@@ -23,31 +23,22 @@
 #endif
 #include "getopt.h"
 #include "global.h"
-#include "su3.h"
-#include "su3adj.h"
-#include "expo.h"
 #include "ranlxd.h"
 #include "geometry_eo.h"
 #include "start.h"
-#include "linalg_eo.h"
-#include "linsolve.h"
 #include "clover_eo.h"
 #include "observables.h"
-#include "hybrid_update.h"
 #ifdef MPI
 #include "xchange.h"
 #endif
-#include "sw.h"
 #include "io.h"
 #include "read_input.h"
-#include "tm_operators.h"
-#include "bicgstabell.h"
 #include "mpi_init.h"
 #include "sighandler.h"
 #include "update_tm.h"
 #include "boundary.h"
 
-char * Version = "0.9";
+char * Version = "1.2";
 
 void usage(){
   fprintf(stderr, "hmc for Wilson twisted mass QCD\n\n");
@@ -57,8 +48,6 @@ void usage(){
 }
 
 extern int nstore;
-
-/* su3 gauge_tmp[VOLUME][4] ALIGN; */
 
 int main(int argc,char *argv[]) {
  
@@ -319,7 +308,7 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     printf("Acceptance Rate was: %e Prozent\n", 100.*(double)Rate/(double)Nmeas);
     fflush(stdout);
-    parameterfile = fopen(parameterfilename, "w");
+    parameterfile = fopen(parameterfilename, "a");
     fprintf(parameterfile, "Acceptance Rate was: %e Prozent\n", 100.*(double)Rate/(double)Nmeas);
     fclose(parameterfile);
   }

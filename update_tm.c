@@ -1,3 +1,15 @@
+/* $Id$ */
+
+/***********************************************************
+ *
+ * This routine contains the update part for
+ * the HMC with up to three pseudo fermion fields
+ * for twisted mass QCD
+ *
+ * Author: Carsten Urbach <urbach@physik.fu-berlin.de>
+ *
+ ***********************************************************/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
