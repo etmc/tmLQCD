@@ -123,7 +123,7 @@ int bicg(int k, int l, double q_off, double eps_sq, const int rel_prec) {
   static double rho0,omega0,rho1,omega1,alpha,be,err,d1,d2,squarenorm;
   int iteration;
 
-  if(ITER_MAX_BCG == 0) {
+  if(ITER_MAX_BCG > 0) {
     gamma5(DUM_SOLVER+1,l);
     if(g_use_clover_flag == 1){
       M_psi(DUM_SOLVER,k,q_off); 
