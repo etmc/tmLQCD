@@ -26,6 +26,9 @@
 /*#include "io.h"*/
 #include "global.h"
 
+#define OlD 
+
+#ifdef OlD
 int Index(const int x0, const int x1, const int x2, const int x3)
 {
    int y0, y1, y2, y3;
@@ -52,7 +55,9 @@ int Index(const int x0, const int x1, const int x2, const int x3)
    return(y3 + L*y2 + L*L*y1 + L*L*L*y0);
 }
 
-int Index_eo(const int x0, const int x1, const int x2, const int x3)
+#else
+
+int Index(const int x0, const int x1, const int x2, const int x3)
 {
    int y0, y1, y2, y3, ix, bnd=0;
 
@@ -93,6 +98,7 @@ int Index_eo(const int x0, const int x1, const int x2, const int x3)
    return( ix );
 }
 
+#endif
 
 void geometry(){
   
@@ -145,8 +151,6 @@ void geometry(){
     }
   }
 }
-
-
 
 
 

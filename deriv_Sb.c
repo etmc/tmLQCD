@@ -84,8 +84,9 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka0,v2);
     _trace_lambda(der,v1);
-    ddd=&df0[ix][0];
-    _add_su3adj(*ddd,der);
+/*     ddd=&df0[ix][0]; */
+/*     _add_su3adj(*ddd,der); */
+    _add_su3adj(df0[ix][0], der);
     /************** direction -0 ****************************/
 
     iy=g_idn[ix][0]; icy=trans1[iy]-ioff2;
@@ -105,8 +106,9 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka0,v2);
     _trace_lambda(der,v1);
-    ddd=&df0[iy][0];
-    _add_su3adj(*ddd,der);
+/*     ddd=&df0[iy][0]; */
+/*     _add_su3adj(*ddd,der); */
+    _add_su3adj(df0[iy][0], der);
     /*************** direction +1 **************************/
 
     iy=g_iup[ix][1]; icy=trans1[iy]-ioff2;
@@ -126,8 +128,9 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka1,v2);
     _trace_lambda(der,v1);
-    ddd=&df0[ix][1];
-    _add_su3adj(*ddd,der);
+/*     ddd=&df0[ix][1]; */
+/*     _add_su3adj(*ddd,der); */
+    _add_su3adj(df0[ix][1], der);
     /**************** direction -1 *************************/
 
     iy=g_idn[ix][1]; icy=trans1[iy]-ioff2;
@@ -147,8 +150,9 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka1,v2);
     _trace_lambda(der,v1);
-    ddd=&df0[iy][1];
-    _add_su3adj(*ddd,der);
+/*     ddd=&df0[iy][1]; */
+/*     _add_su3adj(*ddd,der); */
+    _add_su3adj(df0[iy][1], der);
 
     /*************** direction +2 **************************/
 
@@ -169,8 +173,9 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka2,v2);
     _trace_lambda(der,v1);
-    ddd=&df0[ix][2];
-    _add_su3adj(*ddd,der);
+/*     ddd=&df0[ix][2]; */
+/*     _add_su3adj(*ddd,der); */
+    _add_su3adj(df0[ix][2], der);
 
     /***************** direction -2 ************************/
 
@@ -192,8 +197,9 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka2,v2);
     _trace_lambda(der,v1);
-    ddd=&df0[iy][2];
-    _add_su3adj(*ddd,der);
+/*     ddd=&df0[iy][2]; */
+/*     _add_su3adj(*ddd,der); */
+    _add_su3adj(df0[iy][2], der);
 
     /****************** direction +3 ***********************/
 
@@ -215,8 +221,9 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka3,v2);
     _trace_lambda(der,v1);
-    ddd=&df0[ix][3];
-    _add_su3adj(*ddd,der);
+/*     ddd=&df0[ix][3]; */
+/*     _add_su3adj(*ddd,der); */
+    _add_su3adj(df0[ix][3], der);
 
     /***************** direction -3 ************************/
 
@@ -237,8 +244,9 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka3,v2);
     _trace_lambda(der,v1);
-    ddd=&df0[iy][3];
-    _add_su3adj(*ddd,der);
+/*     ddd=&df0[iy][3]; */
+/*     _add_su3adj(*ddd,der); */
+    _add_su3adj(df0[iy][3], der);
      
     /****************** end of loop ************************/
   }

@@ -142,7 +142,7 @@ int main(int argc,char *argv[]) {
     parameterfile=fopen(filename2, "w");
     
     if(g_proc_id == 0){
-      printf("# This is the hmc code for twisted Mass Wilson QCD\n\n Version %s", Version);
+      printf("# This is the hmc code for twisted Mass Wilson QCD\n\nVersion %s\n", Version);
 #ifdef SSE
       printf("# The code was compiled with SSE instructions\n");
 #endif

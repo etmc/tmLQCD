@@ -189,6 +189,22 @@ _sse_store(r);
 * r.c3+=s.c3
 */
 
+#define _vector_combined_add_i_add(r1, s1, r2, s2, s) \
+   (r1).c1.re=(s1).c1.re+(s).c1.re; \
+   (r1).c1.im=(s1).c1.im+(s).c1.im; \
+   (r2).c1.re=(s2).c1.re-(s).c1.im; \
+   (r2).c1.im=(s2).c1.im+(s).c1.re; \
+   (r1).c2.re=(s1).c2.re+(s).c2.re; \
+   (r1).c2.im=(s1).c2.im+(s).c2.im; \
+   (r2).c2.re=(s2).c2.re-(s).c2.im; \
+   (r2).c2.im=(s2).c2.im+(s).c2.re; \
+   (r1).c3.re=(s1).c3.re+(s).c3.re; \
+   (r1).c3.im=(s1).c3.im+(s).c3.im; \
+   (r2).c3.re=(s2).c3.re-(s).c3.im; \
+   (r2).c3.im=(s2).c3.im+(s).c3.re;
+
+
+
 #if defined SSE2
 #define _vector_add_assign(r,s) \
 _sse_load(r); \

@@ -37,6 +37,7 @@ int main(int argc,char *argv[]){
   int i,k,kmax,n,count;
   float t1,t2,dt;
   double m0;
+  int a,b;
 
 #if defined MPI
   MPI_Init(&argc, &argv);
@@ -53,7 +54,7 @@ int main(int argc,char *argv[]){
 #endif
   if(g_proc_id == 0) {
     printf("\n");
-    printf("Timing of D_psi (random spinor and gauge fields)\n");
+    printf("Timing of Hopping_Matrix (random spinor and gauge fields)\n");
     printf("------------------------------------------------\n");
     
     printf("\n");
@@ -68,7 +69,7 @@ int main(int argc,char *argv[]){
   }
 
 
-  n=1000000/(int)(VOLUME/2);
+  n=30000000/(int)(VOLUME/2);
   if (n<2){
     n=2;
   }
@@ -105,6 +106,13 @@ int main(int argc,char *argv[]){
   printf(" (%d Mflops [%d bit arithmetic])\n",
 	 (int)(1392.0f/dt),(int)sizeof(spinor)/3);   
   printf("\n");
+
+  a = (int)(1392.0f/dt);
+  MPI_Reduce(&a, &b, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  if(g_proc_id == 0) {
+    printf("Sum: %d, Average: %d Mflops\n", b, b/g_nproc);
+    printf("Number of applications of Hopping_Matrix was %d!\n", n);
+  }
 #if defined MPI
    MPI_Finalize();
 #endif

@@ -12,6 +12,8 @@
 #include "global.h"
 #include "xchange.h"
 
+#define OlD
+
 /* exchanges the field  l */
 void xchange_field(int l)
 {
@@ -48,6 +50,8 @@ void xchange_field(int l)
 #endif
 }
 
+#ifdef OlD
+
 void xchange_gauge()
 {
 #ifdef MPI
@@ -83,7 +87,9 @@ void xchange_gauge()
 #endif
 }
 
-void xchange_gauge_eo()
+#else
+
+void xchange_gauge()
 {
 #ifdef MPI
   int i,k;
@@ -127,6 +133,9 @@ void xchange_gauge_eo()
 #endif
 }
 
+#endif
+
+#ifdef OlD
 void xchange_deri()
 {
 #ifdef MPI
@@ -224,8 +233,9 @@ void xchange_deri()
 #endif
 }
 
+#else
 
-void xchange_deri_eo()
+void xchange_deri()
 {
 #ifdef MPI
   int i,k;
@@ -280,3 +290,5 @@ void xchange_deri_eo()
 
 #endif
 }
+
+#endif
