@@ -137,6 +137,10 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x REVCHECK
 %x REVINT
 %x DEBUG
+%x CSGN1
+%x CSGN2
+%x CSGN3
+
 
 %x COMMENT
 %x ERROR
@@ -214,6 +218,9 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^ReversibilityCheck{SPC}*={SPC}*         BEGIN(REVCHECK);
 ^ReversibilityCheckIntervall{SPC}*={SPC}* BEGIN(REVINT);
 ^DebugLevel{SPC}*={SPC}*                 BEGIN(DEBUG);
+^CSGHistMu{SPC}*={SPC}*                  BEGIN(CSGN1);
+^CSGHistMu2{SPC}*={SPC}*                 BEGIN(CSGN2);
+^CSGHistMu3{SPC}*={SPC}*                 BEGIN(CSGN3);
 
 <TT>{DIGIT}+                  {
   T_global = atoi(yytext);
@@ -591,6 +598,18 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   g_debug_level = atoi(yytext);
   if(verbose!=0) printf("Debug level = %d\n", g_debug_level);
 }
+<CSGN1>{DIGIT}+ {
+  g_csg_N[0] = atoi(yytext);
+  if(verbose!=0) printf("Chronological Invertier history length for mu set to %d\n", g_csg_N[0]);
+}
+<CSGN2>{DIGIT}+ {
+  g_csg_N[2] = atoi(yytext);
+  if(verbose!=0) printf("Chronological Invertier history length for mu set to %d\n", g_csg_N[2]);
+}
+<CSGN3>{DIGIT}+ {
+  g_csg_N[4] = atoi(yytext);
+  if(verbose!=0) printf("Chronological Invertier history length for mu set to %d\n", g_csg_N[4]);
+}
 
 <*>^#                       BEGIN(COMMENT);
 <SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
@@ -598,7 +617,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 <NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP>#   BEGIN(COMMENT);
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
 <INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
-<ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG>#      BEGIN(COMMENT);
+<ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3>#      BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -752,6 +771,10 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Unknown value for AcceptancePrecision in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
   exit(1);
 }
+<CSGN1,CSGN2,CSGN3>. {
+  printf("Unknown value for CSGHistMu in line %d! Must be an integer number. Exiting...!\n", line_of_file);
+  exit(1);
+}
 
 <INITIAL>.                        BEGIN(ERROR);
 <ERROR>[^\t\n]*             {
@@ -850,6 +873,10 @@ int read_input(char * conf_file){
   return_check_flag = _default_return_check_flag;
   return_check_interval = _default_return_check_interval;
   g_debug_level = _default_g_debug_level;
+  g_csg_N[0] = _default_g_csg_N;
+  g_csg_N[2] = _default_g_csg_N;
+  g_csg_N[4] = _default_g_csg_N;
+  g_csg_N[6] = _default_g_csg_N;
 
   /********************************************/
 

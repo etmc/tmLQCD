@@ -91,8 +91,6 @@ int main(int argc,char *argv[]) {
   verbose = 0;
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
-  g_csg_N = (int*) malloc(2*g_nr_of_psf*sizeof(int));
-  g_csg_N[0] = 7;
 
 #ifndef XLC 
   signal(SIGUSR1,&catch_del_sig);
@@ -151,44 +149,6 @@ int main(int argc,char *argv[]) {
   g_dbw2rand = 0;
 #endif
 
-#ifdef _GAUGE_COPY
-  j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
-#else
-  j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
-#endif
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
-    exit(0);
-  }
-  j = init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for geometry_indices! Aborting...\n");
-    exit(0);
-  }
-  j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
-    exit(0);
-  }
-  j = init_csg_field(VOLUMEPLUSRAND/2, g_csg_N[0]);
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for csg fields! Aborting...\n");
-    exit(0);
-  }
-  g_csg_index_array = (int*) malloc(g_csg_N[0]*sizeof(int));
-  j = init_moment_field(VOLUME, VOLUMEPLUSRAND);
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
-    exit(0);
-  }
-
-  zero_spinor_field(spinor_field[DUM_DERI+4]);
-  zero_spinor_field(spinor_field[DUM_DERI+5]);
-  zero_spinor_field(spinor_field[DUM_DERI+6]);
-
-  q_off = 0.;
-  q_off2 = 0.;
- 
   /* Reorder the mu parameter and the number of iterations */
   if(g_mu3 > 0.) {
     g_mu = g_mu1;
@@ -198,6 +158,14 @@ int main(int argc,char *argv[]) {
     j = int_n[1];
     int_n[1] = int_n[3];
     int_n[3] = j;
+
+    j = g_csg_N[0];
+    g_csg_N[0] = g_csg_N[4];
+    g_csg_N[4] = j;
+    g_csg_N[6] = j;
+    if(ITER_MAX_BCG == 0 || fabs(g_mu3) > 0) {
+      g_csg_N[6] = 0;
+    }
 
     g_nr_of_psf = 3;
   }
@@ -210,8 +178,26 @@ int main(int argc,char *argv[]) {
     int_n[1] = int_n[2];
     int_n[2] = int_n[3];
 
+    /* For chronological inverter */
+    g_csg_N[4] = g_csg_N[0];
+    g_csg_N[0] = g_csg_N[2];
+    g_csg_N[2] = g_csg_N[4];
+    if(ITER_MAX_BCG == 0 || fabs(g_mu2) > 0) {
+      g_csg_N[4] = 0;
+    }
+    g_csg_N[6] = 0;
+
     g_nr_of_psf = 2;
   }
+  else {
+    g_csg_N[2] = g_csg_N[0];
+    if(ITER_MAX_BCG == 0 || fabs(g_mu2) > 0) {
+      g_csg_N[2] = 0;
+    }
+    g_csg_N[4] = 0;
+    g_csg_N[6] = 0;
+  }
+
   for(j = 0; j < g_nr_of_psf+1; j++) {
     if(int_n[j] == 0) int_n[j] = 1;
   }
@@ -234,6 +220,45 @@ int main(int argc,char *argv[]) {
   g_mu = g_mu1;
   g_eps_sq_acc = g_eps_sq_acc1;
   g_eps_sq_force = g_eps_sq_force1;
+
+
+#ifdef _GAUGE_COPY
+  j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
+#else
+  j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
+#endif
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
+    exit(0);
+  }
+  j = init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for geometry_indices! Aborting...\n");
+    exit(0);
+  }
+  j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
+    exit(0);
+  }
+  j = init_csg_field(VOLUMEPLUSRAND/2, g_csg_N);
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for csg fields! Aborting...\n");
+    exit(0);
+  }
+  j = init_moment_field(VOLUME, VOLUMEPLUSRAND);
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
+    exit(0);
+  }
+
+  zero_spinor_field(spinor_field[DUM_DERI+4]);
+  zero_spinor_field(spinor_field[DUM_DERI+5]);
+  zero_spinor_field(spinor_field[DUM_DERI+6]);
+
+  q_off = 0.;
+  q_off2 = 0.;
+ 
 
   if(g_proc_id == 0){
     
@@ -284,6 +309,8 @@ int main(int argc,char *argv[]) {
     if(integtyp == 5) printf("higher order and leap-frog (multiple time scales)\n");
     printf("# Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
+    printf("# Using in chronological inverter for spinor_field 1,2,3 a history of %d, %d, %d, respectively\n", 
+	   g_csg_N[0], g_csg_N[2], g_csg_N[4]);
 
 
     fprintf(parameterfile, "The lattice size is %d x %d x %d x %d\n", (int)(g_nproc_t*T), (int)(g_nproc_x*LX), (int)(LY), (int)(LZ));
@@ -308,6 +335,8 @@ int main(int argc,char *argv[]) {
     if(integtyp == 5) fprintf(parameterfile, "higher order and leap-frog (multiple time scales)\n");
     fprintf(parameterfile, "Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
+    fprintf(parameterfile, "Using in chronological inverter for spinor_field 1,2,3 a history of %d, %d, %d, respectively\n", 
+	   g_csg_N[0], g_csg_N[2], g_csg_N[4]);
     fflush(stdout); fflush(parameterfile);
   }
 

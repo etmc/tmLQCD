@@ -51,14 +51,18 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
   static complex *G = NULL;
   static int * ipiv = NULL;
   static int lwork = 0;
+  int max_N = 0;
   
   if(init_csg == 0) {
     init_csg = 1;
-    lwork = (_FT(ilaenv)(&ONE, "zhetrf", "U", &N, &MONE, &MONE, &MONE, 6, 1)) * N;
+    for(i = 0; i < 4; i++) {
+      if(g_csg_N[2*i] > max_N) max_N = g_csg_N[2*i];
+    }
+    lwork = (_FT(ilaenv)(&ONE, "zhetrf", "U", &max_N, &MONE, &MONE, &MONE, 6, 1)) * N;
     work = (complex*) malloc(lwork*sizeof(complex));
-    bn = (complex*) malloc(N*sizeof(complex));
-    G = (complex*) malloc(N*N*sizeof(complex));
-    ipiv = (int*) malloc(N*sizeof(int));
+    bn = (complex*) malloc(max_N*sizeof(complex));
+    G = (complex*) malloc(max_N*max_N*sizeof(complex));
+    ipiv = (int*) malloc(max_N*sizeof(int));
   }
 
   /* Construct an orthogonal basis */
@@ -66,16 +70,16 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
     for(i = j-1; i > -1; i--) {
       s = scalar_prod(v[index_array[j]], v[index_array[i]], V);
       assign_diff_mul(v[index_array[i]], v[index_array[j]], s, V);
-      if(g_debug_level > 3) {
+      if(g_debug_level > 2) {
 	s = scalar_prod(v[index_array[i]], v[index_array[j]], V);
 	if(g_proc_id == 0) {
-	  printf("CSG: %e %e id = %d\n", s.re, s.im, g_proc_id);
+	  printf("CSG: <%d,%d> = %e +i %e \n", i, j, s.re, s.im);fflush(stdout);
 	}
       }
     }
   }
 
-    /* Generate "interaction matrix" V^\dagger f V */
+  /* Generate "interaction matrix" V^\dagger f V */
   /* We assume that f is hermitian               */
   /* Generate also the right hand side           */
 
@@ -85,7 +89,7 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
     /* Only the upper triangel part is stored      */
     for(i = 0; i < j+1; i++){
       G[j*N + i] = scalar_prod(v[index_array[i]], trial, V);  
-      if(g_proc_id == 0 && g_debug_level > 2) {
+      if(g_proc_id == 0 && g_debug_level > 1) {
 	printf("CSG: G[%d*N + %d]= %e + i %e  \n", j, i, G[j*N + i].re, G[j*N + i].im);fflush(stdout);
       }
     } 
@@ -105,13 +109,12 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
   
   if(info == 0) {
     mul(trial, bn[n-1], v[index_array[n-1]], V); 
-    if(g_proc_id == 0 && g_debug_level > 2) {
+    if(g_proc_id == 0 && g_debug_level > 1) {
       printf("CSG: bn[%d] = %f %f\n", index_array[n-1], bn[index_array[n-1]].re, bn[index_array[n-1]].im);
     }
     for(i = n-2; i > -1; i--) {
-/*       assign_add_mul(trial, v[index_array[i]], bn[index_array[i]], V); */
       assign_add_mul(trial, v[index_array[i]], bn[i], V);
-      if(g_proc_id == 0 && g_debug_level > 2) {
+      if(g_proc_id == 0 && g_debug_level > 1) {
 	printf("CSG: bn[%d] = %f %f\n", index_array[i], bn[index_array[i]].re, bn[index_array[i]].im);
       }
     }
@@ -120,7 +123,7 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
     assign(trial, phi, V);
   }
 
-  if(g_proc_id == 0 && g_debug_level > 2) {
+  if(g_proc_id == 0 && g_debug_level > 1) {
     printf("CSG: done! n= %d N=%d \n", n, N);fflush(stdout);
   }
   

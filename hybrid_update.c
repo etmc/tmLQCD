@@ -385,7 +385,7 @@ void update_fermion_momenta(double step, const int S) {
     for(mu=0;mu<4;mu++){
       xm=&moment[i][mu];
       deriv=&df0[i][mu];
-      if(g_debug_level > 0) {
+      if(g_debug_level > 2) {
 	sum2 = _su3adj_square_norm(*deriv); 
 	sum+= sum2;
 	if(g_proc_id == 0  && co < 20) {

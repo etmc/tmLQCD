@@ -79,7 +79,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   }
 
   /* For chronological inverter */
-  g_csg_N[1] = 0;
+  g_csg_N[1] = 0; g_csg_N[3] = 0; g_csg_N[5] = 0; g_csg_N[7] = 0;
 
 #ifdef MPI
   atime = MPI_Wtime();
@@ -125,6 +125,12 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   /* it has the largest mu available              */
   g_mu = g_mu1;
   Qtm_plus_psi(spinor_field[first_psf], spinor_field[2]);
+  chrono_add_solution(spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
+		      g_csg_N[0], &g_csg_N[1], VOLUME/2);
+  if(g_nr_of_psf == 1 && ITER_MAX_BCG > 0 && fabs(g_mu1) == 0.) {
+      chrono_add_solution(spinor_field[first_psf], g_csg_field[1], g_csg_index_array[1],
+			  g_csg_N[2], &g_csg_N[3], VOLUME/2);
+    }
 
   /* contruct the second \phi_o */
   if(g_nr_of_psf > 1) {
@@ -135,6 +141,12 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
     idis1 = bicg(second_psf, 3, 0., g_eps_sq_acc1, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
+    chrono_add_solution(spinor_field[second_psf], g_csg_field[1], g_csg_index_array[1],
+			g_csg_N[2], &g_csg_N[3], VOLUME/2);
+    if(g_nr_of_psf == 2 && ITER_MAX_BCG > 0 && fabs(g_mu2) == 0.) {
+      chrono_add_solution(spinor_field[second_psf], g_csg_field[2], g_csg_index_array[2],
+			  g_csg_N[4], &g_csg_N[5], VOLUME/2);
+    }
   }
   /* contruct the third \phi_o */
   if(g_nr_of_psf > 2) {
@@ -145,9 +157,14 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
     idis2 = bicg(third_psf, 5, 0., g_eps_sq_acc2, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
+    chrono_add_solution(spinor_field[third_psf], g_csg_field[2], g_csg_index_array[2],
+			g_csg_N[4], &g_csg_N[5], VOLUME/2);
+    if(ITER_MAX_BCG > 0 && fabs(g_mu3) == 0.) {
+      chrono_add_solution(spinor_field[third_psf], g_csg_field[3], g_csg_index_array[3],
+			  g_csg_N[6], &g_csg_N[7], VOLUME/2);
+    }
   }
-  chrono_add_solution(spinor_field[first_psf], g_csg_field, g_csg_index_array,
-		      g_csg_N[0], &g_csg_N[1], VOLUME/2);
+
 
   /* initialize the momenta */
   enep=ini_momenta();
@@ -182,11 +199,10 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   new_gauge_energy = g_rgi_C0 * new_plaquette_energy + g_rgi_C1 * new_rectangle_energy;
 
   /* compute the energy contributions from the pseudo-fermions */
-  /* In DUM_DERI+4 is the result of the last inversion! */
-  /* Use it as guess! */
-  assign(spinor_field[2], spinor_field[DUM_DERI+4], VOLUME/2);
   g_mu = g_mu1;
   if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+  chrono_guess(spinor_field[2], spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
+	       g_csg_N[0], g_csg_N[1], VOLUME/2, &Qtm_pm_psi);
   idis0=bicg(2, first_psf, q_off, g_eps_sq_acc1, g_relative_precision_flag);
   ITER_MAX_BCG = saveiter_max;
   /* Save the solution of Q^-2 at the right place */
@@ -196,32 +212,26 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   enerphi0x = square_norm(spinor_field[2], VOLUME/2);
 
   if(g_nr_of_psf > 1) {
-    /* In DUM_DERI+5 is the result of the last inversion! */
-    /* Use it as guess! */
-    assign(spinor_field[3], spinor_field[DUM_DERI+5], VOLUME/2);
     g_mu = g_mu1;
     Qtm_plus_psi(spinor_field[DUM_DERI+5], spinor_field[second_psf]);
     g_mu = g_mu2;
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+    chrono_guess(spinor_field[3], spinor_field[DUM_DERI+5], g_csg_field[1], g_csg_index_array[1],
+		 g_csg_N[2], g_csg_N[3], VOLUME/2, &Qtm_pm_psi);
     idis1 += bicg(3, DUM_DERI+5, 0., g_eps_sq_acc2, g_relative_precision_flag); 
     ITER_MAX_BCG = saveiter_max;
-    /* Save the solution of Q^-2 at the right place */
-    /* for later reuse! */
-    assign(spinor_field[DUM_DERI+5], spinor_field[DUM_DERI+6], VOLUME/2);
     /* Compute the energy contr. from second field */
     enerphi1x = square_norm(spinor_field[3], VOLUME/2);
   }
   if(g_nr_of_psf > 2) {
-    /* In DUM_DERI+6 is the result of the last inversion! */
-    /* Use it as guess! */
-    assign(spinor_field[5], spinor_field[DUM_DERI+6], VOLUME/2);
     g_mu = g_mu2;
     Qtm_plus_psi(spinor_field[DUM_DERI+6], spinor_field[third_psf]);
     g_mu = g_mu3;
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+    chrono_guess(spinor_field[5], spinor_field[DUM_DERI+6], g_csg_field[2], g_csg_index_array[2],
+		 g_csg_N[4], g_csg_N[5], VOLUME/2, &Qtm_pm_psi);
     idis2 += bicg(5, DUM_DERI+6, 0., g_eps_sq_acc3, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
-    /* solution of Q^-2 is allready at the right place (DUM_DERI+6)*/
     /* Compute the energy contr. from third field */
     enerphi2x = square_norm(spinor_field[5], VOLUME/2);
   }
