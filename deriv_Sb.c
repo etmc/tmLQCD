@@ -40,6 +40,9 @@ void deriv_Sb(const int ieo, const int l, const int k){
   static su3_vector psia,psib,phia,phib;
   static spinor rr;
   spinor *r,*sp,*sm;
+#ifdef XLC
+#pragma disjoint(*r, *sp, *sm, *up, *um, *ddd)
+#endif
   if(ieo==0){
     ioff=0;
   } 
