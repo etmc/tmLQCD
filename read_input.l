@@ -44,6 +44,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   int Nmeas;
   int Nskip;
   int integtyp;
+  int int_n[4];
   int nsmall;
   int solver_flag;
   int operator_flag;
@@ -56,7 +57,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   int nstore;
   int index_start, index_end;
   int random_seed;
-  double dtau;
+  double dtau, tau;
   int Nsteps;
   double q_off, q_off2;
   char rlxd_input_filename[100];
@@ -83,6 +84,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x Q1
 %x Q2
 %x DTAU
+%x TAU
 %x NSTEPS
 %x CSW
 %x INTTYP
@@ -114,6 +116,11 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x RGIC
 %X READSOURCE
 %x SOURCEFILE
+%x INT0
+%x INT1
+%x INT2
+%x INT3
+%x INT4
 
 %x COMMENT
 %x ERROR
@@ -154,6 +161,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^Integrator{SPC}*={SPC}*                 BEGIN(INTTYP);
 ^NSmall{SPC}*={SPC}*                     BEGIN(NSMALL);
 ^DTau{SPC}*={SPC}*                       BEGIN(DTAU);
+^Tau{SPC}*={SPC}*                        BEGIN(TAU);
 ^NSteps{SPC}*={SPC}*                     BEGIN(NSTEPS);
 ^BCGstabMaxIter{SPC}*={SPC}*             BEGIN(BCGMAX);
 ^CGMaxIter{SPC}*={SPC}*                  BEGIN(CGMAX);
@@ -165,6 +173,11 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^RGIC1{SPC}*={SPC}*                      BEGIN(RGIC);
 ^ReadSource{SPC}*={SPC}*                 BEGIN(READSOURCE);
 ^SourceInputFilename{SPC}*={SPC}*        BEGIN(SOURCEFILE);
+^ExtIntStepsGauge{SPC}*={SPC}*           BEGIN(INT0);
+^ExtIntStepsMu0{SPC}*={SPC}*             BEGIN(INT1);
+^ExtIntStepsMu1{SPC}*={SPC}*             BEGIN(INT2);
+^ExtIntStepsMu2{SPC}*={SPC}*             BEGIN(INT3);
+^ExtIntStepsMu3{SPC}*={SPC}*             BEGIN(INT4);
 
 <TT>{DIGIT}+                  {
   T_global = atoi(yytext);
@@ -407,6 +420,10 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   dtau = atof(yytext);
   if(verbose!=0) printf("dtau set to %e\n", dtau);
 }
+<TAU>{FLT} {
+  tau = atof(yytext);
+  if(verbose!=0) printf("tau set to %e\n", tau);
+}
 <NSTEPS>{DIGIT}+ {
   Nsteps = atoi(yytext);
   if(verbose!=0) printf("NSteps set to %d\n", Nsteps);
@@ -443,10 +460,28 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   strcpy(source_input_filename,yytext);
   if(verbose!=0) printf("source input filename set to %s\n",yytext);
 }
-
+<INT0>{DIGIT}+ {
+  int_n[0] = atoi(yytext);
+  if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for gauge set to %d!\n", int_n[0]);
+}
+<INT1>{DIGIT}+ {
+  int_n[1] = atoi(yytext);
+  if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for psf 1 (mu) set to %d!\n", int_n[1]);
+}
+<INT2>{DIGIT}+ {
+  int_n[2] = atoi(yytext);
+  if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for psf 2 (mu2) set to %d!\n", int_n[2]);
+}
+<INT3>{DIGIT}+ {
+  int_n[3] = atoi(yytext);
+  if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for psf 3 (mu3) set to %d!\n", int_n[3]);
+}
+<INT4>{DIGIT}+ {
+  if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for psf 4 (mu4) set to %d!\n", int_n[1]);
+}
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,NPROCX,IOPROC,IDX,FPROP,DTAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE>#      BEGIN(COMMENT);
+<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,NPROCX,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0,INT1,INT2,INT3,INT4>#      BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -556,7 +591,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Error in line %d! Must be compute or readin! Exiting...!\n", line_of_file);
   exit(1);
 }
-<Q1,Q2,DTAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND,SOURCEFILE,READSOURCE>. {
+<Q1,Q2,DTAU,TAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND,SOURCEFILE,READSOURCE,INT0,INT1,INT2,INT3,INT4>. {
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
@@ -626,6 +661,7 @@ int read_input(char * conf_file){
   q_off = _default_q_off;
   q_off2 = _default_q_off2;
   dtau = _default_dtau;
+  tau = _default_tau;
   Nsteps = _default_Nsteps;
   nsmall = _default_nsmall;
   integtyp = _default_integtyp;

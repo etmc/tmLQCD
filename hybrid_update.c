@@ -70,7 +70,12 @@ void gauge_momenta(double step) {
   static su3adj deriv;
   su3adj *xm;
   static double st, st1;
+#ifdef _COMP_FORCE
   double sum=0;
+#ifdef MPI
+  double sum2=0.;
+#endif
+#endif
 
   st  = -step * g_rgi_C0 * g_beta/3.0;
   st1 = -step * g_rgi_C1 * g_beta/3.0;
@@ -81,7 +86,9 @@ void gauge_momenta(double step) {
       v=get_staples(i,mu); 
       _su3_times_su3d(w,*z,v);
       _trace_lambda(deriv,w);
+#ifdef _COMP_FORCE
       sum+= _su3adj_square_norm(deriv);
+#endif
       _minus_const_times_mom(*xm,st,deriv);
       if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
 	get_rectangle_staples(&v, i, mu);
@@ -91,10 +98,16 @@ void gauge_momenta(double step) {
       }
     }
   }
+#ifdef _COMP_FORCE
+#ifdef MPI
+  MPI_Allreduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  sum = sum2;
+#endif
   if(g_proc_id == 0) {
-    printf("gauge %e\n", sum/((double)VOLUME));
+    printf("gauge %e\n", sum/((double)(VOLUME*g_nproc)));
     fflush(stdout);
   }
+#endif
 }
 
 
@@ -109,7 +122,7 @@ void deri(double q_off,double q_off2) {
 
   int j,jmax=1;
   int i,mu;
-  double qo, sum=0.;
+  double qo;
   su3adj * deriv;
 
   for(i=0;i<(VOLUME+RAND);i++){ 
@@ -298,23 +311,12 @@ void deri(double q_off,double q_off2) {
       deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
       g_mu = g_mu1;
     }
-    for(i = 0; i < VOLUME; i++){
-      for(mu=0;mu<4;mu++){
-	deriv=&df0[i][mu];
-	sum+= _su3adj_square_norm(*deriv);
-      }
-    }
-    if(g_proc_id == 0) {
-      printf("nach %d fermiongesamt %e\n", j, sum/((double)VOLUME));
-      fflush(stdout);
-      sum=0.;
-    }
   }
 }
 
 void fermion_momenta(double step, double q_off, double q_off2) {
   int i,mu;
-  double tmp, sum=0.;
+  double tmp;
   su3adj *xm,*deriv;
 
   if(g_use_clover_flag == 1){ 
@@ -333,7 +335,6 @@ void fermion_momenta(double step, double q_off, double q_off2) {
     for(mu=0;mu<4;mu++){
       xm=&moment[i][mu];
       deriv=&df0[i][mu];
-      sum+= _su3adj_square_norm(*deriv);
       /* This 2* is coming from what? */
       tmp = 2.*step;
       _minus_const_times_mom(*xm,tmp,*deriv); 
@@ -344,18 +345,20 @@ void fermion_momenta(double step, double q_off, double q_off2) {
       } 
     }
   }
-  if(g_proc_id == 0) {
-    printf("fermiongesamt %e\n", sum/((double)VOLUME));
-    fflush(stdout);
-  }
 }
 
 void update_fermion_momenta(double step, const int S) {
   int i,mu;
-  double tmp, sum=0.;
+  double tmp;
   su3adj *xm,*deriv;
+#ifdef _COMP_FORCE
+  double sum=0.;
+#ifdef MPI
+  double sum2=0.;
+#endif
+#endif
 
-  derivative_psf(S);
+  derivative_psf(S, EPS_SQ1);
 #ifdef MPI
   xchange_deri();
 #endif
@@ -363,16 +366,24 @@ void update_fermion_momenta(double step, const int S) {
     for(mu=0;mu<4;mu++){
       xm=&moment[i][mu];
       deriv=&df0[i][mu];
+#ifdef _COMP_FORCE
       sum+= _su3adj_square_norm(*deriv);
+#endif
       /* This 2* is coming from what? */
       tmp = 2.*step;
       _minus_const_times_mom(*xm,tmp,*deriv); 
     }
   }
+#ifdef _COMP_FORCE
+#ifdef MPI
+  MPI_Allreduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  sum = sum2;
+#endif
   if(g_proc_id == 0) {
-    printf("fermionforce%d %e\n", S, sum/((double)VOLUME));
+    printf("fermionforce%d %e\n", S, sum/((double)(VOLUME*g_nproc)));
     fflush(stdout);
   }
+#endif
 }
 
 void update_gauge(double step) {

@@ -22,7 +22,7 @@
 #include"su3adj.h"
 
 #define DUM_DERI 6
-#define DUM_SOLVER (DUM_DERI+4)
+#define DUM_SOLVER (DUM_DERI+7)
 #define DUM_MATRIX (DUM_SOLVER+6) 
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX DUM_SOLVER+11 */
@@ -36,7 +36,7 @@
 #define X1 0.
 #define X2 0.
 #define X3 0.
-#define EPS_SQ0  1.0e-20
+#define EPS_SQ0  1.0e-16
 #define EPS_SQ1  1.0e-7
 #define EPS_SQ2  1.0e-5
 #define EPS_SQ3  1.0e-3

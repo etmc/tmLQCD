@@ -26,7 +26,7 @@
 #include "observables.h"
 #include "hybrid_update.h"
 #include "ranlxd.h"
-#include "read_input.h"
+/* #include "read_input.h" */
 #include "linsolve.h"
 #include "expo.h"
 #include "xchange.h"
@@ -36,12 +36,14 @@
 #include "update_tm.h"
 
 
-int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_energy, char * filename) {
+int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_energy, 
+	      char * filename, const double dtau, const int Nsteps, const int nsmall,
+	      const double tau, int * n_int, const double q_off, const double q_off2) {
   su3 *v, *w;
   static int ini_g_tmp = 0;
   int rlxd_state[105];
   int ix, mu, accept, i;
-  int n_int[4] = {5,7,12}; 
+/*   int n_int[4] = {4,6,1,10};  */
 /*   int n_int[4] = {4,2,60};  */
 /*   int n_int[4] = {5,7,1,10};  */
 
@@ -140,7 +142,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     sexton(q_off, q_off2, dtau, Nsteps, nsmall);
   }
   else if(integtyp == 3) {
-    ext_integrator(n_int, 0.7071067811865, g_nr_of_psf, 0);
+    ext_integrator(n_int, tau, g_nr_of_psf, 0);
   }
 
   /*perform the accept-reject-step*/

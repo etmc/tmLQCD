@@ -37,12 +37,12 @@ void ext_integrator(int * const n_int, const double tau, const int S, const int 
       update_fermion_momenta(0.5 * eps, S-i);
       eps /= ((double)n_int[S-i]);
     }
+    gauge_momenta(0.5 * eps);
   }
 
   eps = tau/((double)n_int[S]);
   if(S == 1) {
     eps0 = eps/((double)n_int[0]);
-    gauge_momenta(0.5 * eps0);
     for(j = 1; j < n_int[S]; j++) {
       for(i = 0; i < n_int[0]; i++) {
 	update_gauge(eps0); 
@@ -55,8 +55,8 @@ void ext_integrator(int * const n_int, const double tau, const int S, const int 
       gauge_momenta(eps0);
     }
     update_gauge(eps0); 
-    gauge_momenta(0.5 * eps0);
     if(halfstep != 1) {
+      gauge_momenta(eps0);
       update_fermion_momenta(eps, S-1);
     }
   }
@@ -79,5 +79,6 @@ void ext_integrator(int * const n_int, const double tau, const int S, const int 
       update_fermion_momenta(0.5 * eps, S-i);
       eps /= ((double)n_int[S-i]);
     }
+    gauge_momenta(0.5 * eps);
   }
 }

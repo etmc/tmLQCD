@@ -47,6 +47,7 @@
 #define _default_q_off  0.8
 #define _default_q_off2 0.1
 #define _default_dtau 0.1
+#define _default_tau 0.5
 #define _default_Nsteps 10
 #define _default_integtyp 2
 #define _default_nsmall 2

@@ -34,6 +34,7 @@ extern "C"
   extern int write_cp_flag;
   extern int cp_interval;
   extern int nstore;
+  extern int int_n[4];
   extern int crylov_space_dim;
   extern char rlxd_input_filename[100];
   extern char gauge_input_filename[100];
@@ -44,7 +45,7 @@ extern "C"
   extern int index_start;
   extern int index_end;
   extern int first_prop_flag;
-  extern double dtau;
+  extern double dtau, tau;
   extern int Nsteps;
   extern double q_off;
   extern double q_off2;

@@ -170,18 +170,31 @@ int main(int argc,char *argv[]) {
   q_off = 0.;
   q_off2 = 0.;
  
-  /* Reorder the mu parameter */
+  /* Reorder the mu parameter and the number of iterations */
   if(g_mu3 > 0.) {
     g_mu = g_mu1;
     g_mu1 = g_mu3;
     g_mu3 = g_mu;
+
+    j = int_n[1];
+    int_n[1] = int_n[3];
+    int_n[3] = j;
+
     g_nr_of_psf = 3;
   }
   else if(g_mu2 > 0.) {
     g_mu = g_mu1;
     g_mu1 = g_mu2;
     g_mu2 = g_mu;
+
+    int_n[3] = int_n[1];
+    int_n[1] = int_n[2];
+    int_n[2] = int_n[3];
+
     g_nr_of_psf = 2;
+  }
+  for(j = 0; j < g_nr_of_psf+1; j++) {
+    if(int_n[j] == 0) int_n[j] = 1;
   }
   g_mu = g_mu1;
 
@@ -219,6 +232,8 @@ int main(int argc,char *argv[]) {
     printf("# The local lattice size is %d x %d x %d^2\n", (int)(T), (int)(LX), (int)(L));
     printf("# beta = %f , kappa= %f, mu= %f \n",g_beta,g_kappa,g_mu);
     printf("# mus = %f, %f, %f\n", g_mu1, g_mu2, g_mu3);
+    printf("# int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n ", 
+	    int_n[0], int_n[1], int_n[2], int_n[3]);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
     
     fprintf(parameterfile, "The lattice size is %d x %d^3\n", (int)(g_nproc_t*T), (int)(L));
@@ -229,7 +244,9 @@ int main(int argc,char *argv[]) {
 	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
     fprintf(parameterfile,"dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n",
 	    dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
-    fprintf(parameterfile,"mu = %f, mu2=%f\n ", g_mu, g_mu2);
+    fprintf(parameterfile,"mu = %f, mu2=%f, mu3=%f\n ", g_mu, g_mu2, g_mu3);
+    fprintf(parameterfile,"int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n ", 
+	    int_n[0], int_n[1], int_n[2], int_n[3]);
     fprintf(parameterfile,"g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
     fflush(stdout); fflush(parameterfile);
   }
@@ -365,15 +382,16 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     gettimeofday(&t1,NULL);
     countfile = fopen("history_hmc_tm", "a");
-    fprintf(countfile, "!!! Timestamp %ld, Nskip = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f\n", 
-	    t1.tv_sec, Nskip, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1); 
+    fprintf(countfile, "!!! Timestamp %ld, Nskip = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, int0 = %d, int1 = %d, int2 = %d, int3 = %d\n", 
+	    t1.tv_sec, Nskip, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1, int_n[0], int_n[1], int_n[2], int_n[3]); 
     fclose(countfile);
   }
 
   /* Loop for measurements */
   for(j=0;j<Nmeas;j++) {
 
-    Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename);
+    Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
+		      dtau, Nsteps, nsmall, tau, int_n, q_off, q_off2);
 
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0) {
