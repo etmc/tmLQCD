@@ -271,7 +271,7 @@ dnl no -pedantic-errors...
       CFLAGS="$CFLAGS -malign-double -fomit-frame-pointer -ffloat-store"
       CXXFLAGS="$CXXFLAGS -mcpu=i686 -O -malign-double -fomit-frame-pointer -ffloat-store"
     else
-      CFLAGS="$CFLAGS -fomit-frame-pointer -ffloat-store"
+      CFLAGS="$CFLAGS -Dx86_64 -fomit-frame-pointer -ffloat-store"
       CXXFLAGS="$CXXFLAGS -O -fomit-frame-pointer -ffloat-store"
     fi
     CCDEP="$CC"

@@ -95,6 +95,9 @@ void eigenvalues(int * nr_of_eigenvalues, const int operator_flag,
   if(allocated == 0) {
     allocated = 1;
 #if (defined SSE || defined SSE2 )
+#ifdef x86_64
+#define unsigned unsigned long
+#endif
     eigenvectors_ = calloc((VOLUMEPLUSRAND)/2*(*nr_of_eigenvalues)+1, sizeof(spinor)); 
     eigenvectors = (spinor *)(((unsigned int)(eigenvectors_)+ALIGN_BASE)&~ALIGN_BASE);
     temp_field_ = calloc((VOLUMEPLUSRAND)/2+1, sizeof(spinor));

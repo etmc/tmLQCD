@@ -12,6 +12,10 @@
 #endif
 
 #if (defined SSE || defined SSE2)
+#ifdef x86_64
+#define unsigned unsigned long
+#endif
+
 /*******************************************************************************
 *
 * File sse.h
