@@ -56,13 +56,14 @@ int check_geometry();
 
 int main(int argc,char *argv[]) {
 
-  FILE *parameterfile=NULL;
-  int c, iter, j, ix=0, is=0, ic=0;
+  FILE *parameterfile=NULL, *countfile=NULL;
+  int c, iter, j, ix=0, is=0, ic=0, write_counter=0;
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
   char conf_filename[50];
   char * input_filename = NULL;
+  char * nstore_filename = ".nstore_counter";
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -110,6 +111,19 @@ int main(int argc,char *argv[]) {
 
   /* Read the input file */
   read_input(input_filename);
+
+  if(nstore == -1) {
+    countfile = fopen(nstore_filename, "r");
+    if(countfile != NULL) {
+      fscanf(countfile, "%d\n", &nstore);
+      fclose(countfile);
+    }
+    else {
+      nstore = 0;
+    }
+    write_counter=1;
+  }
+
   q_off = 0.;
   q_off2 = 0.;
   g_mu = g_mu1; 
@@ -196,13 +210,13 @@ if (g_proc_id == 0){
       ic = (ix % 3);
       source_spinor_field(spinor_field[0], spinor_field[1], is, ic);
 
-      printf("mu = %e\n", g_mu);
+      if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
 
 #ifdef MPI
       atime = MPI_Wtime();
 #endif
       iter = invert_eo(spinor_field[2], spinor_field[3], spinor_field[0], spinor_field[1], 
-		       1.e-15, ITER_MAX_CG, solver_flag);
+		       1.e-15, ITER_MAX_CG, CG);
 #ifdef MPI
       etime = MPI_Wtime();
 #endif
@@ -230,6 +244,11 @@ if (g_proc_id == 0){
       printf("Inversion done in %e sec.\n", etime-atime);
     }
     nstore++;
+    if(g_proc_id == 0) {
+      countfile = fopen(nstore_filename, "w");
+      fprintf(countfile, "%d\n", nstore);
+      fclose(countfile);
+    }
   }
 
   return(0);
