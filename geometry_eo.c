@@ -80,6 +80,7 @@ void set_ipt() {
 
 #else
   int i_even = 0,i_odd = VOLUME/2;
+  int i_even2 = 0, i_odd2 = 0;
   for (x0 = 0; x0 < T; x0++) {
     for (x1 = 0; x1 < LX; x1++) {
       for (x2 = 0; x2 < LY; x2++) {
@@ -97,61 +98,72 @@ void set_ipt() {
     }
   }
 #if ((defined PARALLELT) || (defined PARALLELXT))
-  i_even = VOLUME; i_odd = VOLUME+(LX*LY*LZ)/2;
   /* the time boundary */
+  i_even = VOLUME; i_odd = VOLUME+(LX*LY*LZ)/2;
+  i_even2 = VOLUME+(LX*LY*LZ); i_odd2 = VOLUME+3*(LX*LY*LZ)/2;
   for (x1 = 0; x1 < LX; x1++) {
     for (x2 = 0; x2 < LY; x2++) {
       for (x3 = 0; x3 < LZ; x3++) {
-	if((x0+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
+	if((T+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
 	  g_ipt[T][x1][x2][x3] = i_even;
-	  g_ipt[T+1][x1][x2][x3] = i_even+(LX*LY*LZ);
 	  i_even++;
+	  g_ipt[T+1][x1][x2][x3] = i_odd2;
+	  i_odd2++;
 	} 
 	else {
 	  g_ipt[T][x1][x2][x3] = i_odd;
-	  g_ipt[T+1][x1][x2][x3] = i_odd+(LX*LY*LZ);
 	  i_odd++;
+	  g_ipt[T+1][x1][x2][x3] = i_even2;
+	  i_even2++;
 	}
       }
     }
   }
+
 #endif
 #if (defined PARALLELXT)
-  i_even = VOLUME+2*LX*LY*LZ; i_odd = i_even + (T*LY*LZ)/2;
   /* the x boundary */
+  i_even = VOLUME+2*LX*LY*LZ; i_odd = i_even + (T*LY*LZ)/2;
+  i_even2 = VOLUME+2*LX*LY*LZ + (T*LY*LZ); i_odd2 = i_even2 + (T*LY*LZ)/2;
   for (x0 = 0; x0 < T; x0++) {
     for (x2 = 0; x2 < LY; x2++) {
       for (x3 = 0; x3 < LZ; x3++) {
-	if((x0+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
+	if((x0+LX+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
 	  g_ipt[x0][LX][x2][x3] = i_even;
-	  g_ipt[x0][LX+1][x2][x3] = i_even + (T*LY*LZ);
 	  i_even++;
+	  g_ipt[x0][LX+1][x2][x3] = i_odd2;
+	  i_odd2++;
 	} 
 	else {
 	  g_ipt[x0][LX][x2][x3] = i_odd;
-	  g_ipt[x0][LX+1][x2][x3] = i_odd + (T*LY*LZ);
 	  i_odd++;
+	  g_ipt[x0][LX+1][x2][x3] = i_even2;
+	  i_even2++;
 	}
       }
     }
   }
-  i_even = VOLUME+RAND; i_odd = i_even+(LY*LZ)/2;
+
   /* The edges */
+  i_even = VOLUME+RAND; i_odd = i_even+(LY*LZ)/2;
+  i_even2 = VOLUME+RAND + (LY*LZ); i_odd2 = i_even2 + (LY*LZ)/2;
   for (x2 = 0; x2 < LY; x2++) {
     for (x3 = 0; x3 < LZ; x3++) {
-      if((x0+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
+      if((T+LX+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
 	g_ipt[T][LX][x2][x3] = i_even;
-	g_ipt[T][LX+1][x2][x3] = i_even + (LY*LZ);
-	g_ipt[T+1][LX][x2][x3] = i_even + 2*(LY*LZ);
+	g_ipt[T][LX+1][x2][x3] = i_odd2;
+	g_ipt[T+1][LX][x2][x3] = i_odd2 + (LY*LZ);
 	g_ipt[T+1][LX+1][x2][x3] = i_even + 3*(LY*LZ);
 	i_even++;
+	i_odd2++;
       } 
       else {
 	g_ipt[T][LX][x2][x3] = i_odd;
-	g_ipt[T][LX+1][x2][x3] = i_odd + (LY*LZ);
-	g_ipt[T+1][LX][x2][x3] = i_odd + 2*(LY*LZ);
+	g_ipt[T][LX+1][x2][x3] = i_even2;
+	g_ipt[T+1][LX][x2][x3] = i_even2 + (LY*LZ);;
 	g_ipt[T+1][LX+1][x2][x3] = i_odd + 3*(LY*LZ);
 	i_odd++;
+	i_even2++;
       }
     }
   }
@@ -225,6 +237,8 @@ void geometry() {
 
 	  g_iup[ix][3] = g_ipt[y0][y1][x2][(x3+LY+1)%LZ];
 	  g_idn[ix][3] = g_ipt[y0][y1][x2][(x3+LY-1)%LZ];
+
+	  if(g_proc_id == 0) printf("%d %d %d %d: %d %d  %d %d %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, xeven[ix],g_iup[ix][0], g_idn[ix][0], g_iup[ix][1], g_idn[ix][1], g_iup[ix][2], g_idn[ix][2], g_iup[ix][3], g_idn[ix][3]);
 
 	}
       }
