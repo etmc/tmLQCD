@@ -241,7 +241,7 @@ void geometry(){
   for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
     for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++){
       for (x2 = 0; x2 < LY; x2++){
-	for (x3 = 0; x3 < L; x3++){
+	for (x3 = 0; x3 < LZ; x3++){
 	  ix=Index(x0, x1, x2, x3);
 
 	  /* g_proc_id*T is added to allow for odd T when the number of 
@@ -301,7 +301,7 @@ void geometry(){
     if(g_proc_id == 0) {printf("DBW2 stuff\n");fflush(stdout);fflush(stdout);}
     for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++){
       for (x2 = 0; x2 < LY; x2++) {
-	for (x3 = 0; x3 < L; x3++) {
+	for (x3 = 0; x3 < LZ; x3++) {
 	  x0 = -2;
 	  ix = Index(x0, x1, x2, x3);
 	  if(ix < VOLUMEPLUSRAND) {
@@ -343,7 +343,7 @@ void geometry(){
 #ifdef PARALLELXT
     for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
       for (x2 = 0; x2 < LY; x2++) {
-	for (x3 = 0; x3 < L; x3++) {
+	for (x3 = 0; x3 < LZ; x3++) {
 	  x1 = -2;
 	  ix = Index(x0, x1, x2, x3);
 	  if(ix < VOLUMEPLUSRAND) {
