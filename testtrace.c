@@ -147,11 +147,11 @@ int main(int argc,char *argv[]) {
       printf("# The code was compiled for pentium4\n");
 #endif
     }
-    printf("The lattice size is %d x %d^3\n",(int)(T)*g_nproc,(int)(L));
-    printf("The local lattice size is %d x %d^3\n",(int)(T),(int)(L));
+    printf("The lattice size is %d x %d x %d x %d\n",(int)(T)*g_nproc,(int)(LX),(int)(LY),(int)(LZ));
+    printf("The local lattice size is %d x %d x %d x %d\n",(int)(T),(int)(LX),(int)(LY),(int)(LZ));
     printf("g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
     
-    fprintf(fp2,"The lattice size is %d x %d^3\n\n",(int)(g_nproc*T),(int)(L));
+    fprintf(fp2,"The lattice size is %d x %d x %d x %d\n\n",(int)(g_nproc*T),(int)(LX),(int)(LY),(int)(LZ));
     fprintf(fp2,"g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f g_mu = %f \n\n",g_beta,g_kappa,g_ka_csw_8, g_mu);
     fprintf(fp2,"boundary %f %f %f %f \n \n",X0,X1,X2,X3);
     fprintf(fp2,"ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n\n"
@@ -324,9 +324,9 @@ int main(int argc,char *argv[]) {
   gamma3(5, 3, VOLUME/2);  
   if(g_proc_id == 0 || g_proc_id == 1){
     for (x0=0;x0<T;x0++){
-      for (x1=0;x1<L;x1++){
-	for (x2=0;x2<L;x2++){
-	  for (x3=0;x3<L;x3++){
+      for (x1=0;x1<LX;x1++){
+	for (x2=0;x2<LY;x2++){
+	  for (x3=0;x3<LZ;x3++){
 	    if((x0+x1+x2+x3+g_proc_id*T)%2==0) {
 	      f = 4;
 	      g = g_lexic2eo[ g_ipt[x0][x1][x2][x3] ];
@@ -374,9 +374,9 @@ int main(int argc,char *argv[]) {
     gamma3(5, 3, VOLUME/2);
     
     for (x0=0;x0<T;x0++){
-      for (x1=0;x1<L;x1++){
-	for (x2=0;x2<L;x2++){
-	  for (x3=0;x3<L;x3++){
+      for (x1=0;x1<LX;x1++){
+	for (x2=0;x2<LY;x2++){
+	  for (x3=0;x3<LZ;x3++){
 	    if((x0+x1+x2+x3+g_proc_id*T)%2==0) {
 	      f = 4;
 	      g = g_lexic2eo[ g_ipt[x0][x1][x2][x3] ];
@@ -424,9 +424,9 @@ int main(int argc,char *argv[]) {
     gamma3(5, 3, VOLUME/2);
     
     for (x0=0;x0<T;x0++){
-      for (x1=0;x1<L;x1++){
-	for (x2=0;x2<L;x2++){
-	  for (x3=0;x3<L;x3++){
+      for (x1=0;x1<LX;x1++){
+	for (x2=0;x2<LY;x2++){
+	  for (x3=0;x3<LZ;x3++){
 	    if((x0+x1+x2+x3+g_proc_id*T)%2==0) {
 	      f = 4;
 	      g = g_lexic2eo[ g_ipt[x0][x1][x2][x3] ];
@@ -474,9 +474,9 @@ int main(int argc,char *argv[]) {
     gamma3(5, 3, VOLUME/2);
     
     for (x0=0;x0<T;x0++){
-      for (x1=0;x1<L;x1++){
-	for (x2=0;x2<L;x2++){
-	  for (x3=0;x3<L;x3++){
+      for (x1=0;x1<LX;x1++){
+	for (x2=0;x2<LY;x2++){
+	  for (x3=0;x3<LZ;x3++){
 	    if((x0+x1+x2+x3+g_proc_id*T)%2==0) {
 	      f = 4;
 	      g = g_lexic2eo[ g_ipt[x0][x1][x2][x3] ];
@@ -503,9 +503,9 @@ int main(int argc,char *argv[]) {
     
     if(g_proc_id != 5){
       for (x0=0;x0<T;x0++){
-	for (x1=0;x1<L;x1++){
-	  for (x2=0;x2<L;x2++){
-	    for (x3=0;x3<L;x3++){
+	for (x1=0;x1<LX;x1++){
+	  for (x2=0;x2<LY;x2++){
+	    for (x3=0;x3<LZ;x3++){
 	      if((x0+x1+x2+x3+g_proc_id*T)%2==0) {
 		g = g_lexic2eo[ g_ipt[x0][x1][x2][x3] ];
 		h = g;
@@ -529,9 +529,9 @@ int main(int argc,char *argv[]) {
   
   if(g_proc_id == 0) {
     for (x0=0;x0<T;x0++){
-      for (x1=0;x1<L;x1++){
-	for (x2=0;x2<L;x2++){
-	  for (x3=0;x3<L;x3++){
+      for (x1=0;x1<LX;x1++){
+	for (x2=0;x2<LY;x2++){
+	  for (x3=0;x3<LZ;x3++){
 	    if((x0+x1+x2+x3+g_proc_id*T)%2==0) {
 	      f = 1;
 	      g = g_lexic2eo[ g_ipt[x0][x1][x2][x3] ];
@@ -564,9 +564,9 @@ int main(int argc,char *argv[]) {
 
   if(g_proc_id == 3) {
     for (x0=0;x0<T;x0++){
-      for (x1=0;x1<L;x1++){
-	for (x2=0;x2<L;x2++){
-	  for (x3=0;x3<L;x3++){
+      for (x1=0;x1<LX;x1++){
+	for (x2=0;x2<LY;x2++){
+	  for (x3=0;x3<LZ;x3++){
 	    if((x0+x1+x2+x3+g_proc_id*T)%2==0){
 	      f = 1;
 	      g = g_lexic2eo[ g_ipt[x0][x1][x2][x3] ];

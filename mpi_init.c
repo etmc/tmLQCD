@@ -105,19 +105,19 @@ void mpi_init(int argc,char *argv[]) {
 #endif
 
   MPI_Type_contiguous(72, MPI_DOUBLE, &gauge_point);
-  MPI_Type_contiguous(LX*L*L, gauge_point, &gauge_time_slice_cont);
-  MPI_Type_vector(2, LX*L*L/2, (VOLUME)/2, gauge_point, &gauge_time_slice_split);
+  MPI_Type_contiguous(LX*LY*LZ, gauge_point, &gauge_time_slice_cont);
+  MPI_Type_vector(2, LX*LY*LZ/2, (VOLUME)/2, gauge_point, &gauge_time_slice_split);
   MPI_Type_commit(&gauge_time_slice_split);
   MPI_Type_commit(&gauge_time_slice_cont);
 
   MPI_Type_contiguous(32, MPI_DOUBLE, &deri_point);
-  MPI_Type_vector(2, LX*L*L/2, VOLUME/2, deri_point, &deri_time_slice_split);
-  MPI_Type_contiguous(LX*L*L, deri_point, &deri_time_slice_cont);
+  MPI_Type_vector(2, LX*LY*LZ/2, VOLUME/2, deri_point, &deri_time_slice_split);
+  MPI_Type_contiguous(LX*LY*LZ, deri_point, &deri_time_slice_cont);
   MPI_Type_commit(&deri_time_slice_split);
   MPI_Type_commit(&deri_time_slice_cont);
 
   MPI_Type_contiguous(24, MPI_DOUBLE, &field_point);
-  MPI_Type_contiguous(LX*L*L/2, field_point, &field_time_slice_cont); 
+  MPI_Type_contiguous(LX*LY*LZ/2, field_point, &field_time_slice_cont); 
   MPI_Type_commit(&field_time_slice_cont);
 
   MPI_Type_contiguous(T*LY*LZ, gauge_point, &gauge_x_slice_cont);

@@ -83,8 +83,8 @@ int main(int argc,char *argv[]) {
   int c;
 
   /* For the Polyakov loop: */
-  int dir = 3;
-  complex pl;
+  int dir = 2;
+  complex pl, pl4;
 
   verbose = 0;
   g_use_clover_flag = 0;
@@ -237,16 +237,16 @@ int main(int argc,char *argv[]) {
 #ifdef _GAUGE_COPY
     printf("# The code was compiled with -D_GAUGE_COPY\n");
 #endif
-    printf("# The lattice size is %d x %d^3\n",(int)(T)*g_nproc_t,(int)(L));
-    printf("# The local lattice size is %d x %d x %d^2\n", (int)(T), (int)(LX), (int)(L));
+    printf("# The lattice size is %d x %d x %d x %d\n",(int)(T)*g_nproc_t,(int)(LX),(int)(LY),(int)(LZ));
+    printf("# The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY),(int) LZ);
     printf("# beta = %f , kappa= %f, mu= %f \n",g_beta,g_kappa,g_mu);
     printf("# mus = %f, %f, %f\n", g_mu1, g_mu2, g_mu3);
     printf("# int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n ", 
 	    int_n[0], int_n[1], int_n[2], int_n[3]);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
     
-    fprintf(parameterfile, "The lattice size is %d x %d^3\n", (int)(g_nproc_t*T), (int)(L));
-    fprintf(parameterfile, "The local lattice size is %d x %d x %d^2\n", (int)(T), (int)(LX), (int)(L));
+    fprintf(parameterfile, "The lattice size is %d x %d x %d x %d\n", (int)(g_nproc_t*T), (int)(LX), (int)(LY), (int)(LZ));
+    fprintf(parameterfile, "The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY), (int)(LZ));
     fprintf(parameterfile, "g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f g_mu = %f \n",g_beta,g_kappa,g_ka_csw_8, g_mu);
     fprintf(parameterfile, "boundary of fermion fields (t,x,y,z): %f %f %f %f \n",X0,X1,X2,X3);
     fprintf(parameterfile, "ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n"
@@ -372,9 +372,14 @@ int main(int argc,char *argv[]) {
   polyakov_loop(&pl, dir);
   if(g_proc_id==0){
     fprintf(parameterfile,"#First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",dir,dir,sqrt(pl.re*pl.re+pl.im*pl.im));
+/*     fclose(parameterfile); */
+  }
+  dir=3;
+  polyakov_loop(&pl, dir);
+  if(g_proc_id==0){
+    fprintf(parameterfile,"#First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",dir,dir,sqrt(pl.re*pl.re+pl.im*pl.im));
     fclose(parameterfile);
   }
-
 
 
 
@@ -414,15 +419,19 @@ int main(int argc,char *argv[]) {
 		      dtau, Nsteps, nsmall, tau, int_n, q_off, q_off2);
 
     /* Measure the Polyakov loop in direction dir:*/
+    dir=2;
     polyakov_loop(&pl, dir); 
+    dir=3; 
+    polyakov_loop(&pl4, dir);  
+    
 
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0) {
       sprintf(gauge_filename,"%s.%.4d", "conf", nstore);
       if(g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
-	fprintf(countfile, "%.4d, measurement %d of %d, Nskip = %d, Plaquette = %e, |L(%d)| = %e\n", 
-		nstore, j, Nmeas, Nskip, plaquette_energy/(6.*VOLUME*g_nproc),dir,sqrt(pl.re*pl.re+pl.im*pl.im));
+	fprintf(countfile, "%.4d, measurement %d of %d, Nskip = %d, Plaquette = %e, |L(%d)| = %e, |L(%d)| = %e\n", 
+		nstore, j, Nmeas, Nskip, plaquette_energy/(6.*VOLUME*g_nproc),2,sqrt(pl.re*pl.re+pl.im*pl.im),dir,sqrt(pl4.re*pl4.re+pl4.im*pl4.im));
 	fclose(countfile);
       }
       nstore ++;

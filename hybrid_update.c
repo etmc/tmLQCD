@@ -26,7 +26,7 @@
 extern int ITER_MAX_BCG;
 extern int ITER_MAX_CG;
 
-#define _COMP_FORCE
+/* #define _COMP_FORCE */
 
 static su3 get_staples(int x, int mu) {
 

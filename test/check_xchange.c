@@ -61,8 +61,8 @@ int check_xchange()
     xchange_field(spinor_field[0]);
 
 #if (defined PARALLELT || defined PARALLELXT)  
-    x = (double*) &spinor_field[0][T*LX*L*L/2];
-    for(i = 0; i < LX*L*L/2*24; i++, x++) {
+    x = (double*) &spinor_field[0][T*LX*LY*LZ/2];
+    for(i = 0; i < LX*LY*LZ/2*24; i++, x++) {
       if((int)(*x) != g_nb_t_up) {
 	printf("The exchange up of fields in time direction\n");
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_up);
@@ -74,8 +74,8 @@ int check_xchange()
       }
     }
 
-    x = (double*) &spinor_field[0][(T+1)*LX*L*L/2];
-    for(i = 0; i < LX*L*L/2*24; i++, x++) {
+    x = (double*) &spinor_field[0][(T+1)*LX*LY*LZ/2];
+    for(i = 0; i < LX*LY*LZ/2*24; i++, x++) {
       if((int)(*x) != g_nb_t_dn) {
 	printf("The exchange down of fields in time direction\n");
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_dn);
@@ -89,7 +89,7 @@ int check_xchange()
 #endif
 
 #ifdef PARALLELXT
-    x = (double*) &spinor_field[0][(T+2)*LX*L*L/2];
+    x = (double*) &spinor_field[0][(T+2)*LX*LY*LZ/2];
     for(i = 0; i < T*LY*LZ/2*24; i++, x++) {
       if((int)(*x) != g_nb_x_up) {
 	printf("The exchange up of fields in x direction\n");
@@ -102,7 +102,7 @@ int check_xchange()
       }
     }
 
-    x = (double*) &spinor_field[0][(T+2)*LX*L*L/2+T*LY*LZ/2];
+    x = (double*) &spinor_field[0][(T+2)*LX*LY*LZ/2+T*LY*LZ/2];
     for(i = 0; i < T*LY*LZ/2*24; i++, x++) {
       if((int)(*x) != g_nb_x_dn) {
 	printf("The exchange down of fields in x direction\n");
@@ -149,7 +149,7 @@ int check_xchange()
     xchange_gauge();
 
 #if (defined PARALLELT || defined PARALLELXT)  
-    x = (double*) &g_gauge_field[T*LX*L*L][0];
+    x = (double*) &g_gauge_field[T*LX*LY*LZ][0];
     for(i = 0; i < LX*LY*LZ*72; i++, x++) {
       if((int)(*x) != g_nb_t_up) {
 	printf("The exchange up of gaugefields in time direction\n");
@@ -162,7 +162,7 @@ int check_xchange()
       }
     }
 
-    x = (double*) &g_gauge_field[(T+1)*LX*L*L][0];
+    x = (double*) &g_gauge_field[(T+1)*LX*LY*LZ][0];
     for(i = 0; i < LX*LZ*LY*72; i++, x++) {
       if((int)(*x) != g_nb_t_dn) {
 	printf("The exchange down of gaugefields in time direction\n");

@@ -334,15 +334,15 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
     for(x = 0; x < LX; x++){
 #if (defined MPI && defined PARALLEL2)
       fseek(ifs, position +
-	    ((g_proc_coords[0]*LX+x)*L*LZ*T 
+	    ((g_proc_coords[0]*LX+x)*LY*LZ*T 
 	     + g_proc_coords[1]*LY*LZ*T)*sizeof(spinor),
 	    SEEK_SET);
 #endif
       for(y = 0; y < LY; y++){
 #if (defined MPI && defined PARALLEL3)
 	fseek(ifs, position +
-	      ((g_proc_coords[0]*LX+x)*L*L*T 
-	       + (g_proc_coords[1]*LY+y)*L*T 
+	      ((g_proc_coords[0]*LX+x)*LY*LZ*T 
+	       + (g_proc_coords[1]*LY+y)*LZ*T 
 	       + g_proc_coords[2]*LZ*T)*sizeof(spinor),
 	      SEEK_SET);
 #endif

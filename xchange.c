@@ -32,13 +32,13 @@ void xchange_field(spinor * const l) {
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
   MPI_Sendrecv((void*)l,              1, field_time_slice_cont, g_nb_t_dn, 81,
-	       (void*)(l+T*LX*L*L/2), 1, field_time_slice_cont, g_nb_t_up, 81,
+	       (void*)(l+T*LX*LY*LZ/2), 1, field_time_slice_cont, g_nb_t_up, 81,
 	       g_cart_grid, &status);
 
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
-  MPI_Sendrecv((void*)(l+(T-1)*LX*L*L/2), 1, field_time_slice_cont, g_nb_t_up, 82,
-	       (void*)(l+(T+1)*LX*L*L/2),   1, field_time_slice_cont, g_nb_t_dn, 82,
+  MPI_Sendrecv((void*)(l+(T-1)*LX*LY*LZ/2), 1, field_time_slice_cont, g_nb_t_up, 82,
+	       (void*)(l+(T+1)*LX*LY*LZ/2),   1, field_time_slice_cont, g_nb_t_dn, 82,
 	       g_cart_grid, &status);
 
 #ifdef PARALLELXT
@@ -80,13 +80,13 @@ void xchange_field2(spinor * const l) {
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
   MPI_Sendrecv((void*)l,              1, field_time_slice_cont, g_nb_t_dn, 81,
-	       (void*)(l+T*LX*L*L/2), 1, field_time_slice_cont, g_nb_t_up, 81,
+	       (void*)(l+T*LX*LY*LZ/2), 1, field_time_slice_cont, g_nb_t_up, 81,
 	       g_cart_grid, &status);
 
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
-  MPI_Sendrecv((void*)(l+(T-1)*LX*L*L/2), 1, field_time_slice_cont, g_nb_t_up, 82,
-	       (void*)(l+(T+1)*LX*L*L/2), 1, field_time_slice_cont, g_nb_t_dn, 82,
+  MPI_Sendrecv((void*)(l+(T-1)*LX*LY*LZ/2), 1, field_time_slice_cont, g_nb_t_up, 82,
+	       (void*)(l+(T+1)*LX*LY*LZ/2), 1, field_time_slice_cont, g_nb_t_dn, 82,
 	       g_cart_grid, &status);
 
 #ifdef PARALLELXT
@@ -136,22 +136,22 @@ void xchange_gauge() {
   /* recieve the data from the neighbour on the right */
 #ifndef _NEW_GEOMETRY
   MPI_Sendrecv(g_gauge_field[0],        1, gauge_time_slice_cont, g_nb_t_dn, 83, 
-	       g_gauge_field[T*LX*L*L], 1, gauge_time_slice_cont, g_nb_t_up, 83, 
+	       g_gauge_field[T*LX*LY*LZ], 1, gauge_time_slice_cont, g_nb_t_up, 83, 
 	       g_cart_grid, &status);
 #else
   MPI_Sendrecv(g_gauge_field[0],        1, gauge_time_slice_split, g_nb_t_dn, 83,
-	       g_gauge_field[T*LX*L*L], 1, gauge_time_slice_cont , g_nb_t_up, 83,
+	       g_gauge_field[T*LX*LY*LZ], 1, gauge_time_slice_cont , g_nb_t_up, 83,
 	       g_cart_grid, &status);
 #endif
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
 #ifndef _NEW_GEOMETRY
-  MPI_Sendrecv(g_gauge_field[(T-1)*LX*L*L], 1, gauge_time_slice_cont, g_nb_t_up, 84, 
-	       g_gauge_field[(T+1)*LX*L*L], 1, gauge_time_slice_cont, g_nb_t_dn, 84, 
+  MPI_Sendrecv(g_gauge_field[(T-1)*LX*LY*LZ], 1, gauge_time_slice_cont, g_nb_t_up, 84, 
+	       g_gauge_field[(T+1)*LX*LY*LZ], 1, gauge_time_slice_cont, g_nb_t_dn, 84, 
 	       g_cart_grid, &status);
 #else
-  MPI_Sendrecv(g_gauge_field[(T-1)*LX*L*L/2], 1, gauge_time_slice_split, g_nb_t_up, 84, 
-	       g_gauge_field[(T+1)*LX*L*L],   1, gauge_time_slice_cont , g_nb_t_dn, 84,
+  MPI_Sendrecv(g_gauge_field[(T-1)*LX*LY*LZ/2], 1, gauge_time_slice_split, g_nb_t_up, 84, 
+	       g_gauge_field[(T+1)*LX*LY*LZ],   1, gauge_time_slice_cont , g_nb_t_dn, 84,
 	       g_cart_grid, &status);
 #endif
 
@@ -174,7 +174,7 @@ void xchange_gauge() {
 		 g_gauge_field[VOLUMEPLUSRAND+LX*LY*LZ], 1, gauge_time_slice_cont, g_nb_t_dn, 86, 
 		 g_cart_grid, &status);
 #else
-    MPI_Sendrecv(g_gauge_field[(T-2)*LX*L*L/2],            1, gauge_time_slice_split, g_nb_t_up, 86, 
+    MPI_Sendrecv(g_gauge_field[(T-2)*LX*LY*LZ/2],            1, gauge_time_slice_split, g_nb_t_up, 86, 
 		 g_gauge_field[VOLUMEPLUSRAND+LX*LY*LZ], 1, gauge_time_slice_cont , g_nb_t_dn, 86,
 		 g_cart_grid, &status);
 #endif
@@ -342,13 +342,13 @@ void xchange_gauge2() {
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
   MPI_Sendrecv(&g_gauge_field[0][0].c00.re,        1, gauge_time_slice_cont, g_nb_t_dn, 83, 
-		    &g_gauge_field[T*LX*L*L][0].c00.re, 1, gauge_time_slice_cont, g_nb_t_up, 83, 
+		    &g_gauge_field[T*LX*LY*LZ][0].c00.re, 1, gauge_time_slice_cont, g_nb_t_up, 83, 
 		    g_cart_grid, &status);
 
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
-  MPI_Sendrecv(&g_gauge_field[(T-1)*LX*L*L][0].c00.re, 1, gauge_time_slice_cont, g_nb_t_up, 84, 
-		    &g_gauge_field[(T+1)*LX*L*L][0].c00.re, 1, gauge_time_slice_cont, g_nb_t_dn, 84, 
+  MPI_Sendrecv(&g_gauge_field[(T-1)*LX*LY*LZ][0].c00.re, 1, gauge_time_slice_cont, g_nb_t_up, 84, 
+		    &g_gauge_field[(T+1)*LX*LY*LZ][0].c00.re, 1, gauge_time_slice_cont, g_nb_t_dn, 84, 
 		    g_cart_grid, &status);
 
 #ifdef PARALLELXT
@@ -411,12 +411,12 @@ void xchange_deri()
   /* send the data to the neighbour on the left in time direction */
   /* recieve the data from the neighbour on the right in time direction */
 #ifndef _NEW_GEOMETRY
-  MPI_Sendrecv(&df0[(T+1)*LX*L*L][0].d1,        1, deri_time_slice_cont, g_nb_t_dn, 43,
-	       &ddummy[(T-1)*LX*L*L][0].d1,     1, deri_time_slice_cont, g_nb_t_up, 43,
+  MPI_Sendrecv(&df0[(T+1)*LX*LY*LZ][0].d1,        1, deri_time_slice_cont, g_nb_t_dn, 43,
+	       &ddummy[(T-1)*LX*LY*LZ][0].d1,     1, deri_time_slice_cont, g_nb_t_up, 43,
 	       g_cart_grid, &status);
 
   /* add ddummy to df0 */
-  for(ix=(T-1)*LX*L*L;ix < T*LX*L*L; ix++){
+  for(ix=(T-1)*LX*LY*LZ;ix < T*LX*LY*LZ; ix++){
     for(mu=0;mu<4;mu++){
       df0[ix][mu].d1 += ddummy[ix][mu].d1;
       df0[ix][mu].d2 += ddummy[ix][mu].d2;
@@ -429,11 +429,11 @@ void xchange_deri()
     }
   }
 #else
-  MPI_Sendrecv(&df0[(T+1)*LX*L*L][0].d1,          1, deri_time_slice_cont , g_nb_t_dn, 43, 
-	       &ddummy[(T-1)*LX*L*L/2][0].d1,     1, deri_time_slice_split, g_nb_t_up, 43,
+  MPI_Sendrecv(&df0[(T+1)*LX*LY*LZ][0].d1,          1, deri_time_slice_cont , g_nb_t_dn, 43, 
+	       &ddummy[(T-1)*LX*LY*LZ/2][0].d1,     1, deri_time_slice_split, g_nb_t_up, 43,
 	       g_cart_grid, &status);
   /* add ddummy to df0 */
-  for(ix=(T-1)*LX*L*L/2;ix < T*LX*L*L/2; ix++){
+  for(ix=(T-1)*LX*LY*LZ/2;ix < T*LX*LY*LZ/2; ix++){
     for(mu=0;mu<4;mu++){
       df0[ix][mu].d1 += ddummy[ix][mu].d1;
       df0[ix][mu].d2 += ddummy[ix][mu].d2;
@@ -445,7 +445,7 @@ void xchange_deri()
       df0[ix][mu].d8 += ddummy[ix][mu].d8;
     }
   }
-  for(ix=VOLUME-LX*L*L/2;ix < VOLUME; ix++){
+  for(ix=VOLUME-LX*LY*LZ/2;ix < VOLUME; ix++){
     for(mu=0;mu<4;mu++){
       df0[ix][mu].d1 += ddummy[ix][mu].d1;
       df0[ix][mu].d2 += ddummy[ix][mu].d2;
@@ -502,12 +502,12 @@ void xchange_deri()
     
     /* send the data to the neighbour on the right */
     /* recieve the data from the neighbour on the left */
-    MPI_Sendrecv(&dclover[T*LX*L*L][0].d1, 1, deri_time_slice_cont, g_nb_t_up, 53,
+    MPI_Sendrecv(&dclover[T*LX*LY*LZ][0].d1, 1, deri_time_slice_cont, g_nb_t_up, 53,
 		 &ddummy[0][0].d1,         1, deri_time_slice_cont, g_nb_t_dn, 53,
 		 g_cart_grid, &status);
     /* add ddummy to dclover */
     
-    for(ix=0;ix < LX*L*L; ix++){
+    for(ix=0;ix < LX*LY*LZ; ix++){
       for(mu=0;mu<4;mu++){
 	dclover[ix][mu].d1 += ddummy[ix][mu].d1;
 	dclover[ix][mu].d2 += ddummy[ix][mu].d2;
@@ -522,12 +522,12 @@ void xchange_deri()
     
     /* send the data to the neighbour on the left */
     /* recieve the data from the neighbour on the right */
-    MPI_Sendrecv(&dclover[(T+1)*LX*L*L][0].d1, 1, deri_time_slice_cont, g_nb_t_dn, 54,
-		 &ddummy[(T-1)*LX*L*L][0].d1,  1, deri_time_slice_cont, g_nb_t_up, 54,
+    MPI_Sendrecv(&dclover[(T+1)*LX*LY*LZ][0].d1, 1, deri_time_slice_cont, g_nb_t_dn, 54,
+		 &ddummy[(T-1)*LX*LY*LZ][0].d1,  1, deri_time_slice_cont, g_nb_t_up, 54,
 		 g_cart_grid, &status);
     /* add ddummy to dclover */
     
-    for(ix=(T-1)*LX*L*L; ix < T*LX*L*L; ix++){
+    for(ix=(T-1)*LX*LY*LZ; ix < T*LX*LY*LZ; ix++){
       for(mu=0;mu<4;mu++){
 	dclover[ix][mu].d1 += ddummy[ix][mu].d1;
 	dclover[ix][mu].d2 += ddummy[ix][mu].d2;
@@ -553,13 +553,13 @@ void xchange_gauge()
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
   MPI_Sendrecv(&g_gauge_field[0][0].c00.re,               1, gauge_time_slice_split, g_nb_t_dn, 83,
-	       &g_gauge_field[T*LX*L*L][0].c00.re,        1, gauge_time_slice_cont , g_nb_t_up, 83,
+	       &g_gauge_field[T*LX*LY*LZ][0].c00.re,        1, gauge_time_slice_cont , g_nb_t_up, 83,
 	       g_cart_grid, &status);
   
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
-  MPI_Sendrecv(&g_gauge_field[(T-1)*LX*L*L/2][0].c00.re,      1, gauge_time_slice_split, g_nb_t_up, 84, 
-	       &g_gauge_field[(T+1)*LX*L*L][0].c00.re,        1, gauge_time_slice_cont , g_nb_t_dn, 84,
+  MPI_Sendrecv(&g_gauge_field[(T-1)*LX*LY*LX/2][0].c00.re,      1, gauge_time_slice_split, g_nb_t_up, 84, 
+	       &g_gauge_field[(T+1)*LX*LY*LZ][0].c00.re,        1, gauge_time_slice_cont , g_nb_t_dn, 84,
 	       g_cart_grid, &status);
 
 #endif
@@ -573,11 +573,11 @@ void xchange_deri()
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
-  MPI_Sendrecv(&df0[(T+1)*LX*L*L][0].d1,          1, deri_time_slice_cont , g_nb_t_dn, 43,
-	       &ddummy[(T-1)*LX*L*L/2][0].d1,     1, deri_time_slice_split, g_nb_t_up, 43,
+  MPI_Sendrecv(&df0[(T+1)*LX*LY*LZ][0].d1,          1, deri_time_slice_cont , g_nb_t_dn, 43,
+	       &ddummy[(T-1)*LX*LY*LZ/2][0].d1,     1, deri_time_slice_split, g_nb_t_up, 43,
 	       g_cart_grid, &status);
   /* add ddummy to df0 */
-  for(ix=(T-1)*LX*L*L/2;ix < T*LX*L*L/2; ix++){
+  for(ix=(T-1)*LX*LY*LZ/2;ix < T*LX*LY*LZ/2; ix++){
     for(mu=0;mu<4;mu++){
       df0[ix][mu].d1 += ddummy[ix][mu].d1;
       df0[ix][mu].d2 += ddummy[ix][mu].d2;
@@ -589,7 +589,7 @@ void xchange_deri()
       df0[ix][mu].d8 += ddummy[ix][mu].d8;
     }
   }
-  for(ix=VOLUME-L*L*L/2;ix < VOLUME; ix++){
+  for(ix=VOLUME-LX*LY*LZ/2;ix < VOLUME; ix++){
     for(mu=0;mu<4;mu++){
       df0[ix][mu].d1 += ddummy[ix][mu].d1;
       df0[ix][mu].d2 += ddummy[ix][mu].d2;
