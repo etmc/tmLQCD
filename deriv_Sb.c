@@ -28,8 +28,6 @@
 #include "sse.h"
 #include "deriv_Sb.h"
 
-static su3_vector psi1, psi2, psi, chi, phi1, phi3;
-
 void deriv_Sb(const int ieo, const int l, const int k){
   int ix,iy;
   int ioff,ioff2,icx,icy;
@@ -59,7 +57,7 @@ void deriv_Sb(const int ieo, const int l, const int k){
   /************** loop over all lattice sites ****************/
 
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    ix=trans2[icx];
+    ix=g_eo2lexic[icx];
     rr=spinor_field[l][icx-ioff];
     r=&rr;
 
@@ -69,7 +67,7 @@ void deriv_Sb(const int ieo, const int l, const int k){
 
     /*********************** direction +0 ********************/
 
-    iy=g_iup[ix][0]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
 
 
     sp=&spinor_field[k][icy];
@@ -87,12 +85,12 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka0,v2);
     _trace_lambda(der,v1);
-/*     ddd=&df0[ix][0]; */
-/*     _add_su3adj(*ddd,der); */
-    _add_su3adj(df0[ix][0], der);
+    ddd=&df0[ix][0];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[ix][0], der); */
     /************** direction -0 ****************************/
 
-    iy=g_idn[ix][0]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
 
     sm=&spinor_field[k][icy];
     um=&g_gauge_field[iy][0];
@@ -109,12 +107,12 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka0,v2);
     _trace_lambda(der,v1);
-/*     ddd=&df0[iy][0]; */
-/*     _add_su3adj(*ddd,der); */
-    _add_su3adj(df0[iy][0], der);
+    ddd=&df0[iy][0];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[iy][0], der); */
     /*************** direction +1 **************************/
 
-    iy=g_iup[ix][1]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
 
     sp=&spinor_field[k][icy];
     up=&g_gauge_field[ix][1];      
@@ -131,12 +129,12 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka1,v2);
     _trace_lambda(der,v1);
-/*     ddd=&df0[ix][1]; */
-/*     _add_su3adj(*ddd,der); */
-    _add_su3adj(df0[ix][1], der);
+    ddd=&df0[ix][1];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[ix][1], der); */
     /**************** direction -1 *************************/
 
-    iy=g_idn[ix][1]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
 
     sm=&spinor_field[k][icy];
     um=&g_gauge_field[iy][1];
@@ -153,13 +151,13 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka1,v2);
     _trace_lambda(der,v1);
-/*     ddd=&df0[iy][1]; */
-/*     _add_su3adj(*ddd,der); */
-    _add_su3adj(df0[iy][1], der);
+    ddd=&df0[iy][1];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[iy][1], der); */
 
     /*************** direction +2 **************************/
 
-    iy=g_iup[ix][2]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
 
     sp=&spinor_field[k][icy];
     up=&g_gauge_field[ix][2];
@@ -176,13 +174,13 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka2,v2);
     _trace_lambda(der,v1);
-/*     ddd=&df0[ix][2]; */
-/*     _add_su3adj(*ddd,der); */
-    _add_su3adj(df0[ix][2], der);
+    ddd=&df0[ix][2];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[ix][2], der); */
 
     /***************** direction -2 ************************/
 
-    iy=g_idn[ix][2]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
 
     sm=&spinor_field[k][icy];
     um=&g_gauge_field[iy][2];
@@ -200,13 +198,13 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka2,v2);
     _trace_lambda(der,v1);
-/*     ddd=&df0[iy][2]; */
-/*     _add_su3adj(*ddd,der); */
-    _add_su3adj(df0[iy][2], der);
+    ddd=&df0[iy][2];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[iy][2], der); */
 
     /****************** direction +3 ***********************/
 
-    iy=g_iup[ix][3]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
 
     sp=&spinor_field[k][icy];
     up=&g_gauge_field[ix][3];
@@ -224,13 +222,13 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka3,v2);
     _trace_lambda(der,v1);
-/*     ddd=&df0[ix][3]; */
-/*     _add_su3adj(*ddd,der); */
-    _add_su3adj(df0[ix][3], der);
+    ddd=&df0[ix][3];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[ix][3], der); */
 
     /***************** direction -3 ************************/
 
-    iy=g_idn[ix][3]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
 
     sm=&spinor_field[k][icy];
     um=&g_gauge_field[iy][3];
@@ -247,9 +245,9 @@ void deriv_Sb(const int ieo, const int l, const int k){
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka3,v2);
     _trace_lambda(der,v1);
-/*     ddd=&df0[iy][3]; */
-/*     _add_su3adj(*ddd,der); */
-    _add_su3adj(df0[iy][3], der);
+    ddd=&df0[iy][3];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[iy][3], der); */
      
     /****************** end of loop ************************/
   }

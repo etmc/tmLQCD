@@ -25,7 +25,7 @@
 #include "boundary.h"
 #include "Hopping_Matrix.h"
 
-static su3_vector psi1, psi2, psi, chi, phi1, phi3;
+
 
 #if defined SSE2
 
@@ -55,19 +55,19 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
   }
   ioff2 = (VOLUME+RAND)/2-ioff;
 
-  ix=trans2[ioff];
+  ix=g_eo2lexic[ioff];
   iy=g_iup[ix][0]; 
-  icy=trans1[iy]-ioff2;
+  icy=g_lexic2eosub[iy];
 
   sp=&spinor_field[k][icy];
   up=&g_gauge_field[ix][0];
    
   /**************** loop over all lattice sites ******************/
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    ix=trans2[icx];
+    ix=g_eo2lexic[icx];
     /*********************** direction +0 ************************/
 
-    iy=g_idn[ix][0]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
 
     um=&g_gauge_field[iy][0];
     _prefetch_su3(um);
@@ -95,7 +95,7 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
 
     /*********************** direction -0 ************************/
 
-    iy=g_iup[ix][1]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
 
     up+=1;
     _prefetch_su3(up);
@@ -135,7 +135,7 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
       
     /*********************** direction +1 ************************/
 
-    iy=g_idn[ix][1]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
 
     um=&g_gauge_field[iy][1];
     _prefetch_su3(um);
@@ -179,7 +179,7 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
 
     /*********************** direction -1 ************************/
 
-    iy=g_iup[ix][2]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
 
     up+=1;
     _prefetch_su3(up);
@@ -223,7 +223,7 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
 
     /*********************** direction +2 ************************/
 
-    iy=g_idn[ix][2]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
 
     um=&g_gauge_field[iy][2];
     _prefetch_su3(um);
@@ -263,7 +263,7 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
 
     /*********************** direction -2 ************************/
 
-    iy=g_iup[ix][3]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
 
     up+=1;
     _prefetch_su3(up);
@@ -303,7 +303,7 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
       
     /*********************** direction +3 ************************/
 
-    iy=g_idn[ix][3]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
 
     um=&g_gauge_field[iy][3];
     _prefetch_su3(um);
@@ -349,8 +349,8 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
 
     icz=icx+1;
     if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
-    iz=trans2[icz];
-    iy=g_iup[iz][0]; icy=trans1[iy]-ioff2;
+    iz=g_eo2lexic[icz];
+    iy=g_iup[iz][0]; icy=g_lexic2eosub[iy];
 
     up=&g_gauge_field[iz][0];
     _prefetch_su3(up);
@@ -398,6 +398,8 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
 
 #elif defined XLC
 
+static su3_vector psi1, psi2, psi, chi, phi1, phi3;
+
 /* #define OlD */
 
 #include"xlc_prefetch.h"
@@ -438,15 +440,15 @@ void Hopping_Matrix(int ieo, int l, int k){
   ioff2 = (VOLUME+RAND)/2-ioff;
   /**************** loop over all lattice sites ****************/
 
-  ix = trans2[ioff];
+  ix = g_eo2lexic[ioff];
 
-  iy=g_iup[ix][0]; icy=trans1[iy]-ioff2;
+  iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
 
   sp=&spinor_field[k][icy];
   up=&g_gauge_field[ix][0];
 
   for (icx = ioff; icx < (VOLUME/2 + ioff); icx++) {
-    ix = trans2[icx];
+    ix = g_eo2lexic[icx];
 #ifdef OlD
     r=&spinor_field[l][icx - ioff];
     dd=&spinor_field[l][icx - ioff].c3.c3.re;
@@ -454,7 +456,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 #endif
     /*********************** direction +0 ************************/
     
-    iy=g_idn[ix][0]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
     
     sm=&spinor_field[k][icy];
     dd=&spinor_field[k][icy].c3.c3.re;
@@ -492,7 +494,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction -0 ************************/
 
-    iy=g_iup[ix][1]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
 
     sp=&spinor_field[k][icy];
     dd=&spinor_field[k][icy].c3.c3.re;
@@ -530,7 +532,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction +1 ************************/
 
-    iy=g_idn[ix][1]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
 
     sm=&spinor_field[k][icy];
     dd=&spinor_field[k][icy].c3.c3.re;
@@ -568,7 +570,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction -1 ************************/
 
-    iy=g_iup[ix][2]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
 
     sp=&spinor_field[k][icy];
     dd=&spinor_field[k][icy].c3.c3.re;
@@ -606,7 +608,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction +2 ************************/
 
-    iy=g_idn[ix][2]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
 
     sm=&spinor_field[k][icy];
     dd=&spinor_field[k][icy].c3.c3.re;
@@ -644,7 +646,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction -2 ************************/
 
-    iy=g_iup[ix][3]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
 
     sp=&spinor_field[k][icy];
     dd=&spinor_field[k][icy].c3.c3.re;
@@ -682,7 +684,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction +3 ************************/
 
-    iy=g_idn[ix][3]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
 
     sm=&spinor_field[k][icy];
     dd=&spinor_field[k][icy].c3.c3.re;
@@ -727,8 +729,8 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     icz = icx + 1;
     if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
-    iz=trans2[icz];
-    iy=g_iup[iz][0]; icy=trans1[iy]-ioff2;
+    iz=g_eo2lexic[icz];
+    iy=g_iup[iz][0]; icy=g_lexic2eosub[iy];
 
     up=&g_gauge_field[iz][0];
     dd=&g_gauge_field[iz][0].c33.re;
@@ -773,6 +775,8 @@ void Hopping_Matrix(int ieo, int l, int k){
 /* else of If defined SSE2 */
 #else
 
+static su3_vector psi1, psi2, psi, chi, phi1, phi3;
+
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
 void Hopping_Matrix(int ieo, int l, int k){
@@ -802,13 +806,13 @@ void Hopping_Matrix(int ieo, int l, int k){
   /**************** loop over all lattice sites ****************/
 
   for (icx = ioff; icx < (VOLUME/2 + ioff); icx++){
-    ix=trans2[icx];
+    ix=g_eo2lexic[icx];
 
     r=&spinor_field[l][icx-ioff];
 
     /*********************** direction +0 ************************/
 
-    iy=g_iup[ix][0]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
 
 
     sp=&spinor_field[k][icy];
@@ -832,7 +836,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction -0 ************************/
 
-    iy=g_idn[ix][0]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
 
     sm=&spinor_field[k][icy];
     um=&g_gauge_field[iy][0];
@@ -855,7 +859,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction +1 ************************/
 
-    iy=g_iup[ix][1]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
 
     sp=&spinor_field[k][icy];
     up=&g_gauge_field[ix][1];      
@@ -878,7 +882,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction -1 ************************/
 
-    iy=g_idn[ix][1]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
 
     sm=&spinor_field[k][icy];
     um=&g_gauge_field[iy][1];
@@ -901,7 +905,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction +2 ************************/
 
-    iy=g_iup[ix][2]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
 
     sp=&spinor_field[k][icy];
     up=&g_gauge_field[ix][2];
@@ -924,7 +928,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction -2 ************************/
 
-    iy=g_idn[ix][2]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
 
     sm=&spinor_field[k][icy];
     um=&g_gauge_field[iy][2];
@@ -947,7 +951,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction +3 ************************/
 
-    iy=g_iup[ix][3]; icy=trans1[iy]-ioff2;
+    iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
 
     sp=&spinor_field[k][icy];
     up=&g_gauge_field[ix][3];
@@ -970,7 +974,7 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     /*********************** direction -3 ************************/
 
-    iy=g_idn[ix][3]; icy=trans1[iy]-ioff2;
+    iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
 
     sm=&spinor_field[k][icy];
     um=&g_gauge_field[iy][3];

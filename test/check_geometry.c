@@ -53,7 +53,7 @@ int check_geometry()
 	    printf("The index ipt is out of range\n");
 	    printf("Program aborted\n");
 #ifdef MPI
-	    MPI_Finalize();
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	    exit(0);
 	  }
@@ -69,7 +69,7 @@ int check_geometry()
       printf("The index ipt is not one-to-one\n");
       printf("Program aborted\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
@@ -106,7 +106,7 @@ int check_geometry()
 	      printf("Boundary for x direction up is wrong %d %d %d\n", iy1 < VOLUME, iy1 > VOLUMEPLUSRAND, iy1);
 	      printf("Program aborted\n");
 #ifdef MPI
-	      MPI_Finalize();
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	      exit(0);
 	    }
@@ -127,7 +127,7 @@ int check_geometry()
 	    printf("%d %d %d %d\n", (iy0!=iz0), (iy1!=iz1), (iy2!=iz2), (iy3!=iz3));
 	    printf("Program aborted\n");
 #ifdef MPI
-	    MPI_Finalize();
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	    exit(0);
 	  }
@@ -159,7 +159,7 @@ int check_geometry()
 	      printf("Boundary for x direction is wrong %d %d %d\n", iy1 < VOLUME, iy1 > VOLUMEPLUSRAND, iy1);
 	      printf("Program aborted\n");
 #ifdef MPI
-	      MPI_Finalize();
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	      exit(0);
 	    }
@@ -179,7 +179,7 @@ int check_geometry()
 	    printf("%d %d %d %d\n", (iy0!=iz0), (iy1!=iz1), (iy2!=iz2), (iy3!=iz3));
 	    printf("Program aborted\n");
 #ifdef MPI
-	    MPI_Finalize();
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	    exit(0);
 	  }
@@ -193,7 +193,7 @@ int check_geometry()
       printf("The boundary is not correctly used itest = %d ix = %d \n", itest[ix], ix);
       printf("Program aborted\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0); 
     }
@@ -207,70 +207,70 @@ int check_geometry()
   }
   
   for(j = 0; j < VOLUME/2; j++) {
-    ix = trans2[j];
+    ix = g_eo2lexic[j];
     
     iy0 = g_idn[ix][0];
-    iz0 = trans1[iy0] - (VOLUME+RAND)/2;
+    iz0 = g_lexic2eosub[iy0];
     if(iz0 > VOLUMEPLUSRAND/2 || iz0 < 0) {
       printf("There is a problem with EO geometry in direction 0-\n");
       printf("%d\n", iz0);
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
     stest[iz0] += 1;
     
     iy0 = g_iup[ix][0];
-    iz0 = trans1[iy0] - (VOLUME+RAND)/2;
+    iz0 = g_lexic2eosub[iy0];
     if(iz0 > VOLUMEPLUSRAND/2 || iz0 < 0) {
       printf("There is a problem with EO geometry in direction 0+\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
     stest[iz0] += 1;
     
     iy1 = g_idn[ix][1];
-    iz1 = trans1[iy1] - (VOLUME+RAND)/2;
+    iz1 = g_lexic2eosub[iy1];
     if(iz1 > VOLUMEPLUSRAND/2  || iz1 < 0) {
       printf("There is a problem with EO geometry in direction 1-\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
     stest[iz1] += 1;
     
     iy1 = g_iup[ix][1];
-    iz1 = trans1[iy1] - (VOLUME+RAND)/2;
+    iz1 = g_lexic2eosub[iy1];
     if(iz1 >= VOLUMEPLUSRAND/2  || iz1 < 0) {
       printf("There is a problem with EO geometry in direction 1+\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
     stest[iz1] += 1;
     
     iy2 = g_idn[ix][2];
-    iz2 = trans1[iy2] - (VOLUME+RAND)/2;
+    iz2 = g_lexic2eosub[iy2];
     if(iz2 > VOLUMEPLUSRAND/2 || iz2 < 0) {
       printf("There is a problem with EO geometry in direction 2-\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
     stest[iz2] += 1;
     
     iy2 = g_iup[ix][2];
-    iz2 = trans1[iy2] - (VOLUME+RAND)/2;
+    iz2 = g_lexic2eosub[iy2];
     if(iz2 > VOLUMEPLUSRAND/2 || iz2 < 0) {
       printf("There is a problem with EO geometry in direction 2+\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
@@ -278,22 +278,22 @@ int check_geometry()
     
     
     iy3 = g_idn[ix][3];
-    iz3 = trans1[iy3] - (VOLUME+RAND)/2;
+    iz3 = g_lexic2eosub[iy3];
     if(iz3 > VOLUMEPLUSRAND/2 || iz3 < 0) {
       printf("There is a problem with EO geometry in direction 3-\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
     stest[iz3] += 1;
     
     iy3 = g_iup[ix][3];
-    iz3 = trans1[iy3] - (VOLUME+RAND)/2;
+    iz3 = g_lexic2eosub[iy3];
     if(iz3 > VOLUMEPLUSRAND/2 || iz3 < 0) {
       printf("There is a problem with EO geometry in direction 3+\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
@@ -307,7 +307,7 @@ int check_geometry()
     printf("There is a problem in the first part of the even odd geometry\n");
     printf("%d is not equal to 8*(VOLUME)/2-RAND/2=%d\n", iz0, 8*(VOLUME)/2-RAND/2);
 #ifdef MPI
-    MPI_Finalize();
+    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
     exit(0); 
   }
@@ -316,7 +316,7 @@ int check_geometry()
     if(stest[j] != 1) {
       printf("There is a problem in the first boundary of the even odd geometry\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
@@ -328,69 +328,69 @@ int check_geometry()
   }
 
   for(j = (VOLUME+RAND)/2; j < VOLUME+RAND/2; j++) {
-    ix = trans2[j];
+    ix = g_eo2lexic[j];
     
     iy0 = g_idn[ix][0];
-    iz0 = trans1[iy0];
+    iz0 = g_lexic2eosub[iy0];
     if(iz0 > VOLUMEPLUSRAND/2 || iz0 < 0) {
       printf("There is a problem with EO geometry in direction 0-\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
     stest[iz0] += 1;
     
     iy0 = g_iup[ix][0];
-    iz0 = trans1[iy0];
+    iz0 = g_lexic2eosub[iy0];
     if(iz0 > VOLUMEPLUSRAND/2 || iz0 < 0) {
       printf("There is a problem with EO geometry in direction 0+\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
     stest[iz0] += 1;
     
     iy1 = g_idn[ix][1];
-    iz1 = trans1[iy1];
+    iz1 = g_lexic2eosub[iy1];
     if(iz1 > VOLUMEPLUSRAND/2  || iz1 < 0) {
       printf("There is a problem with EO geometry in direction 1-\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
     stest[iz1] += 1;
     
     iy1 = g_iup[ix][1];
-    iz1 = trans1[iy1];
+    iz1 = g_lexic2eosub[iy1];
     if(iz1 > VOLUMEPLUSRAND/2  || iz1 < 0) {
       printf("There is a problem with EO geometry in direction 1+\n"); 
 #ifdef MPI
-      MPI_Finalize(); 
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
 #endif
       exit(0); 
     }
     stest[iz1] += 1; 
     
     iy2 = g_idn[ix][2];
-    iz2 = trans1[iy2];
+    iz2 = g_lexic2eosub[iy2];
     if(iz2 > VOLUMEPLUSRAND/2 || iz2 < 0) {
       printf("There is a problem with EO geometry in direction 2-\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
     stest[iz2] += 1;
     
     iy2 = g_iup[ix][2];
-    iz2 = trans1[iy2];
+    iz2 = g_lexic2eosub[iy2];
     if(iz2 > VOLUMEPLUSRAND/2 || iz2 < 0) {
       printf("There is a problem with EO geometry in direction 2+\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
@@ -398,22 +398,22 @@ int check_geometry()
     
     
     iy3 = g_idn[ix][3];
-    iz3 = trans1[iy3];
+    iz3 = g_lexic2eosub[iy3];
     if(iz3 > VOLUMEPLUSRAND/2 || iz3 < 0) {
       printf("There is a problem with EO geometry in direction 3-\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
     stest[iz3] += 1;
     
     iy3 = g_iup[ix][3];
-    iz3 = trans1[iy3];
+    iz3 = g_lexic2eosub[iy3];
     if(iz3 > VOLUMEPLUSRAND/2 || iz3 < 0) {
       printf("There is a problem with EO geometry in direction 3+\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
@@ -427,7 +427,7 @@ int check_geometry()
     printf("There is a problem in the second part of the even odd geometry\n");
     printf("%d is not equal to 8*(VOLUME)/2-RAND/2=%d\n", iz0, 8*(VOLUME)/2-RAND/2);
 #ifdef MPI
-    MPI_Finalize();
+    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
     exit(0); 
   }
@@ -436,7 +436,7 @@ int check_geometry()
     if(stest[j] != 1) {
       printf("There is a problem in the second boundary of the even odd geometry\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
       exit(0);
     }
@@ -447,9 +447,6 @@ int check_geometry()
 /*     printf("\n"); */
   }
 
-#ifdef MPI
-/*   MPI_Finalize(); */
-#endif
   free(stest);
   free(itest);
   return(0);

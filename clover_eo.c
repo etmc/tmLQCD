@@ -146,7 +146,7 @@ void clover_inv(int ieo, int l){
   }
   /************ loop over all lattice sites ************/
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    ix=trans2[icx];
+    ix=g_eo2lexic[icx];
     rn=&spinor_field[l][icx-ioff];
     /* noch schlimmer murks fuer den clover-term */
     _vector_assign(phi1, (*rn).c1);
@@ -203,7 +203,7 @@ void clover_gamma5(int ieo, int l, int k, int j, double q_off){
   }
   /******* loop over all lattice sites ********/
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    ix=trans2[icx];
+    ix=g_eo2lexic[icx];
     r=&spinor_field[l][icx-ioff];
     s=&spinor_field[k][icx-ioff];
     t=&spinor_field[j][icx-ioff];
@@ -267,7 +267,7 @@ void clover(int ieo, int l, int k, int j, double q_off){
   }
   /**************** loop over all lattice sites ************/
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    ix=trans2[icx];
+    ix=g_eo2lexic[icx];
     r=&spinor_field[l][icx-ioff];
     s=&spinor_field[k][icx-ioff];
     t=&spinor_field[j][icx-ioff];

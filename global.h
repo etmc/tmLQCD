@@ -21,8 +21,8 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define T  4
-#define L  8
+#define T  2
+#define L  4
 
 #ifndef PARALLELXT
 #define N_PROC_X 1
@@ -83,11 +83,11 @@
   #define ALIGN
 #endif
 
-/* translates from ix to ieven/odd  */
-EXTERN int trans1[VOLUMEPLUSRAND] ALIGN;
-/* translates from ieven/iodd to ix */    
-EXTERN int trans2[VOLUMEPLUSRAND] ALIGN;   
-EXTERN int xeven[VOLUMEPLUSRAND] ALIGN;   
+/* translates from lexicagraphic order to even/odd order */
+EXTERN int g_lexic2eo[VOLUMEPLUSRAND] ALIGN;
+/* translates from even/odd orderto lexicograhic order  */    
+EXTERN int g_eo2lexic[VOLUMEPLUSRAND] ALIGN;
+EXTERN int g_lexic2eosub[VOLUMEPLUSRAND] ALIGN;
 EXTERN int g_ipt[T+2][LX+2][LY][LZ] ALIGN;
 EXTERN int g_iup[VOLUMEPLUSRAND][4] ALIGN;   
 EXTERN int g_idn[VOLUMEPLUSRAND][4] ALIGN;   

@@ -45,7 +45,7 @@ int main(int argc,char *argv[])
   geometry();
 
   for(k = 0; k < 100000; k++) {
-    ix = check_geometry();
+/*     ix = check_geometry(); */
     
     /* Check the field exchange */
     /* Set the whole field to -1 */
@@ -81,7 +81,7 @@ int main(int argc,char *argv[])
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_up);
 	printf("Program aborted\n");
 #ifdef MPI
-	MPI_Finalize(); 
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
 #endif
 	exit(0); 
       }
@@ -94,7 +94,7 @@ int main(int argc,char *argv[])
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_dn);
 	printf("Program aborted\n");
 #ifdef MPI
-	MPI_Finalize(); 
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
 #endif
 	exit(0); 
       }
@@ -109,7 +109,7 @@ int main(int argc,char *argv[])
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_x_up);
 	printf("Program aborted\n");
 #ifdef MPI
-	MPI_Finalize(); 
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
 #endif
 	exit(0); 
       }
@@ -122,7 +122,7 @@ int main(int argc,char *argv[])
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_x_dn);
 	printf("Program aborted\n");
 #ifdef MPI
-	MPI_Finalize(); 
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
 #endif
 	exit(0); 
       }
@@ -167,7 +167,7 @@ int main(int argc,char *argv[])
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_up);
 	printf("Program aborted\n");
 #ifdef MPI
-	MPI_Finalize();
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	exit(0);
       }
@@ -180,7 +180,7 @@ int main(int argc,char *argv[])
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_dn);
 	printf("Program aborted\n");
 #ifdef MPI
-	MPI_Finalize();
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	exit(0);
       }
@@ -196,7 +196,7 @@ int main(int argc,char *argv[])
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
 #ifdef MPI
-	MPI_Finalize();
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	exit(0);
       }
@@ -210,7 +210,7 @@ int main(int argc,char *argv[])
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
 #ifdef MPI
-	MPI_Finalize();
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	exit(0);
       }
@@ -238,7 +238,7 @@ int main(int argc,char *argv[])
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
 #ifdef MPI
-	MPI_Finalize();
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	exit(0);
       }
@@ -252,7 +252,7 @@ int main(int argc,char *argv[])
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
 #ifdef MPI
-	MPI_Finalize();
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	exit(0);
       }
@@ -266,7 +266,7 @@ int main(int argc,char *argv[])
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
 #ifdef MPI
-	MPI_Finalize();
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	exit(0);
       }
@@ -280,7 +280,7 @@ int main(int argc,char *argv[])
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
 #ifdef MPI
-	MPI_Finalize();
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	exit(0);
       }
@@ -367,7 +367,7 @@ int main(int argc,char *argv[])
 	      printf("Exchange of derivatives is working not correctly!\n");
 	      printf("Aborting program!");
 #ifdef MPI
-	      MPI_Finalize();
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	      exit(0);
 	    }
@@ -392,7 +392,7 @@ int main(int argc,char *argv[])
 	      printf("Exchange of derivatives is working not correctly!\n");
 	      printf("Aborting program!");
 #ifdef MPI
-	      MPI_Finalize();
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	      exit(0);
 	    }
@@ -416,7 +416,7 @@ int main(int argc,char *argv[])
 	      printf("Exchange of derivatives is working not correctly!\n");
 	      printf("Aborting program!");
 #ifdef MPI
-	      MPI_Finalize();
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	      exit(0);
 	    }
@@ -439,7 +439,7 @@ int main(int argc,char *argv[])
 	    printf("Exchange of derivatives is working not correctly!\n");
 	    printf("Aborting program!");
 #ifdef MPI
-	    MPI_Finalize();
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	    exit(0);
 	  }

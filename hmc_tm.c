@@ -72,12 +72,14 @@ int main(int argc,char *argv[]) {
   verbose = 0;
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
- 
+
+#ifndef XLC 
   signal(SIGUSR1,&catch_del_sig);
   signal(SIGUSR2,&catch_del_sig);
   signal(SIGTERM,&catch_del_sig);
   signal(SIGXCPU,&catch_del_sig);
-  
+#endif
+
   mpi_init(argc, argv);
 
   while ((c = getopt(argc, argv, "h?f:o:")) != -1) {
@@ -306,6 +308,7 @@ int main(int argc,char *argv[]) {
   /* write the gauge configuration to the file last_configuration */
   write_gauge_field_time_p( "last_configuration" );
   
+
   if(g_proc_id==0) {
     rlxd_get(rlxd_state);
     rlxdfile=fopen("last_state","w");

@@ -354,7 +354,7 @@ double sw_trace(int ieo){
       ioff=(VOLUME+RAND)/2;
     }
   for(icx=ioff;icx<(VOLUME/2+ioff);icx++){
-    x=trans2[icx];
+    x=g_eo2lexic[icx];
     for(i=0;i<2;i++){
       w=&sw[x][0][i];     _a_C(0, 0, *w);
       w=&sw[x][1][i];     _a_C(0, 3, *w);
@@ -397,7 +397,7 @@ void sw_invert(int ieo){
     ioff=(VOLUME+RAND)/2;
   }
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    x=trans2[icx];
+    x=g_eo2lexic[icx];
     for(i=0;i<2;i++){
       w=&sw[x][0][i];     _a_C(0, 0, *w);
       w=&sw[x][1][i];     _a_C(0, 3, *w);
@@ -443,7 +443,7 @@ void sw_deriv(int ieo){
     ioff=(VOLUME+RAND)/2;
   }
   for(icx=ioff;icx<(VOLUME/2+ioff);icx++){
-    x=trans2[icx];
+    x=g_eo2lexic[icx];
     /* compute the insertion matrix */
     _su3_plus_su3(lswp[0], sw_inv[x][0][1], sw_inv[x][0][0]);
     _su3_plus_su3(lswp[1], sw_inv[x][1][1], sw_inv[x][1][0]);
@@ -503,7 +503,7 @@ void sw_spinor(int ieo,  int kk,  int ll){
 
 
   for(icx=ioff;icx<(VOLUME/2+ioff);icx++){
-    x=trans2[icx];
+    x=g_eo2lexic[icx];
     r=&spinor_field[kk][icx-ioff];
     s=&spinor_field[ll][icx-ioff];
 

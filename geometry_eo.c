@@ -7,7 +7,7 @@
  * The externally accessible function is
  *
  *   void geometry_eo(void)
- *     Computes the index arrays g_ipt, g_iup, g_idn, trans1 and trans2
+ *     Computes the index arrays g_ipt, g_iup, g_idn, g_lexic2eo and g_eo2lexic
  *
  * original Version by
  * Author: Martin Luescher <luscher@mail.desy.ch>
@@ -128,6 +128,8 @@ void geometry(){
   int i_even,i_odd;
   int startvaluet = 0;
   int startvaluex = 0;
+  int xeven[VOLUMEPLUSRAND] ALIGN;
+
 #if (defined PARALLELT || defined PARALLELXT)
   startvaluet = 1;
 #endif
@@ -144,7 +146,7 @@ void geometry(){
 
 	  /* g_proc_id*T is added to allow for odd T when the number of 
 	     nodes is even */
-	  if((x0+x1+x2+x3+g_nproc_t*T)%2==0) {
+	  if((x0+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
 	    xeven[ix]=1;
 	  } 
 	  else {
@@ -182,13 +184,15 @@ void geometry(){
   i_odd=0;
   for (ix = 0; ix < (VOLUME+RAND); ix++){
     if(xeven[ix]==1){
-      trans1[ix]=i_even;
-      trans2[i_even]=ix;
+      g_lexic2eo[ix] = i_even;
+      g_lexic2eosub[ix] = i_even;
+      g_eo2lexic[i_even] = ix;
       i_even++;
     }
     else{
-      trans1[ix]=(VOLUME+RAND)/2+i_odd;
-      trans2[(VOLUME+RAND)/2+i_odd]=ix;
+      g_lexic2eo[ix] = (VOLUME+RAND)/2+i_odd;
+      g_lexic2eosub[ix] = i_odd;
+      g_eo2lexic[(VOLUME+RAND)/2+i_odd] = ix;
       i_odd++;
     }
   }
