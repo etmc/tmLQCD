@@ -14,6 +14,9 @@
 
 #define _default_T_global 4
 #define _default_L 4
+#define _default_LX 0
+#define _default_LY 0
+#define _default_LZ 0
 #define _default_N_PROC_X 1
 #define _default_g_kappa 0.125
 #define _default_g_mu 0.0

@@ -1,3 +1,5 @@
+07.02.2005: LX,LY,LZ now possible as input parameter.
+
 07.01.2005: Extended leap-frog and extended Sexton-Weingarten
 	    integration schemes (multiple time scales) implemented 
 	    and tested.

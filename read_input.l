@@ -103,6 +103,9 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x NSTORE
 %x TT
 %x LL
+%x LLX
+%x LLY
+%x LLZ
 %x NPROCX
 %x IOPROC
 %x IDX
@@ -128,6 +131,9 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %%
 ^T{SPC}*={SPC}*                          BEGIN(TT);
 ^L{SPC}*={SPC}*                          BEGIN(LL);
+^LX{SPC}*={SPC}*                         BEGIN(LLX);
+^LY{SPC}*={SPC}*                         BEGIN(LLY);
+^LZ{SPC}*={SPC}*                         BEGIN(LLZ);
 ^NRXProcs{SPC}*={SPC}*                   BEGIN(NPROCX);
 ^kappa{SPC}*={SPC}*                      BEGIN(KAPPA);
 ^mu{SPC}*={SPC}*                         BEGIN(MU);
@@ -186,6 +192,18 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 <LL>{DIGIT}+                  {
   L = atoi(yytext);
   if(verbose!=0) printf("L =%s\n", yytext);
+}
+<LLX>{DIGIT}+                  {
+  LX = atoi(yytext);
+  if(verbose!=0) printf("LX =%s\n", yytext);
+}
+<LLY>{DIGIT}+                  {
+  LY = atoi(yytext);
+  if(verbose!=0) printf("LY =%s\n", yytext);
+}
+<LLZ>{DIGIT}+                  {
+  LZ = atoi(yytext);
+  if(verbose!=0) printf("LZ =%s\n", yytext);
 }
 <NPROCX>{DIGIT}+              {
   N_PROC_X = atoi(yytext);
@@ -485,7 +503,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 }
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,NPROCX,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0,INT1,INT2,INT3,INT4>#      BEGIN(COMMENT);
+<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0,INT1,INT2,INT3,INT4>#      BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -579,6 +597,18 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Unknown value for L in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
   exit(1);
 }
+<LLX>.         {
+  printf("Unknown value for LX in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
+  exit(1);
+}
+<LLY>.         {
+  printf("Unknown value for LY in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
+  exit(1);
+}
+<LLZ>.         {
+  printf("Unknown value for LZ in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
+  exit(1);
+}
 <NPROCX>.    {
   printf("Unknown value for NRXProcs in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
   exit(1);
@@ -654,6 +684,9 @@ int read_input(char * conf_file){
 
   T_global = _default_T_global;
   L = _default_L;
+  LX = _default_LX;
+  LY = _default_LY;
+  LZ = _default_LZ;
   N_PROC_X = _default_N_PROC_X;
   g_kappa = _default_g_kappa;
   g_mu = _default_g_mu;
@@ -708,6 +741,16 @@ int read_input(char * conf_file){
 
   parse_config();  
 
+  if(LX == 0) {
+    LX = L;
+  }
+  if(LY == 0) {
+    LY = L;
+  }
+  if(LZ == 0) {
+    LZ = L;
+  }
+
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
   g_ka_csw_8 = g_kappa*g_c_sw/8.;
   
@@ -730,7 +773,8 @@ int read_input(char * conf_file){
  */
 
 int reread_input(char * conf_file){
-  int j=0, tt=T, ll=L, np=N_PROC_X, rgic=g_rgi_C1, nst=nstore;
+  int j=0, tt=T, ll=L, lx = LX, ly = LY, lz = LZ, 
+      np=N_PROC_X, rgic=g_rgi_C1, nst=nstore;
 
   /********************************************
    * Setting default values!
@@ -747,6 +791,9 @@ int reread_input(char * conf_file){
 
   T = tt;
   L = ll;
+  LX = lx;
+  LY = ly;
+  LZ = lz;
   N_PROC_X = np;
   if(!(rgic < 0.) && !(rgic > 0.)) {
     g_rgi_C1 = 0.;
