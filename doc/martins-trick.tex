@@ -1,0 +1,104 @@
+\section{Hasenbusch trick for dynamical tmQCD}
+
+Let $\hQpm$ and $\hWpm$ be two matrices as defined in (\ref{eq:eo4})
+with two parameters $\mu_1$ and $\mu_2$, respectively. The idea is to
+choose $\mu_2$ bigger than $\mu_1$. With this we can
+write
+\begin{equation}
+  \label{eq:mt0}
+  \det[\hQp\hQm] = \det[\hWp\hWm]\cdot\det[\hWp^{-1}\hQp\hQm\hWm^{-1}].
+\end{equation}
+The first term on the right hand side of (\ref{eq:mt0}) can be handled
+as described in the previous section. The second term needs some
+further investigation: we again write the determinant as an integral
+over pseudo fermion fields:
+\begin{equation}
+  \label{eq:mt1}
+  \begin{split}
+    \det[\hWp^{-1}\hQp\hQm\hWm^{-1}]  &\propto \int
+    D[\phi_o]D[\phi_o^\dagger]\exp(-\phi_o^\dagger (\hWp^{-1}\hQp\hQm\hWm^{-1})^{-1}
+    \phi_o) \\
+    &= \int D[\phi_o]D[\phi_o^\dagger]\exp(-\phi_o^\dagger \hWm\hQm^{-1}\hQp^{-1}\hWp\phi_o) \\
+    &= \int D[\phi_o]D[\phi_o^\dagger]\exp(-S_{F_2})
+  \end{split}
+\end{equation}
+The variation of $S_{F_2}$, needed for the HMC, then reads as follows:
+\begin{equation}
+  \label{eq:mt2}
+  \begin{split}
+    \delta S_{F_2} &= \phi_o^\dagger[\delta\hWm(\hQp\hQm)^{-1}\hWp
+    +\hWm(\hQp\hQm)^{-1}\delta\hWp]\phi_o\\
+    &-\phi_o^\dagger[\hWm\hQm^{-1}\delta\hQm(\hQp\hQm)^{-1}\hWp +
+    \hWm(\hQp\hQm)^{-1}\delta\hQp\hQp^{-1}\hWp]\phi_o
+  \end{split}
+\end{equation}
+If we define now
+\begin{equation}
+  \label{eq:mt3}
+  X_W = (\hQp\hQm)^{-1}\hWp\phi\, ,\quad Y_W = \hQp^{-1}\hWp\phi = \hQm
+  X_W\, ,
+\end{equation}
+we can rewrite (\ref{eq:mt2}):
+\begin{equation}
+  \label{eq:mt4}
+  \begin{split}
+    \delta S_{F_2} &= \phi_o^\dagger\delta\hWm X_W + X_W^\dagger\delta\hWp\phi_o\\
+    &-Y_W^\dagger\delta\hQm X_W - X_W^\dagger\delta\hQp Y_W\, .
+  \end{split}
+\end{equation}
+Recalling the variation of $\hQpm$ (and of $\hWpm$):
+\begin{equation}
+  \label{eq:mt5}
+  \begin{split}
+    \delta\hQpm &= \gamma_5\left(-\delta M_{oe}(1\pm i\mu_1\gamma_5 )^{-1}M_{eo} -
+    M_{oe}(1\pm i\mu_1\gamma_5 )^{-1}\delta M_{eo}\right)\, , \\
+  \delta \hWpm &= \gamma_5\left(-\delta M_{oe}(1\pm i\mu_2\gamma_5 )^{-1}M_{eo} -
+    M_{oe}(1\pm i\mu_2\gamma_5)^{-1}\delta M_{eo}\right)\, ,
+  \end{split}
+\end{equation}
+we find:
+\begin{equation}
+  \label{eq:mt6}
+  \begin{split}
+    \delta S_{F_2} &= Y_2^\dagger \delta Q X_2 + X_2^\dagger\delta QY_2 -X_1^\dagger\delta Q Y_1 -
+    Y_1^\dagger\delta Q X_1\\
+    &= 2\re\left[Y_2^\dagger \delta Q X_2 - Y_1^\dagger\delta Q X_1 \right]\, ,
+  \end{split}
+\end{equation}
+where the fields $X_{1,2}$, $Y_{1,2}$ and the matrix $\delta Q$ are now
+defined over the full lattice as follows:
+\begin{equation}
+  \label{eq:mt7}
+  \begin{split}
+    Y_1 &= 
+    \begin{pmatrix}
+      -(1+i\mu_{1}\gamma_5)^{-1}M_{eo}Y_W \\ Y_W\\
+    \end{pmatrix}\, ,\quad
+    Y_2 = 
+    \begin{pmatrix}
+       -(1+i\mu_{2}\gamma_5)^{-1}M_{eo}\phi_o \\ \phi_o\\
+    \end{pmatrix},\\
+    X_{1,2} &= 
+    \begin{pmatrix}
+      -(1-i\mu_{1,2}\gamma_5)^{-1}M_{eo}X_W \\ X_W\\
+    \end{pmatrix},\quad
+    \delta Q = \gamma_5
+    \begin{pmatrix}
+      0 & \delta M_{eo}\\
+      \delta M_{oe} & 0\\
+    \end{pmatrix}\, .
+  \end{split}
+\end{equation}
+The bosonic part is again quadratic in the fields $\phi_o$ and can be
+therefore generated at the beginning of each molecular dynamics
+trajectory with:
+\begin{equation}
+  \label{eq:mt8}
+  \phi_o = \hWp^{-1}\hQp R
+\end{equation}
+where $R$ is again a random spinor field taken from a Gaussian
+distribution with norm one.
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 
