@@ -26,11 +26,12 @@
 
 void set_spinor_field(int k, const double c);
 void set_gauge_field(const double c);
+int check_geometry();
 
 int main(int argc,char *argv[])
 {
   double * x;
-  int i,ix;
+  int i,ix, mu;
 
   mpi_init(argc, argv);
 
@@ -41,6 +42,8 @@ int main(int argc,char *argv[])
   printf("The lattice size is %d x %d^3 \n\n",(int)(T*g_nproc_t),(int)(L));
    
   geometry();
+
+  ix = check_geometry();
 
   for(ix = 0; ix < VOLUME+RAND; ix++){
     for(mu=0; mu<4; mu++){
