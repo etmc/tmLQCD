@@ -74,9 +74,7 @@ void gauge_momenta(double step) {
   static double st, st1;
 #ifdef _COMP_FORCE
   double sum=0., sum1=0., max=0., max2=0.;
-#ifdef MPI
   double sum2=0.;
-#endif
 #endif
 
   st  = -step * g_rgi_C0 * g_beta/3.0;
@@ -119,13 +117,13 @@ void gauge_momenta(double step) {
     MPI_Reduce(&max2, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
     max2 = sum2;
     if(g_proc_id == 0) {
-      printf("gaugedbw2 %e max %e\n", sum1/((double)(VOLUME*g_nproc)), max2);
+      printf("gaugedbw2 %e max %e\n", sum1/((double)(VOLUME*g_nproc))/4., max2);
       fflush(stdout);
     }
   }
 #endif
   if(g_proc_id == 0) {
-    printf("gauge %e max %e\n", sum/((double)(VOLUME*g_nproc)), max);
+    printf("gauge %e max %e\n", sum/((double)(VOLUME*g_nproc))/4., max);
     fflush(stdout);
   }
 #endif
@@ -373,9 +371,7 @@ void update_fermion_momenta(double step, const int S) {
   su3adj *xm,*deriv;
 #ifdef _COMP_FORCE
   double sum=0., max=0.;
-#ifdef MPI
   double sum2=0.;
-#endif
 #endif
 
   derivative_psf(S, EPS_SQ1);
@@ -404,7 +400,7 @@ void update_fermion_momenta(double step, const int S) {
   max = sum2;
 #endif
   if(g_proc_id == 0) {
-    printf("fermionforce%d %e max %e\n", S, sum/((double)(VOLUME*g_nproc)), max);
+    printf("fermionforce%d %e max %e\n", S, sum/((double)(VOLUME*g_nproc))/4., max);
     fflush(stdout);
   }
 #endif
