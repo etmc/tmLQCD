@@ -40,6 +40,7 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   int ix, mu, accept, i;
   double yy[1];
   double dh, expmdh;
+  double atime=0., etime=0.;
   int idis0=0, idis1=0, idis2=0;
   /* Energy corresponding to the Gauge part */
   double enegx=0.;
@@ -49,6 +50,9 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   double enerphi0 =0., enerphi0x =0., enerphi1 =0., enerphi1x =0., enerphi2 = 0., enerphi2x = 0.;
   FILE * rlxdfile=NULL, * datafile=NULL;
 
+#ifdef MPI
+  atime = MPI_Wtime();
+#endif
 
   /* copy the gauge field to gauge_tmp */
   dontdump = 1;
@@ -196,6 +200,7 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   }
 #ifdef MPI
     xchange_gauge();
+    etime = MPI_Wtime();
 #endif
 
   if(g_proc_id==0){
@@ -209,7 +214,7 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
     if(g_nr_of_psf > 2) {
       fprintf(datafile, "%d %d %d ", idis2, count20, count21);
     }
-    fprintf(datafile, "%d \n", accept);
+    fprintf(datafile, "%d %e\n", accept, etime-atime);
     fflush(datafile);
     fclose(datafile);
   }
