@@ -995,3 +995,5 @@ void Hopping_Matrix(int ieo, int l, int k){
 }
 /* end of If defined SSE2 */
 #endif
+
+static char const rcsid[] = "$Id$";
