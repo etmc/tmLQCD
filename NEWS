@@ -1,3 +1,11 @@
+17.12.2004: Possibility for rereading some parameters added.
+	    If there is a file hmc.reread, it will be parsed
+	    automatically and deleted afterwards. It is not possible
+	    to change T, L, RGIC1 from zero to a non zero value, NrXProcs.
+
+13.12.2004: Extended leapfrog integration scheme implemented
+	    and tested. 
+
 23.11.2004: The lattice size must be now set in the input file.
 	    Recompilation is only needed for one or two dimensional
 	    parallelisation.

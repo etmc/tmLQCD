@@ -422,6 +422,15 @@ int main(int argc,char *argv[]) {
       fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
       fclose(rlxdfile);
     }
+    verbose = 1;
+    ix = reread_input("hmc.reread");
+    if(ix == 0 && g_proc_id == 0) {
+      countfile = fopen("history_hmc_tm", "a");
+      fprintf(countfile, "# Changed parameter according to hmc.reread: measurment %d of %d\n", j, Nmeas); 
+      fclose(countfile);
+      printf("# Changed parameter according to hmc.reread: measurment %d of %d\n", j, Nmeas); 
+      system("rm hmc.reread");
+    }
   }
   /* write the gauge configuration to the file last_configuration */
   write_gauge_field_time_p( "last_configuration" );
@@ -432,8 +441,7 @@ int main(int argc,char *argv[]) {
     rlxdfile=fopen("last_state","w");
     fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
     fclose(rlxdfile);
-  }
-  if(g_proc_id == 0) {
+
     printf("Acceptance Rate was: %e Prozent\n", 100.*(double)Rate/(double)Nmeas);
     fflush(stdout);
     parameterfile = fopen(parameterfilename, "a");

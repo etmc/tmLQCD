@@ -61,6 +61,7 @@ extern "C"
   extern char source_input_filename[100];
   
   int read_input(char *);
+  int reread_input(char *);
   
 #ifdef __cplusplus
 }

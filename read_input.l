@@ -711,3 +711,74 @@ int read_input(char * conf_file){
   fclose(yyin);
   return(0);
 }
+
+
+/* 
+ * This is the function to parse the input file 
+ * again. Only parameters are changed, that
+ * are specified in the input file.
+ * default values for paramters will not be set.
+ *
+ * reread_input expects the filename of the input file
+ * as an input parameter.
+ *
+ * reread_input returns 2 if the input file did not exist 
+ */
+
+int reread_input(char * conf_file){
+  int j=0, tt=T, ll=L, np=N_PROC_X, rgic=g_rgi_C1;
+
+  /********************************************
+   * Setting default values!
+   ********************************************/
+
+  /********************************************/
+
+  if ((yyin = fopen(conf_file, "rt")) == NULL){
+    return(2);
+  }
+  yyout = fopen("/dev/null", "w");
+
+  parse_config();  
+
+  T = tt;
+  L = ll;
+  N_PROC_X = np;
+  if(!(rgic < 0.) && !(rgic > 0.)) {
+    g_rgi_C1 = 0.;
+  }
+
+  g_rgi_C0 = 1. - 8.*g_rgi_C1;
+  g_ka_csw_8 = g_kappa*g_c_sw/8.;
+  
+  if(g_mu3 > 0.) {
+    g_mu = g_mu1;
+    g_mu1 = g_mu3;
+    g_mu3 = g_mu;
+
+    j = int_n[1];
+    int_n[1] = int_n[3];
+    int_n[3] = j;
+
+    g_nr_of_psf = 3;
+  }
+  else if(g_mu2 > 0.) {
+    g_mu = g_mu1;
+    g_mu1 = g_mu2;
+    g_mu2 = g_mu;
+
+    int_n[3] = int_n[1];
+    int_n[1] = int_n[2];
+    int_n[2] = int_n[3];
+
+    g_nr_of_psf = 2;
+  }
+  for(j = 0; j < g_nr_of_psf+1; j++) {
+    if(int_n[j] == 0) int_n[j] = 1;
+  }
+  g_mu = g_mu1;
+
+  fclose(yyout);
+  fclose(yyin);
+  return(0);
+}
