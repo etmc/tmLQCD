@@ -28,8 +28,8 @@
  * l is number of input and output field
  *
  ******************************************/
-void mul_one_pm_imu_inv(const int l, const double _sign);
-void mul_one_pm_imu(const int l, const double _sign);
+void mul_one_pm_imu_inv(spinor * const l, const double _sign);
+void mul_one_pm_imu(spinor * const l, const double _sign);
 /******************************************
  * mul_one_pm_imu_sub_mul_gamma5 computes
  * l = gamma_5*((1\pm i\mu\gamma_5)*k - j)
@@ -40,8 +40,8 @@ void mul_one_pm_imu(const int l, const double _sign);
  * sign indicates which sign should be used
  * in 1\pm i\mu\gamma_5
  ******************************************/
-void mul_one_pm_imu_sub_mul_gamma5(const int l, const int k, 
-				   const int j, const double _sign);
+void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k, 
+				   spinor * const j, const double _sign);
 
 /******************************************
  * mul_one_pm_imu_sub_mul computes
@@ -53,8 +53,8 @@ void mul_one_pm_imu_sub_mul_gamma5(const int l, const int k,
  * sign indicates which sign should be used
  * in 1\pm i\mu\gamma_5
  ******************************************/
-void mul_one_pm_imu_sub_mul(const int l, const int k,
-			    const int j, const double _sign);
+void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
+			    spinor * const j, const double _sign);
 
 /* external functions */
 
@@ -72,11 +72,11 @@ void mul_one_pm_imu_sub_mul(const int l, const int k,
  * it acts only on the odd part or only 
  * on a half spinor
  ******************************************/
-void Qtm_plus_psi(const int l, const int k){
-  Hopping_Matrix(EO, DUM_MATRIX+1, k);
-  mul_one_pm_imu_inv(DUM_MATRIX+1, +1.);
-  Hopping_Matrix(OE, DUM_MATRIX, DUM_MATRIX+1);
-  mul_one_pm_imu_sub_mul_gamma5(l, k, DUM_MATRIX, +1.);
+void Qtm_plus_psi(spinor * const l, spinor * const k){
+  Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], +1.);
+  Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul_gamma5(l, k, spinor_field[DUM_MATRIX], +1.);
 }
 
 /******************************************
@@ -93,11 +93,11 @@ void Qtm_plus_psi(const int l, const int k){
  * it acts only on the odd part or only 
  * on a half spinor
  ******************************************/
-void Qtm_minus_psi(const int l, const int k){
-  Hopping_Matrix(EO, DUM_MATRIX+1, k);
-  mul_one_pm_imu_inv(DUM_MATRIX+1, -1.);
-  Hopping_Matrix(OE, DUM_MATRIX, DUM_MATRIX+1);
-  mul_one_pm_imu_sub_mul_gamma5(l, k, DUM_MATRIX, -1.);
+void Qtm_minus_psi(spinor * const l, spinor * const k){
+  Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], -1.);
+  Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul_gamma5(l, k, spinor_field[DUM_MATRIX], -1.);
 }
 
 /******************************************
@@ -114,11 +114,11 @@ void Qtm_minus_psi(const int l, const int k){
  * it acts only on the odd part or only 
  * on a half spinor
  ******************************************/
-void Mtm_plus_psi(const int l, const int k){
-  Hopping_Matrix(EO, DUM_MATRIX+1, k);
-  mul_one_pm_imu_inv(DUM_MATRIX+1, +1.);
-  Hopping_Matrix(OE, DUM_MATRIX, DUM_MATRIX+1);
-  mul_one_pm_imu_sub_mul(l, k, DUM_MATRIX, +1.);
+void Mtm_plus_psi(spinor * const l, spinor * const k){
+  Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], +1.);
+  Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul(l, k, spinor_field[DUM_MATRIX], +1.);
 }
 
 /******************************************
@@ -135,11 +135,11 @@ void Mtm_plus_psi(const int l, const int k){
  * it acts only on the odd part or only 
  * on a half spinor
  ******************************************/
-void Mtm_minus_psi(const int l, const int k){
-  Hopping_Matrix(EO, DUM_MATRIX+1, k);
-  mul_one_pm_imu_inv(DUM_MATRIX+1, -1.);
-  Hopping_Matrix(OE, DUM_MATRIX, DUM_MATRIX+1);
-  mul_one_pm_imu_sub_mul(l, k, DUM_MATRIX, -1.);
+void Mtm_minus_psi(spinor * const l, spinor * const k){
+  Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], -1.);
+  Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul(l, k, spinor_field[DUM_MATRIX], -1.);
 }
 
 /******************************************
@@ -155,17 +155,17 @@ void Mtm_minus_psi(const int l, const int k){
  * it acts only on the odd part or only 
  * on a half spinor
  ******************************************/
-void Qtm_pm_psi(const int l, const int k){
+void Qtm_pm_psi(spinor * const l, spinor * const k){
   /* Q_{-} */
-  Hopping_Matrix(EO, DUM_MATRIX+1, k);
-  mul_one_pm_imu_inv(DUM_MATRIX+1, -1.);
-  Hopping_Matrix(OE, DUM_MATRIX, DUM_MATRIX+1);
-  mul_one_pm_imu_sub_mul_gamma5(DUM_MATRIX, k, DUM_MATRIX, -1.);
+  Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], -1.);
+  Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul_gamma5(spinor_field[DUM_MATRIX], k, spinor_field[DUM_MATRIX], -1.);
   /* Q_{+} */
-  Hopping_Matrix(EO, l, DUM_MATRIX);
+  Hopping_Matrix(EO, l, spinor_field[DUM_MATRIX]);
   mul_one_pm_imu_inv(l, +1.);
-  Hopping_Matrix(OE, DUM_MATRIX+1, l);
-  mul_one_pm_imu_sub_mul_gamma5(l, DUM_MATRIX, DUM_MATRIX+1, +1.);
+  Hopping_Matrix(OE, spinor_field[DUM_MATRIX+1], l);
+  mul_one_pm_imu_sub_mul_gamma5(l, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1], +1.);
 }
 
 /******************************************
@@ -181,7 +181,7 @@ void Qtm_pm_psi(const int l, const int k){
  * it acts only on the odd part or only 
  * on a half spinor
  ******************************************/
-void H_eo_tm_inv_psi(const int l, const int k, 
+void H_eo_tm_inv_psi(spinor * const l, spinor * const k, 
 		     const int ieo, const double sign){
   Hopping_Matrix(ieo, l, k);
   mul_one_pm_imu_inv(l, sign);
@@ -201,7 +201,7 @@ void H_eo_tm_inv_psi(const int l, const int k,
  *
  **********************************************/
 
-void mul_one_pm_imu_inv(const int l, const double _sign){
+void mul_one_pm_imu_inv(spinor * const l, const double _sign){
   complex z,w;
   int ix;
   double sign=-1.; 
@@ -220,7 +220,7 @@ void mul_one_pm_imu_inv(const int l, const double _sign){
 
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
-    r=&spinor_field[l][ix];
+    r=l + ix;
     /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
     _complex_times_vector(phi1, z, (*r).s0);
     _vector_assign((*r).s0, phi1);
@@ -233,7 +233,7 @@ void mul_one_pm_imu_inv(const int l, const double _sign){
   }
 }
 
-void assign_mul_one_pm_imu_inv(const int l, const int k, const double _sign){
+void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double _sign){
   complex z,w;
   int ix;
   double sign=-1.; 
@@ -251,8 +251,8 @@ void assign_mul_one_pm_imu_inv(const int l, const int k, const double _sign){
 
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
-    r=&spinor_field[k][ix];
-    s=&spinor_field[l][ix];
+    r=k+ix;
+    s=l+ix;
     /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
     _complex_times_vector((*s).s0, z, (*r).s0);
     _complex_times_vector((*s).s1, z, (*r).s1);
@@ -261,7 +261,7 @@ void assign_mul_one_pm_imu_inv(const int l, const int k, const double _sign){
   }
 }
 
-void mul_one_pm_imu(const int l, const double _sign){
+void mul_one_pm_imu(spinor * const l, const double _sign){
   complex z,w;
   int ix;
   double sign = 1.; 
@@ -279,7 +279,7 @@ void mul_one_pm_imu(const int l, const double _sign){
 
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
-    r=&spinor_field[l][ix];
+    r=l+ix;
     /* Multiply the spinorfield with 1+imu\gamma_5 */
     _complex_times_vector(phi1, z, (*r).s0);
     _vector_assign((*r).s0, phi1);
@@ -292,7 +292,7 @@ void mul_one_pm_imu(const int l, const double _sign){
   }
 }
 
-void assign_mul_one_pm_imu(const int l, const int k, const double _sign){
+void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sign){
   complex z,w;
   int ix;
   double sign = 1.; 
@@ -309,8 +309,8 @@ void assign_mul_one_pm_imu(const int l, const int k, const double _sign){
 
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
-    s=&spinor_field[l][ix];
-    r=&spinor_field[k][ix];
+    s=l+ix;
+    r=k+ix;
 
     /* Multiply the spinorfield with of 1+imu\gamma_5 */
     _complex_times_vector((*s).s0, z, (*r).s0);
@@ -320,8 +320,8 @@ void assign_mul_one_pm_imu(const int l, const int k, const double _sign){
   }
 }
 
-void mul_one_pm_imu_sub_mul_gamma5(const int l, const int k, 
-				   const int j, const double _sign){
+void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k, 
+				   spinor * const j, const double _sign){
   complex z,w;
   int ix;
   double sign=1.;
@@ -339,9 +339,9 @@ void mul_one_pm_imu_sub_mul_gamma5(const int l, const int k,
 
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
-    r = &spinor_field[k][ix];
-    s = &spinor_field[j][ix];
-    t = &spinor_field[l][ix];
+    r = k+ix;
+    s = j+ix;
+    t = l+ix;
     /* Multiply the spinorfield with 1+imu\gamma_5 */
     _complex_times_vector(phi1, z, (*r).s0);
     _complex_times_vector(phi2, z, (*r).s1);
@@ -357,8 +357,8 @@ void mul_one_pm_imu_sub_mul_gamma5(const int l, const int k,
   }
 }
 
-void mul_one_pm_imu_sub_mul(const int l, const int k, 
-			    const int j, const double _sign){
+void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k, 
+			    spinor * const j, const double _sign){
   complex z,w;
   int ix;
   double sign=1.;
@@ -376,9 +376,9 @@ void mul_one_pm_imu_sub_mul(const int l, const int k,
 
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
-    r = &spinor_field[k][ix];
-    s = &spinor_field[j][ix];
-    t = &spinor_field[l][ix];
+    r = k+ix;
+    s = j+ix;
+    t = l+ix;
     /* Multiply the spinorfield with 1+imu\gamma_5 */
     _complex_times_vector(phi1, z, (*r).s0);
     _complex_times_vector(phi2, z, (*r).s1);

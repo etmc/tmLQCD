@@ -51,8 +51,8 @@ void deriv_Sb(const int ieo, const int l, const int k){
 
   /* for parallelization */
 #ifdef MPI
-  xchange_field(k);
-  xchange_field(l);
+  xchange_field(spinor_field[k]);
+  xchange_field(spinor_field[l]);
 #endif
   /************** loop over all lattice sites ****************/
 

@@ -18,6 +18,7 @@
 #include "deriv_Sb.h"
 #include "Hopping_Matrix.h"
 #include "tm_operators.h"
+#include "eigenvalues.h"
 #include "hybrid_update.h"
 
 extern int ITER_MAX_BCG;
@@ -135,7 +136,7 @@ void deri(double q_off,double q_off2) {
 	/* X_o -> DUM_DERI+1 */
 	count00 += solve_cg(DUM_DERI+1, first_psf, q_off, EPS_SQ1);
 	/* Y_o -> DUM_DERI  */
-	Qtm_minus_psi(DUM_DERI, DUM_DERI+1);
+	Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
       }
       else{
 	/*contributions from field 0 -> first_psf*/
@@ -165,7 +166,7 @@ void deri(double q_off,double q_off2) {
 	/* First term coming from the second field */
 	/* Multiply with W_+ */
 	g_mu = g_mu1;	
-	Qtm_plus_psi(DUM_DERI+2, second_psf);
+	Qtm_plus_psi(spinor_field[DUM_DERI+2], spinor_field[second_psf]);
 	g_mu = g_mu2;
 	if(ITER_MAX_BCG == 0){
 	  /* If CG is used anyhow */
@@ -174,7 +175,7 @@ void deri(double q_off,double q_off2) {
 	  /* X_W -> DUM_DERI+1 */
 	  count10 += solve_cg(DUM_DERI+1, DUM_DERI+2, q_off, EPS_SQ1);
 	  /* Y_W -> DUM_DERI  */
-	  Qtm_minus_psi(DUM_DERI, DUM_DERI+1);
+	  Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
 	}
 	else{
 	  gamma5(DUM_DERI, DUM_DERI+2);
@@ -210,7 +211,7 @@ void deri(double q_off,double q_off2) {
       /* First term coming from the second field */
       /* Multiply with W_+ */
       g_mu = g_mu2;	
-      Qtm_plus_psi(DUM_DERI+2, third_psf);
+      Qtm_plus_psi(spinor_field[DUM_DERI+2], spinor_field[third_psf]);
       g_mu = g_mu3;
       if(ITER_MAX_BCG == 0){
 	/* If CG is used anyhow */
@@ -219,7 +220,7 @@ void deri(double q_off,double q_off2) {
 	/* X_W -> DUM_DERI+1 */
 	count20 += solve_cg(DUM_DERI+1, DUM_DERI+2, q_off, EPS_SQ1);
 	/* Y_W -> DUM_DERI  */
-	Qtm_minus_psi(DUM_DERI, DUM_DERI+1);
+	Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
       }
       else{
 	gamma5(DUM_DERI, DUM_DERI+2);
@@ -264,12 +265,12 @@ void deri(double q_off,double q_off2) {
     else{
       /* apply Hopping Matrix M_{eo} */
       /* to get the even sites of X */
-      H_eo_tm_inv_psi(DUM_DERI+2, DUM_DERI+1, EO, -1.);
+      H_eo_tm_inv_psi(spinor_field[DUM_DERI+2], spinor_field[DUM_DERI+1], EO, -1.);
       /* \delta Q sandwitched by Y_o^\dagger and X_e */
       deriv_Sb(OE, DUM_DERI, DUM_DERI+2); 
 
       /* to get the even sites of Y */
-      H_eo_tm_inv_psi(DUM_DERI+3, DUM_DERI, EO, +1);
+      H_eo_tm_inv_psi(spinor_field[DUM_DERI+3], spinor_field[DUM_DERI], EO, +1);
       /* \delta Q sandwitched by Y_e^\dagger and X_o */
       deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
       g_mu = g_mu1;
@@ -363,6 +364,7 @@ void leap_frog(double q_off, double q_off2,
 void sexton(double q_off, double q_off2,
 	    double step, int m, int nsmall) {
   int i,j;
+  int ev = 10;
   double smallstep;
   /* initialize the counter for the inverter */
   count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;

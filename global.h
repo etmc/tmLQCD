@@ -21,8 +21,8 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define T  4
-#define L  4
+#define T  12
+#define L  12
 
 #ifndef PARALLELXT
 #define N_PROC_X 1

@@ -93,12 +93,12 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   /* apply the fermion matrix to the first spinor */
   /* it has the largest mu available              */
   g_mu = g_mu1;
-  Qtm_plus_psi(first_psf, 2);
+  Qtm_plus_psi(spinor_field[first_psf], spinor_field[2]);
 
   /* contruct the second \phi_o */
   if(g_nr_of_psf > 1) {
     g_mu = g_mu2;
-    Qtm_plus_psi(3, 3);
+    Qtm_plus_psi(spinor_field[3], spinor_field[3]);
     g_mu = g_mu1;
     zero_spinor_field(second_psf);
     idis1 = bicg(second_psf, 3, 0., EPS_SQ0);
@@ -106,7 +106,7 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   /* contruct the third \phi_o */
   if(g_nr_of_psf > 2) {
     g_mu = g_mu3;
-    Qtm_plus_psi(5, 5);
+    Qtm_plus_psi(spinor_field[5], spinor_field[5]);
     g_mu = g_mu2;
     zero_spinor_field(third_psf);
     idis2 = bicg(third_psf, 5, 0., EPS_SQ0);
@@ -138,7 +138,7 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   if(g_nr_of_psf > 1) {
     zero_spinor_field(3);
     g_mu = g_mu1;
-    Qtm_plus_psi(second_psf, second_psf);
+    Qtm_plus_psi(spinor_field[second_psf], spinor_field[second_psf]);
     g_mu = g_mu2;
     idis1 += bicg(3, second_psf, 0., EPS_SQ0);
     enerphi1x = square_norm(spinor_field[3], VOLUME/2);
@@ -146,7 +146,7 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   if(g_nr_of_psf > 2) {
     zero_spinor_field(5);
     g_mu = g_mu2;
-    Qtm_plus_psi(third_psf, third_psf);
+    Qtm_plus_psi(spinor_field[third_psf], spinor_field[third_psf]);
     g_mu = g_mu3;
     idis2 += bicg(5, third_psf, 0., EPS_SQ0);
     enerphi2x = square_norm(spinor_field[5], VOLUME/2);

@@ -32,7 +32,7 @@ int solve_cg(int k,int l, double q_off, double eps_sq) {
     Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
   }
   else{
-    Qtm_pm_psi(DUM_SOLVER, k); 
+    Qtm_pm_psi(spinor_field[DUM_SOLVER], spinor_field[k]); 
   }
   diff(spinor_field[DUM_SOLVER+1],spinor_field[l],spinor_field[DUM_SOLVER], VOLUME/2);
   assign(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER+1], VOLUME/2);
@@ -45,7 +45,7 @@ int solve_cg(int k,int l, double q_off, double eps_sq) {
        Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
      }
      else {
-       Qtm_pm_psi(DUM_SOLVER, DUM_SOLVER+2);
+       Qtm_pm_psi(spinor_field[DUM_SOLVER], spinor_field[DUM_SOLVER+2]);
      }
      pro=scalar_prod_r(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER], VOLUME/2);
      alpha_cg=normsq/pro;
@@ -128,7 +128,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
     M_psi(DUM_SOLVER,k,q_off); 
   }
   else {
-    Mtm_plus_psi(DUM_SOLVER, k);
+    Mtm_plus_psi(spinor_field[DUM_SOLVER], spinor_field[k]);
   }
   diff(spinor_field[DUM_SOLVER+1],spinor_field[DUM_SOLVER+1],spinor_field[DUM_SOLVER], VOLUME/2);
   assign(spinor_field[DUM_SOLVER], spinor_field[DUM_SOLVER+1], VOLUME/2);
@@ -157,7 +157,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
       M_psi(DUM_SOLVER+2, DUM_SOLVER+3, q_off); 
     }
     else{
-      Mtm_plus_psi(DUM_SOLVER+2, DUM_SOLVER+3);
+      Mtm_plus_psi(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER+3]);
     }
     alpha=rho1/scalar_prod_r(spinor_field[DUM_SOLVER], spinor_field[DUM_SOLVER+2], VOLUME/2);
     assign_add_mul_r(spinor_field[DUM_SOLVER+1], spinor_field[DUM_SOLVER+2], -alpha, VOLUME/2);
@@ -165,7 +165,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
       M_psi(DUM_SOLVER+4, DUM_SOLVER+1, q_off);
     }
     else{
-      Mtm_plus_psi(DUM_SOLVER+4, DUM_SOLVER+1);
+      Mtm_plus_psi(spinor_field[DUM_SOLVER+4], spinor_field[DUM_SOLVER+1]);
     }
     square_and_prod_r(&d1,&d2,  spinor_field[DUM_SOLVER+4],  spinor_field[DUM_SOLVER+1], VOLUME/2);
     omega1=d2/d1;
@@ -187,7 +187,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
       Q_psi(k,k,q_off);
     }
     else{
-      Qtm_minus_psi(k, k);;
+      Qtm_minus_psi(spinor_field[k], spinor_field[k]);;
     }
   }
   return iteration;

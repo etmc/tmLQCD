@@ -28,33 +28,33 @@
 
 
 /* exchanges the field  l */
-void xchange_field(int l)
+void xchange_field(spinor * const l)
 {
 #ifdef MPI
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
-  MPI_Sendrecv(&spinor_field[l][0].s0.c0.re,          1, field_time_slice_cont, g_nb_t_dn, 81,
-	       &spinor_field[l][T*LX*L*L/2].s0.c0.re, 1, field_time_slice_cont, g_nb_t_up, 81,
+  MPI_Sendrecv((void*)l,              1, field_time_slice_cont, g_nb_t_dn, 81,
+	       (void*)(l+T*LX*L*L/2), 1, field_time_slice_cont, g_nb_t_up, 81,
 	       g_cart_grid, &status);
 
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
-  MPI_Sendrecv(&spinor_field[l][(T-1)*LX*L*L/2].s0.c0.re, 1, field_time_slice_cont, g_nb_t_up, 82,
-	       &spinor_field[l][(T+1)*LX*L*L/2].s0.c0.re, 1, field_time_slice_cont, g_nb_t_dn, 82,
+  MPI_Sendrecv((void*)(l+(T-1)*LX*L*L/2), 1, field_time_slice_cont, g_nb_t_up, 82,
+	       (void*)(l+(T+1)*LX*L*L/2),   1, field_time_slice_cont, g_nb_t_dn, 82,
 	       g_cart_grid, &status);
 
 #ifdef PARALLELXT
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
-  MPI_Sendrecv(&spinor_field[l][0],                1, field_x_slice_gath, g_nb_x_dn, 91, 
- 	       &spinor_field[l][(T+2)*LX*LY*LZ/2], 1, field_x_slice_cont, g_nb_x_up, 91,
+  MPI_Sendrecv((void*)l,                    1, field_x_slice_gath, g_nb_x_dn, 91, 
+ 	       (void*)(l+(T+2)*LX*LY*LZ/2), 1, field_x_slice_cont, g_nb_x_up, 91,
 	       g_cart_grid, &status);
 
   /* send the data to the neighbour on the right in x direction */
   /* recieve the data from the neighbour on the left in x direction */  
-  MPI_Sendrecv(&spinor_field[l][(LX-1)*LY*LZ/2],               1, field_x_slice_gath, g_nb_x_up, 92, 
-	       &spinor_field[l][((T+2)*LX*LY*LZ + T*LY*LZ)/2], 1, field_x_slice_cont, g_nb_x_dn, 92,
+  MPI_Sendrecv((void*)(l+(LX-1)*LY*LZ/2),               1, field_x_slice_gath, g_nb_x_up, 92, 
+	       (void*)(l+((T+2)*LX*LY*LZ + T*LY*LZ)/2), 1, field_x_slice_cont, g_nb_x_dn, 92,
 	       g_cart_grid, &status);
 
 
@@ -72,7 +72,7 @@ void xchange_field(int l)
  *
  ********************************************************************/
 
-void xchange_field2(int l)
+void xchange_field2(spinor * const l)
 {
 #if (defined MPI && defined PARALLELXT) 
   int x0, x2, ix = 0, iz=0;
@@ -83,21 +83,21 @@ void xchange_field2(int l)
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
-  MPI_Sendrecv(&spinor_field[l][0].s0.c0.re,          1, field_time_slice_cont, g_nb_t_dn, 81,
-	       &spinor_field[l][T*LX*L*L/2].s0.c0.re, 1, field_time_slice_cont, g_nb_t_up, 81,
+  MPI_Sendrecv((void*)l,              1, field_time_slice_cont, g_nb_t_dn, 81,
+	       (void*)(l+T*LX*L*L/2), 1, field_time_slice_cont, g_nb_t_up, 81,
 	       g_cart_grid, &status);
 
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
-  MPI_Sendrecv(&spinor_field[l][(T-1)*LX*L*L/2].s0.c0.re, 1, field_time_slice_cont, g_nb_t_up, 82,
-	       &spinor_field[l][(T+1)*LX*L*L/2].s0.c0.re, 1, field_time_slice_cont, g_nb_t_dn, 82,
+  MPI_Sendrecv((void*)(l+(T-1)*LX*L*L/2), 1, field_time_slice_cont, g_nb_t_up, 82,
+	       (void*)(l+(T+1)*LX*L*L/2), 1, field_time_slice_cont, g_nb_t_dn, 82,
 	       g_cart_grid, &status);
 
 #ifdef PARALLELXT
   iz = 0;
   for(x0 = 0; x0 < T; x0++) {
     for(x2 = 0; x2 < LY*LZ/2; x2++) {
-      buffer_x[ix] = spinor_field[l][ iz ];
+      buffer_x[ix] = l+iz;
       ix++;
       iz++;
     }
@@ -107,7 +107,7 @@ void xchange_field2(int l)
   iz = (LX-1)*LY*LZ/2;
   for(x0 = 0; x0 < T; x0++) {
     for(x2 = 0; x2 < LY*LZ/2; x2++) {
-      buffer_x[ix] = spinor_field[l][ iz ];
+      buffer_x[ix] = l+iz;
       ix++;
       iz++;
     }
@@ -116,14 +116,14 @@ void xchange_field2(int l)
 
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
-  MPI_Sendrecv(&buffer_x[0]                       , 1, field_x_slice_cont, g_nb_x_dn, 91, 
- 	       &spinor_field[l][(T+2)*LX*LY*LZ/2], 1, field_x_slice_cont, g_nb_x_up, 91,
+  MPI_Sendrecv(&buffer_x[0]               , 1, field_x_slice_cont, g_nb_x_dn, 91, 
+ 	       (void*)(l+(T+2)*LX*LY*LZ/2), 1, field_x_slice_cont, g_nb_x_up, 91,
 	       g_cart_grid, &status);
 
   /* send the data to the neighbour on the right in x direction */
   /* recieve the data from the neighbour on the left in x direction */  
-  MPI_Sendrecv(&buffer_x[T*LY*LZ/2]                           , 1, field_x_slice_cont, g_nb_x_up, 92,
-	       &spinor_field[l][((T+2)*LX*LY*LZ + T*LY*LZ)/2], 1, field_x_slice_cont, g_nb_x_dn, 92,
+  MPI_Sendrecv(&buffer_x[T*LY*LZ/2]                   , 1, field_x_slice_cont, g_nb_x_up, 92,
+	       (void*)(l+((T+2)*LX*LY*LZ + T*LY*LZ)/2), 1, field_x_slice_cont, g_nb_x_dn, 92,
 	       g_cart_grid, &status);
 
 

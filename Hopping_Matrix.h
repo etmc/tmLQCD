@@ -8,6 +8,8 @@
 #define OO 1
 #define EE 0
 
-void Hopping_Matrix(const int ieo, const int l, const int k);
+#include "su3.h"
+
+void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k);
 
 #endif

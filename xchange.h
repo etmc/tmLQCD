@@ -3,7 +3,7 @@
 
 void xchange_field_init(int l);
 void xchange_field_wait();
-void xchange_field(int l);
+void xchange_field(spinor * const l);
 void xchange_gauge();
 void xchange_deri();
 
