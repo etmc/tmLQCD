@@ -203,17 +203,21 @@ void geometry() {
 
 #if ((defined PARALLELT) || (defined PARALLELXT))
 	  if(x0 <  T) g_iup[ix][0] = g_ipt[x0+1][y1][x2][x3];
+	  else g_iup[ix][0] = 0;
 	  if(x0 > -1) g_idn[ix][0] = g_ipt[z0  ][y1][x2][x3];
+	  else g_idn[ix][0] = 0;
 #else
 	  g_iup[ix][0] = g_ipt[(x0+T+1)%T][x1][x2][x3];
 	  g_idn[ix][0] = g_ipt[(x0+t-1)%T][x1][x2][x3];
 #endif
 #if (defined PARALLELXT)
 	  if(x1 < LX) g_iup[ix][1] = g_ipt[y0][x1+1][x2][x3];
+	  else g_iup[ix][1] = 0;
 	  if(x1 > -1) g_idn[ix][1] = g_ipt[y0][z1  ][x2][x3];
+	  else g_idn[ix][1] = 0;
 #else
-	  g_iup[ix][1] = g_ipt[x0][(x1+LX+1)%LX][x2][x3];
-	  g_idn[ix][1] = g_ipt[x0][(x1+LX-1)%LX][x2][x3];
+	  g_iup[ix][1] = g_ipt[y0][(x1+LX+1)%LX][x2][x3];
+	  g_idn[ix][1] = g_ipt[y0][(x1+LX-1)%LX][x2][x3];
 #endif
 
 	  g_iup[ix][2] = g_ipt[y0][y1][(x2+LY+1)%LY][x3];
@@ -221,7 +225,7 @@ void geometry() {
 
 	  g_iup[ix][3] = g_ipt[y0][y1][x2][(x3+LY+1)%LZ];
 	  g_idn[ix][3] = g_ipt[y0][y1][x2][(x3+LY-1)%LZ];
-	  
+
 	}
       }
     }
