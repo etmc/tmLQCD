@@ -2986,7 +2986,7 @@ case 139:
 YY_RULE_SETUP
 #line 523 "read_input.l"
 {
-  g_mu1=atof(yytext);
+  g_eps_sq_acc=atof(yytext);
   if(verbose!=0) printf("g_eps_sq_acc=%s Residual for inversions in the acceptance step\n", yytext);
 }
 	YY_BREAK
