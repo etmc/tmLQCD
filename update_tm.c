@@ -237,3 +237,5 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
 
   return(accept);
 }
+
+static char const rcsid[] = "$Id$";

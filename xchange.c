@@ -501,5 +501,7 @@ void xchange_deri()
 #endif
 
 
+static char const rcsid[] = "$Id$";
+
 
 

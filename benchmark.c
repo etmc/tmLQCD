@@ -36,19 +36,46 @@
 
 
 int check_geometry();
+int check_xchange();
 
 int main(int argc,char *argv[])
 {
-  int j,j_max,k,kb,k_max;
-  static double t1,t2,dt,sdt,dts,dt2,qdt,sqdt;
-  int rlxd_state[105];
+  int j,j_max,k,k_max;
+#ifdef _GAUGE_COPY
+  int kb=0;
+#endif
 
+
+  static double t1,t2,dt,sdt,dts,qdt,sqdt;
+#ifdef MPI
+  static double dt2;
+  int rlxd_state[105];
+#endif
   mpi_init(argc, argv);
 
   if(g_proc_id==0) {
+#ifdef SSE
+    printf("# The code was compiled with SSE instructions\n");
+#endif
+#ifdef SSE2
+    printf("# The code was compiled with SSE2 instructions\n");
+#endif
+#ifdef P4
+    printf("# The code was compiled for Pentium4\n");
+#endif
+#ifdef OPTERON
+    printf("# The code was compiled for AMD Opteron\n");
+#endif
+#ifdef _NEW_GEOMETRY
+    printf("# The code was compiled with -D_NEW_GEOMETRY\n");
+#endif
+#ifdef _GAUGE_COPY
+    printf("# The code was compiled with -D_GAUGE_COPY\n");
+#endif
+
     printf("\n");
     fprintf(stdout,"The number of processes is %d \n",g_nproc);
-    fprintf(stdout,"The local lattice size is %d x %d x %d^2 \n",T,LX,L);
+    fprintf(stdout,"The local lattice size is %d x %d x %d^2 \n\n",T,LX,L);
     fflush(stdout);
   }
 
@@ -57,8 +84,10 @@ int main(int argc,char *argv[])
   /* define the boundary conditions for the fermion fields */
   boundary();
 
-#ifdef MPI  
+
   check_geometry();
+#ifdef MPI
+  check_xchange();
 #endif
 
   /* here we generate exactly the same configuration as for the 

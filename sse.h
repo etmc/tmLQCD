@@ -97,9 +97,9 @@ __asm__ __volatile__ ("prefetcht0 %0 \n\t" \
                       "prefetcht0 %2" \
                       : \
                       : \
-                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f)))), \
-                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f))+64)), \
-                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f))+128)))
+                      "m" (*(((char*)(addr)))), \
+                      "m" (*(((char*)(addr))+64)),			\
+                      "m" (*(((char*)(addr))+128)))
 
 
 #define _prefetch_nta_spinor(addr) \
@@ -108,9 +108,9 @@ __asm__ __volatile__ ("prefetchnta %0 \n\t" \
                       "prefetchnta %2" \
                       : \
                       : \
-                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f)))), \
-                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f))+64)), \
-                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f))+128)))
+                      "m" (*(((char*)(addr)))), \
+                      "m" (*(((char*)(addr))+64)), \
+                      "m" (*(((char*)(addr))+128)))
 
 #define _prefetch_su3(addr) \
 __asm__ __volatile__ ("prefetcht0 %0  \n\t" \
@@ -118,15 +118,15 @@ __asm__ __volatile__ ("prefetcht0 %0  \n\t" \
                       "prefetcht0 %2" \
                       : \
                       : \
-                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f)))), \
-                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f))+64)), \
-                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f))+128)))
+                      "m" (*(((char*)(addr)))), \
+                      "m" (*(((char*)(addr))+64)), \
+                      "m" (*(((char*)(addr))+128)))
 
 #define _prefetch_mom(addr) \
 __asm__ __volatile__ ("prefetcht0 %0" \
                       : \
                       : \
-                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f)))))
+                      "m" (*(((char*)((addr))))))
 
 
 
@@ -1041,5 +1041,9 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
 
 #endif
 
+#endif
+
+#ifdef MAIN_PROGRAM
+static char const ssercsid[] = "$Id$";
 #endif
 #endif

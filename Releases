@@ -1,3 +1,12 @@
+Release 2.1:
+working and optimised for x86_64 and AMD Opteron. benchmark tool
+added. Even Odd geometry also for the gauge fields and the possibility
+to use a copy of the gauge fields for a better cache usage.
+New configure options: 
+--enable-opteron   : Enables cache optimisation for Opteron [default=no]
+--enable-gaugecopy : Enables usage of a copy of the gauge field [default=yes]
+--enable-eogeom    : Enables usage of EO geometry also for the gauge fields [default=yes]
+
 Release 2.0:
 second parallel direction introduced
 

@@ -205,5 +205,6 @@ void geometry(){
   }
 }
 
+static char const rcsid[] = "$Id$";
 
 

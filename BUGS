@@ -1,7 +1,16 @@
+For x86_64 there seems to be a compiler bug in gcc 3.3.3. The code
+is not working with the default sse2 optimisation done by the compiler
+and now switched of with mfpmath=387. It has to be checked, whether this 
+is really a compiler bug, a strange interplay between our sse2 units and 
+the compiler units or a bug in the code (17.08.2004)
+
+bug in the serial version of the code fixed. (16.08.2004)
+
 there are now two exchange routines for the spinor fields, since at
 least on the iwarp pc cluster the version with MPI_Type_vector is not
 working for small local lattices. Maybe this is a bug in the MPI
 implementation, but maybe not ...
+Seems to be a bug in the MPI driver for infiniband. (17.08.2004)
 
 write and read of spinor fields not yet tested
 

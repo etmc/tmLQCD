@@ -1178,4 +1178,8 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (t).c22.re=(u).c2.re*(v).c2.re+(u).c2.im*(v).c2.im; \
    (t).c22.im=(u).c2.im*(v).c2.re-(u).c2.re*(v).c2.im; 
 
+#ifdef MAIN_PROGRAM
+static char const su3rcsid[] = "$Id$";
+#endif
+
 #endif

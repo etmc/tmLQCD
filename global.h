@@ -21,8 +21,8 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define T   6
-#define L  12
+#define T   16
+#define L   16
 
 #ifndef PARALLELXT
 #define N_PROC_X 1
@@ -40,7 +40,9 @@
 #define DUM_MATRIX (DUM_SOLVER+6) 
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX DUM_SOLVER+11 */
-#define NO_OF_SPINORFIELDS (DUM_MATRIX+2)
+#define NO_OF_SPINORFIELDS (DUM_MATRIX+2) 
+/* For benchmark set the following: */
+/* #define NO_OF_SPINORFIELDS 100  */
 
 #if (defined PARALLELT && !defined PARALLELXT)
 #define RAND (2*LX*LY*LZ)
@@ -123,4 +125,9 @@ EXTERN int g_nb_t_up, g_nb_t_dn;
 #undef EXTERN
 /* #undef ALIGN */
 
+#ifdef MAIN_PROGRAM
+static char const g_rcsid[] = "$Id$";
 #endif
+
+#endif
+

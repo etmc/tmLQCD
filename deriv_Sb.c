@@ -252,3 +252,5 @@ void deriv_Sb(const int ieo, const int l, const int k){
     /****************** end of loop ************************/
   }
 }
+
+static char const rcsid[] = "$Id$";

@@ -148,3 +148,5 @@ void mpi_init(int argc,char *argv[]) {
   g_proc_coords[1] = 0;
 #endif
 }
+
+static char const rcsid[] = "$Id$";

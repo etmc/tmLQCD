@@ -574,3 +574,5 @@ double ini_momenta() {
   return kc;
 #endif
 }
+
+static char const rcsid[] = "$Id$";

@@ -38,7 +38,7 @@
 #include "update_tm.h"
 #include "boundary.h"
 
-char * Version = "2.0";
+char * Version = "2.1";
 
 
 void usage(){
@@ -160,7 +160,16 @@ int main(int argc,char *argv[]) {
     printf("# The code was compiled with SSE2 instructions\n");
 #endif
 #ifdef P4
-    printf("# The code was compiled for pentium4\n");
+    printf("# The code was compiled for Pentium4\n");
+#endif
+#ifdef OPTERON
+    printf("# The code was compiled for AMD Opteron\n");
+#endif
+#ifdef _NEW_GEOMETRY
+    printf("# The code was compiled with -D_NEW_GEOMETRY\n");
+#endif
+#ifdef _GAUGE_COPY
+    printf("# The code was compiled with -D_GAUGE_COPY\n");
 #endif
     printf("# The lattice size is %d x %d^3\n",(int)(T)*g_nproc_t,(int)(L));
     printf("# The local lattice size is %d x %d^3\n",(int)(T),(int)(L));
@@ -347,3 +356,5 @@ int main(int argc,char *argv[]) {
 #endif
   return(0);
 }
+
+static char const rcsid[] = "$Id$";

@@ -9,7 +9,6 @@
  *
  *******************************************************************************/
 
-#define MAIN_PROGRAM
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,31 +18,19 @@
 #endif
 #include "global.h"
 #include "geometry_eo.h"
-#ifdef MPI
-#include "mpi_init.h"
-#endif
 #include "start.h"
 #include "xchange.h"
 
 void set_deri_point();
 int check_geometry();
 
-int main(int argc,char *argv[])
+int check_xchange()
 {
+#ifdef MPI
   double * x;
   int i,ix, mu, x0, x1, x2, x3, k;
   int mp, pm, mm, pp, di[2];
 
-  mpi_init(argc, argv);
-
-  printf("\n");
-  printf("Test of the mpi exchange routines \n");
-  printf("----------------------------------\n");
-  printf("\n");
-  printf("The lattice size is %d x %d^3 \n\n",(int)(T*g_nproc_t),(int)(L));
-   
-  geometry();
-  ix = check_geometry(); 
 
   for(k = 0; k < 100; k++) {
 
@@ -455,8 +442,6 @@ int main(int argc,char *argv[])
       printf("\n");
     }
   }
-#ifdef MPI
-  MPI_Finalize();
 #endif
   return(0);
 }

@@ -391,3 +391,5 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
     _vector_sub((*t).s3, phi4, (*s).s3);
   }
 }
+
+static char const rcsid[] = "$Id$";

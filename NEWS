@@ -1,3 +1,16 @@
+17.08.2004: 64 Bit Version of the code running and tested
+	    Cache Optimisation for Opteron added.
+	    New configure options: 
+	    --enable-opteron   : Enables cache optimisation 
+	                         for Opteron                [default=no]
+	    --enable-gaugecopy : Enables usage of a copy of 
+	                         the gauge field            [default=yes]
+	    --enable-eogeom    : Enables usage of EO geometry 
+				 also for the gauge fields  [default=yes]
+
+13.08.2004  New EO geometry for gauge fields implemented also
+	    for the 2-dim parallelisation and tested.
+
 04.05.2004: additional parallelisation in x-direction added
 	    and tested. IO added as well and tested, apart
 	    from write and read for spinor fields.

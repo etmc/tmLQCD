@@ -413,6 +413,28 @@ else
   AC_MSG_RESULT(yes)
 fi
 
+AC_MSG_CHECKING(whether we want to use a copy of the gauge field)
+AC_ARG_ENABLE(gaugecopy,
+  [  --enable-gaugecopy           enable use of a copy of the gauge field [default=yes]],
+  enable_gaugecopy=$enableval, enable_gaugecopy=yes)
+if test $enable_gaugecopy = yes; then
+  AC_MSG_RESULT(yes)
+  CFLAGS="$CFLAGS -D_GAUGE_COPY"
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(whether we want to use EO geometry for gauge fields)
+AC_ARG_ENABLE(eogeom,
+  [  --enable-eogeom              enable use of EO geometry for gauge fields [default=yes]],
+  enable_eogeom=$enableval, enable_eogeom=yes)
+if test $enable_eogeom = yes; then
+  AC_MSG_RESULT(yes)
+  CFLAGS="$CFLAGS -D_NEW_GEOMETRY"
+else
+  AC_MSG_RESULT(no)
+fi
+
 dnl create the lib directory here
 if test ! -e lib; then
   mkdir lib
