@@ -97,7 +97,7 @@ void xchange_field2(spinor * const l)
   iz = 0;
   for(x0 = 0; x0 < T; x0++) {
     for(x2 = 0; x2 < LY*LZ/2; x2++) {
-      buffer_x[ix] = l+iz;
+      buffer_x[ix] = *(l+iz);
       ix++;
       iz++;
     }
@@ -107,7 +107,7 @@ void xchange_field2(spinor * const l)
   iz = (LX-1)*LY*LZ/2;
   for(x0 = 0; x0 < T; x0++) {
     for(x2 = 0; x2 < LY*LZ/2; x2++) {
-      buffer_x[ix] = l+iz;
+      buffer_x[ix] = *(l+iz);
       ix++;
       iz++;
     }

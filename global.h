@@ -34,8 +34,11 @@
 #define LY (L)
 #define LZ (L)
 #define VOLUME (T*LX*LY*LZ)
+#ifndef PARALLELXT
 #define SLICE (LX*LY*LZ/2)
-
+#else
+#define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2))
+#endif
 
 #define DUM_DERI 6
 #define DUM_SOLVER (DUM_DERI+4)
