@@ -1,3 +1,9 @@
+22.11.2004: DBW2 implemented for the serial code and the parallel
+	    code with new and old geometry.
+	    Input parameter BoundaryCond is supplemented by
+	    BCAngleT, like in the GWC code. BoundaryCond is 
+	    deprecated now.
+
 28.09.2004: input parameter added:
 	    input parameter MaxSolverIterations 
 	    and SolverPrecision available.

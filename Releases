@@ -1,3 +1,8 @@
+Release 2.2:
+DBW2 inplemented and working. New input parameter:
+RGIC1 = floating point number
+memory dynamically allocated now.
+
 Release 2.1:
 working and optimised for x86_64 and AMD Opteron. benchmark tool
 added. Even Odd geometry also for the gauge fields and the possibility
