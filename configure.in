@@ -189,23 +189,34 @@ dnl first for PC's
 if test "$host_cpu" = "i686"; then
 dnl the GNU compiler
   if test "$GCC" = yes; then
-    GCCVERSION=`$CC --version`
+    GCCVERSION1=`$CC -dumpversion | cut -d "." -f 1`
+    GCCVERSION2=`$CC -dumpversion | cut -d "." -f 2`
 dnl -march=pentium4
     if test $enable_mpi = yes; then
 dnl Due to some standard problems in MPI header files
 dnl no -pedantic-errors...
       CFLAGS="-ansi -Wall -DMPI $endian $mpidimension"
     else
-      CFLAGS="-ansi -pedantic-errors -Wall $endian"
+      if test $GCCVERSION1 -gt 2 && test $enable_sse2 = yes; then
+        CFLAGS="-ansi -Wall $endian"
+      else
+	CFLAGS="-ansi -Wall $endian -pedantic-errors"
+      fi
     fi
     CXXFLAGS=' -Wall'
     OPTARGS='-O3'
     LIBS="-lm"
 
-
-    if test $enable_p4 = yes; then
-       CFLAGS="$CFLAGS -DP4"
+    if test $enable_p4 = yes && test $GCCVERSION1 -gt 2 && test $GCCVERSION2 -gt 1; then
+       CFLAGS="$CFLAGS -DP4 -march=pentium4"
        SSE="sse2"
+    elif test $enable_p4 = yes && $GCCVERSION1 -gt 2; then
+       CFLAGS="$CFLAGS -DP4 -march=pentium"
+       SSE="sse2"
+    elif test $enable_p4 = yes; then
+       CFLAGS="$CFLAGS -DP4 -mcpu=i686"
+    else
+       CFLAGS="$CFLAGS -mcpu=i686"
     fi
 
     if test $enable_sse = yes && test $enable_sse2 = yes; then
