@@ -1,3 +1,5 @@
+11.03.2004: third pseudo fermion field added and tested.
+
 09.03.2004: .nstore_counter file introduced to easily restart the
 	    programm. Just set InitialStoreCounter = readin. Also a
 	    sighandler was added to savely finish the program.
