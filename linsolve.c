@@ -55,6 +55,10 @@ int solve_cg(int k,int l, double q_off, double eps_sq) {
      assign(DUM_SOLVER+1, DUM_SOLVER, VOLUME/2);
      normsq=err;
    }
+   if(g_proc_id==0) {
+     fprintf(fp7,"CG: iterations: %d  mu: %f eps_sq: %e \n", iteration, g_mu, eps_sq); 
+     fflush(fp7);
+   }
    return iteration;
 }
 
@@ -79,7 +83,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   }
 
   if(g_proc_id==0) {
-    fprintf(fp7,"%d %e %e\n",iteration,xxx, g_mu);
+    fprintf(fp7,"%d %e %f\n",iteration,xxx, g_mu);
     fflush(fp7);
   }
 
@@ -122,13 +126,13 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   rho0=1.0; omega0=1.0; alpha=1.0; 
   /* main loop */
   for(iteration=1;iteration<=ITER_MAX_BCG;iteration++) {
-    if(g_proc_id == 0) printf("%d %e\n", iteration, rho1);
+/*     if(g_proc_id == 0) printf("%d %e\n", iteration, rho1); */
     if(rho1 == 0. && iteration > 1){
       iteration = ITER_MAX_BCG+1;
       break;
     }
     square_and_prod_r(&err,&rho1,DUM_SOLVER+1,DUM_SOLVER, VOLUME/2);
-    if(g_proc_id == 0) printf("%d %e %e\n", iteration, err, rho1);
+/*     if(g_proc_id == 0) printf("%d %e %e\n", iteration, err, rho1); */
     if(err <= eps_sq){
       break;
     }
@@ -161,27 +165,17 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   /* if bicg fails, redo with conjugate gradient */
   if(g_proc_id==0) {
     /* fp7 */
-    fprintf(fp7,"%d %d %e\n", g_proc_id, iteration, g_mu); 
+    fprintf(fp7,"BiCGstab: iterations: %d mu: %f eps_sq: %e\n", iteration, g_mu, eps_sq); 
     fflush(fp7); 
   }
   if(iteration>=ITER_MAX_BCG){
     zero_spinor_field(k);
-    if(ITER_MAX_BCG == 0) {
-      iteration = 0;
-    }
-    iteration+=solve_cg(k,l,q_off,eps_sq);
+    iteration = solve_cg(k,l,q_off,eps_sq);
     if(g_use_clover_flag == 1){
       Q_psi(k,k,q_off);
     }
     else{
       Qtm_minus_psi(k, k);;
-    }
-    if(ITER_MAX_BCG != 0) {
-      iteration-=1000000;
-    }
-    if(g_proc_id==0) {
-      fprintf(fp7,"%d %d %e \n", g_proc_id, iteration, g_mu); 
-      fflush(fp7);
     }
   }
   return iteration;
