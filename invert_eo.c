@@ -26,6 +26,7 @@
 #include"bicgstabell.h"
 #include"clover_eo.h"
 #include"solver/solver.h"
+#include"xchange.h"
 #include"invert_eo.h"
 
 int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
@@ -37,7 +38,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 
   assign_mul_one_pm_imu_inv(Even_new, Even, +1.);
   
-  Hopping_Matrix(OE, spinor_field[DUM_DERI], Even_new);
+  Hopping_Matrix(OE, spinor_field[DUM_DERI], Even_new); 
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
   assign_mul_add_r(spinor_field[DUM_DERI], +1., Odd, VOLUME/2);
@@ -46,8 +47,6 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   /* matrix to get the odd sites               */
   /* The solver inverts gamma_5 D ...          */
   gamma5(DUM_DERI, DUM_DERI); 
-  /*   iter = bicgstabell(Odd_new, DUM_DERI, 2000, 1.e-30, 2, 0.);   */
-  /*   iter = bicg(Odd_new, spinor_field[DUM_DERI], 0., 1.e-15);    */
 
   if(solver_flag == BICGSTAB) {
     if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}
@@ -62,13 +61,18 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     iter = cg_her(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_pm_psi, 0, 0.);
     Qtm_minus_psi(Odd_new, Odd_new);
   }
-  if(solver_flag == MR) {
+  else if(solver_flag == MR) {
     if(g_proc_id == 0) {printf("# Using MR!\n"); fflush(stdout);}
     iter = mr(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_plus_psi);
   }
   else if(solver_flag == CGS) {
     if(g_proc_id == 0) {printf("# Using CGS!\n"); fflush(stdout);}
     iter = cgs_real(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_plus_psi);
+  }
+  else {
+    if(g_proc_id == 0) {printf("# Using CG as default solver!\n"); fflush(stdout);}
+    iter = cg_her(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_pm_psi, 0, 0.);
+    Qtm_minus_psi(Odd_new, Odd_new);
   }
 
   /* Reconstruct the even sites                */

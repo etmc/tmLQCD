@@ -31,11 +31,13 @@ MODULES = read_input clover_eo linsolve xchange \
 
 PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark invert
 ALLOBJ = ${MODULES} ${PROGRAMS}
-
+SUBDIRS = linalg solver
 
 .SUFFIXES:
 
-all: Makefile dep ${LINKLIBS} hmc_tm
+all: Makefile all-recursive dep ${LINKLIBS} hmc_tm invert
+
+.NOTPARALLEL: 
 
 -include $(addsuffix .d,$(ALLOBJ))
 
@@ -68,6 +70,7 @@ clean: compile-clean
 distclean: clean
 	@rm -f Makefile
 	@(cd linalg && $(MAKE) distclean)
+	@(cd solver && $(MAKE) distclean)
 
 .PHONY: all clean compile-clean distclean dep \
 	flex_read_input ${PROGRAMS}

@@ -56,7 +56,7 @@ int check_geometry();
 
 int main(int argc,char *argv[]) {
 
-  FILE *parameterfile=NULL, *countfile=NULL;
+  FILE *parameterfile=NULL, *countfile=NULL, *ifs=NULL;
   int c, iter, j, ix=0, is=0, ic=0, write_counter=0;
   char * filename = NULL;
   char datafilename[50];
@@ -212,6 +212,31 @@ int main(int argc,char *argv[]) {
 
       if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
 
+      sprintf(conf_filename,"%s.is%.1dic%.1d.%.4d", "prop.mass00", is, ic, nstore);
+
+      /* If the solver is _not_ CG we might read in */
+      /* here some better guess                     */
+      /* This also works for re-iteration           */
+      if(solver_flag != CG) {
+	ifs = fopen(conf_filename, "r");
+	if(ifs != NULL) {
+	  if(g_proc_id == g_stdio_proc){
+	    printf("Reading in from file %s\n", filename);
+	    fflush(stdout);
+	  }
+	  fclose(ifs);
+	  
+	  read_spinorfield_eo_time(spinor_field[2], spinor_field[3], conf_filename);
+	  mul_r(spinor_field[3], 1./(2*g_kappa), spinor_field[3], VOLUME/2);
+	}
+	else {
+	  zero_spinor_field(spinor_field[3]);
+	}
+      }
+      else {
+	zero_spinor_field(spinor_field[3]);
+      }
+
 #ifdef MPI
       atime = MPI_Wtime();
 #endif
@@ -220,11 +245,14 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
       etime = MPI_Wtime();
 #endif
+      /* To write in standard format */
+      /* we have to mult. by 2*kappa */
       mul_r(spinor_field[2], (2*g_kappa), spinor_field[2], VOLUME/2);  
       mul_r(spinor_field[3], (2*g_kappa), spinor_field[3], VOLUME/2);
-      sprintf(conf_filename,"%s.is%.1dic%.1d.%.4d", "prop.mass00", is, ic, nstore);
+
       write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 0);
-    
+
+      /* Check the result */
       M_full(spinor_field[4], spinor_field[5], spinor_field[2], spinor_field[3]); 
       mul_r(spinor_field[4], 1./(2*g_kappa), spinor_field[4], VOLUME/2);  
       mul_r(spinor_field[5], 1./(2*g_kappa), spinor_field[5], VOLUME/2); 

@@ -52,7 +52,7 @@ int write_gauge_field_time_p(char * filename){
       fprintf(ofs,"%f %d %d\n", g_beta, L, g_nproc_t*T);
     }
     else{
-      printf("Warning! Could not open file %s in routine write_gauge_field\n", filename);
+      fprintf(stderr, "Warning! Could not open file %s in routine write_gauge_field\n", filename);
 /*       errorhandler(100, filename); */
       return(1);
     }
@@ -163,7 +163,7 @@ int read_gauge_field_time_p(char * filename){
     position = ftell(ifs);
 #endif
     if(beta!=g_beta){
-      printf("Warning! Configuration %s was produced with a different beta!\n", filename);
+      fprintf(stderr, "Warning! Configuration %s was produced with a different beta!\n", filename);
 /*       errorhandler(112,filename); */
     }
     if((l!=L)||(t!=g_nproc_t*T)){
@@ -303,10 +303,11 @@ int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filen
 }
 
 
-int read_spinorfield_eo_time(const int s, const int r, char * filename){
+int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename){
   FILE * ifs;
   double beta,kappa,mu;
-  int l, t, x, y , z, nr = 0, i = 0;
+  int l, t, x, y , z, i = 0;
+  spinor * p = NULL;
 #ifdef MPI
   int position;
 #endif
@@ -321,7 +322,7 @@ int read_spinorfield_eo_time(const int s, const int r, char * filename){
     position = ftell(ifs);
 #endif
     if((beta!=g_beta)||(g_kappa!=kappa)||(g_mu!=mu)){
-      printf("Warnig! Parameters beta, kappa or mu are inconsistent with file %s!\n", filename);
+      fprintf(stderr, "Warning! Parameters beta, kappa or mu are inconsistent with file %s!\n", filename);
 /*       errorhandler(113,filename); */
     }
     if((l!=L)||(t!=T*g_nproc_t)){
@@ -353,19 +354,18 @@ int read_spinorfield_eo_time(const int s, const int r, char * filename){
 		SEEK_SET);
 #endif
 	  for(t = 0; t < T; t++){
-	    i = g_lexic2eo[ g_ipt[t][x][y][z] ];
-	    if((t+x+y+z+g_proc_coords[0]*T)%2==0) {
-	      nr = s;
+	    i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
+	    if((t+x+y+z+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
+	      p = s;
 	    }
 	    else {
-	      nr = r;
-	      i -= (VOLUME+RAND)/2;
+	      p = r;
 	    }
 #ifdef LITTLE_ENDIAN
 	    fread(tmp, sizeof(spinor), 1, ifs);
-	    byte_swap_assign(&spinor_field[nr][i], tmp, sizeof(spinor)/8);
+	    byte_swap_assign(p + i, tmp, sizeof(spinor)/8);
 #else
-	    fread(&spinor_field[nr][i], sizeof(spinor), 1, ifs);
+	    fread(p + i, sizeof(spinor), 1, ifs);
 #endif
 	  }
 	}
