@@ -1,0 +1,163 @@
+\section*{Even-Odd preconditioning}
+
+\begin{equation}
+  \label{eq:eo0}
+  M_{xy} =\delta_{xy}(1+i\mu\gamma_5\tau^3) - \kappa\sum_\mu \delta_{x,y+\hat\mu}(1+\gamma_\mu) 
+\end{equation}
+with $\mu \to \mu/(2\kappa)$.
+\begin{equation}
+  \label{eq:eo1}
+  Q\equiv \gamma_5 M = \begin{pmatrix}
+      Q_+ & \\\
+         & Q_- \\
+      \end{pmatrix}
+\end{equation}
+where
+\begin{equation}
+  \label{eq:eo2}
+  \begin{split}
+    Q_\pm &= \gamma_5\begin{pmatrix}
+      1\pm i\mu\gamma_5 & M_{eo} \\
+      M_{oe}    & 1\pm i\mu\gamma_5 \\
+    \end{pmatrix} =
+    \gamma_5\begin{pmatrix}
+      M_{ee}^\pm & M_{eo} \\
+      M_{oe}    & M_{oo}^\pm \\
+    \end{pmatrix} \\
+    & =
+    \begin{pmatrix}
+      \gamma_5M_{ee}^\pm & 0 \\
+      \gamma_5M_{oe}  & 1 \\
+    \end{pmatrix}
+    \begin{pmatrix}
+      1       & (M_{ee}^\pm)^{-1}M_{eo}\\
+      0       & \gamma_5(M_{oo}^\pm-M_{oe}(M_{ee}^\pm)^{-1}M_{eo})\\
+    \end{pmatrix}
+\end{split}
+\end{equation}
+$(M_{ee}^\pm)^{-1}$ can be computed to 
+\[
+(1\pm i\mu\gamma_5)^{-1} = \frac{1\mp i\mu\gamma_5}{1+\mu^2}.
+\]
+With this we get
+\begin{equation}
+  \label{eq:eo3}
+  \det(Q)=\det(Q_+)\det(Q_-) = \det(Q_+ Q_-).
+\end{equation}
+and appart from an irrelevant factor
+\begin{equation}
+  \label{eq:eo4}
+  \begin{split}
+    \det(Q_\pm) &\propto \det(\hat Q_\pm) \\
+    \hat Q_\pm &= \gamma_5(M_{oo}^\pm - M_{oe}(M_{ee}^\pm )^{-1}M_{eo}). 
+  \end{split}
+\end{equation}
+$\hat Q_\pm$ is only defined on the odd sides. Now we write the
+determinant with pseudo fermion fields:
+\[
+\det(Q) = \det(\hat Q_+ \hat Q_-) \propto \int D[\phi]\exp(-\phi^\dagger (\hat Q_+ \hat Q_-)^{-1} \phi) = \int D[\phi]\exp(-S_b)
+\]
+For the HMC we need the Variation of $S_b$ (using $\delta (A^{-1})=A^{-1}\delta A A^{-1}$):
+\begin{equation}
+  \label{eq:eo5}
+  \begin{split}
+    \delta S_b &= -[\phi_o^\dagger (\hat Q_+ \hat Q_-)^{-1}\delta \hat Q_+ \hat Q_+^{-1}\phi_o +
+    \phi_o^\dagger\hat Q_-^{-1}\delta \hat Q_- (\hat Q_+ \hat Q_-)^{-1} \phi_o ] \\
+     &= -[X_o^\dagger \delta \hat Q_+ Y_o + Y_o^\dagger \delta\hat Q_- X_o]
+  \end{split}
+\end{equation}
+with $X_o$ and $Y_o$ defined on the odd sides as 
+\begin{equation}
+  \label{eq:eo6}
+  X_o = (\hat Q_+ \hat Q_-)^{-1} \phi_o,\quad Y_o = \hat Q_+^{-1}\phi_o=\hat
+  Q_-X_o\ ,
+\end{equation}
+using
+\[
+\hat Q_\pm^\dagger = \hat Q_\mp\, .
+\]
+The variation of $\hat Q_\pm$ reads
+\begin{equation}
+  \label{eq:eo7}
+  \delta \hat Q_\pm = \gamma_5\left(-\delta M_{oe}(M_{ee}^\pm )^{-1}M_{eo} -
+    M_{oe}(M_{ee}^\pm )^{-1}\delta M_{eo}\right),
+\end{equation}
+and we find
+\begin{equation}
+  \label{eq:eo8}
+  \delta S_b = -(X^\dagger\delta Q_+ Y + Y^\dagger\delta Q_- X) = -(X^\dagger\delta Q_+ Y +(X^\dagger\delta Q_+ Y)^\dagger)
+\end{equation}
+where $X,Y$ is now defined over the full lattice as
+\begin{equation}
+  \label{eq:eo9}
+  X = 
+  \begin{pmatrix}
+    -(M_{ee}^-)^{-1}M_{eo}X_o \\ X_o\\
+  \end{pmatrix},\quad
+  Y = 
+  \begin{pmatrix}
+    -(M_{ee}^+)^{-1}M_{eo}Y_o \\ Y_o\\
+  \end{pmatrix}.
+\end{equation}
+Additionally $\delta Q_+ = \delta Q_-$ holds and we used
+\[
+M_{eo}^\dagger = \gamma_5 M_{oe}\gamma_5\;\textrm{and}\; M_{oe}^\dagger = \gamma_5 M_{eo}\gamma_5.
+\]
+Since the bosonic part is quadratic in the $\phi_o$ fields, the $\phi_o$ are
+generated at the beginnig of each molecular dynamics trajectory with
+\begin{equation}
+  \label{eq:eo10}
+  \phi_o = \hat Q_+ R,
+\end{equation}
+where $R$ is a random spinor field taken from a Gaussian distribution
+with norm one.
+
+If one uses $\det(\hat Q_{-}\hat Q_{+})$ instead of $\det(\hat
+Q_{+}\hat Q_{-})$ on gets
+\begin{equation}
+  \label{eq:eo11}
+  \begin{split}
+    \delta S_b & = -[\phi_o^\dagger(\hat Q_{-} \hat Q_{+})^{-1}\delta\hat Q_{-}\hat
+    Q_{-}^{-1} \phi_o + \phi_o^\dagger \hat Q_{+}^{-1}\delta\hat Q_{+}(\hat
+    Q_{-}\hat Q_{-})^{-1}\phi_o]\\
+    & = -[X_o^\dagger\delta\hat Q_{-}Y_o + Y_O^\dagger\delta\hat Q_{+}X_o]
+  \end{split}
+\end{equation}
+with
+\begin{equation}
+  \label{eq:eo12}
+  X_o = (\hat Q_{-} \hat Q_{+})^{-1}\phi_o, \quad Y_o = \hat Q_{-}^{-1}\phi_o=\hat
+  Q_{+} X_o.
+\end{equation}
+ We can reconstruct the spinors over the full lattice in the following
+way:
+\begin{equation}
+  \label{eq:eo13}
+  X = 
+  \begin{pmatrix}
+    -(M_{ee}^+)^{-1}M_{eo}X_o \\ X_o\\
+  \end{pmatrix},\quad
+  Y = 
+  \begin{pmatrix}
+    -(M_{ee}^-)^{-1}M_{eo}Y_o \\ Y_o\\
+  \end{pmatrix},
+\end{equation}
+and the fields $\phi_o$ have to be constructed using $R$ via
+\begin{equation}
+  \label{eq:14}
+  \phi_o = \hat Q_{-} R.
+\end{equation}
+Additionally 
+\[
+Y_o = \gamma_5(M_{ee}^{+}X_o + M_{oe} X_e)
+\]
+can be used to construct $Y_o$, if $X_e$ is allready computed. This
+means one can compute $X_o = (\hat Q_{-} \hat Q_{+})^{-1}\phi_o$, then
+$X_e = -(M_{ee}^+)^{-1}M_{eo}X_o$ followed by $Y_o = \gamma_5(M_{ee}^{+}X_o
++ M_{oe} X_e)$ and $Y_e = -(M_{ee}^-)^{-1}M_{eo}Y_o$, if one uses the
+CG as inverter anyhow.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

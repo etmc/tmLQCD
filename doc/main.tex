@@ -1,0 +1,47 @@
+% $Id$
+\documentclass[a4paper,12pt,dvips]{article}
+%amsmath
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amscd}
+\usepackage{latexsym}
+\usepackage{epsfig}
+\usepackage{multirow}
+\usepackage{color}
+%\usepackage[bf,footnotesize]{caption}
+%\setlength{\captionmargin}{15pt}
+\usepackage{subfigure}
+\usepackage{pifont}
+
+%\setlength{\parindent}{0pt}
+% Absatzabstand
+\setlength{\parskip}{3pt plus 3pt}
+% Hoehe der Kopfzeilen
+%\setlength{\headheight}{26pt}
+
+\input{command}
+
+\date{}
+
+\begin{document}
+%\begin{center}
+%{\Large\bf Even-Odd preconditioning for}\\
+%\vspace*{8mm}
+%{\bf tmQCD}
+
+%\end{center}
+
+%\thispagestyle{empty}
+
+\myinput{eo_pre}
+
+\section{Implementation}
+
+\myinput{c-code}
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

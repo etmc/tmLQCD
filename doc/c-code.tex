@@ -1,0 +1,84 @@
+\subsection{C-Code}
+
+\noindent {\ttfamily Hopping\_Matrix(int ieo, int l, int k)}:\\
+Files: {\ttfamily Hopping\_Matrix.c|h}.\\
+Here the Hopping Matrix is implemented.
+\[
+-\kappa\sum_\mu \delta_{x,y+\hat\mu}(1+\gamma_\mu)
+\]
+It connect even (odd) sites in {\ttfamily l} with odd  (even) sites in {\ttfamily k}
+if {\ttfamily ieo} is set to {\ttfamily EO} ({\ttfamily
+  OE}). {\ttfamily EO} and {\ttfamily OE} are defined in {\ttfamily
+  Hopping\_Matrix.h}.
+
+\noindent {\ttfamily mul\_one\_pm\_imu\_inv(int l, double sign)}:\\
+Files: {\ttfamily tm\_operators.c}.\\
+This multiplies {\ttfamily l} with 
+\[
+l = (M_{ee}^{\pm})^{-1} l\, ,
+\]
+where the sign of $M_{ee}^{\pm}$ is set corresponding to {\ttfamily
+  sign}. This connects even with even or odd with odd sites.
+
+\noindent{\ttfamily mul\_one\_pm\_imu\_sub\_mul\_gamma5(int l, int k, int j,
+double sign)}:\\
+Files: {\ttfamily tm\_operators.c}.\\
+This performs:
+\[
+l = \gamma_5 ((1 \pm i \mu \gamma_5)k - j)\, ,
+\]
+where the sign is set corresponding to {\ttfamily sign}.
+
+\noindent{\ttfamily mul\_one\_pm\_imu\_sub\_mul(int l, int k, int j,
+double sign)}:\\
+Files: {\ttfamily tm\_operators.c}.\\
+This performs:
+\[
+l = ((1 \pm i \mu \gamma_5)k - j)\, ,
+\]
+where the sign is set corresponding to {\ttfamily sign}.
+
+\noindent{\ttfamily Qtm\_plus\_psi(int l, int k)}:\\
+Files: {\ttfamily tm\_operators.c|h}.\\
+This implements:
+\[
+\hat Q_{+} = \gamma_5(M_{oo}^+ - M_{oe}(M_{ee}^+ )^{-1}M_{eo})\, .
+\]
+The Operator is applied to {\ttfamily k} and the result is stored in
+{\ttfamily l}. $\hat Q_{-}$ is implemented in {\ttfamily
+  Qtm\_minus\_psi(int l, int k)}.
+
+\noindent{\ttfamily Mtm\_plus\_psi(int l, int k)}:\\
+Files: {\ttfamily tm\_operators.c|h}.\\
+This implements:
+\[
+\hat \gamma_5Q_{+} = (M_{oo}^+ - M_{oe}(M_{ee}^+ )^{-1}M_{eo})\, .
+\]
+The Operator is applied to {\ttfamily k} and the result is stored in
+{\ttfamily l}. $\hat \gamma_5Q_{-}$ is implemented in {\ttfamily
+  Mtm\_minus\_psi(int l, int k)}.
+
+\noindent{\ttfamily Qtm\_pm\_psi(int l, int k)}:\\
+Files: {\ttfamily tm\_operators.c|h}.\\
+This implements:
+\[
+\hat Q_{+} \hat Q_{-}\, .
+\]
+The Operator is applied to {\ttfamily k} and the result is stored in
+{\ttfamily l}.
+
+\noindent{\ttfamily H\_eo\_tm\_inv\_psi(int l, int k, int ieo, double
+  sign)}:\\
+Files:  {\ttfamily tm\_operators.c|h}.\\
+This implements:
+\[
+l = (M_{ee|oo}^\pm)^{-1} M_{eo|oe} k\, .
+\]
+The sign is set corresponding to {\ttfamily sign}. Setting {\ttfamily
+  ieo} to {\ttfamily EO} ({\ttfamily OE}) means using $M_{eo}$
+($M_{oe}$) and $M_{ee}$ ($M_{oo}$).
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 
