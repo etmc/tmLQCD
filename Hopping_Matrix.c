@@ -396,6 +396,281 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
   }
 }
 
+#elif defined XLC5
+
+#define _prefetch_spinor(addr) \
+__dcbt((void*)addr);
+__dcbt((void*)(addr+128));
+
+/* l output , k input*/
+/* for ieo=0, k resides on  odd sites and l on even sites */
+void Hopping_Matrix(int ieo, int l, int k){
+  int ix, iy, iz;
+  int ioff, ioff2, icx, icy, icz;
+  su3 *up,*um;
+  spinor *r,*sp,*sm;
+
+  /* for parallelization */
+#ifdef MPI
+  xchange_field(k);
+#endif
+
+  if(k == l){
+    printf("Error in H_psi (simple.c):\n");
+    printf("Arguments k and l must be different\n");
+    printf("Program aborted\n");
+    exit(1);
+  }
+  if(ieo == 0){
+    ioff = 0;
+  } 
+  else{
+    ioff = (VOLUME+RAND)/2;
+  } 
+  ioff2 = (VOLUME+RAND)/2-ioff;
+  /**************** loop over all lattice sites ****************/
+
+  ix = trans2[ioff];
+
+  iy=g_iup[ix][0]; icy=trans1[iy]-ioff2;
+
+  sp=&spinor_field[k][icy];
+  up=&g_gauge_field[ix][0];
+
+  for (icx = ioff; icx < (VOLUME/2 + ioff); icx++) {
+    ix = trans2[icx];
+    r=&spinor_field[l][icx - ioff];
+
+    /*********************** direction +0 ************************/
+    
+    iy=g_idn[ix][0]; icy=trans1[iy]-ioff2;
+    
+    sm=&spinor_field[k][icy];
+    __prefetch_by_load((void*)sm);
+    /* __dcbt((void*)sm);*/
+
+    um=&g_gauge_field[iy][0];
+    __prefetch_by_load((void*)um);
+    /* __dcbt((void*)um);*/
+
+    _vector_add(psi,(*sp).c1,(*sp).c3);
+
+    _su3_multiply(chi,(*up),psi);
+    _complex_times_vector(psi,ka0,chi);
+      
+    _vector_assign((*r).c1,psi);
+    _vector_assign((*r).c3,psi);
+
+    _vector_add(psi,(*sp).c2,(*sp).c4);
+
+    _su3_multiply(chi,(*up),psi);
+    _complex_times_vector(psi,ka0,chi);
+            
+    _vector_assign((*r).c2,psi);
+    _vector_assign((*r).c4,psi);
+
+    /*********************** direction -0 ************************/
+
+    iy=g_iup[ix][1]; icy=trans1[iy]-ioff2;
+
+    sp=&spinor_field[k][icy];
+    __prefetch_by_load((void*)sp);
+    /* __dcbt((void*)sp);*/
+
+    up=&g_gauge_field[ix][1];     
+    __prefetch_by_load((void*)up); 
+    /* __dcbt((void*)up);*/
+      
+    _vector_sub(psi,(*sm).c1,(*sm).c3);
+
+    _su3_inverse_multiply(chi,(*um),psi);
+    _complexcjg_times_vector(psi,ka0,chi);
+
+    _vector_add_assign((*r).c1,psi);
+    _vector_sub_assign((*r).c3,psi);
+
+    _vector_sub(psi,(*sm).c2,(*sm).c4);
+
+    _su3_inverse_multiply(chi,(*um),psi);
+    _complexcjg_times_vector(psi,ka0,chi);
+      
+    _vector_add_assign((*r).c2,psi);
+    _vector_sub_assign((*r).c4,psi);
+
+    /*********************** direction +1 ************************/
+
+    iy=g_idn[ix][1]; icy=trans1[iy]-ioff2;
+
+    sm=&spinor_field[k][icy];
+    __prefetch_by_load((void*)sm);
+    /* __dcbt((void*)sm);*/
+
+    um=&g_gauge_field[iy][1];
+    __prefetch_by_load((void*)um);
+    /* __dcbt((void*)um);*/
+      
+    _vector_i_add(psi,(*sp).c1,(*sp).c4);
+
+    _su3_multiply(chi,(*up),psi);
+    _complex_times_vector(psi,ka1,chi);
+
+    _vector_add_assign((*r).c1,psi);
+    _vector_i_sub_assign((*r).c4,psi);
+
+    _vector_i_add(psi,(*sp).c2,(*sp).c3);
+
+    _su3_multiply(chi,(*up),psi);
+    _complex_times_vector(psi,ka1,chi);
+
+    _vector_add_assign((*r).c2,psi);
+    _vector_i_sub_assign((*r).c3,psi);
+
+    /*********************** direction -1 ************************/
+
+    iy=g_iup[ix][2]; icy=trans1[iy]-ioff2;
+
+    sp=&spinor_field[k][icy];
+    __prefetch_by_load((void*)sp);
+    /* __dcbt((void*)sp);*/
+
+    up=&g_gauge_field[ix][2];
+    __prefetch_by_load((void*)up);
+    /* __dcbt((void*)up);*/
+
+    _vector_i_sub(psi,(*sm).c1,(*sm).c4);
+
+    _su3_inverse_multiply(chi,(*um),psi);
+    _complexcjg_times_vector(psi,ka1,chi);
+
+    _vector_add_assign((*r).c1,psi);
+    _vector_i_add_assign((*r).c4,psi);
+
+    _vector_i_sub(psi,(*sm).c2,(*sm).c3);
+
+    _su3_inverse_multiply(chi,(*um),psi);
+    _complexcjg_times_vector(psi,ka1,chi);
+
+    _vector_add_assign((*r).c2,psi);
+    _vector_i_add_assign((*r).c3,psi);
+
+    /*********************** direction +2 ************************/
+
+    iy=g_idn[ix][2]; icy=trans1[iy]-ioff2;
+
+    sm=&spinor_field[k][icy];
+    __prefetch_by_load((void*)sm);
+    /* __dcbt((void*)sm);*/
+
+    um=&g_gauge_field[iy][2];
+    __prefetch_by_load((void*)um);
+    /* __dcbt((void*)um);*/
+
+    _vector_add(psi,(*sp).c1,(*sp).c4);
+
+    _su3_multiply(chi,(*up),psi);
+    _complex_times_vector(psi,ka2,chi);
+
+    _vector_add_assign((*r).c1,psi);
+    _vector_add_assign((*r).c4,psi);
+
+    _vector_sub(psi,(*sp).c2,(*sp).c3);
+
+    _su3_multiply(chi,(*up),psi);
+    _complex_times_vector(psi,ka2,chi);
+      
+    _vector_add_assign((*r).c2,psi);
+    _vector_sub_assign((*r).c3,psi);
+
+    /*********************** direction -2 ************************/
+
+    iy=g_iup[ix][3]; icy=trans1[iy]-ioff2;
+
+    sp=&spinor_field[k][icy];
+    __prefetch_by_load((void*)sp);
+    /* __dcbt((void*)sp);*/
+
+    up=&g_gauge_field[ix][3];
+    __prefetch_by_load((void*)up);
+    /* __dcbt((void*)up);*/
+
+    _vector_sub(psi,(*sm).c1,(*sm).c4);
+
+    _su3_inverse_multiply(chi,(*um),psi);
+    _complexcjg_times_vector(psi,ka2,chi);
+
+    _vector_add_assign((*r).c1,psi);
+    _vector_sub_assign((*r).c4,psi);
+
+    _vector_add(psi,(*sm).c2,(*sm).c3);
+
+    _su3_inverse_multiply(chi,(*um),psi);
+    _complexcjg_times_vector(psi,ka2,chi);
+      
+    _vector_add_assign((*r).c2,psi);
+    _vector_add_assign((*r).c3,psi);
+
+    /*********************** direction +3 ************************/
+
+    iy=g_idn[ix][3]; icy=trans1[iy]-ioff2;
+
+    sm=&spinor_field[k][icy];
+    __prefetch_by_load((void*)sm);
+    /* __dcbt((void*)sm);*/
+
+    um=&g_gauge_field[iy][3];
+    __prefetch_by_load((void*)um);
+    /* __dcbt((void*)um);*/
+
+    _vector_i_add(psi,(*sp).c1,(*sp).c3);
+      
+    _su3_multiply(chi,(*up),psi);
+    _complex_times_vector(psi,ka3,chi);
+
+    _vector_add_assign((*r).c1,psi);
+    _vector_i_sub_assign((*r).c3,psi);
+
+    _vector_i_sub(psi,(*sp).c2,(*sp).c4);
+
+    _su3_multiply(chi,(*up),psi);
+    _complex_times_vector(psi,ka3,chi);
+
+    _vector_add_assign((*r).c2,psi);
+    _vector_i_add_assign((*r).c4,psi);
+
+    /*********************** direction -3 ************************/
+
+    icz = icx + 1;
+    if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
+    iz=trans2[icz];
+    iy=g_iup[iz][0]; icy=trans1[iy]-ioff2;
+
+    up=&g_gauge_field[iz][0];
+    __prefetch_by_load((void*)up);
+    /* __dcbt((void*)up);*/
+
+    sp=&spinor_field[k][icy];
+    __prefetch_by_load((void*)sp);
+    /* __dcbt((void*)sp);*/
+
+    _vector_i_sub(psi,(*sm).c1,(*sm).c3);
+
+    _su3_inverse_multiply(chi,(*um),psi);
+    _complexcjg_times_vector(psi,ka3,chi);
+      
+    _vector_add_assign((*r).c1,psi);
+    _vector_i_add_assign((*r).c3,psi);
+
+    _vector_i_add(psi,(*sm).c2,(*sm).c4);
+
+    _su3_inverse_multiply(chi,(*um),psi);
+    _complexcjg_times_vector(psi,ka3,chi);
+
+    _vector_add_assign((*r).c2,psi);
+    _vector_i_sub_assign((*r).c4,psi);
+    /************************ end of loop ************************/
+  }
+}
+
 /* else of If defined SSE2 */
 #else
 
