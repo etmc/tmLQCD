@@ -726,7 +726,7 @@ int read_input(char * conf_file){
  */
 
 int reread_input(char * conf_file){
-  int j=0, tt=T, ll=L, np=N_PROC_X, rgic=g_rgi_C1;
+  int j=0, tt=T, ll=L, np=N_PROC_X, rgic=g_rgi_C1, nst=nstore;
 
   /********************************************
    * Setting default values!
@@ -747,6 +747,7 @@ int reread_input(char * conf_file){
   if(!(rgic < 0.) && !(rgic > 0.)) {
     g_rgi_C1 = 0.;
   }
+  nstore = nst;
 
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
   g_ka_csw_8 = g_kappa*g_c_sw/8.;
