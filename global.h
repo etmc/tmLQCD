@@ -90,15 +90,15 @@ EXTERN int **** g_ipt;
 EXTERN int ** g_iup;
 EXTERN int ** g_idn;
 
-EXTERN spinor spinor_field[NO_OF_SPINORFIELDS][(VOLUMEPLUSRAND)/2] ALIGN;
+EXTERN spinor ** spinor_field;
 /* EXTERN spinor ** spinor_field; */
 EXTERN su3 ** g_gauge_field;
 EXTERN su3 ** g_gauge_field_back;
 /* This is dirty, but dow not allocate memory */
 /* if no clover is used. */
-EXTERN su3adj moment[VOLUME][4] ALIGN;
-EXTERN su3adj df0[VOLUMEPLUSRAND][4] ALIGN;
-EXTERN su3adj ddummy[VOLUMEPLUSRAND][4] ALIGN;
+EXTERN su3adj ** moment;
+EXTERN su3adj ** df0;
+EXTERN su3adj ** ddummy;
 #ifdef CLOVER
 EXTERN su3adj dclover[VOLUMEPLUSRAND][4] ALIGN;
 EXTERN su3 sw[VOLUME][3][2] ALIGN;

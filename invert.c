@@ -40,6 +40,8 @@
 #include "solver/solver.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
+#include "init_spinor_field.h"
+#include "init_moment_field.h"
 #include "invert_eo.h"
 
 char * Version = "2.1";
@@ -136,6 +138,20 @@ int main(int argc,char *argv[]) {
     exit(0);
   }
   j = init_geometry_indices(VOLUMEPLUSRAND);
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for geometry indices! Aborting...\n");
+    exit(0);
+  }
+  j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
+    exit(0);
+  }
+  j = init_moment_field(VOLUME, VOLUMEPLUSRAND);
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
+    exit(0);
+  }
 
   q_off = 0.;
   q_off2 = 0.;
@@ -295,5 +311,7 @@ int main(int argc,char *argv[]) {
 #endif
   free_gauge_field();
   free_geometry_indices();
+  free_spinor_field();
+  free_moment_field();
   return(0);
 }
