@@ -855,7 +855,7 @@ int reread_input(char * conf_file){
   LY = ly;
   LZ = lz;
   N_PROC_X = np;
-  if(!(rgic < 0.) && !(rgic > 0.)) {
+  if(g_dbw2rand == 0) {
     g_rgi_C1 = 0.;
   }
   nstore = nst;
