@@ -220,7 +220,7 @@ void jdher(int n, double tau, double tol,
   /* Allocating memory for matrices & vectors */ 
 #if (defined SSE || defined SSE2)
   V_ = (complex *)malloc((n * jmax + 4) * sizeof(complex));
-  V = (complex*)(((unsigned int)(V_)+ALIGN_BASE)&~ALIGN_BASE);
+  V = (complex*)(((unsigned long int)(V_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
   V_ = (complex *)malloc(n * jmax * sizeof(complex));
   V = V_;
@@ -232,7 +232,7 @@ void jdher(int n, double tau, double tol,
   if(errno == ENOMEM) errorhandler(300,"s in jdher");
 #if (defined SSE || defined SSE2)
   Res_ = (complex *)malloc((n * blksize+4) * sizeof(complex));
-  Res = (complex*)(((unsigned int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
+  Res = (complex*)(((unsigned long int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
   Res_ = (complex *)malloc(n * blksize * sizeof(complex));
   Res = Res_;
@@ -271,7 +271,7 @@ void jdher(int n, double tau, double tol,
   if(errno == ENOMEM) errorhandler(300,"rwork in jdher");
 #if (defined SSE || defined SSE2)
   temp1_ = (complex *)malloc((n+4) * sizeof(complex));
-  temp1 = (complex*)(((unsigned int)(temp1_)+ALIGN_BASE)&~ALIGN_BASE);
+  temp1 = (complex*)(((unsigned long int)(temp1_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
   temp1_ = (complex *)malloc(n * sizeof(complex));
   temp1 = temp1_;

@@ -215,7 +215,7 @@ void pjdher(int n, int lda, double tau, double tol,
   /* Allocating memory for matrices & vectors */ 
 #if (defined SSE || defined SSE2)
   V_ = (complex *)malloc((lda * jmax + 4) * sizeof(complex));
-  V = (complex*)(((unsigned int)(V_)+ALIGN_BASE)&~ALIGN_BASE);
+  V = (complex*)(((unsigned long int)(V_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
   V_ = (complex *)malloc(lda * jmax * sizeof(complex));
   V = V_;
@@ -227,7 +227,7 @@ void pjdher(int n, int lda, double tau, double tol,
   if(errno == ENOMEM) errorhandler(300,"s in pjdher");
 #if (defined SSE || defined SSE2)
   Res_ = (complex *)malloc((lda * blksize+4) * sizeof(complex));
-  Res = (complex*)(((unsigned int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
+  Res = (complex*)(((unsigned long int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
   Res_ = (complex *)malloc(lda * blksize * sizeof(complex));
   Res = Res_;
@@ -274,7 +274,7 @@ void pjdher(int n, int lda, double tau, double tol,
 
 #if (defined SSE || defined SSE2)
   temp1_ = (complex *)malloc((lda+4) * sizeof(complex));
-  temp1 = (complex*)(((unsigned int)(temp1_)+ALIGN_BASE)&~ALIGN_BASE);
+  temp1 = (complex*)(((unsigned long int)(temp1_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
   temp1_ = (complex *)malloc(lda * sizeof(complex));
   temp1 = temp1_;
