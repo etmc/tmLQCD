@@ -21,8 +21,8 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define T   16
-#define L   16
+#define T    8
+#define L   32
 
 #ifndef PARALLELXT
 #define N_PROC_X 1
@@ -96,20 +96,17 @@ EXTERN su3 g_gauge_field_back[VOLUMEPLUSRAND][4] ALIGN;
 #endif
 /* This is dirty, but dow not allocate memory */
 /* if no clover is used. */
-#ifdef CLOVER
 EXTERN su3adj moment[VOLUME][4] ALIGN;
 EXTERN su3adj df0[VOLUMEPLUSRAND][4] ALIGN;
-EXTERN su3adj dclover[VOLUMEPLUSRAND][4] ALIGN;
 EXTERN su3adj ddummy[VOLUMEPLUSRAND][4] ALIGN;
+#ifdef CLOVER
+EXTERN su3adj dclover[VOLUMEPLUSRAND][4] ALIGN;
 EXTERN su3 sw[VOLUME][3][2] ALIGN;
 EXTERN su3 sw_inv[VOLUME][3][2] ALIGN;
 EXTERN su3 swp[VOLUME][4] ALIGN;
 EXTERN su3 swm[VOLUME][4] ALIGN;
 #else
-EXTERN su3adj moment[1][1] ALIGN;
-EXTERN su3adj df0[1][1] ALIGN;
 EXTERN su3adj dclover[1][1] ALIGN;
-EXTERN su3adj ddummy[1][1] ALIGN;
 EXTERN su3 sw[1][1][1] ALIGN;
 EXTERN su3 sw_inv[1][1][1] ALIGN;
 EXTERN su3 swp[1][1] ALIGN;
