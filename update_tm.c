@@ -182,7 +182,6 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     ext_leap_frog(n_int, tau, g_nr_of_psf, halfstep);
   }
   else if(integtyp == 4) {
-    printf("before leap_frog i = %d , g_proc_id = %d\n", i, g_proc_id);
     ext_sexton_weingarten(n_int, tau, g_nr_of_psf, halfstep);
   }
   else if(integtyp == 5) {

@@ -219,8 +219,11 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^ReversibilityCheckIntervall{SPC}*={SPC}* BEGIN(REVINT);
 ^DebugLevel{SPC}*={SPC}*                 BEGIN(DEBUG);
 ^CSGHistMu{SPC}*={SPC}*                  BEGIN(CSGN1);
+^CSGHistoryMu{SPC}*={SPC}*               BEGIN(CSGN1);
 ^CSGHistMu2{SPC}*={SPC}*                 BEGIN(CSGN2);
+^CSGHistoryMu2{SPC}*={SPC}*              BEGIN(CSGN2);
 ^CSGHistMu3{SPC}*={SPC}*                 BEGIN(CSGN3);
+^CSGHistoryMu3{SPC}*={SPC}*              BEGIN(CSGN3);
 
 <TT>{DIGIT}+                  {
   T_global = atoi(yytext);
@@ -930,6 +933,7 @@ int reread_input(char * conf_file){
   int j=0, tt=T, ll=L, lx = LX, ly = LY, lz = LZ, 
       np=N_PROC_X, nst=nstore;
   double m2 = g_mu2, m3 = g_mu3;
+  int n1 = g_csg_N[0], n2 = g_csg_N[2], n3 = g_csg_N[4], n4 = g_csg_N[6];
 
   /********************************************
    * Setting default values!
@@ -949,6 +953,11 @@ int reread_input(char * conf_file){
   LX = lx;
   LY = ly;
   LZ = lz;
+  g_csg_N[0] = n1;
+  g_csg_N[2] = n2;
+  g_csg_N[4] = n3;
+  g_csg_N[6] = n4;
+
   N_PROC_X = np;
   if(g_dbw2rand == 0) {
     g_rgi_C1 = 0.;
