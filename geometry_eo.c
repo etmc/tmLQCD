@@ -26,157 +26,113 @@
 /*#include "io.h"*/
 #include "global.h"
 
-void set_ipt() {
-  int x0,x1,x2,x3;
+
 #ifndef _NEW_GEOMETRY
-  int ix=0;
-  for (x0 = 0; x0 < T; x0++) {
-    for (x1 = 0; x1 < LX; x1++) {
-      for (x2 = 0; x2 < LY; x2++) {
-	for (x3 = 0; x3 < LZ; x3++) {
-	  g_ipt[x0][x1][x2][x3] = ix;
-	  ix++;
-	}
-      }
-    }
-  }
+int Index(const int x0, const int x1, const int x2, const int x3)
+{
+   int y0, y1, y2, y3, ix;
+   y0 = (x0 + T ) % T; 
+   y1 = (x1 + LX) % LX; 
+   y2 = (x2 + LY) % LY; 
+   y3 = (x3 + LZ) % LZ;
+   ix = ((y0*LX + y1)*LY + y2)*LZ + y3;
+
+   y0=x0;
 #if ((defined PARALLELT) || (defined PARALLELXT))
-  /* the time boundary */
-  for (x0 = T; x0 < T+2; x0++) {
-    for (x1 = 0; x1 < LX; x1++) {
-      for (x2 = 0; x2 < LY; x2++) {
-	for (x3 = 0; x3 < LZ; x3++) {
-	  g_ipt[x0][x1][x2][x3] = ix;
-	  ix++;
-	}
-      }
-    }
-  }
+   if(x0 == T) {
+     ix = VOLUME + y3 + LZ*y2 + LZ*LY*y1;
+   }
+   /* the slice at time -1 is put to T+1 */
+   else if(x0 == -1) {
+     ix = VOLUME + LX*LY*LZ + y3 + LZ*y2 + LZ*LY*y1;
+   }
 #endif
 #if (defined PARALLELXT)
-  /* the x boundary */
-  for (x1 = LX; x1 < LX+2; x1++) {
-    for (x0 = 0; x0 < T; x0++) {
-      for (x2 = 0; x2 < LY; x2++) {
-	for (x3 = 0; x3 < LZ; x3++) {
-	  g_ipt[x0][x1][x2][x3] = ix;
-	  ix++;
-	}
-      }
-    }
+  if(x1 == LX){
+    ix = VOLUME + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
   }
+  if(x1 == -1){
+    ix = VOLUME + 2*LX*LY*LZ + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
+  }   
   /* The edges */
-  for (x0 = T; x0 < T+2; x0++) {
-    for (x1 = LX; x1 < LX+2; x1++) {
-      for (x2 = 0; x2 < LY; x2++) {
-	for (x3 = 0; x3 < LZ; x3++) {
-	  g_ipt[x0][x1][x2][x3] = ix;
-	  ix++;
-	}
-      }
+  if(x0 == T){
+    if(x1 == LX){
+      ix = VOLUME+RAND+y2*LZ+y3;
+    }
+    if(x1 == -1){
+      ix = VOLUME+RAND+LY*LZ+y2*LZ+y3;
     }
   }
-#endif
-
-#else
-  int i_even = 0,i_odd = VOLUME/2;
-  int i_even2 = 0, i_odd2 = 0;
-  for (x0 = 0; x0 < T; x0++) {
-    for (x1 = 0; x1 < LX; x1++) {
-      for (x2 = 0; x2 < LY; x2++) {
-	for (x3 = 0; x3 < LZ; x3++) {
-	  if((x0+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
-	    g_ipt[x0][x1][x2][x3] = i_even;
-	    i_even++;
-	  } 
-	  else {
-	    g_ipt[x0][x1][x2][x3] = i_odd;
-	    i_odd++;
-	  }
-	}
-      }
+  if(x0 == -1){
+    if(x1 == LX){
+      ix = VOLUME+RAND+2*LY*LZ+y2*LZ+y3;
     }
-  }
-#if ((defined PARALLELT) || (defined PARALLELXT))
-  /* the time boundary */
-  i_even = VOLUME; i_odd = VOLUME+(LX*LY*LZ)/2;
-  i_even2 = VOLUME+(LX*LY*LZ); i_odd2 = VOLUME+3*(LX*LY*LZ)/2;
-  for (x1 = 0; x1 < LX; x1++) {
-    for (x2 = 0; x2 < LY; x2++) {
-      for (x3 = 0; x3 < LZ; x3++) {
-	if((T+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
-	  g_ipt[T][x1][x2][x3] = i_even;
-	  i_even++;
-	  g_ipt[T+1][x1][x2][x3] = i_odd2;
-	  i_odd2++;
-	} 
-	else {
-	  g_ipt[T][x1][x2][x3] = i_odd;
-	  i_odd++;
-	  g_ipt[T+1][x1][x2][x3] = i_even2;
-	  i_even2++;
-	}
-      }
+    if(x1 == -1){
+      ix = VOLUME+RAND+3*LY*LZ+y2*LZ+y3;
     }
   }
 
 #endif
-#if (defined PARALLELXT)
-  /* the x boundary */
-  i_even = VOLUME+2*LX*LY*LZ; i_odd = i_even + (T*LY*LZ)/2;
-  i_even2 = VOLUME+2*LX*LY*LZ + (T*LY*LZ); i_odd2 = i_even2 + (T*LY*LZ)/2;
-  for (x0 = 0; x0 < T; x0++) {
-    for (x2 = 0; x2 < LY; x2++) {
-      for (x3 = 0; x3 < LZ; x3++) {
-	if((x0+LX+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
-	  g_ipt[x0][LX][x2][x3] = i_even;
-	  i_even++;
-	  g_ipt[x0][LX+1][x2][x3] = i_odd2;
-	  i_odd2++;
-	} 
-	else {
-	  g_ipt[x0][LX][x2][x3] = i_odd;
-	  i_odd++;
-	  g_ipt[x0][LX+1][x2][x3] = i_even2;
-	  i_even2++;
-	}
-      }
-    }
-  }
-
-  /* The edges */
-  i_even = VOLUME+RAND; i_odd = i_even+(LY*LZ)/2;
-  i_even2 = VOLUME+RAND + (LY*LZ); i_odd2 = i_even2 + (LY*LZ)/2;
-  for (x2 = 0; x2 < LY; x2++) {
-    for (x3 = 0; x3 < LZ; x3++) {
-      if((T+LX+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
-	g_ipt[T][LX][x2][x3] = i_even;
-	g_ipt[T][LX+1][x2][x3] = i_odd2;
-	g_ipt[T+1][LX][x2][x3] = i_odd2 + (LY*LZ);
-	g_ipt[T+1][LX+1][x2][x3] = i_even + 3*(LY*LZ);
-	i_even++;
-	i_odd2++;
-      } 
-      else {
-	g_ipt[T][LX][x2][x3] = i_odd;
-	g_ipt[T][LX+1][x2][x3] = i_even2;
-	g_ipt[T+1][LX][x2][x3] = i_even2 + (LY*LZ);;
-	g_ipt[T+1][LX+1][x2][x3] = i_odd + 3*(LY*LZ);
-	i_odd++;
-	i_even2++;
-      }
-    }
-  }
-#endif
-
-#endif
+   return(ix);
 }
 
-void geometry() {
+#else
+
+int Index(const int x0, const int x1, const int x2, const int x3)
+{
+   int y0, y1, y2, y3, ix, bndt=0, bndx=0, odd;
+
+#if ((defined PARALLELT) || (defined PARALLELXT))
+   y0 = x0;
+   /* the slice at time -1 is put to T+1 */
+   if(x0 == -1) y0=T+1;
+   if(x0 == -1 || x0 == T) bndt = 1;
+#else
+   y0 = (x0+T) % T;
+#endif
+
+#ifdef PARALLELXT 
+   y1 = x1;
+   /* the slice at x -1 is put to LX+1 */
+   if(x1 == -1) y1=LX+1;
+   if(x1 == -1 || x1 == LX) bndx = 1;
+#else
+   y1 = (x1+LX) % LX;
+#endif
+
+   y2=(x2+LY)%LY; 
+   
+   y3=(x3+LZ)%LZ; 
+
+   if((x0+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+     odd = 0;
+   } 
+   else {
+     odd = 1;
+   }
+
+   if(bndt == 0 && bndx == 0) {
+     ix = (y3 + LZ*y2 + LY*LZ*y1 + LX*LY*LZ*y0)/2 + (odd*(VOLUME))/2;
+   }
+   else if(bndt == 1 && bndx == 0) {
+     ix = y0*LX*LY*LZ+(y3 + LZ*y2 + LY*LZ*y1)/2 + (odd*(LX*LY*LZ))/2;
+   }
+   else if(bndt == 0 && bndx == 1) {
+     ix = VOLUME + 2*LX*LY*LZ + (y1-LX)*T*LY*LZ + (y0*LY*LZ + y3 + LZ*y2)/2 + (odd*(LY*LZ*T))/2;
+   }
+   else {
+     ix = VOLUME + RAND + ((y0-T)*2 + (y1-LX))*(LY*LZ) + (y3 + LZ*y2)/2 + (odd*(LY*LZ))/2;
+   }
+
+   return( ix );
+}
+
+#endif
+
+void geometry(){
   
-  int x0,x1,x2,x3,ix=0;
-  int y0, y1, z0, z1;
-  int i_even = 0,i_odd = VOLUME/2;
+  int x0,x1,x2,x3,ix;
+  int i_even,i_odd;
   int startvaluet = 0;
   int startvaluex = 0;
   int xeven[VOLUMEPLUSRAND] ALIGN;
@@ -188,22 +144,13 @@ void geometry() {
   startvaluex = 1;
 #endif
 
-  set_ipt();
-
   /* extended for neighbour slices at x0=-1 and x0=T */
   for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
     for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++){
       for (x2 = 0; x2 < LY; x2++){
-	for (x3 = 0; x3 < LZ; x3++){
-	  y0 = x0;
-	  y1 = x1;
-	  if(x0 == -1) y0 = T+1;
-	  if(x1 == -1) y1 = LX+1;
-	  z0 = y0 - 1;
-	  z1 = y1 - 1;
-	  if(x0 == 0) z0 = T+1;
-	  if(x1 == 0) z1 = LX+1;
-	  ix = g_ipt[y0][y1][x2][x3];
+	for (x3 = 0; x3 < L; x3++){
+	  ix=Index(x0, x1, x2, x3);
+
 	  /* g_proc_id*T is added to allow for odd T when the number of 
 	     nodes is even */
 	  if((x0+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
@@ -213,33 +160,32 @@ void geometry() {
 	    xeven[ix]=0; 
 	  }
 
-#if ((defined PARALLELT) || (defined PARALLELXT))
-	  if(x0 <  T) g_iup[ix][0] = g_ipt[x0+1][y1][x2][x3];
-	  else g_iup[ix][0] = 0;
-	  if(x0 > -1) g_idn[ix][0] = g_ipt[z0  ][y1][x2][x3];
-	  else g_idn[ix][0] = 0;
-#else
-	  g_iup[ix][0] = g_ipt[(x0+T+1)%T][x1][x2][x3];
-	  g_idn[ix][0] = g_ipt[(x0+t-1)%T][x1][x2][x3];
-#endif
-#if (defined PARALLELXT)
-	  if(x1 < LX) g_iup[ix][1] = g_ipt[y0][x1+1][x2][x3];
-	  else g_iup[ix][1] = 0;
-	  if(x1 > -1) g_idn[ix][1] = g_ipt[y0][z1  ][x2][x3];
-	  else g_idn[ix][1] = 0;
-#else
-	  g_iup[ix][1] = g_ipt[y0][(x1+LX+1)%LX][x2][x3];
-	  g_idn[ix][1] = g_ipt[y0][(x1+LX-1)%LX][x2][x3];
-#endif
+	  if(x0 >= 0 && x1 >=0) g_ipt[x0][x1][x2][x3] = ix;
+	  else if(x0 < 0 && x1 < 0) {
+	    g_ipt[T+1][LX+1][x2][x3] = ix;
+	  }
+	  else if(x0 < 0) {
+	    g_ipt[T+1][x1][x2][x3] = ix;
+	  }
+	  else if(x1 < 0) {
+	    g_ipt[x0][LX+1][x2][x3] = ix;
+	  }
 
-	  g_iup[ix][2] = g_ipt[y0][y1][(x2+LY+1)%LY][x3];
-	  g_idn[ix][2] = g_ipt[y0][y1][(x2+LY-1)%LY][x3];
+	  g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	  g_idn[ix][0] = Index(x0-1, x1, x2, x3);
 
-	  g_iup[ix][3] = g_ipt[y0][y1][x2][(x3+LY+1)%LZ];
-	  g_idn[ix][3] = g_ipt[y0][y1][x2][(x3+LY-1)%LZ];
+	  g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	  g_idn[ix][1] = Index(x0, x1-1, x2, x3);
 
-	  if(g_proc_id == 0) printf("%d %d %d %d: %d %d  %d %d %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, xeven[ix],g_iup[ix][0], g_idn[ix][0], g_iup[ix][1], g_idn[ix][1], g_iup[ix][2], g_idn[ix][2], g_iup[ix][3], g_idn[ix][3]);
+	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
 
+	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
+
+ 	  if(g_proc_id == 0) printf("%d %d %d %d: %d %d  %d %d %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, xeven[ix],g_iup[ix][0], g_idn[ix][0], g_iup[ix][1], g_idn[ix][1], g_iup[ix][2], g_idn[ix][2], g_iup[ix][3], g_idn[ix][3]); 
+	  
+	  
 	}
       }
     }
