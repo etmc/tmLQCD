@@ -14,6 +14,8 @@
 
 #define OlD 
 
+int check_geometry();
+
 /* exchanges the field  l */
 void xchange_field(int l)
 {
@@ -34,8 +36,8 @@ void xchange_field(int l)
 #ifdef PARALLELXT
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
-  MPI_Sendrecv(&spinor_field[l][0],                1, g_field_x_slice_gath, g_nb_x_dn, 91,
-	       &spinor_field[l][(T+2)*LX*LY*LZ/2], 1, g_field_x_slice_cont, g_nb_x_up, 91,
+  MPI_Sendrecv(&spinor_field[l][0],                1, g_field_x_slice_gath, g_nb_x_dn, 91, 
+ 	       &spinor_field[l][(T+2)*LX*LY*LZ/2], 1, g_field_x_slice_cont, g_nb_x_up, 91, 
 	       g_cart_grid, &status);
 
   /* send the data to the neighbour on the right in x direction */
@@ -74,7 +76,7 @@ void xchange_gauge()
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Sendrecv(&g_gauge_field[0][0],              1, g_gauge_x_slice_gath, g_nb_x_dn, 93,
-	       &g_gauge_field[(T+2)*LX*LY*LZ][0], 1, g_gauge_x_slice_cont, g_nb_x_up, 93,
+ 	       &g_gauge_field[(T+2)*LX*LY*LZ][0], 1, g_gauge_x_slice_cont, g_nb_x_up, 93, 
 	       g_cart_grid, &status);
 
   /* send the data to the neighbour on the right in x direction */
@@ -82,6 +84,7 @@ void xchange_gauge()
   MPI_Sendrecv(&g_gauge_field[LX-1][0],                     1, g_gauge_x_slice_gath, g_nb_x_up, 94,
 	       &g_gauge_field[(T+2)*LX*LY*LZ + T*LY*LZ][0], 1, g_gauge_x_slice_cont, g_nb_x_dn, 94,
 	       g_cart_grid, &status);
+
 #endif
 
 #endif
@@ -120,7 +123,7 @@ void xchange_deri()
 	       &ddummy[LX-1][0],                     1, g_deri_x_slice_gath, g_nb_x_up, 44,
 	       g_cart_grid, &status);
   /* add ddummy to df0 */
-  for(t = 0; t < 0; t++) {
+  for(t = 0; t < T; t++) {
     for(y = 0; y < LY; y++) {
       for(z = 0; z < LZ; z++) {
 	ix = g_ipt[t][LX-1][y][z];

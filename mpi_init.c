@@ -45,6 +45,7 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Comm_rank(g_cart_grid, &g_proc_id);
   MPI_Cart_coords(g_cart_grid, g_proc_id, ndims, g_proc_coords);
 
+  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
   if(g_stdio_proc == -1){
     g_stdio_proc = g_proc_id;
   }
@@ -83,7 +84,7 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_contiguous(T*LY*LZ/2, g_field_point, &g_field_x_slice_cont);
   MPI_Type_commit(&g_field_x_slice_cont);
   MPI_Type_contiguous(LY*LZ/2, g_field_point, &g_field_yz_subslice);
-  MPI_Type_commit(&g_field_yz_subslice);
+  MPI_Type_commit(&g_field_yz_subslice); 
   MPI_Type_vector(T, 1, LX, g_field_yz_subslice, &g_field_x_slice_gath);
   MPI_Type_commit(&g_field_x_slice_gath);
 

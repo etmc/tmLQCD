@@ -43,11 +43,12 @@
 /* #define DUM_MATRIX DUM_SOLVER+11 */
 #define NO_OF_SPINORFIELDS DUM_MATRIX+2
 
-#ifdef PARALLELT
+#if (defined PARALLELT && !defined PARALLELXT)
 #define RAND (2*LX*LY*LZ)
 #define VOLUMEPLUSRAND ((T+2)*LX*LY*LZ)
 #elif defined PARALLELXT
 #define RAND (2*LY*LZ*(LX+T))
+/* Note that VOLUMEPLUSRAND not equal to VOLUME+RAND in this case */
 #define VOLUMEPLUSRAND (LY*LZ*(T+2)*(LX+2))
 #else
 #define RAND 0
@@ -83,19 +84,19 @@
 #endif
 
 /* translates from ix to ieven/odd  */
-EXTERN int trans1[VOLUME+RAND] ALIGN;
+EXTERN int trans1[VOLUMEPLUSRAND] ALIGN;
 /* translates from ieven/iodd to ix */    
-EXTERN int trans2[VOLUME+RAND] ALIGN;   
-EXTERN int xeven[VOLUME+RAND] ALIGN;   
+EXTERN int trans2[VOLUMEPLUSRAND] ALIGN;   
+EXTERN int xeven[VOLUMEPLUSRAND] ALIGN;   
 EXTERN int g_ipt[T+2][LX+2][LY][LZ] ALIGN;
-EXTERN int g_iup[VOLUME+RAND][4] ALIGN;   
-EXTERN int g_idn[VOLUME+RAND][4] ALIGN;   
-EXTERN spinor spinor_field[NO_OF_SPINORFIELDS][(VOLUME+RAND)/2] ALIGN;
-EXTERN su3 g_gauge_field[VOLUME+RAND][4] ALIGN;
+EXTERN int g_iup[VOLUMEPLUSRAND][4] ALIGN;   
+EXTERN int g_idn[VOLUMEPLUSRAND][4] ALIGN;   
+EXTERN spinor spinor_field[NO_OF_SPINORFIELDS][(VOLUMEPLUSRAND)/2] ALIGN;
+EXTERN su3 g_gauge_field[VOLUMEPLUSRAND][4] ALIGN;
 EXTERN su3adj moment[VOLUME][4] ALIGN;
-EXTERN su3adj df0[VOLUME+RAND][4] ALIGN;
-EXTERN su3adj dclover[VOLUME+RAND][4] ALIGN;
-EXTERN su3adj ddummy[VOLUME+RAND][4] ALIGN;
+EXTERN su3adj df0[VOLUMEPLUSRAND][4] ALIGN;
+EXTERN su3adj dclover[VOLUMEPLUSRAND][4] ALIGN;
+EXTERN su3adj ddummy[VOLUMEPLUSRAND][4] ALIGN;
 EXTERN su3 sw[VOLUME][3][2] ALIGN;
 EXTERN su3 sw_inv[VOLUME][3][2] ALIGN;
 EXTERN su3 swp[VOLUME][4] ALIGN;
