@@ -29,7 +29,7 @@
  *
  ******************************************/
 void mul_one_pm_imu_inv(const int l, const double _sign);
-
+void mul_one_pm_imu(const int l, const double _sign);
 /******************************************
  * mul_one_pm_imu_sub_mul_gamma5 computes
  * l = gamma_5*((1\pm i\mu\gamma_5)*k - j)
@@ -216,6 +216,37 @@ void mul_one_pm_imu_inv(const int l, const double _sign){
   z.re = nrm;
   z.im =  sign * nrm * g_mu;
   w.re = nrm;
+  w.im = -z.im; /*-sign * nrm * g_mu;*/
+
+  /************ loop over all lattice sites ************/
+  for(ix = 0; ix < (VOLUME/2); ix++){
+    r=&spinor_field[l][ix];
+    /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
+    _complex_times_vector(phi1, z, (*r).c1);
+    _vector_assign((*r).c1, phi1);
+    _complex_times_vector(phi1, z, (*r).c2);
+    _vector_assign((*r).c2, phi1);
+    _complex_times_vector(phi1, w, (*r).c3);
+    _vector_assign((*r).c3, phi1);
+    _complex_times_vector(phi1, w, (*r).c4);
+    _vector_assign((*r).c4, phi1);
+  }
+}
+
+void mul_one_pm_imu(const int l, const double _sign){
+  complex z,w;
+  int ix;
+  double sign = 1.; 
+  spinor *r;
+  static su3_vector phi1;
+
+  if(_sign < 0.){
+    sign = -1.; 
+  }
+
+  z.re = 1.;
+  z.im =  sign * g_mu;
+  w.re = 1.;
   w.im = -z.im; /*-sign * nrm * g_mu;*/
 
   /************ loop over all lattice sites ************/
