@@ -1,3 +1,7 @@
+07.01.2005: Extended leap-frog and extended Sexton-Weingarten
+	    integration schemes (multiple time scales) implemented 
+	    and tested.
+
 17.12.2004: Possibility for rereading some parameters added.
 	    If there is a file hmc.reread, it will be parsed
 	    automatically and deleted afterwards. It is not possible

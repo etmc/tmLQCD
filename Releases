@@ -1,3 +1,11 @@
+Release 2.3.3:
+some bug fixes
+extended leap frog and Sexton-Weingarten integration
+scheme (multiple time scales) implemented and tested
+
+Release 2.3.2:
+some bug fixes, extended leap frog integrator
+
 Release 2.3.1:
 some bug fixes
 
