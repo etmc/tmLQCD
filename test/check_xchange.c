@@ -32,6 +32,7 @@ int main(int argc,char *argv[])
 {
   double * x;
   int i,ix, mu, x0, x1, x2, x3;
+  int mp, pm, mm, pp, di[2];
 
   mpi_init(argc, argv);
 
@@ -214,6 +215,75 @@ int main(int argc,char *argv[])
     }
   }
 
+  /* The edges */
+  di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+  di[1] = (g_proc_coords[1] - 1)%N_PROC_X;
+  MPI_Cart_rank(g_cart_grid, di, &mm);
+  di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+  di[1] = (g_proc_coords[1] + 1)%N_PROC_X;
+  MPI_Cart_rank(g_cart_grid, di, &mp);
+  di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+  di[1] = (g_proc_coords[1] - 1)%N_PROC_X;
+  MPI_Cart_rank(g_cart_grid, di, &pm);
+  di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+  di[1] = (g_proc_coords[1] + 1)%N_PROC_X;
+  MPI_Cart_rank(g_cart_grid, di, &pp);
+
+  x = (double*) &g_gauge_field[(T+2)*LX*LY*LZ+2*T*LY*LZ][0];
+  for(i = 0; i < LY*LZ; i++, x++) {
+    if((int)(*x) != pp) {
+      printf("The exchange up of gaugefields edges \n");
+      printf("between %d and %d is not correct\n", g_cart_id, pp);
+      printf("%d %d %d\n", g_cart_id, i, (int)(*x));
+      printf("Program aborted\n");
+#ifdef MPI
+      MPI_Finalize();
+#endif
+      exit(0);
+    }
+  }
+
+  x = (double*) &g_gauge_field[(T+2)*LX*LY*LZ+2*T*LY*LZ+LY*LZ][0];
+  for(i = 0; i < LY*LZ; i++, x++) {
+    if((int)(*x) != pp) {
+      printf("The exchange up of gaugefields edges \n");
+      printf("between %d and %d is not correct\n", g_cart_id, pm);
+      printf("%d %d %d\n", g_cart_id, i, (int)(*x));
+      printf("Program aborted\n");
+#ifdef MPI
+      MPI_Finalize();
+#endif
+      exit(0);
+    }
+  }
+
+  x = (double*) &g_gauge_field[(T+2)*LX*LY*LZ+2*T*LY*LZ+2*LY*LZ][0];
+  for(i = 0; i < LY*LZ; i++, x++) {
+    if((int)(*x) != pp) {
+      printf("The exchange up of gaugefields edges \n");
+      printf("between %d and %d is not correct\n", g_cart_id, mp);
+      printf("%d %d %d\n", g_cart_id, i, (int)(*x));
+      printf("Program aborted\n");
+#ifdef MPI
+      MPI_Finalize();
+#endif
+      exit(0);
+    }
+  }
+
+  x = (double*) &g_gauge_field[(T+2)*LX*LY*LZ+2*T*LY*LZ+3*LY*LZ][0];
+  for(i = 0; i < LY*LZ; i++, x++) {
+    if((int)(*x) != pp) {
+      printf("The exchange up of gaugefields edges \n");
+      printf("between %d and %d is not correct\n", g_cart_id, mm);
+      printf("%d %d %d\n", g_cart_id, i, (int)(*x));
+      printf("Program aborted\n");
+#ifdef MPI
+      MPI_Finalize();
+#endif
+      exit(0);
+    }
+  }
 #endif
 
 
@@ -240,7 +310,7 @@ int main(int argc,char *argv[])
     }
   }
 
-  for(x1 = 0; x1 < 0; x1++) {
+  for(x1 = 0; x1 < T; x1++) {
     for(x2 = 0; x2 < LY; x2++) {
       for(x3 = 0; x3 < LZ; x3++) {
 	ix = g_ipt[T+1][x1][x2][x3];
@@ -279,20 +349,20 @@ int main(int argc,char *argv[])
 
   xchange_deri();
 
-  for(x0 = 0; x0 < T; x0++) {
+#ifndef PARALLELXT
+  for(x1 = 0; x1 < LX; x1++) {
     for(x2 = 0; x2 < LY; x2++) {
       for(x3 = 0; x3 < LZ; x3++) {
-	ix = g_ipt[x0][LX-1][x2][x3];
+	ix = g_ipt[T-1][x1][x2][x3];
 	for(mu=0;mu<4;mu++){
-	  if(
-	  df0[ix][mu].d1 != g_nb_x_up ||
-	  df0[ix][mu].d2 != g_nb_x_up ||
-	  df0[ix][mu].d3 != g_nb_x_up ||
-	  df0[ix][mu].d4 != g_nb_x_up ||
-	  df0[ix][mu].d5 != g_nb_x_up ||
-	  df0[ix][mu].d6 != g_nb_x_up ||
-	  df0[ix][mu].d7 != g_nb_x_up ||
-	  df0[ix][mu].d8 != g_nb_x_up){
+	  if(df0[ix][mu].d1 != g_nb_t_up ||
+	     df0[ix][mu].d2 != g_nb_t_up ||
+	     df0[ix][mu].d3 != g_nb_t_up ||
+	     df0[ix][mu].d4 != g_nb_t_up ||
+	     df0[ix][mu].d5 != g_nb_t_up ||
+	     df0[ix][mu].d6 != g_nb_t_up ||
+	     df0[ix][mu].d7 != g_nb_t_up ||
+	     df0[ix][mu].d8 != g_nb_t_up){
 	    printf("Exchange of derivatives is working not correctly!\n");
 	    printf("Aborting program!");
 #ifdef MPI
@@ -304,8 +374,78 @@ int main(int argc,char *argv[])
       }
     }
   }
-
-  /* Check is missing! */
+#else
+  for(x1 = 0; x1 < LX-1; x1++) {
+    for(x2 = 0; x2 < LY; x2++) {
+      for(x3 = 0; x3 < LZ; x3++) {
+	ix = g_ipt[T-1][x1][x2][x3];
+	for(mu=0;mu<4;mu++){
+	  if(df0[ix][mu].d1 != g_nb_t_up ||
+	     df0[ix][mu].d2 != g_nb_t_up ||
+	     df0[ix][mu].d3 != g_nb_t_up ||
+	     df0[ix][mu].d4 != g_nb_t_up ||
+	     df0[ix][mu].d5 != g_nb_t_up ||
+	     df0[ix][mu].d6 != g_nb_t_up ||
+	     df0[ix][mu].d7 != g_nb_t_up ||
+	     df0[ix][mu].d8 != g_nb_t_up){
+	    printf("Exchange of derivatives is working not correctly!\n");
+	    printf("Aborting program!");
+#ifdef MPI
+	    MPI_Finalize();
+#endif
+	    exit(0);
+	  }
+	}
+      }
+    }
+  }
+  for(x0 = 0; x0 < T-1; x0++) {
+    for(x2 = 0; x2 < LY; x2++) {
+      for(x3 = 0; x3 < LZ; x3++) {
+	ix = g_ipt[x0][LX-1][x2][x3];
+	for(mu=0;mu<4;mu++){
+	  if(df0[ix][mu].d1 != g_nb_x_up ||
+	     df0[ix][mu].d2 != g_nb_x_up ||
+	     df0[ix][mu].d3 != g_nb_x_up ||
+	     df0[ix][mu].d4 != g_nb_x_up ||
+	     df0[ix][mu].d5 != g_nb_x_up ||
+	     df0[ix][mu].d6 != g_nb_x_up ||
+	     df0[ix][mu].d7 != g_nb_x_up ||
+	     df0[ix][mu].d8 != g_nb_x_up){
+	    printf("Exchange of derivatives is working not correctly!\n");
+	    printf("Aborting program!");
+#ifdef MPI
+	    MPI_Finalize();
+#endif
+	    exit(0);
+	  }
+	}
+      }
+    }
+  }
+  for(x2 = 0; x2 < LY; x2++) {
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[T-1][LX-1][x2][x3];
+      for(mu=0;mu<4;mu++){
+	if(df0[ix][mu].d1 != g_nb_x_up + g_nb_t_up ||
+	   df0[ix][mu].d2 != g_nb_x_up + g_nb_t_up ||
+	   df0[ix][mu].d3 != g_nb_x_up + g_nb_t_up ||
+	   df0[ix][mu].d4 != g_nb_x_up + g_nb_t_up ||
+	   df0[ix][mu].d5 != g_nb_x_up + g_nb_t_up ||
+	   df0[ix][mu].d6 != g_nb_x_up + g_nb_t_up ||
+	   df0[ix][mu].d7 != g_nb_x_up + g_nb_t_up ||
+	   df0[ix][mu].d8 != g_nb_x_up + g_nb_t_up){
+	  printf("Exchange of derivatives is working not correctly!\n");
+	  printf("Aborting program!");
+#ifdef MPI
+	  MPI_Finalize();
+#endif
+	  exit(0);
+	}
+      }
+    }
+  }
+#endif
 
   printf("The exchange routines are working correctly\n");
   printf("\n");
