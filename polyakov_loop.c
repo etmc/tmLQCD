@@ -35,7 +35,7 @@ void polyakov_loop(complex * pl_, const int mu) {
 
   /* For the moment only the Polyakov loop in y- and z-direction 
      are implemented, since they are not affected by parallelisation: */
-  if(mu == 0 || mu == 1) {
+  if(mu == 0 || mu == 1 || mu > 3) {
       fprintf(stderr, "Wrong parameter for Polyakov loop calculation in polyakov_loop.c:\n");
       fprintf(stderr, "Only direction %d and %d are allowed.\n",2,3);
       fprintf(stderr, "Actual value is %d! Aborting...\n",mu);
