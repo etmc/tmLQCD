@@ -2,6 +2,7 @@ CC = @CC@
 CCDEP = @CCDEP@
 CFLAGS = @CFLAGS@ @OPTARGS@
 LDFLAGS = @LDFLAGS@ @OPTARGS@
+DEPFLAGS = @DEPFLAGS@
 CCLD = $(CC)
 LEX = @LEX@ 
 AUTOCONF = @AUTOCONF@
@@ -17,13 +18,15 @@ MODULES = read_input clover_eo linsolve xchange \
 	geometry_eo linalg_eo ranlxd sw io Hopping_Matrix \
 	boundary deriv_Sb tm_operators getopt
 
-PROGRAMS = hybrid hmc_tm
+PROGRAMS = hybrid hmc_tm testtrace
 ALLOBJ = ${MODULES} ${PROGRAMS}
 
 
 .SUFFIXES:
 
-all: hybrid hmc_tm
+all: Makefile dep hybrid hmc_tm
+
+-include $(addsuffix .d,$(ALLOBJ))
 
 Makefile: Makefile.in config.status
 	CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
@@ -31,14 +34,22 @@ Makefile: Makefile.in config.status
 flex_read_input: read_input.l
 	${LEX} -i -t $< > read_input.c
 
-${addsuffix .o, ${MODULES}}: %.o: %.c %.h Makefile global.h
+${addsuffix .o, ${MODULES}}: %.o: %.c %.d Makefile
 	${COMPILE} -c $< 
 
-${addsuffix .o, ${PROGRAMS}}: %.o: %.c Makefile global.h
+${addsuffix .o, ${PROGRAMS}}: %.o: %.c %.d Makefile
 	${COMPILE} -c $<
 
 ${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} 
 	 ${LINK} ${addsuffix .o, ${MODULES}} $@.o $(LIBS)
 
+$(addsuffix .d,$(ALLOBJ)): %.d: %.c Makefile
+	 @ $(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@ 
+
+dep: $(addsuffix .d,$(ALLOBJ))
+
 clean:
 	rm -f *.o hybrid
+
+.PHONY: all clean compile-clean distclean dep \
+	flex_read_input ${PROGRAMS}

@@ -14,6 +14,9 @@
 
 #define _default_g_kappa 0.125
 #define _default_g_mu 0.0
+#define _default_g_mu1 0.0
+#define _default_g_mu2 0.0
+#define _default_g_mu3 0.0
 #define _default_g_beta 6.0
 #define _default_random_seed 123456
 #define _default_matrix_element_flag 0

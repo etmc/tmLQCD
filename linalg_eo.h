@@ -14,5 +14,6 @@ double square_norm(const int k, const int N);
 double scalar_prod_r(const int k, const int l, const int N);
 void square_and_prod_r(double *x1, double *x2, const int k, const int l, const int N);
 double diff_and_square_norm(const int j, const int k, const int N);
+void mul_r(const int R, const double c, const int S, const int N);
 
 #endif

@@ -711,3 +711,42 @@ double diff_and_square_norm(const int j, const int k, const int N) {
 
 }
 
+
+void mul_r(const int R, const double c, const int S, const int N){
+  int ix;
+  spinor *r,*s;
+  
+  for (ix = 0; ix < N; ix++){
+    r = &spinor_field[R][ix];
+    s = &spinor_field[S][ix];
+    
+    (*r).c1.c1.re=c*(*s).c1.c1.re;
+    (*r).c1.c1.im=c*(*s).c1.c1.im;
+    (*r).c1.c2.re=c*(*s).c1.c2.re;
+    (*r).c1.c2.im=c*(*s).c1.c2.im;
+    (*r).c1.c3.re=c*(*s).c1.c3.re;
+    (*r).c1.c3.im=c*(*s).c1.c3.im;
+    
+    (*r).c2.c1.re=c*(*s).c2.c1.re;
+    (*r).c2.c1.im=c*(*s).c2.c1.im;
+    (*r).c2.c2.re=c*(*s).c2.c2.re;
+    (*r).c2.c2.im=c*(*s).c2.c2.im;
+    (*r).c2.c3.re=c*(*s).c2.c3.re;
+    (*r).c2.c3.im=c*(*s).c2.c3.im;
+    
+    (*r).c3.c1.re=c*(*s).c3.c1.re;
+    (*r).c3.c1.im=c*(*s).c3.c1.im;
+    (*r).c3.c2.re=c*(*s).c3.c2.re;
+    (*r).c3.c2.im=c*(*s).c3.c2.im;
+    (*r).c3.c3.re=c*(*s).c3.c3.re;
+    (*r).c3.c3.im=c*(*s).c3.c3.im;
+    
+    (*r).c4.c1.re=c*(*s).c4.c1.re;
+    (*r).c4.c1.im=c*(*s).c4.c1.im;
+    (*r).c4.c2.re=c*(*s).c4.c2.re;
+    (*r).c4.c2.im=c*(*s).c4.c2.im;
+    (*r).c4.c3.re=c*(*s).c4.c3.re;
+    (*r).c4.c3.im=c*(*s).c4.c3.im;
+  }
+}
+
