@@ -44,7 +44,7 @@
 #include "init_moment_field.h"
 #include "invert_eo.h"
 
-char * Version = "2.3";
+char * Version = "2.3.3";
 
 void usage(){
   fprintf(stderr, "Inversion for EO preconditioned Wilson twisted mass QCD\n\n");

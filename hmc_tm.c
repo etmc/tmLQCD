@@ -46,7 +46,7 @@
 #include "test/check_geometry.h"
 #include "boundary.h"
 
-char * Version = "2.3.1";
+char * Version = "2.3.3";
 
 
 void usage(){
