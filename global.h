@@ -73,7 +73,10 @@ EXTERN int ** g_iup;
 EXTERN int ** g_idn;
 
 EXTERN spinor ** spinor_field;
-/* EXTERN spinor ** spinor_field; */
+EXTERN spinor ** g_csg_field;
+EXTERN int * g_csg_index_array;
+EXTERN int * g_csg_N;
+
 EXTERN su3 ** g_gauge_field;
 EXTERN su3 ** g_gauge_field_back;
 /* This is dirty, but dow not allocate memory */

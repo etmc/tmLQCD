@@ -48,18 +48,18 @@ int init_csg_field(const int V, const int nr) {
   if(errno == ENOMEM) {
     return(1);
   }
-  csg_field = malloc(nr*sizeof(spinor*));
+  g_csg_field = malloc(nr*sizeof(spinor*));
   if(errno == ENOMEM) {
     return(2);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
-  csg_field[0] = (spinor*)(((unsigned long int)(sp_csg)+ALIGN_BASE)&~ALIGN_BASE);
+  g_csg_field[0] = (spinor*)(((unsigned long int)(sp_csg)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  csg_field[0] = sp_csg;
+  g_csg_field[0] = sp_csg;
 #endif
   
   for(i = 1; i < nr; i++){
-    csg_field[i] = csg_field[i-1]+V;
+    g_csg_field[i] = g_csg_field[i-1]+V;
   }
 
   return(0);
