@@ -49,10 +49,13 @@ int init_csg_field(const int V, const int * nr) {
     return(1);
   }
   for(i = 0; i < 4; i++) {
-    g_csg_field[i] = malloc(nr[2*i]*sizeof(spinor*));
-    if(errno == ENOMEM) {
-      return(2);
+    if(nr[2*i]!=0) {
+      g_csg_field[i] = malloc(nr[2*i]*sizeof(spinor*));
+      if(errno == ENOMEM) {
+	return(2);
+      }
     }
+    else g_csg_field[i] = NULL;
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
   g_csg_field[0][0] = (spinor*)(((unsigned long int)(sp_csg)+ALIGN_BASE)&~ALIGN_BASE);
@@ -64,9 +67,11 @@ int init_csg_field(const int V, const int * nr) {
     g_csg_field[0][i] = g_csg_field[0][i-1]+V;
   }
   for(j = 1; j < 4; j++) {
-    g_csg_field[j][0] = g_csg_field[j-1][nr[2*(j-1)]-1]+V;
-    for(i = 1; i < nr[2*j]; i++) {
-      g_csg_field[j][i] = g_csg_field[j][i-1]+V;
+    if(nr[2*(j)]!=0) {
+      g_csg_field[j][0] = g_csg_field[j-1][nr[2*(j-1)]-1]+V;
+      for(i = 1; i < nr[2*j]; i++) {
+	g_csg_field[j][i] = g_csg_field[j][i-1]+V;
+      }
     }
   }
 
