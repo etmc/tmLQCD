@@ -95,12 +95,10 @@ int main(int argc,char *argv[])
   }
 
   /* define the geometry */
-  printf("geometry %d\n", g_proc_id);fflush(stdout);
   geometry();
   /* define the boundary conditions for the fermion fields */
-  printf("boundary %d\n", g_proc_id);fflush(stdout);
   boundary();
-  printf("done %d\n", g_proc_id);fflush(stdout);
+
 #if defined GEOMETRIC
   if(g_proc_id==0) fprintf(fp2,"The geometric series is used as solver \n\n");
 #else
