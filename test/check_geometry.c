@@ -20,6 +20,7 @@
 #endif
 #include "global.h"
 #include "geometry_eo.h"
+#include "test/check_geometry.h"
 #ifdef MPI
 #include "mpi_init.h"
 #endif
