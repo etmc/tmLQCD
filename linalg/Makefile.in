@@ -82,6 +82,7 @@ compile-clean: Makefile
 
 clean: compile-clean 
 	@rm -f $(addsuffix .a, ${LIBRARIES})
+	@rm -f ../lib/liblinalg.a
 
 distclean: clean
 	@rm -f Makefile

@@ -1448,7 +1448,7 @@ if test $enable_mpi = yes; then
   if test "$host_cpu" = "powerpc"; then
     CC=mpcc_r
     CXX=mpCC_r
-  elif test "$host_cpu" = "i686"; then
+  elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     # Extract the first word of "mpicc", so it can be a program name with args.
 set dummy mpicc; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
@@ -3269,7 +3269,7 @@ fi
 
   fi
 fi
-if test "$host_cpu" = "i686"; then
+if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   echo "$as_me:$LINENO: checking for f__cabs in -lg2c" >&5
 echo $ECHO_N "checking for f__cabs in -lg2c... $ECHO_C" >&6
 if test "${ac_cv_lib_g2c_f__cabs+set}" = set; then
@@ -5140,7 +5140,7 @@ echo "${ECHO_T}no" >&6
   PROFILE_FLAG=
 fi
 
-if test "$host_cpu" = "i686"; then
+if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   if test "$GCC" = yes; then
     GCCVERSION1=`$CC -dumpversion | cut -d "." -f 1`
     GCCVERSION2=`$CC -dumpversion | cut -d "." -f 2`
@@ -5156,17 +5156,23 @@ if test "$host_cpu" = "i686"; then
     CXXFLAGS=' -Wall'
     OPTARGS='-O'
     LIBS="-lm"
-
-    if test $enable_p4 = yes && test $GCCVERSION1 -gt 2 && test $GCCVERSION2 -gt 1; then
-       CFLAGS="$CFLAGS -DP4 -march=pentium4"
-       SSE="sse2"
-    elif test $enable_p4 = yes && $GCCVERSION1 -gt 2; then
-       CFLAGS="$CFLAGS -DP4 -march=pentium"
-       SSE="sse2"
-    elif test $enable_p4 = yes; then
-       CFLAGS="$CFLAGS -DP4 -mcpu=i686"
+    if test "$host_cpu" != "x86_64"; then
+      if test $enable_p4 = yes && test $GCCVERSION1 -gt 2 && test $GCCVERSION2 -gt 1; then
+         CFLAGS="$CFLAGS -DP4 -march=pentium4"
+         SSE="sse2"
+      elif test $enable_p4 = yes && $GCCVERSION1 -gt 2; then
+         CFLAGS="$CFLAGS -DP4 -march=pentium"
+         SSE="sse2"
+      elif test $enable_p4 = yes; then
+         CFLAGS="$CFLAGS -DP4 -mcpu=i686"
+      else
+         CFLAGS="$CFLAGS -mcpu=i686"
+      fi
     else
-       CFLAGS="$CFLAGS -mcpu=i686"
+      if test $enable_p4 = yes; then
+        CFLAGS="$CFLAGS -DP4"
+        SSE="sse2"
+      fi
     fi
 
     if test $enable_sse = yes && test $enable_sse2 = yes; then
@@ -5192,8 +5198,13 @@ if test "$host_cpu" = "i686"; then
       CFLAGS="$CFLAGS -DSSE"
       SSE="sse"
     fi
-    CFLAGS="$CFLAGS -malign-double -fomit-frame-pointer -ffloat-store"
-    CXXFLAGS="$CXXFLAGS -mcpu=i686 -O -malign-double -fomit-frame-pointer -ffloat-store"
+    if test "$host_cpu" != "x86_64"; then
+      CFLAGS="$CFLAGS -malign-double -fomit-frame-pointer -ffloat-store"
+      CXXFLAGS="$CXXFLAGS -mcpu=i686 -O -malign-double -fomit-frame-pointer -ffloat-store"
+    else
+      CFLAGS="$CFLAGS -fomit-frame-pointer -ffloat-store"
+      CXXFLAGS="$CXXFLAGS -O -fomit-frame-pointer -ffloat-store"
+    fi
     CCDEP="$CC"
     if test $enable_mpi = yes; then
       CCDEP="gcc"

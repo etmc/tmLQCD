@@ -29,7 +29,7 @@ MODULES = read_input clover_eo linsolve xchange \
 	mpi_init update_tm Hopping_Matrix_nocom \
 	test/check_geometry
 
-PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark
+PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark test/check_xchange
 ALLOBJ = ${MODULES} ${PROGRAMS}
 
 
@@ -55,11 +55,17 @@ ${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}}
 
 dep: $(addsuffix .d,$(ALLOBJ))
 
-clean:
-	rm -f *.o hybrid
+compile-clean: Makefile
+	@(cd linalg && $(MAKE) compile-clean)
+	rm -f *.o *.d
+
+clean: compile-clean
+	@(cd linalg && $(MAKE) clean)
+	@rm -f hmc_tm hybrid
 
 distclean: clean
-	@(cd linalg && $(MAKE) clean)
+	@rm -f Makefile
+	@(cd linalg && $(MAKE) distclean)
 
 .PHONY: all clean compile-clean distclean dep \
 	flex_read_input ${PROGRAMS}

@@ -59,8 +59,10 @@ int main(int argc,char *argv[])
   geometry();
   /* define the boundary conditions for the fermion fields */
   boundary();
-  
+
+#ifdef MPI  
   check_geometry();
+#endif
 
   /* here we generate exactly the same configuration as for the 
      single node simulation */
@@ -117,6 +119,7 @@ int main(int argc,char *argv[])
     random_spinor_field(k);
   }
 
+#ifdef MPI
   while(sdt<30.) {
     MPI_Barrier(MPI_COMM_WORLD);
     t1=(double)clock();
@@ -149,7 +152,7 @@ int main(int argc,char *argv[])
     printf("\n");
     fflush(stdout);
   }
-
+#endif
   /* isolated computation */
   t1=(double)clock();
   for (j=0;j<j_max;j++) {
@@ -163,11 +166,18 @@ int main(int argc,char *argv[])
   dt2=(t2-t1)/((double)(CLOCKS_PER_SEC));
   /* compute the bandwidth */
   dt=dts-dt2;
+#ifdef MPI
   MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   sdt=sdt/g_nproc;
-
+#else
+  sdt = dt;
+#endif
+#ifdef MPI
   MPI_Allreduce (&dt2, &dt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   dt=dt/g_nproc;
+#else
+  dt = dt2;
+#endif
   dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
   if(g_proc_id==0) {
     printf("communication switched off \n");
@@ -176,7 +186,7 @@ int main(int argc,char *argv[])
     printf("\n");
     fflush(stdout);
   }
-
+#ifdef MPI
   sdt=sdt/k_max;
   sdt=sdt/j_max;
   sdt=sdt/(2*SLICE);
@@ -186,7 +196,10 @@ int main(int argc,char *argv[])
 	   0.000001*2.*192./sdt, 0.000001*2.*192./sdt);
     fflush(stdout);
   }
+#endif
   fflush(stdout);
+#ifdef MPI
   MPI_Finalize();
+#endif
   return(0);
 }
