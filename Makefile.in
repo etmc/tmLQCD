@@ -1,0 +1,25 @@
+CC = @CC@
+CCDEP = @CCDEP@
+CFLAGS = @CFLAGS@
+CCLD = $(CC)
+LINK = $(CCLD) -o $@
+LEX = @LEX@ 
+AUTOCONF = @AUTOCONF@
+LIBS = @LIBS@ 
+
+COMPILE = ${CC} -o $@ ${CFLAGS} 
+
+TARGETS = clover_eo hybrid linsolve xchange \
+	expo hybrid_update observables start \
+	geometry_eo linalg_eo ranlxs sw io
+
+all: hybrid
+
+${addsuffix .o, ${TARGETS}}: %.o: %.c %.h makefile global.h
+	${COMPILE} -c $< 
+
+hybrid: ${addsuffix .o, ${TARGETS}} global.h
+	 ${LINK} ${addsuffix .o, ${TARGETS}} $(LDFLAGS) $(LIBS)
+
+clean:
+	rm -f *.o hybrid

@@ -1,0 +1,357 @@
+dnl $Id$
+dnl
+dnl Process this file with autoconf to produce a configure script
+dnl
+dnl comment in the following two lines
+dnl if autoconf2.5x is available
+AC_INIT(HMC, 0.9, urbach@ifh.de)
+AC_CONFIG_SRCDIR([hybrid.c])
+dnl and comment out the following line
+dnl AC_INIT(src/bin/D_psi.c)
+AC_CANONICAL_HOST()
+AC_PREFIX_DEFAULT($HOME)
+AC_ARG_PROGRAM
+
+if test "$host_cpu" = "powerpc"; then
+  echo We are on a IBM Power PC, using xlc and xlC or mpcc/mpCC
+  CC=xlc_r
+  CXX=xlC_r
+fi
+if test "$host_vendor" = "cray"; then
+  ac_cv_c_bigendian=yes
+fi
+
+
+AC_MSG_CHECKING(whether we want to use MPI)
+AC_ARG_ENABLE(mpi,
+  [  --enable-mpi                 enable use of mpi [default=yes]],
+  enable_mpi=$enableval, enable_mpi=yes)
+if test $enable_mpi = yes; then
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi 
+
+mpidimension="-DPARALLELT"
+
+if test $enable_mpi = yes; then
+dnl In general one cannot run mpi programs directly
+dnl thats why we need here cross_compiling=yes
+dnl for non CRAY
+  if test "$host_vendor" != "cray"; then
+    cross_compiling=yes
+  fi
+  if test "$host_cpu" = "powerpc"; then
+    CC=mpcc_r
+    CXX=mpCC_r
+  elif test "$host_cpu" = "i686"; then	
+    AC_PATH_PROG(MPICC, mpicc, /usr/bin/mpicc, /opt/mpich/gnu3/bin:/opt/mpich/gnu/bin:$PATH)
+    if test "$CC" = ""; then
+      CC=$MPICC
+    fi
+  fi
+fi 
+
+dnl for the case of other configure scripts
+dnl AC_CONFIG_SUBDIRS( rng )
+
+dnl Checks for programs.
+
+AC_PROG_CC
+AC_C_CONST
+AC_PROG_MAKE_SET
+AC_C_BIGENDIAN(endian="", endian="-DLITTLE_ENDIAN")
+
+dnl Checks for libraries.
+if test "$host_cpu" = "powerpc"; then
+  AC_CHECK_LIB(essl, zaxpy, ,echo NO ESSL! exiting...;exit 0, -lf -lm )
+  AC_CHECK_LIB(lapack, zheev, LP=yes, LP="", -lessl -lblas -lf -lm )
+  AC_CHECK_LIB(arpack, zneupd, AP=yes, AP="", -lessl -llapack -lf -lm)
+  if test "$enable_mpi" = "yes"; then
+    AC_CHECK_LIB(parpack, pzneupd, PAP=yes, PAP="", -larpack -lessl -llapack -lf -lm)  
+  fi
+fi
+if test "$host_cpu" = "i686"; then
+  AC_CHECK_LIB(g2c, f__cabs, G2C=yes, G2C="")
+  if test "$G2C" = yes; then
+    F2C="-lg2c"
+  fi
+  AC_CHECK_LIB(lapack, zheev_, LP=yes, LP="", -lblas -lg2c -lm)
+  AC_CHECK_LIB(atlas, ATL_walltime, ATLAS=yes, ATLAS="")
+  if test "$LP" != ""; then
+    AC_CHECK_LIB(arpack, zneupd_, AP=yes ,AP="" , -llapack -lg2c -lm)
+    if test "$enable_mpi" = "yes"; then
+      AC_CHECK_LIB(parpack, pzneupd_, PAP=yes, PAP="", -larpack -llapack -lg2c -lm)  
+    fi
+  else
+    AC_CHECK_LIB(arpack, zneupd_, AP=yes ,AP="" , -lg2c -lm)
+    if test "$enable_mpi" = "yes"; then
+      AC_CHECK_LIB(parpack, pzneupd_, PAP=yes, PAP="", -larpack -lg2c -lm)  
+    fi
+  fi
+fi
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS( math.h  )
+AC_CHECK_HEADERS( signal.h  )
+AC_CHECK_HEADERS( time.h  )
+AC_CHECK_HEADERS( float.h  )
+AC_CHECK_HEADERS( limits.h  )
+AC_CHECK_HEADER( getopt.h, INCLUDES="//  " )
+
+AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
+dnl AC_DEFINE(VERSION, 0.1)
+
+dnl We now define some replace variables
+AC_SUBST(OPTARGS)
+AC_SUBST(INCLUDES)
+AC_SUBST(AUTOCONF)
+AC_SUBST(SOLVEROUT)
+AC_SUBST(CCDEP)
+AC_SUBST(DEPFLAGS)
+AC_SUBST(DEBUG_FLAG)
+AC_SUBST(PROFILE_FLAG)
+AC_SUBST(ARPACK)
+AC_SUBST(PARPACK)
+AC_SUBST(F2C)
+AC_SUBST(XCHANGELIB)
+AC_SUBST(XCHANGEDIR)
+AC_SUBST(XLIB)
+
+dnl in the following we check for extra options
+AC_MSG_CHECKING(whether we want to use P4 instructions)
+AC_ARG_ENABLE(p4,
+  [  --enable-p4                  enable use of P4 instructions [default=no]],
+  enable_p4=$enableval, enable_p4=no)
+if test $enable_p4 = yes; then
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(whether we want to use SSE1 instructions)
+AC_ARG_ENABLE(sse,
+  [  --enable-sse                 enable use of SSE1 instructions [default=yes]],
+  enable_see=$enableval, enable_sse=def)
+if test $enable_sse = yes; then
+  AC_MSG_RESULT(yes)
+else 
+  if test $enable_sse = def; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
+fi
+
+AC_MSG_CHECKING(whether we want to use SSE2 instructions)
+AC_ARG_ENABLE(sse2,
+  [  --enable-sse2                enable use of SSE2 instructions [default=no]],
+  enable_sse2=$enableval, enable_sse2=no)
+if test $enable_sse2 = yes; then
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(whether solvers should output convergence information)
+AC_ARG_ENABLE(solveroutput,
+  [  --enable-solveroutput        enable solver convergence output [default=no]],
+  enable_solveroutput=$enableval, enable_solveroutput=no)
+if test $enable_solveroutput = yes; then
+  AC_MSG_RESULT(yes)
+  SOLVEROUT=-D_SOLVER_OUTPUT
+else
+  AC_MSG_RESULT(no)
+  SOLVEROUT=
+fi
+
+AC_MSG_CHECKING(whether we want to use gprof as profiler)
+AC_ARG_WITH(gprof,
+  [  --with-gprof                  use of gprof profiler [default=yes]],
+  enable_gprof=$withval, enable_gprof=yes)
+if test $enable_gprof = yes; then
+  AC_MSG_RESULT(yes)
+    if test "$GCC" = yes; then
+      PROFILE_FLAG="-pg -g"
+    elif test "$host_cpu" = "powerpc"; then
+      PROFILE_FLAG="-pg -qfullpath -g"
+    else
+      PROFILE_FLAG="-pg -g"
+    fi
+else
+  AC_MSG_RESULT(no)
+  PROFILE_FLAG=
+fi
+
+dnl Now we have to set als Flags and compiler proper
+dnl first for PC's
+if test "$host_cpu" = "i686"; then
+dnl the GNU compiler
+  if test "$GCC" = yes; then
+    GCCVERSION=`$CC --version`
+dnl -march=pentium4
+    if test $enable_mpi = yes; then
+dnl Due to some standard problems in MPI header files
+dnl no -pedantic-errors...
+      CFLAGS="-ansi -Wall -DMPI $endian $mpidimension"
+    else
+      CFLAGS="-ansi -pedantic-errors -Wall $endian"
+    fi
+    CXXFLAGS=' -Wall'
+    OPTARGS='-O'
+    LIBS=
+
+    if test $enable_p4 = yes; then
+       CFLAGS="$CFLAGS -DP4"
+       SSE="sse2"
+    fi
+
+    if test $enable_sse = yes && test $enable_sse2 = yes; then
+      echo Usage of SSE and SSE2 instructions at the same time is not possible!
+      echo Using SSE2 instructions!
+      CFLAGS="$CFLAGS -DSSE2"
+      SSE="sse2"
+    fi
+    if test $enable_sse = def && test $enable_sse2 = yes; then
+      echo Using SSE2 instructions!
+      CFLAGS="$CFLAGS -DSSE2"
+      SSE="sse2"
+    fi
+    if test $enable_sse = no && test $enable_sse2 = yes; then
+      CFLAGS="$CFLAGS -DSSE2"
+      SSE="sse2"
+    fi
+    if test $enable_sse = yes && test $enable_sse2 = no; then
+      CFLAGS="$CFLAGS -DSSE"
+      SSE="sse"
+    fi
+    if test $enable_sse = def && test $enable_sse2 = no; then
+      CFLAGS="$CFLAGS -DSSE"
+      SSE="sse"
+    fi
+    CFLAGS="$CFLAGS -mcpu=i686 -malign-double -fomit-frame-pointer -ffloat-store"
+    CXXFLAGS="$CXXFLAGS -mcpu=i686 -O -malign-double -fomit-frame-pointer -ffloat-store"
+    CCDEP="$CC"
+    if test $enable_mpi = yes; then
+      CCDEP="gcc"
+    fi 
+    DEPFLAGS="-MM"
+    DEBUG_FLAG="-g"
+dnl other compiler
+  else
+dnl check for pgcc
+    PGCC=`$CC -V 2>&1 | grep pgcc`
+    ICC=`$CC -V 2>&1 | grep -i intel`
+    if test "$PGCC" != ""; then
+      echo "We are using the Portland Group C compiler!"
+      if test "$enable_mpi" = yes; then
+        CFLAGS="-Mdalign -fastsse -DMPI $mpidimension"
+      else
+        CFLAGS="-Mdalign -fastsse "
+      fi
+      if test $enable_p4 = "yes"; then
+	SSE="sse2"
+      fi
+      OPTARGS="-O2"
+      DEBUG_FLAG="-g"
+      PROFILE_FLAG="-p -g"
+      CCDEP="$CC"
+      DEPFLAGS="-M"
+dnl check for icc    
+    elif test "$ICC" != ""; then
+      echo "We are using the Intel C compiler!"
+      if test $enable_mpi = yes; then
+        CFLAGS="-Wall -w1  -DMPI $endian $mpidimension"
+      else
+        CFLAGS="-Wall -w1 $endian"
+      fi
+      if test $enable_p4 = "yes"; then
+        CFLAGS="$CFLAGS -march=pentium4"
+	SSE="sse2"
+      fi
+      OPTARGS="-O3"
+      DEBUG_FLAG="-g"
+      PROFILE_FLAG="-p -g"
+      CCDEP="$CC"
+      DEPFLAGS="-M"
+    else
+      if test $enable_mpi = yes; then
+        CFLAGS="-O -DMPI $endian $mpidimension"
+      else
+        CFLAGS="-O $endian"
+      fi
+      DEBUG_FLAG="-g"
+      CCDEP="$CC"
+      DEPFLAGS="-M"
+    fi
+    if test $enable_mpi = yes; then
+      XCHANGEDIR=message-passing
+      XCHANGELIB="\$(top_builddir)/src/message-passing/libxchange.a"
+      XLIB="-lxchange"
+    else
+      XCHANGEDIR=
+      XCHANGELIB=
+      XLIB=
+    fi
+  fi
+
+dnl The IBM Power PC
+elif test "$host_cpu" = "powerpc"; then
+  if test $enable_mpi = yes; then
+    CFLAGS="-DXLC -q64 -qsrcmsg -DMPI -DNOF77_ $endian $mpidimension"
+  else
+    CFLAGS="-DXLC -DNOF77_ -q64 -qsrcmsg"
+  fi
+  LIBS="-larpack -lparpack -lessl -llapack -lblas -lf -lm"
+  LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/src/lib -bmaxdata:0x70000000"
+  XLC=yes
+  OPTARGS="-O3 -qhot"
+  DEBUG_FLAG="-qfullpath -g"
+  CCDEP="gcc"
+  DEPFLAGS="-MM"
+
+dnl The CRAY
+elif test "$host_vendor" = "cray"; then
+  echo
+  echo "Hey, we are on the cray, you should take some time for this..."
+  echo
+  if test $enable_mpi = yes; then
+    CFLAGS="-DCRAY -DMPI $endian $mpidimension -dp -DNOF77_"
+  else
+    CFLAGS="-DCRAY -dp -DNOF77_"
+  fi
+  LIBS="-lsci -larpack -lparpack -llapack -lblacs -lsci -lf -lm"
+  LDFLAGS="-L\$(abs_top_builddir)/src/lib"
+  OPTARGS="-O3"
+  DEBUG_FLAG="-g"
+  CCDEP="$CC"
+  DEPFLAGS="-M"
+else
+  echo
+  echo "Unknown platform... Using standard parameter"
+  echo
+  if test $enable_mpi = yes; then
+    CFLAGS="$CFLAGS -DMPI $endian $mpidimension"
+  fi
+  CCDEP="$CC"
+  DEPFLAGS="-M"
+  LDFLAGS="-L\$(abs_top_builddir)/src/lib"
+fi
+
+
+AC_MSG_CHECKING(whether we want to switch on optimisation)
+AC_ARG_ENABLE(optimize,  
+  [  --enable-optimize            enable optimisation [default=yes]],
+  enable_optimize=$enableval, enable_optimize=yes)
+if test $enable_optimize = no; then
+  AC_MSG_RESULT(no)
+  OPTARGS=
+else
+  AC_MSG_RESULT(yes)
+fi
+
+
+INCLUDES='-I.'
+AUTOCONF=autoconf
+
+AC_OUTPUT([Makefile])
