@@ -9,7 +9,7 @@ void get_rectangle_staples(su3 * const v, const int x, const int mu) {
   int y, z, nu;
   su3 * a, * b, * c, * d, * e;
 #ifdef XLC
-#pragma disjoint(*v, temp1, temp2, *a, *b, *c, *d, *e)
+#pragma disjoint(*v, tmp1, tmp2, *a, *b, *c, *d, *e)
 #endif
   _su3_zero((*v));
   for(nu = 0; nu < 4; nu++) {
