@@ -1216,6 +1216,29 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
       +(v).c21.re*(w).c21.re+(v).c21.im*(w).c21.im  \
       +(v).c22.re*(w).c22.re+(v).c22.im*(w).c22.im;
 
+/* U. Wenger x=Tr (v * w) */
+
+#define _trace_su3_times_su3(x,v,w) \
+   x.re = (v).c00.re*(w).c00.re-(v).c00.im*(w).c00.im  \
+         +(v).c01.re*(w).c10.re-(v).c01.im*(w).c10.im  \
+         +(v).c02.re*(w).c20.re-(v).c02.im*(w).c20.im  \
+         +(v).c10.re*(w).c01.re-(v).c10.im*(w).c01.im  \
+         +(v).c11.re*(w).c11.re-(v).c11.im*(w).c11.im  \
+         +(v).c12.re*(w).c21.re-(v).c12.im*(w).c21.im  \
+         +(v).c20.re*(w).c02.re-(v).c20.im*(w).c02.im  \
+         +(v).c21.re*(w).c12.re-(v).c21.im*(w).c12.im  \
+         +(v).c22.re*(w).c22.re-(v).c22.im*(w).c22.im; \
+   x.im = (v).c00.re*(w).c00.im+(v).c00.im*(w).c00.re  \
+         +(v).c01.re*(w).c10.im+(v).c01.im*(w).c10.re  \
+         +(v).c02.re*(w).c20.im+(v).c02.im*(w).c20.re  \
+         +(v).c10.re*(w).c01.im+(v).c10.im*(w).c01.re  \
+         +(v).c11.re*(w).c11.im+(v).c11.im*(w).c11.re  \
+         +(v).c12.re*(w).c21.im+(v).c12.im*(w).c21.re  \
+         +(v).c20.re*(w).c02.im+(v).c20.im*(w).c02.re  \
+         +(v).c21.re*(w).c12.im+(v).c21.im*(w).c12.re  \
+         +(v).c22.re*(w).c22.im+(v).c22.im*(w).c22.re; 
+
+
 /* M. Hasenbusch t =u tensor v^dag */
 #define _vector_tensor_vector(t,u,v) \
    (t).c00.re=(u).c0.re*(v).c0.re+(u).c0.im*(v).c0.im; \
