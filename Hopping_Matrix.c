@@ -398,21 +398,9 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
 
 #elif defined XLC
 
-#define _prefetch_spinor_dcbt(addr1, addr2) \
-__dcbt((void*)(addr1)); \
-__dcbt((void*)(addr2));
+/* #define OlD */
 
-#define _prefetch_spinor_by_load(addr1, addr2) \
-__prefetch_by_load((void*)(addr1));  \
-__prefetch_by_load((void*)(addr2)); 
-
-#define _prefetch_su3_dcbt(addr1, addr2) \
-__dcbt((void*)(addr1)); \
-__dcbt((void*)(addr2));
-
-#define _prefetch_su3_by_load(addr1, addr2) \
-__prefetch_by_load((void*)(addr1)); \
-__prefetch_by_load((void*)(addr2)); 
+#include"xlc_prefetch.h"
 
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
@@ -422,6 +410,9 @@ void Hopping_Matrix(int ieo, int l, int k){
   su3 *up,*um;
   spinor *r,*sp,*sm;
   void *dd;
+#ifndef OlD
+  spinor temp;
+#endif
 
   /* for parallelization */
 #ifdef MPI
@@ -452,10 +443,11 @@ void Hopping_Matrix(int ieo, int l, int k){
 
   for (icx = ioff; icx < (VOLUME/2 + ioff); icx++) {
     ix = trans2[icx];
+#ifdef OlD
     r=&spinor_field[l][icx - ioff];
-/*     dd=&spinor_field[l][icx - ioff].c3.c3.re; */
-/*     _prefetch_spinor_dcbt((void*)r, dd); */
-
+    dd=&spinor_field[l][icx - ioff].c3.c3.re;
+    _prefetch_spinor_dcbt((void*)r, dd);
+#endif
     /*********************** direction +0 ************************/
     
     iy=g_idn[ix][0]; icy=trans1[iy]-ioff2;
@@ -472,17 +464,27 @@ void Hopping_Matrix(int ieo, int l, int k){
 
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka0,chi);
-      
+
+#ifdef OlD
     _vector_assign((*r).c1,psi);
     _vector_assign((*r).c3,psi);
+#else
+    _vector_assign(temp.c1,psi);
+    _vector_assign(temp.c3,psi);
+#endif
 
     _vector_add(psi,(*sp).c2,(*sp).c4);
 
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka0,chi);
-            
+
+#ifdef OlD
     _vector_assign((*r).c2,psi);
     _vector_assign((*r).c4,psi);
+#else
+    _vector_assign(temp.c2,psi);
+    _vector_assign(temp.c4,psi);
+#endif
 
     /*********************** direction -0 ************************/
 
@@ -501,16 +503,26 @@ void Hopping_Matrix(int ieo, int l, int k){
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka0,chi);
 
+#ifdef OlD
     _vector_add_assign((*r).c1,psi);
     _vector_sub_assign((*r).c3,psi);
+#else
+    _vector_add_assign(temp.c1,psi);
+    _vector_sub_assign(temp.c3,psi);
+#endif
 
     _vector_sub(psi,(*sm).c2,(*sm).c4);
 
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka0,chi);
-      
+
+#ifdef OlD
     _vector_add_assign((*r).c2,psi);
     _vector_sub_assign((*r).c4,psi);
+#else
+    _vector_add_assign(temp.c2,psi);
+    _vector_sub_assign(temp.c4,psi);
+#endif
 
     /*********************** direction +1 ************************/
 
@@ -529,16 +541,26 @@ void Hopping_Matrix(int ieo, int l, int k){
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka1,chi);
 
+#ifdef OlD
     _vector_add_assign((*r).c1,psi);
     _vector_i_sub_assign((*r).c4,psi);
+#else
+    _vector_add_assign(temp.c1,psi);
+    _vector_i_sub_assign(temp.c4,psi);
+#endif
 
     _vector_i_add(psi,(*sp).c2,(*sp).c3);
 
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka1,chi);
 
+#ifdef OlD
     _vector_add_assign((*r).c2,psi);
     _vector_i_sub_assign((*r).c3,psi);
+#else
+    _vector_add_assign(temp.c2,psi);
+    _vector_i_sub_assign(temp.c3,psi);
+#endif
 
     /*********************** direction -1 ************************/
 
@@ -557,16 +579,26 @@ void Hopping_Matrix(int ieo, int l, int k){
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka1,chi);
 
+#ifdef OlD
     _vector_add_assign((*r).c1,psi);
     _vector_i_add_assign((*r).c4,psi);
+#else
+    _vector_add_assign(temp.c1,psi);
+    _vector_i_add_assign(temp.c4,psi);
+#endif
 
     _vector_i_sub(psi,(*sm).c2,(*sm).c3);
 
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka1,chi);
 
+#ifdef OlD
     _vector_add_assign((*r).c2,psi);
     _vector_i_add_assign((*r).c3,psi);
+#else
+    _vector_add_assign(temp.c2,psi);
+    _vector_i_add_assign(temp.c3,psi);
+#endif
 
     /*********************** direction +2 ************************/
 
@@ -585,16 +617,26 @@ void Hopping_Matrix(int ieo, int l, int k){
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka2,chi);
 
+#ifdef OlD
     _vector_add_assign((*r).c1,psi);
     _vector_add_assign((*r).c4,psi);
+#else
+    _vector_add_assign(temp.c1,psi);
+    _vector_add_assign(temp.c4,psi);
+#endif
 
     _vector_sub(psi,(*sp).c2,(*sp).c3);
 
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka2,chi);
-      
+
+#ifdef OlD
     _vector_add_assign((*r).c2,psi);
     _vector_sub_assign((*r).c3,psi);
+#else
+    _vector_add_assign(temp.c2,psi);
+    _vector_sub_assign(temp.c3,psi);
+#endif
 
     /*********************** direction -2 ************************/
 
@@ -613,16 +655,26 @@ void Hopping_Matrix(int ieo, int l, int k){
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka2,chi);
 
+#ifdef OlD
     _vector_add_assign((*r).c1,psi);
     _vector_sub_assign((*r).c4,psi);
+#else
+    _vector_add_assign(temp.c1,psi);
+    _vector_sub_assign(temp.c4,psi);
+#endif
 
     _vector_add(psi,(*sm).c2,(*sm).c3);
 
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka2,chi);
-      
-    _vector_add_assign((*r).c2,psi);
-    _vector_add_assign((*r).c3,psi);
+
+#ifdef OlD
+    _vector_add_assign((*r).c2,psi); 
+    _vector_add_assign((*r).c3,psi); 
+#else
+    _vector_add_assign(temp.c2,psi);
+    _vector_add_assign(temp.c3,psi);
+#endif
 
     /*********************** direction +3 ************************/
 
@@ -641,18 +693,33 @@ void Hopping_Matrix(int ieo, int l, int k){
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka3,chi);
 
+#ifdef OlD
     _vector_add_assign((*r).c1,psi);
     _vector_i_sub_assign((*r).c3,psi);
-
+#else
+    _vector_add_assign(temp.c1,psi);
+    _vector_i_sub_assign(temp.c3,psi);
+#endif
     _vector_i_sub(psi,(*sp).c2,(*sp).c4);
 
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka3,chi);
 
-    _vector_add_assign((*r).c2,psi);
-    _vector_i_add_assign((*r).c4,psi);
+#ifdef OlD
+    _vector_add_assign((*r).c2,psi); 
+    _vector_i_add_assign((*r).c4,psi); 
+#else
+    _vector_add_assign(temp.c2,psi); 
+    _vector_i_add_assign(temp.c4,psi); 
+#endif
 
     /*********************** direction -3 ************************/
+
+#ifndef OlD
+    r=&spinor_field[l][icx - ioff];
+    dd=&spinor_field[l][icx - ioff].c3.c3.re;
+    _prefetch_spinor_dcbt((void*)r, dd);
+#endif
 
     icz = icx + 1;
     if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
@@ -672,19 +739,32 @@ void Hopping_Matrix(int ieo, int l, int k){
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka3,chi);
       
+#ifdef OlD
     _vector_add_assign((*r).c1,psi);
     _vector_i_add_assign((*r).c3,psi);
+#else
+    _vector_add((*r).c1, temp.c1, psi);
+    _vector_i_add((*r).c3, temp.c3, psi);
+#endif
 
     _vector_i_add(psi,(*sm).c2,(*sm).c4);
 
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka3,chi);
 
-    _vector_add_assign((*r).c2,psi);
-    _vector_i_sub_assign((*r).c4,psi);
+#ifdef OlD
+    _vector_add_assign((*r).c2,psi); 
+    _vector_i_sub_assign((*r).c4,psi); 
+#else
+    _vector_add((*r).c2, temp.c2, psi);
+    _vector_i_sub((*r).c4, temp.c4, psi);
+#endif
+/*     __dcbz((void*)r);  */
+
     /************************ end of loop ************************/
   }
 }
+
 
 /* else of If defined SSE2 */
 #else
