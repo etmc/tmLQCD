@@ -38,7 +38,7 @@
 #include "su3.h"
 #include "global.h"
 #include "linalg_eo.h"
-#include "solver/matrix_mult_typedef.h"
+#include "solver/solver.h"
 #include "mr.h"
 
 int mr(spinor * const P, spinor * const Q,
@@ -63,7 +63,7 @@ int mr(spinor * const P, spinor * const Q,
     beta=square_norm(spinor_field[DUM_SOLVER+1], N);
     _mult_real(alpha, alpha, 1./beta);
     assign_add_mul(P, spinor_field[DUM_SOLVER], alpha, N);
-    if(i%30 == -1){
+    if(i%50 == 0){
       f(spinor_field[DUM_SOLVER+2], P);
     }
     else{
