@@ -105,7 +105,7 @@ void geometry(){
   int x0,x1,x2,x3,ix;
   int i_even,i_odd;
   int startvalue = 1;
-#ifdef MPI
+#ifndef MPI
   startvalue = 0;
 #endif
   
