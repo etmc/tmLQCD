@@ -280,6 +280,7 @@ void deri(double q_off,double q_off2) {
 
 void fermion_momenta(double step, double q_off, double q_off2) {
   int i,mu;
+  double tmp;
   su3adj *xm,*deriv;
 
   if(g_use_clover_flag == 1){ 
@@ -299,10 +300,12 @@ void fermion_momenta(double step, double q_off, double q_off2) {
       xm=&moment[i][mu];
       deriv=&df0[i][mu]; 
       /* This 2* is coming from what? */
-      _minus_const_times_mom(*xm,2.*step,*deriv); 
+      tmp = 2.*step;
+      _minus_const_times_mom(*xm,tmp,*deriv); 
       if(g_use_clover_flag == 1){ 
 	deriv=&dclover[i][mu]; 
-	_minus_const_times_mom(*xm,-2.*g_ka_csw_8*step,*deriv); 
+	tmp = -2.*g_ka_csw_8*step;
+	_minus_const_times_mom(*xm,tmp,*deriv); 
       } 
     }
   }
@@ -398,6 +401,7 @@ void sexton(double q_off, double q_off2,
       update_gauge(smallstep/4.);
       gauge_momenta(smallstep/6.);
     }
+
     fermion_momenta(2.*step/3., q_off, q_off2);
     for(j=0;j<nsmall;j++) {
       update_gauge(smallstep/4.);

@@ -149,6 +149,16 @@ else
   AC_MSG_RESULT(no)
 fi
 
+AC_MSG_CHECKING(whether we want to use Opteron instructions)
+AC_ARG_ENABLE(opteron,
+  [  --enable-opteron             enable use of Opteron instructions [default=no]],
+  enable_opteron=$enableval, enable_opteron=no)
+if test $enable_opteron = yes; then
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
 AC_MSG_CHECKING(whether we want to use SSE1 instructions)
 AC_ARG_ENABLE(sse,
   [  --enable-sse                 enable use of SSE1 instructions [default=yes]],
@@ -238,8 +248,8 @@ dnl no -pedantic-errors...
          CFLAGS="$CFLAGS -mcpu=i686"
       fi
     else
-      if test $enable_p4 = yes; then
-        CFLAGS="$CFLAGS -DP4"
+      if test $enable_opteron = yes; then
+        CFLAGS="$CFLAGS -DOPTERON"
         SSE="sse2"
       fi
     fi
@@ -271,7 +281,7 @@ dnl no -pedantic-errors...
       CFLAGS="$CFLAGS -malign-double -fomit-frame-pointer -ffloat-store"
       CXXFLAGS="$CXXFLAGS -mcpu=i686 -O -malign-double -fomit-frame-pointer -ffloat-store"
     else
-      CFLAGS="$CFLAGS -Dx86_64 -fomit-frame-pointer -ffloat-store"
+      CFLAGS="$CFLAGS -D_x86_64 -fomit-frame-pointer -ffloat-store"
       CXXFLAGS="$CXXFLAGS -O -fomit-frame-pointer -ffloat-store"
     fi
     CCDEP="$CC"
@@ -329,24 +339,24 @@ dnl check for icc
     fi
   fi
   LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(abs_top_builddir)/lapack"
-  if test "$LP" = "yes"; then
-    if test "$ATLAS" = "yes"; then
-      LIBS="$LIBS -llapack -lf77blas -latlas"
-    else
-      LIBS="$LIBS -llapack -lblas"
-    fi
-  else
-    if test "$SSE" = "sse2"; then
-      LIBS="$LIBS -llapack_LINUXSSE2P4 -lf77blas_LINUXSSE2P4 -latlas_LINUXSSE2P4"
-    else
-      LIBS="$LIBS -llapack_LINUX -lblas_LINUX"
-    fi
-  fi
-  if test "$G2C" = "yes" && test $enable_mpi != yes; then
-    LIBS="$LIBS -lg2c -lm"
-  else
-    LIBS="$LIBS -lf2c_nomain_LINUX -lm"
-  fi
+dnl  if test "$LP" = "yes"; then
+dnl    if test "$ATLAS" = "yes"; then
+dnl      LIBS="$LIBS -llapack -lf77blas -latlas"
+dnl    else
+dnl      LIBS="$LIBS -llapack -lblas"
+dnl    fi
+dnl  else
+dnl    if test "$SSE" = "sse2"; then
+dnl      LIBS="$LIBS -llapack_LINUXSSE2P4 -lf77blas_LINUXSSE2P4 -latlas_LINUXSSE2P4"
+dnl    else
+dnl      LIBS="$LIBS -llapack_LINUX -lblas_LINUX"
+dnl    fi
+dnl  fi
+dnl  if test "$G2C" = "yes" && test $enable_mpi != yes; then
+dnl    LIBS="$LIBS -lg2c -lm"
+dnl  else
+dnl    LIBS="$LIBS -lf2c_nomain_LINUX"
+dnl  fi
 
 
 dnl The IBM Power PC

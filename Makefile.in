@@ -50,7 +50,7 @@ ${addsuffix .o, ${MODULES}}: %.o: %.c %.d Makefile
 ${addsuffix .o, ${PROGRAMS}}: %.o: %.c %.d Makefile
 	${COMPILE} -c $<
 
-${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} 
+${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} ${LINKLIBS}
 	 ${LINK} ${addsuffix .o, ${MODULES}} $@.o $(LIBS)
 
 dep: $(addsuffix .d,$(ALLOBJ))

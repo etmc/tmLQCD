@@ -2,9 +2,12 @@
 #define _SSE_H
 
 #if ((defined SSE)||(defined SSE2))
-  #if defined P4
+#if ((defined P4))
     #define ALIGN_BASE 0x3f
     #define ALIGN __attribute__ ((aligned (64)))
+  #elif defined OPTERON
+    #define ALIGN_BASE 0x0f
+    #define ALIGN __attribute__ ((aligned (16)))
   #else
     #define ALIGN_BASE 0x1f
     #define ALIGN __attribute__ ((aligned (32)))
@@ -12,9 +15,7 @@
 #endif
 
 #if (defined SSE || defined SSE2)
-#ifdef x86_64
-#define unsigned unsigned long
-#endif
+
 
 /*******************************************************************************
 *
@@ -56,37 +57,79 @@ typedef struct
 *
 *******************************************************************************/
 
-#if defined P4
+#if ((defined P4))
 
 #define _prefetch_spinor(addr) \
 __asm__ __volatile__ ("prefetcht0 %0 \n\t" \
                       "prefetcht0 %1" \
                       : \
                       : \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x7f)))), \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x7f))+128)))
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x7f)))), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x7f))+128)))
 
 #define _prefetch_nta_spinor(addr) \
 __asm__ __volatile__ ("prefetchnta %0 \n\t" \
                       "prefetchnta %1" \
                       : \
                       : \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x7f)))), \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x7f))+128)))
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x7f)))), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x7f))+128)))
 
 #define _prefetch_su3(addr) \
 __asm__ __volatile__ ("prefetcht0 %0 \n\t" \
                       "prefetcht0 %1" \
                       : \
                       : \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x7f)))), \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x7f))+128)))
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x7f)))), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x7f))+128)))
 
 #define _prefetch_mom(addr) \
 __asm__ __volatile__ ("prefetchnta %0" \
                       : \
                       : \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x7f))))) 
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x7f))))) 
+
+#elif defined OPTERON
+
+#define _prefetch_spinor(addr) \
+__asm__ __volatile__ ("prefetcht0 %0 \n\t" \
+                      "prefetcht0 %1 \n\t" \
+                      "prefetcht0 %2" \
+                      : \
+                      : \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f)))), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f))+64)), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f))+128)))
+
+
+#define _prefetch_nta_spinor(addr) \
+__asm__ __volatile__ ("prefetchnta %0 \n\t" \
+                      "prefetchnta %1 \n\t" \
+                      "prefetchnta %2" \
+                      : \
+                      : \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f)))), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f))+64)), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f))+128)))
+
+#define _prefetch_su3(addr) \
+__asm__ __volatile__ ("prefetcht0 %0  \n\t" \
+                      "prefetcht0 %1  \n\t" \
+                      "prefetcht0 %2" \
+                      : \
+                      : \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f)))), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f))+64)), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f))+128)))
+
+#define _prefetch_mom(addr) \
+__asm__ __volatile__ ("prefetcht0 %0" \
+                      : \
+                      : \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x3f)))))
+
+
+
 #else
 
 #define _prefetch_spinor(addr) \
@@ -129,19 +172,19 @@ __asm__ __volatile__ ("prefetcht0 %0  \n\t" \
                       "prefetcht0 %4" \
                       : \
                       : \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x1f)))), \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x1f))+32)), \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x1f))+64)), \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x1f))+96)), \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x1f))+128)))
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x1f)))), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x1f))+32)), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x1f))+64)), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x1f))+96)), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x1f))+128)))
 
 #define _prefetch_mom(addr) \
 __asm__ __volatile__ ("prefetcht0 %0  \n\t" \
                       "prefetcht0 %1" \
                       : \
                       : \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x1f)))), \
-                      "m" (*(((char*)(((unsigned int)(addr))&~0x1f))+32)))
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x1f)))), \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x1f))+32)))
 
 #endif
 
@@ -995,6 +1038,7 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
                       "=m" ((u1).c20), \
                       "=m" ((u1).c21), \
                       "=m" ((u1).c22)) ;
+
 #endif
 
 #endif

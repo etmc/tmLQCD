@@ -855,6 +855,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-mpi                 enable use of mpi default=yes
   --enable-p4                  enable use of P4 instructions default=no
+  --enable-opteron             enable use of Opteron instructions default=no
   --enable-sse                 enable use of SSE1 instructions default=yes
   --enable-sse2                enable use of SSE2 instructions default=no
   --enable-solveroutput        enable solver convergence output default=no
@@ -5056,6 +5057,23 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
+echo "$as_me:$LINENO: checking whether we want to use Opteron instructions" >&5
+echo $ECHO_N "checking whether we want to use Opteron instructions... $ECHO_C" >&6
+# Check whether --enable-opteron or --disable-opteron was given.
+if test "${enable_opteron+set}" = set; then
+  enableval="$enable_opteron"
+  enable_opteron=$enableval
+else
+  enable_opteron=no
+fi;
+if test $enable_opteron = yes; then
+  echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
 echo "$as_me:$LINENO: checking whether we want to use SSE1 instructions" >&5
 echo $ECHO_N "checking whether we want to use SSE1 instructions... $ECHO_C" >&6
 # Check whether --enable-sse or --disable-sse was given.
@@ -5169,8 +5187,8 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
          CFLAGS="$CFLAGS -mcpu=i686"
       fi
     else
-      if test $enable_p4 = yes; then
-        CFLAGS="$CFLAGS -DP4"
+      if test $enable_opteron = yes; then
+        CFLAGS="$CFLAGS -DOPTERON"
         SSE="sse2"
       fi
     fi
@@ -5202,7 +5220,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       CFLAGS="$CFLAGS -malign-double -fomit-frame-pointer -ffloat-store"
       CXXFLAGS="$CXXFLAGS -mcpu=i686 -O -malign-double -fomit-frame-pointer -ffloat-store"
     else
-      CFLAGS="$CFLAGS -Dx86_64 -fomit-frame-pointer -ffloat-store"
+      CFLAGS="$CFLAGS -D_x86_64 -fomit-frame-pointer -ffloat-store"
       CXXFLAGS="$CXXFLAGS -O -fomit-frame-pointer -ffloat-store"
     fi
     CCDEP="$CC"
@@ -5257,24 +5275,6 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     fi
   fi
   LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(abs_top_builddir)/lapack"
-  if test "$LP" = "yes"; then
-    if test "$ATLAS" = "yes"; then
-      LIBS="$LIBS -llapack -lf77blas -latlas"
-    else
-      LIBS="$LIBS -llapack -lblas"
-    fi
-  else
-    if test "$SSE" = "sse2"; then
-      LIBS="$LIBS -llapack_LINUXSSE2P4 -lf77blas_LINUXSSE2P4 -latlas_LINUXSSE2P4"
-    else
-      LIBS="$LIBS -llapack_LINUX -lblas_LINUX"
-    fi
-  fi
-  if test "$G2C" = "yes" && test $enable_mpi != yes; then
-    LIBS="$LIBS -lg2c -lm"
-  else
-    LIBS="$LIBS -lf2c_nomain_LINUX -lm"
-  fi
 
 
 elif test "$host_cpu" = "powerpc"; then
