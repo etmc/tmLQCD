@@ -6,7 +6,7 @@
  ***********************************************/
 
 #include <stdlib.h>
-#include "math.h"
+#include <math.h>
 #include "global.h"
 #include "su3.h"
 #include "boundary.h"

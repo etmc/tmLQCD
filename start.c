@@ -42,10 +42,10 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
+#include "global.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "ranlxd.h"
-#include "global.h"
 #include "start.h"
 
 void gauss_vector(double v[],int n)
