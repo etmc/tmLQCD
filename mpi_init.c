@@ -51,6 +51,7 @@ void mpi_init(int argc,char *argv[]) {
 
 #ifdef PARALLELT
   ndims = 1;
+  N_PROC_X = 1;
 #endif
 #if defined PARALLELXT
   ndims = 2;

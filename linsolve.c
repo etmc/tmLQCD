@@ -13,8 +13,6 @@
 #include "linalg/assign_add_mul_r_add_mul.h"
 #include "linsolve.h"
 
-int ITER_MAX_BCG;
-int ITER_MAX_CG;
 
 char * solvout = "solver_data";
 FILE * sout = NULL;

@@ -107,6 +107,8 @@ EXTERN MPI_Comm g_cart_grid;
 EXTERN int g_nb_x_up, g_nb_x_dn;
 EXTERN int g_nb_t_up, g_nb_t_dn;
 
+EXTERN int ITER_MAX_BCG;
+EXTERN int ITER_MAX_CG;
 
 #endif
 
