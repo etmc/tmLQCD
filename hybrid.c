@@ -334,7 +334,7 @@ int main(int argc,char *argv[]) {
 
     if(g_proc_id==0){
       fprintf(fp1,"%14.12f %14.12f %d %d %d %d %d %d %d %d %d %d %d \n",
-	      eneg/(6.*VOLUME*g_nproc),dh,
+	      1.-eneg/(6.*VOLUME*g_nproc),dh,
 	      idi,idis,idis0,idis1,idis2,count00,count01,count10,count11,count20,count21);
       fflush(fp1);
     }
