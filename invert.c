@@ -127,6 +127,13 @@ int main(int argc,char *argv[]) {
     write_counter=1;
   }
 
+  if(g_rgi_C1 == 0.) {
+    g_dbw2rand = 0;
+  }
+#ifndef MPI
+  g_dbw2rand = 0;
+#endif
+
 #ifdef _GAUGE_COPY
   j = init_gauge_field(VOLUMEPLUSRAND, 1);
 #else
