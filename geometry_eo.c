@@ -27,20 +27,20 @@
 /*#include "io.h"*/
 #include "global.h"
 
-int index(const int x0, const int x1, const int x2, const int x3)
+int Index(const int x0, const int x1, const int x2, const int x3)
 {
    int y0,y1,y2,y3;
 /* the slice at time -1 is put to T+1 */
-   y0=x0;   
-   if(x0==-1) y0=T+1;
-   y1=x1;   
-   if(x1==L) y1=0;    
+   y0=x0;
+   if(x0 == -1) y0=T+1;
+   y1=x1;
+   if(x1==L) y1=0;
    else if(x1==-1) y1=L-1;
-   y2=x2;   
-   if(x2==L) y2=0;    
+   y2=x2;
+   if(x2==L) y2=0;
    else if(x2==-1) y2=L-1;
-   y3=x3;   
-   if(x3==L) y3=0;    
+   y3=x3;
+   if(x3==L) y3=0;
    else if(x3==-1) y3=L-1;
 
    return(y3 + L*y2 + L*L*y1 + L*L*L*y0);
@@ -57,7 +57,7 @@ void geometry(){
     for (x1=0;x1<L;x1++){
       for (x2=0;x2<L;x2++){
 	for (x3=0;x3<L;x3++){
-	  ix=index(x0,x1,x2,x3);
+	  ix=Index(x0,x1,x2,x3);
 
 	  /* g_proc_id*T is added to allow for odd T when the number of 
 	     nodes is even */
@@ -65,20 +65,20 @@ void geometry(){
 	    xeven[ix]=1;
 	  } 
 	  else xeven[ix]=0; 
-	  g_ipt[x0][x1][x2][x3]=ix;
+	  if(x0 >= 0) g_ipt[x0][x1][x2][x3] = ix;
 
-	  g_iup[ix][0]=index(x0+1,x1,x2,x3);
-	  g_idn[ix][0]=index(x0-1,x1,x2,x3);
+	  g_iup[ix][0]=Index(x0+1,x1,x2,x3);
+	  if(x0 >= 0) g_idn[ix][0] = Index(x0-1,x1,x2,x3);
 
-	  g_iup[ix][1]=index(x0,x1+1,x2,x3);
-	  g_idn[ix][1]=index(x0,x1-1,x2,x3);
+	  g_iup[ix][1]=Index(x0,x1+1,x2,x3);
+	  g_idn[ix][1]=Index(x0,x1-1,x2,x3);
 
-	  g_iup[ix][2]=index(x0,x1,x2+1,x3);
-	  g_idn[ix][2]=index(x0,x1,x2-1,x3);
+	  g_iup[ix][2]=Index(x0,x1,x2+1,x3);
+	  g_idn[ix][2]=Index(x0,x1,x2-1,x3);
 
-	  g_iup[ix][3]=index(x0,x1,x2,x3+1);
-	  g_idn[ix][3]=index(x0,x1,x2,x3-1);
-
+	  g_iup[ix][3]=Index(x0,x1,x2,x3+1);
+	  g_idn[ix][3]=Index(x0,x1,x2,x3-1);
+	  
 	}
       }
     }
@@ -97,7 +97,6 @@ void geometry(){
       i_odd++;
     }
   }
-  if(g_proc_id == 0) {printf("Geo %d %d %d %d %d\n", x0, x1, x2, x3, ix);fflush(stdout);}
 }
 
 

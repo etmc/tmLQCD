@@ -115,8 +115,8 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   /* if bicg fails, redo with conjugate gradient */
   if(g_proc_id==0) {
     /* fp7 */
-    fprintf(stdout,"%d %d \n",g_proc_id,iteration); 
-    fflush(stdout); 
+    fprintf(fp7,"%d %d \n",g_proc_id,iteration); 
+    fflush(fp7); 
   }
   if(iteration>=ITER_MAX){
     zero_spinor_field(k);

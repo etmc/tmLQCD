@@ -34,8 +34,8 @@
 #include "io.h"
 #include "read_input.h"
 
-int main(int argc,char *argv[])
-{ 
+int main(int argc,char *argv[]) {
+ 
   FILE *fp1,*fp2,*fp3,*fp4,*fp5,*fp6;
   char * filename="output";
   char filename1[50];
@@ -101,6 +101,7 @@ int main(int argc,char *argv[])
   }
 
   /* define the geometry */
+
   geometry();
 
   /* define the boundary conditions for the fermion fields */
@@ -161,6 +162,7 @@ int main(int argc,char *argv[])
     fprintf(fp2,"%14.12f \n",1.-eneg/(6.*VOLUME*g_nproc));
     fclose(fp2);
   }
+
   /* compute the energy of the determinant term */
   sw_term(); 
   /* compute the contribution from the clover-term */
