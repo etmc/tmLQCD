@@ -1,7 +1,7 @@
 /* $Id$ */
 
 /******************************************
- * H_eo is the conventional Wilson 
+ * Hopping_Matrix is the conventional Wilson 
  * hopping matrix
  *
  * for ieo == 1 H_eo connects even with odd
@@ -22,14 +22,14 @@
 #include "xchange.h"
 #endif
 #include "boundary.h"
-#include "H_eo.h"
+#include "Hopping_Matrix.h"
 
 static su3_vector psi1, psi2, psi, chi, phi1, phi3;
 
 #if defined SSE2
 
 /* input on k; output on l */
-void H_eo(const int ieo, const int l, const int k){
+void Hopping_Matrix(const int ieo, const int l, const int k){
   int icx,icy,icz,ioff,ioff2;
   int ix,iy,iz;
   su3 *up,*um;
@@ -400,7 +400,7 @@ void H_eo(const int ieo, const int l, const int k){
 
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
-void H_eo(int ieo, int l, int k){
+void Hopping_Matrix(int ieo, int l, int k){
   int ix,iy;
   int ioff,ioff2,icx,icy;
   su3 *up,*um;

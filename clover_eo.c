@@ -17,7 +17,7 @@
 #include "su3adj.h"
 #include "global.h"
 #include "xchange.h"
-#include "H_eo.h"
+#include "Hopping_Matrix.h"
 #include "clover_eo.h"
 
 
@@ -99,9 +99,9 @@ void gamma5(int l,int k);
  ******************************************/
 
 void Q_psi(int l, int k, double q_off){
-  H_eo(1, DUM_MATRIX+1, k);
+  Hopping_Matrix(1, DUM_MATRIX+1, k);
   clover_inv(1, DUM_MATRIX+1);
-  H_eo(0, DUM_MATRIX, DUM_MATRIX+1);
+  Hopping_Matrix(0, DUM_MATRIX, DUM_MATRIX+1);
   clover_gamma5(0, l, k, DUM_MATRIX, q_off);
 }
 
@@ -115,14 +115,14 @@ void Q_psi(int l, int k, double q_off){
  ******************************************/
 
 void M_psi(int l, int k, double q_off){
-  H_eo(1, DUM_MATRIX+1, k);
+  Hopping_Matrix(1, DUM_MATRIX+1, k);
   clover_inv(1, DUM_MATRIX+1);
-  H_eo(0, DUM_MATRIX, DUM_MATRIX+1);
+  Hopping_Matrix(0, DUM_MATRIX, DUM_MATRIX+1);
   clover(0, l, k, DUM_MATRIX, q_off);
 }
 
 void H_eo_psi(int ieo, int l, int k){
-  H_eo(ieo, l, k);
+  Hopping_Matrix(ieo, l, k);
   clover_inv(ieo, l);
 }
 

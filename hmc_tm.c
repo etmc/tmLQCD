@@ -120,7 +120,8 @@ int main(int argc,char *argv[]) {
   if(g_proc_id==0) fprintf(fp2,"The BICG_stab is used as solver \n\n");
 #endif
   
-  if(startoption == 2){
+  /* Continue */
+  if(startoption == 3){
     if (g_proc_id == 0){
       fp4=fopen("rlxd_state","r");
       fread(rlxd_state,sizeof(rlxd_state),1,fp4);
@@ -131,22 +132,26 @@ int main(int argc,char *argv[]) {
 
     read_gauge_field_time_p("config");
   }
-  else{
-    /* here we generate exactly the same configuration as for the 
-       single node simulation */
-    if(g_proc_id==0){
+  else {
+    /* Initialize random number generator */
+    if(g_proc_id == 0) {
       rlxd_init(1, random_seed);
-      random_g_gauge_field();
-      /* send the state of the random-number generator to 1 */
+      /* hot */
+      if(startoption == 1) {
+	random_gauge_field();
+      }
       rlxd_get(rlxd_state);
       MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 99, MPI_COMM_WORLD);
+      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
+      rlxd_reset(rlxd_state);
     }
-    else{
-      /* recieve the random number state form g_proc_id-1 */
+    else {
       MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
       rlxd_reset(rlxd_state);
-      random_g_gauge_field();
-      /* send the random number state to g_proc_id+1 */
+      /* hot */
+      if(startoption == 1) {
+	random_gauge_field();
+      }
       k=g_proc_id+1; 
       if(k==g_nproc){
 	k=0;
@@ -154,9 +159,13 @@ int main(int argc,char *argv[]) {
       rlxd_get(rlxd_state);
       MPI_Send(&rlxd_state[0], 105, MPI_INT, k, 99, MPI_COMM_WORLD);
     }
-    if(g_proc_id == 0){
-      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
-      rlxd_reset(rlxd_state);
+    /* Cold */
+    if(startoption == 0) {
+      unit_g_gauge_field();
+    }
+    /* Restart */
+    else if(startoption == 2) {
+      read_gauge_field_time_p("config");
     }
   }
 
@@ -192,6 +201,23 @@ int main(int argc,char *argv[]) {
       ddummy[ix][mu].d8=0.;
     }
   }
+
+/*   unit_g_gauge_field(); */
+/*   unit_spinor_field(2); */
+/*   if(g_proc_id == 0) { */
+/*     printf("%e %e %e %e %e\n", g_mu, spinor_field[2][0].c1.c1.re, spinor_field[2][0].c1.c1.im, spinor_field[2][0].c3.c1.re, spinor_field[2][0].c3.c1.im); */
+/*   } */
+/*   Qtm_plus_psi(0, 2);  */
+/*   if(g_proc_id == 0) { */
+/*     printf("%e %e %e %e %e\n", g_mu, spinor_field[0][0].c1.c1.re, spinor_field[0][0].c1.c1.im, spinor_field[0][0].c3.c1.re, spinor_field[0][0].c3.c1.im); */
+/*     printf("%e %e %e %e %e\n", g_mu, spinor_field[0][6].c1.c1.re, spinor_field[0][6].c1.c1.im, spinor_field[0][6].c3.c1.re, spinor_field[0][6].c3.c1.im); */
+/*   }   */
+
+
+  
+/*   MPI_Finalize(); */
+/*   exit(0); */
+
   for(j=0;j<Nmeas;j++){
     /*copy the gauge field to gauge_tmp */
     for(ix=0;ix<VOLUME;ix++){ 
@@ -207,7 +233,7 @@ int main(int argc,char *argv[]) {
     /* one, two or three pseudo-fermion fields */
     random_spinor_field(2);
     /* compute the square of the norm */
-    enerphi0 = square_norm(2);
+    enerphi0 = square_norm(2, VOLUME/2);
 
     /* apply the fermion matrix to the spinor */
     Qtm_plus_psi(0, 2);
@@ -232,7 +258,7 @@ int main(int argc,char *argv[]) {
 
     zero_spinor_field(2);
     idis0=bicg(2, 0, q_off, EPS_SQ0);
-    enerphi0x=square_norm(2);
+    enerphi0x=square_norm(2, VOLUME/2);
 
     /* Compute the energy difference */
     dh=+enepx - g_beta*enegx - enep + g_beta*eneg
@@ -249,8 +275,6 @@ int main(int argc,char *argv[]) {
     else{
       MPI_Recv(&yy[0], 1, MPI_DOUBLE, 0, 31, MPI_COMM_WORLD, &status);
     }
-    /* What happens here? Do we produce a double precision */
-    /* random number in this way? */
     if(exp(-dh) > yy[0]){
       /* accept */
       Rate += 1;

@@ -27,7 +27,7 @@
 *   void unit_g_gauge_field(void)
 *     Sets the gauge field variables to unity
 *
-*   void random_g_gauge_field(void)
+*   void random_gauge_field(void)
 *     Initializes the gauge field to a random configuration
 *
 * Version: 1.0
@@ -393,7 +393,7 @@ void unit_g_gauge_field(void)
 }
 
 
-void random_g_gauge_field(void)
+void random_gauge_field(void)
 {
    int ix,mu;
    

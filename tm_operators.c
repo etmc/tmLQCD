@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include "global.h"
 #include "su3.h"
-#include "H_eo.h"
+#include "Hopping_Matrix.h"
 #include "sse.h"
 #include "tm_operators.h"
 
@@ -73,9 +73,9 @@ void mul_one_pm_imu_sub_mul(const int l, const int k,
  * on a half spinor
  ******************************************/
 void Qtm_plus_psi(const int l, const int k){
-  H_eo(1, DUM_MATRIX+1, k);
+  Hopping_Matrix(EO, DUM_MATRIX+1, k);
   mul_one_pm_imu_inv(DUM_MATRIX+1, +1.);
-  H_eo(0, DUM_MATRIX, DUM_MATRIX+1);
+  Hopping_Matrix(OE, DUM_MATRIX, DUM_MATRIX+1);
   mul_one_pm_imu_sub_mul_gamma5(l, k, DUM_MATRIX, +1.);
 }
 
@@ -94,9 +94,9 @@ void Qtm_plus_psi(const int l, const int k){
  * on a half spinor
  ******************************************/
 void Qtm_minus_psi(const int l, const int k){
-  H_eo(1, DUM_MATRIX+1, k);
+  Hopping_Matrix(EO, DUM_MATRIX+1, k);
   mul_one_pm_imu_inv(DUM_MATRIX+1, -1.);
-  H_eo(0, DUM_MATRIX, DUM_MATRIX+1);
+  Hopping_Matrix(OE, DUM_MATRIX, DUM_MATRIX+1);
   mul_one_pm_imu_sub_mul_gamma5(l, k, DUM_MATRIX, -1.);
 }
 
@@ -115,9 +115,9 @@ void Qtm_minus_psi(const int l, const int k){
  * on a half spinor
  ******************************************/
 void Mtm_plus_psi(const int l, const int k){
-  H_eo(1, DUM_MATRIX+1, k);
+  Hopping_Matrix(EO, DUM_MATRIX+1, k);
   mul_one_pm_imu_inv(DUM_MATRIX+1, +1.);
-  H_eo(0, DUM_MATRIX, DUM_MATRIX+1);
+  Hopping_Matrix(OE, DUM_MATRIX, DUM_MATRIX+1);
   mul_one_pm_imu_sub_mul(l, k, DUM_MATRIX, +1.);
 }
 
@@ -136,9 +136,9 @@ void Mtm_plus_psi(const int l, const int k){
  * on a half spinor
  ******************************************/
 void Mtm_minus_psi(const int l, const int k){
-  H_eo(1, DUM_MATRIX+1, k);
+  Hopping_Matrix(EO, DUM_MATRIX+1, k);
   mul_one_pm_imu_inv(DUM_MATRIX+1, -1.);
-  H_eo(0, DUM_MATRIX, DUM_MATRIX+1);
+  Hopping_Matrix(OE, DUM_MATRIX, DUM_MATRIX+1);
   mul_one_pm_imu_sub_mul(l, k, DUM_MATRIX, -1.);
 }
 
@@ -157,14 +157,14 @@ void Mtm_minus_psi(const int l, const int k){
  ******************************************/
 void Qtm_pm_psi(const int l, const int k){
   /* Q_{-} */
-  H_eo(1, DUM_MATRIX+1, k);
+  Hopping_Matrix(EO, DUM_MATRIX+1, k);
   mul_one_pm_imu_inv(DUM_MATRIX+1, -1.);
-  H_eo(0, DUM_MATRIX, DUM_MATRIX+1);
+  Hopping_Matrix(OE, DUM_MATRIX, DUM_MATRIX+1);
   mul_one_pm_imu_sub_mul_gamma5(DUM_MATRIX, k, DUM_MATRIX, -1.);
   /* Q_{+} */
-  H_eo(1, l, DUM_MATRIX);
+  Hopping_Matrix(EO, l, DUM_MATRIX);
   mul_one_pm_imu_inv(l, +1.);
-  H_eo(0, DUM_MATRIX+1, l);
+  Hopping_Matrix(OE, DUM_MATRIX+1, l);
   mul_one_pm_imu_sub_mul_gamma5(l, DUM_MATRIX, DUM_MATRIX+1, +1.);
 }
 
@@ -183,7 +183,7 @@ void Qtm_pm_psi(const int l, const int k){
  ******************************************/
 void H_eo_tm_inv_psi(const int l, const int k, 
 		     const int ieo, const double sign){
-  H_eo(ieo, l, k);
+  Hopping_Matrix(ieo, l, k);
   mul_one_pm_imu_inv(l, sign);
 }
 
@@ -204,19 +204,19 @@ void H_eo_tm_inv_psi(const int l, const int k,
 void mul_one_pm_imu_inv(const int l, const double _sign){
   complex z,w;
   int ix;
-  double sign=-1.;
+  double sign=-1.; 
   spinor *r;
   static su3_vector phi1;
   double nrm = 1./(1.+g_mu*g_mu);
 
   if(_sign < 0.){
-    sign = 1.;
+    sign = 1.; 
   }
 
   z.re = nrm;
   z.im =  sign * nrm * g_mu;
   w.re = nrm;
-  w.im = -sign * nrm * g_mu;
+  w.im = -z.im; /*-sign * nrm * g_mu;*/
 
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){

@@ -16,7 +16,7 @@
 #include "linsolve.h"
 #include "xchange.h"
 #include "deriv_Sb.h"
-#include "H_eo.h"
+#include "Hopping_Matrix.h"
 #include "tm_operators.h"
 #include "hybrid_update.h"
 
@@ -72,6 +72,7 @@ void gauge_momenta(double step) {
 
 /********************************************
  *
+ * Here \delta S_b is computed
  *
  ********************************************/
 
@@ -117,21 +118,21 @@ void deri(double q_off,double q_off2) {
       /*contributions from field 0 */
       gamma5(DUM_DERI,0);
       /* Invert first Q_+ */
-      /* Y_0 -> DUM_DERI  */
+      /* Y_o -> DUM_DERI  */
       count00+=bicg(DUM_DERI,0,q_off,EPS_SQ1);
       gamma5(DUM_DERI+1,DUM_DERI);
       /* Now Q_- */
       /* X_o -> DUM_DERI+1 */
       g_mu = -g_mu;
       count01+=bicg(DUM_DERI+1,DUM_DERI,q_off,EPS_SQ1);
-      g_mu = -g_mu;
+      g_mu = -g_mu;   
     }
     if(j==1){
       /* contributions from field 1 */
       gamma5(DUM_DERI,1);
       qo=q_off-q_off2;
       count10+=bicg(DUM_DERI,1,q_off2,EPS_SQ2/qo);
-      deri_linalg(DUM_DERI+2,qo*qo,DUM_DERI,qo,1);
+      deri_linalg(DUM_DERI+2,qo*qo,DUM_DERI,qo,1, VOLUME/2);
       gamma5(DUM_DERI+1,DUM_DERI+2);
       count11+=bicg(DUM_DERI+1,DUM_DERI+2,q_off2,EPS_SQ2*qo);
     }
@@ -139,7 +140,7 @@ void deri(double q_off,double q_off2) {
       /* contributions from field 2 (stored on 4) */
       gamma5(DUM_DERI,4);
       count20+=bicg(DUM_DERI,4,0.,EPS_SQ3/q_off2);
-      deri_linalg(DUM_DERI+2,q_off2*q_off2,DUM_DERI,q_off2,4);
+      deri_linalg(DUM_DERI+2,q_off2*q_off2,DUM_DERI,q_off2,4, VOLUME/2);
       gamma5(DUM_DERI+1,DUM_DERI+2);
       count21+=bicg(DUM_DERI+1,DUM_DERI+2,0.,EPS_SQ3*q_off2);
     }
@@ -167,14 +168,14 @@ void deri(double q_off,double q_off2) {
     else{
       /* apply Hopping Matrix */
       /* to get the even sites of X */
-      H_eo_tm_inv_psi(DUM_DERI+2, DUM_DERI+1, 1, -1.);
-      /* \delta Q sandwitched by X_e^\dagger and Y_o */
-      deriv_Sb(0, DUM_DERI, DUM_DERI+2);
+      H_eo_tm_inv_psi(DUM_DERI+2, DUM_DERI+1, EO, -1.);
+      /* \delta Q sandwitched by Y_o^\dagger and X_e */
+      deriv_Sb(OE, DUM_DERI, DUM_DERI+2); 
 
       /* to get the even sites of Y */
-      H_eo_tm_inv_psi(DUM_DERI+3, DUM_DERI, 1, +1);
-      /* \delta Q sandwitched by X_o^\dagger and Y_e */
-      deriv_Sb(1, DUM_DERI+3, DUM_DERI+1);
+      H_eo_tm_inv_psi(DUM_DERI+3, DUM_DERI, EO, +1);
+      /* \delta Q sandwitched by Y_e^\dagger and X_o */
+      deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
     }
   }
 }
@@ -217,13 +218,15 @@ void update_gauge(double step) {
   static su3adj deriv;
   su3adj *xm;
 
-  for(i=0;i<VOLUME;i++) for(mu=0;mu<4;mu++){
-    xm=&moment[i][mu];
-    z=&g_gauge_field[i][mu];
-    _assign_const_times_mom(deriv,step,*xm);
-    v=restoresu3(exposu3(deriv));
-    _su3_times_su3(w,v,*z);
-    _su3_assign(*z,w);
+  for(i = 0; i < VOLUME; i++) { 
+    for(mu = 0; mu < 4; mu++){
+      xm=&moment[i][mu];
+      z=&g_gauge_field[i][mu];
+      _assign_const_times_mom(deriv, step, *xm);
+      v=restoresu3( exposu3(deriv) );
+      _su3_times_su3(w, v, *z);
+      _su3_assign(*z, w);
+    }
   }
 #ifdef MPI
   /* for parallelization */

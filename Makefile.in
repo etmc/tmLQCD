@@ -14,7 +14,7 @@ COMPILE = ${CC} -o $@ ${CFLAGS}
 
 MODULES = read_input clover_eo linsolve xchange \
 	expo hybrid_update observables start \
-	geometry_eo linalg_eo ranlxd sw io H_eo \
+	geometry_eo linalg_eo ranlxd sw io Hopping_Matrix \
 	boundary deriv_Sb tm_operators 
 
 PROGRAMS = hybrid hmc_tm

@@ -38,7 +38,7 @@
 
 int main(int argc,char *argv[]) {
  
-  FILE *fp1,*fp2,*fp4;
+  FILE *fp1 = NULL ,*fp2 = NULL ,*fp4 = NULL;
   char * filename="output";
   char filename1[50];
   char filename2[50];
@@ -131,7 +131,7 @@ int main(int argc,char *argv[]) {
        single node simulation */
     if(g_proc_id==0){
       rlxd_init(1,random_seed);   
-      random_g_gauge_field();
+      random_gauge_field();
       /* send the state of the random-number generator to 1 */
       rlxd_get(rlxd_state);
       MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 99, MPI_COMM_WORLD);
@@ -140,7 +140,7 @@ int main(int argc,char *argv[]) {
       /* recieve the random number state form g_proc_id-1 */
       MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
       rlxd_reset(rlxd_state);
-      random_g_gauge_field();
+      random_gauge_field();
       /* send the random number state to g_proc_id+1 */
       k=g_proc_id+1; if(k==g_nproc) k=0;
       rlxd_get(rlxd_state);
@@ -209,15 +209,15 @@ int main(int argc,char *argv[]) {
       random_spinor_field(5);
     }
     /* compute the square of the norm */
-    enerphi0 = square_norm(2);
+    enerphi0 = square_norm(2, VOLUME/2);
     if(q_off > 0.){
-      enerphi1=square_norm(3);
+      enerphi1=square_norm(3, VOLUME/2);
     } 
     else{
       enerphi1=0.;
     }
     if(q_off2 > 0.){
-      enerphi2=square_norm(5);
+      enerphi2=square_norm(5, VOLUME/2);
     } 
     else{
       enerphi2=0.;
@@ -264,13 +264,13 @@ int main(int argc,char *argv[]) {
 
     zero_spinor_field(2);
     idis0=bicg(2,0,q_off,EPS_SQ0);
-    enerphi0x=square_norm(2);
+    enerphi0x=square_norm(2, VOLUME/2);
 
     if(q_off>0.){
       zero_spinor_field(3);
       idis1=bicg(3,1,q_off2,EPS_SQ0);
       Q_psi(3,3,q_off);
-      enerphi1x=square_norm(3);
+      enerphi1x=square_norm(3, VOLUME/2);
     }
     else{
       idis1=0; 
@@ -281,8 +281,8 @@ int main(int argc,char *argv[]) {
       zero_spinor_field(5);
       idis2=bicg(5,4,0.,EPS_SQ0);
       gamma5(5,5);
-      add_assign_field2(5,q_off2,4);
-      enerphi2x=square_norm(5);
+      assign_mul_add_r(5,q_off2,4, VOLUME/2);
+      enerphi2x=square_norm(5, VOLUME/2);
     }
     else{
       idis2=0; 
