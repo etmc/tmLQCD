@@ -183,7 +183,7 @@ void deri(double q_off,double q_off2) {
   for(j=0;j<jmax;j++){ 
     if(j==0){
       g_mu = g_mu1;
-      if(ITER_MAX_BCG == 0){
+      if(1){
 	/* If CG is used anyhow */
 	gamma5(DUM_DERI+1, first_psf);
 	/* Invert Q_{+} Q_{-} */
@@ -222,7 +222,7 @@ void deri(double q_off,double q_off2) {
 	g_mu = g_mu1;	
 	Qtm_plus_psi(spinor_field[DUM_DERI+2], spinor_field[second_psf]);
 	g_mu = g_mu2;
-	if(ITER_MAX_BCG == 0){
+	if(1){
 	  /* If CG is used anyhow */
 	  gamma5(DUM_DERI+1, DUM_DERI+2);
 	  /* Invert Q_{+} Q_{-} */
@@ -267,7 +267,7 @@ void deri(double q_off,double q_off2) {
       g_mu = g_mu2;	
       Qtm_plus_psi(spinor_field[DUM_DERI+2], spinor_field[third_psf]);
       g_mu = g_mu3;
-      if(ITER_MAX_BCG == 0){
+      if(1){
 	/* If CG is used anyhow */
 	gamma5(DUM_DERI+1, DUM_DERI+2);
 	/* Invert Q_{+} Q_{-} */
