@@ -85,11 +85,16 @@ int bicg(int k, int l, double q_off, double eps_sq) {
 
   /* if the geometric series fails, redo with conjugate gradient */
   if(iteration>=ITER_MAX_BCG) {
+    if(ITER_MAX_BCG == 0) {
+      iteration = 0;
+    }
     zero_spinor_field(k);
-    iteration+=solve_cg(k,l,q_off,eps_sq);
+    iteration += solve_cg(k,l,q_off,eps_sq);
     Q_psi(k,k,q_off);
-    iteration-=1000000;
-    if(g_proc_id==0) {
+    if(ITER_MAX_BCG != 0) {
+      iteration -= 1000000;
+    }
+    if(g_proc_id == 0) {
       fprintf(fp7,"%d %e\n",iteration, g_mu); fflush(fp7);
     }
   }
@@ -161,6 +166,9 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   }
   if(iteration>=ITER_MAX_BCG){
     zero_spinor_field(k);
+    if(ITER_MAX_BCG == 0) {
+      iteration = 0;
+    }
     iteration+=solve_cg(k,l,q_off,eps_sq);
     if(g_use_clover_flag == 1){
       Q_psi(k,k,q_off);
@@ -168,7 +176,9 @@ int bicg(int k, int l, double q_off, double eps_sq) {
     else{
       Qtm_minus_psi(k, k);;
     }
-    iteration-=1000000;
+    if(ITER_MAX_BCG != 0) {
+      iteration-=1000000;
+    }
     if(g_proc_id==0) {
       fprintf(fp7,"%d %d %e \n", g_proc_id, iteration, g_mu); 
       fflush(fp7);

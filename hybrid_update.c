@@ -20,6 +20,9 @@
 #include "tm_operators.h"
 #include "hybrid_update.h"
 
+extern int ITER_MAX_BCG;
+extern int ITER_MAX_CG;
+
 static su3 get_staples(int x,int mu) {
 
   int k,iy;
@@ -102,30 +105,41 @@ void deri(double q_off,double q_off2) {
 	_su3_zero(swp[i][mu]); 
       }
     }
-
-    if(q_off==0.){
-      jmax=1;
-    } 
-    else{
-      jmax=2;
-    }
-    if(q_off2>0.){
-      jmax=3;
-    }
-  }  
+  }
+  if(q_off==0.){
+    jmax=1;
+  } 
+  else{
+    jmax=2;
+  }
+  if(q_off2>0.){
+    jmax=3;
+  }
+  
   for(j=0;j<jmax;j++){ 
     if(j==0){
-      /*contributions from field 0 */
-      gamma5(DUM_DERI,0);
-      /* Invert first Q_+ */
-      /* Y_o -> DUM_DERI  */
-      count00+=bicg(DUM_DERI,0,q_off,EPS_SQ1);
-      gamma5(DUM_DERI+1,DUM_DERI);
-      /* Now Q_- */
-      /* X_o -> DUM_DERI+1 */
-      g_mu = -g_mu;
-      count01+=bicg(DUM_DERI+1,DUM_DERI,q_off,EPS_SQ1);
-      g_mu = -g_mu;   
+      if(ITER_MAX_BCG == 0){
+	/* If CG is used anyhow */
+	gamma5(DUM_DERI+1, 0);
+	/* Invert Q_{+} Q_{-} */
+	/* X_o -> DUM_DERI+1 */
+	count00 += solve_cg(DUM_DERI+1, 0, q_off, EPS_SQ1);
+	/* Y_o -> DUM_DERI  */
+	Qtm_minus_psi(DUM_DERI, DUM_DERI+1);
+      }
+      else{
+	/*contributions from field 0 */
+	gamma5(DUM_DERI,0);
+	/* Invert first Q_+ */
+	/* Y_o -> DUM_DERI  */
+	count00 += bicg(DUM_DERI,0,q_off,EPS_SQ1);
+	gamma5(DUM_DERI+1,DUM_DERI);
+	/* Now Q_- */
+	/* X_o -> DUM_DERI+1 */
+	g_mu = -g_mu;
+	count01 += bicg(DUM_DERI+1,DUM_DERI,q_off,EPS_SQ1);
+	g_mu = -g_mu;   
+      }
     }
     if(j==1){
       /* contributions from field 1 */

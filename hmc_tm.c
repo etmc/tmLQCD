@@ -17,6 +17,7 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <getopt.h>
 #include "global.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -35,6 +36,8 @@
 #include "read_input.h"
 #include "tm_operators.h"
 #include "boundary.h"
+
+char * Version = "0.9";
 
 int main(int argc,char *argv[]) {
  
@@ -58,7 +61,7 @@ int main(int argc,char *argv[]) {
   int Rate=0;
   int  namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
-  verbose = 1;
+  verbose = 0;
   g_use_clover_flag = 0;
  
   
@@ -94,11 +97,24 @@ int main(int argc,char *argv[]) {
     fp1=fopen(filename1, "w");
     fp2=fopen(filename2, "w");
     
-    printf("\n\nThe lattice size is %d x %d^3\n\n",(int)(T),(int)(L));
+    if(g_proc_id == 0){
+      printf("# This is the hmc code for twisted Mass Wilson QCD\n\n Version %s", Version);
+#ifdef SSE
+      printf("# The code was compiled with SSE instructions\n");
+#endif
+#ifdef SSE2
+      printf("# The code was compiled with SSE2 instructions\n");
+#endif
+#ifdef P4
+      printf("# The code was compiled for pentium4\n");
+#endif
+    }
+    printf("The lattice size is %d x %d^3\n",(int)(T)*g_nproc,(int)(L));
+    printf("The local lattice size is %d x %d\n",(int)(T),(int)(L));
     printf("g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
     
     fprintf(fp2,"The lattice size is %d x %d^3\n\n",(int)(g_nproc*T),(int)(L));
-    fprintf(fp2,"g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
+    fprintf(fp2,"g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f g_mu = %f \n\n",g_beta,g_kappa,g_ka_csw_8, g_mu);
     fprintf(fp2,"boundary %f %f %f %f \n \n",X0,X1,X2,X3);
     fprintf(fp2,"ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n\n"
 	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
@@ -177,7 +193,7 @@ int main(int argc,char *argv[]) {
   /*compute the energy of the gauge field*/
   eneg=measure_gauge_action();
   if(g_proc_id==0){
-    fprintf(fp2,"%14.12f \n",eneg/(6.*VOLUME*g_nproc));
+    fprintf(fp2,"#First plaquette value: %14.12f \n",eneg/(6.*VOLUME*g_nproc));
     fclose(fp2);
   }
 
