@@ -74,7 +74,7 @@ int write_gauge_field_time_p(char * filename){
 	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][y][z] ], 4*sizeof(su3)/8);
 	      fwrite(tmp, sizeof(su3), 4, ofs);
 #else
-	      fwrite(g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3), 1, ofs);
+	      fwrite(g_gauge_field[ g_ipt[tt][X][y][z] ], 4*sizeof(su3), 1, ofs);
 #endif
 	    }
 	    else{
@@ -88,7 +88,7 @@ int write_gauge_field_time_p(char * filename){
 	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][y][z] ], 4*sizeof(su3)/8);
 	      MPI_Send((void*) tmp, 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #else
-	      MPI_Send((void*) g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+	      MPI_Send((void*) g_gauge_field[ g_ipt[tt][X][y][z] ], 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #endif
 	    }
 	  }
