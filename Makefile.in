@@ -1,13 +1,15 @@
 CC = @CC@
 CCDEP = @CCDEP@
-CFLAGS = @CFLAGS@
-LDFLAGS = @LDFLAGS@
+CFLAGS = @CFLAGS@ @OPTARGS@
+LDFLAGS = @LDFLAGS@ @OPTARGS@
 CCLD = $(CC)
-LINK = $(CCLD) -o $@ ${LDFLAGS}
 LEX = @LEX@ 
 AUTOCONF = @AUTOCONF@
 LIBS = @LIBS@ 
+SHELL = @SHELL@
+OPTARGS = @OPTARGS@
 
+LINK = $(CCLD) -o $@ ${LDFLAGS}
 COMPILE = ${CC} -o $@ ${CFLAGS} 
 
 TARGETS = clover_eo hybrid linsolve xchange \
@@ -15,6 +17,9 @@ TARGETS = clover_eo hybrid linsolve xchange \
 	geometry_eo linalg_eo ranlxs sw io
 
 all: hybrid
+
+Makefile: Makefile.in config.status
+	CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 ${addsuffix .o, ${TARGETS}}: %.o: %.c %.h Makefile global.h
 	${COMPILE} -c $< 
