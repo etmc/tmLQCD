@@ -10,8 +10,6 @@
  *
  *******************************************************************************/
 
-#define MAIN_PROGRAM
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -50,7 +48,7 @@ int check_geometry()
 	  ix=g_ipt[x0][x1][x2][x3];
 
 	  if ((ix < 0) || (ix >= VOLUME)) {
-	    printf("The index ipt is out of range\n");
+	    printf("The index ipt is out of range (%d, %d, %d, %d) ix = %d\n", x0, x1, x2, x3, ix);
 	    printf("Program aborted\n");
 #ifdef MPI
 	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
