@@ -18,7 +18,7 @@ int solve_cg(int k,int l, double q_off, double eps_sq) {
   
   /* initialize residue r and search vector p */
   
-  if(g_mu == 0.){
+  if(g_use_clover_flag == 1){
     Q_psi(DUM_SOLVER,k,q_off);
     Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
   }
@@ -31,7 +31,7 @@ int solve_cg(int k,int l, double q_off, double eps_sq) {
 
 /* main loop */
    for(iteration=1;iteration<=ITER_MAX;iteration++) {
-     if(g_mu == 0.){
+     if(g_use_clover_flag == 1){
        Q_psi(DUM_SOLVER,DUM_SOLVER+2,q_off);
        Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
      }
@@ -101,7 +101,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   int iteration;
 
   gamma5(DUM_SOLVER+1,l);
-  if(g_mu == 0.){
+  if(g_use_clover_flag == 1){
     M_psi(DUM_SOLVER,k,q_off); 
   }
   else {
@@ -123,7 +123,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
     /*  add_assign_field(DUM_SOLVER+3,-omega0,DUM_SOLVER+2);
 	add_assign_field2(DUM_SOLVER+3,be,DUM_SOLVER+1);  */
     twice_add_assign_field2(DUM_SOLVER+3, -omega0, DUM_SOLVER+2, be, DUM_SOLVER+1); 
-    if(g_mu == 0.){
+    if(g_use_clover_flag == 1){
       M_psi(DUM_SOLVER+2, DUM_SOLVER+3, q_off); 
     }
     else{
@@ -131,7 +131,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
     }
     alpha=rho1/vprod(DUM_SOLVER, DUM_SOLVER+2);
     add_assign_field(DUM_SOLVER+1, -alpha, DUM_SOLVER+2);
-    if(g_mu == 0.){
+    if(g_use_clover_flag == 1){
       M_psi(DUM_SOLVER+4, DUM_SOLVER+1, q_off);
     }
     else{
@@ -153,7 +153,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   if(iteration>=ITER_MAX){
     zero_spinor_field(k);
     iteration+=solve_cg(k,l,q_off,eps_sq);
-    if(g_mu == 0.){
+    if(g_use_clover_flag == 1){
       Q_psi(k,k,q_off);
     }
     else{

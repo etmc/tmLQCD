@@ -16,6 +16,7 @@
 #include "linsolve.h"
 #include "xchange.h"
 #include "deriv_Sb.h"
+#include "H_eo.h"
 #include "tm_operators.h"
 #include "hybrid_update.h"
 
@@ -82,11 +83,11 @@ void deri(double q_off,double q_off2) {
   double qo;
   for(i=0;i<(VOLUME+RAND);i++){ 
     for(mu=0;mu<4;mu++){ 
-      _zero_su3adj(df0[i][mu]); 
+      _zero_su3adj(df0[i][mu]);
     }
   }
 
-  if(g_mu == 0.){
+  if(g_use_clover_flag == 1){   
     /* All the clover stuff */
     for(i=0;i<(VOLUME+RAND);i++){ 
       for(mu=0;mu<4;mu++){ 
@@ -110,15 +111,17 @@ void deri(double q_off,double q_off2) {
     if(q_off2>0.){
       jmax=3;
     }
-  }
+  }  
   for(j=0;j<jmax;j++){ 
     if(j==0){
       /*contributions from field 0 */
       gamma5(DUM_DERI,0);
       /* Invert first Q_+ */
+      /* Y_0 -> DUM_DERI  */
       count00+=bicg(DUM_DERI,0,q_off,EPS_SQ1);
       gamma5(DUM_DERI+1,DUM_DERI);
       /* Now Q_- */
+      /* X_o -> DUM_DERI+1 */
       g_mu = -g_mu;
       count01+=bicg(DUM_DERI+1,DUM_DERI,q_off,EPS_SQ1);
       g_mu = -g_mu;
@@ -140,7 +143,7 @@ void deri(double q_off,double q_off2) {
       gamma5(DUM_DERI+1,DUM_DERI+2);
       count21+=bicg(DUM_DERI+1,DUM_DERI+2,0.,EPS_SQ3*q_off2);
     }
-    if(g_mu == 0.){
+    if(g_use_clover_flag == 1){ 
       /* apply H_eo to  Q^{-2} phi */
       H_eo_psi(1,DUM_DERI+2,DUM_DERI+1);
       /* result resides on odd sites */
@@ -160,18 +163,19 @@ void deri(double q_off,double q_off2) {
       /* compute the contribution for the det-part */
       gamma5(DUM_DERI,DUM_DERI);
       sw_spinor(0,DUM_DERI,DUM_DERI+1);
-    }
+    }   
     else{
       /* apply Hopping Matrix */
       /* to get the even sites of X */
       /* Check the signs here ! */
       H_eo_tm_inv_psi(DUM_DERI+2, DUM_DERI+1, 1, -1.);
+      /* \delta Q sandwitched by X_e^\dagger and Y_o */
       deriv_Sb(0, DUM_DERI, DUM_DERI+2);
 
-      /* to get the odd sites of X */
+      /* to get the even sites of Y */
       H_eo_tm_inv_psi(DUM_DERI+3, DUM_DERI, 1, +1);
+      /* \delta Q sandwitched by X_o^\dagger and Y_e */
       deriv_Sb(1, DUM_DERI+3, DUM_DERI+1);
-
     }
   }
 }
@@ -180,15 +184,15 @@ void fermion_momenta(double step, double q_off, double q_off2) {
   int i,mu;
   su3adj *xm,*deriv;
 
-  if(g_mu == 0.){
+  if(g_use_clover_flag == 1){ 
     sw_term(); 
     sw_invert(1);
-  }
+  } 
   deri(q_off,q_off2); 
-  if(g_mu == 0.){
+  if(g_use_clover_flag == 1){ 
     sw_deriv(1);
     sw_all();
-  }
+  } 
 #ifdef MPI
   xchange_deri();
 #endif
@@ -196,11 +200,12 @@ void fermion_momenta(double step, double q_off, double q_off2) {
     for(mu=0;mu<4;mu++){
       xm=&moment[i][mu];
       deriv=&df0[i][mu]; 
+      /* This 2* is coming from what? */
       _minus_const_times_mom(*xm,2.*step,*deriv); 
-      if(g_mu == 0.){
+      if(g_use_clover_flag == 1){ 
 	deriv=&dclover[i][mu]; 
 	_minus_const_times_mom(*xm,-2.*g_ka_csw_8*step,*deriv); 
-      }
+      } 
     }
   }
 }

@@ -85,6 +85,7 @@ EXTERN su3 swm[VOLUME][4] ALIGN;
 EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
 EXTERN double g_mu;
+EXTERN int g_use_clover_flag;
 
 /* MPI information */
 EXTERN int g_proc_id, g_nproc, g_stdio_proc;

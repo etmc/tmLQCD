@@ -166,8 +166,6 @@ void mul_one_pm_imu_sub_mul(int l, int k, int j, const double _sign){
     _complex_times_vector(phi3, w, (*r).c3);
     _complex_times_vector(phi4, w, (*r).c4);
     /* Subtract s and store the result in t */
-    /* multiply with  gamma5 included by    */
-    /* reversed order of s and phi3|4       */
     _vector_sub((*t).c1, phi1, (*s).c1);
     _vector_sub((*t).c2, phi2, (*s).c2);
     _vector_sub((*t).c3, phi3, (*s).c3);

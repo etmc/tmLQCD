@@ -33,6 +33,7 @@
 #include "sw.h"
 #include "io.h"
 #include "read_input.h"
+#include "tm_operators.h"
 #include "boundary.h"
 
 int main(int argc,char *argv[]) {
@@ -43,8 +44,7 @@ int main(int argc,char *argv[]) {
   char filename2[50];
   char filename3[50];
   int rlxs_state[25];
-  int idis;
-  int idi,idis0,idis1,idis2;
+  int idis0;
   int j,ix,mu;
   int i,k, nstore=0;
   static float yy[2];
@@ -58,6 +58,8 @@ int main(int argc,char *argv[]) {
   int  namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
   verbose = 1;
+  g_use_clover_flag = 0;
+ 
   
 #ifdef MPI
   MPI_Init(&argc, &argv);
@@ -74,13 +76,12 @@ int main(int argc,char *argv[]) {
   g_proc_id = 0;
 #endif
 
-  
   /* Read the input file */
   read_input("hmc.input");
-  
+ 
   q_off = 0.;
   q_off2 = 0.;
-
+ 
   if(g_proc_id == 0){
     fp7=fopen("solver_data", "w"); 
     
@@ -102,6 +103,7 @@ int main(int argc,char *argv[]) {
 	    ,ITER_MAX,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
     fprintf(fp2,"q_off=%f, q_off2=%f, dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n\n",
 	    q_off,q_off2,dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
+    fprintf(fp2,"mu = %f", g_mu);
     
   }
 
@@ -166,6 +168,9 @@ int main(int argc,char *argv[]) {
     fclose(fp2);
   }
 
+  /* compute the energy of the determinant term */
+  /* needed for exact continuation of the run, since evamax and eva use
+     random numbers */ 
   if(startoption == 2 && g_proc_id == 0){
     rlxs_reset(rlxs_state);
   }
@@ -197,16 +202,11 @@ int main(int argc,char *argv[]) {
     /* depending on q_off and q_off2 we use    */
     /* one, two or three pseudo-fermion fields */
     random_spinor_field(2);
-
     /* compute the square of the norm */
     enerphi0 = square_norm(2);
-    /* Remove this one */
 
-    /* apply the fermion matrix Q_+ to the spinor */
+    /* apply the fermion matrix to the spinor */
     Qtm_plus_psi(0, 2);
-    /* Remove idi and idis? */
-    idi=0;
-    idis = 0.;
 
     /* initialize the momenta */
     enep=ini_momenta();
@@ -224,27 +224,15 @@ int main(int argc,char *argv[]) {
     /*perform the accept-reject-step*/
     enepx=moment_energy();
     enegx=measure_gauge_action();
-    /* Remove enecx */
-
     /*compute the energy contributions from the pseudo-fermions */
 
     zero_spinor_field(2);
     idis0=bicg(2, 0, q_off, EPS_SQ0);
     enerphi0x=square_norm(2);
 
-    /* Remove enerphi1x and enerphi2x */
-    /* Remove enerphi1 and enerphi2 */
-    /*  and idis1 and idis2? */
-    idis1=0; 
-    idis2=0; 
-
-
-
     /* Compute the energy difference */
-    dh = 0.;
-    dh=-enepx - g_beta*enegx + enep + g_beta*eneg
+    dh=+enepx - g_beta*enegx - enep + g_beta*eneg
       + enerphi0x - enerphi0; 
-    printf("%e %e %e %e %e %e %e %e %e\n", -enepx, enep, -g_beta*enegx, g_beta*eneg, enerphi0x, -enerphi0, -enepx+enep,-g_beta*enegx+g_beta*eneg,enerphi0x-enerphi0);
       
     /* the random number is only taken at node zero and then distributed to 
        the other sites */
@@ -288,7 +276,7 @@ int main(int argc,char *argv[]) {
 
     if(g_proc_id==0){
       fprintf(fp1,"%14.12f %14.12f %d %d %d \n",
-	      eneg/(6.*VOLUME*g_nproc),dh,
+	      1.-eneg/(6.*VOLUME*g_nproc),dh,
 	      idis0,count00,count01);
       fflush(fp1);
     }

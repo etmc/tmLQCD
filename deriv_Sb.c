@@ -24,6 +24,7 @@
 #include "global.h"
 #include "su3.h"
 #include "boundary.h"
+#include "xchange.h"
 #include "deriv_Sb.h"
 
 static su3_vector psi1, psi2, psi, chi, phi1, phi3;

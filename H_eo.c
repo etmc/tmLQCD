@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include "global.h"
 #include "su3.h"
+#include "sse.h"
 #ifdef MPI
 #include "xchange.h"
 #endif
