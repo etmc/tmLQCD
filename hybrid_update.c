@@ -71,7 +71,7 @@ void gauge_momenta(double step) {
   su3adj *xm;
   static double st, st1;
 #ifdef _COMP_FORCE
-  double sum=0;
+  double sum=0., sum1=0., max=0., max2=0.;
 #ifdef MPI
   double sum2=0.;
 #endif
@@ -87,24 +87,43 @@ void gauge_momenta(double step) {
       _su3_times_su3d(w,*z,v);
       _trace_lambda(deriv,w);
 #ifdef _COMP_FORCE
-      sum+= _su3adj_square_norm(deriv);
+      sum2 = _su3adj_square_norm(deriv);
+      sum+= sum2;
+      if(sum2 > max) max = sum2;
 #endif
       _minus_const_times_mom(*xm,st,deriv);
       if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
 	get_rectangle_staples(&v, i, mu);
 	_su3_times_su3d(w, *z, v);
 	_trace_lambda(deriv, w);
+#ifdef _COMP_FORCE
+	sum2 = _su3adj_square_norm(deriv);
+	sum1+= sum2;
+	if(sum2 > max2) max2 = sum2;
+#endif
 	_minus_const_times_mom(*xm, st1, deriv);
       }
     }
   }
 #ifdef _COMP_FORCE
 #ifdef MPI
-  MPI_Allreduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   sum = sum2;
+  MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+  max = sum2;
+  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+    MPI_Reduce(&sum1, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    sum1 = sum2;
+    MPI_Reduce(&max2, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    max2 = sum2;
+    if(g_proc_id == 0) {
+      printf("gaugedbw2 %e max %e\n", sum1/((double)(VOLUME*g_nproc)), max2);
+      fflush(stdout);
+    }
+  }
 #endif
   if(g_proc_id == 0) {
-    printf("gauge %e\n", sum/((double)(VOLUME*g_nproc)));
+    printf("gauge %e max %e\n", sum/((double)(VOLUME*g_nproc)), max);
     fflush(stdout);
   }
 #endif
@@ -123,7 +142,6 @@ void deri(double q_off,double q_off2) {
   int j,jmax=1;
   int i,mu;
   double qo;
-  su3adj * deriv;
 
   for(i=0;i<(VOLUME+RAND);i++){ 
     for(mu=0;mu<4;mu++){ 
@@ -352,7 +370,7 @@ void update_fermion_momenta(double step, const int S) {
   double tmp;
   su3adj *xm,*deriv;
 #ifdef _COMP_FORCE
-  double sum=0.;
+  double sum=0., max=0.;
 #ifdef MPI
   double sum2=0.;
 #endif
@@ -367,7 +385,9 @@ void update_fermion_momenta(double step, const int S) {
       xm=&moment[i][mu];
       deriv=&df0[i][mu];
 #ifdef _COMP_FORCE
-      sum+= _su3adj_square_norm(*deriv);
+      sum2 = _su3adj_square_norm(*deriv); 
+      sum+= sum2;
+      if(sum2 > max) max = sum2;
 #endif
       /* This 2* is coming from what? */
       tmp = 2.*step;
@@ -376,11 +396,13 @@ void update_fermion_momenta(double step, const int S) {
   }
 #ifdef _COMP_FORCE
 #ifdef MPI
-  MPI_Allreduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   sum = sum2;
+  MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+  max = sum2;
 #endif
   if(g_proc_id == 0) {
-    printf("fermionforce%d %e\n", S, sum/((double)(VOLUME*g_nproc)));
+    printf("fermionforce%d %e max %e\n", S, sum/((double)(VOLUME*g_nproc)), max);
     fflush(stdout);
   }
 #endif
