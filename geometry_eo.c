@@ -52,6 +52,47 @@ int Index(const int x0, const int x1, const int x2, const int x3)
    return(y3 + L*y2 + L*L*y1 + L*L*L*y0);
 }
 
+int Index_eo(const int x0, const int x1, const int x2, const int x3)
+{
+   int y0, y1, y2, y3, ix, bnd=0;
+
+   y0=x0;
+   /* the slice at time -1 is put to T+1 */
+   if(x0 == -1) y0=T+1;
+   if(x0 == -1 || x0 == T) bnd = 1;
+
+   y1=x1;
+   if(x1==L) y1=0;
+   else if(x1==-1) y1=L-1;
+
+   y2=x2;
+   if(x2==L) y2=0;
+   else if(x2==-1) y2=L-1;
+
+   y3=x3;
+   if(x3==L) y3=0;
+   else if(x3==-1) y3=L-1;
+   
+   if((x0+x1+x2+x3+g_proc_id*T)%2==0) {
+     if(bnd ==0) {
+       ix = (y3 + L*y2 + L*L*y1 + L*L*L*y0)/2;
+     }
+     else {
+       ix = y0*L*L*L+(y3 + L*y2 + L*L*y1)/2;
+     }
+   }
+   else {
+     if(bnd == 0) {
+       ix = (y3 + L*y2 + L*L*y1 + L*L*L*y0)/2+(VOLUME)/2;
+     }
+     else {
+       ix = y0*L*L*L+(y3 + L*y2 + L*L*y1)/2+L*L*L/2;
+     }
+   }
+
+   return( ix );
+}
+
 
 void geometry(){
   

@@ -396,7 +396,7 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
   }
 }
 
-#elif defined XLC6
+#elif defined XLC
 
 #define _prefetch_spinor_dcbt(addr1, addr2) \
 __dcbt((void*)(addr1)); \
@@ -660,7 +660,7 @@ void Hopping_Matrix(int ieo, int l, int k){
     iy=g_iup[iz][0]; icy=trans1[iy]-ioff2;
 
     up=&g_gauge_field[iz][0];
-    dd=&g_gauge_field[iy][0].c33.re;
+    dd=&g_gauge_field[iz][0].c33.re;
     _prefetch_spinor_dcbt((void*)up, dd);
 
     sp=&spinor_field[k][icy];
