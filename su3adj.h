@@ -14,6 +14,15 @@ typedef struct
 *
 *******************************************************************************/
 
+/*
+ *
+ * a = p_j * \lambda_j
+ *
+ * \lambda_j are the eight 
+ * Gell-Mann matrices
+ *
+ */
+
 #define _make_su3(v,p) \
 (v).c00.im= (p).d3+0.5773502691896258*(p).d8; \
 (v).c01.im= (p).d1; \
@@ -33,6 +42,18 @@ typedef struct
 (v).c20.re=-(p).d5; \
 (v).c21.re=-(p).d7; \
 (v).c22.re= 0.0;
+
+/*
+ *
+ * r_j = Re(tr(a*\lambda_j))
+ *
+ * 0.577350269189625 = 1/sqrt(3)
+ *
+ * \lambda_j are the eight 
+ * Gell-Mann matrices
+ *
+ */
+
 
 #define _trace_lambda(r,a) \
 (r).d1=-(a).c10.im-(a).c01.im; \

@@ -28,7 +28,7 @@ MODULES = read_input clover_eo linsolve xchange \
 	boundary deriv_Sb tm_operators getopt sighandler \
 	mpi_init update_tm Hopping_Matrix_nocom \
 	test/check_geometry test/check_xchange invert_eo \
-	measure_rectangles
+	measure_rectangles get_rectangle_staples
 
 
 PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark invert

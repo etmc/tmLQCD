@@ -68,6 +68,7 @@ double measure_rectangles() {
 
           /* Trace it */
 	  _trace_su3_times_su3d(ac,pr1,pr2);
+/* 	  printf("i mu nu: %d %d %d, ac = %e\n", i, mu, nu, ac); */
 	  /* Kahan summation */
 	  tr=ac+kc;
 	  ts=tr+ks;

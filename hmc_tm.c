@@ -70,7 +70,7 @@ int main(int argc,char *argv[]) {
 #endif
 
   /* Energy corresponding to the Gauge part */
-  double eneg = 0., rectangle_eneg = 0.;
+  double eneg = 0., plaquette_energy = 0., rectangle_energy = 0.;
   /* Acceptance rate */
   int Rate=0;
   int c;
@@ -288,17 +288,19 @@ int main(int argc,char *argv[]) {
 #endif
 
   /*compute the energy of the gauge field*/
-  eneg=measure_gauge_action();
-  if(g_rgi_C1 > 0.) {
-    rectangle_eneg = measure_rectangles();
-    fprintf(parameterfile,"#First rectangle value: %14.12f \n",rectangle_eneg/(12.*VOLUME*g_nproc));
+  plaquette_energy=measure_gauge_action();
+  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+    rectangle_energy = measure_rectangles();
+    if(g_proc_id==0){
+      fprintf(parameterfile,"#First rectangle value: %14.12f \n",rectangle_energy/(12.*VOLUME*g_nproc));
+    }
   }
 
   if(g_proc_id==0){
-    fprintf(parameterfile,"#First plaquette value: %14.12f \n",eneg/(6.*VOLUME*g_nproc));
+    fprintf(parameterfile,"#First plaquette value: %14.12f \n",plaquette_energy/(6.*VOLUME*g_nproc));
     fclose(parameterfile);
   }
-
+  eneg = g_rgi_C0 * plaquette_energy + g_rgi_C1 * rectangle_energy;
 
   /* compute the energy of the determinant term */
   /* needed for exact continuation of the run, since evamax and eva use
@@ -321,15 +323,17 @@ int main(int argc,char *argv[]) {
     }
   }
 
-  gettimeofday(&t1,NULL);
-  countfile = fopen("history_hmc_tm", "a");
-  fprintf(countfile, "!!! Timestamp %ld\n", t1.tv_sec); 
-  fclose(countfile);
+  if(g_proc_id == 0) {
+    gettimeofday(&t1,NULL);
+    countfile = fopen("history_hmc_tm", "a");
+    fprintf(countfile, "!!! Timestamp %ld\n", t1.tv_sec); 
+    fclose(countfile);
+  }
 
   /* Loop for measurements */
   for(j=0;j<Nmeas;j++) {
 
-    Rate += update_tm(integtyp, &eneg, datafilename);
+    Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename);
 
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0) {
@@ -338,9 +342,11 @@ int main(int argc,char *argv[]) {
       countfile = fopen(nstore_filename, "w");
       fprintf(countfile, "%d\n", nstore);
       fclose(countfile);
-      countfile = fopen("history_hmc_tm", "a");
-      fprintf(countfile, "%.4d, Nmeas = %d, Plaquette = %e\n", nstore, Nmeas, eneg/(6.*VOLUME*g_nproc));
-      fclose(countfile);
+      if(g_proc_id == 0) {
+        countfile = fopen("history_hmc_tm", "a");
+	fprintf(countfile, "%.4d, Nmeas = %d, Plaquette = %e\n", nstore, Nmeas, plaquette_energy/(6.*VOLUME*g_nproc));
+	fclose(countfile);
+      }
     }
     else {
       sprintf(gauge_filename,"%s", "conf.save");

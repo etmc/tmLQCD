@@ -19,6 +19,7 @@
 #include "Hopping_Matrix.h"
 #include "tm_operators.h"
 #include "eigenvalues.h"
+#include "get_rectangle_staples.h"
 #include "hybrid_update.h"
 
 extern int ITER_MAX_BCG;
@@ -54,113 +55,6 @@ static su3 get_staples(int x, int mu) {
   return v;
 }
 
-su3 get_rectangle_staples(const int x, const int mu) {
-  static su3 v, tmp1, tmp2;
-  int X, y, z, nu;
-  su3 * w1, * w2, * w3;
-  _su3_zero(v);
-  for(nu = 0; nu < 4; nu++) {
-    if(mu != nu) {
-      /* first contr. starting from x */
-      w1 = &g_gauge_field[x][nu];
-      y = g_iup[x][nu];
-      w2 = &g_gauge_field[y][nu];
-      _su3_times_su3(tmp1, *w1, *w2);
-      z = g_iup[y][nu];
-      w3 = &g_gauge_field[z][mu];
-      _su3_times_su3(tmp2, tmp1, *w3);
-
-      y = g_iup[x][mu];
-      w1 = &g_gauge_field[y][nu];
-      z = g_iup[y][nu];
-      w2 = &g_gauge_field[z][nu];
-      _su3_times_su3(tmp1, *w1, *w2);
-      _su3d_times_su3_acc(v, tmp1, tmp2);
-
-      /* second contr. starting from x */
-      w1 = &g_gauge_field[x][nu];
-      y = g_iup[x][nu];
-      w2 = &g_gauge_field[y][mu];
-      _su3_times_su3(tmp1, *w1, *w2);
-      z = g_iup[y][mu];
-      w3 = &g_gauge_field[z][mu];
-      _su3_times_su3(tmp2, tmp1, *w3);
-
-      y = g_iup[x][mu];
-      w1 = &g_gauge_field[y][mu];
-      z = g_iup[y][mu];
-      w2 = &g_gauge_field[z][nu];
-      _su3_times_su3(tmp1, *w1, *w2);
-      _su3d_times_su3_acc(v, tmp1, tmp2);
-
-      /* 1 contr. starting idn[x][mu] */
-      X = g_idn[x][mu];
-      w1 = &g_gauge_field[X][nu];
-      y = g_iup[X][nu];
-      w2 = &g_gauge_field[y][mu];
-      _su3_times_su3(tmp1, *w1, *w2);
-      z = g_iup[y][mu];
-      w3 = &g_gauge_field[z][mu];
-      _su3_times_su3(tmp2, tmp1, *w3);
-
-      w1 = &g_gauge_field[X][mu];
-      z = g_iup[x][mu];
-      w2 = &g_gauge_field[z][nu];
-      _su3_times_su3(tmp1, *w1, *w2);
-      _su3d_times_su3_acc(v, tmp1, tmp2);
-
-      /* 1 contr. starting idn[X][nu] */
-      X = g_idn[X][nu];
-      w1 = &g_gauge_field[X][mu];
-      y = g_iup[X][mu];
-      w2 = &g_gauge_field[y][mu];
-      _su3_times_su3(tmp1, *w1, *w2);
-      z = g_iup[y][nu];
-      w3 = &g_gauge_field[z][nu];
-      _su3_times_su3(tmp2, tmp2, *w3);
-
-      w1 = &g_gauge_field[X][nu];
-      y = g_iup[X][nu];
-      w2 = &g_gauge_field[y][mu];
-      _su3_times_su3(tmp1, *w1, *w2);
-      _su3d_times_su3_acc(v, tmp1, tmp2);
-
-      /* 1 contr. starting idn[x][nu] */
-      X = g_idn[x][nu];
-      w1 = &g_gauge_field[X][mu];
-      y = g_iup[X][mu];
-      w2 = &g_gauge_field[y][mu];
-      _su3_times_su3(tmp1, *w1, *w2);
-      z = g_iup[y][nu];
-      w3 = &g_gauge_field[z][nu];
-      _su3_times_su3(tmp2, tmp2, *w3);
-
-      w1 = &g_gauge_field[X][nu];
-      y = g_iup[X][nu];
-      w2 = &g_gauge_field[ g_iup[y][mu] ][mu];
-      _su3_times_su3(tmp1, *w1, *w2);
-      _su3d_times_su3_acc(v, tmp1, tmp2);
-
-      /* 1 contr. starting idn[X][nu] */
-      X = g_idn[X][nu];
-      w1 = &g_gauge_field[X][mu];
-      y = g_iup[X][mu];
-      w2 = &g_gauge_field[y][mu];
-      _su3_times_su3(tmp1, *w1, *w2);
-      z = g_iup[y][nu];
-      w3 = &g_gauge_field[z][nu];
-      _su3_times_su3(tmp2, tmp2, *w3);
-
-      w1 = &g_gauge_field[X][nu];
-      y = g_iup[X][nu];
-      w2 = &g_gauge_field[y][nu];
-      _su3_times_su3(tmp1, *w1, *w2);
-      _su3d_times_su3_acc(v, tmp1, tmp2);
-    }
-  }
-  return(v);
-}
-
 /***********************************
  *
  * Computes the new gauge momenta
@@ -170,13 +64,14 @@ su3 get_rectangle_staples(const int x, const int mu) {
 void gauge_momenta(double step) {
 
   int i,mu;
-  static su3 v,w;
+  static su3 v, w;
   su3 *z;
   static su3adj deriv;
   su3adj *xm;
-  static double st;
+  static double st, st1;
 
-  st =- step*g_beta/3.0;
+  st  = -step * g_rgi_C0 * g_beta/3.0;
+  st1 = -step * g_rgi_C1 * g_beta/3.0;
   for(i = 0; i < VOLUME; i++){
     for(mu=0;mu<4;mu++){
       z=&g_gauge_field[i][mu];
@@ -185,6 +80,12 @@ void gauge_momenta(double step) {
       _su3_times_su3d(w,*z,v);
       _trace_lambda(deriv,w);
       _minus_const_times_mom(*xm,st,deriv);
+      if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+	get_rectangle_staples(&v, i, mu);
+	_su3_times_su3d(w, *z, v);
+	_trace_lambda(deriv, w);
+	_minus_const_times_mom(*xm, st1, deriv);
+      }
     }
   }
 }
