@@ -4800,7 +4800,7 @@ if test "$host_cpu" = "i686"; then
     fi
     CXXFLAGS=' -Wall'
     OPTARGS='-O'
-    LIBS=
+    LIBS="-lm"
 
     if test $enable_p4 = yes; then
        CFLAGS="$CFLAGS -DP4"
