@@ -208,7 +208,7 @@ if (g_proc_id == 0){
 #endif
       mul_r(spinor_field[2], (2*g_kappa), spinor_field[2], VOLUME/2);  
       mul_r(spinor_field[3], (2*g_kappa), spinor_field[3], VOLUME/2);
-      sprintf(conf_filename,"%s.is%.1dic%.1d%.4d", "prop.mass00", nstore, is, ic);
+      sprintf(conf_filename,"%s.is%.1dic%.1d.%.4d", "prop.mass00", is, ic, nstore);
       write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 0);
 /*       if(ix == 0) { */
 /* 	write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 0); */
