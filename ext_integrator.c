@@ -174,61 +174,61 @@ void ext_sexton_weingarten(int * const n_int, const double tau, const int S, con
 }
 
 void impr_leap_frog(int * const n_int, const double tau, const int S) {
-  int i;
-  double eps;
-  double s,t;
+  int i,j;
+  double eps, eps0, s, t;
 
-  /* initialize the counter for the inverter */
-  count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;
-  
   eps = tau/((double)n_int[S]);
-  s = 1.3512071919596576*eps;
-  t = -1.7024143839193153*eps;
-
-  update_fermion_momenta(0.5*s, S-1);
-  eps = s/((double)n_int[S-1]);
-
-  for(i = 2; i < S; i++) {
-    update_fermion_momenta(0.5*eps, S-i);
-    eps /= ((double)n_int[S-i]);
+  if(S == g_nr_of_psf) {
+    /* initialize the counter for the inverter */
+    count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;
+    s = 1.3512071919596576*eps;
+    t = -1.7024143839193153*eps;
   }
-  update_fermion_momenta(0.5*eps, 0);
-  eps /= ((double)n_int[0]);
-  gauge_momenta(0.5*eps);
   
-  eps = tau/((double)n_int[S]);
 
-  for(i = 1; i < n_int[S]; i++){
-    ext_leap_frog(n_int, s, S-1, 1);
-    update_fermion_momenta(0.5*s/((double)n_int[S-1]), S-2);
-    update_fermion_momenta(0.5*(s+t), S-1);
-    update_fermion_momenta(0.5*t/((double)n_int[S-1]), S-2);
-    ext_leap_frog(n_int, t, S-1, 1);
-    update_fermion_momenta(0.5*t/((double)n_int[S-1]), S-2);
-    update_fermion_momenta(0.5*(s+t), S-1);
-    update_fermion_momenta(0.5*s/((double)n_int[S-1]), S-2);
-    ext_leap_frog(n_int, s, S-1, 0);
-    update_fermion_momenta(s, S-1);
+  if(S == 1) {
+    eps0 = eps/((double)n_int[0]);
+    update_fermion_momenta(0.5*eps, S-1);
+    gauge_momenta(0.5*eps0);
+    for(j = 1; j < n_int[S]; j++) {
+      for(i = 0; i < n_int[0]; i++) {
+	update_gauge(eps0); 
+	gauge_momenta(eps0);
+      }
+      update_fermion_momenta(eps, S-1);
+    }
+    for(i = 1; i < n_int[0]; i++) {
+      update_gauge(eps0); 
+      gauge_momenta(eps0);
+    }
+    update_gauge(eps0); 
+    gauge_momenta(0.5*eps0);
+    update_fermion_momenta(0.5*eps, S-1);
   }
-  ext_leap_frog(n_int, s, S-1, 1);
-  update_fermion_momenta(0.5*s/((double)n_int[S-1]), S-2);
-  update_fermion_momenta(0.5*(s+t), S-1);
-  update_fermion_momenta(0.5*t/((double)n_int[S-1]), S-2);
-  ext_leap_frog(n_int, t, S-1, 1);
-  update_fermion_momenta(0.5*t/((double)n_int[S-1]), S-2);
-  update_fermion_momenta(0.5*(s+t), S-1);
-  update_fermion_momenta(0.5*s/((double)n_int[S-1]), S-2);
-  ext_leap_frog(n_int, s, S-1, 1);
-
-  /* half steps */
-  update_fermion_momenta(s/2., S-1);
-  eps = s/((double)n_int[S-1]);
-  
-  for(i = 2; i < S; i++) {
-    update_fermion_momenta(eps/2., S-i);
-    eps /= ((double)n_int[S-i]);
+  else if(S != g_nr_of_psf){
+    update_fermion_momenta(0.5*eps, S-1);
+    for(i = 1; i < n_int[S]; i++){
+      impr_leap_frog(n_int, eps, S-1);
+      update_fermion_momenta(eps, S-1);
+    }
+    impr_leap_frog(n_int, eps, S-1);
+    update_fermion_momenta(0.5*eps, S-1);
   }
-  update_fermion_momenta(eps/2., 0);
-  eps /= ((double)n_int[0]);
-  gauge_momenta(eps/2.);
+  else {
+    update_fermion_momenta(0.5*s, S-1);
+    for(i = 1; i < n_int[S]; i++){
+      impr_leap_frog(n_int, s, S-1);
+      update_fermion_momenta(0.5*(s+t), S-1);
+      impr_leap_frog(n_int, t, S-1);
+      update_fermion_momenta(0.5*(s+t), S-1);
+      impr_leap_frog(n_int, s, S-1);
+      update_fermion_momenta(s, S-1);
+    }
+    impr_leap_frog(n_int, s, S-1);
+    update_fermion_momenta(0.5*(s+t), S-1);
+    impr_leap_frog(n_int, t, S-1);
+    update_fermion_momenta(0.5*(s+t), S-1);
+    impr_leap_frog(n_int, s, S-1);
+    update_fermion_momenta(0.5*s, S-1);
+  }
 }
