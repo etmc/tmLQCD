@@ -46,7 +46,7 @@
 #include "test/check_geometry.h"
 #include "boundary.h"
 
-char * Version = "2.3";
+char * Version = "2.3.1";
 
 
 void usage(){
@@ -365,7 +365,8 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     gettimeofday(&t1,NULL);
     countfile = fopen("history_hmc_tm", "a");
-    fprintf(countfile, "!!! Timestamp %ld\n", t1.tv_sec); 
+    fprintf(countfile, "!!! Timestamp %ld, Nskip = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f\n", 
+	    t1.tv_sec, Nskip, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1); 
     fclose(countfile);
   }
 
@@ -377,15 +378,16 @@ int main(int argc,char *argv[]) {
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0) {
       sprintf(gauge_filename,"%s.%.4d", "conf", nstore);
+      if(g_proc_id == 0) {
+        countfile = fopen("history_hmc_tm", "a");
+	fprintf(countfile, "%.4d, measurment %d of %d, Nskip = %d, Plaquette = %e\n", 
+		nstore, j, Nmeas, Nskip, plaquette_energy/(6.*VOLUME*g_nproc));
+	fclose(countfile);
+      }
       nstore ++;
       countfile = fopen(nstore_filename, "w");
       fprintf(countfile, "%d\n", nstore);
       fclose(countfile);
-      if(g_proc_id == 0) {
-        countfile = fopen("history_hmc_tm", "a");
-	fprintf(countfile, "%.4d, Nmeas = %d, Plaquette = %e\n", nstore, Nmeas, plaquette_energy/(6.*VOLUME*g_nproc));
-	fclose(countfile);
-      }
     }
     else {
       sprintf(gauge_filename,"%s", "conf.save");
