@@ -130,6 +130,7 @@ void xchange_gauge()
 	       MPI_COMM_WORLD, &status);
   MPI_Type_free(&MY_VEC);
   MPI_Type_free(&Y_VEC);
+  MPI_Type_free(&GAUGE_POINT);
 #endif
 }
 
@@ -287,6 +288,9 @@ void xchange_deri()
     }
   }
   /* send the data to the neighbour on the right is not needed*/
+  MPI_Type_free(&DF);
+  MPI_Type_free(&MY_VEC);
+  MPI_Type_free(&Y_VEC);
 
 #endif
 }
