@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef MPI
+#include <mpi.h>
+#endif
 #include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -367,8 +370,12 @@ double sw_trace(int ieo){
     }
   }
   kc=ks+kc;
+#ifdef MPI
   MPI_Allreduce(&kc,  &ks,  1,  MPI_DOUBLE,  MPI_SUM,  MPI_COMM_WORLD);
   return ks;
+#else
+  return kc;
+#endif
 }
 
 /*

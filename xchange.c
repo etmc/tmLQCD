@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef MPI
+#include <mpi.h>
+#endif
 #include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -12,6 +15,7 @@
 /* exchanges the field  l */
 void xchange_field(int l)
 {
+#ifdef MPI
   int i,k;
   MPI_Status status;
   /* send the data to the neighbour on the left */
@@ -41,10 +45,12 @@ void xchange_field(int l)
   MPI_Sendrecv(&spinor_field[l][(T-1)*L*L*L/2].c1.c1.re, 12*L*L*L, MPI_DOUBLE, i, 82,
 	       &spinor_field[l][(T+1)*L*L*L/2].c1.c1.re, 12*L*L*L, MPI_DOUBLE, k, 82,
 	       MPI_COMM_WORLD, &status);
+#endif
 }
 
 void xchange_gauge()
 {
+#ifdef MPI
   int i,k;
   MPI_Status status;
   /* send the data to the neighbour on the left */
@@ -74,10 +80,12 @@ void xchange_gauge()
   MPI_Sendrecv(&g_gauge_field[(T-1)*L*L*L][0].c11.re, 72*L*L*L, MPI_DOUBLE, i, 84,
 	       &g_gauge_field[(T+1)*L*L*L][0].c11.re, 72*L*L*L, MPI_DOUBLE, k, 84,
 	       MPI_COMM_WORLD, &status);
+#endif
 }
 
 void xchange_deri()
 {
+#ifdef MPI
   int i,k;
   int ix,mu;
   MPI_Status status;
@@ -166,5 +174,5 @@ void xchange_deri()
       dclover[ix][mu].d8 += ddummy[ix][mu].d8;
     }
   }
-
+#endif
 }

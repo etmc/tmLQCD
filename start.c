@@ -39,13 +39,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef MPI
+#include <mpi.h>
+#endif
 #include "su3.h"
 #include "su3adj.h"
 #include "ranlxd.h"
 #include "global.h"
 #include "start.h"
 
-/* murks to make it double precision by M.Hasenbusch */ 
 void gauss_vector(double v[],int n)
 {
    int k;
@@ -234,9 +236,11 @@ void random_spinor_field(int k) {
     }
     /* send the state for the random-number generator to 1 */
     rlxd_get(rlxd_state);
+#ifdef MPI
     MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 102, MPI_COMM_WORLD);
+#endif
   }
-
+#ifdef MPI
   if(g_proc_id!=0) {
     MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 102, MPI_COMM_WORLD, &status);
     rlxd_reset(rlxd_state);
@@ -283,6 +287,7 @@ void random_spinor_field(int k) {
     MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 102, MPI_COMM_WORLD, &status);
     rlxd_reset(rlxd_state);
   }
+#endif
 }
 
 /* Function provides a spinor field of length VOLUME/2 with

@@ -13,6 +13,9 @@
 int ITER_MAX_BCG;
 int ITER_MAX_CG;
 
+char * solvout = "solver_data";
+FILE * sout = NULL;
+
 /* k output , l input */
 int solve_cg(int k,int l, double q_off, double eps_sq) {
 
@@ -56,8 +59,9 @@ int solve_cg(int k,int l, double q_off, double eps_sq) {
      normsq=err;
    }
    if(g_proc_id==0) {
-     fprintf(fp7,"CG: iterations: %d  mu: %f eps_sq: %e \n", iteration, g_mu, eps_sq); 
-     fflush(fp7);
+     sout = fopen(solvout, "a");
+     fprintf(sout, "CG: iterations: %d  mu: %f eps_sq: %e \n", iteration, g_mu, eps_sq); 
+     fclose(sout);
    }
    return iteration;
 }
@@ -83,8 +87,9 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   }
 
   if(g_proc_id==0) {
-    fprintf(fp7,"%d %e %f\n",iteration,xxx, g_mu);
-    fflush(fp7);
+    sout = fopen(solvout, "a");
+    fprintf(sout, "%d %e %f\n",iteration,xxx, g_mu);
+    fclose(sout);
   }
 
   /* if the geometric series fails, redo with conjugate gradient */
@@ -99,7 +104,9 @@ int bicg(int k, int l, double q_off, double eps_sq) {
       iteration -= 1000000;
     }
     if(g_proc_id == 0) {
-      fprintf(fp7,"%d %e\n",iteration, g_mu); fflush(fp7);
+      sout = fopen(solvout, "a");
+      fprintf(sout, "%d %e\n",iteration, g_mu);
+      fclose(sout);
     }
   }
   
@@ -164,9 +171,9 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   }
   /* if bicg fails, redo with conjugate gradient */
   if(g_proc_id==0) {
-    /* fp7 */
-    fprintf(fp7,"BiCGstab: iterations: %d mu: %f eps_sq: %e\n", iteration, g_mu, eps_sq); 
-    fflush(fp7); 
+    sout = fopen(solvout, "a");
+    fprintf(sout, "BiCGstab: iterations: %d mu: %f eps_sq: %e\n", iteration, g_mu, eps_sq); 
+    fclose(sout);
   }
   if(iteration>=ITER_MAX_BCG){
     zero_spinor_field(k);

@@ -129,11 +129,11 @@ int write_gauge_field_time_p(char * filename){
       }
     }
     if(ferror(ofs)){
-      errorhandler(100, filename);
+/*       errorhandler(100, filename); */
     }
   }
   else{
-    errorhandler(100, filename);
+/*     errorhandler(100, filename); */
   }
   fclose(ofs);
   return(0);

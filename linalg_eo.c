@@ -24,6 +24,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef MPI
+#include <mpi.h>
+#endif
 #include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -707,3 +710,4 @@ double diff_and_square_norm(const int j, const int k, const int N) {
 #endif
 
 }
+

@@ -57,7 +57,6 @@ int bicgstabell(const int x0, const int b, const int max_iter,
   }
 
 
-/*   assign(x, x0, VOLUME/2);  */
   x = x0; 
   gamma5(u[0], b); 
   if(g_use_clover_flag == 1){
@@ -149,7 +148,6 @@ int bicgstabell(const int x0, const int b, const int max_iter,
     err = square_norm(r[0], VOLUME/2);
     _SO(if(g_proc_id == 0){printf(" Iterated %d %d, %e\n", l, k, err);fflush( stdout );});
   }
-/*   assign(x0, x, VOLUME/2);  */
   if(k == max_iter) return(-1);
   return(k);
 }

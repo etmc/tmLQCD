@@ -17,6 +17,9 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#ifdef MPI
+#include <mpi.h>
+#endif
 #include "global.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -30,7 +33,9 @@
 #include "clover_eo.h"
 #include "observables.h"
 #include "hybrid_update.h"
+#ifdef MPI
 #include "xchange.h"
+#endif
 #include "sw.h"
 #include "io.h"
 #include "read_input.h"
@@ -38,7 +43,7 @@
 
 int main(int argc,char *argv[]) {
  
-  FILE *fp1 = NULL ,*fp2 = NULL ,*fp4 = NULL;
+  FILE *datafile = NULL ,*parameterfile = NULL ,*rlxdfile = NULL;
   char * filename="output";
   char filename1[50];
   char filename2[50];
@@ -55,9 +60,11 @@ int main(int argc,char *argv[]) {
   static double enerphi0,enerphi0x,enerphi1,enerphi1x,enerphi2,enerphi2x;
   static su3 gauge_tmp[VOLUME][4];
   su3 *v,*w;
-  
+
+#ifdef MPI  
   int  namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
+#endif
   verbose = 1;
   g_use_clover_flag = 1;
   
@@ -80,25 +87,24 @@ int main(int argc,char *argv[]) {
   read_input("hmc.input");
   
   if(g_proc_id == 0){
-    fp7=fopen("solver_data", "w"); 
     
 /*     fscanf(fp6,"%s",filename); */
     /*construct the filenames for the observables and the parameters*/
     strcpy(filename1,filename);  strcat(filename1,".data");
     strcpy(filename2,filename);  strcat(filename2,".para");
     
-    fp1=fopen(filename1, "w");
-    fp2=fopen(filename2, "w");
+    datafile=fopen(filename1, "w");
+    parameterfile=fopen(filename2, "w");
     
     printf("\n\nThe lattice size is %d x %d^3\n\n",(int)(T),(int)(L));
     printf("g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
     
-    fprintf(fp2,"The lattice size is %d x %d^3\n\n",(int)(g_nproc*T),(int)(L));
-    fprintf(fp2,"g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
-    fprintf(fp2,"boundary %f %f %f %f \n \n",X0,X1,X2,X3);
-    fprintf(fp2,"ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n\n"
+    fprintf(parameterfile,"The lattice size is %d x %d^3\n\n",(int)(g_nproc*T),(int)(L));
+    fprintf(parameterfile,"g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
+    fprintf(parameterfile,"boundary %f %f %f %f \n \n",X0,X1,X2,X3);
+    fprintf(parameterfile,"ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n\n"
 	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
-    fprintf(fp2,"q_off=%f, q_off2=%f, dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n\n",
+    fprintf(parameterfile,"q_off=%f, q_off2=%f, dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n\n",
 	    q_off,q_off2,dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
     
   }
@@ -110,16 +116,16 @@ int main(int argc,char *argv[]) {
   boundary();
 
 #if defined GEOMETRIC
-  if(g_proc_id==0) fprintf(fp2,"The geometric series is used as solver \n\n");
+  if(g_proc_id==0) fprintf(parameterfile,"The geometric series is used as solver \n\n");
 #else
-  if(g_proc_id==0) fprintf(fp2,"The BICG_stab is used as solver \n\n");
+  if(g_proc_id==0) fprintf(parameterfile,"The BICG_stab is used as solver \n\n");
 #endif
   
   if(startoption == 2){
     if (g_proc_id == 0){
-      fp4=fopen("rlxd_state","r");
-      fread(rlxd_state,sizeof rlxd_state,1,fp4);
-      fclose(fp4);
+      rlxdfile=fopen("rlxd_state","r");
+      fread(rlxd_state,sizeof rlxd_state,1,rlxdfile);
+      fclose(rlxdfile);
       rlxd_reset(rlxd_state);
       printf("Reading Gauge field from file config\n"); fflush(stdout);
     }
@@ -134,8 +140,11 @@ int main(int argc,char *argv[]) {
       random_gauge_field();
       /* send the state of the random-number generator to 1 */
       rlxd_get(rlxd_state);
+#ifdef MPI
       MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 99, MPI_COMM_WORLD);
+#endif
     }
+#ifdef MPI
     else{
       /* recieve the random number state form g_proc_id-1 */
       MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
@@ -150,6 +159,7 @@ int main(int argc,char *argv[]) {
       MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
       rlxd_reset(rlxd_state);
     }
+#endif
   }
 
   /*For parallelization: exchange the gaugefield */
@@ -160,8 +170,8 @@ int main(int argc,char *argv[]) {
   /*compute the energy of the gauge field*/
   eneg=measure_gauge_action();
   if(g_proc_id==0){
-    fprintf(fp2,"%14.12f \n",eneg/(6.*VOLUME*g_nproc));
-    fclose(fp2);
+    fprintf(parameterfile,"%14.12f \n",eneg/(6.*VOLUME*g_nproc));
+    fclose(parameterfile);
   }
 
   /* compute the energy of the determinant term */
@@ -297,13 +307,17 @@ int main(int argc,char *argv[]) {
        the other sites */
     if(g_proc_id==0){
       ranlxd(yy,1);
+#ifdef MPI
       for(i = 1; i < g_nproc; i++){
 	MPI_Send(yy, 1, MPI_DOUBLE, i, 31, MPI_COMM_WORLD);
       }
+#endif
     }
+#ifdef MPI
     else{
       MPI_Recv(yy, 1, MPI_DOUBLE, 0, 31, MPI_COMM_WORLD, &status);
     }
+#endif
     /* What happens here? Do we produce a double precision */
     /* random number in this way? */
     if(exp(-dh) > yy[0]) {
@@ -335,10 +349,10 @@ int main(int argc,char *argv[]) {
 #endif
 
     if(g_proc_id==0){
-      fprintf(fp1,"%14.12f %14.12f %d %d %d %d %d %d %d %d %d %d %d \n",
+      fprintf(datafile,"%14.12f %14.12f %d %d %d %d %d %d %d %d %d %d %d \n",
 	      eneg/(6.*VOLUME*g_nproc),dh,
 	      idi,idis,idis0,idis1,idis2,count00,count01,count10,count11,count20,count21);
-      fflush(fp1);
+      fflush(datafile);
     }
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0){
@@ -348,9 +362,9 @@ int main(int argc,char *argv[]) {
       /*  write the status of the random number generator on a file */
       if(g_proc_id==0){
 	rlxd_get(rlxd_state);
-	fp4=fopen("rlxd_state","w");
-	fwrite(rlxd_state,sizeof(rlxd_state),1,fp4);
-	fclose(fp4);
+	rlxdfile=fopen("rlxd_state","w");
+	fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
+	fclose(rlxdfile);
       }
     }
   }
@@ -359,13 +373,15 @@ int main(int argc,char *argv[]) {
   
   if(g_proc_id==0){
     rlxd_get(rlxd_state);
-    fp4=fopen("rlxd_state","w");
-    fwrite(rlxd_state,sizeof(rlxd_state),1,fp4);
-    fclose(fp4);
+    rlxdfile=fopen("rlxd_state","w");
+    fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
+    fclose(rlxdfile);
   }
   if(g_proc_id == 0){
     fprintf(stdout,"fertig \n");
     fflush(stdout);
+    fclose(parameterfile);
+    fclose(datafile);
   }
 #ifdef MPI
   MPI_Finalize();

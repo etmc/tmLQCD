@@ -17,6 +17,9 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#ifdef MPI
+#include <mpi.h>
+#endif
 #include "getopt.h"
 #include "global.h"
 #include "su3.h"
@@ -30,7 +33,9 @@
 #include "clover_eo.h"
 #include "observables.h"
 #include "hybrid_update.h"
+#ifdef MPI
 #include "xchange.h"
+#endif
 #include "sw.h"
 #include "io.h"
 #include "read_input.h"
@@ -51,7 +56,7 @@ extern int nstore;
 
 int main(int argc,char *argv[]) {
  
-  FILE *fp1=NULL,*fp2=NULL,*fp4=NULL;
+  FILE *datafile=NULL,*parameterfile=NULL,*rlxdfile=NULL;
   char * filename = NULL;
   char filename1[50];
   char filename2[50];
@@ -64,14 +69,16 @@ int main(int argc,char *argv[]) {
   double yy[1];
 /*   static double step; */
 /*   static double q_off,q_off2; */
-  double eneg,enegx,enep,enepx,dh;
+  double eneg, enegx, enep, enepx, dh;
   double enerphi0,enerphi0x;
   static su3 gauge_tmp[VOLUME][4];
   su3 *v,*w;
 
   int Rate=0;
+#ifdef MPI
   int  namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
+#endif
   char * input_filename = NULL;
   int c;
 
@@ -125,15 +132,14 @@ int main(int argc,char *argv[]) {
   q_off2 = 0.;
  
   if(g_proc_id == 0){
-    fp7=fopen("solver_data", "w"); 
     
 /*     fscanf(fp6,"%s",filename); */
     /*construct the filenames for the observables and the parameters*/
     strcpy(filename1,filename);  strcat(filename1,".data");
     strcpy(filename2,filename);  strcat(filename2,".para");
     
-    fp1=fopen(filename1, "w");
-    fp2=fopen(filename2, "w");
+    datafile=fopen(filename1, "w");
+    parameterfile=fopen(filename2, "w");
     
     if(g_proc_id == 0){
       printf("# This is the hmc code for twisted Mass Wilson QCD\n\n Version %s", Version);
@@ -151,14 +157,14 @@ int main(int argc,char *argv[]) {
     printf("The local lattice size is %d x %d^3\n",(int)(T),(int)(L));
     printf("g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
     
-    fprintf(fp2,"The lattice size is %d x %d^3\n\n",(int)(g_nproc*T),(int)(L));
-    fprintf(fp2,"g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f g_mu = %f \n\n",g_beta,g_kappa,g_ka_csw_8, g_mu);
-    fprintf(fp2,"boundary %f %f %f %f \n \n",X0,X1,X2,X3);
-    fprintf(fp2,"ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n\n"
+    fprintf(parameterfile,"The lattice size is %d x %d^3\n\n",(int)(g_nproc*T),(int)(L));
+    fprintf(parameterfile,"g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f g_mu = %f \n\n",g_beta,g_kappa,g_ka_csw_8, g_mu);
+    fprintf(parameterfile,"boundary %f %f %f %f \n \n",X0,X1,X2,X3);
+    fprintf(parameterfile,"ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n\n"
 	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
-    fprintf(fp2,"q_off=%f, q_off2=%f, dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n\n",
+    fprintf(parameterfile,"q_off=%f, q_off2=%f, dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n\n",
 	    q_off,q_off2,dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
-    fprintf(fp2,"mu = %f", g_mu);
+    fprintf(parameterfile,"mu = %f", g_mu);
     
   }
 
@@ -169,17 +175,17 @@ int main(int argc,char *argv[]) {
   boundary();
 
 #if defined GEOMETRIC
-  if(g_proc_id==0) fprintf(fp2,"The geometric series is used as solver \n\n");
+  if(g_proc_id==0) fprintf(parameterfile,"The geometric series is used as solver \n\n");
 #else
-  if(g_proc_id==0) fprintf(fp2,"The BICG_stab is used as solver \n\n");
+  if(g_proc_id==0) fprintf(parameterfile,"The BICG_stab is used as solver \n\n");
 #endif
   
   /* Continue */
   if(startoption == 3){
     if (g_proc_id == 0){
-      fp4=fopen("rlxd_state","r");
-      fread(rlxd_state,sizeof(rlxd_state),1,fp4);
-      fclose(fp4);
+      rlxdfile=fopen("rlxd_state","r");
+      fread(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
+      fclose(rlxdfile);
       rlxd_reset(rlxd_state);
       printf("Reading Gauge field from file %s\n", gauge_input_filename); fflush(stdout);
     }
@@ -195,10 +201,13 @@ int main(int argc,char *argv[]) {
 	random_gauge_field();
       }
       rlxd_get(rlxd_state);
+#ifdef MPI
       MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 99, MPI_COMM_WORLD);
       MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
       rlxd_reset(rlxd_state);
+#endif
     }
+#ifdef MPI
     else {
       MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
       rlxd_reset(rlxd_state);
@@ -213,6 +222,7 @@ int main(int argc,char *argv[]) {
       rlxd_get(rlxd_state);
       MPI_Send(&rlxd_state[0], 105, MPI_INT, k, 99, MPI_COMM_WORLD);
     }
+#endif
     /* Cold */
     if(startoption == 0) {
       unit_g_gauge_field();
@@ -234,8 +244,8 @@ int main(int argc,char *argv[]) {
   /*compute the energy of the gauge field*/
   eneg=measure_gauge_action();
   if(g_proc_id==0){
-    fprintf(fp2,"#First plaquette value: %14.12f \n",eneg/(6.*VOLUME*g_nproc));
-    fclose(fp2);
+    fprintf(parameterfile,"#First plaquette value: %14.12f \n",eneg/(6.*VOLUME*g_nproc));
+    fclose(parameterfile);
   }
 
   /* compute the energy of the determinant term */
@@ -310,13 +320,17 @@ int main(int argc,char *argv[]) {
        the other sites */
     if(g_proc_id==0) {
       ranlxd(yy,1);
+#ifdef MPI
       for(i = 1; i < g_nproc; i++) {
 	MPI_Send(&yy[0], 1, MPI_DOUBLE, i, 31, MPI_COMM_WORLD);
       }
+#endif
     }
+#ifdef MPI
     else{
       MPI_Recv(&yy[0], 1, MPI_DOUBLE, 0, 31, MPI_COMM_WORLD, &status);
     }
+#endif
     if(exp(-dh) > yy[0]) {
       /* accept */
       Rate += 1;
@@ -346,10 +360,10 @@ int main(int argc,char *argv[]) {
 #endif
 
     if(g_proc_id==0){
-      fprintf(fp1,"%14.12f %14.12f %e %d %d %d \n",
+      fprintf(datafile,"%14.12f %14.12f %e %d %d %d \n",
 	      eneg/(6.*VOLUME*g_nproc),dh,exp(-dh),
 	      idis0,count00,count01);
-      fflush(fp1);
+      fflush(datafile);
     }
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0) {
@@ -360,9 +374,9 @@ int main(int argc,char *argv[]) {
       /*  write the status of the random number generator on a file */
       if(g_proc_id==0) {
 	rlxd_get(rlxd_state);
-	fp4=fopen("rlxd_state","w");
-	fwrite(rlxd_state,sizeof(rlxd_state),1,fp4);
-	fclose(fp4);
+	rlxdfile=fopen("rlxd_state","w");
+	fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
+	fclose(rlxdfile);
       }
     }
   }
@@ -371,14 +385,15 @@ int main(int argc,char *argv[]) {
   
   if(g_proc_id==0) {
     rlxd_get(rlxd_state);
-    fp4=fopen("last_state","w");
-    fwrite(rlxd_state,sizeof(rlxd_state),1,fp4);
-    fclose(fp4);
+    rlxdfile=fopen("last_state","w");
+    fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
+    fclose(rlxdfile);
   }
   if(g_proc_id == 0) {
     printf("Acceptance Rate was: %e Prozent\n", 100.*(double)Rate/(double)Nmeas);
-    printf("fertig \n");
     fflush(stdout);
+    fclose(parameterfile);
+    fclose(datafile);
   }
 #ifdef MPI
   MPI_Finalize();

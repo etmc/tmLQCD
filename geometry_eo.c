@@ -1,23 +1,22 @@
-/* $Id $ */
+/* $Id$ */
 /*******************************************************************************
-*
-* File geometry.c
-*
-* Subroutines related to the lattice geometry
-*
-* The externally accessible function is
-*
-*   void geometry(void)
-*     Computes the index arrays g_ipt, g_iup and g_idn
-*
-* Version: 1.0
-* Author: Martin Luescher <luscher@mail.desy.ch>
-* Date: 24.10.2000
-*
-* Totally abused by M. Hasenbusch, now used for even-odd
-* decomposition of the lattice
-*
-*******************************************************************************/
+ *
+ *
+ * Subroutines related to the lattice geometry
+ *
+ * The externally accessible function is
+ *
+ *   void geometry_eo(void)
+ *     Computes the index arrays g_ipt, g_iup, g_idn, trans1 and trans2
+ *
+ * original Version by
+ * Author: Martin Luescher <luscher@mail.desy.ch>
+ * Date: 24.10.2000
+ *
+ * Totally abused by M. Hasenbusch, now used for even-odd
+ * decomposition of the lattice
+ *
+ *******************************************************************************/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -29,10 +28,17 @@
 
 int Index(const int x0, const int x1, const int x2, const int x3)
 {
-   int y0,y1,y2,y3;
-/* the slice at time -1 is put to T+1 */
+   int y0, y1, y2, y3;
+
    y0=x0;
+#ifdef MPI
+   /* the slice at time -1 is put to T+1 */
    if(x0 == -1) y0=T+1;
+#else
+   /* Without parallelisation */
+   if(x0 == -1) y0 = T-1;
+   else if(x0 == T) y0 = 0;
+#endif
    y1=x1;
    if(x1==L) y1=0;
    else if(x1==-1) y1=L-1;
