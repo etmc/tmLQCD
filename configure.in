@@ -242,7 +242,7 @@ dnl no -pedantic-errors...
       CFLAGS="$CFLAGS -DSSE"
       SSE="sse"
     fi
-    CFLAGS="$CFLAGS -mcpu=i686 -malign-double -fomit-frame-pointer -ffloat-store"
+    CFLAGS="$CFLAGS -malign-double -fomit-frame-pointer -ffloat-store"
     CXXFLAGS="$CXXFLAGS -mcpu=i686 -O -malign-double -fomit-frame-pointer -ffloat-store"
     CCDEP="$CC"
     if test $enable_mpi = yes; then
