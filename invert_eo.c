@@ -25,44 +25,63 @@
 #include"linsolve.h"
 #include"bicgstabell.h"
 #include"clover_eo.h"
+#include"solver/solver.h"
 #include"invert_eo.h"
 
-int invert_eo(const int Even_new, const int Odd_new, const int Even, const int Odd) {
+int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
+	      spinor * const Even, spinor * const Odd,
+	      const double precision, const int max_iter,
+	      const int solver_flag) {
 
   int iter = 0;
 
   assign_mul_one_pm_imu_inv(Even_new, Even, +1.);
   
-  Hopping_Matrix(OE, DUM_DERI, Even_new);
+  Hopping_Matrix(OE, spinor_field[DUM_DERI], Even_new);
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
-  assign_mul_add_r(DUM_DERI, 1., Odd, VOLUME/2);
+  assign_mul_add_r(spinor_field[DUM_DERI], +1., Odd, VOLUME/2);
 
   /* Do the inversion with the preconditioned  */
   /* matrix to get the odd sites               */
   /* The solver inverts gamma_5 D ...          */
   gamma5(DUM_DERI, DUM_DERI); 
-/*   iter = bicgstabell(Odd_new, DUM_DERI, 2000, 1.e-30, 2, 0.);   */
-  iter = bicg(Odd_new, DUM_DERI, 0., 1.e-15);   
+  /*   iter = bicgstabell(Odd_new, DUM_DERI, 2000, 1.e-30, 2, 0.);   */
+/*   iter = bicg(Odd_new, spinor_field[DUM_DERI], 0., 1.e-15);    */
+
+  if(solver_flag == BICGSTAB) {
+    iter = bicgstab_complex(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_plus_psi);
+  }
+  else if(solver_flag == GMRES) {
+    iter = gmres(Odd_new, spinor_field[DUM_DERI], 10, max_iter/10, precision, &Qtm_plus_psi);
+  }
+  else if(solver_flag == CG) {
+    iter = cg_her(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_pm_psi, 0, 0.);
+    Qtm_minus_psi(Odd_new, Odd_new);
+  }
+  else if(solver_flag == CGS) {
+    iter = cgs_real(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_plus_psi);
+  }
 
   /* Reconstruct the even sites                */
-  Hopping_Matrix(EO, DUM_DERI, Odd_new);
-  mul_one_pm_imu_inv(DUM_DERI, +1.);
+  Hopping_Matrix(EO, spinor_field[DUM_DERI], Odd_new);
+  mul_one_pm_imu_inv(spinor_field[DUM_DERI], +1.);
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
-  assign_add_mul_r(Even_new, 1., DUM_DERI, VOLUME/2); 
-
+  assign_add_mul_r(Even_new, spinor_field[DUM_DERI], +1., VOLUME/2); 
+  
   return(iter);
 }
 
-void M_full(const int Even_new, const int Odd_new, const int Even, const int Odd) {
+void M_full(spinor * const Even_new, spinor * const Odd_new, 
+	    spinor * const Even, spinor * const Odd) {
   /* Even sites */
-  Hopping_Matrix(EO, DUM_DERI, Odd);
+  Hopping_Matrix(EO, spinor_field[DUM_DERI], Odd);
   assign_mul_one_pm_imu(Even_new, Even, 1.); 
-  assign_add_mul_r(Even_new, -1., DUM_DERI, VOLUME/2);
+  assign_add_mul_r(Even_new, spinor_field[DUM_DERI], -1., VOLUME/2);
 
   /* Odd sites */
-  Hopping_Matrix(OE, DUM_DERI, Even);
+  Hopping_Matrix(OE, spinor_field[DUM_DERI], Even);
   assign_mul_one_pm_imu(Odd_new, Odd, 1.); 
-  assign_add_mul_r(Odd_new, -1., DUM_DERI, VOLUME/2);
+  assign_add_mul_r(Odd_new, spinor_field[DUM_DERI], -1., VOLUME/2);
 }

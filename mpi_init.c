@@ -143,6 +143,7 @@ void mpi_init(int argc,char *argv[]) {
   g_proc_id = 0;
   g_nproc_x = 1;
   g_nproc_t = 1;
+  g_cart_id = 0;
 
   g_proc_coords[0] = 0;
   g_proc_coords[1] = 0;

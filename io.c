@@ -209,22 +209,31 @@ int read_gauge_field_time_p(char * filename){
   return(0);
 }
 
-int write_spinorfield_eo_time_p(const int s, const int r, char * filename){
+int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filename, const int append){
   FILE * ofs = NULL;
-  int x, X, y, z, t, t0, tag=0, id, i=0, nr=0;
+  int x, X, y, z, t, t0, tag=0, id=0, i=0;
   spinor tmp[1];
   int coords[2];
+  spinor * p = NULL;
 #ifdef MPI
   MPI_Status status;
 #endif
 
   if(g_cart_id == 0){
-    ofs = fopen(filename, "w");
-    if(ofs != NULL ){
-      fprintf(ofs,"%f %f %f %d %d\n",g_beta, g_kappa, g_mu, L, T*g_nproc_t);
+    if(append == 0) {
+      ofs = fopen(filename, "w");
+      if(ofs != NULL ){
+	fprintf(ofs,"%f %f %f %d %d\n",g_beta, g_kappa, g_mu, L, T*g_nproc_t);
+      }
+      else{
+	/*       errorhandler(106, filename); */
+      }
     }
-    else{
-/*       errorhandler(106, filename); */
+    else {
+      ofs = fopen(filename, "a");
+      if(ofs == NULL ) {
+	printf("Could not open file %s!\n", filename);
+      }
     }
   }
   for(x = 0; x < LX*g_nproc_x; x++){
@@ -239,22 +248,21 @@ int write_spinorfield_eo_time_p(const int s, const int r, char * filename){
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	  if(g_cart_id == id) {
-	    i = g_lexic2eo[ g_ipt[t][X][y][z] ];
-	    if((t0+x+y+z)%2==0) {
-	      nr = s;
+	    i = g_lexic2eosub[ g_ipt[t][X][y][z] ];
+	    if((t+X+y+z+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+	      p = s;
 	    }
 	    else {
-	      i -= (VOLUME+RAND)/2;
-	      nr = r;
+	      p = r;
 	    }
 	  }
 	  if(g_cart_id == 0){
 	    if(g_cart_id == id){
 #ifdef LITTLE_ENDIAN
-	      byte_swap_assign(tmp, &spinor_field[nr][i], sizeof(spinor)/8);
+	      byte_swap_assign(tmp, p + i , sizeof(spinor)/8);
 	      fwrite(tmp, sizeof(spinor), 1, ofs);
 #else
-	      fwrite(&spinor_field[nr][i], sizeof(spinor), 1, ofs);
+	      fwrite(p + i, sizeof(spinor), 1, ofs);
 #endif
 	    }
 #ifdef MPI
@@ -268,10 +276,10 @@ int write_spinorfield_eo_time_p(const int s, const int r, char * filename){
 	  else{
 	    if(g_cart_id == id){
 #ifdef LITTLE_ENDIAN
-	      byte_swap_assign(tmp, &spinor_field[nr][i], sizeof(spinor)/8);
+	      byte_swap_assign(tmp, p + i, sizeof(spinor)/8);
 	      MPI_Send((void*) tmp, sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #else
-	      MPI_Send((void*) &spinor_field[nr][i], sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+	      MPI_Send((void*) (p + i), sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #endif		  
 	    }
 	  }

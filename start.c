@@ -292,12 +292,12 @@ void random_spinor_field(int k) {
 
 /* Function provides a spinor field of length VOLUME/2 with
    Gaussian distribution */
-void zero_spinor_field(int k) {
+void zero_spinor_field(spinor * const k) {
 
   int ix;
   spinor *s;
+  s = k;
   for (ix=0;ix<VOLUME/2;ix++) {
-    s=&spinor_field[k][ix];
     (*s).s0.c0.re=0.;
     (*s).s0.c0.im=0.;
     (*s).s0.c1.re=0.;
@@ -322,6 +322,7 @@ void zero_spinor_field(int k) {
     (*s).s3.c1.im=0.;
     (*s).s3.c2.re=0.;
     (*s).s3.c2.im=0.;
+    s++;
   }
 }
 
@@ -532,6 +533,42 @@ void set_gauge_field(const double c) {
   for (ix=0;ix<VOLUME;ix++) {
     for (mu=0;mu<4;mu++){
       g_gauge_field[ix][mu]=set_su3(c);
+    }
+  }
+}
+
+
+void source_spinor_field(spinor * const P, spinor * const Q, int is, int ic) {
+  int ix;
+  spinor * s;
+
+  zero_spinor_field(P);
+  zero_spinor_field(Q);
+
+  if (g_proc_id == 0) {
+
+    s = P;
+    
+    /* put source to 1.0 */
+    if (is==0){
+      if      (ic==0) (*s).s0.c0.re=1.0;
+      else if (ic==1) (*s).s0.c1.re=1.0;
+      else if (ic==2) (*s).s0.c2.re=1.0;
+    }
+    else if (is==1){
+      if      (ic==0) (*s).s1.c0.re=1.0;
+      else if (ic==1) (*s).s1.c1.re=1.0;
+      else if (ic==2) (*s).s1.c2.re=1.0;
+    }
+    else if (is==2){
+      if      (ic==0) (*s).s2.c0.re=1.0;
+      else if (ic==1) (*s).s2.c1.re=1.0;
+      else if (ic==2) (*s).s2.c2.re=1.0;
+    }
+    else if (is==3){
+      if      (ic==0) (*s).s3.c0.re=1.0;
+      else if (ic==1) (*s).s3.c1.re=1.0;
+      else if (ic==2) (*s).s3.c2.re=1.0;
     }
   }
 }

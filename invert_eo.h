@@ -13,9 +13,13 @@
 #ifndef _INVERT_EO_H
 #define _INVERT_EO_H
 
-int invert_eo(const int l, const int k, const int p, const int q);
+int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
+	      spinor * const Even, spinor * const Odd,
+	      const double precision, const int iter_max,
+	      const int solver_flag);
 
 /* This is the full matrix multiplication */
-void M_full(const int Even_new, const int Odd_new, const int Even, const int Odd);
+void M_full(spinor * const Even_new, spinor * const Odd_new, 
+	    spinor * const Even, spinor * const Odd);
 
 #endif

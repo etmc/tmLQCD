@@ -40,7 +40,7 @@
 #define DUM_MATRIX (DUM_SOLVER+6) 
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX DUM_SOLVER+11 */
-#define NO_OF_SPINORFIELDS (DUM_MATRIX+2) 
+#define NO_OF_SPINORFIELDS (DUM_MATRIX+2)
 /* For benchmark set the following: */
 /* #define NO_OF_SPINORFIELDS 100  */
 
@@ -94,6 +94,9 @@ EXTERN su3 g_gauge_field[VOLUMEPLUSRAND][4] ALIGN;
 #ifdef _GAUGE_COPY
 EXTERN su3 g_gauge_field_back[VOLUMEPLUSRAND][4] ALIGN;
 #endif
+/* This is dirty, but dow not allocate memory */
+/* if no clover is used. */
+#ifdef CLOVER
 EXTERN su3adj moment[VOLUME][4] ALIGN;
 EXTERN su3adj df0[VOLUMEPLUSRAND][4] ALIGN;
 EXTERN su3adj dclover[VOLUMEPLUSRAND][4] ALIGN;
@@ -102,6 +105,16 @@ EXTERN su3 sw[VOLUME][3][2] ALIGN;
 EXTERN su3 sw_inv[VOLUME][3][2] ALIGN;
 EXTERN su3 swp[VOLUME][4] ALIGN;
 EXTERN su3 swm[VOLUME][4] ALIGN;
+#else
+EXTERN su3adj moment[1][1] ALIGN;
+EXTERN su3adj df0[1][1] ALIGN;
+EXTERN su3adj dclover[1][1] ALIGN;
+EXTERN su3adj ddummy[1][1] ALIGN;
+EXTERN su3 sw[1][1][1] ALIGN;
+EXTERN su3 sw_inv[1][1][1] ALIGN;
+EXTERN su3 swp[1][1] ALIGN;
+EXTERN su3 swm[1][1] ALIGN;
+#endif
 EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
 EXTERN double g_mu, g_mu1, g_mu2, g_mu3;

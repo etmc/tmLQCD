@@ -448,5 +448,6 @@ int check_geometry()
 
   free(stest);
   free(itest);
+
   return(0);
 }

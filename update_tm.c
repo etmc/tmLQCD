@@ -103,7 +103,7 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
     g_mu = g_mu2;
     Qtm_plus_psi(spinor_field[3], spinor_field[3]);
     g_mu = g_mu1;
-    zero_spinor_field(second_psf);
+    zero_spinor_field(spinor_field[second_psf]);
     idis1 = bicg(second_psf, 3, 0., EPS_SQ0);
   }
   /* contruct the third \phi_o */
@@ -111,7 +111,7 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
     g_mu = g_mu3;
     Qtm_plus_psi(spinor_field[5], spinor_field[5]);
     g_mu = g_mu2;
-    zero_spinor_field(third_psf);
+    zero_spinor_field(spinor_field[third_psf]);
     idis2 = bicg(third_psf, 5, 0., EPS_SQ0);
   }
 
@@ -133,13 +133,13 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   enegx=measure_gauge_action();
   /*compute the energy contributions from the pseudo-fermions */
 
-  zero_spinor_field(2);
+  zero_spinor_field(spinor_field[2]);
   g_mu = g_mu1;
   idis0=bicg(2, first_psf, q_off, EPS_SQ0);
 
   enerphi0x=square_norm(spinor_field[2], VOLUME/2);
   if(g_nr_of_psf > 1) {
-    zero_spinor_field(3);
+    zero_spinor_field(spinor_field[3]);
     g_mu = g_mu1;
     Qtm_plus_psi(spinor_field[second_psf], spinor_field[second_psf]);
     g_mu = g_mu2;
@@ -147,7 +147,7 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
     enerphi1x = square_norm(spinor_field[3], VOLUME/2);
   }
   if(g_nr_of_psf > 2) {
-    zero_spinor_field(5);
+    zero_spinor_field(spinor_field[5]);
     g_mu = g_mu2;
     Qtm_plus_psi(spinor_field[third_psf], spinor_field[third_psf]);
     g_mu = g_mu3;

@@ -132,8 +132,8 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   }
   diff(spinor_field[DUM_SOLVER+1],spinor_field[DUM_SOLVER+1],spinor_field[DUM_SOLVER], VOLUME/2);
   assign(spinor_field[DUM_SOLVER], spinor_field[DUM_SOLVER+1], VOLUME/2);
-  zero_spinor_field(DUM_SOLVER+2);
-  zero_spinor_field(DUM_SOLVER+3);
+  zero_spinor_field(spinor_field[DUM_SOLVER+2]);
+  zero_spinor_field(spinor_field[DUM_SOLVER+3]);
   rho0=1.0; omega0=1.0; alpha=1.0; 
   /* main loop */
   for(iteration=1;iteration<=ITER_MAX_BCG;iteration++) {
@@ -181,7 +181,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
     fclose(sout);
   }
   if(iteration>=ITER_MAX_BCG){
-    zero_spinor_field(k);
+    zero_spinor_field(spinor_field[k]);
     iteration = solve_cg(k,l,q_off,eps_sq);
     if(g_use_clover_flag == 1){
       Q_psi(k,k,q_off);
@@ -209,7 +209,7 @@ int eva(double *rz, int k, double q_off, double eps_sq) {
   /*compute the ritz functional */
   /*put g on DUM_SOLVER+2 and p on DUM_SOLVER+1*/
   ritz=scalar_prod_r(spinor_field[DUM_SOLVER], spinor_field[k], VOLUME/2); 
-  zero_spinor_field(DUM_SOLVER+2);
+  zero_spinor_field(spinor_field[DUM_SOLVER+2]);
   assign_add_mul_r_add_mul(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER], spinor_field[k], 1., -ritz, VOLUME/2);
   assign(spinor_field[DUM_SOLVER+1], spinor_field[DUM_SOLVER+2], VOLUME/2);
   normg0=square_norm(spinor_field[DUM_SOLVER+2], VOLUME/2);
@@ -246,7 +246,7 @@ int eva(double *rz, int k, double q_off, double eps_sq) {
 			     costh-1., sinth/normp, VOLUME/2);
     
     /*   compute g */
-    zero_spinor_field(DUM_SOLVER+2);
+    zero_spinor_field(spinor_field[DUM_SOLVER+2]);
     assign_add_mul_r_add_mul(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER], spinor_field[k],
 			     1., -ritz, VOLUME/2);
     
@@ -267,7 +267,7 @@ int eva(double *rz, int k, double q_off, double eps_sq) {
       /*compute the ritz functional */
       ritz=scalar_prod_r(spinor_field[DUM_SOLVER], spinor_field[k], VOLUME/2);
       /*put g on DUM_SOLVER+2 and p on DUM_SOLVER+1*/
-      zero_spinor_field(DUM_SOLVER+2);
+      zero_spinor_field(spinor_field[DUM_SOLVER+2]);
       assign_add_mul_r_add_mul(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER], spinor_field[k], 
 			       1., -ritz, VOLUME/2);
       normg0=square_norm(spinor_field[DUM_SOLVER+2], VOLUME/2);
@@ -299,7 +299,7 @@ int evamax(double *rz, int k, double q_off, double eps_sq) {
   /*compute the ritz functional */
   /*put g on DUM_SOLVER+2 and p on DUM_SOLVER+1*/
   ritz=scalar_prod_r(spinor_field[DUM_SOLVER], spinor_field[k], VOLUME/2); 
-  zero_spinor_field(DUM_SOLVER+2);
+  zero_spinor_field(spinor_field[DUM_SOLVER+2]);
   assign_add_mul_r_add_mul(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER], spinor_field[k],
 			   1., -ritz, VOLUME/2);
   assign(spinor_field[DUM_SOLVER+1], spinor_field[DUM_SOLVER+2], VOLUME/2);
@@ -338,7 +338,7 @@ int evamax(double *rz, int k, double q_off, double eps_sq) {
 			     costh-1., sinth/normp, VOLUME/2);
     
     /*   compute g */
-    zero_spinor_field(DUM_SOLVER+2);
+    zero_spinor_field(spinor_field[DUM_SOLVER+2]);
     assign_add_mul_r_add_mul(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER], spinor_field[k], 
 			     1., -ritz, VOLUME/2);
     
@@ -360,7 +360,7 @@ int evamax(double *rz, int k, double q_off, double eps_sq) {
       /*compute the ritz functional */
       ritz=scalar_prod_r(spinor_field[DUM_SOLVER], spinor_field[k], VOLUME/2);
       /*put g on DUM_SOLVER+2 and p on DUM_SOLVER+1*/
-      zero_spinor_field(DUM_SOLVER+2);
+      zero_spinor_field(spinor_field[DUM_SOLVER+2]);
       assign_add_mul_r_add_mul(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER], spinor_field[k],
 			       1., -ritz, VOLUME/2);
       normg0=square_norm(spinor_field[DUM_SOLVER+2], VOLUME/2);

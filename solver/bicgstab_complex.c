@@ -27,7 +27,7 @@
 #ifdef _SOLVER_OUTPUT
 #define _SO(x) x
 #else
-#define _SO(x)
+#define _SO(x) x
 #endif
  
 

@@ -12,7 +12,7 @@ DEPFLAGS = @DEPFLAGS@
 CCLD = $(CC)
 LEX = @LEX@ 
 AUTOCONF = @AUTOCONF@
-LIBS = -llinalg @LIBS@ 
+LIBS = -lsolver -llinalg @LIBS@ 
 SHELL = @SHELL@
 OPTARGS = @OPTARGS@
 
@@ -27,9 +27,9 @@ MODULES = read_input clover_eo linsolve xchange \
 	geometry_eo linalg_eo ranlxd sw io Hopping_Matrix \
 	boundary deriv_Sb tm_operators getopt sighandler \
 	mpi_init update_tm Hopping_Matrix_nocom \
-	test/check_geometry test/check_xchange
+	test/check_geometry test/check_xchange invert_eo
 
-PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark 
+PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark invert
 ALLOBJ = ${MODULES} ${PROGRAMS}
 
 
@@ -57,6 +57,7 @@ dep: $(addsuffix .d,$(ALLOBJ))
 
 compile-clean: Makefile
 	@(cd linalg && $(MAKE) compile-clean)
+	@(cd solver && $(MAKE) compile-clean)
 	rm -f *.o *.d
 
 clean: compile-clean
