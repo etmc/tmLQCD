@@ -1,0 +1,86 @@
+# $Id$
+
+srcdir = @srcdir@
+top_builddir =  @top_srcdir@
+subdir = solver
+
+CFLAGS = @CFLAGS@ @SOLVEROUT@
+DEPFLAGS = @DEPFLAGS@
+LDFLAGS = @LDFLAGS@
+DEFS = @DEFS@
+
+AR = ar
+RANLIB = @RANLIB@
+CC = @CC@
+CCDEP = @CCDEP@
+CCLD = $(CC)
+LINK = $(CCLD) $(CFLAGS) $(LDFLAGS) -o $@
+LEX = @LEX@
+AUTOCONF = @AUTOCONF@
+
+INCLUDES = @INCLUDES@
+LDADD =
+#COMPILE = ${CC} ${DEFS} $(INCLUDES) ${CFLAGS}
+COMPILE = ${CC} $(INCLUDES) ${CFLAGS}
+
+LIBRARIES = libsolver
+libsolver_TARGETS = bicgstab_complex gmres \
+	cgs_real gram-schmidt quicksort jdher pjdher \
+	bicgstabell 
+libsolver_OBJECTS = $(addsuffix .o, ${libsolver_TARGETS})
+
+# default rule
+
+all: Makefile dep libsolver.a
+
+# rules for debugging
+debug all-debug: CFLAGS := $(CFLAGS) @DEBUG_FLAG@
+debug all-debug: all
+
+# rules for profiling information
+profile all-profile: CFLAGS := $(filter-out -fomit-frame-pointer,$(CFLAGS)) @PROFILE_FLAG@
+profile all-profile: all
+
+
+#include dep rules
+
+-include $(addsuffix .d,${libsolver_TARGETS})
+
+include ${top_builddir}/Makefile.global
+
+# rule to compile objects
+
+%.o: %.c %.d Makefile
+	$(COMPILE) -c $<
+
+
+# rule to make liblinalg
+
+libsolver.a: ${libsolver_OBJECTS} Makefile
+	@rm -f libsolver.a
+	@${AR} cru libsolver.a $(libsolver_OBJECTS)
+	@$(RANLIB) libsolver.a
+	@cp libsolver.a ../lib/libsolver.a
+
+# rule to generate .d files
+
+$(addsuffix .d,$(libsolver_TARGETS)): %.d: %.c Makefile
+	@$(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@
+
+# rule to make dependencies
+
+dep: ${addsuffix .d, ${libsolver_TARGETS}}
+
+# rules to clean
+
+compile-clean: Makefile
+	@rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} *.d
+
+clean: compile-clean 
+	@rm -f $(addsuffix .a, ${LIBRARIES})
+
+distclean: clean
+	@rm -f Makefile
+
+
+.PHONY: all dep clean compile-clean distclean debug all-debug profile all-profile
