@@ -12,12 +12,12 @@
  *
  **********************************************************/
 
+#ifdef MPI
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef MPI
 #include "mpi_init.h"
-#endif
 #include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -28,7 +28,6 @@
 /* exchanges the field  l */
 void xchange_field(spinor * const l) {
 
-#ifdef MPI
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
@@ -58,7 +57,6 @@ void xchange_field(spinor * const l) {
 
 #endif
 
-#endif
 }
 
 /********************************************************************
@@ -72,12 +70,11 @@ void xchange_field(spinor * const l) {
 
 void xchange_field2(spinor * const l) {
 
-#if (defined MPI && defined PARALLELXT) 
+#if (defined PARALLELXT) 
   int x0, x2, ix = 0, iz=0;
   static spinor buffer_x[T*LY*LZ];
 #endif  
 
-#ifdef MPI
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
@@ -127,14 +124,12 @@ void xchange_field2(spinor * const l) {
 
 #endif
 
-#endif
 }
 
 
 
 void xchange_gauge() {
 
-#ifdef MPI
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
@@ -209,7 +204,6 @@ void xchange_gauge() {
 #endif
 #endif
 
-#endif
 }
 
 /********************************************************************
@@ -222,11 +216,10 @@ void xchange_gauge() {
  ********************************************************************/
 
 void xchange_gauge2() {
-#if (defined MPI && defined PARALLELXT) 
+#if (defined PARALLELXT) 
   int x0, x2, ix = 0, iz=0, mu;
   static su3 buffer_x[2*T*LY*LZ][4];
 #endif
-#ifdef MPI
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
@@ -291,12 +284,10 @@ void xchange_gauge2() {
 		    g_cart_grid, &status);
 #endif
 
-#endif
 }
 
 void xchange_deri()
 {
-#ifdef MPI
   int ix,mu, t, y, z;
   MPI_Status status;
   /* send the data to the neighbour on the left in time direction */
@@ -431,7 +422,6 @@ void xchange_deri()
       }
     }
   }
-#endif
 }
 
 
@@ -503,5 +493,4 @@ void xchange_deri()
 
 static char const rcsid[] = "$Id$";
 
-
-
+#endif
