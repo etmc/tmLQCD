@@ -115,15 +115,16 @@ void deri(double q_off,double q_off2) {
   if(q_off2>0.){
     jmax=3;
   }
-  if(g_mu2 > 0.) {
+  if(g_nr_of_psf == 2) {
     jmax = 3;
+  }
+  if(g_nr_of_psf == 3) {
+    jmax = 5;
   }
 
   for(j=0;j<jmax;j++){ 
     if(j==0){
-      if(g_mu2 > 0.) {
-	g_mu = g_mu2;
-      }
+      g_mu = g_mu1;
       if(ITER_MAX_BCG == 0){
 	/* If CG is used anyhow */
 	gamma5(DUM_DERI+1, first_psf);
@@ -160,9 +161,9 @@ void deri(double q_off,double q_off2) {
       else {
 	/* First term coming from the second field */
 	/* Multiply with W_+ */
-	g_mu = g_mu2;	
+	g_mu = g_mu1;	
 	Qtm_plus_psi(DUM_DERI+2, second_psf);
-	g_mu = g_mu1;
+	g_mu = g_mu2;
 	if(ITER_MAX_BCG == 0){
 	  /* If CG is used anyhow */
 	  gamma5(DUM_DERI+1, DUM_DERI+2);
@@ -199,8 +200,42 @@ void deri(double q_off,double q_off2) {
 	/* Second term coming from the second field */
 	/* The sign is opposite!! */
 	mul_r(DUM_DERI, -1., second_psf, VOLUME/2);
-	g_mu = g_mu2;
+	g_mu = g_mu1;
       }
+    }
+    if(j == 3) {
+      /* First term coming from the second field */
+      /* Multiply with W_+ */
+      g_mu = g_mu2;	
+      Qtm_plus_psi(DUM_DERI+2, third_psf);
+      g_mu = g_mu3;
+      if(ITER_MAX_BCG == 0){
+	/* If CG is used anyhow */
+	gamma5(DUM_DERI+1, DUM_DERI+2);
+	/* Invert Q_{+} Q_{-} */
+	/* X_W -> DUM_DERI+1 */
+	count20 += solve_cg(DUM_DERI+1, DUM_DERI+2, q_off, EPS_SQ1);
+	/* Y_W -> DUM_DERI  */
+	Qtm_minus_psi(DUM_DERI, DUM_DERI+1);
+      }
+      else{
+	gamma5(DUM_DERI, DUM_DERI+2);
+	/* Invert first Q_+ */
+	/* Y_o -> DUM_DERI  */
+	count20 += bicg(DUM_DERI, DUM_DERI+2, q_off, EPS_SQ1);
+	gamma5(DUM_DERI+1,DUM_DERI);
+	/* Now Q_- */
+	/* X_o -> DUM_DERI+1 */
+	g_mu = -g_mu;
+	count21 += bicg(DUM_DERI+1,DUM_DERI,q_off,EPS_SQ1);
+	g_mu = -g_mu;   
+      }
+    }
+    if(j == 4) {
+      /* Second term coming from the third field */
+      /* The sign is opposite!! */
+      mul_r(DUM_DERI, -1., third_psf, VOLUME/2);
+      g_mu = g_mu2;
     }
     if(g_use_clover_flag == 1){ 
       /* apply H_eo to  Q^{-2} phi */

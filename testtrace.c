@@ -238,30 +238,32 @@ int main(int argc,char *argv[]) {
   xchange_gauge();
 #endif
 
-/*   unit_g_gauge_field();   */
-  read_gauge_field_time_p("egal");   
+  unit_g_gauge_field();   
+  read_gauge_field_time_p("egal");
   xchange_gauge();
+/*   g_kappa*=5; */
+  boundary();
   if(g_proc_id == 0){
     for(x0 = 0; x0 < 4; x0++){
       printf("%e %e\n%e %e\n%e %e\n%e %e\n%e %e\n%e %e\n%e %e\n%e %e\n%e %e\n\n", 
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c11.re, 
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c11.im,
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c12.re, 
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c12.im,
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c13.re, 
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c13.im,
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c21.re, 
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c21.im,
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c22.re, 
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c22.im,
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c23.re, 
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c23.im,
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c31.re, 
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c31.im,
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c32.re, 
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c32.im,
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c33.re, 
-	     g_gauge_field[g_ipt[1][2][1][2]][x0].c33.im
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c11.re, 
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c11.im,
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c12.re, 
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c12.im,
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c13.re, 
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c13.im,
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c21.re, 
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c21.im,
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c22.re, 
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c22.im,
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c23.re, 
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c23.im,
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c31.re, 
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c31.im,
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c32.re, 
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c32.im,
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c33.re, 
+	     g_gauge_field[g_ipt[1][1][1][2]][x0].c33.im
 	     );
     }
   }
@@ -287,19 +289,18 @@ int main(int argc,char *argv[]) {
   mul_one_pm_imu(1, 1.);
   assign_add_mul(1, -1., 0, VOLUME/2);
 /*   gamma5(1, 1);     */
-  gamma3(4, 1, VOLUME/2); 
+  gamma3(4, 1, VOLUME/2);  
 
   zero_spinor_field(3);
   zero_spinor_field(2);
   if(g_proc_id == 0) {
     spinor_field[2][trans1[g_ipt[1][2][1][2]]].c1.c1.re = 1.; 
   }
-  printf("%d\n", trans1[g_ipt[1][2][1][2]]);
   Hopping_Matrix(OE, 0, 2);
   mul_one_pm_imu(3, 1.);
   assign_add_mul(3, -1., 0, VOLUME/2);
 /*   gamma5(3, 3);   */
-  gamma3(5, 3, VOLUME/2); 
+  gamma3(5, 3, VOLUME/2);  
   if(g_proc_id == 0 || g_proc_id == 1){
     for (x0=0;x0<T;x0++){
       for (x1=0;x1<L;x1++){

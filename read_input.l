@@ -73,6 +73,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x KAPPA
 %x MU
 %x MU2
+%x MU3
 %x SEED
 %x Q1
 %x Q2
@@ -111,6 +112,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^kappa{SPC}*={SPC}*                      BEGIN(KAPPA);
 ^mu{SPC}*={SPC}*                         BEGIN(MU);
 ^mu2{SPC}*={SPC}*                        BEGIN(MU2);
+^mu3{SPC}*={SPC}*                        BEGIN(MU3);
 ^beta{SPC}*={SPC}*                       BEGIN(BETA);
 ^seed{SPC}*={SPC}*                       BEGIN(SEED);
 ^StartCondition{SPC}*={SPC}*             BEGIN(STARTCOND);
@@ -165,6 +167,10 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 <MU2>{FLT}  {
   g_mu2=atof(yytext);
   if(verbose!=0) printf("mu2=%s \n", yytext);
+}
+<MU3>{FLT}  {
+  g_mu3=atof(yytext);
+  if(verbose!=0) printf("mu3=%s \n", yytext);
 }
 <BETA>{FLT}   {
   g_beta=atof(yytext);
@@ -382,7 +388,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,MU,MU2,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,IOPROC,IDX,FPROP,DTAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND>#      BEGIN(COMMENT);
+<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,IOPROC,IDX,FPROP,DTAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND>#      BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -405,6 +411,10 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   exit(1);
 }
 <MU2>. {
+  printf("Unknown mu in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
+  exit(1);
+}
+<MU3>. {
   printf("Unknown mu in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
   exit(1);
 }
@@ -529,6 +539,7 @@ int read_input(char * conf_file){
   g_mu = _default_g_mu;
   g_mu1 = _default_g_mu1;
   g_mu2 = _default_g_mu2;
+  g_mu3 = _default_g_mu3;
   g_beta = _default_g_beta;
   g_c_sw = _default_g_c_sw;
   q_off = _default_q_off;

@@ -41,6 +41,8 @@
 #include "read_input.h"
 #include "boundary.h"
 
+su3 gauge_tmp[VOLUME][4] ALIGN;
+
 int main(int argc,char *argv[]) {
  
   FILE *datafile = NULL ,*parameterfile = NULL ,*rlxdfile = NULL;
@@ -58,7 +60,6 @@ int main(int argc,char *argv[]) {
 /*   static double q_off,q_off2; */
   static double eneg,enegx,enep,enepx,enec,enecx,dh;
   static double enerphi0,enerphi0x,enerphi1,enerphi1x,enerphi2,enerphi2x;
-  static su3 gauge_tmp[VOLUME][4];
   su3 *v,*w;
 
 #ifdef MPI  
