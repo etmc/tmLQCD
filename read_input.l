@@ -408,6 +408,10 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   integtyp = 3;
   if(verbose!=0) printf("Using extended Leapfrog integrator!\n");
 }
+<INTTYP>ExtSextonWeingarten {
+  integtyp = 4;
+  if(verbose!=0) printf("Using extended Sexton-Weingarten integrator!\n");
+}
 <NSMALL>{DIGIT}+ {
   nsmall = atoi(yytext);
   if(verbose!=0) printf("nsmall set to %d\n", nsmall);

@@ -142,7 +142,10 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     sexton(q_off, q_off2, dtau, Nsteps, nsmall);
   }
   else if(integtyp == 3) {
-    ext_integrator(n_int, tau, g_nr_of_psf, 0);
+    ext_leap_frog(n_int, tau, g_nr_of_psf, 0);
+  }
+  else if(integtyp == 4) {
+    ext_sexton_weingarten(n_int, tau, g_nr_of_psf, 0);
   }
 
   /*perform the accept-reject-step*/
