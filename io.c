@@ -82,9 +82,9 @@ int write_gauge_field_time_p(char * filename){
 	      if(g_proc_id == id){
 #ifdef LITTLE_ENDIAN
 		byte_swap_assign(tmp, g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8);
-		MPI_Ssend((void*) tmp, 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+		MPI_Send((void*) tmp, 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #else
-		MPI_Ssend((void*) g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+		MPI_Send((void*) g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #endif
 	      }
 	    }

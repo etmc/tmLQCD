@@ -57,8 +57,12 @@ void geometry(void)
                ix=index(x0,x1,x2,x3);
 	       /* g_proc_id*T is added to allow for odd T when the number of 
 		  nodes is even */
-               if((x0+x1+x2+x3+g_proc_id*T)%2==0) xeven[ix]=1; else xeven[ix]=0; 
-               g_ipt[x0][x1][x2][x3]=ix;
+               if((x0+x1+x2+x3+g_proc_id*T)%2==0){
+		 xeven[ix]=1;
+	       } 
+	       else xeven[ix]=0; 
+               
+	       g_ipt[x0][x1][x2][x3]=ix;
 
                g_iup[ix][0]=index(x0+1,x1,x2,x3);
                g_idn[ix][0]=index(x0-1,x1,x2,x3);

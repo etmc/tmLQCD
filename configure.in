@@ -59,6 +59,7 @@ dnl Checks for programs.
 
 AC_PROG_CC
 AC_C_CONST
+AC_PROG_LEX
 AC_PROG_MAKE_SET
 AC_C_BIGENDIAN(endian="", endian="-DLITTLE_ENDIAN")
 
