@@ -4883,25 +4883,16 @@ if test "$host_cpu" = "i686"; then
       CCDEP="$CC"
       DEPFLAGS="-M"
     fi
-    if test $enable_mpi = yes; then
-      XCHANGEDIR=message-passing
-      XCHANGELIB="\$(top_builddir)/src/message-passing/libxchange.a"
-      XLIB="-lxchange"
-    else
-      XCHANGEDIR=
-      XCHANGELIB=
-      XLIB=
-    fi
   fi
 
 elif test "$host_cpu" = "powerpc"; then
   if test $enable_mpi = yes; then
-    CFLAGS="-DXLC -q64 -qsrcmsg -DMPI -DNOF77_ $endian $mpidimension"
+    CFLAGS="-DXLC -q64 -qsrcmsg -DMPI  $endian $mpidimension"
   else
-    CFLAGS="-DXLC -DNOF77_ -q64 -qsrcmsg"
+    CFLAGS="-DXLC  -q64 -qsrcmsg"
   fi
-  LIBS="-larpack -lparpack -lessl -llapack -lblas -lf -lm"
-  LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/src/lib -bmaxdata:0x70000000"
+  LIBS="-lm"
+  LDFLAGS="-bmaxdata:0x70000000"
   XLC=yes
   OPTARGS="-O3 -qhot"
   DEBUG_FLAG="-qfullpath -g"
@@ -4913,12 +4904,12 @@ elif test "$host_vendor" = "cray"; then
   echo "Hey, we are on the cray, you should take some time for this..."
   echo
   if test $enable_mpi = yes; then
-    CFLAGS="-DCRAY -DMPI $endian $mpidimension -dp -DNOF77_"
+    CFLAGS="-DCRAY -DMPI $endian $mpidimension -dp"
   else
-    CFLAGS="-DCRAY -dp -DNOF77_"
+    CFLAGS="-DCRAY -dp"
   fi
-  LIBS="-lsci -larpack -lparpack -llapack -lblacs -lsci -lf -lm"
-  LDFLAGS="-L\$(abs_top_builddir)/src/lib"
+  LIBS="-lm"
+  LDFLAGS=""
   OPTARGS="-O3"
   DEBUG_FLAG="-g"
   CCDEP="$CC"
@@ -4932,7 +4923,8 @@ else
   fi
   CCDEP="$CC"
   DEPFLAGS="-M"
-  LDFLAGS="-L\$(abs_top_builddir)/src/lib"
+  LIBS="-lm"
+  LDFLAGS=""
 fi
 
 

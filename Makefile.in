@@ -1,8 +1,9 @@
 CC = @CC@
 CCDEP = @CCDEP@
 CFLAGS = @CFLAGS@
+LDFLAGS = @LDFLAGS@
 CCLD = $(CC)
-LINK = $(CCLD) -o $@
+LINK = $(CCLD) -o $@ ${LDFLAGS}
 LEX = @LEX@ 
 AUTOCONF = @AUTOCONF@
 LIBS = @LIBS@ 
