@@ -25,6 +25,7 @@ int solve_cg(int k,int l, double q_off, double eps_sq, const int rel_prec) {
   
   /* initialize residue r and search vector p */
   
+  squarenorm = square_norm(spinor_field[l], VOLUME/2);
   if(g_use_clover_flag == 1){
     Q_psi(DUM_SOLVER,k,q_off);
     Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
@@ -48,7 +49,7 @@ int solve_cg(int k,int l, double q_off, double eps_sq, const int rel_prec) {
      pro=scalar_prod_r(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER], VOLUME/2);
      alpha_cg=normsq/pro;
      assign_add_mul_r(spinor_field[k], spinor_field[DUM_SOLVER+2], alpha_cg, VOLUME/2);
-     squarenorm = square_norm(spinor_field[k], VOLUME/2);
+
      assign_mul_add_r(spinor_field[DUM_SOLVER], -alpha_cg, spinor_field[DUM_SOLVER+1], VOLUME/2);
      err=square_norm(spinor_field[DUM_SOLVER], VOLUME/2);
 
@@ -124,6 +125,7 @@ int bicg(int k, int l, double q_off, double eps_sq, const int rel_prec) {
   int iteration;
 
   if(ITER_MAX_BCG > 0) {
+    squarenorm = square_norm(spinor_field[l],VOLUME/2);
     gamma5(DUM_SOLVER+1,l);
     if(g_use_clover_flag == 1){
       M_psi(DUM_SOLVER,k,q_off); 
@@ -144,7 +146,7 @@ int bicg(int k, int l, double q_off, double eps_sq, const int rel_prec) {
 	break;
       }
       square_and_prod_r(&err,&rho1, spinor_field[DUM_SOLVER+1],  spinor_field[DUM_SOLVER], VOLUME/2);
-      squarenorm = square_norm(spinor_field[k],VOLUME/2);
+
       /*     if(g_proc_id == 0) printf("%d %e %e\n", iteration, err, rho1); */
       if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
 	break;
