@@ -396,11 +396,23 @@ void Hopping_Matrix(const int ieo, const int l, const int k){
   }
 }
 
-#elif defined XLC5
+#elif defined XLC6
 
-#define _prefetch_spinor(addr) \
-__dcbt((void*)addr);
-__dcbt((void*)(addr+128));
+#define _prefetch_spinor_dcbt(addr1, addr2) \
+__dcbt((void*)(addr1)); \
+__dcbt((void*)(addr2));
+
+#define _prefetch_spinor_by_load(addr1, addr2) \
+__prefetch_by_load((void*)(addr1));  \
+__prefetch_by_load((void*)(addr2)); 
+
+#define _prefetch_su3_dcbt(addr1, addr2) \
+__dcbt((void*)(addr1)); \
+__dcbt((void*)(addr2));
+
+#define _prefetch_su3_by_load(addr1, addr2) \
+__prefetch_by_load((void*)(addr1)); \
+__prefetch_by_load((void*)(addr2)); 
 
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
@@ -409,6 +421,7 @@ void Hopping_Matrix(int ieo, int l, int k){
   int ioff, ioff2, icx, icy, icz;
   su3 *up,*um;
   spinor *r,*sp,*sm;
+  void *dd;
 
   /* for parallelization */
 #ifdef MPI
@@ -440,18 +453,20 @@ void Hopping_Matrix(int ieo, int l, int k){
   for (icx = ioff; icx < (VOLUME/2 + ioff); icx++) {
     ix = trans2[icx];
     r=&spinor_field[l][icx - ioff];
+/*     dd=&spinor_field[l][icx - ioff].c3.c3.re; */
+/*     _prefetch_spinor_dcbt((void*)r, dd); */
 
     /*********************** direction +0 ************************/
     
     iy=g_idn[ix][0]; icy=trans1[iy]-ioff2;
     
     sm=&spinor_field[k][icy];
-    __prefetch_by_load((void*)sm);
-    /* __dcbt((void*)sm);*/
+    dd=&spinor_field[k][icy].c3.c3.re;
+    _prefetch_spinor_dcbt((void*)sm, dd);
 
     um=&g_gauge_field[iy][0];
-    __prefetch_by_load((void*)um);
-    /* __dcbt((void*)um);*/
+    dd=&g_gauge_field[iy][0].c33.re;
+    _prefetch_su3_dcbt((void*)um, dd);
 
     _vector_add(psi,(*sp).c1,(*sp).c3);
 
@@ -474,12 +489,12 @@ void Hopping_Matrix(int ieo, int l, int k){
     iy=g_iup[ix][1]; icy=trans1[iy]-ioff2;
 
     sp=&spinor_field[k][icy];
-    __prefetch_by_load((void*)sp);
-    /* __dcbt((void*)sp);*/
+    dd=&spinor_field[k][icy].c3.c3.re;
+    _prefetch_spinor_dcbt((void*)sp, dd);
 
     up=&g_gauge_field[ix][1];     
-    __prefetch_by_load((void*)up); 
-    /* __dcbt((void*)up);*/
+    dd=&g_gauge_field[iy][0].c33.re;
+    _prefetch_su3_dcbt((void*)up, dd); 
       
     _vector_sub(psi,(*sm).c1,(*sm).c3);
 
@@ -502,12 +517,12 @@ void Hopping_Matrix(int ieo, int l, int k){
     iy=g_idn[ix][1]; icy=trans1[iy]-ioff2;
 
     sm=&spinor_field[k][icy];
-    __prefetch_by_load((void*)sm);
-    /* __dcbt((void*)sm);*/
+    dd=&spinor_field[k][icy].c3.c3.re;
+    _prefetch_spinor_dcbt((void*)sm, dd);
 
     um=&g_gauge_field[iy][1];
-    __prefetch_by_load((void*)um);
-    /* __dcbt((void*)um);*/
+    dd=&g_gauge_field[iy][0].c33.re;
+    _prefetch_su3_dcbt((void*)um, dd);
       
     _vector_i_add(psi,(*sp).c1,(*sp).c4);
 
@@ -530,12 +545,12 @@ void Hopping_Matrix(int ieo, int l, int k){
     iy=g_iup[ix][2]; icy=trans1[iy]-ioff2;
 
     sp=&spinor_field[k][icy];
-    __prefetch_by_load((void*)sp);
-    /* __dcbt((void*)sp);*/
+    dd=&spinor_field[k][icy].c3.c3.re;
+    _prefetch_spinor_dcbt((void*)sp, dd);
 
     up=&g_gauge_field[ix][2];
-    __prefetch_by_load((void*)up);
-    /* __dcbt((void*)up);*/
+    dd=&g_gauge_field[iy][0].c33.re;
+    _prefetch_su3_dcbt((void*)up, dd);
 
     _vector_i_sub(psi,(*sm).c1,(*sm).c4);
 
@@ -558,12 +573,12 @@ void Hopping_Matrix(int ieo, int l, int k){
     iy=g_idn[ix][2]; icy=trans1[iy]-ioff2;
 
     sm=&spinor_field[k][icy];
-    __prefetch_by_load((void*)sm);
-    /* __dcbt((void*)sm);*/
+    dd=&spinor_field[k][icy].c3.c3.re;
+    _prefetch_spinor_dcbt((void*)sm, dd);
 
     um=&g_gauge_field[iy][2];
-    __prefetch_by_load((void*)um);
-    /* __dcbt((void*)um);*/
+    dd=&g_gauge_field[iy][0].c33.re;
+    _prefetch_su3_dcbt((void*)um, dd);
 
     _vector_add(psi,(*sp).c1,(*sp).c4);
 
@@ -586,12 +601,12 @@ void Hopping_Matrix(int ieo, int l, int k){
     iy=g_iup[ix][3]; icy=trans1[iy]-ioff2;
 
     sp=&spinor_field[k][icy];
-    __prefetch_by_load((void*)sp);
-    /* __dcbt((void*)sp);*/
+    dd=&spinor_field[k][icy].c3.c3.re;
+    _prefetch_spinor_dcbt((void*)sp, dd);
 
     up=&g_gauge_field[ix][3];
-    __prefetch_by_load((void*)up);
-    /* __dcbt((void*)up);*/
+    dd=&g_gauge_field[iy][0].c33.re;
+    _prefetch_su3_dcbt((void*)up, dd);
 
     _vector_sub(psi,(*sm).c1,(*sm).c4);
 
@@ -614,12 +629,12 @@ void Hopping_Matrix(int ieo, int l, int k){
     iy=g_idn[ix][3]; icy=trans1[iy]-ioff2;
 
     sm=&spinor_field[k][icy];
-    __prefetch_by_load((void*)sm);
-    /* __dcbt((void*)sm);*/
+    dd=&spinor_field[k][icy].c3.c3.re;
+    _prefetch_spinor_dcbt((void*)sm, dd);
 
     um=&g_gauge_field[iy][3];
-    __prefetch_by_load((void*)um);
-    /* __dcbt((void*)um);*/
+    dd=&g_gauge_field[iy][0].c33.re;
+    _prefetch_su3_dcbt((void*)um, dd);
 
     _vector_i_add(psi,(*sp).c1,(*sp).c3);
       
@@ -645,12 +660,12 @@ void Hopping_Matrix(int ieo, int l, int k){
     iy=g_iup[iz][0]; icy=trans1[iy]-ioff2;
 
     up=&g_gauge_field[iz][0];
-    __prefetch_by_load((void*)up);
-    /* __dcbt((void*)up);*/
+    dd=&g_gauge_field[iy][0].c33.re;
+    _prefetch_spinor_dcbt((void*)up, dd);
 
     sp=&spinor_field[k][icy];
-    __prefetch_by_load((void*)sp);
-    /* __dcbt((void*)sp);*/
+    dd=&spinor_field[k][icy].c3.c3.re;
+    _prefetch_su3_dcbt((void*)sp, dd);
 
     _vector_i_sub(psi,(*sm).c1,(*sm).c3);
 
