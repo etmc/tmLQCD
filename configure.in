@@ -204,7 +204,7 @@ dnl no -pedantic-errors...
       fi
     fi
     CXXFLAGS=' -Wall'
-    OPTARGS='-O3'
+    OPTARGS='-O'
     LIBS="-lm"
 
     if test $enable_p4 = yes && test $GCCVERSION1 -gt 2 && test $GCCVERSION2 -gt 1; then
