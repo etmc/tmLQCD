@@ -1,3 +1,19 @@
+10.03.2005: Precisions in the solver for force and Acceptance are input
+	    parameter now for each mu parameter:
+  	    ForcePrecisionMu, ForcePrecisionMu2, ForcePrecisionMu3
+	    AcceptancePrecisionMu, 
+	    AcceptancePrecisionMu2, AcceptancePrecisionMu3
+	   
+	    ExtIntStepsMu0 is now called IntegrationStepsMu,
+	    ExtIntStepsMu1 is now called IntegrationStepsMu2,
+	    ExtIntStepsMu2 is now called IntegrationStepsMu3,
+	    matchin the input names for the mu parameter.
+	    The old one are still usable.
+
+	    Added an input parameter DebugLevel to control the 
+	    debug output. Setting it to one will cause the program
+	    to compute and print out the norms of the forces.
+
 17.02.2005: Reversibility check implemented. Input parameters are
 	    ReversibilityCheck = yes|no (default no)
 	    ReversibilityCheckIntervall = 100 (default 100)

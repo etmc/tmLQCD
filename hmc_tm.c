@@ -47,7 +47,7 @@
 #include "boundary.h"
 #include "polyakov_loop.h"
 
-char * Version = "2.3.4";
+char * Version = "2.3.5";
 
 
 void usage(){
