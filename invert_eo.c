@@ -47,7 +47,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   /* The solver inverts gamma_5 D ...          */
   gamma5(DUM_DERI, DUM_DERI); 
   /*   iter = bicgstabell(Odd_new, DUM_DERI, 2000, 1.e-30, 2, 0.);   */
-/*   iter = bicg(Odd_new, spinor_field[DUM_DERI], 0., 1.e-15);    */
+  /*   iter = bicg(Odd_new, spinor_field[DUM_DERI], 0., 1.e-15);    */
 
   if(solver_flag == BICGSTAB) {
     if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}
@@ -61,6 +61,10 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
     iter = cg_her(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_pm_psi, 0, 0.);
     Qtm_minus_psi(Odd_new, Odd_new);
+  }
+  if(solver_flag == MR) {
+    if(g_proc_id == 0) {printf("# Using MR!\n"); fflush(stdout);}
+    iter = mr(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_plus_psi);
   }
   else if(solver_flag == CGS) {
     if(g_proc_id == 0) {printf("# Using CGS!\n"); fflush(stdout);}

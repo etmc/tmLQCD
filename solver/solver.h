@@ -15,5 +15,6 @@
 #include"solver/cgs_real.h"
 #include"solver/bicgstabell.h"
 #include"solver/cg_her.h"
+#include"solver/mr.h"
 
 #endif

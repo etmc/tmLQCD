@@ -53,6 +53,8 @@ extern "C"
   extern int ITER_MAX_BCG;
   extern int ITER_MAX_CG;
   extern double X0;
+  extern int max_solver_iterations;
+  extern double solver_precision;
   
   int read_input(char *);
   

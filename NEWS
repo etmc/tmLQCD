@@ -1,3 +1,11 @@
+28.09.2004: input parameter added:
+	    input parameter MaxSolverIterations 
+	    and SolverPrecision available.
+
+	    history_hmc_tm file added with history of
+	    written configurations and corresponding 
+	    Plaquette values and timestamp
+
 20.08.2004: SSE3 Version of the most important macros added and
 	    tested. SSE3 versus SSE2: 1.84 Gflops versus 1.64 Gflops.
             (P4  3.20GHz prescott)

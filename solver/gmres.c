@@ -78,6 +78,11 @@ int gmres(spinor * const P,spinor * const Q,
     /* v_0=r_0/||r_0|| */
     alpha[0].re=sqrt(square_norm(spinor_field[DUM_SOLVER], N));
 
+    if(g_proc_id == g_stdio_proc){
+      printf("%d\t%g true residue\n", restart*m, alpha[0].re*alpha[0].re); 
+      fflush(stdout);
+    }
+
     if(alpha[0].re==0.){
       assign(P, spinor_field[DUM_SOLVER+2], N);
       return(restart*m);
@@ -118,7 +123,10 @@ int gmres(spinor * const P,spinor * const Q,
       _mult_assign_complex_conj(alpha[j], c[j], tmp1);
 
       /* precision reached? */
-      _SO(if(g_proc_id == g_stdio_proc){printf("%d\t%g\n", restart*m+j, alpha[j+1].re*alpha[j+1].re); fflush(stdout);});
+      if(g_proc_id == g_stdio_proc){
+	printf("%d\t%g residue\n", restart*m+j, alpha[j+1].re*alpha[j+1].re); 
+	fflush(stdout);
+      }
       if(alpha[j+1].re <= eps){
 	_mult_real(alpha[j], alpha[j], 1./H[j][j].re);
 	assign_add_mul(spinor_field[DUM_SOLVER+2], V[j], alpha[j], N);

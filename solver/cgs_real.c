@@ -38,10 +38,15 @@ int cgs_real(spinor * const P, spinor * const Q, const int max_iter, double eps_
   /* loop! */
   for(i=0;i<=max_iter;i++) {
     res_sq=square_norm(spinor_field[DUM_SOLVER], N);
-    _SO(if(g_proc_id == g_stdio_proc){printf("%d\t%g\n",i,res_sq); fflush( stdout );});
+    if(g_proc_id == g_stdio_proc) {
+      printf("%d\t%g\n",i,res_sq); 
+      fflush( stdout );
+    }
     rjr0.re=scalar_prod_r(spinor_field[DUM_SOLVER],spinor_field[DUM_SOLVER+5], N);
     /*     square_and_prod(&res_sq,&rjr0,spinor_field[DUM_SOLVER],spinor_field[DUM_SOLVER+5]); */
-    if(res_sq<eps_sq) return i;
+    if(res_sq<eps_sq) {
+      return i;
+    }
     f(spinor_field[DUM_SOLVER+3],spinor_field[DUM_SOLVER+1]);	/* calc v */
     /* calc alpha */
     denom.re=scalar_prod_r(spinor_field[DUM_SOLVER+3],spinor_field[DUM_SOLVER+5], N);
@@ -71,7 +76,11 @@ int cgs_real(spinor * const P, spinor * const Q, const int max_iter, double eps_
   return -1;
 }
 
+/*
+mul_diff_mul
+mul
 
+*/
 
 
 

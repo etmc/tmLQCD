@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <sys/time.h>
 #include <string.h>
 #include <signal.h>
 #ifdef MPI
@@ -62,6 +63,7 @@ int main(int argc,char *argv[]) {
   int rlxd_state[105];
   int j,ix,mu;
   int k;
+  struct timeval t1;
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -312,6 +314,11 @@ int main(int argc,char *argv[]) {
     }
   }
 
+  gettimeofday(&t1,NULL);
+  countfile = fopen("history_hmc_tm", "a");
+  fprintf(countfile, "!!! Timestamp %ld\n", t1.tv_sec); 
+  fclose(countfile);
+
   /* Loop for measurements */
   for(j=0;j<Nmeas;j++) {
 
@@ -323,6 +330,9 @@ int main(int argc,char *argv[]) {
       nstore ++;
       countfile = fopen(nstore_filename, "w");
       fprintf(countfile, "%d\n", nstore);
+      fclose(countfile);
+      countfile = fopen("history_hmc_tm", "a");
+      fprintf(countfile, "conf.%.4d, Nmeas = %d, Plaquette = %e\n", nstore, Nmeas, eneg/(6.*VOLUME*g_nproc));
       fclose(countfile);
     }
     else {

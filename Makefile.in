@@ -62,6 +62,7 @@ compile-clean: Makefile
 
 clean: compile-clean
 	@(cd linalg && $(MAKE) clean)
+	@(cd solver && $(MAKE) clean)
 	@rm -f hmc_tm hybrid
 
 distclean: clean

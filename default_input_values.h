@@ -48,5 +48,7 @@
 #define _default_ITER_MAX_BCG 5000
 #define _default_ITER_MAX_CG 5000
 #define _default_X0 0.
+#define _default_max_solver_iterations 5000
+#define _default_solver_precision 1.e-15
 
 #endif

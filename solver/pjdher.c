@@ -604,7 +604,8 @@ void pjdher(int n, int lda, double tau, double tol,
       /* Solve the correction equation ... */
 
       if(solver_flag == GMRES){
-	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, &pProj_A_psi);
+/* 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, &pProj_A_psi, &pProj_A_psi); */
+ 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, &pProj_A_psi); 
       }
       if(solver_flag == CGS){
 	info = cgs_real((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, &pProj_A_psi);

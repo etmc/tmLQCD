@@ -5185,7 +5185,6 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     GCCVERSION2=`$CC -dumpversion | cut -d "." -f 2`
     if test $enable_mpi = yes; then
       CFLAGS="-ansi -Wall -DMPI $endian $mpidimension"
-      DEPFLAGS="$DEPFLAGS -DMPI"
     else
       if test $GCCVERSION1 -gt 2 && test $enable_sse2 = yes; then
         CFLAGS="-ansi -Wall $endian"
@@ -5256,7 +5255,6 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       echo "We are using the Portland Group C compiler!"
       if test "$enable_mpi" = yes; then
         CFLAGS="-Mdalign -fastsse -DMPI $mpidimension"
-        DEPFLAGS="$DEPFLAGS -DMPI"
       else
         CFLAGS="-Mdalign -fastsse "
       fi
@@ -5273,7 +5271,6 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       DEPFLAGS="-M"
       if test $enable_mpi = yes; then
         CFLAGS="-Wall -w1  -DMPI $endian $mpidimension"
-        DEPFLAGS="$DEPFLAGS -DMPI"
       else
         CFLAGS="-Wall -w1 $endian"
       fi
@@ -5290,7 +5287,6 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       DEPFLAGS="-M"
       if test $enable_mpi = yes; then
         CFLAGS="-O -DMPI $endian $mpidimension"
-        DEPFLAGS="$DEPFLAGS -DMPI"
       else
         CFLAGS="-O $endian"
       fi

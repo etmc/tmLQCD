@@ -62,6 +62,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   char rlxd_input_filename[100];
   char gauge_input_filename[100];
   int first_prop_flag;
+  int max_solver_iterations;
+  double solver_precision;
 %}
 
 %option never-interactive
@@ -102,6 +104,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x CGMAX
 %x BCGMAX
 %x BOUND
+%x SITER
+%x SPREC
 
 %x COMMENT
 %x ERROR
@@ -145,6 +149,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^BCGstabMaxIter{SPC}*={SPC}*             BEGIN(BCGMAX);
 ^CGMaxIter{SPC}*={SPC}*                  BEGIN(CGMAX);
 ^BoundaryCond{SPC}*={SPC}*               BEGIN(BOUND);
+^MaxSolverIterations{SPC}*={SPC}*        BEGIN(SITER);
+^SolverPrecision{SPC}*={SPC}*            BEGIN(SPREC);
 
 <TT>{DIGIT}+                  {
   if(verbose!=0) printf("T =%s\n", yytext);
@@ -223,6 +229,14 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 <SOLVFLAG>mr {
   solver_flag=4;
   if(verbose!=0) printf("Use MR Solver \n");
+}
+<SITER>{DIGIT}+ {
+  max_solver_iterations = atoi(yytext);
+  if(verbose!=0) printf("Use %d iterations in the solvers!\n", max_solver_iterations);
+}
+<SPREC>{FLT} {
+  solver_precision = atof(yytext);
+  if(verbose!=0) printf("Use %e as convergence precision for the solvers!\n", solver_precision);
 }
 <OPFLAG>Dtm {
   operator_flag=2;
@@ -388,7 +402,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,IOPROC,IDX,FPROP,DTAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND>#      BEGIN(COMMENT);
+<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,IOPROC,IDX,FPROP,DTAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC>#      BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -498,6 +512,14 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
+<SITER>. {
+  printf("Unknown value for MaxSolverIterations in line %d! Must be an integer. Exiting...!\n", line_of_file);
+  exit(1);
+}
+<SPREC>. {
+  printf("Unknown value for SolverPrecision in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
+  exit(1);
+}
 
 <INITIAL>.                        BEGIN(ERROR);
 <ERROR>[^\t\n]*             {
@@ -571,6 +593,8 @@ int read_input(char * conf_file){
   ITER_MAX_CG = _default_ITER_MAX_CG;
   ITER_MAX_BCG = _default_ITER_MAX_BCG;
   X0 = _default_X0;
+  max_solver_iterations = _default_max_solver_iterations;
+  solver_precision = _default_solver_precision;
 
   /********************************************/
 

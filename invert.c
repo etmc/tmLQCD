@@ -183,7 +183,7 @@ int main(int argc,char *argv[]) {
       printf("Reading Gauge field from file %s\n", conf_filename); fflush(stdout);
     }
     read_gauge_field_time_p(conf_filename);
-if (g_proc_id == 0){
+    if (g_proc_id == 0){
       printf("done!\n"); fflush(stdout);
     }
 #ifdef MPI
@@ -216,7 +216,7 @@ if (g_proc_id == 0){
       atime = MPI_Wtime();
 #endif
       iter = invert_eo(spinor_field[2], spinor_field[3], spinor_field[0], spinor_field[1], 
-		       1.e-15, ITER_MAX_CG, CG);
+		       solver_precision, max_solver_iterations, solver_flag);
 #ifdef MPI
       etime = MPI_Wtime();
 #endif
@@ -224,12 +224,6 @@ if (g_proc_id == 0){
       mul_r(spinor_field[3], (2*g_kappa), spinor_field[3], VOLUME/2);
       sprintf(conf_filename,"%s.is%.1dic%.1d.%.4d", "prop.mass00", is, ic, nstore);
       write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 0);
-/*       if(ix == 0) { */
-/* 	write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 0); */
-/*       } */
-/*       else { */
-/* 	write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 1); */
-/*       } */
     
       M_full(spinor_field[4], spinor_field[5], spinor_field[2], spinor_field[3]); 
       mul_r(spinor_field[4], 1./(2*g_kappa), spinor_field[4], VOLUME/2);  
@@ -240,8 +234,10 @@ if (g_proc_id == 0){
       nrm1 = square_norm(spinor_field[4], VOLUME/2); 
       nrm2 = square_norm(spinor_field[5], VOLUME/2); 
 
-      printf("Inversion for is = %d, ic = %d done in %d iterations, residue = %e!\n", is, ic, iter, nrm1+nrm2);
-      printf("Inversion done in %e sec.\n", etime-atime);
+      if(g_proc_id == 0) {
+	printf("Inversion for is = %d, ic = %d done in %d iterations, residue = %e!\n", is, ic, iter, nrm1+nrm2);
+	printf("Inversion done in %e sec. (MPI_Wtime)\n", etime-atime);
+      }
     }
     nstore++;
     if(g_proc_id == 0) {

@@ -14,6 +14,7 @@
 #include "global.h"
 #include "su3.h"
 #include "Hopping_Matrix.h"
+#include "Hopping_Matrix_nocom.h"
 #include "sse.h"
 #include "tm_operators.h"
 
@@ -76,6 +77,13 @@ void Qtm_plus_psi(spinor * const l, spinor * const k){
   Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k);
   mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], +1.);
   Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul_gamma5(l, k, spinor_field[DUM_MATRIX], +1.);
+}
+
+void Qtm_plus_psi_nocom(spinor * const l, spinor * const k){
+  Hopping_Matrix_nocom(EO, spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], +1.);
+  Hopping_Matrix_nocom(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
   mul_one_pm_imu_sub_mul_gamma5(l, k, spinor_field[DUM_MATRIX], +1.);
 }
 
@@ -165,6 +173,19 @@ void Qtm_pm_psi(spinor * const l, spinor * const k){
   Hopping_Matrix(EO, l, spinor_field[DUM_MATRIX]);
   mul_one_pm_imu_inv(l, +1.);
   Hopping_Matrix(OE, spinor_field[DUM_MATRIX+1], l);
+  mul_one_pm_imu_sub_mul_gamma5(l, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1], +1.);
+}
+
+void Qtm_pm_psi_nocom(spinor * const l, spinor * const k){
+  /* Q_{-} */
+  Hopping_Matrix_nocom(EO, spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], -1.);
+  Hopping_Matrix_nocom(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul_gamma5(spinor_field[DUM_MATRIX], k, spinor_field[DUM_MATRIX], -1.);
+  /* Q_{+} */
+  Hopping_Matrix_nocom(EO, l, spinor_field[DUM_MATRIX]);
+  mul_one_pm_imu_inv(l, +1.);
+  Hopping_Matrix_nocom(OE, spinor_field[DUM_MATRIX+1], l);
   mul_one_pm_imu_sub_mul_gamma5(l, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1], +1.);
 }
 

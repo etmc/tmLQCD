@@ -64,7 +64,7 @@ liblinalg.a: ${liblinalg_OBJECTS} Makefile
 	@rm -f liblinalg.a
 	@${AR} cru liblinalg.a $(liblinalg_OBJECTS)
 	@$(RANLIB) liblinalg.a
-	@cp liblinalg.a ../lib/liblinalg.a
+	@cp liblinalg.a ${top_builddir}/lib/liblinalg.a
 
 # rule to generate .d files
 
@@ -82,7 +82,7 @@ compile-clean: Makefile
 
 clean: compile-clean 
 	@rm -f $(addsuffix .a, ${LIBRARIES})
-	@rm -f ../lib/liblinalg.a
+	@rm -f ${top_builddir}/lib/liblinalg.a
 
 distclean: clean
 	@rm -f Makefile

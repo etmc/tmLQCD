@@ -25,8 +25,7 @@ COMPILE = ${CC} $(INCLUDES) ${CFLAGS}
 
 LIBRARIES = libsolver
 libsolver_TARGETS = bicgstab_complex gmres \
-	cgs_real gram-schmidt quicksort jdher pjdher \
-	cg_her
+	cgs_real cg_her mr
 libsolver_OBJECTS = $(addsuffix .o, ${libsolver_TARGETS})
 
 # default rule
@@ -60,7 +59,7 @@ libsolver.a: ${libsolver_OBJECTS} Makefile
 	@rm -f libsolver.a
 	@${AR} cru libsolver.a $(libsolver_OBJECTS)
 	@$(RANLIB) libsolver.a
-	@cp libsolver.a ../lib/libsolver.a
+	@cp libsolver.a ${top_builddir}/lib/libsolver.a
 
 # rule to generate .d files
 
@@ -78,6 +77,7 @@ compile-clean: Makefile
 
 clean: compile-clean 
 	@rm -f $(addsuffix .a, ${LIBRARIES})
+	@rm -f ${top_builddir}/lib/libsolver.a
 
 distclean: clean
 	@rm -f Makefile
