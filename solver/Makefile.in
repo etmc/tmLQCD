@@ -25,7 +25,7 @@ COMPILE = ${CC} $(INCLUDES) ${CFLAGS}
 
 LIBRARIES = libsolver
 libsolver_TARGETS = bicgstab_complex gmres \
-	cgs_real cg_her mr
+	cgs_real cg_her mr chrono_guess
 libsolver_OBJECTS = $(addsuffix .o, ${libsolver_TARGETS})
 
 # default rule
