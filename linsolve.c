@@ -53,6 +53,11 @@ int solve_cg(int k,int l, double q_off, double eps_sq, const int rel_prec) {
      assign_mul_add_r(spinor_field[DUM_SOLVER], -alpha_cg, spinor_field[DUM_SOLVER+1], VOLUME/2);
      err=square_norm(spinor_field[DUM_SOLVER], VOLUME/2);
 
+     if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
+       printf("CG iterations: %d res^2 %e\n", iteration, err);
+       fflush(stdout);
+     }
+
      if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
        break;
      }
@@ -120,74 +125,78 @@ int bicg(int k, int l, double q_off, double eps_sq) {
 #else
 /* k output , l input */
 int bicg(int k, int l, double q_off, double eps_sq, const int rel_prec) {
+
+  double err, d1, squarenorm=0.;
+  complex rho0, rho1, omega, alpha, beta, nom, denom;
+  int iteration, N=VOLUME/2;
+  spinor * r, * p, * v, *hatr, * s, * t, * P, * Q;
   
-  static double rho0,omega0,rho1,omega1,alpha,be,err,d1,d2,squarenorm;
-  int iteration;
 
   if(ITER_MAX_BCG > 0) {
-    squarenorm = square_norm(spinor_field[l],VOLUME/2);
-    gamma5(DUM_SOLVER+1,l);
-    if(g_use_clover_flag == 1){
-      M_psi(DUM_SOLVER,k,q_off); 
-    }
-    else {
-      Mtm_plus_psi(spinor_field[DUM_SOLVER], spinor_field[k]);
-    }
-    diff(spinor_field[DUM_SOLVER+1],spinor_field[DUM_SOLVER+1],spinor_field[DUM_SOLVER], VOLUME/2);
-    assign(spinor_field[DUM_SOLVER], spinor_field[DUM_SOLVER+1], VOLUME/2);
-    zero_spinor_field(spinor_field[DUM_SOLVER+2]);
-    zero_spinor_field(spinor_field[DUM_SOLVER+3]);
-    rho0=1.0; omega0=1.0; alpha=1.0; 
-    /* main loop */
-    for(iteration=1;iteration<=ITER_MAX_BCG;iteration++) {
-      /*     if(g_proc_id == 0) printf("%d %e\n", iteration, rho1); */
-      if(rho1 == 0. && iteration > 1){
-	iteration = ITER_MAX_BCG+1;
-	break;
-      }
-      square_and_prod_r(&err,&rho1, spinor_field[DUM_SOLVER+1],  spinor_field[DUM_SOLVER], VOLUME/2);
 
-      /*     if(g_proc_id == 0) printf("%d %e %e\n", iteration, err, rho1); */
-      if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
+
+
+    hatr = spinor_field[DUM_SOLVER];
+    r = spinor_field[DUM_SOLVER+1];
+    v = spinor_field[DUM_SOLVER+2];
+    p = spinor_field[DUM_SOLVER+3];
+    s = spinor_field[DUM_SOLVER+4];
+    t = spinor_field[DUM_SOLVER+5];
+    P = spinor_field[k];
+    Q = spinor_field[l];
+
+    squarenorm = square_norm(Q, VOLUME/2);
+    
+    Mtm_plus_psi(r, P);
+    gamma5(DUM_SOLVER, l);
+    diff(p, hatr, r, N);
+    assign(r, p, N);
+    assign(hatr, p, N);
+    rho0 = scalar_prod(hatr, r, N);
+    
+    for(iteration = 0; iteration < ITER_MAX_BCG; iteration++){
+      err = square_norm(r, N);
+      if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
+	printf("BiCGstab iterations: %d res^2 %e\n", iteration, err);
+	fflush(stdout);
+      }
+      if (((err <= eps_sq) && (rel_prec == 0)) 
+	  || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
 	break;
       }
-      
-      be = (rho1/rho0)*(alpha/omega0);
-      /*  assign_add_mul_r(DUM_SOLVER+3,-omega0,DUM_SOLVER+2, VOLUME/2);
-	  assign_mul_add_r(DUM_SOLVER+3,be,DUM_SOLVER+1, VOLUME/2);  */
-      assign_mul_bra_add_mul_ket_add_r(spinor_field[DUM_SOLVER+3], spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER+1],
-				       -omega0, be, VOLUME/2); 
-      if(g_use_clover_flag == 1){
-	M_psi(DUM_SOLVER+2, DUM_SOLVER+3, q_off); 
-      }
-      else{
-	Mtm_plus_psi(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER+3]);
-      }
-      alpha=rho1/scalar_prod_r(spinor_field[DUM_SOLVER], spinor_field[DUM_SOLVER+2], VOLUME/2);
-      assign_add_mul_r(spinor_field[DUM_SOLVER+1], spinor_field[DUM_SOLVER+2], -alpha, VOLUME/2);
-      if(g_use_clover_flag == 1){
-	M_psi(DUM_SOLVER+4, DUM_SOLVER+1, q_off);
-      }
-      else{
-	Mtm_plus_psi(spinor_field[DUM_SOLVER+4], spinor_field[DUM_SOLVER+1]);
-      }
-      square_and_prod_r(&d1,&d2,  spinor_field[DUM_SOLVER+4],  spinor_field[DUM_SOLVER+1], VOLUME/2);
-      omega1=d2/d1;
-      assign_add_mul_r_add_mul(spinor_field[k], spinor_field[DUM_SOLVER+3], 
-			       spinor_field[DUM_SOLVER+1], alpha, omega1, VOLUME/2); 
-      assign_add_mul_r(spinor_field[DUM_SOLVER+1], spinor_field[DUM_SOLVER+4], -omega1, VOLUME/2);
-      /*copy back */
-      rho0=rho1; omega0=omega1;
+      Mtm_plus_psi(v, p);
+      denom = scalar_prod(hatr, v, N);
+      _div_complex(alpha, rho0, denom);
+      assign(s, r, N);
+      assign_diff_mul(s, v, alpha, N);
+      Mtm_plus_psi(t, s);
+      omega = scalar_prod(t,s, N);
+      d1 = square_norm(t, N);
+      omega.re/=d1; omega.im/=d1;
+      assign_add_mul_add_mul(P, p, s, alpha, omega, N);
+      assign(r, s, N);
+      assign_diff_mul(r, t, omega, N);
+      rho1 = scalar_prod(hatr, r, N);
+      _mult_assign_complex(nom, alpha, rho1);
+      _mult_assign_complex(denom, omega, rho0);
+      _div_complex(beta, nom, denom);
+      omega.re=-omega.re; omega.im=-omega.im;
+      assign_mul_bra_add_mul_ket_add(p, v, r, omega, beta, N);
+      rho0.re = rho1.re; rho0.im = rho1.im;
     }
-    /* if bicg fails, redo with conjugate gradient */
+    
     if(g_proc_id==0) {
       sout = fopen(solvout, "a");
       fprintf(sout, "BiCGstab: iterations: %d mu: %f eps_sq: %e\n", iteration, g_mu, eps_sq); 
       fclose(sout);
     }
   }
-  else iteration = ITER_MAX_BCG;
+  else{
+    iteration = ITER_MAX_BCG;
+    gamma5(k,l);
+  }
 
+  /* if bicg fails, redo with conjugate gradient */
   if(iteration>=ITER_MAX_BCG){
     iteration = solve_cg(k,l,q_off,eps_sq, rel_prec);
     /* Save the solution for reuse! */

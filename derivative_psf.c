@@ -61,14 +61,28 @@ void derivative_psf(const int nr) {
     g_mu = g_mu1;	
     Qtm_plus_psi(spinor_field[DUM_DERI+2], spinor_field[second_psf]);
     g_mu = g_mu2;
-    /* If CG is used anyhow */
-    /*       gamma5(DUM_DERI+1, DUM_DERI+2); */
-    /* Invert Q_{+} Q_{-} */
-    /* X_W -> DUM_DERI+1 */
-    count10 += solve_cg(DUM_DERI+5, DUM_DERI+2, 0., g_eps_sq_force2, g_relative_precision_flag);
-    assign(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+5], VOLUME/2);
-    /* Y_W -> DUM_DERI  */
-    Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
+    if(ITER_MAX_BCG == 0 || (fabs(g_mu) > 0)) {
+      /* If CG is used anyhow */
+      /*       gamma5(DUM_DERI+1, DUM_DERI+2); */
+      /* Invert Q_{+} Q_{-} */
+      /* X_W -> DUM_DERI+1 */
+      count10 += solve_cg(DUM_DERI+5, DUM_DERI+2, 0., g_eps_sq_force2, g_relative_precision_flag);
+      assign(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+5], VOLUME/2);
+      /* Y_W -> DUM_DERI  */
+      Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
+    }
+    else{
+      gamma5(DUM_DERI, DUM_DERI+2);
+      /* Invert first Q_+ */
+      /* Y_o -> DUM_DERI  */
+      count10 += bicg(DUM_DERI, DUM_DERI+2, 0., g_eps_sq_force2, g_relative_precision_flag);
+      gamma5(DUM_DERI+1,DUM_DERI);
+      /* Now Q_- */
+      /* X_o -> DUM_DERI+1 */
+      g_mu = -g_mu;
+      count11 += bicg(DUM_DERI+1,DUM_DERI,0.,g_eps_sq_force2, g_relative_precision_flag);
+      g_mu = -g_mu;   
+    }
 
     /* apply Hopping Matrix M_{eo} */
     /* to get the even sites of X */

@@ -273,7 +273,7 @@ int main(int argc,char *argv[]) {
     if(integtyp == 2) printf("Sexton-Weingarten (single time scale)\n");
     if(integtyp == 3) printf("leap-frog (multiple time scales)\n");
     if(integtyp == 4) printf("Sexton-Weingarten (multiple time scales)\n");
-    if(integtyp == 3) printf("higher order and leap-frog (multiple time scales)\n");
+    if(integtyp == 5) printf("higher order and leap-frog (multiple time scales)\n");
     printf("# Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
 
@@ -297,7 +297,7 @@ int main(int argc,char *argv[]) {
     if(integtyp == 2) fprintf(parameterfile, "Sexton-Weingarten (single time scale)\n");
     if(integtyp == 3) fprintf(parameterfile, "leap-frog (multiple time scales)\n");
     if(integtyp == 4) fprintf(parameterfile, "Sexton-Weingarten (multiple time scales)\n");
-    if(integtyp == 3) fprintf(parameterfile, "higher order and leap-frog (multiple time scales)\n");
+    if(integtyp == 5) fprintf(parameterfile, "higher order and leap-frog (multiple time scales)\n");
     fprintf(parameterfile, "Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
     fflush(stdout); fflush(parameterfile);
