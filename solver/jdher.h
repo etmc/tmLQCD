@@ -10,12 +10,15 @@
 #define JD_MINIMAL 0
 #endif
 
+#include <stdlib.h>
+#include <stdio.h>
 #include "su3.h"
 #include "solver/solver.h"
 
 #define errorhandler(a, b) \
-        printf("Error %d %s!\n", a, b); \
-        exit(6);
+        {printf("Error %d %s!\n", a, b); \
+        fflush(stdout); \
+        exit(6);}
 
 extern void jdher(int n, double tau, double jdtol, 
 		  int kmax, int jmax, int jmin, int itmax,

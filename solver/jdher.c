@@ -606,12 +606,15 @@ void jdher(int n, double tau, double tol,
       if(solver_flag == GMRES){
 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, &Proj_A_psi);
       }
+      if(solver_flag == CGS){
+	info = cgs_real((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, &Proj_A_psi);
+      }
       else if (solver_flag == BICGSTAB){
 	info = bicgstab_complex((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, &Proj_A_psi);
       }
-/*       else if (solver_flag == CG){ */
-/* 	info = cg_her((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, &Proj_A_psi, 0, 0); */
-/*       } */
+      else if (solver_flag == CG){
+	info = cg_her((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, &Proj_A_psi, 0, 0);
+      }
       else{
  	info = gmres((spinor*) v, (spinor*) r, 10, linitmax, it_tol*it_tol, &Proj_A_psi); 
       }

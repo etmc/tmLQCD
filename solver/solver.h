@@ -14,5 +14,6 @@
 #include"solver/bicgstab_complex.h"
 #include"solver/cgs_real.h"
 #include"solver/bicgstabell.h"
+#include"solver/cg_her.h"
 
 #endif

@@ -71,7 +71,7 @@ int main(int argc,char *argv[])
       }
     }
 #endif
-    xchange_field(0);
+    xchange_field(spinor_field[0]);
 
 #if (defined PARALLELT || defined PARALLELXT)  
     x = (double*) &spinor_field[0][T*LX*L*L/2];

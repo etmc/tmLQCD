@@ -29,6 +29,7 @@
 #include "global.h"
 #include "su3.h"
 #include "su3spinor.h"
+#include "sse.h"
 #include "linalg/fortran.h"
 #include "linalg/blas.h"
 #include "linalg/lapack.h"
@@ -200,7 +201,7 @@ void pjdher(int n, int lda, double tau, double tol,
   if(linitmax < 0) errorhandler(409,"");
   if(eps_tr < 0.) errorhandler(500,"");
   if(toldecay <= 1.0) errorhandler(501,"");
-  
+
   CONE.re=1.; CONE.im=0.;
   CZERO.re=0.; CZERO.im=0.;
   CMONE.re=-1.; CMONE.im=0.;
@@ -209,7 +210,8 @@ void pjdher(int n, int lda, double tau, double tol,
    * Opt size of workspace for ZHEEV is (NB+1)*j, where NB is the opt.
    * block size... */
   eigworklen = (2 + _FT(ilaenv)(&ONE, filaenv, fvu, &jmax, &MONE, &MONE, &MONE, 6, 2)) * jmax;
-    
+
+
   /* Allocating memory for matrices & vectors */ 
 #if (defined SSE || defined SSE2)
   V_ = (complex *)malloc((lda * jmax + 4) * sizeof(complex));
@@ -289,6 +291,7 @@ void pjdher(int n, int lda, double tau, double tol,
   p_A_psi = A_psi;
   p_lda = lda;
 
+
   /**************************************************************************
    *                                                                        *
    * Generate initial search subspace V. Vectors are taken from V0 and if   *
@@ -307,7 +310,7 @@ void pjdher(int n, int lda, double tau, double tol,
   }
   for (cnt = 0; cnt < j; cnt ++) {
     pModifiedGS(V + cnt*lda, n, cnt, V, lda);
-    alpha = sqrt(square_norm((spinor*)(V+cnt*lda), n));
+    alpha = sqrt(square_norm((spinor*)(V+cnt*lda), n/sizeof(spinor)*sizeof(complex)));
     alpha = 1.0 / alpha;
     _FT(dscal)(&n2, &alpha, (double *)(V + cnt*lda), &ONE);
   }
@@ -319,7 +322,7 @@ void pjdher(int n, int lda, double tau, double tol,
     A_psi((spinor*) temp1, (spinor*) (V+cnt*lda));
     idummy = cnt+1;
     for(i = 0; i < idummy; i++){
-      M[cnt*jmax+i] = scalar_prod((spinor*) (V+i*lda), (spinor*) temp1, n);
+      M[cnt*jmax+i] = scalar_prod((spinor*) (V+i*lda), (spinor*) temp1, n/sizeof(spinor)*sizeof(complex));
     }
   }
 
@@ -405,7 +408,7 @@ void pjdher(int n, int lda, double tau, double tol,
 
 	/* Compute norm of the residual and update arrays convind/keepind*/
 	resnrm_old[act] = resnrm[act];
-	resnrm[act] = sqrt(square_norm((spinor*) r, n));
+	resnrm[act] = sqrt(square_norm((spinor*) r, n/sizeof(spinor)*sizeof(complex)));
 	if (resnrm[act] < tol){
 	  convind[conv] = act; 
 	  conv = conv + 1; 
@@ -600,15 +603,18 @@ void pjdher(int n, int lda, double tau, double tol,
 
       /* Solve the correction equation ... */
 
-      if(solver_flag == 2){
+      if(solver_flag == GMRES){
 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, &pProj_A_psi);
       }
-      else if (solver_flag == 0){
+      if(solver_flag == CGS){
+	info = cgs_real((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, &pProj_A_psi);
+      }
+      else if (solver_flag == BICGSTAB){
 	info = bicgstab_complex((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, &pProj_A_psi);
       }
-/*       else if (solver_flag == CG){ */
-/* 	info = cg_her((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, &pProj_A_psi, 0, 0); */
-/*       } */
+      else if (solver_flag == CG){ 
+	info = cg_her((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, &pProj_A_psi, 0, 0); 
+      } 
       else{
  	info = gmres((spinor*) v, (spinor*) r, 10, linitmax, it_tol*it_tol, &pProj_A_psi); 
       }
@@ -638,7 +644,7 @@ void pjdher(int n, int lda, double tau, double tol,
       A_psi((spinor*) temp1, (spinor*) v);
       idummy = j+1;
       for(i = 0; i < idummy; i++){
-	M[j*jmax+i] = scalar_prod((spinor*) (V+i*lda), (spinor*) temp1, n);
+	M[j*jmax+i] = scalar_prod((spinor*) (V+i*lda), (spinor*) temp1, n/sizeof(spinor)*sizeof(complex));
       }
 
       /* Increasing SearchSpaceSize j */
@@ -680,7 +686,7 @@ void pjdher(int n, int lda, double tau, double tol,
       theta = -lambda[act];
       A_psi((spinor*) r, (spinor*) q);
       _FT(daxpy)(&n2, &theta, (double*) q, &ONE, (double*) r, &ONE);
-      alpha = sqrt(square_norm((spinor*) r, n));
+      alpha = sqrt(square_norm((spinor*) r, n/sizeof(spinor)*sizeof(complex)));
       if(g_proc_id == g_stdio_proc){ 
 	printf("%3d %22.15e %12.5e\n", act+1, lambda[act],
 	       alpha);
@@ -855,7 +861,7 @@ void pProj_A_psi(spinor * const y, spinor * const x){
   _FT(daxpy)(&p_n2, &mtheta, (double*) x, &ONE, (double*) y, &ONE);
   /* p_work = Q^dagger*y */ 
   for(i = 0; i < p_k; i++){
-    p_work[i] = scalar_prod((spinor*) (p_Q+i*p_lda), (spinor*) y, p_n);
+    p_work[i] = scalar_prod((spinor*) (p_Q+i*p_lda), (spinor*) y, p_n/sizeof(spinor)*sizeof(complex));
   }
 /*   _FT(zgemv)(fupl_c, &p_n, &p_k, &CONE, p_Q, &p_lda, (complex*) y, &ONE, &CZERO, (complex*) p_work, &ONE, 1); */
   /* y = y - Q*p_work */ 
