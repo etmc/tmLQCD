@@ -30,11 +30,12 @@
 #include "linsolve.h"
 #include "expo.h"
 #include "xchange.h"
+#include "measure_rectangles.h"
 #include "update_tm.h"
 
 su3 gauge_tmp[VOLUME][4] ALIGN;
 
-int update_tm(const int integtyp, double * gauge_energy, char * filename) {
+int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_energy, char * filename) {
   su3 *v, *w;
   int rlxd_state[105];
   int ix, mu, accept, i;
@@ -46,7 +47,7 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   double atime=0., etime=0.;
   int idis0=0, idis1=0, idis2=0;
   /* Energy corresponding to the Gauge part */
-  double enegx=0.;
+  double new_plaquette_energy=0., new_rectangle_energy = 0., gauge_energy = 0., new_gauge_energy = 0.;
   /* Energy corresponding to the Momenta part */
   double enep=0., enepx=0.;
   /* Energy corresponding to the pseudo fermion part(s) */
@@ -130,9 +131,14 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
 
   /*perform the accept-reject-step*/
   enepx=moment_energy();
-  enegx=measure_gauge_action();
-  /*compute the energy contributions from the pseudo-fermions */
+  new_plaquette_energy=measure_gauge_action();
+  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+    new_rectangle_energy = measure_rectangles();
+  }
+  gauge_energy = g_rgi_C0 * (*plaquette_energy) + g_rgi_C1 * (*rectangle_energy);
+  new_gauge_energy = g_rgi_C0 * new_plaquette_energy + g_rgi_C1 * new_rectangle_energy;
 
+  /*compute the energy contributions from the pseudo-fermions */
   zero_spinor_field(spinor_field[2]);
   g_mu = g_mu1;
   idis0=bicg(2, first_psf, q_off, EPS_SQ0);
@@ -154,9 +160,10 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
     idis2 += bicg(5, third_psf, 0., EPS_SQ0);
     enerphi2x = square_norm(spinor_field[5], VOLUME/2);
   }
+
   /* Compute the energy difference */
-  dh=+enepx - g_beta*enegx - enep + g_beta*(*gauge_energy)
-    + enerphi0x - enerphi0 + enerphi1x - enerphi1 + enerphi2x - enerphi2; 
+  dh= +enepx - g_beta*new_gauge_energy - enep + g_beta*gauge_energy
+      + enerphi0x - enerphi0 + enerphi1x - enerphi1 + enerphi2x - enerphi2; 
   expmdh = exp(-dh);
       
   /* the random number is only taken at node zero and then distributed to 
@@ -178,7 +185,8 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   if(expmdh > yy[0]) {
     /* accept */
     accept = 1;
-    (*gauge_energy)=enegx;
+    (*plaquette_energy)=new_plaquette_energy;
+    (*rectangle_energy)=new_rectangle_energy;
     dontdump = 1;
     /* put the links back to SU(3) group */
     for(ix=0;ix<VOLUME;ix++) { 
@@ -222,7 +230,7 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   if(g_proc_id==0){
     datafile = fopen(filename, "a");
     fprintf(datafile,"%14.12f %14.12f %e %d %d %d ",
-	    (*gauge_energy)/(6.*VOLUME*g_nproc),dh,expmdh,
+	    (*plaquette_energy)/(6.*VOLUME*g_nproc),dh,expmdh,
 	    idis0, count00, count01);
     if(g_nr_of_psf > 1) {
       fprintf(datafile, "%d %d %d ", idis1, count10, count11);
@@ -230,7 +238,11 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
     if(g_nr_of_psf > 2) {
       fprintf(datafile, "%d %d %d ", idis2, count20, count21);
     }
-    fprintf(datafile, "%d %e\n", accept, etime-atime);
+    fprintf(datafile, "%d %e", accept, etime-atime);
+    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+      fprintf(datafile, " %e", (*rectangle_energy)/(12*VOLUME*g_nproc));
+    }
+    fprintf(datafile, "\n");
     fflush(datafile);
     fclose(datafile);
   }
