@@ -424,6 +424,9 @@ int main(int argc,char *argv[]) {
     }
     verbose = 1;
     ix = reread_input("hmc.reread");
+#ifdef MPI
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif
     if(ix == 0 && g_proc_id == 0) {
       countfile = fopen("history_hmc_tm", "a");
       fprintf(countfile, "# Changed parameter according to hmc.reread: measurment %d of %d\n", j, Nmeas); 

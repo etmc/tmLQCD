@@ -27,8 +27,6 @@
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX DUM_SOLVER+11 */
 #define NO_OF_SPINORFIELDS (DUM_MATRIX+2)
-/* For benchmark set the following: */
-/* #define NO_OF_SPINORFIELDS 100  */
 
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */

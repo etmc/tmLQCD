@@ -106,7 +106,6 @@ void ext_sexton_weingarten(int * const n_int, const double tau, const int S, con
   if(S == 1) {
     eps0 = eps/((double)n_int[0]);
     
-    update_fermion_momenta(eps/6., S-1);
     for(i = 1; i < n_int[S]; i++) {
       for(j = 0; j < n_int[0]; j++) {
 	update_gauge(eps0/4.);

@@ -1,11 +1,8 @@
+/* $Id$ */
 /*******************************************************************************
-*
-* File hybrid.c
 *
 * Benchmark program for the even-odd preconditioned Wilson-Dirac operator
 *
-* Author: Martin Hasenbusch
-* Date: Wed, Aug 29, 2001 02:06:26 PM
 *
 *******************************************************************************/
 
@@ -44,7 +41,7 @@ int check_xchange();
 
 int main(int argc,char *argv[])
 {
-  int j,j_max,k,k_max;
+  int j,j_max,k,k_max = 30;
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -101,7 +98,7 @@ int main(int argc,char *argv[])
   init_gauge_field(VOLUMEPLUSRAND, 0);
 #endif
   init_geometry_indices(VOLUMEPLUSRAND);
-  j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
+  j = init_spinor_field(VOLUMEPLUSRAND/2, 3*k_max);
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
@@ -176,7 +173,6 @@ int main(int argc,char *argv[])
 #endif
 
   /*initialize the pseudo-fermion fields*/
-  k_max=(NO_OF_SPINORFIELDS)/3;
   j_max=1;
   sdt=0.;
   for (k=0;k<k_max;k++) {
@@ -208,7 +204,7 @@ int main(int argc,char *argv[])
 #else
     sqdt = qdt;
 #endif
-    sdt=sdt/g_nproc;
+    sdt=sdt/((double)g_nproc);
     sqdt=sqrt(sqdt/g_nproc-sdt*sdt);
     j_max*=2;
   }
@@ -241,9 +237,9 @@ int main(int argc,char *argv[])
   /* compute the bandwidth */
   dt=dts-dt2;
   MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  sdt=sdt/g_nproc;
+  sdt=sdt/((double)g_nproc);
   MPI_Allreduce (&dt2, &dt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  dt=dt/g_nproc;
+  dt=dt/((double)g_nproc);
   dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
   if(g_proc_id==0) {
     printf("communication switched off \n");
@@ -252,13 +248,13 @@ int main(int argc,char *argv[])
     printf("\n");
     fflush(stdout);
   }
-  sdt=sdt/k_max;
-  sdt=sdt/j_max;
-  sdt=sdt/(2*SLICE);
+  sdt=sdt/((double)k_max);
+  sdt=sdt/((double)j_max);
+  sdt=sdt/((double)(2*SLICE));
   if(g_proc_id==0) {
     printf("The size of the package is %d Byte \n",(SLICE)*192);
     printf("The bandwidth is %5.2f + %5.2f   MB/sec\n",
-	   0.000001*2.*192./sdt, 0.000001*2.*192./sdt);
+	   2.*192./sdt/1024/1024, 2.*192./sdt/1024./1024);
     fflush(stdout);
   }
 #endif
