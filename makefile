@@ -9,7 +9,7 @@ TARGETS = clover_eo hybrid linsolve xchange \
 
 all: hybrid
 
-${addsuffix .o, ${TARGETS}}: %.o: %.c %.h Makefile global.h
+${addsuffix .o, ${TARGETS}}: %.o: %.c %.h makefile global.h
 	${COMPILE} -c $< -o $@
 
 hybrid: ${addsuffix .o, ${TARGETS}} global.h
