@@ -33,6 +33,7 @@
 #include "sw.h"
 #include "io.h"
 #include "read_input.h"
+#include "boundary.h"
 
 int main(int argc,char *argv[]) {
  

@@ -15,6 +15,7 @@
 #include "sw.h"
 #include "linsolve.h"
 #include "xchange.h"
+#include "deriv_Sb.h"
 #include "hybrid_update.h"
 
 static su3 get_staples(int x,int mu){
@@ -120,13 +121,13 @@ void deri(double q_off,double q_off2){
     H_eo_psi(1,DUM_DERI+2,DUM_DERI+1);
     /* result resides on odd sites */
 
-    derivf(0,DUM_DERI,DUM_DERI+2);
+    deriv_Sb(0,DUM_DERI,DUM_DERI+2);
 
     /* add the other contibution */
     H_eo_psi(1,DUM_DERI+3,DUM_DERI);
     /* includes (1+T_oo)^{-1} now */
     /* apply (1+T_oo)^{-1} to the result !!!! */
-    derivf(1,DUM_DERI+3,DUM_DERI+1);
+    deriv_Sb(1,DUM_DERI+3,DUM_DERI+1);
     
     /* add the contribution from inside */
     gamma5(DUM_DERI+2,DUM_DERI+2);
