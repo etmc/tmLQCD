@@ -22,6 +22,7 @@
 #include "su3adj.h"
 #include "expo.h"
 #include "ranlxd.h"
+#include "ranlxs.h"
 #include "geometry_eo.h"
 #include "start.h"
 #include "linalg_eo.h"
@@ -129,7 +130,7 @@ int main(int argc,char *argv[]) {
     /* here we generate exactly the same configuration as for the 
        single node simulation */
     if(g_proc_id==0){
-      rlxd_init(0,random_seed);   
+      rlxd_init(1,random_seed);   
       random_g_gauge_field();
       /* send the state of the random-number generator to 1 */
       rlxd_get(rlxd_state);
@@ -348,7 +349,7 @@ int main(int argc,char *argv[]) {
       if(g_proc_id==0){
 	rlxd_get(rlxd_state);
 	fp4=fopen("rlxd_state","w");
-	fwrite(rlxd_state,sizeof rlxd_state,1,fp4);
+	fwrite(rlxd_state,sizeof(rlxd_state),1,fp4);
 	fclose(fp4);
       }
     }
@@ -359,7 +360,7 @@ int main(int argc,char *argv[]) {
   if(g_proc_id==0){
     rlxd_get(rlxd_state);
     fp4=fopen("rlxd_state","w");
-    fwrite(rlxd_state,sizeof rlxd_state,1,fp4);
+    fwrite(rlxd_state,sizeof(rlxd_state),1,fp4);
     fclose(fp4);
   }
   if(g_proc_id == 0){
