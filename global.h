@@ -7,7 +7,6 @@
  *
  * Global parameters and arrays
  *
- * Version: 1.1
  * Author: Martin Luescher <luscher@mail.desy.de>
  * Date: 16.03.2001
  *
@@ -23,22 +22,41 @@
 #include"su3adj.h"
 
 #define T  4
-#define L  16
-#define LX (L)
+#define L  8
+
+#ifndef PARALLELXT
+#define N_PROC_X 1
+#else
+#define N_PROC_X 2
+#endif
+
+#define LX (L/N_PROC_X)
 #define LY (L)
 #define LZ (L)
+#define VOLUME (T*LX*LY*LZ)
+
+
 #define DUM_DERI 6
 #define DUM_SOLVER DUM_DERI+4
 #define DUM_MATRIX DUM_SOLVER+5 
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX DUM_SOLVER+11 */
 #define NO_OF_SPINORFIELDS DUM_MATRIX+2
-#define VOLUME (T*LX*LY*LZ)
+
+#ifdef PARALLELT
 #define RAND (2*LX*LY*LZ)
-#define SLICE (LX*LY*LZ/2)
+#define VOLUMEPLUSRAND ((T+2)*LX*LY*LZ)
+#elif defined PARALLELXT
+#define RAND (2*LY*LZ*(LX+T))
+#define VOLUMEPLUSRAND (LY*LZ*(T+2)*(LX+2))
+#else
+#define RAND 0
+#define VOLUMEPLUSRAND (VOLUME)
+#endif
+
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */
-/* #define X0 1.  (in time)          */
+/* #define X1 1.  (in time)          */
 #define X1 0.
 #define X2 0.
 #define X3 0.
@@ -66,10 +84,10 @@
 
 /* translates from ix to ieven/odd  */
 EXTERN int trans1[VOLUME+RAND] ALIGN;
-/* translatex from ieven/iodd to ix */    
+/* translates from ieven/iodd to ix */    
 EXTERN int trans2[VOLUME+RAND] ALIGN;   
 EXTERN int xeven[VOLUME+RAND] ALIGN;   
-EXTERN int g_ipt[T+2][L][L][L] ALIGN;
+EXTERN int g_ipt[T+2][LX+2][LY][LZ] ALIGN;
 EXTERN int g_iup[VOLUME+RAND][4] ALIGN;   
 EXTERN int g_idn[VOLUME+RAND][4] ALIGN;   
 EXTERN spinor spinor_field[NO_OF_SPINORFIELDS][(VOLUME+RAND)/2] ALIGN;
@@ -88,11 +106,33 @@ EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
 EXTERN int g_use_clover_flag, g_nr_of_psf;
 
 /* MPI information */
-EXTERN int g_proc_id, g_nproc, g_stdio_proc;
+EXTERN int g_proc_id, g_nproc, g_stdio_proc, g_nproc_t;
+EXTERN int g_proc_coords[3];
 #ifdef MPI
 EXTERN MPI_Status status;
 EXTERN MPI_Request req1,req2,req3,req4;
 EXTERN MPI_Comm g_cart_grid;
+
+/* the next neighbours for MPI */
+EXTERN int g_nb_x_up, g_nb_x_dn;
+EXTERN int g_nb_t_up, g_nb_t_dn;
+
+/* Datatypes for the data exchange */
+EXTERN MPI_Datatype g_gauge_point, g_gauge_time_slice_cont;
+EXTERN MPI_Datatype g_gauge_time_slice_split;
+EXTERN MPI_Datatype g_deri_point, g_deri_time_slice_cont;
+EXTERN MPI_Datatype g_deri_time_slice_split;
+EXTERN MPI_Datatype g_field_point, g_field_time_slice_cont;
+EXTERN MPI_Datatype g_gauge_x_slice_cont;
+EXTERN MPI_Datatype g_gauge_yz_subslice;
+EXTERN MPI_Datatype g_gauge_x_slice_gath;
+EXTERN MPI_Datatype g_field_x_slice_cont;
+EXTERN MPI_Datatype g_field_yz_subslice;
+EXTERN MPI_Datatype g_field_x_slice_gath;
+EXTERN MPI_Datatype g_deri_x_slice_cont;
+EXTERN MPI_Datatype g_deri_yz_subslice;
+EXTERN MPI_Datatype g_deri_x_slice_gath;
+
 #endif
 
 #undef EXTERN

@@ -26,33 +26,36 @@
 /*#include "io.h"*/
 #include "global.h"
 
-#define OlD 
+#define OlD  
 
 #ifdef OlD
 int Index(const int x0, const int x1, const int x2, const int x3)
 {
-   int y0, y1, y2, y3;
+   int y0, y1, y2, y3, ix;
+   y0 = (x0 + T ) % T; 
+   y1 = (x1 + LX) % LX; 
+   y2 = (x2 + LY) % LY; 
+   y3 = (x3 + LZ) % LZ;
+   ix = ((y0*LX + y1)*LY + y2)*LZ + y3;
 
    y0=x0;
-#ifdef MPI
+#if ((defined PARALLELT) || (defined PARALLELXT))
+   if(x0 == T) {
+     ix = VOLUME + y3 + LZ*y2 + LZ*LY*y1;
+   }
    /* the slice at time -1 is put to T+1 */
-   if(x0 == -1) y0=T+1;
-#else
-   /* Without parallelisation */
-   if(x0 == -1) y0 = T-1;
-   else if(x0 == T) y0 = 0;
+   else if(x0 == -1) {
+     ix = VOLUME + LX*LY*LZ + y3 + LZ*y2 + LZ*LY*y1;
+   }
+#elif (defined PARALLELXT)
+  if(x1 == -1){
+    ix = VOLUME + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
+  }
+  if(x1 == LX){
+    ix = VOLUME + 2*LX*LY*LZ + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
+  }   
 #endif
-   y1=x1;
-   if(x1==L) y1=0;
-   else if(x1==-1) y1=L-1;
-   y2=x2;
-   if(x2==L) y2=0;
-   else if(x2==-1) y2=L-1;
-   y3=x3;
-   if(x3==L) y3=0;
-   else if(x3==-1) y3=L-1;
-
-   return(y3 + L*y2 + L*L*y1 + L*L*L*y0);
+   return(ix);
 }
 
 #else
@@ -104,25 +107,32 @@ void geometry(){
   
   int x0,x1,x2,x3,ix;
   int i_even,i_odd;
-  int startvalue = 1;
-#ifndef MPI
-  startvalue = 0;
+  int startvaluet = 0;
+  int startvaluex = 0;
+#ifdef PARALLELT
+  startvaluet = 1;
 #endif
-  
+#ifdef PARALLELXT
+  startvaluex = 1;
+#endif
+
   /* extended for neighbour slices at x0=-1 and x0=T */
-  for (x0=-startvalue;x0<(T+startvalue);x0++){
-    for (x1=0;x1<L;x1++){
-      for (x2=0;x2<L;x2++){
-	for (x3=0;x3<L;x3++){
-	  ix=Index(x0,x1,x2,x3);
+  for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
+    for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++){
+      for (x2 = 0; x2 < LY; x2++){
+	for (x3 = 0; x3 < L; x3++){
+	  ix=Index(x0, x1, x2, x3);
 
 	  /* g_proc_id*T is added to allow for odd T when the number of 
 	     nodes is even */
-	  if((x0+x1+x2+x3+g_proc_id*T)%2==0){
+	  if((x0+x1+x2+x3+g_nproc_t*T)%2==0) {
 	    xeven[ix]=1;
 	  } 
-	  else xeven[ix]=0; 
-	  if(x0 >= 0) g_ipt[x0][x1][x2][x3] = ix;
+	  else {
+	    xeven[ix]=0; 
+	  }
+
+	  if(x0 >= 0 && x1 >=0) g_ipt[x0][x1][x2][x3] = ix;
 
 	  g_iup[ix][0]=Index(x0+1,x1,x2,x3);
 	  if(x0 >= 0) g_idn[ix][0] = Index(x0-1,x1,x2,x3);

@@ -12,152 +12,93 @@
 #include "global.h"
 #include "xchange.h"
 
-#define OlD
+#define OlD 
 
 /* exchanges the field  l */
 void xchange_field(int l)
 {
 #ifdef MPI
-  int i,k;
   MPI_Status status;
   /* send the data to the neighbour on the left */
-  i=g_proc_id-1; 
-  if(g_proc_id==0){
-    i=g_nproc-1;
-  }
   /* recieve the data from the neighbour on the right */
-  k=g_proc_id+1; 
-  if(g_proc_id==g_nproc-1){
-    k=0;
-  }
-  MPI_Sendrecv(&spinor_field[l][0].c1.c1.re,       12*L*L*L, MPI_DOUBLE, i, 81,
-	       &spinor_field[l][T*L*L*L/2].c1.c1.re, 12*L*L*L, MPI_DOUBLE, k, 81,
-	       MPI_COMM_WORLD, &status);
+  MPI_Sendrecv(&spinor_field[l][0].c1.c1.re,         1, g_field_time_slice_cont, g_nb_t_dn, 81,
+	       &spinor_field[l][T*LX*L*L/2].c1.c1.re, 1, g_field_time_slice_cont, g_nb_t_up, 81,
+	       g_cart_grid, &status);
 
   /* send the data to the neighbour on the right */
-  i=g_proc_id+1; 
-  if(g_proc_id==g_nproc-1){
-    i=0;
-  }
   /* recieve the data from the neighbour on the left */
-  k=g_proc_id-1; 
-  if(g_proc_id==0){
-    k=g_nproc-1;
-  }
-  MPI_Sendrecv(&spinor_field[l][(T-1)*L*L*L/2].c1.c1.re, 12*L*L*L, MPI_DOUBLE, i, 82,
-	       &spinor_field[l][(T+1)*L*L*L/2].c1.c1.re, 12*L*L*L, MPI_DOUBLE, k, 82,
-	       MPI_COMM_WORLD, &status);
+  MPI_Sendrecv(&spinor_field[l][(T-1)*LX*L*L/2].c1.c1.re, 1, g_field_time_slice_cont, g_nb_t_up, 82,
+	       &spinor_field[l][(T+1)*LX*L*L/2].c1.c1.re, 1, g_field_time_slice_cont, g_nb_t_dn, 82,
+	       g_cart_grid, &status);
+
+#ifdef PARALLELXT
+  /* send the data to the neighbour on the left in x direction */
+  /* recieve the data from the neighbour on the right in x direction */
+  MPI_Sendrecv(&spinor_field[l][0],                1, g_field_x_slice_gath, g_nb_x_dn, 91,
+	       &spinor_field[l][(T+2)*LX*LY*LZ/2], 1, g_field_x_slice_cont, g_nb_x_up, 91,
+	       g_cart_grid, &status);
+
+  /* send the data to the neighbour on the right in x direction */
+  /* recieve the data from the neighbour on the left in x direction */  
+  MPI_Sendrecv(&spinor_field[l][LX/2-1],                       1, g_field_x_slice_gath, g_nb_x_up, 92,
+	       &spinor_field[l][((T+2)*LX*LY*LZ + T*LY*LZ)/2], 1, g_field_x_slice_cont, g_nb_x_dn, 92,
+	       g_cart_grid, &status);
+
+
+#endif
+
 #endif
 }
+
 
 #ifdef OlD
 
 void xchange_gauge()
 {
 #ifdef MPI
-  int i,k;
+
   MPI_Status status;
   /* send the data to the neighbour on the left */
-  i=g_proc_id-1; 
-  if(g_proc_id==0){
-    i=g_nproc-1;
-  }
   /* recieve the data from the neighbour on the right */
-  k=g_proc_id+1; 
-  if(g_proc_id==g_nproc-1){
-    k=0;
-  }
-  MPI_Sendrecv(&g_gauge_field[0][0].c11.re,       72*L*L*L, MPI_DOUBLE, i, 83, 
- 	       &g_gauge_field[T*L*L*L][0].c11.re, 72*L*L*L, MPI_DOUBLE, k, 83, 
-	       MPI_COMM_WORLD, &status);
+  MPI_Sendrecv(&g_gauge_field[0][0].c11.re,        1, g_gauge_time_slice_cont, g_nb_t_dn, 83, 
+ 	       &g_gauge_field[T*LX*L*L][0].c11.re, 1, g_gauge_time_slice_cont, g_nb_t_up, 83, 
+	       g_cart_grid, &status);
 
   /* send the data to the neighbour on the right */
-  i=g_proc_id+1; 
-  if(g_proc_id==g_nproc-1){
-    i=0;
-  }
   /* recieve the data from the neighbour on the left */
-  k=g_proc_id-1; 
-  if(g_proc_id==0){
-    k=g_nproc-1;
-  }
-  MPI_Sendrecv(&g_gauge_field[(T-1)*L*L*L][0].c11.re, 72*L*L*L, MPI_DOUBLE, i, 84, 
- 	       &g_gauge_field[(T+1)*L*L*L][0].c11.re, 72*L*L*L, MPI_DOUBLE, k, 84, 
-	       MPI_COMM_WORLD, &status);
+  MPI_Sendrecv(&g_gauge_field[(T-1)*LX*L*L][0].c11.re, 1, g_gauge_time_slice_cont, g_nb_t_up, 84, 
+ 	       &g_gauge_field[(T+1)*LX*L*L][0].c11.re, 1, g_gauge_time_slice_cont, g_nb_t_dn, 84, 
+	       g_cart_grid, &status);
+
+#ifdef PARALLELXT
+  /* send the data to the neighbour on the left in x direction */
+  /* recieve the data from the neighbour on the right in x direction */
+  MPI_Sendrecv(&g_gauge_field[0][0],              1, g_gauge_x_slice_gath, g_nb_x_dn, 93,
+	       &g_gauge_field[(T+2)*LX*LY*LZ][0], 1, g_gauge_x_slice_cont, g_nb_x_up, 93,
+	       g_cart_grid, &status);
+
+  /* send the data to the neighbour on the right in x direction */
+  /* recieve the data from the neighbour on the left in x direction */
+  MPI_Sendrecv(&g_gauge_field[LX-1][0],                     1, g_gauge_x_slice_gath, g_nb_x_up, 94,
+	       &g_gauge_field[(T+2)*LX*LY*LZ + T*LY*LZ][0], 1, g_gauge_x_slice_cont, g_nb_x_dn, 94,
+	       g_cart_grid, &status);
+#endif
+
 #endif
 }
 
-#else
-
-void xchange_gauge()
-{
-#ifdef MPI
-  int i,k;
-  MPI_Status status;
-  MPI_Datatype MY_VEC, Y_VEC, GAUGE_POINT;
-  MPI_Type_contiguous(72, MPI_DOUBLE, &GAUGE_POINT);
-  MPI_Type_commit(&GAUGE_POINT);
-  MPI_Type_contiguous(L*L*L, GAUGE_POINT, &Y_VEC);
-  MPI_Type_vector(2, L*L*L/2, (VOLUME)/2, GAUGE_POINT, &MY_VEC);
-  MPI_Type_commit(&MY_VEC);
-  MPI_Type_commit(&Y_VEC);
-  /* send the data to the neighbour on the left */
-  i=g_proc_id-1; 
-  if(g_proc_id==0){
-    i=g_nproc-1;
-  }
-  /* recieve the data from the neighbour on the right */
-  k=g_proc_id+1; 
-  if(g_proc_id==g_nproc-1){
-    k=0;
-  }
-  MPI_Sendrecv(&g_gauge_field[0][0].c11.re,              1, MY_VEC, i, 83,
-	       &g_gauge_field[T*L*L*L][0].c11.re,        1, Y_VEC, k, 83,
-	       MPI_COMM_WORLD, &status);
-  
-  /* send the data to the neighbour on the right */
-  i=g_proc_id+1; 
-  if(g_proc_id==g_nproc-1){
-    i=0;
-  }
-  /* recieve the data from the neighbour on the left */
-  k=g_proc_id-1; 
-  if(g_proc_id==0){
-    k=g_nproc-1;
-  }
-  MPI_Sendrecv(&g_gauge_field[(T-1)*L*L*L/2][0].c11.re,      1, MY_VEC, i, 84, 
-	       &g_gauge_field[(T+1)*L*L*L][0].c11.re,        1, Y_VEC, k, 84,
-	       MPI_COMM_WORLD, &status);
-  MPI_Type_free(&MY_VEC);
-  MPI_Type_free(&Y_VEC);
-  MPI_Type_free(&GAUGE_POINT);
-#endif
-}
-
-#endif
-
-#ifdef OlD
 void xchange_deri()
 {
 #ifdef MPI
-  int i,k;
-  int ix,mu;
+  int ix,mu, t, y, z;
   MPI_Status status;
-  /* send the data to the neighbour on the left */
-  i=g_proc_id-1; 
-  if(g_proc_id==0){
-    i=g_nproc-1;
-  }
-  /* recieve the data from the neighbour on the right */
-  k=g_proc_id+1; 
-  if(g_proc_id==g_nproc-1){
-    k=0;
-  }
-  MPI_Sendrecv(&df0[(T+1)*L*L*L][0].d1,        32*L*L*L, MPI_DOUBLE, i, 43,
-	       &ddummy[(T-1)*L*L*L][0].d1,     32*L*L*L, MPI_DOUBLE, k, 43,
-	       MPI_COMM_WORLD, &status);
+  /* send the data to the neighbour on the left in time direction */
+  /* recieve the data from the neighbour on the right in time direction */
+  MPI_Sendrecv(&df0[(T+1)*LX*L*L][0].d1,        1, g_deri_time_slice_cont, g_nb_t_dn, 43,
+	       &ddummy[(T-1)*LX*L*L][0].d1,     1, g_deri_time_slice_cont, g_nb_t_up, 43,
+	       g_cart_grid, &status);
   /* add ddummy to df0 */
-  for(ix=(T-1)*L*L*L;ix < T*L*L*L; ix++){
+  for(ix=(T-1)*LX*L*L;ix < T*LX*L*L; ix++){
     for(mu=0;mu<4;mu++){
       df0[ix][mu].d1 += ddummy[ix][mu].d1;
       df0[ix][mu].d2 += ddummy[ix][mu].d2;
@@ -171,26 +112,48 @@ void xchange_deri()
   }
   /* send the data to the neighbour on the right is not needed*/
 
+#ifdef PARALLELXT
+
+  /* send the data to the neighbour on the left in x direction */
+  /* recieve the data from the neighbour on the right in x direction */
+  MPI_Sendrecv(&df0[(T+2)*LX*LY*LZ + T*LY*LZ][0],    1, g_deri_x_slice_cont, g_nb_x_dn, 44,
+	       &ddummy[LX-1][0],                     1, g_deri_x_slice_gath, g_nb_x_up, 44,
+	       g_cart_grid, &status);
+  /* add ddummy to df0 */
+  for(t = 0; t < 0; t++) {
+    for(y = 0; y < LY; y++) {
+      for(z = 0; z < LZ; z++) {
+	ix = g_ipt[t][LX-1][y][z];
+	for(mu=0;mu<4;mu++){
+	  df0[ix][mu].d1 += ddummy[ix][mu].d1;
+	  df0[ix][mu].d2 += ddummy[ix][mu].d2;
+	  df0[ix][mu].d3 += ddummy[ix][mu].d3;
+	  df0[ix][mu].d4 += ddummy[ix][mu].d4;
+	  df0[ix][mu].d5 += ddummy[ix][mu].d5;
+	  df0[ix][mu].d6 += ddummy[ix][mu].d6;
+	  df0[ix][mu].d7 += ddummy[ix][mu].d7;
+	  df0[ix][mu].d8 += ddummy[ix][mu].d8;
+	}
+      }
+    }
+  }
+  /* send the data to the neighbour on the right is not needed*/  
+
+#endif
+
+
   /* For dclover */
 
   if(g_use_clover_flag == 1) {
     
     /* send the data to the neighbour on the right */
-    i=g_proc_id+1; 
-    if(g_proc_id==g_nproc-1){
-      i=0;
-    }
     /* recieve the data from the neighbour on the left */
-    k=g_proc_id-1; 
-    if(g_proc_id==0){
-      k=g_nproc-1;
-    }
-    MPI_Sendrecv(&dclover[T*L*L*L][0].d1, 32*L*L*L, MPI_DOUBLE, i, 53,
-		 &ddummy[0][0].d1,        32*L*L*L, MPI_DOUBLE, k, 53,
-		 MPI_COMM_WORLD, &status);
+    MPI_Sendrecv(&dclover[T*LX*L*L][0].d1, 1, g_deri_time_slice_cont, g_nb_t_up, 53,
+		 &ddummy[0][0].d1,         1, g_deri_time_slice_cont, g_nb_t_dn, 53,
+		 g_cart_grid, &status);
     /* add ddummy to dclover */
     
-    for(ix=0;ix < L*L*L; ix++){
+    for(ix=0;ix < LX*L*L; ix++){
       for(mu=0;mu<4;mu++){
 	dclover[ix][mu].d1 += ddummy[ix][mu].d1;
 	dclover[ix][mu].d2 += ddummy[ix][mu].d2;
@@ -204,21 +167,13 @@ void xchange_deri()
     }
     
     /* send the data to the neighbour on the left */
-    i=g_proc_id-1; 
-    if(g_proc_id==0){
-      i=g_nproc-1;
-    }
     /* recieve the data from the neighbour on the right */
-    k=g_proc_id+1; 
-    if(g_proc_id==g_nproc-1){
-      k=0;
-    }
-    MPI_Sendrecv(&dclover[(T+1)*L*L*L][0].d1, 32*L*L*L, MPI_DOUBLE, i, 54,
-		 &ddummy[(T-1)*L*L*L][0].d1,  32*L*L*L, MPI_DOUBLE, k, 54,
-		 MPI_COMM_WORLD, &status);
+    MPI_Sendrecv(&dclover[(T+1)*LX*L*L][0].d1, 1, g_deri_time_slice_cont, g_nb_t_dn, 54,
+		 &ddummy[(T-1)*LX*L*L][0].d1,  1, g_deri_time_slice_cont, g_nb_t_up, 54,
+		 g_cart_grid, &status);
     /* add ddummy to dclover */
     
-    for(ix=(T-1)*L*L*L; ix < T*L*L*L; ix++){
+    for(ix=(T-1)*LX*L*L; ix < T*LX*L*L; ix++){
       for(mu=0;mu<4;mu++){
 	dclover[ix][mu].d1 += ddummy[ix][mu].d1;
 	dclover[ix][mu].d2 += ddummy[ix][mu].d2;
@@ -234,36 +189,44 @@ void xchange_deri()
 #endif
 }
 
-#else
+
+#endif
+
+
+#ifndef OlD
+
+void xchange_gauge()
+{
+#ifdef MPI
+  MPI_Status status;
+  /* send the data to the neighbour on the left */
+  /* recieve the data from the neighbour on the right */
+  MPI_Sendrecv(&g_gauge_field[0][0].c11.re,               1, g_gauge_time_slice_split, g_nb_t_dn, 83,
+	       &g_gauge_field[T*LX*L*L][0].c11.re,        1, g_gauge_time_slice_cont , g_nb_t_up, 83,
+	       g_cart_grid, &status);
+  
+  /* send the data to the neighbour on the right */
+  /* recieve the data from the neighbour on the left */
+  MPI_Sendrecv(&g_gauge_field[(T-1)*LX*L*L/2][0].c11.re,      1, g_gauge_time_slice_split, g_nb_t_up, 84, 
+	       &g_gauge_field[(T+1)*LX*L*L][0].c11.re,        1, g_gauge_time_slice_cont , g_nb_t_dn, 84,
+	       g_cart_grid, &status);
+
+#endif
+}
+
 
 void xchange_deri()
 {
 #ifdef MPI
-  int i,k;
   int ix,mu;
   MPI_Status status;
-  MPI_Datatype DF, MY_VEC, Y_VEC;
-  MPI_Type_contiguous(32, MPI_DOUBLE, &DF);
-  MPI_Type_commit(&DF);
-  MPI_Type_vector(2, L*L*L/2, VOLUME/2, DF, &MY_VEC);
-  MPI_Type_contiguous(L*L*L, DF, &Y_VEC);
-  MPI_Type_commit(&Y_VEC);
-  MPI_Type_commit(&MY_VEC);
   /* send the data to the neighbour on the left */
-  i=g_proc_id-1; 
-  if(g_proc_id==0){
-    i=g_nproc-1;
-  }
   /* recieve the data from the neighbour on the right */
-  k=g_proc_id+1; 
-  if(g_proc_id==g_nproc-1){
-    k=0;
-  }
-  MPI_Sendrecv(&df0[(T+1)*L*L*L][0].d1,        1, Y_VEC, i, 43,
-	       &ddummy[(T-1)*L*L*L/2][0].d1,     1, MY_VEC, k, 43,
-	       MPI_COMM_WORLD, &status);
+  MPI_Sendrecv(&df0[(T+1)*LX*L*L][0].d1,          1, g_deri_time_slice_cont , g_nb_t_dn, 43,
+	       &ddummy[(T-1)*LX*L*L/2][0].d1,     1, g_deri_time_slice_split, g_nb_t_up, 43,
+	       g_cart_grid, &status);
   /* add ddummy to df0 */
-  for(ix=(T-1)*L*L*L/2;ix < T*L*L*L/2; ix++){
+  for(ix=(T-1)*LX*L*L/2;ix < T*LX*L*L/2; ix++){
     for(mu=0;mu<4;mu++){
       df0[ix][mu].d1 += ddummy[ix][mu].d1;
       df0[ix][mu].d2 += ddummy[ix][mu].d2;
@@ -288,11 +251,12 @@ void xchange_deri()
     }
   }
   /* send the data to the neighbour on the right is not needed*/
-  MPI_Type_free(&DF);
-  MPI_Type_free(&MY_VEC);
-  MPI_Type_free(&Y_VEC);
 
 #endif
 }
 
 #endif
+
+
+
+

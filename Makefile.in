@@ -19,7 +19,7 @@ MODULES = read_input clover_eo linsolve xchange \
 	boundary deriv_Sb tm_operators getopt sighandler \
 	mpi_init update_tm
 
-PROGRAMS = hybrid hmc_tm testtrace thermal_cycle_tm
+PROGRAMS = hmc_tm testtrace thermal_cycle_tm
 ALLOBJ = ${MODULES} ${PROGRAMS}
 
 
