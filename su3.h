@@ -912,7 +912,7 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
               +(v).c21.re*(w).c12.im+(v).c21.im*(w).c12.re  \
               +(v).c22.re*(w).c22.im+(v).c22.im*(w).c22.re;
 
-/* M.Hasenbusch u = u + v * v^{dag} */
+/* M.Hasenbusch u = u + v * w */
 
 #define _su3_times_su3_acc(u,v,w) \
    (u).c00.re+=(v).c00.re*(w).c00.re-(v).c00.im*(w).c00.im  \
@@ -970,7 +970,7 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
               +(v).c21.re*(w).c12.im+(v).c21.im*(w).c12.re  \
               +(v).c22.re*(w).c22.im+(v).c22.im*(w).c22.re;
 
-/* M.Hasenbusch u=v * v^{dag} */
+/* M.Hasenbusch u=v * w^{dag} */
 
 #define _su3_times_su3d(u,v,w) \
    (u).c00.re= (v).c00.re*(w).c00.re+(v).c00.im*(w).c00.im  \
