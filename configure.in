@@ -355,24 +355,32 @@ dnl check for icc
     fi
   fi
   LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(abs_top_builddir)/lapack"
-dnl  if test "$LP" = "yes"; then
-dnl    if test "$ATLAS" = "yes"; then
-dnl      LIBS="$LIBS -llapack -lf77blas -latlas"
-dnl    else
-dnl      LIBS="$LIBS -llapack -lblas"
-dnl    fi
-dnl  else
-dnl    if test "$SSE" = "sse2" || test "$SSE" = "sse3"; then
-dnl      LIBS="$LIBS -llapack_LINUXSSE2P4 -lf77blas_LINUXSSE2P4 -latlas_LINUXSSE2P4"
-dnl    else
-dnl      LIBS="$LIBS -llapack_LINUX -lblas_LINUX"
-dnl    fi
-dnl  fi
-dnl  if test "$G2C" = "yes" && test $enable_mpi != yes; then
-dnl    LIBS="$LIBS -lg2c -lm"
-dnl  else
-dnl    LIBS="$LIBS -lf2c_nomain_LINUX"
-dnl  fi
+  if test "$LP" = "yes" && "$host_cpu" != "x86_64"; then
+    if test "$ATLAS" = "yes"; then
+      LIBS="$LIBS -llapack -lf77blas -latlas"
+    else
+      LIBS="$LIBS -llapack -lblas"
+    fi
+  else
+    if test "$SSE" = "sse2" || test "$SSE" = "sse3"; then
+      if test "$host_cpu" != "x86_64"; then
+        LIBS="$LIBS -llapack_LINUXSSE2P4 -lf77blas_LINUXSSE2P4 -latlas_LINUXSSE2P4"
+      else
+        LIBS="$LIBS -llapack_LINUXHAMMER64SSE2 -lf77blas_LINUXHAMMER64SSE2 -latlas_LINUXHAMMER64SSE2"
+      fi
+    else
+      if test "$host_cpu" != "x86_64"; then
+        LIBS="$LIBS -llapack_LINUX -lblas_LINUX"
+      else
+        LIBS="$LIBS -llapack_LINUX64 -lblas_LINUX64"
+      fi
+    fi
+  fi
+  if test "$G2C" = "yes"; then
+    LIBS="$LIBS -lg2c -lm"
+  else
+    LIBS="$LIBS -lf2c_nomain_LINUX"
+  fi
 
 
 dnl The IBM Power PC
