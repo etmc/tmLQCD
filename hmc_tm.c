@@ -116,7 +116,7 @@ int main(int argc,char *argv[]) {
   } 
 
   /* Read the input file */
-  read_input("hmc.input");
+  read_input(input_filename);
  
   q_off = 0.;
   q_off2 = 0.;
@@ -216,7 +216,10 @@ int main(int argc,char *argv[]) {
     }
     /* Restart */
     else if(startoption == 2) {
-      read_gauge_field_time_p("config");
+      if (g_proc_id == 0){
+	printf("Reading Gauge field from file %s\n", gauge_input_filename); fflush(stdout);
+      }
+      read_gauge_field_time_p(gauge_input_filename);
     }
   }
 
@@ -253,26 +256,10 @@ int main(int argc,char *argv[]) {
     }
   }
 
-/*   unit_g_gauge_field(); */
-/*   unit_spinor_field(2); */
-/*   if(g_proc_id == 0) { */
-/*     printf("%e %e %e %e %e\n", g_mu, spinor_field[2][0].c1.c1.re, spinor_field[2][0].c1.c1.im, spinor_field[2][0].c3.c1.re, spinor_field[2][0].c3.c1.im); */
-/*   } */
-/*   Qtm_plus_psi(0, 2);  */
-/*   if(g_proc_id == 0) { */
-/*     printf("%e %e %e %e %e\n", g_mu, spinor_field[0][0].c1.c1.re, spinor_field[0][0].c1.c1.im, spinor_field[0][0].c3.c1.re, spinor_field[0][0].c3.c1.im); */
-/*     printf("%e %e %e %e %e\n", g_mu, spinor_field[0][6].c1.c1.re, spinor_field[0][6].c1.c1.im, spinor_field[0][6].c3.c1.re, spinor_field[0][6].c3.c1.im); */
-/*   }   */
-
-
-  
-/*   MPI_Finalize(); */
-/*   exit(0); */
-
-  for(j=0;j<Nmeas;j++){
-    /*copy the gauge field to gauge_tmp */
-    for(ix=0;ix<VOLUME;ix++){ 
-      for(mu=0;mu<4;mu++){
+  for(j=0;j<Nmeas;j++) {
+    /* copy the gauge field to gauge_tmp */
+    for(ix=0;ix<VOLUME;ix++) { 
+      for(mu=0;mu<4;mu++) {
 	v=&g_gauge_field[ix][mu];
 	w=&gauge_tmp[ix][mu];
 	_su3_assign(*w,*v);
@@ -293,11 +280,11 @@ int main(int argc,char *argv[]) {
     enep=ini_momenta();
 
     /*run the trajectory*/
-    if(integtyp == 1){
+    if(integtyp == 1) {
       /* Leap-frog integration scheme */
       leap_frog(q_off, q_off2, dtau, Nsteps, nsmall); 
     }
-    else if(integtyp == 2){
+    else if(integtyp == 2) {
       /* Sexton Weingarten integration scheme */
       sexton(q_off, q_off2, dtau, Nsteps, nsmall);
     }
@@ -317,31 +304,31 @@ int main(int argc,char *argv[]) {
       
     /* the random number is only taken at node zero and then distributed to 
        the other sites */
-    if(g_proc_id==0){
+    if(g_proc_id==0) {
       ranlxd(yy,1);
-      for(i = 1; i < g_nproc; i++){
+      for(i = 1; i < g_nproc; i++) {
 	MPI_Send(&yy[0], 1, MPI_DOUBLE, i, 31, MPI_COMM_WORLD);
       }
     }
     else{
       MPI_Recv(&yy[0], 1, MPI_DOUBLE, 0, 31, MPI_COMM_WORLD, &status);
     }
-    if(exp(-dh) > yy[0]){
+    if(exp(-dh) > yy[0]) {
       /* accept */
       Rate += 1;
       eneg=enegx;
       /* put the links back to SU(3) group */
-      for(ix=0;ix<VOLUME;ix++){ 
-	for(mu=0;mu<4;mu++){ 
+      for(ix=0;ix<VOLUME;ix++) { 
+	for(mu=0;mu<4;mu++) { 
 	  /* this is MIST */
 	  v=&g_gauge_field[ix][mu];
 	  *v=restoresu3(*v); 
 	}
       }
     }
-    else{
+    else {
       /* reject: copy gauge_tmp to g_gauge_field */
-      for(ix=0;ix<VOLUME;ix++){
+      for(ix=0;ix<VOLUME;ix++) {
 	for(mu=0;mu<4;mu++){
 	  /* Auch MIST */
 	  v=&g_gauge_field[ix][mu];
@@ -361,13 +348,13 @@ int main(int argc,char *argv[]) {
       fflush(fp1);
     }
     /* Save gauge configuration all Nskip times */
-    if((j+1)%Nskip == 0){
-      sprintf(filename3,"%s.%.4d", gauge_input_filename, nstore);
+    if((j+1)%Nskip == 0) {
+      sprintf(filename3,"%s.%.4d", "conf", nstore);
       nstore ++;
       write_gauge_field_time_p( filename3 );
 
       /*  write the status of the random number generator on a file */
-      if(g_proc_id==0){
+      if(g_proc_id==0) {
 	rlxd_get(rlxd_state);
 	fp4=fopen("rlxd_state","w");
 	fwrite(rlxd_state,sizeof(rlxd_state),1,fp4);
@@ -375,18 +362,18 @@ int main(int argc,char *argv[]) {
       }
     }
   }
-  /* write the gauge configuration to the file gaugeconfig2 */
+  /* write the gauge configuration to the file last_configuration */
   write_gauge_field_time_p( "last_configuration" );
   
-  if(g_proc_id==0){
+  if(g_proc_id==0) {
     rlxd_get(rlxd_state);
     fp4=fopen("last_state","w");
     fwrite(rlxd_state,sizeof(rlxd_state),1,fp4);
     fclose(fp4);
   }
-  if(g_proc_id == 0){
-    fprintf(stdout,"fertig \n");
-    printf("Acceptance Rate was: %e\n", (double)Rate/(double)Nmeas);
+  if(g_proc_id == 0) {
+    printf("Acceptance Rate was: %e %\n", 100.*(double)Rate/(double)Nmeas);
+    printf("fertig \n");
     fflush(stdout);
   }
 #ifdef MPI
