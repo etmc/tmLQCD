@@ -125,10 +125,27 @@ the matrices is used:
 \subsection{boundaries in the parallel code}
 
 The gauge field ist stored with the local gauge field first with index
-\ttfamily{0 -> T*L*L*L-1}, then the right boundary with index
-\ttfamily{T*L*L*L -> (T+1)*L*L*L-1} and then the left boundary with index
-\ttfamily((T+1)*L*L*L -> (T+2_*L*L*L-1}. This means there is no
+{\ttfamily 0 to T*L*L*L-1}, then the right boundary with index
+{\ttfamily T*L*L*L to (T+1)*L*L*L-1} and then the left boundary with index
+{\ttfamily (T+1)*L*L*L to (T+2)*L*L*L-1}. This means there is no
 Even-Odd order in the gauge fields. 
+
+The spinor fields have only size {\ttfamily (VOLUME+RAND)/2}. Thus
+there are either only even or only odd sites and the corresponding
+boundary stored. There are two index arrays called {\ttfamily trans1}
+and {\ttfamily trans2} which map from the whole volume to the even odd
+counting and vice versa. {\ttfamily trans2[ix]} returns the lexical
+index where {\ttfamily ix} is a even odd index and
+{\ttfamily trans1[ix]} returns the even odd index where {\ttfamily ix}
+is now a lexical index. 
+
+With the index array {\ttfamily g\_ipt[t][x][y][z]} one can map the
+point $(t,x,y,z)$ to the lexical index. The indices of the next
+neighbours of point with lexical index {\ttfamily ix} in positiv and
+negative direction $\mu$ you can get with
+{\ttfamily g\_iup[ix][$\mu$]} and {\ttfamily g\_idn[ix][$\mu$]}
+respectively.
+
 
 %%% Local Variables: 
 %%% mode: latex

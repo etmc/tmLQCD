@@ -2,7 +2,7 @@
 
 \begin{equation}
   \label{eq:eo0}
-  M_{xy} =\delta_{xy}(1+i\mu\gamma_5\tau^3) - \kappa\sum_\mu \delta_{x,y+\hat\mu}(1+\gamma_\mu) 
+  M_{xy} =\delta_{xy}(1+i2\kappa\mu\gamma_5\tau^3) - \kappa\sum_\mu \delta_{x,y+\hat\mu}(1+\gamma_\mu) U_{x\mu}
 \end{equation}
 with $\mu \to \mu/(2\kappa)$.
 \begin{equation}
@@ -157,6 +157,112 @@ $X_e = -(M_{ee}^+)^{-1}M_{eo}X_o$ followed by $Y_o = \gamma_5(M_{ee}^{+}X_o
 + M_{oe} X_e)$ and $Y_e = -(M_{ee}^-)^{-1}M_{eo}Y_o$, if one uses the
 CG as inverter anyhow.
 
+\subsection{Inversion}
+
+The need two invers matrices:
+\[
+\begin{pmatrix}
+  M_{ee}^\pm & 0 \\
+  M_{oe}   & 1 \\
+\end{pmatrix}^{-1}
+=
+\begin{pmatrix}
+      (M_{ee}^\pm)^{-1} & 0 \\
+      -M_{oe} (M_{ee}^{\pm})^{-1}  & 1 \\
+    \end{pmatrix}
+\]
+and 
+\[
+\begin{split}
+  &\begin{pmatrix}
+    1       & (M_{ee}^\pm)^{-1}M_{eo}\\
+    0       & (M_{oo}^\pm-M_{oe}(M_{ee}^\pm)^{-1}M_{eo})\\
+  \end{pmatrix}^{-1}
+  \\=&
+  \begin{pmatrix}
+    1       & -(M_{ee}^\pm)^{-1}M_{eo}(M_{oo}^\pm-M_{oe}(M_{ee}^\pm)^{-1}M_{eo})^{-1}  \\
+    0       & (M_{oo}^\pm-M_{oe}(M_{ee}^\pm)^{-1}M_{eo})^{-1}\\
+  \end{pmatrix}\, .
+\end{split}
+\]
+Then we get
+\[
+\begin{pmatrix}
+  M_{ee}^\pm & M_{eo} \\
+  M_{oe}    & M_{oo}^\pm \\
+\end{pmatrix}^{-1}
+=
+\begin{pmatrix}
+  1       & (M_{ee}^\pm)^{-1}M_{eo}\\
+  0       & (M_{oo}^\pm-M_{oe}(M_{ee}^\pm)^{-1}M_{eo})\\
+\end{pmatrix}^{-1}
+\begin{pmatrix}
+  M_{ee}^\pm & 0 \\
+  M_{oe}   & 1 \\
+\end{pmatrix}^{-1}\, .
+\]
+With this we can define:
+\[
+\begin{pmatrix}
+  \varphi_e \\ \varphi_o\\
+\end{pmatrix}
+=
+\begin{pmatrix}
+  M_{ee}^\pm & 0 \\
+  M_{oe}   & 1 \\
+\end{pmatrix}^{-1}
+\begin{pmatrix}
+  \phi_e \\ \phi_o \\
+\end{pmatrix}
+=
+\begin{pmatrix}
+  (M_{ee}^\pm)^{-1} \phi_e \\ 
+  -M_{oe}( M_{ee}^\pm)^{-1} \phi_e + \phi_o \\
+\end{pmatrix}
+\]
+and
+\[
+\begin{pmatrix}
+  \psi_e \\ \psi_o \\
+\end{pmatrix}
+=
+\begin{pmatrix}
+  1       & (M_{ee}^\pm)^{-1}M_{eo}\\
+  0       & (M_{oo}^\pm-M_{oe}(M_{ee}^\pm)^{-1}M_{eo})\\
+\end{pmatrix}^{-1}
+\begin{pmatrix}
+  \varphi_e \\ \varphi_o \\
+\end{pmatrix}
+=
+\begin{pmatrix}
+  \varphi_e - (M_{ee}^\pm)^{-1}M_{eo}\psi_o \\ \psi_o \\
+\end{pmatrix}\, ,
+\]
+with
+\[
+\psi_o = (M_{oo}^\pm-M_{oe}(M_{ee}^\pm)^{-1}M_{eo}) \varphi_o\, .
+\]
+The vector $(\phi_e,\phi_o)$ is here the original source and the vector
+$\varphi_e, \varphi_o$ plays the role of an intermediate source for the
+preconditioned matrix.
+
+\noindent This means the inversion proceeds as follows: First one
+computes the intermediate sources
+\[
+\varphi_e = (M_{ee}^\pm)^{-1} \phi_e\, ,
+\]
+and
+\[
+\varphi_o = -M_{oe}( M_{ee}^\pm)^{-1} \phi_e + \phi_o\, .
+\]
+Then one inverts with $\varphi_o$
+\[
+\psi_o = (M_{oo}^\pm-M_{oe}(M_{ee}^\pm)^{-1}M_{eo}) \varphi_o\, ,
+\]
+and finishes by computing
+\[
+\psi_e = \varphi_e - (M_{ee}^\pm)^{-1}M_{eo}\psi_o\, .
+\]
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "main"
