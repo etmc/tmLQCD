@@ -251,5 +251,8 @@ if (g_proc_id == 0){
     }
   }
 
+#ifdef MPI
+  MPI_Finalize();
+#endif
   return(0);
 }
