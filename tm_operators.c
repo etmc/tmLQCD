@@ -1,4 +1,14 @@
-/* $Id$ */
+/**************************************************************
+ * $Id$ *
+ *                                                            *
+ * This file contains operators for twisted mass Wilson QCD   *
+ * prepared for even odd preconditioning                      *
+ *                                                            *
+ * see documentation for details                              *
+ * Author: Carsten Urbach                                     *
+ *         urbach@physik.fu-berlin.de                         *
+ **************************************************************/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "global.h"
@@ -8,13 +18,60 @@
 #include "tm_operators.h"
 
 /* internal */
+
+/******************************************
+ * mul_one_pm_imu_inv computes
+ * l = (1\pm i\mu\gamma_5)^{-1} * l
+ *
+ * sign is the sign used in 
+ *      1\pm i\mu\gamma_5
+ * l is number of input and output field
+ *
+ ******************************************/
 void mul_one_pm_imu_inv(const int l, const double _sign);
-void mul_one_pm_imu_sub_mul_gamma5(int l, int k, int j, const double _sign);
-void mul_one_pm_imu_sub_mul(int l, int k, int j, const double _sign);
+
+/******************************************
+ * mul_one_pm_imu_sub_mul_gamma5 computes
+ * l = gamma_5*((1\pm i\mu\gamma_5)*k - j)
+ *
+ * l is the number of the output field
+ * k and j the numbers of the input fields
+ *
+ * sign indicates which sign should be used
+ * in 1\pm i\mu\gamma_5
+ ******************************************/
+void mul_one_pm_imu_sub_mul_gamma5(const int l, const int k, 
+				   const int j, const double _sign);
+
+/******************************************
+ * mul_one_pm_imu_sub_mul computes
+ * l = ((1\pm i\mu\gamma_5)*k - j)
+ *
+ * l is the number of the output field
+ * k and j the numbers of the input fields
+ *
+ * sign indicates which sign should be used
+ * in 1\pm i\mu\gamma_5
+ ******************************************/
+void mul_one_pm_imu_sub_mul(const int l, const int k,
+			    const int j, const double _sign);
 
 /* external functions */
 
-
+/******************************************
+ *
+ * This is the implementation of
+ *
+ * \hat Q_{+} =
+ * \gamma_5(M_{oo}^+ - M_{oe}(M_{ee}^+ )^{-1}M_{eo})
+ *
+ * see documentation for details
+ * k is the number of the input field
+ * l is the number of the output field
+ *
+ * it acts only on the odd part or only 
+ * on a half spinor
+ ******************************************/
 void Qtm_plus_psi(const int l, const int k){
   H_eo(1, DUM_MATRIX+1, k);
   mul_one_pm_imu_inv(DUM_MATRIX+1, +1.);
@@ -22,6 +79,20 @@ void Qtm_plus_psi(const int l, const int k){
   mul_one_pm_imu_sub_mul_gamma5(l, k, DUM_MATRIX, +1.);
 }
 
+/******************************************
+ *
+ * This is the implementation of
+ *
+ * \hat Q_{-} =
+ * \gamma_5(M_{oo}^- - M_{oe}(M_{ee}^- )^{-1}M_{eo})
+ *
+ * see documentation for details
+ * k is the number of the input field
+ * l is the number of the output field
+ *
+ * it acts only on the odd part or only 
+ * on a half spinor
+ ******************************************/
 void Qtm_minus_psi(const int l, const int k){
   H_eo(1, DUM_MATRIX+1, k);
   mul_one_pm_imu_inv(DUM_MATRIX+1, -1.);
@@ -29,6 +100,20 @@ void Qtm_minus_psi(const int l, const int k){
   mul_one_pm_imu_sub_mul_gamma5(l, k, DUM_MATRIX, -1.);
 }
 
+/******************************************
+ *
+ * This is the implementation of
+ *
+ * \gamma_5 \hat Q_{+} =
+ * (M_{oo}^+ - M_{oe}(M_{ee}^+ )^{-1}M_{eo})
+ *
+ * see documentation for details
+ * k is the number of the input field
+ * l is the number of the output field
+ *
+ * it acts only on the odd part or only 
+ * on a half spinor
+ ******************************************/
 void Mtm_plus_psi(const int l, const int k){
   H_eo(1, DUM_MATRIX+1, k);
   mul_one_pm_imu_inv(DUM_MATRIX+1, +1.);
@@ -36,6 +121,20 @@ void Mtm_plus_psi(const int l, const int k){
   mul_one_pm_imu_sub_mul(l, k, DUM_MATRIX, +1.);
 }
 
+/******************************************
+ *
+ * This is the implementation of
+ *
+ * \gamma_5 \hat Q_{-} =
+ * (M_{oo}^- - M_{oe}(M_{ee}^- )^{-1}M_{eo})
+ *
+ * see documentation for details
+ * k is the number of the input field
+ * l is the number of the output field
+ *
+ * it acts only on the odd part or only 
+ * on a half spinor
+ ******************************************/
 void Mtm_minus_psi(const int l, const int k){
   H_eo(1, DUM_MATRIX+1, k);
   mul_one_pm_imu_inv(DUM_MATRIX+1, -1.);
@@ -43,6 +142,19 @@ void Mtm_minus_psi(const int l, const int k){
   mul_one_pm_imu_sub_mul(l, k, DUM_MATRIX, -1.);
 }
 
+/******************************************
+ *
+ * This is the implementation of
+ *
+ * \hat Q_{+} \hat Q_{-} 
+ *
+ * see documentation for details
+ * k is the number of the input field
+ * l is the number of the output field
+ *
+ * it acts only on the odd part or only 
+ * on a half spinor
+ ******************************************/
 void Qtm_pm_psi(const int l, const int k){
   /* Q_{-} */
   H_eo(1, DUM_MATRIX+1, k);
@@ -56,12 +168,27 @@ void Qtm_pm_psi(const int l, const int k){
   mul_one_pm_imu_sub_mul_gamma5(l, DUM_MATRIX, DUM_MATRIX+1, +1.);
 }
 
-void H_eo_tm_inv_psi(const int l, const int k, const int ieo, const double sign){
+/******************************************
+ *
+ * This is the implementation of
+ *
+ * (M_{ee}^\pm)^{-1}M_{eo}
+ *
+ * see documentation for details
+ * k is the number of the input field
+ * l is the number of the output field
+ *
+ * it acts only on the odd part or only 
+ * on a half spinor
+ ******************************************/
+void H_eo_tm_inv_psi(const int l, const int k, 
+		     const int ieo, const double sign){
   H_eo(ieo, l, k);
   mul_one_pm_imu_inv(l, sign);
 }
 
-/* !!
+/**********************************************
+ *
  * All the results are only stored in the first
  * half of the spinor fields, they have anly
  * lenght VOLUME/2
@@ -69,8 +196,10 @@ void H_eo_tm_inv_psi(const int l, const int k, const int ieo, const double sign)
  * That's why mul_... do not need a iput
  * parameter ieo.
  *
- * !!
- */
+ * the next functions are internal and you 
+ * can find comments above at the declaration 
+ *
+ **********************************************/
 
 void mul_one_pm_imu_inv(const int l, const double _sign){
   complex z,w;
@@ -104,7 +233,8 @@ void mul_one_pm_imu_inv(const int l, const double _sign){
   }
 }
 
-void mul_one_pm_imu_sub_mul_gamma5(int l, int k, int j, const double _sign){
+void mul_one_pm_imu_sub_mul_gamma5(const int l, const int k, 
+				   const int j, const double _sign){
   complex z,w;
   int ix;
   double sign=1.;
@@ -140,7 +270,8 @@ void mul_one_pm_imu_sub_mul_gamma5(int l, int k, int j, const double _sign){
   }
 }
 
-void mul_one_pm_imu_sub_mul(int l, int k, int j, const double _sign){
+void mul_one_pm_imu_sub_mul(const int l, const int k, 
+			    const int j, const double _sign){
   complex z,w;
   int ix;
   double sign=1.;

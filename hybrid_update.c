@@ -167,7 +167,6 @@ void deri(double q_off,double q_off2) {
     else{
       /* apply Hopping Matrix */
       /* to get the even sites of X */
-      /* Check the signs here ! */
       H_eo_tm_inv_psi(DUM_DERI+2, DUM_DERI+1, 1, -1.);
       /* \delta Q sandwitched by X_e^\dagger and Y_o */
       deriv_Sb(0, DUM_DERI, DUM_DERI+2);

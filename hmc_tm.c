@@ -47,14 +47,15 @@ int main(int argc,char *argv[]) {
   int idis0;
   int j,ix,mu;
   int i,k, nstore=0;
-  static float yy[2];
+  float yy[2];
 /*   static double step; */
 /*   static double q_off,q_off2; */
-  static double eneg,enegx,enep,enepx,dh;
-  static double enerphi0,enerphi0x;
+  double eneg,enegx,enep,enepx,dh;
+  double enerphi0,enerphi0x;
   static su3 gauge_tmp[VOLUME][4];
   su3 *v,*w;
-  
+
+  int Rate=0;
   int  namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
   verbose = 1;
@@ -164,7 +165,7 @@ int main(int argc,char *argv[]) {
   /*compute the energy of the gauge field*/
   eneg=measure_gauge_action();
   if(g_proc_id==0){
-    fprintf(fp2,"%14.12f \n",1.-eneg/(6.*VOLUME*g_nproc));
+    fprintf(fp2,"%14.12f \n",eneg/(6.*VOLUME*g_nproc));
     fclose(fp2);
   }
 
@@ -249,6 +250,7 @@ int main(int argc,char *argv[]) {
     /* random number in this way? */
     if(exp(-dh) > (((double)yy[0])+0.596046448e-7*yy[1])){
       /* accept */
+      Rate += 1;
       eneg=enegx;
       /* put the links back to SU(3) group */
       for(ix=0;ix<VOLUME;ix++){ 
@@ -275,14 +277,15 @@ int main(int argc,char *argv[]) {
 #endif
 
     if(g_proc_id==0){
-      fprintf(fp1,"%14.12f %14.12f %d %d %d \n",
-	      1.-eneg/(6.*VOLUME*g_nproc),dh,
+      fprintf(fp1,"%14.12f %14.12f %e %d %d %d \n",
+	      eneg/(6.*VOLUME*g_nproc),dh,exp(-dh),
 	      idis0,count00,count01);
       fflush(fp1);
     }
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0){
       sprintf(filename3,"%s.%.4d", filename, nstore);
+      nstore ++;
       write_gauge_field_time_p( filename3 );
 
       /*  write the status of the random number generator on a file */
@@ -305,6 +308,7 @@ int main(int argc,char *argv[]) {
   }
   if(g_proc_id == 0){
     fprintf(stdout,"fertig \n");
+    printf("Acceptance Rate was: %e\n", (double)Rate/(double)Nmeas);
     fflush(stdout);
   }
 #ifdef MPI

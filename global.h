@@ -31,18 +31,15 @@
 #define VOLUME (T*LX*LY*LZ)
 #define RAND (2*LX*LY*LZ)
 #define SLICE (LX*LY*LZ/2)
-/* #define g_beta  5.1 */
-/* #define g_kappa 0.12 */
-/* #define g_ka_csw_8 0.03058 */
-/* #define g_kappa 0.1 */
-/* #define g_ka_csw_8 0.01875   */
-/* #define g_ka_csw_8 0.0  */
-/* #define X0 1. */
-#define X0 0.
+/* Here you can define antiperiodic  */
+/* boundary conditions with e.g.     */
+/* #define X0 1.  (in time)          */
+#define X0 1.
 #define X1 0.
 #define X2 0.
 #define X3 0.
-#define ITER_MAX 5000
+#define ITER_MAX_BCG 2
+#define ITER_MAX 1000
 /* #define ITER_MAX 1 */
 #define EPS_SQ0  1.0e-20
 #define EPS_SQ1  1.0e-7

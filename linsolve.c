@@ -65,7 +65,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   xxx=0.0;
   gamma5(DUM_SOLVER+1,l);
   /* main loop */
-  for(iteration=1;iteration<=ITER_MAX;iteration++) {
+  for(iteration=1;iteration<=ITER_MAX_BCG;iteration++) {
     /* compute the residual*/
     M_psi(DUM_SOLVER,k,q_off);
     xxx=diff_norm(DUM_SOLVER,DUM_SOLVER+1);
@@ -81,7 +81,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   }
 
   /* if the geometric series fails, redo with conjugate gradient */
-  if(iteration>=ITER_MAX) {
+  if(iteration>=ITER_MAX_BCG) {
     zero_spinor_field(k);
     iteration+=solve_cg(k,l,q_off,eps_sq);
     Q_psi(k,k,q_off);
@@ -113,7 +113,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   zero_spinor_field(DUM_SOLVER+3);
   rho0=1.0; omega0=1.0; alpha=1.0; 
   /* main loop */
-  for(iteration=1;iteration<=ITER_MAX;iteration++) {
+  for(iteration=1;iteration<=ITER_MAX_BCG;iteration++) {
     square_and_prod(&err,&rho1,DUM_SOLVER+1,DUM_SOLVER);
     if(err <= eps_sq){
       break;
@@ -150,14 +150,14 @@ int bicg(int k, int l, double q_off, double eps_sq) {
     fprintf(fp7,"%d %d \n",g_proc_id,iteration); 
     fflush(fp7); 
   }
-  if(iteration>=ITER_MAX){
+  if(iteration>=ITER_MAX_BCG){
     zero_spinor_field(k);
     iteration+=solve_cg(k,l,q_off,eps_sq);
     if(g_use_clover_flag == 1){
       Q_psi(k,k,q_off);
     }
     else{
-      Qtm_pm_psi(k, k);
+      Qtm_minus_psi(k, k);;
     }
     iteration-=1000000;
     if(g_proc_id==0) {

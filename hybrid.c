@@ -58,6 +58,7 @@ int main(int argc,char *argv[]) {
   int  namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
   verbose = 1;
+  g_use_clover_flag = 1;
   
 #ifdef MPI
   MPI_Init(&argc,&argv);
@@ -158,7 +159,7 @@ int main(int argc,char *argv[]) {
   /*compute the energy of the gauge field*/
   eneg=measure_gauge_action();
   if(g_proc_id==0){
-    fprintf(fp2,"%14.12f \n",1.-eneg/(6.*VOLUME*g_nproc));
+    fprintf(fp2,"%14.12f \n",eneg/(6.*VOLUME*g_nproc));
     fclose(fp2);
   }
 
@@ -334,7 +335,7 @@ int main(int argc,char *argv[]) {
 
     if(g_proc_id==0){
       fprintf(fp1,"%14.12f %14.12f %d %d %d %d %d %d %d %d %d %d %d \n",
-	      1.-eneg/(6.*VOLUME*g_nproc),dh,
+	      eneg/(6.*VOLUME*g_nproc),dh,
 	      idi,idis,idis0,idis1,idis2,count00,count01,count10,count11,count20,count21);
       fflush(fp1);
     }
