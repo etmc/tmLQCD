@@ -44,9 +44,7 @@ int main(int argc,char *argv[])
   static double t1,t2,dt,sdt,dts,dt2,qdt,sqdt;
   int rlxd_state[105];
 
-#ifdef MPI  
   mpi_init(argc, argv);
-#endif
 
   if(g_proc_id==0) {
     printf("\n");

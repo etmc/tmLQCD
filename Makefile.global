@@ -24,7 +24,7 @@ $(addsuffix .o,$(EXTERNMODULES)): %.o:
 
 #extern libs
 
-$(LINKLIBS): %.a:
+$(LINKLIBS): %.a: Makefile
 	@( cd $(dir $@) && ${MAKE} $(notdir $@) )
 
 #dep rule

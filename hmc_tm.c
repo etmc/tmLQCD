@@ -83,9 +83,7 @@ int main(int argc,char *argv[]) {
   signal(SIGXCPU,&catch_del_sig);
 #endif
 
-#ifdef MPI
   mpi_init(argc, argv);
-#endif
 
   while ((c = getopt(argc, argv, "h?f:o:")) != -1) {
     switch (c) {
@@ -113,6 +111,7 @@ int main(int argc,char *argv[]) {
 
   /* Read the input file */
   read_input(input_filename);
+
   if(Nskip == 0){
     Nskip = 1;
   }
