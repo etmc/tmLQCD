@@ -42,7 +42,7 @@ int main(int argc,char *argv[])
    int nmd,ntra,goft,integtyp,nsmall;
    int idis;
    int idi,idis0,idis1,idis2;
-   int j,ix,mu;
+   int j,ix,mu,kb;
    int i,jj,k;
    static float yy[2];
    static double step;
@@ -190,6 +190,19 @@ else
   }
 /*For parallelization: exchange the gaugefield */
   xchange_gauge();
+#ifdef _GAUGE_COPY
+  /* set the backward gauge field */
+  for(ix = 0; ix < VOLUME+RAND;ix++) {
+    kb=g_idn[ix][0];
+    _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
+    kb=g_idn[ix][1];
+    _su3_assign(g_gauge_field_back[ix][1],g_gauge_field[kb][1]);
+    kb=g_idn[ix][2];
+    _su3_assign(g_gauge_field_back[ix][2],g_gauge_field[kb][2]);
+    kb=g_idn[ix][3];
+    _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
+  }
+#endif
 /*compute the energy of the gauge field*/
    eneg=measure_gauge_action();
 if(g_proc_id==0)

@@ -38,6 +38,9 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   su3 *v, *w;
   int rlxd_state[105];
   int ix, mu, accept, i;
+#ifdef _GAUGE_COPY
+  int kb=0;
+#endif
   double yy[1];
   double dh, expmdh;
   double atime=0., etime=0.;
@@ -201,6 +204,19 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
 #ifdef MPI
     xchange_gauge();
     etime = MPI_Wtime();
+#endif
+#ifdef _GAUGE_COPY
+  /* set the backward gauge field */
+  for(ix = 0; ix < VOLUME+RAND;ix++) {
+    kb=g_idn[ix][0];
+    _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
+    kb=g_idn[ix][1];
+    _su3_assign(g_gauge_field_back[ix][1],g_gauge_field[kb][1]);
+    kb=g_idn[ix][2];
+    _su3_assign(g_gauge_field_back[ix][2],g_gauge_field[kb][2]);
+    kb=g_idn[ix][3];
+    _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
+  }
 #endif
 
   if(g_proc_id==0){

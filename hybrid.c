@@ -61,6 +61,9 @@ int main(int argc,char *argv[]) {
   static double eneg,enegx,enep,enepx,enec,enecx,dh;
   static double enerphi0,enerphi0x,enerphi1,enerphi1x,enerphi2,enerphi2x;
   su3 *v,*w;
+#ifdef _GAUGE_COPY
+  int kb=0;
+#endif
 
 #ifdef MPI  
   int  namelen;
@@ -165,6 +168,19 @@ int main(int argc,char *argv[]) {
   /*For parallelization: exchange the gaugefield */
 #ifdef MPI
   xchange_gauge();
+#endif
+#ifdef _GAUGE_COPY
+  /* set the backward gauge field */
+  for(ix = 0; ix < VOLUME+RAND;ix++) {
+    kb=g_idn[ix][0];
+    _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
+    kb=g_idn[ix][1];
+    _su3_assign(g_gauge_field_back[ix][1],g_gauge_field[kb][1]);
+    kb=g_idn[ix][2];
+    _su3_assign(g_gauge_field_back[ix][2],g_gauge_field[kb][2]);
+    kb=g_idn[ix][3];
+    _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
+  }
 #endif
 
   /*compute the energy of the gauge field*/
@@ -346,6 +362,19 @@ int main(int argc,char *argv[]) {
     }
 #ifdef MPI
     xchange_gauge();
+#endif
+#ifdef _GAUGE_COPY
+  /* set the backward gauge field */
+  for(ix = 0; ix < VOLUME+RAND;ix++) {
+    kb=g_idn[ix][0];
+    _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
+    kb=g_idn[ix][1];
+    _su3_assign(g_gauge_field_back[ix][1],g_gauge_field[kb][1]);
+    kb=g_idn[ix][2];
+    _su3_assign(g_gauge_field_back[ix][2],g_gauge_field[kb][2]);
+    kb=g_idn[ix][3];
+    _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
+  }
 #endif
 
     if(g_proc_id==0){

@@ -43,10 +43,10 @@ int main(int argc,char *argv[])
   printf("The lattice size is %d x %d^3 \n\n",(int)(T*g_nproc_t),(int)(L));
    
   geometry();
+  ix = check_geometry(); 
 
-  for(k = 0; k < 100000; k++) {
-/*     ix = check_geometry(); */
-    
+  for(k = 0; k < 100; k++) {
+
     /* Check the field exchange */
     /* Set the whole field to -1 */
     set_spinor_field(0, -1.);
@@ -55,8 +55,8 @@ int main(int argc,char *argv[])
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  set_spinor_point(&spinor_field[0][ g_ipt[0][x1][x2][x3]/2 ], g_cart_id);
-	  set_spinor_point(&spinor_field[0][ g_ipt[T-1][x1][x2][x3]/2 ], g_cart_id);
+	  set_spinor_point(&spinor_field[0][ g_lexic2eo[g_ipt[0][x1][x2][x3]]   ], g_cart_id);
+	  set_spinor_point(&spinor_field[0][ g_lexic2eo[g_ipt[T-1][x1][x2][x3]] ], g_cart_id);
 	}
       }
     }
@@ -65,8 +65,8 @@ int main(int argc,char *argv[])
     for(x0 = 0; x0 < T; x0++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  set_spinor_point(&spinor_field[0][ g_ipt[x0][0][x2][x3]/2 ], g_cart_id);
-	  set_spinor_point(&spinor_field[0][ g_ipt[x0][LX-1][x2][x3]/2 ], g_cart_id);
+	  set_spinor_point(&spinor_field[0][ g_lexic2eo[g_ipt[x0][0][x2][x3]]    ], g_cart_id);
+	  set_spinor_point(&spinor_field[0][ g_lexic2eo[g_ipt[x0][LX-1][x2][x3]] ], g_cart_id);
 	}
       }
     }
@@ -83,7 +83,7 @@ int main(int argc,char *argv[])
 #ifdef MPI
 	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
 #endif
-	exit(0); 
+	exit(0);
       }
     }
 
@@ -133,24 +133,26 @@ int main(int argc,char *argv[])
 
     set_gauge_field(-1.);
 
+    /* Set the time boundary */
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  for (mu=0;mu<4;mu++){
-	    g_gauge_field[ g_ipt[0][x1][x2][x3] ][mu]=set_su3((double)g_cart_id);
-	    g_gauge_field[ g_ipt[T-1][x1][x2][x3] ][mu]=set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[0][x1][x2][x3] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[T-1][x1][x2][x3] ][mu] = set_su3((double)g_cart_id);
 	  }
 	}
       }
     }
 
 #ifdef PARALLELXT
+    /* Set the x boundary */
     for(x0 = 0; x0 < T; x0++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  for (mu=0;mu<4;mu++){
-	    g_gauge_field[ g_ipt[x0][0][x2][x3] ][mu]=set_su3((double)g_cart_id);
-	    g_gauge_field[ g_ipt[x0][LX-1][x2][x3] ][mu]=set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][0][x2][x3] ][mu]    = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][LX-1][x2][x3] ][mu] = set_su3((double)g_cart_id);
 	  }
 	}
       }
@@ -311,7 +313,7 @@ int main(int argc,char *argv[])
       }
     }
 
-    for(x1 = 0; x1 < T; x1++) {
+    for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[T+1][x1][x2][x3];
@@ -364,7 +366,8 @@ int main(int argc,char *argv[])
 	       df0[ix][mu].d6 != g_nb_t_up ||
 	       df0[ix][mu].d7 != g_nb_t_up ||
 	       df0[ix][mu].d8 != g_nb_t_up){
-	      printf("Exchange of derivatives is working not correctly!\n");
+	      printf("Exchange of derivatives is working not correctly (1)!\n");
+	      printf("%d %d %d %d %f %d %d\n", ix, x1, x2, x3, df0[ix][mu].d1, g_nb_t_up, mu, (T-1+x1+x2+x3)%2);
 	      printf("Aborting program!");
 #ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -389,7 +392,7 @@ int main(int argc,char *argv[])
 	       df0[ix][mu].d6 != g_nb_t_up ||
 	       df0[ix][mu].d7 != g_nb_t_up ||
 	       df0[ix][mu].d8 != g_nb_t_up){
-	      printf("Exchange of derivatives is working not correctly!\n");
+	      printf("Exchange of derivatives is working not correctly (2)!\n");
 	      printf("Aborting program!");
 #ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -413,7 +416,7 @@ int main(int argc,char *argv[])
 	       df0[ix][mu].d6 != g_nb_x_up ||
 	       df0[ix][mu].d7 != g_nb_x_up ||
 	       df0[ix][mu].d8 != g_nb_x_up){
-	      printf("Exchange of derivatives is working not correctly!\n");
+	      printf("Exchange of derivatives is working not correctly (3)!\n");
 	      printf("Aborting program!");
 #ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -436,7 +439,7 @@ int main(int argc,char *argv[])
 	     df0[ix][mu].d6 != g_nb_x_up + g_nb_t_up ||
 	     df0[ix][mu].d7 != g_nb_x_up + g_nb_t_up ||
 	     df0[ix][mu].d8 != g_nb_x_up + g_nb_t_up){
-	    printf("Exchange of derivatives is working not correctly!\n");
+	    printf("Exchange of derivatives is working not correctly (4)!\n");
 	    printf("Aborting program!");
 #ifdef MPI
 	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();

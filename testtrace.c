@@ -63,6 +63,9 @@ int main(int argc,char *argv[]) {
   int idis0;
   int j,ix,mu;
   int i,k;
+#ifdef _GAUGE_COPY
+  int kb=0;
+#endif
 
   double yy[1];
 /*   static double step; */
@@ -224,10 +227,38 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
   xchange_gauge();
 #endif
+#ifdef _GAUGE_COPY
+  /* set the backward gauge field */
+  for(ix = 0; ix < VOLUME+RAND;ix++) {
+    kb=g_idn[ix][0];
+    _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
+    kb=g_idn[ix][1];
+    _su3_assign(g_gauge_field_back[ix][1],g_gauge_field[kb][1]);
+    kb=g_idn[ix][2];
+    _su3_assign(g_gauge_field_back[ix][2],g_gauge_field[kb][2]);
+    kb=g_idn[ix][3];
+    _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
+  }
+#endif
 
   unit_g_gauge_field();   
   read_gauge_field_time_p("last_configuration");
+#ifdef MPI
   xchange_gauge();
+#endif
+#ifdef _GAUGE_COPY
+  /* set the backward gauge field */
+  for(ix = 0; ix < VOLUME+RAND;ix++) {
+    kb=g_idn[ix][0];
+    _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
+    kb=g_idn[ix][1];
+    _su3_assign(g_gauge_field_back[ix][1],g_gauge_field[kb][1]);
+    kb=g_idn[ix][2];
+    _su3_assign(g_gauge_field_back[ix][2],g_gauge_field[kb][2]);
+    kb=g_idn[ix][3];
+    _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
+  }
+#endif
 /*   g_kappa*=5; */
   boundary();
   if(g_proc_id == 0){

@@ -26,7 +26,8 @@ MODULES = read_input clover_eo linsolve xchange \
 	expo hybrid_update observables start \
 	geometry_eo linalg_eo ranlxd sw io Hopping_Matrix \
 	boundary deriv_Sb tm_operators getopt sighandler \
-	mpi_init update_tm Hopping_Matrix_nocom
+	mpi_init update_tm Hopping_Matrix_nocom \
+	test/check_geometry
 
 PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark
 ALLOBJ = ${MODULES} ${PROGRAMS}

@@ -21,7 +21,7 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define T  12
+#define T   6
 #define L  12
 
 #ifndef PARALLELXT
@@ -34,11 +34,6 @@
 #define LY (L)
 #define LZ (L)
 #define VOLUME (T*LX*LY*LZ)
-#ifndef PARALLELXT
-#define SLICE (LX*LY*LZ/2)
-#else
-#define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2))
-#endif
 
 #define DUM_DERI 6
 #define DUM_SOLVER (DUM_DERI+4)
@@ -94,7 +89,9 @@ EXTERN int g_idn[VOLUMEPLUSRAND][4] ALIGN;
 EXTERN spinor spinor_field[NO_OF_SPINORFIELDS][(VOLUMEPLUSRAND)/2] ALIGN;
 /* EXTERN spinor ** spinor_field; */
 EXTERN su3 g_gauge_field[VOLUMEPLUSRAND][4] ALIGN;
+#ifdef _GAUGE_COPY
 EXTERN su3 g_gauge_field_back[VOLUMEPLUSRAND][4] ALIGN;
+#endif
 EXTERN su3adj moment[VOLUME][4] ALIGN;
 EXTERN su3adj df0[VOLUMEPLUSRAND][4] ALIGN;
 EXTERN su3adj dclover[VOLUMEPLUSRAND][4] ALIGN;

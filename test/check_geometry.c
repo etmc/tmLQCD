@@ -5,8 +5,8 @@
  *
  * Consistency of the index arrays ipt, iup and idn
  *
- * Author: Martin Luescher <luscher@mail.desy.de>
- * Date: 24.10.2000
+ * Author: Carsten Urbach <urbach@physik.fu-berlin.de>
+ *         using a file of Martin Luescher as template
  *
  *******************************************************************************/
 
@@ -24,7 +24,6 @@
 #include "mpi_init.h"
 #endif
 
-/* int main(int argc,char *argv[]) */
 int check_geometry()
 {
   int ix, j;

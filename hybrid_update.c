@@ -315,6 +315,10 @@ void update_gauge(double step) {
   su3 *z;
   static su3adj deriv;
   su3adj *xm;
+#ifdef _GAUGE_COPY
+  int ix=0, kb=0;
+#endif
+
   for(i = 0; i < VOLUME; i++) { 
     for(mu = 0; mu < 4; mu++){
       xm=&moment[i][mu];
@@ -329,6 +333,19 @@ void update_gauge(double step) {
 #ifdef MPI
   /* for parallelization */
   xchange_gauge();
+#endif
+#ifdef _GAUGE_COPY
+  /* set the backward gauge field */
+  for(ix = 0; ix < VOLUME+RAND;ix++) {
+    kb=g_idn[ix][0];
+    _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
+    kb=g_idn[ix][1];
+    _su3_assign(g_gauge_field_back[ix][1],g_gauge_field[kb][1]);
+    kb=g_idn[ix][2];
+    _su3_assign(g_gauge_field_back[ix][2],g_gauge_field[kb][2]);
+    kb=g_idn[ix][3];
+    _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
+  }
 #endif
 }
 
@@ -364,7 +381,7 @@ void leap_frog(double q_off, double q_off2,
 void sexton(double q_off, double q_off2,
 	    double step, int m, int nsmall) {
   int i,j;
-  int ev = 10;
+/*   int ev = 10; */
   double smallstep;
   /* initialize the counter for the inverter */
   count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;

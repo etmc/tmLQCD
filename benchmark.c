@@ -29,6 +29,14 @@
 #ifdef MPI
 #include "mpi_init.h"
 #endif
+#ifndef PARALLELXT
+#define SLICE (LX*LY*LZ/2)
+#else
+#define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2))
+#endif
+
+
+int check_geometry();
 
 int main(int argc,char *argv[])
 {
@@ -52,6 +60,8 @@ int main(int argc,char *argv[])
   /* define the boundary conditions for the fermion fields */
   boundary();
   
+  check_geometry();
+
   /* here we generate exactly the same configuration as for the 
      single node simulation */
   if(g_proc_id==0) {
@@ -84,6 +94,8 @@ int main(int argc,char *argv[])
   xchange_gauge();
 #endif
 
+
+#ifdef _GAUGE_COPY
   /* set the backward gauge field */
   for(k=0;k<VOLUME+RAND;k++) {
     kb=g_idn[k][0];
@@ -95,11 +107,11 @@ int main(int argc,char *argv[])
     kb=g_idn[k][3];
     _su3_assign(g_gauge_field_back[k][3],g_gauge_field[kb][3]);
   }
-
+#endif
 
   /*initialize the pseudo-fermion fields*/
   k_max=(NO_OF_SPINORFIELDS)/3;
-  j_max=1; 
+  j_max=1;
   sdt=0.;
   for (k=0;k<k_max;k++) {
     random_spinor_field(k);
@@ -142,9 +154,7 @@ int main(int argc,char *argv[])
   t1=(double)clock();
   for (j=0;j<j_max;j++) {
     for (k=0;k<k_max;k++) {
-/*       Hopping_Matrix_nocom(0, spinor_field[k+k_max], spinor_field[k]); */
       Hopping_Matrix_nocom(0, spinor_field[k+k_max], spinor_field[k]);
-/*       Hopping_Matrix_nocom(1, spinor_field[k+2*k_max], spinor_field[k+k_max]); */
       Hopping_Matrix_nocom(1, spinor_field[k+2*k_max], spinor_field[k+k_max]);
     }
   }
