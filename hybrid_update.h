@@ -9,5 +9,8 @@ void leap_frog(double q_off,double q_off2,double step,int m,int nsmall);
 void sexton(double q_off,double q_off2,double step,int m,int nsmall);
 double moment_energy();
 double ini_momenta();
+void update_gauge(double step);
+void gauge_momenta(double step);
+void update_fermion_momenta(double step, const int S);
 
 #endif

@@ -32,6 +32,7 @@
 #include "xchange.h"
 #include "measure_rectangles.h"
 #include "init_gauge_tmp.h"
+#include "ext_integrator.h"
 #include "update_tm.h"
 
 
@@ -40,6 +41,9 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   static int ini_g_tmp = 0;
   int rlxd_state[105];
   int ix, mu, accept, i;
+  int n_int[4] = {6,7,10}; 
+/*   int n_int[4] = {5,7,1,10};  */
+
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -133,6 +137,9 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   else if(integtyp == 2) {
     /* Sexton Weingarten integration scheme */
     sexton(q_off, q_off2, dtau, Nsteps, nsmall);
+  }
+  else if(integtyp == 3) {
+    ext_integrator(n_int, 0.7071067811865, g_nr_of_psf);
   }
 
   /*perform the accept-reject-step*/

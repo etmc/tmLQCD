@@ -391,6 +391,10 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   integtyp = 2;
   if(verbose!=0) printf("Using SW integrator!\n");
 }
+<INTTYP>ExtLeapFrog {
+  integtyp = 3;
+  if(verbose!=0) printf("Using extended Leapfrog integrator!\n");
+}
 <NSMALL>{DIGIT}+ {
   nsmall = atoi(yytext);
   if(verbose!=0) printf("nsmall set to %d\n", nsmall);

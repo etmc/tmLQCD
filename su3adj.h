@@ -75,6 +75,16 @@ typedef struct
 (r).d7+=(a).d7; \
 (r).d8+=(a).d8; 
 
+#define _su3adj_square_norm(r) \
+(r).d1*(r).d1 + \
+(r).d2*(r).d2 + \
+(r).d3*(r).d3 + \
+(r).d4*(r).d4 + \
+(r).d5*(r).d5 + \
+(r).d6*(r).d6 + \
+(r).d7*(r).d7 + \
+(r).d8*(r).d8;
+
 #define _zero_su3adj(r) \
 (r).d1=0.; \
 (r).d2=0.; \
