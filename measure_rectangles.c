@@ -29,7 +29,10 @@ double measure_rectangles() {
   int i, j, k, mu, nu;
   static su3 pr1, pr2, tmp; 
   su3 *v = NULL , *w = NULL;
-  static double ga, ac, gas; 
+  static double ga, ac; 
+#ifdef MPI
+  static double gas;
+#endif
   static double ks, kc, tr, ts, tt;
   kc=0.0; ks=0.0;
 

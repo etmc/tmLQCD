@@ -124,6 +124,9 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x INT2
 %x INT3
 %x INT4
+%x RELPREC
+%x FORCEPREC
+%x ACCPREC
 
 %x COMMENT
 %x ERROR
@@ -184,6 +187,9 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^ExtIntStepsMu1{SPC}*={SPC}*             BEGIN(INT2);
 ^ExtIntStepsMu2{SPC}*={SPC}*             BEGIN(INT3);
 ^ExtIntStepsMu3{SPC}*={SPC}*             BEGIN(INT4);
+^UseRelativePrecision{SPC}*={SPC}*       BEGIN(RELPREC);
+^ForcePrecision{SPC}*={SPC}*             BEGIN(FORCEPREC);
+^AcceptancePrecision{SPC}*={SPC}*        BEGIN(ACCPREC);
 
 <TT>{DIGIT}+                  {
   T_global = atoi(yytext);
@@ -505,9 +511,25 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 <INT4>{DIGIT}+ {
   if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for psf 4 (mu4) set to %d!\n", int_n[1]);
 }
+<FORCEPREC>{FLT}  {
+  g_eps_sq_force=atof(yytext);
+  if(verbose!=0) printf("g_eps_sq_force=%s Residual for inversions in the force computation\n", yytext);
+}
+<ACCPREC>{FLT}  {
+  g_mu1=atof(yytext);
+  if(verbose!=0) printf("g_eps_sq_acc=%s Residual for inversions in the acceptance step\n", yytext);
+}
+<RELPREC>yes  {
+  g_relative_precision_flag = 1;
+  if(verbose!=0) printf("Using relative precision\n");
+}
+<RELPREC>no  {
+  g_relative_precision_flag = 0;
+  if(verbose!=0) printf("Using absolute precision\n");
+}
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0,INT1,INT2,INT3,INT4>#      BEGIN(COMMENT);
+<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0,INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC>#      BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -649,6 +671,18 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Unknown value for RGIC1 in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
   exit(1);
 }
+<RELPREC>. {
+  printf("Should be yes or no for relative precision in line %d! Exiting...!\n", line_of_file);
+  exit(1);
+}
+<FORCEPREC>. {
+  printf("Unknown value for ForcePrecision in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
+  exit(1);
+}
+<ACCPREC>. {
+  printf("Unknown value for AcceptancePrecision in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
+  exit(1);
+}
 
 <INITIAL>.                        BEGIN(ERROR);
 <ERROR>[^\t\n]*             {
@@ -735,6 +769,9 @@ int read_input(char * conf_file){
   g_rgi_C1 = _default_g_rgi_C1;
   read_source_flag= _default_read_source_flag;
   strcpy(source_input_filename, _default_source_filename);
+  g_eps_sq_force = _default_g_eps_sq_force;
+  g_eps_sq_acc = _default_g_eps_sq_acc;
+  g_relative_precision_flag = _default_g_relative_precision_flag;
 
   /********************************************/
 

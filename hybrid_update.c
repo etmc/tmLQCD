@@ -188,7 +188,7 @@ void deri(double q_off,double q_off2) {
 	gamma5(DUM_DERI+1, first_psf);
 	/* Invert Q_{+} Q_{-} */
 	/* X_o -> DUM_DERI+1 */
-	count00 += solve_cg(DUM_DERI+1, first_psf, q_off, EPS_SQ1);
+	count00 += solve_cg(DUM_DERI+1, first_psf, q_off, g_eps_sq_force, g_relative_precision_flag);
 	/* Y_o -> DUM_DERI  */
 	Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
       }
@@ -197,12 +197,12 @@ void deri(double q_off,double q_off2) {
 	gamma5(DUM_DERI, first_psf);
 	/* Invert first Q_+ */
 	/* Y_o -> DUM_DERI  */
-	count00 += bicg(DUM_DERI, first_psf, q_off, EPS_SQ1);
+	count00 += bicg(DUM_DERI, first_psf, q_off, g_eps_sq_force, g_relative_precision_flag);
 	gamma5(DUM_DERI+1,DUM_DERI);
 	/* Now Q_- */
 	/* X_o -> DUM_DERI+1 */
 	g_mu = -g_mu;
-	count01 += bicg(DUM_DERI+1,DUM_DERI,q_off,EPS_SQ1);
+	count01 += bicg(DUM_DERI+1,DUM_DERI,q_off,g_eps_sq_force, g_relative_precision_flag);
 	g_mu = -g_mu;   
       }
     }
@@ -211,10 +211,10 @@ void deri(double q_off,double q_off2) {
 	/* contributions from field 1 -> second_psf*/
 	gamma5(DUM_DERI, second_psf);
 	qo=q_off-q_off2;
-	count10+=bicg(DUM_DERI, second_psf, q_off2, EPS_SQ2/qo);
+	count10+=bicg(DUM_DERI, second_psf, q_off2, EPS_SQ2/qo, g_relative_precision_flag);
 	deri_linalg(spinor_field[DUM_DERI+2], qo*qo, spinor_field[DUM_DERI], qo, spinor_field[second_psf], VOLUME/2);
 	gamma5(DUM_DERI+1, DUM_DERI+2);
-	count11+=bicg(DUM_DERI+1, DUM_DERI+2, q_off2, EPS_SQ2*qo);
+	count11+=bicg(DUM_DERI+1, DUM_DERI+2, q_off2, EPS_SQ2*qo, g_relative_precision_flag);
       }
       else {
 	/* First term coming from the second field */
@@ -227,7 +227,7 @@ void deri(double q_off,double q_off2) {
 	  gamma5(DUM_DERI+1, DUM_DERI+2);
 	  /* Invert Q_{+} Q_{-} */
 	  /* X_W -> DUM_DERI+1 */
-	  count10 += solve_cg(DUM_DERI+1, DUM_DERI+2, q_off, EPS_SQ1);
+	  count10 += solve_cg(DUM_DERI+1, DUM_DERI+2, q_off, g_eps_sq_force, g_relative_precision_flag);
 	  /* Y_W -> DUM_DERI  */
 	  Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
 	}
@@ -235,12 +235,12 @@ void deri(double q_off,double q_off2) {
 	  gamma5(DUM_DERI, DUM_DERI+2);
 	  /* Invert first Q_+ */
 	  /* Y_o -> DUM_DERI  */
-	  count10 += bicg(DUM_DERI, DUM_DERI+2, q_off, EPS_SQ1);
+	  count10 += bicg(DUM_DERI, DUM_DERI+2, q_off, g_eps_sq_force, g_relative_precision_flag);
 	  gamma5(DUM_DERI+1,DUM_DERI);
 	  /* Now Q_- */
 	  /* X_o -> DUM_DERI+1 */
 	  g_mu = -g_mu;
-	  count11 += bicg(DUM_DERI+1,DUM_DERI,q_off,EPS_SQ1);
+	  count11 += bicg(DUM_DERI+1,DUM_DERI,q_off,g_eps_sq_force, g_relative_precision_flag);
 	  g_mu = -g_mu;   
 	}
       }
@@ -249,10 +249,10 @@ void deri(double q_off,double q_off2) {
       if(g_use_clover_flag == 1) {
 	/* contributions from field 2 (stored on 4) */
 	gamma5(DUM_DERI,4);
-	count20+=bicg(DUM_DERI,4,0.,EPS_SQ3/q_off2);
+	count20+=bicg(DUM_DERI,4,0.,EPS_SQ3/q_off2, g_relative_precision_flag);
 	deri_linalg(spinor_field[DUM_DERI+2],q_off2*q_off2, spinor_field[DUM_DERI],q_off2, spinor_field[4], VOLUME/2);
 	gamma5(DUM_DERI+1,DUM_DERI+2);
-	count21+=bicg(DUM_DERI+1,DUM_DERI+2,0.,EPS_SQ3*q_off2);
+	count21+=bicg(DUM_DERI+1,DUM_DERI+2,0.,EPS_SQ3*q_off2, g_relative_precision_flag);
       }
       else {
 	/* Second term coming from the second field */
@@ -272,7 +272,7 @@ void deri(double q_off,double q_off2) {
 	gamma5(DUM_DERI+1, DUM_DERI+2);
 	/* Invert Q_{+} Q_{-} */
 	/* X_W -> DUM_DERI+1 */
-	count20 += solve_cg(DUM_DERI+1, DUM_DERI+2, q_off, EPS_SQ1);
+	count20 += solve_cg(DUM_DERI+1, DUM_DERI+2, q_off, g_eps_sq_force, g_relative_precision_flag);
 	/* Y_W -> DUM_DERI  */
 	Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
       }
@@ -280,12 +280,12 @@ void deri(double q_off,double q_off2) {
 	gamma5(DUM_DERI, DUM_DERI+2);
 	/* Invert first Q_+ */
 	/* Y_o -> DUM_DERI  */
-	count20 += bicg(DUM_DERI, DUM_DERI+2, q_off, EPS_SQ1);
+	count20 += bicg(DUM_DERI, DUM_DERI+2, q_off, g_eps_sq_force, g_relative_precision_flag);
 	gamma5(DUM_DERI+1,DUM_DERI);
 	/* Now Q_- */
 	/* X_o -> DUM_DERI+1 */
 	g_mu = -g_mu;
-	count21 += bicg(DUM_DERI+1,DUM_DERI,q_off,EPS_SQ1);
+	count21 += bicg(DUM_DERI+1,DUM_DERI,q_off,g_eps_sq_force, g_relative_precision_flag);
 	g_mu = -g_mu;   
       }
     }
@@ -374,7 +374,7 @@ void update_fermion_momenta(double step, const int S) {
   double sum2=0.;
 #endif
 
-  derivative_psf(S, EPS_SQ1);
+  derivative_psf(S, g_eps_sq_force);
 #ifdef MPI
   xchange_deri();
 #endif

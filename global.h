@@ -52,6 +52,9 @@
   #define ALIGN
 #endif
 
+EXTERN double g_eps_sq_force, g_eps_sq_acc;
+EXTERN int g_relative_precision_flag;
+
 EXTERN int T_global, T, L, LX, LY, LZ, VOLUME;
 EXTERN int N_PROC_X;
 EXTERN int RAND, VOLUMEPLUSRAND;

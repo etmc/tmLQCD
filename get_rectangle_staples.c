@@ -125,7 +125,7 @@ void get_rectangle_staples(su3 * const v, const int x, const int mu) {
       z = g_iup[y][mu];
       c = &g_gauge_field[z][nu];
       _su3_times_su3(tmp1, *b, *c);
-      _su3_times_su3_acc((*v), tmp2, tmp1);
+      _su3_times_su3_acc((*v), tmp2, tmp1); 
 
       /* 1 contr. starting idn[x][mu] 
        * d^+ a b c e^+

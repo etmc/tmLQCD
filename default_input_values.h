@@ -61,5 +61,8 @@
 #define _default_solver_precision 1.e-15
 #define _default_mass_number 0
 #define _default_g_rgi_C1 0.
+#define _default_g_eps_sq_force 1.0e-7
+#define _default_g_eps_sq_acc 1.0e-16
+#define _default_g_relative_precision_flag 0
 
 #endif

@@ -237,26 +237,49 @@ int main(int argc,char *argv[]) {
 #ifdef _GAUGE_COPY
     printf("# The code was compiled with -D_GAUGE_COPY\n");
 #endif
-    printf("# The lattice size is %d x %d x %d x %d\n",(int)(T)*g_nproc_t,(int)(LX),(int)(LY),(int)(LZ));
-    printf("# The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY),(int) LZ);
-    printf("# beta = %f , kappa= %f, mu= %f \n",g_beta,g_kappa,g_mu);
+    printf("# The lattice size is %d x %d x %d x %d\n",
+	   (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY), (int)(LZ));
+    printf("# The local lattice size is %d x %d x %d x %d\n", 
+	   (int)(T), (int)(LX), (int)(LY),(int) LZ);
+    printf("# beta = %f , kappa= %f, mu= %f \n", g_beta, g_kappa, g_mu);
     printf("# mus = %f, %f, %f\n", g_mu1, g_mu2, g_mu3);
-    printf("# int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n ", 
+    printf("# int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n", 
 	    int_n[0], int_n[1], int_n[2], int_n[3]);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
-    
+    printf("# Number of pseudo-fermion fields: %d\n", g_nr_of_psf);
+    printf("g_eps_sq_force = %e, g_eps_sq_acc = %e\n", g_eps_sq_force, g_eps_sq_acc);
+    printf("# Integration scheme: ");
+    if(integtyp == 1) printf("leap-frog (single time scale)\n");
+    if(integtyp == 2) printf("Sexton-Weingarten (single time scale)\n");
+    if(integtyp == 3) printf("leap-frog (multiple time scales)\n");
+    if(integtyp == 4) printf("Sexton-Weingarten (multiple time scales)\n");
+    if(integtyp == 3) printf("higher order and leap-frog (multiple time scales)\n");
+    printf("Using %s precision for the inversions!\n", 
+	   g_relative_precision_flag ? "relative" : "absolute");
+
+
     fprintf(parameterfile, "The lattice size is %d x %d x %d x %d\n", (int)(g_nproc_t*T), (int)(g_nproc_x*LX), (int)(LY), (int)(LZ));
     fprintf(parameterfile, "The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY), (int)(LZ));
     fprintf(parameterfile, "g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f g_mu = %f \n",g_beta,g_kappa,g_ka_csw_8, g_mu);
     fprintf(parameterfile, "boundary of fermion fields (t,x,y,z): %f %f %f %f \n",X0,X1,X2,X3);
     fprintf(parameterfile, "ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n"
 	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
-    fprintf(parameterfile,"dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n",
+    fprintf(parameterfile, "g_eps_sq_force = %e, g_eps_sq_acc = %e\n", g_eps_sq_force, g_eps_sq_acc);
+    fprintf(parameterfile, "dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n",
 	    dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
-    fprintf(parameterfile,"mu = %f, mu2=%f, mu3=%f\n ", g_mu, g_mu2, g_mu3);
-    fprintf(parameterfile,"int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n ", 
+    fprintf(parameterfile, "mu = %f, mu2=%f, mu3=%f\n ", g_mu, g_mu2, g_mu3);
+    fprintf(parameterfile, "int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n ", 
 	    int_n[0], int_n[1], int_n[2], int_n[3]);
-    fprintf(parameterfile,"g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
+    fprintf(parameterfile, "g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
+    fprintf(parameterfile, "# Number of pseudo-fermion fields: %d\n", g_nr_of_psf);
+    fprintf(parameterfile, "# Integration scheme: ");
+    if(integtyp == 1) fprintf(parameterfile, "leap-frog (single time scale)\n");
+    if(integtyp == 2) fprintf(parameterfile, "Sexton-Weingarten (single time scale)\n");
+    if(integtyp == 3) fprintf(parameterfile, "leap-frog (multiple time scales)\n");
+    if(integtyp == 4) fprintf(parameterfile, "Sexton-Weingarten (multiple time scales)\n");
+    if(integtyp == 3) fprintf(parameterfile, "higher order and leap-frog (multiple time scales)\n");
+    fprintf(parameterfile, "Using %s precision for the inversions!\n", 
+	   g_relative_precision_flag ? "relative" : "absolute");
     fflush(stdout); fflush(parameterfile);
   }
 
@@ -279,17 +302,29 @@ int main(int argc,char *argv[]) {
   
   /* Continue */
   if(startoption == 3){
-    if (g_proc_id == 0){
-      rlxdfile=fopen(rlxd_input_filename,"r");
-      fread(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
-      fclose(rlxdfile);
-      rlxd_reset(rlxd_state);
-      printf("Reading Gauge field from file %s\n", gauge_input_filename); fflush(stdout);
+    rlxdfile = fopen(rlxd_input_filename,"r");
+    if(rlxdfile != NULL) {
+      if(g_proc_id == 0) {
+	fread(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
+      }
     }
-
-    read_gauge_field_time_p(gauge_input_filename);
+    else {
+      if(g_proc_id == 0) {
+	printf("%s does not exist, switching to restart...\n", rlxd_input_filename);
+      }
+      startoption = 2;
+    }
+    fclose(rlxdfile);
+    if(startoption != 2) {
+      if(g_proc_id == 0) {
+	rlxd_reset(rlxd_state);
+	printf("Reading Gauge field from file %s\n", gauge_input_filename); fflush(stdout);
+      }
+      
+      read_gauge_field_time_p(gauge_input_filename);
+    }
   }
-  else {
+  if(startoption != 3){
     /* Initialize random number generator */
     if(g_proc_id == 0) {
       rlxd_init(1, random_seed);
@@ -360,28 +395,24 @@ int main(int argc,char *argv[]) {
       fprintf(parameterfile,"#First rectangle value: %14.12f \n",rectangle_energy/(12.*VOLUME*g_nproc));
     }
   }
-
- if(g_proc_id==0){
-    fprintf(parameterfile,"#First plaquette value: %14.12f \n",plaquette_energy/(6.*VOLUME*g_nproc));
-/*    fclose(parameterfile);*/
-  }
   eneg = g_rgi_C0 * plaquette_energy + g_rgi_C1 * rectangle_energy;
-
   
   /* Measure and print the Polyakov loop: */
   polyakov_loop(&pl, dir);
+
   if(g_proc_id==0){
-    fprintf(parameterfile,"#First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",dir,dir,sqrt(pl.re*pl.re+pl.im*pl.im));
-/*     fclose(parameterfile); */
+    fprintf(parameterfile,"#First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+    fprintf(parameterfile,"#First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
+	    dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
   }
+
   dir=3;
   polyakov_loop(&pl, dir);
   if(g_proc_id==0){
-    fprintf(parameterfile,"#First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",dir,dir,sqrt(pl.re*pl.re+pl.im*pl.im));
+    fprintf(parameterfile,"#First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
+	    dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
     fclose(parameterfile);
   }
-
-
 
   /* compute the energy of the determinant term */
   /* needed for exact continuation of the run, since evamax and eva use
@@ -407,8 +438,11 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     gettimeofday(&t1,NULL);
     countfile = fopen("history_hmc_tm", "a");
-    fprintf(countfile, "!!! Timestamp %ld, Nskip = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, int0 = %d, int1 = %d, int2 = %d, int3 = %d\n", 
-	    t1.tv_sec, Nskip, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1, int_n[0], int_n[1], int_n[2], int_n[3]); 
+    fprintf(countfile, "!!! Timestamp %ld, Nskip = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, int0 = %d, int1 = %d, int2 = %d, int3 = %d, g_eps_sq_force = %e, g_eps_sq_acc = %e, ", 
+	    t1.tv_sec, Nskip, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1, 
+	    int_n[0], int_n[1], int_n[2], int_n[3], g_eps_sq_force, g_eps_sq_acc); 
+    fprintf(countfile, "Nsteps = %d, dtau = %e, tau = %e, integtyp = %d, rel. prec. = %d\n", 
+	    Nsteps, dtau, tau, integtyp, g_relative_precision_flag);
     fclose(countfile);
   }
 
@@ -418,20 +452,19 @@ int main(int argc,char *argv[]) {
     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
 		      dtau, Nsteps, nsmall, tau, int_n, q_off, q_off2);
 
-    /* Measure the Polyakov loop in direction dir:*/
-    dir=2;
-    polyakov_loop(&pl, dir); 
-    dir=3; 
-    polyakov_loop(&pl4, dir);  
+    /* Measure the Polyakov loop in direction 2 and 3:*/
+    polyakov_loop(&pl, 2); 
+    polyakov_loop(&pl4, 3);  
     
-
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0) {
       sprintf(gauge_filename,"%s.%.4d", "conf", nstore);
       if(g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
 	fprintf(countfile, "%.4d, measurement %d of %d, Nskip = %d, Plaquette = %e, |L(%d)| = %e, |L(%d)| = %e\n", 
-		nstore, j, Nmeas, Nskip, plaquette_energy/(6.*VOLUME*g_nproc),2,sqrt(pl.re*pl.re+pl.im*pl.im),dir,sqrt(pl4.re*pl4.re+pl4.im*pl4.im));
+		nstore, j, Nmeas, Nskip, plaquette_energy/(6.*VOLUME*g_nproc),
+		2, sqrt(pl.re*pl.re+pl.im*pl.im),
+		dir, sqrt(pl4.re*pl4.re+pl4.im*pl4.im));
 	fclose(countfile);
       }
       nstore ++;
@@ -442,6 +475,10 @@ int main(int argc,char *argv[]) {
     else {
       sprintf(gauge_filename,"%s", "conf.save");
     }
+    verbose = 1;
+    ix = reread_input("hmc.reread");
+    verbose = 0;
+
     write_gauge_field_time_p( gauge_filename );
     /*  write the status of the random number generator on a file */
     if(g_proc_id==0) {
@@ -450,8 +487,7 @@ int main(int argc,char *argv[]) {
       fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
       fclose(rlxdfile);
     }
-    verbose = 1;
-    ix = reread_input("hmc.reread");
+
 #ifdef MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -459,7 +495,7 @@ int main(int argc,char *argv[]) {
       countfile = fopen("history_hmc_tm", "a");
       fprintf(countfile, "# Changed parameter according to hmc.reread: measurment %d of %d\n", j, Nmeas); 
       fclose(countfile);
-      printf("# Changed parameter according to hmc.reread: measurment %d of %d\n", j, Nmeas); 
+      printf("# Changed parameter according to hmc.reread (see stdout): measurment %d of %d\n", j, Nmeas); 
       system("rm hmc.reread");
     }
   }
