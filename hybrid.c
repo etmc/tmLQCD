@@ -37,7 +37,7 @@
 int main(int argc,char *argv[])
 { 
   FILE *fp1,*fp2,*fp3,*fp4,*fp5,*fp6;
-  char filename[50];
+  char * filename="ouput";
   char filename1[50];
   char filename2[50];
   char filename3[50];
@@ -73,7 +73,7 @@ int main(int argc,char *argv[])
   if(g_proc_id==0){
     fp7=fopen("solver_data","w"); 
     
-    fscanf(fp6,"%s",filename);
+/*     fscanf(fp6,"%s",filename); */
     /*construct the filenames for the observables and the parameters*/
     strcpy(filename1,filename);  strcat(filename1,".data");
     strcpy(filename2,filename);  strcat(filename2,".para");
@@ -95,9 +95,12 @@ int main(int argc,char *argv[])
   }
 
   /* define the geometry */
+  printf("geometry %d\n", g_proc_id);fflush(stdout);
   geometry();
   /* define the boundary conditions for the fermion fields */
+  printf("boundary %d\n", g_proc_id);fflush(stdout);
   boundary();
+  printf("done %d\n", g_proc_id);fflush(stdout);
 #if defined GEOMETRIC
   if(g_proc_id==0) fprintf(fp2,"The geometric series is used as solver \n\n");
 #else
