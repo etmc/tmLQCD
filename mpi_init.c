@@ -47,7 +47,6 @@ void mpi_init(int argc,char *argv[]) {
   
   g_proc_coords[0] = 0;
   g_proc_coords[1] = 0;
-  dims[1] = N_PROC_X;
 
 #ifdef PARALLELT
   ndims = 1;
@@ -56,6 +55,7 @@ void mpi_init(int argc,char *argv[]) {
 #if defined PARALLELXT
   ndims = 2;
 #endif
+  dims[1] = N_PROC_X;
 
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &g_nproc);
