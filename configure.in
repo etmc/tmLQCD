@@ -317,7 +317,7 @@ dnl check for icc
       DEPFLAGS="-M"
     fi
   fi
-  LDFLAGS="-L\$(abs_top_builddir)/hmc/lib -L\$(abs_top_builddir)/hmc/lapack"
+  LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(abs_top_builddir)/lapack"
   if test "$LP" = "yes"; then
     if test "$ATLAS" = "yes"; then
       LIBS="$LIBS -llapack -lf77blas -latlas"
