@@ -22,5 +22,7 @@
 
 int write_gauge_field_time_p(char * filename);
 int read_gauge_field_time_p(char * filename);
+int write_spinorfield_eo_time_p(const int s, const int r, char * filename);
+int read_spinorfield_eo_time(const int s, const int r, char * filename);
 
 #endif

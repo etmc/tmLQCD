@@ -163,7 +163,7 @@ int read_gauge_field_time_p(char * filename){
 /*       errorhandler(112,filename); */
     }
     if((l!=L)||(t!=g_nproc*T)){
-      printf("Error! Configuration %s was produced with a differen lattice size\n Aborting...\n", filename);
+      printf("Error! Configuration %s was produced with a different lattice size\n Aborting...\n", filename);
       exit(1);
 /*       errorhandler(114,filename); */
     }
@@ -197,6 +197,173 @@ int read_gauge_field_time_p(char * filename){
     printf("Error! Could not read all data from %s or could not open file!\n Aborting!\n", filename);
     exit(1);
 /*     errorhandler(101, filename);  */
+  }
+  fclose(ifs);
+  return(0);
+}
+
+int write_spinorfield_eo_time_p(const int s, const int r, char * filename){
+  FILE * ofs = NULL;
+  int x, y, z, t, t0, tag=0, id, i=0, nr=0;
+  spinor tmp[1];
+#ifdef MPI
+  MPI_Status status;
+#endif
+
+  if(g_proc_id == 0){
+    ofs = fopen(filename, "w");
+    if(ofs != NULL ){
+      fprintf(ofs,"%f %f %f %d %d\n",g_beta, g_kappa, g_mu, L, T*g_nproc);
+    }
+    else{
+/*       errorhandler(106, filename); */
+    }
+  }
+  for(x = 0; x < LX; x++){
+    for(y = 0; y < LY; y++){
+      for(z = 0; z < LZ; z++){
+	for(t0 = 0; t0 < T*g_nproc; t0++){
+	  t = t0 - T*g_proc_id;
+	  id = t0 / T;
+	  if(g_proc_id == id) {
+	    i = trans1[ g_ipt[t][x][y][z] ];
+	    if((t0+x+y+z)%2==0) {
+	      nr = s;
+	    }
+	    else {
+	      i -= (VOLUME+RAND)/2;
+	      nr = r;
+	    }
+	  }
+	  if(g_proc_id == 0){
+	    if(g_proc_id == id){
+#ifdef LITTLE_ENDIAN
+	      byte_swap_assign(tmp, &spinor_field[nr][i], sizeof(spinor)/8);
+	      fwrite(tmp, sizeof(spinor), 1, ofs);
+#else
+	      fwrite(&spinor_field[nr][i], sizeof(spinor), 1, ofs);
+#endif
+	    }
+#ifdef MPI
+	    else{
+	      MPI_Recv(tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &status);
+	      fwrite(tmp, sizeof(spinor), 1, ofs);
+	    }
+#endif
+	  }
+#ifdef MPI
+	  else{
+	    if(g_proc_id == id){
+#ifdef LITTLE_ENDIAN
+	      byte_swap_assign(tmp, &spinor_field[nr][i], sizeof(spinor)/8);
+	      MPI_Send((void*) tmp, sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+#else
+	      MPI_Send((void*) &spinor_field[nr][i], sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+#endif		  
+	    }
+	  }
+#endif
+	  tag++;
+	}
+#ifdef MPI
+ 	MPI_Barrier(g_cart_grid); 
+#endif
+	tag=0;
+      }
+    }
+  }
+  if(g_proc_id == 0){
+    if(ferror(ofs)){
+/*       errorhandler(106, filename); */
+    }
+    fclose(ofs);
+  }
+  return(0);
+}
+
+
+int read_spinorfield_eo_time(const int s, const int r, char * filename){
+  FILE * ifs;
+  double beta,kappa,mu;
+  int l, t, x, y , z, nr = 0, i = 0;
+#ifdef MPI
+  int position;
+#endif
+#ifdef LITTLE_ENDIAN
+  spinor tmp[1];
+#endif
+
+  ifs = fopen(filename, "r");
+  if(ifs != NULL ){
+    fscanf(ifs,"%lf %lf %lf %d %d\n", &beta, &kappa, &mu, &l, &t);
+#ifdef MPI
+    position = ftell(ifs);
+#endif
+    if((beta!=g_beta)||(g_kappa!=kappa)||(g_mu!=mu)){
+      printf("Warnig! Parameters beta, kappa or mu are inconsistent with file %s!\n", filename);
+/*       errorhandler(113,filename); */
+    }
+    if((l!=L)||(t!=T*g_nproc)){
+      printf("Error! spinorfield %s was produced for a different lattice size!\nAborting!\n", filename);
+      exit(1);
+/*       errorhandler(115,filename); */
+    }
+#if (defined MPI && defined PARALLEL1)
+    fseek(ifs, position +
+	  g_proc_coords[0]*LX*LY*LZ*T*sizeof(spinor),
+	  SEEK_SET);
+#endif
+    for(x = 0; x < LX; x++){
+#if (defined MPI && defined PARALLEL2)
+      fseek(ifs, position +
+	    ((g_proc_coords[0]*LX+x)*L*LZ*T 
+	     + g_proc_coords[1]*LY*LZ*T)*sizeof(spinor),
+	    SEEK_SET);
+#endif
+      for(y = 0; y < LY; y++){
+#if (defined MPI && defined PARALLEL3)
+	fseek(ifs, position +
+	      ((g_proc_coords[0]*LX+x)*L*L*T 
+	       + (g_proc_coords[1]*LY+y)*L*T 
+	       + g_proc_coords[2]*LZ*T)*sizeof(spinor),
+	      SEEK_SET);
+#endif
+	for(z = 0; z < LZ; z++){
+#if (defined MPI && defined PARALLELT)
+	  fseek(ifs, position +
+		(g_proc_id*T+
+		 ((x*LY+y)*LZ+z)*T*g_nproc)*sizeof(spinor),
+		SEEK_SET);
+#endif
+	  for(t = 0; t < T; t++){
+	    i = trans1[ g_ipt[t][x][y][z] ];
+	    if((t+x+y+z+g_proc_id*T)%2==0) {
+	      nr = s;
+	    }
+	    else {
+	      nr = r;
+	      i -= (VOLUME+RAND)/2;
+	    }
+#ifdef LITTLE_ENDIAN
+	    fread(tmp, sizeof(spinor), 1, ifs);
+	    byte_swap_assign(&spinor_field[nr][i], tmp, sizeof(spinor)/8);
+#else
+	    fread(&spinor_field[nr][i], sizeof(spinor), 1, ifs);
+#endif
+	  }
+	}
+      }
+    }
+    if((feof(ifs)) || (ferror(ifs))){
+/*       errorhandler(107, filename); */
+      printf("Error while reading from filed %s!\nAborting!\n", filename);
+      exit(1);
+    }
+  }
+  else{
+/*     errorhandler(107, filename); */
+    printf("Error while reading from filed %s!\nAborting!\n", filename);
+    exit(1);
   }
   fclose(ifs);
   return(0);
