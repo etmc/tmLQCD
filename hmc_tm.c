@@ -37,6 +37,7 @@
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
+#include "hybrid_update.h"
 #include "update_tm.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
@@ -72,9 +73,6 @@ int main(int argc,char *argv[]) {
   int j,ix,mu;
   int k;
   struct timeval t1;
-#ifdef _GAUGE_COPY
-  int kb=0;
-#endif
 
   /* Energy corresponding to the Gauge part */
   double eneg = 0., plaquette_energy = 0., rectangle_energy = 0.;
@@ -397,18 +395,9 @@ int main(int argc,char *argv[]) {
   xchange_gauge();
 #endif
 #ifdef _GAUGE_COPY
-  /* set the backward gauge field */
-  for(ix = 0; ix < VOLUME;ix++) {
-    kb=g_idn[ix][0];
-    _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
-    kb=g_idn[ix][1];
-    _su3_assign(g_gauge_field_back[ix][1],g_gauge_field[kb][1]);
-    kb=g_idn[ix][2];
-    _su3_assign(g_gauge_field_back[ix][2],g_gauge_field[kb][2]);
-    kb=g_idn[ix][3];
-    _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
-  }
+  update_backward_gauge();
 #endif
+
   /*compute the energy of the gauge field*/
   plaquette_energy=measure_gauge_action();
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {

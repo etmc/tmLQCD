@@ -336,6 +336,9 @@ void fermion_momenta(double step, double q_off, double q_off2) {
   double tmp;
   su3adj *xm,*deriv;
 
+#ifdef _GAUGE_COPY
+  update_backward_gauge();
+#endif
   if(g_use_clover_flag == 1){ 
     sw_term(); 
     sw_invert(1);
@@ -417,9 +420,6 @@ void update_gauge(double step) {
   su3 *z;
   static su3adj deriv;
   su3adj *xm;
-#ifdef _GAUGE_COPY
-  int ix=0, kb=0;
-#endif
 
   for(i = 0; i < VOLUME; i++) { 
     for(mu = 0; mu < 4; mu++){
@@ -436,7 +436,17 @@ void update_gauge(double step) {
   /* for parallelization */
   xchange_gauge();
 #endif
-#ifdef _GAUGE_COPY
+  /*
+   *
+   * The backward copy of the gauge field
+   * is not updated here!
+   *
+   */
+}
+
+void update_backward_gauge() {
+  int ix=0, kb=0;
+
   /* set the backward gauge field */
   for(ix = 0; ix < VOLUME;ix++) {
     kb=g_idn[ix][0];
@@ -448,7 +458,6 @@ void update_gauge(double step) {
     kb=g_idn[ix][3];
     _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
   }
-#endif
 }
 
 void leap_frog(double q_off, double q_off2,

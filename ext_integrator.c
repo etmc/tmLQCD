@@ -32,7 +32,10 @@ void ext_leap_frog(int * const n_int, const double tau, const int S, const int h
     /* initialize the counter for the inverter */
     count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;
     eps = tau/((double)n_int[S]);
-    
+
+#ifdef _GAUGE_COPY
+    update_backward_gauge();
+#endif
     for(i = 1; i < S+1; i++) {
       update_fermion_momenta(0.5 * eps, S-i);
       eps /= ((double)n_int[S-i]);
@@ -48,6 +51,9 @@ void ext_leap_frog(int * const n_int, const double tau, const int S, const int h
 	update_gauge(eps0); 
 	gauge_momenta(eps0);
       }
+#ifdef _GAUGE_COPY
+      update_backward_gauge();
+#endif
       update_fermion_momenta(eps, S-1);
     }
     for(i = 1; i < n_int[0]; i++) {
@@ -55,6 +61,9 @@ void ext_leap_frog(int * const n_int, const double tau, const int S, const int h
       gauge_momenta(eps0);
     }
     update_gauge(eps0); 
+#ifdef _GAUGE_COPY
+    update_backward_gauge();
+#endif
     if(halfstep != 1) {
       gauge_momenta(eps0);
       update_fermion_momenta(eps, S-1);
@@ -93,6 +102,9 @@ void ext_sexton_weingarten(int * const n_int, const double tau, const int S, con
 
     eps = tau/((double)n_int[S]);
 
+#ifdef _GAUGE_COPY
+    update_backward_gauge();
+#endif
     for(i = 1; i < S; i++) {
       update_fermion_momenta(eps/6., S-i);
       eps /= ((double)n_int[S-i])*2;
@@ -114,6 +126,9 @@ void ext_sexton_weingarten(int * const n_int, const double tau, const int S, con
 	update_gauge(eps0/4.);
 	gauge_momenta(eps0/6.);
       }
+#ifdef _GAUGE_COPY
+      update_backward_gauge();
+#endif
       update_fermion_momenta(2.*eps/3., S-1);
       for(j = 0; j < n_int[0]; j++) {
 	update_gauge(eps0/4.);
@@ -121,6 +136,9 @@ void ext_sexton_weingarten(int * const n_int, const double tau, const int S, con
 	update_gauge(eps0/4.);
 	gauge_momenta(eps0/6.);
       }
+#ifdef _GAUGE_COPY
+      update_backward_gauge();
+#endif
       update_fermion_momenta(eps/3., S-1);
     }
     for(j = 0; j < n_int[0]; j++) {
@@ -129,6 +147,9 @@ void ext_sexton_weingarten(int * const n_int, const double tau, const int S, con
       update_gauge(eps0/4.);
       gauge_momenta(eps0/6.);
     }
+#ifdef _GAUGE_COPY
+    update_backward_gauge();
+#endif
     update_fermion_momenta(2.*eps/3., S-1);
     for(j = 1; j < n_int[0]; j++) {
       update_gauge(eps0/4.);
@@ -139,6 +160,9 @@ void ext_sexton_weingarten(int * const n_int, const double tau, const int S, con
     update_gauge(eps0/4.);
     gauge_momenta(eps0/3.);
     update_gauge(eps0/4.);
+#ifdef _GAUGE_COPY
+    update_backward_gauge();
+#endif
     if(halfstep != 1) {
       gauge_momenta(eps0/6.);
       update_fermion_momenta(eps/3., S-1);
@@ -183,6 +207,9 @@ void impr_leap_frog(int * const n_int, const double tau, const int S) {
     count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;
     s = 1.3512071919596576*eps;
     t = -1.7024143839193153*eps;
+#ifdef _GAUGE_COPY
+    update_backward_gauge();
+#endif
   }
   
 
@@ -195,6 +222,9 @@ void impr_leap_frog(int * const n_int, const double tau, const int S) {
 	update_gauge(eps0); 
 	gauge_momenta(eps0);
       }
+#ifdef _GAUGE_COPY
+      update_backward_gauge();
+#endif
       update_fermion_momenta(eps, S-1);
     }
     for(i = 1; i < n_int[0]; i++) {
@@ -203,6 +233,9 @@ void impr_leap_frog(int * const n_int, const double tau, const int S) {
     }
     update_gauge(eps0); 
     gauge_momenta(0.5*eps0);
+#ifdef _GAUGE_COPY
+    update_backward_gauge();
+#endif
     update_fermion_momenta(0.5*eps, S-1);
   }
   else if(S != g_nr_of_psf){
