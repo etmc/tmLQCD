@@ -72,7 +72,8 @@ void xchange_field2(spinor * const l) {
 
 #if (defined PARALLELXT) 
   int x0, x2, ix = 0, iz=0;
-  static spinor buffer_x[T*LY*LZ];
+  spinor * buffer_x;
+/*   static spinor buffer_x[T*LY*LZ]; */
 #endif  
 
   MPI_Status status;
@@ -334,7 +335,8 @@ void xchange_gauge() {
 void xchange_gauge2() {
 #if (defined PARALLELXT) 
   int x0, x2, ix = 0, iz=0, mu;
-  static su3 buffer_x[2*T*LY*LZ][4];
+  su3 ** buffer_x=NULL, * buffer_x_=NULL; 
+
 #endif
   MPI_Status status;
   /* send the data to the neighbour on the left */
