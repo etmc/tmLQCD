@@ -153,12 +153,12 @@ int main(int argc,char *argv[]) {
 #ifdef P4
     printf("# The code was compiled for pentium4\n");
 #endif
-    printf("# The lattice size is %d x %d^3\n",(int)(T)*g_nproc,(int)(L));
+    printf("# The lattice size is %d x %d^3\n",(int)(T)*g_nproc_t,(int)(L));
     printf("# The local lattice size is %d x %d^3\n",(int)(T),(int)(L));
     printf("# beta = %f , kappa= %f, mu= %f \n",g_beta,g_kappa,g_mu);
     printf("# mus = %f, %f, %f\n", g_mu1, g_mu2, g_mu3);
     
-    fprintf(parameterfile, "The lattice size is %d x %d^3\n", (int)(g_nproc*T),(int)(L));
+    fprintf(parameterfile, "The lattice size is %d x %d^3\n", (int)(g_nproc_t*T),(int)(L));
     fprintf(parameterfile, "The local lattice size is %d x %d^3\n", (int)(T),(int)(L));
     fprintf(parameterfile, "g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f g_mu = %f \n",g_beta,g_kappa,g_ka_csw_8, g_mu);
     fprintf(parameterfile, "boundary of fermion fields (t,x,y,z): %f %f %f %f \n",X0,X1,X2,X3);
@@ -290,15 +290,17 @@ int main(int argc,char *argv[]) {
       countfile = fopen(nstore_filename, "w");
       fprintf(countfile, "%d\n", nstore);
       fclose(countfile);
-      write_gauge_field_time_p( gauge_filename );
-
-      /*  write the status of the random number generator on a file */
-      if(g_proc_id==0) {
-	rlxd_get(rlxd_state);
-	rlxdfile=fopen("rlxd_state","w");
-	fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
-	fclose(rlxdfile);
-      }
+    }
+    else {
+      sprintf(gauge_filename,"%s", "conf.save");
+    }
+    write_gauge_field_time_p( gauge_filename );
+    /*  write the status of the random number generator on a file */
+    if(g_proc_id==0) {
+      rlxd_get(rlxd_state);
+      rlxdfile=fopen("rlxd_state","w");
+      fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
+      fclose(rlxdfile);
     }
   }
   /* write the gauge configuration to the file last_configuration */
