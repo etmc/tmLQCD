@@ -21,7 +21,7 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define T  4
+#define T  8
 #define L  8
 
 #ifndef PARALLELXT
@@ -118,21 +118,6 @@ EXTERN MPI_Comm g_cart_grid;
 EXTERN int g_nb_x_up, g_nb_x_dn;
 EXTERN int g_nb_t_up, g_nb_t_dn;
 
-/* Datatypes for the data exchange */
-EXTERN MPI_Datatype g_gauge_point, g_gauge_time_slice_cont;
-EXTERN MPI_Datatype g_gauge_time_slice_split;
-EXTERN MPI_Datatype g_deri_point, g_deri_time_slice_cont;
-EXTERN MPI_Datatype g_deri_time_slice_split;
-EXTERN MPI_Datatype g_field_point, g_field_time_slice_cont;
-EXTERN MPI_Datatype g_gauge_x_slice_cont;
-EXTERN MPI_Datatype g_gauge_yz_subslice;
-EXTERN MPI_Datatype g_gauge_x_slice_gath;
-EXTERN MPI_Datatype g_field_x_slice_cont;
-EXTERN MPI_Datatype g_field_yz_subslice;
-EXTERN MPI_Datatype g_field_x_slice_gath;
-EXTERN MPI_Datatype g_deri_x_slice_cont;
-EXTERN MPI_Datatype g_deri_yz_subslice;
-EXTERN MPI_Datatype g_deri_x_slice_gath;
 
 #endif
 

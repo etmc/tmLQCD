@@ -33,23 +33,10 @@ int check_geometry()
   int x0,x1,x2,x3;
   int iy0,iy1,iy2,iy3;
   int iz0,iz1,iz2,iz3;   
-#ifdef MPI
-  int r1=0, r2=0;
-#endif
-  
-/*   mpi_init(argc, argv); */
   
   itest = calloc(VOLUMEPLUSRAND, sizeof(int));
   stest = calloc((VOLUMEPLUSRAND)/2, sizeof(int));
-/*   printf("\n"); */
-/*   printf("Test of the geometry programs \n"); */
-/*   printf("------------------------------\n"); */
-  
-/*   printf("\n"); */
-/*   printf("The lattice size is %d x %d^3 \n\n",(int)(T),(int)(L)); */
-  
-/*   geometry(); */
-  
+
   for (ix=0;ix<VOLUMEPLUSRAND;ix++){
     itest[ix]=0;
   }
@@ -62,7 +49,7 @@ int check_geometry()
 	for (x3 = 0; x3 < LZ; x3++){
 	  ix=g_ipt[x0][x1][x2][x3];
 
-	  if ((ix<0)||(ix>=VOLUME)){
+	  if ((ix < 0) || (ix >= VOLUME)) {
 	    printf("The index ipt is out of range\n");
 	    printf("Program aborted\n");
 #ifdef MPI
@@ -100,7 +87,7 @@ int check_geometry()
 	    iz0=g_ipt[(x0+1)%T][x1][x2][x3];
 	  }
 	  else {
-	    iz0 = iy0;
+	    iz0 = g_ipt[T][x1][x2][x3];
 	    itest[iy0]++;
 	  }
 #else
@@ -113,10 +100,10 @@ int check_geometry()
 	    iz1=g_ipt[x0][(x1+1)%LX][x2][x3];
 	  }
 	  else {
-	    iz1 = iy1;
+	    iz1=g_ipt[x0][LX][x2][x3];
 	    itest[iy1]++;
-	    if(iy1 < VOLUME +T*LY*LZ || iy1 > VOLUMEPLUSRAND) {
-	      printf("Boundary for x direction is wrong %d %d %d\n", iy1 < VOLUME, iy1 > VOLUMEPLUSRAND, iy1);
+	    if(iy1 < VOLUME + 2*LX*LY*LZ || iy1 >= VOLUME + 2*LX*LY*LZ + T*LY*LZ) {
+	      printf("Boundary for x direction up is wrong %d %d %d\n", iy1 < VOLUME, iy1 > VOLUMEPLUSRAND, iy1);
 	      printf("Program aborted\n");
 #ifdef MPI
 	      MPI_Finalize();
@@ -134,7 +121,8 @@ int check_geometry()
 	  iy3=g_iup[ix][3];
 	  iz3=g_ipt[x0][x1][x2][(x3+1)%LZ];               
                
-	  if ((iy0!=iz0)||(iy1!=iz1)||(iy2!=iz2)||(iy3!=iz3)){
+	  if ((iy0!=iz0)||(iy1!=iz1)||(iy2!=iz2)||(iy3!=iz3)||
+	      (g_idn[iy0][0]!=ix)||(g_idn[iy1][1]!=ix)||(g_idn[iy2][2]!=ix)||(g_idn[iy3][3]!=ix)) {
 	    printf("The index iup is incorrect\n");
 	    printf("%d %d %d %d\n", (iy0!=iz0), (iy1!=iz1), (iy2!=iz2), (iy3!=iz3));
 	    printf("Program aborted\n");
@@ -150,21 +138,24 @@ int check_geometry()
 	    iz0=g_ipt[(x0+T-1)%T][x1][x2][x3];
 	  }
 	  else {
-	    iz0 = iy0;
+	    iz0 = g_ipt[T+1][x1][x2][x3];;
 	    itest[iy0]++;
 	  }
 #else
 	  iz0=g_ipt[(x0+T-1)%T][x1][x2][x3];
 #endif
 	  iy1=g_idn[ix][1];
+	  if(g_iup[iy1][1]!=ix) {
+	    printf("Hallo\n");
+	  }
 #if (defined PARALLELXT)
 	  if(x1 !=0) {
 	    iz1=g_ipt[x0][(x1+LX-1)%LX][x2][x3];
 	  }
 	  else {
-	    iz1 = iy1;
+	    iz1 = g_ipt[x0][LX+1][x2][x3];;
 	    itest[iy1]++;
-	    if(iy1 < VOLUME +T*LY*LZ || iy1 > VOLUMEPLUSRAND) {
+	    if(iy1 < VOLUME + 2*LX*LY*LZ + T*LY*LZ || iy1 > VOLUME + RAND) {
 	      printf("Boundary for x direction is wrong %d %d %d\n", iy1 < VOLUME, iy1 > VOLUMEPLUSRAND, iy1);
 	      printf("Program aborted\n");
 #ifdef MPI
@@ -182,7 +173,8 @@ int check_geometry()
 	  iy3=g_idn[ix][3];
 	  iz3=g_ipt[x0][x1][x2][(x3+LZ-1)%LZ];               
                
-	  if ((iy0!=iz0)||(iy1!=iz1)||(iy2!=iz2)||(iy3!=iz3)){
+	  if ((iy0!=iz0)||(iy1!=iz1)||(iy2!=iz2)||(iy3!=iz3)||
+	      (g_iup[iy0][0]!=ix)||(g_iup[iy1][1]!=ix)||(g_iup[iy2][2]!=ix)||(g_iup[iy3][3]!=ix)) {
 	    printf("The index idn is incorrect\n");
 	    printf("%d %d %d %d\n", (iy0!=iz0), (iy1!=iz1), (iy2!=iz2), (iy3!=iz3));
 	    printf("Program aborted\n");

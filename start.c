@@ -411,3 +411,127 @@ void random_gauge_field(void)
    }
 }
 
+void set_spinor_point(spinor * s, const double c){
+  (*s).c1.c1.re=c;
+  (*s).c1.c1.im=c;
+  (*s).c1.c2.re=c;
+  (*s).c1.c2.im=c;
+  (*s).c1.c3.re=c;
+  (*s).c1.c3.im=c;
+  (*s).c2.c1.re=c;
+  (*s).c2.c1.im=c;
+  (*s).c2.c2.re=c;
+  (*s).c2.c2.im=c;
+  (*s).c2.c3.re=c;
+  (*s).c2.c3.im=c;
+  (*s).c3.c1.re=c;
+  (*s).c3.c1.im=c;
+  (*s).c3.c2.re=c;
+  (*s).c3.c2.im=c;
+  (*s).c3.c3.re=c;
+  (*s).c3.c3.im=c;
+  (*s).c4.c1.re=c;
+  (*s).c4.c1.im=c;
+  (*s).c4.c2.re=c;
+  (*s).c4.c2.im=c;
+  (*s).c4.c3.re=c;
+  (*s).c4.c3.im=c;  
+}
+
+void set_spinor_field(int k, const double c) {
+
+  int ix;
+  spinor *s;
+  for (ix=0;ix<VOLUME/2;ix++) {
+    s=&spinor_field[k][ix];
+    (*s).c1.c1.re=c;
+    (*s).c1.c1.im=c;
+    (*s).c1.c2.re=c;
+    (*s).c1.c2.im=c;
+    (*s).c1.c3.re=c;
+    (*s).c1.c3.im=c;
+    (*s).c2.c1.re=c;
+    (*s).c2.c1.im=c;
+    (*s).c2.c2.re=c;
+    (*s).c2.c2.im=c;
+    (*s).c2.c3.re=c;
+    (*s).c2.c3.im=c;
+    (*s).c3.c1.re=c;
+    (*s).c3.c1.im=c;
+    (*s).c3.c2.re=c;
+    (*s).c3.c2.im=c;
+    (*s).c3.c3.re=c;
+    (*s).c3.c3.im=c;
+    (*s).c4.c1.re=c;
+    (*s).c4.c1.im=c;
+    (*s).c4.c2.re=c;
+    (*s).c4.c2.im=c;
+    (*s).c4.c3.re=c;
+    (*s).c4.c3.im=c;
+  }
+ for (ix=VOLUME/2;ix<VOLUMEPLUSRAND/2;ix++) {
+    s=&spinor_field[k][ix];
+    (*s).c1.c1.re=0;
+    (*s).c1.c1.im=0.;
+    (*s).c1.c2.re=0.;
+    (*s).c1.c2.im=0.;
+    (*s).c1.c3.re=0.;
+    (*s).c1.c3.im=0.;
+    (*s).c2.c1.re=0.;
+    (*s).c2.c1.im=0.;
+    (*s).c2.c2.re=0.;
+    (*s).c2.c2.im=0.;
+    (*s).c2.c3.re=0.;
+    (*s).c2.c3.im=0.;
+    (*s).c3.c1.re=0.;
+    (*s).c3.c1.im=0.;
+    (*s).c3.c2.re=0.;
+    (*s).c3.c2.im=0.;
+    (*s).c3.c3.re=0.;
+    (*s).c3.c3.im=0.;
+    (*s).c4.c1.re=0.;
+    (*s).c4.c1.im=0.;
+    (*s).c4.c2.re=0.;
+    (*s).c4.c2.im=0.;
+    (*s).c4.c3.re=0.;
+    (*s).c4.c3.im=0.;
+  }
+}
+
+su3 set_su3(const double c)
+{
+   su3 u;
+
+   u.c11.re=c;
+   u.c11.im=c;
+   u.c12.re=c;
+   u.c12.im=c;
+   u.c13.re=c;
+   u.c13.im=c;
+
+   u.c21.re=c;
+   u.c21.im=c;
+   u.c22.re=c;
+   u.c22.im=c;
+   u.c23.re=c;
+   u.c23.im=c;
+
+   u.c31.re=c;
+   u.c31.im=c;
+   u.c32.re=c;
+   u.c32.im=c;
+   u.c33.re=c;
+   u.c33.im=c;
+
+   return(u);
+}
+
+void set_gauge_field(const double c) {
+  int ix,mu;
+  
+  for (ix=0;ix<VOLUME;ix++) {
+    for (mu=0;mu<4;mu++){
+      g_gauge_field[ix][mu]=set_su3(c);
+    }
+  }
+}

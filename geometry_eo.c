@@ -49,25 +49,26 @@ int Index(const int x0, const int x1, const int x2, const int x3)
    }
 #endif
 #if (defined PARALLELXT)
-  if(x1 == -1){
+  if(x1 == LX){
     ix = VOLUME + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
   }
-  if(x1 == LX){
+  if(x1 == -1){
     ix = VOLUME + 2*LX*LY*LZ + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
   }   
-  if(x0 == -1){
-    if(x1 == -1){
+  /* The edges */
+  if(x0 == T){
+    if(x1 == LX){
       ix = VOLUME+RAND+y2*LZ+y3;
     }
-    if(x1 == LX){
+    if(x1 == -1){
       ix = VOLUME+RAND+LY*LZ+y2*LZ+y3;
     }
   }
-  if(x0 == T){
-    if(x1 == -1){
+  if(x0 == -1){
+    if(x1 == LX){
       ix = VOLUME+RAND+2*LY*LZ+y2*LZ+y3;
     }
-    if(x1 == LX){
+    if(x1 == -1){
       ix = VOLUME+RAND+3*LY*LZ+y2*LZ+y3;
     }
   }
@@ -143,7 +144,7 @@ void geometry(){
 
 	  /* g_proc_id*T is added to allow for odd T when the number of 
 	     nodes is even */
-	  if((x0+x1+x2+x3+g_nproc_t*T)%2==0 && !(((x0 == -1) || (x0 == T)) && ((x1 == -1)||(x1 == LX)))) {
+	  if((x0+x1+x2+x3+g_nproc_t*T)%2==0) {
 	    xeven[ix]=1;
 	  } 
 	  else {
@@ -151,18 +152,27 @@ void geometry(){
 	  }
 
 	  if(x0 >= 0 && x1 >=0) g_ipt[x0][x1][x2][x3] = ix;
+	  else if(x0 < 0 && x1 < 0) {
+	    g_ipt[T+1][LX+1][x2][x3] = ix;
+	  }
+	  else if(x0 < 0) {
+	    g_ipt[T+1][x1][x2][x3] = ix;
+	  }
+	  else if(x1 < 0) {
+	    g_ipt[x0][LX+1][x2][x3] = ix;
+	  }
 
-	  g_iup[ix][0]=Index(x0+1,x1,x2,x3);
-	  g_idn[ix][0] = Index(x0-1,x1,x2,x3);
+	  g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	  g_idn[ix][0] = Index(x0-1, x1, x2, x3);
 
-	  g_iup[ix][1]=Index(x0,x1+1,x2,x3);
-	  g_idn[ix][1]=Index(x0,x1-1,x2,x3);
+	  g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	  g_idn[ix][1] = Index(x0, x1-1, x2, x3);
 
-	  g_iup[ix][2]=Index(x0,x1,x2+1,x3);
-	  g_idn[ix][2]=Index(x0,x1,x2-1,x3);
+	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
 
-	  g_iup[ix][3]=Index(x0,x1,x2,x3+1);
-	  g_idn[ix][3]=Index(x0,x1,x2,x3-1);
+	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
 	  
 	}
       }

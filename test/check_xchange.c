@@ -22,13 +22,10 @@
 #ifdef MPI
 #include "mpi_init.h"
 #endif
+#include "start.h"
 #include "xchange.h"
 
-void set_spinor_field(int k, const double c);
-void set_gauge_field(const double c);
-void set_spinor_point(spinor * s, const double c);
 void set_deri_point();
-su3 set_su3(const double c);
 int check_geometry();
 
 int main(int argc,char *argv[])
@@ -243,18 +240,20 @@ int main(int argc,char *argv[])
     }
   }
 
-  for(x1 = 0; x1 < LX; x1++) {
+  for(x1 = 0; x1 < 0; x1++) {
     for(x2 = 0; x2 < LY; x2++) {
       for(x3 = 0; x3 < LZ; x3++) {
 	ix = g_ipt[T+1][x1][x2][x3];
-	df0[ix][mu].d1=(double)g_cart_id;
-	df0[ix][mu].d2=(double)g_cart_id;
-	df0[ix][mu].d3=(double)g_cart_id;
-	df0[ix][mu].d4=(double)g_cart_id;
-	df0[ix][mu].d5=(double)g_cart_id;
-	df0[ix][mu].d6=(double)g_cart_id;
-	df0[ix][mu].d7=(double)g_cart_id;
-	df0[ix][mu].d8=(double)g_cart_id;
+	for(mu=0;mu<4;mu++){
+	  df0[ix][mu].d1=(double)g_cart_id;
+	  df0[ix][mu].d2=(double)g_cart_id;
+	  df0[ix][mu].d3=(double)g_cart_id;
+	  df0[ix][mu].d4=(double)g_cart_id;
+	  df0[ix][mu].d5=(double)g_cart_id;
+	  df0[ix][mu].d6=(double)g_cart_id;
+	  df0[ix][mu].d7=(double)g_cart_id;
+	  df0[ix][mu].d8=(double)g_cart_id;
+	}
       }
     }
   }
@@ -262,21 +261,49 @@ int main(int argc,char *argv[])
   for(x0 = 0; x0 < T; x0++) {
     for(x2 = 0; x2 < LY; x2++) {
       for(x3 = 0; x3 < LZ; x3++) {
-	ix = g_ipt[x0][LX+11][x2][x3];
-	df0[ix][mu].d1=(double)g_cart_id;
-	df0[ix][mu].d2=(double)g_cart_id;
-	df0[ix][mu].d3=(double)g_cart_id;
-	df0[ix][mu].d4=(double)g_cart_id;
-	df0[ix][mu].d5=(double)g_cart_id;
-	df0[ix][mu].d6=(double)g_cart_id;
-	df0[ix][mu].d7=(double)g_cart_id;
-	df0[ix][mu].d8=(double)g_cart_id;
+	ix = g_idn[ g_ipt[x0][0][x2][x3] ][1];
+	for(mu=0;mu<4;mu++){
+	  df0[ix][mu].d1=(double)g_cart_id;
+	  df0[ix][mu].d2=(double)g_cart_id;
+	  df0[ix][mu].d3=(double)g_cart_id;
+	  df0[ix][mu].d4=(double)g_cart_id;
+	  df0[ix][mu].d5=(double)g_cart_id;
+	  df0[ix][mu].d6=(double)g_cart_id;
+	  df0[ix][mu].d7=(double)g_cart_id;
+	  df0[ix][mu].d8=(double)g_cart_id;
+	}
       }
     }
   }
 #endif
 
   xchange_deri();
+
+  for(x0 = 0; x0 < T; x0++) {
+    for(x2 = 0; x2 < LY; x2++) {
+      for(x3 = 0; x3 < LZ; x3++) {
+	ix = g_ipt[x0][LX-1][x2][x3];
+	for(mu=0;mu<4;mu++){
+	  if(
+	  df0[ix][mu].d1 != g_nb_x_up ||
+	  df0[ix][mu].d2 != g_nb_x_up ||
+	  df0[ix][mu].d3 != g_nb_x_up ||
+	  df0[ix][mu].d4 != g_nb_x_up ||
+	  df0[ix][mu].d5 != g_nb_x_up ||
+	  df0[ix][mu].d6 != g_nb_x_up ||
+	  df0[ix][mu].d7 != g_nb_x_up ||
+	  df0[ix][mu].d8 != g_nb_x_up){
+	    printf("Exchange of derivatives is working not correctly!\n");
+	    printf("Aborting program!");
+#ifdef MPI
+	    MPI_Finalize();
+#endif
+	    exit(0);
+	  }
+	}
+      }
+    }
+  }
 
   /* Check is missing! */
 
@@ -289,128 +316,4 @@ int main(int argc,char *argv[])
   return(0);
 }
 
-void set_spinor_point(spinor * s, const double c){
-  (*s).c1.c1.re=c;
-  (*s).c1.c1.im=c;
-  (*s).c1.c2.re=c;
-  (*s).c1.c2.im=c;
-  (*s).c1.c3.re=c;
-  (*s).c1.c3.im=c;
-  (*s).c2.c1.re=c;
-  (*s).c2.c1.im=c;
-  (*s).c2.c2.re=c;
-  (*s).c2.c2.im=c;
-  (*s).c2.c3.re=c;
-  (*s).c2.c3.im=c;
-  (*s).c3.c1.re=c;
-  (*s).c3.c1.im=c;
-  (*s).c3.c2.re=c;
-  (*s).c3.c2.im=c;
-  (*s).c3.c3.re=c;
-  (*s).c3.c3.im=c;
-  (*s).c4.c1.re=c;
-  (*s).c4.c1.im=c;
-  (*s).c4.c2.re=c;
-  (*s).c4.c2.im=c;
-  (*s).c4.c3.re=c;
-  (*s).c4.c3.im=c;  
-}
-
-void set_spinor_field(int k, const double c) {
-
-  int ix;
-  spinor *s;
-  for (ix=0;ix<VOLUME/2;ix++) {
-    s=&spinor_field[k][ix];
-    (*s).c1.c1.re=c;
-    (*s).c1.c1.im=c;
-    (*s).c1.c2.re=c;
-    (*s).c1.c2.im=c;
-    (*s).c1.c3.re=c;
-    (*s).c1.c3.im=c;
-    (*s).c2.c1.re=c;
-    (*s).c2.c1.im=c;
-    (*s).c2.c2.re=c;
-    (*s).c2.c2.im=c;
-    (*s).c2.c3.re=c;
-    (*s).c2.c3.im=c;
-    (*s).c3.c1.re=c;
-    (*s).c3.c1.im=c;
-    (*s).c3.c2.re=c;
-    (*s).c3.c2.im=c;
-    (*s).c3.c3.re=c;
-    (*s).c3.c3.im=c;
-    (*s).c4.c1.re=c;
-    (*s).c4.c1.im=c;
-    (*s).c4.c2.re=c;
-    (*s).c4.c2.im=c;
-    (*s).c4.c3.re=c;
-    (*s).c4.c3.im=c;
-  }
- for (ix=VOLUME/2;ix<VOLUMEPLUSRAND/2;ix++) {
-    s=&spinor_field[k][ix];
-    (*s).c1.c1.re=0;
-    (*s).c1.c1.im=0.;
-    (*s).c1.c2.re=0.;
-    (*s).c1.c2.im=0.;
-    (*s).c1.c3.re=0.;
-    (*s).c1.c3.im=0.;
-    (*s).c2.c1.re=0.;
-    (*s).c2.c1.im=0.;
-    (*s).c2.c2.re=0.;
-    (*s).c2.c2.im=0.;
-    (*s).c2.c3.re=0.;
-    (*s).c2.c3.im=0.;
-    (*s).c3.c1.re=0.;
-    (*s).c3.c1.im=0.;
-    (*s).c3.c2.re=0.;
-    (*s).c3.c2.im=0.;
-    (*s).c3.c3.re=0.;
-    (*s).c3.c3.im=0.;
-    (*s).c4.c1.re=0.;
-    (*s).c4.c1.im=0.;
-    (*s).c4.c2.re=0.;
-    (*s).c4.c2.im=0.;
-    (*s).c4.c3.re=0.;
-    (*s).c4.c3.im=0.;
-  }
-}
-
-su3 set_su3(const double c)
-{
-   su3 u;
-
-   u.c11.re=c;
-   u.c11.im=c;
-   u.c12.re=c;
-   u.c12.im=c;
-   u.c13.re=c;
-   u.c13.im=c;
-
-   u.c21.re=c;
-   u.c21.im=c;
-   u.c22.re=c;
-   u.c22.im=c;
-   u.c23.re=c;
-   u.c23.im=c;
-
-   u.c31.re=c;
-   u.c31.im=c;
-   u.c32.re=c;
-   u.c32.im=c;
-   u.c33.re=c;
-   u.c33.im=c;
-
-   return(u);
-}
-
-void set_gauge_field(const double c) {
-  int ix,mu;
-  
-  for (ix=0;ix<VOLUME;ix++) {
-    for (mu=0;mu<4;mu++){
-      g_gauge_field[ix][mu]=set_su3(c);
-    }
-  }
-}
 

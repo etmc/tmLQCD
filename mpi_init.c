@@ -7,6 +7,27 @@
 #include "global.h"
 #include "mpi_init.h"
 
+/* Datatypes for the data exchange */
+MPI_Datatype gauge_point;
+MPI_Datatype gauge_time_slice_cont;
+MPI_Datatype gauge_time_slice_split;
+MPI_Datatype deri_point;
+MPI_Datatype deri_time_slice_cont;
+MPI_Datatype deri_time_slice_split;
+MPI_Datatype field_point;
+MPI_Datatype field_time_slice_cont;
+MPI_Datatype gauge_x_slice_cont;
+MPI_Datatype gauge_yz_subslice;
+MPI_Datatype gauge_x_slice_gath;
+MPI_Datatype field_x_slice_cont;
+MPI_Datatype field_yz_subslice;
+MPI_Datatype field_x_slice_gath;
+MPI_Datatype deri_x_slice_cont;
+MPI_Datatype deri_yz_subslice;
+MPI_Datatype deri_x_slice_gath;
+MPI_Datatype gauge_xy_edge_cont;
+MPI_Datatype gauge_xy_edge_gath;
+
 
 void mpi_init(int argc,char *argv[]) {
 #ifdef MPI
@@ -54,45 +75,51 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Cart_shift(g_cart_grid, 1, 1, &g_nb_x_dn, &g_nb_x_up);
 #endif
 
-  MPI_Type_contiguous(72, MPI_DOUBLE, &g_gauge_point);
-  MPI_Type_commit(&g_gauge_point);
-  MPI_Type_contiguous(LX*L*L, g_gauge_point, &g_gauge_time_slice_cont);
-  MPI_Type_vector(2, LX*L*L/2, (VOLUME)/2, g_gauge_point, &g_gauge_time_slice_split);
-  MPI_Type_commit(&g_gauge_time_slice_split);
-  MPI_Type_commit(&g_gauge_time_slice_cont);
+  MPI_Type_contiguous(72, MPI_DOUBLE, &gauge_point);
+/*   MPI_Type_commit(&g_gauge_point); */
+  MPI_Type_contiguous(LX*L*L, gauge_point, &gauge_time_slice_cont);
+  MPI_Type_vector(2, LX*L*L/2, (VOLUME)/2, gauge_point, &gauge_time_slice_split);
+  MPI_Type_commit(&gauge_time_slice_split);
+  MPI_Type_commit(&gauge_time_slice_cont);
 
-  MPI_Type_contiguous(32, MPI_DOUBLE, &g_deri_point);
-  MPI_Type_commit(&g_deri_point);
-  MPI_Type_vector(2, LX*L*L/2, VOLUME/2, g_deri_point, &g_deri_time_slice_split);
-  MPI_Type_contiguous(LX*L*L, g_deri_point, &g_deri_time_slice_cont);
-  MPI_Type_commit(&g_deri_time_slice_split);
-  MPI_Type_commit(&g_deri_time_slice_cont);
+  MPI_Type_contiguous(32, MPI_DOUBLE, &deri_point);
+/*   MPI_Type_commit(&deri_point); */
+  MPI_Type_vector(2, LX*L*L/2, VOLUME/2, deri_point, &deri_time_slice_split);
+  MPI_Type_contiguous(LX*L*L, deri_point, &deri_time_slice_cont);
+  MPI_Type_commit(&deri_time_slice_split);
+  MPI_Type_commit(&deri_time_slice_cont);
 
-  MPI_Type_contiguous(24, MPI_DOUBLE, &g_field_point);
-  MPI_Type_commit(&g_field_point);
-  MPI_Type_contiguous(LX*L*L/2, g_field_point, &g_field_time_slice_cont);
-  MPI_Type_commit(&g_field_time_slice_cont);
+  MPI_Type_contiguous(24, MPI_DOUBLE, &field_point);
+/*   MPI_Type_commit(&field_point); */
+  MPI_Type_contiguous(LX*L*L/2, field_point, &field_time_slice_cont);
+  MPI_Type_commit(&field_time_slice_cont);
 
-  MPI_Type_contiguous(T*LY*LZ, g_gauge_point, &g_gauge_x_slice_cont);
-  MPI_Type_contiguous(LY*LZ, g_gauge_point, &g_gauge_yz_subslice);
-  MPI_Type_commit(&g_gauge_yz_subslice);
-  MPI_Type_vector(T, 1, LX, g_gauge_yz_subslice, &g_gauge_x_slice_gath);
-  MPI_Type_commit(&g_gauge_x_slice_gath);
-  MPI_Type_commit(&g_gauge_x_slice_cont);
+  MPI_Type_contiguous(T*LY*LZ, gauge_point, &gauge_x_slice_cont);
+  MPI_Type_contiguous(LY*LZ, gauge_point, &gauge_yz_subslice);
+/*   MPI_Type_commit(&gauge_yz_subslice); */
+  MPI_Type_vector(T, 1, LX, gauge_yz_subslice, &gauge_x_slice_gath);
+  MPI_Type_commit(&gauge_x_slice_gath);
+  MPI_Type_commit(&gauge_x_slice_cont);
 
-  MPI_Type_contiguous(T*LY*LZ/2, g_field_point, &g_field_x_slice_cont);
-  MPI_Type_commit(&g_field_x_slice_cont);
-  MPI_Type_contiguous(LY*LZ/2, g_field_point, &g_field_yz_subslice);
-  MPI_Type_commit(&g_field_yz_subslice); 
-  MPI_Type_vector(T, 1, LX, g_field_yz_subslice, &g_field_x_slice_gath);
-  MPI_Type_commit(&g_field_x_slice_gath);
+  MPI_Type_contiguous(T*LY*LZ/2, field_point, &field_x_slice_cont);
+  MPI_Type_commit(&field_x_slice_cont);
+  MPI_Type_contiguous(LY*LZ/2, field_point, &field_yz_subslice);
+/*   MPI_Type_commit(&field_yz_subslice);  */
+  MPI_Type_vector(T, 1, LX, field_yz_subslice, &field_x_slice_gath);
+  MPI_Type_commit(&field_x_slice_gath);
 
-  MPI_Type_contiguous(T*LY*LZ, g_deri_point, &g_deri_x_slice_cont);
-  MPI_Type_contiguous(LY*LZ, g_deri_point, &g_deri_yz_subslice);
-  MPI_Type_commit(&g_deri_yz_subslice);
-  MPI_Type_vector(T, 1, LX, g_deri_yz_subslice, &g_deri_x_slice_gath);
-  MPI_Type_commit(&g_deri_x_slice_gath);
-  MPI_Type_commit(&g_deri_x_slice_cont);
+  MPI_Type_contiguous(T*LY*LZ, deri_point, &deri_x_slice_cont);
+  MPI_Type_contiguous(LY*LZ, deri_point, &deri_yz_subslice);
+/*   MPI_Type_commit(&deri_yz_subslice); */
+  MPI_Type_vector(T, 1, LX, deri_yz_subslice, &deri_x_slice_gath);
+  MPI_Type_commit(&deri_x_slice_gath);
+  MPI_Type_commit(&deri_x_slice_cont);
+
+  MPI_Type_contiguous(2*LY*LZ ,gauge_point, &gauge_xy_edge_cont);
+  MPI_Type_commit(&gauge_xy_edge_cont);
+  /* This is in the x- boundary (T*LY*LZ)*/
+  MPI_Type_vector(2, 1, T, gauge_yz_subslice, &gauge_xy_edge_gath);
+  MPI_Type_commit(&gauge_xy_edge_gath);
 
 #else
   g_nproc = 1;
