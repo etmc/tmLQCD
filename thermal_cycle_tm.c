@@ -355,7 +355,7 @@ int main(int argc,char *argv[]) {
 	  printf("Performing %d measurements for kappa = %f!\n", Nmeas, kappa);
 	  fflush( stdout );
 	}
-	sprintf(datafilename, ".back.%s.%f.data", filename, kappa);
+	sprintf(datafilename, "%s.back.%f.data", filename, kappa);
 	
 	/* Loop for measurements */
 	for(j=0;j<Nmeas;j++) {
