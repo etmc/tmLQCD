@@ -157,7 +157,7 @@ void deri(double q_off,double q_off2) {
 	gamma5(DUM_DERI, second_psf);
 	qo=q_off-q_off2;
 	count10+=bicg(DUM_DERI, second_psf, q_off2, EPS_SQ2/qo);
-	deri_linalg(DUM_DERI+2, qo*qo,DUM_DERI, qo, second_psf, VOLUME/2);
+	deri_linalg(spinor_field[DUM_DERI+2], qo*qo, spinor_field[DUM_DERI], qo, spinor_field[second_psf], VOLUME/2);
 	gamma5(DUM_DERI+1, DUM_DERI+2);
 	count11+=bicg(DUM_DERI+1, DUM_DERI+2, q_off2, EPS_SQ2*qo);
       }
@@ -195,14 +195,14 @@ void deri(double q_off,double q_off2) {
 	/* contributions from field 2 (stored on 4) */
 	gamma5(DUM_DERI,4);
 	count20+=bicg(DUM_DERI,4,0.,EPS_SQ3/q_off2);
-	deri_linalg(DUM_DERI+2,q_off2*q_off2,DUM_DERI,q_off2,4, VOLUME/2);
+	deri_linalg(spinor_field[DUM_DERI+2],q_off2*q_off2, spinor_field[DUM_DERI],q_off2, spinor_field[4], VOLUME/2);
 	gamma5(DUM_DERI+1,DUM_DERI+2);
 	count21+=bicg(DUM_DERI+1,DUM_DERI+2,0.,EPS_SQ3*q_off2);
       }
       else {
 	/* Second term coming from the second field */
 	/* The sign is opposite!! */
-	mul_r(DUM_DERI, -1., second_psf, VOLUME/2);
+	mul_r(spinor_field[DUM_DERI], -1., spinor_field[second_psf], VOLUME/2);
 	g_mu = g_mu1;
       }
     }
@@ -237,7 +237,7 @@ void deri(double q_off,double q_off2) {
     if(j == 4) {
       /* Second term coming from the third field */
       /* The sign is opposite!! */
-      mul_r(DUM_DERI, -1., third_psf, VOLUME/2);
+      mul_r( spinor_field[DUM_DERI], -1., spinor_field[third_psf], VOLUME/2);
       g_mu = g_mu2;
     }
     if(g_use_clover_flag == 1){ 

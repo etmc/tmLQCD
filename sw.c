@@ -310,26 +310,26 @@ double six_det(complex a[6][6]){
 
 /*definitions needed for the functions sw_trace(int ieo) and sw_invert(int ieo)*/
 #define _a_C(A, B, C) \
-a[0+(A)][0+(B)]=(C).c11; \
-a[0+(A)][1+(B)]=(C).c12; \
-a[0+(A)][2+(B)]=(C).c13; \
-a[1+(A)][0+(B)]=(C).c21; \
-a[1+(A)][1+(B)]=(C).c22; \
-a[1+(A)][2+(B)]=(C).c23; \
-a[2+(A)][0+(B)]=(C).c31; \
-a[2+(A)][1+(B)]=(C).c32; \
-a[2+(A)][2+(B)]=(C).c33;
+a[0+(A)][0+(B)]=(C).c00; \
+a[0+(A)][1+(B)]=(C).c01; \
+a[0+(A)][2+(B)]=(C).c02; \
+a[1+(A)][0+(B)]=(C).c10; \
+a[1+(A)][1+(B)]=(C).c11; \
+a[1+(A)][2+(B)]=(C).c12; \
+a[2+(A)][0+(B)]=(C).c20; \
+a[2+(A)][1+(B)]=(C).c21; \
+a[2+(A)][2+(B)]=(C).c22;
 
 #define _C_a(A, B, C) \
-(C).c11=a[0+(A)][0+(B)]; \
-(C).c12=a[0+(A)][1+(B)]; \
-(C).c13=a[0+(A)][2+(B)]; \
-(C).c21=a[1+(A)][0+(B)]; \
-(C).c22=a[1+(A)][1+(B)]; \
-(C).c23=a[1+(A)][2+(B)]; \
-(C).c31=a[2+(A)][0+(B)]; \
-(C).c32=a[2+(A)][1+(B)]; \
-(C).c33=a[2+(A)][2+(B)];
+(C).c00=a[0+(A)][0+(B)]; \
+(C).c01=a[0+(A)][1+(B)]; \
+(C).c02=a[0+(A)][2+(B)]; \
+(C).c10=a[1+(A)][0+(B)]; \
+(C).c11=a[1+(A)][1+(B)]; \
+(C).c12=a[1+(A)][2+(B)]; \
+(C).c20=a[2+(A)][0+(B)]; \
+(C).c21=a[2+(A)][1+(B)]; \
+(C).c22=a[2+(A)][2+(B)];
 
 /*
  * Computes Tr log (1+T_{ee|oo})
@@ -514,17 +514,17 @@ void sw_spinor(int ieo,  int kk,  int ll){
       s4=(sw(2, 2, l, t).hdot.phi(3, l, t))+sw(3, 2, l, t)*phi(4, l, t)
     */
 
-    _vector_tensor_vector(v1, (*r).c1, (*s).c1);
-    _vector_tensor_vector(v2, (*r).c1, (*s).c2);
-    _vector_tensor_vector(v3, (*s).c1, (*r).c2);
+    _vector_tensor_vector(v1, (*r).s0, (*s).s0);
+    _vector_tensor_vector(v2, (*r).s0, (*s).s1);
+    _vector_tensor_vector(v3, (*s).s0, (*r).s1);
     _su3_acc(v2, v3);
-    _vector_tensor_vector(v3, (*r).c2, (*s).c2);
+    _vector_tensor_vector(v3, (*r).s1, (*s).s1);
 
-    _vector_tensor_vector(u1, (*r).c3, (*s).c3);
-    _vector_tensor_vector(u2, (*r).c3, (*s).c4);
-    _vector_tensor_vector(u3, (*s).c3, (*r).c4);
+    _vector_tensor_vector(u1, (*r).s2, (*s).s2);
+    _vector_tensor_vector(u2, (*r).s2, (*s).s3);
+    _vector_tensor_vector(u3, (*s).s2, (*r).s3);
     _su3_acc(u2, u3);
-    _vector_tensor_vector(u3, (*r).c4, (*s).c4);
+    _vector_tensor_vector(u3, (*r).s3, (*s).s3);
 
     /* compute the insertion matrix */
     _su3_plus_su3(lswp[0], u1, v1);

@@ -149,28 +149,28 @@ void clover_inv(int ieo, int l){
     ix=g_eo2lexic[icx];
     rn=&spinor_field[l][icx-ioff];
     /* noch schlimmer murks fuer den clover-term */
-    _vector_assign(phi1, (*rn).c1);
-    _vector_assign(phi3, (*rn).c3);
+    _vector_assign(phi1, (*rn).s0);
+    _vector_assign(phi3, (*rn).s2);
 
     w1=&sw_inv[ix][0][0];
     w2=w1+2;  /* &sw_inv[ix][1][0]; */
     w3=w1+4;  /* &sw_inv[ix][2][0]; */
     _su3_multiply(psi, *w1, phi1); 
-    _su3_multiply(chi, *w2, (*rn).c2);
-    _vector_add((*rn).c1, psi,chi);
+    _su3_multiply(chi, *w2, (*rn).s1);
+    _vector_add((*rn).s0, psi,chi);
     _su3_inverse_multiply(psi, *w2,phi1); 
-    _su3_multiply(chi, *w3, (*rn).c2);
-    _vector_add((*rn).c2, psi, chi);
+    _su3_multiply(chi, *w3, (*rn).s1);
+    _vector_add((*rn).s1, psi, chi);
 
     w1++; /* &sw_inv[ix][0][1]; */
     w2++; /* &sw_inv[ix][1][1]; */
     w3++; /* &sw_inv[ix][2][1]; */
     _su3_multiply(psi, *w1, phi3); 
-    _su3_multiply(chi, *w2, (*rn).c4);
-    _vector_add((*rn).c3, psi, chi);
+    _su3_multiply(chi, *w2, (*rn).s3);
+    _vector_add((*rn).s2, psi, chi);
     _su3_inverse_multiply(psi, *w2, phi3); 
-    _su3_multiply(chi,*w3,(*rn).c4);
-    _vector_add((*rn).c4, psi, chi);
+    _su3_multiply(chi,*w3,(*rn).s3);
+    _vector_add((*rn).s3, psi, chi);
     /****************** end of loop *******************/
   }
 }
@@ -212,42 +212,42 @@ void clover_gamma5(int ieo, int l, int k, int j, double q_off){
     w1=&sw[ix][0][0];
     w2=w1+2; /*&sw[ix][1][0];*/
     w3=w1+4; /*&sw[ix][2][0];*/
-    _su3_multiply(psi1, *w1, (*s).c1); 
-    _su3_multiply(chi, *w2, (*s).c2);
+    _su3_multiply(psi1, *w1, (*s).s0); 
+    _su3_multiply(chi, *w2, (*s).s1);
     _vector_add_assign(psi1, chi);
-    _su3_inverse_multiply(psi2, *w2, (*s).c1); 
-    _su3_multiply(chi, *w3, (*s).c2);
+    _su3_inverse_multiply(psi2, *w2, (*s).s0); 
+    _su3_multiply(chi, *w3, (*s).s1);
     _vector_add_assign(psi2, chi); 
 
     /*************** contribution from q_off ******************/
-    _vector_add_mul(psi1, q_off, (*s).c1);
-    _vector_add_mul(psi2, q_off,(*s).c2);
+    _vector_add_mul(psi1, q_off, (*s).s0);
+    _vector_add_mul(psi2, q_off,(*s).s1);
 
     /**********************************************************/
     /* Subtract t and store the result in r */
-    _vector_sub((*r).c1, psi1, (*t).c1);
-    _vector_sub((*r).c2, psi2, (*t).c2);
+    _vector_sub((*r).s0, psi1, (*t).s0);
+    _vector_sub((*r).s1, psi2, (*t).s1);
 
     /* lower right part */
     w1++; /*=&sw[ix][0][1];*/
     w2++; /*=&sw[ix][1][1];*/
     w3++; /*=&sw[ix][2][1];*/
-    _su3_multiply(psi1, *w1, (*s).c3);
-    _su3_multiply(chi, *w2, (*s).c4);
+    _su3_multiply(psi1, *w1, (*s).s2);
+    _su3_multiply(chi, *w2, (*s).s3);
     _vector_add_assign(psi1, chi); 
-    _su3_inverse_multiply(psi2, *w2, (*s).c3); 
-    _su3_multiply(chi, *w3, (*s).c4);
+    _su3_inverse_multiply(psi2, *w2, (*s).s2); 
+    _su3_multiply(chi, *w3, (*s).s3);
     _vector_add_assign(psi2, chi); 
 
     /*************** contribution from q_off ******************/
-    _vector_add_mul(psi1, q_off, (*s).c3);
-    _vector_add_mul(psi2, q_off, (*s).c4);
+    _vector_add_mul(psi1, q_off, (*s).s2);
+    _vector_add_mul(psi2, q_off, (*s).s3);
 
     /* Subtract t and store the result in r */
     /* multiply with  gamma5 included by    */
     /* reversed order of t and psi1|2       */
-    _vector_sub((*r).c3, (*t).c3, psi1);
-    _vector_sub((*r).c4, (*t).c4, psi2);
+    _vector_sub((*r).s2, (*t).s2, psi1);
+    _vector_sub((*r).s3, (*t).s3, psi2);
 
     /************************ end of loop *********************/
   }
@@ -275,40 +275,40 @@ void clover(int ieo, int l, int k, int j, double q_off){
     w1=&sw[ix][0][0];
     w2=w1+2; /*&sw[ix][1][0];*/
     w3=w1+4; /*&sw[ix][2][0];*/
-    _su3_multiply(psi1, *w1, (*s).c1); 
-    _su3_multiply(chi, *w2, (*s).c2);
+    _su3_multiply(psi1, *w1, (*s).s0); 
+    _su3_multiply(chi, *w2, (*s).s1);
     _vector_add_assign(psi1, chi);
-    _su3_inverse_multiply(psi2, *w2, (*s).c1); 
-    _su3_multiply(chi, *w3, (*s).c2);
+    _su3_inverse_multiply(psi2, *w2, (*s).s0); 
+    _su3_multiply(chi, *w3, (*s).s1);
     _vector_add_assign(psi2, chi); 
 
     /*************** contribution from q_off *********/
-    _vector_add_mul(psi1, q_off, (*s).c1);
-    _vector_add_mul(psi2, q_off, (*s).c2);
+    _vector_add_mul(psi1, q_off, (*s).s0);
+    _vector_add_mul(psi2, q_off, (*s).s1);
 
     /*************************************************/
     /* Subtract t and store the result in r */
-    _vector_sub((*r).c1, psi1, (*t).c1);
-    _vector_sub((*r).c2, psi2, (*t).c2);
+    _vector_sub((*r).s0, psi1, (*t).s0);
+    _vector_sub((*r).s1, psi2, (*t).s1);
 
     w1++; /*=&sw[ix][0][1];*/
     w2++; /*=&sw[ix][1][1];*/
     w3++; /*=&sw[ix][2][1];*/
-    _su3_multiply(psi1, *w1, (*s).c3); 
-    _su3_multiply(chi, *w2, (*s).c4);
+    _su3_multiply(psi1, *w1, (*s).s2); 
+    _su3_multiply(chi, *w2, (*s).s3);
     _vector_add_assign(psi1, chi); 
-    _su3_inverse_multiply(psi2, *w2, (*s).c3); 
-    _su3_multiply(chi, *w3, (*s).c4);
+    _su3_inverse_multiply(psi2, *w2, (*s).s2); 
+    _su3_multiply(chi, *w3, (*s).s3);
     _vector_add_assign(psi2, chi); 
 
     /************** contribution from q_off **********/
-    _vector_add_mul(psi1, q_off, (*s).c3);
-    _vector_add_mul(psi2, q_off, (*s).c4);
+    _vector_add_mul(psi1, q_off, (*s).s2);
+    _vector_add_mul(psi2, q_off, (*s).s3);
 
     /*************************************************/
     /* Subtract t and store the result in r */
-    _vector_sub((*r).c3, psi1, (*t).c3);
-    _vector_sub((*r).c4, psi2, (*t).c4);
+    _vector_sub((*r).s2, psi1, (*t).s2);
+    _vector_sub((*r).s3, psi2, (*t).s3);
 
     /******************* end of loop *****************/
   }
@@ -327,9 +327,9 @@ void gamma5(int l,int k){
   for (ix=0;ix<VOLUME/2;ix++){
     r=&spinor_field[l][ix];
     s=&spinor_field[k][ix];
-    _vector_assign((*r).c1,(*s).c1);
-    _vector_assign((*r).c2,(*s).c2);
-    _vector_minus_assign((*r).c3,(*s).c3);
-    _vector_minus_assign((*r).c4,(*s).c4);
+    _vector_assign((*r).s0,(*s).s0);
+    _vector_assign((*r).s1,(*s).s1);
+    _vector_minus_assign((*r).s2,(*s).s2);
+    _vector_minus_assign((*r).s3,(*s).s3);
   }
 }

@@ -1,5 +1,17 @@
 /* $Id$ */
 
+/**********************************************************
+ * 
+ * exchange routines for gauge fields, spinor fields
+ * and the derivatives
+ *
+ * Autor of the first version: Martin Hasenbusch
+ *
+ * extended by Carsten Urbach to 2 dimensions and
+ * various versions of the geometry
+ *
+ **********************************************************/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -16,20 +28,20 @@
 
 
 /* exchanges the field  l */
-void xchange_field2(int l)
+void xchange_field(int l)
 {
 #ifdef MPI
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
-  MPI_Sendrecv(&spinor_field[l][0].c1.c1.re,          1, field_time_slice_cont, g_nb_t_dn, 81,
-	       &spinor_field[l][T*LX*L*L/2].c1.c1.re, 1, field_time_slice_cont, g_nb_t_up, 81,
+  MPI_Sendrecv(&spinor_field[l][0].s0.c0.re,          1, field_time_slice_cont, g_nb_t_dn, 81,
+	       &spinor_field[l][T*LX*L*L/2].s0.c0.re, 1, field_time_slice_cont, g_nb_t_up, 81,
 	       g_cart_grid, &status);
 
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
-  MPI_Sendrecv(&spinor_field[l][(T-1)*LX*L*L/2].c1.c1.re, 1, field_time_slice_cont, g_nb_t_up, 82,
-	       &spinor_field[l][(T+1)*LX*L*L/2].c1.c1.re, 1, field_time_slice_cont, g_nb_t_dn, 82,
+  MPI_Sendrecv(&spinor_field[l][(T-1)*LX*L*L/2].s0.c0.re, 1, field_time_slice_cont, g_nb_t_up, 82,
+	       &spinor_field[l][(T+1)*LX*L*L/2].s0.c0.re, 1, field_time_slice_cont, g_nb_t_dn, 82,
 	       g_cart_grid, &status);
 
 #ifdef PARALLELXT
@@ -53,14 +65,14 @@ void xchange_field2(int l)
 
 /********************************************************************
  * 
- * This version of the xchange routines seems to 
+ * This version of the xchange routine seems to 
  * overcome a bug on the iwarp cluster: It seems to be
  * not possible to use field_x_slice_gath 
  * consistently on this pc cluster
  *
  ********************************************************************/
 
-void xchange_field(int l)
+void xchange_field2(int l)
 {
 #if (defined MPI && defined PARALLELXT) 
   int x0, x2, ix = 0, iz=0;
@@ -71,14 +83,14 @@ void xchange_field(int l)
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
-  MPI_Sendrecv(&spinor_field[l][0].c1.c1.re,          1, field_time_slice_cont, g_nb_t_dn, 81,
-	       &spinor_field[l][T*LX*L*L/2].c1.c1.re, 1, field_time_slice_cont, g_nb_t_up, 81,
+  MPI_Sendrecv(&spinor_field[l][0].s0.c0.re,          1, field_time_slice_cont, g_nb_t_dn, 81,
+	       &spinor_field[l][T*LX*L*L/2].s0.c0.re, 1, field_time_slice_cont, g_nb_t_up, 81,
 	       g_cart_grid, &status);
 
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
-  MPI_Sendrecv(&spinor_field[l][(T-1)*LX*L*L/2].c1.c1.re, 1, field_time_slice_cont, g_nb_t_up, 82,
-	       &spinor_field[l][(T+1)*LX*L*L/2].c1.c1.re, 1, field_time_slice_cont, g_nb_t_dn, 82,
+  MPI_Sendrecv(&spinor_field[l][(T-1)*LX*L*L/2].s0.c0.re, 1, field_time_slice_cont, g_nb_t_up, 82,
+	       &spinor_field[l][(T+1)*LX*L*L/2].s0.c0.re, 1, field_time_slice_cont, g_nb_t_dn, 82,
 	       g_cart_grid, &status);
 
 #ifdef PARALLELXT
@@ -123,21 +135,20 @@ void xchange_field(int l)
 
 #ifdef OlD
 
-void xchange_gauge()
-{
-  int ck=0;
+void xchange_gauge() {
+
 #ifdef MPI
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
-  MPI_Sendrecv(&g_gauge_field[0][0].c11.re,        1, gauge_time_slice_cont, g_nb_t_dn, 83, 
-		    &g_gauge_field[T*LX*L*L][0].c11.re, 1, gauge_time_slice_cont, g_nb_t_up, 83, 
+  MPI_Sendrecv(&g_gauge_field[0][0].c00.re,        1, gauge_time_slice_cont, g_nb_t_dn, 83, 
+		    &g_gauge_field[T*LX*L*L][0].c00.re, 1, gauge_time_slice_cont, g_nb_t_up, 83, 
 		    g_cart_grid, &status);
 
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
-  MPI_Sendrecv(&g_gauge_field[(T-1)*LX*L*L][0].c11.re, 1, gauge_time_slice_cont, g_nb_t_up, 84, 
-		    &g_gauge_field[(T+1)*LX*L*L][0].c11.re, 1, gauge_time_slice_cont, g_nb_t_dn, 84, 
+  MPI_Sendrecv(&g_gauge_field[(T-1)*LX*L*L][0].c00.re, 1, gauge_time_slice_cont, g_nb_t_up, 84, 
+		    &g_gauge_field[(T+1)*LX*L*L][0].c00.re, 1, gauge_time_slice_cont, g_nb_t_dn, 84, 
 		    g_cart_grid, &status);
 
 #ifdef PARALLELXT
@@ -150,6 +161,88 @@ void xchange_gauge()
   /* send the data to the neighbour on the right in x direction */
   /* recieve the data from the neighbour on the left in x direction */
   MPI_Sendrecv(&g_gauge_field[(LX-1)*LY*LZ][0],             1, gauge_x_slice_gath, g_nb_x_up, 94,
+		    &g_gauge_field[(T+2)*LX*LY*LZ + T*LY*LZ][0], 1, gauge_x_slice_cont, g_nb_x_dn, 94,
+		    g_cart_grid, &status);
+
+  /* The edges */
+
+  /* send the data to the neighbour on the left in t direction */
+  /* recieve the data from the neighbour on the right in t direction */
+  MPI_Sendrecv(&g_gauge_field[(T+2)*LX*LY*LZ][0], 1, gauge_xy_edge_gath, g_nb_t_dn, 93,
+		    &g_gauge_field[VOLUME + RAND][0],  1, gauge_xy_edge_cont, g_nb_t_up, 93, 
+		    g_cart_grid, &status);
+
+  /* send the data to the neighbour on the right in x direction */
+  /* recieve the data from the neighbour on the left in x direction */
+  MPI_Sendrecv(&g_gauge_field[(T+2)*LX*LY*LZ + (T-1)*LY*LZ][0],  1, gauge_xy_edge_gath, g_nb_t_up, 94,
+		    &g_gauge_field[VOLUME + RAND + 2*LY*LZ][0],       1, gauge_xy_edge_cont, g_nb_t_dn, 94,
+		    g_cart_grid, &status);
+#endif
+
+#endif
+}
+
+/********************************************************************
+ * 
+ * This version of the xchange routine seems to 
+ * overcome a bug on the iwarp cluster: It seems to be
+ * not possible to use field_x_slice_gath 
+ * consistently on this pc cluster
+ *
+ ********************************************************************/
+
+void xchange_gauge2() {
+#if (defined MPI && defined PARALLELXT) 
+  int x0, x2, ix = 0, iz=0, mu;
+  static su3 buffer_x[2*T*LY*LZ][4];
+#endif
+#ifdef MPI
+  MPI_Status status;
+  /* send the data to the neighbour on the left */
+  /* recieve the data from the neighbour on the right */
+  MPI_Sendrecv(&g_gauge_field[0][0].c00.re,        1, gauge_time_slice_cont, g_nb_t_dn, 83, 
+		    &g_gauge_field[T*LX*L*L][0].c00.re, 1, gauge_time_slice_cont, g_nb_t_up, 83, 
+		    g_cart_grid, &status);
+
+  /* send the data to the neighbour on the right */
+  /* recieve the data from the neighbour on the left */
+  MPI_Sendrecv(&g_gauge_field[(T-1)*LX*L*L][0].c00.re, 1, gauge_time_slice_cont, g_nb_t_up, 84, 
+		    &g_gauge_field[(T+1)*LX*L*L][0].c00.re, 1, gauge_time_slice_cont, g_nb_t_dn, 84, 
+		    g_cart_grid, &status);
+
+#ifdef PARALLELXT
+  iz = 0;
+  for(x0 = 0; x0 < T; x0++) {
+    for(x2 = 0; x2 < LY*LZ; x2++) {
+      for(mu = 0; mu < 4; mu++) {
+	buffer_x[ix][mu] = g_gauge_field[ iz ][mu];
+      }
+      ix++;
+      iz++;
+    }
+    iz += (LX-1)*LY*LZ; 
+  }
+
+  iz = (LX-1)*LY*LZ;
+  for(x0 = 0; x0 < T; x0++) {
+    for(x2 = 0; x2 < LY*LZ; x2++) {
+      for(mu = 0; mu < 4; mu++) {
+	buffer_x[ix][mu] = g_gauge_field[ iz ][mu];
+      }
+      ix++;
+      iz++;
+    }
+    iz += (LX-1)*LZ*LY;
+  }
+  /* send the data to the neighbour on the left in x direction */
+  /* recieve the data from the neighbour on the right in x direction */
+  MPI_Sendrecv(&buffer_x[0][0],                   1, gauge_x_slice_cont, g_nb_x_dn, 93,
+	       &g_gauge_field[(T+2)*LX*LY*LZ][0], 1, gauge_x_slice_cont, g_nb_x_up, 93, 
+	       g_cart_grid, &status);
+
+  /* send the data to the neighbour on the right in x direction */
+  /* recieve the data from the neighbour on the left in x direction */
+  MPI_Sendrecv(&buffer_x[T*LY*LZ][0],                            1, gauge_x_slice_cont, g_nb_x_up, 94,
 		    &g_gauge_field[(T+2)*LX*LY*LZ + T*LY*LZ][0], 1, gauge_x_slice_cont, g_nb_x_dn, 94,
 		    g_cart_grid, &status);
 
@@ -285,14 +378,14 @@ void xchange_gauge()
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
-  MPI_Sendrecv(&g_gauge_field[0][0].c11.re,               1, gauge_time_slice_split, g_nb_t_dn, 83,
-	       &g_gauge_field[T*LX*L*L][0].c11.re,        1, gauge_time_slice_cont , g_nb_t_up, 83,
+  MPI_Sendrecv(&g_gauge_field[0][0].c00.re,               1, gauge_time_slice_split, g_nb_t_dn, 83,
+	       &g_gauge_field[T*LX*L*L][0].c00.re,        1, gauge_time_slice_cont , g_nb_t_up, 83,
 	       g_cart_grid, &status);
   
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
-  MPI_Sendrecv(&g_gauge_field[(T-1)*LX*L*L/2][0].c11.re,      1, gauge_time_slice_split, g_nb_t_up, 84, 
-	       &g_gauge_field[(T+1)*LX*L*L][0].c11.re,        1, gauge_time_slice_cont , g_nb_t_dn, 84,
+  MPI_Sendrecv(&g_gauge_field[(T-1)*LX*L*L/2][0].c00.re,      1, gauge_time_slice_split, g_nb_t_up, 84, 
+	       &g_gauge_field[(T+1)*LX*L*L][0].c00.re,        1, gauge_time_slice_cont , g_nb_t_dn, 84,
 	       g_cart_grid, &status);
 
 #endif

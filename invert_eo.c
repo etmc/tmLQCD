@@ -50,7 +50,7 @@ int invert_eo(const int Even_new, const int Odd_new, const int Even, const int O
   mul_one_pm_imu_inv(DUM_DERI, +1.);
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
-  assign_add_mul(Even_new, 1., DUM_DERI, VOLUME/2); 
+  assign_add_mul_r(Even_new, 1., DUM_DERI, VOLUME/2); 
 
   return(iter);
 }
@@ -59,10 +59,10 @@ void M_full(const int Even_new, const int Odd_new, const int Even, const int Odd
   /* Even sites */
   Hopping_Matrix(EO, DUM_DERI, Odd);
   assign_mul_one_pm_imu(Even_new, Even, 1.); 
-  assign_add_mul(Even_new, -1., DUM_DERI, VOLUME/2);
+  assign_add_mul_r(Even_new, -1., DUM_DERI, VOLUME/2);
 
   /* Odd sites */
   Hopping_Matrix(OE, DUM_DERI, Even);
   assign_mul_one_pm_imu(Odd_new, Odd, 1.); 
-  assign_add_mul(Odd_new, -1., DUM_DERI, VOLUME/2);
+  assign_add_mul_r(Odd_new, -1., DUM_DERI, VOLUME/2);
 }

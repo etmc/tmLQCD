@@ -85,26 +85,26 @@ static su3 unit_su3(void)
 {
    su3 u;
 
+   u.c00.re=1.0;
+   u.c00.im=0.0;
+   u.c01.re=0.0;
+   u.c01.im=0.0;
+   u.c02.re=0.0;
+   u.c02.im=0.0;
+
+   u.c10.re=0.0;
+   u.c10.im=0.0;
    u.c11.re=1.0;
    u.c11.im=0.0;
    u.c12.re=0.0;
    u.c12.im=0.0;
-   u.c13.re=0.0;
-   u.c13.im=0.0;
 
+   u.c20.re=0.0;
+   u.c20.im=0.0;
    u.c21.re=0.0;
    u.c21.im=0.0;
    u.c22.re=1.0;
    u.c22.im=0.0;
-   u.c23.re=0.0;
-   u.c23.im=0.0;
-
-   u.c31.re=0.0;
-   u.c31.im=0.0;
-   u.c32.re=0.0;
-   u.c32.im=0.0;
-   u.c33.re=1.0;
-   u.c33.im=0.0;
 
    return(u);
 }
@@ -112,12 +112,12 @@ static su3 unit_su3(void)
 su3_vector unit_su3_vector() {
   su3_vector s;
 
+  s.c0.re = 1.;
+  s.c0.im = 0.;
   s.c1.re = 1.;
   s.c1.im = 0.;
   s.c2.re = 1.;
   s.c2.im = 0.;
-  s.c3.re = 1.;
-  s.c3.im = 0.;
 
   return(s);
 }
@@ -144,12 +144,12 @@ su3_vector random_su3_vector(void)
    }
 
    fact=1.0/norm;
-   s.c1.re=v[0]*fact;
-   s.c1.im=v[1]*fact;   
-   s.c2.re=v[2]*fact;
-   s.c2.im=v[3]*fact;
-   s.c3.re=v[4]*fact;
-   s.c3.im=v[5]*fact;     
+   s.c0.re=v[0]*fact;
+   s.c0.im=v[1]*fact;   
+   s.c1.re=v[2]*fact;
+   s.c1.im=v[3]*fact;
+   s.c2.re=v[4]*fact;
+   s.c2.im=v[5]*fact;     
 
    return(s);
 }
@@ -159,15 +159,15 @@ spinor random_spinor(void)
 {
    spinor s;
 
-   s.c1=random_su3_vector();
-   s.c2=random_su3_vector();
-   s.c3=random_su3_vector();
-   s.c4=random_su3_vector();   
+   s.s0=random_su3_vector();
+   s.s1=random_su3_vector();
+   s.s2=random_su3_vector();
+   s.s3=random_su3_vector();   
 
-   _vector_mul(s.c1,0.5,s.c1);
-   _vector_mul(s.c2,0.5,s.c2);
-   _vector_mul(s.c3,0.5,s.c3);
-   _vector_mul(s.c4,0.5,s.c4);   
+   _vector_mul(s.s0,0.5,s.s0);
+   _vector_mul(s.s1,0.5,s.s1);
+   _vector_mul(s.s2,0.5,s.s2);
+   _vector_mul(s.s3,0.5,s.s3);   
    
    return(s);
 }
@@ -175,10 +175,10 @@ spinor random_spinor(void)
 spinor unit_spinor() {
   spinor s;
 
-  s.c1 = unit_su3_vector();
-  s.c2 = unit_su3_vector();
-  s.c3 = unit_su3_vector();
-  s.c4 = unit_su3_vector();
+  s.s0 = unit_su3_vector();
+  s.s1 = unit_su3_vector();
+  s.s2 = unit_su3_vector();
+  s.s3 = unit_su3_vector();
 
   return(s);
 }
@@ -206,33 +206,33 @@ void random_spinor_field(int k) {
     for (ix=0;ix<VOLUME/2;ix++) {
       s=&spinor_field[k][ix];
       gauss_vector(v,6);
-      (*s).c1.c1.re=v[0];
-      (*s).c1.c1.im=v[1];
-      (*s).c1.c2.re=v[2];
-      (*s).c1.c2.im=v[3];
-      (*s).c1.c3.re=v[4];
-      (*s).c1.c3.im=v[5];
+      (*s).s0.c0.re=v[0];
+      (*s).s0.c0.im=v[1];
+      (*s).s0.c1.re=v[2];
+      (*s).s0.c1.im=v[3];
+      (*s).s0.c2.re=v[4];
+      (*s).s0.c2.im=v[5];
       gauss_vector(v,6);
-      (*s).c2.c1.re=v[0];
-      (*s).c2.c1.im=v[1];
-      (*s).c2.c2.re=v[2];
-      (*s).c2.c2.im=v[3];
-      (*s).c2.c3.re=v[4];
-      (*s).c2.c3.im=v[5];
+      (*s).s1.c0.re=v[0];
+      (*s).s1.c0.im=v[1];
+      (*s).s1.c1.re=v[2];
+      (*s).s1.c1.im=v[3];
+      (*s).s1.c2.re=v[4];
+      (*s).s1.c2.im=v[5];
       gauss_vector(v,6);
-      (*s).c3.c1.re=v[0];
-      (*s).c3.c1.im=v[1];
-      (*s).c3.c2.re=v[2];
-      (*s).c3.c2.im=v[3];
-      (*s).c3.c3.re=v[4];
-      (*s).c3.c3.im=v[5];
+      (*s).s2.c0.re=v[0];
+      (*s).s2.c0.im=v[1];
+      (*s).s2.c1.re=v[2];
+      (*s).s2.c1.im=v[3];
+      (*s).s2.c2.re=v[4];
+      (*s).s2.c2.im=v[5];
       gauss_vector(v,6);
-      (*s).c4.c1.re=v[0];
-      (*s).c4.c1.im=v[1];
-      (*s).c4.c2.re=v[2];
-      (*s).c4.c2.im=v[3];
-      (*s).c4.c3.re=v[4];
-      (*s).c4.c3.im=v[5];
+      (*s).s3.c0.re=v[0];
+      (*s).s3.c0.im=v[1];
+      (*s).s3.c1.re=v[2];
+      (*s).s3.c1.im=v[3];
+      (*s).s3.c2.re=v[4];
+      (*s).s3.c2.im=v[5];
     }
     /* send the state for the random-number generator to 1 */
     rlxd_get(rlxd_state);
@@ -247,33 +247,33 @@ void random_spinor_field(int k) {
     for (ix=0;ix<VOLUME/2;ix++) {
       s=&spinor_field[k][ix];
       gauss_vector(v,6);
-      (*s).c1.c1.re=v[0];
-      (*s).c1.c1.im=v[1];
-      (*s).c1.c2.re=v[2];
-      (*s).c1.c2.im=v[3];
-      (*s).c1.c3.re=v[4];
-      (*s).c1.c3.im=v[5];
+      (*s).s0.c0.re=v[0];
+      (*s).s0.c0.im=v[1];
+      (*s).s0.c1.re=v[2];
+      (*s).s0.c1.im=v[3];
+      (*s).s0.c2.re=v[4];
+      (*s).s0.c2.im=v[5];
       gauss_vector(v,6);
-      (*s).c2.c1.re=v[0];
-      (*s).c2.c1.im=v[1];
-      (*s).c2.c2.re=v[2];
-      (*s).c2.c2.im=v[3];
-      (*s).c2.c3.re=v[4];
-      (*s).c2.c3.im=v[5];
+      (*s).s1.c0.re=v[0];
+      (*s).s1.c0.im=v[1];
+      (*s).s1.c1.re=v[2];
+      (*s).s1.c1.im=v[3];
+      (*s).s1.c2.re=v[4];
+      (*s).s1.c2.im=v[5];
       gauss_vector(v,6);
-      (*s).c3.c1.re=v[0];
-      (*s).c3.c1.im=v[1];
-      (*s).c3.c2.re=v[2];
-      (*s).c3.c2.im=v[3];
-      (*s).c3.c3.re=v[4];
-      (*s).c3.c3.im=v[5];
+      (*s).s2.c0.re=v[0];
+      (*s).s2.c0.im=v[1];
+      (*s).s2.c1.re=v[2];
+      (*s).s2.c1.im=v[3];
+      (*s).s2.c2.re=v[4];
+      (*s).s2.c2.im=v[5];
       gauss_vector(v,6);
-      (*s).c4.c1.re=v[0];
-      (*s).c4.c1.im=v[1];
-      (*s).c4.c2.re=v[2];
-      (*s).c4.c2.im=v[3];
-      (*s).c4.c3.re=v[4];
-      (*s).c4.c3.im=v[5];
+      (*s).s3.c0.re=v[0];
+      (*s).s3.c0.im=v[1];
+      (*s).s3.c1.re=v[2];
+      (*s).s3.c1.im=v[3];
+      (*s).s3.c2.re=v[4];
+      (*s).s3.c2.im=v[5];
     }
     /* send the state fo the random-number generator to k+1 */
     j=g_proc_id+1; 
@@ -298,30 +298,30 @@ void zero_spinor_field(int k) {
   spinor *s;
   for (ix=0;ix<VOLUME/2;ix++) {
     s=&spinor_field[k][ix];
-    (*s).c1.c1.re=0.;
-    (*s).c1.c1.im=0.;
-    (*s).c1.c2.re=0.;
-    (*s).c1.c2.im=0.;
-    (*s).c1.c3.re=0.;
-    (*s).c1.c3.im=0.;
-    (*s).c2.c1.re=0.;
-    (*s).c2.c1.im=0.;
-    (*s).c2.c2.re=0.;
-    (*s).c2.c2.im=0.;
-    (*s).c2.c3.re=0.;
-    (*s).c2.c3.im=0.;
-    (*s).c3.c1.re=0.;
-    (*s).c3.c1.im=0.;
-    (*s).c3.c2.re=0.;
-    (*s).c3.c2.im=0.;
-    (*s).c3.c3.re=0.;
-    (*s).c3.c3.im=0.;
-    (*s).c4.c1.re=0.;
-    (*s).c4.c1.im=0.;
-    (*s).c4.c2.re=0.;
-    (*s).c4.c2.im=0.;
-    (*s).c4.c3.re=0.;
-    (*s).c4.c3.im=0.;
+    (*s).s0.c0.re=0.;
+    (*s).s0.c0.im=0.;
+    (*s).s0.c1.re=0.;
+    (*s).s0.c1.im=0.;
+    (*s).s0.c2.re=0.;
+    (*s).s0.c2.im=0.;
+    (*s).s1.c0.re=0.;
+    (*s).s1.c0.im=0.;
+    (*s).s1.c1.re=0.;
+    (*s).s1.c1.im=0.;
+    (*s).s1.c2.re=0.;
+    (*s).s1.c2.im=0.;
+    (*s).s2.c0.re=0.;
+    (*s).s2.c0.im=0.;
+    (*s).s2.c1.re=0.;
+    (*s).s2.c1.im=0.;
+    (*s).s2.c2.re=0.;
+    (*s).s2.c2.im=0.;
+    (*s).s3.c0.re=0.;
+    (*s).s3.c0.im=0.;
+    (*s).s3.c1.re=0.;
+    (*s).s3.c1.im=0.;
+    (*s).s3.c2.re=0.;
+    (*s).s3.c2.im=0.;
   }
 }
 
@@ -353,32 +353,32 @@ su3 random_su3(void)
    fact=1.0/norm;
    _vector_mul(z2,fact,z2);
    
-   z3.c1.re= (z1.c2.re*z2.c3.re-z1.c2.im*z2.c3.im)
-            -(z1.c3.re*z2.c2.re-z1.c3.im*z2.c2.im);
-   z3.c1.im=-(z1.c2.re*z2.c3.im+z1.c2.im*z2.c3.re)
-            +(z1.c3.re*z2.c2.im+z1.c3.im*z2.c2.re);
-
-   z3.c2.re= (z1.c3.re*z2.c1.re-z1.c3.im*z2.c1.im)
-            -(z1.c1.re*z2.c3.re-z1.c1.im*z2.c3.im);
-   z3.c2.im=-(z1.c3.re*z2.c1.im+z1.c3.im*z2.c1.re)
-            +(z1.c1.re*z2.c3.im+z1.c1.im*z2.c3.re);
-
-   z3.c3.re= (z1.c1.re*z2.c2.re-z1.c1.im*z2.c2.im)
+   z3.c0.re= (z1.c1.re*z2.c2.re-z1.c1.im*z2.c2.im)
             -(z1.c2.re*z2.c1.re-z1.c2.im*z2.c1.im);
-   z3.c3.im=-(z1.c1.re*z2.c2.im+z1.c1.im*z2.c2.re)
-            +(z1.c2.re*z2.c1.im+z1.c2.im*z2.c1.re);    
+   z3.c0.im=-(z1.c1.re*z2.c2.im+z1.c1.im*z2.c2.re)
+            +(z1.c2.re*z2.c1.im+z1.c2.im*z2.c1.re);
 
-   u.c11=z1.c1;
-   u.c12=z1.c2;
-   u.c13=z1.c3;
+   z3.c1.re= (z1.c2.re*z2.c0.re-z1.c2.im*z2.c0.im)
+            -(z1.c0.re*z2.c2.re-z1.c0.im*z2.c2.im);
+   z3.c1.im=-(z1.c2.re*z2.c0.im+z1.c2.im*z2.c0.re)
+            +(z1.c0.re*z2.c2.im+z1.c0.im*z2.c2.re);
 
-   u.c21=z2.c1;
-   u.c22=z2.c2;
-   u.c23=z2.c3;
+   z3.c2.re= (z1.c0.re*z2.c1.re-z1.c0.im*z2.c1.im)
+            -(z1.c1.re*z2.c0.re-z1.c1.im*z2.c0.im);
+   z3.c2.im=-(z1.c0.re*z2.c1.im+z1.c0.im*z2.c1.re)
+            +(z1.c1.re*z2.c0.im+z1.c1.im*z2.c0.re);    
 
-   u.c31=z3.c1;
-   u.c32=z3.c2;
-   u.c33=z3.c3;   
+   u.c00=z1.c0;
+   u.c01=z1.c1;
+   u.c02=z1.c2;
+
+   u.c10=z2.c0;
+   u.c11=z2.c1;
+   u.c12=z2.c2;
+
+   u.c20=z3.c0;
+   u.c21=z3.c1;
+   u.c22=z3.c2;   
 
    return(u);
 }
@@ -412,30 +412,30 @@ void random_gauge_field(void)
 }
 
 void set_spinor_point(spinor * s, const double c){
-  (*s).c1.c1.re=c;
-  (*s).c1.c1.im=c;
-  (*s).c1.c2.re=c;
-  (*s).c1.c2.im=c;
-  (*s).c1.c3.re=c;
-  (*s).c1.c3.im=c;
-  (*s).c2.c1.re=c;
-  (*s).c2.c1.im=c;
-  (*s).c2.c2.re=c;
-  (*s).c2.c2.im=c;
-  (*s).c2.c3.re=c;
-  (*s).c2.c3.im=c;
-  (*s).c3.c1.re=c;
-  (*s).c3.c1.im=c;
-  (*s).c3.c2.re=c;
-  (*s).c3.c2.im=c;
-  (*s).c3.c3.re=c;
-  (*s).c3.c3.im=c;
-  (*s).c4.c1.re=c;
-  (*s).c4.c1.im=c;
-  (*s).c4.c2.re=c;
-  (*s).c4.c2.im=c;
-  (*s).c4.c3.re=c;
-  (*s).c4.c3.im=c;  
+  (*s).s0.c0.re=c;
+  (*s).s0.c0.im=c;
+  (*s).s0.c1.re=c;
+  (*s).s0.c1.im=c;
+  (*s).s0.c2.re=c;
+  (*s).s0.c2.im=c;
+  (*s).s1.c0.re=c;
+  (*s).s1.c0.im=c;
+  (*s).s1.c1.re=c;
+  (*s).s1.c1.im=c;
+  (*s).s1.c2.re=c;
+  (*s).s1.c2.im=c;
+  (*s).s2.c0.re=c;
+  (*s).s2.c0.im=c;
+  (*s).s2.c1.re=c;
+  (*s).s2.c1.im=c;
+  (*s).s2.c2.re=c;
+  (*s).s2.c2.im=c;
+  (*s).s3.c0.re=c;
+  (*s).s3.c0.im=c;
+  (*s).s3.c1.re=c;
+  (*s).s3.c1.im=c;
+  (*s).s3.c2.re=c;
+  (*s).s3.c2.im=c;  
 }
 
 void set_spinor_field(int k, const double c) {
@@ -444,57 +444,57 @@ void set_spinor_field(int k, const double c) {
   spinor *s;
   for (ix=0;ix<VOLUME/2;ix++) {
     s=&spinor_field[k][ix];
-    (*s).c1.c1.re=c;
-    (*s).c1.c1.im=c;
-    (*s).c1.c2.re=c;
-    (*s).c1.c2.im=c;
-    (*s).c1.c3.re=c;
-    (*s).c1.c3.im=c;
-    (*s).c2.c1.re=c;
-    (*s).c2.c1.im=c;
-    (*s).c2.c2.re=c;
-    (*s).c2.c2.im=c;
-    (*s).c2.c3.re=c;
-    (*s).c2.c3.im=c;
-    (*s).c3.c1.re=c;
-    (*s).c3.c1.im=c;
-    (*s).c3.c2.re=c;
-    (*s).c3.c2.im=c;
-    (*s).c3.c3.re=c;
-    (*s).c3.c3.im=c;
-    (*s).c4.c1.re=c;
-    (*s).c4.c1.im=c;
-    (*s).c4.c2.re=c;
-    (*s).c4.c2.im=c;
-    (*s).c4.c3.re=c;
-    (*s).c4.c3.im=c;
+    (*s).s0.c0.re=c;
+    (*s).s0.c0.im=c;
+    (*s).s0.c1.re=c;
+    (*s).s0.c1.im=c;
+    (*s).s0.c2.re=c;
+    (*s).s0.c2.im=c;
+    (*s).s1.c0.re=c;
+    (*s).s1.c0.im=c;
+    (*s).s1.c1.re=c;
+    (*s).s1.c1.im=c;
+    (*s).s1.c2.re=c;
+    (*s).s1.c2.im=c;
+    (*s).s2.c0.re=c;
+    (*s).s2.c0.im=c;
+    (*s).s2.c1.re=c;
+    (*s).s2.c1.im=c;
+    (*s).s2.c2.re=c;
+    (*s).s2.c2.im=c;
+    (*s).s3.c0.re=c;
+    (*s).s3.c0.im=c;
+    (*s).s3.c1.re=c;
+    (*s).s3.c1.im=c;
+    (*s).s3.c2.re=c;
+    (*s).s3.c2.im=c;
   }
  for (ix=VOLUME/2;ix<VOLUMEPLUSRAND/2;ix++) {
     s=&spinor_field[k][ix];
-    (*s).c1.c1.re=0;
-    (*s).c1.c1.im=0.;
-    (*s).c1.c2.re=0.;
-    (*s).c1.c2.im=0.;
-    (*s).c1.c3.re=0.;
-    (*s).c1.c3.im=0.;
-    (*s).c2.c1.re=0.;
-    (*s).c2.c1.im=0.;
-    (*s).c2.c2.re=0.;
-    (*s).c2.c2.im=0.;
-    (*s).c2.c3.re=0.;
-    (*s).c2.c3.im=0.;
-    (*s).c3.c1.re=0.;
-    (*s).c3.c1.im=0.;
-    (*s).c3.c2.re=0.;
-    (*s).c3.c2.im=0.;
-    (*s).c3.c3.re=0.;
-    (*s).c3.c3.im=0.;
-    (*s).c4.c1.re=0.;
-    (*s).c4.c1.im=0.;
-    (*s).c4.c2.re=0.;
-    (*s).c4.c2.im=0.;
-    (*s).c4.c3.re=0.;
-    (*s).c4.c3.im=0.;
+    (*s).s0.c0.re=0;
+    (*s).s0.c0.im=0.;
+    (*s).s0.c1.re=0.;
+    (*s).s0.c1.im=0.;
+    (*s).s0.c2.re=0.;
+    (*s).s0.c2.im=0.;
+    (*s).s1.c0.re=0.;
+    (*s).s1.c0.im=0.;
+    (*s).s1.c1.re=0.;
+    (*s).s1.c1.im=0.;
+    (*s).s1.c2.re=0.;
+    (*s).s1.c2.im=0.;
+    (*s).s2.c0.re=0.;
+    (*s).s2.c0.im=0.;
+    (*s).s2.c1.re=0.;
+    (*s).s2.c1.im=0.;
+    (*s).s2.c2.re=0.;
+    (*s).s2.c2.im=0.;
+    (*s).s3.c0.re=0.;
+    (*s).s3.c0.im=0.;
+    (*s).s3.c1.re=0.;
+    (*s).s3.c1.im=0.;
+    (*s).s3.c2.re=0.;
+    (*s).s3.c2.im=0.;
   }
 }
 
@@ -502,26 +502,26 @@ su3 set_su3(const double c)
 {
    su3 u;
 
+   u.c00.re=c;
+   u.c00.im=c;
+   u.c01.re=c;
+   u.c01.im=c;
+   u.c02.re=c;
+   u.c02.im=c;
+
+   u.c10.re=c;
+   u.c10.im=c;
    u.c11.re=c;
    u.c11.im=c;
    u.c12.re=c;
    u.c12.im=c;
-   u.c13.re=c;
-   u.c13.im=c;
 
+   u.c20.re=c;
+   u.c20.im=c;
    u.c21.re=c;
    u.c21.im=c;
    u.c22.re=c;
    u.c22.im=c;
-   u.c23.re=c;
-   u.c23.im=c;
-
-   u.c31.re=c;
-   u.c31.im=c;
-   u.c32.re=c;
-   u.c32.im=c;
-   u.c33.re=c;
-   u.c33.im=c;
 
    return(u);
 }

@@ -22,12 +22,12 @@
 
 typedef struct
 {
-   int c1,c2,c3,c4;
+   int c1,c2,c3,s3;
 } sse_int __attribute__ ((aligned (16)));
 
 typedef struct
 {
-   float c1,c2,c3,c4;
+   float c1,c2,c3,s3;
 } sse_float __attribute__ ((aligned (16)));
 
 typedef struct
@@ -163,9 +163,9 @@ __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((s).c0), \
                       "m" ((s).c1), \
-                      "m" ((s).c2), \
-                      "m" ((s).c3))
+                      "m" ((s).c2))
 
 /*
 * Loads an su3 vector s to xmm3,xmm4,xmm5
@@ -177,9 +177,9 @@ __asm__ __volatile__ ("movapd %0, %%xmm3 \n\t" \
                       "movapd %2, %%xmm5" \
                       : \
                       : \
+                      "m" ((s).c0), \
                       "m" ((s).c1), \
-                      "m" ((s).c2), \
-                      "m" ((s).c3))
+                      "m" ((s).c2))
 
 /*
 * Stores xmm0,xmm1,xmm2 to the components r.c1,r.c2,r.c3 of an su3 vector
@@ -190,9 +190,9 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
                       "movapd %%xmm1, %1 \n\t" \
                       "movapd %%xmm2, %2" \
                       : \
+                      "=m" ((r).c0), \
                       "=m" ((r).c1), \
-                      "=m" ((r).c2), \
-                      "=m" ((r).c3))
+                      "=m" ((r).c2))
 
 /*
 * Stores xmm3,xmm4,xmm5 to the components r.c1,r.c2,r.c3 of an su3 vector
@@ -203,9 +203,9 @@ __asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
                       "movapd %%xmm4, %1 \n\t" \
                       "movapd %%xmm5, %2" \
                       : \
+                      "=m" ((r).c0), \
                       "=m" ((r).c1), \
-                      "=m" ((r).c2), \
-                      "=m" ((r).c3))
+                      "=m" ((r).c2))
 
 /*
 * Multiplies xmm0,xmm1,xmm2 with a constant sse_double c
@@ -369,15 +369,15 @@ __asm__ __volatile__ ("movsd %0, %%xmm3 \n\t" \
                       "addpd %%xmm7, %%xmm5" \
                       : \
                       : \
-                      "m" ((u).c11.re), \
+                      "m" ((u).c00.re), \
+                      "m" ((u).c01.re), \
+                      "m" ((u).c10.re), \
                       "m" ((u).c12.re), \
+                      "m" ((u).c20.re), \
                       "m" ((u).c21.re), \
-                      "m" ((u).c23.re), \
-                      "m" ((u).c31.re), \
-                      "m" ((u).c32.re), \
-                      "m" ((u).c13.re), \
-                      "m" ((u).c22.re), \
-                      "m" ((u).c33.re)); \
+                      "m" ((u).c02.re), \
+                      "m" ((u).c11.re), \
+                      "m" ((u).c22.re)); \
 __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "movsd %1, %%xmm7 \n\t" \
                       "shufpd $0x1, %%xmm0, %%xmm0 \n\t" \
@@ -422,15 +422,15 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "addpd %%xmm7, %%xmm4" \
                       : \
                       : \
+                      "m" ((u).c00.im), \
                       "m" ((u).c11.im), \
                       "m" ((u).c22.im), \
-                      "m" ((u).c33.im), \
+                      "m" ((u).c10.im), \
+                      "m" ((u).c01.im), \
+                      "m" ((u).c20.im), \
+                      "m" ((u).c02.im), \
                       "m" ((u).c21.im), \
                       "m" ((u).c12.im), \
-                      "m" ((u).c31.im), \
-                      "m" ((u).c13.im), \
-                      "m" ((u).c32.im), \
-                      "m" ((u).c23.im), \
                       "m" (_sse_sgn))
 
 /*
@@ -477,15 +477,15 @@ __asm__ __volatile__ ("movsd %0, %%xmm3 \n\t" \
                       "addpd %%xmm7, %%xmm5" \
                       : \
                       : \
-                      "m" ((u).c11.re), \
+                      "m" ((u).c00.re), \
+                      "m" ((u).c10.re), \
+                      "m" ((u).c01.re), \
                       "m" ((u).c21.re), \
+                      "m" ((u).c02.re), \
                       "m" ((u).c12.re), \
-                      "m" ((u).c32.re), \
-                      "m" ((u).c13.re), \
-                      "m" ((u).c23.re), \
-                      "m" ((u).c31.re), \
-                      "m" ((u).c22.re), \
-                      "m" ((u).c33.re)); \
+                      "m" ((u).c20.re), \
+                      "m" ((u).c11.re), \
+                      "m" ((u).c22.re)); \
 __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "movsd %1, %%xmm7 \n\t" \
                       "xorpd %9, %%xmm0 \n\t" \
@@ -530,15 +530,15 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "addpd %%xmm7, %%xmm4" \
                       : \
                       : \
+                      "m" ((u).c00.im), \
                       "m" ((u).c11.im), \
                       "m" ((u).c22.im), \
-                      "m" ((u).c33.im), \
+                      "m" ((u).c01.im), \
+                      "m" ((u).c10.im), \
+                      "m" ((u).c02.im), \
+                      "m" ((u).c20.im), \
                       "m" ((u).c12.im), \
                       "m" ((u).c21.im), \
-                      "m" ((u).c13.im), \
-                      "m" ((u).c31.im), \
-                      "m" ((u).c23.im), \
-                      "m" ((u).c32.im), \
                       "m" (_sse_sgn));
 
 /* _sse_su3_times_su3  by martin hasenbusch */
@@ -548,49 +548,49 @@ __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u2).c00), \
+                      "m" ((u2).c10), \
+                      "m" ((u2).c20)); \
+_sse_su3_multiply(u1); \
+__asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
+                      "movapd %%xmm4, %1 \n\t" \
+                      "movapd %%xmm5, %2" \
+                      : \
+                      "=m" ((u3).c00), \
+                      "=m" ((u3).c10), \
+                      "=m" ((u3).c20)) ; \
+__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
+                      "movapd %1, %%xmm1 \n\t" \
+                      "movapd %2, %%xmm2" \
+                      : \
+                      : \
+                      "m" ((u2).c01), \
                       "m" ((u2).c11), \
-                      "m" ((u2).c21), \
-                      "m" ((u2).c31)); \
+                      "m" ((u2).c21)); \
 _sse_su3_multiply(u1); \
 __asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
                       "movapd %%xmm4, %1 \n\t" \
                       "movapd %%xmm5, %2" \
                       : \
+                      "=m" ((u3).c01), \
                       "=m" ((u3).c11), \
-                      "=m" ((u3).c21), \
-                      "=m" ((u3).c31)) ; \
+                      "=m" ((u3).c21)) ; \
 __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %1, %%xmm1 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u2).c02), \
                       "m" ((u2).c12), \
-                      "m" ((u2).c22), \
-                      "m" ((u2).c32)); \
+                      "m" ((u2).c22)); \
 _sse_su3_multiply(u1); \
 __asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
                       "movapd %%xmm4, %1 \n\t" \
                       "movapd %%xmm5, %2" \
                       : \
+                      "=m" ((u3).c02), \
                       "=m" ((u3).c12), \
-                      "=m" ((u3).c22), \
-                      "=m" ((u3).c32)) ; \
-__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
-                      "movapd %1, %%xmm1 \n\t" \
-                      "movapd %2, %%xmm2" \
-                      : \
-                      : \
-                      "m" ((u2).c13), \
-                      "m" ((u2).c23), \
-                      "m" ((u2).c33)); \
-_sse_su3_multiply(u1); \
-__asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
-                      "movapd %%xmm4, %1 \n\t" \
-                      "movapd %%xmm5, %2" \
-                      : \
-                      "=m" ((u3).c13), \
-                      "=m" ((u3).c23), \
-                      "=m" ((u3).c33)) ; 
+                      "=m" ((u3).c22)) ; 
 
 /* _sse_su3_times_su3_acc  by martin hasenbusch */
 #define _sse_su3_times_su3_acc(u3,u1,u2) \
@@ -599,18 +599,48 @@ __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u2).c00), \
+                      "m" ((u2).c10), \
+                      "m" ((u2).c20)); \
+_sse_su3_multiply(u1); \
+__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
+                      "movapd %1, %%xmm1 \n\t" \
+                      "movapd %2, %%xmm2" \
+                      : \
+                      : \
+                      "m" ((u3).c00), \
+                      "m" ((u3).c10), \
+                      "m" ((u3).c20)); \
+__asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
+                      "addpd %%xmm4, %%xmm1 \n\t" \
+                      "addpd %%xmm5, %%xmm2" \
+                      : \
+                      :) ; \
+__asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
+                      "movapd %%xmm1, %1 \n\t" \
+                      "movapd %%xmm2, %2" \
+                      : \
+                      "=m" ((u3).c00), \
+                      "=m" ((u3).c10), \
+                      "=m" ((u3).c20)) ; \
+                                         \
+__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
+                      "movapd %1, %%xmm1 \n\t" \
+                      "movapd %2, %%xmm2" \
+                      : \
+                      : \
+                      "m" ((u2).c01), \
                       "m" ((u2).c11), \
-                      "m" ((u2).c21), \
-                      "m" ((u2).c31)); \
+                      "m" ((u2).c21)); \
 _sse_su3_multiply(u1); \
 __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %1, %%xmm1 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u3).c01), \
                       "m" ((u3).c11), \
-                      "m" ((u3).c21), \
-                      "m" ((u3).c31)); \
+                      "m" ((u3).c21)); \
 __asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
                       "addpd %%xmm4, %%xmm1 \n\t" \
                       "addpd %%xmm5, %%xmm2" \
@@ -620,27 +650,27 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
                       "movapd %%xmm1, %1 \n\t" \
                       "movapd %%xmm2, %2" \
                       : \
+                      "=m" ((u3).c01), \
                       "=m" ((u3).c11), \
-                      "=m" ((u3).c21), \
-                      "=m" ((u3).c31)) ; \
+                      "=m" ((u3).c21)) ; \
                                          \
 __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %1, %%xmm1 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u2).c02), \
                       "m" ((u2).c12), \
-                      "m" ((u2).c22), \
-                      "m" ((u2).c32)); \
+                      "m" ((u2).c22)); \
 _sse_su3_multiply(u1); \
 __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %1, %%xmm1 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u3).c02), \
                       "m" ((u3).c12), \
-                      "m" ((u3).c22), \
-                      "m" ((u3).c32)); \
+                      "m" ((u3).c22)); \
 __asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
                       "addpd %%xmm4, %%xmm1 \n\t" \
                       "addpd %%xmm5, %%xmm2" \
@@ -650,39 +680,9 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
                       "movapd %%xmm1, %1 \n\t" \
                       "movapd %%xmm2, %2" \
                       : \
+                      "=m" ((u3).c02), \
                       "=m" ((u3).c12), \
-                      "=m" ((u3).c22), \
-                      "=m" ((u3).c32)) ; \
-                                         \
-__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
-                      "movapd %1, %%xmm1 \n\t" \
-                      "movapd %2, %%xmm2" \
-                      : \
-                      : \
-                      "m" ((u2).c13), \
-                      "m" ((u2).c23), \
-                      "m" ((u2).c33)); \
-_sse_su3_multiply(u1); \
-__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
-                      "movapd %1, %%xmm1 \n\t" \
-                      "movapd %2, %%xmm2" \
-                      : \
-                      : \
-                      "m" ((u3).c13), \
-                      "m" ((u3).c23), \
-                      "m" ((u3).c33)); \
-__asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
-                      "addpd %%xmm4, %%xmm1 \n\t" \
-                      "addpd %%xmm5, %%xmm2" \
-                      : \
-                      :) ; \
-__asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
-                      "movapd %%xmm1, %1 \n\t" \
-                      "movapd %%xmm2, %2" \
-                      : \
-                      "=m" ((u3).c13), \
-                      "=m" ((u3).c23), \
-                      "=m" ((u3).c33)) ;
+                      "=m" ((u3).c22)) ;
 
 /* _sse_su3d_times_su3  by martin hasenbusch */
 #define _sse_su3d_times_su3(u3,u1,u2) \
@@ -691,49 +691,49 @@ __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u2).c00), \
+                      "m" ((u2).c10), \
+                      "m" ((u2).c20)); \
+_sse_su3_inverse_multiply(u1); \
+__asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
+                      "movapd %%xmm4, %1 \n\t" \
+                      "movapd %%xmm5, %2" \
+                      : \
+                      "=m" ((u3).c00), \
+                      "=m" ((u3).c10), \
+                      "=m" ((u3).c20)) ; \
+__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
+                      "movapd %1, %%xmm1 \n\t" \
+                      "movapd %2, %%xmm2" \
+                      : \
+                      : \
+                      "m" ((u2).c01), \
                       "m" ((u2).c11), \
-                      "m" ((u2).c21), \
-                      "m" ((u2).c31)); \
+                      "m" ((u2).c21)); \
 _sse_su3_inverse_multiply(u1); \
 __asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
                       "movapd %%xmm4, %1 \n\t" \
                       "movapd %%xmm5, %2" \
                       : \
+                      "=m" ((u3).c01), \
                       "=m" ((u3).c11), \
-                      "=m" ((u3).c21), \
-                      "=m" ((u3).c31)) ; \
+                      "=m" ((u3).c21)) ; \
 __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %1, %%xmm1 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u2).c02), \
                       "m" ((u2).c12), \
-                      "m" ((u2).c22), \
-                      "m" ((u2).c32)); \
+                      "m" ((u2).c22)); \
 _sse_su3_inverse_multiply(u1); \
 __asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
                       "movapd %%xmm4, %1 \n\t" \
                       "movapd %%xmm5, %2" \
                       : \
+                      "=m" ((u3).c02), \
                       "=m" ((u3).c12), \
-                      "=m" ((u3).c22), \
-                      "=m" ((u3).c32)) ; \
-__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
-                      "movapd %1, %%xmm1 \n\t" \
-                      "movapd %2, %%xmm2" \
-                      : \
-                      : \
-                      "m" ((u2).c13), \
-                      "m" ((u2).c23), \
-                      "m" ((u2).c33)); \
-_sse_su3_inverse_multiply(u1); \
-__asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
-                      "movapd %%xmm4, %1 \n\t" \
-                      "movapd %%xmm5, %2" \
-                      : \
-                      "=m" ((u3).c13), \
-                      "=m" ((u3).c23), \
-                      "=m" ((u3).c33)) ; 
+                      "=m" ((u3).c22)) ; 
 
 /* _sse_su3d_times_su3_acc  by martin hasenbusch */
 #define _sse_su3d_times_su3_acc(u3,u1,u2) \
@@ -742,18 +742,48 @@ __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u2).c00), \
+                      "m" ((u2).c10), \
+                      "m" ((u2).c20)); \
+_sse_su3_inverse_multiply(u1); \
+__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
+                      "movapd %1, %%xmm1 \n\t" \
+                      "movapd %2, %%xmm2" \
+                      : \
+                      : \
+                      "m" ((u3).c00), \
+                      "m" ((u3).c10), \
+                      "m" ((u3).c20)); \
+__asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
+                      "addpd %%xmm4, %%xmm1 \n\t" \
+                      "addpd %%xmm5, %%xmm2" \
+                      : \
+                      :) ; \
+__asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
+                      "movapd %%xmm1, %1 \n\t" \
+                      "movapd %%xmm2, %2" \
+                      : \
+                      "=m" ((u3).c00), \
+                      "=m" ((u3).c10), \
+                      "=m" ((u3).c20)) ; \
+                                         \
+__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
+                      "movapd %1, %%xmm1 \n\t" \
+                      "movapd %2, %%xmm2" \
+                      : \
+                      : \
+                      "m" ((u2).c01), \
                       "m" ((u2).c11), \
-                      "m" ((u2).c21), \
-                      "m" ((u2).c31)); \
+                      "m" ((u2).c21)); \
 _sse_su3_inverse_multiply(u1); \
 __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %1, %%xmm1 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u3).c01), \
                       "m" ((u3).c11), \
-                      "m" ((u3).c21), \
-                      "m" ((u3).c31)); \
+                      "m" ((u3).c21)); \
 __asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
                       "addpd %%xmm4, %%xmm1 \n\t" \
                       "addpd %%xmm5, %%xmm2" \
@@ -763,27 +793,27 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
                       "movapd %%xmm1, %1 \n\t" \
                       "movapd %%xmm2, %2" \
                       : \
+                      "=m" ((u3).c01), \
                       "=m" ((u3).c11), \
-                      "=m" ((u3).c21), \
-                      "=m" ((u3).c31)) ; \
+                      "=m" ((u3).c21)) ; \
                                          \
 __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %1, %%xmm1 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u2).c02), \
                       "m" ((u2).c12), \
-                      "m" ((u2).c22), \
-                      "m" ((u2).c32)); \
+                      "m" ((u2).c22)); \
 _sse_su3_inverse_multiply(u1); \
 __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %1, %%xmm1 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u3).c02), \
                       "m" ((u3).c12), \
-                      "m" ((u3).c22), \
-                      "m" ((u3).c32)); \
+                      "m" ((u3).c22)); \
 __asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
                       "addpd %%xmm4, %%xmm1 \n\t" \
                       "addpd %%xmm5, %%xmm2" \
@@ -793,39 +823,9 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
                       "movapd %%xmm1, %1 \n\t" \
                       "movapd %%xmm2, %2" \
                       : \
+                      "=m" ((u3).c02), \
                       "=m" ((u3).c12), \
-                      "=m" ((u3).c22), \
-                      "=m" ((u3).c32)) ; \
-                                         \
-__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
-                      "movapd %1, %%xmm1 \n\t" \
-                      "movapd %2, %%xmm2" \
-                      : \
-                      : \
-                      "m" ((u2).c13), \
-                      "m" ((u2).c23), \
-                      "m" ((u2).c33)); \
-_sse_su3_inverse_multiply(u1); \
-__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
-                      "movapd %1, %%xmm1 \n\t" \
-                      "movapd %2, %%xmm2" \
-                      : \
-                      : \
-                      "m" ((u3).c13), \
-                      "m" ((u3).c23), \
-                      "m" ((u3).c33)); \
-__asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
-                      "addpd %%xmm4, %%xmm1 \n\t" \
-                      "addpd %%xmm5, %%xmm2" \
-                      : \
-                      :) ; \
-__asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
-                      "movapd %%xmm1, %1 \n\t" \
-                      "movapd %%xmm2, %2" \
-                      : \
-                      "=m" ((u3).c13), \
-                      "=m" ((u3).c23), \
-                      "=m" ((u3).c33)) ;
+                      "=m" ((u3).c22)) ;
 
 /* _sse_su3_times_su3d  by martin hasenbusch */
 #define _sse_su3_times_su3d(u3,u1,u2) \
@@ -834,9 +834,31 @@ __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u2).c00), \
+                      "m" ((u2).c01), \
+                      "m" ((u2).c02)); \
+__asm__ __volatile__ ("xorpd %0, %%xmm0 \n\t" \
+                      "xorpd %0, %%xmm1 \n\t" \
+                      "xorpd %0, %%xmm2" \
+                      : \
+                      : \
+                      "m" (_sse_sgn2)); \
+_sse_su3_multiply(u1); \
+__asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
+                      "movapd %%xmm4, %1 \n\t" \
+                      "movapd %%xmm5, %2" \
+                      : \
+                      "=m" ((u3).c00), \
+                      "=m" ((u3).c10), \
+                      "=m" ((u3).c20)) ; \
+__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
+                      "movapd %1, %%xmm1 \n\t" \
+                      "movapd %2, %%xmm2" \
+                      : \
+                      : \
+                      "m" ((u2).c10), \
                       "m" ((u2).c11), \
-                      "m" ((u2).c12), \
-                      "m" ((u2).c13)); \
+                      "m" ((u2).c12)); \
 __asm__ __volatile__ ("xorpd %0, %%xmm0 \n\t" \
                       "xorpd %0, %%xmm1 \n\t" \
                       "xorpd %0, %%xmm2" \
@@ -848,17 +870,17 @@ __asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
                       "movapd %%xmm4, %1 \n\t" \
                       "movapd %%xmm5, %2" \
                       : \
+                      "=m" ((u3).c01), \
                       "=m" ((u3).c11), \
-                      "=m" ((u3).c21), \
-                      "=m" ((u3).c31)) ; \
+                      "=m" ((u3).c21)) ; \
 __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %1, %%xmm1 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u2).c20), \
                       "m" ((u2).c21), \
-                      "m" ((u2).c22), \
-                      "m" ((u2).c23)); \
+                      "m" ((u2).c22)); \
 __asm__ __volatile__ ("xorpd %0, %%xmm0 \n\t" \
                       "xorpd %0, %%xmm1 \n\t" \
                       "xorpd %0, %%xmm2" \
@@ -870,31 +892,9 @@ __asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
                       "movapd %%xmm4, %1 \n\t" \
                       "movapd %%xmm5, %2" \
                       : \
+                      "=m" ((u3).c02), \
                       "=m" ((u3).c12), \
-                      "=m" ((u3).c22), \
-                      "=m" ((u3).c32)) ; \
-__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
-                      "movapd %1, %%xmm1 \n\t" \
-                      "movapd %2, %%xmm2" \
-                      : \
-                      : \
-                      "m" ((u2).c31), \
-                      "m" ((u2).c32), \
-                      "m" ((u2).c33)); \
-__asm__ __volatile__ ("xorpd %0, %%xmm0 \n\t" \
-                      "xorpd %0, %%xmm1 \n\t" \
-                      "xorpd %0, %%xmm2" \
-                      : \
-                      : \
-                      "m" (_sse_sgn2)); \
-_sse_su3_multiply(u1); \
-__asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
-                      "movapd %%xmm4, %1 \n\t" \
-                      "movapd %%xmm5, %2" \
-                      : \
-                      "=m" ((u3).c13), \
-                      "=m" ((u3).c23), \
-                      "=m" ((u3).c33)) ; 
+                      "=m" ((u3).c22)) ; 
 
 #define _sse_su3_acc(u1,u2) \
 __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
@@ -902,17 +902,45 @@ __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u1).c00), \
+                      "m" ((u1).c01), \
+                      "m" ((u1).c02)); \
+__asm__ __volatile__ ("movapd %0, %%xmm3 \n\t" \
+                      "movapd %1, %%xmm4 \n\t" \
+                      "movapd %2, %%xmm5" \
+                      : \
+                      : \
+                      "m" ((u2).c00), \
+                      "m" ((u2).c01), \
+                      "m" ((u2).c02)); \
+__asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
+                      "addpd %%xmm4, %%xmm1 \n\t" \
+                      "addpd %%xmm5, %%xmm2" \
+                      : \
+                      :) ; \
+__asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
+                      "movapd %%xmm1, %1 \n\t" \
+                      "movapd %%xmm2, %2" \
+                      : \
+                      "=m" ((u1).c00), \
+                      "=m" ((u1).c01), \
+                      "=m" ((u1).c02)) ; \
+__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
+                      "movapd %1, %%xmm1 \n\t" \
+                      "movapd %2, %%xmm2" \
+                      : \
+                      : \
+                      "m" ((u1).c10), \
                       "m" ((u1).c11), \
-                      "m" ((u1).c12), \
-                      "m" ((u1).c13)); \
+                      "m" ((u1).c12)); \
 __asm__ __volatile__ ("movapd %0, %%xmm3 \n\t" \
                       "movapd %1, %%xmm4 \n\t" \
                       "movapd %2, %%xmm5" \
                       : \
                       : \
+                      "m" ((u2).c10), \
                       "m" ((u2).c11), \
-                      "m" ((u2).c12), \
-                      "m" ((u2).c13)); \
+                      "m" ((u2).c12)); \
 __asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
                       "addpd %%xmm4, %%xmm1 \n\t" \
                       "addpd %%xmm5, %%xmm2" \
@@ -922,25 +950,25 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
                       "movapd %%xmm1, %1 \n\t" \
                       "movapd %%xmm2, %2" \
                       : \
+                      "=m" ((u1).c10), \
                       "=m" ((u1).c11), \
-                      "=m" ((u1).c12), \
-                      "=m" ((u1).c13)) ; \
+                      "=m" ((u1).c12)) ; \
 __asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
                       "movapd %1, %%xmm1 \n\t" \
                       "movapd %2, %%xmm2" \
                       : \
                       : \
+                      "m" ((u1).c20), \
                       "m" ((u1).c21), \
-                      "m" ((u1).c22), \
-                      "m" ((u1).c23)); \
+                      "m" ((u1).c22)); \
 __asm__ __volatile__ ("movapd %0, %%xmm3 \n\t" \
                       "movapd %1, %%xmm4 \n\t" \
                       "movapd %2, %%xmm5" \
                       : \
                       : \
+                      "m" ((u2).c20), \
                       "m" ((u2).c21), \
-                      "m" ((u2).c22), \
-                      "m" ((u2).c23)); \
+                      "m" ((u2).c22)); \
 __asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
                       "addpd %%xmm4, %%xmm1 \n\t" \
                       "addpd %%xmm5, %%xmm2" \
@@ -950,37 +978,9 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
                       "movapd %%xmm1, %1 \n\t" \
                       "movapd %%xmm2, %2" \
                       : \
+                      "=m" ((u1).c20), \
                       "=m" ((u1).c21), \
-                      "=m" ((u1).c22), \
-                      "=m" ((u1).c23)) ; \
-__asm__ __volatile__ ("movapd %0, %%xmm0 \n\t" \
-                      "movapd %1, %%xmm1 \n\t" \
-                      "movapd %2, %%xmm2" \
-                      : \
-                      : \
-                      "m" ((u1).c31), \
-                      "m" ((u1).c32), \
-                      "m" ((u1).c33)); \
-__asm__ __volatile__ ("movapd %0, %%xmm3 \n\t" \
-                      "movapd %1, %%xmm4 \n\t" \
-                      "movapd %2, %%xmm5" \
-                      : \
-                      : \
-                      "m" ((u2).c31), \
-                      "m" ((u2).c32), \
-                      "m" ((u2).c33)); \
-__asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
-                      "addpd %%xmm4, %%xmm1 \n\t" \
-                      "addpd %%xmm5, %%xmm2" \
-                      : \
-                      :) ; \
-__asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
-                      "movapd %%xmm1, %1 \n\t" \
-                      "movapd %%xmm2, %2" \
-                      : \
-                      "=m" ((u1).c31), \
-                      "=m" ((u1).c32), \
-                      "=m" ((u1).c33)) ;
+                      "=m" ((u1).c22)) ;
 #endif
 
 #endif

@@ -69,17 +69,19 @@
 
 #if defined MAIN_PROGRAM
   #define EXTERN
+#else
+  #define EXTERN extern
+#endif
+
 #if ((defined SSE)||(defined SSE2))
   #if defined P4
+    #define ALIGN_BASE 0x3f
     #define ALIGN __attribute__ ((aligned (64)))
-  #else 
+  #else
+    #define ALIGN_BASE 0x1f
     #define ALIGN __attribute__ ((aligned (32)))
   #endif
 #else
-  #define ALIGN
-#endif
-#else
-  #define EXTERN extern
   #define ALIGN
 #endif
 
@@ -92,6 +94,7 @@ EXTERN int g_ipt[T+2][LX+2][LY][LZ] ALIGN;
 EXTERN int g_iup[VOLUMEPLUSRAND][4] ALIGN;   
 EXTERN int g_idn[VOLUMEPLUSRAND][4] ALIGN;   
 EXTERN spinor spinor_field[NO_OF_SPINORFIELDS][(VOLUMEPLUSRAND)/2] ALIGN;
+/* EXTERN spinor ** spinor_field; */
 EXTERN su3 g_gauge_field[VOLUMEPLUSRAND][4] ALIGN;
 EXTERN su3adj moment[VOLUME][4] ALIGN;
 EXTERN su3adj df0[VOLUMEPLUSRAND][4] ALIGN;

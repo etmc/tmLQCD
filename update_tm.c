@@ -80,15 +80,15 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   /* one or two pseudo-fermion fields        */
   random_spinor_field(2);
   /* compute the square of the norm */
-  enerphi0 = square_norm(2, VOLUME/2);
+  enerphi0 = square_norm(spinor_field[2], VOLUME/2);
 
   if(g_nr_of_psf > 1) {
     random_spinor_field(3);
-    enerphi1 = square_norm(3, VOLUME/2);
+    enerphi1 = square_norm(spinor_field[3], VOLUME/2);
   }
   if(g_nr_of_psf > 2) {
     random_spinor_field(5);
-    enerphi2 = square_norm(5, VOLUME/2);
+    enerphi2 = square_norm(spinor_field[5], VOLUME/2);
   }
   /* apply the fermion matrix to the first spinor */
   /* it has the largest mu available              */
@@ -134,14 +134,14 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
   g_mu = g_mu1;
   idis0=bicg(2, first_psf, q_off, EPS_SQ0);
 
-  enerphi0x=square_norm(2, VOLUME/2);
+  enerphi0x=square_norm(spinor_field[2], VOLUME/2);
   if(g_nr_of_psf > 1) {
     zero_spinor_field(3);
     g_mu = g_mu1;
     Qtm_plus_psi(second_psf, second_psf);
     g_mu = g_mu2;
     idis1 += bicg(3, second_psf, 0., EPS_SQ0);
-    enerphi1x = square_norm(3, VOLUME/2);
+    enerphi1x = square_norm(spinor_field[3], VOLUME/2);
   }
   if(g_nr_of_psf > 2) {
     zero_spinor_field(5);
@@ -149,7 +149,7 @@ int update_tm(const int integtyp, double * gauge_energy, char * filename) {
     Qtm_plus_psi(third_psf, third_psf);
     g_mu = g_mu3;
     idis2 += bicg(5, third_psf, 0., EPS_SQ0);
-    enerphi2x = square_norm(5, VOLUME/2);
+    enerphi2x = square_norm(spinor_field[5], VOLUME/2);
   }
   /* Compute the energy difference */
   dh=+enepx - g_beta*enegx - enep + g_beta*(*gauge_energy)

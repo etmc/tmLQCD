@@ -33,18 +33,18 @@ su3 exposu3(su3adj p) {
   
   _make_su3(v,p);
   _su3_times_su3(v2,v,v);
-  a=0.5*(v2.c11.re+v2.c22.re+v2.c33.re);
+  a=0.5*(v2.c00.re+v2.c11.re+v2.c22.re);
   /* 1/3 imaginary part of tr v*v2 */
   b = 0.33333333333333333*
-    (v.c11.re*v2.c11.im+v.c11.im*v2.c11.re
+    (v.c00.re*v2.c00.im+v.c00.im*v2.c00.re
+     +v.c01.re*v2.c10.im+v.c01.im*v2.c10.re
+     +v.c02.re*v2.c20.im+v.c02.im*v2.c20.re
+     +v.c10.re*v2.c01.im+v.c10.im*v2.c01.re
+     +v.c11.re*v2.c11.im+v.c11.im*v2.c11.re
      +v.c12.re*v2.c21.im+v.c12.im*v2.c21.re
-     +v.c13.re*v2.c31.im+v.c13.im*v2.c31.re
+     +v.c20.re*v2.c02.im+v.c20.im*v2.c02.re
      +v.c21.re*v2.c12.im+v.c21.im*v2.c12.re
-     +v.c22.re*v2.c22.im+v.c22.im*v2.c22.re
-     +v.c23.re*v2.c32.im+v.c23.im*v2.c32.re
-     +v.c31.re*v2.c13.im+v.c31.im*v2.c13.re
-     +v.c32.re*v2.c23.im+v.c32.im*v2.c23.re
-     +v.c33.re*v2.c33.im+v.c33.im*v2.c33.re  );
+     +v.c22.re*v2.c22.im+v.c22.im*v2.c22.re  );
   a0.re=0.16059043836821615e-9;    /*  1/13! */
   a0.im=0.0;
   a1.re=0.11470745597729725e-10;   /*  1/14! */
@@ -66,24 +66,24 @@ su3 exposu3(su3adj p) {
     r -= 1.0;
   }
   /* vr = a0 + a1*v + a2*v2 */
+  vr.c00.re = a0.re + a1.re*v.c00.re - a1.im*v.c00.im + a2.re*v2.c00.re - a2.im*v2.c00.im;
+  vr.c00.im = a0.im + a1.re*v.c00.im + a1.im*v.c00.re + a2.re*v2.c00.im + a2.im*v2.c00.re;
+  vr.c01.re =         a1.re*v.c01.re - a1.im*v.c01.im + a2.re*v2.c01.re - a2.im*v2.c01.im;
+  vr.c01.im =         a1.re*v.c01.im + a1.im*v.c01.re + a2.re*v2.c01.im + a2.im*v2.c01.re;
+  vr.c02.re =         a1.re*v.c02.re - a1.im*v.c02.im + a2.re*v2.c02.re - a2.im*v2.c02.im;
+  vr.c02.im =         a1.re*v.c02.im + a1.im*v.c02.re + a2.re*v2.c02.im + a2.im*v2.c02.re;
+  vr.c10.re =         a1.re*v.c10.re - a1.im*v.c10.im + a2.re*v2.c10.re - a2.im*v2.c10.im;
+  vr.c10.im =         a1.re*v.c10.im + a1.im*v.c10.re + a2.re*v2.c10.im + a2.im*v2.c10.re;
   vr.c11.re = a0.re + a1.re*v.c11.re - a1.im*v.c11.im + a2.re*v2.c11.re - a2.im*v2.c11.im;
   vr.c11.im = a0.im + a1.re*v.c11.im + a1.im*v.c11.re + a2.re*v2.c11.im + a2.im*v2.c11.re;
   vr.c12.re =         a1.re*v.c12.re - a1.im*v.c12.im + a2.re*v2.c12.re - a2.im*v2.c12.im;
   vr.c12.im =         a1.re*v.c12.im + a1.im*v.c12.re + a2.re*v2.c12.im + a2.im*v2.c12.re;
-  vr.c13.re =         a1.re*v.c13.re - a1.im*v.c13.im + a2.re*v2.c13.re - a2.im*v2.c13.im;
-  vr.c13.im =         a1.re*v.c13.im + a1.im*v.c13.re + a2.re*v2.c13.im + a2.im*v2.c13.re;
+  vr.c20.re =         a1.re*v.c20.re - a1.im*v.c20.im + a2.re*v2.c20.re - a2.im*v2.c20.im;
+  vr.c20.im =         a1.re*v.c20.im + a1.im*v.c20.re + a2.re*v2.c20.im + a2.im*v2.c20.re;
   vr.c21.re =         a1.re*v.c21.re - a1.im*v.c21.im + a2.re*v2.c21.re - a2.im*v2.c21.im;
   vr.c21.im =         a1.re*v.c21.im + a1.im*v.c21.re + a2.re*v2.c21.im + a2.im*v2.c21.re;
   vr.c22.re = a0.re + a1.re*v.c22.re - a1.im*v.c22.im + a2.re*v2.c22.re - a2.im*v2.c22.im;
   vr.c22.im = a0.im + a1.re*v.c22.im + a1.im*v.c22.re + a2.re*v2.c22.im + a2.im*v2.c22.re;
-  vr.c23.re =         a1.re*v.c23.re - a1.im*v.c23.im + a2.re*v2.c23.re - a2.im*v2.c23.im;
-  vr.c23.im =         a1.re*v.c23.im + a1.im*v.c23.re + a2.re*v2.c23.im + a2.im*v2.c23.re;
-  vr.c31.re =         a1.re*v.c31.re - a1.im*v.c31.im + a2.re*v2.c31.re - a2.im*v2.c31.im;
-  vr.c31.im =         a1.re*v.c31.im + a1.im*v.c31.re + a2.re*v2.c31.im + a2.im*v2.c31.re;
-  vr.c32.re =         a1.re*v.c32.re - a1.im*v.c32.im + a2.re*v2.c32.re - a2.im*v2.c32.im;
-  vr.c32.im =         a1.re*v.c32.im + a1.im*v.c32.re + a2.re*v2.c32.im + a2.im*v2.c32.re;
-  vr.c33.re = a0.re + a1.re*v.c33.re - a1.im*v.c33.im + a2.re*v2.c33.re - a2.im*v2.c33.im;
-  vr.c33.im = a0.im + a1.re*v.c33.im + a1.im*v.c33.re + a2.re*v2.c33.im + a2.im*v2.c33.re;
   return vr;
 }
 
@@ -113,39 +113,39 @@ su3 restoresu3(su3 u) {
   static double n1,n2;
   
   /* normalize rows 1 and 2 */
-  n1= u.c11.re * u.c11.re + u.c11.im * u.c11.im
-    + u.c12.re * u.c12.re + u.c12.im * u.c12.im
-    + u.c13.re * u.c13.re + u.c13.im * u.c13.im;
+  n1= u.c00.re * u.c00.re + u.c00.im * u.c00.im
+    + u.c01.re * u.c01.re + u.c01.im * u.c01.im
+    + u.c02.re * u.c02.re + u.c02.im * u.c02.im;
   n1 = 1.0/sqrt(n1);
-  n2= u.c21.re * u.c21.re + u.c21.im * u.c21.im
-    + u.c22.re * u.c22.re + u.c22.im * u.c22.im
-    + u.c23.re * u.c23.re + u.c23.im * u.c23.im;
+  n2= u.c10.re * u.c10.re + u.c10.im * u.c10.im
+    + u.c11.re * u.c11.re + u.c11.im * u.c11.im
+    + u.c12.re * u.c12.re + u.c12.im * u.c12.im;
   n2= 1.0/sqrt(n2);
   
+  vr.c00.re=n1*u.c00.re;  vr.c00.im=n1*u.c00.im;
+  vr.c01.re=n1*u.c01.re;  vr.c01.im=n1*u.c01.im;
+  vr.c02.re=n1*u.c02.re;  vr.c02.im=n1*u.c02.im;
+  
+  vr.c10.re=n1*u.c10.re;  vr.c10.im=n1*u.c10.im;
   vr.c11.re=n1*u.c11.re;  vr.c11.im=n1*u.c11.im;
   vr.c12.re=n1*u.c12.re;  vr.c12.im=n1*u.c12.im;
-  vr.c13.re=n1*u.c13.re;  vr.c13.im=n1*u.c13.im;
-  
-  vr.c21.re=n1*u.c21.re;  vr.c21.im=n1*u.c21.im;
-  vr.c22.re=n1*u.c22.re;  vr.c22.im=n1*u.c22.im;
-  vr.c23.re=n1*u.c23.re;  vr.c23.im=n1*u.c23.im;
   
   /* compute  row 3 as the conjugate of the cross-product of 1 and 2 */ 
   
   /*1 = 2 3  - 3 2*/
-  vr.c31.re= vr.c12.re*vr.c23.re-vr.c13.re*vr.c22.re
-    -vr.c12.im*vr.c23.im+vr.c13.im*vr.c22.im;
-  vr.c31.im=-vr.c12.re*vr.c23.im+vr.c13.re*vr.c22.im
-    -vr.c12.im*vr.c23.re+vr.c13.im*vr.c22.re;
+  vr.c20.re= vr.c01.re*vr.c12.re-vr.c02.re*vr.c11.re
+    -vr.c01.im*vr.c12.im+vr.c02.im*vr.c11.im;
+  vr.c20.im=-vr.c01.re*vr.c12.im+vr.c02.re*vr.c11.im
+    -vr.c01.im*vr.c12.re+vr.c02.im*vr.c11.re;
   /*2 = 3 1  - 1 3*/
-  vr.c32.re= vr.c13.re*vr.c21.re-vr.c11.re*vr.c23.re
-    -vr.c13.im*vr.c21.im+vr.c11.im*vr.c23.im;
-  vr.c32.im=-vr.c13.re*vr.c21.im+vr.c11.re*vr.c23.im
-    -vr.c13.im*vr.c21.re+vr.c11.im*vr.c23.re;
+  vr.c21.re= vr.c02.re*vr.c10.re-vr.c00.re*vr.c12.re
+    -vr.c02.im*vr.c10.im+vr.c00.im*vr.c12.im;
+  vr.c21.im=-vr.c02.re*vr.c10.im+vr.c00.re*vr.c12.im
+    -vr.c02.im*vr.c10.re+vr.c00.im*vr.c12.re;
   /*3 = 1 2  - 2 1*/
-  vr.c33.re= vr.c11.re*vr.c22.re-vr.c12.re*vr.c21.re
-    -vr.c11.im*vr.c22.im+vr.c12.im*vr.c21.im;
-  vr.c33.im=-vr.c11.re*vr.c22.im+vr.c12.re*vr.c21.im
-    -vr.c11.im*vr.c22.re+vr.c12.im*vr.c21.re;
+  vr.c22.re= vr.c00.re*vr.c11.re-vr.c01.re*vr.c10.re
+    -vr.c00.im*vr.c11.im+vr.c01.im*vr.c10.im;
+  vr.c22.im=-vr.c00.re*vr.c11.im+vr.c01.re*vr.c10.im
+    -vr.c00.im*vr.c11.re+vr.c01.im*vr.c10.re;
   return vr;
 }

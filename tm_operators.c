@@ -222,14 +222,14 @@ void mul_one_pm_imu_inv(const int l, const double _sign){
   for(ix = 0; ix < (VOLUME/2); ix++){
     r=&spinor_field[l][ix];
     /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
-    _complex_times_vector(phi1, z, (*r).c1);
-    _vector_assign((*r).c1, phi1);
-    _complex_times_vector(phi1, z, (*r).c2);
-    _vector_assign((*r).c2, phi1);
-    _complex_times_vector(phi1, w, (*r).c3);
-    _vector_assign((*r).c3, phi1);
-    _complex_times_vector(phi1, w, (*r).c4);
-    _vector_assign((*r).c4, phi1);
+    _complex_times_vector(phi1, z, (*r).s0);
+    _vector_assign((*r).s0, phi1);
+    _complex_times_vector(phi1, z, (*r).s1);
+    _vector_assign((*r).s1, phi1);
+    _complex_times_vector(phi1, w, (*r).s2);
+    _vector_assign((*r).s2, phi1);
+    _complex_times_vector(phi1, w, (*r).s3);
+    _vector_assign((*r).s3, phi1);
   }
 }
 
@@ -254,10 +254,10 @@ void assign_mul_one_pm_imu_inv(const int l, const int k, const double _sign){
     r=&spinor_field[k][ix];
     s=&spinor_field[l][ix];
     /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
-    _complex_times_vector((*s).c1, z, (*r).c1);
-    _complex_times_vector((*s).c2, z, (*r).c2);
-    _complex_times_vector((*s).c3, w, (*r).c3);
-    _complex_times_vector((*s).c4, w, (*r).c4);
+    _complex_times_vector((*s).s0, z, (*r).s0);
+    _complex_times_vector((*s).s1, z, (*r).s1);
+    _complex_times_vector((*s).s2, w, (*r).s2);
+    _complex_times_vector((*s).s3, w, (*r).s3);
   }
 }
 
@@ -281,14 +281,14 @@ void mul_one_pm_imu(const int l, const double _sign){
   for(ix = 0; ix < (VOLUME/2); ix++){
     r=&spinor_field[l][ix];
     /* Multiply the spinorfield with 1+imu\gamma_5 */
-    _complex_times_vector(phi1, z, (*r).c1);
-    _vector_assign((*r).c1, phi1);
-    _complex_times_vector(phi1, z, (*r).c2);
-    _vector_assign((*r).c2, phi1);
-    _complex_times_vector(phi1, w, (*r).c3);
-    _vector_assign((*r).c3, phi1);
-    _complex_times_vector(phi1, w, (*r).c4);
-    _vector_assign((*r).c4, phi1);
+    _complex_times_vector(phi1, z, (*r).s0);
+    _vector_assign((*r).s0, phi1);
+    _complex_times_vector(phi1, z, (*r).s1);
+    _vector_assign((*r).s1, phi1);
+    _complex_times_vector(phi1, w, (*r).s2);
+    _vector_assign((*r).s2, phi1);
+    _complex_times_vector(phi1, w, (*r).s3);
+    _vector_assign((*r).s3, phi1);
   }
 }
 
@@ -313,10 +313,10 @@ void assign_mul_one_pm_imu(const int l, const int k, const double _sign){
     r=&spinor_field[k][ix];
 
     /* Multiply the spinorfield with of 1+imu\gamma_5 */
-    _complex_times_vector((*s).c1, z, (*r).c1);
-    _complex_times_vector((*s).c2, z, (*r).c2);
-    _complex_times_vector((*s).c3, w, (*r).c3);
-    _complex_times_vector((*s).c4, w, (*r).c4);
+    _complex_times_vector((*s).s0, z, (*r).s0);
+    _complex_times_vector((*s).s1, z, (*r).s1);
+    _complex_times_vector((*s).s2, w, (*r).s2);
+    _complex_times_vector((*s).s3, w, (*r).s3);
   }
 }
 
@@ -343,17 +343,17 @@ void mul_one_pm_imu_sub_mul_gamma5(const int l, const int k,
     s = &spinor_field[j][ix];
     t = &spinor_field[l][ix];
     /* Multiply the spinorfield with 1+imu\gamma_5 */
-    _complex_times_vector(phi1, z, (*r).c1);
-    _complex_times_vector(phi2, z, (*r).c2);
-    _complex_times_vector(phi3, w, (*r).c3);
-    _complex_times_vector(phi4, w, (*r).c4);
+    _complex_times_vector(phi1, z, (*r).s0);
+    _complex_times_vector(phi2, z, (*r).s1);
+    _complex_times_vector(phi3, w, (*r).s2);
+    _complex_times_vector(phi4, w, (*r).s3);
     /* Subtract s and store the result in t */
     /* multiply with  gamma5 included by    */
     /* reversed order of s and phi3|4       */
-    _vector_sub((*t).c1, phi1, (*s).c1);
-    _vector_sub((*t).c2, phi2, (*s).c2);
-    _vector_sub((*t).c3, (*s).c3, phi3);
-    _vector_sub((*t).c4, (*s).c4, phi4);
+    _vector_sub((*t).s0, phi1, (*s).s0);
+    _vector_sub((*t).s1, phi2, (*s).s1);
+    _vector_sub((*t).s2, (*s).s2, phi3);
+    _vector_sub((*t).s3, (*s).s3, phi4);
   }
 }
 
@@ -380,14 +380,14 @@ void mul_one_pm_imu_sub_mul(const int l, const int k,
     s = &spinor_field[j][ix];
     t = &spinor_field[l][ix];
     /* Multiply the spinorfield with 1+imu\gamma_5 */
-    _complex_times_vector(phi1, z, (*r).c1);
-    _complex_times_vector(phi2, z, (*r).c2);
-    _complex_times_vector(phi3, w, (*r).c3);
-    _complex_times_vector(phi4, w, (*r).c4);
+    _complex_times_vector(phi1, z, (*r).s0);
+    _complex_times_vector(phi2, z, (*r).s1);
+    _complex_times_vector(phi3, w, (*r).s2);
+    _complex_times_vector(phi4, w, (*r).s3);
     /* Subtract s and store the result in t */
-    _vector_sub((*t).c1, phi1, (*s).c1);
-    _vector_sub((*t).c2, phi2, (*s).c2);
-    _vector_sub((*t).c3, phi3, (*s).c3);
-    _vector_sub((*t).c4, phi4, (*s).c4);
+    _vector_sub((*t).s0, phi1, (*s).s0);
+    _vector_sub((*t).s1, phi2, (*s).s1);
+    _vector_sub((*t).s2, phi3, (*s).s2);
+    _vector_sub((*t).s3, phi4, (*s).s3);
   }
 }

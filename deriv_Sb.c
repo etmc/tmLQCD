@@ -62,8 +62,8 @@ void deriv_Sb(const int ieo, const int l, const int k){
     r=&rr;
 
     /*multiply the left vector with gamma5*/
-    _vector_minus_assign((*r).c3, (*r).c3);
-    _vector_minus_assign((*r).c4, (*r).c4);
+    _vector_minus_assign((*r).s2, (*r).s2);
+    _vector_minus_assign((*r).s3, (*r).s3);
 
     /*********************** direction +0 ********************/
 
@@ -73,11 +73,11 @@ void deriv_Sb(const int ieo, const int l, const int k){
     sp=&spinor_field[k][icy];
     up=&g_gauge_field[ix][0];
       
-    _vector_add(psia,(*sp).c1,(*sp).c3);
-    _vector_add(psib,(*sp).c2,(*sp).c4);
+    _vector_add(psia,(*sp).s0,(*sp).s2);
+    _vector_add(psib,(*sp).s1,(*sp).s3);
       
-    _vector_add(phia,(*r).c1,(*r).c3);
-    _vector_add(phib,(*r).c2,(*r).c4);
+    _vector_add(phia,(*r).s0,(*r).s2);
+    _vector_add(phib,(*r).s1,(*r).s3);
 
     _vector_tensor_vector(v1,phia,psia);
     _vector_tensor_vector(v2,phib,psib);
@@ -95,11 +95,11 @@ void deriv_Sb(const int ieo, const int l, const int k){
     sm=&spinor_field[k][icy];
     um=&g_gauge_field[iy][0];
       
-    _vector_sub(psia,(*sm).c1,(*sm).c3);
-    _vector_sub(psib,(*sm).c2,(*sm).c4);
+    _vector_sub(psia,(*sm).s0,(*sm).s2);
+    _vector_sub(psib,(*sm).s1,(*sm).s3);
 
-    _vector_sub(phia,(*r).c1,(*r).c3);
-    _vector_sub(phib,(*r).c2,(*r).c4);
+    _vector_sub(phia,(*r).s0,(*r).s2);
+    _vector_sub(phib,(*r).s1,(*r).s3);
 
     _vector_tensor_vector(v1,psia,phia);
     _vector_tensor_vector(v2,psib,phib);
@@ -117,11 +117,11 @@ void deriv_Sb(const int ieo, const int l, const int k){
     sp=&spinor_field[k][icy];
     up=&g_gauge_field[ix][1];      
 
-    _vector_i_add(psia,(*sp).c1,(*sp).c4);
-    _vector_i_add(psib,(*sp).c2,(*sp).c3);
+    _vector_i_add(psia,(*sp).s0,(*sp).s3);
+    _vector_i_add(psib,(*sp).s1,(*sp).s2);
 
-    _vector_i_add(phia,(*r).c1,(*r).c4);
-    _vector_i_add(phib,(*r).c2,(*r).c3);
+    _vector_i_add(phia,(*r).s0,(*r).s3);
+    _vector_i_add(phib,(*r).s1,(*r).s2);
 
     _vector_tensor_vector(v1,phia,psia);
     _vector_tensor_vector(v2,phib,psib);
@@ -139,11 +139,11 @@ void deriv_Sb(const int ieo, const int l, const int k){
     sm=&spinor_field[k][icy];
     um=&g_gauge_field[iy][1];
       
-    _vector_i_sub(psia,(*sm).c1,(*sm).c4);
-    _vector_i_sub(psib,(*sm).c2,(*sm).c3);
+    _vector_i_sub(psia,(*sm).s0,(*sm).s3);
+    _vector_i_sub(psib,(*sm).s1,(*sm).s2);
 
-    _vector_i_sub(phia,(*r).c1,(*r).c4);
-    _vector_i_sub(phib,(*r).c2,(*r).c3);
+    _vector_i_sub(phia,(*r).s0,(*r).s3);
+    _vector_i_sub(phib,(*r).s1,(*r).s2);
 
     _vector_tensor_vector(v1,psia,phia);
     _vector_tensor_vector(v2,psib,phib);
@@ -162,11 +162,11 @@ void deriv_Sb(const int ieo, const int l, const int k){
     sp=&spinor_field[k][icy];
     up=&g_gauge_field[ix][2];
       
-    _vector_add(psia,(*sp).c1,(*sp).c4);
-    _vector_sub(psib,(*sp).c2,(*sp).c3);
+    _vector_add(psia,(*sp).s0,(*sp).s3);
+    _vector_sub(psib,(*sp).s1,(*sp).s2);
       
-    _vector_add(phia,(*r).c1,(*r).c4);
-    _vector_sub(phib,(*r).c2,(*r).c3);
+    _vector_add(phia,(*r).s0,(*r).s3);
+    _vector_sub(phib,(*r).s1,(*r).s2);
 
     _vector_tensor_vector(v1,phia,psia);
     _vector_tensor_vector(v2,phib,psib);
@@ -185,11 +185,11 @@ void deriv_Sb(const int ieo, const int l, const int k){
     sm=&spinor_field[k][icy];
     um=&g_gauge_field[iy][2];
       
-    _vector_sub(psia,(*sm).c1,(*sm).c4);
-    _vector_add(psib,(*sm).c2,(*sm).c3);
+    _vector_sub(psia,(*sm).s0,(*sm).s3);
+    _vector_add(psib,(*sm).s1,(*sm).s2);
 
-    _vector_sub(phia,(*r).c1,(*r).c4);
-    _vector_add(phib,(*r).c2,(*r).c3);
+    _vector_sub(phia,(*r).s0,(*r).s3);
+    _vector_add(phib,(*r).s1,(*r).s2);
 
     _vector_tensor_vector(v1,psia,phia);
     _vector_tensor_vector(v2,psib,phib);
@@ -209,11 +209,11 @@ void deriv_Sb(const int ieo, const int l, const int k){
     sp=&spinor_field[k][icy];
     up=&g_gauge_field[ix][3];
       
-    _vector_i_add(psia,(*sp).c1,(*sp).c3);
-    _vector_i_sub(psib,(*sp).c2,(*sp).c4);
+    _vector_i_add(psia,(*sp).s0,(*sp).s2);
+    _vector_i_sub(psib,(*sp).s1,(*sp).s3);
 
-    _vector_i_add(phia,(*r).c1,(*r).c3);
-    _vector_i_sub(phib,(*r).c2,(*r).c4);
+    _vector_i_add(phia,(*r).s0,(*r).s2);
+    _vector_i_sub(phib,(*r).s1,(*r).s3);
 
     _vector_tensor_vector(v1,phia,psia);
     _vector_tensor_vector(v2,phib,psib);
@@ -233,11 +233,11 @@ void deriv_Sb(const int ieo, const int l, const int k){
     sm=&spinor_field[k][icy];
     um=&g_gauge_field[iy][3];
       
-    _vector_i_sub(psia,(*sm).c1,(*sm).c3);
-    _vector_i_add(psib,(*sm).c2,(*sm).c4);
+    _vector_i_sub(psia,(*sm).s0,(*sm).s2);
+    _vector_i_add(psib,(*sm).s1,(*sm).s3);
 
-    _vector_i_sub(phia,(*r).c1,(*r).c3);
-    _vector_i_add(phib,(*r).c2,(*r).c4);
+    _vector_i_sub(phia,(*r).s0,(*r).s2);
+    _vector_i_add(phib,(*r).s1,(*r).s3);
 
     _vector_tensor_vector(v1,psia,phia);
     _vector_tensor_vector(v2,psib,phib);

@@ -99,7 +99,7 @@ int bicgstabell(const int x0, const int b, const int max_iter,
       alpha = rho0/gamma0;
       /* r_i = r_i - \alpha u_{i+1} */
       for(i = 0; i <= j; i++) {
-	assign_add_mul(r[i], -alpha, u[i+1], VOLUME/2);
+	assign_add_mul_r(r[i], -alpha, u[i+1], VOLUME/2);
       }
       if(g_use_clover_flag == 1){
 	M_psi(r[j+1], r[j], q_off); 
@@ -108,7 +108,7 @@ int bicgstabell(const int x0, const int b, const int max_iter,
 	Mtm_plus_psi(r[j+1], r[j]);
       }
       /* x = x + \alpha u_0 */
-      assign_add_mul(x, alpha, u[0], VOLUME/2);
+      assign_add_mul_r(x, alpha, u[0], VOLUME/2);
     }
 
     /* The MR part */
@@ -116,7 +116,7 @@ int bicgstabell(const int x0, const int b, const int max_iter,
     for(j = 1; j <= l; j++){
       for(i = 1; i < j; i++){
 	tau[i][j] = scalar_prod_r(r[j], r[i], VOLUME/2)/sigma[i];
-	assign_add_mul(r[j], -tau[i][j], r[i], VOLUME/2);
+	assign_add_mul_r(r[j], -tau[i][j], r[i], VOLUME/2);
       }
       sigma[j] = scalar_prod_r(r[j], r[j], VOLUME/2);
       gammap[j] = scalar_prod_r(r[0], r[j], VOLUME/2)/sigma[j];
@@ -135,15 +135,15 @@ int bicgstabell(const int x0, const int b, const int max_iter,
 	gammapp[j] += (tau[j][i]*gamma[i+1]);
       }
     }
-    assign_add_mul(x, gamma[1], r[0], VOLUME/2);
-    assign_add_mul(r[0], -gammap[l], r[l], VOLUME/2);
+    assign_add_mul_r(x, gamma[1], r[0], VOLUME/2);
+    assign_add_mul_r(r[0], -gammap[l], r[l], VOLUME/2);
     for(j = 1; j < l; j++){
-      assign_add_mul(x, gammapp[j], r[j], VOLUME/2);
-      assign_add_mul(r[0], -gammap[j], r[j], VOLUME/2);
+      assign_add_mul_r(x, gammapp[j], r[j], VOLUME/2);
+      assign_add_mul_r(r[0], -gammap[j], r[j], VOLUME/2);
     }
-    assign_add_mul(u[0], -gamma[l], u[l], VOLUME/2);
+    assign_add_mul_r(u[0], -gamma[l], u[l], VOLUME/2);
     for(j = 1; j < l; j++){
-      assign_add_mul(u[0], -gamma[j], u[j], VOLUME/2);
+      assign_add_mul_r(u[0], -gamma[j], u[j], VOLUME/2);
     }
     err = square_norm(r[0], VOLUME/2);
     _SO(if(g_proc_id == 0){printf(" Iterated %d %d, %e\n", l, k, err);fflush( stdout );});

@@ -51,7 +51,7 @@ int ranlxd_init = 0;
 
 typedef struct
 {
-   float c1,c2,c3,c4;
+   float c1,c2,c3,s3;
 } vec_t __attribute__ ((aligned (16)));
 
 typedef struct
@@ -153,13 +153,13 @@ static void define_constants()
    one.c1=1.0f;
    one.c2=1.0f;
    one.c3=1.0f;
-   one.c4=1.0f;   
+   one.s3=1.0f;   
 
    b=(float)(ldexp(1.0,-24));
    one_bit.c1=b;
    one_bit.c2=b;
    one_bit.c3=b;
-   one_bit.c4=b;
+   one_bit.s3=b;
    
    for (k=0;k<96;k++)
    {
@@ -225,7 +225,7 @@ void rlxd_init(const int level, const int seed)
    carry.c1=0.0f;
    carry.c2=0.0f;
    carry.c3=0.0f;
-   carry.c4=0.0f;
+   carry.s3=0.0f;
    
    ir=0;
    jr=7;
@@ -277,7 +277,7 @@ void rlxd_get(int * const state)
    state[97]=(int)(base*carry.c1);
    state[98]=(int)(base*carry.c2);
    state[99]=(int)(base*carry.c3);
-   state[100]=(int)(base*carry.c4);
+   state[100]=(int)(base*carry.s3);
 
    state[101]=pr;
    state[102]=ir;
@@ -312,7 +312,7 @@ void rlxd_reset(const int * state)
    carry.c1=(float)(ldexp((double)(state[97]),-24));
    carry.c2=(float)(ldexp((double)(state[98]),-24));
    carry.c3=(float)(ldexp((double)(state[99]),-24));
-   carry.c4=(float)(ldexp((double)(state[100]),-24));
+   carry.s3=(float)(ldexp((double)(state[100]),-24));
 
    pr=state[101];
    ir=state[102];
@@ -336,7 +336,7 @@ void rlxd_reset(const int * state)
 
 typedef struct
 {
-   int c1,c2,c3,c4;
+   int c1,c2,c3,s3;
 } vec_t;
 
 typedef struct
@@ -367,10 +367,10 @@ static union
       (*pi).c2.c3+=(d<0); \
       d+=BASE; \
       (*pi).c1.c3=d&MASK; \
-      d=(*pj).c1.c4-(*pi).c1.c4-carry.c4; \
-      (*pi).c2.c4+=(d<0); \
+      d=(*pj).c1.s3-(*pi).c1.s3-carry.s3; \
+      (*pi).c2.s3+=(d<0); \
       d+=BASE; \
-      (*pi).c1.c4=d&MASK; \
+      (*pi).c1.s3=d&MASK; \
       d=(*pj).c2.c1-(*pi).c2.c1; \
       carry.c1=(d<0); \
       d+=BASE; \
@@ -383,10 +383,10 @@ static union
       carry.c3=(d<0); \
       d+=BASE; \
       (*pi).c2.c3=d&MASK; \
-      d=(*pj).c2.c4-(*pi).c2.c4; \
-      carry.c4=(d<0); \
+      d=(*pj).c2.s3-(*pi).c2.s3; \
+      carry.s3=(d<0); \
       d+=BASE; \
-      (*pi).c2.c4=d&MASK
+      (*pi).c2.s3=d&MASK
 
 
 static void update()
@@ -496,7 +496,7 @@ void rlxd_init(const int level, const int seed)
    carry.c1=0;
    carry.c2=0;
    carry.c3=0;
-   carry.c4=0;
+   carry.s3=0;
 
    ir=0;
    jr=7;
@@ -546,7 +546,7 @@ void rlxd_get(int * const state)
    state[97]=carry.c1;
    state[98]=carry.c2;
    state[99]=carry.c3;
-   state[100]=carry.c4;
+   state[100]=carry.s3;
 
    state[101]=pr;
    state[102]=ir;
@@ -585,7 +585,7 @@ void rlxd_reset(const int * state)
    carry.c1=state[97];
    carry.c2=state[98];
    carry.c3=state[99];
-   carry.c4=state[100];
+   carry.s3=state[100];
 
    pr=state[101];
    ir=state[102];

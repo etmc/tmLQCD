@@ -389,11 +389,11 @@ int big_endian(){
 
 void write_su3(su3 * up, FILE * f) {
   fprintf(f,"%f %f %f %f %f %f \n%f %f %f %f %f %f \n%f %f %f %f %f %f %d\n\n",
+	     (*up).c00.re, (*up).c00.im, (*up).c01.re, (*up).c01.im,
+	     (*up).c02.re, (*up).c02.im, (*up).c10.re, (*up).c10.im,
 	     (*up).c11.re, (*up).c11.im, (*up).c12.re, (*up).c12.im,
-	     (*up).c13.re, (*up).c13.im, (*up).c21.re, (*up).c21.im,
-	     (*up).c22.re, (*up).c22.im, (*up).c23.re, (*up).c23.im,
-	     (*up).c31.re, (*up).c31.im, (*up).c32.re, (*up).c32.im,
-	     (*up).c33.re, (*up).c33.im, g_cart_id);
+	     (*up).c20.re, (*up).c20.im, (*up).c21.re, (*up).c21.im,
+	     (*up).c22.re, (*up).c22.im, g_cart_id);
 }
 
 void byte_swap(void * ptr, int nmemb){

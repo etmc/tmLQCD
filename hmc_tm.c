@@ -108,6 +108,9 @@ int main(int argc,char *argv[]) {
 
   /* Read the input file */
   read_input(input_filename);
+  if(Nskip == 0){
+    Nskip = 1;
+  }
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
     if(countfile != NULL) {

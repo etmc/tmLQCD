@@ -144,7 +144,7 @@ if(idis==1)
     for(i=1;i<g_nproc;i++)
       {
       fread(gauge_tmp,sizeof gauge_tmp,1,fp3);
-      MPI_Send(&gauge_tmp[0][0].c11.re, 72*VOLUME, MPI_DOUBLE, i, 42,
+      MPI_Send(&gauge_tmp[0][0].c00.re, 72*VOLUME, MPI_DOUBLE, i, 42,
   	       MPI_COMM_WORLD);
       }
     fclose(fp3);
@@ -155,7 +155,7 @@ if(idis==1)
     }
   else
     {
-    MPI_Recv(&g_gauge_field[0][0].c11.re, 72*VOLUME, MPI_DOUBLE, 0, 42,
+    MPI_Recv(&g_gauge_field[0][0].c00.re, 72*VOLUME, MPI_DOUBLE, 0, 42,
 	     MPI_COMM_WORLD, &status);
     }
   }
@@ -327,7 +327,23 @@ ks=0.0;
 kc=0.0;
 for(i=0;i<VOLUME;i++) for(mu=0;mu<4;mu++)
   {
-  ds =(gauge_tmp[i][mu].c11.re-g_gauge_field[i][mu].c11.re)
+  ds =(gauge_tmp[i][mu].c00.re-g_gauge_field[i][mu].c00.re)
+     *(gauge_tmp[i][mu].c00.re-g_gauge_field[i][mu].c00.re);
+  ds+=(gauge_tmp[i][mu].c00.im-g_gauge_field[i][mu].c00.im)
+     *(gauge_tmp[i][mu].c00.im-g_gauge_field[i][mu].c00.im);
+  ds+=(gauge_tmp[i][mu].c01.re-g_gauge_field[i][mu].c01.re)
+     *(gauge_tmp[i][mu].c01.re-g_gauge_field[i][mu].c01.re);
+  ds+=(gauge_tmp[i][mu].c01.im-g_gauge_field[i][mu].c01.im)
+     *(gauge_tmp[i][mu].c01.im-g_gauge_field[i][mu].c01.im);
+  ds+=(gauge_tmp[i][mu].c02.re-g_gauge_field[i][mu].c02.re)
+     *(gauge_tmp[i][mu].c02.re-g_gauge_field[i][mu].c02.re);
+  ds+=(gauge_tmp[i][mu].c02.im-g_gauge_field[i][mu].c02.im)
+     *(gauge_tmp[i][mu].c02.im-g_gauge_field[i][mu].c02.im);
+  ds+=(gauge_tmp[i][mu].c10.re-g_gauge_field[i][mu].c10.re)
+     *(gauge_tmp[i][mu].c10.re-g_gauge_field[i][mu].c10.re);
+  ds+=(gauge_tmp[i][mu].c10.im-g_gauge_field[i][mu].c10.im)
+     *(gauge_tmp[i][mu].c10.im-g_gauge_field[i][mu].c10.im);
+  ds+=(gauge_tmp[i][mu].c11.re-g_gauge_field[i][mu].c11.re)
      *(gauge_tmp[i][mu].c11.re-g_gauge_field[i][mu].c11.re);
   ds+=(gauge_tmp[i][mu].c11.im-g_gauge_field[i][mu].c11.im)
      *(gauge_tmp[i][mu].c11.im-g_gauge_field[i][mu].c11.im);
@@ -335,10 +351,10 @@ for(i=0;i<VOLUME;i++) for(mu=0;mu<4;mu++)
      *(gauge_tmp[i][mu].c12.re-g_gauge_field[i][mu].c12.re);
   ds+=(gauge_tmp[i][mu].c12.im-g_gauge_field[i][mu].c12.im)
      *(gauge_tmp[i][mu].c12.im-g_gauge_field[i][mu].c12.im);
-  ds+=(gauge_tmp[i][mu].c13.re-g_gauge_field[i][mu].c13.re)
-     *(gauge_tmp[i][mu].c13.re-g_gauge_field[i][mu].c13.re);
-  ds+=(gauge_tmp[i][mu].c13.im-g_gauge_field[i][mu].c13.im)
-     *(gauge_tmp[i][mu].c13.im-g_gauge_field[i][mu].c13.im);
+  ds+=(gauge_tmp[i][mu].c20.re-g_gauge_field[i][mu].c20.re)
+     *(gauge_tmp[i][mu].c20.re-g_gauge_field[i][mu].c20.re);
+  ds+=(gauge_tmp[i][mu].c20.im-g_gauge_field[i][mu].c20.im)
+     *(gauge_tmp[i][mu].c20.im-g_gauge_field[i][mu].c20.im);
   ds+=(gauge_tmp[i][mu].c21.re-g_gauge_field[i][mu].c21.re)
      *(gauge_tmp[i][mu].c21.re-g_gauge_field[i][mu].c21.re);
   ds+=(gauge_tmp[i][mu].c21.im-g_gauge_field[i][mu].c21.im)
@@ -347,22 +363,6 @@ for(i=0;i<VOLUME;i++) for(mu=0;mu<4;mu++)
      *(gauge_tmp[i][mu].c22.re-g_gauge_field[i][mu].c22.re);
   ds+=(gauge_tmp[i][mu].c22.im-g_gauge_field[i][mu].c22.im)
      *(gauge_tmp[i][mu].c22.im-g_gauge_field[i][mu].c22.im);
-  ds+=(gauge_tmp[i][mu].c23.re-g_gauge_field[i][mu].c23.re)
-     *(gauge_tmp[i][mu].c23.re-g_gauge_field[i][mu].c23.re);
-  ds+=(gauge_tmp[i][mu].c23.im-g_gauge_field[i][mu].c23.im)
-     *(gauge_tmp[i][mu].c23.im-g_gauge_field[i][mu].c23.im);
-  ds+=(gauge_tmp[i][mu].c31.re-g_gauge_field[i][mu].c31.re)
-     *(gauge_tmp[i][mu].c31.re-g_gauge_field[i][mu].c31.re);
-  ds+=(gauge_tmp[i][mu].c31.im-g_gauge_field[i][mu].c31.im)
-     *(gauge_tmp[i][mu].c31.im-g_gauge_field[i][mu].c31.im);
-  ds+=(gauge_tmp[i][mu].c32.re-g_gauge_field[i][mu].c32.re)
-     *(gauge_tmp[i][mu].c32.re-g_gauge_field[i][mu].c32.re);
-  ds+=(gauge_tmp[i][mu].c32.im-g_gauge_field[i][mu].c32.im)
-     *(gauge_tmp[i][mu].c32.im-g_gauge_field[i][mu].c32.im);
-  ds+=(gauge_tmp[i][mu].c33.re-g_gauge_field[i][mu].c33.re)
-     *(gauge_tmp[i][mu].c33.re-g_gauge_field[i][mu].c33.re);
-  ds+=(gauge_tmp[i][mu].c33.im-g_gauge_field[i][mu].c33.im)
-     *(gauge_tmp[i][mu].c33.im-g_gauge_field[i][mu].c33.im);
   tr=ds+kc;
   ts=tr+ks;
   tt=ts-ks;
