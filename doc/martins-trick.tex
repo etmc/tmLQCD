@@ -1,5 +1,73 @@
 \section{Hasenbusch trick for dynamical tmQCD}
 
+The trick presented in \cite{Hasenbusch:2002ai} is based on the
+observation that writing
+\[
+\det[Q^2] = \det[W^2]\cdot\det[W^{-2}Q^2]
+\]
+is advantagous for the HMC, if the condition number of $W^{2}$ and of
+$W^{-2}Q^{2}$ is significantly reduced compared to the condition number
+of only $Q^2$. Thus if we define
+\[
+\begin{split}
+  \Qpm = \gamma_5 D_W \pm i\mu_1\, ,\\
+  \Wpm = \gamma_5 D_W \pm i\mu_2\, ,\\
+\end{split}
+\]
+with $\mu_2 =\mu_1+\Delta\mu$ it follows immidiatly that the condition number of
+$\Wp\Wm$ is lower than the one of $\Qp\Qm$ if for $\lambda_{\textrm{min}}$
+and $\lambda_{\textrm{max}}$ the lowest and the largest eigenvalue of
+$\Qp\Qm$, respectively $|\lambda_{\textrm{min}}|\ll\mu_2^2\ll|\lambda_{\textrm{max}}|$
+holds: It is $|\lambda_{\textrm{max}}|/\mu_2^2$. The condition number of
+$W^{-2}Q^{2}$ contrariwise is $\mu_2^2/|\lambda_{\textrm{min}}|^2$. We can take
+$\mu_1$ which is a lower bound for $|\lambda_{\textrm{min}}|$ to write down
+the condition numbers:
+\[
+k_{W^2} = \frac{|\lambda_{\textrm{max}}|}{\mu_2^2}\, ,\quad
+k_{W^{-2}Q^{2}} \leq \frac{\mu_2^2}{\mu_1^2}\, .
+\]
+This again leads to an optimal choice for
+$\mu_2^2=\sqrt{|\lambda_{\textrm{max}}|\cdot\mu_1}$. It is also illuminating to take
+a look at the force coming from $W^{-2}Q^{2}$. Noticing that
+\[
+\Wpm = \Qpm \pm i\Delta\mu\, ,
+\]
+we see immidiatly that
+\begin{equation}
+  \label{eq:mt01}
+  \Wpm^{-1}\Qpm = \mathds{1} \mp i\Delta\mu\Wpm^{-1}\, .
+\end{equation}
+Now we again write the determinant with pseudo fermion
+fields:
+\[
+\begin{split}
+  \det[\Wp^{-1}\Qp\Qm\Wm^{-1}] &= \int D[\phi]D[\phi^\dagger]
+  \exp(-\phi^\dagger\Wm\Qm^{-1}\Qp^{-1}\Wp\phi) \\
+  &=  \int D[\phi]D[\phi^\dagger] \exp(-S_F)\, .
+\end{split}
+\]
+Using equation (\ref{eq:mt01}) we get the following expression for
+$S_F$:
+\begin{equation}
+  \label{eq:mt02}
+  S_F = \phi^\dagger(\mathds{1} +i\Delta\mu\Qp^{-1}
+  -i\Delta\mu\Qm^{-1}+\Delta\mu^2(\Qp\Qm)^{-1}) \phi\, .
+\end{equation}
+Without explicitly computing the variation of $S_F$ with respect to
+the gauge fields we can see that it can only contain term proportional
+to $\Delta\mu$ and $\Delta\mu^2$, since $S_F$ is a constant up to terms of this
+order. If we take $\Delta\mu$ to be small we expect a smaller force comming
+from $W^{-2}Q^{2}$ than it would come from $Q^2$ and therefore a
+smoother evolution of the Hamiltonian.
+
+This we will now apply on top of even odd preconditioning. For this we
+start directly with the even odd preconditioned matrices $\hQpm$, but
+probably it is also possible to start from the results obtained in
+this subsection. Nevertheless the above discussion was usefull to
+understand a possible gain with this trick.
+
+\subsection{Including EO preconditioning}
+
 Let $\hQpm$ and $\hWpm$ be two matrices as defined in (\ref{eq:eo4})
 with two parameters $\mu_1$ and $\mu_2$, respectively. The idea is to
 choose $\mu_2$ bigger than $\mu_1$. With this we can
@@ -51,9 +119,9 @@ Recalling the variation of $\hQpm$ (and of $\hWpm$):
   \label{eq:mt5}
   \begin{split}
     \delta\hQpm &= \gamma_5\left(-\delta M_{oe}(1\pm i\mu_1\gamma_5 )^{-1}M_{eo} -
-    M_{oe}(1\pm i\mu_1\gamma_5 )^{-1}\delta M_{eo}\right)\, , \\
-  \delta \hWpm &= \gamma_5\left(-\delta M_{oe}(1\pm i\mu_2\gamma_5 )^{-1}M_{eo} -
-    M_{oe}(1\pm i\mu_2\gamma_5)^{-1}\delta M_{eo}\right)\, ,
+      M_{oe}(1\pm i\mu_1\gamma_5 )^{-1}\delta M_{eo}\right)\, , \\
+    \delta\hWpm &= \gamma_5\left(-\delta M_{oe}(1\pm i\mu_2\gamma_5 )^{-1}M_{eo} -
+      M_{oe}(1\pm i\mu_2\gamma_5)^{-1}\delta M_{eo}\right)\, ,
   \end{split}
 \end{equation}
 we find:
@@ -76,7 +144,7 @@ defined over the full lattice as follows:
     \end{pmatrix}\, ,\quad
     Y_2 = 
     \begin{pmatrix}
-       -(1+i\mu_{2}\gamma_5)^{-1}M_{eo}\phi_o \\ \phi_o\\
+      -(1+i\mu_{2}\gamma_5)^{-1}M_{eo}\phi_o \\ \phi_o\\
     \end{pmatrix},\\
     X_{1,2} &= 
     \begin{pmatrix}
@@ -98,6 +166,40 @@ trajectory with:
 \end{equation}
 where $R$ is again a random spinor field taken from a Gaussian
 distribution with norm one.
+
+This method can be applied recursively. In fact we have implemented
+three pseudo fermion fields.
+
+\subsection{Results}
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+    scheme & $\mu_2$ & $\mu_3$ & $\delta\tau$ & stat & $P_{\textrm{acc}}$ \\
+    \hline\hline
+    S & $0.0$ & $0.0$ & $0.05$ & $200$ & $0.89$ \\
+    \hline
+    S & $0.0$ & $0.0$ & $0.1$ & $200$ & $0.32$ \\
+    S & $0.034$ & $0.0$ & $0.1$ & $200$ & $0.87$ \\
+    S & $0.1$ & $0.0$ & $0.1$ & $200$ & $0.91$ \\
+    S & $0.2$ & $0.0$ & $0.1$ & $1000$ & $0.96$ \\
+    S & $0.3$ & $0.0$ & $0.1$ & $200$ & $0.69$ \\
+    S & $0.5$ & $0.0$ & $0.1$ & $200$ & $0.27$ \\
+    \hline
+    S & $0.2$ & $0.0$ & $0.2$ & $1000$ & $0.73$ \\
+    S & $0.2$ & $0.4$ & $0.2$ & $1000$ & $0.80$\\
+    S & $0.2$ & $0.6$ & $0.2$ & $1000$ & $0.80$ \\
+    S & $0.2$ & $0.8$ & $0.2$ & $1000$ & $0.77$ \\
+    S & $0.1$ & $0.3$ & $0.2$ & $1000$ & $0.84$ \\
+    S & $0.1$ & $0.4$ & $0.2$ & $1000$ & $0.86$ \\
+    S & $0.034$ & $0.18$ & $0.2$ & $1000$ & $0.77$ \\
+    \hline
+  \end{tabular}
+  \caption{Acceptance rate for a $8^4$ Lattice at $\beta=5.2$, $\kappa=0.170$ and $\tilde\mu = 0.0034$.}
+  \label{tab:resmt}
+\end{table}
+
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "main"
