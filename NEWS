@@ -1,3 +1,7 @@
+13.02.2005: Integration scheme with error cancellation implemented.
+            It is only implemented for the highest level and should
+	    have errors in \delta\tau^5 only.
+
 07.02.2005: LX,LY,LZ now possible as input parameter.
 
 07.01.2005: Extended leap-frog and extended Sexton-Weingarten

@@ -15,6 +15,21 @@ boundary conditions:
 
 Plaquette: 0.29055(3)
 
+4^3 x 8 lattice, beta = 1, kappa = 0, mu = 0, antiperiodic bc, 
+DBW2 gauge action
+
+Plaquette: 0.71771(3) (Carsten serial)
+Plaquette: 0.71772(7) (Karl)
+
+
+4^4 lattice, beta 0.67, kappa=0.125 mu=0.5 2*kappa*mu=0.125 antiperiodic bc
+DBW2 gauge action.
+
+Plaquette: 0.56121(13) (HH)
+Plaquette: 0.56125(13) (Carsten serial ExtLeapFrog)
+Plaquette: 0.56127(10) (Carsten parallel t ExtLeapFrog)
+Plaquette: 0.56139(11) (Carsten parallel xt ExtLeapFrog)
+
 You can also have a look to the following numbers:
 
 mu = 0.1 -> 2kappa mu = 0.0354

@@ -147,6 +147,9 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   else if(integtyp == 4) {
     ext_sexton_weingarten(n_int, tau, g_nr_of_psf, 0);
   }
+  else if(integtyp == 5) {
+    impr_leap_frog(n_int, tau, g_nr_of_psf);
+  }
 
   /*perform the accept-reject-step*/
   enepx=moment_energy();

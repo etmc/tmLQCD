@@ -430,6 +430,10 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   integtyp = 4;
   if(verbose!=0) printf("Using extended Sexton-Weingarten integrator!\n");
 }
+<INTTYP>ImprLeapFrog {
+  integtyp = 5;
+  if(verbose!=0) printf("Using extended Leapfrog integrator!\n");
+}
 <NSMALL>{DIGIT}+ {
   nsmall = atoi(yytext);
   if(verbose!=0) printf("nsmall set to %d\n", nsmall);
