@@ -25,7 +25,7 @@ int bicgstabell(const int P, const int Q, const int max_iter,
   int i, j, k, l;
   double rho0, rho1, beta, alpha, omega, gamma0;
   int r[5], u[5], r0, u0, x;
-  double tau[25], gamma[25], gammap[25], gammapp[25], sigma[25];
+  double tau[5][5], gamma[25], gammap[25], gammapp[25], sigma[25];
 
 
   l = _l;
@@ -46,18 +46,17 @@ int bicgstabell(const int P, const int Q, const int max_iter,
 
   assign(x, P, VOLUME/2);
   if(g_use_clover_flag == 1){
-    M_psi(r[0], P, q_off); 
+    M_psi(r0, P, q_off); 
   }
   else {
-    Mtm_plus_psi(r[0], P);
+    Mtm_plus_psi(r0, P);
   }
-  diff(r[0], Q, r[0], VOLUME/2);
+  diff(r[0], Q, r0, VOLUME/2);
   zero_spinor_field(u[0]);
-  zero_spinor_field(x);
   assign(r0, r[0], VOLUME/2);
 
   rho0 = 1.;
-  alpha = 1.;
+  alpha = 0.;
   omega = 1.;
   err = square_norm(r0, VOLUME/2);
 
@@ -85,7 +84,7 @@ int bicgstabell(const int P, const int Q, const int max_iter,
 	Mtm_plus_psi(u[j+1], u[j]);
       }
       gamma0 = scalar_prod_r(u[j+1], r0, VOLUME/2);
-      alpha = rho1/gamma0;
+      alpha = rho0/gamma0;
       for(i = 0; i <= j; i++) {
 	assign_add_mul(r[i], -alpha, u[i+1], VOLUME/2);
       }
@@ -102,8 +101,8 @@ int bicgstabell(const int P, const int Q, const int max_iter,
 
     for(j = 1; j <= l; j++){
       for(i = 1; i < j; i++){
-	tau[i*l+j] = 1./sigma[i]*scalar_prod_r(r[j], r[i], VOLUME/2);
-	assign_add_mul(r[j], -tau[i*l+j], r[i], VOLUME/2);
+	tau[i][j] = 1./sigma[i]*scalar_prod_r(r[j], r[i], VOLUME/2);
+	assign_add_mul(r[j], -tau[i][j], r[i], VOLUME/2);
       }
       sigma[j] = scalar_prod_r(r[j], r[j], VOLUME/2);
       gammap[j] = 1./sigma[j]*scalar_prod_r(r[0], r[j], VOLUME/2);
@@ -111,15 +110,15 @@ int bicgstabell(const int P, const int Q, const int max_iter,
     gamma[l] = gammap[l];
     omega = gamma[l];
     for(j = l-1; j > 0; j--) {
-      gamma[j] = gammap[j+1];
+      gamma[j] = gammap[j];
       for(i = j+1; i < l; i++) {
-	gamma[j] += (tau[j*l+i]*gamma[i]);
+	gamma[j] -= (tau[j][i]*gamma[i]);
       }
     }
     for(j = 1; j < l; j++) {
       gammapp[j] = gamma[j+1];
       for(i = j+1; i < l; i++){
-	gammapp[j] += (tau[j*l+i]*gamma[i+1]);
+	gammapp[j] += (tau[j][i]*gamma[i+1]);
       }
     }
     assign_add_mul(x, gamma[1], r[0], VOLUME/2);
