@@ -233,6 +233,34 @@ void mul_one_pm_imu_inv(const int l, const double _sign){
   }
 }
 
+void assign_mul_one_pm_imu_inv(const int l, const int k, const double _sign){
+  complex z,w;
+  int ix;
+  double sign=-1.; 
+  spinor *r, *s;
+  double nrm = 1./(1.+g_mu*g_mu);
+
+  if(_sign < 0.){
+    sign = 1.; 
+  }
+
+  z.re = nrm;
+  z.im =  sign * nrm * g_mu;
+  w.re = nrm;
+  w.im = -z.im; /*-sign * nrm * g_mu;*/
+
+  /************ loop over all lattice sites ************/
+  for(ix = 0; ix < (VOLUME/2); ix++){
+    r=&spinor_field[k][ix];
+    s=&spinor_field[l][ix];
+    /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
+    _complex_times_vector((*s).c1, z, (*r).c1);
+    _complex_times_vector((*s).c2, z, (*r).c2);
+    _complex_times_vector((*s).c3, w, (*r).c3);
+    _complex_times_vector((*s).c4, w, (*r).c4);
+  }
+}
+
 void mul_one_pm_imu(const int l, const double _sign){
   complex z,w;
   int ix;
@@ -252,7 +280,7 @@ void mul_one_pm_imu(const int l, const double _sign){
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
     r=&spinor_field[l][ix];
-    /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
+    /* Multiply the spinorfield with 1+imu\gamma_5 */
     _complex_times_vector(phi1, z, (*r).c1);
     _vector_assign((*r).c1, phi1);
     _complex_times_vector(phi1, z, (*r).c2);
@@ -261,6 +289,34 @@ void mul_one_pm_imu(const int l, const double _sign){
     _vector_assign((*r).c3, phi1);
     _complex_times_vector(phi1, w, (*r).c4);
     _vector_assign((*r).c4, phi1);
+  }
+}
+
+void assign_mul_one_pm_imu(const int l, const int k, const double _sign){
+  complex z,w;
+  int ix;
+  double sign = 1.; 
+  spinor *r, *s;
+
+  if(_sign < 0.){
+    sign = -1.; 
+  }
+
+  z.re = 1.;
+  z.im =  sign * g_mu;
+  w.re = 1.;
+  w.im = -z.im; /*-sign * nrm * g_mu;*/
+
+  /************ loop over all lattice sites ************/
+  for(ix = 0; ix < (VOLUME/2); ix++){
+    s=&spinor_field[l][ix];
+    r=&spinor_field[k][ix];
+
+    /* Multiply the spinorfield with of 1+imu\gamma_5 */
+    _complex_times_vector((*s).c1, z, (*r).c1);
+    _complex_times_vector((*s).c2, z, (*r).c2);
+    _complex_times_vector((*s).c3, w, (*r).c3);
+    _complex_times_vector((*s).c4, w, (*r).c4);
   }
 }
 
