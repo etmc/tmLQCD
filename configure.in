@@ -274,11 +274,17 @@ dnl no -pedantic-errors...
       CFLAGS="$CFLAGS -DSSE3"
       SSE="sse3"
       DEPFLAGS="$DEPFLAGS -DSSE3"
+      if test "$host_cpu" = "x86_64"; then
+        CFLAGS="$CFLAGS -mfpmath=387"
+      fi
     elif test $enable_sse2 = yes && test $enable_sse = no; then
       echo Using SSE2 macros!
       CFLAGS="$CFLAGS -DSSE2"
       DEPFLAGS="$DEPFLAGS -DSSE2"
       SSE="sse2"
+      if test "$host_cpu" = "x86_64"; then
+        CFLAGS="$CFLAGS -mfpmath=387"
+      fi
     elif test $enable_sse = yes; then
       echo Using SSE macros!
       CFLAGS="$CFLAGS -DSSE"
