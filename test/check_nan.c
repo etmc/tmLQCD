@@ -14,11 +14,11 @@ int check_nan() {
   um = &g_gauge_field[0][0];
   for(i = 0; i < VOLUMEPLUSRAND; i++) {
     for(mu = 0; mu < 4; mu++) {
-      if(__isnan((*um).c11.re)|| __isnan((*um).c11.im) || __isnan((*um).c12.re) || __isnan((*um).c12.im) ||
-	 __isnan((*um).c13.re) || __isnan((*um).c13.im) || __isnan((*um).c21.re) || __isnan((*um).c21.im) ||
-	 __isnan((*um).c22.re) || __isnan((*um).c22.im) || __isnan((*um).c23.re) || __isnan((*um).c23.im) ||
-	 __isnan((*um).c31.re) || __isnan((*um).c31.im) || __isnan((*um).c32.re) || __isnan((*um).c32.im) ||
-	 __isnan((*um).c33.re) || __isnan((*um).c33.im)) {
+      if(__isnan((*um).c00.re)|| __isnan((*um).c00.im) || __isnan((*um).c01.re) || __isnan((*um).c01.im) ||
+	 __isnan((*um).c02.re) || __isnan((*um).c02.im) || __isnan((*um).c10.re) || __isnan((*um).c10.im) ||
+	 __isnan((*um).c11.re) || __isnan((*um).c11.im) || __isnan((*um).c12.re) || __isnan((*um).c12.im) ||
+	 __isnan((*um).c20.re) || __isnan((*um).c20.im) || __isnan((*um).c21.re) || __isnan((*um).c21.im) ||
+	 __isnan((*um).c22.re) || __isnan((*um).c22.im)) {
 	return(i);
       }
       um++;
@@ -34,11 +34,11 @@ int check_greater(const double a) {
   um = &g_gauge_field[0][0];
   for(i = 0; i < VOLUMEPLUSRAND; i++) {
     for(mu = 0; mu < 4; mu++) {
-      if(((*um).c11.re > a)|| ((*um).c11.im > a) || ((*um).c12.re > a) || ((*um).c12.im > a) ||
-	 ((*um).c13.re > a) || ((*um).c13.im > a) || ((*um).c21.re > a) || ((*um).c21.im > a) ||
-	 ((*um).c22.re > a) || ((*um).c22.im > a) || ((*um).c23.re > a) || ((*um).c23.im > a) ||
-	 ((*um).c31.re > a) || ((*um).c31.im > a) || ((*um).c32.re > a) || ((*um).c32.im > a) ||
-	 ((*um).c33.re > a) || ((*um).c33.im > a)) {
+      if(((*um).c00.re > a)|| ((*um).c00.im > a) || ((*um).c01.re > a) || ((*um).c01.im > a) ||
+	 ((*um).c02.re > a) || ((*um).c02.im > a) || ((*um).c10.re > a) || ((*um).c10.im > a) ||
+	 ((*um).c11.re > a) || ((*um).c11.im > a) || ((*um).c12.re > a) || ((*um).c12.im > a) ||
+	 ((*um).c20.re > a) || ((*um).c20.im > a) || ((*um).c21.re > a) || ((*um).c21.im > a) ||
+	 ((*um).c22.re > a) || ((*um).c22.im > a)) {
 	return(i);
       }
       um++;
@@ -51,11 +51,11 @@ int check_nan_gauge(const int i, const int mu) {
   su3 * um;
   
   um = &g_gauge_field[i][mu];
-  if(__isnan((*um).c11.re)|| __isnan((*um).c11.im) || __isnan((*um).c12.re) || __isnan((*um).c12.im) ||
-     __isnan((*um).c13.re) || __isnan((*um).c13.im) || __isnan((*um).c21.re) || __isnan((*um).c21.im) ||
-     __isnan((*um).c22.re) || __isnan((*um).c22.im) || __isnan((*um).c23.re) || __isnan((*um).c23.im) ||
-     __isnan((*um).c31.re) || __isnan((*um).c31.im) || __isnan((*um).c32.re) || __isnan((*um).c32.im) ||
-     __isnan((*um).c33.re) || __isnan((*um).c33.im)) {
+  if(__isnan((*um).c00.re)|| __isnan((*um).c00.im) || __isnan((*um).c01.re) || __isnan((*um).c01.im) ||
+     __isnan((*um).c02.re) || __isnan((*um).c02.im) || __isnan((*um).c10.re) || __isnan((*um).c10.im) ||
+     __isnan((*um).c11.re) || __isnan((*um).c11.im) || __isnan((*um).c12.re) || __isnan((*um).c12.im) ||
+     __isnan((*um).c20.re) || __isnan((*um).c20.im) || __isnan((*um).c21.re) || __isnan((*um).c21.im) ||
+     __isnan((*um).c22.re) || __isnan((*um).c22.im)) {
     return(i);
   }
   return(-1);

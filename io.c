@@ -235,7 +235,9 @@ int write_spinorfield_eo_time_p(const int s, const int r, char * filename){
 	for(t0 = 0; t0 < T*g_nproc_t; t0++){
 	  t = t0 - T*g_proc_coords[0];
 	  coords[0] = t0 / T;
+#ifdef MPI
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
+#endif
 	  if(g_cart_id == id) {
 	    i = g_lexic2eo[ g_ipt[t][X][y][z] ];
 	    if((t0+x+y+z)%2==0) {

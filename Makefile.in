@@ -1,3 +1,9 @@
+srcdir = @srcdir@
+top_builddir =  @top_srcdir@
+abs_top_builddir = @abs_top_builddir@
+subdir = .
+
+
 CC = @CC@
 CCDEP = @CCDEP@
 CFLAGS = @CFLAGS@ @OPTARGS@
@@ -6,12 +12,15 @@ DEPFLAGS = @DEPFLAGS@
 CCLD = $(CC)
 LEX = @LEX@ 
 AUTOCONF = @AUTOCONF@
-LIBS = @LIBS@ 
+LIBS = -llinalg @LIBS@ 
 SHELL = @SHELL@
 OPTARGS = @OPTARGS@
 
+INCLUDES = @INCLUDES@ -I..
 LINK = $(CCLD) -o $@ ${LDFLAGS}
-COMPILE = ${CC} -o $@ ${CFLAGS} 
+LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
+	${top_builddir}/solver/libsolver.a
+COMPILE = ${CC} $(INCLUDES) -o $@ ${CFLAGS} 
 
 MODULES = read_input clover_eo linsolve xchange \
 	expo hybrid_update observables start \
@@ -25,12 +34,11 @@ ALLOBJ = ${MODULES} ${PROGRAMS}
 
 .SUFFIXES:
 
-all: Makefile dep hmc_tm
+all: Makefile dep ${LINKLIBS} hmc_tm
 
 -include $(addsuffix .d,$(ALLOBJ))
 
-Makefile: Makefile.in config.status
-	CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
+include ${top_builddir}/Makefile.global
 
 flex_read_input: read_input.l
 	${LEX} -i -t $< > read_input.c
@@ -44,13 +52,13 @@ ${addsuffix .o, ${PROGRAMS}}: %.o: %.c %.d Makefile
 ${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} 
 	 ${LINK} ${addsuffix .o, ${MODULES}} $@.o $(LIBS)
 
-$(addsuffix .d,$(ALLOBJ)): %.d: %.c Makefile
-	 @ $(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@ 
-
 dep: $(addsuffix .d,$(ALLOBJ))
 
 clean:
 	rm -f *.o hybrid
+
+distclean: clean
+	@(cd linalg && $(MAKE) clean)
 
 .PHONY: all clean compile-clean distclean dep \
 	flex_read_input ${PROGRAMS}

@@ -12,12 +12,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "global.h"
 #include "su3.h"
 #include "assign_mul_bra_add_mul_ket_add.h"
 
 
 /* R inoutput, S input, U input, c1 input, c2 input */
-void assign_mul_bra_add_mul_ket_add(spinor * const R,spinor * const S,spinor * const U,const complex c1,const complex c2, const int N){
+void assign_mul_bra_add_mul_ket_add(spinor * const R,spinor * const S,spinor * const U,
+				    const complex c1,const complex c2, const int N) {
   int ix;
   spinor *r,*s,*u,*w,*w_;
   double a1,b1,a2,b2;
@@ -36,7 +38,7 @@ void assign_mul_bra_add_mul_ket_add(spinor * const R,spinor * const S,spinor * c
   b2 = c2.im;
   
   
-  for (ix=0;ix<N;ix++){
+  for (ix = 0;ix < N; ix++){
     r=(spinor *) R + ix;
     s=(spinor *) S + ix;
     u=(spinor *) U + ix;

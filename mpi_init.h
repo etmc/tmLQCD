@@ -4,7 +4,7 @@
 
 #ifdef MPI
 #include <mpi.h>
-#endif
+
 
 /* Datatypes for the data exchange */
 extern MPI_Datatype gauge_point, gauge_time_slice_cont;
@@ -25,5 +25,6 @@ extern MPI_Datatype gauge_xy_edge_cont;
 extern MPI_Datatype gauge_xy_edge_gath;
 
 void mpi_init(int argc,char *argv[]);
+#endif
 
 #endif

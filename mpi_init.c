@@ -7,6 +7,7 @@
 #include "global.h"
 #include "mpi_init.h"
 
+#ifdef MPI
 /* Datatypes for the data exchange */
 MPI_Datatype gauge_point;
 MPI_Datatype gauge_time_slice_cont;
@@ -27,6 +28,7 @@ MPI_Datatype deri_yz_subslice;
 MPI_Datatype deri_x_slice_gath;
 MPI_Datatype gauge_xy_edge_cont;
 MPI_Datatype gauge_xy_edge_gath;
+#endif
 
 
 void mpi_init(int argc,char *argv[]) {

@@ -27,7 +27,10 @@ LIBRARIES = liblinalg
 liblinalg_TARGETS = diff assign_add_mul_r_add_mul assign_add_mul_r \
 	square_norm assign_mul_bra_add_mul_ket_add_r scalar_prod_r \
 	square_and_prod_r assign_mul_bra_add_mul_r mul_r \
-	diff_and_square_norm assign deri_linalg assign_mul_add_r
+	diff_and_square_norm assign deri_linalg assign_mul_add_r \
+	scalar_prod mul_diff_r mul_diff_mul assign_add_mul \
+	assign_diff_mul mul_add_mul mul assign_add_mul_add_mul \
+	assign_mul_bra_add_mul_ket_add
 
 liblinalg_OBJECTS = $(addsuffix .o, ${liblinalg_TARGETS})
 

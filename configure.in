@@ -79,6 +79,7 @@ AC_PROG_CC
 AC_C_CONST
 AC_PROG_LEX
 AC_PROG_MAKE_SET
+AC_PROG_RANLIB
 AC_C_BIGENDIAN(endian="", endian="-DLITTLE_ENDIAN")
 
 dnl Checks for libraries.
@@ -316,6 +317,26 @@ dnl check for icc
       DEPFLAGS="-M"
     fi
   fi
+  LDFLAGS="-L\$(abs_top_builddir)/hmc/lib -L\$(abs_top_builddir)/hmc/lapack"
+  if test "$LP" = "yes"; then
+    if test "$ATLAS" = "yes"; then
+      LIBS="$LIBS -llapack -lf77blas -latlas"
+    else
+      LIBS="$LIBS -llapack -lblas"
+    fi
+  else
+    if test "$SSE" = "sse2"; then
+      LIBS="$LIBS -llapack_LINUXSSE2P4 -lf77blas_LINUXSSE2P4 -latlas_LINUXSSE2P4"
+    else
+      LIBS="$LIBS -llapack_LINUX -lblas_LINUX"
+    fi
+  fi
+  if test "$G2C" = "yes" && test $enable_mpi != yes; then
+    LIBS="$LIBS -lg2c -lm"
+  else
+    LIBS="$LIBS -lf2c_nomain_LINUX -lm"
+  fi
+
 
 dnl The IBM Power PC
 elif test "$host_cpu" = "powerpc"; then
@@ -324,8 +345,8 @@ elif test "$host_cpu" = "powerpc"; then
   else
     CFLAGS="-DXLC  -q64 -qsrcmsg"
   fi
-  LIBS="-lm"
-  LDFLAGS="-q64"
+  LIBS="-lessl -llapack -lblas -lf -lm"
+  LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(HOME)/lib -q64"
   XLC=yes
   OPTARGS="-O3 -qhot"
   DEBUG_FLAG="-qfullpath -g"
@@ -343,7 +364,7 @@ elif test "$host_vendor" = "cray"; then
     CFLAGS="-DCRAY -dp"
   fi
   LIBS="-lm"
-  LDFLAGS=""
+  LDFLAGS="-L\$(abs_top_builddir)/lib"
   OPTARGS="-O3"
   DEBUG_FLAG="-g"
   CCDEP="$CC"
@@ -358,7 +379,7 @@ else
   CCDEP="$CC"
   DEPFLAGS="-M"
   LIBS="-lm"
-  LDFLAGS=""
+  LDFLAGS="-L\$(abs_top_builddir)/lib"
 fi
 
 
@@ -373,8 +394,14 @@ else
   AC_MSG_RESULT(yes)
 fi
 
+dnl create the lib directory here
+if test ! -e lib; then
+  mkdir lib
+fi
 
-INCLUDES='-I.'
+INCLUDES='-I. -I${top_builddir}/'
 AUTOCONF=autoconf
 
-AC_OUTPUT([Makefile])
+AC_OUTPUT([Makefile
+           linalg/Makefile
+	   solver/Makefile])

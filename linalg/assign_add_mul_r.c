@@ -21,8 +21,8 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
 			:
 			:
 			"m" (c));
-  s=(su3_vector*)P;
-  r=(su3_vector*)Q;
+  s=&P[0].s0;
+  r=&Q[0].s0;
   for (ix = 0;ix < 4*N; ix++) {
     _sse_load_up(*r);
     __asm__ __volatile__ ("mulpd %%xmm7, %%xmm3 \n\t"
@@ -55,33 +55,33 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
     r=P+ix;      
     s=Q+ix;
     
-    (*r).c1.c1.re+=fact*(*s).s0.c1.re;
-    (*r).c1.c1.im+=fact*(*s).s0.c1.im;
-    (*r).c1.c2.re+=fact*(*s).s0.c2.re;
-    (*r).c1.c2.im+=fact*(*s).s0.c2.im;
-    (*r).c1.c3.re+=fact*(*s).s0.c3.re;
-    (*r).c1.c3.im+=fact*(*s).s0.c3.im;
+    (*r).s0.c0.re+=fact*(*s).s0.c0.re;
+    (*r).s0.c0.im+=fact*(*s).s0.c0.im;
+    (*r).s0.c1.re+=fact*(*s).s0.c1.re;
+    (*r).s0.c1.im+=fact*(*s).s0.c1.im;
+    (*r).s0.c2.re+=fact*(*s).s0.c2.re;
+    (*r).s0.c2.im+=fact*(*s).s0.c2.im;
     
+    (*r).s1.c0.re+=fact*(*s).s1.c0.re;
+    (*r).s1.c0.im+=fact*(*s).s1.c0.im;
     (*r).s1.c1.re+=fact*(*s).s1.c1.re;
     (*r).s1.c1.im+=fact*(*s).s1.c1.im;
     (*r).s1.c2.re+=fact*(*s).s1.c2.re;
-    (*r).s1.c2.im+=fact*(*s).s1.c2.im;
-    (*r).s1.c3.re+=fact*(*s).s1.c3.re;
-    (*r).s1.c3.im+=fact*(*s).s1.c3.im;         
+    (*r).s1.c2.im+=fact*(*s).s1.c2.im;         
     
+    (*r).s2.c0.re+=fact*(*s).s2.c0.re;
+    (*r).s2.c0.im+=fact*(*s).s2.c0.im;
     (*r).s2.c1.re+=fact*(*s).s2.c1.re;
     (*r).s2.c1.im+=fact*(*s).s2.c1.im;
     (*r).s2.c2.re+=fact*(*s).s2.c2.re;
-    (*r).s2.c2.im+=fact*(*s).s2.c2.im;
-    (*r).s2.c3.re+=fact*(*s).s2.c3.re;
-    (*r).s2.c3.im+=fact*(*s).s2.c3.im;         
+    (*r).s2.c2.im+=fact*(*s).s2.c2.im;         
     
+    (*r).s3.c0.re+=fact*(*s).s3.c0.re;
+    (*r).s3.c0.im+=fact*(*s).s3.c0.im;
     (*r).s3.c1.re+=fact*(*s).s3.c1.re;
     (*r).s3.c1.im+=fact*(*s).s3.c1.im;
     (*r).s3.c2.re+=fact*(*s).s3.c2.re;
     (*r).s3.c2.im+=fact*(*s).s3.c2.im;
-    (*r).s3.c3.re+=fact*(*s).s3.c3.re;
-    (*r).s3.c3.im+=fact*(*s).s3.c3.im;
   }
 }
 #endif

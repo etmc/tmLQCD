@@ -1,6 +1,16 @@
 #ifndef _SSE_H
 #define _SSE_H
 
+#if ((defined SSE)||(defined SSE2))
+  #if defined P4
+    #define ALIGN_BASE 0x3f
+    #define ALIGN __attribute__ ((aligned (64)))
+  #else
+    #define ALIGN_BASE 0x1f
+    #define ALIGN __attribute__ ((aligned (32)))
+  #endif
+#endif
+
 #if (defined SSE || defined SSE2)
 /*******************************************************************************
 *
@@ -22,12 +32,12 @@
 
 typedef struct
 {
-   int c1,c2,c3,s3;
+   int c1,c2,c3,c4;
 } sse_int __attribute__ ((aligned (16)));
 
 typedef struct
 {
-   float c1,c2,c3,s3;
+   float c1,c2,c3,c4;
 } sse_float __attribute__ ((aligned (16)));
 
 typedef struct

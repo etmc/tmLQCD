@@ -21,7 +21,7 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define T  2
+#define T  4
 #define L  4
 
 #ifndef PARALLELXT
@@ -38,7 +38,7 @@
 
 #define DUM_DERI 6
 #define DUM_SOLVER DUM_DERI+4
-#define DUM_MATRIX DUM_SOLVER+5 
+#define DUM_MATRIX DUM_SOLVER+6 
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX DUM_SOLVER+11 */
 #define NO_OF_SPINORFIELDS DUM_MATRIX+2
@@ -74,13 +74,7 @@
 #endif
 
 #if ((defined SSE)||(defined SSE2))
-  #if defined P4
-    #define ALIGN_BASE 0x3f
-    #define ALIGN __attribute__ ((aligned (64)))
-  #else
-    #define ALIGN_BASE 0x1f
-    #define ALIGN __attribute__ ((aligned (32)))
-  #endif
+#include "sse.h"
 #else
   #define ALIGN
 #endif

@@ -20,7 +20,6 @@ void assign_mul_bra_add_mul_ket_add_r(spinor * const R, spinor * const S, spinor
    int ix;
    spinor *r,*s,*t;
 
-/* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
    for (ix = 0; ix < N; ix++) {
      r=R+ix;
      s=S+ix;
