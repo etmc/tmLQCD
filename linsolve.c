@@ -86,7 +86,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
     xxx=diff_and_square_norm(spinor_field[DUM_SOLVER], spinor_field[DUM_SOLVER+1], VOLUME/2);
     /*apply the solver step for the residual*/
     M_psi(DUM_SOLVER+2,DUM_SOLVER,q_off-(2.+2.*q_off));
-    assign_add_mul_r(k,-1./((1.+q_off)*(1.+q_off)),DUM_SOLVER+2, VOLUME/2);
+    assign_add_mul_r(spinor_field[k],-1./((1.+q_off)*(1.+q_off)),spinor_field[DUM_SOLVER+2], VOLUME/2);
     if(xxx <= eps_sq) break;
   }
 

@@ -43,9 +43,9 @@ typedef struct
 *
 *******************************************************************************/
 /* M. Hasenbusch Mon Sep 24
-* r.c0=0
 * r.c1=0
 * r.c2=0
+* r.c3=0
 */
 
 #define _vector_null(r) \
@@ -57,9 +57,9 @@ typedef struct
    (r).c2.im=0.0;
 
 /* M. Hasenbusch Mon Sep 24
-* r.c0=s.c0
 * r.c1=s.c1
 * r.c2=s.c2
+* r.c3=s.c3
 */
 
 #define _vector_assign(r,s) \
@@ -71,9 +71,9 @@ typedef struct
    (r).c2.im=(s).c2.im;
 
 /* M. Hasenbusch Mon Sep 24
-* r.c0=-s.c0
 * r.c1=-s.c1
 * r.c2=-s.c2
+* r.c3=-s.c3
 */
 
 #define _vector_minus_assign(r,s) \
@@ -85,9 +85,9 @@ typedef struct
    (r).c2.im=-(s).c2.im;
 
 /*
-* r.c0=c*s.c0 (c real)
-* r.c1=c*s.c1
+* r.c1=c*s.c1 (c real)
 * r.c2=c*s.c2
+* r.c3=c*s.c3
 */
 
 #define _vector_mul(r,c,s) \
@@ -107,9 +107,9 @@ typedef struct
    (r).c2.im+=(c)*(s).c2.im;
 
 /*
-* r.c0=s1.c0+s2.c0
 * r.c1=s1.c1+s2.c1
 * r.c2=s1.c2+s2.c2
+* r.c3=s1.c3+s2.c3
 */
 
 #if defined SSE2
@@ -137,9 +137,9 @@ _sse_store(r);
    (r).c2.im=(s1).c2.im+(s2).c2.im;
 
 /*
-* r.c0=s1.c0-s2.c0
 * r.c1=s1.c1-s2.c1
 * r.c2=s1.c2-s2.c2
+* r.c3=s1.c3-s2.c3
 */
 
 #define _vector_sub(r,s1,s2) \
@@ -153,9 +153,9 @@ _sse_store(r);
 #endif
 
 /*
-* r.c0=s1.c0+i*s2.c0
 * r.c1=s1.c1+i*s2.c1
 * r.c2=s1.c2+i*s2.c2
+* r.c3=s1.c3+i*s2.c3
 */
 
 #define _vector_i_add(r,s1,s2) \
@@ -167,9 +167,9 @@ _sse_store(r);
    (r).c2.im=(s1).c2.im+(s2).c2.re;
 
 /*
-* r.c0=s1.c0+i*s2.c0
 * r.c1=s1.c1+i*s2.c1
 * r.c2=s1.c2+i*s2.c2
+* r.c3=s1.c3+i*s2.c3
 */
 
 #define _vector_i_sub(r,s1,s2) \
@@ -181,9 +181,9 @@ _sse_store(r);
    (r).c2.im=(s1).c2.im-(s2).c2.re;
 
 /*
-* r.c0+=s.c0
 * r.c1+=s.c1
 * r.c2+=s.c2
+* r.c3+=s.c3
 */
 
 #define _vector_combined_add_i_add(r1, s1, r2, s2, s) \
@@ -226,9 +226,9 @@ _sse_store(r);
    (r).c2.im+=(s).c2.im;
 
 /*
-* r.c0-=s.c0
 * r.c1-=s.c1
 * r.c2-=s.c2
+* r.c3-=s.c3
 */
 
 #define _vector_sub_assign(r,s) \
@@ -242,9 +242,9 @@ _sse_store(r);
 #endif 
 
 /*
-* r.c0+=i*s.c0
 * r.c1+=i*s.c1
 * r.c2+=i*s.c2
+* r.c3+=i*s.c3
 */
 
 #define _vector_i_add_assign(r,s) \
@@ -256,9 +256,9 @@ _sse_store(r);
    (r).c2.im+=(s).c2.re;
 
 /*
-* r.c0-=i*s.c0
 * r.c1-=i*s.c1
 * r.c2-=i*s.c2
+* r.c3-=i*s.c3
 */
 
 #define _vector_i_sub_assign(r,s) \
@@ -270,9 +270,9 @@ _sse_store(r);
    (r).c2.im-=(s).c2.re;
 
 /* M.Hasenbusch 
-* r.c0=c*s.c0
 * r.c1=c*s.c1
 * r.c2=c*s.c2
+* r.c3=c*s.c3
 *
 * c complex
 */
@@ -313,9 +313,9 @@ _sse_store(r);
    (r).c2.re*(s).c2.im-(r).c2.im*(s).c2.re; 
 
 /*
-* r.c0-=z*s.c0 (z of type complex)
-* r.c1-=z*s.c1
+* r.c1-=z*s.c1 (z of type complex)
 * r.c2-=z*s.c2
+* r.c3-=z*s.c3
 */
 
 #define _vector_project(r,z,s) \
@@ -329,9 +329,9 @@ _sse_store(r);
 /*
 * SU(3) matrix u times SU(3) vector s
 *  
-* r.c0=(u*s).c0
 * r.c1=(u*s).c1
 * r.c2=(u*s).c2
+* r.c3=(u*s).c3
 */
 
 #if defined SSE2
@@ -349,31 +349,31 @@ _sse_store_up(r);
 #else
 
 #define _su3_multiply(r,u,s) \
-   (r).c1.re= (u).c00.re*(s).c0.re-(u).c00.im*(s).c0.im  \
+   (r).c0.re= (u).c00.re*(s).c0.re-(u).c00.im*(s).c0.im  \
              +(u).c01.re*(s).c1.re-(u).c01.im*(s).c1.im  \
              +(u).c02.re*(s).c2.re-(u).c02.im*(s).c2.im; \
-   (r).c1.im= (u).c00.re*(s).c0.im+(u).c00.im*(s).c0.re  \
+   (r).c0.im= (u).c00.re*(s).c0.im+(u).c00.im*(s).c0.re  \
              +(u).c01.re*(s).c1.im+(u).c01.im*(s).c1.re  \
              +(u).c02.re*(s).c2.im+(u).c02.im*(s).c2.re; \
-   (r).c2.re= (u).c10.re*(s).c0.re-(u).c10.im*(s).c0.im  \
+   (r).c1.re= (u).c10.re*(s).c0.re-(u).c10.im*(s).c0.im  \
              +(u).c11.re*(s).c1.re-(u).c11.im*(s).c1.im  \
              +(u).c12.re*(s).c2.re-(u).c12.im*(s).c2.im; \
-   (r).c2.im= (u).c10.re*(s).c0.im+(u).c10.im*(s).c0.re  \
+   (r).c1.im= (u).c10.re*(s).c0.im+(u).c10.im*(s).c0.re  \
              +(u).c11.re*(s).c1.im+(u).c11.im*(s).c1.re  \
              +(u).c12.re*(s).c2.im+(u).c12.im*(s).c2.re; \
-   (r).c3.re= (u).c20.re*(s).c0.re-(u).c20.im*(s).c0.im  \
+   (r).c2.re= (u).c20.re*(s).c0.re-(u).c20.im*(s).c0.im  \
              +(u).c21.re*(s).c1.re-(u).c21.im*(s).c1.im  \
              +(u).c22.re*(s).c2.re-(u).c22.im*(s).c2.im; \
-   (r).c3.im= (u).c20.re*(s).c0.im+(u).c20.im*(s).c0.re  \
+   (r).c2.im= (u).c20.re*(s).c0.im+(u).c20.im*(s).c0.re  \
              +(u).c21.re*(s).c1.im+(u).c21.im*(s).c1.re  \
              +(u).c22.re*(s).c2.im+(u).c22.im*(s).c2.re;
 
 /*
 * SU(3) matrix u^dagger times SU(3) vector s
 *  
-* r.c0=(u^dagger*s).c0
 * r.c1=(u^dagger*s).c1
 * r.c2=(u^dagger*s).c2
+* r.c3=(u^dagger*s).c3
 */
 
 #define _su3_inverse_multiply(r,u,s) \
@@ -409,12 +409,12 @@ _sse_store_up(r);
 x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    +(u).c01.re*(u).c01.re + (u).c01.im*(u).c01.im \
    +(u).c02.re*(u).c02.re + (u).c02.im*(u).c02.im \
-   +(u).c10.re*(u).c00.re + (u).c10.im*(u).c10.im \
-   +(u).c11.re*(u).c01.re + (u).c11.im*(u).c11.im \
-   +(u).c12.re*(u).c02.re + (u).c12.im*(u).c12.im \
-   +(u).c20.re*(u).c10.re + (u).c20.im*(u).c20.im \
-   +(u).c21.re*(u).c11.re + (u).c21.im*(u).c21.im \
-   +(u).c22.re*(u).c12.re + (u).c22.im*(u).c22.im; 
+   +(u).c10.re*(u).c10.re + (u).c10.im*(u).c10.im \
+   +(u).c11.re*(u).c11.re + (u).c11.im*(u).c11.im \
+   +(u).c12.re*(u).c12.re + (u).c12.im*(u).c12.im \
+   +(u).c20.re*(u).c20.re + (u).c20.im*(u).c20.im \
+   +(u).c21.re*(u).c21.re + (u).c21.im*(u).c21.im \
+   +(u).c22.re*(u).c22.re + (u).c22.im*(u).c22.im; 
 
 /*
  u=1 
@@ -472,8 +472,8 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (u).c00.im= (v).c00.im; \
    (u).c01.re= (v).c01.re; \
    (u).c01.im= (v).c01.im; \
-   (u).c02.re= (v).c12.re; \
-   (u).c02.im= (v).c12.im; \
+   (u).c02.re= (v).c02.re; \
+   (u).c02.im= (v).c02.im; \
    (u).c10.re= (v).c10.re; \
    (u).c10.im= (v).c10.im; \
    (u).c11.re= (v).c11.re; \
@@ -496,8 +496,8 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (u).c00.im= -(v).c00.im; \
    (u).c01.re= -(v).c01.re; \
    (u).c01.im= -(v).c01.im; \
-   (u).c12.re= -(v).c12.re; \
-   (u).c12.im= -(v).c12.im; \
+   (u).c02.re= -(v).c02.re; \
+   (u).c02.im= -(v).c02.im; \
    (u).c10.re= -(v).c10.re; \
    (u).c10.im= -(v).c10.im; \
    (u).c11.re= -(v).c11.re; \
@@ -518,20 +518,20 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
 #define _su3_dagger(u,v) \
    (u).c00.re= (v).c00.re; \
    (u).c00.im=-(v).c00.im; \
-   (u).c01.re= (v).c00.re; \
-   (u).c01.im=-(v).c00.im; \
-   (u).c02.re= (v).c10.re; \
-   (u).c02.im=-(v).c10.im; \
-   (u).c10.re= (v).c11.re; \
-   (u).c10.im=-(v).c11.im; \
+   (u).c01.re= (v).c10.re; \
+   (u).c01.im=-(v).c10.im; \
+   (u).c02.re= (v).c20.re; \
+   (u).c02.im=-(v).c20.im; \
+   (u).c10.re= (v).c01.re; \
+   (u).c10.im=-(v).c01.im; \
    (u).c11.re= (v).c11.re; \
    (u).c11.im=-(v).c11.im; \
-   (u).c12.re= (v).c11.re; \
-   (u).c12.im=-(v).c11.im; \
+   (u).c12.re= (v).c21.re; \
+   (u).c12.im=-(v).c21.im; \
    (u).c20.re= (v).c02.re; \
    (u).c20.im=-(v).c02.im; \
-   (u).c21.re= (v).c02.re; \
-   (u).c21.im=-(v).c02.im; \
+   (u).c21.re= (v).c12.re; \
+   (u).c21.im=-(v).c12.im; \
    (u).c22.re= (v).c22.re; \
    (u).c22.im=-(v).c22.im;
 
@@ -912,7 +912,6 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
               +(v).c21.re*(w).c12.im+(v).c21.im*(w).c12.re  \
               +(v).c22.re*(w).c22.im+(v).c22.im*(w).c22.re;
 
-
 /* M.Hasenbusch u = u + v * v^{dag} */
 
 #define _su3_times_su3_acc(u,v,w) \
@@ -1142,7 +1141,6 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (u).c22.im+=(v).c02.re*(w).c02.im-(v).c02.im*(w).c02.re  \
               +(v).c12.re*(w).c12.im-(v).c12.im*(w).c12.re  \
               +(v).c22.re*(w).c22.im-(v).c22.im*(w).c22.re;
-
 
 #endif
 

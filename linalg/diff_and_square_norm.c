@@ -51,7 +51,7 @@ double diff_and_square_norm(spinor * const Q, spinor * const R, const int N) {
     (*q).s2.c2.re = (*r).s2.c2.re-(*q).s2.c2.re;
     (*q).s2.c2.im = (*r).s2.c2.im-(*q).s2.c2.im;         
     
-    ds+ = 
+    ds+= 
       (*q).s2.c0.re*(*q).s2.c0.re+(*q).s2.c0.im*(*q).s2.c0.im+
       (*q).s2.c1.re*(*q).s2.c1.re+(*q).s2.c1.im*(*q).s2.c1.im+
       (*q).s2.c2.re*(*q).s2.c2.re+(*q).s2.c2.im*(*q).s2.c2.im;
@@ -63,7 +63,7 @@ double diff_and_square_norm(spinor * const Q, spinor * const R, const int N) {
     (*q).s3.c2.re = (*r).s3.c2.re-(*q).s3.c2.re;
     (*q).s3.c2.im = (*r).s3.c2.im-(*q).s3.c2.im;
     
-    ds+ = 
+    ds+= 
       (*q).s3.c0.re*(*q).s3.c0.re+(*q).s3.c0.im*(*q).s3.c0.im+
       (*q).s3.c1.re*(*q).s3.c1.re+(*q).s3.c1.im*(*q).s3.c1.im+
       (*q).s3.c2.re*(*q).s3.c2.re+(*q).s3.c2.im*(*q).s3.c2.im;
