@@ -1,0 +1,86 @@
+# $Id$
+
+srcdir = @srcdir@
+top_builddir =  @top_srcdir@
+subdir = linalg
+
+CFLAGS = @CFLAGS@ @OPTARGS@
+DEPFLAGS = @DEPFLAGS@
+LDFLAGS = @LDFLAGS@
+DEFS = @DEFS@
+
+AR = ar
+RANLIB = @RANLIB@
+CC = @CC@
+CCDEP = @CCDEP@
+CCLD = $(CC)
+LINK = $(CCLD) $(CFLAGS) $(LDFLAGS) -o $@
+LEX = @LEX@
+AUTOCONF = @AUTOCONF@
+
+INCLUDES = @INCLUDES@
+LDADD =
+#COMPILE = ${CC} ${DEFS} $(INCLUDES) ${CFLAGS}
+COMPILE = ${CC} $(INCLUDES) ${CFLAGS}
+
+LIBRARIES = liblinalg
+liblinalg_TARGETS = diff assign_add_mul_r_add_mul assign_add_mul_r \
+	square_norm assign_mul_bra_add_mul_ket_add_r scalar_prod_r \
+	square_and_prod_r assign_mul_bra_add_mul_r mul_r \
+	diff_and_square_norm assign deri_linalg assign_mul_add_r
+
+liblinalg_OBJECTS = $(addsuffix .o, ${liblinalg_TARGETS})
+
+# default rule
+
+all: Makefile dep liblinalg.a
+
+# rules for debugging
+debug all-debug: CFLAGS := $(CFLAGS) @DEBUG_FLAG@
+debug all-debug: all
+
+# rules for profiling information
+profile all-profile: CFLAGS := $(filter-out -fomit-frame-pointer,$(CFLAGS)) @PROFILE_FLAG@
+profile all-profile: all
+
+
+#include dep rules
+
+-include $(addsuffix .d,${liblinalg_TARGETS})
+
+include ${top_builddir}/Makefile.global
+
+# rule to compile objects
+
+%.o: %.c %.d Makefile
+	$(COMPILE) -c $<
+
+# rule to make liblinalg
+
+liblinalg.a: ${liblinalg_OBJECTS} Makefile
+	@rm -f liblinalg.a
+	@${AR} cru liblinalg.a $(liblinalg_OBJECTS)
+	@$(RANLIB) liblinalg.a
+	@cp liblinalg.a ../lib/liblinalg.a
+
+# rule to generate .d files
+
+$(addsuffix .d,$(liblinalg_TARGETS)): %.d: %.c Makefile
+	@$(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@
+
+# rule to make dependencies
+
+dep: ${addsuffix .d, ${liblinalg_TARGETS}}
+
+# rules to clean
+
+compile-clean: Makefile
+	@rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} *.d
+
+clean: compile-clean 
+	@rm -f $(addsuffix .a, ${LIBRARIES})
+
+distclean: clean
+	@rm -f Makefile
+
+.PHONY: all dep clean compile-clean distclean profile all-profile debug all-debug
