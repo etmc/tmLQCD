@@ -1,6 +1,10 @@
+#ifndef _RANLXS_H
+#define _RANLXS_H
 
-extern void ranlxs(float r[],int n);
-extern void rlxs_init(int level,int seed);
-extern void rlxs_get(int state[]);
-extern void rlxs_reset(int state[]);
-extern void fabhaan_vect();
+void ranlxs(float r[],int n);
+void rlxs_init(int level,int seed);
+void rlxs_get(int state[]);
+void rlxs_reset(int state[]);
+void fabhaan_vect();
+
+#endif

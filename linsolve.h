@@ -1,7 +1,11 @@
+#ifndef _LINSOLVE_H
+#define _LINSOLVE_H
 
-extern int geometric(int k,int l, double q2, double eps_sq);
-extern int solve_cg(int k,int l, double q2, double eps_sq);
-extern int bicg(int k,int l, double q2, double eps_sq);
-extern int eva(double *lambda, int k, double q_off, double eps_sq);
-extern int evamax(double *lambda, int k, double q_off, double eps_sq);
-extern int evamax0(double *lambda, int k, double q_off, double eps_sq);
+int geometric(int k,int l, double q2, double eps_sq);
+int solve_cg(int k,int l, double q2, double eps_sq);
+int bicg(int k,int l, double q2, double eps_sq);
+int eva(double *lambda, int k, double q_off, double eps_sq);
+int evamax(double *lambda, int k, double q_off, double eps_sq);
+int evamax0(double *lambda, int k, double q_off, double eps_sq);
+
+#endif

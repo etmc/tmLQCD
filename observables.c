@@ -21,6 +21,7 @@
 #include "su3adj.h"
 #include "geometry_eo.h"
 #include "global.h"
+#include "observables.h"
 
 double measure_gauge_action(void)
 {

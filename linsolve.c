@@ -7,6 +7,7 @@
 #include "linalg_eo.h"
 #include "clover_eo.h"
 #include "start.h"
+#include "linsolve.h"
 
 /* k output , l input */
 int solve_cg(int k,int l, double q_off, double eps_sq)
@@ -79,49 +80,55 @@ return iteration;
 }
 #else
 /* k output , l input */
-int bicg(int k, int l, double q_off, double eps_sq)
-{
-static double rho0,omega0,rho1,omega1,alpha,be,err,d1,d2;
-int iteration;
-gamma5(DUM_SOLVER+1,l);
-M_psi(DUM_SOLVER,k,q_off); 
-diff_field(DUM_SOLVER+1,DUM_SOLVER+1,DUM_SOLVER);
-assign_field(DUM_SOLVER,DUM_SOLVER+1);
-zero_spinor_field(DUM_SOLVER+2);
-zero_spinor_field(DUM_SOLVER+3);
-rho0=1.0; omega0=1.0; alpha=1.0; 
-/* main loop */
-for(iteration=1;iteration<=ITER_MAX;iteration++)
-  {
-  square_and_prod(&err,&rho1,DUM_SOLVER+1,DUM_SOLVER);
-  if(err <= eps_sq) break;
-  be=(rho1/rho0)*(alpha/omega0);
-/*  add_assign_field(DUM_SOLVER+3,-omega0,DUM_SOLVER+2);
-    add_assign_field2(DUM_SOLVER+3,be,DUM_SOLVER+1);  */
-  twice_add_assign_field2(DUM_SOLVER+3,-omega0,DUM_SOLVER+2,be,DUM_SOLVER+1); 
-  M_psi(DUM_SOLVER+2,DUM_SOLVER+3,q_off); 
-  alpha=rho1/vprod(DUM_SOLVER,DUM_SOLVER+2);
-  add_assign_field(DUM_SOLVER+1,-alpha,DUM_SOLVER+2);
-  M_psi(DUM_SOLVER+4,DUM_SOLVER+1,q_off);
-  square_and_prod(&d1,&d2,DUM_SOLVER+4,DUM_SOLVER+1);
-  omega1=d2/d1;
-  twice_add_assign_field(k,alpha,DUM_SOLVER+3,omega1,DUM_SOLVER+1);
-  add_assign_field(DUM_SOLVER+1,-omega1,DUM_SOLVER+4);
- /*copy back */
-  rho0=rho1; omega0=omega1;
+int bicg(int k, int l, double q_off, double eps_sq) {
+
+  static double rho0,omega0,rho1,omega1,alpha,be,err,d1,d2;
+  int iteration;
+
+  gamma5(DUM_SOLVER+1,l);
+  M_psi(DUM_SOLVER,k,q_off); 
+  diff_field(DUM_SOLVER+1,DUM_SOLVER+1,DUM_SOLVER);
+  assign_field(DUM_SOLVER,DUM_SOLVER+1);
+  zero_spinor_field(DUM_SOLVER+2);
+  zero_spinor_field(DUM_SOLVER+3);
+  rho0=1.0; omega0=1.0; alpha=1.0; 
+  /* main loop */
+  for(iteration=1;iteration<=ITER_MAX;iteration++){
+    square_and_prod(&err,&rho1,DUM_SOLVER+1,DUM_SOLVER);
+    if(err <= eps_sq) break;
+    
+    be=(rho1/rho0)*(alpha/omega0);
+    /*  add_assign_field(DUM_SOLVER+3,-omega0,DUM_SOLVER+2);
+	add_assign_field2(DUM_SOLVER+3,be,DUM_SOLVER+1);  */
+    twice_add_assign_field2(DUM_SOLVER+3,-omega0,DUM_SOLVER+2,be,DUM_SOLVER+1); 
+    M_psi(DUM_SOLVER+2,DUM_SOLVER+3,q_off); 
+    alpha=rho1/vprod(DUM_SOLVER,DUM_SOLVER+2);
+    add_assign_field(DUM_SOLVER+1,-alpha,DUM_SOLVER+2);
+    M_psi(DUM_SOLVER+4,DUM_SOLVER+1,q_off);
+    square_and_prod(&d1,&d2,DUM_SOLVER+4,DUM_SOLVER+1);
+    omega1=d2/d1;
+    twice_add_assign_field(k,alpha,DUM_SOLVER+3,omega1,DUM_SOLVER+1);
+    add_assign_field(DUM_SOLVER+1,-omega1,DUM_SOLVER+4);
+    /*copy back */
+    rho0=rho1; omega0=omega1;
   }
-/* if bicg fails, redo with conjugate gradient */
-if(g_proc_id==0) {fprintf(fp7,"%d %d \n",g_proc_id,iteration);
-             fflush(fp7);}
-if(iteration>=ITER_MAX)
-  {
-  zero_spinor_field(k);
-  iteration+=solve_cg(k,l,q_off,eps_sq);
-  Q_psi(k,k,q_off);
-  iteration-=1000000;
-if(g_proc_id==0) {fprintf(fp7,"%d %d \n",g_proc_id,iteration); fflush(fp7);}
+  /* if bicg fails, redo with conjugate gradient */
+  if(g_proc_id==0) {
+    /* fp7 */
+    fprintf(stdout,"%d %d \n",g_proc_id,iteration); 
+    fflush(stdout); 
   }
-return iteration;
+  if(iteration>=ITER_MAX){
+    zero_spinor_field(k);
+    iteration+=solve_cg(k,l,q_off,eps_sq);
+    Q_psi(k,k,q_off);
+    iteration-=1000000;
+    if(g_proc_id==0) {
+      fprintf(fp7,"%d %d \n",g_proc_id,iteration); 
+      fflush(fp7);
+    }
+  }
+  return iteration;
 }
 #endif
 /*lambda: smallest eigenvalue, k eigenvector */

@@ -15,6 +15,7 @@
 #include "sw.h"
 #include "linsolve.h"
 #include "xchange.h"
+#include "hybrid_update.h"
 
 static su3 get_staples(int x,int mu){
 

@@ -43,6 +43,7 @@
 #include "su3adj.h"
 #include "ranlxs.h"
 #include "global.h"
+#include "start.h"
 
 /* murks to make it double precision by M.Hasenbusch */ 
 void gauss_vector(double v[],int n)

@@ -1,6 +1,10 @@
+#ifndef _XCHANGE_H
+#define _XCHANGE_H
 
-extern void xchange_field_init(int l);
-extern void xchange_field_wait();
-extern void xchange_field(int l);
-extern void xchange_gauge();
-extern void xchange_deri();
+void xchange_field_init(int l);
+void xchange_field_wait();
+void xchange_field(int l);
+void xchange_gauge();
+void xchange_deri();
+
+#endif

@@ -1,1 +1,3 @@
-CSW = 1.
+CSW = 0.
+Measurements = 10
+startCondition = restart

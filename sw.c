@@ -5,6 +5,7 @@
 #include "su3.h"
 #include "su3adj.h"
 #include "global.h"
+#include "sw.h"
 
 /* 
  * This function sets the array sw[][][]

@@ -21,6 +21,7 @@
 #include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
+#include "expo.h"
 
 su3 exposu3(su3adj p)
 {

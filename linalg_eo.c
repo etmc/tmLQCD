@@ -28,6 +28,7 @@
 #include "su3.h"
 #include "su3adj.h"
 #include "global.h"
+#include "linalg_eo.h"
 
 /* j output k input , l input */
 void diff_field(int j,int k,int l)

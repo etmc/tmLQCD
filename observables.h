@@ -1,3 +1,6 @@
+#ifndef _OBSERVABLES_H
+#define _OBSERVABLES_H
 
-extern double measure_gauge_action();
+double measure_gauge_action();
 
+#endif

@@ -1,4 +1,5 @@
-
+#ifndef _GLOBAL_H
+#define _GLOBAL_H
 /***************************************************************
  *
  * File global.h
@@ -12,12 +13,14 @@
  * Adapted for the HMC-Program by M. Hasenbusch 2002
  *
  ***************************************************************/
+#include <stdlib.h>
+#include <stdio.h>
 #include <mpi.h>
 #include"su3.h"
 #include"su3adj.h"
 
-#define T  4
-#define L  8
+#define T  2
+#define L  4
 #define LX (L)
 #define LY (L)
 #define LZ (L)
@@ -90,7 +93,9 @@ EXTERN MPI_Request req1,req2,req3,req4;
 EXTERN MPI_Comm g_cart_grid;
 
 /* file for solver-information */
-FILE *fp7;
+EXTERN FILE *fp7;
 
 #undef EXTERN
 #undef ALIGN
+
+#endif

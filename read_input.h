@@ -46,7 +46,8 @@ extern "C"
   extern int first_prop_flag;
   extern double dtau;
   extern int Nsteps;
-  extern double q_off, q_off2;
+  extern double q_off;
+  extern double q_off2;
   extern int random_seed;
   extern int integtyp,nsmall;
   int read_input(char *);

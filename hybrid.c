@@ -37,7 +37,7 @@
 int main(int argc,char *argv[])
 { 
   FILE *fp1,*fp2,*fp3,*fp4,*fp5,*fp6;
-  char * filename="ouput";
+  char * filename="output";
   char filename1[50];
   char filename2[50];
   char filename3[50];
@@ -102,6 +102,7 @@ int main(int argc,char *argv[])
 
   /* define the geometry */
   geometry();
+
   /* define the boundary conditions for the fermion fields */
   /* You can find boundary in clover_eo.c ...!? */
   boundary();
@@ -112,13 +113,15 @@ int main(int argc,char *argv[])
   if(g_proc_id==0) fprintf(fp2,"The BICG_stab is used as solver \n\n");
 #endif
   
-  if(startoption==2){
+  if(startoption == 2){
     if (g_proc_id == 0){
       fp4=fopen("rlxs_state","r");
       fread(rlxs_state,sizeof rlxs_state,1,fp4);
       fclose(fp4);
       rlxs_reset(rlxs_state);
+      printf("Reading Gauge field from file config\n"); fflush(stdout);
     }
+
     read_gauge_field_time_p("config");
   }
   else{

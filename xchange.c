@@ -5,6 +5,7 @@
 #include "su3.h"
 #include "su3adj.h"
 #include "global.h"
+#include "xchange.h"
 
 /* exchanges the field  l */
 void xchange_field(int l)

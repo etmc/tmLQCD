@@ -1,3 +1,6 @@
+#ifndef _SSE_H
+#define _SSE_H
+
 #if (defined SSE || defined SSE2)
 /*******************************************************************************
 *
@@ -980,4 +983,5 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
                       "=m" ((u1).c33)) ;
 #endif
 
+#endif
 #endif
