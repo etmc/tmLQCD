@@ -88,7 +88,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     }
 #endif
   }
-  /* the slice at time -2 is put to T+2 */
+  /* the slice at time -2 is put behind the one at time T+1 */
   else if(x0 == -2) {
     ix = VOLUMEPLUSRAND + LX*LY*LZ + y3 + LZ*y2 + LZ*LY*y1;
 #ifdef PARALLELXT
@@ -113,7 +113,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 	+ y2*LZ + y3;
     }
     else if (x0 == -1) {
-      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 5*LY*LZ
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 6*LY*LZ
 	+ y2*LZ + y3;
     }
   }
@@ -122,7 +122,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
     }
     else if(x0 == T) {
-      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 6*LY*LZ
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 5*LY*LZ
 	+ y2*LZ + y3;
     }
     else if(x0 == -1) {
