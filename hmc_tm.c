@@ -47,7 +47,7 @@
 #include "boundary.h"
 #include "polyakov_loop.h"
 
-char * Version = "2.3.3";
+char * Version = "2.3.4";
 
 
 void usage(){
@@ -80,6 +80,10 @@ int main(int argc,char *argv[]) {
   double eneg = 0., plaquette_energy = 0., rectangle_energy = 0.;
   /* Acceptance rate */
   int Rate=0;
+  /* Do we want to perform reversibility checks */
+  /* See also return_check_flag in read_input.h */
+  int return_check = 0;
+  /* For getopt */
   int c;
 
   /* For the Polyakov loop: */
@@ -247,14 +251,14 @@ int main(int argc,char *argv[]) {
 	    int_n[0], int_n[1], int_n[2], int_n[3]);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
     printf("# Number of pseudo-fermion fields: %d\n", g_nr_of_psf);
-    printf("g_eps_sq_force = %e, g_eps_sq_acc = %e\n", g_eps_sq_force, g_eps_sq_acc);
+    printf("# g_eps_sq_force = %e, g_eps_sq_acc = %e\n", g_eps_sq_force, g_eps_sq_acc);
     printf("# Integration scheme: ");
     if(integtyp == 1) printf("leap-frog (single time scale)\n");
     if(integtyp == 2) printf("Sexton-Weingarten (single time scale)\n");
     if(integtyp == 3) printf("leap-frog (multiple time scales)\n");
     if(integtyp == 4) printf("Sexton-Weingarten (multiple time scales)\n");
     if(integtyp == 3) printf("higher order and leap-frog (multiple time scales)\n");
-    printf("Using %s precision for the inversions!\n", 
+    printf("# Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
 
 
@@ -448,9 +452,11 @@ int main(int argc,char *argv[]) {
 
   /* Loop for measurements */
   for(j=0;j<Nmeas;j++) {
+    if(return_check_flag == 1 && (j+1)%return_check_interval == 0) return_check = 1;
+    else return_check = 0;
 
     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
-		      dtau, Nsteps, nsmall, tau, int_n, q_off, q_off2);
+		      dtau, Nsteps, nsmall, tau, int_n, return_check, q_off, q_off2);
 
     /* Measure the Polyakov loop in direction 2 and 3:*/
     polyakov_loop(&pl, 2); 

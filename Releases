@@ -1,3 +1,9 @@
+Release 2.3.4:
+Integration scheme with error cancellation 
+Reversibility check implemented
+Relative precision possible
+Precisions are input parameter now
+
 Release 2.3.3:
 some bug fixes
 extended leap frog and Sexton-Weingarten integration

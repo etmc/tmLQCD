@@ -187,8 +187,8 @@ int bicg(int k, int l, double q_off, double eps_sq, const int rel_prec) {
   else iteration = ITER_MAX_BCG;
 
   if(iteration>=ITER_MAX_BCG){
-/*     zero_spinor_field(spinor_field[k]); */
     iteration = solve_cg(k,l,q_off,eps_sq, rel_prec);
+    /* Save the solution for reuse! */
     assign(spinor_field[DUM_DERI+6], spinor_field[k], VOLUME/2);
     if(g_use_clover_flag == 1){
       Q_psi(k,k,q_off);

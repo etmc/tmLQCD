@@ -68,6 +68,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   int mass_number;
   int read_source_flag;
   char source_input_filename[100];
+  int return_check_flag, return_check_interval;
 %}
 
 %option never-interactive
@@ -127,6 +128,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x RELPREC
 %x FORCEPREC
 %x ACCPREC
+%x REVCHECK
+%x REVINT
 
 %x COMMENT
 %x ERROR
@@ -190,6 +193,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^UseRelativePrecision{SPC}*={SPC}*       BEGIN(RELPREC);
 ^ForcePrecision{SPC}*={SPC}*             BEGIN(FORCEPREC);
 ^AcceptancePrecision{SPC}*={SPC}*        BEGIN(ACCPREC);
+^ReversibilityCheck{SPC}*={SPC}*         BEGIN(REVCHECK);
+^ReversibilityCheckIntervall{SPC}*={SPC}* BEGIN(REVINT);
 
 <TT>{DIGIT}+                  {
   T_global = atoi(yytext);
@@ -527,9 +532,21 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   g_relative_precision_flag = 0;
   if(verbose!=0) printf("Using absolute precision\n");
 }
+<REVCHECK>yes {
+  return_check_flag = 1;
+  if(verbose!=0) printf("Perform checks of Reversibility\n");
+}
+<REVCHECK>no {
+  return_check_flag = 0;
+  if(verbose!=0) printf("Don't perform checks of Reversibility\n");
+}
+<REVINT>{DIGIT}+ {
+  return_check_interval = atoi(yytext);
+  if(verbose!=0) printf("Check reversibility all %d trajectories\n", return_check_interval);
+}
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0,INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC>#      BEGIN(COMMENT);
+<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0,INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,REVCHECK,REVINT>#      BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -651,7 +668,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Error in line %d! Must be compute or readin! Exiting...!\n", line_of_file);
   exit(1);
 }
-<Q1,Q2,DTAU,TAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND,SOURCEFILE,READSOURCE,INT0,INT1,INT2,INT3,INT4>. {
+<Q1,Q2,DTAU,TAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND,SOURCEFILE,READSOURCE,INT0,INT1,INT2,INT3,INT4,REVCHECK,REVINT>. {
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
@@ -772,6 +789,8 @@ int read_input(char * conf_file){
   g_eps_sq_force = _default_g_eps_sq_force;
   g_eps_sq_acc = _default_g_eps_sq_acc;
   g_relative_precision_flag = _default_g_relative_precision_flag;
+  return_check_flag = _default_return_check_flag;
+  return_check_interval = _default_return_check_interval;
 
   /********************************************/
 

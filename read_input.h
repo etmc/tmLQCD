@@ -59,6 +59,8 @@ extern "C"
   extern int mass_number;
   extern int read_source_flag;
   extern char source_input_filename[100];
+  extern int return_check_flag;
+  extern int return_check_interval;
   
   int read_input(char *);
   int reread_input(char *);

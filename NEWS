@@ -1,3 +1,15 @@
+17.02.2005: Reversibility check implemented. Input parameters are
+	    ReversibilityCheck = yes|no (default no)
+	    ReversibilityCheckIntervall = 100 (default 100)
+
+	    Precisions in the solver for force and Acceptance are input
+	    parameter now:
+  	    ForcePrecision = float (default 1.e-7)
+	    AcceptancePrecision = float (default 16.e-7)
+  	    
+	    One can choose to have relative precision:
+	    UseRelativePrecision = yes|no (default no)
+
 13.02.2005: Integration scheme with error cancellation implemented.
             It is only implemented for the highest level and should
 	    have errors in \delta\tau^5 only.

@@ -64,5 +64,7 @@
 #define _default_g_eps_sq_force 1.0e-7
 #define _default_g_eps_sq_acc 1.0e-16
 #define _default_g_relative_precision_flag 0
+#define _default_return_check_flag 0
+#define _default_return_check_interval 100
 
 #endif
