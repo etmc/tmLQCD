@@ -21,7 +21,7 @@
 #include "su3.h"
 #include "su3adj.h"
 #include "expo.h"
-#include "ranlxs.h"
+#include "ranlxd.h"
 #include "geometry_eo.h"
 #include "start.h"
 #include "linalg_eo.h"
@@ -42,12 +42,12 @@ int main(int argc,char *argv[]) {
   char filename1[50];
   char filename2[50];
   char filename3[50];
-  int rlxs_state[25];
+  int rlxd_state[105];
   int idis=0;
   int idi,idis0,idis1,idis2;
   int j,ix,mu;
   int i,k, nstore=0;
-  static float yy[2];
+  double yy[1];
 /*   static double step; */
 /*   static double q_off,q_off2; */
   static double eneg,enegx,enep,enepx,enec,enecx,dh;
@@ -95,8 +95,8 @@ int main(int argc,char *argv[]) {
     fprintf(fp2,"The lattice size is %d x %d^3\n\n",(int)(g_nproc*T),(int)(L));
     fprintf(fp2,"g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
     fprintf(fp2,"boundary %f %f %f %f \n \n",X0,X1,X2,X3);
-    fprintf(fp2,"ITER_MAX=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n\n"
-	    ,ITER_MAX,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
+    fprintf(fp2,"ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n\n"
+	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
     fprintf(fp2,"q_off=%f, q_off2=%f, dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n\n",
 	    q_off,q_off2,dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
     
@@ -116,10 +116,10 @@ int main(int argc,char *argv[]) {
   
   if(startoption == 2){
     if (g_proc_id == 0){
-      fp4=fopen("rlxs_state","r");
-      fread(rlxs_state,sizeof rlxs_state,1,fp4);
+      fp4=fopen("rlxd_state","r");
+      fread(rlxd_state,sizeof rlxd_state,1,fp4);
       fclose(fp4);
-      rlxs_reset(rlxs_state);
+      rlxd_reset(rlxd_state);
       printf("Reading Gauge field from file config\n"); fflush(stdout);
     }
 
@@ -129,25 +129,25 @@ int main(int argc,char *argv[]) {
     /* here we generate exactly the same configuration as for the 
        single node simulation */
     if(g_proc_id==0){
-      rlxs_init(0,random_seed);   
+      rlxd_init(0,random_seed);   
       random_g_gauge_field();
       /* send the state of the random-number generator to 1 */
-      rlxs_get(rlxs_state);
-      MPI_Send(&rlxs_state[0], 25, MPI_INT, 1, 99, MPI_COMM_WORLD);
+      rlxd_get(rlxd_state);
+      MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 99, MPI_COMM_WORLD);
     }
     else{
       /* recieve the random number state form g_proc_id-1 */
-      MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
-      rlxs_reset(rlxs_state);
+      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
+      rlxd_reset(rlxd_state);
       random_g_gauge_field();
       /* send the random number state to g_proc_id+1 */
       k=g_proc_id+1; if(k==g_nproc) k=0;
-      rlxs_get(rlxs_state);
-      MPI_Send(&rlxs_state[0], 25, MPI_INT, k, 99, MPI_COMM_WORLD);
+      rlxd_get(rlxd_state);
+      MPI_Send(&rlxd_state[0], 105, MPI_INT, k, 99, MPI_COMM_WORLD);
     }
     if(g_proc_id == 0){
-      MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
-      rlxs_reset(rlxs_state);
+      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
+      rlxd_reset(rlxd_state);
     }
   }
 
@@ -171,7 +171,7 @@ int main(int argc,char *argv[]) {
   /* needed for exact continuation of the run, since evamax and eva use
      random numbers */ 
   if(startoption == 2 && g_proc_id == 0){
-    rlxs_reset(rlxs_state);
+    rlxd_reset(rlxd_state);
   }
   
   /* set ddummy to zero */
@@ -295,17 +295,17 @@ int main(int argc,char *argv[]) {
     /* the random number is only taken at node zero and then distributed to 
        the other sites */
     if(g_proc_id==0){
-      ranlxs(yy,2);
+      ranlxd(yy,1);
       for(i = 1; i < g_nproc; i++){
-	MPI_Send(&yy[0], 2, MPI_FLOAT, i, 31, MPI_COMM_WORLD);
+	MPI_Send(yy, 1, MPI_DOUBLE, i, 31, MPI_COMM_WORLD);
       }
     }
     else{
-      MPI_Recv(&yy[0], 2, MPI_FLOAT, 0, 31, MPI_COMM_WORLD, &status);
+      MPI_Recv(yy, 1, MPI_DOUBLE, 0, 31, MPI_COMM_WORLD, &status);
     }
     /* What happens here? Do we produce a double precision */
     /* random number in this way? */
-    if(exp(-dh) > (((double)yy[0])+0.596046448e-7*yy[1])){
+    if(exp(-dh) > yy[0]) {
       /* accept */
       eneg=enegx;
       enec=enecx;
@@ -346,9 +346,9 @@ int main(int argc,char *argv[]) {
 
       /*  write the status of the random number generator on a file */
       if(g_proc_id==0){
-	rlxs_get(rlxs_state);
-	fp4=fopen("rlxs_state","w");
-	fwrite(rlxs_state,sizeof rlxs_state,1,fp4);
+	rlxd_get(rlxd_state);
+	fp4=fopen("rlxd_state","w");
+	fwrite(rlxd_state,sizeof rlxd_state,1,fp4);
 	fclose(fp4);
       }
     }
@@ -357,9 +357,9 @@ int main(int argc,char *argv[]) {
   write_gauge_field_time_p( "last_configuration" );
   
   if(g_proc_id==0){
-    rlxs_get(rlxs_state);
-    fp4=fopen("rlxs_state","w");
-    fwrite(rlxs_state,sizeof rlxs_state,1,fp4);
+    rlxd_get(rlxd_state);
+    fp4=fopen("rlxd_state","w");
+    fwrite(rlxd_state,sizeof rlxd_state,1,fp4);
     fclose(fp4);
   }
   if(g_proc_id == 0){

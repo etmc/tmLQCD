@@ -10,6 +10,9 @@
 #include "tm_operators.h"
 #include "linsolve.h"
 
+int ITER_MAX_BCG;
+int ITER_MAX_CG;
+
 /* k output , l input */
 int solve_cg(int k,int l, double q_off, double eps_sq) {
 
@@ -30,7 +33,7 @@ int solve_cg(int k,int l, double q_off, double eps_sq) {
   normsq=square_norm(DUM_SOLVER+1);
 
 /* main loop */
-   for(iteration=1;iteration<=ITER_MAX;iteration++) {
+   for(iteration=1;iteration<=ITER_MAX_CG;iteration++) {
      if(g_use_clover_flag == 1){
        Q_psi(DUM_SOLVER,DUM_SOLVER+2,q_off);
        Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
@@ -191,7 +194,7 @@ int eva(double *rz, int k, double q_off, double eps_sq)
   normg0=square_norm(DUM_SOLVER+2);
   
 /* main loop */
-   for(iteration=1;iteration<=ITER_MAX;iteration++)
+   for(iteration=1;iteration<=ITER_MAX_BCG;iteration++)
      {
      if(normg0 <= eps_sq) break;
      Q_psi(DUM_SOLVER+2,DUM_SOLVER+1,q_off);
@@ -284,7 +287,7 @@ int evamax(double *rz, int k, double q_off, double eps_sq)
   normg0=square_norm(DUM_SOLVER+2);
   
 /* main loop */
-   for(iteration=1;iteration<=ITER_MAX;iteration++)
+   for(iteration=1;iteration<=ITER_MAX_BCG;iteration++)
      {
      if(normg0 <= eps_sq) break;
      Q_psi(DUM_SOLVER+2,DUM_SOLVER+1,q_off);
@@ -364,7 +367,7 @@ random_spinor_field(k);
 norm0=square_norm(k); 
 norm=1000.;
 multiply_add_assign_field(k,1./sqrt(norm0),0.,k);
-for(j=1;j<ITER_MAX;j++)
+for(j=1;j<ITER_MAX_BCG;j++)
   {
   Q_psi(k,k,q_off);  Q_psi(k,k,q_off);
   norm0=square_norm(k);

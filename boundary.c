@@ -13,6 +13,7 @@
 
 complex ka0, ka1, ka2, ka3;
 const double PI_ = 3.14159265358979;
+double X0;
 
 void boundary(){
   double x0,x1,x2,x3;

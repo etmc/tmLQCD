@@ -6,7 +6,7 @@
 #include "su3.h"
 #include "su3adj.h"
 #include "expo.h"
-#include "ranlxs.h"
+#include "ranlxd.h"
 #include "sse.h"
 #include "global.h"
 #include "linalg_eo.h"
@@ -359,7 +359,7 @@ double ini_momenta() {
   
   su3adj *xm;
   int i,mu,k;
-  int rlxs_state[25];
+  int rlxd_state[105];
   static double y[8];
   static double tt,tr,ts,kc,ks,sum;
 
@@ -392,15 +392,15 @@ double ini_momenta() {
     }
 #ifdef MPI
     /* send the state for the random-number generator to 1 */
-    rlxs_get(rlxs_state);
-    MPI_Send(&rlxs_state[0], 25, MPI_INT, 1, 101, MPI_COMM_WORLD);
+    rlxd_get(rlxd_state);
+    MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 101, MPI_COMM_WORLD);
 #endif
   }
 
 #ifdef MPI
   if(g_proc_id != 0){
-    MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_proc_id-1, 101, MPI_COMM_WORLD, &status);
-    rlxs_reset(rlxs_state);
+    MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 101, MPI_COMM_WORLD, &status);
+    rlxd_reset(rlxd_state);
     kc=0.; ks=0.;
     for(i=0;i<VOLUME;i++){ 
       for(mu=0;mu<4;mu++){
@@ -433,16 +433,16 @@ double ini_momenta() {
     if(k==g_nproc){ 
       k=0;
     }
-    rlxs_get(rlxs_state);
-    MPI_Send(&rlxs_state[0], 25, MPI_INT, k, 101, MPI_COMM_WORLD);
+    rlxd_get(rlxd_state);
+    MPI_Send(&rlxd_state[0], 105, MPI_INT, k, 101, MPI_COMM_WORLD);
   }
 #endif
   kc=0.5*(ks+kc);
   
 #ifdef MPI
   if(g_proc_id == 0){
-    MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_nproc-1, 101, MPI_COMM_WORLD, &status);
-    rlxs_reset(rlxs_state);
+    MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 101, MPI_COMM_WORLD, &status);
+    rlxd_reset(rlxd_state);
   }
 
   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);

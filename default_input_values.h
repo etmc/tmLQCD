@@ -42,5 +42,8 @@
 #define _default_Nsteps 10
 #define _default_integtyp 2
 #define _default_nsmall 2
+#define _default_ITER_MAX_BCG 5000
+#define _default_ITER_MAX_CG 5000
+#define _default_X0 0.
 
 #endif

@@ -34,13 +34,9 @@
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */
 /* #define X0 1.  (in time)          */
-#define X0 1.
 #define X1 0.
 #define X2 0.
 #define X3 0.
-#define ITER_MAX_BCG 2
-#define ITER_MAX 1000
-/* #define ITER_MAX 1 */
 #define EPS_SQ0  1.0e-20
 #define EPS_SQ1  1.0e-7
 #define EPS_SQ2  1.0e-5

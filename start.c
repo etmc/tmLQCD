@@ -1,4 +1,4 @@
-
+/* $Id$ */
 /*******************************************************************************
 *
 * File start.c
@@ -41,7 +41,7 @@
 #include <math.h>
 #include "su3.h"
 #include "su3adj.h"
-#include "ranlxs.h"
+#include "ranlxd.h"
 #include "global.h"
 #include "start.h"
 
@@ -49,7 +49,8 @@
 void gauss_vector(double v[],int n)
 {
    int k;
-   float r[4];
+   double r[2];
+/*    float r[4]; */
 /*   double pi; */
    double x1,x2,rho,y1,y2;
    
@@ -57,9 +58,9 @@ void gauss_vector(double v[],int n)
 
    for (k=0;;k+=2)
    {
-      ranlxs(r,4);
-      x1=((double)r[0])+0.596046448e-7*r[1];
-      x2=((double)r[2])+0.596046448e-7*r[3];
+      ranlxd(r,2);
+      x1=r[0];
+      x2=r[1];
 
       rho=-log(1.0-x1);
       rho=sqrt(rho);
@@ -158,133 +159,130 @@ spinor random_spinor(void)
 
 /* Function provides a spinor field of length VOLUME/2 with
    Gaussian distribution */
-void random_spinor_field(int k)
-{
-int j,ix;
-int rlxs_state[25];
-spinor *s;
-double v[6];
+void random_spinor_field(int k) {
+  
+  int j,ix;
+  int rlxd_state[105]; 
+  spinor *s;
+  double v[6];
 
-if(g_proc_id==0)
-  {
-for (ix=0;ix<VOLUME/2;ix++)
-  {
-  s=&spinor_field[k][ix];
-  gauss_vector(v,6);
-  (*s).c1.c1.re=v[0];
-  (*s).c1.c1.im=v[1];
-  (*s).c1.c2.re=v[2];
-  (*s).c1.c2.im=v[3];
-  (*s).c1.c3.re=v[4];
-  (*s).c1.c3.im=v[5];
-  gauss_vector(v,6);
-  (*s).c2.c1.re=v[0];
-  (*s).c2.c1.im=v[1];
-  (*s).c2.c2.re=v[2];
-  (*s).c2.c2.im=v[3];
-  (*s).c2.c3.re=v[4];
-  (*s).c2.c3.im=v[5];
-  gauss_vector(v,6);
-  (*s).c3.c1.re=v[0];
-  (*s).c3.c1.im=v[1];
-  (*s).c3.c2.re=v[2];
-  (*s).c3.c2.im=v[3];
-  (*s).c3.c3.re=v[4];
-  (*s).c3.c3.im=v[5];
-  gauss_vector(v,6);
-  (*s).c4.c1.re=v[0];
-  (*s).c4.c1.im=v[1];
-  (*s).c4.c2.re=v[2];
-  (*s).c4.c2.im=v[3];
-  (*s).c4.c3.re=v[4];
-  (*s).c4.c3.im=v[5];
-  }
-/* send the state for the random-number generator to 1 */
-  rlxs_get(rlxs_state);
-  MPI_Send(&rlxs_state[0], 25, MPI_INT, 1, 102, MPI_COMM_WORLD);
+  if(g_proc_id==0) {
+    for (ix=0;ix<VOLUME/2;ix++) {
+      s=&spinor_field[k][ix];
+      gauss_vector(v,6);
+      (*s).c1.c1.re=v[0];
+      (*s).c1.c1.im=v[1];
+      (*s).c1.c2.re=v[2];
+      (*s).c1.c2.im=v[3];
+      (*s).c1.c3.re=v[4];
+      (*s).c1.c3.im=v[5];
+      gauss_vector(v,6);
+      (*s).c2.c1.re=v[0];
+      (*s).c2.c1.im=v[1];
+      (*s).c2.c2.re=v[2];
+      (*s).c2.c2.im=v[3];
+      (*s).c2.c3.re=v[4];
+      (*s).c2.c3.im=v[5];
+      gauss_vector(v,6);
+      (*s).c3.c1.re=v[0];
+      (*s).c3.c1.im=v[1];
+      (*s).c3.c2.re=v[2];
+      (*s).c3.c2.im=v[3];
+      (*s).c3.c3.re=v[4];
+      (*s).c3.c3.im=v[5];
+      gauss_vector(v,6);
+      (*s).c4.c1.re=v[0];
+      (*s).c4.c1.im=v[1];
+      (*s).c4.c2.re=v[2];
+      (*s).c4.c2.im=v[3];
+      (*s).c4.c3.re=v[4];
+      (*s).c4.c3.im=v[5];
+    }
+    /* send the state for the random-number generator to 1 */
+    rlxd_get(rlxd_state);
+    MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 102, MPI_COMM_WORLD);
   }
 
-if(g_proc_id!=0)
-  {
-  MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_proc_id-1, 102, MPI_COMM_WORLD, &status);
-  rlxs_reset(rlxs_state);
-for (ix=0;ix<VOLUME/2;ix++)
-  {
-  s=&spinor_field[k][ix];
-  gauss_vector(v,6);
-  (*s).c1.c1.re=v[0];
-  (*s).c1.c1.im=v[1];
-  (*s).c1.c2.re=v[2];
-  (*s).c1.c2.im=v[3];
-  (*s).c1.c3.re=v[4];
-  (*s).c1.c3.im=v[5];
-  gauss_vector(v,6);
-  (*s).c2.c1.re=v[0];
-  (*s).c2.c1.im=v[1];
-  (*s).c2.c2.re=v[2];
-  (*s).c2.c2.im=v[3];
-  (*s).c2.c3.re=v[4];
-  (*s).c2.c3.im=v[5];
-  gauss_vector(v,6);
-  (*s).c3.c1.re=v[0];
-  (*s).c3.c1.im=v[1];
-  (*s).c3.c2.re=v[2];
-  (*s).c3.c2.im=v[3];
-  (*s).c3.c3.re=v[4];
-  (*s).c3.c3.im=v[5];
-  gauss_vector(v,6);
-  (*s).c4.c1.re=v[0];
-  (*s).c4.c1.im=v[1];
-  (*s).c4.c2.re=v[2];
-  (*s).c4.c2.im=v[3];
-  (*s).c4.c3.re=v[4];
-  (*s).c4.c3.im=v[5];
+  if(g_proc_id!=0) {
+    MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 102, MPI_COMM_WORLD, &status);
+    rlxd_reset(rlxd_state);
+    for (ix=0;ix<VOLUME/2;ix++) {
+      s=&spinor_field[k][ix];
+      gauss_vector(v,6);
+      (*s).c1.c1.re=v[0];
+      (*s).c1.c1.im=v[1];
+      (*s).c1.c2.re=v[2];
+      (*s).c1.c2.im=v[3];
+      (*s).c1.c3.re=v[4];
+      (*s).c1.c3.im=v[5];
+      gauss_vector(v,6);
+      (*s).c2.c1.re=v[0];
+      (*s).c2.c1.im=v[1];
+      (*s).c2.c2.re=v[2];
+      (*s).c2.c2.im=v[3];
+      (*s).c2.c3.re=v[4];
+      (*s).c2.c3.im=v[5];
+      gauss_vector(v,6);
+      (*s).c3.c1.re=v[0];
+      (*s).c3.c1.im=v[1];
+      (*s).c3.c2.re=v[2];
+      (*s).c3.c2.im=v[3];
+      (*s).c3.c3.re=v[4];
+      (*s).c3.c3.im=v[5];
+      gauss_vector(v,6);
+      (*s).c4.c1.re=v[0];
+      (*s).c4.c1.im=v[1];
+      (*s).c4.c2.re=v[2];
+      (*s).c4.c2.im=v[3];
+      (*s).c4.c3.re=v[4];
+      (*s).c4.c3.im=v[5];
+    }
+    /* send the state fo the random-number generator to k+1 */
+    j=g_proc_id+1; 
+    if(j==g_nproc){
+      j=0;
+    }
+    rlxd_get(rlxd_state);
+    MPI_Send(&rlxd_state[0], 105, MPI_INT, j, 102, MPI_COMM_WORLD);
   }
-/* send the state fo the random-number generator to k+1 */
-  j=g_proc_id+1; if(j==g_nproc) j=0;
-  rlxs_get(rlxs_state);
-  MPI_Send(&rlxs_state[0], 25, MPI_INT, j, 102, MPI_COMM_WORLD);
-  }
-if(g_proc_id==0)
-  {
-  MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_nproc-1, 102, MPI_COMM_WORLD, &status);
-  rlxs_reset(rlxs_state);
+  if(g_proc_id==0) {
+    MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 102, MPI_COMM_WORLD, &status);
+    rlxd_reset(rlxd_state);
   }
 }
 
 /* Function provides a spinor field of length VOLUME/2 with
    Gaussian distribution */
-void zero_spinor_field(int k)
-{
-int ix;
-spinor *s;
-for (ix=0;ix<VOLUME/2;ix++)
-  {
-  s=&spinor_field[k][ix];
-  (*s).c1.c1.re=0.;
-  (*s).c1.c1.im=0.;
-  (*s).c1.c2.re=0.;
-  (*s).c1.c2.im=0.;
-  (*s).c1.c3.re=0.;
-  (*s).c1.c3.im=0.;
-  (*s).c2.c1.re=0.;
-  (*s).c2.c1.im=0.;
-  (*s).c2.c2.re=0.;
-  (*s).c2.c2.im=0.;
-  (*s).c2.c3.re=0.;
-  (*s).c2.c3.im=0.;
-  (*s).c3.c1.re=0.;
-  (*s).c3.c1.im=0.;
-  (*s).c3.c2.re=0.;
-  (*s).c3.c2.im=0.;
-  (*s).c3.c3.re=0.;
-  (*s).c3.c3.im=0.;
-  (*s).c4.c1.re=0.;
-  (*s).c4.c1.im=0.;
-  (*s).c4.c2.re=0.;
-  (*s).c4.c2.im=0.;
-  (*s).c4.c3.re=0.;
-  (*s).c4.c3.im=0.;
+void zero_spinor_field(int k) {
+
+  int ix;
+  spinor *s;
+  for (ix=0;ix<VOLUME/2;ix++) {
+    s=&spinor_field[k][ix];
+    (*s).c1.c1.re=0.;
+    (*s).c1.c1.im=0.;
+    (*s).c1.c2.re=0.;
+    (*s).c1.c2.im=0.;
+    (*s).c1.c3.re=0.;
+    (*s).c1.c3.im=0.;
+    (*s).c2.c1.re=0.;
+    (*s).c2.c1.im=0.;
+    (*s).c2.c2.re=0.;
+    (*s).c2.c2.im=0.;
+    (*s).c2.c3.re=0.;
+    (*s).c2.c3.im=0.;
+    (*s).c3.c1.re=0.;
+    (*s).c3.c1.im=0.;
+    (*s).c3.c2.re=0.;
+    (*s).c3.c2.im=0.;
+    (*s).c3.c3.re=0.;
+    (*s).c3.c3.im=0.;
+    (*s).c4.c1.re=0.;
+    (*s).c4.c1.im=0.;
+    (*s).c4.c2.re=0.;
+    (*s).c4.c2.im=0.;
+    (*s).c4.c3.re=0.;
+    (*s).c4.c3.im=0.;
   }
 }
 

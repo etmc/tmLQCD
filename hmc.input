@@ -9,3 +9,6 @@ kappa = 0.12
 dtau = 0.1
 nsteps = 10
 Nskip = 10000
+BoundaryCond = 0.
+BCGstabMaxIter = 1000
+CGMaxIter = 1000

@@ -50,6 +50,10 @@ extern "C"
   extern double q_off2;
   extern int random_seed;
   extern int integtyp,nsmall;
+  extern int ITER_MAX_BCG;
+  extern int ITER_MAX_CG;
+  extern double X0;
+  
   int read_input(char *);
   
 #ifdef __cplusplus

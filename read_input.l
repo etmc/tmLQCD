@@ -97,6 +97,9 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x IOPROC
 %x IDX
 %x FPROP
+%x CGMAX
+%x BCGMAX
+%x BOUND
 
 %x COMMENT
 %x ERROR
@@ -135,6 +138,9 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^NSmall{SPC}*={SPC}*                     BEGIN(NSMALL);
 ^DTau{SPC}*={SPC}*                       BEGIN(DTAU);
 ^NSteps{SPC}*={SPC}*                     BEGIN(NSTEPS);
+^BCGstabMaxIter{SPC}*={SPC}*             BEGIN(BCGMAX);
+^CGMaxIter{SPC}*={SPC}*                  BEGIN(CGMAX);
+^BoundaryCond{SPC}*={SPC}*               BEGIN(BOUND);
 
 <TT>{DIGIT}+                  {
   if(verbose!=0) printf("T =%s\n", yytext);
@@ -351,10 +357,22 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   Nsteps = atoi(yytext);
   if(verbose!=0) printf("NSteps set to %d\n", Nsteps);
 }
+<BCGMAX>{DIGIT}+ {
+  ITER_MAX_BCG = atoi(yytext);
+  if(verbose != 0) printf("Maximal number of iterations for BCGstab set ro %d\n", ITER_MAX_BCG);
+}
+<CGMAX>{DIGIT}+  {
+  ITER_MAX_CG = atoi(yytext);
+  if(verbose != 0) printf("Maximal number of iterations for CG set ro %d\n", ITER_MAX_CG);
+}
+<BOUND>{FLT} {
+  X0 = atof(yytext);
+  if(verbose != 0) printf("X0 for boundary cond. in time set to %e\n", X0);
+}
 
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,MU,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,IOPROC,IDX,FPROP,DTAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW>#      BEGIN(COMMENT);
+<SEED,KAPPA,MU,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,IOPROC,IDX,FPROP,DTAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND>#      BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -452,7 +470,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Error in line %d! Must be compute or readin! Exiting...!\n", line_of_file);
   exit(1);
 }
-<Q1,Q2,DTAU,NSTEPS,INTTYP,NSMALL,CSW>. {
+<Q1,Q2,DTAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND>. {
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
@@ -523,7 +541,9 @@ int read_input(char * conf_file){
   index_start = _default_index_start;
   index_end = _default_index_end;
   first_prop_flag = _default_first_prop_flag;
-
+  ITER_MAX_CG = _default_ITER_MAX_CG;
+  ITER_MAX_BCG = _default_ITER_MAX_BCG;
+  X0 = _default_X0;
 
   /********************************************/
 
