@@ -15,6 +15,7 @@
 #include "tm_operators.h"
 #include "hybrid_update.h"
 #include "Hopping_Matrix.h"
+#include "solver/chrono_guess.h"
 #include "derivative_psf.h"
 
 extern int ITER_MAX_BCG;
@@ -39,15 +40,35 @@ void derivative_psf(const int nr) {
      *********************************************************************/
 
     g_mu = g_mu1;
-    /* If CG is used anyhow */
-    /*       gamma5(DUM_DERI+1, first_psf); */
-    
-    /* Invert Q_{+} Q_{-} */
-    /* X_o -> DUM_DERI+1 */
-    count00 += solve_cg(DUM_DERI+4, first_psf, 0., g_eps_sq_force1, g_relative_precision_flag);
-    assign(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+4], VOLUME/2);
-    /* Y_o -> DUM_DERI  */
-    Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
+    if(ITER_MAX_BCG == 0 || (fabs(g_mu) > 0)) {
+      /* If CG is used anyhow */
+      /*       gamma5(DUM_DERI+1, first_psf); */
+      
+      /* Invert Q_{+} Q_{-} */
+      /* X_o -> DUM_DERI+1 */
+      chrono_guess(spinor_field[DUM_DERI+1], spinor_field[first_psf], g_csg_field, g_csg_index_array,
+		   g_csg_N[2*nr], g_csg_N[2*nr+1], VOLUME/2, &Qtm_pm_psi);
+
+      count00 += solve_cg(DUM_DERI+1, first_psf, 0., g_eps_sq_force1, g_relative_precision_flag);
+      chrono_add_solution(spinor_field[DUM_DERI+1], g_csg_field, g_csg_index_array,
+			  g_csg_N[2*nr], &g_csg_N[2*nr+1], VOLUME/2);
+      /*       assign(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+4], VOLUME/2); */
+      /* Y_o -> DUM_DERI  */
+      Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
+    }
+    else{
+      /*contributions from field 0 -> first_psf*/
+      gamma5(DUM_DERI, first_psf);
+      /* Invert first Q_+ */
+      /* Y_o -> DUM_DERI  */
+      count00 += bicg(DUM_DERI, first_psf, 0., g_eps_sq_force1, g_relative_precision_flag);
+      gamma5(DUM_DERI+1,DUM_DERI);
+      /* Now Q_- */
+      /* X_o -> DUM_DERI+1 */
+      g_mu = -g_mu;
+      count01 += bicg(DUM_DERI+1, DUM_DERI, 0., g_eps_sq_force1, g_relative_precision_flag);
+      g_mu = -g_mu;   
+    }
   }
   else if(nr == 1) {
     /*********************************************************************
@@ -115,14 +136,28 @@ void derivative_psf(const int nr) {
     g_mu = g_mu2;	
     Qtm_plus_psi(spinor_field[DUM_DERI+2], spinor_field[third_psf]);
     g_mu = g_mu3;
-    /* If CG is used anyhow */
-    /*       gamma5(DUM_DERI+1, DUM_DERI+2); */
-    /* Invert Q_{+} Q_{-} */
-    /* X_W -> DUM_DERI+1 */
-    count20 += solve_cg(DUM_DERI+6, DUM_DERI+2, 0., g_eps_sq_force3, g_relative_precision_flag);
-    assign(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+6], VOLUME/2);
-    /* Y_W -> DUM_DERI  */
-    Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
+    if(ITER_MAX_BCG == 0 || (fabs(g_mu) > 0)) {
+      /* If CG is used anyhow */
+      /*       gamma5(DUM_DERI+1, DUM_DERI+2); */
+      /* Invert Q_{+} Q_{-} */
+      /* X_W -> DUM_DERI+1 */
+      count20 += solve_cg(DUM_DERI+6, DUM_DERI+2, 0., g_eps_sq_force3, g_relative_precision_flag);
+      assign(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+6], VOLUME/2);
+      /* Y_W -> DUM_DERI  */
+      Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
+    }
+    else {
+      gamma5(DUM_DERI, DUM_DERI+2);
+      /* Invert first Q_+ */
+      /* Y_o -> DUM_DERI  */
+      count20 += bicg(DUM_DERI, DUM_DERI+2, 0., g_eps_sq_force3, g_relative_precision_flag);
+      gamma5(DUM_DERI+1,DUM_DERI);
+      /* Now Q_- */
+      /* X_o -> DUM_DERI+1 */
+      g_mu = -g_mu;
+      count21 += bicg(DUM_DERI+1,DUM_DERI,0., g_eps_sq_force3, g_relative_precision_flag);
+      g_mu = -g_mu;   
+    }
 
     /* apply Hopping Matrix M_{eo} */
     /* to get the even sites of X */

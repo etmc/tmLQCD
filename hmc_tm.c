@@ -91,6 +91,8 @@ int main(int argc,char *argv[]) {
   verbose = 0;
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
+  g_csg_N = (int*) malloc(2*g_nr_of_psf*sizeof(int));
+  g_csg_N[0] = 7;
 
 #ifndef XLC 
   signal(SIGUSR1,&catch_del_sig);
@@ -168,6 +170,12 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
   }
+  j = init_csg_field(VOLUMEPLUSRAND/2, g_csg_N[0]);
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for csg fields! Aborting...\n");
+    exit(0);
+  }
+  g_csg_index_array = (int*) malloc(g_csg_N[0]*sizeof(int));
   j = init_moment_field(VOLUME, VOLUMEPLUSRAND);
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");

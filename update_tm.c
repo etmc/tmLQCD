@@ -33,6 +33,7 @@
 #include "measure_rectangles.h"
 #include "init_gauge_tmp.h"
 #include "ext_integrator.h"
+#include "solver/chrono_guess.h"
 #include "update_tm.h"
 
 
@@ -43,7 +44,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   su3 *v, *w;
   static int ini_g_tmp = 0;
   int rlxd_state[105];
-  int ix, mu, accept, i, halfstep = 0;
+  int ix, mu, accept, i=0, halfstep = 0;
   int saveiter_max = ITER_MAX_BCG;
 
   double yy[1];
@@ -76,6 +77,9 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   if(g_nr_of_psf == 1) {
     halfstep = 1;
   }
+
+  /* For chronological inverter */
+  g_csg_N[1] = 0;
 
 #ifdef MPI
   atime = MPI_Wtime();
@@ -142,6 +146,8 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     idis2 = bicg(third_psf, 5, 0., g_eps_sq_acc2, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
   }
+  chrono_add_solution(spinor_field[first_psf], g_csg_field, g_csg_index_array,
+		      g_csg_N[0], &g_csg_N[1], VOLUME/2);
 
   /* initialize the momenta */
   enep=ini_momenta();
@@ -159,6 +165,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     ext_leap_frog(n_int, tau, g_nr_of_psf, halfstep);
   }
   else if(integtyp == 4) {
+    printf("before leap_frog i = %d , g_proc_id = %d\n", i, g_proc_id);
     ext_sexton_weingarten(n_int, tau, g_nr_of_psf, halfstep);
   }
   else if(integtyp == 5) {
