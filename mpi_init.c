@@ -70,10 +70,8 @@ void mpi_init(int argc,char *argv[]) {
   g_nproc_t = dims[0];
   g_nproc_x = dims[1];
   N_PROC_X = g_nproc_x;
-  LY = L;
-  LZ = L;
   T = T_global/g_nproc_t;
-  LX = L/g_nproc_x;
+  LX = LX/g_nproc_x;
   VOLUME = (T*LX*LY*LZ);
 #ifdef PARALLELT  
   RAND = (2*LX*LY*LZ);
@@ -167,10 +165,7 @@ void mpi_init(int argc,char *argv[]) {
   g_proc_coords[0] = 0;
   g_proc_coords[1] = 0;
 
-  LY = L;
-  LZ = L;
   T = T_global;
-  LX = L;
   VOLUME = (T*LX*LY*LZ);
   RAND = 0;
   VOLUMEPLUSRAND = VOLUME;
