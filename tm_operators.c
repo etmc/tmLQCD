@@ -4,6 +4,7 @@
 #include "global.h"
 #include "su3.h"
 #include "H_eo.h"
+#include "sse.h"
 #include "tm_operators.h"
 
 /* internal */

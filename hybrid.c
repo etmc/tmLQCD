@@ -43,7 +43,7 @@ int main(int argc,char *argv[]) {
   char filename2[50];
   char filename3[50];
   int rlxs_state[25];
-  int idis;
+  int idis=0;
   int idi,idis0,idis1,idis2;
   int j,ix,mu;
   int i,k, nstore=0;

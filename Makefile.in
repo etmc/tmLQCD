@@ -15,7 +15,7 @@ COMPILE = ${CC} -o $@ ${CFLAGS}
 TARGETS = read_input clover_eo hybrid linsolve xchange \
 	expo hybrid_update observables start \
 	geometry_eo linalg_eo ranlxs sw io H_eo \
-	boundary deriv_Sb
+	boundary deriv_Sb tm_operators
 
 .SUFFIXES:
 
