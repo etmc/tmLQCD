@@ -31,12 +31,13 @@
 #include "expo.h"
 #include "xchange.h"
 #include "measure_rectangles.h"
+#include "init_gauge_tmp.h"
 #include "update_tm.h"
 
-su3 gauge_tmp[VOLUME][4] ALIGN;
 
 int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_energy, char * filename) {
   su3 *v, *w;
+  static int ini_g_tmp = 0;
   int rlxd_state[105];
   int ix, mu, accept, i;
 #ifdef _GAUGE_COPY
@@ -53,6 +54,11 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   /* Energy corresponding to the pseudo fermion part(s) */
   double enerphi0 =0., enerphi0x =0., enerphi1 =0., enerphi1x =0., enerphi2 = 0., enerphi2x = 0.;
   FILE * rlxdfile=NULL, * datafile=NULL;
+
+  if(ini_g_tmp == 0) {
+    ini_g_tmp = 1;
+    init_gauge_tmp(VOLUME);
+  }
 
 #ifdef MPI
   atime = MPI_Wtime();
