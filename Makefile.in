@@ -25,7 +25,7 @@ ALLOBJ = ${MODULES} ${PROGRAMS}
 
 .SUFFIXES:
 
-all: Makefile dep hybrid hmc_tm
+all: Makefile dep hmc_tm
 
 -include $(addsuffix .d,$(ALLOBJ))
 

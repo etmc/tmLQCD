@@ -43,7 +43,7 @@ int main(int argc,char *argv[]){
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &g_nproc);
   MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
-  g_cart_grid = MPI_COMM_WORLD;
+
   if(g_proc_id == 0) {
     printf("g_proc_id=%d g_nproc=%d \n",
 	   g_proc_id,g_nproc);

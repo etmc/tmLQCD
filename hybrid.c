@@ -74,7 +74,6 @@ int main(int argc,char *argv[]) {
   MPI_Comm_size(MPI_COMM_WORLD,&g_nproc);
   MPI_Comm_rank(MPI_COMM_WORLD,&g_proc_id);
   MPI_Get_processor_name(processor_name,&namelen);
-  g_cart_grid = MPI_COMM_WORLD;
 
   fprintf(stdout,"Process %d of %d on %s\n",
 	  g_proc_id, g_nproc, processor_name);

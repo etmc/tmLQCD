@@ -40,6 +40,8 @@
 
 char * Version = "1.2";
 
+int check_geometry();
+
 void usage(){
   fprintf(stderr, "hmc for Wilson twisted mass QCD\n\n");
   fprintf(stderr, "Usage: [-f input-filename]\n");
@@ -176,6 +178,8 @@ int main(int argc,char *argv[]) {
   /* define the boundary conditions for the fermion fields */
   boundary();
 
+  ix = check_geometry();
+
   if(g_proc_id == 0) {
 #if defined GEOMETRIC
     if(g_proc_id==0) fprintf(parameterfile,"The geometric series is used as solver \n\n");
@@ -227,6 +231,7 @@ int main(int argc,char *argv[]) {
       MPI_Send(&rlxd_state[0], 105, MPI_INT, k, 99, MPI_COMM_WORLD);
     }
 #endif
+
     /* Cold */
     if(startoption == 0) {
       unit_g_gauge_field();
@@ -238,6 +243,7 @@ int main(int argc,char *argv[]) {
       }
       read_gauge_field_time_p(gauge_input_filename);
     }
+
   }
 
   /*For parallelization: exchange the gaugefield */
@@ -247,6 +253,7 @@ int main(int argc,char *argv[]) {
 
   /*compute the energy of the gauge field*/
   eneg=measure_gauge_action();
+
   if(g_proc_id==0){
     fprintf(parameterfile,"#First plaquette value: %14.12f \n",eneg/(6.*VOLUME*g_nproc));
     fclose(parameterfile);
@@ -258,7 +265,7 @@ int main(int argc,char *argv[]) {
   if(startoption == 2 && g_proc_id == 0){
     rlxd_reset(rlxd_state);
   }
-  
+
   /* set ddummy to zero */
   for(ix = 0; ix < VOLUME+RAND; ix++){
     for(mu=0; mu<4; mu++){
@@ -277,7 +284,7 @@ int main(int argc,char *argv[]) {
   for(j=0;j<Nmeas;j++) {
 
     Rate += update_tm(integtyp, &eneg, datafilename);
-    
+
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0) {
       sprintf(gauge_filename,"%s.%.4d", "conf", nstore);

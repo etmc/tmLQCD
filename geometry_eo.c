@@ -47,13 +47,31 @@ int Index(const int x0, const int x1, const int x2, const int x3)
    else if(x0 == -1) {
      ix = VOLUME + LX*LY*LZ + y3 + LZ*y2 + LZ*LY*y1;
    }
-#elif (defined PARALLELXT)
+#endif
+#if (defined PARALLELXT)
   if(x1 == -1){
     ix = VOLUME + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
   }
   if(x1 == LX){
     ix = VOLUME + 2*LX*LY*LZ + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
   }   
+  if(x0 == -1){
+    if(x1 == -1){
+      ix = VOLUME+RAND+y2*LZ+y3;
+    }
+    if(x1 == LX){
+      ix = VOLUME+RAND+LY*LZ+y2*LZ+y3;
+    }
+  }
+  if(x0 == T){
+    if(x1 == -1){
+      ix = VOLUME+RAND+2*LY*LZ+y2*LZ+y3;
+    }
+    if(x1 == LX){
+      ix = VOLUME+RAND+3*LY*LZ+y2*LZ+y3;
+    }
+  }
+
 #endif
    return(ix);
 }
@@ -125,7 +143,7 @@ void geometry(){
 
 	  /* g_proc_id*T is added to allow for odd T when the number of 
 	     nodes is even */
-	  if((x0+x1+x2+x3+g_nproc_t*T)%2==0) {
+	  if((x0+x1+x2+x3+g_nproc_t*T)%2==0 && !(((x0 == -1) || (x0 == T)) && ((x1 == -1)||(x1 == LX)))) {
 	    xeven[ix]=1;
 	  } 
 	  else {
@@ -135,7 +153,7 @@ void geometry(){
 	  if(x0 >= 0 && x1 >=0) g_ipt[x0][x1][x2][x3] = ix;
 
 	  g_iup[ix][0]=Index(x0+1,x1,x2,x3);
-	  if(x0 >= 0) g_idn[ix][0] = Index(x0-1,x1,x2,x3);
+	  g_idn[ix][0] = Index(x0-1,x1,x2,x3);
 
 	  g_iup[ix][1]=Index(x0,x1+1,x2,x3);
 	  g_idn[ix][1]=Index(x0,x1-1,x2,x3);
@@ -152,7 +170,7 @@ void geometry(){
   }
   i_even=0;
   i_odd=0;
-  for (ix=0;ix<(VOLUME+RAND);ix++){
+  for (ix = 0; ix < (VOLUME+RAND); ix++){
     if(xeven[ix]==1){
       trans1[ix]=i_even;
       trans2[i_even]=ix;

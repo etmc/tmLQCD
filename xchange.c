@@ -23,7 +23,7 @@ void xchange_field(int l)
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
-  MPI_Sendrecv(&spinor_field[l][0].c1.c1.re,         1, g_field_time_slice_cont, g_nb_t_dn, 81,
+  MPI_Sendrecv(&spinor_field[l][0].c1.c1.re,          1, g_field_time_slice_cont, g_nb_t_dn, 81,
 	       &spinor_field[l][T*LX*L*L/2].c1.c1.re, 1, g_field_time_slice_cont, g_nb_t_up, 81,
 	       g_cart_grid, &status);
 
@@ -42,7 +42,7 @@ void xchange_field(int l)
 
   /* send the data to the neighbour on the right in x direction */
   /* recieve the data from the neighbour on the left in x direction */  
-  MPI_Sendrecv(&spinor_field[l][LX/2-1],                       1, g_field_x_slice_gath, g_nb_x_up, 92,
+  MPI_Sendrecv(&spinor_field[l][(LX-1)*LY*LZ/2],               1, g_field_x_slice_gath, g_nb_x_up, 92,
 	       &spinor_field[l][((T+2)*LX*LY*LZ + T*LY*LZ)/2], 1, g_field_x_slice_cont, g_nb_x_dn, 92,
 	       g_cart_grid, &status);
 
@@ -81,7 +81,7 @@ void xchange_gauge()
 
   /* send the data to the neighbour on the right in x direction */
   /* recieve the data from the neighbour on the left in x direction */
-  MPI_Sendrecv(&g_gauge_field[LX-1][0],                     1, g_gauge_x_slice_gath, g_nb_x_up, 94,
+  MPI_Sendrecv(&g_gauge_field[(LX-1)*LY*LZ][0],             1, g_gauge_x_slice_gath, g_nb_x_up, 94,
 	       &g_gauge_field[(T+2)*LX*LY*LZ + T*LY*LZ][0], 1, g_gauge_x_slice_cont, g_nb_x_dn, 94,
 	       g_cart_grid, &status);
 
@@ -120,7 +120,7 @@ void xchange_deri()
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Sendrecv(&df0[(T+2)*LX*LY*LZ + T*LY*LZ][0],    1, g_deri_x_slice_cont, g_nb_x_dn, 44,
-	       &ddummy[LX-1][0],                     1, g_deri_x_slice_gath, g_nb_x_up, 44,
+	       &ddummy[(LX-1)*LY*LZ][0],             1, g_deri_x_slice_gath, g_nb_x_up, 44,
 	       g_cart_grid, &status);
   /* add ddummy to df0 */
   for(t = 0; t < T; t++) {

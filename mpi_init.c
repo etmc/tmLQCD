@@ -42,10 +42,9 @@ void mpi_init(int argc,char *argv[]) {
   fflush(stdout);
   g_nproc_t = dims[0];
   MPI_Cart_create(MPI_COMM_WORLD, ndims, dims, periods, reorder, &g_cart_grid);
-  MPI_Comm_rank(g_cart_grid, &g_proc_id);
-  MPI_Cart_coords(g_cart_grid, g_proc_id, ndims, g_proc_coords);
+  MPI_Comm_rank(g_cart_grid, &g_cart_id);
+  MPI_Cart_coords(g_cart_grid, g_cart_id, ndims, g_proc_coords);
 
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
   if(g_stdio_proc == -1){
     g_stdio_proc = g_proc_id;
   }
