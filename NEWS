@@ -1,3 +1,7 @@
+20.08.2004: SSE3 Version of the most important macros added and
+	    tested. SSE3 versus SSE2: 1.84 Gflops versus 1.64 Gflops.
+            (P4  3.20GHz prescott)
+
 17.08.2004: 64 Bit Version of the code running and tested
 	    Cache Optimisation for Opteron added.
 	    New configure options: 

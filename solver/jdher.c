@@ -218,7 +218,7 @@ void jdher(int n, double tau, double tol,
   eigworklen = (2 + _FT(ilaenv)(&ONE, filaenv, fvu, &jmax, &MONE, &MONE, &MONE, 6, 2)) * jmax;
 
   /* Allocating memory for matrices & vectors */ 
-#if (defined SSE || defined SSE2)
+#if (defined SSE || defined SSE2 || defined SSE3)
   V_ = (complex *)malloc((n * jmax + 4) * sizeof(complex));
   V = (complex*)(((unsigned long int)(V_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
@@ -230,7 +230,7 @@ void jdher(int n, double tau, double tol,
   if(errno == ENOMEM) errorhandler(300,"U in jdher");
   s = (double *)malloc(jmax * sizeof(double));
   if(errno == ENOMEM) errorhandler(300,"s in jdher");
-#if (defined SSE || defined SSE2)
+#if (defined SSE || defined SSE2 || defined SSE3)
   Res_ = (complex *)malloc((n * blksize+4) * sizeof(complex));
   Res = (complex*)(((unsigned long int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
@@ -269,7 +269,7 @@ void jdher(int n, double tau, double tol,
   if(errno == ENOMEM) errorhandler(300,"eigwork in jdher");
   rwork = (double *)malloc(3*jmax * sizeof(double));
   if(errno == ENOMEM) errorhandler(300,"rwork in jdher");
-#if (defined SSE || defined SSE2)
+#if (defined SSE || defined SSE2 || defined SSE3)
   temp1_ = (complex *)malloc((n+4) * sizeof(complex));
   temp1 = (complex*)(((unsigned long int)(temp1_)+ALIGN_BASE)&~ALIGN_BASE);
 #else

@@ -47,7 +47,7 @@ void errorhandler(const int i, char * c){
 
 int ranlxd_init = 0;
 
-#if ((defined SSE)||(defined SSE2))
+#if ((defined SSE)||(defined SSE2)||(defined SSE3))
 
 typedef struct
 {

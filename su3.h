@@ -112,7 +112,7 @@ typedef struct
 * r.c3=s1.c3+s2.c3
 */
 
-#if defined SSE2
+#if ((defined SSE2)||(defined SSE3))
 
 #define _vector_add(r,s1,s2) \
 _sse_load(s1); \
@@ -202,7 +202,7 @@ _sse_store(r);
 
 
 
-#if defined SSE2
+#if ((defined SSE2) || (defined SSE3))
 #define _vector_add_assign(r,s) \
 _sse_load(r); \
 _sse_load_up(s); \
@@ -334,7 +334,7 @@ _sse_store(r);
 * r.c3=(u*s).c3
 */
 
-#if defined SSE2
+#if ((defined SSE2) || (defined SSE3))
 
 #define _su3_multiply(r,u,s) \
 _sse_load(s); \
@@ -772,7 +772,7 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
 * su3_acc
 */
 
-#if defined SSE2
+#if ((defined SSE2) || (defined SSE3))
 #define _su3_acc(u,v) _sse_su3_acc(u,v) 
 #else
 #define _su3_acc(u,v) \
@@ -844,7 +844,7 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (u).c22.im+=a*(v).c22.re;
 
 
-#if defined SSE2
+#if ((defined SSE2) || (defined SSE3))
 #define _su3_times_su3(u,v,w) _sse_su3_times_su3(u,v,w)
 #define _su3_times_su3_acc(u,v,w) _sse_su3_times_su3_acc(u,v,w)
 #define _su3d_times_su3(u,v,w) _sse_su3d_times_su3(u,v,w)

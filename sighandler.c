@@ -51,6 +51,9 @@ void catch_ill_inst(int s){
 #ifdef SSE2
   printf("Your code was compiled to use SSE2 instructions.\n");
 #endif
+#ifdef SSE3
+  printf("Your code was compiled to use SSE3 instructions.\n");
+#endif
   printf("Probably this caused the exception.\n");
   printf("Please check whether you processor understands SSE (1 or 2) instructions!\n");
   printf("Aborting...\n");

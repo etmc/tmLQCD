@@ -8,11 +8,14 @@ The examples from below need to be edited in order to give the proper path for
 the mpicc or cc. Maybe also the compile-option has to be adopted.
 In particular
 -DSSE2 -DP4  
-should only be given for a Pentium4 (R) system.
+should only be given for a Pentium4 (R) system,
+-DSSE3 -DP4
+only for Petium4 prescott (R).
 And
 -DSSE2 -DOPTERON
-should only be given for a AMD Opteron (R) system. -DSSE2 is tested
-only to work with the gnu compiler.
+should only be given for a AMD Opteron (R) system. -DSSE2|3 is tested
+only to work with the gnu compiler. SSE3 work for gcc version >= 3.3.4 
+(3.3.3 on x86_64).
 
 You should allways set -D_GAUGE_COPY and -D_NEW_GEOMERY.
 

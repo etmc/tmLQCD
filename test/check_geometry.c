@@ -65,7 +65,7 @@ int check_geometry()
 
   for (ix = 0; ix < VOLUME; ix++){
     if (itest[ix]!=1){
-      printf("The index ipt is not one-to-one\n");
+      printf("The index ipt is not one-to-one %d\n", itest[ix]);
       printf("Program aborted\n");
 #ifdef MPI
       MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();

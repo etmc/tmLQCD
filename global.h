@@ -74,7 +74,7 @@
   #define EXTERN extern
 #endif
 
-#if ((defined SSE)||(defined SSE2))
+#if ((defined SSE)||(defined SSE2)||(defined SSE3))
 #include "sse.h"
 #else
   #define ALIGN

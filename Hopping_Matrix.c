@@ -27,7 +27,7 @@
 
 
 
-#if defined SSE2
+#if ((defined SSE2)||(defined SSE3))
 
 /* input on k; output on l */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){

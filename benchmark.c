@@ -60,6 +60,9 @@ int main(int argc,char *argv[])
 #ifdef SSE2
     printf("# The code was compiled with SSE2 instructions\n");
 #endif
+#ifdef SSE3
+    printf("# The code was compiled with SSE3 instructions\n");
+#endif
 #ifdef P4
     printf("# The code was compiled for Pentium4\n");
 #endif
