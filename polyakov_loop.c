@@ -122,10 +122,10 @@ void polyakov_loop(complex * pl_, const int mu) {
 #endif
 
   /* Normalise, i.e. divide by the number of loops: */
-  vol = (double) L0*L1*L2;
-  /*  printf("L0*L1*L2=%d, vol=%e\n",L0*L1*L2,vol); */
+  vol = (double) L0*L1*L2*g_nproc_t*g_nproc_x;
+/*    printf("L0*L1*L2=%d, vol=%e\n",L0*L1*L2,vol);  */
   _div_real(pl,pl,vol);
-/*  printf("Polyakov loop after normalisation, pl.re=%e, pl.im=%e\n",pl.re,pl.im); */
+/*    printf("Polyakov loop after normalisation, pl.re=%e, pl.im=%e\n",pl.re,pl.im) */; 
 /*   return pl; */
   (*pl_).re = pl.re;
   (*pl_).im = pl.im;
