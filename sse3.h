@@ -1,11 +1,22 @@
+/*****************************************************
+ * $Id$
+ *
+ * SSE3 versions of macros used in the Dirac operator
+ *
+ * Author: Carsten Urbach
+ *         <urbach@physik.fu-berlin.de>
+ *         Thu Aug 19 15:07:01 CEST 2004
+ *****************************************************/
+
 #ifndef _SSE3_h
 #define _SSE3_h
+
+
 
 /*
  * C. Urbach Thu Aug 19 15:07:01 CEST 2004
  * Multiplies xmm3,xmm4,xmm5 with the complex number c
  * using SSE3 instructions
- * CHECK ME!
  */
 #define _sse_vector_cmplx_mul(c) \
 __asm__ __volatile__ ("movddup %0, %%xmm6 \n\t"	\
@@ -36,7 +47,6 @@ __asm__ __volatile__ ("movddup %0, %%xmm6 \n\t"	\
  * Multiplies xmm3,xmm4,xmm5 with the complex 
  * conjugate of the number c
  * using SSE3 instructions
- * CHECK ME!
  */
 #define _sse_vector_cmplxcg_mul(c) \
 __asm__ __volatile__ ("movddup %0, %%xmm6 \n\t"	\

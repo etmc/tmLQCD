@@ -12,7 +12,7 @@
  *
  **********************************************************/
 
-#ifdef MPI
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,7 +24,7 @@
 #include "global.h"
 #include "xchange.h"
 
-
+#ifdef MPI
 /* exchanges the field  l */
 void xchange_field(spinor * const l) {
 

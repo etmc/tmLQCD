@@ -54,7 +54,7 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
   assign(u[0], b, N);
   f(r0_tilde, x);
   diff(r[0], u[0], r0_tilde, N);
-  zero_spinor_field(DUM_SOLVER+1);
+  zero_spinor_field(spinor_field[DUM_SOLVER+1]);
   assign(r0_tilde, r[0], N);
 
   rho0 = 1.;
