@@ -4,9 +4,10 @@
  * Hopping_Matrix is the conventional Wilson 
  * hopping matrix
  *
- * for ieo == 1 H_eo connects even with odd
- * sides, and for ieo == 0 H_eo connects
- * odd with even sides.
+ * \kappa\sum_{\pm\mu}(r+\gamma_\mu)U_{x,\mu}
+ *
+ * for ieo = 0 this is M_{eo}, for ieo = 1
+ * it is M_{oe}
  *
  * l is the number of the output field
  * k is the number of the input field
