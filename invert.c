@@ -38,6 +38,8 @@
 #include "update_tm.h"
 #include "boundary.h"
 #include "solver/solver.h"
+#include "init_gauge_field.h"
+#include "init_geometry_indices.h"
 #include "invert_eo.h"
 
 char * Version = "2.1";
@@ -124,10 +126,21 @@ int main(int argc,char *argv[]) {
     write_counter=1;
   }
 
+#ifdef _GAUGE_COPY
+  j = init_gauge_field(VOLUMEPLUSRAND, 1);
+#else
+  j = init_gauge_field(VOLUMEPLUSRAND, 0);
+#endif
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
+    exit(0);
+  }
+  j = init_geometry_indices(VOLUMEPLUSRAND);
+
   q_off = 0.;
   q_off2 = 0.;
   g_mu = g_mu1; 
-  if(g_proc_id == 0){
+  if(g_proc_id == 0){    
     
 /*     fscanf(fp6,"%s",filename); */
     /*construct the filenames for the observables and the parameters*/
@@ -191,7 +204,7 @@ int main(int argc,char *argv[]) {
 #endif
 #ifdef _GAUGE_COPY
     /* set the backward gauge field */
-    for(ix = 0; ix < VOLUME+RAND;ix++) {
+    for(ix = 0; ix < VOLUME;ix++) {
       kb=g_idn[ix][0];
       _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
       kb=g_idn[ix][1];
@@ -203,7 +216,7 @@ int main(int argc,char *argv[]) {
     }
 #endif  
 
-    sprintf(conf_filename,"%s.%.4d", "prop.mass00", nstore);
+    sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore);
     
     for(ix = index_start; ix < index_end; ix++) {
       is = (ix / 3);
@@ -212,7 +225,7 @@ int main(int argc,char *argv[]) {
 
       if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
 
-      sprintf(conf_filename,"%s.is%.1dic%.1d.%.4d", "prop.mass00", is, ic, nstore);
+      sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", "prop.mass", mass_number, is, ic, nstore);
 
       /* If the solver is _not_ CG we might read in */
       /* here some better guess                     */
@@ -280,5 +293,7 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
   MPI_Finalize();
 #endif
+  free_gauge_field();
+  free_geometry_indices();
   return(0);
 }

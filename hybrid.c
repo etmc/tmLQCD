@@ -39,6 +39,8 @@
 #include "sw.h"
 #include "io.h"
 #include "read_input.h"
+#include "init_gauge_field.h"
+#include "init_geometry_indices.h"
 #include "boundary.h"
 
 su3 gauge_tmp[VOLUME][4] ALIGN;
@@ -88,6 +90,13 @@ int main(int argc,char *argv[]) {
 
   /* Read the input file */
   read_input("hmc.input");
+
+#ifdef _GAUGE_COPY
+  init_gauge_field(VOLUMEPLUSRAND, 1);
+#else
+  init_gauge_field(VOLUMEPLUSRAND, 0);
+#endif
+  init_geometry_indices(VOLUMEPLUSRAND);
   
   if(g_proc_id == 0){
     
@@ -171,7 +180,7 @@ int main(int argc,char *argv[]) {
 #endif
 #ifdef _GAUGE_COPY
   /* set the backward gauge field */
-  for(ix = 0; ix < VOLUME+RAND;ix++) {
+  for(ix = 0; ix < VOLUME;ix++) {
     kb=g_idn[ix][0];
     _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
     kb=g_idn[ix][1];

@@ -26,6 +26,8 @@
 #include "Hopping_Matrix_nocom.h"
 #include "global.h"
 #include "xchange.h"
+#include "init_gauge_field.h"
+#include "init_geometry_indices.h"
 #include "mpi_init.h"
 
 #ifndef PARALLELXT
@@ -81,7 +83,12 @@ int main(int argc,char *argv[])
     fprintf(stdout,"The local lattice size is %d x %d x %d^2 \n\n",T,LX,L);
     fflush(stdout);
   }
-
+#ifdef _GAUGE_COPY
+  init_gauge_field(VOLUMEPLUSRAND, 1);
+#else
+  init_gauge_field(VOLUMEPLUSRAND, 0);
+#endif
+  init_geometry_indices(VOLUMEPLUSRAND);
   /* define the geometry */
   geometry();
   /* define the boundary conditions for the fermion fields */
@@ -128,7 +135,7 @@ int main(int argc,char *argv[])
 
 #ifdef _GAUGE_COPY
   /* set the backward gauge field */
-  for(k=0;k<VOLUME+RAND;k++) {
+  for(k=0;k<VOLUME;k++) {
     kb=g_idn[k][0];
     _su3_assign(g_gauge_field_back[k][0],g_gauge_field[kb][0]);
     kb=g_idn[k][1];
@@ -231,5 +238,7 @@ int main(int argc,char *argv[])
 #ifdef MPI
   MPI_Finalize();
 #endif
+  free_gauge_field();
+  free_geometry_indices();
   return(0);
 }

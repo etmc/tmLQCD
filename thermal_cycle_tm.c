@@ -36,6 +36,8 @@
 #include "mpi_init.h"
 #include "sighandler.h"
 #include "update_tm.h"
+#include "init_gauge_field.h"
+#include "init_geometry_indices.h"
 #include "boundary.h"
 
 char * Version = "1.2";
@@ -127,6 +129,14 @@ int main(int argc,char *argv[]) {
   if(filename == NULL){
     filename = "output";
   } 
+
+#ifdef _GAUGE_COPY
+  init_gauge_field(VOLUMEPLUSRAND, 1);
+#else
+  init_gauge_field(VOLUMEPLUSRAND, 0);
+#endif
+
+  init_geometry_indices(VOLUMEPLUSRAND);
 
   /* Read the input file */
   read_input(input_filename);
@@ -278,7 +288,7 @@ int main(int argc,char *argv[]) {
 #endif
 #ifdef _GAUGE_COPY
   /* set the backward gauge field */
-  for(ix = 0; ix < VOLUME+RAND;ix++) {
+  for(ix = 0; ix < VOLUME;ix++) {
     kb=g_idn[ix][0];
     _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
     kb=g_idn[ix][1];
@@ -466,5 +476,7 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
   MPI_Finalize();
 #endif
+  free_gauge_field();
+  free_geometry_indices();
   return(0);
 }

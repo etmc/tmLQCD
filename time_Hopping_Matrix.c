@@ -31,6 +31,8 @@
 #include "boundary.h"
 #if defined MPI
 #include "xchange.h"
+#include "init_gauge_field.h"
+#include "init_geometry_indices.h"
 #endif
 
 int main(int argc,char *argv[]){
@@ -88,7 +90,7 @@ int main(int argc,char *argv[]){
 #endif
 #ifdef _GAUGE_COPY
   /* set the backward gauge field */
-  for(ix = 0; ix < VOLUME+RAND;ix++) {
+  for(ix = 0; ix < VOLUME;ix++) {
     kb=g_idn[ix][0];
     _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
     kb=g_idn[ix][1];

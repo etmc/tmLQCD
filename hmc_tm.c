@@ -38,6 +38,8 @@
 #include "mpi_init.h"
 #include "sighandler.h"
 #include "update_tm.h"
+#include "init_gauge_field.h"
+#include "init_geometry_indices.h"
 #include "boundary.h"
 
 char * Version = "2.1";
@@ -129,6 +131,21 @@ int main(int argc,char *argv[]) {
     }
   }
 
+#ifdef _GAUGE_COPY
+  j = init_gauge_field(VOLUMEPLUSRAND, 1);
+#else
+  j = init_gauge_field(VOLUMEPLUSRAND, 0);
+#endif
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
+    exit(0);
+  }
+  j = init_geometry_indices(VOLUMEPLUSRAND);
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for geometry_indices! Aborting...\n");
+    exit(0);
+  }
+
   q_off = 0.;
   q_off2 = 0.;
  
@@ -193,7 +210,7 @@ int main(int argc,char *argv[]) {
 	    dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
     fprintf(parameterfile,"mu = %f, mu2=%f\n ", g_mu, g_mu2);
     fprintf(parameterfile,"g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
-    
+    fflush(stdout); fflush(parameterfile);
   }
 
   /* define the geometry */
@@ -202,13 +219,13 @@ int main(int argc,char *argv[]) {
   /* define the boundary conditions for the fermion fields */
   boundary();
 
-
   if(g_proc_id == 0) {
 #if defined GEOMETRIC
     if(g_proc_id==0) fprintf(parameterfile,"The geometric series is used as solver \n\n");
 #else
     if(g_proc_id==0) fprintf(parameterfile,"The BICG_stab is used as solver \n\n");
 #endif
+    fflush(parameterfile);
   }
   
   /* Continue */
@@ -257,7 +274,9 @@ int main(int argc,char *argv[]) {
 
     /* Cold */
     if(startoption == 0) {
+      printf("gauge field done!\n"); fflush(stdout);
       unit_g_gauge_field();
+
     }
     /* Restart */
     else if(startoption == 2) {
@@ -275,7 +294,7 @@ int main(int argc,char *argv[]) {
 #endif
 #ifdef _GAUGE_COPY
   /* set the backward gauge field */
-  for(ix = 0; ix < VOLUME+RAND;ix++) {
+  for(ix = 0; ix < VOLUME;ix++) {
     kb=g_idn[ix][0];
     _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
     kb=g_idn[ix][1];
@@ -286,7 +305,6 @@ int main(int argc,char *argv[]) {
     _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
   }
 #endif
-
   /*compute the energy of the gauge field*/
   plaquette_energy=measure_gauge_action();
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
@@ -296,7 +314,7 @@ int main(int argc,char *argv[]) {
     }
   }
 
-  if(g_proc_id==0){
+ if(g_proc_id==0){
     fprintf(parameterfile,"#First plaquette value: %14.12f \n",plaquette_energy/(6.*VOLUME*g_nproc));
     fclose(parameterfile);
   }
@@ -380,6 +398,8 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
   MPI_Finalize();
 #endif
+  free_gauge_field();
+  free_geometry_indices();
   return(0);
 }
 

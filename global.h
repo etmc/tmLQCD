@@ -21,8 +21,8 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define T   8
-#define L   32
+#define T   2
+#define L   4
 
 #ifndef PARALLELXT
 #define N_PROC_X 1
@@ -81,19 +81,19 @@
 #endif
 
 /* translates from lexicagraphic order to even/odd order */
-EXTERN int g_lexic2eo[VOLUMEPLUSRAND] ALIGN;
+EXTERN int * g_lexic2eo;
 /* translates from even/odd orderto lexicograhic order  */    
-EXTERN int g_eo2lexic[VOLUMEPLUSRAND] ALIGN;
-EXTERN int g_lexic2eosub[VOLUMEPLUSRAND] ALIGN;
-EXTERN int g_ipt[T+2][LX+2][LY][LZ] ALIGN;
-EXTERN int g_iup[VOLUMEPLUSRAND][4] ALIGN;   
-EXTERN int g_idn[VOLUMEPLUSRAND][4] ALIGN;   
+EXTERN int * g_eo2lexic;
+EXTERN int * g_lexic2eosub;
+
+EXTERN int **** g_ipt;
+EXTERN int ** g_iup;
+EXTERN int ** g_idn;
+
 EXTERN spinor spinor_field[NO_OF_SPINORFIELDS][(VOLUMEPLUSRAND)/2] ALIGN;
 /* EXTERN spinor ** spinor_field; */
-EXTERN su3 g_gauge_field[VOLUMEPLUSRAND][4] ALIGN;
-#ifdef _GAUGE_COPY
-EXTERN su3 g_gauge_field_back[VOLUMEPLUSRAND][4] ALIGN;
-#endif
+EXTERN su3 ** g_gauge_field;
+EXTERN su3 ** g_gauge_field_back;
 /* This is dirty, but dow not allocate memory */
 /* if no clover is used. */
 EXTERN su3adj moment[VOLUME][4] ALIGN;
