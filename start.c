@@ -545,7 +545,7 @@ void source_spinor_field(spinor * const P, spinor * const Q, int is, int ic) {
   zero_spinor_field(P);
   zero_spinor_field(Q);
 
-  if (g_proc_id == 0) {
+  if (g_proc_coords[0] == 0 && g_proc_coords[1]==0) {
 
     s = P;
     
