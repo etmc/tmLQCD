@@ -197,7 +197,7 @@ void unit_spinor_field(const int k) {
    Gaussian distribution */
 void random_spinor_field(int k) {
   
-  int j,ix;
+  int ix;
   int rlxd_state[105]; 
   spinor *s;
   double v[6];
@@ -536,7 +536,7 @@ void set_gauge_field(const double c) {
 
 
 void source_spinor_field(spinor * const P, spinor * const Q, int is, int ic) {
-  int ix;
+
   spinor * s;
 
   zero_spinor_field(P);
