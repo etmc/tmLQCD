@@ -73,6 +73,7 @@ void catch_del_sig(int s){
     printf("Dumping configuration and Rlxd state to disk!\n");
     printf("Exit savely!\n");
     fflush(stdout);
+    MPI_Abort(MPI_COMM_WORLD, 1);
     /* Save all the stuff needed for restarting */
     if(ranlxd_init == 1){
       if(g_proc_id==0) {
@@ -93,8 +94,11 @@ void catch_del_sig(int s){
 	_su3_assign(*v,*w);
       }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
     write_gauge_field_time_p("last_configuration");
     fflush(stdout);
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Finalize();
     exit(0);
   }
   else{
