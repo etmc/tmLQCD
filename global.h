@@ -1,17 +1,17 @@
 
-/*******************************************************************************
-*
-* File global.h
-*
-* Global parameters and arrays
-*
-* Version: 1.1
-* Author: Martin Luescher <luscher@mail.desy.de>
-* Date: 16.03.2001
-*
-* Adapted for the HMC-Program by M. Hasenbusch 2002
-*
-*******************************************************************************/
+/***************************************************************
+ *
+ * File global.h
+ *
+ * Global parameters and arrays
+ *
+ * Version: 1.1
+ * Author: Martin Luescher <luscher@mail.desy.de>
+ * Date: 16.03.2001
+ *
+ * Adapted for the HMC-Program by M. Hasenbusch 2002
+ *
+ ***************************************************************/
 #include <mpi.h>
 #include"su3.h"
 #include"su3adj.h"

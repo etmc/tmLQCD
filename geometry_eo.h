@@ -1,2 +1,6 @@
+#ifndef _GEOMETRY_EO_H
+#define _GEOMETRY_EO_H
 
-extern void geometry(void);
+void geometry();
+
+#endif

@@ -58,28 +58,34 @@ int main(int argc,char *argv[])
   char processor_name[MPI_MAX_PROCESSOR_NAME];
   verbose = 1;
   
+#ifdef MPI
   MPI_Init(&argc,&argv);
   MPI_Comm_size(MPI_COMM_WORLD,&g_nproc);
   MPI_Comm_rank(MPI_COMM_WORLD,&g_proc_id);
   MPI_Get_processor_name(processor_name,&namelen);
   g_cart_grid = MPI_COMM_WORLD;
-  
+
   fprintf(stdout,"Process %d of %d on %s\n",
 	  g_proc_id, g_nproc, processor_name);
   fflush(stdout);
+#else
+  g_nproc = 1;
+  g_proc_id = 0;
+#endif
 
+  /* Read the input file */
   read_input("hmc.input");
   
-  if(g_proc_id==0){
-    fp7=fopen("solver_data","w"); 
+  if(g_proc_id == 0){
+    fp7=fopen("solver_data", "w"); 
     
 /*     fscanf(fp6,"%s",filename); */
     /*construct the filenames for the observables and the parameters*/
     strcpy(filename1,filename);  strcat(filename1,".data");
     strcpy(filename2,filename);  strcat(filename2,".para");
     
-    fp1=fopen(filename1,"w");
-    fp2=fopen(filename2,"w");
+    fp1=fopen(filename1, "w");
+    fp2=fopen(filename2, "w");
     
     printf("\n\nThe lattice size is %d x %d^3\n\n",(int)(T),(int)(L));
     printf("g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
@@ -97,6 +103,7 @@ int main(int argc,char *argv[])
   /* define the geometry */
   geometry();
   /* define the boundary conditions for the fermion fields */
+  /* You can find boundary in clover_eo.c ...!? */
   boundary();
 
 #if defined GEOMETRIC
@@ -134,15 +141,17 @@ int main(int argc,char *argv[])
       rlxs_get(rlxs_state);
       MPI_Send(&rlxs_state[0], 25, MPI_INT, k, 99, MPI_COMM_WORLD);
     }
-    if(g_proc_id==0){
+    if(g_proc_id == 0){
       MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
       rlxs_reset(rlxs_state);
     }
   }
+
   /*For parallelization: exchange the gaugefield */
 #ifdef MPI
   xchange_gauge();
 #endif
+
   /*compute the energy of the gauge field*/
   eneg=measure_gauge_action();
   if(g_proc_id==0){
@@ -151,25 +160,27 @@ int main(int argc,char *argv[])
   }
   /* compute the energy of the determinant term */
   sw_term(); 
-  /* compute the contribution from the clover-term*/
+  /* compute the contribution from the clover-term */
   enec=2.*sw_trace(1); 
   sw_invert(1);
   /* needed for exact continuation of the run, since evamax and eva use
      random numbers */ 
-  if(startoption==2 && g_proc_id == 0){
+  if(startoption == 2 && g_proc_id == 0){
     rlxs_reset(rlxs_state);
   }
   
   /* set ddummy to zero */
-  for(ix=0;ix<VOLUME+RAND;ix++) for(mu=0;mu<4;mu++){
-    ddummy[ix][mu].d1=0.;
-    ddummy[ix][mu].d2=0.;
-    ddummy[ix][mu].d3=0.;
-    ddummy[ix][mu].d4=0.;
-    ddummy[ix][mu].d5=0.;
-    ddummy[ix][mu].d6=0.;
-    ddummy[ix][mu].d7=0.;
-    ddummy[ix][mu].d8=0.;
+  for(ix = 0; ix < VOLUME+RAND; ix++){
+    for(mu=0; mu<4; mu++){
+      ddummy[ix][mu].d1=0.;
+      ddummy[ix][mu].d2=0.;
+      ddummy[ix][mu].d3=0.;
+      ddummy[ix][mu].d4=0.;
+      ddummy[ix][mu].d5=0.;
+      ddummy[ix][mu].d6=0.;
+      ddummy[ix][mu].d7=0.;
+      ddummy[ix][mu].d8=0.;
+    }
   }
   for(j=0;j<Nmeas;j++){
     /*copy the gauge field to gauge_tmp */
@@ -180,30 +191,35 @@ int main(int argc,char *argv[])
 	_su3_assign(*w,*v);
       }
     }
-    /*initialize the pseudo-fermion fields*/
+
+    /* initialize the pseudo-fermion fields    */
+    /* depending on q_off and q_off2 we use    */
+    /* one, two or three pseudo-fermion fields */
     random_spinor_field(2);
-    if(q_off>0.){
+    if(q_off > 0.){
       random_spinor_field(3);
     }
-    if(q_off2>0.){
+    if(q_off2 > 0.){
       random_spinor_field(5);
     }
-    /*compute the square of the norm */
-    enerphi0=square_norm(2);
-    if(q_off>0.){
+    /* compute the square of the norm */
+    enerphi0 = square_norm(2);
+    if(q_off > 0.){
       enerphi1=square_norm(3);
     } 
     else{
       enerphi1=0.;
     }
-    if(q_off2>0.){
+    if(q_off2 > 0.){
       enerphi2=square_norm(5);
     } 
     else{
       enerphi2=0.;
     }
 
-    /*apply the fermion matrix to the spinor*/
+    /* apply the fermion matrix to the spinor */
+    /* before we have to compute the clover   */
+    /* terms sw[][][] and sw_inv[][][]        */
     sw_term(); 
     sw_invert(1);
     Q_psi(0,2,q_off);
@@ -218,30 +234,32 @@ int main(int argc,char *argv[])
       idis=bicg(4,5,q_off2,EPS_SQ0);
       Q_psi(4,4,0.);
     }
-    /*initialize the momenta */
+
+    /* initialize the momenta */
     enep=ini_momenta();
-      
-      
+
     /*run the trajectory*/
-    if(integtyp==1){
+    if(integtyp == 1){
+      /* Leap-frog integration scheme */
       leap_frog(q_off,q_off2,dtau,Nsteps,nsmall); 
     }
-    else if(integtyp==2){
+    else if(integtyp == 2){
+      /* Sexton Weingarten integration scheme */
       sexton(q_off,q_off2,dtau,Nsteps,nsmall);
     }
-      
-      
+
     /*perform the accept-reject-step*/
     enepx=moment_energy();
     enegx=measure_gauge_action();
     sw_term();
-    enecx=2.*sw_trace(1); sw_invert(1);
+    enecx=2.*sw_trace(1); 
+    sw_invert(1);
     /*compute the energy contributions from the pseudo-fermions */
-      
+
     zero_spinor_field(2);
     idis0=bicg(2,0,q_off,EPS_SQ0);
     enerphi0x=square_norm(2);
-      
+
     if(q_off>0.){
       zero_spinor_field(3);
       idis1=bicg(3,1,q_off2,EPS_SQ0);
@@ -249,7 +267,8 @@ int main(int argc,char *argv[])
       enerphi1x=square_norm(3);
     }
     else{
-      idis1=0; enerphi1x=0.;
+      idis1=0; 
+      enerphi1x=0.;
     }
       
     if(q_off2>0.){
@@ -260,8 +279,11 @@ int main(int argc,char *argv[])
       enerphi2x=square_norm(5);
     }
     else{
-      idis2=0; enerphi2x=0.;
+      idis2=0; 
+      enerphi2x=0.;
     }
+
+    /* Compute the energy difference */
     dh=-enecx+enec+enepx-g_beta*enegx-enep+g_beta*eneg
       +enerphi0x-enerphi0+enerphi1x-enerphi1+enerphi2x-enerphi2; 
       
@@ -269,38 +291,43 @@ int main(int argc,char *argv[])
        the other sites */
     if(g_proc_id==0){
       ranlxs(yy,2);
-      for(i=1;i<g_nproc;i++){
+      for(i = 1; i < g_nproc; i++){
 	MPI_Send(&yy[0], 2, MPI_FLOAT, i, 31, MPI_COMM_WORLD);
       }
     }
     else{
       MPI_Recv(&yy[0], 2, MPI_FLOAT, 0, 31, MPI_COMM_WORLD, &status);
     }
-      
-    if(exp(-dh) > (((double)yy[0])+0.596046448e-7*yy[1]) ) {
-      /*accept*/
+    /* What happens here? Do we produce a double precision */
+    /* random number in this way? */
+    if(exp(-dh) > (((double)yy[0])+0.596046448e-7*yy[1])){
+      /* accept */
       eneg=enegx;
       enec=enecx;
-      /*put the links back to SU(3) group*/
-      for(ix=0;ix<VOLUME;ix++) for(mu=0;mu<4;mu++){ 
-	v=&g_gauge_field[ix][mu];
-	*v=restoresu3(*v); 
+      /* put the links back to SU(3) group */
+      for(ix=0;ix<VOLUME;ix++){ 
+	for(mu=0;mu<4;mu++){ 
+	  /* this is MIST */
+	  v=&g_gauge_field[ix][mu];
+	  *v=restoresu3(*v); 
+	}
       }
-      /* for parallelization */
-      xchange_gauge();
     }
     else{
       /* reject: copy gauge_tmp to g_gauge_field */
-      for(ix=0;ix<VOLUME;ix++) for(mu=0;mu<4;mu++){
-	v=&g_gauge_field[ix][mu];
-	w=&gauge_tmp[ix][mu];
-	_su3_assign(*v,*w);
+      for(ix=0;ix<VOLUME;ix++){
+	for(mu=0;mu<4;mu++){
+	  /* Auch MIST */
+	  v=&g_gauge_field[ix][mu];
+	  w=&gauge_tmp[ix][mu];
+	  _su3_assign(*v,*w);
+	}
       }
-      /* for parallelization */
-      xchange_gauge();
     }
-      
-      
+#ifdef MPI
+    xchange_gauge();
+#endif
+
     if(g_proc_id==0){
       fprintf(fp1,"%14.12f %14.12f %d %d %d %d %d %d %d %d %d %d %d \n",
 	      eneg/(6.*VOLUME*g_nproc),dh,
