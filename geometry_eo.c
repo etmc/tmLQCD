@@ -104,9 +104,13 @@ void geometry(){
   
   int x0,x1,x2,x3,ix;
   int i_even,i_odd;
+  int startvalue = 1;
+#ifdef MPI
+  startvalue = 0;
+#endif
   
   /* extended for neighbour slices at x0=-1 and x0=T */
-  for (x0=-1;x0<(T+1);x0++){
+  for (x0=-startvalue;x0<(T+startvalue);x0++){
     for (x1=0;x1<L;x1++){
       for (x2=0;x2<L;x2++){
 	for (x3=0;x3<L;x3++){

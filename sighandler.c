@@ -17,6 +17,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef MPI
+#include <mpi.h>
+#endif
 #include "global.h"
 #include "io.h"
 #include "ranlxd.h"
@@ -64,7 +67,6 @@ extern su3 gauge_tmp[VOLUME][4] ALIGN;
 void catch_del_sig(int s){
   int ix, mu;
   int rlxd_state[105];
-  char prop_filename[100];
   FILE * rlxdfile = NULL;
   su3 *v,*w;
 
@@ -73,7 +75,9 @@ void catch_del_sig(int s){
     printf("Dumping configuration and Rlxd state to disk!\n");
     printf("Exit savely!\n");
     fflush(stdout);
+#ifdef MPI
     MPI_Abort(MPI_COMM_WORLD, 1);
+#endif
     /* Save all the stuff needed for restarting */
     if(ranlxd_init == 1){
       if(g_proc_id==0) {
@@ -94,11 +98,15 @@ void catch_del_sig(int s){
 	_su3_assign(*v,*w);
       }
     }
+#ifdef MPI
     MPI_Barrier(MPI_COMM_WORLD);
+#endif
     write_gauge_field_time_p("last_configuration");
     fflush(stdout);
+#ifdef MPI
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
+#endif
     exit(0);
   }
   else{
