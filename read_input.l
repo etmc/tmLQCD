@@ -152,6 +152,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^BCGstabMaxIter{SPC}*={SPC}*             BEGIN(BCGMAX);
 ^CGMaxIter{SPC}*={SPC}*                  BEGIN(CGMAX);
 ^BoundaryCond{SPC}*={SPC}*               BEGIN(BOUND);
+^BCAngleT{SPC}*={SPC}*                   BEGIN(BOUND);
 ^MaxSolverIterations{SPC}*={SPC}*        BEGIN(SITER);
 ^SolverPrecision{SPC}*={SPC}*            BEGIN(SPREC);
 ^MassNumber{SPC}*={SPC}*                 BEGIN(MNR);
