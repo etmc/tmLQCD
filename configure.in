@@ -260,14 +260,12 @@ dnl no -pedantic-errors...
       CFLAGS="$CFLAGS -DSSE2"
       SSE="sse2"
     fi
-    if test $enable_sse = def && test $enable_sse2 = yes; then
-      echo Using SSE2 instructions!
+    if ((test $enable_sse = no) || (test $enable_sse = def)) && test $enable_sse2 = yes; then
       CFLAGS="$CFLAGS -DSSE2"
       SSE="sse2"
-    fi
-    if test $enable_sse = no && test $enable_sse2 = yes; then
-      CFLAGS="$CFLAGS -DSSE2"
-      SSE="sse2"
+      if test "$host_cpu" = "x86_64"; then
+        CFLAGS="$CFLAGS -mfpmath=387"
+      fi
     fi
     if test $enable_sse = yes && test $enable_sse2 = no; then
       CFLAGS="$CFLAGS -DSSE"
