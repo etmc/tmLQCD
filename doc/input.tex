@@ -155,12 +155,12 @@ supported input paramters:
   and {\ttfamily ExtSextonWeingarten}. This keyword has no effect, if
   other integrators are used.
 
-\item {\ttfamily ExtIntStepsGauge}:\\
+\item {\ttfamily IntegrationStepsGauge}:\\
   Number of steps to be performed in the extented integration
   algorithms for the gauge action. This keyword has no effect, if
   other integrators are used.
 
-\item {\ttfamily ExtIntStepsMu0}:\\
+\item {\ttfamily IntegrationStepsMu}:\\
   Number of steps to be performed in the extented integration
   algorithms for the action part with the smallest force
   contribution. Corresponds to the pseudo fermion action with the
@@ -168,7 +168,7 @@ supported input paramters:
   the smallest additional mass. This keyword has no effect, if
   other integrators are used.
 
-\item {\ttfamily ExtIntStepsMu1}:\\
+\item {\ttfamily IntegrationStepsMu2}:\\
   Number of steps to be performed in the extented integration
   algorithms for the action part with the next to smallest force
   contribution. Corresponds to the pseudo fermion action with the
@@ -176,7 +176,7 @@ supported input paramters:
   with the operator with the next to smallest mass. This keyword has
   no effect, if other integrators are used.
 
-\item {\ttfamily ExtIntStepsMu2}:\\
+\item {\ttfamily IntegrationStepsMu3}:\\
   Number of steps to be performed in the extented integration
   algorithms for the action part with the next to next to smallest force
   contribution. See above. This keyword has
@@ -188,10 +188,44 @@ supported input paramters:
   computation. Default is no.
 
 \item {\ttfamily ForcePrecision}:\\
-  Sets the squared residuum to be used in the force computation.
+  Sets the squared residuum to be used in the force computation for
+  all three $\mu$ values. This is used, if one of the following is not
+  given.
+
+\item {\ttfamily ForcePrecisionMu}:\\
+  Sets the squared residuum to be used in the force computation for
+  the inversions of $\mu$.
+
+\item {\ttfamily ForcePrecisionMu2}:\\
+  Sets the squared residuum to be used in the force computation for
+  the inversions of $\mu_2$.
+
+\item {\ttfamily ForcePrecisionMu3}:\\
+  Sets the squared residuum to be used in the force computation for
+  the inversions of $\mu_3$.
 
 \item {\ttfamily AcceptancePrecision}:\\
-  Sets the squared residuum to be used in the acceptance step.
+  Sets the squared residuum to be used in the acceptance step for
+  all three $\mu$ values. This is used, if one of the following is not
+  given.
+
+\item {\ttfamily AcceptancePrecisionMu}:\\
+  Sets the squared residuum to be used in the acceptance step for
+  the inversion with $\mu$.
+
+\item {\ttfamily AcceptancePrecisionMu2}:\\
+  Sets the squared residuum to be used in the acceptance step for
+  the inversion with $\mu_2$.
+
+\item {\ttfamily AcceptancePrecisionMu3}:\\
+  Sets the squared residuum to be used in the acceptance step for
+  the inversion with $\mu_3$.
+
+\item {\ttfamily DebugLevel}:\\
+  If set to a value larger than $0$ this causes verbose output:
+  \begin{enumerate}
+  \item forces are printed out.
+  \end{enumerate}
 
 \item {\ttfamily BCGstabMaxIter}:\\
   The maximal number of iterations in the BiCGstab solver.
@@ -199,7 +233,36 @@ supported input paramters:
 \item {\ttfamily CGMaxIter}:\\
   The maximal number of iterations in the CG solver.
 
+\item {\ttfamily ReversibilityCheck}:\\
+  If set to {\ttfamily yes} the program will perform a check of
+  reversibility violation in the integrator by integrating back in
+  time. If not yet existing, the program creates a file {\ttfamily
+    return\_check.data} in which it stores the reversibility violation
+  as the difference in the Hamiltonian.
+
+\item {\ttfamily ReversibilityCheckIntervall}:\\
+  Here one can specify the intervall in terms of trajectories the
+  program should check the reversibility violation.
+
 \end{enumerate}
+
+\subsection{Reread functionality}
+
+If you store a file with name {\ttfamily hmc.reread} in the working
+directory of a running HMC, the program will read in this file after
+the next finished trajectory. Then it will change the parameters
+accordingly without the need of restarting the program. 
+
+One cannot change from gauge action without rectangle part to gauge
+action with rectangle part. If one wants to change $\mu$-,
+$\epsilon^2$- or $N_i$-parameter one has to give allways all of
+them. Otherwise the internal matching does not work and the program
+will do nonsense.
+
+The file will be deleted automatically, if it was used. A message will
+be posted to standard output and to the file {\ttfamily
+  history\_hmc\_tm} to let you identify the exact point where the
+parameters changed.
 
 %%% Local Variables: 
 %%% mode: latex

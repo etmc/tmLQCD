@@ -127,9 +127,16 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x INT4
 %x RELPREC
 %x FORCEPREC
+%x FORCEPREC1
+%x FORCEPREC2
+%x FORCEPREC3
 %x ACCPREC
+%x ACCPREC1
+%x ACCPREC2
+%x ACCPREC3
 %x REVCHECK
 %x REVINT
+%x DEBUG
 
 %x COMMENT
 %x ERROR
@@ -186,15 +193,27 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^ReadSource{SPC}*={SPC}*                 BEGIN(READSOURCE);
 ^SourceInputFilename{SPC}*={SPC}*        BEGIN(SOURCEFILE);
 ^ExtIntStepsGauge{SPC}*={SPC}*           BEGIN(INT0);
+^N_G{SPC}*={SPC}*                        BEGIN(INT0);
 ^ExtIntStepsMu0{SPC}*={SPC}*             BEGIN(INT1);
+^IntegrationStepsMu{SPC}*={SPC}*         BEGIN(INT1);
 ^ExtIntStepsMu1{SPC}*={SPC}*             BEGIN(INT2);
+^IntegrationStepsMu2{SPC}*={SPC}*        BEGIN(INT2);
 ^ExtIntStepsMu2{SPC}*={SPC}*             BEGIN(INT3);
+^IntegrationStepsMu3{SPC}*={SPC}*        BEGIN(INT3);
 ^ExtIntStepsMu3{SPC}*={SPC}*             BEGIN(INT4);
+^IntegrationStepsMu4{SPC}*={SPC}*        BEGIN(INT4);
 ^UseRelativePrecision{SPC}*={SPC}*       BEGIN(RELPREC);
 ^ForcePrecision{SPC}*={SPC}*             BEGIN(FORCEPREC);
+^ForcePrecisionMu{SPC}*={SPC}*           BEGIN(FORCEPREC1);
+^ForcePrecisionMu2{SPC}*={SPC}*          BEGIN(FORCEPREC2);
+^ForcePrecisionMu3{SPC}*={SPC}*          BEGIN(FORCEPREC3);
 ^AcceptancePrecision{SPC}*={SPC}*        BEGIN(ACCPREC);
+^AcceptancePrecisionMu{SPC}*={SPC}*      BEGIN(ACCPREC1);
+^AcceptancePrecisionMu2{SPC}*={SPC}*     BEGIN(ACCPREC2);
+^AcceptancePrecisionMu3{SPC}*={SPC}*     BEGIN(ACCPREC3);
 ^ReversibilityCheck{SPC}*={SPC}*         BEGIN(REVCHECK);
 ^ReversibilityCheckIntervall{SPC}*={SPC}* BEGIN(REVINT);
+^DebugLevel{SPC}*={SPC}*                 BEGIN(DEBUG);
 
 <TT>{DIGIT}+                  {
   T_global = atoi(yytext);
@@ -520,9 +539,33 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   g_eps_sq_force=atof(yytext);
   if(verbose!=0) printf("g_eps_sq_force=%s Residual for inversions in the force computation\n", yytext);
 }
+<FORCEPREC1>{FLT}  {
+  g_eps_sq_force1=atof(yytext);
+  if(verbose!=0) printf("g_eps_sq_force(mu)=%s Residual for inversions in the force computation\n", yytext);
+}
+<FORCEPREC2>{FLT}  {
+  g_eps_sq_force2=atof(yytext);
+  if(verbose!=0) printf("g_eps_sq_force(mu2)=%s Residual for inversions in the force computation\n", yytext);
+}
+<FORCEPREC3>{FLT}  {
+  g_eps_sq_force3=atof(yytext);
+  if(verbose!=0) printf("g_eps_sq_force(mu3)=%s Residual for inversions in the force computation\n", yytext);
+}
 <ACCPREC>{FLT}  {
   g_eps_sq_acc=atof(yytext);
   if(verbose!=0) printf("g_eps_sq_acc=%s Residual for inversions in the acceptance step\n", yytext);
+}
+<ACCPREC1>{FLT}  {
+  g_eps_sq_acc1=atof(yytext);
+  if(verbose!=0) printf("g_eps_sq_acc(mu)=%s Residual for inversions in the acceptance step\n", yytext);
+}
+<ACCPREC2>{FLT}  {
+  g_eps_sq_acc2=atof(yytext);
+  if(verbose!=0) printf("g_eps_sq_acc(mu2)=%s Residual for inversions in the acceptance step\n", yytext);
+}
+<ACCPREC3>{FLT}  {
+  g_eps_sq_acc3=atof(yytext);
+  if(verbose!=0) printf("g_eps_sq_acc(mu3)=%s Residual for inversions in the acceptance step\n", yytext);
 }
 <RELPREC>yes  {
   g_relative_precision_flag = 1;
@@ -544,9 +587,18 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   return_check_interval = atoi(yytext);
   if(verbose!=0) printf("Check reversibility all %d trajectories\n", return_check_interval);
 }
+<DEBUG>{DIGIT}+ {
+  g_debug_level = atoi(yytext);
+  if(verbose!=0) printf("Debug level = %d\n", g_debug_level);
+}
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0,INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,REVCHECK,REVINT>#      BEGIN(COMMENT);
+<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
+<MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2>#   BEGIN(COMMENT);
+<NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP>#   BEGIN(COMMENT);
+<NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
+<INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
+<ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG>#      BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -668,7 +720,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Error in line %d! Must be compute or readin! Exiting...!\n", line_of_file);
   exit(1);
 }
-<Q1,Q2,DTAU,TAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND,SOURCEFILE,READSOURCE,INT0,INT1,INT2,INT3,INT4,REVCHECK,REVINT>. {
+<Q1,Q2,DTAU,TAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND,SOURCEFILE,READSOURCE,INT0,INT1,INT2,INT3,INT4,REVCHECK,REVINT,DEBUG>. {
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
@@ -692,11 +744,11 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Should be yes or no for relative precision in line %d! Exiting...!\n", line_of_file);
   exit(1);
 }
-<FORCEPREC>. {
+<FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>. {
   printf("Unknown value for ForcePrecision in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
   exit(1);
 }
-<ACCPREC>. {
+<ACCPREC,ACCPREC1,ACCPREC2,ACCPREC3>. {
   printf("Unknown value for AcceptancePrecision in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
   exit(1);
 }
@@ -788,9 +840,16 @@ int read_input(char * conf_file){
   strcpy(source_input_filename, _default_source_filename);
   g_eps_sq_force = _default_g_eps_sq_force;
   g_eps_sq_acc = _default_g_eps_sq_acc;
+  g_eps_sq_force1 = _default_g_eps_sq_force1;
+  g_eps_sq_acc1 = _default_g_eps_sq_acc1;
+  g_eps_sq_force2 = _default_g_eps_sq_force2;
+  g_eps_sq_acc2 = _default_g_eps_sq_acc2;
+  g_eps_sq_force3 = _default_g_eps_sq_force3;
+  g_eps_sq_acc3 = _default_g_eps_sq_acc3;
   g_relative_precision_flag = _default_g_relative_precision_flag;
   return_check_flag = _default_return_check_flag;
   return_check_interval = _default_return_check_interval;
+  g_debug_level = _default_g_debug_level;
 
   /********************************************/
 
@@ -810,6 +869,14 @@ int read_input(char * conf_file){
   if(LZ == 0) {
     LZ = L;
   }
+  
+  if(g_eps_sq_force1 < 0) g_eps_sq_force1 = g_eps_sq_force;
+  if(g_eps_sq_force2 < 0) g_eps_sq_force2 = g_eps_sq_force;
+  if(g_eps_sq_force3 < 0) g_eps_sq_force3 = g_eps_sq_force;
+  if(g_eps_sq_acc1 < 0) g_eps_sq_acc1 = g_eps_sq_acc;
+  if(g_eps_sq_acc2 < 0) g_eps_sq_acc2 = g_eps_sq_acc;
+  if(g_eps_sq_acc3 < 0) g_eps_sq_acc3 = g_eps_sq_acc;
+
 
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
   g_ka_csw_8 = g_kappa*g_c_sw/8.;
@@ -834,7 +901,8 @@ int read_input(char * conf_file){
 
 int reread_input(char * conf_file){
   int j=0, tt=T, ll=L, lx = LX, ly = LY, lz = LZ, 
-      np=N_PROC_X, rgic=g_rgi_C1, nst=nstore;
+      np=N_PROC_X, nst=nstore;
+  double m2 = g_mu2, m3 = g_mu3;
 
   /********************************************
    * Setting default values!
@@ -863,7 +931,7 @@ int reread_input(char * conf_file){
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
   g_ka_csw_8 = g_kappa*g_c_sw/8.;
   
-  if(g_mu3 > 0.) {
+  if(g_mu3 > 0. && g_mu3 != m3) {
     g_mu = g_mu1;
     g_mu1 = g_mu3;
     g_mu3 = g_mu;
@@ -874,7 +942,7 @@ int reread_input(char * conf_file){
 
     g_nr_of_psf = 3;
   }
-  else if(g_mu2 > 0.) {
+  else if(g_mu2 > 0. && g_mu2 != m2) {
     g_mu = g_mu1;
     g_mu1 = g_mu2;
     g_mu2 = g_mu;
@@ -888,7 +956,25 @@ int reread_input(char * conf_file){
   for(j = 0; j < g_nr_of_psf+1; j++) {
     if(int_n[j] == 0) int_n[j] = 1;
   }
+  if(g_nr_of_psf == 3) {
+    g_eps_sq_force = g_eps_sq_force1;
+    g_eps_sq_force1 = g_eps_sq_force3;
+    g_eps_sq_force3 = g_eps_sq_force;
+    g_eps_sq_acc = g_eps_sq_acc1;
+    g_eps_sq_acc1 = g_eps_sq_acc3;
+    g_eps_sq_acc3 = g_eps_sq_acc;
+  }
+  if(g_nr_of_psf == 2) {
+    g_eps_sq_force = g_eps_sq_force1;
+    g_eps_sq_force1 = g_eps_sq_force2;
+    g_eps_sq_force2 = g_eps_sq_force;
+    g_eps_sq_acc = g_eps_sq_acc1;
+    g_eps_sq_acc1 = g_eps_sq_acc2;
+    g_eps_sq_acc2 = g_eps_sq_acc;
+  }
   g_mu = g_mu1;
+  g_eps_sq_acc = g_eps_sq_acc1;
+  g_eps_sq_force = g_eps_sq_force1;
 
   fclose(yyout);
   fclose(yyin);

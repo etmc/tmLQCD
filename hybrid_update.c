@@ -26,7 +26,6 @@
 extern int ITER_MAX_BCG;
 extern int ITER_MAX_CG;
 
-#define _COMP_FORCE
 
 su3 get_staples(int x, int mu) {
 
@@ -72,10 +71,8 @@ void gauge_momenta(double step) {
   static su3adj deriv;
   su3adj *xm;
   static double st, st1;
-#ifdef _COMP_FORCE
   double sum=0., sum1=0., max=0., max2=0.;
   double sum2=0.;
-#endif
 
   st  = -step * g_rgi_C0 * g_beta/3.0;
   st1 = -step * g_rgi_C1 * g_beta/3.0;
@@ -86,49 +83,49 @@ void gauge_momenta(double step) {
       v=get_staples(i,mu); 
       _su3_times_su3d(w,*z,v);
       _trace_lambda(deriv,w);
-#ifdef _COMP_FORCE
-      sum2 = _su3adj_square_norm(deriv);
-      sum+= sum2;
-      if(sum2 > max) max = sum2;
-#endif
+      if(g_debug_level > 0) {
+	sum2 = _su3adj_square_norm(deriv);
+	sum+= sum2;
+	if(sum2 > max) max = sum2;
+      }
       _minus_const_times_mom(*xm,st,deriv);
       if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
 	get_rectangle_staples(&v, i, mu);
 	_su3_times_su3d(w, *z, v);
 	_trace_lambda(deriv, w);
-#ifdef _COMP_FORCE
-	sum2 =_su3adj_square_norm(deriv);
-	sum1+= sum2;
-	if(sum2 > max2) max2 = sum2;
-#endif
+	if(g_debug_level > 0) {
+	  sum2 =_su3adj_square_norm(deriv);
+	  sum1+= sum2;
+	  if(sum2 > max2) max2 = sum2;
+	}
 	_minus_const_times_mom(*xm, st1, deriv);
       }
     }
   }
-#ifdef _COMP_FORCE
+  if(g_debug_level > 0) {
 #ifdef MPI
-  MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  sum = sum2;
-  MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-  max = sum2;
-  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-    MPI_Reduce(&sum1, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    sum1 = sum2;
-    MPI_Reduce(&max2, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-    max2 = sum2;
+    MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    sum = sum2;
+    MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    max = sum2;
+    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+      MPI_Reduce(&sum1, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+      sum1 = sum2;
+      MPI_Reduce(&max2, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+      max2 = sum2;
+      if(g_proc_id == 0) {
+	printf("gaugerec %e max %e factor %e\n", sum1/((double)(VOLUME*g_nproc))/4., max2,
+	       g_rgi_C1*g_rgi_C1*g_beta*g_beta/9);
+	fflush(stdout);
+      }
+    }
+#endif
     if(g_proc_id == 0) {
-      printf("gaugerec %e max %e factor %e\n", sum1/((double)(VOLUME*g_nproc))/4., max2,
-	     g_rgi_C1*g_rgi_C1*g_beta*g_beta/9);
+      printf("gaugeplaq %e max %e factor %e\n", sum/((double)(VOLUME*g_nproc))/4., max, 
+	     g_rgi_C0*g_rgi_C0*g_beta*g_beta/9);
       fflush(stdout);
     }
   }
-#endif
-  if(g_proc_id == 0) {
-    printf("gaugeplaq %e max %e factor %e\n", sum/((double)(VOLUME*g_nproc))/4., max, 
-	   g_rgi_C0*g_rgi_C0*g_beta*g_beta/9);
-    fflush(stdout);
-  }
-#endif
 }
 
 
@@ -190,7 +187,7 @@ void deri(double q_off,double q_off2) {
 	gamma5(DUM_DERI+1, first_psf);
 	/* Invert Q_{+} Q_{-} */
 	/* X_o -> DUM_DERI+1 */
-	count00 += solve_cg(DUM_DERI+1, first_psf, q_off, g_eps_sq_force, g_relative_precision_flag);
+	count00 += solve_cg(DUM_DERI+1, first_psf, q_off, g_eps_sq_force1, g_relative_precision_flag);
 	/* Y_o -> DUM_DERI  */
 	Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
       }
@@ -199,12 +196,12 @@ void deri(double q_off,double q_off2) {
 	gamma5(DUM_DERI, first_psf);
 	/* Invert first Q_+ */
 	/* Y_o -> DUM_DERI  */
-	count00 += bicg(DUM_DERI, first_psf, q_off, g_eps_sq_force, g_relative_precision_flag);
+	count00 += bicg(DUM_DERI, first_psf, q_off, g_eps_sq_force1, g_relative_precision_flag);
 	gamma5(DUM_DERI+1,DUM_DERI);
 	/* Now Q_- */
 	/* X_o -> DUM_DERI+1 */
 	g_mu = -g_mu;
-	count01 += bicg(DUM_DERI+1,DUM_DERI,q_off,g_eps_sq_force, g_relative_precision_flag);
+	count01 += bicg(DUM_DERI+1,DUM_DERI,q_off,g_eps_sq_force1, g_relative_precision_flag);
 	g_mu = -g_mu;   
       }
     }
@@ -229,7 +226,7 @@ void deri(double q_off,double q_off2) {
 	  gamma5(DUM_DERI+1, DUM_DERI+2);
 	  /* Invert Q_{+} Q_{-} */
 	  /* X_W -> DUM_DERI+1 */
-	  count10 += solve_cg(DUM_DERI+1, DUM_DERI+2, q_off, g_eps_sq_force, g_relative_precision_flag);
+	  count10 += solve_cg(DUM_DERI+1, DUM_DERI+2, q_off, g_eps_sq_force2, g_relative_precision_flag);
 	  /* Y_W -> DUM_DERI  */
 	  Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
 	}
@@ -237,12 +234,12 @@ void deri(double q_off,double q_off2) {
 	  gamma5(DUM_DERI, DUM_DERI+2);
 	  /* Invert first Q_+ */
 	  /* Y_o -> DUM_DERI  */
-	  count10 += bicg(DUM_DERI, DUM_DERI+2, q_off, g_eps_sq_force, g_relative_precision_flag);
+	  count10 += bicg(DUM_DERI, DUM_DERI+2, q_off, g_eps_sq_force2, g_relative_precision_flag);
 	  gamma5(DUM_DERI+1,DUM_DERI);
 	  /* Now Q_- */
 	  /* X_o -> DUM_DERI+1 */
 	  g_mu = -g_mu;
-	  count11 += bicg(DUM_DERI+1,DUM_DERI,q_off,g_eps_sq_force, g_relative_precision_flag);
+	  count11 += bicg(DUM_DERI+1,DUM_DERI,q_off,g_eps_sq_force2, g_relative_precision_flag);
 	  g_mu = -g_mu;   
 	}
       }
@@ -274,7 +271,7 @@ void deri(double q_off,double q_off2) {
 	gamma5(DUM_DERI+1, DUM_DERI+2);
 	/* Invert Q_{+} Q_{-} */
 	/* X_W -> DUM_DERI+1 */
-	count20 += solve_cg(DUM_DERI+1, DUM_DERI+2, q_off, g_eps_sq_force, g_relative_precision_flag);
+	count20 += solve_cg(DUM_DERI+1, DUM_DERI+2, q_off, g_eps_sq_force3, g_relative_precision_flag);
 	/* Y_W -> DUM_DERI  */
 	Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
       }
@@ -282,12 +279,12 @@ void deri(double q_off,double q_off2) {
 	gamma5(DUM_DERI, DUM_DERI+2);
 	/* Invert first Q_+ */
 	/* Y_o -> DUM_DERI  */
-	count20 += bicg(DUM_DERI, DUM_DERI+2, q_off, g_eps_sq_force, g_relative_precision_flag);
+	count20 += bicg(DUM_DERI, DUM_DERI+2, q_off, g_eps_sq_force3, g_relative_precision_flag);
 	gamma5(DUM_DERI+1,DUM_DERI);
 	/* Now Q_- */
 	/* X_o -> DUM_DERI+1 */
 	g_mu = -g_mu;
-	count21 += bicg(DUM_DERI+1,DUM_DERI,q_off,g_eps_sq_force, g_relative_precision_flag);
+	count21 += bicg(DUM_DERI+1,DUM_DERI,q_off,g_eps_sq_force3, g_relative_precision_flag);
 	g_mu = -g_mu;   
       }
     }
@@ -371,12 +368,13 @@ void update_fermion_momenta(double step, const int S) {
   int i,mu;
   double tmp;
   su3adj *xm,*deriv;
-#ifdef _COMP_FORCE
+
   double sum=0., max=0.;
   double sum2=0.;
-#endif
+  static int co = 0;
+  co++;
 
-  derivative_psf(S, g_eps_sq_force);
+  derivative_psf(S);
 #ifdef MPI
   xchange_deri();
 #endif
@@ -384,28 +382,32 @@ void update_fermion_momenta(double step, const int S) {
     for(mu=0;mu<4;mu++){
       xm=&moment[i][mu];
       deriv=&df0[i][mu];
-#ifdef _COMP_FORCE
-      sum2 = _su3adj_square_norm(*deriv); 
-      sum+= sum2;
-      if(sum2 > max) max = sum2;
-#endif
+      if(g_debug_level > 0) {
+	sum2 = _su3adj_square_norm(*deriv); 
+	sum+= sum2;
+	if(g_proc_id == 0  && co < 20) {
+	  printf("histogram%d %e\n",S,sum2);
+	  fflush(stdout);
+	}
+	if(sum2 > max) max = sum2;
+      }
       /* This 2* is coming from what? */
       tmp = 2.*step;
       _minus_const_times_mom(*xm,tmp,*deriv); 
     }
   }
-#ifdef _COMP_FORCE
+  if(g_debug_level > 0) {
 #ifdef MPI
-  MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  sum = sum2;
-  MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-  max = sum2;
+    MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    sum = sum2;
+    MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    max = sum2;
 #endif
-  if(g_proc_id == 0) {
-    printf("fermionforce%d %e max %e\n", S, sum/((double)(VOLUME*g_nproc))/4., max);
-    fflush(stdout);
+    if(g_proc_id == 0) {
+      printf("fermionforce%d %e max %e\n", S, sum/((double)(VOLUME*g_nproc))/4., max);
+      fflush(stdout);
+    }
   }
-#endif
 }
 
 void update_gauge(double step) {

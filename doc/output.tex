@@ -1,0 +1,52 @@
+\section{Output files}
+
+\subsection*{\ttfamily output.data}
+
+The file {\ttfamily output.data} contains lines for each performed
+trajectory. Each line has entries with the following meaning:
+\begin{enumerate}
+\item Plaquette value.
+\item $\Delta H$
+\item $\exp(-\Delta H)$
+\item number of pseudo fermion fields times three integers. The first
+  of the three is the number of CG (BiCGstab)  iterations used in the acceptance
+  step, the second is the number of CG (BiCGstab) iterations used for
+  the force computation and the third -- only different from $0$ if
+  the BiCGstab is used as solver -- the BiCGstab iterations used for
+  the second inversion in the force computation needed if BiCGstab is
+  used.
+\item Acceptance.
+\item Time in second needed for this trajectory. In case of non MPI
+  this is zero, because not measured.
+\item Value of the rectangle part in the gauge action, if used.
+\end{enumerate}
+Every new run will append its numbers to an allready existing file.
+
+\subsection*{\ttfamily output.para}
+This file contains the parameters used in this run. Old files will be
+overwritten. 
+
+\subsection*{\ttfamily history\_hmc\_tm}
+This file provides a mapping between the configuration number and its
+plaquette and Poliakov loop values. Moreover the simulation parameters
+are stored there and in case of a reread the time point can be found there. 
+
+\subsection*{\ttfamily solver\_data}
+Contains information about the iterations, the residuum, the $\mu$
+values and the square norm of the source for each inversion.
+
+\subsection*{\ttfamily return\_check.data}
+Contains the reversibility violation measurements, if they are
+performed. 
+
+\subsection*{\ttfamily conf.save, rlxd\_state}
+These two files are written after each trajectory giving the
+possibility to continue the program from them. When the program
+finishes it writes in addition the files {\ttfamily
+  last\_configuration} and {\ttfamily last\_state} which might also be
+used for a continuation.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

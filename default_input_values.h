@@ -63,8 +63,15 @@
 #define _default_g_rgi_C1 0.
 #define _default_g_eps_sq_force 1.0e-7
 #define _default_g_eps_sq_acc 1.0e-16
+#define _default_g_eps_sq_force1 -1.
+#define _default_g_eps_sq_acc1 -1.
+#define _default_g_eps_sq_force2 -1.
+#define _default_g_eps_sq_acc2 -1.
+#define _default_g_eps_sq_force3 -1.
+#define _default_g_eps_sq_acc3 -1.
 #define _default_g_relative_precision_flag 0
 #define _default_return_check_flag 0
 #define _default_return_check_interval 100
+#define _default_g_debug_level 0
 
 #endif

@@ -209,7 +209,25 @@ int main(int argc,char *argv[]) {
   for(j = 0; j < g_nr_of_psf+1; j++) {
     if(int_n[j] == 0) int_n[j] = 1;
   }
+  if(g_nr_of_psf == 3) {
+    g_eps_sq_force = g_eps_sq_force1;
+    g_eps_sq_force1 = g_eps_sq_force3;
+    g_eps_sq_force3 = g_eps_sq_force;
+    g_eps_sq_acc = g_eps_sq_acc1;
+    g_eps_sq_acc1 = g_eps_sq_acc3;
+    g_eps_sq_acc3 = g_eps_sq_acc;
+  }
+  if(g_nr_of_psf == 2) {
+    g_eps_sq_force = g_eps_sq_force1;
+    g_eps_sq_force1 = g_eps_sq_force2;
+    g_eps_sq_force2 = g_eps_sq_force;
+    g_eps_sq_acc = g_eps_sq_acc1;
+    g_eps_sq_acc1 = g_eps_sq_acc2;
+    g_eps_sq_acc2 = g_eps_sq_acc;
+  }
   g_mu = g_mu1;
+  g_eps_sq_acc = g_eps_sq_acc1;
+  g_eps_sq_force = g_eps_sq_force1;
 
   if(g_proc_id == 0){
     

@@ -132,7 +132,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     g_mu = g_mu1;
     zero_spinor_field(spinor_field[second_psf]);
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    idis1 = bicg(second_psf, 3, 0., g_eps_sq_acc, g_relative_precision_flag);
+    idis1 = bicg(second_psf, 3, 0., g_eps_sq_acc1, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
   }
   /* contruct the third \phi_o */
@@ -142,7 +142,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     g_mu = g_mu2;
     zero_spinor_field(spinor_field[third_psf]);
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    idis2 = bicg(third_psf, 5, 0., g_eps_sq_acc, g_relative_precision_flag);
+    idis2 = bicg(third_psf, 5, 0., g_eps_sq_acc2, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
   }
 
@@ -183,7 +183,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   assign(spinor_field[2], spinor_field[DUM_DERI+4], VOLUME/2);
   g_mu = g_mu1;
   if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-  idis0=bicg(2, first_psf, q_off, g_eps_sq_acc, g_relative_precision_flag);
+  idis0=bicg(2, first_psf, q_off, g_eps_sq_acc1, g_relative_precision_flag);
   ITER_MAX_BCG = saveiter_max;
   /* Save the solution of Q^-2 at the right place */
   /* for later reuse! */
@@ -199,7 +199,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     Qtm_plus_psi(spinor_field[DUM_DERI+5], spinor_field[second_psf]);
     g_mu = g_mu2;
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    idis1 += bicg(3, DUM_DERI+5, 0., g_eps_sq_acc, g_relative_precision_flag); 
+    idis1 += bicg(3, DUM_DERI+5, 0., g_eps_sq_acc2, g_relative_precision_flag); 
     ITER_MAX_BCG = saveiter_max;
     /* Save the solution of Q^-2 at the right place */
     /* for later reuse! */
@@ -215,7 +215,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     Qtm_plus_psi(spinor_field[DUM_DERI+6], spinor_field[third_psf]);
     g_mu = g_mu3;
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    idis2 += bicg(5, DUM_DERI+6, 0., g_eps_sq_acc, g_relative_precision_flag);
+    idis2 += bicg(5, DUM_DERI+6, 0., g_eps_sq_acc3, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
     /* solution of Q^-2 is allready at the right place (DUM_DERI+6)*/
     /* Compute the energy contr. from third field */

@@ -20,7 +20,7 @@
 extern int ITER_MAX_BCG;
 extern int ITER_MAX_CG;
 
-void derivative_psf(const int nr, const double eps_sq) {
+void derivative_psf(const int nr) {
 
   int i,mu;
 
@@ -31,18 +31,31 @@ void derivative_psf(const int nr, const double eps_sq) {
   }
 
   if(nr == 0) {
+    /*********************************************************************
+     * 
+     * This term is det(Q^2 + \mu_1^2)
+     * g_mu1 is set according to the number of psf in use
+     *
+     *********************************************************************/
+
     g_mu = g_mu1;
     /* If CG is used anyhow */
     /*       gamma5(DUM_DERI+1, first_psf); */
     
     /* Invert Q_{+} Q_{-} */
     /* X_o -> DUM_DERI+1 */
-    count00 += solve_cg(DUM_DERI+4, first_psf, 0., eps_sq, g_relative_precision_flag);
+    count00 += solve_cg(DUM_DERI+4, first_psf, 0., g_eps_sq_force1, g_relative_precision_flag);
     assign(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+4], VOLUME/2);
     /* Y_o -> DUM_DERI  */
     Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
   }
   else if(nr == 1) {
+    /*********************************************************************
+     * 
+     * This term is det((Q^2 + \mu_1^2)/(Q^2 + \mu_2^2))
+     * g_mu1 and g_mu2 are set according to the number of psf in use
+     *
+     *********************************************************************/
     /* First term coming from the second field */
     /* Multiply with W_+ */
     g_mu = g_mu1;	
@@ -52,7 +65,7 @@ void derivative_psf(const int nr, const double eps_sq) {
     /*       gamma5(DUM_DERI+1, DUM_DERI+2); */
     /* Invert Q_{+} Q_{-} */
     /* X_W -> DUM_DERI+1 */
-    count10 += solve_cg(DUM_DERI+5, DUM_DERI+2, 0., eps_sq, g_relative_precision_flag);
+    count10 += solve_cg(DUM_DERI+5, DUM_DERI+2, 0., g_eps_sq_force2, g_relative_precision_flag);
     assign(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+5], VOLUME/2);
     /* Y_W -> DUM_DERI  */
     Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
@@ -77,6 +90,12 @@ void derivative_psf(const int nr, const double eps_sq) {
   }
 
   if(nr == 2) {
+    /*********************************************************************
+     * 
+     * This term is det((Q^2 + \mu_2^2)/(Q^2 + \mu_3^2))
+     * g_mu2 and g_mu3 are set according to the number of psf in use
+     *
+     *********************************************************************/
     /* First term coming from the third field */
     /* Multiply with W_+ */
     g_mu = g_mu2;	
@@ -86,7 +105,7 @@ void derivative_psf(const int nr, const double eps_sq) {
     /*       gamma5(DUM_DERI+1, DUM_DERI+2); */
     /* Invert Q_{+} Q_{-} */
     /* X_W -> DUM_DERI+1 */
-    count20 += solve_cg(DUM_DERI+6, DUM_DERI+2, 0., eps_sq, g_relative_precision_flag);
+    count20 += solve_cg(DUM_DERI+6, DUM_DERI+2, 0., g_eps_sq_force3, g_relative_precision_flag);
     assign(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+6], VOLUME/2);
     /* Y_W -> DUM_DERI  */
     Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
