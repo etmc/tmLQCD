@@ -61,7 +61,6 @@ int main(int argc,char *argv[]) {
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
-  char gauge_filename[50];
   char conf_filename[50];
   char * input_filename = NULL;
 #ifdef _GAUGE_COPY
@@ -209,12 +208,14 @@ if (g_proc_id == 0){
 #endif
       mul_r(spinor_field[2], (2*g_kappa), spinor_field[2], VOLUME/2);  
       mul_r(spinor_field[3], (2*g_kappa), spinor_field[3], VOLUME/2);
-      if(ix == 0) {
-	write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 0);
-      }
-      else {
-	write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 1);
-      }
+      sprintf(conf_filename,"%s.is%.1dic%.1d%.4d", "prop.mass00", nstore, is, ic);
+      write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 0);
+/*       if(ix == 0) { */
+/* 	write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 0); */
+/*       } */
+/*       else { */
+/* 	write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 1); */
+/*       } */
     
       M_full(spinor_field[4], spinor_field[5], spinor_field[2], spinor_field[3]); 
       mul_r(spinor_field[4], 1./(2*g_kappa), spinor_field[4], VOLUME/2);  
