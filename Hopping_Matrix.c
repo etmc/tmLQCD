@@ -412,7 +412,11 @@ void Hopping_Matrix(int ieo, int l, int k){
   void *dd;
 #ifndef OlD
   spinor temp;
+#pragma disjoint(temp, *sp, *sm, *r, *up, *um)
+#else
+#pragma disjoint(*r, *sp, *sm, *up, *um)
 #endif
+
 
   /* for parallelization */
 #ifdef MPI
