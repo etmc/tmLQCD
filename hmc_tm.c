@@ -17,7 +17,7 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#include <getopt.h>
+#include "getopt.h"
 #include "global.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -39,10 +39,19 @@
 
 char * Version = "0.9";
 
+void usage(){
+  fprintf(stderr, "hmc for Wilson twisted mass QCD\n\n");
+  fprintf(stderr, "Usage: [-f input-filename]\n");
+  fprintf(stderr, "Usage: [-o output-filename]\n");
+  exit(1);
+}
+
+
+
 int main(int argc,char *argv[]) {
  
   FILE *fp1=NULL,*fp2=NULL,*fp4=NULL;
-  char * filename="output";
+  char * filename = NULL;
   char filename1[50];
   char filename2[50];
   char filename3[50];
@@ -61,6 +70,8 @@ int main(int argc,char *argv[]) {
   int Rate=0;
   int  namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
+  char * input_filename = NULL;
+  int c;
   verbose = 0;
   g_use_clover_flag = 0;
  
@@ -79,6 +90,30 @@ int main(int argc,char *argv[]) {
   g_nproc = 1;
   g_proc_id = 0;
 #endif
+
+  while ((c = getopt(argc, argv, "h?f:o:")) != -1) {
+    switch (c) {
+    case 'f': 
+      input_filename = calloc(200, sizeof(char));
+      strcpy(input_filename,optarg);
+      break;
+    case 'o':
+      filename = calloc(200, sizeof(char));
+      strcpy(filename,optarg);
+      break;
+    case 'h':
+    case '?':
+    default:
+      usage();
+      break;
+    }
+  }
+  if(input_filename == NULL){
+    input_filename = "hmc.input";
+  }
+  if(filename == NULL){
+    filename = "output";
+  } 
 
   /* Read the input file */
   read_input("hmc.input");
@@ -143,10 +178,10 @@ int main(int argc,char *argv[]) {
       fread(rlxd_state,sizeof(rlxd_state),1,fp4);
       fclose(fp4);
       rlxd_reset(rlxd_state);
-      printf("Reading Gauge field from file config\n"); fflush(stdout);
+      printf("Reading Gauge field from file %s\n", gauge_input_filename); fflush(stdout);
     }
 
-    read_gauge_field_time_p("config");
+    read_gauge_field_time_p(gauge_input_filename);
   }
   else {
     /* Initialize random number generator */
@@ -327,7 +362,7 @@ int main(int argc,char *argv[]) {
     }
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0){
-      sprintf(filename3,"%s.%.4d", filename, nstore);
+      sprintf(filename3,"%s.%.4d", gauge_input_filename, nstore);
       nstore ++;
       write_gauge_field_time_p( filename3 );
 
@@ -345,7 +380,7 @@ int main(int argc,char *argv[]) {
   
   if(g_proc_id==0){
     rlxd_get(rlxd_state);
-    fp4=fopen("rlxd_state","w");
+    fp4=fopen("last_state","w");
     fwrite(rlxd_state,sizeof(rlxd_state),1,fp4);
     fclose(fp4);
   }
