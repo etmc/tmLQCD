@@ -386,9 +386,9 @@ dnl check for icc
 dnl The IBM Power PC
 elif test "$host_cpu" = "powerpc"; then
   if test $enable_mpi = yes; then
-    CFLAGS="-DXLC -q64 -qsrcmsg -DMPI  $endian $mpidimension"
+    CFLAGS="-DXLC -q64 -qsrcmsg -DMPI -DNOF77_ $endian $mpidimension"
   else
-    CFLAGS="-DXLC  -q64 -qsrcmsg"
+    CFLAGS="-DXLC -DNOF77_ -q64 -qsrcmsg"
   fi
   LIBS="-lessl -llapack -lblas -lf -lm"
   LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(HOME)/lib -q64"
