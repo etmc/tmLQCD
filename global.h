@@ -21,7 +21,7 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define T    8
+#define T   8
 #define L   32
 
 #ifndef PARALLELXT
@@ -114,6 +114,7 @@ EXTERN su3 swm[1][1] ALIGN;
 #endif
 EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
+EXTERN double g_rgi_C0, g_rgi_C1;
 EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
 EXTERN int g_use_clover_flag, g_nr_of_psf;
 

@@ -64,6 +64,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   int first_prop_flag;
   int max_solver_iterations;
   double solver_precision;
+  int mass_number;
 %}
 
 %option never-interactive
@@ -106,6 +107,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x BOUND
 %x SITER
 %x SPREC
+%x MNR
+%x RGIC
 
 %x COMMENT
 %x ERROR
@@ -151,6 +154,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^BoundaryCond{SPC}*={SPC}*               BEGIN(BOUND);
 ^MaxSolverIterations{SPC}*={SPC}*        BEGIN(SITER);
 ^SolverPrecision{SPC}*={SPC}*            BEGIN(SPREC);
+^MassNumber{SPC}*={SPC}*                 BEGIN(MNR);
+^RGIC1{SPC}*={SPC}*                      BEGIN(RGIC);
 
 <TT>{DIGIT}+                  {
   if(verbose!=0) printf("T =%s\n", yytext);
@@ -399,10 +404,17 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   X0 = atof(yytext);
   if(verbose != 0) printf("X0 for boundary cond. in time set to %e\n", X0);
 }
-
+<MNR>{DIGIT}+ {
+  mass_number = atoi(yytext);
+  if(verbose != 0) printf("Setting mass number to %s\n", yytext);
+}
+<RGIC>{FLT}  {
+  g_rgi_C1=atof(yytext);
+  if(verbose!=0) printf("g_rgi_C1=%s \n", yytext);
+}
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,IOPROC,IDX,FPROP,DTAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC>#      BEGIN(COMMENT);
+<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,IOPROC,IDX,FPROP,DTAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC>#      BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -520,6 +532,14 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Unknown value for SolverPrecision in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
   exit(1);
 }
+<MNR>. {
+  printf("Unknown value for MassNumber in line %d! Must be an integer. Exiting...!\n", line_of_file);
+  exit(1);
+}
+<RGIC>. {
+  printf("Unknown value for RGIC1 in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
+  exit(1);
+}
 
 <INITIAL>.                        BEGIN(ERROR);
 <ERROR>[^\t\n]*             {
@@ -595,6 +615,8 @@ int read_input(char * conf_file){
   X0 = _default_X0;
   max_solver_iterations = _default_max_solver_iterations;
   solver_precision = _default_solver_precision;
+  mass_number = _default_mass_number;
+  g_rgi_C1 = _default_g_rgi_C1;
 
   /********************************************/
 
@@ -605,6 +627,7 @@ int read_input(char * conf_file){
 
   parse_config();  
 
+  g_rgi_C0 = 1. - 8.*g_rgi_C1;
   g_ka_csw_8 = g_kappa*g_c_sw/8.;
   
   fclose(yyout);

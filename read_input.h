@@ -55,6 +55,7 @@ extern "C"
   extern double X0;
   extern int max_solver_iterations;
   extern double solver_precision;
+  extern int mass_number;
   
   int read_input(char *);
   

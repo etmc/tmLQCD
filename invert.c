@@ -264,7 +264,9 @@ int main(int argc,char *argv[]) {
 
       if(g_proc_id == 0) {
 	printf("Inversion for is = %d, ic = %d done in %d iterations, residue = %e!\n", is, ic, iter, nrm1+nrm2);
+#ifdef MPI
 	printf("Inversion done in %e sec. (MPI_Wtime)\n", etime-atime);
+#endif
       }
     }
     nstore++;

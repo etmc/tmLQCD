@@ -50,5 +50,7 @@
 #define _default_X0 0.
 #define _default_max_solver_iterations 5000
 #define _default_solver_precision 1.e-15
+#define _default_mass_number 0
+#define _default_g_rgi_C1 0.
 
 #endif

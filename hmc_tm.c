@@ -29,6 +29,7 @@
 #include "start.h"
 #include "clover_eo.h"
 #include "observables.h"
+#include "measure_rectangles.h"
 #ifdef MPI
 #include "xchange.h"
 #endif
@@ -69,7 +70,7 @@ int main(int argc,char *argv[]) {
 #endif
 
   /* Energy corresponding to the Gauge part */
-  double eneg=0.;
+  double eneg = 0., rectangle_eneg = 0.;
   /* Acceptance rate */
   int Rate=0;
   int c;
@@ -180,6 +181,7 @@ int main(int argc,char *argv[]) {
     printf("# The local lattice size is %d x %d^3\n",(int)(T),(int)(L));
     printf("# beta = %f , kappa= %f, mu= %f \n",g_beta,g_kappa,g_mu);
     printf("# mus = %f, %f, %f\n", g_mu1, g_mu2, g_mu3);
+    printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
     
     fprintf(parameterfile, "The lattice size is %d x %d^3\n", (int)(g_nproc_t*T),(int)(L));
     fprintf(parameterfile, "The local lattice size is %d x %d^3\n", (int)(T),(int)(L));
@@ -190,6 +192,7 @@ int main(int argc,char *argv[]) {
     fprintf(parameterfile,"dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n",
 	    dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
     fprintf(parameterfile,"mu = %f, mu2=%f\n ", g_mu, g_mu2);
+    fprintf(parameterfile,"g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
     
   }
 
@@ -286,6 +289,10 @@ int main(int argc,char *argv[]) {
 
   /*compute the energy of the gauge field*/
   eneg=measure_gauge_action();
+  if(g_rgi_C1 > 0.) {
+    rectangle_eneg = measure_rectangles();
+    fprintf(parameterfile,"#First rectangle value: %14.12f \n",rectangle_eneg/(12.*VOLUME*g_nproc));
+  }
 
   if(g_proc_id==0){
     fprintf(parameterfile,"#First plaquette value: %14.12f \n",eneg/(6.*VOLUME*g_nproc));
@@ -332,7 +339,7 @@ int main(int argc,char *argv[]) {
       fprintf(countfile, "%d\n", nstore);
       fclose(countfile);
       countfile = fopen("history_hmc_tm", "a");
-      fprintf(countfile, "conf.%.4d, Nmeas = %d, Plaquette = %e\n", nstore, Nmeas, eneg/(6.*VOLUME*g_nproc));
+      fprintf(countfile, "%.4d, Nmeas = %d, Plaquette = %e\n", nstore, Nmeas, eneg/(6.*VOLUME*g_nproc));
       fclose(countfile);
     }
     else {
