@@ -2,7 +2,9 @@
 #ifndef _MPI_INIT_H
 #define _MPI_INIT_H
 
+#ifdef MPI
 #include <mpi.h>
+#endif
 
 /* Datatypes for the data exchange */
 extern MPI_Datatype gauge_point, gauge_time_slice_cont;
