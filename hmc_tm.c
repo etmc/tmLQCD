@@ -38,7 +38,7 @@
 #include "update_tm.h"
 #include "boundary.h"
 
-char * Version = "1.2";
+char * Version = "2.0";
 
 
 void usage(){
