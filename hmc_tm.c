@@ -3,10 +3,10 @@
 *
 * File hybrid.c
 *
-* Hybrid-Monte-Carlo for the pure gauge-theory
+* Hybrid-Monte-Carlo for twisted mass QCD
 *
-* Author: Martin Hasenbusch
-* Date: Wed, Aug 29, 2001 02:06:26 PM
+* Author: Carsten Urbach
+*         urbach@physik.fu-berlin.de
 *
 *******************************************************************************/
 
@@ -35,6 +35,7 @@
 #include "io.h"
 #include "read_input.h"
 #include "tm_operators.h"
+#include "bicgstabell.h"
 #include "boundary.h"
 
 char * Version = "0.9";
@@ -46,7 +47,7 @@ void usage(){
   exit(1);
 }
 
-
+extern int nstore;
 
 int main(int argc,char *argv[]) {
  
@@ -58,7 +59,8 @@ int main(int argc,char *argv[]) {
   int rlxd_state[105];
   int idis0;
   int j,ix,mu;
-  int i,k, nstore=0;
+  int i,k;
+
   double yy[1];
 /*   static double step; */
 /*   static double q_off,q_off2; */
@@ -72,6 +74,7 @@ int main(int argc,char *argv[]) {
   char processor_name[MPI_MAX_PROCESSOR_NAME];
   char * input_filename = NULL;
   int c;
+
   verbose = 0;
   g_use_clover_flag = 0;
  
@@ -145,7 +148,7 @@ int main(int argc,char *argv[]) {
 #endif
     }
     printf("The lattice size is %d x %d^3\n",(int)(T)*g_nproc,(int)(L));
-    printf("The local lattice size is %d x %d\n",(int)(T),(int)(L));
+    printf("The local lattice size is %d x %d^3\n",(int)(T),(int)(L));
     printf("g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
     
     fprintf(fp2,"The lattice size is %d x %d^3\n\n",(int)(g_nproc*T),(int)(L));
@@ -296,6 +299,7 @@ int main(int argc,char *argv[]) {
 
     zero_spinor_field(2);
     idis0=bicg(2, 0, q_off, EPS_SQ0);
+
     enerphi0x=square_norm(2, VOLUME/2);
 
     /* Compute the energy difference */
@@ -372,7 +376,7 @@ int main(int argc,char *argv[]) {
     fclose(fp4);
   }
   if(g_proc_id == 0) {
-    printf("Acceptance Rate was: %e %\n", 100.*(double)Rate/(double)Nmeas);
+    printf("Acceptance Rate was: %e Prozent\n", 100.*(double)Rate/(double)Nmeas);
     printf("fertig \n");
     fflush(stdout);
   }
