@@ -31,7 +31,8 @@ MODULES = init_gauge_field init_geometry_indices \
 	mpi_init update_tm Hopping_Matrix_nocom \
 	test/check_geometry test/check_xchange invert_eo \
 	measure_rectangles get_rectangle_staples \
-	derivative_psf ext_integrator polyakov_loop
+	derivative_psf ext_integrator polyakov_loop \
+	reweighting_factor
 
 
 PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark invert
