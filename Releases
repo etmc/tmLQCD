@@ -1,2 +1,11 @@
+Release 1.1.0:
+Implementation of the Hasenbusch trick with two pseudo fermion
+fields. This is also tested.
+
 Release 1.0.1:
-fully parallelized tm, Wilson and clover impr. dynamical QCD code with SSE2 improvement for P4 and improvement for IBM power4. Serial version gives not the correct results. EO order implemented for also for the gauge fields, but not yet switched on per default. To do so one has to undef OlD in geometry_eo.c and xchange.c. This order will not yet work with clover improved Wilson.
+fully parallelized tm, Wilson and clover impr. dynamical QCD code with
+SSE2 improvement for P4 and improvement for IBM power4. Serial version
+gives not the correct results. EO order implemented for also for the
+gauge fields, but not yet switched on per default. To do so one has to
+undef OlD in geometry_eo.c and xchange.c. This order will not yet work
+with clover improved Wilson.

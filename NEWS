@@ -1,3 +1,13 @@
+09.03.2004: .nstore_counter file introduced to easily restart the
+	    programm. Just set InitialStoreCounter = readin. Also a
+	    sighandler was added to savely finish the program.
+
+04.03.2004: Hasenbusch trick tested and working.
+	    New version of the Hopping matrix for the IBM implemented
+	    with special improvements. Even Odd ordering translated
+	    also to the gauge fields and tested, but not yet default.
+
 03.03.2004: second pseudo fermion (trick of Martin Hasenbusch)
 	    implemented also for tmQCD
+
 02.03.2004: Release 1.0.1
