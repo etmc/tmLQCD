@@ -34,14 +34,15 @@
 #define LY (L)
 #define LZ (L)
 #define VOLUME (T*LX*LY*LZ)
+#define SLICE (LX*LY*LZ/2)
 
 
 #define DUM_DERI 6
-#define DUM_SOLVER DUM_DERI+4
-#define DUM_MATRIX DUM_SOLVER+6 
+#define DUM_SOLVER (DUM_DERI+4)
+#define DUM_MATRIX (DUM_SOLVER+6) 
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX DUM_SOLVER+11 */
-#define NO_OF_SPINORFIELDS DUM_MATRIX+2
+#define NO_OF_SPINORFIELDS (DUM_MATRIX+2)
 
 #if (defined PARALLELT && !defined PARALLELXT)
 #define RAND (2*LX*LY*LZ)
@@ -90,6 +91,7 @@ EXTERN int g_idn[VOLUMEPLUSRAND][4] ALIGN;
 EXTERN spinor spinor_field[NO_OF_SPINORFIELDS][(VOLUMEPLUSRAND)/2] ALIGN;
 /* EXTERN spinor ** spinor_field; */
 EXTERN su3 g_gauge_field[VOLUMEPLUSRAND][4] ALIGN;
+EXTERN su3 g_gauge_field_back[VOLUMEPLUSRAND][4] ALIGN;
 EXTERN su3adj moment[VOLUME][4] ALIGN;
 EXTERN su3adj df0[VOLUMEPLUSRAND][4] ALIGN;
 EXTERN su3adj dclover[VOLUMEPLUSRAND][4] ALIGN;
