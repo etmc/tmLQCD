@@ -32,7 +32,24 @@ else
   AC_MSG_RESULT(no)
 fi 
 
-mpidimension="-DPARALLELT"
+if test $enable_mpi = yes; then
+AC_MSG_CHECKING(whether we want one or two or three dimensional parallesisation)
+AC_ARG_WITH(mpidimension,
+  [  --with-mpidimension[=n]      use n dimenaional parallisation [default=1]],
+  withmpidimension=$withval, withmpidimension=1)
+if test $withmpidimension = 1; then
+  AC_MSG_RESULT(1 dimensional [t])
+  mpidimension="-DPARALLELT"
+elif test $withmpidimension = 2; then
+  AC_MSG_RESULT(2 dimensional [xt])
+  mpidimension="-DPARALLELXT"
+else
+  AC_MSG_RESULT(unknown)
+  exit 1 
+fi
+fi
+
+dnl mpidimension="-DPARALLELT"
 
 if test $enable_mpi = yes; then
 dnl In general one cannot run mpi programs directly
@@ -49,6 +66,7 @@ dnl for non CRAY
     if test "$CC" = ""; then
       CC=$MPICC
     fi
+    cross_compiling=yes
   fi
 fi 
 

@@ -863,6 +863,7 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-mpidimension=n      use n dimenaional parallisation default=1
   --with-gprof                  use of gprof profiler default=yes
 
 Some influential environment variables:
@@ -1413,7 +1414,32 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
-mpidimension="-DPARALLELT"
+if test $enable_mpi = yes; then
+echo "$as_me:$LINENO: checking whether we want one or two or three dimensional parallesisation" >&5
+echo $ECHO_N "checking whether we want one or two or three dimensional parallesisation... $ECHO_C" >&6
+
+# Check whether --with-mpidimension or --without-mpidimension was given.
+if test "${with_mpidimension+set}" = set; then
+  withval="$with_mpidimension"
+  withmpidimension=$withval
+else
+  withmpidimension=1
+fi;
+if test $withmpidimension = 1; then
+  echo "$as_me:$LINENO: result: 1 dimensional t" >&5
+echo "${ECHO_T}1 dimensional t" >&6
+  mpidimension="-DPARALLELT"
+elif test $withmpidimension = 2; then
+  echo "$as_me:$LINENO: result: 2 dimensional xt" >&5
+echo "${ECHO_T}2 dimensional xt" >&6
+  mpidimension="-DPARALLELXT"
+else
+  echo "$as_me:$LINENO: result: unknown" >&5
+echo "${ECHO_T}unknown" >&6
+  exit 1
+fi
+fi
+
 
 if test $enable_mpi = yes; then
   if test "$host_vendor" != "cray"; then
@@ -1467,6 +1493,7 @@ fi
     if test "$CC" = ""; then
       CC=$MPICC
     fi
+    cross_compiling=yes
   fi
 fi
 
