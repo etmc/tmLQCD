@@ -58,13 +58,16 @@ void mpi_init(int argc,char *argv[]) {
     printf("Creating the following cartesian grid for a %d dimensional parallelisation:\n%d x %d \n"
 	   , ndims, dims[0], dims[1]);
   }
-  fprintf(stdout,"Process %d of %d on %s\n",
-	  g_proc_id, g_nproc, processor_name);
-  fflush(stdout);
+
   g_nproc_t = dims[0];
+  g_nproc_x = dims[1];
   MPI_Cart_create(MPI_COMM_WORLD, ndims, dims, periods, reorder, &g_cart_grid);
   MPI_Comm_rank(g_cart_grid, &g_cart_id);
   MPI_Cart_coords(g_cart_grid, g_cart_id, ndims, g_proc_coords);
+
+  fprintf(stdout,"Process %d of %d on %s (%d %d %d)\n",
+	  g_proc_id, g_nproc, processor_name, g_cart_id, g_proc_coords[0], g_proc_coords[1]);
+  fflush(stdout);
 
   if(g_stdio_proc == -1){
     g_stdio_proc = g_proc_id;
@@ -117,7 +120,6 @@ void mpi_init(int argc,char *argv[]) {
 
   MPI_Type_contiguous(2*LY*LZ ,gauge_point, &gauge_xy_edge_cont);
   MPI_Type_commit(&gauge_xy_edge_cont);
-  /* This is in the x- boundary (T*LY*LZ)*/
   MPI_Type_vector(2, 1, T, gauge_yz_subslice, &gauge_xy_edge_gath);
   MPI_Type_commit(&gauge_xy_edge_gath);
 

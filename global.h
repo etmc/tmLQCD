@@ -21,7 +21,7 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define T  8
+#define T  4
 #define L  8
 
 #ifndef PARALLELXT
@@ -107,7 +107,7 @@ EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
 EXTERN int g_use_clover_flag, g_nr_of_psf;
 
 /* MPI information */
-EXTERN int g_proc_id, g_nproc, g_stdio_proc, g_nproc_t, g_cart_id;
+EXTERN int g_proc_id, g_nproc, g_stdio_proc, g_nproc_t, g_nproc_x, g_cart_id;
 EXTERN int g_proc_coords[3];
 #ifdef MPI
 EXTERN MPI_Status status;

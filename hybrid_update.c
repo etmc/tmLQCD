@@ -28,19 +28,22 @@ static su3 get_staples(int x,int mu) {
   int k,iy;
   static su3 v,st;
   su3 *w1,*w2,*w3;
+  
   _su3_zero(v);
-  for(k=0;k<4;k++) if(k!=mu){
-    w1=&g_gauge_field[x][k];
-    w2=&g_gauge_field[g_iup[x][k]][mu];
-    w3=&g_gauge_field[g_iup[x][mu]][k];
-    _su3_times_su3d(st,*w2,*w3);
-    _su3_times_su3_acc(v,*w1,st); 
-    iy=g_idn[x][k];
-    w1=&g_gauge_field[iy][k];
-    w2=&g_gauge_field[iy][mu];
-    w3=&g_gauge_field[g_iup[iy][mu]][k];
-    _su3_times_su3(st,*w2,*w3);
-    _su3d_times_su3_acc(v,*w1,st);
+  for(k=0;k<4;k++) {
+    if(k!=mu){
+      w1=&g_gauge_field[x][k];
+      w2=&g_gauge_field[g_iup[x][k]][mu];
+      w3=&g_gauge_field[g_iup[x][mu]][k];
+      _su3_times_su3d(st,*w2,*w3);
+      _su3_times_su3_acc(v,*w1,st); 
+      iy=g_idn[x][k];
+      w1=&g_gauge_field[iy][k];
+      w2=&g_gauge_field[iy][mu];
+      w3=&g_gauge_field[g_iup[iy][mu]][k];
+      _su3_times_su3(st,*w2,*w3);
+      _su3d_times_su3_acc(v,*w1,st);
+    }
   }
   return v;
 }
@@ -311,7 +314,6 @@ void update_gauge(double step) {
   su3 *z;
   static su3adj deriv;
   su3adj *xm;
-
   for(i = 0; i < VOLUME; i++) { 
     for(mu = 0; mu < 4; mu++){
       xm=&moment[i][mu];
@@ -322,6 +324,7 @@ void update_gauge(double step) {
       _su3_assign(*z, w);
     }
   }
+
 #ifdef MPI
   /* for parallelization */
   xchange_gauge();

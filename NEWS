@@ -1,3 +1,12 @@
+04.05.2004: additional parallelisation in x-direction added
+	    and tested. IO added as well and tested, apart
+	    from write and read for spinor fields.
+	    extended test functions written (hmc/test)
+
+05.04.2004: Bug fix. serial version without MPI running now.
+	    Bug was in geometry_eo.c
+	    program for thermal cycles added.
+
 11.03.2004: third pseudo fermion field added and tested.
 
 09.03.2004: .nstore_counter file introduced to easily restart the

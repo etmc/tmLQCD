@@ -40,7 +40,6 @@
 
 char * Version = "1.2";
 
-int check_geometry();
 
 void usage(){
   fprintf(stderr, "hmc for Wilson twisted mass QCD\n\n");
@@ -68,7 +67,6 @@ int main(int argc,char *argv[]) {
   double eneg=0.;
   /* Acceptance rate */
   int Rate=0;
-
   int c;
 
   verbose = 0;
@@ -178,7 +176,6 @@ int main(int argc,char *argv[]) {
   /* define the boundary conditions for the fermion fields */
   boundary();
 
-  ix = check_geometry();
 
   if(g_proc_id == 0) {
 #if defined GEOMETRIC
@@ -258,6 +255,7 @@ int main(int argc,char *argv[]) {
     fprintf(parameterfile,"#First plaquette value: %14.12f \n",eneg/(6.*VOLUME*g_nproc));
     fclose(parameterfile);
   }
+
 
   /* compute the energy of the determinant term */
   /* needed for exact continuation of the run, since evamax and eva use

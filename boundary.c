@@ -19,9 +19,9 @@ void boundary(){
   double x0,x1,x2,x3;
   /* anti-periodic in time */
   x0 = X0 * PI_/((T)*g_nproc_t);
-  x1 = X1 * PI_/((LX)*N_PROC_X);
-  x2 = X2 * PI_/(L);
-  x3 = X3 * PI_/(L);
+  x1 = X1 * PI_/((LX)*g_nproc_x);
+  x2 = X2 * PI_/(LY);
+  x3 = X3 * PI_/(LZ);
   ka0.re = g_kappa * cos(x0); 
   ka0.im = g_kappa * sin(x0);
   ka1.re = g_kappa * cos(x1); 

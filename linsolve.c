@@ -29,7 +29,7 @@ int solve_cg(int k,int l, double q_off, double eps_sq) {
     Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
   }
   else{
-    Qtm_pm_psi(DUM_SOLVER, k);
+    Qtm_pm_psi(DUM_SOLVER, k); 
   }
   diff(DUM_SOLVER+1,l,DUM_SOLVER, VOLUME/2);
   assign(DUM_SOLVER+2,DUM_SOLVER+1, VOLUME/2);
@@ -57,6 +57,7 @@ int solve_cg(int k,int l, double q_off, double eps_sq) {
      assign_mul_add_r(DUM_SOLVER+2, g_beta_cg, DUM_SOLVER, VOLUME/2);
      assign(DUM_SOLVER+1, DUM_SOLVER, VOLUME/2);
      normsq=err;
+
    }
    if(g_proc_id==0) {
      sout = fopen(solvout, "a");

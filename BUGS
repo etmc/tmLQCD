@@ -1,1 +1,8 @@
---disable-mpi will be configured correctly, but the code is not correct.
+there are now two exchange routines for the spinor fields, since at
+least on the iwarp pc cluster the version with MPI_Type_vector is not
+working for small local lattices. Maybe this is a bug in the MPI
+implementation, but maybe not ...
+
+write and read of spinor fields not yet tested
+
+--disable-mpi will be configured correctly, but the code is not correct. --> fixed

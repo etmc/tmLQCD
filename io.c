@@ -42,13 +42,14 @@ int big_endian();
 #ifdef MPI
 int write_gauge_field_time_p(char * filename){
   FILE * ofs = NULL;
-  int tag=0, t, x, y, z, id;
+  int tag=0, t, x, y, z, id, X, tt;
   MPI_Status status;
   su3 tmp[4];
-  if(g_proc_id == 0){
+  int coords[2];
+  if(g_cart_id == 0){
     ofs = fopen(filename, "w");
     if(ofs != NULL ){
-      fprintf(ofs,"%f %d %d\n", g_beta, L, g_nproc*T);
+      fprintf(ofs,"%f %d %d\n", g_beta, L, g_nproc_t*T);
     }
     else{
       printf("Warning! Could not open file %s in routine write_gauge_field\n", filename);
@@ -57,44 +58,47 @@ int write_gauge_field_time_p(char * filename){
     }
   }
   
-  for(x = 0; x < LX; x++){
+  for(x = 0; x < LX*g_nproc_x; x++){
+    X = x - g_proc_coords[1]*LX; 
+    coords[1] = x / LX;
     for(y = 0; y < LY; y++){
       for(z = 0; z < LZ; z++){
 	tag = 0;
-	for(id = 0; id < g_nproc; id++){
-	  for(t = 0; t < T; t++){
-	    if(g_proc_id == 0){
-	      if(g_proc_id == id){
+	for(t = 0; t < T*g_nproc_t; t++){
+	  tt = t - g_proc_coords[0]*T; 
+	  coords[0] = t / T;
+	  MPI_Cart_rank(g_cart_grid, coords, &id);
+	  if(g_cart_id == 0){
+	    if(g_cart_id == id){
 #ifdef LITTLE_ENDIAN
-		byte_swap_assign(tmp, g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8);
-		fwrite(tmp, sizeof(su3), 4, ofs);
+	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][y][z] ], 4*sizeof(su3)/8);
+	      fwrite(tmp, sizeof(su3), 4, ofs);
 #else
-		fwrite(g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3), 1, ofs);
+	      fwrite(g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3), 1, ofs);
 #endif
-	      }
-	      else{
-		MPI_Recv(tmp, 4*sizeof(su3)/8, MPI_DOUBLE, id, tag, g_cart_grid, &status);
-		fwrite(tmp, sizeof(su3), 4, ofs);
-	      }
 	    }
 	    else{
-	      if(g_proc_id == id){
-#ifdef LITTLE_ENDIAN
-		byte_swap_assign(tmp, g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8);
-		MPI_Send((void*) tmp, 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
-#else
-		MPI_Send((void*) g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
-#endif
-	      }
+	      MPI_Recv(tmp, 4*sizeof(su3)/8, MPI_DOUBLE, id, tag, g_cart_grid, &status);
+	      fwrite(tmp, sizeof(su3), 4, ofs);
 	    }
-	    tag++;
 	  }
+	  else{
+	    if(g_cart_id == id){
+#ifdef LITTLE_ENDIAN
+	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][y][z] ], 4*sizeof(su3)/8);
+	      MPI_Send((void*) tmp, 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+#else
+	      MPI_Send((void*) g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+#endif
+	    }
+	  }
+	  tag++;
 	}
 	MPI_Barrier(g_cart_grid);
       }
     }
   }
-  if(g_proc_id == 0){
+  if(g_cart_id == 0){
     if(ferror(ofs)){
       printf("Error! Failed to write all data to file %s in routine read_gauge_field_time_p\n or could not open file\n",filename);
       return(1);
@@ -162,18 +166,21 @@ int read_gauge_field_time_p(char * filename){
       printf("Warning! Configuration %s was produced with a different beta!\n", filename);
 /*       errorhandler(112,filename); */
     }
-    if((l!=L)||(t!=g_nproc*T)){
+    if((l!=L)||(t!=g_nproc_t*T)){
       printf("Error! Configuration %s was produced with a different lattice size\n Aborting...\n", filename);
       exit(1);
 /*       errorhandler(114,filename); */
     }
+    /* We do not need to seek here      */
+    /* because we never have PARALLELXT */
+    /* without PARALLELT                */
     for(x = 0; x < LX; x++){
       for(y = 0; y < LY; y++){
 	for(z = 0; z < LZ; z++){
 #if (defined MPI && defined PARALLELT)
 	  fseek(ifs, position +
-		(g_proc_id*T+
-		 ((x*LY+y)*LZ+z)*T*g_nproc)*4*sizeof(su3),
+		(g_proc_coords[0]*T+
+		 (((g_proc_coords[1]*LX+x)*LY+y)*LZ+z)*T*g_nproc_t)*4*sizeof(su3),
 		SEEK_SET);
 #endif
 	  for(t = 0; t < T; t++){
@@ -204,29 +211,33 @@ int read_gauge_field_time_p(char * filename){
 
 int write_spinorfield_eo_time_p(const int s, const int r, char * filename){
   FILE * ofs = NULL;
-  int x, y, z, t, t0, tag=0, id, i=0, nr=0;
+  int x, X, y, z, t, t0, tag=0, id, i=0, nr=0;
   spinor tmp[1];
+  int coords[2];
 #ifdef MPI
   MPI_Status status;
 #endif
 
-  if(g_proc_id == 0){
+  if(g_cart_id == 0){
     ofs = fopen(filename, "w");
     if(ofs != NULL ){
-      fprintf(ofs,"%f %f %f %d %d\n",g_beta, g_kappa, g_mu, L, T*g_nproc);
+      fprintf(ofs,"%f %f %f %d %d\n",g_beta, g_kappa, g_mu, L, T*g_nproc_t);
     }
     else{
 /*       errorhandler(106, filename); */
     }
   }
-  for(x = 0; x < LX; x++){
+  for(x = 0; x < LX*g_nproc_x; x++){
+    X = x - g_proc_coords[1]*LX;
+    coords[1] = x / LX;
     for(y = 0; y < LY; y++){
       for(z = 0; z < LZ; z++){
-	for(t0 = 0; t0 < T*g_nproc; t0++){
-	  t = t0 - T*g_proc_id;
-	  id = t0 / T;
-	  if(g_proc_id == id) {
-	    i = trans1[ g_ipt[t][x][y][z] ];
+	for(t0 = 0; t0 < T*g_nproc_t; t0++){
+	  t = t0 - T*g_proc_coords[0];
+	  coords[0] = t0 / T;
+	  MPI_Cart_rank(g_cart_grid, coords, &id);
+	  if(g_cart_id == id) {
+	    i = trans1[ g_ipt[t][X][y][z] ];
 	    if((t0+x+y+z)%2==0) {
 	      nr = s;
 	    }
@@ -235,8 +246,8 @@ int write_spinorfield_eo_time_p(const int s, const int r, char * filename){
 	      nr = r;
 	    }
 	  }
-	  if(g_proc_id == 0){
-	    if(g_proc_id == id){
+	  if(g_cart_id == 0){
+	    if(g_cart_id == id){
 #ifdef LITTLE_ENDIAN
 	      byte_swap_assign(tmp, &spinor_field[nr][i], sizeof(spinor)/8);
 	      fwrite(tmp, sizeof(spinor), 1, ofs);
@@ -253,7 +264,7 @@ int write_spinorfield_eo_time_p(const int s, const int r, char * filename){
 	  }
 #ifdef MPI
 	  else{
-	    if(g_proc_id == id){
+	    if(g_cart_id == id){
 #ifdef LITTLE_ENDIAN
 	      byte_swap_assign(tmp, &spinor_field[nr][i], sizeof(spinor)/8);
 	      MPI_Send((void*) tmp, sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
@@ -272,7 +283,7 @@ int write_spinorfield_eo_time_p(const int s, const int r, char * filename){
       }
     }
   }
-  if(g_proc_id == 0){
+  if(g_cart_id == 0){
     if(ferror(ofs)){
 /*       errorhandler(106, filename); */
     }
@@ -303,16 +314,12 @@ int read_spinorfield_eo_time(const int s, const int r, char * filename){
       printf("Warnig! Parameters beta, kappa or mu are inconsistent with file %s!\n", filename);
 /*       errorhandler(113,filename); */
     }
-    if((l!=L)||(t!=T*g_nproc)){
+    if((l!=L)||(t!=T*g_nproc_t)){
       printf("Error! spinorfield %s was produced for a different lattice size!\nAborting!\n", filename);
       exit(1);
 /*       errorhandler(115,filename); */
     }
-#if (defined MPI && defined PARALLEL1)
-    fseek(ifs, position +
-	  g_proc_coords[0]*LX*LY*LZ*T*sizeof(spinor),
-	  SEEK_SET);
-#endif
+    /* We do not need a seek here, see write_gauge_field... */
     for(x = 0; x < LX; x++){
 #if (defined MPI && defined PARALLEL2)
       fseek(ifs, position +
@@ -331,13 +338,13 @@ int read_spinorfield_eo_time(const int s, const int r, char * filename){
 	for(z = 0; z < LZ; z++){
 #if (defined MPI && defined PARALLELT)
 	  fseek(ifs, position +
-		(g_proc_id*T+
-		 ((x*LY+y)*LZ+z)*T*g_nproc)*sizeof(spinor),
+		(g_proc_coords[0]*T+
+		 (((g_proc_coords[1]*LX+x)*LY+y)*LZ+z)*T*g_nproc_t)*sizeof(spinor),
 		SEEK_SET);
 #endif
 	  for(t = 0; t < T; t++){
 	    i = trans1[ g_ipt[t][x][y][z] ];
-	    if((t+x+y+z+g_proc_id*T)%2==0) {
+	    if((t+x+y+z+g_proc_coords[0]*T)%2==0) {
 	      nr = s;
 	    }
 	    else {
@@ -378,6 +385,15 @@ int big_endian(){
 
   u.l=1;
   return(u.c[sizeof(int) - 1] == 1);
+}
+
+void write_su3(su3 * up, FILE * f) {
+  fprintf(f,"%f %f %f %f %f %f \n%f %f %f %f %f %f \n%f %f %f %f %f %f %d\n\n",
+	     (*up).c11.re, (*up).c11.im, (*up).c12.re, (*up).c12.im,
+	     (*up).c13.re, (*up).c13.im, (*up).c21.re, (*up).c21.im,
+	     (*up).c22.re, (*up).c22.im, (*up).c23.re, (*up).c23.im,
+	     (*up).c31.re, (*up).c31.im, (*up).c32.re, (*up).c32.im,
+	     (*up).c33.re, (*up).c33.im, g_cart_id);
 }
 
 void byte_swap(void * ptr, int nmemb){
