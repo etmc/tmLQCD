@@ -107,6 +107,19 @@ static su3 unit_su3(void)
    return(u);
 }
 
+su3_vector unit_su3_vector() {
+  su3_vector s;
+
+  s.c1.re = 1.;
+  s.c1.im = 0.;
+  s.c2.re = 1.;
+  s.c2.im = 0.;
+  s.c3.re = 1.;
+  s.c3.im = 0.;
+
+  return(s);
+}
+
 
 su3_vector random_su3_vector(void)
 {
@@ -155,6 +168,27 @@ spinor random_spinor(void)
    _vector_mul(s.c4,0.5,s.c4);   
    
    return(s);
+}
+
+spinor unit_spinor() {
+  spinor s;
+
+  s.c1 = unit_su3_vector();
+  s.c2 = unit_su3_vector();
+  s.c3 = unit_su3_vector();
+  s.c4 = unit_su3_vector();
+
+  return(s);
+}
+
+void unit_spinor_field(const int k) {
+  int i=0;
+  spinor *s;
+
+  s = &spinor_field[k][0];  
+  for(i = 0; i < VOLUME/2; i++, s++) {
+    (*s) = unit_spinor();
+  }
 }
 
 /* Function provides a spinor field of length VOLUME/2 with
