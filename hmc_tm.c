@@ -42,9 +42,10 @@
 #include "init_geometry_indices.h"
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
+#include "test/check_geometry.h"
 #include "boundary.h"
 
-char * Version = "2.1";
+char * Version = "2.2";
 
 
 void usage(){
@@ -235,6 +236,8 @@ int main(int argc,char *argv[]) {
   /* define the boundary conditions for the fermion fields */
   boundary();
 
+  check_geometry();
+
   if(g_proc_id == 0) {
 #if defined GEOMETRIC
     if(g_proc_id==0) fprintf(parameterfile,"The geometric series is used as solver \n\n");
@@ -364,10 +367,8 @@ int main(int argc,char *argv[]) {
 
   /* Loop for measurements */
   for(j=0;j<Nmeas;j++) {
-    printf("before !\n");fflush(stdout);
 
     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename);
-    printf("After \n");fflush(stdout);
 
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0) {
