@@ -63,7 +63,7 @@ int main(int argc,char *argv[]) {
   char * input_filename = NULL;
   int rlxd_state[105];
   int j,ix,mu;
-  int k, loop=0;
+  int k, loop=0, back=0;
   double kappa_start=0., kappa_end=0., dkappa=0., kappa=0.;
 
   /* Energy corresponding to the Gauge part */
@@ -84,7 +84,7 @@ int main(int argc,char *argv[]) {
   
   mpi_init(argc, argv);
 
-  while ((c = getopt(argc, argv, "vlh?f:o:d:a:e:")) != -1) {
+  while ((c = getopt(argc, argv, "vlbh?f:o:d:a:e:")) != -1) {
     switch (c) {
     case 'f': 
       input_filename = calloc(200, sizeof(char));
@@ -108,6 +108,9 @@ int main(int argc,char *argv[]) {
       break;
     case 'l':
       loop = 1;
+      break;
+    case 'b':
+      back = 1;
       break;
     case 'h':
     case '?':
@@ -142,15 +145,19 @@ int main(int argc,char *argv[]) {
   /* Reorder the mu parameter */
   if(g_mu3 > 0.) {
     g_mu = g_mu1;
-    g_mu1 = g_mu3;
-    g_mu3 = g_mu;
+    g_mu1 = g_mu3/(2*g_kappa);
+    g_mu2 /= (2*g_kappa);
+    g_mu3 = g_mu/(2*g_kappa);
     g_nr_of_psf = 3;
   }
   else if(g_mu2 > 0.) {
     g_mu = g_mu1;
-    g_mu1 = g_mu2;
-    g_mu2 = g_mu;
+    g_mu1 = g_mu2/(2*g_kappa);
+    g_mu2 = g_mu/(2*g_kappa);
     g_nr_of_psf = 2;
+  }
+  else {
+    g_mu /= (2*g_kappa);
   }
   g_mu = g_mu1;
 
@@ -293,10 +300,15 @@ int main(int argc,char *argv[]) {
     }
   }
 
-  while(loop > -1) {
-    /* loop over all kappa values */
+  /* loop over all kappa values */
+  if(back == 0) {
     for(kappa = kappa_start; kappa <= kappa_end; kappa += dkappa) {
       g_kappa = kappa;
+      g_mu1 *= 2*g_kappa;
+      g_mu2 *= 2*g_kappa;
+      g_mu3 *= 2*g_kappa;
+      g_mu = g_mu1;
+      boundary();
       if(g_proc_id == 0) {
 	printf("Performing %d measurements for kappa = %f!\n", Nmeas, kappa);
 	fflush( stdout );
@@ -326,13 +338,97 @@ int main(int argc,char *argv[]) {
 	  }
 	}
       }
+      g_mu1 /= 2*g_kappa;
+      g_mu2 /= 2*g_kappa;
+      g_mu3 /= 2*g_kappa;
     }
-    kappa = kappa_start;
-    kappa_start = kappa_end;
-    kappa_end = kappa;
-    dkappa = -dkappa;
-    loop--;
+    
+    if(loop == 1) {
+      for(kappa = kappa_end; kappa >= kappa_start; kappa -= dkappa) {
+	g_kappa = kappa;
+	g_mu1 *= 2*g_kappa;
+	g_mu2 *= 2*g_kappa;
+	g_mu3 *= 2*g_kappa;
+	g_mu = g_mu1;
+	boundary();
+	if(g_proc_id == 0) {
+	  printf("Performing %d measurements for kappa = %f!\n", Nmeas, kappa);
+	  fflush( stdout );
+	}
+	sprintf(datafilename, ".back.%s.%f.data", filename, kappa);
+	
+	/* Loop for measurements */
+	for(j=0;j<Nmeas;j++) {
+	  
+	  Rate += update_tm(integtyp, &eneg, datafilename);
+	  
+	  /* Save gauge configuration all Nskip times */
+	  if((j+1)%Nskip == 0) {
+	    sprintf(gauge_filename,"%s", "conf.save");
+	    nstore ++;
+	    countfile = fopen(nstore_filename, "w");
+	    fprintf(countfile, "%d\n", nstore);
+	    fclose(countfile);
+	    write_gauge_field_time_p( gauge_filename );
+	    
+	    /*  write the status of the random number generator on a file */
+	    if(g_proc_id==0) {
+	      rlxd_get(rlxd_state);
+	      rlxdfile=fopen("rlxd_state","w");
+	      fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
+	      fclose(rlxdfile);
+	    }
+	  }
+	}
+	g_mu1 /= 2*g_kappa;
+	g_mu2 /= 2*g_kappa;
+	g_mu3 /= 2*g_kappa;
+      }
+    }
   }
+  else {
+    for(kappa = kappa_start; kappa >= kappa_end; kappa -= dkappa) {
+      g_kappa = kappa;
+      g_mu1 *= 2*g_kappa;
+      g_mu2 *= 2*g_kappa;
+      g_mu3 *= 2*g_kappa;
+      g_mu = g_mu1;
+      boundary();
+      if(g_proc_id == 0) {
+	printf("Performing %d measurements for kappa = %f!\n", Nmeas, kappa);
+	fflush( stdout );
+      }
+      sprintf(datafilename, "%s.%f.data", filename, kappa);
+      
+      /* Loop for measurements */
+      for(j=0;j<Nmeas;j++) {
+	
+	Rate += update_tm(integtyp, &eneg, datafilename);
+	
+	/* Save gauge configuration all Nskip times */
+	if((j+1)%Nskip == 0) {
+	  sprintf(gauge_filename,"%s", "conf.save");
+	  nstore ++;
+	  countfile = fopen(nstore_filename, "w");
+	  fprintf(countfile, "%d\n", nstore);
+	  fclose(countfile);
+	  write_gauge_field_time_p( gauge_filename );
+	  
+	  /*  write the status of the random number generator on a file */
+	  if(g_proc_id==0) {
+	    rlxd_get(rlxd_state);
+	    rlxdfile=fopen("rlxd_state","w");
+	    fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
+	    fclose(rlxdfile);
+	  }
+	}
+      }
+      g_mu1 /= 2*g_kappa;
+      g_mu2 /= 2*g_kappa;
+      g_mu3 /= 2*g_kappa;
+    }
+  }
+
   /* write the gauge configuration to the file last_configuration */
   write_gauge_field_time_p( "last_configuration" );
   
