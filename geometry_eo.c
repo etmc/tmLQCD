@@ -226,7 +226,9 @@ void geometry(){
   int i_even,i_odd;
   int startvaluet = 0;
   int startvaluex = 0;
-  int xeven[VOLUMEPLUSRAND] ALIGN;
+  int * xeven;
+  
+  xeven = malloc(VOLUMEPLUSRAND*sizeof(int));
 
 #if (defined PARALLELT || defined PARALLELXT)
   startvaluet = 1;
