@@ -155,21 +155,26 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   new_gauge_energy = g_rgi_C0 * new_plaquette_energy + g_rgi_C1 * new_rectangle_energy;
 
   /*compute the energy contributions from the pseudo-fermions */
-  zero_spinor_field(spinor_field[2]);
+/*   zero_spinor_field(spinor_field[2]); */
+  assign(spinor_field[2], spinor_field[DUM_DERI+4], VOLUME/2);
   g_mu = g_mu1;
   idis0=bicg(2, first_psf, q_off, EPS_SQ0);
+  assign(spinor_field[DUM_DERI+4], spinor_field[DUM_DERI+6], VOLUME/2);
 
   enerphi0x=square_norm(spinor_field[2], VOLUME/2);
   if(g_nr_of_psf > 1) {
-    zero_spinor_field(spinor_field[3]);
+/*     zero_spinor_field(spinor_field[3]); */
+    assign(spinor_field[3], spinor_field[DUM_DERI+5], VOLUME/2);
     g_mu = g_mu1;
     Qtm_plus_psi(spinor_field[second_psf], spinor_field[second_psf]);
     g_mu = g_mu2;
     idis1 += bicg(3, second_psf, 0., EPS_SQ0);
+    assign(spinor_field[DUM_DERI+5], spinor_field[DUM_DERI+6], VOLUME/2);
     enerphi1x = square_norm(spinor_field[3], VOLUME/2);
   }
   if(g_nr_of_psf > 2) {
-    zero_spinor_field(spinor_field[5]);
+/*     zero_spinor_field(spinor_field[5]); */
+    assign(spinor_field[5], spinor_field[DUM_DERI+6], VOLUME/2);
     g_mu = g_mu2;
     Qtm_plus_psi(spinor_field[third_psf], spinor_field[third_psf]);
     g_mu = g_mu3;

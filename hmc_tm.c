@@ -167,6 +167,10 @@ int main(int argc,char *argv[]) {
     exit(0);
   }
 
+  zero_spinor_field(spinor_field[DUM_DERI+4]);
+  zero_spinor_field(spinor_field[DUM_DERI+5]);
+  zero_spinor_field(spinor_field[DUM_DERI+6]);
+
   q_off = 0.;
   q_off2 = 0.;
  
