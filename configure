@@ -5146,7 +5146,7 @@ elif test "$host_cpu" = "powerpc"; then
     CFLAGS="-DXLC  -q64 -qsrcmsg"
   fi
   LIBS="-lm"
-  LDFLAGS="-bmaxdata:0x70000000"
+  LDFLAGS="-q64"
   XLC=yes
   OPTARGS="-O3 -qhot"
   DEBUG_FLAG="-qfullpath -g"
