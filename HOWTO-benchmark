@@ -1,0 +1,69 @@
+Benchmark of the even-odd preconditioned Dirac operator
+
+The program is compiled with the file ccc
+It needs to be edited to give the proper path for the mpicc.
+Maybe also the compile-option has to be adopted.
+In particular
+-DSSE2 -DP4  
+should only be given for a Pentium4 (R) system.
+And
+-DSSE -DOPTERON
+should only be given for a AMD Opteron (R) system.
+
+You should allways set -D_GAUGE_COPY and -D_NEW_GEOMERY.
+
+There are two different parallelisations available, a one dimensionale
+parallelisation (set -DPARALLELT) and a two dimensional
+parallelisation (set -DPARALLELXT). If none of the two is used, you
+will get a serial version of the program.
+
+The local lattice size in the case of the one dimensional
+prallelisation is controlled by the parameters 
+
+#define T   2
+#define L  16
+
+which will give a 2 x 16^3 local lattice, the total size of the
+lattice is given by 
+
+(number of processes) times T  times L^3
+
+In the two dimensional parallelisation by
+
+#define T   2
+#define L  16
+#define N_PROC_X 2
+
+which will give a 2 x 8 x 16^2 local lattice. In this case the total
+size of the lattice is given by
+
+(number of processes)/N_PROC_X times T  times L^3 .
+
+They can all be found in the file global.h . These are the only things
+you should touch in the program. L should be even. also (number of processes) should
+be even.
+
+the package size of the data that are send and recieved is 
+192 * (1/2) * L^3 Byte in case of the one dimensional parallelisation.
+In case of the two dimensional parallelisation it is
+192 * (1/2) ((L*L*L/N_PROC_X)+(T*L*L)) Byte.
+
+A run of the benchmark takes about one minute.
+
+The out-put of the program is: (T=2,L=16 on lattice in Hamburg)
+
+The number of processes is 12 
+The local lattice size is 2 x 16 ^3 
+total time 4.681349e+00 sec, Variance of the time 6.314982e-03 sec 
+
+ (297 Mflops [64 bit arithmetic])
+
+communication switched off 
+ (577 Mflops [64 bit arithmetic])
+
+The size of the package is 393216 Byte 
+The bandwidth is 84.49 + 84.49   MB/sec
+
+
+If you use the serial version of course the part depending on the
+parallel setup will be missing.
