@@ -128,7 +128,7 @@ void geometry(){
   int i_even,i_odd;
   int startvaluet = 0;
   int startvaluex = 0;
-#ifdef PARALLELT
+#if (defined PARALLELT || defined PARALLELXT)
   startvaluet = 1;
 #endif
 #ifdef PARALLELXT
