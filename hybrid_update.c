@@ -24,7 +24,7 @@
 extern int ITER_MAX_BCG;
 extern int ITER_MAX_CG;
 
-static su3 get_staples(int x,int mu) {
+static su3 get_staples(int x, int mu) {
 
   int k,iy;
   static su3 v,st;
@@ -36,20 +36,133 @@ static su3 get_staples(int x,int mu) {
       w1=&g_gauge_field[x][k];
       w2=&g_gauge_field[g_iup[x][k]][mu];
       w3=&g_gauge_field[g_iup[x][mu]][k];
+      /* st = w2 * w3^d */
       _su3_times_su3d(st,*w2,*w3);
+      /* v = v + w1 * st */
       _su3_times_su3_acc(v,*w1,st); 
+
       iy=g_idn[x][k];
       w1=&g_gauge_field[iy][k];
       w2=&g_gauge_field[iy][mu];
       w3=&g_gauge_field[g_iup[iy][mu]][k];
+      /* st = w2 * w3 */
       _su3_times_su3(st,*w2,*w3);
+      /* v = v + w1^d * st */
       _su3d_times_su3_acc(v,*w1,st);
     }
   }
   return v;
 }
 
+su3 get_rectangle_staples(const int x, const int mu) {
+  static su3 v, tmp1, tmp2;
+  int X, y, z, nu;
+  su3 * w1, * w2, * w3;
+  _su3_zero(v);
+  for(nu = 0; nu < 4; nu++) {
+    if(mu != nu) {
+      /* first contr. starting from x */
+      w1 = &g_gauge_field[x][nu];
+      y = g_iup[x][nu];
+      w2 = &g_gauge_field[y][nu];
+      _su3_times_su3(tmp1, *w1, *w2);
+      z = g_iup[y][nu];
+      w3 = &g_gauge_field[z][mu];
+      _su3_times_su3(tmp2, tmp1, *w3);
+
+      y = g_iup[x][mu];
+      w1 = &g_gauge_field[y][nu];
+      z = g_iup[y][nu];
+      w2 = &g_gauge_field[z][nu];
+      _su3_times_su3(tmp1, *w1, *w2);
+      _su3d_times_su3_acc(v, tmp1, tmp2);
+
+      /* second contr. starting from x */
+      w1 = &g_gauge_field[x][nu];
+      y = g_iup[x][nu];
+      w2 = &g_gauge_field[y][mu];
+      _su3_times_su3(tmp1, *w1, *w2);
+      z = g_iup[y][mu];
+      w3 = &g_gauge_field[z][mu];
+      _su3_times_su3(tmp2, tmp1, *w3);
+
+      y = g_iup[x][mu];
+      w1 = &g_gauge_field[y][mu];
+      z = g_iup[y][mu];
+      w2 = &g_gauge_field[z][nu];
+      _su3_times_su3(tmp1, *w1, *w2);
+      _su3d_times_su3_acc(v, tmp1, tmp2);
+
+      /* 1 contr. starting idn[x][mu] */
+      X = g_idn[x][mu];
+      w1 = &g_gauge_field[X][nu];
+      y = g_iup[X][nu];
+      w2 = &g_gauge_field[y][mu];
+      _su3_times_su3(tmp1, *w1, *w2);
+      z = g_iup[y][mu];
+      w3 = &g_gauge_field[z][mu];
+      _su3_times_su3(tmp2, tmp1, *w3);
+
+      w1 = &g_gauge_field[X][mu];
+      z = g_iup[x][mu];
+      w2 = &g_gauge_field[z][nu];
+      _su3_times_su3(tmp1, *w1, *w2);
+      _su3d_times_su3_acc(v, tmp1, tmp2);
+
+      /* 1 contr. starting idn[X][nu] */
+      X = g_idn[X][nu];
+      w1 = &g_gauge_field[X][mu];
+      y = g_iup[X][mu];
+      w2 = &g_gauge_field[y][mu];
+      _su3_times_su3(tmp1, *w1, *w2);
+      z = g_iup[y][nu];
+      w3 = &g_gauge_field[z][nu];
+      _su3_times_su3(tmp2, tmp2, *w3);
+
+      w1 = &g_gauge_field[X][nu];
+      y = g_iup[X][nu];
+      w2 = &g_gauge_field[y][mu];
+      _su3_times_su3(tmp1, *w1, *w2);
+      _su3d_times_su3_acc(v, tmp1, tmp2);
+
+      /* 1 contr. starting idn[x][nu] */
+      X = g_idn[x][nu];
+      w1 = &g_gauge_field[X][mu];
+      y = g_iup[X][mu];
+      w2 = &g_gauge_field[y][mu];
+      _su3_times_su3(tmp1, *w1, *w2);
+      z = g_iup[y][nu];
+      w3 = &g_gauge_field[z][nu];
+      _su3_times_su3(tmp2, tmp2, *w3);
+
+      w1 = &g_gauge_field[X][nu];
+      y = g_iup[X][nu];
+      w2 = &g_gauge_field[ g_iup[y][mu] ][mu];
+      _su3_times_su3(tmp1, *w1, *w2);
+      _su3d_times_su3_acc(v, tmp1, tmp2);
+
+      /* 1 contr. starting idn[X][nu] */
+      X = g_idn[X][nu];
+      w1 = &g_gauge_field[X][mu];
+      y = g_iup[X][mu];
+      w2 = &g_gauge_field[y][mu];
+      _su3_times_su3(tmp1, *w1, *w2);
+      z = g_iup[y][nu];
+      w3 = &g_gauge_field[z][nu];
+      _su3_times_su3(tmp2, tmp2, *w3);
+
+      w1 = &g_gauge_field[X][nu];
+      y = g_iup[X][nu];
+      w2 = &g_gauge_field[y][nu];
+      _su3_times_su3(tmp1, *w1, *w2);
+      _su3d_times_su3_acc(v, tmp1, tmp2);
+    }
+  }
+  return(v);
+}
+
 /***********************************
+ *
  * Computes the new gauge momenta
  *
  ***********************************/

@@ -23,13 +23,13 @@
 #include "global.h"
 #include "observables.h"
 
-double measure_gauge_action(void)
-{
+double measure_gauge_action() {
   int ix,ix1,ix2,mu1,mu2;
   static su3 pr1,pr2; 
   su3 *v,*w;
   static double ga,ac,gas; 
   static double ks,kc,tr,ts,tt;
+
   kc=0.0; ks=0.0;
   for (ix=0;ix<VOLUME;ix++){
     for (mu1=0;mu1<3;mu1++){ 
@@ -59,3 +59,5 @@ double measure_gauge_action(void)
   return ga;
 #endif
 }
+
+
