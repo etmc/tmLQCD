@@ -1,3 +1,4 @@
+/* $Id$ */
 #ifndef _GLOBAL_H
 #define _GLOBAL_H
 /***************************************************************
@@ -28,7 +29,7 @@
 #define LZ (L)
 #define DUM_DERI 6
 #define DUM_SOLVER DUM_DERI+4
-#define DUM_MATRIX DUM_SOLVER+5
+#define DUM_MATRIX DUM_SOLVER+5 
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX DUM_SOLVER+11 */
 #define NO_OF_SPINORFIELDS DUM_MATRIX+2
@@ -83,8 +84,8 @@ EXTERN su3 swp[VOLUME][4] ALIGN;
 EXTERN su3 swm[VOLUME][4] ALIGN;
 EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
-EXTERN double g_mu, g_mu1, g_mu2;
-EXTERN int g_use_clover_flag;
+EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
+EXTERN int g_use_clover_flag, g_nr_of_psf;
 
 /* MPI information */
 EXTERN int g_proc_id, g_nproc, g_stdio_proc;
