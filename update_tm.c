@@ -41,7 +41,8 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   static int ini_g_tmp = 0;
   int rlxd_state[105];
   int ix, mu, accept, i;
-  int n_int[4] = {6,7,10}; 
+  int n_int[4] = {5,7,12}; 
+/*   int n_int[4] = {4,2,60};  */
 /*   int n_int[4] = {5,7,1,10};  */
 
 #ifdef _GAUGE_COPY
@@ -139,7 +140,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     sexton(q_off, q_off2, dtau, Nsteps, nsmall);
   }
   else if(integtyp == 3) {
-    ext_integrator(n_int, 0.7071067811865, g_nr_of_psf);
+    ext_integrator(n_int, 0.7071067811865, g_nr_of_psf, 0);
   }
 
   /*perform the accept-reject-step*/
