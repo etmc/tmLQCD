@@ -201,6 +201,9 @@ void random_spinor_field(int k) {
   int rlxd_state[105]; 
   spinor *s;
   double v[6];
+#ifdef MPI
+  int j=0;
+#endif
 
   if(g_proc_id==0) {
     for (ix=0;ix<VOLUME/2;ix++) {
