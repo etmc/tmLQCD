@@ -51,11 +51,9 @@ void mpi_init(int argc,char *argv[]) {
 
 #ifdef PARALLELT
   ndims = 1;
-  g_dbw2rand = (2*LX*LY*LZ);
 #endif
 #if defined PARALLELXT
   ndims = 2;
-  g_dbw2rand = (2*LY*LZ*(LX+T+4));
 #endif
 
   MPI_Init(&argc, &argv);
@@ -70,6 +68,24 @@ void mpi_init(int argc,char *argv[]) {
 
   g_nproc_t = dims[0];
   g_nproc_x = dims[1];
+  N_PROC_X = g_nproc_x;
+  LY = L;
+  LZ = L;
+  T = T_global/g_nproc_t;
+  LX = L/g_nproc_x;
+  VOLUME = (T*LX*LY*LZ);
+#ifdef PARALLELT  
+  RAND = (2*LX*LY*LZ);
+  VOLUMEPLUSRAND = ((T+2)*LX*LY*LZ);
+  g_dbw2rand = (2*LX*LY*LZ);
+#endif
+#if defined PARALLELXT
+  RAND = (2*LY*LZ*(LX+T));
+ /* Note that VOLUMEPLUSRAND not equal to VOLUME+RAND in this case */
+  VOLUMEPLUSRAND = (LY*LZ*(T+2)*(LX+2));
+  g_dbw2rand = (2*LY*LZ*(LX+T+4));
+#endif
+
   MPI_Cart_create(MPI_COMM_WORLD, ndims, dims, periods, reorder, &g_cart_grid);
   MPI_Comm_rank(g_cart_grid, &g_cart_id);
   MPI_Cart_coords(g_cart_grid, g_cart_id, ndims, g_proc_coords);
@@ -149,7 +165,16 @@ void mpi_init(int argc,char *argv[]) {
 
   g_proc_coords[0] = 0;
   g_proc_coords[1] = 0;
+
+  LY = L;
+  LZ = L;
+  T = T_global;
+  LX = L;
+  VOLUME = (T*LX*LY*LZ);
+  RAND = 0;
+  VOLUMEPLUSRAND = VOLUME;
   g_dbw2rand = 0;
+  N_PROC_X = 1;
 #endif
 }
 

@@ -56,6 +56,8 @@ extern "C"
   extern int max_solver_iterations;
   extern double solver_precision;
   extern int mass_number;
+  extern int read_source_flag;
+  extern char source_input_filename[100];
   
   int read_input(char *);
   

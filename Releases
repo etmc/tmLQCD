@@ -1,3 +1,11 @@
+Release 2.3:
+T and L can be set in the input file now.
+The number of processors in x direction
+is also set now in the input file.
+T= integer
+L= integer
+NrXProcs = integer
+
 Release 2.2:
 DBW2 inplemented and working. New input parameter:
 RGIC1 = floating point number

@@ -42,10 +42,11 @@
 #include "init_geometry_indices.h"
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
+#include "init_gauge_tmp.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
 
-char * Version = "2.2";
+char * Version = "2.3";
 
 
 void usage(){
@@ -91,8 +92,6 @@ int main(int argc,char *argv[]) {
   signal(SIGXCPU,&catch_del_sig);
 #endif
 
-  mpi_init(argc, argv);
-
   while ((c = getopt(argc, argv, "h?f:o:")) != -1) {
     switch (c) {
     case 'f': 
@@ -119,6 +118,8 @@ int main(int argc,char *argv[]) {
 
   /* Read the input file */
   read_input(input_filename);
+
+  mpi_init(argc, argv);
 
   if(Nskip == 0){
     Nskip = 1;
@@ -215,13 +216,13 @@ int main(int argc,char *argv[]) {
     printf("# The code was compiled with -D_GAUGE_COPY\n");
 #endif
     printf("# The lattice size is %d x %d^3\n",(int)(T)*g_nproc_t,(int)(L));
-    printf("# The local lattice size is %d x %d^3\n",(int)(T),(int)(L));
+    printf("# The local lattice size is %d x %d x %d^2\n", (int)(T), (int)(LX), (int)(L));
     printf("# beta = %f , kappa= %f, mu= %f \n",g_beta,g_kappa,g_mu);
     printf("# mus = %f, %f, %f\n", g_mu1, g_mu2, g_mu3);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
     
-    fprintf(parameterfile, "The lattice size is %d x %d^3\n", (int)(g_nproc_t*T),(int)(L));
-    fprintf(parameterfile, "The local lattice size is %d x %d^3\n", (int)(T),(int)(L));
+    fprintf(parameterfile, "The lattice size is %d x %d^3\n", (int)(g_nproc_t*T), (int)(L));
+    fprintf(parameterfile, "The local lattice size is %d x %d x %d^2\n", (int)(T), (int)(LX), (int)(L));
     fprintf(parameterfile, "g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f g_mu = %f \n",g_beta,g_kappa,g_ka_csw_8, g_mu);
     fprintf(parameterfile, "boundary of fermion fields (t,x,y,z): %f %f %f %f \n",X0,X1,X2,X3);
     fprintf(parameterfile, "ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n"
@@ -418,6 +419,7 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
   MPI_Finalize();
 #endif
+  free_gauge_tmp();
   free_gauge_field();
   free_geometry_indices();
   free_spinor_field();

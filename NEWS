@@ -1,3 +1,14 @@
+23.11.2004: The lattice size must be now set in the input file.
+	    Recompilation is only needed for one or two dimensional
+	    parallelisation.
+	    
+	    For invert there is a new input parameter:
+	    ReadSource = yes|no
+	    SourceInputFilename = filename
+	    This let's you read in a generalised source for the
+  	    inversion. The real filename must be of the form
+	    filename${massnumber}.is${is}ic${ic}.${nstore}
+
 22.11.2004: DBW2 implemented for the serial code and the parallel
 	    code with new and old geometry.
 	    Input parameter BoundaryCond is supplemented by

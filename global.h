@@ -21,20 +21,6 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define T   2
-#define L   4
-
-#ifndef PARALLELXT
-#define N_PROC_X 1
-#else
-#define N_PROC_X 2
-#endif
-
-#define LX (L/N_PROC_X)
-#define LY (L)
-#define LZ (L)
-#define VOLUME (T*LX*LY*LZ)
-
 #define DUM_DERI 6
 #define DUM_SOLVER (DUM_DERI+4)
 #define DUM_MATRIX (DUM_SOLVER+6) 
@@ -44,21 +30,9 @@
 /* For benchmark set the following: */
 /* #define NO_OF_SPINORFIELDS 100  */
 
-#if (defined PARALLELT && !defined PARALLELXT)
-#define RAND (2*LX*LY*LZ)
-#define VOLUMEPLUSRAND ((T+2)*LX*LY*LZ)
-#elif defined PARALLELXT
-#define RAND (2*LY*LZ*(LX+T))
-/* Note that VOLUMEPLUSRAND not equal to VOLUME+RAND in this case */
-#define VOLUMEPLUSRAND (LY*LZ*(T+2)*(LX+2))
-#else
-#define RAND 0
-#define VOLUMEPLUSRAND (VOLUME)
-#endif
-
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */
-/* #define X1 1.  (in time)          */
+/* #define X1 1.  (in x-direction)          */
 #define X1 0.
 #define X2 0.
 #define X3 0.
@@ -80,7 +54,11 @@
   #define ALIGN
 #endif
 
-/* translates from lexicagraphic order to even/odd order */
+EXTERN int T_global, T, L, LX, LY, LZ, VOLUME;
+EXTERN int N_PROC_X;
+EXTERN int RAND, VOLUMEPLUSRAND;
+
+/* translates from lexicographic order to even/odd order */
 EXTERN int * g_lexic2eo;
 /* translates from even/odd orderto lexicograhic order  */    
 EXTERN int * g_eo2lexic;

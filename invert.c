@@ -44,8 +44,7 @@
 #include "init_moment_field.h"
 #include "invert_eo.h"
 
-char * Version = "2.1";
-
+char * Version = "2.3";
 
 void usage(){
   fprintf(stderr, "Inversion for EO preconditioned Wilson twisted mass QCD\n\n");
@@ -87,8 +86,6 @@ int main(int argc,char *argv[]) {
   signal(SIGXCPU,&catch_del_sig);
 #endif
 
-  mpi_init(argc, argv);
-
   while ((c = getopt(argc, argv, "h?f:o:")) != -1) {
     switch (c) {
     case 'f': 
@@ -115,6 +112,8 @@ int main(int argc,char *argv[]) {
 
   /* Read the input file */
   read_input(input_filename);
+
+  mpi_init(argc, argv);
 
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
@@ -145,11 +144,6 @@ int main(int argc,char *argv[]) {
   j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
-    exit(0);
-  }
-  j = init_moment_field(VOLUME, VOLUMEPLUSRAND);
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
     exit(0);
   }
 
@@ -237,7 +231,13 @@ int main(int argc,char *argv[]) {
     for(ix = index_start; ix < index_end; ix++) {
       is = (ix / 3);
       ic = (ix % 3);
-      source_spinor_field(spinor_field[0], spinor_field[1], is, ic);
+      if(read_source_flag == 0) {
+	source_spinor_field(spinor_field[0], spinor_field[1], is, ic);
+      }
+      else {
+	sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", source_input_filename, mass_number, is, ic, nstore);
+	read_spinorfield_eo_time(spinor_field[0], spinor_field[1], conf_filename);
+      }
 
       if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
 

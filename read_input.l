@@ -65,6 +65,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   int max_solver_iterations;
   double solver_precision;
   int mass_number;
+  int read_source_flag;
+  char source_input_filename[100];
 %}
 
 %option never-interactive
@@ -99,6 +101,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x NSTORE
 %x TT
 %x LL
+%x NPROCX
 %x IOPROC
 %x IDX
 %x FPROP
@@ -109,6 +112,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x SPREC
 %x MNR
 %x RGIC
+%X READSOURCE
+%x SOURCEFILE
 
 %x COMMENT
 %x ERROR
@@ -116,6 +121,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %%
 ^T{SPC}*={SPC}*                          BEGIN(TT);
 ^L{SPC}*={SPC}*                          BEGIN(LL);
+^NRXProcs{SPC}*={SPC}*                   BEGIN(NPROCX);
 ^kappa{SPC}*={SPC}*                      BEGIN(KAPPA);
 ^mu{SPC}*={SPC}*                         BEGIN(MU);
 ^mu2{SPC}*={SPC}*                        BEGIN(MU2);
@@ -157,12 +163,20 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^SolverPrecision{SPC}*={SPC}*            BEGIN(SPREC);
 ^MassNumber{SPC}*={SPC}*                 BEGIN(MNR);
 ^RGIC1{SPC}*={SPC}*                      BEGIN(RGIC);
+^ReadSource{SPC}*={SPC}*                 BEGIN(READSOURCE);
+^SourceInputFilename{SPC}*={SPC}*        BEGIN(SOURCEFILE);
 
 <TT>{DIGIT}+                  {
+  T_global = atoi(yytext);
   if(verbose!=0) printf("T =%s\n", yytext);
 }
 <LL>{DIGIT}+                  {
+  L = atoi(yytext);
   if(verbose!=0) printf("L =%s\n", yytext);
+}
+<NPROCX>{DIGIT}+              {
+  N_PROC_X = atoi(yytext);
+  if(verbose!=0) printf("Nr of processors in x direction = %s\n", yytext);
 }
 <SEED>{DIGIT}+               {
   random_seed=atoi(yytext);
@@ -413,9 +427,22 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   g_rgi_C1=atof(yytext);
   if(verbose!=0) printf("g_rgi_C1=%s \n", yytext);
 }
+<READSOURCE>yes     {
+  read_source_flag=1;
+  if(verbose!=0) printf("Read inversion source from file\n");
+}
+<READSOURCE>no     {
+  read_source_flag=0;
+  if(verbose!=0) printf("Don't read inversion source from file\n");
+}
+<SOURCEFILE>{FILENAME} {
+  strcpy(source_input_filename,yytext);
+  if(verbose!=0) printf("source input filename set to %s\n",yytext);
+}
+
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,IOPROC,IDX,FPROP,DTAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC>#      BEGIN(COMMENT);
+<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG,MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2,NSTORE,TT,LL,NPROCX,IOPROC,IDX,FPROP,DTAU,Q1,Q2,NSTEPS,INTTYP,NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE>#      BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -509,6 +536,10 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Unknown value for L in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
   exit(1);
 }
+<NPROCX>.    {
+  printf("Unknown value for NRXProcs in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
+  exit(1);
+}
 <IOPROC>.    {
   printf("Unknown value for StdIOProcessor in line %d!\n Must be all, no or an integer value! Exiting...!\n", line_of_file);
   exit(1);
@@ -521,7 +552,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Error in line %d! Must be compute or readin! Exiting...!\n", line_of_file);
   exit(1);
 }
-<Q1,Q2,DTAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND>. {
+<Q1,Q2,DTAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND,SOURCEFILE,READSOURCE>. {
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
@@ -578,6 +609,9 @@ int read_input(char * conf_file){
    * Setting default values!
    ********************************************/
 
+  T_global = _default_T_global;
+  L = _default_L;
+  N_PROC_X = _default_N_PROC_X;
   g_kappa = _default_g_kappa;
   g_mu = _default_g_mu;
   g_mu1 = _default_g_mu1;
@@ -605,8 +639,8 @@ int read_input(char * conf_file){
   write_cp_flag = _default_write_cp_flag;
   cp_interval = _default_cp_interval;
   nstore = _default_nstore;
-  strcpy(rlxd_input_filename,_default_rlxd_input_filename);
-  strcpy(gauge_input_filename,_default_gauge_input_filename);
+  strcpy(rlxd_input_filename, _default_rlxd_input_filename);
+  strcpy(gauge_input_filename, _default_gauge_input_filename);
   g_stdio_proc = _default_g_stdio_proc;
   index_start = _default_index_start;
   index_end = _default_index_end;
@@ -618,6 +652,8 @@ int read_input(char * conf_file){
   solver_precision = _default_solver_precision;
   mass_number = _default_mass_number;
   g_rgi_C1 = _default_g_rgi_C1;
+  read_source_flag= _default_read_source_flag;
+  strcpy(source_input_filename, _default_source_filename);
 
   /********************************************/
 

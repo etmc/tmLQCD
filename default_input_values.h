@@ -6,12 +6,15 @@
  * read_input.c
  *
  * Autor: Carsten Urbach
- *        urbach@ifh.de
- */
+ *        urbach@desy.de
+ *************************************************/
 
 #ifndef _DEFAULT_INPUT_VALUES_H
 #define _DEFAULT_INPUT_VALUES_H
 
+#define _default_T_global 4
+#define _default_L 4
+#define _default_N_PROC_X 1
 #define _default_g_kappa 0.125
 #define _default_g_mu 0.0
 #define _default_g_mu1 0.0
@@ -34,6 +37,8 @@
 #define _default_nstore 0
 #define _default_rlxd_input_filename "last_state"
 #define _default_gauge_input_filename "conf"
+#define _default_read_source_flag 0
+#define _default_source_filename "source.mass"
 #define _default_g_stdio_proc 0
 #define _default_index_start 0
 #define _default_index_end 12

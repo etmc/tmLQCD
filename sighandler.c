@@ -22,6 +22,7 @@
 #endif
 #include "global.h"
 #include "io.h"
+#include "init_gauge_tmp.h"
 #include "ranlxd.h"
 
 /* quark propagators defined in main.c */
@@ -60,8 +61,6 @@ void catch_ill_inst(int s){
   fflush(stdout);
   exit(0);
 }
-
-extern su3 gauge_tmp[VOLUME][4] ALIGN;
 
 /* catch some signals as SIGUSR1|2 and SIGTERM */
 /* to save the current configuration and */

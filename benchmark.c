@@ -20,6 +20,7 @@
 #include "su3adj.h"
 #include "ranlxd.h"
 #include "geometry_eo.h"
+#include "read_input.h"
 #include "start.h"
 #include "boundary.h"
 #include "Hopping_Matrix.h"
@@ -30,6 +31,7 @@
 #include "init_geometry_indices.h"
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
+#include "test/check_geometry.h"
 #include "mpi_init.h"
 
 #ifndef PARALLELXT
@@ -38,8 +40,6 @@
 #define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2))
 #endif
 
-
-int check_geometry();
 int check_xchange();
 
 int main(int argc,char *argv[])
@@ -55,7 +55,6 @@ int main(int argc,char *argv[])
   static double dt2;
   int rlxd_state[105];
 #endif
-  mpi_init(argc, argv);
 
   if(g_proc_id==0) {
 #ifdef SSE
@@ -96,11 +95,11 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
   }
-  j = init_moment_field(VOLUME, VOLUMEPLUSRAND);
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
-    exit(0);
-  }
+
+  /* Read the input file */
+  read_input("benchmark.input");
+
+  mpi_init(argc, argv);
 
   /* define the geometry */
   geometry();
