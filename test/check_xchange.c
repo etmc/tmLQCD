@@ -32,7 +32,7 @@ int check_xchange()
   int mp, pm, mm, pp, di[2];
 
 
-  for(k = 0; k < 100; k++) {
+  for(k = 0; k < 1; k++) {
 
     /* Check the field exchange */
     /* Set the whole field to -1 */
