@@ -50,8 +50,8 @@ int main(int argc,char *argv[]) {
   static float yy[2];
 /*   static double step; */
 /*   static double q_off,q_off2; */
-  static double eneg,enegx,enep,enepx,enec,enecx,dh;
-  static double enerphi0,enerphi0x,enerphi1,enerphi1x,enerphi2,enerphi2x;
+  static double eneg,enegx,enep,enepx,dh;
+  static double enerphi0,enerphi0x;
   static su3 gauge_tmp[VOLUME][4];
   su3 *v,*w;
   
@@ -60,10 +60,10 @@ int main(int argc,char *argv[]) {
   verbose = 1;
   
 #ifdef MPI
-  MPI_Init(&argc,&argv);
-  MPI_Comm_size(MPI_COMM_WORLD,&g_nproc);
-  MPI_Comm_rank(MPI_COMM_WORLD,&g_proc_id);
-  MPI_Get_processor_name(processor_name,&namelen);
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &g_nproc);
+  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+  MPI_Get_processor_name(processor_name, &namelen);
   g_cart_grid = MPI_COMM_WORLD;
 
   fprintf(stdout,"Process %d of %d on %s\n",
@@ -74,9 +74,13 @@ int main(int argc,char *argv[]) {
   g_proc_id = 0;
 #endif
 
+  
   /* Read the input file */
   read_input("hmc.input");
   
+  q_off = 0.;
+  q_off2 = 0.;
+
   if(g_proc_id == 0){
     fp7=fopen("solver_data", "w"); 
     
@@ -162,13 +166,6 @@ int main(int argc,char *argv[]) {
     fclose(fp2);
   }
 
-  /* compute the energy of the determinant term */
-  sw_term(); 
-  /* compute the contribution from the clover-term */
-  enec=2.*sw_trace(1); 
-  sw_invert(1);
-  /* needed for exact continuation of the run, since evamax and eva use
-     random numbers */ 
   if(startoption == 2 && g_proc_id == 0){
     rlxs_reset(rlxs_state);
   }
@@ -200,44 +197,16 @@ int main(int argc,char *argv[]) {
     /* depending on q_off and q_off2 we use    */
     /* one, two or three pseudo-fermion fields */
     random_spinor_field(2);
-    if(q_off > 0.){
-      random_spinor_field(3);
-    }
-    if(q_off2 > 0.){
-      random_spinor_field(5);
-    }
+
     /* compute the square of the norm */
     enerphi0 = square_norm(2);
-    if(q_off > 0.){
-      enerphi1=square_norm(3);
-    } 
-    else{
-      enerphi1=0.;
-    }
-    if(q_off2 > 0.){
-      enerphi2=square_norm(5);
-    } 
-    else{
-      enerphi2=0.;
-    }
+    /* Remove this one */
 
-    /* apply the fermion matrix to the spinor */
-    /* before we have to compute the clover   */
-    /* terms sw[][][] and sw_inv[][][]        */
-    sw_term(); 
-    sw_invert(1);
-    Q_psi(0,2,q_off);
+    /* apply the fermion matrix Q_+ to the spinor */
+    Qtm_plus_psi(0, 2);
+    /* Remove idi and idis? */
     idi=0;
-    if(q_off>0.){
-      zero_spinor_field(1);
-      idi=bicg(1,3,q_off,EPS_SQ0);
-      Q_psi(1,1,q_off2);
-    }
-    if(q_off2>0.){
-      zero_spinor_field(4);
-      idis=bicg(4,5,q_off2,EPS_SQ0);
-      Q_psi(4,4,0.);
-    }
+    idis = 0.;
 
     /* initialize the momenta */
     enep=ini_momenta();
@@ -245,51 +214,37 @@ int main(int argc,char *argv[]) {
     /*run the trajectory*/
     if(integtyp == 1){
       /* Leap-frog integration scheme */
-      leap_frog(q_off,q_off2,dtau,Nsteps,nsmall); 
+      leap_frog(q_off, q_off2, dtau, Nsteps, nsmall); 
     }
     else if(integtyp == 2){
       /* Sexton Weingarten integration scheme */
-      sexton(q_off,q_off2,dtau,Nsteps,nsmall);
+      sexton(q_off, q_off2, dtau, Nsteps, nsmall);
     }
 
     /*perform the accept-reject-step*/
     enepx=moment_energy();
     enegx=measure_gauge_action();
-    sw_term();
-    enecx=2.*sw_trace(1); 
-    sw_invert(1);
+    /* Remove enecx */
+
     /*compute the energy contributions from the pseudo-fermions */
 
     zero_spinor_field(2);
-    idis0=bicg(2,0,q_off,EPS_SQ0);
+    idis0=bicg(2, 0, q_off, EPS_SQ0);
     enerphi0x=square_norm(2);
 
-    if(q_off>0.){
-      zero_spinor_field(3);
-      idis1=bicg(3,1,q_off2,EPS_SQ0);
-      Q_psi(3,3,q_off);
-      enerphi1x=square_norm(3);
-    }
-    else{
-      idis1=0; 
-      enerphi1x=0.;
-    }
-      
-    if(q_off2>0.){
-      zero_spinor_field(5);
-      idis2=bicg(5,4,0.,EPS_SQ0);
-      gamma5(5,5);
-      add_assign_field2(5,q_off2,4);
-      enerphi2x=square_norm(5);
-    }
-    else{
-      idis2=0; 
-      enerphi2x=0.;
-    }
+    /* Remove enerphi1x and enerphi2x */
+    /* Remove enerphi1 and enerphi2 */
+    /*  and idis1 and idis2? */
+    idis1=0; 
+    idis2=0; 
+
+
 
     /* Compute the energy difference */
-    dh=-enecx+enec+enepx-g_beta*enegx-enep+g_beta*eneg
-      +enerphi0x-enerphi0+enerphi1x-enerphi1+enerphi2x-enerphi2; 
+    dh = 0.;
+    dh=-enepx - g_beta*enegx + enep + g_beta*eneg
+      + enerphi0x - enerphi0; 
+    printf("%e %e %e %e %e %e %e %e %e\n", -enepx, enep, -g_beta*enegx, g_beta*eneg, enerphi0x, -enerphi0, -enepx+enep,-g_beta*enegx+g_beta*eneg,enerphi0x-enerphi0);
       
     /* the random number is only taken at node zero and then distributed to 
        the other sites */
@@ -307,7 +262,6 @@ int main(int argc,char *argv[]) {
     if(exp(-dh) > (((double)yy[0])+0.596046448e-7*yy[1])){
       /* accept */
       eneg=enegx;
-      enec=enecx;
       /* put the links back to SU(3) group */
       for(ix=0;ix<VOLUME;ix++){ 
 	for(mu=0;mu<4;mu++){ 
@@ -333,9 +287,9 @@ int main(int argc,char *argv[]) {
 #endif
 
     if(g_proc_id==0){
-      fprintf(fp1,"%14.12f %14.12f %d %d %d %d %d %d %d %d %d %d %d \n",
+      fprintf(fp1,"%14.12f %14.12f %d %d %d \n",
 	      eneg/(6.*VOLUME*g_nproc),dh,
-	      idi,idis,idis0,idis1,idis2,count00,count01,count10,count11,count20,count21);
+	      idis0,count00,count01);
       fflush(fp1);
     }
     /* Save gauge configuration all Nskip times */

@@ -1,4 +1,4 @@
-
+/* $Id$ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -16,9 +16,10 @@
 #include "linsolve.h"
 #include "xchange.h"
 #include "deriv_Sb.h"
+#include "tm_operators.h"
 #include "hybrid_update.h"
 
-static su3 get_staples(int x,int mu){
+static su3 get_staples(int x,int mu) {
 
   int k,iy;
   static su3 v,st;
@@ -40,7 +41,12 @@ static su3 get_staples(int x,int mu){
   return v;
 }
 
-void gauge_momenta(double step){
+/***********************************
+ * Computes the new gauge momenta
+ *
+ ***********************************/
+
+void gauge_momenta(double step) {
 
   int i,mu;
   static su3 v,w;
@@ -48,6 +54,7 @@ void gauge_momenta(double step){
   static su3adj deriv;
   su3adj *xm;
   static double st;
+
   st =- step*g_beta/3.0;
   for(i = 0; i < VOLUME; i++){
     for(mu=0;mu<4;mu++){
@@ -62,42 +69,59 @@ void gauge_momenta(double step){
 }
 
 
-/* input is the pseudo-fermion field */
-void deri(double q_off,double q_off2){
+/********************************************
+ *
+ *
+ ********************************************/
 
-  int j,jmax;
+/* input is the pseudo-fermion field */
+void deri(double q_off,double q_off2) {
+
+  int j,jmax=1;
   int i,mu;
   double qo;
   for(i=0;i<(VOLUME+RAND);i++){ 
     for(mu=0;mu<4;mu++){ 
       _zero_su3adj(df0[i][mu]); 
-      _zero_su3adj(dclover[i][mu]);
     }
   }
 
-  for(i=0;i<VOLUME;i++){ 
-    for(mu=0;mu<4;mu++){ 
-      _su3_zero(swm[i][mu]); 
-      _su3_zero(swp[i][mu]); 
+  if(g_mu == 0.){
+    /* All the clover stuff */
+    for(i=0;i<(VOLUME+RAND);i++){ 
+      for(mu=0;mu<4;mu++){ 
+	_zero_su3adj(dclover[i][mu]);
+      }
     }
-  }
+    
+    for(i=0;i<VOLUME;i++){ 
+      for(mu=0;mu<4;mu++){ 
+	_su3_zero(swm[i][mu]); 
+	_su3_zero(swp[i][mu]); 
+      }
+    }
 
-  if(q_off==0.){
-    jmax=1;
-  } 
-  else{
-    jmax=2;
-  }
-  if(q_off2>0.){
-    jmax=3;
+    if(q_off==0.){
+      jmax=1;
+    } 
+    else{
+      jmax=2;
+    }
+    if(q_off2>0.){
+      jmax=3;
+    }
   }
   for(j=0;j<jmax;j++){ 
     if(j==0){
       /*contributions from field 0 */
       gamma5(DUM_DERI,0);
+      /* Invert first Q_+ */
       count00+=bicg(DUM_DERI,0,q_off,EPS_SQ1);
       gamma5(DUM_DERI+1,DUM_DERI);
+      /* Now Q_- */
+      g_mu = -g_mu;
       count01+=bicg(DUM_DERI+1,DUM_DERI,q_off,EPS_SQ1);
+      g_mu = -g_mu;
     }
     if(j==1){
       /* contributions from field 1 */
@@ -116,37 +140,55 @@ void deri(double q_off,double q_off2){
       gamma5(DUM_DERI+1,DUM_DERI+2);
       count21+=bicg(DUM_DERI+1,DUM_DERI+2,0.,EPS_SQ3*q_off2);
     }
+    if(g_mu == 0.){
+      /* apply H_eo to  Q^{-2} phi */
+      H_eo_psi(1,DUM_DERI+2,DUM_DERI+1);
+      /* result resides on odd sites */
+      
+      deriv_Sb(0,DUM_DERI,DUM_DERI+2);
+      
+      /* add the other contibution */
+      H_eo_psi(1,DUM_DERI+3,DUM_DERI);
+      /* includes (1+T_oo)^{-1} now */
+      /* apply (1+T_oo)^{-1} to the result !!!! */
+      deriv_Sb(1,DUM_DERI+3,DUM_DERI+1);
+      
+      /* add the contribution from inside */
+      gamma5(DUM_DERI+2,DUM_DERI+2);
+      sw_spinor(1,DUM_DERI+2,DUM_DERI+3);
+      
+      /* compute the contribution for the det-part */
+      gamma5(DUM_DERI,DUM_DERI);
+      sw_spinor(0,DUM_DERI,DUM_DERI+1);
+    }
+    else{
+      /* apply Hopping Matrix */
+      /* to get the even sites of X */
+      /* Check the signs here ! */
+      H_eo_tm_inv_psi(DUM_DERI+2, DUM_DERI+1, 1, -1.);
+      deriv_Sb(0, DUM_DERI, DUM_DERI+2);
 
-    /* apply H_eo to  Q^{-2} phi */
-    H_eo_psi(1,DUM_DERI+2,DUM_DERI+1);
-    /* result resides on odd sites */
+      /* to get the odd sites of X */
+      H_eo_tm_inv_psi(DUM_DERI+3, DUM_DERI, 1, +1);
+      deriv_Sb(1, DUM_DERI+3, DUM_DERI+1);
 
-    deriv_Sb(0,DUM_DERI,DUM_DERI+2);
-
-    /* add the other contibution */
-    H_eo_psi(1,DUM_DERI+3,DUM_DERI);
-    /* includes (1+T_oo)^{-1} now */
-    /* apply (1+T_oo)^{-1} to the result !!!! */
-    deriv_Sb(1,DUM_DERI+3,DUM_DERI+1);
-    
-    /* add the contribution from inside */
-    gamma5(DUM_DERI+2,DUM_DERI+2);
-    sw_spinor(1,DUM_DERI+2,DUM_DERI+3);
-
-    /* compute the contribution for the det-part */
-    gamma5(DUM_DERI,DUM_DERI);
-    sw_spinor(0,DUM_DERI,DUM_DERI+1);
+    }
   }
 }
 
-void fermion_momenta(double step, double q_off, double q_off2){
+void fermion_momenta(double step, double q_off, double q_off2) {
   int i,mu;
   su3adj *xm,*deriv;
-  sw_term(); 
-  sw_invert(1);
+
+  if(g_mu == 0.){
+    sw_term(); 
+    sw_invert(1);
+  }
   deri(q_off,q_off2); 
-  sw_deriv(1);
-  sw_all();
+  if(g_mu == 0.){
+    sw_deriv(1);
+    sw_all();
+  }
 #ifdef MPI
   xchange_deri();
 #endif
@@ -155,13 +197,15 @@ void fermion_momenta(double step, double q_off, double q_off2){
       xm=&moment[i][mu];
       deriv=&df0[i][mu]; 
       _minus_const_times_mom(*xm,2.*step,*deriv); 
-      deriv=&dclover[i][mu]; 
-      _minus_const_times_mom(*xm,-2.*g_ka_csw_8*step,*deriv); 
+      if(g_mu == 0.){
+	deriv=&dclover[i][mu]; 
+	_minus_const_times_mom(*xm,-2.*g_ka_csw_8*step,*deriv); 
+      }
     }
   }
 }
 
-void update_gauge(double step){
+void update_gauge(double step) {
 
   int i,mu;
   static su3 v,w;
@@ -184,7 +228,7 @@ void update_gauge(double step){
 }
 
 void leap_frog(double q_off, double q_off2,
-	       double step, int m, int nsmall){
+	       double step, int m, int nsmall) {
   int i,j;
   double smallstep;
 
@@ -213,7 +257,7 @@ void leap_frog(double q_off, double q_off2,
 }
 
 void sexton(double q_off, double q_off2,
-	    double step, int m, int nsmall){
+	    double step, int m, int nsmall) {
   int i,j;
   double smallstep;
   /* initialize the counter for the inverter */
@@ -259,11 +303,15 @@ void sexton(double q_off, double q_off2,
   gauge_momenta(smallstep/12.);
   fermion_momenta(step/6., q_off, q_off2);
 }
-/*
+
+
+/*******************************************
+ *
  * This computes the contribution to
  * the Hamiltonian coming from the momenta
- */
-double moment_energy(){
+ *
+ *******************************************/
+double moment_energy() {
 
   su3adj *xm;
   int i,mu;
@@ -297,10 +345,13 @@ double moment_energy(){
 #endif
 }
 
-/*
+/**************************************
+ *
  * Initialises the momenta
- */
-double ini_momenta(){
+ * with the gaussian distribution
+ *
+ **************************************/
+double ini_momenta() {
   
   su3adj *xm;
   int i,mu,k;

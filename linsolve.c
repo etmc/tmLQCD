@@ -7,104 +7,136 @@
 #include "linalg_eo.h"
 #include "clover_eo.h"
 #include "start.h"
+#include "tm_operators.h"
 #include "linsolve.h"
 
 /* k output , l input */
-int solve_cg(int k,int l, double q_off, double eps_sq)
-  {
+int solve_cg(int k,int l, double q_off, double eps_sq) {
+
   static double normsq,pro,err,alpha_cg,g_beta_cg;
   int iteration;
-
-/* initialize residue r and search vector p */
-   Q_psi(DUM_SOLVER,k,q_off);
-   Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
-   diff_field(DUM_SOLVER+1,l,DUM_SOLVER);
-   assign_field(DUM_SOLVER+2,DUM_SOLVER+1);
-   normsq=square_norm(DUM_SOLVER+1);
+  
+  /* initialize residue r and search vector p */
+  
+  if(g_mu == 0.){
+    Q_psi(DUM_SOLVER,k,q_off);
+    Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
+  }
+  else{
+    Qtm_pm_psi(DUM_SOLVER, k);
+  }
+  diff_field(DUM_SOLVER+1,l,DUM_SOLVER);
+  assign_field(DUM_SOLVER+2,DUM_SOLVER+1);
+  normsq=square_norm(DUM_SOLVER+1);
 
 /* main loop */
-   for(iteration=1;iteration<=ITER_MAX;iteration++)
-     {
-     Q_psi(DUM_SOLVER,DUM_SOLVER+2,q_off);
-     Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
+   for(iteration=1;iteration<=ITER_MAX;iteration++) {
+     if(g_mu == 0.){
+       Q_psi(DUM_SOLVER,DUM_SOLVER+2,q_off);
+       Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
+     }
+     else {
+       Qtm_pm_psi(DUM_SOLVER, DUM_SOLVER+2);
+     }
      pro=vprod(DUM_SOLVER+2,DUM_SOLVER);
      alpha_cg=normsq/pro;
-     add_assign_field(k,alpha_cg,DUM_SOLVER+2);
-     add_assign_field2(DUM_SOLVER,-alpha_cg,DUM_SOLVER+1);
+     add_assign_field(k, alpha_cg, DUM_SOLVER+2);
+     add_assign_field2(DUM_SOLVER, -alpha_cg, DUM_SOLVER+1);
      err=square_norm(DUM_SOLVER);
-     if (err <= eps_sq) break;
-     g_beta_cg=err/normsq;
-     add_assign_field2(DUM_SOLVER+2,g_beta_cg,DUM_SOLVER);
-     assign_field(DUM_SOLVER+1,DUM_SOLVER);
-     normsq=err;
+
+     if (err <= eps_sq){
+       break;
      }
- return iteration;
- }
+     g_beta_cg = err/normsq;
+     add_assign_field2(DUM_SOLVER+2, g_beta_cg, DUM_SOLVER);
+     assign_field(DUM_SOLVER+1, DUM_SOLVER);
+     normsq=err;
+   }
+   return iteration;
+}
 
 /* this is actually the not the bicg but the geometric series 
    The use of the geometric series avoids  in contrast to the bicg
    reversibility problems when a reduced accuracy of the solver employed*/
 #if defined GEOMETRIC
-int bicg(int k, int l, double q_off, double eps_sq)
-{
-int iteration;
-double xxx;
-xxx=0.0;
-gamma5(DUM_SOLVER+1,l);
-/* main loop */
-for(iteration=1;iteration<=ITER_MAX;iteration++)
-  {
-  /* compute the residual*/
-  M_psi(DUM_SOLVER,k,q_off);
-  xxx=diff_norm(DUM_SOLVER,DUM_SOLVER+1);
-  /*apply the solver step for the residual*/
-  M_psi(DUM_SOLVER+2,DUM_SOLVER,q_off-(2.+2.*q_off));
-  add_assign_field(k,-1./((1.+q_off)*(1.+q_off)),DUM_SOLVER+2);
-  if(xxx <= eps_sq) break;
+int bicg(int k, int l, double q_off, double eps_sq) {
+  int iteration;
+  double xxx;
+  xxx=0.0;
+  gamma5(DUM_SOLVER+1,l);
+  /* main loop */
+  for(iteration=1;iteration<=ITER_MAX;iteration++) {
+    /* compute the residual*/
+    M_psi(DUM_SOLVER,k,q_off);
+    xxx=diff_norm(DUM_SOLVER,DUM_SOLVER+1);
+    /*apply the solver step for the residual*/
+    M_psi(DUM_SOLVER+2,DUM_SOLVER,q_off-(2.+2.*q_off));
+    add_assign_field(k,-1./((1.+q_off)*(1.+q_off)),DUM_SOLVER+2);
+    if(xxx <= eps_sq) break;
   }
 
-if(g_proc_id==0) {fprintf(fp7,"%d %e \n",iteration,xxx);
-             fflush(fp7);}
-
-/* if the geometric series fails, redo with conjugate gradient */
-if(iteration>=ITER_MAX)
-  {
-  zero_spinor_field(k);
-  iteration+=solve_cg(k,l,q_off,eps_sq);
-  Q_psi(k,k,q_off);
-  iteration-=1000000;
-if(g_proc_id==0) {fprintf(fp7,"%d \n",iteration); fflush(fp7);}
+  if(g_proc_id==0) {
+    fprintf(fp7,"%d %e \n",iteration,xxx);
+    fflush(fp7);
   }
 
-return iteration;
+  /* if the geometric series fails, redo with conjugate gradient */
+  if(iteration>=ITER_MAX) {
+    zero_spinor_field(k);
+    iteration+=solve_cg(k,l,q_off,eps_sq);
+    Q_psi(k,k,q_off);
+    iteration-=1000000;
+    if(g_proc_id==0) {
+      fprintf(fp7,"%d \n",iteration); fflush(fp7);
+    }
+  }
+  
+  return iteration;
 }
 #else
 /* k output , l input */
 int bicg(int k, int l, double q_off, double eps_sq) {
-
+  
   static double rho0,omega0,rho1,omega1,alpha,be,err,d1,d2;
   int iteration;
 
   gamma5(DUM_SOLVER+1,l);
-  M_psi(DUM_SOLVER,k,q_off); 
+  if(g_mu == 0.){
+    M_psi(DUM_SOLVER,k,q_off); 
+  }
+  else {
+    Mtm_plus_psi(DUM_SOLVER, k);
+  }
   diff_field(DUM_SOLVER+1,DUM_SOLVER+1,DUM_SOLVER);
   assign_field(DUM_SOLVER,DUM_SOLVER+1);
   zero_spinor_field(DUM_SOLVER+2);
   zero_spinor_field(DUM_SOLVER+3);
   rho0=1.0; omega0=1.0; alpha=1.0; 
   /* main loop */
-  for(iteration=1;iteration<=ITER_MAX;iteration++){
+  for(iteration=1;iteration<=ITER_MAX;iteration++) {
     square_and_prod(&err,&rho1,DUM_SOLVER+1,DUM_SOLVER);
-    if(err <= eps_sq) break;
+    if(err <= eps_sq){
+      break;
+    }
     
-    be=(rho1/rho0)*(alpha/omega0);
+    be = (rho1/rho0)*(alpha/omega0);
     /*  add_assign_field(DUM_SOLVER+3,-omega0,DUM_SOLVER+2);
 	add_assign_field2(DUM_SOLVER+3,be,DUM_SOLVER+1);  */
-    twice_add_assign_field2(DUM_SOLVER+3,-omega0,DUM_SOLVER+2,be,DUM_SOLVER+1); 
-    M_psi(DUM_SOLVER+2,DUM_SOLVER+3,q_off); 
-    alpha=rho1/vprod(DUM_SOLVER,DUM_SOLVER+2);
-    add_assign_field(DUM_SOLVER+1,-alpha,DUM_SOLVER+2);
-    M_psi(DUM_SOLVER+4,DUM_SOLVER+1,q_off);
+    twice_add_assign_field2(DUM_SOLVER+3, -omega0, DUM_SOLVER+2, be, DUM_SOLVER+1); 
+    if(g_mu == 0.){
+      M_psi(DUM_SOLVER+2, DUM_SOLVER+3, q_off); 
+    }
+    else{
+      Mtm_plus_psi(DUM_SOLVER+2, DUM_SOLVER+3);
+    }
+    alpha=rho1/vprod(DUM_SOLVER, DUM_SOLVER+2);
+    add_assign_field(DUM_SOLVER+1, -alpha, DUM_SOLVER+2);
+    if(g_mu == 0.){
+      M_psi(DUM_SOLVER+4, DUM_SOLVER+1, q_off);
+    }
+    else{
+      Mtm_plus_psi(DUM_SOLVER+4, DUM_SOLVER+1);
+    }
     square_and_prod(&d1,&d2,DUM_SOLVER+4,DUM_SOLVER+1);
     omega1=d2/d1;
     twice_add_assign_field(k,alpha,DUM_SOLVER+3,omega1,DUM_SOLVER+1);
@@ -121,7 +153,12 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   if(iteration>=ITER_MAX){
     zero_spinor_field(k);
     iteration+=solve_cg(k,l,q_off,eps_sq);
-    Q_psi(k,k,q_off);
+    if(g_mu == 0.){
+      Q_psi(k,k,q_off);
+    }
+    else{
+      Qtm_pm_psi(k, k);
+    }
     iteration-=1000000;
     if(g_proc_id==0) {
       fprintf(fp7,"%d %d \n",g_proc_id,iteration); 
