@@ -12,14 +12,18 @@ OPTARGS = @OPTARGS@
 LINK = $(CCLD) -o $@ ${LDFLAGS}
 COMPILE = ${CC} -o $@ ${CFLAGS} 
 
-TARGETS = read_input clover_eo hybrid linsolve xchange \
+MODULES = read_input clover_eo linsolve xchange \
 	expo hybrid_update observables start \
 	geometry_eo linalg_eo ranlxs sw io H_eo \
 	boundary deriv_Sb tm_operators
 
+PROGRAMS = hybrid hmc_tm
+ALLOBJ = ${MODULES} ${PROGRAMS}
+
+
 .SUFFIXES:
 
-all: hybrid
+all: hybrid hmc_tm
 
 Makefile: Makefile.in config.status
 	CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
@@ -27,11 +31,14 @@ Makefile: Makefile.in config.status
 flex_read_input: read_input.l
 	${LEX} -i -t $< > read_input.c
 
-${addsuffix .o, ${TARGETS}}: %.o: %.c %.h Makefile global.h
+${addsuffix .o, ${MODULES}}: %.o: %.c %.h Makefile global.h
 	${COMPILE} -c $< 
 
-hybrid: ${addsuffix .o, ${TARGETS}} global.h
-	 ${LINK} ${addsuffix .o, ${TARGETS}} $(LDFLAGS) $(LIBS)
+${addsuffix .o, ${PROGRAMS}}: %.o: %.c Makefile global.h
+	${COMPILE} -c $<
+
+${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} 
+	 ${LINK} ${addsuffix .o, ${MODULES}} $@.o $(LIBS)
 
 clean:
 	rm -f *.o hybrid
