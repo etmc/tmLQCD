@@ -183,9 +183,6 @@ void geometry(){
 	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
 	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
 
- 	  if(g_proc_id == 0) printf("%d %d %d %d: %d %d  %d %d %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, xeven[ix],g_iup[ix][0], g_idn[ix][0], g_iup[ix][1], g_idn[ix][1], g_iup[ix][2], g_idn[ix][2], g_iup[ix][3], g_idn[ix][3]); 
-	  
-	  
 	}
       }
     }
