@@ -163,7 +163,7 @@ int read_gauge_field_time_p(char * filename){
       printf("Warning! Configuration %s was produced with a different beta!\n", filename);
 /*       errorhandler(112,filename); */
     }
-    if((l!=L)||(t!=T)){
+    if((l!=L)||(t!=g_nproc*T)){
       printf("Error! Configuration %s was produced with a differen lattice size\n Aborting...\n", filename);
       exit(1);
 /*       errorhandler(114,filename); */
@@ -172,9 +172,10 @@ int read_gauge_field_time_p(char * filename){
       for(y = 0; y < LY; y++){
 	for(z = 0; z < LZ; z++){
 #if (defined MPI && defined PARALLELT)
-	    fseek(ifs, position +
-		  (g_proc_id*T+x*y*z*T*g_nproc)*4*sizeof(su3),
-		  SEEK_SET);
+	  fseek(ifs, position +
+		(g_proc_id*T+
+		 ((x*LY+y)*LZ+z)*T*g_nproc)*4*sizeof(su3),
+		SEEK_SET);
 #endif
 	  for(t = 0; t < T; t++){
 #ifdef LITTLE_ENDIAN
