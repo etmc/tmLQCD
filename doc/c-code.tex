@@ -4,7 +4,7 @@
 Files: {\ttfamily Hopping\_Matrix.c|h}.\\
 Here the Hopping Matrix is implemented.
 \[
--\kappa\sum_\mu \delta_{x,y+\hat\mu}(1+\gamma_\mu)
+\kappa\sum_\mu \delta_{x,y+\hat\mu}(1+\gamma_\mu)
 \]
 It connect even (odd) sites in {\ttfamily l} with odd  (even) sites in {\ttfamily k}
 if {\ttfamily ieo} is set to {\ttfamily EO} ({\ttfamily
@@ -77,6 +77,58 @@ l = (M_{ee|oo}^\pm)^{-1} M_{eo|oe} k\, .
 The sign is set corresponding to {\ttfamily sign}. Setting {\ttfamily
   ieo} to {\ttfamily EO} ({\ttfamily OE}) means using $M_{eo}$
 ($M_{oe}$) and $M_{ee}$ ($M_{oo}$).
+
+\subsection{$\gamma$ matrices}
+
+$\gamma_5$ ist defined as follows:
+\[
+  \gamma_5 =
+  \begin{pmatrix}
+    +1 & 0 & 0 & 0 \\
+    0 & +1 & 0 & 0 \\
+    0 & 0 & -1 & 0 \\
+    0 & 0 & 0 & -1 \\    
+  \end{pmatrix}\ .
+\]
+
+In the operator the following notation for
+the matrices is used:
+\[
+\begin{split}
+  \gamma_0 = \begin{pmatrix}
+    0 & 0 & +1 & 0 \\
+    0 & 0 & 0 & +1 \\
+    +1 & 0 & 0 & 0 \\
+    0 & +1 & 0 & 0 \\
+  \end{pmatrix},\quad
+  \gamma_1 =\begin{pmatrix}
+    0 & 0 & 0 & +i \\
+    0 & 0 & +i & 0 \\
+    0 & -i & 0 & 0 \\
+    -i & 0 & 0 & 0 \\    
+  \end{pmatrix},\\
+  \gamma_2 = \begin{pmatrix}
+    0 & 0 & 0 & +1 \\
+    0 & 0 & -1 & 0 \\
+    0 & -1 & 0 & 0 \\
+    +1 & 0 & 0 & 0 \\   
+  \end{pmatrix},\quad
+  \gamma_3 =\begin{pmatrix}
+    0 & 0 & +i & 0 \\
+    0 & 0 & 0 & -i \\
+    -i & 0 & 0 & 0 \\
+    0 & +i & 0 & 0 \\
+  \end{pmatrix}\ .\\
+\end{split}
+\]
+
+\subsection{boundaries in the parallel code}
+
+The gauge field ist stored with the local gauge field first with index
+\ttfamily{0 -> T*L*L*L-1}, then the right boundary with index
+\ttfamily{T*L*L*L -> (T+1)*L*L*L-1} and then the left boundary with index
+\ttfamily((T+1)*L*L*L -> (T+2_*L*L*L-1}. This means there is no
+Even-Odd order in the gauge fields. 
 
 %%% Local Variables: 
 %%% mode: latex
