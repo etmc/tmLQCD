@@ -60,20 +60,20 @@ int main(int argc,char *argv[])
    char processor_name[MPI_MAX_PROCESSOR_NAME];
 
    MPI_Init(&argc,&argv);
-   MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
-   MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+   MPI_Comm_size(MPI_COMM_WORLD,&g_nproc);
+   MPI_Comm_rank(MPI_COMM_WORLD,&g_proc_id);
    MPI_Get_processor_name(processor_name,&namelen);
 
    fprintf(stdout,"Process %d of %d on %s\n",
-   myid, numprocs, processor_name);
+   g_proc_id, g_nproc, processor_name);
    fflush(stdout);
 
-if(myid==0)
+if(g_proc_id==0)
   {
   fp7=fopen("bicgdata","w"); 
   fp6=fopen("input","r");
   printf("The lattice size is %d x %d^3\n\n",(int)(T),(int)(L));
-  printf("beta = %f , kappa= %f, kappa*csw/8= %f \n\n",beta,kappa,ka_csw_8);
+  printf("g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
 
   printf("give the name of the out-put files \n");   
   fscanf(fp6,"%s",&filename);
@@ -84,8 +84,8 @@ if(myid==0)
   fp1=fopen(filename1,"w");
   fp2=fopen(filename2,"w");
 
-  fprintf(fp2,"The lattice size is %d x %d^3\n\n",(int)(numprocs*T),(int)(L));
-  fprintf(fp2,"beta = %f , kappa= %f, kappa*csw/8= %f \n\n",beta,kappa,ka_csw_8);
+  fprintf(fp2,"The lattice size is %d x %d^3\n\n",(int)(g_nproc*T),(int)(L));
+  fprintf(fp2,"g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
   fprintf(fp2,"boundary %f %f %f %f \n \n",X0,X1,X2,X3);
   fprintf(fp2,"ITER_MAX=%d, EPS_SQ0=%e, EPS_SQ1=%e \n\n",ITER_MAX,EPS_SQ0,EPS_SQ1);
 
@@ -102,7 +102,7 @@ if(myid==0)
    fscanf(fp6,"%d",&idis);
 
   /*broadcast the information to the other processes */
-  for(i=1;i<numprocs;i++)
+  for(i=1;i<g_nproc;i++)
     {
     MPI_Send(&q_off, 1, MPI_DOUBLE, i, 90, MPI_COMM_WORLD);
     MPI_Send(&q_off2, 1, MPI_DOUBLE, i, 91, MPI_COMM_WORLD);
@@ -116,7 +116,7 @@ if(myid==0)
     }
   }
 /* collect the information */
-if(myid!=0)
+if(g_proc_id!=0)
   {
   MPI_Recv(&q_off, 1, MPI_DOUBLE, 0, 90, MPI_COMM_WORLD, &status);
   MPI_Recv(&q_off2, 1, MPI_DOUBLE, 0, 91, MPI_COMM_WORLD, &status);
@@ -136,12 +136,12 @@ if(myid!=0)
 
 if(idis==1)
   {
-  if(myid==0)
+  if(g_proc_id==0)
     {
     fprintf(fp2,"Dies ist ein Fortsetzungslauf \n\n");
     fp3=fopen("gaugeconfig1","r");
-    fread(gauge_field,sizeof gauge_tmp,1,fp3);
-    for(i=1;i<numprocs;i++)
+    fread(g_gauge_field,sizeof gauge_tmp,1,fp3);
+    for(i=1;i<g_nproc;i++)
       {
       fread(gauge_tmp,sizeof gauge_tmp,1,fp3);
       MPI_Send(&gauge_tmp[0][0].c11.re, 72*VOLUME, MPI_DOUBLE, i, 42,
@@ -155,7 +155,7 @@ if(idis==1)
     }
   else
     {
-    MPI_Recv(&gauge_field[0][0].c11.re, 72*VOLUME, MPI_DOUBLE, 0, 42,
+    MPI_Recv(&g_gauge_field[0][0].c11.re, 72*VOLUME, MPI_DOUBLE, 0, 42,
 	     MPI_COMM_WORLD, &status);
     }
   }
@@ -163,28 +163,28 @@ else
   {
 /* here we generate exactly the same configuration as for the 
    single node simulation */
-  if(myid==0)
+  if(g_proc_id==0)
     {
     rlxs_init(0,123456);   
-    random_gauge_field();
+    random_g_gauge_field();
 /* send the state of the random-number generator to 1 */
     rlxs_get(rlxs_state);
     MPI_Send(&rlxs_state[0], 25, MPI_INT, 1, 99, MPI_COMM_WORLD);
     }
   else
     {
-/* recieve the random number state form myid-1 */
-    MPI_Recv(&rlxs_state[0], 25, MPI_INT, myid-1, 99, MPI_COMM_WORLD, &status);
+/* recieve the random number state form g_proc_id-1 */
+    MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
     rlxs_reset(rlxs_state);
-    random_gauge_field();
-/* send the random number state to myid+1 */
-    k=myid+1; if(k==numprocs) k=0;
+    random_g_gauge_field();
+/* send the random number state to g_proc_id+1 */
+    k=g_proc_id+1; if(k==g_nproc) k=0;
     rlxs_get(rlxs_state);
     MPI_Send(&rlxs_state[0], 25, MPI_INT, k, 99, MPI_COMM_WORLD);
     }
-  if(myid==0)
+  if(g_proc_id==0)
     {
-    MPI_Recv(&rlxs_state[0], 25, MPI_INT, numprocs-1, 99, MPI_COMM_WORLD, &status);
+    MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
     rlxs_reset(rlxs_state);
     }
   }
@@ -192,9 +192,9 @@ else
   xchange_gauge();
 /*compute the energy of the gauge field*/
    eneg=measure_gauge_action();
-if(myid==0)
+if(g_proc_id==0)
   {
-  fprintf(fp2,"%14.12lf \n",1.-eneg/(6.*VOLUME*numprocs));
+  fprintf(fp2,"%14.12lf \n",1.-eneg/(6.*VOLUME*g_nproc));
   fclose(fp2);
   }
 /*compute the energy of the determinant term */
@@ -204,7 +204,7 @@ if(myid==0)
 
 /* needed for exact continuation of the run, since evamax and eva use
    random numbers */ 
-   if(idis==1) if(myid==0) rlxs_reset(rlxs_state);
+   if(idis==1) if(g_proc_id==0) rlxs_reset(rlxs_state);
 
 /* set ddummy to zero */
      for(ix=0;ix<VOLUME+RAND;ix++) for(mu=0;mu<4;mu++)
@@ -222,7 +222,7 @@ if(myid==0)
 /*copy the gauge field to gauge_tmp */
      for(ix=0;ix<VOLUME;ix++) for(mu=0;mu<4;mu++)
        {
-       v=&gauge_field[ix][mu];
+       v=&g_gauge_field[ix][mu];
        w=&gauge_tmp[ix][mu];
        _su3_assign(*w,*v);
        }
@@ -306,14 +306,14 @@ if(myid==0)
        }
 
 /* violation of the Hamiltonian */
-     dh=-enecx+enec+enepx-beta*enegx-enep+beta*eneg
+     dh=-enecx+enec+enepx-g_beta*enegx-enep+g_beta*eneg
         +enerphi0x-enerphi0+enerphi1x-enerphi1+enerphi2x-enerphi2; 
 
-if(myid==0)
+if(g_proc_id==0)
 {
 fprintf(stdout,"%10.5e %10.5e %10.5e %10.5e %10.5e %10.5e \n",
                enecx-enec,
-               beta*eneg-beta*enegx,
+               g_beta*eneg-g_beta*enegx,
                enepx-enep,
                enerphi0x-enerphi0,
                enerphi1x-enerphi1,
@@ -327,42 +327,42 @@ ks=0.0;
 kc=0.0;
 for(i=0;i<VOLUME;i++) for(mu=0;mu<4;mu++)
   {
-  ds =(gauge_tmp[i][mu].c11.re-gauge_field[i][mu].c11.re)
-     *(gauge_tmp[i][mu].c11.re-gauge_field[i][mu].c11.re);
-  ds+=(gauge_tmp[i][mu].c11.im-gauge_field[i][mu].c11.im)
-     *(gauge_tmp[i][mu].c11.im-gauge_field[i][mu].c11.im);
-  ds+=(gauge_tmp[i][mu].c12.re-gauge_field[i][mu].c12.re)
-     *(gauge_tmp[i][mu].c12.re-gauge_field[i][mu].c12.re);
-  ds+=(gauge_tmp[i][mu].c12.im-gauge_field[i][mu].c12.im)
-     *(gauge_tmp[i][mu].c12.im-gauge_field[i][mu].c12.im);
-  ds+=(gauge_tmp[i][mu].c13.re-gauge_field[i][mu].c13.re)
-     *(gauge_tmp[i][mu].c13.re-gauge_field[i][mu].c13.re);
-  ds+=(gauge_tmp[i][mu].c13.im-gauge_field[i][mu].c13.im)
-     *(gauge_tmp[i][mu].c13.im-gauge_field[i][mu].c13.im);
-  ds+=(gauge_tmp[i][mu].c21.re-gauge_field[i][mu].c21.re)
-     *(gauge_tmp[i][mu].c21.re-gauge_field[i][mu].c21.re);
-  ds+=(gauge_tmp[i][mu].c21.im-gauge_field[i][mu].c21.im)
-     *(gauge_tmp[i][mu].c21.im-gauge_field[i][mu].c21.im);
-  ds+=(gauge_tmp[i][mu].c22.re-gauge_field[i][mu].c22.re)
-     *(gauge_tmp[i][mu].c22.re-gauge_field[i][mu].c22.re);
-  ds+=(gauge_tmp[i][mu].c22.im-gauge_field[i][mu].c22.im)
-     *(gauge_tmp[i][mu].c22.im-gauge_field[i][mu].c22.im);
-  ds+=(gauge_tmp[i][mu].c23.re-gauge_field[i][mu].c23.re)
-     *(gauge_tmp[i][mu].c23.re-gauge_field[i][mu].c23.re);
-  ds+=(gauge_tmp[i][mu].c23.im-gauge_field[i][mu].c23.im)
-     *(gauge_tmp[i][mu].c23.im-gauge_field[i][mu].c23.im);
-  ds+=(gauge_tmp[i][mu].c31.re-gauge_field[i][mu].c31.re)
-     *(gauge_tmp[i][mu].c31.re-gauge_field[i][mu].c31.re);
-  ds+=(gauge_tmp[i][mu].c31.im-gauge_field[i][mu].c31.im)
-     *(gauge_tmp[i][mu].c31.im-gauge_field[i][mu].c31.im);
-  ds+=(gauge_tmp[i][mu].c32.re-gauge_field[i][mu].c32.re)
-     *(gauge_tmp[i][mu].c32.re-gauge_field[i][mu].c32.re);
-  ds+=(gauge_tmp[i][mu].c32.im-gauge_field[i][mu].c32.im)
-     *(gauge_tmp[i][mu].c32.im-gauge_field[i][mu].c32.im);
-  ds+=(gauge_tmp[i][mu].c33.re-gauge_field[i][mu].c33.re)
-     *(gauge_tmp[i][mu].c33.re-gauge_field[i][mu].c33.re);
-  ds+=(gauge_tmp[i][mu].c33.im-gauge_field[i][mu].c33.im)
-     *(gauge_tmp[i][mu].c33.im-gauge_field[i][mu].c33.im);
+  ds =(gauge_tmp[i][mu].c11.re-g_gauge_field[i][mu].c11.re)
+     *(gauge_tmp[i][mu].c11.re-g_gauge_field[i][mu].c11.re);
+  ds+=(gauge_tmp[i][mu].c11.im-g_gauge_field[i][mu].c11.im)
+     *(gauge_tmp[i][mu].c11.im-g_gauge_field[i][mu].c11.im);
+  ds+=(gauge_tmp[i][mu].c12.re-g_gauge_field[i][mu].c12.re)
+     *(gauge_tmp[i][mu].c12.re-g_gauge_field[i][mu].c12.re);
+  ds+=(gauge_tmp[i][mu].c12.im-g_gauge_field[i][mu].c12.im)
+     *(gauge_tmp[i][mu].c12.im-g_gauge_field[i][mu].c12.im);
+  ds+=(gauge_tmp[i][mu].c13.re-g_gauge_field[i][mu].c13.re)
+     *(gauge_tmp[i][mu].c13.re-g_gauge_field[i][mu].c13.re);
+  ds+=(gauge_tmp[i][mu].c13.im-g_gauge_field[i][mu].c13.im)
+     *(gauge_tmp[i][mu].c13.im-g_gauge_field[i][mu].c13.im);
+  ds+=(gauge_tmp[i][mu].c21.re-g_gauge_field[i][mu].c21.re)
+     *(gauge_tmp[i][mu].c21.re-g_gauge_field[i][mu].c21.re);
+  ds+=(gauge_tmp[i][mu].c21.im-g_gauge_field[i][mu].c21.im)
+     *(gauge_tmp[i][mu].c21.im-g_gauge_field[i][mu].c21.im);
+  ds+=(gauge_tmp[i][mu].c22.re-g_gauge_field[i][mu].c22.re)
+     *(gauge_tmp[i][mu].c22.re-g_gauge_field[i][mu].c22.re);
+  ds+=(gauge_tmp[i][mu].c22.im-g_gauge_field[i][mu].c22.im)
+     *(gauge_tmp[i][mu].c22.im-g_gauge_field[i][mu].c22.im);
+  ds+=(gauge_tmp[i][mu].c23.re-g_gauge_field[i][mu].c23.re)
+     *(gauge_tmp[i][mu].c23.re-g_gauge_field[i][mu].c23.re);
+  ds+=(gauge_tmp[i][mu].c23.im-g_gauge_field[i][mu].c23.im)
+     *(gauge_tmp[i][mu].c23.im-g_gauge_field[i][mu].c23.im);
+  ds+=(gauge_tmp[i][mu].c31.re-g_gauge_field[i][mu].c31.re)
+     *(gauge_tmp[i][mu].c31.re-g_gauge_field[i][mu].c31.re);
+  ds+=(gauge_tmp[i][mu].c31.im-g_gauge_field[i][mu].c31.im)
+     *(gauge_tmp[i][mu].c31.im-g_gauge_field[i][mu].c31.im);
+  ds+=(gauge_tmp[i][mu].c32.re-g_gauge_field[i][mu].c32.re)
+     *(gauge_tmp[i][mu].c32.re-g_gauge_field[i][mu].c32.re);
+  ds+=(gauge_tmp[i][mu].c32.im-g_gauge_field[i][mu].c32.im)
+     *(gauge_tmp[i][mu].c32.im-g_gauge_field[i][mu].c32.im);
+  ds+=(gauge_tmp[i][mu].c33.re-g_gauge_field[i][mu].c33.re)
+     *(gauge_tmp[i][mu].c33.re-g_gauge_field[i][mu].c33.re);
+  ds+=(gauge_tmp[i][mu].c33.im-g_gauge_field[i][mu].c33.im)
+     *(gauge_tmp[i][mu].c33.im-g_gauge_field[i][mu].c33.im);
   tr=ds+kc;
   ts=tr+ks;
   tt=ts-ks;
@@ -372,7 +372,7 @@ for(i=0;i<VOLUME;i++) for(mu=0;mu<4;mu++)
 kc=ks+kc;
 MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-if(myid==0)
+if(g_proc_id==0)
 {
 fprintf(stdout,"%10.5e %10.5e \n",dh,ks);
 fflush(stdout);

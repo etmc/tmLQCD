@@ -24,10 +24,10 @@
 *   su3 random_su3(void)
 *     Returns a uniformly distributed random SU(3) matrix
 *
-*   void unit_gauge_field(void)
+*   void unit_g_gauge_field(void)
 *     Sets the gauge field variables to unity
 *
-*   void random_gauge_field(void)
+*   void random_g_gauge_field(void)
 *     Initializes the gauge field to a random configuration
 *
 * Version: 1.0
@@ -164,7 +164,7 @@ int rlxs_state[25];
 spinor *s;
 double v[6];
 
-if(myid==0)
+if(g_proc_id==0)
   {
 for (ix=0;ix<VOLUME/2;ix++)
   {
@@ -203,9 +203,9 @@ for (ix=0;ix<VOLUME/2;ix++)
   MPI_Send(&rlxs_state[0], 25, MPI_INT, 1, 102, MPI_COMM_WORLD);
   }
 
-if(myid!=0)
+if(g_proc_id!=0)
   {
-  MPI_Recv(&rlxs_state[0], 25, MPI_INT, myid-1, 102, MPI_COMM_WORLD, &status);
+  MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_proc_id-1, 102, MPI_COMM_WORLD, &status);
   rlxs_reset(rlxs_state);
 for (ix=0;ix<VOLUME/2;ix++)
   {
@@ -240,13 +240,13 @@ for (ix=0;ix<VOLUME/2;ix++)
   (*s).c4.c3.im=v[5];
   }
 /* send the state fo the random-number generator to k+1 */
-  j=myid+1; if(j==numprocs) j=0;
+  j=g_proc_id+1; if(j==g_nproc) j=0;
   rlxs_get(rlxs_state);
   MPI_Send(&rlxs_state[0], 25, MPI_INT, j, 102, MPI_COMM_WORLD);
   }
-if(myid==0)
+if(g_proc_id==0)
   {
-  MPI_Recv(&rlxs_state[0], 25, MPI_INT, numprocs-1, 102, MPI_COMM_WORLD, &status);
+  MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_nproc-1, 102, MPI_COMM_WORLD, &status);
   rlxs_reset(rlxs_state);
   }
 }
@@ -346,7 +346,7 @@ su3 random_su3(void)
 }
 
 
-void unit_gauge_field(void)
+void unit_g_gauge_field(void)
 {
    int ix,mu;
    
@@ -354,13 +354,13 @@ void unit_gauge_field(void)
    {
       for (mu=0;mu<4;mu++)
       {
-         gauge_field[ix][mu]=unit_su3();
+         g_gauge_field[ix][mu]=unit_su3();
       }
    }
 }
 
 
-void random_gauge_field(void)
+void random_g_gauge_field(void)
 {
    int ix,mu;
    
@@ -368,7 +368,7 @@ void random_gauge_field(void)
    {
       for (mu=0;mu<4;mu++)
       {
-         gauge_field[ix][mu]=random_su3();
+         g_gauge_field[ix][mu]=random_su3();
       }
    }
 }

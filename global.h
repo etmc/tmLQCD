@@ -12,23 +12,28 @@
 * Adapted for the HMC-Program by M. Hasenbusch 2002
 *
 *******************************************************************************/
-#include "mpi.h"
+#include <mpi.h>
+#include"su3.h"
+#include"su3adj.h"
 
 #define T  4
 #define L  8
+#define LX (L)
+#define LY (L)
+#define LZ (L)
 #define DUM_DERI 6
 #define DUM_SOLVER DUM_DERI+4
 #define DUM_MATRIX DUM_SOLVER+5
 #define NO_OF_SPINORFIELDS DUM_MATRIX+2
-#define VOLUME (T*L*L*L)
-#define RAND (2*L*L*L)
-#define SLICE (L*L*L/2)
-/* #define beta  5.1 */
-/* #define kappa 0.12 */
-/* #define ka_csw_8 0.03058 */
-/* #define kappa 0.1 */
-/* #define ka_csw_8 0.01875   */
-/* #define ka_csw_8 0.0  */
+#define VOLUME (T*LX*LY*LZ)
+#define RAND (2*LX*LY*LZ)
+#define SLICE (LX*LY*LZ/2)
+/* #define g_beta  5.1 */
+/* #define g_kappa 0.12 */
+/* #define g_ka_csw_8 0.03058 */
+/* #define g_kappa 0.1 */
+/* #define g_ka_csw_8 0.01875   */
+/* #define g_ka_csw_8 0.0  */
 /* #define X0 1. */
 #define X0 0.
 #define X1 0.
@@ -61,11 +66,11 @@
 EXTERN int trans1[VOLUME+RAND] ALIGN;   
 EXTERN int trans2[VOLUME+RAND] ALIGN;   
 EXTERN int xeven[VOLUME+RAND] ALIGN;   
-EXTERN int ipt[T+2][L][L][L] ALIGN;
-EXTERN int iup[VOLUME+RAND][4] ALIGN;   
-EXTERN int idn[VOLUME+RAND][4] ALIGN;   
+EXTERN int g_ipt[T+2][L][L][L] ALIGN;
+EXTERN int g_iup[VOLUME+RAND][4] ALIGN;   
+EXTERN int g_idn[VOLUME+RAND][4] ALIGN;   
 EXTERN spinor spinor_field[NO_OF_SPINORFIELDS][(VOLUME+RAND)/2] ALIGN;
-EXTERN su3 gauge_field[VOLUME+RAND][4] ALIGN;
+EXTERN su3 g_gauge_field[VOLUME+RAND][4] ALIGN;
 EXTERN su3adj moment[VOLUME][4] ALIGN;
 EXTERN su3adj df0[VOLUME+RAND][4] ALIGN;
 EXTERN su3adj dclover[VOLUME+RAND][4] ALIGN;
@@ -75,12 +80,13 @@ EXTERN su3 sw_inv[VOLUME][3][2] ALIGN;
 EXTERN su3 swp[VOLUME][4] ALIGN;
 EXTERN su3 swm[VOLUME][4] ALIGN;
 EXTERN int count00,count01,count10,count11,count20,count21;
-EXTERN double kappa, c_sw, ka_csw_8, beta;
+EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
 
 /* MPI information */
-EXTERN int myid, numprocs;
+EXTERN int g_proc_id, g_nproc;
 EXTERN MPI_Status status;
 EXTERN MPI_Request req1,req2,req3,req4;
+EXTERN MPI_Comm g_cart_grid;
 
 /* file for solver-information */
 FILE *fp7;

@@ -34,15 +34,15 @@ double measure_gauge_action(void)
    {
       for (mu1=0;mu1<3;mu1++)
       { 
-         ix1=iup[ix][mu1];
+         ix1=g_iup[ix][mu1];
          for (mu2=mu1+1;mu2<4;mu2++)
          { 
-            ix2=iup[ix][mu2];
-            v=&gauge_field[ix][mu1];
-            w=&gauge_field[ix1][mu2];
+            ix2=g_iup[ix][mu2];
+            v=&g_gauge_field[ix][mu1];
+            w=&g_gauge_field[ix1][mu2];
             _su3_times_su3(pr1,*v,*w)  
-            v=&gauge_field[ix][mu2];
-            w=&gauge_field[ix2][mu1];
+            v=&g_gauge_field[ix][mu2];
+            w=&g_gauge_field[ix2][mu1];
             _su3_times_su3(pr2,*v,*w) 
             _trace_su3_times_su3d(ac,pr1,pr2) 
             tr=ac+kc;

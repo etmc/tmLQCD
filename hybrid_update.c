@@ -23,15 +23,15 @@ su3 *w1,*w2,*w3;
 _su3_zero(v)
 for(k=0;k<4;k++) if(k!=mu)
   {
-  w1=&gauge_field[x][k];
-  w2=&gauge_field[iup[x][k]][mu];
-  w3=&gauge_field[iup[x][mu]][k];
+  w1=&g_gauge_field[x][k];
+  w2=&g_gauge_field[g_iup[x][k]][mu];
+  w3=&g_gauge_field[g_iup[x][mu]][k];
   _su3_times_su3d(st,*w2,*w3);
   _su3_times_su3_acc(v,*w1,st); 
-  iy=idn[x][k];
-  w1=&gauge_field[iy][k];
-  w2=&gauge_field[iy][mu];
-  w3=&gauge_field[iup[iy][mu]][k];
+  iy=g_idn[x][k];
+  w1=&g_gauge_field[iy][k];
+  w2=&g_gauge_field[iy][mu];
+  w3=&g_gauge_field[g_iup[iy][mu]][k];
   _su3_times_su3(st,*w2,*w3);
   _su3d_times_su3_acc(v,*w1,st);
   }
@@ -46,12 +46,12 @@ su3 *z;
 static su3adj deriv;
 su3adj *xm;
 static double st;
-st=-step*beta/3.0;
+st=-step*g_beta/3.0;
 for(i=0;i<VOLUME;i++) 
   {
   for(mu=0;mu<4;mu++)
     { 
-    z=&gauge_field[i][mu];
+    z=&g_gauge_field[i][mu];
     xm=&moment[i][mu];
     v=get_staples(i,mu); 
     _su3_times_su3d(w,*z,v);
@@ -146,7 +146,7 @@ for(i=0;i<VOLUME;i++)
     deriv=&df0[i][mu]; 
    _minus_const_times_mom(*xm,2.*step,*deriv); 
     deriv=&dclover[i][mu]; 
-   _minus_const_times_mom(*xm,-2.*ka_csw_8*step,*deriv); 
+   _minus_const_times_mom(*xm,-2.*g_ka_csw_8*step,*deriv); 
     }
   }
 }
@@ -161,7 +161,7 @@ su3adj *xm;
 for(i=0;i<VOLUME;i++) for(mu=0;mu<4;mu++)
   {
   xm=&moment[i][mu];
-  z=&gauge_field[i][mu];
+  z=&g_gauge_field[i][mu];
   _assign_const_times_mom(deriv,step,*xm);
   v=restoresu3(exposu3(deriv));
   _su3_times_su3(w,v,*z);
@@ -282,7 +282,7 @@ int rlxs_state[25];
 static double y[8];
 static double tt,tr,ts,kc,ks,sum;
 
-if(myid==0)
+if(g_proc_id==0)
   {
   kc=0.; ks=0.;
   for(i=0;i<VOLUME;i++) for(mu=0;mu<4;mu++)
@@ -313,9 +313,9 @@ if(myid==0)
   MPI_Send(&rlxs_state[0], 25, MPI_INT, 1, 101, MPI_COMM_WORLD);
   }
 
-if(myid!=0)
+if(g_proc_id!=0)
   {
-  MPI_Recv(&rlxs_state[0], 25, MPI_INT, myid-1, 101, MPI_COMM_WORLD, &status);
+  MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_proc_id-1, 101, MPI_COMM_WORLD, &status);
   rlxs_reset(rlxs_state);
   kc=0.; ks=0.;
   for(i=0;i<VOLUME;i++) for(mu=0;mu<4;mu++)
@@ -342,13 +342,13 @@ if(myid!=0)
     kc=tr-tt;
     }
 /* send the state fo the random-number generator to 1 */
-  k=myid+1; if(k==numprocs) k=0;
+  k=g_proc_id+1; if(k==g_nproc) k=0;
   rlxs_get(rlxs_state);
   MPI_Send(&rlxs_state[0], 25, MPI_INT, k, 101, MPI_COMM_WORLD);
   }
-if(myid==0)
+if(g_proc_id==0)
   {
-  MPI_Recv(&rlxs_state[0], 25, MPI_INT, numprocs-1, 101, MPI_COMM_WORLD, &status);
+  MPI_Recv(&rlxs_state[0], 25, MPI_INT, g_nproc-1, 101, MPI_COMM_WORLD, &status);
   rlxs_reset(rlxs_state);
   }
 kc=0.5*(ks+kc);

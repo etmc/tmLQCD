@@ -30,38 +30,38 @@ for(x=0; x<VOLUME; x++)
     {
     for(l=k+1;l<4;l++)
       {
-      xpk=iup[x][k];
-      xpl=iup[x][l];
-      xmk=idn[x][k];
-      xml=idn[x][l];
-      xpkml=idn[xpk][l];
-      xplmk=idn[xpl][k];
-      xmkml=idn[xml][k];
-      w1=&gauge_field[x][k];
-      w2=&gauge_field[xpk][l];
-      w3=&gauge_field[xpl][k];
-      w4=&gauge_field[x][l];
+      xpk=g_iup[x][k];
+      xpl=g_iup[x][l];
+      xmk=g_idn[x][k];
+      xml=g_idn[x][l];
+      xpkml=g_idn[xpk][l];
+      xplmk=g_idn[xpl][k];
+      xmkml=g_idn[xml][k];
+      w1=&g_gauge_field[x][k];
+      w2=&g_gauge_field[xpk][l];
+      w3=&g_gauge_field[xpl][k];
+      w4=&g_gauge_field[x][l];
       _su3_times_su3(v1,*w1,*w2);
       _su3_times_su3(v2,*w4,*w3);
       _su3_times_su3d(plaq,v1,v2);
-      w1=&gauge_field[x][l];
-      w2=&gauge_field[xplmk][k];
-      w3=&gauge_field[xmk][l];
-      w4=&gauge_field[xmk][k];
+      w1=&g_gauge_field[x][l];
+      w2=&g_gauge_field[xplmk][k];
+      w3=&g_gauge_field[xmk][l];
+      w4=&g_gauge_field[xmk][k];
       _su3_times_su3d(v1,*w1,*w2);
       _su3d_times_su3(v2,*w3,*w4);
       _su3_times_su3_acc(plaq,v1,v2);
-      w1=&gauge_field[xmk][k];
-      w2=&gauge_field[xmkml][l];
-      w3=&gauge_field[xmkml][k];
-      w4=&gauge_field[xml][l];
+      w1=&g_gauge_field[xmk][k];
+      w2=&g_gauge_field[xmkml][l];
+      w3=&g_gauge_field[xmkml][k];
+      w4=&g_gauge_field[xml][l];
       _su3_times_su3(v1,*w2,*w1);
       _su3_times_su3(v2,*w3,*w4);
       _su3d_times_su3_acc(plaq,v1,v2);
-      w1=&gauge_field[xml][l];
-      w2=&gauge_field[xml][k];
-      w3=&gauge_field[xpkml][l];
-      w4=&gauge_field[x][k];
+      w1=&g_gauge_field[xml][l];
+      w2=&g_gauge_field[xml][k];
+      w3=&g_gauge_field[xpkml][l];
+      w4=&g_gauge_field[x][k];
       _su3d_times_su3(v1,*w1,*w2);
       _su3_times_su3d(v2,*w3,*w4);
       _su3_times_su3_acc(plaq,v1,v2);
@@ -83,26 +83,26 @@ for(x=0; x<VOLUME; x++)
 /*  upper left block matrix  */
 
     _itimes_su3_minus_su3(aux,electric[3],magnetic[3]);
-    _su3_refac_acc(sw[x][0][0],ka_csw_8,aux);
+    _su3_refac_acc(sw[x][0][0],g_ka_csw_8,aux);
 
     _itimes_su3_minus_su3(aux,electric[1],magnetic[1]);
     _su3_minus_su3(v2,electric[2],magnetic[2]); _su3_acc(aux,v2);
-    _real_times_su3(sw[x][1][0],ka_csw_8,aux);
+    _real_times_su3(sw[x][1][0],g_ka_csw_8,aux);
 
     _itimes_su3_minus_su3(aux,magnetic[3],electric[3]);
-    _su3_refac_acc(sw[x][2][0],ka_csw_8,aux);
+    _su3_refac_acc(sw[x][2][0],g_ka_csw_8,aux);
 
 /*  lower right block matrix */
 
     _itimes_su3_plus_su3(aux,electric[3],magnetic[3]);
-    _su3_refac_acc(sw[x][0][1],(-ka_csw_8),aux);
+    _su3_refac_acc(sw[x][0][1],(-g_ka_csw_8),aux);
 
     _itimes_su3_plus_su3(aux,electric[1],magnetic[1]);
     _su3_plus_su3(v2,electric[2],magnetic[2]); _su3_acc(aux,v2);
-    _real_times_su3(sw[x][1][1],(-ka_csw_8),aux);
+    _real_times_su3(sw[x][1][1],(-g_ka_csw_8),aux);
 
     _itimes_su3_plus_su3(aux,magnetic[3],electric[3]);
-    _su3_refac_acc(sw[x][2][1],ka_csw_8,aux);
+    _su3_refac_acc(sw[x][2][1],g_ka_csw_8,aux);
 
   }
 }
@@ -548,17 +548,17 @@ for(x=0;x<VOLUME;x++)
     {
     for(l=k+1;l<4;l++)
       {
-      xpk=iup[x][k];
-      xpl=iup[x][l];
-      xmk=idn[x][k];
-      xml=idn[x][l];
-      xpkml=idn[xpk][l];
-      xplmk=idn[xpl][k];
-      xmkml=idn[xml][k];
-      w1=&gauge_field[x][k];
-      w2=&gauge_field[xpk][l];
-      w3=&gauge_field[xpl][k];   /*dag*/
-      w4=&gauge_field[x][l];     /*dag*/
+      xpk=g_iup[x][k];
+      xpl=g_iup[x][l];
+      xmk=g_idn[x][k];
+      xml=g_idn[x][l];
+      xpkml=g_idn[xpk][l];
+      xplmk=g_idn[xpl][k];
+      xmkml=g_idn[xml][k];
+      w1=&g_gauge_field[x][k];
+      w2=&g_gauge_field[xpk][l];
+      w3=&g_gauge_field[xpl][k];   /*dag*/
+      w4=&g_gauge_field[x][l];     /*dag*/
 
       _su3_times_su3(v1,*w1,*w2);
       _su3_times_su3(v2,*w4,*w3);
@@ -574,10 +574,10 @@ for(x=0;x<VOLUME;x++)
       _su3d_times_su3(vv2,*w4,vv1); _su3_times_su3(vv1,vv2,*w4);
       _trace_lambda(resu,vv1); der=&dclover[xpl][k]; _add_su3adj(*der,resu);
 
-      w1=&gauge_field[x][l];
-      w2=&gauge_field[xplmk][k];   /*dag*/
-      w3=&gauge_field[xmk][l];     /*dag*/
-      w4=&gauge_field[xmk][k];
+      w1=&g_gauge_field[x][l];
+      w2=&g_gauge_field[xplmk][k];   /*dag*/
+      w3=&g_gauge_field[xmk][l];     /*dag*/
+      w4=&g_gauge_field[xmk][k];
       _su3_times_su3d(v1,*w1,*w2);
       _su3d_times_su3(v2,*w3,*w4);
       _su3_times_su3(plaq,v1,v2);
@@ -595,10 +595,10 @@ for(x=0;x<VOLUME;x++)
       _su3_dagger(vv2,vv1);
       _trace_lambda(resu,vv2); der=&dclover[xmk][k]; _add_su3adj(*der,resu);
 
-      w1=&gauge_field[xmk][k];   /*dag*/
-      w2=&gauge_field[xmkml][l]; /*dag*/
-      w3=&gauge_field[xmkml][k];
-      w4=&gauge_field[xml][l];
+      w1=&g_gauge_field[xmk][k];   /*dag*/
+      w2=&g_gauge_field[xmkml][l]; /*dag*/
+      w3=&g_gauge_field[xmkml][k];
+      w4=&g_gauge_field[xml][l];
       _su3_times_su3(v1,*w2,*w1);
       _su3_times_su3(v2,*w3,*w4);
 
@@ -616,10 +616,10 @@ for(x=0;x<VOLUME;x++)
       _su3d_times_su3(vv1,*w3,vv2); _su3_times_su3(vv2,vv1,*w3);
       _trace_lambda(resu,vv2); der=&dclover[xml][l]; _add_su3adj(*der,resu);
 
-      w1=&gauge_field[xml][l];   /*dag*/
-      w2=&gauge_field[xml][k];
-      w3=&gauge_field[xpkml][l];
-      w4=&gauge_field[x][k];     /*dag*/
+      w1=&g_gauge_field[xml][l];   /*dag*/
+      w2=&g_gauge_field[xml][k];
+      w3=&g_gauge_field[xpkml][l];
+      w4=&g_gauge_field[x][k];     /*dag*/
       _su3d_times_su3(v1,*w1,*w2);
       _su3_times_su3d(v2,*w3,*w4);
 

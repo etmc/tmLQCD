@@ -14,19 +14,19 @@ void boundary()
 {
 double x0,x1,x2,x3;
 /* anti-periodic in time */
-x0=X0*3.14159265358979/(T*numprocs);
+x0=X0*3.14159265358979/(T*g_nproc);
 x1=X1*3.14159265358979/L;
 x2=X2*3.14159265358979/L;
 x3=X3*3.14159265358979/L;
-ka0.re=kappa*cos(x0); ka0.im=kappa*sin(x0);
-ka1.re=kappa*cos(x1); ka1.im=kappa*sin(x1);
-ka2.re=kappa*cos(x2); ka2.im=kappa*sin(x2);
-ka3.re=kappa*cos(x3); ka3.im=kappa*sin(x3);
+ka0.re=g_kappa*cos(x0); ka0.im=g_kappa*sin(x0);
+ka1.re=g_kappa*cos(x1); ka1.im=g_kappa*sin(x1);
+ka2.re=g_kappa*cos(x2); ka2.im=g_kappa*sin(x2);
+ka3.re=g_kappa*cos(x3); ka3.im=g_kappa*sin(x3);
 }
 
 /*******************************************************************************
 *
-*   void H_ee_psi(double kappa,int l,int k)
+*   void H_ee_psi(double g_kappa,int l,int k)
 *
 * Version: 0.0
 * Author: Martin Hasenbusch <Martin.Hasenbusch@desy.de>
@@ -56,10 +56,10 @@ void H_eo(int ieo,int l,int k)
   ioff2=(VOLUME+RAND)/2-ioff;
 
    ix=trans2[ioff];
-   iy=iup[ix][0]; icy=trans1[iy]-ioff2;
+   iy=g_iup[ix][0]; icy=trans1[iy]-ioff2;
 
    sp=&spinor_field[k][icy];
-   up=&gauge_field[ix][0];
+   up=&g_gauge_field[ix][0];
    
 /************************ loop over all lattice sites *************************/
    for (icx=ioff;icx<(VOLUME/2+ioff);icx++)
@@ -67,9 +67,9 @@ void H_eo(int ieo,int l,int k)
       ix=trans2[icx];
 /******************************* direction +0 *********************************/
 
-      iy=idn[ix][0]; icy=trans1[iy]-ioff2;
+      iy=g_idn[ix][0]; icy=trans1[iy]-ioff2;
 
-      um=&gauge_field[iy][0];
+      um=&g_gauge_field[iy][0];
       _prefetch_su3(um);
       
       sm=&spinor_field[k][icy];
@@ -95,7 +95,7 @@ void H_eo(int ieo,int l,int k)
 
 /******************************* direction -0 *********************************/
 
-      iy=iup[ix][1]; icy=trans1[iy]-ioff2;
+      iy=g_iup[ix][1]; icy=trans1[iy]-ioff2;
 
       up+=1;
       _prefetch_su3(up);
@@ -135,9 +135,9 @@ void H_eo(int ieo,int l,int k)
       
 /******************************* direction +1 *********************************/
 
-      iy=idn[ix][1]; icy=trans1[iy]-ioff2;
+      iy=g_idn[ix][1]; icy=trans1[iy]-ioff2;
 
-      um=&gauge_field[iy][1];
+      um=&g_gauge_field[iy][1];
       _prefetch_su3(um);
 
       sm=&spinor_field[k][icy];
@@ -179,7 +179,7 @@ void H_eo(int ieo,int l,int k)
 
 /******************************* direction -1 *********************************/
 
-      iy=iup[ix][2]; icy=trans1[iy]-ioff2;
+      iy=g_iup[ix][2]; icy=trans1[iy]-ioff2;
 
       up+=1;
       _prefetch_su3(up);
@@ -223,9 +223,9 @@ void H_eo(int ieo,int l,int k)
 
 /******************************* direction +2 *********************************/
 
-      iy=idn[ix][2]; icy=trans1[iy]-ioff2;
+      iy=g_idn[ix][2]; icy=trans1[iy]-ioff2;
 
-      um=&gauge_field[iy][2];
+      um=&g_gauge_field[iy][2];
       _prefetch_su3(um);
 
       sm=&spinor_field[k][icy];
@@ -263,7 +263,7 @@ void H_eo(int ieo,int l,int k)
 
 /******************************* direction -2 *********************************/
 
-      iy=iup[ix][3]; icy=trans1[iy]-ioff2;
+      iy=g_iup[ix][3]; icy=trans1[iy]-ioff2;
 
       up+=1;
       _prefetch_su3(up);
@@ -303,9 +303,9 @@ void H_eo(int ieo,int l,int k)
       
 /******************************* direction +3 *********************************/
 
-      iy=idn[ix][3]; icy=trans1[iy]-ioff2;
+      iy=g_idn[ix][3]; icy=trans1[iy]-ioff2;
 
-      um=&gauge_field[iy][3];
+      um=&g_gauge_field[iy][3];
       _prefetch_su3(um);
 
       sm=&spinor_field[k][icy];
@@ -350,9 +350,9 @@ void H_eo(int ieo,int l,int k)
       icz=icx+1;
       if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
       iz=trans2[icz];
-      iy=iup[iz][0]; icy=trans1[iy]-ioff2;
+      iy=g_iup[iz][0]; icy=trans1[iy]-ioff2;
 
-      up=&gauge_field[iz][0];
+      up=&g_gauge_field[iz][0];
       _prefetch_su3(up);
       
       sp=&spinor_field[k][icy];
@@ -427,11 +427,11 @@ void H_eo(int ieo, int l,int k)
 
 /******************************* direction +0 *********************************/
 
-      iy=iup[ix][0]; icy=trans1[iy]-ioff2;
+      iy=g_iup[ix][0]; icy=trans1[iy]-ioff2;
 
 
       sp=&spinor_field[k][icy];
-      up=&gauge_field[ix][0];
+      up=&g_gauge_field[ix][0];
       
       _vector_add(psi,(*sp).c1,(*sp).c3);
 
@@ -451,10 +451,10 @@ void H_eo(int ieo, int l,int k)
 
 /******************************* direction -0 *********************************/
 
-      iy=idn[ix][0]; icy=trans1[iy]-ioff2;
+      iy=g_idn[ix][0]; icy=trans1[iy]-ioff2;
 
       sm=&spinor_field[k][icy];
-      um=&gauge_field[iy][0];
+      um=&g_gauge_field[iy][0];
       
       _vector_sub(psi,(*sm).c1,(*sm).c3);
 
@@ -474,10 +474,10 @@ void H_eo(int ieo, int l,int k)
 
 /******************************* direction +1 *********************************/
 
-      iy=iup[ix][1]; icy=trans1[iy]-ioff2;
+      iy=g_iup[ix][1]; icy=trans1[iy]-ioff2;
 
       sp=&spinor_field[k][icy];
-      up=&gauge_field[ix][1];      
+      up=&g_gauge_field[ix][1];      
       
       _vector_i_add(psi,(*sp).c1,(*sp).c4);
 
@@ -497,10 +497,10 @@ void H_eo(int ieo, int l,int k)
 
 /******************************* direction -1 *********************************/
 
-      iy=idn[ix][1]; icy=trans1[iy]-ioff2;
+      iy=g_idn[ix][1]; icy=trans1[iy]-ioff2;
 
       sm=&spinor_field[k][icy];
-      um=&gauge_field[iy][1];
+      um=&g_gauge_field[iy][1];
       
       _vector_i_sub(psi,(*sm).c1,(*sm).c4);
 
@@ -520,10 +520,10 @@ void H_eo(int ieo, int l,int k)
 
 /******************************* direction +2 *********************************/
 
-      iy=iup[ix][2]; icy=trans1[iy]-ioff2;
+      iy=g_iup[ix][2]; icy=trans1[iy]-ioff2;
 
       sp=&spinor_field[k][icy];
-      up=&gauge_field[ix][2];
+      up=&g_gauge_field[ix][2];
       
       _vector_add(psi,(*sp).c1,(*sp).c4);
 
@@ -543,10 +543,10 @@ void H_eo(int ieo, int l,int k)
 
 /******************************* direction -2 *********************************/
 
-      iy=idn[ix][2]; icy=trans1[iy]-ioff2;
+      iy=g_idn[ix][2]; icy=trans1[iy]-ioff2;
 
       sm=&spinor_field[k][icy];
-      um=&gauge_field[iy][2];
+      um=&g_gauge_field[iy][2];
       
       _vector_sub(psi,(*sm).c1,(*sm).c4);
 
@@ -566,10 +566,10 @@ void H_eo(int ieo, int l,int k)
 
 /******************************* direction +3 *********************************/
 
-      iy=iup[ix][3]; icy=trans1[iy]-ioff2;
+      iy=g_iup[ix][3]; icy=trans1[iy]-ioff2;
 
       sp=&spinor_field[k][icy];
-      up=&gauge_field[ix][3];
+      up=&g_gauge_field[ix][3];
       
       _vector_i_add(psi,(*sp).c1,(*sp).c3);
       
@@ -589,10 +589,10 @@ void H_eo(int ieo, int l,int k)
 
 /******************************* direction -3 *********************************/
 
-      iy=idn[ix][3]; icy=trans1[iy]-ioff2;
+      iy=g_idn[ix][3]; icy=trans1[iy]-ioff2;
 
       sm=&spinor_field[k][icy];
-      um=&gauge_field[iy][3];
+      um=&g_gauge_field[iy][3];
       
       _vector_i_sub(psi,(*sm).c1,(*sm).c3);
 
@@ -819,11 +819,11 @@ for(icx=ioff;icx<(VOLUME/2+ioff);icx++)
 
 /******************************* direction +0 *********************************/
 
-  iy=iup[ix][0]; icy=trans1[iy]-ioff2;
+  iy=g_iup[ix][0]; icy=trans1[iy]-ioff2;
 
 
   sp=&spinor_field[k][icy];
-  up=&gauge_field[ix][0];
+  up=&g_gauge_field[ix][0];
       
   _vector_add(psia,(*sp).c1,(*sp).c3);
   _vector_add(psib,(*sp).c2,(*sp).c4);
@@ -841,10 +841,10 @@ for(icx=ioff;icx<(VOLUME/2+ioff);icx++)
   _add_su3adj(*ddd,der);
 /******************************* direction -0 *********************************/
 
-  iy=idn[ix][0]; icy=trans1[iy]-ioff2;
+  iy=g_idn[ix][0]; icy=trans1[iy]-ioff2;
 
   sm=&spinor_field[k][icy];
-  um=&gauge_field[iy][0];
+  um=&g_gauge_field[iy][0];
       
   _vector_sub(psia,(*sm).c1,(*sm).c3);
   _vector_sub(psib,(*sm).c2,(*sm).c4);
@@ -862,10 +862,10 @@ for(icx=ioff;icx<(VOLUME/2+ioff);icx++)
   _add_su3adj(*ddd,der);
 /******************************* direction +1 *********************************/
 
-  iy=iup[ix][1]; icy=trans1[iy]-ioff2;
+  iy=g_iup[ix][1]; icy=trans1[iy]-ioff2;
 
   sp=&spinor_field[k][icy];
-  up=&gauge_field[ix][1];      
+  up=&g_gauge_field[ix][1];      
 
   _vector_i_add(psia,(*sp).c1,(*sp).c4);
   _vector_i_add(psib,(*sp).c2,(*sp).c3);
@@ -883,10 +883,10 @@ for(icx=ioff;icx<(VOLUME/2+ioff);icx++)
   _add_su3adj(*ddd,der);
 /******************************* direction -1 *********************************/
 
-  iy=idn[ix][1]; icy=trans1[iy]-ioff2;
+  iy=g_idn[ix][1]; icy=trans1[iy]-ioff2;
 
   sm=&spinor_field[k][icy];
-  um=&gauge_field[iy][1];
+  um=&g_gauge_field[iy][1];
       
   _vector_i_sub(psia,(*sm).c1,(*sm).c4);
   _vector_i_sub(psib,(*sm).c2,(*sm).c3);
@@ -905,10 +905,10 @@ for(icx=ioff;icx<(VOLUME/2+ioff);icx++)
 
 /******************************* direction +2 *********************************/
 
-  iy=iup[ix][2]; icy=trans1[iy]-ioff2;
+  iy=g_iup[ix][2]; icy=trans1[iy]-ioff2;
 
   sp=&spinor_field[k][icy];
-  up=&gauge_field[ix][2];
+  up=&g_gauge_field[ix][2];
       
   _vector_add(psia,(*sp).c1,(*sp).c4);
   _vector_sub(psib,(*sp).c2,(*sp).c3);
@@ -927,10 +927,10 @@ for(icx=ioff;icx<(VOLUME/2+ioff);icx++)
 
 /******************************* direction -2 *********************************/
 
-  iy=idn[ix][2]; icy=trans1[iy]-ioff2;
+  iy=g_idn[ix][2]; icy=trans1[iy]-ioff2;
 
   sm=&spinor_field[k][icy];
-  um=&gauge_field[iy][2];
+  um=&g_gauge_field[iy][2];
       
   _vector_sub(psia,(*sm).c1,(*sm).c4);
   _vector_add(psib,(*sm).c2,(*sm).c3);
@@ -950,10 +950,10 @@ for(icx=ioff;icx<(VOLUME/2+ioff);icx++)
 
 /******************************* direction +3 *********************************/
 
-  iy=iup[ix][3]; icy=trans1[iy]-ioff2;
+  iy=g_iup[ix][3]; icy=trans1[iy]-ioff2;
 
   sp=&spinor_field[k][icy];
-  up=&gauge_field[ix][3];
+  up=&g_gauge_field[ix][3];
       
   _vector_i_add(psia,(*sp).c1,(*sp).c3);
   _vector_i_sub(psib,(*sp).c2,(*sp).c4);
@@ -973,10 +973,10 @@ for(icx=ioff;icx<(VOLUME/2+ioff);icx++)
 
 /******************************* direction -3 *********************************/
 
-  iy=idn[ix][3]; icy=trans1[iy]-ioff2;
+  iy=g_idn[ix][3]; icy=trans1[iy]-ioff2;
 
   sm=&spinor_field[k][icy];
-  um=&gauge_field[iy][3];
+  um=&g_gauge_field[iy][3];
       
   _vector_i_sub(psia,(*sm).c1,(*sm).c3);
   _vector_i_add(psib,(*sm).c2,(*sm).c4);

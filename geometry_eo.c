@@ -8,7 +8,7 @@
 * The externally accessible function is
 *
 *   void geometry(void)
-*     Computes the index arrays ipt, iup and idn
+*     Computes the index arrays g_ipt, g_iup and g_idn
 *
 * Version: 1.0
 * Author: Martin Luescher <luscher@mail.desy.ch>
@@ -24,6 +24,7 @@
 #include <math.h>
 #include "su3.h"
 #include "su3adj.h"
+/*#include "io.h"*/
 #include "global.h"
 
 static int index(int x0,int x1,int x2,int x3)
@@ -54,22 +55,22 @@ void geometry(void)
             for (x3=0;x3<L;x3++)
             {
                ix=index(x0,x1,x2,x3);
-	       /* myid*T is added to allow for odd T when the number of 
+	       /* g_proc_id*T is added to allow for odd T when the number of 
 		  nodes is even */
-               if((x0+x1+x2+x3+myid*T)%2==0) xeven[ix]=1; else xeven[ix]=0; 
-               ipt[x0][x1][x2][x3]=ix;
+               if((x0+x1+x2+x3+g_proc_id*T)%2==0) xeven[ix]=1; else xeven[ix]=0; 
+               g_ipt[x0][x1][x2][x3]=ix;
 
-               iup[ix][0]=index(x0+1,x1,x2,x3);
-               idn[ix][0]=index(x0-1,x1,x2,x3);
+               g_iup[ix][0]=index(x0+1,x1,x2,x3);
+               g_idn[ix][0]=index(x0-1,x1,x2,x3);
                
-               iup[ix][1]=index(x0,x1+1,x2,x3);
-               idn[ix][1]=index(x0,x1-1,x2,x3);
+               g_iup[ix][1]=index(x0,x1+1,x2,x3);
+               g_idn[ix][1]=index(x0,x1-1,x2,x3);
 
-               iup[ix][2]=index(x0,x1,x2+1,x3);
-               idn[ix][2]=index(x0,x1,x2-1,x3);
+               g_iup[ix][2]=index(x0,x1,x2+1,x3);
+               g_idn[ix][2]=index(x0,x1,x2-1,x3);
 
-               iup[ix][3]=index(x0,x1,x2,x3+1);
-               idn[ix][3]=index(x0,x1,x2,x3-1);
+               g_iup[ix][3]=index(x0,x1,x2,x3+1);
+               g_idn[ix][3]=index(x0,x1,x2,x3-1);
             }
          }
       }

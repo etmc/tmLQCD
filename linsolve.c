@@ -11,7 +11,7 @@
 /* k output , l input */
 int solve_cg(int k,int l, double q_off, double eps_sq)
   {
-  static double normsq,pro,err,alpha_cg,beta_cg;
+  static double normsq,pro,err,alpha_cg,g_beta_cg;
   int iteration;
 
 /* initialize residue r and search vector p */
@@ -32,8 +32,8 @@ int solve_cg(int k,int l, double q_off, double eps_sq)
      add_assign_field2(DUM_SOLVER,-alpha_cg,DUM_SOLVER+1);
      err=square_norm(DUM_SOLVER);
      if (err <= eps_sq) break;
-     beta_cg=err/normsq;
-     add_assign_field2(DUM_SOLVER+2,beta_cg,DUM_SOLVER);
+     g_beta_cg=err/normsq;
+     add_assign_field2(DUM_SOLVER+2,g_beta_cg,DUM_SOLVER);
      assign_field(DUM_SOLVER+1,DUM_SOLVER);
      normsq=err;
      }
@@ -62,7 +62,7 @@ for(iteration=1;iteration<=ITER_MAX;iteration++)
   if(xxx <= eps_sq) break;
   }
 
-if(myid==0) {fprintf(fp7,"%d %e \n",iteration,xxx);
+if(g_proc_id==0) {fprintf(fp7,"%d %e \n",iteration,xxx);
              fflush(fp7);}
 
 /* if the geometric series fails, redo with conjugate gradient */
@@ -72,7 +72,7 @@ if(iteration>=ITER_MAX)
   iteration+=solve_cg(k,l,q_off,eps_sq);
   Q_psi(k,k,q_off);
   iteration-=1000000;
-if(myid==0) {fprintf(fp7,"%d \n",iteration); fflush(fp7);}
+if(g_proc_id==0) {fprintf(fp7,"%d \n",iteration); fflush(fp7);}
   }
 
 return iteration;
@@ -111,7 +111,7 @@ for(iteration=1;iteration<=ITER_MAX;iteration++)
   rho0=rho1; omega0=omega1;
   }
 /* if bicg fails, redo with conjugate gradient */
-if(myid==0) {fprintf(fp7,"%d %d \n",myid,iteration);
+if(g_proc_id==0) {fprintf(fp7,"%d %d \n",g_proc_id,iteration);
              fflush(fp7);}
 if(iteration>=ITER_MAX)
   {
@@ -119,7 +119,7 @@ if(iteration>=ITER_MAX)
   iteration+=solve_cg(k,l,q_off,eps_sq);
   Q_psi(k,k,q_off);
   iteration-=1000000;
-if(myid==0) {fprintf(fp7,"%d %d \n",myid,iteration); fflush(fp7);}
+if(g_proc_id==0) {fprintf(fp7,"%d %d \n",g_proc_id,iteration); fflush(fp7);}
   }
 return iteration;
 }
@@ -127,7 +127,7 @@ return iteration;
 /*lambda: smallest eigenvalue, k eigenvector */
 int eva(double *rz, int k, double q_off, double eps_sq)
   {
-  static double ritz,norm0,normg,normg0,beta_cg;
+  static double ritz,norm0,normg,normg0,g_beta_cg;
   static double costh,sinth,cosd,sind,aaa,normp,xxx;
   static double xs1,xs2,xs3;
   int iteration;
@@ -184,14 +184,14 @@ int eva(double *rz, int k, double q_off, double eps_sq)
      zero_spinor_field(DUM_SOLVER+2);
      twice_add_assign_field(DUM_SOLVER+2,1.,DUM_SOLVER,-ritz,k);
      
-/*   calculate the norm of g' and beta_cg=costh g'^2/g^2 */
+/*   calculate the norm of g' and g_beta_cg=costh g'^2/g^2 */
      normg=square_norm(DUM_SOLVER+2);
-     beta_cg=costh*normg/normg0;
-     if(beta_cg*costh*normp>20.*sqrt(normg))  beta_cg=0.;
+     g_beta_cg=costh*normg/normg0;
+     if(g_beta_cg*costh*normp>20.*sqrt(normg))  g_beta_cg=0.;
      normg0=normg;    
 /*   compute the new value of p */
      add_assign_field(DUM_SOLVER+1,-vprod(k,DUM_SOLVER+1),k);
-     add_assign_field2(DUM_SOLVER+1,beta_cg,DUM_SOLVER+2);
+     add_assign_field2(DUM_SOLVER+1,g_beta_cg,DUM_SOLVER+2);
      if(iteration%20==0)
        {
        /* readjust x */
@@ -220,7 +220,7 @@ int eva(double *rz, int k, double q_off, double eps_sq)
 /*lambda: largest eigenvalue, k eigenvector */
 int evamax(double *rz, int k, double q_off, double eps_sq)
   {
-  static double ritz,norm0,normg,normg0,beta_cg;
+  static double ritz,norm0,normg,normg0,g_beta_cg;
   static double costh,sinth,cosd,sind,aaa,normp,xxx;
   static double xs1,xs2,xs3;
   int iteration;
@@ -277,14 +277,14 @@ int evamax(double *rz, int k, double q_off, double eps_sq)
      zero_spinor_field(DUM_SOLVER+2);
      twice_add_assign_field(DUM_SOLVER+2,1.,DUM_SOLVER,-ritz,k);
      
-/*   calculate the norm of g' and beta_cg=costh g'^2/g^2 */
+/*   calculate the norm of g' and g_beta_cg=costh g'^2/g^2 */
      normg=square_norm(DUM_SOLVER+2);
-     beta_cg=costh*normg/normg0;
-     if(beta_cg*costh*normp>20.*sqrt(normg))  beta_cg=0.;
+     g_beta_cg=costh*normg/normg0;
+     if(g_beta_cg*costh*normp>20.*sqrt(normg))  g_beta_cg=0.;
      normg0=normg;    
 /*   compute the new value of p */
      add_assign_field(DUM_SOLVER+1,-vprod(k,DUM_SOLVER+1),k);
-     add_assign_field2(DUM_SOLVER+1,beta_cg,DUM_SOLVER+2);
+     add_assign_field2(DUM_SOLVER+1,g_beta_cg,DUM_SOLVER+2);
 /*   restore the state of the iteration */
      if(iteration%20==0)
        {

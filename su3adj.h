@@ -1,3 +1,6 @@
+#ifndef _SU3ADJ_H
+#define _SU3ADJ_H
+
 typedef struct
 {
    double d1,d2,d3,d4,d5,d6,d7,d8;
@@ -164,4 +167,6 @@ __asm__ __volatile__ ("movapd %%xmm4, %0 \n\t" \
 (res).d6-=(c)*(in).d6; \
 (res).d7-=(c)*(in).d7; \
 (res).d8-=(c)*(in).d8;
+#endif
+
 #endif

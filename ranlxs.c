@@ -10,7 +10,7 @@
 *   "Double precision implementation of the random number 
 *    generator ranlux" (December 1997)
 *
-* for a detailed description
+* for a detailed descrg_iption
 *
 * The externally accessible functions are 
 *
