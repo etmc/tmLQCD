@@ -237,7 +237,7 @@ int write_spinorfield_eo_time_p(const int s, const int r, char * filename){
 	  coords[0] = t0 / T;
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
 	  if(g_cart_id == id) {
-	    i = trans1[ g_ipt[t][X][y][z] ];
+	    i = g_lexic2eo[ g_ipt[t][X][y][z] ];
 	    if((t0+x+y+z)%2==0) {
 	      nr = s;
 	    }
@@ -343,7 +343,7 @@ int read_spinorfield_eo_time(const int s, const int r, char * filename){
 		SEEK_SET);
 #endif
 	  for(t = 0; t < T; t++){
-	    i = trans1[ g_ipt[t][x][y][z] ];
+	    i = g_lexic2eo[ g_ipt[t][x][y][z] ];
 	    if((t+x+y+z+g_proc_coords[0]*T)%2==0) {
 	      nr = s;
 	    }
