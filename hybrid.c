@@ -36,7 +36,7 @@
 
 int main(int argc,char *argv[]) {
  
-  FILE *fp1,*fp2,*fp3,*fp4,*fp5,*fp6;
+  FILE *fp1,*fp2,*fp4;
   char * filename="output";
   char filename1[50];
   char filename2[50];
@@ -45,7 +45,7 @@ int main(int argc,char *argv[]) {
   int idis;
   int idi,idis0,idis1,idis2;
   int j,ix,mu;
-  int i,jj,k, nstore=0;
+  int i,k, nstore=0;
   static float yy[2];
 /*   static double step; */
 /*   static double q_off,q_off2; */

@@ -43,7 +43,6 @@ int big_endian();
 int write_gauge_field_time_p(char * filename){
   FILE * ofs = NULL;
   int tag=0, t, x, y, z, id;
-  int coords[3];
   MPI_Status status;
   su3 tmp[4];
   if(g_proc_id == 0){
