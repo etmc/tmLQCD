@@ -45,6 +45,7 @@
 #include "init_gauge_tmp.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
+#include "polyakov_loop.h"
 
 char * Version = "2.3.3";
 
@@ -80,6 +81,10 @@ int main(int argc,char *argv[]) {
   /* Acceptance rate */
   int Rate=0;
   int c;
+
+  /* For the Polyakov loop: */
+  int dir = 3;
+  complex pl;
 
   verbose = 0;
   g_use_clover_flag = 0;
@@ -358,9 +363,20 @@ int main(int argc,char *argv[]) {
 
  if(g_proc_id==0){
     fprintf(parameterfile,"#First plaquette value: %14.12f \n",plaquette_energy/(6.*VOLUME*g_nproc));
-    fclose(parameterfile);
+/*    fclose(parameterfile);*/
   }
   eneg = g_rgi_C0 * plaquette_energy + g_rgi_C1 * rectangle_energy;
+
+  
+  /* Measure and print the Polyakov loop: */
+  polyakov_loop(&pl, dir);
+  if(g_proc_id==0){
+    fprintf(parameterfile,"#First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",dir,dir,sqrt(pl.re*pl.re+pl.im*pl.im));
+    fclose(parameterfile);
+  }
+
+
+
 
   /* compute the energy of the determinant term */
   /* needed for exact continuation of the run, since evamax and eva use
@@ -397,13 +413,16 @@ int main(int argc,char *argv[]) {
     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
 		      dtau, Nsteps, nsmall, tau, int_n, q_off, q_off2);
 
+    /* Measure the Polyakov loop in direction dir:*/
+    polyakov_loop(&pl, dir); 
+
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0) {
       sprintf(gauge_filename,"%s.%.4d", "conf", nstore);
       if(g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
-	fprintf(countfile, "%.4d, measurment %d of %d, Nskip = %d, Plaquette = %e\n", 
-		nstore, j, Nmeas, Nskip, plaquette_energy/(6.*VOLUME*g_nproc));
+	fprintf(countfile, "%.4d, measurement %d of %d, Nskip = %d, Plaquette = %e, |L(%d)| = %e\n", 
+		nstore, j, Nmeas, Nskip, plaquette_energy/(6.*VOLUME*g_nproc),dir,sqrt(pl.re*pl.re+pl.im*pl.im));
 	fclose(countfile);
       }
       nstore ++;
