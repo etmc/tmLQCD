@@ -56,6 +56,11 @@ int main(int argc,char *argv[])
   int rlxd_state[105];
 #endif
 
+  /* Read the input file */
+  read_input("benchmark.input");
+
+  mpi_init(argc, argv);
+
   if(g_proc_id==0) {
 #ifdef SSE
     printf("# The code was compiled with SSE instructions\n");
@@ -80,10 +85,16 @@ int main(int argc,char *argv[])
 #endif
 
     printf("\n");
-    fprintf(stdout,"The number of processes is %d \n",g_nproc);
-    fprintf(stdout,"The local lattice size is %d x %d x %d^2 \n\n",T,LX,L);
     fflush(stdout);
   }
+
+  if(g_rgi_C1 == 0.) {
+    g_dbw2rand = 0;
+  }
+#ifndef MPI
+  g_dbw2rand = 0;
+#endif
+
 #ifdef _GAUGE_COPY
   init_gauge_field(VOLUMEPLUSRAND, 1);
 #else
@@ -95,17 +106,22 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
   }
+  j = init_moment_field(VOLUME, VOLUMEPLUSRAND);
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
+    exit(0);
+  }
 
-  /* Read the input file */
-  read_input("benchmark.input");
-
-  mpi_init(argc, argv);
+  if(g_proc_id == 0) {
+    fprintf(stdout,"The number of processes is %d \n",g_nproc);
+    fprintf(stdout,"The local lattice size is %d x %d x %d^2 \n\n",T,LX,L);
+    fflush(stdout);
+  }
 
   /* define the geometry */
   geometry();
   /* define the boundary conditions for the fermion fields */
   boundary();
-
 
   check_geometry();
 #ifdef MPI

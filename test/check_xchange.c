@@ -222,7 +222,7 @@ int check_xchange()
     x = (double*) &g_gauge_field[(T+2)*LX*LY*LZ+2*T*LY*LZ][0];
     for(i = 0; i < LY*LZ; i++, x++) {
       if((int)(*x) != pp) {
-	printf("The exchange up of gaugefields edges \n");
+	printf("The exchange of gaugefields edges in direction pp\n");
 	printf("between %d and %d is not correct\n", g_cart_id, pp);
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
@@ -235,8 +235,8 @@ int check_xchange()
 
     x = (double*) &g_gauge_field[(T+2)*LX*LY*LZ+2*T*LY*LZ+LY*LZ][0];
     for(i = 0; i < LY*LZ; i++, x++) {
-      if((int)(*x) != pp) {
-	printf("The exchange up of gaugefields edges \n");
+      if((int)(*x) != pm) {
+	printf("The exchange of gaugefields edges in direction pm\n");
 	printf("between %d and %d is not correct\n", g_cart_id, pm);
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
@@ -249,8 +249,8 @@ int check_xchange()
 
     x = (double*) &g_gauge_field[(T+2)*LX*LY*LZ+2*T*LY*LZ+2*LY*LZ][0];
     for(i = 0; i < LY*LZ; i++, x++) {
-      if((int)(*x) != pp) {
-	printf("The exchange up of gaugefields edges \n");
+      if((int)(*x) != mp) {
+	printf("The exchange of gaugefields edges in direction mp\n");
 	printf("between %d and %d is not correct\n", g_cart_id, mp);
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
@@ -263,8 +263,8 @@ int check_xchange()
 
     x = (double*) &g_gauge_field[(T+2)*LX*LY*LZ+2*T*LY*LZ+3*LY*LZ][0];
     for(i = 0; i < LY*LZ; i++, x++) {
-      if((int)(*x) != pp) {
-	printf("The exchange up of gaugefields edges \n");
+      if((int)(*x) != mm) {
+	printf("The exchange of gaugefields edges in direction mm\n");
 	printf("between %d and %d is not correct\n", g_cart_id, mm);
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
