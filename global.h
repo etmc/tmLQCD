@@ -21,8 +21,8 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define T  2
-#define L  4
+#define T  4
+#define L  16
 #define LX (L)
 #define LY (L)
 #define LZ (L)
@@ -95,6 +95,6 @@ EXTERN MPI_Comm g_cart_grid;
 #endif
 
 #undef EXTERN
-#undef ALIGN
+/* #undef ALIGN */
 
 #endif

@@ -17,6 +17,7 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <signal.h>
 #ifdef MPI
 #include <mpi.h>
 #endif
@@ -41,6 +42,7 @@
 #include "read_input.h"
 #include "tm_operators.h"
 #include "bicgstabell.h"
+#include "sighandler.h"
 #include "boundary.h"
 
 char * Version = "0.9";
@@ -54,13 +56,16 @@ void usage(){
 
 extern int nstore;
 
+su3 gauge_tmp[VOLUME][4] ALIGN;
+
 int main(int argc,char *argv[]) {
  
-  FILE *datafile=NULL,*parameterfile=NULL,*rlxdfile=NULL;
+  FILE *datafile=NULL,*parameterfile=NULL,*rlxdfile=NULL, *countfile=NULL;
   char * filename = NULL;
   char filename1[50];
   char filename2[50];
   char filename3[50];
+  char * nstore_filename = ".nstore_counter";
   int rlxd_state[105];
   int idis0=0, idis1=0;
   int j,ix,mu;
@@ -76,35 +81,22 @@ int main(int argc,char *argv[]) {
   double enep=0., enepx=0.;
   /* Energy corresponding to the pseudo fermion part(s) */
   double enerphi0 =0., enerphi0x =0., enerphi1 =0., enerphi1x =0.;
-  static su3 gauge_tmp[VOLUME][4];
+/*   static su3 gauge_tmp[VOLUME][4]; */
   su3 *v,*w;
 
   int Rate=0;
-#ifdef MPI
-  int  namelen;
-  char processor_name[MPI_MAX_PROCESSOR_NAME];
-#endif
   char * input_filename = NULL;
   int c;
 
   verbose = 0;
   g_use_clover_flag = 0;
  
+  signal(SIGUSR1,&catch_del_sig);
+  signal(SIGUSR2,&catch_del_sig);
+  signal(SIGTERM,&catch_del_sig);
+  signal(SIGXCPU,&catch_del_sig);
   
-#ifdef MPI
-  MPI_Init(&argc, &argv);
-  MPI_Comm_size(MPI_COMM_WORLD, &g_nproc);
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
-  MPI_Get_processor_name(processor_name, &namelen);
-  g_cart_grid = MPI_COMM_WORLD;
-
-  fprintf(stdout,"Process %d of %d on %s\n",
-	  g_proc_id, g_nproc, processor_name);
-  fflush(stdout);
-#else
-  g_nproc = 1;
-  g_proc_id = 0;
-#endif
+  mpi_init(argc, argv);
 
   while ((c = getopt(argc, argv, "h?f:o:")) != -1) {
     switch (c) {
@@ -132,6 +124,16 @@ int main(int argc,char *argv[]) {
 
   /* Read the input file */
   read_input(input_filename);
+  if(nstore == -1) {
+    countfile = fopen(nstore_filename, "r");
+    if(countfile != NULL) {
+      fscanf(countfile, "%d\n", &nstore);
+      fclose(countfile);
+    }
+    else {
+      nstore = 0;
+    }
+  }
   g_mu = g_mu1;
  
   q_off = 0.;
@@ -191,7 +193,7 @@ int main(int argc,char *argv[]) {
   /* Continue */
   if(startoption == 3){
     if (g_proc_id == 0){
-      rlxdfile=fopen("rlxd_state","r");
+      rlxdfile=fopen(rlxd_input_filename,"r");
       fread(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
       fclose(rlxdfile);
       rlxd_reset(rlxd_state);
@@ -279,12 +281,24 @@ int main(int argc,char *argv[]) {
 
   for(j=0;j<Nmeas;j++) {
     /* copy the gauge field to gauge_tmp */
+    dontdump = 1;
     for(ix=0;ix<VOLUME;ix++) { 
       for(mu=0;mu<4;mu++) {
 	v=&g_gauge_field[ix][mu];
 	w=&gauge_tmp[ix][mu];
 	_su3_assign(*w,*v);
       }
+    }
+    dontdump = 0;
+    if(forcedump == 1) {
+      write_gauge_field_time_p("last_configuration");
+      if(g_proc_id==0) {
+	rlxd_get(rlxd_state);
+	rlxdfile=fopen("last_state","w");
+	fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
+	fclose(rlxdfile);
+      }
+      exit(0);
     }
 
     /* initialize the pseudo-fermion fields    */
@@ -366,6 +380,7 @@ int main(int argc,char *argv[]) {
       /* accept */
       Rate += 1;
       eneg=enegx;
+      dontdump = 1;
       /* put the links back to SU(3) group */
       for(ix=0;ix<VOLUME;ix++) { 
 	for(mu=0;mu<4;mu++) { 
@@ -395,15 +410,14 @@ int main(int argc,char *argv[]) {
 	      eneg/(6.*VOLUME*g_nproc),dh,exp(-dh),
 	      idis0, count00, count01, idis1, count10, count11);
       fflush(datafile);
-/*       printf("%14.12f %14.12f %e %d %d %d %d %d %e %e\n", */
-/* 	      eneg/(6.*VOLUME*g_nproc),dh,exp(-dh), */
-/* 	      idis0, idis1, count00,count01, count10, count11); */
-/*       fflush( stdout ); */
     }
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0) {
       sprintf(filename3,"%s.%.4d", "conf", nstore);
       nstore ++;
+      countfile = fopen(nstore_filename, "w");
+      fprintf(countfile, "%d\n", nstore);
+      fclose(countfile);
       write_gauge_field_time_p( filename3 );
 
       /*  write the status of the random number generator on a file */

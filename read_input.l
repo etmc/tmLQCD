@@ -286,6 +286,10 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   nstore=atoi(yytext);
   if(verbose!=0) printf("Initial store counter set to %s\n",yytext);
 }
+<NSTORE>readin {
+  nstore=-1;
+  if(verbose!=0) printf("Trying to read InitialStoreCounter from file .nstore_counter\n");
+}
 <IOPROC>all         {
   g_stdio_proc = -1;
   if(verbose!=0) printf("All processors will give output to stdout\n");
