@@ -61,32 +61,32 @@ int main(int argc,char *argv[])
   /* Check the field exchange */
   set_spinor_field(0, (double)g_proc_id);
 
-  xchange_field(0);
+  xchange_field(0); 
 
 #if (defined PARALLELT || defined PARALLELXT)  
   x = (double*) &spinor_field[0][T*LX*L*L/2];
-  for(i = 0; i < LX*L*L/2*12; i++, x++) {
+  for(i = 0; i < LX*L*L/2*24; i++, x++) {
     if((int)(*x) != g_nb_t_up) {
       printf("The exchange up of fields in time direction\n");
       printf("between %d and %d is not correct\n", g_proc_id, g_nb_t_up);
       printf("Program aborted\n");
 #ifdef MPI
-      MPI_Finalize();
+       MPI_Finalize(); 
 #endif
-      exit(0);
+       exit(0); 
     }
   }
 
   x = (double*) &spinor_field[0][(T+1)*LX*L*L/2];
-  for(i = 0; i < LX*L*L/2*12; i++, x++) {
+  for(i = 0; i < LX*L*L/2*24; i++, x++) {
     if((int)(*x) != g_nb_t_dn) {
       printf("The exchange down of fields in time direction\n");
       printf("between %d and %d is not correct\n", g_proc_id, g_nb_t_dn);
       printf("Program aborted\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Finalize(); 
 #endif
-      exit(0);
+      exit(0); 
     }
   }
 #endif
@@ -99,9 +99,9 @@ int main(int argc,char *argv[])
       printf("between %d and %d is not correct\n", g_proc_id, g_nb_x_up);
       printf("Program aborted\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Finalize(); 
 #endif
-      exit(0);
+      exit(0); 
     }
   }
 
@@ -112,9 +112,9 @@ int main(int argc,char *argv[])
       printf("between %d and %d is not correct\n", g_proc_id, g_nb_x_dn);
       printf("Program aborted\n");
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Finalize(); 
 #endif
-      exit(0);
+      exit(0); 
     }
   }
 #endif
@@ -188,6 +188,8 @@ int main(int argc,char *argv[])
   /* Check the deri exchange */
 
   xchange_deri();
+
+  /* Check is missing! */
 
   printf("The exchange routines are working correctly\n");
   printf("\n");

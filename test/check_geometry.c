@@ -39,14 +39,14 @@ int check_geometry()
   
 /*   mpi_init(argc, argv); */
   
-  itest = calloc(VOLUME+RAND, sizeof(int));
-  stest = calloc((VOLUME+RAND)/2, sizeof(int));
-  printf("\n");
-  printf("Test of the geometry programs \n");
-  printf("------------------------------\n");
+  itest = calloc(VOLUMEPLUSRAND, sizeof(int));
+  stest = calloc((VOLUMEPLUSRAND)/2, sizeof(int));
+/*   printf("\n"); */
+/*   printf("Test of the geometry programs \n"); */
+/*   printf("------------------------------\n"); */
   
-  printf("\n");
-  printf("The lattice size is %d x %d^3 \n\n",(int)(T),(int)(L));
+/*   printf("\n"); */
+/*   printf("The lattice size is %d x %d^3 \n\n",(int)(T),(int)(L)); */
   
 /*   geometry(); */
   
@@ -54,7 +54,7 @@ int check_geometry()
     itest[ix]=0;
   }
 
-  
+
   
   for (x0 = 0; x0 < T; x0++){
     for (x1 = 0; x1 < LX; x1++){
@@ -109,12 +109,20 @@ int check_geometry()
                   
 	  iy1=g_iup[ix][1];
 #if (defined PARALLELXT)
-	  if(x1 !=0) {
+	  if(x1 !=LX-1) {
 	    iz1=g_ipt[x0][(x1+1)%LX][x2][x3];
 	  }
 	  else {
 	    iz1 = iy1;
 	    itest[iy1]++;
+	    if(iy1 < VOLUME +T*LY*LZ || iy1 > VOLUMEPLUSRAND) {
+	      printf("Boundary for x direction is wrong %d %d %d\n", iy1 < VOLUME, iy1 > VOLUMEPLUSRAND, iy1);
+	      printf("Program aborted\n");
+#ifdef MPI
+	      MPI_Finalize();
+#endif
+	      exit(0);
+	    }
 	  }
 #else
 	  iz1=g_ipt[x0][(x1+1)%LX][x2][x3];
@@ -156,6 +164,14 @@ int check_geometry()
 	  else {
 	    iz1 = iy1;
 	    itest[iy1]++;
+	    if(iy1 < VOLUME +T*LY*LZ || iy1 > VOLUMEPLUSRAND) {
+	      printf("Boundary for x direction is wrong %d %d %d\n", iy1 < VOLUME, iy1 > VOLUMEPLUSRAND, iy1);
+	      printf("Program aborted\n");
+#ifdef MPI
+	      MPI_Finalize();
+#endif
+	      exit(0);
+	    }
 	  }
 #else
 	  iz1=g_ipt[x0][(x1+LX-1)%LX][x2][x3];
@@ -180,14 +196,14 @@ int check_geometry()
     }
   }
   
-  for (ix = VOLUME; ix < VOLUMEPLUSRAND; ix++){
+  for (ix = VOLUME; ix < (VOLUME+RAND); ix++){
     if (itest[ix]!=1) {
-      printf("The boundary is not correctly used\n");
+      printf("The boundary is not correctly used itest = %d ix = %d \n", itest[ix], ix);
       printf("Program aborted\n");
 #ifdef MPI
       MPI_Finalize();
 #endif
-      exit(0);
+      exit(0); 
     }
   }
   
@@ -202,7 +218,7 @@ int check_geometry()
     ix = trans2[j];
     
     iy0 = g_idn[ix][0];
-    iz0 = trans1[iy0] - VOLUMEPLUSRAND/2;
+    iz0 = trans1[iy0] - (VOLUME+RAND)/2;
     if(iz0 > VOLUMEPLUSRAND/2 || iz0 < 0) {
       printf("There is a problem with EO geometry in direction 0-\n");
       printf("%d\n", iz0);
@@ -214,7 +230,7 @@ int check_geometry()
     stest[iz0] += 1;
     
     iy0 = g_iup[ix][0];
-    iz0 = trans1[iy0] - VOLUMEPLUSRAND/2;
+    iz0 = trans1[iy0] - (VOLUME+RAND)/2;
     if(iz0 > VOLUMEPLUSRAND/2 || iz0 < 0) {
       printf("There is a problem with EO geometry in direction 0+\n");
 #ifdef MPI
@@ -225,7 +241,7 @@ int check_geometry()
     stest[iz0] += 1;
     
     iy1 = g_idn[ix][1];
-    iz1 = trans1[iy1] - VOLUMEPLUSRAND/2;
+    iz1 = trans1[iy1] - (VOLUME+RAND)/2;
     if(iz1 > VOLUMEPLUSRAND/2  || iz1 < 0) {
       printf("There is a problem with EO geometry in direction 1-\n");
 #ifdef MPI
@@ -236,8 +252,8 @@ int check_geometry()
     stest[iz1] += 1;
     
     iy1 = g_iup[ix][1];
-    iz1 = trans1[iy1] - VOLUMEPLUSRAND/2;
-    if(iz1 > VOLUMEPLUSRAND/2  || iz1 < 0) {
+    iz1 = trans1[iy1] - (VOLUME+RAND)/2;
+    if(iz1 >= VOLUMEPLUSRAND/2  || iz1 < 0) {
       printf("There is a problem with EO geometry in direction 1+\n");
 #ifdef MPI
       MPI_Finalize();
@@ -247,7 +263,7 @@ int check_geometry()
     stest[iz1] += 1;
     
     iy2 = g_idn[ix][2];
-    iz2 = trans1[iy2] - VOLUMEPLUSRAND/2;
+    iz2 = trans1[iy2] - (VOLUME+RAND)/2;
     if(iz2 > VOLUMEPLUSRAND/2 || iz2 < 0) {
       printf("There is a problem with EO geometry in direction 2-\n");
 #ifdef MPI
@@ -258,7 +274,7 @@ int check_geometry()
     stest[iz2] += 1;
     
     iy2 = g_iup[ix][2];
-    iz2 = trans1[iy2] - VOLUMEPLUSRAND/2;
+    iz2 = trans1[iy2] - (VOLUME+RAND)/2;
     if(iz2 > VOLUMEPLUSRAND/2 || iz2 < 0) {
       printf("There is a problem with EO geometry in direction 2+\n");
 #ifdef MPI
@@ -270,7 +286,7 @@ int check_geometry()
     
     
     iy3 = g_idn[ix][3];
-    iz3 = trans1[iy3] - VOLUMEPLUSRAND/2;
+    iz3 = trans1[iy3] - (VOLUME+RAND)/2;
     if(iz3 > VOLUMEPLUSRAND/2 || iz3 < 0) {
       printf("There is a problem with EO geometry in direction 3-\n");
 #ifdef MPI
@@ -281,10 +297,7 @@ int check_geometry()
     stest[iz3] += 1;
     
     iy3 = g_iup[ix][3];
-    iz3 = trans1[iy3] - VOLUMEPLUSRAND/2;
-    if(ix == 0 && iy3 == 1) {
-      printf("%d\n", iz3);
-    }
+    iz3 = trans1[iy3] - (VOLUME+RAND)/2;
     if(iz3 > VOLUMEPLUSRAND/2 || iz3 < 0) {
       printf("There is a problem with EO geometry in direction 3+\n");
 #ifdef MPI
@@ -299,7 +312,7 @@ int check_geometry()
     iz0 += stest[j];
   }
   if(iz0 != 8*(VOLUME)/2-RAND/2) {
-    printf("There is a problem in the the even odd geometry\n");
+    printf("There is a problem in the first part of the even odd geometry\n");
     printf("%d is not equal to 8*(VOLUME)/2-RAND/2=%d\n", iz0, 8*(VOLUME)/2-RAND/2);
 #ifdef MPI
     MPI_Finalize();
@@ -307,9 +320,9 @@ int check_geometry()
     exit(0); 
   }
 
-  for(j = VOLUME; j < VOLUMEPLUSRAND/2; j++) {
+  for(j = VOLUME/2; j < (VOLUME+RAND)/2; j++) {
     if(stest[j] != 1) {
-      printf("There is a problem in the boundary of the even odd geometry\n");
+      printf("There is a problem in the first boundary of the even odd geometry\n");
 #ifdef MPI
       MPI_Finalize();
 #endif
@@ -322,14 +335,13 @@ int check_geometry()
     stest[ix]=0;
   }
 
-  for(j = VOLUMEPLUSRAND/2; j < (VOLUME+VOLUMEPLUSRAND)/2; j++) {
+  for(j = (VOLUME+RAND)/2; j < VOLUME+RAND/2; j++) {
     ix = trans2[j];
     
     iy0 = g_idn[ix][0];
     iz0 = trans1[iy0];
     if(iz0 > VOLUMEPLUSRAND/2 || iz0 < 0) {
       printf("There is a problem with EO geometry in direction 0-\n");
-      printf("%d\n", iz0);
 #ifdef MPI
       MPI_Finalize();
 #endif
@@ -362,13 +374,13 @@ int check_geometry()
     iy1 = g_iup[ix][1];
     iz1 = trans1[iy1];
     if(iz1 > VOLUMEPLUSRAND/2  || iz1 < 0) {
-      printf("There is a problem with EO geometry in direction 1+\n");
+      printf("There is a problem with EO geometry in direction 1+\n"); 
 #ifdef MPI
-      MPI_Finalize();
+      MPI_Finalize(); 
 #endif
-      exit(0);
+      exit(0); 
     }
-    stest[iz1] += 1;
+    stest[iz1] += 1; 
     
     iy2 = g_idn[ix][2];
     iz2 = trans1[iy2];
@@ -406,9 +418,6 @@ int check_geometry()
     
     iy3 = g_iup[ix][3];
     iz3 = trans1[iy3];
- if(ix == 0 && iy3 == 1) {
-      printf("%d\n", iz3);
-    }
     if(iz3 > VOLUMEPLUSRAND/2 || iz3 < 0) {
       printf("There is a problem with EO geometry in direction 3+\n");
 #ifdef MPI
@@ -423,7 +432,7 @@ int check_geometry()
     iz0 += stest[j];
   }
   if(iz0 != 8*(VOLUME)/2-RAND/2) {
-    printf("There is a problem in the the even odd geometry\n");
+    printf("There is a problem in the second part of the even odd geometry\n");
     printf("%d is not equal to 8*(VOLUME)/2-RAND/2=%d\n", iz0, 8*(VOLUME)/2-RAND/2);
 #ifdef MPI
     MPI_Finalize();
@@ -431,9 +440,9 @@ int check_geometry()
     exit(0); 
   }
 
-  for(j = VOLUME; j < VOLUMEPLUSRAND/2; j++) {
+  for(j = VOLUME/2; j < (VOLUME+RAND)/2; j++) {
     if(stest[j] != 1) {
-      printf("There is a problem in the boundary of the even odd geometry\n");
+      printf("There is a problem in the second boundary of the even odd geometry\n");
 #ifdef MPI
       MPI_Finalize();
 #endif
@@ -445,7 +454,9 @@ int check_geometry()
   printf("\n");
 
 #ifdef MPI
-  MPI_Finalize();
+/*   MPI_Finalize(); */
 #endif
+  free(stest);
+  free(itest);
   return(0);
 }
