@@ -4799,8 +4799,9 @@ if test "$host_cpu" = "i686"; then
       CFLAGS="-ansi -pedantic-errors -Wall $endian"
     fi
     CXXFLAGS=' -Wall'
-    OPTARGS='-O'
+    OPTARGS='-O3'
     LIBS="-lm"
+
 
     if test $enable_p4 = yes; then
        CFLAGS="$CFLAGS -DP4"
