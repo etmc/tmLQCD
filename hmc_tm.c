@@ -132,17 +132,21 @@ int main(int argc,char *argv[]) {
       nstore = 0;
     }
   }
+  
+  if(g_rgi_C1 == 0.) {
+    g_dbw2rand = 0;
+  }
 
 #ifdef _GAUGE_COPY
-  j = init_gauge_field(VOLUMEPLUSRAND, 1);
+  j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
-  j = init_gauge_field(VOLUMEPLUSRAND, 0);
+  j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
 #endif
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(0);
   }
-  j = init_geometry_indices(VOLUMEPLUSRAND);
+  j = init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for geometry_indices! Aborting...\n");
     exit(0);
@@ -286,9 +290,7 @@ int main(int argc,char *argv[]) {
 
     /* Cold */
     if(startoption == 0) {
-      printf("gauge field done!\n"); fflush(stdout);
       unit_g_gauge_field();
-
     }
     /* Restart */
     else if(startoption == 2) {
@@ -362,8 +364,10 @@ int main(int argc,char *argv[]) {
 
   /* Loop for measurements */
   for(j=0;j<Nmeas;j++) {
+    printf("before !\n");fflush(stdout);
 
     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename);
+    printf("After \n");fflush(stdout);
 
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0) {

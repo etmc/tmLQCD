@@ -51,9 +51,11 @@ void mpi_init(int argc,char *argv[]) {
 
 #ifdef PARALLELT
   ndims = 1;
+  g_dbw2rand = (2*LX*LY*LZ);
 #endif
 #if defined PARALLELXT
   ndims = 2;
+  g_dbw2rand = (2*LY*LZ*(LX+T+4));
 #endif
 
   MPI_Init(&argc, &argv);
@@ -147,6 +149,7 @@ void mpi_init(int argc,char *argv[]) {
 
   g_proc_coords[0] = 0;
   g_proc_coords[1] = 0;
+  g_dbw2rand = 0;
 #endif
 }
 

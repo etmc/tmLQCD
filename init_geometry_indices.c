@@ -21,13 +21,13 @@ int init_geometry_indices(const int V) {
   iup = calloc(4*V, sizeof(int));
   if(errno == ENOMEM) return(7);
 
-  g_ipt = calloc(T+2,sizeof(int*));
+  g_ipt = calloc(T+4,sizeof(int*));
   if(errno == ENOMEM) return(5);
-  ipt__ = calloc ((T+2)*(LX+2), sizeof(int*));
+  ipt__ = calloc ((T+4)*(LX+4), sizeof(int*));
   if(errno == ENOMEM) return(4);
-  ipt_ = calloc((T+2)*(LX+2)*LY, sizeof(int*));
+  ipt_ = calloc((T+4)*(LX+4)*LY, sizeof(int*));
   if(errno == ENOMEM) return(3);
-  ipt = calloc((T+2)*(LX+2)*LY*LZ, sizeof(int));
+  ipt = calloc((T+4)*(LX+4)*LY*LZ, sizeof(int));
   if(errno == ENOMEM) return(8);
 
   g_lexic2eo = calloc(V, sizeof(int));
@@ -47,14 +47,14 @@ int init_geometry_indices(const int V) {
     g_idn[i] = g_idn[i-1]+4;
     g_iup[i] = g_iup[i-1]+4;
   }
-  for(i = 1; i < (T+2)*(LX+2)*LY; i++){
+  for(i = 1; i < (T+4)*(LX+4)*LY; i++){
     ipt_[i] = ipt_[i-1]+LZ;
   }
-  for(i = 1; i < (T+2)*(LX+2); i++){
+  for(i = 1; i < (T+4)*(LX+4); i++){
     ipt__[i] = ipt__[i-1]+LY;
   }
-  for(i = 1; i < (T+2); i++){
-    g_ipt[i] = g_ipt[i-1]+(LX+2);
+  for(i = 1; i < (T+4); i++){
+    g_ipt[i] = g_ipt[i-1]+(LX+4);
   }
   return(0);
 }

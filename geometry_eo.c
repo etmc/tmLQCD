@@ -28,24 +28,24 @@
 
 
 #ifndef _NEW_GEOMETRY
-int Index(const int x0, const int x1, const int x2, const int x3)
-{
-   int y0, y1, y2, y3, ix;
-   y0 = (x0 + T ) % T; 
-   y1 = (x1 + LX) % LX; 
-   y2 = (x2 + LY) % LY; 
-   y3 = (x3 + LZ) % LZ;
-   ix = ((y0*LX + y1)*LY + y2)*LZ + y3;
+int Index(const int x0, const int x1, const int x2, const int x3) {
+  int y0, y1, y2, y3, ix;
 
-   y0=x0;
+  y0 = (x0 + T ) % T; 
+  y1 = (x1 + LX) % LX; 
+  y2 = (x2 + LY) % LY; 
+  y3 = (x3 + LZ) % LZ;
+  ix = ((y0*LX + y1)*LY + y2)*LZ + y3;
+  
+  y0=x0;
 #if ((defined PARALLELT) || (defined PARALLELXT))
-   if(x0 == T) {
-     ix = VOLUME + y3 + LZ*y2 + LZ*LY*y1;
-   }
-   /* the slice at time -1 is put to T+1 */
-   else if(x0 == -1) {
-     ix = VOLUME + LX*LY*LZ + y3 + LZ*y2 + LZ*LY*y1;
-   }
+  if(x0 == T) {
+    ix = VOLUME + y3 + LZ*y2 + LZ*LY*y1;
+  }
+  /* the slice at time -1 is put to T+1 */
+  else if(x0 == -1) {
+    ix = VOLUME + LX*LY*LZ + y3 + LZ*y2 + LZ*LY*y1;
+  }
 #endif
 #if (defined PARALLELXT)
   if(x1 == LX){
@@ -71,9 +71,27 @@ int Index(const int x0, const int x1, const int x2, const int x3)
       ix = VOLUME+RAND+3*LY*LZ+y2*LZ+y3;
     }
   }
-
 #endif
-   return(ix);
+  /* The DBW2 stuff --> second boundary slice */
+  /* This we put a the very end.              */
+#if ((defined PARALLELT) || (defined PARALLELXT))
+  if(x0 == T+1) {
+    ix = VOLUMEPLUSRAND + y3 + LZ*y2 + LZ*LY*y1;
+  }
+  /* the slice at time -2 is put to T+3 */
+  else if(x0 == -2) {
+    ix = VOLUMEPLUSRAND + LX*LY*LZ + y3 + LZ*y2 + LZ*LY*y1;
+  }  
+#endif
+#if (defined PARALLELXT)
+  if(x1 == LX+1){
+    ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
+  }
+  if(x1 == -2){
+    ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
+  }   
+#endif
+  return(ix);
 }
 
 #else
@@ -85,8 +103,11 @@ int Index(const int x0, const int x1, const int x2, const int x3)
 #if ((defined PARALLELT) || (defined PARALLELXT))
    y0 = x0;
    /* the slice at time -1 is put to T+1 */
-   if(x0 == -1) y0=T+1;
+   if(x0 == -1) y0 = T+1;
    if(x0 == -1 || x0 == T) bndt = 1;
+   if(x0 == -2) y0 = T+2;
+   if(x0 == T+1) y0 = T+1;
+   if(x0 == -2 || x0 == T+1) bndt = 2;
 #else
    y0 = (x0+T) % T;
 #endif
@@ -96,6 +117,10 @@ int Index(const int x0, const int x1, const int x2, const int x3)
    /* the slice at x -1 is put to LX+1 */
    if(x1 == -1) y1=LX+1;
    if(x1 == -1 || x1 == LX) bndx = 1;
+   /* the slice at x -1 is put to LX+2 */
+   if(x1 == -2) y1 = LX+2;
+   if(x1 == LX+1) y1 = LX+1;
+   if(x1 == -2 || x1 == LX+1) bndx = 2;
 #else
    y1 = (x1+LX) % LX;
 #endif
@@ -118,12 +143,38 @@ int Index(const int x0, const int x1, const int x2, const int x3)
      ix = y0*LX*LY*LZ+(y3 + LZ*y2 + LY*LZ*y1)/2 + (odd*(LX*LY*LZ))/2;
    }
    else if(bndt == 0 && bndx == 1) {
-     ix = VOLUME + 2*LX*LY*LZ + (y1-LX)*T*LY*LZ + (y0*LY*LZ + y3 + LZ*y2)/2 + (odd*(LY*LZ*T))/2;
+     ix = VOLUME + 2*LX*LY*LZ 
+       + (y1-LX)*T*LY*LZ + (y0*LY*LZ + y3 + LZ*y2)/2 + (odd*(LY*LZ*T))/2;
+   }
+   else if(bndt == 1 && bndx == 1) {
+     ix = VOLUME + RAND 
+       + ((y0-T)*2 + (y1-LX))*(LY*LZ) + (y3 + LZ*y2)/2 + (odd*(LY*LZ))/2;
+   }
+   else if(bndt == 2 && bndx == 0) {
+     ix = VOLUMEPLUSRAND 
+       + (y0-(T+1))*LX*LY*LZ+(y3 + LZ*y2 + LY*LZ*y1)/2 + (odd*(LX*LY*LZ))/2;
+   }
+   else if(bndt == 0 && bndx == 2) {
+     ix = VOLUMEPLUSRAND + 2*LX*LY*LZ 
+       + (y1-(LX+1))*T*LY*LZ + (y0*LY*LZ + y3 + LZ*y2)/2 + (odd*(LY*LZ*T))/2;
+   }
+   else if(bndt == 2 && bndx == 1) {
+     ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ 
+       + ((y0-(T+1))*2 + (y1-LX))*(LY*LZ) + (y3 + LZ*y2)/2 + (odd*(LY*LZ))/2;
+   }
+   else if(bndt == 1 && bndx == 2) {
+     ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*LY*LZ 
+       + ((y0-T)*2 + (y1-(LX+1)))*(LY*LZ) + (y3 + LZ*y2)/2 + (odd*(LY*LZ))/2;
+   }
+   else if(bndt == 2 && bndx == 2) {
+     printf("Should not happen in index routine!\n");
+     printf("%d %d %d %d\n", x0, x1, x2 ,x3);
+     ix = -1;
    }
    else {
-     ix = VOLUME + RAND + ((y0-T)*2 + (y1-LX))*(LY*LZ) + (y3 + LZ*y2)/2 + (odd*(LY*LZ))/2;
+     printf("Error in index routine!\n");
+     exit(1);
    }
-
    return( ix );
 }
 
@@ -202,6 +253,90 @@ void geometry(){
       g_eo2lexic[(VOLUME+RAND)/2+i_odd] = ix;
       i_odd++;
     }
+  }
+  if(g_dbw2rand != 0) {
+    if(g_proc_id == 0) {printf("DBW2 stuff\n");fflush(stdout);fflush(stdout);}
+    for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++){
+      for (x2 = 0; x2 < LY; x2++) {
+	for (x3 = 0; x3 < L; x3++) {
+	  x0 = -2;
+	  ix = Index(x0, x1, x2, x3);
+	  if(ix < VOLUMEPLUSRAND) {
+	    printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	  }
+	  
+	  g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	  g_idn[ix][0] = -1;
+
+	  if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	  if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
+
+	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+
+	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
+
+	  x0 = T+1;
+	  ix = Index(x0, x1, x2, x3);
+	  if(ix < VOLUMEPLUSRAND) {
+	    printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	  }
+	  g_iup[ix][0] = -1;
+	  g_idn[ix][0] = Index(x0-1, x1, x2, x3);
+
+	  if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	  if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
+
+	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+
+	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
+
+	}
+      }
+    }    
+    for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
+      for (x2 = 0; x2 < LY; x2++) {
+	for (x3 = 0; x3 < L; x3++) {
+	  x1 = -2;
+	  ix = Index(x0, x1, x2, x3);
+	  if(ix < VOLUMEPLUSRAND) {
+	    printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	  }
+	  if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	  if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
+
+	  g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	  g_idn[ix][1] = -1;
+
+	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+
+	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
+
+	  x1 = LX+1;
+	  ix = Index(x0, x1, x2, x3);
+	  if(ix < VOLUMEPLUSRAND) {
+	    printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	  }
+	  if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	  if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
+
+	  g_iup[ix][1] = -1;
+	  g_idn[ix][1] = Index(x0, x1-1, x2, x3);
+
+	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+
+	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
+
+	}
+      }
+    }    
   }
 }
 
