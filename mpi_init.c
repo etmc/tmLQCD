@@ -30,9 +30,9 @@ MPI_Datatype deri_yz_subslice;
 MPI_Datatype deri_yz_eo_subslice;
 MPI_Datatype deri_x_slice_gath;
 MPI_Datatype deri_x_slice_gath_split;
-MPI_Datatype gauge_xy_edge_cont;
-MPI_Datatype gauge_xy_edge_gath;
-MPI_Datatype gauge_xy_edge_gath_split;
+MPI_Datatype gauge_yz_edge_cont;
+MPI_Datatype gauge_yz_edge_gath;
+MPI_Datatype gauge_yz_edge_gath_split;
 #endif
 
 
@@ -131,14 +131,14 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(2*T, 1, LX, deri_yz_eo_subslice, &deri_x_slice_gath_split);
   MPI_Type_commit(&deri_x_slice_gath_split);
 
-  MPI_Type_contiguous(2*LY*LZ ,gauge_point, &gauge_xy_edge_cont);
-  MPI_Type_commit(&gauge_xy_edge_cont);
-  MPI_Type_vector(2, 1, T, gauge_yz_subslice, &gauge_xy_edge_gath);
-  MPI_Type_commit(&gauge_xy_edge_gath);
+  MPI_Type_contiguous(2*LY*LZ ,gauge_point, &gauge_yz_edge_cont);
+  MPI_Type_commit(&gauge_yz_edge_cont);
+  MPI_Type_vector(2, 1, T, gauge_yz_subslice, &gauge_yz_edge_gath);
+  MPI_Type_commit(&gauge_yz_edge_gath);
 
   /* For _NEW_GEOMETRY */
-  MPI_Type_vector(4, 1, T, gauge_yz_eo_subslice, &gauge_xy_edge_gath_split);
-  MPI_Type_commit(&gauge_xy_edge_gath_split);
+  MPI_Type_vector(4, 1, T, gauge_yz_eo_subslice, &gauge_yz_edge_gath_split);
+  MPI_Type_commit(&gauge_yz_edge_gath_split);
 
 #else
   g_nproc = 1;

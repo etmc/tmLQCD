@@ -75,20 +75,60 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
   /* The DBW2 stuff --> second boundary slice */
   /* This we put a the very end.              */
 #if ((defined PARALLELT) || (defined PARALLELXT))
-  if(x0 == T+1) {
+  if(x0 == T+1) { 
     ix = VOLUMEPLUSRAND + y3 + LZ*y2 + LZ*LY*y1;
+#ifdef PARALLELXT
+    if(x1 == LX) {
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ
+	+ y2*LZ + y3;
+    }
+    else if (x1 == -1) {
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 1*LY*LZ
+	+ y2*LZ + y3;
+    }
+#endif
   }
-  /* the slice at time -2 is put to T+3 */
+  /* the slice at time -2 is put to T+2 */
   else if(x0 == -2) {
     ix = VOLUMEPLUSRAND + LX*LY*LZ + y3 + LZ*y2 + LZ*LY*y1;
+#ifdef PARALLELXT
+    if(x1 == LX) {
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*LY*LZ
+	+ y2*LZ + y3;
+    }
+    else if (x1 == -1) {
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 3*LY*LZ
+	+ y2*LZ + y3;
+    }
+#endif
   }  
 #endif
 #if (defined PARALLELXT)
-  if(x1 == LX+1){
-    ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
+  if(x1 == LX+1) {
+    if((x0 < T) && (x0 > -1)) {
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
+    }
+    else if(x0 == T) {
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 4*LY*LZ
+	+ y2*LZ + y3;
+    }
+    else if (x0 == -1) {
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 5*LY*LZ
+	+ y2*LZ + y3;
+    }
   }
-  if(x1 == -2){
-    ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
+  if(x1 == -2) {
+    if((x0 < T) && (x0 > -1)) {
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
+    }
+    else if(x0 == T) {
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 6*LY*LZ
+	+ y2*LZ + y3;
+    }
+    else if(x0 == -1) {
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 7*LY*LZ
+	+ y2*LZ + y3;
+    }
   }   
 #endif
   return(ix);
@@ -105,8 +145,8 @@ int Index(const int x0, const int x1, const int x2, const int x3)
    /* the slice at time -1 is put to T+1 */
    if(x0 == -1) y0 = T+1;
    if(x0 == -1 || x0 == T) bndt = 1;
-   if(x0 == -2) y0 = T+2;
-   if(x0 == T+1) y0 = T+1;
+   if(x0 == -2) y0 = 1;
+   if(x0 == T+1) y0 = 0;
    if(x0 == -2 || x0 == T+1) bndt = 2;
 #else
    y0 = (x0+T) % T;
@@ -118,8 +158,8 @@ int Index(const int x0, const int x1, const int x2, const int x3)
    if(x1 == -1) y1=LX+1;
    if(x1 == -1 || x1 == LX) bndx = 1;
    /* the slice at x -1 is put to LX+2 */
-   if(x1 == -2) y1 = LX+2;
-   if(x1 == LX+1) y1 = LX+1;
+   if(x1 == -2) y1 = 1;
+   if(x1 == LX+1) y1 = 0;
    if(x1 == -2 || x1 == LX+1) bndx = 2;
 #else
    y1 = (x1+LX) % LX;
@@ -152,19 +192,19 @@ int Index(const int x0, const int x1, const int x2, const int x3)
    }
    else if(bndt == 2 && bndx == 0) {
      ix = VOLUMEPLUSRAND 
-       + (y0-(T+1))*LX*LY*LZ+(y3 + LZ*y2 + LY*LZ*y1)/2 + (odd*(LX*LY*LZ))/2;
+       + y0*LX*LY*LZ + (y3 + LZ*y2 + LY*LZ*y1)/2 + (odd*(LX*LY*LZ))/2;
    }
    else if(bndt == 0 && bndx == 2) {
      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ 
-       + (y1-(LX+1))*T*LY*LZ + (y0*LY*LZ + y3 + LZ*y2)/2 + (odd*(LY*LZ*T))/2;
+       + y1*T*LY*LZ + (y0*LY*LZ + y3 + LZ*y2)/2 + (odd*(LY*LZ*T))/2;
    }
    else if(bndt == 2 && bndx == 1) {
      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ 
-       + ((y0-(T+1))*2 + (y1-LX))*(LY*LZ) + (y3 + LZ*y2)/2 + (odd*(LY*LZ))/2;
+       + (2*y0 + (y1-LX))*(LY*LZ) + (y3 + LZ*y2)/2 + (odd*(LY*LZ))/2;
    }
    else if(bndt == 1 && bndx == 2) {
-     ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*LY*LZ 
-       + ((y0-T)*2 + (y1-(LX+1)))*(LY*LZ) + (y3 + LZ*y2)/2 + (odd*(LY*LZ))/2;
+     ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 4*LY*LZ 
+       + ((y0-T)*2 + y1)*(LY*LZ) + (y3 + LZ*y2)/2 + (odd*(LY*LZ))/2;
    }
    else if(bndt == 2 && bndx == 2) {
      printf("Should not happen in index routine!\n");
@@ -254,6 +294,7 @@ void geometry(){
       i_odd++;
     }
   }
+#if (defined PARALLELT || defined PARALLELXT)
   if(g_dbw2rand != 0) {
     if(g_proc_id == 0) {printf("DBW2 stuff\n");fflush(stdout);fflush(stdout);}
     for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++){
@@ -297,6 +338,7 @@ void geometry(){
 	}
       }
     }    
+#ifdef PARALLELXT
     for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
       for (x2 = 0; x2 < LY; x2++) {
 	for (x3 = 0; x3 < L; x3++) {
@@ -336,8 +378,10 @@ void geometry(){
 
 	}
       }
-    }    
+    }
+#endif
   }
+#endif
 }
 
 static char const rcsid[] = "$Id$";
