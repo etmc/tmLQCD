@@ -1,21 +1,25 @@
 Benchmark of the even-odd preconditioned Dirac operator
 
-The program is compiled with the file ccc
-It needs to be edited to give the proper path for the mpicc.
-Maybe also the compile-option has to be adopted.
+Example command to compile the program you can find at the end of this
+file. You may paste them into a file ccc and use this to compile the
+benchmark tool.
+
+The examples from below need to be edited in order to give the proper path for
+the mpicc or cc. Maybe also the compile-option has to be adopted.
 In particular
 -DSSE2 -DP4  
 should only be given for a Pentium4 (R) system.
 And
--DSSE -DOPTERON
-should only be given for a AMD Opteron (R) system.
+-DSSE2 -DOPTERON
+should only be given for a AMD Opteron (R) system. -DSSE2 is tested
+only to work with the gnu compiler.
 
 You should allways set -D_GAUGE_COPY and -D_NEW_GEOMERY.
 
 There are two different parallelisations available, a one dimensionale
-parallelisation (set -DPARALLELT) and a two dimensional
-parallelisation (set -DPARALLELXT). If none of the two is used, you
-will get a serial version of the program.
+parallelisation (set -DMPI -DPARALLELT) and a two dimensional
+parallelisation (set -DMPI -DPARALLELXT). 
+If none of them are used, you will get a serial version of the program.
 
 The local lattice size in the case of the one dimensional
 prallelisation is controlled by the parameters 
@@ -67,3 +71,24 @@ The bandwidth is 84.49 + 84.49   MB/sec
 
 If you use the serial version of course the part depending on the
 parallel setup will be missing.
+
+
+Compilation command:
+
+in general 
+cc -I. -I./ -I.. -o benchmark -D_GAUGE_COPY -D_NEW_GEOMETRY -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
+
+gcc and OPTERON (64 Bit architecture):
+gcc -I. -I./ -I.. -o benchmark -ansi -Wall -DOPTERON -DSSE2 -mfpmath=387 -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY -D_NEW_GEOMETRY -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
+
+gcc and pentium4:
+gcc -I. -I./ -I.. -o benchmark -ansi -Wall -DSSE2 -DP4 -march=pentium4  -malign-double -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY -D_NEW_GEOMETRY -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
+
+mpicc (gcc) and pentium4 and _one_ dimensional parallelisation:
+gcc -I. -I./ -I.. -o benchmark -ansi -Wall -DSSE2 -DP4 -DMPI -DPARALLELT -march=pentium4  -malign-double -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY -D_NEW_GEOMETRY -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
+
+mpicc (gcc) and pentium4 and _two_ dimensional parallelisation:
+gcc -I. -I./ -I.. -o benchmark -ansi -Wall -DSSE2 -DP4 -DMPI -DPARALLELXT -march=pentium4  -malign-double -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY -D_NEW_GEOMETRY -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
+
+xlc and IBM powerpc:
+xlc -I. -I./ -I.. -o benchmark -q64 -qsrcmsg -DXLC -D_GAUGE_COPY -D_NEW_GEOMETRY -O3 -qhot  Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
