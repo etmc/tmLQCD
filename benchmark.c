@@ -26,9 +26,8 @@
 #include "Hopping_Matrix_nocom.h"
 #include "global.h"
 #include "xchange.h"
-#ifdef MPI
 #include "mpi_init.h"
-#endif
+
 #ifndef PARALLELXT
 #define SLICE (LX*LY*LZ/2)
 #else
@@ -117,9 +116,10 @@ int main(int argc,char *argv[])
     random_spinor_field(k);
   }
 
-#ifdef MPI
   while(sdt<30.) {
+#ifdef MPI
     MPI_Barrier(MPI_COMM_WORLD);
+#endif
     t1=(double)clock();
     for (j=0;j<j_max;j++) {
       for (k=0;k<k_max;k++) {
@@ -130,9 +130,17 @@ int main(int argc,char *argv[])
     t2=(double)clock();
 
     dt=(t2-t1)/((double)(CLOCKS_PER_SEC));
+#ifdef MPI
     MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+    sdt = dt;
+#endif
     qdt=dt*dt;
+#ifdef MPI
     MPI_Allreduce (&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+    sqdt = qdt;
+#endif
     sdt=sdt/g_nproc;
     sqdt=sqrt(sqdt/g_nproc-sdt*sdt);
     j_max*=2;
@@ -150,7 +158,8 @@ int main(int argc,char *argv[])
     printf("\n");
     fflush(stdout);
   }
-#endif
+
+#ifdef MPI
   /* isolated computation */
   t1=(double)clock();
   for (j=0;j<j_max;j++) {
@@ -164,18 +173,10 @@ int main(int argc,char *argv[])
   dt2=(t2-t1)/((double)(CLOCKS_PER_SEC));
   /* compute the bandwidth */
   dt=dts-dt2;
-#ifdef MPI
   MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   sdt=sdt/g_nproc;
-#else
-  sdt = dt;
-#endif
-#ifdef MPI
   MPI_Allreduce (&dt2, &dt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   dt=dt/g_nproc;
-#else
-  dt = dt2;
-#endif
   dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
   if(g_proc_id==0) {
     printf("communication switched off \n");
@@ -184,7 +185,6 @@ int main(int argc,char *argv[])
     printf("\n");
     fflush(stdout);
   }
-#ifdef MPI
   sdt=sdt/k_max;
   sdt=sdt/j_max;
   sdt=sdt/(2*SLICE);
