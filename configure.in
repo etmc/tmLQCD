@@ -228,6 +228,7 @@ dnl first for PC's
 if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 dnl the GNU compiler
   if test "$GCC" = yes; then
+    DEPFLAGS="-MM"
     GCCVERSION1=`$CC -dumpversion | cut -d "." -f 1`
     GCCVERSION2=`$CC -dumpversion | cut -d "." -f 2`
 dnl -march=pentium4
@@ -235,6 +236,7 @@ dnl -march=pentium4
 dnl Due to some standard problems in MPI header files
 dnl no -pedantic-errors...
       CFLAGS="-ansi -Wall -DMPI $endian $mpidimension"
+      DEPFLAGS="$DEPFLAGS -DMPI"
     else
       if test $GCCVERSION1 -gt 2 && test $enable_sse2 = yes; then
         CFLAGS="-ansi -Wall $endian"
@@ -245,7 +247,7 @@ dnl no -pedantic-errors...
     CXXFLAGS=' -Wall'
     OPTARGS='-O'
     LIBS="-lm"
-    DEPFLAGS="-MM"
+
     if test "$host_cpu" != "x86_64"; then
       if test $enable_p4 = yes && test $GCCVERSION1 -gt 2 && test $GCCVERSION2 -gt 1; then
          CFLAGS="$CFLAGS -DP4 -march=pentium4"
@@ -303,9 +305,11 @@ dnl check for pgcc
     PGCC=`$CC -V 2>&1 | grep pgcc`
     ICC=`$CC -V 2>&1 | grep -i intel`
     if test "$PGCC" != ""; then
+      DEPFLAGS="-M"
       echo "We are using the Portland Group C compiler!"
       if test "$enable_mpi" = yes; then
         CFLAGS="-Mdalign -fastsse -DMPI $mpidimension"
+        DEPFLAGS="$DEPFLAGS -DMPI"
       else
         CFLAGS="-Mdalign -fastsse "
       fi
@@ -316,12 +320,14 @@ dnl check for pgcc
       DEBUG_FLAG="-g"
       PROFILE_FLAG="-p -g"
       CCDEP="$CC"
-      DEPFLAGS="-M"
+
 dnl check for icc    
     elif test "$ICC" != ""; then
       echo "We are using the Intel C compiler!"
+      DEPFLAGS="-M"
       if test $enable_mpi = yes; then
         CFLAGS="-Wall -w1  -DMPI $endian $mpidimension"
+        DEPFLAGS="$DEPFLAGS -DMPI"
       else
         CFLAGS="-Wall -w1 $endian"
       fi
@@ -333,16 +339,17 @@ dnl check for icc
       DEBUG_FLAG="-g"
       PROFILE_FLAG="-p -g"
       CCDEP="$CC"
-      DEPFLAGS="-M"
+
     else
+      DEPFLAGS="-M"
       if test $enable_mpi = yes; then
         CFLAGS="-O -DMPI $endian $mpidimension"
+        DEPFLAGS="$DEPFLAGS -DMPI"
       else
         CFLAGS="-O $endian"
       fi
       DEBUG_FLAG="-g"
       CCDEP="$CC"
-      DEPFLAGS="-M"
     fi
   fi
   LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(abs_top_builddir)/lapack"
