@@ -85,10 +85,13 @@ gcc and pentium4:
 gcc -I. -I./ -I.. -o benchmark -ansi -Wall -DSSE2 -DP4 -march=pentium4  -malign-double -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY -D_NEW_GEOMETRY -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
 
 mpicc (gcc) and pentium4 and _one_ dimensional parallelisation:
-gcc -I. -I./ -I.. -o benchmark -ansi -Wall -DSSE2 -DP4 -DMPI -DPARALLELT -march=pentium4  -malign-double -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY -D_NEW_GEOMETRY -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
+gcc -I. -I./ -I.. -o benchmark -ansi -Wall -DSSE2 -DP4 -DMPI -DPARALLELT -march=pentium4  -malign-double -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY -D_NEW_GEOMETRY -O Hopping_Matrix.c Hopping_Matrix_nocom.c xchange.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
 
 mpicc (gcc) and pentium4 and _two_ dimensional parallelisation:
-gcc -I. -I./ -I.. -o benchmark -ansi -Wall -DSSE2 -DP4 -DMPI -DPARALLELXT -march=pentium4  -malign-double -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY -D_NEW_GEOMETRY -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
+gcc -I. -I./ -I.. -o benchmark -ansi -Wall -DSSE2 -DP4 -DMPI -DPARALLELXT -march=pentium4  -malign-double -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY -D_NEW_GEOMETRY -O Hopping_Matrix.c Hopping_Matrix_nocom.c xchange.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
 
-xlc and IBM powerpc:
-xlc -I. -I./ -I.. -o benchmark -q64 -qsrcmsg -DXLC -D_GAUGE_COPY -D_NEW_GEOMETRY -O3 -qhot  Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
+xlc and IBM powerpc (threadsave: xlc_r):
+xlc_r -I. -I./ -I.. -o benchmark -q64 -qsrcmsg -DXLC -D_GAUGE_COPY -D_NEW_GEOMETRY -O3 -qhot  Hopping_Matrix.c Hopping_Matrix_nocom.c xchange.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
+
+mpcc and IBM powerpc and _one_ dimensional parallelisation (threadsave:mpcc_r):
+mpcc_r -I. -I./ -I.. -o benchmark -q64 -qsrcmsg -DXLC  -DMPI -DPARALLELT -D_GAUGE_COPY -D_NEW_GEOMETRY -O3 -qhot  Hopping_Matrix.c Hopping_Matrix_nocom.c xchange.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c benchmark.c -lm
