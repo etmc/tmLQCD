@@ -177,7 +177,7 @@ int read_gauge_field_time_p(char * filename){
     for(x = 0; x < LX; x++){
       for(y = 0; y < LY; y++){
 	for(z = 0; z < LZ; z++){
-#if (defined MPI && defined PARALLELT)
+#if (defined MPI && (defined PARALLELT || defined PARALLELXT))
 	  fseek(ifs, position +
 		(g_proc_coords[0]*T+
 		 (((g_proc_coords[1]*LX+x)*LY+y)*LZ+z)*T*g_nproc_t)*4*sizeof(su3),
@@ -336,7 +336,7 @@ int read_spinorfield_eo_time(const int s, const int r, char * filename){
 	      SEEK_SET);
 #endif
 	for(z = 0; z < LZ; z++){
-#if (defined MPI && defined PARALLELT)
+#if (defined MPI && (defined PARALLELT || defined PARALLELXT))
 	  fseek(ifs, position +
 		(g_proc_coords[0]*T+
 		 (((g_proc_coords[1]*LX+x)*LY+y)*LZ+z)*T*g_nproc_t)*sizeof(spinor),
