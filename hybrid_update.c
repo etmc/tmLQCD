@@ -115,24 +115,30 @@ void deri(double q_off,double q_off2) {
   if(q_off2>0.){
     jmax=3;
   }
-  
+  if(g_mu2 > 0.) {
+    jmax = 3;
+  }
+
   for(j=0;j<jmax;j++){ 
     if(j==0){
+      if(g_mu2 > 0.) {
+	g_mu = g_mu2;
+      }
       if(ITER_MAX_BCG == 0){
 	/* If CG is used anyhow */
-	gamma5(DUM_DERI+1, 0);
+	gamma5(DUM_DERI+1, first_psf);
 	/* Invert Q_{+} Q_{-} */
 	/* X_o -> DUM_DERI+1 */
-	count00 += solve_cg(DUM_DERI+1, 0, q_off, EPS_SQ1);
+	count00 += solve_cg(DUM_DERI+1, first_psf, q_off, EPS_SQ1);
 	/* Y_o -> DUM_DERI  */
 	Qtm_minus_psi(DUM_DERI, DUM_DERI+1);
       }
       else{
-	/*contributions from field 0 */
-	gamma5(DUM_DERI,0);
+	/*contributions from field 0 -> first_psf*/
+	gamma5(DUM_DERI, first_psf);
 	/* Invert first Q_+ */
 	/* Y_o -> DUM_DERI  */
-	count00 += bicg(DUM_DERI,0,q_off,EPS_SQ1);
+	count00 += bicg(DUM_DERI, first_psf, q_off, EPS_SQ1);
 	gamma5(DUM_DERI+1,DUM_DERI);
 	/* Now Q_- */
 	/* X_o -> DUM_DERI+1 */
@@ -142,21 +148,59 @@ void deri(double q_off,double q_off2) {
       }
     }
     if(j==1){
-      /* contributions from field 1 */
-      gamma5(DUM_DERI,1);
-      qo=q_off-q_off2;
-      count10+=bicg(DUM_DERI,1,q_off2,EPS_SQ2/qo);
-      deri_linalg(DUM_DERI+2,qo*qo,DUM_DERI,qo,1, VOLUME/2);
-      gamma5(DUM_DERI+1,DUM_DERI+2);
-      count11+=bicg(DUM_DERI+1,DUM_DERI+2,q_off2,EPS_SQ2*qo);
+      if(g_use_clover_flag == 1) {
+	/* contributions from field 1 -> second_psf*/
+	gamma5(DUM_DERI, second_psf);
+	qo=q_off-q_off2;
+	count10+=bicg(DUM_DERI, second_psf, q_off2, EPS_SQ2/qo);
+	deri_linalg(DUM_DERI+2, qo*qo,DUM_DERI, qo, second_psf, VOLUME/2);
+	gamma5(DUM_DERI+1, DUM_DERI+2);
+	count11+=bicg(DUM_DERI+1, DUM_DERI+2, q_off2, EPS_SQ2*qo);
+      }
+      else {
+	/* First term coming from the second field */
+	/* Multiply with W_+ */
+	g_mu = g_mu2;	
+	Qtm_plus_psi(DUM_DERI+2, second_psf);
+	g_mu = g_mu1;
+	if(ITER_MAX_BCG == 0){
+	  /* If CG is used anyhow */
+	  gamma5(DUM_DERI+1, DUM_DERI+2);
+	  /* Invert Q_{+} Q_{-} */
+	  /* X_W -> DUM_DERI+1 */
+	  count10 += solve_cg(DUM_DERI+1, DUM_DERI+2, q_off, EPS_SQ1);
+	  /* Y_W -> DUM_DERI  */
+	  Qtm_minus_psi(DUM_DERI, DUM_DERI+1);
+	}
+	else{
+	  gamma5(DUM_DERI, DUM_DERI+2);
+	  /* Invert first Q_+ */
+	  /* Y_o -> DUM_DERI  */
+	  count10 += bicg(DUM_DERI, DUM_DERI+2, q_off, EPS_SQ1);
+	  gamma5(DUM_DERI+1,DUM_DERI);
+	  /* Now Q_- */
+	  /* X_o -> DUM_DERI+1 */
+	  g_mu = -g_mu;
+	  count11 += bicg(DUM_DERI+1,DUM_DERI,q_off,EPS_SQ1);
+	  g_mu = -g_mu;   
+	}
+      }
     }
     if(j==2){
-      /* contributions from field 2 (stored on 4) */
-      gamma5(DUM_DERI,4);
-      count20+=bicg(DUM_DERI,4,0.,EPS_SQ3/q_off2);
-      deri_linalg(DUM_DERI+2,q_off2*q_off2,DUM_DERI,q_off2,4, VOLUME/2);
-      gamma5(DUM_DERI+1,DUM_DERI+2);
-      count21+=bicg(DUM_DERI+1,DUM_DERI+2,0.,EPS_SQ3*q_off2);
+      if(g_use_clover_flag == 1) {
+	/* contributions from field 2 (stored on 4) */
+	gamma5(DUM_DERI,4);
+	count20+=bicg(DUM_DERI,4,0.,EPS_SQ3/q_off2);
+	deri_linalg(DUM_DERI+2,q_off2*q_off2,DUM_DERI,q_off2,4, VOLUME/2);
+	gamma5(DUM_DERI+1,DUM_DERI+2);
+	count21+=bicg(DUM_DERI+1,DUM_DERI+2,0.,EPS_SQ3*q_off2);
+      }
+      else {
+	/* Second term coming from the second field */
+	/* The sign is opposite!! */
+	mul_r(DUM_DERI, -1., second_psf, VOLUME/2);
+	g_mu = g_mu2;
+      }
     }
     if(g_use_clover_flag == 1){ 
       /* apply H_eo to  Q^{-2} phi */
@@ -190,6 +234,7 @@ void deri(double q_off,double q_off2) {
       H_eo_tm_inv_psi(DUM_DERI+3, DUM_DERI, EO, +1);
       /* \delta Q sandwitched by Y_e^\dagger and X_o */
       deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
+      g_mu = g_mu1;
     }
   }
 }

@@ -15,7 +15,9 @@
  ***************************************************************/
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef MPI
 #include <mpi.h>
+#endif
 #include"su3.h"
 #include"su3adj.h"
 
@@ -27,6 +29,8 @@
 #define DUM_DERI 6
 #define DUM_SOLVER DUM_DERI+4
 #define DUM_MATRIX DUM_SOLVER+5
+/* if you want to include bicgstabell */
+/* #define DUM_MATRIX DUM_SOLVER+11 */
 #define NO_OF_SPINORFIELDS DUM_MATRIX+2
 #define VOLUME (T*LX*LY*LZ)
 #define RAND (2*LX*LY*LZ)
@@ -59,7 +63,9 @@
   #define ALIGN
 #endif
 
-EXTERN int trans1[VOLUME+RAND] ALIGN;   
+/* translates from ix to ieven/odd  */
+EXTERN int trans1[VOLUME+RAND] ALIGN;
+/* translatex from ieven/iodd to ix */    
 EXTERN int trans2[VOLUME+RAND] ALIGN;   
 EXTERN int xeven[VOLUME+RAND] ALIGN;   
 EXTERN int g_ipt[T+2][L][L][L] ALIGN;
@@ -77,17 +83,16 @@ EXTERN su3 swp[VOLUME][4] ALIGN;
 EXTERN su3 swm[VOLUME][4] ALIGN;
 EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
-EXTERN double g_mu;
+EXTERN double g_mu, g_mu1, g_mu2;
 EXTERN int g_use_clover_flag;
 
 /* MPI information */
 EXTERN int g_proc_id, g_nproc, g_stdio_proc;
+#ifdef MPI
 EXTERN MPI_Status status;
 EXTERN MPI_Request req1,req2,req3,req4;
 EXTERN MPI_Comm g_cart_grid;
-
-/* file for solver-information */
-EXTERN FILE *fp7;
+#endif
 
 #undef EXTERN
 #undef ALIGN

@@ -62,15 +62,20 @@ int main(int argc,char *argv[]) {
   char filename2[50];
   char filename3[50];
   int rlxd_state[105];
-  int idis0;
+  int idis0=0, idis1=0;
   int j,ix,mu;
   int i,k;
 
   double yy[1];
 /*   static double step; */
 /*   static double q_off,q_off2; */
-  double eneg, enegx, enep, enepx, dh;
-  double enerphi0,enerphi0x;
+  double dh;
+  /* Energy corresponding to the Gauge part */
+  double eneg=0., enegx=0.;
+  /* Energy corresponding to the Momenta part */
+  double enep=0., enepx=0.;
+  /* Energy corresponding to the pseudo fermion part(s) */
+  double enerphi0 =0., enerphi0x =0., enerphi1 =0., enerphi1x =0.;
   static su3 gauge_tmp[VOLUME][4];
   su3 *v,*w;
 
@@ -127,6 +132,7 @@ int main(int argc,char *argv[]) {
 
   /* Read the input file */
   read_input(input_filename);
+  g_mu = g_mu1;
  
   q_off = 0.;
   q_off2 = 0.;
@@ -153,18 +159,20 @@ int main(int argc,char *argv[]) {
       printf("# The code was compiled for pentium4\n");
 #endif
     }
-    printf("The lattice size is %d x %d^3\n",(int)(T)*g_nproc,(int)(L));
-    printf("The local lattice size is %d x %d^3\n",(int)(T),(int)(L));
-    printf("g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n\n",g_beta,g_kappa,g_ka_csw_8);
+    printf("# The lattice size is %d x %d^3\n",(int)(T)*g_nproc,(int)(L));
+    printf("# The local lattice size is %d x %d^3\n",(int)(T),(int)(L));
+    printf("# beta = %f , kappa= %f, mu= %f \n",g_beta,g_kappa,g_mu);
+    printf("# mu2 = %f\n", g_mu2);
     
-    fprintf(parameterfile,"The lattice size is %d x %d^3\n\n",(int)(g_nproc*T),(int)(L));
-    fprintf(parameterfile,"g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f g_mu = %f \n\n",g_beta,g_kappa,g_ka_csw_8, g_mu);
-    fprintf(parameterfile,"boundary %f %f %f %f \n \n",X0,X1,X2,X3);
-    fprintf(parameterfile,"ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n\n"
+    fprintf(parameterfile, "The lattice size is %d x %d^3\n", (int)(g_nproc*T),(int)(L));
+    fprintf(parameterfile, "The local lattice size is %d x %d^3\n", (int)(T),(int)(L));
+    fprintf(parameterfile, "g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f g_mu = %f \n",g_beta,g_kappa,g_ka_csw_8, g_mu);
+    fprintf(parameterfile, "boundary of fermion fields (t,x,y,z): %f %f %f %f \n",X0,X1,X2,X3);
+    fprintf(parameterfile, "ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n"
 	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
-    fprintf(parameterfile,"q_off=%f, q_off2=%f, dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n\n",
-	    q_off,q_off2,dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
-    fprintf(parameterfile,"mu = %f", g_mu);
+    fprintf(parameterfile,"dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n",
+	    dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
+    fprintf(parameterfile,"mu = %f, mu2=%f\n ", g_mu, g_mu2);
     
   }
 
@@ -280,14 +288,27 @@ int main(int argc,char *argv[]) {
     }
 
     /* initialize the pseudo-fermion fields    */
-    /* depending on q_off and q_off2 we use    */
-    /* one, two or three pseudo-fermion fields */
+    /* depending on g_mu1 and g_mu2 we use     */
+    /* one or two pseudo-fermion fields        */
     random_spinor_field(2);
     /* compute the square of the norm */
     enerphi0 = square_norm(2, VOLUME/2);
 
-    /* apply the fermion matrix to the spinor */
-    Qtm_plus_psi(0, 2);
+    if(g_mu2 > 0.) {
+      random_spinor_field(3);
+      enerphi1 = square_norm(3, VOLUME/2);
+      g_mu = g_mu2;
+    }
+    /* apply the fermion matrix to the first spinor */
+    Qtm_plus_psi(first_psf, 2);
+    /* contruxt the second \phi_o */
+    if(g_mu2 > 0.) {
+      g_mu = g_mu1;
+      Qtm_plus_psi(3, 3);
+      g_mu = g_mu2;
+      zero_spinor_field(1);
+      idis1 = bicg(second_psf, 3, 0., EPS_SQ0);
+    }
 
     /* initialize the momenta */
     enep=ini_momenta();
@@ -308,13 +329,23 @@ int main(int argc,char *argv[]) {
     /*compute the energy contributions from the pseudo-fermions */
 
     zero_spinor_field(2);
-    idis0=bicg(2, 0, q_off, EPS_SQ0);
+    if(g_mu2 > 0.) {
+      g_mu = g_mu2;
+    }
+    idis0=bicg(2, first_psf, q_off, EPS_SQ0);
 
     enerphi0x=square_norm(2, VOLUME/2);
-
+    if(g_mu2 > 0.) {
+      zero_spinor_field(3);
+      g_mu = g_mu2;
+      Qtm_plus_psi(second_psf, second_psf);
+      g_mu = g_mu1;
+      idis1 = bicg(3, 1, 0., EPS_SQ0);
+      enerphi1x = square_norm(3, VOLUME/2);
+    }
     /* Compute the energy difference */
     dh=+enepx - g_beta*enegx - enep + g_beta*eneg
-      + enerphi0x - enerphi0; 
+      + enerphi0x - enerphi0 + enerphi1x - enerphi1; 
       
     /* the random number is only taken at node zero and then distributed to 
        the other sites */
@@ -360,10 +391,14 @@ int main(int argc,char *argv[]) {
 #endif
 
     if(g_proc_id==0){
-      fprintf(datafile,"%14.12f %14.12f %e %d %d %d \n",
+      fprintf(datafile,"%14.12f %14.12f %e %d %d %d %d %d %d\n",
 	      eneg/(6.*VOLUME*g_nproc),dh,exp(-dh),
-	      idis0,count00,count01);
+	      idis0, count00, count01, idis1, count10, count11);
       fflush(datafile);
+/*       printf("%14.12f %14.12f %e %d %d %d %d %d %e %e\n", */
+/* 	      eneg/(6.*VOLUME*g_nproc),dh,exp(-dh), */
+/* 	      idis0, idis1, count00,count01, count10, count11); */
+/*       fflush( stdout ); */
     }
     /* Save gauge configuration all Nskip times */
     if((j+1)%Nskip == 0) {
