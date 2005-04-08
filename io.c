@@ -49,7 +49,7 @@ int write_gauge_field_time_p(char * filename){
   if(g_cart_id == 0){
     ofs = fopen(filename, "w");
     if(ofs != NULL ){
-      fprintf(ofs,"%f %d %d\n", g_beta, L, g_nproc_t*T);
+      fprintf(ofs,"%f %d %d\n", g_beta, g_nproc_x*LX, g_nproc_t*T);
     }
     else{
       fprintf(stderr, "Warning! Could not open file %s in routine write_gauge_field\n", filename);
@@ -117,7 +117,7 @@ int write_gauge_field_time_p(char * filename){
 #endif
   ofs = fopen(filename, "w");
   if(ofs != NULL ){
-    fprintf(ofs,"%f %d %d\n", g_beta, L, T);
+    fprintf(ofs,"%f %d %d\n", g_beta, LX, T);
     for(x = 0; x < LX; x++){
       for(y = 0; y < LY; y++){
 	for(z = 0; z < LZ; z++){
@@ -166,7 +166,7 @@ int read_gauge_field_time_p(char * filename){
       fprintf(stderr, "Warning! Configuration %s was produced with a different beta!\n", filename);
 /*       errorhandler(112,filename); */
     }
-    if((l!=L)||(t!=g_nproc_t*T)){
+    if((l!=g_nproc_x*LX)||(t!=g_nproc_t*T)){
       printf("Error! Configuration %s was produced with a different lattice size\n Aborting...\n", filename);
       exit(1);
 /*       errorhandler(114,filename); */
@@ -223,7 +223,7 @@ int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filen
     if(append == 0) {
       ofs = fopen(filename, "w");
       if(ofs != NULL ){
-	fprintf(ofs,"%f %f %f %d %d\n",g_beta, g_kappa, g_mu, L, T*g_nproc_t);
+	fprintf(ofs,"%f %f %f %d %d\n",g_beta, g_kappa, g_mu, LX*g_nproc_x, T*g_nproc_t);
       }
       else{
 	/*       errorhandler(106, filename); */
@@ -325,7 +325,7 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
       fprintf(stderr, "Warning! Parameters beta, kappa or mu are inconsistent with file %s!\n", filename);
 /*       errorhandler(113,filename); */
     }
-    if((l!=L)||(t!=T*g_nproc_t)){
+    if((l!=LX*g_nproc_x)||(t!=T*g_nproc_t)){
       printf("Error! spinorfield %s was produced for a different lattice size!\nAborting!\n", filename);
       exit(1);
 /*       errorhandler(115,filename); */
