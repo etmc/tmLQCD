@@ -15,9 +15,9 @@
 #include "global.h"
 #include "su3.h"
 #include "Hopping_Matrix.h"
-#include "Hopping_Matrix_nocom.h"
 /* #include "sse.h" */
 #include "gamma.h"
+#include "linalg_eo.h"
 #include "Nondegenerate_Matrix.h"
 
 /* internal */
@@ -38,13 +38,6 @@ void mul_one_minus_imubar_inv(spinor * const l);
  * mul_one_plus_imubar_inv computes
  * l = [(1+i\mubar\gamma_5)/(1+mubar^2-epsbar^2)] * l
  *
- ******************************************/
-void mul_epsbar(spinor * const l);
-/******************************************
- * mul_epsbar computes
- * l = epsbar * l
- *
- ******************************************/
 
 
 /* external functions */
