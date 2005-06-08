@@ -24,7 +24,7 @@ COMPILE = ${CC} $(INCLUDES) -o $@ ${CFLAGS}
 
 MODULES = init_gauge_field init_geometry_indices \
 	init_spinor_field init_moment_field init_gauge_tmp \
-	read_input clover_eo linsolve xchange \
+	read_input gamma clover_eo linsolve xchange \
 	expo hybrid_update observables start \
 	geometry_eo linalg_eo ranlxd sw io Hopping_Matrix \
 	boundary deriv_Sb tm_operators getopt sighandler \

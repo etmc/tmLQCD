@@ -24,7 +24,7 @@
 #include"Hopping_Matrix.h"
 #include"linsolve.h"
 #include"bicgstabell.h"
-#include"clover_eo.h"
+#include"gamma.h"
 #include"solver/solver.h"
 #include"xchange.h"
 #include"invert_eo.h"
@@ -46,7 +46,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   /* Do the inversion with the preconditioned  */
   /* matrix to get the odd sites               */
   /* The solver inverts gamma_5 D ...          */
-  gamma5(DUM_DERI, DUM_DERI); 
+  gamma5(spinor_field[DUM_DERI], spinor_field[DUM_DERI], VOLUME/2); 
 
   if(solver_flag == BICGSTAB) {
     if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}

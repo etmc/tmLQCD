@@ -27,7 +27,6 @@
 #include "start.h"
 #include "linalg_eo.h"
 #include "linsolve.h"
-#include "clover_eo.h"
 #include "observables.h"
 #include "hybrid_update.h"
 #include "xchange.h"
@@ -39,6 +38,7 @@
 #include "Hopping_Matrix.h"
 #include "gamma.h"
 #include "mpi_init.h"
+#include "gamma.h"
 #include "boundary.h"
 
 char * Version = "0.9";
@@ -309,7 +309,7 @@ int main(int argc,char *argv[]) {
   Hopping_Matrix(EO, 0, 2);
   mul_one_pm_imu(1, 1.);
   assign_add_mul_r(spinor_field[1], spinor_field[0], -1., VOLUME/2);
-/*   gamma5(1, 1);     */
+/*   gamma5(spinor_field[1], spinor_field[1], VOLUME/2);     */
   gamma3(4, 1, VOLUME/2);  
 
   zero_spinor_field(3);
@@ -320,7 +320,7 @@ int main(int argc,char *argv[]) {
   Hopping_Matrix(OE, 0, 2);
   mul_one_pm_imu(3, 1.);
   assign_add_mul_r(spinor_field[3], spinor_field[0], -1., VOLUME/2);
-/*   gamma5(3, 3);   */
+/*   gamma5(spinor_field[3], spinor_field[3], VOLUME/2);   */
   gamma3(5, 3, VOLUME/2);  
   if(g_proc_id == 0 || g_proc_id == 1){
     for (x0=0;x0<T;x0++){
@@ -358,7 +358,7 @@ int main(int argc,char *argv[]) {
     Hopping_Matrix(EO, 0, 2);
     mul_one_pm_imu(1, 1.);
     assign_add_mul_r(spinor_field[1], spinor_field[0], -1., VOLUME/2);
-    /*   gamma5(1, 1);   */
+    /*   gamma5(spinor_field[1], spinor_field[1], VOLUME/2);   */
     gamma3(4, 1, VOLUME/2);
     
     zero_spinor_field(3);
@@ -370,7 +370,7 @@ int main(int argc,char *argv[]) {
     Hopping_Matrix(OE, 0, 2);
     mul_one_pm_imu(3, 1.);
     assign_add_mul_r(spinor_field[3], spinor_field[0], -1., VOLUME/2);
-/*     gamma5(3, 3);   */
+/*     gamma5(spinor_field[3], spinor_field[3], VOLUME/2);   */
     gamma3(5, 3, VOLUME/2);
     
     for (x0=0;x0<T;x0++){
@@ -408,7 +408,7 @@ int main(int argc,char *argv[]) {
     Hopping_Matrix(EO, 0, 2);
     mul_one_pm_imu(1, 1.);
     assign_add_mul_r(spinor_field[1], spinor_field[0], -1., VOLUME/2);
-    /*   gamma5(1, 1);   */
+    /*   gamma5(spinor_field[1], spinor_field[1], VOLUME/2);   */
     gamma3(4, 1, VOLUME/2);
     
     zero_spinor_field(3);
@@ -420,7 +420,7 @@ int main(int argc,char *argv[]) {
     Hopping_Matrix(OE, 0, 2);
     mul_one_pm_imu(3, 1.);
     assign_add_mul_r(spinor_field[3], spinor_field[0], -1., VOLUME/2);
-/*     gamma5(3, 3);   */
+/*     gamma5(spinor_field[3], spinor_field[3], VOLUME/2);   */
     gamma3(5, 3, VOLUME/2);
     
     for (x0=0;x0<T;x0++){
@@ -458,7 +458,7 @@ int main(int argc,char *argv[]) {
     Hopping_Matrix(EO, 0, 2);
     mul_one_pm_imu(1, 1.);
     assign_add_mul_r(spinor_field[1], spinor_field[0], -1., VOLUME/2);
-    /*   gamma5(1, 1);   */
+    /*   gamma5(spinor_field[1], spinor_field[1], VOLUME/2);   */
     gamma3(4, 1, VOLUME/2);
     
     zero_spinor_field(3);
@@ -470,7 +470,7 @@ int main(int argc,char *argv[]) {
     Hopping_Matrix(OE, 0, 2);
     mul_one_pm_imu(3, 1.);
     assign_add_mul_r(spinor_field[3], spinor_field[0], -1., VOLUME/2);
-/*     gamma5(3, 3);   */
+/*     gamma5(spinor_field[3], spinor_field[3], VOLUME/2);   */
     gamma3(5, 3, VOLUME/2);
     
     for (x0=0;x0<T;x0++){

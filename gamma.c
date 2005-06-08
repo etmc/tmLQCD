@@ -47,13 +47,25 @@ void gamma3( const int Q,  const int P, const int V){
     _gamma3(spinor_field[Q][ix],spinor_field[P][ix]);
   }
 }
-/* void gamma5( const int Q,  const int P, const int V){ */
-/*   int ix; */
+void gamma5(spinor * const l, spinor * const k, const int V){
+  int ix;
+  spinor *r,*s;
+  for (ix = 0; ix < V; ix++){
+    r=l+ix;
+    s=k+ix;
+    _vector_assign((*r).s0,(*s).s0);
+    _vector_assign((*r).s1,(*s).s1);
+    _vector_minus_assign((*r).s2,(*s).s2);
+    _vector_minus_assign((*r).s3,(*s).s3);
+  }
+}
+void gamma5new(spinor * const Q, spinor * const P, const int V){ 
+  int ix; 
   
-/*   for (ix=0;ix<V;ix++){ */
-/*     _gamma5(spinor_field[Q][ix],spinor_field[P][ix]); */
-/*   } */
-/* } */
+  for (ix=0;ix<V;ix++){ 
+    _gamma5(Q[ix], P[ix]); 
+  } 
+}
 void gamma50( const int Q,  const int P, const int V){
   int ix;
   

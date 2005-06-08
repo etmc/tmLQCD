@@ -78,7 +78,6 @@ void clover_gamma5(int ieo, int l, int k, int j, double q_off);
  *
  ******************************************/
 
-void gamma5(int l,int k);
 
 /* definition of external accessible functions */
 
@@ -321,7 +320,7 @@ void clover(int ieo, int l, int k, int j, double q_off){
 
 
 
-void gamma5(int l,int k){
+void gamma5old(int l,int k){
   int ix;
   spinor *r,*s;
   for (ix=0;ix<VOLUME/2;ix++){

@@ -7,7 +7,8 @@
 #include "su3adj.h"
 #include "global.h"
 #include "linalg_eo.h"
-#include "clover_eo.h"
+#include "gamma.h"
+#include "clover_eo.h" 
 #include "start.h"
 #include "tm_operators.h"
 #include "linalg/assign_add_mul_r_add_mul.h"
@@ -84,7 +85,7 @@ int bicg(int k, int l, double q_off, double eps_sq) {
   int iteration;
   double xxx;
   xxx=0.0;
-  gamma5(DUM_SOLVER+1,l);
+  gamma5(spinor_field[DUM_SOLVER+1], spinor_field[l], VOLUME/2);
   /* main loop */
   for(iteration=1;iteration<=ITER_MAX_BCG;iteration++) {
     /* compute the residual*/
@@ -148,7 +149,7 @@ int bicg(int k, int l, double q_off, double eps_sq, const int rel_prec) {
     squarenorm = square_norm(Q, VOLUME/2);
     
     Mtm_plus_psi(r, P);
-    gamma5(DUM_SOLVER, l);
+    gamma5(spinor_field[DUM_SOLVER], spinor_field[l], VOLUME/2);
     diff(p, hatr, r, N);
     assign(r, p, N);
     assign(hatr, p, N);
@@ -193,7 +194,7 @@ int bicg(int k, int l, double q_off, double eps_sq, const int rel_prec) {
   }
   else{
     iteration = ITER_MAX_BCG;
-    gamma5(k,l);
+    gamma5(spinor_field[k], spinor_field[l], VOLUME/2);
   }
 
   /* if bicg fails, redo with conjugate gradient */

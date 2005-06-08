@@ -41,6 +41,7 @@
 #include "read_input.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
+#include "gamma.h"
 #include "boundary.h"
 
 su3 gauge_tmp[VOLUME][4] ALIGN;
@@ -315,7 +316,7 @@ int main(int argc,char *argv[]) {
     if(q_off2>0.){
       zero_spinor_field(5);
       idis2=bicg(5,4,0.,EPS_SQ0);
-      gamma5(5,5);
+      gamma5(spinor_field[5], spinor_field[5], VOLUME/2);
       assign_mul_add_r(5,q_off2,4, VOLUME/2);
       enerphi2x=square_norm(5, VOLUME/2);
     }
