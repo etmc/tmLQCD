@@ -27,17 +27,18 @@
  * l = [(1-i\mubar\gamma_5)/(1+mubar^2-epsbar^2)] * l
  *
  ******************************************/
-void mul_one_minus_imubar_inv(spinor * const l);
+void mul_one_minus_imubar_inv(spinor * const l, spinor * const k);
 /******************************************
  * mul_one_plus_imubar_inv computes
  * l = [(1+i\mubar\gamma_5)/(1+mubar^2-epsbar^2)] * l
  *
  ******************************************/
-void mul_one_minus_imubar_inv(spinor * const l);
+void mul_one_plus_imubar_inv(spinor * const l, spinor * const k);
 /******************************************
  * mul_one_plus_imubar_inv computes
  * l = [(1+i\mubar\gamma_5)/(1+mubar^2-epsbar^2)] * l
  *
+*/
 
 
 /* external functions */
@@ -106,7 +107,7 @@ void QdaggerNon_degenerate(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, spinor_field[DUM_MATRIX+1], spinor_field[DUM_MATRIX+3]);
 
   gamma5(l_charm, spinor_field[DUM_MATRIX], VOLUME/2);
-  gamma5(l_stange, spinor_field[DUM_MATRIX+1], VOLUME/2);
+  gamma5(l_strange, spinor_field[DUM_MATRIX+1], VOLUME/2);
 
 }
 

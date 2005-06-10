@@ -12,6 +12,7 @@
 #include "linalg/assign_mul_bra_add_mul_r.h"
 #include "linalg/assign_add_mul_r_add_mul.h"
 #include "linalg/assign_mul_bra_add_mul_ket_add_r.h"
+#include "linalg/assign_mul_add_mul_add_mul_add_mul_r.h"
 #include "linalg/diff_and_square_norm.h"
 #include "linalg/assign.h"
 #include "linalg/deri_linalg.h"
