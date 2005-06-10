@@ -267,11 +267,11 @@ int main(int argc,char *argv[]) {
 	  mul_r(spinor_field[3], 1./(2*g_kappa), spinor_field[3], VOLUME/2);
 	}
 	else {
-	  zero_spinor_field(spinor_field[3]);
+	  zero_spinor_field(spinor_field[3],VOLUME/2);
 	}
       }
       else {
-	zero_spinor_field(spinor_field[3]);
+	zero_spinor_field(spinor_field[3],VOLUME/2);
       }
 
 #ifdef MPI

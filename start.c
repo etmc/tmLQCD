@@ -295,12 +295,12 @@ void random_spinor_field(int k) {
 
 /* Function provides a spinor field of length VOLUME/2 with
    Gaussian distribution */
-void zero_spinor_field(spinor * const k) {
+void zero_spinor_field(spinor * const k, const int N) {
 
   int ix;
   spinor *s;
   s = k;
-  for (ix=0;ix<VOLUME/2;ix++) {
+  for (ix=0;ix<N;ix++) {
     (*s).s0.c0.re=0.;
     (*s).s0.c0.im=0.;
     (*s).s0.c1.re=0.;
@@ -542,8 +542,8 @@ void source_spinor_field(spinor * const P, spinor * const Q, int is, int ic) {
 
   spinor * s;
 
-  zero_spinor_field(P);
-  zero_spinor_field(Q);
+  zero_spinor_field(P,VOLUME/2);
+  zero_spinor_field(Q,VOLUME/2);
 
   if (g_proc_coords[0] == 0 && g_proc_coords[1]==0) {
 

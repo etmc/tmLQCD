@@ -137,7 +137,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     g_mu = g_mu2;
     Qtm_plus_psi(spinor_field[3], spinor_field[3]);
     g_mu = g_mu1;
-    zero_spinor_field(spinor_field[second_psf]);
+    zero_spinor_field(spinor_field[second_psf],VOLUME/2);
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
     idis1 = bicg(second_psf, 3, 0., g_eps_sq_acc1, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
@@ -153,7 +153,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     g_mu = g_mu3;
     Qtm_plus_psi(spinor_field[5], spinor_field[5]);
     g_mu = g_mu2;
-    zero_spinor_field(spinor_field[third_psf]);
+    zero_spinor_field(spinor_field[third_psf],VOLUME/2);
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
     idis2 = bicg(third_psf, 5, 0., g_eps_sq_acc2, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;

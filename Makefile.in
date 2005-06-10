@@ -35,7 +35,7 @@ MODULES = init_gauge_field init_geometry_indices \
 	reweighting_factor
 
 
-PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark invert
+PROGRAMS = hmc_tm testtrace test_reweighting thermal_cycle_tm benchmark invert
 ALLOBJ = ${MODULES} ${PROGRAMS}
 SUBDIRS = linalg solver
 

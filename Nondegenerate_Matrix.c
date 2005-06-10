@@ -56,7 +56,7 @@ void mul_one_minus_imubar_inv(spinor * const l);
  * on a half spinor
  ******************************************/
 void QNon_degenerate(spinor * const l_strange, spinor * const l_charm,
-                     spinor * const k_strange,  spinor * const k_charm){
+                     spinor * const k_strange, spinor * const k_charm){
 
   Hopping_Matrix(EO, spinor_field[DUM_MATRIX], k_strange);
   Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k_charm);
@@ -74,6 +74,42 @@ void QNon_degenerate(spinor * const l_strange, spinor * const l_charm,
   gamma5(l_charm, l_charm, VOLUME/2);
 
 }
+
+/******************************************
+ *
+ * This is the implementation of
+ *
+ * MISSING
+ *
+ * With respect to QNon_degenerate the role of charme and strange fields
+ * are interchenged, since Qdagger=tau_1 Q tau_1
+ * see documentation for details
+ * k_charm and k_strange are the input fields
+ * l_* the output fields
+ *
+ * it acts only on the odd part or only
+ * on a half spinor
+ ******************************************/
+void QdaggerNon_degenerate(spinor * const l_strange, spinor * const l_charm,
+                           spinor * const k_strange, spinor * const k_charm){
+
+  Hopping_Matrix(EO, spinor_field[DUM_MATRIX], k_charm);
+  Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k_strange);
+
+  mul_one_minus_imubar_inv(spinor_field[DUM_MATRIX+2], spinor_field[DUM_MATRIX]);
+  mul_one_plus_imubar_inv(spinor_field[DUM_MATRIX+3], spinor_field[DUM_MATRIX+1]);
+
+  assign_add_mul_r(spinor_field[DUM_MATRIX+2], spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
+  assign_add_mul_r(spinor_field[DUM_MATRIX+3], spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
+
+  Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+2]);
+  Hopping_Matrix(OE, spinor_field[DUM_MATRIX+1], spinor_field[DUM_MATRIX+3]);
+
+  gamma5(l_charm, spinor_field[DUM_MATRIX], VOLUME/2);
+  gamma5(l_stange, spinor_field[DUM_MATRIX+1], VOLUME/2);
+
+}
+
 
 void mul_one_minus_imubar_inv(spinor * const l, spinor * const k){
   complex z,w;
