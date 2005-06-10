@@ -176,7 +176,7 @@ int main(int argc,char *argv[])
   j_max=1;
   sdt=0.;
   for (k=0;k<k_max;k++) {
-    random_spinor_field(k);
+    random_spinor_field(spinor_field[k], VOLUME/2);
   }
 
   while(sdt<30.) {

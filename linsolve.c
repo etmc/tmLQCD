@@ -219,7 +219,7 @@ int eva(double *rz, int k, double q_off, double eps_sq) {
   static double xs1,xs2,xs3;
   int iteration;
   /* Initialize k to be gaussian */
-  random_spinor_field(k);
+  random_spinor_field(spinor_field[k], VOLUME/2);
   norm0=square_norm(spinor_field[k], VOLUME/2); 
   /*normalize k */
   assign_mul_bra_add_mul_r( spinor_field[k], 1./sqrt(norm0),0., spinor_field[k], VOLUME/2);
@@ -309,7 +309,7 @@ int evamax(double *rz, int k, double q_off, double eps_sq) {
   static double xs1,xs2,xs3;
   int iteration;
   /* Initialize k to be gaussian */
-  random_spinor_field(k);
+  random_spinor_field(spinor_field[k], VOLUME/2);
   norm0=square_norm(spinor_field[k], VOLUME/2); 
   /*normalize k */
   assign_mul_bra_add_mul_r( spinor_field[k], 1./sqrt(norm0),0., spinor_field[k], VOLUME/2);
@@ -400,7 +400,7 @@ int evamax0(double *rz, int k, double q_off, double eps_sq) {
 
   static double norm,norm0;
   int j;
-  random_spinor_field(k);
+  random_spinor_field(spinor_field[k], VOLUME/2);
   norm0=square_norm(spinor_field[k], VOLUME/2); 
   norm=1000.;
   assign_mul_bra_add_mul_r( spinor_field[k], 1./sqrt(norm0),0., spinor_field[k], VOLUME/2);

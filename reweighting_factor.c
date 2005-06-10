@@ -32,7 +32,7 @@ double reweighting_factor(const int N) {
   /* in order not to conflict with anything else... */
 
   for(i = 0; i < N; i++) {
-    random_spinor_field(2);
+    random_spinor_field(spinor_field[2],VOLUME/2);
     g_mu = mu2;
     zero_spinor_field(spinor_field[3],VOLUME/2);
     n_iter = solve_cg(3, 2, 0., 1.e-15, 1);

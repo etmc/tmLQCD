@@ -237,12 +237,12 @@ int main(int argc,char *argv[]) {
     /* initialize the pseudo-fermion fields    */
     /* depending on q_off and q_off2 we use    */
     /* one, two or three pseudo-fermion fields */
-    random_spinor_field(2);
+    random_spinor_field(spinor_field[2], VOLUME/2);
     if(q_off > 0.){
-      random_spinor_field(3);
+      random_spinor_field(spinor_field[3], VOLUME/2);
     }
     if(q_off2 > 0.){
-      random_spinor_field(5);
+      random_spinor_field(spinor_field[5], VOLUME/2);
     }
     /* compute the square of the norm */
     enerphi0 = square_norm(2, VOLUME/2);

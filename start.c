@@ -195,7 +195,7 @@ void unit_spinor_field(const int k) {
 
 /* Function provides a spinor field of length VOLUME/2 with
    Gaussian distribution */
-void random_spinor_field(int k) {
+void random_spinor_field(spinor * const k, const int V) {
   
   int ix;
   int rlxd_state[105]; 
@@ -206,8 +206,8 @@ void random_spinor_field(int k) {
 #endif
 
   if(g_proc_id==0) {
-    for (ix=0;ix<VOLUME/2;ix++) {
-      s=&spinor_field[k][ix];
+    for (ix = 0; ix < V; ix++) {
+      s = k + ix;
       gauss_vector(v,6);
       (*s).s0.c0.re=v[0];
       (*s).s0.c0.im=v[1];
@@ -248,7 +248,7 @@ void random_spinor_field(int k) {
     MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 102, MPI_COMM_WORLD, &status);
     rlxd_reset(rlxd_state);
     for (ix=0;ix<VOLUME/2;ix++) {
-      s=&spinor_field[k][ix];
+      s = k + ix;
       gauss_vector(v,6);
       (*s).s0.c0.re=v[0];
       (*s).s0.c0.im=v[1];

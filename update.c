@@ -8,6 +8,12 @@
 #include "linalg_eo.h"
 #include "update.h"
 
+/******
+ *
+ * This file is not used...!
+ *
+ ******/
+
 su3 gauge_tmp[VOLUME][4] ALIGN;
 
 int update_tm(const int integtyp) {
@@ -24,16 +30,16 @@ int update_tm(const int integtyp) {
   /* initialize the pseudo-fermion fields    */
   /* depending on g_mu1 and g_mu2 we use     */
   /* one or two pseudo-fermion fields        */
-  random_spinor_field(2);
+  random_spinor_field(spinor_field[2], VOLUME/2);
   /* compute the square of the norm */
   enerphi0 = square_norm(2, VOLUME/2);
 
   if(g_nr_of_psf > 1) {
-    random_spinor_field(3);
+    random_spinor_field(spinor_field[3], VOLUME/2);
     enerphi1 = square_norm(3, VOLUME/2);
   }
   if(g_nr_of_psf > 2) {
-    random_spinor_field(5);
+    random_spinor_field(spinor_field[5], VOLUME/2);
     enerphi2 = square_norm(5, VOLUME/2);
   }
   /* apply the fermion matrix to the first spinor */
