@@ -1,3 +1,13 @@
+The lime library is needed now to compile the program. Please download
+it at
+
+http://www.physics.utah.edu/~detar/scidac/
+
+or use the copy in the GWC scratch directory. Install it in a subdirectory 
+of hmc called 'lime', configure and compile before doing the same with hmc.
+You can install lime also somewhere else, then you should use the configure
+option --with-lime=dir to set the correct directory where to find lime.
+
 The following numbers might be taken as reference points:
 
 4^4 lattice, beta 6.0, kappa=0.177, 2*kappa*mu=0.177 (this is the input

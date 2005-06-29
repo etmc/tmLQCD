@@ -1,6 +1,10 @@
+L=4
+T=4
+
 CSW = 0.0
-Measurements = 500
-startCondition = cold
+Measurements = 2
+#startCondition = cold
+startCondition = continue
 beta = 6.0
 mu = 0.1
 Q1=0.
@@ -8,7 +12,9 @@ Q2=0.
 kappa = 0.12
 dtau = 0.1
 nsteps = 10
-Nskip = 10000
+Nskip = 2
 BoundaryCond = 0.
 BCGstabMaxIter = 1000
 CGMaxIter = 1000
+GaugeConfigInputFile = last_configuration
+InitialStoreCounter = readin

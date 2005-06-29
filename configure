@@ -867,6 +867,7 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-limedir=dir      search lime in dir default=${top_builddir}/lime
   --with-mpidimension=n      use n dimenaional parallisation default=1
   --with-gprof                  use of gprof profiler default=yes
 
@@ -1400,6 +1401,18 @@ if test "$host_vendor" = "cray"; then
   ac_cv_c_bigendian=yes
 fi
 
+echo "$as_me:$LINENO: checking where to find lime" >&5
+echo $ECHO_N "checking where to find lime... $ECHO_C" >&6
+
+# Check whether --with-limedir or --without-limedir was given.
+if test "${with_limedir+set}" = set; then
+  withval="$with_limedir"
+  lime_dir=$withval
+else
+  lime_dir='${top_builddir}/lime'
+fi;
+echo "$as_me:$LINENO: result: $lime_dir" >&5
+echo "${ECHO_T}$lime_dir" >&6
 
 echo "$as_me:$LINENO: checking whether we want to use MPI" >&5
 echo $ECHO_N "checking whether we want to use MPI... $ECHO_C" >&6
@@ -1444,8 +1457,12 @@ echo "${ECHO_T}unknown" >&6
 fi
 fi
 
+# mpidimension="-DPARALLELT"
 
 if test $enable_mpi = yes; then
+# In general one cannot run mpi programs directly
+# thats why we need here cross_compiling=yes
+# for non CRAY
   if test "$host_vendor" != "cray"; then
     cross_compiling=yes
   fi
@@ -1501,7 +1518,10 @@ fi
   fi
 fi
 
+# for the case of other configure scripts
+# AC_CONFIG_SUBDIRS( rng )
 
+# Checks for programs.
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -3023,6 +3043,7 @@ presetting ac_cv_c_bigendian=no (or yes) will help" >&2;}
 esac
 
 
+# Checks for libraries.
 if test "$host_cpu" = "powerpc"; then
 
 echo "$as_me:$LINENO: checking for zaxpy in -lessl" >&5
@@ -3705,6 +3726,7 @@ fi
     fi
   fi
 fi
+# Checks for header files.
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -5027,6 +5049,9 @@ cat >>confdefs.h <<_ACEOF
 #define VERSION "$VERSION"
 _ACEOF
 
+# AC_DEFINE(VERSION, 0.1)
+
+# We now define some replace variables
 
 
 
@@ -5042,7 +5067,7 @@ _ACEOF
 
 
 
-
+# in the following we check for extra options
 echo "$as_me:$LINENO: checking whether we want to use P4 instructions" >&5
 echo $ECHO_N "checking whether we want to use P4 instructions... $ECHO_C" >&6
 # Check whether --enable-p4 or --disable-p4 was given.
@@ -5178,12 +5203,18 @@ echo "${ECHO_T}no" >&6
   PROFILE_FLAG=
 fi
 
+# Now we have to set als Flags and compiler proper
+# first for PC's
 if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
+# the GNU compiler
   if test "$GCC" = yes; then
     DEPFLAGS="-MM"
     GCCVERSION1=`$CC -dumpversion | cut -d "." -f 1`
     GCCVERSION2=`$CC -dumpversion | cut -d "." -f 2`
+# -march=pentium4
     if test $enable_mpi = yes; then
+# Due to some standard problems in MPI header files
+# no -pedantic-errors...
       CFLAGS="-ansi -Wall -DMPI $endian $mpidimension"
     else
       if test $GCCVERSION1 -gt 2 && test $enable_sse2 = yes; then
@@ -5253,7 +5284,9 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       CCDEP="gcc"
     fi
     DEBUG_FLAG="-g"
+# other compiler
   else
+# check for pgcc
     PGCC=`$CC -V 2>&1 | grep pgcc`
     ICC=`$CC -V 2>&1 | grep -i intel`
     if test "$PGCC" != ""; then
@@ -5272,6 +5305,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       PROFILE_FLAG="-p -g"
       CCDEP="$CC"
 
+# check for icc
     elif test "$ICC" != ""; then
       echo "We are using the Intel C compiler!"
       DEPFLAGS="-M"
@@ -5300,7 +5334,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       CCDEP="$CC"
     fi
   fi
-  LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(abs_top_builddir)/lapack"
+  LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/lib -L\$(abs_top_builddir)/lapack"
   if test "$LP" = "yes" && "$host_cpu" != "x86_64"; then
     if test "$ATLAS" = "yes"; then
       LIBS="$LIBS -llapack -lf77blas -latlas"
@@ -5329,6 +5363,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   fi
 
 
+# The IBM Power PC
 elif test "$host_cpu" = "powerpc"; then
   if test $enable_mpi = yes; then
     CFLAGS="-DXLC -q64 -qsrcmsg -DMPI -DNOF77_ $endian $mpidimension"
@@ -5343,6 +5378,7 @@ elif test "$host_cpu" = "powerpc"; then
   CCDEP="gcc"
   DEPFLAGS="-MM"
 
+# The CRAY
 elif test "$host_vendor" = "cray"; then
   echo
   echo "Hey, we are on the cray, you should take some time for this..."
@@ -5353,7 +5389,7 @@ elif test "$host_vendor" = "cray"; then
     CFLAGS="-DCRAY -dp"
   fi
   LIBS="-lm"
-  LDFLAGS="-L\$(abs_top_builddir)/lib"
+  LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
   OPTARGS="-O3"
   DEBUG_FLAG="-g"
   CCDEP="$CC"
@@ -5368,7 +5404,7 @@ else
   CCDEP="$CC"
   DEPFLAGS="-M"
   LIBS="-lm"
-  LDFLAGS="-L\$(abs_top_builddir)/lib"
+  LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
 fi
 
 
@@ -5426,12 +5462,16 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
+# create the lib directory here
 if test ! -e lib; then
   mkdir lib
 fi
 
-INCLUDES='-I. -I${top_builddir}/'
+LDFLAGS="$LDFLAGS -L${lime_dir}/lib/"
+INCLUDES="-I\$(HOME)/include/ -I. -I\${top_builddir}/ -I${lime_dir}/include/"
 AUTOCONF=autoconf
+
+#AC_CONFIG_SUBDIRS(lime)
 
                               ac_config_files="$ac_config_files Makefile linalg/Makefile solver/Makefile"
 cat >confcache <<\_ACEOF

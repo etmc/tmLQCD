@@ -1,3 +1,12 @@
+29.06.2005: ILDG LIME file format introduced.
+	    old file format deprecated. But it will be still
+	    automatically detected and read in.
+	
+	    trajectory counter introduced which will now allow
+	    to correctly keep the Nskip's between the confs.
+	    this is as well as the plaquette value stored as 
+	    xlf-info record in the new LIME format.
+
 10.03.2005: Precisions in the solver for force and Acceptance are input
 	    parameter now for each mu parameter:
   	    ForcePrecisionMu, ForcePrecisionMu2, ForcePrecisionMu3

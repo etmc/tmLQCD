@@ -213,7 +213,7 @@ int main(int argc,char *argv[]) {
     if (g_proc_id == 0){
       printf("Reading Gauge field from file %s\n", conf_filename); fflush(stdout);
     }
-    read_gauge_field_time_p(conf_filename);
+    read_lime_gauge_field(conf_filename);
     if (g_proc_id == 0){
       printf("done!\n"); fflush(stdout);
     }

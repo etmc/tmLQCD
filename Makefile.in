@@ -12,11 +12,11 @@ DEPFLAGS = @DEPFLAGS@
 CCLD = $(CC)
 LEX = @LEX@ 
 AUTOCONF = @AUTOCONF@
-LIBS = -lsolver -llinalg @LIBS@ 
+LIBS = -lsolver -llinalg -llime @LIBS@ 
 SHELL = @SHELL@
 OPTARGS = @OPTARGS@
 
-INCLUDES = @INCLUDES@ -I..
+INCLUDES = @INCLUDES@ 
 LINK = $(CCLD) -o $@ ${LDFLAGS}
 LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
 	${top_builddir}/solver/libsolver.a
@@ -32,7 +32,6 @@ MODULES = init_gauge_field init_geometry_indices \
 	test/check_geometry test/check_xchange invert_eo \
 	measure_rectangles get_rectangle_staples \
 	derivative_psf ext_integrator polyakov_loop 
-	
 
 
 PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark invert

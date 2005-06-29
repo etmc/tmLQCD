@@ -1,13 +1,10 @@
-dnl $Id$
-dnl
-dnl Process this file with autoconf to produce a configure script
-dnl
-dnl comment in the following two lines
-dnl if autoconf2.5x is available
+# $Id$
+#
+# Process this file with autoconf to produce a configure script
+#
+AC_PREREQ(2.53)
 AC_INIT(HMC, 0.9, urbach@ifh.de)
 AC_CONFIG_SRCDIR([hybrid.c])
-dnl and comment out the following line
-dnl AC_INIT(src/bin/D_psi.c)
 AC_CANONICAL_HOST()
 AC_PREFIX_DEFAULT($HOME)
 AC_ARG_PROGRAM
@@ -21,6 +18,11 @@ if test "$host_vendor" = "cray"; then
   ac_cv_c_bigendian=yes
 fi
 
+AC_MSG_CHECKING(where to find lime)
+AC_ARG_WITH(limedir,
+  [  --with-limedir[=dir]      search lime in dir [default=${top_builddir}/lime]],
+  lime_dir=$withval, lime_dir='${top_builddir}/lime')
+AC_MSG_RESULT($lime_dir)
 
 AC_MSG_CHECKING(whether we want to use MPI)
 AC_ARG_ENABLE(mpi,
@@ -49,12 +51,12 @@ else
 fi
 fi
 
-dnl mpidimension="-DPARALLELT"
+# mpidimension="-DPARALLELT"
 
 if test $enable_mpi = yes; then
-dnl In general one cannot run mpi programs directly
-dnl thats why we need here cross_compiling=yes
-dnl for non CRAY
+# In general one cannot run mpi programs directly
+# thats why we need here cross_compiling=yes
+# for non CRAY
   if test "$host_vendor" != "cray"; then
     cross_compiling=yes
   fi
@@ -70,10 +72,10 @@ dnl for non CRAY
   fi
 fi 
 
-dnl for the case of other configure scripts
-dnl AC_CONFIG_SUBDIRS( rng )
+# for the case of other configure scripts
+# AC_CONFIG_SUBDIRS( rng )
 
-dnl Checks for programs.
+# Checks for programs.
 
 AC_PROG_CC
 AC_C_CONST
@@ -82,7 +84,7 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_C_BIGENDIAN(endian="", endian="-DLITTLE_ENDIAN")
 
-dnl Checks for libraries.
+# Checks for libraries.
 if test "$host_cpu" = "powerpc"; then
   AC_CHECK_LIB(essl, zaxpy, ,echo NO ESSL! exiting...;exit 0, -lf -lm )
   AC_CHECK_LIB(lapack, zheev, LP=yes, LP="", -lessl -lblas -lf -lm )
@@ -110,7 +112,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     fi
   fi
 fi
-dnl Checks for header files.
+# Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS( math.h  )
 AC_CHECK_HEADERS( signal.h  )
@@ -120,9 +122,9 @@ AC_CHECK_HEADERS( limits.h  )
 AC_CHECK_HEADER( getopt.h, INCLUDES="//  " )
 
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
-dnl AC_DEFINE(VERSION, 0.1)
+# AC_DEFINE(VERSION, 0.1)
 
-dnl We now define some replace variables
+# We now define some replace variables
 AC_SUBST(OPTARGS)
 AC_SUBST(INCLUDES)
 AC_SUBST(AUTOCONF)
@@ -138,7 +140,7 @@ AC_SUBST(XCHANGELIB)
 AC_SUBST(XCHANGEDIR)
 AC_SUBST(XLIB)
 
-dnl in the following we check for extra options
+# in the following we check for extra options
 AC_MSG_CHECKING(whether we want to use P4 instructions)
 AC_ARG_ENABLE(p4,
   [  --enable-p4                  enable use of P4 instructions [default=yes]],
@@ -223,18 +225,18 @@ else
   PROFILE_FLAG=
 fi
 
-dnl Now we have to set als Flags and compiler proper
-dnl first for PC's
+# Now we have to set als Flags and compiler proper
+# first for PC's
 if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
-dnl the GNU compiler
+# the GNU compiler
   if test "$GCC" = yes; then
     DEPFLAGS="-MM"
     GCCVERSION1=`$CC -dumpversion | cut -d "." -f 1`
     GCCVERSION2=`$CC -dumpversion | cut -d "." -f 2`
-dnl -march=pentium4
+# -march=pentium4
     if test $enable_mpi = yes; then
-dnl Due to some standard problems in MPI header files
-dnl no -pedantic-errors...
+# Due to some standard problems in MPI header files
+# no -pedantic-errors...
       CFLAGS="-ansi -Wall -DMPI $endian $mpidimension"
     else
       if test $GCCVERSION1 -gt 2 && test $enable_sse2 = yes; then
@@ -304,9 +306,9 @@ dnl no -pedantic-errors...
       CCDEP="gcc"
     fi 
     DEBUG_FLAG="-g"
-dnl other compiler
+# other compiler
   else
-dnl check for pgcc
+# check for pgcc
     PGCC=`$CC -V 2>&1 | grep pgcc`
     ICC=`$CC -V 2>&1 | grep -i intel`
     if test "$PGCC" != ""; then
@@ -325,7 +327,7 @@ dnl check for pgcc
       PROFILE_FLAG="-p -g"
       CCDEP="$CC"
 
-dnl check for icc    
+# check for icc    
     elif test "$ICC" != ""; then
       echo "We are using the Intel C compiler!"
       DEPFLAGS="-M"
@@ -354,7 +356,7 @@ dnl check for icc
       CCDEP="$CC"
     fi
   fi
-  LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(abs_top_builddir)/lapack"
+  LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/lib -L\$(abs_top_builddir)/lapack"
   if test "$LP" = "yes" && "$host_cpu" != "x86_64"; then
     if test "$ATLAS" = "yes"; then
       LIBS="$LIBS -llapack -lf77blas -latlas"
@@ -383,7 +385,7 @@ dnl check for icc
   fi
 
 
-dnl The IBM Power PC
+# The IBM Power PC
 elif test "$host_cpu" = "powerpc"; then
   if test $enable_mpi = yes; then
     CFLAGS="-DXLC -q64 -qsrcmsg -DMPI -DNOF77_ $endian $mpidimension"
@@ -398,7 +400,7 @@ elif test "$host_cpu" = "powerpc"; then
   CCDEP="gcc"
   DEPFLAGS="-MM"
 
-dnl The CRAY
+# The CRAY
 elif test "$host_vendor" = "cray"; then
   echo
   echo "Hey, we are on the cray, you should take some time for this..."
@@ -409,7 +411,7 @@ elif test "$host_vendor" = "cray"; then
     CFLAGS="-DCRAY -dp"
   fi
   LIBS="-lm"
-  LDFLAGS="-L\$(abs_top_builddir)/lib"
+  LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
   OPTARGS="-O3"
   DEBUG_FLAG="-g"
   CCDEP="$CC"
@@ -424,7 +426,7 @@ else
   CCDEP="$CC"
   DEPFLAGS="-M"
   LIBS="-lm"
-  LDFLAGS="-L\$(abs_top_builddir)/lib"
+  LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
 fi
 
 
@@ -461,13 +463,16 @@ else
   AC_MSG_RESULT(no)
 fi
 
-dnl create the lib directory here
+# create the lib directory here
 if test ! -e lib; then
   mkdir lib
 fi
 
-INCLUDES='-I. -I${top_builddir}/'
+LDFLAGS="$LDFLAGS -L${lime_dir}/lib/"
+INCLUDES="-I\$(HOME)/include/ -I. -I\${top_builddir}/ -I${lime_dir}/include/"
 AUTOCONF=autoconf
+
+#AC_CONFIG_SUBDIRS(lime)
 
 AC_OUTPUT([Makefile
            linalg/Makefile

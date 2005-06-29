@@ -70,7 +70,7 @@ int main(int argc,char *argv[]) {
   char * nstore_filename = ".nstore_counter";
   char * input_filename = NULL;
   int rlxd_state[105];
-  int j,ix,mu;
+  int j,ix,mu, trajectory_counter=1;
   int k;
   struct timeval t1;
 
@@ -134,7 +134,8 @@ int main(int argc,char *argv[]) {
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
     if(countfile != NULL) {
-      fscanf(countfile, "%d\n", &nstore);
+      fscanf(countfile, "%d %d\n", &nstore, &trajectory_counter);
+      printf("%d %d\n", nstore, trajectory_counter);
       fclose(countfile);
     }
     else {
@@ -377,8 +378,8 @@ int main(int argc,char *argv[]) {
 	rlxd_reset(rlxd_state);
 	printf("Reading Gauge field from file %s\n", gauge_input_filename); fflush(stdout);
       }
-      
-      read_gauge_field_time_p(gauge_input_filename);
+      read_lime_gauge_field(gauge_input_filename);
+/*       read_gauge_field_time_p(gauge_input_filename); */
     }
   }
   if(startoption != 3){
@@ -422,7 +423,8 @@ int main(int argc,char *argv[]) {
       if (g_proc_id == 0){
 	printf("Reading Gauge field from file %s\n", gauge_input_filename); fflush(stdout);
       }
-      read_gauge_field_time_p(gauge_input_filename);
+      read_lime_gauge_field(gauge_input_filename);
+/*       read_gauge_field_time_p(gauge_input_filename); */
     }
 
   }
@@ -507,19 +509,19 @@ int main(int argc,char *argv[]) {
     polyakov_loop(&pl4, 3);  
     
     /* Save gauge configuration all Nskip times */
-    if((j+1)%Nskip == 0) {
+    if((trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) {
       sprintf(gauge_filename,"%s.%.4d", "conf", nstore);
       if(g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
-	fprintf(countfile, "%.4d, measurement %d of %d, Nskip = %d, Plaquette = %e, |L(%d)| = %e, |L(%d)| = %e\n", 
+	fprintf(countfile, "%.4d, measurement %d of %d, Nskip = %d, Plaquette = %e, |L(%d)| = %e, |L(%d)| = %e trajectory nr = %d\n", 
 		nstore, j, Nmeas, Nskip, plaquette_energy/(6.*VOLUME*g_nproc),
 		2, sqrt(pl.re*pl.re+pl.im*pl.im),
-		dir, sqrt(pl4.re*pl4.re+pl4.im*pl4.im));
+		dir, sqrt(pl4.re*pl4.re+pl4.im*pl4.im), trajectory_counter);
 	fclose(countfile);
       }
       nstore ++;
       countfile = fopen(nstore_filename, "w");
-      fprintf(countfile, "%d\n", nstore);
+      fprintf(countfile, "%d %d\n", nstore, trajectory_counter+1);
       fclose(countfile);
     }
     else {
@@ -529,7 +531,7 @@ int main(int argc,char *argv[]) {
     ix = reread_input("hmc.reread");
     verbose = 0;
 
-    write_gauge_field_time_p( gauge_filename );
+    write_lime_gauge_field( gauge_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
     /*  write the status of the random number generator on a file */
     if(g_proc_id==0) {
       rlxd_get(rlxd_state);
@@ -548,10 +550,10 @@ int main(int argc,char *argv[]) {
       printf("# Changed parameter according to hmc.reread (see stdout): measurment %d of %d\n", j, Nmeas); 
       system("rm hmc.reread");
     }
+    trajectory_counter++;
   }
   /* write the gauge configuration to the file last_configuration */
-  write_gauge_field_time_p( "last_configuration" );
-  
+  write_lime_gauge_field( "last_configuration" , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
 
   if(g_proc_id==0) {
     rlxd_get(rlxd_state);
