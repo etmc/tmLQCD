@@ -520,13 +520,13 @@ int main(int argc,char *argv[]) {
 	fclose(countfile);
       }
       nstore ++;
-      countfile = fopen(nstore_filename, "w");
-      fprintf(countfile, "%d %d\n", nstore, trajectory_counter+1);
-      fclose(countfile);
     }
     else {
       sprintf(gauge_filename,"%s", "conf.save");
     }
+    countfile = fopen(nstore_filename, "w");
+    fprintf(countfile, "%d %d\n", nstore, trajectory_counter+1);
+    fclose(countfile);
     verbose = 1;
     ix = reread_input("hmc.reread");
     verbose = 0;
