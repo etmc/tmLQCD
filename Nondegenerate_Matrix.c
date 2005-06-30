@@ -59,6 +59,8 @@ void mul_one_plus_imubar_inv(spinor * const l, spinor * const k);
 void QNon_degenerate(spinor * const l_strange, spinor * const l_charm,
                      spinor * const k_strange, spinor * const k_charm){
 
+  double invmaxev=1./20.; 
+
   Hopping_Matrix(EO, spinor_field[DUM_MATRIX], k_strange);
   Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k_charm);
 
@@ -71,8 +73,14 @@ void QNon_degenerate(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, l_strange, spinor_field[DUM_MATRIX+2]);
   Hopping_Matrix(OE, l_charm, spinor_field[DUM_MATRIX+3]);
 
+  diff(l_strange, k_strange, l_strange, VOLUME/2);
+  diff(l_charm, k_charm, l_charm, VOLUME/2);
+
   gamma5(l_strange, l_strange, VOLUME/2);
   gamma5(l_charm, l_charm, VOLUME/2);
+
+  mul_r(l_strange, invmaxev, l_strange, VOLUME/2);
+  mul_r(l_charm, invmaxev, l_charm, VOLUME/2);
 
 }
 
@@ -94,6 +102,8 @@ void QNon_degenerate(spinor * const l_strange, spinor * const l_charm,
 void QdaggerNon_degenerate(spinor * const l_strange, spinor * const l_charm,
                            spinor * const k_strange, spinor * const k_charm){
 
+  double invmaxev=1./20.; 
+
   Hopping_Matrix(EO, spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k_strange);
 
@@ -106,8 +116,14 @@ void QdaggerNon_degenerate(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+2]);
   Hopping_Matrix(OE, spinor_field[DUM_MATRIX+1], spinor_field[DUM_MATRIX+3]);
 
-  gamma5(l_charm, spinor_field[DUM_MATRIX], VOLUME/2);
-  gamma5(l_strange, spinor_field[DUM_MATRIX+1], VOLUME/2);
+  diff(spinor_field[DUM_MATRIX], k_charm, spinor_field[DUM_MATRIX], VOLUME/2);
+  diff(spinor_field[DUM_MATRIX+1], k_strange, spinor_field[DUM_MATRIX+1], VOLUME/2);
+
+  gamma5(spinor_field[DUM_MATRIX+2], spinor_field[DUM_MATRIX], VOLUME/2);
+  gamma5(spinor_field[DUM_MATRIX+3], spinor_field[DUM_MATRIX+1], VOLUME/2);
+
+  mul_r(l_charm, invmaxev, spinor_field[DUM_MATRIX+2], VOLUME/2);
+  mul_r(l_strange, invmaxev, spinor_field[DUM_MATRIX+3], VOLUME/2);
 
 }
 
