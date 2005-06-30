@@ -718,10 +718,10 @@ int write_ildg_format_xml(char *filename, LimeWriter * limewriter){
   fprintf(ofs, "  <version> 1.0 </version>\n");
   fprintf(ofs, "  <field> su3gauge </field>\n");
   fprintf(ofs, "  <precision> 64 </precision>\n");
-  fprintf(ofs, "  <lx> %d </lx>\n", LX);
+  fprintf(ofs, "  <lx> %d </lx>\n", LX*g_nproc_x);
   fprintf(ofs, "  <ly> %d </ly>\n", LY);
   fprintf(ofs, "  <lz> %d </lz>\n", LZ);
-  fprintf(ofs, "  <lt> %d </lt>\n", T);
+  fprintf(ofs, "  <lt> %d </lt>\n", T*g_nproc_t);
   fprintf(ofs, "</ildgFormat>");
   fclose( ofs );
   ofs = fopen(filename, "r");
