@@ -478,7 +478,7 @@ int read_lime_gauge_field(char * filename){
 #if (defined MPI && (defined PARALLELT || defined PARALLELXT))
 	limeReaderSeek(limereader, 
 		       (g_proc_coords[1]*LX + 
-			(((g_proc_coords[0]*T+t)*LZ+z)*LY+y)*LX*g_nproc_x)*bytes,
+			(((g_proc_coords[0]*T+t)*LZ+z)*LY+y)*LX*g_nproc_x)*4*sizeof(su3),
 		       SEEK_SET);
 #endif
 	for(x = 0; x < LX; x++){
