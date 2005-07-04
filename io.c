@@ -132,7 +132,10 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 	    }
 	    else {
 	      MPI_Recv(tmp, 4*sizeof(su3)/8, MPI_DOUBLE, id, tag, g_cart_grid, &mpi_status);
-	      status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[1], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[2], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[3], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[0], &bytes, limewriter);
 	    }
 	    if(status < 0 ) {
 	      fprintf(stderr, "LIME write error %d\n", status);
