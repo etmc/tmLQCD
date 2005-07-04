@@ -66,11 +66,15 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
     ofs = fopen(filename, "w");
     if(ofs == (FILE*)NULL) {
       fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
       exit(500);
     }
     limewriter = limeCreateWriter( ofs );
     if(limewriter == (LimeWriter*)NULL) {
       fprintf(stderr, "LIME error in file %s for writing!\n Aboring...\n", filename);
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
       exit(500);
     }
     write_ildg_format_xml("temp.xml", limewriter);
@@ -79,6 +83,8 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
     status = limeWriteRecordHeader( limeheader, limewriter);
     if(status < 0 ) {
       fprintf(stderr, "LIME write header error %d\n", status);
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
       exit(500);
     }
     limeDestroyHeader( limeheader );
@@ -90,12 +96,14 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
     status = limeWriteRecordHeader( limeheader, limewriter);
     if(status < 0 ) {
       fprintf(stderr, "LIME write header error %d\n", status);
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
       exit(500);
     }
     limeDestroyHeader( limeheader );
   }
 
-  bytes = 4*sizeof(su3);
+  bytes = sizeof(su3);
   for(t = 0; t < T*g_nproc_t; t++) {
     tt = t - g_proc_coords[0]*T;
     coords[0] = t / T;
@@ -111,9 +119,15 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 	    if(g_cart_id == id) {
 #ifdef LITTLE_ENDIAN
 	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8); 
-	      status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[1], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[2], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[3], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[0], &bytes, limewriter);
 #else
-	      status = limeWriteRecordData((void*)g_gauge_field[ g_ipt[t][x][y][z] ], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[t][x][y][z] ][1], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[t][x][y][z] ][2], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[t][x][y][z] ][3], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[t][x][y][z] ][0], &bytes, limewriter);
 #endif
 	    }
 	    else {
@@ -122,6 +136,8 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 	    }
 	    if(status < 0 ) {
 	      fprintf(stderr, "LIME write error %d\n", status);
+	      MPI_Abort(MPI_COMM_WORLD, 1);
+	      MPI_Finalize();
 	      exit(500);
 	    }
 	  }
@@ -194,16 +210,22 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   }
   limeDestroyHeader( limeheader );
 
-  bytes = 4*sizeof(su3);
+  bytes = sizeof(su3);
   for(t = 0; t < T; t++){
     for(z = 0; z < LZ; z++){
       for(y = 0; y < LY; y++){
 	for(x = 0; x < LX; x++){
 #ifdef LITTLE_ENDIAN
 	  byte_swap_assign(tmp, g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8); 
-	  status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
+	  status = limeWriteRecordData((void*)&tmp[1], &bytes, limewriter);
+	  status = limeWriteRecordData((void*)&tmp[2], &bytes, limewriter);
+	  status = limeWriteRecordData((void*)&tmp[3], &bytes, limewriter);
+	  status = limeWriteRecordData((void*)&tmp[0], &bytes, limewriter);
 #else
-	  status = limeWriteRecordData((void*)g_gauge_field[ g_ipt[t][x][y][z] ], &bytes, limewriter);
+	  status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[t][x][y][z] ][1], &bytes, limewriter);
+	  status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[t][x][y][z] ][2], &bytes, limewriter);
+	  status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[t][x][y][z] ][3], &bytes, limewriter);
+	  status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[t][x][y][z] ][0], &bytes, limewriter);
 #endif
 	  if(status < 0 ) {
 	    fprintf(stderr, "LIME write error %d\n", status);
@@ -402,11 +424,19 @@ int read_lime_gauge_field(char * filename){
   ifs = fopen(filename, "r");
   if(ifs == (FILE *)NULL) {
     fprintf(stderr, "Could not open file %s\n Aborting...\n", filename);
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
     exit(500);
   }
   limereader = limeCreateReader( ifs );
   if( limereader == (LimeReader *)NULL ) {
     fprintf(stderr, "Unable to open LimeReader\n");
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
     exit(500);
   }
   while( (status = limeReaderNextRecord(limereader)) != LIME_EOF ) {
@@ -427,9 +457,21 @@ int read_lime_gauge_field(char * filename){
     read_gauge_field_time_p(filename);
     return(0);
   }
-
+  bytes = limeReaderBytes(limereader);
+  if(bytes != LX*g_nproc_x*LY*LZ*T*g_nproc_t*4*sizeof(su3)) {
+    fprintf(stderr, "Probably wrong lattice size or precision in file %s\n", filename);
+    fprintf(stderr, "Aborting...!\n");
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(501);
+  }
 
   bytes = 4*sizeof(su3);
+#ifndef LITTLE_ENDIAN
+  bytes = sizeof(su3);
+#endif
   for(t = 0; t < T; t++){
     for(z = 0; z < LZ; z++){
       for(y = 0; y < LY; y++){
@@ -442,12 +484,22 @@ int read_lime_gauge_field(char * filename){
 	for(x = 0; x < LX; x++){
 #ifdef LITTLE_ENDIAN
 	  status = limeReaderReadData(tmp, &bytes, limereader);
-	  byte_swap_assign(g_gauge_field[ g_ipt[t][x][y][z] ], tmp, 4*sizeof(su3)/8);
+	  byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp[3], sizeof(su3)/8);
+	  byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &tmp[0], sizeof(su3)/8);
+	  byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &tmp[1], sizeof(su3)/8);
+	  byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][3], &tmp[2], sizeof(su3)/8);
 #else
-	  status = limeReaderReadData(g_gauge_field[ g_ipt[t][x][y][z] ], &bytes, limereader);
+	  status = limeReaderReadData(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &bytes, limereader);
+	  status = limeReaderReadData(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &bytes, limereader);
+	  status = limeReaderReadData(&g_gauge_field[ g_ipt[t][x][y][z] ][3], &bytes, limereader);
+	  status = limeReaderReadData(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &bytes, limereader);
 #endif
 	  if(status < 0 && status != LIME_EOR) {
 	    fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", status, filename);
+#ifdef MPI
+	    MPI_Abort(MPI_COMM_WORLD, 1);
+	    MPI_Finalize();
+#endif
 	    exit(500);
 	  }
 	}
