@@ -181,7 +181,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 #endif
 
   sprintf(message,"plaquette = %e\n trajectory nr = %d", plaq, counter);
-  bytes = strlen( message );
+  bytes = (off_t)strlen( message );
   ofs = fopen(filename, "w");
   if(ofs == (FILE*)NULL) {
     fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
@@ -203,7 +203,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   limeDestroyHeader( limeheader );
   limeWriteRecordData(message, &bytes, limewriter);
 
-  bytes = LX*LY*LZ*T*4*sizeof(su3);
+  bytes = (off_t)(LX*LY*LZ*T*4*sizeof(su3));
   MB_flag=0; ME_flag=1;
   limeheader = limeCreateHeader(MB_flag, ME_flag, "ildg-binary-data", bytes);
   status = limeWriteRecordHeader( limeheader, limewriter);
@@ -461,9 +461,10 @@ int read_lime_gauge_field(char * filename){
     return(0);
   }
   bytes = limeReaderBytes(limereader);
-  if(bytes != LX*g_nproc_x*LY*LZ*T*g_nproc_t*4*sizeof(su3)) {
-    fprintf(stderr, "Probably wrong lattice size or precision in file %s\n", filename);
+  if((int)bytes != LX*g_nproc_x*LY*LZ*T*g_nproc_t*4*sizeof(su3)) {
+    fprintf(stderr, "Probably wrong lattice size or precision (bytes=%d) in file %s\n", (int)bytes, filename);
     fprintf(stderr, "Aborting...!\n");
+    fflush( stdout );
 #ifdef MPI
     MPI_Abort(MPI_COMM_WORLD, 1);
     MPI_Finalize();
@@ -471,7 +472,7 @@ int read_lime_gauge_field(char * filename){
     exit(501);
   }
 
-  bytes = 4*sizeof(su3);
+  bytes = (off_t)4*sizeof(su3);
 #ifndef LITTLE_ENDIAN
   bytes = sizeof(su3);
 #endif
@@ -479,7 +480,7 @@ int read_lime_gauge_field(char * filename){
     for(z = 0; z < LZ; z++){
       for(y = 0; y < LY; y++){
 #if (defined MPI && (defined PARALLELT || defined PARALLELXT))
-	limeReaderSeek(limereader, 
+	limeReaderSeek(limereader,(off_t) 
 		       (g_proc_coords[1]*LX + 
 			(((g_proc_coords[0]*T+t)*LZ+z)*LY+y)*LX*g_nproc_x)*4*sizeof(su3),
 		       SEEK_SET);
