@@ -33,6 +33,7 @@
 #include "measure_rectangles.h"
 #include "init_gauge_tmp.h"
 #include "ext_integrator.h"
+#include "2mn_integrator.h"
 #include "solver/chrono_guess.h"
 #include "update_tm.h"
 
@@ -52,6 +53,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   double atime=0., etime=0.;
   int idis0=0, idis1=0, idis2=0;
   int ret_idis0=0, ret_idis1=0, ret_idis2=0;
+  double lambda[5] = {0.1931833275037836,0.1931833275037836,0.1931833275037836,0.1931833275037836,0.1931833275037836};
   
   /* Energy corresponding to the Gauge part */
   double new_plaquette_energy=0., new_rectangle_energy = 0., gauge_energy = 0., new_gauge_energy = 0.;
@@ -187,6 +189,9 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   else if(integtyp == 5) {
     impr_leap_frog(n_int, tau, g_nr_of_psf);
   }
+  else if(integtyp == 6) {
+    mn2_integrator(n_int, tau, g_nr_of_psf, halfstep, lambda);
+  }
 
   /*perform the accept-reject-step*/
   enepx=moment_energy();
@@ -287,6 +292,9 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
     else if(integtyp == 5) {
       impr_leap_frog(n_int, -tau, g_nr_of_psf);
+    }
+    else if(integtyp == 6) {
+      mn2_integrator(n_int, -tau, g_nr_of_psf, halfstep, lambda);
     }
 
     ret_enep=moment_energy();

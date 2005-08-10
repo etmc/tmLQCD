@@ -474,6 +474,10 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   integtyp = 5;
   if(verbose!=0) printf("Using extended Leapfrog integrator!\n");
 }
+<INTTYP>2MN {
+  integtyp = 6;
+  if(verbose!=0) printf("Using Second order Minimal norm integrator!\n");
+}
 <NSMALL>{DIGIT}+ {
   nsmall = atoi(yytext);
   if(verbose!=0) printf("nsmall set to %d\n", nsmall);
