@@ -1,3 +1,4 @@
+
 /*
  * $Id$
  *
@@ -464,20 +465,25 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 }
 <INTTYP>ExtLeapFrog {
   integtyp = 3;
-  if(verbose!=0) printf("Using extended Leapfrog integrator!\n");
+  if(verbose!=0) printf("Using multiple time scale Leapfrog integrator!\n");
 }
 <INTTYP>ExtSextonWeingarten {
   integtyp = 4;
-  if(verbose!=0) printf("Using extended Sexton-Weingarten integrator!\n");
+  if(verbose!=0) printf("Using multiple time scale Sexton-Weingarten integrator!\n");
 }
 <INTTYP>ImprLeapFrog {
   integtyp = 5;
-  if(verbose!=0) printf("Using extended Leapfrog integrator!\n");
+  if(verbose!=0) printf("Using higher order Leapfrog integrator!\n");
 }
 <INTTYP>2MN {
   integtyp = 6;
   if(verbose!=0) printf("Using Second order Minimal norm integrator!\n");
 }
+<INTTYP>2MNposition {
+  integtyp = 7;
+  if(verbose!=0) printf("Using Second order Minimal norm integrator (position version)!\n");
+}
+
 <NSMALL>{DIGIT}+ {
   nsmall = atoi(yytext);
   if(verbose!=0) printf("nsmall set to %d\n", nsmall);

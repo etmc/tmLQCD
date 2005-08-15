@@ -308,6 +308,8 @@ int main(int argc,char *argv[]) {
     if(integtyp == 3) printf("leap-frog (multiple time scales)\n");
     if(integtyp == 4) printf("Sexton-Weingarten (multiple time scales)\n");
     if(integtyp == 5) printf("higher order and leap-frog (multiple time scales)\n");
+    if(integtyp == 6) printf("second order minimal norm (velocity version, multiple time scales)\n");
+    if(integtyp == 7) printf("second order minimal norm (position version, multiple time scales)\n");
     printf("# Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
     printf("# Using in chronological inverter for spinor_field 1,2,3 a history of %d, %d, %d, respectively\n", 

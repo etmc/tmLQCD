@@ -53,7 +53,9 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   double atime=0., etime=0.;
   int idis0=0, idis1=0, idis2=0;
   int ret_idis0=0, ret_idis1=0, ret_idis2=0;
-  double lambda[5] = {0.1931833275037836,0.1931833275037836,0.1931833275037836,0.1931833275037836,0.1931833275037836};
+/*   double lambda[5] = {0.1931833275037836,0.1931833275037836,0.1931833275037836,0.1931833275037836,0.1931833275037836}; */
+/*   double lambda[5] = {0.2,0.2,0.2,0.2,0.2}; */
+  double lambda[5] = {0.21,0.21,0.21,0.21,0.21};
   
   /* Energy corresponding to the Gauge part */
   double new_plaquette_energy=0., new_rectangle_energy = 0., gauge_energy = 0., new_gauge_energy = 0.;
@@ -192,6 +194,9 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   else if(integtyp == 6) {
     mn2_integrator(n_int, tau, g_nr_of_psf, halfstep, lambda);
   }
+  else if(integtyp == 7) {
+    mn2p_integrator(n_int, tau, g_nr_of_psf, lambda);
+  }
 
   /*perform the accept-reject-step*/
   enepx=moment_energy();
@@ -295,6 +300,9 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
     else if(integtyp == 6) {
       mn2_integrator(n_int, -tau, g_nr_of_psf, halfstep, lambda);
+    }
+    else if(integtyp == 7) {
+      mn2p_integrator(n_int, -tau, g_nr_of_psf, lambda);
     }
 
     ret_enep=moment_energy();

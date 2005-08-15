@@ -1,3 +1,7 @@
+11.08.2005: 2MN integrator implemented and tested. Two versions
+	    available: velocity and position version (hep-lat/0505020).
+	    Integrator=2MN or 2MNposition
+
 29.06.2005: ILDG LIME file format introduced.
 	    old file format deprecated. But it will be still
 	    automatically detected and read in.

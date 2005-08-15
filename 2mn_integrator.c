@@ -159,3 +159,51 @@ void mn2_integrator(int * const n_int, const double tau,
 
   }
 }
+
+
+void mn2p_integrator(int * const n_int, const double tau, 
+		    const int S, double * const lambda) {
+  int i,j;
+  double eps = tau/((double)n_int[S]);
+  double oneminus2lambda = (1.-2.*lambda[S]);
+  
+  if(S == g_nr_of_psf) {
+    /* initialize the counter for the inverter */
+    count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;
+/*     for(i=0;i<5;i++) { */
+/*       dtmp[i] = 0.; */
+/*     } */
+  }
+  
+  if(S == 0) {
+    for(i = 0; i < n_int[0]; i++) {
+      update_gauge(lambda[0]*eps);
+      gauge_momenta(0.5*eps);
+/*       dtmp[0] += 0.5*eps; */
+      update_gauge(oneminus2lambda*eps);
+      gauge_momenta(0.5*eps);
+/*       dtmp[0] += 0.5*eps; */
+      update_gauge(lambda[0]*eps);
+    }
+#ifdef _GAUGE_COPY
+    update_backward_gauge();
+#endif
+  }
+  else {
+    for(i = 0; i < n_int[S]; i++) {
+      mn2p_integrator(n_int, lambda[S]*eps, S-1, lambda);
+      update_fermion_momenta(0.5*eps, S-1); 
+/*       dtmp[S] += 0.5*eps; */
+      mn2p_integrator(n_int, oneminus2lambda*eps, S-1, lambda);
+      update_fermion_momenta(0.5*eps, S-1);
+/*       dtmp[S] += 0.5*eps; */
+      mn2p_integrator(n_int, lambda[S]*eps, S-1, lambda);
+    }
+  }
+
+/*   if(S == g_nr_of_psf) { */
+/*     for(i=0;i<5;i++) { */
+/*       printf("%d %e %e\n", i, dtmp[i], lambda[i]); */
+/*     } */
+/*   } */
+}
