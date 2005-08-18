@@ -63,8 +63,8 @@ void deri_nondegenerate() {
   
   /* Y_o -> DUM_DERI  */
   /* check this replacement */
-/*   QNon_degenerate(spinor_field[DUM_DERI+3], spinor_field[DUM_DERI+4],spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+2]); */
-  M_full(spinor_field[DUM_DERI+3], spinor_field[DUM_DERI+4],spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+2]);
+  QNon_degenerate(spinor_field[DUM_DERI+3], spinor_field[DUM_DERI+4],spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+2]); 
+  
 
   /* apply Hopping Matrix M_{eo} */
   /* to get the even sites of X */
