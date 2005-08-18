@@ -2,33 +2,19 @@ L=4
 T=4
 
 CSW = 0.0
-Measurements = 2000
-#startCondition = hot
-startCondition = restart
-beta = 5.6
+Measurements = 500
+#startCondition = cold
+beta = 6.0
 mu = 0.0
-kappa = 0.145
-
-tau=0.5
-#Integrator=2MN
-Integrator=2MNposition
-#Integrator=ExtLeapFrog
-#Integrator=ExtSextonWeingarten
-IntegrationStepsMu=5
-
-#UseRelativePrecision=yes
-#ForcePrecision=1.e-12
-#AcceptancePrecision=1.e-18
-
-#Integrator=LeapFrog
-dtau = 0.1
-nsteps = 15
-
-Nskip = 20000
-BoundaryCond = 1.
-BCGstabMaxIter = 0
+Q1=0.
+Q2=0.
+kappa = 0.12
+dtau = 0.05
+nsteps = 20
+Nskip = 10000
+BoundaryCond = 0.
+BCGstabMaxIter = 1000
 CGMaxIter = 1000
-GaugeConfigInputFile = start
-InitialStoreCounter = readin
-ReversibilityCheck=yes
-ReversibilityCheckIntervall=100
+GaugeConfigInputFile = conf44
+startCondition = restart
+Integrator = LeapFrog

@@ -32,7 +32,8 @@ MODULES = init_gauge_field init_geometry_indices \
 	test/check_geometry test/check_xchange invert_eo \
 	measure_rectangles get_rectangle_staples \
 	derivative_psf ext_integrator polyakov_loop \
-	2mn_integrator
+	2mn_integrator chebyshev_polynomial Nondegenerate_Matrix \
+        hybrid_nondegenerate_update
 
 PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark invert
 ALLOBJ = ${MODULES} ${PROGRAMS}

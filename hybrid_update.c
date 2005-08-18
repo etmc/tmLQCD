@@ -477,7 +477,8 @@ void leap_frog(double q_off, double q_off2,
 #ifdef _GAUGE_COPY
   update_backward_gauge();
 #endif
-  fermion_momenta(0.5*step, q_off, q_off2);
+/*   fermion_momenta(0.5*step, q_off, q_off2); */
+  fermion_momenta_nond(0.5*step); 
   gauge_momenta(0.5*smallstep);
   for(i=1;i<m;i++){
     for(j=0;j<nsmall;j++){
@@ -487,7 +488,8 @@ void leap_frog(double q_off, double q_off2,
 #ifdef _GAUGE_COPY
     update_backward_gauge();
 #endif
-    fermion_momenta(step,q_off,q_off2);
+/*     fermion_momenta(step,q_off,q_off2); */
+    fermion_momenta_nond(step); 
   }
   for(j=1;j<nsmall;j++){
     update_gauge(smallstep); 
@@ -498,7 +500,9 @@ void leap_frog(double q_off, double q_off2,
 #ifdef _GAUGE_COPY
   update_backward_gauge();
 #endif
-  fermion_momenta(0.5*step, q_off, q_off2);
+/*   fermion_momenta(0.5*step, q_off, q_off2); */
+  fermion_momenta_nond(0.5*step); 
+
 }
 
 void sexton(double q_off, double q_off2,

@@ -13,22 +13,28 @@
 
 #define PI 3.141592653589793
 
-double func(double u){
-  return pow(u,0.25);
+double cheb_evmin, cheb_evmax;
+
+double func(double u, double exponent){
+  return pow(u,exponent);
 }
 
-void chebyshev_polynomial(double aa, double bb, double c[], int n){
+void chebyshev_polynomial(double aa, double bb, double c[], int n, double exponent){
   int k,j;
   double fac,bpa,bma,*f;
   double inv_n;
 
+  printf("hello in  chebyshev_polynomial\n");
   inv_n=1./(double)n;
+  printf("n= %d inv_n=%e \n",n,inv_n);
   f=calloc(n,sizeof(double));/*vector(0,n-1);*/
+  printf("allocation !!!\n");
+  fflush(stdout);
   bma=0.5*(bb-aa);
   bpa=0.5*(bb+aa);
   for (k=0;k<n;k++) {
     double y=cos(PI*(k+0.5)*inv_n);
-    f[k]=func(y*bma+bpa);
+    f[k]=func(y*bma+bpa,exponent);
   }
   fac=2.0*inv_n;
   for (j=0;j<n;j++) {
@@ -50,12 +56,15 @@ void chebyshev_polynomial(double aa, double bb, double c[], int n){
  *
  **************************************************************************/
 
-void QdaggerQ_onequarter(spinor *R_s, spinor *R_c, double *c, int n, spinor *S_s, spinor *S_c, double minev)
+void QdaggerQ_power(spinor *R_s, spinor *R_c, double *c, int n, spinor *S_s, spinor *S_c)
 {
   int j;
-  double fact1, fact2, temp, temp1, temp2, temp3, temp4, maxev;
-  spinor *svs_, *svs, *ds_, *ds, *dds_, *dds, *auxs_, *auxs, *aux2s_, *aux2s, *aux3s_, *aux3s;
-  spinor *svc_, *svc, *dc_, *dc, *ddc_, *ddc, *auxc_, *auxc, *aux2c_, *aux2c, *aux3c_, *aux3c;
+  double fact1, fact2, temp, temp1, temp2, temp3, temp4;
+  spinor *svs_=NULL, *svs=NULL, *ds_=NULL, *ds=NULL, *dds_=NULL, *dds=NULL, 
+ *auxs_=NULL, *auxs=NULL, *aux2s_=NULL, *aux2s=NULL, *aux3s_=NULL, *aux3s=NULL;
+  spinor *svc_=NULL, *svc=NULL, *dc_=NULL, *dc=NULL, *ddc_=NULL, 
+  *ddc=NULL, *auxc_=NULL, 
+  *auxc=NULL, *aux2c_=NULL, *aux2c=NULL, *aux3c_=NULL, *aux3c=NULL;
 
   
 
@@ -112,10 +121,11 @@ void QdaggerQ_onequarter(spinor *R_s, spinor *R_c, double *c, int n, spinor *S_s
    aux3c = aux3c_;
 #endif
  
-   maxev=1.;
-   
-   fact1=4/(maxev-minev);
-   fact2=-2*(maxev+minev)/(maxev-minev);
+   cheb_evmax=1.;
+
+
+   fact1=4/(cheb_evmax-cheb_evmin);
+   fact2=-2*(cheb_evmax+cheb_evmin)/(cheb_evmax-cheb_evmin);
    
    zero_spinor_field(&ds[0],VOLUME/2);
    zero_spinor_field(&dds[0],VOLUME/2); 
@@ -129,7 +139,8 @@ void QdaggerQ_onequarter(spinor *R_s, spinor *R_c, double *c, int n, spinor *S_s
      /* Use the Clenshaw's recursion for the 
 	Chebysheff polynomial 
      */
-     printf("n=%d\n",n);
+
+
      for (j=n-1; j>=1; j--) {
        assign(&svs[0],&ds[0],VOLUME/2); 
        assign(&svc[0],&dc[0],VOLUME/2); 
@@ -179,17 +190,19 @@ void QdaggerQ_onequarter(spinor *R_s, spinor *R_c, double *c, int n, spinor *S_s
 */
      
     
-   
-   free(svs_);
-   free(ds_);
-   free(dds_);
-   free(auxs_);
+   free(svs_);  
+   free(ds_);   
+   free(dds_);  
+   free(auxs_); 
+   free(aux2s_);
    free(aux3s_);
-   free(svc_);
-   free(dc_);
-   free(ddc_);
-   free(auxc_);
+   free(svc_);  
+   free(dc_);   
+   free(ddc_);  
+   free(auxc_); 
+   free(aux2c_);
    free(aux3c_);
+   
 }
   
 
@@ -216,11 +229,12 @@ double * dop_cheby_coef;
 void degree_of_polynomial(){
   int i;
   double temp;
-  double ev_minev,ev_maxev;
   static int ini=0;
 
-  spinor *ss, *ss_, *auxs, *auxs_, *aux2s, *aux2s_, *aux3s, *aux3s_;
-  spinor *sc, *sc_, *auxc, *auxc_, *aux2c, *aux2c_, *aux3c, *aux3c_;
+  spinor *ss=NULL, *ss_=NULL, *auxs=NULL, *auxs_=NULL, 
+         *aux2s=NULL, *aux2s_=NULL, *aux3s=NULL, *aux3s_=NULL;
+  spinor *sc=NULL, *sc_=NULL, *auxc=NULL, *auxc_=NULL, *aux2c=NULL, 
+         *aux2c_=NULL, *aux3c=NULL, *aux3c_=NULL;
 
 
 
@@ -260,16 +274,12 @@ void degree_of_polynomial(){
    aux3c=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
 #endif
 
-/* For the time being, I set the minimal eigenvalue by hand */
-   ev_minev=0.001;
-   ev_maxev=1.0;
+chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, 0.25);
 
-  chebyshev_polynomial(ev_minev, ev_maxev, dop_cheby_coef, N_CHEBYMAX);
-
-  temp=1.0;
-  random_spinor_field(ss,VOLUME/2);
-  random_spinor_field(sc,VOLUME/2);
-       assign(&sc[0], &ss[0],VOLUME/2);
+   temp=1.0;
+   random_spinor_field(ss,VOLUME/2);
+   random_spinor_field(sc,VOLUME/2);
+/*   assign(&sc[0], &ss[0],VOLUME/2);
 
   Qtm_pm_psi(&auxs[0], &ss[0]);
     temp=square_norm(&auxs[0],VOLUME/2);
@@ -280,20 +290,17 @@ void degree_of_polynomial(){
     temp=square_norm(&auxs[0],VOLUME/2);
       printf("||auxs own||=%e\n",temp);
     temp=square_norm(&auxc[0],VOLUME/2);
-      printf("||auxc own||=%e\n",temp);
+      printf("||auxc own||=%e\n",temp); */
 
 
-  if(g_proc_id == g_stdio_proc) {
+/*  if(g_proc_id == g_stdio_proc) {
     printf("\ndetermine the degree of the polynomial:\n");
     fflush(stdout);
-  }
+  }  */
 
-  if(g_proc_id == g_stdio_proc) {
-  printf("\ndetermine dop_n_cheby:\n");
-  }
-  dop_n_cheby=(int)5./sqrt(ev_minev);
+  dop_n_cheby=(int)5./sqrt(cheb_evmin);
   for(i = 0;i < 1 ; i++){
-      printf("n_cheby=%d i=%d\n", dop_n_cheby, i);
+/*      printf("n_cheby=%d i=%d\n", dop_n_cheby, i); */
     
     if (dop_n_cheby >= N_CHEBYMAX) {
       if(g_proc_id == g_stdio_proc){
@@ -303,54 +310,42 @@ void degree_of_polynomial(){
 /*      errorhandler(35,"degree_of_polynomial"); */ 
     }
 
-    printf("\ncall QdaggerQ_onequarter:\n");
-    printf("dop_n_cheby=%d\n",dop_n_cheby);
-QdaggerQ_onequarter(&aux3s[0], &aux3c[0], dop_cheby_coef, dop_n_cheby, &ss[0], &sc[0], ev_minev);
-QdaggerQ_onequarter(&auxs[0], &auxc[0], dop_cheby_coef, dop_n_cheby, &aux3s[0], &aux3c[0], ev_minev);
-QdaggerQ_onequarter(&aux3s[0], &aux3c[0], dop_cheby_coef, dop_n_cheby, &auxs[0], &auxc[0], ev_minev);
-QdaggerQ_onequarter(&auxs[0], &auxc[0], dop_cheby_coef, dop_n_cheby, &aux3s[0], &aux3c[0], ev_minev);
-    temp=square_norm(&auxs[0],VOLUME/2);
-      printf("||auxs||=%e\n",temp);
+    QdaggerQ_power(&aux3s[0], &aux3c[0], dop_cheby_coef, dop_n_cheby, &ss[0], &sc[0]);
+    QdaggerQ_power(&auxs[0], &auxc[0], dop_cheby_coef, dop_n_cheby, &aux3s[0], &aux3c[0]);
+    QdaggerQ_power(&aux3s[0], &aux3c[0], dop_cheby_coef, dop_n_cheby, &auxs[0], &auxc[0]);
+    QdaggerQ_power(&auxs[0], &auxc[0], dop_cheby_coef, dop_n_cheby, &aux3s[0], &aux3c[0]);
+/*    temp=square_norm(&auxs[0],VOLUME/2);
+    printf("||auxs||=%e\n",temp);
     temp=square_norm(&auxc[0],VOLUME/2);
-      printf("||auxc||=%e\n",temp);
-
-
+    printf("||auxc||=%e\n",temp); */
 
 
   QdaggerNon_degenerate(&aux2s[0], &aux2c[0], &ss[0], &sc[0]);
   QNon_degenerate(&aux3s[0], &aux3c[0], &aux2s[0], &aux2c[0]);
 
-    temp=square_norm(&aux3s[0],VOLUME/2);
+/*    temp=square_norm(&aux3s[0],VOLUME/2);
       printf("||auxs_3||=%e\n",temp);
     temp=square_norm(&aux3c[0],VOLUME/2);
-      printf("||auxc_3||=%e\n",temp);
-
+      printf("||auxc_3||=%e\n",temp); */
 
     diff(&auxs[0],&auxs[0],&aux3s[0],VOLUME/2);
     temp=square_norm(&auxs[0],VOLUME/2)/square_norm(&aux3s[0],VOLUME/2)/4.0;
     if(g_proc_id == g_stdio_proc) { 
-      printf("n_cheby=%d temp_eps=%e\n", dop_n_cheby, temp);
-      fflush(stdout);
       printf("difference=%e\n",temp);
-    temp=square_norm(&ss[0],VOLUME/2);
-      printf("||ss||=%e\n",temp);
     diff(&auxc[0],&auxc[0],&aux3c[0],VOLUME/2);
     temp=square_norm(&auxc[0],VOLUME/2)/square_norm(&aux3c[0],VOLUME/2)/4.0;
-      printf("n_cheby=%d temp_eps=%e\n", dop_n_cheby, temp);
-      fflush(stdout);
       printf("difference=%e\n",temp);
-    temp=square_norm(&sc[0],VOLUME/2);
-      printf("||sc||=%e\n",temp);
    }  
     if(temp < stopeps ) break;
     dop_n_cheby*=1.05;
   }
-  if(g_proc_id == g_stdio_proc) {
-    printf("Done!\n");
-  }  
 
-  free(ss);
-  free(ss_);
-  free(sc);
-  free(sc_);
+   free(ss_);   
+   free(auxs_); 
+   free(aux2s_);
+   free(aux3s_);
+   free(sc_);   
+   free(auxc_); 
+   free(aux2c_);
+   free(aux3c_);
 }

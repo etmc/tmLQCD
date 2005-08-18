@@ -35,6 +35,8 @@
 #include "ext_integrator.h"
 #include "2mn_integrator.h"
 #include "solver/chrono_guess.h"
+#include "Nondegenerate_Matrix.h"
+#include "chebyshev_polynomial.h"
 #include "update_tm.h"
 
 
@@ -67,6 +69,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   /* Energy corresponding to the pseudo fermion part(s) */
   double enerphi0 =0., enerphi0x =0., enerphi1 =0., enerphi1x =0., enerphi2 = 0., enerphi2x = 0.;
   double ret_enerphi0 = 0., ret_enerphi1 = 0., ret_enerphi2 = 0.;
+  double energy_strange=0.,energy_charm=0.,energy_strangex=0.,energy_charmx=0.;
   FILE * rlxdfile=NULL, * datafile=NULL, * ret_check_file=NULL;
 
   if(ini_g_tmp == 0) {
@@ -169,14 +172,54 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
   }
 
+  /* apply (M^daggerM)^1/4 to the spinors of the non-degenerate case */
+  /* first determine the degree of the polynomial */
+  random_spinor_field(spinor_field[2], VOLUME/2);
+  random_spinor_field(spinor_field[3], VOLUME/2);
+  assign(spinor_field[3], spinor_field[2],VOLUME/2);
+  energy_strange = square_norm(spinor_field[2], VOLUME/2);
+  energy_charm   = square_norm(spinor_field[3], VOLUME/2); 
+  printf("energy_strange=%e \n",energy_strange);
+  printf("energy_charm  =%e \n",energy_charm);
+  
+  /* Replace this at a later stage with a */
+  /* call to a eigenvalue routine */
+  cheb_evmin=0.001;
+  cheb_evmax=1.0;
+
+  /* setting parameters here */
+  /* this should be handled by the input file later */
+  g_mubar=0.0;
+  g_epsbar=0.0;
+
+  /* this is to be done only at start of new hmc iteration */
+  degree_of_polynomial();
+  printf("degree of polynomial ready: %d\n",dop_n_cheby);
+  fflush( stdout);
+
+  printf("calling chebyshev_polynomial\n");
+  fflush( stdout);
+  chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, dop_n_cheby, 0.25);
+
+  printf("call QdaggerQ_power\n");
+  fflush( stdout);
+  QdaggerQ_power(spinor_field[STRANGE], spinor_field[CHARM], dop_cheby_coef, dop_n_cheby, spinor_field[2], spinor_field[3]);
+  
 
   /* initialize the momenta */
   enep=ini_momenta();
-
+  /* initialize the guidance polynomial */
+  printf("initialize the guidance polynomial\n");
+  chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, dop_n_cheby, -0.50);
+  
   /*run the trajectory*/
   if(integtyp == 1) {
     /* Leap-frog integration scheme */
+    printf("calling leap frog\n");
+    fflush( stdout);
     leap_frog(q_off, q_off2, dtau, Nsteps, nsmall); 
+    printf("called leap frog\n");
+    fflush( stdout);
   }
   else if(integtyp == 2) {
     /* Sexton Weingarten integration scheme */
@@ -245,9 +288,23 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     enerphi2x = square_norm(spinor_field[5], VOLUME/2);
   }
 
+  printf("call now chebyshev_polynomial\n");
+  chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, dop_n_cheby, -0.25);
+  
+  printf("call now QdaggerQ_power\n");
+  QdaggerQ_power(spinor_field[2], spinor_field[3], dop_cheby_coef, dop_n_cheby, spinor_field[STRANGE], spinor_field[CHARM]);
+  
+  energy_strangex = square_norm(spinor_field[2], VOLUME/2);
+  energy_charmx   = square_norm(spinor_field[3], VOLUME/2);
+  printf("energy_strangex= %e\n",energy_strangex);
+  printf("energy_charmx= %e\n",energy_charmx);
+  
   /* Compute the energy difference */
+/*   dh= +enepx - g_beta*new_gauge_energy - enep + g_beta*gauge_energy */
+/*       + enerphi0x - enerphi0 + enerphi1x - enerphi1 + enerphi2x - enerphi2 */
+/*       + energy_strangex - energy_strange + energy_charmx - energy_charm;  */
   dh= +enepx - g_beta*new_gauge_energy - enep + g_beta*gauge_energy
-      + enerphi0x - enerphi0 + enerphi1x - enerphi1 + enerphi2x - enerphi2; 
+    + energy_strangex - energy_strange + energy_charmx - energy_charm;  
   expmdh = exp(-dh);
       
   /* the random number is only taken at node zero and then distributed to 
