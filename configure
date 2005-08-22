@@ -1392,7 +1392,7 @@ program_transform_name=`echo $program_transform_name | sed -f conftest.sed`
 rm conftest.sed
 
 
-if test "$host_cpu" = "powerpc"; then
+if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   echo We are on a IBM Power PC, using xlc and xlC or mpcc/mpCC
   CC=xlc_r
   CXX=xlC_r
@@ -1466,7 +1466,7 @@ if test $enable_mpi = yes; then
   if test "$host_vendor" != "cray"; then
     cross_compiling=yes
   fi
-  if test "$host_cpu" = "powerpc"; then
+  if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
     CC=mpcc_r
     CXX=mpCC_r
   elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
@@ -3044,7 +3044,7 @@ esac
 
 
 # Checks for libraries.
-if test "$host_cpu" = "powerpc"; then
+if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
 
 echo "$as_me:$LINENO: checking for zaxpy in -lessl" >&5
 echo $ECHO_N "checking for zaxpy in -lessl... $ECHO_C" >&6
@@ -5192,7 +5192,7 @@ if test $enable_gprof = yes; then
 echo "${ECHO_T}yes" >&6
     if test "$GCC" = yes; then
       PROFILE_FLAG="-pg -g"
-    elif test "$host_cpu" = "powerpc"; then
+    elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
       PROFILE_FLAG="-pg -qfullpath -g"
     else
       PROFILE_FLAG="-pg -g"
@@ -5334,6 +5334,35 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       CCDEP="$CC"
     fi
   fi
+<<<<<<< configure.in
+  LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(abs_top_builddir)/lapack"
+  if test "$LP" = "yes" && "$host_cpu" != "x86_64"; then
+    if test "$ATLAS" = "yes"; then
+      LIBS="$LIBS -llapack -lf77blas -latlas"
+    else
+      LIBS="$LIBS -llapack -lblas"
+    fi
+  else
+    if test "$SSE" = "sse2" || test "$SSE" = "sse3"; then
+      if test "$host_cpu" != "x86_64"; then
+        LIBS="$LIBS -llapack_LINUXSSE2P4 -lf77blas_LINUXSSE2P4 -latlas_LINUXSSE2P4"
+      else
+        LIBS="$LIBS -llapack_LINUXHAMMER64SSE2 -lf77blas_LINUXHAMMER64SSE2 -latlas_LINUXHAMMER64SSE2"
+      fi
+    else
+      if test "$host_cpu" != "x86_64"; then
+        LIBS="$LIBS -llapack_LINUX -lblas_LINUX"
+      else
+        LIBS="$LIBS -llapack_LINUX64 -lblas_LINUX64"
+      fi
+    fi
+  fi
+  if test "$G2C" = "yes"; then
+    LIBS="$LIBS -lg2c -lm"
+  else
+    LIBS="$LIBS -lf2c_nomain_LINUX"
+  fi
+=======
   LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/lib -L\$(abs_top_builddir)/lapack"
   if test "$LP" = "yes" && "$host_cpu" != "x86_64"; then
     if test "$ATLAS" = "yes"; then
@@ -5361,10 +5390,11 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   else
     LIBS="$LIBS -lf2c_nomain_LINUX"
   fi
+>>>>>>> 1.25
 
 
 # The IBM Power PC
-elif test "$host_cpu" = "powerpc"; then
+elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   if test $enable_mpi = yes; then
     CFLAGS="-DXLC -q64 -qsrcmsg -DMPI -DNOF77_ $endian $mpidimension"
   else
