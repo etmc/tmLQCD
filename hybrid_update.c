@@ -22,6 +22,7 @@
 #include "get_rectangle_staples.h"
 #include "derivative_psf.h"
 #include "gamma.h"
+#include "hybrid_nondegenerate_update.h"
 #include "hybrid_update.h"
 
 extern int ITER_MAX_BCG;

@@ -352,24 +352,35 @@ void mul_one_plus_imubar_inv(spinor * const l, spinor * const k){
 void QNon_degenerate_eo(spinor * const l_strange, spinor * const l_charm,
                         spinor * const k_strange, spinor * const k_charm){
 
-  double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
+  double nrm = g_epsbar/(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
 
 
   Hopping_Matrix(EO, spinor_field[DUM_MATRIX], k_strange);
   Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k_charm);
 
   /* inverse? Carsten thinks _inv */
-  mul_one_minus_imubar_inv(spinor_field[DUM_MATRIX+4], spinor_field[DUM_MATRIX]);
-  mul_one_plus_imubar_inv(spinor_field[DUM_MATRIX+3], spinor_field[DUM_MATRIX+1]);
+  mul_one_minus_imubar_inv(l_strange, spinor_field[DUM_MATRIX]);
+  mul_one_plus_imubar_inv(l_charm, spinor_field[DUM_MATRIX+1]);
 
-  assign_add_mul_r(spinor_field[DUM_MATRIX+4], spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
-  assign_add_mul_r(spinor_field[DUM_MATRIX+3], spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
+  assign_add_mul_r(l_strange, spinor_field[DUM_MATRIX+1], nrm, VOLUME/2);
+  assign_add_mul_r(l_charm, spinor_field[DUM_MATRIX], nrm, VOLUME/2);
+}
 
-  mul_r(spinor_field[DUM_MATRIX+4], nrm, spinor_field[DUM_MATRIX+4], VOLUME/2);
-  mul_r(spinor_field[DUM_MATRIX+3], nrm, spinor_field[DUM_MATRIX+3], VOLUME/2);
+void QNon_degenerate_eo_dagger(spinor * const l_strange, spinor * const l_charm,
+                        spinor * const k_strange, spinor * const k_charm){
 
-  assign(l_strange, spinor_field[DUM_MATRIX+4], VOLUME/2);
-  assign(l_charm, spinor_field[DUM_MATRIX+3], VOLUME/2);
+  double nrm = g_epsbar/(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
+
+
+  Hopping_Matrix(EO, spinor_field[DUM_MATRIX], k_strange);
+  Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k_charm);
+
+  /* inverse? Carsten thinks _inv */
+  mul_one_plus_imubar_inv(l_strange, spinor_field[DUM_MATRIX]);
+  mul_one_minus_imubar_inv(l_charm, spinor_field[DUM_MATRIX+1]);
+
+  assign_add_mul_r(l_strange, spinor_field[DUM_MATRIX+1], nrm, VOLUME/2);
+  assign_add_mul_r(l_charm, spinor_field[DUM_MATRIX], nrm, VOLUME/2);
 }
 
 

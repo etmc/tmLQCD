@@ -40,7 +40,6 @@ extern int ITER_MAX_CG;
 void deri_nondegenerate() {
 
   int i,mu;
-  double qo;
 
   for(i=0;i<(VOLUME+RAND);i++){ 
     for(mu=0;mu<4;mu++){ 
@@ -48,42 +47,30 @@ void deri_nondegenerate() {
     }
   }
 
-  /* If CG is used anyhow */
-  /* don't know, why g_5 multiplication 
-     gamma5(spinor_field[DUM_DERI+1], spinor_field[nond_psf_strange], VOLUME/2);
-     gamma5(spinor_field[DUM_DERI+2], spinor_field[nond_psf_charm], VOLUME/2);
-  */
-  /* Invert Q_{+} Q_{-} */
-  /* X_o -> DUM_DERI+1 */
-
-  /* This replaces the solver */
-  QdaggerQ_power(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+2], 
+  /* This replaces the solver     */
+  /* Apply the invers square root */
+  /* to phi_o -> X_o              */
+  QdaggerQ_power(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1], 
 		 dop_cheby_coef, dop_n_cheby, 
 		 spinor_field[STRANGE], spinor_field[CHARM]);
   
-  /* Y_o -> DUM_DERI  */
-  /* check this replacement */
-  QNon_degenerate(spinor_field[DUM_DERI+3], spinor_field[DUM_DERI+4],spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+2]); 
-  
 
-  /* apply Hopping Matrix M_{eo} */
-  /* to get the even sites of X */
-  /* this is checked with mubar and epsbar=0 apart from  */
-  /* check whether mul_one_minus_imubar of mul_one_minus_imubar_inv */
-  QNon_degenerate_eo(spinor_field[DUM_DERI+5], spinor_field[DUM_DERI+6], 
-		     spinor_field[DUM_DERI+3], spinor_field[DUM_DERI+4]); 
-  /* \delta Q sandwitched by Y_o^\dagger and X_e */
-  deriv_Sb(OE, DUM_DERI+1, DUM_DERI+5);
-  deriv_Sb(EO, DUM_DERI+6, DUM_DERI+2);
+  /* Construct X_e and X_e' */
+  /* First X_e              */
+  QNon_degenerate_eo(spinor_field[DUM_DERI+2], spinor_field[DUM_DERI+3], 
+		     spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]); 
 
-  /* to get the even sites of Y */
-  /* this is checked with mubar and epsbar=0 apart from  */
-  /* check whether mul_one_minus_imubar of mul_one_minus_imubar_inv */
-  QNon_degenerate_eo(spinor_field[DUM_DERI+5], spinor_field[DUM_DERI+6], 
-		     spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+2]); 
-  /* \delta Q sandwitched by Y_e^\dagger and X_o */
-  deriv_Sb(OE, DUM_DERI+3, DUM_DERI+5);
-  deriv_Sb(EO, DUM_DERI+6, DUM_DERI+4);
+  /* X_e'                   */
+  QNon_degenerate_eo_dagger(spinor_field[DUM_DERI+4], spinor_field[DUM_DERI+5], 
+		     spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]); 
+
+  /* \delta Q sandwitched by X_e'^\dagger and X_o (EO)*/
+  deriv_Sb(EO, DUM_DERI+4, DUM_DERI);
+  deriv_Sb(EO, DUM_DERI+5, DUM_DERI+1);
+
+  /* \delta Q sandwitched by X_o^\dagger and X_e  (OE)*/
+  deriv_Sb(OE, DUM_DERI, DUM_DERI+2);
+  deriv_Sb(OE, DUM_DERI+1, DUM_DERI+3);
 
 }
 
@@ -101,9 +88,8 @@ void fermion_momenta_nond(double step) {
     for(mu=0;mu<4;mu++){
       xm=&moment[i][mu];
       deriv=&df0[i][mu];
-      /* This 2* is coming from what?             */
-      /* From a missing factor 2 in trace_lambda? */
-      tmp = 2.*step;
+      /* Factor 2 aroung? */
+      tmp = 1.*step;
       _minus_const_times_mom(*xm,tmp,*deriv); 
     }
    }

@@ -212,7 +212,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   printf("initialize the guidance polynomial\n");
   chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, dop_n_cheby, -0.50);
   
-  /*run the trajectory*/
+  /* run the trajectory */
   if(integtyp == 1) {
     /* Leap-frog integration scheme */
     printf("calling leap frog\n");
