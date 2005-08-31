@@ -57,20 +57,27 @@ void deri_nondegenerate() {
 
   /* Construct X_e and X_e' */
   /* First X_e              */
+  /* normalization corrects?*/
   QNon_degenerate_eo(spinor_field[DUM_DERI+2], spinor_field[DUM_DERI+3], 
 		     spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]); 
+  mul_r(spinor_field[DUM_DERI+2], 1/20., spinor_field[DUM_DERI+2], VOLUME/2); 
+  mul_r(spinor_field[DUM_DERI+3], 1/20., spinor_field[DUM_DERI+3], VOLUME/2); 
 
   /* X_e'                   */
+  /* normalization corrects?*/
   QNon_degenerate_eo_dagger(spinor_field[DUM_DERI+4], spinor_field[DUM_DERI+5], 
 		     spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]); 
+  mul_r(spinor_field[DUM_DERI+4], 1/20., spinor_field[DUM_DERI+4], VOLUME/2); 
+  mul_r(spinor_field[DUM_DERI+5], 1/20., spinor_field[DUM_DERI+5], VOLUME/2); 
+
 
   /* \delta Q sandwitched by X_e'^\dagger and X_o (EO)*/
   deriv_Sb(EO, DUM_DERI+4, DUM_DERI);
   deriv_Sb(EO, DUM_DERI+5, DUM_DERI+1);
 
   /* \delta Q sandwitched by X_o^\dagger and X_e  (OE)*/
-  deriv_Sb(OE, DUM_DERI, DUM_DERI+2);
-  deriv_Sb(OE, DUM_DERI+1, DUM_DERI+3);
+  deriv_Sb(OE, DUM_DERI, DUM_DERI+2); 
+  deriv_Sb(OE, DUM_DERI+1, DUM_DERI+3); 
 
 }
 
@@ -88,7 +95,7 @@ void fermion_momenta_nond(double step) {
     for(mu=0;mu<4;mu++){
       xm=&moment[i][mu];
       deriv=&df0[i][mu];
-      /* Factor 2 aroung? */
+      /* Factor 2 around? */
       tmp = 1.*step;
       _minus_const_times_mom(*xm,tmp,*deriv); 
     }
