@@ -22,9 +22,10 @@
 #define DUM_MATRIX (DUM_SOLVER+6) 
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX DUM_SOLVER+11 */
+
+#define STRANGE (DUM_MATRIX+5) 
+#define CHARM (STRANGE+1) 
 /* for the non-degenerate stuff uncomment this */
-/* #define STRANGE (DUM_MATRIX+5) */
-/* #define CHARM (STRANGE+1) */
 /* #define NO_OF_SPINORFIELDS (CHARM+1) */
 #define NO_OF_SPINORFIELDS (DUM_MATRIX+5)
 
