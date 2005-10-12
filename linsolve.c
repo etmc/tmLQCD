@@ -8,7 +8,6 @@
 #include "global.h"
 #include "linalg_eo.h"
 #include "gamma.h"
-#include "clover_eo.h" 
 #include "start.h"
 #include "tm_operators.h"
 #include "linalg/assign_add_mul_r_add_mul.h"
@@ -19,7 +18,7 @@ char * solvout = "solver_data";
 FILE * sout = NULL;
 
 /* k output , l input */
-int solve_cg(int k,int l, double q_off, double eps_sq, const int rel_prec) {
+int solve_cg(int k,int l, double eps_sq, const int rel_prec) {
 
   static double normsq,pro,err,alpha_cg,beta_cg,squarenorm;
   int iteration;
@@ -27,26 +26,16 @@ int solve_cg(int k,int l, double q_off, double eps_sq, const int rel_prec) {
   /* initialize residue r and search vector p */
   
   squarenorm = square_norm(spinor_field[l], VOLUME/2);
-  if(g_use_clover_flag == 1){
-    Q_psi(DUM_SOLVER,k,q_off);
-    Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
-  }
-  else{
-    Qtm_pm_psi(spinor_field[DUM_SOLVER], spinor_field[k]); 
-  }
+
+  Qtm_pm_psi(spinor_field[DUM_SOLVER], spinor_field[k]); 
+
   diff(spinor_field[DUM_SOLVER+1],spinor_field[l],spinor_field[DUM_SOLVER], VOLUME/2);
   assign(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER+1], VOLUME/2);
   normsq=square_norm(spinor_field[DUM_SOLVER+1], VOLUME/2);
 
   /* main loop */
    for(iteration=1;iteration<=ITER_MAX_CG;iteration++) {
-     if(g_use_clover_flag == 1){
-       Q_psi(DUM_SOLVER,DUM_SOLVER+2,q_off);
-       Q_psi(DUM_SOLVER,DUM_SOLVER,q_off);
-     }
-     else {
-       Qtm_pm_psi(spinor_field[DUM_SOLVER], spinor_field[DUM_SOLVER+2]);
-     }
+     Qtm_pm_psi(spinor_field[DUM_SOLVER], spinor_field[DUM_SOLVER+2]);
      pro=scalar_prod_r(spinor_field[DUM_SOLVER+2], spinor_field[DUM_SOLVER], VOLUME/2);
      alpha_cg=normsq/pro;
      assign_add_mul_r(spinor_field[k], spinor_field[DUM_SOLVER+2], alpha_cg, VOLUME/2);
@@ -77,55 +66,9 @@ int solve_cg(int k,int l, double q_off, double eps_sq, const int rel_prec) {
    return iteration;
 }
 
-/* this is actually the not the bicg but the geometric series 
-   The use of the geometric series avoids  in contrast to the bicg
-   reversibility problems when a reduced accuracy of the solver employed*/
-#if defined GEOMETRIC
-int bicg(int k, int l, double q_off, double eps_sq) {
-  int iteration;
-  double xxx;
-  xxx=0.0;
-  gamma5(spinor_field[DUM_SOLVER+1], spinor_field[l], VOLUME/2);
-  /* main loop */
-  for(iteration=1;iteration<=ITER_MAX_BCG;iteration++) {
-    /* compute the residual*/
-    M_psi(DUM_SOLVER,k,q_off);
-    xxx=diff_and_square_norm(spinor_field[DUM_SOLVER], spinor_field[DUM_SOLVER+1], VOLUME/2);
-    /*apply the solver step for the residual*/
-    M_psi(DUM_SOLVER+2,DUM_SOLVER,q_off-(2.+2.*q_off));
-    assign_add_mul_r(spinor_field[k],-1./((1.+q_off)*(1.+q_off)),spinor_field[DUM_SOLVER+2], VOLUME/2);
-    if(xxx <= eps_sq) break;
-  }
 
-  if(g_proc_id==0) {
-    sout = fopen(solvout, "a");
-    fprintf(sout, "%d %e %f\n",iteration,xxx, g_mu);
-    fclose(sout);
-  }
-
-  /* if the geometric series fails, redo with conjugate gradient */
-  if(iteration>=ITER_MAX_BCG) {
-    if(ITER_MAX_BCG == 0) {
-      iteration = 0;
-    }
-    zero_spinor_field(k,VOLUME/2);
-    iteration += solve_cg(k,l,q_off,eps_sq);
-    Q_psi(k,k,q_off);
-    if(ITER_MAX_BCG != 0) {
-      iteration -= 1000000;
-    }
-    if(g_proc_id == 0) {
-      sout = fopen(solvout, "a");
-      fprintf(sout, "%d %e\n",iteration, g_mu);
-      fclose(sout);
-    }
-  }
-  
-  return iteration;
-}
-#else
 /* k output , l input */
-int bicg(int k, int l, double q_off, double eps_sq, const int rel_prec) {
+int bicg(int k, int l, double eps_sq, const int rel_prec) {
 
   double err, d1, squarenorm=0.;
   complex rho0, rho1, omega, alpha, beta, nom, denom;
@@ -199,19 +142,17 @@ int bicg(int k, int l, double q_off, double eps_sq, const int rel_prec) {
 
   /* if bicg fails, redo with conjugate gradient */
   if(iteration>=ITER_MAX_BCG){
-    iteration = solve_cg(k,l,q_off,eps_sq, rel_prec);
+    iteration = solve_cg(k,l,eps_sq, rel_prec);
     /* Save the solution for reuse! not needed since Chronological inverter is there */
     /*     assign(spinor_field[DUM_DERI+6], spinor_field[k], VOLUME/2); */
-    if(g_use_clover_flag == 1){
-      Q_psi(k,k,q_off);
-    }
-    else{
-      Qtm_minus_psi(spinor_field[k], spinor_field[k]);;
-    }
+    Qtm_minus_psi(spinor_field[k], spinor_field[k]);;
   }
   return iteration;
 }
-#endif
+
+#ifdef _USE_NOT_USED_NOR_TESTED
+
+
 /*lambda: smallest eigenvalue, k eigenvector */
 int eva(double *rz, int k, double q_off, double eps_sq) {
   static double ritz,norm0,normg,normg0,beta_cg;
@@ -417,3 +358,53 @@ int evamax0(double *rz, int k, double q_off, double eps_sq) {
   return j;
 }
 
+/* this is actually the not the bicg but the geometric series 
+   The use of the geometric series avoids  in contrast to the bicg
+   reversibility problems when a reduced accuracy of the solver employed
+
+   !!! This is not tested in the current env. and should not be used !!!
+*/
+
+int bicg(int k, int l, double eps_sq) {
+  int iteration;
+  double xxx;
+  xxx=0.0;
+  gamma5(spinor_field[DUM_SOLVER+1], spinor_field[l], VOLUME/2);
+  /* main loop */
+  for(iteration=1;iteration<=ITER_MAX_BCG;iteration++) {
+    /* compute the residual*/
+    M_psi(DUM_SOLVER,k,q_off);
+    xxx=diff_and_square_norm(spinor_field[DUM_SOLVER], spinor_field[DUM_SOLVER+1], VOLUME/2);
+    /*apply the solver step for the residual*/
+    M_psi(DUM_SOLVER+2,DUM_SOLVER,q_off-(2.+2.*q_off));
+    assign_add_mul_r(spinor_field[k],-1./((1.+q_off)*(1.+q_off)),spinor_field[DUM_SOLVER+2], VOLUME/2);
+    if(xxx <= eps_sq) break;
+  }
+
+  if(g_proc_id==0) {
+    sout = fopen(solvout, "a");
+    fprintf(sout, "%d %e %f\n",iteration,xxx, g_mu);
+    fclose(sout);
+  }
+
+  /* if the geometric series fails, redo with conjugate gradient */
+  if(iteration>=ITER_MAX_BCG) {
+    if(ITER_MAX_BCG == 0) {
+      iteration = 0;
+    }
+    zero_spinor_field(k,VOLUME/2);
+    iteration += solve_cg(k,l,q_off,eps_sq);
+    Q_psi(k,k,q_off);
+    if(ITER_MAX_BCG != 0) {
+      iteration -= 1000000;
+    }
+    if(g_proc_id == 0) {
+      sout = fopen(solvout, "a");
+      fprintf(sout, "%d %e\n",iteration, g_mu);
+      fclose(sout);
+    }
+  }
+  
+  return iteration;
+}
+#endif

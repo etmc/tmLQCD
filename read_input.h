@@ -48,8 +48,6 @@ extern "C"
   extern int first_prop_flag;
   extern double dtau, tau;
   extern int Nsteps;
-  extern double q_off;
-  extern double q_off2;
   extern int random_seed;
   extern int integtyp,nsmall;
   extern int ITER_MAX_BCG;

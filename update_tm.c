@@ -47,8 +47,6 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   int rlxd_state[105];
   int ix, mu, accept, i=0, halfstep = 0;
   int saveiter_max = ITER_MAX_BCG;
-  const double q_off=0.;
-  const double q_off2=0.;
 
   double yy[1];
   double dh, expmdh, ret_dh=0., ret_gauge_diff=0.;
@@ -145,7 +143,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     g_mu = g_mu1;
     zero_spinor_field(spinor_field[second_psf],VOLUME/2);
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    idis1 = bicg(second_psf, 3, 0., g_eps_sq_acc1, g_relative_precision_flag);
+    idis1 = bicg(second_psf, 3, g_eps_sq_acc1, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
     chrono_add_solution(spinor_field[second_psf], g_csg_field[1], g_csg_index_array[1],
 			g_csg_N[2], &g_csg_N[3], VOLUME/2);
@@ -161,7 +159,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     g_mu = g_mu2;
     zero_spinor_field(spinor_field[third_psf],VOLUME/2);
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    idis2 = bicg(third_psf, 5, 0., g_eps_sq_acc2, g_relative_precision_flag);
+    idis2 = bicg(third_psf, 5, g_eps_sq_acc2, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
     chrono_add_solution(spinor_field[third_psf], g_csg_field[2], g_csg_index_array[2],
 			g_csg_N[4], &g_csg_N[5], VOLUME/2);
@@ -178,11 +176,11 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   /*run the trajectory*/
   if(integtyp == 1) {
     /* Leap-frog integration scheme */
-    leap_frog(q_off, q_off2, dtau, Nsteps, nsmall); 
+    leap_frog(dtau, Nsteps, nsmall); 
   }
   else if(integtyp == 2) {
     /* Sexton Weingarten integration scheme */
-    sexton(q_off, q_off2, dtau, Nsteps, nsmall);
+    sexton(dtau, Nsteps, nsmall);
   }
   else if(integtyp == 3) {
     ext_leap_frog(n_int, tau, g_nr_of_psf, halfstep);
@@ -214,7 +212,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
   chrono_guess(spinor_field[2], spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
 	       g_csg_N[0], g_csg_N[1], VOLUME/2, &Qtm_pm_psi);
-  idis0=bicg(2, first_psf, q_off, g_eps_sq_acc1, g_relative_precision_flag);
+  idis0=bicg(2, first_psf, g_eps_sq_acc1, g_relative_precision_flag);
   ITER_MAX_BCG = saveiter_max;
   /* Save the solution of Q^-2 at the right place */
   /* for later reuse! */
@@ -229,7 +227,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
     chrono_guess(spinor_field[3], spinor_field[DUM_DERI+5], g_csg_field[1], g_csg_index_array[1],
 		 g_csg_N[2], g_csg_N[3], VOLUME/2, &Qtm_pm_psi);
-    idis1 += bicg(3, DUM_DERI+5, 0., g_eps_sq_acc2, g_relative_precision_flag); 
+    idis1 += bicg(3, DUM_DERI+5, g_eps_sq_acc2, g_relative_precision_flag); 
     ITER_MAX_BCG = saveiter_max;
     /* Compute the energy contr. from second field */
     enerphi1x = square_norm(spinor_field[3], VOLUME/2);
@@ -241,7 +239,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
     chrono_guess(spinor_field[5], spinor_field[DUM_DERI+6], g_csg_field[2], g_csg_index_array[2],
 		 g_csg_N[4], g_csg_N[5], VOLUME/2, &Qtm_pm_psi);
-    idis2 += bicg(5, DUM_DERI+6, 0., g_eps_sq_acc3, g_relative_precision_flag);
+    idis2 += bicg(5, DUM_DERI+6, g_eps_sq_acc3, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
     /* Compute the energy contr. from third field */
     enerphi2x = square_norm(spinor_field[5], VOLUME/2);
@@ -285,11 +283,11 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     /* run the trajectory back */
     if(integtyp == 1) {
       /* Leap-frog integration scheme */
-      leap_frog(q_off, q_off2, -dtau, Nsteps, nsmall); 
+      leap_frog(-dtau, Nsteps, nsmall); 
     }
     else if(integtyp == 2) {
       /* Sexton Weingarten integration scheme */
-      sexton(q_off, q_off2, -dtau, Nsteps, nsmall);
+      sexton(-dtau, Nsteps, nsmall);
     }
     else if(integtyp == 3) {
       ext_leap_frog(n_int, -tau, g_nr_of_psf, halfstep);
@@ -318,7 +316,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     assign(spinor_field[2], spinor_field[DUM_DERI+4], VOLUME/2);
     g_mu = g_mu1;
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    ret_idis0=bicg(2, first_psf, q_off, g_eps_sq_acc, g_relative_precision_flag);
+    ret_idis0=bicg(2, first_psf, g_eps_sq_acc, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
     assign(spinor_field[DUM_DERI+4], spinor_field[DUM_DERI+6], VOLUME/2);
     
@@ -329,7 +327,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
       Qtm_plus_psi(spinor_field[second_psf], spinor_field[second_psf]);
       g_mu = g_mu2;
       if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-      ret_idis1 += bicg(3, second_psf, 0., g_eps_sq_acc, g_relative_precision_flag);
+      ret_idis1 += bicg(3, second_psf, g_eps_sq_acc, g_relative_precision_flag);
       ITER_MAX_BCG = saveiter_max;
       assign(spinor_field[DUM_DERI+5], spinor_field[DUM_DERI+6], VOLUME/2);
       ret_enerphi1 = square_norm(spinor_field[3], VOLUME/2);
@@ -340,7 +338,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
       Qtm_plus_psi(spinor_field[third_psf], spinor_field[third_psf]);
       g_mu = g_mu3;
       if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-      ret_idis2 += bicg(5, third_psf, 0., g_eps_sq_acc, g_relative_precision_flag);
+      ret_idis2 += bicg(5, third_psf, g_eps_sq_acc, g_relative_precision_flag);
       ITER_MAX_BCG = saveiter_max;
       ret_enerphi2 = square_norm(spinor_field[5], VOLUME/2);
     }

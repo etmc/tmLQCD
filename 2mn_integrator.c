@@ -12,7 +12,6 @@
 #include "linalg_eo.h"
 #include "clover_eo.h"
 #include "start.h"
-#include "sw.h"
 #include "linsolve.h"
 #include "xchange.h"
 #include "deriv_Sb.h"
@@ -29,7 +28,7 @@ extern int count00, count01, count10, count11, count20, count21;
 
 void mn2_integrator(int * const n_int, const double tau, 
 		    const int S, const int halfstep, double * const lambda) {
-  int i,j;
+  int i,j=0;
   double eps, eps0,
     oneminus2lambda = (1.-2.*lambda[S]), oneminus2lambda0;
   
@@ -163,7 +162,7 @@ void mn2_integrator(int * const n_int, const double tau,
 
 void mn2p_integrator(int * const n_int, const double tau, 
 		    const int S, double * const lambda) {
-  int i,j;
+  int i;
   double eps = tau/((double)n_int[S]);
   double oneminus2lambda = (1.-2.*lambda[S]);
   

@@ -155,8 +155,6 @@ int main(int argc,char *argv[]) {
     exit(0);
   }
 
-  q_off = 0.;
-  q_off2 = 0.;
   g_mu = g_mu1; 
   if(g_proc_id == 0){    
     

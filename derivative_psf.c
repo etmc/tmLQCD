@@ -48,7 +48,7 @@ void derivative_psf(const int nr) {
       /* X_o -> DUM_DERI+1 */
       chrono_guess(spinor_field[DUM_DERI+1], spinor_field[first_psf], g_csg_field[nr], g_csg_index_array[nr],
 		   g_csg_N[2*nr], g_csg_N[2*nr+1], VOLUME/2, &Qtm_pm_psi);
-      count00 += solve_cg(DUM_DERI+1, first_psf, 0., g_eps_sq_force1, g_relative_precision_flag);
+      count00 += solve_cg(DUM_DERI+1, first_psf, g_eps_sq_force1, g_relative_precision_flag);
       chrono_add_solution(spinor_field[DUM_DERI+1], g_csg_field[nr], g_csg_index_array[nr],
 			  g_csg_N[2*nr], &g_csg_N[2*nr+1], VOLUME/2);
       /*       assign(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+4], VOLUME/2); */
@@ -62,7 +62,7 @@ void derivative_psf(const int nr) {
       chrono_guess(spinor_field[DUM_DERI], spinor_field[first_psf], g_csg_field[nr], g_csg_index_array[nr],
 		   g_csg_N[2*nr], g_csg_N[2*nr+1], VOLUME/2, &Qtm_pm_psi);
       gamma5(spinor_field[DUM_DERI], spinor_field[DUM_DERI], VOLUME/2);
-      count00 += bicg(DUM_DERI, first_psf, 0., g_eps_sq_force1, g_relative_precision_flag);
+      count00 += bicg(DUM_DERI, first_psf, g_eps_sq_force1, g_relative_precision_flag);
       chrono_add_solution(spinor_field[DUM_DERI], g_csg_field[nr], g_csg_index_array[nr],
 			  g_csg_N[2*nr], &g_csg_N[2*nr+1], VOLUME/2);
 
@@ -72,7 +72,7 @@ void derivative_psf(const int nr) {
       chrono_guess(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI], g_csg_field[nr+1], g_csg_index_array[nr+1],
 		   g_csg_N[2*nr+2], g_csg_N[2*nr+3], VOLUME/2, &Qtm_pm_psi);
       gamma5(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+1], VOLUME/2);
-      count01 += bicg(DUM_DERI+1, DUM_DERI, 0., g_eps_sq_force1, g_relative_precision_flag);
+      count01 += bicg(DUM_DERI+1, DUM_DERI, g_eps_sq_force1, g_relative_precision_flag);
       chrono_add_solution(spinor_field[DUM_DERI+1], g_csg_field[nr+1], g_csg_index_array[nr+1],
 			  g_csg_N[2*nr+2], &g_csg_N[2*nr+3], VOLUME/2);
       g_mu = -g_mu;   
@@ -97,7 +97,7 @@ void derivative_psf(const int nr) {
       /* X_W -> DUM_DERI+1 */
       chrono_guess(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+2], g_csg_field[nr], g_csg_index_array[nr],
 		   g_csg_N[2*nr], g_csg_N[2*nr+1], VOLUME/2, &Qtm_pm_psi);
-      count10 += solve_cg(DUM_DERI+1, DUM_DERI+2, 0., g_eps_sq_force2, g_relative_precision_flag);
+      count10 += solve_cg(DUM_DERI+1, DUM_DERI+2, g_eps_sq_force2, g_relative_precision_flag);
       chrono_add_solution(spinor_field[DUM_DERI+1], g_csg_field[nr], g_csg_index_array[nr],
 			  g_csg_N[2*nr], &g_csg_N[2*nr+1], VOLUME/2);
       /* Y_W -> DUM_DERI  */
@@ -109,7 +109,7 @@ void derivative_psf(const int nr) {
       chrono_guess(spinor_field[DUM_DERI], spinor_field[DUM_DERI+2], g_csg_field[nr], g_csg_index_array[nr],
 		   g_csg_N[2*nr], g_csg_N[2*nr+1], VOLUME/2, &Qtm_pm_psi);
       gamma5(spinor_field[DUM_DERI], spinor_field[DUM_DERI], VOLUME/2);
-      count10 += bicg(DUM_DERI, DUM_DERI+2, 0., g_eps_sq_force2, g_relative_precision_flag);
+      count10 += bicg(DUM_DERI, DUM_DERI+2, g_eps_sq_force2, g_relative_precision_flag);
       chrono_add_solution(spinor_field[DUM_DERI], g_csg_field[nr], g_csg_index_array[nr],
 			  g_csg_N[2*nr], &g_csg_N[2*nr+1], VOLUME/2);
 
@@ -120,7 +120,7 @@ void derivative_psf(const int nr) {
       chrono_guess(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI], g_csg_field[nr+1], g_csg_index_array[nr+1],
 		   g_csg_N[2*nr+2], g_csg_N[2*nr+3], VOLUME/2, &Qtm_pm_psi);
       gamma5(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+1], VOLUME/2);
-      count11 += bicg(DUM_DERI+1,DUM_DERI,0.,g_eps_sq_force2, g_relative_precision_flag);
+      count11 += bicg(DUM_DERI+1,DUM_DERI, g_eps_sq_force2, g_relative_precision_flag);
       chrono_add_solution(spinor_field[DUM_DERI+1], g_csg_field[nr+1], g_csg_index_array[nr+1],
 			  g_csg_N[2*nr+2], &g_csg_N[2*nr+3], VOLUME/2);
       g_mu = -g_mu;   
@@ -164,7 +164,7 @@ void derivative_psf(const int nr) {
       /* X_W -> DUM_DERI+1 */
       chrono_guess(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+2], g_csg_field[nr], g_csg_index_array[nr],
 		   g_csg_N[2*nr], g_csg_N[2*nr+1], VOLUME/2, &Qtm_pm_psi);
-      count20 += solve_cg(DUM_DERI+1, DUM_DERI+2, 0., g_eps_sq_force3, g_relative_precision_flag);
+      count20 += solve_cg(DUM_DERI+1, DUM_DERI+2, g_eps_sq_force3, g_relative_precision_flag);
       chrono_add_solution(spinor_field[DUM_DERI+1], g_csg_field[nr], g_csg_index_array[nr],
 			  g_csg_N[2*nr], &g_csg_N[2*nr+1], VOLUME/2);
       /* Y_W -> DUM_DERI  */
@@ -176,7 +176,7 @@ void derivative_psf(const int nr) {
       chrono_guess(spinor_field[DUM_DERI], spinor_field[DUM_DERI+2], g_csg_field[nr], g_csg_index_array[nr],
 		   g_csg_N[2*nr], g_csg_N[2*nr+1], VOLUME/2, &Qtm_pm_psi);
       gamma5(spinor_field[DUM_DERI], spinor_field[DUM_DERI], VOLUME/2);
-      count20 += bicg(DUM_DERI, DUM_DERI+2, 0., g_eps_sq_force3, g_relative_precision_flag);
+      count20 += bicg(DUM_DERI, DUM_DERI+2, g_eps_sq_force3, g_relative_precision_flag);
       chrono_add_solution(spinor_field[DUM_DERI], g_csg_field[nr], g_csg_index_array[nr],
 			  g_csg_N[2*nr], &g_csg_N[2*nr+1], VOLUME/2);
 
@@ -186,7 +186,7 @@ void derivative_psf(const int nr) {
       chrono_guess(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI], g_csg_field[nr+1], g_csg_index_array[nr+1],
 		   g_csg_N[2*nr+2], g_csg_N[2*nr+3], VOLUME/2, &Qtm_pm_psi);
       gamma5(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+1], VOLUME/2);
-      count21 += bicg(DUM_DERI+1,DUM_DERI,0., g_eps_sq_force3, g_relative_precision_flag);
+      count21 += bicg(DUM_DERI+1,DUM_DERI, g_eps_sq_force3, g_relative_precision_flag);
       chrono_add_solution(spinor_field[DUM_DERI+1], g_csg_field[nr+1], g_csg_index_array[nr+1],
 			  g_csg_N[2*nr+2], &g_csg_N[2*nr+3], VOLUME/2);
       g_mu = -g_mu;   

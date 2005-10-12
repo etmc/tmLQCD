@@ -47,8 +47,6 @@
 #define _default_index_end 12
 #define _default_first_prop_flag 0
 #define _default_g_c_sw 0.
-#define _default_q_off  0.8
-#define _default_q_off2 0.1
 #define _default_dtau 0.1
 #define _default_tau 0.5
 #define _default_Nsteps 10

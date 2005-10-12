@@ -61,7 +61,6 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   int random_seed;
   double dtau, tau;
   int Nsteps;
-  double q_off, q_off2;
   char rlxd_input_filename[100];
   char gauge_input_filename[100];
   int first_prop_flag;
@@ -186,8 +185,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^Indices{SPC}*={SPC}*                    BEGIN(IDX);
 ^FirstPropagator{SPC}*={SPC}*            BEGIN(FPROP);
 ^CSW{SPC}*={SPC}*                        BEGIN(CSW);
-^Q1{SPC}*={SPC}*                         BEGIN(Q1);
-^Q2{SPC}*={SPC}*                         BEGIN(Q2);
+^Q1{SPC}*={SPC}*                         BEGIN(COMMENT);
+^Q2{SPC}*={SPC}*                         BEGIN(COMMENT);
 ^Integrator{SPC}*={SPC}*                 BEGIN(INTTYP);
 ^NSmall{SPC}*={SPC}*                     BEGIN(NSMALL);
 ^DTau{SPC}*={SPC}*                       BEGIN(DTAU);
@@ -457,14 +456,6 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 <FPROP>readin {
   first_prop_flag = 1;
   if(verbose!=0) printf("Reading in the first propagator\n");
-}
-<Q1>{FLT}   {
-  q_off = atof(yytext);
-  if(verbose!=0) printf("q_off set to %e\n", q_off);
-}
-<Q2>{FLT}   {
-  q_off2 = atof(yytext);
-  if(verbose!=0) printf("q_off2 set to %e\n", q_off2);
 }
 <INTTYP>leapfrog {
   integtyp = 1;
@@ -868,8 +859,6 @@ int read_input(char * conf_file){
   g_mu3 = _default_g_mu3;
   g_beta = _default_g_beta;
   g_c_sw = _default_g_c_sw;
-  q_off = _default_q_off;
-  q_off2 = _default_q_off2;
   dtau = _default_dtau;
   tau = _default_tau;
   Nsteps = _default_Nsteps;

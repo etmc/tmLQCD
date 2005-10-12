@@ -12,7 +12,6 @@
 #include "linalg_eo.h"
 #include "clover_eo.h" 
 #include "start.h"
-#include "sw.h"
 #include "linsolve.h"
 #include "xchange.h"
 #include "deriv_Sb.h"
