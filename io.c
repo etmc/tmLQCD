@@ -55,12 +55,13 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   int ME_flag=0, MB_flag=0, status=0;
   int tag=0, t=0, x=0, y=0, z=0, id=0, X=0, tt=0;
   MPI_Status mpi_status;
-  char message[100];
+  char message[500];
   su3 tmp[4];
   int coords[2];
   off_t bytes;
 
-  sprintf(message,"plaquette = %e\n trajectory nr = %d", plaq, counter);
+  sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f", 
+	  plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
   bytes = strlen( message );
   if(g_cart_id == 0) {
     ofs = fopen(filename, "w");

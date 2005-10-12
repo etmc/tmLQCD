@@ -7,10 +7,6 @@
  *
  * Global parameters and arrays
  *
- * Author: Martin Luescher <luscher@mail.desy.de>
- * Date: 16.03.2001
- *
- * Adapted for the HMC-Program by M. Hasenbusch 2002
  *
  ***************************************************************/
 #include <stdlib.h>
@@ -26,9 +22,11 @@
 #define DUM_MATRIX (DUM_SOLVER+6) 
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX DUM_SOLVER+11 */
-#define STRANGE (DUM_MATRIX+5)
-#define CHARM (STRANGE+1)
-#define NO_OF_SPINORFIELDS (CHARM+1)
+/* for the non-degenerate stuff uncomment this */
+/* #define STRANGE (DUM_MATRIX+5) */
+/* #define CHARM (STRANGE+1) */
+/* #define NO_OF_SPINORFIELDS (CHARM+1) */
+#define NO_OF_SPINORFIELDS (DUM_MATRIX+5)
 
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */
