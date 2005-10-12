@@ -41,12 +41,14 @@
 int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_energy, 
 	      char * filename, const double dtau, const int Nsteps, const int nsmall,
 	      const double tau, int * n_int, const int return_check,
-	      const double q_off, const double q_off2) {
+	      double * lambda) {
   su3 *v, *w;
   static int ini_g_tmp = 0;
   int rlxd_state[105];
   int ix, mu, accept, i=0, halfstep = 0;
   int saveiter_max = ITER_MAX_BCG;
+  const double q_off=0.;
+  const double q_off2=0.;
 
   double yy[1];
   double dh, expmdh, ret_dh=0., ret_gauge_diff=0.;
@@ -55,7 +57,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   int ret_idis0=0, ret_idis1=0, ret_idis2=0;
 /*   double lambda[5] = {0.1931833275037836,0.1931833275037836,0.1931833275037836,0.1931833275037836,0.1931833275037836}; */
 /*   double lambda[5] = {0.2,0.2,0.2,0.2,0.2}; */
-  double lambda[5] = {0.21,0.21,0.21,0.21,0.21};
+/*   double lambda[5] = {0.21,0.21,0.21,0.21,0.21}; */
   
   /* Energy corresponding to the Gauge part */
   double new_plaquette_energy=0., new_rectangle_energy = 0., gauge_energy = 0., new_gauge_energy = 0.;

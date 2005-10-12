@@ -73,6 +73,7 @@ int main(int argc,char *argv[]) {
   int j,ix,mu, trajectory_counter=1;
   int k;
   struct timeval t1;
+  double x;
 
   /* Energy corresponding to the Gauge part */
   double eneg = 0., plaquette_energy = 0., rectangle_energy = 0.;
@@ -160,6 +161,10 @@ int main(int argc,char *argv[]) {
     int_n[1] = int_n[3];
     int_n[3] = j;
 
+    x = lambda[1];
+    lambda[1] = lambda[3];
+    lambda[3] = x;
+
     j = g_csg_N[0];
     g_csg_N[0] = g_csg_N[4];
     g_csg_N[4] = j;
@@ -178,6 +183,10 @@ int main(int argc,char *argv[]) {
     int_n[3] = int_n[1];
     int_n[1] = int_n[2];
     int_n[2] = int_n[3];
+
+    lambda[3] = lambda[1];
+    lambda[1] = lambda[2];
+    lambda[2] = lambda[3];
 
     /* For chronological inverter */
     g_csg_N[4] = g_csg_N[0];
@@ -504,7 +513,7 @@ int main(int argc,char *argv[]) {
     else return_check = 0;
 
     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
-		      dtau, Nsteps, nsmall, tau, int_n, return_check, q_off, q_off2);
+		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda);
 
     /* Measure the Polyakov loop in direction 2 and 3:*/
     polyakov_loop(&pl, 2); 

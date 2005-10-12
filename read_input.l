@@ -46,6 +46,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   int Nskip;
   int integtyp;
   int int_n[4];
+  double lambda[4];
   int nsmall;
   int solver_flag;
   int operator_flag;
@@ -126,6 +127,11 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x INT2
 %x INT3
 %x INT4
+%x LAMBDA0
+%x LAMBDA1
+%x LAMBDA2
+%x LAMBDA3
+%x LAMBDA4
 %x RELPREC
 %x FORCEPREC
 %x FORCEPREC1
@@ -207,6 +213,11 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^IntegrationStepsMu3{SPC}*={SPC}*        BEGIN(INT3);
 ^ExtIntStepsMu3{SPC}*={SPC}*             BEGIN(INT4);
 ^IntegrationStepsMu4{SPC}*={SPC}*        BEGIN(INT4);
+^2MNLambdaGauge{SPC}*={SPC}*             BEGIN(LAMBDA0);
+^2MNLambdaMu{SPC}*={SPC}*                BEGIN(LAMBDA1);
+^2MNLambdaMu2{SPC}*={SPC}*               BEGIN(LAMBDA2);
+^2MNLambdaMu3{SPC}*={SPC}*               BEGIN(LAMBDA3);
+^2MNLambdaMu4{SPC}*={SPC}*               BEGIN(LAMBDA4);
 ^UseRelativePrecision{SPC}*={SPC}*       BEGIN(RELPREC);
 ^ForcePrecision{SPC}*={SPC}*             BEGIN(FORCEPREC);
 ^ForcePrecisionMu{SPC}*={SPC}*           BEGIN(FORCEPREC1);
@@ -555,6 +566,25 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 <INT4>{DIGIT}+ {
   if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for psf 4 (mu4) set to %d!\n", int_n[1]);
 }
+<LAMBDA0>{FLT} {
+  lambda[0] = atof(yytext);
+  if(verbose!=0) printf("Set lambda parameter for gauge fields (in the 2MN integrator) to %f!\n", lambda[0]);
+}
+<LAMBDA1>{FLT} {
+  lambda[1] = atof(yytext);
+  if(verbose!=0) printf("Set lambda parameter for psf 1 (in the 2MN integrator) to %f!\n", lambda[0]);
+}
+<LAMBDA2>{FLT} {
+  lambda[2] = atof(yytext);
+  if(verbose!=0) printf("Set lambda parameter for psf 2 (in the 2MN integrator) to %f!\n", lambda[0]);
+}
+<LAMBDA3>{FLT} {
+  lambda[3] = atof(yytext);
+  if(verbose!=0) printf("Set lambda parameter for psf 3 (in the 2MN integrator) to %f!\n", lambda[0]);
+}
+<LAMBDA4>{FLT} {
+  if(verbose!=0) printf("Set lambda parameter for psf 4 (in the 2MN integrator) to %f! (not yet implemented)\n", lambda[0]);
+}
 <FORCEPREC>{FLT}  {
   g_eps_sq_force=atof(yytext);
   if(verbose!=0) printf("g_eps_sq_force=%s Residual for inversions in the force computation\n", yytext);
@@ -890,6 +920,10 @@ int read_input(char * conf_file){
   g_csg_N[2] = _default_g_csg_N;
   g_csg_N[4] = _default_g_csg_N;
   g_csg_N[6] = _default_g_csg_N;
+  lambda[0] = _default_2mn_lambda;
+  lambda[1] = _default_2mn_lambda;
+  lambda[2] = _default_2mn_lambda;
+  lambda[3] = _default_2mn_lambda;
 
   /********************************************/
 
@@ -944,6 +978,7 @@ int reread_input(char * conf_file){
       np=N_PROC_X, nst=nstore;
   double m2 = g_mu2, m3 = g_mu3;
   int n1 = g_csg_N[0], n2 = g_csg_N[2], n3 = g_csg_N[4], n4 = g_csg_N[6];
+  double x;
 
   /********************************************
    * Setting default values!
@@ -986,6 +1021,10 @@ int reread_input(char * conf_file){
     int_n[1] = int_n[3];
     int_n[3] = j;
 
+    x = lambda[1];
+    lambda[1] = lambda[3];
+    lambda[3] = x;
+
     g_nr_of_psf = 3;
   }
   else if(g_mu2 > 0. && g_mu2 != m2) {
@@ -996,6 +1035,10 @@ int reread_input(char * conf_file){
     int_n[3] = int_n[1];
     int_n[1] = int_n[2];
     int_n[2] = int_n[3];
+
+    lambda[3] = lambda[1];
+    lambda[1] = lambda[2];
+    lambda[2] = lambda[3];
 
     g_nr_of_psf = 2;
   }
