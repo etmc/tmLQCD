@@ -20,7 +20,6 @@
 #include "start.h"
 #include "sighandler.h"
 #include "tm_operators.h"
-#include "clover_eo.h"
 #include "linalg_eo.h"
 #include "io.h"
 #include "observables.h"

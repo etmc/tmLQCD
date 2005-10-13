@@ -21,7 +21,6 @@
 #include "linalg_eo.h"
 #include "start.h"
 #include "tm_operators.h"
-#include "clover_eo.h"
 #include "bicgstabell.h"
 
 

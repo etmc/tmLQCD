@@ -27,7 +27,6 @@
 #include "ranlxd.h"
 #include "geometry_eo.h"
 #include "start.h"
-#include "clover_eo.h"
 #include "observables.h"
 #include "measure_rectangles.h"
 #ifdef MPI

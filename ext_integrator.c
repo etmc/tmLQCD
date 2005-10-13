@@ -10,7 +10,6 @@
 #include "sse.h"
 #include "global.h"
 #include "linalg_eo.h"
-#include "clover_eo.h"
 #include "start.h"
 #include "linsolve.h"
 #include "xchange.h"

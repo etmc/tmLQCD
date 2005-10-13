@@ -30,7 +30,6 @@
 #include "observables.h"
 #include "hybrid_update.h"
 #include "xchange.h"
-#include "sw.h"
 #include "io.h"
 #include "read_input.h"
 #include "tm_operators.h"
