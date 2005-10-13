@@ -968,8 +968,9 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka2,chi);
       
-    _vector_add_assign((*r).s1,psi);
-    _vector_sub_assign((*r).s2,psi);
+    _vector_add_assign(temp.s1,psi);
+    _vector_sub_assign(temp.s2,psi);
+
 
     /*********************** direction -2 ************************/
 
