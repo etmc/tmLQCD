@@ -182,8 +182,10 @@ int main(int argc,char *argv[]) {
 #ifdef _GAUGE_COPY
     printf("# The code was compiled with -D_GAUGE_COPY\n");
 #endif
-    printf("# The lattice size is %d x %d^3\n",(int)(T)*g_nproc_t,(int)(L));
-    printf("# The local lattice size is %d x %d^3\n",(int)(T),(int)(L));
+    printf("# The lattice size is %d x %d x %d x %d\n",
+	   (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY), (int)(LZ));
+    printf("# The local lattice size is %d x %d x %d x %d\n", 
+	   (int)(T), (int)(LX), (int)(LY),(int) LZ);
     printf("# beta = %f , kappa= %f, mu= %f \n",g_beta,g_kappa,g_mu);
     printf("# mus = %f, %f, %f\n", g_mu1, g_mu2, g_mu3);
     
