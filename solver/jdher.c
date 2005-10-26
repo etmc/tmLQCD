@@ -18,9 +18,6 @@
  *
  *                    A*x = lambda*x
  *
- * The implementation uses LAPACK and BLAS routines and is so far
- * not yet parallelized.
- *
  * Author of this adaption:
  *         Carsten Urbach <urbach@physik.fu-berlin.de> 
  *

@@ -356,14 +356,6 @@ int main(int argc,char *argv[]) {
 
   check_geometry();
 
-  if(g_proc_id == 0) {
-#if defined GEOMETRIC
-    if(g_proc_id==0) fprintf(parameterfile,"The geometric series is used as solver \n\n");
-#else
-    if(g_proc_id==0) fprintf(parameterfile,"The BICG_stab is used as solver \n\n");
-#endif
-    fflush(parameterfile);
-  }
   
   /* Continue */
   if(startoption == 3){
