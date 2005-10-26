@@ -1,3 +1,17 @@
+26.10.2005: Added gauge file format conversion programs for
+	    gwc -> ildg and ildg -> gwc
+
+	    All solver have additional parameter now. It is now possible
+	    to invert with realtive precision. Moreover, the propagator 
+	    (or source) format of Chris Michael can be read in.
+	    The new input parameter is:
+	    SourceFormat = cmi (otherwise gwc assumed)
+	    other related input parameters are
+	    ReadSource = yes
+	    SolverPrecision = 1.e-10
+	    SourceInputFilename = random_test
+	    UseRelativePrecision = yes
+
 11.08.2005: 2MN integrator implemented and tested. Two versions
 	    available: velocity and position version (hep-lat/0505020).
 	    Integrator=2MN or 2MNposition

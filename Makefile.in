@@ -34,13 +34,13 @@ MODULES = init_gauge_field init_geometry_indices \
 	derivative_psf ext_integrator polyakov_loop \
 	2mn_integrator \
 
-PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark invert gwc2ildg
+PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark invert gwc2ildg ildg2gwc
 ALLOBJ = ${MODULES} ${PROGRAMS}
 SUBDIRS = linalg solver
 
 .SUFFIXES:
 
-all: Makefile all-recursive dep ${LINKLIBS} hmc_tm invert gwc2ildg
+all: Makefile all-recursive dep ${LINKLIBS} hmc_tm invert gwc2ildg ildg2gwc
 
 .NOTPARALLEL: 
 

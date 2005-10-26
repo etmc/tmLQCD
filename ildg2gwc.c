@@ -17,11 +17,10 @@
 #include "init_geometry_indices.h"
 
 void usage(){
-  fprintf(stderr, "gwc2ildg gauge conversion program\n\n");
+  fprintf(stderr, "ildg2gwc gauge conversion program\n\n");
   fprintf(stderr, "Usage: [-f parameter input-filename]\n");
   fprintf(stderr, "Usage: [-i gague input-filename]\n");
   fprintf(stderr, "Usage: [-o gauge output-filename]\n");
-  fprintf(stderr, "Usage: [-c trajectory counter]\n");
   exit(1);
 }
 
@@ -35,7 +34,7 @@ int main(int argc,char *argv[]) {
 
   L=0; 
   T=0;
-  while ((c = getopt(argc, argv, "h?f:i:o:c:")) != -1) {
+  while ((c = getopt(argc, argv, "h?f:i:o:")) != -1) {
     switch (c) {
     case 'f': 
       input_filename = calloc(200, sizeof(char));
@@ -48,9 +47,6 @@ int main(int argc,char *argv[]) {
     case 'o':
       ofilename = calloc(200, sizeof(char));
       strcpy(ofilename,optarg);
-      break;
-    case 'c':
-      trajectory_counter = atoi(optarg);
       break;
     case 'h':
     case '?':
@@ -103,9 +99,9 @@ int main(int argc,char *argv[]) {
   geometry();
 
   if (g_proc_id == 0){
-    printf("Reading Gauge field from file %s in GWC format...\n", ifilename); fflush(stdout);
+    printf("Reading Gauge field from file %s in ILDG format\n", ifilename); fflush(stdout);
   }
-  read_gauge_field_time_p(ifilename); 
+  read_lime_gauge_field( ifilename ); 
 
 #ifdef MPI
   xchange_gauge();
@@ -115,8 +111,11 @@ int main(int argc,char *argv[]) {
   plaquette_energy = measure_gauge_action();
 
   if (g_proc_id == 0){
+    printf("The plaquette value is %e\n", plaquette_energy/(6.*VOLUME*g_nproc)); fflush(stdout);
+  }
+  if (g_proc_id == 0){
     printf("Writing Gauge field to file %s in ILDG format...\n", ofilename); fflush(stdout);
   }
-  write_lime_gauge_field( ofilename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+  write_gauge_field_time_p( ofilename );
   return(0);
 }
