@@ -57,17 +57,19 @@ static complex * c;
 static double * s;
 
 int gmres(spinor * const P,spinor * const Q, 
-	   const int m, const int max_restarts,
-	   const double eps_sq, matrix_mult f){
+	  const int m, const int max_restarts,
+	  const double eps_sq, const int rel_prec,
+	  const int N, matrix_mult f){
 
   int restart, i, j, k;
-  double beta, eps;
+  double beta, eps, norm;
   complex tmp1, tmp2;
-  int N=VOLUME/2;
 
 /*   init_solver_field(3); */
   eps=sqrt(eps_sq);
   init_gmres(m, VOLUMEPLUSRAND);
+
+  norm = sqrt(square_norm(Q, N));
 
   assign(spinor_field[DUM_SOLVER+2], P, N);
   for(restart = 0; restart < max_restarts; restart++){
@@ -127,7 +129,7 @@ int gmres(spinor * const P,spinor * const Q,
 	printf("%d\t%g residue\n", restart*m+j, alpha[j+1].re*alpha[j+1].re); 
 	fflush(stdout);
       }
-      if(alpha[j+1].re <= eps){
+      if(((alpha[j+1].re <= eps) && (rel_prec == 0)) || ((alpha[j+1].re <= eps*norm) && (rel_prec == 1))){
 	_mult_real(alpha[j], alpha[j], 1./H[j][j].re);
 	assign_add_mul(spinor_field[DUM_SOLVER+2], V[j], alpha[j], N);
 	for(i = j-1; i >= 0; i--){

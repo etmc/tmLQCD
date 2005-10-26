@@ -21,10 +21,11 @@
    Q input
 */
 
-int cgs_real(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, matrix_mult f) {
+int cgs_real(spinor * const P, spinor * const Q, const int max_iter, 
+	     double eps_sq, const int rel_prec, const int N, matrix_mult f) {
   static complex alpha, beta,rjr0,nom,denom,one;
-  static double res_sq;
-  int i, N=VOLUME/2;
+  static double res_sq, squarenorm;
+  int i;
 
 /*   init_solver_field(6); */
   one.re=1.;one.im=0.;
@@ -34,6 +35,7 @@ int cgs_real(spinor * const P, spinor * const Q, const int max_iter, double eps_
   assign(spinor_field[DUM_SOLVER+1],spinor_field[DUM_SOLVER], N); 
   assign(spinor_field[DUM_SOLVER+2],spinor_field[DUM_SOLVER], N);
   assign(spinor_field[DUM_SOLVER+5],spinor_field[DUM_SOLVER], N); /* ri=pi=ui=r0 */
+  squarenorm = square_norm(Q, N);
 
   /* loop! */
   for(i=0;i<=max_iter;i++) {
@@ -44,7 +46,7 @@ int cgs_real(spinor * const P, spinor * const Q, const int max_iter, double eps_
     }
     rjr0.re=scalar_prod_r(spinor_field[DUM_SOLVER],spinor_field[DUM_SOLVER+5], N);
     /*     square_and_prod(&res_sq,&rjr0,spinor_field[DUM_SOLVER],spinor_field[DUM_SOLVER+5]); */
-    if(res_sq<eps_sq) {
+    if(((res_sq<eps_sq) && (rel_prec == 0)) || ((res_sq<eps_sq*squarenorm) && (rel_prec == 1))) {
       return i;
     }
     f(spinor_field[DUM_SOLVER+3],spinor_field[DUM_SOLVER+1]);	/* calc v */

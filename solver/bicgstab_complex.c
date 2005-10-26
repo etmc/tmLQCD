@@ -36,10 +36,11 @@
    Q input
 */
 int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter, 
-		     double eps_sq, matrix_mult f){
-  double err, d1;
+		     double eps_sq, const int rel_prec, 
+		     const int N, matrix_mult f){
+  double err, d1, squarenorm;
   complex rho0, rho1, omega, alpha, beta, nom, denom;
-  int i, N=VOLUME/2;
+  int i;
   spinor * r, * p, * v, *hatr, * s, * t;
 
 /*   init_solver_field(6); */
@@ -55,6 +56,7 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
   assign(r, p, N);
   assign(hatr, p, N);
   rho0 = scalar_prod(hatr, r, N);
+  squarenorm = square_norm(Q, N);
 
   for(i = 0; i < max_iter; i++){
     err = square_norm(r, N);
@@ -63,7 +65,7 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
       fflush(stdout);
     }
   
-    if(err < eps_sq && i>0){
+    if((((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) && i>0) {
       return(i);
     }
     f(v, p);

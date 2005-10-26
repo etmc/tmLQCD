@@ -242,13 +242,24 @@ int main(int argc,char *argv[]) {
 	source_spinor_field(spinor_field[0], spinor_field[1], is, ic);
       }
       else {
-	sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", source_input_filename, mass_number, is, ic, nstore);
-	read_spinorfield_eo_time(spinor_field[0], spinor_field[1], conf_filename);
+	if(source_format_flag == 0) {
+	  sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", source_input_filename, mass_number, is, ic, nstore); 
+	  read_spinorfield_eo_time(spinor_field[0], spinor_field[1], conf_filename); 
+	}
+	else if(source_format_flag == 1) {
+	  printf("Reading source from %s\n",source_input_filename);
+	  read_spinorfield_cm_single(spinor_field[0], spinor_field[1], source_input_filename, source_time_slice, 1);
+	}
       }
 
       if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
 
-      sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", "prop.mass", mass_number, is, ic, nstore);
+      if(source_format_flag == 0) {
+	sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", "prop.mass", mass_number, is, ic, nstore);
+      }
+      else if(source_format_flag == 1) {
+	sprintf(conf_filename, "%s.invert", source_input_filename);
+      }
 
       /* If the solver is _not_ CG we might read in */
       /* here some better guess                     */
@@ -277,7 +288,7 @@ int main(int argc,char *argv[]) {
       atime = MPI_Wtime();
 #endif
       iter = invert_eo(spinor_field[2], spinor_field[3], spinor_field[0], spinor_field[1], 
-		       solver_precision, max_solver_iterations, solver_flag);
+		       solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag);
 #ifdef MPI
       etime = MPI_Wtime();
 #endif
@@ -286,7 +297,12 @@ int main(int argc,char *argv[]) {
       mul_r(spinor_field[2], (2*g_kappa), spinor_field[2], VOLUME/2);  
       mul_r(spinor_field[3], (2*g_kappa), spinor_field[3], VOLUME/2);
 
-      write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 0);
+      if(source_format_flag == 0) {
+	write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 0);
+      }
+      else if(source_format_flag == 1) {
+	write_spinorfield_cm_single(spinor_field[2], spinor_field[3], "test");
+      }
 
       /* Check the result */
       M_full(spinor_field[4], spinor_field[5], spinor_field[2], spinor_field[3]); 

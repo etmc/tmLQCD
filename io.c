@@ -45,6 +45,9 @@ void byte_swap_assign(void * out_ptr, void * in_ptr, int nmemb);
 int big_endian();
 int write_ildg_format_xml(char *filename, LimeWriter * limewriter);
 off_t file_size(FILE *fp);
+void single2double_cm(spinor * const R, float * const S);
+void double2single_cm(float * const S, spinor * const R);
+void zero_spinor(spinor * const R);
 
 #ifdef MPI
 int write_lime_gauge_field(char * filename, const double plaq, const int counter){
@@ -695,6 +698,87 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
 }
 
 
+int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filename, 
+			       const int ts, const int vol) {
+  /*
+   * ts is the number of the timeslice to be used
+   *    if ts < 0 read a volume source
+   *
+   * if ts > 0 and vol > 0 the file is a volume file
+   * but only one timeslice should be read
+   */
+
+  FILE * ifs;
+  int t, x, y , z, i = 0;
+  spinor * p = NULL;
+  float tmp[24];
+
+  ifs = fopen(filename, "r");
+
+  for(x = 0; x < LX; x++) {
+    for(y = 0; y < LY; y++) {
+      for(z = 0; z < LZ; z++) {
+	for(t = 0; t < T; t++) {
+
+	  i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
+	  if((t+x+y+z+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
+	    p = s;
+	  }
+	  else {
+	    p = r;
+	  }
+	  
+	  if(ts == t || ts < 0 || ts >= T){
+	    /* Read the data */
+	    fread(tmp, sizeof(spinor)/2, 1, ifs);
+	    single2double_cm(p+i, tmp);
+	  }
+	  else {
+	    if(vol > 0) {
+	      fread(tmp, sizeof(spinor)/2, 1, ifs);
+	    }
+	    /* Padding with zeros */
+	    zero_spinor(p+i);
+	  }
+	}
+      }
+    }
+  }
+  fclose(ifs);
+  return(0);
+}
+
+int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filename) {
+
+  FILE * ofs;
+  int t, x, y , z, i = 0;
+  spinor * p = NULL;
+  float tmp[24];
+
+  ofs = fopen(filename, "w");
+
+  for(x = 0; x < LX; x++) {
+    for(y = 0; y < LY; y++) {
+      for(z = 0; z < LZ; z++) {
+	for(t = 0; t < T; t++) {
+  	  i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
+	  if((t+x+y+z+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
+	    p = s;
+	  }
+	  else {
+	    p = r;
+	  }
+	  double2single_cm(tmp, p + i);
+	  fwrite(tmp, sizeof(spinor)/2, 1, ofs);
+	}
+      }
+    }
+  }
+  fclose(ofs);
+  return(0);
+}
+
+
 int big_endian(){
   union{
     int l;
@@ -834,4 +918,85 @@ off_t file_size(FILE *fp)
   
   return ( fseeko(fp,oldpos,SEEK_SET) == -1 ) ? -1 : length;
   
+}
+
+void single2double_cm(spinor * const R, float * const S) {
+  (*R).s0.c0.re = (double) S[0];
+  (*R).s0.c0.im = (double) S[1];
+  (*R).s0.c1.re = (double) S[2];
+  (*R).s0.c1.im = (double) S[3];
+  (*R).s0.c2.re = (double) S[4];
+  (*R).s0.c2.im = (double) S[5];
+  (*R).s1.c0.re = (double) S[6];
+  (*R).s1.c0.im = (double) S[7];
+  (*R).s1.c1.re = (double) S[8];
+  (*R).s1.c1.im = (double) S[9];
+  (*R).s1.c2.re = (double) S[10];
+  (*R).s1.c2.im = (double) S[11];
+  (*R).s2.c0.re = (double) S[12];
+  (*R).s2.c0.im = (double) S[13];
+  (*R).s2.c1.re = (double) S[14];
+  (*R).s2.c1.im = (double) S[15];
+  (*R).s2.c2.re = (double) S[16];
+  (*R).s2.c2.im = (double) S[17];
+  (*R).s3.c0.re = (double) S[18];
+  (*R).s3.c0.im = (double) S[19];
+  (*R).s3.c1.re = (double) S[20];
+  (*R).s3.c1.im = (double) S[21];
+  (*R).s3.c2.re = (double) S[22];
+  (*R).s3.c2.im = (double) S[23];
+}
+
+void double2single_cm(float * const S, spinor * const R) {
+  S[0]  = (float) (*R).s0.c0.re ;
+  S[1]  = (float) (*R).s0.c0.im ;
+  S[2]  = (float) (*R).s0.c1.re ;
+  S[3]  = (float) (*R).s0.c1.im ;
+  S[4]  = (float) (*R).s0.c2.re ;
+  S[5]  = (float) (*R).s0.c2.im ;
+  S[6]  = (float) (*R).s1.c0.re ;
+  S[7]  = (float) (*R).s1.c0.im ;
+  S[8]  = (float) (*R).s1.c1.re ;
+  S[9]  = (float) (*R).s1.c1.im ;
+  S[10] = (float) (*R).s1.c2.re ;
+  S[11] = (float) (*R).s1.c2.im ;
+  S[12] = (float) (*R).s2.c0.re ;
+  S[13] = (float) (*R).s2.c0.im ;
+  S[14] = (float) (*R).s2.c1.re ;
+  S[15] = (float) (*R).s2.c1.im ;
+  S[16] = (float) (*R).s2.c2.re ;
+  S[17] = (float) (*R).s2.c2.im ;
+  S[18] = (float) (*R).s3.c0.re ;
+  S[19] = (float) (*R).s3.c0.im ;
+  S[20] = (float) (*R).s3.c1.re ;
+  S[21] = (float) (*R).s3.c1.im ;
+  S[22] = (float) (*R).s3.c2.re ;
+  S[23] = (float) (*R).s3.c2.im ;
+}
+
+void zero_spinor(spinor * const R) {
+  (*R).s0.c0.re = 0.;
+  (*R).s0.c0.im = 0.;
+  (*R).s0.c1.re = 0.;
+  (*R).s0.c1.im = 0.;
+  (*R).s0.c2.re = 0.;
+  (*R).s0.c2.im = 0.;
+  (*R).s1.c0.re = 0.;
+  (*R).s1.c0.im = 0.;
+  (*R).s1.c1.re = 0.;
+  (*R).s1.c1.im = 0.;
+  (*R).s1.c2.re = 0.;
+  (*R).s1.c2.im = 0.;
+  (*R).s2.c0.re = 0.;
+  (*R).s2.c0.im = 0.;
+  (*R).s2.c1.re = 0.;
+  (*R).s2.c1.im = 0.;
+  (*R).s2.c2.re = 0.;
+  (*R).s2.c2.im = 0.;
+  (*R).s3.c0.re = 0.;
+  (*R).s3.c0.im = 0.;
+  (*R).s3.c1.re = 0.;
+  (*R).s3.c1.im = 0.;
+  (*R).s3.c2.re = 0.;
+  (*R).s3.c2.im = 0.;
 }

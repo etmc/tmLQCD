@@ -70,6 +70,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   int read_source_flag;
   char source_input_filename[100];
   int return_check_flag, return_check_interval;
+  int source_format_flag;
+  int source_time_slice;
 %}
 
 %option never-interactive
@@ -120,7 +122,9 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x MNR
 %x RGIC
 %X READSOURCE
+%x SOURCEFORMAT
 %x SOURCEFILE
+%x SOURCETS
 %x INT0
 %x INT1
 %x INT2
@@ -202,6 +206,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^RGIC1{SPC}*={SPC}*                      BEGIN(RGIC);
 ^ReadSource{SPC}*={SPC}*                 BEGIN(READSOURCE);
 ^SourceInputFilename{SPC}*={SPC}*        BEGIN(SOURCEFILE);
+^SourceFormat{SPC}*={SPC}*               BEGIN(SOURCEFORMAT);
+^SourceTimeSlice{SPC}*={SPC}*            BEGIN(SOURCETS);
 ^ExtIntStepsGauge{SPC}*={SPC}*           BEGIN(INT0);
 ^N_G{SPC}*={SPC}*                        BEGIN(INT0);
 ^ExtIntStepsMu0{SPC}*={SPC}*             BEGIN(INT1);
@@ -538,6 +544,14 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   strcpy(source_input_filename,yytext);
   if(verbose!=0) printf("source input filename set to %s\n",yytext);
 }
+<SOURCEFORMAT>cmi      {
+  source_format_flag = 1;
+  if(verbose!=0) printf("Using CM format for source input file\n");
+}
+<SOURCETS>{DIGIT}+   {
+  source_time_slice = atoi(yytext);
+  if(verbose!=0) printf("Using only timeslice %s of the source, padding the rest with zeros\n", yytext);
+}
 <INT0>{DIGIT}+ {
   int_n[0] = atoi(yytext);
   if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for gauge set to %d!\n", int_n[0]);
@@ -651,7 +665,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 <NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP>#   BEGIN(COMMENT);
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
 <INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
-<ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3>#      BEGIN(COMMENT);
+<ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
+<SOURCETS>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -773,7 +788,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Error in line %d! Must be compute or readin! Exiting...!\n", line_of_file);
   exit(1);
 }
-<Q1,Q2,DTAU,TAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND,SOURCEFILE,READSOURCE,INT0,INT1,INT2,INT3,INT4,REVCHECK,REVINT,DEBUG>. {
+<Q1,Q2,DTAU,TAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND,SOURCEFILE,READSOURCE,INT0,INT1,INT2,INT3,INT4,REVCHECK,REVINT,DEBUG,SOURCEFORMAT,SOURCETS>. {
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
@@ -913,6 +928,8 @@ int read_input(char * conf_file){
   lambda[1] = _default_2mn_lambda;
   lambda[2] = _default_2mn_lambda;
   lambda[3] = _default_2mn_lambda;
+  source_format_flag = _default_source_format_flag;
+  source_time_slice = _default_source_time_slice;
 
   /********************************************/
 

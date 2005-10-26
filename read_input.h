@@ -60,6 +60,8 @@ extern "C"
   extern char source_input_filename[100];
   extern int return_check_flag;
   extern int return_check_interval;
+  extern int source_format_flag;
+  extern int source_time_slice;
   
   int read_input(char *);
   int reread_input(char *);

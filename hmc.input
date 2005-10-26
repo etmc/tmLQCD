@@ -18,3 +18,4 @@ CGMaxIter = 1000
 GaugeConfigInputFile = conf44
 startCondition = restart
 Integrator = LeapFrog
+ReadSource = yes

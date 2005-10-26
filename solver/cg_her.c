@@ -47,12 +47,12 @@
 
 /* P output = solution , Q input = source */
 int cg_her(spinor * const P, spinor * const Q, const int max_iter, 
-       double eps_sq, matrix_mult f, 
-       const int subtract_ev, const int modulo){
-  double normsp, normsq, pro, err, alpha_cg, beta_cg;
+	   double eps_sq, const int rel_prec, const int N, matrix_mult f, 
+	   const int subtract_ev, const int modulo){
+  double normsp, normsq, pro, err, alpha_cg, beta_cg, squarenorm;
   int iteration;
-  int N = VOLUME/2;
   
+  squarenorm = square_norm(Q, N);
   /*        !!!!   INITIALIZATION    !!!! */
   assign(spinor_field[DUM_SOLVER], P, N);
   /*        (r_0,r_0)  =  normsq         */
@@ -111,8 +111,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
 /*     if ( (iteration%10) == 0 && g_proc_id == g_stdio_proc ) */
 /*       printf("%d\t%g\n",iteration,err); */
 #endif
-    
-    if (err <= eps_sq){
+    if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) {
 /*       if((subtract_ev == 1)){ */
 /* 	assign_add_invert_subtracted_part(spinor_field[DUM_SOLVER], Q, 10, N);  */
 /*       } */

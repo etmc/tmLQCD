@@ -6,6 +6,7 @@
 #include"solver/matrix_mult_typedef.h"
 #include"su3.h"
 
-int bicgstab_complex(spinor * const, spinor * const, const int max_iter, double eps_sq, matrix_mult f);
+int bicgstab_complex(spinor * const, spinor * const, const int max_iter, double eps_sq, 
+		     const int rel_prec, const int N, matrix_mult f);
 
 #endif

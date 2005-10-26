@@ -42,12 +42,11 @@
 #include "mr.h"
 
 int mr(spinor * const P, spinor * const Q,
-	const int max_iter, const double eps_sq,
-	matrix_mult f){
+       const int max_iter, const double eps_sq,
+       const int rel_prec, const int N, matrix_mult f){
   int i=0;
   double norm_r,beta;
   complex alpha;
-  int N=VOLUME/2;
 
   f(spinor_field[DUM_SOLVER+2], P);
   diff(spinor_field[DUM_SOLVER], Q, spinor_field[DUM_SOLVER+2], N);

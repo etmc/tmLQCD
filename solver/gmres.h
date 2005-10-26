@@ -37,7 +37,8 @@
 
 int gmres(spinor * const P,spinor * const Q, 
 	   const int m, const int max_restarts,
-	  const double eps, matrix_mult f);
+	  const double eps, const int rel_prec, 
+	  const int N, matrix_mult f);
 
 
 #endif

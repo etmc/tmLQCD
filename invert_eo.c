@@ -32,7 +32,7 @@
 int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
 	      spinor * const Even, spinor * const Odd,
 	      const double precision, const int max_iter,
-	      const int solver_flag) {
+	      const int solver_flag, const int rel_prec) {
 
   int iter = 0;
 
@@ -50,28 +50,28 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 
   if(solver_flag == BICGSTAB) {
     if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}
-    iter = bicgstab_complex(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_plus_psi);
+    iter = bicgstab_complex(Odd_new, spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_plus_psi);
   }
   else if(solver_flag == GMRES) {
     if(g_proc_id == 0) {printf("# Using GMRES!\n"); fflush(stdout);}
-    iter = gmres(Odd_new, spinor_field[DUM_DERI], 10, max_iter/10, precision, &Qtm_plus_psi);
+    iter = gmres(Odd_new, spinor_field[DUM_DERI], 10, max_iter/10, precision, rel_prec, VOLUME/2, &Qtm_plus_psi);
   }
   else if(solver_flag == CG) {
     if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
-    iter = cg_her(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_pm_psi, 0, 0.);
+    iter = cg_her(Odd_new, spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0.);
     Qtm_minus_psi(Odd_new, Odd_new);
   }
   else if(solver_flag == MR) {
     if(g_proc_id == 0) {printf("# Using MR!\n"); fflush(stdout);}
-    iter = mr(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_plus_psi);
+    iter = mr(Odd_new, spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_plus_psi);
   }
   else if(solver_flag == CGS) {
     if(g_proc_id == 0) {printf("# Using CGS!\n"); fflush(stdout);}
-    iter = cgs_real(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_plus_psi);
+    iter = cgs_real(Odd_new, spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_plus_psi);
   }
   else {
     if(g_proc_id == 0) {printf("# Using CG as default solver!\n"); fflush(stdout);}
-    iter = cg_her(Odd_new, spinor_field[DUM_DERI], max_iter, precision, &Qtm_pm_psi, 0, 0.);
+    iter = cg_her(Odd_new, spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0.);
     Qtm_minus_psi(Odd_new, Odd_new);
   }
 
