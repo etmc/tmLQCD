@@ -60,7 +60,7 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "You have to give an input file name! Aborting...\n");
     exit(1);
   }
-  if(ifilename == NULL) {
+  if(ofilename == NULL) {
     fprintf(stderr, "You have to give an output file name! Aborting...\n");
     exit(2);
   }
@@ -70,7 +70,9 @@ int main(int argc,char *argv[]) {
 
   verbose = 0;
 
-  read_input(input_filename);
+  if(read_input(input_filename) != 0) {
+    fprintf(stderr, "Input file required!\n Aborting...!\n");
+  }
 
   mpi_init(argc, argv);
 

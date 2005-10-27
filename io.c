@@ -770,7 +770,7 @@ int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filen
 	    p = r;
 	  }
 	  double2single_cm(tmp, p + i);
-	  fwrite(tmp, sizeof(spinor)/2, 1, ofs);
+	  fwrite(tmp, sizeof(float), 24, ofs);
 	}
       }
     }
