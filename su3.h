@@ -447,7 +447,7 @@ _sse_store(r);
  * Imaginary part of the scalar product (r,s)
  */
 #ifdef _STD_C99_COMPLEX
-#define _vector_prod_im(r,s)			\ 
+#define _vector_prod_im(r,s)			\
 imag((r).c0*conj((s).c0) + (r).c1*conj((s).c1) + (r).c2*conj((s).c2));
 
 #else
@@ -1159,7 +1159,7 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
   (u).c22 =  (v).c20*conj((w).c20) + (v).c21*conj((w).c21)  + (v).c22*conj((w).c22);
 
 /* C.Urbach u=u + v * w^{dag} */
-#define _su3_times_su3d(u,v,w)						\
+#define _su3_times_su3d_acc(u,v,w)						\
   (u).c00 +=  (v).c00*conj((w).c00) + (v).c01*conj((w).c01)  + (v).c02*conj((w).c02); \
   (u).c01 +=  (v).c00*conj((w).c10) + (v).c01*conj((w).c11)  + (v).c02*conj((w).c12); \
   (u).c02 +=  (v).c00*conj((w).c20) + (v).c01*conj((w).c21)  + (v).c02*conj((w).c22); \
