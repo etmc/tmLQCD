@@ -232,8 +232,12 @@ int main(int argc,char *argv[]) {
       _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
     }
 #endif  
-
-    sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore);
+    if(source_format_flag == 0) {
+      sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore);
+    }
+    else if(source_format_flag == 1) {
+      sprintf(conf_filename,"%s.inverted", source_input_filename);
+    }
     
     for(ix = index_start; ix < index_end; ix++) {
       is = (ix / 3);
@@ -258,7 +262,7 @@ int main(int argc,char *argv[]) {
 	sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", "prop.mass", mass_number, is, ic, nstore);
       }
       else if(source_format_flag == 1) {
-	sprintf(conf_filename, "%s.invert", source_input_filename);
+	sprintf(conf_filename, "%s.inverted", source_input_filename);
       }
 
       /* If the solver is _not_ CG we might read in */
@@ -301,7 +305,7 @@ int main(int argc,char *argv[]) {
 	write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 0);
       }
       else if(source_format_flag == 1) {
-	write_spinorfield_cm_single(spinor_field[2], spinor_field[3], "test");
+	write_spinorfield_cm_single(spinor_field[2], spinor_field[3], conf_filename);
       }
 
       /* Check the result */
