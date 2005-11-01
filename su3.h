@@ -16,8 +16,11 @@
 *
 *
 *******************************************************************************/
-
+#ifdef _STD_C99_COMPLEX
+#include <complex.h>
+#else
 #include "complex.h"
+#endif
 
 typedef struct 
 {
@@ -47,7 +50,13 @@ typedef struct
 * r.c2=0
 * r.c3=0
 */
+#ifdef _STD_C99_COMPLEX
+#define _vector_null(r) \
+  (r).c0 = 0.;		\
+  (r).c1 = 0.;		\
+  (r).c2 = 0.;
 
+#else 
 #define _vector_null(r) \
    (r).c0.re=0.0; \
    (r).c0.im=0.0; \
@@ -55,13 +64,20 @@ typedef struct
    (r).c1.im=0.0; \
    (r).c2.re=0.0; \
    (r).c2.im=0.0;
+#endif
 
 /* M. Hasenbusch Mon Sep 24
 * r.c1=s.c1
 * r.c2=s.c2
 * r.c3=s.c3
 */
+#ifdef _STD_C99_COMPLEX
+#define _vector_assign(r,s)			\
+  (r).c0 = (s).c0;				\
+  (r).c1 = (s).c1;				\
+  (r).c2 = (s).c1;
 
+#else
 #define _vector_assign(r,s) \
    (r).c0.re=(s).c0.re; \
    (r).c0.im=(s).c0.im; \
@@ -70,12 +86,20 @@ typedef struct
    (r).c2.re=(s).c2.re; \
    (r).c2.im=(s).c2.im;
 
+#endif
+
 /* M. Hasenbusch Mon Sep 24
 * r.c1=-s.c1
 * r.c2=-s.c2
 * r.c3=-s.c3
 */
+#ifdef _STD_C99_COMPLEX
+#define _vector_minus_assign(r,s)		\
+  (r).c0 = -(s).c0;				\
+  (r).c1 = -(s).c1;				\
+  (r).c2 = -(s).c2;
 
+#else
 #define _vector_minus_assign(r,s) \
    (r).c0.re=-(s).c0.re; \
    (r).c0.im=-(s).c0.im; \
@@ -84,12 +108,20 @@ typedef struct
    (r).c2.re=-(s).c2.re; \
    (r).c2.im=-(s).c2.im;
 
+#endif
+
 /*
 * r.c1=c*s.c1 (c real)
 * r.c2=c*s.c2
 * r.c3=c*s.c3
 */
+#ifdef _STD_C99_COMPLEX
+#define _vector_mul(r,c,s)			\
+  (r).c0 = (c)*(s).c0;				\
+  (r).c1 = (c)*(s).c1;				\
+  (r).c2 = (c)*(s).c2;
 
+#else
 #define _vector_mul(r,c,s) \
    (r).c0.re=(c)*(s).c0.re; \
    (r).c0.im=(c)*(s).c0.im; \
@@ -98,6 +130,15 @@ typedef struct
    (r).c2.re=(c)*(s).c2.re; \
    (r).c2.im=(c)*(s).c2.im;
 
+#endif
+
+#ifdef _STD_C99_COMPLEX
+#define _vector_add_mul(r,c,s)			\
+  (r).c0 += ((c)*(s).c0);			\
+  (r).c1 += ((c)*(s).c1);			\
+  (r).c2 += ((c)*(s).c2);
+
+#else
 #define _vector_add_mul(r,c,s) \
    (r).c0.re+=(c)*(s).c0.re; \
    (r).c0.im+=(c)*(s).c0.im; \
@@ -105,6 +146,8 @@ typedef struct
    (r).c1.im+=(c)*(s).c1.im; \
    (r).c2.re+=(c)*(s).c2.re; \
    (r).c2.im+=(c)*(s).c2.im;
+
+#endif
 
 /*
 * r.c1=s1.c1+s2.c1
@@ -125,6 +168,18 @@ _sse_load(s1); \
 _sse_load_up(s2); \
 _sse_vector_sub(); \
 _sse_store(r);
+
+#elif defined _STD_C99_COMPLEX
+
+#define _vector_add(r,s1,s2)			\
+  (r).c0 = (s1).c0 + (s2).c0;			\
+  (r).c1 = (s1).c1 + (s2).c1;			\
+  (r).c2 = (s1).c2 + (s2).c2;
+
+#define _vector_sub(r,s1,s2)			\
+  (r).c0 = (s1).c0 - (s2).c0;			\
+  (r).c1 = (s1).c1 - (s2).c1;			\
+  (r).c2 = (s1).c2 - (s2).c2;
 
 #else
 
@@ -152,12 +207,20 @@ _sse_store(r);
 
 #endif
 
+
 /*
 * r.c1=s1.c1+i*s2.c1
 * r.c2=s1.c2+i*s2.c2
 * r.c3=s1.c3+i*s2.c3
 */
 
+#ifdef _STD_C99_COMPLEX
+#define _vector_i_add(r,s1,s2)			\
+  (r).c0 = (s1).c0 + I*(s2).c0;			\
+  (r).c0 = (s1).c1 + I*(s2).c1;			\
+  (r).c0 = (s1).c2 + I*(s2).c2;
+
+#else
 #define _vector_i_add(r,s1,s2) \
    (r).c0.re=(s1).c0.re-(s2).c0.im; \
    (r).c0.im=(s1).c0.im+(s2).c0.re; \
@@ -166,13 +229,22 @@ _sse_store(r);
    (r).c2.re=(s1).c2.re-(s2).c2.im; \
    (r).c2.im=(s1).c2.im+(s2).c2.re;
 
+#endif
+
 /*
-* r.c1=s1.c1+i*s2.c1
-* r.c2=s1.c2+i*s2.c2
-* r.c3=s1.c3+i*s2.c3
+* r.c1=s1.c1-i*s2.c1
+* r.c2=s1.c2-i*s2.c2
+* r.c3=s1.c3-i*s2.c3
 */
 
-#define _vector_i_sub(r,s1,s2) \
+#ifdef _STD_C99_COMPLEX
+#define _vector_i_sub(r,s1,s2)			\
+  (r).c0 = (s1).c0 - I*(s2).c0;			\
+  (r).c0 = (s1).c1 - I*(s2).c1;			\
+  (r).c0 = (s1).c2 - I*(s2).c2;
+
+#else
+#define _vector_i_sub(r,s1,s2)	    \
    (r).c0.re=(s1).c0.re+(s2).c0.im; \
    (r).c0.im=(s1).c0.im-(s2).c0.re; \
    (r).c1.re=(s1).c1.re+(s2).c1.im; \
@@ -180,12 +252,18 @@ _sse_store(r);
    (r).c2.re=(s1).c2.re+(s2).c2.im; \
    (r).c2.im=(s1).c2.im-(s2).c2.re;
 
-/*
-* r.c1+=s.c1
-* r.c2+=s.c2
-* r.c3+=s.c3
-*/
+#endif
 
+#ifdef _STD_C99_COMPLEX
+#define _vector_combined_add_i_add(r1, s1, r2, s2, s)	\
+  (r1).c0 = (s1).c0 + (s).c0;				\
+  (r2).c0 = (s2).c0 + I*(s).c0;				\
+  (r1).c1 = (s1).c1 + (s).c1;				\
+  (r2).c1 = (s2).c1 + I*(s).c1;				\
+  (r1).c2 = (s1).c2 + (s).c2;				\
+  (r2).c2 = (s2).c2 + I*(s).c2;				\
+
+#else
 #define _vector_combined_add_i_add(r1, s1, r2, s2, s) \
    (r1).c0.re=(s1).c0.re+(s).c0.re; \
    (r1).c0.im=(s1).c0.im+(s).c0.im; \
@@ -200,7 +278,13 @@ _sse_store(r);
    (r2).c2.re=(s2).c2.re-(s).c2.im; \
    (r2).c2.im=(s2).c2.im+(s).c2.re;
 
+#endif
 
+/*
+* r.c1+=s.c1
+* r.c2+=s.c2
+* r.c3+=s.c3
+*/
 
 #if ((defined SSE2) || (defined SSE3))
 #define _vector_add_assign(r,s) \
@@ -214,6 +298,18 @@ _sse_load(r); \
 _sse_load_up(s); \
 _sse_vector_sub(); \
 _sse_store(r);
+
+#elif defined _STD_C99_COMPLEX
+
+#define _vector_add_assign(r,s)			\
+  (r).c0 += (s).c0;				\
+  (r).c1 += (s).c1;				\
+  (r).c2 += (s).c2;
+
+#define _vector_sub_assign(r,s)			\
+  (r).c0 -= (s).c0;				\
+  (r).c1 -= (s).c1;				\
+  (r).c2 -= (s).c2;
 
 #else
 
@@ -241,12 +337,21 @@ _sse_store(r);
 
 #endif 
 
+
+
 /*
 * r.c1+=i*s.c1
 * r.c2+=i*s.c2
 * r.c3+=i*s.c3
 */
 
+#ifdef _STD_C99_COMPLEX
+#define _vector_i_add_assign(r,s)		\
+  (r).c0 += (I*(s).c0);				\
+  (r).c1 += (I*(s).c1);				\
+  (r).c2 += (I*(s).c2);
+
+#else
 #define _vector_i_add_assign(r,s) \
    (r).c0.re-=(s).c0.im; \
    (r).c0.im+=(s).c0.re; \
@@ -255,12 +360,21 @@ _sse_store(r);
    (r).c2.re-=(s).c2.im; \
    (r).c2.im+=(s).c2.re;
 
+#endif
+
 /*
 * r.c1-=i*s.c1
 * r.c2-=i*s.c2
 * r.c3-=i*s.c3
 */
 
+#ifdef _STD_C99_COMPLEX
+#define _vector_i_sub_assign(r,s)		\
+  (r).c0 -= (I*(s).c0);				\
+  (r).c1 -= (I*(s).c1);				\
+  (r).c2 -= (I*(s).c2);
+
+#else
 #define _vector_i_sub_assign(r,s) \
    (r).c0.re+=(s).c0.im; \
    (r).c0.im-=(s).c0.re; \
@@ -268,6 +382,8 @@ _sse_store(r);
    (r).c1.im-=(s).c1.re; \
    (r).c2.re+=(s).c2.im; \
    (r).c2.im-=(s).c2.re;
+
+#endif
 
 /* M.Hasenbusch 
 * r.c1=c*s.c1
@@ -277,6 +393,13 @@ _sse_store(r);
 * c complex
 */
 
+#ifdef _STD_C99_COMPLEX
+#define _complex_times_vector(r,c,s)		\
+  (r).c0 = (c)*(s).c0;				\
+  (r).c1 = (c)*(s).c1;				\
+  (r).c2 = (c)*(s).c2;
+
+#else
 #define _complex_times_vector(r,c,s) \
    (r).c0.re=(c).re*(s).c0.re-(c).im*(s).c0.im; \
    (r).c0.im=(c).re*(s).c0.im+(c).im*(s).c0.re; \
@@ -285,7 +408,16 @@ _sse_store(r);
    (r).c2.re=(c).re*(s).c2.re-(c).im*(s).c2.im; \
    (r).c2.im=(c).re*(s).c2.im+(c).im*(s).c2.re;
 
+#endif
+
 /* M.Hasenbusch */
+#ifdef _STD_C99_COMPLEX
+#define _complexcjg_times_vector(r,c,s)		\
+  (r).c0 = conj(c)*(s).c0;			\
+  (r).c1 = conj(c)*(s).c1;			\
+  (r).c2 = conj(c)*(s).c2;
+
+#else
 #define _complexcjg_times_vector(r,c,s) \
    (r).c0.re=(c).re*(s).c0.re+(c).im*(s).c0.im; \
    (r).c0.im=(c).re*(s).c0.im-(c).im*(s).c0.re; \
@@ -294,23 +426,36 @@ _sse_store(r);
    (r).c2.re=(c).re*(s).c2.re+(c).im*(s).c2.im; \
    (r).c2.im=(c).re*(s).c2.im-(c).im*(s).c2.re;
 
+#endif
+
 /*
 * Real part of the scalar product (r,s)
 */
 
-#define _vector_prod_re(r,s) \
-   (r).c0.re*(s).c0.re+(r).c0.im*(s).c0.im+ \
-   (r).c1.re*(s).c1.re+(r).c1.im*(s).c1.im+ \
-   (r).c2.re*(s).c2.re+(r).c2.im*(s).c2.im;
+#ifdef _STD_C99_COMPLEX
+#define _vector_prod_re(r,s)						\
+  real((r).c0*conj((s).c0) + (r).c1*conj((s).c1) + (r).c2*conj((s).c2));
 
+#else
+#define _vector_prod_re(r,s)		    \
+  (r).c0.re*(s).c0.re+(r).c0.im*(s).c0.im+  \
+  (r).c1.re*(s).c1.re+(r).c1.im*(s).c1.im+  \
+  (r).c2.re*(s).c2.re+(r).c2.im*(s).c2.im;
+
+#endif
 /*
-* Imaginary part of the scalar product (r,s)
-*/
+ * Imaginary part of the scalar product (r,s)
+ */
+#ifdef _STD_C99_COMPLEX
+#define _vector_prod_im(r,s)			\ 
+imag((r).c0*conj((s).c0) + (r).c1*conj((s).c1) + (r).c2*conj((s).c2));
 
-#define _vector_prod_im(r,s) \
-   (r).c0.re*(s).c0.im-(r).c0.im*(s).c0.re+ \
-   (r).c1.re*(s).c1.im-(r).c1.im*(s).c1.re+ \
-   (r).c2.re*(s).c2.im-(r).c2.im*(s).c2.re; 
+#else
+#define _vector_prod_im(r,s)		    \
+  (r).c0.re*(s).c0.im-(r).c0.im*(s).c0.re+  \
+  (r).c1.re*(s).c1.im-(r).c1.im*(s).c1.re+  \
+  (r).c2.re*(s).c2.im-(r).c2.im*(s).c2.re; 
+#endif
 
 /*
 * r.c1-=z*s.c1 (z of type complex)
@@ -318,6 +463,12 @@ _sse_store(r);
 * r.c3-=z*s.c3
 */
 
+#ifdef _STD_C99_COMPLEX
+#define _vector_project(r,z,s)			\
+  (r).c0 -= (z*(s).c0);				\
+  (r).c1 -= (z*(s).c1);				\
+  (r).c2 -= (z*(s).c2);
+#else
 #define _vector_project(r,z,s) \
    (r).c0.re-=((z).re*(s).c0.re-(z).im*(s).c0.im); \
    (r).c0.im-=((z).re*(s).c0.im+(z).im*(s).c0.re); \
@@ -325,6 +476,7 @@ _sse_store(r);
    (r).c1.im-=((z).re*(s).c1.im+(z).im*(s).c1.re); \
    (r).c2.re-=((z).re*(s).c2.re-(z).im*(s).c2.im); \
    (r).c2.im-=((z).re*(s).c2.im+(z).im*(s).c2.re);
+#endif
 
 /*
 * SU(3) matrix u times SU(3) vector s
@@ -345,6 +497,18 @@ _sse_store_up(r);
 _sse_load(s); \
 _sse_su3_inverse_multiply(u); \
 _sse_store_up(r);
+
+#elif defined _STD_C99_COMPLEX
+
+#define _su3_multiply(r,u,s)					\
+  (r).c0 = (u).c00*(s).c0 + (u).c01*(s).c1 + (u).c02*(s).c2;	\
+  (r).c1 = (u).c10*(s).c0 + (u).c11*(s).c1 + (u).c12*(s).c2;	\
+  (r).c2 = (u).c20*(s).c0 + (u).c21*(s).c1 + (u).c22*(s).c2;  
+
+#define _su3_inverse_multiply(r,u,s)		\
+  (r).c0 = (u).c00*(s).c0 + (u).c10*(s).c1 + (u).c20*(s).c2;	\
+  (r).c1 = (u).c01*(s).c0 + (u).c11*(s).c1 + (u).c21*(s).c2;	\
+  (r).c2 = (u).c02*(s).c0 + (u).c12*(s).c1 + (u).c22*(s).c2;  
 
 #else
 
@@ -396,6 +560,9 @@ _sse_store_up(r);
              +(u).c12.re*(s).c1.im-(u).c12.im*(s).c1.re  \
              +(u).c22.re*(s).c2.im-(u).c22.im*(s).c2.re;
 #endif
+
+
+
 /*******************************************************************************
 *
 * Macros for SU(3) matrices
@@ -405,6 +572,14 @@ _sse_store_up(r);
 *******************************************************************************/
 
 /* M. Hasenbusch */
+#ifdef _STD_C99_COMPLEX
+#define _su3_norm_sq(x,u)			\
+  x = (u).c00*conj((u).c00) + (u).c01*conj((u).c01) + (u).c02*conj((u).c02) \
+    (u).c10*conj((u).c10) + (u).c11*conj((u).c11) + (u).c12*conj((u).c12) \
+    (u).c20*conj((u).c20) + (u).c21*conj((u).c21) + (u).c22*conj((u).c22); 
+
+#else
+
 #define _su3_norm_sq(x,u) \
 x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    +(u).c01.re*(u).c01.re + (u).c01.im*(u).c01.im \
@@ -416,10 +591,25 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    +(u).c21.re*(u).c21.re + (u).c21.im*(u).c21.im \
    +(u).c22.re*(u).c22.re + (u).c22.im*(u).c22.im; 
 
+#endif
+
 /*
  u=1 
  added by M.Hasenbusch Thu Aug  9 10:27:28 MEST 2001 */
 
+#ifdef _STD_C99_COMPLEX
+#define _su2_one(u)				\
+  (u).c00 = 1.;					\
+  (u).c01 = 0.;					\
+  (u).c02 = 0.;					\
+  (u).c10 = 0.;					\
+  (u).c11 = 1.;					\
+  (u).c12 = 0.;					\
+  (u).c20 = 0.;					\
+  (u).c21 = 0.;					\
+  (u).c22 = 1.;
+
+#else
 #define _su3_one(u) \
    (u).c00.re=1.0; \
    (u).c00.im=0.0; \
@@ -440,9 +630,22 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (u).c22.re=1.0; \
    (u).c22.im=0.0;
 
+#endif
 /*
  u=0 
  added by M.Hasenbusch Thu Aug  9 10:27:28 MEST 2001 */
+#ifdef _STD_C99_COMPLEX
+#define _su2_zero(u)				\
+  (u).c00 = 0.;					\
+  (u).c01 = 0.;					\
+  (u).c02 = 0.;					\
+  (u).c10 = 0.;					\
+  (u).c11 = 0.;					\
+  (u).c12 = 0.;					\
+  (u).c20 = 0.;					\
+  (u).c21 = 0.;					\
+  (u).c22 = 0.;
+#else
 #define _su3_zero(u) \
    (u).c00.re=0.0; \
    (u).c00.im=0.0; \
@@ -463,10 +666,24 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (u).c22.re=0.0; \
    (u).c22.im=0.0;
 
+#endif
+
 /* M. Hasenbusch
 * u=v
 */
 
+#ifdef _STD_C99_COMPLEX
+#define _su3_assign(u,v)			\
+  (u).c00 = (v).c00;				\
+  (u).c01 = (v).c01;				\
+  (u).c02 = (v).c02;				\
+  (u).c10 = (v).c10;				\
+  (u).c11 = (v).c11;				\
+  (u).c12 = (v).c12;				\
+  (u).c20 = (v).c20;				\
+  (u).c21 = (v).c21;				\
+  (u).c22 = (v).c22;
+#else
 #define _su3_assign(u,v) \
    (u).c00.re= (v).c00.re; \
    (u).c00.im= (v).c00.im; \
@@ -486,11 +703,23 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (u).c21.im= (v).c21.im; \
    (u).c22.re= (v).c22.re; \
    (u).c22.im= (v).c22.im;
+#endif
 
 /* M. Hasenbusch
 * u=-v
 */
-
+#ifdef _STD_C99_COMPLEX
+#define _su3_minus_assign(u,v)			\
+  (u).c00 = -(v).c00;				\
+  (u).c01 = -(v).c01;				\
+  (u).c02 = -(v).c02;				\
+  (u).c10 = -(v).c10;				\
+  (u).c11 = -(v).c11;				\
+  (u).c12 = -(v).c12;				\
+  (u).c20 = -(v).c20;				\
+  (u).c21 = -(v).c21;				\
+  (u).c22 = -(v).c22;
+#else
 #define _su3_minus_assign(u,v) \
    (u).c00.re= -(v).c00.re; \
    (u).c00.im= -(v).c00.im; \
@@ -510,11 +739,23 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (u).c21.im= -(v).c21.im; \
    (u).c22.re= -(v).c22.re; \
    (u).c22.im= -(v).c22.im;
-
+#endif
 /*
 * u=v^dagger
 */
 
+#ifdef _STD_C99_COMPLEX
+#define _su3_dagger(u,v)			\
+  (u).c00 = conj((v).c00);			\
+  (u).c01 = conj((v).c10);			\
+  (u).c02 = conj((v).c20);			\
+  (u).c10 = conj((v).c01);			\
+  (u).c11 = conj((v).c11);			\
+  (u).c12 = conj((v).c21);			\
+  (u).c20 = conj((v).c02);			\
+  (u).c21 = conj((v).c12);			\
+  (u).c22 = conj((v).c22); 
+#else
 #define _su3_dagger(u,v) \
    (u).c00.re= (v).c00.re; \
    (u).c00.im=-(v).c00.im; \
@@ -534,7 +775,21 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (u).c21.im=-(v).c12.im; \
    (u).c22.re= (v).c22.re; \
    (u).c22.im=-(v).c22.im;
+#endif
 
+#ifdef _STD_C99_COMPLEX
+#define _itimes_su3(u,v)			\
+  (u).c00 = I*(v).c00;				\
+  (u).c01 = I*(v).c01;				\
+  (u).c02 = I*(v).c02;				\
+  (u).c10 = I*(v).c10;				\
+  (u).c11 = I*(v).c11;				\
+  (u).c12 = I*(v).c12;				\
+  (u).c20 = I*(v).c20;				\
+  (u).c21 = I*(v).c21;				\
+  (u).c22 = I*(v).c22;
+
+#else
 /* M.Hasenbusch */
 #define _itimes_su3(u,v) \
    (u).c00.re=-(v).c00.im; \
@@ -555,12 +810,26 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (u).c21.im= (v).c21.re; \
    (u).c22.re=-(v).c22.im; \
    (u).c22.im= (v).c22.re;
+#endif
 
 /* M. Hasenbusch
 * u=c*v 
 * c real
 */
 
+#ifdef _STD_C99_COMPLEX
+#define _real_times_su3(u,a,v)				\
+  (u).c00 = (a)*(v).c00;				\
+  (u).c01 = (a)*(v).c01;				\
+  (u).c02 = (a)*(v).c02;				\
+  (u).c10 = (a)*(v).c10;				\
+  (u).c11 = (a)*(v).c11;				\
+  (u).c12 = (a)*(v).c12;				\
+  (u).c20 = (a)*(v).c20;				\
+  (u).c21 = (a)*(v).c21;				\
+  (u).c22 = (a)*(v).c22;
+
+#else 
 #define _real_times_su3(u,a,v) \
    (u).c00.re= (a)*(v).c00.re; \
    (u).c00.im= (a)*(v).c00.im; \
@@ -580,6 +849,7 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (u).c21.im= (a)*(v).c21.im; \
    (u).c22.re= (a)*(v).c22.re; \
    (u).c22.im= (a)*(v).c22.im;
+#endif
 
 /* M. Hasenbusch
 * u=v-w
@@ -851,6 +1121,79 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
 #define _su3d_times_su3_acc(u,v,w) _sse_su3d_times_su3_acc(u,v,w)
 #define _su3_times_su3d(u,v,w) _sse_su3_times_su3d(u,v,w)
 #define _su3_times_su3d_acc(u,v,w) _sse_su3_times_su3d_acc(u,v,w)  
+
+#elif defined _STD_C99_COMPLEX
+#define _su3_times_su3(u,v,w)					\
+  (u).c00 = (v).c00*(w).c00 + (v).c01*(w).c10  + (v).c02*(w).c20;	\
+  (u).c01 = (v).c00*(w).c01 + (v).c01*(w).c11  + (v).c02*(w).c21;	\
+  (u).c02 = (v).c00*(w).c02 + (v).c01*(w).c12  + (v).c02*(w).c22;	\
+  (u).c10 = (v).c10*(w).c00 + (v).c11*(w).c10	+ (v).c12*(w).c20;	\
+  (u).c11 = (v).c10*(w).c01 + (v).c11*(w).c11	+ (v).c12*(w).c21;	\
+  (u).c12 = (v).c10*(w).c02 + (v).c11*(w).c12	+ (v).c12*(w).c22;	\
+  (u).c20 = (v).c20*(w).c00 + (v).c21*(w).c10	+ (v).c22*(w).c20;	\
+  (u).c21 = (v).c20*(w).c01 + (v).c21*(w).c11	+ (v).c22*(w).c21;	\
+  (u).c22 = (v).c20*(w).c02 + (v).c21*(w).c12	+ (v).c22*(w).c22;
+
+/* C.Urbach u=u + v * w */
+#define _su3_times_su3_acc(u,v,w)					\
+  (u).c00 += (v).c00*(w).c00 + (v).c01*(w).c10  + (v).c02*(w).c20;	\
+  (u).c01 += (v).c00*(w).c01 + (v).c01*(w).c11  + (v).c02*(w).c21;	\
+  (u).c02 += (v).c00*(w).c02 + (v).c01*(w).c12  + (v).c02*(w).c22;	\
+  (u).c10 += (v).c10*(w).c00 + (v).c11*(w).c10	+ (v).c12*(w).c20;	\
+  (u).c11 += (v).c10*(w).c01 + (v).c11*(w).c11	+ (v).c12*(w).c21;	\
+  (u).c12 += (v).c10*(w).c02 + (v).c11*(w).c12	+ (v).c12*(w).c22;	\
+  (u).c20 += (v).c20*(w).c00 + (v).c21*(w).c10	+ (v).c22*(w).c20;	\
+  (u).c21 += (v).c20*(w).c01 + (v).c21*(w).c11	+ (v).c22*(w).c21;	\
+  (u).c22 += (v).c20*(w).c02 + (v).c21*(w).c12	+ (v).c22*(w).c22;
+
+/* C.Urbach u=v * w^{dag} */
+#define _su3_times_su3d(u,v,w)						\
+  (u).c00 =  (v).c00*conj((w).c00) + (v).c01*conj((w).c01)  + (v).c02*conj((w).c02); \
+  (u).c01 =  (v).c00*conj((w).c10) + (v).c01*conj((w).c11)  + (v).c02*conj((w).c12); \
+  (u).c02 =  (v).c00*conj((w).c20) + (v).c01*conj((w).c21)  + (v).c02*conj((w).c22); \
+  (u).c10 =  (v).c10*conj((w).c00) + (v).c11*conj((w).c01)  + (v).c12*conj((w).c02); \
+  (u).c11 =  (v).c10*conj((w).c10) + (v).c11*conj((w).c11)  + (v).c12*conj((w).c12); \
+  (u).c12 =  (v).c10*conj((w).c20) + (v).c11*conj((w).c21)  + (v).c12*conj((w).c22); \
+  (u).c20 =  (v).c20*conj((w).c00) + (v).c21*conj((w).c01)  + (v).c22*conj((w).c02); \
+  (u).c21 =  (v).c20*conj((w).c10) + (v).c21*conj((w).c11)  + (v).c22*conj((w).c12); \
+  (u).c22 =  (v).c20*conj((w).c20) + (v).c21*conj((w).c21)  + (v).c22*conj((w).c22);
+
+/* C.Urbach u=u + v * w^{dag} */
+#define _su3_times_su3d(u,v,w)						\
+  (u).c00 +=  (v).c00*conj((w).c00) + (v).c01*conj((w).c01)  + (v).c02*conj((w).c02); \
+  (u).c01 +=  (v).c00*conj((w).c10) + (v).c01*conj((w).c11)  + (v).c02*conj((w).c12); \
+  (u).c02 +=  (v).c00*conj((w).c20) + (v).c01*conj((w).c21)  + (v).c02*conj((w).c22); \
+  (u).c10 +=  (v).c10*conj((w).c00) + (v).c11*conj((w).c01)  + (v).c12*conj((w).c02); \
+  (u).c11 +=  (v).c10*conj((w).c10) + (v).c11*conj((w).c11)  + (v).c12*conj((w).c12); \
+  (u).c12 +=  (v).c10*conj((w).c20) + (v).c11*conj((w).c21)  + (v).c12*conj((w).c22); \
+  (u).c20 +=  (v).c20*conj((w).c00) + (v).c21*conj((w).c01)  + (v).c22*conj((w).c02); \
+  (u).c21 +=  (v).c20*conj((w).c10) + (v).c21*conj((w).c11)  + (v).c22*conj((w).c12); \
+  (u).c22 +=  (v).c20*conj((w).c20) + (v).c21*conj((w).c21)  + (v).c22*conj((w).c22);
+
+/* C.Urbach u = v^dag * w */
+#define _su3d_times_su3(u,v,w)			\
+  (u).c00 = conj((v).c00)*(w).c00 + conj((v).c10)*(w).c10 + conj((v).c20)*(w).c20; \
+  (u).c01 = conj((v).c00)*(w).c01 + conj((v).c10)*(w).c11 + conj((v).c20)*(w).c21; \
+  (u).c02 = conj((v).c00)*(w).c02 + conj((v).c10)*(w).c12 + conj((v).c20)*(w).c22; \
+  (u).c10 = conj((v).c01)*(w).c00 + conj((v).c11)*(w).c10 + conj((v).c21)*(w).c20; \
+  (u).c11 = conj((v).c01)*(w).c01 + conj((v).c11)*(w).c11 + conj((v).c21)*(w).c21; \
+  (u).c12 = conj((v).c01)*(w).c02 + conj((v).c11)*(w).c12 + conj((v).c21)*(w).c22; \
+  (u).c20 = conj((v).c02)*(w).c00 + conj((v).c12)*(w).c10 + conj((v).c22)*(w).c20; \
+  (u).c21 = conj((v).c02)*(w).c01 + conj((v).c12)*(w).c11 + conj((v).c22)*(w).c21; \
+  (u).c22 = conj((v).c02)*(w).c02 + conj((v).c12)*(w).c12 + conj((v).c22)*(w).c22;
+
+/* C.Urbach u = u + v^dag * w */
+#define _su3d_times_su3_acc(u,v,w)						\
+  (u).c00 += conj((v).c00)*(w).c00 + conj((v).c10)*(w).c10 + conj((v).c20)*(w).c20; \
+  (u).c01 += conj((v).c00)*(w).c01 + conj((v).c10)*(w).c11 + conj((v).c20)*(w).c21; \
+  (u).c02 += conj((v).c00)*(w).c02 + conj((v).c10)*(w).c12 + conj((v).c20)*(w).c22; \
+  (u).c10 += conj((v).c01)*(w).c00 + conj((v).c11)*(w).c10 + conj((v).c21)*(w).c20; \
+  (u).c11 += conj((v).c01)*(w).c01 + conj((v).c11)*(w).c11 + conj((v).c21)*(w).c21; \
+  (u).c12 += conj((v).c01)*(w).c02 + conj((v).c11)*(w).c12 + conj((v).c21)*(w).c22; \
+  (u).c20 += conj((v).c02)*(w).c00 + conj((v).c12)*(w).c10 + conj((v).c22)*(w).c20; \
+  (u).c21 += conj((v).c02)*(w).c01 + conj((v).c12)*(w).c11 + conj((v).c22)*(w).c21; \
+  (u).c22 += conj((v).c02)*(w).c02 + conj((v).c12)*(w).c12 + conj((v).c22)*(w).c22;
+
 #else
 
 /*
@@ -1204,6 +1547,19 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
 #endif
 
 /* M. Hasenbusch x=Re Tr (v * w^{\dag}) */
+#ifdef _STD_C99_COMPLEX
+#define _trace_su3_times_su3d(x,v,w)		    \
+  x = (v).c00*conj((w).c00)			    \
+    +(v).c01*conj((w).c01)			    \
+    +(v).c02*conj((w).c02)			    \
+    +(v).c10*conj((w).c10)			    \
+    +(v).c11*conj((w).c11)			    \
+    +(v).c12*conj((w).c12)			    \
+    +(v).c20*conj((w).c20)			    \
+    +(v).c21*conj((w).c21)			    \
+    +(v).c22*conj((w).c22);
+
+#else
 
 #define _trace_su3_times_su3d(x,v,w) \
    x = (v).c00.re*(w).c00.re+(v).c00.im*(w).c00.im  \
@@ -1215,9 +1571,22 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
       +(v).c20.re*(w).c20.re+(v).c20.im*(w).c20.im  \
       +(v).c21.re*(w).c21.re+(v).c21.im*(w).c21.im  \
       +(v).c22.re*(w).c22.re+(v).c22.im*(w).c22.im;
+#endif
 
 /* U. Wenger x=Tr (v * w) */
 
+#ifdef _STD_C99_COMPLEX
+#define _trace_su3_times_su3(x,v,w)		\
+  x = (v).c00*(w).c00				\
+    + (v).c01*(w).c10				\
+    + (v).c02*(w).c20				\
+    + (v).c10*(w).c01				\
+    + (v).c11*(w).c11				\
+    + (v).c12*(w).c21				\
+    + (v).c20*(w).c02				\
+    + (v).c21*(w).c12				\
+    + (v).c22*(w).c22;
+#else
 #define _trace_su3_times_su3(x,v,w) \
    x.re = (v).c00.re*(w).c00.re-(v).c00.im*(w).c00.im  \
          +(v).c01.re*(w).c10.re-(v).c01.im*(w).c10.im  \
@@ -1237,9 +1606,21 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
          +(v).c20.re*(w).c02.im+(v).c20.im*(w).c02.re  \
          +(v).c21.re*(w).c12.im+(v).c21.im*(w).c12.re  \
          +(v).c22.re*(w).c22.im+(v).c22.im*(w).c22.re; 
-
+#endif
 
 /* M. Hasenbusch t =u tensor v^dag */
+#ifdef _STD_C99_COMPLEX
+#define _vector_tensor_vector(t,u,v)	\
+  (t).c00 = (u).c0*conj((v).c0);	\
+  (t).c01 = (u).c0*conj((v).c1);	\
+  (t).c02 = (u).c0*conj((v).c2);	\
+  (t).c10 = (u).c1*conj((v).c0);	\
+  (t).c11 = (u).c1*conj((v).c1);	\
+  (t).c12 = (u).c1*conj((v).c2);	\
+  (t).c20 = (u).c2*conj((v).c0);	\
+  (t).c21 = (u).c2*conj((v).c1);	\
+  (t).c22 = (u).c2*conj((v).c2);
+#else
 #define _vector_tensor_vector(t,u,v) \
    (t).c00.re=(u).c0.re*(v).c0.re+(u).c0.im*(v).c0.im; \
    (t).c00.im=(u).c0.im*(v).c0.re-(u).c0.re*(v).c0.im; \
@@ -1259,6 +1640,7 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (t).c21.im=(u).c2.im*(v).c1.re-(u).c2.re*(v).c1.im; \
    (t).c22.re=(u).c2.re*(v).c2.re+(u).c2.im*(v).c2.im; \
    (t).c22.im=(u).c2.im*(v).c2.re-(u).c2.re*(v).c2.im; 
+#endif
 
 #ifdef MAIN_PROGRAM
 static char const su3rcsid[] = "$Id$";

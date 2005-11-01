@@ -14,6 +14,7 @@ su3 * gauge_field_back = NULL;
 int init_gauge_field(const int V, const int back) {
   int i=0;
 
+  g_gauge_field_back = NULL;
   g_gauge_field = calloc(V, sizeof(su3*));
   if(errno == ENOMEM) {
     return(1);
