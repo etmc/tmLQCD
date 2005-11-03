@@ -505,10 +505,10 @@ _sse_store_up(r);
   (r).c1 = (u).c10*(s).c0 + (u).c11*(s).c1 + (u).c12*(s).c2;	\
   (r).c2 = (u).c20*(s).c0 + (u).c21*(s).c1 + (u).c22*(s).c2;  
 
-#define _su3_inverse_multiply(r,u,s)		\
-  (r).c0 = (u).c00*(s).c0 + (u).c10*(s).c1 + (u).c20*(s).c2;	\
-  (r).c1 = (u).c01*(s).c0 + (u).c11*(s).c1 + (u).c21*(s).c2;	\
-  (r).c2 = (u).c02*(s).c0 + (u).c12*(s).c1 + (u).c22*(s).c2;  
+#define _su3_inverse_multiply(r,u,s)					\
+  (r).c0 = conj((u).c00)*(s).c0 + conj((u).c10)*(s).c1 + conj((u).c20)*(s).c2; \
+  (r).c1 = conj((u).c01)*(s).c0 + conj((u).c11)*(s).c1 + conj((u).c21)*(s).c2; \
+  (r).c2 = conj((u).c02)*(s).c0 + conj((u).c12)*(s).c1 + conj((u).c22)*(s).c2;
 
 #else
 
