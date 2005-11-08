@@ -18,7 +18,7 @@
 #include"su3adj.h"
 
 #define DUM_DERI 6
-#define DUM_SOLVER (DUM_DERI+2)
+#define DUM_SOLVER (DUM_DERI+7)
 #define DUM_MATRIX (DUM_SOLVER+6) 
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX DUM_SOLVER+11 */
@@ -27,7 +27,7 @@
 #define CHARM (STRANGE+1) 
 /* for the non-degenerate stuff uncomment this */
 /* #define NO_OF_SPINORFIELDS (CHARM+1) */
-#define NO_OF_SPINORFIELDS (DUM_MATRIX+2)
+#define NO_OF_SPINORFIELDS (DUM_MATRIX+5)
 
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */
