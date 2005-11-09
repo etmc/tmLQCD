@@ -16,7 +16,8 @@
 *
 *
 *******************************************************************************/
-#ifdef _STD_C99_COMPLEX
+
+#ifdef _STD_C99_COMPLEX_CHECKED
 #include <complex.h>
 #else
 #include "complex.h"
@@ -71,11 +72,11 @@ typedef struct
 * r.c2=s.c2
 * r.c3=s.c3
 */
-#ifdef _STD_C99_COMPLEX
+#ifdef _STD_C99_COMPLEX_CHECKED
 #define _vector_assign(r,s)			\
   (r).c0 = (s).c0;				\
   (r).c1 = (s).c1;				\
-  (r).c2 = (s).c1;
+  (r).c2 = (s).c2;
 
 #else
 #define _vector_assign(r,s) \
@@ -115,7 +116,7 @@ typedef struct
 * r.c2=c*s.c2
 * r.c3=c*s.c3
 */
-#ifdef _STD_C99_COMPLEX
+#ifdef _STD_C99_COMPLEX_CHECKED
 #define _vector_mul(r,c,s)			\
   (r).c0 = (c)*(s).c0;				\
   (r).c1 = (c)*(s).c1;				\
@@ -169,7 +170,7 @@ _sse_load_up(s2); \
 _sse_vector_sub(); \
 _sse_store(r);
 
-#elif defined _STD_C99_COMPLEX
+#elif defined _STD_C99_COMPLEX_CHECKED
 
 #define _vector_add(r,s1,s2)			\
   (r).c0 = (s1).c0 + (s2).c0;			\
@@ -214,11 +215,11 @@ _sse_store(r);
 * r.c3=s1.c3+i*s2.c3
 */
 
-#ifdef _STD_C99_COMPLEX
+#ifdef _STD_C99_COMPLEX_CHECKED
 #define _vector_i_add(r,s1,s2)			\
   (r).c0 = (s1).c0 + I*(s2).c0;			\
-  (r).c0 = (s1).c1 + I*(s2).c1;			\
-  (r).c0 = (s1).c2 + I*(s2).c2;
+  (r).c1 = (s1).c1 + I*(s2).c1;			\
+  (r).c2 = (s1).c2 + I*(s2).c2;
 
 #else
 #define _vector_i_add(r,s1,s2) \
@@ -237,11 +238,11 @@ _sse_store(r);
 * r.c3=s1.c3-i*s2.c3
 */
 
-#ifdef _STD_C99_COMPLEX
+#ifdef _STD_C99_COMPLEX_CHECKED
 #define _vector_i_sub(r,s1,s2)			\
   (r).c0 = (s1).c0 - I*(s2).c0;			\
-  (r).c0 = (s1).c1 - I*(s2).c1;			\
-  (r).c0 = (s1).c2 - I*(s2).c2;
+  (r).c1 = (s1).c1 - I*(s2).c1;			\
+  (r).c2 = (s1).c2 - I*(s2).c2;
 
 #else
 #define _vector_i_sub(r,s1,s2)	    \
@@ -299,7 +300,7 @@ _sse_load_up(s); \
 _sse_vector_sub(); \
 _sse_store(r);
 
-#elif defined _STD_C99_COMPLEX
+#elif defined _STD_C99_COMPLEX_CHECKED
 
 #define _vector_add_assign(r,s)			\
   (r).c0 += (s).c0;				\
@@ -345,7 +346,7 @@ _sse_store(r);
 * r.c3+=i*s.c3
 */
 
-#ifdef _STD_C99_COMPLEX
+#ifdef _STD_C99_COMPLEX_CHECKED
 #define _vector_i_add_assign(r,s)		\
   (r).c0 += (I*(s).c0);				\
   (r).c1 += (I*(s).c1);				\
@@ -368,7 +369,7 @@ _sse_store(r);
 * r.c3-=i*s.c3
 */
 
-#ifdef _STD_C99_COMPLEX
+#ifdef _STD_C99_COMPLEX_CHECKED
 #define _vector_i_sub_assign(r,s)		\
   (r).c0 -= (I*(s).c0);				\
   (r).c1 -= (I*(s).c1);				\
@@ -393,7 +394,7 @@ _sse_store(r);
 * c complex
 */
 
-#ifdef _STD_C99_COMPLEX
+#ifdef _STD_C99_COMPLEX_CHECKED
 #define _complex_times_vector(r,c,s)		\
   (r).c0 = (c)*(s).c0;				\
   (r).c1 = (c)*(s).c1;				\
@@ -411,7 +412,7 @@ _sse_store(r);
 #endif
 
 /* M.Hasenbusch */
-#ifdef _STD_C99_COMPLEX
+#ifdef _STD_C99_COMPLEX_CHECKED
 #define _complexcjg_times_vector(r,c,s)		\
   (r).c0 = conj(c)*(s).c0;			\
   (r).c1 = conj(c)*(s).c1;			\
@@ -432,9 +433,9 @@ _sse_store(r);
 * Real part of the scalar product (r,s)
 */
 
-#ifdef _STD_C99_COMPLEX
+#ifdef _STD_C99_COMPLEX_CHECKED
 #define _vector_prod_re(r,s)						\
-  real((r).c0*conj((s).c0) + (r).c1*conj((s).c1) + (r).c2*conj((s).c2));
+  creal(conj((r).c0)*(s).c0 + conj((r).c1)*(s).c1 + conj((r).c2)*(s).c2);
 
 #else
 #define _vector_prod_re(r,s)		    \
@@ -446,9 +447,9 @@ _sse_store(r);
 /*
  * Imaginary part of the scalar product (r,s)
  */
-#ifdef _STD_C99_COMPLEX
+#ifdef _STD_C99_COMPLEX_CHECKED
 #define _vector_prod_im(r,s)			\
-imag((r).c0*conj((s).c0) + (r).c1*conj((s).c1) + (r).c2*conj((s).c2));
+  cimag(conj((r).c0)*(s).c0 + conj((r).c1)*(s).c1 + conj((r).c2)*(s).c2);
 
 #else
 #define _vector_prod_im(r,s)		    \
@@ -463,7 +464,7 @@ imag((r).c0*conj((s).c0) + (r).c1*conj((s).c1) + (r).c2*conj((s).c2));
 * r.c3-=z*s.c3
 */
 
-#ifdef _STD_C99_COMPLEX
+#ifdef _STD_C99_COMPLEX_CHECKED
 #define _vector_project(r,z,s)			\
   (r).c0 -= (z*(s).c0);				\
   (r).c1 -= (z*(s).c1);				\
@@ -498,17 +499,17 @@ _sse_load(s); \
 _sse_su3_inverse_multiply(u); \
 _sse_store_up(r);
 
-#elif defined _STD_C99_COMPLEX
+#elif defined _STD_C99_COMPLEX_CHECKED
 
 #define _su3_multiply(r,u,s)					\
   (r).c0 = (u).c00*(s).c0 + (u).c01*(s).c1 + (u).c02*(s).c2;	\
   (r).c1 = (u).c10*(s).c0 + (u).c11*(s).c1 + (u).c12*(s).c2;	\
   (r).c2 = (u).c20*(s).c0 + (u).c21*(s).c1 + (u).c22*(s).c2;  
 
-#define _su3_inverse_multiply(r,u,s)					\
-  (r).c0 = conj((u).c00)*(s).c0 + conj((u).c10)*(s).c1 + conj((u).c20)*(s).c2; \
-  (r).c1 = conj((u).c01)*(s).c0 + conj((u).c11)*(s).c1 + conj((u).c21)*(s).c2; \
-  (r).c2 = conj((u).c02)*(s).c0 + conj((u).c12)*(s).c1 + conj((u).c22)*(s).c2;
+#define _su3_inverse_multiply(r,u,s)		\
+(r).c0 = conj((u).c00)*(s).c0 + conj((u).c10)*(s).c1 + conj((u).c20)*(s).c2;	\
+(r).c1 = conj((u).c01)*(s).c0 + conj((u).c11)*(s).c1 + conj((u).c21)*(s).c2;	\
+(r).c2 = conj((u).c02)*(s).c0 + conj((u).c12)*(s).c1 + conj((u).c22)*(s).c2;   
 
 #else
 
@@ -1122,7 +1123,7 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
 #define _su3_times_su3d(u,v,w) _sse_su3_times_su3d(u,v,w)
 #define _su3_times_su3d_acc(u,v,w) _sse_su3_times_su3d_acc(u,v,w)  
 
-#elif defined _STD_C99_COMPLEX
+#elif defined _STD_C99_COMPLEX_CHECKED
 #define _su3_times_su3(u,v,w)					\
   (u).c00 = (v).c00*(w).c00 + (v).c01*(w).c10  + (v).c02*(w).c20;	\
   (u).c01 = (v).c00*(w).c01 + (v).c01*(w).c11  + (v).c02*(w).c21;	\
