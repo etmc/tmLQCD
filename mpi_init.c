@@ -33,6 +33,9 @@ MPI_Datatype deri_x_slice_gath_split;
 MPI_Datatype gauge_yz_edge_cont;
 MPI_Datatype gauge_yz_edge_gath;
 MPI_Datatype gauge_yz_edge_gath_split;
+
+MPI_Comm mpi_time_slices;
+int mpi_time_rank;
 #endif
 
 
@@ -41,8 +44,7 @@ void mpi_init(int argc,char *argv[]) {
   int periods[] = {1,1};
   int dims[] = {0,0};
   int ndims = 0;
-  int reorder = 1;
-  int  namelen;
+  int reorder = 1, namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
   
   g_proc_coords[0] = 0;
@@ -155,12 +157,20 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(4, 1, T, gauge_yz_eo_subslice, &gauge_yz_edge_gath_split);
   MPI_Type_commit(&gauge_yz_edge_gath_split);
 
+
+  /* For observables */
+
+  MPI_Comm_split(g_cart_grid, g_proc_coords[0], g_cart_id, &mpi_time_slices);
+  MPI_Comm_rank(mpi_time_slices, &mpi_time_rank);
+  fprintf(stderr, "My mpi_time_rank = %d, g_proc_coords = (%d,%d)\n", mpi_time_rank, g_proc_coords[0], g_proc_coords[1]);
+
 #else
   g_nproc = 1;
   g_proc_id = 0;
   g_nproc_x = 1;
   g_nproc_t = 1;
   g_cart_id = 0;
+  mpi_time_rank = 0;
 
   g_proc_coords[0] = 0;
   g_proc_coords[1] = 0;
