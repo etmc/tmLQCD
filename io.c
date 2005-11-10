@@ -63,8 +63,14 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   int coords[2];
   off_t bytes;
 
-  sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f", 
-	  plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
+  if(g_kappa > 0. || g_kappa < 0.) {
+    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f", 
+	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1);
+  }
+  else {
+    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f", 
+	    plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
+  }
   bytes = strlen( message );
   if(g_cart_id == 0) {
     ofs = fopen(filename, "w");
@@ -184,8 +190,14 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   su3 tmp[4];
 #endif
 
-  sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f", 
-	  plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
+  if(g_kappa > 0. || g_kappa < 0.) {
+    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f", 
+	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1);
+  }
+  else {
+    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f", 
+	    plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
+  }
   bytes = (off_t)strlen( message );
   ofs = fopen(filename, "w");
   if(ofs == (FILE*)NULL) {
