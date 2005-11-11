@@ -17,4 +17,8 @@
 #include"solver/cg_her.h"
 #include"solver/mr.h"
 
+#include "solver/matrix_mult_typedef_bi.h"
+#include "solver/bicgstab_complex_bi.h"
+#include "solver/cg_her_bi.h"
+
 #endif
