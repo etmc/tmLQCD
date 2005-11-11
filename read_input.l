@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -81,6 +80,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x THERMSWEEPS
 %x NMEAS
 %x KAPPA
+%x MUBAR
+%x EPSBAR
 %x MU
 %x MU2
 %x MU3
@@ -163,6 +164,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^LZ{SPC}*={SPC}*                         BEGIN(LLZ);
 ^NRXProcs{SPC}*={SPC}*                   BEGIN(NPROCX);
 ^kappa{SPC}*={SPC}*                      BEGIN(KAPPA);
+^mubar{SPC}*={SPC}*                      BEGIN(MUBAR);
+^epsbar{SPC}*={SPC}*                     BEGIN(EPSBAR);
 ^mu{SPC}*={SPC}*                         BEGIN(MU);
 ^mu2{SPC}*={SPC}*                        BEGIN(MU2);
 ^mu3{SPC}*={SPC}*                        BEGIN(MU3);
@@ -189,8 +192,8 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^Indices{SPC}*={SPC}*                    BEGIN(IDX);
 ^FirstPropagator{SPC}*={SPC}*            BEGIN(FPROP);
 ^CSW{SPC}*={SPC}*                        BEGIN(CSW);
-^Q1{SPC}*={SPC}*                         BEGIN(COMMENT);
-^Q2{SPC}*={SPC}*                         BEGIN(COMMENT);
+^Q1{SPC}*={SPC}*                         BEGIN(Q1);
+^Q2{SPC}*={SPC}*                         BEGIN(Q2);
 ^Integrator{SPC}*={SPC}*                 BEGIN(INTTYP);
 ^NSmall{SPC}*={SPC}*                     BEGIN(NSMALL);
 ^DTau{SPC}*={SPC}*                       BEGIN(DTAU);
@@ -273,6 +276,14 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 <KAPPA>{FLT}  {
   g_kappa=atof(yytext);
   if(verbose!=0) printf("kappa=%s \n", yytext);
+}
+<MUBAR>{FLT}  {
+  g_mubar=atof(yytext);
+  if(verbose!=0) printf("mubar=%s \n", yytext);
+}
+<EPSBAR>{FLT}  {
+  g_epsbar=atof(yytext);
+  if(verbose!=0) printf("epsbar=%s \n", yytext);
 }
 <MU>{FLT}  {
   g_mu1=atof(yytext);
@@ -491,7 +502,6 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   integtyp = 7;
   if(verbose!=0) printf("Using Second order Minimal norm integrator (position version)!\n");
 }
-
 <NSMALL>{DIGIT}+ {
   nsmall = atoi(yytext);
   if(verbose!=0) printf("nsmall set to %d\n", nsmall);
@@ -660,7 +670,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 }
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
+<SEED,KAPPA,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
 <MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2>#   BEGIN(COMMENT);
 <NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP>#   BEGIN(COMMENT);
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
@@ -670,6 +680,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 <COMMENT>[^\n]*             {
   ;
 }
+
 
 <*>\n                       {
   line_of_file++;
@@ -682,6 +693,14 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 }
 <KAPPA>. {
   printf("Unknown kappa in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
+  exit(1);
+}
+<MUBAR>. {
+  printf("Unknown mubar in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
+  exit(1);
+}
+<EPSBAR>. {
+  printf("Unknown epsbar in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
   exit(1);
 }
 <MU>. {
@@ -868,6 +887,8 @@ int read_input(char * conf_file){
   LZ = _default_LZ;
   N_PROC_X = _default_N_PROC_X;
   g_kappa = _default_g_kappa;
+  g_mubar = _default_g_mubar;
+  g_epsbar = _default_g_epsbar;
   g_mu = _default_g_mu;
   g_mu1 = _default_g_mu1;
   g_mu2 = _default_g_mu2;
