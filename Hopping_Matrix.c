@@ -467,7 +467,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     ix = g_eo2lexic[icx];
 #ifdef OlD
     r=l+(icx - ioff);
-    dd=&spinor_field[l][icx - ioff].s2.c2.re;
+    dd=&g_spinor_field[l][icx - ioff].s2.c2.re;
     _prefetch_spinor_dcbt((void*)r, dd);
 #endif
     /*********************** direction +0 ************************/

@@ -7,6 +7,10 @@
  *
  * Global parameters and arrays
  *
+ * Author: Martin Luescher <luscher@mail.desy.de>
+ * Date: 16.03.2001
+ *
+ * Adapted for the HMC-Program by M. Hasenbusch 2002
  *
  ***************************************************************/
 #include <stdlib.h>
@@ -22,12 +26,9 @@
 #define DUM_MATRIX (DUM_SOLVER+6) 
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX DUM_SOLVER+11 */
+#define NO_OF_SPINORFIELDS (DUM_MATRIX+6)
 
-#define STRANGE (DUM_MATRIX+5) 
-#define CHARM (STRANGE+1) 
-/* for the non-degenerate stuff uncomment this */
-/* #define NO_OF_SPINORFIELDS (CHARM+1) */
-#define NO_OF_SPINORFIELDS (DUM_MATRIX+5)
+
 
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */
@@ -76,7 +77,10 @@ EXTERN int **** g_ipt;
 EXTERN int ** g_iup;
 EXTERN int ** g_idn;
 
-EXTERN spinor ** spinor_field;
+EXTERN spinor ** g_spinor_field;
+
+EXTERN bispinor ** g_bispinor_field;
+
 EXTERN spinor ** g_csg_field[4];
 EXTERN int * g_csg_index_array[4];
 EXTERN int g_csg_N[8];
@@ -123,6 +127,11 @@ EXTERN int g_nb_x_up, g_nb_x_dn;
 EXTERN int g_nb_t_up, g_nb_t_dn;
 
 #endif
+
+/* something to evaluate time elaps */
+EXTERN double DeltaTtot, DeltaTcd, DeltaTev;
+EXTERN int counter_Spsi;
+/* end of the something ... */
 
 EXTERN int ITER_MAX_BCG;
 EXTERN int ITER_MAX_CG;

@@ -243,16 +243,16 @@ int main(int argc,char *argv[]) {
       is = (ix / 3);
       ic = (ix % 3);
       if(read_source_flag == 0) {
-	source_spinor_field(spinor_field[0], spinor_field[1], is, ic);
+	source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
       }
       else {
 	if(source_format_flag == 0) {
 	  sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", source_input_filename, mass_number, is, ic, nstore); 
-	  read_spinorfield_eo_time(spinor_field[0], spinor_field[1], conf_filename); 
+	  read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], conf_filename); 
 	}
 	else if(source_format_flag == 1) {
 	  printf("Reading source from %s\n",source_input_filename);
-	  read_spinorfield_cm_single(spinor_field[0], spinor_field[1], source_input_filename, source_time_slice, 1);
+	  read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], source_input_filename, source_time_slice, 1);
 	}
       }
 
@@ -277,46 +277,46 @@ int main(int argc,char *argv[]) {
 	  }
 	  fclose(ifs);
 	  
-	  read_spinorfield_eo_time(spinor_field[2], spinor_field[3], conf_filename);
-	  mul_r(spinor_field[3], 1./(2*g_kappa), spinor_field[3], VOLUME/2);
+	  read_spinorfield_eo_time(g_spinor_field[2], g_spinor_field[3], conf_filename);
+	  mul_r(g_spinor_field[3], 1./(2*g_kappa), g_spinor_field[3], VOLUME/2);
 	}
 	else {
-	  zero_spinor_field(spinor_field[3],VOLUME/2);
+	  zero_spinor_field(g_spinor_field[3],VOLUME/2);
 	}
       }
       else {
-	zero_spinor_field(spinor_field[3],VOLUME/2);
+	zero_spinor_field(g_spinor_field[3],VOLUME/2);
       }
 
 #ifdef MPI
       atime = MPI_Wtime();
 #endif
-      iter = invert_eo(spinor_field[2], spinor_field[3], spinor_field[0], spinor_field[1], 
+      iter = invert_eo(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1], 
 		       solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag);
 #ifdef MPI
       etime = MPI_Wtime();
 #endif
       /* To write in standard format */
       /* we have to mult. by 2*kappa */
-      mul_r(spinor_field[2], (2*g_kappa), spinor_field[2], VOLUME/2);  
-      mul_r(spinor_field[3], (2*g_kappa), spinor_field[3], VOLUME/2);
+      mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME/2);  
+      mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[3], VOLUME/2);
 
       if(source_format_flag == 0) {
-	write_spinorfield_eo_time_p(spinor_field[2], spinor_field[3], conf_filename, 0);
+	write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
       }
       else if(source_format_flag == 1) {
-	write_spinorfield_cm_single(spinor_field[2], spinor_field[3], conf_filename);
+	write_spinorfield_cm_single(g_spinor_field[2], g_spinor_field[3], conf_filename);
       }
 
       /* Check the result */
-      M_full(spinor_field[4], spinor_field[5], spinor_field[2], spinor_field[3]); 
-      mul_r(spinor_field[4], 1./(2*g_kappa), spinor_field[4], VOLUME/2);  
-      mul_r(spinor_field[5], 1./(2*g_kappa), spinor_field[5], VOLUME/2); 
-      diff(spinor_field[4], spinor_field[4], spinor_field[0], VOLUME/2); 
-      diff(spinor_field[5], spinor_field[5], spinor_field[1], VOLUME/2); 
+      M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[2], g_spinor_field[3]); 
+      mul_r(g_spinor_field[4], 1./(2*g_kappa), g_spinor_field[4], VOLUME/2);  
+      mul_r(g_spinor_field[5], 1./(2*g_kappa), g_spinor_field[5], VOLUME/2); 
+      diff(g_spinor_field[4], g_spinor_field[4], g_spinor_field[0], VOLUME/2); 
+      diff(g_spinor_field[5], g_spinor_field[5], g_spinor_field[1], VOLUME/2); 
 
-      nrm1 = square_norm(spinor_field[4], VOLUME/2); 
-      nrm2 = square_norm(spinor_field[5], VOLUME/2); 
+      nrm1 = square_norm(g_spinor_field[4], VOLUME/2); 
+      nrm2 = square_norm(g_spinor_field[5], VOLUME/2); 
 
       if(g_proc_id == 0) {
 	printf("Inversion for is = %d, ic = %d done in %d iterations, residue = %e!\n", is, ic, iter, nrm1+nrm2);

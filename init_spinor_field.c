@@ -17,18 +17,18 @@ int init_spinor_field(const int V, const int nr) {
   if(errno == ENOMEM) {
     return(1);
   }
-  spinor_field = malloc(nr*sizeof(spinor*));
+  g_spinor_field = malloc(nr*sizeof(spinor*));
   if(errno == ENOMEM) {
     return(2);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
-  spinor_field[0] = (spinor*)(((unsigned long int)(sp)+ALIGN_BASE)&~ALIGN_BASE);
+  g_spinor_field[0] = (spinor*)(((unsigned long int)(sp)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  spinor_field[0] = sp;
+  g_spinor_field[0] = sp;
 #endif
   
   for(i = 1; i < nr; i++){
-    spinor_field[i] = spinor_field[i-1]+V;
+    g_spinor_field[i] = g_spinor_field[i-1]+V;
   }
 
   return(0);

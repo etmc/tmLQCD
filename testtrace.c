@@ -302,24 +302,24 @@ int main(int argc,char *argv[]) {
   zero_spinor_field(2);
   zero_spinor_field(1);
   if(g_proc_id == 0){
-    spinor_field[1][g_lexic2eo[g_ipt[1][2][1][2]]].s0.c0.re = 1.;
+    g_spinor_field[1][g_lexic2eo[g_ipt[1][2][1][2]]].s0.c0.re = 1.;
   }
 
   Hopping_Matrix(EO, 0, 2);
   mul_one_pm_imu(1, 1.);
-  assign_add_mul_r(spinor_field[1], spinor_field[0], -1., VOLUME/2);
-/*   gamma5(spinor_field[1], spinor_field[1], VOLUME/2);     */
+  assign_add_mul_r(g_spinor_field[1], g_spinor_field[0], -1., VOLUME/2);
+/*   gamma5(g_spinor_field[1], g_spinor_field[1], VOLUME/2);     */
   gamma3(4, 1, VOLUME/2);  
 
   zero_spinor_field(3);
   zero_spinor_field(2);
   if(g_proc_id == 0) {
-    spinor_field[2][g_lexic2eo[g_ipt[1][2][1][2]]].s0.c0.re = 1.; 
+    g_spinor_field[2][g_lexic2eo[g_ipt[1][2][1][2]]].s0.c0.re = 1.; 
   }
   Hopping_Matrix(OE, 0, 2);
   mul_one_pm_imu(3, 1.);
-  assign_add_mul_r(spinor_field[3], spinor_field[0], -1., VOLUME/2);
-/*   gamma5(spinor_field[3], spinor_field[3], VOLUME/2);   */
+  assign_add_mul_r(g_spinor_field[3], g_spinor_field[0], -1., VOLUME/2);
+/*   gamma5(g_spinor_field[3], g_spinor_field[3], VOLUME/2);   */
   gamma3(5, 3, VOLUME/2);  
   if(g_proc_id == 0 || g_proc_id == 1){
     for (x0=0;x0<T;x0++){
@@ -337,12 +337,12 @@ int main(int argc,char *argv[]) {
 	      g = h - VOLUME/2;
 	    }
 	    
-	    Trace[h][0].re += spinor_field[f][g].s0.c0.re;
-	    Trace[h][1].re += spinor_field[f][g].s0.c1.re;
-	    Trace[h][2].re += spinor_field[f][g].s0.c2.re;
-	    Trace[h][0].im += spinor_field[f][g].s0.c0.im;
-	    Trace[h][1].im += spinor_field[f][g].s0.c1.im;
-	    Trace[h][2].im += spinor_field[f][g].s0.c2.im;
+	    Trace[h][0].re += g_spinor_field[f][g].s0.c0.re;
+	    Trace[h][1].re += g_spinor_field[f][g].s0.c1.re;
+	    Trace[h][2].re += g_spinor_field[f][g].s0.c2.re;
+	    Trace[h][0].im += g_spinor_field[f][g].s0.c0.im;
+	    Trace[h][1].im += g_spinor_field[f][g].s0.c1.im;
+	    Trace[h][2].im += g_spinor_field[f][g].s0.c2.im;
 	  }
 	}
       }
@@ -351,25 +351,25 @@ int main(int argc,char *argv[]) {
     zero_spinor_field(2);
     zero_spinor_field(1);
     if(g_proc_id == 0){
-      spinor_field[1][g_lexic2eo[g_ipt[1][2][1][2]]].s1.c0.re = 1.;
+      g_spinor_field[1][g_lexic2eo[g_ipt[1][2][1][2]]].s1.c0.re = 1.;
     }
     
     Hopping_Matrix(EO, 0, 2);
     mul_one_pm_imu(1, 1.);
-    assign_add_mul_r(spinor_field[1], spinor_field[0], -1., VOLUME/2);
-    /*   gamma5(spinor_field[1], spinor_field[1], VOLUME/2);   */
+    assign_add_mul_r(g_spinor_field[1], g_spinor_field[0], -1., VOLUME/2);
+    /*   gamma5(g_spinor_field[1], g_spinor_field[1], VOLUME/2);   */
     gamma3(4, 1, VOLUME/2);
     
     zero_spinor_field(3);
     zero_spinor_field(2);
     if(g_proc_id == 0){
-      spinor_field[2][g_lexic2eo[g_ipt[1][2][1][2]]].s1.c0.re = 1.; 
+      g_spinor_field[2][g_lexic2eo[g_ipt[1][2][1][2]]].s1.c0.re = 1.; 
     }
     
     Hopping_Matrix(OE, 0, 2);
     mul_one_pm_imu(3, 1.);
-    assign_add_mul_r(spinor_field[3], spinor_field[0], -1., VOLUME/2);
-/*     gamma5(spinor_field[3], spinor_field[3], VOLUME/2);   */
+    assign_add_mul_r(g_spinor_field[3], g_spinor_field[0], -1., VOLUME/2);
+/*     gamma5(g_spinor_field[3], g_spinor_field[3], VOLUME/2);   */
     gamma3(5, 3, VOLUME/2);
     
     for (x0=0;x0<T;x0++){
@@ -387,12 +387,12 @@ int main(int argc,char *argv[]) {
 	      g = h - VOLUME/2;
 	    }
 	    
-	    Trace[h][0].re += spinor_field[f][g].s1.c0.re;
-	    Trace[h][1].re += spinor_field[f][g].s1.c1.re;
-	    Trace[h][2].re += spinor_field[f][g].s1.c2.re;
-	    Trace[h][0].im += spinor_field[f][g].s1.c0.im;
-	    Trace[h][1].im += spinor_field[f][g].s1.c1.im;
-	    Trace[h][2].im += spinor_field[f][g].s1.c2.im;
+	    Trace[h][0].re += g_spinor_field[f][g].s1.c0.re;
+	    Trace[h][1].re += g_spinor_field[f][g].s1.c1.re;
+	    Trace[h][2].re += g_spinor_field[f][g].s1.c2.re;
+	    Trace[h][0].im += g_spinor_field[f][g].s1.c0.im;
+	    Trace[h][1].im += g_spinor_field[f][g].s1.c1.im;
+	    Trace[h][2].im += g_spinor_field[f][g].s1.c2.im;
 	  }
 	}
       }
@@ -401,25 +401,25 @@ int main(int argc,char *argv[]) {
     zero_spinor_field(2);
     zero_spinor_field(1);
     if(g_proc_id == 0){
-      spinor_field[1][g_lexic2eo[g_ipt[1][2][1][2]]].s2.c0.re = 1.;
+      g_spinor_field[1][g_lexic2eo[g_ipt[1][2][1][2]]].s2.c0.re = 1.;
     }
     
     Hopping_Matrix(EO, 0, 2);
     mul_one_pm_imu(1, 1.);
-    assign_add_mul_r(spinor_field[1], spinor_field[0], -1., VOLUME/2);
-    /*   gamma5(spinor_field[1], spinor_field[1], VOLUME/2);   */
+    assign_add_mul_r(g_spinor_field[1], g_spinor_field[0], -1., VOLUME/2);
+    /*   gamma5(g_spinor_field[1], g_spinor_field[1], VOLUME/2);   */
     gamma3(4, 1, VOLUME/2);
     
     zero_spinor_field(3);
     zero_spinor_field(2);
     if(g_proc_id == 0){
-      spinor_field[2][g_lexic2eo[g_ipt[1][2][1][2]]].s2.c0.re = 1.; 
+      g_spinor_field[2][g_lexic2eo[g_ipt[1][2][1][2]]].s2.c0.re = 1.; 
     }
     
     Hopping_Matrix(OE, 0, 2);
     mul_one_pm_imu(3, 1.);
-    assign_add_mul_r(spinor_field[3], spinor_field[0], -1., VOLUME/2);
-/*     gamma5(spinor_field[3], spinor_field[3], VOLUME/2);   */
+    assign_add_mul_r(g_spinor_field[3], g_spinor_field[0], -1., VOLUME/2);
+/*     gamma5(g_spinor_field[3], g_spinor_field[3], VOLUME/2);   */
     gamma3(5, 3, VOLUME/2);
     
     for (x0=0;x0<T;x0++){
@@ -437,12 +437,12 @@ int main(int argc,char *argv[]) {
 	      g = h - VOLUME/2;
 	    }
 	    
-	    Trace[h][0].re += spinor_field[f][g].s2.c0.re;
-	    Trace[h][1].re += spinor_field[f][g].s2.c1.re;
-	    Trace[h][2].re += spinor_field[f][g].s2.c2.re;
-	    Trace[h][0].im += spinor_field[f][g].s2.c0.im;
-	    Trace[h][1].im += spinor_field[f][g].s2.c1.im;
-	    Trace[h][2].im += spinor_field[f][g].s2.c2.im;
+	    Trace[h][0].re += g_spinor_field[f][g].s2.c0.re;
+	    Trace[h][1].re += g_spinor_field[f][g].s2.c1.re;
+	    Trace[h][2].re += g_spinor_field[f][g].s2.c2.re;
+	    Trace[h][0].im += g_spinor_field[f][g].s2.c0.im;
+	    Trace[h][1].im += g_spinor_field[f][g].s2.c1.im;
+	    Trace[h][2].im += g_spinor_field[f][g].s2.c2.im;
 	  }
 	}
       }
@@ -451,25 +451,25 @@ int main(int argc,char *argv[]) {
     zero_spinor_field(2);
     zero_spinor_field(1);
     if(g_proc_id == 0){
-      spinor_field[1][g_lexic2eo[g_ipt[1][2][1][2]]].s3.c0.re = 1.;
+      g_spinor_field[1][g_lexic2eo[g_ipt[1][2][1][2]]].s3.c0.re = 1.;
     }
     
     Hopping_Matrix(EO, 0, 2);
     mul_one_pm_imu(1, 1.);
-    assign_add_mul_r(spinor_field[1], spinor_field[0], -1., VOLUME/2);
-    /*   gamma5(spinor_field[1], spinor_field[1], VOLUME/2);   */
+    assign_add_mul_r(g_spinor_field[1], g_spinor_field[0], -1., VOLUME/2);
+    /*   gamma5(g_spinor_field[1], g_spinor_field[1], VOLUME/2);   */
     gamma3(4, 1, VOLUME/2);
     
     zero_spinor_field(3);
     zero_spinor_field(2);
     if(g_proc_id == 0){
-      spinor_field[2][g_lexic2eo[g_ipt[1][2][1][2]]].s3.c0.re = 1.; 
+      g_spinor_field[2][g_lexic2eo[g_ipt[1][2][1][2]]].s3.c0.re = 1.; 
     }
     
     Hopping_Matrix(OE, 0, 2);
     mul_one_pm_imu(3, 1.);
-    assign_add_mul_r(spinor_field[3], spinor_field[0], -1., VOLUME/2);
-/*     gamma5(spinor_field[3], spinor_field[3], VOLUME/2);   */
+    assign_add_mul_r(g_spinor_field[3], g_spinor_field[0], -1., VOLUME/2);
+/*     gamma5(g_spinor_field[3], g_spinor_field[3], VOLUME/2);   */
     gamma3(5, 3, VOLUME/2);
     
     for (x0=0;x0<T;x0++){
@@ -487,12 +487,12 @@ int main(int argc,char *argv[]) {
 	      g = h - VOLUME/2;
 	    }
 	    
-	    Trace[h][0].re += spinor_field[f][g].s3.c0.re;
-	    Trace[h][1].re += spinor_field[f][g].s3.c1.re;
-	    Trace[h][2].re += spinor_field[f][g].s3.c2.re;
-	    Trace[h][0].im += spinor_field[f][g].s3.c0.im;
-	    Trace[h][1].im += spinor_field[f][g].s3.c1.im;
-	    Trace[h][2].im += spinor_field[f][g].s3.c2.im;
+	    Trace[h][0].re += g_spinor_field[f][g].s3.c0.re;
+	    Trace[h][1].re += g_spinor_field[f][g].s3.c1.re;
+	    Trace[h][2].re += g_spinor_field[f][g].s3.c2.re;
+	    Trace[h][0].im += g_spinor_field[f][g].s3.c0.im;
+	    Trace[h][1].im += g_spinor_field[f][g].s3.c1.im;
+	    Trace[h][2].im += g_spinor_field[f][g].s3.c2.im;
 	  }
 	}
       }
@@ -539,18 +539,18 @@ int main(int argc,char *argv[]) {
 	      f = 3;
 	      g = g_lexic2eo[ g_ipt[x0][x1][x2][x3] ] - (VOLUME+RAND)/2;
 	    }
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 0 0) %e %e\n", x0+g_proc_id*2, x1, x2, x3, spinor_field[f][g].s0.c0.re, spinor_field[f][g].s0.c0.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 0 1) %e %e\n", x0+g_proc_id*2, x1, x2, x3, spinor_field[f][g].s0.c1.re, spinor_field[f][g].s0.c1.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 0 2) %e %e\n", x0+g_proc_id*2, x1, x2, x3, spinor_field[f][g].s0.c2.re, spinor_field[f][g].s0.c2.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 1 0) %e %e\n", x0+g_proc_id*2, x1, x2, x3, spinor_field[f][g].s1.c0.re, spinor_field[f][g].s1.c0.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 1 1) %e %e\n", x0+g_proc_id*2, x1, x2, x3, spinor_field[f][g].s1.c1.re, spinor_field[f][g].s1.c1.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 1 2) %e %e\n", x0+g_proc_id*2, x1, x2, x3, spinor_field[f][g].s1.c2.re, spinor_field[f][g].s1.c2.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 2 0) %e %e\n", x0+g_proc_id*2, x1, x2, x3, spinor_field[f][g].s2.c0.re, spinor_field[f][g].s2.c0.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 2 1) %e %e\n", x0+g_proc_id*2, x1, x2, x3, spinor_field[f][g].s2.c1.re, spinor_field[f][g].s2.c1.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 2 2) %e %e\n", x0+g_proc_id*2, x1, x2, x3, spinor_field[f][g].s2.c2.re, spinor_field[f][g].s2.c2.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 3 0) %e %e\n", x0+g_proc_id*2, x1, x2, x3, spinor_field[f][g].s3.c0.re, spinor_field[f][g].s3.c0.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 3 1) %e %e\n", x0+g_proc_id*2, x1, x2, x3, spinor_field[f][g].s3.c1.re, spinor_field[f][g].s3.c1.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 3 2) %e %e\n", x0+g_proc_id*2, x1, x2, x3, spinor_field[1][g].s3.c2.re, spinor_field[f][g].s3.c2.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 0 0) %e %e\n", x0+g_proc_id*2, x1, x2, x3, g_spinor_field[f][g].s0.c0.re, g_spinor_field[f][g].s0.c0.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 0 1) %e %e\n", x0+g_proc_id*2, x1, x2, x3, g_spinor_field[f][g].s0.c1.re, g_spinor_field[f][g].s0.c1.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 0 2) %e %e\n", x0+g_proc_id*2, x1, x2, x3, g_spinor_field[f][g].s0.c2.re, g_spinor_field[f][g].s0.c2.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 1 0) %e %e\n", x0+g_proc_id*2, x1, x2, x3, g_spinor_field[f][g].s1.c0.re, g_spinor_field[f][g].s1.c0.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 1 1) %e %e\n", x0+g_proc_id*2, x1, x2, x3, g_spinor_field[f][g].s1.c1.re, g_spinor_field[f][g].s1.c1.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 1 2) %e %e\n", x0+g_proc_id*2, x1, x2, x3, g_spinor_field[f][g].s1.c2.re, g_spinor_field[f][g].s1.c2.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 2 0) %e %e\n", x0+g_proc_id*2, x1, x2, x3, g_spinor_field[f][g].s2.c0.re, g_spinor_field[f][g].s2.c0.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 2 1) %e %e\n", x0+g_proc_id*2, x1, x2, x3, g_spinor_field[f][g].s2.c1.re, g_spinor_field[f][g].s2.c1.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 2 2) %e %e\n", x0+g_proc_id*2, x1, x2, x3, g_spinor_field[f][g].s2.c2.re, g_spinor_field[f][g].s2.c2.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 3 0) %e %e\n", x0+g_proc_id*2, x1, x2, x3, g_spinor_field[f][g].s3.c0.re, g_spinor_field[f][g].s3.c0.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 3 1) %e %e\n", x0+g_proc_id*2, x1, x2, x3, g_spinor_field[f][g].s3.c1.re, g_spinor_field[f][g].s3.c1.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 3 2) %e %e\n", x0+g_proc_id*2, x1, x2, x3, g_spinor_field[1][g].s3.c2.re, g_spinor_field[f][g].s3.c2.im);
 	    printf("\n");
 	    fflush(stdout);
 	  }
@@ -574,18 +574,18 @@ int main(int argc,char *argv[]) {
 	      f = 3;
 	      g = g_lexic2eo[ g_ipt[x0][x1][x2][x3] ] - (VOLUME+RAND)/2;
 	    }
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 0 0) %e %e\n", x0+2, x1, x2, x3, spinor_field[f][g].s0.c0.re, spinor_field[f][g].s0.c0.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 0 1) %e %e\n", x0+2, x1, x2, x3, spinor_field[f][g].s0.c1.re, spinor_field[f][g].s0.c1.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 0 2) %e %e\n", x0+2, x1, x2, x3, spinor_field[f][g].s0.c2.re, spinor_field[f][g].s0.c2.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 1 0) %e %e\n", x0+2, x1, x2, x3, spinor_field[f][g].s1.c0.re, spinor_field[f][g].s1.c0.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 1 1) %e %e\n", x0+2, x1, x2, x3, spinor_field[f][g].s1.c1.re, spinor_field[f][g].s1.c1.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 1 2) %e %e\n", x0+2, x1, x2, x3, spinor_field[f][g].s1.c2.re, spinor_field[f][g].s1.c2.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 2 0) %e %e\n", x0+2, x1, x2, x3, spinor_field[f][g].s2.c0.re, spinor_field[f][g].s2.c0.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 2 1) %e %e\n", x0+2, x1, x2, x3, spinor_field[f][g].s2.c1.re, spinor_field[f][g].s2.c1.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 2 2) %e %e\n", x0+2, x1, x2, x3, spinor_field[f][g].s2.c2.re, spinor_field[f][g].s2.c2.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 3 0) %e %e\n", x0+2, x1, x2, x3, spinor_field[f][g].s3.c0.re, spinor_field[f][g].s3.c0.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 3 1) %e %e\n", x0+2, x1, x2, x3, spinor_field[f][g].s3.c1.re, spinor_field[f][g].s3.c1.im);
-	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 3 2) %e %e\n", x0+2, x1, x2, x3, spinor_field[1][g].s3.c2.re, spinor_field[f][g].s3.c2.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 0 0) %e %e\n", x0+2, x1, x2, x3, g_spinor_field[f][g].s0.c0.re, g_spinor_field[f][g].s0.c0.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 0 1) %e %e\n", x0+2, x1, x2, x3, g_spinor_field[f][g].s0.c1.re, g_spinor_field[f][g].s0.c1.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 0 2) %e %e\n", x0+2, x1, x2, x3, g_spinor_field[f][g].s0.c2.re, g_spinor_field[f][g].s0.c2.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 1 0) %e %e\n", x0+2, x1, x2, x3, g_spinor_field[f][g].s1.c0.re, g_spinor_field[f][g].s1.c0.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 1 1) %e %e\n", x0+2, x1, x2, x3, g_spinor_field[f][g].s1.c1.re, g_spinor_field[f][g].s1.c1.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 1 2) %e %e\n", x0+2, x1, x2, x3, g_spinor_field[f][g].s1.c2.re, g_spinor_field[f][g].s1.c2.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 2 0) %e %e\n", x0+2, x1, x2, x3, g_spinor_field[f][g].s2.c0.re, g_spinor_field[f][g].s2.c0.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 2 1) %e %e\n", x0+2, x1, x2, x3, g_spinor_field[f][g].s2.c1.re, g_spinor_field[f][g].s2.c1.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 2 2) %e %e\n", x0+2, x1, x2, x3, g_spinor_field[f][g].s2.c2.re, g_spinor_field[f][g].s2.c2.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 3 0) %e %e\n", x0+2, x1, x2, x3, g_spinor_field[f][g].s3.c0.re, g_spinor_field[f][g].s3.c0.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 3 1) %e %e\n", x0+2, x1, x2, x3, g_spinor_field[f][g].s3.c1.re, g_spinor_field[f][g].s3.c1.im);
+	    printf("(t,x,y,z,s,c) (%d, %d, %d, %d, 3 2) %e %e\n", x0+2, x1, x2, x3, g_spinor_field[1][g].s3.c2.re, g_spinor_field[f][g].s3.c2.im);
 	    printf("\n");
 	  }
 	}

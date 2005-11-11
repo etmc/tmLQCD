@@ -310,7 +310,7 @@ if(g_proc_id==0)
        {
        zero_spinor_field(5);
        idis2=bicg(5,4,0.,EPS_SQ0);
-       gamma5(spinor_field[5], spinor_field[5], VOLUME/2);
+       gamma5(g_spinor_field[5], g_spinor_field[5], VOLUME/2);
        assign_mul_add_r(5,q_off2,4);
        enerphi2x=square_norm(5, VOLUME/2);
        }

@@ -187,7 +187,7 @@ void unit_spinor_field(const int k) {
   int i=0;
   spinor *s;
 
-  s = &spinor_field[k][0];  
+  s = &g_spinor_field[k][0];  
   for(i = 0; i < VOLUME/2; i++, s++) {
     (*s) = unit_spinor();
   }
@@ -444,7 +444,7 @@ void set_spinor_field(int k, const double c) {
   int ix;
   spinor *s;
   for (ix=0;ix<VOLUME/2;ix++) {
-    s=&spinor_field[k][ix];
+    s=&g_spinor_field[k][ix];
     (*s).s0.c0.re=c;
     (*s).s0.c0.im=c;
     (*s).s0.c1.re=c;
@@ -471,7 +471,7 @@ void set_spinor_field(int k, const double c) {
     (*s).s3.c2.im=c;
   }
  for (ix=VOLUME/2;ix<VOLUMEPLUSRAND/2;ix++) {
-    s=&spinor_field[k][ix];
+    s=&g_spinor_field[k][ix];
     (*s).s0.c0.re=0;
     (*s).s0.c0.im=0.;
     (*s).s0.c1.re=0.;

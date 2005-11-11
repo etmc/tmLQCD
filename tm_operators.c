@@ -74,17 +74,17 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
  * on a half spinor
  ******************************************/
 void Qtm_plus_psi(spinor * const l, spinor * const k){
-  Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k);
-  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], +1.);
-  Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
-  mul_one_pm_imu_sub_mul_gamma5(l, k, spinor_field[DUM_MATRIX], +1.);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1.);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], +1.);
 }
 
 void Qtm_plus_psi_nocom(spinor * const l, spinor * const k){
-  Hopping_Matrix_nocom(EO, spinor_field[DUM_MATRIX+1], k);
-  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], +1.);
-  Hopping_Matrix_nocom(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
-  mul_one_pm_imu_sub_mul_gamma5(l, k, spinor_field[DUM_MATRIX], +1.);
+  Hopping_Matrix_nocom(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1.);
+  Hopping_Matrix_nocom(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], +1.);
 }
 
 /******************************************
@@ -102,10 +102,10 @@ void Qtm_plus_psi_nocom(spinor * const l, spinor * const k){
  * on a half spinor
  ******************************************/
 void Qtm_minus_psi(spinor * const l, spinor * const k){
-  Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k);
-  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], -1.);
-  Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
-  mul_one_pm_imu_sub_mul_gamma5(l, k, spinor_field[DUM_MATRIX], -1.);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1.);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], -1.);
 }
 
 /******************************************
@@ -123,10 +123,10 @@ void Qtm_minus_psi(spinor * const l, spinor * const k){
  * on a half spinor
  ******************************************/
 void Mtm_plus_psi(spinor * const l, spinor * const k){
-  Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k);
-  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], +1.);
-  Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
-  mul_one_pm_imu_sub_mul(l, k, spinor_field[DUM_MATRIX], +1.);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1.);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul(l, k, g_spinor_field[DUM_MATRIX], +1.);
 }
 
 /******************************************
@@ -144,10 +144,10 @@ void Mtm_plus_psi(spinor * const l, spinor * const k){
  * on a half spinor
  ******************************************/
 void Mtm_minus_psi(spinor * const l, spinor * const k){
-  Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k);
-  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], -1.);
-  Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
-  mul_one_pm_imu_sub_mul(l, k, spinor_field[DUM_MATRIX], -1.);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1.);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul(l, k, g_spinor_field[DUM_MATRIX], -1.);
 }
 
 /******************************************
@@ -165,28 +165,28 @@ void Mtm_minus_psi(spinor * const l, spinor * const k){
  ******************************************/
 void Qtm_pm_psi(spinor * const l, spinor * const k){
   /* Q_{-} */
-  Hopping_Matrix(EO, spinor_field[DUM_MATRIX+1], k);
-  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], -1.);
-  Hopping_Matrix(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
-  mul_one_pm_imu_sub_mul_gamma5(spinor_field[DUM_MATRIX], k, spinor_field[DUM_MATRIX], -1.);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1.);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul_gamma5(g_spinor_field[DUM_MATRIX], k, g_spinor_field[DUM_MATRIX], -1.);
   /* Q_{+} */
-  Hopping_Matrix(EO, l, spinor_field[DUM_MATRIX]);
+  Hopping_Matrix(EO, l, g_spinor_field[DUM_MATRIX]);
   mul_one_pm_imu_inv(l, +1.);
-  Hopping_Matrix(OE, spinor_field[DUM_MATRIX+1], l);
-  mul_one_pm_imu_sub_mul_gamma5(l, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1], +1.);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], l);
+  mul_one_pm_imu_sub_mul_gamma5(l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], +1.);
 }
 
 void Qtm_pm_psi_nocom(spinor * const l, spinor * const k){
   /* Q_{-} */
-  Hopping_Matrix_nocom(EO, spinor_field[DUM_MATRIX+1], k);
-  mul_one_pm_imu_inv(spinor_field[DUM_MATRIX+1], -1.);
-  Hopping_Matrix_nocom(OE, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1]);
-  mul_one_pm_imu_sub_mul_gamma5(spinor_field[DUM_MATRIX], k, spinor_field[DUM_MATRIX], -1.);
+  Hopping_Matrix_nocom(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1.);
+  Hopping_Matrix_nocom(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul_gamma5(g_spinor_field[DUM_MATRIX], k, g_spinor_field[DUM_MATRIX], -1.);
   /* Q_{+} */
-  Hopping_Matrix_nocom(EO, l, spinor_field[DUM_MATRIX]);
+  Hopping_Matrix_nocom(EO, l, g_spinor_field[DUM_MATRIX]);
   mul_one_pm_imu_inv(l, +1.);
-  Hopping_Matrix_nocom(OE, spinor_field[DUM_MATRIX+1], l);
-  mul_one_pm_imu_sub_mul_gamma5(l, spinor_field[DUM_MATRIX], spinor_field[DUM_MATRIX+1], +1.);
+  Hopping_Matrix_nocom(OE, g_spinor_field[DUM_MATRIX+1], l);
+  mul_one_pm_imu_sub_mul_gamma5(l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], +1.);
 }
 
 /******************************************

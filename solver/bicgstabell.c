@@ -43,18 +43,18 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
   k = -l;
 
 /*   init_solver_field(2*(l+1)+2); */
-  r0_tilde = spinor_field[DUM_SOLVER];
-  u0 = spinor_field[DUM_SOLVER+1];
+  r0_tilde = g_spinor_field[DUM_SOLVER];
+  u0 = g_spinor_field[DUM_SOLVER+1];
   for(i = 0; i <= l; i++){
-    r[i] = spinor_field[DUM_SOLVER+2+2*i];
-    u[i] = spinor_field[DUM_SOLVER+3+2*i];
+    r[i] = g_spinor_field[DUM_SOLVER+2+2*i];
+    u[i] = g_spinor_field[DUM_SOLVER+3+2*i];
   }
 
   x = x0; 
   assign(u[0], b, N);
   f(r0_tilde, x);
   diff(r[0], u[0], r0_tilde, N);
-  zero_spinor_field(spinor_field[DUM_SOLVER+1]);
+  zero_spinor_field(g_spinor_field[DUM_SOLVER+1]);
   assign(r0_tilde, r[0], N);
 
   rho0 = 1.;

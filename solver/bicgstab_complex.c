@@ -44,12 +44,12 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
   spinor * r, * p, * v, *hatr, * s, * t;
 
 /*   init_solver_field(6); */
-  hatr = spinor_field[DUM_SOLVER];
-  r = spinor_field[DUM_SOLVER+1];
-  v = spinor_field[DUM_SOLVER+2];
-  p = spinor_field[DUM_SOLVER+3];
-  s = spinor_field[DUM_SOLVER+4];
-  t = spinor_field[DUM_SOLVER+5];
+  hatr = g_spinor_field[DUM_SOLVER];
+  r = g_spinor_field[DUM_SOLVER+1];
+  v = g_spinor_field[DUM_SOLVER+2];
+  p = g_spinor_field[DUM_SOLVER+3];
+  s = g_spinor_field[DUM_SOLVER+4];
+  t = g_spinor_field[DUM_SOLVER+5];
 
   f(r, P);
   diff(p, Q, r, N);

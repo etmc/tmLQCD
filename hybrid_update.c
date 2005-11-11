@@ -162,20 +162,20 @@ void deri() {
       g_mu = g_mu1;
       if(1){
 	/* If CG is used anyhow */
-	gamma5(spinor_field[DUM_DERI+1], spinor_field[first_psf], VOLUME/2);
+	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[first_psf], VOLUME/2);
 	/* Invert Q_{+} Q_{-} */
 	/* X_o -> DUM_DERI+1 */
 	count00 += solve_cg(DUM_DERI+1, first_psf, g_eps_sq_force1, g_relative_precision_flag);
 	/* Y_o -> DUM_DERI  */
-	Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
+	Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
       }
       else{
 	/*contributions from field 0 -> first_psf*/
-	gamma5(spinor_field[DUM_DERI], spinor_field[first_psf], VOLUME/2);
+	gamma5(g_spinor_field[DUM_DERI], g_spinor_field[first_psf], VOLUME/2);
 	/* Invert first Q_+ */
 	/* Y_o -> DUM_DERI  */
 	count00 += bicg(DUM_DERI, first_psf, g_eps_sq_force1, g_relative_precision_flag);
-	gamma5(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI], VOLUME/2);
+	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME/2);
 	/* Now Q_- */
 	/* X_o -> DUM_DERI+1 */
 	g_mu = -g_mu;
@@ -187,23 +187,23 @@ void deri() {
       /* First term coming from the second field */
       /* Multiply with W_+ */
       g_mu = g_mu1;	
-      Qtm_plus_psi(spinor_field[DUM_DERI+2], spinor_field[second_psf]);
+      Qtm_plus_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[second_psf]);
       g_mu = g_mu2;
       if(1){
 	/* If CG is used anyhow */
-	gamma5(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+2], VOLUME/2);
+	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME/2);
 	/* Invert Q_{+} Q_{-} */
 	/* X_W -> DUM_DERI+1 */
 	count10 += solve_cg(DUM_DERI+1, DUM_DERI+2, g_eps_sq_force2, g_relative_precision_flag);
 	/* Y_W -> DUM_DERI  */
-	Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
+	Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
       }
       else{
-	gamma5(spinor_field[DUM_DERI], spinor_field[DUM_DERI+2], VOLUME/2);
+	gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], VOLUME/2);
 	/* Invert first Q_+ */
 	/* Y_o -> DUM_DERI  */
 	count10 += bicg(DUM_DERI, DUM_DERI+2, g_eps_sq_force2, g_relative_precision_flag);
-	gamma5(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI], VOLUME/2);
+	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME/2);
 	/* Now Q_- */
 	/* X_o -> DUM_DERI+1 */
 	g_mu = -g_mu;
@@ -214,30 +214,30 @@ void deri() {
     if(j==2){
       /* Second term coming from the second field */
       /* The sign is opposite!! */
-      mul_r(spinor_field[DUM_DERI], -1., spinor_field[second_psf], VOLUME/2);
+      mul_r(g_spinor_field[DUM_DERI], -1., g_spinor_field[second_psf], VOLUME/2);
       g_mu = g_mu1;
     }
     if(j == 3) {
       /* First term coming from the second field */
       /* Multiply with W_+ */
       g_mu = g_mu2;	
-      Qtm_plus_psi(spinor_field[DUM_DERI+2], spinor_field[third_psf]);
+      Qtm_plus_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[third_psf]);
       g_mu = g_mu3;
       if(1){
 	/* If CG is used anyhow */
-	gamma5(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI+2], VOLUME/2);
+	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME/2);
 	/* Invert Q_{+} Q_{-} */
 	/* X_W -> DUM_DERI+1 */
 	count20 += solve_cg(DUM_DERI+1, DUM_DERI+2, g_eps_sq_force3, g_relative_precision_flag);
 	/* Y_W -> DUM_DERI  */
-	Qtm_minus_psi(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]);
+	Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
       }
       else{
-	gamma5(spinor_field[DUM_DERI], spinor_field[DUM_DERI+2], VOLUME/2);
+	gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], VOLUME/2);
 	/* Invert first Q_+ */
 	/* Y_o -> DUM_DERI  */
 	count20 += bicg(DUM_DERI, DUM_DERI+2, g_eps_sq_force3, g_relative_precision_flag);
-	gamma5(spinor_field[DUM_DERI+1], spinor_field[DUM_DERI], VOLUME/2);
+	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME/2);
 	/* Now Q_- */
 	/* X_o -> DUM_DERI+1 */
 	g_mu = -g_mu;
@@ -248,17 +248,17 @@ void deri() {
     if(j == 4) {
       /* Second term coming from the third field */
       /* The sign is opposite!! */
-      mul_r( spinor_field[DUM_DERI], -1., spinor_field[third_psf], VOLUME/2);
+      mul_r( g_spinor_field[DUM_DERI], -1., g_spinor_field[third_psf], VOLUME/2);
       g_mu = g_mu2;
     }
     /* apply Hopping Matrix M_{eo} */
     /* to get the even sites of X */
-    H_eo_tm_inv_psi(spinor_field[DUM_DERI+2], spinor_field[DUM_DERI+1], EO, -1.);
+    H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
     deriv_Sb(OE, DUM_DERI, DUM_DERI+2); 
     
     /* to get the even sites of Y */
-    H_eo_tm_inv_psi(spinor_field[DUM_DERI+3], spinor_field[DUM_DERI], EO, +1);
+    H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
     deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
     g_mu = g_mu1;

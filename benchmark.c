@@ -176,7 +176,7 @@ int main(int argc,char *argv[])
   j_max=1;
   sdt=0.;
   for (k=0;k<k_max;k++) {
-    random_spinor_field(spinor_field[k], VOLUME/2);
+    random_spinor_field(g_spinor_field[k], VOLUME/2);
   }
 
   while(sdt<30.) {
@@ -186,8 +186,8 @@ int main(int argc,char *argv[])
     t1=(double)clock();
     for (j=0;j<j_max;j++) {
       for (k=0;k<k_max;k++) {
-	Hopping_Matrix(0, spinor_field[k+k_max], spinor_field[k]);
-	Hopping_Matrix(1, spinor_field[k+2*k_max], spinor_field[k+k_max]);
+	Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
+	Hopping_Matrix(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]);
       }
     }
     t2=(double)clock();
@@ -227,8 +227,8 @@ int main(int argc,char *argv[])
   t1=(double)clock();
   for (j=0;j<j_max;j++) {
     for (k=0;k<k_max;k++) {
-      Hopping_Matrix_nocom(0, spinor_field[k+k_max], spinor_field[k]);
-      Hopping_Matrix_nocom(1, spinor_field[k+2*k_max], spinor_field[k+k_max]);
+      Hopping_Matrix_nocom(0, g_spinor_field[k+k_max], g_spinor_field[k]);
+      Hopping_Matrix_nocom(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]);
     }
   }
   t2=(double)clock();

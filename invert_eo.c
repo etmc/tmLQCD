@@ -38,49 +38,49 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 
   assign_mul_one_pm_imu_inv(Even_new, Even, +1.);
   
-  Hopping_Matrix(OE, spinor_field[DUM_DERI], Even_new); 
+  Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new); 
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
-  assign_mul_add_r(spinor_field[DUM_DERI], +1., Odd, VOLUME/2);
+  assign_mul_add_r(g_spinor_field[DUM_DERI], +1., Odd, VOLUME/2);
 
   /* Do the inversion with the preconditioned  */
   /* matrix to get the odd sites               */
   /* The solver inverts gamma_5 D ...          */
-  gamma5(spinor_field[DUM_DERI], spinor_field[DUM_DERI], VOLUME/2); 
+  gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2); 
 
   if(solver_flag == BICGSTAB) {
     if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}
-    iter = bicgstab_complex(Odd_new, spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_plus_psi);
+    iter = bicgstab_complex(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_plus_psi);
   }
   else if(solver_flag == GMRES) {
     if(g_proc_id == 0) {printf("# Using GMRES!\n"); fflush(stdout);}
-    iter = gmres(Odd_new, spinor_field[DUM_DERI], 10, max_iter/10, precision, rel_prec, VOLUME/2, &Qtm_plus_psi);
+    iter = gmres(Odd_new, g_spinor_field[DUM_DERI], 10, max_iter/10, precision, rel_prec, VOLUME/2, &Qtm_plus_psi);
   }
   else if(solver_flag == CG) {
     if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
-    iter = cg_her(Odd_new, spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0.);
+    iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0.);
     Qtm_minus_psi(Odd_new, Odd_new);
   }
   else if(solver_flag == MR) {
     if(g_proc_id == 0) {printf("# Using MR!\n"); fflush(stdout);}
-    iter = mr(Odd_new, spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_plus_psi);
+    iter = mr(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_plus_psi);
   }
   else if(solver_flag == CGS) {
     if(g_proc_id == 0) {printf("# Using CGS!\n"); fflush(stdout);}
-    iter = cgs_real(Odd_new, spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_plus_psi);
+    iter = cgs_real(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_plus_psi);
   }
   else {
     if(g_proc_id == 0) {printf("# Using CG as default solver!\n"); fflush(stdout);}
-    iter = cg_her(Odd_new, spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0.);
+    iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0.);
     Qtm_minus_psi(Odd_new, Odd_new);
   }
 
   /* Reconstruct the even sites                */
-  Hopping_Matrix(EO, spinor_field[DUM_DERI], Odd_new);
-  mul_one_pm_imu_inv(spinor_field[DUM_DERI], +1.);
+  Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
-  assign_add_mul_r(Even_new, spinor_field[DUM_DERI], +1., VOLUME/2); 
+  assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2); 
   
   return(iter);
 }
@@ -88,12 +88,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 void M_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd) {
   /* Even sites */
-  Hopping_Matrix(EO, spinor_field[DUM_DERI], Odd);
+  Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd);
   assign_mul_one_pm_imu(Even_new, Even, 1.); 
-  assign_add_mul_r(Even_new, spinor_field[DUM_DERI], -1., VOLUME/2);
+  assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], -1., VOLUME/2);
 
   /* Odd sites */
-  Hopping_Matrix(OE, spinor_field[DUM_DERI], Even);
+  Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even);
   assign_mul_one_pm_imu(Odd_new, Odd, 1.); 
-  assign_add_mul_r(Odd_new, spinor_field[DUM_DERI], -1., VOLUME/2);
+  assign_add_mul_r(Odd_new, g_spinor_field[DUM_DERI], -1., VOLUME/2);
 }

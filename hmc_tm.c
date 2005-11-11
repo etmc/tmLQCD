@@ -261,9 +261,9 @@ int main(int argc,char *argv[]) {
     exit(0);
   }
 
-  zero_spinor_field(spinor_field[DUM_DERI+4],VOLUME/2);
-  zero_spinor_field(spinor_field[DUM_DERI+5],VOLUME/2);
-  zero_spinor_field(spinor_field[DUM_DERI+6],VOLUME/2);
+  zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME/2);
+  zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME/2);
+  zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME/2);
 
 
   if(g_proc_id == 0){

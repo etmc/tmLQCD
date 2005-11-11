@@ -19,6 +19,8 @@
 #define _default_LZ 0
 #define _default_N_PROC_X 1
 #define _default_g_kappa 0.125
+#define _default_g_mubar 0.0
+#define _default_g_epsbar 0.0
 #define _default_g_mu 0.0
 #define _default_g_mu1 0.0
 #define _default_g_mu2 0.0

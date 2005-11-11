@@ -23,28 +23,28 @@ void gamma0( const int Q,  const int P, const int V){
   int ix;
   
   for (ix = 0; ix < V; ix++){
-    _gamma0(spinor_field[Q][ix], spinor_field[P][ix]);
+    _gamma0(g_spinor_field[Q][ix], g_spinor_field[P][ix]);
   }
 }
 void gamma1( const int Q,  const int P, const int V){
   int ix;
   
   for (ix=0;ix<V;ix++){
-    _gamma1(spinor_field[Q][ix],spinor_field[P][ix]);
+    _gamma1(g_spinor_field[Q][ix],g_spinor_field[P][ix]);
   }
 }
 void gamma2( const int Q,  const int P, const int V){
   int ix;
   
   for (ix=0;ix<V;ix++){
-    _gamma2(spinor_field[Q][ix],spinor_field[P][ix]);
+    _gamma2(g_spinor_field[Q][ix],g_spinor_field[P][ix]);
   }
 }
 void gamma3( const int Q,  const int P, const int V){
   int ix;
   
   for (ix=0;ix<V;ix++){
-    _gamma3(spinor_field[Q][ix],spinor_field[P][ix]);
+    _gamma3(g_spinor_field[Q][ix],g_spinor_field[P][ix]);
   }
 }
 void gamma5(spinor * const l, spinor * const k, const int V){
@@ -70,27 +70,27 @@ void gamma50( const int Q,  const int P, const int V){
   int ix;
   
   for (ix=0;ix<V;ix++){
-    _gamma50(spinor_field[Q][ix],spinor_field[P][ix]);
+    _gamma50(g_spinor_field[Q][ix],g_spinor_field[P][ix]);
   }
 }
 void gamma51( const int Q,  const int P, const int V){
   int ix;
   
   for (ix=0;ix<V;ix++){
-    _gamma51(spinor_field[Q][ix],spinor_field[P][ix]);
+    _gamma51(g_spinor_field[Q][ix],g_spinor_field[P][ix]);
   }
 }
 void gamma52( const int Q,  const int P, const int V){
   int ix;
   
   for (ix=0;ix<V;ix++){
-    _gamma52(spinor_field[Q][ix],spinor_field[P][ix]);
+    _gamma52(g_spinor_field[Q][ix],g_spinor_field[P][ix]);
   }
 }
 void gamma53( const int Q,  const int P, const int V){
   int ix;
   
   for (ix=0;ix<V;ix++){
-    _gamma53(spinor_field[Q][ix],spinor_field[P][ix]);
+    _gamma53(g_spinor_field[Q][ix],g_spinor_field[P][ix]);
   }
 }

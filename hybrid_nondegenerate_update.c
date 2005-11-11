@@ -48,25 +48,25 @@ void deri_nondegenerate() {
   /* This replaces the solver     */
   /* Apply the invers square root */
   /* to phi_o -> X_o              */
-  QdaggerQ_power(spinor_field[DUM_DERI], spinor_field[DUM_DERI+1], 
+  QdaggerQ_power(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], 
 		 dop_cheby_coef, dop_n_cheby, 
-		 spinor_field[STRANGE], spinor_field[CHARM]);
+		 g_spinor_field[STRANGE], g_spinor_field[CHARM]);
   
 
   /* Construct X_e and X_e' */
   /* First X_e              */
   /* normalization corrects?*/
-  QNon_degenerate_eo(spinor_field[DUM_DERI+2], spinor_field[DUM_DERI+3], 
-		     spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]); 
-  mul_r(spinor_field[DUM_DERI+2], 1/20., spinor_field[DUM_DERI+2], VOLUME/2); 
-  mul_r(spinor_field[DUM_DERI+3], 1/20., spinor_field[DUM_DERI+3], VOLUME/2); 
+  QNon_degenerate_eo(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], 
+		     g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]); 
+  mul_r(g_spinor_field[DUM_DERI+2], 1/20., g_spinor_field[DUM_DERI+2], VOLUME/2); 
+  mul_r(g_spinor_field[DUM_DERI+3], 1/20., g_spinor_field[DUM_DERI+3], VOLUME/2); 
 
   /* X_e'                   */
   /* normalization corrects?*/
-  QNon_degenerate_eo_dagger(spinor_field[DUM_DERI+4], spinor_field[DUM_DERI+5], 
-		     spinor_field[DUM_DERI], spinor_field[DUM_DERI+1]); 
-  mul_r(spinor_field[DUM_DERI+4], 1/20., spinor_field[DUM_DERI+4], VOLUME/2); 
-  mul_r(spinor_field[DUM_DERI+5], 1/20., spinor_field[DUM_DERI+5], VOLUME/2); 
+  QNon_degenerate_eo_dagger(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+5], 
+		     g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]); 
+  mul_r(g_spinor_field[DUM_DERI+4], 1/20., g_spinor_field[DUM_DERI+4], VOLUME/2); 
+  mul_r(g_spinor_field[DUM_DERI+5], 1/20., g_spinor_field[DUM_DERI+5], VOLUME/2); 
 
 
   /* \delta Q sandwitched by X_e'^\dagger and X_o (EO)*/
