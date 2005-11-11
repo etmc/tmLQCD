@@ -98,20 +98,30 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   if test "$G2C" = yes; then
     F2C="-lg2c"
   fi
-  AC_CHECK_LIB(lapack, zheev_, LP=yes, LP="", -lblas -lg2c -lm)
+  AC_CHECK_LIB(gfortran, cabs, GFTR=yes, GFTR="")
+  if test "$GFTR" = yes; then
+    F2C="-lgfortran"
+  fi
+  if test "$GFTR" != yes && test "$G2C" != yes; then
+    F2C="-lf2c_nomain_LINUX"
+  fi
+
+  AC_CHECK_LIB(lapack, zheev_, LP=yes, LP="",  -lblas $F2C -lm)
   AC_CHECK_LIB(atlas, ATL_walltime, ATLAS=yes, ATLAS="")
   if test "$LP" != ""; then
-    AC_CHECK_LIB(arpack, zneupd_, AP=yes ,AP="" , -llapack -lg2c -lm)
+    AC_CHECK_LIB(arpack, zneupd_, AP=yes ,AP="" , -llapack $F2C -lm)
     if test "$enable_mpi" = "yes"; then
-      AC_CHECK_LIB(parpack, pzneupd_, PAP=yes, PAP="", -larpack -llapack -lg2c -lm)  
+      AC_CHECK_LIB(parpack, pzneupd_, PAP=yes, PAP="", -larpack -llapack $F2C -lm)  
     fi
   else
-    AC_CHECK_LIB(arpack, zneupd_, AP=yes ,AP="" , -lg2c -lm)
+    AC_CHECK_LIB(arpack, zneupd_, AP=yes ,AP="" , $F2C -lm)
     if test "$enable_mpi" = "yes"; then
-      AC_CHECK_LIB(parpack, pzneupd_, PAP=yes, PAP="", -larpack -lg2c -lm)  
+      AC_CHECK_LIB(parpack, pzneupd_, PAP=yes, PAP="", -larpack $F2C -lm)  
     fi
   fi
+
 fi
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS( math.h  )
@@ -378,11 +388,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       fi
     fi
   fi
-  if test "$G2C" = "yes"; then
-    LIBS="$LIBS -lg2c -lm"
-  else
-    LIBS="$LIBS -lf2c_nomain_LINUX"
-  fi
+  LIBS="$LIBS $F2C"
 
 
 # The IBM Power PC

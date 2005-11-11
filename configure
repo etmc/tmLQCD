@@ -3569,13 +3569,90 @@ fi
   if test "$G2C" = yes; then
     F2C="-lg2c"
   fi
+  echo "$as_me:$LINENO: checking for cabs in -lgfortran" >&5
+echo $ECHO_N "checking for cabs in -lgfortran... $ECHO_C" >&6
+if test "${ac_cv_lib_gfortran_cabs+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lgfortran  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char cabs ();
+int
+main ()
+{
+cabs ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_gfortran_cabs=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_gfortran_cabs=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_gfortran_cabs" >&5
+echo "${ECHO_T}$ac_cv_lib_gfortran_cabs" >&6
+if test $ac_cv_lib_gfortran_cabs = yes; then
+  GFTR=yes
+else
+  GFTR=""
+fi
+
+  if test "$GFTR" = yes; then
+    F2C="-lgfortran"
+  fi
+  if test "$GFTR" != yes && test "$G2C" != yes; then
+    F2C="-lf2c_nomain_LINUX"
+  fi
+
   echo "$as_me:$LINENO: checking for zheev_ in -llapack" >&5
 echo $ECHO_N "checking for zheev_ in -llapack... $ECHO_C" >&6
 if test "${ac_cv_lib_lapack_zheev_+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-llapack -lblas -lg2c -lm $LIBS"
+LIBS="-llapack -lblas $F2C -lm $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3716,7 +3793,7 @@ if test "${ac_cv_lib_arpack_zneupd_+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-larpack -llapack -lg2c -lm $LIBS"
+LIBS="-larpack -llapack $F2C -lm $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3787,7 +3864,7 @@ if test "${ac_cv_lib_parpack_pzneupd_+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lparpack -larpack -llapack -lg2c -lm $LIBS"
+LIBS="-lparpack -larpack -llapack $F2C -lm $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3859,7 +3936,7 @@ if test "${ac_cv_lib_arpack_zneupd_+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-larpack -lg2c -lm $LIBS"
+LIBS="-larpack $F2C -lm $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3930,7 +4007,7 @@ if test "${ac_cv_lib_parpack_pzneupd_+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lparpack -larpack -lg2c -lm $LIBS"
+LIBS="-lparpack -larpack $F2C -lm $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3996,7 +4073,9 @@ fi
 
     fi
   fi
+
 fi
+
 # Checks for header files.
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -5690,11 +5769,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       fi
     fi
   fi
-  if test "$G2C" = "yes"; then
-    LIBS="$LIBS -lg2c -lm"
-  else
-    LIBS="$LIBS -lf2c_nomain_LINUX"
-  fi
+  LIBS="$LIBS $F2C"
 
 
 # The IBM Power PC
