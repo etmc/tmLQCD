@@ -35,9 +35,9 @@ MPI_Datatype gauge_yz_edge_gath;
 MPI_Datatype gauge_yz_edge_gath_split;
 
 MPI_Comm mpi_time_slices;
-int mpi_time_rank;
 #endif
 
+int mpi_time_rank;
 
 void mpi_init(int argc,char *argv[]) {
 #ifdef MPI
