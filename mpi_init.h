@@ -25,8 +25,9 @@ extern MPI_Datatype gauge_yz_edge_gath;
 extern MPI_Datatype gauge_yz_edge_gath_split;
 
 extern MPI_Comm mpi_time_slices;
-extern int mpi_time_rank;
 #endif
+
+extern int mpi_time_rank;
 
 void mpi_init(int argc, char *argv[]);
 
