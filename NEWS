@@ -1,3 +1,7 @@
+14.11.2005: New global parameters (g_mubar, g_epsbar) have been introduced. 
+            These are the mass parameters needed in the eigenvalues 
+            computation of the flavour non-degenerate case Dirac operator.
+
 11.11.2005: gcc-4.x does not use libg2c anymore. One has to link 
 	    against gfortran, which is done now.
 
