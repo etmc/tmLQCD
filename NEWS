@@ -1,3 +1,11 @@
+14.11.2005: For the flavour non-degenerate eigenvalues computation, a new 
+            structure, called bispinor, has been introduced. Consequently, 
+            a serial and a parallel new Jacoby-Davidson routine working 
+            with bispinors has been implemented, as well as two new solvers, 
+            bicgstab_complex and cg_her, respectively. A bunch of linear 
+            algebra files have been adapted to work with bispinors. All these 
+            files are distinguished by the suffix "_bi" (e.g: "file_bi.c").
+
 14.11.2005: New global parameters (g_mubar, g_epsbar) have been introduced. 
             These are the mass parameters needed in the eigenvalues 
             computation of the flavour non-degenerate case Dirac operator.
