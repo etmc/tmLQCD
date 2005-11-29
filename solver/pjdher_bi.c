@@ -604,21 +604,11 @@ void pjdher(int n, int lda, double tau, double tol,
 
       /* Solve the correction equation ... */
 
-      if(solver_flag == GMRES){
-/* 	info = gmres((bispinor*) v, (bispinor*) r, 10, linitmax/10, it_tol*it_tol, &pProj_A_psi, &pProj_A_psi); */
- 	info = gmres((bispinor*) v, (bispinor*) r, 10, linitmax/10, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi); 
-      }
-      if(solver_flag == CGS){
-	info = cgs_real((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi);
-      }
-      else if (solver_flag == BICGSTAB){
-	info = bicgstab_complex((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi);
-      }
-      else if (solver_flag == CG){ 
+      if(solver_flag == CG){ 
 	info = cg_her_bi((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi, 0, 0); 
       } 
       else{
- 	info = gmres((bispinor*) v, (bispinor*) r, 10, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi); 
+	info = cg_her_bi((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi, 0, 0); 
       }
       
       /* Actualizing profiling data */
