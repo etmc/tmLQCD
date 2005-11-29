@@ -75,14 +75,14 @@ dep: ${addsuffix .d, ${libsolver_TARGETS}}
 # rules to clean
 
 compile-clean: Makefile
-	@rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} *.d
+	rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} *.d
 
 clean: compile-clean 
-	@rm -f $(addsuffix .a, ${LIBRARIES})
-	@rm -f ${top_builddir}/lib/libsolver.a
+	rm -f $(addsuffix .a, ${LIBRARIES})
+	rm -f ${top_builddir}/lib/libsolver.a
 
 distclean: clean
-	@rm -f Makefile
+	rm -f Makefile
 
 
 .PHONY: all dep clean compile-clean distclean debug all-debug profile all-profile

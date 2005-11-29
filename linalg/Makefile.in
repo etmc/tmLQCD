@@ -82,13 +82,13 @@ dep: ${addsuffix .d, ${liblinalg_TARGETS}}
 # rules to clean
 
 compile-clean: Makefile
-	@rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} *.d
+	rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} *.d
 
 clean: compile-clean 
-	@rm -f $(addsuffix .a, ${LIBRARIES})
-	@rm -f ${top_builddir}/lib/liblinalg.a
+	rm -f $(addsuffix .a, ${LIBRARIES})
+	rm -f ${top_builddir}/lib/liblinalg.a
 
 distclean: clean
-	@rm -f Makefile
+	rm -f Makefile
 
 .PHONY: all dep clean compile-clean distclean profile all-profile debug all-debug

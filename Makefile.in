@@ -65,20 +65,17 @@ ${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} ${LINKLIBS}
 
 dep: $(addsuffix .d,$(ALLOBJ))
 
-compile-clean: Makefile
-	@(cd linalg && $(MAKE) compile-clean)
-	@(cd solver && $(MAKE) compile-clean)
+compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d
 
-clean: compile-clean
-	@(cd linalg && $(MAKE) clean)
-	@(cd solver && $(MAKE) clean)
-	@rm -f hmc_tm hybrid
+clean: clean-recursive Makefile
+	rm -f hmc_tm hybrid *.o *.d
 
-distclean: clean
-	@rm -f Makefile
-	@(cd linalg && $(MAKE) distclean)
-	@(cd solver && $(MAKE) distclean)
+distclean: distclean-recursive Makefile
+	rm -f hmc_tm hybrid *.o *.d *~ Makefile config.log config.status
 
 .PHONY: all clean compile-clean distclean dep \
-	flex_read_input ${PROGRAMS}
+	flex_read_input ${PROGRAMS} all-recursive \
+	all-debug-recursive all-profile-recursive \
+	clean-recursive distclean-recursive \
+	compile-clean-recursive
