@@ -42,8 +42,8 @@ int check_xchange()
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  set_spinor_point(&spinor_field[0][ g_lexic2eo[g_ipt[0][x1][x2][x3]]   ], g_cart_id);
-	  set_spinor_point(&spinor_field[0][ g_lexic2eo[g_ipt[T-1][x1][x2][x3]] ], g_cart_id);
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eo[g_ipt[0][x1][x2][x3]]   ], g_cart_id);
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eo[g_ipt[T-1][x1][x2][x3]] ], g_cart_id);
 	}
       }
     }
@@ -52,16 +52,16 @@ int check_xchange()
     for(x0 = 0; x0 < T; x0++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  set_spinor_point(&spinor_field[0][ g_lexic2eo[g_ipt[x0][0][x2][x3]]    ], g_cart_id);
-	  set_spinor_point(&spinor_field[0][ g_lexic2eo[g_ipt[x0][LX-1][x2][x3]] ], g_cart_id);
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eo[g_ipt[x0][0][x2][x3]]    ], g_cart_id);
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eo[g_ipt[x0][LX-1][x2][x3]] ], g_cart_id);
 	}
       }
     }
 #endif
-    xchange_field(spinor_field[0]);
+    xchange_field(g_spinor_field[0]);
 
 #if (defined PARALLELT || defined PARALLELXT)  
-    x = (double*) &spinor_field[0][T*LX*LY*LZ/2];
+    x = (double*) &g_spinor_field[0][T*LX*LY*LZ/2];
     for(i = 0; i < LX*LY*LZ/2*24; i++, x++) {
       if((int)(*x) != g_nb_t_up) {
 	printf("The exchange up of fields in time direction\n");
@@ -74,7 +74,7 @@ int check_xchange()
       }
     }
 
-    x = (double*) &spinor_field[0][(T+1)*LX*LY*LZ/2];
+    x = (double*) &g_spinor_field[0][(T+1)*LX*LY*LZ/2];
     for(i = 0; i < LX*LY*LZ/2*24; i++, x++) {
       if((int)(*x) != g_nb_t_dn) {
 	printf("The exchange down of fields in time direction\n");
@@ -89,7 +89,7 @@ int check_xchange()
 #endif
 
 #ifdef PARALLELXT
-    x = (double*) &spinor_field[0][(T+2)*LX*LY*LZ/2];
+    x = (double*) &g_spinor_field[0][(T+2)*LX*LY*LZ/2];
     for(i = 0; i < T*LY*LZ/2*24; i++, x++) {
       if((int)(*x) != g_nb_x_up) {
 	printf("The exchange up of fields in x direction\n");
@@ -102,7 +102,7 @@ int check_xchange()
       }
     }
 
-    x = (double*) &spinor_field[0][(T+2)*LX*LY*LZ/2+T*LY*LZ/2];
+    x = (double*) &g_spinor_field[0][(T+2)*LX*LY*LZ/2+T*LY*LZ/2];
     for(i = 0; i < T*LY*LZ/2*24; i++, x++) {
       if((int)(*x) != g_nb_x_dn) {
 	printf("The exchange down of fields in x direction\n");
