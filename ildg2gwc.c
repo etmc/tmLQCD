@@ -11,6 +11,9 @@
 #include "io.h"
 #include "read_input.h"
 #include "mpi_init.h"
+#ifdef MPI
+#include "xchange.h"
+#endif
 #include "geometry_eo.h"
 #include "observables.h"
 #include "init_gauge_field.h"
