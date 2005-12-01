@@ -3535,6 +3535,10 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
 #  AC_CHECK_LIB(lapack, zheev, LP=yes, echo NO lapack available! Aborting...;exit 0, -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
   echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
 
+elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
+#  AC_CHECK_LIB(lapack, zheev, LP=yes, echo NO lapack available! Aborting...;exit 0, -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
+  echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
+
 elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   echo "$as_me:$LINENO: checking for f__cabs in -lg2c" >&5
 echo $ECHO_N "checking for f__cabs in -lg2c... $ECHO_C" >&6
@@ -5589,6 +5593,7 @@ _ACEOF
 
 
 
+INCLUDES=""
 # in the following we check for extra options
 if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
@@ -5907,6 +5912,32 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
     DEPFLAGS="-M"
   fi
 
+#The BG/L
+elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
+  CFLAGS=" -O3 -g  -qarch=440 -qtune=440 -DNOF77_ $endian"
+  DEBUGFLAG="-g"
+
+  if test "$GCC" != yes; then
+    CFLAGS="-DXLC -qsrcmgs $CFLAGS"
+    DEBUGFLAG="$DEBUGFLAG -qfullpath"
+    XLC=yes
+  fi
+
+  LIBS="-llapack440 -lblas440 -lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts -lf77blas -latlas -lxlf90 -lxlfmath -lm"
+  LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(HOME)/lib"
+
+  OPTARGS="-O3"
+  if test "$CCDEP" = "gcc"; then
+    DEPFLAGS="-MM"
+  else
+    DEPFLAGS="-M"
+  fi
+  if test $enable_mpi = yes; then
+    CFLAGS="$CFLAGS -DMPI $mpidimension"
+  fi
+  INCLUDES="$INCLUDES /bgl/BlueLight/ppcfloor/bglsys/include/"
+
+
 # The IBM Power PC
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   if test $enable_mpi = yes; then
@@ -6057,7 +6088,7 @@ if test ! -e lib; then
 fi
 
 LDFLAGS="$LDFLAGS -L${lime_dir}/lib/"
-INCLUDES="-I\$(HOME)/include/ -I. -I\${top_builddir}/ -I${lime_dir}/include/"
+INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${top_builddir}/ -I${lime_dir}/include/"
 AUTOCONF=autoconf
 
 #AC_CONFIG_SUBDIRS(lime)
