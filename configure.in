@@ -3,7 +3,7 @@
 # Process this file with autoconf to produce a configure script
 #
 AC_PREREQ(2.53)
-AC_INIT(HMC, 0.9, urbach@ifh.de)
+AC_INIT(HMC, 2.3.5, carsten.urbach@desy.de)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()
 AC_PREFIX_DEFAULT($HOME)
@@ -82,6 +82,7 @@ AC_C_CONST
 AC_PROG_LEX
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
+  AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
 AC_C_BIGENDIAN(endian="", endian="-DLITTLE_ENDIAN")
 
 # Checks for libraries.
@@ -92,8 +93,12 @@ if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   if test "$enable_mpi" = "yes"; then
     AC_CHECK_LIB(parpack, pzneupd, PAP=yes, PAP="", -larpack -lessl -llapack -lf -lm)  
   fi
-fi
-if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
+
+elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
+#  AC_CHECK_LIB(lapack, zheev, LP=yes, echo NO lapack available! Aborting...;exit 0, -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
+  echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
+
+elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   AC_CHECK_LIB(g2c, f__cabs, G2C=yes, G2C="")
   if test "$G2C" = yes; then
     F2C="-lg2c"
@@ -119,7 +124,8 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       AC_CHECK_LIB(parpack, pzneupd_, PAP=yes, PAP="", -larpack $F2C -lm)  
     fi
   fi
-
+else
+  AC_CHECK_LIB(lapack, zheev_, LP=yes, LP="", -lblas -lf -lm )	
 fi
 
 # Checks for header files.
@@ -132,7 +138,6 @@ AC_CHECK_HEADERS( limits.h  )
 AC_CHECK_HEADER( getopt.h, INCLUDES="//  " )
 
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
-# AC_DEFINE(VERSION, 0.1)
 
 # We now define some replace variables
 AC_SUBST(OPTARGS)
@@ -151,6 +156,8 @@ AC_SUBST(XCHANGEDIR)
 AC_SUBST(XLIB)
 
 # in the following we check for extra options
+if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
+
 AC_MSG_CHECKING(whether we want to use P4 instructions)
 AC_ARG_ENABLE(p4,
   [  --enable-p4                  enable use of P4 instructions [default=yes]],
@@ -205,6 +212,8 @@ else
   AC_MSG_RESULT(no)
 fi
 
+fi
+
 AC_MSG_CHECKING(whether solvers should output convergence information)
 AC_ARG_ENABLE(solveroutput,
   [  --enable-solveroutput        enable solver convergence output [default=no]],
@@ -235,7 +244,7 @@ else
   PROFILE_FLAG=
 fi
 
-# Now we have to set als Flags and compiler proper
+# Now we have to set als Flags and compiler properly
 # first for PC's
 if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 # the GNU compiler
@@ -247,10 +256,10 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     if test $enable_mpi = yes; then
 # Due to some standard problems in MPI header files
 # no -pedantic-errors...
-      CFLAGS="-ansi -Wall -DMPI $endian $mpidimension"
+      CFLAGS="-ansi -pedantic -Wall -DMPI $endian $mpidimension"
     else
       if test $GCCVERSION1 -gt 2 && test $enable_sse2 = yes; then
-        CFLAGS="-ansi -Wall $endian"
+        CFLAGS="-ansi -Wall $endian -pedantic"
       else
 	CFLAGS="-ansi -Wall $endian -pedantic-errors"
       fi
@@ -390,6 +399,28 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   fi
   LIBS="$LIBS $F2C"
 
+# The MareNostrum: powerpc on a linux system
+elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
+  CFLAGS="-DNOF77_ $endian"
+  DEBUGFLAG="-g"
+  if test $enable_mpi = yes; then
+    CFLAGS="$CFLAGS -DMPI $mpidimension"
+  fi
+  if test "$GCC" != yes; then
+    CFLAGS="-DXLC -qsrcmgs $CFLAGS"
+    DEBUGFLAG="$DEBUGFLAG -qfullpath"
+    XLC=yes
+  fi
+
+  LIBS="-llapack -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm"
+  LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(HOME)/lib"
+
+  OPTARGS="-O3"
+  if test "$CCDEP" = "gcc"; then
+    DEPFLAGS="-MM"
+  else
+    DEPFLAGS="-M"
+  fi
 
 # The IBM Power PC
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
@@ -403,8 +434,11 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   XLC=yes
   OPTARGS="-O3 -qhot"
   DEBUG_FLAG="-qfullpath -g"
-  CCDEP="gcc"
-  DEPFLAGS="-MM"
+  if test "$CCDEP" = "gcc"; then
+    DEPFLAGS="-MM"
+  else
+    DEPFLAGS="-M"
+  fi
 
 # The CRAY
 elif test "$host_vendor" = "cray"; then
@@ -424,14 +458,21 @@ elif test "$host_vendor" = "cray"; then
   DEPFLAGS="-M"
 else
   echo
-  echo "Unknown platform... Using standard parameter"
+  echo "Warning! Unknown platform... Using standard parameters"
   echo
   if test $enable_mpi = yes; then
     CFLAGS="$CFLAGS -DMPI $endian $mpidimension"
+  else
+    CFLAGS="$CFLAGS $endian"
   fi
-  CCDEP="$CC"
-  DEPFLAGS="-M"
-  LIBS="-lm"
+  AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
+  if test "$CCDEP" = "gcc"; then
+    DEPFLAGS="-MM"
+  else
+    DEPFLAGS="-M"
+  fi
+
+  LIBS="-llapack -lblas -lf -lm"
   LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
 fi
 

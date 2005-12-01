@@ -32,7 +32,7 @@ $(LINKLIBS): %.a: Makefile
 $(addsuffix .d,$(ALLOBJ)): %.d: %.c Makefile
 	 @ $(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@ 
 
-all-recursive all-debug-recursive all-profile-recursive: Makefile
+all-recursive all-debug-recursive all-profile-recursive clean-recursive distclean-recursive compile-clean-recursive: Makefile
 	@set fnord ${MAKEFLAGS}; amf=$$2; \
 	dot_seen=no; \
 	target=`echo $@ | sed s/-recursive//`; \
