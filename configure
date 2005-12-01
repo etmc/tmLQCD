@@ -5935,7 +5935,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
   if test $enable_mpi = yes; then
     CFLAGS="$CFLAGS -DMPI $mpidimension"
   fi
-  INCLUDES="$INCLUDES /bgl/BlueLight/ppcfloor/bglsys/include/"
+  INCLUDES="$INCLUDES -I/bgl/BlueLight/ppcfloor/bglsys/include/"
 
 
 # The IBM Power PC
