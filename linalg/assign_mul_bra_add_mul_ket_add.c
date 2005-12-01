@@ -24,8 +24,8 @@ void assign_mul_bra_add_mul_ket_add(spinor * const R,spinor * const S,spinor * c
   spinor *r,*s,*u,*w,*w_;
   double a1,b1,a2,b2;
 #if ( defined SSE || defined SSE2 )
-   w_=calloc(N+1, sizeof(spinor));
-   w = (spinor *)(((unsigned int)(w_)+ALIGN_BASE)&~ALIGN_BASE);
+   w_ = calloc(N+1, sizeof(spinor));
+   w = (spinor *)(((unsigned long int)(w_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
    w_=calloc(N, sizeof(spinor));
    w = w_;
