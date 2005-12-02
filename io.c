@@ -462,7 +462,6 @@ int read_lime_gauge_field(char * filename){
   while( (status = limeReaderNextRecord(limereader)) != LIME_EOF ) {
     if(status != LIME_SUCCESS ) {
       fprintf(stderr, "limeReaderNextRecord returned error with status = %d!\n", status);
-      fprintf(stderr, "trying old deprecated file format!\n");
       status = LIME_EOF;
       break;
     }
@@ -717,7 +716,7 @@ int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filena
    * ts is the number of the timeslice to be used
    *    if ts < 0 read a volume source
    *
-   * if ts > 0 and vol > 0 the file is a volume file
+   * if ts >= 0 and vol > 0 the file is a volume file
    * but only one timeslice should be read
    */
 

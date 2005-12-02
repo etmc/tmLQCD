@@ -296,12 +296,12 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
       etime = MPI_Wtime();
 #endif
-      /* To write in standard format */
-      /* we have to mult. by 2*kappa */
-      mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME/2);  
-      mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[3], VOLUME/2);
 
       if(source_format_flag == 0) {
+	/* To write in standard format */
+	/* we have to mult. by 2*kappa */
+	mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME/2);  
+	mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[3], VOLUME/2);
 	write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
       }
       else if(source_format_flag == 1) {
@@ -310,8 +310,10 @@ int main(int argc,char *argv[]) {
 
       /* Check the result */
       M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[2], g_spinor_field[3]); 
-      mul_r(g_spinor_field[4], 1./(2*g_kappa), g_spinor_field[4], VOLUME/2);  
-      mul_r(g_spinor_field[5], 1./(2*g_kappa), g_spinor_field[5], VOLUME/2); 
+      if(source_format_flag == 0) {
+	mul_r(g_spinor_field[4], 1./(2*g_kappa), g_spinor_field[4], VOLUME/2);  
+	mul_r(g_spinor_field[5], 1./(2*g_kappa), g_spinor_field[5], VOLUME/2); 
+      }
       diff(g_spinor_field[4], g_spinor_field[4], g_spinor_field[0], VOLUME/2); 
       diff(g_spinor_field[5], g_spinor_field[5], g_spinor_field[1], VOLUME/2); 
 
