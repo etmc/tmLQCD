@@ -90,3 +90,8 @@ xlc_r -I. -I./ -I.. -o benchmark -q64 -qsrcmsg -DXLC -D_GAUGE_COPY -D_NEW_GEOMET
 
 mpcc and IBM powerpc and _one_ dimensional parallelisation (threadsave:mpcc_r):
 mpcc_r -I. -I./ -I.. -o benchmark -q64 -qsrcmsg -DXLC  -DMPI -DPARALLELT -D_GAUGE_COPY -D_NEW_GEOMETRY -O3 -qhot  Hopping_Matrix.c Hopping_Matrix_nocom.c xchange.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c -lm
+
+BG/L
+/opt/ibmcmp/vac/7.0/bin/blrts_xlc -I/bgl/BlueLight/ppcfloor/bglsys/include -I/bgl/local/include -L/bgl/local/lib -L/bgl/BlueLight/ppcfloor/bglsys/lib -I. -I./ -I.. -o benchmark  -DXLC  -DMPI -DPARALLELXT -qarch=440 -O3 -qtune=440 Hopping_Matrix.c Hopping_Matrix_nocom.c xchange.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c -lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts
+
+/opt/ibmcmp/vac/7.0/bin/blrts_xlc -I/bgl/BlueLight/ppcfloor/bglsys/include -I/bgl/local/include -L/bgl/local/lib -L/bgl/BlueLight/ppcfloor/bglsys/lib -I. -I./ -I.. -o benchmark -D_GAUGE_COPY -D_NEW_GEOMETRY -DXLC  -DMPI -DPARALLELXT -qarch=440 -O3 -qtune=440 Hopping_Matrix.c Hopping_Matrix_nocom.c xchange.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c -lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts
