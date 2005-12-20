@@ -100,7 +100,8 @@ supported input paramters:
   Name of input file for the gauge field. Default is {\ttfamily conf}
 
 \item {\ttfamily mu}:\\
-  Twisted mass parameter (the physical one) for twisted mass action.
+  Twisted mass parameter (the physical one) for twisted mass
+  action. This is for internal reasons $2\kappa\mu$.
 
 \item {\ttfamily mu2, mu3}:\\
   Additional masses (not physical) used for preconditioning. Default values are
@@ -126,7 +127,7 @@ supported input paramters:
   time for the fermion fields.
 
 \item {\ttfamily Integrator}:\\
-  Determines the integration algorithm to be used:
+  Determines the integration scheme to be used:
   \begin{itemize}
   \item {\ttfamily LeapFrog}: Simple leap frog algorithm with only one
     time scale. 
@@ -136,6 +137,11 @@ supported input paramters:
     multiple time scales.
   \item {\ttfamily ExtSextonWeingarten}: Sexton-Weingarten integration scheme with
     multiple time scales.
+  \item {\ttfamily 2MN}: second order minimal norm with multiple time
+    scales. (see {\ttfamily hep-lat/0505020} )
+  \item {\ttfamily 2MNposition}: second order minimal norm with
+    multiple time scales, but momentum and gauge update interchanged
+    in the order.
   \end{itemize}
 
 \item {\ttfamily Nsteps}:\\
@@ -151,9 +157,11 @@ supported input paramters:
   used.
 
 \item {\ttfamily tau}:\\
-  Total length of the trajectory in case of {\ttfamily ExtLeapFrog}
-  and {\ttfamily ExtSextonWeingarten}. This keyword has no effect, if
-  other integrators are used.
+  Total length of the trajectory in case of a multiple time scale
+  integration scheme ({\ttfamily ExtLeapFrog}, {\ttfamily
+    ExtSextonWeingarten}, {\ttfamily 2MN} and {\ttfamily
+    2MNposition}). This keyword has no effect, if other integrators
+  are used.
 
 \item {\ttfamily IntegrationStepsGauge}:\\
   Number of steps to be performed in the extented integration
@@ -194,15 +202,18 @@ supported input paramters:
 
 \item {\ttfamily ForcePrecisionMu}:\\
   Sets the squared residuum to be used in the force computation for
-  the inversions of $\mu$.
+  the inversions of $\mu$. Overwrites {\ttfamily ForcePrecision}
+  for this force.
 
 \item {\ttfamily ForcePrecisionMu2}:\\
   Sets the squared residuum to be used in the force computation for
-  the inversions of $\mu_2$.
+  the inversions of $\mu_2$. Overwrites {\ttfamily ForcePrecision}
+  for this force.
 
 \item {\ttfamily ForcePrecisionMu3}:\\
   Sets the squared residuum to be used in the force computation for
-  the inversions of $\mu_3$.
+  the inversions of $\mu_3$. Overwrites {\ttfamily ForcePrecision}
+  for this force.
 
 \item {\ttfamily AcceptancePrecision}:\\
   Sets the squared residuum to be used in the acceptance step for
@@ -256,6 +267,12 @@ supported input paramters:
   The number of solutions of the Dirac equation to be saved for the
   second not physical $\mu_3$. 
   
+\item {\ttfamily 2MNLambdaGauge}:\\
+  The 2MN $\lambda$ parameter for the gauge time scale.
+
+\item {\ttfamily 2MNLambdaMu|Mu2|Mu3}:\\
+  The 2MN $\lambda$ parameters for the pseudo fermion time scales.
+
 \end{enumerate}
 
 \subsection{Reread functionality}
