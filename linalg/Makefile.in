@@ -17,11 +17,12 @@ CCLD = $(CC)
 LINK = $(CCLD) $(CFLAGS) $(LDFLAGS) -o $@
 LEX = @LEX@
 AUTOCONF = @AUTOCONF@
+DEFS = @DEFS@
 
 INCLUDES = @INCLUDES@
 LDADD =
 #COMPILE = ${CC} ${DEFS} $(INCLUDES) ${CFLAGS}
-COMPILE = ${CC} $(INCLUDES) ${CFLAGS}
+COMPILE = ${CC} $(DEFS) $(INCLUDES) ${CFLAGS}
 
 LIBRARIES = liblinalg
 liblinalg_TARGETS = diff assign_add_mul_r_add_mul assign_add_mul_r \
