@@ -47,15 +47,17 @@
 #include "boundary.h"
 #include "polyakov_loop.h"
 
-char * Version = PACKAGE_VERSION;
-
-
 void usage(){
-  fprintf(stderr, "hmc for Wilson twisted mass QCD\n\n");
-  fprintf(stderr, "Usage: [-f input-filename]\n");
-  fprintf(stderr, "Usage: [-o output-filename]\n");
-  exit(1);
+  fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
+  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Usage:   hmc_tm [options]\n");
+  fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
+  fprintf(stdout, "         [-o output-filename] default: output\n");
+  fprintf(stdout, "         [-h|-? this help]\n");
+  exit(0);
 }
+
 
 extern int nstore;
 
@@ -274,7 +276,7 @@ int main(int argc,char *argv[]) {
     strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
     
     parameterfile=fopen(parameterfilename, "w");
-    printf("# This is the hmc code for twisted Mass Wilson QCD\n\nVersion %s\n", Version);
+    printf("# This is the hmc code for twisted Mass Wilson QCD\n\nVersion %s\n", PACKAGE_VERSION);
 #ifdef SSE
     printf("# The code was compiled with SSE instructions\n");
 #endif

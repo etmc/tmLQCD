@@ -1,7 +1,7 @@
 /* $Id$ */
 
 #include<stdlib.h>
-
+#include<stdio.h>
 
 /* 
  * QUICKSORT 
@@ -35,7 +35,10 @@ void quicksort(int n, double arr[], int idx[]){
 	  else{	    
 	    stack[++tos] = i+1; stack[++tos] = r; r = i-1; 
 	  }
-	  if(tos > 31) errorhandler(504,"");
+	  if(tos > 31) {
+	    fprintf(stderr,"Error in quicksort! Aborting...!");fflush(stderr);
+	    exit(31);
+	  }
 	} 
       if (tos == -1) break;
       r = stack[tos--]; l = stack[tos--]; 

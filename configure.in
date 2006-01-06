@@ -37,24 +37,33 @@ else
 fi 
 
 if test $enable_mpi = yes; then
-AC_MSG_CHECKING(whether we want one or two or three dimensional parallesisation)
-AC_ARG_WITH(mpidimension,
-  [  --with-mpidimension[=n]      use n dimenaional parallisation [default=1]],
-  withmpidimension=$withval, withmpidimension=1)
-if test $withmpidimension = 1; then
-  AC_MSG_RESULT(1 dimensional [t])
-  mpidimension="-DPARALLELT"
-  AC_DEFINE(PARALLELT,1,One dimensional parallelisation)
-elif test $withmpidimension = 2; then
-  AC_MSG_RESULT(2 dimensional [xt])
-  mpidimension="-DPARALLELXT"
-  AC_DEFINE(PARALLELXT,1,Two dimensional parallelisation)
-else
-  AC_MSG_RESULT(unknown)
-  exit 1 
-fi
+  AC_MSG_CHECKING(whether we want one or two or three dimensional parallesisation)
+  AC_ARG_WITH(mpidimension,
+    [  --with-mpidimension[=n]      use n dimenaional parallisation [default=1]],
+    withmpidimension=$withval, withmpidimension=1)
+  if test $withmpidimension = 1; then
+    AC_MSG_RESULT(1 dimensional [t])
+    mpidimension="-DPARALLELT"
+    AC_DEFINE(PARALLELT,1,One dimensional parallelisation)
+  elif test $withmpidimension = 2; then
+    AC_MSG_RESULT(2 dimensional [xt])
+    mpidimension="-DPARALLELXT"
+    AC_DEFINE(PARALLELXT,1,Two dimensional parallelisation)
+  else
+    AC_MSG_RESULT(unknown)
+    exit 1 
+  fi
 fi
 
+AC_MSG_CHECKING(whether we want to use lapack and blas)
+AC_ARG_ENABLE(lapack,
+  [  --enable-lapack              enable use of lapack [default=yes]],
+  enable_lapack=$enableval, enable_lapack=yes)
+if test $enable_lapack = yes; then
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
 
 if test $enable_mpi = yes; then
 # In general one cannot run mpi programs directly
@@ -91,20 +100,26 @@ AC_C_BIGENDIAN(endian="", AC_DEFINE(LITTLE_ENDIAN,1,The endian of the architecht
 
 # Checks for libraries.
 if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
-  AC_CHECK_LIB(essl, zaxpy, ,echo NO ESSL! exiting...;exit 0, -lf -lm )
-  AC_CHECK_LIB(lapack, zheev, LP=yes, LP="", -lessl -lblas -lf -lm )
-  AC_CHECK_LIB(arpack, zneupd, AP=yes, AP="", -lessl -llapack -lf -lm)
-  if test "$enable_mpi" = "yes"; then
-    AC_CHECK_LIB(parpack, pzneupd, PAP=yes, PAP="", -larpack -lessl -llapack -lf -lm)  
+  if test $enable_lapack = yes; then
+    AC_CHECK_LIB(essl, zaxpy, ,echo NO ESSL! exiting...;exit 0, -lf -lm )
+    AC_CHECK_LIB(lapack, zheev, LP=yes;AC_DEFINE(HAVE_LAPACK,1,lapack available), LP="", -lessl -lblas -lf -lm )
   fi
+#  AC_CHECK_LIB(arpack, zneupd, AP=yes, AP="", -lessl -llapack -lf -lm)
+#  if test "$enable_mpi" = "yes"; then
+#    AC_CHECK_LIB(parpack, pzneupd, PAP=yes, PAP="", -larpack -lessl -llapack -lf -lm)  
+#  fi
 
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
-#  AC_CHECK_LIB(lapack, zheev, LP=yes, echo NO lapack available! Aborting...;exit 0, -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
-  echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
+  if test $enable_lapack = yes; then
+    AC_CHECK_LIB(lapack, zheev, LP=yes, LP="", -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
+    echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
+  fi
 
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
-#  AC_CHECK_LIB(lapack, zheev, LP=yes, echo NO lapack available! Aborting...;exit 0, -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
-  echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
+  if test $enable_lapack = yes; then
+    AC_CHECK_LIB(lapack, zheev, LP=yes, LP="", -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
+    echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
+  fi
 
 elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   AC_CHECK_LIB(g2c, f__cabs, G2C=yes, G2C="")
@@ -119,21 +134,14 @@ elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     F2C="-lf2c_nomain_LINUX"
   fi
 
-  AC_CHECK_LIB(lapack, zheev_, LP=yes, LP="",  -lblas $F2C -lm)
-  AC_CHECK_LIB(atlas, ATL_walltime, ATLAS=yes, ATLAS="")
-  if test "$LP" != ""; then
-    AC_CHECK_LIB(arpack, zneupd_, AP=yes ,AP="" , -llapack $F2C -lm)
-    if test "$enable_mpi" = "yes"; then
-      AC_CHECK_LIB(parpack, pzneupd_, PAP=yes, PAP="", -larpack -llapack $F2C -lm)  
-    fi
-  else
-    AC_CHECK_LIB(arpack, zneupd_, AP=yes ,AP="" , $F2C -lm)
-    if test "$enable_mpi" = "yes"; then
-      AC_CHECK_LIB(parpack, pzneupd_, PAP=yes, PAP="", -larpack $F2C -lm)  
-    fi
+  if test $enable_lapack = yes; then
+    AC_CHECK_LIB(lapack, zheev_, LP=yes, LP="",  -lblas $F2C -lm)
+    AC_CHECK_LIB(atlas, ATL_walltime, ATLAS=yes, ATLAS="")
   fi
 else
-  AC_CHECK_LIB(lapack, zheev_, LP=yes, LP="", -lblas -lf -lm )	
+  if test $enable_lapack = yes; then
+    AC_CHECK_LIB(lapack, zheev_, LP=yes, LP="", -lblas -lf -lm )	
+  fi
 fi
 
 # Checks for header files.
@@ -253,6 +261,8 @@ else
   PROFILE_FLAG=
 fi
 
+LIBS="-lm"
+
 # Now we have to set als Flags and compiler properly
 # first for PC's
 if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
@@ -275,7 +285,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     fi
     CXXFLAGS=' -Wall'
     OPTARGS='-O'
-    LIBS="-lm"
+
 
     if test "$host_cpu" != "x86_64"; then
       if test $enable_p4 = yes && ((test $GCCVERSION1 -gt 2 && test $GCCVERSION2 -gt 1) || test $GCCVERSION1 -gt 3); then
@@ -377,29 +387,33 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       CCDEP="$CC"
     fi
   fi
-  LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/lib -L\$(abs_top_builddir)/lapack"
-  if test "$LP" = "yes" && test "$host_cpu" != "x86_64"; then
-    if test "$ATLAS" = "yes"; then
-      LIBS="$LIBS -llapack -lf77blas -latlas"
-    else
-      LIBS="$LIBS -llapack -lblas"
-    fi
-  else
-    if test "$SSE" = "sse2" || test "$SSE" = "sse3"; then
-      if test "$host_cpu" != "x86_64"; then
-        LIBS="$LIBS -llapack_LINUXSSE2P4 -lf77blas_LINUXSSE2P4 -latlas_LINUXSSE2P4"
+  LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
+  if test $enable_lapack = yes; then
+    LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lapack"
+    AC_DEFINE(HAVE_LAPACK,1,lapack available)
+    if test "$LP" = "yes" && test "$host_cpu" != "x86_64"; then
+      if test "$ATLAS" = "yes"; then
+        LIBS="-llapack -lf77blas -latlas $LIBS"
       else
-        LIBS="$LIBS -llapack_LINUXHAMMER64SSE2 -lf77blas_LINUXHAMMER64SSE2 -latlas_LINUXHAMMER64SSE2"
+        LIBS="-llapack -lblas $LIBS"
       fi
     else
-      if test "$host_cpu" != "x86_64"; then
-        LIBS="$LIBS -llapack_LINUX -lblas_LINUX"
+      if test "$SSE" = "sse2" || test "$SSE" = "sse3"; then
+        if test "$host_cpu" != "x86_64"; then
+          LIBS="-llapack_LINUXSSE2P4 -lf77blas_LINUXSSE2P4 -latlas_LINUXSSE2P4 $LIBS"
+        else
+          LIBS="-llapack_LINUXHAMMER64SSE2 -lf77blas_LINUXHAMMER64SSE2 -latlas_LINUXHAMMER64SSE2 $LIBS"
+        fi
       else
-        LIBS="$LIBS -llapack_LINUX64 -lblas_LINUX64"
+        if test "$host_cpu" != "x86_64"; then
+          LIBS="-llapack_LINUX -lblas_LINUX $LIBS"
+        else
+          LIBS="-llapack_LINUX64 -lblas_LINUX64 $LIBS"
+        fi
       fi
     fi
+    LIBS="$LIBS $F2C"
   fi
-  LIBS="$LIBS $F2C"
 
 # The MareNostrum: powerpc on a linux system
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
@@ -412,8 +426,10 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
     AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   fi
 
-  LIBS="-llapack -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm"
   LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(HOME)/lib"
+  if test $enable_lapack = yes; then
+    LIBS="-llapack -lblas -lf77blas -latlas -lxlf90 -lxlfmath $LIBS"
+  fi
 
   OPTARGS="-O3"
   if test "$CCDEP" = "gcc"; then
@@ -434,8 +450,9 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
     XLC=yes
     AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   fi
-
-  LIBS="-llapack440 -lblas440 -lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts -lxlf90 -lxlfmath -lm"
+  if test $enable_lapack = yes; then
+    LIBS="-llapack440 -lblas440 -lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts -lxlf90 -lxlfmath $LIBS"
+  fi
   LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(HOME)/lib"
 
   OPTARGS="-O3"
@@ -451,7 +468,9 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   CFLAGS="-q64 -qsrcmsg"
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
-  LIBS="-lessl -llapack -lblas -lf -lm"
+  if test $enable_lapack = yes; then
+    LIBS="-lessl -llapack -lblas -lf $LIBS"
+  fi
   LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(HOME)/lib -q64"
   XLC=yes
   AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
@@ -470,7 +489,6 @@ elif test "$host_vendor" = "cray"; then
   echo
   CFLAGS="-dp"
   AC_DEFINE(CRAY,1,We are on a CRAY)
-  LIBS="-lm"
   LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
   OPTARGS="-O3"
   DEBUG_FLAG="-g"
@@ -488,7 +506,9 @@ else
     DEPFLAGS="-M"
   fi
 
-  LIBS="-llapack -lblas -lf -lm"
+  if test $enable_lapack = yes; then
+    LIBS="-llapack -lblas -lf $LIBS"
+  fi
   LDFLAGS="-L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
 fi
 

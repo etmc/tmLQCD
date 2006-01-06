@@ -1,3 +1,9 @@
+05.01.2006: By setting the history parameters for the CSG to zero one gets
+	    now a zero spinor as trial guess for the solvers.
+	    Moreover, by specifying --disable-lapack to configure it is
+	    possible to compile without the need of the external libs lapack
+	    and blas and the fortran-lib.
+
 14.11.2005: For the flavour non-degenerate eigenvalues computation, a new 
             structure, called bispinor, has been introduced. Consequently, 
             a serial and a parallel new Jacoby-Davidson routine working 

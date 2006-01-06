@@ -26,9 +26,10 @@ COMPILE = ${CC} $(DEFS) $(INCLUDES) ${CFLAGS}
 
 LIBRARIES = libsolver
 libsolver_TARGETS = bicgstab_complex gmres \
-	            cgs_real cg_her mr chrono_guess \
-                    jdher_bi gram-schmidt_bi quicksort \
-                    bicgstab_complex_bi cg_her_bi pjdher_bi 
+	            cgs_real cg_her mr chrono_guess 
+
+#                    jdher_bi gram-schmidt_bi quicksort \
+#                    bicgstab_complex_bi cg_her_bi pjdher_bi 
 libsolver_OBJECTS = $(addsuffix .o, ${libsolver_TARGETS})
 
 # default rule

@@ -43,13 +43,16 @@
 #include "init_moment_field.h"
 #include "invert_eo.h"
 
-char * Version = "2.3.5";
 
 void usage(){
-  fprintf(stderr, "Inversion for EO preconditioned Wilson twisted mass QCD\n\n");
-  fprintf(stderr, "Usage: [-f input-filename]\n");
-  fprintf(stderr, "Usage: [-o output-filename]\n");
-  exit(1);
+  fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
+  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Usage:   invert [options]\n");
+  fprintf(stdout, "Options: [-f input-filename]\n");
+  fprintf(stdout, "         [-o output-filename]\n");
+  fprintf(stdout, "         [-h|-? this help]\n");
+  exit(0);
 }
 
 extern int nstore;
@@ -163,7 +166,7 @@ int main(int argc,char *argv[]) {
     strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
     
     parameterfile=fopen(parameterfilename, "w");
-    printf("# This is the hmc code for twisted Mass Wilson QCD\n\nVersion %s\n", Version);
+    printf("# This is the hmc code for twisted Mass Wilson QCD\n\nVersion %s\n", PACKAGE_VERSION);
 #ifdef SSE
     printf("# The code was compiled with SSE instructions\n");
 #endif

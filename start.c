@@ -18,7 +18,7 @@
 *     Initializes the spinor field psi[k] to a Gaussian random field 
 *
 * M.Hasenbusch:
-*   void zero_spinor_field(int k)
+*   void zero_spinor_field(spinor * const k, const int V)
 *     Initializes the spinor field psi[k] to  zero
 *
 *   su3 random_su3(void)

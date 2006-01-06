@@ -41,43 +41,56 @@ void free_spinor_field() {
 }
 
 
-int init_csg_field(const int V, const int * nr) {
+int init_csg_field(const int V, int * const nr) {
   int i = 0, j = 0;
-
-  sp_csg = (spinor*)calloc((nr[0]+nr[2]+nr[4]+nr[6])*V+1, sizeof(spinor));
-  if(errno == ENOMEM) {
-    return(1);
-  }
-  for(i = 0; i < 4; i++) {
-    if(nr[2*i]!=0) {
-      g_csg_field[i] = malloc(nr[2*i]*sizeof(spinor*));
-      if(errno == ENOMEM) {
-	return(2);
-      }
-    }
-    else g_csg_field[i] = NULL;
-  }
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  g_csg_field[0][0] = (spinor*)(((unsigned long int)(sp_csg)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  g_csg_field[0][0] = sp_csg;
-#endif
   
-  for(i = 1; i < nr[0]; i++){
-    g_csg_field[0][i] = g_csg_field[0][i-1]+V;
+#if !defined HAVE_LAPACK
+
+  for(i = 0; i < 4; i++) {
+    nr[2*i] = 0;
   }
-  for(j = 1; j < 4; j++) {
-    if(nr[2*(j)]!=0) {
-      g_csg_field[j][0] = g_csg_field[j-1][nr[2*(j-1)]-1]+V;
-      for(i = 1; i < nr[2*j]; i++) {
-	g_csg_field[j][i] = g_csg_field[j][i-1]+V;
+
+#else
+
+  /* if all histories are zero, we do not need initialisation */
+  if((nr[0] != 0) || (nr[2] != 0) || (nr[4] != 0) || (nr[6] != 0)) {
+    sp_csg = (spinor*)calloc((nr[0]+nr[2]+nr[4]+nr[6])*V+1, sizeof(spinor));
+    if(errno == ENOMEM) {
+      return(1);
+    }
+    for(i = 0; i < 4; i++) {
+      if(nr[2*i]!=0) {
+	g_csg_field[i] = malloc(nr[2*i]*sizeof(spinor*));
+	if(errno == ENOMEM) {
+	  return(2);
+	}
       }
+      else g_csg_field[i] = NULL;
+    }
+#if ( defined SSE || defined SSE2 || defined SSE3)
+    g_csg_field[0][0] = (spinor*)(((unsigned long int)(sp_csg)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+    g_csg_field[0][0] = sp_csg;
+#endif
+    
+    for(i = 1; i < nr[0]; i++){
+      g_csg_field[0][i] = g_csg_field[0][i-1]+V;
+    }
+    for(j = 1; j < 4; j++) {
+      if(nr[2*(j)]!=0) {
+	g_csg_field[j][0] = g_csg_field[j-1][nr[2*(j-1)]-1]+V;
+	for(i = 1; i < nr[2*j]; i++) {
+	  g_csg_field[j][i] = g_csg_field[j][i-1]+V;
+	}
+      }
+    }
+    
+    g_csg_index_array[0] = (int*) malloc((nr[0]+nr[2]+nr[4]+nr[6])*sizeof(int));
+    for(i = 1; i < 4; i++) {
+      g_csg_index_array[i] = g_csg_index_array[i-1]+nr[2*(i-1)];
     }
   }
 
-  g_csg_index_array[0] = (int*) malloc((nr[0]+nr[2]+nr[4]+nr[6])*sizeof(int));
-  for(i = 1; i < 4; i++) {
-    g_csg_index_array[i] = g_csg_index_array[i-1]+nr[2*(i-1)];
-  }
+#endif
   return(0);
 }
