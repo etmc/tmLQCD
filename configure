@@ -4321,8 +4321,9 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
   fi
+  LIBS="-lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts $LIBS"
   if test $enable_lapack = yes; then
-    LIBS="-llapack440 -lblas440 -lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts -lxlf90 -lxlfmath $LIBS"
+    LIBS="-llapack440 -lblas440 -lxlf90 -lxlfmath $LIBS"
   fi
   LDFLAGS="-L\$(abs_top_builddir)/lib -L\$(HOME)/lib"
 
