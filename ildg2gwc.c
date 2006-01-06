@@ -6,13 +6,19 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#include "getopt.h"
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
+#ifdef MPI
+# include <mpi.h>
+#endif
 #include "global.h"
+#include "getopt.h"
 #include "io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #ifdef MPI
-#include "xchange.h"
+# include "xchange.h"
 #endif
 #include "geometry_eo.h"
 #include "observables.h"

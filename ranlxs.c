@@ -39,6 +39,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "ranlxs.h"
 
 #define _ranlux_step(x1,x2,i1,i2,i3)     \

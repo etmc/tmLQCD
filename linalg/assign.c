@@ -11,6 +11,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "su3.h"
 #include "assign.h"
 #include "global.h"

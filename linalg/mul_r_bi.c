@@ -11,11 +11,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "su3.h"
 #include "mul_r.h"
-
 #include "linalg_eo.h"
-#include "global.h"
 
 void mul_r_bi(bispinor * const R, const double cup, const double cdn, bispinor * const S, const int N){
 

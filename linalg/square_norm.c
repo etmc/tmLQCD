@@ -10,22 +10,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "su3.h"
-#include "sse.h"
-#include "square_norm.h"
-#include "global.h"
 #ifdef MPI
 #include <mpi.h>
 #endif
-
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #ifdef _STD_C99_COMPLEX_CHECKED
-#include <complex.h>
+# include <complex.h>
 #endif
-
 #ifdef apenext
-#include <topology.h>
-#include <queue.h>
+# include <topology.h>
+# include <queue.h>
 #endif
+#include "su3.h"
+#include "sse.h"
+#include "square_norm.h"
 
 #if ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
 

@@ -3,24 +3,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-
 #ifdef MPI
-#include <mpi.h>
+# include <mpi.h>
 #endif
-
-#include "sse.h"
-#include "su3.h"
-#include "assign_add_mul_r.h"
-#include "global.h"
-
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #ifdef _STD_C99_COMPLEX_CHECKED
-#include <complex.h>
+# include <complex.h>
 #endif
-
 #ifdef apenext
 #include <topology.h>
 #include <queue.h>
 #endif
+#include "global.h"
+#include "sse.h"
+#include "su3.h"
+#include "assign_add_mul_r.h"
+
 
 #if defined SSE2
 
@@ -54,9 +54,7 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
   }
 }
 
-#endif
-
-#if ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+#elif ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
 
 /*   (*P) = (*P) + c(*Q)        c is a complex constant   */
 
@@ -101,9 +99,7 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
     (*r).s3.c2.im+=fact*(*s).s3.c2.im;
   }
 }
-#endif
-
-#if ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+#elif ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
 
 /*   (*P) = (*P) + c(*Q)        c is a complex constant   */
 
@@ -146,9 +142,7 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
 
   } while (ix<N);
 }
-#endif
-
-#ifdef apenext
+#elif defined apenext
 
 #define NOWHERE_COND(condition) ((condition) ? 0x0 : NOWHERE )
 

@@ -25,7 +25,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "global.h"
 #include "su3.h"
 #include "su3spinor.h"

@@ -24,14 +24,17 @@
  *        Carsten Urbach <urbach@ifh.de>
  *
  ****************************************************/
-#define _LARGEFILE_SOURCE
+
 #define _FILE_OFFSET_BITS 64
 
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
 #ifdef MPI
-#include<unistd.h>
+# include<unistd.h>
+#endif
+#ifdef HAVE_CONFIG_H
+# include<config.h>
 #endif
 #include"global.h"
 #include"su3.h"
@@ -156,7 +159,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 	  }
 	  else {
 	    if(g_cart_id == id){
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][y][z] ], 4*sizeof(su3)/8);
 	      MPI_Send((void*) tmp, 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #else
@@ -186,7 +189,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   int t=0, x=0, y=0, z=0;
   char message[100];
   off_t bytes;
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
   su3 tmp[4];
 #endif
 
@@ -235,7 +238,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
     for(z = 0; z < LZ; z++){
       for(y = 0; y < LY; y++){
 	for(x = 0; x < LX; x++){
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 	  byte_swap_assign(tmp, g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8); 
 	  status = limeWriteRecordData((void*)&tmp[1], &bytes, limewriter);
 	  status = limeWriteRecordData((void*)&tmp[2], &bytes, limewriter);
@@ -292,7 +295,7 @@ int write_gauge_field_time_p(char * filename){
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
 	  if(g_cart_id == 0){
 	    if(g_cart_id == id){
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][y][z] ], 4*sizeof(su3)/8);
 	      fwrite(tmp, sizeof(su3), 4, ofs);
 #else
@@ -306,7 +309,7 @@ int write_gauge_field_time_p(char * filename){
 	  }
 	  else{
 	    if(g_cart_id == id){
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][y][z] ], 4*sizeof(su3)/8);
 	      MPI_Send((void*) tmp, 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #else
@@ -334,7 +337,7 @@ int write_gauge_field_time_p(char * filename){
 int write_gauge_field_time_p(char * filename){
   FILE * ofs;
   int t, x, y, z;
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
   su3 tmp[4];
 #endif
   ofs = fopen(filename, "w");
@@ -344,7 +347,7 @@ int write_gauge_field_time_p(char * filename){
       for(y = 0; y < LY; y++){
 	for(z = 0; z < LZ; z++){
 	  for(t = 0; t < T; t++){
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
  	    byte_swap_assign(tmp, g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8); 
 	    fwrite(tmp, sizeof(su3), 4, ofs);
 #else
@@ -374,7 +377,7 @@ int read_gauge_field_time_p(char * filename){
 #ifdef MPI
   int position;
 #endif
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
   su3 tmp[4];
 #endif
 
@@ -406,7 +409,7 @@ int read_gauge_field_time_p(char * filename){
 		SEEK_SET);
 #endif
 	  for(t = 0; t < T; t++){
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 	    fread(tmp, sizeof(su3), 4, ifs);
 	    byte_swap_assign(g_gauge_field[ g_ipt[t][x][y][z] ], tmp, 4*sizeof(su3)/8);
 #else
@@ -437,7 +440,7 @@ int read_lime_gauge_field(char * filename){
   off_t bytes;
   char * header_type;
   LimeReader * limereader;
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
   su3 tmp[4];
 #endif
 
@@ -502,7 +505,7 @@ int read_lime_gauge_field(char * filename){
 		       SEEK_SET);
 #endif
 	for(x = 0; x < LX; x++){
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 	  status = limeReaderReadData(tmp, &bytes, limereader);
 	  byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp[3], sizeof(su3)/8);
 	  byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &tmp[0], sizeof(su3)/8);
@@ -581,7 +584,7 @@ int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filen
 	  }
 	  if(g_cart_id == 0){
 	    if(g_cart_id == id){
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 	      byte_swap_assign(tmp, p + i , sizeof(spinor)/8);
 	      fwrite(tmp, sizeof(spinor), 1, ofs);
 #else
@@ -598,7 +601,7 @@ int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filen
 #ifdef MPI
 	  else{
 	    if(g_cart_id == id){
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 	      byte_swap_assign(tmp, p + i, sizeof(spinor)/8);
 	      MPI_Send((void*) tmp, sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #else
@@ -634,7 +637,7 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
 #ifdef MPI
   int position;
 #endif
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
   spinor tmp[1];
 #endif
 
@@ -684,7 +687,7 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
 	    else {
 	      p = r;
 	    }
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 	    fread(tmp, sizeof(spinor), 1, ifs);
 	    byte_swap_assign(p + i, tmp, sizeof(spinor)/8);
 #else

@@ -3,9 +3,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
+#include "global.h"
 #include "su3.h"
 #include "su3adj.h"
-#include "global.h"
 #include "linalg_eo.h"
 #include "gamma.h"
 #include "start.h"

@@ -13,16 +13,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef MPI
+# include <mpi.h>
+#endif
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "su3.h"
 #include "sse.h"
-#include "global.h"
-
 #include "square_norm_bi.h"
-
-
-#ifdef MPI
-#include <mpi.h>
-#endif
 
 double square_norm_bi(bispinor * const P, const int N) {
   int ix;

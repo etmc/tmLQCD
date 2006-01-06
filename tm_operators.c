@@ -11,6 +11,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "global.h"
 #include "su3.h"
 #include "Hopping_Matrix.h"

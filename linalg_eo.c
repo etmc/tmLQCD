@@ -27,10 +27,13 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
+#include "global.h"
 #include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
-#include "global.h"
 #include "linalg_eo.h"
 
 /* j output k input , l input */

@@ -51,6 +51,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "global.h"
 #include "linalg_eo.h"
 #include "eigenvalues.h"

@@ -12,11 +12,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef MPI
+# include <mpi.h>
+#endif
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "su3.h"
 #include "square_and_prod_r.h"
-#ifdef MPI
-#include <mpi.h>
-#endif
 
 void square_and_prod_r(double * const x1, double * const x2, spinor * const S, spinor * const R, const int N){
   int ix;

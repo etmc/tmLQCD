@@ -3,12 +3,15 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
+#include "global.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "expo.h"
 #include "ranlxd.h"
 #include "sse.h"
-#include "global.h"
 #include "linalg_eo.h"
 #include "start.h"
 #include "linsolve.h"

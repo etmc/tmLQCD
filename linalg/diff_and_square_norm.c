@@ -1,10 +1,13 @@
 /* $Id$ */
 
 #include <stdlib.h>
-#include "su3.h"
 #ifdef MPI
-#include <mpi.h>
+# include <mpi.h>
 #endif
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
+#include "su3.h"
 #include "diff_and_square_norm.h"
 
 double diff_and_square_norm(spinor * const Q, spinor * const R, const int N) {

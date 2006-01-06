@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "su3.h"
 #include "su3adj.h"
 #include "ranlxd.h"

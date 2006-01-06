@@ -35,9 +35,11 @@
 #include <string.h>
 #include <errno.h>
 #include <string.h>
-
-#include "sse.h" 
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "global.h"
+#include "sse.h" 
 #include "linalg/fortran.h"
 #include "linalg/blas.h"
 #include "linalg/lapack.h"

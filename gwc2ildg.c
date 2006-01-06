@@ -6,8 +6,11 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#include "getopt.h"
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "global.h"
+#include "getopt.h"
 #include "io.h"
 #include "read_input.h"
 #include "mpi_init.h"

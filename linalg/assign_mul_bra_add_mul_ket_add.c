@@ -12,8 +12,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "global.h"
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "su3.h"
+#include "sse.h"
 #include "assign_mul_bra_add_mul_ket_add.h"
 
 

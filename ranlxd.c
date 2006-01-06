@@ -39,6 +39,9 @@
 #include <float.h>
 #include <stdlib.h>
 #include <math.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "ranlxd.h"
 
 void errorhandler(const int i, char * c){

@@ -11,23 +11,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-
 #ifdef MPI
-#include <mpi.h>
+# include <mpi.h>
 #endif
-
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #ifdef _STD_C99_COMPLEX_CHECKED
-#include <complex.h>
+# include <complex.h>
 #endif
-
 #ifdef apenext
-#include <topology.h>
-#include <queue.h>
+# include <topology.h>
+# include <queue.h>
 #endif
-
 #include "su3.h"
 #include "scalar_prod_r.h"
-#include "global.h"
 
 /*  R input, S input */
 

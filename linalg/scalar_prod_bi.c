@@ -10,12 +10,13 @@
  ***************************************************************************/
 
 #include <stdlib.h>
-#include "su3.h"
 #ifdef MPI
 #include <mpi.h>
 #endif
-#include "global.h"
-
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
+#include "su3.h"
 #include "scalar_prod_bi.h"
 
 

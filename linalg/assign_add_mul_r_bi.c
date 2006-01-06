@@ -17,10 +17,11 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "sse.h"
 #include "su3.h"
-
-#include "global.h"
 #include "assign_add_mul_r_bi.h"
 
 

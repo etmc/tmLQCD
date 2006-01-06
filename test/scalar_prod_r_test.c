@@ -2,6 +2,9 @@
 /* #include <complex.h> */
 /* #endif */
 
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #ifndef _STD_C99_COMPLEX
 #include "complex.h"
 #endif

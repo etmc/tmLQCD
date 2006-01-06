@@ -17,8 +17,11 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#include "getopt.h"
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "global.h"
+#include "getopt.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "expo.h"

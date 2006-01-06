@@ -20,6 +20,9 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "global.h"
 #include "io.h"
 #include "init_gauge_tmp.h"

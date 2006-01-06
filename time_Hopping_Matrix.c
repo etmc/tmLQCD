@@ -21,6 +21,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "global.h"
 #include "su3.h"
 #include "ranlxd.h"
@@ -30,7 +33,7 @@
 #include "linalg_eo.h"
 #include "boundary.h"
 #if defined MPI
-#include "xchange.h"
+# include "xchange.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
 #endif

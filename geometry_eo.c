@@ -21,10 +21,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
+#include "global.h"
 #include "su3.h"
 #include "su3adj.h"
-/*#include "io.h"*/
-#include "global.h"
 
 
 #ifndef _NEW_GEOMETRY

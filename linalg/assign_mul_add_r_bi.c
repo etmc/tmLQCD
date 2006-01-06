@@ -12,10 +12,11 @@
 
 
 #include <stdlib.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "su3.h"
 #include "sse.h"
-
-#include "global.h"
 #include "assign_mul_add_r_bi.h"
 
 

@@ -16,6 +16,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "sse.h"
 #include "su3.h"
 #include "su3adj.h"

@@ -20,17 +20,20 @@
 #include <string.h>
 #include <signal.h>
 #ifdef MPI
-#include <mpi.h>
+# include <mpi.h>
 #endif
-#include "getopt.h"
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "global.h"
+#include "getopt.h"
 #include "ranlxd.h"
 #include "geometry_eo.h"
 #include "start.h"
 #include "observables.h"
 #include "measure_rectangles.h"
 #ifdef MPI
-#include "xchange.h"
+# include "xchange.h"
 #endif
 #include "io.h"
 #include "read_input.h"

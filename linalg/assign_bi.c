@@ -14,9 +14,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "su3.h"
-#include "global.h"
-
 #include "assign_bi.h"
 
 /* S input, R output */

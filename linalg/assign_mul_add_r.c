@@ -1,6 +1,9 @@
 /* $Id$ */
 
 #include <stdlib.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include "su3.h"
 #include "sse.h"
 #include "global.h"
@@ -46,9 +49,8 @@ void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const 
     s++; r++;
   }
 }
-#endif
 
-#if ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+#elif ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
 
 /* R inoutput , c,S input*/
 /*   (*R) = c*(*R) + (*S)        c is a real constant   */
@@ -111,9 +113,8 @@ void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const 
 /*       printf("%1.16e %1.16e\n",(*r).s3.c2.re,(*r).s3.c2.im); */
   }
 }
-#endif
 
-#if ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+#elif ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
 
 /*   (*R) = c*(*R) + (*S)        c is a real constant   */
 
@@ -159,9 +160,8 @@ void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const 
 
   } while (ix<N);
 }
-#endif
 
-#ifdef apenext
+#elif defined apenext
 
 #define NOWHERE_COND(condition) ((condition) ? 0x0 : NOWHERE ) 
 
