@@ -8,24 +8,24 @@
  *
  *******************************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#include <stdlib.h>
+#include <stdio.h>
+#ifdef _STD_C99_COMPLEX_CHECKED
+# include <complex.h>
+#endif
+#ifdef apenext
+# include <topology.h>
+# include <queue.h>
+#endif
+#include <math.h>
 #include "su3.h"
 #include "assign.h"
 #include "global.h"
 
-#ifdef _STD_C99_COMPLEX_CHECKED
-#include <complex.h>
-#endif
 
-#ifdef apenext
-#include <topology.h>
-#include <queue.h>
-#endif
 
 /* S input, R output */
 

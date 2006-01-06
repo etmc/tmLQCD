@@ -1,9 +1,9 @@
 /* $Id$ */
 
-#include <stdlib.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#include <stdlib.h>
 #include "su3.h"
 #include "assign_diff_mul.h"
 

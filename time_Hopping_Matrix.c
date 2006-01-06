@@ -17,13 +17,13 @@
 #define CACHE_SIZE 256000
 #endif
 
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#ifdef HAVE_CONFIG_H
-# include<config.h>
-#endif
 #include "global.h"
 #include "su3.h"
 #include "ranlxd.h"

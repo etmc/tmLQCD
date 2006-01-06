@@ -18,11 +18,11 @@
  *
  ******************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#include <stdlib.h>
+#include <stdio.h>
 #include "global.h"
 #include "xchange.h"
 #include "su3.h"

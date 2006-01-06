@@ -9,12 +9,12 @@
  *
  *******************************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include "su3.h"
 #include "su3adj.h"
 #include "assign_mul_add_mul_add_mul_add_mul_r.h"

@@ -24,6 +24,9 @@
  **************************************************************************/
 
 
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include <limits.h>
 #include <float.h>
 #include <math.h>
@@ -32,9 +35,6 @@
 #include <string.h>
 #include <errno.h>
 #include <string.h>
-#ifdef HAVE_CONFIG_H
-# include<config.h>
-#endif
 #include "sse.h" 
 #include "linalg/fortran.h"
 #include "linalg/blas.h"

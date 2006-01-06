@@ -12,6 +12,9 @@
 
 #define MAIN_PROGRAM
 
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -20,9 +23,6 @@
 #include <signal.h>
 #ifdef MPI
 #include <mpi.h>
-#endif
-#ifdef HAVE_CONFIG_H
-# include<config.h>
 #endif
 #include "global.h"
 #include "getopt.h"

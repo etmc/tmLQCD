@@ -51,13 +51,12 @@
 *    done by Kei-ichi Nagai  
 *
 */
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include "global.h"
 #include "su3.h"
 #include "su3adj.h"

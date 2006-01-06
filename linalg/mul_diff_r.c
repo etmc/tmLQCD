@@ -3,12 +3,12 @@
  * Makes (*R)=c1*(*S)-(*U) , c1 is a real constant 
  *******************************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include "su3.h"
 #include "mul_diff_r.h"
 

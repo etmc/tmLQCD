@@ -2,13 +2,13 @@
 
 #define MAIN_PROGRAM
 
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#ifdef HAVE_CONFIG_H
-# include<config.h>
-#endif
 #include "global.h"
 #include "getopt.h"
 #include "io.h"

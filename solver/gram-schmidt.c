@@ -1,10 +1,10 @@
 /* $Id$ */
 
-#include <math.h>
-#include <stdio.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#include <math.h>
+#include <stdio.h>
 #include "su3spinor.h"
 #include "complex.h"
 #include "linalg_eo.h"

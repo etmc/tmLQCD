@@ -1,22 +1,21 @@
 /* $Id$ */
 
-#include <stdlib.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#include "su3.h"
-#include "sse.h"
-#include "global.h"
-#include "assign_mul_add_r.h"
-
-#ifdef _STD_C99_COMPLEX_CHECKED
+#include <stdlib.h>
+# ifdef _STD_C99_COMPLEX_CHECKED
 #include <complex.h>
 #endif
-
 #ifdef apenext
-#include <topology.h>
-#include <queue.h>
+# include <topology.h>
+# include <queue.h>
 #endif
+#include "su3.h"
+#include "sse.h"
+#include "assign_mul_add_r.h"
+
+
 
 
 #if defined SSE2

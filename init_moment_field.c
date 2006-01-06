@@ -1,11 +1,11 @@
 /* $Id$ */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
 #include "global.h"
 #include "su3.h"
 #include "su3adj.h"

@@ -17,10 +17,10 @@
  *
  ****************************************************************/
 
-#include<stdlib.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#include<stdlib.h>
 #include"global.h"
 #include"linalg_eo.h"
 #include"tm_operators.h"

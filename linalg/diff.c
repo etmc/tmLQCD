@@ -5,23 +5,23 @@
  *     Makes the difference (*Q) = (*R) - (*S)
  *******************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef HAVE_CONFIG_H
-# include<config.h>
+#ifdef _STD_C99_COMPLEX_CHECKED
+# include <complex.h>
+#endif
+#ifdef apenext
+# include <topology.h>
+# include <queue.h>
 #endif
 #include "su3.h"
 #include "diff.h"
 
-#ifdef _STD_C99_COMPLEX_CHECKED
-#include <complex.h>
-#endif
 
-#ifdef apenext
-#include <topology.h>
-#include <queue.h>
-#endif
 
 #if ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
 

@@ -12,12 +12,12 @@
  *
  *******************************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include "sse.h"
 #include "su3.h"
 #include "assign_mul_bra_add_mul_ket_add_bi.h"

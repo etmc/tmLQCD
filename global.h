@@ -18,9 +18,6 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 #include"su3.h"
 #include"su3adj.h"
 

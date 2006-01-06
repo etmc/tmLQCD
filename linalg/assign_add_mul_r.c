@@ -1,5 +1,8 @@
 /* $Id$ */
 
+#ifdef _STD_C99_COMPLEX_CHECKED
+# include <complex.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -8,9 +11,6 @@
 #endif
 #ifdef HAVE_CONFIG_H
 # include<config.h>
-#endif
-#ifdef _STD_C99_COMPLEX_CHECKED
-# include <complex.h>
 #endif
 #ifdef apenext
 #include <topology.h>

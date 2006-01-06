@@ -14,14 +14,14 @@
  *
  *******************************************************************/
 
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #ifdef MPI
 #include <mpi.h>
-#endif
-#ifdef HAVE_CONFIG_H
-# include<config.h>
 #endif
 #include "global.h"
 #include "sse.h"
