@@ -13,8 +13,21 @@
 #include <math.h>
 #include "su3.h"
 #include "assign.h"
+#include "global.h"
+
+#ifdef _STD_C99_COMPLEX_CHECKED
+#include <complex.h>
+#endif
+
+#ifdef apenext
+#include <topology.h>
+#include <queue.h>
+#endif
 
 /* S input, R output */
+
+#if ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+
 void assign(spinor * const R, spinor * const S, const int N){
   int ix;
   spinor *r,*s;
@@ -52,3 +65,95 @@ void assign(spinor * const R, spinor * const S, const int N){
     (*r).s3.c2.im = (*s).s3.c2.im;
   }
 }
+#endif
+
+#if ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+
+void assign(spinor * const R, spinor * const S, const int N){
+  register int ix=0;
+  register spinor *rPointer,*sPointer;
+
+  rPointer = R;
+  sPointer = S;
+
+  do {
+    register spinor s, r;
+    ix+=1;
+
+    s = *(sPointer);
+
+    r.s0.c0 = s.s0.c0;
+    r.s0.c1 = s.s0.c1;
+    r.s0.c2 = s.s0.c2;
+
+    r.s1.c0 = s.s1.c0;
+    r.s1.c1 = s.s1.c1;
+    r.s1.c2 = s.s1.c2;
+
+    r.s2.c0 = s.s2.c0;
+    r.s2.c1 = s.s2.c1;
+    r.s2.c2 = s.s2.c2;
+    
+    r.s3.c0 = s.s3.c0;
+    r.s3.c1 = s.s3.c1;
+    r.s3.c2 = s.s3.c2;
+
+    *(rPointer) = r;
+
+    rPointer+=1;
+    sPointer+=1;
+
+ } while (ix<N);
+}
+#endif
+
+
+#ifdef apenext
+
+#define NOWHERE_COND(condition) ((condition) ? 0x0 : NOWHERE )
+
+void assign(spinor * const R, spinor * const S, const int N){
+  register int ix=N;
+  register spinor *rPointer,*sPointer;
+
+  rPointer = R;
+  sPointer = S;
+
+  prefetch (*(sPointer));
+  {
+#pragma cache
+
+    do {
+      register spinor s, r;
+      ix-=1;
+
+      sPointer+=1;
+
+      fetch(s);
+
+      prefetch (*(sPointer+NOWHERE_COND(ix)));
+      
+      r.s0.c0 = s.s0.c0;
+      r.s0.c1 = s.s0.c1;
+      r.s0.c2 = s.s0.c2;
+
+      r.s1.c0 = s.s1.c0;
+      r.s1.c1 = s.s1.c1;
+      r.s1.c2 = s.s1.c2;
+
+      r.s2.c0 = s.s2.c0;
+      r.s2.c1 = s.s2.c1;
+      r.s2.c2 = s.s2.c2;
+    
+      r.s3.c0 = s.s3.c0;
+      r.s3.c1 = s.s3.c1;
+      r.s3.c2 = s.s3.c2;
+
+      *(rPointer) = r;
+
+      rPointer+=1;
+
+    } while (ix>0);
+  }
+}
+#endif
