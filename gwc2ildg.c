@@ -67,12 +67,12 @@ int main(int argc,char *argv[]) {
   }
 
   if(ifilename == NULL) {
-    fprintf(stderr, "You have to give an input file name! Aborting...\n");
-    exit(1);
+    fprintf(stderr, "You have to give an input file name! Aborting...\n\n");
+    usage();
   }
   if(ofilename == NULL) {
-    fprintf(stderr, "You have to give an output file name! Aborting...\n");
-    exit(2);
+    fprintf(stderr, "You have to give an output file name! Aborting...\n\n");
+    usage();
   }
   if(input_filename == NULL){
     input_filename = "hmc.input";
@@ -82,6 +82,7 @@ int main(int argc,char *argv[]) {
 
   if(read_input(input_filename) != 0) {
     fprintf(stderr, "Input file required!\n Aborting...!\n");
+    usage();
   }
 
   mpi_init(argc, argv);
