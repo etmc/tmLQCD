@@ -33,6 +33,8 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
+#include<time.h>
+#include<sys/time.h>
 #ifdef MPI
 # include<unistd.h>
 #endif
@@ -65,10 +67,12 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   su3 tmp[4];
   int coords[2];
   off_t bytes;
+  struct timeval t1;
 
+  gettimeofday(&t1,NULL);
   if(g_kappa > 0. || g_kappa < 0.) {
-    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f", 
-	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1);
+    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n time = %ld", 
+	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1,t1.tv_sec);
   }
   else {
     sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f", 
@@ -130,7 +134,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
 	  if(g_cart_id == 0) {
 	    if(g_cart_id == id) {
-#ifdef LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8); 
 	      status = limeWriteRecordData((void*)&tmp[1], &bytes, limewriter);
 	      status = limeWriteRecordData((void*)&tmp[2], &bytes, limewriter);
@@ -492,7 +496,7 @@ int read_lime_gauge_field(char * filename){
   }
 
   bytes = (off_t)4*sizeof(su3);
-#ifndef LITTLE_ENDIAN
+#ifdef WORDS_BIGENDIAN
   bytes = sizeof(su3);
 #endif
   for(t = 0; t < T; t++){
