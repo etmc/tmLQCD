@@ -1,3 +1,5 @@
+25.01.2006: changed --disalbe-lapack to --without-lapack ...
+
 05.01.2006: By setting the history parameters for the CSG to zero one gets
 	    now a zero spinor as trial guess for the solvers.
 	    Moreover, by specifying --disable-lapack to configure it is

@@ -41,7 +41,7 @@ AC_CHECK_LIB([lime], [limeReaderNextRecord],[],
 
 AC_MSG_CHECKING(whether we want to use MPI)
 AC_ARG_ENABLE(mpi,
-  [  --enable-mpi                 enable use of mpi [default=yes]],
+  [  --enable-mpi            enable use of mpi [default=yes]],
   enable_mpi=$enableval, enable_mpi=yes)
 if test $enable_mpi = yes; then
   AC_MSG_RESULT(yes)
@@ -51,16 +51,16 @@ else
 fi 
 
 if test $enable_mpi = yes; then
-  AC_MSG_CHECKING(whether we want one or two or three dimensional parallesisation)
+  AC_MSG_CHECKING(which parallelisation to use for MPI)
   AC_ARG_WITH(mpidimension,
-    [  --with-mpidimension[=n]      use n dimenaional parallisation [default=1]],
+    [  --with-mpidimension[=n]   use n dimensional parallelisation [default=1]],
     withmpidimension=$withval, withmpidimension=1)
   if test $withmpidimension = 1; then
-    AC_MSG_RESULT(1 dimensional [t])
+    AC_MSG_RESULT(n=1 [t])
     mpidimension="-DPARALLELT"
     AC_DEFINE(PARALLELT,1,One dimensional parallelisation)
   elif test $withmpidimension = 2; then
-    AC_MSG_RESULT(2 dimensional [xt])
+    AC_MSG_RESULT(n=2 [xt])
     mpidimension="-DPARALLELXT"
     AC_DEFINE(PARALLELXT,1,Two dimensional parallelisation)
   else
@@ -70,10 +70,10 @@ if test $enable_mpi = yes; then
 fi
 
 AC_MSG_CHECKING(whether we want to use lapack and blas)
-AC_ARG_ENABLE(lapack,
-  [  --enable-lapack              enable use of lapack [default=yes]],
-  enable_lapack=$enableval, enable_lapack=yes)
-if test $enable_lapack = yes; then
+AC_ARG_WITH(lapack,
+  [  --with-lapack           enable use of lapack [default=yes]],
+  with_lapack=$withval, with_lapack=yes)
+if test $with_lapack = yes; then
   AC_MSG_RESULT(yes)
 else
   AC_MSG_RESULT(no)
@@ -190,7 +190,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
   AC_MSG_CHECKING(whether we want to use P4 instructions)
   AC_ARG_ENABLE(p4,
-    [  --enable-p4                  enable use of P4 instructions [default=yes]],
+    [  --enable-p4             enable use of P4 instructions [default=yes]],
     enable_p4=$enableval, enable_p4=yes)
   if test $enable_p4 = yes; then
     AC_MSG_RESULT(yes)
@@ -202,7 +202,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
   AC_MSG_CHECKING(whether we want to use Opteron instructions)
   AC_ARG_ENABLE(opteron,
-    [  --enable-opteron             enable use of Opteron instructions [default=no]],
+    [  --enable-opteron        enable use of Opteron instructions [default=no]],
     enable_opteron=$enableval, enable_opteron=no)
   if test $enable_opteron = yes; then
     AC_MSG_RESULT(yes)
@@ -214,7 +214,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
   AC_MSG_CHECKING(whether we want to use SSE1 instructions)
   AC_ARG_ENABLE(sse,
-    [  --enable-sse                 enable use of SSE1 instructions [default=no]],
+    [  --enable-sse            enable use of SSE1 instructions [default=no]],
     enable_see=$enableval, enable_sse=no)
   if test $enable_sse = yes; then
     AC_MSG_RESULT(yes)
@@ -228,7 +228,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
   AC_MSG_CHECKING(whether we want to use SSE2 instructions)
   AC_ARG_ENABLE(sse2,
-    [  --enable-sse2                enable use of SSE2 instructions [default=yes]],
+    [  --enable-sse2           enable use of SSE2 instructions [default=yes]],
     enable_sse2=$enableval, enable_sse2=yes)
   if test $enable_sse2 = yes; then
     AC_MSG_RESULT(yes)
@@ -238,7 +238,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
   AC_MSG_CHECKING(whether we want to use SSE3 instructions)
   AC_ARG_ENABLE(sse3,
-    [  --enable-sse3                enable use of SSE3 instructions [default=no]],
+    [  --enable-sse3           enable use of SSE3 instructions [default=no]],
     enable_sse3=$enableval, enable_sse3=no)
   if test $enable_sse3 = yes; then
     AC_MSG_RESULT(yes)
@@ -249,7 +249,7 @@ fi
 
 AC_MSG_CHECKING(whether solvers should output convergence information)
 AC_ARG_ENABLE(solveroutput,
-  [  --enable-solveroutput        enable solver convergence output [default=no]],
+  [  --enable-solveroutput   enable solver convergence output [default=no]],
   enable_solveroutput=$enableval, enable_solveroutput=no)
 if test $enable_solveroutput = yes; then
   AC_MSG_RESULT(yes)
@@ -262,7 +262,7 @@ fi
 
 AC_MSG_CHECKING(whether we want to use gprof as profiler)
 AC_ARG_WITH(gprof,
-  [  --with-gprof                  use of gprof profiler [default=yes]],
+  [  --with-gprof            use of gprof profiler [default=yes]],
   enable_gprof=$withval, enable_gprof=yes)
 if test $enable_gprof = yes; then
   AC_MSG_RESULT(yes)
@@ -291,12 +291,12 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     if test $enable_mpi = yes; then
 # Due to some standard problems in MPI header files
 # no -pedantic-errors...
-      CFLAGS="-ansi -pedantic -Wall"
+      CFLAGS="$CFLAGS -ansi -pedantic -Wall"
     else
       if test $GCCVERSION1 -gt 2 && test $enable_sse2 = yes; then
-        CFLAGS="-ansi -Wall -pedantic"
+        CFLAGS="$CFLAGS -ansi -Wall -pedantic"
       else
-	CFLAGS="-ansi -Wall -pedantic-errors"
+	CFLAGS="$CFLAGS -ansi -Wall -pedantic"
       fi
     fi
     CXXFLAGS=' -Wall'
@@ -327,7 +327,6 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
     if test $enable_sse3 = yes; then
       echo Using SSE3 and SSE2 macros!
-      CFLAGS="$CFLAGS"
       SSE="sse3"
       AC_DEFINE(SSE3,1,Compile with SSE3 support)
       DEPFLAGS="$DEPFLAGS -DSSE3"
@@ -336,7 +335,6 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       fi
     elif test $enable_sse2 = yes && test $enable_sse = no; then
       echo Using SSE2 macros!
-      CFLAGS="$CFLAGS"
       DEPFLAGS="$DEPFLAGS -DSSE2"
       SSE="sse2"
       AC_DEFINE(SSE2,1,Compile with SSE2 support)
@@ -345,7 +343,6 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       fi
     elif test $enable_sse = yes; then
       echo Using SSE macros!
-      CFLAGS="$CFLAGS -DSSE"
       DEPFLAGS="$DEPFLAGS -DSSE"
       SSE="sse"
       AC_DEFINE(SSE,1,Compile with SSE support)
@@ -372,7 +369,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     if test "$PGCC" != ""; then
       DEPFLAGS="-M"
       echo "We are using the Portland Group C compiler!"
-      CFLAGS="-Mdalign -fastsse"
+      CFLAGS="$CFLAGS -Mdalign -fastsse"
       if test $enable_p4 = "yes"; then
 	SSE="sse2"
       fi
@@ -385,7 +382,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     elif test "$ICC" != ""; then
       echo "We are using the Intel C compiler!"
       DEPFLAGS="-M"
-      CFLAGS="-Wall -w1"
+      CFLAGS="$CFLAGS -Wall -w1"
       if test $enable_p4 = "yes"; then
         CFLAGS="$CFLAGS -march=pentium4"
 	SSE="sse2"
@@ -397,7 +394,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
     else
       DEPFLAGS="-M"
-      CFLAGS="-O"
+      CFLAGS="$CFLAGS -O"
       DEBUG_FLAG="-g"
       CCDEP="$CC"
     fi
@@ -455,7 +452,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
 
 #The BG/L
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
-  CFLAGS=" -O3 -g  -qarch=440 -qtune=440"
+  CFLAGS="$CFLAGS -O3 -g  -qarch=440 -qtune=440"
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
   DEBUGFLAG="-g"
 
@@ -482,7 +479,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
 
 # The IBM Power PC
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
-  CFLAGS="-q64 -qsrcmsg"
+  CFLAGS="$CFLAGS -q64 -qsrcmsg"
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
   if test $enable_lapack = yes; then
     LIBS="-lessl -llapack -lblas -lf $LIBS"
@@ -503,7 +500,7 @@ elif test "$host_vendor" = "cray"; then
   echo
   echo "Hey, we are on the cray, you should take some time for this..."
   echo
-  CFLAGS="-dp"
+  CFLAGS="$CFLAGS -dp"
   AC_DEFINE(CRAY,1,We are on a CRAY)
   LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
   OPTARGS="-O3"
@@ -531,7 +528,7 @@ fi
 
 AC_MSG_CHECKING(whether we want to switch on optimisation)
 AC_ARG_ENABLE(optimize,  
-  [  --enable-optimize            enable optimisation [default=yes]],
+  [  --enable-optimize       enable optimisation [default=yes]],
   enable_optimize=$enableval, enable_optimize=yes)
 if test $enable_optimize = no; then
   AC_MSG_RESULT(no)
@@ -542,7 +539,7 @@ fi
 
 AC_MSG_CHECKING(whether we want to use a copy of the gauge field)
 AC_ARG_ENABLE(gaugecopy,
-  [  --enable-gaugecopy           enable use of a copy of the gauge field [default=yes]],
+  [  --enable-gaugecopy      enable use of a copy of the gauge field [default=yes]],
   enable_gaugecopy=$enableval, enable_gaugecopy=yes)
 if test $enable_gaugecopy = yes; then
   AC_MSG_RESULT(yes)
@@ -553,7 +550,7 @@ fi
 
 AC_MSG_CHECKING(whether we want to use EO geometry for gauge fields)
 AC_ARG_ENABLE(eogeom,
-  [  --enable-eogeom              enable use of EO geometry for gauge fields [default=yes]],
+  [  --enable-eogeom         enable use of EO geometry for gauge fields [default=yes]],
   enable_eogeom=$enableval, enable_eogeom=yes)
 if test $enable_eogeom = yes; then
   AC_MSG_RESULT(yes)

@@ -854,25 +854,25 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-mpi                 enable use of mpi default=yes
-  --enable-lapack              enable use of lapack default=yes
+  --enable-mpi            enable use of mpi default=yes
   --disable-largefile     omit support for large files
-  --enable-p4                  enable use of P4 instructions default=yes
-  --enable-opteron             enable use of Opteron instructions default=no
-  --enable-sse                 enable use of SSE1 instructions default=no
-  --enable-sse2                enable use of SSE2 instructions default=yes
-  --enable-sse3                enable use of SSE3 instructions default=no
-  --enable-solveroutput        enable solver convergence output default=no
-  --enable-optimize            enable optimisation default=yes
-  --enable-gaugecopy           enable use of a copy of the gauge field default=yes
-  --enable-eogeom              enable use of EO geometry for gauge fields default=yes
+  --enable-p4             enable use of P4 instructions default=yes
+  --enable-opteron        enable use of Opteron instructions default=no
+  --enable-sse            enable use of SSE1 instructions default=no
+  --enable-sse2           enable use of SSE2 instructions default=yes
+  --enable-sse3           enable use of SSE3 instructions default=no
+  --enable-solveroutput   enable solver convergence output default=no
+  --enable-optimize       enable optimisation default=yes
+  --enable-gaugecopy      enable use of a copy of the gauge field default=yes
+  --enable-eogeom         enable use of EO geometry for gauge fields default=yes
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-limedir=dir      search lime in dir default=./lime
-  --with-mpidimension=n      use n dimenaional parallisation default=1
-  --with-gprof                  use of gprof profiler default=yes
+  --with-mpidimension=n   use n dimensional parallelisation default=1
+  --with-lapack           enable use of lapack default=yes
+  --with-gprof            use of gprof profiler default=yes
 
 Some influential environment variables:
   CC          C compiler command
@@ -3244,8 +3244,8 @@ echo "${ECHO_T}no" >&6
 fi
 
 if test $enable_mpi = yes; then
-  echo "$as_me:$LINENO: checking whether we want one or two or three dimensional parallesisation" >&5
-echo $ECHO_N "checking whether we want one or two or three dimensional parallesisation... $ECHO_C" >&6
+  echo "$as_me:$LINENO: checking which parallelisation to use for MPI" >&5
+echo $ECHO_N "checking which parallelisation to use for MPI... $ECHO_C" >&6
 
 # Check whether --with-mpidimension or --without-mpidimension was given.
 if test "${with_mpidimension+set}" = set; then
@@ -3255,8 +3255,8 @@ else
   withmpidimension=1
 fi;
   if test $withmpidimension = 1; then
-    echo "$as_me:$LINENO: result: 1 dimensional t" >&5
-echo "${ECHO_T}1 dimensional t" >&6
+    echo "$as_me:$LINENO: result: n=1 t" >&5
+echo "${ECHO_T}n=1 t" >&6
     mpidimension="-DPARALLELT"
 
 cat >>confdefs.h <<\_ACEOF
@@ -3264,8 +3264,8 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
   elif test $withmpidimension = 2; then
-    echo "$as_me:$LINENO: result: 2 dimensional xt" >&5
-echo "${ECHO_T}2 dimensional xt" >&6
+    echo "$as_me:$LINENO: result: n=2 xt" >&5
+echo "${ECHO_T}n=2 xt" >&6
     mpidimension="-DPARALLELXT"
 
 cat >>confdefs.h <<\_ACEOF
@@ -3283,14 +3283,15 @@ fi
 
 echo "$as_me:$LINENO: checking whether we want to use lapack and blas" >&5
 echo $ECHO_N "checking whether we want to use lapack and blas... $ECHO_C" >&6
-# Check whether --enable-lapack or --disable-lapack was given.
-if test "${enable_lapack+set}" = set; then
-  enableval="$enable_lapack"
-  enable_lapack=$enableval
+
+# Check whether --with-lapack or --without-lapack was given.
+if test "${with_lapack+set}" = set; then
+  withval="$with_lapack"
+  with_lapack=$withval
 else
-  enable_lapack=yes
+  with_lapack=yes
 fi;
-if test $enable_lapack = yes; then
+if test $with_lapack = yes; then
   echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
 else
@@ -6269,12 +6270,12 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     if test $enable_mpi = yes; then
 # Due to some standard problems in MPI header files
 # no -pedantic-errors...
-      CFLAGS="-ansi -pedantic -Wall"
+      CFLAGS="$CFLAGS -ansi -pedantic -Wall"
     else
       if test $GCCVERSION1 -gt 2 && test $enable_sse2 = yes; then
-        CFLAGS="-ansi -Wall -pedantic"
+        CFLAGS="$CFLAGS -ansi -Wall -pedantic"
       else
-	CFLAGS="-ansi -Wall -pedantic-errors"
+	CFLAGS="$CFLAGS -ansi -Wall -pedantic"
       fi
     fi
     CXXFLAGS=' -Wall'
@@ -6305,7 +6306,6 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
     if test $enable_sse3 = yes; then
       echo Using SSE3 and SSE2 macros!
-      CFLAGS="$CFLAGS"
       SSE="sse3"
 
 cat >>confdefs.h <<\_ACEOF
@@ -6318,7 +6318,6 @@ _ACEOF
       fi
     elif test $enable_sse2 = yes && test $enable_sse = no; then
       echo Using SSE2 macros!
-      CFLAGS="$CFLAGS"
       DEPFLAGS="$DEPFLAGS -DSSE2"
       SSE="sse2"
 
@@ -6331,7 +6330,6 @@ _ACEOF
       fi
     elif test $enable_sse = yes; then
       echo Using SSE macros!
-      CFLAGS="$CFLAGS -DSSE"
       DEPFLAGS="$DEPFLAGS -DSSE"
       SSE="sse"
 
@@ -6366,7 +6364,7 @@ _ACEOF
     if test "$PGCC" != ""; then
       DEPFLAGS="-M"
       echo "We are using the Portland Group C compiler!"
-      CFLAGS="-Mdalign -fastsse"
+      CFLAGS="$CFLAGS -Mdalign -fastsse"
       if test $enable_p4 = "yes"; then
 	SSE="sse2"
       fi
@@ -6379,7 +6377,7 @@ _ACEOF
     elif test "$ICC" != ""; then
       echo "We are using the Intel C compiler!"
       DEPFLAGS="-M"
-      CFLAGS="-Wall -w1"
+      CFLAGS="$CFLAGS -Wall -w1"
       if test $enable_p4 = "yes"; then
         CFLAGS="$CFLAGS -march=pentium4"
 	SSE="sse2"
@@ -6391,7 +6389,7 @@ _ACEOF
 
     else
       DEPFLAGS="-M"
-      CFLAGS="-O"
+      CFLAGS="$CFLAGS -O"
       DEBUG_FLAG="-g"
       CCDEP="$CC"
     fi
@@ -6461,7 +6459,7 @@ _ACEOF
 
 #The BG/L
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
-  CFLAGS=" -O3 -g  -qarch=440 -qtune=440"
+  CFLAGS="$CFLAGS -O3 -g  -qarch=440 -qtune=440"
 
 cat >>confdefs.h <<\_ACEOF
 #define NOF77_ 1
@@ -6496,7 +6494,7 @@ _ACEOF
 
 # The IBM Power PC
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
-  CFLAGS="-q64 -qsrcmsg"
+  CFLAGS="$CFLAGS -q64 -qsrcmsg"
 
 cat >>confdefs.h <<\_ACEOF
 #define NOF77_ 1
@@ -6525,7 +6523,7 @@ elif test "$host_vendor" = "cray"; then
   echo
   echo "Hey, we are on the cray, you should take some time for this..."
   echo
-  CFLAGS="-dp"
+  CFLAGS="$CFLAGS -dp"
 
 cat >>confdefs.h <<\_ACEOF
 #define CRAY 1
