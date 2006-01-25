@@ -255,17 +255,20 @@ supported input paramters:
   Here one can specify the intervall in terms of trajectories the
   program should check the reversibility violation.
 
-\item {\ttfamily CSGHistMu}:\\
+\item {\ttfamily CSGHistoryMu}:\\
   The number of solutions of the Dirac equation to be saved for the
-  physical $\mu$. 
+  physical $\mu$. If set to zero a zero spinor field is given as a
+  first guess to the solver.
   
-\item {\ttfamily CSGHistMu2}:\\
+\item {\ttfamily CSGHistoryMu2}:\\
   The number of solutions of the Dirac equation to be saved for the
-  first not physical $\mu_2$. 
+  first not physical $\mu_2$. If set to zero a zero spinor field is
+  given as a first guess to the solver. 
  
-\item {\ttfamily CSGHistMu2}:\\
+\item {\ttfamily CSGHistoryMu2}:\\
   The number of solutions of the Dirac equation to be saved for the
-  second not physical $\mu_3$. 
+  second not physical $\mu_3$. If set to zero a zero spinor field is
+  given as a first guess to the solver.
   
 \item {\ttfamily 2MNLambdaGauge}:\\
   The 2MN $\lambda$ parameter for the gauge time scale.

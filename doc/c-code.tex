@@ -78,6 +78,42 @@ The sign is set corresponding to {\ttfamily sign}. Setting {\ttfamily
   ieo} to {\ttfamily EO} ({\ttfamily OE}) means using $M_{eo}$
 ($M_{oe}$) and $M_{ee}$ ($M_{oo}$).
 
+\subsection{Chronological Inverter}
+
+The implementation of the chronological inverter \cite{Brower:1995vx}
+can be found in the direction {\ttfamily solver} in the files
+{\ttfamily chrono\_guess.c|h}. These files define basically two
+funtions:
+
+\noindent{\ttfamily void chrono\_add\_solution(spinor * const trial, spinor
+  ** const v, int index\_array[], const int N, const int \_n, const
+  int V)}\\
+This function adds the spinor {\ttfamily trial} to the stack of
+already existing solutions. These are stored in the array {\ttfamily
+  v}. In the integer array {\ttfamily index\_array} the current order
+of the spinor fields in {\ttfamily v} is stored. {\ttfamily N} must
+contain the maximal number of solutions to store in {\ttfamily v},
+{\ttfamily \_n} contains the current index and {\ttfamily V} the volume.
+
+The memory for {\ttfamily v} must be allocated by the user and it must
+be of size {\ttfamily V*N}. The bookholding with {\ttfamily \_n} and
+{\ttfamily index\_array} is done by the function and should not be
+changed by the user elsewhere.
+
+\noindent{\ttfamily int chrono\_guess(spinor * const trial, spinor *
+  const phi, spinor ** const v, int index\_array[],
+  const int \_N, const int \_n, const int V, matrix\_mult f)}\\
+This fuction returns in the spinor {\ttfamily trial} a trial guess
+computed with the chronological guess algorithm. Apart from the
+parametes explained already above: {\ttfamily phi} is the source
+spinor and {\ttfamily matric\_mult} is a pointer to the matrix to be
+inverted.
+
+Note that the chronological solver guess uses lapack functions and is
+switched off when it is not available, and as well as when the history
+length is chosen to be zero, a zero spinor field is returned by the
+chrono guess function. See also input parameters concerning CSG.
+
 \subsection{$\gamma$ matrices}
 
 $\gamma_5$ ist defined as follows:
