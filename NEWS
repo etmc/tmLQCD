@@ -1,3 +1,8 @@
+25.01.2006: Trying to setup a versioning system:
+	    last digit -> bug fixes
+	    second digit odd -> developement Version
+	    second digit even -> stable release
+
 25.01.2006: changed --disalbe-lapack to --without-lapack ...
 
 05.01.2006: By setting the history parameters for the CSG to zero one gets
