@@ -3272,11 +3272,20 @@ cat >>confdefs.h <<\_ACEOF
 #define PARALLELXT 1
 _ACEOF
 
+  elif test $withmpidimension = 3; then
+    echo "$as_me:$LINENO: result: n=2 xt" >&5
+echo "${ECHO_T}n=2 xt" >&6
+    mpidimension="-DPARALLELXYT"
+
+cat >>confdefs.h <<\_ACEOF
+#define PARALLELXT 1
+_ACEOF
+
   else
     echo "$as_me:$LINENO: result: unknown" >&5
 echo "${ECHO_T}unknown" >&6
-    { { echo "$as_me:$LINENO: error: Only one or two dimensional parallelisation available" >&5
-echo "$as_me: error: Only one or two dimensional parallelisation available" >&2;}
+    { { echo "$as_me:$LINENO: error: Only one, two or three dimensional parallelisation available" >&5
+echo "$as_me: error: Only one, two or three dimensional parallelisation available" >&2;}
    { (exit 1); exit 1; }; }
   fi
 fi

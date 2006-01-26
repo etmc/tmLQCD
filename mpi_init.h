@@ -24,6 +24,15 @@ extern MPI_Datatype gauge_yz_edge_cont;
 extern MPI_Datatype gauge_yz_edge_gath;
 extern MPI_Datatype gauge_yz_edge_gath_split;
 
+extern MPI_Datatype gauge_y_slice_cont;
+extern MPI_Datatype gauge_y_slice_gath;
+extern MPI_Datatype gauge_y_slice_gath_split;
+extern MPI_Datatype field_y_slice_cont;
+extern MPI_Datatype field_y_slice_gath;
+extern MPI_Datatype deri_y_slice_cont;
+extern MPI_Datatype deri_y_slice_gath;
+extern MPI_Datatype deri_y_slice_gath_split;
+
 extern MPI_Comm mpi_time_slices;
 #endif
 
