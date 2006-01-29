@@ -1,7 +1,6 @@
 /* $Id$ */
 /*******************************************************************************
 *
-* File hybrid.c
 *
 * Hybrid-Monte-Carlo for twisted mass QCD
 *
@@ -96,6 +95,8 @@ int main(int argc,char *argv[]) {
   verbose = 0;
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
+
+  MPI_Init(&argc, &argv);
 
 #ifndef XLC 
   signal(SIGUSR1,&catch_del_sig);
