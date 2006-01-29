@@ -18,6 +18,9 @@ fi
 if test "$host_vendor" = "cray"; then
   ac_cv_c_bigendian=yes
 fi
+if test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
+  CC=/opt/ibmcmp/vac/7.0/bin/blrts_xlc
+fi
 
 AC_PROG_CC
 AC_C_CONST
@@ -103,7 +106,7 @@ fi
 
 # Checks for libraries.
 if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
-  if test $enable_lapack = yes; then
+  if test $with_lapack = yes; then
     AC_CHECK_LIB(essl, zaxpy, ,AC_MSG_ERROR([libessl is missing or zaxpy not available]), -lf -lm )
     AC_CHECK_LIB(lapack, zheev, LP=yes;AC_DEFINE(HAVE_LAPACK,1,lapack available), LP="", -lessl -lblas -lf -lm )
   fi
@@ -113,13 +116,13 @@ if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
 #  fi
 
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
-  if test $enable_lapack = yes; then
+  if test $with_lapack = yes; then
     AC_CHECK_LIB(lapack, zheev, LP=yes, LP="", -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
     echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
   fi
 
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
-  if test $enable_lapack = yes; then
+  if test $with_lapack = yes; then
     AC_CHECK_LIB(lapack, zheev, LP=yes, LP="", -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
     echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
   fi
@@ -137,12 +140,12 @@ elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     F2C="-lf2c_nomain_LINUX"
   fi
 
-  if test $enable_lapack = yes; then
+  if test $with_lapack = yes; then
     AC_CHECK_LIB(lapack, zheev_, LP=yes, LP="",  -lblas $F2C -lm)
     AC_CHECK_LIB(atlas, ATL_walltime, ATLAS=yes, ATLAS="")
   fi
 else
-  if test $enable_lapack = yes; then
+  if test $with_lapack = yes; then
     AC_CHECK_LIB(lapack, zheev_, LP=yes, LP="", -lblas -lf -lm )	
   fi
 fi
@@ -400,7 +403,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     fi
   fi
   LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
-  if test $enable_lapack = yes; then
+  if test $with_lapack = yes; then
     LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lapack"
     AC_DEFINE(HAVE_LAPACK,1,lapack available)
     if test "$LP" = "yes" && test "$host_cpu" != "x86_64"; then
@@ -438,8 +441,8 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
     AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   fi
 
-  LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib"
-  if test $enable_lapack = yes; then
+  LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib -L/bgl/BlueLight/ppcfloor/bglsys/lib"
+  if test $with_lapack = yes; then
     LIBS="-llapack -lblas -lf77blas -latlas -lxlf90 -lxlfmath $LIBS"
   fi
 
@@ -463,7 +466,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
     AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   fi
   LIBS="-lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts $LIBS"
-  if test $enable_lapack = yes; then
+  if test $with_lapack = yes; then
     LIBS="-llapack440 -lblas440 -lxlf90 -lxlfmath $LIBS"
   fi
   LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib"
@@ -481,7 +484,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   CFLAGS="$CFLAGS -q64 -qsrcmsg"
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
-  if test $enable_lapack = yes; then
+  if test $with_lapack = yes; then
     LIBS="-lessl -llapack -lblas -lf $LIBS"
   fi
   LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib -q64"
@@ -519,7 +522,7 @@ else
     DEPFLAGS="-M"
   fi
 
-  if test $enable_lapack = yes; then
+  if test $with_lapack = yes; then
     LIBS="-llapack -lblas -lf $LIBS"
   fi
   LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
