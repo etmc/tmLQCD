@@ -56,6 +56,8 @@ int main(int argc,char *argv[])
   int rlxd_state[105];
 #endif
 
+  MPI_Init(&argc, &argv);
+
   /* Read the input file */
   read_input("benchmark.input");
 

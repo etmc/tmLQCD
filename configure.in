@@ -455,7 +455,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
 
 #The BG/L
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
-  CFLAGS="$CFLAGS -g"
+  CFLAGS="$CFLAGS"
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
   DEBUGFLAG="-g"
   OPTARGS="-O3"
@@ -471,7 +471,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
   if test $with_lapack = yes; then
     LIBS="-llapack440 -lblas440 -lxlf90 -lxlfmath $LIBS"
   fi
-  LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib"
+  LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib -L/bgl/BlueLight/ppcfloor/bglsys/lib"
 
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"

@@ -6462,7 +6462,7 @@ _ACEOF
 
 #The BG/L
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
-  CFLAGS="$CFLAGS -g"
+  CFLAGS="$CFLAGS"
 
 cat >>confdefs.h <<\_ACEOF
 #define NOF77_ 1
@@ -6486,7 +6486,7 @@ _ACEOF
   if test $with_lapack = yes; then
     LIBS="-llapack440 -lblas440 -lxlf90 -lxlfmath $LIBS"
   fi
-  LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib"
+  LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib -L/bgl/BlueLight/ppcfloor/bglsys/lib"
 
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
