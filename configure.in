@@ -455,13 +455,15 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
 
 #The BG/L
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
-  CFLAGS="$CFLAGS -O3 -g  -qarch=440 -qtune=440"
+  CFLAGS="$CFLAGS -g"
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
   DEBUGFLAG="-g"
+  OPTARGS="-O3"
 
   if test "$GCC" != yes; then
-    CFLAGS="-qsrcmsg $CFLAGS"
+    CFLAGS="-qsrcmsg -qarch=440d -qtune=440 $CFLAGS"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
+    OPTARGS="-qhot"
     XLC=yes
     AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   fi
@@ -471,7 +473,6 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
   fi
   LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib"
 
-  OPTARGS="-O3"
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
   else

@@ -6462,17 +6462,19 @@ _ACEOF
 
 #The BG/L
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
-  CFLAGS="$CFLAGS -O3 -g  -qarch=440 -qtune=440"
+  CFLAGS="$CFLAGS -g"
 
 cat >>confdefs.h <<\_ACEOF
 #define NOF77_ 1
 _ACEOF
 
   DEBUGFLAG="-g"
+  OPTARGS="-O3"
 
   if test "$GCC" != yes; then
-    CFLAGS="-qsrcmsg $CFLAGS"
+    CFLAGS="-qsrcmsg -qarch=440d -qtune=440 $CFLAGS"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
+    OPTARGS="-qhot"
     XLC=yes
 
 cat >>confdefs.h <<\_ACEOF
@@ -6486,7 +6488,6 @@ _ACEOF
   fi
   LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib"
 
-  OPTARGS="-O3"
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
   else
