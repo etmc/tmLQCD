@@ -1,3 +1,7 @@
+30.01.2006: at least for BGL lime needs to be configured with
+	    ./configure CC=/opt/ibmcmp/vac/7.0/bin/blrts_xlc --enable-largefile
+	    and (remember) lime-1.2.3.
+
 29.01.2006: running and partially tested on the BGL in Juelich 
 	    configure with
 	    ./configure --host=powerpc64-bgl-linux-gnu --without-lapack CC=/opt/ibmcmp/vac/7.0/bin/blrts_xlc
