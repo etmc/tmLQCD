@@ -39,6 +39,8 @@ int main(int argc,char *argv[]) {
   int trajectory_counter = 0;
   int c, j;
 
+  MPI_Init(&argc, &argv);
+
   L=0; 
   T=0;
   while ((c = getopt(argc, argv, "h?f:i:o:c:")) != -1) {
