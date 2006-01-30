@@ -83,7 +83,7 @@ int check_geometry()
 	  ix=g_ipt[x0][x1][x2][x3];
 
 	  iy0=g_iup[ix][0];
-#if (defined PARALLELT || defined PARALLELXT )
+#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT)
 	  if(x0!=T-1) {
 	    iz0=g_ipt[(x0+1)%T][x1][x2][x3];
 	  }
@@ -96,7 +96,7 @@ int check_geometry()
 #endif     
                   
 	  iy1=g_iup[ix][1];
-#if (defined PARALLELXT)
+#if (defined PARALLELXT || defined PARALLELXYT)
 	  if(x1 !=LX-1) {
 	    iz1=g_ipt[x0][(x1+1)%LX][x2][x3];
 	  }
@@ -134,7 +134,7 @@ int check_geometry()
 	  }
 
 	  iy0=g_idn[ix][0];
-#if (defined PARALLELT || defined PARALLELXT )
+#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT)
 	  if(x0 !=0) {
 	    iz0=g_ipt[(x0+T-1)%T][x1][x2][x3];
 	  }
@@ -145,19 +145,17 @@ int check_geometry()
 #else
 	  iz0=g_ipt[(x0+T-1)%T][x1][x2][x3];
 #endif
+
 	  iy1=g_idn[ix][1];
-	  if(g_iup[iy1][1]!=ix) {
-	    printf("Hallo\n");
-	  }
-#if (defined PARALLELXT)
+#if (defined PARALLELXT || defined PARALLELXYT)
 	  if(x1 !=0) {
 	    iz1=g_ipt[x0][(x1+LX-1)%LX][x2][x3];
 	  }
 	  else {
 	    iz1 = g_ipt[x0][LX+1][x2][x3];;
 	    itest[iy1]++;
-	    if(iy1 < VOLUME + 2*LX*LY*LZ + T*LY*LZ || iy1 > VOLUME + RAND) {
-	      printf("Boundary for x direction is wrong %d %d %d\n", iy1 < VOLUME, iy1 > VOLUMEPLUSRAND, iy1);
+	    if(iy1 < VOLUME + 2*LX*LY*LZ + T*LY*LZ || iy1 > VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ) {
+	      printf("Boundary for x direction is wrong %d %d %d\n", iy1 < VOLUME + 2*LX*LY*LZ + T*LY*LZ, iy1 > VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ, iy1);
 	      printf("Program aborted\n");
 #ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -169,7 +167,25 @@ int check_geometry()
 	  iz1=g_ipt[x0][(x1+LX-1)%LX][x2][x3];
 #endif
 	  iy2=g_idn[ix][2];
+#if defined PARALLELXYT
+	  if(x2 !=0) {
+	    iz2=g_ipt[x0][x1][(x2+LY-1)%LY][x3];
+	  }
+	  else {
+	    iz2 = g_ipt[x0][x1][LY+1][x3];;
+	    itest[iy2]++;
+	    if(iy2 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ|| iy2 > VOLUME + RAND) {
+	      printf("Boundary for y direction is wrong %d %d %d\n", iy1 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ, iy1 > VOLUME + RAND, iy1);
+	      printf("Program aborted\n");
+#ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+#endif
+	      exit(0);
+	    }
+	  }
+#else
 	  iz2=g_ipt[x0][x1][(x2+LY-1)%LY][x3];
+#endif
 
 	  iy3=g_idn[ix][3];
 	  iz3=g_ipt[x0][x1][x2][(x3+LZ-1)%LZ];               
@@ -243,7 +259,7 @@ int check_geometry()
 	}
       }
     }
-#ifdef PARALLELXT
+#if (defined PARALLELXT || defined PARALLELXYT)
     for (x0 = 0; x0 < T+2; x0++) {
       for (x2 = 0; x2 < LY; x2++) {
 	for (x3 = 0; x3 < LZ; x3++) {

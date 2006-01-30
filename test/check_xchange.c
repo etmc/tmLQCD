@@ -45,26 +45,36 @@ int check_xchange()
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  set_spinor_point(&g_spinor_field[0][ g_lexic2eo[g_ipt[0][x1][x2][x3]]   ], g_cart_id);
-	  set_spinor_point(&g_spinor_field[0][ g_lexic2eo[g_ipt[T-1][x1][x2][x3]] ], g_cart_id);
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eosub[g_ipt[0][x1][x2][x3]]   ], g_cart_id);
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eosub[g_ipt[T-1][x1][x2][x3]] ], g_cart_id);
 	}
       }
     }
     
-#ifdef PARALLELXT
+#if ((defined PARALLELXT) || (defined PARALLELXYT))
     for(x0 = 0; x0 < T; x0++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  set_spinor_point(&g_spinor_field[0][ g_lexic2eo[g_ipt[x0][0][x2][x3]]    ], g_cart_id);
-	  set_spinor_point(&g_spinor_field[0][ g_lexic2eo[g_ipt[x0][LX-1][x2][x3]] ], g_cart_id);
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eosub[g_ipt[x0][0][x2][x3]]    ], g_cart_id);
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eosub[g_ipt[x0][LX-1][x2][x3]] ], g_cart_id);
+	}
+      }
+    }
+#endif
+
+#if defined PARALLELXYT
+    for(x0 = 0; x0 < T; x0++) {
+      for(x1 = 0; x1 < LX; x2++) {
+	for(x3 = 0; x3 < LZ; x3++) {
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eosub[g_ipt[x0][x1][0][x3]]    ], g_cart_id);
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eosub[g_ipt[x0][x1][LY-1][x3]] ], g_cart_id);
 	}
       }
     }
 #endif
     xchange_field(g_spinor_field[0]);
 
-#if (defined PARALLELT || defined PARALLELXT)  
-    x = (double*) &g_spinor_field[0][T*LX*LY*LZ/2];
+    x = (double*) &g_spinor_field[0][VOLUME/2];
     for(i = 0; i < LX*LY*LZ/2*24; i++, x++) {
       if((int)(*x) != g_nb_t_up) {
 	printf("The exchange up of fields in time direction\n");
@@ -85,9 +95,8 @@ int check_xchange()
 	exit(0); 
       }
     }
-#endif
 
-#ifdef PARALLELXT
+#if ((defined PARALLELXT) || (defined PARALLELXYT))
     x = (double*) &g_spinor_field[0][(T+2)*LX*LY*LZ/2];
     for(i = 0; i < T*LY*LZ/2*24; i++, x++) {
       if((int)(*x) != g_nb_x_up) {
@@ -111,6 +120,30 @@ int check_xchange()
     }
 #endif
 
+#ifdef PARALLELXYT
+    x = (double*) &g_spinor_field[0][(T+2)*LX*LY*LZ/2+2*T*LY*LZ/2];
+    for(i = 0; i < T*LX*LZ/2*24; i++, x++) {
+      if((int)(*x) != g_nb_y_up) {
+	printf("The exchange up of fields in y direction\n");
+	printf("between %d and %d is not correct\n", g_cart_id, g_nb_y_up);
+	printf("Program aborted\n");
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+	exit(0); 
+      }
+    }
+
+    x = (double*) &g_spinor_field[0][(T+2)*LX*LY*LZ/2+2*T*LY*LZ/2+T*LX*LZ/2];
+    for(i = 0; i < T*LX*LZ/2*24; i++, x++) {
+      if((int)(*x) != g_nb_y_dn) {
+	printf("The exchange down of fields in y direction\n");
+	printf("between %d and %d is not correct\n", g_cart_id, g_nb_y_dn);
+	printf("Program aborted\n");
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+	exit(0); 
+      }
+    }
+#endif
+
     /* Check the gauge exchange */
 
     set_gauge_field(-1.);
@@ -127,7 +160,7 @@ int check_xchange()
       }
     }
 
-#ifdef PARALLELXT
+#if (defined PARALLELXT || defined PARALLELXYT)
     /* Set the x boundary */
     for(x0 = 0; x0 < T; x0++) {
       for(x2 = 0; x2 < LY; x2++) {
@@ -141,9 +174,22 @@ int check_xchange()
     }
 #endif
 
+#if defined PARALLELXYT
+    /* Set the y boundary */
+    for(x0 = 0; x0 < T; x0++) {
+      for(x1 = 0; x1 < LX; x1++) {
+	for(x3 = 0; x3 < LZ; x3++) {
+	  for (mu=0;mu<4;mu++){
+	    g_gauge_field[ g_ipt[x0][x1][0][x3] ][mu]    = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][LY-1][x3] ][mu] = set_su3((double)g_cart_id);
+	  }
+	}
+      }
+    }
+#endif
+
     xchange_gauge();
 
-#if (defined PARALLELT || defined PARALLELXT)  
     x = (double*) &g_gauge_field[T*LX*LY*LZ][0];
     for(i = 0; i < LX*LY*LZ*72; i++, x++) {
       if((int)(*x) != g_nb_t_up) {
@@ -165,9 +211,8 @@ int check_xchange()
 	exit(0);
       }
     }
-#endif
 
-#ifdef PARALLELXT
+#if (defined PARALLELXT || defined PARALLELXYT)
     x = (double*) &g_gauge_field[(T+2)*LX*LY*LZ][0];
     for(i = 0; i < T*LY*LZ*72; i++, x++) {
       if((int)(*x) != g_nb_x_up) {
@@ -191,7 +236,35 @@ int check_xchange()
 	exit(0);
       }
     }
+#endif
 
+#if defined PARALLELXYT
+    x = (double*) &g_gauge_field[(T+2)*LX*LY*LZ + 2*T*LZ*LY][0];
+    for(i = 0; i < T*LX*LZ*72; i++, x++) {
+      if((int)(*x) != g_nb_y_up) {
+	printf("The exchange up of gaugefields in y direction\n");
+	printf("between %d and %d is not correct\n", g_cart_id, g_nb_y_up);
+	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
+	printf("Program aborted\n");
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	exit(0);
+      }
+    }
+
+    x = (double*) &g_gauge_field[(T+2)*LX*LY*LZ+2*T*LY*LZ+T*LX*LZ][0];
+    for(i = 0; i < T*LX*LZ*72; i++, x++) {
+      if((int)(*x) != g_nb_y_dn) {
+	printf("The exchange down of gaugefields in y direction\n");
+	printf("between %d and %d is not correct\n", g_cart_id, g_nb_y_dn);
+	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
+	printf("Program aborted\n");
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	exit(0);
+      }
+    }
+#endif
+
+#if (defined PARALLELXT || defined PARALLELXYT)
     /* The edges */
     di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
     di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
