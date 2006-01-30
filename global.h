@@ -65,7 +65,7 @@ EXTERN int g_debug_level;
 
 EXTERN int T_global, T, L, LX, LY, LZ, VOLUME;
 EXTERN int N_PROC_X, N_PROC_Y;
-EXTERN int RAND, VOLUMEPLUSRAND;
+EXTERN int RAND, EDGES, VOLUMEPLUSRAND;
 
 /* translates from lexicographic order to even/odd order */
 EXTERN int * g_lexic2eo;

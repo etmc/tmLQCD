@@ -40,7 +40,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
   ix = ((y0*LX + y1)*LY + y2)*LZ + y3;
   
   y0=x0;
-#if ((defined PARALLELT) || (defined PARALLELXT))
+#if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT))
   if(x0 == T) {
     ix = VOLUME + y3 + LZ*y2 + LZ*LY*y1;
   }
@@ -49,7 +49,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     ix = VOLUME + LX*LY*LZ + y3 + LZ*y2 + LZ*LY*y1;
   }
 #endif
-#if (defined PARALLELXT)
+#if ((defined PARALLELXT) || (defined PARALLELXYT))
   if(x1 == LX){
     ix = VOLUME + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
   }
@@ -73,13 +73,60 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUME+RAND+3*LY*LZ+y2*LZ+y3;
     }
   }
+  /* endif of PARALLELXT || PARALLELXYT*/
 #endif
+
+#if (defined PARALLELXYT)
+  /* y-Rand */
+  if(x2 == LY) {
+    ix = VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + y0*LX*LZ + y1*LZ + y3;
+  }
+  if(x2 == -1) {
+    ix = VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ + y0*LX*LZ + y1*LZ + y3;
+  }
+  /* the edges */
+  if(x1 == LX) {
+    if(x2 == LY) {
+      ix = VOLUME + RAND + + 4*LY*LZ + y0*LZ + y3;
+    }
+    if(x2 == -1) {
+      ix = VOLUME + RAND + + 4*LY*LZ + T*LZ + y0*LZ + y3;
+    }
+  }
+  if(x1 == -1) {
+    if(x2 == LY) {
+      ix = VOLUME + RAND + + 4*LY*LZ + 2*T*LZ + y0*LZ + y3;
+    }
+    if(x2 == -1) {
+      ix = VOLUME + RAND + + 4*LY*LZ + 3*T*LZ + y0*LZ + y3;
+    }
+  }
+  if(x0 == T) {
+    if(x2 == LY) {
+      ix = VOLUME + RAND + + 4*LY*LZ + 4*T*LZ + y1*LZ + y3;
+    }
+    if(x2 == -1) {
+      ix = VOLUME + RAND + + 4*LY*LZ + 4*T*LZ + LX*LZ + y1*LZ + y3;
+    }
+  }
+  if(x0 == -1) {
+    if(x2 == LY) {
+      ix = VOLUME + RAND + + 4*LY*LZ + 4*T*LZ + 2*LX*LZ + y1*LZ + y3;
+    }
+    if(x2 == -1) {
+      ix = VOLUME + RAND + + 4*LY*LZ + 4*T*LZ + 3*LX*LZ + y1*LZ + y3;
+    }
+  }
+
+  /* endif of PARALLELXYT */
+#endif
+
   /* The DBW2 stuff --> second boundary slice */
   /* This we put a the very end.              */
-#if ((defined PARALLELT) || (defined PARALLELXT))
+#if ((defined PARALLELT) || (defined PARALLELXT) || (PARALLELXYT))
   if(x0 == T+1) { 
     ix = VOLUMEPLUSRAND + y3 + LZ*y2 + LZ*LY*y1;
-#ifdef PARALLELXT
+#if ((defined PARALLELXT) || (defined PARALLELXYT))
     if(x1 == LX) {
       ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ
 	+ y2*LZ + y3;
@@ -93,7 +140,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
   /* the slice at time -2 is put behind the one at time T+1 */
   else if(x0 == -2) {
     ix = VOLUMEPLUSRAND + LX*LY*LZ + y3 + LZ*y2 + LZ*LY*y1;
-#ifdef PARALLELXT
+#if ((defined PARALLELXT) || (defined PARALLELXYT))
     if(x1 == LX) {
       ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*LY*LZ
 	+ y2*LZ + y3;
@@ -105,7 +152,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 #endif
   }  
 #endif
-#if (defined PARALLELXT)
+#if ((defined PARALLELXT) || (PARALLELXYT))
   if(x1 == LX+1) {
     if((x0 < T) && (x0 > -1)) {
       ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
@@ -137,79 +184,116 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 }
 
 #else
+/* now for even/odd geometry in the gauge fields. */
 
 int Index(const int x0, const int x1, const int x2, const int x3)
 {
-   int y0, y1, y2, y3, ix, bndt=0, bndx=0, odd;
+  int y0, y1, y2, y3, ix, bndt=0, bndx=0, odd, bndy=0;
 
-#if ((defined PARALLELT) || (defined PARALLELXT))
-   y0 = x0;
-   /* the slice at time -1 is put to T+1 */
-   if(x0 == -1) y0 = T+1;
-   if(x0 == -1 || x0 == T) bndt = 1;
-   if(x0 == -2) y0 = 1;
-   if(x0 == T+1) y0 = 0;
-   if(x0 == -2 || x0 == T+1) bndt = 2;
+#if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT))
+  y0 = x0;
+  /* the slice at time -1 is put to T+1 */
+  if(x0 == -1) y0 = T+1;
+  if(x0 == -1 || x0 == T) bndt = 1;
+  if(x0 == -2) y0 = 1;
+  if(x0 == T+1) y0 = 0;
+  if(x0 == -2 || x0 == T+1) bndt = 2;
 #else
-   y0 = (x0+T) % T;
+  y0 = (x0+T) % T;
+#endif
+  
+#if ((defined PARALLELXT) || (defined PARALLELXYT))
+  y1 = x1;
+  /* the slice at x -1 is put to LX+1 */
+  if(x1 == -1) y1=LX+1;
+  if(x1 == -1 || x1 == LX) bndx = 1;
+  /* the slice at x -1 is put to LX+2 */
+  if(x1 == -2) y1 = 1;
+  if(x1 == LX+1) y1 = 0;
+  if(x1 == -2 || x1 == LX+1) bndx = 2;
+#else
+  y1 = (x1+LX) % LX;
 #endif
 
-#ifdef PARALLELXT 
-   y1 = x1;
-   /* the slice at x -1 is put to LX+1 */
-   if(x1 == -1) y1=LX+1;
-   if(x1 == -1 || x1 == LX) bndx = 1;
-   /* the slice at x -1 is put to LX+2 */
-   if(x1 == -2) y1 = 1;
-   if(x1 == LX+1) y1 = 0;
-   if(x1 == -2 || x1 == LX+1) bndx = 2;
+#if defined PARALLELXYT
+  y2 = x2;
+  /* the slice at y -1 is put to LY+1 */
+  if(x2 == -1) y2=LY+1;
+  if(x2 == -1 || x2 == LY) bndy = 1;
+  /* the slice at x -1 is put to LY+2 */
+  if(x2 == -2) y2 = 1;
+  if(x2 == LY+1) y2 = 0;
+  if(x2 == -2 || x2 == LY+1) bndy = 2;
 #else
-   y1 = (x1+LX) % LX;
+   y2 = (x2+LY) % LY; 
 #endif
 
-   y2=(x2+LY)%LY; 
-   
-   y3=(x3+LZ)%LZ; 
-
-   if((x0+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+   y3 = (x3+LZ) % LZ; 
+   /* even or odd point? */
+   if((x0+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX+g_proc_coords[2]*LY)%2 == 0) {
      odd = 0;
    } 
    else {
      odd = 1;
    }
 
-   if(bndt == 0 && bndx == 0) {
+   /* The local volume */
+   if(bndt == 0 && bndx == 0 && bndy == 0) {
      ix = (y3 + LZ*y2 + LY*LZ*y1 + LX*LY*LZ*y0)/2 + (odd*(VOLUME))/2;
    }
-   else if(bndt == 1 && bndx == 0) {
+   /* The time boundary */
+   else if(bndt == 1 && bndx == 0 && bndy == 0) {
      ix = y0*LX*LY*LZ+(y3 + LZ*y2 + LY*LZ*y1)/2 + (odd*(LX*LY*LZ))/2;
    }
-   else if(bndt == 0 && bndx == 1) {
+   /* The x boundary */
+   else if(bndt == 0 && bndx == 1 && bndy == 0) {
      ix = VOLUME + 2*LX*LY*LZ 
        + (y1-LX)*T*LY*LZ + (y0*LY*LZ + y3 + LZ*y2)/2 + (odd*(LY*LZ*T))/2;
    }
-   else if(bndt == 1 && bndx == 1) {
+   /* the y boundary */
+   else if(bndt == 0 && bndx == 0 && bndy == 1) {
+     ix = VOLUME + 2*LZ*(LX*LY+T*LY) 
+       + (y2-LY)*T*LX*LZ + (y0*LX*LZ + y3 + LZ*y1)/2 + (odd*(LX*LZ*T))/2;
+   }
+   /* the xt edges */
+   else if(bndt == 1 && bndx == 1 && bndy == 0) {
      ix = VOLUME + RAND 
        + ((y0-T)*2 + (y1-LX))*(LY*LZ) + (y3 + LZ*y2)/2 + (odd*(LY*LZ))/2;
    }
-   else if(bndt == 2 && bndx == 0) {
+   /* the xy edges */
+   else if(bndt == 0 && bndx == 1 && bndy == 1) {
+     ix = VOLUME + RAND + 4*LY*LZ
+       + ((y1-LX)*2 + (y2-LY))*(T*LZ) + (y3 + LZ*y0)/2 + (odd*(T*LZ))/2;
+   }
+   /* the ty edges */
+   else if(bndt == 1 && bndx == 0 && bndy == 1) {
+     ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ
+       + ((y0-T)*2 + (y2-LY))*(LX*LZ) + (y3 + LZ*y1)/2 + (odd*(LX*LZ))/2;
+   }
+   /* now comes rectangular gauge action stuff */
+   else if(bndt == 2 && bndx == 0 && bndy == 0) {
      ix = VOLUMEPLUSRAND 
        + y0*LX*LY*LZ + (y3 + LZ*y2 + LY*LZ*y1)/2 + (odd*(LX*LY*LZ))/2;
    }
-   else if(bndt == 0 && bndx == 2) {
+   else if(bndt == 0 && bndx == 2 && bndy == 0) {
      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ 
        + y1*T*LY*LZ + (y0*LY*LZ + y3 + LZ*y2)/2 + (odd*(LY*LZ*T))/2;
    }
-   else if(bndt == 2 && bndx == 1) {
+   else if(bndt == 2 && bndx == 1 && bndy == 0) {
      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ 
        + (2*y0 + (y1-LX))*(LY*LZ) + (y3 + LZ*y2)/2 + (odd*(LY*LZ))/2;
    }
-   else if(bndt == 1 && bndx == 2) {
+   else if(bndt == 1 && bndx == 2 && bndy == 0) {
      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 4*LY*LZ 
        + ((y0-T)*2 + y1)*(LY*LZ) + (y3 + LZ*y2)/2 + (odd*(LY*LZ))/2;
    }
    else if(bndt == 2 && bndx == 2) {
      printf("Should not happen in index routine!\n");
+     printf("%d %d %d %d\n", x0, x1, x2 ,x3);
+     ix = -1;
+   }
+   else if(bndt == 1 && bndx == 1 && bndy == 1) {
+     printf("Should not be on three boundaries in index routine!\n");
      printf("%d %d %d %d\n", x0, x1, x2 ,x3);
      ix = -1;
    }
@@ -228,42 +312,60 @@ void geometry(){
   int i_even,i_odd;
   int startvaluet = 0;
   int startvaluex = 0;
+  int startvaluey = 0;
   int * xeven;
   
   xeven = malloc(VOLUMEPLUSRAND*sizeof(int));
 
-#if (defined PARALLELT || defined PARALLELXT)
+#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT)
   startvaluet = 1;
 #endif
-#ifdef PARALLELXT
+#if (defined PARALLELXT || defined PARALLELXYT)
   startvaluex = 1;
 #endif
+#if (defined PARALLELXYT)
+  startvaluey = 1;
+#endif
 
-  /* extended for neighbour slices at x0=-1 and x0=T */
+  /* extended for boundary slices */
   for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
     for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++){
-      for (x2 = 0; x2 < LY; x2++){
+      for (x2 = -startvaluey; x2 < (LY+startvaluey); x2++){
 	for (x3 = 0; x3 < LZ; x3++){
 	  ix=Index(x0, x1, x2, x3);
 
-	  /* g_proc_id*T is added to allow for odd T when the number of 
+	  /* g_proc_id*T|LX|LY is added to allow for odd T|LX|LY when the number of 
 	     nodes is even */
-	  if((x0+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
+	  if((x0+x1+x2+x3+g_proc_coords[0]*T+g_proc_coords[1]*LX+g_proc_coords[2]*LY)%2==0) {
 	    xeven[ix]=1;
 	  } 
 	  else {
 	    xeven[ix]=0; 
 	  }
 
-	  if(x0 >= 0 && x1 >=0) g_ipt[x0][x1][x2][x3] = ix;
+	  if(x0 >= 0 && x1 >=0 && x2 >= 0) {
+	    g_ipt[x0][x1][x2][x3] = ix;
+	  }
+	  else if(x0 < 0 && x1 < 0 && x2 < 0) {
+	    g_ipt[T+1][LX+1][LY+1][x3] = ix;
+	  }
 	  else if(x0 < 0 && x1 < 0) {
 	    g_ipt[T+1][LX+1][x2][x3] = ix;
+	  }
+	  else if(x0 < 0 && x2 < 0) {
+	    g_ipt[T+1][x1][LY+1][x3] = ix;
+	  }
+	  else if(x1 < 0 && x2 < 0) {
+	    g_ipt[x0][LX+1][LY+1][x3] = ix;
 	  }
 	  else if(x0 < 0) {
 	    g_ipt[T+1][x1][x2][x3] = ix;
 	  }
 	  else if(x1 < 0) {
 	    g_ipt[x0][LX+1][x2][x3] = ix;
+	  }
+	  else if(x2 < 0) {
+	    g_ipt[x0][x1][LY+1][x3] = ix;
 	  }
 
 	  g_iup[ix][0] = Index(x0+1, x1, x2, x3);
@@ -298,9 +400,9 @@ void geometry(){
       i_odd++;
     }
   }
-#if (defined PARALLELT || defined PARALLELXT)
+#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT)
   if(g_dbw2rand != 0) {
-    if(g_proc_id == 0) {printf("DBW2 stuff\n");fflush(stdout);fflush(stdout);}
+    if(g_proc_id == 0) {printf("# rectangular gauge action stuff\n");fflush(stdout);fflush(stdout);}
     for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++){
       for (x2 = 0; x2 < LY; x2++) {
 	for (x3 = 0; x3 < LZ; x3++) {
@@ -342,7 +444,7 @@ void geometry(){
 	}
       }
     }    
-#ifdef PARALLELXT
+#if (defined PARALLELXT || PARALLELXYT)
     for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
       for (x2 = 0; x2 < LY; x2++) {
 	for (x3 = 0; x3 < LZ; x3++) {
@@ -383,6 +485,9 @@ void geometry(){
 	}
       }
     }
+#endif
+#ifdef PARALLELXYT
+
 #endif
   }
 #endif

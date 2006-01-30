@@ -121,13 +121,16 @@ void mpi_init(int argc,char *argv[]) {
   g_dbw2rand = (2*LX*LY*LZ);
 #endif
 #if defined PARALLELXT
-  RAND = (2*LY*LZ*(LX+T));
+  RAND = 2*LZ*(LY*LX + T*LY);
+  EDGES = 4*LZ*LY;
   /* Note that VOLUMEPLUSRAND not equal to VOLUME+RAND in this case */
+  /* VOLUMEPLUSRAND rather includes the edges */
   VOLUMEPLUSRAND = (LY*LZ*(T+2)*(LX+2));
   g_dbw2rand = (2*LY*LZ*(LX+T+4));
 #endif
 #if defined PARALLELXYT
-  RAND = (2*LZ*(T*(LX+LY)+LX*LY));
+  RAND = 2*LZ*(LY*LX + T*LY + T*LX);
+  EDGES = 4*LZ*(LY + T + LX);
   VOLUMEPLUSRAND = ((T+2)*(LX+2)*(LY+2)*LZ);
   g_dbw2rand = (VOLUMEPLUSRAND - VOLUME);
 #endif
@@ -204,14 +207,14 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_contiguous(2*T*LZ ,gauge_point, &gauge_x_edge_cont);
   MPI_Type_commit(&gauge_x_edge_cont);
   /* internal edges */
-  MPI_Type_vector(2, 1, LX, gauge_y_subslice, &gauge_x_edge_gath);
+  MPI_Type_vector(2*T, LZ, LX*LZ, gauge_point, &gauge_x_edge_gath);
   MPI_Type_commit(&gauge_x_edge_gath);
 
   /* external edges: t-Rand send in y-direction */
   MPI_Type_contiguous(2*LX*LZ ,gauge_point, &gauge_y_edge_cont);
   MPI_Type_commit(&gauge_y_edge_cont);
   /* internal edges */
-  MPI_Type_vector(2, 1, T, gauge_y_subslice, &gauge_y_edge_gath);
+  MPI_Type_vector(2*LX, LZ, LY*LZ, gauge_point, &gauge_y_edge_gath);
   MPI_Type_commit(&gauge_y_edge_gath);
 
   /* For _NEW_GEOMETRY -> even/odd geometry also in the gauge fields */
@@ -296,7 +299,7 @@ void mpi_init(int argc,char *argv[]) {
 
   MPI_Comm_split(g_cart_grid, g_proc_coords[0], g_cart_id, &mpi_time_slices);
   MPI_Comm_rank(mpi_time_slices, &mpi_time_rank);
-  fprintf(stderr, "My mpi_time_rank = %d, g_proc_coords = (%d,%d)\n", mpi_time_rank, g_proc_coords[0], g_proc_coords[1]);
+/*   fprintf(stderr, "My mpi_time_rank = %d, g_proc_coords = (%d,%d)\n", mpi_time_rank, g_proc_coords[0], g_proc_coords[1]); */
 
 #else
   g_nproc = 1;

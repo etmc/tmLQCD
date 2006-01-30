@@ -96,7 +96,9 @@ int main(int argc,char *argv[]) {
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
 
+#ifdef MPI
   MPI_Init(&argc, &argv);
+#endif
 
 #ifndef XLC 
   signal(SIGUSR1,&catch_del_sig);
@@ -141,7 +143,6 @@ int main(int argc,char *argv[]) {
     countfile = fopen(nstore_filename, "r");
     if(countfile != NULL) {
       fscanf(countfile, "%d %d\n", &nstore, &trajectory_counter);
-      printf("%d %d\n", nstore, trajectory_counter);
       fclose(countfile);
     }
     else {

@@ -39,7 +39,9 @@ int main(int argc,char *argv[]) {
   int trajectory_counter = 0;
   int c, j;
 
+#ifdef MPI
   MPI_Init(&argc, &argv);
+#endif
 
   L=0; 
   T=0;
@@ -129,5 +131,10 @@ int main(int argc,char *argv[]) {
     printf("Writing Gauge field to file %s in ILDG format...\n", ofilename); fflush(stdout);
   }
   write_lime_gauge_field( ofilename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+
+#ifdef MPI
+  MPI_Finalize();
+#endif
+
   return(0);
 }

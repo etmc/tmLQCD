@@ -54,9 +54,9 @@ int main(int argc,char *argv[])
 #ifdef MPI
   static double dt2;
   int rlxd_state[105];
-#endif
 
   MPI_Init(&argc, &argv);
+#endif
 
   /* Read the input file */
   read_input("benchmark.input");
