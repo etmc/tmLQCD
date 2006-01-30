@@ -20,9 +20,17 @@ extern MPI_Datatype field_x_slice_gath;
 extern MPI_Datatype deri_x_slice_cont;
 extern MPI_Datatype deri_x_slice_gath;
 extern MPI_Datatype deri_x_slice_gath_split;
-extern MPI_Datatype gaue_time_edge_cont;
-extern MPI_Datatype gaue_time_edge_gath;
-extern MPI_Datatype gaue_time_edge_gath_split;
+extern MPI_Datatype gauge_time_edge_cont;
+extern MPI_Datatype gauge_time_edge_gath;
+extern MPI_Datatype gauge_time_edge_gath_split;
+
+extern MPI_Datatype gauge_x_edge_cont;
+extern MPI_Datatype gauge_x_edge_gath;
+extern MPI_Datatype gauge_x_edge_gath_split;
+
+extern MPI_Datatype gauge_y_edge_cont;
+extern MPI_Datatype gauge_y_edge_gath;
+extern MPI_Datatype gauge_y_edge_gath_split;
 
 extern MPI_Datatype gauge_y_slice_cont;
 extern MPI_Datatype gauge_y_slice_gath;

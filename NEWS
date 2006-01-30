@@ -1,3 +1,5 @@
+30.01.2006: New input parameter NrYProcs
+
 29.01.2006: running and partially tested on the BGL in Juelich 
 	    configure with
 	    ./configure --host=powerpc64-bgl-linux-gnu --without-lapack CC=/opt/ibmcmp/vac/7.0/bin/blrts_xlc
