@@ -8,13 +8,14 @@ CFLAGS = @CFLAGS@ @OPTARGS@
 DEPFLAGS = @DEPFLAGS@
 LDFLAGS = @LDFLAGS@
 DEFS = @DEFS@
+OPTARGS = @OPTARGS@
 
 AR = ar
 RANLIB = @RANLIB@
 CC = @CC@
 CCDEP = @CCDEP@
 CCLD = $(CC)
-LINK = $(CCLD) $(CFLAGS) $(LDFLAGS) -o $@
+LINK = $(CCLD) $(CFLAGS) $(LDFLAGS) ${OPTARGS} -o $@
 LEX = @LEX@
 AUTOCONF = @AUTOCONF@
 DEFS = @DEFS@
@@ -22,7 +23,7 @@ DEFS = @DEFS@
 INCLUDES = @INCLUDES@
 LDADD =
 #COMPILE = ${CC} ${DEFS} $(INCLUDES) ${CFLAGS}
-COMPILE = ${CC} $(DEFS) $(INCLUDES) ${CFLAGS}
+COMPILE = ${CC} $(DEFS) $(INCLUDES) ${CFLAGS} ${OPTARGS}
 
 LIBRARIES = liblinalg
 liblinalg_TARGETS = diff assign_add_mul_r_add_mul assign_add_mul_r \

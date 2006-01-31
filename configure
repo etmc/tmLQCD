@@ -6460,7 +6460,7 @@ _ACEOF
     DEPFLAGS="-M"
   fi
 
-#The BG/L
+#The BLue Gene/L
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
   CFLAGS="$CFLAGS"
 
@@ -6474,7 +6474,8 @@ _ACEOF
   if test "$GCC" != yes; then
     CFLAGS="-qsrcmsg -qarch=440d -qtune=440 $CFLAGS"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
-    OPTARGS="-qhot"
+    OPTARGS="-O5"
+# OPTARGS="-qhot" leads to wrong code
     XLC=yes
 
 cat >>confdefs.h <<\_ACEOF
