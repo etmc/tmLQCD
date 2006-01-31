@@ -90,6 +90,15 @@ int check_geometry()
 	  else {
 	    iz0 = g_ipt[T][x1][x2][x3];
 	    itest[iy0]++;
+	    if(iy0 < VOLUME  || iy0 >= VOLUME + LX*LY*LZ) {
+	      printf("Boundary for time direction up is wrong %d %d %d\n", 
+		     iy0 < VOLUME, iy0 >= VOLUME+LX*LY*LZ, iy0);
+	      printf("Program aborted\n");
+#ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+#endif
+	      exit(0);
+	    }
 	  }
 #else
 	  iz0=g_ipt[(x0+1)%T][x1][x2][x3];
@@ -104,7 +113,8 @@ int check_geometry()
 	    iz1=g_ipt[x0][LX][x2][x3];
 	    itest[iy1]++;
 	    if(iy1 < VOLUME + 2*LX*LY*LZ || iy1 >= VOLUME + 2*LX*LY*LZ + T*LY*LZ) {
-	      printf("Boundary for x direction up is wrong %d %d %d\n", iy1 < VOLUME, iy1 > VOLUMEPLUSRAND, iy1);
+	      printf("Boundary for x direction up is wrong %d %d %d\n", 
+		     iy1 < VOLUME + 2*LX*LY*LZ, iy1 >= VOLUME + 2*LX*LY*LZ + T*LY*LZ, iy1);
 	      printf("Program aborted\n");
 #ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -117,7 +127,26 @@ int check_geometry()
 #endif
 
 	  iy2=g_iup[ix][2];
+#if defined PARALLELXYT
+	  if(x2 !=LY-1) {
+	    iz2=g_ipt[x0][x1][(x2+1)%LY][x3];
+	  }
+	  else {
+	    iz2=g_ipt[x0][x1][LY][x3];
+	    itest[iy2]++;
+	    if(iy2 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ|| iy2 >= VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ) {
+	      printf("Boundary for y direction up is wrong %d %d %d\n", 
+		     iy2 < VOLUME  + 2*LX*LY*LZ + 2*T*LY*LZ, iy2 > VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ, iy2);
+	      printf("Program aborted\n");
+#ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+#endif
+	      exit(0);
+	    }
+	  }
+#else
 	  iz2=g_ipt[x0][x1][(x2+1)%LY][x3];
+#endif
 
 	  iy3=g_iup[ix][3];
 	  iz3=g_ipt[x0][x1][x2][(x3+1)%LZ];               
@@ -141,6 +170,15 @@ int check_geometry()
 	  else {
 	    iz0 = g_ipt[T+1][x1][x2][x3];;
 	    itest[iy0]++;
+	    if(iy0 < VOLUME + LX*LY*LZ  || iy0 >= VOLUME + 2*LX*LY*LZ) {
+	      printf("Boundary for time direction is wrong %d %d %d\n", 
+		     iy0 < VOLUME + LX*LY*LZ, iy0 >= VOLUME + 2*LX*LY*LZ, iy0);
+	      printf("Program aborted\n");
+#ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+#endif
+	      exit(0);
+	    }
 	  }
 #else
 	  iz0=g_ipt[(x0+T-1)%T][x1][x2][x3];
@@ -152,10 +190,11 @@ int check_geometry()
 	    iz1=g_ipt[x0][(x1+LX-1)%LX][x2][x3];
 	  }
 	  else {
-	    iz1 = g_ipt[x0][LX+1][x2][x3];;
+	    iz1 = g_ipt[x0][LX+1][x2][x3];
 	    itest[iy1]++;
-	    if(iy1 < VOLUME + 2*LX*LY*LZ + T*LY*LZ || iy1 > VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ) {
-	      printf("Boundary for x direction is wrong %d %d %d\n", iy1 < VOLUME + 2*LX*LY*LZ + T*LY*LZ, iy1 > VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ, iy1);
+	    if(iy1 < VOLUME + 2*LX*LY*LZ + T*LY*LZ || iy1 >= VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ) {
+	      printf("Boundary for x direction is wrong %d %d %d\n", 
+		     iy1 < VOLUME + 2*LX*LY*LZ + T*LY*LZ, iy1 >= VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ, iy1);
 	      printf("Program aborted\n");
 #ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -172,10 +211,11 @@ int check_geometry()
 	    iz2=g_ipt[x0][x1][(x2+LY-1)%LY][x3];
 	  }
 	  else {
-	    iz2 = g_ipt[x0][x1][LY+1][x3];;
+	    iz2 = g_ipt[x0][x1][LY+1][x3];
 	    itest[iy2]++;
-	    if(iy2 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ|| iy2 > VOLUME + RAND) {
-	      printf("Boundary for y direction is wrong %d %d %d\n", iy1 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ, iy1 > VOLUME + RAND, iy1);
+	    if(iy2 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ|| iy2 >= VOLUME + RAND) {
+	      printf("Boundary for y direction is wrong %d %d %d\n", 
+		     iy2 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ, iy2 >= VOLUME + RAND, iy1);
 	      printf("Program aborted\n");
 #ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -194,18 +234,241 @@ int check_geometry()
 	      (g_iup[iy0][0]!=ix)||(g_iup[iy1][1]!=ix)||(g_iup[iy2][2]!=ix)||(g_iup[iy3][3]!=ix)) {
 	    printf("The index idn is incorrect\n");
 	    printf("%d %d %d %d\n", (iy0!=iz0), (iy1!=iz1), (iy2!=iz2), (iy3!=iz3));
+	    printf("%d %d %d %d\n", iy1, iz1, iy2, iz2);
+	    printf("%d %d %d %d %d\n", x0, x1, x2, x3, ix);
 	    printf("Program aborted\n");
 #ifdef MPI
 	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #endif
 	    exit(0);
 	  }
+
+  /* The edges */
+  /* In case of PARALLELT there is actually no edge to take care of */
+#if ((defined PARALLELXT) || (defined PARALLELXYT))
+	  if(x0 == 0) {
+	    iy0 = g_idn[ g_idn[ix][1] ][0];
+	    if(x1 != 0) {
+	      iz0 = g_ipt[T+1][(x1+LX-1)%LX][x2][x3];
+	    }
+	    else {
+	      iz0 = g_ipt[T+1][LX+1][x2][x3];
+	      itest[iy0]++;
+	    }
+	    if(iz0 != iy0) {
+	      printf("Edge -t -x has an error\n");
+	      printf("Program aborted\n");
+# ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+# endif
+	      exit(0);
+	    }
+
+	    iy0 = g_idn[ g_iup[ix][1] ][0]; 
+	    if(x1 != LX-1) {
+	      iz0 = g_ipt[T+1][(x1+1)%LX][x2][x3];
+	    }
+	    else {
+	      iz0 = g_ipt[T+1][LX][x2][x3];
+	      itest[iy0]++;
+	    }
+	    if(iz0 != iy0) {
+	      printf("Edge -t +x has an error\n");
+	      printf("Program aborted\n");
+# ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+# endif
+	      exit(0);
+	    }
+	  }
+
+	  if(x0 == T-1) {
+	    iy0 = g_iup[ g_idn[ix][1] ][0];
+	    if(x1 != 0) {
+	      iz0 = g_ipt[T][(x1+LX-1)%LX][x2][x3];
+	    }
+	    else {
+	      iz0 = g_ipt[T][LX+1][x2][x3];
+	      itest[iy0]++;
+	    }
+	    if(iz0 != iy0) {
+	      printf("Edge +t -x has an error\n");
+	      printf("Program aborted\n");
+# ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+# endif
+	      exit(0);
+	    }
+
+	    iy0 = g_iup[ g_iup[ix][1] ][0]; 
+	    if(x1 != LX-1) {
+	      iz0 = g_ipt[T][(x1+1)%LX][x2][x3];
+	    }
+	    else {
+	      iz0 = g_ipt[T][LX][x2][x3];
+	      itest[iy0]++;
+	    }
+	    if(iz0 != iy0) {
+	      printf("Edge +t +x has an error\n");
+	      printf("Program aborted\n");
+# ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+# endif
+	      exit(0);
+	    }
+	  }
+
+#endif
+
+#if defined PARALLELXYT
+	  if(x0 == 0) {
+	    iy0 = g_idn[ g_idn[ix][2] ][0]; 
+	    if(x2 != 0) {
+	      iz0 = g_ipt[T+1][x1][(x2+LY-1)%LY][x3];
+	    }
+	    else {
+	      iz0 = g_ipt[T+1][x1][LY+1][x3];
+	      itest[iy0]++;
+	    }
+	    if(iz0 != iy0) {
+	      printf("Edge -t -y has an error\n");
+	      printf("Program aborted\n");
+# ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+# endif
+	      exit(0);
+	    }
+
+	    iy0 = g_idn[ g_iup[ix][2] ][0]; 
+	    if(x2 != LY-1) {
+	      iz0 = g_ipt[T+1][x1][(x2+1)%LY][x3];
+	    }
+	    else {
+	      iz0 = g_ipt[T+1][x1][LY][x3];
+	      itest[iy0]++;
+	    }
+	    if(iz0 != iy0) {
+	      printf("Edge -t +y has an error\n");
+	      printf("Program aborted\n");
+# ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+# endif
+	      exit(0);
+	    }
+	  }
+
+	  if(x0 == T-1) {
+	    iy0 = g_iup[ g_idn[ix][2] ][0];
+	    if(x2 != 0) {
+	      iz0 = g_ipt[T][x1][(x2+LY-1)%LY][x3];
+	    }
+	    else {
+	      iz0 = g_ipt[T][x1][LY+1][x3];
+	      itest[iy0]++;
+	    }
+	    if(iz0 != iy0) {
+	      printf("Edge +t -y has an error\n");
+	      printf("Program aborted\n");
+# ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+# endif
+	      exit(0);
+	    }
+
+	    iy0 = g_iup[ g_iup[ix][2] ][0]; 
+	    if(x2 != LY-1) {
+	      iz0 = g_ipt[T][x1][(x2+1)%LY][x3];
+	    }
+	    else {
+	      iz0 = g_ipt[T][x1][LY][x3];
+	      itest[iy0]++;
+	    }
+	    if(iz0 != iy0) {
+	      printf("Edge +t +y has an error\n");
+	      printf("Program aborted\n");
+# ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+# endif
+	      exit(0);
+	    }
+	  }
+
+	  if(x1 == 0) {
+	    iy0 = g_idn[ g_idn[ix][2] ][1]; 
+	    if(x2 != 0) {
+	      iz0 = g_ipt[x0][LX+1][(x2+LY-1)%LY][x3];
+	    }
+	    else {
+	      iz0 = g_ipt[x0][LX+1][LY+1][x3];
+	      itest[iy0]++;
+	    }
+	    if(iz0 != iy0) {
+	      printf("Edge -x -y has an error\n");
+	      printf("Program aborted\n");
+# ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+# endif
+	      exit(0);
+	    }
+	    iy0 = g_idn[ g_iup[ix][2] ][1]; 
+	    if(x2 != LY-1) {
+	      iz0 = g_ipt[x0][LX+1][(x2+1)%LY][x3];
+	    }
+	    else {
+	      iz0 = g_ipt[x0][LX+1][LY][x3];
+	      itest[iy0]++;
+	    }
+	    if(iz0 != iy0) {
+	      printf("Edge -x +y has an error\n");
+	      printf("Program aborted\n");
+# ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+# endif
+	      exit(0);
+	    }	    
+	  }
+	  if(x1 == LX-1) {
+	    iy0 = g_iup[ g_idn[ix][2] ][1];
+	    if(x2 != 0) {
+	      iz0 = g_ipt[x0][LX][(x2+LY-1)%LY][x3];
+	    }
+	    else {
+	      iz0 = g_ipt[x0][LX][LY+1][x3];
+	      itest[iy0]++;
+	    }
+	    if(iz0 != iy0) {
+	      printf("Edge +x -y has an error\n");
+	      printf("Program aborted\n");
+# ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+# endif
+	      exit(0);
+	    }
+
+	    iy0 = g_iup[ g_iup[ix][2] ][1]; 
+	    if(x2 != LY-1) {
+	      iz0 = g_ipt[x0][LX][(x2+1)%LY][x3];
+	    }
+	    else {
+	      iz0 = g_ipt[x0][LX][LY][x3];
+	      itest[iy0]++;
+	    }
+	    if(iz0 != iy0) {
+	      printf("Edge +x +y has an error\n");
+	      printf("Program aborted\n");
+# ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+# endif
+	      exit(0);
+	    }
+	  }
+#endif
 	}
       }
     }
   }
   
-  for (ix = VOLUME; ix < (VOLUME+RAND); ix++){
+  for (ix = VOLUME; ix < (VOLUME+RAND+EDGES); ix++){
     if (itest[ix]!=1) {
       printf("The boundary is not correctly used itest = %d ix = %d \n", itest[ix], ix);
       printf("Program aborted\n");
@@ -215,6 +478,7 @@ int check_geometry()
       exit(0); 
     }
   }
+
 
 #ifdef MPI
   if(g_dbw2rand > 0) {
