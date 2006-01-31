@@ -87,34 +87,34 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
   /* the edges */
   if(x1 == LX) {
     if(x2 == LY) {
-      ix = VOLUME + RAND + + 4*LY*LZ + y0*LZ + y3;
+      ix = VOLUME + RAND +  4*LY*LZ + y0*LZ + y3;
     }
     if(x2 == -1) {
-      ix = VOLUME + RAND + + 4*LY*LZ + T*LZ + y0*LZ + y3;
+      ix = VOLUME + RAND +  4*LY*LZ + T*LZ + y0*LZ + y3;
     }
   }
   if(x1 == -1) {
     if(x2 == LY) {
-      ix = VOLUME + RAND + + 4*LY*LZ + 2*T*LZ + y0*LZ + y3;
+      ix = VOLUME + RAND +  4*LY*LZ + 2*T*LZ + y0*LZ + y3;
     }
     if(x2 == -1) {
-      ix = VOLUME + RAND + + 4*LY*LZ + 3*T*LZ + y0*LZ + y3;
+      ix = VOLUME + RAND +  4*LY*LZ + 3*T*LZ + y0*LZ + y3;
     }
   }
   if(x0 == T) {
     if(x2 == LY) {
-      ix = VOLUME + RAND + + 4*LY*LZ + 4*T*LZ + y1*LZ + y3;
+      ix = VOLUME + RAND +  4*LY*LZ + 4*T*LZ + y1*LZ + y3;
     }
     if(x2 == -1) {
-      ix = VOLUME + RAND + + 4*LY*LZ + 4*T*LZ + LX*LZ + y1*LZ + y3;
+      ix = VOLUME + RAND +  4*LY*LZ + 4*T*LZ + LX*LZ + y1*LZ + y3;
     }
   }
   if(x0 == -1) {
     if(x2 == LY) {
-      ix = VOLUME + RAND + + 4*LY*LZ + 4*T*LZ + 2*LX*LZ + y1*LZ + y3;
+      ix = VOLUME + RAND +  4*LY*LZ + 4*T*LZ + 2*LX*LZ + y1*LZ + y3;
     }
     if(x2 == -1) {
-      ix = VOLUME + RAND + + 4*LY*LZ + 4*T*LZ + 3*LX*LZ + y1*LZ + y3;
+      ix = VOLUME + RAND +  4*LY*LZ + 4*T*LZ + 3*LX*LZ + y1*LZ + y3;
     }
   }
 
@@ -123,10 +123,10 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 
   /* The DBW2 stuff --> second boundary slice */
   /* This we put a the very end.              */
-#if ((defined PARALLELT) || (defined PARALLELXT) || (PARALLELXYT))
+#if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT))
   if(x0 == T+1) { 
     ix = VOLUMEPLUSRAND + y3 + LZ*y2 + LZ*LY*y1;
-#if ((defined PARALLELXT) || (defined PARALLELXYT))
+# if ((defined PARALLELXT) || (defined PARALLELXYT))
     if(x1 == LX) {
       ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ
 	+ y2*LZ + y3;
@@ -135,12 +135,12 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 1*LY*LZ
 	+ y2*LZ + y3;
     }
-#endif
+# endif
   }
   /* the slice at time -2 is put behind the one at time T+1 */
   else if(x0 == -2) {
     ix = VOLUMEPLUSRAND + LX*LY*LZ + y3 + LZ*y2 + LZ*LY*y1;
-#if ((defined PARALLELXT) || (defined PARALLELXYT))
+# if ((defined PARALLELXT) || (defined PARALLELXYT))
     if(x1 == LX) {
       ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*LY*LZ
 	+ y2*LZ + y3;
@@ -149,10 +149,10 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 3*LY*LZ
 	+ y2*LZ + y3;
     }
-#endif
+# endif
   }  
 #endif
-#if ((defined PARALLELXT) || (PARALLELXYT))
+#if ((defined PARALLELXT) || (defined PARALLELXYT))
   if(x1 == LX+1) {
     if((x0 < T) && (x0 > -1)) {
       ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
@@ -207,7 +207,7 @@ int Index(const int x0, const int x1, const int x2, const int x3)
   /* the slice at x -1 is put to LX+1 */
   if(x1 == -1) y1=LX+1;
   if(x1 == -1 || x1 == LX) bndx = 1;
-  /* the slice at x -1 is put to LX+2 */
+  /* the slice at x -2 is put to LX+2 */
   if(x1 == -2) y1 = 1;
   if(x1 == LX+1) y1 = 0;
   if(x1 == -2 || x1 == LX+1) bndx = 2;
@@ -220,7 +220,7 @@ int Index(const int x0, const int x1, const int x2, const int x3)
   /* the slice at y -1 is put to LY+1 */
   if(x2 == -1) y2=LY+1;
   if(x2 == -1 || x2 == LY) bndy = 1;
-  /* the slice at x -1 is put to LY+2 */
+  /* the slice at y -2 is put to LY+2 */
   if(x2 == -2) y2 = 1;
   if(x2 == LY+1) y2 = 0;
   if(x2 == -2 || x2 == LY+1) bndy = 2;
@@ -309,6 +309,7 @@ int Index(const int x0, const int x1, const int x2, const int x3)
 void geometry(){
   
   int x0,x1,x2,x3,ix;
+  int y0, y1, y2, y3;
   int i_even,i_odd;
   int startvaluet = 0;
   int startvaluex = 0;
@@ -333,6 +334,16 @@ void geometry(){
       for (x2 = -startvaluey; x2 < (LY+startvaluey); x2++){
 	for (x3 = 0; x3 < LZ; x3++){
 	  ix=Index(x0, x1, x2, x3);
+	  y0=x0; y1=x1; y2=x2; y3=x3;
+	  if(x0 == -1) {
+	    y0 = T+1;
+	  }
+	  if(x1 == -1) {
+	    y1 = LX+1;
+	  }
+	  if(x2 == -1) {
+	    y2 = LY+1;
+	  }
 
 	  /* g_proc_id*T|LX|LY is added to allow for odd T|LX|LY when the number of 
 	     nodes is even */
@@ -343,49 +354,40 @@ void geometry(){
 	    xeven[ix]=0; 
 	  }
 
-	  if(x0 >= 0 && x1 >=0 && x2 >= 0) {
-	    g_ipt[x0][x1][x2][x3] = ix;
+	  if((x0 == T  && x1 == LX && x2 == LY) ||
+	     (x0 == -1 && x1 == -1 && x2 == -1) ||
+	     (x0 == -1 && x1 == LX && x2 == -1) ||
+	     (x0 == -1 && x1 == -1 && x2 == LY) ||
+	     (x0 == T  && x1 == -1 && x2 == -1) ||
+	     (x0 == -1 && x1 == LX && x2 == LY) ||
+	     (x0 == T  && x1 == -1 && x2 == LY) ||
+	     (x0 == T  && x1 == LX && x2 == -1)) {
+	    /* Should not be needed, set it to -1 */
+	    g_ipt[y0][y1][y2][y3] = -1;
 	  }
-	  else if(x0 < 0 && x1 < 0 && x2 < 0) {
-	    g_ipt[T+1][LX+1][LY+1][x3] = ix;
+	  else {
+	    g_ipt[y0][y1][y2][y3] = ix;
 	  }
-	  else if(x0 < 0 && x1 < 0) {
-	    g_ipt[T+1][LX+1][x2][x3] = ix;
+	  if( g_ipt[y0][y1][y2][y3] != -1) {
+	    g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	    g_idn[ix][0] = Index(x0-1, x1, x2, x3);
+	    
+	    g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	    g_idn[ix][1] = Index(x0, x1-1, x2, x3);
+	    
+	    g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	    g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+	    
+	    g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	    g_idn[ix][3] = Index(x0, x1, x2, x3-1);
 	  }
-	  else if(x0 < 0 && x2 < 0) {
-	    g_ipt[T+1][x1][LY+1][x3] = ix;
-	  }
-	  else if(x1 < 0 && x2 < 0) {
-	    g_ipt[x0][LX+1][LY+1][x3] = ix;
-	  }
-	  else if(x0 < 0) {
-	    g_ipt[T+1][x1][x2][x3] = ix;
-	  }
-	  else if(x1 < 0) {
-	    g_ipt[x0][LX+1][x2][x3] = ix;
-	  }
-	  else if(x2 < 0) {
-	    g_ipt[x0][x1][LY+1][x3] = ix;
-	  }
-
-	  g_iup[ix][0] = Index(x0+1, x1, x2, x3);
-	  g_idn[ix][0] = Index(x0-1, x1, x2, x3);
-
-	  g_iup[ix][1] = Index(x0, x1+1, x2, x3);
-	  g_idn[ix][1] = Index(x0, x1-1, x2, x3);
-
-	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
-	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
-
-	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
-	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
-
 	}
       }
     }
   }
   i_even=0;
   i_odd=0;
+  /*For the spinor fields we need only till VOLUME+RAND */
   for (ix = 0; ix < (VOLUME+RAND); ix++){
     if(xeven[ix]==1){
       g_lexic2eo[ix] = i_even;
@@ -400,11 +402,17 @@ void geometry(){
       i_odd++;
     }
   }
+
+  /* The rectangular gauge action part */
+  /* Everything is stored behind VOLUMEPLUSRAND-1 !*/
 #if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT)
   if(g_dbw2rand != 0) {
-    if(g_proc_id == 0) {printf("# rectangular gauge action stuff\n");fflush(stdout);fflush(stdout);}
+    if(g_proc_id == 0) {
+      printf("# Initialising rectangular gauge action stuff\n");
+      fflush(stdout);
+    }
     for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++){
-      for (x2 = 0; x2 < LY; x2++) {
+      for (x2 = -startvaluey; x2 < (LY+startvaluey); x2++) {
 	for (x3 = 0; x3 < LZ; x3++) {
 	  x0 = -2;
 	  ix = Index(x0, x1, x2, x3);
@@ -418,8 +426,8 @@ void geometry(){
 	  if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
 	  if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
 
-	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
-	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+	  if(x2 < LY) g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	  if(x2 > -1) g_idn[ix][2] = Index(x0, x1, x2-1, x3);
 
 	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
 	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
@@ -435,8 +443,8 @@ void geometry(){
 	  if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
 	  if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
 
-	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
-	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+	  if(x2 < LY) g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	  if(x2 > -1) g_idn[ix][2] = Index(x0, x1, x2-1, x3);
 
 	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
 	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
@@ -446,7 +454,7 @@ void geometry(){
     }    
 #if (defined PARALLELXT || PARALLELXYT)
     for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
-      for (x2 = 0; x2 < LY; x2++) {
+      for (x2 = -startvaluey; x2 < (LY+startvaluey); x2++) {
 	for (x3 = 0; x3 < LZ; x3++) {
 	  x1 = -2;
 	  ix = Index(x0, x1, x2, x3);
@@ -459,8 +467,8 @@ void geometry(){
 	  g_iup[ix][1] = Index(x0, x1+1, x2, x3);
 	  g_idn[ix][1] = -1;
 
-	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
-	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+	  if(x2 < LY) g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	  if(x2 > -1) g_idn[ix][2] = Index(x0, x1, x2-1, x3);
 
 	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
 	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
@@ -476,8 +484,8 @@ void geometry(){
 	  g_iup[ix][1] = -1;
 	  g_idn[ix][1] = Index(x0, x1-1, x2, x3);
 
-	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
-	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+	  if(x2 < LY) g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	  if(x2 > -1) g_idn[ix][2] = Index(x0, x1, x2-1, x3);
 
 	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
 	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
@@ -487,7 +495,46 @@ void geometry(){
     }
 #endif
 #ifdef PARALLELXYT
+    for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
+      for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++) {
+	for (x3 = 0; x3 < LZ; x3++) {
+	  x2 = -2;
+	  ix = Index(x0, x1, x2, x3);
+	  if(ix < VOLUMEPLUSRAND) {
+	    printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	  }
+	  if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	  if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
 
+	  if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	  if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
+
+	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	  g_idn[ix][2] = -1;
+
+	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
+
+	  x1 = LY+1;
+	  ix = Index(x0, x1, x2, x3);
+	  if(ix < VOLUMEPLUSRAND) {
+	    printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	  }
+	  if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	  if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
+
+	  if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	  if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
+
+	  g_iup[ix][2] = -1;
+	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+
+	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
+
+	}
+      }
+    }
 #endif
   }
 #endif

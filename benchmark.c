@@ -116,7 +116,10 @@ int main(int argc,char *argv[])
 
   if(g_proc_id == 0) {
     fprintf(stdout,"The number of processes is %d \n",g_nproc);
-    fprintf(stdout,"The local lattice size is %d x %d x %d^2 \n\n",T,LX,L);
+    printf("# The lattice size is %d x %d x %d x %d\n",
+	   (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(LZ));
+    printf("# The local lattice size is %d x %d x %d x %d\n", 
+	   (int)(T), (int)(LX), (int)(LY),(int) LZ);
     fflush(stdout);
   }
 

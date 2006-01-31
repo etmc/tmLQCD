@@ -304,7 +304,7 @@ int main(int argc,char *argv[]) {
     printf("# The code was compiled with -D_GAUGE_COPY\n");
 #endif
     printf("# The lattice size is %d x %d x %d x %d\n",
-	   (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY), (int)(LZ));
+	   (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(LZ));
     printf("# The local lattice size is %d x %d x %d x %d\n", 
 	   (int)(T), (int)(LX), (int)(LY),(int) LZ);
     printf("# beta = %f , kappa= %f\n", g_beta, g_kappa);

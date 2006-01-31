@@ -117,6 +117,7 @@ void mpi_init(int argc,char *argv[]) {
   VOLUME = (T*LX*LY*LZ);
 #ifdef PARALLELT  
   RAND = (2*LX*LY*LZ);
+  EDGES = 0;
   VOLUMEPLUSRAND = ((T+2)*LX*LY*LZ);
   g_dbw2rand = (2*LX*LY*LZ);
 #endif

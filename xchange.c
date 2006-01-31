@@ -326,11 +326,11 @@ void xchange_gauge() {
   /* recieve the data from the neighbour on the right in x direction */
   /* is on the y-Rand */
 # ifndef _NEW_GEOMETRY
-  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY)], 1, gauge_x_edge_gath, g_nb_x_dn, 105,
+  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ], 1, gauge_x_edge_gath, g_nb_x_dn, 105,
 	       g_gauge_field[VOLUME + RAND + 4*LY*LZ],      1, gauge_x_edge_cont, g_nb_x_up, 105, 
 	       g_cart_grid, &status);
 # else
-  MPI_Sendrecv(g_gauge_field[[VOLUME + 2*LZ*(LX*LY + T*LY)], 1, gauge_x_edge_gath_split, g_nb_x_dn, 105,
+  MPI_Sendrecv(g_gauge_field[[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ)], 1, gauge_x_edge_gath_split, g_nb_x_dn, 105,
 	       g_gauge_field[VOLUME + RAND + 4*LY*LZ],       1, gauge_x_edge_cont      , g_nb_x_up, 105, 
 	       g_cart_grid, &status);
 # endif
@@ -453,8 +453,8 @@ void xchange_deri()
   /* send the data to the neighbour on the left in time direction */
   /* recieve the data from the neighbour on the right in time direction */
 #ifndef _NEW_GEOMETRY
-  MPI_Sendrecv(&df0[(T+1)*LX*LY*LZ][0].d1,        1, deri_time_slice_cont, g_nb_t_dn, 43,
-	       &ddummy[(T-1)*LX*LY*LZ][0].d1,     1, deri_time_slice_cont, g_nb_t_up, 43,
+  MPI_Sendrecv(&df0[(T+1)*LX*LY*LZ][0].d1,    1, deri_time_slice_cont, g_nb_t_dn, 43,
+	       &ddummy[(T-1)*LX*LY*LZ][0].d1, 1, deri_time_slice_cont, g_nb_t_up, 43,
 	       g_cart_grid, &status);
 
   /* add ddummy to df0 */
