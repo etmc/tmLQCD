@@ -330,7 +330,7 @@ void xchange_gauge() {
 	       g_gauge_field[VOLUME + RAND + 4*LY*LZ],      1, gauge_x_edge_cont, g_nb_x_up, 105, 
 	       g_cart_grid, &status);
 # else
-  MPI_Sendrecv(g_gauge_field[[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ)], 1, gauge_x_edge_gath_split, g_nb_x_dn, 105,
+  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ], 1, gauge_x_edge_gath_split, g_nb_x_dn, 105,
 	       g_gauge_field[VOLUME + RAND + 4*LY*LZ],       1, gauge_x_edge_cont      , g_nb_x_up, 105, 
 	       g_cart_grid, &status);
 # endif
@@ -458,18 +458,24 @@ void xchange_deri()
 	       g_cart_grid, &status);
 
   /* add ddummy to df0 */
-  for(ix=(T-1)*LX*LY*LZ;ix < T*LX*LY*LZ; ix++){
-    for(mu=0;mu<4;mu++){
-      df0[ix][mu].d1 += ddummy[ix][mu].d1;
-      df0[ix][mu].d2 += ddummy[ix][mu].d2;
-      df0[ix][mu].d3 += ddummy[ix][mu].d3;
-      df0[ix][mu].d4 += ddummy[ix][mu].d4;
-      df0[ix][mu].d5 += ddummy[ix][mu].d5;
-      df0[ix][mu].d6 += ddummy[ix][mu].d6;
-      df0[ix][mu].d7 += ddummy[ix][mu].d7;
-      df0[ix][mu].d8 += ddummy[ix][mu].d8;
+  for(x = 0; x < LX; x++) {
+    for(y = 0; y < LY; y++) {
+      for(z = 0; z < LZ; z++) {
+	ix = g_ipt[T-1][x][y][z];
+	for(mu=0;mu<4;mu++){ 
+	  df0[ix][mu].d1 += ddummy[ix][mu].d1;
+	  df0[ix][mu].d2 += ddummy[ix][mu].d2;
+	  df0[ix][mu].d3 += ddummy[ix][mu].d3;
+	  df0[ix][mu].d4 += ddummy[ix][mu].d4;
+	  df0[ix][mu].d5 += ddummy[ix][mu].d5;
+	  df0[ix][mu].d6 += ddummy[ix][mu].d6;
+	  df0[ix][mu].d7 += ddummy[ix][mu].d7;
+	  df0[ix][mu].d8 += ddummy[ix][mu].d8;
+	}
+      }
     }
   }
+
 #else
   MPI_Sendrecv(&df0[(T+1)*LX*LY*LZ][0].d1,          1, deri_time_slice_cont , g_nb_t_dn, 43, 
 	       &ddummy[(T-1)*LX*LY*LZ/2][0].d1,     1, deri_time_slice_split, g_nb_t_up, 43,

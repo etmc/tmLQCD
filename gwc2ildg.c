@@ -128,6 +128,9 @@ int main(int argc,char *argv[]) {
   plaquette_energy = measure_gauge_action();
 
   if (g_proc_id == 0){
+    printf("The plaquette value is %e\n", plaquette_energy/(6.*VOLUME*g_nproc)); fflush(stdout);
+  }
+  if (g_proc_id == 0){
     printf("Writing Gauge field to file %s in ILDG format...\n", ofilename); fflush(stdout);
   }
   write_lime_gauge_field( ofilename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);

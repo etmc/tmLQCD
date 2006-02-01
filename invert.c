@@ -89,10 +89,10 @@ int main(int argc,char *argv[]) {
 #endif
 
 #ifndef XLC 
-  signal(SIGUSR1,&catch_del_sig);
-  signal(SIGUSR2,&catch_del_sig);
-  signal(SIGTERM,&catch_del_sig);
-  signal(SIGXCPU,&catch_del_sig);
+/*   signal(SIGUSR1,&catch_del_sig); */
+/*   signal(SIGUSR2,&catch_del_sig); */
+/*   signal(SIGTERM,&catch_del_sig); */
+/*   signal(SIGXCPU,&catch_del_sig); */
 #endif
 
   while ((c = getopt(argc, argv, "h?f:o:")) != -1) {

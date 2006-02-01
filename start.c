@@ -548,7 +548,7 @@ void source_spinor_field(spinor * const P, spinor * const Q, int is, int ic) {
   zero_spinor_field(P,VOLUME/2);
   zero_spinor_field(Q,VOLUME/2);
 
-  if (g_proc_coords[0] == 0 && g_proc_coords[1]==0) {
+  if (g_proc_coords[0] == 0 && g_proc_coords[1] == 0 && g_proc_coords[2] == 0) {
 
     s = P;
     

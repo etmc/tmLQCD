@@ -133,6 +133,13 @@ int main(int argc,char *argv[])
   check_xchange();
 #endif
 
+  MPI_Finalize();
+  free_gauge_field();
+  free_geometry_indices();
+  free_spinor_field();
+  free_moment_field();
+  return(0);
+
   /* here we generate exactly the same configuration as for the 
      single node simulation */
   if(g_proc_id==0) {
