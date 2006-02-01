@@ -67,7 +67,7 @@ if test $enable_mpi = yes; then
     mpidimension="-DPARALLELXT"
     AC_DEFINE(PARALLELXT,1,Two dimensional parallelisation)
   elif test $withmpidimension = 3; then
-    AC_MSG_RESULT(n=2 [xt])
+    AC_MSG_RESULT(n=3 [xyt])
     mpidimension="-DPARALLELXYT"
     AC_DEFINE(PARALLELXYT,1,Three dimensional parallelisation)
   else
@@ -457,7 +457,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
     DEPFLAGS="-M"
   fi
 
-#The BG/L
+#The BLue Gene/L
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
   CFLAGS="$CFLAGS"
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
@@ -467,7 +467,8 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
   if test "$GCC" != yes; then
     CFLAGS="-qsrcmsg -qarch=440d -qtune=440 $CFLAGS"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
-    OPTARGS="-qhot"
+    OPTARGS="-O5"
+# OPTARGS="-qhot" leads to wrong code
     XLC=yes
     AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   fi

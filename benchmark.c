@@ -58,6 +58,8 @@ int main(int argc,char *argv[])
   MPI_Init(&argc, &argv);
 #endif
 
+  MPI_Init(&argc, &argv);
+
   /* Read the input file */
   read_input("benchmark.input");
 
@@ -132,13 +134,6 @@ int main(int argc,char *argv[])
 #ifdef MPI
   check_xchange();
 #endif
-
-  MPI_Finalize();
-  free_gauge_field();
-  free_geometry_indices();
-  free_spinor_field();
-  free_moment_field();
-  return(0);
 
   /* here we generate exactly the same configuration as for the 
      single node simulation */

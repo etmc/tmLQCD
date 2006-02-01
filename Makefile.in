@@ -6,8 +6,8 @@ subdir = .
 
 CC = @CC@
 CCDEP = @CCDEP@
-CFLAGS = @CFLAGS@ @OPTARGS@
-LDFLAGS = @LDFLAGS@ @OPTARGS@
+CFLAGS = @CFLAGS@ 
+LDFLAGS = @LDFLAGS@
 DEPFLAGS = @DEPFLAGS@
 CCLD = $(CC)
 LEX = @LEX@ 
@@ -18,10 +18,10 @@ OPTARGS = @OPTARGS@
 DEFS = @DEFS@
 
 INCLUDES = @INCLUDES@ 
-LINK = $(CCLD) -o $@ ${LDFLAGS}
+LINK = $(CCLD) -o $@ ${LDFLAGS} ${OPTARGS}
 LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
 	${top_builddir}/solver/libsolver.a
-COMPILE = ${CC} $(DEFS) $(INCLUDES) -o $@ ${CFLAGS} 
+COMPILE = ${CC} $(DEFS) $(INCLUDES) -o $@ ${CFLAGS} ${OPTARGS}
 
 MODULES = init_gauge_field init_geometry_indices init_spinor_field \
 	init_bispinor_field init_moment_field init_gauge_tmp \

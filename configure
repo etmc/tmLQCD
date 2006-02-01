@@ -3276,8 +3276,8 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
   elif test $withmpidimension = 3; then
-    echo "$as_me:$LINENO: result: n=2 xt" >&5
-echo "${ECHO_T}n=2 xt" >&6
+    echo "$as_me:$LINENO: result: n=3 xyt" >&5
+echo "${ECHO_T}n=3 xyt" >&6
     mpidimension="-DPARALLELXYT"
 
 cat >>confdefs.h <<\_ACEOF
@@ -6469,7 +6469,7 @@ _ACEOF
     DEPFLAGS="-M"
   fi
 
-#The BG/L
+#The BLue Gene/L
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
   CFLAGS="$CFLAGS"
 
@@ -6483,7 +6483,8 @@ _ACEOF
   if test "$GCC" != yes; then
     CFLAGS="-qsrcmsg -qarch=440d -qtune=440 $CFLAGS"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
-    OPTARGS="-qhot"
+    OPTARGS="-O5"
+# OPTARGS="-qhot" leads to wrong code
     XLC=yes
 
 cat >>confdefs.h <<\_ACEOF

@@ -8,10 +8,15 @@
 	    please use lime-1.2.3 _at least_! Earlier version might not
 	    work.
 
+30.01.2006: at least for BGL lime needs to be configured with
+	    ./configure CC=/opt/ibmcmp/vac/7.0/bin/blrts_xlc --enable-largefile
+	    and (remember) lime-1.2.3.
+
 25.01.2006: Trying to setup a versioning system:
 	    last digit -> bug fixes
 	    second digit odd -> developement Version
 	    second digit even -> stable release
+
 
 25.01.2006: changed --disalbe-lapack to --without-lapack ...
 
