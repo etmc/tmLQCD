@@ -57,6 +57,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     ix = VOLUME + 2*LX*LY*LZ + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
   }   
   /* The edges */
+  /* xt-edge */
   if(x0 == T){
     if(x1 == LX){
       ix = VOLUME+RAND+y2*LZ+y3;
@@ -85,6 +86,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     ix = VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ + y0*LX*LZ + y1*LZ + y3;
   }
   /* the edges */
+  /* yx-edge  */
   if(x1 == LX) {
     if(x2 == LY) {
       ix = VOLUME + RAND +  4*LY*LZ + y0*LZ + y3;
@@ -101,19 +103,23 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUME + RAND +  4*LY*LZ + 3*T*LZ + y0*LZ + y3;
     }
   }
-  if(x0 == T) {
-    if(x2 == LY) {
+  /* ty-edge */
+  /* Be carefully here! Here we need y first, then t */
+  /* this is because the chain is first t dir, then y direction */
+  /* this is oposit to the other edges ! */
+  if(x2 == LY) {
+    if(x0 == T) {
       ix = VOLUME + RAND +  4*LY*LZ + 4*T*LZ + y1*LZ + y3;
     }
-    if(x2 == -1) {
+    if(x0 == -1) {
       ix = VOLUME + RAND +  4*LY*LZ + 4*T*LZ + LX*LZ + y1*LZ + y3;
     }
   }
-  if(x0 == -1) {
-    if(x2 == LY) {
+  if(x2 == -1) {
+    if(x0 == T) {
       ix = VOLUME + RAND +  4*LY*LZ + 4*T*LZ + 2*LX*LZ + y1*LZ + y3;
     }
-    if(x2 == -1) {
+    if(x0 == -1) {
       ix = VOLUME + RAND +  4*LY*LZ + 4*T*LZ + 3*LX*LZ + y1*LZ + y3;
     }
   }

@@ -327,7 +327,7 @@ int check_xchange()
     x = (double*) g_gauge_field[VOLUME + RAND];
     for(i = 0; i < LY*LZ; i++, x++) {
       if((int)(*x) != pp) {
-	printf("The exchange of gaugefields edges in direction ppn\n");
+	printf("The exchange of gaugefields edges (xt) in direction +x+t\n");
 	printf("between %d and %d is not correct\n", g_cart_id, pp);
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	printf("Program aborted\n");
@@ -339,7 +339,7 @@ int check_xchange()
     x = (double*) g_gauge_field[VOLUME + RAND + LY*LZ];
     for(i = 0; i < LY*LZ; i++, x++) {
       if((int)(*x) != pm) {
-	printf("The exchange of gaugefields edges in direction pmn\n");
+	printf("The exchange of gaugefields edges (xt) in direction -x+t\n");
 	printf("between %d and %d is not correct\n", g_cart_id, pm);
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	printf("Program aborted\n");
@@ -351,7 +351,7 @@ int check_xchange()
     x = (double*) g_gauge_field[VOLUME + RAND + 2*LY*LZ];
     for(i = 0; i < LY*LZ; i++, x++) {
       if((int)(*x) != mp) {
-	printf("The exchange of gaugefields edges in direction mpn\n");
+	printf("The exchange of gaugefields edges (xt) in direction +x-t\n");
 	printf("between %d and %d is not correct\n", g_cart_id, mp);
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	printf("Program aborted\n");
@@ -363,7 +363,7 @@ int check_xchange()
     x = (double*) g_gauge_field[VOLUME + RAND + 3*LY*LZ];
     for(i = 0; i < LY*LZ; i++, x++) {
       if((int)(*x) != mm) {
-	printf("The exchange of gaugefields edges in direction mmn\n");
+	printf("The exchange of gaugefields edges (xt) in direction -x-t\n");
 	printf("between %d and %d is not correct\n", g_cart_id, mm);
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	printf("Program aborted\n");
@@ -391,7 +391,7 @@ int check_xchange()
     x = (double*) g_gauge_field[VOLUME + RAND + 4*LY*LZ];
     for(i = 0; i < T*LZ; i++, x++) {
       if((int)(*x) != pp) {
-	printf("The exchange of gaugefields edges in direction npp\n");
+	printf("The exchange of gaugefields edges (yx) in direction +y+x\n");
 	printf("between %d and %d is not correct\n", g_cart_id, pp);
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	printf("Program aborted\n");
@@ -403,7 +403,7 @@ int check_xchange()
     x = (double*) g_gauge_field[VOLUME + RAND + 4*LY*LZ + T*LZ];
     for(i = 0; i < T*LZ; i++, x++) {
       if((int)(*x) != pm) {
-	printf("The exchange of gaugefields edges in direction npm\n");
+	printf("The exchange of gaugefields edges (yx) in direction -y+x\n");
 	printf("between %d and %d is not correct\n", g_cart_id, pm);
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	printf("Program aborted\n");
@@ -415,7 +415,7 @@ int check_xchange()
     x = (double*) g_gauge_field[VOLUME + RAND + 4*LY*LZ + 2*T*LZ];
     for(i = 0; i < T*LZ; i++, x++) {
       if((int)(*x) != mp) {
-	printf("The exchange of gaugefields edges in direction nmp\n");
+	printf("The exchange of gaugefields edges (yx) in direction +y-x\n");
 	printf("between %d and %d is not correct\n", g_cart_id, mp);
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	printf("Program aborted\n");
@@ -427,7 +427,7 @@ int check_xchange()
     x = (double*) g_gauge_field[VOLUME + RAND + 4*LY*LZ + 3*T*LZ];
     for(i = 0; i < T*LZ; i++, x++) {
       if((int)(*x) != mm) {
-	printf("The exchange of gaugefields edges in direction nmm\n");
+	printf("The exchange of gaugefields edges (yx) in direction -y-x\n");
 	printf("between %d and %d is not correct\n", g_cart_id, mm);
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	printf("Program aborted\n");
@@ -453,7 +453,7 @@ int check_xchange()
     x = (double*) g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ];
     for(i = 0; i < LX*LZ; i++, x++) {
       if((int)(*x) != pp) {
-	printf("The exchange of gaugefields edges in direction pnp\n");
+	printf("The exchange of gaugefields edges (ty) in direction +t+y\n");
 	printf("between %d and %d is not correct\n", g_cart_id, pp);
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	printf("Program aborted\n");
@@ -464,10 +464,10 @@ int check_xchange()
 
     x = (double*) g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + LX*LZ];
     for(i = 0; i < LX*LZ; i++, x++) {
-      if((int)(*x) != pm) {
-	printf("The exchange of gaugefields edges in direction pnm\n");
-	printf("between %d and %d is not correct\n", g_cart_id, pm);
-	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
+      if((int)(*x) != mp) {
+	printf("The exchange of gaugefields edges (ty) in direction -t+y\n");
+	printf("between %d and %d is not correct\n", g_cart_id, mp);
+	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	printf("Program aborted\n");
 	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 	exit(0);
@@ -476,10 +476,10 @@ int check_xchange()
 
     x = (double*) g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 2*LX*LZ];
     for(i = 0; i < LX*LZ; i++, x++) {
-      if((int)(*x) != mp) {
-	printf("The exchange of gaugefields edges in direction mnp\n");
-	printf("between %d and %d is not correct\n", g_cart_id, mp);
-	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
+      if((int)(*x) != pm) {
+	printf("The exchange of gaugefields edges (ty) in direction +t-y\n");
+	printf("between %d and %d is not correct\n", g_cart_id, pm);
+	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	printf("Program aborted\n");
 	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 	exit(0);
@@ -489,7 +489,7 @@ int check_xchange()
     x = (double*) g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 3*LX*LZ];
     for(i = 0; i < LX*LZ; i++, x++) {
       if((int)(*x) != mm) {
-	printf("The exchange of gaugefields edges in direction mnm\n");
+	printf("The exchange of gaugefields edges (ty) in direction -t-y\n");
 	printf("between %d and %d is not correct\n", g_cart_id, mm);
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	printf("Program aborted\n");

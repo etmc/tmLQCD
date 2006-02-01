@@ -35,9 +35,9 @@ MPI_Datatype deri_x_subslice;
 MPI_Datatype deri_x_eo_subslice;
 MPI_Datatype deri_x_slice_gath;
 MPI_Datatype deri_x_slice_gath_split;
-MPI_Datatype gauge_time_edge_cont;
-MPI_Datatype gauge_time_edge_gath;
-MPI_Datatype gauge_time_edge_gath_split;
+MPI_Datatype gauge_xt_edge_cont;
+MPI_Datatype gauge_xt_edge_gath;
+MPI_Datatype gauge_xt_edge_gath_split;
 
 MPI_Datatype gauge_y_slice_gath;
 MPI_Datatype gauge_y_slice_cont;
@@ -55,13 +55,13 @@ MPI_Datatype deri_y_eo_subslice;
 MPI_Datatype deri_y_slice_gath;
 MPI_Datatype deri_y_slice_gath_split;
 
-MPI_Datatype gauge_x_edge_cont;
-MPI_Datatype gauge_x_edge_gath;
-MPI_Datatype gauge_x_edge_gath_split;
+MPI_Datatype gauge_yx_edge_cont;
+MPI_Datatype gauge_yx_edge_gath;
+MPI_Datatype gauge_yx_edge_gath_split;
 
-MPI_Datatype gauge_y_edge_cont;
-MPI_Datatype gauge_y_edge_gath;
-MPI_Datatype gauge_y_edge_gath_split;
+MPI_Datatype gauge_ty_edge_cont;
+MPI_Datatype gauge_ty_edge_gath;
+MPI_Datatype gauge_ty_edge_gath_split;
 
 MPI_Comm mpi_time_slices;
 #endif
@@ -198,25 +198,25 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_commit(&gauge_y_slice_gath);
 
   /* external edges: on x-Rand send in t-direction*/
-  MPI_Type_contiguous(2*LY*LZ ,gauge_point, &gauge_time_edge_cont);
-  MPI_Type_commit(&gauge_time_edge_cont);
+  MPI_Type_contiguous(2*LY*LZ ,gauge_point, &gauge_xt_edge_cont);
+  MPI_Type_commit(&gauge_xt_edge_cont);
   /* internal edges, lying in memory nevertheless in the boundary */
-  MPI_Type_vector(2, 1, T, gauge_x_subslice, &gauge_time_edge_gath);
-  MPI_Type_commit(&gauge_time_edge_gath);
+  MPI_Type_vector(2, 1, T, gauge_x_subslice, &gauge_xt_edge_gath);
+  MPI_Type_commit(&gauge_xt_edge_gath);
 
   /* external edges: y-Rand send in x-direction */
-  MPI_Type_contiguous(2*T*LZ ,gauge_point, &gauge_x_edge_cont);
-  MPI_Type_commit(&gauge_x_edge_cont);
+  MPI_Type_contiguous(2*T*LZ ,gauge_point, &gauge_yx_edge_cont);
+  MPI_Type_commit(&gauge_yx_edge_cont);
   /* internal edges */
-  MPI_Type_vector(2*T, LZ, LX*LZ, gauge_point, &gauge_x_edge_gath);
-  MPI_Type_commit(&gauge_x_edge_gath);
+  MPI_Type_vector(2*T, LZ, LX*LZ, gauge_point, &gauge_yx_edge_gath);
+  MPI_Type_commit(&gauge_yx_edge_gath);
 
   /* external edges: t-Rand send in y-direction */
-  MPI_Type_contiguous(2*LX*LZ ,gauge_point, &gauge_y_edge_cont);
-  MPI_Type_commit(&gauge_y_edge_cont);
+  MPI_Type_contiguous(2*LX*LZ ,gauge_point, &gauge_ty_edge_cont);
+  MPI_Type_commit(&gauge_ty_edge_cont);
   /* internal edges */
-  MPI_Type_vector(2*LX, LZ, LY*LZ, gauge_point, &gauge_y_edge_gath);
-  MPI_Type_commit(&gauge_y_edge_gath);
+  MPI_Type_vector(2*LX, LZ, LY*LZ, gauge_point, &gauge_ty_edge_gath);
+  MPI_Type_commit(&gauge_ty_edge_gath);
 
   /* For _NEW_GEOMETRY -> even/odd geometry also in the gauge fields */
   /* Now we need a half continuoues gauge xt-slice */
@@ -225,8 +225,8 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(2*T, 1, LX, gauge_x_eo_subslice, &gauge_x_slice_gath_split);
   MPI_Type_commit(&gauge_x_slice_gath_split);
 
-  MPI_Type_vector(4, 1, T, gauge_x_eo_subslice, &gauge_time_edge_gath_split);
-  MPI_Type_commit(&gauge_time_edge_gath_split);
+  MPI_Type_vector(4, 1, T, gauge_x_eo_subslice, &gauge_xt_edge_gath_split);
+  MPI_Type_commit(&gauge_xt_edge_gath_split);
 
   /* Now we need a half continuoues gauge xyt-slice */
   MPI_Type_contiguous((LZ)/2, gauge_point, &gauge_y_eo_subslice); 
