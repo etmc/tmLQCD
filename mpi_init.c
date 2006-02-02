@@ -118,23 +118,21 @@ void mpi_init(int argc,char *argv[]) {
 #ifdef PARALLELT  
   RAND = (2*LX*LY*LZ);
   EDGES = 0;
-  VOLUMEPLUSRAND = ((T+2)*LX*LY*LZ);
-  g_dbw2rand = (2*LX*LY*LZ);
 #endif
 #if defined PARALLELXT
   RAND = 2*LZ*(LY*LX + T*LY);
   EDGES = 4*LZ*LY;
   /* Note that VOLUMEPLUSRAND not equal to VOLUME+RAND in this case */
   /* VOLUMEPLUSRAND rather includes the edges */
-  VOLUMEPLUSRAND = (LY*LZ*(T+2)*(LX+2));
-  g_dbw2rand = (2*LY*LZ*(LX+T+4));
 #endif
 #if defined PARALLELXYT
   RAND = 2*LZ*(LY*LX + T*LY + T*LX);
   EDGES = 4*LZ*(LY + T + LX);
-  VOLUMEPLUSRAND = ((T+2)*(LX+2)*(LY+2)*LZ);
-  g_dbw2rand = (VOLUMEPLUSRAND - VOLUME);
 #endif
+  /* Note that VOLUMEPLUSRAND is not always equal to VOLUME+RAND */
+  /* VOLUMEPLUSRAND rather includes the edges */
+  VOLUMEPLUSRAND = VOLUME + RAND + EDGES;
+  g_dbw2rand = (RAND + 2*EDGES);
 
   MPI_Cart_create(MPI_COMM_WORLD, ndims, dims, periods, reorder, &g_cart_grid);
   MPI_Comm_rank(g_cart_grid, &g_cart_id);

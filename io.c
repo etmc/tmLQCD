@@ -27,6 +27,7 @@
 
 #define _FILE_OFFSET_BITS 64
 
+#include"lime.h" 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -34,13 +35,13 @@
 #include<stdio.h>
 #include<string.h>
 #include<time.h>
-#include<sys/time.h>
+#include<sys/time.h> 
 #ifdef MPI
-# include<unistd.h>
+# include<unistd.h> 
 #endif
 #include"global.h"
 #include"su3.h"
-#include"lime.h"
+#include"lime.h" 
 #include"io.h"
 
 #define MAXBUF 1048576
@@ -73,8 +74,8 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 
   gettimeofday(&t1,NULL);
   if(g_kappa > 0. || g_kappa < 0.) {
-    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n time = %ld", 
-	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1,t1.tv_sec);
+    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n time = %ld\n hmcversion = %s", 
+	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1,t1.tv_sec, PACKAGE_VERSION);
   }
   else {
     sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f", 

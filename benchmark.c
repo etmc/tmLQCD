@@ -58,8 +58,6 @@ int main(int argc,char *argv[])
   MPI_Init(&argc, &argv);
 #endif
 
-  MPI_Init(&argc, &argv);
-
   /* Read the input file */
   read_input("benchmark.input");
 
