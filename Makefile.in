@@ -25,8 +25,8 @@ COMPILE = ${CC} $(DEFS) $(INCLUDES) -o $@ ${CFLAGS} ${OPTARGS}
 
 MODULES = init_gauge_field init_geometry_indices init_spinor_field \
 	init_bispinor_field init_moment_field init_gauge_tmp \
-	read_input gamma linsolve xchange \
-	expo hybrid_update observables start \
+	read_input gamma linsolve xchange_field xchange_gauge \
+	xchange_deri expo hybrid_update observables start \
 	geometry_eo linalg_eo ranlxd io Hopping_Matrix \
 	boundary deriv_Sb tm_operators getopt sighandler \
 	mpi_init update_tm Hopping_Matrix_nocom \
