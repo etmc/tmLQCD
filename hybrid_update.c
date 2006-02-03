@@ -77,9 +77,11 @@ void gauge_momenta(double step) {
   double sum=0., sum1=0., max=0., max2=0.;
   double sum2=0.;
 
+/*   int x0, x1, x2, x3; */
+
   st  = -step * g_rgi_C0 * g_beta/3.0;
   st1 = -step * g_rgi_C1 * g_beta/3.0;
-  for(i = 0; i < VOLUME; i++){
+  for(i = 0; i < VOLUME; i++){ 
     for(mu=0;mu<4;mu++){
       z=&g_gauge_field[i][mu];
       xm=&moment[i][mu];
@@ -92,6 +94,7 @@ void gauge_momenta(double step) {
 	if(sum2 > max) max = sum2;
       }
       _minus_const_times_mom(*xm,st,deriv);
+
       if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
 	get_rectangle_staples(&v, i, mu);
 	_su3_times_su3d(w, *z, v);

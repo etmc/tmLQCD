@@ -516,42 +516,43 @@ void geometry(){
     for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++){
       for (x2 = -startvaluey; x2 < (LY+startvaluey); x2++) {
 	for (x3 = 0; x3 < LZ; x3++) {
-	  /* t2 Rand and t2x and t2y */
-	  x0 = -2;
-	  ix = Index(x0, x1, x2, x3);
-	  if(ix < VOLUMEPLUSRAND) {
-	    printf("#### %d %d %d %d\n",x0, x1, x2, x3);
-	  }
+	  if((x1 > -1 && x1 < LX) || (x2 > -1 && x2 < LY)) {
+	    /* t2 Rand and t2x and t2y */
+	    x0 = -2;
+	    ix = Index(x0, x1, x2, x3);
+	    if(ix < VOLUMEPLUSRAND) {
+	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	    }
 	  
-	  g_iup[ix][0] = Index(x0+1, x1, x2, x3);
-	  g_idn[ix][0] = -1;
+	    g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	    g_idn[ix][0] = -1;
 
-	  if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
-	  if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
+	    if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	    if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
 
-	  if(x2 < LY) g_iup[ix][2] = Index(x0, x1, x2+1, x3);
-	  if(x2 > -1) g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+	    if(x2 < LY) g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	    if(x2 > -1) g_idn[ix][2] = Index(x0, x1, x2-1, x3);
 
-	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
-	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
+	    g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	    g_idn[ix][3] = Index(x0, x1, x2, x3-1);
 
-	  x0 = T+1;
-	  ix = Index(x0, x1, x2, x3);
-	  if(ix < VOLUMEPLUSRAND) {
-	    printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	    x0 = T+1;
+	    ix = Index(x0, x1, x2, x3);
+	    if(ix < VOLUMEPLUSRAND) {
+	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	    }
+	    g_iup[ix][0] = -1;
+	    g_idn[ix][0] = Index(x0-1, x1, x2, x3);
+
+	    if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	    if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
+
+	    if(x2 < LY) g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	    if(x2 > -1) g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+
+	    g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	    g_idn[ix][3] = Index(x0, x1, x2, x3-1);
 	  }
-	  g_iup[ix][0] = -1;
-	  g_idn[ix][0] = Index(x0-1, x1, x2, x3);
-
-	  if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
-	  if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
-
-	  if(x2 < LY) g_iup[ix][2] = Index(x0, x1, x2+1, x3);
-	  if(x2 > -1) g_idn[ix][2] = Index(x0, x1, x2-1, x3);
-
-	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
-	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
-
 	}
       }
     }    
@@ -559,41 +560,42 @@ void geometry(){
     for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
       for (x2 = -startvaluey; x2 < (LY+startvaluey); x2++) {
 	for (x3 = 0; x3 < LZ; x3++) {
-	  /* x2-Rand and x2t and x2y */
-	  x1 = -2;
-	  ix = Index(x0, x1, x2, x3);
-	  if(ix < VOLUMEPLUSRAND) {
-	    printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	  if((x0 > -1 && x0 < T) || (x2 > -1 && x2 < LY)) {
+	    /* x2-Rand and x2t and x2y */
+	    x1 = -2;
+	    ix = Index(x0, x1, x2, x3);
+	    if(ix < VOLUMEPLUSRAND) {
+	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	    }
+	    if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	    if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
+
+	    g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	    g_idn[ix][1] = -1;
+
+	    if(x2 < LY) g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	    if(x2 > -1) g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+
+	    g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	    g_idn[ix][3] = Index(x0, x1, x2, x3-1);
+
+	    x1 = LX+1;
+	    ix = Index(x0, x1, x2, x3);
+	    if(ix < VOLUMEPLUSRAND) {
+	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	    }
+	    if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	    if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
+
+	    g_iup[ix][1] = -1;
+	    g_idn[ix][1] = Index(x0, x1-1, x2, x3);
+
+	    if(x2 < LY) g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	    if(x2 > -1) g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+
+	    g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	    g_idn[ix][3] = Index(x0, x1, x2, x3-1);
 	  }
-	  if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
-	  if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
-
-	  g_iup[ix][1] = Index(x0, x1+1, x2, x3);
-	  g_idn[ix][1] = -1;
-
-	  if(x2 < LY) g_iup[ix][2] = Index(x0, x1, x2+1, x3);
-	  if(x2 > -1) g_idn[ix][2] = Index(x0, x1, x2-1, x3);
-
-	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
-	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
-
-	  x1 = LX+1;
-	  ix = Index(x0, x1, x2, x3);
-	  if(ix < VOLUMEPLUSRAND) {
-	    printf("#### %d %d %d %d\n",x0, x1, x2, x3);
-	  }
-	  if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
-	  if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
-
-	  g_iup[ix][1] = -1;
-	  g_idn[ix][1] = Index(x0, x1-1, x2, x3);
-
-	  if(x2 < LY) g_iup[ix][2] = Index(x0, x1, x2+1, x3);
-	  if(x2 > -1) g_idn[ix][2] = Index(x0, x1, x2-1, x3);
-
-	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
-	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
-
 	}
       }
     }
@@ -602,41 +604,42 @@ void geometry(){
     for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
       for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++) {
 	for (x3 = 0; x3 < LZ; x3++) {
-	  /* y2-Rand y2t and y2x */
-	  x2 = -2;
-	  ix = Index(x0, x1, x2, x3);
-	  if(ix < VOLUMEPLUSRAND) {
-	    printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	  if((x0 > -1 && x0 < T) || (x1 > -1 && x1 < LX)) {
+	    /* y2-Rand y2t and y2x */
+	    x2 = -2;
+	    ix = Index(x0, x1, x2, x3);
+	    if(ix < VOLUMEPLUSRAND || ix >= VOLUMEPLUSRAND + g_dbw2rand) {
+	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	    }
+	    if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	    if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
+	    
+	    if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	    if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
+	    
+	    g_iup[ix][2] = Index(x0, x1, x2+1, x3);
+	    g_idn[ix][2] = -1;
+	    
+	    g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	    g_idn[ix][3] = Index(x0, x1, x2, x3-1);
+	    
+	    x2 = LY+1;
+	    ix = Index(x0, x1, x2, x3);
+	    if(ix < VOLUMEPLUSRAND || ix >= VOLUMEPLUSRAND + g_dbw2rand) {
+	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	    }
+	    if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
+	    if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
+	    
+	    if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
+	    if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
+	    
+	    g_iup[ix][2] = -1;
+	    g_idn[ix][2] = Index(x0, x1, x2-1, x3);
+	    
+	    g_iup[ix][3] = Index(x0, x1, x2, x3+1);
+	    g_idn[ix][3] = Index(x0, x1, x2, x3-1);
 	  }
-	  if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
-	  if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
-
-	  if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
-	  if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
-
-	  g_iup[ix][2] = Index(x0, x1, x2+1, x3);
-	  g_idn[ix][2] = -1;
-
-	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
-	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
-
-	  x2 = LY+1;
-	  ix = Index(x0, x1, x2, x3);
-	  if(ix < VOLUMEPLUSRAND) {
-	    printf("#### %d %d %d %d\n",x0, x1, x2, x3);
-	  }
-	  if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
-	  if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
-
-	  if(x1 < LX) g_iup[ix][1] = Index(x0, x1+1, x2, x3);
-	  if(x1 > -1) g_idn[ix][1] = Index(x0, x1-1, x2, x3);
-
-	  g_iup[ix][2] = -1;
-	  g_idn[ix][2] = Index(x0, x1, x2-1, x3);
-
-	  g_iup[ix][3] = Index(x0, x1, x2, x3+1);
-	  g_idn[ix][3] = Index(x0, x1, x2, x3-1);
-
 	}
       }
     }

@@ -15,6 +15,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef MPI
+# include <mpi.h>
+#endif
 #include "global.h"
 #include "sse.h"
 #include "su3.h"
@@ -42,6 +45,10 @@ void polyakov_loop(complex * pl_, const int mu) {
       fprintf(stderr, "Wrong parameter for Polyakov loop calculation in polyakov_loop.c:\n");
       fprintf(stderr, "Only direction %d and %d are allowed.\n",2,3);
       fprintf(stderr, "Actual value is %d! Aborting...\n",mu);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 10);
+      MPI_Finalize();
+#endif
       exit(0);
   }
 
