@@ -172,7 +172,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 # if defined PARALLELXYT
     /* t2y */
     else if(x2 == LY) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + LZ*LZ
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + LX*LZ
 	+ y1*LZ + y3;
     }
     else if(x2 == -1) {
@@ -203,7 +203,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 	+ y0*LZ + y3;
     }
     else if(x2 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 3*T*LZ 
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 2*T*LZ 
 	+ y0*LZ + y3;
     }
 # endif
@@ -251,11 +251,11 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     /* y2t */
     else if(x0 == T) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 4*LX*LZ
-	+ y2*LZ + y3;
+	+ y1*LZ + y3;
     }
     else if (x0 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 5*LX*LZ
-	+ y2*LZ + y3;
+	+ y1*LZ + y3;
     }
   }
   if(x2 == -2) {
@@ -274,11 +274,11 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     /* y2t */
     else if(x0 == T) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 6*LX*LZ
-	+ y2*LZ + y3;
+	+ y1*LZ + y3;
     }
     else if (x0 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 7*LX*LZ
-	+ y2*LZ + y3;
+	+ y1*LZ + y3;
     }
   }
 #endif
