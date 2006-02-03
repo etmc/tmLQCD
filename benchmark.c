@@ -57,6 +57,7 @@ int main(int argc,char *argv[])
 
   MPI_Init(&argc, &argv);
 #endif
+  g_rgi_C1 = 1.;
 
   /* Read the input file */
   read_input("benchmark.input");
@@ -90,20 +91,14 @@ int main(int argc,char *argv[])
     fflush(stdout);
   }
 
-  if(g_rgi_C1 == 0.) {
-    g_dbw2rand = 0;
-  }
-  g_dbw2rand = 0;
-#ifndef MPI
-  g_dbw2rand = 0;
-#endif
+
 
 #ifdef _GAUGE_COPY
-  init_gauge_field(VOLUMEPLUSRAND, 1);
+  init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
-  init_gauge_field(VOLUMEPLUSRAND, 0);
+  init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
 #endif
-  init_geometry_indices(VOLUMEPLUSRAND);
+  init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
   j = init_spinor_field(VOLUMEPLUSRAND/2, 3*k_max);
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");

@@ -533,7 +533,7 @@ su3 set_su3(const double c)
 void set_gauge_field(const double c) {
   int ix,mu;
   
-  for (ix=0;ix<VOLUMEPLUSRAND;ix++) {
+  for (ix=0;ix<VOLUMEPLUSRAND+ g_dbw2rand;ix++) {
     for (mu=0;mu<4;mu++){
       g_gauge_field[ix][mu]=set_su3(c);
     }

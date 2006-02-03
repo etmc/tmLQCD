@@ -350,7 +350,7 @@ void xchange_gauge() {
 		 1, gauge_yx_edge_cont, g_nb_x_up, 97, 
 		 g_cart_grid, &status);
 #    else
-    MPI_Sendrecv(g_gauge_field[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + LZ]],
+    MPI_Sendrecv(g_gauge_field[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + LZ],
 		 1, gauge_yx_edge_gath_split, g_nb_x_dn, 97,
 		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ],
 		 1, gauge_yx_edge_cont      , g_nb_x_up, 97, 
@@ -415,15 +415,15 @@ void xchange_gauge() {
     /* t2y-edge */
 #    ifndef _NEW_GEOMETRY
     MPI_Sendrecv(g_gauge_field[VOLUMEPLUSRAND],
-		 1, gauge_ty_edge_gath, g_nb_y_dn, 97,
+		 1, gauge_ty_edge_gath, g_nb_y_dn, 197,
 		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ],
-		 1, gauge_ty_edge_cont, g_nb_y_up, 97, 
+		 1, gauge_ty_edge_cont, g_nb_y_up, 197, 
 		 g_cart_grid, &status);
 #    else
     MPI_Sendrecv(g_gauge_field[VOLUMEPLUSRAND],
-		 1, gauge_ty_edge_gath_split, g_nb_y_dn, 97,
+		 1, gauge_ty_edge_gath_split, g_nb_y_dn, 197,
 		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ],
-		 1, gauge_ty_edge_cont      , g_nb_y_up, 97, 
+		 1, gauge_ty_edge_cont      , g_nb_y_up, 197, 
 		 g_cart_grid, &status);
 #    endif
     
@@ -432,15 +432,15 @@ void xchange_gauge() {
     /* t2y edge */
 #    ifndef _NEW_GEOMETRY
     MPI_Sendrecv(g_gauge_field[VOLUMEPLUSRAND + (LY-1)*LZ], 
-		 1, gauge_ty_edge_gath, g_nb_y_up, 98,
-		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 2*LX*LY],
-		 1, gauge_ty_edge_cont, g_nb_y_dn, 98,
+		 1, gauge_ty_edge_gath, g_nb_y_up, 198,
+		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 2*LX*LZ],
+		 1, gauge_ty_edge_cont, g_nb_y_dn, 198,
 		 g_cart_grid, &status);
 #    else
-    MPI_Sendrecv(g_gauge_field[VOLUMEPLUSRAND+ (LX-1)*LZ/2],
-		 1, gauge_ty_edge_gath_split, g_nb_y_up, 98,
-		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 2*LX*LY],
-		 1, gauge_ty_edge_cont      , g_nb_y_dn, 98,
+    MPI_Sendrecv(g_gauge_field[VOLUMEPLUSRAND + (LY-1)*LZ/2],
+		 1, gauge_ty_edge_gath_split, g_nb_y_up, 198,
+		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 2*LX*LZ],
+		 1, gauge_ty_edge_cont      , g_nb_y_dn, 198,
 		 g_cart_grid, &status);
 #    endif    
 
@@ -449,15 +449,15 @@ void xchange_gauge() {
     /* y2t edge */
 #    ifndef _NEW_GEOMETRY
     MPI_Sendrecv(g_gauge_field[VOLUME + LZ],
-		 1, gauge_ty_edge_gath, g_nb_y_dn, 97,
-		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 4*LX*LY],
-		 1, gauge_ty_edge_cont, g_nb_y_up, 97, 
+		 1, gauge_ty_edge_gath, g_nb_y_dn, 297,
+		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 4*LX*LZ],
+		 1, gauge_ty_edge_cont, g_nb_y_up, 297, 
 		 g_cart_grid, &status);
 #    else
     MPI_Sendrecv(g_gauge_field[VOLUME + LZ/2],
-		 1, gauge_ty_edge_gath_split, g_nb_y_dn, 97,
-		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 4*LX*LY],
-		 1, gauge_ty_edge_cont      , g_nb_y_up, 97, 
+		 1, gauge_ty_edge_gath_split, g_nb_y_dn, 297,
+		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 4*LX*LZ],
+		 1, gauge_ty_edge_cont      , g_nb_y_up, 297, 
 		 g_cart_grid, &status);
 #    endif
     
@@ -466,15 +466,15 @@ void xchange_gauge() {
     /* y2t-edge */
 #    ifndef _NEW_GEOMETRY
     MPI_Sendrecv(g_gauge_field[VOLUME + (LY-2)*LZ],
-		 1, gauge_ty_edge_gath, g_nb_y_up, 98,
-		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 6*LX*LY],
-		 1, gauge_ty_edge_cont, g_nb_y_dn, 98,
+		 1, gauge_ty_edge_gath, g_nb_y_up, 298,
+		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 6*LX*LZ],
+		 1, gauge_ty_edge_cont, g_nb_y_dn, 298,
 		 g_cart_grid, &status);
 #    else
     MPI_Sendrecv(g_gauge_field[VOLUME + (LY-2)*LZ/2],
-		 1, gauge_ty_edge_gath_split, g_nb_y_up, 98,
-		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 6*LX*LY],
-		 1, gauge_ty_edge_cont      , g_nb_y_dn, 98,
+		 1, gauge_ty_edge_gath_split, g_nb_y_up, 298,
+		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 6*LX*LZ],
+		 1, gauge_ty_edge_cont      , g_nb_y_dn, 298,
 		 g_cart_grid, &status);
 #    endif
   }

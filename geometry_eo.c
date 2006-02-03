@@ -203,7 +203,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 	+ y0*LZ + y3;
     }
     else if(x2 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 2*T*LZ 
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 1*T*LZ 
 	+ y0*LZ + y3;
     }
 # endif
@@ -224,7 +224,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 # ifdef PARALLELXYT
     /* x2y */
     else if(x2 == LY) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 1*T*LZ
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 2*T*LZ
 	+ y0*LZ + y3;
     }
     else if(x2 == -1) {
