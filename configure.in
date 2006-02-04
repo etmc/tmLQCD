@@ -70,6 +70,10 @@ if test $enable_mpi = yes; then
     AC_MSG_RESULT(n=3 [xyt])
     mpidimension="-DPARALLELXYT"
     AC_DEFINE(PARALLELXYT,1,Three dimensional parallelisation)
+  elif test $withmpidimension = 4; then
+    AC_MSG_RESULT(n=4 [xyzt])
+    mpidimension="-DPARALLELXYZT"
+    AC_DEFINE(PARALLELXYT,1,Four dimensional parallelisation)
   else
     AC_MSG_RESULT(unknown)
     AC_MSG_ERROR([Only one, two or three dimensional parallelisation available]) 

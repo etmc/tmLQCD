@@ -113,6 +113,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 %x LLZ
 %x NPROCX
 %x NPROCY
+%x NPROCZ
 %x IOPROC
 %x IDX
 %x FPROP
@@ -165,6 +166,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^LZ{SPC}*={SPC}*                         BEGIN(LLZ);
 ^NRXProcs{SPC}*={SPC}*                   BEGIN(NPROCX);
 ^NRYProcs{SPC}*={SPC}*                   BEGIN(NPROCY);
+^NRZProcs{SPC}*={SPC}*                   BEGIN(NPROCZ);
 ^kappa{SPC}*={SPC}*                      BEGIN(KAPPA);
 ^mubar{SPC}*={SPC}*                      BEGIN(MUBAR);
 ^epsbar{SPC}*={SPC}*                     BEGIN(EPSBAR);
@@ -273,7 +275,11 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 }
 <NPROCY>{DIGIT}+              {
   N_PROC_Y = atoi(yytext);
-  if(verbose!=0) printf("Nr of processors in t direction = %s\n", yytext);
+  if(verbose!=0) printf("Nr of processors in y direction = %s\n", yytext);
+}
+<NPROCZ>{DIGIT}+              {
+  N_PROC_Z = atoi(yytext);
+  if(verbose!=0) printf("Nr of processors in z direction = %s\n", yytext);
 }
 <SEED>{DIGIT}+               {
   random_seed=atoi(yytext);
@@ -678,7 +684,7 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 <*>^#                       BEGIN(COMMENT);
 <SEED,KAPPA,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
 <MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2>#   BEGIN(COMMENT);
-<NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,NPROCY,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP>#   BEGIN(COMMENT);
+<NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,NPROCY,NPROCZ,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP>#   BEGIN(COMMENT);
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
 <INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
 <ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
@@ -805,6 +811,10 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   printf("Unknown value for NRYProcs in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
   exit(1);
 }
+<NPROCZ>.    {
+  printf("Unknown value for NRYProcs in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
+  exit(1);
+}
 <IOPROC>.    {
   printf("Unknown value for StdIOProcessor in line %d!\n Must be all, no or an integer value! Exiting...!\n", line_of_file);
   exit(1);
@@ -897,6 +907,7 @@ int read_input(char * conf_file){
   LZ = _default_LZ;
   N_PROC_X = _default_N_PROC_X;
   N_PROC_Y = _default_N_PROC_Y;
+  N_PROC_Z = _default_N_PROC_Z;
   g_kappa = _default_g_kappa;
   g_mubar = _default_g_mubar;
   g_epsbar = _default_g_epsbar;

@@ -3284,6 +3284,15 @@ cat >>confdefs.h <<\_ACEOF
 #define PARALLELXYT 1
 _ACEOF
 
+  elif test $withmpidimension = 4; then
+    echo "$as_me:$LINENO: result: n=4 xyzt" >&5
+echo "${ECHO_T}n=4 xyzt" >&6
+    mpidimension="-DPARALLELXYZT"
+
+cat >>confdefs.h <<\_ACEOF
+#define PARALLELXYT 1
+_ACEOF
+
   else
     echo "$as_me:$LINENO: result: unknown" >&5
 echo "${ECHO_T}unknown" >&6

@@ -43,6 +43,7 @@ void deriv_Sb(const int ieo, const int l, const int k){
   static spinor rr;
   spinor *r,*sp,*sm;
 #ifdef XLC
+  double _Complex reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7;
 #pragma disjoint(*r, *sp, *sm, *up, *um, *ddd)
 #endif
   if(ieo==0){

@@ -438,6 +438,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 #pragma disjoint(*r, *sp, *sm, *up, *um)
 #endif
 
+  double _Complex reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7;
 
   /* for parallelization */
 #ifdef MPI

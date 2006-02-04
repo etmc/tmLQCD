@@ -63,6 +63,34 @@ MPI_Datatype gauge_ty_edge_cont;
 MPI_Datatype gauge_ty_edge_gath;
 MPI_Datatype gauge_ty_edge_gath_split;
 
+MPI_Datatype gauge_z_slice_gath;
+MPI_Datatype gauge_z_slice_cont;
+MPI_Datatype gauge_z_subslice;
+MPI_Datatype gauge_z_eo_subslice;
+MPI_Datatype gauge_z_slice_gath_split;
+
+MPI_Datatype field_z_slice_gath;
+MPI_Datatype field_z_slice_cont;
+MPI_Datatype field_z_subslice;
+
+MPI_Datatype deri_z_slice_cont;
+MPI_Datatype deri_z_subslice;
+MPI_Datatype deri_z_eo_subslice;
+MPI_Datatype deri_z_slice_gath;
+MPI_Datatype deri_z_slice_gath_split;
+
+MPI_Datatype gauge_zx_edge_cont;
+MPI_Datatype gauge_zx_edge_gath;
+MPI_Datatype gauge_zx_edge_gath_split;
+
+MPI_Datatype gauge_tz_edge_cont;
+MPI_Datatype gauge_tz_edge_gath;
+MPI_Datatype gauge_tz_edge_gath_split;
+
+MPI_Datatype gauge_yz_edge_cont;
+MPI_Datatype gauge_yz_edge_gath;
+MPI_Datatype gauge_yz_edge_gath_split;
+
 MPI_Comm mpi_time_slices;
 #endif
 
@@ -72,11 +100,11 @@ void mpi_init(int argc,char *argv[]) {
   g_proc_coords[0] = 0;
   g_proc_coords[1] = 0;
   g_proc_coords[2] = 0;
-
+  g_proc_coords[3] = 0;
 
 #ifdef MPI
-  int periods[] = {1,1,1};
-  int dims[] = {0,0,0};
+  int periods[] = {1,1,1,1};
+  int dims[] = {0,0,0,0};
   int ndims = 0;
   int reorder = 1, namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -86,34 +114,45 @@ void mpi_init(int argc,char *argv[]) {
   ndims = 1;
   N_PROC_X = 1;
   N_PROC_Y = 1;
+  N_PROC_Z = 1;
 #endif
 #if defined PARALLELXT
   ndims = 2;
   N_PROC_Y = 1;
+  N_PROC_Z = 1;
 #endif
 #if defined PARALLELXYT
   ndims = 3;
+  N_PROC_Z = 1;
+#endif
+#if defined PARALLELXYZT
+  ndims = 4;
 #endif
   dims[1] = N_PROC_X;
   dims[2] = N_PROC_Y;
+  dims[3] = N_PROC_Z;
+
 
   MPI_Comm_size(MPI_COMM_WORLD, &g_nproc);
   MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
   MPI_Get_processor_name(processor_name, &namelen);
   MPI_Dims_create(g_nproc, ndims, dims);
   if(g_proc_id == 0){
-    printf("Creating the following cartesian grid for a %d dimensional parallelisation:\n%d x %d x %d\n"
-	   , ndims, dims[0], dims[1], dims[2]);
+    printf("Creating the following cartesian grid for a %d dimensional parallelisation:\n%d x %d x %d x %d\n"
+	   , ndims, dims[0], dims[1], dims[2], dims[3]);
   }
 
   g_nproc_t = dims[0];
   g_nproc_x = dims[1];
   g_nproc_y = dims[2];
+  g_nproc_z = dims[3];
   N_PROC_X = g_nproc_x;
   N_PROC_Y = g_nproc_y;
+  N_PROC_Z = g_nproc_z;
   T = T_global/g_nproc_t;
   LX = LX/g_nproc_x;
   LY = LY/g_nproc_y;
+  LZ = LZ/g_nproc_z;
   VOLUME = (T*LX*LY*LZ);
 #ifdef PARALLELT  
   RAND = (2*LX*LY*LZ);
@@ -128,6 +167,10 @@ void mpi_init(int argc,char *argv[]) {
 #if defined PARALLELXYT
   RAND = 2*LZ*(LY*LX + T*LY + T*LX);
   EDGES = 4*LZ*(LY + T + LX);
+#endif
+#if defined PARALLELXYZT
+  RAND = 2*LZ*(LY*LX + T*LY + T*LX) + 2*T*LX*LY;
+  EDGES = 4*LZ*(LY + T + LX) + 4*LY*T + 4*LY*LX + 4*T*LX;
 #endif
   /* Note that VOLUMEPLUSRAND is not always equal to VOLUME+RAND */
   /* VOLUMEPLUSRAND rather includes the edges */
@@ -147,10 +190,13 @@ void mpi_init(int argc,char *argv[]) {
   }
 
   MPI_Cart_shift(g_cart_grid, 0, 1, &g_nb_t_dn, &g_nb_t_up);
-#if (defined PARALLELXT || defined PARALLELXYT)
+#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   MPI_Cart_shift(g_cart_grid, 1, 1, &g_nb_x_dn, &g_nb_x_up);
 #endif
-#ifdef PARALLELXYT
+#if (defined PARALLELXYT  || defined PARALLELXYZT)
+  MPI_Cart_shift(g_cart_grid, 2, 1, &g_nb_y_dn, &g_nb_y_up);
+#endif
+#if defined PARALLELXYZT
   MPI_Cart_shift(g_cart_grid, 2, 1, &g_nb_y_dn, &g_nb_y_up);
 #endif
 
@@ -194,6 +240,14 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(T*LX, 1, LY, gauge_y_subslice, &gauge_y_slice_gath);
   MPI_Type_commit(&gauge_y_slice_cont);
   MPI_Type_commit(&gauge_y_slice_gath);
+
+  /* Continuous z-slice as it is found in the external memory.*/
+  MPI_Type_contiguous(T*LX*LY, gauge_point, &gauge_z_slice_cont);
+  /* Put T*LX*LY gauge-points together, separated by LZ of those */
+  MPI_Type_vector(T*LX*LY, 1, LZ, gauge_point, &gauge_z_slice_gath);
+  MPI_Type_commit(&gauge_z_slice_cont);
+  MPI_Type_commit(&gauge_z_slice_gath);
+
 
   /* external edges: on x-Rand send in t-direction*/
   MPI_Type_contiguous(2*LY*LZ ,gauge_point, &gauge_xt_edge_cont);
@@ -261,6 +315,14 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_commit(&field_y_slice_gath);
   MPI_Type_commit(&field_y_slice_cont);
 
+  /* This is an even or odd continuous spinor field z-slice */
+  MPI_Type_contiguous(T*LX*LY/2, field_point, &field_z_slice_cont);
+  /* this type puts T*LX xt-slices together being the internal x-boundary in */
+  /* even/odd ordered spinor fields */
+  MPI_Type_vector(T*LX*LY/2, 1, LY/2, field_point, &field_z_slice_gath);
+  MPI_Type_commit(&field_z_slice_gath);
+  MPI_Type_commit(&field_z_slice_cont);
+
   /* Now the derivative fields */
   /* this is a derivative field on one space-time point */
   MPI_Type_contiguous(32, MPI_DOUBLE, &deri_point);
@@ -283,6 +345,11 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(T*LX, 1, LY, deri_y_subslice, &deri_y_slice_gath);
   MPI_Type_commit(&deri_y_slice_gath);
   MPI_Type_commit(&deri_y_slice_cont);
+
+  MPI_Type_contiguous(T*LX*LX, deri_point, &deri_z_slice_cont);
+  MPI_Type_vector(T*LX*LY, 1, LZ, deri_point, &deri_z_slice_gath);
+  MPI_Type_commit(&deri_z_slice_gath);
+  MPI_Type_commit(&deri_z_slice_cont);
 
   /* For _NEW_GEOMETRY */
   MPI_Type_contiguous(LY*LZ/2, deri_point, &deri_x_eo_subslice);

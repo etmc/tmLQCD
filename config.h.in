@@ -46,6 +46,9 @@
 /* Three dimensional parallelisation */
 #undef PARALLELXYT
 
+/* Four dimensional parallelisation */
+#undef PARALLELXYZT
+
 /* Compile with SSE support */
 #undef SSE
 

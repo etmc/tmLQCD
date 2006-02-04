@@ -30,7 +30,7 @@ int init_geometry_indices(const int V) {
   if(errno == ENOMEM) return(4);
   ipt_ = calloc((T+4)*(LX+4)*(LY+4), sizeof(int*));
   if(errno == ENOMEM) return(3);
-  ipt = calloc((T+4)*(LX+4)*(LY+4)*LZ, sizeof(int));
+  ipt = calloc((T+4)*(LX+4)*(LY+4)*(LZ+4), sizeof(int));
   if(errno == ENOMEM) return(8);
 
   g_lexic2eo = calloc(V, sizeof(int));
@@ -51,7 +51,7 @@ int init_geometry_indices(const int V) {
     g_iup[i] = g_iup[i-1]+4;
   }
   for(i = 1; i < (T+4)*(LX+4)*(LY+4); i++){
-    ipt_[i] = ipt_[i-1]+LZ;
+    ipt_[i] = ipt_[i-1]+(LZ+4);
   }
   for(i = 1; i < (T+4)*(LX+4); i++){
     ipt__[i] = ipt__[i-1]+(LY+4);

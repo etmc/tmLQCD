@@ -79,7 +79,7 @@ void xchange_gauge() {
 #  endif
   }
   
-#  if (defined PARALLELXT || defined PARALLELXYT)
+#  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
 #    ifndef _NEW_GEOMETRY
@@ -227,10 +227,10 @@ void xchange_gauge() {
 		 g_cart_grid, &status);
 #    endif    
   }
-  /* end of if defined PARALLELXT || PARALLELXYT */
+  /* end of if defined PARALLELXT || PARALLELXYT || PARALLELXYZT*/
 #  endif
 
-#  ifdef PARALLELXYT
+#  if (defined PARALLELXYT || defined PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
 #    ifndef _NEW_GEOMETRY
@@ -479,7 +479,182 @@ void xchange_gauge() {
 #    endif
   }
 
-  /* end of if defined PARALLELXYT */
+  /* end of if defined PARALLELXYT || PARALLELXYZT */
+#  endif
+#  if defined PARALLELXYZT
+  /* z-Rand */
+  /* send the data to the neighbour on the left in z direction */
+  /* recieve the data from the neighbour on the right in z direction */
+#    ifndef _NEW_GEOMETRY
+  MPI_Sendrecv(g_gauge_field[0],
+	       1, gauge_z_slice_gath, g_nb_z_dn, 303,
+	       g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*LZ*T*LX], 
+	       1, gauge_z_slice_cont, g_nb_z_up, 303, 
+	       g_cart_grid, &status);
+#    else
+  MPI_Sendrecv(g_gauge_field[0],
+	       1, gauge_z_slice_gath_split, g_nb_z_dn, 303,
+	       g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*LZ*T*LX],
+	       1, gauge_z_slice_cont      , g_nb_z_up, 303, 
+	       g_cart_grid, &status);
+#    endif
+  /* send the data to the neighbour on the right in z direction */
+  /* recieve the data from the neighbour on the left in z direction */
+#    ifndef _NEW_GEOMETRY
+  MPI_Sendrecv(g_gauge_field[LZ-1],
+	       1, gauge_z_slice_gath, g_nb_z_up, 304,
+	       g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + T*LX*LY],
+	       1, gauge_z_slice_cont, g_nb_z_dn, 304,
+	       g_cart_grid, &status);
+#    else
+  MPI_Sendrecv(g_gauge_field[(LZ-1)/2],
+	       1, gauge_z_slice_gath_split, g_nb_z_up, 304,
+	       g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + T*LX*LY],
+	       1, gauge_z_slice_cont      , g_nb_z_dn, 304,
+	       g_cart_grid, &status);
+#    endif
+
+  if(g_dbw2rand > 0) {
+    /* send the data to the neighbour on the left in z direction */
+    /* recieve the data from the neighbour on the right in z direction */
+    /* z2-Rand */
+#    ifndef _NEW_GEOMETRY
+    MPI_Sendrecv(g_gauge_field[1],
+		 1, gauge_z_slice_gath, g_nb_z_dn, 305,
+		 g_gauge_field[VOLUMEPLUSRAND+(2*LX+2*T)*LY*LZ + 2*T*LX*LZ],
+		 1, gauge_z_slice_cont, g_nb_z_up, 305, 
+		 g_cart_grid, &status);
+#    else
+    MPI_Sendrecv(g_gauge_field[0],
+		 1, gauge_z_slice_gath_split, g_nb_z_dn, 305,
+		 g_gauge_field[VOLUMEPLUSRAND+(2*LX+2*T)*LY*LZ + 2*T*LX*LZ],
+		 1, gauge_z_slice_cont      , g_nb_z_up, 305, 
+		 g_cart_grid, &status);
+#    endif
+    /* send the data to the neighbour on the right in z direction */
+    /* recieve the data from the neighbour on the left in z direction */
+    /* z2-Rand */
+#    ifndef _NEW_GEOMETRY
+    MPI_Sendrecv(g_gauge_field[LZ-2],
+		 1, gauge_z_slice_gath, g_nb_z_up, 306,
+		 g_gauge_field[VOLUMEPLUSRAND+(2*LX+2*T)*LY*LZ + 2*T*LX*LZ + T*LX*LY],
+		 1, gauge_z_slice_cont, g_nb_z_dn, 306,
+		 g_cart_grid, &status);
+#    else
+    MPI_Sendrecv(g_gauge_field[(LZ-2)/2],
+		 1, gauge_z_slice_gath_split, g_nb_z_up, 306,
+		 g_gauge_field[VOLUMEPLUSRAND+(2*LX+2*T)*LY*LZ + 2*T*LX*LZ + T*LX*LY],
+		 1, gauge_z_slice_cont      , g_nb_z_dn, 306,
+		 g_cart_grid, &status);
+#    endif
+  }
+
+  /* edges */
+
+  /* send the data to the neighbour on the left in x direction */
+  /* recieve the data from the neighbour on the right in x direction */
+  /* is on the z-Rand -> zx-edge*/
+#    ifndef _NEW_GEOMETRY
+  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ], 
+	       1, gauge_zx_edge_gath, g_nb_x_dn, 307,
+	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ],
+	       1, gauge_zx_edge_cont, g_nb_x_up, 307, 
+	       g_cart_grid, &status);
+#    else
+  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ], 
+	       1, gauge_zx_edge_gath_split, g_nb_x_dn, 307,
+	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ],
+	       1, gauge_zx_edge_cont      , g_nb_x_up, 307, 
+	       g_cart_grid, &status);
+#    endif
+
+  /* send the data to the neighbour on the right in x direction */
+  /* recieve the data from the neighbour on the left in x direction */
+  /* zx-edge */
+#    ifndef _NEW_GEOMETRY
+  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + (LZ-1)], 
+	       1, gauge_zx_edge_gath, g_nb_x_up, 308,
+	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 2*T*LY],
+	       1, gauge_zx_edge_cont, g_nb_x_dn, 308,
+	       g_cart_grid, &status);
+#    else
+  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + (LZ-1)/2], 
+	       1, gauge_zx_edge_gath_split, g_nb_x_up, 308,
+	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 2*T*LY],
+	       1, gauge_zx_edge_cont      , g_nb_x_dn, 308,
+	       g_cart_grid, &status);
+#    endif
+
+  /* send the data to the neighbour on the left in z direction */
+  /* recieve the data from the neighbour on the right in z direction */
+  /* is on the t-Rand -> tz-edge*/
+#    ifndef _NEW_GEOMETRY
+  MPI_Sendrecv(g_gauge_field[VOLUME],
+	       1, gauge_tz_edge_gath, g_nb_z_dn, 309,
+	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY], 
+	       1, gauge_tz_edge_cont, g_nb_z_up, 309, 
+	       g_cart_grid, &status);
+#    else
+  MPI_Sendrecv(g_gauge_field[VOLUME],
+	       1, gauge_tz_edge_gath_split, g_nb_z_dn, 309,
+	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY], 
+	       1, gauge_tz_edge_cont      , g_nb_z_up, 309, 
+	       g_cart_grid, &status);
+#    endif
+
+  /* send the data to the neighbour on the right in z direction */
+  /* recieve the data from the neighbour on the left in z direction */
+  /* tz-edge */
+#    ifndef _NEW_GEOMETRY
+  MPI_Sendrecv(g_gauge_field[VOLUME + (LZ-1)],
+	       1, gauge_tz_edge_gath, g_nb_z_up, 310,
+	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 2*LX*LY], 
+	       1, gauge_tz_edge_cont, g_nb_z_dn, 310,
+	       g_cart_grid, &status);
+#    else
+  MPI_Sendrecv(g_gauge_field[VOLUME + (LZ-1)/2],
+	       1, gauge_tz_edge_gath_split, g_nb_z_up, 310,
+	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 2*LX*LY], 
+	       1, gauge_tz_edge_cont      , g_nb_z_dn, 110,
+	       g_cart_grid, &status);
+#    endif
+
+  /* send the data to the neighbour on the left in y direction */
+  /* recieve the data from the neighbour on the right in y direction */
+  /* is on the z-Rand -> zy-edge*/
+#    ifndef _NEW_GEOMETRY
+  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ],
+	       1, gauge_zy_edge_gath, g_nb_y_dn, 310,
+	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY], 
+	       1, gauge_zy_edge_cont, g_nb_y_up, 310, 
+	       g_cart_grid, &status);
+#    else
+  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ],
+	       1, gauge_zy_edge_gath_split, g_nb_y_dn, 310,
+	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY], 
+	       1, gauge_zy_edge_cont      , g_nb_y_up, 310, 
+	       g_cart_grid, &status);
+#    endif
+
+  /* send the data to the neighbour on the right in y direction */
+  /* recieve the data from the neighbour on the left in y direction */
+  /* zy-edge */
+#    ifndef _NEW_GEOMETRY
+  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + (LY-1)],
+	       1, gauge_zy_edge_gath, g_nb_y_up, 310,
+	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY + 2*T*LX], 
+	       1, gauge_zy_edge_cont, g_nb_y_dn, 310,
+	       g_cart_grid, &status);
+#    else
+  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + (LY-1)/2],
+	       1, gauge_zy_edge_gath_split, g_nb_y_up, 310,
+	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 2*LX*LY + 2*T*LX], 
+	       1, gauge_zy_edge_cont      , g_nb_y_dn, 110,
+	       g_cart_grid, &status);
+#    endif
+
+
+  /* end of if defined PARALLELXYZT */
 #  endif
 #endif
   return;

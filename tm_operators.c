@@ -23,6 +23,8 @@
 
 /* internal */
 
+double _Complex reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7;
+
 /******************************************
  * mul_one_pm_imu_inv computes
  * l = (1\pm i\mu\gamma_5)^{-1} * l

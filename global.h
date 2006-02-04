@@ -64,7 +64,7 @@ EXTERN int g_relative_precision_flag;
 EXTERN int g_debug_level;
 
 EXTERN int T_global, T, L, LX, LY, LZ, VOLUME;
-EXTERN int N_PROC_X, N_PROC_Y;
+EXTERN int N_PROC_X, N_PROC_Y, N_PROC_Z;
 EXTERN int RAND, EDGES, VOLUMEPLUSRAND;
 
 /* translates from lexicographic order to even/odd order */
@@ -114,8 +114,8 @@ EXTERN double g_mubar, g_epsbar;
 EXTERN int g_use_clover_flag, g_nr_of_psf;
 
 /* MPI information */
-EXTERN int g_proc_id, g_nproc, g_stdio_proc, g_nproc_t, g_nproc_x, g_nproc_y, g_cart_id;
-EXTERN int g_proc_coords[3];
+EXTERN int g_proc_id, g_nproc, g_stdio_proc, g_nproc_t, g_nproc_x, g_nproc_y, g_nproc_z, g_cart_id;
+EXTERN int g_proc_coords[4];
 EXTERN int g_dbw2rand;
 #ifdef MPI
 EXTERN MPI_Status status;
@@ -126,6 +126,7 @@ EXTERN MPI_Comm g_cart_grid;
 EXTERN int g_nb_x_up, g_nb_x_dn;
 EXTERN int g_nb_y_up, g_nb_y_dn;
 EXTERN int g_nb_t_up, g_nb_t_dn;
+EXTERN int g_nb_z_up, g_nb_z_dn;
 
 #endif
 

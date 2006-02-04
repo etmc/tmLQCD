@@ -22,6 +22,9 @@
 #else
 #include "complex.h"
 #endif
+#ifdef XLC
+# include "bgl.h"
+#endif
 
 typedef struct 
 {
@@ -180,6 +183,20 @@ _sse_load(s1); \
 _sse_load_up(s2); \
 _sse_vector_sub(); \
 _sse_store(r);
+
+#elif (defined XLC)
+
+#define _vector_add(r,s1,s2) \
+  _bgl_load(s1);	     \
+  _bgl_load_up(s2);	     \
+  _bgl_vector_add();	     \
+  _bgl_store(r);
+
+#define _vector_sub(r,s1,s2) \
+  _bgl_load(s1);	     \
+  _bgl_load_up(s2);	     \
+  _bgl_vector_sub();	     \
+  _bgl_store(r);
 
 #elif defined _STD_C99_COMPLEX_CHECKED
 
@@ -509,6 +526,18 @@ _sse_store_up(r);
 _sse_load(s); \
 _sse_su3_inverse_multiply(u); \
 _sse_store_up(r);
+
+#elif (defined XLC)
+
+#define _su3_multiply(r,u,s) \
+  _bgl_load(s); \
+  _bgl_su3_multiply(u); \
+  _bgl_store_up(r);
+
+#define _su3_inverse_multiply(r,u,s)		\
+  _bgl_load(s); \
+  _bgl_su3_inverse_multiply(u); \
+  _bgl_store_up(r);
 
 #elif defined _STD_C99_COMPLEX_CHECKED
 
