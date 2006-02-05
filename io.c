@@ -64,11 +64,11 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   LimeRecordHeader * limeheader = NULL;
   /* Message end and Message begin flag */
   int ME_flag=0, MB_flag=0, status=0;
-  int tag=0, t=0, x=0, y=0, z=0, id=0, X=0, tt=0, Y=0;
+  int tag=0, t=0, x=0, y=0, z=0, id=0, X=0, tt=0, Y=0, Z=0;
   MPI_Status mpi_status;
   char message[500];
   su3 tmp[4];
-  int coords[3];
+  int coords[4];
   off_t bytes;
   struct timeval t1;
 
@@ -110,7 +110,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
     limeDestroyHeader( limeheader );
     limeWriteRecordData(message, &bytes, limewriter);
 
-    bytes = LX*g_nproc_x*LY*g_nproc_y*LZ*T*g_nproc_t*4*sizeof(su3);
+    bytes = LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3);
     MB_flag=0; ME_flag=1;
     limeheader = limeCreateHeader(MB_flag, ME_flag, "ildg-binary-data", bytes);
     status = limeWriteRecordHeader( limeheader, limewriter);
@@ -127,7 +127,9 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   for(t = 0; t < T*g_nproc_t; t++) {
     tt = t - g_proc_coords[0]*T;
     coords[0] = t / T;
-    for(z = 0; z < LZ; z++) {
+    for(z = 0; z < LZ*g_nproc_z; z++) {
+      Z = z - g_proc_coords[3]*LZ;
+      coords[3] = z / LZ;
       for(y = 0; y < LY*g_nproc_y; y++) {
 	tag = 0;
 	Y = y - g_proc_coords[2]*LY;
@@ -140,16 +142,16 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 	  if(g_cart_id == 0) {
 	    if(g_cart_id == id) {
 #ifndef WORDS_BIGENDIAN
-	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][Y][z] ], 4*sizeof(su3)/8); 
+	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][Y][Z] ], 4*sizeof(su3)/8); 
 	      status = limeWriteRecordData((void*)&tmp[1], &bytes, limewriter);
 	      status = limeWriteRecordData((void*)&tmp[2], &bytes, limewriter);
 	      status = limeWriteRecordData((void*)&tmp[3], &bytes, limewriter);
 	      status = limeWriteRecordData((void*)&tmp[0], &bytes, limewriter);
 #else
-	      status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[tt][X][Y][z] ][1], &bytes, limewriter);
-	      status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[tt][X][Y][z] ][2], &bytes, limewriter);
-	      status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[tt][X][Y][z] ][3], &bytes, limewriter);
-	      status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[tt][X][Y][z] ][0], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[tt][X][Y][Z] ][1], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[tt][X][Y][Z] ][2], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[tt][X][Y][Z] ][3], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[tt][X][Y][Z] ][0], &bytes, limewriter);
 #endif
 	    }
 	    else {
@@ -161,7 +163,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 	    }
 	    if(status < 0 ) {
 	      fprintf(stderr, "LIME write error %d\n", status);
-	      fprintf(stderr, "x %d, y %d, z %d, t %d (%d,%d,%d,%d)\n",x,y,z,t,X,Y,z,tt);
+	      fprintf(stderr, "x %d, y %d, z %d, t %d (%d,%d,%d,%d)\n",x,y,z,t,X,Y,Z,tt);
 	      MPI_Abort(MPI_COMM_WORLD, 1);
 	      MPI_Finalize();
 	      exit(500);
@@ -280,7 +282,7 @@ int write_gauge_field_time_p(char * filename){
   int tag=0, t, x, y, z, id, X=0, tt=0, Y=0;
   MPI_Status status;
   su3 tmp[4];
-  int coords[3];
+  int coords[4];
   if(g_cart_id == 0){
     ofs = fopen(filename, "w");
     if(ofs != NULL ){
@@ -299,7 +301,9 @@ int write_gauge_field_time_p(char * filename){
     for(y = 0; y < g_nproc_y*LY; y++){
       Y = y - g_proc_coords[2]*LY;
       coords[2] = y / LY;
-      for(z = 0; z < LZ; z++){
+      for(z = 0; z < LZ*g_nproc_z; z++){
+	Z = z - g_proc_coords[3]*LZ;
+	coords[3] = z / LZ;
 	tag = 0;
 	for(t = 0; t < T*g_nproc_t; t++){
 	  tt = t - g_proc_coords[0]*T; 
@@ -308,10 +312,10 @@ int write_gauge_field_time_p(char * filename){
 	  if(g_cart_id == 0){
 	    if(g_cart_id == id){
 #ifndef WORDS_BIGENDIAN
-	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][Y][z] ], 4*sizeof(su3)/8);
+	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][Y][Z] ], 4*sizeof(su3)/8);
 	      fwrite(tmp, sizeof(su3), 4, ofs);
 #else
-	      fwrite(g_gauge_field[ g_ipt[tt][X][Y][z] ], 4*sizeof(su3), 1, ofs);
+	      fwrite(g_gauge_field[ g_ipt[tt][X][Y][Z] ], 4*sizeof(su3), 1, ofs);
 #endif
 	    }
 	    else{
@@ -322,10 +326,10 @@ int write_gauge_field_time_p(char * filename){
 	  else{
 	    if(g_cart_id == id){
 #ifndef WORDS_BIGENDIAN
-	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][Y][z] ], 4*sizeof(su3)/8);
+	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][Y][Z] ], 4*sizeof(su3)/8);
 	      MPI_Send((void*) tmp, 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #else
-	      MPI_Send((void*) g_gauge_field[ g_ipt[tt][X][Y][z] ], 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+	      MPI_Send((void*) g_gauge_field[ g_ipt[tt][X][Y][Z] ], 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #endif
 	    }
 	  }
@@ -417,7 +421,8 @@ int read_gauge_field_time_p(char * filename){
 #if (defined MPI)
 	  fseek(ifs, position +
 		(g_proc_coords[0]*T+
-		 (((g_proc_coords[1]*LX+x)*g_nproc_y*LY + g_proc_coords[2]*LY + y)*LZ+z)*T*g_nproc_t)*4*sizeof(su3),
+		 (((g_proc_coords[1]*LX+x)*g_nproc_y*LY + g_proc_coords[2]*LY + y)*g_nproc_z*LZ
+		  + g_proc_coords[3]*LZ+z)*T*g_nproc_t)*4*sizeof(su3),
 		SEEK_SET);
 #endif
 	  for(t = 0; t < T; t++){
@@ -492,7 +497,7 @@ int read_lime_gauge_field(char * filename){
     return(0);
   }
   bytes = limeReaderBytes(limereader);
-  if((int)bytes != LX*g_nproc_x*LY*g_nproc_y*LZ*T*g_nproc_t*4*sizeof(su3)) {
+  if((int)bytes != LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3)) {
     fprintf(stderr, "Probably wrong lattice size or precision (bytes=%d) in file %s\n", (int)bytes, filename);
     fprintf(stderr, "Aborting...!\n");
     fflush( stdout );
@@ -513,7 +518,8 @@ int read_lime_gauge_field(char * filename){
 #if (defined MPI)
 	limeReaderSeek(limereader,(off_t) 
 		       (g_proc_coords[1]*LX + 
-			(((g_proc_coords[0]*T+t)*LZ+z)*g_nproc_y*LY+g_proc_coords[2]*LY+y)*LX*g_nproc_x)*4*sizeof(su3),
+			(((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
+			 + g_proc_coords[2]*LY+y)*LX*g_nproc_x)*4*sizeof(su3),
 		       SEEK_SET);
 #endif
 	for(x = 0; x < LX; x++){
@@ -549,9 +555,9 @@ int read_lime_gauge_field(char * filename){
 
 int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filename, const int append){
   FILE * ofs = NULL;
-  int x, X, y, Y, z, t, t0, tag=0, id=0, i=0;
+  int x, X, y, Y, z, Z, t, t0, tag=0, id=0, i=0;
   spinor tmp[1];
-  int coords[3];
+  int coords[4];
   spinor * p = NULL;
 #ifdef MPI
   MPI_Status status;
@@ -580,7 +586,9 @@ int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filen
     for(y = 0; y < LY*g_nproc_y; y++){
       Y = y - g_proc_coords[2]*LY;
       coords[2] = y / LY;
-      for(z = 0; z < LZ; z++){
+      for(z = 0; z < LZ*g_nproc_z; z++){
+      Z = z - g_proc_coords[3]*LZ;
+      coords[3] = z / LZ;
 	for(t0 = 0; t0 < T*g_nproc_t; t0++){
 	  t = t0 - T*g_proc_coords[0];
 	  coords[0] = t0 / T;
@@ -588,8 +596,9 @@ int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filen
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	  if(g_cart_id == id) {
-	    i = g_lexic2eosub[ g_ipt[t][X][Y][z] ];
-	    if((t+X+Y+z+g_proc_coords[2]*LY+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+	    i = g_lexic2eosub[ g_ipt[t][X][Y][Z] ];
+	    if((t+X+Y+z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
+		+ g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
 	      p = s;
 	    }
 	    else {
@@ -677,7 +686,8 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
 #if (defined MPI)
 	  fseek(ifs, position +
 		(g_proc_coords[0]*T+
-		 (((g_proc_coords[1]*LX+x)*g_nproc_y*LY+g_proc_coords[2]*LY+y)*LZ+z)*T*g_nproc_t)*sizeof(spinor),
+		 (((g_proc_coords[1]*LX+x)*g_nproc_y*LY+g_proc_coords[2]*LY+y)*g_nproc_z*LZ
+		  + g_proc_coords[3]*LZ+z)*T*g_nproc_t)*sizeof(spinor),
 		SEEK_SET);
 #endif
 	  for(t = 0; t < T; t++){
@@ -881,8 +891,8 @@ int write_ildg_format_xml(char *filename, LimeWriter * limewriter){
   fprintf(ofs, "  <field> su3gauge </field>\n");
   fprintf(ofs, "  <precision> 64 </precision>\n");
   fprintf(ofs, "  <lx> %d </lx>\n", LX*g_nproc_x);
-  fprintf(ofs, "  <ly> %d </ly>\n", LY);
-  fprintf(ofs, "  <lz> %d </lz>\n", LZ);
+  fprintf(ofs, "  <ly> %d </ly>\n", LY*g_nproc_y);
+  fprintf(ofs, "  <lz> %d </lz>\n", LZ*g_nproc_z);
   fprintf(ofs, "  <lt> %d </lt>\n", T*g_nproc_t);
   fprintf(ofs, "</ildgFormat>");
   fclose( ofs );

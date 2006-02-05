@@ -34,6 +34,7 @@ int check_geometry()
   int x0,x1,x2,x3;
   int iy0,iy1,iy2,iy3;
   int iz0,iz1,iz2,iz3;   
+  int bndcnt = 0;
   
   itest = calloc(VOLUMEPLUSRAND + g_dbw2rand, sizeof(int));
   stest = calloc((VOLUMEPLUSRAND)/2, sizeof(int));
@@ -83,7 +84,7 @@ int check_geometry()
 	  ix=g_ipt[x0][x1][x2][x3];
 
 	  iy0=g_iup[ix][0];
-#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT)
+#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
 	  if(x0!=T-1) {
 	    iz0=g_ipt[(x0+1)%T][x1][x2][x3];
 	  }
@@ -94,9 +95,9 @@ int check_geometry()
 	      printf("Boundary for time direction up is wrong %d %d %d\n", 
 		     iy0 < VOLUME, iy0 >= VOLUME+LX*LY*LZ, iy0);
 	      printf("Program aborted\n");
-#ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-#endif
+#  endif
 	      exit(0);
 	    }
 	  }
@@ -105,7 +106,7 @@ int check_geometry()
 #endif     
                   
 	  iy1=g_iup[ix][1];
-#if (defined PARALLELXT || defined PARALLELXYT)
+#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
 	  if(x1 !=LX-1) {
 	    iz1=g_ipt[x0][(x1+1)%LX][x2][x3];
 	  }
@@ -116,9 +117,9 @@ int check_geometry()
 	      printf("Boundary for x direction up is wrong %d %d %d\n", 
 		     iy1 < VOLUME + 2*LX*LY*LZ, iy1 >= VOLUME + 2*LX*LY*LZ + T*LY*LZ, iy1);
 	      printf("Program aborted\n");
-#ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-#endif
+#  endif
 	      exit(0);
 	    }
 	  }
@@ -127,7 +128,7 @@ int check_geometry()
 #endif
 
 	  iy2=g_iup[ix][2];
-#if defined PARALLELXYT
+#if (defined PARALLELXYT || defined PARALLELXYZT)
 	  if(x2 !=LY-1) {
 	    iz2=g_ipt[x0][x1][(x2+1)%LY][x3];
 	  }
@@ -138,9 +139,9 @@ int check_geometry()
 	      printf("Boundary for y direction up is wrong %d %d %d\n", 
 		     iy2 < VOLUME  + 2*LX*LY*LZ + 2*T*LY*LZ, iy2 > VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ, iy2);
 	      printf("Program aborted\n");
-#ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-#endif
+#  endif
 	      exit(0);
 	    }
 	  }
@@ -149,7 +150,26 @@ int check_geometry()
 #endif
 
 	  iy3=g_iup[ix][3];
-	  iz3=g_ipt[x0][x1][x2][(x3+1)%LZ];               
+#if defined PARALLELXYZT
+	  if(x3 !=LZ-1) {
+	    iz3=g_ipt[x0][x1][x2][(x3+1)%LZ];
+	  }
+	  else {
+	    iz3=g_ipt[x0][x1][x2][LZ];
+	    itest[iy3]++;
+	    if(iy3 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ || iy3 >= VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY) {
+	      printf("Boundary for z direction up is wrong %d %d %d\n", 
+		     iy3 < VOLUME  + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ, iy3 > VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY, iy3);
+	      printf("Program aborted\n");
+#  ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+#  endif
+	      exit(0);
+	    }
+	  }
+#else
+	  iz3=g_ipt[x0][x1][x2][(x3+1)%LZ];
+#endif
                
 	  if ((iy0!=iz0)||(iy1!=iz1)||(iy2!=iz2)||(iy3!=iz3)||
 	      (g_idn[iy0][0]!=ix)||(g_idn[iy1][1]!=ix)||(g_idn[iy2][2]!=ix)||(g_idn[iy3][3]!=ix)) {
@@ -163,7 +183,7 @@ int check_geometry()
 	  }
 
 	  iy0=g_idn[ix][0];
-#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT)
+#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
 	  if(x0 !=0) {
 	    iz0=g_ipt[(x0+T-1)%T][x1][x2][x3];
 	  }
@@ -174,9 +194,9 @@ int check_geometry()
 	      printf("Boundary for time direction is wrong %d %d %d\n", 
 		     iy0 < VOLUME + LX*LY*LZ, iy0 >= VOLUME + 2*LX*LY*LZ, iy0);
 	      printf("Program aborted\n");
-#ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-#endif
+#  endif
 	      exit(0);
 	    }
 	  }
@@ -185,7 +205,7 @@ int check_geometry()
 #endif
 
 	  iy1=g_idn[ix][1];
-#if (defined PARALLELXT || defined PARALLELXYT)
+#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
 	  if(x1 !=0) {
 	    iz1=g_ipt[x0][(x1+LX-1)%LX][x2][x3];
 	  }
@@ -196,9 +216,9 @@ int check_geometry()
 	      printf("Boundary for x direction is wrong %d %d %d\n", 
 		     iy1 < VOLUME + 2*LX*LY*LZ + T*LY*LZ, iy1 >= VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ, iy1);
 	      printf("Program aborted\n");
-#ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-#endif
+#  endif
 	      exit(0);
 	    }
 	  }
@@ -206,20 +226,20 @@ int check_geometry()
 	  iz1=g_ipt[x0][(x1+LX-1)%LX][x2][x3];
 #endif
 	  iy2=g_idn[ix][2];
-#if defined PARALLELXYT
+#if (defined PARALLELXYT || defined PARALLELXYZT)
 	  if(x2 !=0) {
 	    iz2=g_ipt[x0][x1][(x2+LY-1)%LY][x3];
 	  }
 	  else {
 	    iz2 = g_ipt[x0][x1][LY+1][x3];
 	    itest[iy2]++;
-	    if(iy2 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ|| iy2 >= VOLUME + RAND) {
+	    if(iy2 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ|| iy2 >= VOLUME  + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ) {
 	      printf("Boundary for y direction is wrong %d %d %d\n", 
-		     iy2 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ, iy2 >= VOLUME + RAND, iy1);
+		     iy2 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ, iy2 >= VOLUME  + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ, iy2);
 	      printf("Program aborted\n");
-#ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-#endif
+#  endif
 	      exit(0);
 	    }
 	  }
@@ -228,7 +248,26 @@ int check_geometry()
 #endif
 
 	  iy3=g_idn[ix][3];
-	  iz3=g_ipt[x0][x1][x2][(x3+LZ-1)%LZ];               
+#if defined PARALLELXYZT
+	  if(x3 !=0) {
+	    iz3=g_ipt[x0][x1][x2][(x3+LZ-1)%LZ];
+	  }
+	  else {
+	    iz3 = g_ipt[x0][x1][x2][LZ+1];
+	    itest[iy3]++;
+	    if(iy3 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY|| iy3 >= VOLUME + RAND) {
+	      printf("Boundary for z direction is wrong %d %d %d\n", 
+		     iy3 < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY, iy3 >= VOLUME + RAND, iy3);
+	      printf("Program aborted\n");
+#  ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+#  endif
+	      exit(0);
+	    }
+	  }
+#else
+	  iz3=g_ipt[x0][x1][x2][(x3+LZ-1)%LZ];
+#enif
                
 	  if ((iy0!=iz0)||(iy1!=iz1)||(iy2!=iz2)||(iy3!=iz3)||
 	      (g_iup[iy0][0]!=ix)||(g_iup[iy1][1]!=ix)||(g_iup[iy2][2]!=ix)||(g_iup[iy3][3]!=ix)) {
@@ -245,7 +284,7 @@ int check_geometry()
 
   /* The edges */
   /* In case of PARALLELT there is actually no edge to take care of */
-#if ((defined PARALLELXT) || (defined PARALLELXYT))
+#if ((defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
 	  if(x0 == 0) {
 	    iy0 = g_idn[ g_idn[ix][1] ][0];
 	    if(x1 != 0) {
@@ -258,9 +297,9 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge -t -x has an error\n");
 	      printf("Program aborted\n");
-# ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-# endif
+#  endif
 	      exit(0);
 	    }
 
@@ -275,9 +314,9 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge -t +x has an error\n");
 	      printf("Program aborted\n");
-# ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-# endif
+#  endif
 	      exit(0);
 	    }
 	  }
@@ -294,9 +333,9 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge +t -x has an error\n");
 	      printf("Program aborted\n");
-# ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-# endif
+#  endif
 	      exit(0);
 	    }
 
@@ -311,16 +350,16 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge +t +x has an error\n");
 	      printf("Program aborted\n");
-# ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-# endif
+#  endif
 	      exit(0);
 	    }
 	  }
 
 #endif
 
-#if defined PARALLELXYT
+#if (defined PARALLELXYT || defined PARALLELXYZT)
 	  if(x0 == 0) {
 	    iy0 = g_idn[ g_idn[ix][2] ][0]; 
 	    if(x2 != 0) {
@@ -333,9 +372,9 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge -t -y has an error\n");
 	      printf("Program aborted\n");
-# ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-# endif
+#  endif
 	      exit(0);
 	    }
 
@@ -350,9 +389,9 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge -t +y has an error\n");
 	      printf("Program aborted\n");
-# ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-# endif
+#  endif
 	      exit(0);
 	    }
 	  }
@@ -369,9 +408,9 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge +t -y has an error\n");
 	      printf("Program aborted\n");
-# ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-# endif
+#  endif
 	      exit(0);
 	    }
 
@@ -386,9 +425,9 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge +t +y has an error\n");
 	      printf("Program aborted\n");
-# ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-# endif
+#  endif
 	      exit(0);
 	    }
 	  }
@@ -405,9 +444,9 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge -x -y has an error\n");
 	      printf("Program aborted\n");
-# ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-# endif
+#  endif
 	      exit(0);
 	    }
 	    iy0 = g_idn[ g_iup[ix][2] ][1]; 
@@ -421,9 +460,9 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge -x +y has an error\n");
 	      printf("Program aborted\n");
-# ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-# endif
+#  endif
 	      exit(0);
 	    }	    
 	  }
@@ -439,9 +478,9 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge +x -y has an error\n");
 	      printf("Program aborted\n");
-# ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-# endif
+#  endif
 	      exit(0);
 	    }
 
@@ -456,9 +495,9 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge +x +y has an error\n");
 	      printf("Program aborted\n");
-# ifdef MPI
+#  ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-# endif
+#  endif
 	      exit(0);
 	    }
 	  }
@@ -523,7 +562,7 @@ int check_geometry()
       }
     }
 
-#if (defined PARALLELXT || defined PARALLELXYT)
+#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
     for (x0 = 0; x0 < T+2; x0++) {
       for (x2 = 0; x2 < LY; x2++) {
 	for (x3 = 0; x3 < LZ; x3++) {
@@ -634,7 +673,7 @@ int check_geometry()
     }
 #endif
 
-#if defined PARALLELXYT
+#if (defined PARALLELXYT || PARALLELXYZT)
 
     for (x0 = 0; x0 < T+2; x0++) {
       for (x1 = 0; x1 < LX+2; x1++) {
@@ -824,6 +863,280 @@ int check_geometry()
 		printf("Program aborted\n");
 		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
 		exit(0);  
+	      }
+	    }
+	  }
+	}
+      }
+    }
+#endif
+#ifdef PARALLELXYZT
+    for (x0 = 0; x0 < T+2; x0++) {
+      for (x1 = 0; x1 < LX+2; x1++) {
+	for (x2 = 0; x2 < LY+2; x2++) {
+	  bndcnt = 0;
+	  if(x0 >= T) bndcnt++;
+	  if(x1 >= LX) bndcnt++;
+	  if(x2 >= LY) bndcnt++;
+	  if(bndcnt < 2) {
+	    x3 = LZ;
+	    ix = g_ipt[x0][x1][x2][x3];
+	    
+	    iy3=g_iup[ix][3];
+	    if(iy3 < VOLUMEPLUSRAND || iy3 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      printf("The DBW2 boundary is not correctly mapped in up z-direction %d %d %d %d %d %d\n", 
+		     x0, x1, x2, x3, ix, iy3);
+	      printf("Program aborted\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0); 
+	    }
+	    itest[iy3]++;
+	    if (itest[iy3]>1) {
+	      printf("The DBW2 boundary is not correctly used up z itest = %d (%d %d %d %d) iy3 = %d ix = %d \n", 
+		     itest[iy3], x0, x1, x2, x3, iy3, ix);
+	      printf("Program aborted\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0); 
+	    }
+	    
+	    if(x0 == T) {
+	      iy0 = g_iup[ix][0];
+	      if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+		printf("The DBW2 boundary is not correctly mapped in up t-direction up z %d %d %d %d %d %d\n", 
+		       x0, x1, x2, x3, ix, iy0);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	      itest[iy0]++;
+	      if (itest[iy0]>1) {
+		printf("The DBW2 boundary is not correctly used up t up z itest = %d (%d %d %d %d) iy0 = %d ix = %d\n", 
+		       itest[iy0], x0, x1, x2, x3, iy0, ix);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	    }
+	    if(x0 == T+1) {
+	      iy0 = g_idn[ix][0];
+	      if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+		printf("The DBW2 boundary is not correctly mapped in down t-direction up z %d %d %d %d %d %d\n", 
+		       x0, x1, x2, x3, ix, iy0);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	      itest[iy0]++;
+	      if (itest[iy0]>1) {
+		printf("The DBW2 boundary is not correctly used down t up z itest = %d (%d %d %d %d) iy0 = %d ix = %d\n", 
+		       itest[iy0], x0, x1, x2, x3, iy0, ix);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	    }
+	    
+	    if(x1 == LX) {
+	      iy1 = g_iup[ix][1];
+	      if(iy1 < VOLUMEPLUSRAND || iy1 >= VOLUMEPLUSRAND+g_dbw2rand) {
+		printf("The DBW2 boundary is not correctly mapped in up x-direction up z %d %d %d %d %d %d\n", 
+		       x0, x1, x2, x3, ix, iy1);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	      itest[iy1]++;
+	      if (itest[iy1]>1) {
+		printf("The DBW2 boundary is not correctly used x up z up itest = %d (%d %d %d %d) iy1 = %d ix = %d\n", 
+		       itest[iy1], x0, x1, x2, x3, iy1, ix);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	    }
+	    if(x1 == LX+1) {
+	      iy1 = g_idn[ix][1];
+	      if(iy1 < VOLUMEPLUSRAND || iy1 >= VOLUMEPLUSRAND+g_dbw2rand) {
+		printf("The DBW2 boundary is not correctly mapped in down x-direction up z %d %d %d %d %d %d\n", 
+		       x0, x1, x2, x3, ix, iy1);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	      itest[iy1]++;
+	      if (itest[iy1]>1) {
+		printf("The DBW2 boundary is not correctly used x down z up itest = %d (%d %d %d %d) iy1 = %d ix = %d\n", 
+		       itest[iy1], x0, x1, x2, x3, iy1, ix);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	    }
+
+	    if(x2 == LY) {
+	      iy2 = g_iup[ix][2];
+	      if(iy2 < VOLUMEPLUSRAND || iy2 >= VOLUMEPLUSRAND+g_dbw2rand) {
+		printf("The DBW2 boundary is not correctly mapped in up y-direction up z %d %d %d %d %d %d\n", 
+		       x0, x1, x2, x3, ix, iy2);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	      itest[iy2]++;
+	      if (itest[iy2]>1) {
+		printf("The DBW2 boundary is not correctly used y up z up itest = %d (%d %d %d %d) iy2 = %d ix = %d\n", 
+		       itest[iy2], x0, x1, x2, x3, iy2, ix);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	    }
+	    if(x2 == LY+1) {
+	      iy2 = g_idn[ix][2];
+	      if(iy2 < VOLUMEPLUSRAND || iy2 >= VOLUMEPLUSRAND+g_dbw2rand) {
+		printf("The DBW2 boundary is not correctly mapped in down y-direction up z %d %d %d %d %d %d\n", 
+		       x0, x1, x2, x3, ix, iy2);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	      itest[iy2]++;
+	      if (itest[iy2]>1) {
+		printf("The DBW2 boundary is not correctly used y down z up itest = %d (%d %d %d %d) iy2 = %d ix = %d\n", 
+		       itest[iy2], x0, x1, x2, x3, iy2, ix);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	    }
+	    
+	    
+	    x3 = LZ+1;
+	    ix = g_ipt[x0][x1][x2][x3];
+	    iy3=g_idn[ix][3];
+	    if(iy3 < VOLUMEPLUSRAND || iy3 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      printf("The DBW2 boundary is not correctly mapped in down z-direction %d %d %d %d %d %d\n", 
+		     x0, x1, x2, x3, ix, iy3);
+	      printf("Program aborted\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0); 
+	    }
+	    itest[iy3]++;
+	    if (itest[iy3]>1) {
+	      printf("The DBW2 boundary is not correctly used down z itest = %d (%d %d %d %d) iy3 = %d ix = %d \n", 
+		     itest[iy3], x0, x1, x2, x3, iy3, ix);
+	      printf("Program aborted\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0); 
+	    }
+	    
+	    if(x0 == T) {
+	      iy0 = g_iup[ix][0];
+	      if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+		printf("The DBW2 boundary is not correctly mapped in up t-direction down z %d %d %d %d %d %d\n", 
+		       x0, x1, x2, x3, ix, iy0);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	      itest[iy0]++;
+	      if (itest[iy0]>1) {
+		printf("The DBW2 boundary is not correctly used up t down z itest = %d (%d %d %d %d) iy0 = %d ix = %d \n", 
+		       itest[iy0], x0, x1, x2, x3, iy0, ix);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	    }
+	    if(x0 == T+1) {
+	      iy0 = g_idn[ix][0];
+	      if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+		printf("The DBW2 boundary is not correctly mapped in down t-direction down z %d %d %d %d %d %d\n", 
+		       x0, x1, x2, x3, ix, iy0);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	      itest[iy0]++;
+	      if (itest[iy0]>1) {
+		printf("The DBW2 boundary is not correctly used down t down z itest = %d (%d %d %d %d) iy0 = %d ix = %d \n", 
+		       itest[iy0], x0, x1, x2, x3, iy0, ix);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	    }
+	    if(x1 == LX) {
+	      iy1 = g_iup[ix][1];
+	      if(iy1 < VOLUMEPLUSRAND || iy1 >= VOLUMEPLUSRAND+g_dbw2rand) {
+		printf("The DBW2 boundary is not correctly mapped in up x-direction down z %d %d %d %d %d %d\n", 
+		       x0, x1, x2, x3, ix, iy1);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	      itest[iy1]++;
+	      if (itest[iy1]>1) {
+		printf("The DBW2 boundary is not correctly used up x down z itest = %d (%d %d %d %d) iy1 = %d ix = %d\n", 
+		       itest[iy1], x0, x1, x2, x3, iy1, ix);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	    }
+	    if(x1 == LX+1) {
+	      iy1 = g_idn[ix][1];
+	      if(iy1 < VOLUMEPLUSRAND || iy1 >= VOLUMEPLUSRAND+g_dbw2rand) {
+		printf("The DBW2 boundary is not correctly mapped in down x-direction down z %d %d %d %d %d %d\n", 
+		       x0, x1, x2, x3, ix, iy1);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	      itest[iy1]++;
+	      if (itest[iy1]>1) {
+		printf("The DBW2 boundary is not correctly used down x down z itest = %d (%d %d %d %d) iy1 = %d ix = %d\n", 
+		       itest[iy1], x0, x1, x2, x3, iy1, ix);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+		exit(0);  
+	      }
+	    }
+
+	    if(x2 == LY) {
+	      iy2 = g_iup[ix][2];
+	      if(iy2 < VOLUMEPLUSRAND || iy2 >= VOLUMEPLUSRAND+g_dbw2rand) {
+		printf("The DBW2 boundary is not correctly mapped in up y-direction down z %d %d %d %d %d %d\n", 
+		       x0, x1, x2, x3, ix, iy2);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	      itest[iy2]++;
+	      if (itest[iy2]>1) {
+		printf("The DBW2 boundary is not correctly used y up z down itest = %d (%d %d %d %d) iy2 = %d ix = %d\n", 
+		       itest[iy2], x0, x1, x2, x3, iy2, ix);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	    }
+	    if(x2 == LY+1) {
+	      iy2 = g_idn[ix][2];
+	      if(iy2 < VOLUMEPLUSRAND || iy2 >= VOLUMEPLUSRAND+g_dbw2rand) {
+		printf("The DBW2 boundary is not correctly mapped in down y-direction down z %d %d %d %d %d %d\n", 
+		       x0, x1, x2, x3, ix, iy2);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
+	      }
+	      itest[iy2]++;
+	      if (itest[iy2]>1) {
+		printf("The DBW2 boundary is not correctly used y down z down itest = %d (%d %d %d %d) iy2 = %d ix = %d\n", 
+		       itest[iy2], x0, x1, x2, x3, iy2, ix);
+		printf("Program aborted\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0); 
 	      }
 	    }
 	  }
