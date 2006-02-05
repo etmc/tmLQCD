@@ -1,0 +1,77 @@
+\section{Configuring the hmc package}
+
+In order to get a simple configuration of the hmc package it is enough
+to just call {\ttfamily ./configure} in the top level directory. The
+c-compiler choice is influenced e.g. by specifying {\ttfamily
+  ./configure CC=<mycc>}. 
+
+The configure script accepts certain options to influence the building
+procedure. One can get an overview over all supported options with
+{\ttfamily configure --help}. There are {\ttfamily enable|disable}
+options switching on and off optional features and {\ttfamily
+  with|without} switches usually related to optional packages. In the
+following we describe the most important of them (check {\ttfamily
+  configure --help} for the defaults):
+
+\begin{itemize}
+\item {\ttfamily --enable-mpi}:\\
+  This option switches on the support for MPI. On certain platforms it
+  automatically chooses the correct parallel compiler or searches for
+  a command {\ttfamily mpicc} in the searchpath.
+
+\item {\ttfamily --enable-p4}:\\
+  Enable the use of special petium4 instruction set and cache
+  management.
+
+\item {\ttfamily --enable-sse}:\\
+  Enable the use of SSE instruction set. This means not much when 64
+  Bit precision is used.
+
+\item {\ttfamily --enable-sse2}:\\
+  Enable the use of SSE2 instruction set. This is a huge improvement
+  on pentium4 and equivalent systems.
+
+\item {\ttfamily --enable-sse3}:\\
+  Enable the use of SSE3 instruction set. This will give another 20\%
+  of speedup when compared to only SSE2. However, only a few
+  processors are capable of SSE3 so far.
+
+\item {\ttfamily --enable-gaugecopy}:\\
+  See section \ref{subsec:storage} for details on this option.
+
+\item {\ttfamily --enable-eogeom}:\\
+  See section \ref{subsec:storage} for details on this option.
+
+
+\item {\ttfamily --with-mpidimension=x}:\\
+  This option has only effect if the preceeding one is switched
+  on. The number of parallel direction can be specified. Currently
+  {\ttfamily x=1} and {\ttfamily x=2} are supported and implemented,
+  corresponding to parallelisation in time- or in time- and x-direction,
+  respectively.
+
+\item {\ttfamily --with-lapack}:\\
+  Build the HMc with lapack. If this is disabled the Chronological
+  solver guess cannot be used. Istead zero spinor fields will be used
+  as initial guesses for the solvers during the molecular dynamics.
+
+\item {\ttfamily --with-limedir=<dir>}:\\
+ Tells configure where to find the lime package, which is required for
+ the build of the HMC. It is used for the ILDG file format.
+
+\end{itemize}
+
+The configure script will guess at the very beginning on which
+platform the build is done. In case this failes or a cross compilation
+must be performed please use the option {\ttfamily --host=HOST}. For
+instance in order to compile for the BGL you have to specify
+{\ttfamily --host=powerpc64-bgl-linux-gnu}.
+
+Special values for {\ttfamily CC, CFLAGS, LDFLAGS} can be given to
+configure as demonstrated above for {\ttfamily CC}.
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 
