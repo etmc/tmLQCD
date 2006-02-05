@@ -49,7 +49,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     ix = VOLUME + LX*LY*LZ + y3 + LZ*y2 + LZ*LY*y1;
   }
 #endif
-#if ((defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYT))
+#if ((defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
   if(x1 == LX){
     ix = VOLUME + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
   }
@@ -127,63 +127,77 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
   /* endif of PARALLELXYT */
 #endif
 #if defined PARALLELXYZT
-  /* y-Rand */
+  /* z-Rand */
   if(x3 == LZ) {
-    ix = VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LY*LZ + y0*LX*LY + y1*LY + y2;
+    ix = VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ 
+      + y0*LX*LY + y1*LY + y2;
   }
   if(x3 == -1) {
-    ix = VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LY*LZ + T*LX*LY + y0*LX*LY + y1*LY + y2;
+    ix = VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY 
+      + y0*LX*LY + y1*LY + y2;
   }
   /* the edges */
-  /* xz-edge  */
+  /* zx-edge  */
   if(x1 == LX) {
     if(x3 == LZ) {
-      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + y0*LZ + y2;
+      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ 
+	+ y0*LY + y2;
     }
     if(x3 == -1) {
-      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + T*LY + y0*LY + y2;
+      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + T*LY 
+	+ y0*LY + y2;
     }
   }
   if(x1 == -1) {
     if(x3 == LZ) {
-      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 2*T*LY + y0*LY + y2;
+      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 2*T*LY 
+	+ y0*LY + y2;
     }
     if(x3 == -1) {
-      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 3*T*LY + y0*LY + y2;
+      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 3*T*LY 
+	+ y0*LY + y2;
     }
   }
-  /* zt-edge */
+  /* tz-edge */
   if(x3 == LZ) {
     if(x0 == T) {
-      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + y1*LY + y2;
+      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY 
+	+ y1*LY + y2;
     }
     if(x0 == -1) {
-      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + LX*LY + y1*LY + y2;
+      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + LX*LY 
+	+ y1*LY + y2;
     }
   }
   if(x3 == -1) {
     if(x0 == T) {
-      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 2*LX*LY + y1*LY + y2;
+      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 2*LX*LY 
+	+ y1*LY + y2;
     }
     if(x0 == -1) {
-      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 3*LX*LY + y1*LY + y2;
+      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 3*LX*LY 
+	+ y1*LY + y2;
     }
   }
   /* zy-edge */
   if(x3 == LZ) {
     if(x2 == LY) {
-      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY + y0*LX + y1;
+      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY 
+	+ y0*LX + y1;
     }
-    if(x0 == -1) {
-      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY + T*LX + y0*LX + y1;
+    if(x2 == -1) {
+      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY + 2*T*LX 
+	+ y0*LX + y1;
     }
   }
   if(x3 == -1) {
-    if(x0 == T) {
-      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY + 2*T*LX + y0*LX + y1;
+    if(x2 == LY) {
+      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY + T*LX 
+	+ y0*LX + y1;
     }
-    if(x0 == -1) {
-      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY + 3*T*LX + y0*LX + y1;
+    if(x2 == -1) {
+      ix = VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY + 3*T*LX 
+	+ y0*LX + y1;
     }
   }
 
@@ -399,7 +413,6 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 7*LX*LZ
 	+ y1*LZ + y3;
     }
-  }
 #  if defined PARALLELXYZT
     /* y2z */
     else if(x3 == LZ) {
@@ -411,7 +424,77 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 	+ y0*LX + y1;      
     }
 # endif
+  }
 #endif
+#if defined PARALLELXYZT
+  if(x3 == LZ+1) {
+    if((x0 < T) && (x0 > -1) && (x1 < LX) && (x1 > -1) && (x2 > -1) && (x2 < LY)) {
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + y0*LX*LY + y1*LY + y1;
+    }
+    /* z2x */
+    else if(x1 == LX) {
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+	+ y0*LY + y2;
+    }
+    else if (x1 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+	+ y0*LY + y2;
+    }
+    /* z2t */
+    else if(x0 == T) {
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+	+ y1*LY + y2;
+    }
+    else if(x0 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+	+ y1*LY + y2;
+    }
+    /* z2y */
+    else if(x2 == LY) {
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+	+ y0*LX + y1;      
+    }
+    else if(x2 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+	+ y0*LX + y1;      
+    }
+  }
+  if(x3 == -2) {
+    if((x0 < T) && (x0 > -1) && (x1 < LX) && (x1 > -1) && (x2 > -1) && (x2 < LY)) {
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY + y0*LX*LY + y1*LY + y1;
+    }
+    /* z2x */
+    else if(x1 == LX) {
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+	+ y0*LY + y2;
+    }
+    else if(x1 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+	+ y0*LY + y2;
+    }
+    /* z2t */
+    else if(x0 == T) {
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+	+ y1*LY + y2;
+    }
+    else if(x0 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+	+ y1*LY + y2;
+    }
+    /* z2y */
+    else if(x2 == LY) {
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+	+ y0*LX + y1;      
+    }
+    else if(x2 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+	+ y0*LX + y1;      
+    }
+  }
+#endif
+/*   if(ix == 546) { */
+/*     printf("## %d %d %d %d ix = %d, %d %d %d %d\n", x0, x1, x2, x3, ix, T, LX, LY, LZ); */
+/*   } */
   return(ix);
 }
 
@@ -618,6 +701,7 @@ void geometry(){
 	    else {
 	      xeven[ix]=0; 
 	    }
+
 	    g_iup[ix][0] = Index(x0+1, x1, x2, x3);
 	    g_idn[ix][0] = Index(x0-1, x1, x2, x3);
 	    
@@ -629,11 +713,13 @@ void geometry(){
 	    
 	    g_iup[ix][3] = Index(x0, x1, x2, x3+1);
 	    g_idn[ix][3] = Index(x0, x1, x2, x3-1);
+
 	  }
 	}
       }
     }
   }
+
   i_even=0;
   i_odd=0;
   /*For the spinor fields we need only till VOLUME+RAND */
@@ -672,9 +758,9 @@ void geometry(){
 	    x0 = -2;
 	    ix = Index(x0, x1, x2, x3);
 	    if(ix < VOLUMEPLUSRAND) {
-	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	      printf("#### -2t %d %d %d %d\n",x0, x1, x2, x3);
 	    }
-	  
+
 	    g_iup[ix][0] = Index(x0+1, x1, x2, x3);
 	    g_idn[ix][0] = -1;
 
@@ -690,7 +776,7 @@ void geometry(){
 	    x0 = T+1;
 	    ix = Index(x0, x1, x2, x3);
 	    if(ix < VOLUMEPLUSRAND) {
-	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	      printf("#### +2t %d %d %d %d\n",x0, x1, x2, x3);
 	    }
 	    g_iup[ix][0] = -1;
 	    g_idn[ix][0] = Index(x0-1, x1, x2, x3);
@@ -703,10 +789,12 @@ void geometry(){
 
 	    if(x3 < LZ) g_iup[ix][3] = Index(x0, x1, x2, x3+1);
 	    if(x3 > -1) g_idn[ix][3] = Index(x0, x1, x2, x3-1);
+
 	  }
 	}
       }
     }    
+#endif
 #if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
     for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
       for (x2 = -startvaluey; x2 < (LY+startvaluey); x2++) {
@@ -720,7 +808,7 @@ void geometry(){
 	    x1 = -2;
 	    ix = Index(x0, x1, x2, x3);
 	    if(ix < VOLUMEPLUSRAND) {
-	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	      printf("#### -2x %d %d %d %d\n",x0, x1, x2, x3);
 	    }
 	    if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
 	    if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
@@ -737,7 +825,7 @@ void geometry(){
 	    x1 = LX+1;
 	    ix = Index(x0, x1, x2, x3);
 	    if(ix < VOLUMEPLUSRAND) {
-	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	      printf("#### +2x %d %d %d %d\n",x0, x1, x2, x3);
 	    }
 	    if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
 	    if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
@@ -768,7 +856,7 @@ void geometry(){
 	    x2 = -2;
 	    ix = Index(x0, x1, x2, x3);
 	    if(ix < VOLUMEPLUSRAND || ix >= VOLUMEPLUSRAND + g_dbw2rand) {
-	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	      printf("#### -2y %d %d %d %d\n",x0, x1, x2, x3);
 	    }
 	    if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
 	    if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
@@ -785,7 +873,7 @@ void geometry(){
 	    x2 = LY+1;
 	    ix = Index(x0, x1, x2, x3);
 	    if(ix < VOLUMEPLUSRAND || ix >= VOLUMEPLUSRAND + g_dbw2rand) {
-	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	      printf("#### +2y %d %d %d %d\n",x0, x1, x2, x3);
 	    }
 	    if(x0 < T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
 	    if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
@@ -816,7 +904,7 @@ void geometry(){
 	    x3 = -2;
 	    ix = Index(x0, x1, x2, x3);
 	    if(ix < VOLUMEPLUSRAND || ix >= VOLUMEPLUSRAND + g_dbw2rand) {
-	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	      printf("#### -2z %d %d %d %d\n",x0, x1, x2, x3);
 	    }
 	    if(x0 <  T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
 	    if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
@@ -833,7 +921,7 @@ void geometry(){
 	    x3 = LZ+1;
 	    ix = Index(x0, x1, x2, x3);
 	    if(ix < VOLUMEPLUSRAND || ix >= VOLUMEPLUSRAND + g_dbw2rand) {
-	      printf("#### %d %d %d %d\n",x0, x1, x2, x3);
+	      printf("#### +2z %d %d %d %d\n",x0, x1, x2, x3);
 	    }
 	    if(x0 <  T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
 	    if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);
@@ -852,7 +940,6 @@ void geometry(){
     }
 #endif
   }
-#endif
 }
 
 static char const rcsid[] = "$Id$";

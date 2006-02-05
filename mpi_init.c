@@ -49,6 +49,10 @@ MPI_Datatype field_y_slice_gath;
 MPI_Datatype field_y_slice_cont;
 MPI_Datatype field_y_subslice;
 
+MPI_Datatype field_z_slice_gath;
+MPI_Datatype field_z_slice_cont;
+MPI_Datatype field_z_subslice;
+
 MPI_Datatype deri_y_slice_cont;
 MPI_Datatype deri_y_subslice;
 MPI_Datatype deri_y_eo_subslice;
@@ -87,9 +91,13 @@ MPI_Datatype gauge_tz_edge_cont;
 MPI_Datatype gauge_tz_edge_gath;
 MPI_Datatype gauge_tz_edge_gath_split;
 
-MPI_Datatype gauge_yz_edge_cont;
-MPI_Datatype gauge_yz_edge_gath;
-MPI_Datatype gauge_yz_edge_gath_split;
+MPI_Datatype gauge_zy_edge_cont;
+MPI_Datatype gauge_zy_edge_gath;
+MPI_Datatype gauge_zy_edge_gath_split;
+
+#ifdef PARALLELXYZT
+spinor * field_buffer_z;
+#endif
 
 MPI_Comm mpi_time_slices;
 #endif
@@ -112,18 +120,24 @@ void mpi_init(int argc,char *argv[]) {
 
 #ifdef PARALLELT
   ndims = 1;
+#  ifndef FIXEDVOLUME
   N_PROC_X = 1;
   N_PROC_Y = 1;
   N_PROC_Z = 1;
+#  endif
 #endif
 #if defined PARALLELXT
   ndims = 2;
+#  ifndef FIXEDVOLUME
   N_PROC_Y = 1;
   N_PROC_Z = 1;
 #endif
+#endif
 #if defined PARALLELXYT
   ndims = 3;
+#  ifndef FIXEDVOLUME
   N_PROC_Z = 1;
+#  endif
 #endif
 #if defined PARALLELXYZT
   ndims = 4;
@@ -146,6 +160,8 @@ void mpi_init(int argc,char *argv[]) {
   g_nproc_x = dims[1];
   g_nproc_y = dims[2];
   g_nproc_z = dims[3];
+
+#ifndef FIXEDVOLUME
   N_PROC_X = g_nproc_x;
   N_PROC_Y = g_nproc_y;
   N_PROC_Z = g_nproc_z;
@@ -154,35 +170,41 @@ void mpi_init(int argc,char *argv[]) {
   LY = LY/g_nproc_y;
   LZ = LZ/g_nproc_z;
   VOLUME = (T*LX*LY*LZ);
-#ifdef PARALLELT  
+#  ifdef PARALLELT  
   RAND = (2*LX*LY*LZ);
   EDGES = 0;
-#endif
-#if defined PARALLELXT
+#  elif defined PARALLELXT
   RAND = 2*LZ*(LY*LX + T*LY);
   EDGES = 4*LZ*LY;
   /* Note that VOLUMEPLUSRAND not equal to VOLUME+RAND in this case */
   /* VOLUMEPLUSRAND rather includes the edges */
-#endif
-#if defined PARALLELXYT
+#  elif defined PARALLELXYT
   RAND = 2*LZ*(LY*LX + T*LY + T*LX);
   EDGES = 4*LZ*(LY + T + LX);
-#endif
-#if defined PARALLELXYZT
-  RAND = 2*LZ*(LY*LX + T*LY + T*LX) + 2*T*LX*LY;
-  EDGES = 4*LZ*(LY + T + LX) + 4*LY*T + 4*LY*LX + 4*T*LX;
-#endif
+#  elif defined PARALLELXYZT
+  RAND = 2*LZ*LY*LX + 2*LZ*T*LY + 2*LZ*T*LX + 2*T*LX*LY;
+  EDGES = 4*LZ*LY + 4*LZ*T + 4*LZ*LX + 4*LY*T + 4*LY*LX + 4*T*LX;
+#  else
+  RAND = 0;
+  EDGES = 0;
+#  endif
   /* Note that VOLUMEPLUSRAND is not always equal to VOLUME+RAND */
   /* VOLUMEPLUSRAND rather includes the edges */
   VOLUMEPLUSRAND = VOLUME + RAND + EDGES;
+#endif
   g_dbw2rand = (RAND + 2*EDGES);
+
+#ifdef PARALLELXYZT
+  field_buffer_z = (spinor*)malloc(T*LX*LZ/2*sizeof(spinor));
+#endif
 
   MPI_Cart_create(MPI_COMM_WORLD, ndims, dims, periods, reorder, &g_cart_grid);
   MPI_Comm_rank(g_cart_grid, &g_cart_id);
   MPI_Cart_coords(g_cart_grid, g_cart_id, ndims, g_proc_coords);
 
-  fprintf(stdout,"Process %d of %d on %s: cart_id %d, coordinates (%d %d %d)\n",
-	  g_proc_id, g_nproc, processor_name, g_cart_id, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2]);
+  fprintf(stdout,"Process %d of %d on %s: cart_id %d, coordinates (%d %d %d %d)\n",
+	  g_proc_id, g_nproc, processor_name, g_cart_id, 
+	  g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
   fflush(stdout);
 
   if(g_stdio_proc == -1){
@@ -197,7 +219,7 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Cart_shift(g_cart_grid, 2, 1, &g_nb_y_dn, &g_nb_y_up);
 #endif
 #if defined PARALLELXYZT
-  MPI_Cart_shift(g_cart_grid, 2, 1, &g_nb_y_dn, &g_nb_y_up);
+  MPI_Cart_shift(g_cart_grid, 3, 1, &g_nb_z_dn, &g_nb_z_up);
 #endif
 
   /* With internal boundary we mean the fields that are send */
@@ -270,6 +292,30 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(2*LX, LZ, LY*LZ, gauge_point, &gauge_ty_edge_gath);
   MPI_Type_commit(&gauge_ty_edge_gath);
 
+  /* external edges: z-Rand send in x-direction */
+  /* zx-edge */
+  MPI_Type_contiguous(2*T*LY ,gauge_point, &gauge_zx_edge_cont);
+  MPI_Type_commit(&gauge_zx_edge_cont);
+  /* internal edges */
+  MPI_Type_vector(2*T, LY, LY*LX, gauge_point, &gauge_zx_edge_gath);
+  MPI_Type_commit(&gauge_zx_edge_gath);
+
+  /* external edges: t-Rand send in z-direction */
+  /* tz-edge */
+  MPI_Type_contiguous(2*LX*LY ,gauge_point, &gauge_tz_edge_cont);
+  MPI_Type_commit(&gauge_tz_edge_cont);
+  /* internal edges */
+  MPI_Type_vector(2*LX*LY, 1, LZ, gauge_point, &gauge_tz_edge_gath);
+  MPI_Type_commit(&gauge_tz_edge_gath);
+
+  /* external edges: z-Rand send in y-direction */
+  /* zy-edge */
+  MPI_Type_contiguous(2*T*LX ,gauge_point, &gauge_zy_edge_cont);
+  MPI_Type_commit(&gauge_zy_edge_cont);
+  /* internal edges */
+  MPI_Type_vector(2*T*LX, 1, LY, gauge_point, &gauge_zy_edge_gath);
+  MPI_Type_commit(&gauge_zy_edge_gath);
+
   /* For _NEW_GEOMETRY -> even/odd geometry also in the gauge fields */
   /* Now we need a half continuoues gauge xt-slice */
   MPI_Type_contiguous((LY*LZ)/2, gauge_point, &gauge_x_eo_subslice); 
@@ -319,7 +365,7 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_contiguous(T*LX*LY/2, field_point, &field_z_slice_cont);
   /* this type puts T*LX xt-slices together being the internal x-boundary in */
   /* even/odd ordered spinor fields */
-  MPI_Type_vector(T*LX*LY/2, 1, LY/2, field_point, &field_z_slice_gath);
+  MPI_Type_vector(T*LX*LY/2, 1, LZ/2, field_point, &field_z_slice_gath);
   MPI_Type_commit(&field_z_slice_gath);
   MPI_Type_commit(&field_z_slice_cont);
 
@@ -346,7 +392,7 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_commit(&deri_y_slice_gath);
   MPI_Type_commit(&deri_y_slice_cont);
 
-  MPI_Type_contiguous(T*LX*LX, deri_point, &deri_z_slice_cont);
+  MPI_Type_contiguous(T*LX*LY, deri_point, &deri_z_slice_cont);
   MPI_Type_vector(T*LX*LY, 1, LZ, deri_point, &deri_z_slice_gath);
   MPI_Type_commit(&deri_z_slice_gath);
   MPI_Type_commit(&deri_z_slice_cont);

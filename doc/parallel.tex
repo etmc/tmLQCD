@@ -194,6 +194,32 @@ In the test directory there is a routine called {\ttfamily
   check\_xchange} which tests whether the exchange routines work correctly.
 
 
+\begin{table}[t]
+  \centering
+  \begin{tabular*}{1.\textwidth}{@{\extracolsep{\fill}}ccc}
+    \hline\hline
+     & start address & size \\
+    \hline\hline
+    local volume & 0 & T*LX*LY*LZ \\
+    \hline
+    t-Rand       & VOLUME & 2*LX*LY*LZ \\
+    x-Rand       & ...+2*LX*LY*LZ & 2*T*LY*LZ\\
+    y-Rand       & ...+2*T*LY*LZ & 2*T*LX*LZ \\
+    z-Rand       & ...+2*T*LX*LZ & 2*T*LX*LY  \\
+    \hline
+    xt-edge      & VOLUME+RAND  & 4*LY*LZ \\
+    yx-edge      & ...+4*LY*LZ  & 4*T*LZ \\
+    ty-edge      & ...+4*T*LZ   & 4*LX*LZ \\
+    zx-edge      & ...+4*LX*LZ  & 4*T*LY\\
+    tz-edge      & ...+4*T*LY   & 4*LX*LY\\
+    zy-edge      & ...+4*LX*LY  & 4*T*LX\\
+    
+
+
+    \hline\hline
+ \end{tabular*}
+\end{table}
+
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "main"

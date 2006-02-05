@@ -572,13 +572,13 @@ void xchange_gauge() {
   /* recieve the data from the neighbour on the left in x direction */
   /* zx-edge */
 #    ifndef _NEW_GEOMETRY
-  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + (LZ-1)], 
+  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + (LX-1)*LY], 
 	       1, gauge_zx_edge_gath, g_nb_x_up, 308,
 	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 2*T*LY],
 	       1, gauge_zx_edge_cont, g_nb_x_dn, 308,
 	       g_cart_grid, &status);
 #    else
-  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + (LZ-1)/2], 
+  MPI_Sendrecv(g_gauge_field[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + (LX-1)*LY/2], 
 	       1, gauge_zx_edge_gath_split, g_nb_x_up, 308,
 	       g_gauge_field[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 2*T*LY],
 	       1, gauge_zx_edge_cont      , g_nb_x_dn, 308,

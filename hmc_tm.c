@@ -298,7 +298,7 @@ int main(int argc,char *argv[]) {
     printf("# The code was compiled with -D_GAUGE_COPY\n");
 #endif
     printf("# The lattice size is %d x %d x %d x %d\n",
-	   (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(LZ));
+	   (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(LZ*g_nproc_z));
     printf("# The local lattice size is %d x %d x %d x %d\n", 
 	   (int)(T), (int)(LX), (int)(LY),(int) LZ);
     printf("# beta = %f , kappa= %f\n", g_beta, g_kappa);
@@ -322,7 +322,8 @@ int main(int argc,char *argv[]) {
 	   g_csg_N[0], g_csg_N[2], g_csg_N[4]);
 
 
-    fprintf(parameterfile, "The lattice size is %d x %d x %d x %d\n", (int)(g_nproc_t*T), (int)(g_nproc_x*LX), (int)(LY), (int)(LZ));
+    fprintf(parameterfile, "The lattice size is %d x %d x %d x %d\n", (int)(g_nproc_t*T), (int)(g_nproc_x*LX), 
+	    (int)(g_nproc_y*LY), (int)(g_nproc_z*LZ));
     fprintf(parameterfile, "The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY), (int)(LZ));
     fprintf(parameterfile, "g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n",g_beta,g_kappa,g_ka_csw_8);
     fprintf(parameterfile, "boundary of fermion fields (t,x,y,z): %f %f %f %f \n",X0,X1,X2,X3);

@@ -49,6 +49,9 @@
 /* Four dimensional parallelisation */
 #undef PARALLELXYZT
 
+/* Fixed volume at compiletime */
+#undef FIXEDVOLUME
+
 /* Compile with SSE support */
 #undef SSE
 

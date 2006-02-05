@@ -16,7 +16,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef MPI
-#include <mpi.h>
+#  include <mpi.h>
+#endif
+#ifdef FIXEDVOLUME
+#  include "fixed_volume.h"
 #endif
 #include"su3.h"
 #include"su3adj.h"
@@ -46,15 +49,15 @@
 
 
 #if defined MAIN_PROGRAM
-  #define EXTERN
+#  define EXTERN
 #else
-  #define EXTERN extern
+#  define EXTERN extern
 #endif
 
 #if ((defined SSE)||(defined SSE2)||(defined SSE3))
-#include "sse.h"
+#  include "sse.h"
 #else
-  #define ALIGN
+#  define ALIGN
 #endif
 
 EXTERN double g_eps_sq_force, g_eps_sq_acc;
@@ -63,9 +66,12 @@ EXTERN double g_eps_sq_acc1, g_eps_sq_acc2, g_eps_sq_acc3;
 EXTERN int g_relative_precision_flag;
 EXTERN int g_debug_level;
 
-EXTERN int T_global, T, L, LX, LY, LZ, VOLUME;
-EXTERN int N_PROC_X, N_PROC_Y, N_PROC_Z;
+EXTERN int T_global;
+#ifndef FIXEDVOLUME
+EXTERN int T, L, LX, LY, LZ, VOLUME;
+EXTERN int N_PROC_T, N_PROC_X, N_PROC_Y, N_PROC_Z;
 EXTERN int RAND, EDGES, VOLUMEPLUSRAND;
+#endif
 
 /* translates from lexicographic order to even/odd order */
 EXTERN int * g_lexic2eo;

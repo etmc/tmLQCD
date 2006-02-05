@@ -57,12 +57,14 @@ int main(int argc,char *argv[])
 
   MPI_Init(&argc, &argv);
 #endif
-  g_rgi_C1 = 1.;
+/*   g_rgi_C1 = 1.; */
 
   /* Read the input file */
   read_input("benchmark.input");
 
   mpi_init(argc, argv);
+/*   g_rgi_C1 = 0.; */
+/*   g_dbw2rand = 0; */
 
   if(g_proc_id==0) {
 #ifdef SSE
@@ -113,7 +115,7 @@ int main(int argc,char *argv[])
   if(g_proc_id == 0) {
     fprintf(stdout,"The number of processes is %d \n",g_nproc);
     printf("# The lattice size is %d x %d x %d x %d\n",
-	   (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(LZ));
+	   (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(g_nproc_z*LZ));
     printf("# The local lattice size is %d x %d x %d x %d\n", 
 	   (int)(T), (int)(LX), (int)(LY),(int) LZ);
     fflush(stdout);
@@ -126,7 +128,7 @@ int main(int argc,char *argv[])
 
   check_geometry();
 #ifdef MPI
-  check_xchange();
+  check_xchange(); 
 #endif
 
   /* here we generate exactly the same configuration as for the 

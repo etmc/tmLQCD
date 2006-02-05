@@ -166,13 +166,13 @@ void xchange_deri()
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
 #    ifndef _NEW_GEOMETRY
-  MPI_Sendrecv((void*)df0[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + T*LX*LY], 
+  MPI_Sendrecv((void*)df0[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY], 
 	       1, deri_z_slice_cont, g_nb_z_dn, 46,
-	       (void*)ddummy[LZ-1][,
+	       (void*)ddummy[LZ-1],
 	       1, deri_z_slice_gath, g_nb_z_up, 46,
 	       g_cart_grid, &status);
 #    else
-  MPI_Sendrecv((void*)df0[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + T*LX*LY], 
+  MPI_Sendrecv((void*)df0[VOLUME + 2*LZ*LX*LY + 2*LZ*T*LY + 2*T*LX*LZ + T*LX*LY], 
 	       1, deri_z_slice_cont      , g_nb_z_dn, 46,
 	       (void*)ddummy[LZ/2-1],
 	       1, deri_z_slice_gath_split, g_nb_z_up, 45,

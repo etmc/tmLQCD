@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 #ifdef MPI
 # include <mpi.h>
 #endif
@@ -26,6 +27,9 @@
 /* exchanges the field  l */
 void xchange_field(spinor * const l) {
 
+#ifdef PARALLELXYZT
+  int x0=0, x1=0, x2=0, ix=0;
+#endif
 #ifdef MPI
 
   MPI_Status status;
@@ -72,20 +76,50 @@ void xchange_field(spinor * const l) {
 # endif
 
 # if (defined PARALLELXYZT)
+  /* fill buffer ! */
+  ix = 0;
+  for(x0 = 0; x0 < T; x0++) {
+    for(x1 = 0; x1 < LX; x1++) {
+      for(x2 = 0; x2 < LY; x2++) {
+	if(g_lexic2eo[ g_ipt[x0][x1][x2][LZ-1]]<VOLUME/2) {
+/* 	if((x0 + x1 + x2 +  */
+/* 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  */
+/* 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==0) { */
+	  memcpy((void*)(field_buffer_z+ix), (void*)&l[ g_lexic2eo[ g_ipt[x0][x1][x2][0]] ], sizeof(spinor));
+	  ix++;
+	}
+      }
+    }
+  }
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
-  MPI_Sendrecv((void*)l,
-	       1, field_z_slice_gath, g_nb_z_dn, 103, 
- 	       (void*)(l+((T+2)*LX*LY*LZ + 2*T*LY*LZ +2*T*LX*LZ)/2), 
-	       1, field_z_slice_cont, g_nb_z_up, 103,
+  MPI_Sendrecv((void*)field_buffer_z,
+	       1, field_z_slice_cont, g_nb_z_dn, 503, 
+ 	       (void*)(l+(VOLUME +2*LX*LY*LZ + 2*T*LY*LZ +2*T*LX*LZ)/2), 
+	       1, field_z_slice_cont, g_nb_z_up, 503,
 	       g_cart_grid, &status);
 
+  ix = 0;
+  for(x0 = 0; x0 < T; x0++) {
+    for(x1 = 0; x1 < LX; x1++) {
+      for(x2 = 0; x2 < LY; x2++) {
+	if(g_lexic2eo[ g_ipt[x0][x1][x2][LZ-1]]<VOLUME/2) {
+	  /* 	if((x0 + x1 + x2 + (LZ-1) + */
+	  /* 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  */
+	  /* 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==0) { */
+	  memcpy((void*)(field_buffer_z+ix), (void*)&l[ g_lexic2eo[ g_ipt[x0][x1][x2][LZ-1]] ], sizeof(spinor));
+	  ix++;
+	}
+      }
+    }
+  }
   /* send the data to the neighbour on the right in y direction */
   /* recieve the data from the neighbour on the left in y direction */  
-  MPI_Sendrecv((void*)(l+(LZ-1)/2), 
-	       1, field_z_slice_gath, g_nb_z_up, 104, 
-	       (void*)(l+((T+2)*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY)/2), 
-	       1, field_z_slice_cont, g_nb_z_dn, 104,
+/*   MPI_Sendrecv((void*)(l+(LZ-1)/2),  */
+  MPI_Sendrecv((void*)field_buffer_z, 
+	       1, field_z_slice_cont, g_nb_z_up, 504, 
+	       (void*)(l+(VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY)/2), 
+	       1, field_z_slice_cont, g_nb_z_dn, 504,
 	       g_cart_grid, &status);
 
 # endif

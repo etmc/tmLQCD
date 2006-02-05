@@ -250,35 +250,51 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 ^CSGHistoryMu3{SPC}*={SPC}*              BEGIN(CSGN3);
 
 <TT>{DIGIT}+                  {
+#ifndef FIXEDVOLUME
   T_global = atoi(yytext);
+#endif
   if(verbose!=0) printf("T =%s\n", yytext);
 }
 <LL>{DIGIT}+                  {
+#ifndef FIXEDVOLUME
   L = atoi(yytext);
+#endif
   if(verbose!=0) printf("L =%s\n", yytext);
 }
 <LLX>{DIGIT}+                  {
+#ifndef FIXEDVOLUME
   LX = atoi(yytext);
+#endif
   if(verbose!=0) printf("LX =%s\n", yytext);
 }
 <LLY>{DIGIT}+                  {
+#ifndef FIXEDVOLUME
   LY = atoi(yytext);
+#endif
   if(verbose!=0) printf("LY =%s\n", yytext);
 }
 <LLZ>{DIGIT}+                  {
+#ifndef FIXEDVOLUME
   LZ = atoi(yytext);
+#endif
   if(verbose!=0) printf("LZ =%s\n", yytext);
 }
 <NPROCX>{DIGIT}+              {
+#ifndef FIXEDVOLUME
   N_PROC_X = atoi(yytext);
+#endif
   if(verbose!=0) printf("Nr of processors in x direction = %s\n", yytext);
 }
 <NPROCY>{DIGIT}+              {
+#ifndef FIXEDVOLUME
   N_PROC_Y = atoi(yytext);
+#endif
   if(verbose!=0) printf("Nr of processors in y direction = %s\n", yytext);
 }
 <NPROCZ>{DIGIT}+              {
+#ifndef FIXEDVOLUME
   N_PROC_Z = atoi(yytext);
+#endif
   if(verbose!=0) printf("Nr of processors in z direction = %s\n", yytext);
 }
 <SEED>{DIGIT}+               {
@@ -900,6 +916,7 @@ int read_input(char * conf_file){
    * Setting default values!
    ********************************************/
 
+#ifndef FIXEDVOLUME
   T_global = _default_T_global;
   L = _default_L;
   LX = _default_LX;
@@ -908,6 +925,7 @@ int read_input(char * conf_file){
   N_PROC_X = _default_N_PROC_X;
   N_PROC_Y = _default_N_PROC_Y;
   N_PROC_Z = _default_N_PROC_Z;
+#endif
   g_kappa = _default_g_kappa;
   g_mubar = _default_g_mubar;
   g_epsbar = _default_g_epsbar;
@@ -982,7 +1000,7 @@ int read_input(char * conf_file){
   yyout = fopen("/dev/null", "w");
 
   parse_config();  
-
+#ifndef FIXEDVOLUME
   if(LX == 0) {
     LX = L;
   }
@@ -992,6 +1010,7 @@ int read_input(char * conf_file){
   if(LZ == 0) {
     LZ = L;
   }
+#endif
   
   if(g_eps_sq_force1 < 0) g_eps_sq_force1 = g_eps_sq_force;
   if(g_eps_sq_force2 < 0) g_eps_sq_force2 = g_eps_sq_force;

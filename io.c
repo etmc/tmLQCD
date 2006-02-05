@@ -279,7 +279,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 #ifdef MPI
 int write_gauge_field_time_p(char * filename){
   FILE * ofs = NULL;
-  int tag=0, t, x, y, z, id, X=0, tt=0, Y=0;
+  int tag=0, t, x, y, z, id, X=0, tt=0, Y=0, Z=0;
   MPI_Status status;
   su3 tmp[4];
   int coords[4];

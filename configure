@@ -871,6 +871,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-limedir=dir      search lime in dir default=./lime
   --with-mpidimension=n   use n dimensional parallelisation default=1
+  --with-fixedvolume      fix volume at compiletime default=no
   --with-lapack           enable use of lapack default=yes
   --with-gprof            use of gprof profiler default=yes
 
@@ -3290,7 +3291,7 @@ echo "${ECHO_T}n=4 xyzt" >&6
     mpidimension="-DPARALLELXYZT"
 
 cat >>confdefs.h <<\_ACEOF
-#define PARALLELXYT 1
+#define PARALLELXYZT 1
 _ACEOF
 
   else
@@ -3300,6 +3301,29 @@ echo "${ECHO_T}unknown" >&6
 echo "$as_me: error: Only one, two or three dimensional parallelisation available" >&2;}
    { (exit 1); exit 1; }; }
   fi
+fi
+
+echo "$as_me:$LINENO: checking whether we want to fix volume at compiletime" >&5
+echo $ECHO_N "checking whether we want to fix volume at compiletime... $ECHO_C" >&6
+
+# Check whether --with-fixvol or --without-fixvol was given.
+if test "${with_fixvol+set}" = set; then
+  withval="$with_fixvol"
+  with_fixvol=$withval
+else
+  with_fixvol=no
+fi;
+if test $with_fixvol = yes; then
+  echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+cat >>confdefs.h <<\_ACEOF
+#define FIXEDVOLUME 1
+_ACEOF
+
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
 fi
 
 echo "$as_me:$LINENO: checking whether we want to use lapack and blas" >&5

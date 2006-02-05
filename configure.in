@@ -73,11 +73,22 @@ if test $enable_mpi = yes; then
   elif test $withmpidimension = 4; then
     AC_MSG_RESULT(n=4 [xyzt])
     mpidimension="-DPARALLELXYZT"
-    AC_DEFINE(PARALLELXYT,1,Four dimensional parallelisation)
+    AC_DEFINE(PARALLELXYZT,1,Four dimensional parallelisation)
   else
     AC_MSG_RESULT(unknown)
     AC_MSG_ERROR([Only one, two or three dimensional parallelisation available]) 
   fi
+fi
+
+AC_MSG_CHECKING([whether we want to fix volume at compiletime])
+AC_ARG_WITH([fixvol],
+  [  --with-fixedvolume      fix volume at compiletime [default=no]],
+  with_fixvol=$withval, with_fixvol=no)
+if test $with_fixvol = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(FIXEDVOLUME,1,Fixed volume at compiletime)
+else
+  AC_MSG_RESULT(no)
 fi
 
 AC_MSG_CHECKING(whether we want to use lapack and blas)
