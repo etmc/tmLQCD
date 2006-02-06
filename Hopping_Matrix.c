@@ -14,6 +14,7 @@
  *
  ******************************************/
 
+
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -23,12 +24,12 @@
 #include "su3.h"
 #include "sse.h"
 #ifdef MPI
-#include "xchange.h"
+#  include "xchange_field.h"
 #endif
 #include "boundary.h"
 #include "Hopping_Matrix.h"
 
-
+void xchange_field(spinor * const l, const int even);
 
 #if ((defined SSE2)||(defined SSE3))
 
@@ -39,10 +40,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   su3 *up,*um;
   spinor *sp,*sm,*rn;
   static spinor rs;
-
+  
   /* for parallelization */
 #ifdef MPI
-  xchange_field(k);
+  xchange_field(k, ieo);
 #endif
 
   if(k == l){
@@ -442,7 +443,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 
   /* for parallelization */
 #ifdef MPI
-  xchange_field(k);
+  xchange_field(k, ieo);
 #endif
 
   if(k == l){
@@ -828,7 +829,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 
   /* for parallelization */
 #ifdef MPI
-  xchange_field(k);
+  xchange_field(k, ieo);
 #endif
 
   if(k == l){

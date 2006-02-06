@@ -8,10 +8,12 @@
  *
  **********************************************************/
 
-
 #ifndef _XCHANGE_FIELD_H
 #define _XCHANGE_FIELD_H
 
-void xchange_field(spinor * const l);
+#define EVEN 1 
+#define  ODD 0 
+
+void xchange_field(spinor * const l, const int ieo);  
 
 #endif

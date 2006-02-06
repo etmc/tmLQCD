@@ -74,7 +74,7 @@ int check_xchange()
     }
 #  endif
 
-    xchange_field(g_spinor_field[0]);
+    xchange_field(g_spinor_field[0], 0);
 
     x = (double*) &g_spinor_field[0][VOLUME/2];
     for(i = 0; i < LX*LY*LZ/2*24; i++, x++) {
@@ -152,13 +152,48 @@ int check_xchange()
     for(x0 = 0; x0 < T; x0++) {
       for(x1 = 0; x1 < LX; x1++) {
 	for(x2 = 0; x2 < LY; x2++) {
-	  set_spinor_point(&g_spinor_field[0][ g_lexic2eo[g_ipt[x0][x1][x2][0]]    ], g_cart_id);
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eosub[g_ipt[x0][x1][x2][0]]    ], g_cart_id);
 	  set_spinor_point(&g_spinor_field[0][ g_lexic2eo[g_ipt[x0][x1][x2][LZ-1]] ], g_cart_id);
 	}
       }
     }
 
-    xchange_field(g_spinor_field[0]);
+    xchange_field(g_spinor_field[0],1);
+
+    x = (double*) &g_spinor_field[0][VOLUME/2 + 2*LX*LY*LZ/2 + 2*T*LY*LZ/2 + 2*T*LX*LZ/2];
+    for(i = 0; i < T*LX*LY/2*24; i++, x++) {
+      if((int)(*x) != g_nb_z_up) {
+	printf("The exchange up of fields in z direction up\n");
+	printf("between %d and %d is not correct\n", g_cart_id, g_nb_z_up);
+	printf("Program aborted\n");
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+	exit(0); 
+      }
+    }
+
+    x = (double*) &g_spinor_field[0][VOLUME/2 + 2*LX*LY*LZ/2 + 2*T*LY*LZ/2 + 2*T*LX*LZ/2 + T*LX*LY/2];
+    for(i = 0; i < T*LX*LY/2*24; i++, x++) {
+      if((int)(*x) != g_nb_z_dn) {
+	printf("The exchange down of fields in z direction down\n");
+	printf("between %d and %d is not correct\n", g_cart_id, g_nb_z_dn);
+	printf("Program aborted\n");
+	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+	exit(0); 
+      }
+    }
+
+    set_spinor_field(0, -1.);
+
+    for(x0 = 0; x0 < T; x0++) {
+      for(x1 = 0; x1 < LX; x1++) {
+	for(x2 = 0; x2 < LY; x2++) {
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eo[g_ipt[x0][x1][x2][0]]    ], g_cart_id);
+	  set_spinor_point(&g_spinor_field[0][ g_lexic2eosub[g_ipt[x0][x1][x2][LZ-1]] ], g_cart_id);
+	}
+      }
+    }
+
+    xchange_field(g_spinor_field[0],0);
 
     x = (double*) &g_spinor_field[0][VOLUME/2 + 2*LX*LY*LZ/2 + 2*T*LY*LZ/2 + 2*T*LX*LZ/2];
     for(i = 0; i < T*LX*LY/2*24; i++, x++) {

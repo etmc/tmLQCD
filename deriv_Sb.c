@@ -28,7 +28,7 @@
 #include "global.h"
 #include "su3.h"
 #include "boundary.h"
-#include "xchange.h"
+#include "xchange_field.h"
 #include "sse.h"
 #include "deriv_Sb.h"
 
@@ -56,8 +56,8 @@ void deriv_Sb(const int ieo, const int l, const int k){
 
   /* for parallelization */
 #ifdef MPI
-  xchange_field(g_spinor_field[k]);
-  xchange_field(g_spinor_field[l]);
+  xchange_field(g_spinor_field[k], ieo);
+  xchange_field(g_spinor_field[l], (ieo+1)%2);
 #endif
   /************** loop over all lattice sites ****************/
 

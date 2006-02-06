@@ -192,9 +192,9 @@ int main(int argc,char *argv[]) {
     printf("# beta = %f , kappa= %f, mu= %f \n",g_beta,g_kappa,g_mu);
     printf("# mus = %f, %f, %f\n", g_mu1, g_mu2, g_mu3);
     
-    fprintf(parameterfile, "The lattice size is %d x %d %d %d\n", (int)(g_nproc_t*T),(int)(g_nproc_x*LX), 
+    fprintf(parameterfile, "The lattice size is %d x %d x %d x %d\n", (int)(g_nproc_t*T),(int)(g_nproc_x*LX), 
 	    (int)(g_nproc_y*LY), (int)(g_nproc_z*LZ));
-    fprintf(parameterfile, "The local lattice size is %d x %d %d %d %d\n", (int)(T),(int)(LX), (int)(LY), (int)(LZ));
+    fprintf(parameterfile, "The local lattice size is %d x %d x %d x %d \n", (int)(T),(int)(LX), (int)(LY), (int)(LZ));
     fprintf(parameterfile, "g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f g_mu = %f \n",g_beta,g_kappa,g_ka_csw_8, g_mu);
     fprintf(parameterfile, "boundary of fermion fields (t,x,y,z): %f %f %f %f \n",X0,X1,X2,X3);
     fprintf(parameterfile, "ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n"

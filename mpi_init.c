@@ -418,19 +418,31 @@ void mpi_init(int argc,char *argv[]) {
   g_proc_id = 0;
   g_nproc_x = 1;
   g_nproc_y = 1;
+  g_nproc_z = 1;
   g_nproc_t = 1;
   g_cart_id = 0;
   mpi_time_rank = 0;
   g_stdio_proc = 0;
 
+#ifndef FIXEDVOLUME
   T = T_global;
   VOLUME = (T*LX*LY*LZ);
   RAND = 0;
+  EDGES = 0;
   VOLUMEPLUSRAND = VOLUME;
-  g_dbw2rand = 0;
   N_PROC_X = 1;
   N_PROC_Y = 1;
+  N_PROC_Z = 1;
 #endif
+  g_dbw2rand = 0;
+#endif
+  if(LZ%2 != 0) {
+    fprintf(stderr, "LZ must be even!\n Aborting prgram...\n");
+#ifdef MPI
+    MPI_Finalize();
+#endif
+    exit(-1);
+  }
 }
 
 static char const rcsid[] = "$Id$";

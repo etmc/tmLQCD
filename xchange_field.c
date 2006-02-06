@@ -25,7 +25,7 @@
 
 
 /* exchanges the field  l */
-void xchange_field(spinor * const l) {
+void xchange_field(spinor * const l, const int ieo) {
 
 #ifdef PARALLELXYZT
   int x0=0, x1=0, x2=0, ix=0;
@@ -77,15 +77,16 @@ void xchange_field(spinor * const l) {
 
 # if (defined PARALLELXYZT)
   /* fill buffer ! */
+  /* This is now depending on whether the field is */
+  /* even or odd */
   ix = 0;
   for(x0 = 0; x0 < T; x0++) {
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
-	if(g_lexic2eo[ g_ipt[x0][x1][x2][LZ-1]]<VOLUME/2) {
-/* 	if((x0 + x1 + x2 +  */
-/* 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  */
-/* 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==0) { */
-	  memcpy((void*)(field_buffer_z+ix), (void*)&l[ g_lexic2eo[ g_ipt[x0][x1][x2][0]] ], sizeof(spinor));
+ 	if((x0 + x1 + x2 +  
+ 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
+ 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==(ieo+1)%2) { 
+	  memcpy((void*)(field_buffer_z+ix), (void*)&l[ g_lexic2eosub[ g_ipt[x0][x1][x2][0]] ], sizeof(spinor));
 	  ix++;
 	}
       }
@@ -103,11 +104,10 @@ void xchange_field(spinor * const l) {
   for(x0 = 0; x0 < T; x0++) {
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
-	if(g_lexic2eo[ g_ipt[x0][x1][x2][LZ-1]]<VOLUME/2) {
-	  /* 	if((x0 + x1 + x2 + (LZ-1) + */
-	  /* 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  */
-	  /* 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==0) { */
-	  memcpy((void*)(field_buffer_z+ix), (void*)&l[ g_lexic2eo[ g_ipt[x0][x1][x2][LZ-1]] ], sizeof(spinor));
+	if((x0 + x1 + x2 + (LZ-1) + 
+	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
+	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==(ieo+1)%2) { 
+	  memcpy((void*)(field_buffer_z+ix), (void*)&l[ g_lexic2eosub[ g_ipt[x0][x1][x2][LZ-1]] ], sizeof(spinor));
 	  ix++;
 	}
       }
