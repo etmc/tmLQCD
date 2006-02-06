@@ -201,21 +201,36 @@ In the test directory there is a routine called {\ttfamily
      & start address & size \\
     \hline\hline
     local volume & 0 & T*LX*LY*LZ \\
-    \hline
+    \hline\hline
     t-Rand       & VOLUME & 2*LX*LY*LZ \\
     x-Rand       & ...+2*LX*LY*LZ & 2*T*LY*LZ\\
     y-Rand       & ...+2*T*LY*LZ & 2*T*LX*LZ \\
     z-Rand       & ...+2*T*LX*LZ & 2*T*LX*LY  \\
-    \hline
+    \hline\hline
     xt-edge      & VOLUME+RAND  & 4*LY*LZ \\
     yx-edge      & ...+4*LY*LZ  & 4*T*LZ \\
     ty-edge      & ...+4*T*LZ   & 4*LX*LZ \\
     zx-edge      & ...+4*LX*LZ  & 4*T*LY\\
     tz-edge      & ...+4*T*LY   & 4*LX*LY\\
     zy-edge      & ...+4*LX*LY  & 4*T*LX\\
-    
-
-
+    \hline\hline
+    t2-Rand      & VOLUMEPLUSRAND & 2*LX*LY*LZ \\
+    x2-Rand      & ...+2*LX*LY*LZ & 2*T*LY*LZ \\
+    y2-Rand      & ...+2*T*LY*LZ  & 2*T*LX*LZ \\
+    z2-Rand      & ...+2*T*LX*LZ  & 2*T*LX*LY \\
+    \hline\hline
+    t2x-edge     & VOLUMEPLUSRAND+RAND & 4*LY*LZ \\
+    x2t-edge     & ...+4*LY*LZ         & 4*LY*LZ \\
+    x2y-edge     & ...+4*LY*LZ         & 4*T*LZ \\
+    y2x-edge     & ...+4*T*LZ          & 4*T*LZ \\
+    t2y-edge     & ...+4*T*LZ          & 4*LX*LZ \\
+    y2t-edge     & ...+4*LX*LZ         & 4*LX*LZ \\
+    t2z-edge     & ...+4*LX*LZ         & 4*LX*LY \\
+    z2t-edge     & ...+4*LX*LY         & 4*LX*LY \\
+    z2x-edge     & ...+4*LX*LY         & 4*T*LY \\
+    x2z-edge     & ...+4*T*LY          & 4*T*LY \\
+    z2y-edge     & ...+4*T*LY          & 4*T*LX \\
+    y2z-edge     & ...+4*T*LX          & 4*T*LX \\
     \hline\hline
  \end{tabular*}
 \end{table}

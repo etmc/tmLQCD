@@ -239,7 +239,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 	+ y1*LY + y2;
     }
     else if(x3 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + LX*LY
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 2*LX*LY
 	+ y1*LY + y2;
     }
 # endif
@@ -272,7 +272,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 # if defined PARALLELXYZT
     /* t2z */
     else if(x3 == LZ) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 2*LX*LY
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + LX*LY
 	+ y1*LY + y2;
     }
     else if(x3 == -1) {
@@ -310,11 +310,11 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 # if defined PARALLELXYZT
     /* x2z */
     else if(x3 == LZ) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 4*T*LY
 	+ y0*LY + y2;      
     }
     else if(x3 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + T*LY
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 5*T*LY
 	+ y0*LY + y2;      
     }
 # endif
@@ -346,11 +346,11 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 # if defined PARALLELXYZT
     /* x2z */
     else if(x3 == LZ) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 2*T*LY
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 6*T*LY
 	+ y0*LY + y2;      
     }
     else if(x3 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 3*T*LY
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 7*T*LY
 	+ y0*LY + y2;      
     }
 # endif
@@ -382,11 +382,11 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 #  if defined PARALLELXYZT
     /* y2z */
     else if(x3 == LZ) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 4*T*LX
 	+ y0*LX + y1;      
     }
     else if(x3 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 5*T*LX
 	+ y0*LX + y1;      
     }
 #  endif
@@ -416,69 +416,70 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 #  if defined PARALLELXYZT
     /* y2z */
     else if(x3 == LZ) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 2*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 6*T*LX
 	+ y0*LX + y1;      
     }
     else if(x3 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 3*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 7*T*LX
 	+ y0*LX + y1;      
     }
 # endif
   }
 #endif
 #if defined PARALLELXYZT
+  /* z2-Rand */
   if(x3 == LZ+1) {
     if((x0 < T) && (x0 > -1) && (x1 < LX) && (x1 > -1) && (x2 > -1) && (x2 < LY)) {
-      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + y0*LX*LY + y1*LY + y1;
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + y0*LX*LY + y1*LY + y2;
     }
     /* z2x */
     else if(x1 == LX) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY 
 	+ y0*LY + y2;
     }
     else if (x1 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 2*T*LY
 	+ y0*LY + y2;
     }
     /* z2t */
     else if(x0 == T) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 4*LX*LY
 	+ y1*LY + y2;
     }
     else if(x0 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 5*LX*LY
 	+ y1*LY + y2;
     }
     /* z2y */
     else if(x2 == LY) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY 
 	+ y0*LX + y1;      
     }
     else if(x2 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 2*T*LX
 	+ y0*LX + y1;      
     }
   }
   if(x3 == -2) {
     if((x0 < T) && (x0 > -1) && (x1 < LX) && (x1 > -1) && (x2 > -1) && (x2 < LY)) {
-      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY + y0*LX*LY + y1*LY + y1;
+      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY + y0*LX*LY + y1*LY + y2;
     }
     /* z2x */
     else if(x1 == LX) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + T*LY 
 	+ y0*LY + y2;
     }
     else if(x1 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 3*T*LY
 	+ y0*LY + y2;
     }
     /* z2t */
     else if(x0 == T) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 6*LX*LY
 	+ y1*LY + y2;
     }
     else if(x0 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 7*LX*LY
 	+ y1*LY + y2;
     }
     /* z2y */
@@ -487,12 +488,12 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 	+ y0*LX + y1;      
     }
     else if(x2 == -1) {
-      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 1*T*LX
+      ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 3*T*LX
 	+ y0*LX + y1;      
     }
   }
 #endif
-/*   if(ix == 546) { */
+/*   if(ix == 372) { */
 /*     printf("## %d %d %d %d ix = %d, %d %d %d %d\n", x0, x1, x2, x3, ix, T, LX, LY, LZ); */
 /*   } */
   return(ix);
@@ -894,17 +895,18 @@ void geometry(){
 #if (defined PARALLELXYZT)
     for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
       for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++) {
-	for (x2 = -startvaluey; x2 < (LZ+startvaluey); x2++) {
+	for (x2 = -startvaluey; x2 < (LY+startvaluey); x2++) {
 	  bndcnt = 0;
 	  if(x0 < 0 || x0 > T-1) bndcnt++;
 	  if(x1 < 0 || x1 > LX-1) bndcnt++;
 	  if(x2 < 0 || x2 > LY-1) bndcnt++;	  
 	  if(bndcnt < 2) {
-	    /* y2-Rand y2t and y2x */
+	    /* z2-Rand t2z and z2x z2y*/
 	    x3 = -2;
 	    ix = Index(x0, x1, x2, x3);
 	    if(ix < VOLUMEPLUSRAND || ix >= VOLUMEPLUSRAND + g_dbw2rand) {
-	      printf("#### -2z %d %d %d %d\n",x0, x1, x2, x3);
+	      printf("#### -2z %d %d %d %d %d %d %d %d %d %d %d\n",x0, x1, x2, x3, ix, 
+		     VOLUMEPLUSRAND, VOLUMEPLUSRAND + g_dbw2rand, T, LX, LY, LZ);
 	    }
 	    if(x0 <  T) g_iup[ix][0] = Index(x0+1, x1, x2, x3);
 	    if(x0 > -1) g_idn[ix][0] = Index(x0-1, x1, x2, x3);

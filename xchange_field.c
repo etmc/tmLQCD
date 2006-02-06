@@ -92,11 +92,12 @@ void xchange_field(spinor * const l, const int ieo) {
       }
     }
   }
+
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
   MPI_Sendrecv((void*)field_buffer_z,
 	       1, field_z_slice_cont, g_nb_z_dn, 503, 
- 	       (void*)(l+(VOLUME +2*LX*LY*LZ + 2*T*LY*LZ +2*T*LX*LZ)/2), 
+ 	       (void*)(l+(VOLUME/2 + LX*LY*LZ + T*LY*LZ +T*LX*LZ)), 
 	       1, field_z_slice_cont, g_nb_z_up, 503,
 	       g_cart_grid, &status);
 
@@ -115,7 +116,6 @@ void xchange_field(spinor * const l, const int ieo) {
   }
   /* send the data to the neighbour on the right in y direction */
   /* recieve the data from the neighbour on the left in y direction */  
-/*   MPI_Sendrecv((void*)(l+(LZ-1)/2),  */
   MPI_Sendrecv((void*)field_buffer_z, 
 	       1, field_z_slice_cont, g_nb_z_up, 504, 
 	       (void*)(l+(VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY)/2), 

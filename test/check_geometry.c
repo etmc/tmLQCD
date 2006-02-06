@@ -1183,7 +1183,7 @@ int check_geometry()
       }
     }
 #endif
-#ifdef PARALLELXYZT2
+#ifdef PARALLELXYZT
     for (x0 = 0; x0 < T+2; x0++) {
       for (x1 = 0; x1 < LX+2; x1++) {
 	for (x2 = 0; x2 < LY+2; x2++) {
@@ -1458,9 +1458,7 @@ int check_geometry()
     }
 #endif
   }
-
-/*   for (ix = VOLUMEPLUSRAND; ix < (VOLUMEPLUSRAND) + g_dbw2rand; ix++){ */
-  for (ix = VOLUMEPLUSRAND; ix < (VOLUMEPLUSRAND); ix++){
+  for (ix = VOLUMEPLUSRAND; ix < (VOLUMEPLUSRAND) + g_dbw2rand; ix++){ 
     if (itest[ix]!=1) {
       printf("The DBW2 boundary is not correctly used itest = %d ix = %d \n", itest[ix], ix);
       printf("Program aborted\n");

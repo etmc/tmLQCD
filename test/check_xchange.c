@@ -163,7 +163,7 @@ int check_xchange()
     x = (double*) &g_spinor_field[0][VOLUME/2 + 2*LX*LY*LZ/2 + 2*T*LY*LZ/2 + 2*T*LX*LZ/2];
     for(i = 0; i < T*LX*LY/2*24; i++, x++) {
       if((int)(*x) != g_nb_z_up) {
-	printf("The exchange up of fields in z direction up\n");
+	printf("The exchange up of fields in z (1) direction up\n");
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_z_up);
 	printf("Program aborted\n");
 	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
@@ -174,7 +174,7 @@ int check_xchange()
     x = (double*) &g_spinor_field[0][VOLUME/2 + 2*LX*LY*LZ/2 + 2*T*LY*LZ/2 + 2*T*LX*LZ/2 + T*LX*LY/2];
     for(i = 0; i < T*LX*LY/2*24; i++, x++) {
       if((int)(*x) != g_nb_z_dn) {
-	printf("The exchange down of fields in z direction down\n");
+	printf("The exchange down of fields in z (1) direction down\n");
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_z_dn);
 	printf("Program aborted\n");
 	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
@@ -193,12 +193,12 @@ int check_xchange()
       }
     }
 
-    xchange_field(g_spinor_field[0],0);
+    xchange_field(g_spinor_field[0],1);
 
     x = (double*) &g_spinor_field[0][VOLUME/2 + 2*LX*LY*LZ/2 + 2*T*LY*LZ/2 + 2*T*LX*LZ/2];
     for(i = 0; i < T*LX*LY/2*24; i++, x++) {
       if((int)(*x) != g_nb_z_up) {
-	printf("The exchange up of fields in z direction up\n");
+	printf("The exchange up of fields in z (0) direction up\n");
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_z_up);
 	printf("Program aborted\n");
 	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
@@ -209,7 +209,7 @@ int check_xchange()
     x = (double*) &g_spinor_field[0][VOLUME/2 + 2*LX*LY*LZ/2 + 2*T*LY*LZ/2 + 2*T*LX*LZ/2 + T*LX*LY/2];
     for(i = 0; i < T*LX*LY/2*24; i++, x++) {
       if((int)(*x) != g_nb_z_dn) {
-	printf("The exchange down of fields in z direction down\n");
+	printf("The exchange down of fields in z (0) direction down\n");
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_z_dn);
 	printf("Program aborted\n");
 	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
@@ -971,7 +971,31 @@ int check_xchange()
       }
 #  endif
 
-#  if defined PARALLELXYZT
+#  if (defined PARALLELXYZT)
+      x = (double*) &g_gauge_field[VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LZ*LY + 2*T*LX*LZ][0];
+      for(i = 0; i < T*LX*LY*72; i++, x++) {
+	if((int)(*x) != g_nb_z_up) {
+	  printf("The exchange up of gaugefields in z direction\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, g_nb_z_up);
+	  printf("%d %d %d\n", g_cart_id, i, (int)(*x));
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) &g_gauge_field[VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY][0];
+      for(i = 0; i < T*LX*LY*72; i++, x++) {
+	if((int)(*x) != g_nb_z_dn) {
+	  printf("The exchange down of gaugefields in y direction\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, g_nb_z_dn);
+	  printf("%d %d %d\n", g_cart_id, i, (int)(*x));
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+#  endif
 
       set_gauge_field(-1.);
 
@@ -1019,6 +1043,54 @@ int check_xchange()
 	    g_gauge_field[ g_ipt[0][x1][LY-2][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-2][x1][LY-1][x3] ][mu] = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-1][x1][LY-2][x3] ][mu] = set_su3((double)g_cart_id);
+	  }
+	}
+      }
+#  if defined PARALLELXYZT
+      /* Set the tz boundary */
+      for(x1 = 0; x1 < LX; x1++) {
+	for(x2 = 0; x2 < LY; x2++) {
+	  for (mu=0;mu<4;mu++){
+	    g_gauge_field[ g_ipt[1][x1][x2][0] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[0][x1][x2][1] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[T-2][x1][x2][0] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[T-1][x1][x2][1] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[1][x1][x2][LZ-1] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[0][x1][x2][LZ-2] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[T-2][x1][x2][LZ-1] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[T-1][x1][x2][LZ-2] ][mu] = set_su3((double)g_cart_id);
+	  }
+	}
+      }
+
+      /* Set the yz boundary */
+      for(x0 = 0; x0 < T; x0++) {
+	for(x1 = 0; x1 < LX; x1++) {
+	  for (mu=0;mu<4;mu++){
+	    g_gauge_field[ g_ipt[x0][x1][1][0] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][0][1] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][LY-2][0] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][LY-1][1] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][1][LZ-1] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][0][LZ-2] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][LY-2][LZ-1] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][LY-1][LZ-2] ][mu] = set_su3((double)g_cart_id);
+	  }
+	}
+      }
+
+      /* Set the xz boundary */
+      for(x0 = 0; x0 < T; x0++) {
+	for(x2 = 0; x2 < LY; x2++) {
+	  for (mu=0;mu<4;mu++){
+	    g_gauge_field[ g_ipt[x0][1][x2][0] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][0][x2][1] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][LX-2][x2][0] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][LX-1][x2][1] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][1][x2][LZ-1] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][0][x2][LZ-2] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][LX-2][x2][LZ-1] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][LX-1][x2][LZ-2] ][mu] = set_su3((double)g_cart_id);
 	  }
 	}
       }
@@ -1365,6 +1437,340 @@ int check_xchange()
 #  endif
 #  if defined PARALLELXYZT
      
+      di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+      di[3] = (g_proc_coords[3] - 1)%g_nproc_z;
+      di[1] = g_proc_coords[1];
+      di[2] = g_proc_coords[2];
+      MPI_Cart_rank(g_cart_grid, di, &mm);
+      di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+      di[3] = (g_proc_coords[3] + 1)%g_nproc_z;
+      MPI_Cart_rank(g_cart_grid, di, &mp);
+      di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+      di[3] = (g_proc_coords[3] - 1)%g_nproc_z;
+      MPI_Cart_rank(g_cart_grid, di, &pm);
+      di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+      di[3] = (g_proc_coords[3] + 1)%g_nproc_z;
+      MPI_Cart_rank(g_cart_grid, di, &pp);
+      
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ];
+      for(i = 0; i < LX*LY*72; i++, x++) {
+	if((int)(*x) != pp) {
+	  printf("The exchange of gaugefields edges (tz) in direction +z+2t\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, pp);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + LX*LY];
+      for(i = 0; i < LX*LY*72; i++, x++) {
+	if((int)(*x) != mp) {
+	  printf("The exchange of gaugefields edges (tz) in direction +z-2t\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, mp);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 2*LX*LY];
+      for(i = 0; i < LX*LY*72; i++, x++) {
+	if((int)(*x) != pm) {
+	  printf("The exchange of gaugefields edges (tz) in direction -z+2t\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, pm);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 3*LX*LY];
+      for(i = 0; i < LX*LY*72; i++, x++) {
+	if((int)(*x) != mm) {
+	  printf("The exchange of gaugefields edges (tz) in direction -z-2t\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, mm);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 4*LX*LY];
+      for(i = 0; i < LX*LY*72; i++, x++) {
+	if((int)(*x) != pp) {
+	  printf("The exchange of gaugefields edges (zt) in direction +2z+t\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, pp);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 5*LX*LY];
+      for(i = 0; i < LX*LY*72; i++, x++) {
+	if((int)(*x) != mp) {
+	  printf("The exchange of gaugefields edges (zt) in direction +2z-t\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, mp);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+      
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 6*LX*LY];
+      for(i = 0; i < LX*LY*72; i++, x++) {
+	if((int)(*x) != pm) {
+	  printf("The exchange of gaugefields edges (zt) in direction -2z+t\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, pm);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 7*LX*LY];
+      for(i = 0; i < LX*LY*72; i++, x++) {
+	if((int)(*x) != mm) {
+	  printf("The exchange of gaugefields edges (zt) in direction -2z-t\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, mm);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+      
+      /* zx-edge */
+      di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+      di[3] = (g_proc_coords[3] - 1)%g_nproc_z;
+      di[0] = g_proc_coords[0];
+      di[2] = g_proc_coords[2];
+      MPI_Cart_rank(g_cart_grid, di, &mm);
+      di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+      di[3] = (g_proc_coords[3] + 1)%g_nproc_z;
+      MPI_Cart_rank(g_cart_grid, di, &mp);
+      di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+      di[3] = (g_proc_coords[3] - 1)%g_nproc_z;
+      MPI_Cart_rank(g_cart_grid, di, &pm);
+      di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+      di[3] = (g_proc_coords[3] + 1)%g_nproc_z;
+      MPI_Cart_rank(g_cart_grid, di, &pp);
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY];
+      for(i = 0; i < T*LY*72; i++, x++) {
+ 	if((int)(*x) != pp) { 
+	  printf("The exchange of gaugefields edges (zx) in direction +2z+x\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, pp);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + T*LY];
+      for(i = 0; i < T*LY*72; i++, x++) {
+ 	if((int)(*x) != pm) { 
+	  printf("The exchange of gaugefields edges (zx) in direction -2z+x\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, pm);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 2*T*LY];
+      for(i = 0; i < T*LY*72; i++, x++) {
+ 	if((int)(*x) != mp) { 
+	  printf("The exchange of gaugefields edges (zx) in direction +2z-x\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, mp);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 3*T*LY];
+      for(i = 0; i < T*LY*72; i++, x++) {
+ 	if((int)(*x) != mm) { 
+	  printf("The exchange of gaugefields edges (zx) in direction -2z-x\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, mm);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 4*T*LY];
+      for(i = 0; i < T*LY*72; i++, x++) {
+ 	if((int)(*x) != pp) { 
+	  printf("The exchange of gaugefields edges (xz) in direction +z+2x\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, pp);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 5*T*LY];
+      for(i = 0; i < T*LY*72; i++, x++) {
+ 	if((int)(*x) != pm) {
+	  printf("The exchange of gaugefields edges (xz) in direction -z+2x\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, pm);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 6*T*LY];
+      for(i = 0; i < T*LY*72; i++, x++) {
+ 	if((int)(*x) != mp) { 
+	  printf("The exchange of gaugefields edges (xz) in direction +z-2x\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, mp);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 7*T*LY];
+      for(i = 0; i < T*LY*72; i++, x++) {
+ 	if((int)(*x) != mm) { 
+	  printf("The exchange of gaugefields edges (xz) in direction -z-2x\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, mm);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      /* zy-edge */
+      di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+      di[3] = (g_proc_coords[3] - 1)%g_nproc_z;
+      di[0] = g_proc_coords[0];
+      di[1] = g_proc_coords[1];
+      MPI_Cart_rank(g_cart_grid, di, &mm);
+      di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+      di[3] = (g_proc_coords[3] + 1)%g_nproc_z;
+      MPI_Cart_rank(g_cart_grid, di, &mp);
+      di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+      di[3] = (g_proc_coords[3] - 1)%g_nproc_z;
+      MPI_Cart_rank(g_cart_grid, di, &pm);
+      di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+      di[3] = (g_proc_coords[3] + 1)%g_nproc_z;
+      MPI_Cart_rank(g_cart_grid, di, &pp);
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY];
+      for(i = 0; i < T*LX*72; i++, x++) {
+ 	if((int)(*x) != pp) { 
+	  printf("The exchange of gaugefields edges (zy) in direction +2z+y\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, pp);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + T*LX];
+      for(i = 0; i < T*LX*72; i++, x++) {
+ 	if((int)(*x) != pm) { 
+	  printf("The exchange of gaugefields edges (zy) in direction -2z+y\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, pm);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 2*T*LX];
+      for(i = 0; i < T*LX*72; i++, x++) {
+ 	if((int)(*x) != mp) { 
+	  printf("The exchange of gaugefields edges (zy) in direction +2z-y\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, mp);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 3*T*LX];
+      for(i = 0; i < T*LX*72; i++, x++) {
+ 	if((int)(*x) != mm) { 
+	  printf("The exchange of gaugefields edges (zy) in direction -2z-y\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, mm);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 4*T*LX];
+      for(i = 0; i < T*LX*72; i++, x++) {
+ 	if((int)(*x) != pp) { 
+	  printf("The exchange of gaugefields edges (yz) in direction +z+2y\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, pp);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 5*T*LX];
+      for(i = 0; i < T*LX*72; i++, x++) {
+ 	if((int)(*x) != pm) {
+	  printf("The exchange of gaugefields edges (yz) in direction -z+2y\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, pm);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 6*T*LX];
+      for(i = 0; i < T*LX*72; i++, x++) {
+ 	if((int)(*x) != mp) { 
+	  printf("The exchange of gaugefields edges (yz) in direction +z-2y\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, mp);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
+      x = (double*) g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 7*T*LX];
+      for(i = 0; i < T*LX*72; i++, x++) {
+ 	if((int)(*x) != mm) { 
+	  printf("The exchange of gaugefields edges (yz) in direction -z-2y\n");
+	  printf("between %d and %d is not correct\n", g_cart_id, mm);
+	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
+	  printf("Program aborted\n");
+	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	  exit(0);
+	}
+      }
+
 #  endif
       if(g_proc_id == 0) {
 	printf("exchange of rectangular gauge action boundaries checked successfully!\n");

@@ -195,7 +195,7 @@ void mpi_init(int argc,char *argv[]) {
   g_dbw2rand = (RAND + 2*EDGES);
 
 #ifdef PARALLELXYZT
-  field_buffer_z = (spinor*)malloc(T*LX*LZ/2*sizeof(spinor));
+  field_buffer_z = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
 #endif
 
   MPI_Cart_create(MPI_COMM_WORLD, ndims, dims, periods, reorder, &g_cart_grid);

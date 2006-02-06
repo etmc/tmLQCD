@@ -63,8 +63,6 @@ int main(int argc,char *argv[])
   read_input("benchmark.input");
 
   mpi_init(argc, argv);
-/*   g_rgi_C1 = 0.; */
-/*   g_dbw2rand = 0; */
 
   if(g_proc_id==0) {
 #ifdef SSE
@@ -130,6 +128,8 @@ int main(int argc,char *argv[])
 #ifdef MPI
   check_xchange(); 
 #endif
+  MPI_Finalize();
+  return(0);
 
   /* here we generate exactly the same configuration as for the 
      single node simulation */
