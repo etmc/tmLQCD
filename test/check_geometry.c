@@ -695,7 +695,7 @@ int check_geometry()
 	      itest[iy0]++;
 	      if(itest[iy0]>1) {
 		printf("Edge +x +z has itest = %d at %d, %d, %d, %d, iy0 = %d iz0 = %d giup[%d][3] = %d ix = %d\n",
-		       itest[iy0], x0, x1, x2, x3, iy0, iz0,  g_iup[ix][3], ix);
+		       itest[iy0], x0, x1, x2, x3, iy0, iz0, ix, g_iup[ix][3], ix);
 		printf("Program aborted\n");
 #  ifdef MPI
 		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -887,7 +887,7 @@ int check_geometry()
 	  ix = g_ipt[x0][x1][x2][x3];
 
 	  iy1=g_iup[ix][1];
-	  if(iy1 < VOLUMEPLUSRAND + 2*LX*LY*LZ || iy1 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + T*LY*LZ && x0 < T) {
+	  if((iy1 < VOLUMEPLUSRAND + 2*LX*LY*LZ || iy1 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + T*LY*LZ) && x0 < T) {
 	    printf("The DBW2 boundary is not correctly mapped in up x-direction %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, iy1);
 	    printf("Program aborted\n");
 	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -939,7 +939,7 @@ int check_geometry()
 	  ix = g_ipt[x0][x1][x2][x3];
 
 	  iy1=g_idn[ix][1];
-	  if(iy1 < VOLUMEPLUSRAND +  2*LX*LY*LZ + T*LY*LZ|| iy1 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ && x0 < T) {
+	  if((iy1 < VOLUMEPLUSRAND +  2*LX*LY*LZ + T*LY*LZ|| iy1 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ) && x0 < T) {
 	    printf("The DBW2 boundary is not correctly mapped in down x-direction %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, iy1);
 	    printf("Program aborted\n");
 	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -1000,7 +1000,7 @@ int check_geometry()
 	    ix = g_ipt[x0][x1][x2][x3];
 	    
 	    iy2=g_iup[ix][2];
-	    if(iy2 < VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ || iy2 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ 
+	    if((iy2 < VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ || iy2 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ) 
 	       && x0 < T && x1 < LX) {
 	      printf("The DBW2 boundary is not correctly mapped in up y-direction %d %d %d %d %d %d\n", 
 		     x0, x1, x2, x3, ix, iy2);
@@ -1095,7 +1095,7 @@ int check_geometry()
 	    x2 = LY+1;
 	    ix = g_ipt[x0][x1][x2][x3];
 	    iy2=g_idn[ix][2];
-	    if(iy2 < VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ|| iy2 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ 
+	    if((iy2 < VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ|| iy2 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ )
 	       && x0 < T && x1 < LX) {
 	      printf("The DBW2 boundary is not correctly mapped in down y-direction %d %d %d %d %d %d\n", 
 		     x0, x1, x2, x3, ix, iy2);

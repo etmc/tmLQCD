@@ -49,12 +49,24 @@ supported input paramters:
 \item {\ttfamily L}:\\
   The global spatial extension of the lattice. Default is $4$.
 
+\item {\ttfamily LX}:\\
+  The global spatial x-extension of the lattice. Default is $4$.
+
+\item {\ttfamily LY}:\\
+  The global spatial y-extension of the lattice. Default is $4$.
+
+\item {\ttfamily LZ}:\\
+  The global spatial z-extension of the lattice. Default is $4$.
+
 \item {\ttfamily NrXProcs}:\\
   The number of processors in x-direction in case of two dimensional
   parallelisation. This has no effect in case of one dimensional
   parallelisation. In case of two dimensional parallelisation it must
   be properly set. The number of processors in time direction is
   automatically computed.
+
+\item {\ttfamily NrYProcs, NrZProcs}:\\
+  See {\ttfamily NrXProcs}.
 
 \item {\ttfamily seed}:\\
   The seed for the random number generator. Default value is $123456$.

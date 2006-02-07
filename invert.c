@@ -71,7 +71,6 @@ int main(int argc,char *argv[]) {
   char parameterfilename[50];
   char conf_filename[50];
   char * input_filename = NULL;
-  char * nstore_filename = ".nstore_counter";
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -118,18 +117,6 @@ int main(int argc,char *argv[]) {
   g_rgi_C1 = 0;
 
   mpi_init(argc, argv);
-
-  if(nstore == -1) {
-    countfile = fopen(nstore_filename, "r");
-    if(countfile != NULL) {
-      fscanf(countfile, "%d\n", &nstore);
-      fclose(countfile);
-    }
-    else {
-      nstore = 0;
-    }
-    write_counter=1;
-  }
 
   g_dbw2rand = 0;
 
@@ -332,11 +319,6 @@ int main(int argc,char *argv[]) {
       }
     }
     nstore++;
-    if(g_proc_id == 0) {
-      countfile = fopen(nstore_filename, "w");
-      fprintf(countfile, "%d\n", nstore);
-      fclose(countfile);
-    }
   }
 
 #ifdef MPI

@@ -45,10 +45,8 @@ following we describe the most important of them (check {\ttfamily
 
 \item {\ttfamily --with-mpidimension=x}:\\
   This option has only effect if the preceeding one is switched
-  on. The number of parallel direction can be specified. Currently
-  {\ttfamily x=1} and {\ttfamily x=2} are supported and implemented,
-  corresponding to parallelisation in time- or in time- and x-direction,
-  respectively.
+  on. The number of parallel direction can be specified. 1,2,3 and 4
+  dimensional parallelisation is supported.
 
 \item {\ttfamily --with-lapack}:\\
   Build the HMc with lapack. If this is disabled the Chronological
@@ -58,6 +56,11 @@ following we describe the most important of them (check {\ttfamily
 \item {\ttfamily --with-limedir=<dir>}:\\
  Tells configure where to find the lime package, which is required for
  the build of the HMC. It is used for the ILDG file format.
+
+\item {\ttfamily --with-fixedvolume}:\\
+  This allows to fix the volume at compiletime in order to allow the
+  compiler for further optimization (maybe). The corresponding
+  definitions can be found in {\ttfamily fixed_volume.h}.
 
 \end{itemize}
 

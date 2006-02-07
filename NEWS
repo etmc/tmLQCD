@@ -1,3 +1,16 @@
+07.02.2006: 3 and 4 dimensional parallelisation implemented
+	    working both so far _only_ with --disable-eogeom
+	    (maybe configure then also --disable-gaugecopy)
+	    New input parameter NrZProcs
+	    local LZ _must_ be even
+
+	    everything is not yet finally tested.
+
+06.02.2006: Added the possibility for fixed volume at compiletime
+	    --with-fixedvolume
+	    please edit fixed_volume.h accordingly
+	    not at all tested tested!
+
 30.01.2006: New input parameter NrYProcs
 
 29.01.2006: running and partially tested on the BGL in Juelich 

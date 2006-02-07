@@ -443,6 +443,14 @@ void mpi_init(int argc,char *argv[]) {
 #endif
     exit(-1);
   }
+#if (defined _NEW_GEOMETRY && (defined PARALLELXYZT || defined PARALLELXYT))
+  fprintf(stderr, "even/odd geometry and 3 or 4-dim parallelisation not yet implemented together!\n Aborting prgram...\n");
+#ifdef MPI
+  MPI_Finalize();
+#endif
+  exit(-1);
+#endif
+  
 }
 
 static char const rcsid[] = "$Id$";

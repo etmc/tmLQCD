@@ -997,6 +997,140 @@ int check_xchange()
       }
 #  endif
 
+
+
+#  if defined PARALLELXYZT
+
+      set_gauge_field(-1.);
+      
+      /* Set the tz boundary */
+      for(x1 = 0; x1 < LX; x1++) {
+	for(x2 = 0; x2 < LY; x2++) {
+	  for (mu=0;mu<4;mu++){
+	    g_gauge_field[ g_ipt[1  ][x1][x2][0   ] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[0  ][x1][x2][1   ] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[T-2][x1][x2][0   ] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[T-1][x1][x2][1   ] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[1  ][x1][x2][LZ-1] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[0  ][x1][x2][LZ-2] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[T-2][x1][x2][LZ-1] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[T-1][x1][x2][LZ-2] ][mu] = set_su3((double)g_cart_id);
+	  }
+	}
+      }
+      
+      xchange_gauge();
+
+      /* Now there should be in the t and t2 Rand certain values set */
+
+      /* t-Rand (x1*LY + x2)*LZ + x3 */
+      /* Hier sollte also x3=1 und x3=LZ-2 gesetzt sein */
+      /* t2-Rand (x1*LY + x2)*LZ + x3 */
+      /* Hier sollte also x3=0 und x3=LZ-1 gesetzt sein */
+      for(x1 = 0; x1 < LX; x1 ++) {
+	for(x2 = 0; x2 < LY; x2 ++) {
+	  x3 = 1;
+	  x = (double*) g_gauge_field[VOLUME + x3 + (x1*LY+x2)*LZ];
+	  for(i = 0; i < 72; i++, x++) {
+	    if((int)(*x) != g_nb_t_up) {
+	      printf("The exchange of t1 Rand for gaugefields t-up z=1\n");
+	      printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_up);
+	      printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), g_nb_t_up);
+	      printf("Program aborted\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	  x3 = LZ-2;
+	  x = (double*) g_gauge_field[VOLUME + x3 + (x1*LY+x2)*LZ];
+	  for(i = 0; i < 72; i++, x++) {
+	    if((int)(*x) != g_nb_t_up) {
+	      printf("The exchange of t1 Rand for gaugefields t-up z=LZ-2\n");
+	      printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_up);
+	      printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), g_nb_t_up);
+	      printf("Program aborted\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	  x3 = 1;
+	  x = (double*) g_gauge_field[VOLUME + LX*LY*LZ + x3 + (x1*LY+x2)*LZ];
+	  for(i = 0; i < 72; i++, x++) {
+	    if((int)(*x) != g_nb_t_dn) {
+	      printf("The exchange of t1 Rand for gaugefields t-down z=1\n");
+	      printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_dn);
+	      printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), g_nb_t_dn);
+	      printf("Program aborted\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	  x3 = LZ-2;
+	  x = (double*) g_gauge_field[VOLUME + LX*LY*LZ + x3 + (x1*LY+x2)*LZ];
+	  for(i = 0; i < 72; i++, x++) {
+	    if((int)(*x) != g_nb_t_dn) {
+	      printf("The exchange of t1 Rand for gaugefields t-down z=LZ-2\n");
+	      printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_dn);
+	      printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), g_nb_t_dn);
+	      printf("Program aborted\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+
+	  x3 = 0;
+	  x = (double*) g_gauge_field[VOLUMEPLUSRAND + x3 + (x1*LY+x2)*LZ];
+	  for(i = 0; i < 72; i++, x++) {
+	    if((int)(*x) != g_nb_t_up) {
+	      printf("The exchange of t2 Rand for gaugefields t-up z=0\n");
+	      printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_up);
+	      printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), g_nb_t_up);
+	      printf("Program aborted\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	  x3 = LZ-1;
+	  x = (double*) g_gauge_field[VOLUMEPLUSRAND + x3 + (x1*LY+x2)*LZ];
+	  for(i = 0; i < 72; i++, x++) {
+	    if((int)(*x) != g_nb_t_up) {
+	      printf("The exchange of t2 Rand for gaugefields t-up z=LZ-1\n");
+	      printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_up);
+	      printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), g_nb_t_up);
+	      printf("Program aborted\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	  x3 = 0;
+	  x = (double*) g_gauge_field[VOLUMEPLUSRAND + LX*LY*LZ + x3 + (x1*LY+x2)*LZ];
+	  for(i = 0; i < 72; i++, x++) {
+	    if((int)(*x) != g_nb_t_dn) {
+	      printf("The exchange of t2 Rand for gaugefields t-down z=0\n");
+	      printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_dn);
+	      printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), g_nb_t_dn);
+	      printf("Program aborted\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	  x3 = LZ-1;
+	  x = (double*) g_gauge_field[VOLUMEPLUSRAND + LX*LY*LZ + x3 + (x1*LY+x2)*LZ];
+	  for(i = 0; i < 72; i++, x++) {
+	    if((int)(*x) != g_nb_t_dn) {
+	      printf("The exchange of t2 Rand for gaugefields t-down z=LZ-1\n");
+	      printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_dn);
+	      printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), g_nb_t_dn);
+	      printf("Program aborted\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+      }
+
+#  endif
+
       set_gauge_field(-1.);
 
       /* Set the edges */
@@ -1051,12 +1185,12 @@ int check_xchange()
       for(x1 = 0; x1 < LX; x1++) {
 	for(x2 = 0; x2 < LY; x2++) {
 	  for (mu=0;mu<4;mu++){
-	    g_gauge_field[ g_ipt[1][x1][x2][0] ][mu]   = set_su3((double)g_cart_id);
-	    g_gauge_field[ g_ipt[0][x1][x2][1] ][mu]   = set_su3((double)g_cart_id);
-	    g_gauge_field[ g_ipt[T-2][x1][x2][0] ][mu] = set_su3((double)g_cart_id);
-	    g_gauge_field[ g_ipt[T-1][x1][x2][1] ][mu] = set_su3((double)g_cart_id);
-	    g_gauge_field[ g_ipt[1][x1][x2][LZ-1] ][mu]   = set_su3((double)g_cart_id);
-	    g_gauge_field[ g_ipt[0][x1][x2][LZ-2] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[1  ][x1][x2][0   ] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[0  ][x1][x2][1   ] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[T-2][x1][x2][0   ] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[T-1][x1][x2][1   ] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[1  ][x1][x2][LZ-1] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[0  ][x1][x2][LZ-2] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-2][x1][x2][LZ-1] ][mu] = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-1][x1][x2][LZ-2] ][mu] = set_su3((double)g_cart_id);
 	  }
@@ -1067,12 +1201,12 @@ int check_xchange()
       for(x0 = 0; x0 < T; x0++) {
 	for(x1 = 0; x1 < LX; x1++) {
 	  for (mu=0;mu<4;mu++){
-	    g_gauge_field[ g_ipt[x0][x1][1][0] ][mu]   = set_su3((double)g_cart_id);
-	    g_gauge_field[ g_ipt[x0][x1][0][1] ][mu]   = set_su3((double)g_cart_id);
-	    g_gauge_field[ g_ipt[x0][x1][LY-2][0] ][mu] = set_su3((double)g_cart_id);
-	    g_gauge_field[ g_ipt[x0][x1][LY-1][1] ][mu] = set_su3((double)g_cart_id);
-	    g_gauge_field[ g_ipt[x0][x1][1][LZ-1] ][mu]   = set_su3((double)g_cart_id);
-	    g_gauge_field[ g_ipt[x0][x1][0][LZ-2] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][1   ][0   ] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][0   ][1   ] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][LY-2][0   ] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][LY-1][1   ] ][mu] = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][1   ][LZ-1] ][mu]   = set_su3((double)g_cart_id);
+	    g_gauge_field[ g_ipt[x0][x1][0   ][LZ-2] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][x1][LY-2][LZ-1] ][mu] = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][x1][LY-1][LZ-2] ][mu] = set_su3((double)g_cart_id);
 	  }

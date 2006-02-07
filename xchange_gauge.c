@@ -658,7 +658,7 @@ void xchange_gauge() {
     /* send the data to the neighbour on the left in z direction */
     /* recieve the data from the neighbour on the right in z direction */
     /* t2z edge */
-    MPI_Sendrecv(g_gauge_field[VOLUMEPLUSRAND + 1],
+    MPI_Sendrecv(g_gauge_field[VOLUMEPLUSRAND],
 		 1, gauge_tz_edge_gath, g_nb_z_dn, 500,
 		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ],
 		 1, gauge_tz_edge_cont, g_nb_z_up, 500, 
@@ -667,7 +667,7 @@ void xchange_gauge() {
     /* send the data to the neighbour on the right in z direction */
     /* recieve the data from the neighbour on the left in z direction */
     /* t2z-edge */
-    MPI_Sendrecv(g_gauge_field[VOLUMEPLUSRAND + (LZ-2)],
+    MPI_Sendrecv(g_gauge_field[VOLUMEPLUSRAND + (LZ-1)],
 		 1, gauge_tz_edge_gath, g_nb_z_up, 501,
 		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 2*LX*LY],
 		 1, gauge_tz_edge_cont, g_nb_z_dn, 501,
@@ -677,7 +677,7 @@ void xchange_gauge() {
     /* send the data to the neighbour on the left in z direction */
     /* recieve the data from the neighbour on the right in z direction */
     /* z2t -edge */
-    MPI_Sendrecv(g_gauge_field[VOLUME],
+    MPI_Sendrecv(g_gauge_field[VOLUME + 1],
 		 1, gauge_tz_edge_gath, g_nb_z_dn, 502,
 		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 4*LX*LY],
 		 1, gauge_tz_edge_cont, g_nb_z_up, 502, 
@@ -686,7 +686,7 @@ void xchange_gauge() {
     /* send the data to the neighbour on the right in z direction */
     /* recieve the data from the neighbour on the left in z direction */
     /* z2t edge */
-    MPI_Sendrecv(g_gauge_field[VOLUME + (LZ-1)],
+    MPI_Sendrecv(g_gauge_field[VOLUME + (LZ-2)],
 		 1, gauge_tz_edge_gath, g_nb_z_up, 503,
 		 g_gauge_field[VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 6*LX*LY],
 		 1, gauge_tz_edge_cont, g_nb_z_dn, 503,
