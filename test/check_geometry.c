@@ -831,6 +831,10 @@ int check_geometry()
     }
   }
 
+  for (ix=0;ix<VOLUMEPLUSRAND + g_dbw2rand;ix++){
+    itest[ix]=0;
+  }
+
 #ifdef MPI
   if(g_dbw2rand > 0) {
     for (x1 = 0; x1 < LX; x1++) {
@@ -840,7 +844,7 @@ int check_geometry()
 	  ix=g_ipt[x0][x1][x2][x3];
 
 	  iy0=g_iup[ix][0];
-	  if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	  if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND + LX*LY*LZ) {
 	    printf("The DBW2 boundary is not correctly mapped in up t-direction  %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, iy0);
 	    printf("Program aborted\n");
 	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -858,7 +862,7 @@ int check_geometry()
 	  ix=g_ipt[x0][x1][x2][x3];
 
 	  iy0=g_idn[ix][0];
-	  if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	  if(iy0 < VOLUMEPLUSRAND + LX*LZ*LY|| iy0 >= VOLUMEPLUSRAND + 2*LX*LY*LZ) {
 	    printf("The DBW2 boundary is not correctly mapped in down t-direction %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, iy0);
 	    printf("Program aborted\n");
 	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -883,7 +887,7 @@ int check_geometry()
 	  ix = g_ipt[x0][x1][x2][x3];
 
 	  iy1=g_iup[ix][1];
-	  if(iy1 < VOLUMEPLUSRAND || iy1 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	  if(iy1 < VOLUMEPLUSRAND + 2*LX*LY*LZ || iy1 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + T*LY*LZ && x0 < T) {
 	    printf("The DBW2 boundary is not correctly mapped in up x-direction %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, iy1);
 	    printf("Program aborted\n");
 	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -899,7 +903,7 @@ int check_geometry()
 
 	  if(x0 == T) {
 	    iy0 = g_iup[ix][0];
-	    if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	    if(iy0 < VOLUMEPLUSRAND + RAND || iy0 >= VOLUMEPLUSRAND + RAND + LY*LZ) {
 	      printf("The DBW2 boundary is not correctly mapped in up t-direction up x %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, iy0);
 	      printf("Program aborted\n");
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -915,7 +919,7 @@ int check_geometry()
 	  }
 	  if(x0 == T+1) {
 	    iy0 = g_idn[ix][0];
-	    if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	    if(iy0 < VOLUMEPLUSRAND + RAND + 2*LY*LZ|| iy0 >= VOLUMEPLUSRAND + RAND + 3*LY*LZ) {
 	      printf("The DBW2 boundary is not correctly mapped in down t-direction up x %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, iy0);
 	      printf("Program aborted\n");
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -935,7 +939,7 @@ int check_geometry()
 	  ix = g_ipt[x0][x1][x2][x3];
 
 	  iy1=g_idn[ix][1];
-	  if(iy1 < VOLUMEPLUSRAND || iy1 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	  if(iy1 < VOLUMEPLUSRAND +  2*LX*LY*LZ + T*LY*LZ|| iy1 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ && x0 < T) {
 	    printf("The DBW2 boundary is not correctly mapped in down x-direction %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, iy1);
 	    printf("Program aborted\n");
 	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -951,7 +955,7 @@ int check_geometry()
 
 	  if(x0 == T) {
 	    iy0 = g_iup[ix][0];
-	    if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	    if(iy0 < VOLUMEPLUSRAND + RAND + LY*LZ || iy0 >= VOLUMEPLUSRAND + + RAND + 2*LY*LZ) {
 	      printf("The DBW2 boundary is not correctly mapped in up t-direction down x %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, iy0);
 	      printf("Program aborted\n");
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -967,7 +971,7 @@ int check_geometry()
 	  }
 	  if(x0 == T+1) {
 	    iy0 = g_idn[ix][0];
-	    if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	    if(iy0 < VOLUMEPLUSRAND + RAND + 3*LY*LZ || iy0 >= VOLUMEPLUSRAND + RAND + 4*LY*LZ) {
 	      printf("The DBW2 boundary is not correctly mapped in down t-direction down x %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, iy0);
 	      printf("Program aborted\n");
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
@@ -986,7 +990,7 @@ int check_geometry()
     }
 #endif
 
-#if (defined PARALLELXYT || PARALLELXYZT)
+#if (defined PARALLELXYT || defined PARALLELXYZT)
 
     for (x0 = 0; x0 < T+2; x0++) {
       for (x1 = 0; x1 < LX+2; x1++) {
@@ -996,7 +1000,8 @@ int check_geometry()
 	    ix = g_ipt[x0][x1][x2][x3];
 	    
 	    iy2=g_iup[ix][2];
-	    if(iy2 < VOLUMEPLUSRAND || iy2 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	    if(iy2 < VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ || iy2 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ 
+	       && x0 < T && x1 < LX) {
 	      printf("The DBW2 boundary is not correctly mapped in up y-direction %d %d %d %d %d %d\n", 
 		     x0, x1, x2, x3, ix, iy2);
 	      printf("Program aborted\n");
@@ -1014,7 +1019,7 @@ int check_geometry()
 	    
 	    if(x0 == T && x1 < LX) {
 	      iy0 = g_iup[ix][0];
-	      if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy0 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
 		printf("The DBW2 boundary is not correctly mapped in up t-direction up y %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy0);
 		printf("Program aborted\n");
@@ -1051,7 +1056,7 @@ int check_geometry()
 	    
 	    if(x1 == LX && x0 < T) {
 	      iy1 = g_iup[ix][1];
-	      if(iy1 < VOLUMEPLUSRAND || iy1 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy1 < VOLUMEPLUSRAND || iy1 >= VOLUMEPLUSRAND + g_dbw2rand) {
 		printf("The DBW2 boundary is not correctly mapped in up x-direction up y %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy1);
 		printf("Program aborted\n");
@@ -1090,7 +1095,8 @@ int check_geometry()
 	    x2 = LY+1;
 	    ix = g_ipt[x0][x1][x2][x3];
 	    iy2=g_idn[ix][2];
-	    if(iy2 < VOLUMEPLUSRAND || iy2 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	    if(iy2 < VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ|| iy2 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ 
+	       && x0 < T && x1 < LX) {
 	      printf("The DBW2 boundary is not correctly mapped in down y-direction %d %d %d %d %d %d\n", 
 		     x0, x1, x2, x3, ix, iy2);
 	      printf("Program aborted\n");
@@ -1196,7 +1202,14 @@ int check_geometry()
 	    ix = g_ipt[x0][x1][x2][x3];
 	    
 	    iy3=g_iup[ix][3];
-	    if(iy3 < VOLUMEPLUSRAND || iy3 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	    if(((iy3 < VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ || 
+	       iy3 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY) &&
+	       bndcnt == 0) ||
+	       (x0 == T && (iy3 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 4*LX*LY ||
+		iy3 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 5*LX*LY )) 
+/* 	       ||(x0 == T+1 && (iy3 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 5*LX*LY || */
+/* 			      iy3 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 6*LX*LY)) */
+	      ){ 
 	      printf("The DBW2 boundary is not correctly mapped in up z-direction %d %d %d %d %d %d\n", 
 		     x0, x1, x2, x3, ix, iy3);
 	      printf("Program aborted\n");
@@ -1214,7 +1227,8 @@ int check_geometry()
 	    
 	    if(x0 == T) {
 	      iy0 = g_iup[ix][0];
-	      if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy0 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ || 
+	         iy0 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + LX*LY) {
 		printf("The DBW2 boundary is not correctly mapped in up t-direction up z %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy0);
 		printf("Program aborted\n");
@@ -1232,7 +1246,8 @@ int check_geometry()
 	    }
 	    if(x0 == T+1) {
 	      iy0 = g_idn[ix][0];
-	      if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy0 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + LX*LY || 
+                 iy0 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 2*LX*LY) {
 		printf("The DBW2 boundary is not correctly mapped in down t-direction up z %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy0);
 		printf("Program aborted\n");
@@ -1251,7 +1266,8 @@ int check_geometry()
 	    
 	    if(x1 == LX) {
 	      iy1 = g_iup[ix][1];
-	      if(iy1 < VOLUMEPLUSRAND || iy1 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy1 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 4*T*LY|| 
+	         iy1 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 5*T*LY) {
 		printf("The DBW2 boundary is not correctly mapped in up x-direction up z %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy1);
 		printf("Program aborted\n");
@@ -1269,7 +1285,8 @@ int check_geometry()
 	    }
 	    if(x1 == LX+1) {
 	      iy1 = g_idn[ix][1];
-	      if(iy1 < VOLUMEPLUSRAND || iy1 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy1 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 6*T*LY || 
+	         iy1 >= VOLUMEPLUSRAND + + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 7*T*LY ) {
 		printf("The DBW2 boundary is not correctly mapped in down x-direction up z %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy1);
 		printf("Program aborted\n");
@@ -1288,7 +1305,8 @@ int check_geometry()
 
 	    if(x2 == LY) {
 	      iy2 = g_iup[ix][2];
-	      if(iy2 < VOLUMEPLUSRAND || iy2 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy2 < VOLUMEPLUSRAND  + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 4*T*LX || 
+	         iy2 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 5*T*LX ) {
 		printf("The DBW2 boundary is not correctly mapped in up y-direction up z %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy2);
 		printf("Program aborted\n");
@@ -1306,7 +1324,8 @@ int check_geometry()
 	    }
 	    if(x2 == LY+1) {
 	      iy2 = g_idn[ix][2];
-	      if(iy2 < VOLUMEPLUSRAND || iy2 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy2 < VOLUMEPLUSRAND  + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 6*T*LX || 
+	         iy2 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 7*T*LX ) {
 		printf("The DBW2 boundary is not correctly mapped in down y-direction up z %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy2);
 		printf("Program aborted\n");
@@ -1327,7 +1346,14 @@ int check_geometry()
 	    x3 = LZ+1;
 	    ix = g_ipt[x0][x1][x2][x3];
 	    iy3=g_idn[ix][3];
-	    if(iy3 < VOLUMEPLUSRAND || iy3 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	    if(((iy3 < VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY|| 
+	       iy3 >= VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + 2*T*LX*LY) &&
+	       bndcnt == 0) ||
+	       (x0 == T && (iy3 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 6*LX*LY||
+			    iy3 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 7*LX*LY)) ||
+	       (x0 == T+1 && (iy3 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 7*LX*LY||
+			    iy3 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY)) 
+		) {
 	      printf("The DBW2 boundary is not correctly mapped in down z-direction %d %d %d %d %d %d\n", 
 		     x0, x1, x2, x3, ix, iy3);
 	      printf("Program aborted\n");
@@ -1345,7 +1371,8 @@ int check_geometry()
 	    
 	    if(x0 == T) {
 	      iy0 = g_iup[ix][0];
-	      if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy0 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 2*LX*LY ||
+	         iy0 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 3*LX*LY) {
 		printf("The DBW2 boundary is not correctly mapped in up t-direction down z %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy0);
 		printf("Program aborted\n");
@@ -1363,7 +1390,8 @@ int check_geometry()
 	    }
 	    if(x0 == T+1) {
 	      iy0 = g_idn[ix][0];
-	      if(iy0 < VOLUMEPLUSRAND || iy0 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy0 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 3*LX*LY || 
+	         iy0 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 4*LX*LY) {
 		printf("The DBW2 boundary is not correctly mapped in down t-direction down z %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy0);
 		printf("Program aborted\n");
@@ -1381,7 +1409,8 @@ int check_geometry()
 	    }
 	    if(x1 == LX) {
 	      iy1 = g_iup[ix][1];
-	      if(iy1 < VOLUMEPLUSRAND || iy1 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy1 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 5*T*LY || 
+	         iy1 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 6*T*LY ) {
 		printf("The DBW2 boundary is not correctly mapped in up x-direction down z %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy1);
 		printf("Program aborted\n");
@@ -1399,7 +1428,8 @@ int check_geometry()
 	    }
 	    if(x1 == LX+1) {
 	      iy1 = g_idn[ix][1];
-	      if(iy1 < VOLUMEPLUSRAND || iy1 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy1 < VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 7*T*LY || 
+	         iy1 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY ) {
 		printf("The DBW2 boundary is not correctly mapped in down x-direction down z %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy1);
 		printf("Program aborted\n");
@@ -1418,7 +1448,8 @@ int check_geometry()
 
 	    if(x2 == LY) {
 	      iy2 = g_iup[ix][2];
-	      if(iy2 < VOLUMEPLUSRAND || iy2 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy2 < VOLUMEPLUSRAND  + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 5*T*LX || 
+	         iy2 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 6*T*LX ) {
 		printf("The DBW2 boundary is not correctly mapped in up y-direction down z %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy2);
 		printf("Program aborted\n");
@@ -1436,7 +1467,8 @@ int check_geometry()
 	    }
 	    if(x2 == LY+1) {
 	      iy2 = g_idn[ix][2];
-	      if(iy2 < VOLUMEPLUSRAND || iy2 >= VOLUMEPLUSRAND+g_dbw2rand) {
+	      if(iy2 < VOLUMEPLUSRAND  + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 7*T*LX || 
+	         iy2 >= VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 8*T*LX ) {
 		printf("The DBW2 boundary is not correctly mapped in down y-direction down z %d %d %d %d %d %d\n", 
 		       x0, x1, x2, x3, ix, iy2);
 		printf("Program aborted\n");
