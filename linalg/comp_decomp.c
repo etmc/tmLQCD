@@ -30,8 +30,8 @@
 #include "comp_decomp.h"
 
 
-/* S and T inputs, R output */
-void compact(bispinor * const R, spinor * const S, spinor * const T){ 
+/* S and P inputs, R output */
+void compact(bispinor * const R, spinor * const S, spinor * const P){ 
 
 
   
@@ -76,7 +76,7 @@ void compact(bispinor * const R, spinor * const S, spinor * const T){
 
 
     u=(spinor *) &R[ix].sp_dn;
-    t=(spinor *) T + ix;
+    t=(spinor *) P + ix;
     
     (*u).s0.c0.re = (*t).s0.c0.re;
     (*u).s0.c0.im = (*t).s0.c0.im;
@@ -127,14 +127,14 @@ void compact(bispinor * const R, spinor * const S, spinor * const T){
   assign(&R->sp_up, &S[0], VOLUME/2);
   */
   /*  
-  assign(&R->sp_dn, &T[0], VOLUME/2);
+  assign(&R->sp_dn, &P[0], VOLUME/2);
   */
 
 }
 
 
-/* R input , S and T outputs */
-void decompact(spinor * const S, spinor * const T, bispinor * const R){
+/* R input , S and P outputs */
+void decompact(spinor * const S, spinor * const P, bispinor * const R){
 
   int ix;
   int N = VOLUME/2;
@@ -175,7 +175,7 @@ void decompact(spinor * const S, spinor * const T, bispinor * const R){
 
 
     t=(spinor *) &R[ix].sp_dn;
-    u=(spinor *) T + ix;
+    u=(spinor *) P + ix;
     
     (*u).s0.c0.re = (*t).s0.c0.re;
     (*u).s0.c0.im = (*t).s0.c0.im;

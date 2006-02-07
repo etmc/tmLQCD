@@ -27,9 +27,9 @@
 /* The rest is done automatially */
 
 #    define T (Tdef/N_PROC_T)
-#    define LX (Xdef/N_PROX_X)
-#    define LY (Ydef/N_PROX_Y)
-#    define LZ (Zdef/N_PROX_Z)
+#    define LX (Xdef/N_PROC_X)
+#    define LY (Ydef/N_PROC_Y)
+#    define LZ (Zdef/N_PROC_Z)
 #    define VOLUME (T*LX*LY*LZ)
 
 #    ifdef PARALLELT  

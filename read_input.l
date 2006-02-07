@@ -25,6 +25,9 @@ FLT {SIGN}?{DIGIT}*+"."{DIGIT}*(e("-"|"+")?{DIGIT}+)?
 FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
 
 %{
+#ifdef HAVE_CONFIG_H
+#  include<config.h>
+#endif
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
@@ -1042,8 +1045,11 @@ int read_input(char * conf_file){
  */
 
 int reread_input(char * conf_file){
-  int j=0, tt=T, ll=L, lx = LX, ly = LY, lz = LZ, 
-      np=N_PROC_X, npy = N_PROC_Y, nst=nstore;
+#ifndef FIXEDVOLUME
+  int tt=T, ll=L, lx = LX, ly = LY, lz = LZ, 
+      np=N_PROC_X, npy = N_PROC_Y;
+#endif
+  int nst=nstore, j=0;
   double m2 = g_mu2, m3 = g_mu3;
   int n1 = g_csg_N[0], n2 = g_csg_N[2], n3 = g_csg_N[4], n4 = g_csg_N[6];
   double x;
@@ -1061,18 +1067,21 @@ int reread_input(char * conf_file){
 
   parse_config();  
 
+#ifndef FIXEDVOLUME
   T = tt;
   L = ll;
   LX = lx;
   LY = ly;
   LZ = lz;
+  N_PROC_X = np;
+  N_PROC_Y = npy;
+#endif
   g_csg_N[0] = n1;
   g_csg_N[2] = n2;
   g_csg_N[4] = n3;
   g_csg_N[6] = n4;
 
-  N_PROC_X = np;
-  N_PROC_Y = npy;
+
   if(g_dbw2rand == 0) {
     g_rgi_C1 = 0.;
   }

@@ -45,8 +45,10 @@ int main(int argc,char *argv[]) {
   MPI_Init(&argc, &argv);
 #endif
 
+#ifndef FIXEDVOLUME
   L=0; 
   T=0;
+#endif
   while ((c = getopt(argc, argv, "h?f:i:o:")) != -1) {
     switch (c) {
     case 'f': 
