@@ -3306,9 +3306,9 @@ fi
 echo "$as_me:$LINENO: checking whether we want to fix volume at compiletime" >&5
 echo $ECHO_N "checking whether we want to fix volume at compiletime... $ECHO_C" >&6
 
-# Check whether --with-fixvol or --without-fixvol was given.
-if test "${with_fixvol+set}" = set; then
-  withval="$with_fixvol"
+# Check whether --with-fixedvolume or --without-fixedvolume was given.
+if test "${with_fixedvolume+set}" = set; then
+  withval="$with_fixedvolume"
   with_fixvol=$withval
 else
   with_fixvol=no
@@ -6512,6 +6512,11 @@ _ACEOF
 
   DEBUGFLAG="-g"
   OPTARGS="-O3"
+
+cat >>confdefs.h <<\_ACEOF
+#define BGL 1
+_ACEOF
+
 
   if test "$GCC" != yes; then
     CFLAGS="-qsrcmsg -qarch=440d -qtune=440 $CFLAGS"

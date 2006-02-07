@@ -81,7 +81,7 @@ if test $enable_mpi = yes; then
 fi
 
 AC_MSG_CHECKING([whether we want to fix volume at compiletime])
-AC_ARG_WITH([fixvol],
+AC_ARG_WITH([fixedvolume],
   [  --with-fixedvolume      fix volume at compiletime [default=no]],
   with_fixvol=$withval, with_fixvol=no)
 if test $with_fixvol = yes; then
@@ -478,6 +478,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
   DEBUGFLAG="-g"
   OPTARGS="-O3"
+  AC_DEFINE(BGL,1,[We are on a Blue Gene/L])
 
   if test "$GCC" != yes; then
     CFLAGS="-qsrcmsg -qarch=440d -qtune=440 $CFLAGS"
