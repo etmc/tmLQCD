@@ -22,7 +22,7 @@
 #else
 #include "complex.h"
 #endif
-#ifdef XLC
+#if (defined XLC && defined BGL)
 # include "bgl.h"
 #endif
 
@@ -184,7 +184,7 @@ _sse_load_up(s2); \
 _sse_vector_sub(); \
 _sse_store(r);
 
-#elif (defined XLC)
+#elif (defined XLC && defined BGL)
 
 #define _vector_add(r,s1,s2) \
   _bgl_load(s1);	     \
@@ -527,7 +527,7 @@ _sse_load(s); \
 _sse_su3_inverse_multiply(u); \
 _sse_store_up(r);
 
-#elif (defined XLC)
+#elif (defined XLC && defined BGL)
 
 #define _su3_multiply(r,u,s) \
   _bgl_load(s); \

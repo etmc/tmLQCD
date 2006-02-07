@@ -16,6 +16,9 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#if (defined BGL)
+#  include <rts.h>
+#endif
 #include "su3.h"
 #include "su3adj.h"
 #include "ranlxd.h"
@@ -35,9 +38,17 @@
 #include "mpi_init.h"
 
 #ifndef PARALLELXT
-#define SLICE (LX*LY*LZ/2)
+#  define SLICE (LX*LY*LZ/2)
 #else
-#define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2))
+#  define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2))
+#endif
+
+#ifdef BGL
+static double clockspeed=1.0e-6/700.0;
+
+double bgl_wtime() {
+  return ( rts_get_timebase() * clockspeed );
+}
 #endif
 
 int check_xchange();
@@ -187,16 +198,24 @@ int main(int argc,char *argv[])
 #ifdef MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
+#if defined BGL
+    t1 = bgl_wtime();
+#else
     t1=(double)clock();
+#endif
     for (j=0;j<j_max;j++) {
       for (k=0;k<k_max;k++) {
 	Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
 	Hopping_Matrix(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]);
       }
     }
+#if defined BGL
+    t2 = bgl_wtime();
+    dt = t2 - t1;
+#else
     t2=(double)clock();
-
     dt=(t2-t1)/((double)(CLOCKS_PER_SEC));
+#endif
 #ifdef MPI
     MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
@@ -228,16 +247,24 @@ int main(int argc,char *argv[])
 
 #ifdef MPI
   /* isolated computation */
-  t1=(double)clock();
+#if defined BGL
+    t1 = bgl_wtime();
+#else
+    t1=(double)clock();
+#endif
   for (j=0;j<j_max;j++) {
     for (k=0;k<k_max;k++) {
       Hopping_Matrix_nocom(0, g_spinor_field[k+k_max], g_spinor_field[k]);
       Hopping_Matrix_nocom(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]);
     }
   }
-  t2=(double)clock();
-
-  dt2=(t2-t1)/((double)(CLOCKS_PER_SEC));
+#if defined BGL
+    t2 = bgl_wtime();
+    dt2 = t2 - t1;
+#else
+    t2=(double)clock();
+    dt2=(t2-t1)/((double)(CLOCKS_PER_SEC));
+#endif
   /* compute the bandwidth */
   dt=dts-dt2;
   MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
