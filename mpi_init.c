@@ -118,30 +118,30 @@ void mpi_init(int argc,char *argv[]) {
   char processor_name[MPI_MAX_PROCESSOR_NAME];
   
 
-#ifdef PARALLELT
+#  ifdef PARALLELT
   ndims = 1;
-#  ifndef FIXEDVOLUME
+#    ifndef FIXEDVOLUME
   N_PROC_X = 1;
   N_PROC_Y = 1;
   N_PROC_Z = 1;
+#    endif
 #  endif
-#endif
-#if defined PARALLELXT
+#  if defined PARALLELXT
   ndims = 2;
-#  ifndef FIXEDVOLUME
+#    ifndef FIXEDVOLUME
   N_PROC_Y = 1;
   N_PROC_Z = 1;
-#endif
-#endif
-#if defined PARALLELXYT
-  ndims = 3;
-#  ifndef FIXEDVOLUME
-  N_PROC_Z = 1;
+#    endif
 #  endif
-#endif
-#if defined PARALLELXYZT
+#  if defined PARALLELXYT
+  ndims = 3;
+#    ifndef FIXEDVOLUME
+  N_PROC_Z = 1;
+#    endif
+#  endif
+#  if defined PARALLELXYZT
   ndims = 4;
-#endif
+#  endif
   dims[1] = N_PROC_X;
   dims[2] = N_PROC_Y;
   dims[3] = N_PROC_Z;
@@ -161,7 +161,7 @@ void mpi_init(int argc,char *argv[]) {
   g_nproc_y = dims[2];
   g_nproc_z = dims[3];
 
-#ifndef FIXEDVOLUME
+#  ifndef FIXEDVOLUME
   N_PROC_X = g_nproc_x;
   N_PROC_Y = g_nproc_y;
   N_PROC_Z = g_nproc_z;
@@ -170,33 +170,33 @@ void mpi_init(int argc,char *argv[]) {
   LY = LY/g_nproc_y;
   LZ = LZ/g_nproc_z;
   VOLUME = (T*LX*LY*LZ);
-#  ifdef PARALLELT  
+#    ifdef PARALLELT  
   RAND = (2*LX*LY*LZ);
   EDGES = 0;
-#  elif defined PARALLELXT
+#    elif defined PARALLELXT
   RAND = 2*LZ*(LY*LX + T*LY);
   EDGES = 4*LZ*LY;
   /* Note that VOLUMEPLUSRAND not equal to VOLUME+RAND in this case */
   /* VOLUMEPLUSRAND rather includes the edges */
-#  elif defined PARALLELXYT
+#    elif defined PARALLELXYT
   RAND = 2*LZ*(LY*LX + T*LY + T*LX);
   EDGES = 4*LZ*(LY + T + LX);
 #  elif defined PARALLELXYZT
   RAND = 2*LZ*LY*LX + 2*LZ*T*LY + 2*LZ*T*LX + 2*T*LX*LY;
   EDGES = 4*LZ*LY + 4*LZ*T + 4*LZ*LX + 4*LY*T + 4*LY*LX + 4*T*LX;
-#  else
+#    else
   RAND = 0;
   EDGES = 0;
-#  endif
+#    endif
   /* Note that VOLUMEPLUSRAND is not always equal to VOLUME+RAND */
   /* VOLUMEPLUSRAND rather includes the edges */
   VOLUMEPLUSRAND = VOLUME + RAND + EDGES;
-#endif
+#  endif
   g_dbw2rand = (RAND + 2*EDGES);
 
-#ifdef PARALLELXYZT
+#  ifdef PARALLELXYZT
   field_buffer_z = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
-#endif
+#  endif
 
   MPI_Cart_create(MPI_COMM_WORLD, ndims, dims, periods, reorder, &g_cart_grid);
   MPI_Comm_rank(g_cart_grid, &g_cart_id);
@@ -212,15 +212,15 @@ void mpi_init(int argc,char *argv[]) {
   }
 
   MPI_Cart_shift(g_cart_grid, 0, 1, &g_nb_t_dn, &g_nb_t_up);
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   MPI_Cart_shift(g_cart_grid, 1, 1, &g_nb_x_dn, &g_nb_x_up);
-#endif
-#if (defined PARALLELXYT  || defined PARALLELXYZT)
+#  endif
+#  if (defined PARALLELXYT  || defined PARALLELXYZT)
   MPI_Cart_shift(g_cart_grid, 2, 1, &g_nb_y_dn, &g_nb_y_up);
-#endif
-#if defined PARALLELXYZT
+#  endif
+#  if defined PARALLELXYZT
   MPI_Cart_shift(g_cart_grid, 3, 1, &g_nb_z_dn, &g_nb_z_up);
-#endif
+#  endif
 
   /* With internal boundary we mean the fields that are send */
   /* to another processor. It is located wihtin the local    */
@@ -424,7 +424,7 @@ void mpi_init(int argc,char *argv[]) {
   mpi_time_rank = 0;
   g_stdio_proc = 0;
 
-#ifndef FIXEDVOLUME
+#  ifndef FIXEDVOLUME
   T = T_global;
   VOLUME = (T*LX*LY*LZ);
   RAND = 0;
@@ -433,9 +433,23 @@ void mpi_init(int argc,char *argv[]) {
   N_PROC_X = 1;
   N_PROC_Y = 1;
   N_PROC_Z = 1;
-#endif
+#  endif
   g_dbw2rand = 0;
+  /*ifdef MPI */
 #endif
+
+  /* Here we perform some checks in order not to */
+  /* run into trouble later                      */
+#if (defined PARALLELXYZT)
+  if((T*LX*LY)%2 != 0) {
+    fprintf(stderr, "T*LX*LY must be even!\n Aborting prgram...\n");
+#  ifdef MPI 
+    MPI_Finalize();
+#  endif
+    exit(-1);
+  }
+#endif
+
   if(LZ%2 != 0) {
     fprintf(stderr, "LZ must be even!\n Aborting prgram...\n");
 #ifdef MPI
@@ -445,9 +459,9 @@ void mpi_init(int argc,char *argv[]) {
   }
 #if (defined _NEW_GEOMETRY && (defined PARALLELXYZT || defined PARALLELXYT))
   fprintf(stderr, "even/odd geometry and 3 or 4-dim parallelisation not yet implemented together!\n Aborting prgram...\n");
-#ifdef MPI
+#  ifdef MPI
   MPI_Finalize();
-#endif
+#  endif
   exit(-1);
 #endif
   

@@ -4,6 +4,17 @@
  * In case the code was configure for fixed volume at
  * compiletime, the parameters have to be set here!
  *
+ * Note:
+ *  - 4dim. parallesitaion: T*LX*LY must be even
+ *  - always: LZ must be even.
+ *
+ *  - on the Blue Gene/L try the following setup
+ *    in oder to get the best performance:
+ *      nodecard  (64CPU): 4x4x2x2
+ *      4nodecard(128CPU): 8x4x2x2
+ *      midplane(1024CPU): 8x8x8x2
+ *      rack    (2048CPU): 8x8x16x2
+ *  
  *
  ********************************************************/
 
