@@ -172,10 +172,10 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 	  else {
 	    if(g_cart_id == id){
 #ifndef WORDS_BIGENDIAN
-	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][Y][z] ], 4*sizeof(su3)/8);
+	      byte_swap_assign(tmp, g_gauge_field[ g_ipt[tt][X][Y][Z] ], 4*sizeof(su3)/8);
 	      MPI_Send((void*) tmp, 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #else
-	      MPI_Send((void*) g_gauge_field[ g_ipt[tt][X][Y][z] ], 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+	      MPI_Send((void*) g_gauge_field[ g_ipt[tt][X][Y][Z] ], 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 #endif
 	    }
 	  }

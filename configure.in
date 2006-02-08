@@ -483,7 +483,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
   if test "$GCC" != yes; then
     CFLAGS="-qsrcmsg -qarch=440d -qtune=440 $CFLAGS"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
-    OPTARGS="-O5"
+    OPTARGS="-O3 -qhot=simd"
 # OPTARGS="-qhot" leads to wrong code
     XLC=yes
     AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
@@ -505,7 +505,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
 # The IBM Power PC
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   CFLAGS="$CFLAGS -q64 -qsrcmsg"
-  AC_DEFINE(NOF77_,1,Fortran has not extra _)
+  AC_DEFINE(NOF77_,1,Fortran has no extra _)
   if test $with_lapack = yes; then
     LIBS="-lessl -llapack -lblas -lf $LIBS"
   fi

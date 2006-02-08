@@ -505,6 +505,7 @@ int main(int argc,char *argv[]) {
     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda);
 
+
     /* Measure the Polyakov loop in direction 2 and 3:*/
     polyakov_loop(&pl, 2); 
     polyakov_loop(&pl4, 3);  
