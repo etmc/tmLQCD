@@ -597,7 +597,7 @@ int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filen
 #endif
 	  if(g_cart_id == id) {
 	    i = g_lexic2eosub[ g_ipt[t][X][Y][Z] ];
-	    if((t+X+Y+z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
+	    if((t+X+Y+Z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
 		+ g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
 	      p = s;
 	    }
@@ -692,7 +692,9 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
 #endif
 	  for(t = 0; t < T; t++){
 	    i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
-	    if((t+x+y+z+g_proc_coords[2]*LY+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
+	    if((t+x+y+z+
+		g_proc_coords[3]*LZ+g_proc_coords[2]*LY
+		+g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
 	      p = s;
 	    }
 	    else {
