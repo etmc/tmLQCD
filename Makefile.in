@@ -1,5 +1,6 @@
 srcdir = @srcdir@
-top_builddir =  @top_srcdir@
+top_srcdir = @top_srcdir@
+top_builddir =  .
 abs_top_builddir = @abs_top_builddir@
 builddir = @builddir@
 subdir = .
@@ -51,7 +52,7 @@ all: Makefile all-recursive dep ${LINKLIBS} hmc_tm invert gwc2ildg ildg2gwc
 
 -include $(addsuffix .d,$(ALLOBJ))
 
-include ${top_builddir}/Makefile.global
+include ${top_srcdir}/Makefile.global
 
 flex_read_input: read_input.l
 	${LEX} -i -t $< > read_input.c

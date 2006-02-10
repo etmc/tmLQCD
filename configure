@@ -3132,7 +3132,7 @@ esac
 #(endian="", AC_DEFINE(LITTLE_ENDIAN,1,The endian of the architechture))
 
 LIBS="-lm"
-LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(builddir)/lib -L../lime/lib"
+LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(top_builddir)/lib"
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -9040,7 +9040,7 @@ _ACEOF
     fi
   fi
   if test $with_lapack = yes; then
-    LDFLAGS="$LDFLAGS -L\$(top_builddir)/lapack"
+    LDFLAGS="$LDFLAGS -L\$(top_srcdir)/lapack"
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_LAPACK 1
@@ -9309,7 +9309,7 @@ if test ! -e test; then
   mkdir test
 fi
 
-INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${top_builddir}/ -I${lime_dir}/include/ -I../lime/include/"
+INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${top_srcdir}/ -I${lime_dir}/include/ -I../lime/include/"
 LIBS="-lsolver -llinalg $LIBS"
 AUTOCONF=autoconf
 

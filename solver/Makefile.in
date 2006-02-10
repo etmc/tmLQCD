@@ -1,7 +1,9 @@
 # $Id$
 
 srcdir = @srcdir@
-top_builddir =  @top_srcdir@
+top_builddir =  @top_builddir@
+abs_top_builddir = @abs_top_builddir@
+top_srcdir = @top_srcdir@
 subdir = solver
 builddir = @builddir@
 
@@ -51,7 +53,7 @@ profile all-profile: all
 
 -include $(addsuffix .d,${libsolver_TARGETS})
 
-include ${top_builddir}/Makefile.global
+include ${top_srcdir}/Makefile.global
 
 # rule to compile objects
 

@@ -32,7 +32,7 @@ AC_C_BIGENDIAN
 #(endian="", AC_DEFINE(LITTLE_ENDIAN,1,The endian of the architechture))
 
 LIBS="-lm"
-LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(builddir)/lib -L../lime/lib"
+LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(top_builddir)/lib"
 
 AC_CHECK_HEADERS([stdint.h],
 [ dnl for inttypes.h and stdint.h for uint_xxx types
@@ -442,7 +442,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     fi
   fi
   if test $with_lapack = yes; then
-    LDFLAGS="$LDFLAGS -L\$(top_builddir)/lapack"
+    LDFLAGS="$LDFLAGS -L\$(top_srcdir)/lapack"
     AC_DEFINE(HAVE_LAPACK,1,lapack available)
     if test "$LP" = "yes" && test "$host_cpu" != "x86_64"; then
       if test "$ATLAS" = "yes"; then
@@ -611,7 +611,7 @@ if test ! -e test; then
   mkdir test
 fi
 
-INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${top_builddir}/ -I${lime_dir}/include/ -I../lime/include/"
+INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${top_srcdir}/ -I${lime_dir}/include/ -I../lime/include/"
 LIBS="-lsolver -llinalg $LIBS"
 AUTOCONF=autoconf
 
