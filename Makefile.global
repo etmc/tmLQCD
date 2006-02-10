@@ -29,7 +29,7 @@ $(LINKLIBS): %.a: Makefile
 
 #dep rule
 
-$(addsuffix .d,$(ALLOBJ)): %.d: %.c Makefile
+$(addsuffix .d,$(ALLOBJ)): %.d: ${srcdir}/%.c Makefile
 	 @ $(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@ 
 
 all-recursive all-debug-recursive all-profile-recursive clean-recursive distclean-recursive compile-clean-recursive: Makefile

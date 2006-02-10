@@ -46,7 +46,7 @@
 
 #define MAXBUF 1048576
 
-#define off_t n_uint64_t 
+/* #define off_t n_uint64_t  */
 
 void byte_swap(void *ptr, int nmemb);
 void byte_swap_assign(void * out_ptr, void * in_ptr, int nmemb);

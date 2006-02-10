@@ -3132,6 +3132,7 @@ esac
 #(endian="", AC_DEFINE(LITTLE_ENDIAN,1,The endian of the architechture))
 
 LIBS="-lm"
+LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(builddir)/lib -L../lime/lib"
 
 echo "$as_me:$LINENO: checking where to find lime" >&5
 echo $ECHO_N "checking where to find lime... $ECHO_C" >&6
@@ -6439,9 +6440,8 @@ _ACEOF
       CCDEP="$CC"
     fi
   fi
-  LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
   if test $with_lapack = yes; then
-    LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lapack"
+    LDFLAGS="$LDFLAGS -L\$(top_builddir)/lapack"
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_LAPACK 1
@@ -6490,7 +6490,7 @@ _ACEOF
 
   fi
 
-  LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib -L/bgl/BlueLight/ppcfloor/bglsys/lib"
+  LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
   if test $with_lapack = yes; then
     LIBS="-llapack -lblas -lf77blas -latlas -lxlf90 -lxlfmath $LIBS"
   fi
@@ -6534,7 +6534,7 @@ _ACEOF
   if test $with_lapack = yes; then
     LIBS="-llapack440 -lblas440 -lxlf90 -lxlfmath $LIBS"
   fi
-  LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib -L/bgl/BlueLight/ppcfloor/bglsys/lib"
+  LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
 
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
@@ -6555,7 +6555,7 @@ _ACEOF
   if test $with_lapack = yes; then
     LIBS="-lessl -llapack -lblas -lf $LIBS"
   fi
-  LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib -q64"
+  LDFLAGS="$LDFLAGS -q64"
   XLC=yes
 
 cat >>confdefs.h <<\_ACEOF
@@ -6581,7 +6581,6 @@ cat >>confdefs.h <<\_ACEOF
 #define CRAY 1
 _ACEOF
 
-  LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
   OPTARGS="-O3"
   DEBUG_FLAG="-g"
   CCDEP="$CC"
@@ -6636,7 +6635,6 @@ fi
   if test $with_lapack = yes; then
     LIBS="-llapack -lblas -lf $LIBS"
   fi
-  LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
 fi
 
 
@@ -6707,7 +6705,12 @@ if test ! -e lib; then
   mkdir lib
 fi
 
-INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${top_builddir}/ -I${lime_dir}/include/"
+# create the test directory here
+if test ! -e test; then
+  mkdir test
+fi
+
+INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${top_builddir}/ -I${lime_dir}/include/ -I../lime/include/"
 LIBS="-lsolver -llinalg $LIBS"
 AUTOCONF=autoconf
 

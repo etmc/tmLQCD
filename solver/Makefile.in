@@ -3,6 +3,7 @@
 srcdir = @srcdir@
 top_builddir =  @top_srcdir@
 subdir = solver
+builddir = @builddir@
 
 CFLAGS = @CFLAGS@ @SOLVEROUT@
 DEPFLAGS = @DEPFLAGS@
@@ -54,7 +55,7 @@ include ${top_builddir}/Makefile.global
 
 # rule to compile objects
 
-%.o: %.c %.d Makefile
+%.o: ${srcdir}/%.c %.d Makefile
 	$(COMPILE) -c $<
 
 
@@ -64,11 +65,11 @@ libsolver.a: ${libsolver_OBJECTS} Makefile
 	@rm -f libsolver.a
 	@${AR} cru libsolver.a $(libsolver_OBJECTS)
 	@$(RANLIB) libsolver.a
-	@cp libsolver.a ${top_builddir}/lib/libsolver.a
+	@cp libsolver.a ../lib/libsolver.a
 
 # rule to generate .d files
 
-$(addsuffix .d,$(libsolver_TARGETS)): %.d: %.c Makefile
+$(addsuffix .d,$(libsolver_TARGETS)): %.d: ${srcdir}/%.c Makefile
 	@$(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@
 
 # rule to make dependencies
@@ -82,7 +83,7 @@ compile-clean: Makefile
 
 clean: compile-clean 
 	rm -f $(addsuffix .a, ${LIBRARIES})
-	rm -f ${top_builddir}/lib/libsolver.a
+	rm -f ../lib/libsolver.a
 
 distclean: clean
 	rm -f Makefile

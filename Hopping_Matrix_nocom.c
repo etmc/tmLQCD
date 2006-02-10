@@ -30,7 +30,7 @@
 #include "boundary.h"
 #include "Hopping_Matrix.h"
 
-#define xchange_field(a, ieo) 
+#define xchange_field(a, ieo) ;
 #define Hopping_Matrix Hopping_Matrix_nocom
 
 #include "Hopping_Matrix.c"

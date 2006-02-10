@@ -32,6 +32,7 @@ AC_C_BIGENDIAN
 #(endian="", AC_DEFINE(LITTLE_ENDIAN,1,The endian of the architechture))
 
 LIBS="-lm"
+LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(builddir)/lib -L../lime/lib"
 
 AC_MSG_CHECKING(where to find lime)
 AC_ARG_WITH(limedir,
@@ -421,9 +422,8 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       CCDEP="$CC"
     fi
   fi
-  LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
   if test $with_lapack = yes; then
-    LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lapack"
+    LDFLAGS="$LDFLAGS -L\$(top_builddir)/lapack"
     AC_DEFINE(HAVE_LAPACK,1,lapack available)
     if test "$LP" = "yes" && test "$host_cpu" != "x86_64"; then
       if test "$ATLAS" = "yes"; then
@@ -460,7 +460,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
     AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   fi
 
-  LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib -L/bgl/BlueLight/ppcfloor/bglsys/lib"
+  LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
   if test $with_lapack = yes; then
     LIBS="-llapack -lblas -lf77blas -latlas -lxlf90 -lxlfmath $LIBS"
   fi
@@ -492,7 +492,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
   if test $with_lapack = yes; then
     LIBS="-llapack440 -lblas440 -lxlf90 -lxlfmath $LIBS"
   fi
-  LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib -L/bgl/BlueLight/ppcfloor/bglsys/lib"
+  LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
 
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
@@ -509,7 +509,7 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   if test $with_lapack = yes; then
     LIBS="-lessl -llapack -lblas -lf $LIBS"
   fi
-  LDFLAGS="$LDFLAGS -L\$(abs_top_builddir)/lib -L\$(HOME)/lib -q64"
+  LDFLAGS="$LDFLAGS -q64"
   XLC=yes
   AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   OPTARGS="-O3 -qhot"
@@ -527,7 +527,6 @@ elif test "$host_vendor" = "cray"; then
   echo
   CFLAGS="$CFLAGS -dp"
   AC_DEFINE(CRAY,1,We are on a CRAY)
-  LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
   OPTARGS="-O3"
   DEBUG_FLAG="-g"
   CCDEP="$CC"
@@ -547,7 +546,6 @@ else
   if test $with_lapack = yes; then
     LIBS="-llapack -lblas -lf $LIBS"
   fi
-  LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(abs_top_builddir)/lib"
 fi
 
 
@@ -589,7 +587,12 @@ if test ! -e lib; then
   mkdir lib
 fi
 
-INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${top_builddir}/ -I${lime_dir}/include/"
+# create the test directory here
+if test ! -e test; then
+  mkdir test
+fi
+
+INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${top_builddir}/ -I${lime_dir}/include/ -I../lime/include/"
 LIBS="-lsolver -llinalg $LIBS"
 AUTOCONF=autoconf
 

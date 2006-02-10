@@ -741,8 +741,8 @@ void geometry(){
 
   /* The rectangular gauge action part */
   /* Everything is stored behind VOLUMEPLUSRAND-1 !*/
-#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   if(g_dbw2rand != 0) {
+#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
     if(g_proc_id == 0) {
       printf("# Initialising rectangular gauge action stuff\n");
       fflush(stdout);
