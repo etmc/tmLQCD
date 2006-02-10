@@ -1,3 +1,9 @@
+10.02.2006: package will compile only with lime >= 1.2.3!
+
+10.02.2006: Build in separate directory possible now.
+
+09.02.2006: Bug in io.c fixed
+
 08.02.2006: Bug in write ILDG configs fixed
 
 07.02.2006: In case of 4-dim. parallelisation the product

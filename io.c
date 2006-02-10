@@ -25,6 +25,13 @@
  *
  ****************************************************/
 
+/*
+ * Note:
+ * Required version of lime: >= 1.2.3
+ * n_uint64_t is a lime defined type!!
+ *
+ */
+
 #define _FILE_OFFSET_BITS 64
 
 #include"lime.h" 
@@ -36,6 +43,7 @@
 #include<string.h>
 #include<time.h>
 #include<sys/time.h> 
+#include<sys/types.h>
 #ifdef MPI
 # include<unistd.h> 
 #endif
@@ -46,13 +54,11 @@
 
 #define MAXBUF 1048576
 
-/* #define off_t n_uint64_t  */
-
 void byte_swap(void *ptr, int nmemb);
 void byte_swap_assign(void * out_ptr, void * in_ptr, int nmemb);
 int big_endian();
 int write_ildg_format_xml(char *filename, LimeWriter * limewriter);
-off_t file_size(FILE *fp);
+n_uint64_t file_size(FILE *fp);
 void single2double_cm(spinor * const R, float * const S);
 void double2single_cm(float * const S, spinor * const R);
 void zero_spinor(spinor * const R);
@@ -69,7 +75,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   char message[500];
   su3 tmp[4];
   int coords[4];
-  off_t bytes;
+  n_uint64_t bytes;
   struct timeval t1;
 
   gettimeofday(&t1,NULL);
@@ -200,7 +206,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   int ME_flag=0, MB_flag=0, status=0;
   int t=0, x=0, y=0, z=0;
   char message[100];
-  off_t bytes;
+  n_uint64_t bytes;
 #ifndef WORDS_BIGENDIAN
   su3 tmp[4];
 #endif
@@ -213,7 +219,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
     sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f", 
 	    plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
   }
-  bytes = (off_t)strlen( message );
+  bytes = (n_uint64_t)strlen( message );
   ofs = fopen(filename, "w");
   if(ofs == (FILE*)NULL) {
     fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
@@ -235,7 +241,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   limeDestroyHeader( limeheader );
   limeWriteRecordData(message, &bytes, limewriter);
 
-  bytes = (off_t)(LX*LY*LZ*T*4*sizeof(su3));
+  bytes = (n_uint64_t)(LX*LY*LZ*T*4*sizeof(su3));
   MB_flag=0; ME_flag=1;
   limeheader = limeCreateHeader(MB_flag, ME_flag, "ildg-binary-data", bytes);
   status = limeWriteRecordHeader( limeheader, limewriter);
@@ -454,7 +460,7 @@ int read_gauge_field_time_p(char * filename){
 int read_lime_gauge_field(char * filename){
   FILE * ifs;
   int t, x, y, z, status;
-  off_t bytes;
+  n_uint64_t bytes;
   char * header_type;
   LimeReader * limereader;
 #ifndef WORDS_BIGENDIAN
@@ -508,7 +514,7 @@ int read_lime_gauge_field(char * filename){
     exit(501);
   }
 
-  bytes = (off_t)4*sizeof(su3);
+  bytes = (n_uint64_t)4*sizeof(su3);
 #ifdef WORDS_BIGENDIAN
   bytes = sizeof(su3);
 #endif
@@ -516,7 +522,7 @@ int read_lime_gauge_field(char * filename){
     for(z = 0; z < LZ; z++){
       for(y = 0; y < LY; y++){
 #if (defined MPI)
-	limeReaderSeek(limereader,(off_t) 
+	limeReaderSeek(limereader,(n_uint64_t) 
 		       (g_proc_coords[1]*LX + 
 			(((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
 			 + g_proc_coords[2]*LY+y)*LX*g_nproc_x)*4*sizeof(su3),
@@ -878,7 +884,7 @@ void byte_swap_assign(void * out_ptr, void * in_ptr, int nmemb){
 
 int write_ildg_format_xml(char *filename, LimeWriter * limewriter){
   FILE * ofs;
-  off_t bytes, bytes_left, bytes_to_copy;
+  n_uint64_t bytes, bytes_left, bytes_to_copy;
   int MB_flag=1, ME_flag=0, status=0;
   LimeRecordHeader * limeheader;
   char buf[MAXBUF];
@@ -939,10 +945,10 @@ int write_ildg_format_xml(char *filename, LimeWriter * limewriter){
   return(0);
 }
 
-off_t file_size(FILE *fp)
+n_uint64_t file_size(FILE *fp)
 {
-  off_t oldpos = ftello(fp);
-  off_t length;
+  n_uint64_t oldpos = ftello(fp);
+  n_uint64_t length;
   
   if (fseeko(fp, 0L,SEEK_END) == -1)
     return -1;
