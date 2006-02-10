@@ -12,6 +12,8 @@
  *
  ***********************************************/
 
+#define ALIGN __attribute__ ((aligned (16)))
+
 #define _bgl_load(s) \
   reg00 = __lfpd((double*)&(s).c0); \
   reg01 = __lfpd((double*)&(s).c1); \

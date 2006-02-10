@@ -32,6 +32,10 @@ void xchange_field(spinor * const l, const int ieo) {
 #endif
 #ifdef MPI
 
+#  if (defined BGL && defined XLC)
+  __alignx(16, l);
+#  endif
+
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */

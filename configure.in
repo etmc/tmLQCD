@@ -497,12 +497,12 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
   DEBUGFLAG="-g"
   OPTARGS="-O3"
-  AC_DEFINE(BGL,1,[We are on a Blue Gene/L])
+  AC_DEFINE(BGL,1,[Optimize for Blue Gene/L])
 
   if test "$GCC" != yes; then
     CFLAGS="-qsrcmsg -qarch=440d -qtune=440 $CFLAGS"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
-    OPTARGS="-O3 -qhot=simd"
+    OPTARGS="-O3"
 # OPTARGS="-qhot" leads to wrong code
     XLC=yes
     AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)

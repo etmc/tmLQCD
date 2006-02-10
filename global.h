@@ -56,6 +56,8 @@
 
 #if ((defined SSE)||(defined SSE2)||(defined SSE3))
 #  include "sse.h"
+#elif defined BGL
+# include "bgl.h"
 #else
 #  define ALIGN
 #endif

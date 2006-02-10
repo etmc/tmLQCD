@@ -14,8 +14,6 @@
  *
  ******************************************/
 
-/* #define BGL */
-
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -419,11 +417,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #elif (defined BGL && defined XLC)
 
-#include "bgl.h"
-
-#undef ALIGN
-#define ALIGN __attribute__ ((aligned (16)))
-
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int icx,icy,icz,ioff,ioff2;
   int ix,iy,iz;
@@ -483,12 +476,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_su3_multiply((*up));
     _bgl_vector_cmplx_mul(ka0);
     _bgl_store_up_rs0();
-    _bgl_store_up_rs1();
+    _bgl_store_up_rs2();
 
     _bgl_load((*sp).s1);
     _bgl_load_up((*sp).s3);
     _bgl_vector_add();
-      
+
     _bgl_su3_multiply((*up));
     _bgl_vector_cmplx_mul(ka0);
     _bgl_store_up_rs1();
@@ -508,13 +501,13 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_load((*sm).s0);
     _bgl_load_up((*sm).s2);
     _bgl_vector_sub();
-      
+
     _bgl_su3_inverse_multiply((*um));
     _bgl_vector_cmplxcg_mul(ka0);
 
     _bgl_add_to_rs0();
     _bgl_sub_from_rs2();
-      
+
     _bgl_load((*sm).s1);
     _bgl_load_up((*sm).s3);
     _bgl_vector_sub();
@@ -560,9 +553,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_vector_cmplx_mul(ka1);
 
     _bgl_add_to_rs1();
-    
 /*     _bgl_vector_i_mul(); */
-    _bgl_i_mul_sub_from_rs2()
+    _bgl_i_mul_sub_from_rs2();
 
     /*********************** direction -1 ************************/
 
@@ -633,7 +625,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_add_to_rs1();
     _bgl_sub_from_rs2();
 
-
     /*********************** direction -2 ************************/
 
     iy=g_iup[ix][3]; 
@@ -664,7 +655,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_add_to_rs1();
 
     _bgl_add_to_rs2();
-      
+
     /*********************** direction +3 ************************/
 
     iy=g_idn[ix][3]; 
@@ -681,30 +672,24 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     _bgl_load((*sp).s0);
     _bgl_load_up((*sp).s2);
-/*     _bgl_vector_i_mul(); */
     _bgl_vector_i_mul_add();
 
     _bgl_su3_multiply((*up));
     _bgl_vector_cmplx_mul(ka3);
 
     _bgl_add_to_rs0();
-
-/*     _bgl_vector_i_mul();       */
-    _bgl_i_mul_sub_from_rs3();
+    _bgl_i_mul_sub_from_rs2();
 
     _bgl_load((*sp).s1);
     _bgl_load_up((*sp).s3);
-/*     _bgl_vector_i_mul(); */
     _bgl_vector_i_mul_sub();
 
     _bgl_su3_multiply((*up));
     _bgl_vector_cmplx_mul(ka3);
 
     _bgl_add_to_rs1();
-
-/*     _bgl_vector_i_mul();       */
     _bgl_i_mul_add_to_rs3();
-      
+
     /*********************** direction -3 ************************/
 
     icz=icx+1;
@@ -749,6 +734,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_i_mul_sub_from_rs3();
     _bgl_store_rs3((*rn).s3);
 
+    /************************ end of loop ************************/
   }
 }
 #elif defined XLC

@@ -9120,7 +9120,7 @@ _ACEOF
   if test "$GCC" != yes; then
     CFLAGS="-qsrcmsg -qarch=440d -qtune=440 $CFLAGS"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
-    OPTARGS="-O3 -qhot=simd"
+    OPTARGS="-O3"
 # OPTARGS="-qhot" leads to wrong code
     XLC=yes
 

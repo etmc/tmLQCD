@@ -61,6 +61,9 @@
 /* Compile with SSE3 support */
 #undef SSE3
 
+/* Optimize for Blue Gene/L */
+#undef BGL
+
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN

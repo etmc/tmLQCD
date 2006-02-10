@@ -291,6 +291,9 @@ int main(int argc,char *argv[]) {
 #ifdef OPTERON
     printf("# The code was compiled for AMD Opteron\n");
 #endif
+#ifdef _GAUGE_COPY
+    printf("# The code was compiled for Blue Gene/L\n");
+#endif
 #ifdef _NEW_GEOMETRY
     printf("# The code was compiled with -D_NEW_GEOMETRY\n");
 #endif

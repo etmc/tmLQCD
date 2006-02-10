@@ -55,7 +55,7 @@ int check_xchange();
 
 int main(int argc,char *argv[])
 {
-  int j,j_max,k,k_max = 30;
+  int j,j_max,k,k_max = 5;
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -96,6 +96,9 @@ int main(int argc,char *argv[])
 #endif
 #ifdef _GAUGE_COPY
     printf("# The code was compiled with -D_GAUGE_COPY\n");
+#endif
+#ifdef _GAUGE_COPY
+    printf("# The code was compiled for Blue Gene/L\n");
 #endif
 
     printf("\n");
@@ -194,7 +197,7 @@ int main(int argc,char *argv[])
     random_spinor_field(g_spinor_field[k], VOLUME/2);
   }
 
-  while(sdt<30.) {
+  while(sdt < 30.) {
 #ifdef MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif

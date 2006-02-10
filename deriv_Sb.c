@@ -41,9 +41,13 @@ void deriv_Sb(const int ieo, const int l, const int k){
   static su3 v1,v2;
   static su3_vector psia,psib,phia,phib;
   static spinor rr;
-  spinor *r,*sp,*sm;
-#ifdef XLC
+  spinor *r ALIGN;
+  spinor *sp ALIGN;
+  spinor *sm ALIGN;
+#if (defined XLC || defined BGLNOTCHECKED)
   double _Complex reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7;
+#endif
+#ifdef XLC
 #pragma disjoint(*r, *sp, *sm, *up, *um, *ddd)
 #endif
   if(ieo==0){
