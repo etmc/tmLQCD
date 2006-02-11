@@ -261,6 +261,33 @@
   reg04 = __fxmul(reg04, reg10); \
   reg05 = __fxmul(reg05, reg10);
 
+#define _bgl_su3_multiply2(u) \
+  reg03 = __fxpmul(reg00, (u).c00.re); \
+  reg06 = __fxpmul(reg01, (u).c01.re); \
+  reg03 = __fpadd(reg06, reg03); \
+  reg07 = __fxpmul(reg02, (u).c02.re); \
+  reg03 = __fpadd(reg07, reg03); \
+  reg03 = __fxcxnpma(reg03, reg00, (u).c00.im); \
+  reg03 = __fxcxnpma(reg03, reg01, (u).c01.im); \
+  reg03 = __fxcxnpma(reg03, reg02, (u).c02.im); \
+  reg04 = __fxpmul(reg00, (u).c10.re); \
+  reg07 = __fxpmul(reg02, (u).c12.re); \
+  reg04 = __fpadd(reg07, reg04); \
+  reg06 = __fxpmul(reg01, (u).c11.re); \
+  reg04 = __fpadd(reg06, reg04); \
+  reg04 = __fxcxnpma(reg04, reg01, (u).c11.im); \
+  reg04 = __fxcxnpma(reg04, reg00, (u).c10.im); \
+  reg04 = __fxcxnpma(reg04, reg02, (u).c12.im); \
+  reg05 = __fxpmul(reg00, (u).c20.re); \
+  reg06 = __fxpmul(reg01, (u).c21.re); \
+  reg05 = __fpadd(reg06, reg05); \
+  reg07 = __fxpmul(reg02, (u).c22.re); \
+  reg05 = __fpadd(reg07, reg05); \
+  reg05 = __fxcxnpma(reg05, reg02, (u).c22.im); \
+  reg05 = __fxcxnpma(reg05, reg00, (u).c20.im); \
+  reg05 = __fxcxnpma(reg05, reg01, (u).c21.im); 
+
+
 #define _bgl_su3_multiply(u) \
   reg03 = __fxpmul(reg00, (u).c00.re); \
   reg06 = __fxpmul(reg01, (u).c01.re); \
@@ -287,6 +314,33 @@
   reg03 = __fxcxnpma(reg03, reg02, (u).c02.im); \
   reg05 = __fxcxnpma(reg05, reg01, (u).c21.im); \
   reg04 = __fxcxnpma(reg04, reg02, (u).c12.im);
+
+#define _bgl_su3_inverse_multiply2(u) \
+  reg03 = __fxpmul(reg00, (u).c00.re); \
+  reg06 = __fxpmul(reg01, (u).c10.re); \
+  reg03 = __fpadd(reg06, reg03); \
+  reg07 = __fxpmul(reg02, (u).c20.re); \
+  reg03 = __fpadd(reg07, reg03); \
+  reg03 = __fxcxnsma(reg03, reg00, (u).c00.im); \
+  reg03 = __fxcxnsma(reg03, reg01, (u).c10.im); \
+  reg03 = __fxcxnsma(reg03, reg02, (u).c20.im); \
+  reg04 = __fxpmul(reg00, (u).c01.re); \
+  reg07 = __fxpmul(reg02, (u).c21.re); \
+  reg04 = __fpadd(reg07, reg04); \
+  reg06 = __fxpmul(reg01, (u).c11.re); \
+  reg04 = __fpadd(reg06, reg04); \
+  reg04 = __fxcxnsma(reg04, reg01, (u).c11.im); \
+  reg04 = __fxcxnsma(reg04, reg00, (u).c01.im); \
+  reg04 = __fxcxnsma(reg04, reg02, (u).c21.im); \
+  reg05 = __fxpmul(reg00, (u).c02.re); \
+  reg06 = __fxpmul(reg01, (u).c12.re); \
+  reg05 = __fpadd(reg06, reg05); \
+  reg07 = __fxpmul(reg02, (u).c22.re); \
+  reg05 = __fpadd(reg07, reg05); \
+  reg05 = __fxcxnsma(reg05, reg02, (u).c22.im); \
+  reg05 = __fxcxnsma(reg05, reg00, (u).c02.im); \
+  reg05 = __fxcxnsma(reg05, reg01, (u).c12.im);
+
 
 #define _bgl_su3_inverse_multiply(u) \
   reg03 = __fxpmul(reg00, (u).c00.re); \

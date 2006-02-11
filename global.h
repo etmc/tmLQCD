@@ -85,6 +85,9 @@ EXTERN int **** g_ipt;
 EXTERN int ** g_iup;
 EXTERN int ** g_idn;
 
+EXTERN int * g_field_z_ipt_even;
+EXTERN int * g_field_z_ipt_odd;
+
 EXTERN spinor ** g_spinor_field;
 
 EXTERN bispinor ** g_bispinor_field;

@@ -61,8 +61,8 @@ extern MPI_Datatype gauge_z_slice_gath;
 extern MPI_Datatype gauge_z_slice_cont;
 extern MPI_Datatype gauge_z_slice_gath_split;
 
-extern MPI_Datatype field_z_slice_gath;
 extern MPI_Datatype field_z_slice_cont;
+extern MPI_Datatype field_z_slice_half;
 
 #ifdef PARALLELXYZT
 extern spinor * field_buffer_z;

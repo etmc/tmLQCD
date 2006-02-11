@@ -739,6 +739,58 @@ void geometry(){
     }
   }
 
+#if defined PARALLELXYZT
+  ix = 0;
+  for(x0 = 0; x0 < T; x0++) {
+    for(x1 = 0; x1 < LX; x1++) {
+      for(x2 = 0; x2 < LY; x2++) {
+	if((x0 + x1 + x2 +  
+	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
+	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==0) { 
+	  g_field_z_ipt_even[ix] = g_lexic2eosub[ g_ipt[x0][x1][x2][0]];
+	  ix++;
+	}
+      }
+    }
+  }
+  for(x0 = 0; x0 < T; x0++) {
+    for(x1 = 0; x1 < LX; x1++) {
+      for(x2 = 0; x2 < LY; x2++) {
+	if((x0 + x1 + x2 + (LZ-1) + 
+	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
+	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==0) { 
+	  g_field_z_ipt_even[ix] = g_lexic2eosub[ g_ipt[x0][x1][x2][LZ-1]];
+	  ix++;
+	}
+      }
+    }
+  }
+  ix = 0;
+  for(x0 = 0; x0 < T; x0++) {
+    for(x1 = 0; x1 < LX; x1++) {
+      for(x2 = 0; x2 < LY; x2++) {
+	if((x0 + x1 + x2 +  
+	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
+	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==1) { 
+	  g_field_z_ipt_odd[ix] = g_lexic2eosub[ g_ipt[x0][x1][x2][0]];
+	  ix++;
+	}
+      }
+    }
+  }
+  for(x0 = 0; x0 < T; x0++) {
+    for(x1 = 0; x1 < LX; x1++) {
+      for(x2 = 0; x2 < LY; x2++) {
+	if((x0 + x1 + x2 + (LZ-1) + 
+	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
+	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==1) { 
+	  g_field_z_ipt_odd[ix] = g_lexic2eosub[ g_ipt[x0][x1][x2][LZ-1]];
+	  ix++;
+	}
+      }
+    }
+  }
+#endif
   /* The rectangular gauge action part */
   /* Everything is stored behind VOLUMEPLUSRAND-1 !*/
   if(g_dbw2rand != 0) {

@@ -419,7 +419,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int icx,icy,icz,ioff,ioff2;
-  int ix,iy,iz;
+  int ix,iy,iz, zp, zm;
   su3 *up ALIGN;
   su3 *um ALIGN;
   spinor *sp ALIGN;
@@ -456,6 +456,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
    
   /**************** loop over all lattice sites ******************/
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
+    zp = 0;
+    zm = 0;
     ix=g_eo2lexic[icx];
     /*********************** direction +0 ************************/
     iy=g_idn[ix][0]; 
@@ -684,6 +686,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_load_up((*sp).s3);
     _bgl_vector_i_mul_sub();
 
+
     _bgl_su3_multiply((*up));
     _bgl_vector_cmplx_mul(ka3);
 
@@ -704,7 +707,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     _bgl_load((*sm).s0);
     _bgl_load_up((*sm).s2);
-/*     _bgl_vector_i_mul(); */
     _bgl_vector_i_mul_sub();
       
     _bgl_su3_inverse_multiply((*um));
@@ -721,7 +723,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     _bgl_load((*sm).s1);
     _bgl_load_up((*sm).s3);
-/*     _bgl_vector_i_mul(); */
     _bgl_vector_i_mul_add();
       
     _bgl_su3_inverse_multiply((*um));

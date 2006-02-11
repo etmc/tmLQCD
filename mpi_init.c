@@ -49,9 +49,8 @@ MPI_Datatype field_y_slice_gath;
 MPI_Datatype field_y_slice_cont;
 MPI_Datatype field_y_subslice;
 
-MPI_Datatype field_z_slice_gath;
 MPI_Datatype field_z_slice_cont;
-MPI_Datatype field_z_subslice;
+MPI_Datatype field_z_slice_half;
 
 MPI_Datatype deri_y_slice_cont;
 MPI_Datatype deri_y_subslice;
@@ -73,10 +72,6 @@ MPI_Datatype gauge_z_subslice;
 MPI_Datatype gauge_z_eo_subslice;
 MPI_Datatype gauge_z_slice_gath_split;
 
-MPI_Datatype field_z_slice_gath;
-MPI_Datatype field_z_slice_cont;
-MPI_Datatype field_z_subslice;
-
 MPI_Datatype deri_z_slice_cont;
 MPI_Datatype deri_z_subslice;
 MPI_Datatype deri_z_eo_subslice;
@@ -96,7 +91,7 @@ MPI_Datatype gauge_zy_edge_gath;
 MPI_Datatype gauge_zy_edge_gath_split;
 
 #ifdef PARALLELXYZT
-spinor * field_buffer_z;
+spinor * field_buffer_z ALIGN;
 #endif
 
 MPI_Comm mpi_time_slices;
@@ -337,36 +332,42 @@ void mpi_init(int argc,char *argv[]) {
   /* this is a single spinor field on one space-time point */
   MPI_Type_contiguous(24, MPI_DOUBLE, &field_point);
   /* Tis is an even or odd spinor field time slice, continuous */
-  MPI_Type_contiguous(LX*LY*LZ/2, field_point, &field_time_slice_cont); 
+/*   MPI_Type_contiguous(LX*LY*LZ/2, field_point, &field_time_slice_cont);  */
+  MPI_Type_contiguous(LX*LY*LZ*12, MPI_DOUBLE, &field_time_slice_cont); 
   /* Commit the new types */
   MPI_Type_commit(&field_time_slice_cont);
 
   /* This is an even or odd continuous spinor field x-slice */
-  MPI_Type_contiguous(T*LY*LZ/2, field_point, &field_x_slice_cont);
+  MPI_Type_contiguous(T*LY*LZ/2, field_point, &field_x_slice_cont); 
+/*   MPI_Type_contiguous(12*T*LY*LZ, MPI_DOUBLE, &field_x_slice_cont); */
   /* this is an even or odd continuoues spinor field xt-slice */
   MPI_Type_contiguous(LY*LZ/2, field_point, &field_x_subslice);
   /* this type puts T xt-slices together being the internal x-boundary in */
   /* even/odd ordered spinor fields */
-  MPI_Type_vector(T, 1, LX, field_x_subslice, &field_x_slice_gath);
+  MPI_Type_vector(T, 1, LX, field_x_subslice, &field_x_slice_gath); 
+/*   MPI_Type_vector(T, 12*LY*LZ, 12*LX*LY*LZ, MPI_DOUBLE, &field_x_slice_gath); */
   MPI_Type_commit(&field_x_slice_gath);
   MPI_Type_commit(&field_x_slice_cont);
 
   /* This is an even or odd continuous spinor field y-slice */
-  MPI_Type_contiguous(T*LX*LZ/2, field_point, &field_y_slice_cont);
+  MPI_Type_contiguous(T*LX*LZ/2, field_point, &field_y_slice_cont); 
+/*   MPI_Type_contiguous(12*T*LX*LZ, MPI_DOUBLE, &field_y_slice_cont); */
   /* this is an even or odd continuoues spinor field xt-slice */
   MPI_Type_contiguous(LZ/2, field_point, &field_y_subslice);
   /* this type puts T*LX xt-slices together being the internal x-boundary in */
   /* even/odd ordered spinor fields */
-  MPI_Type_vector(T*LX, 1, LY, field_y_subslice, &field_y_slice_gath);
+  MPI_Type_vector(T*LX, 1, LY, field_y_subslice, &field_y_slice_gath); 
+/*   MPI_Type_vector(T*LX, 12*LZ, 12*LY*LZ, MPI_DOUBLE, &field_y_slice_gath); */
   MPI_Type_commit(&field_y_slice_gath);
   MPI_Type_commit(&field_y_slice_cont);
 
   /* This is an even or odd continuous spinor field z-slice */
-  MPI_Type_contiguous(T*LX*LY/2, field_point, &field_z_slice_cont);
+/*   MPI_Type_contiguous(T*LX*LY/2, field_point, &field_z_slice_cont); */
+  MPI_Type_contiguous(12*T*LX*LY, MPI_DOUBLE, &field_z_slice_cont);
+  MPI_Type_vector(T*LX*LY/2, 12, 24, MPI_DOUBLE, &field_z_slice_half);
   /* this type puts T*LX xt-slices together being the internal x-boundary in */
   /* even/odd ordered spinor fields */
-  MPI_Type_vector(T*LX*LY/2, 1, LZ/2, field_point, &field_z_slice_gath);
-  MPI_Type_commit(&field_z_slice_gath);
+  MPI_Type_commit(&field_z_slice_half);
   MPI_Type_commit(&field_z_slice_cont);
 
   /* Now the derivative fields */

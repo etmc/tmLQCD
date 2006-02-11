@@ -37,10 +37,14 @@
 #include "test/check_geometry.h"
 #include "mpi_init.h"
 
-#ifndef PARALLELXT
+#ifdef PARALLELT
 #  define SLICE (LX*LY*LZ/2)
-#else
+#elif defined PARALLELXT
 #  define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2))
+#elif defined PARALLELXYT
+#  define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2) + (T*LX*LZ))
+#elif defined PARALLELXYZT
+#  define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2) + (T*LX*LZ) + (T*LX*LY))
 #endif
 
 #ifdef BGL

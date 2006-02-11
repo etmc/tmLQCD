@@ -40,6 +40,13 @@ int init_geometry_indices(const int V) {
   g_eo2lexic = calloc(V, sizeof(int));
   if(errno == ENOMEM) return(11);
 
+#if defined PARALLELXYZT
+  g_field_z_ipt_even = calloc(T*LX*LY, sizeof(int));
+  if(errno == ENOMEM) return(12);
+  g_field_z_ipt_odd  = calloc(T*LX*LY, sizeof(int));
+  if(errno == ENOMEM) return(13);
+#endif
+
   g_idn[0] = idn;
   g_iup[0] = iup;
 
@@ -74,4 +81,8 @@ void free_geometry_indices() {
   free(g_eo2lexic);
   free(g_lexic2eosub);
   free(g_lexic2eo);
+#ifdef PARALLELXYZT
+  free(g_field_z_ipt_odd);
+  free(g_field_z_ipt_even);
+#endif
 }
