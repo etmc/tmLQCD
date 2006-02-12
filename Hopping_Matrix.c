@@ -417,6 +417,14 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #elif (defined BGL && defined XLC)
 
+/**********************************
+ *
+ * Blue Gene/L Version
+ *
+ * Author: Carsten Urbach
+ *
+ **********************************/
+
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int icx,icy,icz,ioff,ioff2;
   int ix,iy,iz, zp, zm;

@@ -8,8 +8,13 @@
  *
  * In the functions where they are to be used
  * there must be declared
- * double _Complex reg0, reg1,...,reg7;
+ * double _Complex reg00, reg01,...,reg07;
+ * double _Complex reg10, ...
+ * double _Complex rs00, ..., rs32
  *
+ * Author: Carsten Urbach
+ *         carsten.urbach@liverpool.ac.uk
+ * 
  ***********************************************/
 
 #define ALIGN __attribute__ ((aligned (16)))
