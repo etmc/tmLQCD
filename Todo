@@ -1,2 +1,5 @@
-for release 3.0.0
-- add a third parallelisation direction.
+For Blue Gene/L:
+- tune get_staples and get_rectangular_staples (su3_times_su3, prefetching)
+- tune xchange_gauge and xchange_deri like xchange_field
+- linear algebra: add __alignx and unrolling in the most important routines.
+  maybe write for the most important ones versions with intrinsic functions

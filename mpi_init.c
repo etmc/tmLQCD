@@ -92,6 +92,7 @@ MPI_Datatype gauge_zy_edge_gath_split;
 
 #ifdef PARALLELXYZT
 spinor * field_buffer_z ALIGN;
+spinor * field_buffer_z2 ALIGN;
 #endif
 
 MPI_Comm mpi_time_slices;
@@ -191,6 +192,7 @@ void mpi_init(int argc,char *argv[]) {
 
 #  ifdef PARALLELXYZT
   field_buffer_z = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
+  field_buffer_z2 = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
 #  endif
 
   MPI_Cart_create(MPI_COMM_WORLD, ndims, dims, periods, reorder, &g_cart_grid);

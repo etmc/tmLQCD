@@ -65,7 +65,8 @@ extern MPI_Datatype field_z_slice_cont;
 extern MPI_Datatype field_z_slice_half;
 
 #ifdef PARALLELXYZT
-extern spinor * field_buffer_z;
+extern spinor * field_buffer_z ALIGN;
+extern spinor * field_buffer_z2 ALIGN;
 #endif
 
 extern MPI_Comm mpi_time_slices;
