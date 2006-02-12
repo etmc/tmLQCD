@@ -284,11 +284,9 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 #endif
 #if ((defined PARALLELXT) || (defined PARALLELXYT) || defined PARALLELXYZT)
   if(x1 == LX+1) {
-    if((x0 < T) && (x0 > -1) && (x2 < LY) && (x2 > -1) && (x3 < LZ) && (x3 > -1)) {
-      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
-    }
+    ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
     /* x2t */
-    else if(x0 == T) {
+    if(x0 == T) {
       ix = VOLUMEPLUSRAND + RAND + 4*LY*LZ
 	+ y2*LZ + y3;
     }
@@ -320,11 +318,9 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 # endif
   }
   if(x1 == -2) {
-    if((x0 < T) && (x0 > -1) && (x2 < LY) && (x2 > -1) && (x3 < LZ) && (x3 > -1)) {
-      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
-    }
+    ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
     /* x2t */
-    else if(x0 == T) {
+    if(x0 == T) {
       ix = VOLUMEPLUSRAND + RAND + 5*LY*LZ
 	+ y2*LZ + y3;
     }
@@ -358,11 +354,9 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 #endif
 #if (defined PARALLELXYT || defined PARALLELXYZT)
   if(x2 == LY+1) {
-    if((x0 < T) && (x0 > -1) && (x1 < LX) && (x1 > -1) && (x3 > -1) && (x3 < LZ)) {
-      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + y0*LX*LZ + y1*LZ + y3;
-    }
+    ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + y0*LX*LZ + y1*LZ + y3;
     /* y2x */
-    else if(x1 == LX) {
+    if(x1 == LX) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 4*T*LZ
 	+ y0*LZ + y3;
     }
@@ -392,11 +386,9 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 #  endif
   }
   if(x2 == -2) {
-    if((x0 < T) && (x0 > -1) && (x1 < LX) && (x1 > -1) && (x3 > -1) && (x3 < LZ)) {
-      ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ + y0*LX*LZ + y1*LZ + y3;      
-    }
+    ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ + y0*LX*LZ + y1*LZ + y3;      
     /* y2x */
-    else if(x1 == LX) {
+    if(x1 == LX) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 5*T*LZ
 	+ y0*LZ + y3;
     }

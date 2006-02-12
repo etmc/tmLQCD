@@ -955,7 +955,7 @@ int check_geometry()
 
 	  if(x0 == T) {
 	    iy0 = g_iup[ix][0];
-	    if(iy0 < VOLUMEPLUSRAND + RAND + LY*LZ || iy0 >= VOLUMEPLUSRAND + + RAND + 2*LY*LZ) {
+	    if(iy0 < VOLUMEPLUSRAND + RAND + LY*LZ || iy0 >= VOLUMEPLUSRAND + RAND + 2*LY*LZ) {
 	      printf("The DBW2 boundary is not correctly mapped in up t-direction down x %d %d %d %d %d %d\n", x0, x1, x2, x3, ix, iy0);
 	      printf("Program aborted\n");
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
