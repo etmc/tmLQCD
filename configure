@@ -9309,7 +9309,7 @@ if test ! -e test; then
   mkdir test
 fi
 
-INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${top_srcdir}/ -I${lime_dir}/include/ -I../lime/include/"
+INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${top_builddir}/  -I\${top_srcdir}/ -I${lime_dir}/include/ -I../lime/include/"
 LIBS="-lsolver -llinalg $LIBS"
 AUTOCONF=autoconf
 
