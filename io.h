@@ -30,5 +30,6 @@ int read_lime_gauge_field(char * filename);
 int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filename, 
 			       const int ts, const int vol);
 int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filename);
+int write_first_messages(FILE * parameterfile, const int integtyp, const int inv);
 
 #endif
