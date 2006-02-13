@@ -991,11 +991,12 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
 	    g_csg_N[0], g_csg_N[2], g_csg_N[4]);
   }
   if(inv == 1) {
-    printf("# beta = %d, mu = %f\n", g_beta, g_mu/2./g_kappa, g_kappa);
+    printf("# beta = %f, mu = %f, kappa = %f\n", g_beta, g_mu/2./g_kappa, g_kappa);
     fprintf(parameterfile,
-	    "# beta = %d, mu = %f\n", g_beta, g_mu/2./g_kappa, g_kappa);
+	    "# beta = %f, mu = %f, kappa = %f\n", g_beta, g_mu/2./g_kappa, g_kappa);
   }
   fflush(stdout); fflush(parameterfile);
+  return(0);
 }
 
 
