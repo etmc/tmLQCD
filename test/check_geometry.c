@@ -1745,7 +1745,7 @@ int check_geometry()
   }
 
   if(g_proc_id == 0 ) {
-    printf("The lattice is correctly mapped by the index arrays\n");
+    printf("# The lattice is correctly mapped by the index arrays\n");
     printf("\n"); 
     fflush(stdout);
   }

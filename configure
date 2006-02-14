@@ -6243,6 +6243,8 @@ cat >>confdefs.h <<\_ACEOF
 #define FIXEDVOLUME 1
 _ACEOF
 
+            ac_config_files="$ac_config_files fixed_volume.h"
+
 else
   echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
@@ -9842,6 +9844,7 @@ for ac_config_target in $ac_config_targets
 do
   case "$ac_config_target" in
   # Handling of arguments.
+  "fixed_volume.h" ) CONFIG_FILES="$CONFIG_FILES fixed_volume.h" ;;
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "linalg/Makefile" ) CONFIG_FILES="$CONFIG_FILES linalg/Makefile" ;;
   "solver/Makefile" ) CONFIG_FILES="$CONFIG_FILES solver/Makefile" ;;

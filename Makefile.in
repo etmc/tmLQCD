@@ -35,7 +35,7 @@ MODULES = init_gauge_field init_geometry_indices init_spinor_field \
 	test/check_geometry test/check_xchange invert_eo \
 	measure_rectangles get_rectangle_staples \
 	derivative_psf ext_integrator polyakov_loop \
-	2mn_integrator \
+	2mn_integrator get_staples \
 ### eigenvalues_bi max_eigenvalues_bi Nondegenerate_Matrix \
 
 PROGRAMS = hmc_tm testtrace thermal_cycle_tm benchmark invert gwc2ildg ildg2gwc
@@ -75,7 +75,7 @@ clean: clean-recursive Makefile
 	rm -f hmc_tm hybrid *.o *.d
 
 distclean: distclean-recursive Makefile
-	rm -f hmc_tm hybrid *.o *.d *~ Makefile config.log config.status
+	rm -f hmc_tm hybrid *.o *.d *~ Makefile config.log config.status fixed_volume.h
 
 .PHONY: all clean compile-clean distclean dep \
 	flex_read_input ${PROGRAMS} all-recursive \

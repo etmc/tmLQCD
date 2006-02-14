@@ -63,6 +63,7 @@
 #include "hybrid_update.h"
 #include "ranlxd.h"
 #include "sse.h"
+#include "get_staples.h"
 #include "overrelaxation.h"
 
 /****************************************************************/

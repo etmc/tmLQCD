@@ -107,6 +107,7 @@ AC_ARG_WITH([fixedvolume],
 if test $with_fixvol = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(FIXEDVOLUME,1,Fixed volume at compiletime)
+  AC_CONFIG_FILES([fixed_volume.h])
 else
   AC_MSG_RESULT(no)
 fi

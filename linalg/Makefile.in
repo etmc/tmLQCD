@@ -7,7 +7,7 @@ top_srcdir = @top_srcdir@
 subdir = linalg
 builddir = @builddir@
 
-CFLAGS = @CFLAGS@ @OPTARGS@
+CFLAGS = @CFLAGS@
 DEPFLAGS = @DEPFLAGS@
 LDFLAGS = @LDFLAGS@
 DEFS = @DEFS@

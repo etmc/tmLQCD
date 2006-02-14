@@ -30,7 +30,10 @@ $(LINKLIBS): %.a: Makefile
 #dep rule
 
 $(addsuffix .d,$(ALLOBJ)): %.d: ${srcdir}/%.c Makefile
-	 @ $(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@ 
+	 @ $(CCDEP) ${DEPFLAGS} ${INCLUDES} ${DEFS} $< > $@ 
+
+${top_builddir}/fixed_volume.h: ${top_srcdir}/fixed_volume.h.in ${top_builddir}/config.status
+	cd ${abs_top_builddir} && CONFIG_FILES=fixed_volume.h CONFIG_HEADERS= $(SHELL) ${top_builddir}/config.status
 
 all-recursive all-debug-recursive all-profile-recursive clean-recursive distclean-recursive compile-clean-recursive: Makefile
 	@set fnord ${MAKEFLAGS}; amf=$$2; \
