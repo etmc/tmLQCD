@@ -44,6 +44,7 @@
 #include "init_geometry_indices.h"
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
+#include "update_backward_gauge.h"
 #include "invert_eo.h"
 
 
@@ -175,18 +176,8 @@ int main(int argc,char *argv[]) {
     xchange_gauge();
 #endif
 #ifdef _GAUGE_COPY
-    /* set the backward gauge field */
-    for(ix = 0; ix < VOLUME;ix++) {
-      kb=g_idn[ix][0];
-      _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
-      kb=g_idn[ix][1];
-      _su3_assign(g_gauge_field_back[ix][1],g_gauge_field[kb][1]);
-      kb=g_idn[ix][2];
-      _su3_assign(g_gauge_field_back[ix][2],g_gauge_field[kb][2]);
-      kb=g_idn[ix][3];
-      _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
-    }
-#endif  
+  update_backward_gauge();
+#endif
     if(source_format_flag == 0) {
       sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore);
     }

@@ -20,7 +20,8 @@
 #include "deriv_Sb.h"
 #include "Hopping_Matrix.h"
 #include "tm_operators.h"
-#include "hybrid_update.h"
+#include "hybrid_update.h" 
+#include "update_backward_gauge.h"
 #include "derivative_psf.h"
 #include "ext_integrator.h"
 

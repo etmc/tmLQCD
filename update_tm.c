@@ -37,6 +37,7 @@
 #include "ext_integrator.h"
 #include "2mn_integrator.h"
 #include "solver/chrono_guess.h"
+#include "update_backward_gauge.h"
 #include "update_tm.h"
 
 
