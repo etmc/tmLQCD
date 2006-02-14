@@ -38,11 +38,11 @@ int init_gauge_field(const int V, const int back) {
   }
 
   if(back == 1) {
-    g_gauge_field_back = calloc(V, sizeof(su3*));
+    g_gauge_field_back = calloc((VOLUME+RAND), sizeof(su3*));
     if(errno == ENOMEM) {
       return(2);
     }
-    gauge_field_back = calloc(4*V+1, sizeof(su3));
+    gauge_field_back = calloc(4*(VOLUME+RAND)+1, sizeof(su3));
     if(errno == ENOMEM) {
       return(2);
     }
@@ -51,15 +51,15 @@ int init_gauge_field(const int V, const int back) {
 #else
     g_gauge_field_back[0] = gauge_field_back;
 #endif
-    for(i = 1; i < V; i++){
+    for(i = 1; i < (VOLUME+RAND); i++){
       g_gauge_field_back[i] = g_gauge_field_back[i-1]+4;
     }
 #if ((!defined _NEW_GEOMETRY))
-    g_gauge_field_forward = calloc(V, sizeof(su3*));
+    g_gauge_field_forward = calloc((VOLUME+RAND), sizeof(su3*));
     if(errno == ENOMEM) {
       return(2);
     }
-    gauge_field_forward = calloc(4*V+1, sizeof(su3));
+    gauge_field_forward = calloc(4*(VOLUME+RAND)+1, sizeof(su3));
     if(errno == ENOMEM) {
       return(2);
     }
@@ -68,7 +68,7 @@ int init_gauge_field(const int V, const int back) {
 #else
     g_gauge_field_forward[0] = gauge_field_forward;
 #endif
-    for(i = 1; i < V; i++){
+    for(i = 1; i < (VOLUME+RAND); i++){
       g_gauge_field_forward[i] = g_gauge_field_forward[i-1]+4;
     }
 #endif
