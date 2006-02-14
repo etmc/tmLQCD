@@ -347,6 +347,7 @@ void update_gauge(double step) {
 void update_backward_gauge() {
   int ix=0, kb=0;
 
+#ifdef _NEW_GEOMETRY
   /* set the backward gauge field */
   for(ix = 0; ix < VOLUME;ix++) {
     kb=g_idn[ix][0];
@@ -358,6 +359,42 @@ void update_backward_gauge() {
     kb=g_idn[ix][3];
     _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
   }
+#else
+  for(ix = 0; ix < VOLUME/2;ix++) {
+    kb=g_idn[g_eo2lexic[ix]][0];
+    _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
+    kb=g_idn[g_eo2lexic[ix]][1];
+    _su3_assign(g_gauge_field_back[ix][1],g_gauge_field[kb][1]);
+    kb=g_idn[g_eo2lexic[ix]][2];
+    _su3_assign(g_gauge_field_back[ix][2],g_gauge_field[kb][2]);
+    kb=g_idn[g_eo2lexic[ix]][3];
+    _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
+  }
+  for(ix = (VOLUME+RAND)/2; ix < (VOLUME+RAND)/2+VOLUME/2;ix++) {
+    kb=g_idn[g_eo2lexic[ix]][0];
+    _su3_assign(g_gauge_field_back[ix][0],g_gauge_field[kb][0]);
+    kb=g_idn[g_eo2lexic[ix]][1];
+    _su3_assign(g_gauge_field_back[ix][1],g_gauge_field[kb][1]);
+    kb=g_idn[g_eo2lexic[ix]][2];
+    _su3_assign(g_gauge_field_back[ix][2],g_gauge_field[kb][2]);
+    kb=g_idn[g_eo2lexic[ix]][3];
+    _su3_assign(g_gauge_field_back[ix][3],g_gauge_field[kb][3]);
+  }
+  for(ix = 0; ix < VOLUME/2;ix++) {
+    kb=g_eo2lexic[ix];
+    _su3_assign(g_gauge_field_forward[ix][0],g_gauge_field[kb][0]);
+    _su3_assign(g_gauge_field_forward[ix][1],g_gauge_field[kb][1]);
+    _su3_assign(g_gauge_field_forward[ix][2],g_gauge_field[kb][2]);
+    _su3_assign(g_gauge_field_forward[ix][3],g_gauge_field[kb][3]);
+  }
+  for(ix = (VOLUME+RAND)/2; ix < (VOLUME+RAND)/2 + VOLUME/2;ix++) {
+    kb=g_eo2lexic[ix];
+    _su3_assign(g_gauge_field_forward[ix][0],g_gauge_field[kb][0]);
+    _su3_assign(g_gauge_field_forward[ix][1],g_gauge_field[kb][1]);
+    _su3_assign(g_gauge_field_forward[ix][2],g_gauge_field[kb][2]);
+    _su3_assign(g_gauge_field_forward[ix][3],g_gauge_field[kb][3]);
+  }
+#endif
 }
 
 void leap_frog(double step, int m, int nsmall) {

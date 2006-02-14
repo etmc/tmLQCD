@@ -21,7 +21,13 @@ Dirac operator, during which the gauge fields stay constant. This
 trick is switched on by the configure option {\ttfamily
   --enable-gaugecopy}.
 
-Note that the additional memory needs might affect the cash coherency.
+In case the gauge fields are not stored in even/odd order a similar
+trick can be used for the price of even another copy of the gauge
+field. If memory-limitations are not an issue then this can help to
+improve the performance of the Dirac operator.
+
+Note that the additional memory needs might affect the cash coherency
+and maybe your application might run out off memory.
 
 \subsubsection{Space-time index arrays}
 

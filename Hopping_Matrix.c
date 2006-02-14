@@ -63,7 +63,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   icy=g_lexic2eosub[iy];
 
   sp=k+icy;
+#if ((defined _GAUGE_COPY) && (!defined _NEW_GEOMETRY))
+  up=&g_gauge_field_forward[ioff][0];
+#else
   up=&g_gauge_field[ix][0];
+#endif
    
   /**************** loop over all lattice sites ******************/
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
@@ -72,10 +76,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
 
-#ifndef _GAUGE_COPY
-    um=&g_gauge_field[iy][0]; 
-#else
+#if ((defined _GAUGE_COPY) && (defined _NEW_GEOMETRY))
     um=&g_gauge_field_back[ix][0]; 
+#elif (!defined _NEW_GEOMETRY)
+    um=&g_gauge_field_back[icx][0]; 
+#else
+    um=&g_gauge_field[iy][0]; 
 #endif
     _prefetch_su3(um);
       
@@ -370,8 +376,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
     iz=g_eo2lexic[icz];
     iy=g_iup[iz][0]; icy=g_lexic2eosub[iy];
-
+#if ((defined _GAUGE_COPY) && (!defined _NEW_GEOMETRY))
+    up=&g_gauge_field_forward[icz][0];
+#else
     up=&g_gauge_field[iz][0];
+#endif
     _prefetch_su3(up);
       
     sp=k+icy;
@@ -465,8 +474,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   icy=g_lexic2eosub[iy];
 
   sp=k+icy;
+
+#if ((defined _GAUGE_COPY) && (!defined _NEW_GEOMETRY))
+  up=&g_gauge_field_forward[ioff][0];
+#else
   up=&g_gauge_field[ix][0];
-   
+#endif
   /**************** loop over all lattice sites ******************/
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
     zp = 0;
@@ -475,10 +488,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     /*********************** direction +0 ************************/
     iy=g_idn[ix][0]; 
     icy=g_lexic2eosub[iy];
-#ifndef _GAUGE_COPY
+#if (!defined _GAUGE_COPY)
     um=&g_gauge_field[iy][0]; 
+#elif (!defined _NEW_GEOMETRY)
+    um=&g_gauge_field_back[icx][0]; 
 #else
-    um=&g_gauge_field_back[ix][0]; 
+    um=&g_gauge_field_back[ix][0];
 #endif
     _prefetch_su3(um); 
     sm=k+icy;
@@ -567,7 +582,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_load_reg1((*sm).s1);
     _bgl_load_reg0_up((*sm).s3);
     _bgl_load_reg1_up((*sm).s2);
-/*     _bgl_vector_i_mul(); */
     _bgl_vector_i_mul_sub_reg0();
     _bgl_vector_i_mul_sub_reg1();
       
@@ -670,7 +684,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     iz=g_eo2lexic[icz];
     iy=g_iup[iz][0]; icy=g_lexic2eosub[iy];
 
+#if ((defined _GAUGE_COPY) && (!defined _NEW_GEOMETRY))
+    up=&g_gauge_field_forward[icz][0];
+#else
     up=&g_gauge_field[iz][0];
+#endif
     _prefetch_su3(up); 
     sp=k+icy;
     _prefetch_spinor(sp); 
@@ -713,11 +731,8 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
   int ioff, ioff2, icx, icy, icz;
   su3 *up,*um;
   spinor *r,*sp,*sm;
-  void *dd;
   spinor temp;
 #pragma disjoint(temp, *sp, *sm, *r, *up, *um)
-
-  double _Complex reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7;
 
   /* for parallelization */
 #ifdef MPI
@@ -744,8 +759,11 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
   iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
 
   sp=k+icy;
+#if ((defined _GAUGE_COPY) && (!defined _NEW_GEOMETRY))
+  up=&g_gauge_field_forward[ioff][0];
+#else
   up=&g_gauge_field[ix][0];
-
+#endif
   for (icx = ioff; icx < (VOLUME/2 + ioff); icx++) {
     ix = g_eo2lexic[icx];
     /*********************** direction +0 ************************/
@@ -753,17 +771,16 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
     
     sm=k+icy;
-    dd=&(*sm).s2.c2.re;
-    _prefetch_spinor_dcbt((void*)sm, dd);
+    _prefetch_spinor((void*)sm);
 
 #ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][0];
-    dd=&g_gauge_field[iy][0].c22.re;
+#elif (!defined _NEW_GEOMETRY)
+    um=&g_gauge_field_back[icx][0]; 
 #else
     um = &g_gauge_field_back[ix][0];
-    dd = &g_gauge_field_back[ix][0].c22.re;
 #endif
-    _prefetch_su3_dcbt((void*)um, dd);
+    _prefetch_su3((void*)um);
 
     _vector_add(psi,(*sp).s0,(*sp).s2);
 
@@ -786,12 +803,10 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
 
     sp=k+icy;
-    dd=&(*sp).s2.c2.re;
-    _prefetch_spinor_dcbt((void*)sp, dd);
+    _prefetch_spinor((void*)sp);
 
-    up=&g_gauge_field[ix][1];     
-    dd=&g_gauge_field[iy][1].c22.re;
-    _prefetch_su3_dcbt((void*)up, dd); 
+    up+=1;
+    _prefetch_su3((void*)up); 
       
     _vector_sub(psi,(*sm).s0,(*sm).s2);
 
@@ -814,17 +829,14 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
 
     sm=k+icy;
-    dd=&(*sm).s2.c2.re;
-    _prefetch_spinor_dcbt((void*)sm, dd);
+    _prefetch_spinor((void*)sm);
 
 #ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][1];
-    dd=&g_gauge_field[iy][1].c22.re;
 #else
-    um=&g_gauge_field_back[ix][1];
-    dd=&g_gauge_field_back[ix][1].c22.re;
+    um+=1;
 #endif
-    _prefetch_su3_dcbt((void*)um, dd);
+    _prefetch_su3((void*)um);
       
     _vector_i_add(psi,(*sp).s0,(*sp).s3);
 
@@ -847,12 +859,10 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
 
     sp=k+icy;
-    dd=&(*sp).s2.c2.re;
-    _prefetch_spinor_dcbt((void*)sp, dd);
+    _prefetch_spinor((void*)sp);
 
-    up=&g_gauge_field[ix][2];
-    dd=&g_gauge_field[iy][2].c22.re;
-    _prefetch_su3_dcbt((void*)up, dd);
+    up+=1;
+    _prefetch_su3((void*)up);
 
     _vector_i_sub(psi,(*sm).s0,(*sm).s3);
 
@@ -875,17 +885,14 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
 
     sm=k+icy;
-    dd=&(*sm).s2.c2.re;
-    _prefetch_spinor_dcbt((void*)sm, dd);
+    _prefetch_spinor((void*)sm);
 
 #ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][2];
-    dd=&g_gauge_field[iy][2].c22.re;
 #else
-    um=&g_gauge_field_back[ix][2];
-    dd=&g_gauge_field_back[ix][2].c22.re;
+    um+=1;
 #endif
-    _prefetch_su3_dcbt((void*)um, dd);
+    _prefetch_su3((void*)um);
 
     _vector_add(psi,(*sp).s0,(*sp).s3);
 
@@ -908,12 +915,10 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
 
     sp=k+icy;
-    dd=&(*sp).s2.c2.re;
-    _prefetch_spinor_dcbt((void*)sp, dd);
+    _prefetch_spinor((void*)sp);
 
-    up=&g_gauge_field[ix][3];
-    dd=&g_gauge_field[iy][3].c22.re;
-    _prefetch_su3_dcbt((void*)up, dd);
+    up+=1;
+    _prefetch_su3((void*)up);
 
     _vector_sub(psi,(*sm).s0,(*sm).s3);
 
@@ -936,17 +941,14 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
 
     sm=k+icy;
-    dd=&(*sm).s2.c2.re;
-    _prefetch_spinor_dcbt((void*)sm, dd);
+    _prefetch_spinor((void*)sm);
 
 #ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][3];
-    dd=&g_gauge_field[iy][3].c22.re;
 #else
-    um=&g_gauge_field_back[ix][3];
-    dd=&g_gauge_field_back[ix][3].c22.re;
+    um+=1;
 #endif
-    _prefetch_su3_dcbt((void*)um, dd);
+    _prefetch_su3((void*)um);
 
     _vector_i_add(psi,(*sp).s0,(*sp).s2);
       
@@ -967,21 +969,21 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     /*********************** direction -3 ************************/
 
     r=l+(icx - ioff);
-    dd=&(*r).s2.c2.re;
-    _prefetch_spinor_dcbt((void*)r, dd);
+    _prefetch_spinor((void*)r);
 
     icz = icx + 1;
     if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
     iz=g_eo2lexic[icz];
     iy=g_iup[iz][0]; icy=g_lexic2eosub[iy];
-
+#if ((defined _GAUGE_COPY) && (!defined _NEW_GEOMETRY))
+    up=&g_gauge_field_forward[icz][0];
+#else
     up=&g_gauge_field[iz][0];
-    dd=&g_gauge_field[iz][0].c22.re;
-    _prefetch_su3_dcbt((void*)up, dd);
+#endif
+    _prefetch_su3((void*)up);
 
     sp=k+icy;
-    dd=&(*sp).s2.c2.re;
-    _prefetch_spinor_dcbt((void*)sp, dd);
+    _prefetch_spinor((void*)sp);
 
     _vector_i_sub(psi,(*sm).s0,(*sm).s2);
 
@@ -1044,12 +1046,15 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     r=l+(icx-ioff);
 
     /*********************** direction +0 ************************/
-
     iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
 
 
     sp=k+icy;
+#if ((defined _GAUGE_COPY) && (!defined _NEW_GEOMETRY))
+    up=&g_gauge_field_forward[icx][0];
+#else
     up=&g_gauge_field[ix][0];
+#endif
       
     _vector_add(psi,(*sp).s0,(*sp).s2);
 
@@ -1072,10 +1077,12 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
 
     sm=k+icy;
-#ifndef _GAUGE_COPY
-    um=&g_gauge_field[iy][0];
-#else
+#if ((defined _GAUGE_COPY) && (!defined _NEW_GEOMETRY))
+    um = &g_gauge_field_back[icx][0];
+#elif defined _GAUGE_COPY
     um = &g_gauge_field_back[ix][0];
+#else
+    um=&g_gauge_field[iy][0];
 #endif
 
     _vector_sub(psi,(*sm).s0,(*sm).s2);
@@ -1099,7 +1106,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
 
     sp=k+icy;
-    up=&g_gauge_field[ix][1];      
+    up+=1;
       
     _vector_i_add(psi,(*sp).s0,(*sp).s3);
 
@@ -1125,7 +1132,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 #ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][1];
 #else
-    um = &g_gauge_field_back[ix][1];
+    um +=1;
 #endif
 
     _vector_i_sub(psi,(*sm).s0,(*sm).s3);
@@ -1149,7 +1156,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
 
     sp=k+icy;
-    up=&g_gauge_field[ix][2];
+    up+=1;
       
     _vector_add(psi,(*sp).s0,(*sp).s3);
 
@@ -1176,7 +1183,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 #ifndef _GAUGE_COPY
     um = &g_gauge_field[iy][2];
 #else
-    um = &g_gauge_field_back[ix][2];
+    um +=1;
 #endif
 
     _vector_sub(psi,(*sm).s0,(*sm).s3);
@@ -1200,7 +1207,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
 
     sp=k+icy;
-    up=&g_gauge_field[ix][3];
+    up+=1;
       
     _vector_i_add(psi,(*sp).s0,(*sp).s2);
       
@@ -1226,7 +1233,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 #ifndef _GAUGE_COPY
     um = &g_gauge_field[iy][3];
 #else
-    um = &g_gauge_field_back[ix][3];
+    um +=1;
 #endif
 
     _vector_i_sub(psi,(*sm).s0,(*sm).s2);

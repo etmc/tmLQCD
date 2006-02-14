@@ -98,6 +98,7 @@ EXTERN int g_csg_N[8];
 
 EXTERN su3 ** g_gauge_field;
 EXTERN su3 ** g_gauge_field_back;
+EXTERN su3 ** g_gauge_field_forward;
 /* This is dirty, but dow not allocate memory */
 /* if no clover is used. */
 EXTERN su3adj ** moment;
