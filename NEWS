@@ -1,3 +1,15 @@
+14.02.2006: --enable-gaugcopy will work now also without
+	    --enable-eogeom . But it requires two additional
+	    copies of the gauge fields.
+
+	    A reasonably well tuned BG/L Dirac operator available
+	    about 10% up to 2048 processors.
+
+13.02.2006: four dimensional parallelisation more or less tested
+
+12.02.2006: But in all but four dimensional parallelisation 
+	    fixed.
+
 10.02.2006: package will compile only with lime >= 1.2.3!
 
 10.02.2006: Build in separate directory possible now.
