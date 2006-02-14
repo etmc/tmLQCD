@@ -49,6 +49,196 @@ void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const 
   }
 }
 
+#elif ((defined BGL) && (defined XLC))
+
+#  include"bgl.h"
+
+void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const int N) {
+  int ix = 1;
+  double *s ALIGN;
+  double *sp ALIGN;
+  double *r ALIGN;
+  double *rp ALIGN;
+  double _Complex x00, x01, x02, x03, x04, x05, x06, x07, 
+    x08, x09, x10, x11;
+  double _Complex y00, y01, y02, y03, y04, y05, y06, y07, 
+    y08, y09, y10, y11;
+  double _Complex a;
+
+#pragma disjoint(*S, *R)
+  a = __cmplx(c, c);
+  __alignx(16, S);
+  __alignx(16, R);
+  s = (double*) S;
+  r = (double*) R;
+  rp = r + 24;
+  sp = s + 24;
+  _prefetch_spinor(rp);
+  _prefetch_spinor(sp);
+  x00 = __lfpd(r);    
+  x01 = __lfpd(r+2);  
+  x02 = __lfpd(r+4);  
+  x03 = __lfpd(r+6);  
+  x04 = __lfpd(r+8);  
+  x05 = __lfpd(r+10); 
+  x06 = __lfpd(r+12); 
+  x07 = __lfpd(r+14); 
+  x08 = __lfpd(r+16); 
+  x09 = __lfpd(r+18); 
+  x10 = __lfpd(r+20); 
+  x11 = __lfpd(r+22); 
+  y00 = __lfpd(s);   
+  y01 = __lfpd(s+2); 
+  y02 = __lfpd(s+4); 
+  y03 = __lfpd(s+6); 
+  y04 = __lfpd(s+8); 
+  y05 = __lfpd(s+10);
+  y06 = __lfpd(s+12);
+  y07 = __lfpd(s+14);
+  y08 = __lfpd(s+16);
+  y09 = __lfpd(s+18);
+  y10 = __lfpd(s+20);
+  y11 = __lfpd(s+22);
+
+  y00 = __fpmadd(y00, x00, a);
+  y01 = __fpmadd(y01, x01, a);
+  y02 = __fpmadd(y02, x02, a);
+  y03 = __fpmadd(y03, x03, a);
+  y04 = __fpmadd(y04, x04, a);
+  y05 = __fpmadd(y05, x05, a);
+  y06 = __fpmadd(y06, x06, a);
+  y07 = __fpmadd(y07, x07, a);
+  y08 = __fpmadd(y08, x08, a);
+  y09 = __fpmadd(y09, x09, a);
+  y10 = __fpmadd(y10, x10, a);
+  y11 = __fpmadd(y11, x11, a);
+  __stfpd(r, y00);
+  __stfpd(r+2, y01);
+  __stfpd(r+4, y02);
+  __stfpd(r+6, y03);
+  __stfpd(r+8, y04);
+  __stfpd(r+10, y05);
+  __stfpd(r+12, y06);
+  __stfpd(r+14, y07);
+  __stfpd(r+16, y08);
+  __stfpd(r+18, y09);
+  __stfpd(r+20, y10);
+  __stfpd(r+22, y11);
+  s = sp;
+  r = rp;
+
+#pragma unroll(12)
+  for(ix = 1; ix < N-1; ix++) {
+    rp += 24;
+    sp += 24;
+    _prefetch_spinor(rp);
+    _prefetch_spinor(sp);
+    x00 = __lfpd(r);    
+    x01 = __lfpd(r+2);  
+    x02 = __lfpd(r+4);  
+    x03 = __lfpd(r+6);  
+    x04 = __lfpd(r+8);  
+    x05 = __lfpd(r+10); 
+    x06 = __lfpd(r+12); 
+    x07 = __lfpd(r+14); 
+    x08 = __lfpd(r+16); 
+    x09 = __lfpd(r+18); 
+    x10 = __lfpd(r+20); 
+    x11 = __lfpd(r+22); 
+    y00 = __lfpd(s);   
+    y01 = __lfpd(s+2); 
+    y02 = __lfpd(s+4); 
+    y03 = __lfpd(s+6); 
+    y04 = __lfpd(s+8); 
+    y05 = __lfpd(s+10);
+    y06 = __lfpd(s+12);
+    y07 = __lfpd(s+14);
+    y08 = __lfpd(s+16);
+    y09 = __lfpd(s+18);
+    y10 = __lfpd(s+20);
+    y11 = __lfpd(s+22);
+
+    y00 = __fpmadd(y00, x00, a);
+    y01 = __fpmadd(y01, x01, a);
+    y02 = __fpmadd(y02, x02, a);
+    y03 = __fpmadd(y03, x03, a);
+    y04 = __fpmadd(y04, x04, a);
+    y05 = __fpmadd(y05, x05, a);
+    y06 = __fpmadd(y06, x06, a);
+    y07 = __fpmadd(y07, x07, a);
+    y08 = __fpmadd(y08, x08, a);
+    y09 = __fpmadd(y09, x09, a);
+    y10 = __fpmadd(y10, x10, a);
+    y11 = __fpmadd(y11, x11, a);
+    __stfpd(r, y00);
+    __stfpd(r+2, y01);
+    __stfpd(r+4, y02);
+    __stfpd(r+6, y03);
+    __stfpd(r+8, y04);
+    __stfpd(r+10, y05);
+    __stfpd(r+12, y06);
+    __stfpd(r+14, y07);
+    __stfpd(r+16, y08);
+    __stfpd(r+18, y09);
+    __stfpd(r+20, y10);
+    __stfpd(r+22, y11);
+    s = sp;
+    r = rp;
+
+  }
+  x00 = __lfpd(r);    
+  x01 = __lfpd(r+2);  
+  x02 = __lfpd(r+4);  
+  x03 = __lfpd(r+6);  
+  x04 = __lfpd(r+8);  
+  x05 = __lfpd(r+10); 
+  x06 = __lfpd(r+12); 
+  x07 = __lfpd(r+14); 
+  x08 = __lfpd(r+16); 
+  x09 = __lfpd(r+18); 
+  x10 = __lfpd(r+20); 
+  x11 = __lfpd(r+22); 
+  y00 = __lfpd(s);   
+  y01 = __lfpd(s+2); 
+  y02 = __lfpd(s+4); 
+  y03 = __lfpd(s+6); 
+  y04 = __lfpd(s+8); 
+  y05 = __lfpd(s+10);
+  y06 = __lfpd(s+12);
+  y07 = __lfpd(s+14);
+  y08 = __lfpd(s+16);
+  y09 = __lfpd(s+18);
+  y10 = __lfpd(s+20);
+  y11 = __lfpd(s+22);
+
+  y00 = __fpmadd(y00, x00, a);
+  y01 = __fpmadd(y01, x01, a);
+  y02 = __fpmadd(y02, x02, a);
+  y03 = __fpmadd(y03, x03, a);
+  y04 = __fpmadd(y04, x04, a);
+  y05 = __fpmadd(y05, x05, a);
+  y06 = __fpmadd(y06, x06, a);
+  y07 = __fpmadd(y07, x07, a);
+  y08 = __fpmadd(y08, x08, a);
+  y09 = __fpmadd(y09, x09, a);
+  y10 = __fpmadd(y10, x10, a);
+  y11 = __fpmadd(y11, x11, a);
+  __stfpd(r, y00);
+  __stfpd(r+2, y01);
+  __stfpd(r+4, y02);
+  __stfpd(r+6, y03);
+  __stfpd(r+8, y04);
+  __stfpd(r+10, y05);
+  __stfpd(r+12, y06);
+  __stfpd(r+14, y07);
+  __stfpd(r+16, y08);
+  __stfpd(r+18, y09);
+  __stfpd(r+20, y10);
+  __stfpd(r+22, y11);
+
+  return;
+}
+
 #elif ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
 
 /* R inoutput , c,S input*/

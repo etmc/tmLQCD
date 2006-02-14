@@ -23,7 +23,7 @@
 
 
 
-#if ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+#if ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext) && (!defined BGL))
 
 void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
 {
@@ -67,9 +67,170 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
    }
 }
 
-#endif
+#elif ((defined BGL) && (defined XLC))
 
-#if ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+/***************************************
+ *
+ * diff with intrinsics
+ *
+ * Carsten.Urbach@liverpool.ac.uk
+ *
+ ***************************************/
+
+#  include"bgl.h"
+
+void diff(spinor * const Q,spinor * const R,spinor * const S, const int N) {
+  int ix = 1;
+  double *s ALIGN;
+  double *sp ALIGN;
+  double *r ALIGN;
+  double *rp ALIGN;
+  double *q ALIGN;
+  double _Complex x00, x01, x02, x03, x04, x05, x06, x07, 
+    x08, x09, x10, x11;
+  double _Complex y00, y01, y02, y03, y04, y05, y06, y07, 
+    y08, y09, y10, y11;
+#pragma disjoint(*R, *S)
+
+  __alignx(16, Q);
+  __alignx(16, R);
+  __alignx(16, S);
+  r = (double*) R;
+  s = (double*) S;
+  q = (double*) Q;
+  rp = r + 24;
+  sp = s + 24;
+  _prefetch_spinor(rp);
+  _prefetch_spinor(sp);
+  x00 = __lfpd(r);    
+  x01 = __lfpd(r+2);  
+  x02 = __lfpd(r+4);  
+  x03 = __lfpd(r+6);  
+  x04 = __lfpd(r+8);  
+  x05 = __lfpd(r+10); 
+  x06 = __lfpd(r+12); 
+  x07 = __lfpd(r+14); 
+  x08 = __lfpd(r+16); 
+  x09 = __lfpd(r+18); 
+  x10 = __lfpd(r+20); 
+  x11 = __lfpd(r+22); 
+  y00 = __lfpd(s);   
+  y01 = __lfpd(s+2); 
+  y02 = __lfpd(s+4); 
+  y03 = __lfpd(s+6); 
+  y04 = __lfpd(s+8); 
+  y05 = __lfpd(s+10);
+  y06 = __lfpd(s+12);
+  y07 = __lfpd(s+14);
+  y08 = __lfpd(s+16);
+  y09 = __lfpd(s+18);
+  y10 = __lfpd(s+20);
+  y11 = __lfpd(s+22);
+
+  __stfpd(q, __fpsub(x00, y00));
+  __stfpd(q+2, __fpsub(x01, y01));
+  __stfpd(q+4, __fpsub(x02, y02));
+  __stfpd(q+6, __fpsub(x03, y03));
+  __stfpd(q+8, __fpsub(x04, y04));
+  __stfpd(q+10, __fpsub(x05, y05));
+  __stfpd(q+12, __fpsub(x06, y06));
+  __stfpd(q+14, __fpsub(x07, y07));
+  __stfpd(q+16, __fpsub(x08, y08));
+  __stfpd(q+18, __fpsub(x09, y09));
+  __stfpd(q+20, __fpsub(x10, y10));
+  __stfpd(q+22, __fpsub(x11, y11));
+  s = sp;
+  r = rp;
+  q+=24;
+#pragma unroll(12)
+  for(ix = 1; ix < N-1; ix++) {
+    rp+=24;
+    sp+=24;
+    _prefetch_spinor(rp);
+    _prefetch_spinor(sp);
+    x00 = __lfpd(r);    
+    x01 = __lfpd(r+2);  
+    x02 = __lfpd(r+4);  
+    x03 = __lfpd(r+6);  
+    x04 = __lfpd(r+8);  
+    x05 = __lfpd(r+10); 
+    x06 = __lfpd(r+12); 
+    x07 = __lfpd(r+14); 
+    x08 = __lfpd(r+16); 
+    x09 = __lfpd(r+18); 
+    x10 = __lfpd(r+20); 
+    x11 = __lfpd(r+22); 
+    y00 = __lfpd(s);   
+    y01 = __lfpd(s+2); 
+    y02 = __lfpd(s+4); 
+    y03 = __lfpd(s+6); 
+    y04 = __lfpd(s+8); 
+    y05 = __lfpd(s+10);
+    y06 = __lfpd(s+12);
+    y07 = __lfpd(s+14);
+    y08 = __lfpd(s+16);
+    y09 = __lfpd(s+18);
+    y10 = __lfpd(s+20);
+    y11 = __lfpd(s+22);
+    
+    __stfpd(q, __fpsub(x00, y00));
+    __stfpd(q+2, __fpsub(x01, y01));
+    __stfpd(q+4, __fpsub(x02, y02));
+    __stfpd(q+6, __fpsub(x03, y03));
+    __stfpd(q+8, __fpsub(x04, y04));
+    __stfpd(q+10, __fpsub(x05, y05));
+    __stfpd(q+12, __fpsub(x06, y06));
+    __stfpd(q+14, __fpsub(x07, y07));
+    __stfpd(q+16, __fpsub(x08, y08));
+    __stfpd(q+18, __fpsub(x09, y09));
+    __stfpd(q+20, __fpsub(x10, y10));
+    __stfpd(q+22, __fpsub(x11, y11));
+    s = sp;
+    r = rp;
+    q+=24;
+  }
+  x00 = __lfpd(r);    
+  x01 = __lfpd(r+2);  
+  x02 = __lfpd(r+4);  
+  x03 = __lfpd(r+6);  
+  x04 = __lfpd(r+8);  
+  x05 = __lfpd(r+10); 
+  x06 = __lfpd(r+12); 
+  x07 = __lfpd(r+14); 
+  x08 = __lfpd(r+16); 
+  x09 = __lfpd(r+18); 
+  x10 = __lfpd(r+20); 
+  x11 = __lfpd(r+22); 
+  y00 = __lfpd(s);   
+  y01 = __lfpd(s+2); 
+  y02 = __lfpd(s+4); 
+  y03 = __lfpd(s+6); 
+  y04 = __lfpd(s+8); 
+  y05 = __lfpd(s+10);
+  y06 = __lfpd(s+12);
+  y07 = __lfpd(s+14);
+  y08 = __lfpd(s+16);
+  y09 = __lfpd(s+18);
+  y10 = __lfpd(s+20);
+  y11 = __lfpd(s+22);
+
+  __stfpd(q, __fpsub(x00, y00));
+  __stfpd(q+2, __fpsub(x01, y01));
+  __stfpd(q+4, __fpsub(x02, y02));
+  __stfpd(q+6, __fpsub(x03, y03));
+  __stfpd(q+8, __fpsub(x04, y04));
+  __stfpd(q+10, __fpsub(x05, y05));
+  __stfpd(q+12, __fpsub(x06, y06));
+  __stfpd(q+14, __fpsub(x07, y07));
+  __stfpd(q+16, __fpsub(x08, y08));
+  __stfpd(q+18, __fpsub(x09, y09));
+  __stfpd(q+20, __fpsub(x10, y10));
+  __stfpd(q+22, __fpsub(x11, y11));
+
+  return;
+}
+
+#elif ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
 
 void diff(spinor * const Q,spinor * const R,spinor * const S, const int N){
   register int ix=0;
@@ -111,9 +272,7 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N){
   } while (ix<N);
 }
 
-#endif
-
-#ifdef apenext
+#elif defined apenext
 
 #define NOWHERE_COND(condition) ((condition) ? 0x0 : NOWHERE )
 

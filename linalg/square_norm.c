@@ -28,7 +28,7 @@
 #include "sse.h"
 #include "square_norm.h"
 
-#if ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+#if ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext) && (!defined BGL))
 
 double square_norm(spinor * const P, const int N) {
   int ix;
@@ -62,16 +62,143 @@ double square_norm(spinor * const P, const int N) {
     kc = tr-tt;
   }
   kc = ks + kc;
-#ifdef MPI
+#  ifdef MPI
   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   return ks;
-#else
+#  else
   return kc;
-#endif
+#  endif
 }
-#endif
 
-#if ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+#elif ((defined BGL) && (defined XLC))
+
+/***************************************
+ *
+ * square norm with intrinsics
+ *
+ * Carsten.Urbach@liverpool.ac.uk
+ *
+ ***************************************/
+
+#  include"bgl.h"
+double square_norm(spinor * const P, const int N) {
+  int ix=0;
+  double res, res2;
+  double *s ALIGN;
+  double *sp ALIGN;
+  double _Complex x00, x01, x02, x03, x04, x05, x06, x07, 
+    x08, x09, x10, x11;
+  double _Complex y00, y01, y02, y03, y04, y05, y06, y07, 
+    y08, y09, y10, y11;
+
+  __alignx(16, P);
+  s = (double*)P;
+  sp = s+24;
+  _prefetch_spinor(sp);
+  x00 = __lfpd(s);
+  x01 = __lfpd(s+2);
+  x02 = __lfpd(s+4);
+  x03 = __lfpd(s+6);
+  x04 = __lfpd(s+8);
+  x05 = __lfpd(s+10);
+  x06 = __lfpd(s+12);
+  x07 = __lfpd(s+14);
+  x08 = __lfpd(s+16);
+  x09 = __lfpd(s+18);
+  x10 = __lfpd(s+20);
+  x11 = __lfpd(s+22);
+  
+  y00 = __fpmul(x00, x00);
+  y01 = __fpmul(x01, x01);
+  y02 = __fpmul(x02, x02);
+  y03 = __fpmul(x03, x03);
+  y04 = __fpmul(x04, x04);
+  y05 = __fpmul(x05, x05);
+  y06 = __fpmul(x06, x06);
+  y07 = __fpmul(x07, x07);
+  y08 = __fpmul(x08, x08);
+  y09 = __fpmul(x09, x09);
+  y10 = __fpmul(x10, x10);
+  y11 = __fpmul(x11, x11);
+  s = sp;
+
+
+#pragma unroll(12)
+  for(ix = 1; ix < N-1; ix++) {
+    sp+=24;;
+    _prefetch_spinor(sp);
+    x00 = __lfpd(s);   
+    x01 = __lfpd(s+2); 
+    x02 = __lfpd(s+4); 
+    x03 = __lfpd(s+6); 
+    x04 = __lfpd(s+8); 
+    x05 = __lfpd(s+10);
+    x06 = __lfpd(s+12);
+    x07 = __lfpd(s+14);
+    x08 = __lfpd(s+16);
+    x09 = __lfpd(s+18);
+    x10 = __lfpd(s+20);
+    x11 = __lfpd(s+22);
+    y00 = __fpmadd(y00, x00, x00); 
+    y01 = __fpmadd(y01, x01, x01); 
+    y02 = __fpmadd(y02, x02, x02); 
+    y03 = __fpmadd(y03, x03, x03); 
+    y04 = __fpmadd(y04, x04, x04); 
+    y05 = __fpmadd(y05, x05, x05); 
+    y06 = __fpmadd(y06, x06, x06); 
+    y07 = __fpmadd(y07, x07, x07); 
+    y08 = __fpmadd(y08, x08, x08); 
+    y09 = __fpmadd(y09, x09, x09); 
+    y10 = __fpmadd(y10, x10, x10); 
+    y11 = __fpmadd(y11, x11, x11); 
+    s=sp;
+  }
+  x00 = __lfpd(s);   
+  x01 = __lfpd(s+2); 
+  x02 = __lfpd(s+4); 
+  x03 = __lfpd(s+6); 
+  x04 = __lfpd(s+8); 
+  x05 = __lfpd(s+10);
+  x06 = __lfpd(s+12);
+  x07 = __lfpd(s+14);
+  x08 = __lfpd(s+16);
+  x09 = __lfpd(s+18);
+  x10 = __lfpd(s+20);
+  x11 = __lfpd(s+22);
+  y00 = __fpmadd(y00, x00, x00); 
+  y01 = __fpmadd(y01, x01, x01); 
+  y02 = __fpmadd(y02, x02, x02); 
+  y03 = __fpmadd(y03, x03, x03); 
+  y04 = __fpmadd(y04, x04, x04); 
+  y05 = __fpmadd(y05, x05, x05); 
+  y06 = __fpmadd(y06, x06, x06); 
+  y07 = __fpmadd(y07, x07, x07); 
+  y08 = __fpmadd(y08, x08, x08); 
+  y09 = __fpmadd(y09, x09, x09); 
+  y10 = __fpmadd(y10, x10, x10); 
+  y11 = __fpmadd(y11, x11, x11); 
+  
+  y00 = __fpadd(y00, y01);
+  y02 = __fpadd(y02, y03);
+  y04 = __fpadd(y04, y05);
+  y06 = __fpadd(y06, y07);
+  y08 = __fpadd(y08, y09);
+  y10 = __fpadd(y10, y11);
+  y00 = __fpadd(y00, y02);
+  y04 = __fpadd(y04, y06);
+  y08 = __fpadd(y08, y10);
+  y00 = __fpadd(y00, y04);
+  y00 = __fpadd(y00, y08);
+  res = __creal(y00)+__cimag(y00);
+#  ifdef MPI
+  MPI_Allreduce(&res, &res2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  return res2;
+#  else
+  return res;
+#  endif
+}
+
+#elif ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
 
 double square_norm(spinor * const P, const int N) {
 
@@ -134,9 +261,7 @@ double square_norm(spinor * const P, const int N) {
   return kc;
 
 }
-#endif
-
-#ifdef apenext
+#elif defined apenext
 
 #define NOWHERE_COND(condition) ((condition) ? 0x0 : NOWHERE )
 
