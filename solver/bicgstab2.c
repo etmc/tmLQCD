@@ -51,11 +51,12 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
   r[2] = g_spinor_field[DUM_SOLVER+6];
   u[2] = g_spinor_field[DUM_SOLVER+7];
   bp = g_spinor_field[DUM_SOLVER+8];
-  xp = g_spinor_field[DUM_SOLVER+9];
+  xp = x0;
+  x = g_spinor_field[DUM_SOLVER+9];
 
-  x = x0; 
+  zero_spinor_field(x, N);
   assign(u[0], b, N);
-  f(r0_tilde, x);
+  f(r0_tilde, xp);
   diff(r[0], u[0], r0_tilde, N);
   zero_spinor_field(u0, N);
 /*   assign(r0_tilde, r[0], N); */
@@ -67,6 +68,8 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
   alpha = rho0;
   omega = rho0;
   err = square_norm(r[0], N);
+  Mr = err;
+  Mx = err;
   zeta0 = err;
   while( k < max_iter && (((err > eps_sq) && (rel_prec == 0)) 
 			  || ((err > eps_sq*squarenorm) && (rel_prec == 1)) 
@@ -79,7 +82,7 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
       rho1 = scalar_prod_r(r[j], r0_tilde, N);
       beta = alpha*(rho1/rho0); 
       rho0 = rho1;
-      if(g_proc_id == 0) {printf("beta = %e, alpha = %e, rho0 = %e\n", beta, alpha, rho0);fflush(stdout);}
+/*       if(g_proc_id == 0) {printf("beta = %e, alpha = %e, rho0 = %e\n", beta, alpha, rho0);fflush(stdout);} */
       for(i = 0; i <= j; i++) {
 	/* u_i = r_i - \beta u_i */
 	assign_mul_add_r(u[i], -beta, r[i], N);
@@ -87,7 +90,7 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
       f(u[j+1], u[j]);
       sigma = scalar_prod_r(u[j+1], r0_tilde, N);
       alpha = rho1/sigma;
-      if(g_proc_id == 0) {printf("sigma = %e, alpha = %e\n", sigma, alpha);fflush(stdout);}
+/*       if(g_proc_id == 0) {printf("sigma = %e, alpha = %e\n", sigma, alpha);fflush(stdout);} */
       /* x = x + \alpha u_0 */
       assign_add_mul_r(x, u[0], alpha, N);
       /* r_i = r_i - \alpha u_{i+1} */
@@ -130,14 +133,18 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
     }
     kappa0 = sqrt( y0[0]*yp[0] + y0[1]*yp[1] + y0[2]*yp[2] );
     kappal = sqrt( yl[0]*ypp[0] + yl[1]*ypp[1] + yl[2]*ypp[2] );
-    rho = (yl[0]*yp[0] + yl[1]*yp[1] + yl[2]*yp[1])/kappa0/kappal;
+    rho = (yl[0]*yp[0] + yl[1]*yp[1] + yl[2]*yp[2])/kappa0/kappal;
     if(fabs(rho) > 0.7) {
       gamma_hat = rho;
     }
     else {
       gamma_hat = rho*0.7/fabs(rho);
     }
+    for(i = 0; i <= l; i++) {
+      y0[i] -= gamma_hat*kappa0*yl[i]/kappal;
+    }
 
+    /* Update */
     omega = y0[l];
     for(i = 1; i < l+1; i++) {
       assign_add_mul_r(u[0], u[i], -y0[i], N);
@@ -168,7 +175,7 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
     update_res = 0;
     if(g_proc_id == 0){
       printf(" BiCGstabell iterated %d %d, %e rho0 = %e, alpha = %e, gamma_hat= %e\n", l, k, err, rho0, alpha, gamma_hat);
-      printf(" %e %e %e %e\n", kappa0, kappal, rho1, rho);
+/*       printf(" %e %e %e %e\n", kappa0, kappal, rho1, rho); */
       fflush( stdout );
     }
   }
