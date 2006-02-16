@@ -19,6 +19,8 @@
 #include "Hopping_Matrix.h"
 #include "Hopping_Matrix_nocom.h"
 #include "sse.h"
+#include "linalg/diff.h"
+#include "gamma.h"
 #include "tm_operators.h"
 
 /* internal */
@@ -90,6 +92,15 @@ void Qtm_plus_psi_nocom(spinor * const l, spinor * const k){
   mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], +1.);
 }
 
+void Qtm_plus_sym_psi(spinor * const l, spinor * const k){
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1.);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX], +1.);
+  diff(l, k, g_spinor_field[DUM_MATRIX], VOLUME/2);
+  gamma5(l, l, VOLUME/2);
+}
+
 /******************************************
  *
  * This is the implementation of
@@ -109,6 +120,15 @@ void Qtm_minus_psi(spinor * const l, spinor * const k){
   mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1.);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], -1.);
+}
+
+void Qtm_minus_sym_psi(spinor * const l, spinor * const k){
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1.);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX], -1.);
+  diff(l, k, g_spinor_field[DUM_MATRIX], VOLUME/2);
+  gamma5(l, l, VOLUME/2);
 }
 
 /******************************************
@@ -132,6 +152,14 @@ void Mtm_plus_psi(spinor * const l, spinor * const k){
   mul_one_pm_imu_sub_mul(l, k, g_spinor_field[DUM_MATRIX], +1.);
 }
 
+void Mtm_plus_sym_psi(spinor * const l, spinor * const k){
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1.);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX], +1.);
+  diff(l, k, g_spinor_field[DUM_MATRIX], VOLUME/2);
+}
+
 /******************************************
  *
  * This is the implementation of
@@ -151,6 +179,14 @@ void Mtm_minus_psi(spinor * const l, spinor * const k){
   mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1.);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   mul_one_pm_imu_sub_mul(l, k, g_spinor_field[DUM_MATRIX], -1.);
+}
+
+void Mtm_minus_sym_psi(spinor * const l, spinor * const k){
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1.);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX], -1.);
+  diff(l, k, g_spinor_field[DUM_MATRIX], VOLUME/2);
 }
 
 /******************************************
@@ -177,6 +213,25 @@ void Qtm_pm_psi(spinor * const l, spinor * const k){
   mul_one_pm_imu_inv(l, +1.);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], l);
   mul_one_pm_imu_sub_mul_gamma5(l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], +1.);
+}
+
+void Qtm_pm_sym_psi(spinor * const l, spinor * const k){
+  /* Q_{-} */
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1.);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX], -1.);
+  diff(l, k, g_spinor_field[DUM_MATRIX], VOLUME/2);
+  gamma5(l, l, VOLUME/2);
+
+  /* Q_{+} */
+  Hopping_Matrix(EO, l, g_spinor_field[DUM_MATRIX]);
+  mul_one_pm_imu_inv(l, +1.);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], l);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX], +1.);
+  diff(l, k, g_spinor_field[DUM_MATRIX], VOLUME/2);
+  gamma5(l, l, VOLUME/2);
+
 }
 
 void Qtm_pm_psi_nocom(spinor * const l, spinor * const k){
