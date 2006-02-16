@@ -8,12 +8,14 @@
 #define GMRES 2
 #define CGS 3
 #define MR 4
+#define BICGSTABELL 5
 
 #include"solver/matrix_mult_typedef.h"
 #include"solver/gmres.h"
 #include"solver/bicgstab_complex.h"
 #include"solver/cgs_real.h"
 #include"solver/bicgstabell.h"
+#include"solver/bicgstab2.h"
 #include"solver/cg_her.h"
 #include"solver/mr.h"
 

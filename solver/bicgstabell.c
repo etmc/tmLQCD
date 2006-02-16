@@ -32,11 +32,11 @@
 #endif
 
 int bicgstabell(spinor * const x0, spinor * const b, const int max_iter, 
-		double eps_sq, const int _l, matrix_mult f) {
+		double eps_sq, const int rel_prec, const int _l, const int N, matrix_mult f) {
 
   double err;
-  int i, j, k, l, N=VOLUME/2;
-  double rho0, rho1, beta, alpha, omega, gamma0;
+  int i, j, k, l;
+  double rho0, rho1, beta, alpha, omega, gamma0, squarenorm;
   spinor * r[5], * u[5], * r0_tilde, * u0, * x;
   double tau[5][5], gamma[25], gammap[25], gammapp[25], sigma[25];
 
@@ -56,15 +56,17 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
   assign(u[0], b, N);
   f(r0_tilde, x);
   diff(r[0], u[0], r0_tilde, N);
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+1]);
+  zero_spinor_field(g_spinor_field[DUM_SOLVER+1], N);
   assign(r0_tilde, r[0], N);
+  squarenorm = square_norm(b, N);
 
   rho0 = 1.;
   alpha = 0.;
   omega = 1.;
   err = square_norm(r0_tilde, N);
-
-  while( k < max_iter && err > eps_sq) {
+  while( k < max_iter && (((err > eps_sq) && (rel_prec == 0)) 
+			  || ((err > eps_sq*squarenorm) && (rel_prec == 1)) 
+			  )) {
     k+=l;
 
     /* The BiCG part */
@@ -126,7 +128,7 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
       assign_add_mul_r(u[0], u[j], -gamma[j], N);
     }
     err = square_norm(r[0], N);
-    _SO(if(g_proc_id == 0){printf(" Iterated %d %d, %e\n", l, k, err);fflush( stdout );});
+    if(g_proc_id == 0){printf(" BiCGstabell iterated %d %d, %e rho0 = %e, alpha = %e, gamma0= %e\n", l, k, err, rho0, alpha, gamma0);fflush( stdout );}
   }
   if(k == max_iter) return(-1);
   return(k);
