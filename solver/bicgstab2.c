@@ -59,8 +59,8 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
   f(r0_tilde, xp);
   diff(r[0], u[0], r0_tilde, N);
   zero_spinor_field(u0, N);
-/*   assign(r0_tilde, r[0], N); */
-  random_spinor_field(r0_tilde, N);
+  assign(r0_tilde, r[0], N); 
+/*   random_spinor_field(r0_tilde, N); */
   assign(bp, r[0], N);
   squarenorm = square_norm(b, N);
 
@@ -99,7 +99,7 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
       }
       f(r[j+1], r[j]);
       err = square_norm(r[j+1], N);
-      if(g_proc_id == 0) {printf("%d %d err = %e\n", k, j, err);fflush(stdout);}
+      if(g_proc_id == 0 && g_debug_level > 1) {printf("%d %d err = %e\n", k, j, err);fflush(stdout);}
       if(err > Mr) Mr = err;
       if(err > Mx) Mx = err;
     }
@@ -117,10 +117,11 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
     /* r0tilde and rl_tilde */
     y0[0] = -1;
     y0[2] = 0.;
-    y0[1] = Z[1][0]/Z[1][1];
+    y0[1] = Z[1][0]/Z[1][1]; 
+
     yl[0] = 0.;
     yl[2] = -1.;
-    yl[1] = Z[1][2]/Z[1][1];
+    yl[1] = Z[1][2]/Z[1][1]; 
 
     /* Convex combination */
     for(i = 0; i < l+1; i++){
@@ -151,21 +152,20 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
       assign_add_mul_r(x, r[i-1], y0[i], N);
       assign_add_mul_r(r[0], r[i], -y0[i], N);
     }
-    zeta = kappa0;
+    err = kappa0*kappa0;
     /* Reliable update part */
-    err = square_norm(r[0], N);
     if(err > Mr) Mr = err;
     if(err > Mx) Mx = err;    
     update_app = (err < 1.e-4*zeta0 && zeta0 <= Mx);
-    update_res = (err < 1.e-4*Mr && zeta0 <= Mr);
+    update_res = ((err < 1.e-4*Mr && zeta0 <= Mr) || update_app);
     if(update_res) {
-      if(g_proc_id == 0) printf("Update res\n");
+      if(g_proc_id == 0 && g_debug_level > 1) printf("Update res\n");
       f(r[0], x);
       diff(r[0], bp, r[0], N);
-      Mr = 0.;
+      Mr = err;
       if(update_app) {
-	if(g_proc_id == 0) printf("Update app\n");
-	Mx = 0.;
+	if(g_proc_id == 0  && g_debug_level > 1) printf("Update app\n");
+	Mx = err;
 	assign_add_mul_r(xp, x, 1., N);
 	zero_spinor_field(x, N);
 	assign(bp, r[0], N);
@@ -173,9 +173,9 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
     }
     update_app = 0;
     update_res = 0;
-    if(g_proc_id == 0){
-      printf(" BiCGstabell iterated %d %d, %e rho0 = %e, alpha = %e, gamma_hat= %e\n", l, k, err, rho0, alpha, gamma_hat);
-/*       printf(" %e %e %e %e\n", kappa0, kappal, rho1, rho); */
+    if(g_proc_id == 0 && g_debug_level > 0){
+      printf(" BiCGstab(2)convex iterated %d %d, %e rho0 = %e, alpha = %e, gamma_hat= %e\n", 
+	     l, k, err, rho0, alpha, gamma_hat);
       fflush( stdout );
     }
   }

@@ -91,6 +91,8 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
       f(r[j+1], r[j]);
       /* x = x + \alpha u_0 */
       assign_add_mul_r(x, u[0], alpha, N);
+      err = square_norm(r[j+1], N);
+      if(g_proc_id == 0 && g_debug_level > 1) {printf("%d %d err = %e\n", k, j, err);fflush(stdout);}
     }
 
     /* The MR part */
@@ -128,7 +130,10 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
       assign_add_mul_r(u[0], u[j], -gamma[j], N);
     }
     err = square_norm(r[0], N);
-    if(g_proc_id == 0){printf(" BiCGstabell iterated %d %d, %e rho0 = %e, alpha = %e, gamma0= %e\n", l, k, err, rho0, alpha, gamma0);fflush( stdout );}
+    if(g_proc_id == 0 && g_debug_level > 0){
+      printf(" BiCGstabell iterated %d %d, %e rho0 = %e, alpha = %e, gamma0= %e\n", l, k, err, rho0, alpha, gamma0);
+      fflush( stdout );
+    }
   }
   if(k == max_iter) return(-1);
   return(k);
