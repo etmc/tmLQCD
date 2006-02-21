@@ -52,11 +52,13 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}
     mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.); 
     iter = bicgstab_complex(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
+    mul_one_pm_imu(g_spinor_field[DUM_DERI], +1.); 
   }
   else if(solver_flag == GMRES) {
     if(g_proc_id == 0) {printf("# Using GMRES!\n"); fflush(stdout);}
     mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
     iter = gmres(Odd_new, g_spinor_field[DUM_DERI], 10, max_iter/10, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
+    mul_one_pm_imu(g_spinor_field[DUM_DERI], +1.); 
   }
   else if(solver_flag == FGMRES) {
     if(g_proc_id == 0) {printf("# Using GMRES!\n"); fflush(stdout);}
@@ -67,6 +69,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     if(g_proc_id == 0) {printf("# Using BiCGstab2!\n"); fflush(stdout);}
     mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.); 
     iter = bicgstabell(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 3, VOLUME/2, &Mtm_plus_sym_psi);
+    mul_one_pm_imu(g_spinor_field[DUM_DERI], +1.); 
   }
   else if(solver_flag == CG) {
     /* Here we invert the hermitean operator squared */
@@ -83,6 +86,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     if(g_proc_id == 0) {printf("# Using CGS!\n"); fflush(stdout);}
     mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.); 
     iter = cgs_real(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
+    mul_one_pm_imu(g_spinor_field[DUM_DERI], +1.); 
   }
   else {
     if(g_proc_id == 0) {printf("# Using CG as default solver!\n"); fflush(stdout);}
@@ -95,14 +99,14 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   if(iter == -1 && solver_flag !=CG) {
     /* Here we invert the hermitean operator squared */
     gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
-    if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
+    if(g_proc_id == 0) {printf("# Redoing it with CG!\n"); fflush(stdout);}
     iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0.);
     Qtm_minus_psi(Odd_new, Odd_new);
   }
 
   /* Reconstruct the even sites                */
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new);
-  mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
+  mul_one_pm_imu(g_spinor_field[DUM_DERI], +1.);
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
   assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2); 
