@@ -197,7 +197,7 @@ void Mtm_minus_sym_psi(spinor * const l, spinor * const k) {
   diff(l, k, g_spinor_field[DUM_MATRIX], VOLUME/2);
 }
 
-void Mtm_minus_sym_psi(spinor * const l, spinor * const k) {
+void Mtm_minus_sym_psi_nocom(spinor * const l, spinor * const k) {
   Hopping_Matrix_nocom(EO, g_spinor_field[DUM_MATRIX+1], k);
   mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1.);
   Hopping_Matrix_nocom(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
