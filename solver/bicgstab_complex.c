@@ -27,14 +27,6 @@
 #include "start.h"
 #include "bicgstab_complex.h"
 
-#ifdef _SOLVER_OUTPUT
-#define _SO(x) x
-#else
-#define _SO(x) x
-#endif
- 
-
-
 /* P inout (guess for the solving spinor)
    Q input
 */
@@ -73,6 +65,9 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
     }
     f(v, p);
     denom = scalar_prod(hatr, v, N);
+    if(_complex_square_norm(denom)==0.) {
+      return -1;
+    }
     _div_complex(alpha, rho0, denom);
     assign(s, r, N);
     assign_diff_mul(s, v, alpha, N);
