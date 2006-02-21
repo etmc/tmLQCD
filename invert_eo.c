@@ -56,6 +56,11 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   else if(solver_flag == GMRES) {
     if(g_proc_id == 0) {printf("# Using GMRES!\n"); fflush(stdout);}
     mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
+    iter = gmres(Odd_new, g_spinor_field[DUM_DERI], 10, max_iter/10, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
+  }
+  else if(solver_flag == FGMRES) {
+    if(g_proc_id == 0) {printf("# Using GMRES!\n"); fflush(stdout);}
+    mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
     iter = fgmres(Odd_new, g_spinor_field[DUM_DERI], 10, max_iter/10, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
   }
   else if(solver_flag == BICGSTABELL) {
@@ -82,6 +87,15 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   else {
     if(g_proc_id == 0) {printf("# Using CG as default solver!\n"); fflush(stdout);}
     gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
+    iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0.);
+    Qtm_minus_psi(Odd_new, Odd_new);
+  }
+
+  /* In case of failure, redo with CG */
+  if(iter == -1 && solver_flag !=CG) {
+    /* Here we invert the hermitean operator squared */
+    gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
+    if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
     iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0.);
     Qtm_minus_psi(Odd_new, Odd_new);
   }

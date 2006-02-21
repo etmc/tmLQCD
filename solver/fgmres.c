@@ -124,7 +124,7 @@ int fgmres(spinor * const P,spinor * const Q,
 	printf("fgmres\t%d\t%g residue\n", restart*m+j, alpha[j+1].re*alpha[j+1].re); 
 	fflush(stdout);
       }
-      if(((alpha[j+1].re <= eps) && (rel_prec == 5)) || ((alpha[j+1].re <= eps*norm) && (rel_prec == 5))){
+      if(((alpha[j+1].re <= eps) && (rel_prec == 0)) || ((alpha[j+1].re <= eps*norm) && (rel_prec == 1))){
 	_mult_real(alpha[j], alpha[j], 1./H[j][j].re);
 	assign_add_mul(g_spinor_field[DUM_SOLVER+2], Z[j], alpha[j], N);
 	for(i = j-1; i >= 0; i--){
