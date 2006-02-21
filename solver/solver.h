@@ -12,6 +12,7 @@
 
 #include"solver/matrix_mult_typedef.h"
 #include"solver/gmres.h"
+#include"solver/fgmres.h"
 #include"solver/bicgstab_complex.h"
 #include"solver/cgs_real.h"
 #include"solver/bicgstabell.h"
