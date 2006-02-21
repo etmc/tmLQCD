@@ -380,6 +380,14 @@ FILENAME [a-zA-z0-9_][a-zA-z0-9"."_"-"]+
   solver_flag=4;
   if(verbose!=0) printf("Use MR Solver \n");
 }
+<SOLVFLAG>bicgstabell {
+  solver_flag=5;
+  if(verbose!=0) printf("Use BiCGstab(2) Solver \n");
+}
+<SOLVFLAG>fgmres {
+  solver_flag=6;
+  if(verbose!=0) printf("Use FGMRES with domain decomp. preconditioning Solver \n");
+}
 <SITER>{DIGIT}+ {
   max_solver_iterations = atoi(yytext);
   if(verbose!=0) printf("Use %d iterations in the solvers!\n", max_solver_iterations);
