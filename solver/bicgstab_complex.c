@@ -65,9 +65,6 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
     }
     f(v, p);
     denom = scalar_prod(hatr, v, N);
-    if(_complex_square_norm(denom)==0.) {
-      return -1;
-    }
     _div_complex(alpha, rho0, denom);
     assign(s, r, N);
     assign_diff_mul(s, v, alpha, N);
@@ -79,6 +76,9 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
     assign(r, s, N);
     assign_diff_mul(r, t, omega, N);
     rho1 = scalar_prod(hatr, r, N);
+    if(fabs(rho1.re) < 1.e-25 && fabs(rho1.im) < 1.e-25) {
+      return(-1);
+    }
     _mult_assign_complex(nom, alpha, rho1);
     _mult_assign_complex(denom, omega, rho0);
     _div_complex(beta, nom, denom);

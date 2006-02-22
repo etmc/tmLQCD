@@ -103,7 +103,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 
   /* Reconstruct the even sites                */
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new);
-  mul_one_pm_imu(g_spinor_field[DUM_DERI], +1.);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
   assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2); 
