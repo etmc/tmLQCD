@@ -26,9 +26,9 @@
 
 #define DUM_DERI 6
 #define DUM_SOLVER (DUM_DERI+7)
-#define DUM_MATRIX (DUM_SOLVER+6) 
+/* #define DUM_MATRIX (DUM_SOLVER+6) */
 /* if you want to include bicgstabell */
-/* #define DUM_MATRIX DUM_SOLVER+11 */
+#define DUM_MATRIX DUM_SOLVER+11 
 #define NO_OF_SPINORFIELDS (DUM_MATRIX+6)
 
 
@@ -98,7 +98,7 @@ EXTERN int g_csg_N[8];
 
 EXTERN su3 ** g_gauge_field;
 EXTERN su3 ** g_gauge_field_back;
-EXTERN su3 ** g_gauge_field_forward;
+EXTERN su3 ** g_gauge_field_copy;
 /* This is dirty, but dow not allocate memory */
 /* if no clover is used. */
 EXTERN su3adj ** moment;

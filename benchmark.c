@@ -34,6 +34,7 @@
 #include "init_geometry_indices.h"
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
+#include "update_backward_gauge.h"
 #include "test/check_geometry.h"
 #include "mpi_init.h"
 
@@ -181,17 +182,7 @@ int main(int argc,char *argv[])
 
 
 #ifdef _GAUGE_COPY
-  /* set the backward gauge field */
-  for(k=0;k<VOLUME;k++) {
-    kb=g_idn[k][0];
-    _su3_assign(g_gauge_field_back[k][0],g_gauge_field[kb][0]);
-    kb=g_idn[k][1];
-    _su3_assign(g_gauge_field_back[k][1],g_gauge_field[kb][1]);
-    kb=g_idn[k][2];
-    _su3_assign(g_gauge_field_back[k][2],g_gauge_field[kb][2]);
-    kb=g_idn[k][3];
-    _su3_assign(g_gauge_field_back[k][3],g_gauge_field[kb][3]);
-  }
+  update_backward_gauge();
 #endif
 
   /*initialize the pseudo-fermion fields*/

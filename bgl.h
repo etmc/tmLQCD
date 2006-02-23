@@ -578,6 +578,14 @@
   __dcbt(((char*)((unsigned long int)(addr)))+128); \
   __dcbt(((char*)((unsigned long int)(addr)))+164); 
 
+#define _prefetch_spinor_for_store(addr) \
+  __dcbz(((char*)((unsigned long int)(addr)))); \
+  __dcbz(((char*)((unsigned long int)(addr)))+32); \
+  __dcbz(((char*)((unsigned long int)(addr)))+64); \
+  __dcbz(((char*)((unsigned long int)(addr)))+96); \
+  __dcbz(((char*)((unsigned long int)(addr)))+128); \
+  __dcbz(((char*)((unsigned long int)(addr)))+164);
+
 #define _prefetch_spinor2(addr)			    \
   __prefetch_by_load(((char*)((unsigned long int)(addr))));	    \
   __prefetch_by_load(((char*)((unsigned long int)(addr)))+32);  \
