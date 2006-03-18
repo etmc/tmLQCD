@@ -10,6 +10,7 @@
 #define MR 4
 #define BICGSTABELL 5
 #define FGMRES 6
+#define GCR 7
 
 #include"solver/matrix_mult_typedef.h"
 #include"solver/gmres.h"
