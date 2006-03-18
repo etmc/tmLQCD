@@ -6,6 +6,9 @@
 #include "linalg/fortran.h"
 
 #if defined CRAY || defined HITACHI
+#define zgels CGELS
+#define zgesv CGESV
+#define zgeevx CGEEVX
 #define dsyev CSYEV
 #define zheev CHEEV
 #define dgetrs DGETRS
@@ -22,6 +25,9 @@
 #define zlapcy CLAPCY
 #define zgetrf CGETRF
 #define zgetrs CGETRS
+extern void _FT(zgels)();
+extern void _FT(zgesv)();
+extern void _FT(zgeevx)();
 extern void _FT(dsyev)();
 extern void _FT(zheev)();
 extern void _FT(dgetrs)();
@@ -36,6 +42,19 @@ extern int _FT(ilaenv)();
 extern void _FT(zgetrf)();
 extern void _FT(zgetrs)();
 #else
+
+void _FT(zgels) (char* transa, int* M, int* N, int* NRHS, complex a[], int* lda, 
+		 complex b[], int* ldb, complex work[], int* lwork, int* info, int len_transa);
+
+void _FT(zgesv) (int* n, int* nrhs, complex a[], int* lda,
+		 int ipivot[], complex b[], int* ldb, int *info);
+
+extern void _FT(zgeevx) (char* balanc, char* jobvl, char* jobvr, char* sense,
+			 int* N, complex A[], int* lda, complex W[], complex vl[], 
+			 int* ldvl, complex vr[], int* ldvr, int* ilo, int* ihi,
+			 double scale[], double* abnrm, double rcone[], double rconv[],
+			 complex work[], int* lwork, double work2[], int* info, 
+			 int len_balanc, int len_jobvl, int len_jobvr, int len_sense);
 
 extern void _FT(dsyev) (char* jobz, char* uplo, int* n, double a[],
         int* lda, double w[], double work[], int* lwork, int* info,
