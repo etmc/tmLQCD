@@ -36,6 +36,7 @@
 #include<stdio.h>
 #include<math.h>
 #include"global.h"
+#include"complex.h"
 #include"su3.h"
 #include"linalg_eo.h"
 #include"diagonalise_general_matrix.h"
@@ -87,7 +88,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
   int lwork;
   complex tmp1, tmp2;
   int info=0;
-  int _m = m, mp1 = m+1, np1 = nr_ev+1, ne = nr_ev, V2 = 12*(VOLUME + RAND)/2, _N = 12*N;
+  int _m = m, mp1 = m+1, np1 = nr_ev+1, ne = nr_ev, V2 = 12*(VOLUMEPLUSRAND)/2, _N = 12*N;
 /*   init_solver_field(3); */
   double err=0.;
   spinor * r0, * x0;
@@ -99,7 +100,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
   r0 = g_spinor_field[DUM_SOLVER];
   x0 = g_spinor_field[DUM_SOLVER+2];
   eps=sqrt(eps_sq);  
-  init_gmres_dr(m, (VOLUME + RAND)/2);
+  init_gmres_dr(m, (VOLUMEPLUSRAND));
   norm = sqrt(square_norm(Q, N));
 
   assign(x0, P, N);
@@ -148,7 +149,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
     work2[j][j+1] = H[j+1][j];
     work[j+1][j].re =  H[j+1][j].re;
     work[j+1][j].im =  -H[j+1][j].im;
-    beta2 = H[j+1][j].re*H[j+1][j].re;
+    beta2 = H[j+1][j].re*H[j+1][j].re; 
     for(i = 0; i < j; i++){
       tmp1 = H[i][j];
       tmp2 = H[i+1][j];
@@ -191,8 +192,8 @@ int gmres_dr(spinor * const P,spinor * const Q,
       return(restart*m+j);
     }
     /* if not */
-    else{
-      mul_r(V[(j+1)], 1./H[j+1][j].re, g_spinor_field[DUM_SOLVER+1], N);
+    else {
+      mul_r(V[(j+1)], 1./H[j+1][j].re, g_spinor_field[DUM_SOLVER+1], N); 
     }
     
   }
@@ -200,31 +201,39 @@ int gmres_dr(spinor * const P,spinor * const Q,
   /* prepare for restart */
   _mult_real(alpha[j], alpha[j], 1./H[j][j].re);
   assign_add_mul(x0, V[j], alpha[j], N);
+  if(g_proc_id == 0) {
+    printf("alpha: %e %e\n", alpha[j].re, alpha[j].im);
+  }
   for(i = j-1; i >= 0; i--){
     for(k = i+1; k <= j; k++){
       _mult_assign_complex(tmp1, H[i][k], alpha[k]);
       _diff_complex(alpha[i], tmp1);
     }
     _mult_real(alpha[i], alpha[i], 1./H[i][i].re);
+    if(g_proc_id == 0) {
+      printf("alpha: %e %e\n", alpha[i].re, alpha[i].im);
+    }
     assign_add_mul(x0, V[i], alpha[i], N);
   }
+  
   /* r_0=Q-AP  (b=Q, x+0=P) */
   f(r0, x0);
   diff(r0, Q, r0, N);
 
   /* v_0=r_0/||r_0|| */
   tmp1.re=sqrt(square_norm(r0, N));
+
   
   if(g_proc_id == g_stdio_proc && g_debug_level > 0){
     printf("%d\t%e true residue\n", m, tmp1.re*tmp1.re); 
     fflush(stdout);
   }
   
-  if(tmp1.re==0.){
+  if(tmp1.re < eps_sq){
     assign(P, x0, N);
     return(restart*m);
   }
-  
+
 
   /* compute Eigenvalues and vectors */
   for(i = 0; i < m; i++){
@@ -233,19 +242,23 @@ int gmres_dr(spinor * const P,spinor * const Q,
   }
   c[m-1].re = 1.;
   _FT(zgesv) (&_m, &one, work[0], &mp1, idx, c, &_m, &info); 
-  G[m-1][m-1].re += (beta2*c[idx[m-1]-1].re);
-  G[m-1][m-1].im += (beta2*c[idx[m-1]-1].im);
-  if(g_proc_id == 0 && g_debug_level > 1){
-    printf("zgesv returned info = %d, c[m-1]= %e, %e , idx[m-1]=%d\n", info, c[idx[m-1]-1].re, c[idx[m-1]-1].im, idx[m-1]);
-  }
+
   /* compute c-\bar H \alpha */
   work[nr_ev][0].re = err;
   work[nr_ev][0].im = 0.;
+  err = tmp1.re;
   for(i=1; i < m+1; i++) {
     work[nr_ev][i].re = 0.;
     work[nr_ev][i].im = 0.;
   }
   _FT(zgemv) ("N", &mp1, &_m, &cmone, G[0], &mp1, alpha, &one, &cpone, work[nr_ev], &one, 1);
+
+  G[m-1][m-1].re += (beta2*c[idx[m-1]-1].re);
+  G[m-1][m-1].im += (beta2*c[idx[m-1]-1].im);
+  if(g_proc_id == 0 && g_debug_level > 1){
+    printf("zgesv returned info = %d, c[m-1]= %e, %e , idx[m-1]=%d\n", info, c[idx[m-1]-1].re, c[idx[m-1]-1].im, idx[m-1]);
+  }
+
 
   for(restart = 1; restart < max_restarts; restart++) {
     /* Compute harmonic Ritz pairs */
@@ -277,13 +290,34 @@ int gmres_dr(spinor * const P,spinor * const Q,
     tmp1 = short_scalar_prod(work[nr_ev], work[nr_ev], mp1);
     if(g_proc_id == 0) {
       printf("short residue = %e \n", tmp1.re);
-    }
+    } 
     /* Orthonormalize c - \bar H d to work */
-    short_ModifiedGS(work[nr_ev], m+1, nr_ev, work[0]);
-    
+    short_ModifiedGS(work[nr_ev], m+1, nr_ev, work[0]); 
     /* Now compute \bar H = P^T_k+1 \bar H_m P_k */
+/*     for(k = 0; k < ne; k++) { */
+/*       for(l = 0; l < mp1; l++) { */
+/* 	_mult_assign_complex(G[k][l], work2[0][l], work[k][0]); */
+/* 	for(i = 1; i < m; i++) { */
+/* 	  _add_assign_complex(G[k][l], work2[i][l], work[k][i]); */
+/* 	} */
+/*       } */
+/*     } */
+/*     for(k = 0; k < ne; k++) { */
+/*       for(l = 0; l < np1; l++) { */
+/* 	_mult_assign_complex_conj(H[k][l], work[l][0], G[k][0]); */
+/* 	for(i = 1; i < mp1; i++) { */
+/* 	  _add_assign_complex_conj(H[k][l], work[l][i], G[k][i]); */
+/* 	} */
+/*       } */
+/*     } */
+    for(i = 0; i < mp1; i++) {
+      for(l = np1; l < mp1; l++) {
+	H[i][l].re = 0.;
+	H[i][l].im = 0.;
+      }
+    }    
     _FT(zgemm) ("N", "N", &mp1, &ne, &_m, &cpone, work2[0], &mp1, work[0], &mp1, &czero, G[0], &mp1, 1, 1); 
-    _FT(zgemm) ("C", "N", &np1, &ne , &mp1, &cpone, work[0], &mp1, G[0], &mp1, &czero, H[0], &mp1, 1, 1); 
+    _FT(zgemm) ("C", "N", &np1, &ne , &mp1, &cpone, work[0], &mp1, G[0], &mp1, &czero, H[0], &mp1, 1, 1);
     for(i = 0; i < nr_ev+1; i++) {
       for(l = 0; l < nr_ev+1; l++) {
 	if(g_proc_id == 0 && g_debug_level > 3) {
@@ -293,48 +327,49 @@ int gmres_dr(spinor * const P,spinor * const Q,
       }
     }
     /* V_k+1 = V_m+1 P_k+1 */
-    _FT(zgemm) ("N", "N", &_N, &np1, &mp1, &cpone, (complex*)V[0], &V2, work[0], &mp1, &czero, (complex*)Z[0], &V2, 1, 1); 
+/*     _FT(zgemm) ("N", "N", &_N, &np1, &mp1, &cpone, (complex*)V[0], &V2, work[0], &mp1, &czero, (complex*)Z[0], &V2, 1, 1);  */
+    for(l = 0; l < np1; l++) {
+      mul(Z[l], work[l][0], V[0], N);
+      for(i = 1; i < mp1; i++) {
+	assign_add_mul(Z[l], V[i], work[l][i], N);
+      }
+    }
     /* copy back to V */
-    _FT(zlacpy) ("A", &_N, &np1, (complex*)Z[0], &V2, (complex*)V[0], &V2, 1); 
+    for(i = 0; i < np1; i++) {
+      assign(V[i], Z[i], N); 
+    }
+    f(g_spinor_field[DUM_SOLVER+1], V[0]);
+    mul(g_spinor_field[DUM_SOLVER+3], evalues[idx[0]], V[0], N);
+    diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], N);
+    tmp1.im = square_norm(g_spinor_field[DUM_SOLVER+3], N);
+    if(g_proc_id == 0) {
+      printf("evalue res = %e\n", tmp1.im);
+    }
     if(g_debug_level > 3) {
       for(i = 0; i < np1; i++) {
 	for(l = 0; l < np1; l++) {
 	  alpha[0] = scalar_prod(V[l], V[i], N);
 	  if(g_proc_id == 0) {
-	    printf("(V[%d], V[%d]) = %e %e %d %d %d %d %d %d\n", l, i, alpha[0].re, alpha[0].im, np1, mp1, ne, _m, _N, V2);
+	    printf("(V[%d], V[%d]) = %e %e %d %d %d %d %d %d %e %e\n", l, i, alpha[0].re, alpha[0].im, np1, mp1, ne, _m, _N, V2, H[l][i].re, H[l][i].im);
 	  }
 	}
       }
     }
-    /* } */
-    
-    
-    for(i = 0; i < mp1; i++){
-      alpha[i].im = 0.;
-      for(l = 0; l < mp1; l++) {
-	G[i][l].re = 0.; G[i][l].im=0.;
-	work[i][l].re = 0.; work[i][l].im=0.;
-	work2[i][l].re = 0.; work2[i][l].im=0.;
-      }
-    }
-    for(i=0; i < ne; i++) { 
-      for(l = 0; l < np1; l++) { 
+
+    for(i=0; i < mp1; i++) { 
+      for(l = 0; l < mp1; l++) { 
  	G[i][l] = H[i][l];
 	work2[i][l] = H[i][l];
 	work[l][i].re = H[i][l].re;
 	work[l][i].im = -H[i][l].im;
-      } 
-    }
-    for(i=ne; i < mp1; i++) {
-      for(l = np1; l < mp1; l++) {
-	H[i][l].re = 0.;
-	H[i][l].im = 0.;
       }
     }
+
+
+/*     mul_r(V[0], 1./err, r0, N);  */
         
-    for(j = nr_ev; j < m; j++){
+    for(j = nr_ev; j < m; j++) {
       /* g_spinor_field[DUM_SOLVER]=A*v_j */
-      
       f(g_spinor_field[DUM_SOLVER+1], V[j]);
       
       /* Set h_ij and omega_j */
@@ -356,13 +391,15 @@ int gmres_dr(spinor * const P,spinor * const Q,
       work2[j][j+1] = H[j][j+1];
       work[j+1][j].re =  H[j][j+1].re;
       work[j+1][j].im =  -H[j][j+1].im;
-      
       mul_r(V[(j+1)], 1./H[j][j+1].re, g_spinor_field[DUM_SOLVER+1], N);
     }
     /* This produces c */
     for(i = 0; i < mp1; i++) {
-      alpha[i] = scalar_prod(V[i], r0, N);
+      alpha[i] = scalar_prod(V[i], r0, N); 
       c[i] = alpha[i];
+      if(g_proc_id == 0) {
+	printf("c: %e %e\n", alpha[i].re, alpha[i].im);
+      }
     }
     /* Solve the least square problem */
     if(lswork == NULL) {
@@ -377,31 +414,52 @@ int gmres_dr(spinor * const P,spinor * const Q,
       fflush(stdout);
     }
     /* Compute the new solution vector */
-    for(i = m-1; i >= 0; i--){
+    for(i = 0; i < m; i++){
+      if(g_proc_id == 0) {
+	printf("alpha: %e %e\n", alpha[i].re, alpha[i].im);
+      }
       assign_add_mul(x0, V[i], alpha[i], N);
     }
+    /* compute c-\bar H \alpha */
+    _FT(zgemv) ("N", &mp1, &_m, &cmone, G[0], &mp1, alpha, &one, &cpone, c, &one, 1);
+
     /* r_0=Q-AP  (b=Q, x+0=P) */
     f(r0, x0);
     diff(r0, Q, r0, N);
-    /* v_0=r_0/||r_0|| */
-    tmp1.re=sqrt(square_norm(r0, N));
+    err=sqrt(square_norm(r0, N));
     if(g_proc_id == 0) {
-      printf("%d\t%e true residue\n", (restart+1)*m, tmp1.re*tmp1.re);
+      printf("%d\t%e true residue\n", (restart+1)*m, err*err);
     }
+/*     mul(r0, c[0], V[0], N); */
+/*     for(i = 1; i < mp1; i++) { */
+/*       assign_add_mul(r0, V[i], c[i], N); */
+/*     } */
+/*     _FT(zgemm) ("N", "N", &_N, &one, &mp1, &cpone, (complex*)V[0], &V2, c, &mp1, &czero, (complex*)r0, &V2, 1, 1);   */
+/*     diff(g_spinor_field[DUM_SOLVER+4], g_spinor_field[DUM_SOLVER+4], r0, N); */
+/*     tmp1.im=sqrt(square_norm(r0, N)); */
+/*     err=sqrt(square_norm(r0, N)); */
+    if(g_proc_id == 0) {
+      printf("%d\t%e true residue\n", (restart+1)*m, err*err);
+    }
+    if(err < eps) {
+      assign(P, x0, N);
+      return((restart+1)*m);
+    }
+
     /* Prepare to compute Eigenvalues and vectors */
     for(i = 0; i < m; i++){
       work[nr_ev][i].re = 0.;
       work[nr_ev][i].im = 0.;
     }
     work[nr_ev][m-1].re = 1.;
-    _FT(zgesv) (&_m, &one, work[0], &mp1, idx, work[nr_ev], &_m, &info); 
+
+    _FT(zgesv) (&_m, &one, work[0], &mp1, idx, work[nr_ev], &_m, &info);  
     G[m-1][m-1].re += (beta2*work[nr_ev][idx[m-1]-1].re);
     G[m-1][m-1].im += (beta2*work[nr_ev][idx[m-1]-1].im);
     if(g_proc_id == 0 && g_debug_level > 1){
       printf("zgesv returned info = %d, c[m-1]= %e, %e , idx[m-1]=%d\n", info, work[nr_ev][idx[m-1]-1].re, work[nr_ev][idx[m-1]-1].im, idx[m-1]);
     }
-    /* compute c-\bar H \alpha */
-    _FT(zgemv) ("N", &mp1, &_m, &cmone, G[0], &mp1, alpha, &one, &cpone, c, &one, 1);
+
     for(i = 0; i < mp1; i++) {
       work[nr_ev][i] = c[i];
     }
@@ -473,7 +531,7 @@ static void init_gmres_dr(const int _M, const int _V){
     Vo = _V;
     M = _M;
     H = calloc(M+1, sizeof(complex *));
-    Z = calloc(M+1, sizeof(complex *));
+    Z = calloc(M+1, sizeof(spinor *));
     G = calloc(M+1, sizeof(complex *));
     V = calloc(M+1, sizeof(spinor *));
     work = calloc(M+1, sizeof(complex *));
@@ -489,7 +547,7 @@ static void init_gmres_dr(const int _M, const int _V){
     G[0] = (complex *)(((unsigned int)(_g)+ALIGN_BASE)&~ALIGN_BASE); 
     _v = calloc((M+1)*Vo+1, sizeof(spinor));
     V[0] = (spinor *)(((unsigned int)(_v)+ALIGN_BASE)&~ALIGN_BASE);
-    _z = calloc((M)*Vo+1, sizeof(spinor));
+    _z = calloc((M+1)*Vo+1, sizeof(spinor));
     Z[0] = (spinor *)(((unsigned int)(_z)+ALIGN_BASE)&~ALIGN_BASE);
 #else
     _h = calloc((M+1)*(M+1), sizeof(complex));
@@ -500,9 +558,9 @@ static void init_gmres_dr(const int _M, const int _V){
     work2[0] = _work2;
     _g = calloc((M+1)*(M+1), sizeof(complex));
     G[0] = _g;
-    _v = calloc(M*Vo, sizeof(spinor));
+    _v = calloc((M+1)*Vo, sizeof(spinor));
     V[0] = _v;
-    _z = calloc(M*Vo, sizeof(spinor));
+    _z = calloc((M+1)*Vo, sizeof(spinor));
     Z[0] = _z;
 #endif
     s = calloc(M, sizeof(double));
