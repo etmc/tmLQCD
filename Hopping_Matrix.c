@@ -76,10 +76,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
 
-#if ((defined _GAUGE_COPY) && (defined _NEW_GEOMETRY))
-    um=&g_gauge_field_back[ix][0]; 
-#elif (!defined _NEW_GEOMETRY)
+#if ((defined _GAUGE_COPY) && (!defined _NEW_GEOMETRY))
     um=up+1;
+#elif defined _GAUGE_COPY
+    um=&g_gauge_field_back[ix][0]; 
 #else
     um=&g_gauge_field[iy][0]; 
 #endif
