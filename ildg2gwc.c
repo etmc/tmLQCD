@@ -40,9 +40,9 @@ int main(int argc,char *argv[]) {
   double plaquette_energy = 0;
   int trajectory_counter = 0;
   int c, j;
-
+#ifdef MPI
   MPI_Init(&argc, &argv);
-
+#endif
   L=0; 
   T=0;
   while ((c = getopt(argc, argv, "h?f:i:o:")) != -1) {
