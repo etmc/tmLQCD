@@ -28,6 +28,7 @@
 #include"linsolve.h"
 #include"gamma.h"
 #include"solver/solver.h"
+#include"read_input.h"
 #include"xchange.h"
 #include"invert_eo.h"
 
@@ -56,12 +57,22 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   else if(solver_flag == GMRES) {
     if(g_proc_id == 0) {printf("# Using GMRES!\n"); fflush(stdout);}
     mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
-    iter = gmres(Odd_new, g_spinor_field[DUM_DERI], 10, max_iter/10, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
+    iter = gmres(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
+  }
+  else if(solver_flag == GCR) {
+    if(g_proc_id == 0) {printf("# Using GMRES!\n"); fflush(stdout);}
+    mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
+    iter = gcr(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
+  }
+  else if(solver_flag == GMRESDR) {
+    if(g_proc_id == 0) {printf("# Using GMRES-DR!\n"); fflush(stdout);}
+    mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
+    iter = gmres_dr(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, gmresdr_nr_ev, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
   }
   else if(solver_flag == FGMRES) {
     if(g_proc_id == 0) {printf("# Using GMRES!\n"); fflush(stdout);}
     mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
-    iter = fgmres(Odd_new, g_spinor_field[DUM_DERI], 10, max_iter/10, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
+    iter = fgmres(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
   }
   else if(solver_flag == BICGSTABELL) {
     if(g_proc_id == 0) {printf("# Using BiCGstab2!\n"); fflush(stdout);}

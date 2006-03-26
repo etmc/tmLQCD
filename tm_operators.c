@@ -102,6 +102,14 @@ void Qtm_plus_sym_psi(spinor * const l, spinor * const k){
   mul_one_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX]);
 }
 
+void Qtm_plus_sym_psi_nocom(spinor * const l, spinor * const k){
+  Hopping_Matrix_nocom(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1.);
+  Hopping_Matrix_nocom(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX], +1.);
+  mul_one_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX]);
+}
+
 /******************************************
  *
  * This is the implementation of
@@ -149,6 +157,13 @@ void Mtm_plus_psi(spinor * const l, spinor * const k){
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
   mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1.);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul(l, k, g_spinor_field[DUM_MATRIX], +1.);
+}
+
+void Mtm_plus_psi_nocom(spinor * const l, spinor * const k){
+  Hopping_Matrix_nocom(EO, g_spinor_field[DUM_MATRIX+1], k);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1.);
+  Hopping_Matrix_nocom(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   mul_one_pm_imu_sub_mul(l, k, g_spinor_field[DUM_MATRIX], +1.);
 }
 
@@ -423,7 +438,7 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
   static su3_vector phi1, phi2, phi3, phi4;
 
   ione.re = 0.;
-  ione.im = 1.;
+  ione.im = -1.;
 
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
@@ -433,10 +448,18 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
     /* Subtract s and store the result in t */
     /* multiply with  gamma5 included by    */
     /* reversed order of s and r (2&3)       */
-    _vector_sub((*t).s0, (*r).s0, (*s).s0); 
-    _vector_sub((*t).s1, (*r).s1, (*s).s1); 
-    _vector_sub((*t).s2, (*s).s2, (*r).s2); 
-    _vector_sub((*t).s3, (*s).s3, (*r).s3); 
+    _vector_sub((*t).s0, (*r).s0, (*s).s0);  
+    _vector_sub((*t).s1, (*r).s1, (*s).s1);  
+    _vector_sub((*t).s2, (*s).s2, (*r).s2);  
+    _vector_sub((*t).s3, (*s).s3, (*r).s3);  
+/*     _vector_sub(phi1, (*r).s0, (*s).s0);  */
+/*     _vector_sub(phi2, (*r).s1, (*s).s1);  */
+/*     _vector_sub(phi3, (*s).s2, (*r).s2);  */
+/*     _vector_sub(phi4, (*s).s3, (*r).s3);  */
+/*     _complex_times_vector((*t).s0, ione, phi1); */
+/*     _complex_times_vector((*t).s1, ione, phi2); */
+/*     _complex_times_vector((*t).s2, ione, phi3); */
+/*     _complex_times_vector((*t).s3, ione, phi4); */
   }
 }
 

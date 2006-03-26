@@ -26,12 +26,10 @@
 
 #define DUM_DERI 6
 #define DUM_SOLVER (DUM_DERI+7)
-/* #define DUM_MATRIX (DUM_SOLVER+6) */
+#define DUM_MATRIX (DUM_SOLVER+6)
 /* if you want to include bicgstabell */
-#define DUM_MATRIX DUM_SOLVER+11 
+/* #define DUM_MATRIX (DUM_SOLVER+11) */
 #define NO_OF_SPINORFIELDS (DUM_MATRIX+6)
-
-
 
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */

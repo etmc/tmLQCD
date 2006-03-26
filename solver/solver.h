@@ -11,9 +11,11 @@
 #define BICGSTABELL 5
 #define FGMRES 6
 #define GCR 7
+#define GMRESDR 8
 
 #include"solver/matrix_mult_typedef.h"
 #include"solver/gmres.h"
+#include"solver/gmres_dr.h"
 #include"solver/fgmres.h"
 #include"solver/bicgstab_complex.h"
 #include"solver/cgs_real.h"

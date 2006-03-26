@@ -236,7 +236,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
     
     /* Compute new residual r0 */
     /* r_0=Q-AP  (b=Q, x+0=P) */
-    if(g_debug_level > 3) {
+    if(g_debug_level > 0) {
       f(r0, x0);
       diff(r0, Q, r0, N);
       tmp1.im=sqrt(square_norm(r0, N));

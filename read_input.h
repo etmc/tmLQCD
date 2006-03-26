@@ -26,6 +26,7 @@ extern "C"
   extern int Nmeas;
   extern int Nskip;
   extern int solver_flag;
+  extern int gmres_m_parameter, gmresdr_nr_ev;
   extern int operator_flag;
   extern int matrix_element_flag;
   extern int save_config_flag;
