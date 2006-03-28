@@ -54,6 +54,7 @@ void diagonalise_general_matrix(int n, complex * A, int lda, complex * vl,
 
   /* Query call to get the optimal lwork */
   lwork = -1;
+#ifdef HAVE_LAPACK
   _FT(zgeevx)("N", "N", "V", "N", &n, A, &lda, evalues, vl, &n, vr, &n, 
 	      &ilo, &ihi, scale, &abnrm, rcone, rconv, 
 	      &dummy, &lwork, rwork, &info, 1, 1, 1, 1);
@@ -64,10 +65,10 @@ void diagonalise_general_matrix(int n, complex * A, int lda, complex * vl,
 	      work, &lwork, rwork, &info, 1, 1, 1, 1);
   for(i=0;i<n;i++) {
     for(j=0;j<n;j++) {
-      A[i+j*lda] = vr[i+j*n]; 
+      A[j+i*lda] = vr[j+i*n]; 
     }
   }
-
+#endif
   /* Transpose VL*/
   for(i=0;i<0;i++) {
     for(j=0;j<n;j++) {

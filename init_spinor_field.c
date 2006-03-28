@@ -47,14 +47,6 @@ void free_spinor_field() {
 int init_csg_field(const int V, int * const nr) {
   int i = 0, j = 0;
   
-#if !defined HAVE_LAPACK
-
-  for(i = 0; i < 4; i++) {
-    nr[2*i] = 0;
-  }
-
-#else
-
   /* if all histories are zero, we do not need initialisation */
   if((nr[0] != 0) || (nr[2] != 0) || (nr[4] != 0) || (nr[6] != 0)) {
     sp_csg = (spinor*)calloc((nr[0]+nr[2]+nr[4]+nr[6])*V+1, sizeof(spinor));
@@ -94,6 +86,5 @@ int init_csg_field(const int V, int * const nr) {
     }
   }
 
-#endif
   return(0);
 }

@@ -1,26 +1,16 @@
 /* $Id$ */
 
 /*******************************************************************************
- * Generalized minimal residual (GMRES) with a maximal number of restarts.    
- * Solves Q=AP for complex regular matrices A.
- * For details see: Andreas Meister, Numerik linearer Gleichungssysteme        
- *   or the original citation:                                                 
- * Y. Saad, M.H.Schultz in GMRES: A generalized minimal residual algorithm    
- *                         for solving nonsymmetric linear systems.            
- * 			SIAM J. Sci. Stat. Comput., 7: 856-869, 1986           
- *           
- * int gmres(spinor * const P,spinor * const Q, 
- *	   const int m, const int max_restarts,
- *	   const double eps_sq, matrix_mult f)
- *                                                                 
- * Returns the number of iterations needed or -1 if maximal number of restarts  
- * has been reached.                                                           
+ * Generalized minimal residual (GMRES) with deflated restarting (Morgan)
+ *
+ * This requires LAPACK to run...
  *
  * Inout:                                                                      
  *  spinor * P       : guess for the solving spinor                                             
  * Input:                                                                      
  *  spinor * Q       : source spinor
  *  int m            : Maximal dimension of Krylov subspace                                     
+ *  int nr_ev        : number of eigenvectors to be deflated
  *  int max_restarts : maximal number of restarts                                   
  *  double eps       : stopping criterium                                                     
  *  matrix_mult f    : pointer to a function containing the matrix mult
@@ -45,6 +35,17 @@
 #include"linalg/blas.h"
 #include"solver/gram-schmidt.h"
 #include"gmres_dr.h"
+
+#ifndef HAVE_LAPACK
+/* In case there is no lapack use normal gmres */
+int gmres_dr(spinor * const P,spinor * const Q, 
+	  const int m, const int nr_ev, const int max_restarts,
+	  const double eps_sq, const int rel_prec,
+	  const int N, matrix_mult f){
+  return(gmres(P, Q, m, max_restarts, eps_sq, rel_prec, N, f));
+}
+
+#else
 
 static void init_gmres_dr(const int _M, const int _V);
 complex short_scalar_prod(complex * const x, complex * const y, const int N);
@@ -107,7 +108,6 @@ int gmres_dr(spinor * const P,spinor * const Q,
   assign(x0, P, N);
 
   /* first normal GMRES cycle */
-/*    for(restart = 0; restart < max_restarts; restart++) {  */
   /* r_0=Q-AP  (b=Q, x+0=P) */
   f(r0, x0);
   diff(r0, Q, r0, N);
@@ -543,3 +543,4 @@ static void init_gmres_dr(const int _M, const int _V){
     init = 1;
   }
 }
+#endif

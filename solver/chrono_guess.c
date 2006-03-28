@@ -10,10 +10,8 @@
 #include "su3.h"
 #include "start.h"
 #include "linalg_eo.h"
-#include "linalg/fortran.h"
-#include "linalg/lapack.h"
-#include "linalg/blas.h"
 #include "solver/matrix_mult_typedef.h"
+#include "solver/lu_solve.h"
 #include "solver/chrono_guess.h"
 
 #ifdef HAVE_LAPACK
@@ -68,9 +66,6 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
       for(i = 0; i < 4; i++) {
 	if(g_csg_N[2*i] > max_N) max_N = g_csg_N[2*i];
       }
-#ifdef HAVE_LAPACK
-      lwork = (_FT(ilaenv)(&ONE, "zhetrf", "U", &max_N, &MONE, &MONE, &MONE, 6, 1)) * N;
-#endif
       work = (complex*) malloc(lwork*sizeof(complex));
       bn = (complex*) malloc(max_N*sizeof(complex));
       G = (complex*) malloc(max_N*max_N*sizeof(complex));
@@ -98,31 +93,40 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
     for (j = 0; j < n; j++){
       f(trial, v[index_array[j]]);
       
-      /* Only the upper triangel part is stored      */
+      /* Only the upper triangular part is stored      */
       for(i = 0; i < j+1; i++){
-	G[j*N + i] = scalar_prod(v[index_array[i]], trial, V);  
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("CSG: G[%d*N + %d]= %e + i %e  \n", j, i, G[j*N + i].re, G[j*N + i].im);fflush(stdout);
+	G[i*N + j] = scalar_prod(v[index_array[i]], trial, V);  
+	if(j != i) {
+	  _complex_conj(G[j*N + i], G[i*N + j]);
 	}
-      } 
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("CSG: G[%d*N + %d]= %e + i %e  \n", i, j, G[i*N + j].re, G[i*N + j].im);
+	  fflush(stdout);
+	}
+      }
+      /* The right hand side */
       bn[j] = scalar_prod(v[index_array[j]], phi, V);  
     }
     
-#ifdef HAVE_LAPACK
-    _FT(zhetrf)("U", &n, G, &N, ipiv, work, &lwork, &info, 1);
-#endif
-    if(info != 0) {
-      printf("Error in zhetrf info = %d\n", info);
-    }
-    else {
-#ifdef HAVE_LAPACK
-      _FT(zhetrs)("U", &n, &ONE, G, &N, ipiv, bn, &N, &info, 1);
-#endif
-      if(info != 0) {
-	printf("Error in zhetrs info = %d\n", info);
-      }
-    }
-    
+    /* Solver G y = bn for y and store it in bn */
+    LUSolve(n, G, N, bn);
+/* #ifdef HAVE_LAPACK */
+/*     _FT(zhetrf)("U", &n, G, &N, ipiv, work, &lwork, &info, 1); */
+/* #endif */
+/*     if(info != 0) { */
+/*       printf("Error in zhetrf info = %d\n", info); */
+/*     } */
+/*     else { */
+/* #ifdef HAVE_LAPACK */
+/*       _FT(zhetrs)("U", &n, &ONE, G, &N, ipiv, bn, &N, &info, 1); */
+/* #endif */
+/*       if(info != 0) { */
+/* 	printf("Error in zhetrs info = %d\n", info); */
+/*       } */
+/*     } */
+    /* solution again stored in bn */
+
+    /* Construct the new guess vector */
     if(info == 0) {
       mul(trial, bn[n-1], v[index_array[n-1]], V); 
       if(g_proc_id == 0 && g_debug_level > 1) {

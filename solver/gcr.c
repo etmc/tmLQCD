@@ -57,9 +57,9 @@ int gcr(spinor * const P, spinor * const Q,
     }
     for(k = 0; k < m; k++) {
 
-/*       assign(xi[k], rho, N);  */
-      gmres_precon(xi[k], rho, 5, 2,  
-		1.e-13, rel_prec, N, &Mtm_plus_psi_nocom); 
+      assign(xi[k], rho, N);  
+/*       gmres_precon(xi[k], rho, 5, 2,   */
+/* 		1.e-13, rel_prec, N, &Mtm_plus_psi_nocom);  */
       f(tmp, xi[k]); 
       /* tmp will become chi[k] */
       for(l = 0; l < k; l++) {
