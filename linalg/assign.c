@@ -23,7 +23,6 @@
 #include <math.h>
 #include "su3.h"
 #include "assign.h"
-#include "global.h"
 
 
 
