@@ -737,6 +737,137 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
   return(0);
 }
 
+int write_rlxd_state(char * filename, int * const _state, const int rlxdsize) {
+  n_uint64_t len;
+  LimeWriter * limewriter = NULL;
+  LimeRecordHeader * limeheader = NULL;
+  int * state;
+  int i, status;
+  FILE * ofs;
+
+  state = (int*)calloc(1, rlxdsize*sizeof(int));
+  for(i = 0; i < rlxdsize; i++) {
+    state[i] = _state[i];
+  }
+  ofs = fopen(filename, "a");
+  if(ofs == (FILE*)NULL) {
+    fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(501);
+  }
+  limewriter = limeCreateWriter( ofs );
+  if(limewriter == (LimeWriter*)NULL) {
+    fprintf(stderr, "LIME error in file %s for writing!\n Aboring...\n", filename);
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(501);
+  }
+  
+  len = rlxdsize*sizeof(int);
+  limeheader = limeCreateHeader(1, 1, "ranluxd-state", len);
+  status = limeWriteRecordHeader( limeheader, limewriter);
+  if(status < 0 ) {
+    fprintf(stderr, "LIME write header error %d\n", status);
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(500);
+  }
+  limeDestroyHeader( limeheader );
+#ifndef WORDS_BIGENDIAN
+  byte_swap(state, rlxdsize);
+#endif
+  status = limeWriteRecordData(state, &len, limewriter);
+  if(status < 0 ) {
+    fprintf(stderr, "LIME write error %d\n", status);
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(500);
+  }
+  fclose(ofs);
+  free(state);
+  return(0);
+}
+
+int read_rlxd_state(char * filename, int * state, const int rlxdsize) {
+  int status;
+  FILE * ifs;
+  n_uint64_t len;
+  char * header_type;
+  LimeReader * limereader;
+
+  ifs = fopen(filename, "r");
+  if(ifs == (FILE *)NULL) {
+    fprintf(stderr, "Could not open file %s\n Aborting...\n", filename);
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(500);
+  }
+  limereader = limeCreateReader( ifs );
+  if( limereader == (LimeReader *)NULL ) {
+    fprintf(stderr, "Unable to open LimeReader\n");
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(500);
+  }
+  while( (status = limeReaderNextRecord(limereader)) != LIME_EOF ) {
+    if(status != LIME_SUCCESS ) {
+      fprintf(stderr, "limeReaderNextRecord returned error with status = %d!\n", status);
+      status = LIME_EOF;
+      break;
+    }
+    header_type = limeReaderType(limereader);
+    if(!strcmp("ranluxd-state",header_type)) break;
+  }
+  if(status == LIME_EOF) {
+    fprintf(stderr, "no ildg-binary-data record found in file %s\n",filename);
+    fprintf(stderr, "trying old deprecated file format!\n");
+    limeDestroyReader(limereader);
+    fclose(ifs);
+    return(-1);
+  }
+  len = limeReaderBytes(limereader);
+  if((int)len != rlxdsize*sizeof(int)) {
+    fprintf(stderr, "Wrong size for ranluxd-state (len=%d!=%d)  %s\n", 
+	    (int)len, rlxdsize*sizeof(int), filename);
+    fprintf(stderr, "Aborting...!\n");
+    fflush( stdout );
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(501);
+  }
+  status = limeReaderReadData(state, &len, limereader);
+#ifndef WORDS_BIGENDIAN
+  byte_swap(state, rlxdsize);
+#endif
+  if(status < 0 && status != LIME_EOR) {
+    fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", 
+	    status, filename);
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(500);
+  }
+  limeDestroyReader(limereader);
+  fclose(ifs);
+  return(0);
+}
+
 
 int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filename, 
 			       const int ts, const int vol) {

@@ -63,6 +63,7 @@ void usage(){
 
 
 extern int nstore;
+const int rlxdsize = 105;
 
 int main(int argc,char *argv[]) {
  
@@ -137,7 +138,9 @@ int main(int argc,char *argv[]) {
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
     if(countfile != NULL) {
-      fscanf(countfile, "%d %d\n", &nstore, &trajectory_counter);
+      j = fscanf(countfile, "%d %d %s\n", &nstore, &trajectory_counter, gauge_input_filename);
+      if(j < 2) nstore = 0;
+      if(j < 3) trajectory_counter = 0;
       fclose(countfile);
     }
     else {
@@ -268,40 +271,40 @@ int main(int argc,char *argv[]) {
   zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME/2);
 
 
-  if(g_proc_id == 0){
+
     
-/*     fscanf(fp6,"%s",filename); */
-    /*construct the filenames for the observables and the parameters*/
-    strcpy(datafilename,filename);  strcat(datafilename,".data");
-    strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
-    
+  /*construct the filenames for the observables and the parameters*/
+  strcpy(datafilename,filename);  strcat(datafilename,".data");
+  strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
+  
+  if(g_proc_id == 0){    
     parameterfile = fopen(parameterfilename, "a");
     write_first_messages(parameterfile, integtyp, 0);
   }
   /* define the geometry */
   geometry();
-
+  
   /* define the boundary conditions for the fermion fields */
   boundary();
-
+  
   check_geometry();
-
+  
   
   /* Continue */
   if(startoption == 3){
-    rlxdfile = fopen(rlxd_input_filename,"r");
-    if(rlxdfile != NULL) {
-      if(g_proc_id == 0) {
-	fread(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
+    j = read_rlxd_state(gauge_input_filename, rlxd_state, rlxdsize);
+    if(j == -1) {
+      printf("Trying to read deprecated format from %s\n", rlxd_input_filename);
+      rlxdfile = fopen(rlxd_input_filename,"r");
+      if(rlxdfile != NULL) {
+	fread(rlxd_state, rlxdsize*sizeof(int),1,rlxdfile);
+	fclose(rlxdfile);
       }
-    }
-    else {
-      if(g_proc_id == 0) {
+      else {
 	printf("%s does not exist, switching to restart...\n", rlxd_input_filename);
+	startoption = 2;
       }
-      startoption = 2;
     }
-    fclose(rlxdfile);
     if(startoption != 2) {
       if(g_proc_id == 0) {
 	rlxd_reset(rlxd_state);
@@ -321,14 +324,14 @@ int main(int argc,char *argv[]) {
       }
       rlxd_get(rlxd_state);
 #ifdef MPI
-      MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 99, MPI_COMM_WORLD);
-      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
+      MPI_Send(&rlxd_state[0], rlxdsize, MPI_INT, 1, 99, MPI_COMM_WORLD);
+      MPI_Recv(&rlxd_state[0], rlxdsize, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
       rlxd_reset(rlxd_state);
 #endif
     }
 #ifdef MPI
     else {
-      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
+      MPI_Recv(&rlxd_state[0], rlxdsize, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
       rlxd_reset(rlxd_state);
       /* hot */
       if(startoption == 1) {
@@ -339,7 +342,7 @@ int main(int argc,char *argv[]) {
 	k=0;
       }
       rlxd_get(rlxd_state);
-      MPI_Send(&rlxd_state[0], 105, MPI_INT, k, 99, MPI_COMM_WORLD);
+      MPI_Send(&rlxd_state[0], rlxdsize, MPI_INT, k, 99, MPI_COMM_WORLD);
     }
 #endif
 
@@ -454,19 +457,21 @@ int main(int argc,char *argv[]) {
       sprintf(gauge_filename,"%s", "conf.save");
     }
     countfile = fopen(nstore_filename, "w");
-    fprintf(countfile, "%d %d\n", nstore, trajectory_counter+1);
+    fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
     fclose(countfile);
-    verbose = 1;
+    if(g_proc_id == 0) {
+      verbose = 1;
+    }
     ix = reread_input("hmc.reread");
-    verbose = 0;
+    if(g_proc_id == 0) {
+      verbose = 0;
+    }
 
     write_lime_gauge_field( gauge_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
     /*  write the status of the random number generator on a file */
     if(g_proc_id==0) {
       rlxd_get(rlxd_state);
-      rlxdfile=fopen("rlxd_state","w");
-      fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
-      fclose(rlxdfile);
+      write_rlxd_state(gauge_filename, rlxd_state, rlxdsize);
     }
 
 #ifdef MPI
@@ -482,13 +487,11 @@ int main(int argc,char *argv[]) {
     trajectory_counter++;
   }
   /* write the gauge configuration to the file last_configuration */
-  write_lime_gauge_field( "last_configuration" , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+/*   write_lime_gauge_field( "last_configuration" , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter); */
 
   if(g_proc_id==0) {
     rlxd_get(rlxd_state);
-    rlxdfile=fopen("last_state","w");
-    fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
-    fclose(rlxdfile);
+/*     write_rlxd_state( "last_configuration", rlxd_state, rlxdsize); */
 
     printf("Acceptance Rate was: %e Prozent\n", 100.*(double)Rate/(double)Nmeas);
     fflush(stdout);
@@ -496,6 +499,7 @@ int main(int argc,char *argv[]) {
     fprintf(parameterfile, "Acceptance Rate was: %e Prozent\n", 100.*(double)Rate/(double)Nmeas);
     fclose(parameterfile);
   }
+
 #ifdef MPI
   MPI_Finalize();
 #endif

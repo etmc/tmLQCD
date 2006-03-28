@@ -1,3 +1,10 @@
+28.03.2006: chronological solver guess now independent of lapack
+	    the current filename is now saved in .nstore_counter
+	    last_configuration and last_state are therefore obsolet.
+	    random number state now saved in lime format in the gauge file
+	    rlxd_state files are not any longer produced, but will still be
+	    read.
+
 14.02.2006: --enable-gaugcopy will work now also without
 	    --enable-eogeom . But it requires two additional
 	    copies of the gauge fields.
