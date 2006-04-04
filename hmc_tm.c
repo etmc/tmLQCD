@@ -71,9 +71,11 @@ int main(int argc,char *argv[]) {
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
-  char gauge_filename[50];
+  char gauge_filename[200];
   char * nstore_filename = ".nstore_counter";
+  char * tmp_filename = ".conf.tmp";
   char * input_filename = NULL;
+  char command_string[300];
   int rlxd_state[105];
   int j,ix,mu, trajectory_counter=1;
   int k;
@@ -456,6 +458,22 @@ int main(int argc,char *argv[]) {
     else {
       sprintf(gauge_filename,"%s", "conf.save");
     }
+    /* Write the gauge configuration first to a temporary file */
+    write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+    /*  write the status of the random number generator on a file */
+    if(g_proc_id==0) {
+      rlxd_get(rlxd_state);
+      write_rlxd_state(tmp_filename, rlxd_state, rlxdsize);
+    }
+/* #ifdef MPI */
+/*     MPI_Barrier(MPI_COMM_WORLD); */
+/* #endif */
+
+    /* Now move it! */
+    if(g_proc_id == 0) {
+      rename(tmp_filename, gauge_filename);
+    }
+
     countfile = fopen(nstore_filename, "w");
     fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
     fclose(countfile);
@@ -467,13 +485,6 @@ int main(int argc,char *argv[]) {
       verbose = 0;
     }
 
-    write_lime_gauge_field( gauge_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-    /*  write the status of the random number generator on a file */
-    if(g_proc_id==0) {
-      rlxd_get(rlxd_state);
-      write_rlxd_state(gauge_filename, rlxd_state, rlxdsize);
-    }
-
 #ifdef MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -482,7 +493,7 @@ int main(int argc,char *argv[]) {
       fprintf(countfile, "# Changed parameter according to hmc.reread: measurment %d of %d\n", j, Nmeas); 
       fclose(countfile);
       printf("# Changed parameter according to hmc.reread (see stdout): measurment %d of %d\n", j, Nmeas); 
-      system("rm hmc.reread");
+      remove("hmc.reread");
     }
     trajectory_counter++;
   }

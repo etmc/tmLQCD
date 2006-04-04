@@ -195,6 +195,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   if(g_cart_id == 0) {
     limeDestroyWriter( limewriter );
     fclose(ofs);
+    fflush(ofs);
   }
   return(0);
 }
@@ -278,6 +279,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
     }
   }
   limeDestroyWriter( limewriter );
+  fflush(ofs);
   fclose(ofs);
   return(0);
 }
@@ -792,6 +794,7 @@ int write_rlxd_state(char * filename, int * const _state, const int rlxdsize) {
 #endif
     exit(500);
   }
+  fflush(ofs);
   fclose(ofs);
   free(state);
   return(0);
