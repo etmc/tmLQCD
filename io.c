@@ -57,8 +57,12 @@
 
 void byte_swap(void *ptr, int nmemb);
 void byte_swap_assign(void * out_ptr, void * in_ptr, int nmemb);
+void byte_swap_assign_single2double(void * out_ptr, void * in_ptr, int nmemb);
+void single2double(void * out_ptr, void * in_ptr, int nmemb);
+void byte_swap_assign_double2single(void * out_ptr, void * in_ptr, int nmemb);
+void double2single(void * out_ptr, void * in_ptr, int nmemb);
 int big_endian();
-int write_ildg_format_xml(char *filename, LimeWriter * limewriter);
+int write_ildg_format_xml(char *filename, LimeWriter * limewriter, const int precision);
 n_uint64_t file_size(FILE *fp);
 void single2double_cm(spinor * const R, float * const S);
 void double2single_cm(float * const S, spinor * const R);
@@ -104,7 +108,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
       MPI_Finalize();
       exit(500);
     }
-    write_ildg_format_xml("temp.xml", limewriter);
+    write_ildg_format_xml("temp.xml", limewriter, 0);
     
     limeheader = limeCreateHeader(MB_flag, ME_flag, "xlf-info", bytes);
     status = limeWriteRecordHeader( limeheader, limewriter);
@@ -232,7 +236,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
     fprintf(stderr, "LIME error in file %s for writing!\n Aboring...\n", filename);
     exit(500);
   }
-  write_ildg_format_xml("temp.xml", limewriter);
+  write_ildg_format_xml("temp.xml", limewriter, 0);
 
   limeheader = limeCreateHeader(MB_flag, ME_flag, "xlf-info", bytes);
   status = limeWriteRecordHeader( limeheader, limewriter);
@@ -270,6 +274,226 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 	  status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[t][x][y][z] ][3], &bytes, limewriter);
 	  status = limeWriteRecordData((void*)&g_gauge_field[ g_ipt[t][x][y][z] ][0], &bytes, limewriter);
 #endif
+	  if(status < 0 ) {
+	    fprintf(stderr, "LIME write error %d\n", status);
+	    exit(500);
+	  }
+	}
+      }
+    }
+  }
+  limeDestroyWriter( limewriter );
+  fflush(ofs);
+  fclose(ofs);
+  return(0);
+}
+#endif
+
+#ifdef MPI
+int write_lime_gauge_field_singleprec(char * filename, const double plaq, 
+				      const int counter){
+  FILE * ofs;
+  LimeWriter * limewriter = NULL;
+  LimeRecordHeader * limeheader = NULL;
+  /* Message end and Message begin flag */
+  int ME_flag=0, MB_flag=0, status=0;
+  int tag=0, t=0, x=0, y=0, z=0, id=0, X=0, tt=0, Y=0, Z=0;
+  MPI_Status mpi_status;
+  char message[500];
+  float tmp[72];
+  int coords[4];
+  n_uint64_t bytes;
+  struct timeval t1;
+
+  gettimeofday(&t1,NULL);
+  if(g_kappa > 0. || g_kappa < 0.) {
+    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n time = %ld\n hmcversion = %s", 
+	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1,t1.tv_sec, PACKAGE_VERSION);
+  }
+  else {
+    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f", 
+	    plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
+  }
+  bytes = strlen( message );
+  if(g_cart_id == 0) {
+    ofs = fopen(filename, "w");
+    if(ofs == (FILE*)NULL) {
+      fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+      exit(500);
+    }
+    limewriter = limeCreateWriter( ofs );
+    if(limewriter == (LimeWriter*)NULL) {
+      fprintf(stderr, "LIME error in file %s for writing!\n Aboring...\n", filename);
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+      exit(500);
+    }
+    write_ildg_format_xml("temp.xml", limewriter, 1);
+    
+    limeheader = limeCreateHeader(MB_flag, ME_flag, "xlf-info", bytes);
+    status = limeWriteRecordHeader( limeheader, limewriter);
+    if(status < 0 ) {
+      fprintf(stderr, "LIME write header error %d\n", status);
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+      exit(500);
+    }
+    limeDestroyHeader( limeheader );
+    limeWriteRecordData(message, &bytes, limewriter);
+
+    bytes = LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3)/2;
+    MB_flag=0; ME_flag=1;
+    limeheader = limeCreateHeader(MB_flag, ME_flag, "ildg-binary-data", bytes);
+    status = limeWriteRecordHeader( limeheader, limewriter);
+    if(status < 0 ) {
+      fprintf(stderr, "LIME write header error %d\n", status);
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+      exit(500);
+    }
+    limeDestroyHeader( limeheader );
+  }
+
+  bytes = sizeof(su3)/2;
+  for(t = 0; t < T*g_nproc_t; t++) {
+    tt = t - g_proc_coords[0]*T;
+    coords[0] = t / T;
+    for(z = 0; z < LZ*g_nproc_z; z++) {
+      Z = z - g_proc_coords[3]*LZ;
+      coords[3] = z / LZ;
+      for(y = 0; y < LY*g_nproc_y; y++) {
+	tag = 0;
+	Y = y - g_proc_coords[2]*LY;
+	coords[2] = y / LY;
+	for(x = 0; x < LX*g_nproc_x; x++) {
+	  X = x - g_proc_coords[1]*LX; 
+	  coords[1] = x / LX;
+
+	  MPI_Cart_rank(g_cart_grid, coords, &id);
+	  if(g_cart_id == 0) {
+	    if(g_cart_id == id) {
+#ifndef WORDS_BIGENDIAN
+	      byte_swap_assign_double2single(tmp, g_gauge_field[ g_ipt[tt][X][Y][Z] ], 
+					     4*sizeof(su3)/8); 
+#else
+	      double2single(tmp, g_gauge_field[ g_ipt[tt][X][Y][Z] ], 
+			    4*sizeof(su3)/8); 
+#endif
+	      status = limeWriteRecordData((void*)&tmp[1*18], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[2*18], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[3*18], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[0*18], &bytes, limewriter);
+	    }
+	    else {
+	      MPI_Recv(tmp, 4*sizeof(su3)/8, MPI_FLOAT, id, tag, g_cart_grid, &mpi_status);
+	      status = limeWriteRecordData((void*)&tmp[1*18], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[2*18], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[3*18], &bytes, limewriter);
+	      status = limeWriteRecordData((void*)&tmp[0*18], &bytes, limewriter);
+	    }
+	    if(status < 0 ) {
+	      fprintf(stderr, "LIME write error %d\n", status);
+	      fprintf(stderr, "x %d, y %d, z %d, t %d (%d,%d,%d,%d)\n",x,y,z,t,X,Y,Z,tt);
+	      MPI_Abort(MPI_COMM_WORLD, 1);
+	      MPI_Finalize();
+	      exit(500);
+	    }
+	  }
+	  else {
+	    if(g_cart_id == id){
+#ifndef WORDS_BIGENDIAN
+	      byte_swap_assign_double2single(tmp, g_gauge_field[ g_ipt[tt][X][Y][Z] ],
+					     4*sizeof(su3)/8);
+#else
+	      double2single(tmp, g_gauge_field[ g_ipt[tt][X][Y][Z] ],
+			    4*sizeof(su3)/8);
+#endif
+	      MPI_Send((void*) tmp, 4*sizeof(su3)/8, MPI_FLOAT, 0, tag, g_cart_grid);
+	    }
+	  }
+	  tag++;
+	}
+	MPI_Barrier(g_cart_grid);
+      }
+    }
+  }
+  if(g_cart_id == 0) {
+    limeDestroyWriter( limewriter );
+    fclose(ofs);
+    fflush(ofs);
+  }
+  return(0);
+}
+#else
+int write_lime_gauge_field_singleprec(char * filename, 
+				      const double plaq, const int counter){
+  FILE * ofs;
+  LimeWriter * limewriter;
+  LimeRecordHeader * limeheader;
+  /* Message end and Message begin flag */
+  int ME_flag=0, MB_flag=0, status=0;
+  int t=0, x=0, y=0, z=0;
+  char message[500];
+  n_uint64_t bytes;
+  float tmp[72];
+
+  if(g_kappa > 0. || g_kappa < 0.) {
+    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f", 
+	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1);
+  }
+  else {
+    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f", 
+	    plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
+  }
+  bytes = (n_uint64_t)strlen( message );
+  ofs = fopen(filename, "w");
+  if(ofs == (FILE*)NULL) {
+    fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
+    exit(500);
+  }
+  limewriter = limeCreateWriter( ofs );
+  if(limewriter == (LimeWriter*)NULL) {
+    fprintf(stderr, "LIME error in file %s for writing!\n Aboring...\n", filename);
+    exit(500);
+  }
+  /* Prepare it for 32 Bit write */
+  write_ildg_format_xml("temp.xml", limewriter, 1);
+
+  limeheader = limeCreateHeader(MB_flag, ME_flag, "xlf-info", bytes);
+  status = limeWriteRecordHeader( limeheader, limewriter);
+  if(status < 0 ) {
+    fprintf(stderr, "LIME write header error %d\n", status);
+    exit(500);
+  }
+  limeDestroyHeader( limeheader );
+  limeWriteRecordData(message, &bytes, limewriter);
+
+  bytes = (n_uint64_t)(LX*LY*LZ*T*4*sizeof(su3))/2;
+  MB_flag=0; ME_flag=1;
+  limeheader = limeCreateHeader(MB_flag, ME_flag, "ildg-binary-data", bytes);
+  status = limeWriteRecordHeader( limeheader, limewriter);
+  if(status < 0 ) {
+    fprintf(stderr, "LIME write header error %d\n", status);
+    exit(500);
+  }
+  limeDestroyHeader( limeheader );
+
+  bytes = sizeof(su3)/2;
+  for(t = 0; t < T; t++) {
+    for(z = 0; z < LZ; z++) {
+      for(y = 0; y < LY; y++) {
+	for(x = 0; x < LX; x++) {
+#ifndef WORDS_BIGENDIAN
+	  byte_swap_assign_double2single(tmp, g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8); 
+#else
+	  double2single(tmp, g_gauge_field[ g_ipt[t][x][y][z] ], 4*sizeof(su3)/8); 
+#endif
+	  status = limeWriteRecordData((void*)&tmp[1*18], &bytes, limewriter);
+	  status = limeWriteRecordData((void*)&tmp[2*18], &bytes, limewriter);
+	  status = limeWriteRecordData((void*)&tmp[3*18], &bytes, limewriter);
+	  status = limeWriteRecordData((void*)&tmp[0*18], &bytes, limewriter);
 	  if(status < 0 ) {
 	    fprintf(stderr, "LIME write error %d\n", status);
 	    exit(500);
@@ -543,6 +767,114 @@ int read_lime_gauge_field(char * filename){
 	  status = limeReaderReadData(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &bytes, limereader);
 	  status = limeReaderReadData(&g_gauge_field[ g_ipt[t][x][y][z] ][3], &bytes, limereader);
 	  status = limeReaderReadData(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &bytes, limereader);
+#endif
+	  if(status < 0 && status != LIME_EOR) {
+	    fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", status, filename);
+#ifdef MPI
+	    MPI_Abort(MPI_COMM_WORLD, 1);
+	    MPI_Finalize();
+#endif
+	    exit(500);
+	  }
+	}
+      }
+    }
+  }
+  limeDestroyReader(limereader);
+  fclose(ifs);
+  return(0);
+}
+
+
+int read_lime_gauge_field_singleprec(char * filename){
+  FILE * ifs;
+  int t, x, y, z, status;
+  n_uint64_t bytes;
+  char * header_type;
+  LimeReader * limereader;
+  float tmp[72];
+
+  ifs = fopen(filename, "r");
+  if(ifs == (FILE *)NULL) {
+    fprintf(stderr, "Could not open file %s\n Aborting...\n", filename);
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(500);
+  }
+  limereader = limeCreateReader( ifs );
+  if( limereader == (LimeReader *)NULL ) {
+    fprintf(stderr, "Unable to open LimeReader\n");
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(500);
+  }
+  while( (status = limeReaderNextRecord(limereader)) != LIME_EOF ) {
+    if(status != LIME_SUCCESS ) {
+      fprintf(stderr, "limeReaderNextRecord returned error with status = %d!\n", status);
+      status = LIME_EOF;
+      break;
+    }
+    header_type = limeReaderType(limereader);
+    if(!strcmp("ildg-binary-data",header_type)) break;
+  }
+  if(status == LIME_EOF) {
+    fprintf(stderr, "no ildg-binary-data record found in file %s\n",filename);
+    fprintf(stderr, "trying old deprecated file format!\n");
+    limeDestroyReader(limereader);
+    fclose(ifs);
+    read_gauge_field_time_p(filename);
+    return(0);
+  }
+  bytes = limeReaderBytes(limereader);
+  if((int)bytes != LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3)/2) {
+    fprintf(stderr, "Probably wrong lattice size or precision (bytes=%d) in file %s\n", (int)bytes, filename);
+    fprintf(stderr, "Aborting...!\n");
+    fflush( stdout );
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(501);
+  }
+
+  bytes = (n_uint64_t)4*sizeof(su3)/2;
+#ifdef WORDS_BIGENDIAN
+  bytes = sizeof(su3)/2;
+#endif
+  for(t = 0; t < T; t++){
+    for(z = 0; z < LZ; z++){
+      for(y = 0; y < LY; y++){
+#if (defined MPI)
+	limeReaderSeek(limereader,(n_uint64_t) 
+		       (g_proc_coords[1]*LX + 
+			(((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
+			 + g_proc_coords[2]*LY+y)*LX*g_nproc_x)*4*sizeof(su3)/2,
+		       SEEK_SET);
+#endif
+	for(x = 0; x < LX; x++) {
+	  status = limeReaderReadData(tmp, &bytes, limereader);
+#ifndef WORDS_BIGENDIAN
+	  byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], 
+					 &tmp[3*18], sizeof(su3)/8);
+	  byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], 
+					 &tmp[0*18], sizeof(su3)/8);
+	  byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], 
+					 &tmp[1*18], sizeof(su3)/8);
+	  byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], 
+					 &tmp[2*18], sizeof(su3)/8);
+#else
+	  single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], 
+			&tmp[3*18], sizeof(su3)/8);
+	  single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], 
+			&tmp[0*18], sizeof(su3)/8);
+	  single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], 
+			&tmp[1*18], sizeof(su3)/8);
+	  single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], 
+			&tmp[2*18], sizeof(su3)/8);
 #endif
 	  if(status < 0 && status != LIME_EOR) {
 	    fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", status, filename);
@@ -1017,6 +1349,81 @@ void byte_swap_assign(void * out_ptr, void * in_ptr, int nmemb){
   }
 }
 
+void single2double(void * out_ptr, void * in_ptr, int nmemb) {
+  int i;
+  float * float_ptr = (float*) in_ptr;
+  double * double_ptr = (double*) out_ptr;
+
+  for(i = 0; i < nmemb; i++) {
+    (*double_ptr) = (double) (*float_ptr);
+
+    float_ptr++;
+    double_ptr++;
+  }
+
+}
+
+void double2single(void * out_ptr, void * in_ptr, int nmemb) {
+  int i;
+  float * float_ptr = (float*) out_ptr;
+  double * double_ptr = (double*) in_ptr;
+
+  for(i = 0; i < nmemb; i++) {
+    (*float_ptr) = (float) (*double_ptr);
+
+    float_ptr++;
+    double_ptr++;
+  }
+
+}
+
+void byte_swap_assign_single2double(void * out_ptr, void * in_ptr, int nmemb){
+  int j;
+  char * char_in_ptr, * char_out_ptr;
+  double * double_out_ptr;
+  float * float_in_ptr;
+  float tmp;
+
+  float_in_ptr = (float *) in_ptr;
+  double_out_ptr = (double *) out_ptr;
+  char_out_ptr = (char *) &tmp;
+  for(j = 0; j < nmemb; j++){
+    char_in_ptr = (char *) float_in_ptr;
+    
+    char_out_ptr[3] = char_in_ptr[0];
+    char_out_ptr[2] = char_in_ptr[1];
+    char_out_ptr[1] = char_in_ptr[2];
+    char_out_ptr[0] = char_in_ptr[3];
+    (*double_out_ptr) = (double) tmp;
+    float_in_ptr++;
+    double_out_ptr++;
+  }
+}
+
+void byte_swap_assign_double2single(void * out_ptr, void * in_ptr, int nmemb){
+  int j;
+  char * char_in_ptr, * char_out_ptr;
+  double * double_in_ptr;
+  float * float_out_ptr;
+  float tmp;
+
+  float_out_ptr = (float *) out_ptr;
+  double_in_ptr = (double *) in_ptr;
+  char_in_ptr = (char *) &tmp;
+  for(j = 0; j < nmemb; j++){
+    tmp = (float) (*double_in_ptr);
+    char_out_ptr = (char*) float_out_ptr;
+
+    char_out_ptr[3] = char_in_ptr[0];
+    char_out_ptr[2] = char_in_ptr[1];
+    char_out_ptr[1] = char_in_ptr[2];
+    char_out_ptr[0] = char_in_ptr[3];
+
+    float_out_ptr++;
+    double_in_ptr++;
+  }
+}
+
 int write_first_messages(FILE * parameterfile, const int integtyp, const int inv) {
 
   if(inv != 1) {
@@ -1134,7 +1541,7 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
 }
 
 
-int write_ildg_format_xml(char *filename, LimeWriter * limewriter){
+int write_ildg_format_xml(char *filename, LimeWriter * limewriter, const int prec){
   FILE * ofs;
   n_uint64_t bytes, bytes_left, bytes_to_copy;
   int MB_flag=1, ME_flag=0, status=0;
@@ -1149,7 +1556,12 @@ int write_ildg_format_xml(char *filename, LimeWriter * limewriter){
   fprintf(ofs, "            xsi:schemaLocation=\"http://www.lqcd.org/ildg filefmt.xsd\">\n");
   fprintf(ofs, "  <version> 1.0 </version>\n");
   fprintf(ofs, "  <field> su3gauge </field>\n");
-  fprintf(ofs, "  <precision> 64 </precision>\n");
+  if(prec == 0) {
+    fprintf(ofs, "  <precision> 64 </precision>\n");
+  }
+  else {
+    fprintf(ofs, "  <precision> 32 </precision>\n");
+  }
   fprintf(ofs, "  <lx> %d </lx>\n", LX*g_nproc_x);
   fprintf(ofs, "  <ly> %d </ly>\n", LY*g_nproc_y);
   fprintf(ofs, "  <lz> %d </lz>\n", LZ*g_nproc_z);
