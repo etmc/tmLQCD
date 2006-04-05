@@ -935,7 +935,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 #ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][2];
 #elif !defined _NEW_GEOMETRY
-    um=up+1
+    um=up+1;
 #else
     um+=1;
 #endif
