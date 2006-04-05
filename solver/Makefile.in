@@ -32,7 +32,7 @@ LIBRARIES = libsolver
 libsolver_TARGETS = bicgstab_complex gmres \
 	            cgs_real cg_her mr chrono_guess \
 	            bicgstabell bicgstab2 fgmres gmres_precon \
-	            mr_precon gcr diagonalise_general_matrix \
+	            gcr diagonalise_general_matrix \
 	            quicksort gmres_dr gram-schmidt lu_solve
 
 #                    jdher_bi gram-schmidt_bi quicksort \

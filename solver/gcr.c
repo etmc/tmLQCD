@@ -10,7 +10,7 @@
 #include"su3.h"
 #include"linalg_eo.h"
 #include"solver/gmres_precon.h"
-#include"solver/mr_precon.h"
+/* #include"solver/mr_precon.h" */
 #include"tm_operators.h"
 #include"gcr.h"
 
