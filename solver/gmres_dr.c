@@ -34,6 +34,7 @@
 #include"linalg/lapack.h"
 #include"linalg/blas.h"
 #include"solver/gram-schmidt.h"
+#include"solver/gmres.h"
 #include"gmres_dr.h"
 
 #ifndef HAVE_LAPACK

@@ -25,6 +25,7 @@
 #include "derivative_psf.h"
 #include "gamma.h"
 #include "get_staples.h"
+#include "update_backward_gauge.h"
 #include "hybrid_update.h"
 
 extern int ITER_MAX_BCG;
