@@ -22,6 +22,7 @@
 #include "tm_operators.h"
 #include "hybrid_update.h"
 #include "derivative_psf.h"
+#include "update_backward_gauge.h"
 #include "2mn_integrator.h"
 
 extern int count00, count01, count10, count11, count20, count21;
