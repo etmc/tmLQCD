@@ -21,5 +21,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 /* This is the full matrix multiplication */
 void M_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd);
+void Q_full(spinor * const Even_new, spinor * const Odd_new, 
+	    spinor * const Even, spinor * const Odd);
 
 #endif
