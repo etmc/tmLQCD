@@ -223,9 +223,14 @@ int main(int argc,char *argv[]) {
 	    fflush(stdout);
 	  }
 	  fclose(ifs);
-	  
-	  read_spinorfield_eo_time(g_spinor_field[2], g_spinor_field[3], conf_filename);
+	  if(source_format_flag == 0) {
+	    read_spinorfield_eo_time(g_spinor_field[2], g_spinor_field[3], conf_filename);
+	  }
+	  else if(source_format_flag == 1) {
+	    read_spinorfield_cm_single(g_spinor_field[2], g_spinor_field[3], conf_filename, source_time_slice, 1);
+	  }
 	  mul_r(g_spinor_field[3], 1./(2*g_kappa), g_spinor_field[3], VOLUME/2);
+	  mul_r(g_spinor_field[2], 1./(2*g_kappa), g_spinor_field[2], VOLUME/2);
 	}
 	else {
 	  zero_spinor_field(g_spinor_field[3],VOLUME/2);
