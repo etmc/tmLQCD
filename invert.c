@@ -178,12 +178,6 @@ int main(int argc,char *argv[]) {
 #ifdef _GAUGE_COPY
   update_backward_gauge();
 #endif
-    if(source_format_flag == 0) {
-      sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore);
-    }
-    else if(source_format_flag == 1) {
-      sprintf(conf_filename,"%s.inverted", source_input_filename);
-    }
     
     for(ix = index_start; ix < index_end; ix++) {
       is = (ix / 3);
@@ -194,11 +188,17 @@ int main(int argc,char *argv[]) {
       else {
 	if(source_format_flag == 0) {
 	  sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", source_input_filename, mass_number, is, ic, nstore); 
+	  if(g_proc_id == 0) {
+	    printf("Reading source from %s\n", conf_filename);
+	  }
 	  read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], conf_filename); 
 	}
 	else if(source_format_flag == 1) {
-	  printf("Reading source from %s\n",source_input_filename);
-	  read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], source_input_filename, source_time_slice, 1);
+	  sprintf(conf_filename,"%s.%.4d.%.2d.%.1d", source_input_filename, nstore, source_time_slice, ix);
+	  if(g_proc_id == 0) {
+	    printf("Reading source from %s\n", conf_filename);
+	  }
+	  read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename, source_time_slice, 1);
 	}
       }
 
@@ -208,7 +208,8 @@ int main(int argc,char *argv[]) {
 	sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", "prop.mass", mass_number, is, ic, nstore);
       }
       else if(source_format_flag == 1) {
-	sprintf(conf_filename, "%s.inverted", source_input_filename);
+	sprintf(conf_filename, "%s.%.4d.%.2d.%.1d.inverted", 
+		source_input_filename, nstore, source_time_slice, ix);
       }
 
       /* If the solver is _not_ CG we might read in */
@@ -267,7 +268,12 @@ int main(int argc,char *argv[]) {
       nrm2 = square_norm(g_spinor_field[5], VOLUME/2); 
 
       if(g_proc_id == 0) {
-	printf("Inversion for is = %d, ic = %d done in %d iterations, residue = %e!\n", is, ic, iter, nrm1+nrm2);
+	if(source_format_flag == 0) {
+	  printf("Inversion for is = %d, ic = %d done in %d iterations, residue = %e!\n", is, ic, iter, nrm1+nrm2);
+	}
+	else if(source_format_flag == 1) {
+	  printf("Inversion for source %d done in %d iterations, residue = %e!\n", ix, iter, nrm1+nrm2);
+	}
 #ifdef MPI
 	printf("Inversion done in %e sec. (MPI_Wtime)\n", etime-atime);
 #endif
