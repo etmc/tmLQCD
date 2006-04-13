@@ -1305,19 +1305,19 @@ int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filen
 	    }
 	  }
 	  if(g_cart_id == 0){
-	    if(g_cart_id == id){
+	    if(g_cart_id == id) {
 	      double2single_cm(tmp, p + i);
 	    }
 #ifdef MPI
 	    else {
 	      MPI_Recv(tmp, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &status);
 	    }
-	    fwrite(tmp, sizeof(float), 24, ofs);
 #endif
+	    fwrite(tmp, sizeof(float), 24, ofs);
 	  }
 #ifdef MPI
 	  else {
-	    if(g_cart_grid == id) {
+	    if(g_cart_id == id) {
 	      double2single_cm(tmp, p + i);
 	      MPI_Send((void*) tmp, sizeof(spinor)/8, MPI_FLOAT, 0, tag, g_cart_grid);
 	    }
