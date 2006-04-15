@@ -63,6 +63,8 @@ extern "C"
   extern int return_check_interval;
   extern int source_format_flag;
   extern int source_time_slice;
+  extern int gauge_precision_read_flag;
+  extern int gauge_precision_write_flag;
   
   int read_input(char *);
   int reread_input(char *);

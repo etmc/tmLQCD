@@ -40,7 +40,7 @@ MODULES = init_gauge_field init_geometry_indices init_spinor_field \
 
 ### eigenvalues_bi max_eigenvalues_bi Nondegenerate_Matrix \
 
-PROGRAMS = hmc_tm thermal_cycle_tm benchmark invert gwc2ildg ildg2gwc
+PROGRAMS = hmc_tm thermal_cycle_tm benchmark invert gwc2ildg ildg2gwc single2double double2single
 ### test/test_eigenvalues
 ALLOBJ = ${MODULES} ${PROGRAMS}
 SUBDIRS = linalg solver

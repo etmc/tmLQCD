@@ -74,6 +74,8 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   int return_check_flag, return_check_interval;
   int source_format_flag;
   int source_time_slice;
+  int gauge_precision_read_flag;
+  int gauge_precision_write_flag;
 %}
 
 %option never-interactive
@@ -100,6 +102,8 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x NSKIP
 %x RLXDINPUTFILE
 %x GAUGEINPUTFILE
+%x GAUGERPREC
+%x GAUGEWPREC
 %x SOLVFLAG
 %x OPFLAG
 %x MEFLAG
@@ -251,6 +255,8 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^CSGHistoryMu2{SPC}*={SPC}*              BEGIN(CSGN2);
 ^CSGHistMu3{SPC}*={SPC}*                 BEGIN(CSGN3);
 ^CSGHistoryMu3{SPC}*={SPC}*              BEGIN(CSGN3);
+^GaugeConfigReadPrecision{SPC}*={SPC}*   BEGIN(GAUGERPREC);
+^GaugeConfigWritePrecision{SPC}*={SPC}*   BEGIN(GAUGEWPREC);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -707,6 +713,22 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   g_csg_N[4] = atoi(yytext);
   if(verbose!=0) printf("Chronological Invertier history length for mu set to %d\n", g_csg_N[4]);
 }
+<GAUGERPREC>32 {
+  gauge_precision_read_flag = 32;
+  if(verbose!=0) printf("Read gauges in 32 Bit precision!\n");
+}
+<GAUGERPREC>64 {
+  gauge_precision_read_flag = 64;
+  if(verbose!=0) printf("Read gauges in 64 Bit precision!\n");
+}
+<GAUGEWPREC>32 {
+  gauge_precision_write_flag = 32;
+  if(verbose!=0) printf("Save gauges in 32 Bit precision!\n");
+}
+<GAUGEWPREC>64 {
+  gauge_precision_write_flag = 64;
+  if(verbose!=0) printf("Save gauges in 64 Bit precision!\n");
+}
 
 <*>^#                       BEGIN(COMMENT);
 <SEED,KAPPA,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
@@ -715,7 +737,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
 <INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
 <ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
-<SOURCETS>#   BEGIN(COMMENT);
+<SOURCETS,GAUGERPREC,GAUGEWPREC>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -844,6 +866,14 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 <IOPROC>.    {
   printf("Unknown value for StdIOProcessor in line %d!\n Must be all, no or an integer value! Exiting...!\n", line_of_file);
+  exit(1);
+}
+<GAUGERPREC>. {
+  printf("Error in line %d! Must be 32 or 64 Bit precision!\n", line_of_file);
+  exit(1);
+}
+<GAUGEWPREC>. {
+  printf("Error in line %d! Must be 32 or 64 Bit precision!\n", line_of_file);
   exit(1);
 }
 <IDX>. {
@@ -1002,6 +1032,8 @@ int read_input(char * conf_file){
   lambda[3] = _default_2mn_lambda;
   source_format_flag = _default_source_format_flag;
   source_time_slice = _default_source_time_slice;
+  gauge_precision_read_flag = _default_gauge_precision_read_flag;
+  gauge_precision_write_flag = _default_gauge_precision_write_flag;
 
   /********************************************/
 

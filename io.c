@@ -637,11 +637,14 @@ int read_gauge_field_time_p(char * filename){
     position = ftell(ifs);
 #endif
     if(beta!=g_beta){
-      fprintf(stderr, "Warning! Configuration %s was produced with a different beta!\n", filename);
-/*       errorhandler(112,filename); */
+      if(g_proc_id == 0) {
+	fprintf(stderr, "Warning! Configuration %s was produced with a different beta!\n", filename);
+      }
     }
     if((l!=g_nproc_x*LX)||(t!=g_nproc_t*T)){
-      printf("Error! Configuration %s was produced with a different lattice size\n Aborting...\n", filename);
+      if(g_proc_id == 0) {
+	printf("Error! Configuration %s was produced with a different lattice size\n Aborting...\n", filename);
+      }
       exit(1);
 /*       errorhandler(114,filename); */
     }
@@ -722,8 +725,10 @@ int read_lime_gauge_field(char * filename){
     if(!strcmp("ildg-binary-data",header_type)) break;
   }
   if(status == LIME_EOF) {
-    fprintf(stderr, "no ildg-binary-data record found in file %s\n",filename);
-    fprintf(stderr, "trying old deprecated file format!\n");
+    if(g_proc_id == 0) {
+      fprintf(stderr, "no ildg-binary-data record found in file %s\n",filename);
+      fprintf(stderr, "trying old deprecated file format!\n");
+    }
     limeDestroyReader(limereader);
     fclose(ifs);
     read_gauge_field_time_p(filename);
@@ -822,8 +827,10 @@ int read_lime_gauge_field_singleprec(char * filename){
     if(!strcmp("ildg-binary-data",header_type)) break;
   }
   if(status == LIME_EOF) {
-    fprintf(stderr, "no ildg-binary-data record found in file %s\n",filename);
-    fprintf(stderr, "trying old deprecated file format!\n");
+    if(g_proc_id == 0) {
+      fprintf(stderr, "no ildg-binary-data record found in file %s\n",filename);
+      fprintf(stderr, "trying old deprecated file format!\n");
+    }
     limeDestroyReader(limereader);
     fclose(ifs);
     read_gauge_field_time_p(filename);

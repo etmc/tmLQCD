@@ -119,7 +119,12 @@ int main(int argc,char *argv[]) {
   if (g_proc_id == 0){
     printf("Reading Gauge field from file %s in ILDG format\n", ifilename); fflush(stdout);
   }
-  read_lime_gauge_field( ifilename ); 
+  if(gauge_precision_read_flag == 64) {
+    read_lime_gauge_field( ifilename ); 
+  }
+  else if(gauge_precision_read_flag == 32) {
+    read_lime_gauge_field_singleprec( ifilename ); 
+  }
 
 #ifdef MPI
   xchange_gauge();

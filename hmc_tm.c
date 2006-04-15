@@ -295,6 +295,7 @@ int main(int argc,char *argv[]) {
   /* Continue */
   if(startoption == 3){
     j = read_rlxd_state(gauge_input_filename, rlxd_state, rlxdsize);
+    printf("%d %d\n", rlxd_state[0], rlxd_state[1]);
     if(j == -1) {
       printf("Trying to read deprecated format from %s\n", rlxd_input_filename);
       rlxdfile = fopen(rlxd_input_filename,"r");
@@ -310,10 +311,19 @@ int main(int argc,char *argv[]) {
     if(startoption != 2) {
       if(g_proc_id == 0) {
 	rlxd_reset(rlxd_state);
-	printf("# Reading Gauge field from file %s\n", gauge_input_filename); fflush(stdout);
+	printf("# Reading Gauge field from file %s in %d Bit\n", 
+	       gauge_input_filename, gauge_precision_read_flag); 
+	fflush(stdout);
       }
-      read_lime_gauge_field(gauge_input_filename);
-/*       read_gauge_field_time_p(gauge_input_filename); */
+      if(gauge_precision_read_flag == 64) {
+	read_lime_gauge_field(gauge_input_filename);
+      }
+      else if(gauge_precision_read_flag == 32){
+	read_lime_gauge_field_singleprec(gauge_input_filename);
+      }
+      if (g_proc_id == 0){
+	printf("done!\n"); fflush(stdout);
+      }
     }
   }
   if(startoption != 3){
@@ -355,9 +365,19 @@ int main(int argc,char *argv[]) {
     /* Restart */
     else if(startoption == 2) {
       if (g_proc_id == 0){
-	printf("# Reading Gauge field from file %s\n", gauge_input_filename); fflush(stdout);
+	printf("# Reading Gauge field from file %s in %d Bit\n", 
+	       gauge_input_filename, gauge_precision_read_flag); 
+	fflush(stdout);
       }
-      read_lime_gauge_field(gauge_input_filename);
+      if(gauge_precision_read_flag == 64) {
+	read_lime_gauge_field(gauge_input_filename);
+      }
+      else if(gauge_precision_read_flag == 32) {
+	read_lime_gauge_field_singleprec(gauge_input_filename);
+      }
+      if(g_proc_id == 0) {
+	printf("# Done!\n");
+      }
     }
 
   }
@@ -459,7 +479,12 @@ int main(int argc,char *argv[]) {
       sprintf(gauge_filename,"%s", "conf.save");
     }
     /* Write the gauge configuration first to a temporary file */
-    write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+    if(gauge_precision_write_flag == 64) {
+      write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+    }
+    else if(gauge_precision_write_flag == 32) {
+      write_lime_gauge_field_singleprec( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+    }
     /*  write the status of the random number generator on a file */
     if(g_proc_id==0) {
       rlxd_get(rlxd_state);
