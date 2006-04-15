@@ -198,10 +198,9 @@ int main(int argc,char *argv[]) {
 	  if(g_proc_id == 0) {
 	    printf("Reading source from %s\n", conf_filename);
 	  }
-	  read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename, source_time_slice, 1);
+	  read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename, -1, 1);
 	}
       }
-
       if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
 
       if(source_format_flag == 0) {
@@ -219,18 +218,18 @@ int main(int argc,char *argv[]) {
 	ifs = fopen(conf_filename, "r");
 	if(ifs != NULL) {
 	  if(g_proc_id == g_stdio_proc){
-	    printf("Reading in from file %s\n", filename);
+	    printf("Reading in from file %s\n", conf_filename);
 	    fflush(stdout);
 	  }
 	  fclose(ifs);
 	  if(source_format_flag == 0) {
 	    read_spinorfield_eo_time(g_spinor_field[2], g_spinor_field[3], conf_filename);
+	    mul_r(g_spinor_field[3], 1./(2*g_kappa), g_spinor_field[3], VOLUME/2);
+	    mul_r(g_spinor_field[2], 1./(2*g_kappa), g_spinor_field[2], VOLUME/2);
 	  }
 	  else if(source_format_flag == 1) {
-	    read_spinorfield_cm_single(g_spinor_field[2], g_spinor_field[3], conf_filename, source_time_slice, 1);
+	    read_spinorfield_cm_single(g_spinor_field[2], g_spinor_field[3], conf_filename, -1, 1);
 	  }
-	  mul_r(g_spinor_field[3], 1./(2*g_kappa), g_spinor_field[3], VOLUME/2);
-	  mul_r(g_spinor_field[2], 1./(2*g_kappa), g_spinor_field[2], VOLUME/2);
 	}
 	else {
 	  zero_spinor_field(g_spinor_field[3],VOLUME/2);
