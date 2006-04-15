@@ -51,6 +51,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   double lambda[4];
   int nsmall;
   int solver_flag;
+  int gmres_m_parameter, gmresdr_nr_ev;
   int operator_flag;
   int matrix_element_flag;
   int save_config_flag;
@@ -161,6 +162,8 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x CSGN1
 %x CSGN2
 %x CSGN3
+%x GMRESM
+%x GMRESDRNEV
 
 
 %x COMMENT
@@ -256,6 +259,8 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^CSGHistoryMu2{SPC}*={SPC}*              BEGIN(CSGN2);
 ^CSGHistMu3{SPC}*={SPC}*                 BEGIN(CSGN3);
 ^CSGHistoryMu3{SPC}*={SPC}*              BEGIN(CSGN3);
+^GMRESMParameter{SPC}*={SPC}*            BEGIN(GMRESM);
+^GMRESDRNrEv{SPC}*={SPC}*                BEGIN(GMRESDRNEV);
 ^GaugeConfigReadPrecision{SPC}*={SPC}*   BEGIN(GAUGERPREC);
 ^GaugeConfigWritePrecision{SPC}*={SPC}*   BEGIN(GAUGEWPREC);
 
@@ -379,6 +384,14 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   solver_flag=2;
   if(verbose!=0) printf("Use GMRES Solver\n");
 }
+<SOLVFLAG>gcr {
+  solver_flag=7;
+  if(verbose!=0) printf("Use GCR Solver\n");
+}
+<SOLVFLAG>gmresdr {
+  solver_flag=8;
+  if(verbose!=0) printf("Use GMRES-DR Solver\n");
+}
 <SOLVFLAG>cgs {
   solver_flag=3;
   if(verbose!=0) printf("Use CGS Solver\n");
@@ -394,6 +407,14 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <SOLVFLAG>fgmres {
   solver_flag=6;
   if(verbose!=0) printf("Use FGMRES with domain decomp. preconditioning Solver \n");
+}
+<GMRESM>{DIGIT}+ {
+  gmres_m_parameter = atoi(yytext);
+  if(verbose!=0) printf("Use Krylov Space of size %d in GMRES \n", gmres_m_parameter);
+}
+<GMRESDRNEV>{DIGIT}+ {
+  gmresdr_nr_ev = atoi(yytext);
+  if(verbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
 }
 <SITER>{DIGIT}+ {
   max_solver_iterations = atoi(yytext);
@@ -738,6 +759,8 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
 <INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
 <ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
+<GMRESM,GMRESDRNEV>#   BEGIN(COMMENT);
+<SOURCETS>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
@@ -889,6 +912,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
+<GMRESM,GMRESDRNEV>. {
+  printf("Error in line %d!\n", line_of_file);
+  exit(1);
+}
 <SITER>. {
   printf("Unknown value for MaxSolverIterations in line %d! Must be an integer. Exiting...!\n", line_of_file);
   exit(1);
@@ -1033,6 +1060,8 @@ int read_input(char * conf_file){
   lambda[3] = _default_2mn_lambda;
   source_format_flag = _default_source_format_flag;
   source_time_slice = _default_source_time_slice;
+  gmres_m_parameter = _default_gmres_m_parameter;
+  gmresdr_nr_ev = _default_gmresdr_nr_ev;
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
 
