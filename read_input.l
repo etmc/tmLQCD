@@ -76,6 +76,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   int source_time_slice;
   int gauge_precision_read_flag;
   int gauge_precision_write_flag;
+  int gmres_m_parameter, gmresdr_nr_ev;
 %}
 
 %option never-interactive
