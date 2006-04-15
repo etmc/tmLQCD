@@ -1,3 +1,10 @@
+15.04.2006: Various new input parameters, see doc/input.tex.
+	    removing of hmc.reread now also works on BG/L.
+	    The file conf.save is now almost always save: a new
+	    configuration is first stored in .conf.temp and then moved
+	    to conf.save. There might be still a problem in case the
+	    job chrashes when .nstore_counter is written...
+
 28.03.2006: chronological solver guess now independent of lapack
 	    the current filename is now saved in .nstore_counter
 	    last_configuration and last_state are therefore obsolet.
@@ -7,10 +14,10 @@
 
 14.02.2006: --enable-gaugcopy will work now also without
 	    --enable-eogeom . But it requires two additional
-	    copies of the gauge fields.
+	    copies of the gauge fields instead of one.
 
 	    A reasonably well tuned BG/L Dirac operator available
-	    about 10% up to 2048 processors.
+	    about 10% of peak scaling up to 2048 processors.
 
 13.02.2006: four dimensional parallelisation more or less tested
 

@@ -3,7 +3,7 @@
 # Process this file with autoconf to produce a configure script
 #
 AC_PREREQ(2.53)
-AC_INIT(HMC, 3.1.3, carsten.urbach@desy.de)
+AC_INIT(HMC, 3.1.4, carsten.urbach@liverpool.ac.uk)
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()
@@ -80,23 +80,19 @@ if test $enable_mpi = yes; then
     withmpidimension=$withval, withmpidimension=1)
   if test $withmpidimension = 1; then
     AC_MSG_RESULT(n=1 [t])
-    mpidimension="-DPARALLELT"
     AC_DEFINE(PARALLELT,1,One dimensional parallelisation)
   elif test $withmpidimension = 2; then
     AC_MSG_RESULT(n=2 [xt])
-    mpidimension="-DPARALLELXT"
     AC_DEFINE(PARALLELXT,1,Two dimensional parallelisation)
   elif test $withmpidimension = 3; then
     AC_MSG_RESULT(n=3 [xyt])
-    mpidimension="-DPARALLELXYT"
     AC_DEFINE(PARALLELXYT,1,Three dimensional parallelisation)
   elif test $withmpidimension = 4; then
     AC_MSG_RESULT(n=4 [xyzt])
-    mpidimension="-DPARALLELXYZT"
     AC_DEFINE(PARALLELXYZT,1,Four dimensional parallelisation)
   else
     AC_MSG_RESULT(unknown)
-    AC_MSG_ERROR([Only one, two or three dimensional parallelisation available]) 
+    AC_MSG_ERROR([Only one, two, three or four dimensional parallelisation available]) 
   fi
 fi
 
