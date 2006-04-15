@@ -288,6 +288,34 @@ supported input paramters:
 \item {\ttfamily 2MNLambdaMu|Mu2|Mu3}:\\
   The 2MN $\lambda$ parameters for the pseudo fermion time scales.
 
+\item {\ttfamily GaugeConfigRead|WritePrecision}:\\
+  Read/Write gauge configurations in single (32) or double double (64)
+  precision. Default is 64.
+
+\item {\ttfamily GMRESMParameter}:\\
+  Krylov subspace size $m$ in GMRES($m$) and such like iterative solvers.
+
+\item {\ttfamily GMRESDRNrEv}:\\
+  Number of eigenvalues to be deflated in GMRES-DR iterative solver.
+
+\item {\ttfamily SourceFormat}:\\
+  Format of sources and propagators. Only needed when not standard
+  format is used. Possible values then cmi.
+
+\item {\ttfamily SolverPrecision}:\\
+  Stopping criterion for solver in programme invert. The squared
+  residue must be set.
+
+\item {\ttfamily ReadSource}:\\
+  If set to yes, then the source vector is read from a file
+
+\item {\ttfamily SourceInputFilename}:\\
+  Filename of the source vector.
+
+\item {\ttfamily SourceTimeSlice}:\\
+  The time slice of the source to be read. At the moment used only for
+  the automatic construction of filenames...
+
 \end{enumerate}
 
 \subsection{Reread functionality}
