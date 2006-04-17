@@ -849,9 +849,6 @@ int read_lime_gauge_field_singleprec(char * filename){
   }
 
   bytes = (n_uint64_t)4*sizeof(su3)/2;
-#ifdef WORDS_BIGENDIAN
-  bytes = sizeof(su3)/2;
-#endif
   for(t = 0; t < T; t++){
     for(z = 0; z < LZ; z++){
       for(y = 0; y < LY; y++){
