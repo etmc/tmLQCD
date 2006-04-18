@@ -1,8 +1,7 @@
 /* $Id$ */
 /*
-  Program  to read a 
-  tmqcd configuration into memory. - based on ILDG CP-PACS
-   (see ToSTDConf.c and web pages)
+  Program  to read a ILDG
+   configuration into memory. - based on ILDG from Carsten
 
  Writes float to D_ukqcd
 
@@ -16,7 +15,7 @@
 int main()
 {
   char filename[150] ;
- /* TM    double U[NX][NY][NZ][NT][4][2][3][2]; mu: TXYZ*/
+ /* ILDG    double U[NT][NZ][NY][NX][4][3][3][2]; mu: XYZT*/
   const int NX = 24 ; 
   const int NY = 24 ; 
   const int NZ = 24 ; 
@@ -24,12 +23,11 @@ int main()
 
   int dim = NX*NY*NZ*NT*2*9*4 ; 
   int dimukqcd = NX*NY*NZ*2*6*4 ;  /*  dimension of write 2 cols case */
-  int dimtm = NT*2*6*4 ;  /*  dimension of write 2 cols case */
   int nxyz = NX*NY*NZ ; 
-  int iri,irv,idim,icol,irow, ixyz,ix,iy,iz,it, idimtm;
+  int iri,irv,idim,icol,irow, ixyz,ix,iy,iz,it;
   int iuk, icp, iout;
   double xnr11,xnr12,xnr22,xtemp1,xtemp2;
-  float *config=NULL  ;
+  double *config=NULL  ;
 
   FILE *fp;
  /* UKQCD   float U[NT][NZ][NY][NX][4][3][2][2] and separate t-slices */
@@ -45,7 +43,7 @@ int main()
   printf("filename = %s\n",filename); 
   fflush(stdout);
 
-  config = (float *) malloc((size_t) dim * sizeof(float) ) ; 
+  config = (double *) malloc((size_t) dim * sizeof(double) ) ; 
   if(errno == ENOMEM) {
     fprintf(stderr, "Error reserving space for config\n"); 
     return(-1);
@@ -100,18 +98,16 @@ int main()
     for (iz = 0; iz < NZ; iz++) {
       for (iy = 0; iy < NY; iy++) {
 	for (ix = 0; ix < NX; ix++) {
-	  /* 	  ixyz=(ix*NY+iy)*NZ+iz; */
-	  /* ILDG has order TZYX */
+	  /* ILDG has order TZYX  as UKQCD */
 	  ixyz = (iz*NY+iy)*NX+ix;
 
 	  for (idim = 0; idim < 4; idim++) {
 	    /* ILDG has mu XYZT */
-	    idimtm = idim;
 
 	    for (icol = 0; icol < 3; icol++) {
 	      for (irow = 0; irow < 2; irow++) {
 		for (iri = 0; iri < 2; iri++) {
-		  icp = iri+icol*2+irow*6+idimtm*12+ixyz*dimtm+it*48 ;
+		  icp = iri+icol*2+irow*6+idim*18+(ixyz+it*nxyz)*72 ;
 		  *(ukqcd+iout) =*(config+icp);
 		  iout++;
 		}

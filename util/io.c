@@ -41,8 +41,8 @@ void byte_swap_assign_double2single(void * out_ptr, void * in_ptr, int nmemb);
 void double2single(void * out_ptr, void * in_ptr, int nmemb);
 int big_endian();
 
-int read_lime_gauge_field_doubleprec(float * config, char * filename,
-			  const int T, const int LX, const int LY, const int LZ){
+int read_lime_gauge_field_doubleprec(double * config, char * filename,
+				     const int T, const int LX, const int LY, const int LZ) {
   FILE * ifs;
   int t, x, y, z, status, p=0;
   n_uint64_t bytes;
@@ -86,26 +86,22 @@ int read_lime_gauge_field_doubleprec(float * config, char * filename,
   }
 
   bytes = (n_uint64_t)72*sizeof(double);
-  for(t = 0; t < T; t++){
-    for(z = 0; z < LZ; z++){
-      for(y = 0; y < LY; y++){
-	for(x = 0; x < LX; x++){
-	  status = limeReaderReadData(tmp, &bytes, limereader);
+
+  for(t = 0; t < T; t++) {
+    for(z = 0; z < LZ; z++) {
+      for(y = 0; y < LY; y++) {
+	for(x = 0; x < LX; x++) {
 	  p = (((t*LZ+z)*LY+y)*LX+x)*72;
 	  if(!words_bigendian) {
-	    byte_swap_assign_double2single(&config[p],    &tmp[0*18], 18);
-	    byte_swap_assign_double2single(&config[p+18], &tmp[1*18], 18);
-	    byte_swap_assign_double2single(&config[p+36], &tmp[2*18], 18);
-	    byte_swap_assign_double2single(&config[p+54], &tmp[3*18], 18);
+	    status = limeReaderReadData(tmp, &bytes, limereader);
+	    byte_swap_assign(&config[p], tmp, 72);
 	  }
 	  else {
-	    double2single(&config[p],    &tmp[0*18], 18);
-	    double2single(&config[p+18], &tmp[1*18], 18);
-	    double2single(&config[p+36], &tmp[2*18], 18);
-	    double2single(&config[p+54], &tmp[3*18], 18);
+	    status = limeReaderReadData(&config[p], &bytes, limereader);
 	  }
 	  if(status < 0 && status != LIME_EOR) {
-	    fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", status, filename);
+	    fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", 
+		    status, filename);
 	    exit(500);
 	  }
 	}
@@ -162,10 +158,7 @@ int read_lime_gauge_field_singleprec(float * config, char * filename,
     exit(501);
   }
 
-  bytes = (n_uint64_t)18*sizeof(float);
-  if(!words_bigendian) {
-    bytes = (n_uint64_t)72*sizeof(float);
-  }
+  bytes = (n_uint64_t)72*sizeof(float);
   for(t = 0; t < T; t++){
     for(z = 0; z < LZ; z++){
       for(y = 0; y < LY; y++){
@@ -173,19 +166,14 @@ int read_lime_gauge_field_singleprec(float * config, char * filename,
 	  p = (((t*LZ+z)*LY+y)*LX+x)*72;
 	  if(!words_bigendian) {
 	    status = limeReaderReadData(tmp, &bytes, limereader);
-	    byte_swap_assign_singleprec(&config[p],    &tmp[0*18], 18);
-	    byte_swap_assign_singleprec(&config[p+18], &tmp[1*18], 18);
-	    byte_swap_assign_singleprec(&config[p+36], &tmp[2*18], 18);
-	    byte_swap_assign_singleprec(&config[p+54], &tmp[3*18], 18);
+	    byte_swap_assign_singleprec(&config[p], tmp, 72);
 	  }
 	  else {
-	    status = limeReaderReadData(&config[p],    &bytes, limereader);
-	    status = limeReaderReadData(&config[p+18], &bytes, limereader);
-	    status = limeReaderReadData(&config[p+36], &bytes, limereader);
-	    status = limeReaderReadData(&config[p+54], &bytes, limereader);
+	    status = limeReaderReadData(&config[p], &bytes, limereader);
 	  }
 	  if(status < 0 && status != LIME_EOR) {
-	    fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", status, filename);
+	    fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", 
+		    status, filename);
 	    exit(500);
 	  }
 	}
@@ -214,7 +202,7 @@ void byte_swap(void * ptr, int nmemb){
   char * in_ptr;
   int * int_ptr;
 
-  for(j = 0, int_ptr = (int *) ptr; j < nmemb; j++, int_ptr++){
+  for(j = 0, int_ptr = (int *) ptr; j < nmemb; j++, int_ptr++) {
     in_ptr = (char *) int_ptr;
     
     char_in[0] = in_ptr[0];
