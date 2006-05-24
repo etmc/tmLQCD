@@ -328,35 +328,43 @@ int main(int argc,char *argv[]) {
   }
   if(startoption != 3){
     /* Initialize random number generator */
-    if(g_proc_id == 0) {
-      rlxd_init(1, random_seed);
-      /* hot */
-      if(startoption == 1) {
-	random_gauge_field();
-      }
-      rlxd_get(rlxd_state);
+    if(reproduce_randomnumber_flag == 1) {
+      if(g_proc_id == 0) {
+	rlxd_init(1, random_seed);
+	/* hot */
+	if(startoption == 1) {
+	  random_gauge_field();
+	}
+	rlxd_get(rlxd_state);
 #ifdef MPI
-      MPI_Send(&rlxd_state[0], rlxdsize, MPI_INT, 1, 99, MPI_COMM_WORLD);
-      MPI_Recv(&rlxd_state[0], rlxdsize, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
-      rlxd_reset(rlxd_state);
+	MPI_Send(&rlxd_state[0], rlxdsize, MPI_INT, 1, 99, MPI_COMM_WORLD);
+	MPI_Recv(&rlxd_state[0], rlxdsize, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
+	rlxd_reset(rlxd_state);
+#endif
+      }
+#ifdef MPI
+      else {
+	MPI_Recv(&rlxd_state[0], rlxdsize, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
+	rlxd_reset(rlxd_state);
+	/* hot */
+	if(startoption == 1) {
+	  random_gauge_field();
+	}
+	k=g_proc_id+1; 
+	if(k==g_nproc){
+	  k=0;
+	}
+	rlxd_get(rlxd_state);
+	MPI_Send(&rlxd_state[0], rlxdsize, MPI_INT, k, 99, MPI_COMM_WORLD);
+      }
 #endif
     }
-#ifdef MPI
     else {
-      MPI_Recv(&rlxd_state[0], rlxdsize, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
-      rlxd_reset(rlxd_state);
-      /* hot */
+      rlxd_init(1, random_seed+g_proc_id*97);
       if(startoption == 1) {
 	random_gauge_field();
       }
-      k=g_proc_id+1; 
-      if(k==g_nproc){
-	k=0;
-      }
-      rlxd_get(rlxd_state);
-      MPI_Send(&rlxd_state[0], rlxdsize, MPI_INT, k, 99, MPI_COMM_WORLD);
     }
-#endif
 
     /* Cold */
     if(startoption == 0) {
@@ -420,7 +428,8 @@ int main(int argc,char *argv[]) {
   /* compute the energy of the determinant term */
   /* needed for exact continuation of the run, since evamax and eva use
      random numbers */ 
-  if(startoption == 2 && g_proc_id == 0){
+  if(startoption == 2 && g_proc_id == 0
+     && reproduce_randomnumber_flag == 1){
     rlxd_reset(rlxd_state);
   }
 
@@ -455,7 +464,7 @@ int main(int argc,char *argv[]) {
     else return_check = 0;
 
     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
-		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda);
+		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag);
 
 
     /* Measure the Polyakov loop in direction 2 and 3:*/
@@ -490,9 +499,6 @@ int main(int argc,char *argv[]) {
       rlxd_get(rlxd_state);
       write_rlxd_state(tmp_filename, rlxd_state, rlxdsize);
     }
-/* #ifdef MPI */
-/*     MPI_Barrier(MPI_COMM_WORLD); */
-/* #endif */
 
     /* Now move it! */
     if(g_proc_id == 0) {
@@ -522,13 +528,8 @@ int main(int argc,char *argv[]) {
     }
     trajectory_counter++;
   }
-  /* write the gauge configuration to the file last_configuration */
-/*   write_lime_gauge_field( "last_configuration" , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter); */
 
   if(g_proc_id==0) {
-    rlxd_get(rlxd_state);
-/*     write_rlxd_state( "last_configuration", rlxd_state, rlxdsize); */
-
     printf("Acceptance Rate was: %e Prozent\n", 100.*(double)Rate/(double)Nmeas);
     fflush(stdout);
     parameterfile = fopen(parameterfilename, "a");

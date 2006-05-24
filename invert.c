@@ -37,7 +37,6 @@
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
-#include "update_tm.h"
 #include "boundary.h"
 #include "solver/solver.h"
 #include "init_gauge_field.h"
@@ -65,8 +64,8 @@ int check_geometry();
 
 int main(int argc,char *argv[]) {
 
-  FILE *parameterfile=NULL, *countfile=NULL, *ifs=NULL;
-  int c, iter, j, ix=0, is=0, ic=0, write_counter=0;
+  FILE *parameterfile=NULL, *ifs=NULL;
+  int c, iter, j, ix=0, is=0, ic=0;
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];

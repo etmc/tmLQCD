@@ -78,6 +78,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   int gauge_precision_read_flag;
   int gauge_precision_write_flag;
   int gmres_m_parameter, gmresdr_nr_ev;
+  int reproduce_randomnumber_flag;
 %}
 
 %option never-interactive
@@ -164,105 +165,107 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x CSGN3
 %x GMRESM
 %x GMRESDRNEV
+%x REPRORND
 
 
 %x COMMENT
 %x ERROR
 
 %%
-^T{SPC}*={SPC}*                          BEGIN(TT);
-^L{SPC}*={SPC}*                          BEGIN(LL);
-^LX{SPC}*={SPC}*                         BEGIN(LLX);
-^LY{SPC}*={SPC}*                         BEGIN(LLY);
-^LZ{SPC}*={SPC}*                         BEGIN(LLZ);
-^NRXProcs{SPC}*={SPC}*                   BEGIN(NPROCX);
-^NRYProcs{SPC}*={SPC}*                   BEGIN(NPROCY);
-^NRZProcs{SPC}*={SPC}*                   BEGIN(NPROCZ);
-^kappa{SPC}*={SPC}*                      BEGIN(KAPPA);
-^mubar{SPC}*={SPC}*                      BEGIN(MUBAR);
-^epsbar{SPC}*={SPC}*                     BEGIN(EPSBAR);
-^mu{SPC}*={SPC}*                         BEGIN(MU);
-^mu2{SPC}*={SPC}*                        BEGIN(MU2);
-^mu3{SPC}*={SPC}*                        BEGIN(MU3);
-^beta{SPC}*={SPC}*                       BEGIN(BETA);
-^seed{SPC}*={SPC}*                       BEGIN(SEED);
-^StartCondition{SPC}*={SPC}*             BEGIN(STARTCOND);
-^ThermalisationSweeps{SPC}*={SPC}*       BEGIN(THERMSWEEPS);
-^Measurements{SPC}*={SPC}*               BEGIN(NMEAS);
-^Nskip{SPC}*={SPC}*                      BEGIN(NSKIP);
-^GaugeFieldInFile{SPC}*={SPC}*           BEGIN(GAUGEINPUTFILE);
-^RlxdStateInFile{SPC}*={SPC}*            BEGIN(RLXDINPUTFILE);
-^SolverFlag{SPC}*={SPC}*                 BEGIN(SOLVFLAG);
-^OperatorFlag{SPC}*={SPC}*               BEGIN(OPFLAG);
-^ComputeMatrixElements{SPC}*={SPC}*      BEGIN(MEFLAG);
-^SaveConfigurations{SPC}*={SPC}*         BEGIN(SAVECONF);
-^SavePropagators{SPC}*={SPC}*            BEGIN(SAVEPROP);
-^SaveGeneralizedPropagators{SPC}*={SPC}* BEGIN(SAVEPRG2);
-^WriteCheckpoints{SPC}*={SPC}*           BEGIN(WRITECP);
-^CheckpointInterval{SPC}*={SPC}*         BEGIN(CPINT);
-^GaugeConfigInputFile{SPC}*={SPC}*       BEGIN(GAUGEINPUTFILE);
-^RlxdInputFile{SPC}*={SPC}*              BEGIN(RLXDINPUTFILE);
-^InitialStoreCounter{SPC}*={SPC}*        BEGIN(NSTORE);
-^StdIOProcessor{SPC}*={SPC}*             BEGIN(IOPROC);
-^Indices{SPC}*={SPC}*                    BEGIN(IDX);
-^FirstPropagator{SPC}*={SPC}*            BEGIN(FPROP);
-^CSW{SPC}*={SPC}*                        BEGIN(CSW);
-^Q1{SPC}*={SPC}*                         BEGIN(Q1);
-^Q2{SPC}*={SPC}*                         BEGIN(Q2);
-^Integrator{SPC}*={SPC}*                 BEGIN(INTTYP);
-^NSmall{SPC}*={SPC}*                     BEGIN(NSMALL);
-^DTau{SPC}*={SPC}*                       BEGIN(DTAU);
-^Tau{SPC}*={SPC}*                        BEGIN(TAU);
-^NSteps{SPC}*={SPC}*                     BEGIN(NSTEPS);
-^BCGstabMaxIter{SPC}*={SPC}*             BEGIN(BCGMAX);
-^CGMaxIter{SPC}*={SPC}*                  BEGIN(CGMAX);
-^BoundaryCond{SPC}*={SPC}*               BEGIN(BOUND);
-^BCAngleT{SPC}*={SPC}*                   BEGIN(BOUND);
-^MaxSolverIterations{SPC}*={SPC}*        BEGIN(SITER);
-^SolverPrecision{SPC}*={SPC}*            BEGIN(SPREC);
-^MassNumber{SPC}*={SPC}*                 BEGIN(MNR);
-^RGIC1{SPC}*={SPC}*                      BEGIN(RGIC);
-^ReadSource{SPC}*={SPC}*                 BEGIN(READSOURCE);
-^SourceInputFilename{SPC}*={SPC}*        BEGIN(SOURCEFILE);
-^SourceFormat{SPC}*={SPC}*               BEGIN(SOURCEFORMAT);
-^SourceTimeSlice{SPC}*={SPC}*            BEGIN(SOURCETS);
-^ExtIntStepsGauge{SPC}*={SPC}*           BEGIN(INT0);
-^N_G{SPC}*={SPC}*                        BEGIN(INT0);
-^ExtIntStepsMu0{SPC}*={SPC}*             BEGIN(INT1);
-^IntegrationStepsMu{SPC}*={SPC}*         BEGIN(INT1);
-^ExtIntStepsMu1{SPC}*={SPC}*             BEGIN(INT2);
-^IntegrationStepsMu2{SPC}*={SPC}*        BEGIN(INT2);
-^ExtIntStepsMu2{SPC}*={SPC}*             BEGIN(INT3);
-^IntegrationStepsMu3{SPC}*={SPC}*        BEGIN(INT3);
-^ExtIntStepsMu3{SPC}*={SPC}*             BEGIN(INT4);
-^IntegrationStepsMu4{SPC}*={SPC}*        BEGIN(INT4);
-^2MNLambdaGauge{SPC}*={SPC}*             BEGIN(LAMBDA0);
-^2MNLambdaMu{SPC}*={SPC}*                BEGIN(LAMBDA1);
-^2MNLambdaMu2{SPC}*={SPC}*               BEGIN(LAMBDA2);
-^2MNLambdaMu3{SPC}*={SPC}*               BEGIN(LAMBDA3);
-^2MNLambdaMu4{SPC}*={SPC}*               BEGIN(LAMBDA4);
-^UseRelativePrecision{SPC}*={SPC}*       BEGIN(RELPREC);
-^ForcePrecision{SPC}*={SPC}*             BEGIN(FORCEPREC);
-^ForcePrecisionMu{SPC}*={SPC}*           BEGIN(FORCEPREC1);
-^ForcePrecisionMu2{SPC}*={SPC}*          BEGIN(FORCEPREC2);
-^ForcePrecisionMu3{SPC}*={SPC}*          BEGIN(FORCEPREC3);
-^AcceptancePrecision{SPC}*={SPC}*        BEGIN(ACCPREC);
-^AcceptancePrecisionMu{SPC}*={SPC}*      BEGIN(ACCPREC1);
-^AcceptancePrecisionMu2{SPC}*={SPC}*     BEGIN(ACCPREC2);
-^AcceptancePrecisionMu3{SPC}*={SPC}*     BEGIN(ACCPREC3);
-^ReversibilityCheck{SPC}*={SPC}*         BEGIN(REVCHECK);
-^ReversibilityCheckIntervall{SPC}*={SPC}* BEGIN(REVINT);
-^DebugLevel{SPC}*={SPC}*                 BEGIN(DEBUG);
-^CSGHistMu{SPC}*={SPC}*                  BEGIN(CSGN1);
-^CSGHistoryMu{SPC}*={SPC}*               BEGIN(CSGN1);
-^CSGHistMu2{SPC}*={SPC}*                 BEGIN(CSGN2);
-^CSGHistoryMu2{SPC}*={SPC}*              BEGIN(CSGN2);
-^CSGHistMu3{SPC}*={SPC}*                 BEGIN(CSGN3);
-^CSGHistoryMu3{SPC}*={SPC}*              BEGIN(CSGN3);
-^GMRESMParameter{SPC}*={SPC}*            BEGIN(GMRESM);
-^GMRESDRNrEv{SPC}*={SPC}*                BEGIN(GMRESDRNEV);
-^GaugeConfigReadPrecision{SPC}*={SPC}*   BEGIN(GAUGERPREC);
-^GaugeConfigWritePrecision{SPC}*={SPC}*   BEGIN(GAUGEWPREC);
+^T{SPC}*={SPC}*                            BEGIN(TT);
+^L{SPC}*={SPC}*                            BEGIN(LL);
+^LX{SPC}*={SPC}*                           BEGIN(LLX);
+^LY{SPC}*={SPC}*                           BEGIN(LLY);
+^LZ{SPC}*={SPC}*                           BEGIN(LLZ);
+^NRXProcs{SPC}*={SPC}*                     BEGIN(NPROCX);
+^NRYProcs{SPC}*={SPC}*                     BEGIN(NPROCY);
+^NRZProcs{SPC}*={SPC}*                     BEGIN(NPROCZ);
+^kappa{SPC}*={SPC}*                        BEGIN(KAPPA);
+^mubar{SPC}*={SPC}*                        BEGIN(MUBAR);
+^epsbar{SPC}*={SPC}*                       BEGIN(EPSBAR);
+^mu{SPC}*={SPC}*                           BEGIN(MU);
+^mu2{SPC}*={SPC}*                          BEGIN(MU2);
+^mu3{SPC}*={SPC}*                          BEGIN(MU3);
+^beta{SPC}*={SPC}*                         BEGIN(BETA);
+^seed{SPC}*={SPC}*                         BEGIN(SEED);
+^StartCondition{SPC}*={SPC}*               BEGIN(STARTCOND);
+^ThermalisationSweeps{SPC}*={SPC}*         BEGIN(THERMSWEEPS);
+^Measurements{SPC}*={SPC}*                 BEGIN(NMEAS);
+^Nskip{SPC}*={SPC}*                        BEGIN(NSKIP);
+^GaugeFieldInFile{SPC}*={SPC}*             BEGIN(GAUGEINPUTFILE);
+^RlxdStateInFile{SPC}*={SPC}*              BEGIN(RLXDINPUTFILE);
+^SolverFlag{SPC}*={SPC}*                   BEGIN(SOLVFLAG);
+^OperatorFlag{SPC}*={SPC}*                 BEGIN(OPFLAG);
+^ComputeMatrixElements{SPC}*={SPC}*        BEGIN(MEFLAG);
+^SaveConfigurations{SPC}*={SPC}*           BEGIN(SAVECONF);
+^SavePropagators{SPC}*={SPC}*              BEGIN(SAVEPROP);
+^SaveGeneralizedPropagators{SPC}*={SPC}*   BEGIN(SAVEPRG2);
+^WriteCheckpoints{SPC}*={SPC}*             BEGIN(WRITECP);
+^CheckpointInterval{SPC}*={SPC}*           BEGIN(CPINT);
+^GaugeConfigInputFile{SPC}*={SPC}*         BEGIN(GAUGEINPUTFILE);
+^RlxdInputFile{SPC}*={SPC}*                BEGIN(RLXDINPUTFILE);
+^InitialStoreCounter{SPC}*={SPC}*          BEGIN(NSTORE);
+^StdIOProcessor{SPC}*={SPC}*               BEGIN(IOPROC);
+^Indices{SPC}*={SPC}*                      BEGIN(IDX);
+^FirstPropagator{SPC}*={SPC}*              BEGIN(FPROP);
+^CSW{SPC}*={SPC}*                          BEGIN(CSW);
+^Q1{SPC}*={SPC}*                           BEGIN(Q1);
+^Q2{SPC}*={SPC}*                           BEGIN(Q2);
+^Integrator{SPC}*={SPC}*                   BEGIN(INTTYP);
+^NSmall{SPC}*={SPC}*                       BEGIN(NSMALL);
+^DTau{SPC}*={SPC}*                         BEGIN(DTAU);
+^Tau{SPC}*={SPC}*                          BEGIN(TAU);
+^NSteps{SPC}*={SPC}*                       BEGIN(NSTEPS);
+^BCGstabMaxIter{SPC}*={SPC}*               BEGIN(BCGMAX);
+^CGMaxIter{SPC}*={SPC}*                    BEGIN(CGMAX);
+^BoundaryCond{SPC}*={SPC}*                 BEGIN(BOUND);
+^BCAngleT{SPC}*={SPC}*                     BEGIN(BOUND);
+^MaxSolverIterations{SPC}*={SPC}*          BEGIN(SITER);
+^SolverPrecision{SPC}*={SPC}*              BEGIN(SPREC);
+^MassNumber{SPC}*={SPC}*                   BEGIN(MNR);
+^RGIC1{SPC}*={SPC}*                        BEGIN(RGIC);
+^ReadSource{SPC}*={SPC}*                   BEGIN(READSOURCE);
+^SourceInputFilename{SPC}*={SPC}*          BEGIN(SOURCEFILE);
+^SourceFormat{SPC}*={SPC}*                 BEGIN(SOURCEFORMAT);
+^SourceTimeSlice{SPC}*={SPC}*              BEGIN(SOURCETS);
+^ExtIntStepsGauge{SPC}*={SPC}*             BEGIN(INT0);
+^N_G{SPC}*={SPC}*                          BEGIN(INT0);
+^ExtIntStepsMu0{SPC}*={SPC}*               BEGIN(INT1);
+^IntegrationStepsMu{SPC}*={SPC}*           BEGIN(INT1);
+^ExtIntStepsMu1{SPC}*={SPC}*               BEGIN(INT2);
+^IntegrationStepsMu2{SPC}*={SPC}*          BEGIN(INT2);
+^ExtIntStepsMu2{SPC}*={SPC}*               BEGIN(INT3);
+^IntegrationStepsMu3{SPC}*={SPC}*          BEGIN(INT3);
+^ExtIntStepsMu3{SPC}*={SPC}*               BEGIN(INT4);
+^IntegrationStepsMu4{SPC}*={SPC}*          BEGIN(INT4);
+^2MNLambdaGauge{SPC}*={SPC}*               BEGIN(LAMBDA0);
+^2MNLambdaMu{SPC}*={SPC}*                  BEGIN(LAMBDA1);
+^2MNLambdaMu2{SPC}*={SPC}*                 BEGIN(LAMBDA2);
+^2MNLambdaMu3{SPC}*={SPC}*                 BEGIN(LAMBDA3);
+^2MNLambdaMu4{SPC}*={SPC}*                 BEGIN(LAMBDA4);
+^UseRelativePrecision{SPC}*={SPC}*         BEGIN(RELPREC);
+^ForcePrecision{SPC}*={SPC}*               BEGIN(FORCEPREC);
+^ForcePrecisionMu{SPC}*={SPC}*             BEGIN(FORCEPREC1);
+^ForcePrecisionMu2{SPC}*={SPC}*            BEGIN(FORCEPREC2);
+^ForcePrecisionMu3{SPC}*={SPC}*            BEGIN(FORCEPREC3);
+^AcceptancePrecision{SPC}*={SPC}*          BEGIN(ACCPREC);
+^AcceptancePrecisionMu{SPC}*={SPC}*        BEGIN(ACCPREC1);
+^AcceptancePrecisionMu2{SPC}*={SPC}*       BEGIN(ACCPREC2);
+^AcceptancePrecisionMu3{SPC}*={SPC}*       BEGIN(ACCPREC3);
+^ReversibilityCheck{SPC}*={SPC}*           BEGIN(REVCHECK);
+^ReversibilityCheckIntervall{SPC}*={SPC}*  BEGIN(REVINT);
+^DebugLevel{SPC}*={SPC}*                   BEGIN(DEBUG);
+^CSGHistMu{SPC}*={SPC}*                    BEGIN(CSGN1);
+^CSGHistoryMu{SPC}*={SPC}*                 BEGIN(CSGN1);
+^CSGHistMu2{SPC}*={SPC}*                   BEGIN(CSGN2);
+^CSGHistoryMu2{SPC}*={SPC}*                BEGIN(CSGN2);
+^CSGHistMu3{SPC}*={SPC}*                   BEGIN(CSGN3);
+^CSGHistoryMu3{SPC}*={SPC}*                BEGIN(CSGN3);
+^GMRESMParameter{SPC}*={SPC}*              BEGIN(GMRESM);
+^GMRESDRNrEv{SPC}*={SPC}*                  BEGIN(GMRESDRNEV);
+^GaugeConfigReadPrecision{SPC}*={SPC}*     BEGIN(GAUGERPREC);
+^GaugeConfigWritePrecision{SPC}*={SPC}*    BEGIN(GAUGEWPREC);
+^ReproduceRandomNumbers{SPC}*={SPC}*       BEGIN(REPRORND);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -751,6 +754,14 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   gauge_precision_write_flag = 64;
   if(verbose!=0) printf("Save gauges in 64 Bit precision!\n");
 }
+<REPRORND>yes {
+  reproduce_randomnumber_flag = 1;
+  if(verbose!=0) printf("Use reproducable randomnumbers!\n");
+}
+<REPRORND>no {
+  reproduce_randomnumber_flag = 0;
+  if(verbose!=0) printf("Use a different seed for each process in ranlxd!\n");
+}
 
 <*>^#                       BEGIN(COMMENT);
 <SEED,KAPPA,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
@@ -759,7 +770,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
 <INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
 <ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
-<GMRESM,GMRESDRNEV>#   BEGIN(COMMENT);
+<GMRESM,GMRESDRNEV,REPRORND>#   BEGIN(COMMENT);
 <SOURCETS>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
@@ -908,7 +919,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Error in line %d! Must be compute or readin! Exiting...!\n", line_of_file);
   exit(1);
 }
-<Q1,Q2,DTAU,TAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND,SOURCEFILE,READSOURCE,INT0,INT1,INT2,INT3,INT4,REVCHECK,REVINT,DEBUG,SOURCEFORMAT,SOURCETS>. {
+<Q1,Q2,DTAU,TAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND,SOURCEFILE,READSOURCE,INT0,INT1,INT2,INT3,INT4,REVCHECK,REVINT,DEBUG,SOURCEFORMAT,SOURCETS,REPRORND>. {
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
@@ -1064,6 +1075,7 @@ int read_input(char * conf_file){
   gmresdr_nr_ev = _default_gmresdr_nr_ev;
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
+  reproduce_randomnumber_flag = _default_reproduce_randomnumber_flag;
 
   /********************************************/
 

@@ -1525,11 +1525,6 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   fprintf(parameterfile,
 	  "# The code was compiled for AMD Opteron\n");
 #endif
-#ifdef _NEW_GEOMETRY
-  printf("# The code was compiled with -D_NEW_GEOMETRY\n");
-  fprintf(parameterfile, 
-	  "# The code was compiled with -D_NEW_GEOMETRY\n");
-#endif
 #ifdef _GAUGE_COPY
   printf("# The code was compiled with -D_GAUGE_COPY\n");
   fprintf(parameterfile,

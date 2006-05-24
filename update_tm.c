@@ -44,7 +44,7 @@
 int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_energy, 
 	      char * filename, const double dtau, const int Nsteps, const int nsmall,
 	      const double tau, int * n_int, const int return_check,
-	      double * lambda) {
+	      double * lambda, const int rngrepro) {
   su3 *v, *w;
   static int ini_g_tmp = 0;
   int rlxd_state[105];
@@ -116,16 +116,16 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   /* initialize the pseudo-fermion fields    */
   /* depending on g_mu1 and g_mu2 we use     */
   /* one or two pseudo-fermion fields        */
-  random_spinor_field(g_spinor_field[2], VOLUME/2);
+  random_spinor_field(g_spinor_field[2], VOLUME/2, rngrepro);
   /* compute the square of the norm */
   enerphi0 = square_norm(g_spinor_field[2], VOLUME/2);
 
   if(g_nr_of_psf > 1) {
-    random_spinor_field(g_spinor_field[3], VOLUME/2);
+    random_spinor_field(g_spinor_field[3], VOLUME/2, rngrepro);
     enerphi1 = square_norm(g_spinor_field[3], VOLUME/2);
   }
   if(g_nr_of_psf > 2) {
-    random_spinor_field(g_spinor_field[5], VOLUME/2);
+    random_spinor_field(g_spinor_field[5], VOLUME/2, rngrepro);
     enerphi2 = square_norm(g_spinor_field[5], VOLUME/2);
   }
   /* apply the fermion matrix to the first spinor */

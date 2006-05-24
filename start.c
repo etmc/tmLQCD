@@ -198,7 +198,7 @@ void unit_spinor_field(const int k) {
 
 /* Function provides a spinor field of length VOLUME/2 with
    Gaussian distribution */
-void random_spinor_field(spinor * const k, const int V) {
+void random_spinor_field(spinor * const k, const int V, const int repro) {
   
   int ix;
   int rlxd_state[105]; 
@@ -208,7 +208,7 @@ void random_spinor_field(spinor * const k, const int V) {
   int j=0;
 #endif
 
-  if(g_proc_id==0) {
+  if(g_proc_id==0 && repro == 1) {
     for (ix = 0; ix < V; ix++) {
       s = k + ix;
       gauss_vector(v,6);
@@ -247,7 +247,7 @@ void random_spinor_field(spinor * const k, const int V) {
 #endif
   }
 #ifdef MPI
-  if(g_proc_id!=0) {
+  if(g_proc_id != 0 && repro == 1) {
     MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 102, MPI_COMM_WORLD, &status);
     rlxd_reset(rlxd_state);
     for (ix=0;ix<VOLUME/2;ix++) {
@@ -289,11 +289,44 @@ void random_spinor_field(spinor * const k, const int V) {
     rlxd_get(rlxd_state);
     MPI_Send(&rlxd_state[0], 105, MPI_INT, j, 102, MPI_COMM_WORLD);
   }
-  if(g_proc_id==0) {
+  if(g_proc_id==0 && repro == 1) {
     MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 102, MPI_COMM_WORLD, &status);
     rlxd_reset(rlxd_state);
   }
 #endif
+  if(repro != 1) {
+    for (ix = 0; ix < VOLUME/2; ix++) {
+      s = k + ix;
+      gauss_vector(v,6);
+      (*s).s0.c0.re=v[0];
+      (*s).s0.c0.im=v[1];
+      (*s).s0.c1.re=v[2];
+      (*s).s0.c1.im=v[3];
+      (*s).s0.c2.re=v[4];
+      (*s).s0.c2.im=v[5];
+      gauss_vector(v,6);
+      (*s).s1.c0.re=v[0];
+      (*s).s1.c0.im=v[1];
+      (*s).s1.c1.re=v[2];
+      (*s).s1.c1.im=v[3];
+      (*s).s1.c2.re=v[4];
+      (*s).s1.c2.im=v[5];
+      gauss_vector(v,6);
+      (*s).s2.c0.re=v[0];
+      (*s).s2.c0.im=v[1];
+      (*s).s2.c1.re=v[2];
+      (*s).s2.c1.im=v[3];
+      (*s).s2.c2.re=v[4];
+      (*s).s2.c2.im=v[5];
+      gauss_vector(v,6);
+      (*s).s3.c0.re=v[0];
+      (*s).s3.c0.im=v[1];
+      (*s).s3.c1.re=v[2];
+      (*s).s3.c1.im=v[3];
+      (*s).s3.c2.re=v[4];
+      (*s).s3.c2.im=v[5];
+    }
+  }
 }
 
 /* Function provides a spinor field of length VOLUME/2 with

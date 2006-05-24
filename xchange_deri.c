@@ -31,7 +31,6 @@ void xchange_deri()
   MPI_Status status;
   /* send the data to the neighbour on the left in time direction */
   /* recieve the data from the neighbour on the right in time direction */
-#  ifndef _NEW_GEOMETRY
   MPI_Sendrecv(&df0[(T+1)*LX*LY*LZ][0].d1,    1, deri_time_slice_cont, g_nb_t_dn, 43,
 	       &ddummy[(T-1)*LX*LY*LZ][0].d1, 1, deri_time_slice_cont, g_nb_t_up, 43,
 	       g_cart_grid, &status);
@@ -55,51 +54,15 @@ void xchange_deri()
     }
   }
 
-#  else
-  MPI_Sendrecv(&df0[(T+1)*LX*LY*LZ][0].d1,          1, deri_time_slice_cont , g_nb_t_dn, 43, 
-	       &ddummy[(T-1)*LX*LY*LZ/2][0].d1,     1, deri_time_slice_split, g_nb_t_up, 43,
-	       g_cart_grid, &status);
-  /* add ddummy to df0 */
-  for(ix=(T-1)*LX*LY*LZ/2;ix < T*LX*LY*LZ/2; ix++){
-    for(mu=0;mu<4;mu++){
-      df0[ix][mu].d1 += ddummy[ix][mu].d1;
-      df0[ix][mu].d2 += ddummy[ix][mu].d2;
-      df0[ix][mu].d3 += ddummy[ix][mu].d3;
-      df0[ix][mu].d4 += ddummy[ix][mu].d4;
-      df0[ix][mu].d5 += ddummy[ix][mu].d5;
-      df0[ix][mu].d6 += ddummy[ix][mu].d6;
-      df0[ix][mu].d7 += ddummy[ix][mu].d7;
-      df0[ix][mu].d8 += ddummy[ix][mu].d8;
-    }
-  }
-  for(ix=VOLUME-LX*LY*LZ/2;ix < VOLUME; ix++){
-    for(mu=0;mu<4;mu++){
-      df0[ix][mu].d1 += ddummy[ix][mu].d1;
-      df0[ix][mu].d2 += ddummy[ix][mu].d2;
-      df0[ix][mu].d3 += ddummy[ix][mu].d3;
-      df0[ix][mu].d4 += ddummy[ix][mu].d4;
-      df0[ix][mu].d5 += ddummy[ix][mu].d5;
-      df0[ix][mu].d6 += ddummy[ix][mu].d6;
-      df0[ix][mu].d7 += ddummy[ix][mu].d7;
-      df0[ix][mu].d8 += ddummy[ix][mu].d8;
-    }
-  }
-#  endif
   /* send the data to the neighbour on the right is not needed*/
 
 #  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
 
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
-#    ifndef _NEW_GEOMETRY
   MPI_Sendrecv(&df0[(T+2)*LX*LY*LZ + T*LY*LZ][0],    1, deri_x_slice_cont, g_nb_x_dn, 44,
 	       &ddummy[(LX-1)*LY*LZ][0],             1, deri_x_slice_gath, g_nb_x_up, 44,
 	       g_cart_grid, &status);
-#    else
-  MPI_Sendrecv(&df0[(T+2)*LX*LY*LZ + T*LY*LZ][0],    1, deri_x_slice_cont      , g_nb_x_dn, 44,
-	       &ddummy[(LX-1)*LY*LZ/2][0],           1, deri_x_slice_gath_split, g_nb_x_up, 44,
-	       g_cart_grid, &status);
-#    endif
   /* add ddummy to df0 */
   for(t = 0; t < T; t++) {
     for(y = 0; y < LY; y++) {
@@ -126,19 +89,11 @@ void xchange_deri()
 #  if (defined PARALLELXYT || defined PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
-#    ifndef _NEW_GEOMETRY
   MPI_Sendrecv((void*)df0[VOLUME + 2*LZ*(LX*LY + T*LY) + T*LX*LZ], 
 	       1, deri_y_slice_cont, g_nb_y_dn, 45,
 	       (void*)ddummy[(LY-1)*LZ],
 	       1, deri_y_slice_gath, g_nb_y_up, 45,
 	       g_cart_grid, &status);
-#    else
-  MPI_Sendrecv((void*)df0[VOLUME + 2*LZ*(LX*LY + T*LY) + T*LX*LZ], 
-	       1, deri_y_slice_cont      , g_nb_y_dn, 45,
-	       (void*)ddummy[(LY-1)*LZ/2],
-	       1, deri_y_slice_gath_split, g_nb_y_up, 45,
-	       g_cart_grid, &status);
-#    endif
   /* add ddummy to df0 */
   for(t = 0; t < T; t++) {
     for(x = 0; x < LX; x++) {
@@ -165,19 +120,11 @@ void xchange_deri()
 #  ifdef PARALLELXYZT
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
-#    ifndef _NEW_GEOMETRY
   MPI_Sendrecv((void*)df0[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY], 
 	       1, deri_z_slice_cont, g_nb_z_dn, 46,
 	       (void*)ddummy[LZ-1],
 	       1, deri_z_slice_gath, g_nb_z_up, 46,
 	       g_cart_grid, &status);
-#    else
-  MPI_Sendrecv((void*)df0[VOLUME + 2*LZ*LX*LY + 2*LZ*T*LY + 2*T*LX*LZ + T*LX*LY], 
-	       1, deri_z_slice_cont      , g_nb_z_dn, 46,
-	       (void*)ddummy[LZ/2-1],
-	       1, deri_z_slice_gath_split, g_nb_z_up, 45,
-	       g_cart_grid, &status);
-#    endif
   /* add ddummy to df0 */
   for(t = 0; t < T; t++) {
     for(x = 0; x < LX; x++) {

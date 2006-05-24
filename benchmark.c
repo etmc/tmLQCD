@@ -96,9 +96,6 @@ int main(int argc,char *argv[])
 #ifdef OPTERON
     printf("# The code was compiled for AMD Opteron\n");
 #endif
-#ifdef _NEW_GEOMETRY
-    printf("# The code was compiled with -D_NEW_GEOMETRY\n");
-#endif
 #ifdef _GAUGE_COPY
     printf("# The code was compiled with -D_GAUGE_COPY\n");
 #endif
@@ -148,32 +145,38 @@ int main(int argc,char *argv[])
   check_xchange(); 
 #endif
 
-  /* here we generate exactly the same configuration as for the 
-     single node simulation */
-  if(g_proc_id==0) {
-    rlxd_init(1, 123456);   
-    random_gauge_field();
-    /*  send the state of the random-number generator to 1 */
+  if(reproduce_randomnumber_flag == 1) {
+    /* here we generate exactly the same configuration as for the 
+       single node simulation */
+    if(g_proc_id==0) {
+      rlxd_init(1, 123456);   
+      random_gauge_field();
+      /*  send the state of the random-number generator to 1 */
 #ifdef MPI
-    rlxd_get(rlxd_state);
-    MPI_Send((void*)rlxd_state, 105, MPI_INT, 1, 99, MPI_COMM_WORLD);
+      rlxd_get(rlxd_state);
+      MPI_Send((void*)rlxd_state, 105, MPI_INT, 1, 99, MPI_COMM_WORLD);
 #endif
-  }
+    }
 #ifdef MPI
-  else {
-    /* recieve the random number state form g_proc_id-1 */
-    MPI_Recv((void*)rlxd_state, 105, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
-    rlxd_reset(rlxd_state);
-    random_gauge_field();
-    /* send the random number state to g_proc_id+1 */
-    k=g_proc_id+1; 
-    if(k==g_nproc) k=0;
-    rlxd_get(rlxd_state);
-    MPI_Send((void*)rlxd_state, 105, MPI_INT, k, 99, MPI_COMM_WORLD);
+    else {
+      /* recieve the random number state form g_proc_id-1 */
+      MPI_Recv((void*)rlxd_state, 105, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
+      rlxd_reset(rlxd_state);
+      random_gauge_field();
+      /* send the random number state to g_proc_id+1 */
+      k=g_proc_id+1; 
+      if(k==g_nproc) k=0;
+      rlxd_get(rlxd_state);
+      MPI_Send((void*)rlxd_state, 105, MPI_INT, k, 99, MPI_COMM_WORLD);
+    }
+    if(g_proc_id==0) {
+      MPI_Recv((void*)rlxd_state, 105, MPI_INT,g_nproc-1,99, MPI_COMM_WORLD, &status);
+      rlxd_reset(rlxd_state);
+    }
   }
-  if(g_proc_id==0) {
-    MPI_Recv((void*)rlxd_state, 105, MPI_INT,g_nproc-1,99, MPI_COMM_WORLD, &status);
-    rlxd_reset(rlxd_state);
+  else {
+    rlxd_init(1, 123456 + g_proc_id*97);
+    random_gauge_field();
   }
 
   /*For parallelization: exchange the gaugefield */
@@ -189,7 +192,7 @@ int main(int argc,char *argv[])
   j_max=1;
   sdt=0.;
   for (k=0;k<k_max;k++) {
-    random_spinor_field(g_spinor_field[k], VOLUME/2);
+    random_spinor_field(g_spinor_field[k], VOLUME/2, reproduce_randomnumber_flag);
   }
 
   while(sdt < 30.) {

@@ -626,4 +626,161 @@
   __prefetch_by_stream(1,((char*)((unsigned long int)(addr)))+128); 
 
 
+/* computers u*w and stores result in regxx */
+#define _bgl_su3_times_su3(u, w) \
+  u00 = __lfpd((double*)&(u).c00); \
+  u01 = __lfpd((double*)&(u).c01); \
+  u02 = __lfpd((double*)&(u).c02); \
+  u10 = __lfpd((double*)&(u).c10); \
+  u11 = __lfpd((double*)&(u).c11); \
+  u12 = __lfpd((double*)&(u).c12); \
+  u20 = __lfpd((double*)&(u).c20); \
+  w00 = __lfpd((double*)&(w).c00); \
+  w01 = __lfpd((double*)&(w).c01); \
+  w02 = __lfpd((double*)&(w).c02); \
+  reg00 = __fxpmul(w00,  __creal(u00));	\
+  reg10 = __fxpmul(w01,  __creal(u00));	\
+  reg20 = __fxpmul(w02,  __creal(u00));	\
+  reg01 = __fxpmul(w00,  __creal(u10));	\
+  reg11 = __fxpmul(w01,  __creal(u10));	\
+  reg21 = __fxpmul(w02,  __creal(u10));	\
+  reg02 = __fxpmul(w00,  __creal(u20));	\
+  reg12 = __fxpmul(w01,  __creal(u20));	\
+  reg22 = __fxpmul(w02,  __creal(u20));	\
+  w10 = __lfpd((double*)&(w).c10); \
+  w11 = __lfpd((double*)&(w).c11); \
+  w12 = __lfpd((double*)&(w).c12); \
+  reg00 = __fxcxnpma(reg00, w00, __cimag(u00)); \
+  reg10 = __fxcxnpma(reg10, w01, __cimag(u00)); \
+  reg20 = __fxcxnpma(reg20, w02, __cimag(u00)); \
+  reg01 = __fxcxnpma(reg01, w00, __cimag(u10)); \
+  reg11 = __fxcxnpma(reg11, w01, __cimag(u10)); \
+  reg21 = __fxcxnpma(reg21, w02, __cimag(u10)); \
+  reg02 = __fxcxnpma(reg02, w00, __cimag(u20)); \
+  reg12 = __fxcxnpma(reg12, w01, __cimag(u20)); \
+  reg22 = __fxcxnpma(reg22, w02, __cimag(u20)); \
+  u00 = __lfpd((double*)&(u).c21); \
+  u10 = __lfpd((double*)&(u).c22); \
+  reg00 = __fxcpmadd(reg00, w10, __creal(u01)); \
+  reg10 = __fxcpmadd(reg10, w11, __creal(u01)); \
+  reg20 = __fxcpmadd(reg20, w12, __creal(u01)); \
+  reg01 = __fxcpmadd(reg01, w10, __creal(u11)); \
+  reg11 = __fxcpmadd(reg11, w11, __creal(u11)); \
+  reg21 = __fxcpmadd(reg21, w12, __creal(u11)); \
+  reg02 = __fxcpmadd(reg02, w10, __creal(u00)); \
+  reg12 = __fxcpmadd(reg12, w11, __creal(u00)); \
+  reg22 = __fxcpmadd(reg22, w12, __creal(u00)); \
+  w20 = __lfpd((double*)&(w).c20); \
+  w01 = __lfpd((double*)&(w).c21); \
+  w02 = __lfpd((double*)&(w).c22); \
+  reg00 = __fxcxnpma(reg00, w10, __cimag(u01)); \
+  reg10 = __fxcxnpma(reg10, w11, __cimag(u01)); \
+  reg20 = __fxcxnpma(reg20, w12, __cimag(u01)); \
+  reg01 = __fxcxnpma(reg01, w10, __cimag(u11)); \
+  reg11 = __fxcxnpma(reg11, w11, __cimag(u11)); \
+  reg21 = __fxcxnpma(reg21, w12, __cimag(u11)); \
+  reg02 = __fxcxnpma(reg02, w10, __cimag(u00)); \
+  reg12 = __fxcxnpma(reg12, w11, __cimag(u00)); \
+  reg22 = __fxcxnpma(reg22, w12, __cimag(u00)); \
+  reg00 = __fxcpmadd(reg00, w20, __creal(u02)); \
+  reg10 = __fxcpmadd(reg10, w01, __creal(u02)); \
+  reg20 = __fxcpmadd(reg20, w02, __creal(u02)); \
+  reg01 = __fxcpmadd(reg01, w20, __creal(u12)); \
+  reg11 = __fxcpmadd(reg11, w01, __creal(u12)); \
+  reg21 = __fxcpmadd(reg21, w02, __creal(u12)); \
+  reg02 = __fxcpmadd(reg02, w20, __creal(u10)); \
+  reg12 = __fxcpmadd(reg12, w01, __creal(u10)); \
+  reg22 = __fxcpmadd(reg22, w02, __creal(u10)); \
+  reg00 = __fxcxnpma(reg00, w20, __cimag(u02)); \
+  reg10 = __fxcxnpma(reg10, w01, __cimag(u02)); \
+  reg20 = __fxcxnpma(reg20, w02, __cimag(u02)); \
+  reg01 = __fxcxnpma(reg01, w20, __cimag(u12)); \
+  reg11 = __fxcxnpma(reg11, w01, __cimag(u12)); \
+  reg21 = __fxcxnpma(reg21, w02, __cimag(u12)); \
+  reg02 = __fxcxnpma(reg02, w20, __cimag(u10)); \
+  reg12 = __fxcxnpma(reg12, w01, __cimag(u10)); \
+  reg22 = __fxcxnpma(reg22, w02, __cimag(u10)); 
+
+/* computers u*w^{dag} and stores result in regxx */
+
+
+
+/* computer u*regxx and adds the result to vxx */
+
+#define _bgl_su3_times_su3_acc(u)	   \
+  u00 = __lfpd((double*)&(u).c00); \
+  u01 = __lfpd((double*)&(u).c01); \
+  u02 = __lfpd((double*)&(u).c02); \
+  u10 = __lfpd((double*)&(u).c10); \
+  u11 = __lfpd((double*)&(u).c11); \
+  u12 = __lfpd((double*)&(u).c12); \
+  u20 = __lfpd((double*)&(u).c20); \
+  v00 = __fxcpmadd(v00, reg00,  __creal(u00));	\
+  v10 = __fxcpmadd(v10, reg01,  __creal(u00));	\
+  v20 = __fxcpmadd(v20, reg02,  __creal(u00));	\
+  v01 = __fxcpmadd(v01, reg00,  __creal(u10));	\
+  v11 = __fxcpmadd(v11, reg01,  __creal(u10));	\
+  v21 = __fxcpmadd(v21, reg02,  __creal(u10));	\
+  v02 = __fxcpmadd(v02, reg00,  __creal(u20));	\
+  v12 = __fxcpmadd(v12, reg01,  __creal(u20));	\
+  v22 = __fxcpmadd(v22, reg02,  __creal(u20));	\
+  v00 = __fxcxnpma(v00, reg00, __cimag(u00)); \
+  v10 = __fxcxnpma(v10, reg01, __cimag(u00)); \
+  v20 = __fxcxnpma(v20, reg02, __cimag(u00)); \
+  v01 = __fxcxnpma(v01, reg00, __cimag(u10)); \
+  v11 = __fxcxnpma(v11, reg01, __cimag(u10)); \
+  v21 = __fxcxnpma(v21, reg02, __cimag(u10)); \
+  v02 = __fxcxnpma(v02, reg00, __cimag(u20)); \
+  v12 = __fxcxnpma(v12, reg01, __cimag(u20)); \
+  v22 = __fxcxnpma(v22, reg02, __cimag(u20)); \
+  u00 = __lfpd((double*)&(u).c21); \
+  u01 = __lfpd((double*)&(u).c22); \
+  v00 = __fxcpmadd(v00, reg10, __creal(u01)); \
+  v10 = __fxcpmadd(v10, reg11, __creal(u01)); \
+  v20 = __fxcpmadd(v20, reg12, __creal(u01)); \
+  v01 = __fxcpmadd(v01, reg10, __creal(u11)); \
+  v11 = __fxcpmadd(v11, reg11, __creal(u11)); \
+  v21 = __fxcpmadd(v21, reg12, __creal(u11)); \
+  v02 = __fxcpmadd(v02, reg10, __creal(u00)); \
+  v12 = __fxcpmadd(v12, reg11, __creal(u00)); \
+  v22 = __fxcpmadd(v22, reg12, __creal(u00)); \
+  v00 = __fxcxnpma(v00, reg10, __cimag(u01)); \
+  v10 = __fxcxnpma(v10, reg11, __cimag(u01)); \
+  v20 = __fxcxnpma(v20, reg12, __cimag(u01)); \
+  v01 = __fxcxnpma(v01, reg10, __cimag(u11)); \
+  v11 = __fxcxnpma(v11, reg11, __cimag(u11)); \
+  v21 = __fxcxnpma(v21, reg12, __cimag(u11)); \
+  v02 = __fxcxnpma(v02, reg10, __cimag(u00)); \
+  v12 = __fxcxnpma(v12, reg11, __cimag(u00)); \
+  v22 = __fxcxnpma(v22, reg12, __cimag(u00)); \
+  v00 = __fxcpmadd(v00, reg20, __creal(u02)); \
+  v10 = __fxcpmadd(v10, reg21, __creal(u02)); \
+  v20 = __fxcpmadd(v20, reg22, __creal(u02)); \
+  v01 = __fxcpmadd(v01, reg20, __creal(u12)); \
+  v11 = __fxcpmadd(v11, reg21, __creal(u12)); \
+  v21 = __fxcpmadd(v21, reg22, __creal(u12)); \
+  v02 = __fxcpmadd(v02, reg20, __creal(u01)); \
+  v12 = __fxcpmadd(v12, reg21, __creal(u01)); \
+  v22 = __fxcpmadd(v22, reg22, __creal(u01)); \
+  v00 = __fxcxnpma(v00, reg20, __cimag(u02)); \
+  v10 = __fxcxnpma(v10, reg21, __cimag(u02)); \
+  v20 = __fxcxnpma(v20, reg22, __cimag(u02)); \
+  v01 = __fxcxnpma(v01, reg20, __cimag(u12)); \
+  v11 = __fxcxnpma(v11, reg21, __cimag(u12)); \
+  v21 = __fxcxnpma(v21, reg22, __cimag(u12)); \
+  v02 = __fxcxnpma(v02, reg20, __cimag(u01)); \
+  v12 = __fxcxnpma(v12, reg21, __cimag(u01)); \
+  v22 = __fxcxnpma(v22, reg22, __cimag(u01)); 
+
+#defined _bgl_store_vxx(v) \
+  __stfpd((double*)&(v).c00, v00); \
+  __stfpd((double*)&(v).c01, v01); \
+  __stfpd((double*)&(v).c02, v02); \
+  __stfpd((double*)&(v).c10, v10); \
+  __stfpd((double*)&(v).c11, v11); \
+  __stfpd((double*)&(v).c12, v12); \
+  __stfpd((double*)&(v).c20, v20); \
+  __stfpd((double*)&(v).c21, v21); \
+  __stfpd((double*)&(v).c22, v22); \
+
 #endif

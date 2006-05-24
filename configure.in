@@ -587,16 +587,16 @@ else
   AC_MSG_RESULT(no)
 fi
 
-AC_MSG_CHECKING(whether we want to use EO geometry for gauge fields)
-AC_ARG_ENABLE(eogeom,
-  [  --enable-eogeom         enable use of EO geometry for gauge fields [default=yes]],
-  enable_eogeom=$enableval, enable_eogeom=yes)
-if test $enable_eogeom = yes; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(_NEW_GEOMETRY,1,Use even/odd geometry in the gauge fields)
-else
-  AC_MSG_RESULT(no)
-fi
+#AC_MSG_CHECKING(whether we want to use EO geometry for gauge fields)
+#AC_ARG_ENABLE(eogeom,
+#  [  --enable-eogeom         enable use of EO geometry for gauge fields [default=yes]],
+#  enable_eogeom=$enableval, enable_eogeom=yes)
+#if test $enable_eogeom = yes; then
+#  AC_MSG_RESULT(yes)
+#  AC_DEFINE(_NEW_GEOMETRY,1,Use even/odd geometry in the gauge fields)
+#else
+#  AC_MSG_RESULT(no)
+#fi
 
 # create the lib directory here
 if test ! -e lib; then

@@ -31,7 +31,7 @@ double reweight_kappac(const int N) {
   /* in order not to conflict with anything else... */
 
   /* First generate a random source: */
-  random_spinor_field(g_spinor_field[2],VOLUME/2);
+  random_spinor_field(g_spinor_field[2],VOLUME/2, 1);
   sq_norm_orig = square_norm(g_spinor_field[2], VOLUME/2);
 
 

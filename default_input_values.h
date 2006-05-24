@@ -83,5 +83,6 @@
 #define _default_gmresdr_nr_ev 0
 #define _default_gauge_precision_read_flag 64
 #define _default_gauge_precision_write_flag 64
+#define _default_reproduce_randomnumber_flag 1
 
 #endif
