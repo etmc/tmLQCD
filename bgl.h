@@ -586,6 +586,11 @@
   __dcbz(((char*)((unsigned long int)(addr)))+128); \
   __dcbz(((char*)((unsigned long int)(addr)))+164);
 
+#define _prefetch_halfspinor_for_store(addr) \
+  __dcbz(((char*)((unsigned long int)(addr)))); \
+  __dcbz(((char*)((unsigned long int)(addr)))+32); \
+  __dcbz(((char*)((unsigned long int)(addr)))+64);
+
 #define _prefetch_spinor2(addr)			    \
   __prefetch_by_load(((char*)((unsigned long int)(addr))));	    \
   __prefetch_by_load(((char*)((unsigned long int)(addr)))+32);  \

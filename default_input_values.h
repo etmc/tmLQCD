@@ -39,7 +39,7 @@
 #define _default_save_config_flag 0
 #define _default_save_prop_flag 0
 #define _default_save_prop_g2_flag 0
-#define _default_write_cp_flag 0
+#define _default_write_cp_flag 1
 #define _default_cp_interval 5
 #define _default_nstore 0
 #define _default_rlxd_input_filename "last_state"

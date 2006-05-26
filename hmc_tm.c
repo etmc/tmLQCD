@@ -295,7 +295,6 @@ int main(int argc,char *argv[]) {
   /* Continue */
   if(startoption == 3){
     j = read_rlxd_state(gauge_input_filename, rlxd_state, rlxdsize);
-    printf("%d %d\n", rlxd_state[0], rlxd_state[1]);
     if(j == -1) {
       printf("Trying to read deprecated format from %s\n", rlxd_input_filename);
       rlxdfile = fopen(rlxd_input_filename,"r");
@@ -484,30 +483,33 @@ int main(int argc,char *argv[]) {
       }
       nstore ++;
     }
-    else {
+    else if(write_cp_flag == 1) {
       sprintf(gauge_filename,"%s", "conf.save");
     }
-    /* Write the gauge configuration first to a temporary file */
-    if(gauge_precision_write_flag == 64) {
-      write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-    }
-    else if(gauge_precision_write_flag == 32) {
-      write_lime_gauge_field_singleprec( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-    }
-    /*  write the status of the random number generator on a file */
-    if(g_proc_id==0) {
-      rlxd_get(rlxd_state);
-      write_rlxd_state(tmp_filename, rlxd_state, rlxdsize);
-    }
 
-    /* Now move it! */
-    if(g_proc_id == 0) {
-      rename(tmp_filename, gauge_filename);
-    }
+    if(((trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1)) {
+      /* Write the gauge configuration first to a temporary file */
+      if(gauge_precision_write_flag == 64) {
+	write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+      }
+      else if(gauge_precision_write_flag == 32) {
+	write_lime_gauge_field_singleprec( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+      }
+      /*  write the status of the random number generator to a file */
+      if(g_proc_id==0) {
+	rlxd_get(rlxd_state);
+	write_rlxd_state(tmp_filename, rlxd_state, rlxdsize);
+      }
 
-    countfile = fopen(nstore_filename, "w");
-    fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
-    fclose(countfile);
+      /* Now move it! */
+      if(g_proc_id == 0) {
+	rename(tmp_filename, gauge_filename);
+      }
+
+      countfile = fopen(nstore_filename, "w");
+      fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
+      fclose(countfile);
+    }
     if(g_proc_id == 0) {
       verbose = 1;
     }

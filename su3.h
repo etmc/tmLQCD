@@ -43,6 +43,11 @@ typedef struct
 
 typedef struct
 {
+  su3_vector s0, s1;
+} halfspinor;
+
+typedef struct
+{
    spinor sp_up,sp_dn;
 } bispinor;
 
