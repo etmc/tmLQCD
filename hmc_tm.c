@@ -487,7 +487,7 @@ int main(int argc,char *argv[]) {
       sprintf(gauge_filename,"%s", "conf.save");
     }
 
-    if(((trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1)) {
+    if(((trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
       /* Write the gauge configuration first to a temporary file */
       if(gauge_precision_write_flag == 64) {
 	write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
@@ -504,11 +504,10 @@ int main(int argc,char *argv[]) {
       /* Now move it! */
       if(g_proc_id == 0) {
 	rename(tmp_filename, gauge_filename);
+        countfile = fopen(nstore_filename, "w");
+        fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
+        fclose(countfile);
       }
-
-      countfile = fopen(nstore_filename, "w");
-      fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
-      fclose(countfile);
     }
     if(g_proc_id == 0) {
       verbose = 1;
