@@ -777,7 +777,7 @@
   v12 = __fxcxnpma(v12, reg21, __cimag(u01)); \
   v22 = __fxcxnpma(v22, reg22, __cimag(u01)); 
 
-#defined _bgl_store_vxx(v) \
+#define _bgl_store_vxx(v) \
   __stfpd((double*)&(v).c00, v00); \
   __stfpd((double*)&(v).c01, v01); \
   __stfpd((double*)&(v).c02, v02); \
