@@ -59,6 +59,26 @@
   __stfpd((double*)&(s).c1, reg14); \
   __stfpd((double*)&(s).c2, reg15);
 
+#define _bgl_load_rs0(s) \
+  rs00 = __lfpd((double*)&(s).c0); \
+  rs01 = __lfpd((double*)&(s).c1); \
+  rs02 = __lfpd((double*)&(s).c2); 
+
+#define _bgl_load_rs1(s) \
+  rs10 = __lfpd((double*)&(s).c0); \
+  rs11 = __lfpd((double*)&(s).c1); \
+  rs12 = __lfpd((double*)&(s).c2); 
+
+#define _bgl_load_rs2(s) \
+  rs20 = __lfpd((double*)&(s).c0); \
+  rs21 = __lfpd((double*)&(s).c1); \
+  rs22 = __lfpd((double*)&(s).c2); 
+
+#define _bgl_load_rs3(s) \
+  rs30 = __lfpd((double*)&(s).c0); \
+  rs31 = __lfpd((double*)&(s).c1); \
+  rs32 = __lfpd((double*)&(s).c2); 
+
 #define _bgl_store_rs0(s) \
   __stfpd((double*)&(s).c0, rs00); \
   __stfpd((double*)&(s).c1, rs01); \
