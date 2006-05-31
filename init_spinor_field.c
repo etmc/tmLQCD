@@ -12,6 +12,8 @@
 
 spinor * sp = NULL;
 spinor * sp_csg = NULL;
+extern halfspinor ** halfs;
+halfspinor * _halfs = NULL;
 
 int init_spinor_field(const int V, const int nr) {
   int i = 0;
@@ -20,7 +22,7 @@ int init_spinor_field(const int V, const int nr) {
   if(errno == ENOMEM) {
     return(1);
   }
-  g_spinor_field = malloc(nr*sizeof(spinor*));
+  g_spinor_field = (spinor**)malloc(nr*sizeof(spinor*));
   if(errno == ENOMEM) {
     return(2);
   }
@@ -34,6 +36,23 @@ int init_spinor_field(const int V, const int nr) {
     g_spinor_field[i] = g_spinor_field[i-1]+V;
   }
 
+#ifdef _NEW__
+  _halfs = (halfspinor*)calloc(2*4*V+1, sizeof(spinor));
+  if(errno == ENOMEM) {
+    return(1);
+  }
+  halfs = (halfspinor**)malloc(2*sizeof(halfspinor*));
+  if(errno == ENOMEM) {
+    return(1);
+  }
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  halfs[0] = (halfspinor*)(((unsigned long int)(_halfs)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  halfs[0] = _halfs;
+#endif
+  halfs[1] = halfs[0] + 4*V;
+#endif
+
   return(0);
 }
 
@@ -41,6 +60,7 @@ void free_spinor_field() {
 
   free(sp);
   free(sp_csg);
+  free(_halfs);
 }
 
 

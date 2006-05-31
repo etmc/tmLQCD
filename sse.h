@@ -77,6 +77,18 @@ __asm__ __volatile__ ("prefetchnta %0 \n\t" \
                       "m" (*(((char*)(((unsigned long int)(addr))&~0x7f)))), \
                       "m" (*(((char*)(((unsigned long int)(addr))&~0x7f))+128)))
 
+#define _prefetch_halfspinor(addr) \
+__asm__ __volatile__ ("prefetcht0 %0" \
+                      : \
+                      : \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x7f))) ))
+
+#define _prefetch_nta_halfspinor(addr) \
+__asm__ __volatile__ ("prefetchnta %0" \
+                      : \
+                      : \
+                      "m" (*(((char*)(((unsigned long int)(addr))&~0x7f))) ))
+
 #define _prefetch_su3(addr) \
 __asm__ __volatile__ ("prefetcht0 %0 \n\t" \
                       "prefetcht0 %1" \
@@ -113,6 +125,23 @@ __asm__ __volatile__ ("prefetchnta %0 \n\t" \
                       "m" (*(((char*)(addr)))), \
                       "m" (*(((char*)(addr))+64)), \
                       "m" (*(((char*)(addr))+128)))
+
+#define _prefetch_halfspinor(addr) \
+__asm__ __volatile__ ("prefetcht0 %0 \n\t" \
+		      "prefetcht0 %1" \
+                      : \
+                      : \
+                      "m" (*(((char*)(addr)))), \
+                      "m" (*(((char*)(addr))+64)))
+
+
+#define _prefetch_nta_halfspinor(addr) \
+__asm__ __volatile__ ("prefetchnta %0 \n\t" \
+		      "prefetchnta %1" \
+                      : \
+                      : \
+                      "m" (*(((char*)(addr)))), \
+                      "m" (*(((char*)(addr))+64)))
 
 #define _prefetch_su3(addr) \
 __asm__ __volatile__ ("prefetcht0 %0  \n\t" \
@@ -165,6 +194,26 @@ __asm__ __volatile__ ("prefetchnta %0 \n\t" \
                       "m" (*(((char*)(addr))+96)), \
                       "m" (*(((char*)(addr))+128)), \
                       "m" (*(((char*)(addr))+160)))
+
+#define _prefetch_halfspinor(addr) \
+__asm__ __volatile__ ("prefetcht0 %0 \n\t" \
+                      "prefetcht0 %1 \n\t" \
+                      "prefetcht0 %2" \
+                      : \
+                      : \
+                      "m" (*(((char*)(addr)))), \
+                      "m" (*(((char*)(addr))+32)), \
+                      "m" (*(((char*)(addr))+64)))
+
+#define _prefetch_nta_spinor(addr) \
+__asm__ __volatile__ ("prefetchnta %0 \n\t" \
+                      "prefetchnta %1 \n\t" \
+                      "prefetchnta %2" \
+                      : \
+                      : \
+                      "m" (*(((char*)(addr)))), \
+                      "m" (*(((char*)(addr))+32)), \
+                      "m" (*(((char*)(addr))+64)))
 
 #define _prefetch_su3(addr) \
 __asm__ __volatile__ ("prefetcht0 %0  \n\t" \
@@ -254,6 +303,20 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
                       "=m" ((r).c2))
 
 /*
+* Stores xmm0,xmm1,xmm2 to the components r.c1,r.c2,r.c3 of an su3 vector
+*/
+
+#define _sse_store_nt(r) \
+__asm__ __volatile__ ("movntpd %%xmm0, %0 \n\t" \
+                      "movntpd %%xmm1, %1 \n\t" \
+                      "movntpd %%xmm2, %2" \
+                      : \
+                      "=m" ((r).c0), \
+                      "=m" ((r).c1), \
+                      "=m" ((r).c2))
+
+
+/*
 * Stores xmm3,xmm4,xmm5 to the components r.c1,r.c2,r.c3 of an su3 vector
 */
 
@@ -261,6 +324,20 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
 __asm__ __volatile__ ("movapd %%xmm3, %0 \n\t" \
                       "movapd %%xmm4, %1 \n\t" \
                       "movapd %%xmm5, %2" \
+                      : \
+                      "=m" ((r).c0), \
+                      "=m" ((r).c1), \
+                      "=m" ((r).c2))
+
+/*
+ * Stores xmm3,xmm4,xmm5 to the components r.c1,r.c2,r.c3 of an su3 vector
+ * directly to memory
+ */
+
+#define _sse_store_nt_up(r) \
+__asm__ __volatile__ ("movntpd %%xmm3, %0 \n\t" \
+                      "movntpd %%xmm4, %1 \n\t" \
+                      "movntpd %%xmm5, %2" \
                       : \
                       "=m" ((r).c0), \
                       "=m" ((r).c1), \

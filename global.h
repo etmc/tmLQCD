@@ -82,8 +82,7 @@ EXTERN int * g_lexic2eosub;
 EXTERN int **** g_ipt;
 EXTERN int ** g_iup;
 EXTERN int ** g_idn;
-EXTERN int ** g_pluspt;
-EXTERN int ** g_minuspt;
+EXTERN int ** g_halfpt;
 
 EXTERN int * g_field_z_ipt_even;
 EXTERN int * g_field_z_ipt_odd;
