@@ -86,6 +86,8 @@ EXTERN int ** g_halfpt;
 
 EXTERN int * g_field_z_ipt_even;
 EXTERN int * g_field_z_ipt_odd;
+EXTERN int * g_halffield_z_ipt_even;
+EXTERN int * g_halffield_z_ipt_odd;
 
 EXTERN spinor ** g_spinor_field;
 

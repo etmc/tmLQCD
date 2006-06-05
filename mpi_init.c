@@ -24,26 +24,19 @@ MPI_Datatype field_point;
 MPI_Datatype field_time_slice_cont;
 MPI_Datatype gauge_x_slice_cont;
 MPI_Datatype gauge_x_subslice;
-MPI_Datatype gauge_x_eo_subslice;
 MPI_Datatype gauge_x_slice_gath;
-MPI_Datatype gauge_x_slice_gath_split;
 MPI_Datatype field_x_slice_cont;
 MPI_Datatype field_x_subslice;
 MPI_Datatype field_x_slice_gath;
 MPI_Datatype deri_x_slice_cont;
 MPI_Datatype deri_x_subslice;
-MPI_Datatype deri_x_eo_subslice;
 MPI_Datatype deri_x_slice_gath;
-MPI_Datatype deri_x_slice_gath_split;
 MPI_Datatype gauge_xt_edge_cont;
 MPI_Datatype gauge_xt_edge_gath;
-MPI_Datatype gauge_xt_edge_gath_split;
 
 MPI_Datatype gauge_y_slice_gath;
 MPI_Datatype gauge_y_slice_cont;
 MPI_Datatype gauge_y_subslice;
-MPI_Datatype gauge_y_eo_subslice;
-MPI_Datatype gauge_y_slice_gath_split;
 
 MPI_Datatype field_y_slice_gath;
 MPI_Datatype field_y_slice_cont;
@@ -54,45 +47,51 @@ MPI_Datatype field_z_slice_half;
 
 MPI_Datatype deri_y_slice_cont;
 MPI_Datatype deri_y_subslice;
-MPI_Datatype deri_y_eo_subslice;
 MPI_Datatype deri_y_slice_gath;
-MPI_Datatype deri_y_slice_gath_split;
 
 MPI_Datatype gauge_yx_edge_cont;
 MPI_Datatype gauge_yx_edge_gath;
-MPI_Datatype gauge_yx_edge_gath_split;
 
 MPI_Datatype gauge_ty_edge_cont;
 MPI_Datatype gauge_ty_edge_gath;
-MPI_Datatype gauge_ty_edge_gath_split;
 
 MPI_Datatype gauge_z_slice_gath;
 MPI_Datatype gauge_z_slice_cont;
 MPI_Datatype gauge_z_subslice;
-MPI_Datatype gauge_z_eo_subslice;
-MPI_Datatype gauge_z_slice_gath_split;
 
 MPI_Datatype deri_z_slice_cont;
 MPI_Datatype deri_z_subslice;
-MPI_Datatype deri_z_eo_subslice;
 MPI_Datatype deri_z_slice_gath;
-MPI_Datatype deri_z_slice_gath_split;
 
 MPI_Datatype gauge_zx_edge_cont;
 MPI_Datatype gauge_zx_edge_gath;
-MPI_Datatype gauge_zx_edge_gath_split;
 
 MPI_Datatype gauge_tz_edge_cont;
 MPI_Datatype gauge_tz_edge_gath;
-MPI_Datatype gauge_tz_edge_gath_split;
 
 MPI_Datatype gauge_zy_edge_cont;
 MPI_Datatype gauge_zy_edge_gath;
-MPI_Datatype gauge_zy_edge_gath_split;
+
+MPI_Datatype halffield_point;
+MPI_Datatype halffield_time_slice_cont;
+
+MPI_Datatype halffield_x_slice_cont;
+MPI_Datatype halffield_x_subslice;
+MPI_Datatype halffield_x_slice_gath;
+
+MPI_Datatype halffield_y_slice_cont;
+MPI_Datatype halffield_y_subslice;
+MPI_Datatype halffield_y_slice_gath;
+
+MPI_Datatype halffield_z_slice_cont;
+
+
 
 #ifdef PARALLELXYZT
 spinor * field_buffer_z ALIGN;
 spinor * field_buffer_z2 ALIGN;
+halfspinor * halffield_buffer_z ALIGN;
+halfspinor * halffield_buffer_z2 ALIGN;
 #endif
 
 MPI_Comm mpi_time_slices;
@@ -193,6 +192,8 @@ void mpi_init(int argc,char *argv[]) {
 #  ifdef PARALLELXYZT
   field_buffer_z = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
   field_buffer_z2 = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
+  halffield_buffer_z = (halfspinor*)malloc(T*LX*LY/2*sizeof(halfspinor));
+  halffield_buffer_z2 = (halfspinor*)malloc(T*LX*LY/2*sizeof(halfspinor));
 #  endif
 
   MPI_Cart_create(MPI_COMM_WORLD, ndims, dims, periods, reorder, &g_cart_grid);
@@ -313,23 +314,6 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(2*T*LX, 1, LY, gauge_point, &gauge_zy_edge_gath);
   MPI_Type_commit(&gauge_zy_edge_gath);
 
-  /* For _NEW_GEOMETRY -> even/odd geometry also in the gauge fields */
-  /* Now we need a half continuoues gauge xt-slice */
-  MPI_Type_contiguous((LY*LZ)/2, gauge_point, &gauge_x_eo_subslice); 
-  /* We need to put 2*T of those of length one together separated by LX */
-  MPI_Type_vector(2*T, 1, LX, gauge_x_eo_subslice, &gauge_x_slice_gath_split);
-  MPI_Type_commit(&gauge_x_slice_gath_split);
-
-  MPI_Type_vector(4, 1, T, gauge_x_eo_subslice, &gauge_xt_edge_gath_split);
-  MPI_Type_commit(&gauge_xt_edge_gath_split);
-
-  /* Now we need a half continuoues gauge xyt-slice */
-  MPI_Type_contiguous((LZ)/2, gauge_point, &gauge_y_eo_subslice); 
-  /* We need to put 2*T*LX of those together separated by LY */
-  MPI_Type_vector(2*T*LX, 1, LY, gauge_y_eo_subslice, &gauge_y_slice_gath_split);
-  MPI_Type_commit(&gauge_y_slice_gath_split);
-  /* END _NEW_GEOMETRY */
-
   /* The spinor fields */
   /* this is a single spinor field on one space-time point */
   MPI_Type_contiguous(24, MPI_DOUBLE, &field_point);
@@ -364,8 +348,7 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_commit(&field_y_slice_cont);
 
   /* This is an even or odd continuous spinor field z-slice */
-/*   MPI_Type_contiguous(T*LX*LY/2, field_point, &field_z_slice_cont); */
-  MPI_Type_contiguous(12*T*LX*LY, MPI_DOUBLE, &field_z_slice_cont);
+  MPI_Type_contiguous(T*LX*LY/2, field_point, &field_z_slice_cont);
   MPI_Type_vector(T*LX*LY/2, 12, 24, MPI_DOUBLE, &field_z_slice_half);
   /* this type puts T*LX xt-slices together being the internal x-boundary in */
   /* even/odd ordered spinor fields */
@@ -400,15 +383,25 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_commit(&deri_z_slice_gath);
   MPI_Type_commit(&deri_z_slice_cont);
 
-  /* For _NEW_GEOMETRY */
-  MPI_Type_contiguous(LY*LZ/2, deri_point, &deri_x_eo_subslice);
-  MPI_Type_vector(2*T, 1, LX, deri_x_eo_subslice, &deri_x_slice_gath_split);
-  MPI_Type_commit(&deri_x_slice_gath_split);
+  /* this is a single halfspinor field on one space-time point */
+  MPI_Type_contiguous(12, MPI_DOUBLE, &halffield_point);
+  MPI_Type_vector(LX*LY*LZ/2, 1, 4, halffield_point, &halffield_time_slice_cont); 
+  MPI_Type_vector(T*LY*LZ/2, 1, 4, halffield_point, &halffield_x_slice_cont); 
+  MPI_Type_vector(T*LX*LZ/2, 1, 4, halffield_point, &halffield_y_slice_cont); 
+  MPI_Type_vector(T*LX*LY/2, 1, 4, halffield_point, &halffield_z_slice_cont); 
+  /* Commit the new types */
+  MPI_Type_commit(&halffield_time_slice_cont);
+  MPI_Type_commit(&halffield_x_slice_cont);
+  MPI_Type_commit(&halffield_y_slice_cont);
+  MPI_Type_commit(&halffield_z_slice_cont);
 
-  MPI_Type_contiguous(LZ/2, deri_point, &deri_y_eo_subslice);
-  MPI_Type_vector(2*T*LX, 1, LY, deri_y_eo_subslice, &deri_y_slice_gath_split);
-  MPI_Type_commit(&deri_y_slice_gath_split);
+  MPI_Type_vector(LY*LZ/2, 1, 4, halffield_point, &halffield_x_subslice);
+  MPI_Type_vector(T, 1, LX, halffield_x_subslice, &halffield_x_slice_gath); 
+  MPI_Type_commit(&halffield_x_slice_gath);
 
+  MPI_Type_vector(LZ/2, 1, 4, halffield_point, &halffield_y_subslice);
+  MPI_Type_vector(T*LX, 1, LY, halffield_y_subslice, &halffield_y_slice_gath); 
+  MPI_Type_commit(&halffield_y_slice_gath);
 
   /* For observables we need communicators for catesian time slices */
 

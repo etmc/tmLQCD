@@ -320,6 +320,31 @@
   reg11 = __fpsub(reg11, reg14); \
   reg12 = __fpsub(reg12, reg15); 
 
+#define _bgl_vector_sub_rs2_from_rs1_reg1()	 \
+  reg10 = __fpsub(rs10, rs20); \
+  reg11 = __fpsub(rs11, rs21); \
+  reg12 = __fpsub(rs12, rs22); 
+
+#define _bgl_vector_sub_rs3_from_rs1_reg1()	 \
+  reg10 = __fpsub(rs10, rs30); \
+  reg11 = __fpsub(rs11, rs31); \
+  reg12 = __fpsub(rs12, rs32); 
+
+#define _bgl_vector_sub_rs2_from_rs0_reg1()	 \
+  reg10 = __fpsub(rs00, rs20); \
+  reg11 = __fpsub(rs01, rs21); \
+  reg12 = __fpsub(rs02, rs22); 
+
+#define _bgl_vector_sub_rs2_from_rs0_reg0()	 \
+  reg00 = __fpsub(rs00, rs20); \
+  reg01 = __fpsub(rs01, rs21); \
+  reg02 = __fpsub(rs02, rs22); 
+
+#define _bgl_vector_sub_rs3_from_rs0_reg0()	 \
+  reg00 = __fpsub(rs00, rs30); \
+  reg01 = __fpsub(rs01, rs31); \
+  reg02 = __fpsub(rs02, rs32); 
+
 /*
  * Multiplies reg3, reg4, reg5 with  
  * a complex number c 
@@ -418,6 +443,21 @@
   reg01 = __fxcxnpma(reg01, reg04, 1.); \
   reg02 = __fxcxnpma(reg02, reg05, 1.);
 
+#define _bgl_vector_i_mul_add_rs3_to_rs0_reg0() \
+  reg00 = __fxcxnpma(rs00, rs30, 1.); \
+  reg01 = __fxcxnpma(rs01, rs31, 1.); \
+  reg02 = __fxcxnpma(rs02, rs32, 1.);
+
+#define _bgl_vector_i_mul_add_rs2_to_rs0_reg0() \
+  reg00 = __fxcxnpma(rs00, rs20, 1.); \
+  reg01 = __fxcxnpma(rs01, rs21, 1.); \
+  reg02 = __fxcxnpma(rs02, rs22, 1.);
+
+#define _bgl_vector_i_mul_add_rs2_to_rs1_reg1() \
+  reg10 = __fxcxnpma(rs10, rs20, 1.); \
+  reg11 = __fxcxnpma(rs11, rs21, 1.); \
+  reg12 = __fxcxnpma(rs12, rs22, 1.);
+
 #define _bgl_vector_i_mul_add_reg1() \
   reg10 = __fxcxnpma(reg10, reg13, 1.); \
   reg11 = __fxcxnpma(reg11, reg14, 1.); \
@@ -432,6 +472,31 @@
   reg10 = __fxcxnpma(reg10, reg13, -1.); \
   reg11 = __fxcxnpma(reg11, reg14, -1.); \
   reg12 = __fxcxnpma(reg12, reg15, -1.);
+
+#define _bgl_vector_i_mul_sub_rs3_from_rs1_reg1() \
+  reg10 = __fxcxnpma(rs10, rs30, -1.); \
+  reg11 = __fxcxnpma(rs11, rs31, -1.); \
+  reg12 = __fxcxnpma(rs12, rs32, -1.);
+
+#define _bgl_vector_i_mul_sub_rs2_from_rs1_reg1() \
+  reg10 = __fxcxnpma(rs10, rs20, -1.); \
+  reg11 = __fxcxnpma(rs11, rs21, -1.); \
+  reg12 = __fxcxnpma(rs12, rs22, -1.);
+
+#define _bgl_vector_i_mul_sub_rs2_from_rs0_reg1() \
+  reg10 = __fxcxnpma(rs00, rs20, -1.); \
+  reg11 = __fxcxnpma(rs01, rs21, -1.); \
+  reg12 = __fxcxnpma(rs02, rs22, -1.);
+
+#define _bgl_vector_i_mul_sub_rs2_from_rs0_reg0() \
+  reg00 = __fxcxnpma(rs00, rs20, -1.); \
+  reg01 = __fxcxnpma(rs01, rs21, -1.); \
+  reg02 = __fxcxnpma(rs02, rs22, -1.);
+
+#define _bgl_vector_i_mul_sub_rs3_from_rs0_reg0() \
+  reg00 = __fxcxnpma(rs00, rs30, -1.); \
+  reg01 = __fxcxnpma(rs01, rs31, -1.); \
+  reg02 = __fxcxnpma(rs02, rs32, -1.);
 
 #define _bgl_vector_i_mul1() \
   reg10 = __cmplx(1., -1.); \
@@ -807,5 +872,66 @@
   __stfpd((double*)&(v).c20, v20); \
   __stfpd((double*)&(v).c21, v21); \
   __stfpd((double*)&(v).c22, v22); \
+
+#define _bgl_assign_rs0_to_reg0() \
+  reg00 = rs00; \
+  reg01 = rs01; \
+  reg02 = rs02;
+
+#define _bgl_assign_rs0_to_reg1() \
+  reg10 = rs00; \
+  reg11 = rs01; \
+  reg12 = rs02;
+
+#define _bgl_assign_rs1_to_reg0() \
+  reg00 = rs10; \
+  reg01 = rs11; \
+  reg02 = rs12;
+
+#define _bgl_assign_rs1_to_reg1() \
+  reg10 = rs10; \
+  reg11 = rs11; \
+  reg12 = rs12;
+
+#define _bgl_assign_rs2_to_reg0() \
+  reg00 = rs20; \
+  reg01 = rs21; \
+  reg02 = rs22;
+
+#define _bgl_assign_rs2_to_reg1() \
+  reg10 = rs20; \
+  reg11 = rs21; \
+  reg12 = rs22;
+
+#define _bgl_assign_rs3_to_reg0() \
+  reg00 = rs30; \
+  reg01 = rs31; \
+  reg02 = rs32;
+
+#define _bgl_assign_rs3_to_reg1() \
+  reg10 = rs30; \
+  reg11 = rs31; \
+  reg12 = rs32;
+
+#define _bgl_vector_add_rs2_to_rs0_reg0() \
+  reg00 = __fpadd(rs00, rs20); \
+  reg01 = __fpadd(rs01, rs21); \
+  reg02 = __fpadd(rs02, rs22); 
+
+#define _bgl_vector_add_rs3_to_rs0_reg0() \
+  reg00 = __fpadd(rs00, rs30); \
+  reg01 = __fpadd(rs01, rs31); \
+  reg02 = __fpadd(rs02, rs32); 
+
+#define _bgl_vector_add_rs3_to_rs1_reg1() \
+  reg10 = __fpadd(rs10, rs30); \
+  reg11 = __fpadd(rs11, rs31); \
+  reg12 = __fpadd(rs12, rs32); 
+
+#define _bgl_vector_add_rs2_to_rs1_reg1() \
+  reg10 = __fpadd(rs10, rs20); \
+  reg11 = __fpadd(rs11, rs21); \
+  reg12 = __fpadd(rs12, rs22); 
+
 
 #endif
