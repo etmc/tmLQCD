@@ -64,22 +64,22 @@ int main(int argc,char *argv[])
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
-
-
+  
+  
   static double t1,t2,dt,sdt,dts,qdt,sqdt;
 #ifdef MPI
   static double dt2;
   int rlxd_state[105];
-
+  
   MPI_Init(&argc, &argv);
 #endif
   g_rgi_C1 = 1.; 
-
+  
   /* Read the input file */
   read_input("benchmark.input");
-
+  
   mpi_init(argc, argv);
-
+  
   if(g_proc_id==0) {
 #ifdef SSE
     printf("# The code was compiled with SSE instructions\n");
@@ -99,16 +99,16 @@ int main(int argc,char *argv[])
 #ifdef _GAUGE_COPY
     printf("# The code was compiled with -D_GAUGE_COPY\n");
 #endif
-#ifdef _GAUGE_COPY
+#ifdef BGL
     printf("# The code was compiled for Blue Gene/L\n");
 #endif
-
+    
     printf("\n");
     fflush(stdout);
   }
-
-
-
+  
+  
+  
 #ifdef _GAUGE_COPY
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
@@ -125,7 +125,7 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
     exit(0);
   }
-
+  
   if(g_proc_id == 0) {
     fprintf(stdout,"The number of processes is %d \n",g_nproc);
     printf("# The lattice size is %d x %d x %d x %d\n",
@@ -134,17 +134,17 @@ int main(int argc,char *argv[])
 	   (int)(T), (int)(LX), (int)(LY),(int) LZ);
     fflush(stdout);
   }
-
+  
   /* define the geometry */
   geometry();
   /* define the boundary conditions for the fermion fields */
   boundary();
-
+  
   check_geometry();
 #ifdef MPI
   check_xchange(); 
 #endif
-
+  
   if(reproduce_randomnumber_flag == 1) {
     /* here we generate exactly the same configuration as for the 
        single node simulation */
@@ -173,12 +173,14 @@ int main(int argc,char *argv[])
       MPI_Recv((void*)rlxd_state, 105, MPI_INT,g_nproc-1,99, MPI_COMM_WORLD, &status);
       rlxd_reset(rlxd_state);
     }
+#endif
   }
   else {
     rlxd_init(1, 123456 + g_proc_id*97);
     random_gauge_field();
   }
 
+#ifdef MPI
   /*For parallelization: exchange the gaugefield */
   xchange_gauge();
 #endif
