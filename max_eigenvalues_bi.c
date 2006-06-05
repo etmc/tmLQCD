@@ -62,7 +62,7 @@ int eigenvalues_for_cg_computed = 0;
 */
 
 
-void max_eigenvalues(int * nr_of_eigenvalues, const int operator_flag, 
+void max_eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag, 
 		 const int max_iterations, const double precision) {
 
 
@@ -227,6 +227,11 @@ void max_eigenvalues(int * nr_of_eigenvalues, const int operator_flag,
 
   (*nr_of_eigenvalues) = converged;
   v0dim = converged;
+
+  /*
+  printf(" Largest EV = %22.15e  \n", max_evls[0]);
+  */
+  cheb_evmax = max_evls[0];
 
 #ifdef MPI
   ev_time = MPI_Wtime();
