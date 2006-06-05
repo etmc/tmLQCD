@@ -46,6 +46,10 @@ int init_geometry_indices(const int V) {
   if(errno == ENOMEM) return(12);
   g_field_z_ipt_odd  = calloc(T*LX*LY, sizeof(int));
   if(errno == ENOMEM) return(13);
+  g_halffield_z_ipt_even = calloc(T*LX*LY, sizeof(int));
+  if(errno == ENOMEM) return(12);
+  g_halffield_z_ipt_odd  = calloc(T*LX*LY, sizeof(int));
+  if(errno == ENOMEM) return(13);
 #endif
 
   halfpt = (int*)calloc(4*(T+2)*(LX+2)*(LY+2)*(LZ+2)/2, sizeof(int));

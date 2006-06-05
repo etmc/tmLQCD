@@ -651,6 +651,7 @@ void geometry(){
 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==0) { 
 	  g_field_z_ipt_even[ix] = g_lexic2eosub[ g_ipt[x0][x1][x2][0]];
+	  g_halffield_z_ipt_even[ix] = g_halfpt[ g_lexic2eosub[ g_ipt[x0][x1][x2][0]] ][3];
 	  ix++;
 	}
       }
@@ -663,6 +664,7 @@ void geometry(){
 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==0) { 
 	  g_field_z_ipt_even[ix] = g_lexic2eosub[ g_ipt[x0][x1][x2][LZ-1]];
+	  g_halffield_z_ipt_even[ix] = g_halfpt[ g_lexic2eosub[ g_ipt[x0][x1][x2][LZ-1]] ][3];
 	  ix++;
 	}
       }
@@ -676,6 +678,7 @@ void geometry(){
 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==1) { 
 	  g_field_z_ipt_odd[ix] = g_lexic2eosub[ g_ipt[x0][x1][x2][0]];
+	  g_halffield_z_ipt_odd[ix] = g_halfpt[ g_lexic2eosub[ g_ipt[x0][x1][x2][0]] ][3];
 	  ix++;
 	}
       }
@@ -688,6 +691,7 @@ void geometry(){
 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==1) { 
 	  g_field_z_ipt_odd[ix] = g_lexic2eosub[ g_ipt[x0][x1][x2][LZ-1]];
+	  g_halffield_z_ipt_odd[ix] = g_halfpt[ g_lexic2eosub[ g_ipt[x0][x1][x2][LZ-1]] ][3];
 	  ix++;
 	}
       }
