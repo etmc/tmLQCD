@@ -116,7 +116,9 @@ int main(int argc,char *argv[]) {
   read_input(input_filename);
   /* this DBW2 stuff is not needed for the inversion ! */
   g_rgi_C1 = 0;
-
+  if(Nskip == 0){
+    Nskip = 1;
+  }
   mpi_init(argc, argv);
 
   g_dbw2rand = 0;
@@ -295,7 +297,7 @@ int main(int argc,char *argv[]) {
 #endif
       }
     }
-    nstore++;
+    nstore+=Nskip;
   }
 
 #ifdef MPI
