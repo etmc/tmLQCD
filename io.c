@@ -1224,6 +1224,14 @@ int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filena
   float tmp[24];
 
   ifs = fopen(filename, "r");
+  if(ifs == (FILE *)NULL) {
+    fprintf(stderr, "Could not open file %s\n Aborting...\n", filename);
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(500);
+  }
 
   for(x = 0; x < LX; x++) {
     for(y = 0; y < LY; y++) {

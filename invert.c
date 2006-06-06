@@ -71,6 +71,7 @@ int main(int argc,char *argv[]) {
   char parameterfilename[50];
   char conf_filename[50];
   char * input_filename = NULL;
+  double plaquette_energy;
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -180,9 +181,16 @@ int main(int argc,char *argv[]) {
     xchange_gauge();
 #endif
 #ifdef _GAUGE_COPY
-  update_backward_gauge();
+    update_backward_gauge();
 #endif
     
+    /*compute the energy of the gauge field*/
+    plaquette_energy = measure_gauge_action();
+
+    if(g_proc_id == 0) {
+      printf("The plaquette value is %e\n", plaquette_energy/(6.*VOLUME*g_nproc)); fflush(stdout);
+    }
+
     for(ix = index_start; ix < index_end; ix++) {
       is = (ix / 3);
       ic = (ix % 3);
