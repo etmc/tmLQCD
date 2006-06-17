@@ -179,15 +179,21 @@ void mn2p_integrator(int * const n_int, const double tau,
   }
   
   if(S == 0) {
-    for(i = 0; i < n_int[0]; i++) {
-      update_gauge(lambda[0]*eps);
+    update_gauge(lambda[0]*eps);
+    for(i = 1; i < n_int[0]; i++) {
       gauge_momenta(0.5*eps);
 /*       dtmp[0] += 0.5*eps; */
       update_gauge(oneminus2lambda*eps);
       gauge_momenta(0.5*eps);
 /*       dtmp[0] += 0.5*eps; */
-      update_gauge(lambda[0]*eps);
+      update_gauge(2*lambda[0]*eps);
     }
+    gauge_momenta(0.5*eps);
+/*       dtmp[0] += 0.5*eps; */
+    update_gauge(oneminus2lambda*eps);
+    gauge_momenta(0.5*eps);
+/*       dtmp[0] += 0.5*eps; */
+    update_gauge(lambda[0]*eps);
 #ifdef _GAUGE_COPY
     update_backward_gauge();
 #endif
