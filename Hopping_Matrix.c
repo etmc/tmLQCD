@@ -564,7 +564,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
   /* We will run through the source vector now */
   /* instead of the solution vector            */
-
+  _prefetch_spinor(k); 
   if(ieo == 1){
     ioff = 0;
   } 
@@ -581,11 +581,14 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   s = k;
   r0 = &halfs[0][ g_halfpt[icy][0] ];
 
+
 #if ((defined _GAUGE_COPY))
   up=g_gauge_field_copy[ioff];
 #else
   up=&g_gauge_field[iy][0];
 #endif
+  _prefetch_su3(up);
+  _prefetch_su3(up+1);
   /**************** loop over all lattice sites ******************/
   for(icx = ioff; icx < ((VOLUME)/2+ioff); icx++){
     ix=g_eo2lexic[icx];
@@ -593,8 +596,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_load_rs1((*s).s1);
     _bgl_load_rs2((*s).s2);
     _bgl_load_rs3((*s).s3);
-    s++;
-    _prefetch_spinor(s);
+    s++; 
+    _prefetch_spinor(s); 
     /*********************** direction +0 ************************/
     iy=g_idn[ix][1]; 
     icy=g_lexic2eosub[iy];
@@ -602,10 +605,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #if (!defined _GAUGE_COPY)
     um=&g_gauge_field[iy][1]; 
 #else
-    um=up+1;
+    um=up+1; 
 #endif
-    _prefetch_su3(um); 
-    _prefetch_halfspinor_for_store(r1); 
+    _prefetch_su3(um+1);
+/*     _prefetch_halfspinor(r1);  */
 
     _bgl_vector_add_rs2_to_rs0_reg0();
     _bgl_vector_add_rs3_to_rs1_reg1();
@@ -632,11 +635,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #ifndef _GAUGE_COPY
     up=&g_gauge_field[iy][2]; 
 #else
-    up = um+1;
+    up = um+1; 
 #endif
-    _prefetch_su3(up); 
+    _prefetch_su3(up+1);
     r2=&halfs[0][ g_halfpt[icy][2] ];
-    _prefetch_halfspinor_for_store(r2); 
+/*     _prefetch_halfspinor(r2); */
 
 /*     _bgl_load_reg0((*s).s0); */
 /*     _bgl_load_reg1((*s).s1); */
@@ -662,11 +665,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][3]; 
 #else
-    um= up+1;
+    um= up+1; 
 #endif
-    _prefetch_su3(um); 
+    _prefetch_su3(um+1);
     r3=&halfs[0][ g_halfpt[icy][3] ];
-    _prefetch_halfspinor_for_store(r3); 
+/*     _prefetch_halfspinor(r3);   */
 
 /*     _bgl_load_reg0((*s).s0); */
 /*     _bgl_load_reg1((*s).s1); */
@@ -693,11 +696,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #ifndef _GAUGE_COPY
     up=&g_gauge_field[iy][0]; 
 #else
-    up=um+1;
+    up=um+1; 
 #endif
-    _prefetch_su3(up); 
+    _prefetch_su3(up+1); 
     r0=&halfs[0][ g_halfpt[icy][0] ];
-    _prefetch_halfspinor_for_store(r0); 
+/*     _prefetch_halfspinor(r0); */
 
 /*     _bgl_load_reg0((*s).s0); */
 /*     _bgl_load_reg1((*s).s1); */
@@ -727,11 +730,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   r0 = &halfs[1][ g_halfpt[icy][0] ];
 
 #if ((defined _GAUGE_COPY))
-/*   up=g_gauge_field_copy[ioff]; */
+  up=g_gauge_field_copy[ioff]; 
 #else
   up=g_gauge_field[iy];
 #endif
-
+  _prefetch_su3(up);
+  _prefetch_su3(up+1);
   /* Here we need to do some exchange for plus direction */
 #  ifdef MPI
 
@@ -752,9 +756,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     um = up + 1;
 
-    _prefetch_su3(um); 
+    _prefetch_su3(um+1);
     r1=&halfs[1][ g_halfpt[icy][1] ];
-    _prefetch_halfspinor_for_store(r1); 
+/*     _prefetch_halfspinor_for_store(r1);  */
 
 /*     _bgl_load_reg0((*s).s0); */
 /*     _bgl_load_reg1((*s).s1); */
@@ -778,9 +782,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     up = um + 1;
 
-    _prefetch_su3(up); 
+    _prefetch_su3(up+1);
     r2=&halfs[1][ g_halfpt[icy][2] ];
-    _prefetch_halfspinor_for_store(r2); 
+/*     _prefetch_halfspinor_for_store(r2);  */
 
 /*     _bgl_load_reg0((*s).s0); */
 /*     _bgl_load_reg1((*s).s1); */
@@ -804,9 +808,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     um = up + 1;
 
-    _prefetch_su3(um); 
+    _prefetch_su3(um+1);
     r3=&halfs[1][ g_halfpt[icy][3] ];
-    _prefetch_halfspinor_for_store(r3); 
+/*     _prefetch_halfspinor_for_store(r3);  */
 
 /*     _bgl_load_reg0((*s).s0); */
 /*     _bgl_load_reg1((*s).s1); */
@@ -838,9 +842,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     up=&g_gauge_field[iz][0];
 #endif
 
-    _prefetch_su3(up); 
+    _prefetch_su3(up+1);
     r0=&halfs[1][ g_halfpt[icy][0] ];
-    _prefetch_halfspinor_for_store(r0); 
+/*     _prefetch_halfspinor_for_store(r0);  */
 
 /*     _bgl_load_reg0((*s).s0); */
 /*     _bgl_load_reg1((*s).s1); */
@@ -866,9 +870,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   /* Now we sum up and expand to full spinor */
   rp = halfs[0];
   rm = halfs[1];
+  rn = l;
+  _prefetch_spinor_for_store(rn); 
   for(icx = 0; icx < (VOLUME)/2; icx++){
-    rn = l + icx;
-    _prefetch_spinor_for_store(rn);
+    rn = l + icx; 
+    _prefetch_spinor_for_store(rn+1);
     /*********************** direction +0 ************************/
     _bgl_load_rs0((*rp).s0);
     rs20 = rs00;
@@ -878,7 +884,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     rs30 = rs10;
     rs31 = rs11;
     rs32 = rs12;
-    rp++;
+    _prefetch_halfspinor(rp+4);
+    rp++; 
 
     /*********************** direction -0 ************************/
     _bgl_load_reg0_up((*rm).s0);
@@ -888,7 +895,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_sub_from_rs2_reg0();
     _bgl_add_to_rs1_reg1();
     _bgl_sub_from_rs3_reg1();
-    rm++;
+    _prefetch_halfspinor(rm+4);
+    rm++; 
 
     /*********************** direction +1 ************************/
     _bgl_load_reg0_up((*rp).s0);
@@ -898,7 +906,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_i_mul_sub_from_rs3_reg0();
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_sub_from_rs2_reg1();
-    rp++;
+    _prefetch_halfspinor(rp+4);
+    rp++; 
 
     /*********************** direction -1 ************************/
     _bgl_load_reg0_up((*rm).s0);
@@ -908,6 +917,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_add_to_rs3_reg0();
     _bgl_i_mul_add_to_rs2_reg1();      
+    _prefetch_halfspinor(rm+4);
     rm++;
 
     /*********************** direction +2 ************************/
@@ -918,6 +928,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_sub_from_rs2_reg1();
     _bgl_add_to_rs3_reg0();
+    _prefetch_halfspinor(rp+4);
     rp++;
 
     /*********************** direction -2 ************************/
@@ -928,6 +939,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_add_to_rs2_reg1();
     _bgl_sub_from_rs3_reg0();
+    _prefetch_halfspinor(rm+4);
     rm++;
 
     /*********************** direction +3 ************************/
@@ -938,6 +950,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_sub_from_rs2_reg0();
     _bgl_i_mul_add_to_rs3_reg1();
+    _prefetch_halfspinor(rp+4);
     rp++;
 
     /*********************** direction -3 ************************/
@@ -953,6 +966,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_store_rs1((*rn).s1);
     _bgl_i_mul_sub_from_rs3_reg1();
     _bgl_store_rs3((*rn).s3);
+    _prefetch_halfspinor(rm+4);
     rm++;
   }
 }
