@@ -607,21 +607,15 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #else
     um=up+1; 
 #endif
-    _prefetch_su3(um+1);
-/*     _prefetch_halfspinor(r1);  */
+    _prefetch_su3(um);
+/*     _prefetch_halfspinor_for_store(r1); */
 
     _bgl_vector_add_rs2_to_rs0_reg0();
     _bgl_vector_add_rs3_to_rs1_reg1();
-/*     _bgl_load_reg0((*s).s0); */
-/*     _bgl_load_reg1((*s).s1); */
-/*     _bgl_load_reg0_up((*s).s2); */
-/*     _bgl_load_reg1_up((*s).s3); */
-/*     _bgl_vector_add_reg0(); */
-/*     _bgl_vector_add_reg1(); */
-    /* result is now in regx0, regx1, regx2 , x=0,1 */
 
     _bgl_su3_multiply_double((*up));
     _bgl_vector_cmplx_mul_double(ka0);
+    /* result is now in regx0, regx1, regx2 , x=0,1 */
 
     _bgl_store_reg0_up((*r0).s0);
     _bgl_store_reg1_up((*r0).s1);
@@ -637,16 +631,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #else
     up = um+1; 
 #endif
-    _prefetch_su3(up+1);
+    _prefetch_su3(up);
     r2=&halfs[0][ g_halfpt[icy][2] ];
-/*     _prefetch_halfspinor(r2); */
+    _prefetch_halfspinor_for_store(r2);  
 
-/*     _bgl_load_reg0((*s).s0); */
-/*     _bgl_load_reg1((*s).s1); */
-/*     _bgl_load_reg0_up((*s).s3); */
-/*     _bgl_load_reg1_up((*s).s2); */
-/*     _bgl_vector_i_mul_add_reg0(); */
-/*     _bgl_vector_i_mul_add_reg1(); */
     _bgl_vector_i_mul_add_rs3_to_rs0_reg0();
     _bgl_vector_i_mul_add_rs2_to_rs1_reg1();
 
@@ -655,6 +643,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     _bgl_store_reg0_up((*r1).s0);
     _bgl_store_reg1_up((*r1).s1);
+
 
 
     /*********************** direction +2 ************************/
@@ -667,16 +656,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #else
     um= up+1; 
 #endif
-    _prefetch_su3(um+1);
+    _prefetch_su3(um);
     r3=&halfs[0][ g_halfpt[icy][3] ];
-/*     _prefetch_halfspinor(r3);   */
+/*     _prefetch_halfspinor_for_store(r3); */
 
-/*     _bgl_load_reg0((*s).s0); */
-/*     _bgl_load_reg1((*s).s1); */
-/*     _bgl_load_reg1_up((*s).s2); */
-/*     _bgl_load_reg0_up((*s).s3); */
-/*     _bgl_vector_add_reg0(); */
-/*     _bgl_vector_sub_reg1(); */
     _bgl_vector_add_rs3_to_rs0_reg0();
     _bgl_vector_sub_rs2_from_rs1_reg1();
 
@@ -698,18 +681,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #else
     up=um+1; 
 #endif
-    _prefetch_su3(up+1); 
+    _prefetch_su3(up); 
     r0=&halfs[0][ g_halfpt[icy][0] ];
-/*     _prefetch_halfspinor(r0); */
+/*     _prefetch_halfspinor_for_store(r0); */
 
-/*     _bgl_load_reg0((*s).s0); */
-/*     _bgl_load_reg1((*s).s1); */
-/*     _bgl_load_reg0_up((*s).s2); */
-/*     _bgl_load_reg1_up((*s).s3); */
-/*     _bgl_vector_i_mul_add_reg0(); */
-/*     _bgl_vector_i_mul_sub_reg1(); */
     _bgl_vector_i_mul_add_rs2_to_rs0_reg0();
-    _bgl_vector_i_mul_sub_rs2_from_rs1_reg1();
+    _bgl_vector_i_mul_sub_rs3_from_rs1_reg1();
 
     _bgl_su3_multiply_double((*um));
     _bgl_vector_cmplx_mul_double(ka3);
@@ -719,7 +696,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     /************************ end of loop ************************/
   }
-
+  _prefetch_spinor(k);
   ix=g_eo2lexic[ioff];
   iy=g_iup[ix][0]; 
   icy=g_lexic2eosub[iy];
@@ -728,7 +705,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   s = k;
   /* rp and rm contain the intermediate half spinor */
   r0 = &halfs[1][ g_halfpt[icy][0] ];
-
+  _prefetch_halfspinor_for_store(r0);
 #if ((defined _GAUGE_COPY))
   up=g_gauge_field_copy[ioff]; 
 #else
@@ -737,9 +714,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   _prefetch_su3(up);
   _prefetch_su3(up+1);
   /* Here we need to do some exchange for plus direction */
-#  ifdef MPI
-
-#endif
+#  if (defined MPI && !defined _NO_COMM)
+  xchange_halffield_plus(ieo);
+#  endif
 
   /* Now all the minus directions */
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
@@ -756,16 +733,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     um = up + 1;
 
-    _prefetch_su3(um+1);
+    _prefetch_su3(um);
     r1=&halfs[1][ g_halfpt[icy][1] ];
-/*     _prefetch_halfspinor_for_store(r1);  */
+/*     _prefetch_halfspinor_for_store(r1); */
 
-/*     _bgl_load_reg0((*s).s0); */
-/*     _bgl_load_reg1((*s).s1); */
-/*     _bgl_load_reg0_up((*s).s2); */
-/*     _bgl_load_reg1_up((*s).s3); */
-/*     _bgl_vector_sub_reg0(); */
-/*     _bgl_vector_sub_reg1(); */
     _bgl_vector_sub_rs2_from_rs0_reg0();
     _bgl_vector_sub_rs3_from_rs1_reg1();
 
@@ -782,16 +753,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     up = um + 1;
 
-    _prefetch_su3(up+1);
+    _prefetch_su3(up);
     r2=&halfs[1][ g_halfpt[icy][2] ];
 /*     _prefetch_halfspinor_for_store(r2);  */
 
-/*     _bgl_load_reg0((*s).s0); */
-/*     _bgl_load_reg1((*s).s1); */
-/*     _bgl_load_reg0_up((*s).s3); */
-/*     _bgl_load_reg1_up((*s).s2); */
-/*     _bgl_vector_i_mul_sub_reg0(); */
-/*     _bgl_vector_i_mul_sub_reg1(); */
     _bgl_vector_i_mul_sub_rs3_from_rs0_reg0();
     _bgl_vector_i_mul_sub_rs2_from_rs1_reg1();
       
@@ -808,16 +773,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     um = up + 1;
 
-    _prefetch_su3(um+1);
+    _prefetch_su3(um);
     r3=&halfs[1][ g_halfpt[icy][3] ];
-/*     _prefetch_halfspinor_for_store(r3);  */
+/*     _prefetch_halfspinor_for_store(r3); */
 
-/*     _bgl_load_reg0((*s).s0); */
-/*     _bgl_load_reg1((*s).s1); */
-/*     _bgl_load_reg1_up((*s).s2); */
-/*     _bgl_load_reg0_up((*s).s3); */
-/*     _bgl_vector_sub_reg0(); */
-/*     _bgl_vector_add_reg1(); */
     _bgl_vector_sub_rs3_from_rs0_reg0();
     _bgl_vector_add_rs2_to_rs1_reg1();
       
@@ -842,18 +801,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     up=&g_gauge_field[iz][0];
 #endif
 
-    _prefetch_su3(up+1);
+    _prefetch_su3(up);
     r0=&halfs[1][ g_halfpt[icy][0] ];
-/*     _prefetch_halfspinor_for_store(r0);  */
+/*     _prefetch_halfspinor_for_store(r0); */
 
-/*     _bgl_load_reg0((*s).s0); */
-/*     _bgl_load_reg1((*s).s1); */
-/*     _bgl_load_reg0_up((*s).s2); */
-/*     _bgl_load_reg1_up((*s).s3); */
-/*     _bgl_vector_i_mul_sub_reg0(); */
-/*     _bgl_vector_i_mul_add_reg1(); */
     _bgl_vector_i_mul_sub_rs2_from_rs0_reg0();
-    _bgl_vector_i_mul_add_rs2_to_rs1_reg1();
+    _bgl_vector_i_mul_add_rs3_to_rs1_reg1();
       
     _bgl_su3_inverse_multiply_double((*um));
     _bgl_vector_cmplxcg_mul_double(ka3);
@@ -864,8 +817,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   }
 
   /* Here we need to do some exchange for minus direction */
-#  ifdef MPI
-
+#  if (defined MPI && !defined _NO_COMM)
+  xchange_halffield_minus(ieo);
 #  endif
   /* Now we sum up and expand to full spinor */
   rp = halfs[0];

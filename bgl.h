@@ -458,6 +458,11 @@
   reg11 = __fxcxnpma(rs11, rs21, 1.); \
   reg12 = __fxcxnpma(rs12, rs22, 1.);
 
+#define _bgl_vector_i_mul_add_rs3_to_rs1_reg1() \
+  reg10 = __fxcxnpma(rs10, rs30, 1.); \
+  reg11 = __fxcxnpma(rs11, rs31, 1.); \
+  reg12 = __fxcxnpma(rs12, rs32, 1.);
+
 #define _bgl_vector_i_mul_add_reg1() \
   reg10 = __fxcxnpma(reg10, reg13, 1.); \
   reg11 = __fxcxnpma(reg11, reg14, 1.); \
@@ -675,6 +680,11 @@
   __dcbz(((char*)((unsigned long int)(addr)))); \
   __dcbz(((char*)((unsigned long int)(addr)))+32); \
   __dcbz(((char*)((unsigned long int)(addr)))+64);
+
+#define _prefetch_halfspinor(addr) \
+  __dcbt(((char*)((unsigned long int)(addr)))); \
+  __dcbt(((char*)((unsigned long int)(addr)))+32); \
+  __dcbt(((char*)((unsigned long int)(addr)))+64);
 
 #define _prefetch_spinor2(addr)			    \
   __prefetch_by_load(((char*)((unsigned long int)(addr))));	    \
