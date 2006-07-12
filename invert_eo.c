@@ -150,3 +150,14 @@ void Q_full(spinor * const Even_new, spinor * const Odd_new,
   assign_add_mul_r(Odd_new, g_spinor_field[DUM_DERI], -1., VOLUME/2);
   gamma5(Odd_new, Odd_new, VOLUME/2);
 }
+
+void M_minus_1_timesC(spinor * const Even_new, spinor * const Odd_new, 
+		      spinor * const Even, spinor * const Odd) {
+  /* Even sites */
+  Hopping_Matrix(EO, Even_new, Odd);
+  mul_one_pm_imu_inv(Even_new, 1.); 
+
+  /* Odd sites */
+  Hopping_Matrix(OE, Odd_new, Even);
+  mul_one_pm_imu_inv(Odd_new, 1.); 
+}

@@ -23,5 +23,6 @@ void M_full(spinor * const Even_new, spinor * const Odd_new,
 	    spinor * const Even, spinor * const Odd);
 void Q_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd);
-
+void M_minus_1_timesC(spinor * const Even_new, spinor * const Odd_new, 
+		      spinor * const Even, spinor * const Odd);
 #endif
