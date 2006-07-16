@@ -10,11 +10,12 @@
 #include "su3.h"
 #include "sse.h"
 
+#define _NEW__
+
 spinor * sp = NULL;
 spinor * sp_csg = NULL;
-extern halfspinor ** halfs;
-halfspinor * _halfs = NULL;
-
+extern halfspinor * HalfSpinor;
+halfspinor * HalfSpinor_;
 int init_spinor_field(const int V, const int nr) {
   int i = 0;
 
@@ -37,20 +38,19 @@ int init_spinor_field(const int V, const int nr) {
   }
 
 #ifdef _NEW__
-  _halfs = (halfspinor*)calloc(2*4*V+1, sizeof(spinor));
-  if(errno == ENOMEM) {
-    return(1);
-  }
-  halfs = (halfspinor**)malloc(2*sizeof(halfspinor*));
+#ifdef _USE_SHMEM
+  HalfSpinor_ = (halfspinor*)shmalloc((8*V+1)*sizeof(halfspinor));
+#else
+  HalfSpinor_ = (halfspinor*)calloc(8*V+1, sizeof(halfspinor));
+#endif
   if(errno == ENOMEM) {
     return(1);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
-  halfs[0] = (halfspinor*)(((unsigned long int)(_halfs)+ALIGN_BASE)&~ALIGN_BASE);
+  HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  halfs[0] = _halfs;
+  HalfSpinor_ = HalfSpinor_;
 #endif
-  halfs[1] = halfs[0] + 4*V;
 #endif
 
   return(0);
@@ -60,7 +60,7 @@ void free_spinor_field() {
 
   free(sp);
   free(sp_csg);
-  free(_halfs);
+  free(HalfSpinor_);
 }
 
 

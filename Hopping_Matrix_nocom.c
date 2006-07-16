@@ -32,5 +32,6 @@
 
 #define xchange_field(a, ieo) ;
 #define Hopping_Matrix Hopping_Matrix_nocom
+#define _NO_COMM 1
 
 #include "Hopping_Matrix.c"

@@ -116,6 +116,9 @@ int main(int argc,char *argv[])
 #endif
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
   j = init_spinor_field(VOLUMEPLUSRAND/2, 3*k_max);
+#if (defined  MPI)
+  init_field_xchange();
+#endif
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);

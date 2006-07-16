@@ -29,7 +29,8 @@
 #include "Hopping_Matrix.h"
 
 void xchange_field(spinor * const l, const int even);
-halfspinor ** halfs ALIGN;
+halfspinor * HalfSpinor ALIGN;
+halfspinor *** NBPointer;
 
 #if ((defined SSE2)||(defined SSE3))
 
@@ -536,17 +537,13 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int icx,icy,icz,ioff;
+  int i;
   int ix,iy,iz;
-  su3 *up ALIGN;
-  su3 *um ALIGN;
+  su3 *U ALIGN;
   spinor *s ALIGN;
-  halfspinor *r0 ALIGN;
-  halfspinor *r1 ALIGN;
-  halfspinor *r2 ALIGN;
-  halfspinor *r3 ALIGN;
+  halfspinor ** phi ALIGN;
   spinor *rn ALIGN;
-  halfspinor *rp ALIGN;
-  halfspinor *rm ALIGN;
+  halfspinor *r ALIGN;
   /* We have 32 registers available */
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
@@ -572,26 +569,17 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ioff = (VOLUME+RAND)/2;
   }
 
-  ix=g_eo2lexic[ioff];
-  iy=g_idn[ix][0]; 
-  icy=g_lexic2eosub[iy];
-
   /* s contains the source vector */
   /* r0,r1,r2,r3 contain the intermediate half spinor */
   s = k;
-  r0 = &halfs[0][ g_halfpt[icy][0] ];
 
-
-#if ((defined _GAUGE_COPY))
-  up=g_gauge_field_copy[ioff];
-#else
-  up=&g_gauge_field[iy][0];
-#endif
-  _prefetch_su3(up);
-  _prefetch_su3(up+1);
+  U=g_gauge_field_copy[ieo][0];
+  phi = NBPointer[ieo];
+  
+  _prefetch_su3(U);
   /**************** loop over all lattice sites ******************/
-  for(icx = ioff; icx < ((VOLUME)/2+ioff); icx++){
-    ix=g_eo2lexic[icx];
+  ix=0;
+  for(i = 0; i < (VOLUME)/2; i++){
     _bgl_load_rs0((*s).s0);
     _bgl_load_rs1((*s).s1);
     _bgl_load_rs2((*s).s2);
@@ -599,316 +587,212 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     s++; 
     _prefetch_spinor(s); 
     /*********************** direction +0 ************************/
-    iy=g_idn[ix][1]; 
-    icy=g_lexic2eosub[iy];
-    r1 =&halfs[0][ g_halfpt[icy][1] ];
-#if (!defined _GAUGE_COPY)
-    um=&g_gauge_field[iy][1]; 
-#else
-    um=up+1; 
-#endif
-    _prefetch_su3(um);
-/*     _prefetch_halfspinor_for_store(r1); */
+    _prefetch_su3(U+1);
 
     _bgl_vector_add_rs2_to_rs0_reg0();
     _bgl_vector_add_rs3_to_rs1_reg1();
 
-    _bgl_su3_multiply_double((*up));
+    _bgl_su3_multiply_double((*U));
     _bgl_vector_cmplx_mul_double(ka0);
     /* result is now in regx0, regx1, regx2 , x=0,1 */
 
-    _bgl_store_reg0_up((*r0).s0);
-    _bgl_store_reg1_up((*r0).s1);
+    _bgl_store_reg0_up((*phi[ix]).s0);
+    _bgl_store_reg1_up((*phi[ix]).s1);
+    U++;
+    ix++;
 
+    /*********************** direction -0 ************************/
+    _bgl_vector_sub_rs2_from_rs0_reg0();
+    _bgl_vector_sub_rs3_from_rs1_reg1();
+
+    _bgl_store_reg0_up((*phi[ix]).s0);
+    _bgl_store_reg1_up((*phi[ix]).s1);
+    ix++;
 
     /*********************** direction +1 ************************/
-
-    iy=g_idn[ix][2]; 
-    icy=g_lexic2eosub[iy];
-
-#ifndef _GAUGE_COPY
-    up=&g_gauge_field[iy][2]; 
-#else
-    up = um+1; 
-#endif
-    _prefetch_su3(up);
-    r2=&halfs[0][ g_halfpt[icy][2] ];
-    _prefetch_halfspinor_for_store(r2);  
+    _prefetch_su3(U+1);
 
     _bgl_vector_i_mul_add_rs3_to_rs0_reg0();
     _bgl_vector_i_mul_add_rs2_to_rs1_reg1();
 
-    _bgl_su3_multiply_double((*um));
+    _bgl_su3_multiply_double((*U));
     _bgl_vector_cmplx_mul_double(ka1);
 
-    _bgl_store_reg0_up((*r1).s0);
-    _bgl_store_reg1_up((*r1).s1);
+    _bgl_store_reg0_up((*phi[ix]).s0);
+    _bgl_store_reg1_up((*phi[ix]).s1);
+    ix++;
+    U++;
 
+    /*********************** direction -1 ************************/
+
+    _bgl_vector_i_mul_sub_rs3_from_rs0_reg0();
+    _bgl_vector_i_mul_sub_rs2_from_rs1_reg1();
+
+    _bgl_store_reg0_up((*phi[ix]).s0);
+    _bgl_store_reg1_up((*phi[ix]).s1);
+    ix++;
 
 
     /*********************** direction +2 ************************/
 
-    iy=g_idn[ix][3]; 
-    icy=g_lexic2eosub[iy];
-
-#ifndef _GAUGE_COPY
-    um=&g_gauge_field[iy][3]; 
-#else
-    um= up+1; 
-#endif
-    _prefetch_su3(um);
-    r3=&halfs[0][ g_halfpt[icy][3] ];
-/*     _prefetch_halfspinor_for_store(r3); */
+    _prefetch_su3(U+1);
 
     _bgl_vector_add_rs3_to_rs0_reg0();
     _bgl_vector_sub_rs2_from_rs1_reg1();
 
-    _bgl_su3_multiply_double((*up));
+    _bgl_su3_multiply_double((*U));
     _bgl_vector_cmplx_mul_double(ka2);
 
-    _bgl_store_reg0_up((*r2).s0);
-    _bgl_store_reg1_up((*r2).s1);
+    _bgl_store_reg0_up((*phi[ix]).s0);
+    _bgl_store_reg1_up((*phi[ix]).s1);
+    ix++;
+    U++;
 
+    /*********************** direction -2 ************************/
+
+    _bgl_vector_sub_rs3_from_rs0_reg0();
+    _bgl_vector_add_rs2_to_rs1_reg1();
+
+    _bgl_store_reg0_up((*phi[ix]).s0);
+    _bgl_store_reg1_up((*phi[ix]).s1);
+    ix++;
 
     /*********************** direction +3 ************************/
-    icz=icx+1;
-    if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
-    iz=g_eo2lexic[icz];
-    iy=g_idn[iz][0]; icy=g_lexic2eosub[iy];
 
-#ifndef _GAUGE_COPY
-    up=&g_gauge_field[iy][0]; 
-#else
-    up=um+1; 
-#endif
-    _prefetch_su3(up); 
-    r0=&halfs[0][ g_halfpt[icy][0] ];
-/*     _prefetch_halfspinor_for_store(r0); */
+    _prefetch_su3(U+1); 
 
     _bgl_vector_i_mul_add_rs2_to_rs0_reg0();
     _bgl_vector_i_mul_sub_rs3_from_rs1_reg1();
 
-    _bgl_su3_multiply_double((*um));
+    _bgl_su3_multiply_double((*U));
     _bgl_vector_cmplx_mul_double(ka3);
 
-    _bgl_store_reg0_up((*r3).s0);
-    _bgl_store_reg1_up((*r3).s1);
-
-    /************************ end of loop ************************/
-  }
-  _prefetch_spinor(k);
-  ix=g_eo2lexic[ioff];
-  iy=g_iup[ix][0]; 
-  icy=g_lexic2eosub[iy];
-
-  /* s contains the source vector */
-  s = k;
-  /* rp and rm contain the intermediate half spinor */
-  r0 = &halfs[1][ g_halfpt[icy][0] ];
-  _prefetch_halfspinor_for_store(r0);
-#if ((defined _GAUGE_COPY))
-  up=g_gauge_field_copy[ioff]; 
-#else
-  up=g_gauge_field[iy];
-#endif
-  _prefetch_su3(up);
-  _prefetch_su3(up+1);
-  /* Here we need to do some exchange for plus direction */
-#  if (defined MPI && !defined _NO_COMM)
-  xchange_halffield_plus(ieo);
-#  endif
-
-  /* Now all the minus directions */
-  for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    _bgl_load_rs0((*s).s0);
-    _bgl_load_rs1((*s).s1);
-    _bgl_load_rs2((*s).s2);
-    _bgl_load_rs3((*s).s3);
-    s++;
-    _prefetch_spinor(s);
-    ix=g_eo2lexic[icx];
-    /*********************** direction -0 ************************/
-    iy=g_iup[ix][1]; 
-    icy=g_lexic2eosub[iy];
-
-    um = up + 1;
-
-    _prefetch_su3(um);
-    r1=&halfs[1][ g_halfpt[icy][1] ];
-/*     _prefetch_halfspinor_for_store(r1); */
-
-    _bgl_vector_sub_rs2_from_rs0_reg0();
-    _bgl_vector_sub_rs3_from_rs1_reg1();
-
-    _bgl_su3_inverse_multiply_double((*up));
-    _bgl_vector_cmplxcg_mul_double(ka0);
-
-    _bgl_store_reg0_up((*r0).s0);
-    _bgl_store_reg1_up((*r0).s1);
-
-    /*********************** direction -1 ************************/
-
-    iy=g_iup[ix][2]; 
-    icy=g_lexic2eosub[iy];
-
-    up = um + 1;
-
-    _prefetch_su3(up);
-    r2=&halfs[1][ g_halfpt[icy][2] ];
-/*     _prefetch_halfspinor_for_store(r2);  */
-
-    _bgl_vector_i_mul_sub_rs3_from_rs0_reg0();
-    _bgl_vector_i_mul_sub_rs2_from_rs1_reg1();
-      
-    _bgl_su3_inverse_multiply_double((*um));
-    _bgl_vector_cmplxcg_mul_double(ka1);
-
-    _bgl_store_reg0_up((*r1).s0);
-    _bgl_store_reg1_up((*r1).s1);
-
-    /*********************** direction -2 ************************/
-
-    iy=g_iup[ix][3]; 
-    icy=g_lexic2eosub[iy];
-
-    um = up + 1;
-
-    _prefetch_su3(um);
-    r3=&halfs[1][ g_halfpt[icy][3] ];
-/*     _prefetch_halfspinor_for_store(r3); */
-
-    _bgl_vector_sub_rs3_from_rs0_reg0();
-    _bgl_vector_add_rs2_to_rs1_reg1();
-      
-    _bgl_su3_inverse_multiply_double((*up));
-    _bgl_vector_cmplxcg_mul_double(ka2);
-
-    _bgl_store_reg0_up((*r2).s0);
-    _bgl_store_reg1_up((*r2).s1);
-
+    _bgl_store_reg0_up((*phi[ix]).s0);
+    _bgl_store_reg1_up((*phi[ix]).s1);
+    ix++;
+    U++;
 
     /*********************** direction -3 ************************/
 
-    icz=icx+1;
-    if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
-    iz=g_eo2lexic[icz];
-    iy=g_iup[iz][0]; 
-    icy=g_lexic2eosub[iy];
-
-#  if (defined _GAUGE_COPY)
-    up = um + 1;
-#else
-    up=&g_gauge_field[iz][0];
-#endif
-
-    _prefetch_su3(up);
-    r0=&halfs[1][ g_halfpt[icy][0] ];
-/*     _prefetch_halfspinor_for_store(r0); */
-
     _bgl_vector_i_mul_sub_rs2_from_rs0_reg0();
     _bgl_vector_i_mul_add_rs3_to_rs1_reg1();
-      
-    _bgl_su3_inverse_multiply_double((*um));
-    _bgl_vector_cmplxcg_mul_double(ka3);
 
-    _bgl_store_reg0_up((*r3).s0);
-    _bgl_store_reg1_up((*r3).s1);
-      
+    _bgl_store_reg0_up((*phi[ix]).s0);
+    _bgl_store_reg1_up((*phi[ix]).s1);
+    ix++;
+
+    /************************ end of loop ************************/
   }
 
-  /* Here we need to do some exchange for minus direction */
 #  if (defined MPI && !defined _NO_COMM)
-  xchange_halffield_minus(ieo);
+/*   xchange_halfspinor(ieo); */
 #  endif
+
   /* Now we sum up and expand to full spinor */
-  rp = halfs[0];
-  rm = halfs[1];
+  r = HalfSpinor;
   rn = l;
   _prefetch_spinor_for_store(rn); 
-  for(icx = 0; icx < (VOLUME)/2; icx++){
-    rn = l + icx; 
+  for(i = 0; i < (VOLUME)/2; i++){
+    rn = l + i; 
     _prefetch_spinor_for_store(rn+1);
     /*********************** direction +0 ************************/
-    _bgl_load_rs0((*rp).s0);
+    _bgl_load_rs0((*r).s0);
     rs20 = rs00;
     rs21 = rs01;
     rs22 = rs02;
-    _bgl_load_rs1((*rp).s1);
+    _bgl_load_rs1((*r).s1);
     rs30 = rs10;
     rs31 = rs11;
     rs32 = rs12;
-    _prefetch_halfspinor(rp+4);
-    rp++; 
+    r++; 
 
     /*********************** direction -0 ************************/
-    _bgl_load_reg0_up((*rm).s0);
-    _bgl_load_reg1_up((*rm).s1);
+    _prefetch_su3(U+1);
+
+    _bgl_load_reg0((*r).s0);
+    _bgl_load_reg1((*r).s1);
+
+    _bgl_su3_inverse_multiply_double((*U));
+    _bgl_vector_cmplxcg_mul_double(ka0);
 
     _bgl_add_to_rs0_reg0();
     _bgl_sub_from_rs2_reg0();
     _bgl_add_to_rs1_reg1();
     _bgl_sub_from_rs3_reg1();
-    _prefetch_halfspinor(rm+4);
-    rm++; 
+    r++; 
+    U++;
 
     /*********************** direction +1 ************************/
-    _bgl_load_reg0_up((*rp).s0);
-    _bgl_load_reg1_up((*rp).s1);
+    _bgl_load_reg0_up((*r).s0);
+    _bgl_load_reg1_up((*r).s1);
 
     _bgl_add_to_rs0_reg0();
     _bgl_i_mul_sub_from_rs3_reg0();
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_sub_from_rs2_reg1();
-    _prefetch_halfspinor(rp+4);
-    rp++; 
+    r++; 
 
     /*********************** direction -1 ************************/
-    _bgl_load_reg0_up((*rm).s0);
-    _bgl_load_reg1_up((*rm).s1);
+    _prefetch_su3(U+1);
+
+    _bgl_load_reg0((*r).s0);
+    _bgl_load_reg1((*r).s1);
+
+    _bgl_su3_inverse_multiply_double((*U));
+    _bgl_vector_cmplxcg_mul_double(ka1);
 
     _bgl_add_to_rs0_reg0();
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_add_to_rs3_reg0();
     _bgl_i_mul_add_to_rs2_reg1();      
-    _prefetch_halfspinor(rm+4);
-    rm++;
+    r++;
+    U++;
 
     /*********************** direction +2 ************************/
-    _bgl_load_reg0_up((*rp).s0);
-    _bgl_load_reg1_up((*rp).s1);
+    _bgl_load_reg0_up((*r).s0);
+    _bgl_load_reg1_up((*r).s1);
 
     _bgl_add_to_rs0_reg0();
     _bgl_add_to_rs1_reg1();
     _bgl_sub_from_rs2_reg1();
     _bgl_add_to_rs3_reg0();
-    _prefetch_halfspinor(rp+4);
-    rp++;
+    r++;
 
     /*********************** direction -2 ************************/
-    _bgl_load_reg0_up((*rm).s0);
-    _bgl_load_reg1_up((*rm).s1);
+    _prefetch_su3(U+1);
+
+    _bgl_load_reg0((*r).s0);
+    _bgl_load_reg1((*r).s1);
+
+    _bgl_su3_inverse_multiply_double((*U));
+    _bgl_vector_cmplxcg_mul_double(ka2);
 
     _bgl_add_to_rs0_reg0();
     _bgl_add_to_rs1_reg1();
     _bgl_add_to_rs2_reg1();
     _bgl_sub_from_rs3_reg0();
-    _prefetch_halfspinor(rm+4);
-    rm++;
+    r++;
+    U++;
 
     /*********************** direction +3 ************************/
-    _bgl_load_reg0_up((*rp).s0);
-    _bgl_load_reg1_up((*rp).s1);
+    _bgl_load_reg0_up((*r).s0);
+    _bgl_load_reg1_up((*r).s1);
 
     _bgl_add_to_rs0_reg0();
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_sub_from_rs2_reg0();
     _bgl_i_mul_add_to_rs3_reg1();
     _prefetch_halfspinor(rp+4);
-    rp++;
+    r++;
 
     /*********************** direction -3 ************************/
-    _bgl_load_reg0_up((*rm).s0);
-    _bgl_load_reg1_up((*rm).s1);
+    _prefetch_su3(U+1);
+
+    _bgl_load_reg0((*r).s0);
+    _bgl_load_reg1((*r).s1);
+
+    _bgl_su3_inverse_multiply_double((*U));
+    _bgl_vector_cmplxcg_mul_double(ka3);
 
     _bgl_add_to_rs0_reg0();
     _bgl_store_rs0((*rn).s0);
@@ -920,7 +804,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_i_mul_sub_from_rs3_reg1();
     _bgl_store_rs3((*rn).s3);
     _prefetch_halfspinor(rm+4);
-    rm++;
+    r++;
+    U++;
   }
 }
 #elif defined XLC

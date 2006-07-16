@@ -130,25 +130,6 @@ void xchange_halffield_plus(const int ieo) {
 #    endif
 #  endif
   MPI_Startall(reqcount, &prequests[0]);
-#  if defined PARALLELXYZT
-  reqcount = 2;
-  MPI_Waitall(reqcount, &prequests[6], &pstatus[6]);
-  reqcount = 6;
-  /* empty buffer ! */
-  /* This is now depending on whether the field is */
-  /* even or odd */
-  if(ieo == 1) { 
-    for(ix = 0; ix < T*LX*LY/2; ix++) { 
-      halfs[0][ g_halffield_z_ipt_even[ix] ] = halffield_buffer_z[ix];  
-    } 
-  } 
-  else { 
-    for(ix = 0; ix < T*LX*LY/2; ix++) { 
-      halfs[0][ g_halffield_z_ipt_odd[ix] ] = halffield_buffer_z[ix];  
-    } 
-  } 
-#  endif
-  MPI_Waitall(reqcount, prequests, pstatus);
   return;
 }
 
@@ -173,6 +154,20 @@ void xchange_halffield_minus(const int ieo) {
   MPI_Startall(reqcount, &prequests[8]);
 #  if defined PARALLELXYZT
   reqcount = 2;
+  MPI_Waitall(reqcount, &prequests[6], &pstatus[6]);
+  /* empty buffer ! */
+  /* This is now depending on whether the field is */
+  /* even or odd */
+  if(ieo == 1) { 
+    for(ix = 0; ix < T*LX*LY/2; ix++) { 
+      halfs[0][ g_halffield_z_ipt_even[ix] ] = halffield_buffer_z[ix];  
+    } 
+  } 
+  else { 
+    for(ix = 0; ix < T*LX*LY/2; ix++) { 
+      halfs[0][ g_halffield_z_ipt_odd[ix] ] = halffield_buffer_z[ix];  
+    } 
+  } 
   MPI_Waitall(reqcount, &prequests[14], &pstatus[14]);
   reqcount = 6;
   /* empty buffer ! */
@@ -180,15 +175,16 @@ void xchange_halffield_minus(const int ieo) {
   /* even or odd */
   if(ieo == 1) { 
     for(ix = T*LX*LY/2; ix < T*LX*LY; ix++) { 
-      halfs[0][ g_halffield_z_ipt_even[ix] ] = halffield_buffer_z2[ix];  
+      halfs[1][ g_halffield_z_ipt_even[ix] ] = halffield_buffer_z2[ix];  
     } 
   } 
   else { 
     for(ix = T*LX*LY/2; ix < T*LX*LY; ix++) { 
-      halfs[0][ g_halffield_z_ipt_odd[ix] ] = halffield_buffer_z2[ix];  
+      halfs[1][ g_halffield_z_ipt_odd[ix] ] = halffield_buffer_z2[ix];  
     } 
   } 
 #  endif
+  MPI_Waitall(reqcount, prequests, pstatus);
   MPI_Waitall(reqcount, &prequests[8], &pstatus[8]);
   return;
 }

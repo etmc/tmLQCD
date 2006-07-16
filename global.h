@@ -98,7 +98,7 @@ EXTERN int * g_csg_index_array[4];
 EXTERN int g_csg_N[8];
 
 EXTERN su3 ** g_gauge_field;
-EXTERN su3 ** g_gauge_field_copy;
+EXTERN su3 **** g_gauge_field_copy;
 
 EXTERN su3adj ** moment;
 EXTERN su3adj ** df0;
