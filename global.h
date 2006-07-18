@@ -44,9 +44,6 @@
 /* #define DUM_BI_MATRIX DUM_BI_SOLVER+11 */
 #define NO_OF_BISPINORFIELDS (DUM_BI_MATRIX+6)
 
-
-#define NO_OF_CHI_UP_SPINORFIELDS (100+2)
-#define NO_OF_CHI_DN_SPINORFIELDS (100+2)
 /* End IF PHMC*/
 
 
@@ -88,6 +85,7 @@ EXTERN int dop_n_cheby;
 EXTERN double * dop_cheby_coef;
 EXTERN int ptilde_n_cheby;
 EXTERN double * ptilde_cheby_coef;
+EXTERN double stilde_low, stilde_max;
 /* END PHMC */
 
 
