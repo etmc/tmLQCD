@@ -258,7 +258,7 @@ double chebtilde_eval(int M, double *dd, double s){
 *****************************************************************************/
 
 
-double stopeps_ptilde=1.0e-11;
+double stopeps_ptilde=1.0e-10;
 
 
 void degree_of_Ptilde(){
@@ -314,7 +314,7 @@ void degree_of_Ptilde(){
 
 
    if(g_proc_id == g_stdio_proc){
-     printf("\n determine the degree of the polynomial:\n");
+     printf("\n determine the degree of the polynomial :   Stop=%e \n", stopeps_ptilde);
      fflush(stdout);
    }
 
@@ -340,16 +340,16 @@ void degree_of_Ptilde(){
 
 
     diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);
-    temp=sqrt(square_norm(&aux2s[0],VOLUME/2)/square_norm(&ss[0],VOLUME/2)/4.0);
+    temp=square_norm(&aux2s[0],VOLUME/2)/square_norm(&ss[0],VOLUME/2)/4.0;
 
     diff(&aux2c[0],&auxc[0],&sc[0],VOLUME/2);
-    temp2=sqrt(square_norm(&aux2c[0],VOLUME/2)/square_norm(&sc[0],VOLUME/2)/4.0);
+    temp2=square_norm(&aux2c[0],VOLUME/2)/square_norm(&sc[0],VOLUME/2)/4.0;
 
     if(g_epsbar == 0){
       temp2 = 0.0;
     }
     if(g_proc_id == g_stdio_proc) {
-      printf("At n=%d  differences:  UP=%e  DN=%e stop=%e \n", ptilde_n_cheby, temp, temp2, stopeps_ptilde);
+      printf("At n=%d  || differences ||^2 :  UP=%e  DN=%e \n", ptilde_n_cheby, temp, temp2);
     }
 
 
@@ -357,15 +357,15 @@ void degree_of_Ptilde(){
     for(j=ptilde_n_cheby; j<NTILDE_CHEBYMAX; j++){ 
       sum += fabs(ptilde_cheby_coef[j]);
     }
-    printf(" Sum | d_n | = %e \n", sum);
+    printf(" Sum remaining | d_n | = %e \n", sum);
 
     /* if(temp < stopeps_ptilde && temp2 < stopeps_ptilde){ */  /* break; */
 
     if(sum < stopeps_ptilde){  
       
-      printf("\n        Achieved Accuracies for Ptilde : \n");
+      printf("\n        Achieved Accuracies for Ptilde :  Stop=%e \n", stopeps_ptilde);
       printf(" Uniform: Sum |d_n|=%e \n", sum);
-      printf(" RND:  | (Ptilde P S P Ptilde - 1)X |/2X:  UP=%e  DN=%e stop=%e \n",temp, temp2, stopeps_ptilde);
+      printf(" RND:  || (Ptilde P S P Ptilde - 1)X ||^2 / || 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
 
       temp = chebtilde_eval(ptilde_n_cheby, ptilde_cheby_coef, cheb_evmin);
       temp *= cheb_eval(dop_n_cheby, dop_cheby_coef, cheb_evmin);
