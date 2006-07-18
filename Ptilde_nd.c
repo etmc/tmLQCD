@@ -11,14 +11,13 @@
 #include "linalg_eo.h"
 #include "start.h"
 #include "tm_operators.h"
-#include "Ptilde_nd.h"
 #include "Nondegenerate_Matrix.h"
+#include "chebyshev_polynomial_nd.h"
+#include "Ptilde_nd.h"
+
 
 #define PI 3.141592653589793
 
-/*
-extern double cheb_evmin, cheb_evmax;
-*/
 
 double func_tilde(double u, double exponent){
 
@@ -227,6 +226,24 @@ void Poly_tilde_ND(spinor *R_s, spinor *R_c, double *dd, int n,
 }
   
 
+double chebtilde_eval(int M, double *dd, double s){
+
+  double d=0,ddd=0, sv, z, z2, res;
+  int j;
+
+  z = (2.0*s - cheb_evmin - cheb_evmax)/(double)(cheb_evmax - cheb_evmin);
+  z2 = 2.0*z;
+
+  for(j=M-1; j>=1; j--){
+    sv = d;
+    d = z2*d - ddd + dd[j];
+    ddd = sv;
+    }
+
+  res = z*d - ddd + 0.5*dd[0];
+
+  return(res);  
+}
 
 /**************************************************************************
  *
@@ -241,20 +258,22 @@ void Poly_tilde_ND(spinor *R_s, spinor *R_c, double *dd, int n,
 *****************************************************************************/
 
 
-double stopeps_ptilde=1.0e-10;
+double stopeps_ptilde=1.0e-11;
 
 
 void degree_of_Ptilde(){
-  int i;
+  int i, j;
   double temp, temp2;
   static int ini=0;
+
+  double sum=0.0;
 
   spinor *ss=NULL, *ss_=NULL, *sc=NULL, *sc_=NULL;
   spinor *auxs=NULL, *auxs_=NULL, *auxc=NULL, *auxc_=NULL;
   spinor *aux2s=NULL, *aux2s_=NULL, *aux2c=NULL, *aux2c_=NULL;
 
   if(ini==0){
-    ptilde_cheby_coef = calloc(N_CHEBYMAX,sizeof(double));
+    ptilde_cheby_coef = calloc(NTILDE_CHEBYMAX,sizeof(double)); 
     ini=1;
   }   
 
@@ -283,12 +302,13 @@ void degree_of_Ptilde(){
 #endif
 
 
-   /* evmin and evmax have been defined in chebyshev_pol_ND  */
+   printf(" \n In Ptilde: EVmin = %f  EVmax = %f  Norm=%f \n", cheb_evmin, cheb_evmax, invmaxev);
+      
+   Ptilde_cheb_coefs(cheb_evmin, cheb_evmax, ptilde_cheby_coef, NTILDE_CHEBYMAX, -1.0); 
 
-   Ptilde_cheb_coefs(cheb_evmin, cheb_evmax, ptilde_cheby_coef, N_CHEBYMAX, -1.0);
-   
    temp=1.0;
    temp2=1.0;
+
    random_spinor_field(ss,VOLUME/2);
    random_spinor_field(sc,VOLUME/2);
 
@@ -298,51 +318,69 @@ void degree_of_Ptilde(){
      fflush(stdout);
    }
 
-   /* OLD WAY NOT USED HERE
-  ptilde_n_cheby=(int)5./sqrt(cheb_evmin);
-   */
+   ptilde_n_cheby = dop_n_cheby;
 
-   ptilde_n_cheby=dop_n_cheby;
-  for(i = 0;i < 100 ; i++){
-    
-    /* if (ptilde_n_cheby >= N_CHEBYMAX) { */
-    if (ptilde_n_cheby > N_CHEBYMAX) {
+   for(i = 0;i < 100 ; i++){
+
+    if (ptilde_n_cheby > NTILDE_CHEBYMAX) {
       if(g_proc_id == g_stdio_proc){
-	printf("Error: n_cheby=%d > N_CHEBYMAX=%d\n",ptilde_n_cheby,N_CHEBYMAX);
+	printf("Error: n_cheby=%d > NTILDE_CHEBYMAX=%d\n",ptilde_n_cheby,NTILDE_CHEBYMAX);
 	printf("Increase n_chebymax\n");
       }
       errorhandler(35,"degree_of_polynomial");
     }
+    
 
-
-    /* either directly Ptilde X - X */
+    /* Ptilde P S P  Ptilde X - X */
     Poly_tilde_ND(&auxs[0], &auxc[0], ptilde_cheby_coef, ptilde_n_cheby, &ss[0], &sc[0]);
+    QdaggerQ_poly(&aux2s[0], &aux2c[0], dop_cheby_coef, dop_n_cheby, &auxs[0], &auxc[0]);
+    Q_Qdagger_ND(&auxs[0], &auxc[0], &aux2s[0], &aux2c[0]);
+    QdaggerQ_poly(&aux2s[0], &aux2c[0], dop_cheby_coef, dop_n_cheby, &auxs[0], &auxc[0]);
+    Poly_tilde_ND(&auxs[0], &auxc[0], ptilde_cheby_coef, ptilde_n_cheby, &aux2s[0], &aux2c[0]);
 
 
     diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);
-    temp=square_norm(&aux2s[0],VOLUME/2)/square_norm(&ss[0],VOLUME/2)/4.0;
+    temp=sqrt(square_norm(&aux2s[0],VOLUME/2)/square_norm(&ss[0],VOLUME/2)/4.0);
 
     diff(&aux2c[0],&auxc[0],&sc[0],VOLUME/2);
-    temp2=square_norm(&aux2c[0],VOLUME/2)/square_norm(&sc[0],VOLUME/2)/4.0;
+    temp2=sqrt(square_norm(&aux2c[0],VOLUME/2)/square_norm(&sc[0],VOLUME/2)/4.0);
 
     if(g_epsbar == 0){
       temp2 = 0.0;
     }
     if(g_proc_id == g_stdio_proc) {
-      printf("At n=%d  differences:  UP=%e  DN=%e stop=%e \n",ptilde_n_cheby,temp, temp2, stopeps_ptilde);
-  
-    }  
-     if(temp < stopeps_ptilde && temp2 < stopeps_ptilde){ /* break;*/
-      printf("differences:  UP=%e  DN=%e \n",temp, temp2);
-      printf(" Latest (TILDE) polynomial degree = %d \n \n", ptilde_n_cheby);  
-    break;
+      printf("At n=%d  differences:  UP=%e  DN=%e stop=%e \n", ptilde_n_cheby, temp, temp2, stopeps_ptilde);
     }
-      
 
-    /* OLD INCREMENTATION
-    ptilde_n_cheby*=1.05;
-    BUT WE NEED AN EVEN DEGREE !!!! */
-    ptilde_n_cheby+=2;
+
+    sum=0;
+    for(j=ptilde_n_cheby; j<NTILDE_CHEBYMAX; j++){ 
+      sum += fabs(ptilde_cheby_coef[j]);
+    }
+    printf(" Sum | d_n | = %e \n", sum);
+
+    /* if(temp < stopeps_ptilde && temp2 < stopeps_ptilde){ */  /* break; */
+
+    if(sum < stopeps_ptilde){  
+      
+      printf("\n        Achieved Accuracies for Ptilde : \n");
+      printf(" Uniform: Sum |d_n|=%e \n", sum);
+      printf(" RND:  | (Ptilde P S P Ptilde - 1)X |/2X:  UP=%e  DN=%e stop=%e \n",temp, temp2, stopeps_ptilde);
+
+      temp = chebtilde_eval(ptilde_n_cheby, ptilde_cheby_coef, cheb_evmin);
+      temp *= cheb_eval(dop_n_cheby, dop_cheby_coef, cheb_evmin);
+      temp *= cheb_evmin;
+      temp *= cheb_eval(dop_n_cheby, dop_cheby_coef, cheb_evmin);
+      temp *= chebtilde_eval(ptilde_n_cheby, ptilde_cheby_coef, cheb_evmin);
+      temp = 0.5*fabs(temp - 1);
+      printf(" Delta_IR at s=%f:    | Ptilde P s_low P Ptilde - 1 |/2 = %e \n", cheb_evmin, temp);
+
+      printf("\n Latest (TILDE) polynomial degree = %d \n \n", ptilde_n_cheby);
+
+     break;
+    }
+
+    ptilde_n_cheby+=1;
   }
 
 
