@@ -16,9 +16,7 @@
 
 
 #define PI 3.141592653589793
-/*
-double cheb_evmin, cheb_evmax;
-*/
+
 double func(double u, double exponent){
   return pow(u,exponent);
 }
@@ -29,13 +27,10 @@ void chebyshev_coefs(double aa, double bb, double c[], int n, double exponent){
   double fac,bpa,bma,*f;
   double inv_n;
 
-  if(g_proc_id == g_stdio_proc)
   printf("\n hello in  chebyshev_polynomial\n");
   inv_n=1./(double)n;
-  if(g_proc_id == g_stdio_proc)
   printf("n= %d inv_n=%e \n",n,inv_n);
   f=calloc(n,sizeof(double));/*vector(0,n-1);*/
-  if(g_proc_id == g_stdio_proc)
   printf("allocation !!!\n");
   fflush(stdout);
   bma=0.5*(bb-aa);
@@ -217,6 +212,25 @@ void QdaggerQ_poly(spinor *R_s, spinor *R_c, double *c, int n,
   
 
 
+double cheb_eval(int M, double *c, double s){
+
+  double d=0,dd=0, sv, z, z2, res;
+  int j;
+
+  z = (2.0*s - cheb_evmin - cheb_evmax)/(double)(cheb_evmax - cheb_evmin);
+  z2 = 2.0*z;
+
+  for(j=M-1; j>=1; j--){
+    sv = d;
+    d = z2*d - dd + c[j];
+    dd = sv;
+    }
+
+  res = z*d - dd + 0.5*c[0];
+
+  return(res);  
+}
+
 /**************************************************************************
  *
  * The externally accessible function is
@@ -233,13 +247,15 @@ void QdaggerQ_poly(spinor *R_s, spinor *R_c, double *c, int n,
 *****************************************************************************/
 
 
-double stopeps=1.0e-08;
+double stopeps=1.0e-10;
 
 
 void degree_of_polynomial_nd(){
-  int i;
+  int i, j;
   double temp, temp2;
   static int ini=0;
+
+  double sum=0.0;
 
   spinor *ss=NULL, *ss_=NULL, *sc=NULL, *sc_=NULL;
   spinor *auxs=NULL, *auxs_=NULL, *auxc=NULL, *auxc_=NULL;
@@ -276,20 +292,13 @@ void degree_of_polynomial_nd(){
    aux2c=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
 #endif
 
-   /* Here the definition of the lowest / largest EW */
-   /*
-   cheb_evmin = 0.031;  
-   cheb_evmax= 1.0;
-   */
-   if(g_proc_id == g_stdio_proc){
-     printf(" EVmin = %f  EVmax = %f  Norm=%f \n", cheb_evmin, cheb_evmax, invmaxev);
-     printf(" MU=%f EPS=%f  KAPPA=%f \n", g_mubar, g_epsbar, g_kappa);
-   }
+   printf(" \n In P: EVmin = %f  EVmax = %f  Norm=%f \n", cheb_evmin, cheb_evmax, invmaxev);
 
    chebyshev_coefs(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, -0.5);
    
    temp=1.0;
    temp2=1.0;
+
    random_spinor_field(ss,VOLUME/2);
    random_spinor_field(sc,VOLUME/2);
 
@@ -298,14 +307,9 @@ void degree_of_polynomial_nd(){
      fflush(stdout);
    }
 
-   /*   TRY WITH A VERY LOW  n  */
-  dop_n_cheby=7;
-  /*
-  dop_n_cheby=(int)5./sqrt(cheb_evmin);
-   */
+  dop_n_cheby=1;
   for(i = 0;i < 100 ; i++){
 
-    /*    if (dop_n_cheby >= N_CHEBYMAX) { */
     if (dop_n_cheby > N_CHEBYMAX) {
       if(g_proc_id == g_stdio_proc){
 	printf("Error: n_cheby=%d > N_CHEBYMAX=%d\n",dop_n_cheby,N_CHEBYMAX);
@@ -314,7 +318,6 @@ void degree_of_polynomial_nd(){
       errorhandler(35,"degree_of_polynomial");
     }
 
- 
 
     QdaggerQ_poly(&auxs[0], &auxc[0], dop_cheby_coef, dop_n_cheby, &ss[0], &sc[0]);
     
@@ -323,35 +326,44 @@ void degree_of_polynomial_nd(){
     QdaggerQ_poly(&auxs[0], &auxc[0], dop_cheby_coef, dop_n_cheby, &aux2s[0], &aux2c[0]);
 
 
-
     diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);
-    temp=square_norm(&aux2s[0],VOLUME/2)/square_norm(&ss[0],VOLUME/2)/4.0;
+    temp=sqrt(square_norm(&aux2s[0],VOLUME/2)/square_norm(&ss[0],VOLUME/2)/4.0);
 
     diff(&aux2c[0],&auxc[0],&sc[0],VOLUME/2);
-    temp2=square_norm(&aux2c[0],VOLUME/2)/square_norm(&sc[0],VOLUME/2)/4.0;
+    temp2=sqrt(square_norm(&aux2c[0],VOLUME/2)/square_norm(&sc[0],VOLUME/2)/4.0);
 
     if(g_epsbar == 0){ 
       temp2 = 0.0;
     }
     if(g_proc_id == g_stdio_proc) {      
-      printf("At n=%d  differences:  UP=%e  DN=%e stop=%e \n",dop_n_cheby,temp, temp2, stopeps);
+      printf("At n=%d  differences:  UP=%e  DN=%e stop=%e \n",dop_n_cheby, temp, temp2, stopeps);
     }  
+   
 
-    if(dop_n_cheby == 87){
-      printf("STOP differences:  UP=%e  DN=%e stop=%e \n",temp, temp2, stopeps);
-      printf("STOP Latest (FIRST) polynomial degree = %d \n", dop_n_cheby);      
-      break;
+      sum=0;
+      for(j=dop_n_cheby; j<N_CHEBYMAX; j++){
+	sum += fabs(dop_cheby_coef[j]);
+      }
+      printf(" Sum | c_n | =%e stop=%e Max=%d \n", sum, stopeps, N_CHEBYMAX);
+
+    if(sum < stopeps){  
+      
+      printf("\n        Achieved Accuracies for P : \n");
+      printf(" Uniform: Sum |c_n|=%e \n", sum);
+      printf(" RND:  | (P S P - 1)X |/2X:  UP=%e  DN=%e stop=%e \n",temp, temp2, stopeps);
+
+      temp = cheb_eval(dop_n_cheby, dop_cheby_coef, cheb_evmin);
+      temp *= cheb_evmin;
+      temp *= cheb_eval(dop_n_cheby, dop_cheby_coef, cheb_evmin);
+      temp = 0.5*fabs(temp - 1);
+      printf(" Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", cheb_evmin, temp);
+
+      printf("\n Latest (FIRST) polynomial degree = %d \n \n", dop_n_cheby);
+
+     break;
     }
 
-    if(temp < stopeps && temp2 < stopeps){ /* break; */
-      printf("differences:  UP=%e  DN=%e stop=%e \n",temp, temp2, stopeps);
-      printf(" Latest (FIRST) polynomial degree = %d \n", dop_n_cheby);      
-      break;
-    }
-
-    /* OLD INCREMENTATION 
-    dop_n_cheby*=1.05;
-    BUT WE NEED AN EVEN DEGREE !!!! */
+    /* RECALL THAT WE NEED AN EVEN DEGREE !!!! */
     dop_n_cheby+=2;
   }
 
