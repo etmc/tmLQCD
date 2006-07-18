@@ -247,7 +247,7 @@ double cheb_eval(int M, double *c, double s){
 *****************************************************************************/
 
 
-double stopeps=1.0e-10;
+double stopeps=1.0e-05;
 
 
 void degree_of_polynomial_nd(){
@@ -303,7 +303,7 @@ void degree_of_polynomial_nd(){
    random_spinor_field(sc,VOLUME/2);
 
    if(g_proc_id == g_stdio_proc){
-     printf("\n determine the degree of the polynomial:\n");
+     printf("\n determine the degree of the polynomial :   Stop=%e \n" , stopeps);
      fflush(stdout);
    }
 
@@ -327,30 +327,30 @@ void degree_of_polynomial_nd(){
 
 
     diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);
-    temp=sqrt(square_norm(&aux2s[0],VOLUME/2)/square_norm(&ss[0],VOLUME/2)/4.0);
+    temp=square_norm(&aux2s[0],VOLUME/2)/square_norm(&ss[0],VOLUME/2)/4.0;
 
     diff(&aux2c[0],&auxc[0],&sc[0],VOLUME/2);
-    temp2=sqrt(square_norm(&aux2c[0],VOLUME/2)/square_norm(&sc[0],VOLUME/2)/4.0);
+    temp2=square_norm(&aux2c[0],VOLUME/2)/square_norm(&sc[0],VOLUME/2)/4.0;
 
     if(g_epsbar == 0){ 
       temp2 = 0.0;
     }
     if(g_proc_id == g_stdio_proc) {      
-      printf("At n=%d  differences:  UP=%e  DN=%e stop=%e \n",dop_n_cheby, temp, temp2, stopeps);
+      printf("At n=%d  || differences ||^2 :  UP=%e  DN=%e \n",dop_n_cheby, temp, temp2);
     }  
    
 
-      sum=0;
-      for(j=dop_n_cheby; j<N_CHEBYMAX; j++){
-	sum += fabs(dop_cheby_coef[j]);
-      }
-      printf(" Sum | c_n | =%e stop=%e Max=%d \n", sum, stopeps, N_CHEBYMAX);
+    sum=0;
+    for(j=dop_n_cheby; j<N_CHEBYMAX; j++){
+      sum += fabs(dop_cheby_coef[j]);
+    }
+    printf(" Sum remaining | c_n | = %e \n", sum);
 
     if(sum < stopeps){  
       
-      printf("\n        Achieved Accuracies for P : \n");
+      printf("\n        Achieved Accuracies for P :   Stop=%e \n", stopeps);
       printf(" Uniform: Sum |c_n|=%e \n", sum);
-      printf(" RND:  | (P S P - 1)X |/2X:  UP=%e  DN=%e stop=%e \n",temp, temp2, stopeps);
+      printf(" RND:  || (P S P - 1)X ||^2 /|| 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
 
       temp = cheb_eval(dop_n_cheby, dop_cheby_coef, cheb_evmin);
       temp *= cheb_evmin;
