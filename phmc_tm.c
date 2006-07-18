@@ -111,7 +111,6 @@ int main(int argc,char *argv[]) {
   complex pl, pl4;
 
   /* START IF PHMC */  
-
   int g_nev, max_iter_ev;
   double stop_prec_ev;
 
@@ -299,20 +298,9 @@ int main(int argc,char *argv[]) {
   }
 
   /* IF PHMC: Bispinors and Chi`s  memory allocation */
-
   j = init_bispinor_field(VOLUME/2, NO_OF_BISPINORFIELDS);
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for Bispinor fields! Aborting...\n");
-    exit(0);
-  }
-  j = init_chi_up_spinor_field(VOLUMEPLUSRAND/2, NO_OF_CHI_UP_SPINORFIELDS);
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for PHMC Chi_up fields! Aborting...\n");
-    exit(0);
-  }
-  j = init_chi_dn_spinor_field(VOLUMEPLUSRAND/2, NO_OF_CHI_DN_SPINORFIELDS);
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for PHMC Chi_dn fields! Aborting...\n");
     exit(0);
   }
   j = init_chi_up_copy(VOLUMEPLUSRAND/2);
@@ -464,20 +452,36 @@ int main(int argc,char *argv[]) {
      polinomial in  sqrt(s) .
   */
 
+  stilde_low = 0.01000;
+  stilde_max = 3.40000;
+
+  cheb_evmin = stilde_low;
+  cheb_evmax = stilde_max;
+  cheb_evmin=cheb_evmin/(cheb_evmax);
+  j=(int)(cheb_evmin*1000);
+  cheb_evmin = j*0.001;
+  invmaxev=1./(sqrt(cheb_evmax));
+  cheb_evmax = 1.0;
+
   Const=fopen(filename_const,"r");
   fscanf(Const, " %lf \n", &Cpol);
   fclose(Const);
   Cpol = sqrt(Cpol);
-
-  invmaxev = 1./(sqrt(1.2*3.402));
-  cheb_evmin = 0.0310;  /* g_mubar^2 - g_epsbar^2 */
-  cheb_evmax = 1.0000;
-
+  
   degree_of_polynomial_nd();
-  degree_of_Ptilde();
 
-  dop_n_cheby = 29;
-  ptilde_n_cheby = 29;
+  j = init_chi_up_spinor_field(VOLUMEPLUSRAND/2, (dop_n_cheby+1));
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for PHMC Chi_up fields! Aborting...\n");
+    exit(0);
+  }
+  j = init_chi_dn_spinor_field(VOLUMEPLUSRAND/2, (dop_n_cheby+1));
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for PHMC Chi_dn fields! Aborting...\n");
+    exit(0);
+  }
+
+  degree_of_Ptilde();
   
   roo = calloc((2*dop_n_cheby-2),sizeof(complex));
 
