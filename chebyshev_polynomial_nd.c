@@ -29,10 +29,13 @@ void chebyshev_coefs(double aa, double bb, double c[], int n, double exponent){
   double fac,bpa,bma,*f;
   double inv_n;
 
+  if(g_proc_id == g_stdio_proc)
   printf("\n hello in  chebyshev_polynomial\n");
   inv_n=1./(double)n;
+  if(g_proc_id == g_stdio_proc)
   printf("n= %d inv_n=%e \n",n,inv_n);
   f=calloc(n,sizeof(double));/*vector(0,n-1);*/
+  if(g_proc_id == g_stdio_proc)
   printf("allocation !!!\n");
   fflush(stdout);
   bma=0.5*(bb-aa);
@@ -230,7 +233,7 @@ void QdaggerQ_poly(spinor *R_s, spinor *R_c, double *c, int n,
 *****************************************************************************/
 
 
-double stopeps=1.0e-10;
+double stopeps=1.0e-08;
 
 
 void degree_of_polynomial_nd(){
@@ -278,8 +281,10 @@ void degree_of_polynomial_nd(){
    cheb_evmin = 0.031;  
    cheb_evmax= 1.0;
    */
-   printf(" EVmin = %f  EVmax = %f  Norm=%f \n", cheb_evmin, cheb_evmax, invmaxev);
-   printf(" MU=%f EPS=%f  KAPPA=%f \n", g_mubar, g_epsbar, g_kappa);
+   if(g_proc_id == g_stdio_proc){
+     printf(" EVmin = %f  EVmax = %f  Norm=%f \n", cheb_evmin, cheb_evmax, invmaxev);
+     printf(" MU=%f EPS=%f  KAPPA=%f \n", g_mubar, g_epsbar, g_kappa);
+   }
 
    chebyshev_coefs(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, -0.5);
    
@@ -331,6 +336,13 @@ void degree_of_polynomial_nd(){
     if(g_proc_id == g_stdio_proc) {      
       printf("At n=%d  differences:  UP=%e  DN=%e stop=%e \n",dop_n_cheby,temp, temp2, stopeps);
     }  
+
+    if(dop_n_cheby == 87){
+      printf("STOP differences:  UP=%e  DN=%e stop=%e \n",temp, temp2, stopeps);
+      printf("STOP Latest (FIRST) polynomial degree = %d \n", dop_n_cheby);      
+      break;
+    }
+
     if(temp < stopeps && temp2 < stopeps){ /* break; */
       printf("differences:  UP=%e  DN=%e stop=%e \n",temp, temp2, stopeps);
       printf(" Latest (FIRST) polynomial degree = %d \n", dop_n_cheby);      
