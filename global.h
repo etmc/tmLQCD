@@ -60,6 +60,7 @@
 #define tiny_t  1.0e-20
 
 #define N_CHEBYMAX 2000
+#define NTILDE_CHEBYMAX 2000
 
 
 #if defined MAIN_PROGRAM
