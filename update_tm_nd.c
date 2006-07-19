@@ -143,7 +143,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   random_spinor_field(g_spinor_field[2], VOLUME/2);
   /* compute the square of the norm */
   enerphi0 = square_norm(g_spinor_field[2], VOLUME/2);
-  printf(" Start HMC Energy = %e \n", enerphi0);
+  if(g_proc_id == g_stdio_proc) printf(" Start HMC Energy = %e \n", enerphi0);
 
 
 
@@ -151,19 +151,21 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
   /* Here come the definition of the "heavy" 2-flavoured pseudofermion */
 
-  printf(" Here comes the computation of H_old with \n \n");
-  printf(" First: random spinors and their norm  \n ");
-
   random_spinor_field(g_chi_up_spinor_field[0], VOLUME/2);
   enerphi0 += square_norm(g_chi_up_spinor_field[0], VOLUME/2);
 
-  printf(" OLD Ennergy UP %e \n", enerphi0);
+  if(g_proc_id == g_stdio_proc){
+    printf(" Here comes the computation of H_old with \n \n");
+    printf(" First: random spinors and their norm  \n ");
+    printf(" OLD Ennergy UP %e \n", enerphi0);
+  }
 
   random_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2);
   enerphi0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
 
-  printf(" OLD Energy  DN + UP %e \n", enerphi0);
-  printf(" \n ");
+  if(g_proc_id == g_stdio_proc){
+    printf(" OLD Energy  DN + UP %e \n\n", enerphi0);
+  }
 
   QNon_degenerate(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0]);
  
@@ -182,13 +184,15 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   assign(g_chi_dn_copy, g_chi_dn_spinor_field[0], VOLUME/2);
 
 
-  printf(" Then: evaluate Norm of pseudofermion heatbath BHB \n ");
   temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2);
-  printf(" Norm of BHB up squared %e \n", temp);
+  if(g_proc_id == g_stdio_proc){
+    printf(" Then: evaluate Norm of pseudofermion heatbath BHB \n ");
+    printf(" Norm of BHB up squared %e \n", temp);
+  }
   temp += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
-  printf(" Norm of BHB up + BHB dn squared %e \n", temp);
-
-  printf(" \n ");
+  if(g_proc_id == g_stdio_proc){
+    printf(" Norm of BHB up + BHB dn squared %e \n\n", temp);
+  }
 
   /* END IF PHMC */
 
@@ -259,7 +263,8 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     */    
 
     /* IF PHMC */
-    printf(" Here comes the NEW leap-frog integration \n \n");
+    if(g_proc_id == g_stdio_proc) printf(" Here comes the NEW leap-frog integration \n \n");
+
     leap_frog_ND(dtau, Nsteps, nsmall); 
   }
   else if(integtyp == 2) {
@@ -303,12 +308,11 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], VOLUME/2);
   /* Compute the energy contr. from first field */
   enerphi0x = square_norm(g_spinor_field[2], VOLUME/2);
-  printf(" Final HMC Energy = %e \n", enerphi0x);
+  if(g_proc_id == g_stdio_proc) printf(" Final HMC Energy = %e \n", enerphi0x);
 
 
   /* IF PHMC */
 
-  printf(" Here comes the computation of H_new with \n \n");
   /* APPLY COMBINATION OF CLENSHAW POLYNS TO PHI AND CONTRACT WITH PHI^DAG*/
   /* HERE WE EVALUATE eq. 9 in last note till the second order 
 
@@ -336,8 +340,12 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   temp = square_norm(g_chi_dn_spinor_field[ij], VOLUME/2);
   Ener[ij] += temp;
 
-  printf(" At j=%d  P+HMC Final Energy %e \n", ij, enerphi0x+Ener[ij]);
-  printf(" At j=%d  PHMC Only Final Energy %e \n", ij, Ener[ij]);
+  if(g_proc_id == g_stdio_proc){
+    printf(" Here comes the computation of H_new with \n \n");
+
+    printf(" At j=%d  P+HMC Final Energy %e \n", ij, enerphi0x+Ener[ij]);
+    printf(" At j=%d  PHMC Only Final Energy %e \n", ij, Ener[ij]);
+  }
 
   /* Here comes the loop for the evaluation of A, A^2, ...  */
   for(j=1; j<1; j++){ /* To omit corrections just set  j<1 */
@@ -379,7 +387,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
 
   enerphi0x += Ener[ij];
-  printf(" At j = %d  P=%e +HMC Final Energy %e \n", ij, Ener[ij], enerphi0x);
+  if(g_proc_id == g_stdio_proc) printf(" At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], enerphi0x);
   
   /* END IF PHMC */
 
@@ -409,19 +417,21 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     enerphi2x = square_norm(g_spinor_field[5], VOLUME/2);
   }
 
-  printf(" Energies: Old = %f New = %f   Exp(-Delta H_heavy) = %f \n", enerphi0, enerphi0x, exp(enerphi0-enerphi0x));
+  if(g_proc_id == g_stdio_proc){
+    printf(" Energies: Old = %f New = %f   Exp(-Delta H_heavy) = %f \n", enerphi0, enerphi0x, exp(enerphi0-enerphi0x));
 
-  printf(" \n Contributions to the Hamiltonian due to \n"); 
-  printf(" Pi=%f NewPi=%f   Gauge=%f NewGauge=%f \n", enep, enepx, g_beta*gauge_energy, g_beta*new_gauge_energy);
-  printf(" BHB1=%f NewBHB1=%f  \n", enerphi0, enerphi0x);
-  printf(" BHB2=%f NewBHB2=%f   BHB3=%f NewBHB3=%f \n", enerphi1, enerphi1x, enerphi2, enerphi2x);
+    printf(" \n Contributions to the Hamiltonian due to \n");
+    printf(" Pi=%f NewPi=%f   Gauge=%f NewGauge=%f \n", enep, enepx, g_beta*gauge_energy, g_beta*new_gauge_energy);
+    printf(" BHB1=%f NewBHB1=%f  \n", enerphi0, enerphi0x);
+    printf(" BHB2=%f NewBHB2=%f   BHB3=%f NewBHB3=%f \n", enerphi1, enerphi1x, enerphi2, enerphi2x);
+  }
 
   /* Compute the energy difference */
   dh= +enepx - g_beta*new_gauge_energy - enep + g_beta*gauge_energy
       + enerphi0x - enerphi0 + enerphi1x - enerphi1 + enerphi2x - enerphi2; 
   expmdh = exp(-dh);
 
-  printf("  Exp(-Delta H) = %f \n \n", expmdh);
+  if(g_proc_id == g_stdio_proc) printf("  Exp(-Delta H) = %f \n \n", expmdh);
       
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
@@ -441,8 +451,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
   if(expmdh > yy[0]) {
     accept = 1;
-
-   printf("\n \n !!!!!!!   IT ACCEPTED HERE   !!!!!!!! \n \n");
+    if(g_proc_id == g_stdio_proc) printf("\n \n !!!!!!!   IT ACCEPTED HERE   !!!!!!!! \n \n");
 
   }
   else {
