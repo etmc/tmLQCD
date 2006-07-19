@@ -313,13 +313,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
   /* IF PHMC */
 
-  /* APPLY COMBINATION OF CLENSHAW POLYNS TO PHI AND CONTRACT WITH PHI^DAG*/
-  /* HERE WE EVALUATE eq. 9 in last note till the second order 
-
-  /* assume LATEST    phi   is stored in  g_chi_dn_spinor_field[0] */
-
   /* This is needed if we consider only "1" in eq. 9 */
-
   assign(g_chi_up_spinor_field[1], g_chi_up_copy, VOLUME/2);
   assign(g_chi_dn_spinor_field[1], g_chi_dn_copy,  VOLUME/2);
 
