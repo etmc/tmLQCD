@@ -27,11 +27,14 @@ void chebyshev_coefs(double aa, double bb, double c[], int n, double exponent){
   double fac,bpa,bma,*f;
   double inv_n;
 
-  printf("\n hello in  chebyshev_polynomial\n");
+
   inv_n=1./(double)n;
-  printf("n= %d inv_n=%e \n",n,inv_n);
   f=calloc(n,sizeof(double));/*vector(0,n-1);*/
-  printf("allocation !!!\n");
+  if(g_proc_id == g_stdio_proc){
+    printf("\n hello in  chebyshev_polynomial\n");
+    printf("n= %d inv_n=%e \n",n,inv_n);
+    printf("allocation !!!\n");
+  }
   fflush(stdout);
   bma=0.5*(bb-aa);
   bpa=0.5*(bb+aa);
@@ -247,7 +250,7 @@ double cheb_eval(int M, double *c, double s){
 *****************************************************************************/
 
 
-double stopeps=1.0e-05;
+double stopeps=1.0e-02;
 
 
 void degree_of_polynomial_nd(){
@@ -292,22 +295,19 @@ void degree_of_polynomial_nd(){
    aux2c=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
 #endif
 
-   printf(" \n In P: EVmin = %f  EVmax = %f  Norm=%f \n", cheb_evmin, cheb_evmax, invmaxev);
 
    chebyshev_coefs(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, -0.5);
-   
-   temp=1.0;
-   temp2=1.0;
 
    random_spinor_field(ss,VOLUME/2);
    random_spinor_field(sc,VOLUME/2);
 
    if(g_proc_id == g_stdio_proc){
+     printf(" \n In P: EVmin = %f  EVmax = %f  \n", cheb_evmin, cheb_evmax);
      printf("\n determine the degree of the polynomial :   Stop=%e \n" , stopeps);
      fflush(stdout);
    }
 
-  dop_n_cheby=1;
+  dop_n_cheby=7;
   for(i = 0;i < 100 ; i++){
 
     if (dop_n_cheby > N_CHEBYMAX) {
@@ -344,23 +344,24 @@ void degree_of_polynomial_nd(){
     for(j=dop_n_cheby; j<N_CHEBYMAX; j++){
       sum += fabs(dop_cheby_coef[j]);
     }
-    printf(" Sum remaining | c_n | = %e \n", sum);
+    if(g_proc_id == g_stdio_proc) printf(" Sum remaining | c_n |=%e \n", sum);
 
     if(sum < stopeps){  
-      
-      printf("\n        Achieved Accuracies for P :   Stop=%e \n", stopeps);
-      printf(" Uniform: Sum |c_n|=%e \n", sum);
-      printf(" RND:  || (P S P - 1)X ||^2 /|| 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
+      if(g_proc_id == g_stdio_proc){
+	printf("\n        Achieved Accuracies for P :   Stop=%e \n", stopeps);
+	printf(" Uniform: Sum |c_n|=%e \n", sum);
+	printf(" RND:  || (P S P - 1)X ||^2 /|| 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
+      }
 
       temp = cheb_eval(dop_n_cheby, dop_cheby_coef, cheb_evmin);
       temp *= cheb_evmin;
       temp *= cheb_eval(dop_n_cheby, dop_cheby_coef, cheb_evmin);
       temp = 0.5*fabs(temp - 1);
-      printf(" Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", cheb_evmin, temp);
-
-      printf("\n Latest (FIRST) polynomial degree = %d \n \n", dop_n_cheby);
-
-     break;
+      if(g_proc_id == g_stdio_proc){
+	printf(" Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", cheb_evmin, temp);
+	printf("\n Latest (FIRST) polynomial degree = %d \n \n", dop_n_cheby);
+      }
+      break;
     }
 
     /* RECALL THAT WE NEED AN EVEN DEGREE !!!! */

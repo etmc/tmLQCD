@@ -47,11 +47,13 @@ void Ptilde_cheb_coefs(double aa, double bb, double dd[], int n, double exponent
   double fac,bpa,bma,*f;
   double inv_n;
 
-  printf("\n hello in  PTILDE-chebyshev_polynomial\n");
   inv_n=1./(double)n;
-  printf("n= %d inv_n=%e \n",n,inv_n);
   f=calloc(n,sizeof(double));/*vector(0,n-1);*/
-  printf("allocation !!!\n");
+  if(g_proc_id == g_stdio_proc){
+    printf("\n hello in  PTILDE-chebyshev_polynomial\n");
+    printf("n= %d inv_n=%e \n",n,inv_n);
+    printf("allocation !!!\n");
+  }
   fflush(stdout);
   bma=0.5*(bb-aa);
   bpa=0.5*(bb+aa);
@@ -301,19 +303,14 @@ void degree_of_Ptilde(){
    aux2c=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
 #endif
 
-
-   printf(" \n In Ptilde: EVmin = %f  EVmax = %f  Norm=%f \n", cheb_evmin, cheb_evmax, invmaxev);
       
    Ptilde_cheb_coefs(cheb_evmin, cheb_evmax, ptilde_cheby_coef, NTILDE_CHEBYMAX, -1.0); 
-
-   temp=1.0;
-   temp2=1.0;
 
    random_spinor_field(ss,VOLUME/2);
    random_spinor_field(sc,VOLUME/2);
 
-
    if(g_proc_id == g_stdio_proc){
+     printf(" \n In Ptilde: EVmin = %f  EVmax = %f\n", cheb_evmin, cheb_evmax);
      printf("\n determine the degree of the polynomial :   Stop=%e \n", stopeps_ptilde);
      fflush(stdout);
    }
@@ -357,15 +354,16 @@ void degree_of_Ptilde(){
     for(j=ptilde_n_cheby; j<NTILDE_CHEBYMAX; j++){ 
       sum += fabs(ptilde_cheby_coef[j]);
     }
-    printf(" Sum remaining | d_n | = %e \n", sum);
+    if(g_proc_id == g_stdio_proc) printf(" Sum remaining | d_n | = %e\n", sum);
 
     /* if(temp < stopeps_ptilde && temp2 < stopeps_ptilde){ */  /* break; */
 
     if(sum < stopeps_ptilde){  
-      
-      printf("\n        Achieved Accuracies for Ptilde :  Stop=%e \n", stopeps_ptilde);
-      printf(" Uniform: Sum |d_n|=%e \n", sum);
-      printf(" RND:  || (Ptilde P S P Ptilde - 1)X ||^2 / || 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
+      if(g_proc_id == g_stdio_proc){
+	printf("\n        Achieved Accuracies for Ptilde :  Stop=%e \n", stopeps_ptilde);
+	printf(" Uniform: Sum |d_n|=%e \n", sum);
+	printf(" RND:  || (Ptilde P S P Ptilde - 1)X ||^2 / || 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
+      }
 
       temp = chebtilde_eval(ptilde_n_cheby, ptilde_cheby_coef, cheb_evmin);
       temp *= cheb_eval(dop_n_cheby, dop_cheby_coef, cheb_evmin);
@@ -373,11 +371,11 @@ void degree_of_Ptilde(){
       temp *= cheb_eval(dop_n_cheby, dop_cheby_coef, cheb_evmin);
       temp *= chebtilde_eval(ptilde_n_cheby, ptilde_cheby_coef, cheb_evmin);
       temp = 0.5*fabs(temp - 1);
-      printf(" Delta_IR at s=%f:    | Ptilde P s_low P Ptilde - 1 |/2 = %e \n", cheb_evmin, temp);
-
-      printf("\n Latest (TILDE) polynomial degree = %d \n \n", ptilde_n_cheby);
-
-     break;
+      if(g_proc_id == g_stdio_proc){
+	printf(" Delta_IR at s=%f:    | Ptilde P s_low P Ptilde - 1 |/2 = %e \n", cheb_evmin, temp);
+	printf("\n Latest (TILDE) polynomial degree = %d\n\n", ptilde_n_cheby);
+      }
+      break;
     }
 
     ptilde_n_cheby+=1;
