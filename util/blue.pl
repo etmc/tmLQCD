@@ -9,7 +9,7 @@ use Getopt::Long;
 
 use constant VERSION => '$Revision 0.0$';
 
-my $debug=1;
+my $debug=0;
 my $mpirun;
 my $llstat;
 my $schedbgl_cmd;
@@ -45,15 +45,18 @@ my $getoptRet=GetOptions ( 'help|?' => \&usage,
                            'quiet'   => sub { $verbose = 0 },
                            'dryrun|n!' => \$dryrun,
                            'at' => \$at,
-			   'executable' => \$executable,
-			   'runpath' => \$runpath,
-			   'logfile' => \$logfile,
-			   'mode' => \$mode,
+			   'executable=s' => \$executable,
+			   'runpath=s' => \$runpath,
+			   'logfile=s' => \$logfile,
+			   'mode=s' => \$mode,
                            );
 exit -1 unless ($getoptRet);
 
 my ($resid)=@ARGV;
 usage() unless (defined($resid));
+if ($verbose > 0) {
+  printf("resid = %s exe=%s dry=%s path=%s logfile=%s mode=%s verbose=%s\n", $resid, $executable, $dryrun, $runpath, $logfile, $mode, $verbose);
+}
 
 if ($at) {
     submitAtJob($resid);
@@ -79,6 +82,7 @@ sub submitAtJob {
     open(ATSCRIPT, "> $atShellScript");
     print ATSCRIPT <<EOF;
 #!/bin/sh
+sleep 5m
 $atPerlScript --executable $executable --runpath $runpath --logfile $logfile --mode $mode $resid
 EOF
     close ATSCRIPT;
@@ -96,15 +100,15 @@ EOF
 ############################## run #############################################
 sub run {
     my ($resid)=@_;
-    
     bglAvailable($ENV{USER},$resid,-1);
 
     my %reservationParameters=bglJobParameters($resid);
     my $partition=$reservationParameters{partition};
-    
+
     my $command = "$mpirun -partition $partition -mode $mode -exe $executable -cwd $runpath > ".
 	"$runpath/$logfile.$reservationParameters{resid}";
     
+#    waitForReservationTime(%reservationParameters);
     waitForBglInitialize(%reservationParameters);
     
     print "Running: $command\n";
@@ -140,7 +144,7 @@ sub bglTime2atTime {
     my $year=substr $date, 2,2;
     my $month=substr $date, 5,2;
     my $day=substr $date, 8,2;
-    return (sprintf("%s %s.%s.%s",$time,$month,$day,$year));
+    return (sprintf("%s %s.%s.%s",$time,$day,$month,$year));
 }
 
 sub bglJobParameters {
