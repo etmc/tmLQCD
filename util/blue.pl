@@ -20,7 +20,7 @@ if ($debug) {
     $llstat="echo 'R11 $ENV{USER} init'";
     $runpath = $ENV{HOME};
 } else {
-    $mpirun = "/bin/echo";
+    $mpirun = "/usr/bin/mpirun";
     $schedbgl_cmd="sched_bgl -l";
     $llstat="llstat";
     $runpath = "/home5/hch02/hch026/bglhome/b4.05_L32T64_k0.157025_mu0.003/";    
@@ -32,14 +32,14 @@ my $partition = 'R11 ';
 my $mode = 'VN';
 my $executable = "/home5/hch02/hch026/bglhome/bin/hmc_tm_xyzt";
 my $logfile = "runlog";
-
+my $args = "";
 # 
 #my @startingtimes = (0, 6, 12);
 #my @startingdays  = (29, 29, 30);
 
 
 
-my ($verbose,$dryrun,$at)=(0,0);
+my ($verbose,$dryrun,$at,$nodelete)=(0,0,0,0);
 my $getoptRet=GetOptions ( 'help|?' => \&usage,
                            'verbose|v+' => \$verbose,
                            'quiet'   => sub { $verbose = 0 },
@@ -49,6 +49,8 @@ my $getoptRet=GetOptions ( 'help|?' => \&usage,
 			   'runpath=s' => \$runpath,
 			   'logfile=s' => \$logfile,
 			   'mode=s' => \$mode,
+			   'nodelete' => \$nodelete,
+			   'args=s' => \$args,
                            );
 exit -1 unless ($getoptRet);
 
@@ -78,12 +80,16 @@ sub submitAtJob {
 	printf(STDERR "Wrong username (running under %s, submitting for %s)\n",$ENV{USER},$reservationParameters{user});
 	exit -1;
     }
+    my $nodel = " ";
+    if($nodelete) {
+      $nodel = "--nodelete";
+    }
     
     open(ATSCRIPT, "> $atShellScript");
     print ATSCRIPT <<EOF;
 #!/bin/sh
 sleep 5m
-$atPerlScript --executable $executable --runpath $runpath --logfile $logfile --mode $mode $resid
+$atPerlScript --executable $executable --runpath $runpath --logfile $logfile --mode $mode --args $args $nodel $resid
 EOF
     close ATSCRIPT;
     my $attime=bglTime2atTime($reservationParameters{start});
@@ -105,7 +111,7 @@ sub run {
     my %reservationParameters=bglJobParameters($resid);
     my $partition=$reservationParameters{partition};
 
-    my $command = "$mpirun -partition $partition -mode $mode -exe $executable -cwd $runpath > ".
+    my $command = "$mpirun -partition $partition -mode $mode -args \"$args\" -exe $executable -cwd $runpath > ".
 	"$runpath/$logfile.$reservationParameters{resid}";
     
 #    waitForReservationTime(%reservationParameters);
@@ -113,7 +119,11 @@ sub run {
     
     print "Running: $command\n";
     my $errorstatus = system "$command" unless($dryrun);
-    
+
+# We may want to delete the reservation if the job finished
+# such that we save allocation time
+    system "sched_bgl -d $resid" unless($dryrun || $nodelete);
+
     exit 0;
     ############## we might want to extend here one day ###########################
     
@@ -140,6 +150,8 @@ sub bglTime2atTime {
     # YYYY.MM.DD_HH:MM
     # format of at time must be
     # HH:MM MMDDYY
+    # no, I think it must be
+    # HH:MM DDMMYY (Carsten)
     my ($date,$time)=split '_', $bglTime;
     my $year=substr $date, 2,2;
     my $month=substr $date, 5,2;
@@ -216,7 +228,9 @@ sub usage {
     --executable              full path to executable
     --runpath                 path in which directory to run
     --logfile                 logfile
-    --mode                    mode of the blue gene
+    --mode                    mode of the blue gene, VN or CO [default=VN]
+    --nodelete                do not delete reservation at end of job
+    --args                    arguments to be given to the executable
 
 EndOfUsage
     exit(0);
