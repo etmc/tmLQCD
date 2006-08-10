@@ -89,7 +89,7 @@ sub submitAtJob {
     print ATSCRIPT <<EOF;
 #!/bin/sh
 sleep 5m
-$atPerlScript --executable $executable --runpath $runpath --logfile $logfile --mode $mode --args $args $nodel $resid
+$atPerlScript --executable $executable --runpath $runpath --logfile $logfile --mode $mode --args "$args" $nodel $resid
 EOF
     close ATSCRIPT;
     my $attime=bglTime2atTime($reservationParameters{start});
