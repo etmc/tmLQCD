@@ -314,8 +314,6 @@ int main(int argc,char *argv[]) {
   zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME/2);
   zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME/2);
 
-
-
     
   /*construct the filenames for the observables and the parameters*/
   strcpy(datafilename,filename);  strcat(datafilename,".data");
@@ -454,19 +452,23 @@ int main(int argc,char *argv[]) {
      S = Q Q^dag         
      When  "S"  is applied, we call  invmaxev  twice !!! */
 
+  /* cheb_evmin=2*(g_mubar*g_mubar - g_epsbar*g_epsbar);   CONS. DEF. of eps ... to be tested */
   temp=cheb_evmin;
-  temp2 = cheb_evmax;
-  /* OLD DEFINITION OF EPSILON ... EMPIRICAL NORMALISATION 
-  cheb_evmin=cheb_evmin/(cheb_evmax*1.2);
-  */
-  /* NEW DEFINITION OF EPSILON ... VERY CONSERVATIVE */
-  cheb_evmin=2*(g_mubar*g_mubar - g_epsbar*g_epsbar);
-  j=(int)(cheb_evmin*10000);
-  cheb_evmin = j*0.0001;
+  temp2=cheb_evmax;
 
-  invmaxev=1./(sqrt(cheb_evmax*1.2)); 
+  stilde_low = 0.01000;
+  stilde_max = 3.40000;
+  stilde_low = cheb_evmin/2;
+  stilde_max = cheb_evmax*1.2;
 
-  cheb_evmax=cheb_evmax/cheb_evmax;
+  cheb_evmin = stilde_low;
+  cheb_evmax = stilde_max;
+  cheb_evmin=cheb_evmin/(cheb_evmax);
+  j=(int)(cheb_evmin*1000);
+  cheb_evmin = j*0.001;
+  invmaxev=1./(sqrt(cheb_evmax));
+  cheb_evmax = 1.0;
+
 
   if(startoption == 3){
     Inoutputs=fopen(filename_inout,"a");
@@ -474,42 +476,25 @@ int main(int argc,char *argv[]) {
   else{
     Inoutputs=fopen(filename_inout,"w");
   }
-  fprintf(Inoutputs, " %f %f %f \n", cheb_evmin, cheb_evmax, invmaxev);
+  fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
   fclose(Inoutputs);
-
-  /* THIS IS THE OVERALL CONSTANT */
-  /*  Cpol = pow(13.243330570,50); */
-  /* expressed as the product 100 identical constants */
-
-  /*  Cpol = sqrt(13.243330570); */
-  /* write Cpol as the result of the simple-program files (BigC^(1/2))^1/2 
-     since  BigC^(1/2)  is the constant appearing in each factor of the 
-     multiplication defining the monomial basis representation of the 
-     polinomial in s,  while its square root  (BigC^(1/2))^1/2  is the 
-     constant appearing in the multiplication representing the 
-     polinomial in  sqrt(s) .
-  */
-
-  Const=fopen(filename_const,"r");
-  fscanf(Const, " %lf \n", &Cpol);
-  fclose(Const);
-  Cpol = sqrt(Cpol);
 
   degree_of_polynomial_nd();
 
-  /* Chi spinors allocation */
-  j = init_chi_up_spinor_field(VOLUMEPLUSRAND/2, dop_n_cheby+1);
+  /* IF PHMC: Chi`s-spinors  memory allocation */
+  j = init_chi_up_spinor_field(VOLUMEPLUSRAND/2, (dop_n_cheby+1));
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for PHMC Chi_up fields! Aborting...\n");
     exit(0);
   }
-  j = init_chi_dn_spinor_field(VOLUMEPLUSRAND/2, dop_n_cheby+1);
+  j = init_chi_dn_spinor_field(VOLUMEPLUSRAND/2, (dop_n_cheby+1));
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for PHMC Chi_dn fields! Aborting...\n");
     exit(0);
   }
   j = init_chi_up_copy(VOLUMEPLUSRAND/2);
   j = init_chi_dn_copy(VOLUMEPLUSRAND/2);
+  /* End PHMC */
 
   degree_of_Ptilde();
     
@@ -518,10 +503,23 @@ int main(int argc,char *argv[]) {
   }
   else{
     Infos_ev=fopen(filename_infos,"w");
-    fprintf(Infos_ev, "  EV_min    Ev_max   n    s_low     s_max    normalisation (by max*1.2) \n");
+    fprintf(Infos_ev, "  EV_min    EV_max      Low       Max   n   epsilon  normalisation \n");
   }
-  fprintf(Infos_ev, " %f  %f  %d  %f  %f     %f \n", temp, temp2, dop_n_cheby-1, cheb_evmin, cheb_evmax, invmaxev);
+  fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f    %f \n", temp, temp2, stilde_low, stilde_max, dop_n_cheby-1, cheb_evmin, invmaxev);
   fclose(Infos_ev);
+
+  /* THIS IS THE OVERALL CONSTANT */
+  /* write Cpol as the result of the simple-program files (BigC^(1/2))^1/2 
+     since  BigC^(1/2)  is the constant appearing in each factor of the 
+     multiplication defining the monomial basis representation of the 
+     polinomial in s,  while its square root  (BigC^(1/2))^1/2  is the 
+     constant appearing in the multiplication representing the 
+     polinomial in  sqrt(s) .
+  */
+  Const=fopen(filename_const,"r");
+  fscanf(Const, " %lf \n", &Cpol);
+  fclose(Const);
+  Cpol = sqrt(Cpol);
 
   roo = calloc((2*dop_n_cheby-2),sizeof(complex));
 
