@@ -503,9 +503,9 @@ int main(int argc,char *argv[]) {
   }
   else{
     Infos_ev=fopen(filename_infos,"w");
-    fprintf(Infos_ev, "  EV_min    EV_max      Low       Max   n   epsilon  normalisation \n");
+    fprintf(Infos_ev, "  EV_min    EV_max      Low       Max      n    epsilon   normalisation \n");
   }
-  fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f    %f \n", temp, temp2, stilde_low, stilde_max, dop_n_cheby-1, cheb_evmin, invmaxev);
+  fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f     %f \n", temp, temp2, stilde_low, stilde_max, dop_n_cheby-1, cheb_evmin, invmaxev);
   fclose(Infos_ev);
 
   /* THIS IS THE OVERALL CONSTANT */
