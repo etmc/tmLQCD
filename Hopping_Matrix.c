@@ -29,7 +29,7 @@
 #include "Hopping_Matrix.h"
 
 void xchange_field(spinor * const l, const int even);
-halfspinor * HalfSpinor ALIGN;
+halfspinor * HalfSpinor=NULL ALIGN;
 halfspinor *** NBPointer;
 
 #if ((defined SSE2)||(defined SSE3))
@@ -694,7 +694,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   _prefetch_spinor_for_store(rn); 
   for(i = 0; i < (VOLUME)/2; i++){
     rn = l + i; 
-    _prefetch_spinor_for_store(rn+1);
+    _prefetch_spinor_for_store(rn);
     /*********************** direction +0 ************************/
     _bgl_load_rs0((*r).s0);
     rs20 = rs00;
@@ -782,7 +782,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_sub_from_rs2_reg0();
     _bgl_i_mul_add_to_rs3_reg1();
-    _prefetch_halfspinor(rp+4);
     r++;
 
     /*********************** direction -3 ************************/
@@ -803,7 +802,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_store_rs1((*rn).s1);
     _bgl_i_mul_sub_from_rs3_reg1();
     _bgl_store_rs3((*rn).s3);
-    _prefetch_halfspinor(rm+4);
     r++;
     U++;
   }

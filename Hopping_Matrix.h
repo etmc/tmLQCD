@@ -10,6 +10,9 @@
 
 #include "su3.h"
 
+extern halfspinor * HalfSpinor ALIGN;
+extern halfspinor *** NBPointer;
+
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k);
 
 #endif
