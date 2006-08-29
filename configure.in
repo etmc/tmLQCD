@@ -18,9 +18,6 @@ fi
 if test "$host_vendor" = "cray"; then
   ac_cv_c_bigendian=yes
 fi
-if test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
-  CC=/opt/ibmcmp/vac/7.0/bin/blrts_xlc
-fi
 
 AC_PROG_CC
 AC_C_CONST
