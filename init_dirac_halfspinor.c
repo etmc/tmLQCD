@@ -19,7 +19,7 @@ int init_dirac_halfspinor() {
   NBPointer = (halfspinor***) malloc(2*sizeof(halfspinor**));
   NBPointer_ = (halfspinor**) malloc(8*(VOLUME+RAND)*sizeof(halfpinor*));
   NBPointer[0] = NBPointer_[0];
-  NBPointer[1] = NBpointer_[8*(VOLUME+RAND)/2];
+  NBPointer[1] = NBPointer_[8*(VOLUME+RAND)/2];
 
   /* Memory for HalfSpinor must be allocated already */
   if(HalfSpinor == NULL) {
@@ -34,7 +34,7 @@ int init_dirac_halfspinor() {
       x = (j-t*(LX*LY*LZ))/(LY*LZ);
       y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
       z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
-      for(mu = 0; mu < 4; m++) {
+      for(mu = 0; mu < 4; mu++) {
 	NBPointer[ieo][8*i + 2*mu + 0] = &HalfSpinor[ 8*g_lexic2eosub[g_idn[j][mu]] + 2*mu + 1];
 	NBPointer[ieo][8*i + 2*mu + 1] = &HalfSpinor[ 8*g_lexic2eosub[g_iup[j][mu]] + 2*mu + 0];
       }
