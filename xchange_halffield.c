@@ -25,7 +25,7 @@
 #include "mpi_init.h"
 #include "su3.h"
 #include "Hopping_Matrix.h"
-#include "xchange_halffied.h"
+#include "xchange_halffield.h"
 
 
 #ifdef BGL
@@ -116,22 +116,22 @@ void xchange_halffield(const int ieo) {
   /* even or odd */
   if(ieo == 1) { 
     for(ix = 0; ix < T*LX*LY/2; ix++) { 
-      field_buffer_z[ix] = l[ g_field_z_ipt_even[ix] ];  
+/*       field_buffer_z[ix] = l[ g_field_z_ipt_even[ix] ];   */
     } 
   } 
   else { 
     for(ix = 0; ix < T*LX*LY/2; ix++) { 
-      field_buffer_z[ix] = l[ g_field_z_ipt_odd[ix] ];  
+/*       field_buffer_z[ix] = l[ g_field_z_ipt_odd[ix] ];   */
     } 
   } 
   if(ieo == 1) { 
     for(ix = T*LX*LY/2; ix < T*LX*LY; ix++) { 
-      field_buffer_z2[ix-T*LX*LY/2] = l[ g_field_z_ipt_even[ix] ];  
+/*       field_buffer_z2[ix-T*LX*LY/2] = l[ g_field_z_ipt_even[ix] ];   */
     } 
   } 
   else { 
     for(ix = T*LX*LY/2; ix < T*LX*LY; ix++) { 
-      field_buffer_z2[ix-T*LX*LY/2] = l[ g_field_z_ipt_odd[ix] ];  
+/*       field_buffer_z2[ix-T*LX*LY/2] = l[ g_field_z_ipt_odd[ix] ];   */
     } 
   } 
 #    endif

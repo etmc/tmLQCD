@@ -14,12 +14,12 @@ halfspinor ** NBPointer_;
 
 int init_dirac_halfspinor() {
   int ieo=0, i=0, j=0, k;
-  int x, y, z, t, mu, k;
+  int x, y, z, t, mu;
   
   NBPointer = (halfspinor***) malloc(2*sizeof(halfspinor**));
-  NBPointer_ = (halfspinor**) malloc(8*(VOLUME+RAND)*sizeof(halfpinor*));
-  NBPointer[0] = NBPointer_[0];
-  NBPointer[1] = NBPointer_[8*(VOLUME+RAND)/2];
+  NBPointer_ = (halfspinor**) malloc(8*(VOLUME+RAND)*sizeof(halfspinor*));
+  NBPointer[0] = NBPointer_;
+  NBPointer[1] = NBPointer_ + (8*(VOLUME+RAND)/2);
 
   /* Memory for HalfSpinor must be allocated already */
   if(HalfSpinor == NULL) {
