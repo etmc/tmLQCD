@@ -39,17 +39,17 @@ int init_gauge_field(const int V, const int back) {
     /*
       g_gauge_field_copy[ieo][PM][sites/2][mu]
     */
-    g_gauge_field_copy = (su3***)calloc(2, sizeof(su3***));
-    g_gauge_field_copy[0] = (su3**)calloc(4, sizeof(su3**));
+    g_gauge_field_copy = (su3****)calloc(2, sizeof(su3***));
+    g_gauge_field_copy[0] = (su3***)calloc(4, sizeof(su3**));
     g_gauge_field_copy[1] = g_gauge_field_copy[0]+2; 
-    g_gauge_field_copy[0][0] = (su3*)calloc(2*(VOLUME+RAND), sizeof(su3*));
+    g_gauge_field_copy[0][0] = (su3**)calloc(2*(VOLUME+RAND), sizeof(su3*));
     g_gauge_field_copy[0][1] = g_gauge_field_copy[0][0] + (VOLUME+RAND)/2;
     g_gauge_field_copy[1][0] = g_gauge_field_copy[0][0] + (VOLUME+RAND);
     g_gauge_field_copy[1][1] = g_gauge_field_copy[0][0] + 3*(VOLUME+RAND)/2;
     if(errno == ENOMEM) {
       return(2);
     }
-    gauge_field_copy = calloc(8*(VOLUME+RAND)+1, sizeof(su3));
+    gauge_field_copy = (su3*)calloc(8*(VOLUME+RAND)+1, sizeof(su3));
     if(errno == ENOMEM) {
       return(2);
     }
