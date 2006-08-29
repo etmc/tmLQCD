@@ -42,7 +42,7 @@ void xchange_halffield(const int ieo) {
   int reqcount = 12;
 #  elif defined PARALLELXYZT
   int x0=0, x1=0, x2=0, ix=0;
-  int reqcount = 16;
+  int reqcount = 4;
 #  endif
 #  if (defined XLC)
   __alignx(16, HalfSpinor);
@@ -54,13 +54,13 @@ void xchange_halffield(const int ieo) {
   /* recieve the data from the neighbour on the left in t direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_up, 81, g_cart_grid, &requests[0]);
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
+  MPI_Irecv((void*)(HalfSpinor), 1, halffield_time_slice_cont, 
 	    g_nb_t_dn, 81, g_cart_grid, &requests[1]);
   /* send the data to the neighbour on the left in t direction */
   /* recieve the data from the neighbour on the right in t direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_dn, 82, g_cart_grid, &requests[2]);
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
+  MPI_Irecv((void*)(HalfSpinor+ 8*(T-1)*LX*LY*LZ/2), 1, halffield_time_slice_cont, 
 	    g_nb_t_up, 82, g_cart_grid, &requests[3]);
 
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
@@ -69,13 +69,13 @@ void xchange_halffield(const int ieo) {
   /* recieve the data from the neighbour on the left in x direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ), T*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_x_up, 91, g_cart_grid, &requests[4]);
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ), T*LY*LZ*12/2, MPI_DOUBLE,
+  MPI_Irecv((void*)(HalfSpinor), 1, halffield_x_slice_gath,
 	    g_nb_x_dn, 91, g_cart_grid, &requests[5]);
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */  
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
 	    g_nb_x_dn, 92, g_cart_grid, &requests[6]);
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
+  MPI_Irecv((void*)(HalfSpinor + 8*(LX-1)*LY*LZ/2), 1, halffield_x_slice_gath,
 	    g_nb_x_up, 92, g_cart_grid, &requests[7]);
 #    endif
     
@@ -84,13 +84,13 @@ void xchange_halffield(const int ieo) {
     /* recieve the data from the neighbour on the left in y direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_up, 101, g_cart_grid, &requests[8]);
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_DOUBLE, 
+  MPI_Irecv((void*)(HalfSpinor), 1, halffield_y_slice_gath, 
 	    g_nb_y_dn, 101, g_cart_grid, &requests[9]);
     /* send the data to the neighbour on the leftt in y direction */
     /* recieve the data from the neighbour on the right in y direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_dn, 102, g_cart_grid, &requests[10]);
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_DOUBLE, 
+  MPI_Irecv((void*)(HalfSpinor + 8*(LY-1)*LZ/2), 1, halffield_y_slice_gath, 
 	    g_nb_y_up, 102, g_cart_grid, &requests[11]);
 #    endif
     
@@ -111,31 +111,31 @@ void xchange_halffield(const int ieo) {
   reqcount = 4;
   MPI_Waitall(reqcount, &requests[12], status);
   reqcount = 12;
-    /* fill buffer ! */
-    /* This is now depending on whether the field is */
-    /* even or odd */
-    if(ieo == 1) { 
-      for(ix = 0; ix < T*LX*LY/2; ix++) { 
- 	field_buffer_z[ix] = l[ g_field_z_ipt_even[ix] ];  
-      } 
+  /* fill buffer ! */
+  /* This is now depending on whether the field is */
+  /* even or odd */
+  if(ieo == 1) { 
+    for(ix = 0; ix < T*LX*LY/2; ix++) { 
+      field_buffer_z[ix] = l[ g_field_z_ipt_even[ix] ];  
     } 
-    else { 
-      for(ix = 0; ix < T*LX*LY/2; ix++) { 
- 	field_buffer_z[ix] = l[ g_field_z_ipt_odd[ix] ];  
-      } 
+  } 
+  else { 
+    for(ix = 0; ix < T*LX*LY/2; ix++) { 
+      field_buffer_z[ix] = l[ g_field_z_ipt_odd[ix] ];  
     } 
-    if(ieo == 1) { 
-      for(ix = T*LX*LY/2; ix < T*LX*LY; ix++) { 
- 	field_buffer_z2[ix-T*LX*LY/2] = l[ g_field_z_ipt_even[ix] ];  
-      } 
+  } 
+  if(ieo == 1) { 
+    for(ix = T*LX*LY/2; ix < T*LX*LY; ix++) { 
+      field_buffer_z2[ix-T*LX*LY/2] = l[ g_field_z_ipt_even[ix] ];  
     } 
-    else { 
-      for(ix = T*LX*LY/2; ix < T*LX*LY; ix++) { 
- 	field_buffer_z2[ix-T*LX*LY/2] = l[ g_field_z_ipt_odd[ix] ];  
-      } 
+  } 
+  else { 
+    for(ix = T*LX*LY/2; ix < T*LX*LY; ix++) { 
+      field_buffer_z2[ix-T*LX*LY/2] = l[ g_field_z_ipt_odd[ix] ];  
     } 
+  } 
 #    endif
-
+  MPI_Waitall(reqcount, requests, status); 
 #  endif
 }
 
