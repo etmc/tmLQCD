@@ -536,13 +536,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
-  int icx,icy,icz,ioff;
+  int icx,icy,icz;
   int i;
   int ix,iy,iz;
   su3 *U ALIGN;
   spinor *s ALIGN;
   halfspinor ** phi ALIGN;
-  spinor *rn ALIGN;
   halfspinor *r ALIGN;
   /* We have 32 registers available */
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
@@ -554,26 +553,22 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   double _Complex rs00, rs01, rs02, rs10, rs11, rs12, rs20, rs21, rs22, 
     rs30, rs31, rs32;
 
-#pragma disjoint(*s, *r0, *r1, *r2, *r3, *up, *um, *l, *k, *rn, *rp, *rm)
+#pragma disjoint(*s, *U, *l, *k, *rn, *r, *s)
 
-  __alignx(16,l);
-  __alignx(16,k);
+  __alignx(16, l);
+  __alignx(16, k);
+  __alignx(16, HalfSpinor);
 
   /* We will run through the source vector now */
   /* instead of the solution vector            */
-  _prefetch_spinor(k); 
-  if(ieo == 1){
-    ioff = 0;
-  } 
-  else{
-    ioff = (VOLUME+RAND)/2;
-  }
+  s = k;
+  _prefetch_spinor(s); 
 
   /* s contains the source vector */
   /* r0,r1,r2,r3 contain the intermediate half spinor */
-  s = k;
 
-  U=g_gauge_field_copy[ieo][0];
+
+  U = g_gauge_field_copy[ieo][0][0];
   phi = NBPointer[ieo];
   
   _prefetch_su3(U);
@@ -687,14 +682,16 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #  if (defined MPI && !defined _NO_COMM)
 /*   xchange_halfspinor(ieo); */
 #  endif
+  U = g_gauge_field_copy[ieo][1][0];
+  _prefetch_su3(U);
 
-  /* Now we sum up and expand to full spinor */
+  /* Now we sum up and expand to a full spinor */
   r = HalfSpinor;
-  rn = l;
-  _prefetch_spinor_for_store(rn); 
+  s = l;
+  _prefetch_spinor_for_store(s); 
   for(i = 0; i < (VOLUME)/2; i++){
-    rn = l + i; 
-    _prefetch_spinor_for_store(rn);
+    s = l + i; 
+    _prefetch_spinor_for_store(s);
     /*********************** direction +0 ************************/
     _bgl_load_rs0((*r).s0);
     rs20 = rs00;
@@ -794,14 +791,14 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_vector_cmplxcg_mul_double(ka3);
 
     _bgl_add_to_rs0_reg0();
-    _bgl_store_rs0((*rn).s0);
+    _bgl_store_rs0((*s).s0);
     _bgl_i_mul_add_to_rs2_reg0();
-    _bgl_store_rs2((*rn).s2);
+    _bgl_store_rs2((*s).s2);
 
     _bgl_add_to_rs1_reg1();
-    _bgl_store_rs1((*rn).s1);
+    _bgl_store_rs1((*s).s1);
     _bgl_i_mul_sub_from_rs3_reg1();
-    _bgl_store_rs3((*rn).s3);
+    _bgl_store_rs3((*s).s3);
     r++;
     U++;
   }
