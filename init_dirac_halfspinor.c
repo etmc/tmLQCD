@@ -65,7 +65,7 @@ int init_dirac_halfspinor() {
 	k = 8*VOLUME/2 + (g_lexic2eosub[g_idn[j][2]] - VOLUME/2);
 	NBPointer[ieo][8*i + 4] = &HalfSpinor[ k ];
       }
-      if(y == T-1) {
+      if(y == LY-1) {
 	k = 8*VOLUME/2 + (g_lexic2eosub[g_iup[j][2]] - VOLUME/2);
 	NBPointer[ieo][8*i + 5] = &HalfSpinor[ k ];
       }
@@ -75,7 +75,7 @@ int init_dirac_halfspinor() {
 	k = 8*VOLUME/2 + (g_lexic2eosub[g_idn[j][3]] - VOLUME/2);
 	NBPointer[ieo][8*i + 6] = &HalfSpinor[ k ];
       }
-      if(z == T-1) {
+      if(z == LZ-1) {
 	k = 8*VOLUME/2 + (g_lexic2eosub[g_iup[j][3]] - VOLUME/2);
 	NBPointer[ieo][8*i + 7] = &HalfSpinor[ k ];
       }
@@ -116,7 +116,7 @@ int init_dirac_halfspinor() {
       if(y == 0) {
 	NBPointer[ieo][k + 5] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[g_idn[j][2]] - VOLUME/2)];
       }
-      if(y == T-1) {
+      if(y == LY-1) {
 	NBPointer[ieo][k + 4] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[g_iup[j][2]] - VOLUME/2) ];
       }
 #endif
@@ -124,7 +124,7 @@ int init_dirac_halfspinor() {
       if(z == 0) {
 	NBPointer[ieo][k + 7] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[g_idn[j][3]] - VOLUME/2)];
       }
-      if(z == T-1) {
+      if(z == LZ-1) {
 	NBPointer[ieo][k + 6] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[g_iup[j][3]] - VOLUME/2) ];
       }
 #endif
