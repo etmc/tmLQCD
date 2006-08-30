@@ -46,6 +46,7 @@
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
 #include "init_gauge_tmp.h"
+#include "init_dirac_halfspinor.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "polyakov_loop.h"
@@ -265,6 +266,11 @@ int main(int argc,char *argv[]) {
   j = init_moment_field(VOLUME, VOLUMEPLUSRAND);
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
+    exit(0);
+  }
+  j = init_dirac_halfspinor();
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(0);
   }
 
