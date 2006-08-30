@@ -427,7 +427,7 @@ int main(int argc,char *argv[]) {
 
   invmaxev=1.0;
 
-  g_nev = 4;   /* Number of eigenvalues to be computed */
+  g_nev = 2;   /* Number of eigenvalues to be computed */
 
   max_iter_ev = 1000;
   stop_prec_ev = 1.e-13;
@@ -452,14 +452,16 @@ int main(int argc,char *argv[]) {
      S = Q Q^dag         
      When  "S"  is applied, we call  invmaxev  twice !!! */
 
-  /* cheb_evmin=2*(g_mubar*g_mubar - g_epsbar*g_epsbar);   CONS. DEF. of eps ... to be tested */
+  /*
+  cheb_evmin=2*(g_mubar*g_mubar - g_epsbar*g_epsbar);   CONS. DEF. of eps ... to be tested 
+  stilde_low = 0.01000;
+  stilde_max = 3.40000;
+  */
   temp=cheb_evmin;
   temp2=cheb_evmax;
 
-  stilde_low = 0.01000;
-  stilde_max = 3.40000;
-  stilde_low = cheb_evmin/2;
-  stilde_max = cheb_evmax*1.2;
+  stilde_low = cheb_evmin;
+  stilde_max = cheb_evmax;
 
   cheb_evmin = stilde_low;
   cheb_evmax = stilde_max;
