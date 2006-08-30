@@ -10,8 +10,6 @@
 #include "su3.h"
 #include "sse.h"
 
-#define _NEW__
-
 spinor * sp = NULL;
 spinor * sp_csg = NULL;
 #ifdef BGL
@@ -39,7 +37,6 @@ int init_spinor_field(const int V, const int nr) {
     g_spinor_field[i] = g_spinor_field[i-1]+V;
   }
 
-#ifdef _NEW__
 #ifdef BGL
 #  ifdef _USE_SHMEM
   HalfSpinor_ = (halfspinor*)shmalloc((8*V+1)*sizeof(halfspinor));
@@ -52,9 +49,8 @@ int init_spinor_field(const int V, const int nr) {
   #if ( defined SSE || defined SSE2 || defined SSE3)
   HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE)&~ALIGN_BASE);
   #else
-  HalfSpinor_ = HalfSpinor_;
+  HalfSpinor = HalfSpinor_;
   #endif
-#endif
 #endif
 
   return(0);

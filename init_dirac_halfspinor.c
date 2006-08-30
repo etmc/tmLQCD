@@ -79,7 +79,7 @@ int init_dirac_halfspinor() {
       }
 #endif
     }
+    NBPointer[ieo][4*VOLUME] = NBPointer[ieo][0]; 
   }
-  
   return(0);
 }
