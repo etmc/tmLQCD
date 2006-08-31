@@ -148,12 +148,6 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
     }
   }
   else {
-
-#if !defined HAVE_LAPACK
-    if(g_proc_id == 0 && g_debug_level > 1) {
-      printf("CSG: No lapack available -> No CSG \n");fflush(stdout);
-    }
-#endif
     if(g_proc_id == 0 && g_debug_level > 1) {
       printf("Using zero trial vector \n");
       fflush(stdout);

@@ -268,11 +268,6 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
     exit(0);
   }
-  j = init_dirac_halfspinor();
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
-    exit(0);
-  }
 
   zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME/2);
   zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME/2);
@@ -296,8 +291,13 @@ int main(int argc,char *argv[]) {
   boundary();
   
   check_geometry();
-  
-  
+
+  j = init_dirac_halfspinor();
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
+    exit(0);
+  }
+    
   /* Continue */
   if(startoption == 3){
     j = read_rlxd_state(gauge_input_filename, rlxd_state, rlxdsize);

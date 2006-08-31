@@ -32,6 +32,8 @@
 
 void xchange_halffield(const int ieo) {
 
+#  ifdef MPI
+
   MPI_Request requests[16];
   MPI_Status status[16];
 #  ifdef PARALLELT
@@ -47,8 +49,6 @@ void xchange_halffield(const int ieo) {
 #  if (defined XLC)
   __alignx(16, HalfSpinor);
 #  endif
-
-#  ifdef MPI
 
   /* send the data to the neighbour on the right in t direction */
   /* recieve the data from the neighbour on the left in t direction */
@@ -123,6 +123,7 @@ void xchange_halffield(const int ieo) {
 
   MPI_Waitall(reqcount, requests, status); 
 #  endif
+  return;
 }
 
 #endif

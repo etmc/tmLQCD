@@ -587,7 +587,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _prefetch_spinor(s); 
     /*********************** direction +0 ************************/
     _prefetch_su3(U+1);
-/*     _prefetch_halfspinor(phi[ix+4]);  */
 
     _bgl_vector_add_rs2_to_rs0_reg0();
     _bgl_vector_add_rs3_to_rs1_reg1();
@@ -602,17 +601,15 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
 
     /*********************** direction -0 ************************/
-/*     _prefetch_halfspinor_for_store(phi[ix+1]); */
     _bgl_vector_sub_rs2_from_rs0_reg0();
     _bgl_vector_sub_rs3_from_rs1_reg1();
 
-    _bgl_store_reg0_up((*phi[ix]).s0);
-    _bgl_store_reg1_up((*phi[ix]).s1);
+    _bgl_store_reg0((*phi[ix]).s0);
+    _bgl_store_reg1((*phi[ix]).s1);
     ix++;
 
     /*********************** direction +1 ************************/
     _prefetch_su3(U+1);
-/*     _prefetch_halfspinor_for_store(phi[ix+1]); */
     _bgl_vector_i_mul_add_rs3_to_rs0_reg0();
     _bgl_vector_i_mul_add_rs2_to_rs1_reg1();
 
@@ -625,17 +622,15 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     U++;
 
     /*********************** direction -1 ************************/
-/*     _prefetch_halfspinor_for_store(phi[ix+1]); */
     _bgl_vector_i_mul_sub_rs3_from_rs0_reg0();
     _bgl_vector_i_mul_sub_rs2_from_rs1_reg1();
 
-    _bgl_store_reg0_up((*phi[ix]).s0);
-    _bgl_store_reg1_up((*phi[ix]).s1);
+    _bgl_store_reg0((*phi[ix]).s0);
+    _bgl_store_reg1((*phi[ix]).s1);
     ix++;
 
 
     /*********************** direction +2 ************************/
-/*     _prefetch_halfspinor_for_store(phi[ix+1]); */
     _prefetch_su3(U+1);
 
     _bgl_vector_add_rs3_to_rs0_reg0();
@@ -650,16 +645,14 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     U++;
 
     /*********************** direction -2 ************************/
-/*     _prefetch_halfspinor_for_store(phi[ix+1]); */
     _bgl_vector_sub_rs3_from_rs0_reg0();
     _bgl_vector_add_rs2_to_rs1_reg1();
 
-    _bgl_store_reg0_up((*phi[ix]).s0);
-    _bgl_store_reg1_up((*phi[ix]).s1);
+    _bgl_store_reg0((*phi[ix]).s0);
+    _bgl_store_reg1((*phi[ix]).s1);
     ix++;
 
     /*********************** direction +3 ************************/
-/*     _prefetch_halfspinor_for_store(phi[ix+1]); */
     _prefetch_su3(U+1); 
 
     _bgl_vector_i_mul_add_rs2_to_rs0_reg0();
@@ -674,12 +667,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     U++;
 
     /*********************** direction -3 ************************/
-/*     _prefetch_halfspinor_for_store(phi[ix+1]); */
     _bgl_vector_i_mul_sub_rs2_from_rs0_reg0();
     _bgl_vector_i_mul_add_rs3_to_rs1_reg1();
 
-    _bgl_store_reg0_up((*phi[ix]).s0);
-    _bgl_store_reg1_up((*phi[ix]).s1);
+    _bgl_store_reg0((*phi[ix]).s0);
+    _bgl_store_reg1((*phi[ix]).s1);
     ix++;
 
     /************************ end of loop ************************/
@@ -698,7 +690,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   ix = 0;
   _prefetch_spinor_for_store(s); 
   for(i = 0; i < (VOLUME)/2; i++){
-    s = l + i; 
     _prefetch_spinor_for_store(s);
     _prefetch_halfspinor(phi[ix+1]);
     /*********************** direction +0 ************************/
@@ -710,7 +701,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     rs30 = rs10;
     rs31 = rs11;
     rs32 = rs12;
-    r++; 
     ix++;
     /*********************** direction -0 ************************/
     _prefetch_su3(U+1);
@@ -720,12 +710,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     _bgl_su3_inverse_multiply_double((*U));
     _bgl_vector_cmplxcg_mul_double(ka0);
+    /* result is in the upper parts of reg0? and reg1? */
 
     _bgl_add_to_rs0_reg0();
     _bgl_sub_from_rs2_reg0();
     _bgl_add_to_rs1_reg1();
     _bgl_sub_from_rs3_reg1();
-    r++; 
     U++;
     ix++;
     /*********************** direction +1 ************************/
@@ -736,7 +726,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_i_mul_sub_from_rs3_reg0();
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_sub_from_rs2_reg1();
-    r++; 
     ix++;
     /*********************** direction -1 ************************/
     _prefetch_su3(U+1);
@@ -751,7 +740,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_add_to_rs3_reg0();
     _bgl_i_mul_add_to_rs2_reg1();      
-    r++;
+
     U++;
     ix++;
     /*********************** direction +2 ************************/
@@ -762,7 +751,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_sub_from_rs2_reg1();
     _bgl_add_to_rs3_reg0();
-    r++;
     ix++;
     /*********************** direction -2 ************************/
     _prefetch_su3(U+1);
@@ -777,7 +765,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_add_to_rs2_reg1();
     _bgl_sub_from_rs3_reg0();
-    r++;
     U++;
     ix++;
     /*********************** direction +3 ************************/
@@ -788,7 +775,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_sub_from_rs2_reg0();
     _bgl_i_mul_add_to_rs3_reg1();
-    r++;
     ix++;
     /*********************** direction -3 ************************/
     _prefetch_su3(U+1);
@@ -808,9 +794,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_store_rs1((*s).s1);
     _bgl_i_mul_sub_from_rs3_reg1();
     _bgl_store_rs3((*s).s3);
-    r++;
     U++;
     ix++;
+    s++;
   }
 }
 #elif defined XLC
