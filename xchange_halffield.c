@@ -54,16 +54,15 @@ void xchange_halffield(const int ieo) {
   /* recieve the data from the neighbour on the left in t direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_up, 81, g_cart_grid, &requests[0]);
-/*   MPI_Irecv((void*)(HalfSpinor), 1, halffield_time_slice_cont,  */
-/* 	    g_nb_t_dn, 81, g_cart_grid, &requests[1]); */
+
   MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_dn, 81, g_cart_grid, &requests[1]);
+
   /* send the data to the neighbour on the left in t direction */
   /* recieve the data from the neighbour on the right in t direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_dn, 82, g_cart_grid, &requests[2]);
-/*   MPI_Irecv((void*)(HalfSpinor+ 8*(T-1)*LX*LY*LZ/2), 1, halffield_time_slice_cont,  */
-/* 	    g_nb_t_up, 82, g_cart_grid, &requests[3]); */
+
   MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_up, 82, g_cart_grid, &requests[3]);
 
@@ -73,16 +72,15 @@ void xchange_halffield(const int ieo) {
   /* recieve the data from the neighbour on the left in x direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ), T*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_x_up, 91, g_cart_grid, &requests[4]);
-/*   MPI_Irecv((void*)(HalfSpinor), 1, halffield_x_slice_gath, */
-/* 	    g_nb_x_dn, 91, g_cart_grid, &requests[5]); */
+
   MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
 	    g_nb_x_dn, 91, g_cart_grid, &requests[5]);
+
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */  
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
  	    g_nb_x_dn, 92, g_cart_grid, &requests[6]);
-/*   MPI_Irecv((void*)(HalfSpinor + 8*(LX-1)*LY*LZ/2), 1, halffield_x_slice_gath, */
-/*  	    g_nb_x_up, 92, g_cart_grid, &requests[7]); */
+
   MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ), T*LY*LZ*12/2, MPI_DOUBLE,
  	    g_nb_x_up, 92, g_cart_grid, &requests[7]);
 #    endif
@@ -92,16 +90,15 @@ void xchange_halffield(const int ieo) {
     /* recieve the data from the neighbour on the left in y direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_up, 101, g_cart_grid, &requests[8]);
-/*   MPI_Irecv((void*)(HalfSpinor), 1, halffield_y_slice_gath,  */
-/* 	    g_nb_y_dn, 101, g_cart_grid, &requests[9]); */
+
   MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_dn, 101, g_cart_grid, &requests[9]);
+
     /* send the data to the neighbour on the leftt in y direction */
     /* recieve the data from the neighbour on the right in y direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_dn, 102, g_cart_grid, &requests[10]);
-/*   MPI_Irecv((void*)(HalfSpinor + 8*(LY-1)*LZ/2), 1, halffield_y_slice_gath,  */
-/* 	    g_nb_y_up, 102, g_cart_grid, &requests[11]); */
+
   MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_up, 102, g_cart_grid, &requests[11]);
 #    endif
@@ -111,12 +108,15 @@ void xchange_halffield(const int ieo) {
   /* recieve the data from the neighbour on the left in z direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
 	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 503, g_cart_grid, &requests[12]); 
+
   MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2), 
 	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_dn, 503, g_cart_grid, &requests[13]); 
+
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2), 
 	    12*T*LX*LY/2, MPI_DOUBLE, g_nb_z_dn, 504, g_cart_grid, &requests[14]); 
+
   MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
 	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &requests[15]); 
 #    endif

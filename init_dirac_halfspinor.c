@@ -82,13 +82,12 @@ int init_dirac_halfspinor() {
 #endif
     }
 #ifdef MPI
-    NBPointer[ieo][4*VOLUME] = NBPointer[ieo][0]; 
+/*     NBPointer[ieo][4*VOLUME] = NBPointer[ieo][0];  */
 #endif
   }
   for(ieo = 2; ieo < 4; ieo++) {
-    k=0;
     for(i = 0; i < VOLUME/2; i++) {
-      j = g_eo2lexic[i + (ieo-2)*(VOLUME+RAND)/2];
+      j = g_eo2lexic[i + ((ieo+0)%2)*(VOLUME+RAND)/2];
       /* get (t,x,y,z) from j */
       t = j/(LX*LY*LZ);
       x = (j-t*(LX*LY*LZ))/(LY*LZ);
@@ -98,41 +97,40 @@ int init_dirac_halfspinor() {
 	NBPointer[ieo][8*i + mu] = &HalfSpinor[8*i + mu];
       }
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
-      if(t == 0) {
-	NBPointer[ieo][8*i + 1] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[g_idn[j][0]] - VOLUME/2)];
-      }
       if(t == T-1) {
-	NBPointer[ieo][8*i] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[g_iup[j][0]] - VOLUME/2) ];
+	NBPointer[ieo][8*i]     = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_iup[j][0] ] - VOLUME/2)];
+      }
+      if(t == 0) {
+	NBPointer[ieo][8*i + 1] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][0] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
-      if(x == 0) {
-	NBPointer[ieo][8*i + 3] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[g_idn[j][1]] - VOLUME/2)];
-      }
       if(x == LX-1) { 
-	NBPointer[ieo][8*i + 2] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[g_iup[j][1]] - VOLUME/2) ];
+	NBPointer[ieo][8*i + 2] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_iup[j][1] ] - VOLUME/2)];
+      }
+      if(x == 0) {
+	NBPointer[ieo][8*i + 3] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][1] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELXYT) || (defined PARALLELXYZT))
-      if(y == 0) {
-	NBPointer[ieo][8*i + 5] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[g_idn[j][2]] - VOLUME/2)];
-      }
       if(y == LY-1) {
-	NBPointer[ieo][8*i + 4] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[g_iup[j][2]] - VOLUME/2) ];
+	NBPointer[ieo][8*i + 4] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_iup[j][2] ] - VOLUME/2)];
+      }
+      if(y == 0) {
+	NBPointer[ieo][8*i + 5] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][2] ] - VOLUME/2)];
       }
 #endif
 #if (defined PARALLELXYZT)
-      if(z == 0) {
-	NBPointer[ieo][8*i + 7] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[g_idn[j][3]] - VOLUME/2)];
-      }
       if(z == LZ-1) {
-	NBPointer[ieo][8*i + 6] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[g_iup[j][3]] - VOLUME/2) ];
+	NBPointer[ieo][8*i + 6] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_iup[j][3] ] - VOLUME/2)];
+      }
+      if(z == 0) {
+	NBPointer[ieo][8*i + 7] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][3] ] - VOLUME/2)];
       }
 #endif
-      k+=8;
     }
 #ifdef MPI
-    NBPointer[ieo][4*VOLUME] = NBPointer[ieo][0]; 
+/*     NBPointer[ieo][4*VOLUME] = NBPointer[ieo][0];  */
 #endif
   }
   return(0);
