@@ -451,17 +451,19 @@ int main(int argc,char *argv[]) {
 
       if(cheb_evmax > stilde_max){
         printf(" !!! BREAK since EV-Max LARGER than stilde_max !!! \n");
+        printf(" Ev-Max=%e   stilde_max=%e \n", cheb_evmax, stilde_max); 
+        exit(-1);
+      }      
+
+      if(cheb_evmin < stilde_low){
+        printf(" !!! BREAK since EV-Min SMALLER than stilde_low !!! \n");
+        printf(" Ev-Min=%e   stilde_low=%e \n", cheb_evmin, stilde_low); 
         exit(-1);
       }      
 
       cheb_evmin = cheb_evmin/(stilde_max);
       j = (int)(cheb_evmin*10000);
       cheb_evmin = j*0.0001;
-
-      if(cheb_evmin < stilde_low){
-        printf(" !!! BREAK since EV-Min SMALLER than stilde_low !!! \n");
-        exit(-1);
-      }      
 
       Inoutputs=fopen(filename_inout,"a");
       fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
@@ -755,17 +757,19 @@ int main(int argc,char *argv[]) {
 
       if(cheb_evmax > stilde_max){
         printf(" !!! BREAK since EV-Max LARGER than stilde_max !!! \n");
-        break;
+        printf(" Ev-Max=%e   stilde_max=%e \n", cheb_evmax, stilde_max); 
+        exit(-1);
+      }      
+
+      if(cheb_evmin < stilde_low){
+        printf(" !!! BREAK since EV-Min SMALLER than stilde_low !!! \n");
+        printf(" Ev-Min=%e   stilde_low=%e \n", cheb_evmin, stilde_low); 
+        exit(-1);
       }      
 
       cheb_evmin = cheb_evmin/(stilde_max);
       j = (int)(cheb_evmin*10000);
       cheb_evmin = j*0.0001;
-
-      if(cheb_evmin < stilde_low){
-        printf(" !!! BREAK since EV-Min SMALLER than stilde_low !!! \n");
-        break;
-      }      
 
       Inoutputs=fopen(filename_inout,"a");
       fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
