@@ -26,7 +26,7 @@
 #include "su3.h"
 #include "xchange_field.h"
 
-#pragma disjoint(*field_buffer_z2, *field_buffer_z, *halffield_buffer_z2, *halffield_buffer_z)
+#pragma disjoint(*field_buffer_z2, *field_buffer_z)
 
 
 #if ((defined BGL) && (defined MPI))

@@ -12,10 +12,7 @@
 
 spinor * sp = NULL;
 spinor * sp_csg = NULL;
-#ifdef BGL
-extern halfspinor * HalfSpinor;
-halfspinor * HalfSpinor_;
-#endif
+
 int init_spinor_field(const int V, const int nr) {
   int i = 0;
 
@@ -37,22 +34,6 @@ int init_spinor_field(const int V, const int nr) {
     g_spinor_field[i] = g_spinor_field[i-1]+V;
   }
 
-#ifdef BGL
-#  ifdef _USE_SHMEM
-  HalfSpinor_ = (halfspinor*)shmalloc((8*V+1)*sizeof(halfspinor));
-#  else
-  HalfSpinor_ = (halfspinor*)calloc(8*V+1, sizeof(halfspinor));
-#  endif
-  if(errno == ENOMEM) {
-    return(1);
-  }
-  #if ( defined SSE || defined SSE2 || defined SSE3)
-  HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE)&~ALIGN_BASE);
-  #else
-  HalfSpinor = HalfSpinor_;
-  #endif
-#endif
-
   return(0);
 }
 
@@ -60,9 +41,6 @@ void free_spinor_field() {
 
   free(sp);
   free(sp_csg);
-#ifdef BGL
-  free(HalfSpinor_);
-#endif
 }
 
 

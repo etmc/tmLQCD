@@ -5,12 +5,13 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 #include "global.h"
 #include "su3.h"
-#include "Hopping_Matrix.h"
 #include "init_dirac_halfspinor.h"
 
 halfspinor ** NBPointer_;
+halfspinor * HalfSpinor_;
 
 int init_dirac_halfspinor() {
   int ieo=0, i=0, j=0, k;
@@ -23,10 +24,19 @@ int init_dirac_halfspinor() {
   NBPointer[2] = NBPointer_ + (16*(VOLUME+RAND)/2);
   NBPointer[3] = NBPointer_ + (24*(VOLUME+RAND)/2);
 
-  /* Memory for HalfSpinor must be allocated already */
-  if(HalfSpinor == NULL) {
-    return(-1);    
+#ifdef _USE_SHMEM
+  HalfSpinor_ = (halfspinor*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor));
+#else
+  HalfSpinor_ = (halfspinor*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor));
+#endif
+  if(errno == ENOMEM) {
+    return(1);
   }
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  HalfSpinor = HalfSpinor_;
+#endif
 
   for(ieo = 0; ieo < 2; ieo++) {
     for(i = 0; i < VOLUME/2; i++) {

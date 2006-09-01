@@ -24,7 +24,7 @@
 #endif
 #include "mpi_init.h"
 #include "su3.h"
-#include "Hopping_Matrix.h"
+#include "init_dirac_halfspinor.h"
 #include "xchange_halffield.h"
 
 
