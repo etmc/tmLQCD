@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#ifdef _USE_SHMEM
+# include <mpp/shmem.h>
+#endif
 #include "global.h"
 #include "su3.h"
 #include "init_dirac_halfspinor.h"
