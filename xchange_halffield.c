@@ -28,8 +28,56 @@
 #include "xchange_halffield.h"
 
 
-#ifdef BGL
+#ifdef _USE_SHMEM
+# include <mpp/shmem.h>
+void xchange_halffield(const int ieo) {
 
+#  ifdef MPI
+
+  shmem_barrier_all();
+
+  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ/2), 
+		   (double*)(HalfSpinor + 4*VOLUME),
+                   (LX*LY*LZ*6), g_nb_t_up);
+  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2), 
+		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ/2),
+                   (LX*LY*LZ*6), g_nb_t_dn);
+
+#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ/2), 
+		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ),
+                   (T*LY*LZ*6), g_nb_x_up);
+  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ),
+		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ/2),
+                   (T*LY*LZ*6), g_nb_x_dn);
+
+#    endif
+
+#    if (defined PARALLELXYT || defined PARALLELXYZT)
+  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2),
+		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ),
+                   (T*LX*LZ*6), g_nb_y_up);
+  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ),
+		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2),
+                   (T*LX*LZ*6), g_nb_y_dn);
+
+#    endif
+
+#    if (defined PARALLELXYZT)
+  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2),
+		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ),
+                   (T*LX*LY*6), g_nb_z_up);
+  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ),
+		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2),
+                   (T*LX*LY*6), g_nb_z_dn);
+
+#    endif
+
+  shmem_barrier_all();
+#  endif
+  return;
+}
+#else
 void xchange_halffield(const int ieo) {
 
 #  ifdef MPI
@@ -46,7 +94,7 @@ void xchange_halffield(const int ieo) {
   int x0=0, x1=0, x2=0, ix=0;
   int reqcount = 16;
 #  endif
-#  if (defined XLC)
+#  if (defined XLC && defined BGL)
   __alignx(16, HalfSpinor);
 #  endif
 

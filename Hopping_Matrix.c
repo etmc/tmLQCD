@@ -31,8 +31,7 @@
 #include "Hopping_Matrix.h"
 
 void xchange_field(spinor * const l, const int even);
-halfspinor * HalfSpinor ALIGN;
-halfspinor *** NBPointer;
+
 
 #if ((defined SSE2)||(defined SSE3))
 
@@ -1169,21 +1168,16 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 /* else of If defined SSE2  and if defined XLC */
 #else
 
-static su3_vector psi1, psi2, psi, chi, phi1, phi3;
-
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
-void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
-  int ix,iy;
-  int ioff,ioff2,icx,icy;
-  su3 *up,*um;
-  spinor *r,*sp,*sm;
-  spinor temp;
+void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+  int i,ix;
+  su3 * U ALIGN;
+  spinor *s ALIGN;
+  spinor rs;
+  su3_vector psi, chi;
+  halfspinor ** phi ALIGN;
 
-  /* for parallelization */
-#ifdef MPI
-  xchange_field(k, ieo);
-#endif
 
   if(k == l){
     printf("Error in H_psi (simple.c):\n");
@@ -1191,246 +1185,223 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     printf("Program aborted\n");
     exit(1);
   }
-  if(ieo == 0){
-    ioff = 0;
-  } 
-  else{
-    ioff = (VOLUME+RAND)/2;
-  } 
-  ioff2 = (VOLUME+RAND)/2-ioff;
+  s = k;
+
+  if(ieo == 0) {
+    U = g_gauge_field_copy[0][0][0];
+  }
+  else {
+    U = g_gauge_field_copy[0][1][0];
+  }
+  phi = NBPointer[ieo];
+
   /**************** loop over all lattice sites ****************/
-
-  for (icx = ioff; icx < (VOLUME/2 + ioff); icx++){
-    ix=g_eo2lexic[icx];
-
-    r=l+(icx-ioff);
-
+  ix=0;
+  for(i = 0; i < (VOLUME)/2; i++){
+    _vector_assign(rs.s0, (*s).s0);
+    _vector_assign(rs.s1, (*s).s1);
+    _vector_assign(rs.s2, (*s).s2);
+    _vector_assign(rs.s3, (*s).s3);
+    s++;
     /*********************** direction +0 ************************/
-    iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
-
-
-    sp=k+icy;
-#if ((defined _GAUGE_COPY))
-    up=&g_gauge_field_copy[icx][0];
-#else
-    up=&g_gauge_field[ix][0];
-#endif
       
-    _vector_add(psi,(*sp).s0,(*sp).s2);
+    _vector_add(psi, rs.s0, rs.s2);
 
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka0,chi);
+    _su3_multiply(chi,(*U),psi);
+    _complex_times_vector((*phi[ix]).s0, ka0, chi);
       
-    _vector_assign(temp.s0,psi);
-    _vector_assign(temp.s2,psi);
+    _vector_add(psi, rs.s1, rs.s3);
 
-    _vector_add(psi,(*sp).s1,(*sp).s3);
-
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka0,chi);
+    _su3_multiply(chi,(*U),psi);
+    _complex_times_vector((*phi[ix]).s1, ka0, chi);
             
-    _vector_assign(temp.s1,psi);
-    _vector_assign(temp.s3,psi);
-
+    U++;
+    ix++;
+    
     /*********************** direction -0 ************************/
 
-    iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
+    _vector_sub((*phi[ix]).s0, rs.s0, rs.s2);
+    _vector_sub((*phi[ix]).s1, rs.s1, rs.s3);
 
-    sm=k+icy;
-#if ((defined _GAUGE_COPY))
-    um = up+1;
-#else
-    um=&g_gauge_field[iy][0];
-#endif
-
-    _vector_sub(psi,(*sm).s0,(*sm).s2);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka0,chi);
-
-    _vector_add_assign(temp.s0,psi);
-    _vector_sub_assign(temp.s2,psi);
-
-    _vector_sub(psi,(*sm).s1,(*sm).s3);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka0,chi);
-      
-    _vector_add_assign(temp.s1,psi);
-    _vector_sub_assign(temp.s3,psi);
+    ix++;
 
     /*********************** direction +1 ************************/
 
-    iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
+    _vector_i_add(psi, rs.s0, rs.s3);
 
-    sp=k+icy;
+    _su3_multiply(chi, (*U), psi);
+    _complex_times_vector((*phi[ix]).s0, ka1, chi);
 
-#if ((defined _GAUGE_COPY))
-    up=um+1;
-#else
-    up+=1;
-#endif
-      
-    _vector_i_add(psi,(*sp).s0,(*sp).s3);
+    _vector_i_add(psi, rs.s1, rs.s2);
 
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka1,chi);
+    _su3_multiply(chi, (*U), psi);
+    _complex_times_vector((*phi[ix]).s1, ka1, chi);
 
-    _vector_add_assign(temp.s0,psi);
-    _vector_i_sub_assign(temp.s3,psi);
-
-    _vector_i_add(psi,(*sp).s1,(*sp).s2);
-
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka1,chi);
-
-    _vector_add_assign(temp.s1,psi);
-    _vector_i_sub_assign(temp.s2,psi);
+    U++;
+    ix++;
 
     /*********************** direction -1 ************************/
 
-    iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
+    _vector_i_sub((*phi[ix]).s0, rs.s0, rs.s3);
+    _vector_i_sub((*phi[ix]).s1, rs.s1, rs.s2);
 
-    sm=k+icy;
-#ifndef _GAUGE_COPY
-    um=&g_gauge_field[iy][1];
-#else
-    um=up+1;
-#endif
-
-    _vector_i_sub(psi,(*sm).s0,(*sm).s3);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka1,chi);
-
-    _vector_add_assign(temp.s0,psi);
-    _vector_i_add_assign(temp.s3,psi);
-
-    _vector_i_sub(psi,(*sm).s1,(*sm).s2);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka1,chi);
-
-    _vector_add_assign(temp.s1,psi);
-    _vector_i_add_assign(temp.s2,psi);
-
+    ix++;
     /*********************** direction +2 ************************/
 
-    iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
+    _vector_add(psi, rs.s0, rs.s3);
 
-    sp=k+icy;
-#if ((defined _GAUGE_COPY))
-    up=um+1;
-#else
-    up+=1;
-#endif 
-    _vector_add(psi,(*sp).s0,(*sp).s3);
+    _su3_multiply(chi,(*U),psi);
+    _complex_times_vector((*phi[ix]).s0, ka2, chi);
 
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka2,chi);
+    _vector_sub(psi, rs.s1, rs.s2);
 
-    _vector_add_assign(temp.s0,psi);
-    _vector_add_assign(temp.s3,psi);
-
-    _vector_sub(psi,(*sp).s1,(*sp).s2);
-
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka2,chi);
+    _su3_multiply(chi,(*U),psi);
+    _complex_times_vector((*phi[ix]).s1, ka2, chi);
       
-    _vector_add_assign(temp.s1,psi);
-    _vector_sub_assign(temp.s2,psi);
-
+    U++;
+    ix++;
 
     /*********************** direction -2 ************************/
 
-    iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
-
-    sm=k+icy;
-#ifndef _GAUGE_COPY
-    um = &g_gauge_field[iy][2];
-#else
-    um = up +1;
-#endif
-
-    _vector_sub(psi,(*sm).s0,(*sm).s3);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka2,chi);
-
-    _vector_add_assign(temp.s0,psi);
-    _vector_sub_assign(temp.s3,psi);
-
-    _vector_add(psi,(*sm).s1,(*sm).s2);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka2,chi);
-      
-    _vector_add_assign(temp.s1,psi);
-    _vector_add_assign(temp.s2,psi);
+    _vector_sub((*phi[ix]).s0, rs.s0, rs.s3);
+    _vector_add((*phi[ix]).s1, rs.s1, rs.s2);
+    ix++;
 
     /*********************** direction +3 ************************/
 
-    iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
-
-    sp=k+icy;
-#if ((defined _GAUGE_COPY))
-    up=um+1;
-#else
-    up+=1;
-#endif 
-    _vector_i_add(psi,(*sp).s0,(*sp).s2);
+    _vector_i_add(psi, rs.s0, rs.s2);
       
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka3,chi);
+    _su3_multiply(chi, (*U), psi);
+    _complex_times_vector((*phi[ix]).s0, ka3, chi);
 
-    _vector_add_assign(temp.s0,psi);
-    _vector_i_sub_assign(temp.s2,psi);
 
-    _vector_i_sub(psi,(*sp).s1,(*sp).s3);
+    _vector_i_sub(psi, rs.s1, rs.s3);
 
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka3,chi);
+    _su3_multiply(chi,(*U),psi);
+    _complex_times_vector((*phi[ix]).s1, ka3, chi);
 
-    _vector_add_assign(temp.s1,psi);
-    _vector_i_add_assign(temp.s3,psi);
+    U++;
+    ix++;
+    /*********************** direction -3 ************************/
+
+    _vector_i_sub((*phi[ix]).s0, rs.s0, rs.s2);
+    _vector_i_add((*phi[ix]).s1, rs.s1, rs.s3);
+
+    ix++;
+    /************************ end of loop ************************/
+  }
+#  if (defined MPI && !defined _NO_COMM)
+  xchange_halffield(ieo); 
+#  endif
+  s = l;
+  phi = NBPointer[2 + ieo];
+  if(ieo == 0) {
+    U = g_gauge_field_copy[0][1][0];
+  }
+  else {
+    U = g_gauge_field_copy[0][0][0];
+  }
+
+  ix = 0;
+  for(i = 0; i < (VOLUME)/2; i++){
+    /*********************** direction +0 ************************/
+    _vector_assign(rs.s0, (*phi[ix]).s0);
+    _vector_assign(rs.s2, (*phi[ix]).s0);
+    _vector_assign(rs.s1, (*phi[ix]).s1);
+    _vector_assign(rs.s3, (*phi[ix]).s1);
+    ix++;
+    /*********************** direction -0 ************************/
+    _su3_inverse_multiply(chi,(*U),(*phi[ix]).s0);
+    _complexcjg_times_vector(psi,ka0,chi);
+
+    _vector_add_assign(rs.s0, psi);
+    _vector_sub_assign(rs.s2, psi);
+
+    _su3_inverse_multiply(chi,(*U),(*phi[ix]).s1);
+    _complexcjg_times_vector(psi,ka0,chi);
+      
+    _vector_add_assign(rs.s1, psi);
+    _vector_sub_assign(rs.s3, psi);
+    ix++;
+    U++;
+    /*********************** direction +1 ************************/
+
+    _vector_add_assign(rs.s0, (*phi[ix]).s0);
+    _vector_i_sub_assign(rs.s3, (*phi[ix]).s0);
+
+    _vector_add_assign(rs.s1, (*phi[ix]).s1);
+    _vector_i_sub_assign(rs.s2, (*phi[ix]).s1);
+    
+    ix++;
+    /*********************** direction -1 ************************/
+
+    _su3_inverse_multiply(chi,(*U), (*phi[ix]).s0);
+    _complexcjg_times_vector(psi,ka1,chi);
+
+    _vector_add_assign(rs.s0, psi);
+    _vector_i_add_assign(rs.s3, psi);
+
+    _su3_inverse_multiply(chi,(*U), (*phi[ix]).s1);
+    _complexcjg_times_vector(psi,ka1,chi);
+
+    _vector_add_assign(rs.s1, psi);
+    _vector_i_add_assign(rs.s2, psi);
+
+    U++;
+    ix++;
+
+    /*********************** direction +2 ************************/
+
+    _vector_add_assign(rs.s0, (*phi[ix]).s0);
+    _vector_add_assign(rs.s3, (*phi[ix]).s0);
+
+    _vector_add_assign(rs.s1, (*phi[ix]).s1);
+    _vector_sub_assign(rs.s2, (*phi[ix]).s1);
+    
+    ix++;
+    /*********************** direction -2 ************************/
+
+    _su3_inverse_multiply(chi,(*U), (*phi[ix]).s0);
+    _complexcjg_times_vector(psi,ka2,chi);
+
+    _vector_add_assign(rs.s0, psi);
+    _vector_sub_assign(rs.s3, psi);
+
+    _su3_inverse_multiply(chi, (*U), (*phi[ix]).s1);
+    _complexcjg_times_vector(psi,ka2,chi);
+      
+    _vector_add_assign(rs.s1, psi);
+    _vector_add_assign(rs.s2, psi);
+
+    U++;
+    ix++;
+    /*********************** direction +3 ************************/
+
+    _vector_add_assign(rs.s0, (*phi[ix]).s0);
+    _vector_i_sub_assign(rs.s2, (*phi[ix]).s0);
+
+    _vector_add_assign(rs.s1, (*phi[ix]).s1);
+    _vector_i_add_assign(rs.s3, (*phi[ix]).s1);
+
+    ix++;
 
     /*********************** direction -3 ************************/
 
-    iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
-
-    sm=k+icy;
-#ifndef _GAUGE_COPY
-    um = &g_gauge_field[iy][3];
-#else
-    um = up+1;
-#endif
-
-    _vector_i_sub(psi,(*sm).s0,(*sm).s2);
-
-    _su3_inverse_multiply(chi,(*um),psi);
+    _su3_inverse_multiply(chi,(*U), (*phi[ix]).s0);
     _complexcjg_times_vector(psi,ka3,chi);
       
-#ifdef OlD
-    _vector_add_assign((*r).s0,psi);
-    _vector_i_add_assign((*r).s2,psi);
-#else
-    _vector_add((*r).s0, temp.s0, psi);
-    _vector_i_add((*r).s2, temp.s2, psi);
-#endif
+    _vector_add((*s).s0, rs.s0, psi);
+    _vector_i_add((*s).s2, rs.s2, psi);
 
-    _vector_i_add(psi,(*sm).s1,(*sm).s3);
-
-    _su3_inverse_multiply(chi,(*um),psi);
+    _su3_inverse_multiply(chi,(*U), (*phi[ix]).s1);
     _complexcjg_times_vector(psi,ka3,chi);
 
-#ifdef OlD
-    _vector_add_assign((*r).s1,psi);
-    _vector_i_sub_assign((*r).s3,psi);
-#else
-    _vector_add((*r).s1, temp.s1, psi);
-    _vector_i_sub((*r).s3, temp.s3, psi);
-#endif
-    /************************ end of loop ************************/
+    _vector_add((*s).s1, rs.s1, psi);
+    _vector_i_sub((*s).s3, rs.s3, psi);
+
+    U++;
+    ix++;
+    s++;
   }
 }
 /* end of If defined SSE2 */

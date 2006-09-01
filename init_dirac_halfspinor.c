@@ -12,6 +12,8 @@
 
 halfspinor ** NBPointer_;
 halfspinor * HalfSpinor_;
+halfspinor * HalfSpinor ALIGN;
+halfspinor *** NBPointer;
 
 int init_dirac_halfspinor() {
   int ieo=0, i=0, j=0, k;
