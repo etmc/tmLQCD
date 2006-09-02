@@ -37,150 +37,137 @@ void xchange_field(spinor * const l, const int even);
 
 /* input on k; output on l */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
-  int icx,icy,icz,ioff;
-  int ix,iy,iz;
-  su3 *up,*um;
+  int ix, i;
+  su3 *U ALIGN;
   static spinor rs;
-  spinor *s, *sp, *rn;
-  halfspinor *r0, *r1, *r2, *r3, *rp, *rm;
+  spinor *s ALIGN;
+  halfspinor ** phi ALIGN;
+#pragma pomp inst begin(hoppingmatrix)
   
-  /* for parallelization */
+  /* We will run through the source vector now */
+  /* instead of the solution vector            */
+  s = k;
+  _prefetch_spinor(s);
 
-  if(k == l){
-    printf("Error in subroutine D_psi: improper arguments\n");
-    printf("Program aborted\n");
-    exit(1);
+  if(ieo == 0) {
+    U = g_gauge_field_copy[0][0][0];
   }
-  if(ieo == 1){
-    ioff = 0;
-  } 
-  else{
-    ioff = (VOLUME+RAND)/2;
+  else {
+    U = g_gauge_field_copy[0][1][0];
   }
+  phi = NBPointer[ieo];
 
-  ix=g_eo2lexic[ioff];
-  iy=g_idn[ix][0]; 
-  icy=g_lexic2eosub[iy];
-  /* s contains the source vector */
-  /* r0,r1,r2,r3 contain the intermediate half spinor */
-  r0 = &halfs[0][ g_halfpt[icy][0] ];
-
-#if ((defined _GAUGE_COPY))
-  up=&g_gauge_field_copy[ioff][0];
-#else
-  up=&g_gauge_field[iy][0];
-#endif
-
+  _prefetch_su3(U);
   /**************** loop over all lattice sites ******************/
-  for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    s = k+(icx-ioff);
-    ix=g_eo2lexic[icx];
+  ix=0;
+  for(i = 0; i < (VOLUME)/2; i++){
+
     /*********************** direction +0 ************************/
-    iy=g_idn[ix][1]; 
-    icy=g_lexic2eosub[iy];
-
-#if ((defined _GAUGE_COPY))
-    um=up+1;
-#else
-    um=&g_gauge_field[iy][1]; 
-#endif
-    _prefetch_su3(um);
-
+    _prefetch_su3(U+1);
     _sse_load((*s).s0);
     _sse_load_up((*s).s2);
     _sse_vector_add();
 
-    _sse_su3_multiply((*up));
+    _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka0);
-    _sse_store_nt_up((*r0).s0);
-
-    r1 =&halfs[0][ g_halfpt[icy][1] ];      
-/*     _prefetch_halfspinor(r1);  */
+    _sse_store_nt_up((*phi[ix]).s0);
 
     _sse_load((*s).s1);
     _sse_load_up((*s).s3);
     _sse_vector_add();
       
-    _sse_su3_multiply((*up));
+    _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka0);
-    _sse_store_nt_up((*r0).s1);
+    _sse_store_nt_up((*phi[ix]).s1);
+    U++;
+    ix++;
+    /*********************** direction -0 ************************/
+
+    _sse_load((*s).s0);
+    _sse_load_up((*s).s2);
+    _sse_vector_sub();
+    _sse_store_nt((*phi[ix]).s0);
+
+    _sse_load((*s).s1);
+    _sse_load_up((*s).s3);
+    _sse_vector_sub();
+    _sse_store_nt((*phi[ix]).s1);
+    ix++;
 
     /*********************** direction +1 ************************/
 
-    iy=g_idn[ix][2]; 
-    icy=g_lexic2eosub[iy];
-
-#ifndef _GAUGE_COPY
-    up=&g_gauge_field[iy][2]; 
-#else
-    up=um+1;
-#endif
-    _prefetch_su3(up);
+    _prefetch_su3(U+1);
 
     _sse_load((*s).s0);
+    /*next not needed?*/
     _sse_load_up((*s).s3);
     _sse_vector_i_mul();
     _sse_vector_add();
 
-    _sse_su3_multiply((*um));
+    _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka1);
-    _sse_store_nt_up((*r1).s0);
-
-    r2=&halfs[0][ g_halfpt[icy][2] ];
-/*     _prefetch_halfspinor(r2); */
+    _sse_store_nt_up((*phi[ix]).s0);
 
     _sse_load((*s).s1);
     _sse_load_up((*s).s2);
     _sse_vector_i_mul();
     _sse_vector_add();
 
-    _sse_su3_multiply((*um));
+    _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka1);
-    _sse_store_nt_up((*r1).s1);
+    _sse_store_nt_up((*phi[ix]).s1);
+    ix++;
+    U++;
+
+    /*********************** direction -1 ************************/
+    _sse_load((*s).s0);
+    _sse_load_up((*s).s3);
+    _sse_vector_i_mul();
+    _sse_vector_sub();
+    _sse_store_nt((*phi[ix]).s0);
+
+    _sse_load((*s).s1);
+    _sse_load_up((*s).s2);
+    _sse_vector_i_mul();
+    _sse_vector_sub();
+    _sse_store_nt((*phi[ix]).s1);
+    ix++;
 
     /*********************** direction +2 ************************/
 
-    iy=g_idn[ix][3]; 
-    icy=g_lexic2eosub[iy];
-
-#ifndef _GAUGE_COPY
-    um=&g_gauge_field[iy][3];
-#else
-    um=up+1;
-#endif
-    _prefetch_su3(um);
+    _prefetch_su3(U+1);
 
     _sse_load((*s).s0);
     _sse_load_up((*s).s3);
     _sse_vector_add();
 
-    _sse_su3_multiply((*up));
+    _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka2);
-    _sse_store_nt_up((*r2).s0);
-
-    r3=&halfs[0][ g_halfpt[icy][3] ];
-/*     _prefetch_halfspinor(r3);  */
+    _sse_store_nt_up((*phi[ix]).s0);
 
     _sse_load((*s).s1);
     _sse_load_up((*s).s2);
     _sse_vector_sub();
 
-    _sse_su3_multiply((*up));
+    _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka2);
-    _sse_store_nt_up((*r2).s1);
+    _sse_store_nt_up((*phi[ix]).s1);
+    ix++;
+    U++;
+    /*********************** direction -2 ************************/
+    _sse_load((*s).s0);
+    _sse_load_up((*s).s3);
+    _sse_vector_sub();
+    _sse_store_nt((*phi[ix]).s0);
+
+    _sse_load((*s).s1);
+    _sse_load_up((*s).s2);
+    _sse_vector_add();
+    _sse_store_nt((*phi[ix]).s1);
+    ix++;
 
     /*********************** direction +3 ************************/
-    icz=icx+1;
-    if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
-    iz=g_eo2lexic[icz];
-    iy=g_idn[iz][0]; icy=g_lexic2eosub[iy];
-
-#ifndef _GAUGE_COPY
-    up=&g_gauge_field[iy][0];
-#else
-    up=um+1;
-#endif
-    _prefetch_su3(up);
+    _prefetch_su3(U+1);
     _prefetch_spinor(s+1);
 
     _sse_load((*s).s0);
@@ -188,203 +175,91 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_i_mul();
     _sse_vector_add();
 
-    _sse_su3_multiply((*um));
+    _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka3);
-    _sse_store_nt_up((*r3).s0);
-
-    r0=&halfs[0][ g_halfpt[icy][0] ];
-/*     _prefetch_halfspinor(r0);  */
+    _sse_store_nt_up((*phi[ix]).s0);
 
     _sse_load((*s).s1);
     _sse_load_up((*s).s3);
     _sse_vector_i_mul();
     _sse_vector_sub();
 
-    _sse_su3_multiply((*um));
+    _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka3);
-    _sse_store_nt_up((*r3).s1);
+    _sse_store_nt_up((*phi[ix]).s1);
+    ix++;
+    U++;
 
-  }
-
-  ix=g_eo2lexic[ioff];
-  iy=g_iup[ix][0]; 
-  icy=g_lexic2eosub[iy];
-
-  /* s contains the source vector */
-  s = k;
-  /* rp and rm contain the intermediate half spinor */
-  r0 = &halfs[1][ g_halfpt[icy][0] ];
-
-#if ((defined _GAUGE_COPY))
-/*   up=g_gauge_field_copy[ioff]; */
-#else
-  up=g_gauge_field[ix];
-#endif
-
-  /* Here we need to do some exchange for plus direction */
-#  ifdef MPI
-
-#endif
-
-  /* Now all the minus directions */
-  for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    s = k+(icx-ioff);
-    ix=g_eo2lexic[icx];
-    /*********************** direction -0 ************************/
-
-    iy=g_iup[ix][1]; 
-    icy=g_lexic2eosub[iy];
-
-    um = up + 1;
-    _prefetch_su3(um);
-      
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s2);
-    _sse_vector_sub();
-      
-    _sse_su3_inverse_multiply((*up));
-    _sse_vector_cmplxcg_mul(ka0);
-    _sse_store_nt_up((*r0).s0);
-      
-    r1=&halfs[1][ g_halfpt[icy][1] ];
-/*     _prefetch_halfspinor(r1);  */
-
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s3);
-    _sse_vector_sub();
-      
-    _sse_su3_inverse_multiply((*up));
-    _sse_vector_cmplxcg_mul(ka0);
-    _sse_store_nt_up((*r0).s1);
-
-    /*********************** direction -1 ************************/
-
-    iy=g_iup[ix][2]; 
-    icy=g_lexic2eosub[iy];
-
-    up = um + 1;
-    _prefetch_su3(up);
-
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s3);
-    _sse_vector_i_mul();
-    _sse_vector_sub();
-      
-    _sse_su3_inverse_multiply((*um));
-    _sse_vector_cmplxcg_mul(ka1);
-    _sse_store_nt_up((*r1).s0);
-      
-    r2=&halfs[1][ g_halfpt[icy][2] ];
-/*     _prefetch_halfspinor(r2);  */
-
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s2);
-    _sse_vector_i_mul();
-    _sse_vector_sub();
-      
-    _sse_su3_inverse_multiply((*um));
-    _sse_vector_cmplxcg_mul(ka1);
-    _sse_store_nt_up((*r1).s1);
-
-    /*********************** direction -2 ************************/
-
-    iy=g_iup[ix][3]; 
-    icy=g_lexic2eosub[iy];
-
-    um = up + 1;
-    _prefetch_su3(um);
-
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s3);
-    _sse_vector_sub();
-      
-    _sse_su3_inverse_multiply((*up));
-    _sse_vector_cmplxcg_mul(ka2);
-    _sse_store_nt_up((*r2).s0);
-      
-    r3=&halfs[1][ g_halfpt[icy][3] ];
-/*     _prefetch_halfspinor(r3);  */
-
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s2);
-    _sse_vector_add();
-      
-    _sse_su3_inverse_multiply((*up));
-    _sse_vector_cmplxcg_mul(ka2);
-    _sse_store_nt_up((*r2).s1);
-      
     /*********************** direction -3 ************************/
-    icz=icx+1;
-    if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
-    iz=g_eo2lexic[icz];
-    iy=g_iup[iz][0]; 
-    icy=g_lexic2eosub[iy];
-
-#  if (defined _GAUGE_COPY)
-    up=um+1;
-#else
-    up=&g_gauge_field[iz][0];
-#endif
-
-    _prefetch_su3(up); 
-    _prefetch_spinor(s+1);
 
     _sse_load((*s).s0);
     _sse_load_up((*s).s2);
     _sse_vector_i_mul();
     _sse_vector_sub();
-      
-    _sse_su3_inverse_multiply((*um));
-    _sse_vector_cmplxcg_mul(ka3);
-    _sse_store_nt_up((*r3).s0);
-
-    r0=&halfs[1][ g_halfpt[icy][0] ];
-/*     _prefetch_halfspinor(r0);  */
+    _sse_store_nt((*phi[ix]).s0);
 
     _sse_load((*s).s1);
     _sse_load_up((*s).s3);
     _sse_vector_i_mul();
     _sse_vector_add();
-      
-    _sse_su3_inverse_multiply((*um));
-    _sse_vector_cmplxcg_mul(ka3);
-    _sse_store_nt_up((*r3).s1);
-
+    _sse_store_nt((*phi[ix]).s1);
+    ix++;
+    s++;
   }
-  rp = halfs[0];
-  _prefetch_nta_halfspinor(rp);
-  rm = halfs[1]; 
-  _prefetch_nta_halfspinor(rm); 
-#  ifdef MPI
 
-#endif
-  /* Now we sum up and expand to full spinor */
-  for(icx = 0; icx < (VOLUME)/2; icx++) {
-    /*********************** direction +0 and -0 *****************/
-    _sse_load((*rp).s0);
-    _sse_load_up((*rm).s0);
+#  if (defined MPI && !defined _NO_COMM)
+  xchange_halffield(ieo); 
+#  endif
+  s = l;
+  phi = NBPointer[2 + ieo];
+  if(ieo == 0) {
+    U = g_gauge_field_copy[0][1][0];
+  }
+  else {
+    U = g_gauge_field_copy[0][0][0];
+  }
+  _prefetch_su3(U);
+  
+  /* Now we sum up and expand to a full spinor */
+  ix = 0;
+  for(i = 0; i < (VOLUME)/2; i++){
+    /*********************** direction +0 ************************/
+    _vector_assign(rs.s0, (*phi[ix]).s0);
+    _vector_assign(rs.s2, (*phi[ix]).s0);
+    _vector_assign(rs.s1, (*phi[ix]).s1);
+    _vector_assign(rs.s3, (*phi[ix]).s1);
+    ix++;
+
+    /*********************** direction -0 ************************/
+    _prefetch_su3(U+1);
+      
+    _sse_load((*phi[ix]).s0);
+    _sse_su3_inverse_multiply((*U));
+    _sse_vector_cmplxcg_mul(ka0);
+    _sse_load(rs.s0);
     _sse_vector_add();
     _sse_store(rs.s0);
 
-    _sse_load((*rp).s0);
+    _sse_load(rs.s2);
     _sse_vector_sub();
     _sse_store(rs.s2);
 
-    _sse_load_up((*rm).s1);
-    _sse_load((*rp).s1);
+    _sse_load((*phi[ix]).s1);
+    _sse_su3_inverse_multiply((*U));
+    _sse_vector_cmplxcg_mul(ka0);
+
+    _sse_load(rs.s1);
     _sse_vector_add();
     _sse_store(rs.s1);
 
-    _sse_load((*rp).s1);
+    _sse_load(rs.s3);
     _sse_vector_sub();
     _sse_store(rs.s3);
-    _prefetch_nta_halfspinor(rp+4);
-    _prefetch_nta_halfspinor(rm+4);
-    rp++;
-    rm++;
+
+    ix++;
+    U++;
     /*********************** direction +1 ************************/
-/*     _prefetch_nta_halfspinor(rp+1); */
-    _sse_load_up((*rp).s0);
+    _sse_load_up((*phi[ix]).s0);
     _sse_load(rs.s0);
     _sse_vector_add();
     _sse_store(rs.s0);
@@ -394,7 +269,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_sub();
     _sse_store(rs.s3); 
 
-    _sse_load_up((*rp).s1);
+    _sse_load_up((*phi[ix]).s1);
     _sse_load(rs.s1);
     _sse_vector_add();
     _sse_store(rs.s1);
@@ -402,12 +277,17 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_load(rs.s2);
     _sse_vector_i_mul();      
     _sse_vector_sub();
-    _sse_store(rs.s2);
-    _prefetch_nta_halfspinor(rp+4);
-    rp++;
+    _sse_store(rs.s2);       
+    ix++;
+
     /*********************** direction -1 ************************/
-/*     _prefetch_nta_halfspinor(rm+1); */
-    _sse_load_up((*rm).s0);
+
+    _prefetch_su3(U);
+
+    _sse_load((*phi[ix]).s0);
+    _sse_su3_inverse_multiply((*U));
+    _sse_vector_cmplxcg_mul(ka1);
+
     _sse_load(rs.s0);
     _sse_vector_add();
     _sse_store(rs.s0);
@@ -416,8 +296,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_i_mul();      
     _sse_vector_add();
     _sse_store(rs.s3);
-/*     _prefetch_spinor(rp+1); */
-    _sse_load_up((*rm).s1);
+
+    _sse_load((*phi[ix]).s1);
+      
+    _sse_su3_inverse_multiply((*U));
+    _sse_vector_cmplxcg_mul(ka1);
+
     _sse_load(rs.s1);
     _sse_vector_add();
     _sse_store(rs.s1);
@@ -426,12 +310,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_i_mul();      
     _sse_vector_add();
     _sse_store(rs.s2);
-    _prefetch_nta_halfspinor(rm+4);
-    rm++;
-    /*********************** direction +4 ************************/
-/*     _prefetch_nta_halfspinor(rp+1); */
+    ix++;
+    U++;
 
-    _sse_load_up((*rp).s0);
+    /*********************** direction +2 ************************/
+    _sse_load_up((*phi[ix]).s0);
     _sse_load(rs.s0);
     _sse_vector_add();
     _sse_store(rs.s0);
@@ -440,19 +323,24 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_add();
     _sse_store(rs.s3);
 
-    _sse_load_up((*rp).s1);
+    _sse_load_up((*phi[ix]).s1);
     _sse_load(rs.s1);
     _sse_vector_add();
     _sse_store(rs.s1);
 
     _sse_load(rs.s2);
     _sse_vector_sub();
-    _sse_store(rs.s2);
-    _prefetch_nta_halfspinor(rp+4);
-    rp++; 
+    _sse_store(rs.s2);      
+    ix++;
+
     /*********************** direction -2 ************************/
-/*     _prefetch_nta_halfspinor(rm+1); */
-    _sse_load_up((*rm).s0);
+
+    _prefetch_su3(U+1);
+
+    _sse_load((*phi[ix]).s0);
+    _sse_su3_inverse_multiply((*U));
+    _sse_vector_cmplxcg_mul(ka2);
+
     _sse_load(rs.s0);
     _sse_vector_add();
     _sse_store(rs.s0);
@@ -461,19 +349,23 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_sub();
     _sse_store(rs.s3);
 
-    _sse_load_up((*rm).s1);
+    _sse_load((*phi[ix]).s1);
+      
+    _sse_su3_inverse_multiply((*U));
+    _sse_vector_cmplxcg_mul(ka2);
+
     _sse_load(rs.s1);
     _sse_vector_add();
     _sse_store(rs.s1);
 
     _sse_load(rs.s2);
     _sse_vector_add();
-    _sse_store(rs.s2);
-    _prefetch_nta_halfspinor(rm+4);
-    rm++;
-    /*********************** direction +4 ************************/
+    _sse_store(rs.s2);      
+    ix++;
+    U++;
+    /*********************** direction +3 ************************/
+    _sse_load_up((*phi[ix]).s0);
 
-    _sse_load_up((*rp).s0);
     _sse_load(rs.s0);
     _sse_vector_add();
     _sse_store(rs.s0);
@@ -483,12 +375,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_sub();
     _sse_store(rs.s2);
 
-    rn = l + icx;
-    _prefetch_spinor(rn);  
+    _sse_load_up((*phi[ix]).s1);
 
-/*     _prefetch_nta_halfspinor(rp+1);  */
-
-    _sse_load_up((*rp).s1);
     _sse_load(rs.s1);
     _sse_vector_add();
     _sse_store(rs.s1);
@@ -497,32 +385,45 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_i_mul();      
     _sse_vector_add();
     _sse_store(rs.s3);
-    _prefetch_nta_halfspinor(rp+4);
-    rp++;
+
+    ix++;
     /*********************** direction -3 ************************/
-/*     _prefetch_nta_halfspinor(rm+1); */
-    _sse_load_up((*rm).s0);
+
+    _prefetch_su3(U+1); 
+    _prefetch_spinor(s+1);
+
+    _sse_load((*phi[ix]).s0);
+      
+    _sse_su3_inverse_multiply((*U));
+    _sse_vector_cmplxcg_mul(ka3);
+
     _sse_load(rs.s0);
     _sse_vector_add();
-    _sse_store((*rn).s0);
+    _sse_store((*s).s0);
 
     _sse_load(rs.s2);
     _sse_vector_i_mul();      
     _sse_vector_add();
-    _sse_store((*rn).s2);
+    _sse_store((*s).s2);
 
-    _sse_load_up((*rm).s1);
+    _sse_load((*phi[ix]).s1);
+      
+    _sse_su3_inverse_multiply((*U));
+    _sse_vector_cmplxcg_mul(ka3);
+
     _sse_load(rs.s1);
     _sse_vector_add();
-    _sse_store((*rn).s1);
+    _sse_store((*s).s1);
 
     _sse_load(rs.s3);
     _sse_vector_i_mul();      
     _sse_vector_sub();
-    _sse_store((*rn).s3);
-    _prefetch_nta_halfspinor(rm+4);
-    rm++;
+    _sse_store((*s).s3);
+    ix++;
+    U++;
+    s++;
   }
+#pragma pomp inst end(hoppingmatrix)
 }
 
 #elif (defined BGL && defined XLC)
@@ -550,7 +451,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   /* The following contains the result spinor (12 regs) */
   double _Complex rs00, rs01, rs02, rs10, rs11, rs12, rs20, rs21, rs22, 
     rs30, rs31, rs32;
-
+#pragma pomp inst begin(hoppingmatrix)
 #pragma disjoint(*s, *U, *l, *k)
 
   __alignx(16, l);
@@ -562,7 +463,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   _prefetch_spinor(s); 
 
   /* s contains the source vector */
-  /* r0,r1,r2,r3 contain the intermediate half spinor */
 
   if(ieo == 0) {
     U = g_gauge_field_copy[0][0][0];
@@ -802,6 +702,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
     s++;
   }
+#pragma pomp inst end(hoppingmatrix)
 }
 #elif defined XLC
 
@@ -817,6 +718,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
   su3 *up,*um;
   spinor *r,*sp,*sm;
   spinor temp;
+#pragma pomp inst begin(hoppingmatrix)
 #pragma disjoint(temp, *sp, *sm, *r, *up, *um)
 
   /* for parallelization */
@@ -1095,6 +997,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 
     /************************ end of loop ************************/
   }
+#pragma pomp inst end(hoppingmatrix)
 }
 
 
@@ -1110,7 +1013,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   spinor rs;
   su3_vector psi, chi;
   halfspinor ** phi ALIGN;
-
+#pragma pomp inst begin(hoppingmatrix)
 
   if(k == l){
     printf("Error in H_psi (simple.c):\n");
@@ -1336,6 +1239,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
     s++;
   }
+#pragma pomp inst end(hoppingmatrix)
 }
 /* end of If defined SSE2 */
 #endif

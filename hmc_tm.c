@@ -8,7 +8,6 @@
 *         urbach@physik.fu-berlin.de
 *
 *******************************************************************************/
-
 #define MAIN_PROGRAM
 
 #ifdef HAVE_CONFIG_H
@@ -96,6 +95,9 @@ int main(int argc,char *argv[]) {
   /* For the Polyakov loop: */
   int dir = 2;
   complex pl, pl4;
+
+#pragma pomp inst init
+#pragma pomp inst begin(main)
 
   verbose = 0;
   g_use_clover_flag = 0;
@@ -553,6 +555,7 @@ int main(int argc,char *argv[]) {
   free_spinor_field();
   free_moment_field();
   return(0);
+#pragma pomp inst end(main)
 }
 
 static char const rcsid[] = "$Id$";

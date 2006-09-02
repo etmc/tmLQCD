@@ -1,4 +1,5 @@
 /* $Id$ */
+
 /**************************************************************
  * deriv_Sb: function to compute the derivative 
  * of the phi^{\dag} Q psi with respect
@@ -47,6 +48,7 @@ void deriv_Sb(const int ieo, const int l, const int k){
 #if (defined XLC || defined BGLNOTCHECKED)
   double _Complex reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7;
 #endif
+#pragma pomp inst begin(derivSb)
 #ifdef XLC
 #pragma disjoint(*r, *sp, *sm, *up, *um, *ddd)
 #endif
@@ -260,6 +262,7 @@ void deriv_Sb(const int ieo, const int l, const int k){
      
     /****************** end of loop ************************/
   }
+#pragma pomp inst end(derivSb)
 }
 
 static char const rcsid[] = "$Id$";

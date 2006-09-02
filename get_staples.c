@@ -70,6 +70,7 @@ su3 get_staples(int x, int mu) {
   int k,iy;
   static su3 v,st;
   su3 *w1,*w2,*w3;
+#pragma pomp inst begin(staples)
   
   _su3_zero(v);
   for(k=0;k<4;k++) {
@@ -93,6 +94,8 @@ su3 get_staples(int x, int mu) {
     }
   }
   return v;
+#pragma pomp inst end(staples)
 }
 
 #endif
+

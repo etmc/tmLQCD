@@ -48,7 +48,7 @@ void gauge_momenta(double step) {
   static double st, st1;
   double sum=0., sum1=0., max=0., max2=0.;
   double sum2=0.;
-
+#pragma pomp inst begin(gaugemomenta)
 /*   int x0, x1, x2, x3; */
 
   st  = -step * g_rgi_C0 * g_beta/3.0;
@@ -106,6 +106,7 @@ void gauge_momenta(double step) {
       fflush(stdout);
     }
   }
+#pragma pomp inst end(gaugemomenta)
 }
 
 
@@ -114,12 +115,12 @@ void gauge_momenta(double step) {
  * Here \delta S_b is computed
  *
  ********************************************/
-
 /* input is the pseudo-fermion field */
 void deri() {
 
   int j,jmax=1;
   int i,mu;
+#pragma pomp inst begin(deri)
 
   for(i=0;i<(VOLUME+RAND);i++){ 
     for(mu=0;mu<4;mu++){ 
@@ -242,7 +243,9 @@ void deri() {
     deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
     g_mu = g_mu1;
   }
+#pragma pomp inst end(deri)
 }
+
 
 void fermion_momenta(double step) {
   int i,mu;
@@ -321,6 +324,7 @@ void update_gauge(double step) {
   su3 *z;
   static su3adj deriv;
   su3adj *xm;
+#pragma pomp inst begin(updategauge)
 
   for(i = 0; i < VOLUME; i++) { 
     for(mu = 0; mu < 4; mu++){
@@ -343,6 +347,7 @@ void update_gauge(double step) {
    * is not updated here!
    *
    */
+#pragma pomp inst end(updategauge)
 }
 
 
