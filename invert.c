@@ -162,6 +162,14 @@ int main(int argc,char *argv[]) {
   /* define the boundary conditions for the fermion fields */
   boundary();
 
+#ifdef _USE_HALFSPINOR
+  j = init_dirac_halfspinor();
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
+    exit(0);
+  }
+#endif
+
   for(j=0;j<Nmeas; j++) {
     sprintf(conf_filename,"%s.%.4d", gauge_input_filename, nstore);
     if (g_proc_id == 0){

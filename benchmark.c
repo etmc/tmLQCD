@@ -103,7 +103,9 @@ int main(int argc,char *argv[])
 #ifdef BGL
     printf("# The code was compiled for Blue Gene/L\n");
 #endif
-    
+#ifdef _USE_HALFSPINOR
+  printf("# The code was compiled with -D_USE_HALFSPINOR\n");
+#endif    
     printf("\n");
     fflush(stdout);
   }
@@ -142,8 +144,10 @@ int main(int argc,char *argv[])
   /* define the boundary conditions for the fermion fields */
   boundary();
 
+#ifdef _USE_HALFSPINOR
   init_dirac_halfspinor();
-  
+#endif  
+
   check_geometry();
 #ifdef MPI
   check_xchange(); 

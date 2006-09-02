@@ -30,7 +30,7 @@
 
 #ifdef _USE_SHMEM
 # include <mpp/shmem.h>
-void xchange_halffield(const int ieo) {
+void xchange_halffield() {
 #pragma pomp inst begin(xchangehalf)
 #  ifdef MPI
 
@@ -79,7 +79,7 @@ void xchange_halffield(const int ieo) {
 #pragma pomp inst end(xchangehalf)
 }
 #else
-void xchange_halffield(const int ieo) {
+void xchange_halffield() {
 
 #  ifdef MPI
 

@@ -1530,6 +1530,11 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   fprintf(parameterfile,
 	  "# The code was compiled with -D_GAUGE_COPY\n");
 #endif
+#ifdef _USE_HALFSPINOR
+  printf("# The code was compiled with -D_USE_HALFSPINOR\n");
+  fprintf(parameterfile,
+	  "# The code was compiled with -D_USE_HALFSPINOR\n");
+#endif
   printf("# The lattice size is %d x %d x %d x %d\n",
 	 (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(LZ*g_nproc_z));
   printf("# The local lattice size is %d x %d x %d x %d\n", 

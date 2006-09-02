@@ -294,11 +294,13 @@ int main(int argc,char *argv[]) {
   
   check_geometry();
 
+#ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(0);
   }
+#endif
     
   /* Continue */
   if(startoption == 3){

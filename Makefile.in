@@ -78,6 +78,7 @@ clean: clean-recursive Makefile
 
 distclean: distclean-recursive Makefile
 	rm -f hmc_tm hybrid *.o *.d *~ Makefile config.log config.status fixed_volume.h
+	rm -f config.h
 
 .PHONY: all clean compile-clean distclean dep \
 	flex_read_input ${PROGRAMS} all-recursive \
