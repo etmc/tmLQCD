@@ -34,5 +34,6 @@
 #define _NO_COMM 1
 #ifdef _KOJAK_INST
 #undef _KOJAK_INST
+#endif
 
 #include "Hopping_Matrix.c"
