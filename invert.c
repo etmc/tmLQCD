@@ -79,7 +79,10 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
   double atime=0., etime=0.;
 #endif
+#ifdef _KOJAK_INST
+#pragma pomp inst init
 #pragma pomp inst begin(main)
+#endif
   verbose = 0;
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
@@ -316,5 +319,7 @@ int main(int argc,char *argv[]) {
   free_spinor_field();
   free_moment_field();
   return(0);
+#ifdef _KOJAK_INST
 #pragma pomp inst end(main)
+#endif
 }

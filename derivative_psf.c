@@ -27,8 +27,9 @@ extern int ITER_MAX_CG;
 
 void derivative_psf(const int nr) {
   int i,mu;
-
+#ifdef _KOJAK_INST
 #pragma pomp inst begin(derivativepsf)
+#endif
   for(i=0;i<(VOLUME+RAND);i++){ 
     for(mu=0;mu<4;mu++){ 
       _zero_su3adj(df0[i][mu]);
@@ -225,6 +226,8 @@ void derivative_psf(const int nr) {
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
   deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
   g_mu = g_mu1;
+#ifdef _KOJAK_INST
 #pragma pomp inst end(derivativepsf)
+#endif
 }
 

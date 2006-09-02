@@ -31,7 +31,10 @@
 #ifdef _USE_SHMEM
 # include <mpp/shmem.h>
 void xchange_halffield() {
+
+#ifdef _KOJAK_INST
 #pragma pomp inst begin(xchangehalf)
+#endif
 #  ifdef MPI
 
   shmem_barrier_all();
@@ -76,7 +79,9 @@ void xchange_halffield() {
   shmem_barrier_all();
 #  endif
   return;
+#ifdef _KOJAK_INST
 #pragma pomp inst end(xchangehalf)
+#endif
 }
 #else
 void xchange_halffield() {
@@ -98,7 +103,10 @@ void xchange_halffield() {
 #  if (defined XLC && defined BGL)
   __alignx(16, HalfSpinor);
 #  endif
+
+#ifdef _KOJAK_INST
 #pragma pomp inst begin(xchangehalf)
+#endif
   /* send the data to the neighbour on the right in t direction */
   /* recieve the data from the neighbour on the left in t direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME), LX*LY*LZ*12/2, MPI_DOUBLE, 
@@ -173,6 +181,10 @@ void xchange_halffield() {
   MPI_Waitall(reqcount, requests, status); 
 #  endif
   return;
+
+#ifdef _KOJAK_INST
+#pragma pomp inst end(xchangehalf)
+#endif
 }
 
 #endif

@@ -42,7 +42,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   static spinor rs;
   spinor *s ALIGN;
   halfspinor ** phi ALIGN;
+#ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
+#endif
   
   /* We will run through the source vector now */
   /* instead of the solution vector            */
@@ -423,7 +425,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     U++;
     s++;
   }
+#ifdef _KOJAK_INST
 #pragma pomp inst end(hoppingmatrix)
+#endif
 }
 
 #  elif (defined BGL && defined XLC)
@@ -451,7 +455,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   /* The following contains the result spinor (12 regs) */
   double _Complex rs00, rs01, rs02, rs10, rs11, rs12, rs20, rs21, rs22, 
     rs30, rs31, rs32;
+#ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
+#endif
 #pragma disjoint(*s, *U, *l, *k)
 
   __alignx(16, l);
@@ -702,7 +708,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
     s++;
   }
+#ifdef _KOJAK_INST
 #pragma pomp inst end(hoppingmatrix)
+#endif
 }
 
 #  else
@@ -716,7 +724,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   spinor rs;
   su3_vector psi, chi;
   halfspinor ** phi ALIGN;
+#ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
+#endif
 
   if(k == l){
     printf("Error in H_psi (simple.c):\n");
@@ -942,7 +952,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
     s++;
   }
+#ifdef _KOJAK_INST
 #pragma pomp inst end(hoppingmatrix)
+#endif
 }
 #  endif
 

@@ -105,6 +105,17 @@ else
   AC_MSG_RESULT(no)
 fi
 
+AC_MSG_CHECKING([whether we want to fix volume at compiletime])
+AC_ARG_WITH([kojakinst],
+  [  --with-kojakinst        instrumentalise for KOJAK [default=no]],
+  with_kojakinst=$withval, with_kojakinst=no)
+if test $with_fixvol = yes; then
+  AC_MSG_RESULT(yes)
+  CC="kinst-pomp ${CC}"
+else
+  AC_MSG_RESULT(no)
+fi
+
 AC_MSG_CHECKING(whether we want to use lapack and blas)
 AC_ARG_WITH(lapack,
   [  --with-lapack           enable use of lapack [default=yes]],

@@ -873,6 +873,7 @@ Optional Packages:
   --with-limedir=dir      search lime in dir default=./lime
   --with-mpidimension=n   use n dimensional parallelisation default=1
   --with-fixedvolume      fix volume at compiletime default=no
+  --with-kojakinst        instrumentalise for KOJAK default=no
   --with-lapack           enable use of lapack default=yes
   --with-gprof            use of gprof profiler default=yes
 
@@ -6239,6 +6240,25 @@ _ACEOF
 
             ac_config_files="$ac_config_files fixed_volume.h"
 
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+echo "$as_me:$LINENO: checking whether we want to fix volume at compiletime" >&5
+echo $ECHO_N "checking whether we want to fix volume at compiletime... $ECHO_C" >&6
+
+# Check whether --with-kojakinst or --without-kojakinst was given.
+if test "${with_kojakinst+set}" = set; then
+  withval="$with_kojakinst"
+  with_kojakinst=$withval
+else
+  with_kojakinst=no
+fi;
+if test $with_fixvol = yes; then
+  echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+  CC="kinst-pomp ${CC}"
 else
   echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6

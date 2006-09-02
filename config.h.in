@@ -125,3 +125,6 @@
 
 /* Define to 1 if shmem API should be used */
 #undef _USE_SHMEM
+
+/* Define to 1 if KOJAK instrumentalisation should be done*/
+#undef _KOJAK_INST

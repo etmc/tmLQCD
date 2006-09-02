@@ -13,7 +13,9 @@ void get_rectangle_staples(su3 * const v, const int x, const int mu) {
   static su3 tmp1, tmp2;
   int y, z, nu;
   su3 * a, * b, * c, * d, * e;
+#ifdef _KOJAK_INST
 #pragma pomp inst begin(rectstaples)
+#endif
 #ifdef XLC
 #pragma disjoint(*v, tmp1, tmp2, *a, *b, *c, *d, *e)
 #endif
@@ -157,6 +159,8 @@ void get_rectangle_staples(su3 * const v, const int x, const int mu) {
       _su3_times_su3_acc((*v), tmp2, tmp1);
     }
   }
+#ifdef _KOJAK_INST
 #pragma pomp inst end(rectstaples)
+#endif
 }
 

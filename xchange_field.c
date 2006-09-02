@@ -50,6 +50,10 @@ void xchange_field(spinor * const l, const int ieo) {
   int x0=0, x1=0, x2=0, ix=0;
   int reqcount = 16;
 #  endif
+
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(xchangefield)
+#endif
 #  if (defined XLC)
 #    ifdef PARALLELXYZT
   __alignx(16, field_buffer_z);
@@ -219,6 +223,9 @@ void xchange_field(spinor * const l, const int ieo) {
   MPI_Waitall(reqcount, requests, status);
 #  endif
   return;
+#ifdef _KOJAK_INST
+#pragma pomp inst end(xchangefield)
+#endif
 }
 
 #elif (defined _USE_SHMEM)
@@ -229,6 +236,11 @@ void xchange_field(spinor * const l, const int ieo) {
 
 #  ifdef MPI
   int i,ix, mu, x0, x1, x2, x3, k;
+
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(xchangefield)
+#endif
+
   shmem_barrier_all();
 
   shmem_double_put((double*)(l+T*LX*LY*LZ/2), (double*)l,
@@ -313,6 +325,10 @@ void xchange_field(spinor * const l, const int ieo) {
 
   shmem_barrier_all();
 #  endif
+  return;
+#ifdef _KOJAK_INST
+#pragma pomp inst end(xchangefield)
+#endif
 }
 
 
@@ -324,6 +340,10 @@ void xchange_field(spinor * const l, const int ieo) {
 #  ifdef PARALLELXYZT
   int x0=0, x1=0, x2=0, ix=0;
 #  endif
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(xchangefield)
+#endif
+
 #  ifdef MPI
     
   MPI_Status status;
@@ -412,6 +432,9 @@ void xchange_field(spinor * const l, const int ieo) {
 #    endif
 #  endif
   return;
+#ifdef _KOJAK_INST
+#pragma pomp inst end(xchangefield)
+#endif
 }
 #endif
 

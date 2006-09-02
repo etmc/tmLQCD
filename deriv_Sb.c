@@ -48,7 +48,9 @@ void deriv_Sb(const int ieo, const int l, const int k){
 #if (defined XLC || defined BGLNOTCHECKED)
   double _Complex reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7;
 #endif
+#ifdef _KOJAK_INST
 #pragma pomp inst begin(derivSb)
+#endif
 #ifdef XLC
 #pragma disjoint(*r, *sp, *sm, *up, *um, *ddd)
 #endif
@@ -262,7 +264,9 @@ void deriv_Sb(const int ieo, const int l, const int k){
      
     /****************** end of loop ************************/
   }
+#ifdef _KOJAK_INST
 #pragma pomp inst end(derivSb)
+#endif
 }
 
 static char const rcsid[] = "$Id$";

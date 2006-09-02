@@ -95,9 +95,10 @@ int main(int argc,char *argv[]) {
   /* For the Polyakov loop: */
   int dir = 2;
   complex pl, pl4;
-
+#ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
+#endif
 
   verbose = 0;
   g_use_clover_flag = 0;
@@ -557,7 +558,9 @@ int main(int argc,char *argv[]) {
   free_spinor_field();
   free_moment_field();
   return(0);
+#ifdef _KOJAK_INST
 #pragma pomp inst end(main)
+#endif
 }
 
 static char const rcsid[] = "$Id$";
