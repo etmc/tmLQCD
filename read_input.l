@@ -1076,6 +1076,7 @@ int read_input(char * conf_file){
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
   reproduce_randomnumber_flag = _default_reproduce_randomnumber_flag;
+  g_sloppy_precision = 0;
 
   /********************************************/
 
