@@ -10,7 +10,6 @@
 #include "init_geometry_indices.h"
 
 int *iup = NULL, *idn = NULL, *ipt = NULL, **ipt_ = NULL, ***ipt__ = NULL;
-int *halfpt = NULL;
 
 int init_geometry_indices(const int V) {
   int i = 0;
@@ -48,18 +47,12 @@ int init_geometry_indices(const int V) {
   if(errno == ENOMEM) return(13);
 #endif
 
-  halfpt = (int*)calloc(4*(T+2)*(LX+2)*(LY+2)*(LZ+2)/2, sizeof(int));
-  if(errno == ENOMEM) return(14);
-  g_halfpt = (int**)calloc((T+2)*(LX+2)*(LY+2)*(LZ+2)/2, sizeof(int*));
-  if(errno == ENOMEM) return(15);
-
   g_idn[0] = idn;
   g_iup[0] = iup;
 
   ipt_[0] = ipt;
   ipt__[0] = ipt_;
   g_ipt[0] = ipt__;
-  g_halfpt[0] = halfpt;
   for(i = 1; i < V; i++){
     g_idn[i] = g_idn[i-1]+4;
     g_iup[i] = g_iup[i-1]+4;
@@ -72,9 +65,6 @@ int init_geometry_indices(const int V) {
   }
   for(i = 1; i < (T+4); i++){
     g_ipt[i] = g_ipt[i-1]+(LX+4);
-  }
-  for(i = 1; i < (T+2)*(LX+2)*(LY+2)*(LZ+2)/2; i++) {
-    g_halfpt[i] = g_halfpt[i-1] + 4;
   }
   return(0);
 }
@@ -91,8 +81,6 @@ void free_geometry_indices() {
   free(g_eo2lexic);
   free(g_lexic2eosub);
   free(g_lexic2eo);
-  free(g_halfpt);
-  free(halfpt);
 #ifdef PARALLELXYZT
   free(g_field_z_ipt_odd);
   free(g_field_z_ipt_even);

@@ -34,6 +34,7 @@
 #include "init_geometry_indices.h"
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
+#include "init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
 #include "test/check_geometry.h"
 #include "mpi_init.h"
@@ -102,7 +103,9 @@ int main(int argc,char *argv[])
 #ifdef BGL
     printf("# The code was compiled for Blue Gene/L\n");
 #endif
-    
+#ifdef _USE_HALFSPINOR
+  printf("# The code was compiled with -D_USE_HALFSPINOR\n");
+#endif    
     printf("\n");
     fflush(stdout);
   }
@@ -116,6 +119,7 @@ int main(int argc,char *argv[])
 #endif
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
   j = init_spinor_field(VOLUMEPLUSRAND/2, 3*k_max);
+
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
@@ -139,7 +143,11 @@ int main(int argc,char *argv[])
   geometry();
   /* define the boundary conditions for the fermion fields */
   boundary();
-  
+
+#ifdef _USE_HALFSPINOR
+  init_dirac_halfspinor();
+#endif  
+
   check_geometry();
 #ifdef MPI
   check_xchange(); 

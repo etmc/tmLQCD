@@ -1,3 +1,11 @@
+02.09.2006: New Dirac operator implemented and working
+	    On BG/L this brings a 20% improvement
+	    it can be switched on with --enable-newdiraop
+
+	    The exchange routines are now also with shmem API
+	    available. Usable with --enable-shmem. this
+	    feature is not yet completely tested.
+
 15.04.2006: Various new input parameters, see doc/input.tex.
 	    removing of hmc.reread now also works on BG/L.
 	    The file conf.save is now almost always save: a new

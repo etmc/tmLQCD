@@ -82,12 +82,9 @@ EXTERN int * g_lexic2eosub;
 EXTERN int **** g_ipt;
 EXTERN int ** g_iup;
 EXTERN int ** g_idn;
-EXTERN int ** g_halfpt;
 
 EXTERN int * g_field_z_ipt_even;
 EXTERN int * g_field_z_ipt_odd;
-EXTERN int * g_halffield_z_ipt_even;
-EXTERN int * g_halffield_z_ipt_odd;
 
 EXTERN spinor ** g_spinor_field;
 
@@ -98,7 +95,11 @@ EXTERN int * g_csg_index_array[4];
 EXTERN int g_csg_N[8];
 
 EXTERN su3 ** g_gauge_field;
+#ifdef _USE_HALFSPINOR
+EXTERN su3 *** g_gauge_field_copy;
+#else
 EXTERN su3 ** g_gauge_field_copy;
+#endif
 
 EXTERN su3adj ** moment;
 EXTERN su3adj ** df0;

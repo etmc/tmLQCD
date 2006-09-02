@@ -8,7 +8,6 @@
 *         urbach@physik.fu-berlin.de
 *
 *******************************************************************************/
-
 #define MAIN_PROGRAM
 
 #ifdef HAVE_CONFIG_H
@@ -46,6 +45,7 @@
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
 #include "init_gauge_tmp.h"
+#include "init_dirac_halfspinor.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "polyakov_loop.h"
@@ -96,6 +96,9 @@ int main(int argc,char *argv[]) {
   int dir = 2;
   complex pl, pl4;
 
+#pragma pomp inst init
+#pragma pomp inst begin(main)
+
   verbose = 0;
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
@@ -141,8 +144,8 @@ int main(int argc,char *argv[]) {
     countfile = fopen(nstore_filename, "r");
     if(countfile != NULL) {
       j = fscanf(countfile, "%d %d %s\n", &nstore, &trajectory_counter, gauge_input_filename);
-      if(j < 2) nstore = 0;
-      if(j < 3) trajectory_counter = 0;
+      if(j < 1) nstore = 0;
+      if(j < 2) trajectory_counter = 0;
       fclose(countfile);
     }
     else {
@@ -290,8 +293,15 @@ int main(int argc,char *argv[]) {
   boundary();
   
   check_geometry();
-  
-  
+
+#ifdef _USE_HALFSPINOR
+  j = init_dirac_halfspinor();
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
+    exit(0);
+  }
+#endif
+    
   /* Continue */
   if(startoption == 3){
     j = read_rlxd_state(gauge_input_filename, rlxd_state, rlxdsize);
@@ -547,6 +557,7 @@ int main(int argc,char *argv[]) {
   free_spinor_field();
   free_moment_field();
   return(0);
+#pragma pomp inst end(main)
 }
 
 static char const rcsid[] = "$Id$";

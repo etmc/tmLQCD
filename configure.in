@@ -3,7 +3,7 @@
 # Process this file with autoconf to produce a configure script
 #
 AC_PREREQ(2.53)
-AC_INIT(HMC, 3.1.5, carsten.urbach@liverpool.ac.uk)
+AC_INIT(HMC, 3.2.0, carsten.urbach@liverpool.ac.uk)
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()
@@ -584,18 +584,35 @@ else
   AC_MSG_RESULT(no)
 fi
 
-#AC_MSG_CHECKING(whether we want to use EO geometry for gauge fields)
-#AC_ARG_ENABLE(eogeom,
-#  [  --enable-eogeom         enable use of EO geometry for gauge fields [default=yes]],
-#  enable_eogeom=$enableval, enable_eogeom=yes)
-#if test $enable_eogeom = yes; then
-#  AC_MSG_RESULT(yes)
-#  AC_DEFINE(_NEW_GEOMETRY,1,Use even/odd geometry in the gauge fields)
-#else
-#  AC_MSG_RESULT(no)
-#fi
+AC_MSG_CHECKING(whether we want to use a Dirac Op. with halfspinor exchange)
+AC_ARG_ENABLE(newdiracop,
+  [  --enable-newdiracop     use a Dirac Op. with halfspinor exchange [default=yes]],
+  enable_newdiracop=$enableval, enable_newdiracop=yes)
+if test $enable_newdiracop = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(_USE_HALFSPINOR,1,Exchange only a halfspinor in the Dirac Operator)
+  if test $enable_gaugecopy = no; then
+    AC_MSG_WARN([switching on gaugecopy for newdiracop!])
+    AC_DEFINE(_GAUGE_COPY,1,Construct an extra copy of the gauge fields)
+  fi
+else
+  AC_MSG_RESULT(no)
+fi
 
-# create the lib directory here
+#_USE_SHMEM
+
+AC_MSG_CHECKING(whether we want to use shmem API)
+AC_ARG_ENABLE(shmem,
+  [  --enable-shmem          use shmem API [default=no]],
+  enable_shmem=$enableval, enable_shmem=no)
+if test $enable_shmem = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(_USE_SHMEM,1,Use shmem API)
+else
+  AC_MSG_RESULT(no)
+fi
+
+
 if test ! -e lib; then
   mkdir lib
 fi

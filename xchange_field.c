@@ -18,6 +18,10 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef _USE_SHMEM
+# include <mpp/shmem.h>
+#endif
+
 #include "global.h"
 #if (defined XLC && defined BGL)
 #  include "bgl.h"
@@ -26,8 +30,10 @@
 #include "su3.h"
 #include "xchange_field.h"
 
-#if defined BGL
+#pragma disjoint(*field_buffer_z2, *field_buffer_z)
 
+
+#if ((defined BGL) && (defined MPI))
 
 
 void xchange_field(spinor * const l, const int ieo) {
@@ -46,7 +52,6 @@ void xchange_field(spinor * const l, const int ieo) {
 #  endif
 #  if (defined XLC)
 #    ifdef PARALLELXYZT
-#pragma disjoint(*field_buffer_z2, *field_buffer_z, l)
   __alignx(16, field_buffer_z);
   __alignx(16, field_buffer_z2);
 #    endif
@@ -216,6 +221,101 @@ void xchange_field(spinor * const l, const int ieo) {
   return;
 }
 
+#elif (defined _USE_SHMEM)
+
+/* Here comes the version with shared memory */
+/* exchanges the field  l */
+void xchange_field(spinor * const l, const int ieo) {
+
+#  ifdef MPI
+  int i,ix, mu, x0, x1, x2, x3, k;
+  shmem_barrier_all();
+
+  shmem_double_put((double*)(l+T*LX*LY*LZ/2), (double*)l,
+                   (LX*LY*LZ*12), g_nb_t_dn);
+  shmem_double_put((double*)(l+(T+1)*LX*LY*LZ/2), (double*)(l+(T-1)*LX*LY*LZ/2),
+                   (LX*LY*LZ*12), g_nb_t_up);
+
+#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+  k = (T+2)*LX*LY*LZ/2;
+  for(x0 = 0; x0 < T; x0++) {
+    shmem_double_put((double*)(l + k),
+                     (double*)(l + g_lexic2eo[g_ipt[x0][0][0][0]]),
+                     12*LZ*LY, g_nb_x_dn);
+    k+=LZ*LY;
+  }
+  k = ((T+2)*LX*LY*LZ + T*LY*LZ)/2;
+  for(x0 = 0; x0 < T; x0++) {
+    shmem_double_put((double*)(l + k),
+                     (double*)(l + g_lexic2eo[g_ipt[x0][LX-1][0][0]]),
+                     12*LZ*LY, g_nb_x_up);
+    k+=LZ*LY;
+  }
+#    endif
+
+#    if (defined PARALLELXYT || defined PARALLELXYZT)
+  k = ((T+2)*LX*LY*LZ + 2*T*LY*LZ)/2;
+  for(x0 = 0; x0 < T; x0++) {
+    for(x1 = 0; x1 < LX; x1++) {
+      shmem_double_put((double*)(l + k),
+                       (double*)(l + g_lexic2eo[g_ipt[x0][x1][0][0]]),
+                       12*LZ, g_nb_y_dn);
+      k+=LZ;
+    }
+  }
+  k = ((T+2)*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ)/2;
+  for(x0 = 0; x0 < T; x0++) {
+    for(x1 = 0; x1 < LX; x1++) {
+      shmem_double_put((double*)(l + k),
+                       (double*)(l + g_lexic2eo[g_ipt[x0][x1][LY-1][0]]),
+                       12*LZ, g_nb_y_up);
+      k+=LZ;
+    }
+  }
+#    endif
+
+#    if (defined PARALLELXYZT)
+  x0 = (VOLUME/2 + LX*LY*LZ + T*LY*LZ +T*LX*LZ);
+  if(ieo == 1) {
+    for(k = 0; k < T*LX*LY/2; k++) {
+      shmem_double_put((double*)(l + x0),
+                       (double*)(l + g_field_z_ipt_even[k]),
+                       24, g_nb_z_dn);
+      x0++;
+    }
+  }
+  else {
+    for(k = 0; k < T*LX*LY/2; k++) {
+      shmem_double_put((double*)(l + x0),
+                       (double*)(l + g_field_z_ipt_odd[k]),
+                       24, g_nb_z_dn);
+      x0++;
+    }
+  }
+  x0 = (VOLUME/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2);
+  if(ieo == 1) {
+    for(k = T*LX*LY/2; k < T*LX*LY; k++) {
+      shmem_double_put((double*)(l + x0),
+                       (double*)(l + g_field_z_ipt_even[k]),
+                       24, g_nb_z_up);
+      x0++;
+    }
+  }
+  else {
+    for(k = T*LX*LY/2; k < T*LX*LY; k++) {
+      shmem_double_put((double*)(l + x0),
+                       (double*)(l + g_field_z_ipt_even[k]),
+                       24, g_nb_z_up);
+      x0++;
+    }
+  }
+#    endif
+
+  shmem_barrier_all();
+#  endif
+}
+
+
 #else
 /* Here comes the naive version */  
 /* exchanges the field  l */
@@ -317,145 +417,3 @@ void xchange_field(spinor * const l, const int ieo) {
 
 static char const rcsid[] = "$Id$";
 
-/* Sending only half the amount?? */
-#if defined BLA
-  if(ieo == 1) {
-    sp = &l[ g_field_z_ipt_even[0] ];
-    for(ix = 0; ix < T*LX*LY/2-1; ix++) {
-/*       field_buffer_z[ix] = l[ g_field_z_ipt_even[ix] ]; */
-      s = sp;
-      sp = &l[ g_field_z_ipt_even[ix+1] ];
-      _prefetch_spinor(sp); 
-      _bgl_load((*s).s0);
-      _bgl_load_up((*s).s2);
-      _bgl_vector_i_mul_add();
-      _bgl_store(field_buffer_z[ix].s0);
-      
-      _bgl_load((*sp).s1);
-      _bgl_load_up((*sp).s3);
-      _bgl_vector_i_mul_sub();
-      _bgl_store(field_buffer_z[ix].s1);
-    }
-    s = sp;
-    _bgl_load((*s).s0);
-    _bgl_load_up((*s).s2);
-    _bgl_vector_i_mul_add();
-    _bgl_store(field_buffer_z[ix].s0);
-    
-    _bgl_load((*sp).s1);
-    _bgl_load_up((*sp).s3);
-    _bgl_vector_i_mul_sub();
-    _bgl_store(field_buffer_z[ix].s1);
-  }
-  else {
-    sp = &l[ g_field_z_ipt_odd[0] ];
-    for(ix = 0; ix < T*LX*LY/2-1; ix++) {
-      /*       field_buffer_z[ix] = l[ g_field_z_ipt_odd[ix] ]; */
-      s = sp;
-      sp = &l[ g_field_z_ipt_odd[ix+1] ];
-      _prefetch_spinor(sp); 
-      _bgl_load((*s).s0);
-      _bgl_load_up((*s).s2);
-      _bgl_vector_i_mul_add();
-      _bgl_store(field_buffer_z[ix].s0);
-
-      _bgl_load((*sp).s1);
-      _bgl_load_up((*sp).s3);
-      _bgl_vector_i_mul_sub();
-      _bgl_store(field_buffer_z[ix].s1);
-    }
-    s = sp;
-    _bgl_load((*s).s0);
-    _bgl_load_up((*s).s2);
-    _bgl_vector_i_mul_add();
-    _bgl_store(field_buffer_z[ix].s0);
-    
-    _bgl_load((*sp).s1);
-    _bgl_load_up((*sp).s3);
-    _bgl_vector_i_mul_sub();
-    _bgl_store(field_buffer_z[ix].s1);
-  }
-  /* send the data to the neighbour on the left in z direction */
-  /* recieve the data from the neighbour on the right in z direction */
-/*   MPI_Sendrecv((void*)field_buffer_z, */
-/* 	       12*T*LX*LY, MPI_DOUBLE, g_nb_z_dn, 503,  */
-/*  	       (void*)(l+(VOLUME/2 + LX*LY*LZ + T*LY*LZ +T*LX*LZ)),  */
-/* 	       12*T*LX*LY, MPI_DOUBLE, g_nb_z_up, 503, */
-/* 	       g_cart_grid, &status); */
-
-  MPI_Sendrecv((void*)field_buffer_z,
- 	       1, field_z_slice_half, g_nb_z_dn, 503,  
- 	       (void*)(l+(VOLUME/2 + LX*LY*LZ + T*LY*LZ +T*LX*LZ)), 
- 	       1, field_z_slice_half, g_nb_z_up, 503, 
-	       g_cart_grid, &status);
-
-  if(ieo == 1) {
-    sp = &l[ g_field_z_ipt_even[T*LX*LY] ];
-    for(ix = T*LX*LY/2; ix < T*LX*LY-1; ix++) {
-      /*       field_buffer_z[ix-T*LX*LY/2] = l[ g_field_z_ipt_even[ix] ]; */
-      s = sp;
-      sp =  &l[ g_field_z_ipt_even[ix+1] ];
-      _prefetch_spinor(sp);
-      _bgl_load((*s).s0);
-      _bgl_load_up((*s).s2);
-      _bgl_vector_i_mul_sub();
-      _bgl_store(field_buffer_z[ix-T*LX*LY/2].s0);
-      
-      _bgl_load((*s).s1);
-      _bgl_load_up((*s).s3);
-      _bgl_vector_i_mul_add();
-      _bgl_store(field_buffer_z[ix-T*LX*LY/2].s1);
-    }
-    s = sp;
-    _bgl_load((*s).s0);
-    _bgl_load_up((*s).s2);
-    _bgl_vector_i_mul_sub();
-    _bgl_store(field_buffer_z[ix-T*LX*LY/2].s0);
-    
-    _bgl_load((*s).s1);
-    _bgl_load_up((*s).s3);
-    _bgl_vector_i_mul_add();
-    _bgl_store(field_buffer_z[ix-T*LX*LY/2].s1);
-  }
-  else {
-    sp = &l[ g_field_z_ipt_odd[T*LX*LY] ];
-    for(ix = T*LX*LY/2; ix < T*LX*LY-1; ix++) {
-/*       field_buffer_z[ix-T*LX*LY/2] = l[ g_field_z_ipt_odd[ix] ]; */
-      s = sp;
-      sp =  &l[ g_field_z_ipt_odd[ix+1] ];
-      _prefetch_spinor(sp);
-      _bgl_load((*s).s0);
-      _bgl_load_up((*s).s2);
-      _bgl_vector_i_mul_sub();
-      _bgl_store(field_buffer_z[ix-T*LX*LY/2].s0);
-      
-      _bgl_load((*s).s1);
-      _bgl_load_up((*s).s3);
-      _bgl_vector_i_mul_add();
-      _bgl_store(field_buffer_z[ix-T*LX*LY/2].s1);
-    }
-    s = sp;
-    _bgl_load((*s).s0);
-    _bgl_load_up((*s).s2);
-    _bgl_vector_i_mul_sub();
-    _bgl_store(field_buffer_z[ix-T*LX*LY/2].s0);
-    
-    _bgl_load((*s).s1);
-    _bgl_load_up((*s).s3);
-    _bgl_vector_i_mul_add();
-    _bgl_store(field_buffer_z[ix-T*LX*LY/2].s1);
-  }
-  /* send the data to the neighbour on the right in y direction */
-  /* recieve the data from the neighbour on the left in y direction */  
-/*   MPI_Sendrecv((void*)field_buffer_z,  */
-/* 	       12*T*LX*LY, MPI_DOUBLE, g_nb_z_up, 504, */
-/* 	       (void*)(l+(VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY)/2),  */
-/* 	       12*T*LX*LY, MPI_DOUBLE, g_nb_z_dn, 504, */
-/* 	       g_cart_grid, &status); */
-
-  MPI_Sendrecv((void*)field_buffer_z, 
- 	       1, field_z_slice_half, g_nb_z_up, 504,  
-	       (void*)(l+(VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY)/2), 
- 	       1, field_z_slice_half, g_nb_z_dn, 504, 
-	       g_cart_grid, &status);
-#endif

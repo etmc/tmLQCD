@@ -1,3 +1,14 @@
+Release 3.2.0:
+New Dirac Operator where only half of the spinor is
+exchanged. This bring a 20% improvement on the BG/L
+Moreover, shmem versions of the exchange routines
+are available.
+
+shmem not yet completely testet!
+
+Release 3.1.0:
+Running with an extra BG/L Dirac operator
+
 Release 2.3.6:
 Bug fix release and some minor important new features.
 

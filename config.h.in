@@ -119,3 +119,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if Dirac operator with halfspinor should be used */
+#undef _USE_HALFSPINOR
+
+/* Define to 1 if shmem API should be used */
+#undef _USE_SHMEM

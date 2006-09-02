@@ -79,7 +79,7 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
   double atime=0., etime=0.;
 #endif
-
+#pragma pomp inst begin(main)
   verbose = 0;
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
@@ -164,6 +164,14 @@ int main(int argc,char *argv[]) {
 
   /* define the boundary conditions for the fermion fields */
   boundary();
+
+#ifdef _USE_HALFSPINOR
+  j = init_dirac_halfspinor();
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
+    exit(0);
+  }
+#endif
 
   for(j=0;j<Nmeas; j++) {
     sprintf(conf_filename,"%s.%.4d", gauge_input_filename, nstore);
@@ -308,4 +316,5 @@ int main(int argc,char *argv[]) {
   free_spinor_field();
   free_moment_field();
   return(0);
+#pragma pomp inst end(main)
 }

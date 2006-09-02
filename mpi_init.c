@@ -8,6 +8,9 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef _USE_SHMEM
+# include <mpp/shmem.h>
+#endif
 #include "global.h"
 #include "mpi_init.h"
 
@@ -111,7 +114,12 @@ void mpi_init(int argc,char *argv[]) {
   int ndims = 0;
   int reorder = 1, namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
-  
+
+#  ifdef _USE_SHMEM
+  /* we need that the PE number in MPI_COMM_WORL  */
+  /* exactly correspond to the one in g_cart_grid */
+  reorder = 0;
+#  endif
 
 #  ifdef PARALLELT
   ndims = 1;
@@ -385,21 +393,16 @@ void mpi_init(int argc,char *argv[]) {
 
   /* this is a single halfspinor field on one space-time point */
   MPI_Type_contiguous(12, MPI_DOUBLE, &halffield_point);
-  MPI_Type_vector(LX*LY*LZ/2, 1, 4, halffield_point, &halffield_time_slice_cont); 
-  MPI_Type_vector(T*LY*LZ/2, 1, 4, halffield_point, &halffield_x_slice_cont); 
-  MPI_Type_vector(T*LX*LZ/2, 1, 4, halffield_point, &halffield_y_slice_cont); 
-  MPI_Type_vector(T*LX*LY/2, 1, 4, halffield_point, &halffield_z_slice_cont); 
+  MPI_Type_vector(LX*LY*LZ/2, 1, 8, halffield_point, &halffield_time_slice_cont); 
+
   /* Commit the new types */
   MPI_Type_commit(&halffield_time_slice_cont);
-  MPI_Type_commit(&halffield_x_slice_cont);
-  MPI_Type_commit(&halffield_y_slice_cont);
-  MPI_Type_commit(&halffield_z_slice_cont);
 
-  MPI_Type_vector(LY*LZ/2, 1, 4, halffield_point, &halffield_x_subslice);
+  MPI_Type_vector(LY*LZ/2, 1, 8, halffield_point, &halffield_x_subslice);
   MPI_Type_vector(T, 1, LX, halffield_x_subslice, &halffield_x_slice_gath); 
   MPI_Type_commit(&halffield_x_slice_gath);
 
-  MPI_Type_vector(LZ/2, 1, 4, halffield_point, &halffield_y_subslice);
+  MPI_Type_vector(LZ/2, 1, 8, halffield_point, &halffield_y_subslice);
   MPI_Type_vector(T*LX, 1, LY, halffield_y_subslice, &halffield_y_slice_gath); 
   MPI_Type_commit(&halffield_y_slice_gath);
 

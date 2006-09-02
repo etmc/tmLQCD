@@ -585,62 +585,16 @@ void geometry(){
       g_lexic2eo[ix] = i_even;
       g_lexic2eosub[ix] = i_even;
       g_eo2lexic[i_even] = ix;
-      g_halfpt[i_even][0]  = 4*i_even;
-      g_halfpt[i_even][1]  = 4*i_even + 1;
-      g_halfpt[i_even][2]  = 4*i_even + 2;
-      g_halfpt[i_even][3]  = 4*i_even + 3;
       i_even++;
     }
     else{
       g_lexic2eo[ix] = (VOLUME+RAND)/2+i_odd;
       g_lexic2eosub[ix] = i_odd;
       g_eo2lexic[(VOLUME+RAND)/2+i_odd] = ix;
-      g_halfpt[i_even][0]  = 4*i_even;
-      g_halfpt[i_even][1]  = 4*i_even + 1;
-      g_halfpt[i_even][2]  = 4*i_even + 2;
-      g_halfpt[i_even][3]  = 4*i_even + 3;
       i_odd++;
     }
   }
 
-#ifdef MPI2
-#  if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
-  for(x1 = 0; x1 < LX; x1++) {
-    for(x2 = 0; x2 < LY; x2++) {
-      for(x3 = 0; x3 < LZ; x3++) {
-	g_halfpt[ g_lexic2eo[ g_iup[ g_ipt[T-1][x1][x2][x3]][0] ] ][0] = ; 
-      }
-    }
-  }
-#  endif
-#  if ((defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
-  for(x0 = 0; x0 < T; x0++) {
-    for(x2 = 0; x2 < LY; x2++) {
-      for(x3 = 0; x3 < LZ; x3++) {
-
-      }
-    }
-  }
-#  endif
-#  if ((defined PARALLELXYT) || (defined PARALLELXYZT))
-  for(x0 = 0; x0 < T; x0++) {
-    for(x1 = 0; x1 < LX; x1++) {
-      for(x3 = 0; x3 < LZ; x3++) {
-
-      }
-    }
-  }
-#  endif
-#  if ((defined PARALLELXYZT))
-  for(x0 = 0; x0 < T; x0++) {
-    for(x1 = 0; x1 < LX; x1++) {
-      for(x2 = 0; x2 < LY; x2++) {
-
-      }
-    }
-  }
-#  endif
-#endif
 
 #if defined PARALLELXYZT
   ix = 0;
