@@ -24,10 +24,20 @@
   reg01 = __lfpd((double*)&(s).c1); \
   reg02 = __lfpd((double*)&(s).c2); 
 
+#define _bgl_load_reg0_32(s) \
+  reg00 = __lfps((float*)&(s).c0); \
+  reg01 = __lfps((float*)&(s).c1); \
+  reg02 = __lfps((float*)&(s).c2); 
+
 #define _bgl_load_reg1(s) \
   reg10 = __lfpd((double*)&(s).c0); \
   reg11 = __lfpd((double*)&(s).c1); \
   reg12 = __lfpd((double*)&(s).c2); 
+
+#define _bgl_load_reg1_32(s) \
+  reg10 = __lfps((float*)&(s).c0); \
+  reg11 = __lfps((float*)&(s).c1); \
+  reg12 = __lfps((float*)&(s).c2); 
 
 #define _bgl_load_reg0_up(s) \
   reg03 = __lfpd((double*)&(s).c0); \
@@ -44,30 +54,60 @@
   __stfpd((double*)&(s).c1, reg01); \
   __stfpd((double*)&(s).c2, reg02);
 
+#define _bgl_store_reg0_32(s) \
+  __stfps((float*)&(s).c0, reg00); \
+  __stfps((float*)&(s).c1, reg01); \
+  __stfps((float*)&(s).c2, reg02);
+
 #define _bgl_store_reg1(s) \
   __stfpd((double*)&(s).c0, reg10); \
   __stfpd((double*)&(s).c1, reg11); \
   __stfpd((double*)&(s).c2, reg12);
+
+#define _bgl_store_reg1_32(s) \
+  __stfps((float*)&(s).c0, reg10); \
+  __stfps((float*)&(s).c1, reg11); \
+  __stfps((float*)&(s).c2, reg12);
 
 #define _bgl_store_reg0_up(s) \
   __stfpd((double*)&(s).c0, reg03); \
   __stfpd((double*)&(s).c1, reg04); \
   __stfpd((double*)&(s).c2, reg05);
 
+#define _bgl_store_reg0_up_32(s) \
+  __stfps((float*)&(s).c0, reg03); \
+  __stfps((float*)&(s).c1, reg04); \
+  __stfps((float*)&(s).c2, reg05);
+
 #define _bgl_store_reg1_up(s) \
   __stfpd((double*)&(s).c0, reg13); \
   __stfpd((double*)&(s).c1, reg14); \
   __stfpd((double*)&(s).c2, reg15);
+
+#define _bgl_store_reg1_up_32(s) \
+  __stfps((float*)&(s).c0, reg13); \
+  __stfps((float*)&(s).c1, reg14); \
+  __stfps((float*)&(s).c2, reg15);
 
 #define _bgl_load_rs0(s) \
   rs00 = __lfpd((double*)&(s).c0); \
   rs01 = __lfpd((double*)&(s).c1); \
   rs02 = __lfpd((double*)&(s).c2); 
 
+#define _bgl_load_rs0_32(s) \
+  rs00 = __lfps((float*)&(s).c0); \
+  rs01 = __lfps((float*)&(s).c1); \
+  rs02 = __lfps((float*)&(s).c2); 
+
 #define _bgl_load_rs1(s) \
   rs10 = __lfpd((double*)&(s).c0); \
   rs11 = __lfpd((double*)&(s).c1); \
   rs12 = __lfpd((double*)&(s).c2); 
+
+#define _bgl_load_rs1_32(s) \
+  rs10 = __lfps((float*)&(s).c0); \
+  rs11 = __lfps((float*)&(s).c1); \
+  rs12 = __lfps((float*)&(s).c2); 
 
 #define _bgl_load_rs2(s) \
   rs20 = __lfpd((double*)&(s).c0); \
@@ -320,6 +360,28 @@
   reg11 = __fpsub(reg11, reg14); \
   reg12 = __fpsub(reg12, reg15); 
 
+<<<<<<< bgl.h
+#define _bgl_vector_sub_rs2_from_rs1_reg1()	 \
+  reg10 = __fpsub(rs10, rs20); \
+  reg11 = __fpsub(rs11, rs21); \
+  reg12 = __fpsub(rs12, rs22); 
+
+#define _bgl_vector_sub_rs3_from_rs1_reg1()	 \
+  reg10 = __fpsub(rs10, rs30); \
+  reg11 = __fpsub(rs11, rs31); \
+  reg12 = __fpsub(rs12, rs32); 
+
+#define _bgl_vector_sub_rs2_from_rs0_reg1()	 \
+  reg10 = __fpsub(rs00, rs20); \
+  reg11 = __fpsub(rs01, rs21); \
+  reg12 = __fpsub(rs02, rs22); 
+
+#define _bgl_vector_sub_rs3_from_rs0_reg0()	 \
+  reg00 = __fpsub(rs00, rs30); \
+  reg01 = __fpsub(rs01, rs31); \
+  reg02 = __fpsub(rs02, rs32); 
+
+=======
 #define _bgl_vector_sub_rs2_from_rs1_reg1()	 \
   reg10 = __fpsub(rs10, rs20); \
   reg11 = __fpsub(rs11, rs21); \
@@ -345,6 +407,7 @@
   reg01 = __fpsub(rs01, rs31); \
   reg02 = __fpsub(rs02, rs32); 
 
+>>>>>>> 1.12
 /*
  * Multiplies reg3, reg4, reg5 with  
  * a complex number c 
@@ -478,6 +541,28 @@
   reg11 = __fxcxnpma(reg11, reg14, -1.); \
   reg12 = __fxcxnpma(reg12, reg15, -1.);
 
+<<<<<<< bgl.h
+#define _bgl_vector_i_mul_sub_rs3_from_rs1_reg1() \
+  reg10 = __fxcxnpma(rs10, rs30, -1.); \
+  reg11 = __fxcxnpma(rs11, rs31, -1.); \
+  reg12 = __fxcxnpma(rs12, rs32, -1.);
+
+#define _bgl_vector_i_mul_sub_rs2_from_rs1_reg1() \
+  reg10 = __fxcxnpma(rs10, rs20, -1.); \
+  reg11 = __fxcxnpma(rs11, rs21, -1.); \
+  reg12 = __fxcxnpma(rs12, rs22, -1.);
+
+#define _bgl_vector_i_mul_sub_rs2_from_rs0_reg1() \
+  reg10 = __fxcxnpma(rs00, rs20, -1.); \
+  reg11 = __fxcxnpma(rs01, rs21, -1.); \
+  reg12 = __fxcxnpma(rs02, rs22, -1.);
+
+#define _bgl_vector_i_mul_sub_rs3_from_rs0_reg0() \
+  reg00 = __fxcxnpma(rs00, rs30, -1.); \
+  reg01 = __fxcxnpma(rs01, rs31, -1.); \
+  reg02 = __fxcxnpma(rs02, rs32, -1.);
+
+=======
 #define _bgl_vector_i_mul_sub_rs3_from_rs1_reg1() \
   reg10 = __fxcxnpma(rs10, rs30, -1.); \
   reg11 = __fxcxnpma(rs11, rs31, -1.); \
@@ -503,6 +588,7 @@
   reg01 = __fxcxnpma(rs01, rs31, -1.); \
   reg02 = __fxcxnpma(rs02, rs32, -1.);
 
+>>>>>>> 1.12
 #define _bgl_vector_i_mul1() \
   reg10 = __cmplx(1., -1.); \
   reg03 = __fxmul(reg03, reg10); \

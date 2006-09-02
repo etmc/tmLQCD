@@ -146,6 +146,7 @@ int main(int argc,char *argv[])
 
 #ifdef _USE_HALFSPINOR
   init_dirac_halfspinor();
+  init_dirac_halfspinor32();
 #endif  
 
   check_geometry();

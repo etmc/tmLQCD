@@ -10,6 +10,11 @@ typedef struct
    double re,im;
 } complex;
 
+typedef struct
+{
+   float re,im;
+} complex32;
+
 
 /* To be compatible to standard C complex.h */
 #define cimag(x) (x).re

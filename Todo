@@ -3,3 +3,6 @@ For Blue Gene/L:
 - tune xchange_gauge and xchange_deri like xchange_field
 - linear algebra: add __alignx and unrolling in the most important routines.
   maybe write for the most important ones versions with intrinsic functions
+- the usage of the random number generator should be changed for this machine
+  moreover a usage should be available for testing which reproduces
+  exactly the scalar case. 
