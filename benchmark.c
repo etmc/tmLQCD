@@ -149,7 +149,7 @@ int main(int argc,char *argv[])
 #endif  
 
   check_geometry();
-#ifdef MPI
+#if (defined MPI && !(defined _USE_SHMEM))
   check_xchange(); 
 #endif
   
