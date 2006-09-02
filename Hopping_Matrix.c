@@ -536,14 +536,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
  **********************************/
 
 
-void Hopping_Matrix(const int ieo_, spinor * const l, spinor * const k){
-  int icx,icy,icz,ieo;
-  int i;
-  int ix,iy,iz;
+void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+  int i, ix;
   su3 *U ALIGN;
   spinor *s ALIGN;
   halfspinor ** phi ALIGN;
-  halfspinor *r ALIGN;
   /* We have 32 registers available */
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
@@ -554,13 +551,11 @@ void Hopping_Matrix(const int ieo_, spinor * const l, spinor * const k){
   double _Complex rs00, rs01, rs02, rs10, rs11, rs12, rs20, rs21, rs22, 
     rs30, rs31, rs32;
 
-#pragma disjoint(*s, *U, *l, *k, *r, *s)
+#pragma disjoint(*s, *U, *l, *k)
 
   __alignx(16, l);
   __alignx(16, k);
   __alignx(16, HalfSpinor);
-  if(ieo_ == 0) ieo = 0;
-  else ieo = 1;
   /* We will run through the source vector now */
   /* instead of the solution vector            */
   s = k;
@@ -696,9 +691,10 @@ void Hopping_Matrix(const int ieo_, spinor * const l, spinor * const k){
   
   /* Now we sum up and expand to a full spinor */
   ix = 0;
-  _prefetch_spinor_for_store(s); 
+  /*   _prefetch_spinor_for_store(s); */
   for(i = 0; i < (VOLUME)/2; i++){
-    _prefetch_spinor_for_store(s);
+    /* This causes a lot of trouble, do we understand this? */
+    /*     _prefetch_spinor_for_store(s); */
     _prefetch_halfspinor(phi[ix+1]);
     /*********************** direction +0 ************************/
     _bgl_load_rs0((*phi[ix]).s0);
@@ -709,12 +705,6 @@ void Hopping_Matrix(const int ieo_, spinor * const l, spinor * const k){
     rs30 = rs10;
     rs31 = rs11;
     rs32 = rs12;
-    if(g_proc_id == -1) {
-      printf("%d dir +0 %e %e\n", i, __creal(rs00), __cimag(rs00));
-      printf("%d dir +0 %e %e\n", i, __creal(rs10), __cimag(rs10));
-      printf("%d dir +0 %e %e\n", i, __creal(rs20), __cimag(rs20));
-      printf("%d dir +0 %e %e\n", i, __creal(rs30), __cimag(rs30));
-    }
     ix++;
     /*********************** direction -0 ************************/
     _prefetch_su3(U+1);
@@ -730,13 +720,6 @@ void Hopping_Matrix(const int ieo_, spinor * const l, spinor * const k){
     _bgl_sub_from_rs2_reg0();
     _bgl_add_to_rs1_reg1();
     _bgl_sub_from_rs3_reg1();
-    if(g_proc_id == -1) {
-      printf("%d dir -0 %e %e\n", i, __creal(reg03), __cimag(reg03));
-      printf("%d dir -0 %e %e\n", i, __creal(rs00), __cimag(rs00));
-      printf("%d dir +0 %e %e\n", i, __creal(rs10), __cimag(rs10));
-      printf("%d dir +0 %e %e\n", i, __creal(rs20), __cimag(rs20));
-      printf("%d dir +0 %e %e\n", i, __creal(rs30), __cimag(rs30));
-    }
     U++;
     ix++;
     /*********************** direction +1 ************************/
@@ -747,13 +730,6 @@ void Hopping_Matrix(const int ieo_, spinor * const l, spinor * const k){
     _bgl_i_mul_sub_from_rs3_reg0();
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_sub_from_rs2_reg1();
-    if(g_proc_id == -1) {
-      printf("%d dir +1 %e %e\n", i, __creal(reg03), __cimag(reg03));
-      printf("%d dir +1 %e %e\n", i, __creal(rs00), __cimag(rs00));
-      printf("%d dir +0 %e %e\n", i, __creal(rs10), __cimag(rs10));
-      printf("%d dir +0 %e %e\n", i, __creal(rs20), __cimag(rs20));
-      printf("%d dir +0 %e %e\n", i, __creal(rs30), __cimag(rs30));
-    }
     ix++;
     /*********************** direction -1 ************************/
     _prefetch_su3(U+1);
@@ -768,13 +744,6 @@ void Hopping_Matrix(const int ieo_, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_add_to_rs3_reg0();
     _bgl_i_mul_add_to_rs2_reg1();      
-    if(g_proc_id == -1) {
-      printf("%d dir -1 %e %e\n", i, __creal(reg03), __cimag(reg03));
-      printf("%d dir -1 %e %e\n", i, __creal(rs00), __cimag(rs00));
-      printf("%d dir +0 %e %e\n", i, __creal(rs10), __cimag(rs10));
-      printf("%d dir +0 %e %e\n", i, __creal(rs20), __cimag(rs20));
-      printf("%d dir +0 %e %e\n", i, __creal(rs30), __cimag(rs30));
-    }
     U++;
     ix++;
     /*********************** direction +2 ************************/
@@ -785,13 +754,6 @@ void Hopping_Matrix(const int ieo_, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_sub_from_rs2_reg1();
     _bgl_add_to_rs3_reg0();
-    if(g_proc_id == -1) {
-      printf("%d dir +2 %e %e\n", i, __creal(reg03), __cimag(reg03));
-      printf("%d dir +2 %e %e\n", i, __creal(rs00), __cimag(rs00));
-      printf("%d dir +0 %e %e\n", i, __creal(rs10), __cimag(rs10));
-      printf("%d dir +0 %e %e\n", i, __creal(rs20), __cimag(rs20));
-      printf("%d dir +0 %e %e\n", i, __creal(rs30), __cimag(rs30));
-    }
     ix++;
     /*********************** direction -2 ************************/
     _prefetch_su3(U+1);
@@ -806,13 +768,6 @@ void Hopping_Matrix(const int ieo_, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_add_to_rs2_reg1();
     _bgl_sub_from_rs3_reg0();
-    if(g_proc_id == -1) {
-      printf("%d dir -2 %e %e\n", i, __creal(reg03), __cimag(reg03));
-      printf("%d dir -2 %e %e\n", i, __creal(rs00), __cimag(rs00));
-      printf("%d dir +0 %e %e\n", i, __creal(rs10), __cimag(rs10));
-      printf("%d dir +0 %e %e\n", i, __creal(rs20), __cimag(rs20));
-      printf("%d dir +0 %e %e\n", i, __creal(rs30), __cimag(rs30));
-    }
     U++;
     ix++;
     /*********************** direction +3 ************************/
@@ -823,13 +778,6 @@ void Hopping_Matrix(const int ieo_, spinor * const l, spinor * const k){
     _bgl_add_to_rs1_reg1();
     _bgl_i_mul_sub_from_rs2_reg0();
     _bgl_i_mul_add_to_rs3_reg1();
-    if(g_proc_id == -1) {
-      printf("%d dir +3 %e %e\n", i, __creal(reg03), __cimag(reg03));
-      printf("%d dir +3 %e %e\n", i, __creal(rs00), __cimag(rs00));
-      printf("%d dir +0 %e %e\n", i, __creal(rs10), __cimag(rs10));
-      printf("%d dir +0 %e %e\n", i, __creal(rs20), __cimag(rs20));
-      printf("%d dir +0 %e %e\n", i, __creal(rs30), __cimag(rs30));
-    }
     ix++;
     /*********************** direction -3 ************************/
     _prefetch_su3(U+1);
@@ -849,26 +797,11 @@ void Hopping_Matrix(const int ieo_, spinor * const l, spinor * const k){
     _bgl_store_rs1((*s).s1);
     _bgl_i_mul_sub_from_rs3_reg1();
     _bgl_store_rs3((*s).s3);
-    if(g_proc_id == -1) {
-      printf("%d dir -3 %e %e\n", i, __creal(reg03), __cimag(reg03));
-      printf("%d dir -3 %e %e\n", i, __creal(rs00), __cimag(rs00));
-      printf("%d dir +0 %e %e\n", i, __creal(rs10), __cimag(rs10));
-      printf("%d dir +0 %e %e\n", i, __creal(rs20), __cimag(rs20));
-      printf("%d dir +0 %e %e\n", i, __creal(rs30), __cimag(rs30));
-      printf("%e %e %e %e \n", (*s).s0.c0.re, (*s).s0.c0.im, (*s).s0.c1.re, (*s).s0.c1.im);
-      printf("%e %e %e %e \n", (*s).s0.c2.re, (*s).s0.c2.im, (*s).s1.c0.re, (*s).s1.c0.im);
-      printf("%e %e %e %e \n", (*s).s1.c1.re, (*s).s1.c1.im, (*s).s1.c2.re, (*s).s1.c2.im);
-      printf("%e %e %e %e \n", (*s).s2.c0.re, (*s).s2.c0.im, (*s).s2.c1.re, (*s).s2.c1.im);
-      printf("%e %e %e %e \n", (*s).s2.c2.re, (*s).s2.c2.im, (*s).s3.c0.re, (*s).s3.c0.im);
-      printf("%e %e %e %e \n", (*s).s3.c1.re, (*s).s3.c1.im, (*s).s3.c2.re, (*s).s3.c2.im);
-    }
+
     U++;
     ix++;
     s++;
   }
-/*   if(ieo_ == 1) { */
-/*     exit(0); */
-/*   } */
 }
 #elif defined XLC
 
