@@ -31,7 +31,7 @@
 #ifdef _USE_SHMEM
 # include <mpp/shmem.h>
 void xchange_halffield(const int ieo) {
-
+#pragma pomp inst begin(xchangehalf)
 #  ifdef MPI
 
   shmem_barrier_all();
@@ -76,6 +76,7 @@ void xchange_halffield(const int ieo) {
   shmem_barrier_all();
 #  endif
   return;
+#pragma pomp inst end(xchangehalf)
 }
 #else
 void xchange_halffield(const int ieo) {
@@ -97,7 +98,7 @@ void xchange_halffield(const int ieo) {
 #  if (defined XLC && defined BGL)
   __alignx(16, HalfSpinor);
 #  endif
-
+#pragma pomp inst begin(xchangehalf)
   /* send the data to the neighbour on the right in t direction */
   /* recieve the data from the neighbour on the left in t direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME), LX*LY*LZ*12/2, MPI_DOUBLE, 
