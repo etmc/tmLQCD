@@ -38,7 +38,7 @@ typedef struct
 
 typedef struct
 {
-   complex32 c0,c1,c2;
+    complex32 c0,c1,c2;
 } su3_vector32;
 
 typedef struct
@@ -48,12 +48,12 @@ typedef struct
 
 typedef struct
 {
-  su3_vector32 s0, s1;
+  su3_vector s0, s1;
 } halfspinor;
 
 typedef struct
 {
-  su3_vector s0, s1;
+   su3_vector32 s0, s1;
 } halfspinor32;
 
 typedef struct
