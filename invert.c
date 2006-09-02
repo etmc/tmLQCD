@@ -174,6 +174,10 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(0);
   }
+  g_sloppy_precision = 0;
+  if(g_sloppy_precision > 0) {
+    init_dirac_halfspinor32();
+  }
 #endif
 
   for(j=0;j<Nmeas; j++) {

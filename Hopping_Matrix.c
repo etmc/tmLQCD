@@ -446,7 +446,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   su3 *U ALIGN;
   spinor *s ALIGN;
   halfspinor ** phi ALIGN;
-  halfspinor ** phi32 ALIGN;
+  halfspinor32 ** phi32 ALIGN;
   /* We have 32 registers available */
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
@@ -487,17 +487,17 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     else {
       U = g_gauge_field_copy[1][0];
     }
-    phi32 = NBPointer[ieo];
+    phi32 = NBPointer32[ieo];
 
     _prefetch_su3(U);
     /**************** loop over all lattice sites ******************/
     ix=0;
     for(i = 0; i < (VOLUME)/2; i++){
 
-      _bgl_load_rs0_32((*s).s0);
-      _bgl_load_rs1_32((*s).s1);
-      _bgl_load_rs2_32((*s).s2);
-      _bgl_load_rs3_32((*s).s3);
+      _bgl_load_rs0((*s).s0);
+      _bgl_load_rs1((*s).s1);
+      _bgl_load_rs2((*s).s2);
+      _bgl_load_rs3((*s).s3);
       s++; 
       _prefetch_spinor(s); 
       /*********************** direction +0 ************************/
@@ -596,7 +596,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     xchange_halffield32(); 
 #    endif
     s = l;
-    phi32 = NBPointer[2 + ieo];
+    phi32 = NBPointer32[2 + ieo];
     if(ieo == 0) {
       U = g_gauge_field_copy[1][0];
     }
@@ -640,8 +640,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       U++;
       ix++;
       /*********************** direction +1 ************************/
-      _bgl_load_reg0_32_up((*phi32[ix]).s0);
-      _bgl_load_reg1_32_up((*phi32[ix]).s1);
+      _bgl_load_reg0_up_32((*phi32[ix]).s0);
+      _bgl_load_reg1_up_32((*phi32[ix]).s1);
 
       _bgl_add_to_rs0_reg0();
       _bgl_i_mul_sub_from_rs3_reg0();
@@ -664,8 +664,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       U++;
       ix++;
       /*********************** direction +2 ************************/
-      _bgl_load_reg0_32_up((*phi32[ix]).s0);
-      _bgl_load_reg1_32_up((*phi32[ix]).s1);
+      _bgl_load_reg0_up_32((*phi32[ix]).s0);
+      _bgl_load_reg1_up_32((*phi32[ix]).s1);
 
       _bgl_add_to_rs0_reg0();
       _bgl_add_to_rs1_reg1();
@@ -688,8 +688,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       U++;
       ix++;
       /*********************** direction +3 ************************/
-      _bgl_load_reg0_32_up((*phi32[ix]).s0);
-      _bgl_load_reg1_32_up((*phi32[ix]).s1);
+      _bgl_load_reg0_up_32((*phi32[ix]).s0);
+      _bgl_load_reg1_up_32((*phi32[ix]).s1);
 
       _bgl_add_to_rs0_reg0();
       _bgl_add_to_rs1_reg1();
