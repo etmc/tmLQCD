@@ -9304,8 +9304,6 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
-#_USE_SHMEM
-
 echo "$as_me:$LINENO: checking whether we want to use shmem API" >&5
 echo $ECHO_N "checking whether we want to use shmem API... $ECHO_C" >&6
 # Check whether --enable-shmem or --disable-shmem was given.
@@ -9323,6 +9321,7 @@ cat >>confdefs.h <<\_ACEOF
 #define _USE_SHMEM 1
 _ACEOF
 
+  LIBS="$LIBS -lsma"
 else
   echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
