@@ -3,7 +3,7 @@
 # Process this file with autoconf to produce a configure script
 #
 AC_PREREQ(2.53)
-AC_INIT(HMC, 3.1.4, carsten.urbach@liverpool.ac.uk)
+AC_INIT(HMC, 3.1.5, carsten.urbach@liverpool.ac.uk)
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()
@@ -17,9 +17,6 @@ if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
 fi
 if test "$host_vendor" = "cray"; then
   ac_cv_c_bigendian=yes
-fi
-if test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
-  CC=/opt/ibmcmp/vac/7.0/bin/blrts_xlc
 fi
 
 AC_PROG_CC
