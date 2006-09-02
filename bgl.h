@@ -124,10 +124,20 @@
   rs21 = __lfpd((double*)&(s).c1); \
   rs22 = __lfpd((double*)&(s).c2); 
 
+#define _bgl_load_rs2_32(s) \
+  rs20 = __lfps((float*)&(s).c0); \
+  rs21 = __lfps((float*)&(s).c1); \
+  rs22 = __lfps((float*)&(s).c2); 
+
 #define _bgl_load_rs3(s) \
   rs30 = __lfpd((double*)&(s).c0); \
   rs31 = __lfpd((double*)&(s).c1); \
   rs32 = __lfpd((double*)&(s).c2); 
+
+#define _bgl_load_rs3_32(s) \
+  rs30 = __lfps((float*)&(s).c0); \
+  rs31 = __lfps((float*)&(s).c1); \
+  rs32 = __lfps((float*)&(s).c2); 
 
 #define _bgl_store_rs0(s) \
   __stfpd((double*)&(s).c0, rs00); \
