@@ -9,5 +9,6 @@ extern halfspinor32 * HalfSpinor32 ALIGN;
 extern halfspinor32 *** NBPointer32;
 
 int init_dirac_halfspinor();
+int init_dirac_halfspinor32();
 
 #endif
