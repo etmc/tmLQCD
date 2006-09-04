@@ -1,3 +1,7 @@
+Release 3.2.1:
+Bugfix release. Basically bug fixed on the altix for
+shmem version.
+
 Release 3.2.0:
 New Dirac Operator where only half of the spinor is
 exchanged. This bring a 20% improvement on the BG/L

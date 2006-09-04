@@ -999,7 +999,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   spinor * restrict s ALIGN;
   spinor rs;
   su3_vector psi, chi;
-  halfspinor ** phi ALIGN;
+  halfspinor * restrict * phi ALIGN;
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
 #endif

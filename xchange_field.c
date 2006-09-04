@@ -30,8 +30,9 @@
 #include "su3.h"
 #include "xchange_field.h"
 
+#ifdef XLC
 #pragma disjoint(*field_buffer_z2, *field_buffer_z)
-
+#endif
 
 #if ((defined BGL) && (defined MPI))
 
@@ -228,7 +229,7 @@ void xchange_field(spinor * const l, const int ieo) {
 #endif
 }
 
-#elif (defined _USE_SHMEM)
+#elif (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
 
 /* Here comes the version with shared memory */
 /* exchanges the field  l */

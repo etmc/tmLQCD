@@ -43,6 +43,7 @@
 #include "init_geometry_indices.h"
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
+#include "init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
 #include "invert_eo.h"
 

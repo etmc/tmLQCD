@@ -18,6 +18,9 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef _USE_SHMEM
+# include <mpp/shmem.h>
+#endif
 #include "global.h"
 #if (defined XLC && defined BGL)
 #  include "bgl.h"
@@ -28,7 +31,7 @@
 #include "xchange_halffield.h"
 
 
-#ifdef _USE_SHMEM
+#if (defined _USE_SHMEM && defined _USE_HALFSPINOR)
 # include <mpp/shmem.h>
 void xchange_halffield() {
 
