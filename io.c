@@ -1180,7 +1180,7 @@ int read_rlxd_state(char * filename, int * state, const int rlxdsize) {
   len = limeReaderBytes(limereader);
   if((int)len != rlxdsize*sizeof(int)) {
     fprintf(stderr, "Wrong size for ranluxd-state (len=%d!=%d)  %s\n", 
-	    (int)len, rlxdsize*sizeof(int), filename);
+	    (int)len, (int)rlxdsize*sizeof(int), filename);
     fprintf(stderr, "Aborting...!\n");
     fflush( stdout );
 #ifdef MPI
