@@ -38,9 +38,9 @@
 /* input on k; output on l */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int ix, i;
-  su3 *U ALIGN;
+  su3 * restrict U ALIGN;
   static spinor rs;
-  spinor *s ALIGN;
+  spinor * restrict s ALIGN;
   halfspinor ** phi ALIGN;
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
@@ -443,10 +443,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int i, ix;
-  su3 *U ALIGN;
-  spinor *s ALIGN;
-  halfspinor ** phi ALIGN;
-  halfspinor32 ** phi32 ALIGN;
+  su3 * restrict U ALIGN;
+  spinor * restrict s ALIGN;
+  halfspinor * restrict * phi ALIGN;
+  halfspinor32 * restrict * phi32 ALIGN;
   /* We have 32 registers available */
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
@@ -995,8 +995,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 /* for ieo=0, k resides on  odd sites and l on even sites */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int i,ix;
-  su3 * U ALIGN;
-  spinor *s ALIGN;
+  su3 * restrict U ALIGN;
+  spinor * restrict s ALIGN;
   spinor rs;
   su3_vector psi, chi;
   halfspinor ** phi ALIGN;
@@ -1245,8 +1245,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int icx,icy,icz,ioff,ioff2;
   int ix,iy,iz;
-  su3 *up,*um;
-  spinor *sp,*sm,*rn;
+  su3 *restrict up;
+  su3 * restrict um;
+  spinor * restrict sp;
+  spinor * restrict sm;
+  spinor * restrict rn;
   static spinor rs;
   
   /* for parallelization */
@@ -1656,11 +1659,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int icx,icy,icz,ioff,ioff2;
   int ix,iy,iz;
-  su3 *up ALIGN;
-  su3 *um ALIGN;
-  spinor *sp ALIGN;
-  spinor *sm ALIGN;
-  spinor *rn ALIGN;
+  su3 * restrict up ALIGN;
+  su3 * restrict um ALIGN;
+  spinor * restrict sp ALIGN;
+  spinor * restrict sm ALIGN;
+  spinor * restrict rn ALIGN;
   /* We have 32 registers available */
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
@@ -1959,8 +1962,8 @@ static su3_vector psi1, psi2, psi, chi, phi1, phi3;
 void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
   int ix, iy, iz;
   int ioff, ioff2, icx, icy, icz;
-  su3 *up,*um;
-  spinor *r,*sp,*sm;
+  su3 * restrict up, * restrict um;
+  spinor * restrict r,* restrict sp,* restrict sm;
   spinor temp;
 #pragma disjoint(temp, *sp, *sm, *r, *up, *um)
 
@@ -2253,8 +2256,8 @@ static su3_vector psi1, psi2, psi, chi, phi1, phi3;
 void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
   int ix,iy;
   int ioff,ioff2,icx,icy;
-  su3 *up,*um;
-  spinor *r,*sp,*sm;
+  su3 * restrict up, * restrict um;
+  spinor * restrict r, * restrict sp, * restrict sm;
   spinor temp;
 
   /* for parallelization */
