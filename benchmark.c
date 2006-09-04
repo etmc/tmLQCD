@@ -147,6 +147,7 @@ int main(int argc,char *argv[])
 #ifdef _USE_HALFSPINOR
   init_dirac_halfspinor();
   if(g_sloppy_precision_flag == 1) {
+    g_sloppy_precision = 1;
     init_dirac_halfspinor32();
   }
 #endif  

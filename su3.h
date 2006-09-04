@@ -112,6 +112,15 @@ typedef struct
 
 #endif
 
+#define _vector_assign32(r,s) \
+   (r).c0.re= (double) (s).c0.re; \
+   (r).c0.im= (double) (s).c0.im; \
+   (r).c1.re= (double) (s).c1.re; \
+   (r).c1.im= (double) (s).c1.im; \
+   (r).c2.re= (double) (s).c2.re; \
+   (r).c2.im= (double) (s).c2.im;
+
+
 /* M. Hasenbusch Mon Sep 24
 * r.c1=-s.c1
 * r.c2=-s.c2
@@ -251,6 +260,28 @@ _sse_store(r);
 
 #endif
 
+#define _vector_add32(r,s1,s2) \
+   (r).c0.re= (float) (s1).c0.re+(s2).c0.re; \
+   (r).c0.im= (float) (s1).c0.im+(s2).c0.im; \
+   (r).c1.re= (float) (s1).c1.re+(s2).c1.re; \
+   (r).c1.im= (float) (s1).c1.im+(s2).c1.im; \
+   (r).c2.re= (float) (s1).c2.re+(s2).c2.re; \
+   (r).c2.im= (float) (s1).c2.im+(s2).c2.im;
+
+/*
+* r.c1=s1.c1-s2.c1
+* r.c2=s1.c2-s2.c2
+* r.c3=s1.c3-s2.c3
+*/
+
+#define _vector_sub32(r,s1,s2) \
+   (r).c0.re= (float) (s1).c0.re-(s2).c0.re; \
+   (r).c0.im= (float) (s1).c0.im-(s2).c0.im; \
+   (r).c1.re= (float) (s1).c1.re-(s2).c1.re; \
+   (r).c1.im= (float) (s1).c1.im-(s2).c1.im; \
+   (r).c2.re= (float) (s1).c2.re-(s2).c2.re; \
+   (r).c2.im= (float) (s1).c2.im-(s2).c2.im;
+
 
 /*
 * r.c1=s1.c1+i*s2.c1
@@ -275,6 +306,14 @@ _sse_store(r);
 
 #endif
 
+#define _vector_i_add32(r,s1,s2) \
+   (r).c0.re= (float) (s1).c0.re-(s2).c0.im; \
+   (r).c0.im= (float) (s1).c0.im+(s2).c0.re; \
+   (r).c1.re= (float) (s1).c1.re-(s2).c1.im; \
+   (r).c1.im= (float) (s1).c1.im+(s2).c1.re; \
+   (r).c2.re= (float) (s1).c2.re-(s2).c2.im; \
+   (r).c2.im= (float) (s1).c2.im+(s2).c2.re;
+
 /*
 * r.c1=s1.c1-i*s2.c1
 * r.c2=s1.c2-i*s2.c2
@@ -297,6 +336,16 @@ _sse_store(r);
    (r).c2.im=(s1).c2.im-(s2).c2.re;
 
 #endif
+
+#define _vector_i_sub32(r,s1,s2)	    \
+   (r).c0.re= (float) (s1).c0.re+(s2).c0.im; \
+   (r).c0.im= (float) (s1).c0.im-(s2).c0.re; \
+   (r).c1.re= (float) (s1).c1.re+(s2).c1.im; \
+   (r).c1.im= (float) (s1).c1.im-(s2).c1.re; \
+   (r).c2.re= (float) (s1).c2.re+(s2).c2.im; \
+   (r).c2.im= (float) (s1).c2.im-(s2).c2.re;
+
+
 
 #ifdef _STD_C99_COMPLEX
 #define _vector_combined_add_i_add(r1, s1, r2, s2, s)	\
@@ -381,6 +430,27 @@ _sse_store(r);
 
 #endif 
 
+#define _vector_add_assign32(r,s) \
+   (r).c0.re+= (double) (s).c0.re; \
+   (r).c0.im+= (double) (s).c0.im; \
+   (r).c1.re+= (double) (s).c1.re; \
+   (r).c1.im+= (double) (s).c1.im; \
+   (r).c2.re+= (double) (s).c2.re; \
+   (r).c2.im+= (double) (s).c2.im;
+
+/*
+* r.c1-=s.c1
+* r.c2-=s.c2
+* r.c3-=s.c3
+*/
+
+#define _vector_sub_assign32(r,s) \
+   (r).c0.re-= (double) (s).c0.re; \
+   (r).c0.im-= (double) (s).c0.im; \
+   (r).c1.re-= (double) (s).c1.re; \
+   (r).c1.im-= (double) (s).c1.im; \
+   (r).c2.re-= (double) (s).c2.re; \
+   (r).c2.im-= (double) (s).c2.im;
 
 
 /*
@@ -406,6 +476,15 @@ _sse_store(r);
 
 #endif
 
+#define _vector_i_add_assign32(r,s) \
+   (r).c0.re-= (double) (s).c0.im; \
+   (r).c0.im+= (double) (s).c0.re; \
+   (r).c1.re-= (double) (s).c1.im; \
+   (r).c1.im+= (double) (s).c1.re; \
+   (r).c2.re-= (double) (s).c2.im; \
+   (r).c2.im+= (double) (s).c2.re;
+
+
 /*
 * r.c1-=i*s.c1
 * r.c2-=i*s.c2
@@ -428,6 +507,15 @@ _sse_store(r);
    (r).c2.im-=(s).c2.re;
 
 #endif
+
+#define _vector_i_sub_assign32(r,s) \
+   (r).c0.re+= (double) (s).c0.im; \
+   (r).c0.im-= (double) (s).c0.re; \
+   (r).c1.re+= (double) (s).c1.im; \
+   (r).c1.im-= (double) (s).c1.re; \
+   (r).c2.re+= (double) (s).c2.im; \
+   (r).c2.im-= (double) (s).c2.re;
+
 
 /* M.Hasenbusch 
 * r.c1=c*s.c1
@@ -454,6 +542,24 @@ _sse_store(r);
 
 #endif
 
+#ifdef _STD_C99_COMPLEX_CHECKED
+#define _complex_times_vector32(r,c,s)		\
+  (r).c0 = (float)(c)*(s).c0;				\
+  (r).c1 = (float)(c)*(s).c1;				\
+  (r).c2 = (float)(c)*(s).c2;
+
+#else
+#define _complex_times_vector32(r,c,s) \
+   (r).c0.re=(float)(c).re*(s).c0.re-(c).im*(s).c0.im; \
+   (r).c0.im=(float)(c).re*(s).c0.im+(c).im*(s).c0.re; \
+   (r).c1.re=(float)(c).re*(s).c1.re-(c).im*(s).c1.im; \
+   (r).c1.im=(float)(c).re*(s).c1.im+(c).im*(s).c1.re; \
+   (r).c2.re=(float)(c).re*(s).c2.re-(c).im*(s).c2.im; \
+   (r).c2.im=(float)(c).re*(s).c2.im+(c).im*(s).c2.re;
+
+#endif
+
+
 /* M.Hasenbusch */
 #ifdef _STD_C99_COMPLEX_CHECKED
 #define _complexcjg_times_vector(r,c,s)		\
@@ -471,6 +577,24 @@ _sse_store(r);
    (r).c2.im=(c).re*(s).c2.im-(c).im*(s).c2.re;
 
 #endif
+
+#ifdef _STD_C99_COMPLEX_CHECKED
+#define _complexcjg_times_vector32(r,c,s)		\
+  (r).c0 =(float) conj(c)*(s).c0;			\
+  (r).c1 =(float) conj(c)*(s).c1;			\
+  (r).c2 =(float) conj(c)*(s).c2;
+
+#else
+#define _complexcjg_times_vector32(r,c,s) \
+   (r).c0.re=(float) (c).re*(s).c0.re+(c).im*(s).c0.im; \
+   (r).c0.im=(float) (c).re*(s).c0.im-(c).im*(s).c0.re; \
+   (r).c1.re=(float) (c).re*(s).c1.re+(c).im*(s).c1.im; \
+   (r).c1.im=(float) (c).re*(s).c1.im-(c).im*(s).c1.re; \
+   (r).c2.re=(float) (c).re*(s).c2.re+(c).im*(s).c2.im; \
+   (r).c2.im=(float)(c).re*(s).c2.im-(c).im*(s).c2.re;
+
+#endif
+
 
 /*
 * Real part of the scalar product (r,s)
@@ -616,6 +740,27 @@ _sse_store_up(r);
              +(u).c12.re*(s).c1.im-(u).c12.im*(s).c1.re  \
              +(u).c22.re*(s).c2.im-(u).c22.im*(s).c2.re;
 #endif
+
+#define _su3_inverse_multiply32(r,u,s) \
+   (r).c0.re= (u).c00.re*(double)(s).c0.re+(u).c00.im*(double)(s).c0.im  \
+             +(u).c10.re*(double)(s).c1.re+(u).c10.im*(double)(s).c1.im  \
+             +(u).c20.re*(double)(s).c2.re+(u).c20.im*(double)(s).c2.im; \
+   (r).c0.im= (u).c00.re*(double)(s).c0.im-(u).c00.im*(double)(s).c0.re  \
+             +(u).c10.re*(double)(s).c1.im-(u).c10.im*(double)(s).c1.re  \
+             +(u).c20.re*(double)(s).c2.im-(u).c20.im*(double)(s).c2.re; \
+   (r).c1.re= (u).c01.re*(double)(s).c0.re+(u).c01.im*(double)(s).c0.im  \
+             +(u).c11.re*(double)(s).c1.re+(u).c11.im*(double)(s).c1.im  \
+             +(u).c21.re*(double)(s).c2.re+(u).c21.im*(double)(s).c2.im; \
+   (r).c1.im= (u).c01.re*(double)(s).c0.im-(u).c01.im*(double)(s).c0.re  \
+             +(u).c11.re*(double)(s).c1.im-(u).c11.im*(double)(s).c1.re  \
+             +(u).c21.re*(double)(s).c2.im-(u).c21.im*(double)(s).c2.re; \
+   (r).c2.re= (u).c02.re*(double)(s).c0.re+(u).c02.im*(double)(s).c0.im  \
+             +(u).c12.re*(double)(s).c1.re+(u).c12.im*(double)(s).c1.im  \
+             +(u).c22.re*(double)(s).c2.re+(u).c22.im*(double)(s).c2.im; \
+   (r).c2.im= (u).c02.re*(double)(s).c0.im-(u).c02.im*(double)(s).c0.re  \
+             +(u).c12.re*(double)(s).c1.im-(u).c12.im*(double)(s).c1.re  \
+             +(u).c22.re*(double)(s).c2.im-(u).c22.im*(double)(s).c2.re;
+
 
 
 

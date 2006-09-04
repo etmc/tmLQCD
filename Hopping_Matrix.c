@@ -459,7 +459,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
 #endif
-#pragma disjoint(*s, *U, *l, *k)
+#pragma disjoint(*s, *U)
 
   __alignx(16, l);
   __alignx(16, k);
@@ -1000,6 +1000,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   spinor rs;
   su3_vector psi, chi;
   halfspinor * restrict * phi ALIGN;
+  halfspinor32 * restrict * phi32 ALIGN;
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
 #endif
@@ -1021,215 +1022,436 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   else {
     U = g_gauge_field_copy[1][0];
   }
-  phi = NBPointer[ieo];
-
-  /**************** loop over all lattice sites ****************/
-  ix=0;
-  for(i = 0; i < (VOLUME)/2; i++){
-    _vector_assign(rs.s0, (*s).s0);
-    _vector_assign(rs.s1, (*s).s1);
-    _vector_assign(rs.s2, (*s).s2);
-    _vector_assign(rs.s3, (*s).s3);
-    s++;
-    /*********************** direction +0 ************************/
+  if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
+    phi32 = NBPointer32[ieo];
       
-    _vector_add(psi, rs.s0, rs.s2);
-
-    _su3_multiply(chi,(*U),psi);
-    _complex_times_vector((*phi[ix]).s0, ka0, chi);
+    /**************** loop over all lattice sites ****************/
+    ix=0;
+    for(i = 0; i < (VOLUME)/2; i++){
+      _vector_assign(rs.s0, (*s).s0);
+      _vector_assign(rs.s1, (*s).s1);
+      _vector_assign(rs.s2, (*s).s2);
+      _vector_assign(rs.s3, (*s).s3);
+      s++;
+      /*********************** direction +0 ************************/
       
-    _vector_add(psi, rs.s1, rs.s3);
+      _vector_add(psi, rs.s0, rs.s2);
 
-    _su3_multiply(chi,(*U),psi);
-    _complex_times_vector((*phi[ix]).s1, ka0, chi);
+      _su3_multiply(chi,(*U),psi);
+      _complex_times_vector32((*phi32[ix]).s0, ka0, chi);
+      
+      _vector_add(psi, rs.s1, rs.s3);
+
+      _su3_multiply(chi,(*U),psi);
+      _complex_times_vector32((*phi32[ix]).s1, ka0, chi);
             
-    U++;
-    ix++;
+      U++;
+      ix++;
     
-    /*********************** direction -0 ************************/
+      /*********************** direction -0 ************************/
 
-    _vector_sub((*phi[ix]).s0, rs.s0, rs.s2);
-    _vector_sub((*phi[ix]).s1, rs.s1, rs.s3);
+      _vector_sub32((*phi32[ix]).s0, rs.s0, rs.s2);
+      _vector_sub32((*phi32[ix]).s1, rs.s1, rs.s3);
 
-    ix++;
+      ix++;
 
-    /*********************** direction +1 ************************/
+      /*********************** direction +1 ************************/
 
-    _vector_i_add(psi, rs.s0, rs.s3);
+      _vector_i_add(psi, rs.s0, rs.s3);
 
-    _su3_multiply(chi, (*U), psi);
-    _complex_times_vector((*phi[ix]).s0, ka1, chi);
+      _su3_multiply(chi, (*U), psi);
+      _complex_times_vector32((*phi32[ix]).s0, ka1, chi);
 
-    _vector_i_add(psi, rs.s1, rs.s2);
+      _vector_i_add(psi, rs.s1, rs.s2);
 
-    _su3_multiply(chi, (*U), psi);
-    _complex_times_vector((*phi[ix]).s1, ka1, chi);
+      _su3_multiply(chi, (*U), psi);
+      _complex_times_vector32((*phi32[ix]).s1, ka1, chi);
 
-    U++;
-    ix++;
+      U++;
+      ix++;
 
-    /*********************** direction -1 ************************/
+      /*********************** direction -1 ************************/
 
-    _vector_i_sub((*phi[ix]).s0, rs.s0, rs.s3);
-    _vector_i_sub((*phi[ix]).s1, rs.s1, rs.s2);
+      _vector_i_sub32((*phi32[ix]).s0, rs.s0, rs.s3);
+      _vector_i_sub32((*phi32[ix]).s1, rs.s1, rs.s2);
 
-    ix++;
-    /*********************** direction +2 ************************/
+      ix++;
+      /*********************** direction +2 ************************/
 
-    _vector_add(psi, rs.s0, rs.s3);
+      _vector_add(psi, rs.s0, rs.s3);
 
-    _su3_multiply(chi,(*U),psi);
-    _complex_times_vector((*phi[ix]).s0, ka2, chi);
+      _su3_multiply(chi,(*U),psi);
+      _complex_times_vector32((*phi32[ix]).s0, ka2, chi);
 
-    _vector_sub(psi, rs.s1, rs.s2);
+      _vector_sub(psi, rs.s1, rs.s2);
 
-    _su3_multiply(chi,(*U),psi);
-    _complex_times_vector((*phi[ix]).s1, ka2, chi);
+      _su3_multiply(chi,(*U),psi);
+      _complex_times_vector32((*phi32[ix]).s1, ka2, chi);
       
-    U++;
-    ix++;
+      U++;
+      ix++;
 
-    /*********************** direction -2 ************************/
+      /*********************** direction -2 ************************/
 
-    _vector_sub((*phi[ix]).s0, rs.s0, rs.s3);
-    _vector_add((*phi[ix]).s1, rs.s1, rs.s2);
-    ix++;
+      _vector_sub32((*phi32[ix]).s0, rs.s0, rs.s3);
+      _vector_add32((*phi32[ix]).s1, rs.s1, rs.s2);
+      ix++;
 
-    /*********************** direction +3 ************************/
+      /*********************** direction +3 ************************/
 
-    _vector_i_add(psi, rs.s0, rs.s2);
+      _vector_i_add(psi, rs.s0, rs.s2);
       
-    _su3_multiply(chi, (*U), psi);
-    _complex_times_vector((*phi[ix]).s0, ka3, chi);
+      _su3_multiply(chi, (*U), psi);
+      _complex_times_vector32((*phi32[ix]).s0, ka3, chi);
 
 
-    _vector_i_sub(psi, rs.s1, rs.s3);
+      _vector_i_sub(psi, rs.s1, rs.s3);
 
-    _su3_multiply(chi,(*U),psi);
-    _complex_times_vector((*phi[ix]).s1, ka3, chi);
+      _su3_multiply(chi,(*U),psi);
+      _complex_times_vector32((*phi32[ix]).s1, ka3, chi);
 
-    U++;
-    ix++;
-    /*********************** direction -3 ************************/
+      U++;
+      ix++;
+      /*********************** direction -3 ************************/
 
-    _vector_i_sub((*phi[ix]).s0, rs.s0, rs.s2);
-    _vector_i_add((*phi[ix]).s1, rs.s1, rs.s3);
+      _vector_i_sub32((*phi32[ix]).s0, rs.s0, rs.s2);
+      _vector_i_add32((*phi32[ix]).s1, rs.s1, rs.s3);
 
-    ix++;
-    /************************ end of loop ************************/
-  }
+      ix++;
+      /************************ end of loop ************************/
+    }
 #    if (defined MPI && !defined _NO_COMM)
-  xchange_halffield(ieo); 
+    xchange_halffield32(); 
 #    endif
-  s = l;
-  phi = NBPointer[2 + ieo];
-  if(ieo == 0) {
-    U = g_gauge_field_copy[1][0];
+    s = l;
+    phi32 = NBPointer32[2 + ieo];
+    if(ieo == 0) {
+      U = g_gauge_field_copy[1][0];
+    }
+    else {
+      U = g_gauge_field_copy[0][0];
+    }
+
+    ix = 0;
+    for(i = 0; i < (VOLUME)/2; i++){
+      /*********************** direction +0 ************************/
+      _vector_assign32(rs.s0, (*phi32[ix]).s0);
+      _vector_assign32(rs.s2, (*phi32[ix]).s0);
+      _vector_assign32(rs.s1, (*phi32[ix]).s1);
+      _vector_assign32(rs.s3, (*phi32[ix]).s1);
+      ix++;
+      /*********************** direction -0 ************************/
+      _vector_assign32(psi, (*phi32[ix]).s0);
+      _su3_inverse_multiply(chi,(*U), psi);
+      _complexcjg_times_vector(psi,ka0,chi);
+
+      _vector_add_assign(rs.s0, psi);
+      _vector_sub_assign(rs.s2, psi);
+
+      _vector_assign32(psi, (*phi32[ix]).s1);
+      _su3_inverse_multiply(chi,(*U), psi);
+      _complexcjg_times_vector(psi,ka0,chi);
+      
+      _vector_add_assign(rs.s1, psi);
+      _vector_sub_assign(rs.s3, psi);
+      ix++;
+      U++;
+      /*********************** direction +1 ************************/
+
+      _vector_add_assign32(rs.s0, (*phi32[ix]).s0);
+      _vector_i_sub_assign32(rs.s3, (*phi32[ix]).s0);
+
+      _vector_add_assign32(rs.s1, (*phi32[ix]).s1);
+      _vector_i_sub_assign32(rs.s2, (*phi32[ix]).s1);
+    
+      ix++;
+      /*********************** direction -1 ************************/
+      _vector_assign32(psi, (*phi32[ix]).s0);
+      _su3_inverse_multiply(chi,(*U), psi);
+      _complexcjg_times_vector(psi,ka1,chi);
+
+      _vector_add_assign(rs.s0, psi);
+      _vector_i_add_assign(rs.s3, psi);
+
+      _vector_assign32(psi, (*phi32[ix]).s1);
+      _su3_inverse_multiply(chi,(*U), psi);
+      _complexcjg_times_vector(psi,ka1,chi);
+
+      _vector_add_assign(rs.s1, psi);
+      _vector_i_add_assign(rs.s2, psi);
+
+      U++;
+      ix++;
+
+      /*********************** direction +2 ************************/
+
+      _vector_add_assign32(rs.s0, (*phi32[ix]).s0);
+      _vector_add_assign32(rs.s3, (*phi32[ix]).s0);
+
+      _vector_add_assign32(rs.s1, (*phi32[ix]).s1);
+      _vector_sub_assign32(rs.s2, (*phi32[ix]).s1);
+    
+      ix++;
+      /*********************** direction -2 ************************/
+
+      _vector_assign32(psi, (*phi32[ix]).s0);
+      _su3_inverse_multiply(chi,(*U), psi);
+      _complexcjg_times_vector(psi,ka2,chi);
+
+      _vector_add_assign(rs.s0, psi);
+      _vector_sub_assign(rs.s3, psi);
+
+      _vector_assign32(psi, (*phi32[ix]).s1);
+      _su3_inverse_multiply(chi, (*U), psi);
+      _complexcjg_times_vector(psi,ka2,chi);
+      
+      _vector_add_assign(rs.s1, psi);
+      _vector_add_assign(rs.s2, psi);
+
+      U++;
+      ix++;
+      /*********************** direction +3 ************************/
+
+      _vector_add_assign32(rs.s0, (*phi32[ix]).s0);
+      _vector_i_sub_assign32(rs.s2, (*phi32[ix]).s0);
+
+      _vector_add_assign32(rs.s1, (*phi32[ix]).s1);
+      _vector_i_add_assign32(rs.s3, (*phi32[ix]).s1);
+
+      ix++;
+
+      /*********************** direction -3 ************************/
+
+      _vector_assign32(psi, (*phi32[ix]).s0);
+      _su3_inverse_multiply(chi,(*U), psi);
+      _complexcjg_times_vector(psi,ka3,chi);
+      
+      _vector_add((*s).s0, rs.s0, psi);
+      _vector_i_add((*s).s2, rs.s2, psi);
+
+      _vector_assign32(psi, (*phi32[ix]).s1);
+      _su3_inverse_multiply(chi,(*U), psi);
+      _complexcjg_times_vector(psi,ka3,chi);
+
+      _vector_add((*s).s1, rs.s1, psi);
+      _vector_i_sub((*s).s3, rs.s3, psi);
+
+      U++;
+      ix++;
+      s++;
+    }
   }
   else {
-    U = g_gauge_field_copy[0][0];
-  }
-
-  ix = 0;
-  for(i = 0; i < (VOLUME)/2; i++){
-    /*********************** direction +0 ************************/
-    _vector_assign(rs.s0, (*phi[ix]).s0);
-    _vector_assign(rs.s2, (*phi[ix]).s0);
-    _vector_assign(rs.s1, (*phi[ix]).s1);
-    _vector_assign(rs.s3, (*phi[ix]).s1);
-    ix++;
-    /*********************** direction -0 ************************/
-    _su3_inverse_multiply(chi,(*U),(*phi[ix]).s0);
-    _complexcjg_times_vector(psi,ka0,chi);
-
-    _vector_add_assign(rs.s0, psi);
-    _vector_sub_assign(rs.s2, psi);
-
-    _su3_inverse_multiply(chi,(*U),(*phi[ix]).s1);
-    _complexcjg_times_vector(psi,ka0,chi);
+    phi = NBPointer[ieo];
       
-    _vector_add_assign(rs.s1, psi);
-    _vector_sub_assign(rs.s3, psi);
-    ix++;
-    U++;
-    /*********************** direction +1 ************************/
+    /**************** loop over all lattice sites ****************/
+    ix=0;
+    for(i = 0; i < (VOLUME)/2; i++){
+      _vector_assign(rs.s0, (*s).s0);
+      _vector_assign(rs.s1, (*s).s1);
+      _vector_assign(rs.s2, (*s).s2);
+      _vector_assign(rs.s3, (*s).s3);
+      s++;
+      /*********************** direction +0 ************************/
+      
+      _vector_add(psi, rs.s0, rs.s2);
 
-    _vector_add_assign(rs.s0, (*phi[ix]).s0);
-    _vector_i_sub_assign(rs.s3, (*phi[ix]).s0);
+      _su3_multiply(chi,(*U),psi);
+      _complex_times_vector((*phi[ix]).s0, ka0, chi);
+      
+      _vector_add(psi, rs.s1, rs.s3);
 
-    _vector_add_assign(rs.s1, (*phi[ix]).s1);
-    _vector_i_sub_assign(rs.s2, (*phi[ix]).s1);
+      _su3_multiply(chi,(*U),psi);
+      _complex_times_vector((*phi[ix]).s1, ka0, chi);
+            
+      U++;
+      ix++;
     
-    ix++;
-    /*********************** direction -1 ************************/
+      /*********************** direction -0 ************************/
 
-    _su3_inverse_multiply(chi,(*U), (*phi[ix]).s0);
-    _complexcjg_times_vector(psi,ka1,chi);
+      _vector_sub((*phi[ix]).s0, rs.s0, rs.s2);
+      _vector_sub((*phi[ix]).s1, rs.s1, rs.s3);
 
-    _vector_add_assign(rs.s0, psi);
-    _vector_i_add_assign(rs.s3, psi);
+      ix++;
 
-    _su3_inverse_multiply(chi,(*U), (*phi[ix]).s1);
-    _complexcjg_times_vector(psi,ka1,chi);
+      /*********************** direction +1 ************************/
 
-    _vector_add_assign(rs.s1, psi);
-    _vector_i_add_assign(rs.s2, psi);
+      _vector_i_add(psi, rs.s0, rs.s3);
 
-    U++;
-    ix++;
+      _su3_multiply(chi, (*U), psi);
+      _complex_times_vector((*phi[ix]).s0, ka1, chi);
 
-    /*********************** direction +2 ************************/
+      _vector_i_add(psi, rs.s1, rs.s2);
 
-    _vector_add_assign(rs.s0, (*phi[ix]).s0);
-    _vector_add_assign(rs.s3, (*phi[ix]).s0);
+      _su3_multiply(chi, (*U), psi);
+      _complex_times_vector((*phi[ix]).s1, ka1, chi);
 
-    _vector_add_assign(rs.s1, (*phi[ix]).s1);
-    _vector_sub_assign(rs.s2, (*phi[ix]).s1);
+      U++;
+      ix++;
+
+      /*********************** direction -1 ************************/
+
+      _vector_i_sub((*phi[ix]).s0, rs.s0, rs.s3);
+      _vector_i_sub((*phi[ix]).s1, rs.s1, rs.s2);
+
+      ix++;
+      /*********************** direction +2 ************************/
+
+      _vector_add(psi, rs.s0, rs.s3);
+
+      _su3_multiply(chi,(*U),psi);
+      _complex_times_vector((*phi[ix]).s0, ka2, chi);
+
+      _vector_sub(psi, rs.s1, rs.s2);
+
+      _su3_multiply(chi,(*U),psi);
+      _complex_times_vector((*phi[ix]).s1, ka2, chi);
+      
+      U++;
+      ix++;
+
+      /*********************** direction -2 ************************/
+
+      _vector_sub((*phi[ix]).s0, rs.s0, rs.s3);
+      _vector_add((*phi[ix]).s1, rs.s1, rs.s2);
+      ix++;
+
+      /*********************** direction +3 ************************/
+
+      _vector_i_add(psi, rs.s0, rs.s2);
+      
+      _su3_multiply(chi, (*U), psi);
+      _complex_times_vector((*phi[ix]).s0, ka3, chi);
+
+
+      _vector_i_sub(psi, rs.s1, rs.s3);
+
+      _su3_multiply(chi,(*U),psi);
+      _complex_times_vector((*phi[ix]).s1, ka3, chi);
+
+      U++;
+      ix++;
+      /*********************** direction -3 ************************/
+
+      _vector_i_sub((*phi[ix]).s0, rs.s0, rs.s2);
+      _vector_i_add((*phi[ix]).s1, rs.s1, rs.s3);
+
+      ix++;
+      /************************ end of loop ************************/
+    }
+#    if (defined MPI && !defined _NO_COMM)
+    xchange_halffield(); 
+#    endif
+    s = l;
+    phi = NBPointer[2 + ieo];
+    if(ieo == 0) {
+      U = g_gauge_field_copy[1][0];
+    }
+    else {
+      U = g_gauge_field_copy[0][0];
+    }
+
+    ix = 0;
+    for(i = 0; i < (VOLUME)/2; i++){
+      /*********************** direction +0 ************************/
+      _vector_assign(rs.s0, (*phi[ix]).s0);
+      _vector_assign(rs.s2, (*phi[ix]).s0);
+      _vector_assign(rs.s1, (*phi[ix]).s1);
+      _vector_assign(rs.s3, (*phi[ix]).s1);
+      ix++;
+      /*********************** direction -0 ************************/
+      _su3_inverse_multiply(chi,(*U),(*phi[ix]).s0);
+      _complexcjg_times_vector(psi,ka0,chi);
+
+      _vector_add_assign(rs.s0, psi);
+      _vector_sub_assign(rs.s2, psi);
+
+      _su3_inverse_multiply(chi,(*U),(*phi[ix]).s1);
+      _complexcjg_times_vector(psi,ka0,chi);
+      
+      _vector_add_assign(rs.s1, psi);
+      _vector_sub_assign(rs.s3, psi);
+      ix++;
+      U++;
+      /*********************** direction +1 ************************/
+
+      _vector_add_assign(rs.s0, (*phi[ix]).s0);
+      _vector_i_sub_assign(rs.s3, (*phi[ix]).s0);
+
+      _vector_add_assign(rs.s1, (*phi[ix]).s1);
+      _vector_i_sub_assign(rs.s2, (*phi[ix]).s1);
     
-    ix++;
-    /*********************** direction -2 ************************/
+      ix++;
+      /*********************** direction -1 ************************/
 
-    _su3_inverse_multiply(chi,(*U), (*phi[ix]).s0);
-    _complexcjg_times_vector(psi,ka2,chi);
+      _su3_inverse_multiply(chi,(*U), (*phi[ix]).s0);
+      _complexcjg_times_vector(psi,ka1,chi);
 
-    _vector_add_assign(rs.s0, psi);
-    _vector_sub_assign(rs.s3, psi);
+      _vector_add_assign(rs.s0, psi);
+      _vector_i_add_assign(rs.s3, psi);
 
-    _su3_inverse_multiply(chi, (*U), (*phi[ix]).s1);
-    _complexcjg_times_vector(psi,ka2,chi);
+      _su3_inverse_multiply(chi,(*U), (*phi[ix]).s1);
+      _complexcjg_times_vector(psi,ka1,chi);
+
+      _vector_add_assign(rs.s1, psi);
+      _vector_i_add_assign(rs.s2, psi);
+
+      U++;
+      ix++;
+
+      /*********************** direction +2 ************************/
+
+      _vector_add_assign(rs.s0, (*phi[ix]).s0);
+      _vector_add_assign(rs.s3, (*phi[ix]).s0);
+
+      _vector_add_assign(rs.s1, (*phi[ix]).s1);
+      _vector_sub_assign(rs.s2, (*phi[ix]).s1);
+    
+      ix++;
+      /*********************** direction -2 ************************/
+
+      _su3_inverse_multiply(chi,(*U), (*phi[ix]).s0);
+      _complexcjg_times_vector(psi,ka2,chi);
+
+      _vector_add_assign(rs.s0, psi);
+      _vector_sub_assign(rs.s3, psi);
+
+      _su3_inverse_multiply(chi, (*U), (*phi[ix]).s1);
+      _complexcjg_times_vector(psi,ka2,chi);
       
-    _vector_add_assign(rs.s1, psi);
-    _vector_add_assign(rs.s2, psi);
+      _vector_add_assign(rs.s1, psi);
+      _vector_add_assign(rs.s2, psi);
 
-    U++;
-    ix++;
-    /*********************** direction +3 ************************/
+      U++;
+      ix++;
+      /*********************** direction +3 ************************/
 
-    _vector_add_assign(rs.s0, (*phi[ix]).s0);
-    _vector_i_sub_assign(rs.s2, (*phi[ix]).s0);
+      _vector_add_assign(rs.s0, (*phi[ix]).s0);
+      _vector_i_sub_assign(rs.s2, (*phi[ix]).s0);
 
-    _vector_add_assign(rs.s1, (*phi[ix]).s1);
-    _vector_i_add_assign(rs.s3, (*phi[ix]).s1);
+      _vector_add_assign(rs.s1, (*phi[ix]).s1);
+      _vector_i_add_assign(rs.s3, (*phi[ix]).s1);
 
-    ix++;
+      ix++;
 
-    /*********************** direction -3 ************************/
+      /*********************** direction -3 ************************/
 
-    _su3_inverse_multiply(chi,(*U), (*phi[ix]).s0);
-    _complexcjg_times_vector(psi,ka3,chi);
+      _su3_inverse_multiply(chi,(*U), (*phi[ix]).s0);
+      _complexcjg_times_vector(psi,ka3,chi);
       
-    _vector_add((*s).s0, rs.s0, psi);
-    _vector_i_add((*s).s2, rs.s2, psi);
+      _vector_add((*s).s0, rs.s0, psi);
+      _vector_i_add((*s).s2, rs.s2, psi);
 
-    _su3_inverse_multiply(chi,(*U), (*phi[ix]).s1);
-    _complexcjg_times_vector(psi,ka3,chi);
+      _su3_inverse_multiply(chi,(*U), (*phi[ix]).s1);
+      _complexcjg_times_vector(psi,ka3,chi);
 
-    _vector_add((*s).s1, rs.s1, psi);
-    _vector_i_sub((*s).s3, rs.s3, psi);
+      _vector_add((*s).s1, rs.s1, psi);
+      _vector_i_sub((*s).s3, rs.s3, psi);
 
-    U++;
-    ix++;
-    s++;
+      U++;
+      ix++;
+      s++;
+    }
   }
 #ifdef _KOJAK_INST
 #pragma pomp inst end(hoppingmatrix)

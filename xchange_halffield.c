@@ -192,6 +192,64 @@ void xchange_halffield() {
 
 #endif
 
+#if (defined _USE_SHMEM && defined _USE_HALFSPINOR)
+# include <mpp/shmem.h>
+void xchange_halffield32() {
+
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(xchangehalf32)
+#endif
+#  ifdef MPI
+
+  shmem_barrier_all();
+
+  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ/2), 
+		   (float*)(HalfSpinor32 + 4*VOLUME),
+                   (LX*LY*LZ*6), g_nb_t_up);
+  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2), 
+		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ/2),
+                   (LX*LY*LZ*6), g_nb_t_dn);
+
+#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ/2), 
+		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ),
+                   (T*LY*LZ*6), g_nb_x_up);
+  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ),
+		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ/2),
+                   (T*LY*LZ*6), g_nb_x_dn);
+
+#    endif
+
+#    if (defined PARALLELXYT || defined PARALLELXYZT)
+  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2),
+		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ),
+                   (T*LX*LZ*6), g_nb_y_up);
+  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ),
+		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2),
+                   (T*LX*LZ*6), g_nb_y_dn);
+
+#    endif
+
+#    if (defined PARALLELXYZT)
+  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2),
+		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ),
+                   (T*LX*LY*6), g_nb_z_up);
+  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ),
+		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2),
+                   (T*LX*LY*6), g_nb_z_dn);
+
+#    endif
+
+  shmem_barrier_all();
+#  endif
+  return;
+#ifdef _KOJAK_INST
+#pragma pomp inst end(xchangehalf32)
+#endif
+}
+
+#else
+
 void xchange_halffield32() {
 
 #  ifdef MPI
@@ -208,6 +266,9 @@ void xchange_halffield32() {
   int x0=0, x1=0, x2=0, ix=0;
   int reqcount = 16;
 #  endif
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(xchangehalf32)
+#endif
 #  if (defined XLC && defined BGL)
   __alignx(16, HalfSpinor32);
 #  endif
@@ -286,7 +347,9 @@ void xchange_halffield32() {
   MPI_Waitall(reqcount, requests, status); 
 #  endif
   return;
-
+#ifdef _KOJAK_INST
+#pragma pomp inst end(xchangehalf32)
+#endif
 }
-
+#endif
 static char const rcsid[] = "$Id$";
