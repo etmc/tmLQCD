@@ -166,6 +166,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x GMRESM
 %x GMRESDRNEV
 %x REPRORND
+%x SLOPPYPREC
 
 
 %x COMMENT
@@ -266,6 +267,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^GaugeConfigReadPrecision{SPC}*={SPC}*     BEGIN(GAUGERPREC);
 ^GaugeConfigWritePrecision{SPC}*={SPC}*    BEGIN(GAUGEWPREC);
 ^ReproduceRandomNumbers{SPC}*={SPC}*       BEGIN(REPRORND);
+^UseSloppyPrecision{SPC}*={SPC}*           BEGIN(SLOPPYPREC);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -762,6 +764,14 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   reproduce_randomnumber_flag = 0;
   if(verbose!=0) printf("Use a different seed for each process in ranlxd!\n");
 }
+<SLOPPYPREC>yes {
+  g_sloppy_precision_flag = 1;
+  if(verbose!=0) printf("Use sloppy precision if available!\n");
+}
+<SLOPPYPREC>no {
+  g_sloppy_precision_flag = 0;
+  if(verbose!=0) printf("Don't use sloppy precision!\n");
+}
 
 <*>^#                       BEGIN(COMMENT);
 <SEED,KAPPA,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
@@ -770,7 +780,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
 <INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
 <ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
-<GMRESM,GMRESDRNEV,REPRORND>#   BEGIN(COMMENT);
+<GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC>#   BEGIN(COMMENT);
 <SOURCETS>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
@@ -923,7 +933,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
-<GMRESM,GMRESDRNEV>. {
+<GMRESM,GMRESDRNEV,SLOPPYPREC>. {
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
@@ -1076,7 +1086,7 @@ int read_input(char * conf_file){
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
   reproduce_randomnumber_flag = _default_reproduce_randomnumber_flag;
-  g_sloppy_precision = 0;
+  g_sloppy_precision_flag = _default_g_sloppy_precision_flag;
 
   /********************************************/
 

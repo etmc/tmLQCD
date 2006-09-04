@@ -103,8 +103,12 @@ int init_dirac_halfspinor() {
       }
 #endif
     }
+    for(i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
+      for(mu = 0; mu < 8; mu++) {
+	NBPointer[ieo][8*i + mu] = NBPointer[ieo][0];
+      }
+    }
 #ifdef MPI
-/*     NBPointer[ieo][4*VOLUME] = NBPointer[ieo][0];  */
 #endif
   }
   for(ieo = 2; ieo < 4; ieo++) {
@@ -150,6 +154,11 @@ int init_dirac_halfspinor() {
 	NBPointer[ieo][8*i + 7] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][3] ] - VOLUME/2)];
       }
 #endif
+    }
+    for(i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
+      for(mu = 0; mu < 8; mu++) {
+	NBPointer[ieo][8*i + mu] = NBPointer[ieo][0];
+      }
     }
 #ifdef MPI
 /*     NBPointer[ieo][4*VOLUME] = NBPointer[ieo][0];  */

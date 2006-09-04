@@ -4,5 +4,6 @@
 #include "xchange_field.h"
 #include "xchange_gauge.h"
 #include "xchange_deri.h"
+#include "xchange_halffield.h"
 
 #endif

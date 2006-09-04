@@ -78,6 +78,7 @@ EXTERN int * g_lexic2eo;
 /* translates from even/odd orderto lexicograhic order  */    
 EXTERN int * g_eo2lexic;
 EXTERN int * g_lexic2eosub;
+EXTERN int g_sloppy_precision_flag;
 EXTERN int g_sloppy_precision;
 
 EXTERN int **** g_ipt;

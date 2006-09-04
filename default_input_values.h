@@ -84,5 +84,6 @@
 #define _default_gauge_precision_read_flag 64
 #define _default_gauge_precision_write_flag 64
 #define _default_reproduce_randomnumber_flag 1
+#define _default_g_sloppy_precision_flag 0
 
 #endif

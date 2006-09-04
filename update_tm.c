@@ -176,7 +176,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
 
   /* initialize the momenta */
   enep=ini_momenta();
-
+  g_sloppy_precision = 1;
   /*run the trajectory*/
   if(integtyp == 1) {
     /* Leap-frog integration scheme */
@@ -201,7 +201,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   else if(integtyp == 7) {
     mn2p_integrator(n_int, tau, g_nr_of_psf, lambda);
   }
-
+  g_sloppy_precision = 0;
   /*perform the accept-reject-step*/
   enepx=moment_energy();
   new_plaquette_energy=measure_gauge_action();
@@ -283,7 +283,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     if(accept == 1) {
       write_lime_gauge_field( "conf.save", gauge_energy/(6.*VOLUME*g_nproc), 0);
     }
-
+    g_sloppy_precision = 1;
     /* run the trajectory back */
     if(integtyp == 1) {
       /* Leap-frog integration scheme */
@@ -308,7 +308,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     else if(integtyp == 7) {
       mn2p_integrator(n_int, -tau, g_nr_of_psf, lambda);
     }
-
+    g_sloppy_precision = 0;
     ret_enep=moment_energy();
     ret_plaquette_energy=measure_gauge_action();
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
