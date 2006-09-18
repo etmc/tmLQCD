@@ -33,6 +33,7 @@
 #include "Nondegenerate_Matrix.h"
 #include "chebyshev_polynomial_nd.h"
 #include "Ptilde_nd.h"
+#include "reweighting_factor_nd.h"
 
 #include "ranlxd.h"
 /* #include "read_input.h" */
@@ -451,6 +452,13 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   else {
     accept = 0;
   }
+
+  /* REWEIGHTING */
+  /* Argument = number of rnd spinor to be used */ 
+  /*
+  reweighting_factor_nd(10);
+  */
+
 
   /* Here a reversibility test is performed */
   /* The trajectory is integrated back      */
