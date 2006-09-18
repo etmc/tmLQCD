@@ -373,7 +373,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     Diff = fabs(Ener[j] - Ener[j-1]);
     printf(" At j=%d  Energy=%e  Diff=%e \n", j, Ener[j], Diff);
 
-    if(Diff < 1.0e-4){   
+    if(Diff < g_acc_Hfin){   
       printf(" At j = %d  PHMC Only Final Energy %e \n", j, Ener[j]);
       break;
     }
@@ -455,7 +455,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
   /* REWEIGHTING */
   /* Argument = number of rnd spinor to be used */ 
-  /*
+  /* 
   reweighting_factor_nd(10);
   */
 
