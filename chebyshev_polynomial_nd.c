@@ -250,9 +250,6 @@ double cheb_eval(int M, double *c, double s){
 *****************************************************************************/
 
 
-double stopeps=1.0e-02;
-
-
 void degree_of_polynomial_nd(){
   int i, j;
   double temp, temp2;
@@ -303,7 +300,7 @@ void degree_of_polynomial_nd(){
 
    if(g_proc_id == g_stdio_proc){
      printf(" \n In P: EVmin = %f  EVmax = %f  \n", cheb_evmin, cheb_evmax);
-     printf("\n determine the degree of the polynomial :   Stop=%e \n" , stopeps);
+     printf("\n determine the degree of the polynomial :   Stop=%e \n", g_acc_Pfirst);
      fflush(stdout);
    }
 
@@ -346,9 +343,9 @@ void degree_of_polynomial_nd(){
     }
     if(g_proc_id == g_stdio_proc) printf(" Sum remaining | c_n |=%e \n", sum);
 
-    if(sum < stopeps){  
+    if(sum < g_acc_Pfirst){  
       if(g_proc_id == g_stdio_proc){
-	printf("\n        Achieved Accuracies for P :   Stop=%e \n", stopeps);
+	printf("\n        Achieved Accuracies for P :   Stop=%e \n", g_acc_Pfirst);
 	printf(" Uniform: Sum |c_n|=%e \n", sum);
 	printf(" RND:  || (P S P - 1)X ||^2 /|| 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
       }

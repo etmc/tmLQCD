@@ -260,8 +260,6 @@ double chebtilde_eval(int M, double *dd, double s){
 *****************************************************************************/
 
 
-double stopeps_ptilde=1.0e-10;
-
 
 void degree_of_Ptilde(){
   int i, j;
@@ -311,7 +309,7 @@ void degree_of_Ptilde(){
 
    if(g_proc_id == g_stdio_proc){
      printf(" \n In Ptilde: EVmin = %f  EVmax = %f\n", cheb_evmin, cheb_evmax);
-     printf("\n determine the degree of the polynomial :   Stop=%e \n", stopeps_ptilde);
+     printf("\n determine the degree of the polynomial :   Stop=%e \n", g_acc_Ptilde);
      fflush(stdout);
    }
 
@@ -356,11 +354,11 @@ void degree_of_Ptilde(){
     }
     if(g_proc_id == g_stdio_proc) printf(" Sum remaining | d_n | = %e\n", sum);
 
-    /* if(temp < stopeps_ptilde && temp2 < stopeps_ptilde){ */  /* break; */
+    /* if(temp < g_acc_ptilde && temp2 < g_acc_ptilde){ */  /* break; */
 
-    if(sum < stopeps_ptilde){  
+    if(sum < g_acc_Ptilde){  
       if(g_proc_id == g_stdio_proc){
-	printf("\n        Achieved Accuracies for Ptilde :  Stop=%e \n", stopeps_ptilde);
+	printf("\n        Achieved Accuracies for Ptilde :  Stop=%e \n", g_acc_Ptilde);
 	printf(" Uniform: Sum |d_n|=%e \n", sum);
 	printf(" RND:  || (Ptilde P S P Ptilde - 1)X ||^2 / || 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
       }
