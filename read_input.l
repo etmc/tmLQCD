@@ -87,6 +87,9 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x THERMSWEEPS
 %x NMEAS
 %x KAPPA
+%x ACCPFIRST
+%x ACCPTILDE
+%x ACCHFIN
 %x MUBAR
 %x EPSBAR
 %x MU
@@ -179,6 +182,9 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^NRYProcs{SPC}*={SPC}*                   BEGIN(NPROCY);
 ^NRZProcs{SPC}*={SPC}*                   BEGIN(NPROCZ);
 ^kappa{SPC}*={SPC}*                      BEGIN(KAPPA);
+^acc_Pfirst{SPC}*={SPC}*                 BEGIN(ACCPFIRST);
+^acc_Ptilde{SPC}*={SPC}*                 BEGIN(ACCPTILDE);
+^acc_Hfin{SPC}*={SPC}*                   BEGIN(ACCHFIN);
 ^mubar{SPC}*={SPC}*                      BEGIN(MUBAR);
 ^epsbar{SPC}*={SPC}*                     BEGIN(EPSBAR);
 ^mu{SPC}*={SPC}*                         BEGIN(MU);
@@ -319,6 +325,18 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <KAPPA>{FLT}  {
   g_kappa=atof(yytext);
   if(verbose!=0) printf("kappa=%s \n", yytext);
+}
+<ACCPFIRST>{FLT}  {
+  g_acc_Pfirst=atof(yytext);
+  if(verbose!=0) printf("Acc_Pfirst=%s \n", yytext);
+}
+<ACCPTILDE>{FLT}  {
+  g_acc_Ptilde=atof(yytext);
+  if(verbose!=0) printf("Acc_Ptilde=%s \n", yytext);
+}
+<ACCHFIN>{FLT}  {
+  g_acc_Hfin=atof(yytext);
+  if(verbose!=0) printf("Acc_Hfin=%s \n", yytext);
 }
 <MUBAR>{FLT}  {
   g_mubar=atof(yytext);
@@ -753,7 +771,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
+<SEED,KAPPA,ACCPFIRST,ACCPTILDE,ACCHFIN,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
 <MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2>#   BEGIN(COMMENT);
 <NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,NPROCY,NPROCZ,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP>#   BEGIN(COMMENT);
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
@@ -778,6 +796,18 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 <KAPPA>. {
   printf("Unknown kappa in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
+  exit(1);
+}
+<ACCPFIRST>. {
+  printf("Unknown Acc_Pfirst in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
+  exit(1);
+}
+<ACCPTILDE>. {
+  printf("Unknown Acc_Ptilde in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
+  exit(1);
+}
+<ACCHFIN>. {
+  printf("Unknown Acc_Hfin in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
   exit(1);
 }
 <MUBAR>. {
@@ -996,6 +1026,9 @@ int read_input(char * conf_file){
   N_PROC_Z = _default_N_PROC_Z;
 #endif
   g_kappa = _default_g_kappa;
+  g_acc_Pfirst = _default_g_acc_Pfirst;
+  g_acc_Ptilde = _default_g_acc_Ptilde;
+  g_acc_Hfin = _default_g_acc_Hfin;
   g_mubar = _default_g_mubar;
   g_epsbar = _default_g_epsbar;
   g_mu = _default_g_mu;
