@@ -24,6 +24,7 @@
 #define _default_g_acc_Pfirst 1.e-02
 #define _default_g_acc_Ptilde 1.e-06
 #define _default_g_acc_Hfin 1.e-04
+#define _default_g_rec_ev 1000
 #define _default_g_mubar 0.0
 #define _default_g_epsbar 0.0
 #define _default_g_mu 0.0
