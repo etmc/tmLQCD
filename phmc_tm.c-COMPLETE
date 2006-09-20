@@ -740,9 +740,9 @@ int main(int argc,char *argv[]) {
 
 
     /* If PHMC */
-    /* Put here the flag "NRecPol" for polynomial recomputation !!!! */
-    /*
-    if((trajectory_counter%NRecPol == 0)) {
+    /* Put here the flag "g_rec_ev" for polynomial recomputation !!!! */
+    
+    if((trajectory_counter%g_rec_ev == 0)) {
       max_iter_ev = 1000;
       stop_prec_ev = 1.e-13;
 
@@ -802,7 +802,7 @@ int main(int argc,char *argv[]) {
       }
       fclose(roots);
     }
-    */
+    
     /* End PHMC */
 
 
