@@ -159,6 +159,7 @@ EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
 /* Parameters for non-degenrate case */
 EXTERN double g_acc_Pfirst, g_acc_Ptilde;
 EXTERN double g_acc_Hfin;
+EXTERN int g_rec_ev;
 EXTERN double g_mubar, g_epsbar;
 EXTERN int g_use_clover_flag, g_nr_of_psf;
 
