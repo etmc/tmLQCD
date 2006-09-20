@@ -90,6 +90,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x ACCPFIRST
 %x ACCPTILDE
 %x ACCHFIN
+%x RECEV
 %x MUBAR
 %x EPSBAR
 %x MU
@@ -185,6 +186,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^acc_Pfirst{SPC}*={SPC}*                 BEGIN(ACCPFIRST);
 ^acc_Ptilde{SPC}*={SPC}*                 BEGIN(ACCPTILDE);
 ^acc_Hfin{SPC}*={SPC}*                   BEGIN(ACCHFIN);
+^recev{SPC}*={SPC}*                      BEGIN(RECEV);
 ^mubar{SPC}*={SPC}*                      BEGIN(MUBAR);
 ^epsbar{SPC}*={SPC}*                     BEGIN(EPSBAR);
 ^mu{SPC}*={SPC}*                         BEGIN(MU);
@@ -337,6 +339,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <ACCHFIN>{FLT}  {
   g_acc_Hfin=atof(yytext);
   if(verbose!=0) printf("Acc_Hfin=%s \n", yytext);
+}
+<RECEV>{DIGIT}+               {
+  g_rec_ev = atoi(yytext);
+  if(verbose!=0) printf("Rec_EV=%s \n", yytext);
 }
 <MUBAR>{FLT}  {
   g_mubar=atof(yytext);
@@ -771,7 +777,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,ACCPFIRST,ACCPTILDE,ACCHFIN,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
+<SEED,KAPPA,ACCPFIRST,ACCPTILDE,ACCHFIN,RECEV,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
 <MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2>#   BEGIN(COMMENT);
 <NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,NPROCY,NPROCZ,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP>#   BEGIN(COMMENT);
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
@@ -808,6 +814,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 <ACCHFIN>. {
   printf("Unknown Acc_Hfin in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
+  exit(1);
+}
+<RECEV>. {
+  printf("Unknown Rec_EV in line %d.\n Must be an integer number. Exiting...!\n",line_of_file);
   exit(1);
 }
 <MUBAR>. {
@@ -1029,6 +1039,7 @@ int read_input(char * conf_file){
   g_acc_Pfirst = _default_g_acc_Pfirst;
   g_acc_Ptilde = _default_g_acc_Ptilde;
   g_acc_Hfin = _default_g_acc_Hfin;
+  g_rec_ev = _default_g_rec_ev;
   g_mubar = _default_g_mubar;
   g_epsbar = _default_g_epsbar;
   g_mu = _default_g_mu;
