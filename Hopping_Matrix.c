@@ -1475,7 +1475,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   static spinor rs;
   
   /* for parallelization */
-#    ifdef MPI
+#    if (defined MPI && !defined _NO_COMM)
   xchange_field(k, ieo);
 #    endif
 
