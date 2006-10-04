@@ -224,7 +224,12 @@ int main(int argc,char *argv[]) {
 	  read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], conf_filename); 
 	}
 	else if(source_format_flag == 1) {
-	  sprintf(conf_filename,"%s.%.4d.%.2d.%.1d", source_input_filename, nstore, source_time_slice, ix);
+	  if(source_time_slice > T*g_nproc_t || source_time_slice < 0) {
+	    sprintf(conf_filename,"%s", source_input_filename);
+	  }
+	  else {
+	    sprintf(conf_filename,"%s.%.4d.%.2d.%.1d", source_input_filename, nstore, source_time_slice, ix);
+	  }
 	  if(g_proc_id == 0) {
 	    printf("Reading source from %s\n", conf_filename);
 	  }
@@ -237,8 +242,13 @@ int main(int argc,char *argv[]) {
 	sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", "prop.mass", mass_number, is, ic, nstore);
       }
       else if(source_format_flag == 1) {
-	sprintf(conf_filename, "%s.%.4d.%.2d.%.1d.inverted", 
-		source_input_filename, nstore, source_time_slice, ix);
+	if(source_time_slice > T*g_nproc_t || source_time_slice < 0) {
+	  sprintf(conf_filename,"%s.inverted", source_input_filename);
+	}
+	else {
+	  sprintf(conf_filename, "%s.%.4d.%.2d.%.1d.inverted", 
+		  source_input_filename, nstore, source_time_slice, ix);
+	}
       }
 
       /* If the solver is _not_ CG we might read in */
