@@ -1,0 +1,52 @@
+\section{Dirac operator}
+
+It is well known that $(1 \pm \gamma_\nu)\psi$ has only two
+independent components from which the other two can be
+recomputed. This can be used on the one hand to reduce the
+computational effort by multiplying only the two independent
+components with the gauge field and reconstruct the other two from
+them. On the other hand it can be used to reduce communication
+overhead by communicating only a half spinor. 
+
+The first trick is always used in the code, whereas the second one is
+implemented in a second version of the Dirac operator. It can be used
+by configuring with {\ttfamily --enable-newdiracop} ({\ttfamily
+  --enable-gaugecopy} is the automatically switched on). 
+
+The idea of this new version is the following:
+hopping-matrix times vector $\chi=H\psi$ in three steps
+\begin{enumerate}
+\item<1-> project to a half Spinor $\phi$:
+  \[
+  \phi = H_{4\to 2}\psi
+  \]
+  Keep only the two independent elements of $(1\pm\gamma_i)\psi$.
+\item<2-> exchange halfspinor $\phi$
+\item<3-> expand to full Spinor:
+  \[
+  \chi = H_{2\to 4}\phi
+  \]
+\end{enumerate}
+The multiplication with the gauge fields is done at the moment
+symmetrically in the sense that in step 1 the plus direction is
+multiplied and in step 3 the minus direction. 
+
+Depending on the platform this new version gives a quite reasonable
+speedup, in particular on the SGI Altix and the BG/L.
+
+\subsection{Sloppy precision}
+
+An additional way to speed up the Dirac operator is to store the field
+$\phi$ only in single precision. This reduces the memory traffic and
+the communication traffic significantly. This trick can be used for
+instance in the MD part of the HMC without loosing the exactness of
+the algorithm. However, reversibility violations might be an issue.
+
+Using this trick in the MD part can be triggered using the input
+parameter {\ttfamily UseSloppyPrecision=yes}. It works quite well and
+gives a speedup of about 30\%.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

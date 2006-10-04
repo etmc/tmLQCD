@@ -5,13 +5,17 @@ to just call {\ttfamily ./configure} in the top level directory. The
 c-compiler choice is influenced e.g. by specifying {\ttfamily
   ./configure CC=<mycc>}. 
 
+The code was successfully compiled and run at least on the following platforms:
+i686 and compatible, x64 and compatible, IBM Regatta systems, IBM Blue
+Gene/L, SGI Altix, powerpc cluster (MareNostrum), Cray.
+
 The configure script accepts certain options to influence the building
 procedure. One can get an overview over all supported options with
 {\ttfamily configure --help}. There are {\ttfamily enable|disable}
 options switching on and off optional features and {\ttfamily
   with|without} switches usually related to optional packages. In the
 following we describe the most important of them (check {\ttfamily
-  configure --help} for the defaults):
+  configure --help} for the defaults and more options):
 
 \begin{itemize}
 \item {\ttfamily --enable-mpi}:\\
@@ -21,6 +25,10 @@ following we describe the most important of them (check {\ttfamily
 
 \item {\ttfamily --enable-p4}:\\
   Enable the use of special petium4 instruction set and cache
+  management.
+
+\item {\ttfamily --enable-opteron}:\\
+  Enable the use of special opteron instruction set and cache
   management.
 
 \item {\ttfamily --enable-sse}:\\
@@ -40,18 +48,25 @@ following we describe the most important of them (check {\ttfamily
   See section \ref{subsec:storage} for details on this option.
 
 \item {\ttfamily --enable-eogeom}:\\
-  See section \ref{subsec:storage} for details on this option.
+  This option is obsolete.
 
+\item {\ttfamily --enable-newdiracop}:\\
+  There are two versions of the Dirac operator implemented. The newer
+  one is used when this option is enabled.
 
-\item {\ttfamily --with-mpidimension=x}:\\
+\item {\ttfamily --enable-shmem}:\\
+  Use shared memory API instead of MPI for the communication of spinor
+  fields. This is currently only usable on the Munich Altix machine.
+
+\item {\ttfamily --with-mpidimension=n}:\\
   This option has only effect if the preceeding one is switched
-  on. The number of parallel direction can be specified. 1,2,3 and 4
+  on. The number of parallel directions can be specified. 1,2,3 and 4
   dimensional parallelisation is supported.
 
 \item {\ttfamily --with-lapack}:\\
-  Build the HMc with lapack. If this is disabled the Chronological
-  solver guess cannot be used. Istead zero spinor fields will be used
-  as initial guesses for the solvers during the molecular dynamics.
+  Build the HMC with lapack. At the moment this is not necessary sinc
+  in the Chronological solver guess a self written LU decomposition is
+  used. This option might become relevant in the future again.
 
 \item {\ttfamily --with-limedir=<dir>}:\\
  Tells configure where to find the lime package, which is required for
@@ -61,6 +76,7 @@ following we describe the most important of them (check {\ttfamily
   This allows to fix the volume at compiletime in order to allow the
   compiler for further optimization (maybe). The corresponding
   definitions can be found in {\ttfamily fixed\_volume.h}.
+
 
 \end{itemize}
 

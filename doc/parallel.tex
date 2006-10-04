@@ -1,33 +1,22 @@
 \subsection{Storage of fields and index arrays}
 \label{subsec:storage}
 
-While the spinor fields are stored in even/odd order, for the gauge
-fields there are two differents orderings available: these are
-lexical and even/odd order. The gauge field order is controlled
-by the configure switch {\ttfamily --enable-eogeom}. In the code it is
-controled with the C-macro {\ttfamily \_NEW\_GEOMETRY}.
+While the spinor fields are stored in even/odd order, the gauge
+fields in lexicographial order.
 
-Usually even/odd order for the gauge fields is only helpful if the
-following trick is used in addition: in order to allow for continuous
+In order to allow for continuous
 memory access of the gauge fields (without being strided) in the
-hopping matrix one can install a copy of the gauge field in backward
-order. Since the forward direction is accessed continuous in the
-hopping matrix, but the backward direction not, the additional copy
-must be ordered exactly such that the access for the backward fields
-is not strided. The price for this trick is more memory requirement
+hopping matrix one can install a copy of the gauge field in correct
+order. Ordered exactly in the order they are accessed in the hopping
+matrix. The price for this trick is more memory requirement
 and the need to copy the gauge field once. The time for copying is
 negligible if it is done for instance once before an inversion of the
 Dirac operator, during which the gauge fields stay constant. This
 trick is switched on by the configure option {\ttfamily
   --enable-gaugecopy}.
 
-In case the gauge fields are not stored in even/odd order a similar
-trick can be used for the price of even another copy of the gauge
-field. If memory-limitations are not an issue then this can help to
-improve the performance of the Dirac operator.
-
-Note that the additional memory needs might affect the cash coherency
-and maybe your application might run out off memory.
+Note that the additional memory needs might also affect the cash
+coherency and moreover, your application might run out off memory.
 
 \subsubsection{Space-time index arrays}
 
@@ -69,11 +58,9 @@ fields are stored first.
 
 \subsection{Parallelisation}
 
-The whole lattice can be parallelised in only the $t$-direction (by
-defining {\ttfamily PARALLELT} during the compilation) or in $t$-
-and $x$-direction (by defining {\ttfamily PARALLELXT}).
+The whole lattice can be parallelised in up to 4 space-time directions.
 It is controled with the configure switches {\ttfamily --enable-mpi}
-and {\ttfamily --with-mpidimension=1|2}. 
+and {\ttfamily --with-mpidimension=1|2|3|4}. 
 
 \subsubsection{One dimesional parallelisation}
 

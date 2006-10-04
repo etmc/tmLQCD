@@ -86,17 +86,22 @@ supported input paramters:
   The starting condition for a run. Possible values are {\ttfamily
     hot, cold, restart, continue}. Default is {\ttfamily
     cold}. Restart uses the seed to reset the random number
-  generator. For continue there must exist a state file for the random
-  number generator. For both restart and continue there must exist a
-  configuration file to start from. The file names must be set properly.
+  generator. In case of {\ttfamily continue} the programme uses the
+  file {\ttfamily .nstore\_counter} to get the information about from
+  where to read the gauge and the random number status. If this file
+  does not exist (its written in the course of the HMC) then the input
+  parameter described here are used instead.
 
 \item {\ttfamily Measurements}:\\
   Number of measurements in units of trajectories to be done. Default
-  value is $3$. 
+  value is $3$. For the {\ttfamily invert} programme this counts the
+  number of gauge configurations to invert on.
 
 \item {\ttfamily Nskip}:\\
   Number of produced configurations to skip (i.e. not written to
-  disk). Default value is $5$. 
+  disk). Default value is $5$. For the {\ttfamily invert} programme
+  this counts the number of gauge configurations to skip in between
+  adjacent inversions.
 
 \item {\ttfamily InitialStoreCounter}:\\
   Start with value to label measurements. Default is $0$. Can be also
@@ -106,7 +111,9 @@ supported input paramters:
 
 \item {\ttfamily RlxdInputFile}:\\
   Name of input file for the double precision random number
-  generator. Default is {\ttfamily last\_state}.
+  generator. Default is {\ttfamily last\_state}. {\bf This option is
+  obsolete since the random number generator status is now saved
+  within the gauge configuration file.}
 
 \item {\ttfamily GaugeConfigInputFile}:\\
   Name of input file for the gauge field. Default is {\ttfamily conf}
@@ -124,16 +131,16 @@ supported input paramters:
   Compute only components $n$ to $m$ of the quark propagator. $n,m$ must
   be in $[0,11]$. If the start index is not zero the data will be
   appended to the propagator file. The program takes not care of the
-  order, the data is just appended! If the end index is equal to $11$
-  also the two point functions are computed. This parameter has only
+  order, the data is just appended! This parameter has only
   effect for executable {\ttfamily invert}.
 
 \item {\ttfamily SplittedPropagator}:\\
   If set to yes the propagators will written splitted to disk: one
-  file per spinor color component. Default is {\ttfamily yes}.
+  file per spinor color component. Default is {\ttfamily yes}. Only
+  needed for not cmi format.
 
-\item {\ttfamily BCAngleT}:\\
-  If generalized boundary conditions are enabled this set the angle in
+\item {\ttfamily BCAngleT=x}:\\
+  This set the angle in
   time direction to $\theta_t = 2\pi x$. Default value is
   zero. A value of $1$ would mean antiperiodic boundary conditions in
   time for the fermion fields.
@@ -293,28 +300,54 @@ supported input paramters:
   precision. Default is 64.
 
 \item {\ttfamily GMRESMParameter}:\\
-  Krylov subspace size $m$ in GMRES($m$) and such like iterative solvers.
+  Krylov subspace size $m$ in GMRES($m$) and such like iterative
+  solvers. Not yet working!
 
 \item {\ttfamily GMRESDRNrEv}:\\
-  Number of eigenvalues to be deflated in GMRES-DR iterative solver.
+  Number of eigenvalues to be deflated in GMRES-DR iterative
+  solver. Not yet working!
 
 \item {\ttfamily SourceFormat}:\\
   Format of sources and propagators. Only needed when not standard
-  format is used. Possible values then cmi.
+  format is used. Possible values then cmi for the Chris Michael
+  format. This parameter has only effect for executable {\ttfamily invert}.
+
+\item {\ttfamily SolverFlag}:\\
+  Sets the solver to be used. Possible values are among others
+  {\ttfamily CG, BiCGstab, CGS, GMRES}. This parameter has only
+  effect for executable {\ttfamily invert}.
 
 \item {\ttfamily SolverPrecision}:\\
   Stopping criterion for solver in programme invert. The squared
-  residue must be set.
+  residue must be set. This parameter has only
+  effect for executable {\ttfamily invert}.
 
 \item {\ttfamily ReadSource}:\\
-  If set to yes, then the source vector is read from a file
+  If set to yes, then the source vector is read from a file. This
+  parameter has only effect for executable {\ttfamily invert}.
 
 \item {\ttfamily SourceInputFilename}:\\
-  Filename of the source vector.
+  Base filename of the source vector to be read in. The filename will
+  be constructed as {\ttfamily basefilename.massnumber.is.ic.nstore}
+  unless the cmi format is used (see next input parameter). This
+  parameter has only effect for executable {\ttfamily invert}.
 
 \item {\ttfamily SourceTimeSlice}:\\
-  The time slice of the source to be read. At the moment used only for
-  the automatic construction of filenames...
+  The time slice of the source to be read (in case of cmi format). At
+  the moment used only for
+  the automatic construction of filenames. The filename will then be
+  constructed as {\ttfamily basefilename.nstore.ts.index}.
+  {\ttfamily SourceTimeSlice} must be set to something
+  smaller than 0 or larger than T in order to let the code not
+  automatically construct the filenames. The filename will then
+  consist only of the base filename. This parameter has only
+  effect for executable {\ttfamily invert}.
+
+\item {\ttfamily UseSloppyPrecision}:\\
+  Use a reduced precision Dirac operator in the MC part of the
+  HMC. Possible values are yes and no, the latter being the
+  default. This could be possibly used in the invert code along the 
+  lines of {\ttfamily hep-lat/0609023} in the future.
 
 \end{enumerate}
 

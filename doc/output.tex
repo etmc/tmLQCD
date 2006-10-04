@@ -39,12 +39,12 @@ values and the square norm of the source for each inversion.
 Contains the reversibility violation measurements, if they are
 performed. 
 
-\subsection*{\ttfamily conf.save, rlxd\_state}
-These two files are written after each trajectory giving the
-possibility to continue the program from them. When the program
-finishes it writes in addition the files {\ttfamily
-  last\_configuration} and {\ttfamily last\_state} which might also be
-used for a continuation.
+\subsection*{\ttfamily conf.save}
+This file is written after each trajectory, if no regular
+configuration is saved. It contains the most recent gauge
+configuration and the status of the random number generator for a
+restart of the programme. 
+
 
 %%% Local Variables: 
 %%% mode: latex
