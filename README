@@ -1,12 +1,70 @@
-The lime library is needed now to compile the program. Please download
-it at
+Here are some remarks collected in order to configure, compile and
+test the HMC programme suit. For more information, also about running
+the code please read the documentation in the doc sub-directory. 
+
+CONFIGURE and COMPILE
+
+It is recommended to build the code not in the source directory but in
+a separate directory.
+
+The lime library (version 1.2.3) is needed to compile the
+program. Please download it at
 
 http://www.physics.utah.edu/~detar/scidac/
 
-or use the copy in the GWC scratch directory. Install it in a subdirectory 
-of hmc called 'lime', configure and compile before doing the same with hmc.
-You can install lime also somewhere else, then you should use the configure
-option --with-lime=dir to set the correct directory where to find lime.
+or use the copy in the GWC scratch directory. Untar it somewhere
+configure and compile before doing the same with HMC. Then you should
+use the configure option --with-lime=dir for the HMC to set the
+correct directory where to find lime (see below). 
+
+Building the HMC code is a two step procedure:
+
+1) configure:
+
+In your build directory type
+
+path-to-the-sources/configure --help
+
+to get an overview of the available options and switches. For
+instance, a scalar build on a P4 machine would look like:
+
+path-to-the-sources/configure --disable-mpi --enable-sse2 --enable-p4 \
+--enable-gaugecopy --disable-newdiracop --with-limedir=path-to-lime/
+
+Opteron with SSE2:
+
+path-to-the-sources/configure --disable-mpi --enable-sse2 --enable-opteron \
+--enable-gaugecopy --disable-newdiracop --with-limedir=path-to-lime/
+
+A MPI parallel (4dims) build on a P4 cluster:
+
+path-to-the-sources/configure --enable-mpi --enable-sse2 --enable-p4 \
+--with-mpidimension=4 --enable-gaugecopy --disable-newdiracop
+
+on the Munich Altix machine:
+
+path-to-the-sources/configure --enable-mpi --with-mpidimension=4 \
+--without-lapack --with-limedir=path-to-lime/ --enable-newdiracop \
+--disable-shmem CC=mpicc CFLAGS="-mcpu=itanium2 -O3 -g -c99 -mtune=itanium2"
+
+on the BG/L:
+
+path-to-the-sources/configure --host=powerpc64-bgl-linux-gnu \
+--without-lapack --enable-mpi --with-mpidimension=4 \
+--enable-gaugecopy --with-limedir=path-to-lime/  \
+--enable-newdiracop CC=/usr/bin/blrts_xlc
+
+You may enable or disable other configure options as needed.
+
+2) make
+
+type `make` in your build directory.
+
+I there appears not error message during compilation you should end up
+with two executable in the build directory, namely `hmc_tm` and
+`invert`. 
+
+TESTING
 
 The following numbers might be taken as reference points:
 
