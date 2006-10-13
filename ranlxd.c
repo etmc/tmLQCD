@@ -41,6 +41,7 @@
 #include <limits.h>
 #include <float.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include "ranlxd.h"
 
@@ -181,12 +182,16 @@ void rlxd_init(const int level, const int seed)
 
    define_constants();
    
-   if (level==1)
-      pr=202;
-   else if (level==2)
-      pr=397;
-   else
-      errorhandler(1, "");
+   if (level==1) {
+     pr=202;
+   }
+   else if (level==2) {
+     pr=397;
+   }
+   else {
+     fprintf(stderr, "Wrong level %d in ranluxd!\n Must be 1 or 2! Aborting...\n", level);
+     exit(1000);
+   }
 
    i=seed;
 
@@ -196,8 +201,10 @@ void rlxd_init(const int level, const int seed)
       i/=2;
    }
 
-   if ((seed<=0)||(i!=0))
-      errorhandler(2, "");
+   if ((seed<=0)||(i!=0)) {
+     fprintf(stderr, "Seed %d out of range in ranluxd! Aborting...\n", seed);
+     exit(1001);
+   }
 
    ibit=0;
    jbit=18;
@@ -240,20 +247,19 @@ void rlxd_init(const int level, const int seed)
 }
 
 
-void ranlxd(double * const r, const int n)
-{
-   int k;
-
-   if (init==0)
-      rlxd_init(1,1);
-
-   for (k=0;k<n;k++) 
-   {
-      is=next[is];
-      if (is==is_old)
-         update();
-      r[k]=(double)(x.num[is+4])+(double)(one_bit.c1*x.num[is]);
-   }
+void ranlxd(double * const r, const int n) {
+  int k;
+  
+  if (init==0) {
+    rlxd_init(1,1);
+  }
+  
+  for (k=0;k<n;k++) {
+    is=next[is];
+    if (is==is_old)
+      update();
+    r[k]=(double)(x.num[is+4])+(double)(one_bit.c1*x.num[is]);
+  }
 }
 
 
@@ -268,8 +274,9 @@ void rlxd_get(int * const state)
    int k;
    float base;
 
-   if (init==0)
-      errorhandler(3, "");
+   if (init==0) {
+     rlxd_init(1, 1);
+   }
 
    base=(float)(ldexp(1.0,24));
    state[0]=rlxd_size();
@@ -295,22 +302,26 @@ void rlxd_reset(const int * state)
 
    define_constants();
 
-   if (state[0]!=rlxd_size())
-      errorhandler(5, "");
+   if (state[0]!=rlxd_size()) {
+     fprintf(stderr, "State has the wrong size in rlxd_reset! Aborting...\n");
+     exit(1003);
+   }
 
-   for (k=0;k<96;k++)
-   {
-      if ((state[k+1]<0)||(state[k+1]>=167777216))
-         errorhandler(5, "");
-
+   for (k=0;k<96;k++) {
+     if ((state[k+1]<0)||(state[k+1]>=167777216)) {
+       fprintf(stderr, "State is wrong in rlxd_reset! Aborting...\n");
+       exit(1004);
+     }
       x.num[k]=(float)(ldexp((double)(state[k+1]),-24));
    }
 
    if (((state[97]!=0)&&(state[97]!=1))||
        ((state[98]!=0)&&(state[98]!=1))||
        ((state[99]!=0)&&(state[99]!=1))||
-       ((state[100]!=0)&&(state[100]!=1)))
-      errorhandler(5, "");
+       ((state[100]!=0)&&(state[100]!=1))) {
+       fprintf(stderr, "State is wrong in rlxd_reset! Aborting...\n");
+       exit(1005);
+   }
    
    carry.c1=(float)(ldexp((double)(state[97]),-24));
    carry.c2=(float)(ldexp((double)(state[98]),-24));
@@ -328,8 +339,10 @@ void rlxd_reset(const int * state)
    
    if (((pr!=202)&&(pr!=397))||
        (ir<0)||(ir>11)||(jr<0)||(jr>11)||(jr!=((ir+7)%12))||
-       (is<0)||(is>91))
-      errorhandler(5, "");
+       (is<0)||(is>91)) {
+       fprintf(stderr, "State is wrong in rlxd_reset! Aborting...\n");
+       exit(1006);
+   }
 }
 
 #else
@@ -447,17 +460,23 @@ void rlxd_init(const int level, const int seed)
    int ix,iy;
 
    if ((INT_MAX<2147483647)||(FLT_RADIX!=2)||(FLT_MANT_DIG<24)||
-       (DBL_MANT_DIG<48))
-      errorhandler(0, "");
+       (DBL_MANT_DIG<48)) {
+     fprintf(stderr, "Something wrong in ranluxd! Aborting...\n");
+     exit(1002);
+   }
 
    define_constants();
    
-   if (level==1)
-      pr=202;
-   else if (level==2)
-      pr=397;
-   else
-      errorhandler(1, "");
+   if (level==1) {
+     pr=202;
+   }
+   else if (level==2) {
+     pr=397;
+   }
+   else {
+     fprintf(stderr, "Wrong level %d in ranluxd!\n Must be 1 or 2! Aborting...\n", level);
+     exit(1000);
+   }
    
    i=seed;
 
@@ -467,8 +486,10 @@ void rlxd_init(const int level, const int seed)
       i/=2;
    }
 
-   if ((seed<=0)||(i!=0))
-      errorhandler(2, "");
+   if ((seed<=0)||(i!=0)) {
+     fprintf(stderr, "Wrong Seed %d in ranluxd! Aborting...\n", seed);
+     exit(1001);
+   }
 
    ibit=0;
    jbit=18;
@@ -515,8 +536,9 @@ void ranlxd(double * const r, const int n)
 {
    int k;
 
-   if (init==0)
-      rlxd_init(1,1);
+   if (init==0) {
+     rlxd_init(1,1);
+   }
 
    for (k=0;k<n;k++) 
    {
@@ -538,8 +560,9 @@ void rlxd_get(int * const state)
 {
    int k;
 
-   if (init==0)
-      errorhandler(3, "");
+   if (init==0) {
+     rlxd_init(1,1);
+   }
 
    state[0]=rlxd_size();
 

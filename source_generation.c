@@ -41,7 +41,7 @@ void source_generation_nucleon(spinor * const P, spinor * const Q,
   }
 
   /* Compute the seed */
-  seed =(int) abs(sample + t*10*97 + nstore*100*53);
+  seed =(int) abs(1+sample + t*10*97 + nstore*100*53);
 
   rlxd_init(1, seed);
 
