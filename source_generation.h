@@ -5,6 +5,7 @@
 void source_generation_nucleon(spinor * const P, spinor * const Q, 
 			       const int is, const int ic,
 			       const int t, const int nt, const int nx, 
-			       const int sample, const int nstore);
+			       const int sample, const int nstore,
+			       const int meson);
 
 #endif

@@ -16,13 +16,14 @@
 #endif
 
 void source_generation_nucleon(spinor * const P, spinor * const Q, 
-		       const int is, const int ic,
-		       const int t, const int nt, const int nx, 
-		       const int sample, const int nstore) {
+			       const int is, const int ic,
+			       const int t, const int nt, const int nx, 
+			       const int sample, const int nstore, 
+			       const int meson) {
 
   double rnumber, si=0., co=0.;
   int rlxd_state[105];
-  int reset = 0, seed, r, tt, lt, xx, lx, yy, ly, zz, lz, ix;
+  int reset = 0, seed, r, tt, lt, xx, lx, yy, ly, zz, lz;
   int coords[4], id=0, i;
   complex * p = NULL;
   const double s0=0.;
@@ -41,29 +42,47 @@ void source_generation_nucleon(spinor * const P, spinor * const Q,
   }
 
   /* Compute the seed */
-  seed =(int) abs(1+sample + t*10*97 + nstore*100*53);
+  seed =(int) abs(1 + sample + t*10*97 + nstore*100*53);
 
   rlxd_init(1, seed);
 
   for(tt = t; tt < T*g_nproc_t; tt+=nt) {
     lt = tt - g_proc_coords[0]*T;
     coords[0] = tt / T;
-    ix = 0;
-    for(xx = 0; xx < LX*g_nproc_x; xx++) {
+    for(xx = 0; xx < LX*g_nproc_x; xx+=nx) {
       lx = xx - g_proc_coords[1]*LX;
       coords[1] = xx / LX;
-      for(yy = 0; yy < LY*g_nproc_y; yy++) {
+      for(yy = 0; yy < LY*g_nproc_y; yy+=nx) {
 	ly = yy - g_proc_coords[2]*LY;
 	coords[2] = yy / LY;
-	for(zz = 0; zz < LZ*g_nproc_z; zz++) {
+	for(zz = 0; zz < LZ*g_nproc_z; zz+=nx) {
 	  lz = zz - g_proc_coords[3]*LZ;
 	  coords[3] = zz / LZ;
-	  if(ix%nx == 0) {
 #ifdef MPI
-	    MPI_Cart_rank(g_cart_grid, coords, &id);
+	  MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
-	    ranlxd(&rnumber, 1);
-	    if(g_cart_id  == id) {
+	  ranlxd(&rnumber, 1);
+	  if(g_cart_id  == id) {
+	    if(meson) {
+	      r = (int)floor(4.*rnumber);
+	      if(r == 0) {
+		si = 1.;
+		co = 0.;
+	      }
+	      else if(r == 1) {
+		si = -1.;
+		co = 0.;
+	      }
+	      else if(r==2) {
+		si = 0.;
+		co = 1.;
+	      }
+	      else {
+		si = 0.;
+		co = -1.;
+	      }
+	    }
+	    else {
 	      r = (int)floor(3.*rnumber);
 	      if(r == 0) {
 		si = s0;
@@ -77,21 +96,20 @@ void source_generation_nucleon(spinor * const P, spinor * const Q,
 		si = s2;
 		co = c2;
 	      }
-
-	      i = g_lexic2eosub[ g_ipt[lt][lx][ly][lz] ];
-	      if((lt+lx+ly+lz+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
-		  + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
-		p = (complex*)(P + i);
-	      }
-	      else {
-		p = (complex*)(Q + i);
-	      }
-
-	      (*(p+3*is+ic)).re = co;
- 	      (*(p+3*is+ic)).im = si;
 	    }
+	    
+	    i = g_lexic2eosub[ g_ipt[lt][lx][ly][lz] ];
+	    if((lt+lx+ly+lz+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
+		+ g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+	      p = (complex*)(P + i);
+	    }
+	    else {
+	      p = (complex*)(Q + i);
+	    }
+
+	    (*(p+3*is+ic)).re = co;
+	    (*(p+3*is+ic)).im = si;
 	  }
-	  ix++;
 	}
       }
     }
