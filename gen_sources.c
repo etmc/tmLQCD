@@ -64,12 +64,10 @@ int main(int argc,char *argv[]) {
  
   char spinorfilename[100];
   char * filename = NULL;
-  int sample=0, ts=0, ss=1, typeflag = 0, x0, t0=0, formatflag = 0;
-  int is, ic, j,ix,mu, tt=0, filenameflag = 0;
-  int k;
-  double x;
+  int sample=0, ts=0, ss=1, typeflag = 1, t0=0, formatflag = 0;
+  int is, ic, j, tt=0, filenameflag = 0;
   complex co;
-  char c;
+  int c;
 
   verbose = 0;
   g_use_clover_flag = 0;
@@ -96,7 +94,7 @@ int main(int argc,char *argv[]) {
       T_global = T;
       break;
     case 'N':
-      typeflag = 1;
+      typeflag = 0;
       break;
     case 'n':
       nstore = atoi(optarg);
@@ -182,9 +180,6 @@ int main(int argc,char *argv[]) {
 	write_spinorfield_eo_time_p(g_spinor_field[0], g_spinor_field[1], spinorfilename, 0);
       }
     }
-  }
-  else {
-    printf("blub\n");
   }
   
 #ifdef MPI
