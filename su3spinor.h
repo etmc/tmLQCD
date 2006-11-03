@@ -115,12 +115,12 @@
 
 #define _spinor_norm_sq(d,s) \
    d = 0.; \
-   d = _complex_square_norm((s).s0.c1) + _complex_square_norm((s).s0.c2) + \
-       _complex_square_norm((s).s0.c3) + _complex_square_norm((s).s1.c1) + \
-       _complex_square_norm((s).s1.c2) + _complex_square_norm((s).s1.c3) + \
-       _complex_square_norm((s).s2.c1) + _complex_square_norm((s).s2.c2) + \
-       _complex_square_norm((s).s2.c3) + _complex_square_norm((s).s3.c1) + \
-       _complex_square_norm((s).s3.c2) + _complex_square_norm((s).s3.c3)
+   d = _complex_square_norm((s).s0.c0) + _complex_square_norm((s).s0.c1) + \
+       _complex_square_norm((s).s0.c2) + _complex_square_norm((s).s1.c0) + \
+       _complex_square_norm((s).s1.c1) + _complex_square_norm((s).s1.c2) + \
+       _complex_square_norm((s).s2.c0) + _complex_square_norm((s).s2.c1) + \
+       _complex_square_norm((s).s2.c2) + _complex_square_norm((s).s3.c0) + \
+       _complex_square_norm((s).s3.c1) + _complex_square_norm((s).s3.c2)
 
 
 /*             gamma 0
