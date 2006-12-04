@@ -29,6 +29,10 @@ int check_geometry();
 
 int check_xchange()
 {
+#ifdef XLC
+#pragma execution_frequency(very_low)
+#endif
+
 #ifdef MPI
   double * x;
   int i,ix, mu, x0, x1, x2, x3, k;

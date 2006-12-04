@@ -12,6 +12,7 @@ DEPFLAGS = @DEPFLAGS@
 LDFLAGS = @LDFLAGS@
 DEFS = @DEFS@
 OPTARGS = @OPTARGS@
+SOPTARGS = @SOPTARGS@
 
 AR = ar
 RANLIB = @RANLIB@
@@ -26,13 +27,13 @@ DEFS = @DEFS@
 INCLUDES = @INCLUDES@
 LDADD =
 #COMPILE = ${CC} ${DEFS} $(INCLUDES) ${CFLAGS}
-COMPILE = ${CC} $(DEFS) $(INCLUDES) ${CFLAGS} ${OPTARGS}
+COMPILE = ${CC} $(DEFS) $(INCLUDES) ${CFLAGS}
 
 LIBRARIES = liblinalg
-liblinalg_TARGETS = diff assign_add_mul_r_add_mul assign_add_mul_r \
-	square_norm assign_mul_bra_add_mul_ket_add_r scalar_prod_r \
+liblinalg_TARGETS = assign_add_mul_r_add_mul \
+	assign_mul_bra_add_mul_ket_add_r scalar_prod_r \
 	square_and_prod_r assign_mul_bra_add_mul_r mul_r \
-	diff_and_square_norm assign deri_linalg assign_mul_add_r \
+	diff_and_square_norm assign deri_linalg \
 	scalar_prod mul_diff_r mul_diff_mul assign_add_mul add \
 	assign_diff_mul mul_add_mul mul assign_add_mul_add_mul \
 	assign_mul_bra_add_mul_ket_add assign_mul_add_mul_add_mul_add_mul_r \
@@ -42,7 +43,10 @@ liblinalg_TARGETS = diff assign_add_mul_r_add_mul assign_add_mul_r \
         assign_mul_bra_add_mul_ket_add_bi mul_r_bi \
         scalar_prod_r_bi assign_add_mul_r_bi assign_mul_add_r_bi 
 
+liblinalg_STARGETS = diff assign_add_mul_r assign_mul_add_r square_norm
+
 liblinalg_OBJECTS = $(addsuffix .o, ${liblinalg_TARGETS})
+liblinalg_SOBJECTS = $(addsuffix .o, ${liblinalg_STARGETS})
 
 # default rule
 
@@ -65,30 +69,33 @@ include ${top_srcdir}/Makefile.global
 
 # rule to compile objects
 
-%.o: ${srcdir}/%.c %.d Makefile
-	$(COMPILE) -c $<
+${liblinalg_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile
+	$(COMPILE) ${OPTARGS} -c $<
+
+${liblinalg_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile
+	$(COMPILE) ${SOPTARGS} -c $<
 
 # rule to make liblinalg
 
-liblinalg.a: ${liblinalg_OBJECTS} Makefile
+liblinalg.a: ${liblinalg_OBJECTS} ${liblinalg_SOBJECTS} Makefile
 	@rm -f liblinalg.a
-	@${AR} cru liblinalg.a $(liblinalg_OBJECTS)
+	@${AR} cru liblinalg.a $(liblinalg_OBJECTS) $(liblinalg_SOBJECTS)
 	@$(RANLIB) liblinalg.a
 	@cp liblinalg.a ../lib/liblinalg.a
 
 # rule to generate .d files
 
-$(addsuffix .d,$(liblinalg_TARGETS)): %.d: ${srcdir}/%.c Makefile
+$(addsuffix .d, $(liblinalg_TARGETS) ${liblinalg_STARGETS}): %.d: ${srcdir}/%.c Makefile
 	@$(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@
 
 # rule to make dependencies
 
-dep: ${addsuffix .d, ${liblinalg_TARGETS}}
+dep: ${addsuffix .d, ${liblinalg_TARGETS} ${liblinalg_STARGETS}}
 
 # rules to clean
 
 compile-clean: Makefile
-	rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} *.d
+	rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} ${$(addsuffix _SOBJECTS, ${LIBRARIES})} *.d
 
 clean: compile-clean 
 	rm -f $(addsuffix .a, ${LIBRARIES})

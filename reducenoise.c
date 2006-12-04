@@ -195,18 +195,18 @@ int main(int argc,char *argv[]) {
   }
 
   if(source_format_flag == 0) {
-      sprintf(conf_filename,"%s", source_input_filename); 
-      if(g_proc_id == 0) {
-	  printf("Reading source from %s\n", conf_filename);
-      }
-      read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], conf_filename); 
+    sprintf(conf_filename,"%s", source_input_filename); 
+    if(g_proc_id == 0) {
+      printf("Reading source from %s\n", conf_filename);
+    }
+    read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], conf_filename); 
   }
   else if(source_format_flag == 1) {
-      sprintf(conf_filename,"%s", source_input_filename);
-      if(g_proc_id == 0) {
-	  printf("Reading source from %s\n", conf_filename);
-      }
-      read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename, -1, 1);
+    sprintf(conf_filename,"%s", source_input_filename);
+    if(g_proc_id == 0) {
+      printf("Reading source from %s\n", conf_filename);
+    }
+    read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename, -1, 1);
   }
   if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
   

@@ -11,33 +11,36 @@ CCDEP = @CCDEP@
 CFLAGS = @CFLAGS@ 
 LDFLAGS = @LDFLAGS@
 DEPFLAGS = @DEPFLAGS@
+CPPFLAGS = @CPPFLAGS@
 CCLD = $(CC)
 LEX = @LEX@ 
 AUTOCONF = @AUTOCONF@
 LIBS = @LIBS@ 
 SHELL = @SHELL@
 OPTARGS = @OPTARGS@
+SOPTARGS = @SOPTARGS@
 DEFS = @DEFS@
 
 INCLUDES = @INCLUDES@ 
 LINK = $(CCLD) -o $@ ${LDFLAGS} ${OPTARGS}
 LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
 	${top_builddir}/solver/libsolver.a
-COMPILE = ${CC} $(DEFS) $(INCLUDES) -o $@ ${CFLAGS} ${OPTARGS}
+COMPILE = ${CC} $(DEFS) $(INCLUDES) -o $@ ${CFLAGS}
 
 MODULES = init_gauge_field init_geometry_indices init_spinor_field \
 	init_bispinor_field init_moment_field init_gauge_tmp \
 	read_input gamma linsolve xchange_field xchange_gauge \
 	xchange_deri expo hybrid_update observables start \
-	geometry_eo linalg_eo ranlxd io Hopping_Matrix \
+	geometry_eo linalg_eo ranlxd io mpi_init update_tm \
 	boundary deriv_Sb tm_operators getopt sighandler \
-	mpi_init update_tm Hopping_Matrix_nocom \
 	test/check_geometry test/check_xchange invert_eo \
 	measure_rectangles get_rectangle_staples \
 	derivative_psf ext_integrator polyakov_loop \
 	2mn_integrator get_staples update_backward_gauge \
 	reweight_kappac init_dirac_halfspinor xchange_halffield \
 	source_generation
+
+SMODULES = Hopping_Matrix_nocom Hopping_Matrix
 
 ### eigenvalues_bi max_eigenvalues_bi Nondegenerate_Matrix \
 
@@ -61,13 +64,16 @@ flex_read_input: read_input.l
 	${LEX} -i -t $< > read_input.c
 
 ${addsuffix .o, ${MODULES}}: %.o: ${srcdir}/%.c %.d Makefile
-	${COMPILE} -c $< 
+	${COMPILE} ${OPTARGS} -c $< 
+
+${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile
+	${COMPILE} ${SOPTARGS} -c $< 
 
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} -c $<
 
-${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} ${LINKLIBS}
-	 ${LINK} ${addsuffix .o, ${MODULES}} $@.o $(LIBS)
+${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} ${LINKLIBS}
+	 ${LINK} ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} $@.o $(LIBS)
 
 dep: $(addsuffix .d,$(ALLOBJ))
 

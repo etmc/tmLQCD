@@ -10,7 +10,7 @@ AC_CANONICAL_HOST()
 AC_PREFIX_DEFAULT($HOME)
 AC_ARG_PROGRAM
 
-if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
+if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts"; then
   echo We are on a IBM Power PC, using xlc and xlC or mpcc/mpCC
   CC=xlc_r
   CXX=xlC_r
@@ -134,7 +134,7 @@ if test $enable_mpi = yes; then
   if test "$host_vendor" != "cray"; then
     cross_compiling=yes
   fi
-  if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
+  if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts"; then
     CC=mpcc_r
     CXX=mpCC_r
   elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then	
@@ -150,7 +150,7 @@ fi
 # AC_CONFIG_SUBDIRS( rng )
 
 # Checks for libraries.
-if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
+if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts"; then
   if test $with_lapack = yes; then
     AC_CHECK_LIB(essl, zaxpy, ,AC_MSG_ERROR([libessl is missing or zaxpy not available]), -lf -lm )
     AC_CHECK_LIB(lapack, zheev, LP=yes;AC_DEFINE(HAVE_LAPACK,1,lapack available), LP="", -lessl -lblas -lf -lm )
@@ -166,7 +166,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
     echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
   fi
 
-elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
+elif test "$host_cpu" = "ppc64" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts"; then
   if test $with_lapack = yes; then
     AC_CHECK_LIB(lapack, zheev, LP=yes, LP="", -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
     echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
@@ -218,6 +218,7 @@ AC_CHECK_FUNCS([gettimeofday pow sqrt])
 
 # We now define some replace variables
 AC_SUBST(OPTARGS)
+AC_SUBST(SOPTARGS)
 AC_SUBST(INCLUDES)
 AC_SUBST(AUTOCONF)
 AC_SUBST(SOLVEROUT)
@@ -349,7 +350,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     fi
     CXXFLAGS=' -Wall'
     OPTARGS='-O'
-
+    SOPTARGS='-O'
 
     if test "$host_cpu" != "x86_64"; then
       if test $enable_p4 = yes && ((test $GCCVERSION1 -gt 2 && test $GCCVERSION2 -gt 1) || test $GCCVERSION1 -gt 3); then
@@ -422,6 +423,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 	SSE="sse2"
       fi
       OPTARGS="-O2"
+      SOPTARGS="-O2"
       DEBUG_FLAG="-g"
       PROFILE_FLAG="-p -g"
       CCDEP="$CC"
@@ -436,6 +438,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 	SSE="sse2"
       fi
       OPTARGS="-O3"
+      SOPTARGS="-O3"
       DEBUG_FLAG="-g"
       PROFILE_FLAG="-p -g"
       CCDEP="$CC"
@@ -491,6 +494,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
   fi
 
   OPTARGS="-O3"
+  SOPTARGS="-O3"
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
   else
@@ -498,17 +502,19 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
   fi
 
 #The BLue Gene/L
-elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$host_os" = "linux-gnu"; then
+elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "blrts"; then
   CFLAGS="$CFLAGS"
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
   DEBUGFLAG="-g"
   OPTARGS="-O3"
+  SOPTARGS="-O3"
   AC_DEFINE(BGL,1,[Optimize for Blue Gene/L])
 
   if test "$GCC" != yes; then
-    CFLAGS="-qsrcmsg -qarch=440d -qtune=440 $CFLAGS"
+    CFLAGS="-qsrcmsg $CFLAGS"
+    OPTARGS="$OPTARGS -qarch=440 -qtune=440"
+    SOPTARGS="$SOPTARGS -qarch=440d -qtune=440"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
-    OPTARGS="-O3"
 # OPTARGS="-qhot" leads to wrong code
     XLC=yes
     AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
@@ -524,8 +530,8 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "bgl" && test "$hos
   else
     DEPFLAGS="-M"
   fi
+  CPPFLAGS="-I/bgl/BlueLight/ppcfloor/bglsys/include"
   INCLUDES="$INCLUDES -I/bgl/BlueLight/ppcfloor/bglsys/include/"
-
 
 # The IBM Power PC
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
@@ -538,6 +544,7 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   XLC=yes
   AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   OPTARGS="-O3 -qhot"
+  SOPTARGS="-O3 -qhot"
   DEBUG_FLAG="-qfullpath -g"
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
@@ -553,6 +560,7 @@ elif test "$host_vendor" = "cray"; then
   CFLAGS="$CFLAGS -dp"
   AC_DEFINE(CRAY,1,We are on a CRAY)
   OPTARGS="-O3"
+  SOPTARGS="-O3"
   DEBUG_FLAG="-g"
   CCDEP="$CC"
   DEPFLAGS="-M"
@@ -567,6 +575,8 @@ else
   else
     DEPFLAGS="-M"
   fi
+  OPTARGS=
+  SOPTARGS=
 
   if test $with_lapack = yes; then
     LIBS="-llapack -lblas -lf $LIBS"
@@ -581,6 +591,7 @@ AC_ARG_ENABLE(optimize,
 if test $enable_optimize = no; then
   AC_MSG_RESULT(no)
   OPTARGS=
+  SOPTARGS=
 else
   AC_MSG_RESULT(yes)
 fi

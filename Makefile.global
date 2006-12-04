@@ -13,9 +13,13 @@ Makefile: $(srcdir)/Makefile.in  $(abs_top_builddir)/config.status
 $(abs_top_builddir)/config.status: $(top_srcdir)/configure
 	( cd ${abs_top_builddir} && $(SHELL) ./config.status --recheck ) 
 
+$(abs_top_builddir)/config.h: $(abs_top_builddir)/stamp-h
+$(abs_top_builddir)/stamp-h: $(top_srcdir)config.h.in config.status
+	./config.status
+
 #$(top_srcdir)/configure: $(top_srcdir)/configure.in 
 #$(top_srcdir)/configure:
-#	( cd $(top_builddir) && $(AUTOCONF) )
+#	( cd $(top_srcdir) && $(AUTOCONF) )
 
 #extern modules
 
@@ -30,7 +34,7 @@ $(LINKLIBS): %.a: Makefile
 #dep rule
 
 $(addsuffix .d,$(ALLOBJ)): %.d: ${srcdir}/%.c Makefile
-	 @ $(CCDEP) ${DEPFLAGS} ${INCLUDES} ${DEFS} $< > $@ 
+	 @ $(CCDEP) ${DEPFLAGS} ${CPPFLAGS} ${INCLUDES} ${DEFS} $< > $@ 
 
 ${top_builddir}/fixed_volume.h: ${top_srcdir}/fixed_volume.h.in ${top_builddir}/config.status
 	cd ${abs_top_builddir} && CONFIG_FILES=fixed_volume.h CONFIG_HEADERS= $(SHELL) ${top_builddir}/config.status
