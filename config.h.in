@@ -132,3 +132,6 @@
 /* Define to equivalent of C99 restrict keyword, or to nothing if this is not
    supported. Do not define if restrict is supported directly. */
 #undef restrict
+
+/* Define to 1 for rts_get_dram_window usage for halfspinor on BG/L */
+#undef BGL2

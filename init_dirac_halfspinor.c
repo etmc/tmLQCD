@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#ifdef BGL
+# include <rts.h>
+#endif
 #ifdef _USE_SHMEM
 # include <mpp/shmem.h>
 #endif
@@ -28,7 +31,11 @@ halfspinor32 *** NBPointer32;
 int init_dirac_halfspinor() {
   int ieo=0, i=0, j=0, k;
   int x, y, z, t, mu;
-  
+#ifdef BGL2
+  unsigned int actualSize;
+  int rts_return=0;
+#endif  
+
   NBPointer = (halfspinor***) malloc(4*sizeof(halfspinor**));
   NBPointer_ = (halfspinor**) malloc(16*(VOLUME+RAND)*sizeof(halfspinor*));
   NBPointer[0] = NBPointer_;
@@ -38,11 +45,16 @@ int init_dirac_halfspinor() {
 
 #ifdef _USE_SHMEM
   HalfSpinor_ = (halfspinor*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor));
+#elif defined BGL2
+  rts_return = rts_get_dram_window(8*((VOLUME+RAND)+1)*sizeof(halfspinor), RTS_STORE_WITHOUT_ALLOCATE, (void**)&HalfSpinor_, &actualSize);
+  if(rts_return !=0) {
+    return(-1);
+  }
 #else
   HalfSpinor_ = (halfspinor*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor));
 #endif
   if(errno == ENOMEM) {
-    return(1);
+    return(-1);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
   HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE)&~ALIGN_BASE);
@@ -171,6 +183,10 @@ int init_dirac_halfspinor() {
 int init_dirac_halfspinor32() {
   int ieo=0, i=0, j=0, k;
   int x, y, z, t, mu;
+#ifdef BGL2
+  unsigned int actualSize;
+  int rts_return=0;
+#endif  
   
   NBPointer32 = (halfspinor32***) malloc(4*sizeof(halfspinor32**));
   NBPointer32_ = (halfspinor32**) malloc(16*(VOLUME+RAND)*sizeof(halfspinor32*));
@@ -181,11 +197,16 @@ int init_dirac_halfspinor32() {
 
 #ifdef _USE_SHMEM
   HalfSpinor32_ = (halfspinor32*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor32));
+#elif defined BGL2
+  rts_return = rts_get_dram_window(8*((VOLUME+RAND)+1)*sizeof(halfspinor32), RTS_STORE_WITHOUT_ALLOCATE, (void**)&HalfSpinor32_, &actualSize);
+  if(rts_return !=0) {
+    return(-1);
+  }
 #else
   HalfSpinor32_ = (halfspinor32*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor32));
 #endif
   if(errno == ENOMEM) {
-    return(1);
+    return(-1);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
   HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE)&~ALIGN_BASE);

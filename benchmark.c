@@ -145,10 +145,18 @@ int main(int argc,char *argv[])
   boundary();
 
 #ifdef _USE_HALFSPINOR
-  init_dirac_halfspinor();
+  j = init_dirac_halfspinor();
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for halfspinor fields! Aborting...\n");
+    exit(0);
+  }
   if(g_sloppy_precision_flag == 1) {
     g_sloppy_precision = 1;
-    init_dirac_halfspinor32();
+    j = init_dirac_halfspinor32();
+    if ( j!= 0) {
+      fprintf(stderr, "Not enough memory for 32-Bit halfspinor fields! Aborting...\n");
+      exit(0);
+    }
   }
 #endif  
 
@@ -300,7 +308,11 @@ int main(int argc,char *argv[])
   if(g_proc_id==0) {
     printf("The size of the package is %d Byte \n",(SLICE)*192);
     printf("The bandwidth is %5.2f + %5.2f   MB/sec\n",
+#ifdef _USE_HALFSPINOR
+	   192./sdt/1024/1024, 192./sdt/1024./1024);
+#else
 	   2.*192./sdt/1024/1024, 2.*192./sdt/1024./1024);
+#endif
     fflush(stdout);
   }
 #endif
