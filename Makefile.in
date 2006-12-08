@@ -46,7 +46,7 @@ MODULES = read_input gamma hybrid_update observables start \
 
 PROGRAMS = hmc_tm thermal_cycle_tm benchmark invert gwc2ildg ildg2gwc single2double double2single reducenoise gen_sources
 ### test/test_eigenvalues
-ALLOBJ = ${MODULES} ${PROGRAMS}
+ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = linalg solver
 
 .SUFFIXES:
