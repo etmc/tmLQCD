@@ -71,6 +71,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     /*********************** direction +0 ************************/
     _prefetch_su3(U+predist);
+
     _sse_load((*s).s0);
     _sse_load_up((*s).s2);
     _sse_vector_add();
@@ -89,7 +90,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     U++;
     ix++;
     /*********************** direction -0 ************************/
-
     _sse_load((*s).s0);
     _sse_load_up((*s).s2);
     _sse_vector_sub();
@@ -102,7 +102,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
 
     /*********************** direction +1 ************************/
-
     _prefetch_su3(U+predist);
 
     _sse_load((*s).s0);
@@ -141,7 +140,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
 
     /*********************** direction +2 ************************/
-
     _prefetch_su3(U+predist);
 
     _sse_load((*s).s0);
@@ -198,7 +196,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     U++;
 
     /*********************** direction -3 ************************/
-
     _sse_load((*s).s0);
     _sse_load_up((*s).s2);
     _sse_vector_i_mul();
@@ -406,12 +403,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     _sse_load(rs.s0);
     _sse_vector_add();
-    _sse_store((*s).s0);
+    _sse_store_nt((*s).s0);
 
     _sse_load(rs.s2);
     _sse_vector_i_mul();      
     _sse_vector_add();
-    _sse_store((*s).s2);
+    _sse_store_nt((*s).s2);
 
     _sse_load((*phi[ix]).s1);
       
@@ -420,12 +417,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     _sse_load(rs.s1);
     _sse_vector_add();
-    _sse_store((*s).s1);
+    _sse_store_nt((*s).s1);
 
     _sse_load(rs.s3);
     _sse_vector_i_mul();      
     _sse_vector_sub();
-    _sse_store((*s).s3);
+    _sse_store_nt((*s).s3);
     ix++;
     U++;
     s++;
@@ -1515,6 +1512,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
 
+    sm=k+icy;
+    _prefetch_spinor(sm);
+
 #    if ((defined _GAUGE_COPY))
     um=up+1;
 #    else
@@ -1522,9 +1522,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    endif
     _prefetch_su3(um);
       
-    sm=k+icy;
-    _prefetch_spinor(sm);
-
     _sse_load((*sp).s0);
     _sse_load_up((*sp).s2);
     _sse_vector_add();
@@ -1546,6 +1543,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     /*********************** direction -0 ************************/
 
     iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
+      
+    sp=k+icy;
+    _prefetch_spinor(sp);
 
 #    if ((defined _GAUGE_COPY))
     up = um + 1;
@@ -1553,9 +1553,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     up+=1;
 #    endif
     _prefetch_su3(up);
-      
-    sp=k+icy;
-    _prefetch_spinor(sp);
 
     _sse_load((*sm).s0);
     _sse_load_up((*sm).s2);
@@ -1591,15 +1588,15 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
 
+    sm=k+icy;
+    _prefetch_spinor(sm);
+
 #    ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][1]; 
 #    else
     um=up+1;
 #    endif
     _prefetch_su3(um);
-
-    sm=k+icy;
-    _prefetch_spinor(sm);
 
     _sse_load((*sp).s0);
     _sse_load_up((*sp).s3);
@@ -1639,15 +1636,15 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
 
+    sp=k+icy;
+    _prefetch_spinor(sp);
+
 #    if ((defined _GAUGE_COPY))
     up = um + 1;
 #    else
     up+=1;
 #    endif
     _prefetch_su3(up);
-
-    sp=k+icy;
-    _prefetch_spinor(sp);
 
     _sse_load((*sm).s0);
     _sse_load_up((*sm).s3);
@@ -1687,15 +1684,15 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
 
+    sm=k+icy;
+    _prefetch_spinor(sm);
+
 #    ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][2]; 
 #    else
     um=up+1;
 #    endif
     _prefetch_su3(um);
-
-    sm=k+icy;
-    _prefetch_spinor(sm);
 
     _sse_load((*sp).s0);
     _sse_load_up((*sp).s3);
@@ -1731,15 +1728,15 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
 
+    sp=k+icy;
+    _prefetch_spinor(sp);
+
 #    if ((defined _GAUGE_COPY))
     up = um + 1;
 #    else
     up+=1;
 #    endif
     _prefetch_su3(up);
-
-    sp=k+icy;
-    _prefetch_spinor(sp);
 
     _sse_load((*sm).s0);
     _sse_load_up((*sm).s3);
@@ -1775,15 +1772,15 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
 
+    sm=k+icy;
+    _prefetch_spinor(sm);
+
 #    ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][3]; 
 #    else
     um=up+1;
 #    endif
     _prefetch_su3(um);
-
-    sm=k+icy;
-    _prefetch_spinor(sm);
 
     _sse_load((*sp).s0);
     _sse_load_up((*sp).s2);
@@ -1825,15 +1822,16 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
     iz=g_eo2lexic[icz];
     iy=g_iup[iz][0]; icy=g_lexic2eosub[iy];
+      
+    sp=k+icy;
+    _prefetch_spinor(sp);
+
 #    if ((defined _GAUGE_COPY))
     up=&g_gauge_field_copy[icz][0];
 #    else
     up=&g_gauge_field[iz][0];
 #    endif
     _prefetch_su3(up);
-      
-    sp=k+icy;
-    _prefetch_spinor(sp);
 
     _sse_load((*sm).s0);
     _sse_load_up((*sm).s2);
@@ -1847,12 +1845,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       
     _sse_load(rs.s0);
     _sse_vector_add();
-    _sse_store((*rn).s0);
+    _sse_store_nt((*rn).s0);
 
     _sse_load(rs.s2);
     _sse_vector_i_mul();      
     _sse_vector_add();
-    _sse_store((*rn).s2);
+    _sse_store_nt((*rn).s2);
 
     _sse_load((*sm).s1);
     _sse_load_up((*sm).s3);
@@ -1864,12 +1862,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     _sse_load(rs.s1);
     _sse_vector_add();
-    _sse_store((*rn).s1);
+    _sse_store_nt((*rn).s1);
 
     _sse_load(rs.s3);
     _sse_vector_i_mul();      
     _sse_vector_sub();
-    _sse_store((*rn).s3);
+    _sse_store_nt((*rn).s3);
   }
 }
 

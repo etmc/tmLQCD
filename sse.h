@@ -50,7 +50,7 @@ typedef struct
 typedef struct
 {
    double c1,c2;
-} sse_double __attribute__ ((aligned (16)));
+} sse_double ALIGN;
 
 
 /*******************************************************************************
@@ -680,12 +680,12 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
 #endif
 
 /*
-* Multiplies an su3 vector s with an su3 matrix u^dagger, assuming s is
-* stored in  xmm0,xmm1,xmm2
-*
-* On output the result is in xmm3,xmm4,xmm5 and the registers 
-* xmm0,xmm1,xmm2 are changed
-*/
+ * Multiplies an su3 vector s with an su3 matrix u^dagger, assuming s is
+ * stored in  xmm0,xmm1,xmm2
+ *
+ * On output the result is in xmm3,xmm4,xmm5 and the registers 
+ * xmm0,xmm1,xmm2 are changed
+ */
 
 #if defined OPTERON
 
