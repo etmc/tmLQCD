@@ -42,6 +42,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   static spinor rs;
   spinor * restrict s ALIGN;
   halfspinor ** phi ALIGN;
+#if defined OPTERON
+  const int predist=2;
+#else
+  const int predist=1;
+#endif
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
 #endif
@@ -65,7 +70,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   for(i = 0; i < (VOLUME)/2; i++){
 
     /*********************** direction +0 ************************/
-    _prefetch_su3(U+1);
+    _prefetch_su3(U+predist);
     _sse_load((*s).s0);
     _sse_load_up((*s).s2);
     _sse_vector_add();
@@ -98,7 +103,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     /*********************** direction +1 ************************/
 
-    _prefetch_su3(U+1);
+    _prefetch_su3(U+predist);
 
     _sse_load((*s).s0);
     /*next not needed?*/
@@ -137,7 +142,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     /*********************** direction +2 ************************/
 
-    _prefetch_su3(U+1);
+    _prefetch_su3(U+predist);
 
     _sse_load((*s).s0);
     _sse_load_up((*s).s3);
@@ -169,7 +174,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
 
     /*********************** direction +3 ************************/
-    _prefetch_su3(U+1);
+    _prefetch_su3(U+predist);
     _prefetch_spinor(s+1);
 
     _sse_load((*s).s0);
@@ -233,7 +238,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
 
     /*********************** direction -0 ************************/
-    _prefetch_su3(U+1);
+    _prefetch_su3(U+predist);
       
     _sse_load((*phi[ix]).s0);
     _sse_su3_inverse_multiply((*U));
@@ -284,7 +289,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     /*********************** direction -1 ************************/
 
-    _prefetch_su3(U);
+    _prefetch_su3(U+predist);
 
     _sse_load((*phi[ix]).s0);
     _sse_su3_inverse_multiply((*U));
@@ -337,7 +342,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     /*********************** direction -2 ************************/
 
-    _prefetch_su3(U+1);
+    _prefetch_su3(U+predist);
 
     _sse_load((*phi[ix]).s0);
     _sse_su3_inverse_multiply((*U));
@@ -391,7 +396,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
     /*********************** direction -3 ************************/
 
-    _prefetch_su3(U+1); 
+    _prefetch_su3(U+predist); 
     _prefetch_spinor(s+1);
 
     _sse_load((*phi[ix]).s0);

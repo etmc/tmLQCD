@@ -2,16 +2,16 @@
 #define _SSE_H
 
 #if ((defined SSE)||(defined SSE2)||(defined SSE3))
-#if ((defined P4))
-    #define ALIGN_BASE 0x3f
-    #define ALIGN __attribute__ ((aligned (64)))
-  #elif defined OPTERON
-    #define ALIGN_BASE 0x0f
-    #define ALIGN __attribute__ ((aligned (16)))
-  #else
-    #define ALIGN_BASE 0x1f
-    #define ALIGN __attribute__ ((aligned (32)))
-  #endif
+#  if ((defined P4))
+#    define ALIGN_BASE 0x3f
+#    define ALIGN __attribute__ ((aligned (64)))
+#  elif defined OPTERON
+#    define ALIGN_BASE 0x1f
+#    define ALIGN __attribute__ ((aligned (32)))
+#  else
+#    define ALIGN_BASE 0x1f
+#    define ALIGN __attribute__ ((aligned (32)))
+#  endif
 #endif
 
 #if (defined SSE || defined SSE2 || defined SSE3)
@@ -521,42 +521,42 @@ __asm__ __volatile__ ("movsd %0, %%xmm3 \n\t" \
                       "m" ((u).c22.re)); \
 __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "movsd %1, %%xmm7 \n\t" \
+                      "movsd %2, %%xmm8 \n\t" \
                       "shufpd $0x1, %%xmm0, %%xmm0 \n\t" \
                       "shufpd $0x1, %%xmm1, %%xmm1 \n\t" \
                       "shufpd $0x1, %%xmm2, %%xmm2 \n\t" \
                       "unpcklpd %%xmm6, %%xmm6 \n\t" \
                       "unpcklpd %%xmm7, %%xmm7 \n\t" \
+                      "unpcklpd %%xmm8, %%xmm8 \n\t" \
                       "xorpd %9, %%xmm0 \n\t" \
                       "xorpd %9, %%xmm1 \n\t" \
                       "xorpd %9, %%xmm2 \n\t" \
                       "mulpd %%xmm0, %%xmm6 \n\t" \
                       "mulpd %%xmm1, %%xmm7 \n\t" \
-                      "addpd %%xmm6, %%xmm3 \n\t" \
-                      "addpd %%xmm7, %%xmm4 \n\t" \
-                      "movsd %2, %%xmm8 \n\t" \
-                      "movsd %3, %%xmm9 \n\t" \
-                      "unpcklpd %%xmm8, %%xmm8 \n\t" \
-                      "unpcklpd %%xmm9, %%xmm9 \n\t" \
                       "mulpd %%xmm2, %%xmm8 \n\t" \
-                      "mulpd %%xmm0, %%xmm9 \n\t" \
-                      "addpd %%xmm8, %%xmm5 \n\t" \
-                      "addpd %%xmm9, %%xmm4 \n\t" \
+                      "movsd %3, %%xmm9 \n\t" \
                       "movsd %4, %%xmm10 \n\t" \
                       "movsd %5, %%xmm11 \n\t" \
+                      "addpd %%xmm6, %%xmm3 \n\t" \
+                      "addpd %%xmm7, %%xmm4 \n\t" \
+                      "addpd %%xmm8, %%xmm5 \n\t" \
+                      "unpcklpd %%xmm9, %%xmm9 \n\t" \
+                      "unpcklpd %%xmm10, %%xmm10 \n\t" \
+                      "unpcklpd %%xmm11, %%xmm11 \n\t" \
+                      "mulpd %%xmm0, %%xmm9 \n\t" \
+                      "mulpd %%xmm1, %%xmm10 \n\t" \
+                      "mulpd %%xmm0, %%xmm11 \n\t" \
                       "movsd %6, %%xmm12 \n\t" \
                       "movsd %7, %%xmm13 \n\t" \
                       "movsd %8, %%xmm14 \n\t" \
-                      "unpcklpd %%xmm10, %%xmm10 \n\t" \
-                      "unpcklpd %%xmm11, %%xmm11 \n\t" \
                       "unpcklpd %%xmm12, %%xmm12 \n\t" \
                       "unpcklpd %%xmm13, %%xmm13 \n\t" \
                       "unpcklpd %%xmm14, %%xmm14 \n\t" \
-                      "mulpd %%xmm1, %%xmm10 \n\t" \
-                      "mulpd %%xmm0, %%xmm11 \n\t" \
-                      "mulpd %%xmm2, %%xmm12 \n\t" \
+                      "addpd %%xmm9, %%xmm4 \n\t" \
                       "addpd %%xmm10, %%xmm3 \n\t" \
-                      "mulpd %%xmm1, %%xmm13 \n\t" \
                       "addpd %%xmm11, %%xmm5 \n\t" \
+                      "mulpd %%xmm2, %%xmm12 \n\t" \
+                      "mulpd %%xmm1, %%xmm13 \n\t" \
                       "mulpd %%xmm2, %%xmm14 \n\t" \
                       "addpd %%xmm12, %%xmm3 \n\t" \
                       "addpd %%xmm13, %%xmm5 \n\t" \
@@ -693,33 +693,33 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
 __asm__ __volatile__ ("movsd %0, %%xmm3 \n\t" \
                       "movsd %1, %%xmm6 \n\t" \
                       "movsd %2, %%xmm4 \n\t" \
-                      "movsd %3, %%xmm7 \n\t" \
-                      "movsd %4, %%xmm5 \n\t" \
                       "unpcklpd %%xmm3, %%xmm3 \n\t" \
                       "unpcklpd %%xmm6, %%xmm6 \n\t" \
                       "unpcklpd %%xmm4, %%xmm4 \n\t" \
                       "mulpd %%xmm0, %%xmm3 \n\t" \
-                      "unpcklpd %%xmm7, %%xmm7 \n\t" \
                       "mulpd %%xmm1, %%xmm6 \n\t" \
-                      "unpcklpd %%xmm5, %%xmm5 \n\t" \
                       "mulpd %%xmm0, %%xmm4 \n\t" \
-                      "addpd %%xmm6, %%xmm3 \n\t" \
+                      "movsd %3, %%xmm7 \n\t" \
+                      "movsd %4, %%xmm5 \n\t" \
+                      "movsd %5, %%xmm8 \n\t" \
+                      "unpcklpd %%xmm7, %%xmm7 \n\t" \
+                      "unpcklpd %%xmm5, %%xmm5 \n\t" \
+                      "unpcklpd %%xmm8, %%xmm8 \n\t" \
                       "mulpd %%xmm2, %%xmm7 \n\t" \
                       "mulpd %%xmm0, %%xmm5 \n\t" \
-                      "addpd %%xmm7, %%xmm4 \n\t" \
-                      "movsd %5, %%xmm8 \n\t" \
-                      "movsd %6, %%xmm7 \n\t" \
+                      "mulpd %%xmm1, %%xmm8 \n\t" \
+                      "movsd %6, %%xmm9 \n\t" \
                       "movsd %7, %%xmm10 \n\t" \
                       "movsd %8, %%xmm11 \n\t" \
-                      "unpcklpd %%xmm8, %%xmm8 \n\t" \
+                      "addpd %%xmm6, %%xmm3 \n\t" \
+                      "addpd %%xmm7, %%xmm4 \n\t" \
+                      "addpd %%xmm8, %%xmm5 \n\t" \
                       "unpcklpd %%xmm9, %%xmm9 \n\t" \
                       "unpcklpd %%xmm10, %%xmm10 \n\t" \
                       "unpcklpd %%xmm11, %%xmm11 \n\t" \
-                      "mulpd %%xmm1, %%xmm8 \n\t" \
                       "mulpd %%xmm2, %%xmm9 \n\t" \
                       "mulpd %%xmm1, %%xmm10 \n\t" \
                       "mulpd %%xmm2, %%xmm11 \n\t" \
-                      "addpd %%xmm8, %%xmm5 \n\t" \
                       "addpd %%xmm9, %%xmm3 \n\t" \
                       "addpd %%xmm10, %%xmm4 \n\t" \
                       "addpd %%xmm11, %%xmm5" \
@@ -736,42 +736,42 @@ __asm__ __volatile__ ("movsd %0, %%xmm3 \n\t" \
                       "m" ((u).c22.re)); \
 __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "movsd %1, %%xmm7 \n\t" \
+                      "movsd %2, %%xmm8 \n\t" \
                       "xorpd %9, %%xmm0 \n\t" \
                       "xorpd %9, %%xmm1 \n\t" \
                       "xorpd %9, %%xmm2 \n\t" \
                       "unpcklpd %%xmm6, %%xmm6 \n\t" \
                       "unpcklpd %%xmm7, %%xmm7 \n\t" \
+                      "unpcklpd %%xmm8, %%xmm8 \n\t" \
                       "shufpd $0x1, %%xmm0, %%xmm0 \n\t" \
                       "shufpd $0x1, %%xmm1, %%xmm1 \n\t" \
                       "shufpd $0x1, %%xmm2, %%xmm2 \n\t" \
                       "mulpd %%xmm0, %%xmm6 \n\t" \
                       "mulpd %%xmm1, %%xmm7 \n\t" \
+                      "mulpd %%xmm2, %%xmm8 \n\t" \
                       "addpd %%xmm6, %%xmm3 \n\t" \
                       "addpd %%xmm7, %%xmm4 \n\t" \
-                      "movsd %2, %%xmm8 \n\t" \
-                      "movsd %3, %%xmm9 \n\t" \
-                      "unpcklpd %%xmm8, %%xmm8 \n\t" \
-                      "unpcklpd %%xmm9, %%xmm9 \n\t" \
-                      "mulpd %%xmm2, %%xmm8 \n\t" \
-                      "mulpd %%xmm0, %%xmm9 \n\t" \
                       "addpd %%xmm8, %%xmm5 \n\t" \
-                      "addpd %%xmm9, %%xmm4 \n\t" \
+                      "movsd %3, %%xmm9 \n\t" \
                       "movsd %4, %%xmm10 \n\t" \
-                      "movsd %5, %%xmm7 \n\t" \
+                      "movsd %5, %%xmm11 \n\t" \
+                      "unpcklpd %%xmm9, %%xmm9 \n\t" \
+                      "unpcklpd %%xmm10, %%xmm10 \n\t" \
+                      "unpcklpd %%xmm11, %%xmm11 \n\t" \
+                      "mulpd %%xmm0, %%xmm9 \n\t" \
+                      "mulpd %%xmm1, %%xmm10 \n\t" \
+                      "mulpd %%xmm0, %%xmm11 \n\t" \
+                      "addpd %%xmm9, %%xmm4 \n\t" \
+                      "addpd %%xmm10, %%xmm3 \n\t" \
+                      "addpd %%xmm11, %%xmm5 \n\t" \
                       "movsd %6, %%xmm12 \n\t" \
                       "movsd %7, %%xmm13 \n\t" \
                       "movsd %8, %%xmm14 \n\t" \
-                      "unpcklpd %%xmm10, %%xmm10 \n\t" \
-                      "unpcklpd %%xmm11, %%xmm11 \n\t" \
                       "unpcklpd %%xmm12, %%xmm12 \n\t" \
                       "unpcklpd %%xmm13, %%xmm13 \n\t" \
                       "unpcklpd %%xmm14, %%xmm14 \n\t" \
-                      "mulpd %%xmm1, %%xmm10 \n\t" \
-                      "mulpd %%xmm0, %%xmm11 \n\t" \
                       "mulpd %%xmm2, %%xmm12 \n\t" \
-                      "addpd %%xmm10, %%xmm3 \n\t" \
                       "mulpd %%xmm1, %%xmm13 \n\t" \
-                      "addpd %%xmm11, %%xmm5 \n\t" \
                       "mulpd %%xmm2, %%xmm14 \n\t" \
                       "addpd %%xmm12, %%xmm3 \n\t" \
                       "addpd %%xmm13, %%xmm5 \n\t" \
