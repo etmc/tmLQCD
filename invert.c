@@ -145,7 +145,7 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for geometry indices! Aborting...\n");
     exit(0);
   }
-  j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
+  j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS); 
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);

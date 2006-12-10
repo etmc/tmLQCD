@@ -356,7 +356,7 @@ __asm__ __volatile__ ("mulpd %0, %%xmm0 \n\t" \
                       "m" (c))
 
 /*
-* Adds xmm3,xmm4,xmm5 to xmm1,xmm2,xmm3
+* Adds xmm3,xmm4,xmm5 to xmm0,xmm1,xmm2
 */
 
 #define _sse_vector_add() \
@@ -368,13 +368,24 @@ __asm__ __volatile__ ("addpd %%xmm3, %%xmm0 \n\t" \
 
 
 /*
-* Subtracts xmm3,xmm4,xmm5 from xmm1,xmm2,xmm3
+* Subtracts xmm3,xmm4,xmm5 from xmm0,xmm1,xmm2
 */
 
 #define _sse_vector_sub() \
 __asm__ __volatile__ ("subpd %%xmm3, %%xmm0 \n\t" \
                       "subpd %%xmm4, %%xmm1 \n\t" \
                       "subpd %%xmm5, %%xmm2" \
+                      : \
+                      :)
+
+/*
+* Subtracts xmm0,xmm1,xmm2 from xmm3,xmm4,xmm5
+*/
+
+#define _sse_vector_sub_up() \
+__asm__ __volatile__ ("subpd %%xmm0, %%xmm3 \n\t" \
+                      "subpd %%xmm1, %%xmm4 \n\t" \
+                      "subpd %%xmm2, %%xmm5" \
                       : \
                       :)
 
@@ -394,6 +405,37 @@ __asm__ __volatile__ ("shufpd $0x1, %%xmm3, %%xmm3 \n\t" \
                       "m" (_sse_sgn))
 
 #ifndef SSE3
+
+/*
+ * C.Urbach
+ * Multiplies xmm3,xmm4,xmm5 with the complex number stored
+ * in xmm6 and xmm7
+ */
+
+#define _sse_vector_cmplx_mul_two() \
+__asm__ __volatile__ ("movapd %%xmm3, %%xmm0 \n\t" \
+                      "movapd %%xmm4, %%xmm1 \n\t" \
+                      "movapd %%xmm5, %%xmm2 \n\t" \
+                      "mulpd %%xmm6, %%xmm3 \n\t" \
+                      "mulpd %%xmm6, %%xmm4 \n\t" \
+                      "mulpd %%xmm6, %%xmm5 \n\t" \
+                      "mulpd %%xmm7, %%xmm0 \n\t" \
+                      "mulpd %%xmm7, %%xmm1 \n\t" \
+                      "mulpd %%xmm7, %%xmm2 \n\t" \
+                      "shufpd $0x1, %%xmm0, %%xmm0 \n\t" \
+                      "shufpd $0x1, %%xmm1, %%xmm1 \n\t" \
+                      "shufpd $0x1, %%xmm2, %%xmm2 \n\t" \
+                      "xorpd %2, %%xmm0 \n\t" \
+                      "xorpd %2, %%xmm1 \n\t" \
+                      "xorpd %2, %%xmm2 \n\t" \
+                      "addpd %%xmm0, %%xmm3 \n\t" \
+                      "addpd %%xmm1, %%xmm4 \n\t" \
+                      "addpd %%xmm2, %%xmm5" \
+                      : \
+                      : \
+                      "m" (_sse_sgn)) ;
+
+
 
 /*
 * M. Hasenbusch, Fri Nov  9 13:33:22 MET 2001

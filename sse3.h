@@ -11,6 +11,31 @@
 #ifndef _SSE3_h
 #define _SSE3_h
 
+/*
+ * C.Urbach
+ * Multiplies xmm3,xmm4,xmm5 with the complex number stored
+ * in xmm6 and xmm7
+ */
+
+#define _sse_vector_cmplx_mul_two() \
+__asm__ __volatile__ ("movapd %%xmm7, %%xmm0 \n\t"	\
+		      "movapd %%xmm7, %%xmm1 \n\t"	\
+		      "movapd %%xmm7, %%xmm2 \n\t"	\
+		      "mulpd %%xmm3, %%xmm0 \n\t"	\
+		      "mulpd %%xmm6, %%xmm3 \n\t"	\
+		      "mulpd %%xmm4, %%xmm1 \n\t"	\
+		      "mulpd %%xmm6, %%xmm4 \n\t"	\
+		      "mulpd %%xmm5, %%xmm2 \n\t"	 \
+		      "mulpd %%xmm6, %%xmm5 \n\t"		\
+		      "shufpd $0x1, %%xmm0, %%xmm0 \n\t"	\
+		      "shufpd $0x1, %%xmm1, %%xmm1 \n\t"	\
+		      "shufpd $0x1, %%xmm2, %%xmm2 \n\t"	\
+		      "addsubpd %%xmm0, %%xmm3 \n\t"		\
+		      "addsubpd %%xmm1, %%xmm4 \n\t"		\
+		      "addsubpd %%xmm2, %%xmm5 \n\t"		\
+		      :	\
+		      :);
+
 
 
 /*
@@ -123,26 +148,26 @@ __asm__ __volatile__ ("movddup %0, %%xmm3 \n\t" \
                       "m" ((u).c22.re)); \
 __asm__ __volatile__ ("movddup %0, %%xmm6 \n\t" \
                       "movddup %1, %%xmm7 \n\t" \
+                      "movddup %2, %%xmm8 \n\t" \
                       "shufpd $0x1, %%xmm0, %%xmm0 \n\t" \
                       "shufpd $0x1, %%xmm1, %%xmm1 \n\t" \
                       "shufpd $0x1, %%xmm2, %%xmm2 \n\t" \
-                      "movddup %2, %%xmm8 \n\t" \
-                      "movddup %3, %%xmm9 \n\t" \
                       "mulpd %%xmm0, %%xmm6 \n\t" \
                       "mulpd %%xmm1, %%xmm7 \n\t" \
                       "mulpd %%xmm2, %%xmm8 \n\t" \
-                      "mulpd %%xmm0, %%xmm9 \n\t" \
+                      "movddup %3, %%xmm9 \n\t" \
                       "movddup %4, %%xmm10 \n\t" \
                       "movddup %5, %%xmm11 \n\t" \
                       "addsubpd %%xmm6, %%xmm3 \n\t" \
                       "addsubpd %%xmm7, %%xmm4 \n\t" \
                       "addsubpd %%xmm8, %%xmm5 \n\t" \
-                      "addsubpd %%xmm9, %%xmm4 \n\t" \
+                      "mulpd %%xmm0, %%xmm9 \n\t" \
                       "mulpd %%xmm1, %%xmm10 \n\t" \
                       "mulpd %%xmm0, %%xmm11 \n\t" \
                       "movddup %6, %%xmm12 \n\t" \
                       "movddup %7, %%xmm13 \n\t" \
                       "movddup %8, %%xmm14 \n\t" \
+                      "addsubpd %%xmm9, %%xmm4 \n\t" \
                       "addsubpd %%xmm10, %%xmm3 \n\t" \
                       "addsubpd %%xmm11, %%xmm5 \n\t" \
                       "mulpd %%xmm2, %%xmm12 \n\t" \
@@ -307,21 +332,21 @@ __asm__ __volatile__ ("movddup %0, %%xmm6 \n\t" \
                       "mulpd %%xmm0, %%xmm6 \n\t" \
                       "mulpd %%xmm1, %%xmm7 \n\t" \
                       "mulpd %%xmm2, %%xmm8 \n\t" \
-                      "addpd %%xmm6, %%xmm3 \n\t" \
-                      "addpd %%xmm7, %%xmm4 \n\t" \
-                      "addpd %%xmm8, %%xmm5 \n\t" \
                       "movddup %3, %%xmm9 \n\t" \
                       "movddup %4, %%xmm10 \n\t" \
                       "movddup %5, %%xmm11 \n\t" \
+                      "addpd %%xmm6, %%xmm3 \n\t" \
+                      "addpd %%xmm7, %%xmm4 \n\t" \
+                      "addpd %%xmm8, %%xmm5 \n\t" \
                       "mulpd %%xmm0, %%xmm9 \n\t" \
                       "mulpd %%xmm1, %%xmm10 \n\t" \
                       "mulpd %%xmm0, %%xmm11 \n\t" \
-                      "addpd %%xmm9, %%xmm4 \n\t" \
-                      "addpd %%xmm10, %%xmm3 \n\t" \
-                      "addpd %%xmm11, %%xmm5 \n\t" \
                       "movddup %6, %%xmm12 \n\t" \
                       "movddup %7, %%xmm13 \n\t" \
                       "movddup %8, %%xmm14 \n\t" \
+                      "addpd %%xmm9, %%xmm4 \n\t" \
+                      "addpd %%xmm10, %%xmm3 \n\t" \
+                      "addpd %%xmm11, %%xmm5 \n\t" \
                       "mulpd %%xmm2, %%xmm12 \n\t" \
                       "mulpd %%xmm1, %%xmm13 \n\t" \
                       "mulpd %%xmm2, %%xmm14 \n\t" \

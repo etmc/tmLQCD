@@ -370,6 +370,11 @@
   reg01 = __fpsub(reg01, reg04); \
   reg02 = __fpsub(reg02, reg05); 
 
+#define _bgl_vector_sub_reg0_up()	 \
+  reg00 = __fpsub(reg03, reg00); \
+  reg01 = __fpsub(reg04, reg01); \
+  reg02 = __fpsub(reg05, reg02); 
+
 #define _bgl_vector_add_reg1() \
   reg10 = __fpadd(reg10, reg13); \
   reg11 = __fpadd(reg11, reg14); \
@@ -379,6 +384,11 @@
   reg10 = __fpsub(reg10, reg13); \
   reg11 = __fpsub(reg11, reg14); \
   reg12 = __fpsub(reg12, reg15); 
+
+#define _bgl_vector_sub_reg1()	 \
+  reg10 = __fpsub(reg13, reg10); \
+  reg11 = __fpsub(reg14, reg11); \
+  reg12 = __fpsub(reg15, reg12); 
 
 #define _bgl_vector_sub_rs2_from_rs1_reg1()	 \
   reg10 = __fpsub(rs10, rs20); \

@@ -24,12 +24,17 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define DUM_DERI 6
-#define DUM_SOLVER (DUM_DERI+7)
-#define DUM_MATRIX (DUM_SOLVER+6)
+/*#define DUM_DERI 6*/
+/*#define DUM_SOLVER (DUM_DERI+7)*/
+/*#define DUM_MATRIX (DUM_SOLVER+6)*/
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX (DUM_SOLVER+11) */
-#define NO_OF_SPINORFIELDS (DUM_MATRIX+6)
+/*#define NO_OF_SPINORFIELDS (DUM_MATRIX+6)*/
+
+#define DUM_DERI 6
+#define DUM_SOLVER (DUM_DERI+2)
+#define DUM_MATRIX (DUM_SOLVER+6)
+#define NO_OF_SPINORFIELDS (DUM_MATRIX+2)
 
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */

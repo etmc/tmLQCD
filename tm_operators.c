@@ -23,6 +23,9 @@
 #include "gamma.h"
 #include "tm_operators.h"
 
+#if (defined SSE2 || defined SSE3 || defined BGL)
+const int predist=2;
+#endif
 /* internal */
 
 /******************************************
@@ -327,11 +330,28 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign){
   z.im =  sign * nrm * g_mu;
   w.re = nrm;
   w.im = -z.im; /*-sign * nrm * g_mu;*/
-
+#if (defined BGL && defined XLC)
+  __alignx(16,l);
+#endif
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
     r=l + ix;
     /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
+#if ( defined SSE2 || defined SSE3 )
+    _prefetch_spinor((r+predist)); 
+    _sse_load_up((*r).s0);
+    _sse_vector_cmplx_mul(z);
+    _sse_store_nt_up((*r).s0);
+    _sse_load_up((*r).s1);
+    _sse_vector_cmplx_mul_two();
+    _sse_store_nt_up((*r).s1);
+    _sse_load_up((*r).s2);
+    _sse_vector_cmplx_mul(w);
+    _sse_store_nt_up((*r).s2);
+    _sse_load_up((*r).s3);
+    _sse_vector_cmplx_mul_two();
+    _sse_store_nt_up((*r).s3);
+#else
     _complex_times_vector(phi1, z, (*r).s0);
     _vector_assign((*r).s0, phi1);
     _complex_times_vector(phi1, z, (*r).s1);
@@ -340,6 +360,7 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign){
     _vector_assign((*r).s2, phi1);
     _complex_times_vector(phi1, w, (*r).s3);
     _vector_assign((*r).s3, phi1);
+#endif
   }
 }
 
@@ -358,16 +379,36 @@ void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double 
   z.im =  sign * nrm * g_mu;
   w.re = nrm;
   w.im = -z.im; /*-sign * nrm * g_mu;*/
-
+#if (defined BGL && defined XLC)
+  __alignx(16,l);
+  __alignx(16,k);
+#endif
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
     r=k+ix;
     s=l+ix;
     /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
+#if ( defined SSE22 || defined SSE32 )
+    _prefetch_spinor((r+predist));
+    _prefetch_spinor((s+predist));
+    _sse_load_up((*r).s0);
+    _sse_vector_cmplx_mul(z);
+    _sse_store_nt_up((*s).s0);
+    _sse_load_up((*r).s1);
+    _sse_vector_cmplx_mul_two();
+    _sse_store_nt_up((*s).s1);
+    _sse_load_up((*r).s2);
+    _sse_vector_cmplx_mul(w);
+    _sse_store_nt_up((*s).s2);
+    _sse_load_up((*r).s3);
+    _sse_vector_cmplx_mul_two();
+    _sse_store_nt_up((*s).s3);
+#else
     _complex_times_vector((*s).s0, z, (*r).s0);
     _complex_times_vector((*s).s1, z, (*r).s1);
     _complex_times_vector((*s).s2, w, (*r).s2);
     _complex_times_vector((*s).s3, w, (*r).s3);
+#endif
   }
 }
 
@@ -378,6 +419,10 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
   spinor *r;
   static su3_vector phi1;
 
+#if (defined BGL && defined XLC)
+  double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
+  double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
+#endif
   if(_sign < 0.){
     sign = -1.; 
   }
@@ -387,10 +432,41 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
   w.re = 1.;
   w.im = -z.im; /*-sign * nrm * g_mu;*/
 
+#if (defined BGL && defined XLC)
+  __alignx(16,l);
+#endif
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
     r=l+ix;
     /* Multiply the spinorfield with 1+imu\gamma_5 */
+#if ( defined SSE22 || defined SSE32 )
+    _prefetch_spinor((r+predist));
+    _sse_load_up((*r).s0);
+    _sse_vector_cmplx_mul(z);
+    _sse_store_nt_up((*r).s0);
+    _sse_load_up((*r).s1);
+    _sse_vector_cmplx_mul_two();
+    _sse_store_nt_up((*r).s1);
+    _sse_load_up((*r).s2);
+    _sse_vector_cmplx_mul(w);
+    _sse_store_nt_up((*r).s2);
+    _sse_load_up((*r).s3);
+    _sse_vector_cmplx_mul_two();
+    _sse_store_nt_up((*r).s3);
+#elif (defined BGL && defined XLC)
+    _prefetch_spinor(r+predist)
+    _bgl_load_reg0_up((*r).s0);
+    _bgl_load_reg1_up((*r).s1);
+    _bgl_vector_cmplx_mul_double(z);
+    _bgl_store_reg0((*r).s0);
+    _bgl_store_reg1((*r).s1);
+
+    _bgl_load_reg0_up((*r).s2);
+    _bgl_load_reg1_up((*r).s3);
+    _bgl_vector_cmplx_mul_double(w);
+    _bgl_store_reg0((*r).s2);
+    _bgl_store_reg1((*r).s3);
+#else
     _complex_times_vector(phi1, z, (*r).s0);
     _vector_assign((*r).s0, phi1);
     _complex_times_vector(phi1, z, (*r).s1);
@@ -399,6 +475,7 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
     _vector_assign((*r).s2, phi1);
     _complex_times_vector(phi1, w, (*r).s3);
     _vector_assign((*r).s3, phi1);
+#endif
   }
 }
 
@@ -407,6 +484,10 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
   int ix;
   double sign = 1.; 
   spinor *r, *s;
+#if (defined BGL && defined XLC)
+  double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
+  double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
+#endif
 
   if(_sign < 0.){
     sign = -1.; 
@@ -416,17 +497,50 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
   z.im =  sign * g_mu;
   w.re = 1.;
   w.im = -z.im; /*-sign * nrm * g_mu;*/
-
+#if (defined BGL && defined XLC)
+  __alignx(16,l);
+  __alignx(16,k);
+#endif
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
     s=l+ix;
     r=k+ix;
 
     /* Multiply the spinorfield with of 1+imu\gamma_5 */
+#if ( defined SSE2 || defined SSE3 )
+    _prefetch_spinor((r+predist));
+    _prefetch_spinor((s+predist));
+    _sse_load_up((*r).s0);
+    _sse_vector_cmplx_mul(z);
+    _sse_store_nt_up((*s).s0);
+    _sse_load_up((*r).s1);
+    _sse_vector_cmplx_mul_two();
+    _sse_store_nt_up((*s).s1);
+    _sse_load_up((*r).s2);
+    _sse_vector_cmplx_mul(w);
+    _sse_store_nt_up((*s).s2);
+    _sse_load_up((*r).s3);
+    _sse_vector_cmplx_mul_two();
+    _sse_store_nt_up((*s).s3);
+#elif (defined BGL && defined XLC)
+    _prefetch_spinor(r+predist)
+    _bgl_load_reg0_up((*r).s0);
+    _bgl_load_reg1_up((*r).s1);
+    _bgl_vector_cmplx_mul_double(z);
+    _bgl_store_reg0((*s).s0);
+    _bgl_store_reg1((*s).s1);
+
+    _bgl_load_reg0_up((*r).s2);
+    _bgl_load_reg1_up((*r).s3);
+    _bgl_vector_cmplx_mul_double(w);
+    _bgl_store_reg0((*s).s2);
+    _bgl_store_reg1((*s).s3);
+#else
     _complex_times_vector((*s).s0, z, (*r).s0);
     _complex_times_vector((*s).s1, z, (*r).s1);
     _complex_times_vector((*s).s2, w, (*r).s2);
     _complex_times_vector((*s).s3, w, (*r).s3);
+#endif
   }
 }
 
@@ -436,10 +550,18 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
   int ix;
   spinor *r, *s, *t;
   static su3_vector phi1, phi2, phi3, phi4;
+#if (defined BGL && defined XLC)
+  double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
+  double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
+#endif
 
   ione.re = 0.;
   ione.im = -1.;
-
+#if (defined BGL && defined XLC)
+  __alignx(16,l);
+  __alignx(16,k);
+  __alignx(16,j);
+#endif
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
     r = k+ix;
@@ -448,18 +570,50 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
     /* Subtract s and store the result in t */
     /* multiply with  gamma5 included by    */
     /* reversed order of s and r (2&3)       */
+#if (defined SSE22 || defined SSE32)
+    _prefetch_spinor((r+predist));
+    _prefetch_spinor((s+predist));
+    _sse_load((*r).s0);
+    _sse_load_up((*s).s0);
+    _sse_vector_sub();
+    _sse_store_nt((*t).s0);
+    _sse_load((*r).s1);
+    _sse_load_up((*s).s1);
+    _sse_vector_sub();
+    _sse_store_nt((*t).s1);
+    _sse_load_up((*r).s2);
+    _sse_load((*s).s2);
+    _sse_vector_sub();
+    _sse_store_nt((*t).s2);
+    _sse_load_up((*r).s3);
+    _sse_load((*s).s3);
+    _sse_vector_sub();
+    _sse_store_nt((*t).s3);
+#elif (defined BGL && defined XLC)
+    _prefetch_spinor((r+predist));
+    _prefetch_spinor((s+predist));
+    _bgl_load_reg0((*r).s0);
+    _bgl_load_reg0_up((*s).s0);
+    _bgl_load_reg1((*r).s1);
+    _bgl_load_reg1_up((*s).s1);
+    _bgl_vector_sub_reg0();
+    _bgl_vector_sub_reg1();
+    _bgl_store_reg0((*t).s0);
+    _bgl_store_reg1((*t).s1);
+    _bgl_load_reg0_up((*r).s2);
+    _bgl_load_reg0((*s).s2);
+    _bgl_load_reg1_up((*r).s3);
+    _bgl_load_reg1((*s).s3);
+    _bgl_vector_sub_reg0();
+    _bgl_vector_sub_reg1();
+    _bgl_store_reg0((*t).s2);
+    _bgl_store_reg1((*t).s3);
+#else
     _vector_sub((*t).s0, (*r).s0, (*s).s0);  
     _vector_sub((*t).s1, (*r).s1, (*s).s1);  
     _vector_sub((*t).s2, (*s).s2, (*r).s2);  
     _vector_sub((*t).s3, (*s).s3, (*r).s3);  
-/*     _vector_sub(phi1, (*r).s0, (*s).s0);  */
-/*     _vector_sub(phi2, (*r).s1, (*s).s1);  */
-/*     _vector_sub(phi3, (*s).s2, (*r).s2);  */
-/*     _vector_sub(phi4, (*s).s3, (*r).s3);  */
-/*     _complex_times_vector((*t).s0, ione, phi1); */
-/*     _complex_times_vector((*t).s1, ione, phi2); */
-/*     _complex_times_vector((*t).s2, ione, phi3); */
-/*     _complex_times_vector((*t).s3, ione, phi4); */
+#endif
   }
 }
 
@@ -480,13 +634,41 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k,
   z.im =  sign * g_mu;
   w.re = 1.;
   w.im = -sign * g_mu;
-
+#if (defined BGL && defined XLC)
+  __alignx(16,l);
+  __alignx(16,k);
+  __alignx(16,j);
+#endif
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
     r = k+ix;
     s = j+ix;
     t = l+ix;
     /* Multiply the spinorfield with 1+imu\gamma_5 */
+#if (defined SSE22 || defined SSE32)
+    _prefetch_spinor((r+predist));
+    _prefetch_spinor((s+predist));
+    _sse_load_up((*r).s0);
+    _sse_vector_cmplx_mul(z);
+    _sse_load((*s).s0);
+    _sse_vector_sub_up();
+    _sse_store_nt_up((*t).s0);
+    _sse_load_up((*r).s1);
+    _sse_vector_cmplx_mul_two();
+    _sse_load((*s).s1);
+    _sse_vector_sub_up();
+    _sse_store_nt_up((*t).s1);
+    _sse_load_up((*r).s2);
+    _sse_vector_cmplx_mul(w);
+    _sse_load((*s).s2);
+    _sse_vector_sub();
+    _sse_store_nt_up((*t).s2);
+    _sse_load_up((*r).s3);
+    _sse_vector_cmplx_mul_two();
+    _sse_load((*s).s3);
+    _sse_vector_sub();
+    _sse_store_nt_up((*t).s3);
+#else
     _complex_times_vector(phi1, z, (*r).s0);
     _complex_times_vector(phi2, z, (*r).s1);
     _complex_times_vector(phi3, w, (*r).s2);
@@ -498,6 +680,7 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k,
     _vector_sub((*t).s1, phi2, (*s).s1);
     _vector_sub((*t).s2, (*s).s2, phi3);
     _vector_sub((*t).s3, (*s).s3, phi4);
+#endif
   }
 }
 
@@ -508,6 +691,10 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
   double sign=1.;
   spinor *r, *s, *t;
   static su3_vector phi1, phi2, phi3, phi4;
+#if (defined BGL && defined XLC)
+  double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
+  double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
+#endif
 
   if(_sign < 0.){
     sign = -1.;
@@ -517,13 +704,63 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
   z.im =  sign * g_mu;
   w.re = 1.;
   w.im = -sign * g_mu;
-
+#if (defined BGL && defined XLC)
+  __alignx(16,l);
+  __alignx(16,k);
+  __alignx(16,j);
+#endif
   /************ loop over all lattice sites ************/
   for(ix = 0; ix < (VOLUME/2); ix++){
     r = k+ix;
     s = j+ix;
     t = l+ix;
     /* Multiply the spinorfield with 1+imu\gamma_5 */
+#if (defined SSE2 || defined SSE3)
+    _prefetch_spinor((r+predist));
+    _prefetch_spinor((s+predist));
+    _sse_load_up((*r).s0);
+    _sse_vector_cmplx_mul(z);
+    _sse_load((*s).s0);
+    _sse_vector_sub_up();
+    _sse_store_nt_up((*t).s0);
+    _sse_load_up((*r).s1);
+    _sse_vector_cmplx_mul_two();
+    _sse_load((*s).s1);
+    _sse_vector_sub_up();
+    _sse_store_nt_up((*t).s1);
+    _sse_load_up((*r).s2);
+    _sse_vector_cmplx_mul(w);
+    _sse_load((*s).s2);
+    _sse_vector_sub_up();
+    _sse_store_nt_up((*t).s2);
+    _sse_load_up((*r).s3);
+    _sse_vector_cmplx_mul_two();
+    _sse_load((*s).s3);
+    _sse_vector_sub_up();
+    _sse_store_nt_up((*t).s3);
+#elif (defined BGL && defined XLC)
+    _prefetch_spinor(r+predist)
+    _prefetch_spinor(s+predist)
+    _bgl_load_reg0_up((*r).s0);
+    _bgl_load_reg1_up((*r).s1);
+    _bgl_vector_cmplx_mul_double(z);
+    _bgl_load_reg0_up((*s).s0);
+    _bgl_load_reg1_up((*s).s1);
+    _bgl_vector_sub_reg0();
+    _bgl_vector_sub_reg1();
+    _bgl_store_reg0((*t).s0);
+    _bgl_store_reg1((*t).s1);
+
+    _bgl_load_reg0_up((*r).s2);
+    _bgl_load_reg1_up((*r).s3);
+    _bgl_vector_cmplx_mul_double(z);
+    _bgl_load_reg0_up((*s).s2);
+    _bgl_load_reg1_up((*s).s3);
+    _bgl_vector_sub_reg0_up();
+    _bgl_vector_sub_reg1_up();
+    _bgl_store_reg0((*t).s2);
+    _bgl_store_reg1((*t).s3);
+#else
     _complex_times_vector(phi1, z, (*r).s0);
     _complex_times_vector(phi2, z, (*r).s1);
     _complex_times_vector(phi3, w, (*r).s2);
@@ -533,6 +770,7 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
     _vector_sub((*t).s1, phi2, (*s).s1);
     _vector_sub((*t).s2, phi3, (*s).s2);
     _vector_sub((*t).s3, phi4, (*s).s3);
+#endif
   }
 }
 

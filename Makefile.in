@@ -27,7 +27,7 @@ LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
 	${top_builddir}/solver/libsolver.a
 COMPILE = ${CC} $(DEFS) $(INCLUDES) -o $@ ${CFLAGS}
 
-SMODULES = Hopping_Matrix_nocom Hopping_Matrix
+SMODULES = Hopping_Matrix_nocom Hopping_Matrix tm_operators
 
 MODULES = read_input gamma hybrid_update observables start \
 	expo 2mn_integrator get_staples update_backward_gauge \
@@ -35,7 +35,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	test/check_geometry test/check_xchange invert_eo \
 	ext_integrator polyakov_loop getopt sighandler \
 	source_generation boundary io update_tm ranlxd  \
-	mpi_init linsolve deriv_Sb tm_operators \
+	mpi_init linsolve deriv_Sb \
 	reweight_kappac xchange_deri geometry_eo linalg_eo \
 	init_bispinor_field init_moment_field init_gauge_tmp \
 	derivative_psf xchange_field xchange_gauge \
