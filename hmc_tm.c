@@ -46,6 +46,7 @@
 #include "init_moment_field.h"
 #include "init_gauge_tmp.h"
 #include "init_dirac_halfspinor.h"
+#include "xchange_halffield.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "polyakov_loop.h"
@@ -304,6 +305,9 @@ int main(int argc,char *argv[]) {
   if(g_sloppy_precision_flag == 1) {
     init_dirac_halfspinor32();
   }
+#  if (defined _PERSISTENT)
+  init_xchange_halffield();
+#  endif
 #endif
     
   /* Continue */

@@ -872,6 +872,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-limedir=dir      search lime in dir default=./lime
   --with-mpidimension=n   use n dimensional parallelisation default=1
+  --with-persistentmpi    use persistent MPI calls for halfspinor default=no
   --with-fixedvolume      fix volume at compiletime default=no
   --with-kojakinst        instrumentalise for KOJAK default=no
   --with-lapack           enable use of lapack default=yes
@@ -6281,6 +6282,29 @@ echo "${ECHO_T}unknown" >&6
     { { echo "$as_me:$LINENO: error: Only one, two, three or four dimensional parallelisation available" >&5
 echo "$as_me: error: Only one, two, three or four dimensional parallelisation available" >&2;}
    { (exit 1); exit 1; }; }
+  fi
+
+  echo "$as_me:$LINENO: checking whether we shall use persistent MPI calls" >&5
+echo $ECHO_N "checking whether we shall use persistent MPI calls... $ECHO_C" >&6
+
+# Check whether --with-persistentmpi or --without-persistentmpi was given.
+if test "${with_persistentmpi+set}" = set; then
+  withval="$with_persistentmpi"
+  withpersistent=$withval
+else
+  withpersistent=no
+fi;
+  if test $withpersistent = yes; then
+    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+cat >>confdefs.h <<\_ACEOF
+#define _PERSISTENT 1
+_ACEOF
+
+  else
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
   fi
 fi
 

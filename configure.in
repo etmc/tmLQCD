@@ -92,6 +92,17 @@ if test $enable_mpi = yes; then
     AC_MSG_RESULT(unknown)
     AC_MSG_ERROR([Only one, two, three or four dimensional parallelisation available]) 
   fi
+  
+  AC_MSG_CHECKING(whether we shall use persistent MPI calls)
+  AC_ARG_WITH([persistentmpi],
+    [  --with-persistentmpi    use persistent MPI calls for halfspinor [default=no]],
+    withpersistent=$withval, withpersistent=no)
+  if test $withpersistent = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(_PERSISTENT,1,use persistent MPI calls for halfspinor)
+  else
+    AC_MSG_RESULT(no)
+  fi
 fi
 
 AC_MSG_CHECKING([whether we want to fix volume at compiletime])

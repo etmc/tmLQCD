@@ -44,6 +44,7 @@
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
 #include "init_dirac_halfspinor.h"
+#include "xchange_halffield.h"
 #include "update_backward_gauge.h"
 #include "invert_eo.h"
 
@@ -179,6 +180,9 @@ int main(int argc,char *argv[]) {
   if(g_sloppy_precision > 0) {
     init_dirac_halfspinor32();
   }
+#  if (defined _PERSISTENT)
+  init_xchange_halffield();
+#  endif
 #endif
 
   for(j=0;j<Nmeas; j++) {

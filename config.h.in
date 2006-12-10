@@ -133,6 +133,9 @@
    supported. Do not define if restrict is supported directly. */
 #undef restrict
 
+/* Define to 1 if persistent MPI calls for halfspinor should be used */
+#undef _PERSISTENT
+
 /* Define to 1 for rts_get_dram_window usage for halfspinor on BG/L */
 #undef BGL2
 

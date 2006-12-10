@@ -37,6 +37,7 @@
 #include "init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
 #include "test/check_geometry.h"
+#include "xchange_halffield.h"
 #include "mpi_init.h"
 
 #ifdef PARALLELT
@@ -158,6 +159,9 @@ int main(int argc,char *argv[])
       exit(0);
     }
   }
+#  if (defined _PERSISTENT)
+  init_xchange_halffield();
+#  endif
 #endif  
 
   check_geometry();
