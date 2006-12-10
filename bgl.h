@@ -385,7 +385,7 @@
   reg11 = __fpsub(reg11, reg14); \
   reg12 = __fpsub(reg12, reg15); 
 
-#define _bgl_vector_sub_reg1()	 \
+#define _bgl_vector_sub_reg1_up()	 \
   reg10 = __fpsub(reg13, reg10); \
   reg11 = __fpsub(reg14, reg11); \
   reg12 = __fpsub(reg15, reg12); 

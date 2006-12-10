@@ -21,6 +21,9 @@
 #include "sse.h"
 #include "linalg/diff.h"
 #include "gamma.h"
+#ifdef BGL
+#  include "bgl.h"
+#endif
 #include "tm_operators.h"
 
 #if (defined SSE2 || defined SSE3 || defined BGL)
@@ -321,6 +324,10 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign){
   spinor *r;
   static su3_vector phi1;
   double nrm = 1./(1.+g_mu*g_mu);
+#if (defined BGL && defined XLC)
+  double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
+  double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
+#endif
 
   if(_sign < 0.){
     sign = 1.; 
@@ -351,6 +358,19 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign){
     _sse_load_up((*r).s3);
     _sse_vector_cmplx_mul_two();
     _sse_store_nt_up((*r).s3);
+#elif (defined BGL && defined XLC)
+    _prefetch_spinor(r+predist)
+    _bgl_load_reg0_up((*r).s0);
+    _bgl_load_reg1_up((*r).s1);
+    _bgl_vector_cmplx_mul_double(z);
+    _bgl_store_reg0_up((*r).s0);
+    _bgl_store_reg1_up((*r).s1);
+
+    _bgl_load_reg0_up((*r).s2);
+    _bgl_load_reg1_up((*r).s3);
+    _bgl_vector_cmplx_mul_double(w);
+    _bgl_store_reg0_up((*r).s2);
+    _bgl_store_reg1_up((*r).s3);
 #else
     _complex_times_vector(phi1, z, (*r).s0);
     _vector_assign((*r).s0, phi1);
@@ -370,6 +390,10 @@ void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double 
   double sign=-1.; 
   spinor *r, *s;
   double nrm = 1./(1.+g_mu*g_mu);
+#if (defined BGL && defined XLC)
+  double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
+  double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
+#endif
 
   if(_sign < 0.){
     sign = 1.; 
@@ -403,6 +427,19 @@ void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double 
     _sse_load_up((*r).s3);
     _sse_vector_cmplx_mul_two();
     _sse_store_nt_up((*s).s3);
+#elif (defined BGL && defined XLC)
+    _prefetch_spinor(r+predist)
+    _bgl_load_reg0_up((*r).s0);
+    _bgl_load_reg1_up((*r).s1);
+    _bgl_vector_cmplx_mul_double(z);
+    _bgl_store_reg0_up((*s).s0);
+    _bgl_store_reg1_up((*s).s1);
+
+    _bgl_load_reg0_up((*r).s2);
+    _bgl_load_reg1_up((*r).s3);
+    _bgl_vector_cmplx_mul_double(w);
+    _bgl_store_reg0_up((*s).s2);
+    _bgl_store_reg1_up((*s).s3);
 #else
     _complex_times_vector((*s).s0, z, (*r).s0);
     _complex_times_vector((*s).s1, z, (*r).s1);
@@ -458,14 +495,14 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
     _bgl_load_reg0_up((*r).s0);
     _bgl_load_reg1_up((*r).s1);
     _bgl_vector_cmplx_mul_double(z);
-    _bgl_store_reg0((*r).s0);
-    _bgl_store_reg1((*r).s1);
+    _bgl_store_reg0_up((*r).s0);
+    _bgl_store_reg1_up((*r).s1);
 
     _bgl_load_reg0_up((*r).s2);
     _bgl_load_reg1_up((*r).s3);
     _bgl_vector_cmplx_mul_double(w);
-    _bgl_store_reg0((*r).s2);
-    _bgl_store_reg1((*r).s3);
+    _bgl_store_reg0_up((*r).s2);
+    _bgl_store_reg1_up((*r).s3);
 #else
     _complex_times_vector(phi1, z, (*r).s0);
     _vector_assign((*r).s0, phi1);
@@ -527,14 +564,14 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
     _bgl_load_reg0_up((*r).s0);
     _bgl_load_reg1_up((*r).s1);
     _bgl_vector_cmplx_mul_double(z);
-    _bgl_store_reg0((*s).s0);
-    _bgl_store_reg1((*s).s1);
+    _bgl_store_reg0_up((*s).s0);
+    _bgl_store_reg1_up((*s).s1);
 
     _bgl_load_reg0_up((*r).s2);
     _bgl_load_reg1_up((*r).s3);
     _bgl_vector_cmplx_mul_double(w);
-    _bgl_store_reg0((*s).s2);
-    _bgl_store_reg1((*s).s3);
+    _bgl_store_reg0_up((*s).s2);
+    _bgl_store_reg1_up((*s).s3);
 #else
     _complex_times_vector((*s).s0, z, (*r).s0);
     _complex_times_vector((*s).s1, z, (*r).s1);
@@ -744,20 +781,20 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
     _bgl_load_reg0_up((*r).s0);
     _bgl_load_reg1_up((*r).s1);
     _bgl_vector_cmplx_mul_double(z);
-    _bgl_load_reg0_up((*s).s0);
-    _bgl_load_reg1_up((*s).s1);
-    _bgl_vector_sub_reg0();
-    _bgl_vector_sub_reg1();
+    _bgl_load_reg0((*s).s0);
+    _bgl_load_reg1((*s).s1);
+    _bgl_vector_sub_reg0_up();
+    _bgl_vector_sub_reg1_up();
     _bgl_store_reg0((*t).s0);
     _bgl_store_reg1((*t).s1);
 
     _bgl_load_reg0_up((*r).s2);
     _bgl_load_reg1_up((*r).s3);
     _bgl_vector_cmplx_mul_double(z);
-    _bgl_load_reg0_up((*s).s2);
-    _bgl_load_reg1_up((*s).s3);
-    _bgl_vector_sub_reg0_up();
-    _bgl_vector_sub_reg1_up();
+    _bgl_load_reg0((*s).s2);
+    _bgl_load_reg1((*s).s3);
+    _bgl_vector_sub_reg0();
+    _bgl_vector_sub_reg1();
     _bgl_store_reg0((*t).s2);
     _bgl_store_reg1((*t).s3);
 #else
