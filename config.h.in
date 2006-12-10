@@ -135,3 +135,4 @@
 
 /* Define to 1 for rts_get_dram_window usage for halfspinor on BG/L */
 #undef BGL2
+
