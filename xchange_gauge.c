@@ -27,10 +27,10 @@
 #ifdef BGL
 
 void xchange_gauge() {
-  MPI_Request request[105];
-  MPI_Status status[105];
   int cntr=0;
 #  ifdef MPI
+  MPI_Request request[105];
+  MPI_Status status[105];
 
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
