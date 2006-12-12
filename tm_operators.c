@@ -324,7 +324,7 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign){
   spinor *r;
   static su3_vector phi1;
   double nrm = 1./(1.+g_mu*g_mu);
-#if (defined BGL && defined XLC)
+#if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
 #endif
@@ -337,7 +337,7 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign){
   z.im =  sign * nrm * g_mu;
   w.re = nrm;
   w.im = -z.im; /*-sign * nrm * g_mu;*/
-#if (defined BGL2 && defined XLC)
+#if (defined BGL3 && defined XLC)
   __alignx(16,l);
 #endif
   /************ loop over all lattice sites ************/
@@ -358,7 +358,7 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign){
     _sse_load_up((*r).s3);
     _sse_vector_cmplx_mul_two();
     _sse_store_nt_up((*r).s3);
-#elif (defined BGL && defined XLC)
+#elif (defined BGL3 && defined XLC)
     _prefetch_spinor(r+predist)
     _bgl_load_reg0_up((*r).s0);
     _bgl_load_reg1_up((*r).s1);
@@ -390,7 +390,7 @@ void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double 
   double sign=-1.; 
   spinor *r, *s;
   double nrm = 1./(1.+g_mu*g_mu);
-#if (defined BGL && defined XLC)
+#if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
 #endif
@@ -403,7 +403,7 @@ void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double 
   z.im =  sign * nrm * g_mu;
   w.re = nrm;
   w.im = -z.im; /*-sign * nrm * g_mu;*/
-#if (defined BGL2 && defined XLC)
+#if (defined BGL3 && defined XLC)
   __alignx(16,l);
   __alignx(16,k);
 #endif
@@ -427,7 +427,7 @@ void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double 
     _sse_load_up((*r).s3);
     _sse_vector_cmplx_mul_two();
     _sse_store_nt_up((*s).s3);
-#elif (defined BGL && defined XLC)
+#elif (defined BGL3 && defined XLC)
     _prefetch_spinor(r+predist)
     _bgl_load_reg0_up((*r).s0);
     _bgl_load_reg1_up((*r).s1);
@@ -456,7 +456,7 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
   spinor *r;
   static su3_vector phi1;
 
-#if (defined BGL && defined XLC)
+#if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
 #endif
@@ -469,7 +469,7 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
   w.re = 1.;
   w.im = -z.im; /*-sign * nrm * g_mu;*/
 
-#if (defined BGL && defined XLC)
+#if (defined BGL3 && defined XLC)
   __alignx(16,l);
 #endif
   /************ loop over all lattice sites ************/
@@ -490,7 +490,7 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
     _sse_load_up((*r).s3);
     _sse_vector_cmplx_mul_two();
     _sse_store_nt_up((*r).s3);
-#elif (defined BGL2 && defined XLC)
+#elif (defined BGL3 && defined XLC)
 /*     _prefetch_spinor(r+predist) */
     _bgl_load_reg0_up((*r).s0);
     _bgl_load_reg1_up((*r).s1);
@@ -521,7 +521,7 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
   int ix;
   double sign = 1.; 
   spinor *r, *s;
-#if (defined BGL && defined XLC)
+#if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
 #endif
@@ -534,7 +534,7 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
   z.im =  sign * g_mu;
   w.re = 1.;
   w.im = -z.im; /*-sign * nrm * g_mu;*/
-#if (defined BGL2 && defined XLC)
+#if (defined BGL3 && defined XLC)
   __alignx(16,l);
   __alignx(16,k);
 #endif
@@ -559,7 +559,7 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
     _sse_load_up((*r).s3);
     _sse_vector_cmplx_mul_two();
     _sse_store_nt_up((*s).s3);
-#elif (defined BGL2 && defined XLC)
+#elif (defined BGL3 && defined XLC)
     _prefetch_spinor(r+predist)
     _bgl_load_reg0_up((*r).s0);
     _bgl_load_reg1_up((*r).s1);
@@ -587,14 +587,14 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
   int ix;
   spinor *r, *s, *t;
   static su3_vector phi1, phi2, phi3, phi4;
-#if (defined BGL2 && defined XLC)
+#if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
 #endif
 
   ione.re = 0.;
   ione.im = -1.;
-#if (defined BGL2 && defined XLC)
+#if (defined BGL3 && defined XLC)
   __alignx(16,l);
   __alignx(16,k);
   __alignx(16,j);
@@ -626,7 +626,7 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
     _sse_load((*s).s3);
     _sse_vector_sub();
     _sse_store_nt((*t).s3);
-#elif (defined BGL2 && defined XLC)
+#elif (defined BGL3 && defined XLC)
     _prefetch_spinor((r+predist));
     _prefetch_spinor((s+predist));
     _bgl_load_reg0((*r).s0);
@@ -671,7 +671,7 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k,
   z.im =  sign * g_mu;
   w.re = 1.;
   w.im = -sign * g_mu;
-#if (defined BGL2 && defined XLC)
+#if (defined BGL3 && defined XLC)
   __alignx(16,l);
   __alignx(16,k);
   __alignx(16,j);
@@ -728,7 +728,7 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
   double sign=1.;
   spinor *r, *s, *t;
   static su3_vector phi1, phi2, phi3, phi4;
-#if (defined BGL && defined XLC)
+#if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
 #endif
@@ -741,7 +741,7 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
   z.im =  sign * g_mu;
   w.re = 1.;
   w.im = -sign * g_mu;
-#if (defined BGL2 && defined XLC)
+#if (defined BGL3 && defined XLC)
   __alignx(16,l);
   __alignx(16,k);
   __alignx(16,j);
@@ -775,7 +775,7 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
     _sse_load((*s).s3);
     _sse_vector_sub_up();
     _sse_store_nt_up((*t).s3);
-#elif (defined BGL2 && defined XLC)
+#elif (defined BGL3 && defined XLC)
     _prefetch_spinor(r+predist)
     _prefetch_spinor(s+predist)
     _bgl_load_reg0_up((*r).s0);

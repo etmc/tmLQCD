@@ -1527,6 +1527,11 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   printf("# The code was compiled for Blue Gene/L\n");
   fprintf(parameterfile, 
 	  "# The code was compiled for Blue Gene/L\n");
+#  ifdef _USE_BGLDRAM
+  printf("# The code was compiled for Blue Gene/L dram window\n");
+  fprintf(parameterfile, 
+	  "# The code was compiled for Blue Gene/L dram window\n");
+#  endif
 #endif
 #ifdef OPTERON
   printf("# The code was compiled for AMD Opteron\n");
@@ -1547,6 +1552,19 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   printf("# the code was comiled with -D_USE_SHMEM\n");
   fprintf(parameterfile,
          "# the code was comiled with -D_USE_SHMEM\n");
+#  ifdef _PERSISTENT
+  printf("# the code was comiled for persistent MPI calls (halfspinor only)\n");
+  fprintf(parameterfile,
+         "# the code was comiled for persistent MPI calls (halfspinor only)\n");
+#  endif
+#endif
+#ifdef MPI
+#  ifdef _NON_BLOCKING
+  printf("# the code was comiled for non-blocking MPI calls (spinor and gauge)\n");
+  fprintf(parameterfile,
+         "# the code was comiled for non-blocking MPI calls (spinor and gauge)\n");
+#  endif
+
 #endif
   printf("# The lattice size is %d x %d x %d x %d\n",
 	 (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(LZ*g_nproc_z));

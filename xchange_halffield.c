@@ -86,7 +86,8 @@ void xchange_halffield() {
 #pragma pomp inst end(xchangehalf)
 #endif
 }
-#elif (defined _PERSISTENT)
+
+#elif (defined _USE_HALFSPINOR && defined _PERSISTENT)
 
 MPI_Request prequests[16];
 
@@ -207,6 +208,7 @@ void xchange_halffield() {
 }
 
 #else
+
 void xchange_halffield() {
 
 #  ifdef MPI

@@ -34,8 +34,9 @@
 #pragma disjoint(*field_buffer_z2, *field_buffer_z)
 #endif
 
-#if ((defined BGL) && (defined MPI))
+#if (defined _NON_BLOCKING)
 
+/* this version uses non-blocking MPI calls */
 
 void xchange_field(spinor * const l, const int ieo) {
 
@@ -55,7 +56,7 @@ void xchange_field(spinor * const l, const int ieo) {
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchangefield)
 #endif
-#  if (defined XLC)
+#  if (defined BGL && defined XLC)
 #    ifdef PARALLELXYZT
   __alignx(16, field_buffer_z);
   __alignx(16, field_buffer_z2);
@@ -229,7 +230,7 @@ void xchange_field(spinor * const l, const int ieo) {
 #endif
 }
 
-#elif (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+#elif (defined _USE_SHMEM)
 
 /* Here comes the version with shared memory */
 /* exchanges the field  l */
@@ -334,7 +335,9 @@ void xchange_field(spinor * const l, const int ieo) {
 
 
 #else
+
 /* Here comes the naive version */  
+/* Using MPI_Sendrecv */
 /* exchanges the field  l */
 void xchange_field(spinor * const l, const int ieo) {
   

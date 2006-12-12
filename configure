@@ -873,10 +873,12 @@ Optional Packages:
   --with-limedir=dir      search lime in dir default=./lime
   --with-mpidimension=n   use n dimensional parallelisation default=1
   --with-persistentmpi    use persistent MPI calls for halfspinor default=no
+  --with-nonblockingmpi   use non-blocking MPI calls for spinor and gauge default=yes
   --with-fixedvolume      fix volume at compiletime default=no
   --with-kojakinst        instrumentalise for KOJAK default=no
   --with-lapack           enable use of lapack default=yes
   --with-gprof            use of gprof profiler default=yes
+  --with-bgldram          use BGL dram window (BGL only!) default=yes
 
 Some influential environment variables:
   CC          C compiler command
@@ -6284,8 +6286,8 @@ echo "$as_me: error: Only one, two, three or four dimensional parallelisation av
    { (exit 1); exit 1; }; }
   fi
 
-  echo "$as_me:$LINENO: checking whether we shall use persistent MPI calls" >&5
-echo $ECHO_N "checking whether we shall use persistent MPI calls... $ECHO_C" >&6
+  echo "$as_me:$LINENO: checking whether we shall use persistent MPI calls for halfspinor" >&5
+echo $ECHO_N "checking whether we shall use persistent MPI calls for halfspinor... $ECHO_C" >&6
 
 # Check whether --with-persistentmpi or --without-persistentmpi was given.
 if test "${with_persistentmpi+set}" = set; then
@@ -6300,6 +6302,29 @@ echo "${ECHO_T}yes" >&6
 
 cat >>confdefs.h <<\_ACEOF
 #define _PERSISTENT 1
+_ACEOF
+
+  else
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+  fi
+
+  echo "$as_me:$LINENO: checking whether we shall use non-blocking MPI calls" >&5
+echo $ECHO_N "checking whether we shall use non-blocking MPI calls... $ECHO_C" >&6
+
+# Check whether --with-nonblockmpi or --without-nonblockmpi was given.
+if test "${with_nonblockmpi+set}" = set; then
+  withval="$with_nonblockmpi"
+  withnonblock=$withval
+else
+  withnonblock=yes
+fi;
+  if test $withnonblock = yes; then
+    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+cat >>confdefs.h <<\_ACEOF
+#define _NON_BLOCKING 1
 _ACEOF
 
   else
@@ -9007,6 +9032,30 @@ echo "${ECHO_T}no" >&6
   PROFILE_FLAG=
 fi
 
+echo "$as_me:$LINENO: checking whether we shall use rts dram window" >&5
+echo $ECHO_N "checking whether we shall use rts dram window... $ECHO_C" >&6
+
+# Check whether --with-withdram or --without-withdram was given.
+if test "${with_withdram+set}" = set; then
+  withval="$with_withdram"
+  withdram=$withval
+else
+  withdram=yes
+fi;
+if test $withdram = yes; then
+  echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+cat >>confdefs.h <<\_ACEOF
+#define _USE_BGLDRAM 1
+_ACEOF
+
+  { echo "$as_me:$LINENO: WARNING: Remember to manually link the executable (see README)" >&5
+echo "$as_me: WARNING: Remember to manually link the executable (see README)" >&2;}
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
 
 # Now we have to set als Flags and compiler properly
 # first for PC's
@@ -9228,7 +9277,7 @@ _ACEOF
 
   if test "$GCC" != yes; then
     CFLAGS="-qsrcmsg $CFLAGS"
-    OPTARGS="$OPTARGS -qarch=440 -qtune=440"
+    OPTARGS="$OPTARGS -qarch=440d -qtune=440"
     SOPTARGS="$SOPTARGS -qarch=440d -qtune=440"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
 # OPTARGS="-qhot" leads to wrong code

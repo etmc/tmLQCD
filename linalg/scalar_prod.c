@@ -21,7 +21,10 @@ complex scalar_prod(spinor * const S,spinor * const R, const int N){
 
   ks=0.0;
   kc=0.0;
-  
+#if (defined BGL && defined XLC)
+  __alignx(16, S);
+  __alignx(16, R);
+#endif  
   for (ix = 0; ix < N; ix++){
     s=(spinor *) S + ix;
     r=(spinor *) R + ix;

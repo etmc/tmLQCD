@@ -136,6 +136,12 @@
 /* Define to 1 if persistent MPI calls for halfspinor should be used */
 #undef _PERSISTENT
 
+/* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
+#undef _NON_BLOCKING
+
+/* Define to 1 if BGL dram window should be used */
+#undef _USE_BGLDRAM
+
 /* Define to 1 for rts_get_dram_window usage for halfspinor on BG/L */
 #undef BGL2
 

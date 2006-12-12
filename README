@@ -55,8 +55,8 @@ path-to-the-sources/configure --host=ppc-ibm-blrts --build=ppc64-ibm-linux \
 --enable-newdiracop CC=/usr/bin/blrts_xlc
 
 *** important ***
-for optimal performance on the BG/L with --enable-newdiracop 
-define BGL2=1 in config.h and link the executables with
+for optimal performance on the BG/L use --enable-newdiracop 
+with --with-bgldram and link the executables with
 /bgl/local/bin/blrts_gcc -Xlinker --script=./elf32ppcblrts.x
 See IBM redbook for details regarding rts_get_dram_window()
 runtime function.

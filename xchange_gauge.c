@@ -24,7 +24,7 @@
 #include "su3adj.h"
 #include "xchange_gauge.h"
 
-#ifdef BGL
+#if defined _NON_BLOCKING
 
 void xchange_gauge() {
   int cntr=0;

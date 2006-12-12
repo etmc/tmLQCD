@@ -1,3 +1,10 @@
+12.12.2006: run time call for dram window on BG/L implemented (--with-bgldram)
+            persistent MPI for halfspinor available (--with-persistentmpi)
+            non-blocking MPI calls also for gauge fields implemented
+            now generally available with --with-nonblockingmpi for all platforms
+
+	    Improved performance for opteron CPU's
+
 02.09.2006: New Dirac operator implemented and working
 	    On BG/L this brings a 20% improvement
 	    it can be switched on with --enable-newdiraop

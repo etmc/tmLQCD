@@ -1,3 +1,7 @@
+Release 3.2.2:
+performance improvements for BG/L and opteron
+target machines
+
 Release 3.2.1:
 Bugfix release. Basically bug fixed on the altix for
 shmem version.

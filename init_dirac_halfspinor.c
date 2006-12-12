@@ -31,7 +31,7 @@ halfspinor32 *** NBPointer32;
 int init_dirac_halfspinor() {
   int ieo=0, i=0, j=0, k;
   int x, y, z, t, mu;
-#ifdef BGL2
+#if (defined BGL && defined _USE_BGLDRAM)
   unsigned int actualSize;
   int rts_return=0;
 #endif  
@@ -45,7 +45,7 @@ int init_dirac_halfspinor() {
 
 #ifdef _USE_SHMEM
   HalfSpinor_ = (halfspinor*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor));
-#elif defined BGL2
+#elif (defined BGL && defined _USE_BGLDRAM)
   rts_return = rts_get_dram_window(8*((VOLUME+RAND)+1)*sizeof(halfspinor), RTS_STORE_WITHOUT_ALLOCATE, (void**)&HalfSpinor_, &actualSize);
   if(rts_return !=0) {
     return(-1);
@@ -183,7 +183,7 @@ int init_dirac_halfspinor() {
 int init_dirac_halfspinor32() {
   int ieo=0, i=0, j=0, k;
   int x, y, z, t, mu;
-#ifdef BGL2
+#if (defined BGL && defined _USE_BGLDRAM)
   unsigned int actualSize;
   int rts_return=0;
 #endif  
@@ -197,7 +197,7 @@ int init_dirac_halfspinor32() {
 
 #ifdef _USE_SHMEM
   HalfSpinor32_ = (halfspinor32*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor32));
-#elif defined BGL2
+#elif (defined BGL && defined _USE_BGLDRAM)
   rts_return = rts_get_dram_window(8*((VOLUME+RAND)+1)*sizeof(halfspinor32), RTS_STORE_WITHOUT_ALLOCATE, (void**)&HalfSpinor32_, &actualSize);
   if(rts_return !=0) {
     return(-1);

@@ -93,13 +93,24 @@ if test $enable_mpi = yes; then
     AC_MSG_ERROR([Only one, two, three or four dimensional parallelisation available]) 
   fi
   
-  AC_MSG_CHECKING(whether we shall use persistent MPI calls)
+  AC_MSG_CHECKING(whether we shall use persistent MPI calls for halfspinor)
   AC_ARG_WITH([persistentmpi],
     [  --with-persistentmpi    use persistent MPI calls for halfspinor [default=no]],
     withpersistent=$withval, withpersistent=no)
   if test $withpersistent = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(_PERSISTENT,1,use persistent MPI calls for halfspinor)
+  else
+    AC_MSG_RESULT(no)
+  fi
+
+  AC_MSG_CHECKING(whether we shall use non-blocking MPI calls)
+  AC_ARG_WITH([nonblockmpi],
+    [  --with-nonblockingmpi   use non-blocking MPI calls for spinor and gauge [default=yes]],
+    withnonblock=$withval, withnonblock=yes)
+  if test $withnonblock = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(_NON_BLOCKING,1,use non-blocking MPI calls for spinor ang gauge)
   else
     AC_MSG_RESULT(no)
   fi
@@ -338,6 +349,17 @@ else
   PROFILE_FLAG=
 fi
 
+AC_MSG_CHECKING(whether we shall use rts dram window)
+AC_ARG_WITH([withdram],
+  [  --with-bgldram          use BGL dram window (BGL only!) [default=yes]],
+  withdram=$withval, withdram=yes)
+if test $withdram = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(_USE_BGLDRAM,1,use BGL dram window)
+  AC_MSG_WARN([Remember to manually link the executable (see README)])
+else
+  AC_MSG_RESULT(no)
+fi
 
 # Now we have to set als Flags and compiler properly
 # first for PC's
@@ -523,7 +545,7 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
 
   if test "$GCC" != yes; then
     CFLAGS="-qsrcmsg $CFLAGS"
-    OPTARGS="$OPTARGS -qarch=440 -qtune=440"
+    OPTARGS="$OPTARGS -qarch=440d -qtune=440"
     SOPTARGS="$SOPTARGS -qarch=440d -qtune=440"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
 # OPTARGS="-qhot" leads to wrong code
