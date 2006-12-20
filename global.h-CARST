@@ -44,6 +44,9 @@
 /* #define DUM_BI_MATRIX DUM_BI_SOLVER+11 */
 #define NO_OF_BISPINORFIELDS (DUM_BI_MATRIX+6)
 
+
+#define NO_OF_CHI_UP_SPINORFIELDS (100+2)
+#define NO_OF_CHI_DN_SPINORFIELDS (100+2)
 /* End IF PHMC*/
 
 
@@ -59,8 +62,7 @@
 #define EPS_SQ3  1.0e-3
 #define tiny_t  1.0e-20
 
-#define N_CHEBYMAX 2000
-#define NTILDE_CHEBYMAX 2000
+#define N_CHEBYMAX 29
 
 
 #if defined MAIN_PROGRAM
@@ -86,7 +88,6 @@ EXTERN int dop_n_cheby;
 EXTERN double * dop_cheby_coef;
 EXTERN int ptilde_n_cheby;
 EXTERN double * ptilde_cheby_coef;
-EXTERN double stilde_low, stilde_max;
 /* END PHMC */
 
 
@@ -157,9 +158,6 @@ EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
 EXTERN double g_rgi_C0, g_rgi_C1;
 EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
 /* Parameters for non-degenrate case */
-EXTERN double g_acc_Pfirst, g_acc_Ptilde;
-EXTERN double g_acc_Hfin;
-EXTERN int g_rec_ev;
 EXTERN double g_mubar, g_epsbar;
 EXTERN int g_use_clover_flag, g_nr_of_psf;
 

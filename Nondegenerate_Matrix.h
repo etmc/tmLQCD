@@ -13,6 +13,14 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
 
 void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k);
 
+void L_POLY_MIN_CCONST(spinor * const l_strange, spinor * const l_charm,
+                       spinor * const k_strange, spinor * const k_charm, 
+                       const complex z);
+
+void H_eo_ND(spinor * const l_strange, spinor * const l_charm, 
+             spinor * const k_strange, spinor * const k_charm, 
+	     const int ieo);
+
 void Q_test_epsilon(spinor * const l_strange, spinor * const l_charm,
                     spinor * const k_strange, spinor * const k_charm);
 

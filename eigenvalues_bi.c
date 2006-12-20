@@ -64,7 +64,7 @@ bispinor  *eigenvectors = NULL;
 double * eigenvls = NULL;
 int eigenvalues_for_cg_computed = 0;
 
-void eigenvalues(int * nr_of_eigenvalues, const int operator_flag, 
+void eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag, 
 		 const int max_iterations, const double precision) {
 
 
@@ -101,7 +101,6 @@ void eigenvalues(int * nr_of_eigenvalues, const int operator_flag,
   
   filename = calloc(200, sizeof(char));
   /*  strcpy(filename,optarg);*/
-
 
 
   if(g_proc_id == g_stdio_proc) printf("\nNumber of lowest eigenvalues to compute = %d\n\n",(*nr_of_eigenvalues));
@@ -222,7 +221,10 @@ void eigenvalues(int * nr_of_eigenvalues, const int operator_flag,
   (*nr_of_eigenvalues) = converged;
   v0dim = converged;
 
-
+  /*
+  printf(" Lowest EV = %22.15e \n", eigenvls[0]);
+  */
+  cheb_evmin = eigenvls[0];
 
   free(eigenvls);
 }
