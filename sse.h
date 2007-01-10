@@ -425,9 +425,9 @@ __asm__ __volatile__ ("movapd %%xmm3, %%xmm0 \n\t" \
                       "shufpd $0x1, %%xmm0, %%xmm0 \n\t" \
                       "shufpd $0x1, %%xmm1, %%xmm1 \n\t" \
                       "shufpd $0x1, %%xmm2, %%xmm2 \n\t" \
-                      "xorpd %2, %%xmm0 \n\t" \
-                      "xorpd %2, %%xmm1 \n\t" \
-                      "xorpd %2, %%xmm2 \n\t" \
+                      "xorpd %0, %%xmm0 \n\t" \
+                      "xorpd %0, %%xmm1 \n\t" \
+                      "xorpd %0, %%xmm2 \n\t" \
                       "addpd %%xmm0, %%xmm3 \n\t" \
                       "addpd %%xmm1, %%xmm4 \n\t" \
                       "addpd %%xmm2, %%xmm5" \
