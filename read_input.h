@@ -66,7 +66,9 @@ extern "C"
   extern int gauge_precision_read_flag;
   extern int gauge_precision_write_flag;
   extern int reproduce_randomnumber_flag;
-
+  extern double stout_rho;
+  extern int stout_no_iter;
+  extern int use_stout_flag;
   
   int read_input(char *);
   int reread_input(char *);

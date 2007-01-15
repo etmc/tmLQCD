@@ -56,7 +56,8 @@ void  scale_su3(su3 *in, double scale) ;
 su3   slow_expon(su3 in, int nterm)  ;
 void  check_su3(su3 *in)  ;
 
-int stout_smear(double rho , int no_iters)
+
+int stout_smear(const double rho , const int no_iters)
 {
   const int dim = 4 ; 
   int iter , mu , x; 

@@ -79,6 +79,9 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   int gauge_precision_write_flag;
   int gmres_m_parameter, gmresdr_nr_ev;
   int reproduce_randomnumber_flag;
+  double stout_rho;
+  int stout_no_iter;
+  int use_stout_flag;
 %}
 
 %option never-interactive
@@ -167,6 +170,9 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x GMRESDRNEV
 %x REPRORND
 %x SLOPPYPREC
+%x USESTOUT
+%x STOUTRHO
+%x STOUTITER
 
 
 %x COMMENT
@@ -268,6 +274,9 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^GaugeConfigWritePrecision{SPC}*={SPC}*    BEGIN(GAUGEWPREC);
 ^ReproduceRandomNumbers{SPC}*={SPC}*       BEGIN(REPRORND);
 ^UseSloppyPrecision{SPC}*={SPC}*           BEGIN(SLOPPYPREC);
+^UseStoutSmearing{SPC}*={SPC}*             BEGIN(USESTOUT);
+^StoutRho{SPC}*={SPC}*                     BEGIN(STOUTRHO);
+^StoutNoIterations{SPC}*={SPC}*            BEGIN(STOUTITER);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -772,6 +781,23 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   g_sloppy_precision_flag = 0;
   if(verbose!=0) printf("Don't use sloppy precision!\n");
 }
+<USESTOUT>yes {
+  use_stout_flag = 1;
+  if(verbose!=0) printf("Use stout smearing for invert!\n");
+}
+<USESTOUT>no {
+  use_stout_flag = 0;
+  if(verbose!=0) printf("Don't use stout smearing for invert!\n");
+}
+<STOUTRHO>{FLT} {
+  stout_rho=atof(yytext);
+  if(verbose!=0) printf("use stout rho=%e!\n", stout_rho);
+}
+<STOUTITER>{DIGIT}+ {
+  stout_no_iter=atoi(yytext);
+  if(verbose!=0) printf("make %d stout iterations!\n", stout_no_iter);
+}
+
 
 <*>^#                       BEGIN(COMMENT);
 <SEED,KAPPA,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
@@ -780,7 +806,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
 <INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
 <ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
-<GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC>#   BEGIN(COMMENT);
+<GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC,USESTOUT,STOUTRHO,STOUTITER>#   BEGIN(COMMENT);
 <SOURCETS>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
@@ -969,6 +995,18 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Unknown value for CSGHistMu in line %d! Must be an integer number. Exiting...!\n", line_of_file);
   exit(1);
 }
+<USESTOUT>. {
+  printf("Unknown value in line %d! Must be yes or no. Exiting...!\n", line_of_file);
+  exit(1);
+}
+<STOUTRHO>. {
+  printf("Unknown value in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
+  exit(1);
+}
+<STOUTITER>. {
+  printf("Unknown value in line %d! Must be an integer. Exiting...!\n", line_of_file);
+  exit(1);
+}
 
 <INITIAL>.                        BEGIN(ERROR);
 <ERROR>[^\t\n]*             {
@@ -1087,6 +1125,9 @@ int read_input(char * conf_file){
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
   reproduce_randomnumber_flag = _default_reproduce_randomnumber_flag;
   g_sloppy_precision_flag = _default_g_sloppy_precision_flag;
+  use_stout_flag = _default_use_stout_flag;
+  stout_rho = _default_stout_rho;
+  stout_no_iter = _default_stout_no_iter;
 
   /********************************************/
 

@@ -1,3 +1,10 @@
+15.01.2007: stout smearing for invert implemented by Craig McNeile
+            input parameters are: UseStoutSmearing, StoutRho and
+            StoutNoIterations (hopefully self explaining)
+	    Tested against Chroma-3.17.0
+
+            stouting for hmc not yet implemented
+
 12.12.2006: run time call for dram window on BG/L implemented (--with-bgldram)
             persistent MPI for halfspinor available (--with-persistentmpi)
             non-blocking MPI calls also for gauge fields implemented
