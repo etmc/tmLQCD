@@ -40,7 +40,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	init_bispinor_field init_moment_field init_gauge_tmp \
 	derivative_psf xchange_field xchange_gauge \
 	init_gauge_field init_geometry_indices init_spinor_field \
-	init_dirac_halfspinor xchange_halffield
+	init_dirac_halfspinor xchange_halffield stout_smear
 
 ### eigenvalues_bi max_eigenvalues_bi Nondegenerate_Matrix \
 
