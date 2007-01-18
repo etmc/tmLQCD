@@ -12,5 +12,6 @@ double ini_momenta();
 void update_gauge(double step);
 void gauge_momenta(double step);
 void update_fermion_momenta(double step, const int S);
+void fermion_momenta(double step);
 
 #endif

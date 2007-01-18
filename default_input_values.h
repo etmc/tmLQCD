@@ -1,4 +1,5 @@
 /* $Id$ */
+
 /*************************************************
  *
  * this header file contains default values
@@ -21,6 +22,10 @@
 #define _default_N_PROC_Y 1
 #define _default_N_PROC_Z 1
 #define _default_g_kappa 0.125
+#define _default_g_acc_Pfirst 1.e-02
+#define _default_g_acc_Ptilde 1.e-06
+#define _default_g_acc_Hfin 1.e-04
+#define _default_g_rec_ev 1.e+05
 #define _default_g_mubar 0.0
 #define _default_g_epsbar 0.0
 #define _default_g_mu 0.0
@@ -62,7 +67,7 @@
 #define _default_max_solver_iterations 5000
 #define _default_solver_precision 1.e-15
 #define _default_mass_number 0
-#define _default_g_rgi_C1 0.
+#define _default_g_rgi_C1 -0.08333333
 #define _default_g_eps_sq_force 1.0e-7
 #define _default_g_eps_sq_acc 1.0e-16
 #define _default_g_eps_sq_force1 -1.

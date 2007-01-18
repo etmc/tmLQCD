@@ -205,7 +205,7 @@ __asm__ __volatile__ ("prefetcht0 %0 \n\t" \
                       "m" (*(((char*)(addr))+32)), \
                       "m" (*(((char*)(addr))+64)))
 
-#define _prefetch_nta_spinor(addr) \
+#define _prefetch_nta_halfspinor(addr) \
 __asm__ __volatile__ ("prefetchnta %0 \n\t" \
                       "prefetchnta %1 \n\t" \
                       "prefetchnta %2" \

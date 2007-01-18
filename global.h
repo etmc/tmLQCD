@@ -29,7 +29,23 @@
 #define DUM_MATRIX (DUM_SOLVER+6)
 /* if you want to include bicgstabell */
 /* #define DUM_MATRIX (DUM_SOLVER+11) */
-#define NO_OF_SPINORFIELDS (DUM_MATRIX+6)
+
+/* IF PHMC    need  dum_matrix + 8  instead of  + 6  */
+#define NO_OF_SPINORFIELDS (DUM_MATRIX+8)
+/* END IF PHMC */
+
+
+/* IF PHMC: 
+   Define here how many bispinors and chi`s one needs ... = Pol degree */
+#define DUM_BI_DERI 6
+#define DUM_BI_SOLVER (DUM_BI_DERI+7)
+#define DUM_BI_MATRIX (DUM_BI_SOLVER+6) 
+/* if you want to include bicgstabell */
+/* #define DUM_BI_MATRIX DUM_BI_SOLVER+11 */
+#define NO_OF_BISPINORFIELDS (DUM_BI_MATRIX+6)
+
+/* End IF PHMC*/
+
 
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */
@@ -43,7 +59,8 @@
 #define EPS_SQ3  1.0e-3
 #define tiny_t  1.0e-20
 
-#define N_CHEBYMAX 2000
+#define N_CHEBYMAX 49
+#define NTILDE_CHEBYMAX 2000
 
 
 #if defined MAIN_PROGRAM
@@ -59,6 +76,19 @@
 #else
 #  define ALIGN
 #endif
+
+/* IF PHMC */
+EXTERN double Cpol;
+EXTERN double cheb_evmin, cheb_evmax;
+EXTERN double invmaxev;
+EXTERN complex * roo;
+EXTERN int dop_n_cheby;
+EXTERN double * dop_cheby_coef;
+EXTERN int ptilde_n_cheby;
+EXTERN double * ptilde_cheby_coef;
+EXTERN double stilde_low, stilde_max;
+/* END PHMC */
+
 
 EXTERN double g_eps_sq_force, g_eps_sq_acc;
 EXTERN double g_eps_sq_force1, g_eps_sq_force2, g_eps_sq_force3;
@@ -92,6 +122,13 @@ EXTERN spinor ** g_spinor_field;
 
 EXTERN bispinor ** g_bispinor_field;
 
+/* IF PHMC  */
+EXTERN spinor ** g_chi_up_spinor_field;
+EXTERN spinor ** g_chi_dn_spinor_field;
+EXTERN spinor * g_chi_up_copy;
+EXTERN spinor * g_chi_dn_copy;
+/* End IF PHMC  */
+
 EXTERN spinor ** g_csg_field[4];
 EXTERN int * g_csg_index_array[4];
 EXTERN int g_csg_N[8];
@@ -112,6 +149,9 @@ EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
 EXTERN double g_rgi_C0, g_rgi_C1;
 EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
 /* Parameters for non-degenrate case */
+EXTERN double g_acc_Pfirst, g_acc_Ptilde;
+EXTERN double g_acc_Hfin;
+EXTERN int g_rec_ev;
 EXTERN double g_mubar, g_epsbar;
 EXTERN int g_use_clover_flag, g_nr_of_psf;
 
