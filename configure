@@ -9050,8 +9050,6 @@ cat >>confdefs.h <<\_ACEOF
 #define _USE_BGLDRAM 1
 _ACEOF
 
-  { echo "$as_me:$LINENO: WARNING: Remember to manually link the executable (see README)" >&5
-echo "$as_me: WARNING: Remember to manually link the executable (see README)" >&2;}
 else
   echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
@@ -9266,6 +9264,10 @@ cat >>confdefs.h <<\_ACEOF
 #define NOF77_ 1
 _ACEOF
 
+  if test $withdram = yes; then
+    { echo "$as_me:$LINENO: WARNING: Remember to manually link the executable on BG/L (bgl only! see README)" >&5
+echo "$as_me: WARNING: Remember to manually link the executable on BG/L (bgl only! see README)" >&2;}
+  fi
   DEBUGFLAG="-g"
   OPTARGS="-O3"
   SOPTARGS="-O3"

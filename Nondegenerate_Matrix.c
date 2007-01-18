@@ -186,7 +186,6 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
 
   /* FIRST THE  Qhat(2x2)^dagger  PART*/
-
   /* Here the  M_oe Mee^-1 M_eo  implementation  */
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);

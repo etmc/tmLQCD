@@ -1,8 +1,10 @@
+18.1.2007: phmc does not work with halfspinor, seg fault in Hopping_Matrix.
+
 For x86_64 there seems to be a compiler bug in gcc 3.3.3. The code
 is not working with the default sse2 optimisation done by the compiler
 and now switched of with mfpmath=387. It has to be checked, whether this 
 is really a compiler bug, a strange interplay between our sse2 units and 
-the compiler units or a bug in the code (17.08.2004)
+the compiler units or a bug in the code (17.08.2004) --> fixed
 
 bug in the serial version of the code fixed. (16.08.2004)
 
@@ -12,6 +14,6 @@ working for small local lattices. Maybe this is a bug in the MPI
 implementation, but maybe not ...
 Seems to be a bug in the MPI driver for infiniband. (17.08.2004)
 
-write and read of spinor fields not yet tested
+write and read of spinor fields not yet tested --> tested
 
 --disable-mpi will be configured correctly, but the code is not correct. --> fixed

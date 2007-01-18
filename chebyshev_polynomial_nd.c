@@ -140,7 +140,6 @@ void QdaggerQ_poly(spinor *R_s, spinor *R_c, double *c, int n,
    zero_spinor_field(&dc[0],VOLUME/2);
    zero_spinor_field(&ddc[0],VOLUME/2); 
 
-
    /*   sub_low_ev(&aux3[0], &S[0]);  */
    assign(&aux3s[0], &S_s[0],VOLUME/2);  
    assign(&aux3c[0], &S_c[0],VOLUME/2);  
@@ -318,12 +317,11 @@ void degree_of_polynomial_nd(){
 	printf("Error: n_cheby=%d > N_CHEBYMAX=%d\n",dop_n_cheby,N_CHEBYMAX);
 	printf("Increase n_chebymax\n");
       }
-      errorhandler(35,"degree_of_polynomial");
+/*       errorhandler(35,"degree_of_polynomial"); */
     }
 
-
     QdaggerQ_poly(&auxs[0], &auxc[0], dop_cheby_coef, dop_n_cheby, &ss[0], &sc[0]);
-    
+
     Q_Qdagger_ND(&aux2s[0], &aux2c[0], &auxs[0], &auxc[0]);
     
     QdaggerQ_poly(&auxs[0], &auxc[0], dop_cheby_coef, dop_n_cheby, &aux2s[0], &aux2c[0]);
@@ -340,6 +338,7 @@ void degree_of_polynomial_nd(){
     }
     if(g_proc_id == g_stdio_proc) {      
       printf("At n=%d  || differences ||^2 :  UP=%e  DN=%e \n",dop_n_cheby, temp, temp2);
+      fflush(stdout);
     }  
    
 
@@ -347,8 +346,10 @@ void degree_of_polynomial_nd(){
     for(j=dop_n_cheby; j<N_CHEBYMAX; j++){
       sum += fabs(dop_cheby_coef[j]);
     }
-    if(g_proc_id == g_stdio_proc) printf(" Sum remaining | c_n |=%e \n", sum);
-
+    if(g_proc_id == g_stdio_proc) {
+      printf(" Sum remaining | c_n |=%e \n", sum);
+      fflush(stdout);
+    }
     if(sum < g_acc_Pfirst){  
       if(g_proc_id == g_stdio_proc){
 	printf("\n        Achieved Accuracies for P :   Stop=%e \n", g_acc_Pfirst);

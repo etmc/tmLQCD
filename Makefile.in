@@ -81,7 +81,7 @@ ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile
 ${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} ${LINKLIBS}
 	 ${LINK} ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} $@.o $(LIBS)
 
-phmc_tm: %: %.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${PMODULES}} ${addsuffix .o, ${SMODULES}} ${LINKLIBS}
+phmc_tm: %: %.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${PMODULES}} ${addsuffix .o, ${SMODULES}} ${LINKLIBS} ${srcdir}/phmc_tm.c
 	 ${LINK} ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${PMODULES}} ${addsuffix .o, ${SMODULES}} $@.o $(LIBS)
 
 

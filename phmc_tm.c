@@ -2,7 +2,7 @@
 /*******************************************************************************
 *
 *
-* Hybrid-Monte-Carlo for twisted mass QCD
+* Polynomial-Hybrid-Monte-Carlo for twisted mass QCD
 *
 * Author: Carsten Urbach
 *         urbach@physik.fu-berlin.de
@@ -47,6 +47,8 @@
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
 #include "init_gauge_tmp.h"
+#include "init_dirac_halfspinor.h"
+#include "xchange_halffield.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "polyakov_loop.h"
@@ -65,7 +67,7 @@
 
 
 void usage(){
-  fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
+  fprintf(stdout, "PHMC for Wilson twisted mass QCD\n");
   fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
   fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   hmc_tm [options]\n");
@@ -332,12 +334,25 @@ int main(int argc,char *argv[]) {
   boundary();
   
   check_geometry();
+
+#ifdef _USE_HALFSPINOR
+  j = init_dirac_halfspinor();
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
+    exit(0);
+  }
+  if(g_sloppy_precision_flag == 1) {
+    init_dirac_halfspinor32();
+  }
+#  if (defined _PERSISTENT)
+  init_xchange_halffield();
+#  endif
+#endif
   
   
   /* Continue */
   if(startoption == 3){
     j = read_rlxd_state(gauge_input_filename, rlxd_state, rlxdsize);
-    printf("%d %d\n", rlxd_state[0], rlxd_state[1]);
     if(j == -1) {
       printf("Trying to read deprecated format from %s\n", rlxd_input_filename);
       rlxdfile = fopen(rlxd_input_filename,"r");
@@ -424,6 +439,9 @@ int main(int argc,char *argv[]) {
 
   }
 
+#ifdef _GAUGE_COPY
+  update_backward_gauge();
+#endif
 
   /* START IF PHMC */
   invmaxev=1.0;
@@ -513,9 +531,9 @@ int main(int argc,char *argv[]) {
   cheb_evmin = stilde_low/(stilde_max);
   j = (int)(cheb_evmin*10000);
   cheb_evmin = j*0.0001;
-    Inoutputs=fopen(filename_inout,"w");
-    fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
-    fclose(Inoutputs);
+  Inoutputs=fopen(filename_inout,"w");
+  fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
+  fclose(Inoutputs);
   */
 
   cheb_evmax = stilde_max;
