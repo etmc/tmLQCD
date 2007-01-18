@@ -170,6 +170,12 @@ void pjdher(int n, int lda, double tau, double tol,
   *                                                                          *
   ****************************************************************************/
 
+  /*   NEW PART FOR GAUGE_COPY */
+#ifdef _GAUGE_COPY
+  update_backward_gauge();
+#endif
+  /* END NEW PART */
+
   /* print info header */
   if (verbosity >= 2 && g_proc_id == g_stdio_proc) {
     printf("Jacobi-Davidson method for hermitian Matrices\n");
