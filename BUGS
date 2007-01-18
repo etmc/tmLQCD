@@ -1,4 +1,5 @@
 18.1.2007: phmc does not work with halfspinor, seg fault in Hopping_Matrix.
+--> fixed
 
 For x86_64 there seems to be a compiler bug in gcc 3.3.3. The code
 is not working with the default sse2 optimisation done by the compiler

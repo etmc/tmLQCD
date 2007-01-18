@@ -1,3 +1,14 @@
+18.01.2007: towards version 4.0
+	    merged with branch phmc. hmc_tm and phmc_tm
+	    are both compiling and running. phmc needs
+	    lapack.
+	    phmc has so far only on integration scheme
+	    available. The PHMC code is tested against a 
+	    code of I. Montway.
+	    Credits to T. Chiarappa for the PHMC, see
+	    doc directory for more details.
+	    Tested so far only on PC's
+
 15.01.2007: stout smearing for invert implemented by Craig McNeile
             input parameters are: UseStoutSmearing, StoutRho and
             StoutNoIterations (hopefully self explaining)
@@ -9,6 +20,7 @@
             persistent MPI for halfspinor available (--with-persistentmpi)
             non-blocking MPI calls also for gauge fields implemented
             now generally available with --with-nonblockingmpi for all platforms
+	    The BG/L performance is now close to 18% peak.
 
 	    Improved performance for opteron CPU's
 

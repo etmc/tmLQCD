@@ -50,7 +50,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
 #endif
-  
+
   /* We will run through the source vector now */
   /* instead of the solution vector            */
   s = k;

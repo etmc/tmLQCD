@@ -50,7 +50,7 @@ MODULES = read_input gamma hybrid_update observables start \
 PROGRAMS = hmc_tm benchmark invert gwc2ildg \
 	ildg2gwc single2double double2single reducenoise gen_sources 
 
-ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES} ${PMODULES}
+ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES} ${PMODULES} phmc_tm
 SUBDIRS = linalg solver
 
 .SUFFIXES:
@@ -66,6 +66,9 @@ include ${top_srcdir}/Makefile.global
 flex_read_input: read_input.l
 	${LEX} -i -t $< > read_input.c
 
+#${addsuffix .o, ${ALLOBJ}}: %.o: ${srcdir}/%.c %.d Makefile
+#	${COMPILE} ${OPTARGS} -c $< 
+
 ${addsuffix .o, ${MODULES}}: %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} ${OPTARGS} -c $< 
 
@@ -78,10 +81,13 @@ ${addsuffix .o, ${PMODULES}}: %.o: ${srcdir}/%.c %.d Makefile
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} ${OPTARGS} -c $<
 
+${addsuffix .o, phmc_tm}: %.o: ${srcdir}/%.c %.d Makefile
+	${COMPILE} ${OPTARGS} -c $<
+
 ${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} ${LINKLIBS}
 	 ${LINK} ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} $@.o $(LIBS)
 
-phmc_tm: %: %.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${PMODULES}} ${addsuffix .o, ${SMODULES}} ${LINKLIBS} ${srcdir}/phmc_tm.c
+phmc_tm: %: %.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${PMODULES}} ${addsuffix .o, ${SMODULES}} ${LINKLIBS} phmc_tm.o
 	 ${LINK} ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${PMODULES}} ${addsuffix .o, ${SMODULES}} $@.o $(LIBS)
 
 
