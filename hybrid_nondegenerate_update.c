@@ -23,14 +23,13 @@
 #include "eigenvalues.h"
 #include "derivative_psf.h"
 #include "get_rectangle_staples.h"
-#include "update_backward_gauge.h"
 #include "derivative_psf.h"
 #include "gamma.h"
 #include "get_staples.h"
 #include "chebyshev_polynomial.h"
 #include "Nondegenerate_Matrix.h"
 #include "invert_eo.h"
-
+#include "update_backward_gauge.h"
 #include "observables.h"
 #include "hybrid_update.h"
 
@@ -116,13 +115,11 @@ void deri_nondegenerate() {
 
 void fermion_momenta_ND(double step) {
   int i,mu;
-  double tmp, tmp2;
-  su3adj *xm;
-  static su3adj deriv;
+  double tmp;
+  su3adj *xm,*deriv;
 
   deri_nondegenerate(); 
-  
-  tmp2=Cpol*invmaxev;
+
 #ifdef MPI
   xchange_deri();
 #endif
@@ -130,12 +127,9 @@ void fermion_momenta_ND(double step) {
     for(mu=0;mu<4;mu++){
       xm=&moment[i][mu];
       
-      _assign_const_times_mom(deriv, tmp2, df0[i][mu]);
-      
-/*       deriv=&df0[i][mu]; */
-      /* Factor 2 around? */
-      tmp = -2.*step;
-      _minus_const_times_mom(*xm,tmp,deriv); 
+      deriv=&df0[i][mu];
+      tmp = -2.*step*Cpol*invmaxev;
+      _minus_const_times_mom(*xm,tmp,*deriv); 
     }
    }
 

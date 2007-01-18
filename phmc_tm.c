@@ -112,7 +112,7 @@ int main(int argc,char *argv[]) {
 
   /* START IF PHMC */  
   int g_nev, max_iter_ev;
-  double stop_prec_ev;
+  double stop_prec_ev, temp, temp2;
 
   FILE *roots;
   char *filename_root = "Square_root_BR_roots.dat";
@@ -123,6 +123,9 @@ int main(int argc,char *argv[]) {
 
   FILE *Inoutputs;
   char *filename_inout = "INOUT.data";
+
+  FILE *Infos_ev;
+  char *filename_infos = "EVS.data";
   /* END PHMC ... to be used almost at the end of the file */
 
   verbose = 0;
@@ -305,7 +308,6 @@ int main(int argc,char *argv[]) {
   }
   j = init_chi_up_copy(VOLUMEPLUSRAND/2);
   j = init_chi_dn_copy(VOLUMEPLUSRAND/2);
-
   /* End PHMC */
 
   zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME/2);
@@ -424,52 +426,123 @@ int main(int argc,char *argv[]) {
 
 
   /* START IF PHMC */
-
   invmaxev=1.0;
+
+  if(startoption > 1){
+    Inoutputs=fopen(filename_inout,"r");
+    fseek(Inoutputs, 0, SEEK_END);
+    j=ftell(Inoutputs);
+    fseek(Inoutputs, j-29, SEEK_SET);
+    fscanf(Inoutputs, " %lf %lf %lf \n", &stilde_low, &stilde_max, &cheb_evmin);
+    fclose(Inoutputs);
+
+    if(startoption == 2){
+      max_iter_ev = 1000;
+      stop_prec_ev = 1.e-13;
+
+      g_nev = 2;
+      eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
+
+      g_nev = 2;
+      max_eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
+  
+      temp=cheb_evmin;
+      temp2=cheb_evmax;
+
+      if(cheb_evmax > stilde_max){
+        printf(" !!! BREAK since EV-Max LARGER than stilde_max !!! \n");
+        printf(" Ev-Max=%e   stilde_max=%e \n", cheb_evmax, stilde_max); 
+        exit(-1);
+      }      
+
+      if(cheb_evmin < stilde_low){
+        printf(" !!! BREAK since EV-Min SMALLER than stilde_low !!! \n");
+        printf(" Ev-Min=%e   stilde_low=%e \n", cheb_evmin, stilde_low); 
+        exit(-1);
+      }      
+
+      cheb_evmin = cheb_evmin/(stilde_max);
+      j = (int)(cheb_evmin*10000);
+      cheb_evmin = j*0.0001;
+
+      Inoutputs=fopen(filename_inout,"a");
+      fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
+      fclose(Inoutputs);
+    }
+  }
+  else{
+    max_iter_ev = 1000;
+    stop_prec_ev = 1.e-13;
+
+    g_nev = 2;   /* Number of lowest eigenvalues to be computed */
+    eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
+
+    /*
+    max_iter_ev = 200;
+    stop_prec_ev = 1.e-03;
+    */
+    g_nev = 2;   /* Number of highest eigenvalues to be computed */
+    max_eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
+  
+    temp=cheb_evmin;
+    temp2=cheb_evmax;
+
+    /* CONSERVATIVE DEFINITION OF epsilon ... to be tested
+       stilde_low=2*(g_mubar*g_mubar - g_epsbar*g_epsbar);
+       stilde_low = g_mubar - g_epsbar;
+       stilde_low = (g_mubar + g_epsbar)*0.1;
+       stilde_low = 0.01000;
+       stilde_max = 3.40000; 
+    */
+    stilde_low = cheb_evmin;
+    stilde_max = cheb_evmax;
+
+    cheb_evmin = stilde_low/(stilde_max);
+    j = (int)(cheb_evmin*10000);
+    cheb_evmin = j*0.0001;
+
+    Inoutputs=fopen(filename_inout,"w");
+    fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
+    fclose(Inoutputs);
+  }
+
+  /* 
+  stilde_low = 0.013577;
+  stilde_max = 3.096935;
+
+  cheb_evmin = stilde_low/(stilde_max);
+  j = (int)(cheb_evmin*10000);
+  cheb_evmin = j*0.0001;
+    Inoutputs=fopen(filename_inout,"w");
+    fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
+    fclose(Inoutputs);
+  */
+
+  cheb_evmax = stilde_max;
 
   /* In the following there is the  "sqrt"  since the value refers to 
      the hermitian Dirac operator (used in EV-computation), namely 
      S = Q Q^dag         
      When  "S"  is applied, we call  invmaxev  twice !!! */
-
-  Inoutputs=fopen(filename_inout,"r");
-  fseek(Inoutputs, 0, SEEK_END);
-  j=ftell(Inoutputs);
-  fseek(Inoutputs, j-29, SEEK_SET);
-  fscanf(Inoutputs, " %lf %lf %lf \n", &cheb_evmin, &cheb_evmax, &invmaxev);
-  fclose(Inoutputs);
-
-  /* THIS IS THE OVERALL CONSTANT */
-  /*  Cpol = pow(13.243330570,50); */
-  /* expressed as the product 100 identical constants */
-
-  /*  Cpol = sqrt(13.243330570); */
-  /* write Cpol as the result of the simple-program files (BigC^(1/2))^1/2 
-     since  BigC^(1/2)  is the constant appearing in each factor of the 
-     multiplication defining the monomial basis representation of the 
-     polinomial in s,  while its square root  (BigC^(1/2))^1/2  is the 
-     constant appearing in the multiplication representing the 
-     polinomial in  sqrt(s) .
-  */
-
-  stilde_low = 0.01000;
-  stilde_max = 3.40000;
-
-  cheb_evmin = stilde_low;
-  cheb_evmax = stilde_max;
-  cheb_evmin=cheb_evmin/(cheb_evmax);
-  j=(int)(cheb_evmin*1000);
-  cheb_evmin = j*0.001;
   invmaxev=1./(sqrt(cheb_evmax));
   cheb_evmax = 1.0;
 
-  Const=fopen(filename_const,"r");
-  fscanf(Const, " %lf \n", &Cpol);
-  fclose(Const);
-  Cpol = sqrt(Cpol);
-  
+
   degree_of_polynomial_nd();
 
+  if(startoption > 1){
+    Infos_ev=fopen(filename_infos,"a");
+  }
+  else{
+    Infos_ev=fopen(filename_infos,"w");
+    fprintf(Infos_ev, "  EV_min    EV_max      Low       Max      n    epsilon   normalisation \n");
+  }
+  fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f     %f \n", temp, temp2, stilde_low, stilde_max, dop_n_cheby-1, cheb_evmin, invmaxev);
+  fclose(Infos_ev);
+
+
+
+  /* Chi`s-spinors  memory allocation */
   j = init_chi_up_spinor_field(VOLUMEPLUSRAND/2, (dop_n_cheby+1));
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for PHMC Chi_up fields! Aborting...\n");
@@ -480,9 +553,40 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for PHMC Chi_dn fields! Aborting...\n");
     exit(0);
   }
+  /* End memory allocation */
 
   degree_of_Ptilde();
-  
+
+
+
+  /*
+  if(startoption == 3){
+    Infos_ev=fopen(filename_infos,"a");
+  }
+  else{
+    Infos_ev=fopen(filename_infos,"w");
+    fprintf(Infos_ev, "  EV_min    EV_max      Low       Max      n    epsilon   normalisation \n");
+  }
+  fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f     %f \n", temp, temp2, stilde_low, stilde_max, dop_n_cheby-1, cheb_evmin, invmaxev);
+  fclose(Infos_ev);
+  */
+
+
+
+
+  /* THIS IS THE OVERALL CONSTANT */
+  /* write Cpol as the result of the simple-program files (BigC^(1/2))^1/2 
+     since  BigC^(1/2)  is the constant appearing in each factor of the 
+     multiplication defining the monomial basis representation of the 
+     polinomial in s,  while its square root  (BigC^(1/2))^1/2  is the 
+     constant appearing in the multiplication representing the 
+     polinomial in  sqrt(s) .
+  */
+  Const=fopen(filename_const,"r");
+  fscanf(Const, " %lf \n", &Cpol);
+  fclose(Const);
+  Cpol = sqrt(Cpol);
+
   roo = calloc((2*dop_n_cheby-2),sizeof(complex));
 
   roots=fopen(filename_root,"r");
@@ -570,13 +674,15 @@ int main(int argc,char *argv[]) {
     if(return_check_flag == 1 && (j+1)%return_check_interval == 0) return_check = 1;
     else return_check = 0;
 
-    /* Changed IF PHMC 
-    Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
-		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda);
-		      End IF PHMC */
+    /* IF PHMC */
 
     Rate += update_tm_nd(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
+			 dtau, Nsteps, nsmall, tau, int_n, return_check, lambda);
+    /* Else
+   Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda);
+    
+        End if/else PHMC */
 
 
     /* Measure the Polyakov loop in direction 2 and 3:*/
@@ -641,6 +747,76 @@ int main(int argc,char *argv[]) {
       printf("# Changed parameter according to hmc.reread (see stdout): measurment %d of %d\n", j, Nmeas); 
       remove("hmc.reread");
     }
+
+
+
+    /* If PHMC */
+    /* Put here the flag "g_rec_ev" for polynomial recomputation !!!! */
+    
+    if((trajectory_counter%g_rec_ev == 0)) {
+      max_iter_ev = 1000;
+      stop_prec_ev = 1.e-13;
+
+      g_nev = 2;
+      eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
+
+      g_nev = 2;
+      max_eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
+  
+      temp=cheb_evmin;
+      temp2=cheb_evmax;
+
+      if(cheb_evmax > stilde_max){
+        printf(" !!! BREAK since EV-Max LARGER than stilde_max !!! \n");
+        printf(" Ev-Max=%e   stilde_max=%e \n", cheb_evmax, stilde_max); 
+        exit(-1);
+      }      
+
+      if(cheb_evmin < stilde_low){
+        printf(" !!! BREAK since EV-Min SMALLER than stilde_low !!! \n");
+        printf(" Ev-Min=%e   stilde_low=%e \n", cheb_evmin, stilde_low); 
+        exit(-1);
+      }      
+
+      cheb_evmin = cheb_evmin/(stilde_max);
+      j = (int)(cheb_evmin*10000);
+      cheb_evmin = j*0.0001;
+
+      Inoutputs=fopen(filename_inout,"a");
+      fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
+      fclose(Inoutputs);
+
+      Infos_ev=fopen(filename_infos,"a");
+      fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f     %f \n", temp, temp2, stilde_low, stilde_max, dop_n_cheby-1, cheb_evmin, invmaxev);
+      fclose(Infos_ev);
+
+
+      cheb_evmax = stilde_max;
+      invmaxev=1./(sqrt(cheb_evmax));
+      cheb_evmax = 1.0;
+
+      degree_of_polynomial_nd();
+
+
+      Const=fopen(filename_const,"r");
+      fscanf(Const, " %lf \n", &Cpol);
+      fclose(Const);
+      Cpol = sqrt(Cpol);
+
+      roo = calloc((2*dop_n_cheby-2),sizeof(complex));
+
+      roots=fopen(filename_root,"r");
+      fgets(title, 100, roots);
+
+      for(j=0; j<(2*dop_n_cheby-2); j++){
+        fscanf(roots," %ld %lf %lf \n", &k, &roo[j].re, &roo[j].im);
+      }
+      fclose(roots);
+    }
+    
+    /* End PHMC */
+
+
     trajectory_counter++;
   }
   /* write the gauge configuration to the file last_configuration */

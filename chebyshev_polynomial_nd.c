@@ -294,6 +294,12 @@ void degree_of_polynomial_nd(){
 
 
    chebyshev_coefs(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, -0.5);
+   /*
+   printf(" \n  NchebyMAX = %d \n ", N_CHEBYMAX);
+   for(j=0; j<49; j++){
+     printf(" At %d   Coef=%20.18f \n", j, dop_cheby_coef[j]);
+   }
+   */
 
    random_spinor_field(ss,VOLUME/2);
    random_spinor_field(sc,VOLUME/2);
@@ -304,7 +310,7 @@ void degree_of_polynomial_nd(){
      fflush(stdout);
    }
 
-  dop_n_cheby=7;
+  dop_n_cheby=49;
   for(i = 0;i < 100 ; i++){
 
     if (dop_n_cheby > N_CHEBYMAX) {

@@ -157,6 +157,39 @@ su3_vector random_su3_vector(void)
    return(s);
 }
 
+su3_vector unif_su3_vector(void)
+{
+   int i;
+   double v[6],norm,fact;
+   su3_vector s;
+
+   for (;;)
+   {
+      ranlxd(v,6);
+      norm=0.0;
+
+      for (i=0;i<6;i++){
+	v[i] *= 6.2831853071796;
+        norm+=v[i]*v[i];
+     }
+
+      norm=sqrt(norm);
+
+      if (1.0!=(1.0+norm))
+         break;
+   }
+
+   fact=1.0/norm;
+   s.c0.re=v[0]*fact;
+   s.c0.im=v[1]*fact;   
+   s.c1.re=v[2]*fact;
+   s.c1.im=v[3]*fact;
+   s.c2.re=v[4]*fact;
+   s.c2.im=v[5]*fact;     
+
+   return(s);
+}
+
 
 spinor random_spinor(void)
 {
@@ -339,11 +372,18 @@ su3 random_su3(void)
    su3_vector z1,z2,z3;
    su3 u;
 
+   /*
    z1=random_su3_vector();
+   */
+   z1=unif_su3_vector();
+
 
    for (;;)
    {
+     /*
       z2=random_su3_vector();
+     */
+      z2=unif_su3_vector();
 
       z.re=_vector_prod_re(z1,z2);
       z.im=_vector_prod_im(z1,z2);
