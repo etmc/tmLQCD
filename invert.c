@@ -86,6 +86,14 @@ int main(int argc,char *argv[]) {
 #pragma pomp inst init
 #pragma pomp inst begin(main)
 #endif
+
+  DUM_DERI = 6;
+  /* DUM_DERI + 2 is enough (not 7) */
+  DUM_SOLVER = DUM_DERI+2;
+  DUM_MATRIX = DUM_SOLVER+6;
+  /* DUM_MATRIX + 2 is enough (not 6) */
+  NO_OF_SPINORFIELDS = DUM_MATRIX+2;
+
   verbose = 0;
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;

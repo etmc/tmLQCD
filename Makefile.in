@@ -22,7 +22,7 @@ SOPTARGS = @SOPTARGS@
 DEFS = @DEFS@
 
 INCLUDES = @INCLUDES@ 
-LINK = $(CCLD) -o $@ ${LDFLAGS} ${SOPTARGS}
+LINK = $(CCLD) -o $@ ${LDFLAGS}
 LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
 	${top_builddir}/solver/libsolver.a
 COMPILE = ${CC} $(DEFS) $(INCLUDES) -o $@ ${CFLAGS}

@@ -101,6 +101,11 @@ int main(int argc,char *argv[]) {
 #pragma pomp inst begin(main)
 #endif
 
+  DUM_DERI = 6;
+  DUM_SOLVER = DUM_DERI+7;
+  DUM_MATRIX = DUM_SOLVER+6;
+  NO_OF_SPINORFIELDS = DUM_MATRIX+6;
+
   verbose = 0;
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
@@ -316,7 +321,7 @@ int main(int argc,char *argv[]) {
   if(startoption == 3) {
     if( (j = read_rlxd_state(gauge_input_filename, rlxd_state, rlxdsize)) == -1) {
       if(g_proc_id == 0) {
-	printf("%s does not exist, switching to restart...\n", rlxd_input_filename);
+	printf("no rlxd_state found in %s, switching to restart...\n", gauge_input_filename);
 	fflush(stdout);
       }
       startoption = 2;
@@ -345,7 +350,7 @@ int main(int argc,char *argv[]) {
       read_lime_gauge_field_singleprec(gauge_input_filename);
     }
     if (g_proc_id == 0){
-      printf("done!\n"); fflush(stdout);
+      printf("# done!\n"); fflush(stdout);
     }
   }
   else if (startoption == 1) {
@@ -394,13 +399,6 @@ int main(int argc,char *argv[]) {
     fclose(parameterfile);
   }
 
-  /* compute the energy of the determinant term */
-  /* needed for exact continuation of the run, since evamax and eva use
-     random numbers */ 
-  if(startoption == 2 && g_proc_id == 0
-     && reproduce_randomnumber_flag == 1){
-    rlxd_reset(rlxd_state);
-  }
 
   /* set ddummy to zero */
   for(ix = 0; ix < VOLUME+RAND; ix++){

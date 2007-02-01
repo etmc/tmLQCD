@@ -130,6 +130,16 @@ int main(int argc,char *argv[]) {
   char *filename_infos = "EVS.data";
   /* END PHMC ... to be used almost at the end of the file */
 
+  DUM_DERI = 6;
+  DUM_SOLVER = DUM_DERI+7;
+  DUM_MATRIX = DUM_SOLVER+6;
+  NO_OF_SPINORFIELDS = DUM_MATRIX+8;
+
+  DUM_BI_DERI = 6;
+  DUM_BI_SOLVER = DUM_BI_DERI+7;
+  DUM_BI_MATRIX = DUM_BI_SOLVER+6;
+  NO_OF_BISPINORFIELDS = DUM_BI_MATRIX+6;
+
   verbose = 0;
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
@@ -615,12 +625,6 @@ int main(int argc,char *argv[]) {
     fclose(parameterfile);
   }
 
-  /* compute the energy of the determinant term */
-  /* needed for exact continuation of the run, since evamax and eva use
-     random numbers */ 
-  if(startoption == 2 && g_proc_id == 0){
-    rlxd_reset(rlxd_state);
-  }
 
   /* set ddummy to zero */
   for(ix = 0; ix < VOLUME+RAND; ix++){

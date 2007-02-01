@@ -11,6 +11,7 @@ path-to-the-sources/configure --host=ppc-ibm-blrts --build=ppc64-ibm-linux \
 some comments are important: 
 - if option --with-bgldram is used, then the executables have to be
   relinked with /bgl/local/bin/blrts_gcc -Xlinker --script=./elf32ppcblrts.x .
+  The linker is now replaced automatically.
   the file elf32ppcblrts.x can be obtained from
   blrts-gnu/powerpc-bgl-blrts-gnu/lib/ldscripts/elf32ppcblrts.x
   and it needs the change of the line

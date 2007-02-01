@@ -72,6 +72,12 @@ int main(int argc,char *argv[])
 #ifdef MPI
   static double dt2;
   int rlxd_state[105];
+
+  DUM_DERI = 6;
+  DUM_SOLVER = DUM_DERI+2;
+  DUM_MATRIX = DUM_SOLVER+6;
+  NO_OF_SPINORFIELDS = DUM_MATRIX+2;
+
   
   MPI_Init(&argc, &argv);
 #endif
@@ -107,10 +113,19 @@ int main(int argc,char *argv[])
 #ifdef _USE_HALFSPINOR
   printf("# The code was compiled with -D_USE_HALFSPINOR\n");
 #endif    
+#ifdef _USE_SHMEM
+  printf("# the code was comiled with -D_USE_SHMEM\n");
+#  ifdef _PERSISTENT
+  printf("# the code was comiled for persistent MPI calls (halfspinor only)\n");
+#  endif
+#endif
+#ifdef MPI
+#  ifdef _NON_BLOCKING
+  printf("# the code was comiled for non-blocking MPI calls (spinor and gauge)\n");
+#  endif
     printf("\n");
     fflush(stdout);
   }
-  
   
   
 #ifdef _GAUGE_COPY

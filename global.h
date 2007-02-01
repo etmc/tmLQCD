@@ -24,27 +24,7 @@
 #include"su3.h"
 #include"su3adj.h"
 
-#define DUM_DERI 6
-#define DUM_SOLVER (DUM_DERI+7)
-#define DUM_MATRIX (DUM_SOLVER+6)
-/* if you want to include bicgstabell */
-/* #define DUM_MATRIX (DUM_SOLVER+11) */
 
-/* IF PHMC    need  dum_matrix + 8  instead of  + 6  */
-#define NO_OF_SPINORFIELDS (DUM_MATRIX+8)
-/* END IF PHMC */
-
-
-/* IF PHMC: 
-   Define here how many bispinors and chi`s one needs ... = Pol degree */
-#define DUM_BI_DERI 6
-#define DUM_BI_SOLVER (DUM_BI_DERI+7)
-#define DUM_BI_MATRIX (DUM_BI_SOLVER+6) 
-/* if you want to include bicgstabell */
-/* #define DUM_BI_MATRIX DUM_BI_SOLVER+11 */
-#define NO_OF_BISPINORFIELDS (DUM_BI_MATRIX+6)
-
-/* End IF PHMC*/
 
 
 /* Here you can define antiperiodic  */
@@ -76,6 +56,13 @@
 #else
 #  define ALIGN
 #endif
+
+EXTERN int DUM_DERI, DUM_SOLVER, DUM_MATRIX;
+EXTERN int NO_OF_SPINORFIELDS;
+
+EXTERN int DUM_BI_DERI, DUM_BI_SOLVER, DUM_BI_MATRIX;
+EXTERN int NO_OF_BISPINORFIELDS;
+
 
 /* IF PHMC */
 EXTERN double Cpol;
