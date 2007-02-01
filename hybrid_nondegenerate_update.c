@@ -32,7 +32,7 @@
 #include "update_backward_gauge.h"
 #include "observables.h"
 #include "hybrid_update.h"
-
+#include "phmc.h"
 #include "hybrid_nondegenerate_update.h"
 
 
@@ -63,28 +63,28 @@ void deri_nondegenerate() {
   /* Here comes the definitions for the chi_j fields */
   /* from  j=0  (chi_0 = phi)  .....  to j = n-1 */
   
-  for(k=1; k<(dop_n_cheby-1); k++){
+  for(k=1; k<(phmc_dop_n_cheby-1); k++){
 
-    L_POLY_MIN_CCONST(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], roo[k-1]);
+    L_POLY_MIN_CCONST(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], phmc_roo[k-1]);
   }
 
 
   /* Here comes the remaining fields  chi_k ; k=n,...,2n-1  */
-  /*They are evaluated step-by-step overwriting the same field (dop_n_cheby)*/
+  /*They are evaluated step-by-step overwriting the same field (phmc_dop_n_cheby)*/
 
-  assign(g_chi_up_spinor_field[dop_n_cheby], g_chi_up_spinor_field[dop_n_cheby-2], VOLUME/2);
-  assign(g_chi_dn_spinor_field[dop_n_cheby], g_chi_dn_spinor_field[dop_n_cheby-2], VOLUME/2);
+  assign(g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_up_spinor_field[phmc_dop_n_cheby-2], VOLUME/2);
+  assign(g_chi_dn_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby-2], VOLUME/2);
 
-  for(j=(dop_n_cheby-1); j>=1; j--){
+  for(j=(phmc_dop_n_cheby-1); j>=1; j--){
 
-    assign(g_chi_up_spinor_field[dop_n_cheby-1], g_chi_up_spinor_field[dop_n_cheby], VOLUME/2);
-    assign(g_chi_dn_spinor_field[dop_n_cheby-1], g_chi_dn_spinor_field[dop_n_cheby], VOLUME/2);
+    assign(g_chi_up_spinor_field[phmc_dop_n_cheby-1], g_chi_up_spinor_field[phmc_dop_n_cheby], VOLUME/2);
+    assign(g_chi_dn_spinor_field[phmc_dop_n_cheby-1], g_chi_dn_spinor_field[phmc_dop_n_cheby], VOLUME/2);
 
-    L_POLY_MIN_CCONST(g_chi_up_spinor_field[dop_n_cheby], g_chi_dn_spinor_field[dop_n_cheby], g_chi_up_spinor_field[dop_n_cheby-1], g_chi_dn_spinor_field[dop_n_cheby-1], roo[2*dop_n_cheby-3-j]);
+    L_POLY_MIN_CCONST(g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby], g_chi_up_spinor_field[phmc_dop_n_cheby-1], g_chi_dn_spinor_field[phmc_dop_n_cheby-1], phmc_roo[2*phmc_dop_n_cheby-3-j]);
 
 
-    assign(g_spinor_field[DUM_DERI+4], g_chi_up_spinor_field[dop_n_cheby], VOLUME/2);
-    assign(g_spinor_field[DUM_DERI+5], g_chi_dn_spinor_field[dop_n_cheby], VOLUME/2);
+    assign(g_spinor_field[DUM_DERI+4], g_chi_up_spinor_field[phmc_dop_n_cheby], VOLUME/2);
+    assign(g_spinor_field[DUM_DERI+5], g_chi_dn_spinor_field[phmc_dop_n_cheby], VOLUME/2);
   
     assign(g_spinor_field[DUM_DERI+2], g_chi_up_spinor_field[j-1], VOLUME/2);
     assign(g_spinor_field[DUM_DERI+3], g_chi_dn_spinor_field[j-1], VOLUME/2);
@@ -128,7 +128,7 @@ void fermion_momenta_ND(double step) {
       xm=&moment[i][mu];
       
       deriv=&df0[i][mu];
-      tmp = -2.*step*Cpol*invmaxev;
+      tmp = -2.*step*phmc_Cpol*phmc_invmaxev;
       _minus_const_times_mom(*xm,tmp,*deriv); 
     }
    }

@@ -41,6 +41,7 @@
 #include "solver/pjdher_bi.h"
 #endif
 #include "eigenvalues_bi.h"
+#include "phmc.h"
 #include "Nondegenerate_Matrix.h"
 
 /* Needed only if you want to create an EV-file
@@ -224,7 +225,7 @@ void eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
   /*
   printf(" Lowest EV = %22.15e \n", eigenvls[0]);
   */
-  cheb_evmin = eigenvls[0];
+  phmc_cheb_evmin = eigenvls[0];
 
   free(eigenvls);
 }

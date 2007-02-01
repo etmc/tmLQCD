@@ -736,6 +736,9 @@ int read_lime_gauge_field(char * filename){
   }
   bytes = limeReaderBytes(limereader);
   if((int)bytes != LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3)) {
+    if((int)bytes == (LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3))/2) {
+      return(read_lime_gauge_field_singleprec(filename));
+    }
     fprintf(stderr, "Probably wrong lattice size or precision (bytes=%d) in file %s\n", (int)bytes, filename);
     fprintf(stderr, "Aborting...!\n");
     fflush( stdout );
@@ -838,6 +841,9 @@ int read_lime_gauge_field_singleprec(char * filename){
   }
   bytes = limeReaderBytes(limereader);
   if((int)bytes != LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3)/2) {
+    if((int)bytes == (LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3))) {
+      return(read_lime_gauge_field(filename));
+    }
     fprintf(stderr, "Probably wrong lattice size or precision (bytes=%d) in file %s\n", (int)bytes, filename);
     fprintf(stderr, "Aborting...!\n");
     fflush( stdout );

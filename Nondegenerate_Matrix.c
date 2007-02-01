@@ -21,11 +21,10 @@
 #include "global.h"
 #include "su3.h"
 #include "Hopping_Matrix.h"
-/* #include "sse.h" */
+#include "phmc.h"
 #include "gamma.h"
 /* in piu` */
 #include "linsolve.h"
-
 #include "linalg_eo.h"
 #include "Nondegenerate_Matrix.h"
 
@@ -99,8 +98,8 @@ void QNon_degenerate(spinor * const l_strange, spinor * const l_charm,
   gamma5(l_charm, l_charm, VOLUME/2);
 
   /* At the end, the normalisation by the max. eigenvalue  */
-  mul_r(l_strange, invmaxev, l_strange, VOLUME/2);
-  mul_r(l_charm, invmaxev, l_charm, VOLUME/2);
+  mul_r(l_strange, phmc_invmaxev, l_strange, VOLUME/2);
+  mul_r(l_charm, phmc_invmaxev, l_charm, VOLUME/2);
 }
 
 /******************************************
@@ -158,8 +157,8 @@ void QdaggerNon_degenerate(spinor * const l_strange, spinor * const l_charm,
   gamma5(l_strange, l_strange, VOLUME/2);
 
   /* At the end, the normalisation by the max. eigenvalue  */
-  mul_r(l_charm, invmaxev, l_charm, VOLUME/2);
-  mul_r(l_strange, invmaxev, l_strange, VOLUME/2);
+  mul_r(l_charm, phmc_invmaxev, l_charm, VOLUME/2);
+  mul_r(l_strange, phmc_invmaxev, l_strange, VOLUME/2);
 
 }
 
@@ -262,9 +261,9 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
 
 
   /* At the end, the normalisation by the max. eigenvalue  */ 
-  /* Twice  invmaxev  since we consider here  D Ddag  !!! */
-  mul_r(l_charm, invmaxev*invmaxev, l_charm, VOLUME/2);
-  mul_r(l_strange, invmaxev*invmaxev, l_strange, VOLUME/2);
+  /* Twice  phmc_invmaxev  since we consider here  D Ddag  !!! */
+  mul_r(l_charm, phmc_invmaxev*phmc_invmaxev, l_charm, VOLUME/2);
+  mul_r(l_strange, phmc_invmaxev*phmc_invmaxev, l_strange, VOLUME/2);
 
 }
 
@@ -346,8 +345,8 @@ void L_POLY_MIN_CCONST(spinor * const l_strange, spinor * const l_charm,
   gamma5(l_charm, l_charm, VOLUME/2);
 
   /* At the end, the normalisation by the max. eigenvalue  */
-  mul_r(l_strange, invmaxev, l_strange, VOLUME/2);
-  mul_r(l_charm, invmaxev, l_charm, VOLUME/2);
+  mul_r(l_strange, phmc_invmaxev, l_strange, VOLUME/2);
+  mul_r(l_charm, phmc_invmaxev, l_charm, VOLUME/2);
 
   /*     
   printf(" IN UP: %f %f \n", l_strange[0].s2.c1.re, l_strange[0].s2.c1.im);
@@ -390,11 +389,11 @@ void L_POLY_MIN_CCONST(spinor * const l_strange, spinor * const l_charm,
   printf(" IN 2 DN: %f %f \n", l_charm[0].s2.c1.re, l_charm[0].s2.c1.im);
   */
 
-  /* Finally, we multiply by the constant  Cpol  */
+  /* Finally, we multiply by the constant  phmc_Cpol  */
   /* which renders the polynomial in monomials  */
   /* identical to the polynomial a la clenshaw */;
-  mul_r(l_strange, Cpol, l_strange, VOLUME/2);
-  mul_r(l_charm, Cpol, l_charm, VOLUME/2);
+  mul_r(l_strange, phmc_Cpol, l_strange, VOLUME/2);
+  mul_r(l_charm, phmc_Cpol, l_charm, VOLUME/2);
 
 }
 
@@ -529,9 +528,9 @@ void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
   gamma5(l_charm, l_charm, VOLUME/2);
 
   /* At the end, the normalisation by the max. eigenvalue  */
-  /* Twice  invmaxev  since we consider here  D Ddag  !!! */
-  mul_r(l_charm, invmaxev*invmaxev, l_charm, VOLUME/2);
-  mul_r(l_strange, invmaxev*invmaxev, l_strange, VOLUME/2);
+  /* Twice  phmc_invmaxev  since we consider here  D Ddag  !!! */
+  mul_r(l_charm, phmc_invmaxev*phmc_invmaxev, l_charm, VOLUME/2);
+  mul_r(l_strange, phmc_invmaxev*phmc_invmaxev, l_strange, VOLUME/2);
 
 
   /*    !!!  I HAVE REPLACED THE ABOVE LINES BY ASSIGNMENTS  !!!     */
@@ -618,8 +617,8 @@ void Q_test_epsilon(spinor * const l_strange, spinor * const l_charm,
   gamma5(l_charm, l_charm, VOLUME/2);
 
   /* At the end, the normalisation by the max. eigenvalue  */
-  mul_r(l_charm, invmaxev, l_charm, VOLUME/2);
-  mul_r(l_strange, invmaxev, l_strange, VOLUME/2);
+  mul_r(l_charm, phmc_invmaxev, l_charm, VOLUME/2);
+  mul_r(l_strange, phmc_invmaxev, l_strange, VOLUME/2);
 
 }
 

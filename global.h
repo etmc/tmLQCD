@@ -64,19 +64,6 @@ EXTERN int DUM_BI_DERI, DUM_BI_SOLVER, DUM_BI_MATRIX;
 EXTERN int NO_OF_BISPINORFIELDS;
 
 
-/* IF PHMC */
-EXTERN double Cpol;
-EXTERN double cheb_evmin, cheb_evmax;
-EXTERN double invmaxev;
-EXTERN complex * roo;
-EXTERN int dop_n_cheby;
-EXTERN double * dop_cheby_coef;
-EXTERN int ptilde_n_cheby;
-EXTERN double * ptilde_cheby_coef;
-EXTERN double stilde_low, stilde_max;
-/* END PHMC */
-
-
 EXTERN double g_eps_sq_force, g_eps_sq_acc;
 EXTERN double g_eps_sq_force1, g_eps_sq_force2, g_eps_sq_force3;
 EXTERN double g_eps_sq_acc1, g_eps_sq_acc2, g_eps_sq_acc3;
@@ -92,7 +79,7 @@ EXTERN int RAND, EDGES, VOLUMEPLUSRAND;
 
 /* translates from lexicographic order to even/odd order */
 EXTERN int * g_lexic2eo;
-/* translates from even/odd orderto lexicograhic order  */    
+/* translates from even/odd order to lexicograhic order  */    
 EXTERN int * g_eo2lexic;
 EXTERN int * g_lexic2eosub;
 EXTERN int g_sloppy_precision_flag;

@@ -38,6 +38,7 @@
 #include "solver/pjdher_bi.h"
 #endif
 #include "max_eigenvalues_bi.h"
+#include "phmc.h"
 #include "Nondegenerate_Matrix.h"
 
 /* Needed only if you want to create an EV-file
@@ -231,7 +232,7 @@ void max_eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
   /*
   printf(" Largest EV = %22.15e  \n", max_evls[0]);
   */
-  cheb_evmax = max_evls[0];
+  phmc_cheb_evmax = max_evls[0];
 
 #ifdef MPI
   ev_time = MPI_Wtime();

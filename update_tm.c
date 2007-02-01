@@ -57,9 +57,6 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   double ks,kc,ds,tr,ts,tt;
   int idis0=0, idis1=0, idis2=0;
   int ret_idis0=0, ret_idis1=0, ret_idis2=0;
-/*   double lambda[5] = {0.1931833275037836,0.1931833275037836,0.1931833275037836,0.1931833275037836,0.1931833275037836}; */
-/*   double lambda[5] = {0.2,0.2,0.2,0.2,0.2}; */
-/*   double lambda[5] = {0.21,0.21,0.21,0.21,0.21}; */
   
   /* Energy corresponding to the Gauge part */
   double new_plaquette_energy=0., new_rectangle_energy = 0., gauge_energy = 0., new_gauge_energy = 0.;
@@ -103,16 +100,6 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
   }
   dontdump = 0;
-  if(forcedump == 1) {
-    write_gauge_field_time_p("last_configuration");
-    if(g_proc_id==0) {
-      rlxd_get(rlxd_state);
-      rlxdfile=fopen("last_state","w");
-      fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
-      fclose(rlxdfile);
-    }
-    exit(0);
-  }
   
   /* initialize the pseudo-fermion fields    */
   /* depending on g_mu1 and g_mu2 we use     */

@@ -1,6 +1,9 @@
+/* $Id$ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "phmc.h"
 #include "clenshaw_coef.h"
 #define Pi 3.141592653589793
 

@@ -12,6 +12,7 @@
 #include "start.h"
 #include "tm_operators.h"
 #include "Ptilde_nd.h"
+#include "phmc.h"
 #include "reweighting_factor_nd.h"
 
 double reweighting_factor_nd(const int N) {
@@ -43,12 +44,12 @@ double reweighting_factor_nd(const int N) {
     zero_spinor_field(g_chi_up_spinor_field[3],VOLUME/2);
     zero_spinor_field(g_chi_dn_spinor_field[3],VOLUME/2);
 
-    temp1 = ptilde_cheby_coef[0];
-    ptilde_cheby_coef[0] = temp1 - 1;
+    temp1 = phmc_ptilde_cheby_coef[0];
+    phmc_ptilde_cheby_coef[0] = temp1 - 1;
 
-    Poly_tilde_ND(g_chi_up_spinor_field[3], g_chi_dn_spinor_field[3], ptilde_cheby_coef, ptilde_n_cheby, g_chi_up_spinor_field[2], g_chi_dn_spinor_field[2]);
+    Poly_tilde_ND(g_chi_up_spinor_field[3], g_chi_dn_spinor_field[3], phmc_ptilde_cheby_coef, phmc_ptilde_n_cheby, g_chi_up_spinor_field[2], g_chi_dn_spinor_field[2]);
 
-    ptilde_cheby_coef[0] = temp1;
+    phmc_ptilde_cheby_coef[0] = temp1;
 
     temp2 = scalar_prod(g_chi_up_spinor_field[2], g_chi_up_spinor_field[3], VOLUME/2);
     if(temp2.im > 1.0e-8) {

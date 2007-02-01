@@ -46,6 +46,7 @@
 #include "2mn_integrator.h"
 #include "solver/chrono_guess.h"
 #include "update_backward_gauge.h"
+#include "phmc.h"
 #include "update_tm_nd.h"
 
 
@@ -73,9 +74,6 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   double atime=0., etime=0.;
   int idis0=0, idis1=0, idis2=0;
   int ret_idis0=0, ret_idis1=0, ret_idis2=0;
-/*   double lambda[5] = {0.1931833275037836,0.1931833275037836,0.1931833275037836,0.1931833275037836,0.1931833275037836}; */
-/*   double lambda[5] = {0.2,0.2,0.2,0.2,0.2}; */
-/*   double lambda[5] = {0.21,0.21,0.21,0.21,0.21}; */
   
   /* Energy corresponding to the Gauge part */
   double new_plaquette_energy=0., new_rectangle_energy = 0., gauge_energy = 0., new_gauge_energy = 0.;
@@ -115,6 +113,8 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
 #ifdef MPI
   atime = MPI_Wtime();
+#else
+  atime = 0;
 #endif
 
   /* copy the gauge field to gauge_tmp */
@@ -127,16 +127,6 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     }
   }
   dontdump = 0;
-  if(forcedump == 1) {
-    write_gauge_field_time_p("last_configuration");
-    if(g_proc_id==0) {
-      rlxd_get(rlxd_state);
-      rlxdfile=fopen("last_state","w");
-      fwrite(rlxd_state,sizeof(rlxd_state),1,rlxdfile);
-      fclose(rlxdfile);
-    }
-    exit(0);
-  }
   
   /* initialize the pseudo-fermion fields    */
   /* depending on g_mu1 and g_mu2 we use     */
@@ -144,41 +134,44 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   random_spinor_field(g_spinor_field[2], VOLUME/2, rngrepro);
   /* compute the square of the norm */
   enerphi0 = square_norm(g_spinor_field[2], VOLUME/2);
-  if(g_proc_id == g_stdio_proc) printf(" Start HMC Energy = %e \n", enerphi0);
-
+  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
+    printf(" Start HMC Energy = %e \n", enerphi0);
+  }
 
 
   /* IF PHMC */
 
-  /* Here come the definition of the "heavy" 2-flavoured pseudofermion */
+  /* Here comes the definition of the "heavy" 2-flavoured pseudofermion */
 
   random_spinor_field(g_chi_up_spinor_field[0], VOLUME/2, rngrepro);
   enerphi0 += square_norm(g_chi_up_spinor_field[0], VOLUME/2);
 
-  if(g_proc_id == g_stdio_proc){
-    printf(" Here comes the computation of H_old with \n \n");
-    printf(" First: random spinors and their norm  \n ");
-    printf(" OLD Ennergy UP %e \n", enerphi0);
-  }
-
   random_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2, rngrepro);
   enerphi0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
 
-  if(g_proc_id == g_stdio_proc){
+
+  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
+    printf(" Here comes the computation of H_old with \n \n");
+    printf(" First: random spinors and their norm  \n ");
+    printf(" OLD Ennergy UP %e \n", enerphi0);
     printf(" OLD Energy  DN + UP %e \n\n", enerphi0);
   }
 
-  QNon_degenerate(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0]);
+  QNon_degenerate(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
+		  g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0]);
  
-  for(j=1; j<=(dop_n_cheby-1); j++){
+  for(j = 1; j < (phmc_dop_n_cheby); j++){
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
     assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
 
-    L_POLY_MIN_CCONST(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], roo[dop_n_cheby-2+j]);
+    L_POLY_MIN_CCONST(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
+		      g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
+		      phmc_roo[phmc_dop_n_cheby-2+j]);
   }
 
 
-  Poly_tilde_ND(g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], ptilde_cheby_coef, ptilde_n_cheby, g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1]);;
+  Poly_tilde_ND(g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], phmc_ptilde_cheby_coef, 
+		phmc_ptilde_n_cheby, g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1]);
 
 
   assign(g_chi_up_copy, g_chi_up_spinor_field[0], VOLUME/2);
@@ -186,12 +179,12 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
 
   temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2);
-  if(g_proc_id == g_stdio_proc){
+  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
     printf(" Then: evaluate Norm of pseudofermion heatbath BHB \n ");
     printf(" Norm of BHB up squared %e \n", temp);
   }
   temp += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
-  if(g_proc_id == g_stdio_proc){
+  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)){
     printf(" Norm of BHB up + BHB dn squared %e \n\n", temp);
   }
 
@@ -264,7 +257,9 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     */    
 
     /* IF PHMC */
-    if(g_proc_id == g_stdio_proc) printf(" Here comes the NEW leap-frog integration \n \n");
+    if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
+      printf(" Here comes the NEW leap-frog integration \n \n");
+    }
 
     leap_frog_ND(dtau, Nsteps, nsmall); 
   }
@@ -309,8 +304,9 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], VOLUME/2);
   /* Compute the energy contr. from first field */
   enerphi0x = square_norm(g_spinor_field[2], VOLUME/2);
-  if(g_proc_id == g_stdio_proc) printf(" Final HMC Energy = %e \n", enerphi0x);
-
+  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
+    printf(" Final HMC Energy = %e \n", enerphi0x);
+  }
 
   /* IF PHMC */
 
@@ -318,11 +314,13 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   assign(g_chi_up_spinor_field[1], g_chi_up_copy, VOLUME/2);
   assign(g_chi_dn_spinor_field[1], g_chi_dn_copy,  VOLUME/2);
 
-  for(j=1; j<=(dop_n_cheby-1); j++){
+  for(j=1; j<=(phmc_dop_n_cheby-1); j++){
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
     assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
 
-    L_POLY_MIN_CCONST(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], roo[j-1]);
+    L_POLY_MIN_CCONST(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
+		      g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
+		      phmc_roo[j-1]);
   }
   
   ij=0;
@@ -335,7 +333,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   temp = square_norm(g_chi_dn_spinor_field[ij], VOLUME/2);
   Ener[ij] += temp;
 
-  if(g_proc_id == g_stdio_proc){
+  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
     printf(" Here comes the computation of H_new with \n \n");
 
     printf(" At j=%d  P+HMC Final Energy %e \n", ij, enerphi0x+Ener[ij]);
@@ -346,35 +344,43 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   for(j=1; j<1; j++){ /* To omit corrections just set  j<1 */
 
     if(j % 2){ /*  Chi[j] = ( Qdag P  Ptilde ) Chi[j-1]  */ 
-      Poly_tilde_ND(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], ptilde_cheby_coef, ptilde_n_cheby, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
-      QdaggerQ_poly(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], dop_cheby_coef, dop_n_cheby, g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
+      Poly_tilde_ND(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], phmc_ptilde_cheby_coef, phmc_ptilde_n_cheby, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
+      QdaggerQ_poly(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], phmc_dop_cheby_coef, phmc_dop_n_cheby, g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
       QdaggerNon_degenerate(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
     }
     else{ /*  Chi[j] = ( Ptilde P Q ) Chi[j-1]  */ 
       QNon_degenerate(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
-      QdaggerQ_poly(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], dop_cheby_coef, dop_n_cheby, g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
-      Poly_tilde_ND(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], ptilde_cheby_coef, ptilde_n_cheby, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
+      QdaggerQ_poly(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], phmc_dop_cheby_coef, phmc_dop_n_cheby, g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
+      Poly_tilde_ND(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], phmc_ptilde_cheby_coef, phmc_ptilde_n_cheby, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
     }
 
     Ener[j] = Ener[j-1] + Ener[0];
     sgn = -1.0;
     for(ij=1; ij<j; ij++){
       fact = factor[j] / (factor[ij] * factor[j-ij]);
-      printf(" Here  j=%d  and  ij=%d   sign=%f  fact=%f \n", j ,ij, sgn, fact);
+      if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
+	printf(" Here  j=%d  and  ij=%d   sign=%f  fact=%f \n", j ,ij, sgn, fact);
+      }
       Ener[j] += sgn*fact*Ener[ij];
       sgn = (-1)*sgn;
     }
     temp = square_norm(g_chi_up_spinor_field[j], VOLUME/2);
     temp += square_norm(g_chi_dn_spinor_field[j], VOLUME/2);
-    printf(" Here  j=%d   sign=%f  temp=%e \n", j, sgn, temp);
+    if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
+      printf(" Here  j=%d   sign=%f  temp=%e \n", j, sgn, temp);
+    }
 
     Ener[j] += sgn*temp;
 
     Diff = fabs(Ener[j] - Ener[j-1]);
-    printf(" At j=%d  Energy=%e  Diff=%e \n", j, Ener[j], Diff);
+    if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
+      printf(" At j=%d  Energy=%e  Diff=%e \n", j, Ener[j], Diff);
+    }
 
-    if(Diff < g_acc_Hfin){   
-      printf(" At j = %d  PHMC Only Final Energy %e \n", j, Ener[j]);
+    if(Diff < g_acc_Hfin){
+      if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
+	printf(" At j = %d  PHMC Only Final Energy %e \n", j, Ener[j]);
+      }
       break;
     }
 
@@ -382,7 +388,9 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
 
   enerphi0x += Ener[ij];
-  if(g_proc_id == g_stdio_proc) printf(" At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], enerphi0x);
+  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
+    printf(" At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], enerphi0x);
+  }
   
   /* END IF PHMC */
 
@@ -412,9 +420,9 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     enerphi2x = square_norm(g_spinor_field[5], VOLUME/2);
   }
 
-  if(g_proc_id == g_stdio_proc){
+  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
     printf(" Energies: Old = %f New = %f   Exp(-Delta H_heavy) = %f \n", enerphi0, enerphi0x, exp(enerphi0-enerphi0x));
-
+  
     printf(" \n Contributions to the Hamiltonian due to \n");
     printf(" Pi=%f NewPi=%f   Gauge=%f NewGauge=%f \n", enep, enepx, g_beta*gauge_energy, g_beta*new_gauge_energy);
     printf(" BHB1=%f NewBHB1=%f  \n", enerphi0, enerphi0x);
@@ -426,7 +434,9 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
       + enerphi0x - enerphi0 + enerphi1x - enerphi1 + enerphi2x - enerphi2; 
   expmdh = exp(-dh);
 
-  if(g_proc_id == g_stdio_proc) printf("  Exp(-Delta H) = %f \n \n", expmdh);
+  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
+    printf("  Exp(-Delta H) = %f \n \n", expmdh);
+  }
       
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
@@ -446,8 +456,9 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
   if(expmdh > yy[0]) {
     accept = 1;
-    if(g_proc_id == g_stdio_proc) printf("\n \n !!!!!!!   IT ACCEPTED HERE   !!!!!!!! \n \n");
-
+    if((g_proc_id == g_stdio_proc) && (g_debug_level == 5)) {
+      printf("\n \n !!!!!!!   IT ACCEPTED HERE   !!!!!!!! \n \n");
+    }
   }
   else {
     accept = 0;
@@ -560,7 +571,6 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     /* put the links back to SU(3) group */
     for(ix=0;ix<VOLUME;ix++) { 
       for(mu=0;mu<4;mu++) { 
-	/* this is MIST */
 	v=&g_gauge_field[ix][mu];
 	*v=restoresu3(*v); 
       }
@@ -570,7 +580,6 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     /* reject: copy gauge_tmp to g_gauge_field */
     for(ix=0;ix<VOLUME;ix++) {
       for(mu=0;mu<4;mu++){
-	/* Auch MIST */
 	v=&g_gauge_field[ix][mu];
 	w=&gauge_tmp[ix][mu];
 	_su3_assign(*v,*w);

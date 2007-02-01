@@ -11,8 +11,10 @@
 #include "linalg_eo.h"
 #include "start.h"
 #include "tm_operators.h"
-#include "chebyshev_polynomial_nd.h"
 #include "Nondegenerate_Matrix.h"
+#include "phmc.h"
+#include "chebyshev_polynomial_nd.h"
+
 
 
 #define PI 3.141592653589793
@@ -30,7 +32,7 @@ void chebyshev_coefs(double aa, double bb, double c[], int n, double exponent){
 
   inv_n=1./(double)n;
   f=calloc(n,sizeof(double));/*vector(0,n-1);*/
-  if(g_proc_id == g_stdio_proc){
+  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
     printf("\n hello in  chebyshev_polynomial\n");
     printf("n= %d inv_n=%e \n",n,inv_n);
     printf("allocation !!!\n");
@@ -132,8 +134,8 @@ void QdaggerQ_poly(spinor *R_s, spinor *R_c, double *c, int n,
 #endif
 
 
-   fact1=4/(cheb_evmax-cheb_evmin);
-   fact2=-2*(cheb_evmax+cheb_evmin)/(cheb_evmax-cheb_evmin);
+   fact1=4/(phmc_cheb_evmax-phmc_cheb_evmin);
+   fact2=-2*(phmc_cheb_evmax+phmc_cheb_evmin)/(phmc_cheb_evmax-phmc_cheb_evmin);
 
    zero_spinor_field(&ds[0],VOLUME/2);
    zero_spinor_field(&dds[0],VOLUME/2); 
@@ -219,7 +221,7 @@ double cheb_eval(int M, double *c, double s){
   double d=0,dd=0, sv, z, z2, res;
   int j;
 
-  z = (2.0*s - cheb_evmin - cheb_evmax)/(double)(cheb_evmax - cheb_evmin);
+  z = (2.0*s - phmc_cheb_evmin - phmc_cheb_evmax)/(double)(phmc_cheb_evmax - phmc_cheb_evmin);
   z2 = 2.0*z;
 
   for(j=M-1; j>=1; j--){
@@ -262,7 +264,7 @@ void degree_of_polynomial_nd(){
 
 
   if(ini==0){
-    dop_cheby_coef = calloc(N_CHEBYMAX,sizeof(double));
+    phmc_dop_cheby_coef = calloc(N_CHEBYMAX,sizeof(double));
     ini=1;
   }
 
@@ -292,11 +294,11 @@ void degree_of_polynomial_nd(){
 #endif
 
 
-   chebyshev_coefs(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, -0.5);
+   chebyshev_coefs(phmc_cheb_evmin, phmc_cheb_evmax, phmc_dop_cheby_coef, N_CHEBYMAX, -0.5);
    /*
    printf(" \n  NchebyMAX = %d \n ", N_CHEBYMAX);
    for(j=0; j<49; j++){
-     printf(" At %d   Coef=%20.18f \n", j, dop_cheby_coef[j]);
+     printf(" At %d   Coef=%20.18f \n", j, phmc_dop_cheby_coef[j]);
    }
    */
 
@@ -304,27 +306,27 @@ void degree_of_polynomial_nd(){
    random_spinor_field(sc,VOLUME/2, 1);
 
    if(g_proc_id == g_stdio_proc){
-     printf(" \n In P: EVmin = %f  EVmax = %f  \n", cheb_evmin, cheb_evmax);
+     printf(" \n In P: EVmin = %f  EVmax = %f  \n", phmc_cheb_evmin, phmc_cheb_evmax);
      printf("\n determine the degree of the polynomial :   Stop=%e \n", g_acc_Pfirst);
      fflush(stdout);
    }
 
-  dop_n_cheby=49;
+  phmc_dop_n_cheby=49;
   for(i = 0;i < 100 ; i++){
 
-    if (dop_n_cheby > N_CHEBYMAX) {
+    if (phmc_dop_n_cheby > N_CHEBYMAX) {
       if(g_proc_id == g_stdio_proc){
-	printf("Error: n_cheby=%d > N_CHEBYMAX=%d\n",dop_n_cheby,N_CHEBYMAX);
+	printf("Error: n_cheby=%d > N_CHEBYMAX=%d\n",phmc_dop_n_cheby,N_CHEBYMAX);
 	printf("Increase n_chebymax\n");
       }
 /*       errorhandler(35,"degree_of_polynomial"); */
     }
 
-    QdaggerQ_poly(&auxs[0], &auxc[0], dop_cheby_coef, dop_n_cheby, &ss[0], &sc[0]);
+    QdaggerQ_poly(&auxs[0], &auxc[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &ss[0], &sc[0]);
 
     Q_Qdagger_ND(&aux2s[0], &aux2c[0], &auxs[0], &auxc[0]);
     
-    QdaggerQ_poly(&auxs[0], &auxc[0], dop_cheby_coef, dop_n_cheby, &aux2s[0], &aux2c[0]);
+    QdaggerQ_poly(&auxs[0], &auxc[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &aux2s[0], &aux2c[0]);
 
 
     diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);
@@ -337,14 +339,14 @@ void degree_of_polynomial_nd(){
       temp2 = 0.0;
     }
     if(g_proc_id == g_stdio_proc) {      
-      printf("At n=%d  || differences ||^2 :  UP=%e  DN=%e \n",dop_n_cheby, temp, temp2);
+      printf("At n=%d  || differences ||^2 :  UP=%e  DN=%e \n",phmc_dop_n_cheby, temp, temp2);
       fflush(stdout);
     }  
    
 
     sum=0;
-    for(j=dop_n_cheby; j<N_CHEBYMAX; j++){
-      sum += fabs(dop_cheby_coef[j]);
+    for(j=phmc_dop_n_cheby; j<N_CHEBYMAX; j++){
+      sum += fabs(phmc_dop_cheby_coef[j]);
     }
     if(g_proc_id == g_stdio_proc) {
       printf(" Sum remaining | c_n |=%e \n", sum);
@@ -357,19 +359,19 @@ void degree_of_polynomial_nd(){
 	printf(" RND:  || (P S P - 1)X ||^2 /|| 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
       }
 
-      temp = cheb_eval(dop_n_cheby, dop_cheby_coef, cheb_evmin);
-      temp *= cheb_evmin;
-      temp *= cheb_eval(dop_n_cheby, dop_cheby_coef, cheb_evmin);
+      temp = cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
+      temp *= phmc_cheb_evmin;
+      temp *= cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
       temp = 0.5*fabs(temp - 1);
       if(g_proc_id == g_stdio_proc){
-	printf(" Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", cheb_evmin, temp);
-	printf("\n Latest (FIRST) polynomial degree = %d \n \n", dop_n_cheby);
+	printf(" Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", phmc_cheb_evmin, temp);
+	printf("\n Latest (FIRST) polynomial degree = %d \n \n", phmc_dop_n_cheby);
       }
       break;
     }
 
     /* RECALL THAT WE NEED AN EVEN DEGREE !!!! */
-    dop_n_cheby+=2;
+    phmc_dop_n_cheby+=2;
   }
 
 

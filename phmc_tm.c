@@ -39,8 +39,6 @@
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
-/* #include "hybrid_update.h" */
-/* #include "update_tm.h" */
 #include "update_backward_gauge.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
@@ -53,11 +51,10 @@
 #include "boundary.h"
 #include "polyakov_loop.h"
 
-/* PHMC: Start*/
+#include "phmc.h"
 #include "init_bispinor_field.h"
 #include "eigenvalues_bi.h"
 #include "max_eigenvalues_bi.h"
-
 #include "init_chi_spinor_field.h"
 #include "init_chi_copy.h"
 #include "chebyshev_polynomial_nd.h"
@@ -117,7 +114,7 @@ int main(int argc,char *argv[]) {
   double stop_prec_ev, temp, temp2;
 
   FILE *roots;
-  char *filename_root = "Square_root_BR_roots.dat";
+  char *filename_phmc_root = "Square_phmc_root_BR_roots.dat";
   char title[50];
 
   FILE *Const;
@@ -191,6 +188,7 @@ int main(int argc,char *argv[]) {
     }
     else {
       nstore = 0;
+      trajectory_counter = 0;
     }
   }
   
@@ -414,14 +412,14 @@ int main(int argc,char *argv[]) {
 #endif
 
   /* START IF PHMC */
-  invmaxev=1.0;
+  phmc_invmaxev=1.0;
 
   if(startoption > 1){
     Inoutputs=fopen(filename_inout,"r");
     fseek(Inoutputs, 0, SEEK_END);
     j=ftell(Inoutputs);
     fseek(Inoutputs, j-29, SEEK_SET);
-    fscanf(Inoutputs, " %lf %lf %lf \n", &stilde_low, &stilde_max, &cheb_evmin);
+    fscanf(Inoutputs, " %lf %lf %lf \n", &phmc_stilde_low, &phmc_stilde_max, &phmc_cheb_evmin);
     fclose(Inoutputs);
 
     if(startoption == 2){
@@ -434,27 +432,27 @@ int main(int argc,char *argv[]) {
       g_nev = 2;
       max_eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
   
-      temp=cheb_evmin;
-      temp2=cheb_evmax;
+      temp=phmc_cheb_evmin;
+      temp2=phmc_cheb_evmax;
 
-      if(cheb_evmax > stilde_max){
-        printf(" !!! BREAK since EV-Max LARGER than stilde_max !!! \n");
-        printf(" Ev-Max=%e   stilde_max=%e \n", cheb_evmax, stilde_max); 
+      if(phmc_cheb_evmax > phmc_stilde_max){
+        printf(" !!! BREAK since EV-Max LARGER than phmc_stilde_max !!! \n");
+        printf(" Ev-Max=%e   phmc_stilde_max=%e \n", phmc_cheb_evmax, phmc_stilde_max); 
         exit(-1);
       }      
 
-      if(cheb_evmin < stilde_low){
-        printf(" !!! BREAK since EV-Min SMALLER than stilde_low !!! \n");
-        printf(" Ev-Min=%e   stilde_low=%e \n", cheb_evmin, stilde_low); 
+      if(phmc_cheb_evmin < phmc_stilde_low){
+        printf(" !!! BREAK since EV-Min SMALLER than phmc_stilde_low !!! \n");
+        printf(" Ev-Min=%e   phmc_stilde_low=%e \n", phmc_cheb_evmin, phmc_stilde_low); 
         exit(-1);
       }      
 
-      cheb_evmin = cheb_evmin/(stilde_max);
-      j = (int)(cheb_evmin*10000);
-      cheb_evmin = j*0.0001;
+      phmc_cheb_evmin = phmc_cheb_evmin/(phmc_stilde_max);
+      j = (int)(phmc_cheb_evmin*10000);
+      phmc_cheb_evmin = j*0.0001;
 
       Inoutputs=fopen(filename_inout,"a");
-      fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
+      fprintf(Inoutputs, " %f %f %f \n", phmc_stilde_low, phmc_stilde_max, phmc_cheb_evmin);
       fclose(Inoutputs);
     }
   }
@@ -472,48 +470,48 @@ int main(int argc,char *argv[]) {
     g_nev = 2;   /* Number of highest eigenvalues to be computed */
     max_eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
   
-    temp=cheb_evmin;
-    temp2=cheb_evmax;
+    temp=phmc_cheb_evmin;
+    temp2=phmc_cheb_evmax;
 
     /* CONSERVATIVE DEFINITION OF epsilon ... to be tested
-       stilde_low=2*(g_mubar*g_mubar - g_epsbar*g_epsbar);
-       stilde_low = g_mubar - g_epsbar;
-       stilde_low = (g_mubar + g_epsbar)*0.1;
-       stilde_low = 0.01000;
-       stilde_max = 3.40000; 
+       phmc_stilde_low=2*(g_mubar*g_mubar - g_epsbar*g_epsbar);
+       phmc_stilde_low = g_mubar - g_epsbar;
+       phmc_stilde_low = (g_mubar + g_epsbar)*0.1;
+       phmc_stilde_low = 0.01000;
+       phmc_stilde_max = 3.40000; 
     */
-    stilde_low = cheb_evmin;
-    stilde_max = cheb_evmax;
+    phmc_stilde_low = phmc_cheb_evmin;
+    phmc_stilde_max = phmc_cheb_evmax;
 
-    cheb_evmin = stilde_low/(stilde_max);
-    j = (int)(cheb_evmin*10000);
-    cheb_evmin = j*0.0001;
+    phmc_cheb_evmin = phmc_stilde_low/(phmc_stilde_max);
+    j = (int)(phmc_cheb_evmin*10000);
+    phmc_cheb_evmin = j*0.0001;
 
     Inoutputs=fopen(filename_inout,"w");
-    fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
+    fprintf(Inoutputs, " %f %f %f \n", phmc_stilde_low, phmc_stilde_max, phmc_cheb_evmin);
     fclose(Inoutputs);
   }
 
   /* 
-  stilde_low = 0.013577;
-  stilde_max = 3.096935;
+  phmc_stilde_low = 0.013577;
+  phmc_stilde_max = 3.096935;
 
-  cheb_evmin = stilde_low/(stilde_max);
-  j = (int)(cheb_evmin*10000);
-  cheb_evmin = j*0.0001;
+  phmc_cheb_evmin = phmc_stilde_low/(phmc_stilde_max);
+  j = (int)(phmc_cheb_evmin*10000);
+  phmc_cheb_evmin = j*0.0001;
   Inoutputs=fopen(filename_inout,"w");
-  fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
+  fprintf(Inoutputs, " %f %f %f \n", phmc_stilde_low, phmc_stilde_max, phmc_cheb_evmin);
   fclose(Inoutputs);
   */
 
-  cheb_evmax = stilde_max;
+  phmc_cheb_evmax = phmc_stilde_max;
 
   /* In the following there is the  "sqrt"  since the value refers to 
      the hermitian Dirac operator (used in EV-computation), namely 
      S = Q Q^dag         
-     When  "S"  is applied, we call  invmaxev  twice !!! */
-  invmaxev=1./(sqrt(cheb_evmax));
-  cheb_evmax = 1.0;
+     When  "S"  is applied, we call  phmc_invmaxev  twice !!! */
+  phmc_invmaxev=1./(sqrt(phmc_cheb_evmax));
+  phmc_cheb_evmax = 1.0;
 
 
   degree_of_polynomial_nd();
@@ -525,18 +523,20 @@ int main(int argc,char *argv[]) {
     Infos_ev=fopen(filename_infos,"w");
     fprintf(Infos_ev, "  EV_min    EV_max      Low       Max      n    epsilon   normalisation \n");
   }
-  fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f     %f \n", temp, temp2, stilde_low, stilde_max, dop_n_cheby-1, cheb_evmin, invmaxev);
+  fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f     %f \n", 
+	  temp, temp2, phmc_stilde_low, phmc_stilde_max, 
+	  phmc_dop_n_cheby-1, phmc_cheb_evmin, phmc_invmaxev);
   fclose(Infos_ev);
 
 
 
   /* Chi`s-spinors  memory allocation */
-  j = init_chi_up_spinor_field(VOLUMEPLUSRAND/2, (dop_n_cheby+1));
+  j = init_chi_up_spinor_field(VOLUMEPLUSRAND/2, (phmc_dop_n_cheby+1));
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for PHMC Chi_up fields! Aborting...\n");
     exit(0);
   }
-  j = init_chi_dn_spinor_field(VOLUMEPLUSRAND/2, (dop_n_cheby+1));
+  j = init_chi_dn_spinor_field(VOLUMEPLUSRAND/2, (phmc_dop_n_cheby+1));
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for PHMC Chi_dn fields! Aborting...\n");
     exit(0);
@@ -544,8 +544,6 @@ int main(int argc,char *argv[]) {
   /* End memory allocation */
 
   degree_of_Ptilde();
-
-
 
   /*
   if(startoption == 3){
@@ -555,7 +553,7 @@ int main(int argc,char *argv[]) {
     Infos_ev=fopen(filename_infos,"w");
     fprintf(Infos_ev, "  EV_min    EV_max      Low       Max      n    epsilon   normalisation \n");
   }
-  fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f     %f \n", temp, temp2, stilde_low, stilde_max, dop_n_cheby-1, cheb_evmin, invmaxev);
+  fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f     %f \n", temp, temp2, phmc_stilde_low, phmc_stilde_max, phmc_dop_n_cheby-1, phmc_cheb_evmin, phmc_invmaxev);
   fclose(Infos_ev);
   */
 
@@ -563,26 +561,26 @@ int main(int argc,char *argv[]) {
 
 
   /* THIS IS THE OVERALL CONSTANT */
-  /* write Cpol as the result of the simple-program files (BigC^(1/2))^1/2 
+  /* write phmc_Cpol as the result of the simple-program files (BigC^(1/2))^1/2 
      since  BigC^(1/2)  is the constant appearing in each factor of the 
      multiplication defining the monomial basis representation of the 
-     polinomial in s,  while its square root  (BigC^(1/2))^1/2  is the 
+     polinomial in s,  while its square phmc_root  (BigC^(1/2))^1/2  is the 
      constant appearing in the multiplication representing the 
      polinomial in  sqrt(s) .
   */
   Const=fopen(filename_const,"r");
-  fscanf(Const, " %lf \n", &Cpol);
+  fscanf(Const, " %lf \n", &phmc_Cpol);
   fclose(Const);
-  Cpol = sqrt(Cpol);
+  phmc_Cpol = sqrt(phmc_Cpol);
 
-  roo = calloc((2*dop_n_cheby-2),sizeof(complex));
+  phmc_roo = calloc((2*phmc_dop_n_cheby-2),sizeof(complex));
 
-  roots=fopen(filename_root,"r");
+  roots=fopen(filename_phmc_root,"r");
   fgets(title, 100, roots);
 
   /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
-  for(j=0; j<(2*dop_n_cheby-2); j++){
-    fscanf(roots," %ld %lf %lf \n", &k, &roo[j].re, &roo[j].im);
+  for(j=0; j<(2*phmc_dop_n_cheby-2); j++){
+    fscanf(roots," %ld %lf %lf \n", &k, &phmc_roo[j].re, &phmc_roo[j].im);
   }
   fclose(roots);
 
@@ -652,7 +650,7 @@ int main(int argc,char *argv[]) {
   }
 
   /* Loop for measurements */
-  for(j=0;j<Nmeas;j++) {
+  for(j = 0; j < Nmeas; j++) {
 
     if(return_check_flag == 1 && (j+1)%return_check_interval == 0) return_check = 1;
     else return_check = 0;
@@ -738,53 +736,53 @@ int main(int argc,char *argv[]) {
       g_nev = 2;
       max_eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
   
-      temp=cheb_evmin;
-      temp2=cheb_evmax;
+      temp=phmc_cheb_evmin;
+      temp2=phmc_cheb_evmax;
 
-      if(cheb_evmax > stilde_max){
-        printf(" !!! BREAK since EV-Max LARGER than stilde_max !!! \n");
-        printf(" Ev-Max=%e   stilde_max=%e \n", cheb_evmax, stilde_max); 
+      if(phmc_cheb_evmax > phmc_stilde_max){
+        printf(" !!! BREAK since EV-Max LARGER than phmc_stilde_max !!! \n");
+        printf(" Ev-Max=%e   phmc_stilde_max=%e \n", phmc_cheb_evmax, phmc_stilde_max); 
         exit(-1);
       }      
 
-      if(cheb_evmin < stilde_low){
-        printf(" !!! BREAK since EV-Min SMALLER than stilde_low !!! \n");
-        printf(" Ev-Min=%e   stilde_low=%e \n", cheb_evmin, stilde_low); 
+      if(phmc_cheb_evmin < phmc_stilde_low){
+        printf(" !!! BREAK since EV-Min SMALLER than phmc_stilde_low !!! \n");
+        printf(" Ev-Min=%e   phmc_stilde_low=%e \n", phmc_cheb_evmin, phmc_stilde_low); 
         exit(-1);
       }      
 
-      cheb_evmin = cheb_evmin/(stilde_max);
-      j = (int)(cheb_evmin*10000);
-      cheb_evmin = j*0.0001;
+      phmc_cheb_evmin = phmc_cheb_evmin/(phmc_stilde_max);
+      j = (int)(phmc_cheb_evmin*10000);
+      phmc_cheb_evmin = j*0.0001;
 
       Inoutputs=fopen(filename_inout,"a");
-      fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, cheb_evmin);
+      fprintf(Inoutputs, " %f %f %f \n", phmc_stilde_low, phmc_stilde_max, phmc_cheb_evmin);
       fclose(Inoutputs);
 
       Infos_ev=fopen(filename_infos,"a");
-      fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f     %f \n", temp, temp2, stilde_low, stilde_max, dop_n_cheby-1, cheb_evmin, invmaxev);
+      fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f     %f \n", temp, temp2, phmc_stilde_low, phmc_stilde_max, phmc_dop_n_cheby-1, phmc_cheb_evmin, phmc_invmaxev);
       fclose(Infos_ev);
 
 
-      cheb_evmax = stilde_max;
-      invmaxev=1./(sqrt(cheb_evmax));
-      cheb_evmax = 1.0;
+      phmc_cheb_evmax = phmc_stilde_max;
+      phmc_invmaxev=1./(sqrt(phmc_cheb_evmax));
+      phmc_cheb_evmax = 1.0;
 
       degree_of_polynomial_nd();
 
 
       Const=fopen(filename_const,"r");
-      fscanf(Const, " %lf \n", &Cpol);
+      fscanf(Const, " %lf \n", &phmc_Cpol);
       fclose(Const);
-      Cpol = sqrt(Cpol);
+      phmc_Cpol = sqrt(phmc_Cpol);
 
-      roo = calloc((2*dop_n_cheby-2),sizeof(complex));
+      phmc_roo = calloc((2*phmc_dop_n_cheby-2),sizeof(complex));
 
-      roots=fopen(filename_root,"r");
+      roots=fopen(filename_phmc_root,"r");
       fgets(title, 100, roots);
 
-      for(j=0; j<(2*dop_n_cheby-2); j++){
-        fscanf(roots," %ld %lf %lf \n", &k, &roo[j].re, &roo[j].im);
+      for(j=0; j<(2*phmc_dop_n_cheby-2); j++){
+        fscanf(roots," %ld %lf %lf \n", &k, &phmc_roo[j].re, &phmc_roo[j].im);
       }
       fclose(roots);
     }
