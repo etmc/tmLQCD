@@ -9271,7 +9271,7 @@ _ACEOF
     if (!(test -s ./elf32ppcblrts.x)); then
       { { echo "$as_me:$LINENO: error: Sorry, elf32ppcblrts.x is missing, see README.bgl!" >&5
 echo "$as_me: error: Sorry, elf32ppcblrts.x is missing, see README.bgl!" >&2;}
-   { (exit 1); exit 1; }; }]
+   { (exit 1); exit 1; }; }
     fi
   fi
   DEBUGFLAG="-g"

@@ -542,7 +542,7 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
   if test $withdram = yes; then
     CCLD="/bgl/local/bin/blrts_gcc -Xlinker --script=./elf32ppcblrts.x"
     if (!(test -s ./elf32ppcblrts.x)); then
-      AC_MSG_ERROR([Sorry, elf32ppcblrts.x is missing, see README.bgl!])]
+      AC_MSG_ERROR([Sorry, elf32ppcblrts.x is missing, see README.bgl!])
     fi
   fi
   DEBUGFLAG="-g"
