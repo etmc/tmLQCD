@@ -312,7 +312,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT LEX LEXLIB LEX_OUTPUT_ROOT SET_MAKE RANLIB ac_ct_RANLIB CCDEP CPP EGREP MPICC LIBOBJS OPTARGS SOPTARGS INCLUDES AUTOCONF SOLVEROUT DEPFLAGS DEBUG_FLAG PROFILE_FLAG F2C XCHANGELIB XCHANGEDIR XLIB LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT LEX LEXLIB LEX_OUTPUT_ROOT SET_MAKE RANLIB ac_ct_RANLIB CCDEP CPP EGREP MPICC LIBOBJS OPTARGS SOPTARGS INCLUDES AUTOCONF SOLVEROUT CCLD DEPFLAGS DEBUG_FLAG PROFILE_FLAG F2C XCHANGELIB XCHANGEDIR XLIB LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -3197,8 +3197,9 @@ fi
 
 #(endian="", AC_DEFINE(LITTLE_ENDIAN,1,The endian of the architechture))
 
-LIBS="-lm"
+LIBS="$LIBS -lm"
 LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(top_builddir)/lib"
+CCLD=${CC}
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -8868,6 +8869,7 @@ done
 
 
 
+
 #AC_SUBST(ARPACK)
 #AC_SUBST(PARPACK)
 
@@ -9265,8 +9267,12 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
   if test $withdram = yes; then
-    { echo "$as_me:$LINENO: WARNING: Remember to manually link the executable on BG/L (bgl only! see README)" >&5
-echo "$as_me: WARNING: Remember to manually link the executable on BG/L (bgl only! see README)" >&2;}
+    CCLD="/bgl/local/bin/blrts_gcc -Xlinker --script=./elf32ppcblrts.x"
+    if (!(test -s ./elf32ppcblrts.x)); then
+      { { echo "$as_me:$LINENO: error: Sorry, elf32ppcblrts.x is missing, see README.bgl!" >&5
+echo "$as_me: error: Sorry, elf32ppcblrts.x is missing, see README.bgl!" >&2;}
+   { (exit 1); exit 1; }; }]
+    fi
   fi
   DEBUGFLAG="-g"
   OPTARGS="-O3"
@@ -9290,11 +9296,12 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
   fi
-  LIBS="-lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts $LIBS"
-  if test $with_lapack = yes; then
-    LIBS="-llapack440 -lblas440 -lxlf90 -lxlfmath $LIBS"
-  fi
+  LIBS="-lmpich.rts -lfmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts $LIBS"
   LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
+  if test $with_lapack = yes; then
+    LIBS="-llapack.rts -lesslbg -lxlf90 -lxlfmath -lxl $LIBS"
+    LDFLAGS="$LDFLAGS -L/opt/ibmcmp/xlf/bg/10.1/blrts_lib -L/bgl/local/lib/"
+  fi
 
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
@@ -10160,6 +10167,7 @@ s,@SOPTARGS@,$SOPTARGS,;t t
 s,@INCLUDES@,$INCLUDES,;t t
 s,@AUTOCONF@,$AUTOCONF,;t t
 s,@SOLVEROUT@,$SOLVEROUT,;t t
+s,@CCLD@,$CCLD,;t t
 s,@DEPFLAGS@,$DEPFLAGS,;t t
 s,@DEBUG_FLAG@,$DEBUG_FLAG,;t t
 s,@PROFILE_FLAG@,$PROFILE_FLAG,;t t

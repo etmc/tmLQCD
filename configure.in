@@ -29,8 +29,9 @@ AC_PROG_RANLIB
 AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
 #(endian="", AC_DEFINE(LITTLE_ENDIAN,1,The endian of the architechture))
 
-LIBS="-lm"
+LIBS="$LIBS -lm"
 LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(top_builddir)/lib"
+CCLD=${CC}
 
 AC_CHECK_HEADERS([stdint.h],
 [ dnl for inttypes.h and stdint.h for uint_xxx types
@@ -245,6 +246,7 @@ AC_SUBST(INCLUDES)
 AC_SUBST(AUTOCONF)
 AC_SUBST(SOLVEROUT)
 AC_SUBST(CCDEP)
+AC_SUBST(CCLD)
 AC_SUBST(DEPFLAGS)
 AC_SUBST(DEBUG_FLAG)
 AC_SUBST(PROFILE_FLAG)
@@ -538,7 +540,10 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
   CFLAGS="$CFLAGS"
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
   if test $withdram = yes; then
-    AC_MSG_WARN([Remember to manually link the executable on BG/L (bgl only! see README)])
+    CCLD="/bgl/local/bin/blrts_gcc -Xlinker --script=./elf32ppcblrts.x"
+    if (!(test -s ./elf32ppcblrts.x)); then
+      AC_MSG_ERROR([Sorry, elf32ppcblrts.x is missing, see README.bgl!])]
+    fi
   fi
   DEBUGFLAG="-g"
   OPTARGS="-O3"
@@ -554,11 +559,12 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
     XLC=yes
     AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   fi
-  LIBS="-lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts $LIBS"
-  if test $with_lapack = yes; then
-    LIBS="-llapack440 -lblas440 -lxlf90 -lxlfmath $LIBS"
-  fi
+  LIBS="-lmpich.rts -lfmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts $LIBS"
   LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
+  if test $with_lapack = yes; then
+    LIBS="-llapack.rts -lesslbg -lxlf90 -lxlfmath -lxl $LIBS"
+    LDFLAGS="$LDFLAGS -L/opt/ibmcmp/xlf/bg/10.1/blrts_lib -L/bgl/local/lib/"
+  fi
 
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"

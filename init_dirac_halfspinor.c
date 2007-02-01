@@ -35,7 +35,6 @@ int init_dirac_halfspinor() {
   unsigned int actualSize;
   int rts_return=0;
 #endif  
-  printf("hallo\n");fflush(stdout);  
 
   NBPointer = (halfspinor***) malloc(4*sizeof(halfspinor**));
   NBPointer_ = (halfspinor**) malloc(16*(VOLUME+RAND)*sizeof(halfspinor*));

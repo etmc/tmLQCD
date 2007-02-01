@@ -350,95 +350,55 @@ int main(int argc,char *argv[]) {
 #endif
   
   
+  /* Initialise random number generator */
   /* Continue */
-  if(startoption == 3){
-    j = read_rlxd_state(gauge_input_filename, rlxd_state, rlxdsize);
-    if(j == -1) {
-      printf("Trying to read deprecated format from %s\n", rlxd_input_filename);
-      rlxdfile = fopen(rlxd_input_filename,"r");
-      if(rlxdfile != NULL) {
-	fread(rlxd_state, rlxdsize*sizeof(int),1,rlxdfile);
-	fclose(rlxdfile);
-      }
-      else {
+  if(startoption == 3) {
+    if( (j = read_rlxd_state(gauge_input_filename, rlxd_state, rlxdsize)) == -1) {
+      if(g_proc_id == 0) {
 	printf("%s does not exist, switching to restart...\n", rlxd_input_filename);
-	startoption = 2;
-      }
-    }
-    if(startoption != 2) {
-      if(g_proc_id == 0) {
-	rlxd_reset(rlxd_state);
-	printf("# Reading Gauge field from file %s in %d Bit\n", 
-	       gauge_input_filename, gauge_precision_read_flag); 
 	fflush(stdout);
       }
-      if(gauge_precision_read_flag == 64) {
-	read_lime_gauge_field(gauge_input_filename);
-      }
-      else if(gauge_precision_read_flag == 32){
-	read_lime_gauge_field_singleprec(gauge_input_filename);
-      }
-      if (g_proc_id == 0){
-	printf("done!\n"); fflush(stdout);
-      }
+      startoption = 2;
     }
-  }
-  if(startoption != 3){
-    /* Initialize random number generator */
-    if(g_proc_id == 0) {
-      rlxd_init(1, random_seed);
-      /* hot */
-      if(startoption == 1) {
-	random_gauge_field();
-      }
-      rlxd_get(rlxd_state);
-#ifdef MPI
-      MPI_Send(&rlxd_state[0], rlxdsize, MPI_INT, 1, 99, MPI_COMM_WORLD);
-      MPI_Recv(&rlxd_state[0], rlxdsize, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
-      rlxd_reset(rlxd_state);
-#endif
-    }
-#ifdef MPI
     else {
-      MPI_Recv(&rlxd_state[0], rlxdsize, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
       rlxd_reset(rlxd_state);
-      /* hot */
-      if(startoption == 1) {
-	random_gauge_field();
-      }
-      k=g_proc_id+1; 
-      if(k==g_nproc){
-	k=0;
-      }
-      rlxd_get(rlxd_state);
-      MPI_Send(&rlxd_state[0], rlxdsize, MPI_INT, k, 99, MPI_COMM_WORLD);
     }
-#endif
-
-    /* Cold */
-    if(startoption == 0) {
-      unit_g_gauge_field();
+  }
+  /* restart, hot and cold */
+  if(startoption != 3) {
+    rlxd_init(1, random_seed + g_proc_id*97);
+  }
+  
+  /* Set up the gauge field */
+  /* continue and restart */
+  if(startoption==3 || startoption == 2) {
+    if(g_proc_id == 0) {
+      printf("# Reading Gauge field from file %s in %d Bit\n", 
+	     gauge_input_filename, gauge_precision_read_flag); 
+      fflush(stdout);
     }
-    /* Restart */
-    else if(startoption == 2) {
-      if (g_proc_id == 0){
-	printf("# Reading Gauge field from file %s in %d Bit\n", 
-	       gauge_input_filename, gauge_precision_read_flag); 
-	fflush(stdout);
-      }
-      if(gauge_precision_read_flag == 64) {
-	read_lime_gauge_field(gauge_input_filename);
-      }
-      else if(gauge_precision_read_flag == 32) {
-	read_lime_gauge_field_singleprec(gauge_input_filename);
-      }
-      if(g_proc_id == 0) {
-	printf("# Done!\n");
-      }
+    if(gauge_precision_read_flag == 64) {
+      read_lime_gauge_field(gauge_input_filename);
     }
-
+    else if(gauge_precision_read_flag == 32){
+      read_lime_gauge_field_singleprec(gauge_input_filename);
+    }
+    if (g_proc_id == 0){
+      printf("done!\n"); fflush(stdout);
+    }
+  }
+  else if (startoption == 1) {
+    /* hot */
+    random_gauge_field();
+  }
+  else if(startoption == 0) {
+    /* cold */
+    unit_g_gauge_field();    
   }
 
+#ifdef MPI
+  xchange_gauge();
+#endif
 #ifdef _GAUGE_COPY
   update_backward_gauge();
 #endif
@@ -642,6 +602,7 @@ int main(int argc,char *argv[]) {
 
   if(g_proc_id==0){
     fprintf(parameterfile,"# First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+    printf("# First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
     fprintf(parameterfile,"# First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
 	    dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
   }

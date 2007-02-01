@@ -476,17 +476,35 @@ void unit_g_gauge_field(void) {
 }
 
 
-void random_gauge_field(void)
-{
-   int ix,mu;
+void random_gauge_field() {
+
+  int ix,mu;
+#ifdef MPI
+  int rlxd_state[105];
+  int j=0;
+
+  if(g_proc_id !=0) {
+    MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 102, MPI_COMM_WORLD, &status);
+    rlxd_reset(rlxd_state);
+  }
+#endif
    
-   for (ix=0;ix<VOLUME;ix++)
-   {
-      for (mu=0;mu<4;mu++)
-      {
-         g_gauge_field[ix][mu]=random_su3();
-      }
-   }
+  for (ix = 0; ix < VOLUME; ix++) {
+    for (mu = 0; mu < 4; mu++) {
+      g_gauge_field[ix][mu] = random_su3();
+    }
+  }
+
+#ifdef MPI
+  j = (g_proc_id + 1) % g_nproc; 
+  rlxd_get(rlxd_state);
+  MPI_Send(&rlxd_state[0], 105, MPI_INT, j, 102, MPI_COMM_WORLD);
+
+  if(g_proc_id == 0) {
+    MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 102, MPI_COMM_WORLD, &status);
+    rlxd_reset(rlxd_state);
+  }
+#endif
 }
 
 void set_spinor_point(spinor * s, const double c){
