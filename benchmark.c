@@ -123,6 +123,7 @@ int main(int argc,char *argv[])
 #  ifdef _NON_BLOCKING
   printf("# the code was comiled for non-blocking MPI calls (spinor and gauge)\n");
 #  endif
+#endif
     printf("\n");
     fflush(stdout);
   }
