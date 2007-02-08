@@ -121,7 +121,7 @@ int stout_smear(const double rho , const int no_iters)
     
 #ifdef MPI
     /** update boundaries for parallel stuff **/
-    xchange_gaugefield();
+    xchange_gauge();
 #endif
   } /* end loop over stout smearing iterations */
 
