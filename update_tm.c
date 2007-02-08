@@ -237,8 +237,10 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   }
 
   /* Compute the energy difference */
-  dh= +enepx - g_beta*new_gauge_energy - enep + g_beta*gauge_energy
-      + enerphi0x - enerphi0 + enerphi1x - enerphi1 + enerphi2x - enerphi2; 
+  dh = (enepx - enep) + g_beta*(gauge_energy - new_gauge_energy) +
+    (enerphi0x - enerphi0) + (enerphi1x - enerphi1) + (enerphi2x - enerphi2);
+/*   dh= +enepx - g_beta*new_gauge_energy - enep + g_beta*gauge_energy */
+/*       + enerphi0x - enerphi0 + enerphi1x - enerphi1 + enerphi2x - enerphi2;  */
   expmdh = exp(-dh);
       
   /* the random number is only taken at node zero and then distributed to 
@@ -335,8 +337,10 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
 
     /* Compute the energy difference */
-    ret_dh= +ret_enep - g_beta*ret_gauge_energy - enep + g_beta*gauge_energy
-      + ret_enerphi0 - enerphi0 + ret_enerphi1 - enerphi1 + ret_enerphi2 - enerphi2;
+    ret_dh = (ret_enep - enep ) + g_beta*(gauge_energy - ret_gauge_energy) +
+      (ret_enerphi0 - enerphi0) + (ret_enerphi1 - enerphi1) + (ret_enerphi2 - enerphi2);
+/*     ret_dh= +ret_enep - g_beta*ret_gauge_energy - enep + g_beta*gauge_energy */
+/*       + ret_enerphi0 - enerphi0 + ret_enerphi1 - enerphi1 + ret_enerphi2 - enerphi2; */
 
     /* Compute Differences in the fields */
     ks = 0.;
