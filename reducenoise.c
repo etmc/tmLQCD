@@ -247,7 +247,7 @@ int main(int argc,char *argv[]) {
       write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
   }
   else if(source_format_flag == 1) {
-      write_spinorfield_cm_single(g_spinor_field[2], g_spinor_field[3], conf_filename);
+      write_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename);
   }
   
   if(g_proc_id == 0) {
