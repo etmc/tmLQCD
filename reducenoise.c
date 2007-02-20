@@ -81,6 +81,13 @@ int main(int argc,char *argv[]) {
   double atime=0., etime=0.;
 #endif
 
+  DUM_DERI = 6;
+  /* DUM_DERI + 2 is enough (not 7) */
+  DUM_SOLVER = DUM_DERI+2;
+  DUM_MATRIX = DUM_SOLVER+0;
+  /* DUM_MATRIX + 2 is enough (not 6) */
+  NO_OF_SPINORFIELDS = DUM_MATRIX+2;
+
   verbose = 0;
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
@@ -224,7 +231,7 @@ int main(int argc,char *argv[]) {
   for(j=0;j<Nmeas/2; j++) {
       M_minus_1_timesC(g_spinor_field[4], g_spinor_field[5],
 		       g_spinor_field[0], g_spinor_field[1]);
-      M_minus_1_timesC(g_spinor_field[2], g_spinor_field[3],
+      M_minus_1_timesC(g_spinor_field[0], g_spinor_field[1],
 		       g_spinor_field[4], g_spinor_field[5]);
   }
   
@@ -235,8 +242,8 @@ int main(int argc,char *argv[]) {
   if(source_format_flag == 0) {
       /* To write in standard format */
       /* we have to mult. by 2*kappa */
-      mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME/2);  
-      mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[3], VOLUME/2);
+      mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[0], VOLUME/2);  
+      mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[1], VOLUME/2);
       write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
   }
   else if(source_format_flag == 1) {
