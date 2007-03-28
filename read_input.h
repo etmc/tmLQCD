@@ -13,6 +13,11 @@
 #ifndef _PARSER_H
 #define _PARSER_H
 
+#define COLD 0
+#define HOT 1
+#define RESTART 2
+#define CONTINUE 3
+
 #ifdef __cplusplus
 extern "C"
 {

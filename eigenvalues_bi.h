@@ -5,6 +5,6 @@
 extern bispinor * eigenvectors;
 extern double * eigenvls;
 extern int eigenvalues_for_cg_computed;
-void eigenvalues_bi(int * nev, const int operator_flag, const int max_iterations, const double prec);
+double eigenvalues_bi(int * nev, const int operator_flag, const int max_iterations, const double prec);
 
 #endif

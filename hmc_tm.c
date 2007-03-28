@@ -144,9 +144,6 @@ int main(int argc,char *argv[]) {
 
   mpi_init(argc, argv);
 
-  if(Nskip == 0){
-    Nskip = 1;
-  }
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
     if(countfile != NULL) {
@@ -439,7 +436,7 @@ int main(int argc,char *argv[]) {
     polyakov_loop(&pl4, 3);  
     
     /* Save gauge configuration all Nskip times */
-    if((trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) {
+    if((Nskip !=0) && (trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) {
       sprintf(gauge_filename,"%s.%.4d", "conf", nstore);
       if(g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
@@ -455,7 +452,7 @@ int main(int argc,char *argv[]) {
       sprintf(gauge_filename,"%s", "conf.save");
     }
 
-    if(((trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
+    if(((Nskip !=0) && (trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
       /* Write the gauge configuration first to a temporary file */
       if(gauge_precision_write_flag == 64) {
 	write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
