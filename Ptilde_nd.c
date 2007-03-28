@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef MPI
+# include <mpi.h>
+#endif
 #include "global.h"
 #include "linsolve.h"
 #include "linalg_eo.h"
@@ -50,10 +53,10 @@ void Ptilde_cheb_coefs(double aa, double bb, double dd[], int n, double exponent
 
   inv_n=1./(double)n;
   f=calloc(n,sizeof(double));/*vector(0,n-1);*/
-  if(g_proc_id == g_stdio_proc){
-    printf("\n hello in  PTILDE-chebyshev_polynomial\n");
-    printf("n= %d inv_n=%e \n",n,inv_n);
-    printf("allocation !!!\n");
+  if(g_proc_id == g_stdio_proc && g_debug_level > 2){
+    printf("PHMC: PTILDE-chebyshev_polynomial\n");
+    printf("PHMC: n= %d inv_n=%e \n",n,inv_n);
+    printf("PHMC: allocation !!!\n");
   }
   fflush(stdout);
   bma=0.5*(bb-aa);
@@ -98,29 +101,29 @@ void Poly_tilde_ND(spinor *R_s, spinor *R_c, double *dd, int n,
 
 #if ( defined SSE || defined SSE2 )
    svs_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-   svs   = (spinor *)(((unsigned int)(svs_)+ALIGN_BASE)&~ALIGN_BASE);
+   svs   = (spinor *)(((unsigned long int)(svs_)+ALIGN_BASE)&~ALIGN_BASE);
    ds_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-   ds    = (spinor *)(((unsigned int)(ds_)+ALIGN_BASE)&~ALIGN_BASE);
+   ds    = (spinor *)(((unsigned long int)(ds_)+ALIGN_BASE)&~ALIGN_BASE);
    dds_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-   dds   = (spinor *)(((unsigned int)(dds_)+ALIGN_BASE)&~ALIGN_BASE);
+   dds   = (spinor *)(((unsigned long int)(dds_)+ALIGN_BASE)&~ALIGN_BASE);
    auxs_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-   auxs  = (spinor *)(((unsigned int)(auxs_)+ALIGN_BASE)&~ALIGN_BASE);
+   auxs  = (spinor *)(((unsigned long int)(auxs_)+ALIGN_BASE)&~ALIGN_BASE);
    aux2s_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-   aux2s = (spinor *)(((unsigned int)(aux2s_)+ALIGN_BASE)&~ALIGN_BASE);
+   aux2s = (spinor *)(((unsigned long int)(aux2s_)+ALIGN_BASE)&~ALIGN_BASE);
    aux3s_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-   aux3s = (spinor *)(((unsigned int)(aux3s_)+ALIGN_BASE)&~ALIGN_BASE);
+   aux3s = (spinor *)(((unsigned long int)(aux3s_)+ALIGN_BASE)&~ALIGN_BASE);
    svc_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-   svc   = (spinor *)(((unsigned int)(svc_)+ALIGN_BASE)&~ALIGN_BASE);
+   svc   = (spinor *)(((unsigned long int)(svc_)+ALIGN_BASE)&~ALIGN_BASE);
    dc_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-   dc    = (spinor *)(((unsigned int)(dc_)+ALIGN_BASE)&~ALIGN_BASE);
+   dc    = (spinor *)(((unsigned long int)(dc_)+ALIGN_BASE)&~ALIGN_BASE);
    ddc_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-   ddc   = (spinor *)(((unsigned int)(ddc_)+ALIGN_BASE)&~ALIGN_BASE);
+   ddc   = (spinor *)(((unsigned long int)(ddc_)+ALIGN_BASE)&~ALIGN_BASE);
    auxc_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-   auxc  = (spinor *)(((unsigned int)(auxc_)+ALIGN_BASE)&~ALIGN_BASE);
+   auxc  = (spinor *)(((unsigned long int)(auxc_)+ALIGN_BASE)&~ALIGN_BASE);
    aux2c_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-   aux2c = (spinor *)(((unsigned int)(aux2c_)+ALIGN_BASE)&~ALIGN_BASE);
+   aux2c = (spinor *)(((unsigned long int)(aux2c_)+ALIGN_BASE)&~ALIGN_BASE);
    aux3c_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-   aux3c = (spinor *)(((unsigned int)(aux3c_)+ALIGN_BASE)&~ALIGN_BASE);
+   aux3c = (spinor *)(((unsigned long int)(aux3c_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
    svs_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
    svs = svs_;
@@ -286,12 +289,12 @@ void degree_of_Ptilde(){
    auxc_ = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
    aux2c_= calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
 
-   ss    = (spinor *)(((unsigned int)(ss_)+ALIGN_BASE)&~ALIGN_BASE);
-   auxs  = (spinor *)(((unsigned int)(auxs_)+ALIGN_BASE)&~ALIGN_BASE);
-   aux2s = (spinor *)(((unsigned int)(aux2s_)+ALIGN_BASE)&~ALIGN_BASE);
-   sc    = (spinor *)(((unsigned int)(sc_)+ALIGN_BASE)&~ALIGN_BASE);
-   auxc  = (spinor *)(((unsigned int)(auxc_)+ALIGN_BASE)&~ALIGN_BASE);
-   aux2c = (spinor *)(((unsigned int)(aux2c_)+ALIGN_BASE)&~ALIGN_BASE);
+   ss    = (spinor *)(((unsigned long int)(ss_)+ALIGN_BASE)&~ALIGN_BASE);
+   auxs  = (spinor *)(((unsigned long int)(auxs_)+ALIGN_BASE)&~ALIGN_BASE);
+   aux2s = (spinor *)(((unsigned long int)(aux2s_)+ALIGN_BASE)&~ALIGN_BASE);
+   sc    = (spinor *)(((unsigned long int)(sc_)+ALIGN_BASE)&~ALIGN_BASE);
+   auxc  = (spinor *)(((unsigned long int)(auxc_)+ALIGN_BASE)&~ALIGN_BASE);
+   aux2c = (spinor *)(((unsigned long int)(aux2c_)+ALIGN_BASE)&~ALIGN_BASE);
 
 #else
    ss   =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
@@ -308,9 +311,9 @@ void degree_of_Ptilde(){
    random_spinor_field(ss,VOLUME/2, 1);
    random_spinor_field(sc,VOLUME/2, 1);
 
-   if(g_proc_id == g_stdio_proc){
-     printf(" \n In Ptilde: EVmin = %f  EVmax = %f\n", phmc_cheb_evmin, phmc_cheb_evmax);
-     printf("\n determine the degree of the polynomial :   Stop=%e \n", g_acc_Ptilde);
+   if(g_proc_id == g_stdio_proc && g_debug_level > 2){
+     printf("PHMC: In Ptilde: EVmin = %f  EVmax = %f\n", phmc_cheb_evmin, phmc_cheb_evmax);
+     printf("PHMC: determine the degree of the polynomial :   Stop=%e \n", g_acc_Ptilde);
      fflush(stdout);
    }
 
@@ -319,11 +322,15 @@ void degree_of_Ptilde(){
    for(i = 0;i < 100 ; i++){
 
     if (phmc_ptilde_n_cheby > NTILDE_CHEBYMAX) {
-      if(g_proc_id == g_stdio_proc){
-	printf("Error: n_cheby=%d > NTILDE_CHEBYMAX=%d\n",phmc_ptilde_n_cheby,NTILDE_CHEBYMAX);
-	printf("Increase n_chebymax\n");
+      if(g_proc_id == g_stdio_proc && g_debug_level > 2){
+	fprintf(stderr, "Error: n_cheby=%d > NTILDE_CHEBYMAX=%d in ptilde\n",
+		phmc_ptilde_n_cheby, NTILDE_CHEBYMAX);
+	fprintf(stderr, "Increase n_chebymax\n");
       }
-      errorhandler(35,"degree_of_polynomial");
+#ifdef MPI
+      MPI_Finalize();
+#endif
+      exit(-5);
     }
     
 
@@ -344,8 +351,8 @@ void degree_of_Ptilde(){
     if(g_epsbar == 0){
       temp2 = 0.0;
     }
-    if(g_proc_id == g_stdio_proc) {
-      printf("At n=%d  || differences ||^2 :  UP=%e  DN=%e \n", phmc_ptilde_n_cheby, temp, temp2);
+    if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
+      printf("PHMC: At n=%d  || differences ||^2 :  UP=%e  DN=%e \n", phmc_ptilde_n_cheby, temp, temp2);
     }
 
 
@@ -358,10 +365,10 @@ void degree_of_Ptilde(){
     /* if(temp < g_acc_ptilde && temp2 < g_acc_ptilde){ */  /* break; */
 
     if(sum < g_acc_Ptilde){  
-      if(g_proc_id == g_stdio_proc){
-	printf("\n        Achieved Accuracies for Ptilde :  Stop=%e \n", g_acc_Ptilde);
-	printf(" Uniform: Sum |d_n|=%e \n", sum);
-	printf(" RND:  || (Ptilde P S P Ptilde - 1)X ||^2 / || 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
+      if(g_proc_id == g_stdio_proc && g_debug_level > 2){
+	printf("PHMC:        Achieved Accuracies for Ptilde :  Stop=%e \n", g_acc_Ptilde);
+	printf("PHMC: Uniform: Sum |d_n|=%e \n", sum);
+	printf("PHMC: RND:  || (Ptilde P S P Ptilde - 1)X ||^2 / || 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
       }
 
       temp = chebtilde_eval(phmc_ptilde_n_cheby, phmc_ptilde_cheby_coef, phmc_cheb_evmin);
@@ -370,9 +377,9 @@ void degree_of_Ptilde(){
       temp *= cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
       temp *= chebtilde_eval(phmc_ptilde_n_cheby, phmc_ptilde_cheby_coef, phmc_cheb_evmin);
       temp = 0.5*fabs(temp - 1);
-      if(g_proc_id == g_stdio_proc){
-	printf(" Delta_IR at s=%f:    | Ptilde P s_low P Ptilde - 1 |/2 = %e \n", phmc_cheb_evmin, temp);
-	printf("\n Latest (TILDE) polynomial degree = %d\n\n", phmc_ptilde_n_cheby);
+      if(g_proc_id == g_stdio_proc && g_debug_level > 2){
+	printf("PHMC: Delta_IR at s=%f:    | Ptilde P s_low P Ptilde - 1 |/2 = %e \n", phmc_cheb_evmin, temp);
+	printf("PHMC: Latest (TILDE) polynomial degree = %d\n\n", phmc_ptilde_n_cheby);
       }
       break;
     }

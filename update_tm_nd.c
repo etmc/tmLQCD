@@ -140,11 +140,11 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   enerphi0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
 
 
-  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-    printf(" Here comes the computation of H_old with \n \n");
-    printf(" First: random spinors and their norm  \n ");
-    printf(" OLD Ennergy UP %e \n", enerphi0);
-    printf(" OLD Energy  DN + UP %e \n\n", enerphi0);
+  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+    printf("PHMC: Here comes the computation of H_old with \n \n");
+    printf("PHMC: First: random spinors and their norm  \n ");
+    printf("PHMC: OLD Ennergy UP %e \n", enerphi0);
+    printf("PHMC: OLD Energy  DN + UP %e \n\n", enerphi0);
   }
 
   QNon_degenerate(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
@@ -169,13 +169,13 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
 
   temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2);
-  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-    printf(" Then: evaluate Norm of pseudofermion heatbath BHB \n ");
-    printf(" Norm of BHB up squared %e \n", temp);
+  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+    printf("PHMC: Then: evaluate Norm of pseudofermion heatbath BHB \n ");
+    printf("PHMC: Norm of BHB up squared %e \n", temp);
   }
   temp += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
-  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)){
-    printf(" Norm of BHB up + BHB dn squared %e \n\n", temp);
+  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)){
+    printf("PHMC: Norm of BHB up + BHB dn squared %e \n\n", temp);
   }
 
 
@@ -194,8 +194,8 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
    random_spinor_field(g_spinor_field[2], VOLUME/2, rngrepro);
    /* compute the square of the norm */
    enerphi0 += square_norm(g_spinor_field[2], VOLUME/2);
-   if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-     printf(" Start HMC Energy = %e \n", enerphi0);
+   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+     printf("PHMC: Start HMC Energy = %e \n", enerphi0);
    }
 
    if(g_nr_of_psf > 1) {
@@ -268,9 +268,6 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     */    
 
     /* IF PHMC */
-    if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-      printf(" Here comes the NEW leap-frog integration \n \n");
-    }
 
     leap_frog_ND(dtau, Nsteps, nsmall,phmc_only); 
   }
@@ -315,6 +312,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
     assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
 
+    /* Change this name !!*/
     L_POLY_MIN_CCONST(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
 		      g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
 		      phmc_roo[j-1]);
@@ -330,11 +328,11 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   temp = square_norm(g_chi_dn_spinor_field[ij], VOLUME/2);
   Ener[ij] += temp;
 
-  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-    printf(" Here comes the computation of H_new with \n \n");
+  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+    printf("PHMC: Here comes the computation of H_new with \n \n");
 
-    printf(" At j=%d  P+HMC Final Energy %e \n", ij, enerphi0x+Ener[ij]);
-    printf(" At j=%d  PHMC Only Final Energy %e \n", ij, Ener[ij]);
+    printf("PHMC: At j=%d  P+HMC Final Energy %e \n", ij, enerphi0x+Ener[ij]);
+    printf("PHMC: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[ij]);
   }
 
   /* Here comes the loop for the evaluation of A, A^2, ...  */
@@ -355,28 +353,28 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     sgn = -1.0;
     for(ij=1; ij<j; ij++){
       fact = factor[j] / (factor[ij] * factor[j-ij]);
-      if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-	printf(" Here  j=%d  and  ij=%d   sign=%f  fact=%f \n", j ,ij, sgn, fact);
+      if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+	printf("PHMC: Here  j=%d  and  ij=%d   sign=%f  fact=%f \n", j ,ij, sgn, fact);
       }
       Ener[j] += sgn*fact*Ener[ij];
       sgn = (-1)*sgn;
     }
     temp = square_norm(g_chi_up_spinor_field[j], VOLUME/2);
     temp += square_norm(g_chi_dn_spinor_field[j], VOLUME/2);
-    if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-      printf(" Here  j=%d   sign=%f  temp=%e \n", j, sgn, temp);
+    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+      printf("PHMC: Here  j=%d   sign=%f  temp=%e \n", j, sgn, temp);
     }
 
     Ener[j] += sgn*temp;
 
     Diff = fabs(Ener[j] - Ener[j-1]);
-    if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-      printf(" At j=%d  Energy=%e  Diff=%e \n", j, Ener[j], Diff);
+    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+      printf("PHMC: At j=%d  Energy=%e  Diff=%e \n", j, Ener[j], Diff);
     }
 
     if(Diff < g_acc_Hfin){
-      if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-	printf(" At j = %d  PHMC Only Final Energy %e \n", j, Ener[j]);
+      if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+	printf("PHMC: At j = %d  PHMC Only Final Energy %e \n", j, Ener[j]);
       }
       break;
     }
@@ -385,8 +383,8 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
 
   enerphi0x += Ener[ij];  /* this is quite sticky */
-  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-    printf(" At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], enerphi0x);
+  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+    printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], enerphi0x);
   }
   
   /* END IF PHMC */
@@ -404,8 +402,8 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
    assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], VOLUME/2);
    /* Compute the energy contr. from first field */
    enerphi0x += square_norm(g_spinor_field[2], VOLUME/2);
-   if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-     printf(" Final HMC Energy = %e \n", enerphi0x);
+   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+     printf("PHMC: Final HMC Energy = %e \n", enerphi0x);
    }
   
 
@@ -435,13 +433,14 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
    }
   } /* endif phmc_only */
 
-  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-    printf(" Energies: Old = %f New = %f   Exp(-Delta H_heavy) = %f \n", enerphi0, enerphi0x, exp(enerphi0-enerphi0x));
+  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+    printf("PHMC: Energies: Old = %f New = %f   Exp(-Delta H_heavy) = %f \n", 
+	   enerphi0, enerphi0x, exp(enerphi0-enerphi0x));
   
-    printf(" \n Contributions to the Hamiltonian due to \n");
-    printf(" Pi=%f NewPi=%f   Gauge=%f NewGauge=%f \n", enep, enepx, g_beta*gauge_energy, g_beta*new_gauge_energy);
-    printf(" BHB1=%f NewBHB1=%f  \n", enerphi0, enerphi0x);
-    printf(" BHB2=%f NewBHB2=%f   BHB3=%f NewBHB3=%f \n", enerphi1, enerphi1x, enerphi2, enerphi2x);
+    printf("PHMC: Contributions to the Hamiltonian due to \n");
+    printf("PHMC: Pi=%f NewPi=%f   Gauge=%f NewGauge=%f \n", enep, enepx, g_beta*gauge_energy, g_beta*new_gauge_energy);
+    printf("PHMC: BHB1=%f NewBHB1=%f  \n", enerphi0, enerphi0x);
+    printf("PHMC: BHB2=%f NewBHB2=%f   BHB3=%f NewBHB3=%f \n", enerphi1, enerphi1x, enerphi2, enerphi2x);
   }
 
   /* Compute the energy difference */
@@ -449,8 +448,8 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
       + enerphi0x - enerphi0 + enerphi1x - enerphi1 + enerphi2x - enerphi2; 
   expmdh = exp(-dh);
 
-  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-    printf("  Exp(-Delta H) = %f \n \n", expmdh);
+  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+    printf("PHMC: Exp(-Delta H) = %f \n \n", expmdh);
   }
       
   /* the random number is only taken at node zero and then distributed to 
@@ -471,9 +470,6 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
   if(expmdh > yy[0]) {
     accept = 1;
-    if((g_proc_id == g_stdio_proc) && (g_debug_level == 5)) {
-      printf("\n \n !!!!!!!   IT ACCEPTED HERE   !!!!!!!! \n \n");
-    }
   }
   else {
     accept = 0;

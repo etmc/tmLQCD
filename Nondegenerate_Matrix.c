@@ -428,14 +428,14 @@ void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
 
 #if ( defined SSE || defined SSE2 || defined SSE3)
   k_strange_ = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-  k_strange  = (spinor *)(((unsigned int)(k_strange_)+ALIGN_BASE)&~ALIGN_BASE);
+  k_strange  = (spinor *)(((unsigned long int)(k_strange_)+ALIGN_BASE)&~ALIGN_BASE);
   k_charm_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-  k_charm    = (spinor *)(((unsigned int)(k_charm_)+ALIGN_BASE)&~ALIGN_BASE);
+  k_charm    = (spinor *)(((unsigned long int)(k_charm_)+ALIGN_BASE)&~ALIGN_BASE);
 
   l_strange_ = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-  l_strange  = (spinor *)(((unsigned int)(l_strange_)+ALIGN_BASE)&~ALIGN_BASE);
+  l_strange  = (spinor *)(((unsigned long int)(l_strange_)+ALIGN_BASE)&~ALIGN_BASE);
   l_charm_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-  l_charm    = (spinor *)(((unsigned int)(l_charm_)+ALIGN_BASE)&~ALIGN_BASE);
+  l_charm    = (spinor *)(((unsigned long int)(l_charm_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
   k_strange  =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
   k_charm    =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));

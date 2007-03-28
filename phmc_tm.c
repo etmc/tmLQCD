@@ -80,7 +80,7 @@ const int rlxdsize = 105;
 
 int main(int argc,char *argv[]) {
  
-  FILE *parameterfile=NULL,*rlxdfile=NULL, *countfile=NULL;
+  FILE *parameterfile=NULL, *countfile=NULL;
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
@@ -311,7 +311,8 @@ int main(int argc,char *argv[]) {
     exit(0);
   }
 
-  /* IF PHMC: Bispinors and Chi`s  memory allocation */
+  /* IF PHMC: Bispinors and Chi`s  memory allocation    */
+  /* chi's are used for the correction step at end of MD */
   j = init_bispinor_field(VOLUME/2, NO_OF_BISPINORFIELDS);
   if (j!= 0) {
     fprintf(stderr, "Not enough memory for Bispinor fields! Aborting...\n");
@@ -421,7 +422,7 @@ int main(int argc,char *argv[]) {
 #endif
 
   /* START IF PHMC */
-  /* Here we prepare the more precise polynomial first */
+
   phmc_invmaxev=1.0;
 
   if(startoption != CONTINUE) {
@@ -464,7 +465,7 @@ int main(int argc,char *argv[]) {
 	if(g_proc_id == 0) {
 	  fprintf(stderr, "EV-Max is LARGER than stilde_max or \nEV-Min SMALLER than stilde_low! Aborting ...\n");
 	  fprintf(stderr, "Ev-Max=%e   stilde_max=%e \n", phmc_cheb_evmax, stilde_max);
-	  fprintf(stderr, " Ev-Min=%e   stilde_low=%e \n", phmc_cheb_evmin, stilde_low);
+	  fprintf(stderr, "Ev-Min=%e   stilde_low=%e \n", phmc_cheb_evmin, stilde_low);
 	}
 #ifdef MPI
 	MPI_Finalize();
@@ -526,7 +527,7 @@ int main(int argc,char *argv[]) {
   phmc_invmaxev=1./(sqrt(phmc_cheb_evmax));
   phmc_cheb_evmax = 1.0;
 
-
+  /* Here we prepare the less precise polynomial first */
   degree_of_polynomial_nd();
 
   if(g_proc_id == 0) {
