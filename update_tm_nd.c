@@ -54,7 +54,7 @@
 int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle_energy, 
 	      char * filename, const double dtau, const int Nsteps, const int nsmall,
 	      const double tau, int * n_int, const int return_check,
-	      double * lambda, const int rngrepro) {
+	      double * lambda, const int rngrepro,const int phmc_only) {
   su3 *v, *w;
   static int ini_g_tmp = 0;
   int rlxd_state[105];
@@ -127,16 +127,6 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     }
   }
   dontdump = 0;
-  
-  /* initialize the pseudo-fermion fields    */
-  /* depending on g_mu1 and g_mu2 we use     */
-  /* one or two pseudo-fermion fields        */
-  random_spinor_field(g_spinor_field[2], VOLUME/2, rngrepro);
-  /* compute the square of the norm */
-  enerphi0 = square_norm(g_spinor_field[2], VOLUME/2);
-  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-    printf(" Start HMC Energy = %e \n", enerphi0);
-  }
 
 
   /* IF PHMC */
@@ -188,62 +178,83 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     printf(" Norm of BHB up + BHB dn squared %e \n\n", temp);
   }
 
+
+
   /* END IF PHMC */
 
 
+  /* check if we want only 1+1 instead of 2+1+1*/
 
-  if(g_nr_of_psf > 1) {
-    random_spinor_field(g_spinor_field[3], VOLUME/2, rngrepro);
-    enerphi1 = square_norm(g_spinor_field[3], VOLUME/2);
-  }
-  if(g_nr_of_psf > 2) {
-    random_spinor_field(g_spinor_field[5], VOLUME/2, rngrepro);
-    enerphi2 = square_norm(g_spinor_field[5], VOLUME/2);
-  }
-  /* apply the fermion matrix to the first spinor */
-  /* it has the largest mu available              */
-  g_mu = g_mu1;
-  Qtm_plus_psi(g_spinor_field[first_psf], g_spinor_field[2]);
-  chrono_add_solution(g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
-		      g_csg_N[0], &g_csg_N[1], VOLUME/2);
-  if(g_nr_of_psf == 1 && ITER_MAX_BCG > 0 && fabs(g_mu1) == 0.) {
-      chrono_add_solution(g_spinor_field[first_psf], g_csg_field[1], g_csg_index_array[1],
+
+  if(phmc_only==0){
+
+   /* initialize the pseudo-fermion fields    */
+   /* depending on g_mu1 and g_mu2 we use     */
+   /* one or two pseudo-fermion fields        */
+   random_spinor_field(g_spinor_field[2], VOLUME/2, rngrepro);
+   /* compute the square of the norm */
+   enerphi0 += square_norm(g_spinor_field[2], VOLUME/2);
+   if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
+     printf(" Start HMC Energy = %e \n", enerphi0);
+   }
+
+   if(g_nr_of_psf > 1) {
+     random_spinor_field(g_spinor_field[3], VOLUME/2, rngrepro);
+     enerphi1 = square_norm(g_spinor_field[3], VOLUME/2);
+   }
+   if(g_nr_of_psf > 2) {
+     random_spinor_field(g_spinor_field[5], VOLUME/2, rngrepro);
+     enerphi2 = square_norm(g_spinor_field[5], VOLUME/2);
+   }
+   /* apply the fermion matrix to the first spinor */
+   /* it has the largest mu available              */
+   g_mu = g_mu1;
+   Qtm_plus_psi(g_spinor_field[first_psf], g_spinor_field[2]);
+   chrono_add_solution(g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
+ 		      g_csg_N[0], &g_csg_N[1], VOLUME/2);
+   if(g_nr_of_psf == 1 && ITER_MAX_BCG > 0 && fabs(g_mu1) == 0.) {
+       chrono_add_solution(g_spinor_field[first_psf], g_csg_field[1], g_csg_index_array[1],
 			  g_csg_N[2], &g_csg_N[3], VOLUME/2);
-    }
+     }
 
-  /* contruct the second \phi_o */
-  if(g_nr_of_psf > 1) {
-    g_mu = g_mu2;
-    Qtm_plus_psi(g_spinor_field[3], g_spinor_field[3]);
-    g_mu = g_mu1;
-    zero_spinor_field(g_spinor_field[second_psf],VOLUME/2);
-    if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    idis1 = bicg(second_psf, 3, g_eps_sq_acc1, g_relative_precision_flag);
-    ITER_MAX_BCG = saveiter_max;
-    chrono_add_solution(g_spinor_field[second_psf], g_csg_field[1], g_csg_index_array[1],
-			g_csg_N[2], &g_csg_N[3], VOLUME/2);
-    if(g_nr_of_psf == 2 && ITER_MAX_BCG > 0 && fabs(g_mu2) == 0.) {
-      chrono_add_solution(g_spinor_field[second_psf], g_csg_field[2], g_csg_index_array[2],
-			  g_csg_N[4], &g_csg_N[5], VOLUME/2);
-    }
-  }
-  /* contruct the third \phi_o */
-  if(g_nr_of_psf > 2) {
-    g_mu = g_mu3;
-    Qtm_plus_psi(g_spinor_field[5], g_spinor_field[5]);
-    g_mu = g_mu2;
-    zero_spinor_field(g_spinor_field[third_psf],VOLUME/2);
-    if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    idis2 = bicg(third_psf, 5, g_eps_sq_acc2, g_relative_precision_flag);
-    ITER_MAX_BCG = saveiter_max;
-    chrono_add_solution(g_spinor_field[third_psf], g_csg_field[2], g_csg_index_array[2],
-			g_csg_N[4], &g_csg_N[5], VOLUME/2);
-    if(ITER_MAX_BCG > 0 && fabs(g_mu3) == 0.) {
-      chrono_add_solution(g_spinor_field[third_psf], g_csg_field[3], g_csg_index_array[3],
+   /* contruct the second \phi_o */
+   if(g_nr_of_psf > 1) {
+     g_mu = g_mu2;
+     Qtm_plus_psi(g_spinor_field[3], g_spinor_field[3]);
+     g_mu = g_mu1;
+     zero_spinor_field(g_spinor_field[second_psf],VOLUME/2);
+     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+     idis1 = bicg(second_psf, 3, g_eps_sq_acc1, g_relative_precision_flag);
+     ITER_MAX_BCG = saveiter_max;
+     chrono_add_solution(g_spinor_field[second_psf], g_csg_field[1], g_csg_index_array[1],
+ 			g_csg_N[2], &g_csg_N[3], VOLUME/2);
+     if(g_nr_of_psf == 2 && ITER_MAX_BCG > 0 && fabs(g_mu2) == 0.) {
+       chrono_add_solution(g_spinor_field[second_psf], g_csg_field[2], g_csg_index_array[2],
+ 			  g_csg_N[4], &g_csg_N[5], VOLUME/2);
+     }
+   }
+   /* contruct the third \phi_o */
+   if(g_nr_of_psf > 2) {
+     g_mu = g_mu3;
+     Qtm_plus_psi(g_spinor_field[5], g_spinor_field[5]);
+     g_mu = g_mu2;
+     zero_spinor_field(g_spinor_field[third_psf],VOLUME/2);
+     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+     idis2 = bicg(third_psf, 5, g_eps_sq_acc2, g_relative_precision_flag);
+     ITER_MAX_BCG = saveiter_max;
+     chrono_add_solution(g_spinor_field[third_psf], g_csg_field[2], g_csg_index_array[2],
+ 			g_csg_N[4], &g_csg_N[5], VOLUME/2);
+     if(ITER_MAX_BCG > 0 && fabs(g_mu3) == 0.) {
+       chrono_add_solution(g_spinor_field[third_psf], g_csg_field[3], g_csg_index_array[3],
 			  g_csg_N[6], &g_csg_N[7], VOLUME/2);
-    }
+     }
+   }
   }
-
+  else if(phmc_only!=0){
+   zero_spinor_field(g_spinor_field[first_psf],VOLUME/2);
+   zero_spinor_field(g_spinor_field[second_psf],VOLUME/2);
+   zero_spinor_field(g_spinor_field[third_psf],VOLUME/2);
+  }
 
   /* initialize the momenta */
   enep=ini_momenta();
@@ -261,7 +272,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
       printf(" Here comes the NEW leap-frog integration \n \n");
     }
 
-    leap_frog_ND(dtau, Nsteps, nsmall); 
+    leap_frog_ND(dtau, Nsteps, nsmall,phmc_only); 
   }
   else if(integtyp == 2) {
     /* Sexton Weingarten integration scheme */
@@ -293,20 +304,6 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   new_gauge_energy = g_rgi_C0 * new_plaquette_energy + g_rgi_C1 * new_rectangle_energy;
 
   /* compute the energy contributions from the pseudo-fermions */
-  g_mu = g_mu1;
-  if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-  chrono_guess(g_spinor_field[2], g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
-	       g_csg_N[0], g_csg_N[1], VOLUME/2, &Qtm_pm_psi);
-  idis0=bicg(2, first_psf, g_eps_sq_acc1, g_relative_precision_flag);
-  ITER_MAX_BCG = saveiter_max;
-  /* Save the solution of Q^-2 at the right place */
-  /* for later reuse! */
-  assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], VOLUME/2);
-  /* Compute the energy contr. from first field */
-  enerphi0x = square_norm(g_spinor_field[2], VOLUME/2);
-  if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
-    printf(" Final HMC Energy = %e \n", enerphi0x);
-  }
 
   /* IF PHMC */
 
@@ -387,7 +384,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   }
 
 
-  enerphi0x += Ener[ij];
+  enerphi0x += Ener[ij];  /* this is quite sticky */
   if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
     printf(" At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], enerphi0x);
   }
@@ -395,30 +392,48 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   /* END IF PHMC */
 
 
-  if(g_nr_of_psf > 1) {
-    g_mu = g_mu1;
-    Qtm_plus_psi(g_spinor_field[DUM_DERI+5], g_spinor_field[second_psf]);
-    g_mu = g_mu2;
-    if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    chrono_guess(g_spinor_field[3], g_spinor_field[DUM_DERI+5], g_csg_field[1], g_csg_index_array[1],
-		 g_csg_N[2], g_csg_N[3], VOLUME/2, &Qtm_pm_psi);
-    idis1 += bicg(3, DUM_DERI+5, g_eps_sq_acc2, g_relative_precision_flag); 
-    ITER_MAX_BCG = saveiter_max;
-    /* Compute the energy contr. from second field */
-    enerphi1x = square_norm(g_spinor_field[3], VOLUME/2);
-  }
-  if(g_nr_of_psf > 2) {
-    g_mu = g_mu2;
-    Qtm_plus_psi(g_spinor_field[DUM_DERI+6], g_spinor_field[third_psf]);
-    g_mu = g_mu3;
-    if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    chrono_guess(g_spinor_field[5], g_spinor_field[DUM_DERI+6], g_csg_field[2], g_csg_index_array[2],
+  if(phmc_only==0) {
+   g_mu = g_mu1;
+   if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+   chrono_guess(g_spinor_field[2], g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
+ 	       g_csg_N[0], g_csg_N[1], VOLUME/2, &Qtm_pm_psi);
+   idis0=bicg(2, first_psf, g_eps_sq_acc1, g_relative_precision_flag);
+   ITER_MAX_BCG = saveiter_max;
+   /* Save the solution of Q^-2 at the right place */
+   /* for later reuse! */
+   assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], VOLUME/2);
+   /* Compute the energy contr. from first field */
+   enerphi0x += square_norm(g_spinor_field[2], VOLUME/2);
+   if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
+     printf(" Final HMC Energy = %e \n", enerphi0x);
+   }
+  
+
+   if(g_nr_of_psf > 1) {
+     g_mu = g_mu1;
+     Qtm_plus_psi(g_spinor_field[DUM_DERI+5], g_spinor_field[second_psf]);
+     g_mu = g_mu2;
+     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+     chrono_guess(g_spinor_field[3], g_spinor_field[DUM_DERI+5], g_csg_field[1], g_csg_index_array[1],
+ 		 g_csg_N[2], g_csg_N[3], VOLUME/2, &Qtm_pm_psi);
+     idis1 += bicg(3, DUM_DERI+5, g_eps_sq_acc2, g_relative_precision_flag); 
+     ITER_MAX_BCG = saveiter_max;
+     /* Compute the energy contr. from second field */
+     enerphi1x = square_norm(g_spinor_field[3], VOLUME/2);
+   }
+   if(g_nr_of_psf > 2) {
+     g_mu = g_mu2;
+     Qtm_plus_psi(g_spinor_field[DUM_DERI+6], g_spinor_field[third_psf]);
+     g_mu = g_mu3;
+     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+     chrono_guess(g_spinor_field[5], g_spinor_field[DUM_DERI+6], g_csg_field[2], g_csg_index_array[2],
 		 g_csg_N[4], g_csg_N[5], VOLUME/2, &Qtm_pm_psi);
-    idis2 += bicg(5, DUM_DERI+6, g_eps_sq_acc3, g_relative_precision_flag);
-    ITER_MAX_BCG = saveiter_max;
-    /* Compute the energy contr. from third field */
-    enerphi2x = square_norm(g_spinor_field[5], VOLUME/2);
-  }
+     idis2 += bicg(5, DUM_DERI+6, g_eps_sq_acc3, g_relative_precision_flag);
+     ITER_MAX_BCG = saveiter_max;
+     /* Compute the energy contr. from third field */
+     enerphi2x = square_norm(g_spinor_field[5], VOLUME/2);
+   }
+  } /* endif phmc_only */
 
   if((g_proc_id == g_stdio_proc) && (g_debug_level == 2)) {
     printf(" Energies: Old = %f New = %f   Exp(-Delta H_heavy) = %f \n", enerphi0, enerphi0x, exp(enerphi0-enerphi0x));
@@ -471,97 +486,6 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   */
 
 
-  /* Here a reversibility test is performed */
-  /* The trajectory is integrated back      */
-  if(return_check == 1) {
-    if(accept == 1) {
-      write_gauge_field_time_p( "conf.save" );
-    }
-
-    /* run the trajectory back */
-    if(integtyp == 1) {
-      /* Leap-frog integration scheme */
-      /* COMMENTED IF PHMC used 
-      leap_frog(-dtau, Nsteps, nsmall); 
-      */      
-
-      /* IF PHMC */
-      leap_frog_ND(-dtau, Nsteps, nsmall); 
-      
-    }
-    else if(integtyp == 2) {
-      /* Sexton Weingarten integration scheme */
-      sexton(-dtau, Nsteps, nsmall);
-    }
-    else if(integtyp == 3) {
-      ext_leap_frog(n_int, -tau, g_nr_of_psf, halfstep);
-    }
-    else if(integtyp == 4) {
-      ext_sexton_weingarten(n_int, -tau, g_nr_of_psf, halfstep);
-    }
-    else if(integtyp == 5) {
-      impr_leap_frog(n_int, -tau, g_nr_of_psf);
-    }
-    else if(integtyp == 6) {
-      mn2_integrator(n_int, -tau, g_nr_of_psf, halfstep, lambda);
-    }
-    else if(integtyp == 7) {
-      mn2p_integrator(n_int, -tau, g_nr_of_psf, lambda);
-    }
-
-    ret_enep=moment_energy();
-    ret_plaquette_energy=measure_gauge_action();
-    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-      ret_rectangle_energy = measure_rectangles();
-    }
-    ret_gauge_energy = g_rgi_C0 * ret_plaquette_energy + g_rgi_C1 * ret_rectangle_energy;
-    
-    /*compute the energy contributions from the pseudo-fermions */
-    assign(g_spinor_field[2], g_spinor_field[DUM_DERI+4], VOLUME/2);
-    g_mu = g_mu1;
-    if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    ret_idis0=bicg(2, first_psf, g_eps_sq_acc, g_relative_precision_flag);
-    ITER_MAX_BCG = saveiter_max;
-    assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], VOLUME/2);
-    
-    ret_enerphi0=square_norm(g_spinor_field[2], VOLUME/2);
-    if(g_nr_of_psf > 1) {
-      assign(g_spinor_field[3], g_spinor_field[DUM_DERI+5], VOLUME/2);
-      g_mu = g_mu1;
-      Qtm_plus_psi(g_spinor_field[second_psf], g_spinor_field[second_psf]);
-      g_mu = g_mu2;
-      if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-      ret_idis1 += bicg(3, second_psf, g_eps_sq_acc, g_relative_precision_flag);
-      ITER_MAX_BCG = saveiter_max;
-      assign(g_spinor_field[DUM_DERI+5], g_spinor_field[DUM_DERI+6], VOLUME/2);
-      ret_enerphi1 = square_norm(g_spinor_field[3], VOLUME/2);
-    }
-    if(g_nr_of_psf > 2) {
-      assign(g_spinor_field[5], g_spinor_field[DUM_DERI+6], VOLUME/2);
-      g_mu = g_mu2;
-      Qtm_plus_psi(g_spinor_field[third_psf], g_spinor_field[third_psf]);
-      g_mu = g_mu3;
-      if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-      ret_idis2 += bicg(5, third_psf, g_eps_sq_acc, g_relative_precision_flag);
-      ITER_MAX_BCG = saveiter_max;
-      ret_enerphi2 = square_norm(g_spinor_field[5], VOLUME/2);
-    }
-    
-    /* Compute the energy difference */
-    ret_dh= +ret_enep - g_beta*ret_gauge_energy - enep + g_beta*gauge_energy
-      + ret_enerphi0 - enerphi0 + ret_enerphi1 - enerphi1 + ret_enerphi2 - enerphi2;
-
-    /* Output */
-    if(g_proc_id == 0) {
-      ret_check_file = fopen("return_check.data","a");
-      fprintf(ret_check_file,"dh = %e, \n",ret_dh);
-      fclose(ret_check_file);
-    }
-
-    if(accept == 1) {
-      read_gauge_field_time_p( "conf.save" );
-    }
-  }
 
   if(accept == 1) {
     /* accept */
