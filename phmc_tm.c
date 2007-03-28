@@ -114,7 +114,7 @@ int main(int argc,char *argv[]) {
   double stop_prec_ev, temp, temp2;
 
   FILE *roots;
-  char *filename_phmc_root = "Square_phmc_root_BR_roots.dat";
+  char *filename_phmc_root = "Square_root_BR_roots.dat";
   char title[50];
 
   FILE *Const;
