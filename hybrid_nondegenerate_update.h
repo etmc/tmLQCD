@@ -11,6 +11,6 @@ void deri_nondegenerate();
 
 void fermion_momenta_ND(double step);
 
-void leap_frog_ND(double step, int m, int nsmall);
+void leap_frog_ND(double step, int m, int nsmall,int phmc_only);
 
 #endif

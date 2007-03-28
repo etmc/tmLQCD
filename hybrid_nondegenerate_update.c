@@ -136,7 +136,7 @@ void fermion_momenta_ND(double step) {
 }
 
 
-void leap_frog_ND(double step, int m, int nsmall) {
+void leap_frog_ND(double step, int m, int nsmall,int phmc_only) {
   int i,j;
   double smallstep;
 
@@ -151,7 +151,8 @@ void leap_frog_ND(double step, int m, int nsmall) {
   update_backward_gauge();
 #endif
   fermion_momenta_ND(0.5*step);
-  fermion_momenta(0.5*step);
+  if(phmc_only==0)
+   fermion_momenta(0.5*step);
   gauge_momenta(0.5*smallstep);
   for(i=1;i<m;i++){
     for(j=0;j<nsmall;j++){
@@ -161,8 +162,10 @@ void leap_frog_ND(double step, int m, int nsmall) {
 #ifdef _GAUGE_COPY
     update_backward_gauge();
 #endif
+
     fermion_momenta_ND(step);
-    fermion_momenta(step);
+    if(phmc_only==0)
+     fermion_momenta(step);
   }
   for(j=1;j<nsmall;j++){
     update_gauge(smallstep); 
@@ -174,7 +177,8 @@ void leap_frog_ND(double step, int m, int nsmall) {
   update_backward_gauge();
 #endif
   fermion_momenta_ND(0.5*step);
-  fermion_momenta(0.5*step);
+  if(phmc_only==0)
+   fermion_momenta(0.5*step);
 
 }
 
