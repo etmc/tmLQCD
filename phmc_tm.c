@@ -415,12 +415,20 @@ int main(int argc,char *argv[]) {
   phmc_invmaxev=1.0;
 
   if(startoption > 1){
-    Inoutputs=fopen(filename_inout,"r");
-    fseek(Inoutputs, 0, SEEK_END);
-    j=ftell(Inoutputs);
-    fseek(Inoutputs, j-29, SEEK_SET);
-    fscanf(Inoutputs, " %lf %lf %lf \n", &phmc_stilde_low, &phmc_stilde_max, &phmc_cheb_evmin);
-    fclose(Inoutputs);
+    if((Inoutputs = fopen(filename_inout,"r")) != (FILE*)NULL) {
+      fseek(Inoutputs, 0, SEEK_END);
+      j=ftell(Inoutputs);
+      fseek(Inoutputs, j-29, SEEK_SET);
+      fscanf(Inoutputs, " %lf %lf %lf \n", &phmc_stilde_low, &phmc_stilde_max, &phmc_cheb_evmin);
+      fclose(Inoutputs);
+    }
+    else {
+      fprintf(stderr, "File %s is missing! Aborting ...\n", filename_inout);
+#ifdef MPI
+      MPI_Finalize();
+#endif
+      exit(6);
+    }
 
     if(startoption == 2){
       max_iter_ev = 1000;
@@ -445,14 +453,12 @@ int main(int argc,char *argv[]) {
         printf(" !!! BREAK since EV-Min SMALLER than phmc_stilde_low !!! \n");
         printf(" Ev-Min=%e   phmc_stilde_low=%e \n", phmc_cheb_evmin, phmc_stilde_low); 
         exit(-1);
-      }      
+      }
 
       phmc_cheb_evmin = phmc_cheb_evmin/(phmc_stilde_max);
-      j = (int)(phmc_cheb_evmin*10000);
-      phmc_cheb_evmin = j*0.0001;
 
       Inoutputs=fopen(filename_inout,"a");
-      fprintf(Inoutputs, " %f %f %f \n", phmc_stilde_low, phmc_stilde_max, phmc_cheb_evmin);
+      fprintf(Inoutputs, " %f %f %1.5e \n", phmc_stilde_low, phmc_stilde_max, phmc_cheb_evmin);
       fclose(Inoutputs);
     }
   }
@@ -568,9 +574,17 @@ int main(int argc,char *argv[]) {
      constant appearing in the multiplication representing the 
      polinomial in  sqrt(s) .
   */
-  Const=fopen(filename_const,"r");
-  fscanf(Const, " %lf \n", &phmc_Cpol);
-  fclose(Const);
+  if((Const=fopen(filename_const,"r")) != (FILE*)NULL) {
+    fscanf(Const, " %lf \n", &phmc_Cpol);
+    fclose(Const);
+  }
+  else {
+    fprintf(stderr, "File %s is missing! Aborting...\n", filename_const);
+#ifdef MPI
+    MPI_Finalize();
+#endif
+    exit(6);
+  }
   phmc_Cpol = sqrt(phmc_Cpol);
 
   phmc_roo = calloc((2*phmc_dop_n_cheby-2),sizeof(complex));
@@ -656,7 +670,7 @@ int main(int argc,char *argv[]) {
     else return_check = 0;
 
     Rate += update_tm_nd(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
-			 dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag,0 /* 0 means no change 1 means neglect the hmc contr.*/ );
+			 dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag,1 /* 0 means no change 1 means neglect the hmc contr.*/ );
 
     /* Measure the Polyakov loop in direction 2 and 3:*/
     polyakov_loop(&pl, 2); 
