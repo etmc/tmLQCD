@@ -656,7 +656,7 @@ int main(int argc,char *argv[]) {
     else return_check = 0;
 
     Rate += update_tm_nd(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
-			 dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag);
+			 dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag,0 /* 0 means no change 1 means neglect the hmc contr.*/ );
 
     /* Measure the Polyakov loop in direction 2 and 3:*/
     polyakov_loop(&pl, 2); 
