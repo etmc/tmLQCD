@@ -128,6 +128,18 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   }
   dontdump = 0;
 
+  if(phmc_no_flavours==0) {
+   /* initialize the pseudo-fermion fields    */
+   /* depending on g_mu1 and g_mu2 we use     */
+   /* one or two pseudo-fermion fields        */
+   random_spinor_field(g_spinor_field[2], VOLUME/2, rngrepro);
+   /* compute the square of the norm */
+   enerphi0 += square_norm(g_spinor_field[2], VOLUME/2);
+   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+     printf("PHMC: Start HMC Energy = %e \n", enerphi0);
+   }
+  }
+
 
   /* IF PHMC */
 
@@ -187,16 +199,6 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
 
   if(phmc_no_flavours==0){
-
-   /* initialize the pseudo-fermion fields    */
-   /* depending on g_mu1 and g_mu2 we use     */
-   /* one or two pseudo-fermion fields        */
-   random_spinor_field(g_spinor_field[2], VOLUME/2, rngrepro);
-   /* compute the square of the norm */
-   enerphi0 += square_norm(g_spinor_field[2], VOLUME/2);
-   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-     printf("PHMC: Start HMC Energy = %e \n", enerphi0);
-   }
 
    if(g_nr_of_psf > 1) {
      random_spinor_field(g_spinor_field[3], VOLUME/2, rngrepro);
@@ -302,6 +304,23 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
   /* compute the energy contributions from the pseudo-fermions */
 
+  if(phmc_no_flavours==0){
+   g_mu = g_mu1;
+   if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+   chrono_guess(g_spinor_field[2], g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
+ 	       g_csg_N[0], g_csg_N[1], VOLUME/2, &Qtm_pm_psi);
+   idis0=bicg(2, first_psf, g_eps_sq_acc1, g_relative_precision_flag);
+   ITER_MAX_BCG = saveiter_max;
+   /* Save the solution of Q^-2 at the right place */
+   /* for later reuse! */
+   assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], VOLUME/2);
+   /* Compute the energy contr. from first field */
+   enerphi0x += square_norm(g_spinor_field[2], VOLUME/2);
+   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+     printf("PHMC: Final HMC Energy = %e \n", enerphi0x);
+   }  
+  }
+
   /* IF PHMC */
 
   /* This is needed if we consider only "1" in eq. 9 */
@@ -391,23 +410,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
 
   if(phmc_no_flavours==0) {
-   g_mu = g_mu1;
-   if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-   chrono_guess(g_spinor_field[2], g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
- 	       g_csg_N[0], g_csg_N[1], VOLUME/2, &Qtm_pm_psi);
-   idis0=bicg(2, first_psf, g_eps_sq_acc1, g_relative_precision_flag);
-   ITER_MAX_BCG = saveiter_max;
-   /* Save the solution of Q^-2 at the right place */
-   /* for later reuse! */
-   assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], VOLUME/2);
-   /* Compute the energy contr. from first field */
-   enerphi0x += square_norm(g_spinor_field[2], VOLUME/2);
-   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-     printf("PHMC: Final HMC Energy = %e \n", enerphi0x);
-   }
-  
-
-   if(g_nr_of_psf > 1) {
+    if(g_nr_of_psf > 1) {
      g_mu = g_mu1;
      Qtm_plus_psi(g_spinor_field[DUM_DERI+5], g_spinor_field[second_psf]);
      g_mu = g_mu2;
