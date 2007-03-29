@@ -54,7 +54,7 @@
 int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle_energy, 
 	      char * filename, const double dtau, const int Nsteps, const int nsmall,
 	      const double tau, int * n_int, const int return_check,
-	      double * lambda, const int rngrepro,const int phmc_only) {
+	      double * lambda, const int rngrepro,const int phmc_no_flavours) {
   su3 *v, *w;
   static int ini_g_tmp = 0;
   int rlxd_state[105];
@@ -186,7 +186,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   /* check if we want only 1+1 instead of 2+1+1*/
 
 
-  if(phmc_only==0){
+  if(phmc_no_flavours==0){
 
    /* initialize the pseudo-fermion fields    */
    /* depending on g_mu1 and g_mu2 we use     */
@@ -250,7 +250,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
      }
    }
   }
-  else if(phmc_only!=0){
+  else if(phmc_no_flavours!=0){
    zero_spinor_field(g_spinor_field[first_psf],VOLUME/2);
    zero_spinor_field(g_spinor_field[second_psf],VOLUME/2);
    zero_spinor_field(g_spinor_field[third_psf],VOLUME/2);
@@ -269,7 +269,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
     /* IF PHMC */
 
-    leap_frog_ND(dtau, Nsteps, nsmall,phmc_only); 
+    leap_frog_ND(dtau, Nsteps, nsmall,phmc_no_flavours); 
   }
   else if(integtyp == 2) {
     /* Sexton Weingarten integration scheme */
@@ -390,7 +390,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   /* END IF PHMC */
 
 
-  if(phmc_only==0) {
+  if(phmc_no_flavours==0) {
    g_mu = g_mu1;
    if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
    chrono_guess(g_spinor_field[2], g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
@@ -431,7 +431,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
      /* Compute the energy contr. from third field */
      enerphi2x = square_norm(g_spinor_field[5], VOLUME/2);
    }
-  } /* endif phmc_only */
+  } /* endif phmc_no_flavours */
 
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
     printf("PHMC: Energies: Old = %f New = %f   Exp(-Delta H_heavy) = %f \n", 
