@@ -82,6 +82,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   double stout_rho;
   int stout_no_iter;
   int use_stout_flag;
+  int phmc_no_flavours;
 %}
 
 %option never-interactive
@@ -177,7 +178,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x USESTOUT
 %x STOUTRHO
 %x STOUTITER
-
+%x PHMCFLAV
 
 %x COMMENT
 %x ERROR
@@ -285,6 +286,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^UseStoutSmearing{SPC}*={SPC}*             BEGIN(USESTOUT);
 ^StoutRho{SPC}*={SPC}*                     BEGIN(STOUTRHO);
 ^StoutNoIterations{SPC}*={SPC}*            BEGIN(STOUTITER);
+^PhmcNoFlavours{SPC}*={SPC}*               BEGIN(PHMCFLAV);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -821,6 +823,14 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   stout_no_iter=atoi(yytext);
   if(verbose!=0) printf("make %d stout iterations!\n", stout_no_iter);
 }
+<PHMCFLAV>2"+"1"+"1 {
+  phmc_no_flavours=0;
+  if(verbose!=0) printf("Simulate 2+1+1 flavours (1+1 PHMC).\n");
+}
+<PHMCFLAV>1"+"1 {
+  phmc_no_flavours=1;
+  if(verbose!=0) printf("Simulate 1+1 flavours only (1+1 PHMC).\n");
+}
 
 
 <*>^#                       BEGIN(COMMENT);
@@ -830,7 +840,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
 <INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
 <ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
-<GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC,USESTOUT,STOUTRHO,STOUTITER>#   BEGIN(COMMENT);
+<GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC,USESTOUT,STOUTRHO,STOUTITER,PHMCFLAV>#   BEGIN(COMMENT);
 <SOURCETS>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
@@ -1047,6 +1057,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Unknown value in line %d! Must be an integer. Exiting...!\n", line_of_file);
   exit(1);
 }
+<PHMCFLAV>. {
+  printf("Unknown value in line %d! Must be 2+1+1 or 1+1. Exiting...!\n", line_of_file);
+  exit(1); 
+}
 
 <INITIAL>.                        BEGIN(ERROR);
 <ERROR>[^\t\n]*             {
@@ -1172,6 +1186,8 @@ int read_input(char * conf_file){
   use_stout_flag = _default_use_stout_flag;
   stout_rho = _default_stout_rho;
   stout_no_iter = _default_stout_no_iter;
+  /* check for reread ! */ 
+  phmc_no_flavours = _default_phmc_no_flavours;
 
   /********************************************/
 

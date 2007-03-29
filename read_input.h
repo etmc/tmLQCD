@@ -74,7 +74,8 @@ extern "C"
   extern double stout_rho;
   extern int stout_no_iter;
   extern int use_stout_flag;
-  
+  extern int phmc_no_flavours;
+ 
   int read_input(char *);
   int reread_input(char *);
   
