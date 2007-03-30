@@ -834,9 +834,13 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   phmc_no_flavours=1;
   if(verbose!=0) printf("Simulate 1+1 flavours only (1+1 PHMC).\n");
 }
-<COMPUTEEVS>{DIGIT}+ {
-  compute_evs=atoi(yytext);
+<COMPUTEEVS>yes {
+  compute_evs=1;
   if(verbose!=0) if(compute_evs!=0) printf("Compute Eigenvalues and exit.");
+}
+<COMPUTEEVS>no {
+  compute_evs=0;
+  if(verbose!=0) if(compute_evs!=0) printf("Dont compute Eigenvalues and run as usual.");
 }
 
 <*>^#                       BEGIN(COMMENT);
@@ -1069,7 +1073,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   exit(1); 
 }
 <COMPUTEEVS>. {
-  printf("Unknown value in line %d! Must be an integer. Exiting...!\n", line_of_file);
+  printf("Unknown value in line %d! Must be an yes or no. Exiting...!\n", line_of_file);
   exit(1);
 }
 
