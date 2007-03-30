@@ -425,7 +425,7 @@ int main(int argc,char *argv[]) {
 
   phmc_invmaxev=1.0;
 
-  if(startoption != CONTINUE) {
+  if(startoption != CONTINUE || (compute_evs!=0)) {
     max_iter_ev = 1000;
     stop_prec_ev = 1.e-13;
     
@@ -434,9 +434,22 @@ int main(int argc,char *argv[]) {
     
     g_nev = 2;   /* Number of highest eigenvalues to be computed */
     phmc_cheb_evmax = max_eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
-    
+       
     temp=phmc_cheb_evmin;
     temp2=phmc_cheb_evmax;
+    
+    if((compute_evs!=0)){
+      if(g_proc_id==0){
+        printf(" Ev-max = %e stilde_max = %e \n", phmc_cheb_evmax,stilde_max);
+        printf(" Ev-min = %e stilde_low = %e \n", phmc_cheb_evmin,stilde_low); 
+      }
+#ifdef MPI
+      MPI_finalize();
+#endif
+      exit(0);
+    }
+
+
   }
 
 
