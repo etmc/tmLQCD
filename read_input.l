@@ -83,6 +83,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   int stout_no_iter;
   int use_stout_flag;
   int phmc_no_flavours;
+  int compute_evs;
 %}
 
 %option never-interactive
@@ -179,6 +180,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x STOUTRHO
 %x STOUTITER
 %x PHMCFLAV
+%x COMPUTEEVS
 
 %x COMMENT
 %x ERROR
@@ -287,6 +289,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^StoutRho{SPC}*={SPC}*                     BEGIN(STOUTRHO);
 ^StoutNoIterations{SPC}*={SPC}*            BEGIN(STOUTITER);
 ^PhmcNoFlavours{SPC}*={SPC}*               BEGIN(PHMCFLAV);
+^PhmcComputeEVs{SPC}*={SPC}*                   BEGIN(COMPUTEEVS);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -831,7 +834,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   phmc_no_flavours=1;
   if(verbose!=0) printf("Simulate 1+1 flavours only (1+1 PHMC).\n");
 }
-
+<COMPUTEEVS>{DIGIT}+ {
+  compute_evs=atoi(yytext);
+  if(verbose!=0) if(compute_evs!=0) printf("Compute Eigenvalues and exit.");
+}
 
 <*>^#                       BEGIN(COMMENT);
 <SEED,KAPPA,ACCPFIRST,ACCPTILDE,ACCHFIN,RECEV,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
@@ -841,6 +847,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
 <ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
 <GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC,USESTOUT,STOUTRHO,STOUTITER,PHMCFLAV>#   BEGIN(COMMENT);
+<COMPUTEEVS>#  BEGIN(COMMENT);
 <SOURCETS>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
@@ -1061,6 +1068,11 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Unknown value in line %d! Must be 2+1+1 or 1+1. Exiting...!\n", line_of_file);
   exit(1); 
 }
+<COMPUTEEVS>. {
+  printf("Unknown value in line %d! Must be an integer. Exiting...!\n", line_of_file);
+  exit(1);
+}
+
 
 <INITIAL>.                        BEGIN(ERROR);
 <ERROR>[^\t\n]*             {
@@ -1188,7 +1200,7 @@ int read_input(char * conf_file){
   stout_no_iter = _default_stout_no_iter;
   /* check for reread ! */ 
   phmc_no_flavours = _default_phmc_no_flavours;
-
+  compute_evs = _default_compute_evs;
   /********************************************/
 
   if ((yyin = fopen(conf_file, "rt")) == NULL){
