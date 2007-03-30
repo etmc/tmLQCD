@@ -444,7 +444,7 @@ int main(int argc,char *argv[]) {
         printf(" Ev-min = %e stilde_low = %e \n", phmc_cheb_evmin,stilde_low); 
       }
 #ifdef MPI
-      MPI_finalize();
+      MPI_Finalize();
 #endif
       exit(0);
     }
