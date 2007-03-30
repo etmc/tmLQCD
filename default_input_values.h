@@ -94,5 +94,5 @@
 #define _default_stout_no_iter 1
 #define _default_use_stout_flag 0
 #define _default_phmc_no_flavours 0
-
+#define _default_compute_evs 0
 #endif
