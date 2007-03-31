@@ -289,7 +289,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^StoutRho{SPC}*={SPC}*                     BEGIN(STOUTRHO);
 ^StoutNoIterations{SPC}*={SPC}*            BEGIN(STOUTITER);
 ^PhmcNoFlavours{SPC}*={SPC}*               BEGIN(PHMCFLAV);
-^PhmcComputeEVs{SPC}*={SPC}*                   BEGIN(COMPUTEEVS);
+^PhmcComputeOnlyEVs{SPC}*={SPC}*           BEGIN(COMPUTEEVS);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -836,11 +836,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 <COMPUTEEVS>yes {
   compute_evs=1;
-  if(verbose!=0) if(compute_evs!=0) printf("Compute Eigenvalues and exit.");
+  if(verbose!=0) printf("Compute Eigenvalues and exit.");
 }
 <COMPUTEEVS>no {
   compute_evs=0;
-  if(verbose!=0) if(compute_evs!=0) printf("Dont compute Eigenvalues and run as usual.");
 }
 
 <*>^#                       BEGIN(COMMENT);

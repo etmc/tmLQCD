@@ -32,10 +32,20 @@
 #include "su3spinor.h"
 #include "sse.h"
 #include "linalg/fortran.h"
-#include "linalg/blas.h"
-#include "linalg/lapack.h"
+#ifdef ESSL
+# ifdef BGL
+#  include </opt/ibmmath/include/essl.h>
+# else
+#  include <essl.h>
+# endif
+#else
+# include "linalg/blas.h"
+# include "linalg/lapack.h"
+#endif
 #include "linalg_eo.h"
-
+#ifdef MPI
+# include <mpi.h>
+#endif
 #include "solver/solver.h"
 #include "solver/gram-schmidt_bi.h"
 #include "solver/quicksort.h"
@@ -60,6 +70,14 @@ static void print_status(int clvl, int it, int k, int j, int kmax,
 static void sorteig(int j, double S[], complex U[], int ldu, double tau,
 		    double dtemp[], int idx1[], int idx2[], int strategy);
 
+void perrorhandler(const int i, char * message) {
+  fprintf(stderr, "%s \n", message); 
+#ifdef MPI
+  MPI_Finalize();
+#endif
+  exit(i);
+}
+
 /* Projection routines */
 void pProj_A_psi(bispinor * const y, bispinor * const x);
 
@@ -71,7 +89,9 @@ void pProj_A_psi(bispinor * const y, bispinor * const x);
 /* static double DMONE = -1.0, DZER = 0.0, DONE = 1.0; */
 static int MONE = -1, ONE = 1;
 static complex CONE, CZERO, CMONE;
-
+#ifdef ESSL
+static dcmplx _CONE, _CZERO, _CMONE;
+#endif
 /* Projector variables */
 
 static int p_n, p_n2, p_k, p_lda;
@@ -136,10 +156,10 @@ void pjdher(int n, int lda, double tau, double tol,
 /*   complex *matdummy, *vecdummy; */
   
   /* scalar vars */
-  double theta, alpha, it_tol;
+  double theta, alpha, it_tol, dum;
 
 
-  int i, k, j, actblksize, eigworklen, found, conv, keep, n2;
+  int i, k, j, actblksize, eigworklen, found, conv, keep, n2, N = n*sizeof(complex)/sizeof(bispinor);
   int act, cnt, idummy, info, CntCorrIts=0, endflag=0;
 
   /* variables for random number generator */
@@ -196,19 +216,24 @@ void pjdher(int n, int lda, double tau, double tol,
   }
 
   /* validate input parameters */
-  if(tol <= 0) errorhandler(401,"");
-  if(kmax <= 0 || kmax > n) errorhandler(402,"");
-  if(jmax <= 0 || jmax > n) errorhandler(403,"");
-  if(jmin <= 0 || jmin > jmax) errorhandler(404,"");
-  if(itmax < 0) errorhandler(405,"");
-  if(blksize > jmin || blksize > (jmax - jmin)) errorhandler(406,"");
-  if(blksize <= 0 || blksize > kmax) errorhandler(406,"");
-  if(blkwise < 0 || blkwise > 1) errorhandler(407,"");
-  if(V0dim < 0 || V0dim >= jmax) errorhandler(408,"");
-  if(linitmax < 0) errorhandler(409,"");
-  if(eps_tr < 0.) errorhandler(500,"");
-  if(toldecay <= 1.0) errorhandler(501,"");
+  if(tol <= 0) perrorhandler(401,"");
+  if(kmax <= 0 || kmax > n) perrorhandler(402,"");
+  if(jmax <= 0 || jmax > n) perrorhandler(403,"");
+  if(jmin <= 0 || jmin > jmax) perrorhandler(404,"");
+  if(itmax < 0) perrorhandler(405,"");
+  if(blksize > jmin || blksize > (jmax - jmin)) perrorhandler(406,"");
+  if(blksize <= 0 || blksize > kmax) perrorhandler(406,"");
+  if(blkwise < 0 || blkwise > 1) perrorhandler(407,"");
+  if(V0dim < 0 || V0dim >= jmax) perrorhandler(408,"");
+  if(linitmax < 0) perrorhandler(409,"");
+  if(eps_tr < 0.) perrorhandler(500,"");
+  if(toldecay <= 1.0) perrorhandler(501,"");
 
+#ifdef ESSL
+  _CONE._data._re=1.; _CONE._data._im=0.;
+  _CMONE._data._re=-1.; _CMONE._data._im=0.;
+  _CZERO._data._re=0.; _CZERO._data._im=0.;
+#endif
   CONE.re=1.; CONE.im=0.;
   CZERO.re=0.; CZERO.im=0.;
   CMONE.re=-1.; CMONE.im=0.;
@@ -216,7 +241,11 @@ void pjdher(int n, int lda, double tau, double tol,
   /* Get hardware-dependent values:
    * Opt size of workspace for ZHEEV is (NB+1)*j, where NB is the opt.
    * block size... */
+#ifdef ESSL
+  eigworklen = 8*jmax;
+#else
   eigworklen = (2 + _FT(ilaenv)(&ONE, filaenv, fvu, &jmax, &MONE, &MONE, &MONE, 6, 2)) * jmax;
+#endif
 
 
   /* Allocating memory for matrices & vectors */ 
@@ -227,11 +256,11 @@ void pjdher(int n, int lda, double tau, double tol,
   V_ = (complex *)malloc(lda * jmax * sizeof(complex));
   V = V_;
 #endif
-  if(errno == ENOMEM) errorhandler(300,"V in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"V in pjdher");
   U = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) errorhandler(300,"U in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"U in pjdher");
   s = (double *)malloc(jmax * sizeof(double));
-  if(errno == ENOMEM) errorhandler(300,"s in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"s in pjdher");
 #if (defined SSE || defined SSE2 || defined SSE3)
   Res_ = (complex *)malloc((lda * blksize+4) * sizeof(complex));
   Res = (complex*)(((unsigned long int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
@@ -239,45 +268,43 @@ void pjdher(int n, int lda, double tau, double tol,
   Res_ = (complex *)malloc(lda * blksize * sizeof(complex));
   Res = Res_;
 #endif
-  if(errno == ENOMEM) errorhandler(300,"Res in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"Res in pjdher");
   resnrm = (double *)malloc(blksize * sizeof(double));
-  if(errno == ENOMEM) errorhandler(300,"resnrm in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"resnrm in pjdher");
   resnrm_old = (double *)calloc(blksize,sizeof(double));
-  if(errno == ENOMEM) errorhandler(300,"resnrm_old in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"resnrm_old in pjdher");
   M = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) errorhandler(300,"M in pjdher");
-/*   Z = (complex *)malloc(jmax * jmax * sizeof(complex)); */
-/*   if(errno == ENOMEM) errorhandler(300,"Z in pjdher"); */
+  if(errno == ENOMEM) perrorhandler(300,"M in pjdher");
+#ifdef ESSL
+  Z = (complex *)malloc(jmax * jmax * sizeof(complex)); 
+  if(errno == ENOMEM) perrorhandler(300,"Z in pjdher"); 
+#endif
   Vtmp = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) errorhandler(300,"Vtmp in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"Vtmp in pjdher");
   p_work = (complex *)malloc(n * sizeof(complex));
-  if(errno == ENOMEM) errorhandler(300,"p_work in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"p_work in pjdher");
 
   /* ... */
   idx1 = (int *)malloc(jmax * sizeof(int));
-  if(errno == ENOMEM) errorhandler(300,"idx1 in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"idx1 in pjdher");
   idx2 = (int *)malloc(jmax * sizeof(int));
-  if(errno == ENOMEM) errorhandler(300,"idx2 in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"idx2 in pjdher");
 
   /* Indices for (non-)converged approximations */
   convind = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) errorhandler(300,"convind in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"convind in pjdher");
   keepind = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) errorhandler(300,"keepind in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"keepind in pjdher");
   solvestep = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) errorhandler(300,"solvestep in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"solvestep in pjdher");
   actcorrits = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) errorhandler(300,"actcorrits in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"actcorrits in pjdher");
 
   rwork = (double *)malloc(3*jmax * sizeof(double));
-  if(errno == ENOMEM) errorhandler(300,"rwork in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"rwork in pjdher");
 
-/*   _FT(pzheev)(fupl_v, fupl_u, &j, Z, &ONE, &ONE, desc_M, s, U, &ONE, &ONE, desc_M,  */
-/* 	      &dummy, &MONE, rwork, &rworklen, &info, 1, 1);  */
-/*   eigworklen = (int)(dummy.re); */
-/*   printf("eigworklen = %d \n",eigworklen); */
   eigwork = (complex *)malloc(eigworklen * sizeof(complex));
-  if(errno == ENOMEM) errorhandler(300,"eigwork in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"eigwork in pjdher");
 
 #if (defined SSE || defined SSE2 || defined SSE3)
   temp1_ = (complex *)malloc((lda+4) * sizeof(complex));
@@ -286,9 +313,9 @@ void pjdher(int n, int lda, double tau, double tol,
   temp1_ = (complex *)malloc(lda * sizeof(complex));
   temp1 = temp1_;
 #endif
-  if(errno == ENOMEM) errorhandler(300,"temp1 in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"temp1 in pjdher");
   dtemp = (double *)malloc(n * sizeof(complex));
-  if(errno == ENOMEM) errorhandler(300,"dtemp in pjdher");
+  if(errno == ENOMEM) perrorhandler(300,"dtemp in pjdher");
 
   /* Set variables for Projection routines */
   n2 = 2*n;
@@ -317,9 +344,13 @@ void pjdher(int n, int lda, double tau, double tol,
   }
   for (cnt = 0; cnt < j; cnt ++) {
     pModifiedGS(V + cnt*lda, n, cnt, V, lda);
-    alpha = sqrt(square_norm_bi((bispinor*)(V+cnt*lda), n/sizeof(bispinor)*sizeof(complex)));
+    alpha = sqrt(square_norm_bi((bispinor*)(V+cnt*lda), N));
     alpha = 1.0 / alpha;
+#ifdef ESSL
+    dscal(n2, alpha, (double *)(V + cnt*lda), 1);
+#else
     _FT(dscal)(&n2, &alpha, (double *)(V + cnt*lda), &ONE);
+#endif
   }
 
   /* Generate interaction matrix M = V^dagger*A*V. Only the upper triangle
@@ -329,7 +360,7 @@ void pjdher(int n, int lda, double tau, double tol,
     A_psi((bispinor*) temp1, (bispinor*) (V+cnt*lda));
     idummy = cnt+1;
     for(i = 0; i < idummy; i++){
-      M[cnt*jmax+i] = scalar_prod_bi((bispinor*) (V+i*lda), (bispinor*) temp1, n/sizeof(bispinor)*sizeof(complex));
+      M[cnt*jmax+i] = scalar_prod_bi((bispinor*) (V+i*lda), (bispinor*) temp1, N);
     }
   }
 
@@ -363,15 +394,32 @@ void pjdher(int n, int lda, double tau, double tol,
   * M is hermitian, only the upper triangle is stored                        *
   *                                                                          *
   ****************************************************************************/
+
+#ifdef ESSL
+    info = 0;
+    for(act = 0; act < j; act++) {
+      for(cnt = 0; cnt <= act; cnt++) {
+	Z[info] = M[act*jmax+cnt];
+	info++;
+      }
+    }
+/*     _FT(zlacpy)(fupl_u, &j, &j, M, &jmax, Z, &j, 1); */
+#else
     _FT(zlacpy)(fupl_u, &j, &j, M, &jmax, U, &jmax, 1);
-    _FT(zheev)(fupl_v, fupl_u, &j, U, &jmax, s, eigwork, &eigworklen, rwork, &info, 1, 1); 
+#endif
+#ifdef ESSL
+    zhpev(21, (dcmplx*) Z, s, U, jmax, j, rwork, eigworklen);
+    info = 0;
+#else
+    _FT(zheev)(fupl_v, fupl_u, &j, U, &jmax, s, eigwork, &eigworklen, rwork, &info, 1, 1);
+#endif
 
     if (info != 0) {
       printf("error solving the projected eigenproblem.");
       printf(" zheev: info = %d\n", info);
     }
-    if(info != 0) errorhandler(502,"");
-  
+    if(info != 0) perrorhandler(502,"problem in zheev");
+
     /* Reverse order of eigenvalues if maximal value is needed */
     if(maxmin == 1){
       sorteig(j, s, U, jmax, s[j-1], dtemp, idx1, idx2, 0); 
@@ -379,6 +427,7 @@ void pjdher(int n, int lda, double tau, double tol,
     else{
       sorteig(j, s, U, jmax, 0., dtemp, idx1, idx2, 0); 
     }
+
  /****************************************************************************
   *                                                                          *
   * Convergence/Restart Check                                                *
@@ -406,17 +455,24 @@ void pjdher(int n, int lda, double tau, double tol,
 	
 	/* Compute Ritz-Vector Q[:,k+cnt1]=V*U[:,cnt1] */
 	theta = s[act];
+#ifdef ESSL
+	zgemv(fupl_n, n, j, _CONE, V, lda, (dcmplx*)u, 1, _CZERO, (dcmplx*)q, 1);
+#else
 	_FT(zgemv)(fupl_n, &n, &j, &CONE, V, &lda, u, &ONE, &CZERO, q, &ONE, 1);
+#endif
 
 	/* Compute the residual */
 	A_psi((bispinor*) r, (bispinor*) q); 
 
 	theta = -theta;
+#ifdef ESSL
+	daxpy(n2, theta, (double*) q, 1, (double*) r, 1);
+#else
 	_FT(daxpy)(&n2, &theta, (double*) q, &ONE, (double*) r, &ONE);
-
+#endif
 	/* Compute norm of the residual and update arrays convind/keepind*/
 	resnrm_old[act] = resnrm[act];
-	resnrm[act] = sqrt(square_norm_bi((bispinor*) r, n/sizeof(bispinor)*sizeof(complex)));
+	resnrm[act] = sqrt(square_norm_bi((bispinor*) r, N));
 	if (resnrm[act] < tol){
 	  convind[conv] = act; 
 	  conv = conv + 1; 
@@ -463,8 +519,13 @@ void pjdher(int n, int lda, double tau, double tol,
 	for (act = 0; act < n; act = act + jmax) {
 	  cnt = act + jmax > n ? n-act : jmax;
 	  _FT(zlacpy)(fupl_a, &cnt, &j, V+act, &lda, Vtmp, &jmax, 1);
+#ifdef ESSL
+	  zgemm(fupl_n, fupl_n, cnt, idummy, j, _CONE, Vtmp, 
+		jmax,  U+actblksize*jmax, jmax, _CZERO,  V+act+keep*lda, lda);
+#else
 	  _FT(zgemm)(fupl_n, fupl_n, &cnt, &idummy, &j, &CONE, Vtmp, 
 		     &jmax, U+actblksize*jmax, &jmax, &CZERO, V+act+keep*lda, &lda, 1, 1);
+#endif
 	}
 
 	/* Insert the not converged approximations as first columns in V */
@@ -546,8 +607,13 @@ void pjdher(int n, int lda, double tau, double tol,
 	for (act = 0; act < n; act = act + jmax) { /* V = V * U(:,1:j) */
 	  cnt = act+jmax > n ? n-act : jmax;
 	  _FT(zlacpy)(fupl_a, &cnt, &idummy, V+act, &lda, Vtmp, &jmax, 1);
+#ifdef ESSL
+	  zgemm(fupl_n, fupl_n, cnt, j, idummy, _CONE, Vtmp,
+		jmax, U, jmax, _CZERO, V+act, lda);
+#else
 	  _FT(zgemm)(fupl_n, fupl_n, &cnt, &j, &idummy, &CONE, Vtmp, 
 		     &jmax, U, &jmax, &CZERO, V+act, &lda, 1, 1);
+#endif
 	}
 	  
 	_FT(zlaset)(fupl_a, &j, &j, &CZERO, &CONE, U, &jmax, 1);
@@ -609,15 +675,22 @@ void pjdher(int n, int lda, double tau, double tol,
       /* equation and project if necessary */
       pModifiedGS(r, n, k + actblksize, Q, lda);
 
+      i = g_sloppy_precision_flag;
+      g_sloppy_precision = 1;
+      g_sloppy_precision_flag = 1;
       /* Solve the correction equation ... */
-
-      if(solver_flag == CG){ 
+      if (solver_flag == BICGSTAB){
+	info = bicgstab_complex_bi((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi);
+      }
+      else if(solver_flag == CG){ 
 	info = cg_her_bi((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi, 0, 0); 
       } 
       else{
 	info = cg_her_bi((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi, 0, 0); 
       }
       
+      g_sloppy_precision = 0;
+      g_sloppy_precision_flag = i;
       /* Actualizing profiling data */
       if (info == -1){
 	CntCorrIts += linitmax;
@@ -637,13 +710,16 @@ void pjdher(int n, int lda, double tau, double tol,
       pIteratedClassicalGS(v, &alpha, n, j, V, temp1, lda);
 
       alpha = 1.0 / alpha;
+#ifdef ESSL
+      dscal(n2, alpha, (double*) v, 1);
+#else
       _FT(dscal)(&n2, &alpha, (double*) v, &ONE);
-      
+#endif      
       /* update interaction matrix M */
       A_psi((bispinor*) temp1, (bispinor*) v);
       idummy = j+1;
       for(i = 0; i < idummy; i++){
-	M[j*jmax+i] = scalar_prod_bi((bispinor*) (V+i*lda), (bispinor*) temp1, n/sizeof(bispinor)*sizeof(complex));
+	M[j*jmax+i] = scalar_prod_bi((bispinor*) (V+i*lda), (bispinor*) temp1, N);
       }
 
       /* Increasing SearchSpaceSize j */
@@ -684,8 +760,12 @@ void pjdher(int n, int lda, double tau, double tol,
       q = Q + act*lda;
       theta = -lambda[act];
       A_psi((bispinor*) r, (bispinor*) q);
+#ifdef ESSL
+      daxpy(n2, theta, (double*) q, 1, (double*) r, 1);
+#else
       _FT(daxpy)(&n2, &theta, (double*) q, &ONE, (double*) r, &ONE);
-      alpha = sqrt(square_norm_bi((bispinor*) r, n/sizeof(bispinor)*sizeof(complex)));
+#endif
+      alpha = sqrt(square_norm_bi((bispinor*) r, N));
       if(g_proc_id == g_stdio_proc){ 
 	printf("%3d %22.15e %12.5e\n", act+1, lambda[act],
 	       alpha);
@@ -818,7 +898,7 @@ static void sorteig(int j, double S[], complex U[], int ldu, double tau,
 	dtemp[i] = fabs(S[i] - tau);
     break;
   default:
-    errorhandler(503,"");;
+    perrorhandler(503,"");;
   }
   for (i = 0; i < j; i ++)
     idx1[i] = i;
@@ -857,14 +937,22 @@ void pProj_A_psi(bispinor * const y, bispinor * const x){
   /* y = A*x */
   p_A_psi(y, x); 
   /* y = -theta*x+y*/
+#ifdef ESSL
+  daxpy(p_n2, mtheta, (double*) x, 1, (double*) y, 1);
+#else
   _FT(daxpy)(&p_n2, &mtheta, (double*) x, &ONE, (double*) y, &ONE);
+#endif
   /* p_work = Q^dagger*y */ 
   for(i = 0; i < p_k; i++){
-    p_work[i] = scalar_prod_bi((bispinor*) (p_Q+i*p_lda), (bispinor*) y, p_n/sizeof(bispinor)*sizeof(complex));
+    p_work[i] = scalar_prod_bi((bispinor*) (p_Q+i*p_lda), (bispinor*) y, p_n*sizeof(complex)/sizeof(bispinor));
   }
 /*   _FT(zgemv)(fupl_c, &p_n, &p_k, &CONE, p_Q, &p_lda, (complex*) y, &ONE, &CZERO, (complex*) p_work, &ONE, 1); */
   /* y = y - Q*p_work */ 
+#ifdef ESSL
+  _FT(zgemv)(fupl_n, p_n, p_k, _CMONE, p_Q, p_lda, (dcmplx*) p_work, 1, _CONE, (dcmplx*) y, 1);
+#else
   _FT(zgemv)(fupl_n, &p_n, &p_k, &CMONE, p_Q, &p_lda, (complex*) p_work, &ONE, &CONE, (complex*) y, &ONE, 1);
+#endif
 }
 
 /********************************************************************

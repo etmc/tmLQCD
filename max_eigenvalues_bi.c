@@ -78,7 +78,7 @@ double max_eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
   /* OLD VALUES HERE
   int verbosity = 5;
   */  
-  int verbosity = 4, converged = 0, blocksize = 1, blockwise = 0;
+  int verbosity = g_debug_level, converged = 0, blocksize = 1, blockwise = 0;
   int solver_it_max = 50, j_max, j_min; 
   /*int it_max = 10000;*/
   complex *eigv_ = NULL, *eigv;
@@ -170,7 +170,7 @@ double max_eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
 
   if(g_proc_id==0) {
 
-  printf(" Values of   mu = %e     mubar = %e     eps = %e     precision = %e  \n \n", g_mu, g_mubar, g_epsbar, precision);
+    printf(" Values of   mu = %e     mubar = %e     eps = %e     precision = %e  \n \n", g_mu, g_mubar, g_epsbar, precision);
 
   }
 

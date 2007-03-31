@@ -403,5 +403,5 @@ void degree_of_Ptilde(){
    free(auxc); 
    free(aux2c);
 #endif
-
+   return;
 }

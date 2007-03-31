@@ -9299,7 +9299,7 @@ _ACEOF
   LIBS="-lmpich.rts -lfmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts $LIBS"
   LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
   if test $with_lapack = yes; then
-    LIBS="-llapack.rts -lesslbg -lxlf90 -lxlfmath -lxl $LIBS"
+    LIBS="-lesslbg -llapack.rts -lesslbg -lxlf90 -lxlfmath -lxl $LIBS"
     LDFLAGS="$LDFLAGS -L/opt/ibmcmp/xlf/bg/10.1/blrts_lib -L/bgl/local/lib/"
   fi
 

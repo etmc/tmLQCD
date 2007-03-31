@@ -47,15 +47,21 @@ MODULES = read_input gamma hybrid_update observables start \
 	init_gauge_field init_geometry_indices init_spinor_field \
 	init_dirac_halfspinor xchange_halffield stout_smear 
 
+NOOPTMOD = test/check_xchange test/check_geometry
+
 PROGRAMS = hmc_tm benchmark invert gwc2ildg \
 	ildg2gwc single2double double2single reducenoise gen_sources 
 
-ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES} ${PMODULES} phmc_tm
+ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = linalg solver
 
 .SUFFIXES:
 
+ifneq (,$(findstring lapack,${LIBS}))
+all: Makefile all-recursive dep ${LINKLIBS} hmc_tm invert phmc_tm
+else
 all: Makefile all-recursive dep ${LINKLIBS} hmc_tm invert
+endif
 
 .NOTPARALLEL: 
 
@@ -63,33 +69,32 @@ all: Makefile all-recursive dep ${LINKLIBS} hmc_tm invert
 
 include ${top_srcdir}/Makefile.global
 
-flex_read_input: read_input.l
-	${LEX} -i -t $< > read_input.c
+ifneq (,$(findstring lex,${LEX}))
+read_input.c: ${srcdir}/read_input.l
+	${LEX} -i -t $< > ${srcdir}/read_input.c
+endif
 
 #${addsuffix .o, ${ALLOBJ}}: %.o: ${srcdir}/%.c %.d Makefile
 #	${COMPILE} ${OPTARGS} -c $< 
 
-${addsuffix .o, ${MODULES}}: %.o: ${srcdir}/%.c %.d Makefile
+$(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES} ${PMODULES})): %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} ${OPTARGS} -c $< 
+
+#here we don't need optimisation
+$(addsuffix .o,$(filter ${NOOPTMOD},${MODULES} ${PMODULES})): %.o: ${srcdir}/%.c %.d Makefile
+	${COMPILE} -c $< 
 
 ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} ${SOPTARGS} -c $< 
 
-${addsuffix .o, ${PMODULES}}: %.o: ${srcdir}/%.c %.d Makefile
-	${COMPILE} ${OPTARGS} -c $< 
-
-${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile
-	${COMPILE} ${OPTARGS} -c $<
-
-${addsuffix .o, phmc_tm}: %.o: ${srcdir}/%.c %.d Makefile
+${addsuffix .o, ${PROGRAMS} phmc_tm}: %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} ${OPTARGS} -c $<
 
 ${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} ${LINKLIBS}
 	 ${LINK} ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} $@.o $(LIBS)
 
-phmc_tm: %: %.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${PMODULES}} ${addsuffix .o, ${SMODULES}} ${LINKLIBS} phmc_tm.o
-	 ${LINK} ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${PMODULES}} ${addsuffix .o, ${SMODULES}} $@.o $(LIBS)
-
+phmc_tm: phmc_tm.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} ${addsuffix .o, ${PMODULES}} ${LINKLIBS}
+	 ${LINK} ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} ${addsuffix .o, ${PMODULES}} $@.o $(LIBS)
 
 dep: $(addsuffix .d,$(ALLOBJ))
 

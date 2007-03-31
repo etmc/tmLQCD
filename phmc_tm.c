@@ -359,9 +359,10 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(0);
   }
-  if(g_sloppy_precision_flag == 1) {
-    init_dirac_halfspinor32();
-  }
+  /* Here we initialise this always, because it can be used in */
+  /* the eigenvalue solver */
+  init_dirac_halfspinor32();
+
 #  if (defined _PERSISTENT)
   init_xchange_halffield();
 #  endif
@@ -429,19 +430,19 @@ int main(int argc,char *argv[]) {
     max_iter_ev = 1000;
     stop_prec_ev = 1.e-13;
     
-    g_nev = 2;   /* Number of lowest eigenvalues to be computed */
-    phmc_cheb_evmin = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
+    g_nev = 10;   /* Number of lowest eigenvalues to be computed */
+    phmc_cheb_evmin = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 0);
     
     g_nev = 2;   /* Number of highest eigenvalues to be computed */
-    phmc_cheb_evmax = max_eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
+    phmc_cheb_evmax = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 1);
        
     temp=phmc_cheb_evmin;
     temp2=phmc_cheb_evmax;
     
     if((compute_evs!=0)){
       if(g_proc_id==0){
-        printf(" Ev-max = %e stilde_max = %e \n", phmc_cheb_evmax,stilde_max);
-        printf(" Ev-min = %e stilde_low = %e \n", phmc_cheb_evmin,stilde_low); 
+        printf(" Ev-max = %e \n", phmc_cheb_evmax);
+        printf(" Ev-min = %e \n", phmc_cheb_evmin); 
       }
 #ifdef MPI
       MPI_Finalize();
@@ -759,10 +760,10 @@ int main(int argc,char *argv[]) {
       stop_prec_ev = 1.e-13;
 
       g_nev = 2;
-      phmc_cheb_evmin = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
+      phmc_cheb_evmin = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 0);
 
       g_nev = 2;
-      phmc_cheb_evmax = max_eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev);
+      phmc_cheb_evmax = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 1);
   
       temp=phmc_cheb_evmin;
       temp2=phmc_cheb_evmax;

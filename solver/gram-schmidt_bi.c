@@ -96,15 +96,15 @@ void pIteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[],
   CONE.re = 1.; CONE.im=0.;
   CZERO.re = 0.; CZERO.im=0.;
 
-  vnrm_old = sqrt(square_norm_bi((bispinor*) v, n/sizeof(bispinor)*sizeof(complex)));
+  vnrm_old = sqrt(square_norm_bi((bispinor*) v, n*sizeof(complex)/sizeof(bispinor)));
 
   for(i = 0; !isorth && i < max_cgs_it; i ++) {
 
     for(j = 0; j < m; j++){
-      work1[j] = scalar_prod_bi((bispinor*) (A+j*lda), (bispinor*) v, n/sizeof(bispinor)*sizeof(complex));
+      work1[j] = scalar_prod_bi((bispinor*) (A+j*lda), (bispinor*) v, n*sizeof(complex)/sizeof(bispinor));
     }
     _FT(zgemv)(fupl_n, &n, &m, &CMONE, A, &lda, work1, &ONE, &CONE, v, &ONE, 1);
-    (*vnrm) = sqrt(square_norm_bi((bispinor*) v, n/sizeof(bispinor)*sizeof(complex)));
+    (*vnrm) = sqrt(square_norm_bi((bispinor*) v, n*sizeof(complex)/sizeof(bispinor)));
 
     isorth=((*vnrm) > alpha*vnrm_old);
     vnrm_old = (*vnrm);
@@ -127,7 +127,7 @@ void ModifiedGS(complex v[], int n, int m, complex A[]){
   complex s;
 
   for (i = 0; i < m; i ++) {
-    s = scalar_prod_bi((bispinor*) (A+i*n), (bispinor*) v, n/sizeof(bispinor)*sizeof(complex));
+    s = scalar_prod_bi((bispinor*) (A+i*n), (bispinor*) v, n*sizeof(complex)/sizeof(bispinor));
     s.re = -s.re; s.im = -s.im;
     _FT(zaxpy)(&n, &s, A+i*n, &ONE, v, &ONE); 
   }
@@ -140,7 +140,7 @@ void pModifiedGS(complex v[], int n, int m, complex A[], int lda){
   complex s;
 
   for (i = 0; i < m; i ++) {
-    s = scalar_prod_bi((bispinor*) (A+i*lda), (bispinor*) v, n/sizeof(bispinor)*sizeof(complex));
+    s = scalar_prod_bi((bispinor*) (A+i*lda), (bispinor*) v, n*sizeof(complex)/sizeof(bispinor));
     s.re = -s.re; s.im = -s.im;
     _FT(zaxpy)(&n, &s, A+i*lda, &ONE, v, &ONE); 
   }

@@ -68,6 +68,11 @@ static void print_status(int clvl, int it, int k, int j, int kmax,
 static void sorteig(int j, double S[], complex U[], int ldu, double tau,
 		    double dtemp[], int idx1[], int idx2[], int strategy);
 
+void perrorhandler(const int i, char * message) {
+  fprintf(stderr, "%s \n", message); 
+  exit(i);
+}
+
 /* Projection routines */
 void Proj_A_psi(bispinor * const y, bispinor * const x);
 

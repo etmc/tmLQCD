@@ -120,11 +120,9 @@ int cg_her_bi(bispinor * const P, bispinor * const Q, const int max_iter,
     /* Check whether the precision is reached ... */
     err=square_norm_bi(g_bispinor_field[DUM_SOLVER+1], N);
 /*     _SO(if(g_proc_id == g_stdio_proc){printf("%d\t%g\n",iteration,err); fflush( stdout);}); */
-    if(g_proc_id == g_stdio_proc){printf("%d\t%g\n",iteration,err); fflush( stdout);}
-#ifndef _SOLVER_OUTPUT
-/*     if ( (iteration%10) == 0 && g_proc_id == g_stdio_proc ) */
-/*       printf("%d\t%g\n",iteration,err); */
-#endif
+    if((g_proc_id == g_stdio_proc) && (g_debug_level > 1)) {
+      printf("%d\t%g\n",iteration,err); fflush( stdout);
+    }
     
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) {
 /*       if((subtract_ev == 1)){ */

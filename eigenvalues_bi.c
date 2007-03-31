@@ -62,10 +62,10 @@ spinor  *eigenvectors = NULL;
 */
 bispinor  *eigenvectors = NULL;
 double * eigenvls = NULL;
-int eigenvalues_for_cg_computed = 0;
 
 double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag, 
-		    const int max_iterations, const double precision) {
+		      const int max_iterations, const double precision,
+		      const int maxmin) {
 
 
   /*
@@ -79,13 +79,15 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
   /**********************
    * For Jacobi-Davidson 
    **********************/
-  int verbosity = 5, converged = 0, blocksize = 1, blockwise = 0;
+  int verbosity = g_debug_level, converged = 0, blocksize = 1, blockwise = 0;
   int solver_it_max = 200, j_max, j_min; 
   /*int it_max = 10000;*/
   complex *eigv_ = NULL, *eigv;
   double decay_min = 1.7, decay_max = 1.5, prec,
-    threshold_min = 1.e-3, threshold_max = 5.e-2;
-  static int v0dim = 0;
+    threshold_min = 1.e-3, threshold_max = 5.e-2, 
+    startvalue, threshold, decay, returnvalue;
+/*   static int v0dim = 0; */
+  int v0dim = 0;
 
   /**********************
    * General variables
@@ -102,11 +104,25 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
   filename = calloc(200, sizeof(char));
   /*  strcpy(filename,optarg);*/
 
+  if(maxmin == JD_MINIMAL) {
+    startvalue = 0.;
+    threshold = threshold_min;
+    decay = decay_min;
+    solver_it_max = 200;
+  }
+  else {
+    startvalue = 50.;
+    threshold = threshold_max;
+    decay = decay_max;
+    solver_it_max = 50;
+  }
 
-  if(g_proc_id == g_stdio_proc) printf("\nNumber of lowest eigenvalues to compute = %d\n\n",(*nr_of_eigenvalues));
-  eigenvalues_for_cg_computed = 1;
+  if(g_proc_id == g_stdio_proc) {
+    printf("Number of %s eigenvalues to compute = %d\n",
+	   maxmin ? "maximal" : "minimal",(*nr_of_eigenvalues));
+    printf("Using Jacobi-Davidson method! \n");
+  }
 
-  if(g_proc_id == g_stdio_proc) printf("Using Jacobi-Davidson method! \n");
   if((*nr_of_eigenvalues) < 8){
     j_max = 15;
     j_min = 8;
@@ -121,26 +137,14 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
   else{
     prec = precision;
   }
-/*  g_mu = 0.00343; */
-/*   prec = 1.e-10; */
+
   if(allocated == 0) {
     allocated = 1;
 #if (defined SSE || defined SSE2 || defined SSE3)
-    /*
-    eigenvectors_ = calloc((VOLUMEPLUSRAND)/2*(*nr_of_eigenvalues)+1, sizeof(spinor)); 
-    eigenvectors = (spinor *)(((unsigned long int)(eigenvectors_)+ALIGN_BASE)&~ALIGN_BASE);
-    */
     eigenvectors_ = calloc((VOLUME)/2*(*nr_of_eigenvalues)+1, sizeof(bispinor)); 
     eigenvectors = (bispinor *)(((unsigned long int)(eigenvectors_)+ALIGN_BASE)&~ALIGN_BASE);
     copy_ev_ = calloc((VOLUME)/2*(*nr_of_eigenvalues)+1, sizeof(bispinor)); 
     copy_ev = (bispinor *)(((unsigned long int)(copy_ev_)+ALIGN_BASE)&~ALIGN_BASE);
-    /*
-    temp_field_ = calloc((VOLUMEPLUSRAND)/2+1, sizeof(spinor));
-    temp_field = (spinor *)(((unsigned long int)(temp_field_)+ALIGN_BASE)&~ALIGN_BASE);
-
-    aux_ = calloc((VOLUMEPLUSRAND)/2+1, sizeof(spinor));
-    aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE);
-    */
 
     temp_field_ = calloc((VOLUME)/2+1, sizeof(bispinor));
     temp_field = (bispinor *)(((unsigned long int)(temp_field_)+ALIGN_BASE)&~ALIGN_BASE);
@@ -148,16 +152,8 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
     aux_ = calloc((VOLUME)/2+1, sizeof(bispinor));
     aux = (bispinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-    /*
-    eigenvectors_= calloc((VOLUMEPLUSRAND)/2*(*nr_of_eigenvalues), sizeof(spinor));
-    */
     eigenvectors_= calloc((VOLUME)/2*(*nr_of_eigenvalues), sizeof(bispinor));
     copy_ev_= calloc((VOLUME)/2*(*nr_of_eigenvalues), sizeof(bispinor));
-
-    /*
-    temp_field_ = calloc((VOLUMEPLUSRAND)/2, sizeof(spinor));
-    aux_ = calloc((VOLUMEPLUSRAND)/2, sizeof(spinor));
-    */
 
     temp_field_ = calloc((VOLUME)/2, sizeof(bispinor));
     aux_ = calloc((VOLUME)/2, sizeof(bispinor));
@@ -170,27 +166,22 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
     eigenvls = (double*)malloc((*nr_of_eigenvalues)*sizeof(double));
   }
 
-  /* compute minimal eigenvalues */
+  /* compute eigenvalues */
 
-  if(g_proc_id==0) {
-
-  printf(" Values of   mu = %e     mubar = %e     eps = %e     precision = %e  \n \n", g_mu, g_mubar, g_epsbar, precision);
-
+  if((g_proc_id==0) && (g_debug_level > 4)) {
+    printf(" Values of   mu = %e     mubar = %e     eps = %e     precision = %e  \n \n", g_mu, g_mubar, g_epsbar, precision);
   }
  
-  /*  Come secondo argomento, originariamente c`era 
-      (VOLUMEPLUSRAND)/2*sizeof(spinor)/sizeof(complex),
-  */
 
 #ifdef MPI
-  pjdher((VOLUME)/2*sizeof(bispinor)/sizeof(complex), (VOLUME)/2*sizeof(bispinor)/sizeof(complex),
-	 0., prec, 
+  pjdher((VOLUME)/2*sizeof(bispinor)/sizeof(complex), (VOLUMEPLUSRAND)/2*sizeof(bispinor)/sizeof(complex),
+	 startvalue, prec, 
 	 (*nr_of_eigenvalues), j_max, j_min, 
 	 max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors,
 	 CG, solver_it_max,
-	 threshold_min, decay_min, verbosity,
+	 threshold, decay, verbosity,
 	 &converged, (complex*) eigenvectors, eigenvls,
-	 &returncode, JD_MINIMAL, 1,
+	 &returncode, maxmin, 1,
 	 &Q_Qdagger_ND_BI);
 
 	/* IN THE LAST LINE, INSERT:
@@ -201,13 +192,13 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
 
 #else
   jdher((VOLUME)/2*sizeof(bispinor)/sizeof(complex),
-        0., prec, 
+        startvalue, prec, 
 	(*nr_of_eigenvalues), j_max, j_min, 
 	max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors,
-	BICGSTAB, solver_it_max,
+	CG, solver_it_max,
 	threshold_min, decay_min, verbosity,
 	&converged, (complex*) eigenvectors, eigenvls,
-	&returncode, JD_MINIMAL, 1,
+	&returncode, maxmin, 1,
 	&Q_Qdagger_ND_BI);
 
 	/* IN THE LAST LINE, INSERT:
@@ -221,10 +212,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
   (*nr_of_eigenvalues) = converged;
   v0dim = converged;
 
-  /*
-  printf(" Lowest EV = %22.15e \n", eigenvls[0]);
-  */
-
-  free(eigenvls);
-  return(eigenvls[0]);
+  returnvalue = eigenvls[0];
+  return(returnvalue);
 }
