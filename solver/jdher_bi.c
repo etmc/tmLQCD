@@ -47,6 +47,7 @@
 #include "solver/solver.h"
 #include "solver/gram-schmidt_bi.h"
 #include "solver/quicksort.h"
+#include "update_backward_gauge.h"
 #include "jdher_bi.h"
 #ifdef CRAY
 #include <fortran.h>

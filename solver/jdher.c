@@ -35,6 +35,7 @@
 #include <string.h>
 #include <errno.h>
 #include <string.h>
+#include "global.h"
 #include "sse.h" 
 #include "linalg/fortran.h"
 #include "linalg/blas.h"
@@ -44,6 +45,7 @@
 #include "solver/solver.h"
 #include "solver/gram-schmidt.h"
 #include "solver/quicksort.h"
+#include "update_backward_gauge.h"
 #include "jdher.h"
 #ifdef CRAY
 #include <fortran.h>
@@ -67,6 +69,11 @@ static void sorteig(int j, double S[], complex U[], int ldu, double tau,
 
 /* Projection routines */
 void Proj_A_psi(spinor * const y, spinor * const x);
+
+void jerrorhandler(const int i, char * message) {
+  fprintf(stderr, "jdher %s \n", message);
+  exit(-1);
+}
 
 /****************************************************************************
  *                                                                          *
@@ -174,6 +181,10 @@ void jdher(int n, double tau, double tol,
    *                                                                          *
    ****************************************************************************/
 
+#ifdef GAUGE_COPY
+  update_backward_gauge();
+#endif
+
   /* print info header */
   if (verbosity >= 2) {
     printf("Jacobi-Davidson method for hermitian Matrices\n");
@@ -194,18 +205,18 @@ void jdher(int n, double tau, double tol,
   }
 
   /* validate input parameters */
-  if(tol <= 0) errorhandler(401,"");
-  if(kmax <= 0 || kmax > n) errorhandler(402,"");
-  if(jmax <= 0 || jmax > n) errorhandler(403,"");
-  if(jmin <= 0 || jmin > jmax) errorhandler(404,"");
-  if(itmax < 0) errorhandler(405,"");
-  if(blksize > jmin || blksize > (jmax - jmin)) errorhandler(406,"");
-  if(blksize <= 0 || blksize > kmax) errorhandler(406,"");
-  if(blkwise < 0 || blkwise > 1) errorhandler(407,"");
-  if(V0dim < 0 || V0dim >= jmax) errorhandler(408,"");
-  if(linitmax < 0) errorhandler(409,"");
-  if(eps_tr < 0.) errorhandler(500,"");
-  if(toldecay <= 1.0) errorhandler(501,"");
+  if(tol <= 0) jerrorhandler(401,"");
+  if(kmax <= 0 || kmax > n) jerrorhandler(402,"");
+  if(jmax <= 0 || jmax > n) jerrorhandler(403,"");
+  if(jmin <= 0 || jmin > jmax) jerrorhandler(404,"");
+  if(itmax < 0) jerrorhandler(405,"");
+  if(blksize > jmin || blksize > (jmax - jmin)) jerrorhandler(406,"");
+  if(blksize <= 0 || blksize > kmax) jerrorhandler(406,"");
+  if(blkwise < 0 || blkwise > 1) jerrorhandler(407,"");
+  if(V0dim < 0 || V0dim >= jmax) jerrorhandler(408,"");
+  if(linitmax < 0) jerrorhandler(409,"");
+  if(eps_tr < 0.) jerrorhandler(500,"");
+  if(toldecay <= 1.0) jerrorhandler(501,"");
   
   CONE.re=1.; CONE.im=0.;
   CZERO.re=0.; CZERO.im=0.;
@@ -224,11 +235,11 @@ void jdher(int n, double tau, double tol,
   V_ = (complex *)malloc(n * jmax * sizeof(complex));
   V = V_;
 #endif
-  if(errno == ENOMEM) errorhandler(300,"V in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"V in jdher");
   U = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) errorhandler(300,"U in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"U in jdher");
   s = (double *)malloc(jmax * sizeof(double));
-  if(errno == ENOMEM) errorhandler(300,"s in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"s in jdher");
 #if (defined SSE || defined SSE2 || defined SSE3)
   Res_ = (complex *)malloc((n * blksize+4) * sizeof(complex));
   Res = (complex*)(((unsigned long int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
@@ -236,38 +247,38 @@ void jdher(int n, double tau, double tol,
   Res_ = (complex *)malloc(n * blksize * sizeof(complex));
   Res = Res_;
 #endif
-  if(errno == ENOMEM) errorhandler(300,"Res in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"Res in jdher");
   resnrm = (double *)malloc(blksize * sizeof(double));
-  if(errno == ENOMEM) errorhandler(300,"resnrm in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"resnrm in jdher");
   resnrm_old = (double *)calloc(blksize,sizeof(double));
-  if(errno == ENOMEM) errorhandler(300,"resnrm_old in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"resnrm_old in jdher");
   M = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) errorhandler(300,"M in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"M in jdher");
   Vtmp = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) errorhandler(300,"Vtmp in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"Vtmp in jdher");
   p_work = (complex *)malloc(n * sizeof(complex));
-  if(errno == ENOMEM) errorhandler(300,"p_work in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"p_work in jdher");
 
   /* ... */
   idx1 = (int *)malloc(jmax * sizeof(int));
-  if(errno == ENOMEM) errorhandler(300,"idx1 in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"idx1 in jdher");
   idx2 = (int *)malloc(jmax * sizeof(int));
-  if(errno == ENOMEM) errorhandler(300,"idx2 in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"idx2 in jdher");
 
   /* Indices for (non-)converged approximations */
   convind = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) errorhandler(300,"convind in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"convind in jdher");
   keepind = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) errorhandler(300,"keepind in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"keepind in jdher");
   solvestep = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) errorhandler(300,"solvestep in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"solvestep in jdher");
   actcorrits = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) errorhandler(300,"actcorrits in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"actcorrits in jdher");
 
   eigwork = (complex *)malloc(eigworklen * sizeof(complex));
-  if(errno == ENOMEM) errorhandler(300,"eigwork in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"eigwork in jdher");
   rwork = (double *)malloc(3*jmax * sizeof(double));
-  if(errno == ENOMEM) errorhandler(300,"rwork in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"rwork in jdher");
 #if (defined SSE || defined SSE2 || defined SSE3)
   temp1_ = (complex *)malloc((n+4) * sizeof(complex));
   temp1 = (complex*)(((unsigned long int)(temp1_)+ALIGN_BASE)&~ALIGN_BASE);
@@ -275,9 +286,9 @@ void jdher(int n, double tau, double tol,
   temp1_ = (complex *)malloc(n * sizeof(complex));
   temp1 = temp1_;
 #endif
-  if(errno == ENOMEM) errorhandler(300,"temp1 in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"temp1 in jdher");
   dtemp = (double *)malloc(n * sizeof(complex));
-  if(errno == ENOMEM) errorhandler(300,"dtemp in jdher");
+  if(errno == ENOMEM) jerrorhandler(300,"dtemp in jdher");
 
   /* Set variables for Projection routines */
   n2 = 2*n;
@@ -356,7 +367,7 @@ void jdher(int n, double tau, double tol,
       printf("error solving the projected eigenproblem.");
       printf(" zheev: info = %d\n", info);
     }
-    if(info != 0) errorhandler(502,"");
+    if(info != 0) jerrorhandler(502,"");
   
 
     /* Reverse order of eigenvalues if maximal value is needed */
@@ -604,19 +615,24 @@ void jdher(int n, double tau, double tol,
       /* Solve the correction equation ...  */
       if(solver_flag == GMRES){
 /* 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, &Proj_A_psi, &Proj_A_psi); */
-	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, &Proj_A_psi);
+	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, 0, 
+		     n*sizeof(complex)/sizeof(spinor), &Proj_A_psi);
       }
       if(solver_flag == CGS){
-	info = cgs_real((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, &Proj_A_psi);
+	info = cgs_real((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, 0,
+			n*sizeof(complex)/sizeof(spinor), &Proj_A_psi);
       }
       else if (solver_flag == BICGSTAB){
-	info = bicgstab_complex((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, &Proj_A_psi);
+	info = bicgstab_complex((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, 0,
+				n*sizeof(complex)/sizeof(spinor), &Proj_A_psi);
       }
       else if (solver_flag == CG){
-	info = cg_her((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, &Proj_A_psi, 0, 0);
+	info = cg_her((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, 0, 
+		      n*sizeof(complex)/sizeof(spinor), &Proj_A_psi, 0, 0);
       }
       else{
- 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax, it_tol*it_tol, &Proj_A_psi); 
+ 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax, it_tol*it_tol, 0,
+		     n*sizeof(complex)/sizeof(spinor), &Proj_A_psi); 
       }
 
       /* Actualizing profiling data */
@@ -810,7 +826,7 @@ static void sorteig(int j, double S[], complex U[], int ldu, double tau,
 	dtemp[i] = fabs(S[i] - tau);
     break;
   default:
-    errorhandler(503,"");;
+    jerrorhandler(503,"");;
   }
   for (i = 0; i < j; i ++)
     idx1[i] = i;

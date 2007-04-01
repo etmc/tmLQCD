@@ -33,8 +33,8 @@ libsolver_TARGETS = bicgstab_complex gmres \
 	            cgs_real cg_her mr chrono_guess \
 	            bicgstabell bicgstab2 fgmres gmres_precon \
 	            gcr diagonalise_general_matrix \
-	            quicksort gmres gmres_dr lu_solve \
-                    jdher_bi gram-schmidt_bi \
+	            quicksort gmres_dr lu_solve jdher \
+                    jdher_bi gram-schmidt_bi pjdher \
                     bicgstab_complex_bi cg_her_bi pjdher_bi 
 
 libsolver_OBJECTS = $(addsuffix .o, ${libsolver_TARGETS})

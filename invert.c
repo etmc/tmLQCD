@@ -46,6 +46,7 @@
 #include "init_dirac_halfspinor.h"
 #include "xchange_halffield.h"
 #include "update_backward_gauge.h"
+#include "eigenvalues.h"
 #include "stout_smear.h"
 #include "invert_eo.h"
 
@@ -68,7 +69,7 @@ int check_geometry();
 int main(int argc,char *argv[]) {
 
   FILE *parameterfile=NULL, *ifs=NULL;
-  int c, iter, j, ix=0, is=0, ic=0;
+  int c, no_eigenvalues, iter, j, ix=0, is=0, ic=0;
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
@@ -214,7 +215,10 @@ int main(int argc,char *argv[]) {
 #ifdef _GAUGE_COPY
     update_backward_gauge();
 #endif
-    
+#ifdef HAVE_LAPACK2
+    no_eigenvalues = 10;   /* Number of lowest eigenvalues to be computed */
+    eigenvalues(&no_eigenvalues, 1000, 1.e-12);
+#endif
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action();
 

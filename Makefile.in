@@ -40,7 +40,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	test/check_geometry test/check_xchange invert_eo \
 	ext_integrator polyakov_loop getopt sighandler \
 	source_generation boundary io update_tm ranlxd  \
-	mpi_init linsolve deriv_Sb \
+	mpi_init linsolve deriv_Sb eigenvalues \
 	xchange_deri geometry_eo linalg_eo \
 	init_moment_field init_gauge_tmp \
 	derivative_psf xchange_field xchange_gauge \
@@ -52,7 +52,7 @@ NOOPTMOD = test/check_xchange test/check_geometry
 PROGRAMS = hmc_tm benchmark invert gwc2ildg \
 	ildg2gwc single2double double2single reducenoise gen_sources 
 
-ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
+ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES} ${PMODULES} phmc_tm
 SUBDIRS = linalg solver
 
 .SUFFIXES:

@@ -110,7 +110,7 @@ int main(int argc,char *argv[]) {
   complex pl, pl4;
 
   /* START IF PHMC */  
-  int g_nev, max_iter_ev;
+  int no_eigenvalues, max_iter_ev;
   double stop_prec_ev, temp, temp2;
 
   FILE *roots;
@@ -426,11 +426,11 @@ int main(int argc,char *argv[]) {
     max_iter_ev = 1000;
     stop_prec_ev = 1.e-13;
     
-    g_nev = 10;   /* Number of lowest eigenvalues to be computed */
-    phmc_cheb_evmin = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 0);
+    no_eigenvalues = 10;   /* Number of lowest eigenvalues to be computed */
+    phmc_cheb_evmin = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 0);
     
-    g_nev = 4;   /* Number of highest eigenvalues to be computed */
-    phmc_cheb_evmax = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 1);
+    no_eigenvalues = 4;   /* Number of highest eigenvalues to be computed */
+    phmc_cheb_evmax = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 1);
        
     temp=phmc_cheb_evmin;
     temp2=phmc_cheb_evmax;
@@ -662,11 +662,11 @@ int main(int argc,char *argv[]) {
       max_iter_ev = 1000;
       stop_prec_ev = 1.e-13;
 
-      g_nev = 4;
-      temp = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 0);
+      no_eigenvalues = 4;
+      temp = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 0);
 
-      g_nev = 4;
-      temp2 = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 1);
+      no_eigenvalues = 4;
+      temp2 = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 1);
       
       if((g_proc_id == 0) && (g_debug_level > 0)) {
 	printf("PHMC: lowest eigenvalue end of trajectory %d = %e\n", 
