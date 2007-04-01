@@ -1555,20 +1555,20 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
 	  "# The code was compiled with -D_USE_HALFSPINOR\n");
 #endif
 #ifdef _USE_SHMEM
-  printf("# the code was comiled with -D_USE_SHMEM\n");
+  printf("# the code was compiled with -D_USE_SHMEM\n");
   fprintf(parameterfile,
-         "# the code was comiled with -D_USE_SHMEM\n");
+         "# the code was compiled with -D_USE_SHMEM\n");
 #  ifdef _PERSISTENT
-  printf("# the code was comiled for persistent MPI calls (halfspinor only)\n");
+  printf("# the code was compiled for persistent MPI calls (halfspinor only)\n");
   fprintf(parameterfile,
-         "# the code was comiled for persistent MPI calls (halfspinor only)\n");
+         "# the code was compiled for persistent MPI calls (halfspinor only)\n");
 #  endif
 #endif
 #ifdef MPI
 #  ifdef _NON_BLOCKING
-  printf("# the code was comiled for non-blocking MPI calls (spinor and gauge)\n");
+  printf("# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
   fprintf(parameterfile,
-         "# the code was comiled for non-blocking MPI calls (spinor and gauge)\n");
+         "# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #  endif
 
 #endif
