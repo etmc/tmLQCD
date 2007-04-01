@@ -95,10 +95,6 @@ int main(int argc,char *argv[]) {
   struct timeval t1;
   double x;
 
-  /* These two parameters define the lowest and highest eigenvalue of the operator */
-  /* just intermediately, only locally used */
-  double stilde_low, stilde_max;
-
   /* Energy corresponding to the Gauge part */
   double eneg = 0., plaquette_energy = 0., rectangle_energy = 0.;
   /* Acceptance rate */
@@ -426,139 +422,47 @@ int main(int argc,char *argv[]) {
 
   phmc_invmaxev=1.0;
 
-  if(startoption != CONTINUE || (compute_evs!=0)) {
+  if(compute_evs != 0) {
     max_iter_ev = 1000;
     stop_prec_ev = 1.e-13;
     
     g_nev = 10;   /* Number of lowest eigenvalues to be computed */
     phmc_cheb_evmin = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 0);
     
-    g_nev = 2;   /* Number of highest eigenvalues to be computed */
+    g_nev = 4;   /* Number of highest eigenvalues to be computed */
     phmc_cheb_evmax = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 1);
        
     temp=phmc_cheb_evmin;
     temp2=phmc_cheb_evmax;
     
-    if((compute_evs!=0)){
-      if(g_proc_id==0){
-        printf(" Ev-max = %e \n", phmc_cheb_evmax);
-        printf(" Ev-min = %e \n", phmc_cheb_evmin); 
-      }
-#ifdef MPI
-      MPI_Finalize();
-#endif
-      exit(0);
+    if(g_proc_id==0){
+      printf("PHMC: Ev-max = %e \n", phmc_cheb_evmax);
+      printf("PHMC: Ev-min = %e \n", phmc_cheb_evmin); 
     }
-
-
+#ifdef MPI
+    MPI_Finalize();
+#endif
+    exit(0);
   }
 
-
-  if((startoption == RESTART) || (startoption == CONTINUE)){
-    if((Inoutputs = fopen(filename_inout,"r")) != (FILE*)NULL) {
-      fseek(Inoutputs, 0, SEEK_END);
-      j=ftell(Inoutputs);
-      fseek(Inoutputs, j-29, SEEK_SET);
-      fscanf(Inoutputs, " %lf %lf %lf \n", &stilde_low, &stilde_max, &phmc_cheb_evmin);
-      fclose(Inoutputs);
-    }
-    else {
-      if(g_proc_id == 0) {
-	fprintf(stderr, "File %s is missing! Aborting ...\n", filename_inout);
-      }
-#ifdef MPI
-      MPI_Finalize();
-#endif
-      exit(6);
-    }
-
-    if(startoption == RESTART){
-
-      /* check the approximation intervall */
-      if((phmc_cheb_evmax > stilde_max) || (phmc_cheb_evmin < stilde_low)){
-	if(g_proc_id == 0) {
-	  fprintf(stderr, "EV-Max is LARGER than stilde_max or \nEV-Min SMALLER than stilde_low! Aborting ...\n");
-	  fprintf(stderr, "Ev-Max=%e   stilde_max=%e \n", phmc_cheb_evmax, stilde_max);
-	  fprintf(stderr, "Ev-Min=%e   stilde_low=%e \n", phmc_cheb_evmin, stilde_low);
-	}
-#ifdef MPI
-	MPI_Finalize();
-#endif
-        exit(-1);
-      }      
-
-      /* Compute the min evalue for normalised operator */
-      phmc_cheb_evmin = phmc_cheb_evmin/(stilde_max);
-      
-      if(g_proc_id == 0) {
-	Inoutputs=fopen(filename_inout,"a");
-	fprintf(Inoutputs, " %f %f %1.5e \n", stilde_low, stilde_max, phmc_cheb_evmin);
-	fclose(Inoutputs);
-      }
-    }
-  }
-  else{
-
-    /* CONSERVATIVE DEFINITION OF epsilon ... to be tested
-       stilde_low=2*(g_mubar*g_mubar - g_epsbar*g_epsbar);
-       stilde_low = g_mubar - g_epsbar;
-       stilde_low = (g_mubar + g_epsbar)*0.1;
-       stilde_low = 0.01000;
-       stilde_max = 3.40000; 
-    */
-    stilde_low = phmc_cheb_evmin;
-    stilde_max = phmc_cheb_evmax;
-
-    phmc_cheb_evmin = stilde_low/(stilde_max);
-    j = (int)(phmc_cheb_evmin*10000);
-    phmc_cheb_evmin = j*0.0001;
-
-    if(g_proc_id == 0) {
-      Inoutputs=fopen(filename_inout,"w");
-      fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, phmc_cheb_evmin);
-      fclose(Inoutputs);
-    }
-  }
-
-  /* 
-  stilde_low = 0.013577;
-  stilde_max = 3.096935;
-
-  phmc_cheb_evmin = stilde_low/(stilde_max);
-  j = (int)(phmc_cheb_evmin*10000);
-  phmc_cheb_evmin = j*0.0001;
-  Inoutputs=fopen(filename_inout,"w");
-  fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, phmc_cheb_evmin);
-  fclose(Inoutputs);
-  */
-
-  phmc_cheb_evmax = stilde_max;
+  /* This is the epsilon parameter */
+  phmc_cheb_evmin = stilde_min/(stilde_max);
 
   /* In the following there is the  "sqrt"  since the value refers to 
      the hermitian Dirac operator (used in EV-computation), namely 
      S = Q Q^dag         
      When  "S"  is applied, we call  phmc_invmaxev  twice !!! */
-  phmc_invmaxev=1./(sqrt(phmc_cheb_evmax));
+  phmc_invmaxev=1./(sqrt(stilde_max));
   phmc_cheb_evmax = 1.0;
 
   /* Here we prepare the less precise polynomial first */
-  degree_of_polynomial_nd();
+  degree_of_polynomial_nd(degree_of_p);
 
-  if(g_proc_id == 0) {
-    if(startoption > HOT){
-      Infos_ev=fopen(filename_infos,"a");
-    }
-    else{
-      Infos_ev=fopen(filename_infos,"w");
-      fprintf(Infos_ev, "  EV_min    EV_max      Low       Max      n    epsilon   normalisation \n");
-    }
-    fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f     %f \n", 
-	    temp, temp2, stilde_low, stilde_max, 
-	    phmc_dop_n_cheby-1, phmc_cheb_evmin, phmc_invmaxev);
-    fclose(Infos_ev);
+  if((g_proc_id == 0) && (g_debug_level > 1)) {
+    printf("PHMC: interval of approximation [stilde_min, stilde_max] = [%e, %e]\n", stilde_min, stilde_max);
+    printf("PHMC: degree for P = %d, epsilont = %e, normalisation = %e", 
+	   phmc_dop_n_cheby-1, phmc_cheb_evmin, phmc_invmaxev);
   }
-
-
 
   /* Chi`s-spinors  memory allocation */
   j = init_chi_up_spinor_field(VOLUMEPLUSRAND/2, (phmc_dop_n_cheby+1));
@@ -572,9 +476,8 @@ int main(int argc,char *argv[]) {
     exit(0);
   }
   /* End memory allocation */
-
+  /* Here we prepare the precise polynomial */
   degree_of_Ptilde();
-
 
   /* THIS IS THE OVERALL CONSTANT */
   /* write phmc_Cpol as the result of the simple-program files (BigC^(1/2))^1/2 
@@ -597,14 +500,14 @@ int main(int argc,char *argv[]) {
   }
   phmc_Cpol = sqrt(phmc_Cpol);
 
-  phmc_roo = calloc((2*phmc_dop_n_cheby-2),sizeof(complex));
+  phmc_root = calloc((2*phmc_dop_n_cheby-2),sizeof(complex));
 
   if((roots=fopen(filename_phmc_root,"r")) != (FILE*)NULL) {
     fgets(title, 100, roots);
     
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
     for(j=0; j<(2*phmc_dop_n_cheby-2); j++){
-      fscanf(roots," %ld %lf %lf \n", &k, &phmc_roo[j].re, &phmc_roo[j].im);
+      fscanf(roots," %ld %lf %lf \n", &k, &phmc_root[j].re, &phmc_root[j].im);
     }
     fclose(roots);
   }
@@ -759,61 +662,19 @@ int main(int argc,char *argv[]) {
       max_iter_ev = 1000;
       stop_prec_ev = 1.e-13;
 
-      g_nev = 2;
-      phmc_cheb_evmin = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 0);
+      g_nev = 4;
+      temp = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 0);
 
-      g_nev = 2;
-      phmc_cheb_evmax = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 1);
-  
-      temp=phmc_cheb_evmin;
-      temp2=phmc_cheb_evmax;
-
-      if((phmc_cheb_evmax > stilde_max) || (phmc_cheb_evmin < stilde_low)){
-	if(g_proc_id == 0) {
-	  fprintf(stderr, "EV-Max is LARGER than stilde_max or \nEV-Min SMALLER than stilde_low! Aborting ...\n");
-	  fprintf(stderr, "Ev-Max=%e   stilde_max=%e \n", phmc_cheb_evmax, stilde_max);
-	  fprintf(stderr, " Ev-Min=%e   stilde_low=%e \n", phmc_cheb_evmin, stilde_low);
-	}
-#ifdef MPI
-	MPI_Finalize();
-#endif
-        exit(-1);
-      }      
-
-      phmc_cheb_evmin = phmc_cheb_evmin/(stilde_max);
-      j = (int)(phmc_cheb_evmin*10000);
-      phmc_cheb_evmin = j*0.0001;
-
-      Inoutputs=fopen(filename_inout,"a");
-      fprintf(Inoutputs, " %f %f %f \n", stilde_low, stilde_max, phmc_cheb_evmin);
-      fclose(Inoutputs);
-
-      Infos_ev=fopen(filename_infos,"a");
-      fprintf(Infos_ev, " %f  %f  %f  %f   %d   %f     %f \n", temp, temp2, stilde_low, stilde_max, phmc_dop_n_cheby-1, phmc_cheb_evmin, phmc_invmaxev);
-      fclose(Infos_ev);
-
-
-      phmc_cheb_evmax = stilde_max;
-      phmc_invmaxev=1./(sqrt(phmc_cheb_evmax));
-      phmc_cheb_evmax = 1.0;
-
-      degree_of_polynomial_nd();
-
-
-      Const=fopen(filename_const,"r");
-      fscanf(Const, " %lf \n", &phmc_Cpol);
-      fclose(Const);
-      phmc_Cpol = sqrt(phmc_Cpol);
-
-      phmc_roo = calloc((2*phmc_dop_n_cheby-2),sizeof(complex));
-
-      roots=fopen(filename_phmc_root,"r");
-      fgets(title, 100, roots);
-
-      for(j=0; j<(2*phmc_dop_n_cheby-2); j++){
-        fscanf(roots," %ld %lf %lf \n", &k, &phmc_roo[j].re, &phmc_roo[j].im);
+      g_nev = 4;
+      temp2 = eigenvalues_bi(&g_nev, operator_flag, max_iter_ev, stop_prec_ev, 1);
+      
+      if((g_proc_id == 0) && (g_debug_level > 0)) {
+	printf("PHMC: lowest eigenvalue end of trajectory %d = %e\n", 
+	       trajectory_counter, temp);
+	printf("PHMC: maximal eigenvalue end of trajectory %d = %e\n", 
+	       trajectory_counter, temp2);
       }
-      fclose(roots);
+  
     }
     
     /* End PHMC */

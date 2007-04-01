@@ -22,7 +22,6 @@
 #define _default_N_PROC_Y 1
 #define _default_N_PROC_Z 1
 #define _default_g_kappa 0.125
-#define _default_g_acc_Pfirst 1.e-02
 #define _default_g_acc_Ptilde 1.e-06
 #define _default_g_acc_Hfin 1.e-04
 #define _default_g_rec_ev 1.e+05
@@ -79,7 +78,7 @@
 #define _default_g_relative_precision_flag 0
 #define _default_return_check_flag 0
 #define _default_return_check_interval 100
-#define _default_g_debug_level 0
+#define _default_g_debug_level 1
 #define _default_g_csg_N 1
 #define _default_2mn_lambda 0.1938
 #define _default_source_format_flag 0
@@ -95,4 +94,8 @@
 #define _default_use_stout_flag 0
 #define _default_phmc_no_flavours 0
 #define _default_compute_evs 0
+#define _default_stilde_max 3.
+#define _default_stilde_min 0.01
+#define _default_degree_of_p 48
+
 #endif

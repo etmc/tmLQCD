@@ -311,18 +311,19 @@ void degree_of_Ptilde(){
    random_spinor_field(ss,VOLUME/2, 1);
    random_spinor_field(sc,VOLUME/2, 1);
 
-   if(g_proc_id == g_stdio_proc && g_debug_level > 2){
+   if(g_proc_id == g_stdio_proc && g_debug_level > 0){
      printf("PHMC: In Ptilde: EVmin = %f  EVmax = %f\n", phmc_cheb_evmin, phmc_cheb_evmax);
      printf("PHMC: determine the degree of the polynomial :   Stop=%e \n", g_acc_Ptilde);
      fflush(stdout);
    }
 
    phmc_ptilde_n_cheby = phmc_dop_n_cheby;
+/*    phmc_ptilde_n_cheby = 700; */
 
    for(i = 0;i < 100 ; i++){
 
     if (phmc_ptilde_n_cheby > NTILDE_CHEBYMAX) {
-      if(g_proc_id == g_stdio_proc && g_debug_level > 2){
+      if(g_proc_id == g_stdio_proc){
 	fprintf(stderr, "Error: n_cheby=%d > NTILDE_CHEBYMAX=%d in ptilde\n",
 		phmc_ptilde_n_cheby, NTILDE_CHEBYMAX);
 	fprintf(stderr, "Increase n_chebymax\n");
@@ -351,7 +352,7 @@ void degree_of_Ptilde(){
     if(g_epsbar == 0){
       temp2 = 0.0;
     }
-    if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
+    if(g_proc_id == g_stdio_proc && g_debug_level > 0) {
       printf("PHMC: At n=%d  || differences ||^2 :  UP=%e  DN=%e \n", phmc_ptilde_n_cheby, temp, temp2);
     }
 
@@ -360,12 +361,14 @@ void degree_of_Ptilde(){
     for(j=phmc_ptilde_n_cheby; j<NTILDE_CHEBYMAX; j++){ 
       sum += fabs(phmc_ptilde_cheby_coef[j]);
     }
-    if(g_proc_id == g_stdio_proc) printf(" Sum remaining | d_n | = %e\n", sum);
+    if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)) {
+      printf("PHMC: Sum remaining | d_n | = %e\n", sum);
+    }
 
     /* if(temp < g_acc_ptilde && temp2 < g_acc_ptilde){ */  /* break; */
 
     if(sum < g_acc_Ptilde){  
-      if(g_proc_id == g_stdio_proc && g_debug_level > 2){
+      if(g_proc_id == g_stdio_proc && g_debug_level > 0){
 	printf("PHMC:        Achieved Accuracies for Ptilde :  Stop=%e \n", g_acc_Ptilde);
 	printf("PHMC: Uniform: Sum |d_n|=%e \n", sum);
 	printf("PHMC: RND:  || (Ptilde P S P Ptilde - 1)X ||^2 / || 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
@@ -377,14 +380,14 @@ void degree_of_Ptilde(){
       temp *= cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
       temp *= chebtilde_eval(phmc_ptilde_n_cheby, phmc_ptilde_cheby_coef, phmc_cheb_evmin);
       temp = 0.5*fabs(temp - 1);
-      if(g_proc_id == g_stdio_proc && g_debug_level > 2){
+      if(g_proc_id == g_stdio_proc && g_debug_level > 0){
 	printf("PHMC: Delta_IR at s=%f:    | Ptilde P s_low P Ptilde - 1 |/2 = %e \n", phmc_cheb_evmin, temp);
 	printf("PHMC: Latest (TILDE) polynomial degree = %d\n\n", phmc_ptilde_n_cheby);
       }
       break;
     }
 
-    phmc_ptilde_n_cheby+=1;
+    phmc_ptilde_n_cheby= (int)(phmc_ptilde_n_cheby*1.05);
   }
 
 

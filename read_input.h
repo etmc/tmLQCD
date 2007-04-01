@@ -76,6 +76,9 @@ extern "C"
   extern int use_stout_flag;
   extern int phmc_no_flavours;
   extern int compute_evs;
+  extern double stilde_max;
+  extern double stilde_min;
+  extern int degree_of_p;
  
   int read_input(char *);
   int reread_input(char *);

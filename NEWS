@@ -1,3 +1,16 @@
+01.04.2007: many changes to PHMC
+	    new input parameters:
+	    PhmcNoFlavours (2+1+1 or 1+1)
+	    PhmcComputeOnlyEVs (yes or no: compute EVs only and exit then)
+	    PhmcStildeMax (flaot, upper bound for appr. interval)
+	    PhmcStildeMin (float, lower bound for appr. interval)
+	    PhmcDegreeOfP (int, degree of P, the less precise polynomial)
+	    PhmcRecEVInterval (int, recompute EV's every n trajectories)
+
+	    parallel Eigenvalue computation works now, also on BG/L
+
+	    PHMC fuer 1+1 flavours exists and works
+
 18.01.2007: towards version 4.0
 	    merged with branch phmc. hmc_tm and phmc_tm
 	    are both compiling and running. phmc needs

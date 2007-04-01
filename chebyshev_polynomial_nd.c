@@ -251,7 +251,7 @@ double cheb_eval(int M, double *c, double s){
 *****************************************************************************/
 
 
-void degree_of_polynomial_nd(){
+void degree_of_polynomial_nd(const int degree_of_p){
   int i, j;
   double temp, temp2;
   static int ini=0;
@@ -262,118 +262,92 @@ void degree_of_polynomial_nd(){
   spinor *auxs=NULL, *auxs_=NULL, *auxc=NULL, *auxc_=NULL;
   spinor *aux2s=NULL, *aux2s_=NULL, *aux2c=NULL, *aux2c_=NULL;
 
-
+  phmc_dop_n_cheby=degree_of_p+1;
   if(ini==0){
-    phmc_dop_cheby_coef = calloc(N_CHEBYMAX,sizeof(double));
+    phmc_dop_cheby_coef = calloc(phmc_dop_n_cheby,sizeof(double));
     ini=1;
   }
 
 
 #if ( defined SSE || defined SSE2 || defined SSE3)
-   ss_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-   auxs_ = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-   aux2s_= calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-   sc_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-   auxc_ = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-   aux2c_= calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-
-   ss    = (spinor *)(((unsigned long int)(ss_)+ALIGN_BASE)&~ALIGN_BASE);
-   auxs  = (spinor *)(((unsigned long int)(auxs_)+ALIGN_BASE)&~ALIGN_BASE);
-   aux2s = (spinor *)(((unsigned long int)(aux2s_)+ALIGN_BASE)&~ALIGN_BASE);
-   sc    = (spinor *)(((unsigned long int)(sc_)+ALIGN_BASE)&~ALIGN_BASE);
-   auxc  = (spinor *)(((unsigned long int)(auxc_)+ALIGN_BASE)&~ALIGN_BASE);
-   aux2c = (spinor *)(((unsigned long int)(aux2c_)+ALIGN_BASE)&~ALIGN_BASE);
-
+  ss_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
+  auxs_ = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
+  aux2s_= calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
+  sc_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
+  auxc_ = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
+  aux2c_= calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
+  
+  ss    = (spinor *)(((unsigned long int)(ss_)+ALIGN_BASE)&~ALIGN_BASE);
+  auxs  = (spinor *)(((unsigned long int)(auxs_)+ALIGN_BASE)&~ALIGN_BASE);
+  aux2s = (spinor *)(((unsigned long int)(aux2s_)+ALIGN_BASE)&~ALIGN_BASE);
+  sc    = (spinor *)(((unsigned long int)(sc_)+ALIGN_BASE)&~ALIGN_BASE);
+  auxc  = (spinor *)(((unsigned long int)(auxc_)+ALIGN_BASE)&~ALIGN_BASE);
+  aux2c = (spinor *)(((unsigned long int)(aux2c_)+ALIGN_BASE)&~ALIGN_BASE);
+  
 #else
-   ss   =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-   auxs =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-   aux2s=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-   sc   =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-   auxc =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-   aux2c=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
+  ss   =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
+  auxs =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
+  aux2s=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
+  sc   =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
+  auxc =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
+  aux2c=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
 #endif
+  
+  
+  chebyshev_coefs(phmc_cheb_evmin, phmc_cheb_evmax, phmc_dop_cheby_coef, phmc_dop_n_cheby, -0.5);
 
+  random_spinor_field(ss,VOLUME/2, 1);
+  random_spinor_field(sc,VOLUME/2, 1);
 
-   chebyshev_coefs(phmc_cheb_evmin, phmc_cheb_evmax, phmc_dop_cheby_coef, N_CHEBYMAX, -0.5);
-   /*
-   printf(" \n  NchebyMAX = %d \n ", N_CHEBYMAX);
-   for(j=0; j<49; j++){
-     printf(" At %d   Coef=%20.18f \n", j, phmc_dop_cheby_coef[j]);
-   }
-   */
-
-   random_spinor_field(ss,VOLUME/2, 1);
-   random_spinor_field(sc,VOLUME/2, 1);
-
-   if(g_proc_id == g_stdio_proc){
-     printf(" \n In P: EVmin = %f  EVmax = %f  \n", phmc_cheb_evmin, phmc_cheb_evmax);
-     printf("\n determine the degree of the polynomial :   Stop=%e \n", g_acc_Pfirst);
-     fflush(stdout);
-   }
-
-  phmc_dop_n_cheby=49;
-  for(i = 0;i < 100 ; i++){
-
-    if (phmc_dop_n_cheby > N_CHEBYMAX) {
-      if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
-	printf("PHMC: Error: n_cheby=%d > N_CHEBYMAX=%d\n",phmc_dop_n_cheby,N_CHEBYMAX);
-	printf("PHMC: Increase n_chebymax\n");
-      }
-      exit(-1);
-    }
-
-    QdaggerQ_poly(&auxs[0], &auxc[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &ss[0], &sc[0]);
-
-    Q_Qdagger_ND(&aux2s[0], &aux2c[0], &auxs[0], &auxc[0]);
-    
-    QdaggerQ_poly(&auxs[0], &auxc[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &aux2s[0], &aux2c[0]);
-
-
-    diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);
-    temp=square_norm(&aux2s[0],VOLUME/2)/square_norm(&ss[0],VOLUME/2)/4.0;
-
-    diff(&aux2c[0],&auxc[0],&sc[0],VOLUME/2);
-    temp2=square_norm(&aux2c[0],VOLUME/2)/square_norm(&sc[0],VOLUME/2)/4.0;
-
-    if(g_epsbar == 0){ 
-      temp2 = 0.0;
-    }
-    if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
-      printf("PHMC: At n=%d  || differences ||^2 :  UP=%e  DN=%e \n",phmc_dop_n_cheby, temp, temp2);
-      fflush(stdout);
-    }  
-   
-
-    sum=0;
-    for(j=phmc_dop_n_cheby; j<N_CHEBYMAX; j++){
-      sum += fabs(phmc_dop_cheby_coef[j]);
-    }
-    if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
-      printf("PHMC: Sum remaining | c_n |=%e \n", sum);
-      fflush(stdout);
-    }
-    if(sum < g_acc_Pfirst){  
-      if(g_proc_id == g_stdio_proc && g_debug_level > 2){
-	printf("PHMC:        Achieved Accuracies for P :   Stop=%e \n", g_acc_Pfirst);
-	printf("PHMC: Uniform: Sum |c_n|=%e \n", sum);
-	printf("PHMC: RND:  || (P S P - 1)X ||^2 /|| 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
-      }
-
-      temp = cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
-      temp *= phmc_cheb_evmin;
-      temp *= cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
-      temp = 0.5*fabs(temp - 1);
-      if(g_proc_id == g_stdio_proc && g_debug_level > 2){
-	printf("PHMC: Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", phmc_cheb_evmin, temp);
-	printf("PHMC: Latest (FIRST) polynomial degree = %d \n \n", phmc_dop_n_cheby);
-      }
-      break;
-    }
-
-    /* RECALL THAT WE NEED AN EVEN DEGREE !!!! */
-    phmc_dop_n_cheby+=2;
+  if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)){
+    printf("PHMC: in P: EVmin = %e  EVmax = %e  \n", phmc_cheb_evmin, phmc_cheb_evmax);
+    printf("PHMC: the degree of polynomial P set to: %d\n", phmc_dop_n_cheby);
+    fflush(stdout);
   }
 
+  /* Here we check the accuracy */
+  QdaggerQ_poly(&auxs[0], &auxc[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &ss[0], &sc[0]);
+  Q_Qdagger_ND(&aux2s[0], &aux2c[0], &auxs[0], &auxc[0]);
+  QdaggerQ_poly(&auxs[0], &auxc[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &aux2s[0], &aux2c[0]);
+
+  diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);
+  temp=square_norm(&aux2s[0],VOLUME/2)/square_norm(&ss[0],VOLUME/2)/4.0;
+
+  diff(&aux2c[0],&auxc[0],&sc[0],VOLUME/2);
+  temp2=square_norm(&aux2c[0],VOLUME/2)/square_norm(&sc[0],VOLUME/2)/4.0;
+
+  if(g_epsbar == 0.){ 
+    temp2 = 0.0;
+  }
+  if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
+    printf("PHMC: At n=%d  || differences ||^2 :  UP=%e  DN=%e \n",phmc_dop_n_cheby, temp, temp2);
+    fflush(stdout);
+  }
+   
+
+  sum=0;
+  for(j=phmc_dop_n_cheby; j<N_CHEBYMAX; j++){
+    sum += fabs(phmc_dop_cheby_coef[j]);
+  }
+  if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
+    printf("PHMC: Sum remaining | c_n |=%e \n", sum);
+    fflush(stdout);
+  }
+  
+  if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+    printf("PHMC: Achieved Accuracies for P :\n");
+    printf("PHMC: Uniform: Sum |c_n|=%e \n", sum);
+    printf("PHMC: RND:  || (P S P - 1)X ||^2 /|| 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
+  }
+
+  temp = cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
+  temp *= phmc_cheb_evmin;
+  temp *= cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
+  temp = 0.5*fabs(temp - 1);
+  if(g_proc_id == g_stdio_proc && g_debug_level > 1){
+    printf("PHMC: Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", phmc_cheb_evmin, temp);
+  }
+    /* RECALL THAT WE NEED AN EVEN DEGREE !!!! */
 
 #if ( defined SSE || defined SSE2 || defined SSE3)
    free(ss_);   

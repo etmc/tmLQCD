@@ -11,6 +11,6 @@ void QdaggerQ_poly(spinor *R_s, spinor *R_c, double *c, int n, spinor *S_s, spin
 
 double cheb_eval(int M, double *c, double s);
 
-void degree_of_polynomial_nd();
+void degree_of_polynomial_nd(const int degree_of_p);
 
 #endif

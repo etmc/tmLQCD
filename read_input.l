@@ -84,6 +84,9 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   int use_stout_flag;
   int phmc_no_flavours;
   int compute_evs;
+  double stilde_max;
+  double stilde_min;
+  int degree_of_p;
 %}
 
 %option never-interactive
@@ -93,7 +96,6 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x THERMSWEEPS
 %x NMEAS
 %x KAPPA
-%x ACCPFIRST
 %x ACCPTILDE
 %x ACCHFIN
 %x RECEV
@@ -181,6 +183,9 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x STOUTITER
 %x PHMCFLAV
 %x COMPUTEEVS
+%x SMAX
+%x SMIN
+%x DEGP
 
 %x COMMENT
 %x ERROR
@@ -199,12 +204,16 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^mu2{SPC}*={SPC}*                          BEGIN(MU2);
 ^mu3{SPC}*={SPC}*                          BEGIN(MU3);
 ^mubar{SPC}*={SPC}*                        BEGIN(MUBAR);
+^PhmcMubar{SPC}*={SPC}*                    BEGIN(MUBAR);
 ^epsbar{SPC}*={SPC}*                       BEGIN(EPSBAR);
+^PhmcEpsBar{SPC}*={SPC}*                   BEGIN(EPSBAR);
 ^beta{SPC}*={SPC}*                         BEGIN(BETA);
-^Acc_Pfirst{SPC}*={SPC}*                 BEGIN(ACCPFIRST);
-^Acc_Ptilde{SPC}*={SPC}*                 BEGIN(ACCPTILDE);
-^Acc_Hfin{SPC}*={SPC}*                   BEGIN(ACCHFIN);
-^recev{SPC}*={SPC}*                      BEGIN(RECEV);
+^Acc_Ptilde{SPC}*={SPC}*                   BEGIN(ACCPTILDE);
+^PhmcPrecisionPtilde{SPC}*={SPC}*          BEGIN(ACCPTILDE);
+^Acc_Hfin{SPC}*={SPC}*                     BEGIN(ACCHFIN);
+^PhmcPrecisionHfin{SPC}*={SPC}*            BEGIN(ACCHFIN);
+^recev{SPC}*={SPC}*                        BEGIN(RECEV);
+^PhmcRecEVInterval{SPC}*={SPC}*            BEGIN(RECEV);
 ^seed{SPC}*={SPC}*                         BEGIN(SEED);
 ^StartCondition{SPC}*={SPC}*               BEGIN(STARTCOND);
 ^ThermalisationSweeps{SPC}*={SPC}*         BEGIN(THERMSWEEPS);
@@ -290,6 +299,9 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^StoutNoIterations{SPC}*={SPC}*            BEGIN(STOUTITER);
 ^PhmcNoFlavours{SPC}*={SPC}*               BEGIN(PHMCFLAV);
 ^PhmcComputeOnlyEVs{SPC}*={SPC}*           BEGIN(COMPUTEEVS);
+^PhmcStildeMax{SPC}*={SPC}*                BEGIN(SMAX);
+^PhmcStildeMin{SPC}*={SPC}*                BEGIN(SMIN);
+^PhmcDegreeOfP{SPC}*={SPC}*                BEGIN(DEGP);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -346,10 +358,6 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <KAPPA>{FLT}  {
   g_kappa=atof(yytext);
   if(verbose!=0) printf("kappa=%s \n", yytext);
-}
-<ACCPFIRST>{FLT}  {
-  g_acc_Pfirst=atof(yytext);
-  if(verbose!=0) printf("Acc_Pfirst=%s \n", yytext);
 }
 <ACCPTILDE>{FLT}  {
   g_acc_Ptilde=atof(yytext);
@@ -841,15 +849,28 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <COMPUTEEVS>no {
   compute_evs=0;
 }
+<SMAX>{FLT} {
+  stilde_max = atof(yytext);
+  if(verbose!=0) printf("Stilde max for PHMC set to %e.\n", stilde_max);
+}
+<SMIN>{FLT} {
+  stilde_min = atof(yytext);
+  if(verbose!=0) printf("Stilde min for PHMC set to %e.\n", stilde_max);
+}
+<DEGP>{DIGIT}+ {
+  degree_of_p = atoi(yytext);
+  if(verbose!=0) printf("Degree for less precise polynomial P set to %d \n", degree_of_p);
+}
 
 <*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,ACCPFIRST,ACCPTILDE,ACCHFIN,RECEV,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
+<SEED,KAPPA,ACCPTILDE,ACCHFIN,RECEV,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
 <MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2>#   BEGIN(COMMENT);
 <NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,NPROCY,NPROCZ,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP>#   BEGIN(COMMENT);
 <NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
 <INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
 <ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
 <GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC,USESTOUT,STOUTRHO,STOUTITER,PHMCFLAV>#   BEGIN(COMMENT);
+<SMIN,SMAX,DEGP>#  BEGIN(COMMENT);
 <COMPUTEEVS>#  BEGIN(COMMENT);
 <SOURCETS>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC>#   BEGIN(COMMENT);
@@ -871,16 +892,12 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Unknown kappa in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
   exit(1);
 }
-<ACCPFIRST>. {
-  printf("Unknown Acc_Pfirst in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
-  exit(1);
-}
 <ACCPTILDE>. {
-  printf("Unknown Acc_Ptilde in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
+  printf("Unknown PhmcPrecisionPtilde in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
   exit(1);
 }
 <ACCHFIN>. {
-  printf("Unknown Acc_Hfin in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
+  printf("Unknown PhmcPrecisionHfin in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
   exit(1);
 }
 <RECEV>. {
@@ -888,11 +905,11 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   exit(1);
 }
 <MUBAR>. {
-  printf("Unknown mubar in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
+  printf("Unknown PhmcMuBar in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
   exit(1);
 }
 <EPSBAR>. {
-  printf("Unknown epsbar in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
+  printf("Unknown PhmcEpsBar in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
   exit(1);
 }
 <MU>. {
@@ -1063,7 +1080,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Unknown value in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
   exit(1);
 }
-<STOUTITER>. {
+<STOUTITER,DEGP>. {
   printf("Unknown value in line %d! Must be an integer. Exiting...!\n", line_of_file);
   exit(1);
 }
@@ -1075,7 +1092,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Unknown value in line %d! Must be an yes or no. Exiting...!\n", line_of_file);
   exit(1);
 }
-
+<SMIN,SMAX>. {
+  printf("Unknown value in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
+  exit(1);
+}
 
 <INITIAL>.                        BEGIN(ERROR);
 <ERROR>[^\t\n]*             {
@@ -1124,7 +1144,6 @@ int read_input(char * conf_file){
   N_PROC_Z = _default_N_PROC_Z;
 #endif
   g_kappa = _default_g_kappa;
-  g_acc_Pfirst = _default_g_acc_Pfirst;
   g_acc_Ptilde = _default_g_acc_Ptilde;
   g_acc_Hfin = _default_g_acc_Hfin;
   g_rec_ev = _default_g_rec_ev;
@@ -1204,6 +1223,9 @@ int read_input(char * conf_file){
   /* check for reread ! */ 
   phmc_no_flavours = _default_phmc_no_flavours;
   compute_evs = _default_compute_evs;
+  stilde_min = _default_stilde_min;
+  stilde_max = _default_stilde_max;
+  degree_of_p = _default_degree_of_p;
   /********************************************/
 
   if ((yyin = fopen(conf_file, "rt")) == NULL){

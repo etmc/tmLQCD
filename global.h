@@ -123,7 +123,7 @@ EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
 EXTERN double g_rgi_C0, g_rgi_C1;
 EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
 /* Parameters for non-degenrate case */
-EXTERN double g_acc_Pfirst, g_acc_Ptilde;
+EXTERN double g_acc_Ptilde;
 EXTERN double g_acc_Hfin;
 EXTERN int g_rec_ev;
 EXTERN double g_mubar, g_epsbar;
