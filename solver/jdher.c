@@ -32,7 +32,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <errno.h>
 #include <string.h>
 #include "global.h"
@@ -70,7 +69,7 @@ static void sorteig(int j, double S[], complex U[], int ldu, double tau,
 /* Projection routines */
 void Proj_A_psi(spinor * const y, spinor * const x);
 
-void jerrorhandler(const int i, char * message) {
+void jderrorhandler(const int i, char * message) {
   fprintf(stderr, "jdher %s \n", message);
   exit(-1);
 }
@@ -86,7 +85,7 @@ static complex CONE, CZERO, CMONE;
 
 /* Projector variables */
 
-static int p_n, p_n2, p_k;
+static int p_n, p_n2, p_k, p_lda;
 static double p_theta;
 complex * p_Q;
 complex * p_work;
@@ -103,7 +102,7 @@ matrix_mult p_A_psi;
   char * cupl_u = "U", * cupl_c = "C", *cupl_n = "N", * cupl_a = "A", *cupl_v = "V", *cilaenv = "zhetrd", *cvu = "VU";
   _fcd fupl_u, fupl_c, fupl_a, fupl_n, fupl_v, filaenv, fvu;
 #else
-  char * fupl_u = "U", * fupl_c = "C", *fupl_n = "N", * fupl_a = "A", *fupl_v = "V", *filaenv = "zhetrd", *fvu = "VU";
+  static char * fupl_u = "U", * fupl_c = "C", *fupl_n = "N", * fupl_a = "A", *fupl_v = "V", *filaenv = "zhetrd", *fvu = "VU";
 #endif
 
 /****************************************************************************
@@ -112,15 +111,15 @@ matrix_mult p_A_psi;
  *                                                                          *
  ****************************************************************************/
 
-void jdher(int n, double tau, double tol, 
-	   int kmax, int jmax, int jmin, int itmax,
-	   int blksize, int blkwise, 
+void jdher(const int n, const int lda, const double tau, const double tol, 
+	   const int kmax, const int jmax, const int jmin, const int itmax,
+	   const int blksize, const int blkwise, 
 	   int V0dim, complex *V0, 
-	   int solver_flag, 
-	   int linitmax, double eps_tr, double toldecay,
-	   int verbosity,
+	   const int solver_flag, 
+	   const int linitmax, double eps_tr, double toldecay,
+	   const int verbosity,
 	   int *k_conv, complex *Q, double *lambda, int *it,
-	   int maxmin, const int shift_mode,
+	   const int maxmin, const int shift_mode,
 	   matrix_mult A_psi){
 
   /****************************************************************************
@@ -135,7 +134,7 @@ void jdher(int n, double tau, double tol,
    * initialize with NULL, so we can free even unallocated ptrs */
   double *s = NULL, *resnrm = NULL, *resnrm_old = NULL, *dtemp = NULL, *rwork = NULL;
 
-  complex *V_ = NULL, *V, *Vtmp = NULL, *U = NULL, *M = NULL,
+  complex *V_ = NULL, *V, *Vtmp = NULL, *U = NULL, *M = NULL, *Z = NULL,
     *Res_ = NULL, *Res,
     *eigwork = NULL, *temp1_ = NULL, *temp1;
 
@@ -150,13 +149,14 @@ void jdher(int n, double tau, double tol,
   /* scalar vars */
   double theta, alpha, it_tol;
 
-  int k, j, actblksize, eigworklen, found, conv, keep, n2;
+  int i, k, j, actblksize, eigworklen, found, conv, keep, n2;
   int act, cnt, idummy, info, CntCorrIts=0, endflag=0;
-
+  int N = n*sizeof(complex)/sizeof(spinor);
 
   /* variables for random number generator */
   int IDIST = 1;
   int ISEED[4] = {2, 3, 5, 7};
+  ISEED[0] = g_proc_id+2;
 
   /****************************************************************************
    *                                                                          *
@@ -186,7 +186,7 @@ void jdher(int n, double tau, double tol,
 #endif
 
   /* print info header */
-  if (verbosity >= 2) {
+  if ((verbosity >= 2) && (g_proc_id == 0)){
     printf("Jacobi-Davidson method for hermitian Matrices\n");
     printf("Solving  A*x = lambda*x \n\n");
     printf("  N=      %10d  ITMAX=%4d\n", n, itmax);
@@ -205,18 +205,18 @@ void jdher(int n, double tau, double tol,
   }
 
   /* validate input parameters */
-  if(tol <= 0) jerrorhandler(401,"");
-  if(kmax <= 0 || kmax > n) jerrorhandler(402,"");
-  if(jmax <= 0 || jmax > n) jerrorhandler(403,"");
-  if(jmin <= 0 || jmin > jmax) jerrorhandler(404,"");
-  if(itmax < 0) jerrorhandler(405,"");
-  if(blksize > jmin || blksize > (jmax - jmin)) jerrorhandler(406,"");
-  if(blksize <= 0 || blksize > kmax) jerrorhandler(406,"");
-  if(blkwise < 0 || blkwise > 1) jerrorhandler(407,"");
-  if(V0dim < 0 || V0dim >= jmax) jerrorhandler(408,"");
-  if(linitmax < 0) jerrorhandler(409,"");
-  if(eps_tr < 0.) jerrorhandler(500,"");
-  if(toldecay <= 1.0) jerrorhandler(501,"");
+  if(tol <= 0) jderrorhandler(401,"");
+  if(kmax <= 0 || kmax > n) jderrorhandler(402,"");
+  if(jmax <= 0 || jmax > n) jderrorhandler(403,"");
+  if(jmin <= 0 || jmin > jmax) jderrorhandler(404,"");
+  if(itmax < 0) jderrorhandler(405,"");
+  if(blksize > jmin || blksize > (jmax - jmin)) jderrorhandler(406,"");
+  if(blksize <= 0 || blksize > kmax) jderrorhandler(406,"");
+  if(blkwise < 0 || blkwise > 1) jderrorhandler(407,"");
+  if(V0dim < 0 || V0dim >= jmax) jderrorhandler(408,"");
+  if(linitmax < 0) jderrorhandler(409,"");
+  if(eps_tr < 0.) jderrorhandler(500,"");
+  if(toldecay <= 1.0) jderrorhandler(501,"");
   
   CONE.re=1.; CONE.im=0.;
   CZERO.re=0.; CZERO.im=0.;
@@ -229,66 +229,66 @@ void jdher(int n, double tau, double tol,
 
   /* Allocating memory for matrices & vectors */ 
 #if (defined SSE || defined SSE2 || defined SSE3)
-  V_ = (complex *)malloc((n * jmax + 4) * sizeof(complex));
+  V_ = (complex *)malloc((lda * jmax + 4) * sizeof(complex));
   V = (complex*)(((unsigned long int)(V_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  V_ = (complex *)malloc(n * jmax * sizeof(complex));
+  V_ = (complex *)malloc(lda * jmax * sizeof(complex));
   V = V_;
 #endif
-  if(errno == ENOMEM) jerrorhandler(300,"V in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"V in jdher");
   U = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) jerrorhandler(300,"U in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"U in jdher");
   s = (double *)malloc(jmax * sizeof(double));
-  if(errno == ENOMEM) jerrorhandler(300,"s in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"s in jdher");
 #if (defined SSE || defined SSE2 || defined SSE3)
-  Res_ = (complex *)malloc((n * blksize+4) * sizeof(complex));
+  Res_ = (complex *)malloc((lda * blksize+4) * sizeof(complex));
   Res = (complex*)(((unsigned long int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  Res_ = (complex *)malloc(n * blksize * sizeof(complex));
+  Res_ = (complex *)malloc(lda * blksize * sizeof(complex));
   Res = Res_;
 #endif
-  if(errno == ENOMEM) jerrorhandler(300,"Res in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"Res in jdher");
   resnrm = (double *)malloc(blksize * sizeof(double));
-  if(errno == ENOMEM) jerrorhandler(300,"resnrm in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"resnrm in jdher");
   resnrm_old = (double *)calloc(blksize,sizeof(double));
-  if(errno == ENOMEM) jerrorhandler(300,"resnrm_old in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"resnrm_old in jdher");
   M = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) jerrorhandler(300,"M in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"M in jdher");
   Vtmp = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) jerrorhandler(300,"Vtmp in jdher");
-  p_work = (complex *)malloc(n * sizeof(complex));
-  if(errno == ENOMEM) jerrorhandler(300,"p_work in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"Vtmp in jdher");
+  p_work = (complex *)malloc(lda * sizeof(complex));
+  if(errno == ENOMEM) jderrorhandler(300,"p_work in jdher");
 
   /* ... */
   idx1 = (int *)malloc(jmax * sizeof(int));
-  if(errno == ENOMEM) jerrorhandler(300,"idx1 in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"idx1 in jdher");
   idx2 = (int *)malloc(jmax * sizeof(int));
-  if(errno == ENOMEM) jerrorhandler(300,"idx2 in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"idx2 in jdher");
 
   /* Indices for (non-)converged approximations */
   convind = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) jerrorhandler(300,"convind in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"convind in jdher");
   keepind = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) jerrorhandler(300,"keepind in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"keepind in jdher");
   solvestep = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) jerrorhandler(300,"solvestep in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"solvestep in jdher");
   actcorrits = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) jerrorhandler(300,"actcorrits in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"actcorrits in jdher");
 
   eigwork = (complex *)malloc(eigworklen * sizeof(complex));
-  if(errno == ENOMEM) jerrorhandler(300,"eigwork in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"eigwork in jdher");
   rwork = (double *)malloc(3*jmax * sizeof(double));
-  if(errno == ENOMEM) jerrorhandler(300,"rwork in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"rwork in jdher");
 #if (defined SSE || defined SSE2 || defined SSE3)
-  temp1_ = (complex *)malloc((n+4) * sizeof(complex));
+  temp1_ = (complex *)malloc((lda+4) * sizeof(complex));
   temp1 = (complex*)(((unsigned long int)(temp1_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  temp1_ = (complex *)malloc(n * sizeof(complex));
+  temp1_ = (complex *)malloc(lda * sizeof(complex));
   temp1 = temp1_;
 #endif
-  if(errno == ENOMEM) jerrorhandler(300,"temp1 in jdher");
-  dtemp = (double *)malloc(n * sizeof(complex));
-  if(errno == ENOMEM) jerrorhandler(300,"dtemp in jdher");
+  if(errno == ENOMEM) jderrorhandler(300,"temp1 in jdher");
+  dtemp = (double *)malloc(lda * sizeof(complex));
+  if(errno == ENOMEM) jderrorhandler(300,"dtemp in jdher");
 
   /* Set variables for Projection routines */
   n2 = 2*n;
@@ -296,7 +296,7 @@ void jdher(int n, double tau, double tol,
   p_n2 = n2;
   p_Q = Q;
   p_A_psi = A_psi;
-
+  p_lda = lda;
 
   /**************************************************************************
    *                                                                        *
@@ -306,18 +306,19 @@ void jdher(int n, double tau, double tol,
    **************************************************************************/
 
   /* copy V0 to V */
-  _FT(zlacpy)(fupl_a, &n, &V0dim, V0, &n, V, &n, 1);
+  _FT(zlacpy)(fupl_a, &n, &V0dim, V0, &lda, V, &lda, 1);
   j = V0dim;
   /* if V0dim < blksize: generate additional random vectors */
   if (V0dim < blksize) {
     idummy = (blksize - V0dim)*n; /* nof random numbers */
-    _FT(zlarnv)(&IDIST, ISEED, &idummy, V + V0dim*n);
+    _FT(zlarnv)(&IDIST, ISEED, &idummy, V + V0dim*lda);
     j = blksize;
   }
   for (cnt = 0; cnt < j; cnt ++) {
     ModifiedGS(V + cnt*n, n, cnt, V);
-    alpha = 1.0 / _FT(dnrm2)(&n2,(double*) (V + cnt*n), &ONE);
-    _FT(dscal)(&n2, &alpha, (double *)(V + cnt*n), &ONE);
+    alpha = sqrt(square_norm((spinor*)(V+cnt*lda), N));
+    alpha = 1.0 / alpha;
+    _FT(dscal)(&n2, &alpha, (double *)(V + cnt*lda), &ONE);
   }
 
   /* Generate interaction matrix M = V^dagger*A*V. Only the upper triangle
@@ -325,11 +326,9 @@ void jdher(int n, double tau, double tol,
   for (cnt = 0; cnt < j; cnt++){
     A_psi((spinor*) temp1, (spinor*) (V+cnt*n));
     idummy = cnt+1;
-/*     for(i = 0; i < idummy; i++){ */
-/*       M[cnt*jmax+i] = scalar_prod((spinor*)&V[i*n], (spinor*) temp1); */
-/*     } */
-    _FT(zgemv)(fupl_c, &n, &idummy, &CONE, V, &n, temp1, &ONE,
-	       &CZERO, M+cnt*jmax, &ONE, 1);
+    for(i = 0; i < idummy; i++){
+      M[cnt*jmax+i] = scalar_prod((spinor*)(V+i*lda), (spinor*) temp1, N);
+    }
   }
 
   /* Other initializations */
@@ -367,7 +366,7 @@ void jdher(int n, double tau, double tol,
       printf("error solving the projected eigenproblem.");
       printf(" zheev: info = %d\n", info);
     }
-    if(info != 0) jerrorhandler(502,"");
+    if(info != 0) jderrorhandler(502,"proble in zheev");
   
 
     /* Reverse order of eigenvalues if maximal value is needed */
@@ -398,13 +397,13 @@ void jdher(int n, double tau, double tol,
       for(act=0; act < actblksize; act++){
 
 	/* Setting pointers for single vectors */
-	q = Q + (act+k)*n; 
+	q = Q + (act+k)*lda; 
 	u = U + act*jmax; 
-	r = Res + act*n; 
+	r = Res + act*lda; 
 	
 	/* Compute Ritz-Vector Q[:,k+cnt1]=V*U[:,cnt1] */
 	theta = s[act];
-	_FT(zgemv)(fupl_n, &n, &j, &CONE, V, &n, u, &ONE, &CZERO, q, &ONE, 1);
+	_FT(zgemv)(fupl_n, &n, &j, &CONE, V, &lda, u, &ONE, &CZERO, q, &ONE, 1);
 
 	/* Compute the residual */
 	A_psi((spinor*) r, (spinor*) q); 
@@ -413,7 +412,7 @@ void jdher(int n, double tau, double tol,
 
 	/* Compute norm of the residual and update arrays convind/keepind*/
 	resnrm_old[act] = resnrm[act];
-	resnrm[act] = _FT(dnrm2)(&n2, (double*)r, &ONE);
+	resnrm[act] = sqrt(square_norm((spinor*) r, N));
 	if (resnrm[act] < tol){
 	  convind[conv] = act; 
 	  conv = conv + 1; 
@@ -459,19 +458,19 @@ void jdher(int n, double tau, double tol,
 	idummy = j - actblksize;
 	for (act = 0; act < n; act = act + jmax) {
 	  cnt = act + jmax > n ? n-act : jmax;
-	  _FT(zlacpy)(fupl_a, &cnt, &j, V+act, &n, Vtmp, &jmax, 1);
+	  _FT(zlacpy)(fupl_a, &cnt, &j, V+act, &lda, Vtmp, &jmax, 1);
 	  _FT(zgemm)(fupl_n, fupl_n, &cnt, &idummy, &j, &CONE, Vtmp, 
-		     &jmax, U+actblksize*jmax, &jmax, &CZERO, V+act+keep*n, &n, 1, 1);
+		     &jmax, U+actblksize*jmax, &jmax, &CZERO, V+act+keep*lda, &lda, 1, 1);
 	}
 
 	/* Insert the not converged approximations as first columns in V */
 	for(act = 0; act < keep; act++){
-	  _FT(zlacpy)(fupl_a,&n,&ONE,Q+(k+keepind[act])*n,&n,V+act*n,&n,1);
+	  _FT(zlacpy)(fupl_a,&n,&ONE,Q+(k+keepind[act])*lda,&lda,V+act*lda,&lda,1);
 	}
 
 	/* Store Eigenvectors */
 	for(act = 0; act < conv; act++){
-	  _FT(zlacpy)(fupl_a,&n,&ONE,Q+(k+convind[act])*n,&n,Q+(k+act)*n,&n,1);
+	  _FT(zlacpy)(fupl_a,&n,&ONE,Q+(k+convind[act])*lda,&lda,Q+(k+act)*lda,&lda,1);
 	}
 
 	/* Update SearchSpaceSize j */
@@ -543,9 +542,9 @@ void jdher(int n, double tau, double tol,
 
 	for (act = 0; act < n; act = act + jmax) { /* V = V * U(:,1:j) */
 	  cnt = act+jmax > n ? n-act : jmax;
-	  _FT(zlacpy)(fupl_a, &cnt, &idummy, V+act, &n, Vtmp, &jmax, 1);
+	  _FT(zlacpy)(fupl_a, &cnt, &idummy, V+act, &lda, Vtmp, &jmax, 1);
 	  _FT(zgemm)(fupl_n, fupl_n, &cnt, &j, &idummy, &CONE, Vtmp, 
-		     &jmax, U, &jmax, &CZERO, V+act, &n, 1, 1);
+		     &jmax, U, &jmax, &CZERO, V+act, &lda, 1, 1);
 	}
 	  
 	_FT(zlaset)(fupl_a, &j, &j, &CZERO, &CONE, U, &jmax, 1);
@@ -572,7 +571,7 @@ void jdher(int n, double tau, double tol,
 
       /* Setting start-value for vector v as zeros(n,1). Guarantees
          orthogonality */
-      v = V + j*n;
+      v = V + j*lda;
       for (cnt = 0; cnt < n; cnt ++){ 
 	v[cnt].re = 0.;
 	v[cnt].im = 0.;
@@ -582,7 +581,7 @@ void jdher(int n, double tau, double tol,
 	 residual is big, we don't need a too precise solution for the
 	 correction equation, since even in exact arithmetic the
 	 solution wouldn't be too usefull for the Eigenproblem. */
-      r = Res + act*n;
+      r = Res + act*lda;
 
       if (resnrm[act] < eps_tr && resnrm[act] < s[act] && resnrm_old[act] > resnrm[act]){
 	p_theta = s[act];
@@ -605,7 +604,7 @@ void jdher(int n, double tau, double tol,
 
 
       /* equation and project if necessary */
-      ModifiedGS(r, n, k + actblksize, Q);
+      pModifiedGS(r, n, k + actblksize, Q, lda);
 
 /*       for(i=0;i<n;i++){ */
 /* 	r[i].re*=-1.; */
@@ -613,6 +612,9 @@ void jdher(int n, double tau, double tol,
 /*       } */
 
       /* Solve the correction equation ...  */
+      i = g_sloppy_precision_flag;
+/*       g_sloppy_precision = 1; */
+      g_sloppy_precision_flag = 1;
       if(solver_flag == GMRES){
 /* 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, &Proj_A_psi, &Proj_A_psi); */
 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, 0, 
@@ -634,6 +636,8 @@ void jdher(int n, double tau, double tol,
  	info = gmres((spinor*) v, (spinor*) r, 10, linitmax, it_tol*it_tol, 0,
 		     n*sizeof(complex)/sizeof(spinor), &Proj_A_psi); 
       }
+      g_sloppy_precision = 0;
+      g_sloppy_precision_flag = i;
 
       /* Actualizing profiling data */
       if (info == -1){
@@ -649,8 +653,8 @@ void jdher(int n, double tau, double tol,
 	 apply "IteratedCGS" to prevent numerical breakdown 
          in order to orthogonalize v to V */
 
-      ModifiedGS(v, n, k+actblksize, Q);
-      IteratedClassicalGS(v, &alpha, n, j, V, temp1);
+      pModifiedGS(v, n, k+actblksize, Q, N);
+      pIteratedClassicalGS(v, &alpha, n, j, V, temp1, lda);
 
       alpha = 1.0 / alpha;
       _FT(dscal)(&n2, &alpha, (double*) v, &ONE);
@@ -658,19 +662,19 @@ void jdher(int n, double tau, double tol,
       /* update interaction matrix M */
       A_psi((spinor*) temp1, (spinor*) v);
       idummy = j+1;
-/*       for(i = 0; i < idummy; i++){ */
-/* 	M[j*jmax+i] = scalar_prod((spinor*) (V+i*n), (spinor*) temp1); */
-/*       } */
-      _FT(zgemv)(fupl_c, &n, &idummy, &CONE, V, &n, temp1, &ONE,
-		 &CZERO, M+j*jmax, &ONE, 1);
+      for(i = 0; i < idummy; i++) {
+	M[j*jmax+i] = scalar_prod((spinor*) (V+i*lda), (spinor*) temp1, N);
+      }
       
       /* Increasing SearchSpaceSize j */
       j ++;
     }   /* for (act = 0;act < actblksize; act ++) */    
 
     /* Print information line */
-    print_status(verbosity, *it, k, j - blksize, kmax, blksize, actblksize, 
-		 s, resnrm, actcorrits);    
+    if(g_proc_id == 0) {
+      print_status(verbosity, *it, k, j - blksize, kmax, blksize, actblksize, 
+		   s, resnrm, actcorrits);
+    }
 
     /* Increase iteration-counter for outer loop  */
     (*it) = (*it) + 1;
@@ -685,8 +689,8 @@ void jdher(int n, double tau, double tol,
    *                                                                *
    ******************************************************************/
 
-  *k_conv = k;
-  if (verbosity >= 1) {
+  (*k_conv) = k;
+  if (g_proc_id == 0 && verbosity > 0) {
     printf("\nJDHER execution statistics\n\n");
     printf("IT_OUTER=%d   IT_INNER_TOT=%d   IT_INNER_AVG=%8.2f\n",
 	   (*it), CntCorrIts, (double)CntCorrIts/(*it));
@@ -696,12 +700,13 @@ void jdher(int n, double tau, double tol,
     
     for (act = 0; act < *k_conv; act ++) {
       /* Compute the residual for solution act */
-      q = Q + act*n;
+      q = Q + act*lda;
       theta = -lambda[act];
       A_psi((spinor*) r, (spinor*) q);
       _FT(daxpy)(&n2, &theta, (double*) q, &ONE, (double*) r, &ONE);
+      alpha = sqrt(square_norm((spinor*) r, N));
       printf("%3d %22.15e %12.5e\n", act+1, lambda[act],
-	     _FT(dnrm2)(&n2, (double*) r, &ONE));
+	     alpha);
     }
     printf("\n");
     fflush( stdout );
@@ -709,7 +714,7 @@ void jdher(int n, double tau, double tol,
 
   free(V_); free(Vtmp); free(U); 
   free(s); free(Res_); free(resnrm); 
-  free(M); 
+  free(M); free(Z);
   free(eigwork); free(temp1_);
   free(dtemp); free(rwork);
   free(p_work);
@@ -826,7 +831,7 @@ static void sorteig(int j, double S[], complex U[], int ldu, double tau,
 	dtemp[i] = fabs(S[i] - tau);
     break;
   default:
-    jerrorhandler(503,"");;
+    jderrorhandler(503,"");;
   }
   for (i = 0; i < j; i ++)
     idx1[i] = i;
@@ -860,16 +865,16 @@ static void sorteig(int j, double S[], complex U[], int ldu, double tau,
 
 void Proj_A_psi(spinor * const y, spinor * const x){
   double mtheta = -p_theta;
-/*   int i; */
+  int i; 
   /* y = A*x */
   p_A_psi(y, x); 
   /* y = -theta*x+y*/
   _FT(daxpy)(&p_n2, &mtheta, (double*) x, &ONE, (double*) y, &ONE);
   /* p_work = Q^dagger*y */ 
-/*   for(i = 0; i < p_k; i++){ */
-/*     p_work[i] = scalar_prod((spinor*) (p_Q+i*p_n), (spinor*) y); */
-/*   } */
-  _FT(zgemv)(fupl_c, &p_n, &p_k, &CONE, p_Q, &p_n, (complex*) y, &ONE, &CZERO, (complex*) p_work, &ONE, 1);
+  for(i = 0; i < p_k; i++) {
+    p_work[i] = scalar_prod((spinor*) (p_Q+i*p_lda), (spinor*) y);
+  }
+/*   _FT(zgemv)(fupl_c, &p_n, &p_k, &CONE, p_Q, &p_n, (complex*) y, &ONE, &CZERO, (complex*) p_work, &ONE, 1); */
   /* y = y - Q*p_work */ 
-  _FT(zgemv)(fupl_n, &p_n, &p_k, &CMONE, p_Q, &p_n, (complex*) p_work, &ONE, &CONE, (complex*) y, &ONE, 1);
+  _FT(zgemv)(fupl_n, &p_n, &p_k, &CMONE, p_Q, &p_lda, (complex*) p_work, &ONE, &CONE, (complex*) y, &ONE, 1);
 }
