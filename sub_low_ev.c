@@ -61,45 +61,45 @@
 
 
 /* Q=Q-sum_i lambda_i |eigen_i><eigen_i|P> */
-void sub_lowest_eigenvalues(spinor * const Q, spinor * const P, const int n, const int N){
+void sub_lowest_eigenvalues(spinor * const Q, spinor * const P, const int n, const int N) {
   int i;
   complex c;
   
   for(i = 0; i < n; i++){
-    c=scalar_prod(&(eigenvectors[i*VOLUMEPLUSRAND]), P, N);
+    c = scalar_prod(&(eigenvectors[i*(VOLUMEPLUSRAND)/2]), P, N);
     c.re = -eigenvls[i]*c.re;
     c.im = -eigenvls[i]*c.im;
-    assign_add_mul(Q, &eigenvectors[i*VOLUMEPLUSRAND], c, N);
+    assign_add_mul(Q, &eigenvectors[i*(VOLUMEPLUSRAND)/2], c, N);
   }
 }
 
 /* Q=P-sum_i |eigen_i><eigen_i|P> */
-void assign_sub_lowest_eigenvalues(spinor * const Q, spinor * const P, const int n, const int N){
+void assign_sub_lowest_eigenvalues(spinor * const Q, spinor * const P, const int n, const int N) {
   int i;
   complex c;
 
   assign(Q, P, N);
   
   for(i = 0; i < n; i++){
-    c=scalar_prod(&(eigenvectors[i*VOLUMEPLUSRAND]), P, N);
+    c = scalar_prod(&(eigenvectors[i*(VOLUMEPLUSRAND)/2]), P, N);
     c.re = -c.re;
     c.im = -c.im;
-    assign_add_mul(Q, &eigenvectors[i*VOLUMEPLUSRAND], c, N);
+    assign_add_mul(Q, &eigenvectors[i*(VOLUMEPLUSRAND)/2], c, N);
 
   }
 }
 
 /* Q = Q + sum_i 1/lambda_i |eigen_i><eigen_i|P> */
-void assign_add_invert_subtracted_part(spinor * const Q, spinor * const P, const int n, const int N){
+void assign_add_invert_subtracted_part(spinor * const Q, spinor * const P, const int n, const int N) {
   int i=0;
   complex c;
   double rev=0;
 
    for(i = 0; i < n; i++){
-     c = scalar_prod(&eigenvectors[i*VOLUMEPLUSRAND], P, N);
+     c = scalar_prod(&eigenvectors[i*(VOLUMEPLUSRAND)/2], P, N);
      rev = 1./eigenvls[i];
      c.re *= rev;
      c.im *= rev;
-     assign_add_mul(Q, &eigenvectors[i*VOLUMEPLUSRAND], c, N);
+     assign_add_mul(Q, &eigenvectors[i*(VOLUMEPLUSRAND)/2], c, N);
    }
 }

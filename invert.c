@@ -76,6 +76,7 @@ int main(int argc,char *argv[]) {
   char conf_filename[50];
   char * input_filename = NULL;
   double plaquette_energy;
+  int no_eigenvalues;
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -215,7 +216,11 @@ int main(int argc,char *argv[]) {
 #ifdef _GAUGE_COPY
     update_backward_gauge();
 #endif
-    
+
+    if(g_rec_ev != 0) {
+      no_eigenvalues = 10;
+      eigenvalues(&no_eigenvalues, 1000, 1.e-12);
+    }
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action();
 

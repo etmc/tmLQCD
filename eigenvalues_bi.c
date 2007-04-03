@@ -153,39 +153,39 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
  
 
 #ifdef MPI
-  pjdher((VOLUME)/2*sizeof(bispinor)/sizeof(complex), (VOLUMEPLUSRAND)/2*sizeof(bispinor)/sizeof(complex),
-	 startvalue, prec, 
-	 (*nr_of_eigenvalues), j_max, j_min, 
-	 max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors_bi,
-	 CG, solver_it_max,
-	 threshold, decay, verbosity,
-	 &converged, (complex*) eigenvectors_bi, eigenvls_bi,
-	 &returncode, maxmin, 1,
-	 &Q_Qdagger_ND_BI);
-
-	/* IN THE LAST LINE, INSERT:
-             Q_Qdagger_ND_BI;   Non-degenerate case - on 1 bispinor 
-             Q_Qdagger_ND;      Non-degenerate case - on 2 spinors 
-             Qtm_pm_psi;        Degenerate case  -  on 1 spinor 
-	*/
+  pjdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(complex), (VOLUMEPLUSRAND)/2*sizeof(bispinor)/sizeof(complex),
+	    startvalue, prec, 
+	    (*nr_of_eigenvalues), j_max, j_min, 
+	    max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors_bi,
+	    CG, solver_it_max,
+	    threshold, decay, verbosity,
+	    &converged, (complex*) eigenvectors_bi, eigenvls_bi,
+	    &returncode, maxmin, 1,
+	    &Q_Qdagger_ND_BI);
+  
+  /* IN THE LAST LINE, INSERT:
+     Q_Qdagger_ND_BI;   Non-degenerate case - on 1 bispinor 
+     Q_Qdagger_ND;      Non-degenerate case - on 2 spinors 
+     Qtm_pm_psi;        Degenerate case  -  on 1 spinor 
+  */
 
 #else
-  jdher((VOLUME)/2*sizeof(bispinor)/sizeof(complex),
-        startvalue, prec, 
-	(*nr_of_eigenvalues), j_max, j_min, 
-	max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors_bi,
-	CG, solver_it_max,
-	threshold_min, decay_min, verbosity,
-	&converged, (complex*) eigenvectors_bi, eigenvls_bi,
-	&returncode, maxmin, 1,
-	&Q_Qdagger_ND_BI);
-
-	/* IN THE LAST LINE, INSERT:
-             Q_Qdagger_ND_BI;   Non-degenerate case - on 1 bispinor 
-             Q_Qdagger_ND;      Non-degenerate case - on 2 spinors 
-             Qtm_pm_psi;        Degenerate case  -  on 1 spinor 
-	*/
-
+  jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(complex),
+	   startvalue, prec, 
+	   (*nr_of_eigenvalues), j_max, j_min, 
+	   max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors_bi,
+	   CG, solver_it_max,
+	   threshold_min, decay_min, verbosity,
+	   &converged, (complex*) eigenvectors_bi, eigenvls_bi,
+	   &returncode, maxmin, 1,
+	   &Q_Qdagger_ND_BI);
+  
+  /* IN THE LAST LINE, INSERT:
+     Q_Qdagger_ND_BI;   Non-degenerate case - on 1 bispinor 
+     Q_Qdagger_ND;      Non-degenerate case - on 2 spinors 
+     Qtm_pm_psi;        Degenerate case  -  on 1 spinor 
+  */
+  
 #endif
 
   (*nr_of_eigenvalues) = converged;

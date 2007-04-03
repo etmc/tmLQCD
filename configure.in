@@ -146,6 +146,7 @@ AC_ARG_WITH(lapack,
   with_lapack=$withval, with_lapack=yes)
 if test $with_lapack = yes; then
   AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_LAPACK,1,lapack available)
 else
   AC_MSG_RESULT(no)
 fi

@@ -349,7 +349,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
       assign(V[i], Z[i], N); 
     }
     /* Reorthogonalise v_nr_ev */
-    pModifiedGS((complex*)V[nr_ev], _N, nr_ev, (complex*)V[0], V2);  
+    ModifiedGS((complex*)V[nr_ev], _N, nr_ev, (complex*)V[0], V2);  
     if(g_debug_level > 3) {
       for(i = 0; i < np1; i++) {
 	for(l = 0; l < np1; l++) {

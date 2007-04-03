@@ -26,7 +26,7 @@
 #endif
 #include "gram-schmidt_bi.h"
 
-const int max_cgs_it=5;
+const int max_cgs_it_bi=5;
 static int ONE = 1;
 
 /*
@@ -37,7 +37,7 @@ static int ONE = 1;
  *
  */
 
-void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[], 
+void IteratedClassicalGS_bi(complex v[], double *vnrm, int n, int m, complex A[], 
 			 complex work1[]) {
   const double alpha = 0.5;
 
@@ -60,7 +60,7 @@ void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[],
 
   vnrm_old = _FT(dnrm2)(&n2, (double*) v, &ONE);
 
-  for (i = 0; !isorth && i < max_cgs_it; i ++) {
+  for (i = 0; !isorth && i < max_cgs_it_bi; i ++) {
     _FT(zgemv)(fupl_c, &n, &m, &CONE, A, &n, v, &ONE, &CZERO, work1, &ONE, 1);
     _FT(zgemv)(fupl_n, &n, &m, &CMONE, A, &n, work1, &ONE, &CONE, v, &ONE, 1);
 
@@ -69,13 +69,13 @@ void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[],
     isorth=((*vnrm) > alpha*vnrm_old);
     vnrm_old = (*vnrm);
   }
-  if (i >= max_cgs_it) {
+  if (i >= max_cgs_it_bi) {
 /*     errorhandler(400,""); */
   }
 }
 
 
-void pIteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[], 
+void pIteratedClassicalGS_bi(complex v[], double *vnrm, int n, int m, complex A[], 
 			 complex work1[], int lda) {
   const double alpha = 0.5;
 
@@ -98,7 +98,7 @@ void pIteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[],
 
   vnrm_old = sqrt(square_norm_bi((bispinor*) v, n*sizeof(complex)/sizeof(bispinor)));
 
-  for(i = 0; !isorth && i < max_cgs_it; i ++) {
+  for(i = 0; !isorth && i < max_cgs_it_bi; i ++) {
 
     for(j = 0; j < m; j++){
       work1[j] = scalar_prod_bi((bispinor*) (A+j*lda), (bispinor*) v, n*sizeof(complex)/sizeof(bispinor));
@@ -109,7 +109,7 @@ void pIteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[],
     isorth=((*vnrm) > alpha*vnrm_old);
     vnrm_old = (*vnrm);
   }
-  if (i >= max_cgs_it) {
+  if (i >= max_cgs_it_bi) {
 /*     errorhandler(400,""); */
   }
 }
@@ -121,7 +121,7 @@ void pIteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[],
  *  Orthogonlaizes v with respect to span{A[:,1:m]}
  */
 
-void ModifiedGS(complex v[], int n, int m, complex A[]){
+void ModifiedGS_bi(complex v[], int n, int m, complex A[]){
 
   int i;
   complex s;
@@ -134,7 +134,7 @@ void ModifiedGS(complex v[], int n, int m, complex A[]){
 }
 
 
-void pModifiedGS(complex v[], int n, int m, complex A[], int lda){
+void pModifiedGS_bi(complex v[], int n, int m, complex A[], int lda){
 
   int i;
   complex s;

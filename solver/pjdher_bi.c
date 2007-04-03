@@ -49,6 +49,7 @@
 #include "solver/solver.h"
 #include "solver/gram-schmidt_bi.h"
 #include "solver/quicksort.h"
+#include "jdher.h"
 #include "jdher_bi.h"
 #include "update_backward_gauge.h"
 #ifdef CRAY
@@ -71,16 +72,8 @@ static void print_status(int clvl, int it, int k, int j, int kmax,
 static void sorteig(int j, double S[], complex U[], int ldu, double tau,
 		    double dtemp[], int idx1[], int idx2[], int strategy);
 
-void perrorhandler(const int i, char * message) {
-  fprintf(stderr, "%s \n", message); 
-#ifdef MPI
-  MPI_Finalize();
-#endif
-  exit(i);
-}
-
 /* Projection routines */
-void pProj_A_psi(bispinor * const y, bispinor * const x);
+void pProj_A_psi_bi(bispinor * const y, bispinor * const x);
 
 /****************************************************************************
  *                                                                          *
@@ -121,18 +114,18 @@ matrix_mult_bi p_A_psi;
  *                                                                          *
  ****************************************************************************/
 
-void pjdher(int n, int lda, double tau, double tol, 
-	    int kmax, int jmax, int jmin, int itmax,
-	    int blksize, int blkwise, 
-	    int V0dim, complex *V0, 
-	    int solver_flag, 
-	    int linitmax, double eps_tr, double toldecay,
-	    int verbosity,
-	    int *k_conv, complex *Q, double *lambda, int *it,
-	    int maxmin, const int shift_mode,
-	    matrix_mult_bi A_psi){
-
- /****************************************************************************
+void pjdher_bi(int n, int lda, double tau, double tol, 
+	       int kmax, int jmax, int jmin, int itmax,
+	       int blksize, int blkwise, 
+	       int V0dim, complex *V0, 
+	       int solver_flag, 
+	       int linitmax, double eps_tr, double toldecay,
+	       int verbosity,
+	       int *k_conv, complex *Q, double *lambda, int *it,
+	       int maxmin, const int shift_mode,
+	       matrix_mult_bi A_psi){
+  
+  /****************************************************************************
   *                                                                          *
   * Local variables                                                          *
   *                                                                          *
@@ -217,18 +210,18 @@ void pjdher(int n, int lda, double tau, double tol,
   }
 
   /* validate input parameters */
-  if(tol <= 0) perrorhandler(401,"");
-  if(kmax <= 0 || kmax > n) perrorhandler(402,"");
-  if(jmax <= 0 || jmax > n) perrorhandler(403,"");
-  if(jmin <= 0 || jmin > jmax) perrorhandler(404,"");
-  if(itmax < 0) perrorhandler(405,"");
-  if(blksize > jmin || blksize > (jmax - jmin)) perrorhandler(406,"");
-  if(blksize <= 0 || blksize > kmax) perrorhandler(406,"");
-  if(blkwise < 0 || blkwise > 1) perrorhandler(407,"");
-  if(V0dim < 0 || V0dim >= jmax) perrorhandler(408,"");
-  if(linitmax < 0) perrorhandler(409,"");
-  if(eps_tr < 0.) perrorhandler(500,"");
-  if(toldecay <= 1.0) perrorhandler(501,"");
+  if(tol <= 0) jderrorhandler(401,"");
+  if(kmax <= 0 || kmax > n) jderrorhandler(402,"");
+  if(jmax <= 0 || jmax > n) jderrorhandler(403,"");
+  if(jmin <= 0 || jmin > jmax) jderrorhandler(404,"");
+  if(itmax < 0) jderrorhandler(405,"");
+  if(blksize > jmin || blksize > (jmax - jmin)) jderrorhandler(406,"");
+  if(blksize <= 0 || blksize > kmax) jderrorhandler(406,"");
+  if(blkwise < 0 || blkwise > 1) jderrorhandler(407,"");
+  if(V0dim < 0 || V0dim >= jmax) jderrorhandler(408,"");
+  if(linitmax < 0) jderrorhandler(409,"");
+  if(eps_tr < 0.) jderrorhandler(500,"");
+  if(toldecay <= 1.0) jderrorhandler(501,"");
 
 #ifdef ESSL
   _CONE._data._re=1.; _CONE._data._im=0.;
@@ -257,11 +250,11 @@ void pjdher(int n, int lda, double tau, double tol,
   V_ = (complex *)malloc(lda * jmax * sizeof(complex));
   V = V_;
 #endif
-  if(errno == ENOMEM) perrorhandler(300,"V in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"V in pjdher");
   U = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) perrorhandler(300,"U in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"U in pjdher");
   s = (double *)malloc(jmax * sizeof(double));
-  if(errno == ENOMEM) perrorhandler(300,"s in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"s in pjdher");
 #if (defined SSE || defined SSE2 || defined SSE3)
   Res_ = (complex *)malloc((lda * blksize+4) * sizeof(complex));
   Res = (complex*)(((unsigned long int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
@@ -269,43 +262,43 @@ void pjdher(int n, int lda, double tau, double tol,
   Res_ = (complex *)malloc(lda * blksize * sizeof(complex));
   Res = Res_;
 #endif
-  if(errno == ENOMEM) perrorhandler(300,"Res in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"Res in pjdher");
   resnrm = (double *)malloc(blksize * sizeof(double));
-  if(errno == ENOMEM) perrorhandler(300,"resnrm in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"resnrm in pjdher");
   resnrm_old = (double *)calloc(blksize,sizeof(double));
-  if(errno == ENOMEM) perrorhandler(300,"resnrm_old in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"resnrm_old in pjdher");
   M = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) perrorhandler(300,"M in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"M in pjdher");
 #ifdef ESSL
   Z = (complex *)malloc(jmax * jmax * sizeof(complex)); 
-  if(errno == ENOMEM) perrorhandler(300,"Z in pjdher"); 
+  if(errno == ENOMEM) jderrorhandler(300,"Z in pjdher"); 
 #endif
   Vtmp = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) perrorhandler(300,"Vtmp in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"Vtmp in pjdher");
   p_work = (complex *)malloc(n * sizeof(complex));
-  if(errno == ENOMEM) perrorhandler(300,"p_work in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"p_work in pjdher");
 
   /* ... */
   idx1 = (int *)malloc(jmax * sizeof(int));
-  if(errno == ENOMEM) perrorhandler(300,"idx1 in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"idx1 in pjdher");
   idx2 = (int *)malloc(jmax * sizeof(int));
-  if(errno == ENOMEM) perrorhandler(300,"idx2 in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"idx2 in pjdher");
 
   /* Indices for (non-)converged approximations */
   convind = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) perrorhandler(300,"convind in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"convind in pjdher");
   keepind = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) perrorhandler(300,"keepind in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"keepind in pjdher");
   solvestep = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) perrorhandler(300,"solvestep in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"solvestep in pjdher");
   actcorrits = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) perrorhandler(300,"actcorrits in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"actcorrits in pjdher");
 
   rwork = (double *)malloc(3*jmax * sizeof(double));
-  if(errno == ENOMEM) perrorhandler(300,"rwork in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"rwork in pjdher");
 
   eigwork = (complex *)malloc(eigworklen * sizeof(complex));
-  if(errno == ENOMEM) perrorhandler(300,"eigwork in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"eigwork in pjdher");
 
 #if (defined SSE || defined SSE2 || defined SSE3)
   temp1_ = (complex *)malloc((lda+4) * sizeof(complex));
@@ -314,9 +307,9 @@ void pjdher(int n, int lda, double tau, double tol,
   temp1_ = (complex *)malloc(lda * sizeof(complex));
   temp1 = temp1_;
 #endif
-  if(errno == ENOMEM) perrorhandler(300,"temp1 in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"temp1 in pjdher");
   dtemp = (double *)malloc(n * sizeof(complex));
-  if(errno == ENOMEM) perrorhandler(300,"dtemp in pjdher");
+  if(errno == ENOMEM) jderrorhandler(300,"dtemp in pjdher");
 
   /* Set variables for Projection routines */
   n2 = 2*n;
@@ -344,7 +337,7 @@ void pjdher(int n, int lda, double tau, double tol,
     j = blksize;
   }
   for (cnt = 0; cnt < j; cnt ++) {
-    pModifiedGS(V + cnt*lda, n, cnt, V, lda);
+    pModifiedGS_bi(V + cnt*lda, n, cnt, V, lda);
     alpha = sqrt(square_norm_bi((bispinor*)(V+cnt*lda), N));
     alpha = 1.0 / alpha;
 #ifdef ESSL
@@ -419,7 +412,7 @@ void pjdher(int n, int lda, double tau, double tol,
       printf("error solving the projected eigenproblem.");
       printf(" zheev: info = %d\n", info);
     }
-    if(info != 0) perrorhandler(502,"problem in zheev");
+    if(info != 0) jderrorhandler(502,"problem in zheev");
 
     /* Reverse order of eigenvalues if maximal value is needed */
     if(maxmin == 1){
@@ -674,20 +667,20 @@ void pjdher(int n, int lda, double tau, double tol,
       solvestep[act] = solvestep[act] + 1;
 
       /* equation and project if necessary */
-      pModifiedGS(r, n, k + actblksize, Q, lda);
+      pModifiedGS_bi(r, n, k + actblksize, Q, lda);
 
       i = g_sloppy_precision_flag;
       g_sloppy_precision = 1;
       g_sloppy_precision_flag = 1;
       /* Solve the correction equation ... */
       if (solver_flag == BICGSTAB){
-	info = bicgstab_complex_bi((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi);
+	info = bicgstab_complex_bi((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi_bi);
       }
       else if(solver_flag == CG){ 
-	info = cg_her_bi((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi, 0, 0); 
+	info = cg_her_bi((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi_bi, 0, 0); 
       } 
       else{
-	info = cg_her_bi((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi, 0, 0); 
+	info = cg_her_bi((bispinor*) v, (bispinor*) r, linitmax, it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &pProj_A_psi_bi, 0, 0); 
       }
       
       g_sloppy_precision = 0;
@@ -706,9 +699,9 @@ void pjdher(int n, int lda, double tau, double tol,
 	 apply "IteratedCGS" to prevent numerical breakdown 
          in order to orthogonalize v to V */
 
-      pModifiedGS(v, n, k+actblksize, Q, lda);
+      pModifiedGS_bi(v, n, k+actblksize, Q, lda);
 
-      pIteratedClassicalGS(v, &alpha, n, j, V, temp1, lda);
+      pIteratedClassicalGS_bi(v, &alpha, n, j, V, temp1, lda);
 
       alpha = 1.0 / alpha;
 #ifdef ESSL
@@ -899,7 +892,7 @@ static void sorteig(int j, double S[], complex U[], int ldu, double tau,
 	dtemp[i] = fabs(S[i] - tau);
     break;
   default:
-    perrorhandler(503,"");;
+    jderrorhandler(503,"");;
   }
   for (i = 0; i < j; i ++)
     idx1[i] = i;
@@ -931,7 +924,7 @@ static void sorteig(int j, double S[], complex U[], int ldu, double tau,
 
 
 
-void pProj_A_psi(bispinor * const y, bispinor * const x){
+void pProj_A_psi_bi(bispinor * const y, bispinor * const x){
   double mtheta = -p_theta;
   int i;
 

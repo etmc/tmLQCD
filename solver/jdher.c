@@ -71,7 +71,10 @@ void Proj_A_psi(spinor * const y, spinor * const x);
 
 void jderrorhandler(const int i, char * message) {
   fprintf(stderr, "jdher %s \n", message);
-  exit(-1);
+#ifdef MPI
+  MPI_Finalize();
+#endif
+  exit(i);
 }
 
 /****************************************************************************
@@ -111,16 +114,16 @@ matrix_mult p_A_psi;
  *                                                                          *
  ****************************************************************************/
 
-void jdher(const int n, const int lda, const double tau, const double tol, 
-	   const int kmax, const int jmax, const int jmin, const int itmax,
-	   const int blksize, const int blkwise, 
+void jdher(int n, int lda, double tau, double tol, 
+	   int kmax, int jmax, int jmin, int itmax,
+	   int blksize, int blkwise, 
 	   int V0dim, complex *V0, 
-	   const int solver_flag, 
-	   const int linitmax, double eps_tr, double toldecay,
-	   const int verbosity,
+	   int solver_flag, 
+	   int linitmax, double eps_tr, double toldecay,
+	   int verbosity,
 	   int *k_conv, complex *Q, double *lambda, int *it,
-	   const int maxmin, const int shift_mode,
-	   matrix_mult A_psi){
+	   int maxmin, int shift_mode,
+	   matrix_mult A_psi) {
 
   /****************************************************************************
    *                                                                          *
@@ -181,7 +184,7 @@ void jdher(const int n, const int lda, const double tau, const double tol,
    *                                                                          *
    ****************************************************************************/
 
-#ifdef GAUGE_COPY
+#ifdef _GAUGE_COPY
   update_backward_gauge();
 #endif
 
@@ -315,7 +318,7 @@ void jdher(const int n, const int lda, const double tau, const double tol,
     j = blksize;
   }
   for (cnt = 0; cnt < j; cnt ++) {
-    ModifiedGS(V + cnt*n, n, cnt, V);
+    ModifiedGS(V + cnt*lda, n, cnt, V, lda);
     alpha = sqrt(square_norm((spinor*)(V+cnt*lda), N));
     alpha = 1.0 / alpha;
     _FT(dscal)(&n2, &alpha, (double *)(V + cnt*lda), &ONE);
@@ -324,7 +327,7 @@ void jdher(const int n, const int lda, const double tau, const double tol,
   /* Generate interaction matrix M = V^dagger*A*V. Only the upper triangle
      is computed. */
   for (cnt = 0; cnt < j; cnt++){
-    A_psi((spinor*) temp1, (spinor*) (V+cnt*n));
+    A_psi((spinor*) temp1, (spinor*) (V+cnt*lda));
     idummy = cnt+1;
     for(i = 0; i < idummy; i++){
       M[cnt*jmax+i] = scalar_prod((spinor*)(V+i*lda), (spinor*) temp1, N);
@@ -604,7 +607,7 @@ void jdher(const int n, const int lda, const double tau, const double tol,
 
 
       /* equation and project if necessary */
-      pModifiedGS(r, n, k + actblksize, Q, lda);
+      ModifiedGS(r, n, k + actblksize, Q, lda);
 
 /*       for(i=0;i<n;i++){ */
 /* 	r[i].re*=-1.; */
@@ -653,8 +656,8 @@ void jdher(const int n, const int lda, const double tau, const double tol,
 	 apply "IteratedCGS" to prevent numerical breakdown 
          in order to orthogonalize v to V */
 
-      pModifiedGS(v, n, k+actblksize, Q, N);
-      pIteratedClassicalGS(v, &alpha, n, j, V, temp1, lda);
+      ModifiedGS(v, n, k+actblksize, Q, lda);
+      IteratedClassicalGS(v, &alpha, n, j, V, temp1, lda);
 
       alpha = 1.0 / alpha;
       _FT(dscal)(&n2, &alpha, (double*) v, &ONE);
@@ -697,17 +700,20 @@ void jdher(const int n, const int lda, const double tau, const double tol,
     printf("\nConverged eigensolutions in order of convergence:\n");
     printf("\n  I              LAMBDA(I)      RES(I)\n");
     printf("---------------------------------------\n");
-    
-    for (act = 0; act < *k_conv; act ++) {
-      /* Compute the residual for solution act */
-      q = Q + act*lda;
-      theta = -lambda[act];
-      A_psi((spinor*) r, (spinor*) q);
-      _FT(daxpy)(&n2, &theta, (double*) q, &ONE, (double*) r, &ONE);
-      alpha = sqrt(square_norm((spinor*) r, N));
+  }    
+  for (act = 0; act < *k_conv; act ++) {
+    /* Compute the residual for solution act */
+    q = Q + act*lda;
+    theta = -lambda[act];
+    A_psi((spinor*) r, (spinor*) q);
+    _FT(daxpy)(&n2, &theta, (double*) q, &ONE, (double*) r, &ONE);
+    alpha = sqrt(square_norm((spinor*) r, N));
+    if(g_proc_id == 0 && verbosity > 0) {
       printf("%3d %22.15e %12.5e\n", act+1, lambda[act],
 	     alpha);
     }
+  }
+  if(g_proc_id == 0 && verbosity > 0) {
     printf("\n");
     fflush( stdout );
   }
@@ -872,9 +878,8 @@ void Proj_A_psi(spinor * const y, spinor * const x){
   _FT(daxpy)(&p_n2, &mtheta, (double*) x, &ONE, (double*) y, &ONE);
   /* p_work = Q^dagger*y */ 
   for(i = 0; i < p_k; i++) {
-    p_work[i] = scalar_prod((spinor*) (p_Q+i*p_lda), (spinor*) y);
+    p_work[i] = scalar_prod((spinor*) (p_Q+i*p_lda), (spinor*) y, p_n*sizeof(complex)/sizeof(spinor));
   }
-/*   _FT(zgemv)(fupl_c, &p_n, &p_k, &CONE, p_Q, &p_n, (complex*) y, &ONE, &CZERO, (complex*) p_work, &ONE, 1); */
   /* y = y - Q*p_work */ 
   _FT(zgemv)(fupl_n, &p_n, &p_k, &CMONE, p_Q, &p_lda, (complex*) p_work, &ONE, &CONE, (complex*) y, &ONE, 1);
 }

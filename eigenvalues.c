@@ -28,9 +28,6 @@
 #include "tm_operators.h"
 #include "solver/solver.h"
 #include "solver/jdher.h"
-#ifdef MPI
-# include "solver/pjdher.h"
-#endif
 #include "eigenvalues.h"
 
 
@@ -40,7 +37,7 @@ int eigenvalues_for_cg_computed = 0;
 
 void eigenvalues(int * nr_of_eigenvalues, 
 		 const int max_iterations, const double precision) {
-#ifdef HAVE_LAPACK2
+#ifdef HAVE_LAPACK
   static spinor * eigenvectors_ = NULL;
   static int allocated = 0;
 
@@ -95,18 +92,7 @@ void eigenvalues(int * nr_of_eigenvalues,
 
   /* compute minimal eigenvalues */
 
-#  ifdef MPI
-  pjdher((VOLUME)/2*sizeof(spinor)/sizeof(complex), (VOLUMEPLUSRAND)/2*sizeof(spinor)/sizeof(complex),
-	 0., prec, 
-	 (*nr_of_eigenvalues), j_max, j_min, 
-	 max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors,
-	 BICGSTAB, solver_it_max,
-	 threshold_min, decay_min, verbosity,
-	 &converged, (complex*) eigenvectors, eigenvls,
-	 &returncode, JD_MINIMAL, 1,
-	 &Qtm_pm_psi);
-#  else
-  jdher((VOLUME)/2*sizeof(spinor)/sizeof(complex),
+  jdher((VOLUME)/2*sizeof(spinor)/sizeof(complex), (VOLUMEPLUSRAND)/2*sizeof(spinor)/sizeof(complex),
 	0., prec, 
 	(*nr_of_eigenvalues), j_max, j_min, 
 	max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors,
@@ -115,7 +101,6 @@ void eigenvalues(int * nr_of_eigenvalues,
 	&converged, (complex*) eigenvectors, eigenvls,
 	&returncode, JD_MINIMAL, 1,
 	&Qtm_pm_psi);
-#  endif
 
   (*nr_of_eigenvalues) = converged;
   v0dim = converged;
