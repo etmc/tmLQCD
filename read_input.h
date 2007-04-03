@@ -79,6 +79,8 @@ extern "C"
   extern double stilde_max;
   extern double stilde_min;
   extern int degree_of_p;
+  extern int propagator_splitted;
+  extern int source_location;
  
   int read_input(char *);
   int reread_input(char *);

@@ -16,7 +16,7 @@
 *
 * M.Hasenbusch:
 *   void random_spinor_field(int k)
-*     Initializes the spinor field psi[k] to a Gaussian random field 
+*     Initializes the spinor field psi[k] to a Gaussian random field
 *
 * M.Hasenbusch:
 *   void zero_spinor_field(spinor * const k, const int V)
@@ -35,6 +35,12 @@
 * Author: Martin Luescher <luscher@mail.desy.de>
 * Date: 24.10.2000
 *
+* Added the function
+*   void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int is, int ic)
+*   which uses the new input parameter SourceLocation in the input parameter files
+*   to place the source at the desired point
+*
+*   Author: Remi Baron <baron@th.u-psud.fr> April 2007
 *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -47,6 +53,7 @@
 # include <mpi.h>
 #endif
 #include "global.h"
+#include "read_input.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "ranlxd.h"
@@ -59,7 +66,7 @@ void gauss_vector(double v[],int n)
 /*    float r[4]; */
 /*   double pi; */
    double x1,x2,rho,y1,y2;
-   
+
  /*  pi=4.0*atan(1.0); */
 
    for (k=0;;k+=2)
@@ -74,7 +81,7 @@ void gauss_vector(double v[],int n)
       x2*=6.2831853071796;
       y1=rho*sin(x2);
       y2=rho*cos(x2);
-      
+
       if (n>k)
          v[k]=y1;
       if (n>(k+1))
@@ -149,11 +156,11 @@ su3_vector random_su3_vector(void)
 
    fact=1.0/norm;
    s.c0.re=v[0]*fact;
-   s.c0.im=v[1]*fact;   
+   s.c0.im=v[1]*fact;
    s.c1.re=v[2]*fact;
    s.c1.im=v[3]*fact;
    s.c2.re=v[4]*fact;
-   s.c2.im=v[5]*fact;     
+   s.c2.im=v[5]*fact;
 
    return(s);
 }
@@ -182,11 +189,11 @@ su3_vector unif_su3_vector(void)
 
    fact=1.0/norm;
    s.c0.re=v[0]*fact;
-   s.c0.im=v[1]*fact;   
+   s.c0.im=v[1]*fact;
    s.c1.re=v[2]*fact;
    s.c1.im=v[3]*fact;
    s.c2.re=v[4]*fact;
-   s.c2.im=v[5]*fact;     
+   s.c2.im=v[5]*fact;
 
    return(s);
 }
@@ -199,13 +206,13 @@ spinor random_spinor(void)
    s.s0=random_su3_vector();
    s.s1=random_su3_vector();
    s.s2=random_su3_vector();
-   s.s3=random_su3_vector();   
+   s.s3=random_su3_vector();
 
    _vector_mul(s.s0,0.5,s.s0);
    _vector_mul(s.s1,0.5,s.s1);
    _vector_mul(s.s2,0.5,s.s2);
-   _vector_mul(s.s3,0.5,s.s3);   
-   
+   _vector_mul(s.s3,0.5,s.s3);
+
    return(s);
 }
 
@@ -224,7 +231,7 @@ void unit_spinor_field(const int k) {
   int i=0;
   spinor *s;
 
-  s = &g_spinor_field[k][0];  
+  s = &g_spinor_field[k][0];
   for(i = 0; i < VOLUME/2; i++, s++) {
     (*s) = unit_spinor();
   }
@@ -233,9 +240,9 @@ void unit_spinor_field(const int k) {
 /* Function provides a spinor field of length VOLUME/2 with
    Gaussian distribution */
 void random_spinor_field(spinor * const k, const int V, const int repro) {
-  
+
   int ix;
-  int rlxd_state[105]; 
+  int rlxd_state[105];
   spinor *s;
   double v[6];
 #ifdef MPI
@@ -316,7 +323,7 @@ void random_spinor_field(spinor * const k, const int V, const int repro) {
       (*s).s3.c2.im=v[5];
     }
     /* send the state fo the random-number generator to k+1 */
-    j=g_proc_id+1; 
+    j=g_proc_id+1;
     if(j==g_nproc){
       j=0;
     }
@@ -428,12 +435,12 @@ su3 random_su3(void)
       norm=sqrt(norm);
 
       if (1.0!=(1.0+norm))
-         break;      
-   }        
+         break;
+   }
 
    fact=1.0/norm;
    _vector_mul(z2,fact,z2);
-   
+
    z3.c0.re= (z1.c1.re*z2.c2.re-z1.c1.im*z2.c2.im)
             -(z1.c2.re*z2.c1.re-z1.c2.im*z2.c1.im);
    z3.c0.im=-(z1.c1.re*z2.c2.im+z1.c1.im*z2.c2.re)
@@ -447,7 +454,7 @@ su3 random_su3(void)
    z3.c2.re= (z1.c0.re*z2.c1.re-z1.c0.im*z2.c1.im)
             -(z1.c1.re*z2.c0.re-z1.c1.im*z2.c0.im);
    z3.c2.im=-(z1.c0.re*z2.c1.im+z1.c0.im*z2.c1.re)
-            +(z1.c1.re*z2.c0.im+z1.c1.im*z2.c0.re);    
+            +(z1.c1.re*z2.c0.im+z1.c1.im*z2.c0.re);
 
    u.c00=z1.c0;
    u.c01=z1.c1;
@@ -459,7 +466,7 @@ su3 random_su3(void)
 
    u.c20=z3.c0;
    u.c21=z3.c1;
-   u.c22=z3.c2;   
+   u.c22=z3.c2;
 
    return(u);
 }
@@ -467,7 +474,7 @@ su3 random_su3(void)
 
 void unit_g_gauge_field(void) {
   int ix,mu;
-  
+
   for (ix=0;ix<VOLUME;ix++) {
     for (mu=0;mu<4;mu++) {
       g_gauge_field[ix][mu]=unit_su3();
@@ -488,7 +495,7 @@ void random_gauge_field() {
     rlxd_reset(rlxd_state);
   }
 #endif
-   
+
   for (ix = 0; ix < VOLUME; ix++) {
     for (mu = 0; mu < 4; mu++) {
       g_gauge_field[ix][mu] = random_su3();
@@ -496,7 +503,7 @@ void random_gauge_field() {
   }
 
 #ifdef MPI
-  j = (g_proc_id + 1) % g_nproc; 
+  j = (g_proc_id + 1) % g_nproc;
   rlxd_get(rlxd_state);
   MPI_Send(&rlxd_state[0], 105, MPI_INT, j, 102, MPI_COMM_WORLD);
 
@@ -531,7 +538,7 @@ void set_spinor_point(spinor * s, const double c){
   (*s).s3.c1.re=c;
   (*s).s3.c1.im=c;
   (*s).s3.c2.re=c;
-  (*s).s3.c2.im=c;  
+  (*s).s3.c2.im=c;
 }
 
 void set_spinor_field(int k, const double c) {
@@ -624,7 +631,7 @@ su3 set_su3(const double c)
 
 void set_gauge_field(const double c) {
   int ix,mu;
-  
+
   for (ix=0;ix<VOLUMEPLUSRAND + g_dbw2rand;ix++) {
     for (mu=0;mu<4;mu++){
       g_gauge_field[ix][mu]=set_su3(c);
@@ -640,11 +647,101 @@ void source_spinor_field(spinor * const P, spinor * const Q, int is, int ic) {
   zero_spinor_field(P,VOLUME/2);
   zero_spinor_field(Q,VOLUME/2);
 
-  if (g_proc_coords[0] == 0 && g_proc_coords[1] == 0 
+  if (g_proc_coords[0] == 0 && g_proc_coords[1] == 0
       && g_proc_coords[2] == 0 && g_proc_coords[3] == 0) {
 
     s = P;
-    
+
+    /* put source to 1.0 */
+    if (is==0){
+      if      (ic==0) (*s).s0.c0.re=1.0;
+      else if (ic==1) (*s).s0.c1.re=1.0;
+      else if (ic==2) (*s).s0.c2.re=1.0;
+    }
+    else if (is==1){
+      if      (ic==0) (*s).s1.c0.re=1.0;
+      else if (ic==1) (*s).s1.c1.re=1.0;
+      else if (ic==2) (*s).s1.c2.re=1.0;
+    }
+    else if (is==2){
+      if      (ic==0) (*s).s2.c0.re=1.0;
+      else if (ic==1) (*s).s2.c1.re=1.0;
+      else if (ic==2) (*s).s2.c2.re=1.0;
+    }
+    else if (is==3){
+      if      (ic==0) (*s).s3.c0.re=1.0;
+      else if (ic==1) (*s).s3.c1.re=1.0;
+      else if (ic==2) (*s).s3.c2.re=1.0;
+    }
+  }
+}
+
+void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int is, int ic)
+{
+  int tmp;
+  int source_coord[4],source_pe_coord[4],source_loc_coord[4];
+  int source_indx,source_pe_indx,source_loc_indx;
+  spinor * s;
+
+  /* set fields to zero */
+  zero_spinor_field(P,VOLUME/2);
+  zero_spinor_field(Q,VOLUME/2);
+
+  /* Use the input parameter SourceLocation */
+  source_indx=source_location;
+
+  /* translate it into global coordinate */
+  source_coord[3]=source_indx % L;
+  tmp = source_indx / L;
+  source_coord[2]=tmp % L;
+  tmp = tmp / L;
+  source_coord[1]=tmp % L;
+  tmp = tmp / L;
+  source_coord[0]=tmp;
+
+  if(3*is+ic == index_start)
+    printf("The source site number is %i which corresponds to (t,x,y,z)=(%i,%i,%i,%i)\n",source_location,source_coord[0],source_coord[1],source_coord[2],source_coord[3]);
+
+  /* compute the coordinates and the index of the node*/
+  /* be careful!!! nodes indices have different convention (see io.c)*/
+  source_pe_coord[0] = source_coord[0]/T;
+  source_pe_coord[1] = source_coord[1]/LX;
+  source_pe_coord[2] = source_coord[2]/LY;
+  source_pe_coord[3] = source_coord[3]/LZ;
+
+#ifdef MPI
+  MPI_Cart_rank(g_cart_grid, source_pe_coord, &source_pe_indx);
+#else
+  source_pe_indx=0;
+#endif
+
+  /* compute the local (inside the node) coordinates and index*/
+  source_loc_coord[0] = source_coord[0] - source_pe_coord[0] * T;
+  source_loc_coord[1] = source_coord[1] - source_pe_coord[1] * LX;
+  source_loc_coord[2] = source_coord[2] - source_pe_coord[2] * LY;
+  source_loc_coord[3] = source_coord[3] - source_pe_coord[3] * LZ;
+
+  source_loc_indx=g_ipt[source_loc_coord[0]][source_loc_coord[1]][source_loc_coord[2]][source_loc_coord[3]];
+
+  /* Essayer g_proc_id au lieu de g_cart_id */
+  if(source_pe_indx == g_cart_id)
+  {
+    if(3*is + ic == index_start)
+    {
+      printf("g_cart_id =%i\n",g_cart_id);
+      printf("source_loc_coord[0] = %i\n",source_loc_coord[0]);
+      printf("source_loc_coord[1] = %i\n",source_loc_coord[1]);
+      printf("source_loc_coord[2] = %i\n",source_loc_coord[2]);
+      printf("source_loc_coord[3] = %i\n",source_loc_coord[3]);
+      printf("source_loc_indx = %i\n",source_loc_indx);
+    }
+    /* Check which spinor field (even or odd) needs to be initialized */
+    /* TODO (VOLUME+RAND)/2 est-ce correct ? */
+    if(g_lexic2eo[source_loc_indx] < VOLUME/2)
+      s = P + g_lexic2eo[source_loc_indx];
+    else
+      s = Q + g_lexic2eosub[source_loc_indx];
+
     /* put source to 1.0 */
     if (is==0){
       if      (ic==0) (*s).s0.c0.re=1.0;

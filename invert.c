@@ -46,7 +46,6 @@
 #include "init_dirac_halfspinor.h"
 #include "xchange_halffield.h"
 #include "update_backward_gauge.h"
-#include "eigenvalues.h"
 #include "stout_smear.h"
 #include "invert_eo.h"
 
@@ -69,7 +68,7 @@ int check_geometry();
 int main(int argc,char *argv[]) {
 
   FILE *parameterfile=NULL, *ifs=NULL;
-  int c, no_eigenvalues, iter, j, ix=0, is=0, ic=0;
+  int c, iter, j, ix=0, is=0, ic=0;
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
@@ -215,10 +214,7 @@ int main(int argc,char *argv[]) {
 #ifdef _GAUGE_COPY
     update_backward_gauge();
 #endif
-#ifdef HAVE_LAPACK2
-    no_eigenvalues = 10;   /* Number of lowest eigenvalues to be computed */
-    eigenvalues(&no_eigenvalues, 1000, 1.e-12);
-#endif
+    
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action();
 
@@ -240,7 +236,10 @@ int main(int argc,char *argv[]) {
       is = (ix / 3);
       ic = (ix % 3);
       if(read_source_flag == 0) {
-	source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
+        if(source_location == 0)
+          source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
+        else
+          source_spinor_field_point_from_file(g_spinor_field[0], g_spinor_field[1], is, ic);
       }
       else {
 	if(source_format_flag == 0) {
@@ -320,7 +319,17 @@ int main(int argc,char *argv[]) {
 	/* we have to mult. by 2*kappa */
 	mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME/2);  
 	mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[3], VOLUME/2);
-	write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
+        if(propagator_splitted)
+          write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
+        else
+        {
+          sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore);
+
+          if(ix == index_start)
+            write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
+          else
+            write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 1);
+        }
       }
       else if(source_format_flag == 1) {
 	write_spinorfield_cm_single(g_spinor_field[2], g_spinor_field[3], conf_filename);

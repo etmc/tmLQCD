@@ -1,3 +1,9 @@
+03.04.2007: Addition of 2 input parameters:
+            SplittedPropagator and SourceLocation
+            New function in start.c to use the SourceLocation
+            when its value is different from 0.
+            The same modification was done in the GWC code.
+
 01.04.2007: many changes to PHMC
 	    new input parameters:
 	    PhmcNoFlavours (2+1+1 or 1+1)

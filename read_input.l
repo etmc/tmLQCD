@@ -87,6 +87,8 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   double stilde_max;
   double stilde_min;
   int degree_of_p;
+  int propagator_splitted;
+  int source_location;
 %}
 
 %option never-interactive
@@ -186,6 +188,8 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x SMAX
 %x SMIN
 %x DEGP
+%x SPLITPROP
+%x SRCLOC
 
 %x COMMENT
 %x ERROR
@@ -302,6 +306,8 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^PhmcStildeMax{SPC}*={SPC}*                BEGIN(SMAX);
 ^PhmcStildeMin{SPC}*={SPC}*                BEGIN(SMIN);
 ^PhmcDegreeOfP{SPC}*={SPC}*                BEGIN(DEGP);
+^SplittedPropagator{SPC}*={SPC}*           BEGIN(SPLITPROP);
+^SourceLocation{SPC}*={SPC}*               BEGIN(SRCLOC);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -861,6 +867,19 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   degree_of_p = atoi(yytext);
   if(verbose!=0) printf("Degree for less precise polynomial P set to %d \n", degree_of_p);
 }
+<SPLITPROP>yes {
+  propagator_splitted=1;
+  if(verbose!=0) printf("Split the propagator in several files!\n");
+}
+<SPLITPROP>no {
+  propagator_splitted=0;
+  if(verbose!=0) printf("Do not split the propagator in several files (default)!\n");
+}
+<SRCLOC>{DIGIT}+ {
+    source_location=atoi(yytext);
+  if(verbose!=0) printf("source_location = %s\n",yytext);
+}
+
 
 <*>^#                       BEGIN(COMMENT);
 <SEED,KAPPA,ACCPTILDE,ACCHFIN,RECEV,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
@@ -871,7 +890,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
 <GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC,USESTOUT,STOUTRHO,STOUTITER,PHMCFLAV>#   BEGIN(COMMENT);
 <SMIN,SMAX,DEGP>#  BEGIN(COMMENT);
-<COMPUTEEVS>#  BEGIN(COMMENT);
+<COMPUTEEVS,SPLITPROP,SRCLOC>#  BEGIN(COMMENT);
 <SOURCETS>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
@@ -1096,6 +1115,15 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Unknown value in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
   exit(1);
 }
+<SPLITPROP>. {
+  printf("Unknown value for SplittedPropagator in line %d! Must be yes or no. Exiting...!\n", line_of_file);
+  exit(1);
+}
+<SRCLOC>. {
+  printf("Unknown source_location in line %d.\n Must be an integer. Exiting...!\n",line_of_file);
+  exit(1);
+}
+
 
 <INITIAL>.                        BEGIN(ERROR);
 <ERROR>[^\t\n]*             {
@@ -1226,6 +1254,8 @@ int read_input(char * conf_file){
   stilde_min = _default_stilde_min;
   stilde_max = _default_stilde_max;
   degree_of_p = _default_degree_of_p;
+  propagator_splitted = _default_propagator_splitted;
+  source_location = _default_source_location;
   /********************************************/
 
   if ((yyin = fopen(conf_file, "rt")) == NULL){
