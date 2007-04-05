@@ -870,8 +870,10 @@ void Proj_A_psi_bi(bispinor * const y, bispinor * const x){
   _FT(daxpy)(&p_n2, &mtheta, (double*) x, &ONE, (double*) y, &ONE);
   /* p_work_bi = Q^dagger*y */ 
   for(i = 0; i < p_k; i++) {
-    p_work_bi[i] = scalar_prod((bispinor*) (p_Q_bi+i*p_lda), (bispinor*) y, p_n*sizeof(complex)/sizeof(bispinor));
+    p_work_bi[i] = scalar_prod_bi((bispinor*) (p_Q_bi+i*p_lda), (bispinor*) y, 
+				  p_n*sizeof(complex)/sizeof(bispinor));
   }
   /* y = y - Q*p_work_bi */ 
-  _FT(zgemv)(fupl_n, &p_n, &p_k, &CMONE, p_Q_bi, &p_lda, (complex*) p_work_bi, &ONE, &CONE, (complex*) y, &ONE, 1);
+  _FT(zgemv)(fupl_n, &p_n, &p_k, &CMONE, p_Q_bi, &p_lda, (complex*) p_work_bi, 
+	     &ONE, &CONE, (complex*) y, &ONE, 1);
 }
