@@ -51,9 +51,8 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
   */
   static bispinor * eigenvectors_bi_ = NULL;
   static int allocated = 0;
-  bispinor  *temp_field, *temp_field_ = NULL, *aux, *aux_ = NULL;
-  bispinor  *eigenvectors_bi = NULL;
-  double * eigenvls_bi = NULL;
+  static bispinor  *eigenvectors_bi = NULL;
+  static double * eigenvls_bi = NULL;
 
 
   /**********************
@@ -123,21 +122,9 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
 #if (defined SSE || defined SSE2 || defined SSE3)
     eigenvectors_bi_ = calloc((VOLUME)/2*(*nr_of_eigenvalues)+1, sizeof(bispinor)); 
     eigenvectors_bi = (bispinor *)(((unsigned long int)(eigenvectors_bi_)+ALIGN_BASE)&~ALIGN_BASE);
-
-    temp_field_ = calloc((VOLUME)/2+1, sizeof(bispinor));
-    temp_field = (bispinor *)(((unsigned long int)(temp_field_)+ALIGN_BASE)&~ALIGN_BASE);
-
-    aux_ = calloc((VOLUME)/2+1, sizeof(bispinor));
-    aux = (bispinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
     eigenvectors_bi_= calloc((VOLUME)/2*(*nr_of_eigenvalues), sizeof(bispinor));
-
-    temp_field_ = calloc((VOLUME)/2, sizeof(bispinor));
-    aux_ = calloc((VOLUME)/2, sizeof(bispinor));
-
     eigenvectors_bi = eigenvectors_bi_;
-    temp_field = temp_field_;
-    aux = aux_;
 #endif
     eigenvls_bi = (double*)malloc((*nr_of_eigenvalues)*sizeof(double));
   }
@@ -149,11 +136,11 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
   }
  
 
-  jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(complex), (VOLUMEPLUSRAND)/2*sizeof(bispinor)/sizeof(complex),
+  jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(complex), (VOLUME)/2*sizeof(bispinor)/sizeof(complex),
 	    startvalue, prec, 
 	    (*nr_of_eigenvalues), j_max, j_min, 
 	    max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors_bi,
-	    CG, solver_it_max,
+	    BICGSTAB, solver_it_max,
 	    threshold, decay, verbosity,
 	    &converged, (complex*) eigenvectors_bi, eigenvls_bi,
 	    &returncode, maxmin, 1,
@@ -167,7 +154,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
 
 
   (*nr_of_eigenvalues) = converged;
-  v0dim = converged;
 
   returnvalue = eigenvls_bi[0];
   return(returnvalue);
