@@ -100,10 +100,10 @@ matrix_mult_bi p_A_psi_bi;
  ****************************************************************************/
 
 #ifdef CRAY
-  static char * cupl_u = "U", * cupl_c = "C", *cupl_n = "N", * cupl_a = "A", *cupl_v = "V", *cilaenv = "zhetrd", *cvu = "VU";
-  _fcd fupl_u, fupl_c, fupl_a, fupl_n, fupl_v, filaenv, fvu;
+static char * cupl_u = "U", * cupl_c = "C", *cupl_n = "N", * cupl_a = "A", *cupl_v = "V", *cilaenv = "zhetrd", *cvu = "VU";
+_fcd fupl_u, fupl_c, fupl_a, fupl_n, fupl_v, filaenv, fvu;
 #else
-  static char * fupl_u = "U", * fupl_c = "C", *fupl_n = "N", * fupl_a = "A", *fupl_v = "V", *filaenv = "zhetrd", *fvu = "VU";
+static char * fupl_u = "U", * fupl_c = "C", *fupl_n = "N", * fupl_a = "A", *fupl_v = "V", *filaenv = "zhetrd", *fvu = "VU";
 #endif
 
 /****************************************************************************
@@ -145,7 +145,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
 
   /* non-allocated ptrs */
   complex *q, *v, *u, *r = NULL;  
-/*   complex *matdummy, *vecdummy; */
+  /*   complex *matdummy, *vecdummy; */
 
   /* scalar vars */
   double theta, alpha, it_tol;
@@ -298,15 +298,15 @@ void jdher_bi(int n, int lda, double tau, double tol,
   p_n2 = n2;
   p_Q_bi = Q;
   p_A_psi_bi = A_psi;
-  p_lda = lda
-
+  p_lda = lda;
+  
   /**************************************************************************
    *                                                                        *
    * Generate initial search subspace V. Vectors are taken from V0 and if   *
    * necessary randomly generated.                                          *
    *                                                                        *
    **************************************************************************/
-
+  
   /* copy V0 to V */
   _FT(zlacpy)(fupl_a, &n, &V0dim, V0, &lda, V, &lda, 1);
   j = V0dim;
@@ -328,7 +328,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
   for (cnt = 0; cnt < j; cnt++){
     A_psi((bispinor*) temp1, (bispinor*) (V+cnt*lda));
     idummy = cnt+1;
-    for(i = 0; i < idummy; i++){
+    for(i = 0; i < idummy; i++) {
       M[cnt*jmax+i] = scalar_prod_bi((bispinor*)(V+i*lda), (bispinor*) temp1, N);
     }
   }
@@ -434,13 +434,13 @@ void jdher_bi(int n, int lda, double tau, double tol,
 	&& (j > actblksize || k == kmax - actblksize);
       
       /***************************************************************************
-	*                                                                        *
-	* Convergence Case                                                       *
-	*                                                                        *
-	* In case of convergence, strip off a whole block or just the converged  *
-	* ones and put 'em into Q.  Update the matrices Q, V, U, s               *
-	*                                                                        *
-	**************************************************************************/
+       *                                                                        *
+       * Convergence Case                                                       *
+       *                                                                        *
+       * In case of convergence, strip off a whole block or just the converged  *
+       * ones and put 'em into Q.  Update the matrices Q, V, U, s               *
+       *                                                                        *
+       **************************************************************************/
 
       if (found) {
 
@@ -608,10 +608,10 @@ void jdher_bi(int n, int lda, double tau, double tol,
       /* equation and project if necessary */
       ModifiedGS_bi(r, n, k + actblksize, Q, lda);
 
-/*       for(i=0;i<n;i++){ */
-/* 	r[i].re*=-1.; */
-/* 	r[i].im*=-1.; */
-/*       } */
+      /*       for(i=0;i<n;i++){ */
+      /* 	r[i].re*=-1.; */
+      /* 	r[i].im*=-1.; */
+      /*       } */
 
       i = g_sloppy_precision_flag;
       g_sloppy_precision = 1;
