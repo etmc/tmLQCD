@@ -29,6 +29,9 @@ AC_PROG_RANLIB
 AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
 #(endian="", AC_DEFINE(LITTLE_ENDIAN,1,The endian of the architechture))
 
+# AC_PROG_FC([ifort gfortran])
+# AC_FC_FUNC(testfunc, )
+
 LIBS="$LIBS -lm"
 LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(top_builddir)/lib"
 CCLD=${CC}
@@ -144,8 +147,13 @@ AC_MSG_CHECKING(whether we want to use lapack and blas)
 AC_ARG_WITH(lapack,
   [  --with-lapack           enable use of lapack [default=yes]],
   with_lapack=$withval, with_lapack=yes)
-if test $with_lapack = yes; then
+if test "$with_lapack" = yes; then
   AC_MSG_RESULT(yes)
+  LAPACKLIB=
+  AC_DEFINE(HAVE_LAPACK,1,lapack available)
+elif test "$with_lapack" != ""; then
+  LAPACKLIB=$withval
+  with_lapack=yes
   AC_DEFINE(HAVE_LAPACK,1,lapack available)
 else
   AC_MSG_RESULT(no)
@@ -179,11 +187,6 @@ if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os
     AC_CHECK_LIB(essl, zaxpy, ,AC_MSG_ERROR([libessl is missing or zaxpy not available]), -lf -lm )
     AC_CHECK_LIB(lapack, zheev, LP=yes;AC_DEFINE(HAVE_LAPACK,1,lapack available), LP="", -lessl -lblas -lf -lm )
   fi
-#  AC_CHECK_LIB(arpack, zneupd, AP=yes, AP="", -lessl -llapack -lf -lm)
-#  if test "$enable_mpi" = "yes"; then
-#    AC_CHECK_LIB(parpack, pzneupd, PAP=yes, PAP="", -larpack -lessl -llapack -lf -lm)  
-#  fi
-
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
   if test $with_lapack = yes; then
     AC_CHECK_LIB(lapack, zheev, LP=yes, LP="", -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
@@ -608,9 +611,6 @@ elif test "$host_vendor" = "cray"; then
   DEPFLAGS="-M"
 
 else
-  echo
-  echo "Warning! Unknown platform... Using standard parameters"
-  echo
   AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
@@ -620,8 +620,12 @@ else
   OPTARGS=
   SOPTARGS=
 
-  if test $with_lapack = yes; then
-    LIBS="-llapack -lblas -lf $LIBS"
+  if test "$with_lapack" = yes; then
+    if test "$LAPACKLIB" = ""; then
+      LIBS="$LIBS -llapack -lblas -lf -lm"
+    else
+      LIBS="$LIBS $LAPACKLIB"
+    fi
   fi
 fi
 

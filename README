@@ -47,6 +47,12 @@ path-to-the-sources/configure --enable-mpi --with-mpidimension=4 \
 --without-lapack --with-limedir=path-to-lime/ --enable-newdiracop \
 --disable-shmem CC=mpicc CFLAGS="-mcpu=itanium2 -O3 -g -c99 -mtune=itanium2"
 
+if you want to use lapack on this machine please do
+module load mkl
+and then replace
+--without-lapack with
+--with-lapack="$MKL_LIB"
+
 on the BG/L:
 
 path-to-the-sources/configure --host=ppc-ibm-blrts --build=ppc64-ibm-linux \
