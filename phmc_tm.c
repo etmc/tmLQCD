@@ -507,7 +507,7 @@ int main(int argc,char *argv[]) {
     
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
     for(j=0; j<(2*phmc_dop_n_cheby-2); j++){
-      fscanf(roots," %ld %lf %lf \n", &k, &phmc_root[j].re, &phmc_root[j].im);
+      fscanf(roots," %d %lf %lf \n", &k, &phmc_root[j].re, &phmc_root[j].im);
     }
     fclose(roots);
   }
