@@ -275,7 +275,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   }
   else if(integtyp == 2) {
     /* Sexton Weingarten integration scheme */
-    sexton(dtau, Nsteps, nsmall);
+    sexton_ND(dtau, Nsteps, nsmall,phmc_no_flavours);
   }
   else if(integtyp == 3) {
     ext_leap_frog(n_int, tau, g_nr_of_psf, halfstep);

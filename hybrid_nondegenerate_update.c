@@ -143,7 +143,7 @@ void leap_frog_ND(double step, int m, int nsmall,int phmc_no_flavours) {
   /* initialize the counter for the inverter */
   count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;
   /* adjust the step-size to standard convention */
-  step*=0.7071067811865;
+  /* step*=0.7071067811865; */
   smallstep=step/nsmall;
 
 
@@ -182,4 +182,81 @@ void leap_frog_ND(double step, int m, int nsmall,int phmc_no_flavours) {
 
 }
 
+/**********************************
+ * This is the Sexton-Weingarten
+ * integration scheme for the PHMC
+ **********************************/
 
+void sexton_ND(double step, int m, int nsmall,int phmc_no_flavours) {
+  int i,j;
+/*   int ev = 10; */
+  double smallstep;
+  /* initialize the counter for the inverter */
+  count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;
+  /* adjust the step-size to standard convention */
+  /* step*=0.7071067811865; */
+  smallstep=step/nsmall;
+
+#ifdef _GAUGE_COPY
+  update_backward_gauge();
+#endif
+  fermion_momenta_ND(step/6.);
+  if(phmc_no_flavours==0)
+    fermion_momenta(step/6.);
+  gauge_momenta(smallstep/12.);
+  for(i=1;i<m;i++){
+    for(j=0;j<nsmall;j++){
+      update_gauge(smallstep/4.);
+      gauge_momenta(smallstep/3.);
+      update_gauge(smallstep/4.);
+      gauge_momenta(smallstep/6.);
+    }
+
+#ifdef _GAUGE_COPY
+    update_backward_gauge();
+#endif
+    fermion_momenta_ND(2.*step/3.);
+    if(phmc_no_flavours==0)
+      fermion_momenta(2.*step/3.);
+    for(j=0;j<nsmall;j++) {
+      update_gauge(smallstep/4.);
+      gauge_momenta(smallstep/3.);
+      update_gauge(smallstep/4.);
+      gauge_momenta(smallstep/6.);
+    }
+#ifdef _GAUGE_COPY
+    update_backward_gauge();
+#endif
+    fermion_momenta_ND(step/3.);
+    if(phmc_no_flavours==0)
+      fermion_momenta(step/3.);
+  }
+  for(j=0;j<nsmall;j++){
+    update_gauge(smallstep/4.);
+    gauge_momenta(smallstep/3.);
+    update_gauge(smallstep/4.);
+    gauge_momenta(smallstep/6.);
+  }
+#ifdef _GAUGE_COPY
+  update_backward_gauge();
+#endif
+  fermion_momenta_ND(2.*step/3.);
+  if(phmc_no_flavours==0)
+    fermion_momenta(2.*step/3.);
+  for(j=1;j<nsmall;j++){
+    update_gauge(smallstep/4.);
+    gauge_momenta(smallstep/3.);
+    update_gauge(smallstep/4.);
+    gauge_momenta(smallstep/6.);
+  }
+  update_gauge(smallstep/4.);
+  gauge_momenta(smallstep/3.);
+  update_gauge(smallstep/4.);
+  gauge_momenta(smallstep/12.);
+#ifdef _GAUGE_COPY
+  update_backward_gauge();
+#endif
+  fermion_momenta_ND(step/6.);
+  if(phmc_no_flavours==0)
+    fermion_momenta(step/6.);
+}
