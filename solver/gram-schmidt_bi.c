@@ -37,7 +37,7 @@ static int ONE = 1;
  *
  */
 
-void IteratedClassicalGS_bi(complex v[], double *vnrm, int n, int m, complex A[], 
+void IteratedClassicalGS_bi_old(complex v[], double *vnrm, int n, int m, complex A[], 
 			 complex work1[]) {
   const double alpha = 0.5;
 
@@ -75,7 +75,7 @@ void IteratedClassicalGS_bi(complex v[], double *vnrm, int n, int m, complex A[]
 }
 
 
-void pIteratedClassicalGS_bi(complex v[], double *vnrm, int n, int m, complex A[], 
+void IteratedClassicalGS_bi(complex v[], double *vnrm, int n, int m, complex A[], 
 			 complex work1[], int lda) {
   const double alpha = 0.5;
 
@@ -121,7 +121,7 @@ void pIteratedClassicalGS_bi(complex v[], double *vnrm, int n, int m, complex A[
  *  Orthogonlaizes v with respect to span{A[:,1:m]}
  */
 
-void ModifiedGS_bi(complex v[], int n, int m, complex A[]){
+void ModifiedGS_bi_old(complex v[], int n, int m, complex A[]){
 
   int i;
   complex s;
@@ -134,7 +134,7 @@ void ModifiedGS_bi(complex v[], int n, int m, complex A[]){
 }
 
 
-void pModifiedGS_bi(complex v[], int n, int m, complex A[], int lda){
+void ModifiedGS_bi(complex v[], int n, int m, complex A[], int lda){
 
   int i;
   complex s;

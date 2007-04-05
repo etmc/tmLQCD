@@ -16,7 +16,7 @@
 #include "solver/solver.h"
 
 
-extern void jdher_bi(int n, double tau, double jdtol, 
+extern void jdher_bi(int n, int lda, double tau, double jdtol, 
 		     int kmax, int jmax, int jmin, int itmax,
 		     int blksize, int blkwise, 
 		     int V0dim, complex *V0, 
