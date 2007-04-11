@@ -137,10 +137,7 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
   }
  
 
-  /* if epsbar is 0 we are choose the degenerate case */ 
-
-  if(g_epsbar!=0.0)
-    jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(complex), (VOLUME)/2*sizeof(bispinor)/sizeof(complex),
+  jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(complex), (VOLUME)/2*sizeof(bispinor)/sizeof(complex),
 	    startvalue, prec, 
 	    (*nr_of_eigenvalues), j_max, j_min, 
 	    max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors_bi,
@@ -149,16 +146,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
 	    &converged, (complex*) eigenvectors_bi, eigenvls_bi,
 	    &returncode, maxmin, 1,
 	    &Q_Qdagger_ND_BI);
-  else
-    jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(complex), (VOLUME)/2*sizeof(bispinor)/sizeof(complex),
-	    startvalue, prec, 
-	    (*nr_of_eigenvalues), j_max, j_min, 
-	    max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors_bi,
-	    BICGSTAB, solver_it_max,
-	    threshold, decay, verbosity,
-	    &converged, (complex*) eigenvectors_bi, eigenvls_bi,
-	    &returncode, maxmin, 1,
-	    &Qtm_pm_psi);
   
   /* IN THE LAST LINE, INSERT:
      Q_Qdagger_ND_BI;   Non-degenerate case - on 1 bispinor 
