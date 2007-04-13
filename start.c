@@ -691,12 +691,13 @@ void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int
   source_indx=source_location;
 
   /* translate it into global coordinate */
-  source_coord[3]=source_indx % L;
-  tmp = source_indx / L;
-  source_coord[2]=tmp % L;
-  tmp = tmp / L;
-  source_coord[1]=tmp % L;
-  tmp = tmp / L;
+  /* For a T*L^3 lattice then  L = g_nproc_z * LZ = g_nproc_y * LY = g_nproc_x * LX    */
+  source_coord[3]=source_indx % (g_nproc_z * LZ);
+  tmp = source_indx / (g_nproc_z * LZ);
+  source_coord[2]=tmp % (g_nproc_y * LY);
+  tmp = tmp / (g_nproc_y * LY);
+  source_coord[1]=tmp % (g_nproc_x * LX);
+  tmp = tmp / (g_nproc_x * LX);
   source_coord[0]=tmp;
 
   if(3*is+ic == index_start && g_proc_id == g_stdio_proc)
@@ -736,7 +737,6 @@ void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int
       printf("source_loc_indx = %i\n",source_loc_indx);
     }
     /* Check which spinor field (even or odd) needs to be initialized */
-    /* TODO (VOLUME+RAND)/2 est-ce correct ? */
     if(g_lexic2eo[source_loc_indx] < VOLUME/2)
       s = P + g_lexic2eo[source_loc_indx];
     else
