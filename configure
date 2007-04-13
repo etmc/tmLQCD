@@ -6362,8 +6362,8 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
-echo "$as_me:$LINENO: checking whether we want to fix volume at compiletime" >&5
-echo $ECHO_N "checking whether we want to fix volume at compiletime... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking whether we want to use KOJAK instrumentalisation" >&5
+echo $ECHO_N "checking whether we want to use KOJAK instrumentalisation... $ECHO_C" >&6
 
 # Check whether --with-kojakinst or --without-kojakinst was given.
 if test "${with_kojakinst+set}" = set; then
@@ -6400,7 +6400,9 @@ cat >>confdefs.h <<\_ACEOF
 #define HAVE_LAPACK 1
 _ACEOF
 
-elif test "$with_lapack" != ""; then
+elif test "$with_lapack" != no; then
+  echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
   LAPACKLIB=$withval
   with_lapack=yes
 

@@ -132,7 +132,7 @@ else
   AC_MSG_RESULT(no)
 fi
 
-AC_MSG_CHECKING([whether we want to fix volume at compiletime])
+AC_MSG_CHECKING([whether we want to use KOJAK instrumentalisation])
 AC_ARG_WITH([kojakinst],
   [  --with-kojakinst        instrumentalise for KOJAK [default=no]],
   with_kojakinst=$withval, with_kojakinst=no)
@@ -151,7 +151,8 @@ if test "$with_lapack" = yes; then
   AC_MSG_RESULT(yes)
   LAPACKLIB=
   AC_DEFINE(HAVE_LAPACK,1,lapack available)
-elif test "$with_lapack" != ""; then
+elif test "$with_lapack" != no; then
+  AC_MSG_RESULT(yes)
   LAPACKLIB=$withval
   with_lapack=yes
   AC_DEFINE(HAVE_LAPACK,1,lapack available)
