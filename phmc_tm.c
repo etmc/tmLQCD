@@ -427,10 +427,17 @@ int main(int argc,char *argv[]) {
     stop_prec_ev = 1.e-13;
     
     no_eigenvalues = 10;   /* Number of lowest eigenvalues to be computed */
-    phmc_cheb_evmin = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 0);
-    
+    if(g_epsbar!=0.0)
+      phmc_cheb_evmin = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 0);
+    else {
+      phmc_cheb_evmin = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 0);
+    }
+
     no_eigenvalues = 4;   /* Number of highest eigenvalues to be computed */
-    phmc_cheb_evmax = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 1);
+    if(g_epsbar!=0.0)
+      phmc_cheb_evmax = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 1);
+    else
+      phmc_cheb_evmax = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 1);
        
     temp=phmc_cheb_evmin;
     temp2=phmc_cheb_evmax;
@@ -662,11 +669,18 @@ int main(int argc,char *argv[]) {
       max_iter_ev = 1000;
       stop_prec_ev = 1.e-13;
 
-      no_eigenvalues = 4;
-      temp = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 0);
 
       no_eigenvalues = 4;
-      temp2 = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 1);
+      if(g_epsbar!=0.0)
+        temp = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 0);
+      else
+	temp = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 0);
+
+      no_eigenvalues = 4;
+      if(g_epsbar!=0.0)
+        temp2 = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 1);
+      else
+        temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 1);
       
       if((g_proc_id == 0) && (g_debug_level > 0)) {
 	printf("PHMC: lowest eigenvalue end of trajectory %d = %e\n", 

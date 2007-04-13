@@ -5,6 +5,6 @@
 extern spinor * eigenvectors;
 extern double * eigenvls;
 extern int eigenvalues_for_cg_computed;
-void eigenvalues(int * nev, const int max_iterations, const double prec);
+double eigenvalues(int * nev, const int max_iterations, const double precision,const int maxmin);
 
 #endif
