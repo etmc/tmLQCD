@@ -1577,6 +1577,7 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   printf("# The local lattice size is %d x %d x %d x %d\n", 
 	 (int)(T), (int)(LX), (int)(LY),(int) LZ);
   printf("# beta = %f , kappa= %f\n", g_beta, g_kappa);
+  printf("# boundary of fermion fields (t,x,y,z): %f %f %f %f \n",X0,X1,X2,X3);
   if(inv != 1) {
     printf("# mus = %f, %f, %f\n", g_mu1, g_mu2, g_mu3);
     printf("# int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n", 
