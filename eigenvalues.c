@@ -37,6 +37,8 @@ int eigenvalues_for_cg_computed = 0;
 
 double eigenvalues(int * nr_of_eigenvalues, 
 		 const int max_iterations, const double precision,const int maxmin) {
+  double returnvalue;
+
 #ifdef HAVE_LAPACK
   static spinor * eigenvectors_ = NULL;
   static int allocated = 0;
@@ -50,7 +52,7 @@ double eigenvalues(int * nr_of_eigenvalues,
   /* complex *eigv_ = NULL, *eigv; */
   double decay_min = 1.7, decay_max = 1.5, prec,
     threshold_min = 1.e-3, threshold_max = 5.e-2,
-    startvalue, threshold, decay, returnvalue;
+    startvalue, threshold, decay;
   /* static int v0dim = 0; */
   int v0dim = 0;
   
