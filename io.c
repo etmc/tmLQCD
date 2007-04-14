@@ -3,6 +3,18 @@
 /****************************************************
  * IO routines:
  *
+ * write_lime_gauge_field(char * filename, const double plaq, const int counter)
+ *   write gauge field in ILDG format
+ *
+ * read_lime_gauge_field(char * filename)
+ *   read gauge field in ILDG format
+ *
+ * write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filename, const int append)
+ *   write a full spinor from even and odd spinorfield
+ *
+ * read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename)
+ *   read a full spinor into even/odd spinorfields
+ *
  * write_gauge_field(char * filename)
  *   writes gauge field configuration to file
  *   with name filename.
@@ -927,7 +939,8 @@ int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filen
     else {
       ofs = fopen(filename, "a");
       if(ofs == NULL ) {
-	printf("Could not open file %s!\n", filename);
+	fprintf(stderr, "Could not open file %s!\n", filename);
+	return(-1);
       }
     }
   }
@@ -1026,7 +1039,7 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
 /*       errorhandler(113,filename); */
     }
     if((l!=LX*g_nproc_x)||(t!=T*g_nproc_t)){
-      printf("Error! spinorfield %s was produced for a different lattice size!\nAborting!\n", filename);
+      fprintf(stderr, "Error! spinorfield %s was produced for a different lattice size!\nAborting!\n", filename);
       exit(1);
 /*       errorhandler(115,filename); */
     }
@@ -1080,6 +1093,151 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
   fclose(ifs);
   return(0);
 }
+
+
+int write_eospinor(spinor * const s, char * filename) {
+  FILE * ofs = NULL;
+  int x, X, y, Y, z, Z, t, t0, tag=0, id=0, i=0;
+  spinor tmp[1];
+  int coords[4];
+#ifdef MPI
+  MPI_Status status;
+#endif
+  
+  if(g_cart_id == 0){
+    if((ofs = fopen(filename, "w")) == (FILE*)NULL) {
+      fprintf(stderr, "Error writing eigenvector to file %s!\n", filename);
+      return(-1);
+    }
+  }
+
+  for(x = 0; x < LX*g_nproc_x; x++){
+    X = x - g_proc_coords[1]*LX;
+    coords[1] = x / LX;
+    for(y = 0; y < LY*g_nproc_y; y++){
+      Y = y - g_proc_coords[2]*LY;
+      coords[2] = y / LY;
+      for(z = 0; z < LZ*g_nproc_z; z++){
+	Z = z - g_proc_coords[3]*LZ;
+	coords[3] = z / LZ;
+	for(t0 = 0; t0 < T*g_nproc_t; t0++){
+	  t = t0 - T*g_proc_coords[0];
+	  coords[0] = t0 / T;
+#ifdef MPI
+	  MPI_Cart_rank(g_cart_grid, coords, &id);
+#endif
+	  i = g_lexic2eosub[ g_ipt[t][X][Y][Z] ];
+	  if((t+X+Y+Z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
+	      + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+	    if(g_cart_id == 0) {
+	      if(g_cart_id == id) {
+#ifndef WORDS_BIGENDIAN
+		byte_swap_assign(tmp, s + i , sizeof(spinor)/8);
+		fwrite(tmp, sizeof(spinor), 1, ofs);
+#else
+		fwrite(s + i, sizeof(spinor), 1, ofs);
+#endif
+	      }
+#ifdef MPI
+	      else {
+		MPI_Recv(tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &status);
+		fwrite(tmp, sizeof(spinor), 1, ofs);
+	      }
+#endif
+	    }
+#ifdef MPI
+	    else {
+	      if(g_cart_id == id) {
+#  ifndef WORDS_BIGENDIAN
+		byte_swap_assign(tmp, s + i, sizeof(spinor)/8);
+		MPI_Send((void*) tmp, sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+#  else
+		MPI_Send((void*) (s + i), sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+#  endif		  
+	      }
+	    }
+#endif
+	    tag++;
+	  }
+	}
+#ifdef MPI
+ 	MPI_Barrier(g_cart_grid); 
+#endif
+	tag=0;
+      }
+    }
+  }
+  if(g_cart_id == 0) {
+    if(ferror(ofs)) {
+      fprintf(stderr, "Warning! Error while writing to file %s \n", filename);
+    }
+    fclose(ofs);
+  }
+  return(0);
+}
+
+int read_eospinor(spinor * const s, char * filename) {
+  FILE * ifs;
+  int t, x, y , z, i = 0;
+#ifdef MPI
+  int position;
+#endif
+#ifndef WORDS_BIGENDIAN
+  spinor tmp[1];
+#endif
+  
+  if((ifs = fopen(filename, "r")) == (FILE*)NULL) {
+    fprintf(stderr, "Error opening file %s\n", filename);
+#ifdef MPI
+    MPI_Finalize();
+#endif
+    exit(1);
+  }
+#ifdef MPI
+  position = ftell(ifs);
+#endif
+  
+  for(x = 0; x < LX; x++) {
+    for(y = 0; y < LY; y++) {
+      for(z = 0; z < LZ; z++) {
+#if (defined MPI)
+	fseek(ifs, position +
+	      (g_proc_coords[0]*T+
+	       (((g_proc_coords[1]*LX+x)*g_nproc_y*LY+g_proc_coords[2]*LY+y)*g_nproc_z*LZ
+		+ g_proc_coords[3]*LZ+z)*T*g_nproc_t)*sizeof(spinor)/2,
+	      SEEK_SET);
+#endif
+	for(t = 0; t < T; t++){
+	  i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
+	  if((t+x+y+z+
+	      g_proc_coords[3]*LZ+g_proc_coords[2]*LY
+	      +g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
+	    
+#ifndef WORDS_BIGENDIAN
+	    fread(tmp, sizeof(spinor), 1, ifs);
+	    byte_swap_assign(s + i, tmp, sizeof(spinor)/8);
+#else
+	    fread(s + i, sizeof(spinor), 1, ifs);
+#endif
+	  }
+	}
+      }
+    }
+    if((feof(ifs)) || (ferror(ifs))) {
+      fprintf(stderr, "Error while reading from file %s!\nAborting!\n", filename);
+      fprintf(stderr, "%d %d\n", feof(ifs), ferror(ifs));
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(1);
+    }
+  }
+  fclose(ifs);
+  return(0);
+}
+
+
 
 int write_rlxd_state(char * filename, int * const _state, const int rlxdsize) {
   n_uint64_t len;

@@ -58,9 +58,9 @@ SUBDIRS = linalg solver
 .SUFFIXES:
 
 ifneq (,$(findstring lapack,${LIBS}))
-all: Makefile all-recursive dep ${LINKLIBS} hmc_tm invert phmc_tm
+all: Makefile all-recursive dep hmc_tm invert phmc_tm
 else
-all: Makefile all-recursive dep ${LINKLIBS} hmc_tm invert
+all: Makefile all-recursive dep hmc_tm invert
 endif
 
 .NOTPARALLEL: 
@@ -90,10 +90,10 @@ ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile
 ${addsuffix .o, ${PROGRAMS} phmc_tm}: %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} ${OPTARGS} -c $<
 
-${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} ${LINKLIBS}
+${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} all-recursive
 	 ${LINK} ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} $@.o $(LIBS)
 
-phmc_tm: phmc_tm.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} ${addsuffix .o, ${PMODULES}} ${LINKLIBS}
+phmc_tm: phmc_tm.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} ${addsuffix .o, ${PMODULES}} all-recursive
 	 ${LINK} ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} ${addsuffix .o, ${PMODULES}} $@.o $(LIBS)
 
 dep: $(addsuffix .d,$(ALLOBJ))
@@ -112,4 +112,4 @@ distclean: distclean-recursive Makefile
 	flex_read_input ${PROGRAMS} all-recursive \
 	all-debug-recursive all-profile-recursive \
 	clean-recursive distclean-recursive \
-	compile-clean-recursive
+	compile-clean-recursive $(LINKLIBS)
