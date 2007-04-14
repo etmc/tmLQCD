@@ -1577,7 +1577,7 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   printf("# The local lattice size is %d x %d x %d x %d\n", 
 	 (int)(T), (int)(LX), (int)(LY),(int) LZ);
   printf("# beta = %f , kappa= %f\n", g_beta, g_kappa);
-  printf("# boundary of fermion fields (t,x,y,z): %f %f %f %f \n",X0,X1,X2,X3);
+  printf("# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
   if(inv != 1) {
     printf("# mus = %f, %f, %f\n", g_mu1, g_mu2, g_mu3);
     printf("# int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n", 
@@ -1603,7 +1603,7 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
 	  (int)(g_nproc_y*LY), (int)(g_nproc_z*LZ));
   fprintf(parameterfile, "# The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY), (int)(LZ));
   fprintf(parameterfile, "# g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n",g_beta,g_kappa,g_ka_csw_8);
-  fprintf(parameterfile, "# boundary of fermion fields (t,x,y,z): %f %f %f %f \n",X0,X1,X2,X3);
+  fprintf(parameterfile, "# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
   if(inv != 1) {
     fprintf(parameterfile, "# ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n"
 	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);

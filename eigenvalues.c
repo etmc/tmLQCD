@@ -78,8 +78,7 @@ double eigenvalues(int * nr_of_eigenvalues,
   if(g_proc_id == g_stdio_proc && g_debug_level > 0) {
     printf("\nNumber of lowest eigenvalues to compute = %d\n\n",(*nr_of_eigenvalues));
     printf("Using Jacobi-Davidson method! \n");
-  }
-  eigenvalues_for_cg_computed = 1;
+  }  
 
   if((*nr_of_eigenvalues) < 8){
     j_max = 15;
@@ -114,13 +113,17 @@ double eigenvalues(int * nr_of_eigenvalues,
 	startvalue, prec, 
 	(*nr_of_eigenvalues), j_max, j_min, 
 	max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors,
-	BICGSTAB, solver_it_max,
+/* 	BICGSTAB, solver_it_max, */
+	CG, solver_it_max,
 	threshold, decay, verbosity,
 	&converged, (complex*) eigenvectors, eigenvls,
 	&returncode, maxmin, 1,
 	&Qtm_pm_psi);
 
   (*nr_of_eigenvalues) = converged;
+  if(maxmin == JD_MINIMAL) {
+    eigenvalues_for_cg_computed = converged;
+  }
   /* v0dim = converged; */
   returnvalue=eigenvls[0];
 #else

@@ -219,7 +219,7 @@ int main(int argc,char *argv[]) {
 
     if(g_rec_ev != 0) {
       no_eigenvalues = 10;
-      eigenvalues(&no_eigenvalues, 1000, 1.e-12,0);
+      eigenvalues(&no_eigenvalues, 1000, 1.e-10, 0);
     }
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action();

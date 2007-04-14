@@ -54,7 +54,7 @@
 #include "phmc.h"
 #include "init_bispinor_field.h"
 #include "eigenvalues_bi.h"
-#include "max_eigenvalues_bi.h"
+#include "eigenvalues.h"
 #include "init_chi_spinor_field.h"
 #include "init_chi_copy.h"
 #include "chebyshev_polynomial_nd.h"
@@ -423,6 +423,9 @@ int main(int argc,char *argv[]) {
   phmc_invmaxev=1.0;
 
   if(compute_evs != 0) {
+    if(g_nr_of_psf == 3) g_mu = g_mu3;
+    else if (g_nr_of_psf == 2) g_mu = g_mu2;
+    else g_mu = g_mu1;
     max_iter_ev = 1000;
     stop_prec_ev = 1.e-13;
     
@@ -668,19 +671,21 @@ int main(int argc,char *argv[]) {
     if((g_rec_ev !=0) && (trajectory_counter%g_rec_ev == 0)) {
       max_iter_ev = 1000;
       stop_prec_ev = 1.e-13;
-
+      if(g_nr_of_psf == 3) g_mu = g_mu3;
+      else if (g_nr_of_psf == 2) g_mu = g_mu2;
+      else g_mu = g_mu1;
 
       no_eigenvalues = 4;
       if(g_epsbar!=0.0)
         temp = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 0);
       else
-	temp = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 0);
+ 	temp = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 0);
 
       no_eigenvalues = 4;
       if(g_epsbar!=0.0)
         temp2 = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 1);
       else
-        temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 1);
+	temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 1);
       
       if((g_proc_id == 0) && (g_debug_level > 0)) {
 	printf("PHMC: lowest eigenvalue end of trajectory %d = %e\n", 
