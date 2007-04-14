@@ -23,8 +23,7 @@
 #include <math.h>
 #include "global.h"
 #include "su3.h"
-#include "linalg_eo.h"
-#include "start.h"
+#include "io.h"
 #include "tm_operators.h"
 #include "solver/solver.h"
 #include "solver/jdher.h"
@@ -35,13 +34,16 @@ spinor  *eigenvectors = NULL;
 double * eigenvls = NULL;
 int eigenvalues_for_cg_computed = 0;
 
-double eigenvalues(int * nr_of_eigenvalues, 
-		 const int max_iterations, const double precision,const int maxmin) {
+double eigenvalues(int * nr_of_eigenvalues, const int max_iterations, 
+		   const double precision, const int maxmin,
+		   const int readwrite, const int nstore) {
   double returnvalue;
 
 #ifdef HAVE_LAPACK
   static spinor * eigenvectors_ = NULL;
   static int allocated = 0;
+  char filename[200];
+  FILE * ofs;
 
   /**********************
    * For Jacobi-Davidson 
@@ -75,10 +77,11 @@ double eigenvalues(int * nr_of_eigenvalues,
     solver_it_max = 50;
   }
 
-  if(g_proc_id == g_stdio_proc && g_debug_level > 0) {
-    printf("\nNumber of lowest eigenvalues to compute = %d\n\n",(*nr_of_eigenvalues));
+  if(g_proc_id == g_stdio_proc && g_debug_level >0) {
+    printf("Number of %s eigenvalues to compute = %d\n",
+	   maxmin ? "maximal" : "minimal",(*nr_of_eigenvalues));
     printf("Using Jacobi-Davidson method! \n");
-  }  
+  }
 
   if((*nr_of_eigenvalues) < 8){
     j_max = 15;
@@ -107,7 +110,16 @@ double eigenvalues(int * nr_of_eigenvalues,
     eigenvls = (double*)malloc((*nr_of_eigenvalues)*sizeof(double));
   }
 
-  /* compute minimal eigenvalues */
+  if(readwrite) {
+    for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
+      sprintf(filename, "eigenvector.%s.%.2d.%.4d", maxmin ? "max" : "min", v0dim, nstore);
+      if((read_eospinor(&eigenvectors[v0dim*(VOLUMEPLUSRAND)/2], filename)) != 0) {
+	break;
+      }
+    }
+  }
+
+  /* (re-) compute minimal eigenvalues */
 
   jdher((VOLUME)/2*sizeof(spinor)/sizeof(complex), (VOLUMEPLUSRAND)/2*sizeof(spinor)/sizeof(complex),
 	startvalue, prec, 
@@ -124,7 +136,22 @@ double eigenvalues(int * nr_of_eigenvalues,
   if(maxmin == JD_MINIMAL) {
     eigenvalues_for_cg_computed = converged;
   }
-  /* v0dim = converged; */
+  if(readwrite) {
+    for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
+      sprintf(filename, "eigenvector.%s.%.2d.%.4d", maxmin ? "max" : "min", v0dim, nstore);
+      if((write_eospinor(&eigenvectors[v0dim*(VOLUMEPLUSRAND)/2], filename, eigenvls[v0dim], prec, nstore)) != 0) {
+	break;
+      }
+    }
+  }
+  if(g_proc_id == 0) {
+    sprintf(filename, "eigenvalues.%s.%.2d.%.4d", maxmin ? "max" : "min", v0dim, nstore); 
+    ofs = fopen(filename, "w");
+    for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
+      fprintf(ofs, "%d %e\n", v0dim, eigenvls[v0dim]);
+    }
+    fclose(ofs);
+  }
   returnvalue=eigenvls[0];
 #else
   fprintf(stderr, "lapack not available, so JD method not available \n");

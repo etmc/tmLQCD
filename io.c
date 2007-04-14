@@ -1095,22 +1095,74 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
 }
 
 
-int write_eospinor(spinor * const s, char * filename) {
+int write_eospinor(spinor * const s, char * filename, 
+		   const double evalue, const double prec, const int nstore) {
   FILE * ofs = NULL;
+  LimeWriter * limewriter = NULL;
+  LimeRecordHeader * limeheader = NULL;
   int x, X, y, Y, z, Z, t, t0, tag=0, id=0, i=0;
+  int ME_flag=0, MB_flag=0, status=0;
   spinor tmp[1];
   int coords[4];
+  char message[500];
+  n_uint64_t bytes;
 #ifdef MPI
   MPI_Status status;
 #endif
   
+  if(g_kappa > 0. || g_kappa < 0.) {
+    sprintf(message,"\n eigenvalue = %e\n prec = %e\n conf nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n hmcversion = %s", 
+	    evalue, prec, nstore, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1, PACKAGE_VERSION);
+  }
+  else {
+    sprintf(message,"\n eigenvalue = %e\n prec = %e\n conf nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f\n hmcversion = %s", 
+	    evalue, prec, nstore, g_beta, g_kappa, g_mu, g_rgi_C1, PACKAGE_VERSION);
+  }
   if(g_cart_id == 0){
+
     if((ofs = fopen(filename, "w")) == (FILE*)NULL) {
       fprintf(stderr, "Error writing eigenvector to file %s!\n", filename);
       return(-1);
     }
+    limewriter = limeCreateWriter( ofs );
+    if(limewriter == (LimeWriter*)NULL) {
+      fprintf(stderr, "LIME error in file %s for writing!\n Aboring...\n", filename);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+
+    limeheader = limeCreateHeader(MB_flag, ME_flag, "xlf-info", bytes);
+    status = limeWriteRecordHeader( limeheader, limewriter);
+    if(status < 0 ) {
+      fprintf(stderr, "LIME write header error %d\n", status);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    limeDestroyHeader( limeheader );
+    limeWriteRecordData(message, &bytes, limewriter);
+
+    bytes = LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*sizeof(spinor)/2;
+    MB_flag=0; ME_flag=1;
+    limeheader = limeCreateHeader(MB_flag, ME_flag, "eospinor-binary-data", bytes);
+    status = limeWriteRecordHeader( limeheader, limewriter);
+    if(status < 0 ) {
+      fprintf(stderr, "LIME write header error %d\n", status);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    limeDestroyHeader( limeheader );
   }
 
+  bytes = sizeof(spinor);
   for(x = 0; x < LX*g_nproc_x; x++){
     X = x - g_proc_coords[1]*LX;
     coords[1] = x / LX;
@@ -1133,17 +1185,25 @@ int write_eospinor(spinor * const s, char * filename) {
 	      if(g_cart_id == id) {
 #ifndef WORDS_BIGENDIAN
 		byte_swap_assign(tmp, s + i , sizeof(spinor)/8);
-		fwrite(tmp, sizeof(spinor), 1, ofs);
+		status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
 #else
-		fwrite(s + i, sizeof(spinor), 1, ofs);
+		status = limeWriteRecordData((void*)(s+i), &bytes, limewriter);
 #endif
 	      }
 #ifdef MPI
 	      else {
 		MPI_Recv(tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &status);
-		fwrite(tmp, sizeof(spinor), 1, ofs);
+		status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
 	      }
 #endif
+	      if(status < 0 ) {
+		fprintf(stderr, "LIME write error %d\n", status);
+#ifdef MPI
+		MPI_Abort(MPI_COMM_WORLD, 1);
+		MPI_Finalize();
+#endif
+		exit(500);
+	      }
 	    }
 #ifdef MPI
 	    else {
@@ -1171,14 +1231,19 @@ int write_eospinor(spinor * const s, char * filename) {
     if(ferror(ofs)) {
       fprintf(stderr, "Warning! Error while writing to file %s \n", filename);
     }
+    limeDestroyWriter( limewriter );
     fclose(ofs);
+    fflush(ofs);
   }
   return(0);
 }
 
 int read_eospinor(spinor * const s, char * filename) {
   FILE * ifs;
-  int t, x, y , z, i = 0;
+  int t, x, y , z, i = 0, status=0;
+  n_uint64_t bytes;
+  char * header_type;
+  LimeReader * limereader;
 #ifdef MPI
   int position;
 #endif
@@ -1188,24 +1253,47 @@ int read_eospinor(spinor * const s, char * filename) {
   
   if((ifs = fopen(filename, "r")) == (FILE*)NULL) {
     fprintf(stderr, "Error opening file %s\n", filename);
-#ifdef MPI
-    MPI_Finalize();
-#endif
-    exit(1);
+    return(-1);
   }
-#ifdef MPI
-  position = ftell(ifs);
-#endif
-  
+
+  limereader = limeCreateReader( ifs );
+  if( limereader == (LimeReader *)NULL ) {
+    fprintf(stderr, "Unable to open LimeReader\n");
+    return(-1);
+  }
+  while( (status = limeReaderNextRecord(limereader)) != LIME_EOF ) {
+    if(status != LIME_SUCCESS ) {
+      fprintf(stderr, "limeReaderNextRecord returned error with status = %d!\n", status);
+      status = LIME_EOF;
+      break;
+    }
+    header_type = limeReaderType(limereader);
+    if(!strcmp("eospinor-binary-data",header_type)) break;
+  }
+  if(status == LIME_EOF) {
+    if(g_proc_id == 0) {
+      fprintf(stderr, "no eospinor-binary-data record found in file %s\n",filename);
+    }
+    limeDestroyReader(limereader);
+    fclose(ifs);
+    return(-1);
+  }
+  bytes = limeReaderBytes(limereader);
+  if((int)bytes != LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*sizeof(spinor)/2) {
+    fprintf(stderr, "wrong length in eospinor: %d. Aborting read!\n", (int)bytes);
+    return(-1);
+  }
+
+  bytes = sizeof(spinor);
   for(x = 0; x < LX; x++) {
     for(y = 0; y < LY; y++) {
       for(z = 0; z < LZ; z++) {
 #if (defined MPI)
-	fseek(ifs, position +
-	      (g_proc_coords[0]*T+
-	       (((g_proc_coords[1]*LX+x)*g_nproc_y*LY+g_proc_coords[2]*LY+y)*g_nproc_z*LZ
-		+ g_proc_coords[3]*LZ+z)*T*g_nproc_t)*sizeof(spinor)/2,
-	      SEEK_SET);
+	limeReaderSeek(limereader, (n_uint64_t)
+		       (g_proc_coords[0]*T+
+			(((g_proc_coords[1]*LX+x)*g_nproc_y*LY+g_proc_coords[2]*LY+y)*g_nproc_z*LZ
+			 + g_proc_coords[3]*LZ+z)*T*g_nproc_t)*sizeof(spinor)/2,
+		       SEEK_SET);
 #endif
 	for(t = 0; t < T; t++){
 	  i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
@@ -1214,25 +1302,25 @@ int read_eospinor(spinor * const s, char * filename) {
 	      +g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
 	    
 #ifndef WORDS_BIGENDIAN
-	    fread(tmp, sizeof(spinor), 1, ifs);
+	    status = limeReaderReadData(tmp, &bytes, limereader);
 	    byte_swap_assign(s + i, tmp, sizeof(spinor)/8);
 #else
-	    fread(s + i, sizeof(spinor), 1, ifs);
+	    status = limeReaderReadData((s+i), &bytes, limereader);
 #endif
+	    if(status < 0 && status != LIME_EOR) {
+	      fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", status, filename);
+#ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 1);
+	      MPI_Finalize();
+#endif
+	      exit(500);
+	    }
 	  }
 	}
       }
     }
-    if((feof(ifs)) || (ferror(ifs))) {
-      fprintf(stderr, "Error while reading from file %s!\nAborting!\n", filename);
-      fprintf(stderr, "%d %d\n", feof(ifs), ferror(ifs));
-#ifdef MPI
-      MPI_Abort(MPI_COMM_WORLD, 1);
-      MPI_Finalize();
-#endif
-      exit(1);
-    }
   }
+  limeDestroyReader(limereader);
   fclose(ifs);
   return(0);
 }

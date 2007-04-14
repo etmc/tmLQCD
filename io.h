@@ -33,7 +33,8 @@ int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filena
 			       const int ts, const int vol);
 int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filename);
 
-int write_eospinor(spinor * const s, char * filename);
+int write_eospinor(spinor * const s, char * filename, 
+		   const double evalue, const double prec, const int nstore);
 int read_eospinor(spinor * const s, char * filename);
 
 int write_first_messages(FILE * parameterfile, const int integtyp, const int inv);
