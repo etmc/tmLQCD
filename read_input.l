@@ -84,11 +84,15 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   int use_stout_flag;
   int phmc_no_flavours;
   int compute_evs;
+  int phmc_compute_evs;
   double stilde_max;
   double stilde_min;
   int degree_of_p;
   int propagator_splitted;
   int source_location;
+  int no_eigenvalues;
+  double eigenvalue_precision;
+  int sub_evs_cg_flag;
 %}
 
 %option never-interactive
@@ -185,11 +189,15 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x STOUTITER
 %x PHMCFLAV
 %x COMPUTEEVS
+%x PCOMPUTEEVS
 %x SMAX
 %x SMIN
 %x DEGP
 %x SPLITPROP
 %x SRCLOC
+%x SUBEVCG
+%x NOEV
+%x PRECEV
 
 %x COMMENT
 %x ERROR
@@ -218,6 +226,8 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^PhmcPrecisionHfin{SPC}*={SPC}*            BEGIN(ACCHFIN);
 ^recev{SPC}*={SPC}*                        BEGIN(RECEV);
 ^PhmcRecEVInterval{SPC}*={SPC}*            BEGIN(RECEV);
+^NoEigenvalues{SPC}*={SPC}*                BEGIN(NOEV);
+^EigenvaluePrecision{SPC}*={SPC}*          BEGIN(PRECEV);
 ^seed{SPC}*={SPC}*                         BEGIN(SEED);
 ^StartCondition{SPC}*={SPC}*               BEGIN(STARTCOND);
 ^ThermalisationSweeps{SPC}*={SPC}*         BEGIN(THERMSWEEPS);
@@ -226,6 +236,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^GaugeFieldInFile{SPC}*={SPC}*             BEGIN(GAUGEINPUTFILE);
 ^RlxdStateInFile{SPC}*={SPC}*              BEGIN(RLXDINPUTFILE);
 ^SolverFlag{SPC}*={SPC}*                   BEGIN(SOLVFLAG);
+^SubtractEVForCG{SPC}*={SPC}*              BEGIN(SUBEVCG);
 ^OperatorFlag{SPC}*={SPC}*                 BEGIN(OPFLAG);
 ^ComputeMatrixElements{SPC}*={SPC}*        BEGIN(MEFLAG);
 ^SaveConfigurations{SPC}*={SPC}*           BEGIN(SAVECONF);
@@ -302,7 +313,8 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^StoutRho{SPC}*={SPC}*                     BEGIN(STOUTRHO);
 ^StoutNoIterations{SPC}*={SPC}*            BEGIN(STOUTITER);
 ^PhmcNoFlavours{SPC}*={SPC}*               BEGIN(PHMCFLAV);
-^PhmcComputeOnlyEVs{SPC}*={SPC}*           BEGIN(COMPUTEEVS);
+^PhmcComputeOnlyEVs{SPC}*={SPC}*           BEGIN(PCOMPUTEEVS);
+^ComputeEVs{SPC}*={SPC}*                   BEGIN(COMPUTEEVS);
 ^PhmcStildeMax{SPC}*={SPC}*                BEGIN(SMAX);
 ^PhmcStildeMin{SPC}*={SPC}*                BEGIN(SMIN);
 ^PhmcDegreeOfP{SPC}*={SPC}*                BEGIN(DEGP);
@@ -437,6 +449,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   solver_flag=1;
   if(verbose!=0) printf("Use CG Solver\n");
 }
+<SOLVFLAG>pcg {
+  solver_flag=9;
+  if(verbose!=0) printf("Use PCG Solver (eigenvectors needed) \n");
+}
 <SOLVFLAG>gmres {
   solver_flag=2;
   if(verbose!=0) printf("Use GMRES Solver\n");
@@ -463,7 +479,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 <SOLVFLAG>fgmres {
   solver_flag=6;
-  if(verbose!=0) printf("Use FGMRES with domain decomp. preconditioning Solver \n");
+  if(verbose!=0) printf("Use FGMRES solver (eigenvectors needed) \n");
 }
 <GMRESM>{DIGIT}+ {
   gmres_m_parameter = atoi(yytext);
@@ -848,12 +864,24 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   phmc_no_flavours=1;
   if(verbose!=0) printf("Simulate 1+1 flavours only (1+1 PHMC).\n");
 }
+<PCOMPUTEEVS>yes {
+  phmc_compute_evs=1;
+  if(verbose!=0) printf("Compute Eigenvalues and exit.");
+}
+<PCOMPUTEEVS>no {
+  phmc_compute_evs=0;
+}
 <COMPUTEEVS>yes {
   compute_evs=1;
-  if(verbose!=0) printf("Compute Eigenvalues and exit.");
+  if(verbose!=0) printf("Compute Eigenvalues in invert.");
 }
 <COMPUTEEVS>no {
   compute_evs=0;
+  if(verbose!=0) printf("Do not compute Eigenvalues in invert.");
+}
+<COMPUTEEVS>readin {
+  compute_evs=2;
+  if(verbose!=0) printf("Try to only read in eigenvalues and vectors in invert.");
 }
 <SMAX>{FLT} {
   stilde_max = atof(yytext);
@@ -876,10 +904,25 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   if(verbose!=0) printf("Do not split the propagator in several files (default)!\n");
 }
 <SRCLOC>{DIGIT}+ {
-    source_location=atoi(yytext);
+  source_location=atoi(yytext);
   if(verbose!=0) printf("source_location = %s\n",yytext);
 }
-
+<PRECEV>{FLT} {
+  eigenvalue_precision = atof(yytext);
+  if(verbose!=0) printf("precision for eigenvalues = %e\n", eigenvalue_precision);
+}
+<NOEV>{DIGIT}+ {
+  no_eigenvalues = atoi(yytext);
+  if(verbose!=0) printf("no of eigenvalues = %d\n", no_eigenvalues);
+}
+<SUBEVCG>yes {
+  sub_evs_cg_flag = 1;
+  if(verbose!=0) printf("project out eigenvector subspace = %d\n");
+}
+<SUBEVCG>no {
+  sub_evs_cg_flag = 0;
+  if(verbose!=0) printf("Do no project out eigenvector subspace = %d\n");
+}
 
 <*>^#                       BEGIN(COMMENT);
 <SEED,KAPPA,ACCPTILDE,ACCHFIN,RECEV,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
@@ -889,9 +932,9 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
 <ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
 <GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC,USESTOUT,STOUTRHO,STOUTITER,PHMCFLAV>#   BEGIN(COMMENT);
-<SMIN,SMAX,DEGP>#  BEGIN(COMMENT);
-<COMPUTEEVS,SPLITPROP,SRCLOC>#  BEGIN(COMMENT);
-<SOURCETS>#   BEGIN(COMMENT);
+<SMIN,SMAX,DEGP,PRECEV,NOEV>#  BEGIN(COMMENT);
+<PCOMPUTEEVS,COMPUTEEVS,SPLITPROP,SRCLOC>#  BEGIN(COMMENT);
+<SOURCETS,SUBEVCG>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
@@ -1055,7 +1098,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
-<GMRESM,GMRESDRNEV,SLOPPYPREC>. {
+<GMRESM,GMRESDRNEV,SLOPPYPREC,NOEV,PRECEV,SUBEVCG>. {
   printf("Error in line %d!\n", line_of_file);
   exit(1);
 }
@@ -1107,7 +1150,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Unknown value in line %d! Must be 2+1+1 or 1+1. Exiting...!\n", line_of_file);
   exit(1); 
 }
-<COMPUTEEVS>. {
+<PCOMPUTEEVS>. {
   printf("Unknown value in line %d! Must be an yes or no. Exiting...!\n", line_of_file);
   exit(1);
 }
@@ -1250,12 +1293,16 @@ int read_input(char * conf_file){
   stout_no_iter = _default_stout_no_iter;
   /* check for reread ! */ 
   phmc_no_flavours = _default_phmc_no_flavours;
+  phmc_compute_evs = _default_phmc_compute_evs;
   compute_evs = _default_compute_evs;
   stilde_min = _default_stilde_min;
   stilde_max = _default_stilde_max;
   degree_of_p = _default_degree_of_p;
   propagator_splitted = _default_propagator_splitted;
   source_location = _default_source_location;
+  eigenvalue_precision = _default_eigenvalue_precision;
+  no_eigenvalues = _default_no_eigenvalues;
+  sub_evs_cg_flag = _default_sub_evs_cg_flag;
   /********************************************/
 
   if ((yyin = fopen(conf_file, "rt")) == NULL){

@@ -1,3 +1,12 @@
+15.04.2007: eigenvalue computation for squared one flavour operator
+	    implemented, few new input parameters connected to this,
+            see documentation.
+	    Preconditioned CG added and tested with eigenvalues
+	    estimates. However, CG with exact eigenvector subspace
+	    projected out is faster.
+
+	    Sloppy precision now also available for CG.
+
 03.04.2007: Addition of 2 input parameters:
             SplittedPropagator and SourceLocation
             New function in start.c to use the SourceLocation

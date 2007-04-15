@@ -30,6 +30,7 @@
 #include"xchange_field.h"
 #include"gmres_precon.h"
 #include"tm_operators.h"
+#include"sub_low_ev.h"
 #include"fgmres.h"
 
 static void init_gmres(const int _M, const int _V);
@@ -89,8 +90,10 @@ int fgmres(spinor * const P,spinor * const Q,
       /* g_spinor_field[DUM_SOLVER]=A*v_j */
 
 /*       xchange_field(V[j], 0); */
-      gmres_precon(Z[j], V[j], 5, 4, 
-		   1.e-2*eps_sq, rel_prec, N, &Mtm_plus_sym_psi_nocom);
+/*       gmres_precon(Z[j], V[j], 5, 4,  */
+/* 		   1.e-2*eps_sq, rel_prec, N, &Mtm_plus_sym_psi_nocom); */
+      invert_eigenvalue_part(Z[j], V[j], 10, N);
+/*       assign(Z[j], V[j], N); */
       f(r0, Z[j]); 
       /* Set h_ij and omega_j */
       /* g_spinor_field[DUM_SOLVER+1] <- omega_j */

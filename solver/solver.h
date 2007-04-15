@@ -12,6 +12,7 @@
 #define FGMRES 6
 #define GCR 7
 #define GMRESDR 8
+#define PCG 9
 
 #include"solver/matrix_mult_typedef.h"
 #include"solver/gmres.h"
@@ -22,6 +23,7 @@
 #include"solver/bicgstabell.h"
 #include"solver/bicgstab2.h"
 #include"solver/cg_her.h"
+#include"solver/pcg_her.h"
 #include"solver/mr.h"
 #include"solver/gcr.h"
 

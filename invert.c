@@ -76,7 +76,6 @@ int main(int argc,char *argv[]) {
   char conf_filename[50];
   char * input_filename = NULL;
   double plaquette_energy;
-  int no_eigenvalues;
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -187,10 +186,7 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(0);
   }
-  g_sloppy_precision = 0;
-  if(g_sloppy_precision > 0) {
-    init_dirac_halfspinor32();
-  }
+  init_dirac_halfspinor32();
 #  if (defined _PERSISTENT)
   init_xchange_halffield();
 #  endif
@@ -217,9 +213,9 @@ int main(int argc,char *argv[]) {
     update_backward_gauge();
 #endif
 
-    if(g_rec_ev != 0) {
-      no_eigenvalues = 10;
-      eigenvalues(&no_eigenvalues, 1000, 1.e-10, 0, 1, nstore);
+    /* Compute minimal eigenvalues, if wanted */
+    if(compute_evs != 0) {
+      eigenvalues(&no_eigenvalues, 1000, eigenvalue_precision, 0, compute_evs, nstore);
     }
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action();
@@ -286,7 +282,7 @@ int main(int argc,char *argv[]) {
       /* If the solver is _not_ CG we might read in */
       /* here some better guess                     */
       /* This also works for re-iteration           */
-      if(solver_flag != CG) {
+      if(solver_flag != CG && solver_flag != PCG) {
 	ifs = fopen(conf_filename, "r");
 	if(ifs != NULL) {
 	  if(g_proc_id == g_stdio_proc){
@@ -315,7 +311,8 @@ int main(int argc,char *argv[]) {
       atime = MPI_Wtime();
 #endif
       iter = invert_eo(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1], 
-		       solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag);
+		       solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag,
+		       sub_evs_cg_flag);
 #ifdef MPI
       etime = MPI_Wtime();
 #endif

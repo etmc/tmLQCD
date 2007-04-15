@@ -95,11 +95,31 @@ void assign_add_invert_subtracted_part(spinor * const Q, spinor * const P, const
   complex c;
   double rev=0;
 
-   for(i = 0; i < eigenvalues_for_cg_computed; i++){
-     c = scalar_prod(&eigenvectors[i*(VOLUMEPLUSRAND)/2], P, N);
-     rev = 1./eigenvls[i];
-     c.re *= rev;
-     c.im *= rev;
-     assign_add_mul(Q, &eigenvectors[i*(VOLUMEPLUSRAND)/2], c, N);
-   }
+  for(i = 0; i < eigenvalues_for_cg_computed; i++){
+    c = scalar_prod(&eigenvectors[i*(VOLUMEPLUSRAND)/2], P, N);
+    rev = 1./eigenvls[i];
+    c.re *= rev;
+    c.im *= rev;
+    assign_add_mul(Q, &eigenvectors[i*(VOLUMEPLUSRAND)/2], c, N);
+  }
 }
+
+void invert_eigenvalue_part(spinor * const Q, spinor * const P, const int n, const int N) {
+  int i=0;
+  complex c;
+  double rev=0;
+
+/*   c = scalar_prod(&eigenvectors[0], P, N); */
+/*   rev = 1./eigenvls[0]; */
+/*   c.re *= rev; */
+/*   c.im *= rev; */
+/*   mul(Q, c, &eigenvectors[0], N); */
+  assign(Q, P, N);
+  for(i = 0; i < eigenvalues_for_cg_computed; i++){
+    c = scalar_prod(&eigenvectors[i*(VOLUMEPLUSRAND)/2], P, N);
+    c.re *= -inv_eigenvls[i];
+    c.im *= -inv_eigenvls[i];
+    assign_add_mul(Q, &eigenvectors[i*(VOLUMEPLUSRAND)/2], c, N);
+  }
+}
+

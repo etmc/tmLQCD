@@ -94,10 +94,14 @@
 #define _default_use_stout_flag 0
 #define _default_phmc_no_flavours 0
 #define _default_compute_evs 0
+#define _default_phmc_compute_evs 0
 #define _default_stilde_max 3.
 #define _default_stilde_min 0.01
 #define _default_degree_of_p 48
 #define _default_propagator_splitted 1
 #define _default_source_location 0
+#define _default_no_eigenvalues 10
+#define _default_eigenvalue_precision 1.e-5
+#define _default_sub_evs_cg_flag 0
 
 #endif

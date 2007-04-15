@@ -75,12 +75,16 @@ extern "C"
   extern int stout_no_iter;
   extern int use_stout_flag;
   extern int phmc_no_flavours;
+  extern int phmc_compute_evs;
   extern int compute_evs;
+  extern int no_eigenvalues;
+  extern double eigenvalue_precision;
   extern double stilde_max;
   extern double stilde_min;
   extern int degree_of_p;
   extern int propagator_splitted;
   extern int source_location;
+  extern int sub_evs_cg_flag;
  
   int read_input(char *);
   int reread_input(char *);

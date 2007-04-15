@@ -422,7 +422,7 @@ int main(int argc,char *argv[]) {
 
   phmc_invmaxev=1.0;
 
-  if(compute_evs != 0) {
+  if(phmc_compute_evs != 0) {
     if(g_nr_of_psf == 3) g_mu = g_mu3;
     else if (g_nr_of_psf == 2) g_mu = g_mu2;
     else g_mu = g_mu1;

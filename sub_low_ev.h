@@ -7,6 +7,7 @@
 void sub_lowest_eigenvalues(spinor * const , spinor * const, const int n, const int N); 
 void assign_sub_lowest_eigenvalues(spinor * const , spinor * const, const int n, const int N); 
 void assign_add_invert_subtracted_part(spinor * const Q, spinor * const P, const int n, const int N);
+void invert_eigenvalue_part(spinor * const Q, spinor * const P, const int n, const int N);
 #endif
 
 

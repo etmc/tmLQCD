@@ -3,7 +3,7 @@
 # Process this file with autoconf to produce a configure script
 #
 AC_PREREQ(2.53)
-AC_INIT(HMC, 4.0.0-rc1, carsten.urbach@liverpool.ac.uk)
+AC_INIT(HMC, 4.0.0-rc2, carsten.urbach@liverpool.ac.uk)
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()

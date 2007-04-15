@@ -32,6 +32,7 @@
 
 spinor  *eigenvectors = NULL;
 double * eigenvls = NULL;
+double * inv_eigenvls = NULL;
 int eigenvalues_for_cg_computed = 0;
 
 double eigenvalues(int * nr_of_eigenvalues, const int max_iterations, 
@@ -44,6 +45,9 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   static int allocated = 0;
   char filename[200];
   FILE * ofs;
+#ifdef MPI
+  double atime, etime;
+#endif
 
   /**********************
    * For Jacobi-Davidson 
@@ -108,6 +112,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
     eigenvectors = eigenvectors_;
 #endif
     eigenvls = (double*)malloc((*nr_of_eigenvalues)*sizeof(double));
+    inv_eigenvls = (double*)malloc((*nr_of_eigenvalues)*sizeof(double));
   }
 
   if(readwrite) {
@@ -119,24 +124,46 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
     }
   }
 
-  /* (re-) compute minimal eigenvalues */
-
-  jdher((VOLUME)/2*sizeof(spinor)/sizeof(complex), (VOLUMEPLUSRAND)/2*sizeof(spinor)/sizeof(complex),
-	startvalue, prec, 
-	(*nr_of_eigenvalues), j_max, j_min, 
-	max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors,
-/* 	BICGSTAB, solver_it_max, */
-	CG, solver_it_max,
-	threshold, decay, verbosity,
-	&converged, (complex*) eigenvectors, eigenvls,
-	&returncode, maxmin, 1,
-	&Qtm_pm_psi);
+  if(readwrite != 2) {
+#ifdef MPI
+    atime = MPI_Wtime();
+#endif
+    /* (re-) compute minimal eigenvalues */
+    
+    jdher((VOLUME)/2*sizeof(spinor)/sizeof(complex), (VOLUMEPLUSRAND)/2*sizeof(spinor)/sizeof(complex),
+	  startvalue, prec, 
+	  (*nr_of_eigenvalues), j_max, j_min, 
+	  max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors,
+	  CG, solver_it_max,
+	  threshold, decay, verbosity,
+	  &converged, (complex*) eigenvectors, eigenvls,
+	  &returncode, maxmin, 1,
+	  &Qtm_pm_psi);
+    
+#ifdef MPI
+    etime = MPI_Wtime();
+    if(g_proc_id == 0) {
+      printf("Eigenvalues computed in %e sec. (MPI_Wtime)\n", etime-atime);
+    }
+#endif
+  }
+  else {
+    sprintf(filename, "eigenvalues.%s.%.4d", maxmin ? "max" : "min", nstore); 
+    if((ofs = fopen(filename, "r")) != (FILE*) NULL) {
+      for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
+	fscanf(ofs, "%d %e\n", &v0dim, &eigenvls[v0dim]);
+	if(feof(ofs)) break;
+	converged = v0dim;
+      }
+    }
+    fclose(ofs);
+  }
 
   (*nr_of_eigenvalues) = converged;
   if(maxmin == JD_MINIMAL) {
     eigenvalues_for_cg_computed = converged;
   }
-  if(readwrite) {
+  if(readwrite == 1) {
     for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
       sprintf(filename, "eigenvector.%s.%.2d.%.4d", maxmin ? "max" : "min", v0dim, nstore);
       if((write_eospinor(&eigenvectors[v0dim*(VOLUMEPLUSRAND)/2], filename, eigenvls[v0dim], prec, nstore)) != 0) {
@@ -144,17 +171,20 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
       }
     }
   }
-  if(g_proc_id == 0) {
-    sprintf(filename, "eigenvalues.%s.%.2d.%.4d", maxmin ? "max" : "min", v0dim, nstore); 
+  if(g_proc_id == 0 && readwrite != 2) {
+    sprintf(filename, "eigenvalues.%s.%.4d", maxmin ? "max" : "min", nstore); 
     ofs = fopen(filename, "w");
     for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
       fprintf(ofs, "%d %e\n", v0dim, eigenvls[v0dim]);
     }
     fclose(ofs);
   }
+  for(v0dim = 0; v0dim < converged; v0dim++) {
+    inv_eigenvls[v0dim] = 1./eigenvls[v0dim];
+  }
   returnvalue=eigenvls[0];
 #else
-  fprintf(stderr, "lapack not available, so JD method not available \n");
+  fprintf(stderr, "lapack not available, so JD method for EV computation not available \n");
 #endif
   return(returnvalue);
 }

@@ -42,12 +42,6 @@
 #include "sub_low_ev.h"
 #include "cg_her.h"
 
-#ifdef _SOLVER_OUTPUT
-#define _SO(x) x
-#else
-#define _SO(x)
-#endif
-
 /* P output = solution , Q input = source */
 int cg_her(spinor * const P, spinor * const Q, const int max_iter, 
 	   double eps_sq, const int rel_prec, const int N, matrix_mult f, 
@@ -91,7 +85,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   for(iteration=0;iteration<max_iter;iteration++){
     f(g_spinor_field[DUM_SOLVER+4], g_spinor_field[DUM_SOLVER+2]);
 
-    if((subtract_ev == 1) && (iteration%modulo == 0)){
+    if((subtract_ev == 1) && (iteration%modulo == 0)) {
       sub_lowest_eigenvalues(g_spinor_field[DUM_SOLVER+4], g_spinor_field[DUM_SOLVER+2], 10, N);
     }
     /* c=scalar_prod(&g_ev[0*VOLUME], g_spinor_field[DUM_SOLVER+4]);
@@ -108,8 +102,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
     /* Check whether the precision is reached ... */
     err=square_norm(g_spinor_field[DUM_SOLVER+1], N);
-/*     _SO(if(g_proc_id == g_stdio_proc){printf("%d\t%g\n",iteration,err); fflush( stdout);}); */
-    if(g_proc_id == g_stdio_proc && g_debug_level > 0) {
+    if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
       printf("%d\t%g\n",iteration,err); fflush( stdout);
     }
 
@@ -117,12 +110,18 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
       if((subtract_ev == 1)){
 	assign_add_invert_subtracted_part(g_spinor_field[DUM_SOLVER], Q, 10, N);
       } 
-
       assign(P, g_spinor_field[DUM_SOLVER], N);
-       
+      g_sloppy_precision = 0;
       return(iteration+1);
     }
-     
+#ifdef _USE_HALFSPINOR
+    if(((err*err <= eps_sq) && (rel_prec == 0)) || ((err*err <= eps_sq*squarenorm) && (rel_prec == 1))) {
+      g_sloppy_precision = 1;
+      if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
+	printf("sloppy precision on\n"); fflush( stdout);
+      }
+    }
+#endif
     /* Compute beta_cg(i+1)
        Compute p_(i+1) = r_i+1 + beta_(i+1) p_i     */
     beta_cg=err/normsq;
@@ -132,9 +131,8 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   if((subtract_ev == 1)) { 
     assign_add_invert_subtracted_part(g_spinor_field[DUM_SOLVER], Q, 10, N);
   }
-  
-  assign(P, g_spinor_field[DUM_SOLVER], N);  
-
+  assign(P, g_spinor_field[DUM_SOLVER], N);
+  g_sloppy_precision = 0;
   return(-1);
 }
 

@@ -32,6 +32,12 @@
  * void byte_swap_assign(void * out_ptr, void * in_ptr, int nmemb)
  *   Swap bytes in an array of nmemb doubles in_ptr and assigns it to out_ptr
  *
+ * int read_eospinor(spinor * const s, char * filename)
+ *   Read an even/odd spinor from file (eigenvector)
+ *
+ * int write_eospinor(spinor * const s, char * filename, const double evalue, const double prec, const int nstore)
+ *   Read an even/odd spinor from file (eigenvector)
+ *
  * Autor: Ines Wetzorke <wetzorke@ifh.de>
  *        Carsten Urbach <urbach@ifh.de>
  *
@@ -1034,9 +1040,8 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
 #ifdef MPI
     position = ftell(ifs);
 #endif
-    if((beta!=g_beta)||(g_kappa!=kappa)||(g_mu!=mu)){
+    if(((beta!=g_beta)||(g_kappa!=kappa)||(g_mu!=mu)) && (g_proc_id == 0)){
       fprintf(stderr, "Warning! Parameters beta, kappa or mu are inconsistent with file %s!\n", filename);
-/*       errorhandler(113,filename); */
     }
     if((l!=LX*g_nproc_x)||(t!=T*g_nproc_t)){
       fprintf(stderr, "Error! spinorfield %s was produced for a different lattice size!\nAborting!\n", filename);
@@ -1107,19 +1112,20 @@ int write_eospinor(spinor * const s, char * filename,
   char message[500];
   n_uint64_t bytes;
 #ifdef MPI
-  MPI_Status status;
+  MPI_Status mpistatus;
 #endif
-  
-  if(g_kappa > 0. || g_kappa < 0.) {
-    sprintf(message,"\n eigenvalue = %e\n prec = %e\n conf nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n hmcversion = %s", 
-	    evalue, prec, nstore, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1, PACKAGE_VERSION);
-  }
-  else {
-    sprintf(message,"\n eigenvalue = %e\n prec = %e\n conf nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f\n hmcversion = %s", 
-	    evalue, prec, nstore, g_beta, g_kappa, g_mu, g_rgi_C1, PACKAGE_VERSION);
-  }
-  if(g_cart_id == 0){
 
+  if(g_cart_id == 0){  
+    if(g_kappa > 0. || g_kappa < 0.) {
+      sprintf(message,"\n eigenvalue = %e\n prec = %e\n conf nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n hmcversion = %s", 
+	      evalue, prec, nstore, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1, PACKAGE_VERSION);
+    }
+    else {
+      sprintf(message,"\n eigenvalue = %e\n prec = %e\n conf nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f\n hmcversion = %s", 
+	      evalue, prec, nstore, g_beta, g_kappa, g_mu, g_rgi_C1, PACKAGE_VERSION);
+    }
+    bytes = strlen( message );
+    
     if((ofs = fopen(filename, "w")) == (FILE*)NULL) {
       fprintf(stderr, "Error writing eigenvector to file %s!\n", filename);
       return(-1);
@@ -1137,7 +1143,7 @@ int write_eospinor(spinor * const s, char * filename,
     limeheader = limeCreateHeader(MB_flag, ME_flag, "xlf-info", bytes);
     status = limeWriteRecordHeader( limeheader, limewriter);
     if(status < 0 ) {
-      fprintf(stderr, "LIME write header error %d\n", status);
+      fprintf(stderr, "LIME write header (xlf-info) error %d\n", status);
 #ifdef MPI
       MPI_Abort(MPI_COMM_WORLD, 1);
       MPI_Finalize();
@@ -1152,7 +1158,7 @@ int write_eospinor(spinor * const s, char * filename,
     limeheader = limeCreateHeader(MB_flag, ME_flag, "eospinor-binary-data", bytes);
     status = limeWriteRecordHeader( limeheader, limewriter);
     if(status < 0 ) {
-      fprintf(stderr, "LIME write header error %d\n", status);
+      fprintf(stderr, "LIME write header (eospinor-binary-data) error %d\n", status);
 #ifdef MPI
       MPI_Abort(MPI_COMM_WORLD, 1);
       MPI_Finalize();
@@ -1192,7 +1198,7 @@ int write_eospinor(spinor * const s, char * filename,
 	      }
 #ifdef MPI
 	      else {
-		MPI_Recv(tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &status);
+		MPI_Recv(tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &mpistatus);
 		status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
 	      }
 #endif
@@ -1252,13 +1258,17 @@ int read_eospinor(spinor * const s, char * filename) {
 #endif
   
   if((ifs = fopen(filename, "r")) == (FILE*)NULL) {
-    fprintf(stderr, "Error opening file %s\n", filename);
+    if(g_proc_id == 0) {
+      fprintf(stderr, "Error opening file %s\n", filename);
+    }
     return(-1);
   }
 
   limereader = limeCreateReader( ifs );
   if( limereader == (LimeReader *)NULL ) {
-    fprintf(stderr, "Unable to open LimeReader\n");
+    if(g_proc_id == 0) {
+      fprintf(stderr, "Unable to open LimeReader\n");
+    }
     return(-1);
   }
   while( (status = limeReaderNextRecord(limereader)) != LIME_EOF ) {
@@ -1280,7 +1290,9 @@ int read_eospinor(spinor * const s, char * filename) {
   }
   bytes = limeReaderBytes(limereader);
   if((int)bytes != LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*sizeof(spinor)/2) {
-    fprintf(stderr, "wrong length in eospinor: %d. Aborting read!\n", (int)bytes);
+    if(g_proc_id == 0) {
+      fprintf(stderr, "wrong length in eospinor: %d. Aborting read!\n", (int)bytes);
+    }
     return(-1);
   }
 

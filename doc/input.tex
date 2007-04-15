@@ -314,7 +314,7 @@ supported input paramters:
 
 \item {\ttfamily SolverFlag}:\\
   Sets the solver to be used. Possible values are among others
-  {\ttfamily CG, BiCGstab, CGS, GMRES}. This parameter has only
+  {\ttfamily CG, BiCGstab, CGS, GMRES, PCG}. This parameter has only
   effect for executable {\ttfamily invert}.
 
 \item {\ttfamily SolverPrecision}:\\
@@ -349,6 +349,29 @@ supported input paramters:
   default. This could be possibly used in the invert code along the 
   lines of {\ttfamily hep-lat/0609023} in the future.
 
+\item {\ttfamily ComputeEVs}:\\
+  compute eigenvalues and vectors before inversion in invert. Values
+  can be no, yes and readin. In the latter case the eigenvalues and
+  vectors are only read from disk, if possible. In case of yes it is
+  also tried to read them from disk, but they are also recomputed, to
+  a possibly higher precision.
+
+\item {\ttfamily NoEigenvalues}:\\
+  number of eigenvalues to compute.
+
+\item {\ttfamily EigenvaluePrecision}:\\
+  precision for eigenvalues.
+
+\item {\ttfamily SourceLocation}:\\
+  integer indicating the location of the source. The location is computed as
+  {\ttfamily SourceLocation = z+L*y+L*L*x+L*L*L*t}.
+
+\item {\ttfamily UseStoutSmearing}:\\
+  Whether or not to stout smear the configuration before inversion.
+
+\item {\ttfamily StoutRho} and {\ttfamily StoutNoIterations}:\
+  Stout smearing parameter.
+  
 \end{enumerate}
 
 \subsection{Reread functionality}

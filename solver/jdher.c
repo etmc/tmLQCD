@@ -615,9 +615,7 @@ void jdher(int n, int lda, double tau, double tol,
 /*       } */
 
       /* Solve the correction equation ...  */
-      i = g_sloppy_precision_flag;
-/*       g_sloppy_precision = 1; */
-      g_sloppy_precision_flag = 1;
+      g_sloppy_precision = 1;
       if(solver_flag == GMRES){
 /* 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, &Proj_A_psi, &Proj_A_psi); */
 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, 0, 
@@ -640,7 +638,6 @@ void jdher(int n, int lda, double tau, double tol,
 		     n*sizeof(complex)/sizeof(spinor), &Proj_A_psi); 
       }
       g_sloppy_precision = 0;
-      g_sloppy_precision_flag = i;
 
       /* Actualizing profiling data */
       if (info == -1){

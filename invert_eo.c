@@ -35,7 +35,8 @@
 int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
 	      spinor * const Even, spinor * const Odd,
 	      const double precision, const int max_iter,
-	      const int solver_flag, const int rel_prec) {
+	      const int solver_flag, const int rel_prec,
+	      const int sub_evs_flag) {
 
   int iter = 0;
 
@@ -71,20 +72,29 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     iter = gmres_dr(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, gmresdr_nr_ev, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
   }
   else if(solver_flag == FGMRES) {
-    if(g_proc_id == 0) {printf("# Using GMRES!\n"); fflush(stdout);}
-    mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
-    iter = fgmres(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
+    if(g_proc_id == 0) {printf("# Using FGMRES!\n"); fflush(stdout);}
+    iter = fgmres(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
+    gamma5(Odd_new, Odd_new, VOLUME/2);
+    Qtm_minus_psi(Odd_new, Odd_new);
   }
   else if(solver_flag == BICGSTABELL) {
     if(g_proc_id == 0) {printf("# Using BiCGstab2!\n"); fflush(stdout);}
     mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.); 
     iter = bicgstabell(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 3, VOLUME/2, &Mtm_plus_sym_psi);
   }
+  else if(solver_flag == PCG) {
+    /* Here we invert the hermitean operator squared */
+    gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
+    if(g_proc_id == 0) {printf("# Using PCG!\n"); fflush(stdout);}
+    iter = pcg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
+    Qtm_minus_psi(Odd_new, Odd_new);
+  }
   else if(solver_flag == CG) {
     /* Here we invert the hermitean operator squared */
     gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
     if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
-    iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 1, 0.);
+    iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
+		  VOLUME/2, &Qtm_pm_psi, sub_evs_flag, 1000);
     Qtm_minus_psi(Odd_new, Odd_new);
   }
   else if(solver_flag == MR) {
@@ -99,7 +109,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   else {
     if(g_proc_id == 0) {printf("# Using CG as default solver!\n"); fflush(stdout);}
     gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
-    iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0.);
+    iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0);
     Qtm_minus_psi(Odd_new, Odd_new);
   }
 

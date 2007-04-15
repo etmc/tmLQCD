@@ -4,6 +4,7 @@
 
 extern spinor * eigenvectors;
 extern double * eigenvls;
+extern double * inv_eigenvls;
 extern int eigenvalues_for_cg_computed;
 double eigenvalues(int * nr_of_eigenvalues, const int max_iterations, 
 		   const double precision, const int maxmin,
