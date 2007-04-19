@@ -125,7 +125,6 @@ int main(int argc,char *argv[]) {
 
   FILE *Infos_ev;
   char *filename_infos = "EVS.data";
-  int nstore_ev = 0;
 
   /* END PHMC ... to be used almost at the end of the file */
 
@@ -435,14 +434,14 @@ int main(int argc,char *argv[]) {
     if(g_epsbar!=0.0)
       phmc_cheb_evmin = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 0);
     else {
-      phmc_cheb_evmin = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 0, 0, 0);
+      phmc_cheb_evmin = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 0, 0, nstore);
     }
 
     no_eigenvalues = 4;   /* Number of highest eigenvalues to be computed */
     if(g_epsbar!=0.0)
       phmc_cheb_evmax = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 1);
     else
-      phmc_cheb_evmax = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 1, 0, 0);
+      phmc_cheb_evmax = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 1, 0, nstore);
        
     temp=phmc_cheb_evmin;
     temp2=phmc_cheb_evmax;
@@ -681,13 +680,13 @@ int main(int argc,char *argv[]) {
       if(g_epsbar!=0.0)
         temp = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 0);
       else
- 	temp = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 0, 0, nstore_ev);
+ 	temp = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 0, 0, nstore);
 
       no_eigenvalues = 4;
       if(g_epsbar!=0.0)
         temp2 = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 1);
       else
-	temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 1, 0, nstore_ev++);
+	temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 1, 0, nstore);
       
       if((g_proc_id == 0) && (g_debug_level > 0)) {
 	printf("PHMC: lowest eigenvalue end of trajectory %d = %e\n", 
