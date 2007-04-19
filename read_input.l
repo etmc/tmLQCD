@@ -889,7 +889,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 <SMIN>{FLT} {
   stilde_min = atof(yytext);
-  if(verbose!=0) printf("Stilde min for PHMC set to %e.\n", stilde_max);
+  if(verbose!=0) printf("Stilde min for PHMC set to %e.\n", stilde_min);
 }
 <DEGP>{DIGIT}+ {
   degree_of_p = atoi(yytext);
