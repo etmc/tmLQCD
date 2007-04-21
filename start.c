@@ -36,7 +36,7 @@
 * Date: 24.10.2000
 *
 * Added the function
-*   void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int is, int ic)
+*   void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int is, int ic, int source_indx)
 *   which uses the new input parameter SourceLocation in the input parameter files
 *   to place the source at the desired point
 *
@@ -676,19 +676,23 @@ void source_spinor_field(spinor * const P, spinor * const Q, int is, int ic) {
   }
 }
 
-void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int is, int ic)
+void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int is, int ic, int source_indx)
 {
   int tmp;
   int source_coord[4],source_pe_coord[4],source_loc_coord[4];
-  int source_indx,source_pe_indx,source_loc_indx;
+  int source_pe_indx,source_loc_indx;
   spinor * s;
 
   /* set fields to zero */
   zero_spinor_field(P,VOLUME/2);
   zero_spinor_field(Q,VOLUME/2);
 
-  /* Use the input parameter SourceLocation */
-  source_indx=source_location;
+  /* Check if source_indx is valid */
+  if((source_indx < 0) || (source_indx >= (g_nproc_t*g_nproc_x*g_nproc_y*g_nproc_z*T*LX*LY*LZ)))
+  {
+    printf("Error in the input parameter file, SourceLocation must be in [0,VOLUME-1]! Exiting...!\n");
+    exit(1);
+  }
 
   /* translate it into global coordinate */
   /* For a T*L^3 lattice then  L = g_nproc_z * LZ = g_nproc_y * LY = g_nproc_x * LX    */
@@ -701,7 +705,7 @@ void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int
   source_coord[0]=tmp;
 
   if(3*is+ic == index_start && g_proc_id == g_stdio_proc)
-    printf("The source site number is %i which corresponds to (t,x,y,z)=(%i,%i,%i,%i)\n",source_location,source_coord[0],source_coord[1],source_coord[2],source_coord[3]);
+    printf("The source site number is %i which corresponds to (t,x,y,z)=(%i,%i,%i,%i)\n",source_indx,source_coord[0],source_coord[1],source_coord[2],source_coord[3]);
 
   /* compute the coordinates and the index of the node*/
   /* be careful!!! nodes indices have different convention (see io.c)*/

@@ -241,7 +241,7 @@ int main(int argc,char *argv[]) {
         if(source_location == 0)
           source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
         else
-          source_spinor_field_point_from_file(g_spinor_field[0], g_spinor_field[1], is, ic);
+          source_spinor_field_point_from_file(g_spinor_field[0], g_spinor_field[1], is, ic, source_location);
       }
       else {
 	if(source_format_flag == 0) {
