@@ -207,7 +207,7 @@ elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   fi
   AC_CHECK_LIB(gfortran, cabs, GFTR="yes", GFTR="")
   if test "$GFTR" = yes; then
-    F2C="-lgfortran"
+    F2C="-lgfortran $F2C"
   fi
   if test "$GFTR" != yes && test "$G2C" != yes; then
     F2C="-lf2c_nomain_LINUX"
