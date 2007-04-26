@@ -1040,7 +1040,7 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
 #ifdef MPI
     position = ftell(ifs);
 #endif
-    if(((beta!=g_beta)||(g_kappa!=kappa)||(g_mu!=mu)) && (g_proc_id == 0)){
+    if(((beta!=g_beta)||(g_kappa!=kappa)||(fabs(g_mu-mu)>=1e-6)) && (g_proc_id == 0)){
       fprintf(stderr, "Warning! Parameters beta, kappa or mu are inconsistent with file %s!\n", filename);
     }
     if((l!=LX*g_nproc_x)||(t!=T*g_nproc_t)){
