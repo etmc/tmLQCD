@@ -149,17 +149,17 @@ int main(int argc,char *argv[]) {
 #endif
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
-    exit(0);
+    exit(-1);
   }
   j = init_geometry_indices(VOLUMEPLUSRAND);
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for geometry indices! Aborting...\n");
-    exit(0);
+    exit(-1);
   }
   j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS); 
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
-    exit(0);
+    exit(-1);
   }
 
   g_mu = g_mu1; 
@@ -184,9 +184,15 @@ int main(int argc,char *argv[]) {
   j = init_dirac_halfspinor();
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
-    exit(0);
+    exit(-1);
   }
-  init_dirac_halfspinor32();
+  if(g_sloppy_precision_flag == 1) {
+    j = init_dirac_halfspinor32();
+    if ( j!= 0) {
+      fprintf(stderr, "Not enough memory for 32-Bit halffield! Aborting...\n");
+      exit(-1);
+    }
+  }
 #  if (defined _PERSISTENT)
   init_xchange_halffield();
 #  endif
