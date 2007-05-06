@@ -102,7 +102,7 @@ compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d
 
 clean: clean-recursive Makefile
-	rm -f hmc_tm invert phmc_tm*.o *.d
+	rm -f hmc_tm invert phmc_tm *.o *.d
 distclean: distclean-recursive Makefile
 	rm -f hmc_tm hybrid *.o *.d *~ Makefile config.log config.status fixed_volume.h
 	rm -f phmc_tm
