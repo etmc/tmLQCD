@@ -16,7 +16,7 @@
 #endif
 
 void extended_pion_source(spinor * const P, spinor * const Q,
-			  spinor * const S, spinor * const R,
+			  spinor * const R, spinor * const S,
 			  const int t,
 			  const double px, const double py, const double pz) {
   int lt, lx, ly, lz, i, x, y, z, id=0;
