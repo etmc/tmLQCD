@@ -225,10 +225,10 @@ int main(int argc,char *argv[]) {
         sprintf(spinorfilename, "%s.inverted", filename);
       }
       if(formatflag == 1) {
-        read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], spinorfilename);
+        read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], spinorfilename, -1, 1);
       }
       else {
-        read_spinorfield_eo_time_p(g_spinor_field[0], g_spinor_field[1], spinorfilename, 0);
+        read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], spinorfilename);
       }
       extended_pion_source(g_spinor_field[2], g_spinor_field[3],
 			   g_spinor_field[0], g_spinor_field[1],
