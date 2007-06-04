@@ -9,6 +9,7 @@
 #include "global.h"
 #include "start.h"
 #include "ranlxd.h"
+#include "su3spinor.h"
 #include "source_generation.h"
 
 #ifndef M_PI
