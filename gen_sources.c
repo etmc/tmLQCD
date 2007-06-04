@@ -83,7 +83,7 @@ int main(int argc,char *argv[]) {
 #endif
 
 
-  while ((c = getopt(argc, argv, "h?NCpOoE:L:T:n:t:s:S:P:")) != -1) {
+  while ((c = getopt(argc, argv, "h?NCpOEo:L:T:n:t:s:S:P:")) != -1) {
     switch (c) {
     case 'L':
       L = atoi(optarg);
