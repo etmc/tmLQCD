@@ -51,6 +51,7 @@ void usage() {
   fprintf(stdout, "         -N produce nucleon sources [optional, default meson]\n");
   fprintf(stdout, "         -p use plain output filename [default, complex]\n");
   fprintf(stdout, "         -O pion only -> wallsource at start timeslice \n");
+  fprintf(stdout, "         -E extendent source for pion only \n");
   fprintf(stdout, "         -h|-? this help \n\n");
   fprintf(stdout, "plain output file (-p) corresponds to basename.00 - basename.11\n");
   fprintf(stdout, "complex ones (no -p) to basename.samplenr.gaugenr.tsnr.00 - 11\n");
@@ -65,7 +66,7 @@ int main(int argc,char *argv[]) {
  
   char spinorfilename[100];
   char * filename = NULL;
-  int sample=0, ts=0, ss=1, typeflag = 1, t0=0, formatflag = 0, piononly;
+  int sample=0, ts=0, ss=1, typeflag = 1, t0=0, formatflag = 0, piononly, ext_sourceflag = 0;
   int is, ic, j, tt=0, filenameflag = 0;
   complex co;
   int c;
@@ -82,7 +83,7 @@ int main(int argc,char *argv[]) {
 #endif
 
 
-  while ((c = getopt(argc, argv, "h?NCpOo:L:T:n:t:s:S:P:")) != -1) {
+  while ((c = getopt(argc, argv, "h?NCpOoE:L:T:n:t:s:S:P:")) != -1) {
     switch (c) {
     case 'L':
       L = atoi(optarg);
@@ -122,6 +123,9 @@ int main(int argc,char *argv[]) {
       filename = calloc(200, sizeof(char));
       strcpy(filename,optarg);
       break;
+    case 'E':
+      ext_sourceflag = 1;
+      break;
     case 'p':
       filenameflag = 1;
       break;
@@ -153,7 +157,12 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for geometry_indices! Aborting...\n");
     exit(0);
   }
-  j = init_spinor_field(VOLUMEPLUSRAND/2, 2);
+  if(!ext_sourceflag) {
+    j = init_spinor_field(VOLUMEPLUSRAND/2, 2);
+  }
+  else {
+    j = init_spinor_field(VOLUMEPLUSRAND/2, 4);
+  }
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
@@ -188,23 +197,55 @@ int main(int argc,char *argv[]) {
     }
   }
   else {
-    if(!filenameflag) {
-      sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d", filename, nstore, sample, tt); 
+    if(!ext_sourceflag) {
+      if(!filenameflag) {
+	sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d", filename, nstore, sample, tt); 
+      }
+      else {
+	sprintf(spinorfilename, "%s", filename); 
+      }
+      printf("Generating source %s!\n", spinorfilename);
+      fflush(stdout);
+      source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 
+				  t0, sample, nstore);
+      
+      co = scalar_prod(g_spinor_field[1], g_spinor_field[1], VOLUME/2);
+      if(formatflag == 1) {
+	write_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], spinorfilename);
+      }
+      else {
+	write_spinorfield_eo_time_p(g_spinor_field[0], g_spinor_field[1], spinorfilename, 0);
+      }
     }
     else {
-      sprintf(spinorfilename, "%s", filename); 
-    }
-    printf("Generating source %s!\n", spinorfilename);
-    fflush(stdout);
-    source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 
-				t0, sample, nstore);
-	
-    co = scalar_prod(g_spinor_field[1], g_spinor_field[1], VOLUME/2);
-    if(formatflag == 1) {
-      write_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], spinorfilename);
-    }
-    else {
-      write_spinorfield_eo_time_p(g_spinor_field[0], g_spinor_field[1], spinorfilename, 0);
+      if(!filenameflag) {
+        sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d.inverted", filename, nstore, sample, tt);
+      }
+      else {
+        sprintf(spinorfilename, "%s.inverted", filename);
+      }
+      if(formatflag == 1) {
+        read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], spinorfilename);
+      }
+      else {
+        read_spinorfield_eo_time_p(g_spinor_field[0], g_spinor_field[1], spinorfilename, 0);
+      }
+      extended_pion_source(g_spinor_field[2], g_spinor_field[3],
+			   g_spinor_field[0], g_spinor_field[1],
+			   (t0+T/2)%T, 0., 0., 0.);
+      if(!filenameflag) {
+	sprintf(spinorfilename, "g%s.%.4d.%.4d.%.2d", filename, nstore, sample, tt); 
+      }
+      else {
+	sprintf(spinorfilename, "g%s", filename); 
+      }
+      if(formatflag == 1) {
+        write_spinorfield_cm_single(g_spinor_field[2], g_spinor_field[3], spinorfilename);
+      }
+      else {
+        write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], spinorfilename, 0);
+      }
+
     }
   }
 
