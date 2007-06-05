@@ -51,7 +51,7 @@ void usage() {
   fprintf(stdout, "         -N produce nucleon sources [optional, default meson]\n");
   fprintf(stdout, "         -p use plain output filename [default, complex]\n");
   fprintf(stdout, "         -O pion only -> wallsource at start timeslice \n");
-  fprintf(stdout, "         -E extendent source for pion only \n");
+  fprintf(stdout, "         -E extended source for pion only \n");
   fprintf(stdout, "         -h|-? this help \n\n");
   fprintf(stdout, "plain output file (-p) corresponds to basename.00 - basename.11\n");
   fprintf(stdout, "complex ones (no -p) to basename.samplenr.gaugenr.tsnr.00 - 11\n");
@@ -67,7 +67,7 @@ int main(int argc,char *argv[]) {
   char spinorfilename[100];
   char * filename = NULL;
   int sample=0, ts=0, ss=1, typeflag = 1, t0=0, formatflag = 0, piononly, ext_sourceflag = 0;
-  int is, ic, j, tt=0, filenameflag = 0;
+  int is, ic, j, filenameflag = 0;
   complex co;
   int c;
 
@@ -175,7 +175,7 @@ int main(int argc,char *argv[]) {
     for(is = 0; is < 4; is ++) {
       for(ic = 0; ic < 3; ic++) {
 	if(!filenameflag) {
-	  sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d.%.2d", filename, nstore, sample, tt, 3*is+ic); 
+	  sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d.%.2d", filename, nstore, sample, t0, 3*is+ic); 
 	}
 	else {
 	  sprintf(spinorfilename, "%s.%.2d", filename, 3*is+ic); 
@@ -199,7 +199,7 @@ int main(int argc,char *argv[]) {
   else {
     if(!ext_sourceflag) {
       if(!filenameflag) {
-	sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d", filename, nstore, sample, tt); 
+	sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d", filename, nstore, sample, t0); 
       }
       else {
 	sprintf(spinorfilename, "%s", filename); 
@@ -219,7 +219,7 @@ int main(int argc,char *argv[]) {
     }
     else {
       if(!filenameflag) {
-        sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d.inverted", filename, nstore, sample, tt);
+        sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d.inverted", filename, nstore, sample, t0);
       }
       else {
         sprintf(spinorfilename, "%s.inverted", filename);
@@ -232,9 +232,9 @@ int main(int argc,char *argv[]) {
       }
       extended_pion_source(g_spinor_field[2], g_spinor_field[3],
 			   g_spinor_field[0], g_spinor_field[1],
-			   (t0+T/2)%T, 0., 0., 0.);
+			   (t0+(g_nproc_t*T)/2)%T, 0., 0., 0.);
       if(!filenameflag) {
-	sprintf(spinorfilename, "g%s.%.4d.%.4d.%.2d", filename, nstore, sample, tt); 
+	sprintf(spinorfilename, "g%s.%.4d.%.4d.%.2d", filename, nstore, sample, t0); 
       }
       else {
 	sprintf(spinorfilename, "g%s", filename); 
