@@ -225,14 +225,17 @@ int main(int argc,char *argv[]) {
         sprintf(spinorfilename, "%s.inverted", filename);
       }
       if(formatflag == 1) {
+	printf("Reading propagator from %s in cmi format!\n", spinorfilename);
         read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], spinorfilename, -1, 1);
       }
       else {
+	printf("Reading propagator from %s in GWC format!\n", spinorfilename);
         read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], spinorfilename);
       }
+      printf("Generating ext. pion source %s!\n", spinorfilename);
       extended_pion_source(g_spinor_field[2], g_spinor_field[3],
 			   g_spinor_field[0], g_spinor_field[1],
-			   (t0+(g_nproc_t*T)/2)%T, 0., 0., 0.);
+			   t0, 0., 0., 0.);
       if(!filenameflag) {
 	sprintf(spinorfilename, "g%s.%.4d.%.4d.%.2d", filename, nstore, sample, t0); 
       }
@@ -240,9 +243,11 @@ int main(int argc,char *argv[]) {
 	sprintf(spinorfilename, "g%s", filename); 
       }
       if(formatflag == 1) {
+	printf("Writing ext. source to %s in cmi format!\n", spinorfilename);
         write_spinorfield_cm_single(g_spinor_field[2], g_spinor_field[3], spinorfilename);
       }
       else {
+	printf("Writing ext. source to %s in GWC format!\n", spinorfilename);
         write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], spinorfilename, 0);
       }
 
