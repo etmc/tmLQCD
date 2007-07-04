@@ -58,9 +58,9 @@ SUBDIRS = linalg solver
 .SUFFIXES:
 
 ifneq (,$(findstring lapack,${LIBS}))
-all: Makefile all-recursive dep hmc_tm invert phmc_tm
+all: Makefile all-recursive dep hmc_tm invert gen_sources phmc_tm
 else
-all: Makefile all-recursive dep hmc_tm invert
+all: Makefile all-recursive dep hmc_tm invert gen_sources
 endif
 
 .NOTPARALLEL: 
