@@ -367,33 +367,45 @@ void deri_stout_smearing()
    * from eqtn (4) hep-lat/0311018 
    */
   stout_smear_gauge_field(stout_rho, stout_no_iter);
-  printf("A\n");
+  printf("Successfully ran \"stout_smear_gauge_field()\"\n");
 
+  const int dim = 4;
 
   int j, jmax;
   int i, x, y, mu, matrix_row_index, matrix_column_index;
   jmax = 1;
-
+  su3 tmp_su3_0;
+  
   /*
-   *  now we get \tilde{\Sigma}_\mu(x) eqtn (44) hep-lat/0311018 
-   *  we need its explicit form, so we sandwich between spinors with 
-   *  only one explicit entry =1, while all others vanish
+   *  here we set some variables to zero
    */
   for(i=0; i<(VOLUME/2); i++)
   { 
     _spinor_null(g_test_spinor_field_left[i]);
     _spinor_null(g_test_spinor_field_right[i]);
   } 
+  
+  for(i=0; i<(VOLUME/2); i++)
+    for(mu=0; mu<dim; mu++)
+    {
+      _su3_zero(g_stout_force_field[i][mu]);
+      _su3_zero(g_previous_stout_force_field[i][mu]);
+    }
 
-  for(y = 0; y < VOLUME/2; y++)
-  {
-    for(matrix_row_index=0; matrix_row_index < 3; matrix_row_index++)
-      for(matrix_column_index=0; matrix_column_index < 3; matrix_column_index++)
+  /*
+   *  now we get \tilde{\Sigma}_\mu(x) eqtn (44) hep-lat/0311018 
+   *  we need its explicit form, so we sandwich between spinors with 
+   *  only one explicit entry =1, while all others vanish
+   */
+  for(matrix_row_index=0; matrix_row_index < 3; matrix_row_index++)
+    for(matrix_column_index=0; matrix_column_index < 3; matrix_column_index++)
+    {
+
+      /*
+       *  here we set the respective test matrix entries to one
+       */
+      for(y = 0; y < VOLUME/2; y++)
       {
-
-        /*
-         *  here we set the respective test matrix entries to one
-         */
         if(matrix_column_index == 0)
         {
           g_test_spinor_field_left[y].s0.c0.re = 1.0;
@@ -438,186 +450,197 @@ void deri_stout_smearing()
           g_test_spinor_field_right[y].s2.c2.re = 1.0;
           g_test_spinor_field_right[y].s3.c2.re = 1.0;
         }
-
+      }
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(deri)
 #endif
 
-        for(i=0;i<(VOLUME+RAND);i++)
+      for(i = 0; i < (VOLUME+RAND); i++)
+      { 
+        for(mu=0; mu < dim; mu++)
         { 
-          for(mu=0;mu<4;mu++)
-          { 
-            _zero_su3adj(df0[i][mu]);
-          }
+          _zero_su3adj(df0[i][mu]);
         }
+      }
 
-        jmax=1;
+      jmax=1;
 
-        if(g_nr_of_psf == 2) 
+      if(g_nr_of_psf == 2) 
+      {
+        jmax = 3;
+      }
+      if(g_nr_of_psf == 3) 
+      {
+        jmax = 5;
+      }
+
+      for(j = 0; j < jmax; j++)
+      { 
+        if(j==0)
         {
-          jmax = 3;
-        }
-        if(g_nr_of_psf == 3) 
-        {
-          jmax = 5;
-        }
-
-        for(j=0;j<jmax;j++)
-        { 
-          if(j==0)
-          {
-            g_mu = g_mu1;
-            if(1)
-            {
-              /* 
-               * if CG is used anyhow 
-               */
-              
-              /* 
-               *  first we get 
-               *  Y_o -> DUM_DERI  
-               */
-              gamma5(g_spinor_field[DUM_DERI+1], &(g_test_spinor_field_left[y]), VOLUME/2);
-              count00 += solve_cg(DUM_DERI+1, first_psf, g_eps_sq_force1, g_relative_precision_flag);
-              Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-
-              /* 
-               *  now we get 
-               *  X_o -> DUM_DERI+1  
-               */
-
-              /* 
-               *    
-               *  X_o -> DUM_DERI+1 
-               *  invert Q_{+} Q_{-}  to obtain 
-               */
-              gamma5(g_spinor_field[DUM_DERI+1], &(g_test_spinor_field_right[y]), VOLUME/2);
-              count00 += solve_cg(DUM_DERI+1, first_psf, g_eps_sq_force1, g_relative_precision_flag);
-              
-              
-            }
-            
-            /*
-             * this is never run
-             */
-            else
-            {
-              /*contributions from field 0 -> first_psf*/
-              gamma5(g_spinor_field[DUM_DERI], g_spinor_field[first_psf], VOLUME/2);
-              /* Invert first Q_+ */
-              /* Y_o -> DUM_DERI  */
-              count00 += bicg(DUM_DERI, first_psf, g_eps_sq_force1, g_relative_precision_flag);
-              gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME/2);
-              /* Now Q_- */
-              /* X_o -> DUM_DERI+1 */
-              g_mu = -g_mu;
-              count01 += bicg(DUM_DERI+1,DUM_DERI, g_eps_sq_force1, g_relative_precision_flag);
-              g_mu = -g_mu;   
-            }
-          }
-          
-          /*
-           *  these if-cases seem not to be run ever
-           */
-          if(j==1)
-          {
-            /* First term coming from the second field */
-            /* Multiply with W_+ */
-            g_mu = g_mu1;	
-            Qtm_plus_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[second_psf]);
-            g_mu = g_mu2;
-            if(1)
-            {
-              /* If CG is used anyhow */
-              gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME/2);
-              /* Invert Q_{+} Q_{-} */
-              /* X_W -> DUM_DERI+1 */
-              count10 += solve_cg(DUM_DERI+1, DUM_DERI+2, g_eps_sq_force2, g_relative_precision_flag);
-              /* Y_W -> DUM_DERI  */
-              Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-            }
-            else
-            {
-              gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], VOLUME/2);
-              /* Invert first Q_+ */
-              /* Y_o -> DUM_DERI  */
-              count10 += bicg(DUM_DERI, DUM_DERI+2, g_eps_sq_force2, g_relative_precision_flag);
-              gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME/2);
-              /* Now Q_- */
-              /* X_o -> DUM_DERI+1 */
-              g_mu = -g_mu;
-              count11 += bicg(DUM_DERI+1,DUM_DERI, g_eps_sq_force2, g_relative_precision_flag);
-              g_mu = -g_mu;   
-            }
-          }
-          if(j==2)
-          {
-            printf("J=2     %d   %d \n", matrix_row_index, matrix_column_index);
-            /* Second term coming from the second field */
-            /* The sign is opposite!! */
-            mul_r(g_spinor_field[DUM_DERI], -1., g_spinor_field[second_psf], VOLUME/2);
-            g_mu = g_mu1;
-          }
-          if(j == 3) 
-          {
-            printf("J=3     %d   %d \n", matrix_row_index, matrix_column_index);
-            /* First term coming from the second field */
-            /* Multiply with W_+ */
-            g_mu = g_mu2;	
-            Qtm_plus_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[third_psf]);
-            g_mu = g_mu3;
-            if(1)
-            {
-              /* If CG is used anyhow */
-              gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME/2);
-              /* Invert Q_{+} Q_{-} */
-              /* X_W -> DUM_DERI+1 */
-              count20 += solve_cg(DUM_DERI+1, DUM_DERI+2, g_eps_sq_force3, g_relative_precision_flag);
-              /* Y_W -> DUM_DERI  */
-              Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-            }
-            else
-            {
-              gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], VOLUME/2);
-              /* Invert first Q_+ */
-              /* Y_o -> DUM_DERI  */
-              count20 += bicg(DUM_DERI, DUM_DERI+2, g_eps_sq_force3, g_relative_precision_flag);
-              gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME/2);
-              /* Now Q_- */
-              /* X_o -> DUM_DERI+1 */
-              g_mu = -g_mu;
-              count21 += bicg(DUM_DERI+1,DUM_DERI, g_eps_sq_force3, g_relative_precision_flag);
-              g_mu = -g_mu;   
-            }
-          }
-          if(j == 4) 
-          {
-            /* Second term coming from the third field */
-            /* The sign is opposite!! */
-            mul_r( g_spinor_field[DUM_DERI], -1., g_spinor_field[third_psf], VOLUME/2);
-            g_mu = g_mu2;
-          }
-
-          printf("E     %d   %d \n", matrix_row_index, matrix_column_index);
-          /* apply Hopping Matrix M_{eo} */
-          /* to get the even sites of X */
-          H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
-          /* \delta Q sandwitched by Y_o^\dagger and X_e */
-          deriv_Sb(OE, DUM_DERI, DUM_DERI+2); 
-
-          /* to get the even sites of Y */
-          H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
-          /* \delta Q sandwitched by Y_e^\dagger and X_o */
-          deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
           g_mu = g_mu1;
-          printf("Juhu     %d   %d \n", matrix_row_index, matrix_column_index);
+          if(1)
+          {
+            /* 
+             * if CG is used anyhow 
+             */
+
+            /* 
+             *  first we get 
+             *  Y_o -> DUM_DERI  
+             */
+            gamma5(g_spinor_field[DUM_DERI+1], &(g_test_spinor_field_left[y]), VOLUME/2);
+            count00 += solve_cg(DUM_DERI+1, first_psf, g_eps_sq_force1, g_relative_precision_flag);
+            Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+
+            /* 
+             *  now we get 
+             *  X_o -> DUM_DERI+1  
+             */
+
+            /* 
+             *    
+             *  X_o -> DUM_DERI+1 
+             *  invert Q_{+} Q_{-}  to obtain 
+             */
+            gamma5(g_spinor_field[DUM_DERI+1], &(g_test_spinor_field_right[y]), VOLUME/2);
+            count00 += solve_cg(DUM_DERI+1, first_psf, g_eps_sq_force1, g_relative_precision_flag);
+
+
+          }
+
+          /*
+           * this is never run
+           */
+          else
+          {
+            /*contributions from field 0 -> first_psf*/
+            gamma5(g_spinor_field[DUM_DERI], g_spinor_field[first_psf], VOLUME/2);
+            /* Invert first Q_+ */
+            /* Y_o -> DUM_DERI  */
+            count00 += bicg(DUM_DERI, first_psf, g_eps_sq_force1, g_relative_precision_flag);
+            gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME/2);
+            /* Now Q_- */
+            /* X_o -> DUM_DERI+1 */
+            g_mu = -g_mu;
+            count01 += bicg(DUM_DERI+1,DUM_DERI, g_eps_sq_force1, g_relative_precision_flag);
+            g_mu = -g_mu;   
+          }
         }
 
-        printf("SU3_CHECK after sandwiching y=%d row_i=%d column_j=%d :\n", y, matrix_row_index, matrix_column_index);
-        /*_su3_assign(&(g_stout_force_field[y][nu]), &(df0[y][nu]));*/
         /*
-         *  here we reset the test matrix enries to zero
+         *  these if-cases seem not to be run ever
          */
+        if(j==1)
+        {
+          /* First term coming from the second field */
+          /* Multiply with W_+ */
+          g_mu = g_mu1;	
+          Qtm_plus_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[second_psf]);
+          g_mu = g_mu2;
+          if(1)
+          {
+            /* If CG is used anyhow */
+            gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME/2);
+            /* Invert Q_{+} Q_{-} */
+            /* X_W -> DUM_DERI+1 */
+            count10 += solve_cg(DUM_DERI+1, DUM_DERI+2, g_eps_sq_force2, g_relative_precision_flag);
+            /* Y_W -> DUM_DERI  */
+            Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+          }
+          else
+          {
+            gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], VOLUME/2);
+            /* Invert first Q_+ */
+            /* Y_o -> DUM_DERI  */
+            count10 += bicg(DUM_DERI, DUM_DERI+2, g_eps_sq_force2, g_relative_precision_flag);
+            gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME/2);
+            /* Now Q_- */
+            /* X_o -> DUM_DERI+1 */
+            g_mu = -g_mu;
+            count11 += bicg(DUM_DERI+1,DUM_DERI, g_eps_sq_force2, g_relative_precision_flag);
+            g_mu = -g_mu;   
+          }
+        }
+        if(j==2)
+        {
+          printf("J=2     %d   %d \n", matrix_row_index, matrix_column_index);
+          /* Second term coming from the second field */
+          /* The sign is opposite!! */
+          mul_r(g_spinor_field[DUM_DERI], -1., g_spinor_field[second_psf], VOLUME/2);
+          g_mu = g_mu1;
+        }
+        if(j == 3) 
+        {
+          printf("J=3     %d   %d \n", matrix_row_index, matrix_column_index);
+          /* First term coming from the second field */
+          /* Multiply with W_+ */
+          g_mu = g_mu2;	
+          Qtm_plus_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[third_psf]);
+          g_mu = g_mu3;
+          if(1)
+          {
+            /* If CG is used anyhow */
+            gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME/2);
+            /* Invert Q_{+} Q_{-} */
+            /* X_W -> DUM_DERI+1 */
+            count20 += solve_cg(DUM_DERI+1, DUM_DERI+2, g_eps_sq_force3, g_relative_precision_flag);
+            /* Y_W -> DUM_DERI  */
+            Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+          }
+          else
+          {
+            gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], VOLUME/2);
+            /* Invert first Q_+ */
+            /* Y_o -> DUM_DERI  */
+            count20 += bicg(DUM_DERI, DUM_DERI+2, g_eps_sq_force3, g_relative_precision_flag);
+            gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME/2);
+            /* Now Q_- */
+            /* X_o -> DUM_DERI+1 */
+            g_mu = -g_mu;
+            count21 += bicg(DUM_DERI+1,DUM_DERI, g_eps_sq_force3, g_relative_precision_flag);
+            g_mu = -g_mu;   
+          }
+        }
+        if(j == 4) 
+        {
+          /* Second term coming from the third field */
+          /* The sign is opposite!! */
+          mul_r( g_spinor_field[DUM_DERI], -1., g_spinor_field[third_psf], VOLUME/2);
+          g_mu = g_mu2;
+        }
+
+        printf("E     %d   %d \n", matrix_row_index, matrix_column_index);
+        /* apply Hopping Matrix M_{eo} */
+        /* to get the even sites of X */
+        H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
+        /* \delta Q sandwitched by Y_o^\dagger and X_e */
+        deriv_Sb(OE, DUM_DERI, DUM_DERI+2); 
+
+        /* to get the even sites of Y */
+        H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
+        /* \delta Q sandwitched by Y_e^\dagger and X_o */
+        deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
+        g_mu = g_mu1;
+        printf("Juhu     %d   %d \n", matrix_row_index, matrix_column_index);
+      }
+
+      printf("SU3_CHECK after sandwiching y=%d row_i=%d column_j=%d :\n", y, matrix_row_index, matrix_column_index);
+      /*_su3_assign(&(g_stout_force_field[y][nu]), &(df0[y][nu]));*/
+
+        for(y=0; y<VOLUME/2; y++)
+        for(mu=0; mu<4; mu++)
+        {
+          _make_su3(tmp_su3_0, df0[y][mu]);
+          _su3_plus_su3(g_stout_force_field[y][mu], g_stout_force_field[y][mu], tmp_su3_0);
+        }
+          
+
+      /*
+       *  here we reset the test matrix enries to zero
+       */
+      for(y = 0; y < VOLUME/2; y++)
+      {
         if(matrix_column_index == 0)
         {
           g_test_spinor_field_left[y].s0.c0.re = 0.0;
@@ -661,8 +684,26 @@ void deri_stout_smearing()
           g_test_spinor_field_right[y].s2.c2.re = 0.0;
           g_test_spinor_field_right[y].s3.c2.re = 0.0;
         }
+
+        /*
+         *
+         */
       }
-  }
+    }
+
+  
+  printf("SPINOR       \n\n");
+  for(y=0; y<VOLUME; y++)
+    for(mu=0; mu<dim; mu++)
+    {
+      printf("x=%d mu=%d\n", y, mu);
+      print_spinor(&(g_stout_force_field[y][mu]));
+      printf("\n");
+    }
+
+  stout_smear_force();
+
+
 #ifdef _KOJAK_INST
 #pragma pomp inst end(deri)
 #endif
@@ -825,7 +866,7 @@ void leap_frog(double step, int m, int nsmall) {
 
 void sexton(double step, int m, int nsmall) {
   int i,j;
-/*   int ev = 10; */
+  /*   int ev = 10; */
   double smallstep;
   /* initialize the counter for the inverter */
   count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;
@@ -837,6 +878,7 @@ void sexton(double step, int m, int nsmall) {
   update_backward_gauge();
 #endif
   fermion_momenta(step/6.);
+  printf("Entering  \n");
   gauge_momenta(smallstep/12.);
   for(i=1;i<m;i++){
     for(j=0;j<nsmall;j++){
