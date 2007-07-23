@@ -628,13 +628,13 @@ void deri_stout_smearing()
       printf("SU3_CHECK after sandwiching y=%d row_i=%d column_j=%d :\n", y, matrix_row_index, matrix_column_index);
       /*_su3_assign(&(g_stout_force_field[y][nu]), &(df0[y][nu]));*/
 
-        for(y=0; y<VOLUME/2; y++)
+      for(y=0; y<VOLUME; y++)
         for(mu=0; mu<4; mu++)
         {
           _make_su3(tmp_su3_0, df0[y][mu]);
           _su3_plus_su3(g_stout_force_field[y][mu], g_stout_force_field[y][mu], tmp_su3_0);
         }
-          
+
 
       /*
        *  here we reset the test matrix enries to zero
@@ -685,13 +685,19 @@ void deri_stout_smearing()
           g_test_spinor_field_right[y].s3.c2.re = 0.0;
         }
 
-        /*
-         *
-         */
       }
     }
 
+  /*
+   *  now we iterate the force field acc. to hep-lat/0311018 
+   */
+  stout_smear_force();
   
+  for(y=0; y<VOLUME; y++)
+    for(mu=0; mu<4; mu++)
+    {
+       _trace_lambda(df0[y][mu], g_stout_force_field[y][mu]);
+    }
   printf("SPINOR       \n\n");
   for(y=0; y<VOLUME; y++)
     for(mu=0; mu<dim; mu++)
@@ -825,7 +831,7 @@ void update_gauge(double step) {
 #endif
 }
 
-
+/*----------------------------------------------------------------------------*/
 
 void leap_frog(double step, int m, int nsmall) {
   int i,j;
@@ -863,6 +869,8 @@ void leap_frog(double step, int m, int nsmall) {
 #endif
   fermion_momenta(0.5*step);
 }
+
+/*----------------------------------------------------------------------------*/
 
 void sexton(double step, int m, int nsmall) {
   int i,j;
@@ -929,6 +937,7 @@ void sexton(double step, int m, int nsmall) {
   fermion_momenta(step/6.);
 }
 
+/*----------------------------------------------------------------------------*/
 
 /*******************************************
  *
@@ -969,6 +978,8 @@ double moment_energy() {
   return kc;
 #endif
 }
+
+/*----------------------------------------------------------------------------*/
 
 /**************************************
  *
