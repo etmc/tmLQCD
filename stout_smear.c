@@ -48,6 +48,7 @@
 #include "get_staples.h"
 #include "xchange_gauge.h"
 #include "xchange.h"
+/*#include "stout_smear_aux_vars.h"*/
 
 void  project_anti_herm(su3 *omega)  ;
 void  print_su3(su3 *in)  ; 
@@ -57,8 +58,10 @@ su3   slow_expon(su3 in, int nterm)  ;
 void  check_su3(su3 *in)  ;
 
 
-int stout_smear(const double rho , const int no_iters)
+int stout_smear_gauge_field(const double rho , const int no_iters)
 {
+
+  printf("Entering init_stout_gauge_field\n");
   const int dim = 4 ; 
   int iter , mu , x; 
   su3 *gauge_wk[4] ; 
@@ -89,6 +92,8 @@ int stout_smear(const double rho , const int no_iters)
 	/* get staples */
 	wk_staple = get_staples(x, mu) ; 
 	scale_su3(&wk_staple, rho) ; 
+
+  _su3_assign(g_C_smear_iterations[iter][x][mu], wk_staple);
 	
 	/* omega = staple * u^dagger */
 	gauge_local = &g_gauge_field[x][mu];
@@ -97,12 +102,19 @@ int stout_smear(const double rho , const int no_iters)
 	/* project out anti-hermitian traceless part */
 	project_anti_herm(&omega) ; 
 	
+  /*
+   *  omega is Q from eqtn (2) hep-lat/0311018
+   * since we need it later we save this
+   */
+  _su3_assign(g_Q_smear_iterations[iter][x][mu], omega);
+
 	/*  exponentiate */
 	_trace_lambda(p,omega) ;
 	/* -2.0 to get su3 to su3adjoint consistency ****/
 	p.d1 /= -2.0 ; p.d2 /= -2.0 ; p.d3 /= -2.0 ; p.d4 /= -2.0 ; 
 	p.d5 /= -2.0 ; p.d6 /= -2.0 ; p.d7 /= -2.0 ; p.d8 /= -2.0 ; 
 	
+
 	Exp_p = exposu3(p);
 	
 	/* new_gauge_local = Exp_p * gauge_local */
@@ -123,13 +135,27 @@ int stout_smear(const double rho , const int no_iters)
     /** update boundaries for parallel stuff **/
     xchange_gauge();
 #endif
+    
+    /*
+     *  here we save the intermediate smeares gauge fields a large array
+     */
+    for(x= 0 ; x < VOLUME ; x++)
+      for(mu = 0 ; mu < dim  ; mu++){
+        /*printf("iter= %i\nx = %i\nmu = %i\n", iter, x, mu);  */
+        _su3_assign(g_gauge_field_smear_iterations[iter][x][mu], g_gauge_field[x][mu]);
+        /*printf("\n");  */
+      }
   } /* end loop over stout smearing iterations */
 
   /*    free up memory */
   for(mu=0 ; mu < dim ; ++mu) {
     free(gauge_wk[mu]);
   }
+
+  x=3;
+  mu=2;
   
+  printf("Leaving init_stout_gauge_field\n");
   return(0);
 }
 
@@ -200,6 +226,26 @@ void  print_su3(su3 *in) {
 
 }
 
+
+void  print_spinor(spinor *in) 
+{
+  printf("[ %f +i * %f,    %f + I * %f    ,    %f + I * %f  ] \n",
+	 in->s0.c0.re, in->s0.c0.im, in->s0.c1.re, in->s0.c1.im, in->s0.c2.re, in->s0.c2.im); 
+  printf("[ %f +i * %f ,     %f + I * %f    ,    %f + I * %f  ] \n",
+	 in->s1.c0.re, in->s1.c0.im, in->s1.c1.re, in->s1.c1.im, in->s1.c2.re, in->s1.c2.im); 
+  printf("[ %f +i * %f ,     %f + I * %f    ,    %f + I * %f  ] \n",
+	 in->s2.c0.re, in->s2.c0.im, in->s2.c1.re, in->s2.c1.im, in->s2.c2.re, in->s2.c2.im); 
+  printf("[ %f +i * %f ,     %f + I * %f    ,    %f + I * %f  ] \n",
+	 in->s3.c0.re, in->s3.c0.im, in->s3.c1.re, in->s3.c1.im, in->s3.c2.re, in->s3.c2.im); 
+}
+
+void  print_su3_octave(su3 *in) 
+{
+  printf("[[(%f)+i*(%f) (%f)+i*(%f)  (%f)+i*(%f)]; [(%f)+i*(%f) (%f)+i*(%f)  (%f)+i*(%f)]; [(%f)+i*(%f) (%f)+i*(%f)  (%f)+i*(%f)]] \n",
+	 in->c00.re, in->c00.im, in->c01.re, in->c01.im, in->c02.re, in->c02.im, in->c10.re, in->c10.im, in->c11.re, in->c11.im, in->c12.re, in->c12.im, in->c20.re, in->c20.im, in->c21.re, in->c21.im, in->c22.re, in->c22.im ) ; 
+	 
+
+}
 /*
 Check that a matrix is unitary
 */
