@@ -280,7 +280,9 @@ int main(int argc,char *argv[]) {
   zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME/2);
   zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME/2);
 
-
+  if(use_stout_flag == 1)
+    init_stout_smear_vars(VOLUME, stout_no_iter);
+    /*init_stout_smear_vars(VOLUMEPLUSRAND, stout_no_iter);*/
 
     
   /*construct the filenames for the observables and the parameters*/
@@ -511,6 +513,9 @@ int main(int argc,char *argv[]) {
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
+  if(use_stout_flag == 1)
+    free_stout_smear_vars();
+
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
