@@ -114,6 +114,28 @@ EXTERN su3 *** g_gauge_field_copy;
 EXTERN su3 ** g_gauge_field_copy;
 #endif
 
+/*
+ *   if we do stout smearing we need to store all intermediate 
+ *   gauge field iterations and a whole bunch of
+ *   matrix fields
+ */
+EXTERN su3 * gauge_field_smear_iterations;
+EXTERN su3 *** g_gauge_field_smear_iterations;
+EXTERN su3 * Q_smear_iterations;
+EXTERN su3 *** g_Q_smear_iterations;
+EXTERN su3 * C_smear_iterations;
+EXTERN su3 *** g_C_smear_iterations;
+EXTERN su3 * stout_force_field;
+EXTERN su3 ** g_stout_force_field;
+EXTERN su3 * previous_stout_force_field;
+EXTERN su3 ** g_previous_stout_force_field;
+EXTERN su3 * stout_Lambda_field;
+EXTERN su3 ** g_stout_Lambda_field;
+EXTERN su3 * stout_Gamma_field;
+EXTERN su3 ** g_stout_Gamma_field;
+EXTERN spinor * g_test_spinor_field_left;
+EXTERN spinor * g_test_spinor_field_right;
+
 EXTERN su3adj ** moment;
 EXTERN su3adj ** df0;
 EXTERN su3adj ** ddummy;
