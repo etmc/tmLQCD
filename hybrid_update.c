@@ -204,141 +204,10 @@ void gauge_momenta(double step)
  *
  * Here \delta S_b is computed
  *
+ * deri() is 
+ * now completely replaced by derivative_psf
+ *
  ********************************************/
-/* input is the pseudo-fermion field */
-void deri() {
-
-  int j,jmax=1;
-  int i,mu;
-#ifdef _KOJAK_INST
-#pragma pomp inst begin(deri)
-#endif
-
-  for(i=0;i<(VOLUME+RAND);i++){ 
-    for(mu=0;mu<4;mu++){ 
-      _zero_su3adj(df0[i][mu]);
-    }
-  }
-
-  jmax=1;
-
-  if(g_nr_of_psf == 2) {
-    jmax = 3;
-  }
-  if(g_nr_of_psf == 3) {
-    jmax = 5;
-  }
-
-  for(j=0;j<jmax;j++){ 
-    if(j==0){
-      g_mu = g_mu1;
-      if(1){
-	/* If CG is used anyhow */
-	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[first_psf], VOLUME/2);
-	/* Invert Q_{+} Q_{-} */
-	/* X_o -> DUM_DERI+1 */
-	count00 += solve_cg(DUM_DERI+1, first_psf, g_eps_sq_force1, g_relative_precision_flag);
-	/* Y_o -> DUM_DERI  */
-	Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-      }
-      else{
-	/*contributions from field 0 -> first_psf*/
-	gamma5(g_spinor_field[DUM_DERI], g_spinor_field[first_psf], VOLUME/2);
-	/* Invert first Q_+ */
-	/* Y_o -> DUM_DERI  */
-	count00 += bicg(DUM_DERI, first_psf, g_eps_sq_force1, g_relative_precision_flag);
-	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME/2);
-	/* Now Q_- */
-	/* X_o -> DUM_DERI+1 */
-	g_mu = -g_mu;
-	count01 += bicg(DUM_DERI+1,DUM_DERI, g_eps_sq_force1, g_relative_precision_flag);
-	g_mu = -g_mu;   
-      }
-    }
-    if(j==1){
-      /* First term coming from the second field */
-      /* Multiply with W_+ */
-      g_mu = g_mu1;	
-      Qtm_plus_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[second_psf]);
-      g_mu = g_mu2;
-      if(1){
-	/* If CG is used anyhow */
-	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME/2);
-	/* Invert Q_{+} Q_{-} */
-	/* X_W -> DUM_DERI+1 */
-	count10 += solve_cg(DUM_DERI+1, DUM_DERI+2, g_eps_sq_force2, g_relative_precision_flag);
-	/* Y_W -> DUM_DERI  */
-	Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-      }
-      else{
-	gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], VOLUME/2);
-	/* Invert first Q_+ */
-	/* Y_o -> DUM_DERI  */
-	count10 += bicg(DUM_DERI, DUM_DERI+2, g_eps_sq_force2, g_relative_precision_flag);
-	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME/2);
-	/* Now Q_- */
-	/* X_o -> DUM_DERI+1 */
-	g_mu = -g_mu;
-	count11 += bicg(DUM_DERI+1,DUM_DERI, g_eps_sq_force2, g_relative_precision_flag);
-	g_mu = -g_mu;   
-      }
-    }
-    if(j==2){
-      /* Second term coming from the second field */
-      /* The sign is opposite!! */
-      mul_r(g_spinor_field[DUM_DERI], -1., g_spinor_field[second_psf], VOLUME/2);
-      g_mu = g_mu1;
-    }
-    if(j == 3) {
-      /* First term coming from the second field */
-      /* Multiply with W_+ */
-      g_mu = g_mu2;	
-      Qtm_plus_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[third_psf]);
-      g_mu = g_mu3;
-      if(1){
-	/* If CG is used anyhow */
-	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME/2);
-	/* Invert Q_{+} Q_{-} */
-	/* X_W -> DUM_DERI+1 */
-	count20 += solve_cg(DUM_DERI+1, DUM_DERI+2, g_eps_sq_force3, g_relative_precision_flag);
-	/* Y_W -> DUM_DERI  */
-	Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-      }
-      else{
-	gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], VOLUME/2);
-	/* Invert first Q_+ */
-	/* Y_o -> DUM_DERI  */
-	count20 += bicg(DUM_DERI, DUM_DERI+2, g_eps_sq_force3, g_relative_precision_flag);
-	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME/2);
-	/* Now Q_- */
-	/* X_o -> DUM_DERI+1 */
-	g_mu = -g_mu;
-	count21 += bicg(DUM_DERI+1,DUM_DERI, g_eps_sq_force3, g_relative_precision_flag);
-	g_mu = -g_mu;   
-      }
-    }
-    if(j == 4) {
-      /* Second term coming from the third field */
-      /* The sign is opposite!! */
-      mul_r( g_spinor_field[DUM_DERI], -1., g_spinor_field[third_psf], VOLUME/2);
-      g_mu = g_mu2;
-    }
-    /* apply Hopping Matrix M_{eo} */
-    /* to get the even sites of X */
-    H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
-    /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, DUM_DERI, DUM_DERI+2); 
-    
-    /* to get the even sites of Y */
-    H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
-    /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
-    g_mu = g_mu1;
-  }
-#ifdef _KOJAK_INST
-#pragma pomp inst end(deri)
-#endif
-}
 
 
 /*----------------------------------------------------------------------------*/
@@ -715,36 +584,10 @@ void deri_stout_smearing()
 #endif
 }
 
-/*------------------------------------------------------------------------*/
-
-void fermion_momenta(double step) {
-  int i,mu;
-  double tmp;
-  su3adj *xm,*deriv;
-
-  if(use_stout_flag == 1)
-    deri_stout_smearing(); 
-  else
-    deri(); 
-
-#ifdef MPI
-  xchange_deri();
-#endif
-  for(i = 0; i < VOLUME; i++){
-    for(mu=0;mu<4;mu++) {
-      xm=&moment[i][mu];
-      deriv=&df0[i][mu];
-      /* This 2* is coming from what?             */
-      /* From a missing factor 2 in trace_lambda? */
-      tmp = 2.*step;
-      _minus_const_times_mom(*xm,tmp,*deriv); 
-    }
-  }
-}
 
 /*----------------------------------------------------------------------------*/
 
-void update_fermion_momenta(double step, const int S) {
+void update_fermion_momenta(double step, const int S, const int do_all) {
   int i,mu;
   double tmp;
   su3adj *xm,*deriv;
@@ -754,18 +597,28 @@ void update_fermion_momenta(double step, const int S) {
   static int co = 0;
   co++;
 
-  derivative_psf(S);
+  if(do_all == 1) {
+    /* set deriv to zero here */
+    derivative_psf(0, 1);
+    for(i = 1; i < g_nr_of_psf; i++) {
+      /* and add all the rest */
+      derivative_psf(i, 0);
+    }
+  }
+  else {
+    derivative_psf(S, 1);
+  }
 #ifdef MPI
   xchange_deri();
 #endif
-  for(i = 0; i < VOLUME; i++){
+  for(i = 0; i < VOLUME; i++) {
     for(mu=0;mu<4;mu++){
       xm=&moment[i][mu];
       deriv=&df0[i][mu];
       if(g_debug_level > 0) {
 	sum2 = _su3adj_square_norm(*deriv); 
 	sum+= sum2;
-	if(g_proc_id == 0  && co < 20 && g_debug_level > 2) {
+	if(g_debug_level > 2 && co < 20 && g_proc_id == 0) {
 	  printf("histogram%d %e\n",S,sum2);
 	  fflush(stdout);
 	}
@@ -840,13 +693,13 @@ void leap_frog(double step, int m, int nsmall) {
   /* initialize the counter for the inverter */
   count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;
   /* adjust the step-size to standard convention */
-  step*=0.7071067811865;
+  /*   step*=0.7071067811865; */
   smallstep=step/nsmall;
 
 #ifdef _GAUGE_COPY
   update_backward_gauge();
 #endif
-  fermion_momenta(0.5*step);
+  update_fermion_momenta(0.5*step, 0, 1);
   gauge_momenta(0.5*smallstep);
   for(i=1;i<m;i++){
     for(j=0;j<nsmall;j++){
@@ -856,7 +709,7 @@ void leap_frog(double step, int m, int nsmall) {
 #ifdef _GAUGE_COPY
     update_backward_gauge();
 #endif
-    fermion_momenta(step);
+    update_fermion_momenta(step, 0, 1);
   }
   for(j=1;j<nsmall;j++){
     update_gauge(smallstep); 
@@ -867,7 +720,7 @@ void leap_frog(double step, int m, int nsmall) {
 #ifdef _GAUGE_COPY
   update_backward_gauge();
 #endif
-  fermion_momenta(0.5*step);
+  update_fermion_momenta(0.5*step, 0, 1);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -879,13 +732,13 @@ void sexton(double step, int m, int nsmall) {
   /* initialize the counter for the inverter */
   count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;
   /* adjust the step-size to standard convention */
-  step*=0.7071067811865;
+  /*   step*=0.7071067811865; */
   smallstep=step/nsmall;
 
 #ifdef _GAUGE_COPY
   update_backward_gauge();
 #endif
-  fermion_momenta(step/6.);
+  update_fermion_momenta(step/6., 0, 1);
   printf("Entering  \n");
   gauge_momenta(smallstep/12.);
   for(i=1;i<m;i++){
@@ -899,7 +752,7 @@ void sexton(double step, int m, int nsmall) {
 #ifdef _GAUGE_COPY
     update_backward_gauge();
 #endif
-    fermion_momenta(2.*step/3.);
+    update_fermion_momenta(2.*step/3., 0, 1);
     for(j=0;j<nsmall;j++) {
       update_gauge(smallstep/4.);
       gauge_momenta(smallstep/3.);
@@ -909,7 +762,7 @@ void sexton(double step, int m, int nsmall) {
 #ifdef _GAUGE_COPY
     update_backward_gauge();
 #endif
-    fermion_momenta(step/3.);
+    update_fermion_momenta(step/3., 0, 1);
   }
   for(j=0;j<nsmall;j++){
     update_gauge(smallstep/4.);
@@ -920,7 +773,7 @@ void sexton(double step, int m, int nsmall) {
 #ifdef _GAUGE_COPY
   update_backward_gauge();
 #endif
-  fermion_momenta(2.*step/3.);
+  update_fermion_momenta(2*step/3., 0, 1);
   for(j=1;j<nsmall;j++){
     update_gauge(smallstep/4.);
     gauge_momenta(smallstep/3.);
@@ -934,7 +787,7 @@ void sexton(double step, int m, int nsmall) {
 #ifdef _GAUGE_COPY
   update_backward_gauge();
 #endif
-  fermion_momenta(step/6.);
+  update_fermion_momenta(step/6., 0, 1);
 }
 
 /*----------------------------------------------------------------------------*/

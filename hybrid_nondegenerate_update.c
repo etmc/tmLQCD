@@ -151,8 +151,9 @@ void leap_frog_ND(double step, int m, int nsmall,int phmc_no_flavours) {
   update_backward_gauge();
 #endif
   fermion_momenta_ND(0.5*step);
-  if(phmc_no_flavours==0)
-   fermion_momenta(0.5*step);
+  if(phmc_no_flavours==0) {
+    update_fermion_momenta(0.5*step, 0, 1);
+  }
   gauge_momenta(0.5*smallstep);
   for(i=1;i<m;i++){
     for(j=0;j<nsmall;j++){
@@ -164,8 +165,9 @@ void leap_frog_ND(double step, int m, int nsmall,int phmc_no_flavours) {
 #endif
 
     fermion_momenta_ND(step);
-    if(phmc_no_flavours==0)
-     fermion_momenta(step);
+    if(phmc_no_flavours==0) {
+      update_fermion_momenta(step, 0, 1);
+    }
   }
   for(j=1;j<nsmall;j++){
     update_gauge(smallstep); 
@@ -177,8 +179,9 @@ void leap_frog_ND(double step, int m, int nsmall,int phmc_no_flavours) {
   update_backward_gauge();
 #endif
   fermion_momenta_ND(0.5*step);
-  if(phmc_no_flavours==0)
-   fermion_momenta(0.5*step);
+  if(phmc_no_flavours==0) {
+    update_fermion_momenta(0.5*step, 0, 1);
+  }
 
 }
 
@@ -201,8 +204,9 @@ void sexton_ND(double step, int m, int nsmall,int phmc_no_flavours) {
   update_backward_gauge();
 #endif
   fermion_momenta_ND(step/6.);
-  if(phmc_no_flavours==0)
-    fermion_momenta(step/6.);
+  if(phmc_no_flavours==0) {
+    update_fermion_momenta(step/6., 0, 1);
+  }
   gauge_momenta(smallstep/12.);
   for(i=1;i<m;i++){
     for(j=0;j<nsmall;j++){
@@ -216,8 +220,9 @@ void sexton_ND(double step, int m, int nsmall,int phmc_no_flavours) {
     update_backward_gauge();
 #endif
     fermion_momenta_ND(2.*step/3.);
-    if(phmc_no_flavours==0)
-      fermion_momenta(2.*step/3.);
+    if(phmc_no_flavours==0) {
+      update_fermion_momenta(2.*step/3., 0, 1);
+    }
     for(j=0;j<nsmall;j++) {
       update_gauge(smallstep/4.);
       gauge_momenta(smallstep/3.);
@@ -228,8 +233,9 @@ void sexton_ND(double step, int m, int nsmall,int phmc_no_flavours) {
     update_backward_gauge();
 #endif
     fermion_momenta_ND(step/3.);
-    if(phmc_no_flavours==0)
-      fermion_momenta(step/3.);
+    if(phmc_no_flavours==0) {
+      update_fermion_momenta(step/3., 0, 1);
+    }
   }
   for(j=0;j<nsmall;j++){
     update_gauge(smallstep/4.);
@@ -241,8 +247,9 @@ void sexton_ND(double step, int m, int nsmall,int phmc_no_flavours) {
   update_backward_gauge();
 #endif
   fermion_momenta_ND(2.*step/3.);
-  if(phmc_no_flavours==0)
-    fermion_momenta(2.*step/3.);
+  if(phmc_no_flavours==0) {
+    update_fermion_momenta(2.*step/3., 0, 1);
+  }
   for(j=1;j<nsmall;j++){
     update_gauge(smallstep/4.);
     gauge_momenta(smallstep/3.);
@@ -257,6 +264,7 @@ void sexton_ND(double step, int m, int nsmall,int phmc_no_flavours) {
   update_backward_gauge();
 #endif
   fermion_momenta_ND(step/6.);
-  if(phmc_no_flavours==0)
-    fermion_momenta(step/6.);
+  if(phmc_no_flavours==0) {
+    update_fermion_momenta(step/6., 0, 1);
+  }
 }

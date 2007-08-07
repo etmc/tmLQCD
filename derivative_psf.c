@@ -25,14 +25,16 @@
 extern int ITER_MAX_BCG;
 extern int ITER_MAX_CG;
 
-void derivative_psf(const int nr) {
+void derivative_psf(const int nr, const int set_zero) {
   int i,mu;
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(derivativepsf)
 #endif
-  for(i=0;i<(VOLUME+RAND);i++){ 
-    for(mu=0;mu<4;mu++){ 
-      _zero_su3adj(df0[i][mu]);
+  if(set_zero == 1) {
+    for(i=0;i<(VOLUME+RAND);i++){ 
+      for(mu=0;mu<4;mu++){ 
+	_zero_su3adj(df0[i][mu]);
+      }
     }
   }
 
