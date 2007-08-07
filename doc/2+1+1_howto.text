@@ -114,8 +114,7 @@ value, e.g.
 int   MAXPOW = 104;
 
 This _must_ be identical to the degree used in the hmc code. If not,
-the PHMC will fail. (Stimmt das hier, da gibt es doch ein
-Ambiguitiaet, oder? ist nicht der Parameter im input file MAXPOW +- 1?)
+the PHMC will fail.
 
 To actually compile the code the CLN library is needed, which is
 available from 
