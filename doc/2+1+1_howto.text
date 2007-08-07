@@ -6,10 +6,21 @@
 
 Introduction:
 
-In this HOWTO i will describe how to run the PHMC code with "2+1+1" setup. "2+1+1" in this
-context means that we have two degenerate LIGHT quarks and two non-degenerate HEAVY quarks.
-This HOWTO addresses the setup of all necessary input files and also the maintenance of the 
-thermalization progress due to necessary readjustments of the polynomial.
+In this HOWTO i shall describe how to run the PHMC code with "2+1+1"
+setup. "2+1+1" in this context means that we have two degenerate LIGHT
+quarks and two non-degenerate HEAVY quarks. This HOWTO addresses the
+setup of all necessary input files and also the monitoring of the
+thermalization progress due to necessary re-adjustments of the
+polynomial.
+
+ 0. Building the code
+ ------------------------------------
+
+Well, this should be quite automatic. However, you need lapack and
+blas in order to build the phmc_tm executable. Make sure that you have
+both available and configure/make the hmc code accordingly. If
+successful, you will find the executable phmc_tm in your build
+directory.
 
  1. Setup the "hmc.input" file
  ------------------------------------
@@ -95,9 +106,23 @@ e.g. if you have PhmcStildeMin = 0.008 , PhmcStildeMax=3.6
 then ratio = 0.002222222222222
 and you have to set EPSILON to this value in CLN notation:
 
-  EPSILON =  "0.00222222222222222e+0_700",
+  EPSILON =  "0.00222222222222222e+0_700"
 
-Save the file and run on command line 
+Moreover, you have to set the degree of the polynomial to the correct
+value, e.g.
+
+int   MAXPOW = 104;
+
+This _must_ be identical to the degree used in the hmc code. If not,
+the PHMC will fail. (Stimmt das hier, da gibt es doch ein
+Ambiguitiaet, oder? ist nicht der Parameter im input file MAXPOW +- 1?)
+
+To actually compile the code the CLN library is needed, which is
+available from 
+   http://www.ginac.de/CLN/
+Please download it and install it in a convenient place. CLN provides
+arbitrary precision. Edit the Makefile accordingly and run on command
+line
 
  make
 
@@ -125,7 +150,7 @@ cat job.12345.out|grep -A6 LAMBDA
  hmc.input file. To get the unscaled eigenvalue you have to multiply the 
 values by PhmcStildeMax.
 If the eigenvalues you measured are outside the approximation interval
- [PhmcStildeMin,PhmcStildeMax] you have to readjust these values (in hmc.input) and 
+ [PhmcStildeMin,PhmcStildeMax] you have to re-adjust these values (in hmc.input) and 
 also regenerate the files 
 
  Square_root_BR_roots.dat

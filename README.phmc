@@ -1,3 +1,6 @@
+See doc/2+1+1_howto.text for more details
+
+
 How it roughly works:
 - Decide for a fixed order n of the less accurate polynomial
   P
