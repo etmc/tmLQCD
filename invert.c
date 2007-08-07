@@ -231,7 +231,7 @@ int main(int argc,char *argv[]) {
     }
 
     if(use_stout_flag == 1) {
-      if( stout_smear(stout_rho , stout_no_iter) != 0 ) exit(1) ;
+      if( stout_smear_gauge_field(stout_rho , stout_no_iter) != 0 ) exit(1) ;
 
       plaquette_energy = measure_gauge_action();
 
