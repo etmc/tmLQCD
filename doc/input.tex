@@ -374,6 +374,50 @@ supported input paramters:
   
 \end{enumerate}
 
+\noindent PHMC related input parameters, where the heavy part of the actions
+reads
+\begin{equation}
+  \label{eq:haction}
+  S_{F,h} = \bar\psi_h\left[ \delta_{x,y}(1+i\gamma_5\bar\mu\tau^3 +
+    \bar\epsilon\tau^1)
+  - \kappa\sum_\mu \delta_{x,y+\mu}(1+\gamma_\mu)U_{y,\mu}\right] \psi_h
+\end{equation}
+For more details see also the file {\ttfamily Status-Phmc.pdf} in the
+very same directory.
+\begin{enumerate}
+\item {\ttfamily PhmcMuBar}:\\
+  The average mass of the heavy doublet multiplied with $2\kappa$
+
+\item {\ttfamily PhmcEpsBar}:\\
+  The splitting mass multiplied with $2\kappa$
+
+\item {\ttfamily PhmcNoFlavours}:\\
+  no. of flavours to simulate. Possible options are {\ttfamily 2+1+1}
+  or just {\ttfamily 2}.
+
+\item {\ttfamily PhmcRecEVInterval}:\\
+  If you want to calculate the eigenvalues every n'th trajectory
+  then set this parameter to n if you want no eigenvalues set this to 0
+  during thermalization you should set this to 1 or 2 to follow the evolution
+  of smallest and largest eigenvalue to adjust the approximation interval
+  of the polynomial
+
+\item {\ttfamily PhmcStildeMin}:\\
+  lower bound for the approximation interval of the polynomial
+
+\item {\ttfamily PhmcStildeMax}:\\
+  upper bound for the approximation interval of the polynomial
+
+\item {\ttfamily PhmcDegreeOfP}:\\
+  degree of the less precise polynomial $P$. Must be identical to the
+  degree used to compute the roots.
+
+\item {\ttfamily PhmcPrecisionPtilde}:\\
+  Precision of the more precise polynomial $\tilde P$ used in the
+  heat-bath and the acceptance step of the PHMC.
+
+\end{enumerate}
+
 \subsection{Reread functionality}
 
 If you store a file with name {\ttfamily hmc.reread} in the working
