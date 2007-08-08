@@ -43,7 +43,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	init_gauge_field init_geometry_indices init_spinor_field \
 	init_dirac_halfspinor xchange_halffield stout_smear \
 	init_stout_smear_vars stout_smear_force \
-	hybrid_nondegenerate_update Nondegenerate_Matrix \
+	derivative_nondegenerate Nondegenerate_Matrix \
         chebyshev_polynomial_nd Ptilde_nd  \
 	init_chi_spinor_field init_chi_copy reweighting_factor_nd \
 	init_bispinor_field eigenvalues_bi update_tm_nd 

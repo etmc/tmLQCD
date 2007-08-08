@@ -31,7 +31,7 @@
 #include "stout_smear.h"
 #include "stout_smear_force.h"
 #include "phmc.h"
-#include "hybrid_nondegenerate_update.h"
+#include "derivative_nondegenerate.h"
 #include "hybrid_update.h"
 
 extern int ITER_MAX_BCG;
@@ -589,7 +589,8 @@ void deri_stout_smearing()
 
 /*----------------------------------------------------------------------------*/
 
-void update_fermion_momenta(double step, const int S, const int do_all) {
+void update_fermion_momenta(double step, const int S, 
+			    const int do_all) {
   int i,mu;
   double tmp;
   su3adj *xm,*deriv;
@@ -599,56 +600,60 @@ void update_fermion_momenta(double step, const int S, const int do_all) {
   static int co = 0;
   co++;
 
-  if(do_all == 1) {
-    /* set deriv to zero here */
-    derivative_psf(0, 1);
-    for(i = 1; i < g_nr_of_psf; i++) {
-      /* and add all the rest */
-      derivative_psf(i, 0);
-    }
-  }
-  else {
-    derivative_psf(S, 1);
-  }
-#ifdef MPI
-  xchange_deri();
-#endif
-  for(i = 0; i < VOLUME; i++) {
-    for(mu=0;mu<4;mu++){
-      xm=&moment[i][mu];
-      deriv=&df0[i][mu];
-      if(g_debug_level > 0) {
-	sum2 = _su3adj_square_norm(*deriv); 
-	sum+= sum2;
-	if(g_debug_level > 2 && co < 20 && g_proc_id == 0) {
-	  printf("histogram%d %e\n",S,sum2);
-	  fflush(stdout);
-	}
-	if(sum2 > max) max = sum2;
+  if(!(g_running_phmc && phmc_no_flavours == 2)) {
+    if(do_all == 1) {
+      /* set deriv to zero here */
+      derivative_psf(0, 1);
+      for(i = 1; i < g_nr_of_psf; i++) {
+	/* and add all the rest */
+	derivative_psf(i, 0);
       }
-      /* This 2* is coming from what?             */
-      /* From a missing factor 2 in trace_lambda? */
-      tmp = 2.*step;
-      _minus_const_times_mom(*xm,tmp,*deriv); 
     }
-  }
-  if(g_debug_level > 0) {
+    else {
+      derivative_psf(S, 1);
+    }
 #ifdef MPI
-    MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    sum = sum2;
-    MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-    max = sum2;
+    xchange_deri();
 #endif
-    if(g_proc_id == 0) {
-      /* The factor 2 from above is missing here */
-      printf("fermionforce%d %e max %e\n", S, sum/((double)(VOLUME*g_nproc))/4., max);
-      fflush(stdout);
+    for(i = 0; i < VOLUME; i++) {
+      for(mu=0;mu<4;mu++){
+	xm=&moment[i][mu];
+	deriv=&df0[i][mu];
+	if(g_debug_level > 0) {
+	  sum2 = _su3adj_square_norm(*deriv); 
+	  sum+= sum2;
+	  if(g_debug_level > 2 && co < 20 && g_proc_id == 0) {
+	    printf("histogram%d %e\n",S,sum2);
+	    fflush(stdout);
+	  }
+	  if(sum2 > max) max = sum2;
+	}
+	/* This 2* is coming from what?             */
+	/* From a missing factor 2 in trace_lambda? */
+	tmp = 2.*step;
+	_minus_const_times_mom(*xm,tmp,*deriv); 
+      }
+    }
+    if(g_debug_level > 0) {
+#ifdef MPI
+      MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+      sum = sum2;
+      MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+      max = sum2;
+#endif
+      if(g_proc_id == 0) {
+	/* The factor 2 from above is missing here */
+	printf("fermionforce%d %e max %e\n", S, sum/((double)(VOLUME*g_nproc))/4., max);
+	fflush(stdout);
+      }
     }
   }
 
   /* the 1+1 part */
-  if(g_running_phmc && (do_all || (S == 0))) {
-    deri_nondegenerate(); 
+  if(g_running_phmc && (do_all || (phmc_heavy_timescale == S))) {
+    sum = 0.;
+    max = 0.;
+    derivative_nondegenerate(); 
     
 #ifdef MPI
     xchange_deri();
@@ -656,10 +661,30 @@ void update_fermion_momenta(double step, const int S, const int do_all) {
     for(i = 0; i < VOLUME; i++) {
       for(mu=0;mu<4;mu++){
 	xm=&moment[i][mu];
-	
 	deriv=&df0[i][mu];
+
+	if(g_debug_level > 0) {
+	  sum2 = _su3adj_square_norm(*deriv); 
+	  sum+= sum2;
+	  if(sum2 > max) max = sum2;
+	}
+
 	tmp = -2.*step*phmc_Cpol*phmc_invmaxev;
 	_minus_const_times_mom(*xm,tmp,*deriv); 
+      }
+    }
+    if(g_debug_level > 0) {
+#ifdef MPI
+      MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+      sum = sum2;
+      MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+      max = sum2;
+#endif
+      if(g_proc_id == 0) {
+	printf("fermionforceheavydoubletts%d %e max %e\n", S, 
+	       sum/((double)(VOLUME*g_nproc))/4.*phmc_Cpol*phmc_invmaxev, 
+	       max*phmc_Cpol*phmc_invmaxev);
+	fflush(stdout);
       }
     }
   }
@@ -759,7 +784,6 @@ void sexton(double step, int m, int nsmall) {
   update_backward_gauge();
 #endif
   update_fermion_momenta(step/6., 0, 1);
-  printf("Entering  \n");
   gauge_momenta(smallstep/12.);
   for(i=1;i<m;i++){
     for(j=0;j<nsmall;j++){

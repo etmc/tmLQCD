@@ -75,6 +75,7 @@ extern "C"
   extern int stout_no_iter;
   extern int use_stout_flag;
   extern int phmc_no_flavours;
+  extern int phmc_heavy_timescale;
   extern int phmc_compute_evs;
   extern int compute_evs;
   extern int no_eigenvalues;

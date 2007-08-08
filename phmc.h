@@ -19,7 +19,6 @@ extern double * phmc_dop_cheby_coef;
 /* degree of coefs \tilde P */
 extern int phmc_ptilde_n_cheby;
 extern double * phmc_ptilde_cheby_coef;
-extern int phmc_timescale;
 #else
 double phmc_Cpol;
 double phmc_cheb_evmin, phmc_cheb_evmax;
@@ -29,7 +28,6 @@ int phmc_dop_n_cheby;
 double * phmc_dop_cheby_coef;
 int phmc_ptilde_n_cheby;
 double * phmc_ptilde_cheby_coef;
-int phmc_timescale;
 #endif
 
 

@@ -83,6 +83,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   int stout_no_iter;
   int use_stout_flag;
   int phmc_no_flavours;
+  int phmc_heavy_timescale;
   int compute_evs;
   int phmc_compute_evs;
   double stilde_max;
@@ -198,6 +199,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x SUBEVCG
 %x NOEV
 %x PRECEV
+%x HEAVYTS
 
 %x COMMENT
 %x ERROR
@@ -271,6 +273,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^SourceFormat{SPC}*={SPC}*                 BEGIN(SOURCEFORMAT);
 ^SourceTimeSlice{SPC}*={SPC}*              BEGIN(SOURCETS);
 ^ExtIntStepsGauge{SPC}*={SPC}*             BEGIN(INT0);
+^IntegrationStepsGauge{SPC}*={SPC}*        BEGIN(INT0);
 ^N_G{SPC}*={SPC}*                          BEGIN(INT0);
 ^ExtIntStepsMu0{SPC}*={SPC}*               BEGIN(INT1);
 ^IntegrationStepsMu{SPC}*={SPC}*           BEGIN(INT1);
@@ -320,6 +323,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^PhmcDegreeOfP{SPC}*={SPC}*                BEGIN(DEGP);
 ^SplittedPropagator{SPC}*={SPC}*           BEGIN(SPLITPROP);
 ^SourceLocation{SPC}*={SPC}*               BEGIN(SRCLOC);
+^TimeScaleHeavyDoublet{SPC}*={SPC}*        BEGIN(HEAVYTS);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -917,12 +921,17 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 <SUBEVCG>yes {
   sub_evs_cg_flag = 1;
-  if(verbose!=0) printf("project out eigenvector subspace = %d\n");
+  if(verbose!=0) printf("project out eigenvector subspace\n");
 }
 <SUBEVCG>no {
   sub_evs_cg_flag = 0;
-  if(verbose!=0) printf("Do no project out eigenvector subspace = %d\n");
+  if(verbose!=0) printf("Do no project out eigenvector subspace\n");
 }
+<HEAVYTS>{DIGIT}+ {
+  phmc_heavy_timescale = atoi(yytext);
+  if(verbose!=0) printf("Integrate heavy doublet on timescale %d\n", phmc_heavy_timescale);
+}
+
 
 <*>^#                       BEGIN(COMMENT);
 <SEED,KAPPA,ACCPTILDE,ACCHFIN,RECEV,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
@@ -935,7 +944,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <SMIN,SMAX,DEGP,PRECEV,NOEV>#  BEGIN(COMMENT);
 <PCOMPUTEEVS,COMPUTEEVS,SPLITPROP,SRCLOC>#  BEGIN(COMMENT);
 <SOURCETS,SUBEVCG>#   BEGIN(COMMENT);
-<SOURCETS,GAUGERPREC,GAUGEWPREC>#   BEGIN(COMMENT);
+<SOURCETS,GAUGERPREC,GAUGEWPREC,HEAVYTS>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -1166,6 +1175,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Unknown source_location in line %d.\n Must be an integer. Exiting...!\n",line_of_file);
   exit(1);
 }
+<HEAVYTS>. {
+  printf("Uknown value for TimeScaleHeavyDoublet in line %d\n", line_of_file);
+  exit(1);
+}
 
 
 <INITIAL>.                        BEGIN(ERROR);
@@ -1303,6 +1316,7 @@ int read_input(char * conf_file){
   eigenvalue_precision = _default_eigenvalue_precision;
   no_eigenvalues = _default_no_eigenvalues;
   sub_evs_cg_flag = _default_sub_evs_cg_flag;
+  phmc_heavy_timescale = _default_phmc_heavy_timescale;
   /********************************************/
 
   if ((yyin = fopen(conf_file, "rt")) == NULL){

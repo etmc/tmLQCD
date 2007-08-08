@@ -29,7 +29,6 @@
 #include "hybrid_update.h"
 
 /* IF PHMC */
-#include "hybrid_nondegenerate_update.h"
 #include "Nondegenerate_Matrix.h"
 #include "chebyshev_polynomial_nd.h"
 #include "Ptilde_nd.h"
@@ -263,19 +262,10 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
   /*run the trajectory*/
   if(integtyp == 1) {
-    /* Leap-frog integration scheme */
-
-    /* COMMENTED IF PHMC used 
     leap_frog(dtau, Nsteps, nsmall); 
-    */    
-
-    /* IF PHMC */
-
-    leap_frog_ND(dtau, Nsteps, nsmall,phmc_no_flavours); 
   }
   else if(integtyp == 2) {
-    /* Sexton Weingarten integration scheme */
-    sexton_ND(dtau, Nsteps, nsmall,phmc_no_flavours);
+    sexton(dtau, Nsteps, nsmall);
   }
   else if(integtyp == 3) {
     ext_leap_frog(n_int, tau, g_nr_of_psf, halfstep);
