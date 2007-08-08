@@ -27,10 +27,12 @@
 #include "gamma.h"
 #include "get_staples.h"
 #include "update_backward_gauge.h"
-#include "hybrid_update.h"
 #include "read_input.h"
 #include "stout_smear.h"
 #include "stout_smear_force.h"
+#include "phmc.h"
+#include "hybrid_nondegenerate_update.h"
+#include "hybrid_update.h"
 
 extern int ITER_MAX_BCG;
 extern int ITER_MAX_CG;
@@ -641,6 +643,24 @@ void update_fermion_momenta(double step, const int S, const int do_all) {
       /* The factor 2 from above is missing here */
       printf("fermionforce%d %e max %e\n", S, sum/((double)(VOLUME*g_nproc))/4., max);
       fflush(stdout);
+    }
+  }
+
+  /* the 1+1 part */
+  if(g_running_phmc && (do_all || (S == 0))) {
+    deri_nondegenerate(); 
+    
+#ifdef MPI
+    xchange_deri();
+#endif
+    for(i = 0; i < VOLUME; i++) {
+      for(mu=0;mu<4;mu++){
+	xm=&moment[i][mu];
+	
+	deriv=&df0[i][mu];
+	tmp = -2.*step*phmc_Cpol*phmc_invmaxev;
+	_minus_const_times_mom(*xm,tmp,*deriv); 
+      }
     }
   }
 }

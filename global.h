@@ -101,6 +101,7 @@ EXTERN spinor ** g_chi_up_spinor_field;
 EXTERN spinor ** g_chi_dn_spinor_field;
 EXTERN spinor * g_chi_up_copy;
 EXTERN spinor * g_chi_dn_copy;
+EXTERN int g_running_phmc;
 /* End IF PHMC  */
 
 EXTERN spinor ** g_csg_field[4];

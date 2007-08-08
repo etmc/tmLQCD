@@ -128,6 +128,7 @@ int main(int argc,char *argv[]) {
 
   /* END PHMC ... to be used almost at the end of the file */
 
+  g_running_phmc = 1;
   DUM_DERI = 6;
   DUM_SOLVER = DUM_DERI+7;
   DUM_MATRIX = DUM_SOLVER+6;

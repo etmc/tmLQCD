@@ -857,11 +857,11 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   if(verbose!=0) printf("make %d stout iterations!\n", stout_no_iter);
 }
 <PHMCFLAV>2"+"1"+"1 {
-  phmc_no_flavours=0;
+  phmc_no_flavours=4;
   if(verbose!=0) printf("Simulate 2+1+1 flavours (1+1 PHMC).\n");
 }
 <PHMCFLAV>1"+"1 {
-  phmc_no_flavours=1;
+  phmc_no_flavours=2;
   if(verbose!=0) printf("Simulate 1+1 flavours only (1+1 PHMC).\n");
 }
 <PCOMPUTEEVS>yes {

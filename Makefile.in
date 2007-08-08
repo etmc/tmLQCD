@@ -5,7 +5,8 @@ abs_top_builddir = @abs_top_builddir@
 builddir = @builddir@
 subdir = .
 
-
+AR = ar
+RANLIB = @RANLIB@
 CC = @CC@
 CCDEP = @CCDEP@
 CFLAGS = @CFLAGS@ 
@@ -29,11 +30,6 @@ COMPILE = ${CC} $(DEFS) $(INCLUDES) -o $@ ${CFLAGS}
 
 SMODULES = Hopping_Matrix_nocom Hopping_Matrix tm_operators
 
-PMODULES = init_chi_spinor_field init_chi_copy reweighting_factor_nd \
-        chebyshev_polynomial_nd Ptilde_nd  Nondegenerate_Matrix \
-	init_bispinor_field eigenvalues_bi \
-	update_tm_nd hybrid_nondegenerate_update
-
 MODULES = read_input gamma hybrid_update observables start \
 	expo 2mn_integrator get_staples update_backward_gauge \
 	measure_rectangles get_rectangle_staples  \
@@ -42,18 +38,23 @@ MODULES = read_input gamma hybrid_update observables start \
 	source_generation boundary io update_tm ranlxd  \
 	mpi_init linsolve deriv_Sb eigenvalues \
 	xchange_deri geometry_eo linalg_eo \
-	init_moment_field init_gauge_tmp sub_low_ev \
+	init_moment_field init_gauge_tmp  \
 	derivative_psf xchange_field xchange_gauge \
 	init_gauge_field init_geometry_indices init_spinor_field \
 	init_dirac_halfspinor xchange_halffield stout_smear \
-	init_stout_smear_vars stout_smear_force
+	init_stout_smear_vars stout_smear_force \
+	hybrid_nondegenerate_update Nondegenerate_Matrix \
+        chebyshev_polynomial_nd Ptilde_nd  \
+	init_chi_spinor_field init_chi_copy reweighting_factor_nd \
+	init_bispinor_field eigenvalues_bi update_tm_nd 
+
 
 NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert gwc2ildg \
 	ildg2gwc single2double double2single reducenoise gen_sources 
 
-ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES} ${PMODULES} phmc_tm
+ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES} phmc_tm
 SUBDIRS = linalg solver
 
 .SUFFIXES:
@@ -75,14 +76,20 @@ read_input.c: ${srcdir}/read_input.l
 	${LEX} -i -t $< > ${srcdir}/read_input.c
 endif
 
+libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
+	@rm -f libhmc.a
+	@${AR} cru libhmc.a ${addsuffix .o, ${MODULES} ${SMODULES}}
+	@$(RANLIB) libhmc.a
+	@cp libhmc.a ${top_builddir}/lib/libhmc.a
+
 #${addsuffix .o, ${ALLOBJ}}: %.o: ${srcdir}/%.c %.d Makefile
 #	${COMPILE} ${OPTARGS} -c $< 
 
-$(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES} ${PMODULES})): %.o: ${srcdir}/%.c %.d Makefile
+$(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} ${OPTARGS} -c $< 
 
 #here we don't need optimisation
-$(addsuffix .o,$(filter ${NOOPTMOD},${MODULES} ${PMODULES})): %.o: ${srcdir}/%.c %.d Makefile
+$(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} -c $< 
 
 ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile
@@ -91,11 +98,11 @@ ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile
 ${addsuffix .o, ${PROGRAMS} phmc_tm}: %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} ${OPTARGS} -c $<
 
-${PROGRAMS}: %: %.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} all-recursive
-	 ${LINK} ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} $@.o $(LIBS)
+${PROGRAMS}: %: %.o libhmc.a all-recursive
+	 ${LINK}  $@.o $(LIBS)
 
-phmc_tm: phmc_tm.o ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} ${addsuffix .o, ${PMODULES}} all-recursive
-	 ${LINK} ${addsuffix .o, ${MODULES}} ${addsuffix .o, ${SMODULES}} ${addsuffix .o, ${PMODULES}} $@.o $(LIBS)
+phmc_tm: phmc_tm.o libhmc.a all-recursive
+	 ${LINK}  $@.o $(LIBS)
 
 dep: $(addsuffix .d,$(ALLOBJ))
 
@@ -113,4 +120,5 @@ distclean: distclean-recursive Makefile
 	flex_read_input ${PROGRAMS} all-recursive \
 	all-debug-recursive all-profile-recursive \
 	clean-recursive distclean-recursive \
-	compile-clean-recursive $(LINKLIBS)
+	compile-clean-recursive $(LINKLIBS) \
+	libhmc.a

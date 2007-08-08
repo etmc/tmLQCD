@@ -46,9 +46,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
 		      const int maxmin) {
 
 
-  /*
-  static spinor * eigenvectors_ = NULL;
-  */
   static bispinor * eigenvectors_bi_ = NULL;
   static int allocated = 0;
   static bispinor  *eigenvectors_bi = NULL;

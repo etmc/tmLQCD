@@ -27,6 +27,8 @@
 #include"solver/mr.h"
 #include"solver/gcr.h"
 
+#include"solver/sub_low_ev.h"
+
 #include "solver/matrix_mult_typedef_bi.h"
 #include "solver/bicgstab_complex_bi.h"
 #include "solver/cg_her_bi.h"

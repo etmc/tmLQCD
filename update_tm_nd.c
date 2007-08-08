@@ -128,7 +128,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   }
   dontdump = 0;
 
-  if(phmc_no_flavours==0) {
+  if(phmc_no_flavours==4) {
    /* initialize the pseudo-fermion fields    */
    /* depending on g_mu1 and g_mu2 we use     */
    /* one or two pseudo-fermion fields        */
@@ -198,7 +198,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   /* check if we want only 1+1 instead of 2+1+1*/
 
 
-  if(phmc_no_flavours==0){
+  if(phmc_no_flavours==4){
 
    if(g_nr_of_psf > 1) {
      random_spinor_field(g_spinor_field[3], VOLUME/2, rngrepro);
@@ -252,7 +252,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
      }
    }
   }
-  else if(phmc_no_flavours!=0){
+  else if(phmc_no_flavours!=4){
    zero_spinor_field(g_spinor_field[first_psf],VOLUME/2);
    zero_spinor_field(g_spinor_field[second_psf],VOLUME/2);
    zero_spinor_field(g_spinor_field[third_psf],VOLUME/2);
@@ -304,7 +304,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
   /* compute the energy contributions from the pseudo-fermions */
 
-  if(phmc_no_flavours==0){
+  if(phmc_no_flavours==4){
    g_mu = g_mu1;
    if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
    chrono_guess(g_spinor_field[2], g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
@@ -409,7 +409,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   /* END IF PHMC */
 
 
-  if(phmc_no_flavours==0) {
+  if(phmc_no_flavours == 4) {
     if(g_nr_of_psf > 1) {
      g_mu = g_mu1;
      Qtm_plus_psi(g_spinor_field[DUM_DERI+5], g_spinor_field[second_psf]);

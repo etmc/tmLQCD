@@ -43,29 +43,24 @@
  *
  ********************************************/
 
-/* input is the pseudo-fermion field */
 void deri_nondegenerate() {
 
   int i, mu, j, k;
 
-
   /* Recall:  The GAMMA_5 left of  delta M_eo  is done in  deriv_Sb !!! */
-
-
   /* Re-initialize df0 */
-  for(i=0;i<(VOLUME+RAND);i++){ 
+  for(i=0;i<(VOLUME+RAND);i++) { 
     for(mu=0;mu<4;mu++){ 
       _zero_su3adj(df0[i][mu]);
     }
   }
 
-
   /* Here comes the definitions for the chi_j fields */
   /* from  j=0  (chi_0 = phi)  .....  to j = n-1 */
-  
-  for(k=1; k<(phmc_dop_n_cheby-1); k++){
-
-    L_POLY_MIN_CCONST(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], phmc_root[k-1]);
+  for(k = 1; k < (phmc_dop_n_cheby-1); k++) {
+    L_POLY_MIN_CCONST(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
+		      g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
+		      phmc_root[k-1]);
   }
 
 
@@ -75,31 +70,32 @@ void deri_nondegenerate() {
   assign(g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_up_spinor_field[phmc_dop_n_cheby-2], VOLUME/2);
   assign(g_chi_dn_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby-2], VOLUME/2);
 
-  for(j=(phmc_dop_n_cheby-1); j>=1; j--){
+  for(j=(phmc_dop_n_cheby-1); j>=1; j--) {
 
     assign(g_chi_up_spinor_field[phmc_dop_n_cheby-1], g_chi_up_spinor_field[phmc_dop_n_cheby], VOLUME/2);
     assign(g_chi_dn_spinor_field[phmc_dop_n_cheby-1], g_chi_dn_spinor_field[phmc_dop_n_cheby], VOLUME/2);
 
-    L_POLY_MIN_CCONST(g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby], g_chi_up_spinor_field[phmc_dop_n_cheby-1], g_chi_dn_spinor_field[phmc_dop_n_cheby-1], phmc_root[2*phmc_dop_n_cheby-3-j]);
-
+    L_POLY_MIN_CCONST(g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby], 
+		      g_chi_up_spinor_field[phmc_dop_n_cheby-1], g_chi_dn_spinor_field[phmc_dop_n_cheby-1], 
+		      phmc_root[2*phmc_dop_n_cheby-3-j]);
 
     assign(g_spinor_field[DUM_DERI+4], g_chi_up_spinor_field[phmc_dop_n_cheby], VOLUME/2);
     assign(g_spinor_field[DUM_DERI+5], g_chi_dn_spinor_field[phmc_dop_n_cheby], VOLUME/2);
   
     assign(g_spinor_field[DUM_DERI+2], g_chi_up_spinor_field[j-1], VOLUME/2);
     assign(g_spinor_field[DUM_DERI+3], g_chi_dn_spinor_field[j-1], VOLUME/2);
-
       
     /* Get the even parts of the  (j-1)th  chi_spinors */
-    H_eo_ND(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], EO);
+    H_eo_ND(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], 
+	    g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], EO);
 
     /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
     deriv_Sb(EO, DUM_DERI, DUM_DERI+4);      /* UP */
     deriv_Sb(EO, DUM_DERI+1, DUM_DERI+5);    /* DN */
 
-
     /* Get the even parts of the  (2N-j)-th  chi_spinors */
-    H_eo_ND(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+5], EO);
+    H_eo_ND(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], 
+	    g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+5], EO);
 
     /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
     deriv_Sb(OE, DUM_DERI+2, DUM_DERI);
@@ -117,13 +113,13 @@ void fermion_momenta_ND(double step) {
   int i,mu;
   double tmp;
   su3adj *xm,*deriv;
-
+  
   deri_nondegenerate(); 
-
+  
 #ifdef MPI
   xchange_deri();
 #endif
-  for(i = 0; i < VOLUME; i++){
+  for(i = 0; i < VOLUME; i++) {
     for(mu=0;mu<4;mu++){
       xm=&moment[i][mu];
       
@@ -131,8 +127,7 @@ void fermion_momenta_ND(double step) {
       tmp = -2.*step*phmc_Cpol*phmc_invmaxev;
       _minus_const_times_mom(*xm,tmp,*deriv); 
     }
-   }
-
+  }
 }
 
 
@@ -151,7 +146,7 @@ void leap_frog_ND(double step, int m, int nsmall,int phmc_no_flavours) {
   update_backward_gauge();
 #endif
   fermion_momenta_ND(0.5*step);
-  if(phmc_no_flavours==0) {
+  if(phmc_no_flavours==4) {
     update_fermion_momenta(0.5*step, 0, 1);
   }
   gauge_momenta(0.5*smallstep);
@@ -165,7 +160,7 @@ void leap_frog_ND(double step, int m, int nsmall,int phmc_no_flavours) {
 #endif
 
     fermion_momenta_ND(step);
-    if(phmc_no_flavours==0) {
+    if(phmc_no_flavours==4) {
       update_fermion_momenta(step, 0, 1);
     }
   }
@@ -179,7 +174,7 @@ void leap_frog_ND(double step, int m, int nsmall,int phmc_no_flavours) {
   update_backward_gauge();
 #endif
   fermion_momenta_ND(0.5*step);
-  if(phmc_no_flavours==0) {
+  if(phmc_no_flavours==4) {
     update_fermion_momenta(0.5*step, 0, 1);
   }
 
@@ -204,7 +199,7 @@ void sexton_ND(double step, int m, int nsmall,int phmc_no_flavours) {
   update_backward_gauge();
 #endif
   fermion_momenta_ND(step/6.);
-  if(phmc_no_flavours==0) {
+  if(phmc_no_flavours==4) {
     update_fermion_momenta(step/6., 0, 1);
   }
   gauge_momenta(smallstep/12.);
@@ -220,7 +215,7 @@ void sexton_ND(double step, int m, int nsmall,int phmc_no_flavours) {
     update_backward_gauge();
 #endif
     fermion_momenta_ND(2.*step/3.);
-    if(phmc_no_flavours==0) {
+    if(phmc_no_flavours==4) {
       update_fermion_momenta(2.*step/3., 0, 1);
     }
     for(j=0;j<nsmall;j++) {
@@ -233,7 +228,7 @@ void sexton_ND(double step, int m, int nsmall,int phmc_no_flavours) {
     update_backward_gauge();
 #endif
     fermion_momenta_ND(step/3.);
-    if(phmc_no_flavours==0) {
+    if(phmc_no_flavours==4) {
       update_fermion_momenta(step/3., 0, 1);
     }
   }
@@ -247,7 +242,7 @@ void sexton_ND(double step, int m, int nsmall,int phmc_no_flavours) {
   update_backward_gauge();
 #endif
   fermion_momenta_ND(2.*step/3.);
-  if(phmc_no_flavours==0) {
+  if(phmc_no_flavours==4) {
     update_fermion_momenta(2.*step/3., 0, 1);
   }
   for(j=1;j<nsmall;j++){
@@ -264,7 +259,7 @@ void sexton_ND(double step, int m, int nsmall,int phmc_no_flavours) {
   update_backward_gauge();
 #endif
   fermion_momenta_ND(step/6.);
-  if(phmc_no_flavours==0) {
+  if(phmc_no_flavours==4) {
     update_fermion_momenta(step/6., 0, 1);
   }
 }

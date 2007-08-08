@@ -35,7 +35,8 @@ libsolver_TARGETS = bicgstab_complex gmres \
 	            gcr diagonalise_general_matrix \
 	            quicksort gmres_dr lu_solve jdher \
                     jdher_bi gram-schmidt_bi gram-schmidt \
-                    bicgstab_complex_bi cg_her_bi pcg_her
+                    bicgstab_complex_bi cg_her_bi pcg_her \
+                    sub_low_ev
 
 libsolver_OBJECTS = $(addsuffix .o, ${libsolver_TARGETS})
 
@@ -70,7 +71,7 @@ libsolver.a: ${libsolver_OBJECTS} Makefile
 	@rm -f libsolver.a
 	@${AR} cru libsolver.a $(libsolver_OBJECTS)
 	@$(RANLIB) libsolver.a
-	@cp libsolver.a ../lib/libsolver.a
+	@cp libsolver.a ${top_builddir}/lib/libsolver.a
 
 # rule to generate .d files
 

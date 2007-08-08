@@ -12,4 +12,8 @@ void source_generation_nucleon(spinor * const P, spinor * const Q,
 			       const int sample, const int nstore,
 			       const int meson);
 
+void extended_pion_source(spinor * const P, spinor * const Q,
+			  spinor * const R, spinor * const S,
+			  const int t0,
+			  const double px, const double py, const double pz);
 #endif

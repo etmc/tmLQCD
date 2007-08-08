@@ -49,6 +49,7 @@
 #include "xchange_halffield.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
+#include "phmc.h"
 #include "polyakov_loop.h"
 
 void usage(){
@@ -101,6 +102,7 @@ int main(int argc,char *argv[]) {
 #pragma pomp inst begin(main)
 #endif
 
+  g_running_phmc = 0;
   DUM_DERI = 6;
   DUM_SOLVER = DUM_DERI+7;
   DUM_MATRIX = DUM_SOLVER+6;
