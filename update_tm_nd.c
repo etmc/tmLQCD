@@ -468,11 +468,137 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     accept = 0;
   }
 
-  /* REWEIGHTING */
-  /* Argument = number of rnd spinor to be used */ 
-  /* 
-  reweighting_factor_nd(10);
-  */
+
+  /* Here a reversibility test is performed */
+  /* The trajectory is integrated back      */
+  if(return_check == 1) {
+    if(accept == 1) {
+      write_lime_gauge_field( "conf.save", gauge_energy/(6.*VOLUME*g_nproc), 0);
+    }
+    g_sloppy_precision = 1;
+    /* run the trajectory back */
+    if(integtyp == 1) {
+      /* Leap-frog integration scheme */
+      leap_frog(-dtau, Nsteps, nsmall); 
+    }
+    else if(integtyp == 2) {
+      /* Sexton Weingarten integration scheme */
+      sexton(-dtau, Nsteps, nsmall);
+    }
+    else if(integtyp == 3) {
+      ext_leap_frog(n_int, -tau, g_nr_of_psf, halfstep);
+    }
+    else if(integtyp == 4) {
+      ext_sexton_weingarten(n_int, -tau, g_nr_of_psf, halfstep);
+    }
+    else if(integtyp == 5) {
+      impr_leap_frog(n_int, -tau, g_nr_of_psf);
+    }
+    else if(integtyp == 6) {
+      mn2_integrator(n_int, -tau, g_nr_of_psf, halfstep, lambda);
+    }
+    else if(integtyp == 7) {
+      mn2p_integrator(n_int, -tau, g_nr_of_psf, lambda);
+    }
+    g_sloppy_precision = 0;
+    ret_enep=moment_energy();
+    ret_plaquette_energy=measure_gauge_action();
+    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+      ret_rectangle_energy = measure_rectangles();
+    }
+    ret_gauge_energy = g_rgi_C0 * ret_plaquette_energy + g_rgi_C1 * ret_rectangle_energy;
+    
+    if(phmc_no_flavours == 4) {
+      /*compute the energy contributions from the pseudo-fermions */
+      assign(g_spinor_field[2], g_spinor_field[DUM_DERI+4], VOLUME/2);
+      g_mu = g_mu1;
+      if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+      ret_idis0=bicg(2, first_psf, g_eps_sq_acc, g_relative_precision_flag);
+      ITER_MAX_BCG = saveiter_max;
+      assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], VOLUME/2);
+
+      ret_enerphi0=square_norm(g_spinor_field[2], VOLUME/2);
+      if(g_nr_of_psf > 1) {
+	assign(g_spinor_field[3], g_spinor_field[DUM_DERI+5], VOLUME/2);
+	g_mu = g_mu1;
+	Qtm_plus_psi(g_spinor_field[second_psf], g_spinor_field[second_psf]);
+	g_mu = g_mu2;
+	if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+	ret_idis1 += bicg(3, second_psf, g_eps_sq_acc, g_relative_precision_flag);
+	ITER_MAX_BCG = saveiter_max;
+	assign(g_spinor_field[DUM_DERI+5], g_spinor_field[DUM_DERI+6], VOLUME/2);
+	ret_enerphi1 = square_norm(g_spinor_field[3], VOLUME/2);
+      }
+      if(g_nr_of_psf > 2) {
+	assign(g_spinor_field[5], g_spinor_field[DUM_DERI+6], VOLUME/2);
+	g_mu = g_mu2;
+	Qtm_plus_psi(g_spinor_field[third_psf], g_spinor_field[third_psf]);
+	g_mu = g_mu3;
+	if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+	ret_idis2 += bicg(5, third_psf, g_eps_sq_acc, g_relative_precision_flag);
+	ITER_MAX_BCG = saveiter_max;
+	ret_enerphi2 = square_norm(g_spinor_field[5], VOLUME/2);
+      }
+    }
+
+    /* Compute the energy difference */
+    ret_dh = (ret_enep - enep ) + g_beta*(gauge_energy - ret_gauge_energy) +
+      (ret_enerphi0 - enerphi0) + (ret_enerphi1 - enerphi1) + (ret_enerphi2 - enerphi2);
+/*     ret_dh= +ret_enep - g_beta*ret_gauge_energy - enep + g_beta*gauge_energy */
+/*       + ret_enerphi0 - enerphi0 + ret_enerphi1 - enerphi1 + ret_enerphi2 - enerphi2; */
+
+    /* Compute Differences in the fields */
+    ks = 0.;
+    kc = 0.;
+
+    for(ix=0;ix<VOLUME;ix++) {
+      for(mu=0;mu<4;mu++){
+	tmp = 0.;
+	/* Auch MIST */
+	v=&g_gauge_field[ix][mu];
+	w=&gauge_tmp[ix][mu];
+	ds = ((*v).c00.re-(*w).c00.re)*((*v).c00.re-(*w).c00.re)
+	  + ((*v).c00.im-(*w).c00.im)*((*v).c00.im-(*w).c00.im)
+	  + ((*v).c01.re-(*w).c01.re)*((*v).c01.re-(*w).c01.re)
+	  + ((*v).c01.im-(*w).c01.im)*((*v).c01.im-(*w).c01.im)
+	  + ((*v).c02.re-(*w).c02.re)*((*v).c02.re-(*w).c02.re)
+	  + ((*v).c02.im-(*w).c02.im)*((*v).c02.im-(*w).c02.im)
+	  + ((*v).c10.re-(*w).c10.re)*((*v).c10.re-(*w).c10.re)
+	  + ((*v).c10.im-(*w).c10.im)*((*v).c10.im-(*w).c10.im)
+	  + ((*v).c11.re-(*w).c11.re)*((*v).c11.re-(*w).c11.re)
+	  + ((*v).c11.im-(*w).c11.im)*((*v).c11.im-(*w).c11.im)
+	  + ((*v).c12.re-(*w).c12.re)*((*v).c12.re-(*w).c12.re)
+	  + ((*v).c12.im-(*w).c12.im)*((*v).c12.im-(*w).c12.im)
+	  + ((*v).c20.re-(*w).c20.re)*((*v).c20.re-(*w).c20.re)
+	  + ((*v).c20.im-(*w).c20.im)*((*v).c20.im-(*w).c20.im)
+	  + ((*v).c21.re-(*w).c21.re)*((*v).c21.re-(*w).c21.re)
+	  + ((*v).c21.im-(*w).c21.im)*((*v).c21.im-(*w).c21.im)
+	  + ((*v).c22.re-(*w).c22.re)*((*v).c22.re-(*w).c22.re)
+	  + ((*v).c22.im-(*w).c22.im)*((*v).c22.im-(*w).c22.im);
+	ds = sqrt(ds);
+	tr = ds + kc;
+	ts = tr + ks;
+	tt = ts-ks;
+	ks = ts;
+	kc = tr-tt;
+      }
+    }
+    ret_gauge_diff = ks + kc;
+#ifdef MPI
+    tmp = ret_gauge_diff;
+    MPI_Reduce(&tmp, &ret_gauge_diff, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+#endif
+    /* Output */
+    if(g_proc_id == 0) {
+      ret_check_file = fopen("return_check.data","a");
+      fprintf(ret_check_file,"ddh = %e, ddU= %e\n",ret_dh, ret_gauge_diff/4./((double)(VOLUME*g_nproc))/3.);
+      fclose(ret_check_file);
+    }
+
+    if(accept == 1) {
+      read_lime_gauge_field( "conf.save");
+    }
+  }
 
 
 
