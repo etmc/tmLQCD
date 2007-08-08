@@ -1,3 +1,13 @@
+08.08.2007: all integration schemes available for the PHMC
+	    new input paramter 
+	    TimeScaleHeavyDoublet
+	    which must be set to an integeter >=0 specifying the timescale
+	    on which to integrate the heavy doublet on. Note that 0 is
+	    the smallest possible timescale, which is the smallest
+	    timescale available for pseudo fermion fields. (the gauge
+	    field is one scale below)
+	    not completely tested yet.
+
 15.04.2007: eigenvalue computation for squared one flavour operator
 	    implemented, few new input parameters connected to this,
             see documentation.
