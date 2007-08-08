@@ -69,8 +69,9 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   complex temp2;
 
   double yy[1];
-  double dh, expmdh, ret_dh=0., ret_gauge_diff=0.;
+  double dh, expmdh, ret_dh=0., ret_gauge_diff=0., tmp;
   double atime=0., etime=0.;
+  double ks,kc,ds,tr,ts,tt;
   int idis0=0, idis1=0, idis2=0;
   int ret_idis0=0, ret_idis1=0, ret_idis2=0;
   
