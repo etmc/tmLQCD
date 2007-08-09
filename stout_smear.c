@@ -67,10 +67,7 @@ int stout_smear_gauge_field(const double rho , const int no_iters)
   extern su3 *** g_Q_smear_iterations;
   extern su3 * C_smear_iterations;
   extern su3 *** g_C_smear_iterations;
-
-  printf("Entering init_stout_gauge_field\n");
-  const int dim ; 
-  dim=4;
+  const int dim=4 ; 
   int iter , mu , x; 
   su3 *gauge_wk[4] ; 
   su3  wk_staple  ; 
@@ -78,6 +75,8 @@ int stout_smear_gauge_field(const double rho , const int no_iters)
   su3adj p;
   su3  *gauge_local ; 
   su3  new_gauge_local ; 
+
+  printf("Entering init_stout_gauge_field\n");
   
   if(g_proc_id == 0) {
     printf("STOUT smearing the gauge fields\n") ; 
