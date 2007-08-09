@@ -606,8 +606,12 @@ void update_fermion_momenta(double step, const int S,
   double sum2=0.;
   static int co = 0;
   co++;
+  double atime=0., etime=0.;
 
   if(!(g_running_phmc && phmc_no_flavours == 2)) {
+#ifdef MPI
+    atime = MPI_Wtime();
+#endif
     if(do_all == 1) {
       /* set deriv to zero here */
       derivative_psf(0, 1);
@@ -641,6 +645,9 @@ void update_fermion_momenta(double step, const int S,
 	_minus_const_times_mom(*xm,tmp,*deriv); 
       }
     }
+#ifdef MPI
+    etime = MPI_Wtime();
+#endif
     if(g_debug_level > 0) {
 #ifdef MPI
       MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -650,7 +657,7 @@ void update_fermion_momenta(double step, const int S,
 #endif
       if(g_proc_id == 0) {
 	/* The factor 2 from above is missing here */
-	printf("fermionforce%d %e max %e\n", S, sum/((double)(VOLUME*g_nproc))/4., max);
+	printf("fermionforce%d %e max %e time/s %f\n", S, sum/((double)(VOLUME*g_nproc))/4., max, etime-atime);
 	fflush(stdout);
       }
     }
@@ -658,6 +665,9 @@ void update_fermion_momenta(double step, const int S,
 
   /* the 1+1 part */
   if(g_running_phmc && (do_all || (phmc_heavy_timescale == S))) {
+#ifdef MPI
+    atime = MPI_Wtime();
+#endif
     sum = 0.;
     max = 0.;
     derivative_nondegenerate(); 
@@ -680,6 +690,9 @@ void update_fermion_momenta(double step, const int S,
 	_minus_const_times_mom(*xm,tmp,*deriv); 
       }
     }
+#ifdef MPI
+    etime = MPI_Wtime();
+#endif
     if(g_debug_level > 0) {
 #ifdef MPI
       MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -688,9 +701,9 @@ void update_fermion_momenta(double step, const int S,
       max = sum2;
 #endif
       if(g_proc_id == 0) {
-	printf("fermionforceheavydoubletts%d %e max %e\n", S, 
+	printf("fermionforceheavydoubletts%d %e max %e time/s %f\n", S, 
 	       sum/((double)(VOLUME*g_nproc))/4.*phmc_Cpol*phmc_invmaxev, 
-	       max*phmc_Cpol*phmc_invmaxev);
+	       max*phmc_Cpol*phmc_invmaxev, etime-atime);
 	fflush(stdout);
       }
     }
