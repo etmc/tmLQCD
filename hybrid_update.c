@@ -55,6 +55,7 @@ void gauge_momenta(double step)
   static double st, st1;
   double sum=0., sum1=0., max=0., max2=0.;
   double sum2=0.;
+  double atime=0., etime=0.;
 
   extern su3 * stout_force_field;
   extern su3 ** g_stout_force_field;
@@ -66,6 +67,9 @@ void gauge_momenta(double step)
   st  = -step * g_rgi_C0 * g_beta/3.0;
   st1 = -step * g_rgi_C1 * g_beta/3.0;
 
+#ifdef MPI
+  atime = MPI_Wtime();
+#endif
   if(use_stout_flag == 1)
   {
     /*
@@ -171,6 +175,9 @@ void gauge_momenta(double step)
       }
     }
   }
+#ifdef MPI
+  etime = MPI_Wtime();
+#endif
 
   if(g_debug_level > 0) {
 #ifdef MPI
@@ -178,11 +185,14 @@ void gauge_momenta(double step)
     sum = sum2;
     MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
     max = sum2;
+#endif
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+#ifdef MPI
       MPI_Reduce(&sum1, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
       sum1 = sum2;
       MPI_Reduce(&max2, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
       max2 = sum2;
+#endif
       if(g_proc_id == 0) {
 	/* Here is a factor 1/4 missing            */
 	printf("gaugerec %e max %e factor %e\n", sum1/((double)(VOLUME*g_nproc))/4., max2,
@@ -190,11 +200,11 @@ void gauge_momenta(double step)
 	fflush(stdout);
       }
     }
-#endif
+
     if(g_proc_id == 0) {
       /* Here is a factor 1/4 missing            */
-      printf("gaugeplaq %e max %e factor %e\n", sum/((double)(VOLUME*g_nproc))/4., max, 
-	     g_rgi_C0*g_rgi_C0*g_beta*g_beta/9);
+      printf("gaugeplaq %e max %e factor %e time/s %f\n", sum/((double)(VOLUME*g_nproc))/4., max, 
+	     g_rgi_C0*g_rgi_C0*g_beta*g_beta/9, etime-atime);
       fflush(stdout);
     }
   }
