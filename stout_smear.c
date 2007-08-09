@@ -61,8 +61,16 @@ void  check_su3(su3 *in)  ;
 int stout_smear_gauge_field(const double rho , const int no_iters)
 {
 
+  extern su3 * gauge_field_smear_iterations;
+  extern su3 *** g_gauge_field_smear_iterations;
+  extern su3 * Q_smear_iterations;
+  extern su3 *** g_Q_smear_iterations;
+  extern su3 * C_smear_iterations;
+  extern su3 *** g_C_smear_iterations;
+
   printf("Entering init_stout_gauge_field\n");
-  const int dim = 4 ; 
+  const int dim ; 
+  dim=4;
   int iter , mu , x; 
   su3 *gauge_wk[4] ; 
   su3  wk_staple  ; 

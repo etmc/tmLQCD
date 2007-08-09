@@ -11,6 +11,23 @@
 #include "sse.h"
 #include "init_stout_smear_vars.h"
 
+su3 * gauge_field_smear_iterations;
+su3 *** g_gauge_field_smear_iterations;
+su3 * Q_smear_iterations;
+su3 *** g_Q_smear_iterations;
+su3 * C_smear_iterations;
+su3 *** g_C_smear_iterations;
+su3 * stout_force_field;
+su3 ** g_stout_force_field;
+su3 * previous_stout_force_field;
+su3 ** g_previous_stout_force_field;
+su3 * stout_Lambda_field;
+su3 ** g_stout_Lambda_field;
+su3 * stout_Gamma_field;
+su3 ** g_stout_Gamma_field;
+spinor * g_test_spinor_field_left;
+spinor * g_test_spinor_field_right;
+
 int init_stout_smear_vars(const int V, const int stout_no_iter) 
 {
 
@@ -60,7 +77,6 @@ int init_stout_smear_vars(const int V, const int stout_no_iter)
       }
     }
   }
-
 
   /*
    *  here we save the C matrix field from eqtn(1) in hep-lat/0311018

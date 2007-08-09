@@ -11,6 +11,22 @@
 /*void stout_smear_force(int x, int mu, su3 force){*/
 void stout_smear_force()
 {
+
+  extern su3 * gauge_field_smear_iterations;
+  extern su3 *** g_gauge_field_smear_iterations;
+  extern su3 * stout_force_field;
+  extern su3 ** g_stout_force_field;
+  extern su3 * previous_stout_force_field;
+  extern su3 ** g_previous_stout_force_field;
+  extern su3 * Q_smear_iterations;
+  extern su3 *** g_Q_smear_iterations;
+  extern su3 * C_smear_iterations;
+  extern su3 *** g_C_smear_iterations;
+  extern su3 * stout_Lambda_field;
+  extern su3 ** g_stout_Lambda_field;
+  extern su3 * stout_Gamma_field;
+  extern su3 ** g_stout_Gamma_field;
+
   const int dim = 4;
 
   int x, mu, nu, stout_iter_counter;
@@ -24,9 +40,6 @@ void stout_smear_force()
   su3 B1, B2; 
 
   printf("Running stout_smear_force()\n");
-  /*printf("AWA\n");
-    print_su3(&force);*/
-
 
   /*
    *  first we save the original force field, so we have \Sigma'

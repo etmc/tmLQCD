@@ -284,9 +284,7 @@ int main(int argc,char *argv[]) {
 
   if(use_stout_flag == 1)
     init_stout_smear_vars(VOLUME, stout_no_iter);
-    /*init_stout_smear_vars(VOLUMEPLUSRAND, stout_no_iter);*/
 
-    
   /*construct the filenames for the observables and the parameters*/
   strcpy(datafilename,filename);  strcat(datafilename,".data");
   strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");

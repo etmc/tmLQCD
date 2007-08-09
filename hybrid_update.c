@@ -55,6 +55,9 @@ void gauge_momenta(double step)
   static double st, st1;
   double sum=0., sum1=0., max=0., max2=0.;
   double sum2=0.;
+
+  extern su3 * stout_force_field;
+  extern su3 ** g_stout_force_field;
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(gaugemomenta)
 #endif
@@ -224,8 +227,12 @@ void gauge_momenta(double step)
 void deri_stout_smearing() 
 {
 
-  /*int iter_counter;
-  iter_counter = 0;*/
+  extern su3 * stout_force_field;
+  extern su3 ** g_stout_force_field;
+  extern su3 * previous_stout_force_field;
+  extern su3 ** g_previous_stout_force_field;
+  extern spinor * g_test_spinor_field_left;
+  extern spinor * g_test_spinor_field_right;
 
   printf("Running deri_stout_smearing()\n");
   printf("g_nr_of_psf = %d\n", g_nr_of_psf);
