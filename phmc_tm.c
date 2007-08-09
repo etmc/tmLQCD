@@ -83,6 +83,7 @@ int main(int argc,char *argv[]) {
   FILE *parameterfile=NULL, *countfile=NULL;
   char * filename = NULL;
   char datafilename[50];
+  char * phmcfilename = "phmc.data";
   char parameterfilename[50];
   char gauge_filename[200];
   char * nstore_filename = ".nstore_counter";
@@ -604,7 +605,7 @@ int main(int argc,char *argv[]) {
     else return_check = 0;
 
     Rate += update_tm_nd(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
-			 dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag, phmc_no_flavours );
+			 dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag, phmc_no_flavours, trajectory_counter);
 
     /* Measure the Polyakov loop in direction 2 and 3:*/
     polyakov_loop(&pl, 2); 
@@ -696,7 +697,12 @@ int main(int argc,char *argv[]) {
 	printf("PHMC: maximal eigenvalue end of trajectory %d = %e\n", 
 	       trajectory_counter, temp2);
       }
-  
+      if(g_proc_id == 0) {
+	countfile = fopen(phmcfilename, "a");
+	fprintf(countfile, "%d %1.12f %1.5e %1.5e\n", 
+		trajectory_counter, plaquette_energy/(6.*VOLUME*g_nproc), temp, temp2);
+	fclose(countfile);
+      }
     }
     
     /* End PHMC */

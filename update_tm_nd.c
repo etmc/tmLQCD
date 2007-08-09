@@ -51,9 +51,10 @@
 
 
 int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle_energy, 
-	      char * filename, const double dtau, const int Nsteps, const int nsmall,
-	      const double tau, int * n_int, const int return_check,
-	      double * lambda, const int rngrepro,const int phmc_no_flavours) {
+		 char * filename, const double dtau, const int Nsteps, const int nsmall,
+		 const double tau, int * n_int, const int return_check,
+		 double * lambda, const int rngrepro,const int phmc_no_flavours,
+		 const int trajectory_counter) {
   su3 *v, *w;
   static int ini_g_tmp = 0;
   int rlxd_state[105];
@@ -636,7 +637,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 
   if(g_proc_id==0){
     datafile = fopen(filename, "a");
-    fprintf(datafile,"%14.12f %14.12f %e %d %d %d ",
+    fprintf(datafile,"%d %14.12f %14.12f %e %d %d %d ", trajectory_counter,
 	    (*plaquette_energy)/(6.*VOLUME*g_nproc),dh,expmdh,
 	    idis0, count00, count01);
     if(g_nr_of_psf > 1) {
