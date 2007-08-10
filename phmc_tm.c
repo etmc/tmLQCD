@@ -600,6 +600,10 @@ int main(int argc,char *argv[]) {
 
   /* Loop for measurements */
   for(j = 0; j < Nmeas; j++) {
+    if(g_proc_id == 0) {
+      printf("# Starting trajectory no %d\n", trajectory_counter);
+    }
+
 
     if(return_check_flag == 1 && (j+1)%return_check_interval == 0) return_check = 1;
     else return_check = 0;
