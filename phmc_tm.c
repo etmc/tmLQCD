@@ -699,8 +699,8 @@ int main(int argc,char *argv[]) {
       }
       if(g_proc_id == 0) {
 	countfile = fopen(phmcfilename, "a");
-	fprintf(countfile, "%d %1.12f %1.5e %1.5e\n", 
-		trajectory_counter, plaquette_energy/(6.*VOLUME*g_nproc), temp, temp2);
+	fprintf(countfile, "%d %1.12f %1.5e %1.5e %1.5e %1.5e\n", 
+		trajectory_counter, plaquette_energy/(6.*VOLUME*g_nproc), temp, temp2, stilde_min, stilde_max);
 	fclose(countfile);
       }
     }
