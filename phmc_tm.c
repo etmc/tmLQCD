@@ -95,6 +95,7 @@ int main(int argc,char *argv[]) {
   int k;
   struct timeval t1;
   double x;
+  double atime, etime;
 
   /* Energy corresponding to the Gauge part */
   double eneg = 0., plaquette_energy = 0., rectangle_energy = 0.;
@@ -677,6 +678,9 @@ int main(int argc,char *argv[]) {
     /* Put here the flag "g_rec_ev" for polynomial recomputation !!!! */
     
     if((g_rec_ev !=0) && (trajectory_counter%g_rec_ev == 0)) {
+#ifdef MPI
+      atime = MPI_Wtime();
+#endif
       max_iter_ev = 1000;
       stop_prec_ev = 1.e-13;
       if(g_nr_of_psf == 3) g_mu = g_mu3;
@@ -707,6 +711,12 @@ int main(int argc,char *argv[]) {
 		trajectory_counter, plaquette_energy/(6.*VOLUME*g_nproc), temp, temp2, stilde_min, stilde_max);
 	fclose(countfile);
       }
+#ifdef MPI
+      etime = MPI_Wtime();
+      if((g_proc_id == 0)) {
+	printf("PHMC: time/s for eigenvalue computation %e\n", etime-atime);
+      }
+#endif
     }
     
     /* End PHMC */
