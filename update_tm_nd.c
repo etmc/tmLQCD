@@ -368,7 +368,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 	printf("PHMC: Here  j=%d  and  ij=%d   sign=%f  fact=%f \n", j ,ij, sgn, fact);
       }
       Ener[j] += sgn*fact*Ener[ij];
-      sgn = (-1)*sgn;
+      sgn = -sgn;
     }
     temp = square_norm(g_chi_up_spinor_field[j], VOLUME/2);
     temp += square_norm(g_chi_dn_spinor_field[j], VOLUME/2);
@@ -379,8 +379,8 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     Ener[j] += sgn*temp;
 
     Diff = fabs(Ener[j] - Ener[j-1]);
-    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-      printf("PHMC: At j=%d  Energy=%e  Diff=%e \n", j, Ener[j], Diff);
+    if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)) {
+      printf("PHMC: Correction aftern %d steps: %e \n", j, Diff);
     }
 
     if(Diff < g_acc_Hfin){

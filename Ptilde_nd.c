@@ -317,7 +317,7 @@ void degree_of_Ptilde(){
      fflush(stdout);
    }
 
-   phmc_ptilde_n_cheby = phmc_dop_n_cheby;
+   phmc_ptilde_n_cheby = 2*phmc_dop_n_cheby;
 /*    phmc_ptilde_n_cheby = 700; */
 
    for(i = 0;i < 100 ; i++){
@@ -387,7 +387,7 @@ void degree_of_Ptilde(){
       break;
     }
 
-    phmc_ptilde_n_cheby= (int)(phmc_ptilde_n_cheby*1.05);
+    phmc_ptilde_n_cheby= (int)(phmc_ptilde_n_cheby*1.2);
   }
 
 

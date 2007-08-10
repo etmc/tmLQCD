@@ -79,7 +79,7 @@
 #define _default_return_check_flag 0
 #define _default_return_check_interval 100
 #define _default_g_debug_level 1
-#define _default_g_csg_N 1
+#define _default_g_csg_N 0
 #define _default_2mn_lambda 0.1938
 #define _default_source_format_flag 0
 #define _default_source_time_slice -1
