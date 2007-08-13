@@ -478,6 +478,11 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
       write_lime_gauge_field( "conf.save", gauge_energy/(6.*VOLUME*g_nproc), 0);
     }
     g_sloppy_precision = 1;
+
+  assign(g_chi_up_spinor_field[0], g_chi_up_copy, VOLUME/2);
+  assign(g_chi_dn_spinor_field[0], g_chi_dn_copy,  VOLUME/2);
+
+
     /* run the trajectory back */
     if(integtyp == 1) {
       /* Leap-frog integration scheme */
@@ -542,6 +547,33 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
 	ret_enerphi2 = square_norm(g_spinor_field[5], VOLUME/2);
       }
     }
+
+
+    /* IF PHMC */
+
+    /* This is needed if we consider only "1" in eq. 9 */
+    assign(g_chi_up_spinor_field[1], g_chi_up_copy, VOLUME/2);
+    assign(g_chi_dn_spinor_field[1], g_chi_dn_copy,  VOLUME/2);
+
+    for(j=1; j<=(phmc_dop_n_cheby-1); j++){
+      assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
+      assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
+
+      /* Change this name !!*/
+      L_POLY_MIN_CCONST(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
+		      g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
+		      phmc_root[j-1]);
+    }
+  
+    assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
+    assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
+
+    ret_enerphi0 += square_norm(g_chi_up_spinor_field[0], VOLUME/2);
+
+    ret_enerphi0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
+
+    /* ENDIF PHMC */
+
 
     /* Compute the energy difference */
     ret_dh = (ret_enep - enep ) + g_beta*(gauge_energy - ret_gauge_energy) +
