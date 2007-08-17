@@ -84,6 +84,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   int use_stout_flag;
   int phmc_no_flavours;
   int phmc_heavy_timescale;
+  int phmc_pure_phmc;
   int compute_evs;
   int phmc_compute_evs;
   double stilde_max;
@@ -191,6 +192,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x PHMCFLAV
 %x COMPUTEEVS
 %x PCOMPUTEEVS
+%x PPP
 %x SMAX
 %x SMIN
 %x DEGP
@@ -219,6 +221,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^mu3{SPC}*={SPC}*                          BEGIN(MU3);
 ^mubar{SPC}*={SPC}*                        BEGIN(MUBAR);
 ^PhmcMubar{SPC}*={SPC}*                    BEGIN(MUBAR);
+^PhmcPurePHMC*={SPC}*                      BEGIN(PPP);
 ^epsbar{SPC}*={SPC}*                       BEGIN(EPSBAR);
 ^PhmcEpsBar{SPC}*={SPC}*                   BEGIN(EPSBAR);
 ^beta{SPC}*={SPC}*                         BEGIN(BETA);
@@ -887,6 +890,15 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   compute_evs=2;
   if(verbose!=0) printf("Try to only read in eigenvalues and vectors in invert.");
 }
+<PPP>no {
+ phmc_pure_phmc = 0;
+ if(verbose!=0) printf("Run the PHMC as usual.");
+}
+<PPP>yes {
+ phmc_pure_phmc = 1;
+ if(verbose!=0) printf("Run the PHMC only with usage of the less accurate polynomial.");
+}
+
 <SMAX>{FLT} {
   stilde_max = atof(yytext);
   if(verbose!=0) printf("Stilde max for PHMC set to %e.\n", stilde_max);
@@ -1163,6 +1175,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Unknown value in line %d! Must be an yes or no. Exiting...!\n", line_of_file);
   exit(1);
 }
+<PPP>. {
+  printf("Unknown value in line %d! Must be an yes or no. Exiting...!\n", line_of_file);
+  exit(1);
+}
 <SMIN,SMAX>. {
   printf("Unknown value in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
   exit(1);
@@ -1317,6 +1333,7 @@ int read_input(char * conf_file){
   no_eigenvalues = _default_no_eigenvalues;
   sub_evs_cg_flag = _default_sub_evs_cg_flag;
   phmc_heavy_timescale = _default_phmc_heavy_timescale;
+  phmc_pure_phmc = _default_phmc_pure_phmc;
   /********************************************/
 
   if ((yyin = fopen(conf_file, "rt")) == NULL){

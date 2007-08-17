@@ -95,6 +95,7 @@
 #define _default_phmc_no_flavours 4
 #define _default_compute_evs 0
 #define _default_phmc_compute_evs 0
+#define _default_phmc_pure_phmc 0
 #define _default_stilde_max 3.
 #define _default_stilde_min 0.01
 #define _default_degree_of_p 48
