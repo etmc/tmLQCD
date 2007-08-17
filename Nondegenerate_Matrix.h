@@ -24,4 +24,8 @@ void H_eo_ND(spinor * const l_strange, spinor * const l_charm,
 void Q_test_epsilon(spinor * const l_strange, spinor * const l_charm,
                     spinor * const k_strange, spinor * const k_charm);
 
+void Qtau1_P_ND(spinor * const l_strange, spinor * const l_charm,
+		spinor * const k_strange, spinor * const k_charm);
+
+
 #endif

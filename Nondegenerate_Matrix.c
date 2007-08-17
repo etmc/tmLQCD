@@ -679,6 +679,55 @@ void mul_one_plus_imubar(spinor * const l, spinor * const k){
 }
 
 
+/*  calculates P(Q Q^dagger) for the nondegenerate case */
+
+ void P_ND(spinor * const l_strange, spinor * const l_charm,
+         spinor * const k_strange, spinor * const k_charm){
+
+
+
+   int j;
+   spinor *dum_up,*dum_dn;
+   dum_up=g_chi_up_spinor_field[DUM_MATRIX];
+   dum_dn=g_chi_dn_spinor_field[DUM_MATRIX];
+
+   assign(dum_up,k_strange,VOLUME/2);
+   assign(dum_dn,k_charm,VOLUME/2);
+
+
+   for(j=0; j<(2*phmc_dop_n_cheby -2); j++){
+     if(j>0) {
+       assign(dum_up,l_strange,VOLUME/2);
+       assign(dum_dn,l_charm,VOLUME/2);
+     }
+
+     L_POLY_MIN_CCONST(l_strange, l_charm,
+                     dum_up, dum_dn,
+                     phmc_root[j]);
+   }
+
+ }
+
+
+/* calculates  Q * \tau^1  for the nondegenerate case */
+void Qtau1_P_ND(spinor * const l_strange, spinor * const l_charm,
+         spinor * const k_strange, spinor * const k_charm){
+
+
+   spinor * dum_up,* dum_dn;
+   dum_up=g_chi_up_spinor_field[DUM_MATRIX+1];
+   dum_dn=g_chi_dn_spinor_field[DUM_MATRIX+1];
+
+   P_ND(l_strange, l_charm,k_strange,k_charm);
+
+   assign(dum_up,l_strange,VOLUME/2);
+   assign(dum_dn,l_charm,VOLUME/2);
+
+   QNon_degenerate(l_strange,l_charm,dum_dn,dum_up);
+
+}
+
+
 static char const rcsid[] = "$Id$";
 
 
