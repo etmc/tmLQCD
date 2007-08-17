@@ -610,7 +610,7 @@ int main(int argc,char *argv[]) {
     else return_check = 0;
 
     Rate += update_tm_nd(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
-			 dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag, phmc_no_flavours, trajectory_counter);
+			 dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag, phmc_no_flavours,phmc_exact_poly, trajectory_counter);
 
     /* Measure the Polyakov loop in direction 2 and 3:*/
     polyakov_loop(&pl, 2); 

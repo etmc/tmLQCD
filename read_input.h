@@ -77,7 +77,7 @@ extern "C"
   extern int phmc_no_flavours;
   extern int phmc_heavy_timescale;
   extern int phmc_compute_evs;
-  extern int phmc_pure_phmc;
+  extern int phmc_exact_poly;
   extern int compute_evs;
   extern int no_eigenvalues;
   extern double eigenvalue_precision;
