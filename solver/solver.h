@@ -33,4 +33,6 @@
 #include "solver/bicgstab_complex_bi.h"
 #include "solver/cg_her_bi.h"
 
+#include "solver/matrix_mult_typedef_nd.h"
+#include "solver/cg_her_nd.h"
 #endif
