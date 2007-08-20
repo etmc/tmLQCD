@@ -79,6 +79,7 @@ void stout_smear_force()
         c1.re = -0.5 * (Q_squared.c00.re + Q_squared.c11.re + Q_squared.c22.re);
         c1.im = -0.5 * (Q_squared.c00.im + Q_squared.c11.im + Q_squared.c22.im);
 
+        
         /*
          * c0_max from eqtn (17) hep-lat/0311018
          *
@@ -87,142 +88,185 @@ void stout_smear_force()
          * sqrt(2)/(3)^1.5 = 0.27216552697590867757747600830065459910732749785074112538
          */
 
-        /*  tmp_c_1 = c1^3 */
-        tmp_c_0.re = (-3.0 * c1.im * c1.im + c1.re * c1.re) * c1.re;
-        tmp_c_0.im = ( 3.0 * c1.re * c1.re - c1.im * c1.im) * c1.im;
-
-        magnitude = sqrt(tmp_c_0.re * tmp_c_0.re + tmp_c_0.im * tmp_c_0.im);
-
-        /*this is just the square root and not needed*/
-        /*c0_max.re = 0.7071067811865475244008443621048490392848359*sqrt(magnitude + tmp.re); 
-          if(tmp.im > 0.0)
-          c0_max.im = 0.7071067811865475244008443621048490392848359*sqrt(magnitude - tmp.re);
-          else
-          c0_max.im = -0.7071067811865475244008443621048490392848359*sqrt(magnitude - tmp.re);*/
-
-        /*c0_max.re = 0.27216552697590867757747600830065459910732749785074112538*sqrt(magnitude + tmp.re); 
-          if(tmp.im > 0.0)
-          c0_max.im = 0.27216552697590867757747600830065459910732749785074112538*sqrt(magnitude - tmp.re);
-          else
-          c0_max.im = -0.27216552697590867757747600830065459910732749785074112538*sqrt(magnitude - tmp.re);*/
-
-        /*printf("OPOII %f\n", c1.re * c1.re * c1.re);*/
-        c0_max.re = 0.3849001794597505841196932900549*sqrt(c1.re * c1.re * c1.re);
-        /*c0_max.im = 0.0;*/
 
         /*
-         * theta from eqtn (25) hep-lat/0311018
-         *
-         * theta = acos()
+         *  as stated in the chroma sources ("stout_utils.cc")
+         *  we need to watch out for the case c0 \approx 0
+         *  this case is ommitted in hep-lat/0311018
          */
-        theta = acos(c0.re / c0_max.re);
+        if (c1.re < 1e-4)
+        /*if (c1.re*c1.re + c1.im * c1.im < 1e-4)*/
+        {  
 
-        /*
-         * u from eqtn (23) hep-lat/0311018
-         *
-         * u = sqrt(c1 / 3) * cos(theta / 3)
-         */
-        u=sqrt(0.333333333333333333333333333333333*c1.re)*cos(0.333333333333333333333333333333333*theta);
-        u_squared = u * u;
+          f_0.re = 1-c0.re * c0.re / 720.0;
+          f_0.im =  -(c0.re / 6.0) * (1.0 - (c1.re / 20)
+              * ( 1.0 - (c1.re / 42.0)));
 
-        /*
-         * w from eqtn (24) hep-lat/0311018
-         *
-         * w = sqrt(c1) * sin(theta / 3)
-         *
-         * 1/6  = 0.1666666666...
-         * 1/42 = 0.0238095238...
-         */
-        w=sqrt(c1.re)*sin(0.333333333333333333333333333333333*theta);
-        w_squared = w * w;
+          f_1.re =  c0.re / 24.0 * (1.0 - c1.re / 15.0 * (1.0 - 3.0 * c1.re / 112.0)) ;
+          f_1.im =  1.0 - c1.re / 6.0 * (1.0 - c1.re / 20.0 * (1.0 - c1.re / 42.0))
+            - c0.re * c0.re / 5040.0;
 
-        /*
-         * xi_0 from eqtn (33) hep-lat/0311018
-         */
-        if(fabs(w) < 0.05)
-          xi_0=1
-            -0.1666666666666666666666666666666666666666666666666667*w_squared*
-            (1.0 - 0.05 * w_squared * 
-             (1 - 0.0238095238095238095238095238095238095238095238095238 * w_squared));
+          f_2.re = 0.5 * (-1.0 + c1.re / 12.0 * (1.0 - c1.re / 30.0 
+                * (1.0 - c1.re / 56.0)) + c0.re * c0.re / 20160.0);
+          f_2.im = 0.5 * (c0.re / 60.0 * (1.0 - c1.re / 21.0 * (1.0 - c1.re / 48.0)));
+
+          b_2_0.re = -c0.re / 360.0;
+          b_2_0.im =  -(1.0 / 6.0) * (1.0 - (c1.re / 20.0) * (1.0 - c1.re / 42.0));
+          
+          b_1_0.re = 0.0;
+          b_1_0.im = (c0.re / 120.0)*(1.0 - c1.re / 21.0);
+
+          b_2_1.re = (1.0 / 24.0) * (1.0 - c1.re / 15.0 * (1.0 - 3.0 * c1.re / 112.0));
+          b_2_1.im = -c0.re / 2520.0;
+
+          b_1_1.re = -c0.re / 360.0 * (1.0 - 3.0 * c1.re / 56.0);
+          b_1_1.im = -1.0 / 6.0 * (1.0 - c1.re / 10.0 * (1.0 - c1.re / 28.0));
+
+          b_2_2.re = 0.5 * c0.re / 10080.0;
+          b_2_2.im = 0.5 * (1.0 / 60.0 * (1.0 - c1.re / 21.0 * (1.0 - c1.re / 48.0)) );
+
+          b_1_2.re = 0.5 * (1.0 / 12.0 * (1.0 - (2.0 * c1.re / 30.0) * (1.0 - 3.0*c1.re/112.0)) );
+          b_1_2.im = 0.5*( -c0.re/1260.0 * (1.0-c1.re/24.0) );
+
+        }
         else
-          xi_0 = sin(w)/w;
+        {
+          /*  tmp_c_1 = c1^3 */
+          tmp_c_0.re = (-3.0 * c1.im * c1.im + c1.re * c1.re) * c1.re;
+          tmp_c_0.im = ( 3.0 * c1.re * c1.re - c1.im * c1.im) * c1.im;
 
-        /*
-         * xi_1 from eqtn (67) hep-lat/0311018
-         */
-        xi_1 = (cos(w) - xi_0)/w_squared;
+          magnitude = sqrt(tmp_c_0.re * tmp_c_0.re + tmp_c_0.im * tmp_c_0.im);
 
-        /*
-         * h_0, h_1 and h_2  from eqtn (30), (31) and (32) hep-lat/0311018
-         */
-        h_0.re = (u_squared - w_squared) * cos(2*u) + cos(-u)*8.0*u_squared*cos(w)
-          - sin(-u) * 2.0 * u * (3*u_squared + w_squared)*xi_0;
-        h_0.im = (u_squared - w_squared) * sin(2*u) + sin(-u)*8.0*u_squared*cos(w)
-          + cos(-u) * 2.0 * u * (3*u_squared + w_squared)*xi_0;
+          /*this is just the square root and not needed*/
+          /*c0_max.re = 0.7071067811865475244008443621048490392848359*sqrt(magnitude + tmp.re); 
+            if(tmp.im > 0.0)
+            c0_max.im = 0.7071067811865475244008443621048490392848359*sqrt(magnitude - tmp.re);
+            else
+            c0_max.im = -0.7071067811865475244008443621048490392848359*sqrt(magnitude - tmp.re);*/
 
-        h_1.re = 2*u*cos(2.0*u) - cos(-u)*2*u*cos(w) - sin(-u)*(3*u_squared-w_squared)*xi_0;
-        h_1.im = 2*u*sin(2.0*u) - sin(-u)*2*u*cos(w) + cos(-u)*(3*u_squared-w_squared)*xi_0;
+          /*c0_max.re = 0.27216552697590867757747600830065459910732749785074112538*sqrt(magnitude + tmp.re); 
+            if(tmp.im > 0.0)
+            c0_max.im = 0.27216552697590867757747600830065459910732749785074112538*sqrt(magnitude - tmp.re);
+            else
+            c0_max.im = -0.27216552697590867757747600830065459910732749785074112538*sqrt(magnitude - tmp.re);*/
 
-        h_2.re = cos(2*u) - cos(-u) * cos (w) + sin(-u) * 3.0 * u * xi_0;
-        h_2.im = sin(2*u) - sin(-u) * cos (w) + cos(-u) * 3.0 * u * xi_0;
+          /*printf("OPOII %f\n", c1.re * c1.re * c1.re);*/
+          c0_max.re = 0.3849001794597505841196932900549*sqrt(c1.re * c1.re * c1.re);
+          /*c0_max.im = 0.0;*/
+
+          /*
+           * theta from eqtn (25) hep-lat/0311018
+           *
+           * theta = acos()
+           */
+          theta = acos(c0.re / c0_max.re);
+
+          /*
+           * u from eqtn (23) hep-lat/0311018
+           *
+           * u = sqrt(c1 / 3) * cos(theta / 3)
+           */
+          u=sqrt(0.333333333333333333333333333333333*c1.re)*cos(0.333333333333333333333333333333333*theta);
+          u_squared = u * u;
+
+          /*
+           * w from eqtn (24) hep-lat/0311018
+           *
+           * w = sqrt(c1) * sin(theta / 3)
+           *
+           * 1/6  = 0.1666666666...
+           * 1/42 = 0.0238095238...
+           */
+          w=sqrt(c1.re)*sin(0.333333333333333333333333333333333*theta);
+          w_squared = w * w;
+
+          /*
+           * xi_0 from eqtn (33) hep-lat/0311018
+           */
+          if(fabs(w) < 0.05)
+            xi_0=1
+              -0.1666666666666666666666666666666666666666666666666667*w_squared*
+              (1.0 - 0.05 * w_squared * 
+               (1 - 0.0238095238095238095238095238095238095238095238095238 * w_squared));
+          else
+            xi_0 = sin(w)/w;
+
+          /*
+           * xi_1 from eqtn (67) hep-lat/0311018
+           */
+          xi_1 = (cos(w) - xi_0)/w_squared;
+
+          /*
+           * h_0, h_1 and h_2  from eqtn (30), (31) and (32) hep-lat/0311018
+           */
+          h_0.re = (u_squared - w_squared) * cos(2*u) + cos(-u)*8.0*u_squared*cos(w)
+            - sin(-u) * 2.0 * u * (3*u_squared + w_squared)*xi_0;
+          h_0.im = (u_squared - w_squared) * sin(2*u) + sin(-u)*8.0*u_squared*cos(w)
+            + cos(-u) * 2.0 * u * (3*u_squared + w_squared)*xi_0;
+
+          h_1.re = 2*u*cos(2.0*u) - cos(-u)*2*u*cos(w) - sin(-u)*(3*u_squared-w_squared)*xi_0;
+          h_1.im = 2*u*sin(2.0*u) - sin(-u)*2*u*cos(w) + cos(-u)*(3*u_squared-w_squared)*xi_0;
+
+          h_2.re = cos(2*u) - cos(-u) * cos (w) + sin(-u) * 3.0 * u * xi_0;
+          h_2.im = sin(2*u) - sin(-u) * cos (w) + cos(-u) * 3.0 * u * xi_0;
 
 
-        tmp_d_0 = 1.0/(9.0*u_squared-w_squared); 
+          tmp_d_0 = 1.0/(9.0*u_squared-w_squared); 
 
-        f_0.re = tmp_d_0 * h_0.re; 
-        f_0.im = tmp_d_0 * h_0.im; 
-        f_1.re = tmp_d_0 * h_1.re; 
-        f_1.im = tmp_d_0 * h_1.im; 
-        f_2.re = tmp_d_0 * h_2.re; 
-        f_2.im = tmp_d_0 * h_2.im; 
+          f_0.re = tmp_d_0 * h_0.re; 
+          f_0.im = tmp_d_0 * h_0.im; 
+          f_1.re = tmp_d_0 * h_1.re; 
+          f_1.im = tmp_d_0 * h_1.im; 
+          f_2.re = tmp_d_0 * h_2.re; 
+          f_2.im = tmp_d_0 * h_2.im; 
 
-        r_0_1.re = 2.0*(u*cos(2.0*u) - sin(2.0 * u)*(u_squared -w_squared) 
-            + 8.0 * cos(-u) * u * cos(w) + u * cos(-u) * (3*u_squared+w_squared)*xi_0 + 4.0*u_squared*cos(w)*sin(-u)) - sin(-u)*(9.0*u_squared+w_squared)*xi_0;
-        r_0_1.im = 2.0*(u*sin(2.0*u) + cos(2.0 * u)*(u_squared -w_squared) 
-            + 8.0 * sin(-u) * u * cos(w) + u * sin(-u) * (3*u_squared+w_squared)*xi_0 + 4.0*u_squared*cos(w)*cos(-u) + cos(-u)*(9.0*u_squared+w_squared)*xi_0);
+          r_0_1.re = 2.0*(u*cos(2.0*u) - sin(2.0 * u)*(u_squared -w_squared) 
+              + 8.0 * cos(-u) * u * cos(w) + u * cos(-u) * (3*u_squared+w_squared)*xi_0 + 4.0*u_squared*cos(w)*sin(-u)) - sin(-u)*(9.0*u_squared+w_squared)*xi_0;
+          r_0_1.im = 2.0*(u*sin(2.0*u) + cos(2.0 * u)*(u_squared -w_squared) 
+              + 8.0 * sin(-u) * u * cos(w) + u * sin(-u) * (3*u_squared+w_squared)*xi_0 + 4.0*u_squared*cos(w)*cos(-u) + cos(-u)*(9.0*u_squared+w_squared)*xi_0);
 
-        r_0_2.re = -2.0 * cos(2.0*u) - 2.0 * u * sin(-u) * cos(w) - 2.0 * u * sin(-u)* xi_0 - 6.0 * sin(-u) * u_squared * xi_1;
-        r_0_2.im = -2.0 * u * sin(-u) + 2.0 * u * cos(-u) * cos(w) + 2.0 * u * cos(-u) * xi_0 + 6.0 * u * u_squared * cos(-u) * xi_1 - 8.0 * sin(-u) * u * xi_0; 
-
-
-        r_1_1.re = 2.0 * cos(2*u) - 4.0 * u * sin(2*u) - 2.0 * cos(-u) * cos(w) - cos(-u) * (w_squared - 3.0 * u_squared) * xi_0 - 2.0 * u * sin(-u) * cos(w) - 6.0 * u * sin(-u) * xi_0;
-        r_1_1.im = 2.0 * sin(2*u) + 4.0 * u * cos(2*u) + 2.0 * u * cos(-u) * cos(w) + 6.0 * u * cos(-u) * xi_0 - 2.0 * sin(-u) * cos(w) - sin(-u) * (w_squared - 3.0 * u_squared) * xi_0;
-
-        r_1_2.re = cos(-u) *2.0 * u *xi_0 + sin(-u) * cos(w) + sin(-u) * xi_0 - 3.0 * u_squared * sin(-u) * xi_1;
-        r_1_2.im = -cos(-u) * cos(w) - cos(-u) * xi_0 + 3.0 * u_squared * cos(-u) * xi_1 + 2.0 * u * sin(-u) * xi_0;
-
-        r_2_1.re = -2.0 * sin(2.0 * u) - 3.0 * cos(-u) * u * xi_0 - sin(-u) * cos(w) - 3.0 * sin(-u) * xi_0;
-        r_2_1.im = 2.0 * cos(-u) * cos(w) + 3.0 * cos(-u) * xi_0 - 3.0 * u * sin(-u) * xi_0;
-
-        r_2_2.re = cos(-u) * xi_0 + 3.0 * u * sin(-u) * xi_1;
-        r_2_2.im = sin(-u) * xi_0 - 3.0 * cos(-u) * u * xi_1;
+          r_0_2.re = -2.0 * cos(2.0*u) - 2.0 * u * sin(-u) * cos(w) - 2.0 * u * sin(-u)* xi_0 - 6.0 * sin(-u) * u_squared * xi_1;
+          r_0_2.im = -2.0 * u * sin(-u) + 2.0 * u * cos(-u) * cos(w) + 2.0 * u * cos(-u) * xi_0 + 6.0 * u * u_squared * cos(-u) * xi_1 - 8.0 * sin(-u) * u * xi_0; 
 
 
-        tmp_d_0 = 9.0 * u_squared - w_squared;
-        tmp_d_0 = 1.0 / (2.0 * tmp_d_0 * tmp_d_0);
+          r_1_1.re = 2.0 * cos(2*u) - 4.0 * u * sin(2*u) - 2.0 * cos(-u) * cos(w) - cos(-u) * (w_squared - 3.0 * u_squared) * xi_0 - 2.0 * u * sin(-u) * cos(w) - 6.0 * u * sin(-u) * xi_0;
+          r_1_1.im = 2.0 * sin(2*u) + 4.0 * u * cos(2*u) + 2.0 * u * cos(-u) * cos(w) + 6.0 * u * cos(-u) * xi_0 - 2.0 * sin(-u) * cos(w) - sin(-u) * (w_squared - 3.0 * u_squared) * xi_0;
 
-        tmp_d_1 = 3.0 * u_squared - w_squared;
-        tmp_d_2 = 15.0 * u_squared + w_squared;
+          r_1_2.re = cos(-u) *2.0 * u *xi_0 + sin(-u) * cos(w) + sin(-u) * xi_0 - 3.0 * u_squared * sin(-u) * xi_1;
+          r_1_2.im = -cos(-u) * cos(w) - cos(-u) * xi_0 + 3.0 * u_squared * cos(-u) * xi_1 + 2.0 * u * sin(-u) * xi_0;
+
+          r_2_1.re = -2.0 * sin(2.0 * u) - 3.0 * cos(-u) * u * xi_0 - sin(-u) * cos(w) - 3.0 * sin(-u) * xi_0;
+          r_2_1.im = 2.0 * cos(-u) * cos(w) + 3.0 * cos(-u) * xi_0 - 3.0 * u * sin(-u) * xi_0;
+
+          r_2_2.re = cos(-u) * xi_0 + 3.0 * u * sin(-u) * xi_1;
+          r_2_2.im = sin(-u) * xi_0 - 3.0 * cos(-u) * u * xi_1;
 
 
-        b_1_0.re = tmp_d_0 * (2.0 * u * r_0_1.re + tmp_d_1 * r_0_2.re - 2.0 * tmp_d_2 * f_0.re);
-        b_1_0.im = tmp_d_0 * (2.0 * u * r_0_1.im + tmp_d_1 * r_0_2.im - 2.0 * tmp_d_2 * f_0.im);
+          tmp_d_0 = 9.0 * u_squared - w_squared;
+          tmp_d_0 = 1.0 / (2.0 * tmp_d_0 * tmp_d_0);
 
-        b_2_0.re = tmp_d_0 * (r_0_1.re - 3.0 * u * r_0_2.re - 24.0 * u *tmp_d_2 * f_0.re);
-        b_2_0.im = tmp_d_0 * (r_0_1.im - 3.0 * u * r_0_2.im - 24.0 * u *tmp_d_2 * f_0.im);
+          tmp_d_1 = 3.0 * u_squared - w_squared;
+          tmp_d_2 = 15.0 * u_squared + w_squared;
 
-        b_1_1.re = tmp_d_0 * (2.0 * u * r_1_1.re + tmp_d_1 * r_1_2.re - 2.0 * tmp_d_2 * f_1.re);
-        b_1_1.im = tmp_d_0 * (2.0 * u * r_1_1.im + tmp_d_1 * r_1_2.im - 2.0 * tmp_d_2 * f_1.im);
 
-        b_2_1.re = tmp_d_0 * (r_1_1.re - 3.0 * u * r_1_2.re - 24.0 * u *tmp_d_2 * f_1.re);
-        b_2_1.im = tmp_d_0 * (r_1_1.im - 3.0 * u * r_1_2.im - 24.0 * u *tmp_d_2 * f_1.im);
+          b_1_0.re = tmp_d_0 * (2.0 * u * r_0_1.re + tmp_d_1 * r_0_2.re - 2.0 * tmp_d_2 * f_0.re);
+          b_1_0.im = tmp_d_0 * (2.0 * u * r_0_1.im + tmp_d_1 * r_0_2.im - 2.0 * tmp_d_2 * f_0.im);
 
-        b_1_2.re = tmp_d_0 * (2.0 * u * r_2_1.re + tmp_d_1 * r_2_2.re - 2.0 * tmp_d_2 * f_2.re);
-        b_1_2.im = tmp_d_0 * (2.0 * u * r_2_1.im + tmp_d_1 * r_2_2.im - 2.0 * tmp_d_2 * f_2.im);
+          b_2_0.re = tmp_d_0 * (r_0_1.re - 3.0 * u * r_0_2.re - 24.0 * u *tmp_d_2 * f_0.re);
+          b_2_0.im = tmp_d_0 * (r_0_1.im - 3.0 * u * r_0_2.im - 24.0 * u *tmp_d_2 * f_0.im);
 
-        b_2_2.re = tmp_d_0 * (r_2_1.re - 3.0 * u * r_2_2.re - 24.0 * u *tmp_d_2 * f_2.re);
-        b_2_2.im = tmp_d_0 * (r_2_1.im - 3.0 * u * r_2_2.im - 24.0 * u *tmp_d_2 * f_2.im);
+          b_1_1.re = tmp_d_0 * (2.0 * u * r_1_1.re + tmp_d_1 * r_1_2.re - 2.0 * tmp_d_2 * f_1.re);
+          b_1_1.im = tmp_d_0 * (2.0 * u * r_1_1.im + tmp_d_1 * r_1_2.im - 2.0 * tmp_d_2 * f_1.im);
 
+          b_2_1.re = tmp_d_0 * (r_1_1.re - 3.0 * u * r_1_2.re - 24.0 * u *tmp_d_2 * f_1.re);
+          b_2_1.im = tmp_d_0 * (r_1_1.im - 3.0 * u * r_1_2.im - 24.0 * u *tmp_d_2 * f_1.im);
+
+          b_1_2.re = tmp_d_0 * (2.0 * u * r_2_1.re + tmp_d_1 * r_2_2.re - 2.0 * tmp_d_2 * f_2.re);
+          b_1_2.im = tmp_d_0 * (2.0 * u * r_2_1.im + tmp_d_1 * r_2_2.im - 2.0 * tmp_d_2 * f_2.im);
+
+          b_2_2.re = tmp_d_0 * (r_2_1.re - 3.0 * u * r_2_2.re - 24.0 * u *tmp_d_2 * f_2.re);
+          b_2_2.im = tmp_d_0 * (r_2_1.im - 3.0 * u * r_2_2.im - 24.0 * u *tmp_d_2 * f_2.im);
+        }
 
         /*
          * here we calculate B1, B2  eqtn (69) hep-lat/0311018
