@@ -105,5 +105,6 @@
 #define _default_eigenvalue_precision 1.e-5
 #define _default_sub_evs_cg_flag 0
 #define _default_phmc_heavy_timescale 0
+#define _default_phmc_exact_poly 0
 
 #endif

@@ -602,7 +602,7 @@ int main(int argc,char *argv[]) {
   /* Loop for measurements */
   for(j = 0; j < Nmeas; j++) {
     if(g_proc_id == 0) {
-      printf("# Starting trajectory no %d\n", trajectory_counter);
+      printf("# Starting trajectory no %d (meas %d of %d) \n", trajectory_counter, j, Nmeas);
     }
 
 
@@ -687,13 +687,13 @@ int main(int argc,char *argv[]) {
       else if (g_nr_of_psf == 2) g_mu = g_mu2;
       else g_mu = g_mu1;
 
-      no_eigenvalues = 4;
+      no_eigenvalues = 2;
       if(g_epsbar!=0.0)
         temp = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 0);
       else
  	temp = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 0, 0, nstore);
 
-      no_eigenvalues = 4;
+      no_eigenvalues = 2;
       if(g_epsbar!=0.0)
         temp2 = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 1);
       else
