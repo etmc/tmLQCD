@@ -439,10 +439,9 @@ void stout_smear_force()
 
 
         _trace_su3_times_su3(tmp_c_0, tmp_su3_0, tmp_su3_0);
-        printf("AAAAAA\n");
         _trace_su3_times_su3(tmp_c_0, g_previous_stout_force_field[x][mu], tmp_su3_0);
-        printf("CCCCCC\n");
-        printf("tmp_c_0.re = %f tmp_c_0.im = %f\n", tmp_c_0.re, tmp_c_0.im);
+        /*printf("CCCCCC\n");
+        printf("tmp_c_0.re = %f tmp_c_0.im = %f\n", tmp_c_0.re, tmp_c_0.im);*/
 
         /*printf("tmp    = %f +i* %f \n", tmp_c_1.re, tmp_c_1.im);
           printf("c0_max = %f +i* %f \n", c0_max.re, c0_max.im);
