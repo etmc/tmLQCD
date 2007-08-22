@@ -265,6 +265,16 @@ void derivative_psf(const int nr, const int set_zero) {
             }
           }
 
+        /*
+         *  now that we have the force field we need to iterate according to
+         *  eqtn(75) in hep-lat/0311018
+         */
+        stout_smear_force();
+        for(y=0; y<VOLUME; y++)
+          for(mu=0; mu < dim; mu++)
+          {
+            _trace_lambda(df0[y][0], g_stout_force_field[y][mu]);
+          }
       }
     }
     else
