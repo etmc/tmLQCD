@@ -37,16 +37,16 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 /* const int l, const int k){ */
   int ix,iy;
   int ioff,ioff2,icx,icy;
-  su3 restrict *up ALIGN;
-  su3 restrict *um ALIGN;
+  su3 * restrict up ALIGN;
+  su3 * restrict um ALIGN;
   su3adj restrict *ddd;
   static su3adj der;
   static su3 v1,v2;
   static su3_vector psia,psib,phia,phib;
   static spinor rr;
-  spinor restrict *r ALIGN;
-  spinor restrict *sp ALIGN;
-  spinor restrict *sm ALIGN;
+  spinor * restrict r ALIGN;
+  spinor * restrict sp ALIGN;
+  spinor * restrict sm ALIGN;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(derivSb)
