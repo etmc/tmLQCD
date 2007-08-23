@@ -272,7 +272,7 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
  *
  * This is the implementation of 
  *
- *  L_POLY_MIN_CCONST =  M - z_k 
+ *  Q_tau1_min_cconst_ND =  M - z_k 
  *
  *  with M = Qhat(2x2) tau_1   and z_k \in Complex
  *
@@ -290,7 +290,7 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
  * it acts only on the odd part or only
  * on a half spinor
  ******************************************/
-void L_POLY_MIN_CCONST(spinor * const l_strange, spinor * const l_charm,
+void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
                      spinor * const k_strange, spinor * const k_charm, const complex z){
 
 
@@ -701,7 +701,7 @@ void mul_one_plus_imubar(spinor * const l, spinor * const k){
        assign(dum_dn,l_charm,VOLUME/2);
      }
 
-     L_POLY_MIN_CCONST(l_strange, l_charm,
+     Q_tau1_min_cconst_ND(l_strange, l_charm,
                      dum_up, dum_dn,
                      phmc_root[j]);
    }

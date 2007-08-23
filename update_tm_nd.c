@@ -168,7 +168,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
       assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
       assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
 
-      L_POLY_MIN_CCONST(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
+      Q_tau1_min_cconst_ND(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
 			g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
 			phmc_root[phmc_dop_n_cheby-2+j]);
     }
@@ -199,7 +199,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
       assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
       assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
                                                                                                                               
-      L_POLY_MIN_CCONST(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1],
+      Q_tau1_min_cconst_ND(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1],
 			g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0],
 			phmc_root[phmc_dop_n_cheby-2+j]);
     }
@@ -359,7 +359,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
       assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
 
       /* Change this name !!*/
-      L_POLY_MIN_CCONST(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
+      Q_tau1_min_cconst_ND(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
 			g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
 			phmc_root[j-1]);
     }
@@ -442,7 +442,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
       assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
       assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
                                                                                                                             
-      L_POLY_MIN_CCONST(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1],
+      Q_tau1_min_cconst_ND(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1],
 			g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0],
 			phmc_root[j-1]);
     }
@@ -630,7 +630,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
       assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
 
       /* Change this name !!*/
-      L_POLY_MIN_CCONST(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
+      Q_tau1_min_cconst_ND(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
 		      g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
 		      phmc_root[j-1]);
     }

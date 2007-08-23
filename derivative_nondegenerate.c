@@ -44,7 +44,7 @@ void derivative_nondegenerate() {
   /* Here comes the definitions for the chi_j fields */
   /* from  j=0  (chi_0 = phi)  .....  to j = n-1 */
   for(k = 1; k < (phmc_dop_n_cheby-1); k++) {
-    L_POLY_MIN_CCONST(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
+    Q_tau1_min_cconst_ND(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
 		      g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
 		      phmc_root[k-1]);
   }
@@ -61,7 +61,7 @@ void derivative_nondegenerate() {
     assign(g_chi_up_spinor_field[phmc_dop_n_cheby-1], g_chi_up_spinor_field[phmc_dop_n_cheby], VOLUME/2);
     assign(g_chi_dn_spinor_field[phmc_dop_n_cheby-1], g_chi_dn_spinor_field[phmc_dop_n_cheby], VOLUME/2);
 
-    L_POLY_MIN_CCONST(g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby], 
+    Q_tau1_min_cconst_ND(g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby], 
 		      g_chi_up_spinor_field[phmc_dop_n_cheby-1], g_chi_dn_spinor_field[phmc_dop_n_cheby-1], 
 		      phmc_root[2*phmc_dop_n_cheby-3-j]);
 
