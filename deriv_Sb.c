@@ -39,7 +39,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
   int ioff,ioff2,icx,icy;
   su3 * restrict up ALIGN;
   su3 * restrict um ALIGN;
-  su3adj restrict *ddd;
+  su3adj * restrict ddd;
   static su3adj der;
   static su3 v1,v2;
   static su3_vector psia,psib,phia,phib;
