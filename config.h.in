@@ -1,5 +1,7 @@
 /* config.h.in.  Generated from configure.in by autoheader.  */
 /* $Id$ */
+#ifndef _CONFIG_H
+#define _CONFIG_H
 
 /* We are on a CRAY */
 #undef CRAY
@@ -144,4 +146,7 @@
 
 /* Define to 1 for rts_get_dram_window usage for halfspinor on BG/L */
 #undef BGL2
+
+
+#endif
 
