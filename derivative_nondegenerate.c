@@ -65,27 +65,27 @@ void derivative_nondegenerate() {
 		      g_chi_up_spinor_field[phmc_dop_n_cheby-1], g_chi_dn_spinor_field[phmc_dop_n_cheby-1], 
 		      phmc_root[2*phmc_dop_n_cheby-3-j]);
 
-    assign(g_spinor_field[DUM_DERI+4], g_chi_up_spinor_field[phmc_dop_n_cheby], VOLUME/2);
-    assign(g_spinor_field[DUM_DERI+5], g_chi_dn_spinor_field[phmc_dop_n_cheby], VOLUME/2);
+/*     assign(g_spinor_field[DUM_DERI+4], g_chi_up_spinor_field[phmc_dop_n_cheby], VOLUME/2); */
+/*     assign(g_spinor_field[DUM_DERI+5], g_chi_dn_spinor_field[phmc_dop_n_cheby], VOLUME/2); */
   
-    assign(g_spinor_field[DUM_DERI+2], g_chi_up_spinor_field[j-1], VOLUME/2);
-    assign(g_spinor_field[DUM_DERI+3], g_chi_dn_spinor_field[j-1], VOLUME/2);
+/*     assign(g_spinor_field[DUM_DERI+2], g_chi_up_spinor_field[j-1], VOLUME/2); */
+/*     assign(g_spinor_field[DUM_DERI+3], g_chi_dn_spinor_field[j-1], VOLUME/2); */
       
     /* Get the even parts of the  (j-1)th  chi_spinors */
     H_eo_ND(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], 
-	    g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], EO);
+	    g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
 
     /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
-    deriv_Sb(EO, DUM_DERI, DUM_DERI+4);      /* UP */
-    deriv_Sb(EO, DUM_DERI+1, DUM_DERI+5);    /* DN */
+    deriv_Sb(EO, g_spinor_field[DUM_DERI], g_chi_up_spinor_field[phmc_dop_n_cheby]);      /* UP */
+    deriv_Sb(EO, g_spinor_field[DUM_DERI+1], g_chi_dn_spinor_field[phmc_dop_n_cheby]);    /* DN */
 
     /* Get the even parts of the  (2N-j)-th  chi_spinors */
     H_eo_ND(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], 
-	    g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+5], EO);
+	    g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby], EO);
 
     /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
-    deriv_Sb(OE, DUM_DERI+2, DUM_DERI);
-    deriv_Sb(OE, DUM_DERI+3, DUM_DERI+1);
+    deriv_Sb(OE, g_chi_up_spinor_field[j-1], g_spinor_field[DUM_DERI]);
+    deriv_Sb(OE, g_chi_dn_spinor_field[j-1], g_spinor_field[DUM_DERI+1]);
   }
 
   /*

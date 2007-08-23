@@ -33,45 +33,46 @@
 #include "sse.h"
 #include "deriv_Sb.h"
 
-void deriv_Sb(const int ieo, const int l, const int k){
+void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
+/* const int l, const int k){ */
   int ix,iy;
   int ioff,ioff2,icx,icy;
-  su3 *up,*um;
-  su3adj *ddd;
+  su3 restrict *up ALIGN;
+  su3 restrict *um ALIGN;
+  su3adj restrict *ddd;
   static su3adj der;
   static su3 v1,v2;
   static su3_vector psia,psib,phia,phib;
   static spinor rr;
-  spinor *r ALIGN;
-  spinor *sp ALIGN;
-  spinor *sm ALIGN;
-#if (defined XLC || defined BGLNOTCHECKED)
-  double _Complex reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7;
-#endif
+  spinor restrict *r ALIGN;
+  spinor restrict *sp ALIGN;
+  spinor restrict *sm ALIGN;
+
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(derivSb)
 #endif
 #ifdef XLC
 #pragma disjoint(*r, *sp, *sm, *up, *um, *ddd)
 #endif
-  if(ieo==0){
+  if(ieo==0) {
     ioff=0;
-  } 
-  else{
+  }
+  else {
     ioff=(VOLUME+RAND)/2;
   } 
   ioff2=(VOLUME+RAND)/2-ioff;
 
   /* for parallelization */
 #ifdef MPI
-  xchange_field(g_spinor_field[k], ieo);
-  xchange_field(g_spinor_field[l], (ieo+1)%2);
+  xchange_field(k, ieo);
+  xchange_field(l, (ieo+1)%2);
 #endif
   /************** loop over all lattice sites ****************/
 
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
     ix=g_eo2lexic[icx];
-    rr=g_spinor_field[l][icx-ioff];
+    rr = (*(l + (icx-ioff)));
+    /*     rr=g_spinor_field[l][icx-ioff]; */
     r=&rr;
 
     /*multiply the left vector with gamma5*/
@@ -82,8 +83,8 @@ void deriv_Sb(const int ieo, const int l, const int k){
 
     iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
 
-
-    sp=&g_spinor_field[k][icy];
+    sp = k + icy;
+/*     sp=&g_spinor_field[k][icy]; */
     up=&g_gauge_field[ix][0];
       
     _vector_add(psia,(*sp).s0,(*sp).s2);
@@ -105,7 +106,8 @@ void deriv_Sb(const int ieo, const int l, const int k){
 
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
 
-    sm=&g_spinor_field[k][icy];
+    sm = k + icy;
+/*     sm=&g_spinor_field[k][icy]; */
     um=&g_gauge_field[iy][0];
       
     _vector_sub(psia,(*sm).s0,(*sm).s2);
@@ -127,7 +129,8 @@ void deriv_Sb(const int ieo, const int l, const int k){
 
     iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
 
-    sp=&g_spinor_field[k][icy];
+    sp = k + icy;
+    /*     sp=&g_spinor_field[k][icy]; */
     up=&g_gauge_field[ix][1];      
 
     _vector_i_add(psia,(*sp).s0,(*sp).s3);
@@ -149,7 +152,8 @@ void deriv_Sb(const int ieo, const int l, const int k){
 
     iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
 
-    sm=&g_spinor_field[k][icy];
+    sm = k + icy;
+    /*     sm=&g_spinor_field[k][icy]; */
     um=&g_gauge_field[iy][1];
       
     _vector_i_sub(psia,(*sm).s0,(*sm).s3);
@@ -172,7 +176,8 @@ void deriv_Sb(const int ieo, const int l, const int k){
 
     iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
 
-    sp=&g_spinor_field[k][icy];
+    sp = k + icy;
+    /*     sp=&g_spinor_field[k][icy]; */
     up=&g_gauge_field[ix][2];
       
     _vector_add(psia,(*sp).s0,(*sp).s3);
@@ -195,7 +200,8 @@ void deriv_Sb(const int ieo, const int l, const int k){
 
     iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
 
-    sm=&g_spinor_field[k][icy];
+    sm = k + icy;
+    /*     sm=&g_spinor_field[k][icy]; */
     um=&g_gauge_field[iy][2];
       
     _vector_sub(psia,(*sm).s0,(*sm).s3);
@@ -219,7 +225,8 @@ void deriv_Sb(const int ieo, const int l, const int k){
 
     iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
 
-    sp=&g_spinor_field[k][icy];
+    sp = k + icy;
+    /*     sp=&g_spinor_field[k][icy]; */
     up=&g_gauge_field[ix][3];
       
     _vector_i_add(psia,(*sp).s0,(*sp).s2);
@@ -243,7 +250,8 @@ void deriv_Sb(const int ieo, const int l, const int k){
 
     iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
 
-    sm=&g_spinor_field[k][icy];
+    sm = k + icy;
+    /*     sm=&g_spinor_field[k][icy]; */
     um=&g_gauge_field[iy][3];
       
     _vector_i_sub(psia,(*sm).s0,(*sm).s2);

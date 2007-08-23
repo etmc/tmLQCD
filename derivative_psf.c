@@ -201,12 +201,12 @@ void derivative_psf(const int nr, const int set_zero) {
             /* to get the even sites of X */
             H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
             /* \delta Q sandwitched by Y_o^\dagger and X_e */
-            deriv_Sb(OE, DUM_DERI, DUM_DERI+2); 
+            deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2]); 
 
             /* to get the even sites of Y */
             H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
             /* \delta Q sandwitched by Y_e^\dagger and X_o */
-            deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
+            deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]); 
             g_mu = g_mu1;
 
             for(y=0; y<VOLUME; y++)
@@ -353,12 +353,12 @@ void derivative_psf(const int nr, const int set_zero) {
     /* to get the even sites of X */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, DUM_DERI, DUM_DERI+2); 
+    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2]); 
     
     /* to get the even sites of Y */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
+    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]); 
     g_mu = g_mu1;
     
     
@@ -419,12 +419,12 @@ void derivative_psf(const int nr, const int set_zero) {
     /* to get the even sites of X */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, DUM_DERI, DUM_DERI+2); 
+    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2]); 
     
     /* to get the even sites of Y */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
+    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]); 
     g_mu = g_mu1;
 
     /* Second term coming from the third field */
@@ -439,12 +439,12 @@ void derivative_psf(const int nr, const int set_zero) {
   /* to get the even sites of X */
   H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
-  deriv_Sb(OE, DUM_DERI, DUM_DERI+2); 
+  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2]); 
   
   /* to get the even sites of Y */
   H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
-  deriv_Sb(EO, DUM_DERI+3, DUM_DERI+1); 
+  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]); 
   g_mu = g_mu1;
   }
 #ifdef _KOJAK_INST
