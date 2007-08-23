@@ -25,8 +25,6 @@ su3 * stout_Lambda_field;
 su3 ** g_stout_Lambda_field;
 su3 * stout_Gamma_field;
 su3 ** g_stout_Gamma_field;
-spinor * g_test_spinor_field_left;
-spinor * g_test_spinor_field_right;
 
 int init_stout_smear_vars(const int V, const int stout_no_iter) 
 {
@@ -45,20 +43,20 @@ int init_stout_smear_vars(const int V, const int stout_no_iter)
    *  this is the field where we store the intermediate smeared gauge configurations U^{(i)}
    *  eqtn (4) hep-lat/0311018
    */
-  gauge_field_smear_iterations = calloc(stout_no_iter*dim*V, sizeof(su3));
+  gauge_field_smear_iterations = calloc((stout_no_iter+1)*dim*V, sizeof(su3));
   if(errno == ENOMEM) 
   {
     return(1);
   }
 
-  g_gauge_field_smear_iterations = calloc(stout_no_iter, sizeof(su3**));
+  g_gauge_field_smear_iterations = calloc(stout_no_iter+1, sizeof(su3**));
   if(errno == ENOMEM) 
   {
     return(1);
   }
 
   tmp_su3_pointer = gauge_field_smear_iterations;
-  for(i = 0; i < stout_no_iter; i++) 
+  for(i = 0; i < stout_no_iter+1; i++) 
   {
     g_gauge_field_smear_iterations[i] = calloc(V, sizeof(su3*));
     if(errno == ENOMEM) 
@@ -260,7 +258,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter)
    *  here we allocate the testspinors necessary to get the 
    *  explicit force \Sigma
    */
-  g_test_spinor_field_left = calloc(V/2, sizeof(spinor));
+  /*g_test_spinor_field_left = calloc(V/2, sizeof(spinor));
   if(errno == ENOMEM) 
   {
     return(1);
@@ -270,7 +268,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter)
   if(errno == ENOMEM) 
   {
     return(1);
-  }
+  }*/
   
   /*#if (defined SSE || defined SSE2 || defined SSE3)
     g_gauge_field[0] = (su3*)(((unsigned long int)(gauge_field)+ALIGN_BASE)&~ALIGN_BASE);
@@ -330,7 +328,7 @@ g_gauge_field_copy[i] = g_gauge_field_copy[i-1]+8;
 }
 #  endif*/
 
-  printf("Leaving init_stout_smear_vars\n");
+  /*printf("Leaving init_stout_smear_vars\n");*/
   return(0);
   }
 
@@ -348,6 +346,4 @@ void free_stout_smear_vars()
   free(g_stout_Lambda_field);
   free(stout_Gamma_field);
   free(g_stout_Gamma_field);
-  free(g_test_spinor_field_left);
-  free(g_test_spinor_field_right);
 }
