@@ -194,53 +194,6 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   g_sloppy_precision = 0;
   /*perform the accept-reject-step*/
   enepx=moment_energy();
-
-  /*if(use_stout_flag == 1){
-    int iter;
-    printf("A\n");
-    init_stout_smear_vars(VOLUME, 0, stout_no_iter);
-    printf("B\n");
-    for(iter=0; iter < stout_no_iter; iter++)
-    {
-      for(ix=0; ix < VOLUME; ix++)
-      {
-        for(mu=0; mu < 4; mu++)
-        {
-          _su3_zero((g_gauge_field_smear_iterations[iter][ix][mu]));
-          if( iter == 3 && ix == 5 && mu == 2 )
-          {
-            _su3_assign(g_gauge_field_smear_iterations[iter][ix][mu], g_gauge_field[ix][mu]);
-            print_su3(&(g_gauge_field_smear_iterations[iter][ix][mu]));
-            print_su3(&(g_gauge_field[ix][mu]));
-          }
-        }
-
-      }
-
-    }
-    printf("Juhu\n");
-    _su3_assign(g_gauge_field_smear_iterations[2][4][1],g_gauge_field[7][2]);
-
-    printf("iterations = %d\nvolume = %d \ndim = 4\n", stout_no_iter, VOLUME);
-    printf("\n");
-    print_su3(&(gauge_field_smear_iterations[1]));
-    printf("\n");
-    print_su3(&(g_gauge_field_smear_iterations[0][0][1]));
-    printf("\n");
-    print_su3(&(g_gauge_field[5][2]));
-    printf("\n");
-    print_su3(&(g_gauge_field_smear_iterations[3][5][2]));
-    printf("\n");
-    print_su3(&(g_gauge_field[7][2]));
-    printf("\n");
-    print_su3(&(g_gauge_field_smear_iterations[2][4][1]));
-    printf("\n");
-
-    printf("g_nr_of_psf = %d\n", g_nr_of_psf);
-
-    stout_smear_gauge_field(stout_rho, stout_no_iter);
-
-  }*/
   
   new_plaquette_energy=measure_gauge_action();
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
