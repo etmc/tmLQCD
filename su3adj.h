@@ -75,6 +75,17 @@ typedef struct
 (r).d7+=(a).d7; \
 (r).d8+=(a).d8; 
 
+#define _trace_lambda_add_assign(r,a) \
+(r).d1+= (-(a).c10.im-(a).c01.im); \
+(r).d2+= (+(a).c10.re-(a).c01.re); \
+(r).d3+= (-(a).c00.im+(a).c11.im); \
+(r).d4+= (-(a).c20.im-(a).c02.im); \
+(r).d5+= (+(a).c20.re-(a).c02.re); \
+(r).d6+= (-(a).c21.im-(a).c12.im); \
+(r).d7+= (+(a).c21.re-(a).c12.re); \
+(r).d8+= ((-(a).c00.im-(a).c11.im + 2.0*a.c22.im)*0.577350269189625);
+
+
 /*************************************************
  *
  * Square norm of su3adj

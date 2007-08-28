@@ -1843,6 +1843,26 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (t).c22.im=(u).c2.im*(v).c2.re-(u).c2.re*(v).c2.im; 
 #endif
 
+#define _vector_tensor_vector_add(t, u, v, w, z) \
+   (t).c00.re=(u).c0.re*(v).c0.re+(u).c0.im*(v).c0.im + (w).c0.re*(z).c0.re+(w).c0.im*(z).c0.im; \
+   (t).c00.im=(u).c0.im*(v).c0.re-(u).c0.re*(v).c0.im + (w).c0.im*(z).c0.re-(w).c0.re*(z).c0.im; \
+   (t).c01.re=(u).c0.re*(v).c1.re+(u).c0.im*(v).c1.im + (w).c0.re*(z).c1.re+(w).c0.im*(z).c1.im; \
+   (t).c01.im=(u).c0.im*(v).c1.re-(u).c0.re*(v).c1.im + (w).c0.im*(z).c1.re-(w).c0.re*(z).c1.im; \
+   (t).c02.re=(u).c0.re*(v).c2.re+(u).c0.im*(v).c2.im + (w).c0.re*(z).c2.re+(w).c0.im*(z).c2.im; \
+   (t).c02.im=(u).c0.im*(v).c2.re-(u).c0.re*(v).c2.im + (w).c0.im*(z).c2.re-(w).c0.re*(z).c2.im; \
+   (t).c10.re=(u).c1.re*(v).c0.re+(u).c1.im*(v).c0.im + (w).c1.re*(z).c0.re+(w).c1.im*(z).c0.im; \
+   (t).c10.im=(u).c1.im*(v).c0.re-(u).c1.re*(v).c0.im + (w).c1.im*(z).c0.re-(w).c1.re*(z).c0.im; \
+   (t).c11.re=(u).c1.re*(v).c1.re+(u).c1.im*(v).c1.im + (w).c1.re*(z).c1.re+(w).c1.im*(z).c1.im; \
+   (t).c11.im=(u).c1.im*(v).c1.re-(u).c1.re*(v).c1.im + (w).c1.im*(z).c1.re-(w).c1.re*(z).c1.im; \
+   (t).c12.re=(u).c1.re*(v).c2.re+(u).c1.im*(v).c2.im + (w).c1.re*(z).c2.re+(w).c1.im*(z).c2.im; \
+   (t).c12.im=(u).c1.im*(v).c2.re-(u).c1.re*(v).c2.im + (w).c1.im*(z).c2.re-(w).c1.re*(z).c2.im; \
+   (t).c20.re=(u).c2.re*(v).c0.re+(u).c2.im*(v).c0.im + (w).c2.re*(z).c0.re+(w).c2.im*(z).c0.im; \
+   (t).c20.im=(u).c2.im*(v).c0.re-(u).c2.re*(v).c0.im + (w).c2.im*(z).c0.re-(w).c2.re*(z).c0.im; \
+   (t).c21.re=(u).c2.re*(v).c1.re+(u).c2.im*(v).c1.im + (w).c2.re*(z).c1.re+(w).c2.im*(z).c1.im; \
+   (t).c21.im=(u).c2.im*(v).c1.re-(u).c2.re*(v).c1.im + (w).c2.im*(z).c1.re-(w).c2.re*(z).c1.im; \
+   (t).c22.re=(u).c2.re*(v).c2.re+(u).c2.im*(v).c2.im + (w).c2.re*(z).c2.re+(w).c2.im*(z).c2.im; \
+   (t).c22.im=(u).c2.im*(v).c2.re-(u).c2.re*(v).c2.im + (w).c2.im*(z).c2.re-(w).c2.re*(z).c2.im; 
+
 #ifdef MAIN_PROGRAM
 static char const su3rcsid[] = "$Id$";
 #endif
