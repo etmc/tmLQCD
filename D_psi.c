@@ -427,6 +427,7 @@ void D_psi(spinor * const P, spinor * const Q){
   static complex fact1;
   su3 * restrict up ALIGN;
   su3 * restrict um ALIGN;
+  spinor * restrict s ALIGN;
   spinor * restrict sp ALIGN;
   spinor * restrict sm ALIGN;
   spinor * restrict rn ALIGN;
@@ -440,7 +441,7 @@ void D_psi(spinor * const P, spinor * const Q){
   double _Complex rs00, rs01, rs02, rs10, rs11, rs12, rs20, rs21, rs22, 
     rs30, rs31, rs32;
 
-#pragma disjoint(*sp, *sm, *rn, *up, *um, *P, *Q)
+#pragma disjoint(*s, *sp, *sm, *rn, *up, *um, *P, *Q)
 
   __alignx(16,P);
   __alignx(16,Q);

@@ -34,8 +34,12 @@ void boundary(){
   ka2.im = g_kappa * sin(x2);
   ka3.re = g_kappa * cos(x3); 
   ka3.im = g_kappa * sin(x3);
-  phase_0 = -ka0;
-  phase_1 = -ka1;
-  phase_2 = -ka2;
-  phase_3 = -ka3;
+  phase_0.re = -ka0.re;
+  phase_1.re = -ka1.re;
+  phase_2.re = -ka2.re;
+  phase_3.re = -ka3.re;
+  phase_0.im = -ka0.im;
+  phase_1.im = -ka1.im;
+  phase_2.im = -ka2.im;
+  phase_3.im = -ka3.im;
 }

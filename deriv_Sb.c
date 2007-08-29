@@ -569,4 +569,6 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 #endif
 }
 
+#endif
+
 static char const rcsid[] = "$Id$";

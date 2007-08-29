@@ -1131,7 +1131,7 @@
 /* conjugate in vxy transposed */
 /* 9th element is stored in reg00 */
 
-#define _bgl_tensor_product_and_add() \
+#define _bgl_tensor_product_and_add_dagger() \
   v00 = __fxpmul(reg10, __creal(reg00)); \
   v01 = __fxpmul(reg10, __creal(reg01)); \
   v02 = __fxpmul(reg10, __creal(reg02)); \
