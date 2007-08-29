@@ -33,6 +33,284 @@
 #include "sse.h"
 #include "deriv_Sb.h"
 
+
+#if (defined BGLnotchecked && defined XLC)
+
+void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
+/* const int l, const int k){ */
+  int ix,iy;
+  int ioff,ioff2,icx,icy;
+  su3 * restrict up ALIGN;
+  su3 * restrict um ALIGN;
+  su3adj * restrict ddd;
+  static su3adj der;
+  static su3 v1,v2;
+  static su3_vector psia,psib,phia,phib;
+  static spinor rr;
+  spinor * restrict r ALIGN;
+  spinor * restrict sp ALIGN;
+  spinor * restrict sm ALIGN;
+
+  /* We have 32 registers available */
+  double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
+  double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
+  /* For su3 matrix, use reg00 for missing register */
+  double _Complex v00, v01, v02, v10, v11, v12, v20, v21;
+  /* The following contains the left spinor (12 regs) (independent of mu) */
+  double _Complex r00, r01, r02, r10, r11, r12, r20, r21, r22, 
+    r30, r31, r32;
+
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(derivSb)
+#endif
+#ifdef XLC
+#pragma disjoint(*r, *sp, *sm, *up, *um, *ddd)
+  __alignx(16, l);
+  __alignx(16, k);
+#endif
+
+  if(ieo==0) {
+    ioff=0;
+  }
+  else {
+    ioff=(VOLUME+RAND)/2;
+  } 
+  ioff2=(VOLUME+RAND)/2-ioff;
+
+  /* for parallelization */
+#ifdef MPI
+  xchange_field(k, ieo);
+  xchange_field(l, (ieo+1)%2);
+#endif
+  /************** loop over all lattice sites ****************/
+
+  for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
+    ix=g_eo2lexic[icx];
+/*     rr = (*(l + (icx-ioff))); */
+    /*     rr=g_spinor_field[l][icx-ioff]; */
+/*     r=&rr; */
+
+    /* load left vector r and */
+    /* multiply with gamma5   */
+    r = l + (icx-ioff);
+    _bgl_load_r0((*r).s0);
+    _bgl_load_r1((*r).s1);
+    _bgl_load_minus_r2((*r).s2);
+    _bgl_load_minus_r3((*r).s3);
+
+
+    /*********************** direction +0 ********************/
+
+    iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
+
+    sp = k + icy;
+/*     sp=&g_spinor_field[k][icy]; */
+    up=&g_gauge_field[ix][0];
+
+    _bgl_load_reg0((*sp).s0);
+    _bgl_load_reg0_up((*sp).s1);
+    _bgl_load_reg1((*sp).s2);
+    _bgl_load_reg1_up((*sp).s3);
+    
+    _bgl_add_to_reg0_reg1();
+    _bgl_add_to_reg0_up_reg1_up();
+/*     _vector_add(psia,(*sp).s0,(*sp).s2); */
+/*     _vector_add(psib,(*sp).s1,(*sp).s3); */
+      
+    _bgl_add_r0_to_r2_reg1();
+    _bgl_add_r1_to_r3_reg1_up();
+/*     _vector_add(phia,(*r).s0,(*r).s2); */
+/*     _vector_add(phib,(*r).s1,(*r).s3); */
+
+    _bgl_tensor_product_and_add();
+/*     _vector_tensor_vector(v1,phia,psia); */
+/*     _vector_tensor_vector(v2,phib,psib); */
+/*     _su3_plus_su3(v1,v1,v2); */
+    _su3_times_su3d(v2,*up,v1);
+    _complex_times_su3(v1,ka0,v2);
+    _trace_lambda(der,v1);
+    ddd=&df0[ix][0];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[ix][0], der); */
+    /************** direction -0 ****************************/
+
+    iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
+
+    sm = k + icy;
+/*     sm=&g_spinor_field[k][icy]; */
+    um=&g_gauge_field[iy][0];
+      
+    _vector_sub(psia,(*sm).s0,(*sm).s2);
+    _vector_sub(psib,(*sm).s1,(*sm).s3);
+
+    _vector_sub(phia,(*r).s0,(*r).s2);
+    _vector_sub(phib,(*r).s1,(*r).s3);
+
+    _vector_tensor_vector(v1,psia,phia);
+    _vector_tensor_vector(v2,psib,phib);
+    _su3_plus_su3(v1,v1,v2);
+    _su3_times_su3d(v2,*um,v1);
+    _complex_times_su3(v1,ka0,v2);
+    _trace_lambda(der,v1);
+    ddd=&df0[iy][0];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[iy][0], der); */
+    /*************** direction +1 **************************/
+
+    iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
+
+    sp = k + icy;
+    /*     sp=&g_spinor_field[k][icy]; */
+    up=&g_gauge_field[ix][1];      
+
+    _vector_i_add(psia,(*sp).s0,(*sp).s3);
+    _vector_i_add(psib,(*sp).s1,(*sp).s2);
+
+    _vector_i_add(phia,(*r).s0,(*r).s3);
+    _vector_i_add(phib,(*r).s1,(*r).s2);
+
+    _vector_tensor_vector(v1,phia,psia);
+    _vector_tensor_vector(v2,phib,psib);
+    _su3_plus_su3(v1,v1,v2);
+    _su3_times_su3d(v2,*up,v1);
+    _complex_times_su3(v1,ka1,v2);
+    _trace_lambda(der,v1);
+    ddd=&df0[ix][1];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[ix][1], der); */
+    /**************** direction -1 *************************/
+
+    iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
+
+    sm = k + icy;
+    /*     sm=&g_spinor_field[k][icy]; */
+    um=&g_gauge_field[iy][1];
+      
+    _vector_i_sub(psia,(*sm).s0,(*sm).s3);
+    _vector_i_sub(psib,(*sm).s1,(*sm).s2);
+
+    _vector_i_sub(phia,(*r).s0,(*r).s3);
+    _vector_i_sub(phib,(*r).s1,(*r).s2);
+
+    _vector_tensor_vector(v1,psia,phia);
+    _vector_tensor_vector(v2,psib,phib);
+    _su3_plus_su3(v1,v1,v2);
+    _su3_times_su3d(v2,*um,v1);
+    _complex_times_su3(v1,ka1,v2);
+    _trace_lambda(der,v1);
+    ddd=&df0[iy][1];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[iy][1], der); */
+
+    /*************** direction +2 **************************/
+
+    iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
+
+    sp = k + icy;
+    /*     sp=&g_spinor_field[k][icy]; */
+    up=&g_gauge_field[ix][2];
+      
+    _vector_add(psia,(*sp).s0,(*sp).s3);
+    _vector_sub(psib,(*sp).s1,(*sp).s2);
+      
+    _vector_add(phia,(*r).s0,(*r).s3);
+    _vector_sub(phib,(*r).s1,(*r).s2);
+
+    _vector_tensor_vector(v1,phia,psia);
+    _vector_tensor_vector(v2,phib,psib);
+    _su3_plus_su3(v1,v1,v2);
+    _su3_times_su3d(v2,*up,v1);
+    _complex_times_su3(v1,ka2,v2);
+    _trace_lambda(der,v1);
+    ddd=&df0[ix][2];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[ix][2], der); */
+
+    /***************** direction -2 ************************/
+
+    iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
+
+    sm = k + icy;
+    /*     sm=&g_spinor_field[k][icy]; */
+    um=&g_gauge_field[iy][2];
+      
+    _vector_sub(psia,(*sm).s0,(*sm).s3);
+    _vector_add(psib,(*sm).s1,(*sm).s2);
+
+    _vector_sub(phia,(*r).s0,(*r).s3);
+    _vector_add(phib,(*r).s1,(*r).s2);
+
+    _vector_tensor_vector(v1,psia,phia);
+    _vector_tensor_vector(v2,psib,phib);
+
+    _su3_plus_su3(v1,v1,v2);
+    _su3_times_su3d(v2,*um,v1);
+    _complex_times_su3(v1,ka2,v2);
+    _trace_lambda(der,v1);
+    ddd=&df0[iy][2];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[iy][2], der); */
+
+    /****************** direction +3 ***********************/
+
+    iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
+
+    sp = k + icy;
+    /*     sp=&g_spinor_field[k][icy]; */
+    up=&g_gauge_field[ix][3];
+      
+    _vector_i_add(psia,(*sp).s0,(*sp).s2);
+    _vector_i_sub(psib,(*sp).s1,(*sp).s3);
+
+    _vector_i_add(phia,(*r).s0,(*r).s2);
+    _vector_i_sub(phib,(*r).s1,(*r).s3);
+
+    _vector_tensor_vector(v1,phia,psia);
+    _vector_tensor_vector(v2,phib,psib);
+
+    _su3_plus_su3(v1,v1,v2);
+    _su3_times_su3d(v2,*up,v1);
+    _complex_times_su3(v1,ka3,v2);
+    _trace_lambda(der,v1);
+    ddd=&df0[ix][3];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[ix][3], der); */
+
+    /***************** direction -3 ************************/
+
+    iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
+
+    sm = k + icy;
+    /*     sm=&g_spinor_field[k][icy]; */
+    um=&g_gauge_field[iy][3];
+      
+    _vector_i_sub(psia,(*sm).s0,(*sm).s2);
+    _vector_i_add(psib,(*sm).s1,(*sm).s3);
+
+    _vector_i_sub(phia,(*r).s0,(*r).s2);
+    _vector_i_add(phib,(*r).s1,(*r).s3);
+
+    _vector_tensor_vector(v1,psia,phia);
+    _vector_tensor_vector(v2,psib,phib);
+    _su3_plus_su3(v1,v1,v2);
+    _su3_times_su3d(v2,*um,v1);
+    _complex_times_su3(v1,ka3,v2);
+    _trace_lambda(der,v1);
+    ddd=&df0[iy][3];
+    _add_su3adj(*ddd,der);
+/*     _add_su3adj(df0[iy][3], der); */
+     
+    /****************** end of loop ************************/
+  }
+#ifdef _KOJAK_INST
+#pragma pomp inst end(derivSb)
+#endif
+}
+
+#else
+
+
+
 void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 /* const int l, const int k){ */
   int ix,iy;
