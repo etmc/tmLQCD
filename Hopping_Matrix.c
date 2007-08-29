@@ -1949,7 +1949,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _bgl_load_reg1_up((*sp).s3);
     _bgl_vector_add_reg0();
     _bgl_vector_add_reg1();
-    /* result is now in regx0, regx1, regx2 */
+    /* result is now in regx0, regx1, regx2 x = 0,1 */
 
     _bgl_su3_multiply_double((*up));
     _bgl_vector_cmplx_mul_double(ka0);

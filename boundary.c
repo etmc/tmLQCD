@@ -15,6 +15,7 @@
 #include "boundary.h"
 
 complex ka0, ka1, ka2, ka3;
+complex phase_0, phase_1, phase_2, phase_3;
 const double PI_ = 3.14159265358979;
 double X0;
 
@@ -33,4 +34,8 @@ void boundary(){
   ka2.im = g_kappa * sin(x2);
   ka3.re = g_kappa * cos(x3); 
   ka3.im = g_kappa * sin(x3);
+  phase_0 = -ka0;
+  phase_1 = -ka1;
+  phase_2 = -ka2;
+  phase_3 = -ka3;
 }

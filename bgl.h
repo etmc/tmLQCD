@@ -443,6 +443,33 @@
   reg05 = __fxcxnpma(reg02, reg05, c.im); \
   reg15 = __fxcxnpma(reg12, reg15, c.im); 
 
+#define _bgl_vector_cmplx_mul_rs(c) \
+  reg00 = __fxpmul(rs00, c.re); \
+  reg01 = __fxpmul(rs01, c.re); \
+  reg02 = __fxpmul(rs02, c.re); \
+  reg10 = __fxpmul(rs10, c.re); \
+  reg11 = __fxpmul(rs11, c.re); \
+  reg12 = __fxpmul(rs12, c.re); \
+  rs00 = __fxcxnpma(reg00, rs00, c.im); \
+  rs01 = __fxcxnpma(reg01, rs01, c.im); \
+  rs02 = __fxcxnpma(reg02, rs02, c.im); \
+  rs10 = __fxcxnpma(reg10, rs10, c.im); \
+  rs11 = __fxcxnpma(reg11, rs11, c.im); \
+  rs12 = __fxcxnpma(reg12, rs12, c.im); \
+  reg00 = __fxpmul(rs20, c.re); \
+  reg01 = __fxpmul(rs21, c.re); \
+  reg02 = __fxpmul(rs22, c.re); \
+  reg10 = __fxpmul(rs30, c.re); \
+  reg11 = __fxpmul(rs31, c.re); \
+  reg12 = __fxpmul(rs32, c.re); \
+  rs20 = __fxcxnsma(reg00, rs20, c.im); \
+  rs21 = __fxcxnsma(reg01, rs21, c.im); \
+  rs22 = __fxcxnsma(reg02, rs22, c.im); \
+  rs30 = __fxcxnsma(reg10, rs30, c.im); \
+  rs31 = __fxcxnsma(reg11, rs31, c.im); \
+  rs32 = __fxcxnsma(reg12, rs32, c.im); \
+  
+
 #define _bgl_vector_cmplxcg_mul(c) \
   reg00 = __fxpmul(reg03, c.re); \
   reg01 = __fxpmul(reg04, c.re); \
@@ -1013,5 +1040,135 @@
   reg11 = __fpadd(rs11, rs21); \
   reg12 = __fpadd(rs12, rs22); 
 
+
+/* for deriv_Sb */
+#define _bgl_load_r0(s) \
+  r00 = __lfpd((double*)&(s).c0); \
+  r01 = __lfpd((double*)&(s).c1); \
+  r02 = __lfpd((double*)&(s).c2); 
+
+#define _bgl_load_r1(s) \
+  r10 = __lfpd((double*)&(s).c0); \
+  r11 = __lfpd((double*)&(s).c1); \
+  r12 = __lfpd((double*)&(s).c2); 
+
+#define _bgl_load_minus_r2(s) \
+  r20 = -__lfpd((double*)&(s).c0); \
+  r21 = -__lfpd((double*)&(s).c1); \
+  r22 = -__lfpd((double*)&(s).c2); 
+
+#define _bgl_load_minus_r3(s) \
+  r30 = -__lfpd((double*)&(s).c0); \
+  r31 = -__lfpd((double*)&(s).c1); \
+  r32 = -__lfpd((double*)&(s).c2); 
+
+#define _bgl_add_to_reg0_reg1() \
+  reg00 = __fpadd(reg10, reg00); \
+  reg01 = __fpadd(reg11, reg01); \
+  reg02 = __fpadd(reg12, reg02);  
+
+#define _bgl_add_to_reg0_up_reg1_up() \
+  reg03 = __fpadd(reg13, reg03); \
+  reg04 = __fpadd(reg14, reg04); \
+  reg05 = __fpadd(reg15, reg05);  
+
+#define _bgl_add_r0_to_r2_reg1() \
+  reg10 = __fpadd(r00, r20); \
+  reg11 = __fpadd(r01, r21); \
+  reg12 = __fpadd(r02, r22);  
+
+#define _bgl_add_r1_to_r3_reg1_up() \
+  reg13 = __fpadd(r10, r30); \
+  reg14 = __fpadd(r11, r31); \
+  reg15 = __fpadd(r12, r32);  
+
+/* computes tensor product of reg0x with reg1x, x=0,1,2 */
+/* and tensor product of reg0x with reg1x, x=3,4,5 */
+/* and adds the results and stores them in vxy */
+/* 9th element is stored in reg00 */
+
+#define _bgl_tensor_product_and_add() \
+  v00 = __fxpmul(reg00, __creal(reg10)); \
+  v01 = __fxpmul(reg00, __creal(reg11)); \
+  v02 = __fxpmul(reg00, __creal(reg12)); \
+  v00 = __fxcxnsma(v00, reg00, __cimag(reg10)); \
+  v01 = __fxcxnsma(v01, reg00, __cimag(reg11)); \
+  v02 = __fxcxnsma(v02, reg00, __cimag(reg12)); \
+  v00 = __fxcpmadd(v00, reg03, __creal(reg13)); \
+  v01 = __fxcpmadd(v01, reg03, __creal(reg14)); \
+  v02 = __fxcpmadd(v02, reg03, __creal(reg15)); \
+  v00 = __fxcxnsma(v00, reg03, __cimag(reg13)); \
+  v01 = __fxcxnsma(v01, reg03, __cimag(reg14)); \
+  v02 = __fxcxnsma(v02, reg03, __cimag(reg15)); \
+  v10 = __fxpmul(reg01, __creal(reg10)); \
+  v11 = __fxpmul(reg01, __creal(reg11)); \
+  v12 = __fxpmul(reg01, __creal(reg12)); \
+  v10 = __fxcxnsma(v10, reg01, __cimag(reg10)); \
+  v11 = __fxcxnsma(v11, reg01, __cimag(reg11)); \
+  v12 = __fxcxnsma(v12, reg01, __cimag(reg12)); \
+  v10 = __fxcpmadd(v10, reg04, __creal(reg13)); \
+  v11 = __fxcpmadd(v11, reg04, __creal(reg14)); \
+  v12 = __fxcpmadd(v12, reg04, __creal(reg15)); \
+  v10 = __fxcxnsma(v10, reg04, __cimag(reg13)); \
+  v11 = __fxcxnsma(v11, reg04, __cimag(reg14)); \
+  v12 = __fxcxnsma(v12, reg04, __cimag(reg15)); \
+  v20 = __fxpmul(reg02, __creal(reg10)); \
+  v21 = __fxpmul(reg02, __creal(reg11)); \
+  reg00 = __fxpmul(reg02, __creal(reg12)); \
+  v20 = __fxcxnsma(v20, reg02, __cimag(reg10)); \
+  v21 = __fxcxnsma(v21, reg02, __cimag(reg11)); \
+  reg00 = __fxcxnsma(reg00, reg02, __cimag(reg12)); \
+  v20 = __fxcpmadd(v20, reg05, __creal(reg13)); \
+  v21 = __fxcpmadd(v21, reg05, __creal(reg14)); \
+  reg00 = __fxcpmadd(reg00, reg05, __creal(reg15)); \
+  v20 = __fxcxnsma(v20, reg05, __cimag(reg13)); \
+  v21 = __fxcxnsma(v21, reg05, __cimag(reg14)); \
+  reg00 = __fxcxnsma(reg00, reg05, __cimag(reg15)); \
+
+/* computes tensor product of reg0x with reg1x, x=0,1,2 */
+/* and tensor product of reg0x with reg1x, x=3,4,5 */
+/* and adds the results and stores their complex  */
+/* conjugate in vxy transposed */
+/* 9th element is stored in reg00 */
+
+#define _bgl_tensor_product_and_add() \
+  v00 = __fxpmul(reg10, __creal(reg00)); \
+  v01 = __fxpmul(reg10, __creal(reg01)); \
+  v02 = __fxpmul(reg10, __creal(reg02)); \
+  v00 = __fxcxnsma(v00, reg10, __cimag(reg00)); \
+  v01 = __fxcxnsma(v01, reg10, __cimag(reg01)); \
+  v02 = __fxcxnsma(v02, reg10, __cimag(reg02)); \
+  v00 = __fxcpmadd(v00, reg13, __creal(reg03)); \
+  v01 = __fxcpmadd(v01, reg13, __creal(reg04)); \
+  v02 = __fxcpmadd(v02, reg13, __creal(reg05)); \
+  v00 = __fxcxnsma(v00, reg13, __cimag(reg03)); \
+  v01 = __fxcxnsma(v01, reg13, __cimag(reg04)); \
+  v02 = __fxcxnsma(v02, reg13, __cimag(reg05)); \
+  v10 = __fxpmul(reg11, __creal(reg00)); \
+  v11 = __fxpmul(reg11, __creal(reg01)); \
+  v12 = __fxpmul(reg11, __creal(reg02)); \
+  v10 = __fxcxnsma(v10, reg11, __cimag(reg00)); \
+  v11 = __fxcxnsma(v11, reg11, __cimag(reg01)); \
+  v12 = __fxcxnsma(v12, reg11, __cimag(reg02)); \
+  v10 = __fxcpmadd(v10, reg14, __creal(reg03)); \
+  v11 = __fxcpmadd(v11, reg14, __creal(reg04)); \
+  v12 = __fxcpmadd(v12, reg14, __creal(reg05)); \
+  v10 = __fxcxnsma(v10, reg14, __cimag(reg03)); \
+  v11 = __fxcxnsma(v11, reg14, __cimag(reg04)); \
+  v12 = __fxcxnsma(v12, reg14, __cimag(reg05)); \
+  v20 = __fxpmul(reg12, __creal(reg00)); \
+  v21 = __fxpmul(reg12, __creal(reg01)); \
+  reg00 = __fxpmul(reg12, __creal(reg02)); \
+  v20 = __fxcxnsma(v20, reg12, __cimag(reg00)); \
+  v21 = __fxcxnsma(v21, reg12, __cimag(reg01)); \
+  reg00 = __fxcxnsma(reg00, reg12, __cimag(reg02)); \
+  v20 = __fxcpmadd(v20, reg15, __creal(reg03)); \
+  v21 = __fxcpmadd(v21, reg15, __creal(reg04)); \
+  reg00 = __fxcpmadd(reg00, reg15, __creal(reg05)); \
+  v20 = __fxcxnsma(v20, reg15, __cimag(reg03)); \
+  v21 = __fxcxnsma(v21, reg15, __cimag(reg04)); \
+  reg00 = __fxcxnsma(reg00, reg15, __cimag(reg05)); \
+
+  
 
 #endif

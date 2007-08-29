@@ -39,17 +39,17 @@
 
 typedef struct
 {
-   int c1,c2,c3,c4;
+   int c0,c1,c2,c3;
 } sse_int __attribute__ ((aligned (16)));
 
 typedef struct
 {
-   float c1,c2,c3,c4;
+   float c0,c1,c2,c3;
 } sse_float __attribute__ ((aligned (16)));
 
 typedef struct
 {
-   double c1,c2;
+   double c0,c1;
 } sse_double ALIGN;
 
 
@@ -354,6 +354,26 @@ __asm__ __volatile__ ("mulpd %0, %%xmm0 \n\t" \
                       : \
                       : \
                       "m" (c))
+
+/*
+* Multiplies xmm3,xmm4,xmm5 with an imaginary number i*sse_double
+*/
+
+#define _sse_vector_imag_mul(c) \
+__asm__ __volatile__ ("shufpd $0x1, %%xmm3, %%xmm3 \n\t" \
+                      "shufpd $0x1, %%xmm4, %%xmm4 \n\t" \
+                      "shufpd $0x1, %%xmm5, %%xmm5 \n\t" \
+                      "xorpd %0, %%xmm3 \n\t" \
+                      "xorpd %0, %%xmm4 \n\t" \
+                      "xorpd %0, %%xmm5 \n\t" \
+                      "mulpd %1, %%xmm3 \n\t" \
+                      "mulpd %1, %%xmm4 \n\t" \
+                      "mulpd %1, %%xmm5" \
+                      : \
+                      : \
+                      "m" (_sse_sgn),\
+                      "m" (c))
+
 
 /*
 * Adds xmm3,xmm4,xmm5 to xmm0,xmm1,xmm2
