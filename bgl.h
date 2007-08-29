@@ -1062,25 +1062,195 @@
   r31 = -__lfpd((double*)&(s).c1); \
   r32 = -__lfpd((double*)&(s).c2); 
 
+/*c*/
 #define _bgl_add_to_reg0_reg1() \
   reg00 = __fpadd(reg10, reg00); \
   reg01 = __fpadd(reg11, reg01); \
   reg02 = __fpadd(reg12, reg02);  
 
+/*c*/
+#define _bgl_add_to_reg0_reg1_up() \
+  reg00 = __fpadd(reg13, reg00); \
+  reg01 = __fpadd(reg14, reg01); \
+  reg02 = __fpadd(reg15, reg02);  
+
+/*c*/
+#define _bgl_sub_from_reg0_reg1() \
+  reg00 = __fpsub(reg00, reg10); \
+  reg01 = __fpsub(reg01, reg11); \
+  reg02 = __fpsub(reg02, reg12);
+
+/*c*/
+#define _bgl_sub_from_reg0_reg1_up() \
+  reg00 = __fpsub(reg00, reg13); \
+  reg01 = __fpsub(reg01, reg14); \
+  reg02 = __fpsub(reg02, reg15);
+
+/*c*/
+#define _bgl_sub_from_reg0_up_reg1() \
+  reg03 = __fpsub(reg03, reg10); \
+  reg04 = __fpsub(reg04, reg11); \
+  reg05 = __fpsub(reg05, reg12);
+
+/*c*/
+#define _bgl_i_mul_add_to_reg0_reg1_up() \
+  reg00 = __fxcxnpma(reg00, reg13, 1.); \
+  reg01 = __fxcxnpma(reg01, reg14, 1.); \
+  reg02 = __fxcxnpma(reg02, reg15, 1.);
+
+/*c*/
+#define _bgl_i_mul_add_to_reg0_reg1() \
+  reg00 = __fxcxnpma(reg00, reg10, 1.); \
+  reg01 = __fxcxnpma(reg01, reg11, 1.); \
+  reg02 = __fxcxnpma(reg02, reg12, 1.);
+
+/*c*/
+#define _bgl_i_mul_add_to_reg0_up_reg1() \
+  reg03 = __fxcxnpma(reg03, reg10, 1.); \
+  reg04 = __fxcxnpma(reg04, reg11, 1.); \
+  reg05 = __fxcxnpma(reg05, reg12, 1.);
+
+/*c*/
+#define _bgl_i_mul_add_to_reg0_up_reg1_up() \
+  reg03 = __fxcxnpma(reg03, reg13, 1.); \
+  reg04 = __fxcxnpma(reg04, reg14, 1.); \
+  reg05 = __fxcxnpma(reg05, reg15, 1.);
+
+/*c*/
+#define _bgl_i_mul_sub_from_reg0_reg1_up() \
+  reg00 = __fxcxnpma(reg00, reg13, -1.); \
+  reg01 = __fxcxnpma(reg01, reg14, -1.); \
+  reg02 = __fxcxnpma(reg02, reg15, -1.);
+
+/*c*/
+#define _bgl_i_mul_sub_from_reg0_reg1() \
+  reg00 = __fxcxnpma(reg00, reg10, -1.); \
+  reg01 = __fxcxnpma(reg01, reg11, -1.); \
+  reg02 = __fxcxnpma(reg02, reg12, -1.);
+
+/*c*/
+#define _bgl_i_mul_sub_from_reg0_up_reg1_up() \
+  reg03 = __fxcxnpma(reg03, reg13, -1.); \
+  reg04 = __fxcxnpma(reg04, reg14, -1.); \
+  reg05 = __fxcxnpma(reg05, reg15, -1.);
+
+/*c*/
+#define _bgl_i_mul_sub_from_reg0_up_reg1() \
+  reg03 = __fxcxnpma(reg03, reg10, -1.); \
+  reg04 = __fxcxnpma(reg04, reg11, -1.); \
+  reg05 = __fxcxnpma(reg05, reg12, -1.);
+
+/*c*/
 #define _bgl_add_to_reg0_up_reg1_up() \
   reg03 = __fpadd(reg13, reg03); \
   reg04 = __fpadd(reg14, reg04); \
   reg05 = __fpadd(reg15, reg05);  
+
+/*c*/
+#define _bgl_add_to_reg0_up_reg1() \
+  reg03 = __fpadd(reg10, reg03); \
+  reg04 = __fpadd(reg11, reg04); \
+  reg05 = __fpadd(reg12, reg05);  
+
+/*c*/
+#define _bgl_sub_from_reg0_up_reg1_up() \
+  reg03 = __fpsub(reg03, reg13); \
+  reg04 = __fpsub(reg04, reg14); \
+  reg05 = __fpsub(reg05, reg15);
 
 #define _bgl_add_r0_to_r2_reg1() \
   reg10 = __fpadd(r00, r20); \
   reg11 = __fpadd(r01, r21); \
   reg12 = __fpadd(r02, r22);  
 
+/*c*/
+#define _bgl_add_r0_to_r3_reg1() \
+  reg10 = __fpadd(r00, r30); \
+  reg11 = __fpadd(r01, r31); \
+  reg12 = __fpadd(r02, r32);  
+
+/*c*/
+#define _bgl_add_r1_to_r2_reg1_up() \
+  reg13 = __fpadd(r10, r20); \
+  reg14 = __fpadd(r11, r21); \
+  reg15 = __fpadd(r12, r22);  
+
+/*c*/
+#define _bgl_i_mul_add_r0_to_r3_reg1() \
+  reg10 = __fxcxnpma(r00, r30, 1.); \
+  reg11 = __fxcxnpma(r01, r31, 1.); \
+  reg12 = __fxcxnpma(r02, r32, 1.);
+
+/*c*/
+#define _bgl_i_mul_add_r1_to_r2_reg1_up() \
+  reg13 = __fxcxnpma(r10, r20, 1.); \
+  reg14 = __fxcxnpma(r11, r21, 1.); \
+  reg15 = __fxcxnpma(r12, r22, 1.);
+
+/*c*/
+#define _bgl_i_mul_add_r1_to_r3_reg1_up() \
+  reg13 = __fxcxnpma(r10, r30, 1.); \
+  reg14 = __fxcxnpma(r11, r31, 1.); \
+  reg15 = __fxcxnpma(r12, r32, 1.);
+
+/*c*/
+#define _bgl_i_mul_add_r0_to_r2_reg1() \
+  reg13 = __fxcxnpma(r00, r20, 1.); \
+  reg14 = __fxcxnpma(r01, r21, 1.); \
+  reg15 = __fxcxnpma(r02, r22, 1.);
+
+/*c*/
+#define _bgl_i_mul_sub_from_r0_r3_reg1() \
+  reg10 = __fxcxnpma(r00, r30, -1.); \
+  reg11 = __fxcxnpma(r01, r31, -1.); \
+  reg12 = __fxcxnpma(r02, r32, -1.);
+
+/*c*/
+#define _bgl_i_mul_sub_from_r0_r2_reg1() \
+  reg10 = __fxcxnpma(r00, r20, -1.); \
+  reg11 = __fxcxnpma(r01, r21, -1.); \
+  reg12 = __fxcxnpma(r02, r22, -1.);
+
+/*c*/
+#define _bgl_i_mul_sub_from_r1_r3_reg1_up() \
+  reg13 = __fxcxnpma(r10, r30, -1.); \
+  reg14 = __fxcxnpma(r11, r31, -1.); \
+  reg15 = __fxcxnpma(r12, r32, -1.);
+
+/*c*/
+#define _bgl_i_mul_sub_from_r1_r2_reg1_up() \
+  reg13 = __fxcxnpma(r10, r20, -1.); \
+  reg14 = __fxcxnpma(r11, r21, -1.); \
+  reg15 = __fxcxnpma(r12, r22, -1.);
+
+/*c*/
+#define _bgl_sub_from_r0_r2_reg1() \
+  reg10 = __fpsub(r00, r20); \
+  reg11 = __fpsub(r01, r21); \
+  reg12 = __fpsub(r02, r22);  
+
+/*c*/
+#define _bgl_sub_from_r0_r3_reg1() \
+  reg10 = __fpsub(r00, r30); \
+  reg11 = __fpsub(r01, r31); \
+  reg12 = __fpsub(r02, r32);  
+
+
+#define _bgl_sub_from_r1_r2_reg1_up() \
+  reg13 = __fpsub(r10, r20); \
+  reg14 = __fpsub(r11, r21); \
+  reg15 = __fpsub(r12, r22);  
+
 #define _bgl_add_r1_to_r3_reg1_up() \
   reg13 = __fpadd(r10, r30); \
   reg14 = __fpadd(r11, r31); \
   reg15 = __fpadd(r12, r32);  
+
+/*c*/
+#define _bgl_sub_from_r1_r3_reg1_up() \
+  reg13 = __fpsub(r10, r30); \
+  reg14 = __fpsub(r11, r31); \
+  reg15 = __fpsub(r12, r32);  
 
 /* computes tensor product of reg0x with reg1x, x=0,1,2 */
 /* and tensor product of reg0x with reg1x, x=3,4,5 */
@@ -1127,7 +1297,7 @@
 
 /* computes tensor product of reg0x with reg1x, x=0,1,2 */
 /* and tensor product of reg0x with reg1x, x=3,4,5 */
-/* and adds the results and stores their complex  */
+/* adds the results and stores their complex  */
 /* conjugate in vxy transposed */
 /* 9th element is stored in reg00 */
 
@@ -1169,6 +1339,103 @@
   v21 = __fxcxnsma(v21, reg15, __cimag(reg04)); \
   reg00 = __fxcxnsma(reg00, reg15, __cimag(reg05)); \
 
-  
+/* computes u*v */
+/* result back to v */
+#define _bgl_su3_times_v_dagger(u) \
+  r00 = __lfpd((double*)&(u).c00); \
+  r01 = __lfpd((double*)&(u).c01); \
+  r02 = __lfpd((double*)&(u).c02); \
+  r10 = __lfpd((double*)&(u).c10); \
+  r11 = __lfpd((double*)&(u).c11); \
+  r12 = __lfpd((double*)&(u).c12); \
+  r20 = __lfpd((double*)&(u).c20); \
+  r21 = __lfpd((double*)&(u).c21); \
+  r22 = __lfpd((double*)&(u).c22); \
+  reg03 = __fxpmul(r00, __creal(v00)); \
+  reg10 = __fxpmul(r10, __creal(v00)); \
+  reg13 = __fxpmul(r20, __creal(v00)); \
+  reg04 = __fxpmul(r00, __creal(v10)); \
+  reg11 = __fxpmul(r10, __creal(v10)); \
+  reg14 = __fxpmul(r20, __creal(v10)); \
+  reg05 = __fxpmul(r00, __creal(v20)); \
+  reg12 = __fxpmul(r10, __creal(v20)); \
+  reg15 = __fxpmul(r20, __creal(v20)); \
+  reg03 = __fxcxnsma(reg03, r00, __cimag(v00)); \
+  reg10 = __fxcxnsma(reg10, r10, __cimag(v00)); \
+  reg13 = __fxcxnsma(reg13, r20, __cimag(v00)); \
+  reg04 = __fxcxnsma(reg04, r00, __cimag(v10)); \
+  reg11 = __fxcxnsma(reg11, r10, __cimag(v10)); \
+  reg14 = __fxcxnsma(reg14, r20, __cimag(v10)); \
+  reg05 = __fxcxnsma(reg05, r00, __cimag(v10)); \
+  reg12 = __fxcxnsma(reg12, r10, __cimag(v10)); \
+  reg15 = __fxcxnsma(reg15, r20, __cimag(v10)); \
+  reg03 = __fxcpmadd(reg03, r01, __creal(v01));	\
+  reg10 = __fxcpmadd(reg10, r11, __creal(v01));	\
+  reg13 = __fxcpmadd(reg13, r21, __creal(v01));	\
+  reg04 = __fxcpmadd(reg04, r01, __creal(v11));	\
+  reg11 = __fxcpmadd(reg11, r11, __creal(v11));	\
+  reg14 = __fxcpmadd(reg14, r21, __creal(v11));	\
+  reg05 = __fxcpmadd(reg05, r01, __creal(v21));	\
+  reg12 = __fxcpmadd(reg12, r11, __creal(v21));	\
+  reg15 = __fxcpmadd(reg15, r21, __creal(v21));	\
+  reg03 = __fxcxnsma(reg03, r01, __cimag(v01)); \
+  reg10 = __fxcxnsma(reg10, r11, __cimag(v01)); \
+  reg13 = __fxcxnsma(reg13, r21, __cimag(v01)); \
+  reg04 = __fxcxnsma(reg04, r01, __cimag(v11)); \ 
+  reg11 = __fxcxnsma(reg11, r11, __cimag(v11)); \
+  reg14 = __fxcxnsma(reg14, r21, __cimag(v11)); \
+  reg05 = __fxcxnsma(reg05, r01, __cimag(v11)); \
+  reg12 = __fxcxnsma(reg12, r11, __cimag(v11)); \
+  reg15 = __fxcxnsma(reg15, r21, __cimag(v11)); \
+  reg03 = __fxcpmadd(reg03, r02, __creal(v02));	\
+  reg10 = __fxcpmadd(reg10, r12, __creal(v02));	\
+  reg13 = __fxcpmadd(reg13, r22, __creal(v02));	\
+  reg04 = __fxcpmadd(reg04, r02, __creal(v12));	\
+  reg11 = __fxcpmadd(reg11, r12, __creal(v12));	\
+  reg14 = __fxcpmadd(reg14, r22, __creal(v12));	\
+  reg05 = __fxcpmadd(reg05, r02, __creal(reg00)); \
+  reg12 = __fxcpmadd(reg12, r12, __creal(reg00)); \
+  reg15 = __fxcpmadd(reg15, r22, __creal(reg00)); \
+  r00 = __fxcxnsma(reg03, r02, __cimag(v02)); \
+  r10 = __fxcxnsma(reg10, r12, __cimag(v02)); \
+  r20 = __fxcxnsma(reg13, r22, __cimag(v02)); \
+  r01 = __fxcxnsma(reg04, r02, __cimag(v12)); \
+  r11 = __fxcxnsma(reg11, r12, __cimag(v12)); \
+  r21 = __fxcxnsma(reg14, r22, __cimag(v12)); \
+  r02 = __fxcxnsma(reg05, r02, __cimag(reg00)); \
+  r12 = __fxcxnsma(reg12, r12, __cimag(reg00));	\
+  r22 = __fxcxnsma(reg15, r22, __cimag(reg00)); 
+
+#define _bgl_complex_times_r(c) \
+  reg00 = __lfpd((double*)&c);	       \
+  reg03 = __fxpmul(reg00, __creal(r00)); \
+  reg10 = __fxpmul(reg00, __creal(r10)); \
+  reg13 = __fxpmul(reg00, __creal(r20)); \
+  reg04 = __fxpmul(reg00, __creal(r01)); \
+  reg11 = __fxpmul(reg00, __creal(r11)); \
+  reg14 = __fxpmul(reg00, __creal(r21)); \
+  reg05 = __fxpmul(reg00, __creal(r02)); \
+  reg12 = __fxpmul(reg00, __creal(r12)); \
+  reg15 = __fxpmul(reg00, __creal(r22)); \
+  r00 = __fxcxnsma(reg03, reg00, __cimag(r00)); \
+  r10 = __fxcxnsma(reg10, reg00, __cimag(r10)); \
+  r20 = __fxcxnsma(reg13, reg00, __cimag(r20)); \
+  r01 = __fxcxnsma(reg04, reg00, __cimag(r01)); \
+  r11 = __fxcxnsma(reg11, reg00, __cimag(r11)); \
+  r21 = __fxcxnsma(reg14, reg00, __cimag(r21)); \
+  r02 = __fxcxnsma(reg05, reg00, __cimag(r02)); \
+  r12 = __fxcxnsma(reg12, reg00, __cimag(r12)); \
+  r22 = __fxcxnsma(reg15, reg00, __cimag(r22));
+
+#define _bgl_trace_lambda_add_assign(r)					\
+  (r).d1+= (-__cimag(r10) - __cimag(r01));				\
+  (r).d2+= (+__creal(r10) - __creal(r01));				\
+  (r).d3+= (-__cimag(r00) + __cimag(r11));				\
+  (r).d4+= (-__cimag(r20) - __cimag(r02));				\
+  (r).d5+= (+__creal(r20) - __creal(r02));				\
+  (r).d6+= (-__cimag(r21) - __cimag(r12));				\
+  (r).d7+= (+__creal(r21) - __creal(r12));				\
+  (r).d8+= ((-__cimag(r00) - __cimag(r11) + 2.*__cimag(r22))*0.577350269189625);
+
 
 #endif

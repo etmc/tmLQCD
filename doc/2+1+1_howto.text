@@ -72,6 +72,7 @@ directory.
    PhmcStildeMin = 0.008
 
    # and this to an upper bound of all eigenvalues
+   # 
    PhmcStildeMax = 3.6
 
    # an estimate for the error of an approximation of 1/sqrt(x) by a chebycheff
