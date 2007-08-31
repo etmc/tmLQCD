@@ -43,10 +43,8 @@ void xchange_lexicfield(spinor * const l) {
 #  elif defined PARALLELXYT
   int reqcount = 12;
 #  elif defined PARALLELXYZT
-  int x0=0, x1=0, x2=0, ix=0;
   int reqcount = 16;
 #  endif
-
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchange_lexicfield)
 #endif
@@ -66,6 +64,7 @@ void xchange_lexicfield(spinor * const l) {
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Isend((void*)l, 1, lfield_x_slice_gath, g_nb_x_dn, 5091, g_cart_grid,  &requests[4]);
   MPI_Irecv((void*)(l+(T+2)*LX*LY*LZ), 1, lfield_x_slice_cont, g_nb_x_up, 5091, g_cart_grid, &requests[5]);
+
 #    endif
   
 #    if (defined PARALLELXYT || defined PARALLELXYZT)
