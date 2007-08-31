@@ -157,7 +157,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     up=&g_gauge_field[ix][1];      
     _prefetch_su3(up);
 
-    _bgl_tensor_product_and_add();
+    _bgl_tensor_product_and_add_d();
     /* result in v now */
     _bgl_su3_times_v_dagger(*um);
     /* result in r now */
@@ -221,7 +221,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     up=&g_gauge_field[ix][2];
     _prefetch_su3(up);
 
-    _bgl_tensor_product_and_add();
+    _bgl_tensor_product_and_add_d();
     /* result in v now */
     _bgl_su3_times_v_dagger(*um);
     /* result in r now */
@@ -285,7 +285,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     up=&g_gauge_field[ix][3];
     _prefetch_su3(up);
 
-    _bgl_tensor_product_and_add();
+    _bgl_tensor_product_and_add_d();
     /* result in v now */
     _bgl_su3_times_v_dagger(*um);
     /* result in r now */
@@ -352,7 +352,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     up=&g_gauge_field[iz][0];
     _prefetch_su3(up);
 
-    _bgl_tensor_product_and_add();
+    _bgl_tensor_product_and_add_d();
     /* result in v now */
     _bgl_su3_times_v_dagger(*um);
     /* result in r now */

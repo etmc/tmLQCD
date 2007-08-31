@@ -1252,6 +1252,7 @@
   reg14 = __fpsub(r11, r31); \
   reg15 = __fpsub(r12, r32);  
 
+/* v tensor w^dagger */
 /* computes tensor product of reg0x with reg1x, x=0,1,2 */
 /* and tensor product of reg0x with reg1x, x=3,4,5 */
 /* and adds the results and stores them in vxy */
@@ -1294,6 +1295,48 @@
   v20 = __fxcxnsma(v20, reg05, __cimag(reg13)); \
   v21 = __fxcxnsma(v21, reg05, __cimag(reg14)); \
   reg00 = __fxcxnsma(reg00, reg05, __cimag(reg15)); \
+
+/* same, but */
+/* computes tensor product of reg1x with reg0x, x=0,1,2 */
+
+#define _bgl_tensor_product_and_add_d() \
+  v00 = __fxpmul(reg10, __creal(reg00)); \
+  v01 = __fxpmul(reg10, __creal(reg01)); \
+  v02 = __fxpmul(reg10, __creal(reg02)); \
+  v00 = __fxcxnsma(v00, reg10, __cimag(reg00)); \
+  v01 = __fxcxnsma(v01, reg10, __cimag(reg01)); \
+  v02 = __fxcxnsma(v02, reg10, __cimag(reg02)); \
+  v00 = __fxcpmadd(v00, reg13, __creal(reg03)); \
+  v01 = __fxcpmadd(v01, reg13, __creal(reg04)); \
+  v02 = __fxcpmadd(v02, reg13, __creal(reg05)); \
+  v00 = __fxcxnsma(v00, reg13, __cimag(reg03)); \
+  v01 = __fxcxnsma(v01, reg13, __cimag(reg04)); \
+  v02 = __fxcxnsma(v02, reg13, __cimag(reg05)); \
+  v10 = __fxpmul(reg11, __creal(reg00)); \
+  v11 = __fxpmul(reg11, __creal(reg01)); \
+  v12 = __fxpmul(reg11, __creal(reg02)); \
+  v10 = __fxcxnsma(v10, reg11, __cimag(reg00)); \
+  v11 = __fxcxnsma(v11, reg11, __cimag(reg01)); \
+  v12 = __fxcxnsma(v12, reg11, __cimag(reg02)); \
+  v10 = __fxcpmadd(v10, reg14, __creal(reg03)); \
+  v11 = __fxcpmadd(v11, reg14, __creal(reg04)); \
+  v12 = __fxcpmadd(v12, reg14, __creal(reg05)); \
+  v10 = __fxcxnsma(v10, reg14, __cimag(reg03)); \
+  v11 = __fxcxnsma(v11, reg14, __cimag(reg04)); \
+  v12 = __fxcxnsma(v12, reg14, __cimag(reg05)); \
+  v20 = __fxpmul(reg12, __creal(reg00)); \
+  v21 = __fxpmul(reg12, __creal(reg01)); \
+  reg00 = __fxpmul(reg12, __creal(reg02)); \
+  v20 = __fxcxnsma(v20, reg12, __cimag(reg00)); \
+  v21 = __fxcxnsma(v21, reg12, __cimag(reg01)); \
+  reg00 = __fxcxnsma(reg00, reg12, __cimag(reg02)); \
+  v20 = __fxcpmadd(v20, reg15, __creal(reg03)); \
+  v21 = __fxcpmadd(v21, reg15, __creal(reg04)); \
+  reg00 = __fxcpmadd(reg00, reg15, __creal(reg05)); \
+  v20 = __fxcxnsma(v20, reg15, __cimag(reg03)); \
+  v21 = __fxcxnsma(v21, reg15, __cimag(reg04)); \
+  reg00 = __fxcxnsma(reg00, reg15, __cimag(reg05)); \
+
 
 /* computes tensor product of reg0x with reg1x, x=0,1,2 */
 /* and tensor product of reg0x with reg1x, x=3,4,5 */
