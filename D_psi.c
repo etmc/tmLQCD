@@ -34,7 +34,7 @@
 
 static spinor rs __attribute__ ((aligned (16)));
 
-/* Serial Checked ! */
+/* Serially Checked ! */
 void D_psi(spinor * const P, spinor * const Q){
   int ix,iy,iz;
   su3 *up,*um;
@@ -680,7 +680,7 @@ void D_psi(spinor * const P, spinor * const Q){
 
 #else
 
-/* Serial Checked ! */
+/* Serially Checked ! */
 
 static complex rho1,rho2;
 static su3_vector psi,chi;
