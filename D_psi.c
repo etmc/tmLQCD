@@ -34,8 +34,7 @@
 
 static spinor rs __attribute__ ((aligned (16)));
 
-
-
+/* Serial Checked ! */
 void D_psi(spinor * const P, spinor * const Q){
   int ix,iy,iz;
   su3 *up,*um;
@@ -82,16 +81,19 @@ void D_psi(spinor * const P, spinor * const Q){
 
     _sse_su3_multiply((*up));
     _sse_vector_cmplx_mul(phase_0);
+    _sse_store_up(rs.s2);
 
-    _sse_load((*s).s0);
+    _sse_load_up((*s).s0);
     _sse_vector_cmplx_mul(fact1);
 /*     _sse_vector_mul(fact1); */
+    _sse_load(rs.s2);
     _sse_vector_add();
     _sse_store(rs.s0);
 
-    _sse_load((*s).s2);
+    _sse_load_up((*s).s2);
     _sse_vector_cmplx_mul(fact2);
 /*     _sse_vector_mul(fact1);       */
+    _sse_load(rs.s2);
     _sse_vector_add();
     _sse_store(rs.s2);      
       
@@ -104,19 +106,22 @@ void D_psi(spinor * const P, spinor * const Q){
       
     _sse_su3_multiply((*up));
     _sse_vector_cmplx_mul(phase_0);
-
-    _sse_load((*s).s1);
+    _sse_store_up(rs.s3);
+    
+    _sse_load_up((*s).s1);
     _sse_vector_cmplx_mul(fact1);
 /*     _sse_vector_mul(fact1); */
+    _sse_load(rs.s3);
     _sse_vector_add();
     _sse_store(rs.s1);
 
-    _sse_load((*s).s3);
+    _sse_load_up((*s).s3);
     _sse_vector_cmplx_mul(fact2);
 /*     _sse_vector_mul(fact1);       */
+    _sse_load(rs.s3);
     _sse_vector_add();
     _sse_store(rs.s3); 
-      
+
     /******************************* direction -0 *********************************/
 
     iy=g_iup[ix][1];
@@ -675,10 +680,12 @@ void D_psi(spinor * const P, spinor * const Q){
 
 #else
 
+/* Serial Checked ! */
+
 static complex rho1,rho2;
 static su3_vector psi,chi;
 
-void D_psi(spinor * const P, spinor * const Q, const double m0){
+void D_psi(spinor * const P, spinor * const Q){
   int ix,iy;
   static spinor r;
   su3 * restrict up,* restrict um;
