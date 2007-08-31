@@ -460,7 +460,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _vector_sub(phia,rr.s0,rr.s2);
     _vector_sub(phib,rr.s1,rr.s3);
 
-    _vector_tensor_vector_add(v1, phia, psia, phib, psib);
+    _vector_tensor_vector_add(v1, psia, phia, psib, phib);
 /*     _vector_tensor_vector(v1,psia,phia); */
 /*     _vector_tensor_vector(v2,psib,phib); */
 /*     _su3_plus_su3(v1,v1,v2); */
@@ -510,7 +510,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _vector_i_sub(phia,rr.s0,rr.s3);
     _vector_i_sub(phib,rr.s1,rr.s2);
 
-    _vector_tensor_vector_add(v1, phia, psia, phib, psib);
+    _vector_tensor_vector_add(v1, psia, phia, psib, phib);
 /*     _vector_tensor_vector(v1,psia,phia); */
 /*     _vector_tensor_vector(v2,psib,phib); */
 /*     _su3_plus_su3(v1,v1,v2); */
@@ -560,7 +560,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _vector_sub(phia,rr.s0,rr.s3);
     _vector_add(phib,rr.s1,rr.s2);
 
-    _vector_tensor_vector_add(v1, phia, psia, phib, psib);
+    _vector_tensor_vector_add(v1, psia, phia, psib, phib);
 /*     _vector_tensor_vector(v1,psia,phia); */
 /*     _vector_tensor_vector(v2,psib,phib); */
 /*     _su3_plus_su3(v1,v1,v2); */
@@ -610,7 +610,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _vector_i_sub(phia,rr.s0,rr.s2);
     _vector_i_add(phib,rr.s1,rr.s3);
 
-    _vector_tensor_vector_add(v1, phia, psia, phib, psib);
+    _vector_tensor_vector_add(v1, psia, phia, psib, phib);
 /*     _vector_tensor_vector(v1,psia,phia); */
 /*     _vector_tensor_vector(v2,psib,phib); */
 /*     _su3_plus_su3(v1,v1,v2); */
