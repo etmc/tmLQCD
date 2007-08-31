@@ -26,7 +26,7 @@
 #include "sse.h"
 #include "boundary.h"
 #ifdef MPI
-
+# include "xchange_lexicfield.h"
 #endif
 #include "D_psi.h"
 
@@ -50,7 +50,7 @@ void D_psi(spinor * const P, spinor * const Q){
 
 
 # if defined MPI
-
+  xchange_lexicfield(Q);
 # endif
 
   fact1.re = 1.;
@@ -452,7 +452,7 @@ void D_psi(spinor * const P, spinor * const Q){
   __alignx(16,Q);
 
 #    if (defined MPI && !(defined _NO_COMM))
-
+  xchange_lexicfield(Q);
 #    endif
 
   fact1.re = 1.;
@@ -699,7 +699,7 @@ void D_psi(spinor * const P, spinor * const Q){
   }
 
 # if defined MPI
-  xchange_spinorfield(Q);
+  xchange_lexicfield(Q);
 # endif
    
   rho1.re=1.;
