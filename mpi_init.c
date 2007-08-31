@@ -26,6 +26,7 @@ MPI_Datatype deri_time_slice_split;
 MPI_Datatype field_point;
 MPI_Datatype field_time_slice_cont;
 MPI_Datatype lfield_time_slice_cont;
+MPI_Datatype lfield_time_slice_gath;
 MPI_Datatype gauge_x_slice_cont;
 MPI_Datatype gauge_x_subslice;
 MPI_Datatype gauge_x_slice_gath;
@@ -378,7 +379,7 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_commit(&field_y_slice_gath);
   MPI_Type_commit(&field_y_slice_cont);
 
-  MPI_Type_contiguous(T*LX*LZ, lfield_point, &lfield_y_slice_cont);
+  MPI_Type_contiguous(T*LX*LZ, field_point, &lfield_y_slice_cont);
   MPI_Type_contiguous(LZ, field_point, &lfield_y_subslice);
   MPI_Type_vector(T*LX, 1, LY, lfield_y_subslice, &lfield_y_slice_gath);
   MPI_Type_commit(&lfield_y_slice_cont);
@@ -393,7 +394,7 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_commit(&field_z_slice_half);
   MPI_Type_commit(&field_z_slice_cont);
 
-  MPI_Type_contiguous(T*LX*LY, lfield_point, &lfield_z_slice_cont);
+  MPI_Type_contiguous(T*LX*LY, field_point, &lfield_z_slice_cont);
   MPI_Type_vector(T*LX*LY, 1, LZ, field_point, &lfield_z_slice_gath);
   MPI_Type_commit(&lfield_z_slice_cont);
   MPI_Type_commit(&lfield_z_slice_gath);
