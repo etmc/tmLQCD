@@ -1,3 +1,7 @@
+16.04.2007: enable-gaugecopy and disable-newdiracop is buggy, at least
+in the 1-dim parallel case. -> fixed, wrong #ifdef in xchange_gauge 
+around MPI_Waitall
+
 18.1.2007: phmc does not work with halfspinor, seg fault in Hopping_Matrix.
 --> fixed
 

@@ -113,8 +113,10 @@ void xchange_gauge() {
 	      g_cart_grid, &request[cntr]);
     cntr++;
   }
+#    endif
   MPI_Waitall(cntr, request, status);
   cntr=0;
+#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   /* The edges */
 
   /* send the data to the neighbour on the left in t direction */
@@ -227,9 +229,11 @@ void xchange_gauge() {
 	      g_cart_grid, &request[cntr]);
     cntr++;
   }
-
+#    endif
   MPI_Waitall(cntr, request, status);
   cntr=0;
+#    if (defined PARALLELXYT || defined PARALLELXYZT)
+
   /* jetzt wirds richtig eklig ... */
 
   /* edges */
@@ -424,7 +428,9 @@ void xchange_gauge() {
 	      g_cart_grid, &request[cntr]);
     cntr++;
   }
+#    endif
   MPI_Waitall(cntr, request, status);
+#    if defined PARALLELXYZT
   cntr=0;
   /* edges */
 
