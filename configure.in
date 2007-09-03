@@ -170,6 +170,7 @@ if test $enable_mpi = yes; then
   if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts"; then
     CC=mpcc_r
     CXX=mpCC_r
+    CCLD=mpcc_r
   elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then	
     AC_PATH_PROG(MPICC, mpicc, /usr/bin/mpicc, /opt/mpich/gnu3/bin:/opt/mpich/gnu/bin:$PATH)
     if test "$CC" = ""; then
