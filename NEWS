@@ -1,3 +1,10 @@
+04.09.2007: D_psi in three versions tested, also parallel
+	    versions. BG/L version of deriv_Sb still not checked.
+
+31.08.2007: D_psi for full spinor field (no even/odd) implemented and tested
+	    for SSE2 and normal version. new deriv_Sb implemented and tested.
+	    BG/L versions still need testing.
+
 08.08.2007: all integration schemes available for the PHMC
 	    new input paramter 
 	    TimeScaleHeavyDoublet

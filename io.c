@@ -10,10 +10,10 @@
  *   read gauge field in ILDG format
  *
  * write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filename, const int append)
- *   write a full spinor from even and odd spinorfield
+ *   write a full spinor from one even and one odd spinorfield
  *
  * read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename)
- *   read a full spinor into even/odd spinorfields
+ *   read a full spinor into one even and one odd spinorfields
  *
  * write_gauge_field(char * filename)
  *   writes gauge field configuration to file
@@ -33,10 +33,10 @@
  *   Swap bytes in an array of nmemb doubles in_ptr and assigns it to out_ptr
  *
  * int read_eospinor(spinor * const s, char * filename)
- *   Read an even/odd spinor from file (eigenvector)
+ *   Read an even or odd spinor from file (eigenvector)
  *
  * int write_eospinor(spinor * const s, char * filename, const double evalue, const double prec, const int nstore)
- *   Read an even/odd spinor from file (eigenvector)
+ *   Read an even or odd spinor from file (eigenvector)
  *
  * Autor: Ines Wetzorke <wetzorke@ifh.de>
  *        Carsten Urbach <urbach@ifh.de>
@@ -951,16 +951,16 @@ int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filen
       }
     }
   }
-  for(x = 0; x < LX*g_nproc_x; x++){
+  for(x = 0; x < LX*g_nproc_x; x++) {
     X = x - g_proc_coords[1]*LX;
     coords[1] = x / LX;
-    for(y = 0; y < LY*g_nproc_y; y++){
+    for(y = 0; y < LY*g_nproc_y; y++) {
       Y = y - g_proc_coords[2]*LY;
       coords[2] = y / LY;
-      for(z = 0; z < LZ*g_nproc_z; z++){
+      for(z = 0; z < LZ*g_nproc_z; z++) {
       Z = z - g_proc_coords[3]*LZ;
       coords[3] = z / LZ;
-	for(t0 = 0; t0 < T*g_nproc_t; t0++){
+	for(t0 = 0; t0 < T*g_nproc_t; t0++) {
 	  t = t0 - T*g_proc_coords[0];
 	  coords[0] = t0 / T;
 #ifdef MPI
@@ -976,8 +976,8 @@ int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filen
 	      p = r;
 	    }
 	  }
-	  if(g_cart_id == 0){
-	    if(g_cart_id == id){
+	  if(g_cart_id == 0) {
+	    if(g_cart_id == id) {
 #ifndef WORDS_BIGENDIAN
 	      byte_swap_assign(tmp, p + i , sizeof(spinor)/8);
 	      fwrite(tmp, sizeof(spinor), 1, ofs);
@@ -1100,6 +1100,15 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
   return(0);
 }
 
+/*************************************************
+ *
+ * This routine writes an even or odd spinor-field
+ * so really of size VOLUME/2
+ *
+ * used for instance for storing eigenvectors
+ * of the precoditioned matrix
+ *
+ *************************************************/
 
 int write_eospinor(spinor * const s, char * filename, 
 		   const double evalue, const double prec, const int nstore) {
