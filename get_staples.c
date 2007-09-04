@@ -15,7 +15,7 @@
 
 #if ((defined BGL_notchecked) && (defined XLC))
 
-su3 get_staples(int x, int mu) {
+su3 get_staples(int x, int mu, su3 ** in_gauge_field) {
   /* We have 32 registers */
   double _Complex u00, u01, u02, u10, u11, u12, u20;
   double _Complex v00, v01, v02, v10, v11, v12, v20, v21, v22;
@@ -41,9 +41,9 @@ su3 get_staples(int x, int mu) {
 #pragma unroll(4)
   for(k = 0; k < 4; k++) {
     if(k!=mu){
-      w1=&g_gauge_field[x][k];
-      w2=&g_gauge_field[g_iup[x][k]][mu];
-      w3=&g_gauge_field[g_iup[x][mu]][k];
+      w1=&in_gauge_field[x][k];
+      w2=&in_gauge_field[g_iup[x][k]][mu];
+      w3=&in_gauge_field[g_iup[x][mu]][k];
 
       /* st = w2 * w3^d */
       _su3_times_su3d(st,*w2,*w3);
@@ -51,9 +51,9 @@ su3 get_staples(int x, int mu) {
       _su3_times_su3_acc(v,*w1,st); 
 
       iy=g_idn[x][k];
-      w1=&g_gauge_field[iy][k];
-      w2=&g_gauge_field[iy][mu];
-      w3=&g_gauge_field[g_iup[iy][mu]][k];
+      w1=&in_gauge_field[iy][k];
+      w2=&in_gauge_field[iy][mu];
+      w3=&in_gauge_field[g_iup[iy][mu]][k];
       /* st = w2 * w3 */
       /* v = v + w1^d * st */
       _bgl_su3_times_su3(*w2, *w3);
@@ -65,7 +65,7 @@ su3 get_staples(int x, int mu) {
   return(v);
 }
 #else
-su3 get_staples(int x, int mu) {
+su3 get_staples(int x, int mu, su3 ** in_gauge_field) {
 
   int k,iy;
   static su3 v,st;
@@ -74,21 +74,23 @@ su3 get_staples(int x, int mu) {
 #pragma pomp inst begin(staples)
 #endif
   
+  
   _su3_zero(v);
   for(k=0;k<4;k++) {
     if(k!=mu){
-      w1=&g_gauge_field[x][k];
-      w2=&g_gauge_field[g_iup[x][k]][mu];
-      w3=&g_gauge_field[g_iup[x][mu]][k];
+      w1=&in_gauge_field[x][k];
+      w2=&in_gauge_field[g_iup[x][k]][mu];
+      w3=&in_gauge_field[g_iup[x][mu]][k];
+
       /* st = w2 * w3^d */
       _su3_times_su3d(st,*w2,*w3);
       /* v = v + w1 * st */
       _su3_times_su3_acc(v,*w1,st); 
 
       iy=g_idn[x][k];
-      w1=&g_gauge_field[iy][k];
-      w2=&g_gauge_field[iy][mu];
-      w3=&g_gauge_field[g_iup[iy][mu]][k];
+      w1=&in_gauge_field[iy][k];
+      w2=&in_gauge_field[iy][mu];
+      w3=&in_gauge_field[g_iup[iy][mu]][k];
       /* st = w2 * w3 */
       _su3_times_su3(st,*w2,*w3);
       /* v = v + w1^d * st */
