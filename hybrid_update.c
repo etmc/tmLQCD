@@ -70,83 +70,13 @@ void gauge_momenta(double step)
 #ifdef MPI
   atime = MPI_Wtime();
 #endif
-  if(use_stout_flag == 1)
-  {
-    /*
-     *  here we smear the gauge field
-     */
-    stout_smear_gauge_field(stout_rho, stout_no_iter);
-    for(i = 0; i < VOLUME; i++)
-    { 
-      for(mu=0;mu<4;mu++)
-      {
-
-        /*
-         *  now we determine \tilde{\Sigma}(x) eqtn(44) hep-lat/0311018 
-         */
-        z=&g_gauge_field[i][mu];
-        xm=&moment[i][mu];
-        v=get_staples(i,mu); 
-        _su3_times_su3d(w,*z,v);
-        _trace_lambda(deriv,w);
-
-        _make_su3(g_stout_force_field[i][mu], deriv);
-
-        /*printf("FORCE x=%d mu=%d:\n", i, mu);
-          printf("DERIV d1=%f d2=%f d3=%f d4=%f d5=%f d6=%f d7=%f d8=%f\n", deriv.d1, deriv.d2, deriv.d3, deriv.d4, deriv.d5, deriv.d6, deriv.d7, deriv.d8);
-          print_su3(&(g_stout_force_field[i][mu]));*/
-      }
-    }
-          stout_smear_force();
-          /*stout_smear_force(i, mu, force);*/
-
-
-
-        for(i = 0; i < VOLUME; i++)
-        { 
-          for(mu=0;mu<4;mu++)
-          {
-
-
-            _trace_lambda(deriv,g_stout_force_field[i][mu]);
-            if(g_debug_level > 0) 
-            {
-              sum2 = _su3adj_square_norm(deriv);
-              sum+= sum2;
-              if(sum2 > max) max = sum2;
-            }
-
-            /*
-             * pi_{x,\mu} = pi_{x,\mu} - \delta S(U) / \delta U
-             */
-            /*_minus_const_times_mom(*xm,st,force);*/
-            if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-              get_rectangle_staples(&v, i, mu);
-              _su3_times_su3d(w, *z, v);
-              _trace_lambda(deriv, w);
-              if(g_debug_level > 0) {
-                sum2 =_su3adj_square_norm(deriv);
-                sum1+= sum2;
-                if(sum2 > max2) max2 = sum2;
-              }
-              _minus_const_times_mom(*xm, st1, deriv);
-            }
-          }
-        }
-  }
-
-  /*
-   *  this is for the case without smearing  
-   */
-  else
-  {
     for(i = 0; i < VOLUME; i++)
     { 
       for(mu=0;mu<4;mu++)
       {
         z=&g_gauge_field[i][mu];
         xm=&moment[i][mu];
-        v=get_staples(i,mu); 
+        v=get_staples(i,mu, g_gauge_field); 
         _su3_times_su3d(w,*z,v);
         _trace_lambda(deriv,w);
         if(g_debug_level > 0) 
@@ -174,7 +104,6 @@ void gauge_momenta(double step)
         }
       }
     }
-  }
 #ifdef MPI
   etime = MPI_Wtime();
 #endif

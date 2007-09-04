@@ -171,7 +171,7 @@ void overrel_sweep(){
           {
           ix=g_ipt[x0][x1][x2][x3];
           for(mu=0;mu<4;mu++){
-            v=get_staples(ix,mu);
+            v=get_staples(ix,mu,g_gauge_field);
             flip_subgroup(ix,mu,v,1);
             flip_subgroup(ix,mu,v,2);
             flip_subgroup(ix,mu,v,3);
@@ -193,7 +193,7 @@ void overrel_sweep(){
           {
           ix=g_ipt[x0][x1][x2][x3];
           for(mu=0;mu<4;mu++){
-            v=get_staples(ix,mu);
+            v=get_staples(ix,mu,g_gauge_field);
             flip_subgroup(ix,mu,v,1);
             flip_subgroup(ix,mu,v,2);
             flip_subgroup(ix,mu,v,3);
@@ -209,7 +209,7 @@ void overrel_sweep(){
   static su3 v;
   for(mu=0;mu<4;mu++){
     for(ix=0;ix<VOLUME;ix++){
-      v=get_staples(ix,mu);
+      v=get_staples(ix,mu,g_gauge_field);
       flip_subgroup(ix,mu,v,1);
       flip_subgroup(ix,mu,v,2);
       flip_subgroup(ix,mu,v,3);
