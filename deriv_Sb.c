@@ -99,10 +99,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     /* load left vector r and */
     /* multiply with gamma5   */
     r = l + (icx-ioff);
-
+    ix=g_eo2lexic[icx];
 
     /*********************** direction +0 ********************/
 
+    ddd = &df0[ix][0];
     _bgl_load_r0((*r).s0);
     _bgl_load_r1((*r).s1);
     _bgl_load_minus_r2((*r).s2);
@@ -130,10 +131,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _bgl_su3_times_v_dagger(*up);
     /* result in r now */
     _bgl_complex_times_r(ka0);
-    _bgl_trace_lambda_add_assign(df0[ix][0]);
+    _bgl_trace_lambda_add_assign((*ddd));
 
     /************** direction -0 ****************************/
 
+    ddd = &df0[iy][0];
     _bgl_load_r0((*r).s0);
     _bgl_load_r1((*r).s1);
     _bgl_load_minus_r2((*r).s2);
@@ -162,10 +164,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _bgl_su3_times_v_dagger(*um);
     /* result in r now */
     _bgl_complex_times_r(ka0);
-    _bgl_trace_lambda_add_assign(df0[iy][0]);
+    _bgl_trace_lambda_add_assign((*ddd));
 
     /*************** direction +1 **************************/
 
+    ddd = &df0[ix][1];
     _bgl_load_r0((*r).s0);
     _bgl_load_r1((*r).s1);
     _bgl_load_minus_r2((*r).s2);
@@ -194,10 +197,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _bgl_su3_times_v_dagger(*up);
     /* result in r now */
     _bgl_complex_times_r(ka1);
-    _bgl_trace_lambda_add_assign(df0[ix][1]);
+    _bgl_trace_lambda_add_assign((*ddd));
 
     /**************** direction -1 *************************/
 
+    ddd = &df0[iy][1];
     _bgl_load_r0((*r).s0);
     _bgl_load_r1((*r).s1);
     _bgl_load_minus_r2((*r).s2);
@@ -226,10 +230,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _bgl_su3_times_v_dagger(*um);
     /* result in r now */
     _bgl_complex_times_r(ka1);
-    _bgl_trace_lambda_add_assign(df0[iy][1]);
+    _bgl_trace_lambda_add_assign((*ddd));
 
     /*************** direction +2 **************************/
 
+    ddd = &df0[ix][2];
     _bgl_load_r0((*r).s0);
     _bgl_load_r1((*r).s1);
     _bgl_load_minus_r2((*r).s2);
@@ -258,10 +263,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _bgl_su3_times_v_dagger(*up);
     /* result in r now */
     _bgl_complex_times_r(ka2);
-    _bgl_trace_lambda_add_assign(df0[ix][2]);
+    _bgl_trace_lambda_add_assign((*ddd));
       
     /***************** direction -2 ************************/
 
+    ddd = &df0[iy][2];
     _bgl_load_r0((*r).s0);
     _bgl_load_r1((*r).s1);
     _bgl_load_minus_r2((*r).s2);
@@ -290,10 +296,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _bgl_su3_times_v_dagger(*um);
     /* result in r now */
     _bgl_complex_times_r(ka1);
-    _bgl_trace_lambda_add_assign(df0[iy][2]);
+    _bgl_trace_lambda_add_assign(*ddd);
 
     /****************** direction +3 ***********************/
 
+    ddd = &df0[ix][3];
     _bgl_load_r0((*r).s0);
     _bgl_load_r1((*r).s1);
     _bgl_load_minus_r2((*r).s2);
@@ -322,10 +329,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _bgl_su3_times_v_dagger(*up);
     /* result in r now */
     _bgl_complex_times_r(ka3);
-    _bgl_trace_lambda_add_assign(df0[ix][3]);
+    _bgl_trace_lambda_add_assign((*ddd));
 
     /***************** direction -3 ************************/
 
+    ddd = &df0[iy][3];
     _bgl_load_r0((*r).s0);
     _bgl_load_r1((*r).s1);
     _bgl_load_minus_r2((*r).s2);
@@ -342,6 +350,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _bgl_i_mul_sub_from_r0_r2_reg1();
     _bgl_i_mul_add_r1_to_r3_reg1_up();
 
+    /* something wrong here...*/
     icz=icx+1;
     if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
     iz=g_eo2lexic[icz];
@@ -357,7 +366,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _bgl_su3_times_v_dagger(*um);
     /* result in r now */
     _bgl_complex_times_r(ka3);
-    _bgl_trace_lambda_add_assign(df0[iy][3]);
+    _bgl_trace_lambda_add_assign((*ddd));
 
     /****************** end of loop ************************/
   }

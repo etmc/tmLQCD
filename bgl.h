@@ -1256,7 +1256,7 @@
   reg14 = __fpsub(r11, r31); \
   reg15 = __fpsub(r12, r32);  
 
-/* v tensor w^dagger */
+/* reg0 tensor reg1^dagger */
 /* computes tensor product of reg0x with reg1x, x=0,1,2 */
 /* and tensor product of reg0x with reg1x, x=3,4,5 */
 /* and adds the results and stores them in vxy */
@@ -1455,24 +1455,24 @@
 
 #define _bgl_complex_times_r(c) \
   reg00 = __lfpd((double*)&c);	       \
-  reg03 = __fxpmul(reg00, __creal(r00)); \
-  reg10 = __fxpmul(reg00, __creal(r10)); \
-  reg13 = __fxpmul(reg00, __creal(r20)); \
-  reg04 = __fxpmul(reg00, __creal(r01)); \
-  reg11 = __fxpmul(reg00, __creal(r11)); \
-  reg14 = __fxpmul(reg00, __creal(r21)); \
-  reg05 = __fxpmul(reg00, __creal(r02)); \
-  reg12 = __fxpmul(reg00, __creal(r12)); \
-  reg15 = __fxpmul(reg00, __creal(r22)); \
-  r00 = __fxcxnsma(reg03, reg00, __cimag(r00)); \
-  r10 = __fxcxnsma(reg10, reg00, __cimag(r10)); \
-  r20 = __fxcxnsma(reg13, reg00, __cimag(r20)); \
-  r01 = __fxcxnsma(reg04, reg00, __cimag(r01)); \
-  r11 = __fxcxnsma(reg11, reg00, __cimag(r11)); \
-  r21 = __fxcxnsma(reg14, reg00, __cimag(r21)); \
-  r02 = __fxcxnsma(reg05, reg00, __cimag(r02)); \
-  r12 = __fxcxnsma(reg12, reg00, __cimag(r12)); \
-  r22 = __fxcxnsma(reg15, reg00, __cimag(r22));
+  reg03 = __fxpmul(r00, __creal(reg00)); \
+  reg10 = __fxpmul(r10, __creal(reg00)); \
+  reg13 = __fxpmul(r20, __creal(reg00)); \
+  reg04 = __fxpmul(r01, __creal(reg00)); \
+  reg11 = __fxpmul(r11, __creal(reg00)); \
+  reg14 = __fxpmul(r21, __creal(reg00)); \
+  reg05 = __fxpmul(r02, __creal(reg00)); \
+  reg12 = __fxpmul(r12, __creal(reg00)); \
+  reg15 = __fxpmul(r22, __creal(reg00)); \
+  r00 = __fxcxnpma(reg03, r00, __cimag(reg00)); \
+  r10 = __fxcxnpma(reg10, r10, __cimag(reg00)); \
+  r20 = __fxcxnpma(reg13, r20, __cimag(reg00)); \
+  r01 = __fxcxnpma(reg04, r01, __cimag(reg00)); \
+  r11 = __fxcxnpma(reg11, r11, __cimag(reg00)); \
+  r21 = __fxcxnpma(reg14, r21, __cimag(reg00)); \
+  r02 = __fxcxnpma(reg05, r02, __cimag(reg00)); \
+  r12 = __fxcxnpma(reg12, r12, __cimag(reg00)); \
+  r22 = __fxcxnpma(reg15, r22, __cimag(reg00));
 
 #define _bgl_trace_lambda_add_assign(r)					\
   (r).d1+= (-__cimag(r10) - __cimag(r01));				\
