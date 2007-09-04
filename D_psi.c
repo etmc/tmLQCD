@@ -426,7 +426,7 @@ void D_psi(spinor * const P, spinor * const Q){
  * Author: Carsten Urbach
  *
  **********************************/
-
+/* Checked! */
 void D_psi(spinor * const P, spinor * const Q){
   int ix,iy,iz;
   static complex fact1;
@@ -513,7 +513,7 @@ void D_psi(spinor * const P, spinor * const Q){
     _bgl_vector_sub_reg1();
 
     _bgl_su3_inverse_multiply_double((*um));
-    _bgl_vector_cmplxcg_mul_double(ka0);
+    _bgl_vector_cmplxcg_mul_double(phase_0);
 
     _bgl_add_to_rs0_reg0();
     _bgl_sub_from_rs2_reg0();
@@ -538,7 +538,7 @@ void D_psi(spinor * const P, spinor * const Q){
     _bgl_vector_i_mul_add_reg1();
 
     _bgl_su3_multiply_double((*up));
-    _bgl_vector_cmplx_mul_double(ka1);
+    _bgl_vector_cmplx_mul_double(phase_1);
 
     _bgl_add_to_rs0_reg0();
     _bgl_i_mul_sub_from_rs3_reg0();
@@ -562,7 +562,7 @@ void D_psi(spinor * const P, spinor * const Q){
     _bgl_vector_i_mul_sub_reg1();
       
     _bgl_su3_inverse_multiply_double((*um));
-    _bgl_vector_cmplxcg_mul_double(ka1);
+    _bgl_vector_cmplxcg_mul_double(phase_1);
       
     _bgl_add_to_rs0_reg0();
     _bgl_add_to_rs1_reg1();
@@ -586,7 +586,7 @@ void D_psi(spinor * const P, spinor * const Q){
     _bgl_vector_sub_reg1();
 
     _bgl_su3_multiply_double((*up));
-    _bgl_vector_cmplx_mul_double(ka2);
+    _bgl_vector_cmplx_mul_double(phase_2);
 
     _bgl_add_to_rs0_reg0();
     _bgl_add_to_rs1_reg1();
@@ -611,7 +611,7 @@ void D_psi(spinor * const P, spinor * const Q){
     _bgl_vector_add_reg1();
       
     _bgl_su3_inverse_multiply_double((*um));
-    _bgl_vector_cmplxcg_mul_double(ka2);
+    _bgl_vector_cmplxcg_mul_double(phase_2);
       
     _bgl_add_to_rs0_reg0();
     _bgl_add_to_rs1_reg1();
@@ -635,7 +635,7 @@ void D_psi(spinor * const P, spinor * const Q){
     _bgl_vector_i_mul_sub_reg1();
 
     _bgl_su3_multiply_double((*up));
-    _bgl_vector_cmplx_mul_double(ka3);
+    _bgl_vector_cmplx_mul_double(phase_3);
 
     _bgl_add_to_rs0_reg0();
     _bgl_add_to_rs1_reg1();
@@ -661,7 +661,7 @@ void D_psi(spinor * const P, spinor * const Q){
     _bgl_vector_i_mul_add_reg1();
       
     _bgl_su3_inverse_multiply_double((*um));
-    _bgl_vector_cmplxcg_mul_double(ka3);
+    _bgl_vector_cmplxcg_mul_double(phase_3);
       
     _bgl_add_to_rs0_reg0();
     _bgl_store_rs0((*rn).s0);

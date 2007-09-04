@@ -443,32 +443,36 @@
   reg05 = __fxcxnpma(reg02, reg05, c.im); \
   reg15 = __fxcxnpma(reg12, reg15, c.im); 
 
-#define _bgl_vector_cmplx_mul_rs(c) \
-  reg00 = __fxpmul(rs00, c.re); \
-  reg01 = __fxpmul(rs01, c.re); \
-  reg02 = __fxpmul(rs02, c.re); \
-  reg10 = __fxpmul(rs10, c.re); \
-  reg11 = __fxpmul(rs11, c.re); \
-  reg12 = __fxpmul(rs12, c.re); \
-  rs00 = __fxcxnpma(reg00, rs00, c.im); \
-  rs01 = __fxcxnpma(reg01, rs01, c.im); \
-  rs02 = __fxcxnpma(reg02, rs02, c.im); \
-  rs10 = __fxcxnpma(reg10, rs10, c.im); \
-  rs11 = __fxcxnpma(reg11, rs11, c.im); \
-  rs12 = __fxcxnpma(reg12, rs12, c.im); \
-  reg00 = __fxpmul(rs20, c.re); \
-  reg01 = __fxpmul(rs21, c.re); \
-  reg02 = __fxpmul(rs22, c.re); \
-  reg10 = __fxpmul(rs30, c.re); \
-  reg11 = __fxpmul(rs31, c.re); \
-  reg12 = __fxpmul(rs32, c.re); \
-  rs20 = __fxcxnsma(reg00, rs20, c.im); \
-  rs21 = __fxcxnsma(reg01, rs21, c.im); \
-  rs22 = __fxcxnsma(reg02, rs22, c.im); \
-  rs30 = __fxcxnsma(reg10, rs30, c.im); \
-  rs31 = __fxcxnsma(reg11, rs31, c.im); \
-  rs32 = __fxcxnsma(reg12, rs32, c.im); \
-  
+/* complex number c times rs0 and rs1 */
+/* complex number c times cjgt of rs2 and rs3 */
+
+#define _bgl_vector_cmplx_mul_rs(c)			\
+  reg20 = __lfpd((double*)&c);					\
+  reg00 = __fxpmul(rs00, __creal(reg20));			\
+  reg01 = __fxpmul(rs01, __creal(reg20));			\
+  reg02 = __fxpmul(rs02, __creal(reg20));			\
+  reg10 = __fxpmul(rs10, __creal(reg20));			\
+  reg11 = __fxpmul(rs11, __creal(reg20));			\
+  reg12 = __fxpmul(rs12, __creal(reg20));			\
+  rs00 = __fxcxnpma(reg00, rs00, __cimag(reg20));		\
+  rs01 = __fxcxnpma(reg01, rs01, __cimag(reg20));		\
+  rs02 = __fxcxnpma(reg02, rs02, __cimag(reg20));		\
+  rs10 = __fxcxnpma(reg10, rs10, __cimag(reg20));		\
+  rs11 = __fxcxnpma(reg11, rs11, __cimag(reg20));		\
+  rs12 = __fxcxnpma(reg12, rs12, __cimag(reg20));		\
+  reg00 = __fxpmul(rs20, __creal(reg20));			\
+  reg01 = __fxpmul(rs21, __creal(reg20));			\
+  reg02 = __fxpmul(rs22, __creal(reg20));			\
+  reg10 = __fxpmul(rs30, __creal(reg20));			\
+  reg11 = __fxpmul(rs31, __creal(reg20));			\
+  reg12 = __fxpmul(rs32, __creal(reg20));			\
+  rs20 = __fxcxnsma(reg00, rs20, __cimag(reg20));		\
+  rs21 = __fxcxnsma(reg01, rs21, __cimag(reg20));		\
+  rs22 = __fxcxnsma(reg02, rs22, __cimag(reg20));		\
+  rs30 = __fxcxnsma(reg10, rs30, __cimag(reg20));		\
+  rs31 = __fxcxnsma(reg11, rs31, __cimag(reg20));		\
+  rs32 = __fxcxnsma(reg12, rs32, __cimag(reg20));
+
 
 #define _bgl_vector_cmplxcg_mul(c) \
   reg00 = __fxpmul(reg03, c.re); \
