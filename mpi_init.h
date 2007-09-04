@@ -13,7 +13,6 @@ extern MPI_Datatype deri_time_slice_cont;
 extern MPI_Datatype deri_time_slice_split;
 extern MPI_Datatype field_time_slice_cont;
 extern MPI_Datatype lfield_time_slice_cont;
-extern MPI_Datatype lfield_time_slice_gath;
 extern MPI_Datatype gauge_x_slice_cont;
 extern MPI_Datatype gauge_x_slice_gath;
 extern MPI_Datatype field_x_slice_cont;

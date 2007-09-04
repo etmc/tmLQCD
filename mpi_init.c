@@ -26,7 +26,6 @@ MPI_Datatype deri_time_slice_split;
 MPI_Datatype field_point;
 MPI_Datatype field_time_slice_cont;
 MPI_Datatype lfield_time_slice_cont;
-MPI_Datatype lfield_time_slice_gath;
 MPI_Datatype gauge_x_slice_cont;
 MPI_Datatype gauge_x_subslice;
 MPI_Datatype gauge_x_slice_gath;
@@ -344,8 +343,6 @@ void mpi_init(int argc,char *argv[]) {
 
   /* this is the not even/odd field */
   MPI_Type_contiguous(LX*LY*LZ, field_point, &lfield_time_slice_cont);
-  MPI_Type_vector(2, LX*LY*LZ/2, (VOLUME)/2, field_point, &lfield_time_slice_gath);
-  MPI_Type_commit(&lfield_time_slice_gath);
   MPI_Type_commit(&lfield_time_slice_cont);
 
 
