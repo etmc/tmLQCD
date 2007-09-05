@@ -1,3 +1,6 @@
+05.09.2007: invert suppports now also inversions using D_psi. This is
+	    triggered by UseEvenOdd (default = yes) as input parameter.
+
 04.09.2007: D_psi in three versions tested, also parallel
 	    versions. BG/L version of deriv_Sb still not checked.
 

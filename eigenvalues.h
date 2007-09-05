@@ -8,6 +8,7 @@ extern double * inv_eigenvls;
 extern int eigenvalues_for_cg_computed;
 double eigenvalues(int * nr_of_eigenvalues, const int max_iterations, 
 		   const double precision, const int maxmin,
-		   const int readwrite, const int nstore);
+		   const int readwrite, const int nstore,
+		   const int even_odd_flag);
 
 #endif

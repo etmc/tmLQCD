@@ -87,6 +87,7 @@ extern "C"
   extern int propagator_splitted;
   extern int source_location;
   extern int sub_evs_cg_flag;
+  extern int even_odd_flag;
  
   int read_input(char *);
   int reread_input(char *);

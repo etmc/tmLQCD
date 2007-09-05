@@ -39,4 +39,6 @@
 #include "linalg/assign_add_mul_r_bi.h"
 #include "linalg/assign_mul_add_r_bi.h"
 
+#include "linalg/convert_eo_to_lexic.h"
+
 #endif

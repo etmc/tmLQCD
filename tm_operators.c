@@ -21,6 +21,7 @@
 #include "sse.h"
 #include "linalg/diff.h"
 #include "gamma.h"
+#include "D_psi.h"
 #ifdef BGL
 #  include "bgl.h"
 #endif
@@ -282,6 +283,29 @@ void Qtm_pm_psi_nocom(spinor * const l, spinor * const k){
   mul_one_pm_imu_inv(l, +1.);
   Hopping_Matrix_nocom(OE, g_spinor_field[DUM_MATRIX+1], l);
   mul_one_pm_imu_sub_mul_gamma5(l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], +1.);
+}
+
+/* the "full" operators */
+void Q_pm_psi(spinor * const l, spinor * const k) {
+  /* Q */
+  gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME);
+  g_mu = -g_mu;
+  D_psi(l, g_spinor_field[DUM_MATRIX]);
+  gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME);
+  g_mu = -g_mu;
+  D_psi(l, g_spinor_field[DUM_MATRIX]);
+}
+
+void Q_minus_psi(spinor * const l, spinor * const k) {
+  gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME);
+  g_mu = -g_mu;
+  D_psi(l, g_spinor_field[DUM_MATRIX]);
+  g_mu = -g_mu;
+}
+
+void Q_plus_psi(spinor * const l, spinor * const k) {
+  gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME);
+  D_psi(l, g_spinor_field[DUM_MATRIX]);
 }
 
 /******************************************

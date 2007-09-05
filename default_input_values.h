@@ -106,5 +106,6 @@
 #define _default_sub_evs_cg_flag 0
 #define _default_phmc_heavy_timescale 0
 #define _default_phmc_exact_poly 0
+#define _default_even_odd_flag 1
 
 #endif

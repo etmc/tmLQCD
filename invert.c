@@ -49,6 +49,8 @@
 #include "update_backward_gauge.h"
 #include "stout_smear.h"
 #include "invert_eo.h"
+#include "D_psi.h"
+#include "linalg/convert_eo_to_lexic.h"
 
 
 void usage(){
@@ -76,6 +78,7 @@ int main(int argc,char *argv[]) {
   char conf_filename[50];
   char * input_filename = NULL;
   double plaquette_energy;
+
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -156,7 +159,12 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for geometry indices! Aborting...\n");
     exit(-1);
   }
-  j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS); 
+  if(even_odd_flag) {
+    j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
+  }
+  else {
+    j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
+  }
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(-1);
@@ -164,8 +172,6 @@ int main(int argc,char *argv[]) {
 
   g_mu = g_mu1; 
   if(g_proc_id == 0){    
-    
-/*     fscanf(fp6,"%s",filename); */
     /*construct the filenames for the observables and the parameters*/
     strcpy(datafilename,filename);  strcat(datafilename,".data");
     strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
@@ -221,7 +227,7 @@ int main(int argc,char *argv[]) {
 
     /* Compute minimal eigenvalues, if wanted */
     if(compute_evs != 0) {
-      eigenvalues(&no_eigenvalues, 1000, eigenvalue_precision, 0, compute_evs, nstore);
+      eigenvalues(&no_eigenvalues, 1000, eigenvalue_precision, 0, compute_evs, nstore, even_odd_flag);
     }
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action();
@@ -318,7 +324,7 @@ int main(int argc,char *argv[]) {
 #endif
       iter = invert_eo(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1], 
 		       solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag,
-		       sub_evs_cg_flag);
+		       sub_evs_cg_flag, even_odd_flag);
 #ifdef MPI
       etime = MPI_Wtime();
 #endif

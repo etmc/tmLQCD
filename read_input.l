@@ -95,6 +95,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   int no_eigenvalues;
   double eigenvalue_precision;
   int sub_evs_cg_flag;
+  int even_odd_flag;
 %}
 
 %option never-interactive
@@ -202,6 +203,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x NOEV
 %x PRECEV
 %x HEAVYTS
+%x EO
 
 %x COMMENT
 %x ERROR
@@ -327,6 +329,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^SplittedPropagator{SPC}*={SPC}*           BEGIN(SPLITPROP);
 ^SourceLocation{SPC}*={SPC}*               BEGIN(SRCLOC);
 ^TimeScaleHeavyDoublet{SPC}*={SPC}*        BEGIN(HEAVYTS);
+^UseEvenOdd{SPC}*={SPC}*                   BEGIN(EO);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -943,6 +946,14 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   phmc_heavy_timescale = atoi(yytext);
   if(verbose!=0) printf("Integrate heavy doublet on timescale %d\n", phmc_heavy_timescale);
 }
+<EO>yes {
+  even_odd_flag = 1;
+  if(verbose) printf("Use even/odd preconditioning\n");
+}
+<EO>no {
+  even_odd_flag = 0;
+  if(verbose) printf("Do not use even/odd preconditioning\n");
+}
 
 
 <*>^#                       BEGIN(COMMENT);
@@ -955,7 +966,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC,USESTOUT,STOUTRHO,STOUTITER,PHMCFLAV>#   BEGIN(COMMENT);
 <SMIN,SMAX,DEGP,PRECEV,NOEV>#  BEGIN(COMMENT);
 <PCOMPUTEEVS,COMPUTEEVS,SPLITPROP,SRCLOC>#  BEGIN(COMMENT);
-<SOURCETS,SUBEVCG>#   BEGIN(COMMENT);
+<SOURCETS,SUBEVCG,EO>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC,HEAVYTS>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
@@ -1192,10 +1203,12 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   exit(1);
 }
 <HEAVYTS>. {
-  printf("Uknown value for TimeScaleHeavyDoublet in line %d\n", line_of_file);
+  printf("Unknown value for TimeScaleHeavyDoublet in line %d\n", line_of_file);
   exit(1);
 }
-
+<EO>. {
+  printf("Unknown value for UseEvenOdd in line %d\n Must be yes or no. Aborting!\n", line_of_file);
+}
 
 <INITIAL>.                        BEGIN(ERROR);
 <ERROR>[^\t\n]*             {
@@ -1334,6 +1347,7 @@ int read_input(char * conf_file){
   sub_evs_cg_flag = _default_sub_evs_cg_flag;
   phmc_heavy_timescale = _default_phmc_heavy_timescale;
   phmc_exact_poly = _default_phmc_exact_poly;
+  even_odd_flag = _default_even_odd_flag;
   /********************************************/
 
   if ((yyin = fopen(conf_file, "rt")) == NULL){
