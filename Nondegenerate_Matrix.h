@@ -27,5 +27,7 @@ void Q_test_epsilon(spinor * const l_strange, spinor * const l_charm,
 void Qtau1_P_ND(spinor * const l_strange, spinor * const l_charm,
 		spinor * const k_strange, spinor * const k_charm);
 
+void Qtm_pm_Ptm_pm_psi(spinor * const l, spinor * const k);
+void Qtm_pm_min_cconst_nrm(spinor * const l, spinor * const k,const complex z);
 
 #endif

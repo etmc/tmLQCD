@@ -43,7 +43,7 @@ void mul_one_plus_imubar(spinor * const l, spinor * const k);
  *
 */
 
-
+void Qtm_pm_psi(spinor *l,spinor *k);
 
 /* external functions */
 
@@ -724,6 +724,81 @@ void Qtau1_P_ND(spinor * const l_strange, spinor * const l_charm,
    assign(dum_dn,l_charm,VOLUME/2);
 
    QNon_degenerate(l_strange,l_charm,dum_dn,dum_up);
+
+}
+
+
+
+/* this is neccessary for the calculation of the polynomial */
+
+void Qtm_pm_min_cconst_nrm(spinor * const l, spinor * const k,
+			   const complex z){
+  static su3_vector phi1;
+  spinor *r,*s;
+  int ix;
+  Qtm_pm_psi(l,k);
+  mul_r(l, phmc_invmaxev*phmc_invmaxev, l, VOLUME/2);
+
+  /*  AND FINALLY WE SUBSTRACT THE C-CONSTANT  */
+
+
+  /************ loop over all lattice sites ************/
+  for(ix = 0; ix < (VOLUME/2); ix++){
+
+    r=l + ix;
+    s=k + ix;
+
+    _complex_times_vector(phi1, z, (*s).s0);
+    _vector_sub_assign((*r).s0, phi1);
+    _complex_times_vector(phi1, z, (*s).s1);
+    _vector_sub_assign((*r).s1, phi1);
+    _complex_times_vector(phi1, z, (*s).s2);
+    _vector_sub_assign((*r).s2, phi1);
+    _complex_times_vector(phi1, z, (*s).s3);
+    _vector_sub_assign((*r).s3, phi1);
+    
+  }
+
+  mul_r(l, phmc_Cpol, l, VOLUME/2);
+
+}
+
+/* calculate a polynomial in (Q+)*(Q-) */
+
+
+ void Ptm_pm_psi(spinor * const l, spinor * const k){
+
+   int j;
+   spinor *spinDum;
+   spinDum=g_spinor_field[DUM_MATRIX+2];
+
+   assign(spinDum,k,VOLUME/2);
+
+
+   for(j=0; j<(2*phmc_dop_n_cheby -2); j++){
+     if(j>0) {
+       assign(spinDum,l,VOLUME/2);
+     }
+
+     Qtm_pm_min_cconst_nrm(l,spinDum,phmc_root[j]);
+
+
+   }
+
+ }
+
+/* **********************************************
+ * Qpm * P(Qpm)
+ * this operator is neccessary for the inverter 
+ ************************************************/
+
+ void Qtm_pm_Ptm_pm_psi(spinor * const l, spinor * const k){
+   spinor * spinDum;
+
+   spinDum=g_spinor_field[DUM_MATRIX+3]; 
+   Ptm_pm_psi(l,k);
+   assign(spinDum,l,VOLUME/2);
+   Qtm_pm_psi(l,spinDum);
 
 }
 
