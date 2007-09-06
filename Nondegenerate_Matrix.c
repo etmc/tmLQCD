@@ -737,7 +737,7 @@ void Qtm_pm_min_cconst_nrm(spinor * const l, spinor * const k,
   spinor *r,*s;
   int ix;
   Qtm_pm_psi(l,k);
-  mul_r(l, phmc_invmaxev*phmc_invmaxev, l, VOLUME/2);
+  mul_r(l, phmc_invmaxev, l, VOLUME/2);
 
   /*  AND FINALLY WE SUBSTRACT THE C-CONSTANT  */
 

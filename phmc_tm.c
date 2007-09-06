@@ -467,7 +467,8 @@ int main(int argc,char *argv[]) {
      the hermitian Dirac operator (used in EV-computation), namely 
      S = Q Q^dag         
      When  "S"  is applied, we call  phmc_invmaxev  twice !!! */
-  phmc_invmaxev=1./(sqrt(stilde_max));
+  if(g_epsbar=0.0) phmc_invmaxev=1./(sqrt(stilde_max));
+  else if(g_epsbar==0.0) phmc_invmaxev=1./stilde_max;
   phmc_cheb_evmax = 1.0;
 
   /* Here we prepare the less precise polynomial first */
@@ -513,7 +514,7 @@ int main(int argc,char *argv[]) {
 #endif
     exit(6);
   }
-  phmc_Cpol = sqrt(phmc_Cpol);
+  if(g_epsbar!=0.0) phmc_Cpol = sqrt(phmc_Cpol);
 
   phmc_root = calloc((2*phmc_dop_n_cheby-2),sizeof(complex));
 
