@@ -108,7 +108,7 @@ int stout_smear_gauge_field(const double rho , const int no_iters)
         _su3_assign(g_gauge_field_smear_iterations[iter][x][mu], g_gauge_field[x][mu]);
 
         /* get staples */
-        wk_staple = get_staples(x, mu) ; 
+        wk_staple = get_staples(x, mu,g_gauge_field) ; 
         scale_su3(&wk_staple, rho) ; 
 
         _su3_assign(g_C_smear_iterations[iter][x][mu], wk_staple);
