@@ -47,7 +47,8 @@
 #include "update_backward_gauge.h"
 #include "phmc.h"
 #include "update_tm_nd.h"
-
+#include "solver/cg_her.h"
+#include "solver/cg_her_nd.h"
 
 
 int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle_energy, 
@@ -149,8 +150,12 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   random_spinor_field(g_chi_up_spinor_field[0], VOLUME/2, rngrepro);
   enerphi0 += square_norm(g_chi_up_spinor_field[0], VOLUME/2);
 
-  random_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2, rngrepro);
-  enerphi0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
+  if(g_epsbar!=0.0 || phmc_exact_poly == 0){
+     random_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2, rngrepro);
+     enerphi0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
+  } else {
+     zero_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2);
+  }
 
 
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
@@ -177,7 +182,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     Poly_tilde_ND(g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], phmc_ptilde_cheby_coef, 
 		  phmc_ptilde_n_cheby, g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1]);
 
-  } else if( phmc_exact_poly==1){
+  } else if( phmc_exact_poly==1 && g_epsbar!=0.0) {
 
     /* Attention this is Q * tau1, up/dn are exchanged in the input spinor  */
     /* this is used as an preconditioner */
@@ -208,18 +213,42 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
 
 
+  } else if(phmc_exact_poly==1 && g_epsbar==0.0) {
+
+    Qtm_pm_psi(g_chi_up_spinor_field[1], g_chi_up_spinor_field[0]);
+
+
+    assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
+
+    /* solve (Q+)*(Q-)*P((Q+)*(Q-)) *x=y */
+    cg_her(g_chi_up_spinor_field[1], g_chi_up_spinor_field[0],
+             1000,1.e-16,0,VOLUME/2, Qtm_pm_Ptm_pm_psi  ,0,1);
+
+    /*  phi= Bdagger phi  */
+    for(j = 1; j < (phmc_dop_n_cheby); j++){
+      assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
+      Qtm_pm_min_cconst_nrm(g_chi_up_spinor_field[1],
+			    g_chi_up_spinor_field[0],
+			    phmc_root[phmc_dop_n_cheby-2+j]);
+    }
+    assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
+
+
   }
 
   assign(g_chi_up_copy, g_chi_up_spinor_field[0], VOLUME/2);
   assign(g_chi_dn_copy, g_chi_dn_spinor_field[0], VOLUME/2);
-
+  
 
   temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2);
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
     printf("PHMC: Then: evaluate Norm of pseudofermion heatbath BHB \n ");
     printf("PHMC: Norm of BHB up squared %e \n", temp);
   }
-  temp += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
+
+  if(g_epsbar!=0.0 || phmc_exact_poly==0) 
+    temp += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
+
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)){
     printf("PHMC: Norm of BHB up + BHB dn squared %e \n\n", temp);
   }
@@ -433,7 +462,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
       printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], enerphi0x);
     }
   
-  } else if(phmc_exact_poly==1){
+  } else if(phmc_exact_poly==1 && g_epsbar!=0.0){
       
 
     /* B(Q*tau1) */
@@ -450,21 +479,47 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
     assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
 
-    temp = square_norm(g_chi_up_spinor_field[ij], VOLUME/2);
+    temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2);
     Ener[0] = temp;
 
-    temp = square_norm(g_chi_dn_spinor_field[ij], VOLUME/2);
+    temp = square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
     Ener[0] += temp;
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+      ij=0;
       printf("PHMC: Here comes the computation of H_new with \n \n");
-      printf("PHMC: At j=%d  P+HMC Final Energy %e \n", ij, enerphi0x+Ener[ij]);
-      printf("PHMC: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[ij]);
+      printf("PHMC: At j=%d  P+HMC Final Energy %e \n", ij, enerphi0x+Ener[0]);
+      printf("PHMC: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[0]);
     }
 
     enerphi0x += Ener[0];  /* this is quite sticky */
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-      printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], enerphi0x);
+      printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[0], enerphi0x);
+    }
+
+  } else if(phmc_exact_poly==1 && g_epsbar==0.0){
+    for(j = 1; j < (phmc_dop_n_cheby); j++){
+      assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
+      Qtm_pm_min_cconst_nrm(g_chi_up_spinor_field[1],
+			    g_chi_up_spinor_field[0],
+			    phmc_root[j-1]);
+    }
+    assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
+
+
+
+    temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2);
+    Ener[0] = temp;
+
+    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+      printf("PHMC: Here comes the computation of H_new with \n \n");
+      printf("PHMC: At j=%d  P+HMC Final Energy %e \n", ij, enerphi0x+Ener[0]);
+      printf("PHMC: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[0]);
+    }
+
+    enerphi0x += Ener[0];  /* this is quite sticky */
+    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+      printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[0], enerphi0x);
     }
 
   }
