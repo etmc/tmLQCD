@@ -117,10 +117,12 @@ int main(int argc,char *argv[]) {
 
   FILE *roots;
   char *filename_phmc_root = "Square_root_BR_roots.dat";
+  char *filename_phmc_root_oox = "Square_root_BR_roots.dat.oox";
   char title[50];
 
   FILE *Const;
   char *filename_const = "normierungLocal.dat";
+  char *filename_const_oox = "normierungLocal.dat.oox";
 
   FILE *Inoutputs;
   char *filename_inout = "INOUT.data";
@@ -467,8 +469,8 @@ int main(int argc,char *argv[]) {
      the hermitian Dirac operator (used in EV-computation), namely 
      S = Q Q^dag         
      When  "S"  is applied, we call  phmc_invmaxev  twice !!! */
-  if(g_epsbar=0.0) phmc_invmaxev=1./(sqrt(stilde_max));
-  else if(g_epsbar==0.0) phmc_invmaxev=1./stilde_max;
+  if(g_epsbar!=0.0 || phmc_exact_poly==0) phmc_invmaxev=1./(sqrt(stilde_max));
+  else if(g_epsbar==0.0 && phmc_exact_poly==1) phmc_invmaxev=1./stilde_max;
   phmc_cheb_evmax = 1.0;
 
   /* Here we prepare the less precise polynomial first */
@@ -503,6 +505,8 @@ int main(int argc,char *argv[]) {
      constant appearing in the multiplication representing the 
      polinomial in  sqrt(s) .
   */
+  if(g_epsbar==0.0 && phmc_exact_poly ==1) 
+    filename_const=filename_const_oox;
   if((Const=fopen(filename_const,"r")) != (FILE*)NULL) {
     fscanf(Const, " %lf \n", &phmc_Cpol);
     fclose(Const);
@@ -514,10 +518,13 @@ int main(int argc,char *argv[]) {
 #endif
     exit(6);
   }
-  if(g_epsbar!=0.0) phmc_Cpol = sqrt(phmc_Cpol);
+  if(g_epsbar!=0.0 || phmc_exact_poly==0) phmc_Cpol = sqrt(phmc_Cpol);
 
   phmc_root = calloc((2*phmc_dop_n_cheby-2),sizeof(complex));
 
+
+  if(g_epsbar==0.0 && phmc_exact_poly == 1) 
+    filename_phmc_root=filename_phmc_root_oox;
   if((roots=fopen(filename_phmc_root,"r")) != (FILE*)NULL) {
     fgets(title, 100, roots);
     
