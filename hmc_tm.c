@@ -283,7 +283,7 @@ int main(int argc,char *argv[]) {
   zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME/2);
 
   if(use_stout_flag == 1)
-    init_stout_smear_vars(VOLUME, stout_no_iter);
+    init_stout_smear_vars(VOLUMEPLUSRAND, stout_no_iter);
 
   /*construct the filenames for the observables and the parameters*/
   strcpy(datafilename,filename);  strcat(datafilename,".data");

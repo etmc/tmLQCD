@@ -33,11 +33,25 @@ void derivative_psf(const int nr, const int set_zero) {
 
   int i, mu, x;
   extern su3 ** g_stout_force_field;
-  extern su3 *** g_gauge_field_smear_iterations;
+  extern su3 ** g_gauge_field_saved;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(derivativepsf)
 #endif
+  if(use_stout_flag == 1)
+  {
+
+    /*
+     *  save unsmeared gauge field
+     */
+    for(x = 0; x < VOLUME; x++) 
+      for(mu = 0; mu < 4; mu++)
+      {
+        _su3_assign(g_gauge_field_saved[x][mu], g_gauge_field[x][mu]);
+      }
+      stout_smear_gauge_field(stout_rho , stout_no_iter);
+  }
+
   if(set_zero == 1) 
   {
     for(i=0;i<(VOLUME+RAND);i++)
@@ -48,9 +62,6 @@ void derivative_psf(const int nr, const int set_zero) {
       }
     }
   }
-
-  if(use_stout_flag == 1)
-    stout_smear_gauge_field(stout_rho, stout_no_iter);
 
   if(nr == 0) 
   {
@@ -261,30 +272,90 @@ void derivative_psf(const int nr, const int set_zero) {
       {
         _make_su3(g_stout_force_field[x][mu], df0[x][mu]);
       }
-    printf("SARS\n");
-
     stout_smear_force();
 
     for(x = 0; x < VOLUME; x++)
       for(mu = 0; mu < 4; mu++)
       {
-        _trace_lambda(df0[x][mu],g_stout_force_field[x][mu]);
+			  _trace_lambda(df0[x][mu],g_stout_force_field[x][mu]);
+			  df0[x][mu].d1 /= -2.0;
+			  df0[x][mu].d2 /= -2.0;
+			  df0[x][mu].d3 /= -2.0;
+			  df0[x][mu].d4 /= -2.0;
+			  df0[x][mu].d5 /= -2.0;
+			  df0[x][mu].d6 /= -2.0;
+			  df0[x][mu].d7 /= -2.0;
+			  df0[x][mu].d8 /= -2.0;
       }
 
     /*for(x = 0; x < VOLUME; x++)
       for(mu = 0; mu < 4; mu++)
-    print_su3(&(g_gauge_field_smear_iterations[0][x][mu]));*/
+      print_su3(&(g_gauge_field_smear_iterations[0][x][mu]));*/
+
+    /*printf("gauge_field BBB\n");
+      print_su3(&(g_gauge_field[0][0]));*/
 
     /*
      *  the original gauge field needs to be restored 
      *  so we can continue with the HMC evolution
      */
-    for(x = 0; x < VOLUME; x++)
+    /*for(x = 0; x < VOLUME; x++)
       for(mu = 0; mu < 4; mu++)
       {
-        /*_su3_assign(g_gauge_field_smear_iterations[i][x][mu], g_gauge_field[x][mu]);*/
         _su3_assign(g_gauge_field[x][mu], g_gauge_field_smear_iterations[0][x][mu]);
+      }*/
+
+    /*print_su3(&(g_gauge_field[0][0]));*/
+      printf("df0 after = %f %f %f %f %f %f %f %f\n", df0[0][0].d1, df0[0][0].d2, df0[0][0].d3, df0[0][0].d4, df0[0][0].d5, df0[0][0].d6, df0[0][0].d7, df0[0][0].d8);
+
+    /*
+     *  restore unsmeared gauge field
+     */
+    for(x = 0; x < VOLUME; x++) 
+      for(mu = 0; mu < 4; mu++)
+      {
+        _su3_assign(g_gauge_field[x][mu], g_gauge_field_saved[x][mu]);
       }
+    /*printf("gauge_field 000000\n");*/
+
+    /*su3 bu, *tempppp, **g_tempppp;
+    _su3_one(bu);
+    tempppp = calloc(VOLUME*4, sizeof(su3));
+    g_tempppp = calloc(VOLUME, sizeof(su3*));
+    g_tempppp[0] = tempppp;
+    for(x = 1; x < VOLUME; x++)
+      g_tempppp[x] = g_tempppp[x-1]+4;*/
+
+    /*printf("AaAaAa\n");*/
+    /*print_su3(&bu);
+    for(x = 0; x < VOLUME; x++)
+    for(mu = 0; mu < 4; mu++)
+    {
+      printf("x=%d mu=%d\n", x, mu);*/
+      /*_su3_assign(bu, bu);*/
+      /*_su3_assign(g_tempppp[x][mu], bu);
+      print_su3(&(g_tempppp[x][mu]));
+    }
+    printf("BaBaBa\n");
+    g_tempppp[0][2].c00.re = 3.0; 
+    print_su3(&(tempppp[2]));*/
+    /*printf("gauge_field AAAAAA\n");
+    printf("before tempppp %p\n", tempppp);
+    printf("before g_tmpppp[0] %p\n", g_tempppp[0]);
+    printf("BEFORE &(g_tmpppp[0][2]) %p\n", &(g_tempppp[0][2]));
+    printf("before &(g_tmpppp[0][2]).c00.re %d\n", ((&(g_tempppp[0][2]))->c00).re);
+    print_su3(&(g_tempppp[0][2]));*/
+    /*read_lime_gauge_field("config_saved.dat");
+    printf("gauge_field AAAAAA\n");
+    print_config_to_screen(g_gauge_field);
+    load_config_from_file(g_tempppp, "force_saved.dat");*/
+    /*print_su3(&(g_tempppp[0][0]));*/
+    /*printf("gauge_field BBBBBB\n");
+    print_config_to_screen(g_gauge_field);
+    printf("gauge_field CCCCCC\n");
+    print_config_to_screen(g_tempppp);
+    printf("gauge_field DDDDDD\n");*/
+    /*exit(7);*/
   }
 
 #ifdef _KOJAK_INST
