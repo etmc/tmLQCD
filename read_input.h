@@ -88,6 +88,7 @@ extern "C"
   extern int source_location;
   extern int sub_evs_cg_flag;
   extern int even_odd_flag;
+  extern int write_prop_format_flag;
  
   int read_input(char *);
   int reread_input(char *);

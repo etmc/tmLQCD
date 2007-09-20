@@ -96,6 +96,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   double eigenvalue_precision;
   int sub_evs_cg_flag;
   int even_odd_flag;
+  int write_prop_format_flag;
 %}
 
 %option never-interactive
@@ -204,6 +205,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x PRECEV
 %x HEAVYTS
 %x EO
+%x WRPROPFLAG
 
 %x COMMENT
 %x ERROR
@@ -330,6 +332,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^SourceLocation{SPC}*={SPC}*               BEGIN(SRCLOC);
 ^TimeScaleHeavyDoublet{SPC}*={SPC}*        BEGIN(HEAVYTS);
 ^UseEvenOdd{SPC}*={SPC}*                   BEGIN(EO);
+^WritePropagatorFormat{SPC}*={SPC}*        BEGIN(WRPROPFLAG);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -954,6 +957,14 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   even_odd_flag = 0;
   if(verbose) printf("Do not use even/odd preconditioning\n");
 }
+<WRPROPFLAG>gwc      {
+  write_prop_format_flag = 0;
+  if(verbose!=0) printf("Using GWC format to write propagator file\n");
+}
+<WRPROPFLAG>cmi      {
+  write_prop_format_flag = 1;
+  if(verbose!=0) printf("Using CM format to write propagator file\n");
+}
 
 
 <*>^#                       BEGIN(COMMENT);
@@ -966,7 +977,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC,USESTOUT,STOUTRHO,STOUTITER,PHMCFLAV>#   BEGIN(COMMENT);
 <SMIN,SMAX,DEGP,PRECEV,NOEV>#  BEGIN(COMMENT);
 <PCOMPUTEEVS,COMPUTEEVS,SPLITPROP,SRCLOC>#  BEGIN(COMMENT);
-<SOURCETS,SUBEVCG,EO>#   BEGIN(COMMENT);
+<SOURCETS,SUBEVCG,EO,WRPROPFLAG>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC,HEAVYTS>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
@@ -1209,6 +1220,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <EO>. {
   printf("Unknown value for UseEvenOdd in line %d\n Must be yes or no. Aborting!\n", line_of_file);
 }
+<WRPROPFLAG>. {
+  printf("Unknown value for WritePropagatorFormat in line %d\n Must be gwc or cmi. Aborting!\n", line_of_file);
+}
+
 
 <INITIAL>.                        BEGIN(ERROR);
 <ERROR>[^\t\n]*             {
@@ -1348,6 +1363,7 @@ int read_input(char * conf_file){
   phmc_heavy_timescale = _default_phmc_heavy_timescale;
   phmc_exact_poly = _default_phmc_exact_poly;
   even_odd_flag = _default_even_odd_flag;
+  write_prop_format_flag = source_format_flag;
   /********************************************/
 
   if ((yyin = fopen(conf_file, "rt")) == NULL){

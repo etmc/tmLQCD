@@ -239,14 +239,14 @@ int main(int argc,char *argv[]) {
   etime = MPI_Wtime();
 #endif
   
-  if(source_format_flag == 0) {
+  if(write_prop_format_flag == 0) {
       /* To write in standard format */
       /* we have to mult. by 2*kappa */
       mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[0], VOLUME/2);  
       mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[1], VOLUME/2);
       write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
   }
-  else if(source_format_flag == 1) {
+  else if(write_prop_format_flag == 1) {
       write_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename);
   }
   

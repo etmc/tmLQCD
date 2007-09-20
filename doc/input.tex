@@ -308,9 +308,10 @@ supported input paramters:
   solver. Not yet working!
 
 \item {\ttfamily SourceFormat}:\\
-  Format of sources and propagators. Only needed when not standard
-  format is used. Possible values then cmi for the Chris Michael
-  format. This parameter has only effect for executable {\ttfamily invert}.
+  Format of sources only (use {\ttfamily WritePropagatorFormat} for propagators).
+  Only needed when not standard format is used. Possible values are 
+  then cmi for the Chris Michael format. This parameter has effect 
+  for executables {\ttfamily invert} and {\ttfamily reducenoise}.
 
 \item {\ttfamily SolverFlag}:\\
   Sets the solver to be used. Possible values are among others
@@ -372,10 +373,15 @@ supported input paramters:
 \item {\ttfamily StoutRho} and {\ttfamily StoutNoIterations}:\\
   Stout smearing parameter.
 
-\item {\gg\ttfamily UseEvenOdd}:\\
+\item {\ttfamily UseEvenOdd}:\\
   Whether or not to use even/odd preconditioning in the invert
   programme.
-  
+
+\item {\ttfamily WritePropagatorFormat}:\\
+  By default this option take the value of SourceFormat, but now the choice
+  of format for the source and the propagators can be different.
+  Possible choices are gwc or cmi.
+
 \end{enumerate}
 
 \noindent PHMC related input parameters, where the heavy part of the actions
