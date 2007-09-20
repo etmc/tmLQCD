@@ -41,6 +41,12 @@
  * Autor: Ines Wetzorke <wetzorke@ifh.de>
  *        Carsten Urbach <urbach@ifh.de>
  *
+ * Addition of isnan in function read_spinorfield_cm_single to detect a
+ * wrong read order and creation of read_spinorfield_cm_swap_single to
+ * swap while reading if necessary.
+ *
+ * Author: Remi Baron <remi.baron@cea.fr> Jul 2007
+ *
  ****************************************************/
 
 /*
@@ -1532,6 +1538,24 @@ int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filena
 	  if(ts == t || ts < 0 || ts >= T){
 	    /* Read the data */
 	    fread(tmp, sizeof(spinor)/2, 1, ifs);
+
+            /* Test if we read the data with the correct endian order */
+            if(isnan(tmp[0]) || isnan(tmp[1]) || isnan(tmp[2]) || isnan(tmp[3]) || isnan(tmp[4]) || isnan(tmp[5]) ||
+            isnan(tmp[6]) || isnan(tmp[7]) || isnan(tmp[8]) || isnan(tmp[9]) || isnan(tmp[10]) || isnan(tmp[11]) ||
+            isnan(tmp[12]) || isnan(tmp[13]) || isnan(tmp[14]) || isnan(tmp[15]) || isnan(tmp[16]) || isnan(tmp[17]) ||
+            isnan(tmp[18]) || isnan(tmp[19]) || isnan(tmp[20]) || isnan(tmp[21]) || isnan(tmp[22]) || isnan(tmp[23]))
+            {
+              if(g_proc_id == 0)
+              {
+                if(big_endian())
+                  fprintf(stderr, "\nBig endian order gives some NaN. Trying little endian order instead...\n\n");
+                else
+                  fprintf(stderr, "\nLittle endian order gives some NaN. Trying big endian order instead...\n\n");
+              }
+
+              fclose(ifs);
+              return read_spinorfield_cm_swap_single(s,r,filename,ts,vol);
+            }
 	    single2double_cm(p+i, tmp);
 	  }
 	  else {
@@ -1548,6 +1572,76 @@ int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filena
   fclose(ifs);
   return(0);
 }
+
+int read_spinorfield_cm_swap_single(spinor * const s, spinor * const r, char * filename,
+                               const int ts, const int vol) {
+  /*
+   * ts is the number of the timeslice to be used
+   *    if ts < 0 read a volume source
+   *
+   * if ts >= 0 and vol > 0 the file is a volume file
+   * but only one timeslice should be read
+   */
+
+  FILE * ifs;
+  int t, x, y , z, i = 0;
+  spinor * p = NULL;
+  float tmp[24];
+
+  ifs = fopen(filename, "r");
+  if(ifs == (FILE *)NULL) {
+    fprintf(stderr, "Could not open file %s\n Aborting...\n", filename);
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(500);
+  }
+
+  for(x = 0; x < LX; x++) {
+    for(y = 0; y < LY; y++) {
+      for(z = 0; z < LZ; z++) {
+#if (defined MPI)
+        fseek(ifs,
+              (g_proc_coords[0]*T+
+               (((g_proc_coords[1]*LX+x)*g_nproc_y*LY+g_proc_coords[2]*LY+y)*g_nproc_z*LZ
+                + g_proc_coords[3]*LZ+z)*T*g_nproc_t)*sizeof(spinor)/2,
+              SEEK_SET);
+#endif
+        for(t = 0; t < T; t++) {
+
+          i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
+          if((t+x+y+z+
+              g_proc_coords[0]*T+g_proc_coords[1]*LX+
+              g_proc_coords[2]*LY+g_proc_coords[3]*LZ)%2==0) {
+            p = s;
+          }
+          else {
+            p = r;
+          }
+
+          if(ts == t || ts < 0 || ts >= T){
+            /* Read the data */
+            fread(tmp, sizeof(spinor)/2, 1, ifs);
+
+            /* Swap and convert from single to double precision */
+            byte_swap_assign_single2double(p+i, tmp, sizeof(spinor)/8);
+          }
+          else {
+            if(vol > 0) {
+              fread(tmp, sizeof(spinor)/2, 1, ifs);
+            }
+            /* Padding with zeros */
+            zero_spinor(p+i);
+          }
+        }
+      }
+    }
+  }
+  fclose(ifs);
+  return(0);
+}
+
 
 int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filename) {
 
@@ -1599,6 +1693,9 @@ int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filen
 	    else {
 	      MPI_Recv(tmp, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &status);
 	    }
+#endif
+#ifndef WORDS_BIGENDIAN
+            byte_swap(tmp,sizeof(spinor)/8);
 #endif
 	    fwrite(tmp, sizeof(float), 24, ofs);
 	  }
