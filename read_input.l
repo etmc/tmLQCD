@@ -1363,7 +1363,10 @@ int read_input(char * conf_file){
   phmc_heavy_timescale = _default_phmc_heavy_timescale;
   phmc_exact_poly = _default_phmc_exact_poly;
   even_odd_flag = _default_even_odd_flag;
-  write_prop_format_flag = source_format_flag;
+
+  /* Put -1 in write_prop_format_flag to see if parse_config() will
+  change the value. If not then set it to source_format_flag */
+  write_prop_format_flag = -1;
   /********************************************/
 
   if ((yyin = fopen(conf_file, "rt")) == NULL){
@@ -1391,7 +1394,7 @@ int read_input(char * conf_file){
   if(g_eps_sq_acc2 < 0) g_eps_sq_acc2 = g_eps_sq_acc;
   if(g_eps_sq_acc3 < 0) g_eps_sq_acc3 = g_eps_sq_acc;
 
-
+  if(write_prop_format_flag == -1) write_prop_format_flag = source_format_flag;
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
   g_ka_csw_8 = g_kappa*g_c_sw/8.;
   
