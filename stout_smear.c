@@ -48,6 +48,7 @@
 #include "get_staples.h"
 #include "xchange_gauge.h"
 #include "xchange.h"
+#include "io.h"
 /*#include "stout_smear_aux_vars.h"*/
 
 void  project_anti_herm(su3 *omega)  ;
@@ -59,12 +60,6 @@ void  check_su3(su3 *in)  ;
 
 int stout_smear_gauge_field(const double rho , const int no_iters)
 {
-  extern su3 * gauge_field_smear_iterations;
-  extern su3 *** g_gauge_field_smear_iterations;
-  extern su3 * Q_smear_iterations;
-  extern su3 *** g_Q_smear_iterations;
-  extern su3 * C_smear_iterations;
-  extern su3 *** g_C_smear_iterations;
   const int dim=4 ; 
   int iter , mu , x; 
   su3 *gauge_wk[4] ; 
@@ -74,7 +69,7 @@ int stout_smear_gauge_field(const double rho , const int no_iters)
   su3  *gauge_local ; 
   su3  new_gauge_local ; 
 
-  printf("Entering init_stout_gauge_field\n");
+  /*printf("Entering CRAIG's stout_smear_gauge_field\n");*/
 
 
   if(g_proc_id == 0) 
@@ -105,13 +100,11 @@ int stout_smear_gauge_field(const double rho , const int no_iters)
          *  because they are needed for the force back iteration in
          *  "stout_smear_force.c"
          */
-        _su3_assign(g_gauge_field_smear_iterations[iter][x][mu], g_gauge_field[x][mu]);
+        /*_su3_assign(g_gauge_field_smear_iterations[iter][x][mu], g_gauge_field[x][mu]);*/
 
         /* get staples */
-        wk_staple = get_staples(x, mu,g_gauge_field) ; 
+        wk_staple = get_staples(x, mu, g_gauge_field) ; 
         scale_su3(&wk_staple, rho) ; 
-
-        _su3_assign(g_C_smear_iterations[iter][x][mu], wk_staple);
 
         /* omega = staple * u^dagger */
         gauge_local = &g_gauge_field[x][mu];
@@ -119,12 +112,6 @@ int stout_smear_gauge_field(const double rho , const int no_iters)
 
         /* project out anti-hermitian traceless part */
         project_anti_herm(&omega) ; 
-
-        /*
-         *  omega is Q from eqtn (2) hep-lat/0311018
-         * since we need it later we save this
-         */
-        _su3_assign(g_Q_smear_iterations[iter][x][mu], omega);
 
         /*  exponentiate */
         _trace_lambda(p,omega) ;
@@ -158,18 +145,6 @@ int stout_smear_gauge_field(const double rho , const int no_iters)
      */
   } /* end loop over stout smearing iterations */
 
-  /*
-   *  store the final smeared gauge config as well
-   *  (maybe not needed)
-   */
-  for(x= 0 ; x < VOLUME ; ++x) 
-  {
-    for(mu = 0 ; mu < dim  ; ++mu) 
-    {
-      _su3_assign(g_gauge_field_smear_iterations[no_iters][x][mu], g_gauge_field[x][mu]);
-    }
-  }
-
   /*    free up memory */
   for(mu=0 ; mu < dim ; ++mu) {
     free(gauge_wk[mu]);
@@ -178,10 +153,11 @@ int stout_smear_gauge_field(const double rho , const int no_iters)
   x=3;
   mu=2;
 
-  printf("Leaving init_stout_gauge_field\n");
+  printf("Leaving CRAIG's stout_smear_gauge_field\n");
   return(0);
 }
 
+/*----------------------------------------------------------------------------*/
 
 /*
    Project the hermitian part out of a
@@ -230,18 +206,74 @@ void  project_anti_herm(su3 *omega) {
 
 }
 
+/*##################### DEBUG #######################*/
+
+void  load_config_from_file(su3 **in, char * filename) 
+{
+  int x, mu;
+  su3 temp_su3[VOLUME][4];
+
+  for(x = 0; x < VOLUME; x++)
+    for(mu = 0; mu < 4; mu++)
+    {
+      _su3_assign(temp_su3[x][mu], g_gauge_field[x][mu]);
+    }
+  read_lime_gauge_field(filename);
+  for(x = 0; x < VOLUME; x++)
+    for(mu = 0; mu < 4; mu++)
+    {
+      _su3_assign((in[x][mu]), g_gauge_field[x][mu]);
+      _su3_assign(g_gauge_field[x][mu], temp_su3[x][mu]);
+    }
+}
+
+/*----------------------------------------------------------------------------*/
+
+void  print_config_to_screen(su3 **in) 
+{
+  int x, mu;
+  for(x = 0; x < VOLUME; x++)
+    for(mu = 0; mu < 4; mu++)
+    {
+      printf("x = %d  mu = %d\n", x, mu);
+      /*print_su3_full_hex_precision(&(in[x][mu]));*/
+      print_su3(&(in[x][mu]));
+    }
+}
+
+/*----------------------------------------------------------------------------*/
+
+void  print_scalar_complex_field_to_screen(complex *in_field) 
+{
+  int x;
+  for(x = 0; x < VOLUME; x++)
+    printf("x = %d:  %12.14lf + I * %12.14lf\n", x, in_field[x].re, in_field[x].im);
+  printf("\n");
+}
+
+/*----------------------------------------------------------------------------*/
+
+void  print_scalar_real_field_to_screen(double *in_field) 
+{
+  int x;
+  for(x = 0; x < VOLUME; x++)
+    printf("x = %d:  %12.14lf\n", x, in_field[x]);
+  printf("\n");
+}
+
+/*----------------------------------------------------------------------------*/
 
 void  print_su3(su3 *in) {
 
-  printf("[ %f %f , %f %f , %f %f  ] \n",
+  printf("[ %12.14lf %12.14lf , %12.14lf %12.14lf , %12.14lf %12.14lf  ] \n",
       in->c00.re,in->c00.im, 
       in->c01.re,in->c01.im, 
       in->c02.re,in->c02.im ) ; 
-  printf("[ %f %f , %f %f , %f %f  ] \n",
+  printf("[ %12.14lf %12.14lf , %12.14lf %12.14lf , %12.14lf %12.14lf  ] \n",
       in->c10.re,in->c10.im, 
       in->c11.re,in->c11.im, 
       in->c12.re,in->c12.im ) ; 
-  printf("[ %f %f , %f %f , %f %f  ] \n",
+  printf("[ %12.14lf %12.14lf , %12.14lf %12.14lf , %12.14lf %12.14lf  ] \n",
       in->c20.re,in->c20.im, 
       in->c21.re,in->c21.im, 
       in->c22.re,in->c22.im ) ; 
@@ -249,6 +281,27 @@ void  print_su3(su3 *in) {
 
 }
 
+/*----------------------------------------------------------------------------*/
+
+void  print_su3_full_hex_precision(su3 *in) {
+
+  printf("[ %0A %0A , %0A %0A , %0A %0A  ] \n",
+      in->c00.re,in->c00.im, 
+      in->c01.re,in->c01.im, 
+      in->c02.re,in->c02.im ) ; 
+  printf("[ %0A %0A , %0A %0A , %0A %0A  ] \n",
+      in->c10.re,in->c10.im, 
+      in->c11.re,in->c11.im, 
+      in->c12.re,in->c12.im ) ; 
+  printf("[ %0A %0A , %0A %0A , %0A %0A  ] \n",
+      in->c20.re,in->c20.im, 
+      in->c21.re,in->c21.im, 
+      in->c22.re,in->c22.im ) ; 
+
+
+}
+
+/*----------------------------------------------------------------------------*/
 
 void  print_spinor(spinor *in) 
 {
@@ -264,11 +317,12 @@ void  print_spinor(spinor *in)
 
 void  print_su3_octave(su3 *in) 
 {
-  printf("[[(%f)+i*(%f) (%f)+i*(%f)  (%f)+i*(%f)]; [(%f)+i*(%f) (%f)+i*(%f)  (%f)+i*(%f)]; [(%f)+i*(%f) (%f)+i*(%f)  (%f)+i*(%f)]] \n",
+  printf("[[(%12.14lf)+i*(%12.14lf) (%12.14lf)+i*(%12.14lf)  (%12.14lf)+i*(%12.14lf)]; [(%12.14lf)+i*(%12.14lf) (%12.14lf)+i*(%12.14lf)  (%12.14lf)+i*(%12.14lf)]; [(%12.14lf)+i*(%12.14lf) (%12.14lf)+i*(%12.14lf)  (%12.14lf)+i*(%12.14lf)]] \n",
       in->c00.re, in->c00.im, in->c01.re, in->c01.im, in->c02.re, in->c02.im, in->c10.re, in->c10.im, in->c11.re, in->c11.im, in->c12.re, in->c12.im, in->c20.re, in->c20.im, in->c21.re, in->c21.im, in->c22.re, in->c22.im ) ; 
-
-
 }
+
+/*##################### END OF DEBUG #######################*/
+
 /*
    Check that a matrix is unitary
  */
@@ -294,6 +348,7 @@ void  check_su3(su3 *in) {
 
 }
 
+/*----------------------------------------------------------------------------*/
 
 /*
    Scale su3 matrix by a double.
@@ -317,6 +372,7 @@ void scale_su3(su3 *in, double scale) {
 
 }
 
+/*----------------------------------------------------------------------------*/
 
 /*
    Check the conversion of su3 adjoint 
@@ -343,6 +399,8 @@ void check_su3_adj(su3 in, su3adj p) {
   print_su3(&out); 
 
 }
+
+/*----------------------------------------------------------------------------*/
 
 /*
    Power series exponentiation.
