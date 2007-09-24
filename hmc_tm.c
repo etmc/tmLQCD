@@ -262,12 +262,26 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for geometry_indices! Aborting...\n");
     exit(0);
   }
-  j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
+  if(even_odd_flag)
+  {
+    j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
+  }
+  else
+  {
+    j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
+  }
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
   }
-  j = init_csg_field(VOLUMEPLUSRAND/2, g_csg_N);
+  if(even_odd_flag)
+  {
+    j = init_csg_field(VOLUMEPLUSRAND/2, g_csg_N);
+  }
+  else
+  {
+    j = init_csg_field(VOLUMEPLUSRAND, g_csg_N);
+  }
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for csg fields! Aborting...\n");
     exit(0);
