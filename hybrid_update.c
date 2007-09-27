@@ -24,6 +24,7 @@
 #include "eigenvalues.h"
 #include "get_rectangle_staples.h"
 #include "derivative_psf.h"
+#include "derivative_psf_no_evenodd.h"
 #include "gamma.h"
 #include "get_staples.h"
 #include "update_backward_gauge.h"
@@ -160,16 +161,28 @@ void update_fermion_momenta(double step, const int S,
 #ifdef MPI
     atime = MPI_Wtime();
 #endif
-    if(do_all == 1) {
+    if(do_all == 1) 
+    {
       /* set deriv to zero here */
-      derivative_psf(0, 1);
-      for(i = 1; i < g_nr_of_psf; i++) {
-	/* and add all the rest */
-	derivative_psf(i, 0);
+      if(even_odd_flag)
+        derivative_psf(0, 1);
+      else
+        derivative_psf_no_evenodd(0, 1);
+      for(i = 1; i < g_nr_of_psf; i++) 
+      {
+        /* and add all the rest */
+        if(even_odd_flag)
+          derivative_psf(i, 0);
+        else
+          derivative_psf_no_evenodd(i, 0);
       }
     }
-    else {
-      derivative_psf(S, 1);
+    else 
+    {
+      if(even_odd_flag)
+        derivative_psf(S, 1);
+      else
+        derivative_psf_no_evenodd(S, 1);
     }
 #ifdef MPI
     xchange_deri();
