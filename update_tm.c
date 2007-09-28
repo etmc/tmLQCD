@@ -37,6 +37,7 @@
 #include "ext_integrator.h"
 #include "2mn_integrator.h"
 #include "solver/chrono_guess.h"
+#include "solver/bicgstab_complex.h"
 #include "update_backward_gauge.h"
 #include "update_tm.h"
 #include "stout_smear.h"
@@ -92,7 +93,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     spinor_volume = VOLUME/2;
   else
     spinor_volume = VOLUME;
-  
+
   /* For chronological inverter */
   g_csg_N[1] = 0; g_csg_N[3] = 0; g_csg_N[5] = 0; g_csg_N[7] = 0;
 
@@ -206,6 +207,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   /* initialize the momenta */
   enep=ini_momenta();
   g_sloppy_precision = 1;
+
   /*run the trajectory*/
   if(integtyp == 1) {
     /* Leap-frog integration scheme */
@@ -242,18 +244,37 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   new_gauge_energy = g_rgi_C0 * new_plaquette_energy + g_rgi_C1 * new_rectangle_energy;
 
   /* compute the energy contributions from the pseudo-fermions */
-  g_mu = g_mu1;
-  if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-  chrono_guess(g_spinor_field[2], g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
-	       g_csg_N[0], g_csg_N[1], VOLUME/2, &Qtm_pm_psi);
-  idis0=bicg(2, first_psf, g_eps_sq_acc1, g_relative_precision_flag);
-  ITER_MAX_BCG = saveiter_max;
-  /* Save the solution of Q^-2 at the right place */
-  /* for later reuse! */
-  assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], spinor_volume);
-  /* Compute the energy contr. from first field */
-  enerphi0x = square_norm(g_spinor_field[2], spinor_volume);
+  if(even_odd_flag)
+  {
+    g_mu = g_mu1;
+    if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+    chrono_guess(g_spinor_field[2], g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
+        g_csg_N[0], g_csg_N[1], VOLUME/2, &Qtm_pm_psi);
+    idis0=bicg(2, first_psf, g_eps_sq_acc1, g_relative_precision_flag);
+    ITER_MAX_BCG = saveiter_max;
+    /* Save the solution of Q^-2 at the right place */
+    /* for later reuse! */
+    assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], spinor_volume);
+    /* Compute the energy contr. from first field */
+    enerphi0x = square_norm(g_spinor_field[2], spinor_volume);
+  }
+  else
+  {
+    g_mu = g_mu1;
+    if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+    chrono_guess(g_spinor_field[2], g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
+        g_csg_N[0], g_csg_N[1], VOLUME/2, &Qtm_pm_psi);
+    idis0=bicgstab_complex(g_spinor_field[2], g_spinor_field[first_psf], 1000, g_eps_sq_acc1, g_relative_precision_flag, VOLUME, Q_minus_psi);
+    /*idis0=bicg(2, first_psf, g_eps_sq_acc1, g_relative_precision_flag);*/
+    ITER_MAX_BCG = saveiter_max;
+    /* Save the solution of Q^-2 at the right place */
+    /* for later reuse! */
+    assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], spinor_volume);
+    /* Compute the energy contr. from first field */
+    enerphi0x = square_norm(g_spinor_field[2], spinor_volume);
+  }
 
+  printf("enerphi0x = %lf\n", enerphi0x);
   if(g_nr_of_psf > 1) 
   {
     if(even_odd_flag)
