@@ -36,7 +36,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	test/check_geometry test/check_xchange invert_eo \
 	ext_integrator polyakov_loop getopt sighandler \
 	source_generation boundary io update_tm ranlxd  \
-	mpi_init linsolve deriv_Sb deriv_Sb_D_psi eigenvalues \
+	mpi_init linsolve deriv_Sb deriv_Sb_D_psi \
 	xchange_deri geometry_eo linalg_eo \
 	init_moment_field init_gauge_tmp  \
 	derivative_psf derivative_psf_no_evenodd xchange_field xchange_gauge \
