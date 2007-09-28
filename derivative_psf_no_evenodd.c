@@ -21,7 +21,8 @@
 #include "hybrid_update.h"
 #include "Hopping_Matrix.h"
 #include "solver/chrono_guess.h"
-#include "solver/cg_her.h"
+#include "solver/solver.h"
+/*#include "solver/cg_her.h"*/
 #include "read_input.h"
 #include "stout_smear.h"
 #include "stout_smear_force.h"
@@ -244,7 +245,7 @@ void derivative_psf_no_evenodd(const int nr, const int set_zero)
   }
 
   /*########################################################*/
-  #include "start.h"
+  /*#include "start.h"
   #include "deriv_Sb.h"
   spinor *bbla_odd, *bbla_even, *BBLA_odd, *BBLA_even;
   su3 tmmpp;
@@ -259,20 +260,36 @@ void derivative_psf_no_evenodd(const int nr, const int set_zero)
   print_spinor(&(g_spinor_field[1][0]));
   
   convert_lexic_to_eo(bbla_even, bbla_odd, g_spinor_field[1]);
-  convert_lexic_to_eo(BBLA_even, BBLA_odd, g_spinor_field[1]);
+  convert_lexic_to_eo(BBLA_even, BBLA_odd, g_spinor_field[2]);
   print_spinor(&(g_spinor_field[1][0]));
   print_spinor(&(bbla_even[0]));
   deriv_Sb(OE, bbla_odd, BBLA_even);
-  /*deriv_Sb(EO, bbla_even, BBLA_odd);*/
-  /*for(x = 0; x < VOLUME; x++)
+  deriv_Sb(EO, bbla_even, BBLA_odd);
+  printf("Spiderschein AAAAAAA\n");
+  for(x = 0; x < VOLUME; x++)
     for(mu = 0; mu < 4; mu++)
     {
       _make_su3(tmmpp, df0[x][mu]);
       printf("x = %d  mu = %d\n", x, mu);
       print_su3(&(tmmpp));
-    }*/
+    }
+
+  for(x = 0; x < VOLUME; x++)
+    for(mu = 0; mu < 4; mu++)
+    {
+       _zero_su3adj(df0[x][mu]);
+    }
+  deriv_Sb_D_psi(g_spinor_field[1], g_spinor_field[2]);
+  printf("Spiderschein BBBBBBB\n");
+  for(x = 0; x < VOLUME; x++)
+    for(mu = 0; mu < 4; mu++)
+    {
+      _make_su3(tmmpp, df0[x][mu]);
+      printf("x = %d  mu = %d\n", x, mu);
+      print_su3(&(tmmpp));
+    }
   
-  exit(7);
+  exit(7);*/
   /*########################################################*/
 
   /* \delta Q sandwitched by Y^\dagger and X */
