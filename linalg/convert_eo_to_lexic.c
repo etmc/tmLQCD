@@ -38,6 +38,11 @@ void convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * const r) {
   return;
 }
 
+/*
+ *      P: spinor with full volume 
+ *      s: new spinor even 
+ *      r: new spinor odd 
+ */
 void convert_lexic_to_eo(spinor * const s, spinor * const r, spinor * const P) {
   int x, y, z, t, i, ix;
   spinor * p = NULL;
