@@ -1548,9 +1548,9 @@ int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filena
               if(g_proc_id == 0)
               {
                 if(big_endian())
-                  printf("\nBig endian order gives some NaN. Trying little endian order instead...\n\n");
+                  fprintf(stderr, "\nBig endian order gives some NaN. Trying little endian order instead...\n\n");
                 else
-                  printf("\nLittle endian order gives some NaN. Trying big endian order instead...\n\n");
+                  fprintf(stderr, "\nLittle endian order gives some NaN. Trying big endian order instead...\n\n");
               }
 
               fclose(ifs);
@@ -1940,7 +1940,15 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   printf("# The lattice size is %d x %d x %d x %d\n",
 	 (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(LZ*g_nproc_z));
   printf("# The local lattice size is %d x %d x %d x %d\n", 
-	 (int)(T), (int)(LX), (int)(LY),(int) LZ);
+      (int)(T), (int)(LX), (int)(LY),(int) LZ);
+  if(even_odd_flag)
+  {
+    printf("# even odd preconditioning is used\n");
+  }
+  else
+  {
+    printf("# even odd preconditioning is NOT used\n");
+  }
   printf("# beta = %f , kappa= %f\n", g_beta, g_kappa);
   printf("# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
   if(inv != 1) {
