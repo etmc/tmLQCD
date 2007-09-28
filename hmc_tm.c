@@ -50,7 +50,7 @@
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "phmc.h"
-#include "eigenvalues.h"
+#include "solver/solver.h"
 #include "polyakov_loop.h"
 
 void usage(){

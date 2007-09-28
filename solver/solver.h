@@ -26,6 +26,7 @@
 #include"solver/pcg_her.h"
 #include"solver/mr.h"
 #include"solver/gcr.h"
+#include"solver/eigenvalues.h"
 
 #include"solver/sub_low_ev.h"
 

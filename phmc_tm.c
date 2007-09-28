@@ -54,7 +54,7 @@
 #include "phmc.h"
 #include "init_bispinor_field.h"
 #include "eigenvalues_bi.h"
-#include "eigenvalues.h"
+#include "solver/solver.h"
 #include "init_chi_spinor_field.h"
 #include "init_chi_copy.h"
 #include "chebyshev_polynomial_nd.h"

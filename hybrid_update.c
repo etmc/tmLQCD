@@ -21,7 +21,7 @@
 #include "deriv_Sb.h"
 #include "Hopping_Matrix.h"
 #include "tm_operators.h"
-#include "eigenvalues.h"
+#include "solver/solver.h"
 #include "get_rectangle_staples.h"
 #include "derivative_psf.h"
 #include "derivative_psf_no_evenodd.h"
