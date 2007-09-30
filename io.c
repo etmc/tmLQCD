@@ -1548,9 +1548,9 @@ int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filena
               if(g_proc_id == 0)
               {
                 if(big_endian())
-                  fprintf(stderr, "\nBig endian order gives some NaN. Trying little endian order instead...\n\n");
+                  printf("\nBig endian order gives some NaN. Trying little endian order instead...\n\n");
                 else
-                  fprintf(stderr, "\nLittle endian order gives some NaN. Trying big endian order instead...\n\n");
+                  printf("\nLittle endian order gives some NaN. Trying big endian order instead...\n\n");
               }
 
               fclose(ifs);
