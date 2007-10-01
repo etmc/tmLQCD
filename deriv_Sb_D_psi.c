@@ -382,7 +382,6 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
 void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
 /* const int l, const int k){ */
   int ix,iy;
-  int ioff,ioff2,icx,icy;
   su3 * restrict up ALIGN;
   su3 * restrict um ALIGN;
 /*   su3adj * restrict ddd; */
@@ -406,14 +405,6 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
   __alignx(16, k);
 #endif
 
-  /*if(ieo==0) {
-    ioff=0;
-  }
-  else {
-    ioff=(VOLUME+RAND)/2;
-  } 
-  ioff2=(VOLUME+RAND)/2-ioff;*/
-
   /* for parallelization */
 #ifdef MPI
   xchange_lexicfield(k);
@@ -421,9 +412,8 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
 #endif
   /************** loop over all lattice sites ****************/
 
-  for(icx = ioff; icx < (VOLUME); icx++){
-    ix=icx;
-    rr = (*(l + (icx-ioff)));
+  for(ix = 0; ix < (VOLUME); ix++){
+    rr = (*(l + ix));
     /*     rr=g_spinor_field[l][icx-ioff]; */
 
     /*multiply the left vector with gamma5*/
@@ -432,9 +422,9 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
 
     /*********************** direction +0 ********************/
 
-    iy=g_iup[ix][0]; icy=iy;
+    iy=g_iup[ix][0];
 
-    sp = k + icy;
+    sp = k + iy;
 /*     sp=&g_spinor_field[k][icy]; */
     up=&g_gauge_field[ix][0];
       
@@ -457,9 +447,9 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
 
     /************** direction -0 ****************************/
 
-    iy=g_idn[ix][0]; icy=iy;
+    iy=g_idn[ix][0];
 
-    sm = k + icy;
+    sm = k + iy;
 /*     sm=&g_spinor_field[k][icy]; */
     um=&g_gauge_field[iy][0];
       
@@ -482,9 +472,9 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
 
     /*************** direction +1 **************************/
 
-    iy=g_iup[ix][1]; icy=iy;
+    iy=g_iup[ix][1];
 
-    sp = k + icy;
+    sp = k + iy;
     /*     sp=&g_spinor_field[k][icy]; */
     up=&g_gauge_field[ix][1];      
 
@@ -507,9 +497,9 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
 
     /**************** direction -1 *************************/
 
-    iy=g_idn[ix][1]; icy=iy;
+    iy=g_idn[ix][1];
 
-    sm = k + icy;
+    sm = k + iy;
     /*     sm=&g_spinor_field[k][icy]; */
     um=&g_gauge_field[iy][1];
       
@@ -532,9 +522,9 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
 
     /*************** direction +2 **************************/
 
-    iy=g_iup[ix][2]; icy=iy;
+    iy=g_iup[ix][2];
 
-    sp = k + icy;
+    sp = k + iy;
     /*     sp=&g_spinor_field[k][icy]; */
     up=&g_gauge_field[ix][2];
       
@@ -557,9 +547,9 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
 
     /***************** direction -2 ************************/
 
-    iy=g_idn[ix][2]; icy=iy;
+    iy=g_idn[ix][2];
 
-    sm = k + icy;
+    sm = k + iy;
     /*     sm=&g_spinor_field[k][icy]; */
     um=&g_gauge_field[iy][2];
       
@@ -582,9 +572,9 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
 
     /****************** direction +3 ***********************/
 
-    iy=g_iup[ix][3]; icy=iy;
+    iy=g_iup[ix][3];
 
-    sp = k + icy;
+    sp = k + iy;
     /*     sp=&g_spinor_field[k][icy]; */
     up=&g_gauge_field[ix][3];
       
@@ -607,9 +597,9 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
 
     /***************** direction -3 ************************/
 
-    iy=g_idn[ix][3]; icy=iy;
+    iy=g_idn[ix][3];
 
-    sm = k + icy;
+    sm = k + iy;
     /*     sm=&g_spinor_field[k][icy]; */
     um=&g_gauge_field[iy][3];
       

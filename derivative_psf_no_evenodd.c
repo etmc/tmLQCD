@@ -22,7 +22,8 @@
 #include "Hopping_Matrix.h"
 #include "solver/chrono_guess.h"
 #include "solver/solver.h"
-/*#include "solver/cg_her.h"*/
+#include "start.h"
+#include "deriv_Sb.h"
 #include "read_input.h"
 #include "stout_smear.h"
 #include "stout_smear_force.h"
@@ -38,6 +39,9 @@ void derivative_psf_no_evenodd(const int nr, const int set_zero)
   int i, mu, x;
   extern su3 ** g_stout_force_field;
   extern su3 ** g_gauge_field_saved;
+  spinor *bbla_odd, *bbla_even, *BBLA_odd, *BBLA_even;
+  su3 tmmpp;
+
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(derivativepsf)
@@ -84,10 +88,12 @@ void derivative_psf_no_evenodd(const int nr, const int set_zero)
 
       /* Invert Q_{+} Q_{-} */
       /* X -> DUM_DERI+1 */
-      count00 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[first_psf], ITER_MAX_CG, 1.e-16, 0, VOLUME, &Q_pm_psi, 0, 1);
+      count00 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[first_psf], ITER_MAX_CG, g_eps_sq_force1, g_relative_precision_flag, VOLUME, &Q_pm_psi, 0, 1);
       /*       assign(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+4], VOLUME/2); */
       /* Y -> DUM_DERI  */
+
       Q_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+
     }
     else
     {
@@ -245,56 +251,51 @@ void derivative_psf_no_evenodd(const int nr, const int set_zero)
   }
 
   /*########################################################*/
-  /*#include "start.h"
-  #include "deriv_Sb.h"
-  spinor *bbla_odd, *bbla_even, *BBLA_odd, *BBLA_even;
-  su3 tmmpp;
   
-  bbla_odd = calloc(VOLUME/2, sizeof(spinor));
-  bbla_even = calloc(VOLUME/2, sizeof(spinor));
-  BBLA_odd = calloc(VOLUME/2, sizeof(spinor));
-  BBLA_even = calloc(VOLUME/2, sizeof(spinor));
+/*   random_spinor_field(g_spinor_field[1], VOLUME, 1); */
+/*   random_spinor_field(g_spinor_field[2], VOLUME, 1); */
+/*   print_spinor(&(g_spinor_field[1][0])); */
   
-  random_spinor_field(g_spinor_field[1], VOLUME, 1);
-  random_spinor_field(g_spinor_field[2], VOLUME, 1);
-  print_spinor(&(g_spinor_field[1][0]));
-  
-  convert_lexic_to_eo(bbla_even, bbla_odd, g_spinor_field[1]);
-  convert_lexic_to_eo(BBLA_even, BBLA_odd, g_spinor_field[2]);
-  print_spinor(&(g_spinor_field[1][0]));
-  print_spinor(&(bbla_even[0]));
-  deriv_Sb(OE, bbla_odd, BBLA_even);
-  deriv_Sb(EO, bbla_even, BBLA_odd);
-  printf("Spiderschein AAAAAAA\n");
-  for(x = 0; x < VOLUME; x++)
-    for(mu = 0; mu < 4; mu++)
-    {
-      _make_su3(tmmpp, df0[x][mu]);
-      printf("x = %d  mu = %d\n", x, mu);
-      print_su3(&(tmmpp));
-    }
+/*   convert_lexic_to_eo(g_spinor_field[3], g_spinor_field[4], g_spinor_field[1]); */
+/*   convert_lexic_to_eo(g_spinor_field[5], g_spinor_field[6], g_spinor_field[2]); */
+/*   print_spinor(&(g_spinor_field[1][0])); */
 
-  for(x = 0; x < VOLUME; x++)
-    for(mu = 0; mu < 4; mu++)
-    {
-       _zero_su3adj(df0[x][mu]);
-    }
-  deriv_Sb_D_psi(g_spinor_field[1], g_spinor_field[2]);
-  printf("Spiderschein BBBBBBB\n");
-  for(x = 0; x < VOLUME; x++)
-    for(mu = 0; mu < 4; mu++)
-    {
-      _make_su3(tmmpp, df0[x][mu]);
-      printf("x = %d  mu = %d\n", x, mu);
-      print_su3(&(tmmpp));
-    }
+/*   deriv_Sb(EO, g_spinor_field[3], g_spinor_field[6]); */
+/*   deriv_Sb(OE, g_spinor_field[4], g_spinor_field[5]); */
+/*   printf("Spiderschein AAAAAAA\n"); */
+/*   for(x = 0; x < VOLUME; x++) */
+/*     for(mu = 0; mu < 4; mu++) */
+/*     { */
+/*       _make_su3(tmmpp, df0[x][mu]); */
+/*       printf("x = %d  mu = %d\n", x, mu); */
+/*       print_su3(&(tmmpp)); */
+/*     } */
+
+/*   for(x = 0; x < VOLUME; x++) */
+/*     for(mu = 0; mu < 4; mu++) */
+/*     { */
+/*        _zero_su3adj(df0[x][mu]); */
+/*     } */
+/*   deriv_Sb_D_psi(g_spinor_field[2], g_spinor_field[1]); */
+/*   printf("Spiderschein BBBBBBB\n"); */
+/*   for(x = 0; x < VOLUME; x++) */
+/*     for(mu = 0; mu < 4; mu++) */
+/*     { */
+/*       _make_su3(tmmpp, df0[x][mu]); */
+/*       printf("x = %d  mu = %d\n", x, mu); */
+/*       print_su3(&(tmmpp)); */
+/*     } */
   
-  exit(7);*/
+/*   exit(7); */
   /*########################################################*/
 
   /* \delta Q sandwitched by Y^\dagger and X */
-  /*deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1])*/; 
-  deriv_Sb_D_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]); 
+  deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+/*   convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_DERI]); */
+/*   convert_lexic_to_eo(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_DERI+1]); */
+
+/*   deriv_Sb(OE, g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]); */
+/*   deriv_Sb(EO, g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]); */
 
   g_mu = g_mu1;
 

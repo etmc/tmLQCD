@@ -41,6 +41,7 @@
 #include "update_backward_gauge.h"
 #include "update_tm.h"
 #include "stout_smear.h"
+#include "solver/solver.h"
 #include "init_stout_smear_vars.h"
 
 
@@ -147,7 +148,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   }
   else
   {
-    D_psi(g_spinor_field[first_psf], g_spinor_field[2]);
+    Q_plus_psi(g_spinor_field[first_psf], g_spinor_field[2]);
   }
 
   /* contruct the second \phi_o */
@@ -262,19 +263,22 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   {
     g_mu = g_mu1;
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    chrono_guess(g_spinor_field[2], g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0],
-        g_csg_N[0], g_csg_N[1], VOLUME/2, &Qtm_pm_psi);
-    idis0=bicgstab_complex(g_spinor_field[2], g_spinor_field[first_psf], 1000, g_eps_sq_acc1, g_relative_precision_flag, VOLUME, Q_minus_psi);
+/*     chrono_guess(g_spinor_field[2], g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0], */
+/*         g_csg_N[0], g_csg_N[1], VOLUME/2, &Qtm_pm_psi); */
+/*     idis0=bicgstab_complex(g_spinor_field[2], g_spinor_field[first_psf], 1000, g_eps_sq_acc1, g_relative_precision_flag, VOLUME, Q_minus_psi); */
     /*idis0=bicg(2, first_psf, g_eps_sq_acc1, g_relative_precision_flag);*/
-    ITER_MAX_BCG = saveiter_max;
+/*     ITER_MAX_BCG = saveiter_max; */
     /* Save the solution of Q^-2 at the right place */
     /* for later reuse! */
-    assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], spinor_volume);
+/*     assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], spinor_volume);
+ */
+    idis0=cg_her(g_spinor_field[DUM_DERI+5], g_spinor_field[first_psf], 1000, g_eps_sq_acc1, g_relative_precision_flag, VOLUME, Q_pm_psi, 0, 0);
+    Q_minus_psi(g_spinor_field[2], g_spinor_field[DUM_DERI+5]);
     /* Compute the energy contr. from first field */
     enerphi0x = square_norm(g_spinor_field[2], spinor_volume);
   }
 
-  printf("enerphi0x = %lf\n", enerphi0x);
+  printf("enerphi0x = %f\n", enerphi0x);
   if(g_nr_of_psf > 1) 
   {
     if(even_odd_flag)
@@ -321,8 +325,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   /* Compute the energy difference */
   dh = (enepx - enep) + g_beta*(gauge_energy - new_gauge_energy) +
     (enerphi0x - enerphi0) + (enerphi1x - enerphi1) + (enerphi2x - enerphi2);
-/*   dh= +enepx - g_beta*new_gauge_energy - enep + g_beta*gauge_energy */
-/*       + enerphi0x - enerphi0 + enerphi1x - enerphi1 + enerphi2x - enerphi2;  */
+  printf("%f %f %f\n", (enepx - enep), g_beta*(gauge_energy - new_gauge_energy), (enerphi0x - enerphi0));
   expmdh = exp(-dh);
       
   /* the random number is only taken at node zero and then distributed to 
