@@ -288,24 +288,41 @@ void Qtm_pm_psi_nocom(spinor * const l, spinor * const k){
 /* the "full" operators */
 void Q_pm_psi(spinor * const l, spinor * const k) {
   /* Q */
-  gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME);
-  g_mu = -g_mu;
-  D_psi(l, g_spinor_field[DUM_MATRIX]);
+/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
+/*   g_mu = g_mu; */
+/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
+/*   gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME); */
+/*   g_mu = -g_mu; */
+/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
+/*   g_mu = -g_mu; */
+
+
+  g_mu = g_mu;
+  D_psi(l, k);
   gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME);
   g_mu = -g_mu;
   D_psi(l, g_spinor_field[DUM_MATRIX]);
+  g_mu = -g_mu;
+  gamma5(l, l, VOLUME);
 }
 
 void Q_minus_psi(spinor * const l, spinor * const k) {
-  gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME);
+/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
+/*   g_mu = -g_mu; */
+/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
+/*   g_mu = -g_mu; */
+
   g_mu = -g_mu;
-  D_psi(l, g_spinor_field[DUM_MATRIX]);
+  D_psi(l, k);
   g_mu = -g_mu;
+  gamma5(l, l, VOLUME);
 }
 
 void Q_plus_psi(spinor * const l, spinor * const k) {
-  gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME);
-  D_psi(l, g_spinor_field[DUM_MATRIX]);
+/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
+/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
+  D_psi(l, k);
+  gamma5(l, l, VOLUME);
 }
 
 /******************************************
