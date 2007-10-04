@@ -278,7 +278,6 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     enerphi0x = square_norm(g_spinor_field[2], spinor_volume);
   }
 
-  printf("enerphi0x = %f\n", enerphi0x);
   if(g_nr_of_psf > 1) 
   {
     if(even_odd_flag)
