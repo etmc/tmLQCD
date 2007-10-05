@@ -1943,13 +1943,13 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
       (int)(T), (int)(LX), (int)(LY),(int) LZ);
   if(even_odd_flag)
   {
-    printf("# even odd preconditioning is used\n");
-    fprintf(parameterfile, "# even odd preconditioning is used\n");
+    printf("# Even/odd preconditioning was used\n");
+    fprintf(parameterfile, "# Even/odd preconditioning was used\n");
   }
   else
   {
-    printf("# even odd preconditioning is NOT used\n");
-    fprintf(parameterfile, "# even odd preconditioning is NOT used\n");
+    printf("# Even/odd preconditioning was not used\n");
+    fprintf(parameterfile, "# Even/odd preconditioning was not used\n");
   }
   printf("# beta = %f , kappa= %f\n", g_beta, g_kappa);
   printf("# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
