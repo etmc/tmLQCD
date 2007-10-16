@@ -70,6 +70,8 @@ extern MPI_Datatype halffield_z_slice_cont;
 #ifdef PARALLELXYZT
 extern spinor * field_buffer_z ALIGN;
 extern spinor * field_buffer_z2 ALIGN;
+extern spinor * field_buffer_z3 ALIGN;
+extern spinor * field_buffer_z4 ALIGN;
 extern halfspinor * halffield_buffer_z ALIGN;
 extern halfspinor * halffield_buffer_z2 ALIGN;
 #endif

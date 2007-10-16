@@ -30,7 +30,7 @@
 #include "su3.h"
 #include "xchange_field.h"
 
-#ifdef XLC
+#if (defined XLC && defined PARALLELXYZT)
 #pragma disjoint(*field_buffer_z2, *field_buffer_z)
 #endif
 
@@ -49,7 +49,7 @@ void xchange_field(spinor * const l, const int ieo) {
 #  elif defined PARALLELXYT
   int reqcount = 12;
 #  elif defined PARALLELXYZT
-  int x0=0, x1=0, x2=0, ix=0;
+  int ix=0;
   int reqcount = 16;
 #  endif
 

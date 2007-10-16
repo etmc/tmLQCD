@@ -44,10 +44,10 @@ MODULES = read_input gamma hybrid_update observables start \
 	init_dirac_halfspinor xchange_halffield stout_smear \
 	init_stout_smear_vars stout_smear_force \
 	derivative_nondegenerate Nondegenerate_Matrix \
-  chebyshev_polynomial_nd Ptilde_nd  \
+	chebyshev_polynomial_nd Ptilde_nd  \
 	init_chi_spinor_field init_chi_copy reweighting_factor_nd \
 	init_bispinor_field eigenvalues_bi update_tm_nd D_psi \
-	xchange_lexicfield
+	xchange_lexicfield xchange_2fields
 
 
 NOOPTMOD = test/check_xchange test/check_geometry
