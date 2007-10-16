@@ -94,7 +94,7 @@ void xchange_2fields(spinor * const k, spinor * const l, const int ieo) {
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Isend((void*)l, 1, field_x_slice_gath, g_nb_x_dn, 91, g_cart_grid,  &requests[reqcount]);
   reqcount++;
-  MPI_Irecv((void*)(l+(T+2)*LX*LY*LZ/2), 1, field_x_slice_cont, g_nb_x_up, 91, g_cart_grid, &requests[recount]);
+  MPI_Irecv((void*)(l+(T+2)*LX*LY*LZ/2), 1, field_x_slice_cont, g_nb_x_up, 91, g_cart_grid, &requests[reqcount]);
   reqcount++;
   
     /* send the data to the neighbour on the right in x direction */
@@ -108,7 +108,7 @@ void xchange_2fields(spinor * const k, spinor * const l, const int ieo) {
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Isend((void*)k, 1, field_x_slice_gath, g_nb_x_dn, 93, g_cart_grid,  &requests[reqcount]);
   reqcount++;
-  MPI_Irecv((void*)(k+(T+2)*LX*LY*LZ/2), 1, field_x_slice_cont, g_nb_x_up, 93, g_cart_grid, &requests[recount]);
+  MPI_Irecv((void*)(k+(T+2)*LX*LY*LZ/2), 1, field_x_slice_cont, g_nb_x_up, 93, g_cart_grid, &requests[reqcount]);
   reqcount++;
   
   /* send the data to the neighbour on the right in x direction */

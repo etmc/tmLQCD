@@ -109,7 +109,7 @@ if test $enable_mpi = yes; then
   fi
 
   AC_MSG_CHECKING(whether we shall use non-blocking MPI calls)
-  AC_ARG_WITH([nonblockmpi],
+  AC_ARG_WITH([nonblockingmpi],
     [  --with-nonblockingmpi   use non-blocking MPI calls for spinor and gauge [default=yes]],
     withnonblock=$withval, withnonblock=yes)
   if test $withnonblock = yes; then
