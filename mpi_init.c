@@ -103,6 +103,8 @@ MPI_Datatype halffield_z_slice_cont;
 #ifdef PARALLELXYZT
 spinor * field_buffer_z ALIGN;
 spinor * field_buffer_z2 ALIGN;
+spinor * field_buffer_z3 ALIGN;
+spinor * field_buffer_z4 ALIGN;
 halfspinor * halffield_buffer_z ALIGN;
 halfspinor * halffield_buffer_z2 ALIGN;
 #endif
@@ -210,6 +212,10 @@ void mpi_init(int argc,char *argv[]) {
 #  ifdef PARALLELXYZT
   field_buffer_z = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
   field_buffer_z2 = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
+#    ifdef _NON_BLOCKING
+  field_buffer_z3 = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
+  field_buffer_z4 = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
+#    endif
   halffield_buffer_z = (halfspinor*)malloc(T*LX*LY/2*sizeof(halfspinor));
   halffield_buffer_z2 = (halfspinor*)malloc(T*LX*LY/2*sizeof(halfspinor));
 #  endif
