@@ -35,7 +35,7 @@
 
 /* this version uses non-blocking MPI calls */
 
-void xchange_2fields(spinor * const k, spinor * const l, const int ieo) {
+void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
 
   MPI_Request requests[32];
   MPI_Status status[32];
