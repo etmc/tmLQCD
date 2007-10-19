@@ -47,9 +47,9 @@
 
 
 int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_energy, 
-	      char * filename, const double dtau, const int Nsteps, const int nsmall,
-	      const double tau, int * n_int, const int return_check,
-	      double * lambda, const int rngrepro) {
+    char * filename, const double dtau, const int Nsteps, const int nsmall,
+    const double tau, int * n_int, const int return_check,
+    double * lambda, const int rngrepro) {
   su3 *v, *w;
   static int ini_g_tmp = 0;
   int rlxd_state[105];
@@ -64,7 +64,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   double ks,kc,ds,tr,ts,tt;
   int idis0=0, idis1=0, idis2=0;
   int ret_idis0=0, ret_idis1=0, ret_idis2=0;
-  
+
   /* Energy corresponding to the Gauge part */
   double new_plaquette_energy=0., new_rectangle_energy = 0., gauge_energy = 0., new_gauge_energy = 0.;
   double ret_plaquette_energy=0., ret_rectangle_energy = 0., ret_gauge_energy = 0.;
@@ -112,7 +112,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
   }
   dontdump = 0;
-  
+
   /* initialize the pseudo-fermion fields    */
   /* depending on g_mu1 and g_mu2 we use     */
   /* one or two pseudo-fermion fields        */
@@ -122,13 +122,13 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
 
   if(g_nr_of_psf > 1) 
   {
-      random_spinor_field(g_spinor_field[3], spinor_volume, rngrepro);
-      enerphi1 = square_norm(g_spinor_field[3], spinor_volume);
+    random_spinor_field(g_spinor_field[4], spinor_volume, rngrepro);
+    enerphi1 = square_norm(g_spinor_field[4], spinor_volume);
   }
   if(g_nr_of_psf > 2) 
   {
-      random_spinor_field(g_spinor_field[5], spinor_volume, rngrepro);
-      enerphi2 = square_norm(g_spinor_field[5], spinor_volume);
+    random_spinor_field(g_spinor_field[6], spinor_volume, rngrepro);
+    enerphi2 = square_norm(g_spinor_field[6], spinor_volume);
   }
   /* apply the fermion matrix to the first spinor */
   /* it has the largest mu available              */
@@ -142,8 +142,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
         g_csg_N[0], &g_csg_N[1], VOLUME/2);
     if(g_nr_of_psf == 1 && ITER_MAX_BCG > 0 && fabs(g_mu1) == 0.) 
     {
-      chrono_add_solution(g_spinor_field[first_psf], g_csg_field[1], g_csg_index_array[1],
-          g_csg_N[2], &g_csg_N[3], VOLUME/2);
+      chrono_add_solution(g_spinor_field[first_psf], g_csg_field[1], g_csg_index_array[1], g_csg_N[2], &g_csg_N[3], VOLUME/2);
     }
   }
   else
@@ -154,10 +153,10 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   /* contruct the second \phi_o */
   if(g_nr_of_psf > 1) 
   {
+    g_mu = g_mu2;
     if(even_odd_flag)
     {
-      g_mu = g_mu2;
-      Qtm_plus_psi(g_spinor_field[3], g_spinor_field[3]);
+      Qtm_plus_psi(g_spinor_field[3], g_spinor_field[4]);
       g_mu = g_mu1;
       zero_spinor_field(g_spinor_field[second_psf],VOLUME/2);
       if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
@@ -173,24 +172,27 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
     else
     {
-      fprintf(stderr, "This has not been implemented yet. Exiting...\n");
-      exit(1);
+      Q_plus_psi(g_spinor_field[3], g_spinor_field[4]);
+      g_mu = g_mu1;
+      zero_spinor_field(g_spinor_field[second_psf],VOLUME);
+      if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+      idis1 = bicgstab_complex(g_spinor_field[second_psf], g_spinor_field[3], 1000, g_eps_sq_acc1, g_relative_precision_flag, VOLUME, Q_minus_psi);
+      ITER_MAX_BCG = saveiter_max;
     }
   }
   /* contruct the third \phi_o */
   if(g_nr_of_psf > 2) 
   {
+    g_mu = g_mu3;
     if(even_odd_flag)
     {
-      g_mu = g_mu3;
-      Qtm_plus_psi(g_spinor_field[5], g_spinor_field[5]);
+      Qtm_plus_psi(g_spinor_field[5], g_spinor_field[6]);
       g_mu = g_mu2;
       zero_spinor_field(g_spinor_field[third_psf],VOLUME/2);
       if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
       idis2 = bicg(third_psf, 5, g_eps_sq_acc2, g_relative_precision_flag);
       ITER_MAX_BCG = saveiter_max;
-      chrono_add_solution(g_spinor_field[third_psf], g_csg_field[2], g_csg_index_array[2],
-          g_csg_N[4], &g_csg_N[5], VOLUME/2);
+      chrono_add_solution(g_spinor_field[third_psf], g_csg_field[2], g_csg_index_array[2], g_csg_N[4], &g_csg_N[5], VOLUME/2);
       if(ITER_MAX_BCG > 0 && fabs(g_mu3) == 0.) 
       {
         chrono_add_solution(g_spinor_field[third_psf], g_csg_field[3], g_csg_index_array[3],
@@ -199,8 +201,13 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
     else
     {
-      fprintf(stderr, "This has not been implemented yet. Exiting...\n");
-      exit(1);
+      Q_plus_psi(g_spinor_field[5], g_spinor_field[6]);
+      g_mu = g_mu2;
+      zero_spinor_field(g_spinor_field[third_psf],VOLUME);
+      if(fabs(g_mu)>0.) 
+        ITER_MAX_BCG = 0;
+      idis2 = bicgstab_complex(g_spinor_field[third_psf], g_spinor_field[5], 1000, g_eps_sq_acc2, g_relative_precision_flag, VOLUME, Q_minus_psi);
+      ITER_MAX_BCG = saveiter_max;
     }
   }
 
@@ -236,7 +243,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   g_sloppy_precision = 0;
   /*perform the accept-reject-step*/
   enepx=moment_energy();
-  
+
   new_plaquette_energy=measure_gauge_action();
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
     new_rectangle_energy = measure_rectangles();
@@ -263,8 +270,17 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   {
     g_mu = g_mu1;
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+    /*     chrono_guess(g_spinor_field[2], g_spinor_field[first_psf], g_csg_field[0], g_csg_index_array[0], */
+    /*         g_csg_N[0], g_csg_N[1], VOLUME/2, &Qtm_pm_psi); */
+    /*     idis0=bicgstab_complex(g_spinor_field[2], g_spinor_field[first_psf], 1000, g_eps_sq_acc1, g_relative_precision_flag, VOLUME, Q_minus_psi); */
+    /*idis0=bicg(2, first_psf, g_eps_sq_acc1, g_relative_precision_flag);*/
+    /*     ITER_MAX_BCG = saveiter_max; */
+    /* Save the solution of Q^-2 at the right place */
+    /* for later reuse! */
+    /*     assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], spinor_volume);
+     */
     idis0=cg_her(g_spinor_field[DUM_DERI+5], g_spinor_field[first_psf], 1000, g_eps_sq_acc1, g_relative_precision_flag, spinor_volume, Q_pm_psi, 0, 0);
-    Q_plus_psi(g_spinor_field[2], g_spinor_field[DUM_DERI+5]);
+    Q_minus_psi(g_spinor_field[2], g_spinor_field[DUM_DERI+5]);
     /* Compute the energy contr. from first field */
     enerphi0x = square_norm(g_spinor_field[2], spinor_volume);
   }
@@ -286,8 +302,14 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
     else
     {
-      fprintf(stderr, "This has not been implemented yet. Exiting...\n");
-      exit(1);
+      g_mu = g_mu1;
+      Q_plus_psi(g_spinor_field[DUM_DERI+5], g_spinor_field[second_psf]);
+      g_mu = g_mu2;
+      if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+      idis1 += bicgstab_complex(g_spinor_field[3], g_spinor_field[DUM_DERI+5], 1000, g_eps_sq_acc2, g_relative_precision_flag, VOLUME, Q_minus_psi); 
+      ITER_MAX_BCG = saveiter_max;
+      /* Compute the energy contr. from second field */
+      enerphi1x = square_norm(g_spinor_field[3], VOLUME);
     }
   }
   if(g_nr_of_psf > 2) 
@@ -307,16 +329,22 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
     else
     {
-      fprintf(stderr, "This has not been implemented yet. Exiting...\n");
-      exit(1);
+      g_mu = g_mu2;
+      Q_plus_psi(g_spinor_field[DUM_DERI+6], g_spinor_field[third_psf]);
+      g_mu = g_mu3;
+      idis2 += bicgstab_complex(g_spinor_field[5], g_spinor_field[DUM_DERI+6], 1000, g_eps_sq_acc3, g_relative_precision_flag, VOLUME, Q_minus_psi);
+      ITER_MAX_BCG = saveiter_max;
+      /* Compute the energy contr. from third field */
+      enerphi2x = square_norm(g_spinor_field[5], VOLUME);
     }
   }
 
   /* Compute the energy difference */
   dh = (enepx - enep) + g_beta*(gauge_energy - new_gauge_energy) +
     (enerphi0x - enerphi0) + (enerphi1x - enerphi1) + (enerphi2x - enerphi2);
+  printf("mom=%lf gauge_field=%lf ferm_0=%lf ferm_1=%lf ferm_2=%lf  dh=%lf\n", (enepx - enep), g_beta*(gauge_energy - new_gauge_energy), (enerphi0x - enerphi0), (enerphi1x - enerphi1), (enerphi2x - enerphi2), dh);
   expmdh = exp(-dh);
-      
+
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
   if(g_proc_id==0) {
@@ -378,7 +406,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
       ret_rectangle_energy = measure_rectangles();
     }
     ret_gauge_energy = g_rgi_C0 * ret_plaquette_energy + g_rgi_C1 * ret_rectangle_energy;
-    
+
     /*compute the energy contributions from the pseudo-fermions */
     assign(g_spinor_field[2], g_spinor_field[DUM_DERI+4], spinor_volume);
     g_mu = g_mu1;
@@ -386,7 +414,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     ret_idis0=bicg(2, first_psf, g_eps_sq_acc, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
     assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], spinor_volume);
-    
+
     ret_enerphi0=square_norm(g_spinor_field[2], spinor_volume);
     if(g_nr_of_psf > 1) 
     {
@@ -431,8 +459,8 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     /* Compute the energy difference */
     ret_dh = (ret_enep - enep ) + g_beta*(gauge_energy - ret_gauge_energy) +
       (ret_enerphi0 - enerphi0) + (ret_enerphi1 - enerphi1) + (ret_enerphi2 - enerphi2);
-/*     ret_dh= +ret_enep - g_beta*ret_gauge_energy - enep + g_beta*gauge_energy */
-/*       + ret_enerphi0 - enerphi0 + ret_enerphi1 - enerphi1 + ret_enerphi2 - enerphi2; */
+    /*     ret_dh= +ret_enep - g_beta*ret_gauge_energy - enep + g_beta*gauge_energy */
+    /*       + ret_enerphi0 - enerphi0 + ret_enerphi1 - enerphi1 + ret_enerphi2 - enerphi2; */
 
     /* Compute Differences in the fields */
     ks = 0.;
@@ -495,9 +523,9 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     /* put the links back to SU(3) group */
     for(ix=0;ix<VOLUME;ix++) { 
       for(mu=0;mu<4;mu++) { 
-	/* this is MIST */
-	v=&g_gauge_field[ix][mu];
-	*v=restoresu3(*v); 
+        /* this is MIST */
+        v=&g_gauge_field[ix][mu];
+        *v=restoresu3(*v); 
       }
     }
   }
@@ -505,10 +533,10 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     /* reject: copy gauge_tmp to g_gauge_field */
     for(ix=0;ix<VOLUME;ix++) {
       for(mu=0;mu<4;mu++){
-	/* Auch MIST */
-	v=&g_gauge_field[ix][mu];
-	w=&gauge_tmp[ix][mu];
-	_su3_assign(*v,*w);
+        /* Auch MIST */
+        v=&g_gauge_field[ix][mu];
+        w=&gauge_tmp[ix][mu];
+        _su3_assign(*v,*w);
       }
     }
   }
@@ -523,8 +551,8 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   if(g_proc_id==0){
     datafile = fopen(filename, "a");
     fprintf(datafile,"%14.12f %14.12f %e %d %d %d ",
-	    (*plaquette_energy)/(6.*VOLUME*g_nproc),dh,expmdh,
-	    idis0, count00, count01);
+        (*plaquette_energy)/(6.*VOLUME*g_nproc),dh,expmdh,
+        idis0, count00, count01);
     if(g_nr_of_psf > 1) {
       fprintf(datafile, "%d %d %d ", idis1, count10, count11);
     }
