@@ -1,3 +1,6 @@
+19.10.2007: hmc runs now also without even/odd preconditioning.
+	    Set UseEvenOdd=no in the input file (thanks to Jan Volkholz).
+
 05.09.2007: invert suppports now also inversions using D_psi. This is
 	    triggered by UseEvenOdd (default = yes) as input parameter.
 
