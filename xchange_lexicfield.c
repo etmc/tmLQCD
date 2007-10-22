@@ -122,7 +122,7 @@ void xchange_lexicfield(spinor * const l) {
 /* Here comes the naive version */  
 /* Using MPI_Sendrecv */
 /* exchanges the field  l */
-void xchange_field(spinor * const l) {
+void xchange_lexicfield(spinor * const l) {
   
 #  ifdef PARALLELXYZT
   int x0=0, x1=0, x2=0, ix=0;
