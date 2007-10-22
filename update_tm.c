@@ -236,7 +236,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   /* Compute the energy difference */
   dh = (enepx - enep) + g_beta*(gauge_energy - new_gauge_energy) +
     (enerphi0x - enerphi0) + (enerphi1x - enerphi1) + (enerphi2x - enerphi2);
-  printf("mom=%lf gauge_field=%lf ferm_0=%lf ferm_1=%lf ferm_2=%lf  dh=%lf\n", (enepx - enep), g_beta*(gauge_energy - new_gauge_energy), (enerphi0x - enerphi0), (enerphi1x - enerphi1), (enerphi2x - enerphi2), dh);
+  /*printf("mom=%lf gauge_field=%lf ferm_0=%lf ferm_1=%lf ferm_2=%lf  dh=%lf\n", (enepx - enep), g_beta*(gauge_energy - new_gauge_energy), (enerphi0x - enerphi0), (enerphi1x - enerphi1), (enerphi2x - enerphi2), dh);*/
   expmdh = exp(-dh);
 
   /* the random number is only taken at node zero and then distributed to 
