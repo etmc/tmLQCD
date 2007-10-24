@@ -14,6 +14,60 @@
  *
  ******************************************/
 
+/*********************************************************
+ *
+ *  Structure of top level precompiler directives 
+ *
+ * - defining _USE_HALFSPINOR implies that we also use
+ *   a "gauge copy"
+ *
+ * - such that we are checking for the _USE_GAUGECOPY feature seperatly in the 
+ *   ELSE branch of the "if defined _USE_HALFSPINOR" statement
+ *
+ * - the numbers represent the certain implementation of Hopping_Matrix
+ *
+ * #if defined _USE_HALFSPINOR
+ *   #if ((defined SSE2)||(defined SSE3))
+ *
+ *     1. 
+ *
+ *    #elif (defined BGL && defined XLC)
+ *
+ *     2.
+ *
+ *   #else
+ *
+ *     3.
+ *
+ *   #endif
+ *
+ * #else \/* thats _USE_HALFSPINOR *\/
+ *
+ *   #if ((defined SSE2)||(defined SSE3))
+ *
+ *     4.
+ *
+ *   #elif (defined BGL && defined XLC)
+ *
+ *     5.
+ *
+ *   #elif defined XLC
+ *
+ *     6.
+ *
+ *   \/* else of If defined SSE2  and if defined XLC *\/
+ *   #else
+ *
+ *     7.
+ *
+ *   #endif
+ *
+ *
+ * #endif \/* thats _USE_HALFSPINOR *\/
+ *
+ ***********************************************************/
+
+
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
