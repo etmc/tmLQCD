@@ -34,7 +34,7 @@
 #include "deriv_Sb.h"
 
 
-#if (defined BGLnotchecked && defined XLC)
+#if (defined BGL && defined XLC)
 
 void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
@@ -127,10 +127,12 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     _bgl_tensor_product_and_add();
     /* result in v now */
-    _bgl_su3_times_v_dagger(*up);
+    /* v is daggered as compared to non-bgl version */
+    _bgl_su3_times_v(*up);
     /* result in r now */
     _bgl_complex_times_r(ka0);
     _bgl_trace_lambda_add_assign((*ddd));
+
 
     /************** direction -0 ****************************/
 
@@ -160,7 +162,8 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     _bgl_tensor_product_and_add_d();
     /* result in v now */
-    _bgl_su3_times_v_dagger(*um);
+    _bgl_su3_times_v(*um);
+
     /* result in r now */
     _bgl_complex_times_r(ka0);
     _bgl_trace_lambda_add_assign((*ddd));
@@ -193,7 +196,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     _bgl_tensor_product_and_add();
     /* result in v now */
-    _bgl_su3_times_v_dagger(*up);
+    _bgl_su3_times_v(*up);
     /* result in r now */
     _bgl_complex_times_r(ka1);
     _bgl_trace_lambda_add_assign((*ddd));
@@ -206,10 +209,10 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _bgl_load_minus_r2((*r).s2);
     _bgl_load_minus_r3((*r).s3);
 
-    _bgl_load_reg0((*sp).s0);
-    _bgl_load_reg0_up((*sp).s1);
-    _bgl_load_reg1((*sp).s2);
-    _bgl_load_reg1_up((*sp).s3);
+    _bgl_load_reg0((*sm).s0);
+    _bgl_load_reg0_up((*sm).s1);
+    _bgl_load_reg1((*sm).s2);
+    _bgl_load_reg1_up((*sm).s3);
     
     _bgl_i_mul_sub_from_reg0_reg1_up();
     _bgl_i_mul_sub_from_reg0_up_reg1();
@@ -226,7 +229,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     _bgl_tensor_product_and_add_d();
     /* result in v now */
-    _bgl_su3_times_v_dagger(*um);
+    _bgl_su3_times_v(*um);
     /* result in r now */
     _bgl_complex_times_r(ka1);
     _bgl_trace_lambda_add_assign((*ddd));
@@ -259,7 +262,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     _bgl_tensor_product_and_add();
     /* result in v now */
-    _bgl_su3_times_v_dagger(*up);
+    _bgl_su3_times_v(*up);
     /* result in r now */
     _bgl_complex_times_r(ka2);
     _bgl_trace_lambda_add_assign((*ddd));
@@ -272,10 +275,10 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _bgl_load_minus_r2((*r).s2);
     _bgl_load_minus_r3((*r).s3);
 
-    _bgl_load_reg0((*sp).s0);
-    _bgl_load_reg0_up((*sp).s1);
-    _bgl_load_reg1((*sp).s2);
-    _bgl_load_reg1_up((*sp).s3);
+    _bgl_load_reg0((*sm).s0);
+    _bgl_load_reg0_up((*sm).s1);
+    _bgl_load_reg1((*sm).s2);
+    _bgl_load_reg1_up((*sm).s3);
     
     _bgl_sub_from_reg0_reg1_up();
     _bgl_add_to_reg0_up_reg1();
@@ -292,7 +295,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     _bgl_tensor_product_and_add_d();
     /* result in v now */
-    _bgl_su3_times_v_dagger(*um);
+    _bgl_su3_times_v(*um);
     /* result in r now */
     _bgl_complex_times_r(ka1);
     _bgl_trace_lambda_add_assign(*ddd);
@@ -325,7 +328,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     _bgl_tensor_product_and_add();
     /* result in v now */
-    _bgl_su3_times_v_dagger(*up);
+    _bgl_su3_times_v(*up);
     /* result in r now */
     _bgl_complex_times_r(ka3);
     _bgl_trace_lambda_add_assign((*ddd));
@@ -338,10 +341,10 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _bgl_load_minus_r2((*r).s2);
     _bgl_load_minus_r3((*r).s3);
 
-    _bgl_load_reg0((*sp).s0);
-    _bgl_load_reg0_up((*sp).s1);
-    _bgl_load_reg1((*sp).s2);
-    _bgl_load_reg1_up((*sp).s3);
+    _bgl_load_reg0((*sm).s0);
+    _bgl_load_reg0_up((*sm).s1);
+    _bgl_load_reg1((*sm).s2);
+    _bgl_load_reg1_up((*sm).s3);
     
     _bgl_i_mul_sub_from_reg0_reg1();
     _bgl_i_mul_add_to_reg0_up_reg1_up();
@@ -362,7 +365,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     _bgl_tensor_product_and_add_d();
     /* result in v now */
-    _bgl_su3_times_v_dagger(*um);
+    _bgl_su3_times_v(*um);
     /* result in r now */
     _bgl_complex_times_r(ka3);
     _bgl_trace_lambda_add_assign((*ddd));
@@ -433,7 +436,6 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
 
     sp = k + icy;
-/*     sp=&g_spinor_field[k][icy]; */
     up=&g_gauge_field[ix][0];
       
     _vector_add(psia,(*sp).s0,(*sp).s2);
@@ -443,22 +445,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _vector_add(phib,rr.s1,rr.s3);
 
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
-/*     _vector_tensor_vector(v1,phia,psia); */
-/*     _vector_tensor_vector(v2,phib,psib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka0,v2);
     _trace_lambda_add_assign(df0[ix][0], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&df0[ix][0]; */
-/*     _add_su3adj(*ddd,der); */
 
     /************** direction -0 ****************************/
 
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
 
     sm = k + icy;
-/*     sm=&g_spinor_field[k][icy]; */
     um=&g_gauge_field[iy][0];
       
     _vector_sub(psia,(*sm).s0,(*sm).s2);
@@ -467,23 +462,17 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _vector_sub(phia,rr.s0,rr.s2);
     _vector_sub(phib,rr.s1,rr.s3);
 
+
     _vector_tensor_vector_add(v1, psia, phia, psib, phib);
-/*     _vector_tensor_vector(v1,psia,phia); */
-/*     _vector_tensor_vector(v2,psib,phib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka0,v2);
     _trace_lambda_add_assign(df0[iy][0], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&df0[iy][0]; */
-/*     _add_su3adj(*ddd,der); */
 
     /*************** direction +1 **************************/
 
     iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
 
     sp = k + icy;
-    /*     sp=&g_spinor_field[k][icy]; */
     up=&g_gauge_field[ix][1];      
 
     _vector_i_add(psia,(*sp).s0,(*sp).s3);
@@ -493,22 +482,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _vector_i_add(phib,rr.s1,rr.s2);
 
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
-/*     _vector_tensor_vector(v1,phia,psia); */
-/*     _vector_tensor_vector(v2,phib,psib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka1,v2);
     _trace_lambda_add_assign(df0[ix][1], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&df0[ix][1]; */
-/*     _add_su3adj(*ddd,der); */
 
     /**************** direction -1 *************************/
 
     iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
 
     sm = k + icy;
-    /*     sm=&g_spinor_field[k][icy]; */
     um=&g_gauge_field[iy][1];
       
     _vector_i_sub(psia,(*sm).s0,(*sm).s3);
@@ -518,22 +500,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _vector_i_sub(phib,rr.s1,rr.s2);
 
     _vector_tensor_vector_add(v1, psia, phia, psib, phib);
-/*     _vector_tensor_vector(v1,psia,phia); */
-/*     _vector_tensor_vector(v2,psib,phib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka1,v2);
     _trace_lambda_add_assign(df0[iy][1], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&df0[iy][1]; */
-/*     _add_su3adj(*ddd,der); */
 
     /*************** direction +2 **************************/
 
     iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
 
     sp = k + icy;
-    /*     sp=&g_spinor_field[k][icy]; */
     up=&g_gauge_field[ix][2];
       
     _vector_add(psia,(*sp).s0,(*sp).s3);
@@ -543,22 +518,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _vector_sub(phib,rr.s1,rr.s2);
 
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
-/*     _vector_tensor_vector(v1,phia,psia); */
-/*     _vector_tensor_vector(v2,phib,psib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka2,v2);
     _trace_lambda_add_assign(df0[ix][2], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&df0[ix][2]; */
-/*     _add_su3adj(*ddd,der); */
 
     /***************** direction -2 ************************/
 
     iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
 
     sm = k + icy;
-    /*     sm=&g_spinor_field[k][icy]; */
     um=&g_gauge_field[iy][2];
       
     _vector_sub(psia,(*sm).s0,(*sm).s3);
@@ -568,22 +536,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _vector_add(phib,rr.s1,rr.s2);
 
     _vector_tensor_vector_add(v1, psia, phia, psib, phib);
-/*     _vector_tensor_vector(v1,psia,phia); */
-/*     _vector_tensor_vector(v2,psib,phib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka2,v2);
     _trace_lambda_add_assign(df0[iy][2], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&df0[iy][2]; */
-/*     _add_su3adj(*ddd,der); */
 
     /****************** direction +3 ***********************/
 
     iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
 
     sp = k + icy;
-    /*     sp=&g_spinor_field[k][icy]; */
     up=&g_gauge_field[ix][3];
       
     _vector_i_add(psia,(*sp).s0,(*sp).s2);
@@ -593,22 +554,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _vector_i_sub(phib,rr.s1,rr.s3);
 
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
-/*     _vector_tensor_vector(v1,phia,psia); */
-/*     _vector_tensor_vector(v2,phib,psib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka3,v2);
     _trace_lambda_add_assign(df0[ix][3], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&df0[ix][3]; */
-/*     _add_su3adj(*ddd,der); */
 
     /***************** direction -3 ************************/
 
     iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
 
     sm = k + icy;
-    /*     sm=&g_spinor_field[k][icy]; */
     um=&g_gauge_field[iy][3];
       
     _vector_i_sub(psia,(*sm).s0,(*sm).s2);
@@ -618,15 +572,9 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     _vector_i_add(phib,rr.s1,rr.s3);
 
     _vector_tensor_vector_add(v1, psia, phia, psib, phib);
-/*     _vector_tensor_vector(v1,psia,phia); */
-/*     _vector_tensor_vector(v2,psib,phib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka3,v2);
     _trace_lambda_add_assign(df0[iy][3], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&df0[iy][3]; */
-/*     _add_su3adj(*ddd,der); */
      
     /****************** end of loop ************************/
   }
