@@ -54,6 +54,9 @@
 /* Fixed volume at compiletime */
 #undef FIXEDVOLUME
 
+/* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
+#undef HAVE_FSEEKO
+
 /* Compile with SSE support */
 #undef SSE
 
@@ -86,6 +89,9 @@
 /* Define to 1 to make fseeko visible on some hosts (e.g. glibc 2.2). */
 #undef _LARGEFILE_SOURCE
 
+/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES
+
 /* Use even/odd geometry in the gauge fields */
 #undef _NEW_GEOMETRY
 
@@ -97,6 +103,12 @@
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
+
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+#undef inline
+#endif
 
 /* Define to `long' if <sys/types.h> does not define. */
 #undef off_t
