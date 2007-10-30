@@ -436,8 +436,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
 
     sp = k + icy;
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+    up=&g_gauge_field_copy[icx][0];
+#else
     up=&g_gauge_field[ix][0];
-      
+#endif      
     _vector_add(psia,(*sp).s0,(*sp).s2);
     _vector_add(psib,(*sp).s1,(*sp).s3);
       
@@ -454,7 +457,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
 
     sm = k + icy;
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+    um = up+1;
+#else
     um=&g_gauge_field[iy][0];
+#endif
       
     _vector_sub(psia,(*sm).s0,(*sm).s2);
     _vector_sub(psib,(*sm).s1,(*sm).s3);
@@ -473,8 +480,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
 
     sp = k + icy;
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+    up=um+1;
+#else
     up=&g_gauge_field[ix][1];      
-
+#endif
     _vector_i_add(psia,(*sp).s0,(*sp).s3);
     _vector_i_add(psib,(*sp).s1,(*sp).s2);
 
@@ -491,8 +501,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
 
     sm = k + icy;
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+      um=up+1;
+#else
     um=&g_gauge_field[iy][1];
-      
+#endif
     _vector_i_sub(psia,(*sm).s0,(*sm).s3);
     _vector_i_sub(psib,(*sm).s1,(*sm).s2);
 
@@ -509,8 +522,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
 
     sp = k + icy;
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+    up=um+1;
+#else
     up=&g_gauge_field[ix][2];
-      
+#endif      
     _vector_add(psia,(*sp).s0,(*sp).s3);
     _vector_sub(psib,(*sp).s1,(*sp).s2);
       
@@ -527,8 +543,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
 
     sm = k + icy;
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+      um = up +1;
+#else
     um=&g_gauge_field[iy][2];
-      
+#endif
     _vector_sub(psia,(*sm).s0,(*sm).s3);
     _vector_add(psib,(*sm).s1,(*sm).s2);
 
@@ -545,8 +564,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
 
     sp = k + icy;
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+    up=um+1;
+#else
     up=&g_gauge_field[ix][3];
-      
+#endif      
     _vector_i_add(psia,(*sp).s0,(*sp).s2);
     _vector_i_sub(psib,(*sp).s1,(*sp).s3);
 
@@ -563,8 +585,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
 
     sm = k + icy;
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+    um = up+1;
+#else
     um=&g_gauge_field[iy][3];
-      
+#endif
     _vector_i_sub(psia,(*sm).s0,(*sm).s2);
     _vector_i_add(psib,(*sm).s1,(*sm).s3);
 
