@@ -113,7 +113,7 @@ int main(int argc,char *argv[]) {
 
   /* START IF PHMC */  
   int no_eigenvalues, max_iter_ev;
-  double stop_prec_ev, temp, temp2;
+  double temp, temp2;
 
   FILE *roots;
   char *filename_phmc_root = "Square_root_BR_roots.dat";
@@ -434,25 +434,24 @@ int main(int argc,char *argv[]) {
     else if (g_nr_of_psf == 2) g_mu = g_mu2;
     else g_mu = g_mu1;
     max_iter_ev = 1000;
-    stop_prec_ev = 1.e-13;
     
     no_eigenvalues = 10;   /* Number of lowest eigenvalues to be computed */
     if(g_epsbar!=0.0)
-      phmc_cheb_evmin = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 0);
+      phmc_cheb_evmin = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, eigenvalue_precision, 0);
     else {
-      phmc_cheb_evmin = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 0, 0, nstore, even_odd_flag);
+      phmc_cheb_evmin = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, 0, nstore, even_odd_flag);
     }
 
     no_eigenvalues = 4;   /* Number of highest eigenvalues to be computed */
     if(g_epsbar!=0.0)
-      phmc_cheb_evmax = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 1);
+      phmc_cheb_evmax = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, eigenvalue_precision, 1);
     else
-      phmc_cheb_evmax = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 1, 0, nstore, even_odd_flag);
+      phmc_cheb_evmax = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, 0, nstore, even_odd_flag);
        
     temp=phmc_cheb_evmin;
     temp2=phmc_cheb_evmax;
     
-    if(g_proc_id==0){
+    if(g_proc_id==0) {
       printf("PHMC: Ev-max = %e \n", phmc_cheb_evmax);
       printf("PHMC: Ev-min = %e \n", phmc_cheb_evmin); 
     }
@@ -690,22 +689,21 @@ int main(int argc,char *argv[]) {
       atime = MPI_Wtime();
 #endif
       max_iter_ev = 1000;
-      stop_prec_ev = 1.e-13;
       if(g_nr_of_psf == 3) g_mu = g_mu3;
       else if (g_nr_of_psf == 2) g_mu = g_mu2;
       else g_mu = g_mu1;
 
-      no_eigenvalues = 2;
+      no_eigenvalues = 1;
       if(g_epsbar!=0.0)
-        temp = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 0);
+        temp = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, eigenvalue_precision, 0);
       else
- 	temp = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 0, 0, nstore, even_odd_flag);
+ 	temp = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, 0, nstore, even_odd_flag);
 
-      no_eigenvalues = 2;
+      no_eigenvalues = 1;
       if(g_epsbar!=0.0)
-        temp2 = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, stop_prec_ev, 1);
+        temp2 = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, eigenvalue_precision, 1);
       else
-	temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, stop_prec_ev, 1, 0, nstore, even_odd_flag);
+	temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, 0, nstore, even_odd_flag);
       
       if((g_proc_id == 0) && (g_debug_level > 0)) {
 	printf("PHMC: lowest eigenvalue end of trajectory %d = %e\n", 
