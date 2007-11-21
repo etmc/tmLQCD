@@ -35,6 +35,7 @@
 #include "xchange.h"
 #endif
 #include "io.h"
+#include "propagator_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
@@ -261,7 +262,8 @@ int main(int argc,char *argv[]) {
 	  if(g_proc_id == 0) {
 	    printf("Reading source from %s\n", conf_filename);
 	  }
-	  read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], conf_filename); 
+	  read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename); 
+/* 	  read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], conf_filename);  */
 	}
 	else if(source_format_flag == 1) {
 	  if(source_time_slice > T*g_nproc_t || source_time_slice < 0) {
@@ -303,7 +305,8 @@ int main(int argc,char *argv[]) {
 	  }
 	  fclose(ifs);
 	  if(source_format_flag == 0) {
-	    read_spinorfield_eo_time(g_spinor_field[2], g_spinor_field[3], conf_filename);
+	    read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename);
+/* 	    read_spinorfield_eo_time(g_spinor_field[2], g_spinor_field[3], conf_filename); */
 	    mul_r(g_spinor_field[3], 1./(2*g_kappa), g_spinor_field[3], VOLUME/2);
 	    mul_r(g_spinor_field[2], 1./(2*g_kappa), g_spinor_field[2], VOLUME/2);
 	  }
@@ -332,18 +335,21 @@ int main(int argc,char *argv[]) {
       if(write_prop_format_flag == 0) {
 	/* To write in standard format */
 	/* we have to mult. by 2*kappa */
-	mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME/2);  
+	mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME/2);
 	mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[3], VOLUME/2);
         if(propagator_splitted)
-          write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
+          write_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 0, 64);
+/*           write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0); */
         else
         {
           sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore);
 
           if(ix == index_start)
-            write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
+            write_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, 64);
+/*             write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0); */
           else
-            write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 1);
+            write_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, 64);
+/*             write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 1); */
         }
       }
       else if(write_prop_format_flag == 1) {
