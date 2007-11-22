@@ -310,15 +310,15 @@ int main(int argc,char *argv[]) {
 	  }
 	  fclose(ifs);
 	  iter = get_propagator_type(conf_filename);
-	  if(iter == 1 ) iter = 2;
-	  else iter = 1;
-	  if(iter == 1 && propagator_splitted){
-	    read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 2*ix);	    
-	  }
-	  else
-	  if(source_format_flag == 0) {
-
-/* 	    read_spinorfield_eo_time(g_spinor_field[2], g_spinor_field[3], conf_filename); */
+	  if(iter > -1 ) {
+	    if(iter == 1 ) iter = 2;
+	    else iter = 1;
+	    if(propagator_splitted){
+	      read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, iter*ix);
+	    }
+	    else {
+	      read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, iter);
+	    }
 	    mul_r(g_spinor_field[3], 1./(2*g_kappa), g_spinor_field[3], VOLUME/2);
 	    mul_r(g_spinor_field[2], 1./(2*g_kappa), g_spinor_field[2], VOLUME/2);
 	  }
