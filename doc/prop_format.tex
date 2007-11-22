@@ -76,7 +76,15 @@ t, z, y, x, s, c
 \]
 The binary data is stored big endian and either in single or in double
 precision, depending on the {\ttfamily precision} parameter in the
-{\ttfamily etmc-propagator-format} record.
+{\ttfamily etmc-propagator-format} record. 
+
+The $\gamma$-matrix convention is the one of the HMC code (see
+subsection \ref{gammas}) and the operator is normalised to
+\[
+D =
+\frac{1}{2}[\gamma_\mu(\nabla_\mu+\nabla_\mu^*)-a\nabla_\mu^*\nabla_\mu]
++ m_0 + i \mu\gamma_5\tau^3\, .
+\]
 
 %%% Local Variables: 
 %%% mode: latex
