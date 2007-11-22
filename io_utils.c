@@ -24,12 +24,12 @@ int isnan_d  (double      x) { return x != x; }
 int isnan_ld (long double x) { return x != x; }
 
 
-int write_xlf_info(const double plaq, const int counter, char * filename) {
+int write_xlf_info(const double plaq, const int counter, char * filename, const int append) {
   FILE * ofs;
   LimeWriter * limewriter = NULL;
   LimeRecordHeader * limeheader = NULL;
   /* Message end and Message begin flag */
-  int ME_flag=0, MB_flag=0, status=0;
+  int ME_flag=1, MB_flag=1, status=0;
 #ifdef MPI
   MPI_Status mpi_status;
 #endif
@@ -40,17 +40,20 @@ int write_xlf_info(const double plaq, const int counter, char * filename) {
 
   gettimeofday(&t1,NULL);
   if(g_kappa > 0. || g_kappa < 0.) {
-    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n time = %ld\n hmcversion = %s\n mubar = %f\n epsilonbar = %f\n ", 
+    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n time = %ld\n hmcversion = %s\n mubar = %f\n epsilonbar = %f\n date = %s", 
 	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1,t1.tv_sec, PACKAGE_VERSION, 
-	    g_mubar/2./g_kappa, g_epsbar/2./g_kappa);
+	    g_mubar/2./g_kappa, g_epsbar/2./g_kappa, ctime(&t1.tv_sec));
   }
   else {
-    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f", 
-	    plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
+    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f\n date = %s", 
+	    plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1, ctime(&t1.tv_sec));
   }
   bytes = strlen( message );
   if(g_cart_id == 0) {
-    ofs = fopen(filename, "a");
+    if(append) {
+      ofs = fopen(filename, "a");
+    }
+    else ofs = fopen(filename, "w");
     if(ofs == (FILE*)NULL) {
       fprintf(stderr, "Could not open file %s for writing!\n Aborting...\n", filename);
 #ifdef MPI

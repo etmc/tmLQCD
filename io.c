@@ -96,21 +96,11 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   su3 tmp[4];
   int coords[4];
   n_uint64_t bytes;
-  struct timeval t1;
 
-  gettimeofday(&t1,NULL);
-  if(g_kappa > 0. || g_kappa < 0.) {
-    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n time = %ld\n hmcversion = %s\n mubar = %f\n epsilonbar = %f\n ", 
-	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1,t1.tv_sec, PACKAGE_VERSION, 
-	    g_mubar/2./g_kappa, g_epsbar/2./g_kappa);
-  }
-  else {
-    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f", 
-	    plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
-  }
-  bytes = strlen( message );
+  write_xlf_info(plaq, counter, filename, 0);
+
   if(g_cart_id == 0) {
-    ofs = fopen(filename, "w");
+    ofs = fopen(filename, "a");
     if(ofs == (FILE*)NULL) {
       fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
       MPI_Abort(MPI_COMM_WORLD, 1);
@@ -126,19 +116,8 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
     }
     write_ildg_format_xml("temp.xml", limewriter, 0);
     
-    limeheader = limeCreateHeader(MB_flag, ME_flag, "xlf-info", bytes);
-    status = limeWriteRecordHeader( limeheader, limewriter);
-    if(status < 0 ) {
-      fprintf(stderr, "LIME write header error %d\n", status);
-      MPI_Abort(MPI_COMM_WORLD, 1);
-      MPI_Finalize();
-      exit(500);
-    }
-    limeDestroyHeader( limeheader );
-    limeWriteRecordData(message, &bytes, limewriter);
-
     bytes = LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3);
-    MB_flag=0; ME_flag=1;
+    MB_flag=1; ME_flag=1;
     limeheader = limeCreateHeader(MB_flag, ME_flag, "ildg-binary-data", bytes);
     status = limeWriteRecordHeader( limeheader, limewriter);
     if(status < 0 ) {
@@ -233,16 +212,9 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   su3 tmp[4];
 #endif
 
-  if(g_kappa > 0. || g_kappa < 0.) {
-    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f", 
-	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1);
-  }
-  else {
-    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f", 
-	    plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
-  }
-  bytes = (n_uint64_t)strlen( message );
-  ofs = fopen(filename, "w");
+  write_xlf_info(plaq, counter, filename, 0);
+
+  ofs = fopen(filename, "a");
   if(ofs == (FILE*)NULL) {
     fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
     exit(500);
@@ -253,15 +225,6 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
     exit(500);
   }
   write_ildg_format_xml("temp.xml", limewriter, 0);
-
-  limeheader = limeCreateHeader(MB_flag, ME_flag, "xlf-info", bytes);
-  status = limeWriteRecordHeader( limeheader, limewriter);
-  if(status < 0 ) {
-    fprintf(stderr, "LIME write header error %d\n", status);
-    exit(500);
-  }
-  limeDestroyHeader( limeheader );
-  limeWriteRecordData(message, &bytes, limewriter);
 
   bytes = (n_uint64_t)(LX*LY*LZ*T*4*sizeof(su3));
   MB_flag=0; ME_flag=1;
@@ -319,20 +282,11 @@ int write_lime_gauge_field_singleprec(char * filename, const double plaq,
   float tmp[72];
   int coords[4];
   n_uint64_t bytes;
-  struct timeval t1;
 
-  gettimeofday(&t1,NULL);
-  if(g_kappa > 0. || g_kappa < 0.) {
-    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n time = %ld\n hmcversion = %s", 
-	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1,t1.tv_sec, PACKAGE_VERSION);
-  }
-  else {
-    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f", 
-	    plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
-  }
-  bytes = strlen( message );
+  write_xlf_info(plaq, counter, filename, 0);
+
   if(g_cart_id == 0) {
-    ofs = fopen(filename, "w");
+    ofs = fopen(filename, "a");
     if(ofs == (FILE*)NULL) {
       fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
       MPI_Abort(MPI_COMM_WORLD, 1);
@@ -348,17 +302,6 @@ int write_lime_gauge_field_singleprec(char * filename, const double plaq,
     }
     write_ildg_format_xml("temp.xml", limewriter, 1);
     
-    limeheader = limeCreateHeader(MB_flag, ME_flag, "xlf-info", bytes);
-    status = limeWriteRecordHeader( limeheader, limewriter);
-    if(status < 0 ) {
-      fprintf(stderr, "LIME write header error %d\n", status);
-      MPI_Abort(MPI_COMM_WORLD, 1);
-      MPI_Finalize();
-      exit(500);
-    }
-    limeDestroyHeader( limeheader );
-    limeWriteRecordData(message, &bytes, limewriter);
-
     bytes = LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3)/2;
     MB_flag=0; ME_flag=1;
     limeheader = limeCreateHeader(MB_flag, ME_flag, "ildg-binary-data", bytes);
@@ -455,16 +398,9 @@ int write_lime_gauge_field_singleprec(char * filename,
   n_uint64_t bytes;
   float tmp[72];
 
-  if(g_kappa > 0. || g_kappa < 0.) {
-    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f", 
-	    plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1);
-  }
-  else {
-    sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f", 
-	    plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1);
-  }
-  bytes = (n_uint64_t)strlen( message );
-  ofs = fopen(filename, "w");
+  write_xlf_info(plaq, counter, filename, 0);
+
+  ofs = fopen(filename, "a");
   if(ofs == (FILE*)NULL) {
     fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
     exit(500);
@@ -476,15 +412,6 @@ int write_lime_gauge_field_singleprec(char * filename,
   }
   /* Prepare it for 32 Bit write */
   write_ildg_format_xml("temp.xml", limewriter, 1);
-
-  limeheader = limeCreateHeader(MB_flag, ME_flag, "xlf-info", bytes);
-  status = limeWriteRecordHeader( limeheader, limewriter);
-  if(status < 0 ) {
-    fprintf(stderr, "LIME write header error %d\n", status);
-    exit(500);
-  }
-  limeDestroyHeader( limeheader );
-  limeWriteRecordData(message, &bytes, limewriter);
 
   bytes = (n_uint64_t)(LX*LY*LZ*T*4*sizeof(su3))/2;
   MB_flag=0; ME_flag=1;

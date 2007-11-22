@@ -3,6 +3,7 @@
 #ifndef _IO_UTILS_H
 #define _IO_UTILS_H
 
+
 #ifndef isnan
 # define isnan(x)						 \
   (sizeof (x) == sizeof (long double) ? isnan_ld (x)		 \
@@ -26,6 +27,6 @@ int write_ildg_format_xml(char *filename, LimeWriter * limewriter, const int pre
 void single2double_cm(spinor * const R, float * const S);
 void double2single_cm(float * const S, spinor * const R);
 void zero_spinor(spinor * const R);
-int write_xlf_info(const double plaq, const int counter, char * filename);
+int write_xlf_info(const double plaq, const int counter, char * filename, const int append);
 
 #endif

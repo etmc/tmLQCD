@@ -77,6 +77,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   int source_time_slice;
   int gauge_precision_read_flag;
   int gauge_precision_write_flag;
+  int prop_precision_flag;
   int gmres_m_parameter, gmresdr_nr_ev;
   int reproduce_randomnumber_flag;
   double stout_rho;
@@ -206,6 +207,8 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x HEAVYTS
 %x EO
 %x WRPROPFLAG
+%x PROPPREC
+%x PROPTYPE
 
 %x COMMENT
 %x ERROR
@@ -317,6 +320,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^GMRESDRNrEv{SPC}*={SPC}*                  BEGIN(GMRESDRNEV);
 ^GaugeConfigReadPrecision{SPC}*={SPC}*     BEGIN(GAUGERPREC);
 ^GaugeConfigWritePrecision{SPC}*={SPC}*    BEGIN(GAUGEWPREC);
+^PropagatorPrecision{SPC}*={SPC}*          BEGIN(PROPPREC);
 ^ReproduceRandomNumbers{SPC}*={SPC}*       BEGIN(REPRORND);
 ^UseSloppyPrecision{SPC}*={SPC}*           BEGIN(SLOPPYPREC);
 ^UseStoutSmearing{SPC}*={SPC}*             BEGIN(USESTOUT);
@@ -333,6 +337,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^TimeScaleHeavyDoublet{SPC}*={SPC}*        BEGIN(HEAVYTS);
 ^UseEvenOdd{SPC}*={SPC}*                   BEGIN(EO);
 ^WritePropagatorFormat{SPC}*={SPC}*        BEGIN(WRPROPFLAG);
+^PropagatorType{SPC}*={SPC}*               BEGIN(WRPROPFLAG);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -837,6 +842,14 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   gauge_precision_write_flag = 64;
   if(verbose!=0) printf("Save gauges in 64 Bit precision!\n");
 }
+<PROPPREC>32 {
+  prop_precision_flag = 32;
+  if(verbose!=0) printf("Save propagators in 32 Bit precision!\n");
+}
+<PROPPREC>64 {
+  prop_precision_flag = 64;
+  if(verbose!=0) printf("Save propagators in 64 Bit precision!\n");
+}
 <REPRORND>yes {
   reproduce_randomnumber_flag = 1;
   if(verbose!=0) printf("Use reproducable randomnumbers!\n");
@@ -959,13 +972,28 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 <WRPROPFLAG>gwc      {
   write_prop_format_flag = 0;
-  if(verbose!=0) printf("Using GWC format to write propagator file\n");
+  fprintf(stderr, "GWC format no longer supported for writing propagators\n");
 }
 <WRPROPFLAG>cmi      {
-  write_prop_format_flag = 1;
-  if(verbose!=0) printf("Using CM format to write propagator file\n");
+  write_prop_format_flag = 0;
+  fprintf(stderr, "CM format no longer supported for writing propagators\n");
 }
-
+<WRPROPFLAG>DiracFermion_Sink {
+  write_prop_format_flag = 0;
+  if(verbose!=0) printf("Propagator type: DiracFermion_Sinks\n");
+}
+<WRPROPFLAG>DiracFermion_Source_Sink_Pairs {
+  write_prop_format_flag = 1;
+  if(verbose!=0) printf("Propagator type: DiracFermion_Source_Sink_Pairs\n");
+}
+<WRPROPFLAG>DiracFermion_ScalarSource_TwelveSink {
+  write_prop_format_flag = 1;
+  fprintf(stderr, "Propagator type: DiracFermion_ScalarSource_TwelveSink, not yet supported\n");
+}
+<WRPROPFLAG>DiracFermion_ScalarSource_FourSink {
+  write_prop_format_flag = 1;
+  fprintf(stderr, "Propagator type: DiracFermion_ScalarSource_FourSink, not yet supported\n");
+}
 
 <*>^#                       BEGIN(COMMENT);
 <SEED,KAPPA,ACCPTILDE,ACCHFIN,RECEV,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
@@ -978,7 +1006,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <SMIN,SMAX,DEGP,PRECEV,NOEV>#  BEGIN(COMMENT);
 <PCOMPUTEEVS,COMPUTEEVS,SPLITPROP,SRCLOC>#  BEGIN(COMMENT);
 <SOURCETS,SUBEVCG,EO,WRPROPFLAG>#   BEGIN(COMMENT);
-<SOURCETS,GAUGERPREC,GAUGEWPREC,HEAVYTS>#   BEGIN(COMMENT);
+<SOURCETS,GAUGERPREC,GAUGEWPREC,PROPPREC,HEAVYTS>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
 }
@@ -1126,6 +1154,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   exit(1);
 }
 <GAUGEWPREC>. {
+  printf("Error in line %d! Must be 32 or 64 Bit precision!\n", line_of_file);
+  exit(1);
+}
+<PROPPREC>. {
   printf("Error in line %d! Must be 32 or 64 Bit precision!\n", line_of_file);
   exit(1);
 }
@@ -1343,6 +1375,7 @@ int read_input(char * conf_file){
   gmresdr_nr_ev = _default_gmresdr_nr_ev;
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
+  prop_precision_flag = _default_prop_precision_flag;
   reproduce_randomnumber_flag = _default_reproduce_randomnumber_flag;
   g_sloppy_precision_flag = _default_g_sloppy_precision_flag;
   use_stout_flag = _default_use_stout_flag;

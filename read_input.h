@@ -70,6 +70,7 @@ extern "C"
   extern int source_time_slice;
   extern int gauge_precision_read_flag;
   extern int gauge_precision_write_flag;
+  extern int prop_precision_flag;
   extern int reproduce_randomnumber_flag;
   extern double stout_rho;
   extern int stout_no_iter;

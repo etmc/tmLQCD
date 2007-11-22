@@ -12,6 +12,7 @@
 
 #define MAIN_PROGRAM
 
+#include"lime.h"
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -35,6 +36,7 @@
 #include "xchange.h"
 #endif
 #include "io.h"
+#include "io_utils.h"
 #include "propagator_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
@@ -262,7 +264,10 @@ int main(int argc,char *argv[]) {
 	  if(g_proc_id == 0) {
 	    printf("Reading source from %s\n", conf_filename);
 	  }
-	  read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename); 
+	  if(propagator_splitted) {
+	    read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, ix); 
+	  }
+	  read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 1);
 /* 	  read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], conf_filename);  */
 	}
 	else if(source_format_flag == 1) {
@@ -300,12 +305,19 @@ int main(int argc,char *argv[]) {
 	ifs = fopen(conf_filename, "r");
 	if(ifs != NULL) {
 	  if(g_proc_id == g_stdio_proc){
-	    printf("Reading in from file %s\n", conf_filename);
+	    printf("# Trying to read guess from file %s\n", conf_filename);
 	    fflush(stdout);
 	  }
 	  fclose(ifs);
+	  iter = get_propagator_type(conf_filename);
+	  if(iter == 1 ) iter = 2;
+	  else iter = 1;
+	  if(iter == 1 && propagator_splitted){
+	    read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 2*ix);	    
+	  }
+	  else
 	  if(source_format_flag == 0) {
-	    read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename);
+
 /* 	    read_spinorfield_eo_time(g_spinor_field[2], g_spinor_field[3], conf_filename); */
 	    mul_r(g_spinor_field[3], 1./(2*g_kappa), g_spinor_field[3], VOLUME/2);
 	    mul_r(g_spinor_field[2], 1./(2*g_kappa), g_spinor_field[2], VOLUME/2);
@@ -332,29 +344,34 @@ int main(int argc,char *argv[]) {
       etime = MPI_Wtime();
 #endif
 
-      if(write_prop_format_flag == 0) {
-	/* To write in standard format */
-	/* we have to mult. by 2*kappa */
-	mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME/2);
-	mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[3], VOLUME/2);
-        if(propagator_splitted)
-          write_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 0, 64);
-/*           write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0); */
-        else
-        {
-          sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore);
+      /* To write in standard format */
+      /* we have to mult. by 2*kappa */
+      mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME/2);
+      mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[3], VOLUME/2);
 
-          if(ix == index_start)
-            write_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, 64);
-/*             write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0); */
-          else
-            write_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, 64);
-/*             write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 1); */
-        }
+
+      if(propagator_splitted) {
+	write_propagator_type(write_prop_format_flag, conf_filename);
+	write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
+	if(write_prop_format_flag == 1) {
+	  write_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, prop_precision_flag);
+	}
+	write_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, prop_precision_flag);
+	/*           write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0); */
       }
-      else if(write_prop_format_flag == 1) {
-	write_spinorfield_cm_single(g_spinor_field[2], g_spinor_field[3], conf_filename);
+      else {
+	sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore);
+	
+	if(ix == index_start) {
+	  write_propagator_type(write_prop_format_flag, conf_filename);
+	}
+	write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
+	if(write_prop_format_flag == 1) {
+	  write_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, prop_precision_flag);
+	}
+	write_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, prop_precision_flag);
       }
+      
 
       /* Check the result */
       M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[2], g_spinor_field[3]); 

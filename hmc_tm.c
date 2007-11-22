@@ -74,7 +74,7 @@ int main(int argc,char *argv[]) {
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
-  char gauge_filename[200];
+  char * gauge_filename = "conf.save";
   char * nstore_filename = ".nstore_counter";
   char * tmp_filename = ".conf.tmp";
   char * input_filename = NULL;
@@ -293,9 +293,9 @@ int main(int argc,char *argv[]) {
     exit(0);
   }
 
-  zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME/2);
-  zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME/2);
-  zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME/2);
+  zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME);
+  zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME);
+  zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME);
 
   if(use_stout_flag == 1)
     init_stout_smear_vars(VOLUMEPLUSRAND, stout_no_iter);
@@ -458,7 +458,7 @@ int main(int argc,char *argv[]) {
     
     /* Save gauge configuration all Nskip times */
     if((Nskip !=0) && (trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) {
-      sprintf(gauge_filename,"%s.%.4d", "conf", nstore);
+      sprintf(gauge_filename,"conf.%.4d", nstore);
       if(g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
 	fprintf(countfile, "%.4d, measurement %d of %d, Nskip = %d, Plaquette = %e, |L(%d)| = %e, |L(%d)| = %e trajectory nr = %d\n", 
@@ -469,14 +469,14 @@ int main(int argc,char *argv[]) {
       }
       nstore ++;
     }
-    else if(write_cp_flag == 1) {
-      sprintf(gauge_filename,"%s", "conf.save");
+    else if(write_cp_flag == 1 || (j >= (Nmeas -1))) {
+      sprintf(gauge_filename,"conf.save");
     }
-
+    
     if(((Nskip !=0) && (trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
       /* Write the gauge configuration first to a temporary file */
       if(gauge_precision_write_flag == 64) {
-	write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+  	write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
       }
       else if(gauge_precision_write_flag == 32) {
 	write_lime_gauge_field_singleprec( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
@@ -484,12 +484,12 @@ int main(int argc,char *argv[]) {
       /*  write the status of the random number generator to a file */
       if(g_proc_id==0) {
 	rlxd_get(rlxd_state);
-	write_rlxd_state(tmp_filename, rlxd_state, rlxdsize);
+ 	write_rlxd_state(tmp_filename, rlxd_state, rlxdsize);
       }
-
+      
       /* Now move it! */
       if(g_proc_id == 0) {
-	rename(tmp_filename, gauge_filename);
+  	rename(tmp_filename, gauge_filename);
         countfile = fopen(nstore_filename, "w");
         fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
         fclose(countfile);

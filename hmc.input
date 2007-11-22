@@ -21,3 +21,4 @@ GaugeConfigInputFile = conf.save
 #startCondition = restart
 Integrator = LeapFrog
 ReadSource = yes
+SolverFlag = BiCGstab
