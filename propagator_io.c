@@ -21,8 +21,29 @@
 #include"lime.h" 
 #include"read_input.h"
 #include"io_utils.h"
+#include"propagator_io.h"
 #include"io.h"
 
+
+int write_propagator(spinor * const s, spinor * const r, char * filename, 
+		      const int append, const int prec) {
+  int err = 0;
+
+  write_propagator_format(filename, prec, 1);
+  err = write_lime_spinor(s, r, filename, append, prec);
+  return(err);
+}
+
+int write_double_propagator(spinor * const s, spinor * const r, 
+			    spinor * const p, spinor * const q,
+			    char * filename, const int append, const int prec) {
+  int err = 0;
+
+  write_propagator_format(filename, prec, 2);
+  err = write_lime_spinor(s, r, filename, append, prec);
+  err += write_lime_spinor(p, q, filename, append, prec);
+  return(err);
+}
 
 int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * limewriter,
 			     const int prec) {
@@ -305,6 +326,8 @@ int write_propagator_format(char * filename, const int prec, const int no_flavou
   return(0);
 }
 
+
+
 int write_lime_spinor(spinor * const s, spinor * const r, char * filename, 
 		      const int append, const int prec) {
 
@@ -318,7 +341,6 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
   MPI_Status mpistatus;
 #endif
 
-  write_propagator_format(filename, prec, 1);
 
   if(g_cart_id == 0) {
     if(append) {

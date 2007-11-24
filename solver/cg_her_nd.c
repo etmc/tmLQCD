@@ -48,6 +48,7 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
 	   const int subtract_ev, const int modulo){
   double normsp, normsq, pro, err, alpha_cg, beta_cg, squarenorm;
   int iteration;
+  double err1, err2;
   
   squarenorm = square_norm(Q_up, N);
   squarenorm+= square_norm(Q_dn, N);
@@ -122,10 +123,11 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
     assign_add_mul_r(g_chi_dn_spinor_field[DUM_SOLVER+1], g_chi_dn_spinor_field[DUM_SOLVER+4], -alpha_cg, N);
 
     /* Check whether the precision is reached ... */
-    err =square_norm(g_chi_up_spinor_field[DUM_SOLVER+1], N);
-    err+=square_norm(g_chi_dn_spinor_field[DUM_SOLVER+1], N);
+    err1 =square_norm(g_chi_up_spinor_field[DUM_SOLVER+1], N);
+    err2 =square_norm(g_chi_dn_spinor_field[DUM_SOLVER+1], N);
+    err = err1 + err2;
     if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
-      printf("cg_her_nd : iteration number: %d  error:  %e\n",iteration,err); fflush( stdout);
+      printf("cg_her_nd : i = %d  esqr  %e = %e + %e \n",iteration,err, err1, err2); fflush( stdout);
     }
 
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) {

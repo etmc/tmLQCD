@@ -570,7 +570,7 @@ void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
  ******************************************/
 void H_eo_ND(spinor * const l_strange, spinor * const l_charm, 
              spinor * const k_strange, spinor * const k_charm, 
-	     const int ieo){
+	     const int ieo) {
 
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
 
@@ -590,7 +590,24 @@ void H_eo_ND(spinor * const l_strange, spinor * const l_charm,
 
 }
 
+void M_ee_inv_ND(spinor * const l_strange, spinor * const l_charm, 
+		 spinor * const k_strange, spinor * const k_charm) {
+  
+  double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
 
+
+  /* recall:   strange <-> up    while    charm <-> dn   */
+
+  mul_one_minus_imubar(l_strange, k_strange);
+  mul_one_plus_imubar(l_charm, k_charm);
+
+  assign_add_mul_r(l_strange, k_charm, g_epsbar, VOLUME/2);
+  assign_add_mul_r(l_charm, k_strange, g_epsbar, VOLUME/2);
+
+  mul_r(l_strange, nrm, l_strange, VOLUME/2);
+  mul_r(l_charm, nrm, l_charm, VOLUME/2);
+
+}
 
 
 
@@ -619,7 +636,25 @@ void Q_test_epsilon(spinor * const l_strange, spinor * const l_charm,
   /* At the end, the normalisation by the max. eigenvalue  */
   mul_r(l_charm, phmc_invmaxev, l_charm, VOLUME/2);
   mul_r(l_strange, phmc_invmaxev, l_strange, VOLUME/2);
+  return;
+}
 
+
+void mul_one_pm_itau2(spinor * const p, spinor * const q,
+		      spinor * const r, spinor * const s,
+		      const double sign, const int N) {
+  double fac = 1./sqrt(2.);
+
+  if(sign > 0) {
+    add(p, r, s, N);
+    diff(q, r, s, N);
+  }
+  else {
+    diff(p, r, s, N);
+    add(q, r, s, N);
+  }
+  mul_r(p, fac, p, N);
+  mul_r(q, fac, q, N);
 }
 
 
@@ -676,55 +711,56 @@ void mul_one_plus_imubar(spinor * const l, spinor * const k){
     _complex_times_vector(phi1, w, (*s).s3);
     _vector_assign((*r).s3, phi1);
   }
+  return;
 }
 
 
 /*  calculates P(Q Q^dagger) for the nondegenerate case */
 
- void P_ND(spinor * const l_strange, spinor * const l_charm,
-         spinor * const k_strange, spinor * const k_charm){
-
-
-
-   int j;
-   spinor *dum_up,*dum_dn;
-   dum_up=g_chi_up_spinor_field[DUM_MATRIX];
-   dum_dn=g_chi_dn_spinor_field[DUM_MATRIX];
-
-   assign(dum_up,k_strange,VOLUME/2);
-   assign(dum_dn,k_charm,VOLUME/2);
-
-
-   for(j=0; j<(2*phmc_dop_n_cheby -2); j++){
-     if(j>0) {
-       assign(dum_up,l_strange,VOLUME/2);
-       assign(dum_dn,l_charm,VOLUME/2);
-     }
-
-     Q_tau1_min_cconst_ND(l_strange, l_charm,
-                     dum_up, dum_dn,
-                     phmc_root[j]);
-   }
-
- }
+void P_ND(spinor * const l_strange, spinor * const l_charm,
+	  spinor * const k_strange, spinor * const k_charm){
+  
+  
+  
+  int j;
+  spinor *dum_up,*dum_dn;
+  dum_up=g_chi_up_spinor_field[DUM_MATRIX];
+  dum_dn=g_chi_dn_spinor_field[DUM_MATRIX];
+  
+  assign(dum_up,k_strange,VOLUME/2);
+  assign(dum_dn,k_charm,VOLUME/2);
+  
+  
+  for(j=0; j<(2*phmc_dop_n_cheby -2); j++){
+    if(j>0) {
+      assign(dum_up,l_strange,VOLUME/2);
+      assign(dum_dn,l_charm,VOLUME/2);
+    }
+    
+    Q_tau1_min_cconst_ND(l_strange, l_charm,
+			 dum_up, dum_dn,
+			 phmc_root[j]);
+  }
+  return;
+}
 
 
 /* calculates  Q * \tau^1  for the nondegenerate case */
 void Qtau1_P_ND(spinor * const l_strange, spinor * const l_charm,
-         spinor * const k_strange, spinor * const k_charm){
-
-
-   spinor * dum_up,* dum_dn;
-   dum_up=g_chi_up_spinor_field[DUM_MATRIX+1];
-   dum_dn=g_chi_dn_spinor_field[DUM_MATRIX+1];
-
-   P_ND(l_strange, l_charm,k_strange,k_charm);
-
-   assign(dum_up,l_strange,VOLUME/2);
-   assign(dum_dn,l_charm,VOLUME/2);
-
-   QNon_degenerate(l_strange,l_charm,dum_dn,dum_up);
-
+		spinor * const k_strange, spinor * const k_charm){
+  
+  
+  spinor * dum_up,* dum_dn;
+  dum_up=g_chi_up_spinor_field[DUM_MATRIX+1];
+  dum_dn=g_chi_dn_spinor_field[DUM_MATRIX+1];
+  
+  P_ND(l_strange, l_charm,k_strange,k_charm);
+  
+  assign(dum_up,l_strange,VOLUME/2);
+  assign(dum_dn,l_charm,VOLUME/2);
+  
+  QNon_degenerate(l_strange,l_charm,dum_dn,dum_up);
+  return;
 }
 
 
@@ -760,46 +796,44 @@ void Qtm_pm_min_cconst_nrm(spinor * const l, spinor * const k,
   }
 
   mul_r(l, phmc_Cpol, l, VOLUME/2);
-
+  return;
 }
 
 /* calculate a polynomial in (Q+)*(Q-) */
 
 
- void Ptm_pm_psi(spinor * const l, spinor * const k){
-
-   int j;
-   spinor *spinDum;
-   spinDum=g_spinor_field[DUM_MATRIX+2];
-
-   assign(spinDum,k,VOLUME/2);
-
-
-   for(j=0; j<(2*phmc_dop_n_cheby -2); j++){
-     if(j>0) {
-       assign(spinDum,l,VOLUME/2);
-     }
-
-     Qtm_pm_min_cconst_nrm(l,spinDum,phmc_root[j]);
-
-
-   }
-
- }
+void Ptm_pm_psi(spinor * const l, spinor * const k){
+  
+  int j;
+  spinor *spinDum;
+  spinDum=g_spinor_field[DUM_MATRIX+2];
+  
+  assign(spinDum,k,VOLUME/2);
+  
+  
+  for(j=0; j<(2*phmc_dop_n_cheby -2); j++){
+    if(j>0) {
+      assign(spinDum,l,VOLUME/2);
+    }
+    
+    Qtm_pm_min_cconst_nrm(l,spinDum,phmc_root[j]);
+  }
+  return;
+}
 
 /* **********************************************
  * Qpm * P(Qpm)
  * this operator is neccessary for the inverter 
  ************************************************/
 
- void Qtm_pm_Ptm_pm_psi(spinor * const l, spinor * const k){
-   spinor * spinDum;
-
-   spinDum=g_spinor_field[DUM_MATRIX+3]; 
-   Ptm_pm_psi(l,k);
-   assign(spinDum,l,VOLUME/2);
-   Qtm_pm_psi(l,spinDum);
-
+void Qtm_pm_Ptm_pm_psi(spinor * const l, spinor * const k){
+  spinor * spinDum;
+  
+  spinDum=g_spinor_field[DUM_MATRIX+3]; 
+  Ptm_pm_psi(l,k);
+  assign(spinDum,l,VOLUME/2);
+  Qtm_pm_psi(l,spinDum);
+  return;
 }
 
 

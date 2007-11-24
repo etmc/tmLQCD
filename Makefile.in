@@ -33,7 +33,8 @@ SMODULES = Hopping_Matrix_nocom Hopping_Matrix tm_operators
 MODULES = read_input gamma hybrid_update observables start \
 	expo 2mn_integrator get_staples update_backward_gauge \
 	measure_rectangles get_rectangle_staples  \
-	test/check_geometry test/check_xchange invert_eo \
+	test/check_geometry test/check_xchange \
+	invert_eo invert_doublet_eo \
 	ext_integrator polyakov_loop getopt sighandler \
 	source_generation boundary io_utils io update_tm ranlxd  \
 	mpi_init linsolve deriv_Sb deriv_Sb_D_psi \
@@ -53,7 +54,7 @@ MODULES = read_input gamma hybrid_update observables start \
 
 NOOPTMOD = test/check_xchange test/check_geometry
 
-PROGRAMS = hmc_tm benchmark invert gwc2ildg \
+PROGRAMS = hmc_tm benchmark invert invert_doublet gwc2ildg \
 	ildg2gwc single2double double2single reducenoise gen_sources 
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES} phmc_tm
@@ -62,9 +63,9 @@ SUBDIRS = linalg solver
 .SUFFIXES:
 
 ifneq (,$(findstring lapack,${LIBS}))
-all: Makefile all-recursive dep hmc_tm invert gen_sources phmc_tm
+all: Makefile all-recursive dep hmc_tm invert invert_doublet gen_sources phmc_tm
 else
-all: Makefile all-recursive dep hmc_tm invert gen_sources
+all: Makefile all-recursive dep hmc_tm invert invert_doublet gen_sources
 endif
 
 .NOTPARALLEL: 
