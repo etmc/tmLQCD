@@ -264,7 +264,7 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
   /* Twice  phmc_invmaxev  since we consider here  D Ddag  !!! */
   mul_r(l_charm, phmc_invmaxev*phmc_invmaxev, l_charm, VOLUME/2);
   mul_r(l_strange, phmc_invmaxev*phmc_invmaxev, l_strange, VOLUME/2);
-
+  return;
 }
 
 

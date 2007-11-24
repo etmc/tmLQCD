@@ -25,6 +25,7 @@
 #include "linalg/mul.h"
 #include "linalg/assign_add_mul_add_mul.h"
 #include "linalg/assign_mul_bra_add_mul_ket_add.h"
+#include "linalg/add.h"
 
 #include "linalg/comp_decomp.h"
 #include "linalg/square_norm_bi.h"

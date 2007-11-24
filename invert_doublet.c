@@ -52,6 +52,7 @@
 #include "xchange_halffield.h"
 #include "update_backward_gauge.h"
 #include "stout_smear.h"
+#include "invert_eo.h"
 #include "invert_doublet_eo.h"
 #include "D_psi.h"
 #include "phmc.h"
@@ -318,6 +319,27 @@ int main(int argc,char *argv[]) {
       write_double_propagator(g_spinor_field[4], g_spinor_field[5],
 			      g_spinor_field[6], g_spinor_field[7], conf_filename, 1, prop_precision_flag);
       
+
+      /* Check the result */
+      M_full(g_spinor_field[6], g_spinor_field[7], g_spinor_field[4], g_spinor_field[5]); 
+      mul_r(g_spinor_field[6], 1./(2*g_kappa), g_spinor_field[6], VOLUME/2);  
+      mul_r(g_spinor_field[7], 1./(2*g_kappa), g_spinor_field[7], VOLUME/2); 
+
+      diff(g_spinor_field[6], g_spinor_field[6], g_spinor_field[0], VOLUME/2); 
+      diff(g_spinor_field[7], g_spinor_field[7], g_spinor_field[1], VOLUME/2); 
+
+      nrm1 = square_norm(g_spinor_field[6], VOLUME/2); 
+      nrm2 = square_norm(g_spinor_field[7], VOLUME/2); 
+
+      if(g_proc_id == 0) {
+	if(source_format_flag == 0) {
+	  printf("Inversion for is = %d, ic = %d done in %d iterations, residue = %e!\n", is, ic, iter, nrm1+nrm2);
+	}
+	else if(source_format_flag == 1) {
+	  printf("Inversion for source %d done in %d iterations, residue = %e!\n", ix, iter, nrm1+nrm2);
+	}
+      }
+
 #ifdef MPI
       printf("Inversion done in %e sec. (MPI_Wtime)\n", etime-atime);
 #endif

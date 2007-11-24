@@ -34,10 +34,10 @@
 #include"Nondegenerate_Matrix.h"
 #include"invert_doublet_eo.h"
 
-int invert_doublet_eo(spinor * const Even_new_s, spinor * const Even_new_c, 
-		      spinor * const Odd_new_c, spinor * const Odd_new_s, 
-		      spinor * const Even_s, spinor * const Even_c,
-		      spinor * const Odd_s, spinor * const Odd_c,
+int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s, 
+		      spinor * const Even_new_c, spinor * const Odd_new_c, 
+		      spinor * const Even_s, spinor * const Odd_s,
+		      spinor * const Even_c, spinor * const Odd_c,
 		      const double precision, const int max_iter,
 		      const int solver_flag, const int rel_prec) {
 
@@ -54,34 +54,37 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Even_new_c,
   /* the minus is missing                      */
   assign_mul_add_r(g_spinor_field[DUM_DERI], +1., Odd_s, VOLUME/2);
   assign_mul_add_r(g_spinor_field[DUM_DERI+1], +1., Odd_c, VOLUME/2);
-/*   assign_mul_add_r(g_spinor_field[DUM_DERI], +1., Odd, VOLUME/2); */
-  
+
   /* Do the inversion with the preconditioned  */
   /* matrix to get the odd sites               */
   
   /* Here we invert the hermitean operator squared */
+
   if(g_proc_id == 0) {
     printf("# Using CG for flavour doublet!\n"); 
     fflush(stdout);
   }
+  gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+  gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME/2);
+
   iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
 		   max_iter, precision, rel_prec, 
 		   VOLUME/2, &Q_Qdagger_ND, 0, 1000);
+
+
   QdaggerNon_degenerate(Odd_new_s, Odd_new_c,
 			Odd_new_s, Odd_new_c);
-/*   Qtm_minus_psi(Odd_new, Odd_new); */
-  
   
   /* Reconstruct the even sites                */
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new_s);
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI+1], Odd_new_c);
   M_ee_inv_ND(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3],
 	      g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
   assign_add_mul_r(Even_new_s, g_spinor_field[DUM_DERI+2], +1., VOLUME/2);
   assign_add_mul_r(Even_new_c, g_spinor_field[DUM_DERI+3], +1., VOLUME/2);
-/*   assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2); */
 
   return(iter);
 }

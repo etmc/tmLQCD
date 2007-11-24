@@ -50,7 +50,6 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     /* The sign is plus, since in Hopping_Matrix */
     /* the minus is missing                      */
     assign_mul_add_r(g_spinor_field[DUM_DERI], +1., Odd, VOLUME/2);
-    
     /* Do the inversion with the preconditioned  */
     /* matrix to get the odd sites               */
     
