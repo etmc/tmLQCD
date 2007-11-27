@@ -458,7 +458,7 @@ int main(int argc,char *argv[]) {
     
     /* Save gauge configuration all Nskip times */
     if((Nskip !=0) && (trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) {
-      sprintf(gauge_filename,"conf.%.4d", nstore);
+      sprintf(&gauge_filename,"conf.%.4d", nstore);
       if(g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
 	fprintf(countfile, "%.4d, measurement %d of %d, Nskip = %d, Plaquette = %e, |L(%d)| = %e, |L(%d)| = %e trajectory nr = %d\n", 
@@ -470,7 +470,7 @@ int main(int argc,char *argv[]) {
       nstore ++;
     }
     else if(write_cp_flag == 1 || (j >= (Nmeas -1))) {
-      sprintf(gauge_filename,"conf.save");
+      sprintf(&gauge_filename,"conf.save");
     }
     
     if(((Nskip !=0) && (trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
