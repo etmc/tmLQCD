@@ -16,6 +16,7 @@
 #include "linalg_eo.h"
 #include "linsolve.h"
 #include "deriv_Sb.h"
+#include "deriv_Sb_D_psi.h"
 #include "gamma.h"
 #include "tm_operators.h"
 #include "hybrid_update.h"
@@ -268,10 +269,8 @@ void derivative_psf(const int nr, const int set_zero)
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
     deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]);
   } 
-  else
-  {
-    if(nr == 0) 
-    {
+  else {
+    if(nr == 0) {
       /*********************************************************************
        * 
        * This term is det(Q^2 + \mu_1^2)

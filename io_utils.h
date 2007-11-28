@@ -3,6 +3,7 @@
 #ifndef _IO_UTILS_H
 #define _IO_UTILS_H
 
+#include"dml.h"
 
 #ifndef isnan
 # define isnan(x)						 \
@@ -16,6 +17,7 @@ int isnan_f  (float       x);
 int isnan_d  (double      x);
 int isnan_ld (long double x);
 
+int write_checksum(char * filename, DML_Checksum * checksum);
 void byte_swap(void *ptr, int nmemb);
 void byte_swap_assign(void * out_ptr, void * in_ptr, int nmemb);
 void byte_swap_assign_single2double(void * out_ptr, void * in_ptr, int nmemb);

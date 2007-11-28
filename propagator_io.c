@@ -22,8 +22,10 @@
 #include"read_input.h"
 #include"io_utils.h"
 #include"propagator_io.h"
+#include"dml.h"
 #include"io.h"
 
+/* write a one flavour propagator to file */
 
 int write_propagator(spinor * const s, spinor * const r, char * filename, 
 		      const int append, const int prec) {
@@ -33,6 +35,8 @@ int write_propagator(spinor * const s, spinor * const r, char * filename,
   err = write_lime_spinor(s, r, filename, append, prec);
   return(err);
 }
+
+/* write two flavour operator to file */
 
 int write_double_propagator(spinor * const s, spinor * const r, 
 			    spinor * const p, spinor * const q,
@@ -46,7 +50,7 @@ int write_double_propagator(spinor * const s, spinor * const r,
 }
 
 int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * limewriter,
-			     const int prec) {
+				      const int prec, DML_Checksum * ans) {
   
   int x, X, y, Y, z, Z, t, t0, tag=0, id=0, i=0, status=0;
   spinor * p = NULL;
@@ -54,6 +58,10 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
   float tmp2[24];
   int coords[4];
   n_uint64_t bytes;
+  DML_SiteRank rank;
+
+  DML_checksum_init(ans);
+
   if(prec == 32) bytes = sizeof(spinor)/2;
   else bytes = sizeof(spinor);
   for(t0 = 0; t0 < T*g_nproc_t; t0++) {
@@ -81,33 +89,44 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 	      p = r;
 	    }
 	  }
+	  if(g_cart_id == id) {
+	    rank = (DML_SiteRank) (((t0*LZ*g_nproc_z + z)*LY*g_nproc_y + y)*LX*g_nproc_x + x);
+	  }
 	  if(g_cart_id == 0) {
 	    if(g_cart_id == id) {
 #ifndef WORDS_BIGENDIAN
 	      if(prec == 32) {
 		byte_swap_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8); 
+		DML_checksum_accum(ans,rank,(char *) tmp2,sizeof(spinor)/2);
 		status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
 	      }
 	      else {
 		byte_swap_assign(tmp, p + i , sizeof(spinor)/8);
+		DML_checksum_accum(ans,rank,(char *) tmp,sizeof(spinor));
 		status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
 	      }
 #else
 	      if(prec == 32) {
 		double2single((float*)tmp2, (p + i), sizeof(spinor)/8); 
+		DML_checksum_accum(ans,rank,(char *) tmp2,sizeof(spinor)/2);
 		status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
 	      }
-	      else status = limeWriteRecordData((void*)(p + i), &bytes, limewriter);
+	      else {
+		status = limeWriteRecordData((void*)(p + i), &bytes, limewriter);
+		DML_checksum_accum(ans,rank,(char *) (p + i), sizeof(spinor));
+	      }
 #endif
 	    }
 #ifdef MPI
 	    else{
 	      if(prec == 32) {
 		MPI_Recv((void*)tmp2, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &status);
+		DML_checksum_accum(ans,rank,(char *) tmp2, sizeof(spinor)/2);
 		status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
 	      }
 	      else {
 		MPI_Recv((void*)tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &status);
+		DML_checksum_accum(ans,rank,(char *) tmp, sizeof(spinor));
 		status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
 	      }
 	    }
@@ -130,7 +149,9 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 		double2single((float*)tmp2, (p + i), sizeof(spinor)/8); 
 		MPI_Send((void*) tmp2, sizeof(spinor)/8, MPI_FLOAT, 0, tag, g_cart_grid);
 	      }
-	      else MPI_Send((void*) (p + i), sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+	      else {
+		MPI_Send((void*) (p + i), sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+	      }
 #  endif		  
 	    }
 	  }
@@ -148,12 +169,15 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 }
 
 int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * limereader, 
-			    const double prec) {
+			    const double prec, DML_Checksum * ans) {
   int t, x, y , z, i = 0, status=0;
   n_uint64_t bytes;
   spinor * p = NULL;
   spinor tmp[1];
   float tmp2[24];
+  DML_SiteRank rank;
+
+  DML_checksum_init(ans);
   
   if(prec == 32) bytes = sizeof(spinor)/2;
   else bytes = sizeof(spinor);
@@ -177,8 +201,17 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
 	  else {
 	    p = r;
 	  }
-	  if(prec == 32) status = limeReaderReadData(tmp2, &bytes, limereader);
-	  else status = limeReaderReadData(tmp, &bytes, limereader);
+	  rank = (DML_SiteRank) (g_proc_coords[1]*LX + 
+				 (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
+				  + g_proc_coords[2]*LY+y)*LX*g_nproc_x);
+	  if(prec == 32) {
+	    status = limeReaderReadData(tmp2, &bytes, limereader);
+	    DML_checksum_accum(ans,rank,(char *) tmp2, sizeof(spinor)/2);
+	  }
+	  else {
+	    status = limeReaderReadData(tmp, &bytes, limereader);
+	    DML_checksum_accum(ans,rank,(char *) tmp, sizeof(spinor));
+	  }
 #ifndef WORDS_BIGENDIAN
 	  if(prec == 32) {
 	    byte_swap_assign_single2double(p+i, (float*)tmp2, sizeof(spinor)/8);
@@ -199,6 +232,9 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
       }
     }
   }
+#ifdef MPI
+  DML_checksum_combine(ans);
+#endif
   return(0);
 }
 
@@ -327,7 +363,6 @@ int write_propagator_format(char * filename, const int prec, const int no_flavou
 }
 
 
-
 int write_lime_spinor(spinor * const s, spinor * const r, char * filename, 
 		      const int append, const int prec) {
 
@@ -337,6 +372,7 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
   int status = 0;
   int ME_flag=0, MB_flag=0;
   n_uint64_t bytes;
+  DML_Checksum checksum;
 #ifdef MPI
   MPI_Status mpistatus;
 #endif
@@ -382,8 +418,10 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
     limeDestroyHeader( limeheader );
   }
 
-  write_binary_spinor_data(s, r, limewriter, prec);
-
+  status = write_binary_spinor_data(s, r, limewriter, prec, &checksum);
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("Final check sum is (%#x  %#x)\n", checksum.suma, checksum.sumb);
+  }
   if(g_cart_id == 0) {
     if(ferror(ofs)) {
       fprintf(stderr, "Warning! Error while writing to file %s \n", filename);
@@ -392,6 +430,7 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
     fclose(ofs);
     fflush(ofs);
   }
+  write_checksum(filename, &checksum);
   return(0);
 }
 
@@ -453,6 +492,7 @@ int read_lime_spinor(spinor * const s, spinor * const r, char * filename, const 
   char * header_type;
   LimeReader * limereader;
   int prec = 32;
+  DML_Checksum checksum;
   
   if((ifs = fopen(filename, "r")) == (FILE*)NULL) {
     if(g_proc_id == 0) {
@@ -499,7 +539,7 @@ int read_lime_spinor(spinor * const s, spinor * const r, char * filename, const 
     printf("# %d Bit precision read\n", prec);
   }
 
-  status = read_binary_spinor_data(s, r, limereader, prec);
+  status = read_binary_spinor_data(s, r, limereader, prec, &checksum);
 
   if(status < 0) {
     fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", 

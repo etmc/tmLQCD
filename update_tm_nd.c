@@ -25,6 +25,7 @@
 #include "tm_operators.h"
 #include "linalg_eo.h"
 #include "io.h"
+#include "gauge_io.h"
 #include "observables.h"
 #include "hybrid_update.h"
 
@@ -600,7 +601,7 @@ int update_tm_nd(const int integtyp, double *plaquette_energy, double *rectangle
   /* The trajectory is integrated back      */
   if(return_check == 1) {
     if(accept == 1) {
-      write_lime_gauge_field( "conf.save", gauge_energy/(6.*VOLUME*g_nproc), 0);
+      write_lime_gauge_field( "conf.save", gauge_energy/(6.*VOLUME*g_nproc), 0, 64);
     }
     g_sloppy_precision = 1;
 

@@ -34,6 +34,8 @@
 # include "xchange.h"
 #endif
 #include "io.h"
+#include "propagator_io.h"
+#include "gauge_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
@@ -297,8 +299,8 @@ int main(int argc,char *argv[]) {
   zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME);
   zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME);
 
-  if(use_stout_flag == 1)
-    init_stout_smear_vars(VOLUMEPLUSRAND, stout_no_iter);
+/*   if(use_stout_flag == 1) */
+/*     init_stout_smear_vars(VOLUMEPLUSRAND, stout_no_iter); */
 
   /*construct the filenames for the observables and the parameters*/
   strcpy(datafilename,filename);  strcat(datafilename,".data");
@@ -475,12 +477,9 @@ int main(int argc,char *argv[]) {
     
     if(((Nskip !=0) && (trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
       /* Write the gauge configuration first to a temporary file */
-      if(gauge_precision_write_flag == 64) {
-  	write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-      }
-      else if(gauge_precision_write_flag == 32) {
-	write_lime_gauge_field_singleprec( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-      }
+      write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), 
+			      trajectory_counter, gauge_precision_write_flag);
+
       /*  write the status of the random number generator to a file */
       if(g_proc_id==0) {
 	rlxd_get(rlxd_state);
@@ -532,8 +531,8 @@ int main(int argc,char *argv[]) {
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
-  if(use_stout_flag == 1)
-    free_stout_smear_vars();
+/*   if(use_stout_flag == 1) */
+/*     free_stout_smear_vars(); */
 
   return(0);
 #ifdef _KOJAK_INST

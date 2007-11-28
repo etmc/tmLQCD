@@ -3,10 +3,10 @@
 /****************************************************
  * IO routines:
  *
- * write_lime_gauge_field(char * filename, const double plaq, const int counter)
+ * write_lime_gauge_field_old(char * filename, const double plaq, const int counter)
  *   write gauge field in ILDG format
  *
- * read_lime_gauge_field(char * filename)
+ * read_lime_gauge_field_old(char * filename)
  *   read gauge field in ILDG format
  *
  * write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filename, const int append)
@@ -22,15 +22,6 @@
  * read_gauge_field(char * filename)
  *   reads gauge field configuration from file
  *   with name filename.
- *
- * int big_endian()
- *   returns 1 if data is in big endian order, 0 otherwise
- *
- * void byte_swap(void *ptr, int nmemb)
- *   Swap bytes in an array of nmemb integers ptr
- *
- * void byte_swap_assign(void * out_ptr, void * in_ptr, int nmemb)
- *   Swap bytes in an array of nmemb doubles in_ptr and assigns it to out_ptr
  *
  * int read_eospinor(spinor * const s, char * filename)
  *   Read an even or odd spinor from file (eigenvector)
@@ -84,7 +75,7 @@
 n_uint64_t file_size(FILE *fp);
 
 #ifdef MPI
-int write_lime_gauge_field(char * filename, const double plaq, const int counter){
+int write_lime_gauge_field_old(char * filename, const double plaq, const int counter){
   FILE * ofs;
   LimeWriter * limewriter = NULL;
   LimeRecordHeader * limeheader = NULL;
@@ -199,7 +190,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   return(0);
 }
 #else
-int write_lime_gauge_field(char * filename, const double plaq, const int counter){
+int write_lime_gauge_field_old(char * filename, const double plaq, const int counter){
   FILE * ofs;
   LimeWriter * limewriter;
   LimeRecordHeader * limeheader;
@@ -630,7 +621,7 @@ int read_gauge_field_time_p(char * filename){
   return(0);
 }
 
-int read_lime_gauge_field(char * filename){
+int read_lime_gauge_field_old(char * filename){
   FILE * ifs;
   int t, x, y, z, status;
   n_uint64_t bytes;

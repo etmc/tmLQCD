@@ -17,11 +17,67 @@
 #include"global.h"
 #include"su3.h"
 #include"lime.h" 
+#include"dml.h"
 #include"io_utils.h"
 
 int isnan_f  (float       x) { return x != x; }
 int isnan_d  (double      x) { return x != x; }
 int isnan_ld (long double x) { return x != x; }
+
+int write_checksum(char * filename, DML_Checksum * checksum) {
+  FILE * ofs = NULL;
+  LimeWriter * limewriter = NULL;
+  LimeRecordHeader * limeheader = NULL;
+  int status = 0;
+  int ME_flag=0, MB_flag=1;
+  char message[500];
+  n_uint64_t bytes;
+  /*   char * message; */
+
+
+  if(g_cart_id == 0) {
+    ofs = fopen(filename, "a");
+
+    if(ofs == (FILE*)NULL) {
+      fprintf(stderr, "Could not open file %s for writing!\n Aborting...\n", filename);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    limewriter = limeCreateWriter( ofs );
+    if(limewriter == (LimeWriter*)NULL) {
+      fprintf(stderr, "LIME error in file %s for writing!\n Aborting...\n", filename);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+
+    sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><scidacChecksum><version>1.0</version><suma>%#x</suma><sumb>%#x</sumb></scidacChecksum>", (*checksum).suma, (*checksum).sumb);
+    bytes = strlen( message );
+    limeheader = limeCreateHeader(MB_flag, ME_flag, "scidac-checksum", bytes);
+    status = limeWriteRecordHeader( limeheader, limewriter);
+    if(status < 0 ) {
+      fprintf(stderr, "LIME write header error %d\n", status);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    limeDestroyHeader( limeheader );
+    limeWriteRecordData(message, &bytes, limewriter);
+
+    limeDestroyWriter( limewriter );
+    fclose(ofs);
+    fflush(ofs);
+  }
+
+  return(0);
+}
 
 
 int write_xlf_info(const double plaq, const int counter, char * filename, const int append) {

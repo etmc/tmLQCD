@@ -15,6 +15,7 @@
 #include "global.h"
 #include "getopt.h"
 #include "io.h"
+#include "gauge_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #ifdef MPI
@@ -134,7 +135,7 @@ int main(int argc,char *argv[]) {
   if (g_proc_id == 0){
     printf("Writing Gauge field to file %s in ILDG format...\n", ofilename); fflush(stdout);
   }
-  write_lime_gauge_field( ofilename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+  write_lime_gauge_field( ofilename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter, 64);
 
 #ifdef MPI
   MPI_Finalize();

@@ -34,11 +34,11 @@ MODULES = read_input gamma hybrid_update observables start \
 	expo 2mn_integrator get_staples update_backward_gauge \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
-	invert_eo invert_doublet_eo \
+	invert_eo invert_doublet_eo dml DML_crc32 \
 	ext_integrator polyakov_loop getopt sighandler \
 	source_generation boundary io_utils io update_tm ranlxd  \
 	mpi_init linsolve deriv_Sb deriv_Sb_D_psi \
-	xchange_deri geometry_eo linalg_eo \
+	xchange_deri geometry_eo linalg_eo gauge_io\
 	init_moment_field init_gauge_tmp  propagator_io \
 	derivative_psf xchange_field xchange_gauge \
 	init_gauge_field init_geometry_indices init_spinor_field \

@@ -36,6 +36,7 @@
 # include "xchange.h"
 #endif
 #include "io.h"
+#include "gauge_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
@@ -640,12 +641,9 @@ int main(int argc,char *argv[]) {
       sprintf(gauge_filename,"%s", "conf.save");
     }
     /* Write the gauge configuration first to a temporary file */
-    if(gauge_precision_write_flag == 64) {
-      write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-    }
-    else if(gauge_precision_write_flag == 32) {
-      write_lime_gauge_field_singleprec( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-    }
+    write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), 
+			    trajectory_counter, gauge_precision_write_flag);
+
     /*  write the status of the random number generator on a file */
     if(g_proc_id==0) {
       rlxd_get(rlxd_state);
