@@ -489,7 +489,7 @@ int main(int argc,char *argv[]) {
       
       /* Now move it! */
       if(g_proc_id == 0) {
-  	rename(tmp_filename, gauge_filename);
+  	rename(tmp_filename, &gauge_filename);
         countfile = fopen(nstore_filename, "w");
         fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, &gauge_filename);
         fclose(countfile);
