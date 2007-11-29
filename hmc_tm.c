@@ -76,9 +76,9 @@ int main(int argc,char *argv[]) {
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
-  char * gauge_filename = "conf.save";
-  char * nstore_filename = ".nstore_counter";
-  char * tmp_filename = ".conf.tmp";
+  char gauge_filename[50];
+  char nstore_filename[50];
+  char tmp_filename[50];
   char * input_filename = NULL;
   char command_string[300];
   int rlxd_state[105];
@@ -87,6 +87,9 @@ int main(int argc,char *argv[]) {
   struct timeval t1;
   double x;
 
+  strcpy(gauge_filename,"conf.save");
+  strcpy(nstore_filename,".nstore_counter");
+  strcpy(tmp_filename, ".conf.tmp");
   /* Energy corresponding to the Gauge part */
   double eneg = 0., plaquette_energy = 0., rectangle_energy = 0.;
   /* Acceptance rate */
@@ -460,7 +463,7 @@ int main(int argc,char *argv[]) {
     
     /* Save gauge configuration all Nskip times */
     if((Nskip !=0) && (trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) {
-      sprintf(&gauge_filename,"conf.%.4d", nstore);
+      sprintf(gauge_filename,"conf.%.4d", nstore);
       if(g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
 	fprintf(countfile, "%.4d, measurement %d of %d, Nskip = %d, Plaquette = %e, |L(%d)| = %e, |L(%d)| = %e trajectory nr = %d\n", 
@@ -472,7 +475,7 @@ int main(int argc,char *argv[]) {
       nstore ++;
     }
     else if(write_cp_flag == 1 || (j >= (Nmeas -1))) {
-      sprintf(&gauge_filename,"conf.save");
+      sprintf(gauge_filename,"conf.save");
     }
     
     if(((Nskip !=0) && (trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
@@ -488,9 +491,9 @@ int main(int argc,char *argv[]) {
       
       /* Now move it! */
       if(g_proc_id == 0) {
-  	rename(tmp_filename, &gauge_filename);
+  	rename(tmp_filename, gauge_filename);
         countfile = fopen(nstore_filename, "w");
-        fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, &gauge_filename);
+        fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
         fclose(countfile);
       }
     }
