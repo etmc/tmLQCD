@@ -3,7 +3,7 @@
 # Process this file with autoconf to produce a configure script
 #
 AC_PREREQ(2.53)
-AC_INIT(HMC, 4.0.0-rc4, carsten.urbach@liverpool.ac.uk)
+AC_INIT(HMC, 4.0.0-rc5, carsten.urbach@liverpool.ac.uk)
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()
@@ -547,7 +547,14 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
   CFLAGS="$CFLAGS"
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
   if test $withdram = yes; then
-    CCLD="/bgl/local/bin/blrts_gcc -Xlinker --script=./elf32ppcblrts.x"
+    if (test -e /bgl/local/bin/blrts_gcc); then
+      BLRTSGCC=/bgl/local/bin/blrts_gcc
+    elif (test -e /bgl/BlueLight/ppcfloor/blrts-gnu/bin/powerpc-bgl-blrts-gnu-gcc); then
+      BLRTSGCC=/bgl/BlueLight/ppcfloor/blrts-gnu/bin/powerpc-bgl-blrts-gnu-gcc
+    else
+      AC_MSG_ERROR([Sorry, don't know where to find blrts_gcc, see README.bgl!])
+    fi
+    CCLD="$BLRTSGCC -Xlinker --script=./elf32ppcblrts.x"
     if (!(test -s ./elf32ppcblrts.x)); then
       AC_MSG_ERROR([Sorry, elf32ppcblrts.x is missing, see README.bgl!])
     fi
@@ -569,7 +576,7 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
   LIBS="-lmpich.rts -lfmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts $LIBS"
   LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
   if test $with_lapack = yes; then
-    LIBS="-lesslbg -llapack.rts -lesslbg -lxlf90 -lxlfmath -lxl $LIBS"
+    LIBS="-lesslbg -llapack.rts -lesslbg -lxlf90 -lxlfmath -lxl -lxlopt $LIBS"
     LDFLAGS="$LDFLAGS -L/opt/ibmcmp/xlf/bg/10.1/blrts_lib -L/bgl/local/lib/"
   fi
 

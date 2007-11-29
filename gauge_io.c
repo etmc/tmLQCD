@@ -353,7 +353,9 @@ int read_lime_gauge_field(char * filename) {
 #endif
     exit(501);
   }
-
+  if(g_proc_id == 0 && g_debug_level > 2) {
+    printf("# %d Bit precision read\n", prec);
+  }
   read_binary_gauge_data(limereader, prec, &checksum);
 
   limeDestroyReader(limereader);

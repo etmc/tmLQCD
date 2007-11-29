@@ -419,9 +419,6 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
   }
 
   status = write_binary_spinor_data(s, r, limewriter, prec, &checksum);
-  if(g_debug_level > 0 && g_proc_id == 0) {
-    printf("Final check sum is (%#x  %#x)\n", checksum.suma, checksum.sumb);
-  }
   if(g_cart_id == 0) {
     if(ferror(ofs)) {
       fprintf(stderr, "Warning! Error while writing to file %s \n", filename);
@@ -540,6 +537,11 @@ int read_lime_spinor(spinor * const s, spinor * const r, char * filename, const 
   }
 
   status = read_binary_spinor_data(s, r, limereader, prec, &checksum);
+
+  if(g_proc_id == 0) {
+    printf("# checksum for propagator %s position %d is %#x %#x\n", 
+	   filename, position, checksum.suma, checksum.sumb);
+  }
 
   if(status < 0) {
     fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", 
