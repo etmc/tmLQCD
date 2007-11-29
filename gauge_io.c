@@ -180,7 +180,7 @@ int read_binary_gauge_data(LimeReader * limereader,
 	for(x = 0; x < LX; x++) {
 	  rank = (DML_SiteRank) (g_proc_coords[1]*LX + 
 				 (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
-				  + g_proc_coords[2]*LY+y)*LX*g_nproc_x);
+				  + g_proc_coords[2]*LY+y)*LX*g_nproc_x + x);
 	  if(prec == 32) {
 	    status = limeReaderReadData(tmp2, &bytes, limereader);
  	    DML_checksum_accum(ans,rank,(char *) tmp2, bytes);
