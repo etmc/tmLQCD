@@ -25,6 +25,7 @@
 #include "tm_operators.h"
 #include "linalg_eo.h"
 #include "io.h"
+#include "gauge_io.h"
 #include "observables.h"
 #include "hybrid_update.h"
 #include "ranlxd.h"
@@ -147,8 +148,8 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     (enerphi0x - enerphi0) + (enerphi1x - enerphi1) + (enerphi2x - enerphi2);
   /*dh = (enepx - enep) + g_beta*(gauge_energy - new_gauge_energy) +
     (enerphi0x - enerphi0) + (enerphi1x - enerphi1) + (enerphi2x - enerphi2);*/
-  printf("beta = %lf gauge_field_before=%lf gauge_energy=%lf\n", g_beta, gauge_energy,  new_gauge_energy);
-  printf("mom=%lf gauge_field=%lf ferm_0=%lf ferm_1=%lf ferm_2=%lf  dh=%lf\n", (enepx - enep), g_beta*(gauge_energy - new_gauge_energy), (enerphi0x - enerphi0), (enerphi1x - enerphi1), (enerphi2x - enerphi2), dh);
+/*   printf("beta = %lf gauge_field_before=%lf gauge_energy=%lf\n", g_beta, gauge_energy,  new_gauge_energy); */
+/*   printf("mom=%lf gauge_field=%lf ferm_0=%lf ferm_1=%lf ferm_2=%lf  dh=%lf\n", (enepx - enep), g_beta*(gauge_energy - new_gauge_energy), (enerphi0x - enerphi0), (enerphi1x - enerphi1), (enerphi2x - enerphi2), dh); */
   expmdh = exp(-dh);
 
   /* the random number is only taken at node zero and then distributed to 
@@ -178,7 +179,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   /* The trajectory is integrated back      */
   if(return_check == 1) {
     if(accept == 1) {
-      write_lime_gauge_field( "conf.save", gauge_energy/(6.*VOLUME*g_nproc), 0);
+      write_lime_gauge_field( "conf.save", gauge_energy/(6.*VOLUME*g_nproc), 0, 64);
     }
     g_sloppy_precision = 1;
     /* run the trajectory back */
