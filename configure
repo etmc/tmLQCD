@@ -9757,7 +9757,7 @@ _ACEOF
   LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
   if test $with_lapack = yes; then
     LIBS="-lesslbg -llapack.rts -lesslbg -lxlf90 -lxlfmath -lxl -lxlopt $LIBS"
-    LDFLAGS="$LDFLAGS -L/opt/ibmcmp/xlf/bg/10.1/blrts_lib -L/bgl/local/lib/"
+    LDFLAGS="$LDFLAGS -L/opt/ibmcmp/xlf/bg/10.1/blrts_lib -L/bgl/local/lib/ -L/opt/ibmmath/lib/"
   fi
 
   if test "$CCDEP" = "gcc"; then
