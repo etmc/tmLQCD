@@ -51,7 +51,8 @@
 int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_energy, 
     char * filename, const double dtau, const int Nsteps, const int nsmall,
     const double tau, int * n_int, const int return_check,
-    double * lambda, const int rngrepro) {
+    double * lambda, const int rngrepro) 
+{
   su3 *v, *w;
   static int ini_g_tmp = 0;
   int rlxd_state[105];
@@ -79,16 +80,18 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   double ret_enerphi0 = 0., ret_enerphi1 = 0., ret_enerphi2 = 0.;
   FILE * rlxdfile=NULL, * datafile=NULL, * ret_check_file=NULL;
 
-  if(ini_g_tmp == 0) {
-    ini_g_tmp = 1;
-    init_gauge_tmp(VOLUME);
+  if(ini_g_tmp == 0) 
+  {
+      ini_g_tmp = 1;
+      init_gauge_tmp(VOLUME);
   }
 
   /* This is needed in order to let the */
   /* extended version of leap frog and  */
   /* Sexton-Weingarten work also with   */
   /* only one pseudo fermion field      */
-  if(g_nr_of_psf == 1) {
+  if(g_nr_of_psf == 1) 
+  {
     halfstep = 1;
   }
 
@@ -108,7 +111,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
    *  here the momentum and spinor fields are initialized 
    *  and their respective actions are calculated
    */
-  initialize_hmc_evolution(spinor_volume, rngrepro, &enerphi0, &enerphi1, &enerphi2, &enep, &idis0, &idis1, &idis2, &saveiter_max);
+  initialize_hmc_trajectory(spinor_volume, rngrepro, &enerphi0, &enerphi1, &enerphi2, &enep, &idis0, &idis1, &idis2, &saveiter_max);
 
   g_sloppy_precision = 1;
 
@@ -137,12 +140,15 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     mn2p_integrator(n_int, tau, g_nr_of_psf, lambda);
   }
 
-  weight_of_new_configuration(spinor_volume, rngrepro, &plaquette_energy, &new_plaquette_energy, &enerphi0x, &enerphi1x, &enerphi2x, &enepx, &rectangle_energy, &new_rectangle_energy, &gauge_energy, &new_gauge_energy, &idis0, &idis1, &idis2, &saveiter_max);
+  weight_of_new_configuration(spinor_volume, rngrepro, &enerphi0x, &enerphi1x, &enerphi2x, &enepx, rectangle_energy, &new_rectangle_energy, plaquette_energy, &new_plaquette_energy, &gauge_energy, &new_gauge_energy, &idis0, &idis1, &idis2, &saveiter_max);
 
   /* Compute the energy difference */
   dh = (enepx - enep) + g_beta*(gauge_energy - new_gauge_energy) +
     (enerphi0x - enerphi0) + (enerphi1x - enerphi1) + (enerphi2x - enerphi2);
-  /*printf("mom=%lf gauge_field=%lf ferm_0=%lf ferm_1=%lf ferm_2=%lf  dh=%lf\n", (enepx - enep), g_beta*(gauge_energy - new_gauge_energy), (enerphi0x - enerphi0), (enerphi1x - enerphi1), (enerphi2x - enerphi2), dh);*/
+  /*dh = (enepx - enep) + g_beta*(gauge_energy - new_gauge_energy) +
+    (enerphi0x - enerphi0) + (enerphi1x - enerphi1) + (enerphi2x - enerphi2);*/
+  printf("beta = %lf gauge_field_before=%lf gauge_energy=%lf\n", g_beta, gauge_energy,  new_gauge_energy);
+  printf("mom=%lf gauge_field=%lf ferm_0=%lf ferm_1=%lf ferm_2=%lf  dh=%lf\n", (enepx - enep), g_beta*(gauge_energy - new_gauge_energy), (enerphi0x - enerphi0), (enerphi1x - enerphi1), (enerphi2x - enerphi2), dh);
   expmdh = exp(-dh);
 
   /* the random number is only taken at node zero and then distributed to 

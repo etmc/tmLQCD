@@ -11,7 +11,7 @@
 #include "linalg_eo.h"
 
 
-void weight_of_new_configuration(int spinor_volume, const int rngrepro, double * plaquette_energy, double * new_plaquette_energy, double * enerphi0x, double * enerphi1x, double * enerphi2x, double * enepx, double * rectangle_energy, double * new_rectangle_energy, double * gauge_energy, double * new_gauge_energy,  int * idis0, int * idis1, int * idis2, int * saveiter_max)
+void weight_of_new_configuration(int spinor_volume, const int rngrepro, double * enerphi0x, double * enerphi1x, double * enerphi2x, double * enepx, double * rectangle_energy, double * new_rectangle_energy, double * plaquette_energy, double* new_plaquette_energy, double * gauge_energy, double * new_gauge_energy,  int * idis0, int * idis1, int * idis2, int * saveiter_max)
 {
 
   g_sloppy_precision = 0;
@@ -19,7 +19,8 @@ void weight_of_new_configuration(int spinor_volume, const int rngrepro, double *
   *enepx=moment_energy();
 
   *new_plaquette_energy=measure_gauge_action();
-  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) 
+  {
     *new_rectangle_energy = measure_rectangles();
   }
   *gauge_energy = g_rgi_C0 * (*plaquette_energy) + g_rgi_C1 * (*rectangle_energy);
@@ -66,9 +67,9 @@ void weight_of_new_configuration(int spinor_volume, const int rngrepro, double *
       g_mu = g_mu1;
       Qtm_plus_psi(g_spinor_field[DUM_DERI+5], g_spinor_field[second_psf]);
       g_mu = g_mu2;
-      if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-      chrono_guess(g_spinor_field[3], g_spinor_field[DUM_DERI+5], g_csg_field[1], g_csg_index_array[1],
-          g_csg_N[2], g_csg_N[3], VOLUME/2, &Qtm_pm_psi);
+      if(fabs(g_mu)>0.) 
+          ITER_MAX_BCG = 0;
+      chrono_guess(g_spinor_field[3], g_spinor_field[DUM_DERI+5], g_csg_field[1], g_csg_index_array[1], g_csg_N[2], g_csg_N[3], VOLUME/2, &Qtm_pm_psi);
       *idis1 += bicg(3, DUM_DERI+5, g_eps_sq_acc2, g_relative_precision_flag); 
       ITER_MAX_BCG = *saveiter_max;
       /* Compute the energy contr. from second field */
@@ -112,5 +113,4 @@ void weight_of_new_configuration(int spinor_volume, const int rngrepro, double *
       *enerphi2x = square_norm(g_spinor_field[5], VOLUME);
     }
   }
-
 }
