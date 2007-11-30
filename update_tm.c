@@ -177,39 +177,55 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
 
   /* Here a reversibility test is performed */
   /* The trajectory is integrated back      */
-  if(return_check == 1) {
-    if(accept == 1) {
+  if(return_check == 1) 
+  {
+    if(accept == 1) 
+    {
       write_lime_gauge_field( "conf.save", gauge_energy/(6.*VOLUME*g_nproc), 0, 64);
     }
     g_sloppy_precision = 1;
     /* run the trajectory back */
-    if(integtyp == 1) {
+    if(integtyp == 1) 
+    {
       /* Leap-frog integration scheme */
       leap_frog(-dtau, Nsteps, nsmall); 
     }
-    else if(integtyp == 2) {
-      /* Sexton Weingarten integration scheme */
-      sexton(-dtau, Nsteps, nsmall);
-    }
-    else if(integtyp == 3) {
-      ext_leap_frog(n_int, -tau, g_nr_of_psf, halfstep);
-    }
-    else if(integtyp == 4) {
-      ext_sexton_weingarten(n_int, -tau, g_nr_of_psf, halfstep);
-    }
-    else if(integtyp == 5) {
-      impr_leap_frog(n_int, -tau, g_nr_of_psf);
-    }
-    else if(integtyp == 6) {
-      mn2_integrator(n_int, -tau, g_nr_of_psf, halfstep, lambda);
-    }
-    else if(integtyp == 7) {
-      mn2p_integrator(n_int, -tau, g_nr_of_psf, lambda);
-    }
+    else 
+      if(integtyp == 2) 
+      {
+        /* Sexton Weingarten integration scheme */
+        sexton(-dtau, Nsteps, nsmall);
+      }
+      else 
+        if(integtyp == 3) 
+        {
+          ext_leap_frog(n_int, -tau, g_nr_of_psf, halfstep);
+        }
+        else 
+          if(integtyp == 4) 
+          {
+            ext_sexton_weingarten(n_int, -tau, g_nr_of_psf, halfstep);
+          }
+          else 
+            if(integtyp == 5) 
+            {
+              impr_leap_frog(n_int, -tau, g_nr_of_psf);
+            }
+            else 
+              if(integtyp == 6) 
+              {
+                mn2_integrator(n_int, -tau, g_nr_of_psf, halfstep, lambda);
+              }
+              else 
+                if(integtyp == 7) 
+                {
+                  mn2p_integrator(n_int, -tau, g_nr_of_psf, lambda);
+                }
     g_sloppy_precision = 0;
-    ret_enep=moment_energy();
-    ret_plaquette_energy=measure_gauge_action();
-    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+    ret_enep = moment_energy();
+    ret_plaquette_energy = measure_gauge_action();
+    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) 
+    {
       ret_rectangle_energy = measure_rectangles();
     }
     ret_gauge_energy = g_rgi_C0 * ret_plaquette_energy + g_rgi_C1 * ret_rectangle_energy;
@@ -218,11 +234,11 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     assign(g_spinor_field[2], g_spinor_field[DUM_DERI+4], spinor_volume);
     g_mu = g_mu1;
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    ret_idis0=bicg(2, first_psf, g_eps_sq_acc, g_relative_precision_flag);
+    ret_idis0 = bicg(2, first_psf, g_eps_sq_acc, g_relative_precision_flag);
     ITER_MAX_BCG = saveiter_max;
     assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], spinor_volume);
 
-    ret_enerphi0=square_norm(g_spinor_field[2], spinor_volume);
+    ret_enerphi0 = square_norm(g_spinor_field[2], spinor_volume);
     if(g_nr_of_psf > 1) 
     {
       if(even_odd_flag)
@@ -239,8 +255,16 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
       }
       else
       {
-        fprintf(stderr, "This has not been implemented yet. Exiting...\n");
-        exit(1);
+        assign(g_spinor_field[3], g_spinor_field[DUM_DERI+5], VOLUME);
+        g_mu = g_mu1;
+        assign(g_spinor_field[DUM_DERI+5], g_spinor_field[second_psf], VOLUME);
+        Q_plus_psi(g_spinor_field[second_psf], g_spinor_field[DUM_DERI+5]);
+        g_mu = g_mu2;
+        if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+        ret_idis1 += bicgstab_complex(g_spinor_field[3], g_spinor_field[second_psf], 1000, g_eps_sq_acc, g_relative_precision_flag, VOLUME, Q_minus_psi);
+        ITER_MAX_BCG = saveiter_max;
+        assign(g_spinor_field[DUM_DERI+5], g_spinor_field[DUM_DERI+6], VOLUME);
+        ret_enerphi1 = square_norm(g_spinor_field[3], VOLUME);
       }
     }
     if(g_nr_of_psf > 2) 
@@ -258,8 +282,15 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
       }
       else
       {
-        fprintf(stderr, "This has not been implemented yet. Exiting...\n");
-        exit(1);
+        assign(g_spinor_field[5], g_spinor_field[DUM_DERI+6], VOLUME);
+        g_mu = g_mu2;
+        assign(g_spinor_field[DUM_DERI+6], g_spinor_field[third_psf], VOLUME);
+        Q_plus_psi(g_spinor_field[third_psf], g_spinor_field[DUM_DERI+6]);
+        g_mu = g_mu3;
+        if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+        ret_idis2 += bicgstab_complex(g_spinor_field[5], g_spinor_field[third_psf], 1000, g_eps_sq_acc, g_relative_precision_flag, VOLUME, Q_minus_psi);
+        ITER_MAX_BCG = saveiter_max;
+        ret_enerphi2 = square_norm(g_spinor_field[5], VOLUME);
       }
     }
 
