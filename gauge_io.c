@@ -37,6 +37,9 @@ int write_binary_gauge_data(LimeWriter * limewriter,
   int coords[4];
   n_uint64_t bytes;
   DML_SiteRank rank;
+#ifdef MPI
+  MPI_Status mpi_status;
+#endif
 
   DML_checksum_init(ans);
 
