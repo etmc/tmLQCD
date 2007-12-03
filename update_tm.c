@@ -230,68 +230,91 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
     ret_gauge_energy = g_rgi_C0 * ret_plaquette_energy + g_rgi_C1 * ret_rectangle_energy;
 
-    /*compute the energy contributions from the pseudo-fermions */
+    /*
+     *  compute the energy contributions from the pseudo-fermions 
+     */
     assign(g_spinor_field[2], g_spinor_field[DUM_DERI+4], spinor_volume);
     g_mu = g_mu1;
     if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    ret_idis0 = bicg(2, first_psf, g_eps_sq_acc, g_relative_precision_flag);
+    if(even_odd_flag)
+    {
+      ret_idis0 = bicg(2, first_psf, g_eps_sq_acc, g_relative_precision_flag);
+    }
+    else
+    {
+      ret_idis0 = bicgstab_complex(g_spinor_field[2], g_spinor_field[first_psf], 1000, g_eps_sq_acc, g_relative_precision_flag, spinor_volume, Q_minus_psi);
+    }
     ITER_MAX_BCG = saveiter_max;
     assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], spinor_volume);
-
     ret_enerphi0 = square_norm(g_spinor_field[2], spinor_volume);
+
+    /*
+     *  handle 2nd pseudofermion field
+     */
     if(g_nr_of_psf > 1) 
     {
+      assign(g_spinor_field[3], g_spinor_field[DUM_DERI+5], spinor_volume);
+      g_mu = g_mu1;
+
       if(even_odd_flag)
       {
-        assign(g_spinor_field[3], g_spinor_field[DUM_DERI+5], VOLUME/2);
-        g_mu = g_mu1;
         Qtm_plus_psi(g_spinor_field[second_psf], g_spinor_field[second_psf]);
-        g_mu = g_mu2;
-        if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-        ret_idis1 += bicg(3, second_psf, g_eps_sq_acc, g_relative_precision_flag);
-        ITER_MAX_BCG = saveiter_max;
-        assign(g_spinor_field[DUM_DERI+5], g_spinor_field[DUM_DERI+6], VOLUME/2);
-        ret_enerphi1 = square_norm(g_spinor_field[3], VOLUME/2);
       }
       else
       {
-        assign(g_spinor_field[3], g_spinor_field[DUM_DERI+5], VOLUME);
-        g_mu = g_mu1;
-        assign(g_spinor_field[DUM_DERI+5], g_spinor_field[second_psf], VOLUME);
-        Q_plus_psi(g_spinor_field[second_psf], g_spinor_field[DUM_DERI+5]);
-        g_mu = g_mu2;
-        if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-        ret_idis1 += bicgstab_complex(g_spinor_field[3], g_spinor_field[second_psf], 1000, g_eps_sq_acc, g_relative_precision_flag, VOLUME, Q_minus_psi);
-        ITER_MAX_BCG = saveiter_max;
-        assign(g_spinor_field[DUM_DERI+5], g_spinor_field[DUM_DERI+6], VOLUME);
-        ret_enerphi1 = square_norm(g_spinor_field[3], VOLUME);
+        assign(g_spinor_field[DUM_DERI+7], g_spinor_field[second_psf], spinor_volume);
+        Q_plus_psi(g_spinor_field[second_psf], g_spinor_field[DUM_DERI+7]);
       }
+
+      g_mu = g_mu2;
+      if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+
+      if(even_odd_flag)
+      {
+        ret_idis1 += bicg(3, second_psf, g_eps_sq_acc, g_relative_precision_flag);
+      }
+      else
+      {
+        ret_idis1 += bicgstab_complex(g_spinor_field[3], g_spinor_field[second_psf], 1000, g_eps_sq_acc, g_relative_precision_flag, spinor_volume, Q_minus_psi);
+      }
+
+      ITER_MAX_BCG = saveiter_max;
+      assign(g_spinor_field[DUM_DERI+5], g_spinor_field[DUM_DERI+6], spinor_volume);
+      ret_enerphi1 = square_norm(g_spinor_field[3], spinor_volume);
     }
+
+    /*
+     *  handle 3rd pseudofermion field
+     */
     if(g_nr_of_psf > 2) 
     {
+      assign(g_spinor_field[5], g_spinor_field[DUM_DERI+6], spinor_volume);
+      g_mu = g_mu2;
+
       if(even_odd_flag)
       {
-        assign(g_spinor_field[5], g_spinor_field[DUM_DERI+6], VOLUME/2);
-        g_mu = g_mu2;
         Qtm_plus_psi(g_spinor_field[third_psf], g_spinor_field[third_psf]);
-        g_mu = g_mu3;
-        if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-        ret_idis2 += bicg(5, third_psf, g_eps_sq_acc, g_relative_precision_flag);
-        ITER_MAX_BCG = saveiter_max;
-        ret_enerphi2 = square_norm(g_spinor_field[5], VOLUME/2);
       }
       else
       {
-        assign(g_spinor_field[5], g_spinor_field[DUM_DERI+6], VOLUME);
-        g_mu = g_mu2;
-        assign(g_spinor_field[DUM_DERI+6], g_spinor_field[third_psf], VOLUME);
-        Q_plus_psi(g_spinor_field[third_psf], g_spinor_field[DUM_DERI+6]);
-        g_mu = g_mu3;
-        if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-        ret_idis2 += bicgstab_complex(g_spinor_field[5], g_spinor_field[third_psf], 1000, g_eps_sq_acc, g_relative_precision_flag, VOLUME, Q_minus_psi);
-        ITER_MAX_BCG = saveiter_max;
-        ret_enerphi2 = square_norm(g_spinor_field[5], VOLUME);
+        assign(g_spinor_field[DUM_DERI+7], g_spinor_field[third_psf], spinor_volume);
+        Q_plus_psi(g_spinor_field[third_psf], g_spinor_field[DUM_DERI+7]);
       }
+
+      g_mu = g_mu3;
+      if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+
+      if(even_odd_flag)
+      {
+        ret_idis2 += bicg(5, third_psf, g_eps_sq_acc, g_relative_precision_flag);
+      }
+      else
+      {
+        ret_idis2 += bicgstab_complex(g_spinor_field[5], g_spinor_field[third_psf], 1000, g_eps_sq_acc, g_relative_precision_flag, spinor_volume, Q_minus_psi);
+      }
+
+      ITER_MAX_BCG = saveiter_max;
+      ret_enerphi2 = square_norm(g_spinor_field[5], spinor_volume);
     }
 
     /* Compute the energy difference */

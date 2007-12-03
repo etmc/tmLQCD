@@ -110,7 +110,7 @@ int main(int argc,char *argv[]) {
 
   g_running_phmc = 0;
   DUM_DERI = 6;
-  DUM_SOLVER = DUM_DERI+7;
+  DUM_SOLVER = DUM_DERI+8;
   DUM_MATRIX = DUM_SOLVER+6;
   NO_OF_SPINORFIELDS = DUM_MATRIX+6;
 
