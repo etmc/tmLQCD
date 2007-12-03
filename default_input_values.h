@@ -101,6 +101,7 @@
 #define _default_stilde_min 0.01
 #define _default_degree_of_p 48
 #define _default_propagator_splitted 1
+#define _default_source_splitted 1
 #define _default_source_location 0
 #define _default_no_eigenvalues 10
 #define _default_eigenvalue_precision 1.e-5

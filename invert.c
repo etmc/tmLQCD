@@ -213,12 +213,7 @@ int main(int argc,char *argv[]) {
     if (g_proc_id == 0){
       printf("Reading Gauge field from file %s\n", conf_filename); fflush(stdout);
     }
-    if(gauge_precision_read_flag == 64) {
-      read_lime_gauge_field(conf_filename);
-    }
-    else if(gauge_precision_read_flag == 32){
-      read_lime_gauge_field_singleprec(conf_filename);
-    }
+    read_lime_gauge_field(conf_filename);
     if (g_proc_id == 0){
       printf("done!\n"); fflush(stdout);
     }
@@ -260,43 +255,28 @@ int main(int argc,char *argv[]) {
           source_spinor_field_point_from_file(g_spinor_field[0], g_spinor_field[1], is, ic, source_location);
       }
       else {
-	if(source_format_flag == 0) {
-	  sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", source_input_filename, mass_number, is, ic, nstore); 
+	if(source_splitted) {
+	  sprintf(conf_filename,"%s.%.2d", source_input_filename, ix);
 	  if(g_proc_id == 0) {
 	    printf("Reading source from %s\n", conf_filename);
 	  }
-	  if(propagator_splitted) {
-	    read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, ix); 
-	  }
-	  read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 1);
-/* 	  read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], conf_filename);  */
+	  read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 0);
 	}
-	else if(source_format_flag == 1) {
-	  if(source_time_slice > T*g_nproc_t || source_time_slice < 0) {
-	    sprintf(conf_filename,"%s", source_input_filename);
-	  }
-	  else {
-	    sprintf(conf_filename,"%s.%.4d.%.2d.%.1d", source_input_filename, nstore, source_time_slice, ix);
-	  }
+	else {
+	  sprintf(conf_filename,"%s", source_input_filename);
 	  if(g_proc_id == 0) {
 	    printf("Reading source from %s\n", conf_filename);
 	  }
-	  read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename, -1, 1);
+	  read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, ix);
 	}
       }
       if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
 
-      if(source_format_flag == 0) {
-	sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", "prop.mass", mass_number, is, ic, nstore);
+      if(propagator_splitted) {
+	sprintf(conf_filename,"%s.%2d.inverted", source_input_filename, ix);
       }
-      else if(source_format_flag == 1) {
-	if(source_time_slice > T*g_nproc_t || source_time_slice < 0) {
-	  sprintf(conf_filename,"%s.inverted", source_input_filename);
-	}
-	else {
-	  sprintf(conf_filename, "%s.%.4d.%.2d.%.1d.inverted", 
-		  source_input_filename, nstore, source_time_slice, ix);
-	}
+      else {
+	sprintf(conf_filename,"%s.inverted", source_input_filename);
       }
 
       /* If the solver is _not_ CG we might read in */
@@ -354,23 +334,25 @@ int main(int argc,char *argv[]) {
       if(propagator_splitted) {
 	write_propagator_type(write_prop_format_flag, conf_filename);
 	write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
+	/* write the source depending on format */
 	if(write_prop_format_flag == 1) {
 	  write_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, prop_precision_flag);
 	}
-	write_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, prop_precision_flag);
+	write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, prop_precision_flag);
 	/*           write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0); */
       }
       else {
-	sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore);
+	/* 	sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore); */
 	
 	if(ix == index_start) {
 	  write_propagator_type(write_prop_format_flag, conf_filename);
 	}
 	write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
+	/* write the source depending on format */
 	if(write_prop_format_flag == 1) {
 	  write_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, prop_precision_flag);
 	}
-	write_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, prop_precision_flag);
+	write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, prop_precision_flag);
       }
       
 

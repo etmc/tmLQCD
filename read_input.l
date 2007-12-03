@@ -92,6 +92,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   double stilde_min;
   int degree_of_p;
   int propagator_splitted;
+  int source_splitted;
   int source_location;
   int no_eigenvalues;
   double eigenvalue_precision;
@@ -200,6 +201,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x SMIN
 %x DEGP
 %x SPLITPROP
+%x SPLITSOURCE
 %x SRCLOC
 %x SUBEVCG
 %x NOEV
@@ -333,6 +335,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^PhmcStildeMin{SPC}*={SPC}*                BEGIN(SMIN);
 ^PhmcDegreeOfP{SPC}*={SPC}*                BEGIN(DEGP);
 ^SplittedPropagator{SPC}*={SPC}*           BEGIN(SPLITPROP);
+^SplittedSource{SPC}*={SPC}*               BEGIN(SPLITSOURCE);
 ^SourceLocation{SPC}*={SPC}*               BEGIN(SRCLOC);
 ^TimeScaleHeavyDoublet{SPC}*={SPC}*        BEGIN(HEAVYTS);
 ^UseEvenOdd{SPC}*={SPC}*                   BEGIN(EO);
@@ -932,11 +935,19 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 <SPLITPROP>yes {
   propagator_splitted=1;
-  if(verbose!=0) printf("Split the propagator in several files!\n");
+  if(verbose!=0) printf("Split the propagator in several files! (invert)\n");
 }
 <SPLITPROP>no {
   propagator_splitted=0;
-  if(verbose!=0) printf("Do not split the propagator in several files (default)!\n");
+  if(verbose!=0) printf("Do not split the propagator in several files (default) (invert)!\n");
+}
+<SPLITSOURCE>yes {
+  source_splitted=1;
+  if(verbose!=0) printf("Expect source to be split in several files (invert)!\n");
+}
+<SPLITSOURCE>no {
+  source_splitted=0;
+  if(verbose!=0) printf("Do not expect source to be split in several files (default) (invert)!\n");
 }
 <SRCLOC>{DIGIT}+ {
   source_location=atoi(yytext);
@@ -1004,7 +1015,7 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
 <GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC,USESTOUT,STOUTRHO,STOUTITER,PHMCFLAV>#   BEGIN(COMMENT);
 <SMIN,SMAX,DEGP,PRECEV,NOEV>#  BEGIN(COMMENT);
-<PCOMPUTEEVS,COMPUTEEVS,SPLITPROP,SRCLOC>#  BEGIN(COMMENT);
+<PCOMPUTEEVS,COMPUTEEVS,SPLITPROP,SPLITSOURCE,SRCLOC>#  BEGIN(COMMENT);
 <SOURCETS,SUBEVCG,EO,WRPROPFLAG>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC,PROPPREC,HEAVYTS>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
@@ -1241,6 +1252,10 @@ FILENAME [a-zA-z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   printf("Unknown value for SplittedPropagator in line %d! Must be yes or no. Exiting...!\n", line_of_file);
   exit(1);
 }
+<SPLITSOURCE>. {
+  printf("Unknown value for SplittedSource in line %d! Must be yes or no. Exiting...!\n", line_of_file);
+  exit(1);
+}
 <SRCLOC>. {
   printf("Unknown source_location in line %d.\n Must be an integer. Exiting...!\n",line_of_file);
   exit(1);
@@ -1389,6 +1404,7 @@ int read_input(char * conf_file){
   stilde_max = _default_stilde_max;
   degree_of_p = _default_degree_of_p;
   propagator_splitted = _default_propagator_splitted;
+  source_splitted = _default_source_splitted;
   source_location = _default_source_location;
   eigenvalue_precision = _default_eigenvalue_precision;
   no_eigenvalues = _default_no_eigenvalues;

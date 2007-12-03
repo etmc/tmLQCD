@@ -36,6 +36,17 @@ int write_propagator(spinor * const s, spinor * const r, char * filename,
   return(err);
 }
 
+/* write a one flavour source to file */
+
+int write_source(spinor * const s, spinor * const r, char * filename, 
+		 const int append, const int prec) {
+  int err = 0;
+
+  write_source_format(filename, prec, 1, T, LX, LY, LZ, 4, 3);
+  err = write_lime_spinor(s, r, filename, append, prec);
+  return(err);
+}
+
 /* write two flavour operator to file */
 
 int write_double_propagator(spinor * const s, spinor * const r, 
@@ -203,7 +214,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
 	  }
 	  rank = (DML_SiteRank) (g_proc_coords[1]*LX + 
 				 (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
-				  + g_proc_coords[2]*LY+y)*LX*g_nproc_x);
+				  + g_proc_coords[2]*LY+y)*LX*g_nproc_x + x);
 	  if(prec == 32) {
 	    status = limeReaderReadData(tmp2, &bytes, limereader);
 	    DML_checksum_accum(ans,rank,(char *) tmp2, sizeof(spinor)/2);
@@ -237,6 +248,75 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
 #endif
   return(0);
 }
+
+int write_source_type(const int type, char * filename) {
+  FILE * ofs = NULL;
+  LimeWriter * limewriter = NULL;
+  LimeRecordHeader * limeheader = NULL;
+  int status = 0;
+  int ME_flag=1, MB_flag=1;
+  char message[500];
+  n_uint64_t bytes;
+
+  if(g_cart_id == 0) {
+    ofs = fopen(filename, "w");
+
+    if(ofs == (FILE*)NULL) {
+      fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    limewriter = limeCreateWriter( ofs );
+    if(limewriter == (LimeWriter*)NULL) {
+      fprintf(stderr, "LIME error in file %s for writing!\n Aborting...\n", filename);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+
+
+    if(type == 0) {
+      sprintf(message,"DiracFermion_Source");
+      bytes = strlen( message );
+    }
+    else if (type == 1) {
+      sprintf(message,"DiracFermion_ScalarSource");
+      bytes = strlen( message );
+    }
+    else if (type == 2) {
+      sprintf(message,"DiracFermion_FourScalarSource");
+      bytes = strlen( message );
+    }
+    else if (type == 3) {
+      sprintf(message,"DiracFermion_TwelveScalarSource");
+      bytes = strlen( message );
+    }
+
+    limeheader = limeCreateHeader(MB_flag, ME_flag, "source-type", bytes);
+    status = limeWriteRecordHeader( limeheader, limewriter);
+    if(status < 0 ) {
+      fprintf(stderr, "LIME write header error %d\n", status);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    limeDestroyHeader( limeheader );
+    limeWriteRecordData(message, &bytes, limewriter);
+
+    limeDestroyWriter( limewriter );
+    fclose(ofs);
+    fflush(ofs);
+  }
+  return(0);
+}
+
 
 int write_propagator_type(const int type, char * filename) {
 
@@ -287,7 +367,7 @@ int write_propagator_type(const int type, char * filename) {
       bytes = strlen( message );
     }
 
-    limeheader = limeCreateHeader(MB_flag, ME_flag, "etmc-propagator-type", bytes);
+    limeheader = limeCreateHeader(MB_flag, ME_flag, "propagator-type", bytes);
     status = limeWriteRecordHeader( limeheader, limewriter);
     if(status < 0 ) {
       fprintf(stderr, "LIME write header error %d\n", status);
@@ -342,6 +422,63 @@ int write_propagator_format(char * filename, const int prec, const int no_flavou
     sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<etmcFormat>\n<field>diracFermion</field>\n<precision>%d</precision>\n<flavours>%d</flavours>\n<lx>%d</lx>\n<ly>%d</ly>\n<lz>%d</lz>\n<lt>%d</lt>\n</etmcFormat>", prec, no_flavours, LX*g_nproc_x, LY*g_nproc_y, LZ*g_nproc_z, T*g_nproc_t);
     bytes = strlen( message );
     limeheader = limeCreateHeader(MB_flag, ME_flag, "etmc-propagator-format", bytes);
+    status = limeWriteRecordHeader( limeheader, limewriter);
+    if(status < 0 ) {
+      fprintf(stderr, "LIME write header error %d\n", status);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    limeDestroyHeader( limeheader );
+    limeWriteRecordData(message, &bytes, limewriter);
+
+    limeDestroyWriter( limewriter );
+    fclose(ofs);
+    fflush(ofs);
+  }
+
+  return(0);
+}
+
+int write_source_format(char * filename, const int prec, const int no_flavours,
+			const int t, const int lx, const int ly, const int lz,
+			const int is, const int ic) {
+  FILE * ofs = NULL;
+  LimeWriter * limewriter = NULL;
+  LimeRecordHeader * limeheader = NULL;
+  int status = 0;
+  int ME_flag=0, MB_flag=1;
+  char message[500];
+  n_uint64_t bytes;
+  /*   char * message; */
+
+
+  if(g_cart_id == 0) {
+    ofs = fopen(filename, "a");
+
+    if(ofs == (FILE*)NULL) {
+      fprintf(stderr, "Could not open file %s for writing!\n Aborting...\n", filename);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    limewriter = limeCreateWriter( ofs );
+    if(limewriter == (LimeWriter*)NULL) {
+      fprintf(stderr, "LIME error in file %s for writing!\n Aborting...\n", filename);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+
+    sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<etmcFormat>\n<field>diracFermion</field>\n<precision>%d</precision>\n<flavours>%d</flavours>\n<lx>%d</lx>\n<ly>%d</ly>\n<lz>%d</lz>\n<lt>%d</lt>\n<spin>%d</spin>\n<colour>%d</colour>\n</etmcFormat>", prec, no_flavours, lx, ly, lz, t, is, ic);
+    bytes = strlen( message );
+    limeheader = limeCreateHeader(MB_flag, ME_flag, "etmc-source-format", bytes);
     status = limeWriteRecordHeader( limeheader, limewriter);
     if(status < 0 ) {
       fprintf(stderr, "LIME write header error %d\n", status);
@@ -460,11 +597,11 @@ int get_propagator_type(char * filename) {
       break;
     }
     header_type = limeReaderType(limereader);
-    if(strcmp("etmc-propagator-type",header_type) == 0) break;
+    if(strcmp("propagator-type",header_type) == 0) break;
   }
   if(status == LIME_EOF) {
     if(g_proc_id == 0) {
-      fprintf(stderr, "no etmc-propagator-type record found in file %s\n",filename);
+      fprintf(stderr, "no propagator-type record found in file %s\n",filename);
     }
     limeDestroyReader(limereader);
     fclose(ifs);
@@ -478,6 +615,56 @@ int get_propagator_type(char * filename) {
   else if(strcmp("DiracFermion_Source_Sink_Pairs", tmp)) return(1);
   else if(strcmp("DiracFermion_ScalarSource_TwelveSink", tmp)) return(2);
   else if(strcmp("DiracFermion_ScalarSource_FourSink", tmp)) return(3);
+  else return(-1);
+}
+
+int get_source_type(char * filename) {
+  FILE * ifs;
+  int status=0;
+  n_uint64_t bytes;
+  char * header_type;
+  char tmp[500];
+  LimeReader * limereader;
+  
+  if((ifs = fopen(filename, "r")) == (FILE*)NULL) {
+    if(g_proc_id == 0) {
+      fprintf(stderr, "Error opening file %s\n", filename);
+    }
+    return(-1);
+  }
+
+  limereader = limeCreateReader( ifs );
+  if( limereader == (LimeReader *)NULL ) {
+    if(g_proc_id == 0) {
+      fprintf(stderr, "Unable to open LimeReader\n");
+    }
+    return(-1);
+  }
+  while( (status = limeReaderNextRecord(limereader)) != LIME_EOF ) {
+    if(status != LIME_SUCCESS ) {
+      fprintf(stderr, "limeReaderNextRecord returned error with status = %d!\n", status);
+      status = LIME_EOF;
+      break;
+    }
+    header_type = limeReaderType(limereader);
+    if(strcmp("source-type",header_type) == 0) break;
+  }
+  if(status == LIME_EOF) {
+    if(g_proc_id == 0) {
+      fprintf(stderr, "no source-type record found in file %s\n",filename);
+    }
+    limeDestroyReader(limereader);
+    fclose(ifs);
+    return(-1);
+  }
+  bytes = limeReaderBytes(limereader);
+  status = limeReaderReadData(tmp, &bytes, limereader);
+  limeDestroyReader(limereader);
+  fclose(ifs);
+  if(strcmp("DiracFermion_Source", tmp)) return(0);
+  else if(strcmp("DiracFermion_ScalarSource", tmp)) return(1);
+  else if(strcmp("DiracFermion_FourScalarSource", tmp)) return(2);
+  else if(strcmp("DiracFermion_TwelveScalarSource", tmp)) return(3);
   else return(-1);
 }
 

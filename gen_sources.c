@@ -10,6 +10,7 @@
 *******************************************************************************/
 #define MAIN_PROGRAM
 
+#include "lime.h"
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -27,6 +28,8 @@
 #include "geometry_eo.h"
 #include "start.h"
 #include "io.h"
+#include "io_utils.h"
+#include "propagator_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "source_generation.h"
@@ -52,6 +55,7 @@ void usage() {
   fprintf(stdout, "         -p use plain output filename [default, complex]\n");
   fprintf(stdout, "         -O pion only -> wallsource at start timeslice \n");
   fprintf(stdout, "         -E extended source for pion only \n");
+  fprintf(stdout, "         -d double precision \n");
   fprintf(stdout, "         -h|-? this help \n\n");
   fprintf(stdout, "plain output file (-p) corresponds to basename.00 - basename.11\n");
   fprintf(stdout, "complex ones (no -p) to basename.samplenr.gaugenr.tsnr.00 - 11\n");
@@ -66,10 +70,11 @@ int main(int argc,char *argv[]) {
  
   char spinorfilename[100];
   char * filename = NULL;
-  int sample=0, ts=0, ss=1, typeflag = 1, t0=0, formatflag = 0, piononly, ext_sourceflag = 0;
-  int is, ic, j, filenameflag = 0;
+  int sample=0, ts=0, ss=1, typeflag = 1, t0=0, piononly = 0, ext_sourceflag = 0;
+  int is, ic, j, filenameflag = 0, appendflag = 0;
   complex co;
   int c;
+  int prec=32;
 
   verbose = 0;
   g_use_clover_flag = 0;
@@ -83,7 +88,7 @@ int main(int argc,char *argv[]) {
 #endif
 
 
-  while ((c = getopt(argc, argv, "h?NCpOEo:L:T:n:t:s:S:P:")) != -1) {
+  while ((c = getopt(argc, argv, "h?NCpOEdao:L:T:n:t:s:S:P:")) != -1) {
     switch (c) {
     case 'L':
       L = atoi(optarg);
@@ -97,6 +102,9 @@ int main(int argc,char *argv[]) {
       break;
     case 'N':
       typeflag = 0;
+      break;
+    case 'd':
+      prec = 64;
       break;
     case 'O':
       piononly = 1;
@@ -116,9 +124,6 @@ int main(int argc,char *argv[]) {
     case 'P':
       ts = atoi(optarg);
       break;
-    case 'C':
-      formatflag = 1;
-      break;
     case 'o':
       filename = calloc(200, sizeof(char));
       strcpy(filename,optarg);
@@ -128,6 +133,9 @@ int main(int argc,char *argv[]) {
       break;
     case 'p':
       filenameflag = 1;
+      break;
+    case 'a':
+      appendflag = 1;
       break;
     case 'h':
     case '?':
@@ -174,25 +182,28 @@ int main(int argc,char *argv[]) {
   if(!piononly) {
     for(is = 0; is < 4; is ++) {
       for(ic = 0; ic < 3; ic++) {
-	if(!filenameflag) {
+	if(!filenameflag && !appendflag) {
 	  sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d.%.2d", filename, nstore, sample, t0, 3*is+ic); 
 	}
-	else {
+	else if(!filenameflag && appendflag) {
+	  sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d", filename, nstore, sample, t0); 
+	}
+	else{
 	  sprintf(spinorfilename, "%s.%.2d", filename, 3*is+ic); 
 	}
-	printf("Generating source %s!\n", spinorfilename);
-	fflush(stdout);
+	if(!appendflag || (is == 0 && ic ==0)) {
+	  printf("Generating source %s!\n", spinorfilename);
+	  fflush(stdout);
+	}
 	
 	source_generation_nucleon(g_spinor_field[0], g_spinor_field[1], 
 				  is, ic, t0, ts, ss, sample, nstore, typeflag);
 	
 	co = scalar_prod(g_spinor_field[1], g_spinor_field[1], VOLUME/2);
-	if(formatflag == 1) {
-	  write_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], spinorfilename);
+	if((is == 0 && ic == 0) || appendflag == 0) {
+	  write_source_type(0, spinorfilename);
 	}
-	else {
-	  write_spinorfield_eo_time_p(g_spinor_field[0], g_spinor_field[1], spinorfilename, 0);
-	}
+	write_source(g_spinor_field[0], g_spinor_field[1], spinorfilename, 1, prec);
       }
     }
   }
@@ -210,12 +221,8 @@ int main(int argc,char *argv[]) {
 				  t0, sample, nstore);
       
       co = scalar_prod(g_spinor_field[1], g_spinor_field[1], VOLUME/2);
-      if(formatflag == 1) {
-	write_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], spinorfilename);
-      }
-      else {
-	write_spinorfield_eo_time_p(g_spinor_field[0], g_spinor_field[1], spinorfilename, 0);
-      }
+      write_source_type(0, spinorfilename);
+      write_source(g_spinor_field[0], g_spinor_field[1], spinorfilename, 1, prec);
     }
     else {
       if(!filenameflag) {
@@ -224,14 +231,8 @@ int main(int argc,char *argv[]) {
       else {
         sprintf(spinorfilename, "%s.inverted", filename);
       }
-      if(formatflag == 1) {
-	printf("Reading propagator from %s in cmi format!\n", spinorfilename);
-        read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], spinorfilename, -1, 1);
-      }
-      else {
-	printf("Reading propagator from %s in GWC format!\n", spinorfilename);
-        read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], spinorfilename);
-      }
+      read_lime_spinor(g_spinor_field[0], g_spinor_field[1], spinorfilename, 0);
+
       printf("Generating ext. pion source %s!\n", spinorfilename);
       extended_pion_source(g_spinor_field[2], g_spinor_field[3],
 			   g_spinor_field[0], g_spinor_field[1],
@@ -242,15 +243,8 @@ int main(int argc,char *argv[]) {
       else {
 	sprintf(spinorfilename, "g%s", filename); 
       }
-      if(formatflag == 1) {
-	printf("Writing ext. source to %s in cmi format!\n", spinorfilename);
-        write_spinorfield_cm_single(g_spinor_field[2], g_spinor_field[3], spinorfilename);
-      }
-      else {
-	printf("Writing ext. source to %s in GWC format!\n", spinorfilename);
-        write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], spinorfilename, 0);
-      }
-
+      write_source_type(0, spinorfilename);
+      write_source(g_spinor_field[2], g_spinor_field[3], spinorfilename, 1, prec);
     }
   }
 

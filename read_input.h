@@ -86,6 +86,7 @@ extern "C"
   extern double stilde_min;
   extern int degree_of_p;
   extern int propagator_splitted;
+  extern int source_splitted;
   extern int source_location;
   extern int sub_evs_cg_flag;
   extern int even_odd_flag;
