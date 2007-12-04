@@ -79,6 +79,76 @@ int write_checksum(char * filename, DML_Checksum * checksum) {
   return(0);
 }
 
+int write_inverter_info(const double epssq, const int iter, const int heavy, 
+			const int append, char * filename) {
+  FILE * ofs;
+  LimeWriter * limewriter = NULL;
+  LimeRecordHeader * limeheader = NULL;
+  /* Message end and Message begin flag */
+  int ME_flag=1, MB_flag=1, status=0;
+#ifdef MPI
+  MPI_Status mpi_status;
+#endif
+  char message[500];
+  n_uint64_t bytes;
+  struct timeval t1;
+  
+
+  gettimeofday(&t1,NULL);
+  if(!heavy) {
+    sprintf(message,"\n epssq = %e\n noiter = %d\n kappa = %f, mu = %f\n time = %ld\n hmcversion = %s\n date = %s", 
+	    epssq, iter, g_kappa, g_mu/2./g_kappa,t1.tv_sec, PACKAGE_VERSION, 
+	    ctime(&t1.tv_sec));
+  }
+  else {
+    sprintf(message,"\n epssq = %e\n noiter = %d\n kappa = %f, mubar = %f, epsbar=%f\n time = %ld\n hmcversion = %s\n date = %s", 
+	    epssq, iter, g_kappa, g_mubar/2./g_kappa, g_epsbar/2./g_kappa, t1.tv_sec, PACKAGE_VERSION, 
+	    ctime(&t1.tv_sec));
+  }
+  bytes = strlen( message );
+  if(g_cart_id == 0) {
+    if(append) {
+      ofs = fopen(filename, "a");
+    }
+    else ofs = fopen(filename, "w");
+    if(ofs == (FILE*)NULL) {
+      fprintf(stderr, "Could not open file %s for writing!\n Aborting...\n", filename);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    limewriter = limeCreateWriter( ofs );
+    if(limewriter == (LimeWriter*)NULL) {
+      fprintf(stderr, "LIME error in file %s for writing!\n Aborting...\n", filename);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    
+    limeheader = limeCreateHeader(MB_flag, ME_flag, "inverter-info", bytes);
+    status = limeWriteRecordHeader( limeheader, limewriter);
+    if(status < 0 ) {
+      fprintf(stderr, "LIME write header error %d\n", status);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    limeDestroyHeader( limeheader );
+    limeWriteRecordData(message, &bytes, limewriter);
+    
+    limeDestroyWriter( limewriter );
+    fclose(ofs);
+    fflush(ofs);
+    
+  }
+  return(0);
+}
 
 int write_xlf_info(const double plaq, const int counter, char * filename, const int append) {
   FILE * ofs;

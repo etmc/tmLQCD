@@ -30,5 +30,7 @@ void single2double_cm(spinor * const R, float * const S);
 void double2single_cm(float * const S, spinor * const R);
 void zero_spinor(spinor * const R);
 int write_xlf_info(const double plaq, const int counter, char * filename, const int append);
+int write_inverter_info(const double epssq, const int iter, const int heavy, 
+			const int append, char * filename);
 
 #endif

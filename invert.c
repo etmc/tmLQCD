@@ -1,8 +1,6 @@
 /* $Id$ */
 /*******************************************************************************
 *
-* File hybrid.c
-*
 * Hybrid-Monte-Carlo for twisted mass QCD
 *
 * Author: Carsten Urbach
@@ -75,7 +73,7 @@ int check_geometry();
 int main(int argc,char *argv[]) {
 
   FILE *parameterfile=NULL, *ifs=NULL;
-  int c, iter, j, ix=0, is=0, ic=0;
+  int c, iter, j, ix=0, is=0, ic=0, err=0;
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
@@ -260,20 +258,38 @@ int main(int argc,char *argv[]) {
 	  if(g_proc_id == 0) {
 	    printf("Reading source from %s\n", conf_filename);
 	  }
-	  read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 0);
+	  if(read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 0) != 0) {
+	    if(g_proc_id == 0) {
+	      printf("Error reading source! Aborting...\n");
+	    }
+#ifdef MPI
+	    MPI_Abort(MPI_COMM_WORLD, 1);
+	    MPI_Finalize();
+#endif
+	    exit(-1);
+	  };
 	}
 	else {
 	  sprintf(conf_filename,"%s", source_input_filename);
 	  if(g_proc_id == 0) {
 	    printf("Reading source from %s\n", conf_filename);
 	  }
-	  read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, ix);
+	  if(read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, ix) != 0) {
+	    if(g_proc_id == 0) {
+	      printf("Error reading source! Aborting...\n");
+	    }
+#ifdef MPI
+	    MPI_Abort(MPI_COMM_WORLD, 1);
+	    MPI_Finalize();
+#endif
+	    exit(-1);
+	  };
 	}
       }
       if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
 
       if(propagator_splitted) {
-	sprintf(conf_filename,"%s.%2d.inverted", source_input_filename, ix);
+	sprintf(conf_filename,"%s.%.2d.inverted", source_input_filename, ix);
       }
       else {
 	sprintf(conf_filename,"%s.inverted", source_input_filename);
@@ -290,21 +306,30 @@ int main(int argc,char *argv[]) {
 	    fflush(stdout);
 	  }
 	  fclose(ifs);
+	  err = 0;
 	  iter = get_propagator_type(conf_filename);
 	  if(iter > -1 ) {
-	    if(iter == 1 ) iter = 2;
-	    else iter = 1;
-	    if(propagator_splitted){
-	      read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, iter*ix);
+	    if(iter == 1) {
+	      if(propagator_splitted){
+		err = read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
+	      }
+	      else {
+		err = read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, ix);
+	      }
 	    }
-	    else {
-	      read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, iter);
+	    else if(iter == 0 ) {
+	      if(propagator_splitted){
+		err = read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 1);
+	      }
+	      else {
+		err = read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 2*ix);
+	      }
 	    }
 	    mul_r(g_spinor_field[3], 1./(2*g_kappa), g_spinor_field[3], VOLUME/2);
 	    mul_r(g_spinor_field[2], 1./(2*g_kappa), g_spinor_field[2], VOLUME/2);
 	  }
-	  else if(source_format_flag == 1) {
-	    read_spinorfield_cm_single(g_spinor_field[2], g_spinor_field[3], conf_filename, -1, 1);
+	  if(err != 0) {
+	    zero_spinor_field(g_spinor_field[3],VOLUME/2);
 	  }
 	}
 	else {
@@ -336,25 +361,23 @@ int main(int argc,char *argv[]) {
 	write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
 	/* write the source depending on format */
 	if(write_prop_format_flag == 1) {
-	  write_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, prop_precision_flag);
+	  write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
 	}
 	write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, prop_precision_flag);
 	/*           write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0); */
       }
       else {
 	/* 	sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore); */
-	
 	if(ix == index_start) {
 	  write_propagator_type(write_prop_format_flag, conf_filename);
 	}
 	write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
 	/* write the source depending on format */
 	if(write_prop_format_flag == 1) {
-	  write_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, prop_precision_flag);
+	  write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
 	}
 	write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, prop_precision_flag);
       }
-      
 
       /* Check the result */
       M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[2], g_spinor_field[3]); 
@@ -377,7 +400,9 @@ int main(int argc,char *argv[]) {
 	}
 #ifdef MPI
 	printf("Inversion done in %e sec. (MPI_Wtime)\n", etime-atime);
+	MPI_Barrier(g_card_grid);
 #endif
+	write_inverter_info(nrm1+nrm2, iter, 0, 1, conf_filename);
       }
     }
     nstore+=Nskip;
