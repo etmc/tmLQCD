@@ -92,7 +92,7 @@ int main(int argc,char *argv[]) {
   char * input_filename = NULL;
   char command_string[300];
   int rlxd_state[105];
-  int j,ix,mu, trajectory_counter=1;
+  int j,ix,mu, trajectory_counter=1, accept = 0;
   int k;
   struct timeval t1;
   double x;
@@ -617,8 +617,10 @@ int main(int argc,char *argv[]) {
     if(return_check_flag == 1 && (j+1)%return_check_interval == 0) return_check = 1;
     else return_check = 0;
 
-    Rate += update_tm_nd(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
+    accept = update_tm_nd(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
 			 dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag, phmc_no_flavours,phmc_exact_poly, trajectory_counter);
+
+    Rate += accept;
 
     /* Measure the Polyakov loop in direction 2 and 3:*/
     polyakov_loop(&pl, 2); 
@@ -692,16 +694,18 @@ int main(int argc,char *argv[]) {
       else g_mu = g_mu1;
 
       no_eigenvalues = 1;
-      if(g_epsbar!=0.0)
-        temp = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, eigenvalue_precision, 0);
-      else
- 	temp = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, 0, nstore, even_odd_flag);
-
-      no_eigenvalues = 1;
-      if(g_epsbar!=0.0)
-        temp2 = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, eigenvalue_precision, 1);
-      else
-	temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, 0, nstore, even_odd_flag);
+      if(accept == 1 || j == 0) {
+	if(g_epsbar!=0.0)
+	  temp = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, eigenvalue_precision, 0);
+	else
+	  temp = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, 0, nstore, even_odd_flag);
+	
+	no_eigenvalues = 1;
+	if(g_epsbar!=0.0)
+	  temp2 = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, eigenvalue_precision, 1);
+	else
+	  temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, 0, nstore, even_odd_flag);
+      }
       
       if((g_proc_id == 0) && (g_debug_level > 0)) {
 	printf("PHMC: lowest eigenvalue end of trajectory %d = %e\n", 
