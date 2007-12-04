@@ -57,6 +57,7 @@
 #include "invert_doublet_eo.h"
 #include "D_psi.h"
 #include "phmc.h"
+#include "Nondegenerate_Matrix.h"
 #include "linalg/convert_eo_to_lexic.h"
 
 
@@ -79,7 +80,7 @@ int check_geometry();
 int main(int argc,char *argv[]) {
 
   FILE *parameterfile=NULL, *ifs=NULL;
-  int c, iter, j, ix=0, is=0, ic=0;
+  int c, iter, j, ix=0, is=0, ic=0, fl=0;
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
@@ -267,83 +268,148 @@ int main(int argc,char *argv[]) {
     for(ix = index_start; ix < index_end; ix++) {
       is = (ix / 3);
       ic = (ix % 3);
-      if(source_location == 0) {
-	source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
-      }
-      else {
-	source_spinor_field_point_from_file(g_spinor_field[0], g_spinor_field[1], is, ic, source_location);
-      }
-
-      if(g_proc_id == 0) {printf("mubar = %e, epsbar = %e \n", g_mu, g_epsbar);}
-
-      if(source_format_flag == 0) {
-	sprintf(conf_filename,"%s%.2d.is%.1dic%.1d.%.4d", "prop.mass", mass_number, is, ic, nstore);
-      }
-      else if(source_format_flag == 1) {
-	if(source_time_slice > T*g_nproc_t || source_time_slice < 0) {
-	  sprintf(conf_filename,"%s.inverted", source_input_filename);
+      for(fl = 0; fl < 2; fl++) {
+	zero_spinor_field(g_spinor_field[0], VOLUME/2);
+	zero_spinor_field(g_spinor_field[1], VOLUME/2);
+	zero_spinor_field(g_spinor_field[2], VOLUME/2);
+	zero_spinor_field(g_spinor_field[3], VOLUME/2);
+	if(read_source_flag == 0) {
+	  if(source_location == 0) {
+	    source_spinor_field(g_spinor_field[0+fl*2], g_spinor_field[1+fl*2], is, ic);
+	  }
+	  else {
+	    source_spinor_field_point_from_file(g_spinor_field[0+fl*2], g_spinor_field[1+fl*2], 
+						is, ic, source_location);
+	  }
 	}
 	else {
-	  sprintf(conf_filename, "%s.%.4d.%.2d.%.1d.inverted", 
-		  source_input_filename, nstore, source_time_slice, ix);
+	  if(source_splitted) {
+	    sprintf(conf_filename,"%s.%.2d", source_input_filename, ix);
+	    if(g_proc_id == 0) {
+	      printf("Reading source from %s\n", conf_filename);
+	    }
+	    if(read_lime_spinor(g_spinor_field[0+fl*2], g_spinor_field[1+fl*2], conf_filename, 0) != 0) {
+	      if(g_proc_id == 0) {
+		printf("Error reading source! Aborting...\n");
+	      }
+#ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 1);
+	      MPI_Finalize();
+#endif
+	      exit(-1);
+	    };
+	  }
+	  else {
+	    sprintf(conf_filename,"%s", source_input_filename);
+	    if(g_proc_id == 0) {
+	      printf("Reading source from %s\n", conf_filename);
+	    }
+	    if(read_lime_spinor(g_spinor_field[0+2*fl], g_spinor_field[1+2*fl], conf_filename, ix) != 0) {
+	      if(g_proc_id == 0) {
+		printf("Error reading source! Aborting...\n");
+	      }
+#ifdef MPI
+	      MPI_Abort(MPI_COMM_WORLD, 1);
+	      MPI_Finalize();
+#endif
+	      exit(-1);
+	    };
+	  }
 	}
-      }
-      zero_spinor_field(g_spinor_field[2],VOLUME/2);
-      zero_spinor_field(g_spinor_field[3],VOLUME/2);
 
+	mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], +1., VOLUME/2);
+	mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], +1., VOLUME/2);
+	assign(g_spinor_field[0], g_spinor_field[4], VOLUME/2);
+	assign(g_spinor_field[1], g_spinor_field[5], VOLUME/2);
+	assign(g_spinor_field[2], g_spinor_field[6], VOLUME/2);
+	assign(g_spinor_field[3], g_spinor_field[7], VOLUME/2);
 
+	if(g_proc_id == 0) {printf("mubar = %e, epsbar = %e\n", g_mubar, g_epsbar);}
+	
+	if(propagator_splitted) {
+	  sprintf(conf_filename,"%s.%.2d.hinverted", source_input_filename, ix);
+	}
+	else {
+	  sprintf(conf_filename,"%s.hinverted", source_input_filename);
+	}
+	
+	
 #ifdef MPI
-      atime = MPI_Wtime();
+	atime = MPI_Wtime();
 #endif
-      iter = invert_doublet_eo(g_spinor_field[4], g_spinor_field[5], g_spinor_field[6], g_spinor_field[7], 
-			       g_spinor_field[0], g_spinor_field[1], g_spinor_field[2], g_spinor_field[3], 
-			       solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag);
+	iter = invert_doublet_eo(g_spinor_field[4], g_spinor_field[5], g_spinor_field[6], g_spinor_field[7], 
+				 g_spinor_field[0], g_spinor_field[1], g_spinor_field[2], g_spinor_field[3], 
+				 solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag);
 #ifdef MPI
-      etime = MPI_Wtime();
+	etime = MPI_Wtime();
 #endif
+	
+	/* To write in standard format */
+	/* we have to mult. by 2*kappa */
+	mul_r(g_spinor_field[DUM_DERI], (2*g_kappa), g_spinor_field[4], VOLUME/2);
+	mul_r(g_spinor_field[DUM_DERI+1], (2*g_kappa), g_spinor_field[5], VOLUME/2);
+	mul_r(g_spinor_field[DUM_DERI+2], (2*g_kappa), g_spinor_field[6], VOLUME/2);
+	mul_r(g_spinor_field[DUM_DERI+3], (2*g_kappa), g_spinor_field[7], VOLUME/2);
 
-      /* To write in standard format */
-      /* we have to mult. by 2*kappa */
-      mul_r(g_spinor_field[4], (2*g_kappa), g_spinor_field[4], VOLUME/2);
-      mul_r(g_spinor_field[5], (2*g_kappa), g_spinor_field[5], VOLUME/2);
-      mul_r(g_spinor_field[6], (2*g_kappa), g_spinor_field[6], VOLUME/2);
-      mul_r(g_spinor_field[7], (2*g_kappa), g_spinor_field[7], VOLUME/2);
+	mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2],
+			 -1., VOLUME/2);
+	mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+3], 
+			 -1., VOLUME/2);
 
-      if(ix == 0) {
-	write_propagator_type(write_prop_format_flag, conf_filename);
+	
+	if(propagator_splitted) {
+	  if(fl == 0) {
+	    write_propagator_type(write_prop_format_flag, conf_filename);
+	  }
+	  write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
+	  /* write the source depending on format */
+	  if(write_prop_format_flag == 1 && fl == 0) {
+	    write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
+
+	  }
+	  write_double_propagator(g_spinor_field[4], g_spinor_field[5],
+				  g_spinor_field[6], g_spinor_field[7], conf_filename, 1, prop_precision_flag);
+	}
+	else {
+	  /* 	sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore); */
+	  if(ix == index_start && fl == 0) {
+	    write_propagator_type(write_prop_format_flag, conf_filename);
+	  }
+	  write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
+	  /* write the source depending on format */
+	  if(write_prop_format_flag == 1 && fl == 0) {
+	    write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
+	  }
+	  write_double_propagator(g_spinor_field[4], g_spinor_field[5],
+				  g_spinor_field[6], g_spinor_field[7], conf_filename, 1, prop_precision_flag);
+	}
+
+
+	if(fabs(g_epsbar) < 0.0000001) {
+	  /* Check the result */
+	  M_full(g_spinor_field[6], g_spinor_field[7], g_spinor_field[4], g_spinor_field[5]); 
+	  mul_r(g_spinor_field[6], 1./(2*g_kappa), g_spinor_field[6], VOLUME/2);  
+	  mul_r(g_spinor_field[7], 1./(2*g_kappa), g_spinor_field[7], VOLUME/2); 
+	  
+	  diff(g_spinor_field[6], g_spinor_field[6], g_spinor_field[0], VOLUME/2); 
+	  diff(g_spinor_field[7], g_spinor_field[7], g_spinor_field[1], VOLUME/2); 
+	  
+	  nrm1 = square_norm(g_spinor_field[6], VOLUME/2); 
+	  nrm2 = square_norm(g_spinor_field[7], VOLUME/2); 
+	  
+	  if(g_proc_id == 0) {
+	    printf("Inversion for source %d done in %d iterations, residue = %e!\n", 2*ix+fl, iter, nrm1+nrm2);
+	  }
+	}
+#ifdef MPI
+	if(g_proc_id == 0) {
+	  printf("Inversion done in %e sec. (MPI_Wtime)\n", etime-atime);
+	}
+#endif
       }
-      write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
-      if(write_prop_format_flag == 1) {
-	write_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, prop_precision_flag);
-	write_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, prop_precision_flag);
-      }
-      write_double_propagator(g_spinor_field[4], g_spinor_field[5],
-			      g_spinor_field[6], g_spinor_field[7], conf_filename, 1, prop_precision_flag);
-      
-
-      /* Check the result */
-      M_full(g_spinor_field[6], g_spinor_field[7], g_spinor_field[4], g_spinor_field[5]); 
-      mul_r(g_spinor_field[6], 1./(2*g_kappa), g_spinor_field[6], VOLUME/2);  
-      mul_r(g_spinor_field[7], 1./(2*g_kappa), g_spinor_field[7], VOLUME/2); 
-
-      diff(g_spinor_field[6], g_spinor_field[6], g_spinor_field[0], VOLUME/2); 
-      diff(g_spinor_field[7], g_spinor_field[7], g_spinor_field[1], VOLUME/2); 
-
-      nrm1 = square_norm(g_spinor_field[6], VOLUME/2); 
-      nrm2 = square_norm(g_spinor_field[7], VOLUME/2); 
-
       if(g_proc_id == 0) {
-	if(source_format_flag == 0) {
-	  printf("Inversion for is = %d, ic = %d done in %d iterations, residue = %e!\n", is, ic, iter, nrm1+nrm2);
-	}
-	else if(source_format_flag == 1) {
-	  printf("Inversion for source %d done in %d iterations, residue = %e!\n", ix, iter, nrm1+nrm2);
-	}
+	write_inverter_info(solver_precision, iter, 0, 1, conf_filename);
       }
-
-#ifdef MPI
-      printf("Inversion done in %e sec. (MPI_Wtime)\n", etime-atime);
-#endif
     }
     nstore+=Nskip;
   }

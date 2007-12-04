@@ -56,6 +56,7 @@ void usage() {
   fprintf(stdout, "         -O pion only -> wallsource at start timeslice \n");
   fprintf(stdout, "         -E extended source for pion only \n");
   fprintf(stdout, "         -d double precision \n");
+  fprintf(stdout, "         -a store all sources in one file\n");
   fprintf(stdout, "         -h|-? this help \n\n");
   fprintf(stdout, "plain output file (-p) corresponds to basename.00 - basename.11\n");
   fprintf(stdout, "complex ones (no -p) to basename.samplenr.gaugenr.tsnr.00 - 11\n");

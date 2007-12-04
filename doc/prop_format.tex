@@ -5,6 +5,8 @@ source or sink fermion fields. They are both stored using the same
 lime records. The meta-data stored in the same lime-packed file is
 supposed to clarify all other things.
 
+\subsection{Propagators}
+
 Here we mainly concentrate on storing propagators (sink). The file can
 contain only sources, or both, source and sink. We (plan to) support
 four different formats
@@ -72,8 +74,9 @@ might follow.
 The indices in the binary data {\ttfamily scidac-binary-data} are in
 the following order:
 \[
-t, z, y, x, s, c
+t, z, y, x, s, c\, ,
 \]
+where $t$ is the slowest and colour the fastest running index.
 The binary data is stored big endian and either in single or in double
 precision, depending on the {\ttfamily precision} parameter in the
 {\ttfamily etmc-propagator-format} record. 
@@ -85,6 +88,44 @@ D =
 \frac{1}{2}[\gamma_\mu(\nabla_\mu+\nabla_\mu^*)-a\nabla_\mu^*\nabla_\mu]
 + m_0 + i \mu\gamma_5\tau^3\, .
 \]
+For the non-degenerate case with the two flavour operator the
+following operator is inverted:
+\[
+D_\mathrm{nd} =
+\frac{1}{2}[\gamma_\mu(\nabla_\mu+\nabla_\mu^*)-a\nabla_\mu^*\nabla_\mu]
++ m_0 + i\bar\mu\gamma_5\tau_1+\bar\epsilon\tau_3
+\]
+
+\subsection{Source Fields}
+
+Source fields are, as mentioned before, stored with the same binary
+data format. There are again several types of source files possible:
+\begin{itemize}
+\item {\ttfamily DiracFermion\_Source}
+\item {\ttfamily DiracFermion\_ScalarSource}
+\item {\ttfamily DiracFermion\_FourScalarSource}
+\item {\ttfamily DiracFermion\_TwelveScalarSource}
+\end{itemize}
+This type is stored in a record called {\ttfamily source-type} in the
+lime file. There might be several sources stored within the same
+file. We add a format reacord {\ttfamily etmc-source-format} looking like
+\begin{verbatim}
+<?xml version="1.0" encoding="UTF-8"?>
+<etmcFormat>
+  <field>diracFermion</field>
+  <precision>32</precision>
+  <flavours>1</flavours>
+  <lx>4</lx>
+  <ly>4</ly>
+  <lz>4</lz>
+  <lt>4</lt>
+  <spin>4</spin>
+  <colour>3</colour>
+</etmcFormat>
+\end{verbatim}
+with obvious meaning for every {\ttfamily scidac-binary-data} record
+within the lime packed file. This format record also allows to store a
+subset of the whole field, e.g. a timeslize.
 
 %%% Local Variables: 
 %%% mode: latex
