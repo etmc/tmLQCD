@@ -136,8 +136,12 @@ supported input paramters:
 
 \item {\ttfamily SplittedPropagator}:\\
   If set to yes the propagators will written splitted to disk: one
-  file per spinor color component. Default is {\ttfamily yes}. Only
-  needed for not cmi format.
+  file per spinor color component. Default is {\ttfamily yes}.
+
+\item {\ttfamily SplittedSource}:\\
+  If set to yes every source is expected to be stored in a seperate file.
+  Default is {\ttfamily yes}.
+
 
 \item {\ttfamily BCAngleT=x}:\\
   This set the angle in
@@ -308,10 +312,7 @@ supported input paramters:
   solver. Not yet working!
 
 \item {\ttfamily SourceFormat}:\\
-  Format of sources only (use {\ttfamily WritePropagatorFormat} for propagators).
-  Only needed when not standard format is used. Possible values are 
-  then cmi for the Chris Michael format. This parameter has effect 
-  for executables {\ttfamily invert} and {\ttfamily reducenoise}.
+  deprecated, has no effect anymore.
 
 \item {\ttfamily SolverFlag}:\\
   Sets the solver to be used. Possible values are among others
@@ -329,11 +330,13 @@ supported input paramters:
 
 \item {\ttfamily SourceInputFilename}:\\
   Base filename of the source vector to be read in. The filename will
-  be constructed as {\ttfamily basefilename.massnumber.is.ic.nstore}
-  unless the cmi format is used (see next input parameter). This
-  parameter has only effect for executable {\ttfamily invert}.
+  be constructed as {\ttfamily basefilename.is*ic},
+  unless propagator is not splitted, i.e. stored in only one file,
+  which has the name {\ttfamily basefilename} then.
+  Parameter has only effect for executable {\ttfamily invert}.
 
 \item {\ttfamily SourceTimeSlice}:\\
+  not used right now.
   The time slice of the source to be read (in case of cmi format). At
   the moment used only for
   the automatic construction of filenames. The filename will then be
@@ -377,10 +380,16 @@ supported input paramters:
   Whether or not to use even/odd preconditioning in the invert
   programme.
 
-\item {\ttfamily WritePropagatorFormat}:\\
-  By default this option take the value of SourceFormat, but now the choice
-  of format for the source and the propagators can be different.
-  Possible choices are gwc or cmi.
+\item {\ttfamily WritePropagatorFormat} or {\ttfamiliy PropagatorType}:\\
+  The type in which to store the propagator. There are 
+  \begin{itemize}
+  \item {\ttfamily DiracFermion\_Sink}
+  \item {\ttfamily DiracFermion\_Source\_Sink\_Pairs}
+  \item {\ttfamily DiracFermion\_ScalarSource\_TwelveSink}
+  \item {\ttfamily DiracFermion\_ScalarSource\_FourSink}
+  \end{itemize}
+  available. However, only the first two are implemented so far.
+
 
 \end{enumerate}
 

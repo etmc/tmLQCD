@@ -381,10 +381,10 @@ int main(int argc,char *argv[]) {
 
       /* Check the result */
       M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[2], g_spinor_field[3]); 
-      if(source_format_flag == 0) {
-	mul_r(g_spinor_field[4], 1./(2*g_kappa), g_spinor_field[4], VOLUME/2);  
-	mul_r(g_spinor_field[5], 1./(2*g_kappa), g_spinor_field[5], VOLUME/2); 
-      }
+
+      mul_r(g_spinor_field[4], 1./(2*g_kappa), g_spinor_field[4], VOLUME/2);  
+      mul_r(g_spinor_field[5], 1./(2*g_kappa), g_spinor_field[5], VOLUME/2); 
+
       diff(g_spinor_field[4], g_spinor_field[4], g_spinor_field[0], VOLUME/2); 
       diff(g_spinor_field[5], g_spinor_field[5], g_spinor_field[1], VOLUME/2); 
 
@@ -392,12 +392,7 @@ int main(int argc,char *argv[]) {
       nrm2 = square_norm(g_spinor_field[5], VOLUME/2); 
 
       if(g_proc_id == 0) {
-	if(source_format_flag == 0) {
-	  printf("Inversion for is = %d, ic = %d done in %d iterations, residue = %e!\n", is, ic, iter, nrm1+nrm2);
-	}
-	else if(source_format_flag == 1) {
-	  printf("Inversion for source %d done in %d iterations, residue = %e!\n", ix, iter, nrm1+nrm2);
-	}
+	printf("Inversion for source %d done in %d iterations, residue = %e!\n", ix, iter, nrm1+nrm2);
 #ifdef MPI
 	printf("Inversion done in %e sec. (MPI_Wtime)\n", etime-atime);
 	MPI_Barrier(g_card_grid);
