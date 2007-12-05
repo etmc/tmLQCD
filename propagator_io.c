@@ -70,7 +70,9 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
   int coords[4];
   n_uint64_t bytes;
   DML_SiteRank rank;
-
+#ifdef MPI
+  MPI_Status mstatus;
+#endif
   DML_checksum_init(ans);
 
   if(prec == 32) bytes = sizeof(spinor)/2;
@@ -131,12 +133,12 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 #ifdef MPI
 	    else{
 	      if(prec == 32) {
-		MPI_Recv((void*)tmp2, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &status);
+		MPI_Recv((void*)tmp2, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &mstatus);
 		DML_checksum_accum(ans,rank,(char *) tmp2, sizeof(spinor)/2);
 		status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
 	      }
 	      else {
-		MPI_Recv((void*)tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &status);
+		MPI_Recv((void*)tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &mstatus);
 		DML_checksum_accum(ans,rank,(char *) tmp, sizeof(spinor));
 		status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
 	      }
@@ -244,7 +246,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
     }
   }
 #ifdef MPI
-  DML_checksum_combine(ans);
+/*  DML_checksum_combine(ans); */
 #endif
   return(0);
 }
