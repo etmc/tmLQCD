@@ -395,7 +395,7 @@ int main(int argc,char *argv[]) {
 	printf("Inversion for source %d done in %d iterations, residue = %e!\n", ix, iter, nrm1+nrm2);
 #ifdef MPI
 	printf("Inversion done in %e sec. (MPI_Wtime)\n", etime-atime);
-	MPI_Barrier(g_card_grid);
+	MPI_Barrier(g_cart_grid);
 #endif
 	write_inverter_info(nrm1+nrm2, iter, 0, 1, conf_filename);
       }
