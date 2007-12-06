@@ -246,7 +246,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
     }
   }
 #ifdef MPI
-/*  DML_checksum_combine(ans); */
+  DML_checksum_combine(ans);
 #endif
   return(0);
 }
