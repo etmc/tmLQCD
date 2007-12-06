@@ -317,8 +317,13 @@ int main(int argc,char *argv[]) {
 	  }
 	}
 
-	mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], +1., VOLUME/2);
-	mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], +1., VOLUME/2);
+	/* the final result should be stored in the convention used in */
+	/* hep-lat/0606011                                             */
+	/* this requires multiplication of source with                 */
+	/* (1-itau_2)/sqrt(2) and the result with (1+itau_2)/sqrt(2)   */
+        
+	mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], -1., VOLUME/2);
+	mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], -1., VOLUME/2);
 	assign(g_spinor_field[0], g_spinor_field[4], VOLUME/2);
 	assign(g_spinor_field[1], g_spinor_field[5], VOLUME/2);
 	assign(g_spinor_field[2], g_spinor_field[6], VOLUME/2);
@@ -339,9 +344,40 @@ int main(int argc,char *argv[]) {
 #endif
 	iter = invert_doublet_eo(g_spinor_field[4], g_spinor_field[5], g_spinor_field[6], g_spinor_field[7], 
 				 g_spinor_field[0], g_spinor_field[1], g_spinor_field[2], g_spinor_field[3], 
-				 solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag);
+				 solver_precision, max_solver_iterations, solver_flag, g_relative_precision_flag);
 #ifdef MPI
 	etime = MPI_Wtime();
+#endif
+
+
+	/* Check the result */
+	g_mu = g_mubar;
+	M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], g_spinor_field[4], g_spinor_field[5]); 
+	assign_add_mul_r(g_spinor_field[DUM_DERI+1], g_spinor_field[6], -g_epsbar, VOLUME/2);
+	assign_add_mul_r(g_spinor_field[DUM_DERI+2], g_spinor_field[7], -g_epsbar, VOLUME/2);
+
+	g_mu = -g_mu;
+	M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], g_spinor_field[6], g_spinor_field[7]); 
+	assign_add_mul_r(g_spinor_field[DUM_DERI+3], g_spinor_field[4], -g_epsbar, VOLUME/2);
+	assign_add_mul_r(g_spinor_field[DUM_DERI+4], g_spinor_field[5], -g_epsbar, VOLUME/2);
+
+	diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], g_spinor_field[0], VOLUME/2); 
+	diff(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], g_spinor_field[1], VOLUME/2); 
+	diff(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+3], g_spinor_field[2], VOLUME/2); 
+	diff(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+4], g_spinor_field[3], VOLUME/2); 
+	  
+	nrm1  = square_norm(g_spinor_field[DUM_DERI+1], VOLUME/2); 
+	nrm1 += square_norm(g_spinor_field[DUM_DERI+2], VOLUME/2); 
+	nrm1 += square_norm(g_spinor_field[DUM_DERI+3], VOLUME/2); 
+	nrm1 += square_norm(g_spinor_field[DUM_DERI+4], VOLUME/2); 
+	  
+	if(g_proc_id == 0) {
+	  printf("Inversion for source %d done in %d iterations, residue = %e!\n", 2*ix+fl, iter, nrm1);
+	}
+#ifdef MPI
+	if(g_proc_id == 0) {
+	  printf("Inversion done in %e sec. (MPI_Wtime)\n", etime-atime);
+	}
 #endif
 	
 	/* To write in standard format */
@@ -351,11 +387,15 @@ int main(int argc,char *argv[]) {
 	mul_r(g_spinor_field[DUM_DERI+2], (2*g_kappa), g_spinor_field[6], VOLUME/2);
 	mul_r(g_spinor_field[DUM_DERI+3], (2*g_kappa), g_spinor_field[7], VOLUME/2);
 
-	mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2],
-			 -1., VOLUME/2);
-	mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+3], 
-			 -1., VOLUME/2);
+	/* the final result should be stored in the convention used in */
+	/* hep-lat/0606011                                             */
+	/* this requires multiplication of source with                 */
+	/* (1-itau_2)/sqrt(2) and the result with (1+itau_2)/sqrt(2)   */
 
+	mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[DUM_DERI], 
+			 g_spinor_field[DUM_DERI+2], +1., VOLUME/2);
+	mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[DUM_DERI+1], 
+			 g_spinor_field[DUM_DERI+3], +1., VOLUME/2);
 	
 	if(propagator_splitted) {
 	  if(fl == 0) {
@@ -383,32 +423,9 @@ int main(int argc,char *argv[]) {
 	  write_double_propagator(g_spinor_field[4], g_spinor_field[5],
 				  g_spinor_field[6], g_spinor_field[7], conf_filename, 1, prop_precision_flag);
 	}
-
-
-	if(fabs(g_epsbar) < 0.0000001) {
-	  /* Check the result */
-	  M_full(g_spinor_field[6], g_spinor_field[7], g_spinor_field[4], g_spinor_field[5]); 
-	  mul_r(g_spinor_field[6], 1./(2*g_kappa), g_spinor_field[6], VOLUME/2);  
-	  mul_r(g_spinor_field[7], 1./(2*g_kappa), g_spinor_field[7], VOLUME/2); 
-	  
-	  diff(g_spinor_field[6], g_spinor_field[6], g_spinor_field[0], VOLUME/2); 
-	  diff(g_spinor_field[7], g_spinor_field[7], g_spinor_field[1], VOLUME/2); 
-	  
-	  nrm1 = square_norm(g_spinor_field[6], VOLUME/2); 
-	  nrm2 = square_norm(g_spinor_field[7], VOLUME/2); 
-	  
-	  if(g_proc_id == 0) {
-	    printf("Inversion for source %d done in %d iterations, residue = %e!\n", 2*ix+fl, iter, nrm1+nrm2);
-	  }
-	}
-#ifdef MPI
-	if(g_proc_id == 0) {
-	  printf("Inversion done in %e sec. (MPI_Wtime)\n", etime-atime);
-	}
-#endif
       }
       if(g_proc_id == 0) {
-	write_inverter_info(solver_precision, iter, 0, 1, conf_filename);
+	write_inverter_info(nrm1, iter, 0, 1, conf_filename);
       }
     }
     nstore+=Nskip;
