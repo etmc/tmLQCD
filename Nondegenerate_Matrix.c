@@ -647,7 +647,7 @@ void mul_one_pm_itau2(spinor * const p, spinor * const q,
 
   if(sign > 0) {
     add(p, r, s, N);
-    diff(q, r, s, N);
+    diff(q, s, r, N);
   }
   else {
     diff(p, r, s, N);

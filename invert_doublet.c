@@ -1,9 +1,9 @@
 /* $Id$ */
 /*******************************************************************************
 *
-* File hybrid.c
-*
-* Hybrid-Monte-Carlo for twisted mass QCD
+* Inversion code for a mass split doublet in the
+* twisted mass formalism. See hep-lat/0606011w for details on the convention
+* for the propagator used.
 *
 * Author: Carsten Urbach
 *         urbach@physik.fu-berlin.de
@@ -63,7 +63,8 @@
 
 void usage(){
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
-  fprintf(stdout, "This code inverts a (non-degenerate) doublet\n");
+  fprintf(stdout, "This code inverts a (mass non-degenerate) flavour non-diagonal doublet\n");
+  fprintf(stdout, "For the convention used see hep-lat/0606011\n");
   fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
   fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   invert [options]\n");
@@ -304,7 +305,8 @@ int main(int argc,char *argv[]) {
 	    if(g_proc_id == 0) {
 	      printf("Reading source from %s\n", conf_filename);
 	    }
-	    if(read_lime_spinor(g_spinor_field[0+2*fl], g_spinor_field[1+2*fl], conf_filename, ix) != 0) {
+/*  	    if(read_lime_spinor(g_spinor_field[0+((fl+1)%2)*2], g_spinor_field[1+((fl+1)%2)*2], conf_filename, 0) != 0) { */
+ 	    if(read_lime_spinor(g_spinor_field[0+2*fl], g_spinor_field[1+2*fl], conf_filename, ix) != 0) {
 	      if(g_proc_id == 0) {
 		printf("Error reading source! Aborting...\n");
 	      }
@@ -322,8 +324,8 @@ int main(int argc,char *argv[]) {
 	/* this requires multiplication of source with                 */
 	/* (1-itau_2)/sqrt(2) and the result with (1+itau_2)/sqrt(2)   */
         
-	mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], -1., VOLUME/2);
-	mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], -1., VOLUME/2);
+	mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], +1., VOLUME/2);
+	mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], +1., VOLUME/2);
 	assign(g_spinor_field[0], g_spinor_field[4], VOLUME/2);
 	assign(g_spinor_field[1], g_spinor_field[5], VOLUME/2);
 	assign(g_spinor_field[2], g_spinor_field[6], VOLUME/2);
@@ -393,9 +395,9 @@ int main(int argc,char *argv[]) {
 	/* (1-itau_2)/sqrt(2) and the result with (1+itau_2)/sqrt(2)   */
 
 	mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[DUM_DERI], 
-			 g_spinor_field[DUM_DERI+2], +1., VOLUME/2);
+			 g_spinor_field[DUM_DERI+2], -1., VOLUME/2);
 	mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[DUM_DERI+1], 
-			 g_spinor_field[DUM_DERI+3], +1., VOLUME/2);
+			 g_spinor_field[DUM_DERI+3], -1., VOLUME/2);
 	
 	if(propagator_splitted) {
 	  if(fl == 0) {
@@ -437,7 +439,7 @@ int main(int argc,char *argv[]) {
   free_gauge_field();
   free_geometry_indices();
   free_spinor_field();
-  free_moment_field();
+
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)

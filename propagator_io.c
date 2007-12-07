@@ -558,6 +558,11 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
   }
 
   status = write_binary_spinor_data(s, r, limewriter, prec, &checksum);
+  if(g_proc_id == 0) {
+    printf("# checksum for DiracFermion field written to file %s is %#x %#x\n", 
+	   filename, checksum.suma, checksum.sumb);
+  }
+
   if(g_cart_id == 0) {
     if(ferror(ofs)) {
       fprintf(stderr, "Warning! Error while writing to file %s \n", filename);
@@ -728,7 +733,7 @@ int read_lime_spinor(spinor * const s, spinor * const r, char * filename, const 
   status = read_binary_spinor_data(s, r, limereader, prec, &checksum);
 
   if(g_proc_id == 0) {
-    printf("# checksum for propagator %s position %d is %#x %#x\n", 
+    printf("# checksum for DiracFermion field in file %s position %d is %#x %#x\n", 
 	   filename, position, checksum.suma, checksum.sumb);
   }
 
