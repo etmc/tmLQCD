@@ -1,3 +1,10 @@
+Release 4.0.0:
+new IO format
+inversion for split doublet
+checksums
+improvements for the PHMC
+preconditioning for the CG
+
 Release 4.0.0-rc2:
 Improvements for the PHMC
 preconditioning for the CG

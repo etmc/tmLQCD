@@ -1,3 +1,7 @@
+07.12.2007: inversion for the flavour split doublet implemented and tested
+	    new spinor field IO format implemented and tested
+	    scidac checksums implemented
+
 19.10.2007: hmc runs now also without even/odd preconditioning.
 	    Set UseEvenOdd=no in the input file (thanks to Jan Volkholz).
 
