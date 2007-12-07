@@ -158,6 +158,31 @@ the matrices is used:
 \end{split}
 \]
 
+\subsection{Flavour Split Doublet Operator}
+
+The convention we use internally for the flavour split doublet Dirac
+operator is 
+\[
+D_h = D_W + m_0 + i\bar\mu\gamma_5\tau^3 - \bar\epsilon\tau^1
+\]
+The programme {\ttfamily invert\_doublet} inverts this operator, but
+the source and sink are written in a convention corresponding to
+\[
+D_h' = D_W + m_0 + i\bar\mu\gamma_5\tau^1 + \bar\epsilon\tau^3
+\]
+The relation between the two is given by
+\[
+D_h' = (1+i\tau^2)D_h(1-i\tau^2)\, .
+\]
+The convention $D_h'$ is the one of \cite{Chiarappa:2006ae} with
+$\bar\mu = \mu_\sigma$ and $\bar\epsilon = \mu_\delta$. {\ttfamily
+  invert\_doublet} inverts with the source first set for the upper
+flavour and then with the same source set for the lower
+flavour. The other one is set to zero. Hence, the ouput is a set of
+four Dirac fermion spinor fields, which are stored in the order upper,
+lower, upper, lower flavour. The former two correspond to the source
+in the upper flavour, the latter to the source in the lower flavour.
+
 
 
 %%% Local Variables: 
