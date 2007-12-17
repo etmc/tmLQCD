@@ -10,13 +10,14 @@
 #include "tm_operators.h"
 #include "linsolve.h"
 #include "initialize_hmc_evolution.h"
-
+#include "stout_smear.h"
 
 void initialize_hmc_trajectory(int spinor_volume, const int rngrepro, double * enerphi0, double * enerphi1, double * enerphi2, double * enep, int * idis0, int * idis1, int * idis2, int * saveiter_max)
 {
     int ix, mu;
-    double weight;
     su3 *v, *w;
+
+    extern su3 ** g_gauge_field_saved;
 
     /* 
      *  copy the gauge field to gauge_tmp 
@@ -54,6 +55,19 @@ void initialize_hmc_trajectory(int spinor_volume, const int rngrepro, double * e
     {
         random_spinor_field(g_spinor_field[6], spinor_volume, rngrepro);
         *enerphi2 = square_norm(g_spinor_field[6], spinor_volume);
+    }
+
+    /*
+     *  smear the gauge field
+     */
+    if(use_stout_flag == 1)
+    {
+      for(ix = 0; ix < VOLUME; ix++)
+        for(mu = 0; mu < 4; mu++)
+        {
+          _su3_assign(g_gauge_field_saved[ix][mu], g_gauge_field[ix][mu]);
+        }
+      stout_smear_gauge_field(stout_rho , stout_no_iter);
     }
 
     /* 
@@ -144,6 +158,17 @@ void initialize_hmc_trajectory(int spinor_volume, const int rngrepro, double * e
         }
     }
 
+    /*
+     *  keep on going with the unsmeared gauge field
+     */
+    if(use_stout_flag == 1)
+    {
+      for(ix = 0; ix < VOLUME; ix++)
+        for(mu = 0; mu < 4; mu++)
+        {
+          _su3_assign(g_gauge_field[ix][mu], g_gauge_field_saved[ix][mu]);
+        }
+    }
 
     /* 
      *  initialize the momenta 
