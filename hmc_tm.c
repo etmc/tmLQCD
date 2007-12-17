@@ -48,6 +48,7 @@
 #include "init_moment_field.h"
 #include "init_gauge_tmp.h"
 #include "init_dirac_halfspinor.h"
+#include "init_stout_smear_vars.h"
 #include "xchange_halffield.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
@@ -302,8 +303,8 @@ int main(int argc,char *argv[]) {
   zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME);
   zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME);
 
-/*   if(use_stout_flag == 1) */
-/*     init_stout_smear_vars(VOLUMEPLUSRAND, stout_no_iter); */
+  if(use_stout_flag == 1) 
+    init_stout_smear_vars(VOLUMEPLUSRAND, stout_no_iter); 
 
   /*construct the filenames for the observables and the parameters*/
   strcpy(datafilename,filename);  strcat(datafilename,".data");
@@ -380,7 +381,6 @@ int main(int argc,char *argv[]) {
     /* cold */
     unit_g_gauge_field();    
   }
-  
 
   /*For parallelization: exchange the gaugefield */
 #ifdef MPI
