@@ -69,8 +69,11 @@ int stout_smear_gauge_field(const double rho , const int no_iters)
   su3  *gauge_local ; 
   su3  new_gauge_local ; 
 
-  /*printf("Entering CRAIG's stout_smear_gauge_field\n");*/
+  /*printf("Entering stout_smear_gauge_field\n");*/
 
+
+  printf("DUMP OF g_gauge_field in STOUT\n");
+  print_config_to_screen(g_gauge_field);
 
   if(g_proc_id == 0) 
   {
@@ -153,7 +156,7 @@ int stout_smear_gauge_field(const double rho , const int no_iters)
   x=3;
   mu=2;
 
-  printf("Leaving CRAIG's stout_smear_gauge_field\n");
+  printf("Leaving stout_smear_gauge_field\n");
   return(0);
 }
 
