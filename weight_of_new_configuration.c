@@ -9,10 +9,13 @@
 #include "solver/bicgstab_complex.h"
 #include "linsolve.h"
 #include "linalg_eo.h"
-
+#include "stout_smear.h"
 
 void weight_of_new_configuration(int spinor_volume, const int rngrepro, double * enerphi0x, double * enerphi1x, double * enerphi2x, double * enepx, double * rectangle_energy, double * new_rectangle_energy, double * plaquette_energy, double* new_plaquette_energy, double * gauge_energy, double * new_gauge_energy,  int * idis0, int * idis1, int * idis2, int * saveiter_max)
 {
+
+  int x, mu;
+  extern su3 ** g_gauge_field_saved;
 
   g_sloppy_precision = 0;
   /*perform the accept-reject-step*/
@@ -25,6 +28,19 @@ void weight_of_new_configuration(int spinor_volume, const int rngrepro, double *
   }
   *gauge_energy = g_rgi_C0 * (*plaquette_energy) + g_rgi_C1 * (*rectangle_energy);
   *new_gauge_energy = g_rgi_C0 * (*new_plaquette_energy) + g_rgi_C1 * (*new_rectangle_energy);
+
+  /*
+   *  smear the gauge field
+   */
+  if(use_stout_flag == 1)
+  {
+    for(x = 0; x < VOLUME; x++)
+      for(mu = 0; mu < 4; mu++)
+      {
+        _su3_assign(g_gauge_field_saved[x][mu], g_gauge_field[x][mu]);
+      }
+    stout_smear_gauge_field(stout_rho , stout_no_iter);
+  }
 
   /* compute the energy contributions from the pseudo-fermions */
   if(even_odd_flag)
@@ -112,5 +128,17 @@ void weight_of_new_configuration(int spinor_volume, const int rngrepro, double *
       /* Compute the energy contr. from third field */
       *enerphi2x = square_norm(g_spinor_field[5], VOLUME);
     }
+  }
+
+  /*
+   *  keep on going with the unsmeared gauge field
+   */
+  if(use_stout_flag == 1)
+  {
+    for(x = 0; x < VOLUME; x++)
+      for(mu = 0; mu < 4; mu++)
+      {
+        _su3_assign(g_gauge_field[x][mu], g_gauge_field_saved[x][mu]);
+      }
   }
 }
