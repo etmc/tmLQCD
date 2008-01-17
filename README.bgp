@@ -1,0 +1,10 @@
+linking:
+mpixlc -o hmc_tm -L/home/cmcneile/lib -L./lib -L../../install//lib/ -L/bgsys/drivers/ppcfloor/comm/lib hmc_tm.o -lhmc -lsolver -llinalg -lmpich.cnk -llime
+fortran mpi bindings: libfmpich.cnk.a
+extra underscore: libfmpich_.cnk.a
+Common BGP message layer interface in C: libdcmf.cnk.a
+Common BGP message layer interface for general collectives in C: libdcmfcoll.cnk.a
+-lesslbg -lxlf90 -lxlfmath -lxl -lxlopt
+
+
+mpixlc -o phmc_tm -L/home/cmcneile/lib -L./lib -L../../install//lib/ -L/opt/ibmcmp/xlf/bg/11.1/lib  -L/bgsys/drivers/ppcfloor/comm/ -L/opt/ibmmath/lib -L/bgsys/drivers/ppcfloor/comm/lib  phmc_tm.o -lhmc -lsolver -llinalg -lesslbg -lfmpich.cnk -lxlf90_r -lmpich.cnk -lxlomp_ser -lxl -lxlopt -lrt -lpthread -llime  -lm

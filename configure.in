@@ -359,10 +359,10 @@ else
 fi
 
 AC_MSG_CHECKING(whether we shall use rts dram window)
-AC_ARG_WITH([withdram],
+AC_ARG_WITH([bgldram],
   [  --with-bgldram          use BGL dram window (BGL only!) [default=yes]],
-  withdram=$withval, withdram=yes)
-if test $withdram = yes; then
+  with_bgldram=$withval, with_bgldram=yes)
+if test $with_bgldram = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(_USE_BGLDRAM,1,use BGL dram window)
 else
@@ -546,7 +546,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "blrts"; then
   CFLAGS="$CFLAGS"
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
-  if test $withdram = yes; then
+  if test "$with_bgldram" = yes; then
     if (test -e /bgl/local/bin/blrts_gcc); then
       BLRTSGCC=/bgl/local/bin/blrts_gcc
     elif (test -e /bgl/BlueLight/ppcfloor/blrts-gnu/bin/powerpc-bgl-blrts-gnu-gcc); then

@@ -9485,14 +9485,14 @@ fi
 { echo "$as_me:$LINENO: checking whether we shall use rts dram window" >&5
 echo $ECHO_N "checking whether we shall use rts dram window... $ECHO_C" >&6; }
 
-# Check whether --with-withdram was given.
-if test "${with_withdram+set}" = set; then
-  withval=$with_withdram; withdram=$withval
+# Check whether --with-bgldram was given.
+if test "${with_bgldram+set}" = set; then
+  withval=$with_bgldram; with_bgldram=$withval
 else
-  withdram=yes
+  with_bgldram=yes
 fi
 
-if test $withdram = yes; then
+if test $with_bgldram = yes; then
   { echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
 
@@ -9714,7 +9714,7 @@ cat >>confdefs.h <<\_ACEOF
 #define NOF77_ 1
 _ACEOF
 
-  if test $withdram = yes; then
+  if test "$with_bgldram" = yes; then
     if (test -e /bgl/local/bin/blrts_gcc); then
       BLRTSGCC=/bgl/local/bin/blrts_gcc
     elif (test -e /bgl/BlueLight/ppcfloor/blrts-gnu/bin/powerpc-bgl-blrts-gnu-gcc); then
