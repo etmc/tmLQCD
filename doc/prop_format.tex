@@ -64,7 +64,9 @@ flavour propagator (flavour non-diagonal 2-flavour operator). In the
 former case there follows one record of type
 {\ttfamily scidac-binary-data}, which is identical to the SCIDAC
 format, containing the fermion field. In the latter case there follow
-two of such records, the first of which is the upper flavour.
+two of such records, the first of which is the upper flavour. To be
+precise, lets call the two flavours $s$ and $c$. Then we always store
+the $s$ component first and then the $c$ component.
 Any number of other records can be added for convenience.
 
 The first two types are by now supported. In the future the other two
