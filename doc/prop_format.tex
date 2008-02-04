@@ -20,8 +20,7 @@ This is very similar to the formats in use in parts of the US
 community. However, they use XML as a markup language, which we don't
 (yet) use.
 
-An open issue is an appropriate checksum. The maybe easiest is to
-implement the SCIDAC checksum.
+We adopt the SCIDAC chechsum for gauge and propagator files.
 
 Every source and sink has to be in a seperate lime record. The order
 in one file for the four formats mentioned above is supposed to be 
@@ -32,7 +31,7 @@ in one file for the four formats mentioned above is supposed to be
 \item one source, 4 sink: first source, then 4 sinks
 \end{enumerate}
 All fermion field files must have a record indicating the type. The
-record itself is of type {\ttfamily etmc-propagator-type} and the
+record itself is of type {\ttfamily propagator-type} and the
 record has a single entry (ascii string) which can contain one of 
 \begin{itemize}
 \item {\ttfamily DiracFermion\_Sink}
@@ -60,7 +59,7 @@ and should contain the following information:
 </etmcFormat>
 \end{verbatim}
 The {\ttfamily flavours} entry must be set to {\ttfamily 1} for a one
-flavour propagator (flavour diagonal operator) and to {\ttfamily 2} for a two
+flavour propagator (flavour diagonal case) and to {\ttfamily 2} for a two
 flavour propagator (flavour non-diagonal 2-flavour operator). In the
 former case there follows one record of type
 {\ttfamily scidac-binary-data}, which is identical to the SCIDAC
