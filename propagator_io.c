@@ -54,9 +54,14 @@ int write_double_propagator(spinor * const s, spinor * const r,
 			    char * filename, const int append, const int prec) {
   int err = 0;
 
+  /* we store strange component first, then charm */
+  /* strange -> (mu_sigma - mu_delta)             */
+  /* charm   -> (mu_sigma + mu_delta)             */
+  /* they are in interchaged order in our code    */
+
   write_propagator_format(filename, prec, 2);
-  err = write_lime_spinor(s, r, filename, append, prec);
-  err += write_lime_spinor(p, q, filename, append, prec);
+  err = write_lime_spinor(p, q, filename, append, prec);
+  err += write_lime_spinor(s, r, filename, append, prec);
   return(err);
 }
 

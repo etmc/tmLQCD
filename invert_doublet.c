@@ -269,7 +269,11 @@ int main(int argc,char *argv[]) {
     for(ix = index_start; ix < index_end; ix++) {
       is = (ix / 3);
       ic = (ix % 3);
-      for(fl = 0; fl < 2; fl++) {
+
+      for(fl = 1; fl > -1; fl--) {
+	/* We have two flavour components now, remember! */
+	/* what we call strange (mu_sigma - mu_delta) is */
+	/* for us the second component */
 	zero_spinor_field(g_spinor_field[0], VOLUME/2);
 	zero_spinor_field(g_spinor_field[1], VOLUME/2);
 	zero_spinor_field(g_spinor_field[2], VOLUME/2);
@@ -400,7 +404,7 @@ int main(int argc,char *argv[]) {
 			 g_spinor_field[DUM_DERI+3], -1., VOLUME/2);
 	
 	if(propagator_splitted) {
-	  if(fl == 0) {
+	  if(fl == 1) {
 	    write_propagator_type(write_prop_format_flag, conf_filename);
 	  }
 	  write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
@@ -414,12 +418,12 @@ int main(int argc,char *argv[]) {
 	}
 	else {
 	  /* 	sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore); */
-	  if(ix == index_start && fl == 0) {
+	  if(ix == index_start && fl == 1) {
 	    write_propagator_type(write_prop_format_flag, conf_filename);
 	  }
 	  write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
 	  /* write the source depending on format */
-	  if(write_prop_format_flag == 1 && fl == 0) {
+	  if(write_prop_format_flag == 1 && fl == 1) {
 	    write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
 	  }
 	  write_double_propagator(g_spinor_field[4], g_spinor_field[5],
