@@ -16,7 +16,7 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#if (defined BGL)
+#if (defined BGL && !defined BGP)
 #  include <rts.h>
 #endif
 #include "su3.h"
@@ -50,12 +50,14 @@
 #  define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2) + (T*LX*LZ) + (T*LX*LY))
 #endif
 
-#ifdef BGL
+#if (defined BGL && !defined BGP)
 static double clockspeed=1.0e-6/700.0;
 
 double bgl_wtime() {
   return ( rts_get_timebase() * clockspeed );
 }
+#else
+double bgl_wtime() { return(MPI_Wtime()); }
 #endif
 
 int check_xchange();

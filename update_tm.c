@@ -81,10 +81,12 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   double ret_enerphi0 = 0., ret_enerphi1 = 0., ret_enerphi2 = 0.;
   FILE * rlxdfile=NULL, * datafile=NULL, * ret_check_file=NULL;
 
-  if(ini_g_tmp == 0) 
-  {
-      ini_g_tmp = 1;
-      init_gauge_tmp(VOLUME);
+  if(ini_g_tmp == 0) {
+    ini_g_tmp = init_gauge_tmp(VOLUME);
+    if(ini_g_tmp != 0) {
+      exit(-1);
+    }
+    ini_g_tmp = 1;
   }
 
   /* This is needed in order to let the */

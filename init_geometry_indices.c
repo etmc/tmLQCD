@@ -14,37 +14,37 @@ int *iup = NULL, *idn = NULL, *ipt = NULL, **ipt_ = NULL, ***ipt__ = NULL;
 int init_geometry_indices(const int V) {
   int i = 0;
 
-  g_idn= calloc(V, sizeof(int*));
-  if(errno == ENOMEM) return(1);
-  g_iup = calloc(V, sizeof(int*));
-  if(errno == ENOMEM) return(2);
+  g_idn= (int**)calloc(V, sizeof(int*));
+  if((void*)g_idn == NULL) return(1);
+  g_iup = (int**)calloc(V, sizeof(int*));
+  if((void*)g_iup == NULL) return(2);
 
-  idn = calloc(4*V, sizeof(int));
-  if(errno == ENOMEM) return(6);
-  iup = calloc(4*V, sizeof(int));
-  if(errno == ENOMEM) return(7);
+  idn = (int*)calloc(4*V, sizeof(int));
+  if((void*)idn == NULL ) return(6);
+  iup = (int*)calloc(4*V, sizeof(int));
+  if((void*)iup == NULL) return(7);
 
-  g_ipt = calloc(T+4,sizeof(int*));
-  if(errno == ENOMEM) return(5);
-  ipt__ = calloc ((T+4)*(LX+4), sizeof(int*));
-  if(errno == ENOMEM) return(4);
-  ipt_ = calloc((T+4)*(LX+4)*(LY+4), sizeof(int*));
-  if(errno == ENOMEM) return(3);
-  ipt = calloc((T+4)*(LX+4)*(LY+4)*(LZ+4), sizeof(int));
-  if(errno == ENOMEM) return(8);
+  g_ipt = (int**)calloc(T+4,sizeof(int*));
+  if((void*)g_ipt == NULL) return(5);
+  ipt__ = (int**)calloc ((T+4)*(LX+4), sizeof(int*));
+  if((void*)ipt__ == NULL) return(4);
+  ipt_ = (int**)calloc((T+4)*(LX+4)*(LY+4), sizeof(int*));
+  if((void*)ipt_ == NULL) return(3);
+  ipt = (int*)calloc((T+4)*(LX+4)*(LY+4)*(LZ+4), sizeof(int));
+  if((void*)ipt == NULL) return(8);
 
-  g_lexic2eo = calloc(V, sizeof(int));
-  if(errno == ENOMEM) return(9);
-  g_lexic2eosub = calloc(V, sizeof(int));
-  if(errno == ENOMEM) return(10);
-  g_eo2lexic = calloc(V, sizeof(int));
-  if(errno == ENOMEM) return(11);
+  g_lexic2eo = (int*)calloc(V, sizeof(int));
+  if((void*)g_lexic2eo == NULL) return(9);
+  g_lexic2eosub = (int*)calloc(V, sizeof(int));
+  if((void*)g_lexic2eosub == NULL) return(10);
+  g_eo2lexic = (int*)calloc(V, sizeof(int));
+  if((void*)g_eo2lexic == NULL) return(11);
 
 #if defined PARALLELXYZT
-  g_field_z_ipt_even = calloc(T*LX*LY, sizeof(int));
-  if(errno == ENOMEM) return(12);
-  g_field_z_ipt_odd  = calloc(T*LX*LY, sizeof(int));
-  if(errno == ENOMEM) return(13);
+  g_field_z_ipt_even = (int*)calloc(T*LX*LY, sizeof(int));
+  if((void*)g_field_z_ipt_even == NULL) return(12);
+  g_field_z_ipt_odd  = (int*)calloc(T*LX*LY, sizeof(int));
+  if((void*)g_field_z_ipt_odd == NULL) return(13);
 #endif
 
   g_idn[0] = idn;

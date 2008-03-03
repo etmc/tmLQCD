@@ -3,14 +3,14 @@
 # Process this file with autoconf to produce a configure script
 #
 AC_PREREQ(2.53)
-AC_INIT(HMC, 4.0.0, carsten.urbach@liverpool.ac.uk)
+AC_INIT(HMC, 4.0.1, carsten.urbach@liverpool.ac.uk)
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()
 AC_PREFIX_DEFAULT($HOME)
 AC_ARG_PROGRAM
 
-if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts"; then
+if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
   echo We are on a IBM Power PC, using xlc and xlC or mpcc/mpCC
   CC=xlc_r
   CXX=xlC_r
@@ -168,7 +168,7 @@ if test $enable_mpi = yes; then
   if test "$host_vendor" != "cray"; then
     cross_compiling=yes
   fi
-  if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts"; then
+  if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
     CC=mpcc_r
     CXX=mpCC_r
     CCLD=mpcc_r
@@ -185,7 +185,7 @@ fi
 # AC_CONFIG_SUBDIRS( rng )
 
 # Checks for libraries.
-if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts"; then
+if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
   if test $with_lapack = yes; then
     AC_CHECK_LIB(essl, zaxpy, ,AC_MSG_ERROR([libessl is missing or zaxpy not available]), -lf -lm )
     AC_CHECK_LIB(lapack, zheev, LP=yes;AC_DEFINE(HAVE_LAPACK,1,lapack available), LP="", -lessl -lblas -lf -lm )
@@ -196,7 +196,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
     echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
   fi
 
-elif test "$host_cpu" = "ppc64" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts"; then
+elif test "$host_cpu" = "ppc64" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
   if test $with_lapack = yes; then
     AC_CHECK_LIB(lapack, zheev, LP=yes, LP="", -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
     echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
@@ -587,6 +587,42 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
   fi
   CPPFLAGS="-I/bgl/BlueLight/ppcfloor/bglsys/include"
   INCLUDES="$INCLUDES -I/bgl/BlueLight/ppcfloor/bglsys/include/"
+
+#The BLue Gene/P
+elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "bprts"; then
+  CFLAGS="$CFLAGS"
+  AC_DEFINE(NOF77_,1,Fortran has not extra _)
+  DEBUGFLAG="-g"
+  OPTARGS="-O3"
+  SOPTARGS="-O3"
+  AC_DEFINE(BGL,1,[Optimize for Blue Gene/L])
+  AC_DEFINE(BGP,1,[Optimize for Blue Gene/P])
+
+  if test "$GCC" != yes; then
+    CFLAGS="-qsrcmsg $CFLAGS"
+    OPTARGS="$OPTARGS -qarch=440d -qtune=440"
+    SOPTARGS="$SOPTARGS -qarch=440d -qtune=440"
+    DEBUGFLAG="$DEBUGFLAG -qfullpath"
+# OPTARGS="-qhot" leads to wrong code
+    XLC=yes
+    AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
+  fi
+  LIBS="-lfmpich.cnk -lxlf90_r -lmpich.cnk -lxlomp_ser -lxl -lxlopt -lrt -lpthread  $LIBS"
+  LDFLAGS="$LDFLAGS -L/opt/ibmcmp/xlf/bg/11.1/lib  -L/bgsys/drivers/ppcfloor/comm/"
+  if test $with_lapack = yes; then
+    LIBS="-lesslbg -llapack.cnk -lesslbg $LIBS"
+    LDFLAGS="$LDFLAGS -L/opt/ibmmath/lib/"
+  fi
+
+  if test "$CCDEP" = "gcc"; then
+    DEPFLAGS="-MM"
+  else
+    DEPFLAGS="-M"
+  fi
+  CPPFLAGS="-I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
+  INCLUDES="$INCLUDES -I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
+
+
 
 # The IBM Power PC
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then

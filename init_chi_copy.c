@@ -16,12 +16,14 @@ spinor * sp_cdn = NULL;
 int init_chi_up_copy(const int V) {
   int i = 0;
 
-  sp_cup = (spinor*)calloc(V+1, sizeof(spinor));
-  if(errno == ENOMEM) {
+  if((void*)(sp_cup = (spinor*)calloc(V+1, sizeof(spinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(1);
   }
-  g_chi_up_copy = malloc(sizeof(spinor*));
-  if(errno == ENOMEM) {
+  if((void*)(g_chi_up_copy = malloc(sizeof(spinor*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(2);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
@@ -42,12 +44,14 @@ void free_chi_up_copy() {
 int init_chi_dn_copy(const int V) {
   int i = 0;
 
-  sp_cdn = (spinor*)calloc(V+1, sizeof(spinor));
-  if(errno == ENOMEM) {
+  if((void*)(sp_cdn = (spinor*)calloc(V+1, sizeof(spinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(1);
   }
-  g_chi_dn_copy = malloc(sizeof(spinor*));
-  if(errno == ENOMEM) {
+  if((void*)(g_chi_dn_copy = malloc(sizeof(spinor*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(2);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)

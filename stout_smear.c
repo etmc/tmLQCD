@@ -73,7 +73,7 @@ int stout_smear_gauge_field(const double rho , const int no_iters)
 
 
   printf("DUMP OF g_gauge_field in STOUT\n");
-  print_config_to_screen(g_gauge_field);
+/*  print_config_to_screen(g_gauge_field); */
 
   if(g_proc_id == 0) 
   {

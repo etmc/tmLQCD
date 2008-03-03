@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#ifdef BGL
+#if defined BGL && !defined BGP
 # include <rts.h>
 #endif
 #ifdef _USE_SHMEM
@@ -31,31 +31,36 @@ halfspinor32 *** NBPointer32;
 int init_dirac_halfspinor() {
   int ieo=0, i=0, j=0, k;
   int x, y, z, t, mu;
-#if (defined BGL && defined _USE_BGLDRAM)
+#if (defined BGL && defined _USE_BGLDRAM && !defined BGP)
   unsigned int actualSize;
   int rts_return=0;
 #endif  
 
-  NBPointer = (halfspinor***) malloc(4*sizeof(halfspinor**));
-  NBPointer_ = (halfspinor**) malloc(16*(VOLUME+RAND)*sizeof(halfspinor*));
+  NBPointer = (halfspinor***) calloc(4,sizeof(halfspinor**));
+  NBPointer_ = (halfspinor**) calloc(16,(VOLUME+RAND)*sizeof(halfspinor*));
   NBPointer[0] = NBPointer_;
   NBPointer[1] = NBPointer_ + (8*(VOLUME+RAND)/2);
   NBPointer[2] = NBPointer_ + (16*(VOLUME+RAND)/2);
   NBPointer[3] = NBPointer_ + (24*(VOLUME+RAND)/2);
 
 #ifdef _USE_SHMEM
-  HalfSpinor_ = (halfspinor*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor));
-#elif (defined BGL && defined _USE_BGLDRAM)
+  if((coid*)(HalfSpinor_ = (halfspinor*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+#elif (defined BGL && defined _USE_BGLDRAM && !defined BGP)
   rts_return = rts_get_dram_window(8*((VOLUME+RAND)+1)*sizeof(halfspinor), RTS_STORE_WITHOUT_ALLOCATE, (void**)&HalfSpinor_, &actualSize);
   if(rts_return !=0) {
     return(-1);
   }
 #else
-  HalfSpinor_ = (halfspinor*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor));
-#endif
-  if(errno == ENOMEM) {
-    return(-1);
+  if((void*)(HalfSpinor_ = (halfspinor*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
   }
+#endif
 #if ( defined SSE || defined SSE2 || defined SSE3)
   HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
@@ -183,31 +188,37 @@ int init_dirac_halfspinor() {
 int init_dirac_halfspinor32() {
   int ieo=0, i=0, j=0, k;
   int x, y, z, t, mu;
-#if (defined BGL && defined _USE_BGLDRAM)
+#if (defined BGL && defined _USE_BGLDRAM && !defined BGP)
   unsigned int actualSize;
   int rts_return=0;
 #endif  
   
-  NBPointer32 = (halfspinor32***) malloc(4*sizeof(halfspinor32**));
-  NBPointer32_ = (halfspinor32**) malloc(16*(VOLUME+RAND)*sizeof(halfspinor32*));
+  NBPointer32 = (halfspinor32***) calloc(4,sizeof(halfspinor32**));
+  NBPointer32_ = (halfspinor32**) calloc(16,(VOLUME+RAND)*sizeof(halfspinor32*));
   NBPointer32[0] = NBPointer32_;
   NBPointer32[1] = NBPointer32_ + (8*(VOLUME+RAND)/2);
   NBPointer32[2] = NBPointer32_ + (16*(VOLUME+RAND)/2);
   NBPointer32[3] = NBPointer32_ + (24*(VOLUME+RAND)/2);
 
 #ifdef _USE_SHMEM
-  HalfSpinor32_ = (halfspinor32*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor32));
-#elif (defined BGL && defined _USE_BGLDRAM)
+  if((void*)(HalfSpinor32_ = (halfspinor32*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor32))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+#elif (defined BGL && defined _USE_BGLDRAM && !defined BGP)
   rts_return = rts_get_dram_window(8*((VOLUME+RAND)+1)*sizeof(halfspinor32), RTS_STORE_WITHOUT_ALLOCATE, (void**)&HalfSpinor32_, &actualSize);
   if(rts_return !=0) {
     return(-1);
   }
 #else
-  HalfSpinor32_ = (halfspinor32*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor32));
-#endif
-  if(errno == ENOMEM) {
+  if((void*)(HalfSpinor32_ = (halfspinor32*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor32))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(-1);
   }
+#endif
+
 #if ( defined SSE || defined SSE2 || defined SSE3)
   HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE)&~ALIGN_BASE);
 #else

@@ -69,6 +69,9 @@
 /* Optimize for Blue Gene/L */
 #undef BGL
 
+/* Optimize for Blue Gene/P */
+#undef BGP
+
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN

@@ -16,12 +16,14 @@ spinor * sp_dn = NULL;
 int init_chi_up_spinor_field(const int V, const int nr) {
   int i = 0;
 
-  sp_up = (spinor*)calloc(nr*V+1, sizeof(spinor));
-  if(errno == ENOMEM) {
+  if((void*)(sp_up = (spinor*)calloc(nr*V+1, sizeof(spinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(1);
   }
-  g_chi_up_spinor_field = malloc(nr*sizeof(spinor*));
-  if(errno == ENOMEM) {
+  if((void*)(g_chi_up_spinor_field = malloc(nr*sizeof(spinor*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(2);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
@@ -46,12 +48,14 @@ void free_chi_up_spinor_field() {
 int init_chi_dn_spinor_field(const int V, const int nr) {
   int i = 0;
 
-  sp_dn = (spinor*)calloc(nr*V+1, sizeof(spinor));
-  if(errno == ENOMEM) {
+  if((void*)(sp_dn = (spinor*)calloc(nr*V+1, sizeof(spinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(1);
   }
-  g_chi_dn_spinor_field = malloc(nr*sizeof(spinor*));
-  if(errno == ENOMEM) {
+  if((void*)(g_chi_dn_spinor_field = malloc(nr*sizeof(spinor*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(2);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)

@@ -1,7 +1,7 @@
 /* $Id$ */
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+ # include<config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,31 +16,36 @@ su3adj * mo=NULL, *df=NULL, *du=NULL;
 int init_moment_field(const int V, const int VR) {
   int i = 0;
 
-  mo = (su3adj*)calloc(4*V+1, sizeof(su3adj));
-  if(errno == ENOMEM) {
+/*   posix_memalign(void **memptr, size_t alignment, size_t size) */
+  if( (int*)(mo = (su3adj*)calloc(4*V+1, sizeof(su3adj))) == NULL){ 
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(1);
   }
-  moment = malloc(V*sizeof(su3adj*));
-  if(errno == ENOMEM) {
+  if((void*)(moment = (su3adj**)calloc(V,sizeof(su3adj*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(2);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
   moment[0] = (su3adj*)(((unsigned long int)(mo)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  moment[0] = mo;
+  moment[0] = mo; 
 #endif
   
   for(i = 1; i < V; i++){
     moment[i] = moment[i-1]+4;
-  }
+  } 
 
-  df = (su3adj*)calloc(4*VR+1, sizeof(su3adj));
-  if(errno == ENOMEM) {
-    return(1);
+  if((void*)(df = (su3adj*)calloc(4*VR+1, sizeof(su3adj))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(3);
   }
-  df0 = malloc(VR*sizeof(su3adj*));
-  if(errno == ENOMEM) {
-    return(2);
+  if((void*)(df0 = (su3adj**)calloc(VR,sizeof(su3adj*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(4);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
   df0[0] = (su3adj*)(((unsigned long int)(df)+ALIGN_BASE)&~ALIGN_BASE);
@@ -48,17 +53,19 @@ int init_moment_field(const int V, const int VR) {
   df0[0] = df;
 #endif
   
-  for(i = 1; i < VR; i++){
-    df0[i] = df0[i-1]+4;
+  for(i = 1; i < VR; i++) {
+    df0[i] = df0[i-1]+4; 
   }
-
-  du = (su3adj*)calloc(4*VR+1, sizeof(su3adj));
-  if(errno == ENOMEM) {
-    return(1);
+  
+  if((void*)(du = (su3adj*)calloc(4*VR+1, sizeof(su3adj))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(5);
   }
-  ddummy = malloc(VR*sizeof(su3adj*));
-  if(errno == ENOMEM) {
-    return(2);
+  if((void*)(ddummy = (su3adj**)calloc(VR,sizeof(su3adj*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(6);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
   ddummy[0] = (su3adj*)(((unsigned long int)(du)+ALIGN_BASE)&~ALIGN_BASE);

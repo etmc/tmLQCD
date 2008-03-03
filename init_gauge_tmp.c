@@ -17,12 +17,14 @@ su3 ** gauge_tmp = NULL;
 int init_gauge_tmp(const int V) {
   int i=0;
 
-  gauge_tmp = calloc(V, sizeof(su3*));
-  if(errno == ENOMEM) {
+  if((void*)(gauge_tmp = (su3**)calloc(V, sizeof(su3*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(1);
   }
-  gauge_tmp_ = calloc(4*V+1, sizeof(su3));
-  if(errno == ENOMEM) {
+  if((void*)(gauge_tmp_ = (su3*)calloc(4*V+1, sizeof(su3))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(1);
   }
 #if (defined SSE || defined SSE2 || defined SSE3)

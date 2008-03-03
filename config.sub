@@ -1355,6 +1355,9 @@ case $os in
 	-blrts)
 		os=-blrts
 		;;
+        -bprts)
+		os=-bprts
+		;;
 	-none)
 		;;
 	*)

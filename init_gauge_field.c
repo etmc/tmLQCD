@@ -18,13 +18,15 @@ int init_gauge_field(const int V, const int back) {
   int i=0;
 
   g_gauge_field_copy = NULL;
-  g_gauge_field = calloc(V, sizeof(su3*));
-  if(errno == ENOMEM) {
+  if((void*)(g_gauge_field = (su3**)calloc(V, sizeof(su3*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(1);
   }
-  gauge_field = calloc(4*V+1, sizeof(su3));
-  if(errno == ENOMEM) {
-    return(1);
+  if((void*)(gauge_field = (su3*)calloc(4*V+1, sizeof(su3))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(2);
   }
 #if (defined SSE || defined SSE2 || defined SSE3)
   g_gauge_field[0] = (su3*)(((unsigned long int)(gauge_field)+ALIGN_BASE)&~ALIGN_BASE);
@@ -40,15 +42,21 @@ int init_gauge_field(const int V, const int back) {
     /*
       g_gauge_field_copy[ieo][PM][sites/2][mu]
     */
-    g_gauge_field_copy = (su3***)calloc(2, sizeof(su3**));
-    g_gauge_field_copy[0] = (su3**)calloc(VOLUME, sizeof(su3*));
-    g_gauge_field_copy[1] = g_gauge_field_copy[0] + (VOLUME)/2;
-    if(errno == ENOMEM) {
-      return(2);
+    if((void*)(g_gauge_field_copy = (su3***)calloc(2, sizeof(su3**))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(3);
     }
-    gauge_field_copy = (su3*)calloc(4*(VOLUME)+1, sizeof(su3));
-    if(errno == ENOMEM) {
-      return(2);
+    if((void*)(g_gauge_field_copy[0] = (su3**)calloc(VOLUME, sizeof(su3*))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(3);
+    }
+    g_gauge_field_copy[1] = g_gauge_field_copy[0] + (VOLUME)/2;
+    if((void*)(gauge_field_copy = (su3*)calloc(4*(VOLUME)+1, sizeof(su3))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(4);
     }
 #    if (defined SSE || defined SSE2 || defined SSE3)
     g_gauge_field_copy[0][0] = (su3*)(((unsigned long int)(gauge_field_copy)+ALIGN_BASE)&~ALIGN_BASE);
@@ -65,13 +73,15 @@ int init_gauge_field(const int V, const int back) {
   }
 #  else
   if(back == 1) {
-    g_gauge_field_copy = calloc((VOLUME+RAND), sizeof(su3*));
-    if(errno == ENOMEM) {
-      return(2);
+    if((void*)(g_gauge_field_copy = (su3**)calloc((VOLUME+RAND), sizeof(su3*))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(3);
     }
-    gauge_field_copy = calloc(8*(VOLUME+RAND)+1, sizeof(su3));
-    if(errno == ENOMEM) {
-      return(2);
+    if((void*)(gauge_field_copy = (su3*)calloc(8*(VOLUME+RAND)+1, sizeof(su3))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(4);
     }
 #  if (defined SSE || defined SSE2 || defined SSE3)
     g_gauge_field_copy[0] = (su3*)(((unsigned long int)(gauge_field_copy)+ALIGN_BASE)&~ALIGN_BASE);

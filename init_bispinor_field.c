@@ -16,12 +16,14 @@ bispinor * bisp = NULL;
 int init_bispinor_field(const int V, const int nr) {
   int i = 0;
 
-  bisp = (bispinor*)calloc(nr*V+1, sizeof(bispinor));
-  if(errno == ENOMEM) {
+  if((void*)(bisp = (bispinor*)calloc(nr*V+1, sizeof(bispinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(1);
   }
-  g_bispinor_field = malloc(nr*sizeof(bispinor*));
-  if(errno == ENOMEM) {
+  if((void*)(g_bispinor_field = malloc(nr*sizeof(bispinor*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
     return(2);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
