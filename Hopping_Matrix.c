@@ -41,7 +41,7 @@
  *
  *   #endif
  *
- * #else \/* thats _USE_HALFSPINOR *\/
+ * #else * thats _USE_HALFSPINOR *
  *
  *   #if ((defined SSE2)||(defined SSE3))
  *
@@ -55,7 +55,7 @@
  *
  *     6.
  *
- *   \/* else of If defined SSE2  and if defined XLC *\/
+ *   * else of If defined SSE2  and if defined XLC *
  *   #else
  *
  *     7.
@@ -63,7 +63,7 @@
  *   #endif
  *
  *
- * #endif \/* thats _USE_HALFSPINOR *\/
+ * #endif * thats _USE_HALFSPINOR *
  *
  ***********************************************************/
 

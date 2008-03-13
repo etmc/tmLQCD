@@ -365,6 +365,7 @@ int main(int argc,char *argv[]) {
     }
     if(gauge_precision_read_flag == 64) {
       read_lime_gauge_field(gauge_input_filename);
+/*       read_gauge_field_time_p(gauge_input_filename); */
     }
     else if(gauge_precision_read_flag == 32){
       read_lime_gauge_field_singleprec(gauge_input_filename);
@@ -480,8 +481,9 @@ int main(int argc,char *argv[]) {
     
     if(((Nskip !=0) && (trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
       /* Write the gauge configuration first to a temporary file */
+/*       write_gauge_field_time_p( tmp_filename); */
       write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), 
-			      trajectory_counter, gauge_precision_write_flag);
+   			      trajectory_counter, gauge_precision_write_flag); 
 
       /*  write the status of the random number generator to a file */
       if(g_proc_id==0) {

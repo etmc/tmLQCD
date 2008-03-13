@@ -24,7 +24,7 @@
 #include"io.h"
 #include"gauge_io.h"
 
-#define MAXBUF 1048576
+/* #define MAXBUF 1048576 */
 
 
 int write_binary_gauge_data(LimeWriter * limewriter,
@@ -35,7 +35,8 @@ int write_binary_gauge_data(LimeWriter * limewriter,
   su3 tmp3[4];
   float tmp2[72];
   int coords[4];
-  n_uint64_t bytes;
+/*   n_uint64_t bytes; */
+  unsigned long long bytes; 
   DML_SiteRank rank;
 #ifdef MPI
   MPI_Status mpi_status;
@@ -43,8 +44,8 @@ int write_binary_gauge_data(LimeWriter * limewriter,
 
   DML_checksum_init(ans);
 
-  if(prec == 32) bytes = 2*sizeof(su3);
-  else bytes = 4*sizeof(su3);
+  if(prec == 32) bytes = (unsigned long long)2*sizeof(su3);
+  else bytes = (unsigned long long)4*sizeof(su3);
   for(t0 = 0; t0 < T*g_nproc_t; t0++) {
     tt = t0 - g_proc_coords[0]*T;
     coords[0] = t0 / T;
@@ -111,6 +112,7 @@ int write_binary_gauge_data(LimeWriter * limewriter,
 	    if(status < 0 ) {
 	      fprintf(stderr, "LIME write error %d\n", status);
 	      fprintf(stderr, "x %d, y %d, z %d, t %d (%d,%d,%d,%d)\n",x,y,z,tt,X,Y,Z,tt);
+	      fprintf(stderr, "id = %d, bytes = %llu, size = %d\n", g_proc_id, bytes,  4*sizeof(su3)/8); 
 #ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 1);
 	      MPI_Finalize();
@@ -161,23 +163,24 @@ int write_binary_gauge_data(LimeWriter * limewriter,
 int read_binary_gauge_data(LimeReader * limereader, 
 			   const double prec, DML_Checksum * ans) {
   int t, x, y , z, status=0;
-  n_uint64_t bytes;
+/*   n_uint64_t bytes; */
+  unsigned long long bytes;
   su3 tmp[4];
   float tmp2[72];
   DML_SiteRank rank;
 
   DML_checksum_init(ans);
   
-  if(prec == 32) bytes = (n_uint64_t) 4*sizeof(su3)/2;
-  else bytes = (n_uint64_t) 4*sizeof(su3);
+  if(prec == 32) bytes = (unsigned long long) 4*sizeof(su3)/2;
+  else bytes = (unsigned long long) 4*sizeof(su3);
   for(t = 0; t < T; t++){
     for(z = 0; z < LZ; z++){
       for(y = 0; y < LY; y++){
 #if (defined MPI)
-	limeReaderSeek(limereader,(n_uint64_t) 
-		       (g_proc_coords[1]*LX + 
-			(((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
-			 + g_proc_coords[2]*LY+y)*LX*g_nproc_x)*4*sizeof(su3),
+	limeReaderSeek(limereader,(unsigned long long) 
+		       (((unsigned long long) g_proc_coords[1]*LX) + 
+			((unsigned long long) (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
+			 + g_proc_coords[2]*LY+y)*LX*g_nproc_x))*((unsigned long long) 4*sizeof(su3)),
 		       SEEK_SET);
 #endif
 	for(x = 0; x < LX; x++) {
@@ -244,7 +247,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   LimeRecordHeader * limeheader = NULL;
   /* Message end and Message begin flag */
   int ME_flag=0, MB_flag=0, status=0;
-  n_uint64_t bytes;
+  unsigned long long bytes;
   DML_Checksum checksum;
   
   write_xlf_info(plaq, counter, filename, 0);
@@ -270,7 +273,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
     }
     write_ildg_format_xml("temp.xml", limewriter, 0);
     
-    bytes = LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3);
+    bytes = ((unsigned long long)LX*g_nproc_x)*((unsigned long long)LY*g_nproc_y)*((unsigned long long)LZ*g_nproc_z)*((unsigned long long)T*g_nproc_t)*((unsigned long long)4*sizeof(su3));
     MB_flag=0; ME_flag=0;
     limeheader = limeCreateHeader(MB_flag, ME_flag, "ildg-binary-data", bytes);
     status = limeWriteRecordHeader( limeheader, limewriter);
@@ -300,7 +303,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 int read_lime_gauge_field(char * filename) {
   FILE * ifs;
   int status, prec = 64;
-  n_uint64_t bytes;
+  unsigned long long bytes;
   char * header_type;
   LimeReader * limereader;
   DML_Checksum checksum;
@@ -344,10 +347,10 @@ int read_lime_gauge_field(char * filename) {
   }
   bytes = limeReaderBytes(limereader);
 
-  if((int)bytes == LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3)) prec = 64;
-  else if((int)bytes == (LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3))/2) prec = 32;
+  if(bytes == ((unsigned long long)LX*g_nproc_x)*((unsigned long long)LY*g_nproc_y)*((unsigned long long)LZ*g_nproc_z)*((unsigned long long)T*g_nproc_t)*((unsigned long long)4*sizeof(su3))) prec = 64;
+  else if(bytes == ((unsigned long long)LX*g_nproc_x)*((unsigned long long)LY*g_nproc_y)*((unsigned long long)LZ*g_nproc_z)*((unsigned long long)T*g_nproc_t)*((unsigned long long)4*sizeof(su3)/2)) prec = 32;
   else {
-    fprintf(stderr, "Probably wrong lattice size or precision (bytes=%d) in file %s\n", (int)bytes, filename);
+    fprintf(stderr, "Probably wrong lattice size or precision (bytes=%llu) in file %s\n", bytes, filename);
     fprintf(stderr, "Aborting...!\n");
     fflush( stdout );
 #ifdef MPI

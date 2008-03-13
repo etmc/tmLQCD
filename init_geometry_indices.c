@@ -24,9 +24,9 @@ int init_geometry_indices(const int V) {
   iup = (int*)calloc(4*V, sizeof(int));
   if((void*)iup == NULL) return(7);
 
-  g_ipt = (int**)calloc(T+4,sizeof(int*));
+  g_ipt = (int****)calloc(T+4,sizeof(int*));
   if((void*)g_ipt == NULL) return(5);
-  ipt__ = (int**)calloc ((T+4)*(LX+4), sizeof(int*));
+  ipt__ = (int***)calloc ((T+4)*(LX+4), sizeof(int*));
   if((void*)ipt__ == NULL) return(4);
   ipt_ = (int**)calloc((T+4)*(LX+4)*(LY+4), sizeof(int*));
   if((void*)ipt_ == NULL) return(3);
