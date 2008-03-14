@@ -170,7 +170,7 @@ int read_binary_gauge_data(LimeReader * limereader,
   DML_SiteRank rank;
 
   DML_checksum_init(ans);
-  
+
   if(prec == 32) bytes = (unsigned long long) 4*sizeof(su3)/2;
   else bytes = (unsigned long long) 4*sizeof(su3);
   for(t = 0; t < T; t++){
@@ -274,6 +274,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
     write_ildg_format_xml("temp.xml", limewriter, 0);
     
     bytes = ((unsigned long long)LX*g_nproc_x)*((unsigned long long)LY*g_nproc_y)*((unsigned long long)LZ*g_nproc_z)*((unsigned long long)T*g_nproc_t)*((unsigned long long)4*sizeof(su3));
+    if(prec == 32) bytes = bytes/((unsigned long long)2);
     MB_flag=0; ME_flag=0;
     limeheader = limeCreateHeader(MB_flag, ME_flag, "ildg-binary-data", bytes);
     status = limeWriteRecordHeader( limeheader, limewriter);
