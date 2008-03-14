@@ -1,5 +1,24 @@
-linking:
-mpixlc -o hmc_tm -L/home/cmcneile/lib -L./lib -L../../install//lib/ -L/bgsys/drivers/ppcfloor/comm/lib hmc_tm.o -lhmc -lsolver -llinalg -lmpich.cnk -llime
+Configure with
+
+../hmc/configure --with-lapack --enable-mpi --with-mpidimension=4 --enable-gaugecopy --with-limedir=../../c-lime/ --host=ppc-ibm-bprts --build=ppc64-ibm-linux --enable-largefiles CC=mpixlc CCFLAGS="-I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
+
+adjusting the lime directory.
+
+Running should be done with 
+NrZProcs = 4
+always. Matching the physical torus works with
+        : T*LX*LY*LZ
+midplane: 8*8*8*4
+rack:     16*8*8*4
+2rack:    32*8*8*4
+4rack:    32*16*8*4
+
+number of processors in time direction is chosen automatically.
+
+please read README.bgl as well.
+
+some notes:
+
 fortran mpi bindings: libfmpich.cnk.a
 extra underscore: libfmpich_.cnk.a
 Common BGP message layer interface in C: libdcmf.cnk.a

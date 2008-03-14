@@ -1666,15 +1666,20 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   fprintf(parameterfile, 
 	  "# The code was compiled for Pentium4\n");
 #endif
-#ifdef BGL
+#if (defined BGL && !defined BGP)
   printf("# The code was compiled for Blue Gene/L\n");
   fprintf(parameterfile, 
 	  "# The code was compiled for Blue Gene/L\n");
-#  ifdef _USE_BGLDRAM
+#  if (defined _USE_BGLDRAM)
   printf("# The code was compiled for Blue Gene/L dram window\n");
   fprintf(parameterfile, 
 	  "# The code was compiled for Blue Gene/L dram window\n");
 #  endif
+#endif
+#ifdef BGP
+  printf("# The code was compiled for Blue Gene/P\n");
+  fprintf(parameterfile,
+          "# The code was compiled for Blue Gene/P\n");
 #endif
 #ifdef OPTERON
   printf("# The code was compiled for AMD Opteron\n");
