@@ -73,7 +73,7 @@ const int rlxdsize = 105;
 
 int main(int argc,char *argv[]) {
  
-  FILE *parameterfile=NULL,*rlxdfile=NULL, *countfile=NULL;
+  FILE *parameterfile=NULL, *countfile=NULL;
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
@@ -81,16 +81,11 @@ int main(int argc,char *argv[]) {
   char nstore_filename[50];
   char tmp_filename[50];
   char * input_filename = NULL;
-  char command_string[300];
   int rlxd_state[105];
   int j,ix,mu, trajectory_counter=1;
-  int k;
   struct timeval t1;
   double x;
 
-  strcpy(gauge_filename,"conf.save");
-  strcpy(nstore_filename,".nstore_counter");
-  strcpy(tmp_filename, ".conf.tmp");
   /* Energy corresponding to the Gauge part */
   double eneg = 0., plaquette_energy = 0., rectangle_energy = 0.;
   /* Acceptance rate */
@@ -108,6 +103,10 @@ int main(int argc,char *argv[]) {
 #pragma pomp inst init
 #pragma pomp inst begin(main)
 #endif
+
+  strcpy(gauge_filename,"conf.save");
+  strcpy(nstore_filename,".nstore_counter");
+  strcpy(tmp_filename, ".conf.tmp");
 
   g_running_phmc = 0;
   DUM_DERI = 6;

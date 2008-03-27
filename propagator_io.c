@@ -221,14 +221,14 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
 	  }
 	  rank = (DML_SiteRank) (g_proc_coords[1]*LX + 
 				 (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
-				  + g_proc_coords[2]*LY+y)*LX*g_nproc_x + x);
+				  + g_proc_coords[2]*LY+y)*((DML_SiteRank)LX*g_nproc_x) + x);
 	  if(prec == 32) {
 	    status = limeReaderReadData(tmp2, &bytes, limereader);
-	    DML_checksum_accum(ans,rank,(char *) tmp2, sizeof(spinor)/2);
+	    DML_checksum_accum(ans,rank,(char *) tmp2, bytes);
 	  }
 	  else {
 	    status = limeReaderReadData(tmp, &bytes, limereader);
-	    DML_checksum_accum(ans,rank,(char *) tmp, sizeof(spinor));
+	    DML_checksum_accum(ans,rank,(char *) tmp, bytes);
 	  }
 #ifndef WORDS_BIGENDIAN
 	  if(prec == 32) {
@@ -727,7 +727,7 @@ int read_lime_spinor(spinor * const s, spinor * const r, char * filename, const 
   else if((int)bytes == LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*sizeof(spinor)/2) prec = 32;
   else {
     if(g_proc_id == 0) {
-      fprintf(stderr, "wrong length in eospinor: bytes = %d, not %d. Aborting read!\n", (int)bytes, LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*sizeof(spinor)/2);
+      fprintf(stderr, "wrong length in eospinor: bytes = %lu, not %d. Aborting read!\n", bytes, LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*sizeof(spinor)/2);
     }
     return(-1);
   }

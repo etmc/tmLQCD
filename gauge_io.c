@@ -36,7 +36,7 @@ int write_binary_gauge_data(LimeWriter * limewriter,
   float tmp2[72];
   int coords[4];
 /*   n_uint64_t bytes; */
-  unsigned long long bytes; 
+  n_uint64_t bytes; 
   DML_SiteRank rank;
 #ifdef MPI
   MPI_Status mpi_status;
@@ -44,8 +44,8 @@ int write_binary_gauge_data(LimeWriter * limewriter,
 
   DML_checksum_init(ans);
 
-  if(prec == 32) bytes = (unsigned long long)2*sizeof(su3);
-  else bytes = (unsigned long long)4*sizeof(su3);
+  if(prec == 32) bytes = (n_uint64_t)2*sizeof(su3);
+  else bytes = (n_uint64_t)4*sizeof(su3);
   for(t0 = 0; t0 < T*g_nproc_t; t0++) {
     tt = t0 - g_proc_coords[0]*T;
     coords[0] = t0 / T;
@@ -112,7 +112,7 @@ int write_binary_gauge_data(LimeWriter * limewriter,
 	    if(status < 0 ) {
 	      fprintf(stderr, "LIME write error %d\n", status);
 	      fprintf(stderr, "x %d, y %d, z %d, t %d (%d,%d,%d,%d)\n",x,y,z,tt,X,Y,Z,tt);
-	      fprintf(stderr, "id = %d, bytes = %llu, size = %d\n", g_proc_id, bytes,  4*sizeof(su3)/8); 
+	      fprintf(stderr, "id = %d, bytes = %lu, size = %d\n", g_proc_id, bytes,  4*sizeof(su3)/8); 
 #ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 1);
 	      MPI_Finalize();
@@ -180,20 +180,20 @@ int read_binary_gauge_data(LimeReader * limereader,
 	limeReaderSeek(limereader,(n_uint64_t) 
 		       (((n_uint64_t) g_proc_coords[1]*LX) + 
 			((n_uint64_t) (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
-			 + g_proc_coords[2]*LY+y)*LX*g_nproc_x))*((n_uint64_t) 4*sizeof(su3)),
+			 + g_proc_coords[2]*LY+y)*LX*g_nproc_x))*bytes,
 		       SEEK_SET);
 #endif
 	for(x = 0; x < LX; x++) {
 	  rank = (DML_SiteRank) (g_proc_coords[1]*LX + 
 				 (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
-				  + g_proc_coords[2]*LY+y)*LX*g_nproc_x + x);
+				  + g_proc_coords[2]*LY+y)*((DML_SiteRank)LX*g_nproc_x) + x);
 	  if(prec == 32) {
 	    status = limeReaderReadData(tmp2, &bytes, limereader);
- 	    DML_checksum_accum(ans,rank,(char *) tmp2, bytes);
+ 	    DML_checksum_accum(ans, rank, (char *) tmp2, bytes);
 	  }
 	  else {
 	    status = limeReaderReadData(tmp, &bytes, limereader);
-	    DML_checksum_accum(ans,rank,(char *) tmp, bytes);
+	    DML_checksum_accum(ans, rank, (char *) tmp, bytes);
 	  }
 	  if(status < 0 && status != LIME_EOR) {
 	    fprintf(stderr, "LIME read error occured with status = %d while reading!\n Aborting...\n", status);
@@ -290,6 +290,10 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   }
 
   write_binary_gauge_data(limewriter, prec, &checksum);
+  if(g_proc_id == 0) {
+    printf("# checksum for Gauge field written to file %s is %#x %#x\n", 
+	   filename, checksum.suma, checksum.sumb);
+  }
 
   if(g_cart_id == 0) {
     limeDestroyWriter( limewriter );
@@ -351,7 +355,7 @@ int read_lime_gauge_field(char * filename) {
   if(bytes == ((n_uint64_t)LX*g_nproc_x)*((n_uint64_t)LY*g_nproc_y)*((n_uint64_t)LZ*g_nproc_z)*((n_uint64_t)T*g_nproc_t)*((n_uint64_t)4*sizeof(su3))) prec = 64;
   else if(bytes == ((n_uint64_t)LX*g_nproc_x)*((n_uint64_t)LY*g_nproc_y)*((n_uint64_t)LZ*g_nproc_z)*((n_uint64_t)T*g_nproc_t)*((n_uint64_t)4*sizeof(su3)/2)) prec = 32;
   else {
-    fprintf(stderr, "Probably wrong lattice size or precision (bytes=%llu) in file %s\n", bytes, filename);
+    fprintf(stderr, "Probably wrong lattice size or precision (bytes=%lu) in file %s\n", bytes, filename);
     fprintf(stderr, "Aborting...!\n");
     fflush( stdout );
 #ifdef MPI
