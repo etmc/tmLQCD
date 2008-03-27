@@ -80,8 +80,8 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 #endif
   DML_checksum_init(ans);
 
-  if(prec == 32) bytes = sizeof(spinor)/2;
-  else bytes = sizeof(spinor);
+  if(prec == 32) bytes = (n_uint64_t)sizeof(spinor)/2;
+  else bytes = (n_uint64_t)sizeof(spinor);
   for(t0 = 0; t0 < T*g_nproc_t; t0++) {
     t = t0 - T*g_proc_coords[0];
     coords[0] = t0 / T;  
@@ -547,7 +547,7 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
       exit(500);
     }
   
-    bytes = LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*sizeof(spinor)*prec/64;
+    bytes = (n_uint64_t)LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*(n_uint64_t)(sizeof(spinor)*prec/64);
     MB_flag=0; ME_flag=1;
     limeheader = limeCreateHeader(MB_flag, ME_flag, "scidac-binary-data", bytes);
     status = limeWriteRecordHeader( limeheader, limewriter);
