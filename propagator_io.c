@@ -623,10 +623,10 @@ int get_propagator_type(char * filename) {
   status = limeReaderReadData(tmp, &bytes, limereader);
   limeDestroyReader(limereader);
   fclose(ifs);
-  if(strcmp("DiracFermion_Sink", tmp)) return(0);
-  else if(strcmp("DiracFermion_Source_Sink_Pairs", tmp)) return(1);
-  else if(strcmp("DiracFermion_ScalarSource_TwelveSink", tmp)) return(2);
-  else if(strcmp("DiracFermion_ScalarSource_FourSink", tmp)) return(3);
+  if(strcmp("DiracFermion_Sink", tmp) == 0) return(0);
+  else if(strcmp("DiracFermion_Source_Sink_Pairs", tmp) == 0) return(1);
+  else if(strcmp("DiracFermion_ScalarSource_TwelveSink", tmp) == 0) return(2);
+  else if(strcmp("DiracFermion_ScalarSource_FourSink", tmp) == 0) return(3);
   else return(-1);
 }
 
@@ -673,10 +673,10 @@ int get_source_type(char * filename) {
   status = limeReaderReadData(tmp, &bytes, limereader);
   limeDestroyReader(limereader);
   fclose(ifs);
-  if(strcmp("DiracFermion_Source", tmp)) return(0);
-  else if(strcmp("DiracFermion_ScalarSource", tmp)) return(1);
-  else if(strcmp("DiracFermion_FourScalarSource", tmp)) return(2);
-  else if(strcmp("DiracFermion_TwelveScalarSource", tmp)) return(3);
+  if(strcmp("DiracFermion_Source", tmp) == 0) return(0);
+  else if(strcmp("DiracFermion_ScalarSource", tmp) == 0) return(1);
+  else if(strcmp("DiracFermion_FourScalarSource", tmp) == 0) return(2);
+  else if(strcmp("DiracFermion_TwelveScalarSource", tmp) == 0) return(3);
   else return(-1);
 }
 
