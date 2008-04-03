@@ -269,7 +269,7 @@ int write_source_type(const int type, char * filename) {
     ofs = fopen(filename, "w");
 
     if(ofs == (FILE*)NULL) {
-      fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
+      fprintf(stderr, "Could not open file %s for writing!\n Aborting...\n", filename);
 #ifdef MPI
       MPI_Abort(MPI_COMM_WORLD, 1);
       MPI_Finalize();
@@ -339,7 +339,7 @@ int write_propagator_type(const int type, char * filename) {
     ofs = fopen(filename, "w");
 
     if(ofs == (FILE*)NULL) {
-      fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
+      fprintf(stderr, "Could not open file %s for writing!\n Aborting...\n", filename);
 #ifdef MPI
       MPI_Abort(MPI_COMM_WORLD, 1);
       MPI_Finalize();
@@ -530,7 +530,7 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
       ofs = fopen(filename, "w");
     }
     if(ofs == (FILE*)NULL) {
-      fprintf(stderr, "Could not open file %s for writing!\n Aboring...\n", filename);
+      fprintf(stderr, "Could not open file %s for writing!\n Aborting...\n", filename);
 #ifdef MPI
       MPI_Abort(MPI_COMM_WORLD, 1);
       MPI_Finalize();
@@ -539,7 +539,7 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
     }
     limewriter = limeCreateWriter( ofs );
     if(limewriter == (LimeWriter*)NULL) {
-      fprintf(stderr, "LIME error in file %s for writing!\n Aboring...\n", filename);
+      fprintf(stderr, "LIME error in file %s for writing!\n Aborting...\n", filename);
 #ifdef MPI
       MPI_Abort(MPI_COMM_WORLD, 1);
       MPI_Finalize();
