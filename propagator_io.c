@@ -711,7 +711,7 @@ int read_lime_spinor(spinor * const s, spinor * const r, char * filename, const 
       break;
     }
     header_type = limeReaderType(limereader);
-    if(!strcmp("scidac-binary-data",header_type)) getpos++;
+    if(strcmp("scidac-binary-data",header_type) == 0) getpos++;
     if(getpos == position) break;
   }
   if(status == LIME_EOF) {

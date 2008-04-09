@@ -338,7 +338,7 @@ int read_lime_gauge_field(char * filename) {
       break;
     }
     header_type = limeReaderType(limereader);
-    if(!strcmp("ildg-binary-data",header_type)) break;
+    if(strcmp("ildg-binary-data",header_type) == 0) break;
   }
   if(status == LIME_EOF) {
     if(g_proc_id == 0) {
