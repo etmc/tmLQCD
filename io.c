@@ -184,8 +184,8 @@ int write_lime_gauge_field_old(char * filename, const double plaq, const int cou
   }
   if(g_cart_id == 0) {
     limeDestroyWriter( limewriter );
-    fclose(ofs);
     fflush(ofs);
+    fclose(ofs);
   }
   return(0);
 }
@@ -371,8 +371,8 @@ int write_lime_gauge_field_singleprec(char * filename, const double plaq,
   }
   if(g_cart_id == 0) {
     limeDestroyWriter( limewriter );
-    fclose(ofs);
     fflush(ofs);
+    fclose(ofs);
   }
   return(0);
 }
@@ -1163,8 +1163,8 @@ int write_eospinor(spinor * const s, char * filename,
       fprintf(stderr, "Warning! Error while writing to file %s \n", filename);
     }
     limeDestroyWriter( limewriter );
-    fclose(ofs);
     fflush(ofs);
+    fclose(ofs);
   }
   return(0);
 }

@@ -318,8 +318,8 @@ int write_source_type(const int type, char * filename) {
     limeWriteRecordData(message, &bytes, limewriter);
 
     limeDestroyWriter( limewriter );
-    fclose(ofs);
     fflush(ofs);
+    fclose(ofs);
   }
   return(0);
 }
@@ -388,8 +388,8 @@ int write_propagator_type(const int type, char * filename) {
     limeWriteRecordData(message, &bytes, limewriter);
 
     limeDestroyWriter( limewriter );
-    fclose(ofs);
     fflush(ofs);
+    fclose(ofs);
   }
   return(0);
 }
@@ -442,8 +442,8 @@ int write_propagator_format(char * filename, const int prec, const int no_flavou
     limeWriteRecordData(message, &bytes, limewriter);
 
     limeDestroyWriter( limewriter );
-    fclose(ofs);
     fflush(ofs);
+    fclose(ofs);
   }
 
   return(0);
@@ -499,8 +499,8 @@ int write_source_format(char * filename, const int prec, const int no_flavours,
     limeWriteRecordData(message, &bytes, limewriter);
 
     limeDestroyWriter( limewriter );
-    fclose(ofs);
     fflush(ofs);
+    fclose(ofs);
   }
 
   return(0);
@@ -573,8 +573,8 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
       fprintf(stderr, "Warning! Error while writing to file %s \n", filename);
     }
     limeDestroyWriter( limewriter );
-    fclose(ofs);
     fflush(ofs);
+    fclose(ofs);
   }
   write_checksum(filename, &checksum);
   return(0);

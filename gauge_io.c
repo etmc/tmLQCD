@@ -297,8 +297,8 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 
   if(g_cart_id == 0) {
     limeDestroyWriter( limewriter );
-    fclose(ofs);
     fflush(ofs);
+    fclose(ofs);
   }
   write_checksum(filename, &checksum);
 

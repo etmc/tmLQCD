@@ -72,8 +72,8 @@ int write_checksum(char * filename, DML_Checksum * checksum) {
     limeWriteRecordData(message, &bytes, limewriter);
 
     limeDestroyWriter( limewriter );
-    fclose(ofs);
     fflush(ofs);
+    fclose(ofs);
   }
 
   return(0);
@@ -143,8 +143,8 @@ int write_inverter_info(const double epssq, const int iter, const int heavy,
     limeWriteRecordData(message, &bytes, limewriter);
     
     limeDestroyWriter( limewriter );
-    fclose(ofs);
     fflush(ofs);
+    fclose(ofs);
     
   }
   return(0);
@@ -212,8 +212,8 @@ int write_xlf_info(const double plaq, const int counter, char * filename, const 
     limeWriteRecordData(message, &bytes, limewriter);
     
     limeDestroyWriter( limewriter );
-    fclose(ofs);
     fflush(ofs);
+    fclose(ofs);
     
   }
   return(0);
