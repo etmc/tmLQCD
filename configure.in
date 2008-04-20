@@ -600,8 +600,8 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
 
   if test "$GCC" != yes; then
     CFLAGS="-qsrcmsg $CFLAGS"
-    OPTARGS="$OPTARGS -qarch=440d -qtune=440"
-    SOPTARGS="$SOPTARGS -qarch=440d -qtune=440"
+    OPTARGS="$OPTARGS -qarch=450d -qtune=450"
+    SOPTARGS="$SOPTARGS -qarch=450d -qtune=450"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
 # OPTARGS="-qhot" leads to wrong code
     XLC=yes

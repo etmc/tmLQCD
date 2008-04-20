@@ -2,7 +2,12 @@ Configure with
 
 ../hmc/configure --with-lapack --enable-mpi --with-mpidimension=4 --enable-gaugecopy --with-limedir=../../c-lime/ --host=ppc-ibm-bprts --build=ppc64-ibm-linux --enable-largefiles CC=mpixlc CCFLAGS="-I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
 
-adjusting the lime directory.
+adjusting the lime directory. Currently I am using a self compiled
+lapack library (not time critical), which is available on jugene in
+/home5/hch02/hch026/lib/liblapack.cnk.a
+and an example for a build directory can be found in
+/home5/hch02/hch026/bglhome/head/bgp4dim/
+
 
 Running should be done with 
 NrZProcs = 4
