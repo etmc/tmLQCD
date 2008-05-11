@@ -155,7 +155,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     else {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
       iter = cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &Q_pm_psi, 0, 0);
-      Q_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+      Q_plus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
     }
 

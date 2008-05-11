@@ -474,7 +474,7 @@ int main(int argc,char *argv[]) {
       }
       nstore ++;
     }
-    else if(write_cp_flag == 1 || (j >= (Nmeas -1))) {
+    else {
       sprintf(gauge_filename,"conf.save");
     }
     
