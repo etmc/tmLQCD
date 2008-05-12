@@ -152,13 +152,16 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(g_proc_id == 0) {printf("# Using GMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
       iter = gmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &D_psi);
     }
+    else if(solver_flag == GCR) {
+      if(g_proc_id == 0) {printf("# Using GMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
+      iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &D_psi);
+    }
     else {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
-      iter = cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &Q_pm_psi, 0, 0);
-      Q_plus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+      iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, rel_prec, VOLUME, &Q_pm_psi, 0, 0);
+      Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     }
-
     convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
   }
   return(iter);

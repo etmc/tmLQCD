@@ -89,7 +89,7 @@ int write_inverter_info(const double epssq, const int iter, const int heavy,
 #ifdef MPI
   MPI_Status mpi_status;
 #endif
-  char message[500];
+  char message[5000];
   n_uint64_t bytes;
   struct timeval t1;
   
@@ -159,7 +159,7 @@ int write_xlf_info(const double plaq, const int counter, char * filename, const 
 #ifdef MPI
   MPI_Status mpi_status;
 #endif
-  char message[500];
+  char message[5000];
   n_uint64_t bytes;
   struct timeval t1;
   

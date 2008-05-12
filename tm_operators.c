@@ -297,12 +297,11 @@ void Q_pm_psi(spinor * const l, spinor * const k) {
 /*   g_mu = -g_mu; */
 
 
-  g_mu = g_mu;
+  g_mu = -g_mu;
   D_psi(l, k);
   gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME);
   g_mu = -g_mu;
   D_psi(l, g_spinor_field[DUM_MATRIX]);
-  g_mu = -g_mu;
   gamma5(l, l, VOLUME);
 }
 

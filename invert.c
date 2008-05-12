@@ -308,6 +308,7 @@ int main(int argc,char *argv[]) {
 	  fclose(ifs);
 	  err = 0;
 	  iter = get_propagator_type(conf_filename);
+	  printf("%d\n", iter);
 	  if(iter > -1 ) {
 	    if(iter == 1) {
 	      if(propagator_splitted){
@@ -319,7 +320,7 @@ int main(int argc,char *argv[]) {
 	    }
 	    else if(iter == 0 ) {
 	      if(propagator_splitted){
-		err = read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 1);
+		err = read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
 	      }
 	      else {
 		err = read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 2*ix);
