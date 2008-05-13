@@ -28,11 +28,8 @@ void chebyshev_polynomial(double aa, double bb, double c[], int n, double expone
   double fac,bpa,bma,*f;
   double inv_n;
 
-  printf("hello in  chebyshev_polynomial\n");
   inv_n=1./(double)n;
-  printf("n= %d inv_n=%e \n",n,inv_n);
   f=calloc(n,sizeof(double));/*vector(0,n-1);*/
-  printf("allocation !!!\n");
   fflush(stdout);
   bma=0.5*(bb-aa);
   bpa=0.5*(bb+aa);

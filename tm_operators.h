@@ -29,6 +29,7 @@ void Mtm_minus_sym_psi_nocom(spinor * const l, spinor * const k);
 void Qtm_pm_sym_psi(spinor * const l, spinor * const k);
 
 void Q_pm_psi(spinor * const l, spinor * const k);
+void Q_pm_psi2(spinor * const l, spinor * const k);
 void Q_minus_psi(spinor * const l, spinor * const k);
 void Q_plus_psi(spinor * const l, spinor * const k);
 

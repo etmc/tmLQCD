@@ -305,6 +305,27 @@ void Q_pm_psi(spinor * const l, spinor * const k) {
   gamma5(l, l, VOLUME);
 }
 
+/* the "full" operators */
+void Q_pm_psi2(spinor * const l, spinor * const k) {
+  /* Q */
+/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
+/*   g_mu = g_mu; */
+/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
+/*   gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME); */
+/*   g_mu = -g_mu; */
+/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
+/*   g_mu = -g_mu; */
+
+
+  g_mu = -10.*g_mu;
+  D_psi(l, k);
+  gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME);
+  g_mu = -g_mu/10.;
+  D_psi(l, g_spinor_field[DUM_MATRIX]);
+  gamma5(l, l, VOLUME);
+}
+
+
 void Q_minus_psi(spinor * const l, spinor * const k) {
 /*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
 /*   g_mu = -g_mu; */

@@ -26,6 +26,9 @@
 #include "linalg/assign_add_mul_add_mul.h"
 #include "linalg/assign_mul_bra_add_mul_ket_add.h"
 #include "linalg/add.h"
+#include "linalg/assign_mul_add_mul_r.h"
+#include "linalg/assign_mul_add_mul_add_mul_r.h"
+#include "linalg/mul_add_mul_r.h"
 
 #include "linalg/comp_decomp.h"
 #include "linalg/square_norm_bi.h"
@@ -39,6 +42,7 @@
 #include "linalg/scalar_prod_r_bi.h"
 #include "linalg/assign_add_mul_r_bi.h"
 #include "linalg/assign_mul_add_r_bi.h"
+
 
 #include "linalg/convert_eo_to_lexic.h"
 

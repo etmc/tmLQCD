@@ -582,12 +582,12 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
 
 int get_propagator_type(char * filename) {
   FILE * ifs;
-  int status=0;
+  int ret=-1, status=0;
   n_uint64_t bytes;
-  char * header_type;
-  char tmp[500];
+  char * tmp;
   LimeReader * limereader;
   
+
   if((ifs = fopen(filename, "r")) == (FILE*)NULL) {
     if(g_proc_id == 0) {
       fprintf(stderr, "Error opening file %s\n", filename);
@@ -608,9 +608,10 @@ int get_propagator_type(char * filename) {
       status = LIME_EOF;
       break;
     }
-    header_type = limeReaderType(limereader);
-    if(strcmp("propagator-type",header_type) == 0) break;
+    if(strcmp("propagator-type", limeReaderType(limereader)) == 0) break;
   }
+
+  tmp = (char*)calloc(500, sizeof(char));
   if(status == LIME_EOF) {
     if(g_proc_id == 0) {
       fprintf(stderr, "no propagator-type record found in file %s\n",filename);
@@ -619,23 +620,25 @@ int get_propagator_type(char * filename) {
     fclose(ifs);
     return(-1);
   }
+
   bytes = limeReaderBytes(limereader);
   status = limeReaderReadData(tmp, &bytes, limereader);
   limeDestroyReader(limereader);
   fclose(ifs);
-  if(strcmp("DiracFermion_Sink", tmp) == 0) return(0);
-  else if(strcmp("DiracFermion_Source_Sink_Pairs", tmp) == 0) return(1);
-  else if(strcmp("DiracFermion_ScalarSource_TwelveSink", tmp) == 0) return(2);
-  else if(strcmp("DiracFermion_ScalarSource_FourSink", tmp) == 0) return(3);
-  else return(-1);
+  
+  if(strcmp("DiracFermion_Sink", tmp) == 0) ret = 0;
+  else if(strcmp("DiracFermion_Source_Sink_Pairs", tmp) == 0) ret =1;
+  else if(strcmp("DiracFermion_ScalarSource_TwelveSink", tmp) == 0) ret = 2;
+  else if(strcmp("DiracFermion_ScalarSource_FourSink", tmp) == 0) ret = 3;
+  free(tmp);
+  return(ret);
 }
 
 int get_source_type(char * filename) {
   FILE * ifs;
-  int status=0;
+  int ret=-1, status=0;
   n_uint64_t bytes;
-  char * header_type;
-  char tmp[500];
+  char * tmp;
   LimeReader * limereader;
   
   if((ifs = fopen(filename, "r")) == (FILE*)NULL) {
@@ -658,8 +661,7 @@ int get_source_type(char * filename) {
       status = LIME_EOF;
       break;
     }
-    header_type = limeReaderType(limereader);
-    if(strcmp("source-type",header_type) == 0) break;
+    if(strcmp("source-type", limeReaderType(limereader)) == 0) break;
   }
   if(status == LIME_EOF) {
     if(g_proc_id == 0) {
@@ -669,15 +671,18 @@ int get_source_type(char * filename) {
     fclose(ifs);
     return(-1);
   }
+
   bytes = limeReaderBytes(limereader);
+  tmp = (char*)calloc(500, sizeof(char));
   status = limeReaderReadData(tmp, &bytes, limereader);
   limeDestroyReader(limereader);
   fclose(ifs);
-  if(strcmp("DiracFermion_Source", tmp) == 0) return(0);
-  else if(strcmp("DiracFermion_ScalarSource", tmp) == 0) return(1);
-  else if(strcmp("DiracFermion_FourScalarSource", tmp) == 0) return(2);
-  else if(strcmp("DiracFermion_TwelveScalarSource", tmp) == 0) return(3);
-  else return(-1);
+  if(strcmp("DiracFermion_Source", tmp) == 0) ret =0;
+  else if(strcmp("DiracFermion_ScalarSource", tmp) == 0) ret =1;
+  else if(strcmp("DiracFermion_FourScalarSource", tmp) == 0) ret =2;
+  else if(strcmp("DiracFermion_TwelveScalarSource", tmp) == 0) ret =3;
+  free(tmp);
+  return(ret);
 }
 
  

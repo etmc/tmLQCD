@@ -12,6 +12,7 @@
 #include"solver/gmres_precon.h"
 /* #include"solver/mr_precon.h" */
 #include"tm_operators.h"
+#include"solver/poly_precon.h"
 #include"gcr.h"
 
 static void init_gcr(const int _M, const int _V);
@@ -40,7 +41,7 @@ int gcr(spinor * const P, spinor * const Q,
   rho = g_spinor_field[DUM_SOLVER];
   tmp = g_spinor_field[DUM_SOLVER+1];
 
-  init_gcr(m, (VOLUME + RAND)/2);
+  init_gcr(m, N+RAND);
 
   norm_sq = square_norm(Q, N);
   
@@ -57,7 +58,8 @@ int gcr(spinor * const P, spinor * const Q,
     }
     for(k = 0; k < m; k++) {
 
-      assign(xi[k], rho, N);  
+/*       assign(xi[k], rho, N);   */
+      poly_precon(xi[k], rho, -1., 10);
 /*       gmres_precon(xi[k], rho, 5, 2,   */
 /* 		1.e-13, rel_prec, N, &Mtm_plus_psi_nocom);  */
       f(tmp, xi[k]); 

@@ -308,7 +308,6 @@ int main(int argc,char *argv[]) {
 	  fclose(ifs);
 	  err = 0;
 	  iter = get_propagator_type(conf_filename);
-	  printf("%d\n", iter);
 	  if(iter > -1 ) {
 	    if(iter == 1) {
 	      if(propagator_splitted){

@@ -40,6 +40,7 @@
 #include "start.h"
 #include "solver/matrix_mult_typedef.h"
 #include "sub_low_ev.h"
+#include "poly_precon.h"
 #include "cg_her.h"
 
 /* P output = solution , Q input = source */
@@ -111,6 +112,12 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
 	assign_add_invert_subtracted_part(g_spinor_field[DUM_SOLVER], Q, 10, N);
       } 
       assign(P, g_spinor_field[DUM_SOLVER], N);
+      f(g_spinor_field[DUM_SOLVER+2], P);
+      diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], Q, N);
+      err = square_norm(g_spinor_field[DUM_SOLVER+3], N);
+      if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
+	printf("true residue %d\t%g\t\n",iteration, err); fflush( stdout);
+      }
       g_sloppy_precision = 0;
       return(iteration+1);
     }

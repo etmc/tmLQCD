@@ -31,7 +31,9 @@
 #include"solver/solver.h"
 #include"read_input.h"
 #include"xchange.h"
+#include"solver/poly_precon.h"
 #include"invert_eo.h"
+
 
 int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
 	      spinor * const Even, spinor * const Odd,
@@ -152,9 +154,19 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(g_proc_id == 0) {printf("# Using GMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
       iter = gmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &D_psi);
     }
+    else if(solver_flag == FGMRES) {
+      if(g_proc_id == 0) {printf("# Using FGMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
+/*       iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &D_psi); */
+      gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+      iter = fgmres(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &Q_pm_psi); 
+      Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+    }
     else if(solver_flag == GCR) {
-      if(g_proc_id == 0) {printf("# Using GMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
-      iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &D_psi);
+      if(g_proc_id == 0) {printf("# Using GCR! m = %d\n", gmres_m_parameter); fflush(stdout);}
+/*       iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &D_psi); */
+      gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+      iter = gcr(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &Q_pm_psi);
+      Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     }
     else {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
