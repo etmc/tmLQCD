@@ -64,6 +64,7 @@ void poly_precon(spinor * const R, spinor * const S, const double prec, const in
 
   if(initp == 0) {
     c = (double*)calloc(1000, sizeof(double));
+#if (defined SSE || defined SSE2 || defined SSE3)
     sv_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
     sv   = (spinor *)(((unsigned long int)(sv_)+ALIGN_BASE)&~ALIGN_BASE);
     d_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
@@ -74,6 +75,18 @@ void poly_precon(spinor * const R, spinor * const S, const double prec, const in
     aux  = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE);
     aux3_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
     aux3 = (spinor *)(((unsigned long int)(aux3_)+ALIGN_BASE)&~ALIGN_BASE);
+#else 
+    sv_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    sv   = sv_;
+    d_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    d    = d_;
+    dd_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    dd   = dd_;
+    aux_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    aux  = aux_;
+    aux3_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    aux3 = aux3_;
+#endif
     get_c(minev, maxev, c, 100);
     initp = 1;
   }
