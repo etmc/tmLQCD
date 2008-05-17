@@ -55,7 +55,8 @@ MODULES = read_input gamma hybrid_update observables start \
 NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert invert_doublet gwc2ildg \
-	ildg2gwc single2double double2single reducenoise gen_sources 
+	ildg2gwc single2double double2single reducenoise gen_sources  \
+	check_locallity
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES} phmc_tm
 SUBDIRS = linalg solver
