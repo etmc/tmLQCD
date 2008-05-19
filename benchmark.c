@@ -112,18 +112,21 @@ int main(int argc,char *argv[])
 #ifdef BGL
     printf("# The code was compiled for Blue Gene/L\n");
 #endif
+#ifdef BGP
+    printf("# The code was compiled for Blue Gene/P\n");
+#endif
 #ifdef _USE_HALFSPINOR
-  printf("# The code was compiled with -D_USE_HALFSPINOR\n");
+    printf("# The code was compiled with -D_USE_HALFSPINOR\n");
 #endif    
 #ifdef _USE_SHMEM
-  printf("# the code was compiled with -D_USE_SHMEM\n");
+    printf("# the code was compiled with -D_USE_SHMEM\n");
 #  ifdef _PERSISTENT
-  printf("# the code was compiled for persistent MPI calls (halfspinor only)\n");
+    printf("# the code was compiled for persistent MPI calls (halfspinor only)\n");
 #  endif
 #endif
 #ifdef MPI
 #  ifdef _NON_BLOCKING
-  printf("# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
+    printf("# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #  endif
 #endif
     printf("\n");
