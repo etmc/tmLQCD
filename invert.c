@@ -310,6 +310,14 @@ int main(int argc,char *argv[]) {
 	    mul_r(g_spinor_field[3], 1./(2*g_kappa), g_spinor_field[3], VOLUME/2);
 	    mul_r(g_spinor_field[2], 1./(2*g_kappa), g_spinor_field[2], VOLUME/2);
 	  }
+	  else {
+	    /* trying cmi format */
+	    if(g_proc_id == g_stdio_proc){
+	      printf("# Trying cmi format instead of ETMC standard\n");
+	      fflush(stdout);
+	    }
+	    err = read_source(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, 0);
+	  }
 	  if(err != 0) {
 	    zero_spinor_field(g_spinor_field[3],VOLUME/2);
 	  }

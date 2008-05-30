@@ -6117,7 +6117,7 @@ YY_RULE_SETUP
 #line 992 "read_input.l"
 {
   write_prop_format_flag = 10;
-  fprintf(stderr, "GWC format no longer supported for writing propagators\n");
+  if(verbose!=0) fprintf(stderr, "GWC format no longer supported for writing propagators\n");
 }
 	YY_BREAK
 case 282:
@@ -6125,7 +6125,7 @@ YY_RULE_SETUP
 #line 996 "read_input.l"
 {
   write_prop_format_flag = 11;
-  fprintf(stderr, "CM format no longer supported for writing propagators\n");
+  if(verbose!=0) fprintf(stderr, "CM format no longer supported for writing propagators\n");
 }
 	YY_BREAK
 case 283:

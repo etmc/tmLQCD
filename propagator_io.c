@@ -63,9 +63,6 @@ int read_source(spinor * const s, spinor * const r, char *filename,
 		const int format, const int position) {
   int err = 0;
 
-  if(g_proc_id == 0) {
-    printf("Reading source from %s\n", filename);
-  }
   if(format == 1) {
     /* cmi format */
     err = read_spinorfield_cm_single(s, r, filename,  -1, 1);

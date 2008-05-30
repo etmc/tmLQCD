@@ -991,11 +991,11 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 <WRPROPFLAG>gwc      {
   write_prop_format_flag = 10;
-  fprintf(stderr, "GWC format no longer supported for writing propagators\n");
+  if(verbose!=0) fprintf(stderr, "GWC format no longer supported for writing propagators\n");
 }
 <WRPROPFLAG>cmi      {
   write_prop_format_flag = 11;
-  fprintf(stderr, "CM format no longer supported for writing propagators\n");
+  if(verbose!=0) fprintf(stderr, "CM format no longer supported for writing propagators\n");
 }
 <WRPROPFLAG>DiracFermion_Sink {
   write_prop_format_flag = 0;
