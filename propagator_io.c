@@ -28,11 +28,22 @@
 /* write a one flavour propagator to file */
 
 int write_propagator(spinor * const s, spinor * const r, char * filename, 
-		      const int append, const int prec) {
+		     const int append, const int prec, const int format) {
   int err = 0;
 
-  write_propagator_format(filename, prec, 1);
-  err = write_lime_spinor(s, r, filename, append, prec);
+  if(format == 11) {
+    /* cmi */
+    write_spinorfield_cm_single(s, r, filename);
+  }
+  else if (format == 10) {
+    /* GWC */
+    write_spinorfield_eo_time_p(s, r, filename, append);
+  }
+  else {
+    /* standard ETMC */
+    write_propagator_format(filename, prec, 1);
+    err = write_lime_spinor(s, r, filename, append, prec);
+  }
   return(err);
 }
 
@@ -47,6 +58,40 @@ int write_source(spinor * const s, spinor * const r, char * filename,
   return(err);
 }
 
+
+int read_source(spinor * const s, spinor * const r, char *filename, 
+		const int format, const int position) {
+  int err = 0;
+
+  if(g_proc_id == 0) {
+    printf("Reading source from %s\n", filename);
+  }
+  if(format == 1) {
+    /* cmi format */
+    err = read_spinorfield_cm_single(s, r, filename,  -1, 1);
+  }
+  else if(format == 2) {
+    /* GWC format */
+    err = read_spinorfield_eo_time(s, r, filename);
+  }
+  else {
+    /* ETMC standard format */
+    if(read_lime_spinor(g_spinor_field[0], g_spinor_field[1], filename, position) != 0) err = -2;
+  }
+
+  if(err != 0) {
+    if(g_proc_id == 0) {
+      printf("Error reading source! Aborting...\n");
+    }
+#ifdef MPI
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+#endif
+    exit(-1);
+  }
+  return(0);
+}
+
 /* write two flavour operator to file */
 
 int write_double_propagator(spinor * const s, spinor * const r, 
@@ -57,7 +102,7 @@ int write_double_propagator(spinor * const s, spinor * const r,
   /* we store strange component first, then charm */
   /* strange -> (mu_sigma - mu_delta)             */
   /* charm   -> (mu_sigma + mu_delta)             */
-  /* they are in interchaged order in our code    */
+  /* they are in reversed order in our code    */
 
   write_propagator_format(filename, prec, 2);
   err = write_lime_spinor(p, q, filename, append, prec);

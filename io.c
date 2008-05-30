@@ -961,8 +961,7 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
     }
     if((l!=LX*g_nproc_x)||(t!=T*g_nproc_t)){
       fprintf(stderr, "Error! spinorfield %s was produced for a different lattice size!\nAborting!\n", filename);
-      exit(1);
-/*       errorhandler(115,filename); */
+      return(-3);
     }
     /* We do not need a seek here, see write_gauge_field... */
     for(x = 0; x < LX; x++) {
@@ -996,20 +995,13 @@ int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename
       }
     }
     if((feof(ifs)) || (ferror(ifs))){
-/*       errorhandler(107, filename); */
-      fprintf(stderr, "Error while reading from file %s!\nAborting!\n", filename);
-      fprintf(stderr, "%d %d\n", feof(ifs), ferror(ifs));
-#ifdef MPI
-      MPI_Abort(MPI_COMM_WORLD, 1);
-      MPI_Finalize();
-#endif
-      exit(1);
+      fclose(ifs);
+      return(-1);
     }
   }
   else{
-/*     errorhandler(107, filename); */
-    printf("Error while reading from file %s!\nAborting!\n", filename);
-    exit(1);
+    fclose(ifs);
+    return(-2);
   }
   fclose(ifs);
   return(0);
@@ -1414,12 +1406,7 @@ int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filena
 
   ifs = fopen(filename, "r");
   if(ifs == (FILE *)NULL) {
-    fprintf(stderr, "Could not open file %s\n Aborting...\n", filename);
-#ifdef MPI
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-#endif
-    exit(500);
+    return(-1);
   }
 
   for(x = 0; x < LX; x++) {

@@ -715,9 +715,17 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   strcpy(source_input_filename,yytext);
   if(verbose!=0) printf("source input filename set to %s\n",yytext);
 }
+<SOURCEFORMAT>etmc      {
+  source_format_flag = 0;
+  if(verbose!=0) printf("Using standard ETMC binary format for source input file\n");
+}
 <SOURCEFORMAT>cmi      {
   source_format_flag = 1;
   if(verbose!=0) printf("Using CM format for source input file\n");
+}
+<SOURCEFORMAT>gwc      {
+  source_format_flag = 2;
+  if(verbose!=0) printf("Using GWC format for source input file\n");
 }
 <SOURCETS>{DIGIT}+   {
   source_time_slice = atoi(yytext);
@@ -982,11 +990,11 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   if(verbose) printf("Do not use even/odd preconditioning\n");
 }
 <WRPROPFLAG>gwc      {
-  write_prop_format_flag = 0;
+  write_prop_format_flag = 10;
   fprintf(stderr, "GWC format no longer supported for writing propagators\n");
 }
 <WRPROPFLAG>cmi      {
-  write_prop_format_flag = 0;
+  write_prop_format_flag = 11;
   fprintf(stderr, "CM format no longer supported for writing propagators\n");
 }
 <WRPROPFLAG>DiracFermion_Sink {

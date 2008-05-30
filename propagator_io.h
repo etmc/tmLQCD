@@ -5,11 +5,14 @@
 
 /* write a one flavour propagator to file */
 int write_propagator(spinor * const s, spinor * const r, char * filename, 
-		     const int append, const int prec);
+		     const int append, const int prec, const int format);
 
 /* write a one flavour source to file */
 int write_source(spinor * const s, spinor * const r, char * filename, 
 		     const int append, const int prec);
+
+int read_source(spinor * const s, spinor * const r, char * filename, 
+		const int format, const int position);
 
 /* write a two flavour propagator to file */
 int write_double_propagator(spinor * const s, spinor * const r, 

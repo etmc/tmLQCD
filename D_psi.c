@@ -61,7 +61,7 @@ void D_psi(spinor * const P, spinor * const Q){
   iy=g_iup[0][0];
   sp=(spinor *) Q + iy;
   up=&g_gauge_field[0][0];
-   
+
   /************************ loop over all lattice sites *************************/
    
   for (ix=0;ix<VOLUME;ix++){

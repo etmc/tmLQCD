@@ -258,32 +258,14 @@ int main(int argc,char *argv[]) {
 	  if(g_proc_id == 0) {
 	    printf("Reading source from %s\n", conf_filename);
 	  }
-	  if(read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 0) != 0) {
-	    if(g_proc_id == 0) {
-	      printf("Error reading source! Aborting...\n");
-	    }
-#ifdef MPI
-	    MPI_Abort(MPI_COMM_WORLD, 1);
-	    MPI_Finalize();
-#endif
-	    exit(-1);
-	  };
+	  read_source(g_spinor_field[0], g_spinor_field[1], conf_filename, source_format_flag, 0);
 	}
 	else {
 	  sprintf(conf_filename,"%s", source_input_filename);
 	  if(g_proc_id == 0) {
-	    printf("Reading source from %s\n", conf_filename);
+	    printf("Reading source no %d from %s\n", ix, conf_filename);
 	  }
-	  if(read_lime_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, ix) != 0) {
-	    if(g_proc_id == 0) {
-	      printf("Error reading source! Aborting...\n");
-	    }
-#ifdef MPI
-	    MPI_Abort(MPI_COMM_WORLD, 1);
-	    MPI_Finalize();
-#endif
-	    exit(-1);
-	  };
+	  read_source(g_spinor_field[0], g_spinor_field[1], conf_filename, source_format_flag, ix);
 	}
       }
       if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
@@ -352,38 +334,41 @@ int main(int argc,char *argv[]) {
 
       /* To write in standard format */
       /* we have to mult. by 2*kappa */
-      mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME/2);
-      mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[3], VOLUME/2);
-
-
-      if(propagator_splitted) {
-	write_propagator_type(write_prop_format_flag, conf_filename);
-	write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
-	/* write the source depending on format */
-	if(write_prop_format_flag == 1) {
-	  write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
-	}
-	write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, prop_precision_flag);
-	/*           write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0); */
+      if(write_prop_format_flag != 11) {
+	mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME/2);
+	mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[3], VOLUME/2);
       }
-      else {
-	/* 	sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore); */
-	if(ix == index_start) {
+
+      if(write_prop_format_flag < 10) {
+	if(propagator_splitted) {
 	  write_propagator_type(write_prop_format_flag, conf_filename);
+	  write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
+	  /* write the source depending on format */
+	  if(write_prop_format_flag == 1) {
+	    write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
+	  }
 	}
-	write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
-	/* write the source depending on format */
-	if(write_prop_format_flag == 1) {
-	  write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
+	else {
+	  if(ix == index_start) {
+	    write_propagator_type(write_prop_format_flag, conf_filename);
+	  }
+	  write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
+	  /* write the source depending on format */
+	  if(write_prop_format_flag == 1) {
+	    write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
+	  }
 	}
-	write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, prop_precision_flag);
       }
+      write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, 
+		       prop_precision_flag, write_prop_format_flag);
 
       /* Check the result */
       M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[2], g_spinor_field[3]); 
 
-      mul_r(g_spinor_field[4], 1./(2*g_kappa), g_spinor_field[4], VOLUME/2);  
-      mul_r(g_spinor_field[5], 1./(2*g_kappa), g_spinor_field[5], VOLUME/2); 
+      if(write_prop_format_flag != 11) {
+	mul_r(g_spinor_field[4], 1./(2*g_kappa), g_spinor_field[4], VOLUME/2);  
+	mul_r(g_spinor_field[5], 1./(2*g_kappa), g_spinor_field[5], VOLUME/2); 
+      }
 
       diff(g_spinor_field[4], g_spinor_field[4], g_spinor_field[0], VOLUME/2); 
       diff(g_spinor_field[5], g_spinor_field[5], g_spinor_field[1], VOLUME/2); 

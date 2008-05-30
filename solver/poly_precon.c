@@ -17,9 +17,9 @@
 #define PI 3.141592653589793
 
 double f_pre(double u){
-/*   return(1./(1.+(g_mu*g_mu*(1-100))/(u))); */
+/*   return(1./(1.+(g_mu*g_mu*(1-1.5*1.5))/(u)));  */
 /*   return pow(u,exponent); */
-  return(1./u);
+   return(1./u);
 }
 
 void get_c(double aa, double bb, double c[], int n){
@@ -61,6 +61,7 @@ void poly_precon(spinor * const R, spinor * const S, const double prec, const in
   maxev = 4.0;
   invmaxev = 1./maxev;
   minev = 0.1;
+/*   minev = 1.5*1.5*g_mu*g_mu; */
 
   if(initp == 0) {
     c = (double*)calloc(1000, sizeof(double));
