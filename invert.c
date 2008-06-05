@@ -80,6 +80,7 @@ int main(int argc,char *argv[]) {
   char conf_filename[50];
   char * input_filename = NULL;
   double plaquette_energy;
+  double ratime, retime;
 
 #ifdef _GAUGE_COPY
   int kb=0;
@@ -253,6 +254,9 @@ int main(int argc,char *argv[]) {
           source_spinor_field_point_from_file(g_spinor_field[0], g_spinor_field[1], is, ic, source_location);
       }
       else {
+#ifdef MPI
+	ratime = MPI_Wtime();
+#endif
 	if(source_splitted) {
 	  sprintf(conf_filename,"%s.%.2d", source_input_filename, ix);
 	  if(g_proc_id == 0) {
@@ -267,6 +271,12 @@ int main(int argc,char *argv[]) {
 	  }
 	  read_source(g_spinor_field[0], g_spinor_field[1], conf_filename, source_format_flag, ix);
 	}
+#ifdef MPI
+	retime = MPI_Wtime();
+	if(g_proc_id == 0) {
+	  printf("time for reading source was %e seconds\n", retime-ratime);
+	}
+#endif
       }
       if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
 
@@ -369,6 +379,13 @@ int main(int argc,char *argv[]) {
       }
       write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, 
 		       prop_precision_flag, write_prop_format_flag);
+
+#ifdef MPI
+	retime = MPI_Wtime();
+	if(g_proc_id == 0) {
+	  printf("time for writing prop was %e seconds\n", retime-ratime);
+	}
+#endif
 
       /* Check the result */
       M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[2], g_spinor_field[3]); 
