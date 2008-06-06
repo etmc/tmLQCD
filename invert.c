@@ -223,10 +223,6 @@ int main(int argc,char *argv[]) {
     update_backward_gauge();
 #endif
 
-    /* Compute minimal eigenvalues, if wanted */
-    if(compute_evs != 0) {
-      eigenvalues(&no_eigenvalues, 1000, eigenvalue_precision, 0, compute_evs, nstore, even_odd_flag);
-    }
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action();
 
@@ -242,6 +238,18 @@ int main(int argc,char *argv[]) {
       if(g_proc_id == 0) {
 	printf("The plaquette value after stouting is %e\n", plaquette_energy/(6.*VOLUME*g_nproc)); fflush(stdout);
       }
+    }
+
+    /* Compute minimal eigenvalues, if wanted */
+    if(compute_evs != 0) {
+      eigenvalues(&no_eigenvalues, max_solver_iterations, eigenvalue_precision, 
+		  0, compute_evs, nstore, even_odd_flag);
+    }
+    if(phmc_compute_evs != 0) {
+#ifdef MPI
+      MPI_Finalize();
+#endif
+      return(0);
     }
 
     for(ix = index_start; ix < index_end; ix++) {
