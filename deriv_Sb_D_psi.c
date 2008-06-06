@@ -30,8 +30,9 @@
 #include "su3.h"
 #include "boundary.h"
 #include "xchange_field.h"
+#include "xchange_lexicfield.h"
 #include "sse.h"
-#include "deriv_Sb.h"
+#include "deriv_Sb_D_psi.h"
 
 
 #if (defined BGLnotchecked && defined XLC)
