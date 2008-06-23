@@ -105,7 +105,7 @@ int write_lime_gauge_field_old(char * filename, const double plaq, const int cou
       MPI_Finalize();
       exit(500);
     }
-    write_ildg_format_xml("temp.xml", limewriter, 0);
+    write_ildg_format_xml("temp.xml", limewriter, 64);
     
     bytes = LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3);
     MB_flag=1; ME_flag=1;
@@ -215,7 +215,7 @@ int write_lime_gauge_field_old(char * filename, const double plaq, const int cou
     fprintf(stderr, "LIME error in file %s for writing!\n Aboring...\n", filename);
     exit(500);
   }
-  write_ildg_format_xml("temp.xml", limewriter, 0);
+  write_ildg_format_xml("temp.xml", limewriter, 64);
 
   bytes = (n_uint64_t)(LX*LY*LZ*T*4*sizeof(su3));
   MB_flag=0; ME_flag=1;
@@ -291,7 +291,7 @@ int write_lime_gauge_field_singleprec(char * filename, const double plaq,
       MPI_Finalize();
       exit(500);
     }
-    write_ildg_format_xml("temp.xml", limewriter, 1);
+    write_ildg_format_xml("temp.xml", limewriter, 32);
     
     bytes = LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*4*sizeof(su3)/2;
     MB_flag=0; ME_flag=1;
@@ -402,7 +402,7 @@ int write_lime_gauge_field_singleprec(char * filename,
     exit(500);
   }
   /* Prepare it for 32 Bit write */
-  write_ildg_format_xml("temp.xml", limewriter, 1);
+  write_ildg_format_xml("temp.xml", limewriter, 32);
 
   bytes = (n_uint64_t)(LX*LY*LZ*T*4*sizeof(su3))/2;
   MB_flag=0; ME_flag=1;
@@ -1792,12 +1792,7 @@ int write_ildg_format_xml(char *filename, LimeWriter * limewriter, const int pre
   fprintf(ofs, "            xsi:schemaLocation=\"http://www.lqcd.org/ildg filefmt.xsd\">\n");
   fprintf(ofs, "  <version> 1.0 </version>\n");
   fprintf(ofs, "  <field> su3gauge </field>\n");
-  if(prec == 0) {
-    fprintf(ofs, "  <precision> 64 </precision>\n");
-  }
-  else {
-    fprintf(ofs, "  <precision> 32 </precision>\n");
-  }
+  fprintf(ofs, "  <precision> %d </precision>\n", prec);
   fprintf(ofs, "  <lx> %d </lx>\n", LX*g_nproc_x);
   fprintf(ofs, "  <ly> %d </ly>\n", LY*g_nproc_y);
   fprintf(ofs, "  <lz> %d </lz>\n", LZ*g_nproc_z);

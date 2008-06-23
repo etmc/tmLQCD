@@ -271,7 +271,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 #endif
       exit(500);
     }
-    write_ildg_format_xml("temp.xml", limewriter, 0);
+    write_ildg_format_xml("temp.xml", limewriter, prec);
     
     bytes = ((n_uint64_t)LX*g_nproc_x)*((n_uint64_t)LY*g_nproc_y)*((n_uint64_t)LZ*g_nproc_z)*((n_uint64_t)T*g_nproc_t)*((n_uint64_t)4*sizeof(su3));
     if(prec == 32) bytes = bytes/((n_uint64_t)2);
