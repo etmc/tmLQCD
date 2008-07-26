@@ -228,7 +228,7 @@ fi
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([float.h libintl.h limits.h stdint.h stdlib.h string.h strings.h sys/time.h unistd.h])
-AC_CHECK_HEADER( getopt.h, INCLUDES="//  " )
+AC_CHECK_HEADER( getopt.h, INCLUDES=" " )
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

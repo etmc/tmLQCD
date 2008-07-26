@@ -7686,7 +7686,7 @@ echo "${ECHO_T}$ac_cv_header_getopt_h" >&6
 
 fi
 if test $ac_cv_header_getopt_h = yes; then
-  INCLUDES="//  "
+  INCLUDES=" "
 fi
 
 
