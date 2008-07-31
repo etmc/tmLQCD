@@ -76,10 +76,8 @@ extern halfspinor * halffield_buffer_z ALIGN;
 extern halfspinor * halffield_buffer_z2 ALIGN;
 #endif
 
-extern MPI_Comm mpi_time_slices;
 #endif
 
-extern int mpi_time_rank;
 
 void mpi_init(int argc, char *argv[]);
 

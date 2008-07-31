@@ -87,7 +87,7 @@ void source_generation_pion_only(spinor * const P, spinor * const Q,
   }
 
   /* Compute the seed */
-  seed =(int) abs(1 + sample + t*10*97 + nstore*100*53);
+  seed =(int) abs(1 + sample + t*10*97 + nstore*100*53 + g_cart_id*13);
 
   rlxd_init(1, seed);
 

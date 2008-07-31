@@ -53,6 +53,13 @@ and then replace
 --without-lapack with
 --with-lapack="$MKL_LIB"
 
+
+on the HLRB ice installation
+
+very similar to the Munich Altix, for lapack use
+
+--with-lapack="-L $LIBRARY_PATH mkl_lapack.a -lmkl_ipf -lguide -lpthread"
+
 on the BG/L:
 
 path-to-the-sources/configure --host=ppc-ibm-blrts --build=ppc64-ibm-linux \

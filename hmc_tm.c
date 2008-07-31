@@ -55,6 +55,7 @@
 #include "phmc.h"
 #include "solver/solver.h"
 #include "polyakov_loop.h"
+#include "online_measurement.h"
 
 void usage(){
   fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
@@ -450,13 +451,15 @@ int main(int argc,char *argv[]) {
       printf("# Starting trajectory no %d\n", trajectory_counter);
     }
 
-    if(return_check_flag == 1 && (j+1)%return_check_interval == 0) return_check = 1;
+    if(return_check_flag == 1 && trajectory_counter%return_check_interval == 0) return_check = 1;
     else return_check = 0;
 
     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag);
 
-
+    if(online_measurement_flag && (trajectory_counter%online_measurement_freq == 0)) {
+      online_measurement(trajectory_counter, ((int)(10000*plaquette_energy/(6.*VOLUME*g_nproc)))%(g_nproc_t*T));
+    }
     /* Measure the Polyakov loop in direction 2 and 3:*/
     polyakov_loop(&pl, 2); 
     polyakov_loop(&pl4, 3);  

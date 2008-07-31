@@ -134,10 +134,13 @@ EXTERN int g_use_clover_flag, g_nr_of_psf;
 EXTERN int g_proc_id, g_nproc, g_stdio_proc, g_nproc_t, g_nproc_x, g_nproc_y, g_nproc_z, g_cart_id;
 EXTERN int g_proc_coords[4];
 EXTERN int g_dbw2rand;
+EXTERN int g_mpi_time_rank;
+
 #ifdef MPI
 EXTERN MPI_Status status;
 EXTERN MPI_Request req1,req2,req3,req4;
 EXTERN MPI_Comm g_cart_grid;
+EXTERN MPI_Comm g_mpi_time_slices;
 
 /* the next neighbours for MPI */
 EXTERN int g_nb_x_up, g_nb_x_dn;

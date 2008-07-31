@@ -1,4 +1,11 @@
-30.05.2008: support now three formats for source and propagator, for compatibility:
+01.08.2008: online measurements implemented for
+            PP and PA correlators. Input variables are
+            PerformOnlineMeasurements = yes|no and
+            OnlineMeasuremntsFreq = n
+	    Result will be written to a file called
+	    onlinemeas.trajno
+
+30.05.2008: support now for three formats for source and propagator, for compatibility:
             cmi, GWC, ETMC. The latter is the standard and recommended.
 
 07.12.2007: inversion for the flavour split doublet implemented and tested

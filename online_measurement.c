@@ -17,21 +17,35 @@
 #include "linalg/convert_eo_to_lexic.h"
 #include "online_measurement.h"
 
+/******************************************************
+ *
+ * This routine computes the two correlator
+ * <PP> and <PA>  (<source sink>)
+ * using a stochastic time slice source
+ * and only one inversion
+ * for <AP> we would need another inversion
+ *
+ *
+ *
+ *
+ ******************************************************/
+
 void online_measurement(const int traj, const int t0) {
   int i, j, t, tt;
-  double *C;
-  double res = 0.;
+  double *Cpp, *Cpa;
+  double res = 0., respa = 0.;
 #ifdef MPI
-  double mpi_res = 0.;
+  double mpi_res = 0., mpi_respa = 0.;
 #endif
   FILE *ofs;
   char *filename;
   char buf[100];
+  spinor phi;
   filename=buf;
-  sprintf(filename,"%s%.6d.dat", "pp_corr." ,traj);
+  sprintf(filename,"%s%.6d", "onlinemeas." ,traj);
 
-
-  C = (double*) calloc(g_nproc_t*T, sizeof(double));
+  Cpp = (double*) calloc(g_nproc_t*T, sizeof(double));
+  Cpa = (double*) calloc(g_nproc_t*T, sizeof(double));
 
   source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 
 			      t0, 0, traj);
@@ -48,17 +62,25 @@ void online_measurement(const int traj, const int t0) {
   for(t = 0; t < T; t++) {
     j = g_ipt[t][0][0][0];
     res = 0.;
+    respa = 0.;
     for(i = j; i < j+LX*LY*LZ; i++) {
       res += _spinor_prod_re(g_spinor_field[DUM_MATRIX][j], g_spinor_field[DUM_MATRIX][j]);
+      _gamma0(phi, g_spinor_field[DUM_MATRIX][j]);
+      respa += _spinor_prod_re(g_spinor_field[DUM_MATRIX][j], phi);
     }
 
 #if defined MPI
-    MPI_Allreduce(&res, &res2, 1, MPI_DOUBLE, MPI_SUM, g_mpi_time_slices);
-    res = res2;
+    MPI_Allreduce(&res, &mpi_res, 1, MPI_DOUBLE, MPI_SUM, g_mpi_time_slices);
+    res = mpi_res;
+    MPI_Allreduce(&respa, &mpi_respa, 1, MPI_DOUBLE, MPI_SUM, g_mpi_time_slices);
+    respa = mpi_respa;
 #endif
-    C[t+g_proc_coords[0]*T] = res;
+    Cpp[t+g_proc_coords[0]*T] = res;
+    Cpa[t+g_proc_coords[0]*T] = respa;
   }
 #ifdef MPI
+
+  /* some gymnastics needed in case of parallelisation */
   if(g_mpi_time_rank == 0) {
     if(g_proc_coords[0] == 0) {
       
@@ -67,19 +89,31 @@ void online_measurement(const int traj, const int t0) {
     }
   }
 #endif
+
+  /* and write everything into a file */
   if(g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
     ofs = fopen(filename, "w");
-    fprintf( ofs, "%e %e\n", C[t0], 0.);
+    fprintf( ofs, "1  1  0  %e  %e\n", Cpp[t0], 0.);
     for(t = 1; t < g_nproc_t*T/2-1; t++) {
       tt = (t0+t)%T;
-      fprintf( ofs, "%e  ", C[tt]);
-      tt = (t0+g_nproc_t*T-1-t)%T;
-      fprintf( ofs, "%e\n", C[tt]);
+      fprintf( ofs, "1  1  %d  %e  ", t, Cpp[tt]);
+      tt = (t0+g_nproc_t*T-t)%T;
+      fprintf( ofs, "%e\n", Cpp[tt]);
     }
-    tt = (t0+g_nproc_t*T/2)%T;
-    fprintf( ofs, "%e  %e\n", C[tt], 0.);
+    tt = (t0+g_nproc_t*T/2+1)%T;
+    fprintf( ofs, "1  1  %d  %e  %e\n", t, Cpp[tt], 0.);
+
+    fprintf( ofs, "2  1  0  %e  %e\n", Cpa[t0], 0.);
+    for(t = 1; t < g_nproc_t*T/2-1; t++) {
+      tt = (t0+t)%T;
+      fprintf( ofs, "2  1  %d  %e  ", t, Cpa[tt]);
+      tt = (t0+g_nproc_t*T-t)%T;
+      fprintf( ofs, "%e\n", Cpa[tt]);
+    }
+    tt = (t0+g_nproc_t*T/2+1)%T;
+    fprintf( ofs, "2  1  %d  %e  %e\n", t, Cpa[tt], 0.);
     fclose(ofs);
   }
-  free(C);
+  free(Cpp); free(Cpa);
   return;
 }

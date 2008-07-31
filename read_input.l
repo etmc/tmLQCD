@@ -99,6 +99,8 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   int sub_evs_cg_flag;
   int even_odd_flag;
   int write_prop_format_flag;
+  int online_measurement_flag;
+  int online_measurement_freq;
 %}
 
 %option never-interactive
@@ -211,6 +213,8 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x WRPROPFLAG
 %x PROPPREC
 %x PROPTYPE
+%x ONMEAS
+%x ONFREQ
 
 %x COMMENT
 %x ERROR
@@ -341,6 +345,8 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^UseEvenOdd{SPC}*={SPC}*                   BEGIN(EO);
 ^WritePropagatorFormat{SPC}*={SPC}*        BEGIN(WRPROPFLAG);
 ^PropagatorType{SPC}*={SPC}*               BEGIN(WRPROPFLAG);
+^PerformOnlineMeasurements{SPC}*={SPC}*    BEGIN(ONMEAS);
+^OnlineMeasurementsFreq{SPC}*={SPC}*       BEGIN(ONFREQ);
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -1013,6 +1019,18 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   write_prop_format_flag = 1;
   fprintf(stderr, "Propagator type: DiracFermion_ScalarSource_FourSink, not yet supported\n");
 }
+<ONMEAS>yes {
+  online_measurement_flag = 1;
+  fprintf(stderr, "Switched on online measurements\n");
+}
+<ONMEAS>no {
+  online_measurement_flag = 0;
+  fprintf(stderr, "Online measurements not switched on\n");
+}
+<ONFREQ>{DIGIT}+ {
+  online_measurement_freq = atoi(yytext);
+  fprintf(stderr, "Frequency for online measurements set to %s\n", yytext);
+}
 
 <*>^#                       BEGIN(COMMENT);
 <SEED,KAPPA,ACCPTILDE,ACCHFIN,RECEV,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
@@ -1024,7 +1042,7 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC,USESTOUT,STOUTRHO,STOUTITER,PHMCFLAV>#   BEGIN(COMMENT);
 <SMIN,SMAX,DEGP,PRECEV,NOEV>#  BEGIN(COMMENT);
 <PCOMPUTEEVS,COMPUTEEVS,SPLITPROP,SPLITSOURCE,SRCLOC>#  BEGIN(COMMENT);
-<SOURCETS,SUBEVCG,EO,WRPROPFLAG>#   BEGIN(COMMENT);
+<SOURCETS,SUBEVCG,EO,WRPROPFLAG,ONMEAS,ONFREQ>#   BEGIN(COMMENT);
 <SOURCETS,GAUGERPREC,GAUGEWPREC,PROPPREC,HEAVYTS>#   BEGIN(COMMENT);
 <COMMENT>[^\n]*             {
   ;
@@ -1278,6 +1296,12 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <WRPROPFLAG>. {
   printf("Unknown value for WritePropagatorFormat in line %d\n Must be gwc or cmi. Aborting!\n", line_of_file);
 }
+<ONMEAS>. {
+  printf("Unknown value for PerformOnlineMeasurements in line %d\n Must be yes or no. Aborting!\n", line_of_file);
+}
+<ONFREQ>. {
+  printf("Unknown value for OnlineMeasurementsFreq in line %d\n Must be an integer. Aborting!\n", line_of_file);
+}
 
 
 <INITIAL>.                        BEGIN(ERROR);
@@ -1420,6 +1444,8 @@ int read_input(char * conf_file){
   phmc_heavy_timescale = _default_phmc_heavy_timescale;
   phmc_exact_poly = _default_phmc_exact_poly;
   even_odd_flag = _default_even_odd_flag;
+  online_measurement_flag = _default_online_measurement_flag;
+  online_measurement_freq = _default_online_measurement_freq;
 
   /* Put -1 in write_prop_format_flag to see if parse_config() will
   change the value. If not then set it to source_format_flag */

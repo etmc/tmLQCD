@@ -109,10 +109,10 @@ halfspinor * halffield_buffer_z ALIGN;
 halfspinor * halffield_buffer_z2 ALIGN;
 #endif
 
-MPI_Comm mpi_time_slices;
+
 #endif
 
-int mpi_time_rank;
+
 
 void mpi_init(int argc,char *argv[]) {
   g_proc_coords[0] = 0;
@@ -448,9 +448,11 @@ void mpi_init(int argc,char *argv[]) {
 
   /* For observables we need communicators for catesian time slices */
 
-  MPI_Comm_split(g_cart_grid, g_proc_coords[0], g_cart_id, &mpi_time_slices);
-  MPI_Comm_rank(mpi_time_slices, &mpi_time_rank);
-/*   fprintf(stderr, "My mpi_time_rank = %d, g_proc_coords = (%d,%d)\n", mpi_time_rank, g_proc_coords[0], g_proc_coords[1]); */
+  MPI_Comm_split(g_cart_grid, g_proc_coords[0], g_cart_id, &g_mpi_time_slices);
+  MPI_Comm_rank(g_mpi_time_slices, &g_mpi_time_rank);
+  fprintf(stdout, "# My mpi_time_rank = %d, g_proc_coords = (%d,%d,%d,%d), g_cart_id = %d\n", 
+	  g_mpi_time_rank, g_proc_coords[0], g_proc_coords[1], g_proc_coord[2], g_proc_coord[3],
+	  g_cart_id); 
 
 #else
   g_nproc = 1;
@@ -460,7 +462,7 @@ void mpi_init(int argc,char *argv[]) {
   g_nproc_z = 1;
   g_nproc_t = 1;
   g_cart_id = 0;
-  mpi_time_rank = 0;
+  g_mpi_time_rank = 0;
   g_stdio_proc = 0;
 
 #  ifndef FIXEDVOLUME
