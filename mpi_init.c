@@ -447,12 +447,14 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_commit(&halffield_y_slice_gath);
 
   /* For observables we need communicators for catesian time slices */
-
   MPI_Comm_split(g_cart_grid, g_proc_coords[0], g_cart_id, &g_mpi_time_slices);
   MPI_Comm_rank(g_mpi_time_slices, &g_mpi_time_rank);
   fprintf(stdout, "# My mpi_time_rank = %d, g_proc_coords = (%d,%d,%d,%d), g_cart_id = %d\n", 
 	  g_mpi_time_rank, g_proc_coords[0], g_proc_coords[1], g_proc_coord[2], g_proc_coord[3],
-	  g_cart_id); 
+	  g_cart_id);
+
+  /* and spatial volume slices */
+  MPI_Comm_split(g_cart_grid, g_mpi_time_rank, g_proc_coords[0], &g_mpi_SV_slices);
 
 #else
   g_nproc = 1;

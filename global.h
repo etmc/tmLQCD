@@ -141,6 +141,7 @@ EXTERN MPI_Status status;
 EXTERN MPI_Request req1,req2,req3,req4;
 EXTERN MPI_Comm g_cart_grid;
 EXTERN MPI_Comm g_mpi_time_slices;
+EXTERN MPI_Comm g_mpi_SV_slices;
 
 /* the next neighbours for MPI */
 EXTERN int g_nb_x_up, g_nb_x_dn;
