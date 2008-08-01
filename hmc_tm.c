@@ -457,9 +457,6 @@ int main(int argc,char *argv[]) {
     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag);
 
-    if(online_measurement_flag && (trajectory_counter%online_measurement_freq == 0)) {
-      online_measurement(trajectory_counter, ((int)(10000*plaquette_energy/(6.*VOLUME*g_nproc)))%(g_nproc_t*T));
-    }
     /* Measure the Polyakov loop in direction 2 and 3:*/
     polyakov_loop(&pl, 2); 
     polyakov_loop(&pl4, 3);  
@@ -501,6 +498,11 @@ int main(int argc,char *argv[]) {
         fclose(countfile);
       }
     }
+    if(online_measurement_flag && (trajectory_counter%online_measurement_freq == 0)) {
+      online_measurement(trajectory_counter, 
+			 ((int)(100000*plaquette_energy/(6.*VOLUME*g_nproc)))%(g_nproc_t*T));
+    }
+
     if(g_proc_id == 0) {
       verbose = 1;
     }

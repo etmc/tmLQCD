@@ -51,7 +51,7 @@
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "polyakov_loop.h"
-
+#include "online_measurement.h"
 #include "phmc.h"
 #include "init_bispinor_field.h"
 #include "eigenvalues_bi.h"
@@ -614,11 +614,13 @@ int main(int argc,char *argv[]) {
     }
 
 
-    if(return_check_flag == 1 && (j+1)%return_check_interval == 0) return_check = 1;
+    if(return_check_flag == 1 && trajectory_counter%return_check_interval == 0) return_check = 1;
     else return_check = 0;
 
     accept = update_tm_nd(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
-			 dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag, phmc_no_flavours,phmc_exact_poly, trajectory_counter);
+			 dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, 
+			  reproduce_randomnumber_flag, phmc_no_flavours,
+			  phmc_exact_poly, trajectory_counter);
 
     Rate += accept;
 
@@ -655,11 +657,16 @@ int main(int argc,char *argv[]) {
     /* Now move it! */
     if(g_proc_id == 0) {
       rename(tmp_filename, gauge_filename);
+      countfile = fopen(nstore_filename, "w");
+      fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
+      fclose(countfile);
     }
 
-    countfile = fopen(nstore_filename, "w");
-    fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
-    fclose(countfile);
+    if(online_measurement_flag && (trajectory_counter%online_measurement_freq == 0)) {
+      online_measurement(trajectory_counter, 
+			 ((int)(100000*plaquette_energy/(6.*VOLUME*g_nproc)))%(g_nproc_t*T));
+    }
+
     if(g_proc_id == 0) {
       verbose = 1;
     }

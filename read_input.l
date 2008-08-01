@@ -1021,15 +1021,15 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 }
 <ONMEAS>yes {
   online_measurement_flag = 1;
-  fprintf(stderr, "Switched on online measurements\n");
+  if(verbose!=0) fprintf(stderr, "Switched on online measurements\n");
 }
 <ONMEAS>no {
   online_measurement_flag = 0;
-  fprintf(stderr, "Online measurements not switched on\n");
+  if(verbose!=0) fprintf(stderr, "Online measurements not switched on\n");
 }
 <ONFREQ>{DIGIT}+ {
   online_measurement_freq = atoi(yytext);
-  fprintf(stderr, "Frequency for online measurements set to %s\n", yytext);
+  if(verbose!=0) fprintf(stderr, "Frequency for online measurements set to %s\n", yytext);
 }
 
 <*>^#                       BEGIN(COMMENT);
