@@ -4,6 +4,7 @@
             OnlineMeasuremntsFreq = n
 	    Result will be written to a file called
 	    onlinemeas.trajno
+	    tested to work scalar and parallel
 
 30.05.2008: support now for three formats for source and propagator, for compatibility:
             cmi, GWC, ETMC. The latter is the standard and recommended.

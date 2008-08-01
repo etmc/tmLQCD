@@ -126,19 +126,19 @@ void source_generation_pion_only(spinor * const P, spinor * const Q,
 		si = -sqr2;
 		co = -sqr2;
 	      }
-	    }
 	    
-	    i = g_lexic2eosub[ g_ipt[lt][lx][ly][lz] ];
-	    if((lt+lx+ly+lz+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
-		+ g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
-	      p = (complex*)(P + i);
+	      i = g_lexic2eosub[ g_ipt[lt][lx][ly][lz] ];
+	      if((lt+lx+ly+lz+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
+		  + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+		p = (complex*)(P + i);
+	      }
+	      else {
+		p = (complex*)(Q + i);
+	      }
+	      
+	      (*(p+3*is+ic)).re = co;
+	      (*(p+3*is+ic)).im = si;
 	    }
-	    else {
-	      p = (complex*)(Q + i);
-	    }
-	    
-	    (*(p+3*is+ic)).re = co;
-	    (*(p+3*is+ic)).im = si;
 	  }
 	}
       }
