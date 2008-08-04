@@ -221,7 +221,7 @@ void det_heatbath(const int id) {
     Qtm_plus_psi(mnl->pf, g_spinor_field[2]);
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-    if(g_nr_of_psf == 1 && ITER_MAX_BCG > 0 && fabs(g_mu1) == 0.) {
+    if(ITER_MAX_BCG > 0 && fabs(g_mu1) == 0.) {
       chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2, 
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
     }

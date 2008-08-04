@@ -80,7 +80,6 @@ int main(int argc,char *argv[]) {
 
   verbose = 0;
   g_use_clover_flag = 0;
-  g_nr_of_psf = 1;
   nstore = 0;
   L=0;
   T=0;

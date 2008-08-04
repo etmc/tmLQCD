@@ -63,10 +63,6 @@ EXTERN int NO_OF_SPINORFIELDS;
 EXTERN int DUM_BI_DERI, DUM_BI_SOLVER, DUM_BI_MATRIX;
 EXTERN int NO_OF_BISPINORFIELDS;
 
-
-EXTERN double g_eps_sq_force, g_eps_sq_acc;
-EXTERN double g_eps_sq_force1, g_eps_sq_force2, g_eps_sq_force3;
-EXTERN double g_eps_sq_acc1, g_eps_sq_acc2, g_eps_sq_acc3;
 EXTERN int g_relative_precision_flag;
 EXTERN int g_debug_level;
 
@@ -104,10 +100,6 @@ EXTERN spinor * g_chi_dn_copy;
 EXTERN int g_running_phmc;
 /* End IF PHMC  */
 
-EXTERN spinor ** g_csg_field[4];
-EXTERN int * g_csg_index_array[4];
-EXTERN int g_csg_N[8];
-
 EXTERN su3 ** g_gauge_field;
 #ifdef _USE_HALFSPINOR
 EXTERN su3 *** g_gauge_field_copy;
@@ -121,14 +113,14 @@ EXTERN su3adj ** ddummy;
 
 EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
-EXTERN double g_rgi_C0, g_rgi_C1;
 EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
+EXTERN double g_rgi_C0, g_rgi_C1;
 /* Parameters for non-degenrate case */
 EXTERN double g_acc_Ptilde;
 EXTERN double g_acc_Hfin;
 EXTERN int g_rec_ev;
 EXTERN double g_mubar, g_epsbar;
-EXTERN int g_use_clover_flag, g_nr_of_psf;
+EXTERN int g_use_clover_flag;
 
 /* MPI information */
 EXTERN int g_proc_id, g_nproc, g_stdio_proc, g_nproc_t, g_nproc_x, g_nproc_y, g_nproc_z, g_cart_id;

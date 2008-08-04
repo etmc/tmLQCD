@@ -73,14 +73,11 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
   static complex *G = NULL;
   static int * ipiv = NULL;
   static int lwork = 0;
-  int max_N = 0;
+  int max_N = 20;
 
   if(N > 0) {
     if(init_csg == 0) {
       init_csg = 1;
-      for(i = 0; i < 4; i++) {
-	if(g_csg_N[2*i] > max_N) max_N = g_csg_N[2*i];
-      }
       work = (complex*) malloc(lwork*sizeof(complex));
       bn = (complex*) malloc(max_N*sizeof(complex));
       G = (complex*) malloc(max_N*max_N*sizeof(complex));

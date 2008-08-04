@@ -1,24 +1,66 @@
-L=4
-T=4
-CSW = 0.0
+L=8
+T=16
 Measurements = 1
 startCondition = continue
-acc_Ptilde = 1.0e-5
-acc_Pfirst = 1.0e-2
-RGIC1 = -0.08333333
+#Startcondition = hot
 beta = 3.30
-mu = 0.0
-mubar = 0.1105
-epsbar = 0.0935
-kappa = 0.170
-dtau = 0.02
-nsteps = 50
+2KappaMu = 0.03
+kappa = 0.090
 Nskip = 50
-BCAngleT = 0.
-BCGstabMaxIter = 1000
+BCAngleT = 1.
+BCGstabMaxIter = 0
 CGMaxIter = 1000
 GaugeConfigInputFile = conf.save
-#startCondition = restart
-Integrator = LeapFrog
-ReadSource = yes
-SolverFlag = BiCGstab
+UseEvenOdd = yes
+PropagatorPrecision = 64
+ReversibilityCheck = no
+ReversibilityCheckIntervall = 1
+DebugLevel = 1
+
+PerformOnlineMeasurements = yes
+OnlineMeasurementsFreq = 1
+
+BeginMonomial GAUGE
+  UseRectangleStaples = yes
+  RectangleCoefficient = -0.0833333
+  Timescale = 0
+EndMonomial
+
+BeginMonomial DET
+  Timescale = 1
+  2KappaMu = 0.1
+  kappa = 0.125
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = det
+  solver   =    CG
+#  CSGHistory = 7
+#  CSGHistory2 = 3
+EndMonomial
+
+
+BeginMonomial DETRATIO
+  Timescale = 2
+  2KappaMu = 0.03
+  2KappaMu2 = 0.1
+  kappa = 0.125
+  kappa2 = 0.125
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = detrat
+  solver = CG
+  CSGHistory = 0
+EndMonomial
+
+#BeginMonomial NDPOLY
+#  Timescale = 1
+#EndMonomial
+
+BeginIntegrator 2MN
+  IntegrationSteps0 = 1
+  IntegrationSteps1 = 2
+  IntegrationSteps2 = 3
+  tau = 1.
+  Lambda0 = 0.19
+  NumberOfTimescales = 3
+EndIntegrator

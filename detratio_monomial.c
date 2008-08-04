@@ -265,7 +265,7 @@ void detratio_heatbath(const int id) {
 
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-    if(g_nr_of_psf == 2 && ITER_MAX_BCG > 0 && fabs(g_mu) == 0.) {
+    if(ITER_MAX_BCG > 0 && fabs(g_mu) == 0.) {
       chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2,
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
     }

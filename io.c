@@ -1722,8 +1722,6 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
     printf("# int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n", 
 	   int_n[0], int_n[1], int_n[2], int_n[3]);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
-    printf("# Number of pseudo-fermion fields: %d\n", g_nr_of_psf);
-    printf("# g_eps_sq_force = %e, g_eps_sq_acc = %e\n", g_eps_sq_force, g_eps_sq_acc);
     printf("# Integration scheme: ");
     if(integtyp == 1) printf("leap-frog (single time scale)\n");
     if(integtyp == 2) printf("Sexton-Weingarten (single time scale)\n");
@@ -1734,8 +1732,6 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
     if(integtyp == 7) printf("second order minimal norm (position version, multiple time scales)\n");
     printf("# Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
-    printf("# Using in chronological inverter for spinor_field 1,2,3 a history of %d, %d, %d, respectively\n", 
-	   g_csg_N[0], g_csg_N[2], g_csg_N[4]);
   }
 
   fprintf(parameterfile, "# The lattice size is %d x %d x %d x %d\n", (int)(g_nproc_t*T), (int)(g_nproc_x*LX), 
@@ -1746,14 +1742,12 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   if(inv != 1) {
     fprintf(parameterfile, "# ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n"
 	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
-    fprintf(parameterfile, "# g_eps_sq_force = %e, g_eps_sq_acc = %e\n", g_eps_sq_force, g_eps_sq_acc);
     fprintf(parameterfile, "# dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n",
 	    dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
     fprintf(parameterfile, "# mu = %f, mu2=%f, mu3=%f\n ", g_mu, g_mu2, g_mu3);
     fprintf(parameterfile, "# int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n ", 
 	    int_n[0], int_n[1], int_n[2], int_n[3]);
     fprintf(parameterfile, "g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
-    fprintf(parameterfile, "# Number of pseudo-fermion fields: %d\n", g_nr_of_psf);
     fprintf(parameterfile, "# Integration scheme: ");
     if(integtyp == 1) fprintf(parameterfile, "leap-frog (single time scale)\n");
     if(integtyp == 2) fprintf(parameterfile, "Sexton-Weingarten (single time scale)\n");
@@ -1764,8 +1758,6 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
     if(integtyp == 7) fprintf(parameterfile, "second order minimal norm (position version, multiple time scales)\n");
     fprintf(parameterfile, "# Using %s precision for the inversions!\n", 
 	    g_relative_precision_flag ? "relative" : "absolute");
-    fprintf(parameterfile, "# Using in chronological inverter for spinor_field 1,2,3 a history of %d, %d, %d, respectively\n", 
-	    g_csg_N[0], g_csg_N[2], g_csg_N[4]);
   }
   if(inv == 1) {
     printf("# beta = %f, mu = %f, kappa = %f\n", g_beta, g_mu/2./g_kappa, g_kappa);

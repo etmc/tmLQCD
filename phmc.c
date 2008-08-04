@@ -17,10 +17,16 @@
 #include "init_chi_copy.h"
 #include "chebyshev_polynomial_nd.h"
 #include "Ptilde_nd.h"
-#include "update_tm_nd.h"
 #include "phmc.h"
 
-
+double phmc_Cpol;
+double phmc_cheb_evmin, phmc_cheb_evmax;
+double phmc_invmaxev;
+complex * phmc_root;
+int phmc_dop_n_cheby;
+double * phmc_dop_cheby_coef;
+int phmc_ptilde_n_cheby;
+double * phmc_ptilde_cheby_coef;
 
 void init_phmc() {
   int max_iter_ev, j, k;
@@ -33,7 +39,6 @@ void init_phmc() {
   FILE *Const;
   char *filename_const = "normierungLocal.dat";
   char *filename_const_oox = "normierungLocal.dat.oox";
-
 
   /* START IF PHMC */
 

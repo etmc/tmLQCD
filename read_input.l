@@ -55,7 +55,8 @@ TYPE [0-9A-Z]+
   int reread = 0;
   char name[100];
 
-  int verbose=0;
+  int verbose = 0;
+  int myverbose = 0;
   int startoption;
   int Ntherm;
   int Nmeas;
@@ -296,7 +297,6 @@ TYPE [0-9A-Z]+
 ^SplittedPropagator{SPC}*={SPC}*           BEGIN(SPLITPROP);
 ^SplittedSource{SPC}*={SPC}*               BEGIN(SPLITSOURCE);
 ^SourceLocation{SPC}*={SPC}*               BEGIN(SRCLOC);
-^TimeScaleHeavyDoublet{SPC}*={SPC}*        BEGIN(HEAVYTS);
 ^UseEvenOdd{SPC}*={SPC}*                   BEGIN(EO);
 ^WritePropagatorFormat{SPC}*={SPC}*        BEGIN(WRPROPFLAG);
 ^PropagatorType{SPC}*={SPC}*               BEGIN(WRPROPFLAG);
@@ -332,8 +332,8 @@ TYPE [0-9A-Z]+
     exit(1);
   }
   if(!reread) add_monomial(mnl->type);
-  if(verbose) printf("initialising monomial with type %s %d line %d\n", yytext, mnl->type, line_of_file);
-  if(verbose) printf("monomial has id %d\n", current_monomial);
+  if(myverbose) printf("initialising monomial with type %s %d line %d\n", yytext, mnl->type, line_of_file);
+  if(myverbose) printf("monomial has id %d\n", current_monomial);
   mnl->kappa = _default_g_kappa;
   mnl->kappa2 = _default_g_kappa;
   mnl->mu = _default_g_mu;
@@ -360,95 +360,95 @@ TYPE [0-9A-Z]+
   {SPC}*Timescale{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->timescale = a;
-    if(verbose) printf("  timescales set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+    if(myverbose) printf("  timescales set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
   {SPC}*2KappaMu{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu = c;
-    if(verbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*2KappaMu2{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu2 = c;
-    if(verbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*Kappa{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     mnl->kappa = c;
-    if(verbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*Kappa2{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->kappa2 = c;
-    if(verbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*CSGHistory{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->csg_N = a;
-    if(verbose) printf("  csg history length set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+    if(myverbose) printf("  csg history length set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
   {SPC}*CSGHistory2{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z2] = %d", name , &a);
     mnl->csg_N2 = a;
-    if(verbose) printf("  csg history2 length (for bicgstab) set to %d line %d monomial %d\n", 
+    if(myverbose) printf("  csg history2 length (for bicgstab) set to %d line %d monomial %d\n", 
                        a, line_of_file, current_monomial);
   }
   {SPC}*ForcePrecision{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->forceprec = c;
-    if(verbose) printf("  ForcePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  ForcePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*AcceptancePrecision{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->accprec = c;
-    if(verbose) printf("  AcceptancePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  AcceptancePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*MaxSolverIterations{SPC}*={SPC}*{DIGIT} {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->maxiter = a;
-    if(verbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+    if(myverbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
   {SPC}*UseRectangleStaples{SPC}*={SPC}*yes {
     mnl->use_rectangles = 1;
     g_dbw2rand = 1;
-    if(verbose) printf("  UseRectangleStaples set to true line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("  UseRectangleStaples set to true line %d monomial %d\n", line_of_file, current_monomial);
   }
   {SPC}*UseRectangleStaples{SPC}*={SPC}*no {
     mnl->use_rectangles = 0;
-    if(verbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
   {SPC}*Beta{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->beta = c;
     g_beta = c;
-    if(verbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*RectangleCoefficient{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1 = c;
     g_rgi_C1 = c;
-    if(verbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   ^EndMonomial{SPC}*  {
-    if(verbose) printf("monomial %d parsed line %d\n\n", current_monomial, line_of_file);
+    if(myverbose) printf("monomial %d parsed line %d\n\n", current_monomial, line_of_file);
     BEGIN(0);
   }
   {SPC}*Name{SPC}*={SPC}* BEGIN(MNAME);
   {SPC}*Solver{SPC}*={SPC}* BEGIN(MSOLVER);
 }
 <MNAME>{NAME} {
-  if(verbose) printf("  monomial named \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+  if(myverbose) printf("  monomial named \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
   strcpy((*mnl).name, yytext);
   BEGIN(MONOMIAL);
 }
 <MSOLVER>{
   CG {
-    if(verbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 1;
     BEGIN(MONOMIAL);
   }
   bicgstab {
-    if(verbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 0;
     BEGIN(MONOMIAL);
   }
@@ -473,31 +473,31 @@ TYPE [0-9A-Z]+
   for(i = 0; i < 10; i++) {
     Integrator.lambda[i] = _default_2mn_lambda;
   }
-  if(verbose) printf("initialising integrator of type %s %d line %d\n", yytext, Integrator.type, line_of_file);
+  if(myverbose) printf("initialising integrator of type %s %d line %d\n", yytext, Integrator.type, line_of_file);
   BEGIN(INTEGRATOR);
 }
 <INTEGRATOR>{
   {SPC}*IntegrationSteps{DIGIT}{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z]%d = %d", name, &a, &b);
-    if(verbose) printf("  timescale %d steps=%d line %d\n", a, b, line_of_file);
+    if(myverbose) printf("  timescale %d steps=%d line %d\n", a, b, line_of_file);
     Integrator.n_int[a] = b;
     BEGIN(INTEGRATOR);
   }
   {SPC}*Lambda{DIGIT}{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[a-zA-Z]%d = %f", name, &a, &c);
     Integrator.lambda[a] = c;
-    if(verbose) printf("  timescale %d Lambda=%f line %d\n", a, c, line_of_file);
+    if(myverbose) printf("  timescale %d Lambda=%f line %d\n", a, c, line_of_file);
     BEGIN(INTEGRATOR);
   }
   {SPC}*NumberOfTimescales{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    if(verbose) printf("  Number of timescales set to %d line %d\n", a, line_of_file);
+    if(myverbose) printf("  Number of timescales set to %d line %d\n", a, line_of_file);
     Integrator.no_timescales = a;
     BEGIN(INTEGRATOR);
   }
   {SPC}*Tau{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
-    if(verbose) printf("  tau set to %e line %d\n", c, line_of_file);
+    if(myverbose) printf("  tau set to %e line %d\n", c, line_of_file);
     Integrator.tau = c;
     BEGIN(INTEGRATOR);
   }
@@ -506,7 +506,7 @@ TYPE [0-9A-Z]+
       fprintf(stderr, "NumberOfTimescales must be specified!\n");
       exit(1);
     }
-    if(verbose) printf("Integrators parsed line %d\n\n", line_of_file);
+    if(myverbose) printf("Integrators parsed line %d\n\n", line_of_file);
     BEGIN(0);
   }
 }
@@ -515,253 +515,253 @@ TYPE [0-9A-Z]+
 #ifndef FIXEDVOLUME
   T_global = atoi(yytext);
 #endif
-  if(verbose!=0) printf("T =%s\n", yytext);
+  if(myverbose!=0) printf("T =%s\n", yytext);
 }
 <LL>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
   L = atoi(yytext);
 #endif
-  if(verbose!=0) printf("L =%s\n", yytext);
+  if(myverbose!=0) printf("L =%s\n", yytext);
 }
 <LLX>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
   LX = atoi(yytext);
 #endif
-  if(verbose!=0) printf("LX =%s\n", yytext);
+  if(myverbose!=0) printf("LX =%s\n", yytext);
 }
 <LLY>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
   LY = atoi(yytext);
 #endif
-  if(verbose!=0) printf("LY =%s\n", yytext);
+  if(myverbose!=0) printf("LY =%s\n", yytext);
 }
 <LLZ>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
   LZ = atoi(yytext);
 #endif
-  if(verbose!=0) printf("LZ =%s\n", yytext);
+  if(myverbose!=0) printf("LZ =%s\n", yytext);
 }
 <NPROCX>{DIGIT}+              {
 #ifndef FIXEDVOLUME
   N_PROC_X = atoi(yytext);
 #endif
-  if(verbose!=0) printf("Nr of processors in x direction = %s\n", yytext);
+  if(myverbose!=0) printf("Nr of processors in x direction = %s\n", yytext);
 }
 <NPROCY>{DIGIT}+              {
 #ifndef FIXEDVOLUME
   N_PROC_Y = atoi(yytext);
 #endif
-  if(verbose!=0) printf("Nr of processors in y direction = %s\n", yytext);
+  if(myverbose!=0) printf("Nr of processors in y direction = %s\n", yytext);
 }
 <NPROCZ>{DIGIT}+              {
 #ifndef FIXEDVOLUME
   N_PROC_Z = atoi(yytext);
 #endif
-  if(verbose!=0) printf("Nr of processors in z direction = %s\n", yytext);
+  if(myverbose!=0) printf("Nr of processors in z direction = %s\n", yytext);
 }
 <SEED>{DIGIT}+               {
   random_seed=atoi(yytext);
-  if(verbose!=0) printf("seed=%s \n", yytext);
+  if(myverbose!=0) printf("seed=%s \n", yytext);
 }
 <KAPPA>{FLT}  {
   g_kappa=atof(yytext);
-  if(verbose!=0) printf("kappa=%s \n", yytext);
+  if(myverbose!=0) printf("kappa=%s \n", yytext);
 }
 <ACCPTILDE>{FLT}  {
   g_acc_Ptilde=atof(yytext);
-  if(verbose!=0) printf("Acc_Ptilde=%s \n", yytext);
+  if(myverbose!=0) printf("Acc_Ptilde=%s \n", yytext);
 }
 <ACCHFIN>{FLT}  {
   g_acc_Hfin=atof(yytext);
-  if(verbose!=0) printf("Acc_Hfin=%s \n", yytext);
+  if(myverbose!=0) printf("Acc_Hfin=%s \n", yytext);
 }
 <RECEV>{DIGIT}+               {
   g_rec_ev = atoi(yytext);
-  if(verbose!=0) printf("Rec_EV=%s \n", yytext);
+  if(myverbose!=0) printf("Rec_EV=%s \n", yytext);
 }
 <MUBAR>{FLT}  {
   g_mubar=atof(yytext);
-  if(verbose!=0) printf("mubar=%s \n", yytext);
+  if(myverbose!=0) printf("mubar=%s \n", yytext);
 }
 <EPSBAR>{FLT}  {
   g_epsbar=atof(yytext);
-  if(verbose!=0) printf("epsbar=%s \n", yytext);
+  if(myverbose!=0) printf("epsbar=%s \n", yytext);
 }
 <MU>{FLT}  {
   g_mu1=atof(yytext);
-  if(verbose!=0) printf("mu=%s \n", yytext);
+  if(myverbose!=0) printf("mu=%s \n", yytext);
 }
 <BETA>{FLT}   {
   g_beta=atof(yytext);
-  if(verbose!=0) printf("beta=%s \n",yytext);
+  if(myverbose!=0) printf("beta=%s \n",yytext);
 }
 <STARTCOND>cold {
   startoption=0; 
-  if(verbose!=0) printf("Start Condition is %s \n",yytext);
+  if(myverbose!=0) printf("Start Condition is %s \n",yytext);
 }
 <STARTCOND>{
   hot {
     startoption=1;
-    if(verbose!=0) printf("Start Condition is %s \n",yytext);
+    if(myverbose!=0) printf("Start Condition is %s \n",yytext);
   }
   restart {
     startoption=2;
-    if(verbose!=0) printf("Start Condition is %s \n",yytext);
+    if(myverbose!=0) printf("Start Condition is %s \n",yytext);
   }
   continue {
     startoption=3;
-    if(verbose!=0) printf("Start Condition is %s \n",yytext);
+    if(myverbose!=0) printf("Start Condition is %s \n",yytext);
   }
 }
 <THERMSWEEPS>{DIGIT}+ {
   Ntherm=atoi(yytext);
-  if(verbose!=0) printf("Nterm= %s \n",yytext);
+  if(myverbose!=0) printf("Nterm= %s \n",yytext);
 }
 <NMEAS>{DIGIT}+ {
   Nmeas=atoi(yytext); 
-  if(verbose!=0) printf("Nmeas= %s \n",yytext);
+  if(myverbose!=0) printf("Nmeas= %s \n",yytext);
 }
 <NSKIP>{DIGIT}+ {
   Nskip=atoi(yytext);
-  if(verbose!=0) printf("Nskip= %s \n",yytext);
+  if(myverbose!=0) printf("Nskip= %s \n",yytext);
 }
 <SOLVFLAG>{
   bicgstab {
     solver_flag=0;
-    if(verbose!=0) printf("Use BiCGStab Solver");
+    if(myverbose!=0) printf("Use BiCGStab Solver");
   }
   cg {
     solver_flag=1;
-    if(verbose!=0) printf("Use CG Solver\n");
+    if(myverbose!=0) printf("Use CG Solver\n");
   }
   pcg {
     solver_flag=9;
-    if(verbose!=0) printf("Use PCG Solver (eigenvectors needed) \n");
+    if(myverbose!=0) printf("Use PCG Solver (eigenvectors needed) \n");
   }
   gmres {
     solver_flag=2;
-    if(verbose!=0) printf("Use GMRES Solver\n");
+    if(myverbose!=0) printf("Use GMRES Solver\n");
   }
   gcr {
     solver_flag=7;
-    if(verbose!=0) printf("Use GCR Solver\n");
+    if(myverbose!=0) printf("Use GCR Solver\n");
   }
   gmresdr {
     solver_flag=8;
-    if(verbose!=0) printf("Use GMRES-DR Solver\n");
+    if(myverbose!=0) printf("Use GMRES-DR Solver\n");
   }
   cgs {
     solver_flag=3;
-    if(verbose!=0) printf("Use CGS Solver\n");
+    if(myverbose!=0) printf("Use CGS Solver\n");
   }
   mr {
     solver_flag=4;
-    if(verbose!=0) printf("Use MR Solver \n");
+    if(myverbose!=0) printf("Use MR Solver \n");
   }
   bicgstabell {
     solver_flag=5;
-    if(verbose!=0) printf("Use BiCGstab(2) Solver \n");
+    if(myverbose!=0) printf("Use BiCGstab(2) Solver \n");
   }
   fgmres {
     solver_flag=6;
-    if(verbose!=0) printf("Use FGMRES solver (eigenvectors needed) \n");
+    if(myverbose!=0) printf("Use FGMRES solver (eigenvectors needed) \n");
   }
 }
 <GMRESM>{DIGIT}+ {
   gmres_m_parameter = atoi(yytext);
-  if(verbose!=0) printf("Use Krylov Space of size %d in GMRES \n", gmres_m_parameter);
+  if(myverbose!=0) printf("Use Krylov Space of size %d in GMRES \n", gmres_m_parameter);
 }
 <GMRESDRNEV>{DIGIT}+ {
   gmresdr_nr_ev = atoi(yytext);
-  if(verbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
+  if(myverbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
 }
 <SITER>{DIGIT}+ {
   max_solver_iterations = atoi(yytext);
-  if(verbose!=0) printf("Use %d iterations in the solvers!\n", max_solver_iterations);
+  if(myverbose!=0) printf("Use %d iterations in the solvers!\n", max_solver_iterations);
 }
 <SPREC>{FLT} {
   solver_precision = atof(yytext);
-  if(verbose!=0) printf("Use %e as convergence precision for the solvers!\n", solver_precision);
+  if(myverbose!=0) printf("Use %e as convergence precision for the solvers!\n", solver_precision);
 }
 <OPFLAG>Dtm {
   operator_flag=2;
-  if(verbose!=0) printf("Operator Flag is set to %s\n",yytext);
+  if(myverbose!=0) printf("Operator Flag is set to %s\n",yytext);
 }
 <OPFLAG>DWilson {
   operator_flag=1;
-  if(verbose!=0) printf("Operator Flag is set to %s\n",yytext);
+  if(myverbose!=0) printf("Operator Flag is set to %s\n",yytext);
 }
 <OPFLAG>DOverlap {
   operator_flag=0;
-  if(verbose!=0) printf("Operator Flag is set to %s\n",yytext);
+  if(myverbose!=0) printf("Operator Flag is set to %s\n",yytext);
 }
 <MEFLAG>yes {
   matrix_element_flag=1;
-  if(verbose!=0) printf("Compute Matrix Elements: %s\n", yytext);
+  if(myverbose!=0) printf("Compute Matrix Elements: %s\n", yytext);
 }
 <MEFLAG>no {
   matrix_element_flag=0;
-  if(verbose!=0) printf("Compute Matrix Elements: %s\n", yytext);
+  if(myverbose!=0) printf("Compute Matrix Elements: %s\n", yytext);
 }
 <SAVECONF>yes    {
   save_config_flag=1;
-  if(verbose!=0) printf("Save configurations\n");
+  if(myverbose!=0) printf("Save configurations\n");
 }
 <SAVECONF>no     {
   save_config_flag=0;
-  if(verbose!=0) printf("Don't save configurations\n");
+  if(myverbose!=0) printf("Don't save configurations\n");
 }
 <SAVEPROP>yes    {
   save_prop_flag=1;
-  if(verbose!=0) printf("Save propagators\n");
+  if(myverbose!=0) printf("Save propagators\n");
 }
 <SAVEPROP>no     {
   save_prop_flag=0;
-  if(verbose!=0) printf("Don't save propagators\n");
+  if(myverbose!=0) printf("Don't save propagators\n");
 }
 <SAVEPRG2>yes    {
   save_prop_g2_flag=1;
-  if(verbose!=0) printf("Save generalized propagators\n");
+  if(myverbose!=0) printf("Save generalized propagators\n");
 }
 <SAVEPRG2>no     {
   save_prop_g2_flag=0;
-  if(verbose!=0) printf("Don't save generalized propagators\n");
+  if(myverbose!=0) printf("Don't save generalized propagators\n");
 }
 <WRITECP>yes     {
   write_cp_flag=1;
-  if(verbose!=0) printf("Write Checkpoints\n");
+  if(myverbose!=0) printf("Write Checkpoints\n");
 }
 <WRITECP>no     {
   write_cp_flag=0;
-  if(verbose!=0) printf("Don't write Checkpoints\n");
+  if(myverbose!=0) printf("Don't write Checkpoints\n");
 }
 <CPINT>{DIGIT}+   {
   cp_interval=atoi(yytext);
-  if(verbose!=0) printf("Write Checkpoint all %s measurements\n",yytext);
+  if(myverbose!=0) printf("Write Checkpoint all %s measurements\n",yytext);
 }
 <GAUGEINPUTFILE>{FILENAME} {
   strcpy(gauge_input_filename,yytext);
-  if(verbose!=0) printf("Gauge Configuration input filename set to %s\n",yytext);
+  if(myverbose!=0) printf("Gauge Configuration input filename set to %s\n",yytext);
 }
 <NSTORE>{DIGIT}+   {
   nstore=atoi(yytext);
-  if(verbose!=0) printf("Initial store counter set to %s\n",yytext);
+  if(myverbose!=0) printf("Initial store counter set to %s\n",yytext);
 }
 <NSTORE>readin {
   nstore=-1;
-  if(verbose!=0) printf("Trying to read InitialStoreCounter from file .nstore_counter\n");
+  if(myverbose!=0) printf("Trying to read InitialStoreCounter from file .nstore_counter\n");
 }
 <IOPROC>all         {
   g_stdio_proc = -1;
-  if(verbose!=0) printf("All processors will give output to stdout\n");
+  if(myverbose!=0) printf("All processors will give output to stdout\n");
 }
 <IOPROC>no          {
   g_stdio_proc = -2;
-  if(verbose!=0) printf("No processor will give output to stdout\n");
+  if(myverbose!=0) printf("No processor will give output to stdout\n");
 }
 <IOPROC>{DIGIT}+    {
   g_stdio_proc = atoi(yytext);
-  if(verbose!=0) printf("processor %s will give output to stdout\n", yytext);
+  if(myverbose!=0) printf("processor %s will give output to stdout\n", yytext);
 }
 <IDX>{DIGIT}+ {
   index_start = atoi(yytext);
@@ -770,7 +770,7 @@ TYPE [0-9A-Z]+
     printf("Error in line %d! index_start must be in [0,11]! Exiting...!\n", line_of_file);
     exit(1);
   }
-  if(verbose!=0) printf("inverting for index %s\n", yytext);
+  if(myverbose!=0) printf("inverting for index %s\n", yytext);
 }
 <IDX>{IDXEX}  {
   sscanf(yytext, "-%d", &index_end);
@@ -781,252 +781,248 @@ TYPE [0-9A-Z]+
   if((index_end < 0)||(index_end >11)){
     printf("Warnig! index_end bigger than index_start. Will compute no propagator!\n");
   }
-  if(verbose!=0) printf("inverting up to color index %d\n", index_end);
+  if(myverbose!=0) printf("inverting up to color index %d\n", index_end);
   index_end+=1;
 }
 <FPROP>no {
   first_prop_flag = -1;
-  if(verbose!=0) printf("Do not compute the first propagator (default)\n");
+  if(myverbose!=0) printf("Do not compute the first propagator (default)\n");
 }
 <FPROP>compute {
   first_prop_flag = 0;
-  if(verbose!=0) printf("Computing the first propagator (default)\n");
+  if(myverbose!=0) printf("Computing the first propagator (default)\n");
 }
 <FPROP>readin {
   first_prop_flag = 1;
-  if(verbose!=0) printf("Reading in the first propagator\n");
+  if(myverbose!=0) printf("Reading in the first propagator\n");
 }
 <BCGMAX>{DIGIT}+ {
   ITER_MAX_BCG = atoi(yytext);
-  if(verbose != 0) printf("Maximal number of iterations for BCGstab set ro %d\n", ITER_MAX_BCG);
+  if(myverbose != 0) printf("Maximal number of iterations for BCGstab set ro %d\n", ITER_MAX_BCG);
 }
 <CGMAX>{DIGIT}+  {
   ITER_MAX_CG = atoi(yytext);
-  if(verbose != 0) printf("Maximal number of iterations for CG set ro %d\n", ITER_MAX_CG);
+  if(myverbose != 0) printf("Maximal number of iterations for CG set ro %d\n", ITER_MAX_CG);
 }
 <BOUND>{FLT} {
   X0 = atof(yytext);
-  if(verbose != 0) printf("X0 for boundary cond. in time set to %e\n", X0);
+  if(myverbose != 0) printf("X0 for boundary cond. in time set to %e\n", X0);
 }
 <READSOURCE>yes     {
   read_source_flag=1;
-  if(verbose!=0) printf("Read inversion source from file\n");
+  if(myverbose!=0) printf("Read inversion source from file\n");
 }
 <READSOURCE>no     {
   read_source_flag=0;
-  if(verbose!=0) printf("Don't read inversion source from file\n");
+  if(myverbose!=0) printf("Don't read inversion source from file\n");
 }
 <SOURCEFILE>{FILENAME} {
   strcpy(source_input_filename,yytext);
-  if(verbose!=0) printf("source input filename set to %s\n",yytext);
+  if(myverbose!=0) printf("source input filename set to %s\n",yytext);
 }
 <SOURCEFORMAT>etmc      {
   source_format_flag = 0;
-  if(verbose!=0) printf("Using standard ETMC binary format for source input file\n");
+  if(myverbose!=0) printf("Using standard ETMC binary format for source input file\n");
 }
 <SOURCEFORMAT>cmi      {
   source_format_flag = 1;
-  if(verbose!=0) printf("Using CM format for source input file\n");
+  if(myverbose!=0) printf("Using CM format for source input file\n");
 }
 <SOURCEFORMAT>gwc      {
   source_format_flag = 2;
-  if(verbose!=0) printf("Using GWC format for source input file\n");
+  if(myverbose!=0) printf("Using GWC format for source input file\n");
 }
 <SOURCETS>{DIGIT}+   {
   source_time_slice = atoi(yytext);
-  if(verbose!=0) printf("Using only timeslice %s of the source, padding the rest with zeros\n", yytext);
+  if(myverbose!=0) printf("Using only timeslice %s of the source, padding the rest with zeros\n", yytext);
 }
 <RELPREC>yes  {
   g_relative_precision_flag = 1;
-  if(verbose!=0) printf("Using relative precision\n");
+  if(myverbose!=0) printf("Using relative precision\n");
 }
 <RELPREC>no  {
   g_relative_precision_flag = 0;
-  if(verbose!=0) printf("Using absolute precision\n");
+  if(myverbose!=0) printf("Using absolute precision\n");
 }
 <REVCHECK>yes {
   return_check_flag = 1;
-  if(verbose!=0) printf("Perform checks of Reversibility\n");
+  if(myverbose!=0) printf("Perform checks of Reversibility\n");
 }
 <REVCHECK>no {
   return_check_flag = 0;
-  if(verbose!=0) printf("Don't perform checks of Reversibility\n");
+  if(myverbose!=0) printf("Don't perform checks of Reversibility\n");
 }
 <REVINT>{DIGIT}+ {
   return_check_interval = atoi(yytext);
-  if(verbose!=0) printf("Check reversibility all %d trajectories\n", return_check_interval);
+  if(myverbose!=0) printf("Check reversibility all %d trajectories\n", return_check_interval);
 }
 <DEBUG>{DIGIT}+ {
   g_debug_level = atoi(yytext);
-  if(verbose!=0) printf("Debug level = %d\n", g_debug_level);
+  if(myverbose!=0) printf("Debug level = %d\n", g_debug_level);
 }
 <GAUGERPREC>32 {
   gauge_precision_read_flag = 32;
-  if(verbose!=0) printf("Read gauges in 32 Bit precision!\n");
+  if(myverbose!=0) printf("Read gauges in 32 Bit precision!\n");
 }
 <GAUGERPREC>64 {
   gauge_precision_read_flag = 64;
-  if(verbose!=0) printf("Read gauges in 64 Bit precision!\n");
+  if(myverbose!=0) printf("Read gauges in 64 Bit precision!\n");
 }
 <GAUGEWPREC>32 {
   gauge_precision_write_flag = 32;
-  if(verbose!=0) printf("Save gauges in 32 Bit precision!\n");
+  if(myverbose!=0) printf("Save gauges in 32 Bit precision!\n");
 }
 <GAUGEWPREC>64 {
   gauge_precision_write_flag = 64;
-  if(verbose!=0) printf("Save gauges in 64 Bit precision!\n");
+  if(myverbose!=0) printf("Save gauges in 64 Bit precision!\n");
 }
 <PROPPREC>32 {
   prop_precision_flag = 32;
-  if(verbose!=0) printf("Save propagators in 32 Bit precision!\n");
+  if(myverbose!=0) printf("Save propagators in 32 Bit precision!\n");
 }
 <PROPPREC>64 {
   prop_precision_flag = 64;
-  if(verbose!=0) printf("Save propagators in 64 Bit precision!\n");
+  if(myverbose!=0) printf("Save propagators in 64 Bit precision!\n");
 }
 <REPRORND>yes {
   reproduce_randomnumber_flag = 1;
-  if(verbose!=0) printf("Use reproducable randomnumbers!\n");
+  if(myverbose!=0) printf("Use reproducable randomnumbers!\n");
 }
 <REPRORND>no {
   reproduce_randomnumber_flag = 0;
-  if(verbose!=0) printf("Use a different seed for each process in ranlxd!\n");
+  if(myverbose!=0) printf("Use a different seed for each process in ranlxd!\n");
 }
 <SLOPPYPREC>yes {
   g_sloppy_precision_flag = 1;
-  if(verbose!=0) printf("Use sloppy precision if available!\n");
+  if(myverbose!=0) printf("Use sloppy precision if available!\n");
 }
 <SLOPPYPREC>no {
   g_sloppy_precision_flag = 0;
-  if(verbose!=0) printf("Don't use sloppy precision!\n");
+  if(myverbose!=0) printf("Don't use sloppy precision!\n");
 }
 <USESTOUT>yes {
   use_stout_flag = 1;
-  if(verbose!=0) printf("Use stout smearing for invert!\n");
+  if(myverbose!=0) printf("Use stout smearing for invert!\n");
 }
 <USESTOUT>no {
   use_stout_flag = 0;
-  if(verbose!=0) printf("Don't use stout smearing for invert!\n");
+  if(myverbose!=0) printf("Don't use stout smearing for invert!\n");
 }
 <STOUTRHO>{FLT} {
   stout_rho=atof(yytext);
-  if(verbose!=0) printf("use stout rho=%e!\n", stout_rho);
+  if(myverbose!=0) printf("use stout rho=%e!\n", stout_rho);
 }
 <STOUTITER>{DIGIT}+ {
   stout_no_iter=atoi(yytext);
-  if(verbose!=0) printf("make %d stout iterations!\n", stout_no_iter);
+  if(myverbose!=0) printf("make %d stout iterations!\n", stout_no_iter);
 }
 <PHMCFLAV>2"+"1"+"1 {
   phmc_no_flavours=4;
-  if(verbose!=0) printf("Simulate 2+1+1 flavours (1+1 PHMC).\n");
+  if(myverbose!=0) printf("Simulate 2+1+1 flavours (1+1 PHMC).\n");
 }
 <PHMCFLAV>1"+"1 {
   phmc_no_flavours=2;
-  if(verbose!=0) printf("Simulate 1+1 flavours only (1+1 PHMC).\n");
+  if(myverbose!=0) printf("Simulate 1+1 flavours only (1+1 PHMC).\n");
 }
 <PCOMPUTEEVS>yes {
   phmc_compute_evs=1;
-  if(verbose!=0) printf("Compute Eigenvalues and exit.");
+  if(myverbose!=0) printf("Compute Eigenvalues and exit.");
 }
 <PCOMPUTEEVS>no {
   phmc_compute_evs=0;
 }
 <COMPUTEEVS>yes {
   compute_evs=1;
-  if(verbose!=0) printf("Compute Eigenvalues in invert.");
+  if(myverbose!=0) printf("Compute Eigenvalues in invert.");
 }
 <COMPUTEEVS>no {
   compute_evs=0;
-  if(verbose!=0) printf("Do not compute Eigenvalues in invert.");
+  if(myverbose!=0) printf("Do not compute Eigenvalues in invert.");
 }
 <COMPUTEEVS>readin {
   compute_evs=2;
-  if(verbose!=0) printf("Try to only read in eigenvalues and vectors in invert.");
+  if(myverbose!=0) printf("Try to only read in eigenvalues and vectors in invert.");
 }
 <PPP>no {
  phmc_exact_poly = 0;
- if(verbose!=0) printf("Run the PHMC as usual.");
+ if(myverbose!=0) printf("Run the PHMC as usual.");
 }
 <PPP>yes {
  phmc_exact_poly = 1;
- if(verbose!=0) printf("Run the PHMC only with usage of the less accurate polynomial.");
+ if(myverbose!=0) printf("Run the PHMC only with usage of the less accurate polynomial.");
 }
 
 <SMAX>{FLT} {
   stilde_max = atof(yytext);
-  if(verbose!=0) printf("Stilde max for PHMC set to %e.\n", stilde_max);
+  if(myverbose!=0) printf("Stilde max for PHMC set to %e.\n", stilde_max);
 }
 <SMIN>{FLT} {
   stilde_min = atof(yytext);
-  if(verbose!=0) printf("Stilde min for PHMC set to %e.\n", stilde_min);
+  if(myverbose!=0) printf("Stilde min for PHMC set to %e.\n", stilde_min);
 }
 <DEGP>{DIGIT}+ {
   degree_of_p = atoi(yytext);
-  if(verbose!=0) printf("Degree for less precise polynomial P set to %d \n", degree_of_p);
+  if(myverbose!=0) printf("Degree for less precise polynomial P set to %d \n", degree_of_p);
 }
 <SPLITPROP>yes {
   propagator_splitted=1;
-  if(verbose!=0) printf("Split the propagator in several files! (invert)\n");
+  if(myverbose!=0) printf("Split the propagator in several files! (invert)\n");
 }
 <SPLITPROP>no {
   propagator_splitted=0;
-  if(verbose!=0) printf("Do not split the propagator in several files (default) (invert)!\n");
+  if(myverbose!=0) printf("Do not split the propagator in several files (default) (invert)!\n");
 }
 <SPLITSOURCE>yes {
   source_splitted=1;
-  if(verbose!=0) printf("Expect source to be split in several files (invert)!\n");
+  if(myverbose!=0) printf("Expect source to be split in several files (invert)!\n");
 }
 <SPLITSOURCE>no {
   source_splitted=0;
-  if(verbose!=0) printf("Do not expect source to be split in several files (default) (invert)!\n");
+  if(myverbose!=0) printf("Do not expect source to be split in several files (default) (invert)!\n");
 }
 <SRCLOC>{DIGIT}+ {
   source_location=atoi(yytext);
-  if(verbose!=0) printf("source_location = %s\n",yytext);
+  if(myverbose!=0) printf("source_location = %s\n",yytext);
 }
 <PRECEV>{FLT} {
   eigenvalue_precision = atof(yytext);
-  if(verbose!=0) printf("precision for eigenvalues = %e\n", eigenvalue_precision);
+  if(myverbose!=0) printf("precision for eigenvalues = %e\n", eigenvalue_precision);
 }
 <NOEV>{DIGIT}+ {
   no_eigenvalues = atoi(yytext);
-  if(verbose!=0) printf("no of eigenvalues = %d\n", no_eigenvalues);
+  if(myverbose!=0) printf("no of eigenvalues = %d\n", no_eigenvalues);
 }
 <SUBEVCG>yes {
   sub_evs_cg_flag = 1;
-  if(verbose!=0) printf("project out eigenvector subspace\n");
+  if(myverbose!=0) printf("project out eigenvector subspace\n");
 }
 <SUBEVCG>no {
   sub_evs_cg_flag = 0;
-  if(verbose!=0) printf("Do no project out eigenvector subspace\n");
-}
-<HEAVYTS>{DIGIT}+ {
-  phmc_heavy_timescale = atoi(yytext);
-  if(verbose!=0) printf("Integrate heavy doublet on timescale %d\n", phmc_heavy_timescale);
+  if(myverbose!=0) printf("Do no project out eigenvector subspace\n");
 }
 <EO>yes {
   even_odd_flag = 1;
-  if(verbose) printf("Use even/odd preconditioning\n");
+  if(myverbose) printf("Use even/odd preconditioning\n");
 }
 <EO>no {
   even_odd_flag = 0;
-  if(verbose) printf("Do not use even/odd preconditioning\n");
+  if(myverbose) printf("Do not use even/odd preconditioning\n");
 }
 <WRPROPFLAG>gwc      {
   write_prop_format_flag = 10;
-  if(verbose!=0) fprintf(stderr, "GWC format no longer supported for writing propagators\n");
+  if(myverbose!=0) fprintf(stderr, "GWC format no longer supported for writing propagators\n");
 }
 <WRPROPFLAG>cmi      {
   write_prop_format_flag = 11;
-  if(verbose!=0) fprintf(stderr, "CM format no longer supported for writing propagators\n");
+  if(myverbose!=0) fprintf(stderr, "CM format no longer supported for writing propagators\n");
 }
 <WRPROPFLAG>DiracFermion_Sink {
   write_prop_format_flag = 0;
-  if(verbose!=0) printf("Propagator type: DiracFermion_Sinks\n");
+  if(myverbose!=0) printf("Propagator type: DiracFermion_Sinks\n");
 }
 <WRPROPFLAG>DiracFermion_Source_Sink_Pairs {
   write_prop_format_flag = 1;
-  if(verbose!=0) printf("Propagator type: DiracFermion_Source_Sink_Pairs\n");
+  if(myverbose!=0) printf("Propagator type: DiracFermion_Source_Sink_Pairs\n");
 }
 <WRPROPFLAG>DiracFermion_ScalarSource_TwelveSink {
   write_prop_format_flag = 1;
@@ -1038,15 +1034,15 @@ TYPE [0-9A-Z]+
 }
 <ONMEAS>yes {
   online_measurement_flag = 1;
-  if(verbose!=0) fprintf(stderr, "Switched on online measurements\n");
+  if(myverbose!=0) fprintf(stderr, "Switched on online measurements\n");
 }
 <ONMEAS>no {
   online_measurement_flag = 0;
-  if(verbose!=0) fprintf(stderr, "Online measurements not switched on\n");
+  if(myverbose!=0) fprintf(stderr, "Online measurements not switched on\n");
 }
 <ONFREQ>{DIGIT}+ {
   online_measurement_freq = atoi(yytext);
-  if(verbose!=0) fprintf(stderr, "Frequency for online measurements set to %s\n", yytext);
+  if(myverbose!=0) fprintf(stderr, "Frequency for online measurements set to %s\n", yytext);
 }
 
 <*>^#   {
@@ -1166,26 +1162,10 @@ int read_input(char * conf_file){
   g_rgi_C1 = _default_g_rgi_C1;
   read_source_flag= _default_read_source_flag;
   strcpy(source_input_filename, _default_source_filename);
-  g_eps_sq_force = _default_g_eps_sq_force;
-  g_eps_sq_acc = _default_g_eps_sq_acc;
-  g_eps_sq_force1 = _default_g_eps_sq_force1;
-  g_eps_sq_acc1 = _default_g_eps_sq_acc1;
-  g_eps_sq_force2 = _default_g_eps_sq_force2;
-  g_eps_sq_acc2 = _default_g_eps_sq_acc2;
-  g_eps_sq_force3 = _default_g_eps_sq_force3;
-  g_eps_sq_acc3 = _default_g_eps_sq_acc3;
   g_relative_precision_flag = _default_g_relative_precision_flag;
   return_check_flag = _default_return_check_flag;
   return_check_interval = _default_return_check_interval;
   g_debug_level = _default_g_debug_level;
-  g_csg_N[0] = _default_g_csg_N;
-  g_csg_N[2] = _default_g_csg_N;
-  g_csg_N[4] = _default_g_csg_N;
-  g_csg_N[6] = _default_g_csg_N;
-  lambda[0] = _default_2mn_lambda;
-  lambda[1] = _default_2mn_lambda;
-  lambda[2] = _default_2mn_lambda;
-  lambda[3] = _default_2mn_lambda;
   source_format_flag = _default_source_format_flag;
   source_time_slice = _default_source_time_slice;
   gmres_m_parameter = _default_gmres_m_parameter;
@@ -1222,6 +1202,9 @@ int read_input(char * conf_file){
   write_prop_format_flag = -1;
   /********************************************/
 
+  if(verbose && g_proc_id == 0) {
+    myverbose = 1;
+  }
   if ((yyin = fopen(conf_file, "rt")) == NULL){
     return(2);
   }
@@ -1240,13 +1223,6 @@ int read_input(char * conf_file){
   }
 #endif
   
-  if(g_eps_sq_force1 < 0) g_eps_sq_force1 = g_eps_sq_force;
-  if(g_eps_sq_force2 < 0) g_eps_sq_force2 = g_eps_sq_force;
-  if(g_eps_sq_force3 < 0) g_eps_sq_force3 = g_eps_sq_force;
-  if(g_eps_sq_acc1 < 0) g_eps_sq_acc1 = g_eps_sq_acc;
-  if(g_eps_sq_acc2 < 0) g_eps_sq_acc2 = g_eps_sq_acc;
-  if(g_eps_sq_acc3 < 0) g_eps_sq_acc3 = g_eps_sq_acc;
-
   if(write_prop_format_flag == -1) write_prop_format_flag = source_format_flag;
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
   g_ka_csw_8 = g_kappa*g_c_sw/8.;
@@ -1276,9 +1252,11 @@ int reread_input(char * conf_file){
 #endif
   int nst=nstore, j=0;
   double m2 = g_mu2, m3 = g_mu3;
-  int n1 = g_csg_N[0], n2 = g_csg_N[2], n3 = g_csg_N[4], n4 = g_csg_N[6];
   double x;
 
+  if(verbose && g_proc_id == 0) {
+    myverbose = 1;
+  }
   reread = 1;
 
   /********************************************
@@ -1303,10 +1281,6 @@ int reread_input(char * conf_file){
   N_PROC_X = np;
   N_PROC_Y = npy;
 #endif
-  g_csg_N[0] = n1;
-  g_csg_N[2] = n2;
-  g_csg_N[4] = n3;
-  g_csg_N[6] = n4;
 
 
   if(g_dbw2rand == 0) {
@@ -1317,58 +1291,7 @@ int reread_input(char * conf_file){
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
   g_ka_csw_8 = g_kappa*g_c_sw/8.;
   
-  if(g_mu3 > 0. && g_mu3 != m3) {
-    g_mu = g_mu1;
-    g_mu1 = g_mu3;
-    g_mu3 = g_mu;
-
-    j = int_n[1];
-    int_n[1] = int_n[3];
-    int_n[3] = j;
-
-    x = lambda[1];
-    lambda[1] = lambda[3];
-    lambda[3] = x;
-
-    g_nr_of_psf = 3;
-  }
-  else if(g_mu2 > 0. && g_mu2 != m2) {
-    g_mu = g_mu1;
-    g_mu1 = g_mu2;
-    g_mu2 = g_mu;
-
-    int_n[3] = int_n[1];
-    int_n[1] = int_n[2];
-    int_n[2] = int_n[3];
-
-    lambda[3] = lambda[1];
-    lambda[1] = lambda[2];
-    lambda[2] = lambda[3];
-
-    g_nr_of_psf = 2;
-  }
-  for(j = 0; j < g_nr_of_psf+1; j++) {
-    if(int_n[j] == 0) int_n[j] = 1;
-  }
-  if(g_nr_of_psf == 3) {
-    g_eps_sq_force = g_eps_sq_force1;
-    g_eps_sq_force1 = g_eps_sq_force3;
-    g_eps_sq_force3 = g_eps_sq_force;
-    g_eps_sq_acc = g_eps_sq_acc1;
-    g_eps_sq_acc1 = g_eps_sq_acc3;
-    g_eps_sq_acc3 = g_eps_sq_acc;
-  }
-  if(g_nr_of_psf == 2) {
-    g_eps_sq_force = g_eps_sq_force1;
-    g_eps_sq_force1 = g_eps_sq_force2;
-    g_eps_sq_force2 = g_eps_sq_force;
-    g_eps_sq_acc = g_eps_sq_acc1;
-    g_eps_sq_acc1 = g_eps_sq_acc2;
-    g_eps_sq_acc2 = g_eps_sq_acc;
-  }
   g_mu = g_mu1;
-  g_eps_sq_acc = g_eps_sq_acc1;
-  g_eps_sq_force = g_eps_sq_force1;
 
   fclose(yyout);
   fclose(yyin);

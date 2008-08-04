@@ -23,7 +23,6 @@
 #include "tm_operators.h"
 #include "solver/solver.h"
 #include "get_rectangle_staples.h"
-#include "derivative_psf.h"
 #include "gamma.h"
 #include "get_staples.h"
 #include "update_backward_gauge.h"
@@ -31,7 +30,6 @@
 #include "stout_smear.h"
 #include "stout_smear_force.h"
 #include "phmc.h"
-#include "derivative_nondegenerate.h"
 #include "hybrid_update.h"
 
 extern int ITER_MAX_BCG;
@@ -146,125 +144,6 @@ void gauge_momenta(double step)
 #endif
 }
 
-/*----------------------------------------------------------------------------*/
-
-void update_fermion_momenta(double step, const int S, 
-			    const int do_all) {
-  int i,mu;
-  double tmp;
-  su3adj *xm,*deriv;
-
-  double sum=0., max=0.;
-  double sum2=0.;
-  static int co = 0;
-  co++;
-  double atime=0., etime=0.;
-
-  if(!(g_running_phmc && phmc_no_flavours == 2)) {
-#ifdef MPI
-    atime = MPI_Wtime();
-#else
-    atime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
-    if(do_all == 1) {
-      /* set deriv to zero here */
-      derivative_psf(0, 1);
-      for(i = 1; i < g_nr_of_psf; i++) {
-        /* and add all the rest */
-	derivative_psf(i, 0);
-      }
-    }
-    else {
-      derivative_psf(S, 1);
-    }
-#ifdef MPI
-    xchange_deri();
-#endif
-    for(i = 0; i < VOLUME; i++) {
-      for(mu=0;mu<4;mu++){
-	xm=&moment[i][mu];
-	deriv=&df0[i][mu];
-	if(g_debug_level > 0) {
-	  sum2 = _su3adj_square_norm(*deriv); 
-	  sum+= sum2;
-	  if(g_debug_level > 2 && co < 20 && g_proc_id == 0) {
-	    printf("histogram%d %e\n",S,sum2);
-	    fflush(stdout);
-	  }
-	  if(sum2 > max) max = sum2;
-	}
-	/* This 2* is coming from what?             */
-	/* From a missing factor 2 in trace_lambda? */
-	tmp = 2.*step;
-	_minus_const_times_mom(*xm,tmp,*deriv); 
-      }
-    }
-#ifdef MPI
-    etime = MPI_Wtime();
-#else
-    etime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
-    if(g_debug_level > 0) {
-#ifdef MPI
-      MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-      sum = sum2;
-      MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-      max = sum2;
-#endif
-      if(g_proc_id == 0) {
-	/* The factor 2 from above is missing here */
-	printf("fermionforce%d %e max %e time/s %f\n", S, sum/((double)(VOLUME*g_nproc))/4., max, etime-atime);
-	fflush(stdout);
-      }
-    }
-  }
-
-  /* the 1+1 part */
-  if(g_running_phmc && (do_all || (phmc_heavy_timescale == S))) {
-#ifdef MPI
-    atime = MPI_Wtime();
-#endif
-    sum = 0.;
-    max = 0.;
-    derivative_nondegenerate(); 
-    
-#ifdef MPI
-    xchange_deri();
-#endif
-    for(i = 0; i < VOLUME; i++) {
-      for(mu=0;mu<4;mu++){
-	xm=&moment[i][mu];
-	deriv=&df0[i][mu];
-
-	if(g_debug_level > 0) {
-	  sum2 = _su3adj_square_norm(*deriv); 
-	  sum+= sum2;
-	  if(sum2 > max) max = sum2;
-	}
-
-	tmp = -2.*step*phmc_Cpol*phmc_invmaxev;
-	_minus_const_times_mom(*xm,tmp,*deriv); 
-      }
-    }
-#ifdef MPI
-    etime = MPI_Wtime();
-#endif
-    if(g_debug_level > 0) {
-#ifdef MPI
-      MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-      sum = sum2;
-      MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-      max = sum2;
-#endif
-      if(g_proc_id == 0) {
-	printf("fermionforceheavydoubletts%d %e max %e time/s %f\n", S, 
-	       sum/((double)(VOLUME*g_nproc))/4.*phmc_Cpol*phmc_invmaxev, 
-	       max*phmc_Cpol*phmc_invmaxev, etime-atime);
-	fflush(stdout);
-      }
-    }
-  }
-}
 
 /*----------------------------------------------------------------------------*/
 
@@ -305,110 +184,6 @@ void update_gauge(double step) {
 #endif
 }
 
-/*----------------------------------------------------------------------------*/
-
-void leap_frog(double step, int m, int nsmall) {
-  int i,j;
-  double smallstep;
-
-  /* initialize the counter for the inverter */
-  count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;
-  /* adjust the step-size to standard convention */
-  /*   step*=0.7071067811865; */
-  smallstep=step/nsmall;
-
-#ifdef _GAUGE_COPY
-  update_backward_gauge();
-#endif
-  update_fermion_momenta(0.5*step, 0, 1);
-  gauge_momenta(0.5*smallstep);
-  for(i=1;i<m;i++){
-    for(j=0;j<nsmall;j++){
-      update_gauge(smallstep); 
-      gauge_momenta(smallstep);
-    }
-#ifdef _GAUGE_COPY
-    update_backward_gauge();
-#endif
-    update_fermion_momenta(step, 0, 1);
-  }
-  for(j=1;j<nsmall;j++){
-    update_gauge(smallstep); 
-    gauge_momenta(smallstep);
-  }
-  update_gauge(smallstep); 
-  gauge_momenta(0.5*smallstep);
-#ifdef _GAUGE_COPY
-  update_backward_gauge();
-#endif
-  update_fermion_momenta(0.5*step, 0, 1);
-}
-
-/*----------------------------------------------------------------------------*/
-
-void sexton(double step, int m, int nsmall) {
-  int i,j;
-  /*   int ev = 10; */
-  double smallstep;
-  /* initialize the counter for the inverter */
-  count00=0; count01=0; count10=0; count11=0; count20=0; count21=0;
-  /* adjust the step-size to standard convention */
-  /*   step*=0.7071067811865; */
-  smallstep=step/nsmall;
-
-#ifdef _GAUGE_COPY
-  update_backward_gauge();
-#endif
-  update_fermion_momenta(step/6., 0, 1);
-  gauge_momenta(smallstep/12.);
-  for(i=1;i<m;i++){
-    for(j=0;j<nsmall;j++){
-      update_gauge(smallstep/4.);
-      gauge_momenta(smallstep/3.);
-      update_gauge(smallstep/4.);
-      gauge_momenta(smallstep/6.);
-    }
-
-#ifdef _GAUGE_COPY
-    update_backward_gauge();
-#endif
-    update_fermion_momenta(2.*step/3., 0, 1);
-    for(j=0;j<nsmall;j++) {
-      update_gauge(smallstep/4.);
-      gauge_momenta(smallstep/3.);
-      update_gauge(smallstep/4.);
-      gauge_momenta(smallstep/6.);
-    }
-#ifdef _GAUGE_COPY
-    update_backward_gauge();
-#endif
-    update_fermion_momenta(step/3., 0, 1);
-  }
-  for(j=0;j<nsmall;j++){
-    update_gauge(smallstep/4.);
-    gauge_momenta(smallstep/3.);
-    update_gauge(smallstep/4.);
-    gauge_momenta(smallstep/6.);
-  }
-#ifdef _GAUGE_COPY
-  update_backward_gauge();
-#endif
-  update_fermion_momenta(2*step/3., 0, 1);
-  for(j=1;j<nsmall;j++){
-    update_gauge(smallstep/4.);
-    gauge_momenta(smallstep/3.);
-    update_gauge(smallstep/4.);
-    gauge_momenta(smallstep/6.);
-  }
-  update_gauge(smallstep/4.);
-  gauge_momenta(smallstep/3.);
-  update_gauge(smallstep/4.);
-  gauge_momenta(smallstep/12.);
-#ifdef _GAUGE_COPY
-  update_backward_gauge();
-#endif
-  update_fermion_momenta(step/6., 0, 1);
-}
 
 /*----------------------------------------------------------------------------*/
 

@@ -93,9 +93,7 @@ int main(int argc,char *argv[]) {
   int kb=0;
 #endif
   double nrm1, nrm2;
-#ifdef MPI
   double atime=0., etime=0.;
-#endif
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
@@ -109,7 +107,6 @@ int main(int argc,char *argv[]) {
 
   verbose = 0;
   g_use_clover_flag = 0;
-  g_nr_of_psf = 1;
 
 #ifdef MPI
   MPI_Init(&argc, &argv);
@@ -347,12 +344,16 @@ int main(int argc,char *argv[]) {
 	
 #ifdef MPI
 	atime = MPI_Wtime();
+#else
+	atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
 	iter = invert_doublet_eo(g_spinor_field[4], g_spinor_field[5], g_spinor_field[6], g_spinor_field[7], 
 				 g_spinor_field[0], g_spinor_field[1], g_spinor_field[2], g_spinor_field[3], 
 				 solver_precision, max_solver_iterations, solver_flag, g_relative_precision_flag);
 #ifdef MPI
 	etime = MPI_Wtime();
+#else
+	etime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
 
 

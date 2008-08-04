@@ -22,19 +22,9 @@ double reweighting_factor_nd(const int N) {
 
   complex temp2;
 
-  if(g_nr_of_psf == 2) {
-    /* The physical mass */
-    mu1 = g_mu2;
-    /* The precond. mass */
-    mu2 = g_mu1;
-  }
-  else if (g_nr_of_psf == 3) {
-    /* The physical mass */
-    mu1 = g_mu3;
-    /* The precond. mass */
-    mu2 = g_mu2;
-  }
-
+  mu1 = g_mu1;
+  mu2 = g_mu1;
+  
   /* Use spinor_field 2,3,5                         */
   /* in order not to conflict with anything else... */
 

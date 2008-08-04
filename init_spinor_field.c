@@ -62,7 +62,7 @@ void free_spinor_field() {
 }
 
 
-int init_csg_field(const int V, int * const nr) {
+int init_csg_field(const int V) {
   int i = 0, j = 0, sum=0;
   spinor * s;
   for(i = 0; i < no_monomials; i++) {

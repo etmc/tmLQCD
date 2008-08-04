@@ -36,8 +36,6 @@
 #include "xchange.h"
 #include "measure_rectangles.h"
 #include "init_gauge_tmp.h"
-#include "ext_integrator.h"
-#include "2mn_integrator.h"
 #include "solver/chrono_guess.h"
 #include "solver/bicgstab_complex.h"
 #include "update_backward_gauge.h"
@@ -300,10 +298,13 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     datafile = fopen(filename, "a");
     fprintf(datafile,"%14.12f %14.12f %e ",
 	    (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
-    for(i = 1; i < Integrator.no_timescales; i++) {
+    for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-	fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
-		monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);
+	if(monomial_list[ Integrator.mnls_per_ts[i][j] ].type != GAUGE 
+	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY) {
+	  fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
+		  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);
+	}
       }
     }
     fprintf(datafile, "%d %e", accept, etime-atime);

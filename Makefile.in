@@ -32,20 +32,20 @@ COMPILE = ${CC} $(DEFS) $(INCLUDES) -o $@ ${CFLAGS}
 SMODULES = Hopping_Matrix_nocom Hopping_Matrix tm_operators
 
 MODULES = read_input gamma hybrid_update observables start \
-	expo 2mn_integrator get_staples update_backward_gauge \
+	expo get_staples update_backward_gauge \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
 	invert_eo invert_doublet_eo dml DML_crc32 \
-	ext_integrator polyakov_loop getopt sighandler \
+	polyakov_loop getopt sighandler \
 	source_generation boundary io_utils io update_tm ranlxd  \
 	mpi_init linsolve deriv_Sb deriv_Sb_D_psi \
 	xchange_deri geometry_eo linalg_eo gauge_io\
 	init_moment_field init_gauge_tmp  propagator_io \
-	derivative_psf xchange_field xchange_gauge \
+	xchange_field xchange_gauge \
 	init_gauge_field init_geometry_indices init_spinor_field \
 	init_dirac_halfspinor xchange_halffield stout_smear \
 	init_stout_smear_vars stout_smear_force \
-	derivative_nondegenerate Nondegenerate_Matrix \
+	Nondegenerate_Matrix \
 	chebyshev_polynomial_nd Ptilde_nd  \
 	init_chi_spinor_field init_chi_copy reweighting_factor_nd \
 	init_bispinor_field eigenvalues_bi D_psi \

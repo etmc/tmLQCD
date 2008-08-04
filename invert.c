@@ -87,9 +87,7 @@ int main(int argc,char *argv[]) {
   int kb=0;
 #endif
   double nrm1, nrm2;
-#ifdef MPI
   double atime=0., etime=0.;
-#endif
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
@@ -104,7 +102,6 @@ int main(int argc,char *argv[]) {
 
   verbose = 0;
   g_use_clover_flag = 0;
-  g_nr_of_psf = 1;
 
 #ifdef MPI
   MPI_Init(&argc, &argv);
@@ -265,6 +262,8 @@ int main(int argc,char *argv[]) {
       else {
 #ifdef MPI
 	ratime = MPI_Wtime();
+#else
+	ratime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
 	if(source_splitted) {
 	  sprintf(conf_filename,"%s.%.2d", source_input_filename, ix);
@@ -282,10 +281,12 @@ int main(int argc,char *argv[]) {
 	}
 #ifdef MPI
 	retime = MPI_Wtime();
+#else
+	retime = (double)clock()/(double)(CLOCKS_PER_SEC);
+#endif
 	if(g_proc_id == 0) {
 	  printf("time for reading source was %e seconds\n", retime-ratime);
 	}
-#endif
       }
       if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
 
@@ -351,12 +352,16 @@ int main(int argc,char *argv[]) {
 
 #ifdef MPI
       atime = MPI_Wtime();
+#else
+      atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
       iter = invert_eo(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1], 
 		       solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag,
 		       sub_evs_cg_flag, even_odd_flag);
 #ifdef MPI
       etime = MPI_Wtime();
+#else
+      etime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
 
       /* To write in standard format */
