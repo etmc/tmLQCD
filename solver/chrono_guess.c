@@ -19,6 +19,14 @@ static int ONE = 1;
 static int MONE = -1;
 #endif
 
+/* N is the number of vectors to be stored maximally */
+/* _n is the last added vector                       */
+/* index_array holds the indices of all the vectors  */
+/*  to avoid copying things around                   */
+/* V is the volume                                   */
+/* trial is the vector to be added                   */
+/* v is the array of vectors                         */
+
 void chrono_add_solution(spinor * const trial, spinor ** const v, int index_array[],
 			const int N, int * _n, const int V) {
 
@@ -29,6 +37,7 @@ void chrono_add_solution(spinor * const trial, spinor ** const v, int index_arra
     if((*_n) < N) {
       index_array[(*_n)] = (*_n);
       (*_n)= (*_n)+1;
+      /* normalise vector */
       norm = sqrt(square_norm(trial, V));
       mul_r(v[index_array[(*_n)-1]], 1/norm, trial, V);
     }
@@ -39,6 +48,7 @@ void chrono_add_solution(spinor * const trial, spinor ** const v, int index_arra
 	index_array[i-1] = index_array[i];
       }
       index_array[N-1] = (index_array[N-2]+1)%N;
+      /* and normalise */
       norm = sqrt(square_norm(trial, V));
       mul_r(v[index_array[N-1]], 1/norm, trial, V);
     }
@@ -46,6 +56,11 @@ void chrono_add_solution(spinor * const trial, spinor ** const v, int index_arra
 
   return;
 }
+
+/* index_array, _N, _n, V as explained above         */
+/* trial is the guess vector to be returned          */
+/* phi is the right hand side of A*x = b to be       */
+/*   solved                                          */
 
 int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, int index_array[], 
 		 const int _N, const int _n, const int V, matrix_mult f) {
