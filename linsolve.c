@@ -21,18 +21,18 @@ char * solvout = "solver_data";
 FILE * sout = NULL;
 
 /* k output , l input */
-int solve_cg(int k,int l, double eps_sq, const int rel_prec) {
+int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) {
 
   static double normsq,pro,err,alpha_cg,beta_cg,squarenorm;
   int iteration;
   
   /* initialize residue r and search vector p */
   
-  squarenorm = square_norm(g_spinor_field[l], VOLUME/2);
+  squarenorm = square_norm(l, VOLUME/2);
 
-  Qtm_pm_psi(g_spinor_field[DUM_SOLVER], g_spinor_field[k]); 
+  Qtm_pm_psi(g_spinor_field[DUM_SOLVER], k); 
 
-  diff(g_spinor_field[DUM_SOLVER+1],g_spinor_field[l],g_spinor_field[DUM_SOLVER], VOLUME/2);
+  diff(g_spinor_field[DUM_SOLVER+1], l, g_spinor_field[DUM_SOLVER], VOLUME/2);
   assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME/2);
   normsq=square_norm(g_spinor_field[DUM_SOLVER+1], VOLUME/2);
 
@@ -41,7 +41,7 @@ int solve_cg(int k,int l, double eps_sq, const int rel_prec) {
      Qtm_pm_psi(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2]);
      pro=scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], VOLUME/2);
      alpha_cg=normsq/pro;
-     assign_add_mul_r(g_spinor_field[k], g_spinor_field[DUM_SOLVER+2], alpha_cg, VOLUME/2);
+     assign_add_mul_r(k, g_spinor_field[DUM_SOLVER+2], alpha_cg, VOLUME/2);
 
      assign_mul_add_r(g_spinor_field[DUM_SOLVER], -alpha_cg, g_spinor_field[DUM_SOLVER+1], VOLUME/2);
      err=square_norm(g_spinor_field[DUM_SOLVER], VOLUME/2);
@@ -71,7 +71,7 @@ int solve_cg(int k,int l, double eps_sq, const int rel_prec) {
 
 
 /* k output , l input */
-int bicg(int k, int l, double eps_sq, const int rel_prec) {
+int bicg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) {
 
   double err, d1, squarenorm=0.;
   complex rho0, rho1, omega, alpha, beta, nom, denom;
@@ -89,13 +89,13 @@ int bicg(int k, int l, double eps_sq, const int rel_prec) {
     p = g_spinor_field[DUM_SOLVER+3];
     s = g_spinor_field[DUM_SOLVER+4];
     t = g_spinor_field[DUM_SOLVER+5];
-    P = g_spinor_field[k];
-    Q = g_spinor_field[l];
+    P = k;
+    Q = l;
 
     squarenorm = square_norm(Q, VOLUME/2);
     
     Mtm_plus_psi(r, P);
-    gamma5(g_spinor_field[DUM_SOLVER], g_spinor_field[l], VOLUME/2);
+    gamma5(g_spinor_field[DUM_SOLVER], l, VOLUME/2);
     diff(p, hatr, r, N);
     assign(r, p, N);
     assign(hatr, p, N);
@@ -140,15 +140,15 @@ int bicg(int k, int l, double eps_sq, const int rel_prec) {
   }
   else{
     iteration = ITER_MAX_BCG;
-    gamma5(g_spinor_field[k], g_spinor_field[l], VOLUME/2);
+    gamma5(k, l, VOLUME/2);
   }
 
   /* if bicg fails, redo with conjugate gradient */
   if(iteration>=ITER_MAX_BCG){
     iteration = solve_cg(k,l,eps_sq, rel_prec);
     /* Save the solution for reuse! not needed since Chronological inverter is there */
-    /*     assign(g_spinor_field[DUM_DERI+6], g_spinor_field[k], VOLUME/2); */
-    Qtm_minus_psi(g_spinor_field[k], g_spinor_field[k]);;
+    /*     assign(g_spinor_field[DUM_DERI+6], k, VOLUME/2); */
+    Qtm_minus_psi(k, k);;
   }
   return iteration;
 }
@@ -368,11 +368,11 @@ int evamax0(double *rz, int k, double q_off, double eps_sq) {
    !!! This is not tested in the current env. and should not be used !!!
 */
 
-int bicg(int k, int l, double eps_sq) {
+int bicg(spinor * const k, spinor * const l, double eps_sq) {
   int iteration;
   double xxx;
   xxx=0.0;
-  gamma5(g_spinor_field[DUM_SOLVER+1], g_spinor_field[l], VOLUME/2);
+  gamma5(g_spinor_field[DUM_SOLVER+1], l, VOLUME/2);
   /* main loop */
   for(iteration=1;iteration<=ITER_MAX_BCG;iteration++) {
     /* compute the residual*/
@@ -380,7 +380,7 @@ int bicg(int k, int l, double eps_sq) {
     xxx=diff_and_square_norm(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], VOLUME/2);
     /*apply the solver step for the residual*/
     M_psi(DUM_SOLVER+2,DUM_SOLVER,q_off-(2.+2.*q_off));
-    assign_add_mul_r(g_spinor_field[k],-1./((1.+q_off)*(1.+q_off)),g_spinor_field[DUM_SOLVER+2], VOLUME/2);
+    assign_add_mul_r(k,-1./((1.+q_off)*(1.+q_off)),g_spinor_field[DUM_SOLVER+2], VOLUME/2);
     if(xxx <= eps_sq) break;
   }
 

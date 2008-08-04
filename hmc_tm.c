@@ -49,12 +49,17 @@
 #include "init_gauge_tmp.h"
 #include "init_dirac_halfspinor.h"
 #include "init_stout_smear_vars.h"
+#include "init_bispinor_field.h"
+#include "init_chi_spinor_field.h"
+#include "init_chi_copy.h"
 #include "xchange_halffield.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "phmc.h"
 #include "solver/solver.h"
 #include "polyakov_loop.h"
+#include "monomial.h"
+#include "integrator.h"
 #include "online_measurement.h"
 
 void usage(){
@@ -85,7 +90,6 @@ int main(int argc,char *argv[]) {
   int rlxd_state[105];
   int j,ix,mu, trajectory_counter=1;
   struct timeval t1;
-  double x;
 
   /* Energy corresponding to the Gauge part */
   double eneg = 0., plaquette_energy = 0., rectangle_energy = 0.;
@@ -109,18 +113,14 @@ int main(int argc,char *argv[]) {
   strcpy(nstore_filename,".nstore_counter");
   strcpy(tmp_filename, ".conf.tmp");
 
-  g_running_phmc = 0;
-  DUM_DERI = 6;
-  DUM_SOLVER = DUM_DERI+8;
-  DUM_MATRIX = DUM_SOLVER+6;
-  NO_OF_SPINORFIELDS = DUM_MATRIX+6;
-
-  verbose = 0;
+  verbose = 1;
   g_use_clover_flag = 0;
-  g_nr_of_psf = 1;
 
 #ifdef MPI
   MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+#else
+  g_proc_id = 0;
 #endif
 
 
@@ -151,7 +151,23 @@ int main(int argc,char *argv[]) {
   /* Read the input file */
   read_input(input_filename);
 
+  DUM_DERI = 6;
+  DUM_SOLVER = DUM_DERI+8;
+  DUM_MATRIX = DUM_SOLVER+6;
+  if(g_running_phmc) {
+    NO_OF_SPINORFIELDS = DUM_MATRIX+8;
+  }
+  else {
+    NO_OF_SPINORFIELDS = DUM_MATRIX+6;
+  }
+  DUM_BI_DERI = 6;
+  DUM_BI_SOLVER = DUM_BI_DERI+7;
+  DUM_BI_MATRIX = DUM_BI_SOLVER+6;
+  NO_OF_BISPINORFIELDS = DUM_BI_MATRIX+6;
+
   mpi_init(argc, argv);
+
+  init_integrator();
 
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
@@ -167,106 +183,40 @@ int main(int argc,char *argv[]) {
     }
   }
   
-  if(g_rgi_C1 == 0.) {
-    g_dbw2rand = 0;
-  }
 #ifndef MPI
   g_dbw2rand = 0;
 #endif
 
-  /* Reorder the mu parameter and the number of iterations */
-  if(g_mu3 > 0.) {
-    g_mu = g_mu1;
-    g_mu1 = g_mu3;
-    g_mu3 = g_mu;
-
-    j = int_n[1];
-    int_n[1] = int_n[3];
-    int_n[3] = j;
-
-    x = lambda[1];
-    lambda[1] = lambda[3];
-    lambda[3] = x;
-
-    j = g_csg_N[0];
-    g_csg_N[0] = g_csg_N[4];
-    g_csg_N[4] = j;
-    g_csg_N[6] = j;
-    if(ITER_MAX_BCG == 0 || fabs(g_mu3) > 0) {
-      g_csg_N[6] = 0;
+  if(g_proc_id == 0) {
+    for(j = 0; j < no_monomials; j++) {
+      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type, monomial_list[j].timescale);
     }
-
-    g_nr_of_psf = 3;
-  }
-  else if(g_mu2 > 0.) {
-    g_mu = g_mu1;
-    g_mu1 = g_mu2;
-    g_mu2 = g_mu;
-
-    int_n[3] = int_n[1];
-    int_n[1] = int_n[2];
-    int_n[2] = int_n[3];
-
-    lambda[3] = lambda[1];
-    lambda[1] = lambda[2];
-    lambda[2] = lambda[3];
-
-    /* For chronological inverter */
-    g_csg_N[4] = g_csg_N[0];
-    g_csg_N[0] = g_csg_N[2];
-    g_csg_N[2] = g_csg_N[4];
-    if(ITER_MAX_BCG == 0 || fabs(g_mu2) > 0) {
-      g_csg_N[4] = 0;
-    }
-    g_csg_N[6] = 0;
-
-    g_nr_of_psf = 2;
-  }
-  else {
-    g_csg_N[2] = g_csg_N[0];
-    if(ITER_MAX_BCG == 0 || fabs(g_mu2) > 0) {
-      g_csg_N[2] = 0;
-    }
-    g_csg_N[4] = 0;
-    g_csg_N[6] = 0;
   }
 
-  for(j = 0; j < g_nr_of_psf+1; j++) {
-    if(int_n[j] == 0) int_n[j] = 1;
-  }
-  if(g_nr_of_psf == 3) {
-    g_eps_sq_force = g_eps_sq_force1;
-    g_eps_sq_force1 = g_eps_sq_force3;
-    g_eps_sq_force3 = g_eps_sq_force;
-    g_eps_sq_acc = g_eps_sq_acc1;
-    g_eps_sq_acc1 = g_eps_sq_acc3;
-    g_eps_sq_acc3 = g_eps_sq_acc;
-  }
-  if(g_nr_of_psf == 2) {
-    g_eps_sq_force = g_eps_sq_force1;
-    g_eps_sq_force1 = g_eps_sq_force2;
-    g_eps_sq_force2 = g_eps_sq_force;
-    g_eps_sq_acc = g_eps_sq_acc1;
-    g_eps_sq_acc1 = g_eps_sq_acc2;
-    g_eps_sq_acc2 = g_eps_sq_acc;
-  }
   g_mu = g_mu1;
-  g_eps_sq_acc = g_eps_sq_acc1;
-  g_eps_sq_force = g_eps_sq_force1;
-
 
 #ifdef _GAUGE_COPY
   j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
 #endif
-  if ( j!= 0) {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(0);
   }
   j = init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
-  if ( j!= 0) {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for geometry_indices! Aborting...\n");
+    exit(0);
+  }
+  if(even_odd_flag) {
+    j = init_monomials(VOLUMEPLUSRAND/2);
+  }
+  else {
+    j = init_monomials(VOLUMEPLUSRAND);
+  }
+  if (j != 0) {
+    fprintf(stderr, "Not enough memory for monomial pseudo fermion  fields! Aborting...\n");
     exit(0);
   }
   if(even_odd_flag)
@@ -277,7 +227,7 @@ int main(int argc,char *argv[]) {
   {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
   }
-  if ( j!= 0) {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
   }
@@ -289,14 +239,32 @@ int main(int argc,char *argv[]) {
   {
     j = init_csg_field(VOLUMEPLUSRAND, g_csg_N);
   }
-  if ( j!= 0) {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for csg fields! Aborting...\n");
     exit(0);
   }
   j = init_moment_field(VOLUME, VOLUMEPLUSRAND);
-  if ( j!= 0) {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
     exit(0);
+  }
+
+  if(g_running_phmc) {
+    j = init_bispinor_field(VOLUME/2, NO_OF_BISPINORFIELDS);
+    if (j!= 0) {
+      fprintf(stderr, "Not enough memory for Bispinor fields! Aborting...\n");
+      exit(0);
+    }
+    j = init_chi_up_copy(VOLUMEPLUSRAND/2);
+    if (j!= 0) {
+      fprintf(stderr, "Not enough memory for Bi-chi up fields! Aborting...\n");
+      exit(0);
+    }
+    j = init_chi_dn_copy(VOLUMEPLUSRAND/2);
+    if (j!= 0) {
+      fprintf(stderr, "Not enough memory for Bi-chi dn fields! Aborting...\n");
+      exit(0);
+    }
   }
 
   zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME);
@@ -318,7 +286,7 @@ int main(int argc,char *argv[]) {
   geometry();
   
   /* define the boundary conditions for the fermion fields */
-  boundary();
+  boundary(g_kappa);
   
   check_geometry();
 
@@ -391,6 +359,8 @@ int main(int argc,char *argv[]) {
   update_backward_gauge();
 #endif
 
+  if(g_running_phmc) init_phmc();
+
   /*compute the energy of the gauge field*/
   plaquette_energy=measure_gauge_action();
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
@@ -446,7 +416,7 @@ int main(int argc,char *argv[]) {
   }
 
   /* Loop for measurements */
-  for(j=0;j<Nmeas;j++) {
+  for(j = 0; j < Nmeas; j++) {
     if(g_proc_id == 0) {
       printf("# Starting trajectory no %d\n", trajectory_counter);
     }
@@ -503,6 +473,11 @@ int main(int argc,char *argv[]) {
 			 ((int)(100000*plaquette_energy/(6.*VOLUME*g_nproc)))%(g_nproc_t*T));
     }
 
+    if((g_rec_ev !=0) && (trajectory_counter%g_rec_ev == 0) && (g_running_phmc)) {
+      phmc_compute_ev(trajectory_counter, plaquette_energy);
+    }
+
+
     if(g_proc_id == 0) {
       verbose = 1;
     }
@@ -540,6 +515,15 @@ int main(int argc,char *argv[]) {
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
+  free_monomials();
+  if(g_running_phmc) {
+    free_bispinor_field(); 
+    free_chi_up_spinor_field(); 
+    free_chi_dn_spinor_field(); 
+    free_chi_up_copy(); 
+    free_chi_dn_copy(); 
+  }
+  /* End IF PHMC */
 /*   if(use_stout_flag == 1) */
 /*     free_stout_smear_vars(); */
 

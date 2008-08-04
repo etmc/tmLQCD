@@ -30,5 +30,8 @@ int phmc_ptilde_n_cheby;
 double * phmc_ptilde_cheby_coef;
 #endif
 
+void init_phmc();
+void phmc_compute_ev(const int trajectory_counter,
+		     const double plaquette_energy);
 
 #endif

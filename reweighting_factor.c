@@ -38,7 +38,7 @@ double reweighting_factor(const int N) {
     random_spinor_field(g_spinor_field[2],VOLUME/2);
     g_mu = mu2;
     zero_spinor_field(g_spinor_field[3],VOLUME/2);
-    n_iter = solve_cg(3, 2, 0., 1.e-15, 1);
+    n_iter = solve_cg(g_spinor_field[3], g_spinor_field[2], 0., 1.e-15, 1);
     
     g_mu = mu1;
     Qtm_pm_psi(g_spinor_field[5] , g_spinor_field[3]);

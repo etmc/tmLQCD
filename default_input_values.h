@@ -111,5 +111,6 @@
 #define _default_even_odd_flag 1
 #define _default_online_measurement_flag 0
 #define _default_online_measurement_freq 2
+#define _default_timescale 1
 
 #endif

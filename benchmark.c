@@ -38,6 +38,7 @@
 #include "update_backward_gauge.h"
 #include "test/check_geometry.h"
 #include "xchange_halffield.h"
+#include "phmc.h"
 #include "mpi_init.h"
 
 #ifdef PARALLELT
@@ -57,7 +58,11 @@ double bgl_wtime() {
   return ( rts_get_timebase() * clockspeed );
 }
 #else
+# ifdef MPI
 double bgl_wtime() { return(MPI_Wtime()); }
+# else
+double bgl_wtime() { return(0); }
+# endif
 #endif
 
 int check_xchange();
@@ -164,7 +169,7 @@ int main(int argc,char *argv[])
   /* define the geometry */
   geometry();
   /* define the boundary conditions for the fermion fields */
-  boundary();
+  boundary(g_kappa);
 
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();

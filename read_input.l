@@ -14,7 +14,7 @@
  *        urbach@physik.fu-berlin.de
  */
 
-SPC [[:space:]]+
+SPC [[:blank:]]+
 CMD [:][[:space:]]+
 RLN [1-9(10)(11)(12)(13)(14)(15)(16)][:]
 DIGIT [[:digit:]]
@@ -23,6 +23,8 @@ IDXEX ("-"{DIGIT}+)
 SIGN ("+"|"-")
 FLT {SIGN}?{DIGIT}*+"."{DIGIT}*(e("-"|"+")?{DIGIT}+)?
 FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
+NAME [a-zA-Z0-9_]+
+TYPE [0-9A-Z]+
 
 %{
 #ifdef HAVE_CONFIG_H
@@ -34,13 +36,25 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 #include"global.h"
 #include"read_input.h"
 #include"default_input_values.h"
+#include"monomial.h"
+#include"integrator.h"
 
   /* Name of the parsing routine */
 #define YY_DECL         int parse_config()
 #define YY_NO_UNPUT
 
   /* declaration of input parameters */
+  int i=0;
   int line_of_file=1;
+  int current_monomial=-1;
+  extern int no_monomials;
+  monomial * mnl;
+  int comment_caller;
+  int a,b;
+  float c;
+  int reread = 0;
+  char name[100];
+
   int verbose=0;
   int startoption;
   int Ntherm;
@@ -116,17 +130,9 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x MUBAR
 %x EPSBAR
 %x MU
-%x MU2
-%x MU3
 %x SEED
 %x Q1
 %x Q2
-%x DTAU
-%x TAU
-%x NSTEPS
-%x CSW
-%x INTTYP
-%x NSMALL
 %x NSKIP
 %x RLXDINPUTFILE
 %x GAUGEINPUTFILE
@@ -163,31 +169,10 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x SOURCEFORMAT
 %x SOURCEFILE
 %x SOURCETS
-%x INT0
-%x INT1
-%x INT2
-%x INT3
-%x INT4
-%x LAMBDA0
-%x LAMBDA1
-%x LAMBDA2
-%x LAMBDA3
-%x LAMBDA4
 %x RELPREC
-%x FORCEPREC
-%x FORCEPREC1
-%x FORCEPREC2
-%x FORCEPREC3
-%x ACCPREC
-%x ACCPREC1
-%x ACCPREC2
-%x ACCPREC3
 %x REVCHECK
 %x REVINT
 %x DEBUG
-%x CSGN1
-%x CSGN2
-%x CSGN3
 %x GMRESM
 %x GMRESDRNEV
 %x REPRORND
@@ -216,6 +201,15 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 %x ONMEAS
 %x ONFREQ
 
+%x INITINTEGRATOR
+%x INTEGRATOR
+
+%x INITMONOMIAL
+%x MONOMIAL
+%x MNAME
+%x MSOLVER
+
+
 %x COMMENT
 %x ERROR
 
@@ -229,9 +223,7 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^NRYProcs{SPC}*={SPC}*                     BEGIN(NPROCY);
 ^NRZProcs{SPC}*={SPC}*                     BEGIN(NPROCZ);
 ^kappa{SPC}*={SPC}*                        BEGIN(KAPPA);
-^mu{SPC}*={SPC}*                           BEGIN(MU);
-^mu2{SPC}*={SPC}*                          BEGIN(MU2);
-^mu3{SPC}*={SPC}*                          BEGIN(MU3);
+^2KappaMu{SPC}*={SPC}*                     BEGIN(MU);
 ^mubar{SPC}*={SPC}*                        BEGIN(MUBAR);
 ^PhmcMubar{SPC}*={SPC}*                    BEGIN(MUBAR);
 ^PhmcExactPolynomial{SPC}*={SPC}*          BEGIN(PPP);
@@ -268,14 +260,8 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^StdIOProcessor{SPC}*={SPC}*               BEGIN(IOPROC);
 ^Indices{SPC}*={SPC}*                      BEGIN(IDX);
 ^FirstPropagator{SPC}*={SPC}*              BEGIN(FPROP);
-^CSW{SPC}*={SPC}*                          BEGIN(CSW);
 ^Q1{SPC}*={SPC}*                           BEGIN(Q1);
 ^Q2{SPC}*={SPC}*                           BEGIN(Q2);
-^Integrator{SPC}*={SPC}*                   BEGIN(INTTYP);
-^NSmall{SPC}*={SPC}*                       BEGIN(NSMALL);
-^DTau{SPC}*={SPC}*                         BEGIN(DTAU);
-^Tau{SPC}*={SPC}*                          BEGIN(TAU);
-^NSteps{SPC}*={SPC}*                       BEGIN(NSTEPS);
 ^BCGstabMaxIter{SPC}*={SPC}*               BEGIN(BCGMAX);
 ^CGMaxIter{SPC}*={SPC}*                    BEGIN(CGMAX);
 ^BoundaryCond{SPC}*={SPC}*                 BEGIN(BOUND);
@@ -283,45 +269,14 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^MaxSolverIterations{SPC}*={SPC}*          BEGIN(SITER);
 ^SolverPrecision{SPC}*={SPC}*              BEGIN(SPREC);
 ^MassNumber{SPC}*={SPC}*                   BEGIN(MNR);
-^RGIC1{SPC}*={SPC}*                        BEGIN(RGIC);
 ^ReadSource{SPC}*={SPC}*                   BEGIN(READSOURCE);
 ^SourceInputFilename{SPC}*={SPC}*          BEGIN(SOURCEFILE);
 ^SourceFormat{SPC}*={SPC}*                 BEGIN(SOURCEFORMAT);
 ^SourceTimeSlice{SPC}*={SPC}*              BEGIN(SOURCETS);
-^ExtIntStepsGauge{SPC}*={SPC}*             BEGIN(INT0);
-^IntegrationStepsGauge{SPC}*={SPC}*        BEGIN(INT0);
-^N_G{SPC}*={SPC}*                          BEGIN(INT0);
-^ExtIntStepsMu0{SPC}*={SPC}*               BEGIN(INT1);
-^IntegrationStepsMu{SPC}*={SPC}*           BEGIN(INT1);
-^ExtIntStepsMu1{SPC}*={SPC}*               BEGIN(INT2);
-^IntegrationStepsMu2{SPC}*={SPC}*          BEGIN(INT2);
-^ExtIntStepsMu2{SPC}*={SPC}*               BEGIN(INT3);
-^IntegrationStepsMu3{SPC}*={SPC}*          BEGIN(INT3);
-^ExtIntStepsMu3{SPC}*={SPC}*               BEGIN(INT4);
-^IntegrationStepsMu4{SPC}*={SPC}*          BEGIN(INT4);
-^2MNLambdaGauge{SPC}*={SPC}*               BEGIN(LAMBDA0);
-^2MNLambdaMu{SPC}*={SPC}*                  BEGIN(LAMBDA1);
-^2MNLambdaMu2{SPC}*={SPC}*                 BEGIN(LAMBDA2);
-^2MNLambdaMu3{SPC}*={SPC}*                 BEGIN(LAMBDA3);
-^2MNLambdaMu4{SPC}*={SPC}*                 BEGIN(LAMBDA4);
 ^UseRelativePrecision{SPC}*={SPC}*         BEGIN(RELPREC);
-^ForcePrecision{SPC}*={SPC}*               BEGIN(FORCEPREC);
-^ForcePrecisionMu{SPC}*={SPC}*             BEGIN(FORCEPREC1);
-^ForcePrecisionMu2{SPC}*={SPC}*            BEGIN(FORCEPREC2);
-^ForcePrecisionMu3{SPC}*={SPC}*            BEGIN(FORCEPREC3);
-^AcceptancePrecision{SPC}*={SPC}*          BEGIN(ACCPREC);
-^AcceptancePrecisionMu{SPC}*={SPC}*        BEGIN(ACCPREC1);
-^AcceptancePrecisionMu2{SPC}*={SPC}*       BEGIN(ACCPREC2);
-^AcceptancePrecisionMu3{SPC}*={SPC}*       BEGIN(ACCPREC3);
 ^ReversibilityCheck{SPC}*={SPC}*           BEGIN(REVCHECK);
 ^ReversibilityCheckIntervall{SPC}*={SPC}*  BEGIN(REVINT);
 ^DebugLevel{SPC}*={SPC}*                   BEGIN(DEBUG);
-^CSGHistMu{SPC}*={SPC}*                    BEGIN(CSGN1);
-^CSGHistoryMu{SPC}*={SPC}*                 BEGIN(CSGN1);
-^CSGHistMu2{SPC}*={SPC}*                   BEGIN(CSGN2);
-^CSGHistoryMu2{SPC}*={SPC}*                BEGIN(CSGN2);
-^CSGHistMu3{SPC}*={SPC}*                   BEGIN(CSGN3);
-^CSGHistoryMu3{SPC}*={SPC}*                BEGIN(CSGN3);
 ^GMRESMParameter{SPC}*={SPC}*              BEGIN(GMRESM);
 ^GMRESDRNrEv{SPC}*={SPC}*                  BEGIN(GMRESDRNEV);
 ^GaugeConfigReadPrecision{SPC}*={SPC}*     BEGIN(GAUGERPREC);
@@ -347,6 +302,214 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 ^PropagatorType{SPC}*={SPC}*               BEGIN(WRPROPFLAG);
 ^PerformOnlineMeasurements{SPC}*={SPC}*    BEGIN(ONMEAS);
 ^OnlineMeasurementsFreq{SPC}*={SPC}*       BEGIN(ONFREQ);
+
+^BeginMonomial{SPC}+                       BEGIN(INITMONOMIAL);
+^BeginIntegrator{SPC}+                     BEGIN(INITINTEGRATOR);
+
+<INITMONOMIAL>{TYPE} {
+  current_monomial++;
+  mnl = &monomial_list[current_monomial];
+  mnl->id = current_monomial;
+  if(strcmp(yytext, "DET")==0) {
+    mnl->type = DET;
+    strcpy((*mnl).name, "DET");
+  }
+  else if(strcmp(yytext, "DETRATIO")==0) {
+    mnl->type = DETRATIO;
+    strcpy((*mnl).name, "DETRATIO");
+  }
+  else if(strcmp(yytext, "NDPOLY")==0) {
+    mnl->type = NDPOLY;
+    strcpy((*mnl).name, "NDPOLY");
+    g_running_phmc = 1;
+  }
+  else if(strcmp(yytext, "GAUGE")==0) {
+    mnl->type = GAUGE;
+    strcpy((*mnl).name, "GAUGE");
+  }
+  else {
+    fprintf(stderr, "Unknown monomial type %s in line %d\n", yytext, line_of_file);
+    exit(1);
+  }
+  if(!reread) add_monomial(mnl->type);
+  if(verbose) printf("initialising monomial with type %s %d line %d\n", yytext, mnl->type, line_of_file);
+  if(verbose) printf("monomial has id %d\n", current_monomial);
+  mnl->kappa = _default_g_kappa;
+  mnl->kappa2 = _default_g_kappa;
+  mnl->mu = _default_g_mu;
+  mnl->mu2 = _default_g_mu;
+  mnl->csg_N = _default_g_csg_N;
+  mnl->csg_N2 = _default_g_csg_N;
+  mnl->csg_n = 1;
+  mnl->csg_n2 = 0;
+  mnl->timescale = _default_timescale;
+  mnl->accprec = _default_g_eps_sq_acc;
+  mnl->forceprec = _default_g_eps_sq_force;
+  mnl->maxiter = _default_max_solver_iterations;
+  mnl->solver = _default_solver_flag;
+  mnl->even_odd_flag = _default_even_odd_flag;
+  mnl->forcefactor = 1.;
+  mnl->use_rectangles = 0;
+  mnl->c1 = _default_g_rgi_C1;
+  mnl->c0 = 1.;
+  mnl->beta = _default_g_beta;
+  /* here we need to set default values */
+  BEGIN(MONOMIAL);
+}
+<MONOMIAL>{
+  {SPC}*Timescale{SPC}*={SPC}*{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->timescale = a;
+    if(verbose) printf("  timescales set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*2KappaMu{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    mnl->mu = c;
+    if(verbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*2KappaMu2{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    mnl->mu2 = c;
+    if(verbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*Kappa{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
+    mnl->kappa = c;
+    if(verbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*Kappa2{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    mnl->kappa2 = c;
+    if(verbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*CSGHistory{SPC}*={SPC}*{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->csg_N = a;
+    if(verbose) printf("  csg history length set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*CSGHistory2{SPC}*={SPC}*{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z2] = %d", name , &a);
+    mnl->csg_N2 = a;
+    if(verbose) printf("  csg history2 length (for bicgstab) set to %d line %d monomial %d\n", 
+                       a, line_of_file, current_monomial);
+  }
+  {SPC}*ForcePrecision{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    mnl->forceprec = c;
+    if(verbose) printf("  ForcePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*AcceptancePrecision{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    mnl->accprec = c;
+    if(verbose) printf("  AcceptancePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*MaxSolverIterations{SPC}*={SPC}*{DIGIT} {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->maxiter = a;
+    if(verbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*UseRectangleStaples{SPC}*={SPC}*yes {
+    mnl->use_rectangles = 1;
+    g_dbw2rand = 1;
+    if(verbose) printf("  UseRectangleStaples set to true line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*UseRectangleStaples{SPC}*={SPC}*no {
+    mnl->use_rectangles = 0;
+    if(verbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*Beta{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    mnl->beta = c;
+    g_beta = c;
+    if(verbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*RectangleCoefficient{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    mnl->c1 = c;
+    g_rgi_C1 = c;
+    if(verbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  ^EndMonomial{SPC}*  {
+    if(verbose) printf("monomial %d parsed line %d\n\n", current_monomial, line_of_file);
+    BEGIN(0);
+  }
+  {SPC}*Name{SPC}*={SPC}* BEGIN(MNAME);
+  {SPC}*Solver{SPC}*={SPC}* BEGIN(MSOLVER);
+}
+<MNAME>{NAME} {
+  if(verbose) printf("  monomial named \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+  strcpy((*mnl).name, yytext);
+  BEGIN(MONOMIAL);
+}
+<MSOLVER>{
+  CG {
+    if(verbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = 1;
+    BEGIN(MONOMIAL);
+  }
+  bicgstab {
+    if(verbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = 0;
+    BEGIN(MONOMIAL);
+  }
+}
+
+<INITINTEGRATOR>{TYPE} {
+  Integrator.no_timescales = -1;
+  Integrator.tau = 1.;
+  if(strcmp(yytext, "LEAPFROG")==0) {
+    Integrator.type = 5;
+  }
+  else if(strcmp(yytext, "2MN")==0) {
+    Integrator.type = 6;
+  }
+  else if(strcmp(yytext, "2MNPOSITION")==0) {
+    Integrator.type = 7;
+  }
+  else {
+    fprintf(stderr, "Unknown integrator type %s in line %d\n", yytext, line_of_file);
+    exit(1);
+  }
+  for(i = 0; i < 10; i++) {
+    Integrator.lambda[i] = _default_2mn_lambda;
+  }
+  if(verbose) printf("initialising integrator of type %s %d line %d\n", yytext, Integrator.type, line_of_file);
+  BEGIN(INTEGRATOR);
+}
+<INTEGRATOR>{
+  {SPC}*IntegrationSteps{DIGIT}{SPC}*={SPC}*{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z]%d = %d", name, &a, &b);
+    if(verbose) printf("  timescale %d steps=%d line %d\n", a, b, line_of_file);
+    Integrator.n_int[a] = b;
+    BEGIN(INTEGRATOR);
+  }
+  {SPC}*Lambda{DIGIT}{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z]%d = %f", name, &a, &c);
+    Integrator.lambda[a] = c;
+    if(verbose) printf("  timescale %d Lambda=%f line %d\n", a, c, line_of_file);
+    BEGIN(INTEGRATOR);
+  }
+  {SPC}*NumberOfTimescales{SPC}*={SPC}*{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    if(verbose) printf("  Number of timescales set to %d line %d\n", a, line_of_file);
+    Integrator.no_timescales = a;
+    BEGIN(INTEGRATOR);
+  }
+  {SPC}*Tau{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
+    if(verbose) printf("  tau set to %e line %d\n", c, line_of_file);
+    Integrator.tau = c;
+    BEGIN(INTEGRATOR);
+  }
+  EndIntegrator{SPC}* {
+    if(Integrator.no_timescales == -1) {
+      fprintf(stderr, "NumberOfTimescales must be specified!\n");
+      exit(1);
+    }
+    if(verbose) printf("Integrators parsed line %d\n\n", line_of_file);
+    BEGIN(0);
+  }
+}
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -428,14 +591,6 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   g_mu1=atof(yytext);
   if(verbose!=0) printf("mu=%s \n", yytext);
 }
-<MU2>{FLT}  {
-  g_mu2=atof(yytext);
-  if(verbose!=0) printf("mu2=%s \n", yytext);
-}
-<MU3>{FLT}  {
-  g_mu3=atof(yytext);
-  if(verbose!=0) printf("mu3=%s \n", yytext);
-}
 <BETA>{FLT}   {
   g_beta=atof(yytext);
   if(verbose!=0) printf("beta=%s \n",yytext);
@@ -444,17 +599,19 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   startoption=0; 
   if(verbose!=0) printf("Start Condition is %s \n",yytext);
 }
-<STARTCOND>hot {
-  startoption=1;
-  if(verbose!=0) printf("Start Condition is %s \n",yytext);
-}
-<STARTCOND>restart {
-  startoption=2;
-  if(verbose!=0) printf("Start Condition is %s \n",yytext);
-}
-<STARTCOND>continue {
-  startoption=3;
-  if(verbose!=0) printf("Start Condition is %s \n",yytext);
+<STARTCOND>{
+  hot {
+    startoption=1;
+    if(verbose!=0) printf("Start Condition is %s \n",yytext);
+  }
+  restart {
+    startoption=2;
+    if(verbose!=0) printf("Start Condition is %s \n",yytext);
+  }
+  continue {
+    startoption=3;
+    if(verbose!=0) printf("Start Condition is %s \n",yytext);
+  }
 }
 <THERMSWEEPS>{DIGIT}+ {
   Ntherm=atoi(yytext);
@@ -468,45 +625,47 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   Nskip=atoi(yytext);
   if(verbose!=0) printf("Nskip= %s \n",yytext);
 }
-<SOLVFLAG>bicgstab {
-  solver_flag=0;
-  if(verbose!=0) printf("Use BiCGStab Solver");
-}
-<SOLVFLAG>cg {
-  solver_flag=1;
-  if(verbose!=0) printf("Use CG Solver\n");
-}
-<SOLVFLAG>pcg {
-  solver_flag=9;
-  if(verbose!=0) printf("Use PCG Solver (eigenvectors needed) \n");
-}
-<SOLVFLAG>gmres {
-  solver_flag=2;
-  if(verbose!=0) printf("Use GMRES Solver\n");
-}
-<SOLVFLAG>gcr {
-  solver_flag=7;
-  if(verbose!=0) printf("Use GCR Solver\n");
-}
-<SOLVFLAG>gmresdr {
-  solver_flag=8;
-  if(verbose!=0) printf("Use GMRES-DR Solver\n");
-}
-<SOLVFLAG>cgs {
-  solver_flag=3;
-  if(verbose!=0) printf("Use CGS Solver\n");
-}
-<SOLVFLAG>mr {
-  solver_flag=4;
-  if(verbose!=0) printf("Use MR Solver \n");
-}
-<SOLVFLAG>bicgstabell {
-  solver_flag=5;
-  if(verbose!=0) printf("Use BiCGstab(2) Solver \n");
-}
-<SOLVFLAG>fgmres {
-  solver_flag=6;
-  if(verbose!=0) printf("Use FGMRES solver (eigenvectors needed) \n");
+<SOLVFLAG>{
+  bicgstab {
+    solver_flag=0;
+    if(verbose!=0) printf("Use BiCGStab Solver");
+  }
+  cg {
+    solver_flag=1;
+    if(verbose!=0) printf("Use CG Solver\n");
+  }
+  pcg {
+    solver_flag=9;
+    if(verbose!=0) printf("Use PCG Solver (eigenvectors needed) \n");
+  }
+  gmres {
+    solver_flag=2;
+    if(verbose!=0) printf("Use GMRES Solver\n");
+  }
+  gcr {
+    solver_flag=7;
+    if(verbose!=0) printf("Use GCR Solver\n");
+  }
+  gmresdr {
+    solver_flag=8;
+    if(verbose!=0) printf("Use GMRES-DR Solver\n");
+  }
+  cgs {
+    solver_flag=3;
+    if(verbose!=0) printf("Use CGS Solver\n");
+  }
+  mr {
+    solver_flag=4;
+    if(verbose!=0) printf("Use MR Solver \n");
+  }
+  bicgstabell {
+    solver_flag=5;
+    if(verbose!=0) printf("Use BiCGstab(2) Solver \n");
+  }
+  fgmres {
+    solver_flag=6;
+    if(verbose!=0) printf("Use FGMRES solver (eigenvectors needed) \n");
+  }
 }
 <GMRESM>{DIGIT}+ {
   gmres_m_parameter = atoi(yytext);
@@ -580,10 +739,6 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   cp_interval=atoi(yytext);
   if(verbose!=0) printf("Write Checkpoint all %s measurements\n",yytext);
 }
-<RLXDINPUTFILE>{FILENAME} {
-  strcpy(rlxd_input_filename,yytext);
-  if(verbose!=0) printf("Ranluxd input filename set to %s\n",yytext);
-}
 <GAUGEINPUTFILE>{FILENAME} {
   strcpy(gauge_input_filename,yytext);
   if(verbose!=0) printf("Gauge Configuration input filename set to %s\n",yytext);
@@ -641,54 +796,6 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   first_prop_flag = 1;
   if(verbose!=0) printf("Reading in the first propagator\n");
 }
-<INTTYP>leapfrog {
-  integtyp = 1;
-  if(verbose!=0) printf("Using Leap Frog integrator!\n");
-}
-<INTTYP>SextonWeingarten {
-  integtyp = 2;
-  if(verbose!=0) printf("Using SW integrator!\n");
-}
-<INTTYP>ExtLeapFrog {
-  integtyp = 3;
-  if(verbose!=0) printf("Using multiple time scale Leapfrog integrator!\n");
-}
-<INTTYP>ExtSextonWeingarten {
-  integtyp = 4;
-  if(verbose!=0) printf("Using multiple time scale Sexton-Weingarten integrator!\n");
-}
-<INTTYP>ImprLeapFrog {
-  integtyp = 5;
-  if(verbose!=0) printf("Using higher order Leapfrog integrator!\n");
-}
-<INTTYP>2MN {
-  integtyp = 6;
-  if(verbose!=0) printf("Using Second order Minimal norm integrator!\n");
-}
-<INTTYP>2MNposition {
-  integtyp = 7;
-  if(verbose!=0) printf("Using Second order Minimal norm integrator (position version)!\n");
-}
-<NSMALL>{DIGIT}+ {
-  nsmall = atoi(yytext);
-  if(verbose!=0) printf("nsmall set to %d\n", nsmall);
-}
-<CSW>{FLT} {
-  g_c_sw = atof(yytext);
-  if(verbose!=0) printf("c_sw set to %e\n", g_c_sw);
-}
-<DTAU>{FLT} {
-  dtau = atof(yytext);
-  if(verbose!=0) printf("dtau set to %e\n", dtau);
-}
-<TAU>{FLT} {
-  tau = atof(yytext);
-  if(verbose!=0) printf("tau set to %e\n", tau);
-}
-<NSTEPS>{DIGIT}+ {
-  Nsteps = atoi(yytext);
-  if(verbose!=0) printf("NSteps set to %d\n", Nsteps);
-}
 <BCGMAX>{DIGIT}+ {
   ITER_MAX_BCG = atoi(yytext);
   if(verbose != 0) printf("Maximal number of iterations for BCGstab set ro %d\n", ITER_MAX_BCG);
@@ -700,14 +807,6 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <BOUND>{FLT} {
   X0 = atof(yytext);
   if(verbose != 0) printf("X0 for boundary cond. in time set to %e\n", X0);
-}
-<MNR>{DIGIT}+ {
-  mass_number = atoi(yytext);
-  if(verbose != 0) printf("Setting mass number to %s\n", yytext);
-}
-<RGIC>{FLT}  {
-  g_rgi_C1=atof(yytext);
-  if(verbose!=0) printf("g_rgi_C1=%s \n", yytext);
 }
 <READSOURCE>yes     {
   read_source_flag=1;
@@ -737,76 +836,6 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   source_time_slice = atoi(yytext);
   if(verbose!=0) printf("Using only timeslice %s of the source, padding the rest with zeros\n", yytext);
 }
-<INT0>{DIGIT}+ {
-  int_n[0] = atoi(yytext);
-  if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for gauge set to %d!\n", int_n[0]);
-}
-<INT1>{DIGIT}+ {
-  int_n[1] = atoi(yytext);
-  if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for psf 1 (mu) set to %d!\n", int_n[1]);
-}
-<INT2>{DIGIT}+ {
-  int_n[2] = atoi(yytext);
-  if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for psf 2 (mu2) set to %d!\n", int_n[2]);
-}
-<INT3>{DIGIT}+ {
-  int_n[3] = atoi(yytext);
-  if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for psf 3 (mu3) set to %d!\n", int_n[3]);
-}
-<INT4>{DIGIT}+ {
-  if(verbose!=0) printf("Number of steps in ExtLeapFrog integrator for psf 4 (mu4) set to %d!\n", int_n[1]);
-}
-<LAMBDA0>{FLT} {
-  lambda[0] = atof(yytext);
-  if(verbose!=0) printf("Set lambda parameter for gauge fields (in the 2MN integrator) to %f!\n", lambda[0]);
-}
-<LAMBDA1>{FLT} {
-  lambda[1] = atof(yytext);
-  if(verbose!=0) printf("Set lambda parameter for psf 1 (in the 2MN integrator) to %f!\n", lambda[0]);
-}
-<LAMBDA2>{FLT} {
-  lambda[2] = atof(yytext);
-  if(verbose!=0) printf("Set lambda parameter for psf 2 (in the 2MN integrator) to %f!\n", lambda[0]);
-}
-<LAMBDA3>{FLT} {
-  lambda[3] = atof(yytext);
-  if(verbose!=0) printf("Set lambda parameter for psf 3 (in the 2MN integrator) to %f!\n", lambda[0]);
-}
-<LAMBDA4>{FLT} {
-  if(verbose!=0) printf("Set lambda parameter for psf 4 (in the 2MN integrator) to %f! (not yet implemented)\n", lambda[0]);
-}
-<FORCEPREC>{FLT}  {
-  g_eps_sq_force=atof(yytext);
-  if(verbose!=0) printf("g_eps_sq_force=%s Residual for inversions in the force computation\n", yytext);
-}
-<FORCEPREC1>{FLT}  {
-  g_eps_sq_force1=atof(yytext);
-  if(verbose!=0) printf("g_eps_sq_force(mu)=%s Residual for inversions in the force computation\n", yytext);
-}
-<FORCEPREC2>{FLT}  {
-  g_eps_sq_force2=atof(yytext);
-  if(verbose!=0) printf("g_eps_sq_force(mu2)=%s Residual for inversions in the force computation\n", yytext);
-}
-<FORCEPREC3>{FLT}  {
-  g_eps_sq_force3=atof(yytext);
-  if(verbose!=0) printf("g_eps_sq_force(mu3)=%s Residual for inversions in the force computation\n", yytext);
-}
-<ACCPREC>{FLT}  {
-  g_eps_sq_acc=atof(yytext);
-  if(verbose!=0) printf("g_eps_sq_acc=%s Residual for inversions in the acceptance step\n", yytext);
-}
-<ACCPREC1>{FLT}  {
-  g_eps_sq_acc1=atof(yytext);
-  if(verbose!=0) printf("g_eps_sq_acc(mu)=%s Residual for inversions in the acceptance step\n", yytext);
-}
-<ACCPREC2>{FLT}  {
-  g_eps_sq_acc2=atof(yytext);
-  if(verbose!=0) printf("g_eps_sq_acc(mu2)=%s Residual for inversions in the acceptance step\n", yytext);
-}
-<ACCPREC3>{FLT}  {
-  g_eps_sq_acc3=atof(yytext);
-  if(verbose!=0) printf("g_eps_sq_acc(mu3)=%s Residual for inversions in the acceptance step\n", yytext);
-}
 <RELPREC>yes  {
   g_relative_precision_flag = 1;
   if(verbose!=0) printf("Using relative precision\n");
@@ -830,18 +859,6 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 <DEBUG>{DIGIT}+ {
   g_debug_level = atoi(yytext);
   if(verbose!=0) printf("Debug level = %d\n", g_debug_level);
-}
-<CSGN1>{DIGIT}+ {
-  g_csg_N[0] = atoi(yytext);
-  if(verbose!=0) printf("Chronological Invertier history length for mu set to %d\n", g_csg_N[0]);
-}
-<CSGN2>{DIGIT}+ {
-  g_csg_N[2] = atoi(yytext);
-  if(verbose!=0) printf("Chronological Invertier history length for mu set to %d\n", g_csg_N[2]);
-}
-<CSGN3>{DIGIT}+ {
-  g_csg_N[4] = atoi(yytext);
-  if(verbose!=0) printf("Chronological Invertier history length for mu set to %d\n", g_csg_N[4]);
 }
 <GAUGERPREC>32 {
   gauge_precision_read_flag = 32;
@@ -1032,281 +1049,32 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
   if(verbose!=0) fprintf(stderr, "Frequency for online measurements set to %s\n", yytext);
 }
 
-<*>^#                       BEGIN(COMMENT);
-<SEED,KAPPA,ACCPTILDE,ACCHFIN,RECEV,MUBAR,EPSBAR,MU,MU2,MU3,BETA,STARTCOND,NMEAS,THERMSWEEPS,NSKIP,OPFLAG,SOLVFLAG>#   BEGIN(COMMENT);
-<MEFLAG,SAVECONF,SAVEPROP,WRITECP,CPINT,RLXDINPUTFILE,GAUGEINPUTFILE,SAVEPRG2>#   BEGIN(COMMENT);
-<NSTORE,TT,LL,LLX,LLY,LLZ,NPROCX,NPROCY,NPROCZ,IOPROC,IDX,FPROP,DTAU,TAU,Q1,Q2,NSTEPS,INTTYP>#   BEGIN(COMMENT);
-<NSMALL,CSW,BCGMAX,CGMAX,BOUND,SITER,SPREC,MNR,RGIC,READSOURCE,SOURCEFILE,INT0>#   BEGIN(COMMENT);
-<INT1,INT2,INT3,INT4,RELPREC,ACCPREC,FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>#   BEGIN(COMMENT);
-<ACCPREC1,ACCPREC2,ACCPREC3,REVCHECK,REVINT,DEBUG,CSGN1,CSGN2,CSGN3,SOURCEFORMAT>#      BEGIN(COMMENT);
-<GMRESM,GMRESDRNEV,REPRORND,SLOPPYPREC,USESTOUT,STOUTRHO,STOUTITER,PHMCFLAV>#   BEGIN(COMMENT);
-<SMIN,SMAX,DEGP,PRECEV,NOEV>#  BEGIN(COMMENT);
-<PCOMPUTEEVS,COMPUTEEVS,SPLITPROP,SPLITSOURCE,SRCLOC>#  BEGIN(COMMENT);
-<SOURCETS,SUBEVCG,EO,WRPROPFLAG,ONMEAS,ONFREQ>#   BEGIN(COMMENT);
-<SOURCETS,GAUGERPREC,GAUGEWPREC,PROPPREC,HEAVYTS>#   BEGIN(COMMENT);
+<*>^#   {
+   comment_caller = YY_START;   
+   BEGIN(COMMENT);
+}
+<*>{SPC}*#    {
+   comment_caller = YY_START;
+   BEGIN(COMMENT);
+}
 <COMMENT>[^\n]*             {
-  ;
+  BEGIN(comment_caller);
 }
 
 
+<INITMONOMIAL,MONOMIAL,INTEGRATOR,INITINTEGRATOR>\n   {
+  line_of_file++;
+}
 <*>\n                       {
   line_of_file++;
   BEGIN(0);
 }
 
-<SEED>. {
-  printf("Unknown seed in line %d.\n Must be an integer. Exiting...!\n",line_of_file);
-  exit(1);
+<*>. {
+  BEGIN(ERROR);
 }
-<KAPPA>. {
-  printf("Unknown kappa in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
-  exit(1);
-}
-<ACCPTILDE>. {
-  printf("Unknown PhmcPrecisionPtilde in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
-  exit(1);
-}
-<ACCHFIN>. {
-  printf("Unknown PhmcPrecisionHfin in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
-  exit(1);
-}
-<RECEV>. {
-  printf("Unknown Rec_EV in line %d.\n Must be an integer number. Exiting...!\n",line_of_file);
-  exit(1);
-}
-<MUBAR>. {
-  printf("Unknown PhmcMuBar in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
-  exit(1);
-}
-<EPSBAR>. {
-  printf("Unknown PhmcEpsBar in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
-  exit(1);
-}
-<MU>. {
-  printf("Unknown mu in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
-  exit(1);
-}
-<MU2>. {
-  printf("Unknown mu in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
-  exit(1);
-}
-<MU3>. {
-  printf("Unknown mu in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
-  exit(1);
-}
-<BETA>. {
-  printf("Unknown beta in line %d.\n Must be a floating point number. Exiting...!\n",line_of_file);
-  exit(1);
-}
-<STARTCOND>.          {
-  printf("Unknown Startcondition in line %d! \n Must be hot, cold, continue or restart. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<THERMSWEEPS>. {
-  printf("Unknown number of TermSteps in line %d! \n Must be an integer. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<NMEAS>. {
-  printf("Unknown number of MeasSteps in line %d! \n Must be an integer. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<NSKIP>. {
-  printf("Unknown number of Sweeps to skip in line %d! \n Must be an integer. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<SOLVFLAG>. {
-  printf("Unknown value for solver_flag in line %d! \n Must be bicgstab, cg, cgs, mr or gmres. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<OPFLAG>. {
-  printf("Unknown value for operator_flag in line %d! \n Must be an integer. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<MEFLAG>. {
-  printf("Unknown value for matrix_element_flag in line %d! \n Must be yes or no. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<SAVECONF>. {
-  printf("Unknown value for save_config_flag in line %d! \n Must be yes or no! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<SAVEPROP>. {
-  printf("Unknown value for save_prop_flag in line %d! \n Must be yes or no! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<SAVEPRG2>. {
-  printf("Unknown value for save_prop_g2_flag in line %d! \n Must be yes or no! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<WRITECP>. {
-  printf("Unknown value for write_checkpoint_flag in line %d! \n Must be yes or no! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<CPINT>.   {
-  printf("Unknown value for checkpoint interval in line %d! \n Must be an integer! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<NSTORE>.  {
-  printf("Unknown value for Initial store counter in line %d! \n Must be an integer! Exiting...!\n",line_of_file);
-  exit(1);
-}
-<TT>.         {
-  printf("Unknown value for T in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<LL>.         {
-  printf("Unknown value for L in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<LLX>.         {
-  printf("Unknown value for LX in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<LLY>.         {
-  printf("Unknown value for LY in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<LLZ>.         {
-  printf("Unknown value for LZ in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<NPROCX>.    {
-  printf("Unknown value for NRXProcs in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<NPROCY>.    {
-  printf("Unknown value for NRYProcs in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<NPROCZ>.    {
-  printf("Unknown value for NRYProcs in line %d!\n Must be an integer value! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<IOPROC>.    {
-  printf("Unknown value for StdIOProcessor in line %d!\n Must be all, no or an integer value! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<GAUGERPREC>. {
-  printf("Error in line %d! Must be 32 or 64 Bit precision!\n", line_of_file);
-  exit(1);
-}
-<GAUGEWPREC>. {
-  printf("Error in line %d! Must be 32 or 64 Bit precision!\n", line_of_file);
-  exit(1);
-}
-<PROPPREC>. {
-  printf("Error in line %d! Must be 32 or 64 Bit precision!\n", line_of_file);
-  exit(1);
-}
-<IDX>. {
-  printf("Error in line %d! Exiting...!\n",line_of_file);
-  exit(1);
-}
-<FPROP>. {
-  printf("Error in line %d! Must be compute or readin! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<Q1,Q2,DTAU,TAU,NSTEPS,INTTYP,NSMALL,CSW,CGMAX,BCGMAX,BOUND,SOURCEFILE,READSOURCE,INT0,INT1,INT2,INT3,INT4,REVCHECK,REVINT,DEBUG,SOURCEFORMAT,SOURCETS,REPRORND>. {
-  printf("Error in line %d!\n", line_of_file);
-  exit(1);
-}
-<GMRESM,GMRESDRNEV,SLOPPYPREC,NOEV,PRECEV,SUBEVCG>. {
-  printf("Error in line %d!\n", line_of_file);
-  exit(1);
-}
-<SITER>. {
-  printf("Unknown value for MaxSolverIterations in line %d! Must be an integer. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<SPREC>. {
-  printf("Unknown value for SolverPrecision in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<MNR>. {
-  printf("Unknown value for MassNumber in line %d! Must be an integer. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<RGIC>. {
-  printf("Unknown value for RGIC1 in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<RELPREC>. {
-  printf("Should be yes or no for relative precision in line %d! Exiting...!\n", line_of_file);
-  exit(1);
-}
-<FORCEPREC,FORCEPREC1,FORCEPREC2,FORCEPREC3>. {
-  printf("Unknown value for ForcePrecision in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<ACCPREC,ACCPREC1,ACCPREC2,ACCPREC3>. {
-  printf("Unknown value for AcceptancePrecision in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<CSGN1,CSGN2,CSGN3>. {
-  printf("Unknown value for CSGHistMu in line %d! Must be an integer number. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<USESTOUT>. {
-  printf("Unknown value in line %d! Must be yes or no. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<STOUTRHO>. {
-  printf("Unknown value in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<STOUTITER,DEGP>. {
-  printf("Unknown value in line %d! Must be an integer. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<PHMCFLAV>. {
-  printf("Unknown value in line %d! Must be 2+1+1 or 1+1. Exiting...!\n", line_of_file);
-  exit(1); 
-}
-<PCOMPUTEEVS>. {
-  printf("Unknown value in line %d! Must be an yes or no. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<PPP>. {
-  printf("Unknown value in line %d! Must be an yes or no. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<SMIN,SMAX>. {
-  printf("Unknown value in line %d! Must be a floating point number. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<SPLITPROP>. {
-  printf("Unknown value for SplittedPropagator in line %d! Must be yes or no. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<SPLITSOURCE>. {
-  printf("Unknown value for SplittedSource in line %d! Must be yes or no. Exiting...!\n", line_of_file);
-  exit(1);
-}
-<SRCLOC>. {
-  printf("Unknown source_location in line %d.\n Must be an integer. Exiting...!\n",line_of_file);
-  exit(1);
-}
-<HEAVYTS>. {
-  printf("Unknown value for TimeScaleHeavyDoublet in line %d\n", line_of_file);
-  exit(1);
-}
-<EO>. {
-  printf("Unknown value for UseEvenOdd in line %d\n Must be yes or no. Aborting!\n", line_of_file);
-}
-<WRPROPFLAG>. {
-  printf("Unknown value for WritePropagatorFormat in line %d\n Must be gwc or cmi. Aborting!\n", line_of_file);
-}
-<ONMEAS>. {
-  printf("Unknown value for PerformOnlineMeasurements in line %d\n Must be yes or no. Aborting!\n", line_of_file);
-}
-<ONFREQ>. {
-  printf("Unknown value for OnlineMeasurementsFreq in line %d\n Must be an integer. Aborting!\n", line_of_file);
-}
-
-
-<INITIAL>.                        BEGIN(ERROR);
 <ERROR>[^\t\n]*             {
-  printf("Error in line %d: %s \n",line_of_file,yytext);
+  printf("Parsing error in line %d\nAborting...!\n", line_of_file);
   exit(1);
 }
 
@@ -1339,7 +1107,7 @@ int read_input(char * conf_file){
   /********************************************
    * Setting default values!
    ********************************************/
-
+  reread = 0;
 #ifndef FIXEDVOLUME
   T_global = _default_T_global;
   L = _default_L;
@@ -1360,6 +1128,8 @@ int read_input(char * conf_file){
   g_mu1 = _default_g_mu1;
   g_mu2 = _default_g_mu2;
   g_mu3 = _default_g_mu3;
+  g_dbw2rand = 0;
+  g_running_phmc = 0;
   g_beta = _default_g_beta;
   g_c_sw = _default_g_c_sw;
   dtau = _default_dtau;
@@ -1508,6 +1278,8 @@ int reread_input(char * conf_file){
   double m2 = g_mu2, m3 = g_mu3;
   int n1 = g_csg_N[0], n2 = g_csg_N[2], n3 = g_csg_N[4], n4 = g_csg_N[6];
   double x;
+
+  reread = 1;
 
   /********************************************
    * Setting default values!

@@ -258,13 +258,13 @@ if(g_proc_id==0)
      if(q_off>0.)
        {
        zero_spinor_field(1);
-       idi=bicg(1,3,q_off,EPS_SQ0);
+       idi=bicg(g_spinor_field[1], g_spinor_field[3],q_off,EPS_SQ0);
        Q_psi(1,1,q_off2);
        }
      if(q_off2>0.)
        {
        zero_spinor_field(4);
-       idis=bicg(4,5,q_off2,EPS_SQ0);
+       idis=bicg(g_spinor_field[4], g_spinor_field[5],q_off2,EPS_SQ0);
        Q_psi(4,4,0.);
        }
 /*initialize the momenta */
@@ -294,13 +294,13 @@ if(g_proc_id==0)
 
 /*compute the energy contributions from the pseudo-fermions */
      zero_spinor_field(2);
-     idis0=bicg(2,0,q_off,EPS_SQ0);
+     idis0=bicg(g_spinor_field[2], g_spinor_field[0],q_off,EPS_SQ0);
      enerphi0x=square_norm(2, VOLUME/2);
 
      if(q_off>0.)
        {
        zero_spinor_field(3);
-       idis1=bicg(3,1,q_off2,EPS_SQ0);
+       idis1=bicg(g_spinor_field[3], g_spinor_field[1],q_off2,EPS_SQ0);
        Q_psi(3,3,q_off);
        enerphi1x=square_norm(3, VOLUME/2);
        }
@@ -312,7 +312,7 @@ if(g_proc_id==0)
      if(q_off2>0.)
        {
        zero_spinor_field(5);
-       idis2=bicg(5,4,0.,EPS_SQ0);
+       idis2=bicg(g_spinor_field[5], g_spinor_field[4],0.,EPS_SQ0);
        gamma5(g_spinor_field[5], g_spinor_field[5], VOLUME/2);
        assign_mul_add_r(5,q_off2,4);
        enerphi2x=square_norm(5, VOLUME/2);

@@ -65,6 +65,27 @@ typedef struct
 (r).d7=+(a).c21.re-(a).c12.re; \
 (r).d8=(-(a).c00.im-(a).c11.im + 2.0*a.c22.im)*0.577350269189625;
 
+#define _add_trace_lambda(r,a) \
+(r).d1+=-(a).c10.im-(a).c01.im; \
+(r).d2+=+(a).c10.re-(a).c01.re; \
+(r).d3+=-(a).c00.im+(a).c11.im; \
+(r).d4+=-(a).c20.im-(a).c02.im; \
+(r).d5+=+(a).c20.re-(a).c02.re; \
+(r).d6+=-(a).c21.im-(a).c12.im; \
+(r).d7+=+(a).c21.re-(a).c12.re; \
+(r).d8+=(-(a).c00.im-(a).c11.im + 2.0*a.c22.im)*0.577350269189625;
+
+#define _mul_add_trace_lambda(r,a,c)		\
+  (r).d1+=c*(-(a).c10.im-(a).c01.im);		\
+  (r).d2+=c*(+(a).c10.re-(a).c01.re);		\
+  (r).d3+=c*(-(a).c00.im+(a).c11.im);		\
+  (r).d4+=c*(-(a).c20.im-(a).c02.im);		\
+  (r).d5+=c*(+(a).c20.re-(a).c02.re);		\
+  (r).d6+=c*(-(a).c21.im-(a).c12.im);		\
+  (r).d7+=c*(+(a).c21.re-(a).c12.re);					\
+  (r).d8+=c*((-(a).c00.im-(a).c11.im + 2.0*a.c22.im)*0.577350269189625);
+
+
 #define _add_su3adj(r,a) \
 (r).d1+=(a).d1; \
 (r).d2+=(a).d2; \

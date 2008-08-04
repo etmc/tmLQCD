@@ -69,6 +69,8 @@ void gauge_momenta(double step)
 
 #ifdef MPI
   atime = MPI_Wtime();
+#else
+  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
     for(i = 0; i < VOLUME; i++)
     { 
@@ -106,6 +108,8 @@ void gauge_momenta(double step)
     }
 #ifdef MPI
   etime = MPI_Wtime();
+#else
+  etime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
 
   if(g_debug_level > 0) {
@@ -159,20 +163,19 @@ void update_fermion_momenta(double step, const int S,
   if(!(g_running_phmc && phmc_no_flavours == 2)) {
 #ifdef MPI
     atime = MPI_Wtime();
+#else
+    atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-    if(do_all == 1) 
-    {
+    if(do_all == 1) {
       /* set deriv to zero here */
-        derivative_psf(0, 1);
-      for(i = 1; i < g_nr_of_psf; i++) 
-      {
+      derivative_psf(0, 1);
+      for(i = 1; i < g_nr_of_psf; i++) {
         /* and add all the rest */
-          derivative_psf(i, 0);
+	derivative_psf(i, 0);
       }
     }
-    else 
-    {
-        derivative_psf(S, 1);
+    else {
+      derivative_psf(S, 1);
     }
 #ifdef MPI
     xchange_deri();
@@ -198,6 +201,8 @@ void update_fermion_momenta(double step, const int S,
     }
 #ifdef MPI
     etime = MPI_Wtime();
+#else
+    etime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
     if(g_debug_level > 0) {
 #ifdef MPI

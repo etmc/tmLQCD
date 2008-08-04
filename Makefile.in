@@ -48,9 +48,10 @@ MODULES = read_input gamma hybrid_update observables start \
 	derivative_nondegenerate Nondegenerate_Matrix \
 	chebyshev_polynomial_nd Ptilde_nd  \
 	init_chi_spinor_field init_chi_copy reweighting_factor_nd \
-	init_bispinor_field eigenvalues_bi update_tm_nd D_psi \
-	xchange_lexicfield xchange_2fields initialize_hmc_evolution \
-	weight_of_new_configuration online_measurement
+	init_bispinor_field eigenvalues_bi D_psi \
+	xchange_lexicfield xchange_2fields online_measurement \
+	monomial det_monomial detratio_monomial update_momenta \
+	integrator gauge_monomial ndpoly_monomial phmc
 
 
 NOOPTMOD = test/check_xchange test/check_geometry
@@ -59,13 +60,13 @@ PROGRAMS = hmc_tm benchmark invert invert_doublet gwc2ildg \
 	ildg2gwc single2double double2single reducenoise gen_sources  \
 	check_locallity
 
-ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES} phmc_tm
+ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = linalg solver
 
 .SUFFIXES:
 
 ifneq (,$(findstring lapack,${LIBS}))
-all: Makefile all-recursive dep hmc_tm invert invert_doublet gen_sources phmc_tm
+all: Makefile all-recursive dep hmc_tm invert invert_doublet gen_sources
 else
 all: Makefile all-recursive dep hmc_tm invert invert_doublet gen_sources
 endif
@@ -100,13 +101,10 @@ $(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefil
 ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} ${SOPTARGS} -c $< 
 
-${addsuffix .o, ${PROGRAMS} phmc_tm}: %.o: ${srcdir}/%.c %.d Makefile
+${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} ${OPTARGS} -c $<
 
 ${PROGRAMS}: %: %.o libhmc.a all-recursive
-	 ${LINK}  $@.o $(LIBS)
-
-phmc_tm: phmc_tm.o libhmc.a all-recursive
 	 ${LINK}  $@.o $(LIBS)
 
 dep: $(addsuffix .d,$(ALLOBJ))
@@ -115,10 +113,9 @@ compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d
 
 clean: clean-recursive Makefile
-	rm -f hmc_tm invert phmc_tm *.o *.d
+	rm -f hmc_tm invert *.o *.d
 distclean: distclean-recursive Makefile
 	rm -f hmc_tm hybrid *.o *.d *~ Makefile config.log config.status fixed_volume.h
-	rm -f phmc_tm
 	rm -f config.h
 
 .PHONY: all clean compile-clean distclean dep \

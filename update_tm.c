@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 #ifdef MPI
 # include <mpi.h>
 #endif
@@ -44,42 +45,38 @@
 #include "stout_smear.h"
 #include "solver/solver.h"
 #include "init_stout_smear_vars.h"
-#include "initialize_hmc_evolution.h"
-#include "weight_of_new_configuration.h"
+#include "monomial.h"
+#include "integrator.h"
 
-
+extern su3 ** g_gauge_field_saved;
+void stout_smear();
+void unstout();
 
 int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_energy, 
     char * filename, const double dtau, const int Nsteps, const int nsmall,
     const double tau, int * n_int, const int return_check,
-    double * lambda, const int rngrepro) 
-{
+    double * lambda, const int rngrepro) {
+
   su3 *v, *w;
   static int ini_g_tmp = 0;
   int rlxd_state[105];
-  int ix, mu, accept, i=0, halfstep = 0;
+  int ix, mu, accept, i=0, j=0;
   int saveiter_max = ITER_MAX_BCG;
-
-  int spinor_volume;
 
   double yy[1];
   double dh, expmdh, ret_dh=0., ret_gauge_diff=0., tmp;
   double atime=0., etime=0.;
   double ks,kc,ds,tr,ts,tt;
-  int idis0=0, idis1=0, idis2=0;
-  int ret_idis0=0, ret_idis1=0, ret_idis2=0;
 
   /* Energy corresponding to the Gauge part */
   double new_plaquette_energy=0., new_rectangle_energy = 0., gauge_energy = 0., new_gauge_energy = 0.;
-  double ret_plaquette_energy=0., ret_rectangle_energy = 0., ret_gauge_energy = 0.;
 
   /* Energy corresponding to the Momenta part */
   double enep=0., enepx=0., ret_enep = 0.;
 
   /* Energy corresponding to the pseudo fermion part(s) */
-  double enerphi0 =0., enerphi0x =0., enerphi1 =0., enerphi1x =0., enerphi2 = 0., enerphi2x = 0.;
-  double ret_enerphi0 = 0., ret_enerphi1 = 0., ret_enerphi2 = 0.;
   FILE * rlxdfile=NULL, * datafile=NULL, * ret_check_file=NULL;
+
 
   if(ini_g_tmp == 0) {
     ini_g_tmp = init_gauge_tmp(VOLUME);
@@ -89,71 +86,76 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     ini_g_tmp = 1;
   }
 
-  /* This is needed in order to let the */
-  /* extended version of leap frog and  */
-  /* Sexton-Weingarten work also with   */
-  /* only one pseudo fermion field      */
-  if(g_nr_of_psf == 1) 
-  {
-    halfstep = 1;
-  }
-
-  if(even_odd_flag)
-    spinor_volume = VOLUME/2;
-  else
-    spinor_volume = VOLUME;
-
-  /* For chronological inverter */
-  g_csg_N[1] = 0; g_csg_N[3] = 0; g_csg_N[5] = 0; g_csg_N[7] = 0;
-
 #ifdef MPI
   atime = MPI_Wtime();
+#else
+  atime = (double)clock()/((double)(CLOCKS_PER_SEC));
 #endif
 
   /*
    *  here the momentum and spinor fields are initialized 
    *  and their respective actions are calculated
    */
-  initialize_hmc_trajectory(spinor_volume, rngrepro, &enerphi0, &enerphi1, &enerphi2, &enep, &idis0, &idis1, &idis2, &saveiter_max);
+
+  /* 
+   *  copy the gauge field to gauge_tmp 
+   */
+  dontdump = 1;
+  for(ix=0;ix<VOLUME;ix++) { 
+    for(mu=0;mu<4;mu++) {
+      v=&g_gauge_field[ix][mu];
+      w=&gauge_tmp[ix][mu];
+      _su3_assign(*w,*v);
+    }
+  }
+  dontdump = 0;
+
+  /* smear the gauge field */
+  if(use_stout_flag == 1) stout_smear();
+
+  /* heatbath for all monomials */
+  for(i = 0; i < Integrator.no_timescales; i++) {
+    for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+      monomial_list[ Integrator.mnls_per_ts[i][j] ].hbfunction(Integrator.mnls_per_ts[i][j]);
+    }
+  }
+
+  /* keep on going with the unsmeared gauge field */
+  if(use_stout_flag == 1) unstout();
+
+  
+  /* initialize the momenta  */
+  enep=ini_momenta();
 
   g_sloppy_precision = 1;
 
   /*run the trajectory*/
-  if(integtyp == 1) {
-    /* Leap-frog integration scheme */
-    leap_frog(dtau, Nsteps, nsmall); 
-  }
-  else if(integtyp == 2) {
-    /* Sexton Weingarten integration scheme */
-    sexton(dtau, Nsteps, nsmall);
-  }
-  else if(integtyp == 3) {
-    ext_leap_frog(n_int, tau, g_nr_of_psf, halfstep);
-  }
-  else if(integtyp == 4) {
-    ext_sexton_weingarten(n_int, tau, g_nr_of_psf, halfstep);
-  }
-  else if(integtyp == 5) {
-    impr_leap_frog(n_int, tau, g_nr_of_psf);
-  }
-  else if(integtyp == 6) {
-    mn2_integrator(n_int, tau, g_nr_of_psf, halfstep, lambda);
-  }
-  else if(integtyp == 7) {
-    mn2p_integrator(n_int, tau, g_nr_of_psf, lambda);
-  }
+  integrate_md(&Integrator, 1);
 
-  weight_of_new_configuration(spinor_volume, rngrepro, &enerphi0x, &enerphi1x, &enerphi2x, &enepx, rectangle_energy, &new_rectangle_energy, plaquette_energy, &new_plaquette_energy, &gauge_energy, &new_gauge_energy, &idis0, &idis1, &idis2, &saveiter_max);
+  /*   smear the gauge field */
+  if(use_stout_flag == 1) stout_smear();
 
+  /* compute the final energy contributions for all monomials */
+  dh = 0.;
+  for(i = 0; i < Integrator.no_timescales; i++) {
+    for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+      dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j]);
+    }
+  }
+  
+  /*   keep on going with the unsmeared gauge field */
+  if(use_stout_flag == 1) unstout();
+
+  enepx = moment_energy();
+  new_plaquette_energy = measure_gauge_action();
+  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+    new_rectangle_energy = measure_rectangles();
+  }
+  
   /* Compute the energy difference */
-  dh = (enepx - enep) + g_beta*(gauge_energy - new_gauge_energy) +
-    (enerphi0x - enerphi0) + (enerphi1x - enerphi1) + (enerphi2x - enerphi2);
-  /*dh = (enepx - enep) + g_beta*(gauge_energy - new_gauge_energy) +
-    (enerphi0x - enerphi0) + (enerphi1x - enerphi1) + (enerphi2x - enerphi2);*/
-/*   printf("beta = %lf gauge_field_before=%lf gauge_energy=%lf\n", g_beta, gauge_energy,  new_gauge_energy); */
-/*   printf("mom=%lf gauge_field=%lf ferm_0=%lf ferm_1=%lf ferm_2=%lf  dh=%lf\n", (enepx - enep), g_beta*(gauge_energy - new_gauge_energy), (enerphi0x - enerphi0), (enerphi1x - enerphi1), (enerphi2x - enerphi2), dh); */
-  expmdh = exp(-dh);
+  dh = dh + (enepx - enep);
 
+  expmdh = exp(-dh);
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
   if(g_proc_id==0) {
@@ -179,151 +181,33 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
 
   /* Here a reversibility test is performed */
   /* The trajectory is integrated back      */
-  if(return_check == 1) 
-  {
-    if(accept == 1) 
-    {
+  if(return_check == 1) {
+    if(accept == 1) {
       write_lime_gauge_field( "conf.save", gauge_energy/(6.*VOLUME*g_nproc), 0, 64);
     }
     g_sloppy_precision = 1;
     /* run the trajectory back */
-    if(integtyp == 1) 
-    {
-      /* Leap-frog integration scheme */
-      leap_frog(-dtau, Nsteps, nsmall); 
-    }
-    else 
-      if(integtyp == 2) 
-      {
-        /* Sexton Weingarten integration scheme */
-        sexton(-dtau, Nsteps, nsmall);
-      }
-      else 
-        if(integtyp == 3) 
-        {
-          ext_leap_frog(n_int, -tau, g_nr_of_psf, halfstep);
-        }
-        else 
-          if(integtyp == 4) 
-          {
-            ext_sexton_weingarten(n_int, -tau, g_nr_of_psf, halfstep);
-          }
-          else 
-            if(integtyp == 5) 
-            {
-              impr_leap_frog(n_int, -tau, g_nr_of_psf);
-            }
-            else 
-              if(integtyp == 6) 
-              {
-                mn2_integrator(n_int, -tau, g_nr_of_psf, halfstep, lambda);
-              }
-              else 
-                if(integtyp == 7) 
-                {
-                  mn2p_integrator(n_int, -tau, g_nr_of_psf, lambda);
-                }
+    integrate_md(&Integrator, 0);
+
     g_sloppy_precision = 0;
+
+    /*   compute the energy contributions from the pseudo-fermions  */
+    if(use_stout_flag == 1) stout_smear();
+    
+    ret_dh = 0.;
+    for(i = 0; i < Integrator.no_timescales; i++) {
+      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+	ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j]);
+      }
+    }
+
+    /*   keep on going with the unsmeared gauge field */
+    if(use_stout_flag == 1) unstout();
+
     ret_enep = moment_energy();
-    ret_plaquette_energy = measure_gauge_action();
-    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) 
-    {
-      ret_rectangle_energy = measure_rectangles();
-    }
-    ret_gauge_energy = g_rgi_C0 * ret_plaquette_energy + g_rgi_C1 * ret_rectangle_energy;
-
-    /*
-     *  compute the energy contributions from the pseudo-fermions 
-     */
-    assign(g_spinor_field[2], g_spinor_field[DUM_DERI+4], spinor_volume);
-    g_mu = g_mu1;
-    if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-    if(even_odd_flag)
-    {
-      ret_idis0 = bicg(2, first_psf, g_eps_sq_acc, g_relative_precision_flag);
-    }
-    else
-    {
-      ret_idis0 = bicgstab_complex(g_spinor_field[2], g_spinor_field[first_psf], 1000, g_eps_sq_acc, g_relative_precision_flag, spinor_volume, Q_minus_psi);
-    }
-    ITER_MAX_BCG = saveiter_max;
-    assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], spinor_volume);
-    ret_enerphi0 = square_norm(g_spinor_field[2], spinor_volume);
-
-    /*
-     *  handle 2nd pseudofermion field
-     */
-    if(g_nr_of_psf > 1) 
-    {
-      assign(g_spinor_field[3], g_spinor_field[DUM_DERI+5], spinor_volume);
-      g_mu = g_mu1;
-
-      if(even_odd_flag)
-      {
-        Qtm_plus_psi(g_spinor_field[second_psf], g_spinor_field[second_psf]);
-      }
-      else
-      {
-        assign(g_spinor_field[DUM_DERI+7], g_spinor_field[second_psf], spinor_volume);
-        Q_plus_psi(g_spinor_field[second_psf], g_spinor_field[DUM_DERI+7]);
-      }
-
-      g_mu = g_mu2;
-      if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-
-      if(even_odd_flag)
-      {
-        ret_idis1 += bicg(3, second_psf, g_eps_sq_acc, g_relative_precision_flag);
-      }
-      else
-      {
-        ret_idis1 += bicgstab_complex(g_spinor_field[3], g_spinor_field[second_psf], 1000, g_eps_sq_acc, g_relative_precision_flag, spinor_volume, Q_minus_psi);
-      }
-
-      ITER_MAX_BCG = saveiter_max;
-      assign(g_spinor_field[DUM_DERI+5], g_spinor_field[DUM_DERI+6], spinor_volume);
-      ret_enerphi1 = square_norm(g_spinor_field[3], spinor_volume);
-    }
-
-    /*
-     *  handle 3rd pseudofermion field
-     */
-    if(g_nr_of_psf > 2) 
-    {
-      assign(g_spinor_field[5], g_spinor_field[DUM_DERI+6], spinor_volume);
-      g_mu = g_mu2;
-
-      if(even_odd_flag)
-      {
-        Qtm_plus_psi(g_spinor_field[third_psf], g_spinor_field[third_psf]);
-      }
-      else
-      {
-        assign(g_spinor_field[DUM_DERI+7], g_spinor_field[third_psf], spinor_volume);
-        Q_plus_psi(g_spinor_field[third_psf], g_spinor_field[DUM_DERI+7]);
-      }
-
-      g_mu = g_mu3;
-      if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
-
-      if(even_odd_flag)
-      {
-        ret_idis2 += bicg(5, third_psf, g_eps_sq_acc, g_relative_precision_flag);
-      }
-      else
-      {
-        ret_idis2 += bicgstab_complex(g_spinor_field[5], g_spinor_field[third_psf], 1000, g_eps_sq_acc, g_relative_precision_flag, spinor_volume, Q_minus_psi);
-      }
-
-      ITER_MAX_BCG = saveiter_max;
-      ret_enerphi2 = square_norm(g_spinor_field[5], spinor_volume);
-    }
 
     /* Compute the energy difference */
-    ret_dh = (ret_enep - enep ) + g_beta*(gauge_energy - ret_gauge_energy) +
-      (ret_enerphi0 - enerphi0) + (ret_enerphi1 - enerphi1) + (ret_enerphi2 - enerphi2);
-    /*     ret_dh= +ret_enep - g_beta*ret_gauge_energy - enep + g_beta*gauge_energy */
-    /*       + ret_enerphi0 - enerphi0 + ret_enerphi1 - enerphi1 + ret_enerphi2 - enerphi2; */
+    ret_dh += (ret_enep - enep );
 
     /* Compute Differences in the fields */
     ks = 0.;
@@ -332,7 +216,6 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     for(ix=0;ix<VOLUME;ix++) {
       for(mu=0;mu<4;mu++){
         tmp = 0.;
-        /* Auch MIST */
         v=&g_gauge_field[ix][mu];
         w=&gauge_tmp[ix][mu];
         ds = ((*v).c00.re-(*w).c00.re)*((*v).c00.re-(*w).c00.re)
@@ -406,6 +289,8 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
 #ifdef MPI
   xchange_gauge();
   etime = MPI_Wtime();
+#else
+  etime = (double)clock()/((double)(CLOCKS_PER_SEC));
 #endif
 #ifdef _GAUGE_COPY
   update_backward_gauge();
@@ -413,14 +298,13 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
 
   if(g_proc_id==0){
     datafile = fopen(filename, "a");
-    fprintf(datafile,"%14.12f %14.12f %e %d %d %d ",
-        (*plaquette_energy)/(6.*VOLUME*g_nproc),dh,expmdh,
-        idis0, count00, count01);
-    if(g_nr_of_psf > 1) {
-      fprintf(datafile, "%d %d %d ", idis1, count10, count11);
-    }
-    if(g_nr_of_psf > 2) {
-      fprintf(datafile, "%d %d %d ", idis2, count20, count21);
+    fprintf(datafile,"%14.12f %14.12f %e ",
+	    (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
+    for(i = 1; i < Integrator.no_timescales; i++) {
+      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+	fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
+		monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);
+      }
     }
     fprintf(datafile, "%d %e", accept, etime-atime);
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
@@ -430,8 +314,28 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     fflush(datafile);
     fclose(datafile);
   }
-
   return(accept);
 }
+
+void stout_smear() {
+  int ix, mu;
+  for(ix = 0; ix < VOLUME; ix++) {
+    for(mu = 0; mu < 4; mu++) {
+      _su3_assign(g_gauge_field_saved[ix][mu], g_gauge_field[ix][mu]);
+    }
+    stout_smear_gauge_field(stout_rho , stout_no_iter);
+  }
+  return;
+}
+void unstout() {
+  int ix, mu;
+  for(ix = 0; ix < VOLUME; ix++) {
+    for(mu = 0; mu < 4; mu++) {
+      _su3_assign(g_gauge_field[ix][mu], g_gauge_field_saved[ix][mu]);
+    }
+  }
+  return;
+}
+
 
 static char const rcsid[] = "$Id$";

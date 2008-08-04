@@ -51,6 +51,7 @@
 #include "update_backward_gauge.h"
 #include "stout_smear.h"
 #include "invert_eo.h"
+#include "phmc.h"
 #include "D_psi.h"
 #include "linalg/convert_eo_to_lexic.h"
 
@@ -187,7 +188,7 @@ int main(int argc,char *argv[]) {
   geometry();
 
   /* define the boundary conditions for the fermion fields */
-  boundary();
+  boundary(g_kappa);
 
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();

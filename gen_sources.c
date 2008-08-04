@@ -35,6 +35,7 @@
 #include "source_generation.h"
 #include "init_geometry_indices.h"
 #include "linalg_eo.h"
+#include "phmc.h"
 #include "init_spinor_field.h"
 
 

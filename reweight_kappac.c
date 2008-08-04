@@ -45,7 +45,7 @@ double reweight_kappac(const int N) {
   zero_spinor_field(g_spinor_field[3],VOLUME/2);
 
   /* and now solve:*/
-  n_iter = solve_cg(3, 2, 1.e-15, 1);
+  n_iter = solve_cg(g_spinor_field[3], g_spinor_field[2], 1.e-15, 1);
 
 
 

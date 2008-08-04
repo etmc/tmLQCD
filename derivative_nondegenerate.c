@@ -139,9 +139,8 @@ void derivative_nondegenerate() {
 
   
   /*
-    Normalisation by the largest  EW  is done in update_fermion_momenta 
+    Normalisation by the largest  EW  is done in update_fermion_momenta
     C.U. this is something worth to be changed...
-    Compute force once for every monomial, can we have them on different time-scales?
   */ 
 }
 
