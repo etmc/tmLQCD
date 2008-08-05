@@ -69,6 +69,7 @@ void usage(){
   fprintf(stdout, "Usage:   hmc_tm [options]\n");
   fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
   fprintf(stdout, "         [-o output-filename] default: output\n");
+  fprintf(stdout, "         [-v] more verbosity\n");
   fprintf(stdout, "         [-h|-? this help]\n");
   exit(0);
 }
@@ -113,7 +114,7 @@ int main(int argc,char *argv[]) {
   strcpy(nstore_filename,".nstore_counter");
   strcpy(tmp_filename, ".conf.tmp");
 
-  verbose = 1;
+  verbose = 0;
   g_use_clover_flag = 0;
 
 #ifdef MPI
@@ -124,7 +125,7 @@ int main(int argc,char *argv[]) {
 #endif
 
 
-  while ((c = getopt(argc, argv, "h?f:o:")) != -1) {
+  while ((c = getopt(argc, argv, "h?vf:o:")) != -1) {
     switch (c) {
     case 'f': 
       input_filename = calloc(200, sizeof(char));
@@ -133,6 +134,9 @@ int main(int argc,char *argv[]) {
     case 'o':
       filename = calloc(200, sizeof(char));
       strcpy(filename,optarg);
+      break;
+    case 'v':
+      verbose = 1;
       break;
     case 'h':
     case '?':

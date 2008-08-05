@@ -34,6 +34,10 @@ void chrono_add_solution(spinor * const trial, spinor ** const v, int index_arra
   int i;
 
   if(N > 0) {
+    if(g_proc_id == 0 && g_debug_level > 1) {
+      printf("CSG: adding vector %d to the list of length %d\n", (*_n)+1, N);
+      fflush(stdout);
+    }
     if((*_n) < N) {
       index_array[(*_n)] = (*_n);
       (*_n)= (*_n)+1;
@@ -76,6 +80,10 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
   int max_N = 20;
 
   if(N > 0) {
+    if(g_proc_id == 0 && g_debug_level > 1) {
+      printf("CSG: preparing  trial vector \n");
+      fflush(stdout);
+    }
     if(init_csg == 0) {
       init_csg = 1;
       work = (complex*) malloc(lwork*sizeof(complex));
@@ -111,7 +119,7 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
 	if(j != i) {
 	  _complex_conj(G[j*N + i], G[i*N + j]);
 	}
-	if(g_proc_id == 0 && g_debug_level > 1) {
+	if(g_proc_id == 0 && g_debug_level > 2) {
 	  printf("CSG: G[%d*N + %d]= %e + i %e  \n", i, j, G[i*N + j].re, G[i*N + j].im);
 	  fflush(stdout);
 	}
@@ -141,12 +149,12 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
     /* Construct the new guess vector */
     if(info == 0) {
       mul(trial, bn[n-1], v[index_array[n-1]], V); 
-      if(g_proc_id == 0 && g_debug_level > 1) {
+      if(g_proc_id == 0 && g_debug_level > 2) {
 	printf("CSG: bn[%d] = %f %f\n", index_array[n-1], bn[index_array[n-1]].re, bn[index_array[n-1]].im);
       }
       for(i = n-2; i > -1; i--) {
 	assign_add_mul(trial, v[index_array[i]], bn[i], V);
-	if(g_proc_id == 0 && g_debug_level > 1) {
+	if(g_proc_id == 0 && g_debug_level > 2) {
 	  printf("CSG: bn[%d] = %f %f\n", index_array[i], bn[index_array[i]].re, bn[index_array[i]].im);
 	}
       }
@@ -161,7 +169,7 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
   }
   else {
     if(g_proc_id == 0 && g_debug_level > 1) {
-      printf("Using zero trial vector \n");
+      printf("CSG: using zero trial vector \n");
       fflush(stdout);
     }
     zero_spinor_field(trial, V);

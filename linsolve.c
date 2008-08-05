@@ -47,7 +47,7 @@ int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_pr
      err=square_norm(g_spinor_field[DUM_SOLVER], VOLUME/2);
 
      if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
-       printf("CG iterations: %d res^2 %e\n", iteration, err);
+       printf("CG: iterations: %d res^2 %e\n", iteration, err);
        fflush(stdout);
      }
 
@@ -104,7 +104,7 @@ int bicg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) 
     for(iteration = 0; iteration < ITER_MAX_BCG; iteration++){
       err = square_norm(r, N);
       if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
-	printf("BiCGstab iterations: %d res^2 %e\n", iteration, err);
+	printf("BiCGstab: iterations: %d res^2 %e\n", iteration, err);
 	fflush(stdout);
       }
       if (((err <= eps_sq) && (rel_prec == 0)) 

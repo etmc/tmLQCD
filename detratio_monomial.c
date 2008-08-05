@@ -72,7 +72,7 @@ void detratio_derivative(const int no) {
     Qtm_plus_psi(g_spinor_field[DUM_DERI+2], psf);
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if(mnl->solver == CG || (fabs(g_mu) > 0)) {
+    if(mnl->solver == CG) {
       ITER_MAX_CG = mnl->maxiter;
       /* If CG is used anyhow */
       /*       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME/2); */
@@ -154,7 +154,7 @@ void detratio_derivative(const int no) {
     Q_plus_psi(g_spinor_field[DUM_DERI+2], psf);
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if(mnl->solver == CG || (fabs(g_mu) > 0)) {/*  || (g_nr_of_psf != nr+1)) { */
+    if(mnl->solver == CG) {
       /* If CG is used anyhow */
       /*       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME/2); */
       /* Invert Q_{+} Q_{-} */
@@ -249,6 +249,7 @@ void detratio_heatbath(const int id) {
   g_mu = mnl->mu;
   boundary(mnl->kappa);
   mnl->csg_n = 0;
+  mnl->csg_n2 = 0;
   mnl->iter0 = 0;
   mnl->iter1 = 0;
   if(mnl->even_odd_flag) {
@@ -259,13 +260,13 @@ void detratio_heatbath(const int id) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
     zero_spinor_field(mnl->pf,VOLUME/2);
-    if(mnl->solver == CG || fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+    if(mnl->solver == CG) ITER_MAX_BCG = 0;
     ITER_MAX_CG = mnl->maxiter;
     mnl->iter0 += bicg(mnl->pf, g_spinor_field[3], mnl->accprec, g_relative_precision_flag);
 
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-    if(ITER_MAX_BCG > 0 && fabs(g_mu) == 0.) {
+    if(mnl->solver != CG) {
       chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2,
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
     }
@@ -278,7 +279,7 @@ void detratio_heatbath(const int id) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
     zero_spinor_field(mnl->pf,VOLUME);
-    if(fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+    if(mnl->solver == CG) ITER_MAX_BCG = 0;
     mnl->iter0 += bicgstab_complex(mnl->pf, g_spinor_field[3], mnl->maxiter, mnl->accprec, 
 				   g_relative_precision_flag, VOLUME, Q_minus_psi);
   }
@@ -301,7 +302,7 @@ double detratio_acc(const int id) {
     Qtm_plus_psi(g_spinor_field[DUM_DERI+5], mnl->pf);
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if(mnl->solver == CG || fabs(g_mu)>0.) ITER_MAX_BCG = 0;
+    if(mnl->solver == CG) ITER_MAX_BCG = 0;
     ITER_MAX_CG = mnl->maxiter;
     chrono_guess(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->csg_field, mnl->csg_index_array, 
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);

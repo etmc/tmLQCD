@@ -14,6 +14,7 @@
 #include "ranlxd.h"
 #include "sse.h"
 #include "linalg_eo.h"
+#include "default_input_values.h"
 #include "monomial.h"
 
 
@@ -64,7 +65,34 @@ int add_monomial(const int type) {
     fprintf(stderr, "Unknown monomial type!\n");
     return(-1);
   }
-  
+  monomial_list[no_monomials].pf = NULL;
+  monomial_list[no_monomials].csg_field = NULL;
+  monomial_list[no_monomials].csg_field2 = NULL;
+  monomial_list[no_monomials].csg_index_array = NULL;
+  monomial_list[no_monomials].csg_index_array2 = NULL;
+  monomial_list[no_monomials].csg_N = 0;
+  monomial_list[no_monomials].csg_N2 = 0;
+  monomial_list[no_monomials].csg_n = 1;
+  monomial_list[no_monomials].csg_n2 = 1;
+  monomial_list[no_monomials].kappa = _default_g_kappa;
+  monomial_list[no_monomials].kappa2 = _default_g_kappa;
+  monomial_list[no_monomials].mu = _default_g_mu;
+  monomial_list[no_monomials].mu2 = _default_g_mu;
+  monomial_list[no_monomials].epsilon = _default_g_epsbar;
+  monomial_list[no_monomials].timescale = _default_timescale;
+  monomial_list[no_monomials].accprec = _default_g_eps_sq_acc;
+  monomial_list[no_monomials].forceprec = _default_g_eps_sq_force;
+  monomial_list[no_monomials].maxiter = _default_max_solver_iterations;
+  monomial_list[no_monomials].solver = _default_solver_flag;
+  monomial_list[no_monomials].even_odd_flag = _default_even_odd_flag;
+  monomial_list[no_monomials].forcefactor = 1.;
+  monomial_list[no_monomials].use_rectangles = 0;
+  monomial_list[no_monomials].c1 = _default_g_rgi_C1;
+  monomial_list[no_monomials].c0 = 1.;
+  monomial_list[no_monomials].beta = _default_g_beta;  
+  monomial_list[no_monomials].rngrepro = _default_reproduce_randomnumber_flag;
+  monomial_list[no_monomials].initialised = 1;
+
   no_monomials++;
   return(no_monomials);
 }
@@ -98,6 +126,7 @@ int init_monomials(const int V) {
       no++;
     }
     else {
+      monomial_list[i].pf = NULL;
       if(!monomial_list[i].use_rectangles) {
 	monomial_list[i].c1 = 0.;
       }
@@ -109,6 +138,7 @@ int init_monomials(const int V) {
 }
 
 void free_monomials() {
+  
   free(_pf);
   return;
 }

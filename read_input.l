@@ -331,28 +331,15 @@ TYPE [0-9A-Z]+
     fprintf(stderr, "Unknown monomial type %s in line %d\n", yytext, line_of_file);
     exit(1);
   }
-  if(!reread) add_monomial(mnl->type);
+  if(!reread) {
+    if(add_monomial(mnl->type) < 0) {
+      fprintf(stderr, "Something went wrong in adding monomials\nAborting...!\n");
+      exit(1);
+    }
+  }
   if(myverbose) printf("initialising monomial with type %s %d line %d\n", yytext, mnl->type, line_of_file);
   if(myverbose) printf("monomial has id %d\n", current_monomial);
-  mnl->kappa = _default_g_kappa;
-  mnl->kappa2 = _default_g_kappa;
-  mnl->mu = _default_g_mu;
-  mnl->mu2 = _default_g_mu;
-  mnl->csg_N = _default_g_csg_N;
-  mnl->csg_N2 = _default_g_csg_N;
-  mnl->csg_n = 1;
-  mnl->csg_n2 = 0;
-  mnl->timescale = _default_timescale;
-  mnl->accprec = _default_g_eps_sq_acc;
-  mnl->forceprec = _default_g_eps_sq_force;
-  mnl->maxiter = _default_max_solver_iterations;
-  mnl->solver = _default_solver_flag;
-  mnl->even_odd_flag = _default_even_odd_flag;
-  mnl->forcefactor = 1.;
-  mnl->use_rectangles = 0;
-  mnl->c1 = _default_g_rgi_C1;
-  mnl->c0 = 1.;
-  mnl->beta = _default_g_beta;
+
   /* here we need to set default values */
   BEGIN(MONOMIAL);
 }
@@ -514,50 +501,50 @@ TYPE [0-9A-Z]+
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
   T_global = atoi(yytext);
-#endif
   if(myverbose!=0) printf("T =%s\n", yytext);
+#endif
 }
 <LL>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
   L = atoi(yytext);
-#endif
   if(myverbose!=0) printf("L =%s\n", yytext);
+#endif
 }
 <LLX>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
   LX = atoi(yytext);
-#endif
   if(myverbose!=0) printf("LX =%s\n", yytext);
+#endif
 }
 <LLY>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
   LY = atoi(yytext);
-#endif
   if(myverbose!=0) printf("LY =%s\n", yytext);
+#endif
 }
 <LLZ>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
   LZ = atoi(yytext);
-#endif
   if(myverbose!=0) printf("LZ =%s\n", yytext);
+#endif
 }
 <NPROCX>{DIGIT}+              {
 #ifndef FIXEDVOLUME
   N_PROC_X = atoi(yytext);
-#endif
   if(myverbose!=0) printf("Nr of processors in x direction = %s\n", yytext);
+#endif
 }
 <NPROCY>{DIGIT}+              {
 #ifndef FIXEDVOLUME
   N_PROC_Y = atoi(yytext);
-#endif
   if(myverbose!=0) printf("Nr of processors in y direction = %s\n", yytext);
+#endif
 }
 <NPROCZ>{DIGIT}+              {
 #ifndef FIXEDVOLUME
   N_PROC_Z = atoi(yytext);
-#endif
   if(myverbose!=0) printf("Nr of processors in z direction = %s\n", yytext);
+#endif
 }
 <SEED>{DIGIT}+               {
   random_seed=atoi(yytext);

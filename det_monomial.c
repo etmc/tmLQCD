@@ -64,7 +64,7 @@ void det_derivative(const int id) {
     
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if(mnl->solver == CG || (fabs(g_mu) > 0)) {/*  || (g_nr_of_psf != nr+1)) { */
+    if(mnl->solver == CG) {/*  || (g_nr_of_psf != nr+1)) { */
       ITER_MAX_CG = mnl->maxiter;
       /* If CG is used anyhow */
       /*       gamma5(spionr_field[DUM_DERI+1], g_spinor_field[first_psf], VOLUME/2); */
@@ -84,12 +84,12 @@ void det_derivative(const int id) {
       /*contributions from field 0 -> first_psf*/
       /* Invert first Q_+ */
       /* Y_o -> DUM_DERI  */
-      chrono_guess(g_spinor_field[DUM_DERI], psf, mnl->csg_field2, mnl->csg_index_array2,
-		   mnl->csg_N2, mnl->csg_n2, VOLUME/2, &Qtm_pm_psi);
+      chrono_guess(g_spinor_field[DUM_DERI], psf, mnl->csg_field, mnl->csg_index_array,
+		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       mnl->iter1 += bicg(g_spinor_field[DUM_DERI], psf, mnl->forceprec, g_relative_precision_flag);
-      chrono_add_solution(g_spinor_field[DUM_DERI], mnl->csg_field2, mnl->csg_index_array2,
-			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
+      chrono_add_solution(g_spinor_field[DUM_DERI], mnl->csg_field, mnl->csg_index_array,
+			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       
       /* Now Q_- */
       /* X_o -> DUM_DERI+1 */
@@ -123,7 +123,7 @@ void det_derivative(const int id) {
      *********************************************************************/
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if(mnl->solver == CG || (fabs(g_mu) > 0)) {
+    if(mnl->solver == CG) {
       /* If CG is used anyhow */
       /*       gamma5(spionr_field[DUM_DERI+1], g_spinor_field[first_psf], VOLUME/2); */
       
@@ -211,6 +211,7 @@ void det_heatbath(const int id) {
   g_mu = mnl->mu;
   boundary(mnl->kappa);
   mnl->csg_n = 0;
+  mnl->csg_n2 = 0;
   mnl->iter0 = 0;
   mnl->iter1 = 0;
 
@@ -221,7 +222,7 @@ void det_heatbath(const int id) {
     Qtm_plus_psi(mnl->pf, g_spinor_field[2]);
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-    if(ITER_MAX_BCG > 0 && fabs(g_mu1) == 0.) {
+    if(mnl->solver != CG) {
       chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2, 
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
     }
@@ -258,7 +259,7 @@ double det_acc(const int id) {
     /*     ITER_MAX_BCG = *saveiter_max; */
     /* Save the solution of Q^-2 at the right place */
     /* for later reuse! */
-    assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], VOLUME/2);
+/*     assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], VOLUME/2); */
     /* Compute the energy contr. from first field */
     mnl->energy1 = square_norm(g_spinor_field[2], VOLUME/2);
   }

@@ -63,7 +63,7 @@ void free_spinor_field() {
 
 
 int init_csg_field(const int V) {
-  int i = 0, j = 0, sum=0;
+  int i = 0, j = 0, sum = 0;
   spinor * s;
   for(i = 0; i < no_monomials; i++) {
     sum += monomial_list[i].csg_N;
@@ -91,16 +91,11 @@ int init_csg_field(const int V) {
       }
     }
 #if ( defined SSE || defined SSE2 || defined SSE3)
-    monomial_list[0].csg_field[0] = (spinor*)(((unsigned long int)(sp_csg)+ALIGN_BASE)&~ALIGN_BASE);
+    s = (spinor*)(((unsigned long int)(sp_csg)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-    monomial_list[0].csg_field[0] = sp_csg;
+    s = sp_csg;
 #endif
-    s = monomial_list[0].csg_field[0] + V;
-    for(i = 1; i < monomial_list[0].csg_N; i++){
-      monomial_list[0].csg_field[i] = s;
-      s = s + V;
-    }
-    for(j = 1; j < no_monomials; j++) {
+    for(j = 0; j < no_monomials; j++) {
       if(monomial_list[j].csg_N != 0) {
 	for(i = 0; i < monomial_list[j].csg_N; i++) {
 	  monomial_list[j].csg_field[i] = s;
