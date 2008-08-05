@@ -41,7 +41,6 @@ void det_derivative(const int id) {
   extern su3 ** g_stout_force_field;
   extern su3 ** g_gauge_field_saved;
   monomial * mnl = &monomial_list[id];
-  spinor * psf = mnl->pf;
 
   (*mnl).forcefactor = 1.;
   if(use_stout_flag == 1) {
@@ -71,9 +70,9 @@ void det_derivative(const int id) {
       
       /* Invert Q_{+} Q_{-} */
       /* X_o -> DUM_DERI+1 */
-      chrono_guess(g_spinor_field[DUM_DERI+1], psf, mnl->csg_field, mnl->csg_index_array,
+      chrono_guess(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
-      mnl->iter1 += solve_cg(g_spinor_field[DUM_DERI+1], psf, mnl->forceprec, g_relative_precision_flag);
+      mnl->iter1 += solve_cg(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->forceprec, g_relative_precision_flag);
       chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       /*       assign(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+4], VOLUME/2); */
@@ -84,20 +83,21 @@ void det_derivative(const int id) {
       /*contributions from field 0 -> first_psf*/
       /* Invert first Q_+ */
       /* Y_o -> DUM_DERI  */
-      chrono_guess(g_spinor_field[DUM_DERI], psf, mnl->csg_field, mnl->csg_index_array,
-		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
+      chrono_guess(g_spinor_field[DUM_DERI], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-      mnl->iter1 += bicg(g_spinor_field[DUM_DERI], psf, mnl->forceprec, g_relative_precision_flag);
+      mnl->iter1 += bicg(g_spinor_field[DUM_DERI], mnl->pf, mnl->forceprec, g_relative_precision_flag);
       chrono_add_solution(g_spinor_field[DUM_DERI], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       
       /* Now Q_- */
       /* X_o -> DUM_DERI+1 */
       g_mu = -g_mu;
-      chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], mnl->csg_field2, mnl->csg_index_array2,
-		   mnl->csg_N2, mnl->csg_n2, VOLUME/2, &Qtm_pm_psi);
+      chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], mnl->csg_field2, 
+		   mnl->csg_index_array2, mnl->csg_N2, mnl->csg_n2, VOLUME/2, &Qtm_minus_psi);
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME/2);
-      mnl->iter1 += bicg(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], mnl->forceprec, g_relative_precision_flag);
+      mnl->iter1 += bicg(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], 
+			 mnl->forceprec, g_relative_precision_flag);
       chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field2, mnl->csg_index_array2,
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
       g_mu = -g_mu;   
@@ -129,9 +129,14 @@ void det_derivative(const int id) {
       
       /* Invert Q_{+} Q_{-} */
       /* X -> DUM_DERI+1 */
-      mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], psf, 
+      chrono_guess(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
+      mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], mnl->pf, 
 			mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
 			VOLUME, &Q_pm_psi, 0, 1);
+      chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
+			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
+
       /*       assign(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+4], VOLUME/2); */
       /* Y -> DUM_DERI  */
       
@@ -143,16 +148,24 @@ void det_derivative(const int id) {
       /*contributions from field 0 -> first_psf*/
       /* Invert first Q_+ */
       /* Y_o -> DUM_DERI  */
-      mnl->iter1 += bicgstab_complex(g_spinor_field[DUM_DERI], psf, 
+      chrono_guess(g_spinor_field[DUM_DERI], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_plus_psi);
+      mnl->iter1 += bicgstab_complex(g_spinor_field[DUM_DERI], mnl->pf, 
 				     mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
-				     VOLUME,  Q_minus_psi);
+				     VOLUME,  Q_plus_psi);
+      chrono_add_solution(g_spinor_field[DUM_DERI], mnl->csg_field, mnl->csg_index_array,
+			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       
       /* Now Q_- */
       /* X_o -> DUM_DERI+1 */
       g_mu = -g_mu;
+      chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], mnl->csg_field2, 
+		   mnl->csg_index_array2, mnl->csg_N2, mnl->csg_n2, VOLUME/2, &Q_minus_psi);
       mnl->iter1 += bicgstab_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], 
 				     mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
 				     VOLUME, Q_minus_psi);
+      chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field2, mnl->csg_index_array2,
+			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
       g_mu = -g_mu;   
     }
     
@@ -162,8 +175,7 @@ void det_derivative(const int id) {
   g_mu = g_mu1;
   boundary(g_kappa);
 
-  if(use_stout_flag == 1)
-  {
+  if(use_stout_flag == 1) {
     /*
      *  now we iterate the force field (\Sigma in hep-lat/0311018) 
      *  according to eqtn(75) in hep-lat/0311018
@@ -189,9 +201,8 @@ void det_derivative(const int id) {
         df0[x][mu].d8 /= -2.0;
       }
     }
-
-    printf("df0 after = %f %f %f %f %f %f %f %f\n", df0[0][0].d1, df0[0][0].d2, df0[0][0].d3, df0[0][0].d4, df0[0][0].d5, df0[0][0].d6, df0[0][0].d7, df0[0][0].d8);
-    
+    printf("df0 after = %f %f %f %f %f %f %f %f\n", df0[0][0].d1, df0[0][0].d2, 
+	   df0[0][0].d3, df0[0][0].d4, df0[0][0].d5, df0[0][0].d6, df0[0][0].d7, df0[0][0].d8);
     /*
      *  restore unsmeared gauge field
      */
@@ -232,6 +243,12 @@ void det_heatbath(const int id) {
     mnl->energy0 = square_norm(g_spinor_field[2], VOLUME);
 
     Q_plus_psi(mnl->pf, g_spinor_field[2]);
+    chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
+			mnl->csg_N, &mnl->csg_n, VOLUME/2);
+    if(mnl->solver != CG) {
+      chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2, 
+			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
+    }
   }
   g_mu = g_mu1;
   boundary(g_kappa);
@@ -254,22 +271,30 @@ double det_acc(const int id) {
       ITER_MAX_BCG = 0;
     }
     chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
+		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
     mnl->iter0 = bicg(g_spinor_field[2], mnl->pf, mnl->accprec, g_relative_precision_flag);
-    /*     ITER_MAX_BCG = *saveiter_max; */
-    /* Save the solution of Q^-2 at the right place */
-    /* for later reuse! */
-/*     assign(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+6], VOLUME/2); */
     /* Compute the energy contr. from first field */
     mnl->energy1 = square_norm(g_spinor_field[2], VOLUME/2);
   }
   else {
-    mnl->iter0 = cg_her(g_spinor_field[DUM_DERI+5], mnl->pf, 
-			mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
-			VOLUME, Q_pm_psi, 0, 0);
-    Q_minus_psi(g_spinor_field[2], g_spinor_field[DUM_DERI+5]);
-    /* Compute the energy contr. from first field */
-    mnl->energy1 = square_norm(g_spinor_field[2], VOLUME);
+    if(mnl->solver == CG) {
+      chrono_guess(g_spinor_field[DUM_DERI+5], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
+      mnl->iter0 = cg_her(g_spinor_field[DUM_DERI+5], mnl->pf, 
+			  mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
+			  VOLUME, Q_pm_psi, 0, 0);
+      Q_minus_psi(g_spinor_field[2], g_spinor_field[DUM_DERI+5]);
+      /* Compute the energy contr. from first field */
+      mnl->energy1 = square_norm(g_spinor_field[2], VOLUME);
+    }
+    else {
+      chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_plus_psi);
+      mnl->iter0 += bicgstab_complex(g_spinor_field[2], mnl->pf, 
+				     mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
+				     VOLUME,  Q_plus_psi);
+      mnl->energy1 = square_norm(g_spinor_field[2], VOLUME);
+    }
   }
   g_mu = g_mu1;
   boundary(g_kappa);

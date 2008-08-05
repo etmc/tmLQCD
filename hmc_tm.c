@@ -214,33 +214,29 @@ int main(int argc,char *argv[]) {
     exit(0);
   }
   if(even_odd_flag) {
-    j = init_monomials(VOLUMEPLUSRAND/2);
+    j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
   }
   else {
-    j = init_monomials(VOLUMEPLUSRAND);
+    j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
   }
   if (j != 0) {
     fprintf(stderr, "Not enough memory for monomial pseudo fermion  fields! Aborting...\n");
     exit(0);
   }
-  if(even_odd_flag)
-  {
+  if(even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
   }
-  else
-  {
+  else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
   }
   if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
   }
-  if(even_odd_flag)
-  {
+  if(even_odd_flag) {
     j = init_csg_field(VOLUMEPLUSRAND/2);
   }
-  else
-  {
+  else {
     j = init_csg_field(VOLUMEPLUSRAND);
   }
   if (j != 0) {

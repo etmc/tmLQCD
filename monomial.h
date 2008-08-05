@@ -57,7 +57,7 @@ extern int no_gauge_monomials;
 extern int no_ndpoly_monomials;
 
 int add_monomial(const int type);
-int init_monomials(const int V);
+int init_monomials(const int V, const int even_odd_flag);
 void free_monomials();
 
 void dummy_heatbath(const int id);

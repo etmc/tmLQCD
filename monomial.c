@@ -98,7 +98,7 @@ int add_monomial(const int type) {
 }
 
 
-int init_monomials(const int V) {
+int init_monomials(const int V, const int even_odd_flag) {
   int i, no=0;
   spinor * __pf = NULL;
   for(i = 0; i < no_monomials; i++) {
@@ -133,6 +133,7 @@ int init_monomials(const int V) {
       monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
     }
     monomial_list[i].id = i;
+    monomial_list[i].even_odd_flag = even_odd_flag;
   }
   return(0);
 }

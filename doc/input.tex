@@ -33,7 +33,7 @@ The functions returns $0$, if no error occurs, $2$, if the input file
 could not be opened. If no input file could be opened or if there is
 no value given in the input file for a paramter, default values are
 used. All default values can be found in the file {\ttfamily
-  gwc/src/bin/default\_input\_values.h}. The syntax is allways
+  gwc/src/bin/default\_input\_values.h}. The syntax is mostly
 {\ttfamily keyword = value} and {\ttfamily keyword} must be at the
 beginning of the line. Comments starting with {\ttfamily \#} and empty
 lines are allowed. The order of the lines is not importand as long as
@@ -41,7 +41,7 @@ every keyword appears only once.  If it appears more than once, the
 last appearance becomes valid. The parser is case-insensitive.
 
 In the following a list of the currently (possibly incomplete)
-supported input paramters: 
+supported general input paramters: 
 \begin{enumerate}
 \item {\ttfamily T}:\\
   The global time extension of the lattice. Default is $4$.
@@ -77,10 +77,9 @@ supported input paramters:
 \item {\ttfamily kappa}:\\
   The $\kappa$ value. Default is $0.12$.
 
-\item {\ttfamily RGIC1}:\\
-  Coefficient $c_1$ for the rectangular part in the gauge
-  action. Default value is $0$. $c_0$ is computed automatically with
-  the correct normalization.
+\item {\ttfamily 2KappaMu}:\\
+  Twisted mass parameter (the physical one) for twisted mass
+  action. This is for internal reasons $2\kappa\mu$.
 
 \item {\ttfamily Startcondition}:\\
   The starting condition for a run. Possible values are {\ttfamily
@@ -109,23 +108,8 @@ supported input paramters:
   file {\ttfamily .nstore\_counter} and reads the initial value from
   this file. If it is not existing, the counter will be set to $0$.
 
-\item {\ttfamily RlxdInputFile}:\\
-  Name of input file for the double precision random number
-  generator. Default is {\ttfamily last\_state}. {\bf This option is
-  obsolete since the random number generator status is now saved
-  within the gauge configuration file.}
-
 \item {\ttfamily GaugeConfigInputFile}:\\
   Name of input file for the gauge field. Default is {\ttfamily conf}
-
-\item {\ttfamily mu}:\\
-  Twisted mass parameter (the physical one) for twisted mass
-  action. This is for internal reasons $2\kappa\mu$.
-
-\item {\ttfamily mu2, mu3}:\\
-  Additional masses (not physical) used for preconditioning. Default values are
-  $0$. If set to a non zero value, additional pseudo fermion fields
-  will be used.
 
 \item {\ttfamily Indices=n-m}:\\
   Compute only components $n$ to $m$ of the quark propagator. $n,m$ must
@@ -142,118 +126,16 @@ supported input paramters:
   If set to yes every source is expected to be stored in a seperate file.
   Default is {\ttfamily yes}.
 
-
 \item {\ttfamily BCAngleT=x}:\\
   This set the angle in
   time direction to $\theta_t = 2\pi x$. Default value is
   zero. A value of $1$ would mean antiperiodic boundary conditions in
   time for the fermion fields.
 
-\item {\ttfamily Integrator}:\\
-  Determines the integration scheme to be used:
-  \begin{itemize}
-  \item {\ttfamily LeapFrog}: Simple leap frog algorithm with only one
-    time scale. 
-  \item {\ttfamily SextonWeingarten}: Sexton-Weingarten integration
-    scheme with one time scale.
-  \item {\ttfamily ExtLeapFrog}: leap frog integration scheme with
-    multiple time scales.
-  \item {\ttfamily ExtSextonWeingarten}: Sexton-Weingarten integration scheme with
-    multiple time scales.
-  \item {\ttfamily 2MN}: second order minimal norm with multiple time
-    scales. (see {\ttfamily hep-lat/0505020} )
-  \item {\ttfamily 2MNposition}: second order minimal norm with
-    multiple time scales, but momentum and gauge update interchanged
-    in the order.
-  \end{itemize}
-
-\item {\ttfamily Nsteps}:\\
-  Number of molecular dynamic steps to be performed in the simple
-  {\ttfamily LeapFrog} or the simple {\ttfamily SextonWeingarten}
-  integrators. This keyword has no effect, if other integrators are
-  used.
-
-\item {\ttfamily dtau}:\\
-  step size of molecular dynamic integration in the simple
-  {\ttfamily LeapFrog} or the simple {\ttfamily SextonWeingarten}
-  integrators. This keyword has no effect, if other integrators are
-  used.
-
-\item {\ttfamily tau}:\\
-  Total length of the trajectory in case of a multiple time scale
-  integration scheme ({\ttfamily ExtLeapFrog}, {\ttfamily
-    ExtSextonWeingarten}, {\ttfamily 2MN} and {\ttfamily
-    2MNposition}). This keyword has no effect, if other integrators
-  are used.
-
-\item {\ttfamily IntegrationStepsGauge}:\\
-  Number of steps to be performed in the extented integration
-  algorithms for the gauge action. This keyword has no effect, if
-  other integrators are used.
-
-\item {\ttfamily IntegrationStepsMu}:\\
-  Number of steps to be performed in the extented integration
-  algorithms for the action part with the smallest force
-  contribution. Corresponds to the pseudo fermion action with the
-  ratio of the physical operator with the precoditioning matrix with
-  the smallest additional mass. This keyword has no effect, if
-  other integrators are used.
-
-\item {\ttfamily IntegrationStepsMu2}:\\
-  Number of steps to be performed in the extented integration
-  algorithms for the action part with the next to smallest force
-  contribution. Corresponds to the pseudo fermion action with the
-  ratio of the precoditioning matrix with the smallest additional mass
-  with the operator with the next to smallest mass. This keyword has
-  no effect, if other integrators are used.
-
-\item {\ttfamily IntegrationStepsMu3}:\\
-  Number of steps to be performed in the extented integration
-  algorithms for the action part with the next to next to smallest force
-  contribution. See above. This keyword has
-  no effect, if other integrators are used.
-
 \item {\ttfamily UseRelativePrecision}:\\
   Possible values {\ttfamily yes, no}. Indicates whether relative
   precision is used in the inversions for the force and the acceptance
   computation. Default is no.
-
-\item {\ttfamily ForcePrecision}:\\
-  Sets the squared residuum to be used in the force computation for
-  all three $\mu$ values. This is used, if one of the following is not
-  given.
-
-\item {\ttfamily ForcePrecisionMu}:\\
-  Sets the squared residuum to be used in the force computation for
-  the inversions of $\mu$. Overwrites {\ttfamily ForcePrecision}
-  for this force.
-
-\item {\ttfamily ForcePrecisionMu2}:\\
-  Sets the squared residuum to be used in the force computation for
-  the inversions of $\mu_2$. Overwrites {\ttfamily ForcePrecision}
-  for this force.
-
-\item {\ttfamily ForcePrecisionMu3}:\\
-  Sets the squared residuum to be used in the force computation for
-  the inversions of $\mu_3$. Overwrites {\ttfamily ForcePrecision}
-  for this force.
-
-\item {\ttfamily AcceptancePrecision}:\\
-  Sets the squared residuum to be used in the acceptance step for
-  all three $\mu$ values. This is used, if one of the following is not
-  given.
-
-\item {\ttfamily AcceptancePrecisionMu}:\\
-  Sets the squared residuum to be used in the acceptance step for
-  the inversion with $\mu$.
-
-\item {\ttfamily AcceptancePrecisionMu2}:\\
-  Sets the squared residuum to be used in the acceptance step for
-  the inversion with $\mu_2$.
-
-\item {\ttfamily AcceptancePrecisionMu3}:\\
-  Sets the squared residuum to be used in the acceptance step for
-  the inversion with $\mu_3$.
 
 \item {\ttfamily DebugLevel}:\\
   If set to a value larger than $0$ this causes verbose output:
@@ -277,27 +159,6 @@ supported input paramters:
 \item {\ttfamily ReversibilityCheckIntervall}:\\
   Here one can specify the intervall in terms of trajectories the
   program should check the reversibility violation.
-
-\item {\ttfamily CSGHistoryMu}:\\
-  The number of solutions of the Dirac equation to be saved for the
-  physical $\mu$. If set to zero a zero spinor field is given as a
-  first guess to the solver.
-  
-\item {\ttfamily CSGHistoryMu2}:\\
-  The number of solutions of the Dirac equation to be saved for the
-  first not physical $\mu_2$. If set to zero a zero spinor field is
-  given as a first guess to the solver. 
- 
-\item {\ttfamily CSGHistoryMu2}:\\
-  The number of solutions of the Dirac equation to be saved for the
-  second not physical $\mu_3$. If set to zero a zero spinor field is
-  given as a first guess to the solver.
-  
-\item {\ttfamily 2MNLambdaGauge}:\\
-  The 2MN $\lambda$ parameter for the gauge time scale.
-
-\item {\ttfamily 2MNLambdaMu|Mu2|Mu3}:\\
-  The 2MN $\lambda$ parameters for the pseudo fermion time scales.
 
 \item {\ttfamily GaugeConfigRead|WritePrecision}:\\
   Read/Write gauge configurations in single (32) or double double (64)
@@ -390,6 +251,13 @@ supported input paramters:
   \end{itemize}
   available. However, only the first two are implemented so far.
 
+\item {\ttfamily PerfromOnlineMeasurements}:\\
+  Perform some useful measurements online. This includes so far the
+  $\langle PP\rangle$ and the $\langle PA\rangle$ correlators.
+
+\item {\ttfamily OnlineMeasurementsFreq}:\\
+  The frequency in units of trajectories with which to perform online
+  measurements. 
 
 \end{enumerate}
 
@@ -442,6 +310,236 @@ very same directory.
   fermion fields. (the gauge field is one scale below)
 
 \end{enumerate}
+
+\subsection{Specifying the Action to Simulate}
+
+Following the CHROMA notation we call every part in the action a
+monomial. A monomial is added to the action in the input file in the
+following way:
+\begin{verbatim}
+BeginMonomial TYPE
+  Option = value
+EndMonomial
+\end{verbatim}
+{\ttfamily TYPE} can be one of the following
+\begin{itemize}
+\item {\ttfamily DET}: pseudo fermion representation of the (mass degenerate)\\
+  \[
+  \det(Q^2(\kappa) + \mu^2)
+  \]
+\item {\ttfamily DETRATIO}: pseudo fermion representation of\\
+  \[
+  \det(Q^2(\kappa) + \mu^2)/det(Q^2(\kappa_2) + \mu_2^2)
+  \]
+\item {\ttfamily GAUGE}:\\
+  \[
+  \frac{\beta}{3}\sum_x\left(  c_0\sum_{\substack{
+        \mu,\nu=1\\1\leq\mu<\nu}}^4\{1-\re\tr(U^{1\times1}_{x,\mu,\nu})\}\Bigr. 
+    \Bigl.\ +\ 
+    c_1\sum_{\substack{\mu,\nu=1\\\mu\neq\nu}}^4\{1
+    -\re\tr(U^{1\times2}_{x,\mu,\nu})\}\right)\,  ,
+  \]
+\item {\ttfamily NDPOLY}: polynomial representation of the (possibly
+  non-degenerate) split doublet\\
+  \[
+  \det(Q_{nd}(\bar\epsilon, \bar\mu)
+  \]
+\end{itemize}
+
+Each of them has different options:
+\begin{itemize}
+\item {\ttfamily DET}:
+  \begin{itemize}
+  \item {\ttfamily 2KappaMu}
+  \item {\ttfamily Kappa}
+  \item {\ttfamily Timescale}: the timescale on which to integrate
+    this monomial. Counting starts from zero up to the total number of
+    timescales minus 1.
+  \item {\ttfamily CSGHistory}: the maximal number of vectors to store
+    for the chronolical predictor (for CG and BiCGstab), default $0$.
+  \item {\ttfamily CSGHistory2}: the maximal number of vectors to store
+    for the second chronolical predictor (for BiCGstab only), default
+    $0$.
+  \item {\ttfamily ForcePrecision}: the solver precision used in the
+    force computation
+  \item {\ttfamily AcceptancePrecision}: the solver precision used in the
+    acceptance and heatbath
+  \item {\ttfamily MaxSolverIterations}: default is $5000$
+  \item {\ttfamily Solver}: the solver to be used, either CG or
+    BiCGstab. Default is CG.
+  \item {\ttfamily Name}: a name to be assigned to the monomial. The
+    default is {\ttfamily DET}
+  \end{itemize}
+\item {\ttfamily DETRATIO}: the same as for {\ttfamily DET}, but in
+  addition:
+  \begin{itemize}
+  \item {\ttfamily 2KappaMu2}
+  \item {\ttfamily Kappa2}
+  \item {\ttfamily Name}: a name to be assigned to the monomial. The
+    default is {\ttfamily DETRATIO}
+  \end{itemize}
+\item {\ttfamily GAUGE}: the $\beta$-value is taken from the general
+  input parameter, what is important here is to choose the timescale
+  and the use of the rectangular staples.
+  \begin{itemize}
+  \item {\ttfamily Timescale}: the timescale on which to integrate
+    this monomial. Counting starts from zero up to the total number of
+    timescales minus 1.
+  \item {\ttfamily UseRectangleStaples}: can be yes or no, indicating
+    whether to use also the rectangle staples. No corresponds to pure
+    Wilson plaquette. Default is no.
+  \item {\ttfamily c1}: the value of the parameter $c_1$. The
+    coefficient $c_0$ is computed from $c_0 = 1-8c_1$.
+  \item {\ttfamily Name}: a name to be assigned to the monomial. The
+    default is {\ttfamily GAUGE}
+  \end{itemize}
+  There is maximally one allowed for this type.
+\item {\ttfamily NDPOLY}: more a dummy monomial so far, but switches
+  on the PHMC part for the non-degenerate heavy doublet and lets you
+  specify the timescale on which to integrate this.
+  \begin{itemize}
+  \item {\ttfamily Timescale}: the timescale on which to integrate
+    this monomial. Counting starts from zero up to the total number of
+    timescales minus 1.
+  \item {\ttfamily Name}: a name to be assigned to the monomial. The
+    default is {\ttfamily NDPOLY}
+  \end{itemize}
+  So far there is maximally one allowed for this type.
+\end{itemize}
+
+\subsection{The Integrator}
+
+The Integrator can be specified similar to the monomials:
+\begin{verbatim}
+BeginIntegrator TYPE
+  Option = value
+EndIntegrator
+\end{verbatim}
+with the following types available: {\ttfamily 2MN, 2MNPOSITION,
+  LEAPFROG} and the following options:
+\begin{itemize}
+\item {\ttfamily Tau}
+\item {\ttfamily NumberOfTimescales}
+\item {\ttfamily IntegrationStepsN = M} where {\ttfamily N} is the
+  timescale (as integer value, counting starts from zero and goes up
+  to the number of timescales minus 1) and {\ttfamily M} is the number
+  of integration steps on that timescale. Note, that the integrators
+  or defined recursively.
+\item {\ttfamily LambdaN = F} where {\ttfamily N} is the
+  timescale and {\ttfamily F} is a floating point number specifying
+  the $\lambda$ value to be used on this timescale in case of the
+  second order minimal norm integrator (2MN, 2MNPOSITION). The default
+  value is $0.19$. Note, that $\lambda = 1/6$ is the Sexton-Weingarte
+  scheme. 
+\end{itemize}
+A timescale must not be empty. Currently the maximal number of
+timescales is $10$ and the cannot be more than $10$ monomials per
+timescale. But there can be more that one monomial per timescale.
+
+\subsection{Example Input File}
+
+The following is a typical HMC input file:
+\begin{verbatim}
+L=8
+T=16
+Measurements = 1
+startCondition = continue
+#Startcondition = hot
+beta = 3.30
+2KappaMu = 0.03
+kappa = 0.090
+mubar = 1.
+epsbar = 0.2
+
+#This is a comment
+
+PhmcRecEVInterval = 1
+Nskip = 50
+BCAngleT = 1.
+BCGstabMaxIter = 5000
+CGMaxIter = 1000
+InitialStoreCounter = readin
+UseEvenOdd = yes
+PropagatorPrecision = 64
+ReversibilityCheck = no
+ReversibilityCheckIntervall = 1
+DebugLevel = 3
+
+PerformOnlineMeasurements = yes
+OnlineMeasurementsFreq = 1
+
+BeginMonomial GAUGE
+  UseRectangleStaples = yes
+  RectangleCoefficient = -0.0833333
+  Timescale = 0
+EndMonomial
+
+BeginMonomial DET
+  Timescale = 1
+  2KappaMu = 0.
+  kappa = 0.125
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = det
+  solver   = cg
+  CSGHistory = 10
+  CSGHistory2 = 10
+EndMonomial
+
+BeginMonomial DETRATIO
+  Timescale = 2
+  2KappaMu = 0.03
+  2KappaMu2 = 0.1
+  kappa = 0.125
+  kappa2 = 0.125
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = detrat
+  solver = cg
+EndMonomial
+
+# this is a NDPOLY monomial
+# but commented out
+#BeginMonomial NDPOLY
+#  Timescale = 1
+#EndMonomial
+
+BeginIntegrator 2MN
+  IntegrationSteps0 = 1
+  IntegrationSteps1 = 2
+  IntegrationSteps2 = 3
+  tau = 1.
+  Lambda0 = 0.19
+  NumberOfTimescales = 3
+EndIntegrator
+\end{verbatim}
+
+For the inverter a typical file would look like
+\begin{verbatim}
+L=4
+T=4
+SolverFlag = cg
+DebugLevel = 2
+SolverPrecision = 1.e-14
+InitialStoreCounter = 1
+Indices = 0-7
+ReadSource = no
+Measurements = 1
+mu = 0.0305
+kappa = 0.15
+BCAngleT = 1.
+GaugeConfigInputFile = conf
+UseEvenOdd = no
+UseRelativePrecision=yes
+SplittedPropagator = yes
+SplittedSource = yes
+PropagatorPrecision = 64
+PropagatorType = DiracFermion_Source_Sink_Pairs
+UseStoutSmearing = yes
+StoutRho = 0.15
+StoutNoIterations = 10
+UseSloppyPrecision = yes
+\end{verbatim}
 
 \subsection{Reread functionality}
 

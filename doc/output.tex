@@ -8,15 +8,12 @@ trajectory. Each line has entries with the following meaning:
 \item Plaquette value.
 \item $\Delta H$
 \item $\exp(-\Delta H)$
-\item number of pseudo fermion fields times three integers. The first
-  of the three is the number of CG (BiCGstab)  iterations used in the acceptance
-  step, the second is the number of CG (BiCGstab) iterations used for
-  the force computation and the third -- only different from $0$ if
-  the BiCGstab is used as solver -- the BiCGstab iterations used for
-  the second inversion in the force computation needed if BiCGstab is
-  used.
+\item number of pseudo fermion monomials times two integers. The first
+  of the three is the number of CG or BiCGstab solveriterations used
+  in the acceptance and heatbath steps, the second is the number of CG
+  (BiCGstab) iterations used for the force computation.
 \item Acceptance.
-\item Time in second needed for this trajectory. In case of non MPI
+\item Time in seconds needed for this trajectory. In case of non MPI
   this is zero, because not measured.
 \item Value of the rectangle part in the gauge action, if used.
 \end{enumerate}
