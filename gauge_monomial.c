@@ -35,7 +35,7 @@ void gauge_derivative(const int id) {
     mnl->forcefactor = -mnl->c0 * g_beta/3.0/2.;
   }
   else {
-    mnl->forcefactor = 1.;
+    mnl->forcefactor = -1. * g_beta/3.0/2.;
   }
 
   for(i = 0; i < VOLUME; i++) { 
