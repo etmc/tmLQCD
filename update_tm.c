@@ -128,8 +128,8 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   g_sloppy_precision = 1;
 
   /*run the trajectory*/
-  integrate_md(&Integrator, 1);
-
+  Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
+						   Integrator.no_timescales-1, 1);
   /*   smear the gauge field */
   if(use_stout_flag == 1) stout_smear();
 
@@ -185,7 +185,8 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
     g_sloppy_precision = 1;
     /* run the trajectory back */
-    integrate_md(&Integrator, 0);
+    Integrator.integrate[Integrator.no_timescales-1](-Integrator.tau, 
+						     Integrator.no_timescales-1, 1);
 
     g_sloppy_precision = 0;
 
@@ -284,14 +285,12 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
       }
     }
   }
+  g_update_gauge_copy = 1;
 #ifdef MPI
   xchange_gauge();
   etime = MPI_Wtime();
 #else
   etime = (double)clock()/((double)(CLOCKS_PER_SEC));
-#endif
-#ifdef _GAUGE_COPY
-  update_backward_gauge();
 #endif
 
   if(g_proc_id==0){
@@ -335,6 +334,7 @@ void unstout() {
       _su3_assign(g_gauge_field[ix][mu], g_gauge_field_saved[ix][mu]);
     }
   }
+  g_update_gauge_copy = 1;
   return;
 }
 

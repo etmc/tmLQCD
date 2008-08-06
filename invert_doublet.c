@@ -51,7 +51,6 @@
 #include "init_dirac_halfspinor.h"
 #include "init_chi_spinor_field.h"
 #include "xchange_halffield.h"
-#include "update_backward_gauge.h"
 #include "stout_smear.h"
 #include "invert_eo.h"
 #include "invert_doublet_eo.h"
@@ -241,9 +240,6 @@ int main(int argc,char *argv[]) {
     }
 #ifdef MPI
     xchange_gauge();
-#endif
-#ifdef _GAUGE_COPY
-    update_backward_gauge();
 #endif
 
     /*compute the energy of the gauge field*/

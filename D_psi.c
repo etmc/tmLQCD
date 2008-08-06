@@ -48,6 +48,11 @@ void D_psi(spinor * const P, spinor * const Q){
     exit(1);
   }
 
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+      update_backward_gauge();
+  }
+#endif
 
 # if defined MPI
   xchange_lexicfield(Q);
@@ -451,6 +456,12 @@ void D_psi(spinor * const P, spinor * const Q){
   __alignx(16,P);
   __alignx(16,Q);
 
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+      update_backward_gauge();
+  }
+#endif
+
 #    if (defined MPI && !(defined _NO_COMM))
   xchange_lexicfield(Q);
 #    endif
@@ -697,6 +708,11 @@ void D_psi(spinor * const P, spinor * const Q){
     printf("Program aborted\n");
     exit(1);
   }
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+      update_backward_gauge();
+  }
+#endif
 
 # if defined MPI
   xchange_lexicfield(Q);

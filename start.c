@@ -480,6 +480,8 @@ void unit_g_gauge_field(void) {
       g_gauge_field[ix][mu]=unit_su3();
     }
   }
+  g_update_gauge_copy = 1;
+  return;
 }
 
 
@@ -512,6 +514,8 @@ void random_gauge_field() {
     rlxd_reset(rlxd_state);
   }
 #endif
+  g_update_gauge_copy = 1;
+  return;
 }
 
 void set_spinor_point(spinor * s, const double c){
@@ -637,6 +641,8 @@ void set_gauge_field(const double c) {
       g_gauge_field[ix][mu]=set_su3(c);
     }
   }
+  g_update_gauge_copy = 1;
+  return;
 }
 
 

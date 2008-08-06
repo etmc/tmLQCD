@@ -48,7 +48,6 @@
 #include "init_moment_field.h"
 #include "init_dirac_halfspinor.h"
 #include "xchange_halffield.h"
-#include "update_backward_gauge.h"
 #include "stout_smear.h"
 #include "invert_eo.h"
 #include "phmc.h"
@@ -216,9 +215,6 @@ int main(int argc,char *argv[]) {
     }
 #ifdef MPI
     xchange_gauge();
-#endif
-#ifdef _GAUGE_COPY
-    update_backward_gauge();
 #endif
 
     /*compute the energy of the gauge field*/

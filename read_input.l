@@ -54,6 +54,7 @@ TYPE [0-9A-Z]+
   float c;
   int reread = 0;
   char name[100];
+  char * type;
 
   int verbose = 0;
   int myverbose = 0;
@@ -226,10 +227,10 @@ TYPE [0-9A-Z]+
 ^kappa{SPC}*={SPC}*                        BEGIN(KAPPA);
 ^2KappaMu{SPC}*={SPC}*                     BEGIN(MU);
 ^mubar{SPC}*={SPC}*                        BEGIN(MUBAR);
-^PhmcMubar{SPC}*={SPC}*                    BEGIN(MUBAR);
+^Phmc2KappaMubar{SPC}*={SPC}*              BEGIN(MUBAR);
 ^PhmcExactPolynomial{SPC}*={SPC}*          BEGIN(PPP);
 ^epsbar{SPC}*={SPC}*                       BEGIN(EPSBAR);
-^PhmcEpsBar{SPC}*={SPC}*                   BEGIN(EPSBAR);
+^Phmc2KappaEpsBar{SPC}*={SPC}*             BEGIN(EPSBAR);
 ^beta{SPC}*={SPC}*                         BEGIN(BETA);
 ^Acc_Ptilde{SPC}*={SPC}*                   BEGIN(ACCPTILDE);
 ^PhmcPrecisionPtilde{SPC}*={SPC}*          BEGIN(ACCPTILDE);
@@ -304,7 +305,7 @@ TYPE [0-9A-Z]+
 ^OnlineMeasurementsFreq{SPC}*={SPC}*       BEGIN(ONFREQ);
 
 ^BeginMonomial{SPC}+                       BEGIN(INITMONOMIAL);
-^BeginIntegrator{SPC}+                     BEGIN(INITINTEGRATOR);
+^BeginInt                                  BEGIN(INITINTEGRATOR);
 
 <INITMONOMIAL>{TYPE} {
   current_monomial++;
@@ -441,29 +442,37 @@ TYPE [0-9A-Z]+
   }
 }
 
-<INITINTEGRATOR>{TYPE} {
+<INITINTEGRATOR>egrator{SPC}* {
   Integrator.no_timescales = -1;
   Integrator.tau = 1.;
-  if(strcmp(yytext, "LEAPFROG")==0) {
-    Integrator.type = 5;
-  }
-  else if(strcmp(yytext, "2MN")==0) {
-    Integrator.type = 6;
-  }
-  else if(strcmp(yytext, "2MNPOSITION")==0) {
-    Integrator.type = 7;
-  }
-  else {
-    fprintf(stderr, "Unknown integrator type %s in line %d\n", yytext, line_of_file);
-    exit(1);
-  }
   for(i = 0; i < 10; i++) {
     Integrator.lambda[i] = _default_2mn_lambda;
+    Integrator.type[i] = MN2;
   }
   if(myverbose) printf("initialising integrator of type %s %d line %d\n", yytext, Integrator.type, line_of_file);
   BEGIN(INTEGRATOR);
 }
 <INTEGRATOR>{
+  {SPC}*Type{DIGIT}{SPC}*={SPC}*{TYPE} {
+    type = (char*)malloc(100*sizeof(char));
+    sscanf(yytext, " %[a-zA-Z]%d = %s", name, &a, type);
+    if(strcmp(type, "LEAPFROG")==0) {
+      Integrator.type[a] = LEAPFROG;
+    }
+    else if(strcmp(type, "2MN")==0) {
+      Integrator.type[a] = MN2;
+    }
+    else if(strcmp(type, "2MNPOSITION")==0) {
+      Integrator.type[a] = MN2p;
+    }
+    else {
+      fprintf(stderr, "Unknown integrator type %s in line %d\n", yytext, line_of_file);
+      exit(1);
+    }
+
+    if(myverbose) printf("  timescale %d type = %s line %d\n", a, type, line_of_file);
+    free(type);
+  }
   {SPC}*IntegrationSteps{DIGIT}{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z]%d = %d", name, &a, &b);
     if(myverbose) printf("  timescale %d steps=%d line %d\n", a, b, line_of_file);
@@ -479,6 +488,10 @@ TYPE [0-9A-Z]+
   {SPC}*NumberOfTimescales{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     if(myverbose) printf("  Number of timescales set to %d line %d\n", a, line_of_file);
+    if(a > 10) {
+      if(g_proc_id == 0) fprintf(stderr, "maximal number of timescales is 10! Aborting...!\n");
+      exit(-1);
+    }
     Integrator.no_timescales = a;
     BEGIN(INTEGRATOR);
   }

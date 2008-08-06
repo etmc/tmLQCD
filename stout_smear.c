@@ -146,9 +146,7 @@ int stout_smear_gauge_field(const double rho , const int no_iters) {
     /** update boundaries for parallel stuff **/
     xchange_gauge();
 #endif
-#ifdef _GAUGE_COPY
-    update_backward_gauge();
-#endif
+    g_update_gauge_copy = 1;
     
     /*
      *  here we save the intermediate smeares gauge fields a large array

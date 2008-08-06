@@ -12,137 +12,24 @@
 #include "su3adj.h"
 #include "su3spinor.h"
 #include "expo.h"
-#include "ranlxd.h"
 #include "sse.h"
-#include "linalg_eo.h"
-#include "start.h"
-#include "linsolve.h"
 #include "xchange.h"
-#include "deriv_Sb.h"
-#include "Hopping_Matrix.h"
-#include "tm_operators.h"
-#include "solver/solver.h"
 #include "get_rectangle_staples.h"
 #include "gamma.h"
 #include "get_staples.h"
-#include "update_backward_gauge.h"
 #include "read_input.h"
 #include "stout_smear.h"
 #include "stout_smear_force.h"
 #include "phmc.h"
 #include "hybrid_update.h"
 
-extern int ITER_MAX_BCG;
-extern int ITER_MAX_CG;
-
 
 /***********************************
  *
- * Computes the new gauge momenta
+ * Computes the new gauge field
  *
  ***********************************/
 
-void gauge_momenta(double step) 
-{
-
-  int i, j, mu;
-  static su3 v, w;
-  su3 *z, force;
-  static su3adj deriv;
-  su3adj *xm;
-  static double st, st1;
-  double sum=0., sum1=0., max=0., max2=0.;
-  double sum2=0.;
-  double atime=0., etime=0.;
-
-  extern su3 * stout_force_field;
-  extern su3 ** g_stout_force_field;
-#ifdef _KOJAK_INST
-#pragma pomp inst begin(gaugemomenta)
-#endif
-/*   int x0, x1, x2, x3; */
-
-  st  = -step * g_rgi_C0 * g_beta/3.0;
-  st1 = -step * g_rgi_C1 * g_beta/3.0;
-
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
-    for(i = 0; i < VOLUME; i++)
-    { 
-      for(mu=0;mu<4;mu++)
-      {
-        z=&g_gauge_field[i][mu];
-        xm=&moment[i][mu];
-        v=get_staples(i,mu, g_gauge_field); 
-        _su3_times_su3d(w,*z,v);
-        _trace_lambda(deriv,w);
-        if(g_debug_level > 0) 
-        {
-          sum2 = _su3adj_square_norm(deriv);
-          sum+= sum2;
-          if(sum2 > max) 
-            max = sum2;
-        }
-        _minus_const_times_mom(*xm,st,deriv);
-
-        if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) 
-        {
-          get_rectangle_staples(&v, i, mu);
-          _su3_times_su3d(w, *z, v);
-          _trace_lambda(deriv, w);
-          if(g_debug_level > 0) 
-          {
-            sum2 =_su3adj_square_norm(deriv);
-            sum1+= sum2;
-            if(sum2 > max2) 
-              max2 = sum2;
-          }
-          _minus_const_times_mom(*xm, st1, deriv);
-        }
-      }
-    }
-#ifdef MPI
-  etime = MPI_Wtime();
-#else
-  etime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
-
-  if(g_debug_level > 0) {
-#ifdef MPI
-    MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    sum = sum2;
-    MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-    max = sum2;
-#endif
-    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-#ifdef MPI
-      MPI_Reduce(&sum1, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-      sum1 = sum2;
-      MPI_Reduce(&max2, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-      max2 = sum2;
-#endif
-      if(g_proc_id == 0) {
-	/* Here is a factor 1/4 missing            */
-	printf("gaugerec %e max %e factor %e\n", sum1/((double)(VOLUME*g_nproc))/4., max2,
-	       g_rgi_C1*g_rgi_C1*g_beta*g_beta/9);
-	fflush(stdout);
-      }
-    }
-
-    if(g_proc_id == 0) {
-      /* Here is a factor 1/4 missing            */
-      printf("gaugeplaq %e max %e factor %e time/s %f\n", sum/((double)(VOLUME*g_nproc))/4., max, 
-	     g_rgi_C0*g_rgi_C0*g_beta*g_beta/9, etime-atime);
-      fflush(stdout);
-    }
-  }
-#ifdef _KOJAK_INST
-#pragma pomp inst end(gaugemomenta)
-#endif
-}
 
 
 /*----------------------------------------------------------------------------*/
@@ -174,11 +61,11 @@ void update_gauge(double step) {
   xchange_gauge();
 #endif
   /*
-   *
    * The backward copy of the gauge field
    * is not updated here!
-   *
    */
+  g_update_gauge_copy = 1;
+  return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(updategauge)
 #endif

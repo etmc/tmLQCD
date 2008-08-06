@@ -35,7 +35,6 @@
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
 #include "init_dirac_halfspinor.h"
-#include "update_backward_gauge.h"
 #include "test/check_geometry.h"
 #include "xchange_halffield.h"
 #include "phmc.h"
@@ -233,11 +232,6 @@ int main(int argc,char *argv[])
 #ifdef MPI
   /*For parallelization: exchange the gaugefield */
   xchange_gauge();
-#endif
-
-
-#ifdef _GAUGE_COPY
-  update_backward_gauge();
 #endif
 
   /*initialize the pseudo-fermion fields*/

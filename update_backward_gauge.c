@@ -34,6 +34,8 @@ void update_backward_gauge() {
     kb = g_idn[ g_eo2lexic[ix] ][3];
     _su3_assign(g_gauge_field_copy[1][ix][3], g_gauge_field[kb][3]);
   }
+  g_update_gauge_copy = 0;
+  return;
 }
 
 #else
@@ -77,6 +79,8 @@ void update_backward_gauge() {
     kb=g_idn[g_eo2lexic[ix]][3];
     _su3_assign(g_gauge_field_copy[ix][7],g_gauge_field[kb][3]);
   }
+  g_update_gauge_copy = 0;
+  return;
 }
 
 #endif

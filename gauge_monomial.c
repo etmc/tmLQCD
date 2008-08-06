@@ -15,7 +15,6 @@
 #include "get_rectangle_staples.h"
 #include "gamma.h"
 #include "get_staples.h"
-#include "update_backward_gauge.h"
 #include "read_input.h"
 #include "observables.h"
 #include "measure_rectangles.h"

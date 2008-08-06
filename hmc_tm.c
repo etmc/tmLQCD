@@ -41,7 +41,6 @@
 #include "sighandler.h"
 /* #include "hybrid_update.h" */
 #include "update_tm.h"
-#include "update_backward_gauge.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
 #include "init_spinor_field.h"
@@ -354,9 +353,6 @@ int main(int argc,char *argv[]) {
   /*For parallelization: exchange the gaugefield */
 #ifdef MPI
   xchange_gauge();
-#endif
-#ifdef _GAUGE_COPY
-  update_backward_gauge();
 #endif
 
   if(g_running_phmc) init_phmc();

@@ -84,6 +84,7 @@
 #endif
 #include "boundary.h"
 #include "init_dirac_halfspinor.h"
+#include "update_backward_gauge.h"
 #include "Hopping_Matrix.h"
 
 #if defined _USE_HALFSPINOR
@@ -105,6 +106,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #pragma pomp inst begin(hoppingmatrix)
 #endif
 
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge();
+  }
+#endif
   /* We will run through the source vector now */
   /* instead of the solution vector            */
   s = k;
@@ -516,6 +522,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #pragma pomp inst begin(hoppingmatrix)
 #endif
 #pragma disjoint(*s, *U)
+
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge();
+  }
+#endif
 
   __alignx(16, l);
   __alignx(16, k);
@@ -1064,6 +1076,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #pragma disjoint(*l, *k, *U, *s);
 #endif
 
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge();
+  }
+#endif
+
   if(k == l){
     printf("Error in H_psi (simple.c):\n");
     printf("Arguments k and l must be different\n");
@@ -1302,7 +1320,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       
     /**************** loop over all lattice sites ****************/
     ix=0;
-/* #pragma ivdep*/
+    /* #pragma ivdep*/
     for(i = 0; i < (VOLUME)/2; i++){
       _vector_assign(rs.s0, (*s).s0);
       _vector_assign(rs.s1, (*s).s1);
@@ -1396,7 +1414,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     }
 
     ix = 0;
-/* #pragma ivdep */
+    /* #pragma ivdep */
     for(i = 0; i < (VOLUME)/2; i++){
       /*********************** direction +0 ************************/
       _vector_assign(rs.s0, (*phi[ix]).s0);
@@ -1508,6 +1526,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   static spinor rs;
   
   /* for parallelization */
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge();
+  }
+#endif
+
 #    if (defined MPI && !defined _NO_COMM)
   xchange_field(k, ieo);
 #    endif
@@ -1935,6 +1959,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   __alignx(16,l);
   __alignx(16,k);
 
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge();
+  }
+#endif
+
 #    if (defined MPI && !(defined _NO_COMM))
   xchange_field(k, ieo);
 #    endif
@@ -2222,6 +2252,12 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
   spinor * restrict r,* restrict sp,* restrict sm;
   spinor temp;
 #pragma disjoint(temp, *sp, *sm, *r, *up, *um)
+
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge();
+  }
+#endif
 
   /* for parallelization */
 #    if (defined MPI && !(defined _NO_COMM))
@@ -2515,6 +2551,12 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
   su3 * restrict up, * restrict um;
   spinor * restrict r, * restrict sp, * restrict sm;
   spinor temp;
+
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge();
+  }
+#endif
 
   /* for parallelization */
 #    if (defined MPI && !(defined _NO_COMM))

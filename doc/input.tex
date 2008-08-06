@@ -272,10 +272,10 @@ reads
 For more details see also the file {\ttfamily Status-Phmc.pdf} in the
 very same directory.
 \begin{enumerate}
-\item {\ttfamily PhmcMuBar}:\\
+\item {\ttfamily Phmc2KappaMuBar}:\\
   The average mass of the heavy doublet multiplied with $2\kappa$
 
-\item {\ttfamily PhmcEpsBar}:\\
+\item {\ttfamily Phmc2KappaEpsBar}:\\
   The splitting mass multiplied with $2\kappa$
 
 \item {\ttfamily PhmcNoFlavours}:\\
@@ -411,12 +411,11 @@ Each of them has different options:
 
 The Integrator can be specified similar to the monomials:
 \begin{verbatim}
-BeginIntegrator TYPE
+BeginIntegrator
   Option = value
 EndIntegrator
 \end{verbatim}
-with the following types available: {\ttfamily 2MN, 2MNPOSITION,
-  LEAPFROG} and the following options:
+with the following options available:
 \begin{itemize}
 \item {\ttfamily Tau}
 \item {\ttfamily NumberOfTimescales}
@@ -431,6 +430,12 @@ with the following types available: {\ttfamily 2MN, 2MNPOSITION,
   second order minimal norm integrator (2MN, 2MNPOSITION). The default
   value is $0.19$. Note, that $\lambda = 1/6$ is the Sexton-Weingarte
   scheme. 
+\item {\ttfamily TypeN = TYPE}: set the type of integrator to be used
+  on the timescale {\ttfamily N}. The following types available:
+  {\ttfamily 2MN, 2MNPOSITION, LEAPFROG}
+
+  The position versions are not compatible with the velocity versions,
+  thus they must not be used together.
 \end{itemize}
 A timescale must not be empty. Currently the maximal number of
 timescales is $10$ and the cannot be more than $10$ monomials per

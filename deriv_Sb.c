@@ -416,6 +416,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
   } 
   ioff2=(VOLUME+RAND)/2-ioff;
 
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge();
+  }
+#endif
   /* for parallelization */
 #ifdef MPI
   xchange_2fields(k, l, ieo);

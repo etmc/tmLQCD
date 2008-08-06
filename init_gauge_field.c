@@ -93,6 +93,7 @@ int init_gauge_field(const int V, const int back) {
     }
   }
 #  endif
+  g_update_gauge_copy = 1;
   return(0);
 }
 
