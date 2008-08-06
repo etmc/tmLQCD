@@ -278,9 +278,9 @@ very same directory.
 \item {\ttfamily Phmc2KappaEpsBar}:\\
   The splitting mass multiplied with $2\kappa$
 
-\item {\ttfamily PhmcNoFlavours}:\\
-  no. of flavours to simulate. Possible options are {\ttfamily 2+1+1}
-  or just {\ttfamily 2}.
+%\item {\ttfamily PhmcNoFlavours}:\\
+%  no. of flavours to simulate. Possible options are {\ttfamily 2+1+1}
+%  or just {\ttfamily 2}.
 
 \item {\ttfamily PhmcRecEVInterval}:\\
   If you want to calculate the eigenvalues every n'th trajectory
@@ -303,11 +303,11 @@ very same directory.
   Precision of the more precise polynomial $\tilde P$ used in the
   heat-bath and the acceptance step of the PHMC.
 
-\item {\ttfamily TimeScaleHeavyDoublet}:\\
-  the time scale on which to integrate the heavy doublet. Must be an
-  integer larger or equal than zero. Note that 0 is the smallest possible
-  timescale, which is the smallest timescale available for pseudo
-  fermion fields. (the gauge field is one scale below)
+%\item {\ttfamily TimeScaleHeavyDoublet}:\\
+%  the time scale on which to integrate the heavy doublet. Must be an
+%  integer larger or equal than zero. Note that 0 is the smallest possible
+%  timescale, which is the smallest timescale available for pseudo
+%  fermion fields. (the gauge field is one scale below)
 
 \end{enumerate}
 
@@ -431,15 +431,15 @@ with the following options available:
   value is $0.19$. Note, that $\lambda = 1/6$ is the Sexton-Weingarte
   scheme. 
 \item {\ttfamily TypeN = TYPE}: set the type of integrator to be used
-  on the timescale {\ttfamily N}. The following types available:
+  on timescale {\ttfamily N}. The following types available:
   {\ttfamily 2MN, 2MNPOSITION, LEAPFROG}
 
   The position versions are not compatible with the velocity versions,
   thus they must not be used together.
 \end{itemize}
 A timescale must not be empty. Currently the maximal number of
-timescales is $10$ and the cannot be more than $10$ monomials per
-timescale. But there can be more that one monomial per timescale.
+timescales is $10$ and there cannot be more than $10$ monomials per
+timescale. But there can be more than one monomial per timescale.
 
 \subsection{Example Input File}
 
@@ -497,6 +497,7 @@ BeginMonomial DETRATIO
   2KappaMu2 = 0.1
   kappa = 0.125
   kappa2 = 0.125
+  maxiter = 20000
   AcceptancePrecision =  1.e-20
   ForcePrecision = 1.e-12
   Name = detrat
@@ -509,7 +510,10 @@ EndMonomial
 #  Timescale = 1
 #EndMonomial
 
-BeginIntegrator 2MN
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  Type2 = 2MN
   IntegrationSteps0 = 1
   IntegrationSteps1 = 2
   IntegrationSteps2 = 3

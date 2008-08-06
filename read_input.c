@@ -4146,7 +4146,7 @@ YY_RULE_SETUP
     Integrator.lambda[i] = _default_2mn_lambda;
     Integrator.type[i] = MN2;
   }
-  if(myverbose) printf("initialising integrator of type %s %d line %d\n", yytext, Integrator.type, line_of_file);
+  if(myverbose) printf("initialising integrator line %d\n", line_of_file);
   BEGIN(INTEGRATOR);
 }
 	YY_BREAK

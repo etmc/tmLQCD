@@ -56,7 +56,10 @@ EndMonomial
 #  Timescale = 1
 #EndMonomial
 
-BeginIntegrator 2MN
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  Type2 = 2MN
   IntegrationSteps0 = 1
   IntegrationSteps1 = 2
   IntegrationSteps2 = 3
