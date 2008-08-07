@@ -96,6 +96,11 @@ supported general input paramters:
   value is $3$. For the {\ttfamily invert} programme this counts the
   number of gauge configurations to invert on.
 
+\item {ThermalisationSweeps}:\\
+  As longer as the number of trajectories is smaller than this number
+  the acceptance test will be discarded. This might help to faster
+  equilibrate the system.
+
 \item {\ttfamily Nskip}:\\
   Number of produced configurations to skip (i.e. not written to
   disk). Default value is $5$. For the {\ttfamily invert} programme
@@ -261,7 +266,7 @@ supported general input paramters:
 
 \end{enumerate}
 
-\noindent PHMC related input parameters, where the heavy part of the actions
+\noindent $n_f=2+1+1$ related input parameters, where the heavy part of the actions
 reads
 \begin{equation}
   \label{eq:haction}
@@ -272,42 +277,11 @@ reads
 For more details see also the file {\ttfamily Status-Phmc.pdf} in the
 very same directory.
 \begin{enumerate}
-\item {\ttfamily Phmc2KappaMuBar}:\\
+\item {\ttfamily 2KappaMuBar}:\\
   The average mass of the heavy doublet multiplied with $2\kappa$
 
-\item {\ttfamily Phmc2KappaEpsBar}:\\
+\item {\ttfamily 2KappaEpsBar}:\\
   The splitting mass multiplied with $2\kappa$
-
-%\item {\ttfamily PhmcNoFlavours}:\\
-%  no. of flavours to simulate. Possible options are {\ttfamily 2+1+1}
-%  or just {\ttfamily 2}.
-
-\item {\ttfamily PhmcRecEVInterval}:\\
-  If you want to calculate the eigenvalues every n'th trajectory
-  then set this parameter to n if you want no eigenvalues set this to 0
-  during thermalization you should set this to 1 or 2 to follow the evolution
-  of smallest and largest eigenvalue to adjust the approximation interval
-  of the polynomial
-
-\item {\ttfamily PhmcStildeMin}:\\
-  lower bound for the approximation interval of the polynomial
-
-\item {\ttfamily PhmcStildeMax}:\\
-  upper bound for the approximation interval of the polynomial
-
-\item {\ttfamily PhmcDegreeOfP}:\\
-  degree of the less precise polynomial $P$. Must be identical to the
-  degree used to compute the roots.
-
-\item {\ttfamily PhmcPrecisionPtilde}:\\
-  Precision of the more precise polynomial $\tilde P$ used in the
-  heat-bath and the acceptance step of the PHMC.
-
-%\item {\ttfamily TimeScaleHeavyDoublet}:\\
-%  the time scale on which to integrate the heavy doublet. Must be an
-%  integer larger or equal than zero. Note that 0 is the smallest possible
-%  timescale, which is the smallest timescale available for pseudo
-%  fermion fields. (the gauge field is one scale below)
 
 \end{enumerate}
 
@@ -398,11 +372,39 @@ Each of them has different options:
   on the PHMC part for the non-degenerate heavy doublet and lets you
   specify the timescale on which to integrate this.
   \begin{itemize}
+
   \item {\ttfamily Timescale}: the timescale on which to integrate
     this monomial. Counting starts from zero up to the total number of
     timescales minus 1.
+
   \item {\ttfamily Name}: a name to be assigned to the monomial. The
     default is {\ttfamily NDPOLY}
+
+  \item {\ttfamily ComputeEVFreq}:
+    If you want to calculate the eigenvalues every n'th trajectory
+    then set this parameter to n if you want no eigenvalues set this to 0
+    during thermalization you should set this to 1 or 2 to follow the evolution
+    of smallest and largest eigenvalue to adjust the approximation interval
+    of the polynomial
+
+  \item {\ttfamily ComputeOnlyEVs}: Computes only once at the very
+    beginning of the run the eigenvalues of the heavy split operator
+    and exits.
+
+  \item {\ttfamily StildeMin}: lower bound for the approximation interval of the polynomial
+
+  \item {\ttfamily StildeMax}:
+    upper bound for the approximation interval of the polynomial
+
+  \item {\ttfamily DegreeOfMDPolynomial}:
+    degree of the less precise polynomial $P$. Must be identical to the
+    degree used to compute the roots.
+
+  \item {\ttfamily PrecisionPtilde}:
+    Precision of the more precise polynomial $\tilde P$ used in the
+    heat-bath and the acceptance step of the PHMC.
+
+  \item {\ttfamily PrecisionHfinal}:
   \end{itemize}
   So far there is maximally one allowed for this type.
 \end{itemize}

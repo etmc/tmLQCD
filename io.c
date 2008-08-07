@@ -1740,8 +1740,7 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   fprintf(parameterfile, "# g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n",g_beta,g_kappa,g_ka_csw_8);
   fprintf(parameterfile, "# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
   if(inv != 1) {
-    fprintf(parameterfile, "# ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n"
-	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
+    fprintf(parameterfile, "# ITER_MAX_BCG=%d\n", ITER_MAX_BCG);
     fprintf(parameterfile, "# dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n",
 	    dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
     fprintf(parameterfile, "# mu = %f, mu2=%f, mu3=%f\n ", g_mu, g_mu2, g_mu3);

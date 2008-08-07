@@ -33,34 +33,36 @@ double measure_gauge_action() {
   static double ga,ac,gas; 
   static double ks,kc,tr,ts,tt;
 
-  kc=0.0; ks=0.0;
-  for (ix=0;ix<VOLUME;ix++){
-    for (mu1=0;mu1<3;mu1++){ 
-      ix1=g_iup[ix][mu1];
-      for (mu2=mu1+1;mu2<4;mu2++){ 
-	ix2=g_iup[ix][mu2];
-	v=&g_gauge_field[ix][mu1];
-	w=&g_gauge_field[ix1][mu2];
-	_su3_times_su3(pr1,*v,*w);
-	v=&g_gauge_field[ix][mu2];
-	w=&g_gauge_field[ix2][mu1];
-	_su3_times_su3(pr2,*v,*w);
-	_trace_su3_times_su3d(ac,pr1,pr2);
-	tr=ac+kc;
-	ts=tr+ks;
-	tt=ts-ks;
-	ks=ts;
-	kc=tr-tt;
+  if(g_update_gauge_energy) {
+    kc=0.0; ks=0.0;
+    for (ix=0;ix<VOLUME;ix++){
+      for (mu1=0;mu1<3;mu1++){ 
+	ix1=g_iup[ix][mu1];
+	for (mu2=mu1+1;mu2<4;mu2++){ 
+	  ix2=g_iup[ix][mu2];
+	  v=&g_gauge_field[ix][mu1];
+	  w=&g_gauge_field[ix1][mu2];
+	  _su3_times_su3(pr1,*v,*w);
+	  v=&g_gauge_field[ix][mu2];
+	  w=&g_gauge_field[ix2][mu1];
+	  _su3_times_su3(pr2,*v,*w);
+	  _trace_su3_times_su3d(ac,pr1,pr2);
+	  tr=ac+kc;
+	  ts=tr+ks;
+	  tt=ts-ks;
+	  ks=ts;
+	  kc=tr-tt;
+	}
       }
     }
-  }
-  ga=(kc+ks)/3.0;
+    ga=(kc+ks)/3.0;
 #ifdef MPI
-  MPI_Allreduce(&ga, &gas, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return gas;
-#else
-  return ga;
+    MPI_Allreduce(&ga, &gas, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    ga = gas;
 #endif
+    g_update_gauge_energy = 0;
+  }
+  return ga;
 }
 
 

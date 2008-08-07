@@ -423,8 +423,9 @@ int main(int argc,char *argv[]) {
     if(return_check_flag == 1 && trajectory_counter%return_check_interval == 0) return_check = 1;
     else return_check = 0;
 
-    Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename, 
-		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag);
+    Rate += update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check, Ntherm<trajectory_counter);
+/*     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename,  */
+/* 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag); */
 
     /* Measure the Polyakov loop in direction 2 and 3:*/
     polyakov_loop(&pl, 2); 

@@ -50,10 +50,8 @@ extern su3 ** g_gauge_field_saved;
 void stout_smear();
 void unstout();
 
-int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_energy, 
-    char * filename, const double dtau, const int Nsteps, const int nsmall,
-    const double tau, int * n_int, const int return_check,
-    double * lambda, const int rngrepro) {
+int update_tm(double *plaquette_energy, double *rectangle_energy, 
+	      char * filename, const int return_check, const int acctest) {
 
   su3 *v, *w;
   static int ini_g_tmp = 0;
@@ -176,7 +174,9 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
   else {
     accept = 0;
   }
-
+  if(!acctest) {
+    accept = 1;
+  }
   /* Here a reversibility test is performed */
   /* The trajectory is integrated back      */
   if(return_check == 1) {
@@ -286,6 +286,8 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
   }
   g_update_gauge_copy = 1;
+  g_update_gauge_energy = 1;
+  g_update_rectangle_energy = 1;
 #ifdef MPI
   xchange_gauge();
   etime = MPI_Wtime();
@@ -307,7 +309,7 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
       }
     }
     fprintf(datafile, "%d %e", accept, etime-atime);
-    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+    if(g_rgi_C1 > 0. || g_rgi_C1 < 0) {
       fprintf(datafile, " %e", (*rectangle_energy)/(12*VOLUME*g_nproc));
     }
     fprintf(datafile, "\n");

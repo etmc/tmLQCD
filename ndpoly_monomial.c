@@ -131,7 +131,6 @@ void ndpoly_heatbath(const int id) {
   double temp;
   monomial * mnl = &monomial_list[id];
 
-  printf("called ndpoly_heatbath with g_running_phmc = %d\n", g_running_phmc);
   (*mnl).energy0 = 0.;
   random_spinor_field(g_chi_up_spinor_field[0], VOLUME/2, (*mnl).rngrepro);
   (*mnl).energy0 = square_norm(g_chi_up_spinor_field[0], VOLUME/2);
@@ -225,6 +224,9 @@ void ndpoly_heatbath(const int id) {
 
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)){
     printf("PHMC: Norm of BHB up + BHB dn squared %e \n\n", temp);
+  }
+  if(g_proc_id == 0 && g_debug_level > 3) {
+    printf("called ndpoly_heatbath for id %d with g_running_phmc = %d\n", id, g_running_phmc);
   }
   return;
 }
@@ -390,6 +392,9 @@ double ndpoly_acc(const int id) {
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
       printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[0], (*mnl).energy1);
     }
+  }
+  if(g_proc_id == 0 && g_debug_level > 3) {
+    printf("called ndpoly_acc for id %d with g_running_phmc = %d\n", id, g_running_phmc);
   }
   /* END IF PHMC */
   return(mnl->energy1 - mnl->energy0);

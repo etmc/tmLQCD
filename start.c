@@ -481,6 +481,8 @@ void unit_g_gauge_field(void) {
     }
   }
   g_update_gauge_copy = 1;
+  g_update_gauge_energy = 1;
+  g_update_rectangle_energy = 1;
   return;
 }
 
@@ -515,6 +517,8 @@ void random_gauge_field() {
   }
 #endif
   g_update_gauge_copy = 1;
+  g_update_gauge_energy = 1;
+  g_update_rectangle_energy = 1;
   return;
 }
 
@@ -642,6 +646,8 @@ void set_gauge_field(const double c) {
     }
   }
   g_update_gauge_copy = 1;
+  g_update_gauge_energy = 1;
+  g_update_rectangle_energy = 1;
   return;
 }
 

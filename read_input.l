@@ -50,6 +50,7 @@ TYPE [0-9A-Z]+
   extern int no_monomials;
   monomial * mnl;
   int comment_caller;
+  int name_caller;
   int a,b;
   float c;
   int reread = 0;
@@ -126,9 +127,6 @@ TYPE [0-9A-Z]+
 %x THERMSWEEPS
 %x NMEAS
 %x KAPPA
-%x ACCPTILDE
-%x ACCHFIN
-%x RECEV
 %x MUBAR
 %x EPSBAR
 %x MU
@@ -165,8 +163,6 @@ TYPE [0-9A-Z]+
 %x BOUND
 %x SITER
 %x SPREC
-%x MNR
-%x RGIC
 %X READSOURCE
 %x SOURCEFORMAT
 %x SOURCEFILE
@@ -182,20 +178,13 @@ TYPE [0-9A-Z]+
 %x USESTOUT
 %x STOUTRHO
 %x STOUTITER
-%x PHMCFLAV
 %x COMPUTEEVS
-%x PCOMPUTEEVS
-%x PPP
-%x SMAX
-%x SMIN
-%x DEGP
 %x SPLITPROP
 %x SPLITSOURCE
 %x SRCLOC
 %x SUBEVCG
 %x NOEV
 %x PRECEV
-%x HEAVYTS
 %x EO
 %x WRPROPFLAG
 %x PROPPREC
@@ -207,7 +196,9 @@ TYPE [0-9A-Z]+
 %x INTEGRATOR
 
 %x INITMONOMIAL
-%x MONOMIAL
+%x DETMONOMIAL
+%x GAUGEMONOMIAL
+%x NDPOLYMONOMIAL
 %x MNAME
 %x MSOLVER
 
@@ -226,18 +217,9 @@ TYPE [0-9A-Z]+
 ^NRZProcs{SPC}*={SPC}*                     BEGIN(NPROCZ);
 ^kappa{SPC}*={SPC}*                        BEGIN(KAPPA);
 ^2KappaMu{SPC}*={SPC}*                     BEGIN(MU);
-^mubar{SPC}*={SPC}*                        BEGIN(MUBAR);
-^Phmc2KappaMubar{SPC}*={SPC}*              BEGIN(MUBAR);
-^PhmcExactPolynomial{SPC}*={SPC}*          BEGIN(PPP);
-^epsbar{SPC}*={SPC}*                       BEGIN(EPSBAR);
-^Phmc2KappaEpsBar{SPC}*={SPC}*             BEGIN(EPSBAR);
+^2KappaMubar{SPC}*={SPC}*                  BEGIN(MUBAR);
+^2KappaEpsBar{SPC}*={SPC}*                 BEGIN(EPSBAR);
 ^beta{SPC}*={SPC}*                         BEGIN(BETA);
-^Acc_Ptilde{SPC}*={SPC}*                   BEGIN(ACCPTILDE);
-^PhmcPrecisionPtilde{SPC}*={SPC}*          BEGIN(ACCPTILDE);
-^Acc_Hfin{SPC}*={SPC}*                     BEGIN(ACCHFIN);
-^PhmcPrecisionHfin{SPC}*={SPC}*            BEGIN(ACCHFIN);
-^recev{SPC}*={SPC}*                        BEGIN(RECEV);
-^PhmcRecEVInterval{SPC}*={SPC}*            BEGIN(RECEV);
 ^NoEigenvalues{SPC}*={SPC}*                BEGIN(NOEV);
 ^EigenvaluePrecision{SPC}*={SPC}*          BEGIN(PRECEV);
 ^seed{SPC}*={SPC}*                         BEGIN(SEED);
@@ -270,7 +252,6 @@ TYPE [0-9A-Z]+
 ^BCAngleT{SPC}*={SPC}*                     BEGIN(BOUND);
 ^MaxSolverIterations{SPC}*={SPC}*          BEGIN(SITER);
 ^SolverPrecision{SPC}*={SPC}*              BEGIN(SPREC);
-^MassNumber{SPC}*={SPC}*                   BEGIN(MNR);
 ^ReadSource{SPC}*={SPC}*                   BEGIN(READSOURCE);
 ^SourceInputFilename{SPC}*={SPC}*          BEGIN(SOURCEFILE);
 ^SourceFormat{SPC}*={SPC}*                 BEGIN(SOURCEFORMAT);
@@ -289,12 +270,7 @@ TYPE [0-9A-Z]+
 ^UseStoutSmearing{SPC}*={SPC}*             BEGIN(USESTOUT);
 ^StoutRho{SPC}*={SPC}*                     BEGIN(STOUTRHO);
 ^StoutNoIterations{SPC}*={SPC}*            BEGIN(STOUTITER);
-^PhmcNoFlavours{SPC}*={SPC}*               BEGIN(PHMCFLAV);
-^PhmcComputeOnlyEVs{SPC}*={SPC}*           BEGIN(PCOMPUTEEVS);
 ^ComputeEVs{SPC}*={SPC}*                   BEGIN(COMPUTEEVS);
-^PhmcStildeMax{SPC}*={SPC}*                BEGIN(SMAX);
-^PhmcStildeMin{SPC}*={SPC}*                BEGIN(SMIN);
-^PhmcDegreeOfP{SPC}*={SPC}*                BEGIN(DEGP);
 ^SplittedPropagator{SPC}*={SPC}*           BEGIN(SPLITPROP);
 ^SplittedSource{SPC}*={SPC}*               BEGIN(SPLITSOURCE);
 ^SourceLocation{SPC}*={SPC}*               BEGIN(SRCLOC);
@@ -341,15 +317,32 @@ TYPE [0-9A-Z]+
   if(myverbose) printf("initialising monomial with type %s %d line %d\n", yytext, mnl->type, line_of_file);
   if(myverbose) printf("monomial has id %d\n", current_monomial);
 
-  /* here we need to set default values */
-  BEGIN(MONOMIAL);
+  if(mnl->type == GAUGE) BEGIN(GAUGEMONOMIAL);
+  else if(mnl->type == NDPOLY) BEGIN(NDPOLYMONOMIAL);
+  else BEGIN(DETMONOMIAL);
 }
-<MONOMIAL>{
+
+
+
+<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL>{
   {SPC}*Timescale{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->timescale = a;
     if(myverbose) printf("  timescales set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
+  {SPC}*Name{SPC}*={SPC}* {
+    name_caller = YY_START;   
+    BEGIN(MNAME);
+  }
+  ^EndMonomial{SPC}*  {
+    if(myverbose) printf("monomial %d parsed line %d\n\n", current_monomial, line_of_file);
+    BEGIN(0);
+  }
+}
+
+
+
+<DETMONOMIAL>{
   {SPC}*2KappaMu{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu = c;
@@ -396,6 +389,11 @@ TYPE [0-9A-Z]+
     mnl->maxiter = a;
     if(myverbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
+  {SPC}*Solver{SPC}*={SPC}* BEGIN(MSOLVER);
+}
+
+
+<GAUGEMONOMIAL>{
   {SPC}*UseRectangleStaples{SPC}*={SPC}*yes {
     mnl->use_rectangles = 1;
     g_dbw2rand = 1;
@@ -403,6 +401,7 @@ TYPE [0-9A-Z]+
   }
   {SPC}*UseRectangleStaples{SPC}*={SPC}*no {
     mnl->use_rectangles = 0;
+    g_dbw2rand = 0;
     if(myverbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
   {SPC}*Beta{SPC}*={SPC}*{FLT} {
@@ -417,28 +416,75 @@ TYPE [0-9A-Z]+
     g_rgi_C1 = c;
     if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  ^EndMonomial{SPC}*  {
-    if(myverbose) printf("monomial %d parsed line %d\n\n", current_monomial, line_of_file);
-    BEGIN(0);
-  }
-  {SPC}*Name{SPC}*={SPC}* BEGIN(MNAME);
-  {SPC}*Solver{SPC}*={SPC}* BEGIN(MSOLVER);
 }
+
+
+
+<NDPOLYMONOMIAL>{
+  {SPC}*ExactPolynomial{SPC}*={SPC}*yes {
+    phmc_exact_poly = 1;
+    if(myverbose!=0) printf("  phmc_exact_poly set to true line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*ExactPolynomial{SPC}*={SPC}*no {
+    phmc_exact_poly = 0;
+    if(myverbose!=0) printf("  phmc_exact_poly set to false line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*StildeMax{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    stilde_max = c;
+    if(myverbose!=0) printf("  Stilde max set to %e line %d monomial %d\n", stilde_max, line_of_file, current_monomial);
+  }
+  {SPC}*StildeMin{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    stilde_min = c;
+    if(myverbose!=0) printf("  Stilde min set to %e line %d monomial %d\n", stilde_min, line_of_file, current_monomial);
+  }
+  {SPC}*DegreeOfMDPolynomial{SPC}*={SPC}*{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    degree_of_p = a;
+    if(myverbose!=0) printf("  Degree of MD polynomial set to %d line %d monomial %d\n", degree_of_p, line_of_file, current_monomial);
+  }
+  {SPC}*PrecisionPtilde{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    g_acc_Ptilde = c;
+    if(myverbose!=0) printf("  Precision for Ptilde set to %e line %d monomial %d\n", g_acc_Ptilde, line_of_file, current_monomial);
+  }
+  {SPC}*PrecisionHfinal{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    g_acc_Hfin = c;
+    if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", g_acc_Hfin, line_of_file, current_monomial);
+  }
+  {SPC}*ComputeEVFreq{SPC}*={SPC}*{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    g_rec_ev = a;
+    if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", g_acc_Hfin, line_of_file, current_monomial);
+  }
+  {SPC}*ComputeOnlyEVs{SPC}*={SPC}*yes {
+    phmc_compute_evs=1;
+    if(myverbose!=0) printf("  Compute only heavy EVs set to true line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*ComputeOnlyEVs{SPC}*={SPC}*no {
+    phmc_compute_evs=0;
+    if(myverbose!=0) printf("  Compute only heavy EVs set to false line %d monomial %d\n", line_of_file, current_monomial);
+  }
+}
+
 <MNAME>{NAME} {
   if(myverbose) printf("  monomial named \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
   strcpy((*mnl).name, yytext);
-  BEGIN(MONOMIAL);
+  BEGIN(name_caller);
 }
+
 <MSOLVER>{
   CG {
     if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 1;
-    BEGIN(MONOMIAL);
+    BEGIN(DETMONOMIAL);
   }
   bicgstab {
     if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 0;
-    BEGIN(MONOMIAL);
+    BEGIN(DETMONOMIAL);
   }
 }
 
@@ -566,18 +612,6 @@ TYPE [0-9A-Z]+
 <KAPPA>{FLT}  {
   g_kappa=atof(yytext);
   if(myverbose!=0) printf("kappa=%s \n", yytext);
-}
-<ACCPTILDE>{FLT}  {
-  g_acc_Ptilde=atof(yytext);
-  if(myverbose!=0) printf("Acc_Ptilde=%s \n", yytext);
-}
-<ACCHFIN>{FLT}  {
-  g_acc_Hfin=atof(yytext);
-  if(myverbose!=0) printf("Acc_Hfin=%s \n", yytext);
-}
-<RECEV>{DIGIT}+               {
-  g_rec_ev = atoi(yytext);
-  if(myverbose!=0) printf("Rec_EV=%s \n", yytext);
 }
 <MUBAR>{FLT}  {
   g_mubar=atof(yytext);
@@ -916,21 +950,6 @@ TYPE [0-9A-Z]+
   stout_no_iter=atoi(yytext);
   if(myverbose!=0) printf("make %d stout iterations!\n", stout_no_iter);
 }
-<PHMCFLAV>2"+"1"+"1 {
-  phmc_no_flavours=4;
-  if(myverbose!=0) printf("Simulate 2+1+1 flavours (1+1 PHMC).\n");
-}
-<PHMCFLAV>1"+"1 {
-  phmc_no_flavours=2;
-  if(myverbose!=0) printf("Simulate 1+1 flavours only (1+1 PHMC).\n");
-}
-<PCOMPUTEEVS>yes {
-  phmc_compute_evs=1;
-  if(myverbose!=0) printf("Compute Eigenvalues and exit.");
-}
-<PCOMPUTEEVS>no {
-  phmc_compute_evs=0;
-}
 <COMPUTEEVS>yes {
   compute_evs=1;
   if(myverbose!=0) printf("Compute Eigenvalues in invert.");
@@ -942,27 +961,6 @@ TYPE [0-9A-Z]+
 <COMPUTEEVS>readin {
   compute_evs=2;
   if(myverbose!=0) printf("Try to only read in eigenvalues and vectors in invert.");
-}
-<PPP>no {
- phmc_exact_poly = 0;
- if(myverbose!=0) printf("Run the PHMC as usual.");
-}
-<PPP>yes {
- phmc_exact_poly = 1;
- if(myverbose!=0) printf("Run the PHMC only with usage of the less accurate polynomial.");
-}
-
-<SMAX>{FLT} {
-  stilde_max = atof(yytext);
-  if(myverbose!=0) printf("Stilde max for PHMC set to %e.\n", stilde_max);
-}
-<SMIN>{FLT} {
-  stilde_min = atof(yytext);
-  if(myverbose!=0) printf("Stilde min for PHMC set to %e.\n", stilde_min);
-}
-<DEGP>{DIGIT}+ {
-  degree_of_p = atoi(yytext);
-  if(myverbose!=0) printf("Degree for less precise polynomial P set to %d \n", degree_of_p);
 }
 <SPLITPROP>yes {
   propagator_splitted=1;
@@ -1058,7 +1056,7 @@ TYPE [0-9A-Z]+
 }
 
 
-<INITMONOMIAL,MONOMIAL,INTEGRATOR,INITINTEGRATOR>\n   {
+<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR>\n   {
   line_of_file++;
 }
 <*>\n                       {
@@ -1128,11 +1126,6 @@ int read_input(char * conf_file){
   g_running_phmc = 0;
   g_beta = _default_g_beta;
   g_c_sw = _default_g_c_sw;
-  dtau = _default_dtau;
-  tau = _default_tau;
-  Nsteps = _default_Nsteps;
-  nsmall = _default_nsmall;
-  integtyp = _default_integtyp;
   random_seed = _default_random_seed;
   matrix_element_flag = _default_matrix_element_flag;
   solver_flag = _default_solver_flag;
@@ -1179,7 +1172,6 @@ int read_input(char * conf_file){
   stout_rho = _default_stout_rho;
   stout_no_iter = _default_stout_no_iter;
   /* check for reread ! */ 
-  phmc_no_flavours = _default_phmc_no_flavours;
   phmc_compute_evs = _default_phmc_compute_evs;
   compute_evs = _default_compute_evs;
   stilde_min = _default_stilde_min;
@@ -1191,7 +1183,6 @@ int read_input(char * conf_file){
   eigenvalue_precision = _default_eigenvalue_precision;
   no_eigenvalues = _default_no_eigenvalues;
   sub_evs_cg_flag = _default_sub_evs_cg_flag;
-  phmc_heavy_timescale = _default_phmc_heavy_timescale;
   phmc_exact_poly = _default_phmc_exact_poly;
   even_odd_flag = _default_even_odd_flag;
   online_measurement_flag = _default_online_measurement_flag;
@@ -1250,9 +1241,7 @@ int reread_input(char * conf_file){
   int tt=T, ll=L, lx = LX, ly = LY, lz = LZ, 
       np=N_PROC_X, npy = N_PROC_Y;
 #endif
-  int nst=nstore, j=0;
-  double m2 = g_mu2, m3 = g_mu3;
-  double x;
+  int nst=nstore;
 
   if(verbose && g_proc_id == 0) {
     myverbose = 1;

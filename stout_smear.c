@@ -147,6 +147,8 @@ int stout_smear_gauge_field(const double rho , const int no_iters) {
     xchange_gauge();
 #endif
     g_update_gauge_copy = 1;
+    g_update_gauge_energy = 1;
+    g_update_rectangle_energy = 1;
     
     /*
      *  here we save the intermediate smeares gauge fields a large array

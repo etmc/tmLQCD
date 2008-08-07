@@ -39,57 +39,59 @@ double measure_rectangles() {
   static double ks, kc, tr, ts, tt;
   kc=0.0; ks=0.0;
 
-  for (i = 0; i < VOLUME; i++) {
-    for (mu = 0; mu < 4; mu++) {
-      for (nu = 0; nu < 4; nu++) { 
-	if(nu != mu) {
-	  /*
+  if(g_update_rectangle_energy) {
+    for (i = 0; i < VOLUME; i++) {
+      for (mu = 0; mu < 4; mu++) {
+	for (nu = 0; nu < 4; nu++) { 
+	  if(nu != mu) {
+	    /*
 	      ^
 	      |
 	      ^
 	      |
-	    ->
-	  */
-	  j = g_iup[i][mu];
-	  k = g_iup[j][nu];
-	  v = &g_gauge_field[i][mu];
-	  w = &g_gauge_field[j][nu];
-	  _su3_times_su3(tmp, *v, *w);
-	  v = &g_gauge_field[k][nu];
-	  _su3_times_su3(pr1, tmp, *v);
-	  /*
-	    ->
-	   ^
-	   |
-	   ^
-	   |
-	  */
-	  j = g_iup[i][nu];
-	  k = g_iup[j][nu];
-	  v = &g_gauge_field[i][nu];
-	  w = &g_gauge_field[j][nu];
-	  _su3_times_su3(tmp, *v, *w);
-	  v = &g_gauge_field[k][mu];
-	  _su3_times_su3(pr2, tmp, *v);
-
-          /* Trace it */
-	  _trace_su3_times_su3d(ac,pr1,pr2);
-/* 	  printf("i mu nu: %d %d %d, ac = %e\n", i, mu, nu, ac); */
-	  /* Kahan summation */
-	  tr=ac+kc;
-	  ts=tr+ks;
-	  tt=ts-ks;
-	  ks=ts;
-	  kc=tr-tt;
+	      ->
+	    */
+	    j = g_iup[i][mu];
+	    k = g_iup[j][nu];
+	    v = &g_gauge_field[i][mu];
+	    w = &g_gauge_field[j][nu];
+	    _su3_times_su3(tmp, *v, *w);
+	    v = &g_gauge_field[k][nu];
+	    _su3_times_su3(pr1, tmp, *v);
+	    /*
+	      ->
+	      ^
+	      |
+	      ^
+	      |
+	    */
+	    j = g_iup[i][nu];
+	    k = g_iup[j][nu];
+	    v = &g_gauge_field[i][nu];
+	    w = &g_gauge_field[j][nu];
+	    _su3_times_su3(tmp, *v, *w);
+	    v = &g_gauge_field[k][mu];
+	    _su3_times_su3(pr2, tmp, *v);
+	    
+	    /* Trace it */
+	    _trace_su3_times_su3d(ac,pr1,pr2);
+	    /* 	  printf("i mu nu: %d %d %d, ac = %e\n", i, mu, nu, ac); */
+	    /* Kahan summation */
+	    tr=ac+kc;
+	    ts=tr+ks;
+	    tt=ts-ks;
+	    ks=ts;
+	    kc=tr-tt;
+	  }
 	}
       }
     }
-  }
-  ga=(kc+ks)/3.0;
+    ga=(kc+ks)/3.0;
 #ifdef MPI
-  MPI_Allreduce(&ga, &gas, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return gas;
-#else
-  return ga;
+    MPI_Allreduce(&ga, &gas, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    ga = gas;
 #endif
+    g_update_rectangle_energy = 0;
+  }
+  return ga;
 }

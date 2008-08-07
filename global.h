@@ -7,10 +7,6 @@
  *
  * Global parameters and arrays
  *
- * Author: Martin Luescher <luscher@mail.desy.de>
- * Date: 16.03.2001
- *
- * Adapted for the HMC-Program by M. Hasenbusch 2002
  *
  ***************************************************************/
 #include <stdlib.h>
@@ -25,23 +21,15 @@
 #include"su3adj.h"
 
 
-
-
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */
 /* #define X1 1.  (in x-direction)          */
 #define X1 0.
 #define X2 0.
 #define X3 0.
-#define EPS_SQ0  1.0e-16
-#define EPS_SQ1  1.0e-7
-#define EPS_SQ2  1.0e-5
-#define EPS_SQ3  1.0e-3
-#define tiny_t  1.0e-20
 
 #define N_CHEBYMAX 49
 #define NTILDE_CHEBYMAX 2000
-
 
 #if defined MAIN_PROGRAM
 #  define EXTERN
@@ -64,6 +52,8 @@ EXTERN int DUM_BI_DERI, DUM_BI_SOLVER, DUM_BI_MATRIX;
 EXTERN int NO_OF_BISPINORFIELDS;
 
 EXTERN int g_update_gauge_copy;
+EXTERN int g_update_gauge_energy;
+EXTERN int g_update_rectangle_energy;
 EXTERN int g_relative_precision_flag;
 EXTERN int g_debug_level;
 

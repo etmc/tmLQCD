@@ -78,10 +78,13 @@ void update_momenta(int * mnllist, double step, const int no) {
       max = sum2;
 #endif
       if(g_proc_id == 0) {
-	printf("force %s ts %d aver: %e max: %e time/s %f\n", 
+	printf("force %s ts %d\taver: %1.4e\tmax: %1.4e\tdt*aver: %1.4e\tdt*max: %1.4e\tt/s %1.4e\n", 
 	       monomial_list[ mnllist[k] ].name, monomial_list[ mnllist[k] ].timescale, 
-	       sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor, 
-	       max*monomial_list[ mnllist[k] ].forcefactor, etime-atime);
+	       fabs(2.*sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor),
+	       fabs(2.*max*monomial_list[ mnllist[k] ].forcefactor),
+	       fabs(2.*step*sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor),
+	       fabs(2.*step*max*monomial_list[ mnllist[k] ].forcefactor), 
+	       etime-atime);
 	fflush(stdout);
       }
     }

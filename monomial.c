@@ -50,6 +50,9 @@ int add_monomial(const int type) {
     monomial_list[no_monomials].accfunction = &gauge_acc;
     monomial_list[no_monomials].derivativefunction = &gauge_derivative;
     no_gauge_monomials++;
+    if(!monomial_list[no_monomials].use_rectangles) {
+      g_rgi_C1 = 0.;
+    }
   }
   else if(type == NDPOLY) {
     if(no_ndpoly_monomials > 0) {
@@ -129,8 +132,13 @@ int init_monomials(const int V, const int even_odd_flag) {
       monomial_list[i].pf = NULL;
       if(!monomial_list[i].use_rectangles) {
 	monomial_list[i].c1 = 0.;
+	g_rgi_C1 = 0.;
+	monomial_list[i].c0 = 1.;
+	g_rgi_C0 = 1.;
       }
-      monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
+      else {
+	monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
+      }
     }
     monomial_list[i].id = i;
     monomial_list[i].even_odd_flag = even_odd_flag;

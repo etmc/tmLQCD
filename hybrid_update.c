@@ -65,6 +65,8 @@ void update_gauge(double step) {
    * is not updated here!
    */
   g_update_gauge_copy = 1;
+  g_update_gauge_energy = 1;
+  g_update_rectangle_energy = 1;
   return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(updategauge)
