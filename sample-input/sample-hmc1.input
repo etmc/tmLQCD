@@ -1,0 +1,64 @@
+# $Id$
+# this sample corresponds to the first case in README
+# like sample-hmc0.input, but with preconditioning
+L=4
+T=4
+Measurements = 100000
+#startCondition = continue
+Startcondition = hot
+beta = 6.00
+2KappaMu = 0.177
+kappa = 0.177
+Nskip = 500000
+BCAngleT = 1.
+BCGstabMaxIter = 0
+CGMaxIter = 1000
+GaugeConfigInputFile = conf.save
+UseEvenOdd = yes
+PropagatorPrecision = 64
+ReversibilityCheck = yes
+ReversibilityCheckIntervall = 100
+DebugLevel = 1
+
+PerformOnlineMeasurements = yes
+OnlineMeasurementsFreq = 100
+
+BeginMonomial GAUGE
+  UseRectangleStaples = no
+  RectangleCoefficient = -0.0833333
+  Timescale = 0
+EndMonomial
+
+BeginMonomial DET
+  Timescale = 1
+  2KappaMu = 0.5
+  kappa = 0.177
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = det
+  solver = CG
+EndMonomial
+
+BeginMonomial DETRATIO
+  Timescale = 2
+  2KappaMu = 0.177
+  2KappaMu2 = 0.5
+  kappa = 0.177
+  kappa2 = 0.177
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = detrat
+  solver = CG
+EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  Type2 = 2MN
+  IntegrationSteps0 = 1
+  IntegrationSteps1 = 2
+  IntegrationSteps2 = 4
+  tau = 1.
+  Lambda0 = 0.19
+  NumberOfTimescales = 3
+EndIntegrator
