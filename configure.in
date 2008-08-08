@@ -3,7 +3,7 @@
 # Process this file with autoconf to produce a configure script
 #
 AC_PREREQ(2.53)
-AC_INIT(HMC, 4.0.9, carsten.urbach@physik.hu-berlin.de)
+AC_INIT(HMC, 5.0.0, carsten.urbach@physik.hu-berlin.de)
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()
@@ -212,11 +212,11 @@ elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     F2C="-lgfortran $F2C"
   fi
   if test "$GFTR" != yes && test "$G2C" != yes; then
-    F2C="-lf2c_nomain_LINUX"
+    AC_MSG_ERROR([missing both libg2c and libgfortran])
   fi
 
   if test $with_lapack = yes; then
-    AC_CHECK_LIB(lapack, zheev_, LP=yes, LP="",  -lblas $F2C -lm)
+    AC_CHECK_LIB(lapack, zheev_, LP=yes, [AC_MSG_ERROR([Cannot find lapack])],  -lblas $F2C -lm)
     AC_CHECK_LIB(atlas, ATL_walltime, ATLAS=yes, ATLAS="")
   fi
 else
@@ -492,7 +492,6 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     fi
   fi
   if test $with_lapack = yes; then
-    LDFLAGS="$LDFLAGS -L\$(top_srcdir)/lapack"
     AC_DEFINE(HAVE_LAPACK,1,lapack available)
     if test "$LP" = "yes" && test "$host_cpu" != "x86_64"; then
       if test "$ATLAS" = "yes"; then
@@ -501,19 +500,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
         LIBS="-llapack -lblas $LIBS"
       fi
     else
-      if test "$SSE" = "sse2" || test "$SSE" = "sse3"; then
-        if test "$host_cpu" != "x86_64"; then
-          LIBS="-llapack_LINUXSSE2P4 -lf77blas_LINUXSSE2P4 -latlas_LINUXSSE2P4 $LIBS"
-        else
-          LIBS="-llapack_LINUXHAMMER64SSE2 -lf77blas_LINUXHAMMER64SSE2 -latlas_LINUXHAMMER64SSE2 $LIBS"
-        fi
-      else
-        if test "$host_cpu" != "x86_64"; then
-          LIBS="-llapack_LINUX -lblas_LINUX $LIBS"
-        else
-          LIBS="-llapack_LINUX64 -lblas_LINUX64 $LIBS"
-        fi
-      fi
+      AC_MSG_ERROR("Cannot find liblapack!")
     fi
     LIBS="$LIBS $F2C"
   fi
