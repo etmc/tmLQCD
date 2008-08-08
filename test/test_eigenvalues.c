@@ -141,8 +141,8 @@ int main(int argc,char *argv[]) {
 
   mpi_init(argc, argv);
 
-  if(Nskip == 0){
-    Nskip = 1;
+  if(Nsave == 0){
+    Nsave = 1;
   }
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
@@ -334,8 +334,8 @@ int main(int argc,char *argv[]) {
     fprintf(parameterfile, "ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n"
 	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
     fprintf(parameterfile, "g_eps_sq_force = %e, g_eps_sq_acc = %e\n", g_eps_sq_force, g_eps_sq_acc);
-    fprintf(parameterfile, "dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n",
-	    dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
+    fprintf(parameterfile, "dtau=%f, Nsteps=%d, Nmeas=%d, Nsave=%d, integtyp=%d, nsmall=%d \n",
+	    dtau,Nsteps,Nmeas,Nsave,integtyp,nsmall);
     fprintf(parameterfile, "mu = %f, mu2=%f, mu3=%f\n ", g_mu, g_mu2, g_mu3);
     fprintf(parameterfile, "int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n ", 
 	    int_n[0], int_n[1], int_n[2], int_n[3]);
@@ -506,8 +506,8 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     gettimeofday(&t1,NULL);
     countfile = fopen("history_hmc_tm", "a");
-    fprintf(countfile, "!!! Timestamp %ld, Nskip = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, int0 = %d, int1 = %d, int2 = %d, int3 = %d, g_eps_sq_force = %e, g_eps_sq_acc = %e, ", 
-	    t1.tv_sec, Nskip, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1, 
+    fprintf(countfile, "!!! Timestamp %ld, Nsave = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, int0 = %d, int1 = %d, int2 = %d, int3 = %d, g_eps_sq_force = %e, g_eps_sq_acc = %e, ", 
+	    t1.tv_sec, Nsave, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1, 
 	    int_n[0], int_n[1], int_n[2], int_n[3], g_eps_sq_force, g_eps_sq_acc); 
     fprintf(countfile, "Nsteps = %d, dtau = %e, tau = %e, integtyp = %d, rel. prec. = %d\n", 
 	    Nsteps, dtau, tau, integtyp, g_relative_precision_flag);

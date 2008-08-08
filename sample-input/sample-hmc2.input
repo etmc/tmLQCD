@@ -2,6 +2,8 @@
 # this sample corresponds to a 2+1+1 test case
 # roots and the normalisation are in Square_root_BR_roots.dat
 # and normierungLocal.dat in this directory
+# they were generated using the chebyRoot.H file that can also
+# be found in this directory
 L=4
 T=4
 Measurements = 35000
@@ -11,7 +13,7 @@ beta = 3.30
 2Kappamubar = 0.1105
 2Kappaepsbar = 0.0935
 kappa = 0.170
-Nskip = 500000
+NSave = 500000
 BCAngleT = 1.
 BCGstabMaxIter = 0
 CGMaxIter = 1000

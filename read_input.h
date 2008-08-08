@@ -29,7 +29,7 @@ extern "C"
   extern int startoption;
   extern int Ntherm;
   extern int Nmeas;
-  extern int Nskip;
+  extern int Nsave;
   extern int solver_flag;
   extern int gmres_m_parameter, gmresdr_nr_ev;
   extern int operator_flag;
@@ -55,6 +55,7 @@ extern "C"
   extern double dtau, tau;
   extern int Nsteps;
   extern int random_seed;
+  extern int rlxd_level;
   extern int integtyp,nsmall;
   extern int ITER_MAX_BCG;
   extern int ITER_MAX_CG;

@@ -394,7 +394,7 @@ double ndpoly_acc(const int id) {
     }
   }
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called ndpoly_acc for id %d with g_running_phmc = %d\n", id, g_running_phmc);
+    printf("called ndpoly_acc for id %d %d dH = %1.4e\n", id, g_running_phmc, mnl->energy1 - mnl->energy0);
   }
   /* END IF PHMC */
   return(mnl->energy1 - mnl->energy0);

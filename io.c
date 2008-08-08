@@ -1741,8 +1741,8 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   fprintf(parameterfile, "# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
   if(inv != 1) {
     fprintf(parameterfile, "# ITER_MAX_BCG=%d\n", ITER_MAX_BCG);
-    fprintf(parameterfile, "# dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n",
-	    dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
+    fprintf(parameterfile, "# dtau=%f, Nsteps=%d, Nmeas=%d, Nsave=%d, integtyp=%d, nsmall=%d \n",
+	    dtau,Nsteps,Nmeas,Nsave,integtyp,nsmall);
     fprintf(parameterfile, "# mu = %f, mu2=%f, mu3=%f\n ", g_mu, g_mu2, g_mu3);
     fprintf(parameterfile, "# int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n ", 
 	    int_n[0], int_n[1], int_n[2], int_n[3]);

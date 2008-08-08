@@ -346,7 +346,8 @@ double detratio_acc(const int id) {
   boundary(g_kappa);
   ITER_MAX_BCG = saveiter;
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called detratio_acc for id %d %d energy %f\n", id, mnl->even_odd_flag, mnl->energy1);
+    printf("called detratio_acc for id %d %d dH = %1.4e\n", 
+	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);
   }
   return(mnl->energy1 - mnl->energy0);
 }

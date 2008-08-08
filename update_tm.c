@@ -121,7 +121,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
   
   /* initialize the momenta  */
-  enep=ini_momenta();
+  enep = ini_momenta();
 
   g_sloppy_precision = 1;
 
@@ -248,10 +248,18 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     tmp = ret_gauge_diff;
     MPI_Reduce(&tmp, &ret_gauge_diff, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 #endif
+    /* compute the total H */
+    tmp = enep;
+    for(i = 0; i < Integrator.no_timescales; i++) {
+      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+	tmp += monomial_list[ Integrator.mnls_per_ts[i][j] ].energy0;
+      }
+    }    
     /* Output */
     if(g_proc_id == 0) {
       ret_check_file = fopen("return_check.data","a");
-      fprintf(ret_check_file,"ddh = %e, ddU= %e\n",ret_dh, ret_gauge_diff/4./((double)(VOLUME*g_nproc))/3.);
+      fprintf(ret_check_file,"ddh = %1.4e ddU= %1.4e ddh/H = %1.4e\n",
+	      ret_dh, ret_gauge_diff/4./((double)(VOLUME*g_nproc))/3., ret_dh/tmp);
       fclose(ret_check_file);
     }
 

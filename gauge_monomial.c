@@ -59,9 +59,9 @@ void gauge_heatbath(const int id) {
   monomial * mnl = &monomial_list[id];
   if(mnl->use_rectangles) mnl->c0 = 1. - 8.*mnl->c1;
 
-  mnl->energy0 = mnl->c0 * measure_gauge_action();
+  mnl->energy0 = g_beta*(mnl->c0 * measure_gauge_action());
   if(mnl->use_rectangles) {
-    mnl->energy0 += mnl->c1 * measure_rectangles();
+    mnl->energy0 += g_beta*(mnl->c1 * measure_rectangles());
   }
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called gauge_heatbath for id %d %d\n", id, mnl->even_odd_flag);
@@ -71,12 +71,13 @@ void gauge_heatbath(const int id) {
 double gauge_acc(const int id) {
   monomial * mnl = &monomial_list[id];
 
-  mnl->energy1 = mnl->c0 * measure_gauge_action();
+  mnl->energy1 = g_beta*(mnl->c0 * measure_gauge_action());
   if(mnl->use_rectangles) {
-    mnl->energy1 += mnl->c1 * measure_rectangles();
+    mnl->energy1 += g_beta*(mnl->c1 * measure_rectangles());
   }
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called gauge_acc for id %d %d\n", id, mnl->even_odd_flag);
+    printf("called gauge_acc for id %d %d dH = %1.4e\n", 
+	   id, mnl->even_odd_flag, mnl->energy0 - mnl->energy1);
   }
-  return(g_beta*(mnl->energy0 - mnl->energy1));
+  return(mnl->energy0 - mnl->energy1);
 }

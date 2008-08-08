@@ -299,7 +299,8 @@ double det_acc(const int id) {
   g_mu = g_mu1;
   boundary(g_kappa);
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called det_acc for id %d %d\n", id, mnl->even_odd_flag);
+    printf("called det_acc for id %d %d dH = %1.4e\n", 
+	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);
   }
   ITER_MAX_BCG = save_iter;
   return(mnl->energy1 - mnl->energy0);

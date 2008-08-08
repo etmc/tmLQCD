@@ -220,8 +220,8 @@ int main(int argc,char *argv[]) {
     fprintf(parameterfile, "boundary of fermion fields (t,x,y,z): %f %f %f %f \n",X0,X1,X2,X3);
     fprintf(parameterfile, "ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n"
 	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
-    fprintf(parameterfile,"dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n",
-	    dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
+    fprintf(parameterfile,"dtau=%f, Nsteps=%d, Nmeas=%d, Nsave=%d, integtyp=%d, nsmall=%d \n",
+	    dtau,Nsteps,Nmeas,Nsave,integtyp,nsmall);
     fprintf(parameterfile,"mu = %f, mu2=%f\n ", g_mu, g_mu2);
     
   }
@@ -362,8 +362,8 @@ int main(int argc,char *argv[]) {
 	
 	Rate += update_tm(integtyp, &eneg, datafilename);
 	
-	/* Save gauge configuration all Nskip times */
-	if((j+1)%Nskip == 0) {
+	/* Save gauge configuration all Nsave times */
+	if((j+1)%Nsave == 0) {
 	  sprintf(gauge_filename,"%s", "conf.save");
 	  nstore ++;
 	  countfile = fopen(nstore_filename, "w");
@@ -404,8 +404,8 @@ int main(int argc,char *argv[]) {
 	  
 	  Rate += update_tm(integtyp, &eneg, datafilename);
 	  
-	  /* Save gauge configuration all Nskip times */
-	  if((j+1)%Nskip == 0) {
+	  /* Save gauge configuration all Nsave times */
+	  if((j+1)%Nsave == 0) {
 	    sprintf(gauge_filename,"%s", "conf.save");
 	    nstore ++;
 	    countfile = fopen(nstore_filename, "w");
@@ -447,8 +447,8 @@ int main(int argc,char *argv[]) {
 	
 	Rate += update_tm(integtyp, &eneg, datafilename);
 	
-	/* Save gauge configuration all Nskip times */
-	if((j+1)%Nskip == 0) {
+	/* Save gauge configuration all Nsave times */
+	if((j+1)%Nsave == 0) {
 	  sprintf(gauge_filename,"%s", "conf.save");
 	  nstore ++;
 	  countfile = fopen(nstore_filename, "w");

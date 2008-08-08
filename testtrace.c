@@ -158,8 +158,8 @@ int main(int argc,char *argv[]) {
     fprintf(fp2,"boundary %f %f %f %f \n \n",X0,X1,X2,X3);
     fprintf(fp2,"ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n\n"
 	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
-    fprintf(fp2,"q_off=%f, q_off2=%f, dtau=%f, Nsteps=%d, Nmeas=%d, Nskip=%d, integtyp=%d, nsmall=%d \n\n",
-	    q_off,q_off2,dtau,Nsteps,Nmeas,Nskip,integtyp,nsmall);
+    fprintf(fp2,"q_off=%f, q_off2=%f, dtau=%f, Nsteps=%d, Nmeas=%d, Nsave=%d, integtyp=%d, nsmall=%d \n\n",
+	    q_off,q_off2,dtau,Nsteps,Nmeas,Nsave,integtyp,nsmall);
     fprintf(fp2,"mu = %f", g_mu);
     
   }

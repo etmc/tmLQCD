@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
+#ifdef MPI
+# include <mpi.h>
+#endif
 #include "global.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -17,56 +21,63 @@
 #include "linsolve.h"
 
 
-char * solvout = "solver_data";
-FILE * sout = NULL;
-
 /* k output , l input */
 int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) {
 
   static double normsq,pro,err,alpha_cg,beta_cg,squarenorm;
   int iteration;
+  double atime, etime, flops;
   
   /* initialize residue r and search vector p */
-  
+#ifdef MPI
+  atime = MPI_Wtime();
+#else
+  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
+#endif
   squarenorm = square_norm(l, VOLUME/2);
-
+  
   Qtm_pm_psi(g_spinor_field[DUM_SOLVER], k); 
-
+  
   diff(g_spinor_field[DUM_SOLVER+1], l, g_spinor_field[DUM_SOLVER], VOLUME/2);
   assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME/2);
   normsq=square_norm(g_spinor_field[DUM_SOLVER+1], VOLUME/2);
-
+  
   /* main loop */
-   for(iteration=1;iteration<=ITER_MAX_CG;iteration++) {
-     Qtm_pm_psi(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2]);
-     pro=scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], VOLUME/2);
-     alpha_cg=normsq/pro;
-     assign_add_mul_r(k, g_spinor_field[DUM_SOLVER+2], alpha_cg, VOLUME/2);
-
-     assign_mul_add_r(g_spinor_field[DUM_SOLVER], -alpha_cg, g_spinor_field[DUM_SOLVER+1], VOLUME/2);
-     err=square_norm(g_spinor_field[DUM_SOLVER], VOLUME/2);
-
-     if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
-       printf("CG: iterations: %d res^2 %e\n", iteration, err);
-       fflush(stdout);
-     }
-
-     if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
-       break;
-     }
-     beta_cg = err/normsq;
-     assign_mul_add_r(g_spinor_field[DUM_SOLVER+2], beta_cg, g_spinor_field[DUM_SOLVER], VOLUME/2);
-     assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], VOLUME/2);
-     normsq=err;
-
-   }
-   if(g_proc_id==0) {
-     sout = fopen(solvout, "a");
-     fprintf(sout, "CG: iterations: %d  mu: %f eps_sq: %e \n", iteration, g_mu, eps_sq); 
-     fprintf(sout, "Squarenorm is %f\n", squarenorm);
-     fclose(sout);
-   }
-   return iteration;
+  for(iteration=1;iteration<=ITER_MAX_CG;iteration++) {
+    Qtm_pm_psi(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2]);
+    pro=scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], VOLUME/2);
+    alpha_cg=normsq/pro;
+    assign_add_mul_r(k, g_spinor_field[DUM_SOLVER+2], alpha_cg, VOLUME/2);
+    
+    assign_mul_add_r(g_spinor_field[DUM_SOLVER], -alpha_cg, g_spinor_field[DUM_SOLVER+1], VOLUME/2);
+    err=square_norm(g_spinor_field[DUM_SOLVER], VOLUME/2);
+    
+    if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
+      printf("CG: iterations: %d res^2 %e\n", iteration, err);
+      fflush(stdout);
+    }
+    
+    if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
+      break;
+    }
+    beta_cg = err/normsq;
+    assign_mul_add_r(g_spinor_field[DUM_SOLVER+2], beta_cg, g_spinor_field[DUM_SOLVER], VOLUME/2);
+    assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], VOLUME/2);
+    normsq=err;
+  }
+#ifdef MPI
+  etime = MPI_Wtime();
+#else
+  etime = (double)clock()/(double)(CLOCKS_PER_SEC);
+#endif
+  /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
+  flops = (2*(1320.0+2*3*4) + 2*3*4 + iteration*(2.*(1320.0+2*3*4) + 10*3*4))*VOLUME/2/1.0e6f;
+  if(g_proc_id==0 && g_debug_level > 0) {
+    printf("CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iteration, eps_sq, etime-atime); 
+    printf("CG: flopcount: t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+	   etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
+  }
+  return iteration;
 }
 
 
@@ -132,10 +143,8 @@ int bicg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) 
       rho0.re = rho1.re; rho0.im = rho1.im;
     }
     
-    if(g_proc_id==0) {
-      sout = fopen(solvout, "a");
-      fprintf(sout, "BiCGstab: iterations: %d mu: %f eps_sq: %e\n", iteration, g_mu, eps_sq); 
-      fclose(sout);
+    if(g_proc_id==0 && g_debug_level > 0) {
+      printf("BiCGstab: iterations: %d eps_sq: %1.4e\n", iteration, eps_sq); 
     }
   }
   else{

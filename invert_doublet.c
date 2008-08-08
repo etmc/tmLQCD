@@ -79,7 +79,7 @@ int check_geometry();
 
 int main(int argc,char *argv[]) {
 
-  FILE *parameterfile=NULL, *ifs=NULL;
+  FILE *parameterfile=NULL;
   int c, iter, j, ix=0, is=0, ic=0, fl=0;
   char * filename = NULL;
   char datafilename[50];
@@ -88,10 +88,7 @@ int main(int argc,char *argv[]) {
   char * input_filename = NULL;
   double plaquette_energy;
 
-#ifdef _GAUGE_COPY
-  int kb=0;
-#endif
-  double nrm1, nrm2;
+  double nrm1;
   double atime=0., etime=0.;
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -139,8 +136,8 @@ int main(int argc,char *argv[]) {
   read_input(input_filename);
   /* this DBW2 stuff is not needed for the inversion ! */
   g_rgi_C1 = 0;
-  if(Nskip == 0){
-    Nskip = 1;
+  if(Nsave == 0){
+    Nsave = 1;
   }
   mpi_init(argc, argv);
 
@@ -431,7 +428,7 @@ int main(int argc,char *argv[]) {
 	write_inverter_info(nrm1, iter, 0, 1, conf_filename);
       }
     }
-    nstore+=Nskip;
+    nstore+=Nsave;
   }
   
 #ifdef MPI

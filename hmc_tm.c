@@ -319,7 +319,7 @@ int main(int argc,char *argv[]) {
   }
   /* restart, hot and cold */
   if(startoption != 3) {
-    rlxd_init(1, random_seed + g_proc_id*97);
+    rlxd_init(rlxd_level, random_seed + g_proc_id*97);
   }
   
   /* Set up the gauge field */
@@ -403,10 +403,10 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     gettimeofday(&t1,NULL);
     countfile = fopen("history_hmc_tm", "a");
-    fprintf(countfile, "!!! Timestamp %ld, Nskip = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, ", 
-	    t1.tv_sec, Nskip, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1); 
+    fprintf(countfile, "!!! Timestamp %ld, Nsave = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, ", 
+	    t1.tv_sec, Nsave, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1); 
     for(j = 0; j < Integrator.no_timescales; j++) {
-      fprintf(countfile, "n_int[%d] = %d ", Integrator.no_mnls_per_ts[j]);
+      fprintf(countfile, "n_int[%d] = %d ", j, Integrator.no_mnls_per_ts[j]);
     }
     fprintf(countfile, "\n");
     fprintf(countfile, "Nsteps = %d, dtau = %e, tau = %e, integtyp = %d, rel. prec. = %d\n", 
@@ -431,13 +431,13 @@ int main(int argc,char *argv[]) {
     polyakov_loop(&pl, 2); 
     polyakov_loop(&pl4, 3);  
     
-    /* Save gauge configuration all Nskip times */
-    if((Nskip !=0) && (trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) {
+    /* Save gauge configuration all Nsave times */
+    if((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) {
       sprintf(gauge_filename,"conf.%.4d", nstore);
       if(g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
-	fprintf(countfile, "%.4d, measurement %d of %d, Nskip = %d, Plaquette = %e, |L(%d)| = %e, |L(%d)| = %e trajectory nr = %d\n", 
-		nstore, j, Nmeas, Nskip, plaquette_energy/(6.*VOLUME*g_nproc),
+	fprintf(countfile, "%.4d, measurement %d of %d, Nsave = %d, Plaquette = %e, |L(%d)| = %e, |L(%d)| = %e trajectory nr = %d\n", 
+		nstore, j, Nmeas, Nsave, plaquette_energy/(6.*VOLUME*g_nproc),
 		2, sqrt(pl.re*pl.re+pl.im*pl.im),
 		dir, sqrt(pl4.re*pl4.re+pl4.im*pl4.im), trajectory_counter);
 	fclose(countfile);
@@ -448,7 +448,7 @@ int main(int argc,char *argv[]) {
       sprintf(gauge_filename,"conf.save");
     }
     
-    if(((Nskip !=0) && (trajectory_counter%Nskip == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
+    if(((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
       /* Write the gauge configuration first to a temporary file */
 /*       write_gauge_field_time_p( tmp_filename); */
       write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), 

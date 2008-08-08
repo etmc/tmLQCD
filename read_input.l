@@ -62,7 +62,7 @@ TYPE [0-9A-Z]+
   int startoption;
   int Ntherm;
   int Nmeas;
-  int Nskip;
+  int Nsave;
   int integtyp;
   int int_n[4];
   double lambda[4];
@@ -79,6 +79,7 @@ TYPE [0-9A-Z]+
   int nstore;
   int index_start, index_end;
   int random_seed;
+  int rlxd_level;
   double dtau, tau;
   int Nsteps;
   char rlxd_input_filename[100];
@@ -131,9 +132,10 @@ TYPE [0-9A-Z]+
 %x EPSBAR
 %x MU
 %x SEED
+%x RLXDLEVEL
 %x Q1
 %x Q2
-%x NSKIP
+%x NSAVE
 %x RLXDINPUTFILE
 %x GAUGEINPUTFILE
 %x GAUGERPREC
@@ -226,7 +228,7 @@ TYPE [0-9A-Z]+
 ^StartCondition{SPC}*={SPC}*               BEGIN(STARTCOND);
 ^ThermalisationSweeps{SPC}*={SPC}*         BEGIN(THERMSWEEPS);
 ^Measurements{SPC}*={SPC}*                 BEGIN(NMEAS);
-^Nskip{SPC}*={SPC}*                        BEGIN(NSKIP);
+^NSave{SPC}*={SPC}*                        BEGIN(NSAVE);
 ^GaugeFieldInFile{SPC}*={SPC}*             BEGIN(GAUGEINPUTFILE);
 ^RlxdStateInFile{SPC}*={SPC}*              BEGIN(RLXDINPUTFILE);
 ^SolverFlag{SPC}*={SPC}*                   BEGIN(SOLVFLAG);
@@ -279,6 +281,7 @@ TYPE [0-9A-Z]+
 ^PropagatorType{SPC}*={SPC}*               BEGIN(WRPROPFLAG);
 ^PerformOnlineMeasurements{SPC}*={SPC}*    BEGIN(ONMEAS);
 ^OnlineMeasurementsFreq{SPC}*={SPC}*       BEGIN(ONFREQ);
+^RanluxdLevel{SPC}*={SPC}*                 BEGIN(RLXDLEVEL);
 
 ^BeginMonomial{SPC}+                       BEGIN(INITMONOMIAL);
 ^BeginInt                                  BEGIN(INITINTEGRATOR);
@@ -609,6 +612,10 @@ TYPE [0-9A-Z]+
   random_seed=atoi(yytext);
   if(myverbose!=0) printf("seed=%s \n", yytext);
 }
+<RLXDLEVEL>[12] {
+  rlxd_level = atoi(yytext);
+  if(myverbose!=0) printf("RanluxdLevel set to %d \n", rlxd_level);
+}
 <KAPPA>{FLT}  {
   g_kappa=atof(yytext);
   if(myverbose!=0) printf("kappa=%s \n", yytext);
@@ -655,9 +662,9 @@ TYPE [0-9A-Z]+
   Nmeas=atoi(yytext); 
   if(myverbose!=0) printf("Nmeas= %s \n",yytext);
 }
-<NSKIP>{DIGIT}+ {
-  Nskip=atoi(yytext);
-  if(myverbose!=0) printf("Nskip= %s \n",yytext);
+<NSAVE>{DIGIT}+ {
+  Nsave=atoi(yytext);
+  if(myverbose!=0) printf("Nsave= %s \n",yytext);
 }
 <SOLVFLAG>{
   bicgstab {
@@ -1127,13 +1134,14 @@ int read_input(char * conf_file){
   g_beta = _default_g_beta;
   g_c_sw = _default_g_c_sw;
   random_seed = _default_random_seed;
+  rlxd_level = _default_rlxd_level;
   matrix_element_flag = _default_matrix_element_flag;
   solver_flag = _default_solver_flag;
   operator_flag = _default_operator_flag;
   startoption = _default_startoption;
   Ntherm = _default_Ntherm;
   Nmeas = _default_Nmeas;
-  Nskip = _default_Nskip;
+  Nsave = _default_Nsave;
   save_config_flag = _default_save_config_flag;
   save_prop_flag = _default_save_prop_flag;
   save_prop_g2_flag = _default_save_prop_g2_flag;

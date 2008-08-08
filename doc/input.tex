@@ -101,11 +101,10 @@ supported general input paramters:
   the acceptance test will be discarded. This might help to faster
   equilibrate the system.
 
-\item {\ttfamily Nskip}:\\
-  Number of produced configurations to skip (i.e. not written to
-  disk). Default value is $5$. For the {\ttfamily invert} programme
-  this counts the number of gauge configurations to skip in between
-  adjacent inversions.
+\item {\ttfamily Nsave}:\\
+  Save evey n-th trajectory the configuration to disk.
+  For the {\ttfamily invert} programme it means that every n-th
+  configuration is measured.
 
 \item {\ttfamily InitialStoreCounter}:\\
   Start with value to label measurements. Default is $0$. Can be also
