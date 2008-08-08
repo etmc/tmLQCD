@@ -50,9 +50,30 @@ int add_monomial(const int type) {
     monomial_list[no_monomials].accfunction = &gauge_acc;
     monomial_list[no_monomials].derivativefunction = &gauge_derivative;
     no_gauge_monomials++;
+    if( monomial_list[no_monomials].gtype == 0) {
+      monomial_list[no_monomials].use_rectangles = 0;
+      monomial_list[no_monomials].c0 = 1.;
+      monomial_list[no_monomials].c1 = 0.;
+    }
+    if(monomial_list[no_monomials].gtype == 1) {
+      monomial_list[no_monomials].use_rectangles = 1;
+      monomial_list[no_monomials].c1 = -0.083333333;
+      monomial_list[no_monomials].c0 = 1.-8*monomial_list[no_monomials].c1;
+    }
+    if(monomial_list[no_monomials].gtype == 2) {
+      monomial_list[no_monomials].use_rectangles = 1;
+      monomial_list[no_monomials].c1 = -0.331;
+      monomial_list[no_monomials].c0 = 1.-8*monomial_list[no_monomials].c1;
+    }
+    if(monomial_list[no_monomials].gtype == 4) {
+      monomial_list[no_monomials].use_rectangles = 1;
+      monomial_list[no_monomials].c1 = -1.4088;
+      monomial_list[no_monomials].c0 = 1.-8*monomial_list[no_monomials].c1;
+    }
     if(!monomial_list[no_monomials].use_rectangles) {
       g_rgi_C1 = 0.;
     }
+    else g_rgi_C1 = monomial_list[no_monomials].c1;
   }
   else if(type == NDPOLY) {
     if(no_ndpoly_monomials > 0) {

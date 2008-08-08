@@ -39,7 +39,8 @@ void ndpoly_derivative(const int id) {
   int j, k;
   monomial * mnl = &monomial_list[id];
 
-  (*mnl).forcefactor = -phmc_Cpol*phmc_invmaxev;
+  /* This factor 2 a missing factor 2 in trace_lambda */
+  (*mnl).forcefactor = -2.*phmc_Cpol*phmc_invmaxev;
 
   /* Recall:  The GAMMA_5 left of  delta M_eo  is done in  deriv_Sb !!! */
 

@@ -5,7 +5,6 @@ T=4
 Measurements = 100000
 #startCondition = continue
 Startcondition = hot
-beta = 6.00
 2KappaMu = 0.177
 kappa = 0.177
 NSave = 500000
@@ -23,8 +22,8 @@ PerformOnlineMeasurements = yes
 OnlineMeasurementsFreq = 100
 
 BeginMonomial GAUGE
-  UseRectangleStaples = no
-  RectangleCoefficient = -0.0833333
+  Type = Wilson
+  beta = 6.00
   Timescale = 0
 EndMonomial
 

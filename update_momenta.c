@@ -57,9 +57,8 @@ void update_momenta(int * mnllist, double step, const int no) {
 	  sum+= sum2;
 	  if(fabs(sum2) > max) max = sum2;
 	}
-	/* This 2* is coming from what?             */
-	/* From a missing factor 2 in trace_lambda? */
-	tmp = 2.*step*monomial_list[ mnllist[k] ].forcefactor;
+	tmp = step*monomial_list[ mnllist[k] ].forcefactor;
+	/* the minus comes from an extra minus in trace_lambda */
 	_minus_const_times_mom(*xm,tmp,*deriv); 
 	/* set to zero immediately */
 	_zero_su3adj(df0[i][mu]);
@@ -80,10 +79,10 @@ void update_momenta(int * mnllist, double step, const int no) {
       if(g_proc_id == 0) {
 	printf("force %s ts %d\taver: %1.4e\tmax: %1.4e\tdt*aver: %1.4e\tdt*max: %1.4e\tt/s %1.4e\n", 
 	       monomial_list[ mnllist[k] ].name, monomial_list[ mnllist[k] ].timescale, 
-	       fabs(2.*sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor),
-	       fabs(2.*max*monomial_list[ mnllist[k] ].forcefactor),
-	       fabs(2.*step*sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor),
-	       fabs(2.*step*max*monomial_list[ mnllist[k] ].forcefactor), 
+	       fabs(sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor),
+	       fabs(max*monomial_list[ mnllist[k] ].forcefactor),
+	       fabs(step*sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor),
+	       fabs(step*max*monomial_list[ mnllist[k] ].forcefactor), 
 	       etime-atime);
 	fflush(stdout);
       }

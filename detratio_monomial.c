@@ -42,7 +42,8 @@ void detratio_derivative(const int no) {
   extern su3 ** g_gauge_field_saved;
   monomial * mnl = &monomial_list[no];
 
-  mnl->forcefactor = 1.;
+  /* This factor 2* a missing factor 2 in trace_lambda */
+  mnl->forcefactor = 2.;
 
   if(use_stout_flag == 1) {
     /*  save unsmeared gauge field */

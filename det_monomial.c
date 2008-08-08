@@ -42,7 +42,8 @@ void det_derivative(const int id) {
   extern su3 ** g_gauge_field_saved;
   monomial * mnl = &monomial_list[id];
 
-  (*mnl).forcefactor = 1.;
+  /* This factor 2 a missing factor 2 in trace_lambda */
+  (*mnl).forcefactor = 2.;
   if(use_stout_flag == 1) {
     /*  save unsmeared gauge field */
     for(x = 0; x < VOLUME; x++) {

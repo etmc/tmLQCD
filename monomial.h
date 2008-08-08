@@ -11,6 +11,7 @@
 #define max_no_monomials 20
 typedef struct {
   int type;
+  int gtype;
   int initialised;
   int timescale;
   int maxiter;

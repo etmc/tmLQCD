@@ -13,9 +13,13 @@ be called with
   files differ by their suffix. Default for {\ttfamily name} is
   {\ttfamily output}.
 
+\item {\ttfamily -v  }:\\
+  makes the code a bit more verbose. Unrelated to input parameter
+  {\ttfamily DebugLevel}.
+
 \item {\ttfamily -?|-h}:\\
   This will produce help output and exit then.
-  
+
 \end{itemize}
 
 There are several input parameters read from an input file. The parser is contained in the file {\ttfamily gwc/src/bin/read\_input.l}. The file {\ttfamily read\_input.l} is converted to {\ttfamily read\_input.c} using {\ttfamily flex} and defines the following function:
@@ -71,9 +75,6 @@ supported general input paramters:
 \item {\ttfamily seed}:\\
   The seed for the random number generator. Default value is $123456$.
 
-\item {\ttfamily beta}:\\
-  The invers coupling $\beta$. Default value is $5.2$.
-
 \item {\ttfamily kappa}:\\
   The $\kappa$ value. Default is $0.12$.
 
@@ -104,7 +105,8 @@ supported general input paramters:
 \item {\ttfamily Nsave}:\\
   Save evey n-th trajectory the configuration to disk.
   For the {\ttfamily invert} programme it means that every n-th
-  configuration is measured.
+  configuration is measured. This was formerly called {\ttfamily
+    Nskip}.
 
 \item {\ttfamily InitialStoreCounter}:\\
   Start with value to label measurements. Default is $0$. Can be also
@@ -143,10 +145,14 @@ supported general input paramters:
 
 \item {\ttfamily DebugLevel}:\\
   If set to a value larger than $0$ this causes verbose output:
-  \begin{enumerate}
-  \item forces are printed out.
-  \end{enumerate}
-
+  \begin{itemize}
+  \item {\ttfamily DebugLevel = 1}: forces, iteration counts and flops are printed out.
+  \item {\ttfamily DebugLevel = 2}: every iteration step is
+    printed. Chronological Solver gives details about which routines
+    are called, the same for the monomials. polynomial gets more verbose.
+  \item {\ttfamily DebugLevel > 2}: all available output.
+  \end{itemize}
+  
 \item {\ttfamily BCGstabMaxIter}:\\
   The maximal number of iterations in the BiCGstab solver.
 
@@ -158,7 +164,8 @@ supported general input paramters:
   reversibility violation in the integrator by integrating back in
   time. If not yet existing, the program creates a file {\ttfamily
     return\_check.data} in which it stores the reversibility violation
-  as the difference in the Hamiltonian.
+  as the difference in the Hamiltonian, the difference in the gauge
+  fields and the relative difference in the Hamiltonian.
 
 \item {\ttfamily ReversibilityCheckIntervall}:\\
   Here one can specify the intervall in terms of trajectories the
@@ -302,7 +309,7 @@ EndMonomial
   \]
 \item {\ttfamily DETRATIO}: pseudo fermion representation of\\
   \[
-  \det(Q^2(\kappa) + \mu^2)/det(Q^2(\kappa_2) + \mu_2^2)
+  \det(Q^2(\kappa) + \mu^2)/\det(Q^2(\kappa_2) + \mu_2^2)
   \]
 \item {\ttfamily GAUGE}:\\
   \[
@@ -315,7 +322,7 @@ EndMonomial
 \item {\ttfamily NDPOLY}: polynomial representation of the (possibly
   non-degenerate) split doublet\\
   \[
-  \det(Q_{nd}(\bar\epsilon, \bar\mu)
+  \det(Q_{nd}(\bar\epsilon, \bar\mu))
   \]
 \end{itemize}
 
@@ -351,25 +358,36 @@ Each of them has different options:
   \item {\ttfamily Name}: a name to be assigned to the monomial. The
     default is {\ttfamily DETRATIO}
   \end{itemize}
-\item {\ttfamily GAUGE}: the $\beta$-value is taken from the general
-  input parameter, what is important here is to choose the timescale
-  and the use of the rectangular staples.
+
+
+\item {\ttfamily GAUGE}: 
   \begin{itemize}
   \item {\ttfamily Timescale}: the timescale on which to integrate
     this monomial. Counting starts from zero up to the total number of
     timescales minus 1.
+  \item {\ttfamily Name}: a name to be assigned to the monomial. The
+    default is {\ttfamily GAUGE}.
+
+  \item {\ttfamily beta}:\\
+    The invers coupling $\beta$. Default value is $5.2$.
+    
+  \item {\ttfamily Type}: can be one of\ {\ttfamily Wilson, tlsym,
+      Iwasaki, DBW2, user}. For type user you can specify also the two
+    following options. Default is {\ttfamily user} here.
   \item {\ttfamily UseRectangleStaples}: can be yes or no, indicating
     whether to use also the rectangle staples. No corresponds to pure
-    Wilson plaquette. Default is no.
+    Wilson plaquette. Default is no. Is effective only for {\ttfamily
+      type = user}.
   \item {\ttfamily c1}: the value of the parameter $c_1$. The
-    coefficient $c_0$ is computed from $c_0 = 1-8c_1$.
-  \item {\ttfamily Name}: a name to be assigned to the monomial. The
-    default is {\ttfamily GAUGE}
+    coefficient $c_0$ is computed from $c_0 = 1-8c_1$. Is effective
+    only for {\ttfamily type = user}.
   \end{itemize}
-  There is maximally one allowed for this type.
+  There is maximally one instance allowed of this type.
+
+
 \item {\ttfamily NDPOLY}: more a dummy monomial so far, but switches
   on the PHMC part for the non-degenerate heavy doublet and lets you
-  specify the timescale on which to integrate this.
+  specify the timescale on which to integrate this and the parameters.
   \begin{itemize}
 
   \item {\ttfamily Timescale}: the timescale on which to integrate
@@ -405,7 +423,8 @@ Each of them has different options:
 
   \item {\ttfamily PrecisionHfinal}:
   \end{itemize}
-  So far there is maximally one allowed for this type.
+  So far, there is maximally one instance allowed for this type. This
+  might change in the future.
 \end{itemize}
 
 \subsection{The Integrator}
@@ -418,8 +437,8 @@ EndIntegrator
 \end{verbatim}
 with the following options available:
 \begin{itemize}
-\item {\ttfamily Tau}
-\item {\ttfamily NumberOfTimescales}
+\item {\ttfamily Tau}: total trajectory length.
+\item {\ttfamily NumberOfTimescales}: total number of timescales.
 \item {\ttfamily IntegrationStepsN = M} where {\ttfamily N} is the
   timescale (as integer value, counting starts from zero and goes up
   to the number of timescales minus 1) and {\ttfamily M} is the number
@@ -451,7 +470,6 @@ T=16
 Measurements = 1
 startCondition = continue
 #Startcondition = hot
-beta = 3.30
 2KappaMu = 0.03
 kappa = 0.090
 mubar = 1.
@@ -460,7 +478,7 @@ epsbar = 0.2
 #This is a comment
 
 PhmcRecEVInterval = 1
-Nskip = 50
+Nsave = 50
 BCAngleT = 1.
 BCGstabMaxIter = 5000
 CGMaxIter = 1000
@@ -475,9 +493,9 @@ PerformOnlineMeasurements = yes
 OnlineMeasurementsFreq = 1
 
 BeginMonomial GAUGE
-  UseRectangleStaples = yes
-  RectangleCoefficient = -0.0833333
+  beta = 3.30
   Timescale = 0
+  Type = tlsym
 EndMonomial
 
 BeginMonomial DET
@@ -535,7 +553,7 @@ InitialStoreCounter = 1
 Indices = 0-7
 ReadSource = no
 Measurements = 1
-mu = 0.0305
+2KappaMu = 0.0305
 kappa = 0.15
 BCAngleT = 1.
 GaugeConfigInputFile = conf

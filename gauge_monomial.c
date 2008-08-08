@@ -31,10 +31,10 @@ void gauge_derivative(const int id) {
   monomial * mnl = &monomial_list[id];
 
   if(mnl->use_rectangles) {
-    mnl->forcefactor = -mnl->c0 * g_beta/3.0/2.;
+    mnl->forcefactor = -mnl->c0 * g_beta/3.0;
   }
   else {
-    mnl->forcefactor = -1. * g_beta/3.0/2.;
+    mnl->forcefactor = -1. * g_beta/3.0;
   }
 
   for(i = 0; i < VOLUME; i++) { 

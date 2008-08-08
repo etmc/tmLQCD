@@ -123,7 +123,6 @@ TYPE [0-9A-Z]+
 
 %option never-interactive
 
-%x BETA
 %x STARTCOND
 %x THERMSWEEPS
 %x NMEAS
@@ -203,7 +202,7 @@ TYPE [0-9A-Z]+
 %x NDPOLYMONOMIAL
 %x MNAME
 %x MSOLVER
-
+%x GTYPE
 
 %x COMMENT
 %x ERROR
@@ -221,7 +220,6 @@ TYPE [0-9A-Z]+
 ^2KappaMu{SPC}*={SPC}*                     BEGIN(MU);
 ^2KappaMubar{SPC}*={SPC}*                  BEGIN(MUBAR);
 ^2KappaEpsBar{SPC}*={SPC}*                 BEGIN(EPSBAR);
-^beta{SPC}*={SPC}*                         BEGIN(BETA);
 ^NoEigenvalues{SPC}*={SPC}*                BEGIN(NOEV);
 ^EigenvaluePrecision{SPC}*={SPC}*          BEGIN(PRECEV);
 ^seed{SPC}*={SPC}*                         BEGIN(SEED);
@@ -305,6 +303,7 @@ TYPE [0-9A-Z]+
   }
   else if(strcmp(yytext, "GAUGE")==0) {
     mnl->type = GAUGE;
+    mnl->gtype = 3;
     strcpy((*mnl).name, "GAUGE");
   }
   else {
@@ -397,6 +396,7 @@ TYPE [0-9A-Z]+
 
 
 <GAUGEMONOMIAL>{
+  {SPC}*Type{SPC}*={SPC}* BEGIN(GTYPE);
   {SPC}*UseRectangleStaples{SPC}*={SPC}*yes {
     mnl->use_rectangles = 1;
     g_dbw2rand = 1;
@@ -488,6 +488,37 @@ TYPE [0-9A-Z]+
     if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 0;
     BEGIN(DETMONOMIAL);
+  }
+}
+
+<GTYPE>{
+  Wilson {
+    mnl->gtype = 0;
+    mnl->c1 = 0.;
+    g_rgi_C1 = 0.;
+    BEGIN(GAUGEMONOMIAL);
+  }
+  tlsym {
+    mnl->gtype = 1;
+    mnl->c1 = -0.083333333;
+    g_rgi_C1 = -0.083333333;
+    BEGIN(GAUGEMONOMIAL);
+  }
+  Iwasaki {
+    mnl->gtype = 2;
+    mnl->c1 = -0.331;
+    g_rgi_C1 = -0.331;
+    BEGIN(GAUGEMONOMIAL);
+  }
+  user {
+    mnl->gtype = 3;
+    BEGIN(GAUGEMONOMIAL);
+  }
+  DBW2 {
+    mnl->gtype = 4;
+    mnl->c1 = -1.4088;
+    g_rgi_C1 = -1.4088;
+    BEGIN(GAUGEMONOMIAL);
   }
 }
 
@@ -631,10 +662,6 @@ TYPE [0-9A-Z]+
 <MU>{FLT}  {
   g_mu1=atof(yytext);
   if(myverbose!=0) printf("mu=%s \n", yytext);
-}
-<BETA>{FLT}   {
-  g_beta=atof(yytext);
-  if(myverbose!=0) printf("beta=%s \n",yytext);
 }
 <STARTCOND>cold {
   startoption=0; 
