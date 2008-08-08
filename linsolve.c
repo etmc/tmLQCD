@@ -32,7 +32,7 @@ int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_pr
 #ifdef MPI
   atime = MPI_Wtime();
 #else
-  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
+  atime = ((double)clock())/((double)(CLOCKS_PER_SEC));
 #endif
   squarenorm = square_norm(l, VOLUME/2);
   
@@ -51,7 +51,7 @@ int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_pr
     
     assign_mul_add_r(g_spinor_field[DUM_SOLVER], -alpha_cg, g_spinor_field[DUM_SOLVER+1], VOLUME/2);
     err=square_norm(g_spinor_field[DUM_SOLVER], VOLUME/2);
-    
+
     if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
       printf("CG: iterations: %d res^2 %e\n", iteration, err);
       fflush(stdout);
@@ -68,10 +68,11 @@ int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_pr
 #ifdef MPI
   etime = MPI_Wtime();
 #else
-  etime = (double)clock()/(double)(CLOCKS_PER_SEC);
+  etime = ((double)clock())/((double)(CLOCKS_PER_SEC));
 #endif
   /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
-  flops = (2*(1320.0+2*3*4) + 2*3*4 + iteration*(2.*(1320.0+2*3*4) + 10*3*4))*VOLUME/2/1.0e6f;
+  /* 2*1320.0 because the linalg is over VOLUME/2 */
+  flops = (2*(2*1320.0+2*3*4) + 2*3*4 + iteration*(2.*(2*1320.0+2*3*4) + 10*3*4))*VOLUME/2/1.0e6f;
   if(g_proc_id==0 && g_debug_level > 0) {
     printf("CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iteration, eps_sq, etime-atime); 
     printf("CG: flopcount: t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 

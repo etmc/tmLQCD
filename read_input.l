@@ -386,7 +386,7 @@ TYPE [0-9A-Z]+
     mnl->accprec = c;
     if(myverbose) printf("  AcceptancePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*MaxSolverIterations{SPC}*={SPC}*{DIGIT} {
+  {SPC}*MaxSolverIterations{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->maxiter = a;
     if(myverbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
