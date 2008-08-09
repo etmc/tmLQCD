@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 #include "global.h"
 #include "start.h"
 #include "ranlxd.h"
