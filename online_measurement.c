@@ -99,31 +99,31 @@ void online_measurement(const int traj, const int t0) {
   if(g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
     ofs = fopen(filename, "w");
     fprintf( ofs, "1  1  0  %e  %e\n", Cpp[t0], 0.);
-    for(t = 1; t < g_nproc_t*T/2-1; t++) {
+    for(t = 1; t < g_nproc_t*T/2; t++) {
       tt = (t0+t)%(g_nproc_t*T);
       fprintf( ofs, "1  1  %d  %e  ", t, Cpp[tt]);
       tt = (t0+g_nproc_t*T-t)%(g_nproc_t*T);
       fprintf( ofs, "%e\n", Cpp[tt]);
     }
-    tt = (t0+g_nproc_t*T/2+1)%(g_nproc_t*T);
+    tt = (t0+g_nproc_t*T/2)%(g_nproc_t*T);
     fprintf( ofs, "1  1  %d  %e  %e\n", t, Cpp[tt], 0.);
 
     fprintf( ofs, "2  1  0  %e  %e\n", Cpa[t0], 0.);
-    for(t = 1; t < g_nproc_t*T/2-1; t++) {
+    for(t = 1; t < g_nproc_t*T/2; t++) {
       tt = (t0+t)%(g_nproc_t*T);
       fprintf( ofs, "2  1  %d  %e  ", t, Cpa[tt]);
       tt = (t0+g_nproc_t*T-t)%(g_nproc_t*T);
       fprintf( ofs, "%e\n", Cpa[tt]);
     }
-    tt = (t0+g_nproc_t*T/2+1)%(g_nproc_t*T);
+    tt = (t0+g_nproc_t*T/2)%(g_nproc_t*T);
     fprintf( ofs, "2  1  %d  %e  %e\n", t, Cpa[tt], 0.);
     fclose(ofs);
   }
   free(Cpp); free(Cpa);
 #ifdef MPI
-  atime = MPI_Wtime();
+  etime = MPI_Wtime();
 #else
-  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
+  etime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("ONLINE: measurement done int t/s = %1.4e\n", etime - atime);
