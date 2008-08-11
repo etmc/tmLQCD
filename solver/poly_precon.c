@@ -11,6 +11,8 @@
 #include "start.h"
 #include "linalg_eo.h"
 #include "tm_operators.h"
+#include "boundary.h"
+#include "D_psi.h"
 #include "chebyshev_polynomial.h"
 
 
@@ -156,6 +158,83 @@ void poly_precon(spinor * const R, spinor * const S, const double prec, const in
 
 /*   assign(aux, R, N); */
 /*   Q_minus_psi(R, aux); */
+
+  return;
+}
+
+
+void poly_nonherm_precon(spinor * const R, spinor * const S, 
+			 const double e, const int n) {
+  int j;
+  double a1, a2;
+  double fact1, fact2, temp1, temp2, temp3, temp4, auxnorm;
+  static spinor *sv_, *sv, *d_, *d, *dd_, *dd, *aux_, *aux, *aux3_, *aux3;
+  static int initpnH = 0;
+  static double * c;
+  const int N = VOLUME;
+  spinor * psi, * chi, *tmp;
+
+  
+  if(initpnH == 0) {
+    c = (double*)calloc(1000, sizeof(double));
+#if (defined SSE || defined SSE2 || defined SSE3)
+    sv_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    sv   = (spinor *)(((unsigned long int)(sv_)+ALIGN_BASE)&~ALIGN_BASE);
+    d_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    d    = (spinor *)(((unsigned long int)(d_)+ALIGN_BASE)&~ALIGN_BASE);
+    dd_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    dd   = (spinor *)(((unsigned long int)(dd_)+ALIGN_BASE)&~ALIGN_BASE);
+    aux_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    aux  = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE);
+    aux3_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    aux3 = (spinor *)(((unsigned long int)(aux3_)+ALIGN_BASE)&~ALIGN_BASE);
+#else 
+    sv_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    sv   = sv_;
+    d_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    d    = d_;
+    dd_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    dd   = dd_;
+    aux_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    aux  = aux_;
+    aux3_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+    aux3 = aux3_;
+#endif
+    initpnH = 1;
+  }
+
+
+  /* P_0 * S */
+  assign(d, S, N);
+  /* P_1 * S = a_1(1+kappa*H) * S */
+  a1 = 1./(1.-e*e/2.);
+  boundary(-g_kappa);
+  g_mu = -g_mu;
+  D_psi(dd, d);
+  mul_r(dd, a1, dd, N);
+  psi = d;
+  chi = dd;
+/*   assign(chi, d, N); */
+  for(j = 2; j < n+1; j++) {
+    /* a_n */
+    a2 = 1./(1.-a1*e*e/4.);
+    /* 1-a_n */
+    a1 = 1.-a2;
+    /* aux = a_n*S + (1-a_n) psi */
+    mul_add_mul_r(aux, S, psi, a2, a1, N);
+    /* sv = kappa H chi = (D_psi(-kappa, -2kappamu) - 1) chi */
+    D_psi(sv, chi);
+    diff(sv, sv, chi, N);
+    /* psi = aux + a_n * sv */
+    mul_add_mul_r(psi, aux, sv, 1., a2, N);
+    tmp = psi;
+    psi = chi;
+    chi = tmp;
+    a1 = a2;
+  }
+  assign(R, chi, N);
+  boundary(-g_kappa);
+  g_mu = -g_mu;
 
   return;
 }
