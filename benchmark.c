@@ -28,6 +28,7 @@
 #include "boundary.h"
 #include "Hopping_Matrix.h"
 #include "Hopping_Matrix_nocom.h"
+#include "tm_operators.h"
 #include "global.h"
 #include "xchange.h"
 #include "init_gauge_field.h"
@@ -252,8 +253,9 @@ int main(int argc,char *argv[])
 #endif
     for (j=0;j<j_max;j++) {
       for (k=0;k<k_max;k++) {
-	Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
-	Hopping_Matrix(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]);
+	Qtm_plus_psi(g_spinor_field[k+2*k_max], g_spinor_field[k]);
+/* 	Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]); */
+/* 	Hopping_Matrix(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]); */
       }
     }
 #if defined BGL

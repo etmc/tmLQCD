@@ -1,5 +1,6 @@
 # $Id$
 # this sample corresponds to the first case in README
+# the expected plaquette value is 0.62457(7)
 L=4
 T=4
 Measurements = 100000

@@ -4,6 +4,8 @@
 # and normierungLocal.dat in this directory
 # they were generated using the chebyRoot.H file, which can also
 # be found in this directory
+# the expected plaquette value is 0.53347(17)
+# the expected rect. plaq. value is 0.30393(22)
 L=4
 T=4
 Measurements = 35000

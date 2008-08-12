@@ -1,5 +1,18 @@
 See doc/2+1+1_howto.text for more details
 
+as a test the following parameter set can be used (see also
+sample-input/sample-hmc2.input):
+Kappa = 0.170
+2KappaMu = 0.01
+2Kappamubar = 0.1105
+2Kappaepsbar = 0.0935
+beta=3.3
+tlsym gauge action
+antiperiodic boundary conditions for quark fields
+
+P     = 0.53347(17)
+P_rec = 0.30393(22)
+
 
 How it roughly works:
 - Decide for a fixed order n of the less accurate polynomial
@@ -27,12 +40,3 @@ todo:
                          - on BG/L?
 - reduce memory usage?
 
--------
-comment by Thomas Chiarappa:
-
-        Untill today, May 17. 2006 
-
-   If one want to compute EV, remember to configure with 
-
-               --disable-gaugecopy
- 
