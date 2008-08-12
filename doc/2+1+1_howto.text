@@ -37,7 +37,7 @@ kappa = 0.1234
 # 2*kappa*mu_desired
 # where mu_desired is the quark mass you want to simulate 
 # in the LIGHT quark sector
-mu = 0.00005    
+2KappaMu = 0.00005    
 
 # twisted mass for the heavy sector
 # set this to the mean value of the mass of the HEAVY quarks
