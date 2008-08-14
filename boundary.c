@@ -13,13 +13,13 @@
 #include "global.h"
 #include "su3.h"
 #include "boundary.h"
-
+  
 complex ka0, ka1, ka2, ka3;
 complex phase_0, phase_1, phase_2, phase_3;
 const double PI_ = 3.14159265358979;
 double X0;
 
-void boundary(const double kappa){
+void boundary(const double kappa) {
   double x0,x1,x2,x3;
   /* anti-periodic in time */
   x0 = X0 * PI_/((T)*g_nproc_t);

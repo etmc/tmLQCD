@@ -33,7 +33,7 @@
 
 void online_measurement(const int traj, const int t0) {
   int i, j, t, tt;
-  double *Cpp, *Cpa;
+  double *Cpp, *Cpa, *Cp4;
   double res = 0., respa = 0., resp4 = 0.;
   double atime, etime;
 #ifdef MPI

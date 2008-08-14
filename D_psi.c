@@ -6,7 +6,7 @@
  *
  * The externally accessible function is
  *
- *   void D_psi(spinor * const P, spinor * const Q, const double m0)
+ *   void D_psi(spinor * const P, spinor * const Q)
  *     Computes D*Q and stores the result in P
  *
  * original code by
