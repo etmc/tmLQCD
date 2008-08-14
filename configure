@@ -9660,9 +9660,10 @@ _ACEOF
         LIBS="-llapack -lblas $LIBS"
       fi
     else
-      { { echo "$as_me:$LINENO: error: \"Cannot find liblapack!\"" >&5
-echo "$as_me: error: \"Cannot find liblapack!\"" >&2;}
-   { (exit 1); exit 1; }; }
+#      { { echo "$as_me:$LINENO: error: \"Cannot find liblapack!\"" >&5
+#echo "$as_me: error: \"Cannot find liblapack!\"" >&2;}
+#   { (exit 1); exit 1; }; }
+        LIBS="-llapack -lblas $LIBS"
     fi
     LIBS="$LIBS $F2C"
   fi
