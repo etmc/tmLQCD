@@ -9,8 +9,8 @@ typedef struct
 {
   /* Data members */
   /* Include, possibly, E/O boolean, storage for 'big' fields */
-  su3spinor **little_basis;
-  su3spinor **little_neighbour_edges;
+  spinor **little_basis;
+  spinor **little_neighbour_edges;
   complex    *little_dirac_operator;
 
   complex    *local_little_field;
@@ -21,9 +21,9 @@ typedef struct
   
 } deflation_block;
 
-int init_deflation_blocks(int const nblocks);
+int init_deflation_blocks();
 int free_deflation_blocks();
 
-void add_basis_field(int const index, su3spinor const *field);
+int add_basis_field(int const index, spinor const *field);
 
 #endif
