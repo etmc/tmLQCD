@@ -76,14 +76,24 @@ int free_deflation_blocks()
 
 int add_basis_field(int const index, spinor const *field)
 {
-  /* This should in principle include a transposition step if we want to use LAPACK for all
-     the low and dirty linear algebra. Specifically, we would like to use its SVD routines here. */
   int ctr_t;
-  int contig_block = VOLUME / (2 * T);
-  for (ctr_t = 0; ctr_t < T; ++ctr_t)
+  int contig_block = Z / 2;
+  for (ctr_t = 0; ctr_t < (2*VOLUME/Z); ++ctr_t)
   {
-    memcpy(g_deflation_blocks[0].little_basis[index], field + (2 * T) * contig_block, contig_block * sizeof(spinor));
-    memcpy(g_deflation_blocks[1].little_basis[index], field + (2 * T + 1) * contig_block, contig_block * sizeof(spinor));
+    memcpy(g_deflation_blocks[0].little_basis[index], field + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
+    memcpy(g_deflation_blocks[1].little_basis[index], field + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
+  }
+  return 0;
+}
+
+int copy_block_gauge(su3 const *field)
+{
+  int ctr_t;
+  int contig_block = Z / 2;
+  for (ctr_t = 0; ctr_t < (2*VOLUME/Z); ++ctr_t)
+  {
+    memcpy(g_deflation_blocks[0].u, field + (2 * ctr_t) * 8 * contig_block, contig_block * sizeof(su3));
+    memcpy(g_deflation_blocks[1].u, field + (2 * ctr_t + 1) * 8 * contig_block, contig_block * sizeof(su3));
   }
   return 0;
 }
