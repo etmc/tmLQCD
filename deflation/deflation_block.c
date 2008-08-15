@@ -14,10 +14,9 @@ extern int LITTLE_BASIS_SIZE;
 int init_deflation_blocks()
 {
   int i, j;
-
+  
   g_deflation_blocks = calloc(2, sizeof(deflation_block));
-  for (i = 0; i < 2; ++i)
-  {
+  for (i = 0; i < 2; ++i) {
     if ((void*)(g_deflation_blocks[i].little_basis = calloc(LITTLE_BASIS_SIZE, sizeof(spinor *))) == NULL)
       CALLOC_ERROR_CRASH;
     
@@ -58,8 +57,7 @@ int free_deflation_blocks()
 {
   int i, j;
 
-  for (i = 0; i < 2; ++i)
-  {   
+  for (i = 0; i < 2; ++i) {   
     for (j = 0; j < LITTLE_BASIS_SIZE; ++j)
       free(g_deflation_blocks[i].little_basis[j]);
     free(g_deflation_blocks[i].little_basis);
@@ -88,4 +86,107 @@ int add_basis_field(int const index, spinor const *field)
     memcpy(g_deflation_blocks[1].little_basis[index], field + (2 * T + 1) * contig_block, contig_block * sizeof(spinor));
   }
   return 0;
+}
+
+/* the following should be somewhere else ... */
+
+complex block_scalar_prod_Ugamma(spinor * const r, spinor * const s, 
+				const int mu, const int N) {
+  complex c;
+
+  return(c);
+}
+
+complex block_scalar_prod(spinor * const r, spinor * const s, const int N) {
+  int ix;
+  static double ks,kc,ds,tr,ts,tt;
+  spinor *s,*r;
+  complex c;
+  
+  /* Real Part */
+
+  ks=0.0;
+  kc=0.0;
+#if (defined BGL && defined XLC)
+  __alignx(16, S);
+  __alignx(16, R);
+#endif  
+  for (ix = 0; ix < N; ix++){
+    s=(spinor *) S + ix;
+    r=(spinor *) R + ix;
+    
+    ds=(*r).s0.c0.re*(*s).s0.c0.re+(*r).s0.c0.im*(*s).s0.c0.im+
+       (*r).s0.c1.re*(*s).s0.c1.re+(*r).s0.c1.im*(*s).s0.c1.im+
+       (*r).s0.c2.re*(*s).s0.c2.re+(*r).s0.c2.im*(*s).s0.c2.im+
+       (*r).s1.c0.re*(*s).s1.c0.re+(*r).s1.c0.im*(*s).s1.c0.im+
+       (*r).s1.c1.re*(*s).s1.c1.re+(*r).s1.c1.im*(*s).s1.c1.im+
+       (*r).s1.c2.re*(*s).s1.c2.re+(*r).s1.c2.im*(*s).s1.c2.im+
+       (*r).s2.c0.re*(*s).s2.c0.re+(*r).s2.c0.im*(*s).s2.c0.im+
+       (*r).s2.c1.re*(*s).s2.c1.re+(*r).s2.c1.im*(*s).s2.c1.im+
+       (*r).s2.c2.re*(*s).s2.c2.re+(*r).s2.c2.im*(*s).s2.c2.im+
+       (*r).s3.c0.re*(*s).s3.c0.re+(*r).s3.c0.im*(*s).s3.c0.im+
+       (*r).s3.c1.re*(*s).s3.c1.re+(*r).s3.c1.im*(*s).s3.c1.im+
+       (*r).s3.c2.re*(*s).s3.c2.re+(*r).s3.c2.im*(*s).s3.c2.im;
+
+    /* Kahan Summation */    
+    tr=ds+kc;
+    ts=tr+ks;
+    tt=ts-ks;
+    ks=ts;
+    kc=tr-tt;
+  }
+  c.re = ks+kc;
+
+  /* Imaginary Part */
+
+  ks=0.0;
+  kc=0.0;
+  
+  for (ix=0;ix<N;ix++){
+    s=(spinor *) S + ix;
+    r=(spinor *) R + ix;
+    
+    ds=-(*r).s0.c0.re*(*s).s0.c0.im+(*r).s0.c0.im*(*s).s0.c0.re-
+      (*r).s0.c1.re*(*s).s0.c1.im+(*r).s0.c1.im*(*s).s0.c1.re-
+      (*r).s0.c2.re*(*s).s0.c2.im+(*r).s0.c2.im*(*s).s0.c2.re-
+      (*r).s1.c0.re*(*s).s1.c0.im+(*r).s1.c0.im*(*s).s1.c0.re-
+      (*r).s1.c1.re*(*s).s1.c1.im+(*r).s1.c1.im*(*s).s1.c1.re-
+      (*r).s1.c2.re*(*s).s1.c2.im+(*r).s1.c2.im*(*s).s1.c2.re-
+      (*r).s2.c0.re*(*s).s2.c0.im+(*r).s2.c0.im*(*s).s2.c0.re-
+      (*r).s2.c1.re*(*s).s2.c1.im+(*r).s2.c1.im*(*s).s2.c1.re-
+      (*r).s2.c2.re*(*s).s2.c2.im+(*r).s2.c2.im*(*s).s2.c2.re-
+      (*r).s3.c0.re*(*s).s3.c0.im+(*r).s3.c0.im*(*s).s3.c0.re-
+      (*r).s3.c1.re*(*s).s3.c1.im+(*r).s3.c1.im*(*s).s3.c1.re-
+      (*r).s3.c2.re*(*s).s3.c2.im+(*r).s3.c2.im*(*s).s3.c2.re;
+    
+    tr=ds+kc;
+    ts=tr+ks;
+    tt=ts-ks;
+    ks=ts;
+    kc=tr-tt;
+  }
+  c.im = ks+kc;
+  return(c);
+}
+
+void compute_little_D_digonal(deflation_block * blk) {
+  int i,j;
+  /* we need working space, where do we best allocate it? */
+  spinor * tmp; 
+  complex * M = blk->little_dirac_operator;
+
+  for(i = 0; i < g_Ns; i++) {
+    Block_D_psi(tmp, blk->little_basis[i]);
+    for(j = 0; j < g_Ns; j++) {
+      /* order correct ? */
+      M[i*g_Ns + j] = block_scalar_prod(blk->little_basis[j], tmp, blk->volume);
+    }
+  }
+  return;
+}
+
+void compute_little_D_offdiagonal(deflation_block * blk) {
+/*   Here we need to multiply the boundary with the corresponding  */
+/*   U and gamma_i and take the scalar product then */
+  
 }
