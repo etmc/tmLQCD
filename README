@@ -217,3 +217,32 @@ beta = 6.0, kappa = 0.177, 2 kappa mu = 0.5
 ------------------------------------------------------
 Carsten   0.6095(3)          2.8        4000    0.1667
 ------------------------------------------------------
+
+
+Some more or less strict coding rules:
+
+- C99 standard, configure should take care of non-conform compilers
+- variables starting with 'g_' are declared in global.h
+- constant macros are all capital letters
+  and starting with a '_'
+- other varialbes all small letters
+- as few as possible macros, inline instead...
+- as much as possible speaking names
+- all default values defined in default_input_values.h
+- order of parameters to functions should be (if applicable)
+  f(output, input)
+- indent by 2 spaces, but otherwise like
+function1() {
+  dostuff
+  do more stuff
+}
+  but never an empty line after an opening '{', because then emacs informes
+  you about an empty line, when you are at the '}' of a long block...
+  And always a space before a '{' for paren highlighting in emacs
+
+  But also your style (this is real gnu-indent-style, I guess), is okay,
+  eventhough there are sometimes really a lot of spaces in this style.
+- I usually always put braces, even if there is only one line in the block.
+- header files always enclosed in #ifnedef _NAME_H #define _NAME ... #endif
+- define parameters to	function	as const where applicable
+- first	line in	every file /* $Id$ */ for CVS

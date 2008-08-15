@@ -92,7 +92,8 @@ int fgmres(spinor * const P,spinor * const Q,
       /* g_spinor_field[DUM_SOLVER]=A*M^-1*v_j */
 
 /*       invert_eigenvalue_part(Z[j], V[j], 10, N); */
-      poly_precon(Z[j], V[j], alpha[0].re*alpha[0].re, 10);
+      poly_nonherm_precon(Z[j], V[j], .1, 4, N);
+/*       poly_precon(Z[j], V[j], alpha[0].re*alpha[0].re, 10); */
 /*       assign(Z[j], V[j], N); */
       f(r0, Z[j]); 
       /* Set h_ij and omega_j */

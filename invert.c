@@ -413,9 +413,7 @@ int main(int argc,char *argv[]) {
 
       if(g_proc_id == 0) {
 	printf("Inversion for source %d done in %d iterations, residue = %e!\n", ix, iter, nrm1+nrm2);
-#ifdef MPI
-	printf("Inversion done in %e sec. (MPI_Wtime)\n", etime-atime);
-#endif
+	printf("Inversion done in %1.2e sec. \n", etime-atime);
         write_inverter_info(nrm1+nrm2, iter, 0, 1, conf_filename);
       }
     }

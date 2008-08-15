@@ -166,7 +166,7 @@ void poly_precon(spinor * const R, spinor * const S, const double prec, const in
 void poly_nonherm_precon(spinor * const R, spinor * const S, 
 			 const double e, const int n) {
   int j;
-  double a1, a2;
+  double a1, a2, dtmp;
   double fact1, fact2, temp1, temp2, temp3, temp4, auxnorm;
   static spinor *sv_, *sv, *d_, *d, *dd_, *dd, *aux_, *aux, *aux3_, *aux3;
   static int initpnH = 0;
@@ -203,7 +203,7 @@ void poly_nonherm_precon(spinor * const R, spinor * const S,
     initpnH = 1;
   }
 
-
+  /* signs to be clarified!! */
   /* P_0 * S */
   assign(d, S, N);
   /* P_1 * S = a_1(1+kappa*H) * S */
@@ -214,6 +214,16 @@ void poly_nonherm_precon(spinor * const R, spinor * const S,
   mul_r(dd, a1, dd, N);
   psi = d;
   chi = dd;
+
+/*   boundary(-g_kappa); */
+/*   g_mu = -g_mu; */
+/*   D_psi(aux, chi); */
+/*   diff(aux, aux, S, N); */
+/*   dtmp = square_norm(aux, N); */
+/*   printf("1 %1.3e\n", dtmp); */
+/*   boundary(-g_kappa); */
+/*   g_mu = -g_mu; */
+
 /*   assign(chi, d, N); */
   for(j = 2; j < n+1; j++) {
     /* a_n */
@@ -224,18 +234,28 @@ void poly_nonherm_precon(spinor * const R, spinor * const S,
     mul_add_mul_r(aux, S, psi, a2, a1, N);
     /* sv = kappa H chi = (D_psi(-kappa, -2kappamu) - 1) chi */
     D_psi(sv, chi);
-    diff(sv, sv, chi, N);
+    /* why is the following sign like this? */
+    diff(sv, chi, sv, N);
     /* psi = aux + a_n * sv */
     mul_add_mul_r(psi, aux, sv, 1., a2, N);
     tmp = psi;
     psi = chi;
     chi = tmp;
+
+
+/*     boundary(-g_kappa); */
+/*     g_mu = -g_mu; */
+/*     D_psi(aux, chi); */
+/*     diff(aux, aux, S, N); */
+/*     dtmp = square_norm(aux, N); */
+/*     printf("%d %1.3e\n", j, dtmp); */
+/*     boundary(-g_kappa); */
+/*     g_mu = -g_mu; */
     a1 = a2;
   }
   assign(R, chi, N);
   boundary(-g_kappa);
   g_mu = -g_mu;
-
   return;
 }
 
