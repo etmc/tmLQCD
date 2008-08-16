@@ -50,7 +50,7 @@ int gcr(spinor * const P, spinor * const Q,
     diff(rho, Q, tmp, N);
     err = square_norm(rho, N);
     if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-      printf("%d\t%g true GCR residue\n", restart*m, err); 
+      printf("GCR: %d\t%g true residue\n", restart*m, err); 
       fflush(stdout);
     }
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
@@ -60,7 +60,7 @@ int gcr(spinor * const P, spinor * const Q,
 
 /*       assign(xi[k], rho, N); */
 /*       poly_precon(xi[k], rho, -1., 200); */
-      poly_nonherm_precon(xi[k], rho, 0.1, 4, N);
+      poly_nonherm_precon(xi[k], rho, 0., 1.1, 4, N);
 /*       gmres_precon(xi[k], rho, 5, 2,   */
 /* 		    1.e-13, rel_prec, N, &Mtm_plus_psi);  */
       f(tmp, xi[k]); 
@@ -75,7 +75,7 @@ int gcr(spinor * const P, spinor * const Q,
       assign_diff_mul(rho, chi[k], c[k], N);
       err = square_norm(rho, N);
       if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-	printf("%d\t%g GCR residue\n", restart*m+k, err); 
+	printf("GCR: %d\t%g iterated residue\n", restart*m+k, err); 
 	fflush(stdout);
       }
       /* Precision reached? */

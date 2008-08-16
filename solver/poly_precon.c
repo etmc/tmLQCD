@@ -164,57 +164,41 @@ void poly_precon(spinor * const R, spinor * const S, const double prec, const in
 
 
 void poly_nonherm_precon(spinor * const R, spinor * const S, 
-			 const double e, const int n) {
+			 const double e, const double d, const int n) {
   int j;
   double a1, a2, dtmp;
-  double fact1, fact2, temp1, temp2, temp3, temp4, auxnorm;
-  static spinor *sv_, *sv, *d_, *d, *dd_, *dd, *aux_, *aux, *aux3_, *aux3;
+  static spinor *work, *work_;
   static int initpnH = 0;
-  static double * c;
   const int N = VOLUME;
-  spinor * psi, * chi, *tmp;
+  spinor * psi, * chi, *tmp0, *tmp1, *cptmp;
 
   
   if(initpnH == 0) {
-    c = (double*)calloc(1000, sizeof(double));
+    work_  = calloc(4*VOLUMEPLUSRAND+1, sizeof(spinor));
 #if (defined SSE || defined SSE2 || defined SSE3)
-    sv_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-    sv   = (spinor *)(((unsigned long int)(sv_)+ALIGN_BASE)&~ALIGN_BASE);
-    d_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-    d    = (spinor *)(((unsigned long int)(d_)+ALIGN_BASE)&~ALIGN_BASE);
-    dd_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-    dd   = (spinor *)(((unsigned long int)(dd_)+ALIGN_BASE)&~ALIGN_BASE);
-    aux_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-    aux  = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE);
-    aux3_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-    aux3 = (spinor *)(((unsigned long int)(aux3_)+ALIGN_BASE)&~ALIGN_BASE);
+    work   = (spinor *)(((unsigned long int)(work_)+ALIGN_BASE)&~ALIGN_BASE);
 #else 
-    sv_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-    sv   = sv_;
-    d_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-    d    = d_;
-    dd_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-    dd   = dd_;
-    aux_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-    aux  = aux_;
-    aux3_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-    aux3 = aux3_;
+    work = work_;
 #endif
     initpnH = 1;
   }
+  psi = work;
+  chi = &work[VOLUMEPLUSRAND];
+  tmp0 = &work[2*VOLUMEPLUSRAND];
+  tmp1 = &work[3*VOLUMEPLUSRAND];
 
   /* signs to be clarified!! */
   /* P_0 * S */
-  assign(d, S, N);
+  mul_r(psi, 1./d, S, N);
   /* P_1 * S = a_1(1+kappa*H) * S */
-  a1 = 1./(1.-e*e/2.);
-  boundary(-g_kappa);
-  g_mu = -g_mu;
-  D_psi(dd, d);
-  mul_r(dd, a1, dd, N);
-  psi = d;
-  chi = dd;
-
+  a1 = d/(d*d-e*e/2.);
+  boundary(g_kappa/d);
+  dtmp = g_mu;
+  g_mu = g_mu/d;
+  D_psi(chi, S);
+  mul_r(chi, a1, chi, N);
+  boundary(g_kappa);
+  g_mu = dtmp;
 /*   boundary(-g_kappa); */
 /*   g_mu = -g_mu; */
 /*   D_psi(aux, chi); */
@@ -227,21 +211,20 @@ void poly_nonherm_precon(spinor * const R, spinor * const S,
 /*   assign(chi, d, N); */
   for(j = 2; j < n+1; j++) {
     /* a_n */
-    a2 = 1./(1.-a1*e*e/4.);
+    a2 = 1./(d-a1*e*e/4.);
     /* 1-a_n */
-    a1 = 1.-a2;
+    a1 = 1.-d*a2;
     /* aux = a_n*S + (1-a_n) psi */
-    mul_add_mul_r(aux, S, psi, a2, a1, N);
+    mul_add_mul_r(tmp0, S, psi, a2, a1, N);
     /* sv = kappa H chi = (D_psi(-kappa, -2kappamu) - 1) chi */
-    D_psi(sv, chi);
+    D_psi(tmp1, chi);
     /* why is the following sign like this? */
-    diff(sv, chi, sv, N);
+    diff(tmp1, chi, tmp1, N);
     /* psi = aux + a_n * sv */
-    mul_add_mul_r(psi, aux, sv, 1., a2, N);
-    tmp = psi;
+    mul_add_mul_r(psi, tmp0, tmp1, 1., a2, N);
+    cptmp = psi;
     psi = chi;
-    chi = tmp;
-
+    chi = cptmp;
 
 /*     boundary(-g_kappa); */
 /*     g_mu = -g_mu; */
@@ -254,8 +237,8 @@ void poly_nonherm_precon(spinor * const R, spinor * const S,
     a1 = a2;
   }
   assign(R, chi, N);
-  boundary(-g_kappa);
-  g_mu = -g_mu;
+/*   boundary(-g_kappa); */
+/*   g_mu = -g_mu; */
   return;
 }
 

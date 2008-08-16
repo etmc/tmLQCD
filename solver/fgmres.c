@@ -77,7 +77,7 @@ int fgmres(spinor * const P,spinor * const Q,
     alpha[0].re=sqrt(square_norm(r0, N));
 
     if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-      printf("%d\t%g true residue\n", restart*m, alpha[0].re*alpha[0].re); 
+      printf("FGMRES %d\t%g true residue\n", restart*m, alpha[0].re*alpha[0].re); 
       fflush(stdout);
     }
 
@@ -92,7 +92,7 @@ int fgmres(spinor * const P,spinor * const Q,
       /* g_spinor_field[DUM_SOLVER]=A*M^-1*v_j */
 
 /*       invert_eigenvalue_part(Z[j], V[j], 10, N); */
-      poly_nonherm_precon(Z[j], V[j], .1, 4, N);
+      poly_nonherm_precon(Z[j], V[j], .1, 1., 4, N);
 /*       poly_precon(Z[j], V[j], alpha[0].re*alpha[0].re, 10); */
 /*       assign(Z[j], V[j], N); */
       f(r0, Z[j]); 
@@ -125,7 +125,7 @@ int fgmres(spinor * const P,spinor * const Q,
 
       /* precision reached? */
       if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-	printf("fgmres\t%d\t%g residue\n", restart*m+j, alpha[j+1].re*alpha[j+1].re); 
+	printf("FGMRES\t%d\t%g iterated residue\n", restart*m+j, alpha[j+1].re*alpha[j+1].re); 
 	fflush(stdout);
       }
       if(((alpha[j+1].re <= eps) && (rel_prec == 0)) || ((alpha[j+1].re <= eps*norm) && (rel_prec == 1))){
