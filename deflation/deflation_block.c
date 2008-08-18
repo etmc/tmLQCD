@@ -260,9 +260,9 @@ void compute_little_D_diagonal(void *parent) {
   complex * M = this->little_dirac_operator;
 
   
-  for(i = 0; i < this->little_basis_size; i++) {
+  for(i = 0; i < this->little_basis_size; i++){
     Block_D_psi(tmp, this->little_basis[i]);
-    for(j = 0; j < this->little_basis_size; j++) {
+    for(j = 0; j < this->little_basis_size; j++){
       /* order correct ? */
       M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume);
     }
@@ -275,88 +275,60 @@ void block_compute_little_D_offdiagonal(void *parent) {
 /*   U and gamma_i and take the scalar product then */
 /*   NOTE I will assume the boundaries are available, for the time being */
   deflation_block *this = (deflation_block*)parent;
-  int i,j;
-  spinor * tmp; 
-  /* Start by going for the first block (t-up) */
-  complex * M = this->little_dirac_operator + this->little_basis_size * this->little_basis_size;
-  spinor *neighbour = this->little_neighbour_edges[0];
-  for(i = 0; i < this->little_basis_size; i++) {
-    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
-    for(j = 0; j < this->little_basis_size; j++) {
-      /* order correct ? */
-      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / T);
+  int i, j, vec_ctr, dir, surface;
+  int start, stride;
+  spinor tmp;
+  spinor **neighbours = this->little_neighbour_edges;
+  spinor *basis;
+  complex *M = this->little_dirac_operator + this->little_basis_size * this->little_basis_size;
+  complex result, aggregate[this->little_basis_size];
+  su3 *gauge;
+
+  /* +T direction (+0) */
+  for(vec_ctr = 0; vec_ctr < this->little_basis_size; ++vec_ctr){
+    
+    stride = 1;
+    surface = this->local_volume / T;
+    start = this->little_basis + vec_ctr * this->local_volume;
+    gauge_start = u;
+    
+    aggregate.re = 0;
+    aggregate.im = 0;
+    
+    for(i = 0; i < surface; ++i){
+      boundary_D_0(tmp, start + i * stride, gauge_start + 8 * i * stride);
+      for(j = 0; j < this->little_basis_size; ++j){
+        result = block_scalar_prod(neighbours[0][i + j * surface], tmp, 1);
+        aggregate[j].re += result.re;
+        aggregate[j].im += result.im;
+      }
     }
+    memcpy(M, aggregate, this->little_basis_size); /* NOTE I'm maybe mucking up colums/rows here */
   }
-  /* Start by going for the first block (t-down) */
+
+  /* -T direction (-0) */
   M += this->little_basis_size * this->little_basis_size;
-  neighbour = this->little_neighbour_edges[1];
-  for(i = 0; i < this->little_basis_size; i++) {
-    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
-    for(j = 0; j < this->little_basis_size; j++) {
-      /* order correct ? */
-      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / T);
+  for(vec_ctr = 0; vec_ctr < this->little_basis_size; ++vec_ctr){   
+    
+    start = this->little_basis + local_volume - T + vec_ctr * this->local_volume;
+    gauge_start = u + 8 * (local_volume - T) + 1;
+    
+    aggregate.re = 0;
+    aggregate.im = 0;
+    
+    for(i = 0; i < surface; ++i){
+      boundary_D_1(tmp, start + i * stride, gauge_start + 8 * i * stride);
+      for(j = 0; j < this->little_basis_size; ++j){
+        result = block_scalar_prod(neighbours[1][i + j * surface], tmp, 1);
+        aggregate[j].re += result.re;
+        aggregate[j].im += result.im;
+      }
     }
+    memcpy(M, aggregate, this->little_basis_size); /* NOTE I'm maybe mucking up colums/rows here */
   }
-  /* Start by going for the first block (x-up) */
-  M += this->little_basis_size * this->little_basis_size;
-  neighbour = this->little_neighbour_edges[2];
-  for(i = 0; i < this->little_basis_size; i++) {
-    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
-    for(j = 0; j < this->little_basis_size; j++) {
-      /* order correct ? */
-      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / LX);
-    }
-  }
-  /* Start by going for the first block (x-down) */
-  M += this->little_basis_size * this->little_basis_size;
-  neighbour = this->little_neighbour_edges[3];
-  for(i = 0; i < this->little_basis_size; i++) {
-    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
-    for(j = 0; j < this->little_basis_size; j++) {
-      /* order correct ? */
-      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / LX);
-    }
-  }
-  /* Start by going for the first block (y-up) */
-  M += this->little_basis_size * this->little_basis_size;
-  neighbour = this->little_neighbour_edges[4];
-  for(i = 0; i < this->little_basis_size; i++) {
-    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
-    for(j = 0; j < this->little_basis_size; j++) {
-      /* order correct ? */
-      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / LY);
-    }
-  }
-  /* Start by going for the first block (y-down) */
-  M += this->little_basis_size * this->little_basis_size;
-  neighbour = this->little_neighbour_edges[5];
-  for(i = 0; i < this->little_basis_size; i++) {
-    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
-    for(j = 0; j < this->little_basis_size; j++) {
-      /* order correct ? */
-      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / LY);
-    }
-  }
-  /* Start by going for the first block (z-up) */
-  M += this->little_basis_size * this->little_basis_size;
-  neighbour = this->little_neighbour_edges[6];
-  for(i = 0; i < this->little_basis_size; i++) {
-    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
-    for(j = 0; j < this->little_basis_size; j++) {
-      /* order correct ? */
-      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / LZ);
-    }
-  }
-  /* Start by going for the first block (z-down) */
-  M += this->little_basis_size * this->little_basis_size;
-  neighbour = this->little_neighbour_edges[7];
-  for(i = 0; i < this->little_basis_size; i++) {
-    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
-    for(j = 0; j < this->little_basis_size; j++) {
-      /* order correct ? */
-      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / LZ);
-    }
-  }
+
+  /* +X direction (+1) */
+  /* NOTE As above, but make sure to include also readsize to be able to fully define the scan */
 }
 
 /* Uses a Modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
