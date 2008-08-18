@@ -28,7 +28,9 @@ typedef struct {
   /**** 'Member' functions ****/
   void (*orthonormalize)(void *parent);
   spinor *(*reconstruct_global_field)(void *parent, int const index, spinor *reconstructed_field);
-  void (*)(void *parent);
+  void (*compute_little_D_offdiagonal)(void *parent);
+  void (*compute_little_D_diagonal)(void *parent);
+  
 } deflation_block;
 
 int init_deflation_blocks();
@@ -39,6 +41,8 @@ int copy_block_gauge(su3 const *field);
 
 void block_orthonormalize(void *parent);
 spinor *block_reconstruct_global_field(void *parent, int const index, spinor *reconstructed_field);
-void block_build_little_dirac(void *parent);
+
+void block_compute_little_D_offdiagonal(void *parent);
+void block_compute_little_D_diagonal(void *parent);
 
 #endif

@@ -110,7 +110,7 @@ complex block_scalar_prod_Ugamma(spinor * const r, spinor * const s,
   return(c);
 }
 
-complex block_scalar_prod(spinor * const r, spinor * const s, const int N) {
+complex block_scalar_prod(spinor * const R, spinor * const s, const int N) {
   int ix;
   static double ks,kc,ds,tr,ts,tt;
   complex c;
@@ -221,26 +221,111 @@ double block_two_norm(spinor * const r, const int N) {
   return(norm);
 }
 
-void compute_little_D_diagonal(deflation_block * blk) {
+void compute_little_D_diagonal(void *parent) {
   int i,j;
   /* we need working space, where do we best allocate it? */
-  spinor * tmp; 
-  complex * M = blk->little_dirac_operator;
+  spinor * tmp;
+  this = (deflation_block*)parent;
+  complex * M = this->little_dirac_operator;
 
-  for(i = 0; i < blk->little_basis_size; i++) {
-    Block_D_psi(tmp, blk->little_basis[i]);
-    for(j = 0; j < blk->little_basis_size; j++) {
+  
+  for(i = 0; i < this->little_basis_size; i++) {
+    Block_D_psi(tmp, this->little_basis[i]);
+    for(j = 0; j < this->little_basis_size; j++) {
       /* order correct ? */
-      M[i*blk->little_basis_size + j] = block_scalar_prod(blk->little_basis + j * blk->local_volume, tmp, blk->local_volume);
+      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume);
     }
   }
   return;
 }
 
-void compute_little_D_offdiagonal(deflation_block * blk) {
+void block_compute_little_D_offdiagonal(void *parent) {
 /*   Here we need to multiply the boundary with the corresponding  */
 /*   U and gamma_i and take the scalar product then */
-  
+/*   NOTE I will assume the boundaries are available, for the time being */
+  this = (deflation_block*)parent;
+  int i,j;
+  spinor * tmp; 
+  /* Start by going for the first block (t-up) */
+  complex * M = this->little_dirac_operator + this->little_basis_size * this->little_basis_size;
+  spinor *neighbour = little_neighbour_edges[0];
+  for(i = 0; i < this->little_basis_size; i++) {
+    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
+    for(j = 0; j < this->little_basis_size; j++) {
+      /* order correct ? */
+      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / T);
+    }
+  }
+  /* Start by going for the first block (t-down) */
+  complex * M += this->little_basis_size * this->little_basis_size;
+  spinor *neighbour = little_neighbour_edges[1];
+  for(i = 0; i < this->little_basis_size; i++) {
+    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
+    for(j = 0; j < this->little_basis_size; j++) {
+      /* order correct ? */
+      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / T);
+    }
+  }
+  /* Start by going for the first block (x-up) */
+  complex * M += this->little_basis_size * this->little_basis_size;
+  spinor *neighbour = little_neighbour_edges[2];
+  for(i = 0; i < this->little_basis_size; i++) {
+    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
+    for(j = 0; j < this->little_basis_size; j++) {
+      /* order correct ? */
+      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / LX);
+    }
+  }
+  /* Start by going for the first block (x-down) */
+  complex * M += this->little_basis_size * this->little_basis_size;
+  spinor *neighbour = little_neighbour_edges[3];
+  for(i = 0; i < this->little_basis_size; i++) {
+    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
+    for(j = 0; j < this->little_basis_size; j++) {
+      /* order correct ? */
+      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / LX);
+    }
+  }
+  /* Start by going for the first block (y-up) */
+  complex * M += this->little_basis_size * this->little_basis_size;
+  spinor *neighbour = little_neighbour_edges[4];
+  for(i = 0; i < this->little_basis_size; i++) {
+    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
+    for(j = 0; j < this->little_basis_size; j++) {
+      /* order correct ? */
+      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / LY);
+    }
+  }
+  /* Start by going for the first block (y-down) */
+  complex * M += this->little_basis_size * this->little_basis_size;
+  spinor *neighbour = little_neighbour_edges[5];
+  for(i = 0; i < this->little_basis_size; i++) {
+    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
+    for(j = 0; j < this->little_basis_size; j++) {
+      /* order correct ? */
+      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / LY);
+    }
+  }
+  /* Start by going for the first block (z-up) */
+  complex * M += this->little_basis_size * this->little_basis_size;
+  spinor *neighbour = little_neighbour_edges[6];
+  for(i = 0; i < this->little_basis_size; i++) {
+    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
+    for(j = 0; j < this->little_basis_size; j++) {
+      /* order correct ? */
+      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / LZ);
+    }
+  }
+  /* Start by going for the first block (z-down) */
+  complex * M += this->little_basis_size * this->little_basis_size;
+  spinor *neighbour = little_neighbour_edges[7];
+  for(i = 0; i < this->little_basis_size; i++) {
+    boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
+    for(j = 0; j < this->little_basis_size; j++) {
+      /* order correct ? */
+      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume / LZ);
+    }
+  }
 }
 
 /* Uses a modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
@@ -287,6 +372,3 @@ spinor *block_reconstruct_global_basis(void *parent, int const index, spinor *re
   }
   return reconstructed_field;
 }
-
-/* Constructs the little Dirac operator matrix from the little basis */
-void block_build_little_dirac(void *parent)
