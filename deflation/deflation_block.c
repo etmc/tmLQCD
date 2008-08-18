@@ -52,6 +52,8 @@ int init_deflation_blocks()
       CALLOC_ERROR_CRASH;
 
     g_deflation_blocks[i].orthonormalize = &block_orthonormalize;
+    g_deflation_blocks[i].reconstruct_global_field = &block_reconstruct_global_field;
+    g_deflation_blocks[i].build_little_dirac = &block_build_little_dirac;
   }
   return 0;
 }
@@ -62,15 +64,15 @@ int free_deflation_blocks()
 
   for(i = 0; i < 2; ++i){
     free(g_deflation_blocks[i].little_basis);
-    
+
     for (j = 0; j < 8; ++j)
       free(g_deflation_blocks[i].little_neighbour_edges[j]);
     free(g_deflation_blocks[i].little_neighbour_edges);
-    
+
     free(g_deflation_blocks[i].little_dirac_operator);
     free(g_deflation_blocks[i].local_little_field);
   }
-  
+
   free(g_deflation_blocks);
   return 0;
 }
@@ -79,7 +81,7 @@ int add_basis_field(int const index, spinor const *field)
 {
   int ctr_t;
   int contig_block = LZ / 2;
-  for (ctr_t = 0; ctr_t < ( 2 * VOLUME / LZ); ++ctr_t)
+  for (ctr_t = 0; ctr_t < (2 * VOLUME / LZ); ++ctr_t)
   {
     memcpy(g_deflation_blocks[0].little_basis + index * VOLUME, field + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
     memcpy(g_deflation_blocks[1].little_basis + index * VOLUME, field + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
@@ -89,9 +91,9 @@ int add_basis_field(int const index, spinor const *field)
 
 int copy_block_gauge(su3 const *field)
 {
+  /* NOTE INVALID AS IS */
   int ctr_t;
-  int contig_block = LZ / 2;
-  for (ctr_t = 0; ctr_t < (2*VOLUME/LZ); ++ctr_t)
+  for (ctr_t = 0; ctr_t < (2 * VOLUME / LZ); ++ctr_t)
   {
     memcpy(g_deflation_blocks[0].u, field + (2 * ctr_t) * 8 * contig_block, contig_block * sizeof(su3));
     memcpy(g_deflation_blocks[1].u, field + (2 * ctr_t + 1) * 8 * contig_block, contig_block * sizeof(su3));
@@ -241,7 +243,7 @@ void compute_little_D_offdiagonal(deflation_block * blk) {
   
 }
 
-/* Use a modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
+/* Uses a modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
 void block_orthonormalize(void *parent){
   int i, j, k;
   spinor *current, *next, *iter;
@@ -272,3 +274,19 @@ void block_orthonormalize(void *parent){
     }
   }
 }
+
+/* Reconstructs a global field from the little basis of two blocks */
+spinor *block_reconstruct_global_basis(void *parent, int const index, spinor *reconstructed_field)
+{
+  int ctr_t;
+  int contig_block = LZ / 2;
+  for (ctr_t = 0; ctr_t < (2 * VOLUME / LZ); ++ctr_t)
+  {
+    memcpy(reconstructed_field + (2 * ctr_t) * contig_block, g_deflation_blocks[0].little_basis + index * VOLUME,contig_block * sizeof(spinor));
+    memcpy(reconstructed_field + (2 * ctr_t + 1) * contig_block, g_deflation_blocks[1].little_basis + index * VOLUME, contig_block * sizeof(spinor));
+  }
+  return reconstructed_field;
+}
+
+/* Constructs the little Dirac operator matrix from the little basis */
+void block_build_little_dirac(void *parent)
