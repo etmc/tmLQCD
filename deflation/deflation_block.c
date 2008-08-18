@@ -12,6 +12,7 @@
 extern deflation_block *g_deflation_blocks;
 extern int LX,LY,LZ,T,VOLUME;
 extern int LITTLE_BASIS_SIZE;
+extern int g_proc_coords[4]; /* NOTE may need some ifdef guard for MPI availability, though I fear our code will never be made serially capable */
 
 int init_deflation_blocks()
 {
@@ -19,6 +20,17 @@ int init_deflation_blocks()
 
   g_deflation_blocks = calloc(2, sizeof(deflation_block));
   for (i = 0; i < 2; ++i) {
+    g_deflation_blocks[i].local_volume = VOLUME/2;
+    g_deflation_blocks[i].bl_x = LX;
+    g_deflation_blocks[i].bl_y = LY;
+    g_deflation_blocks[i].bl_z = LZ/2;
+    g_deflation_blocks[i].bl_t = T;
+    g_deflation_blocks[i].little_basis_size = 20; /* NOTE hardcoded by hand here until we come up with an input way of defining it */
+
+    g_deflation_blocks[i].mpilocal_coordinate[4] = {g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]};
+    g_deflation_blocks[i].coordinate[4] = {g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], 2 * g_proc_coords[3] + i};
+
+
     if ((void*)(g_deflation_blocks[i].little_basis = calloc(LITTLE_BASIS_SIZE, sizeof(spinor *))) == NULL)
       CALLOC_ERROR_CRASH;
 
@@ -53,7 +65,8 @@ int init_deflation_blocks()
 
     g_deflation_blocks[i].orthonormalize = &block_orthonormalize;
     g_deflation_blocks[i].reconstruct_global_field = &block_reconstruct_global_field;
-
+    if ((void*)(g_deflation_blocks[i].u = calloc(8 * VOLUME, sizeof(su3))) == NULL)
+      CALLOC_ERROR_CRASH;
   }
   return 0;
 }
@@ -89,7 +102,7 @@ int add_basis_field(int const index, spinor const *field)
   return 0;
 }
 
-int copy_block_gauge(su3 const *field)
+int init_gauge_blocks(su3 const *field)
 {
   /* Pseudocode:
   The purpose of this function is to store locally all forward and backward gauge links in a block.
@@ -98,6 +111,25 @@ int copy_block_gauge(su3 const *field)
   Then in every direction a set of links needs to be copied from a neighbouring processor and plugged in in the proper location.
   Hermitian conjugation for the backwards part is handled in the Dirac operator explicitly through the _su3_inverse_multiply macro.
   */
+  int ix,iy,iz,it;
+  for (it = 0; it < T; ++it) {
+    for (ix = 0; it < LX; ++ix) {
+      for (iy = 0; it < LY; ++iy) {
+        for (iz = 0; it < (LZ / 2); ++iz) {
+          *(g_deflation_blocks[0].u + 0 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 0 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
+          *(g_deflation_blocks[0].u + 2 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 1 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
+          *(g_deflation_blocks[0].u + 4 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 2 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
+          *(g_deflation_blocks[0].u + 6 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 3 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
+        }
+        for (iz = (LZ / 2); it < LZ; ++iz) {
+          *(g_deflation_blocks[1].u + 0 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 0 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
+          *(g_deflation_blocks[1].u + 2 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 1 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
+          *(g_deflation_blocks[1].u + 4 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 2 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
+          *(g_deflation_blocks[1].u + 6 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 3 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
+        }
+      }
+    }
+  }
 }
 
 /* the following should be somewhere else ... */
@@ -113,8 +145,7 @@ complex block_scalar_prod(spinor * const R, spinor * const S, const int N) {
   int ix;
   static double ks,kc,ds,tr,ts,tt;
   complex c;
-  spinor * r;
-  spinor * s;
+  spinor *r, *s;
   /* Real Part */
 
   ks=0.0;
@@ -185,7 +216,7 @@ double block_two_norm(spinor * const R, const int N) {
   int ix;
   static double ks,kc,ds,tr,ts,tt;
   double norm;
-  spinor * r;
+  spinor *r;
   /* Real Part */
 
   ks=0.0;
