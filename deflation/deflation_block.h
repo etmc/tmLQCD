@@ -10,7 +10,7 @@ extern int LITTLE_BASIS_SIZE;
 typedef struct {
   /**** Data members ****/
   int local_volume;                   /* the block local 4 volume */
-  int bl_x, bl_y, bl_z, bl_t;         /* block local sizes */
+  int LX, LY, LZ, T;         /* block local sizes */
   int little_basis_size;              /* the value of Ns, which is needed almost everywhere */
   int coordinate[4];                  /* global block coordinate */
   int mpilocal_coordinate[4];         /* mpi process local coordinate */

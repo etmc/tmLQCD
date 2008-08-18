@@ -12,7 +12,9 @@
 extern deflation_block *g_deflation_blocks;
 extern int LX,LY,LZ,T,VOLUME;
 extern int LITTLE_BASIS_SIZE;
-extern int g_proc_coords[4]; /* NOTE may need some ifdef guard for MPI availability, though I fear our code will never be made serially capable */
+extern int g_proc_coords[4]; /* NOTE may need some ifdef guard for MPI availability, though I hope our deflation code will never be made serially capable */
+extern int ****g_ipt;
+extern int **g_iup, **g_idn;
 
 int init_deflation_blocks()
 {
@@ -21,15 +23,15 @@ int init_deflation_blocks()
   g_deflation_blocks = calloc(2, sizeof(deflation_block));
   for (i = 0; i < 2; ++i) {
     g_deflation_blocks[i].local_volume = VOLUME/2;
-    g_deflation_blocks[i].bl_x = LX;
-    g_deflation_blocks[i].bl_y = LY;
-    g_deflation_blocks[i].bl_z = LZ/2;
-    g_deflation_blocks[i].bl_t = T;
+    g_deflation_blocks[i].LX = LX;
+    g_deflation_blocks[i].LY = LY;
+    g_deflation_blocks[i].LZ = LZ/2;
+    g_deflation_blocks[i].T = T;
     g_deflation_blocks[i].little_basis_size = 20; /* NOTE hardcoded by hand here until we come up with an input way of defining it */
 
-    g_deflation_blocks[i].mpilocal_coordinate[4] = {g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]};
-    g_deflation_blocks[i].coordinate[4] = {g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], 2 * g_proc_coords[3] + i};
-
+    memcpy(g_deflation_blocks[i].mpilocal_coordinate, g_proc_coords, 4);
+    memcpy(g_deflation_blocks[i].coordinate, g_proc_coords, 3);
+    g_deflation_blocks[i].coordinate[3] = 2 * g_proc_coords[3] + i;
 
     if ((void*)(g_deflation_blocks[i].little_basis = calloc(LITTLE_BASIS_SIZE, sizeof(spinor *))) == NULL)
       CALLOC_ERROR_CRASH;
@@ -75,7 +77,7 @@ int free_deflation_blocks()
 {
   int i, j;
 
-  for(i = 0; i < 2; ++i){
+  for(i = 0; i < 2; ++i) {
     free(g_deflation_blocks[i].little_basis);
 
     for (j = 0; j < 8; ++j)
@@ -104,34 +106,43 @@ int add_basis_field(int const index, spinor const *field)
 
 int init_gauge_blocks(su3 const *field)
 {
-  /* Pseudocode:
-  The purpose of this function is to store locally all forward and backward gauge links in a block.
-  All positive directions should be available on this processor already, so they can be copied in immediately.
-  A subset of the backward links can be done directly, so do them next.
-  Then in every direction a set of links needs to be copied from a neighbouring processor and plugged in in the proper location.
-  Hermitian conjugation for the backwards part is handled in the Dirac operator explicitly through the _su3_inverse_multiply macro.
-  */
-  int ix,iy,iz,it;
-  for (it = 0; it < T; ++it) {
-    for (ix = 0; it < LX; ++ix) {
-      for (iy = 0; it < LY; ++iy) {
-        for (iz = 0; it < (LZ / 2); ++iz) {
-          *(g_deflation_blocks[0].u + 0 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 0 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
-          *(g_deflation_blocks[0].u + 2 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 1 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
-          *(g_deflation_blocks[0].u + 4 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 2 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
-          *(g_deflation_blocks[0].u + 6 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 3 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
+  /* Copies the existing gauge field on the processor into the two separate blocks in a form
+  that is readable by the by the block Dirac operator. Specifically, in consecutive memory
+  now +t,-t,+x,-x,+y,-y,+z,-z gauge links are stored. This requires double the storage in
+  memory. */
+
+  int x, y, z, t, ix, ix_new;
+  for (t = 0; t < T; ++t) {
+    for (x = 0; x < LX; ++x) {
+      for (y = 0; y < LY; ++y) {
+        for (z = 0; z < LZ/2; ++z) {
+          ix = g_ipt[t][x][y][z];
+          ix_new = 8 * (z + y * LZ/2 + x * LY * LZ/2 + t * LX * LY * LZ/2); //su3 index on this block
+          memcpy(g_deflation_blocks[0].u + ix_new, field + g_iup[ix][0], sizeof(su3));
+          memcpy(g_deflation_blocks[0].u + ix_new + 1, field + g_idn[ix][0], sizeof(su3));
+          memcpy(g_deflation_blocks[0].u + ix_new + 2, field + g_iup[ix][1], sizeof(su3));
+          memcpy(g_deflation_blocks[0].u + ix_new + 3, field + g_idn[ix][1], sizeof(su3));
+          memcpy(g_deflation_blocks[0].u + ix_new + 4, field + g_iup[ix][2], sizeof(su3));
+          memcpy(g_deflation_blocks[0].u + ix_new + 5, field + g_idn[ix][2], sizeof(su3));
+          memcpy(g_deflation_blocks[0].u + ix_new + 6, field + g_iup[ix][3], sizeof(su3));
+          memcpy(g_deflation_blocks[0].u + ix_new + 7, field + g_idn[ix][3], sizeof(su3));
         }
-        for (iz = (LZ / 2); it < LZ; ++iz) {
-          *(g_deflation_blocks[1].u + 0 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 0 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
-          *(g_deflation_blocks[1].u + 2 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 1 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
-          *(g_deflation_blocks[1].u + 4 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 2 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
-          *(g_deflation_blocks[1].u + 6 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it)) = *(field + 3 + 4 * (iz + Z*iy + Z*Y*ix + Z*Y*X*it));
+        for (z = LZ/2; z < LZ; ++z) {
+          ix = g_ipt[t][x][y][z];
+          ix_new = 8 * (z - LZ/2 + y * LZ/2 + x * LY * LZ/2 + t * LX * LY * LZ/2); //su3 index on this block, count anew in the z direction
+          memcpy(g_deflation_blocks[1].u + ix_new, field + g_iup[ix][0], sizeof(su3));
+          memcpy(g_deflation_blocks[1].u + ix_new + 1, field + g_idn[ix][0], sizeof(su3));
+          memcpy(g_deflation_blocks[1].u + ix_new + 2, field + g_iup[ix][1], sizeof(su3));
+          memcpy(g_deflation_blocks[1].u + ix_new + 3, field + g_idn[ix][1], sizeof(su3));
+          memcpy(g_deflation_blocks[1].u + ix_new + 4, field + g_iup[ix][2], sizeof(su3));
+          memcpy(g_deflation_blocks[1].u + ix_new + 5, field + g_idn[ix][2], sizeof(su3));
+          memcpy(g_deflation_blocks[1].u + ix_new + 6, field + g_iup[ix][3], sizeof(su3));
+          memcpy(g_deflation_blocks[1].u + ix_new + 7, field + g_idn[ix][3], sizeof(su3));
         }
       }
     }
   }
 }
-
 /* the following should be somewhere else ... */
 
 complex block_scalar_prod_Ugamma(spinor * const r, spinor * const s, 
