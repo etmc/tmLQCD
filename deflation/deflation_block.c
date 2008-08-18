@@ -53,7 +53,7 @@ int init_deflation_blocks()
 
     g_deflation_blocks[i].orthonormalize = &block_orthonormalize;
     g_deflation_blocks[i].reconstruct_global_field = &block_reconstruct_global_field;
-    g_deflation_blocks[i].build_little_dirac = &block_build_little_dirac;
+
   }
   return 0;
 }
@@ -91,14 +91,13 @@ int add_basis_field(int const index, spinor const *field)
 
 int copy_block_gauge(su3 const *field)
 {
-  /* NOTE INVALID AS IS */
-  int ctr_t;
-  for (ctr_t = 0; ctr_t < (2 * VOLUME / LZ); ++ctr_t)
-  {
-    memcpy(g_deflation_blocks[0].u, field + (2 * ctr_t) * 8 * contig_block, contig_block * sizeof(su3));
-    memcpy(g_deflation_blocks[1].u, field + (2 * ctr_t + 1) * 8 * contig_block, contig_block * sizeof(su3));
-  }
-  return 0;
+  /* Pseudocode:
+  The purpose of this function is to store locally all forward and backward gauge links in a block.
+  All positive directions should be available on this processor already, so they can be copied in immediately.
+  A subset of the backward links can be done directly, so do them next.
+  Then in every direction a set of links needs to be copied from a neighbouring processor and plugged in in the proper location.
+  Hermitian conjugation for the backwards part is handled in the Dirac operator explicitly through the _su3_inverse_multiply macro.
+  */
 }
 
 /* the following should be somewhere else ... */
@@ -110,11 +109,12 @@ complex block_scalar_prod_Ugamma(spinor * const r, spinor * const s,
   return(c);
 }
 
-complex block_scalar_prod(spinor * const R, spinor * const s, const int N) {
+complex block_scalar_prod(spinor * const R, spinor * const S, const int N) {
   int ix;
   static double ks,kc,ds,tr,ts,tt;
   complex c;
-  
+  spinor * r;
+  spinor * s;
   /* Real Part */
 
   ks=0.0;
@@ -181,11 +181,11 @@ complex block_scalar_prod(spinor * const R, spinor * const s, const int N) {
   return(c);
 }
 
-double block_two_norm(spinor * const r, const int N) {
+double block_two_norm(spinor * const R, const int N) {
   int ix;
   static double ks,kc,ds,tr,ts,tt;
   double norm;
-  
+  spinor * r;
   /* Real Part */
 
   ks=0.0;
@@ -225,7 +225,7 @@ void compute_little_D_diagonal(void *parent) {
   int i,j;
   /* we need working space, where do we best allocate it? */
   spinor * tmp;
-  this = (deflation_block*)parent;
+  deflation_block *this = (deflation_block*)parent;
   complex * M = this->little_dirac_operator;
 
   
@@ -243,12 +243,12 @@ void block_compute_little_D_offdiagonal(void *parent) {
 /*   Here we need to multiply the boundary with the corresponding  */
 /*   U and gamma_i and take the scalar product then */
 /*   NOTE I will assume the boundaries are available, for the time being */
-  this = (deflation_block*)parent;
+  deflation_block *this = (deflation_block*)parent;
   int i,j;
   spinor * tmp; 
   /* Start by going for the first block (t-up) */
   complex * M = this->little_dirac_operator + this->little_basis_size * this->little_basis_size;
-  spinor *neighbour = little_neighbour_edges[0];
+  spinor *neighbour = this->little_neighbour_edges[0];
   for(i = 0; i < this->little_basis_size; i++) {
     boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
     for(j = 0; j < this->little_basis_size; j++) {
@@ -257,8 +257,8 @@ void block_compute_little_D_offdiagonal(void *parent) {
     }
   }
   /* Start by going for the first block (t-down) */
-  complex * M += this->little_basis_size * this->little_basis_size;
-  spinor *neighbour = little_neighbour_edges[1];
+  M += this->little_basis_size * this->little_basis_size;
+  neighbour = this->little_neighbour_edges[1];
   for(i = 0; i < this->little_basis_size; i++) {
     boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
     for(j = 0; j < this->little_basis_size; j++) {
@@ -267,8 +267,8 @@ void block_compute_little_D_offdiagonal(void *parent) {
     }
   }
   /* Start by going for the first block (x-up) */
-  complex * M += this->little_basis_size * this->little_basis_size;
-  spinor *neighbour = little_neighbour_edges[2];
+  M += this->little_basis_size * this->little_basis_size;
+  neighbour = this->little_neighbour_edges[2];
   for(i = 0; i < this->little_basis_size; i++) {
     boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
     for(j = 0; j < this->little_basis_size; j++) {
@@ -277,8 +277,8 @@ void block_compute_little_D_offdiagonal(void *parent) {
     }
   }
   /* Start by going for the first block (x-down) */
-  complex * M += this->little_basis_size * this->little_basis_size;
-  spinor *neighbour = little_neighbour_edges[3];
+  M += this->little_basis_size * this->little_basis_size;
+  neighbour = this->little_neighbour_edges[3];
   for(i = 0; i < this->little_basis_size; i++) {
     boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
     for(j = 0; j < this->little_basis_size; j++) {
@@ -287,8 +287,8 @@ void block_compute_little_D_offdiagonal(void *parent) {
     }
   }
   /* Start by going for the first block (y-up) */
-  complex * M += this->little_basis_size * this->little_basis_size;
-  spinor *neighbour = little_neighbour_edges[4];
+  M += this->little_basis_size * this->little_basis_size;
+  neighbour = this->little_neighbour_edges[4];
   for(i = 0; i < this->little_basis_size; i++) {
     boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
     for(j = 0; j < this->little_basis_size; j++) {
@@ -297,8 +297,8 @@ void block_compute_little_D_offdiagonal(void *parent) {
     }
   }
   /* Start by going for the first block (y-down) */
-  complex * M += this->little_basis_size * this->little_basis_size;
-  spinor *neighbour = little_neighbour_edges[5];
+  M += this->little_basis_size * this->little_basis_size;
+  neighbour = this->little_neighbour_edges[5];
   for(i = 0; i < this->little_basis_size; i++) {
     boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
     for(j = 0; j < this->little_basis_size; j++) {
@@ -307,8 +307,8 @@ void block_compute_little_D_offdiagonal(void *parent) {
     }
   }
   /* Start by going for the first block (z-up) */
-  complex * M += this->little_basis_size * this->little_basis_size;
-  spinor *neighbour = little_neighbour_edges[6];
+  M += this->little_basis_size * this->little_basis_size;
+  neighbour = this->little_neighbour_edges[6];
   for(i = 0; i < this->little_basis_size; i++) {
     boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
     for(j = 0; j < this->little_basis_size; j++) {
@@ -317,8 +317,8 @@ void block_compute_little_D_offdiagonal(void *parent) {
     }
   }
   /* Start by going for the first block (z-down) */
-  complex * M += this->little_basis_size * this->little_basis_size;
-  spinor *neighbour = little_neighbour_edges[7];
+  M += this->little_basis_size * this->little_basis_size;
+  neighbour = this->little_neighbour_edges[7];
   for(i = 0; i < this->little_basis_size; i++) {
     boundary_D(tmp, this->little_basis[i]); /* NOTE Syntax! */
     for(j = 0; j < this->little_basis_size; j++) {
@@ -328,16 +328,14 @@ void block_compute_little_D_offdiagonal(void *parent) {
   }
 }
 
-/* Uses a modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
+/* Uses a Modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
 void block_orthonormalize(void *parent){
   int i, j, k;
   spinor *current, *next, *iter;
-  spinor orig;
+  spinor orig, resbasis;
   complex coeff;
   complex scale;
-  deflation_block *this;
-
-  this = (deflation_block*)parent;
+  deflation_block *this = (deflation_block*)parent;
 
   scale.im = 0;
   for(i = 0; i < this->little_basis_size; ++i){
@@ -348,13 +346,14 @@ void block_orthonormalize(void *parent){
       orig = *iter; /* we can't alias */
       _spinor_mul_complex(*iter, scale, orig);
     }
+    /* rescaling done, now subtract this direction from all vectors that follow */
     for(j = i + 1; j < this->little_basis_size; ++j){
-      next = this->little_basis + i * this->local_volume;
+      next = this->little_basis + j * this->local_volume;
       coeff = block_scalar_prod(current, next, this->local_volume);
       for(k = 0; k < this->local_volume; ++k){
-        _spinor_mul_complex(*iter, coeff, *(current + k));
+        _spinor_mul_complex(resbasis, coeff, *(current + k));
         orig = *(next + k);
-        diff(next + k, &orig, iter, 1);
+        diff(next + k, &orig, &resbasis, 1); /* NOTE We could also subtract the complete spinors from eachother */
       }
     }
   }
