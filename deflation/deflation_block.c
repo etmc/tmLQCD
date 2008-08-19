@@ -9,86 +9,84 @@
 
 #define CALLOC_ERROR_CRASH {printf ("calloc errno : %d\n", errno); errno = 0; return 1;}
 
-extern deflation_block *g_deflation_blocks;
+extern block *g_blocks;
 extern int LX,LY,LZ,T,VOLUME;
-extern int LITTLE_BASIS_SIZE;
 extern int g_proc_coords[4]; /* NOTE may need some ifdef guard for MPI availability, though I hope our deflation code will never be made serially capable */
 extern int ****g_ipt;
 extern int **g_iup, **g_idn;
 
-int init_deflation_blocks()
+int init_blocks()
 {
   int i;
-
-  g_deflation_blocks = calloc(2, sizeof(deflation_block));
+  int g_N_s = 20;  /* NOTE hardcoded by hand here until we come up with an input way of defining it */
+  g_blocks = calloc(2, sizeof(block));
   for (i = 0; i < 2; ++i) {
-    g_deflation_blocks[i].local_volume = VOLUME/2;
-    g_deflation_blocks[i].LX = LX;
-    g_deflation_blocks[i].LY = LY;
-    g_deflation_blocks[i].LZ = LZ/2;
-    g_deflation_blocks[i].T = T;
-    g_deflation_blocks[i].little_basis_size = 20; /* NOTE hardcoded by hand here until we come up with an input way of defining it */
+    g_blocks[i].volume = VOLUME/2;
+    g_blocks[i].LX = LX;
+    g_blocks[i].LY = LY;
+    g_blocks[i].LZ = LZ/2;
+    g_blocks[i].T = T;
+    g_blocks[i].ns = g_N_s;
 
-    memcpy(g_deflation_blocks[i].mpilocal_coordinate, g_proc_coords, 4);
-    memcpy(g_deflation_blocks[i].coordinate, g_proc_coords, 3);
-    g_deflation_blocks[i].coordinate[3] = 2 * g_proc_coords[3] + i;
+    memcpy(g_blocks[i].mpilocal_coordinate, g_proc_coords, 4);
+    memcpy(g_blocks[i].coordinate, g_proc_coords, 3);
+    g_blocks[i].coordinate[3] = 2 * g_proc_coords[3] + i;
 
-    if ((void*)(g_deflation_blocks[i].little_basis = calloc(LITTLE_BASIS_SIZE, sizeof(spinor *))) == NULL)
-      CALLOC_ERROR_CRASH;
-
-    if ((void*)(g_deflation_blocks[i].little_basis = calloc(LITTLE_BASIS_SIZE * VOLUME, sizeof(spinor))) == NULL)
+    if ((void*)(g_blocks[i].idx = calloc(4 * VOLUME, sizeof(int))) == NULL)
       CALLOC_ERROR_CRASH;
 
-    if ((void*)(g_deflation_blocks[i].little_neighbour_edges = calloc(8, sizeof(spinor *))) == NULL)
+    if ((void*)(g_blocks[i].basis = calloc(g_N_s * VOLUME/2 + 1, sizeof(spinor))) == NULL)
+      CALLOC_ERROR_CRASH; /*block volume is half of processor volume, add one spinor for the zero element */
+    _spinor_null(g_blocks[i].basis[g_N_s * VOLUME/2]);
+
+    if ((void*)(g_blocks[i].neighbour_edges = calloc(8, sizeof(spinor *))) == NULL)
       CALLOC_ERROR_CRASH;
 
-    if ((void*)(g_deflation_blocks[i].little_neighbour_edges[0] = calloc(VOLUME / (2 * LX), sizeof(spinor))) == NULL)
+    if ((void*)(g_blocks[i].neighbour_edges[0] = calloc(VOLUME / (2 * LX), sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(g_deflation_blocks[i].little_neighbour_edges[1] = calloc(VOLUME / (2 * LX), sizeof(spinor))) == NULL)
+    if ((void*)(g_blocks[i].neighbour_edges[1] = calloc(VOLUME / (2 * LX), sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(g_deflation_blocks[i].little_neighbour_edges[2] = calloc(VOLUME / (2 * LY), sizeof(spinor))) == NULL)
+    if ((void*)(g_blocks[i].neighbour_edges[2] = calloc(VOLUME / (2 * LY), sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(g_deflation_blocks[i].little_neighbour_edges[3] = calloc(VOLUME / (2 * LY), sizeof(spinor))) == NULL)
+    if ((void*)(g_blocks[i].neighbour_edges[3] = calloc(VOLUME / (2 * LY), sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(g_deflation_blocks[i].little_neighbour_edges[4] = calloc(VOLUME / LZ, sizeof(spinor))) == NULL)
+    if ((void*)(g_blocks[i].neighbour_edges[4] = calloc(VOLUME / LZ, sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(g_deflation_blocks[i].little_neighbour_edges[5] = calloc(VOLUME / LZ, sizeof(spinor))) == NULL)
+    if ((void*)(g_blocks[i].neighbour_edges[5] = calloc(VOLUME / LZ, sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(g_deflation_blocks[i].little_neighbour_edges[6] = calloc(VOLUME / (2 * T), sizeof(spinor))) == NULL)
+    if ((void*)(g_blocks[i].neighbour_edges[6] = calloc(VOLUME / (2 * T), sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(g_deflation_blocks[i].little_neighbour_edges[7] = calloc(VOLUME / (2 * T), sizeof(spinor))) == NULL)
-      CALLOC_ERROR_CRASH;
-
-    if ((void*)(g_deflation_blocks[i].little_dirac_operator = calloc(9 * LITTLE_BASIS_SIZE * LITTLE_BASIS_SIZE, sizeof(complex))) == NULL)
+    if ((void*)(g_blocks[i].neighbour_edges[7] = calloc(VOLUME / (2 * T), sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
 
-    if ((void*)(g_deflation_blocks[i].local_little_field = calloc(LITTLE_BASIS_SIZE, sizeof(complex))) == NULL)
+    if ((void*)(g_blocks[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(complex))) == NULL)
       CALLOC_ERROR_CRASH;
 
-    g_deflation_blocks[i].orthonormalize = &block_orthonormalize;
-    g_deflation_blocks[i].reconstruct_global_field = &block_reconstruct_global_field;
-    if ((void*)(g_deflation_blocks[i].u = calloc(8 * VOLUME, sizeof(su3))) == NULL)
+    g_blocks[i].orthonormalize = &block_orthonormalize;
+    g_blocks[i].reconstruct_global_field = &block_reconstruct_global_field;
+    if ((void*)(g_blocks[i].u = calloc(8 * VOLUME, sizeof(su3))) == NULL)
       CALLOC_ERROR_CRASH;
   }
   return 0;
 }
 
-int free_deflation_blocks()
+int free_blocks()
 {
   int i, j;
 
   for(i = 0; i < 2; ++i) {
-    free(g_deflation_blocks[i].little_basis);
+    free(g_blocks[i].basis);
+    free(g_blocks[i].mpilocal_coordinate);
+    free(g_blocks[i].coordinate);
 
     for (j = 0; j < 8; ++j)
-      free(g_deflation_blocks[i].little_neighbour_edges[j]);
-    free(g_deflation_blocks[i].little_neighbour_edges);
+      free(g_blocks[i].neighbour_edges[j]);
+    free(g_blocks[i].neighbour_edges);
 
-    free(g_deflation_blocks[i].little_dirac_operator);
-    free(g_deflation_blocks[i].local_little_field);
+    free(g_blocks[i].little_dirac_operator);
   }
 
-  free(g_deflation_blocks);
+  free(g_blocks);
   return 0;
 }
 
@@ -98,8 +96,8 @@ int add_basis_field(int const index, spinor const *field)
   int contig_block = LZ / 2;
   for (ctr_t = 0; ctr_t < (2 * VOLUME / LZ); ++ctr_t)
   {
-    memcpy(g_deflation_blocks[0].little_basis + index * VOLUME, field + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
-    memcpy(g_deflation_blocks[1].little_basis + index * VOLUME, field + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
+    memcpy(g_blocks[0].basis + index * VOLUME, field + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
+    memcpy(g_blocks[1].basis + index * VOLUME, field + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
   }
   return 0;
 }
@@ -118,31 +116,39 @@ int init_gauge_blocks(su3 const *field)
         for (z = 0; z < LZ/2; ++z) {
           ix = g_ipt[t][x][y][z];
           ix_new = 8 * (z + y * LZ/2 + x * LY * LZ/2 + t * LX * LY * LZ/2); //su3 index on this block
-          memcpy(g_deflation_blocks[0].u + ix_new, field + g_iup[ix][0], sizeof(su3));
-          memcpy(g_deflation_blocks[0].u + ix_new + 1, field + g_idn[ix][0], sizeof(su3));
-          memcpy(g_deflation_blocks[0].u + ix_new + 2, field + g_iup[ix][1], sizeof(su3));
-          memcpy(g_deflation_blocks[0].u + ix_new + 3, field + g_idn[ix][1], sizeof(su3));
-          memcpy(g_deflation_blocks[0].u + ix_new + 4, field + g_iup[ix][2], sizeof(su3));
-          memcpy(g_deflation_blocks[0].u + ix_new + 5, field + g_idn[ix][2], sizeof(su3));
-          memcpy(g_deflation_blocks[0].u + ix_new + 6, field + g_iup[ix][3], sizeof(su3));
-          memcpy(g_deflation_blocks[0].u + ix_new + 7, field + g_idn[ix][3], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new, field + g_iup[ix][0], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 1, field + g_idn[ix][0], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 2, field + g_iup[ix][1], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 3, field + g_idn[ix][1], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 4, field + g_iup[ix][2], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 5, field + g_idn[ix][2], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 6, field + g_iup[ix][3], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 7, field + g_idn[ix][3], sizeof(su3));
         }
         for (z = LZ/2; z < LZ; ++z) {
           ix = g_ipt[t][x][y][z];
           ix_new = 8 * (z - LZ/2 + y * LZ/2 + x * LY * LZ/2 + t * LX * LY * LZ/2); //su3 index on this block, count anew in the z direction
-          memcpy(g_deflation_blocks[1].u + ix_new, field + g_iup[ix][0], sizeof(su3));
-          memcpy(g_deflation_blocks[1].u + ix_new + 1, field + g_idn[ix][0], sizeof(su3));
-          memcpy(g_deflation_blocks[1].u + ix_new + 2, field + g_iup[ix][1], sizeof(su3));
-          memcpy(g_deflation_blocks[1].u + ix_new + 3, field + g_idn[ix][1], sizeof(su3));
-          memcpy(g_deflation_blocks[1].u + ix_new + 4, field + g_iup[ix][2], sizeof(su3));
-          memcpy(g_deflation_blocks[1].u + ix_new + 5, field + g_idn[ix][2], sizeof(su3));
-          memcpy(g_deflation_blocks[1].u + ix_new + 6, field + g_iup[ix][3], sizeof(su3));
-          memcpy(g_deflation_blocks[1].u + ix_new + 7, field + g_idn[ix][3], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new, field + g_iup[ix][0], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 1, field + g_idn[ix][0], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 2, field + g_iup[ix][1], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 3, field + g_idn[ix][1], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 4, field + g_iup[ix][2], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 5, field + g_idn[ix][2], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 6, field + g_iup[ix][3], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 7, field + g_idn[ix][3], sizeof(su3));
         }
       }
     }
   }
+  return 0;
 }
+
+int init_geom_blocks()
+{
+  memcpy(g_blocks[1].idx, g_blocks[0].idx, 8 * VOLUME/2);
+  return 0;
+}
+
 /* the following should be somewhere else ... */
 
 complex block_scalar_prod_Ugamma(spinor * const r, spinor * const s, 
@@ -267,15 +273,15 @@ void compute_little_D_diagonal(void *parent) {
   int i,j;
   /* we need working space, where do we best allocate it? */
   spinor * tmp;
-  deflation_block *this = (deflation_block*)parent;
+  block *this = (block*)parent;
   complex * M = this->little_dirac_operator;
 
   
-  for(i = 0; i < this->little_basis_size; i++){
-    Block_D_psi(tmp, this->little_basis[i]);
-    for(j = 0; j < this->little_basis_size; j++){
+  for(i = 0; i < this->ns; i++){
+    Block_D_psi(tmp, this->basis[i]);
+    for(j = 0; j < this->ns; j++){
       /* order correct ? */
-      M[i*this->little_basis_size + j] = block_scalar_prod(this->little_basis + j * this->local_volume, tmp, this->local_volume);
+      M[i*this->ns + j] = block_scalar_prod(this->basis + j * this->volume, tmp, this->volume);
     }
   }
   return;
@@ -285,22 +291,22 @@ void block_compute_little_D_offdiagonal(void *parent) {
 /*   Here we need to multiply the boundary with the corresponding  */
 /*   U and gamma_i and take the scalar product then */
 /*   NOTE I will assume the boundaries are available, for the time being */
-  deflation_block *this = (deflation_block*)parent;
+  block *this = (block*)parent;
   int i, j, vec_ctr, dir, surface;
   int start, stride;
   spinor tmp;
-  spinor **neighbours = this->little_neighbour_edges;
+  spinor **neighbours = this->neighbour_edges;
   spinor *basis;
-  complex *M = this->little_dirac_operator + this->little_basis_size * this->little_basis_size;
-  complex result, aggregate[this->little_basis_size];
+  complex *M = this->little_dirac_operator + this->ns * this->ns;
+  complex result, aggregate[this->ns];
   su3 *gauge;
 
   /* +T direction (+0) */
-  for(vec_ctr = 0; vec_ctr < this->little_basis_size; ++vec_ctr){
+  for(vec_ctr = 0; vec_ctr < this->ns; ++vec_ctr){
     
     stride = 1;
-    surface = this->local_volume / T;
-    start = this->little_basis + vec_ctr * this->local_volume;
+    surface = this->volume / T;
+    start = this->basis + vec_ctr * this->volume;
     gauge_start = u;
     
     aggregate.re = 0;
@@ -308,34 +314,34 @@ void block_compute_little_D_offdiagonal(void *parent) {
     
     for(i = 0; i < surface; ++i){
       boundary_D_0(tmp, start + i * stride, gauge_start + 8 * i * stride);
-      for(j = 0; j < this->little_basis_size; ++j){
+      for(j = 0; j < this->ns; ++j){
         result = block_scalar_prod(neighbours[0][i + j * surface], tmp, 1);
         aggregate[j].re += result.re;
         aggregate[j].im += result.im;
       }
     }
-    memcpy(M, aggregate, this->little_basis_size); /* NOTE I'm maybe mucking up colums/rows here */
+    memcpy(M, aggregate, this->ns); /* NOTE I'm maybe mucking up colums/rows here */
   }
 
   /* -T direction (-0) */
-  M += this->little_basis_size * this->little_basis_size;
-  for(vec_ctr = 0; vec_ctr < this->little_basis_size; ++vec_ctr){   
+  M += this->ns * this->ns;
+  for(vec_ctr = 0; vec_ctr < this->ns; ++vec_ctr){   
     
-    start = this->little_basis + local_volume - T + vec_ctr * this->local_volume;
-    gauge_start = u + 8 * (local_volume - T) + 1;
+    start = this->basis + volume - T + vec_ctr * this->volume;
+    gauge_start = u + 8 * (volume - T) + 1;
     
     aggregate.re = 0;
     aggregate.im = 0;
     
     for(i = 0; i < surface; ++i){
       boundary_D_1(tmp, start + i * stride, gauge_start + 8 * i * stride);
-      for(j = 0; j < this->little_basis_size; ++j){
+      for(j = 0; j < this->ns; ++j){
         result = block_scalar_prod(neighbours[1][i + j * surface], tmp, 1);
         aggregate[j].re += result.re;
         aggregate[j].im += result.im;
       }
     }
-    memcpy(M, aggregate, this->little_basis_size); /* NOTE I'm maybe mucking up colums/rows here */
+    memcpy(M, aggregate, this->ns); /* NOTE I'm maybe mucking up colums/rows here */
   }
 
   /* +X direction (+1) */
@@ -349,22 +355,22 @@ void block_orthonormalize(void *parent){
   spinor orig, resbasis;
   complex coeff;
   complex scale;
-  deflation_block *this = (deflation_block*)parent;
+  block *this = (block*)parent;
 
   scale.im = 0;
-  for(i = 0; i < this->little_basis_size; ++i){
+  for(i = 0; i < this->ns; ++i){
     /* rescale the current vector */
-    current = this->little_basis + i * this->local_volume;
-    scale.re = 1 / sqrt(block_two_norm(current, this->local_volume));
-    for(iter = current; iter < current + this->local_volume; ++iter){
+    current = this->basis + i * this->volume;
+    scale.re = 1 / sqrt(block_two_norm(current, this->volume));
+    for(iter = current; iter < current + this->volume; ++iter){
       orig = *iter; /* we can't alias */
       _spinor_mul_complex(*iter, scale, orig);
     }
     /* rescaling done, now subtract this direction from all vectors that follow */
-    for(j = i + 1; j < this->little_basis_size; ++j){
-      next = this->little_basis + j * this->local_volume;
-      coeff = block_scalar_prod(current, next, this->local_volume);
-      for(k = 0; k < this->local_volume; ++k){
+    for(j = i + 1; j < this->ns; ++j){
+      next = this->basis + j * this->volume;
+      coeff = block_scalar_prod(current, next, this->volume);
+      for(k = 0; k < this->volume; ++k){
         _spinor_mul_complex(resbasis, coeff, *(current + k));
         orig = *(next + k);
         diff(next + k, &orig, &resbasis, 1); /* NOTE We could also subtract the complete spinors from eachother */
@@ -380,8 +386,8 @@ spinor *block_reconstruct_global_basis(void *parent, int const index, spinor *re
   int contig_block = LZ / 2;
   for (ctr_t = 0; ctr_t < (2 * VOLUME / LZ); ++ctr_t)
   {
-    memcpy(reconstructed_field + (2 * ctr_t) * contig_block, g_deflation_blocks[0].little_basis + index * VOLUME,contig_block * sizeof(spinor));
-    memcpy(reconstructed_field + (2 * ctr_t + 1) * contig_block, g_deflation_blocks[1].little_basis + index * VOLUME, contig_block * sizeof(spinor));
+    memcpy(reconstructed_field + (2 * ctr_t) * contig_block, g_blocks[0].basis + index * VOLUME,contig_block * sizeof(spinor));
+    memcpy(reconstructed_field + (2 * ctr_t + 1) * contig_block, g_blocks[1].basis + index * VOLUME, contig_block * sizeof(spinor));
   }
   return reconstructed_field;
 }
