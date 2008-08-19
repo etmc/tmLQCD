@@ -5,7 +5,7 @@
 #include "deflation/deflation_block.h"
 
 void D_psi(spinor * const P, spinor * const Q);
-void Block_D_psi(deflation_block * blk, spinor * const rr, spinor * const s);
+void Block_D_psi(block * blk, spinor * const rr, spinor * const s);
 
 void boundary_D_0(spinor * const r, spinor * const s, 
 		  su3 * restrict u);

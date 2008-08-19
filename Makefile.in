@@ -51,7 +51,8 @@ MODULES = read_input gamma hybrid_update observables start \
 	init_bispinor_field eigenvalues_bi D_psi \
 	xchange_lexicfield xchange_2fields online_measurement \
 	monomial det_monomial detratio_monomial update_momenta \
-	integrator gauge_monomial ndpoly_monomial phmc
+	integrator gauge_monomial ndpoly_monomial phmc \
+	little_D
 
 
 NOOPTMOD = test/check_xchange test/check_geometry

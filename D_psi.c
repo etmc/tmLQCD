@@ -928,7 +928,7 @@ void D_psi(spinor * const P, spinor * const Q){
 #endif
 
 void local_D(spinor * const rr, spinor * const s, 
-	     su3 * restrict u, int * iup, int * idn);
+	     su3 * restrict u, int * idx);
 
 /* apply the Dirac operator to the block local spinor field l */
 /* and store the result in block local spinor field k         */
@@ -936,16 +936,15 @@ void local_D(spinor * const rr, spinor * const s,
 /* that is needed int local_D, which means also that it is a  */
 /* double copy                                                */
 
-void Block_D_psi(deflation_block * blk, spinor * const rr, spinor * const s) {
+void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
   int i;
   spinor *r = rr;
   su3 * u = blk->u;
-  int * iup = blk->iup;
-  int * idn = blk->idn;
+  int * idx = blk->idx;
 
-  for(i = 0; i < blk->local_volume; i++) {
-    local_D(r, s, u, iup, idn);
-    /* u, iup, idn are incremented in local_D */
+  for(i = 0; i < blk->volume; i++) {
+    local_D(r, s, u, idx);
+    /* u and idx are incremented in local_D */
     r++;
   }
   return;
@@ -953,7 +952,7 @@ void Block_D_psi(deflation_block * blk, spinor * const rr, spinor * const s) {
 
 
 void local_D(spinor * const rr, spinor * const s, 
-	     su3 * restrict u, int * iup, int * idn) {
+	     su3 * restrict u, int * idx) {
   static spinor r;
   spinor * sp, * sm;
   static su3_vector chi, psi;
@@ -970,7 +969,7 @@ void local_D(spinor * const rr, spinor * const s,
   _complex_times_vector(r.s3,rhob,(*s).s3);
 
   /******************************* direction +0 *********************************/
-  sp = (spinor *) s + (*(iup++));
+  sp = (spinor *) s + (*(idx++));
       
   _vector_add(psi,(*sp).s0,(*sp).s2);
 
@@ -991,7 +990,7 @@ void local_D(spinor * const rr, spinor * const s,
   _vector_add_assign(r.s3,psi);
 
   /******************************* direction -0 *********************************/
-  sm = (spinor *) s + (*(idn++));
+  sm = (spinor *) s + (*(idx++));
   
   _vector_sub(psi, (*sm).s0, (*sm).s2);
 
@@ -1011,7 +1010,7 @@ void local_D(spinor * const rr, spinor * const s,
   _vector_sub_assign(r.s3,psi);
 
   /******************************* direction +1 *********************************/
-  sp = (spinor *) s + (*(iup++));
+  sp = (spinor *) s + (*(idx++));
   
   _vector_i_add(psi,(*sp).s0,(*sp).s3);
   
@@ -1031,7 +1030,7 @@ void local_D(spinor * const rr, spinor * const s,
   _vector_i_sub_assign(r.s2,psi);
 
   /******************************* direction -1 *********************************/
-  sm = (spinor *) s + (*(idn++));
+  sm = (spinor *) s + (*(idx++));
       
   _vector_i_sub(psi,(*sm).s0,(*sm).s3);
   
@@ -1051,7 +1050,7 @@ void local_D(spinor * const rr, spinor * const s,
   _vector_i_add_assign(r.s2,psi);
 
   /******************************* direction +2 *********************************/
-  sp = (spinor *) s + (*(iup++));
+  sp = (spinor *) s + (*(idx++));
       
   _vector_add(psi,(*sp).s0,(*sp).s3);
 
@@ -1071,7 +1070,7 @@ void local_D(spinor * const rr, spinor * const s,
   _vector_sub_assign(r.s2,psi);
 
   /******************************* direction -2 *********************************/
-  sm = (spinor *) s + (*(idn++));
+  sm = (spinor *) s + (*(idx++));
       
   _vector_sub(psi,(*sm).s0,(*sm).s3);
   
@@ -1091,7 +1090,7 @@ void local_D(spinor * const rr, spinor * const s,
   _vector_add_assign(r.s2,psi);
 
   /******************************* direction +3 *********************************/
-  sp = (spinor *) s + (*(iup++));
+  sp = (spinor *) s + (*(idx++));
   
   _vector_i_add(psi,(*sp).s0,(*sp).s2);
   
@@ -1111,7 +1110,7 @@ void local_D(spinor * const rr, spinor * const s,
   _vector_i_add_assign(r.s3, psi);
 
   /******************************* direction -3 *********************************/
-  sm = (spinor *) s + (*(idn++));
+  sm = (spinor *) s + (*(idx++));
   
   _vector_i_sub(psi,(*sm).s0,(*sm).s2);
 

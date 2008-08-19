@@ -19,6 +19,7 @@
 #endif
 #include"su3.h"
 #include"su3adj.h"
+#include"deflation/deflation_block.h"
 
 
 /* Here you can define antiperiodic  */
@@ -118,6 +119,11 @@ EXTERN int g_proc_id, g_nproc, g_stdio_proc, g_nproc_t, g_nproc_x, g_nproc_y, g_
 EXTERN int g_proc_coords[4];
 EXTERN int g_dbw2rand;
 EXTERN int g_mpi_time_rank;
+EXTERN int g_nb_list[8];
+
+/* size of deflation subspace */
+EXTERN int g_N_s;
+EXTERN block * g_blocks;
 
 #ifdef MPI
 EXTERN MPI_Status status;

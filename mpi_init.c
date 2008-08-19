@@ -115,18 +115,23 @@ halfspinor * halffield_buffer_z2 ALIGN;
 
 
 void mpi_init(int argc,char *argv[]) {
-  g_proc_coords[0] = 0;
-  g_proc_coords[1] = 0;
-  g_proc_coords[2] = 0;
-  g_proc_coords[3] = 0;
-
+  int i;
 #ifdef MPI
   int periods[] = {1,1,1,1};
   int dims[] = {0,0,0,0};
   int ndims = 0;
   int reorder = 1, namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
+#endif
+  g_proc_coords[0] = 0;
+  g_proc_coords[1] = 0;
+  g_proc_coords[2] = 0;
+  g_proc_coords[3] = 0;
+  for(i = 0; i < 8; i++) {
+    g_nb_list[i] = 0;
+  }
 
+#ifdef MPI
 #  ifdef _USE_SHMEM
   /* we need that the PE number in MPI_COMM_WORL  */
   /* exactly correspond to the one in g_cart_grid */
@@ -232,16 +237,26 @@ void mpi_init(int argc,char *argv[]) {
   if(g_stdio_proc == -1){
     g_stdio_proc = g_proc_id;
   }
-
+  for(i = 0; i < 8; i++) {
+    g_nb_list[i] = g_cart_id;
+  }
   MPI_Cart_shift(g_cart_grid, 0, 1, &g_nb_t_dn, &g_nb_t_up);
+  g_nb_list[0] = g_nb_t_up;  
+  g_nb_list[1] = g_nb_t_dn;
 #  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   MPI_Cart_shift(g_cart_grid, 1, 1, &g_nb_x_dn, &g_nb_x_up);
+  g_nb_list[2] = g_nb_x_up;  
+  g_nb_list[3] = g_nb_x_dn;
 #  endif
 #  if (defined PARALLELXYT  || defined PARALLELXYZT)
   MPI_Cart_shift(g_cart_grid, 2, 1, &g_nb_y_dn, &g_nb_y_up);
+  g_nb_list[4] = g_nb_y_up;  
+  g_nb_list[5] = g_nb_y_dn;
 #  endif
 #  if defined PARALLELXYZT
   MPI_Cart_shift(g_cart_grid, 3, 1, &g_nb_z_dn, &g_nb_z_up);
+  g_nb_list[0] = g_nb_z_up;  
+  g_nb_list[1] = g_nb_z_dn;
 #  endif
 
   /* With internal boundary we mean the fields that are send */
