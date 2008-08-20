@@ -36,4 +36,6 @@
 
 #include "solver/matrix_mult_typedef_nd.h"
 #include "solver/cg_her_nd.h"
+
+#include "solver/generate_dfl_subspace.h"
 #endif

@@ -53,7 +53,7 @@
 #include "phmc.h"
 #include "D_psi.h"
 #include "linalg/convert_eo_to_lexic.h"
-#include "deflation/deflation_block.h"
+#include "block.h"
 
 void usage(){
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
@@ -81,6 +81,9 @@ int main(int argc,char *argv[]) {
   char * input_filename = NULL;
   double plaquette_energy;
   double ratime, retime;
+
+  spinor **app_eigenvectors;
+  int nsiter;
 
 #ifdef _GAUGE_COPY
   int kb=0;
@@ -253,29 +256,31 @@ int main(int argc,char *argv[]) {
       init_geom_blocks();
       init_gauge_blocks(g_gauge_field);
 
+
+      /* the can stay here for now, but later we probably need */
+      /* something like init_dfl_solver called somewhere else  */
       /* create set of approximate lowest eigenvectors ("global deflation subspace") */
-      spinor **app_eigenvectors;
-      generate_approx_eigenvectors(app_eigenvectors); /* TODO */
 
+      generate_dfl_subspace(g_N_s, VOLUME); /* TODO */
 
-      int nsiter;
       for (nsiter = 0; nsiter < g_N_s; ++nsiter) {
         /* add it to the basis */
         add_basis_field(nsiter, app_eigenvectors[nsiter]);
       }
 
       /* perform local orthonormalization */
-      block_orthonormalize(g_blocks);
-      block_orthonormalize(g_blocks+1);
+      block_orthonormalize(block_list);
+      block_orthonormalize(block_list+1);
 
       /* Exchange edges of local spinor basis */
-      block_exchange_edges(); /* TODO */
+      /* TODO */
+/*       block_exchange_edges();  */
 
       /* Compute little Dirac operators */
-      block_compute_little_D_diagonal(g_blocks);
-      block_compute_little_D_diagonal(g_blocks + 1);
-      block_compute_little_D_offdiagonal(g_blocks);
-      block_compute_little_D_offdiagonal(g_blocks + 1);
+      block_compute_little_D_diagonal(block_list);
+      block_compute_little_D_diagonal(block_list + 1);
+      block_compute_little_D_offdiagonal(block_list);
+      block_compute_little_D_offdiagonal(block_list + 1);
 
       /* TODO Generate projectors */
     }

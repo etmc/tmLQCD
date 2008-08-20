@@ -28,7 +28,7 @@
 #ifdef MPI
 # include "xchange_lexicfield.h"
 #endif
-#include "deflation/deflation_block.h"
+#include "block.h"
 #include "D_psi.h"
 
 #if (defined SSE2 || defined SSE3)
@@ -1336,14 +1336,10 @@ void boundary_D_7(spinor * const r, spinor * const s,
   return;
 }
 
-g_boundary_D[0] = boundary_D_0;
-g_boundary_D[1] = boundary_D_1;
-g_boundary_D[2] = boundary_D_2
-g_boundary_D[3] = boundary_D_3,
-g_boundary_D[4] = boundary_D_4;
-g_boundary_D[5] = boundary_D_5;
-g_boundary_D[6] = boundary_D_6;
-g_boundary_D[7] = boundary_D_7;
+void (*boundary_D[8])
+  (spinor * const r, spinor * const s, su3 * restrict u)=
+{boundary_D_0, boundary_D_0, boundary_D_0, boundary_D_0, boundary_D_0, boundary_D_0, boundary_D_0, boundary_D_0};
+
 
 static char const rcsid[] = "$Id$";
 

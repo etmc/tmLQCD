@@ -52,7 +52,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	xchange_lexicfield xchange_2fields online_measurement \
 	monomial det_monomial detratio_monomial update_momenta \
 	integrator gauge_monomial ndpoly_monomial phmc \
-	little_D
+	little_D block
 
 
 NOOPTMOD = test/check_xchange test/check_geometry

@@ -19,8 +19,6 @@
 #endif
 #include "su3.h"
 #include "su3adj.h"
-#include "deflation/deflation_block.h"
-#include "D_psi.h"
 
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */
@@ -124,7 +122,6 @@ EXTERN int g_nb_list[8];
 /* Deflation information */
 EXTERN int g_dflgcr_flag;
 EXTERN int g_N_s;
-EXTERN block * g_blocks;
 
 #ifdef MPI
 EXTERN MPI_Status status;
@@ -148,8 +145,6 @@ EXTERN int counter_Spsi;
 
 EXTERN int ITER_MAX_BCG;
 EXTERN int ITER_MAX_CG;
-
-EXTERN surf_D g_boundary_D[8];
 
 #undef EXTERN
 /* #undef ALIGN */

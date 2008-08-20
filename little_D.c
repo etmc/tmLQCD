@@ -11,7 +11,7 @@
 #endif
 #include "global.h"
 #include "complex.h"
-#include "deflation/deflation_block.h"
+#include "block.h"
 #include "linalg/blas.h"
 #include "little_D.h"
 
@@ -58,16 +58,16 @@ void little_D(complex * v, complex *w) {
   /* all the mpilocal stuff first */
   for(i = 0; i < no_blocks; i++) {
     /* diagonal term */
-    _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, g_blocks[i].little_dirac_operator,
+    _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator,
 	       &g_N_s, w + i*g_N_s, &ONE, &CZERO, v + i*g_N_s, &ONE, 1);
 
     /* offdiagonal terms */
     for(j = 0; j < 8; j++) {
       /* set k to neighbour in direction j */
-      k = g_blocks[i].mpilocal_neighbour[j];
+      k = block_list[i].mpilocal_neighbour[j];
       /* if k is on the same mpi proc, but not myself */
       if(k > -1 && k != i) {
-	_FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, g_blocks[i].little_dirac_operator + (j+1)*sq,
+	_FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator + (j+1)*sq,
 		   &g_N_s, w + k*g_N_s, &ONE, &CONE, v + i*g_N_s, &ONE, 1);
       }
     }
@@ -79,9 +79,9 @@ void little_D(complex * v, complex *w) {
   for(j = 7; j > -1; j--) {
     wait_little_field_exchange(j);
     for(i = 0; i < no_blocks; i++) {
-      k = g_blocks[i].mpilocal_neighbour[j];
+      k = block_list[i].mpilocal_neighbour[j];
       if(k < 0) {
-	_FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, g_blocks[i].little_dirac_operator + (j+1)*sq,
+	_FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator + (j+1)*sq,
 		   &g_N_s, w + ((j+1)*no_blocks + i)*g_N_s, &ONE, &CONE, v + i*g_N_s, &ONE, 1);
       }
     }
