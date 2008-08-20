@@ -16,13 +16,16 @@
 
 
 /* assume we have a little field w                       */
-/* which has length 9*no_blocks*N_s                      */
+/* which has length 8*no_blocks*N_s                      */
 /* with usual order in space                             */
 /* no_blocks = 2 currently fixed                         */
 /* and blocks devide z-direction by 2                    */
 /*                                                       */
 /* block[0], block[1], block[0], block[1], block[0]  ... */
 /* local             , +t                , -t        ... */
+/*                                                       */
+/* block[0], block[1], block[0], block[1]                */
+/* +z                , -z                                */
 
 const int no_blocks = 2;
 const int nblks_t = 1;
@@ -72,7 +75,7 @@ void little_D(complex * v, complex *w) {
 #ifdef MPI
   /* now all non-mpilocal stuff */
   /* start with z direction     */
-  for(j = 8; j > -1; j--) {
+  for(j = 7; j > -1; j--) {
     wait_little_field_exchange(j);
     for(i = 0; i < no_blocks; i++) {
       k = g_blocks[i].mpilocal_neighbour[j];
@@ -95,14 +98,14 @@ int waitcount = 0;
 #endif
 
 void init_little_field_exchange(complex * w) {
-  int i = 0, l = 0;
 #ifdef MPI
+  int i = 0;
 #  ifdef PARALLELT
-  int no_dirs = 1;
-#  elif defined PARALLELXT
   int no_dirs = 2;
+#  elif defined PARALLELXT
+  int no_dirs = 4;
 #  elif (defined PARALLELXYT || defined PARALLELXYZT)
-  int no_dirs = 3;
+  int no_dirs = 6;
 #  endif
   if(waitcount != 0) {
     if(g_proc_id == 0) {
@@ -111,33 +114,33 @@ void init_little_field_exchange(complex * w) {
     exit(-1);
   }
   /* z-dir requires special treatment! */
-  for(i = 0; i < no_dirs; i++) {
+  for(i = 0; i < no_dirs; i+=2) {
     /* send to the right, receive from the left */
-    MPI_Isend((void*)w, no_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[2*i], 
-	      2*i, g_cart_grid, &lrequests[4*i]);
-    MPI_Irecv((void*)(w + (no_blocks*(i+1)+1)*g_N_s), no_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[2*i+1], 
-	      2*i, g_cart_grid, &lrequests[4*i+1]);
-
+    MPI_Isend((void*)w, no_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
+	      i, g_cart_grid, &lrequests[2*i]);
+    MPI_Irecv((void*)(w + no_blocks*(i+2)*g_N_s), no_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i+1], 
+	      i, g_cart_grid, &lrequests[2*i+1]);
+    
     /* send to the left, receive from the right */
-    MPI_Isend((void*)w, no_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[2*i+1], 
-	      2*i+1, g_cart_grid, &lrequests[4*i+2]);
-    MPI_Irecv((void*)(w + (no_blocks*(i+1))*g_N_s), no_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[2*i], 
-	      2*i+1, g_cart_grid, &lrequests[4*i+3]);
+    MPI_Isend((void*)w, no_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i+1], 
+	      i+1, g_cart_grid, &lrequests[2*i+2]);
+    MPI_Irecv((void*)(w + no_blocks*(i+1)*g_N_s), no_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
+	      i+1, g_cart_grid, &lrequests[2*i+3]);
     waitcount += 4;
   }
 #  ifdef PARALLELXYZT
   /* send to the right, receive from the left */
-  i = 3;
-  MPI_Isend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[2*i], 
-	    2*i, g_cart_grid, &lrequests[4*i]);
-  MPI_Irecv((void*)(w + (no_blocks*(i+1)+1)*g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[2*i+1], 
-	    2*i, g_cart_grid, &lrequests[4*i+1]);
+  i = 6;
+  MPI_Isend((void*)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
+	    i, g_cart_grid, &lrequests[2*i]);
+  MPI_Irecv((void*)(w + (no_blocks*(i+1)+1)*g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i+1], 
+	    i, g_cart_grid, &lrequests[2*i+1]);
   
   /* send to the left, receive from the right */
   MPI_Isend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[2*i+1], 
-	    2*i+1, g_cart_grid, &lrequests[4*i+2]);
-  MPI_Irecv((void*)(w + (no_blocks*(i+1))*g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[2*i], 
-	    2*i+1, g_cart_grid, &lrequests[4*i+3]);
+	    i+1, g_cart_grid, &lrequests[2*i+2]);
+  MPI_Irecv((void*)(w + no_blocks*(i+1)*g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
+	    i+1, g_cart_grid, &lrequests[2*i+3]);
   waitcount += 4;
 #  endif
 #endif
