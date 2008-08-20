@@ -37,6 +37,12 @@ int generate_dfl_subspace(const int Ns, const int N) {
       nrm = sqrt(square_norm(g_spinor_field[DUM_SOLVER], N));
       mul_r(g_dfl_fields[i], 1./nrm, g_spinor_field[DUM_SOLVER], N);
     }
+    /* test quality */
+    D_psi(g_spinor_field[DUM_SOLVER], g_dfl_fields[i]);
+    nrm = sqrt(square_norm(g_spinor_field[DUM_SOLVER], N));
+    if(g_proc_id == 0 && g_debug_level > -1) {
+      printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm); 
+    }
   }
   
   return(0);
