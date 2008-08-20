@@ -284,25 +284,23 @@ double block_two_norm(spinor * const R, const int N) {
   return(norm);
 }
 
-void compute_little_D_diagonal(void *parent) {
+void compute_little_D_diagonal(block *parent) {
   int i,j;
   /* we need working space, where do we best allocate it? */
   spinor * tmp;
-  block *this = (block*)parent;
   complex * M = this->little_dirac_operator;
 
-  
-  for(i = 0; i < this->ns; i++){
-    Block_D_psi(tmp, this->basis + i * (this->volume + this->spinpad));
-    for(j = 0; j < this->ns; j++){
+  for(i = 0; i < g_N_s; i++){
+    Block_D_psi(tmp, parent->basis + i * (this->volume + this->spinpad));
+    for(j = 0; j < g_N_s; j++){
       /* order correct ? */
-      M[i*this->ns + j] = block_scalar_prod(this->basis + j * (this->volume + this->spinpad), tmp, this->volume);
+      M[i * g_N_s + j] = block_scalar_prod(parent->basis + j * (parent->volume + parent->spinpad), tmp, this->volume);
     }
   }
   return;
 }
 
-surface_D_apply_contract(block *this, int surface, int offset, int step_size, su3 *gauge_start, int direction){
+surface_D_apply_contract(block *parent, int surface, int offset, int step_size, su3 *gauge_start, int direction){
   int i, j, k;
   complex aggregate[g_N_s];
 
@@ -315,128 +313,127 @@ surface_D_apply_contract(block *this, int surface, int offset, int step_size, su
     for(j = 0; j < step_size; ++j){
       arr_boundary_D[direction](tmp, offset + i * stride + j, gauge_start + 8 * (i * stride + j) + direction);
       for(k = 0; k < g_N_s; ++k){
-        result = block_scalar_prod(this->neighbour_edges[direction][i * step_size + j + k * surface], tmp, 1);
+        result = block_scalar_prod(parent->neighbour_edges[direction][i * step_size + j + k * surface], tmp, 1);
         aggregate[k].re += result.re;
         aggregate[k].im += result.im;
       }
     }
   }
-  memcpy(this->little_dirac_operator + (direction + 1) * (g_N_s * g_N_s) , aggregate, g_N_s * sizeof(complex));
+  memcpy(parent->little_dirac_operator + (direction + 1) * (g_N_s * g_N_s) , aggregate, g_N_s * sizeof(complex));
   /* NOTE Is this the correct location within M eventually? */
 }
 
-void block_compute_little_D_offdiagonal(block *this) {
+void block_compute_little_D_offdiagonal(block *parent) {
 /*   Here we need to multiply the boundary with the corresponding  */
 /*   U and gamma_i and take the scalar product then */
-/*   NOTE I will assume the boundaries are available, for the time being */
+/*   NOTE I assume the boundaries are available in parent->neighbour_edges*/
   int vec_ctr, surface;
   int offset, stride, step_size;
   spinor tmp;
 
   /* +T direction (+0) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    surface = LX * LY * LZ / 2; /* Corrected for snipped Z direction */
-    stride = surface;
+    surface   = LX * LY * LZ / 2; /* Corrected for snipped Z direction */
+    stride    = surface;
     step_size = surface;
 
-    offset = this->basis + (LT - 1) * stride + vec_ctr * this->volume;
-    gauge_start = this->u + 8 * (this->volume - surface);
+    offset = parent->basis + (T - 1) * stride + vec_ctr * (parent->volume + parent->spinpad);
+    gauge_start = parent->u + 8 * (parent->volume - surface);
 
     surface_D_apply_contract(this, surface, offset, step_size, gauge_start, 0);
   }
 
   /* -T direction (-0) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    offset = this->basis + vec_ctr * this->volume;
-    gauge_start = this->u;
+    offset = parent->basis + vec_ctr * (parent->volume + parent->spinpad);
+    gauge_start = parent->u;
 
-    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, this->little_dirac_operator, 1);
+    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, parent->little_dirac_operator, 1);
   }
 
   /* +X direction (+1) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    surface = LZ * LY * LT / 2;
-    stride = LZ * LY * LX / 2;
-    step_size = LZ * LY / 2;
+    surface =   LZ * LY * T  / 2;
+    stride =    LZ * LY * LX / 2;
+    step_size = LZ * LY      / 2;
 
-    offset = this->basis + (LX - 1) * stride + vec_ctr * this->volume;
-    gauge_start = this->u + (LX - 1) * stride;  /* Pick up -X gauge throughout */
+    offset = parent->basis + (LX - 1) * stride + vec_ctr * (parent->volume + parent->spinpad);
+    gauge_start = parent->u + (LX - 1) * stride;  /* Pick up -X gauge throughout */
 
-    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, this->little_dirac_operator, 2);
+    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, parent->little_dirac_operator, 2);
   }
 
   /* -X direction (-1) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    offset = this->basis + vec_ctr * this->volume;
-    gauge_start = this->u;
+    offset = parent->basis + vec_ctr * (parent->volume + parent->spinpad);
+    gauge_start = parent->u;
 
-    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, this->little_dirac_operator, 3);
+    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, parent->little_dirac_operator, 3);
   }
 
   /* +Y direction (+2) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    surface = LZ * LX * LT / 2;
-    stride = LZ * LY / 2;
-    step_size = LZ / 2;
+    surface =   LZ * LX * T / 2;
+    stride =    LZ * LY     / 2;
+    step_size = LZ          / 2;
 
-    offset = this->basis + (LY - 1) * stride + vec_ctr * this->volume;
-    gauge_start = this->u + (LY - 1) * stride;
+    offset = parent->basis + (LY - 1) * stride + vec_ctr * (parent->volume + parent->spinpad);
+    gauge_start = parent->u + (LY - 1) * stride;
 
-    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, this->little_dirac_operator, 4);
+    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, parent->little_dirac_operator, 4);
   }
 
   /* -Y direction (-2) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    offset = this->basis + vec_ctr * this->volume;
-    gauge_start = this->u;
+    offset = parent->basis + vec_ctr * (parent->volume + parent->spinpad);
+    gauge_start = parent->u;
 
-    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, this->little_dirac_operator, 5);
+    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, parent->little_dirac_operator, 5);
   }
 
   /* +Z direction (+3) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    surface = LY * LX * LT;
-    stride = LZ * LY * LT / 2;
-    step_size = 1;
+    surface =   LY * LX * T   ;
+    stride =    LZ         / 2;
+    step_size = 1             ;
 
-    offset = this->basis + (LZ - 1) * stride + vec_ctr * this->volume;
-    gauge_start = this->u + (LZ - 1) * stride;
+    offset = parent->basis + (LZ - 1) * stride + vec_ctr * (parent->volume + parent->spinpad);
+    gauge_start = parent->u + (LZ - 1) * stride;
 
-    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, this->little_dirac_operator, 6);
+    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, parent->little_dirac_operator, 6);
   }
 
   /* -Z direction (-3) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    offset = this->basis + vec_ctr * this->volume;
-    gauge_start = this->u;
+    offset = parent->basis + vec_ctr * (parent->volume + parent->spinpad);
+    gauge_start = parent->u;
 
-    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, this->little_dirac_operator, 7);
+    surface_D_apply_contract(this, surface, offset, step_size, gauge_start, parent->little_dirac_operator, 7);
   }
 }
 
 /* Uses a Modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
-void block_orthonormalize(void *parent){
+void block_orthonormalize(block *parent){
   int i, j, k;
   spinor *current, *next, *iter;
   spinor orig, resbasis;
   complex coeff;
   complex scale;
-  block *this = (block*)parent;
 
   scale.im = 0;
-  for(i = 0; i < this->ns; ++i){
+  for(i = 0; i < parent->ns; ++i){
     /* rescale the current vector */
-    current = this->basis + i * (this->volume + this->spinpad);
-    scale.re = 1 / sqrt(block_two_norm(current, this->volume));
-    for(iter = current; iter < current + this->volume; ++iter){
+    current = parent->basis + i * (parent->volume + parent->spinpad);
+    scale.re = 1 / sqrt(block_two_norm(current, parent->volume));
+    for(iter = current; iter < current + parent->volume; ++iter){
       orig = *iter; /* we can't alias */
       _spinor_mul_complex(*iter, scale, orig);
     }
     /* rescaling done, now subtract this direction from all vectors that follow */
-    for(j = i + 1; j < this->ns; ++j){
-      next = this->basis + j * (this->volume + this->spinpad);
-      coeff = block_scalar_prod(current, next, this->volume);
-      for(k = 0; k < this->volume; ++k){
+    for(j = i + 1; j < parent->ns; ++j){
+      next = parent->basis + j * (parent->volume + parent->spinpad);
+      coeff = block_scalar_prod(current, next, parent->volume);
+      for(k = 0; k < parent->volume; ++k){
         _spinor_mul_complex(resbasis, coeff, *(current + k));
         orig = *(next + k);
         diff(next + k, &orig, &resbasis, 1); /* NOTE We could also subtract the complete spinors from eachother */
@@ -446,7 +443,7 @@ void block_orthonormalize(void *parent){
 }
 
 /* Reconstructs a global field from the little basis of two blocks */
-spinor *block_reconstruct_global_basis(void *parent, int const index, spinor *reconstructed_field)
+spinor *block_reconstruct_global_basis(int const index, spinor *reconstructed_field)
 {
   int ctr_t;
   int contig_block = LZ / 2;

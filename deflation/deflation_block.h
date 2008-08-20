@@ -32,10 +32,10 @@ int add_basis_field(int const index, spinor const *field);
 int init_gauge_blocks(su3 const *field);
 int init_geom_blocks();
 
-void block_orthonormalize(void *parent);
-spinor *block_reconstruct_global_field(void *parent, int const index, spinor *reconstructed_field);
+void block_orthonormalize(block *parent);
+spinor *block_reconstruct_global_field(block *parent, int const index, spinor *reconstructed_field);
 
-void block_compute_little_D_offdiagonal(void *parent);
-void block_compute_little_D_diagonal(void *parent);
+void block_compute_little_D_offdiagonal(block *parent);
+void block_compute_little_D_diagonal(block *parent);
 
 #endif
