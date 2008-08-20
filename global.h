@@ -17,10 +17,10 @@
 #ifdef FIXEDVOLUME
 #  include "fixed_volume.h"
 #endif
-#include"su3.h"
-#include"su3adj.h"
-#include"deflation/deflation_block.h"
-
+#include "su3.h"
+#include "su3adj.h"
+#include "deflation/deflation_block.h"
+#include "D_psi.h"
 
 /* Here you can define antiperiodic  */
 /* boundary conditions with e.g.     */
@@ -147,6 +147,8 @@ EXTERN int counter_Spsi;
 
 EXTERN int ITER_MAX_BCG;
 EXTERN int ITER_MAX_CG;
+
+EXTERN surf_D g_boundary_D[8];
 
 #undef EXTERN
 /* #undef ALIGN */

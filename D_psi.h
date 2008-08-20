@@ -7,17 +7,15 @@
 void D_psi(spinor * const P, spinor * const Q);
 void Block_D_psi(block * blk, spinor * const rr, spinor * const s);
 
-void boundary_D_0(spinor * const r, spinor * const s, su3 * restrict u);
-void boundary_D_1(spinor * const r, spinor * const s, su3 * restrict u);
-void boundary_D_2(spinor * const r, spinor * const s, su3 * restrict u);
-void boundary_D_3(spinor * const r, spinor * const s, su3 * restrict u);
-void boundary_D_4(spinor * const r, spinor * const s, su3 * restrict u);
-void boundary_D_5(spinor * const r, spinor * const s, su3 * restrict u);
-void boundary_D_6(spinor * const r, spinor * const s, su3 * restrict u);
-void boundary_D_7(spinor * const r, spinor * const s, su3 * restrict u);
+void boundary_D_0(spinor * const r, spinor * const s, su3 *u);
+void boundary_D_1(spinor * const r, spinor * const s, su3 *u);
+void boundary_D_2(spinor * const r, spinor * const s, su3 *u);
+void boundary_D_3(spinor * const r, spinor * const s, su3 *u);
+void boundary_D_4(spinor * const r, spinor * const s, su3 *u);
+void boundary_D_5(spinor * const r, spinor * const s, su3 *u);
+void boundary_D_6(spinor * const r, spinor * const s, su3 *u);
+void boundary_D_7(spinor * const r, spinor * const s, su3 *u);
 
-typedef void (*surf_D)(spinor * const, spinor * const, su3 * restrict);
-extern surf_D [] = {boundary_D_0, boundary_D_1, boundary_D_2, boundary_D_3,
-                                  boundary_D_4, boundary_D_5, boundary_D_6, boundary_D_7 };
+typedef void (*surf_D)(spinor* const, spinor* const, su3*);
 
 #endif
