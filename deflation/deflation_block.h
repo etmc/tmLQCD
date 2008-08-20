@@ -29,7 +29,7 @@ int init_blocks();
 int free_blocks();
 
 int add_basis_field(int const index, spinor const *field);
-int init_gauge_blocks(su3 const *field);
+int init_gauge_blocks(su3 const **field);
 int init_geom_blocks();
 
 void block_orthonormalize(block *parent);

@@ -121,7 +121,8 @@ EXTERN int g_dbw2rand;
 EXTERN int g_mpi_time_rank;
 EXTERN int g_nb_list[8];
 
-/* size of deflation subspace */
+/* Deflation information */
+EXTERN int g_dflgcr_flag;
 EXTERN int g_N_s;
 EXTERN block * g_blocks;
 

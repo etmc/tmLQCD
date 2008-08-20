@@ -9,16 +9,10 @@
 
 #define CALLOC_ERROR_CRASH {printf ("calloc errno : %d\n", errno); errno = 0; return 1;}
 
-extern block *g_blocks;
-extern int LX,LY,LZ,T,VOLUME;
-extern int g_proc_coords[4]; /* NOTE may need some ifdef guard for MPI availability, though I hope our deflation code will never be made serially capable */
-extern int ****g_ipt;        /* Used in the block gauge field initialization */
-extern int **g_iup, **g_idn; /* Used in the block gauge field initialization */
-
 int init_blocks()
 {
   int i,j;
-  int g_N_s = 20;  /* NOTE hardcoded by hand here until we come up with an input way of defining it */
+  g_N_s = 20;  /* NOTE hardcoded by hand here until we come up with an input way of defining it */
   g_blocks = calloc(2, sizeof(block));
   for (i = 0; i < 2; ++i) {
     g_blocks[i].volume = VOLUME/2;
@@ -101,10 +95,10 @@ int add_basis_field(int const index, spinor const *field)
   return 0;
 }
 
-int init_gauge_blocks(su3 const *field)
+void init_gauge_blocks(su3 const **field)
 {
   /* Copies the existing gauge field on the processor into the two separate blocks in a form
-  that is readable by the by the block Dirac operator. Specifically, in consecutive memory
+  that is readable by the block Dirac operator. Specifically, in consecutive memory
   now +t,-t,+x,-x,+y,-y,+z,-z gauge links are stored. This requires double the storage in
   memory. */
 
@@ -115,31 +109,30 @@ int init_gauge_blocks(su3 const *field)
         for (z = 0; z < LZ/2; ++z) {
           ix = g_ipt[t][x][y][z];
           ix_new = 8 * (z + y * LZ/2 + x * LY * LZ/2 + t * LX * LY * LZ/2); //su3 index on this block
-          memcpy(g_blocks[0].u + ix_new, field + g_iup[ix][0], sizeof(su3));
-          memcpy(g_blocks[0].u + ix_new + 1, field + g_idn[ix][0], sizeof(su3));
-          memcpy(g_blocks[0].u + ix_new + 2, field + g_iup[ix][1], sizeof(su3));
-          memcpy(g_blocks[0].u + ix_new + 3, field + g_idn[ix][1], sizeof(su3));
-          memcpy(g_blocks[0].u + ix_new + 4, field + g_iup[ix][2], sizeof(su3));
-          memcpy(g_blocks[0].u + ix_new + 5, field + g_idn[ix][2], sizeof(su3));
-          memcpy(g_blocks[0].u + ix_new + 6, field + g_iup[ix][3], sizeof(su3));
-          memcpy(g_blocks[0].u + ix_new + 7, field + g_idn[ix][3], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new, *field + g_iup[ix][0], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 1, *field + g_idn[ix][0], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 2, *field + g_iup[ix][1], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 3, *field + g_idn[ix][1], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 4, *field + g_iup[ix][2], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 5, *field + g_idn[ix][2], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 6, *field + g_iup[ix][3], sizeof(su3));
+          memcpy(g_blocks[0].u + ix_new + 7, *field + g_idn[ix][3], sizeof(su3));
         }
         for (z = LZ/2; z < LZ; ++z) {
           ix = g_ipt[t][x][y][z];
           ix_new = 8 * (z - LZ/2 + y * LZ/2 + x * LY * LZ/2 + t * LX * LY * LZ/2); //su3 index on this block, count anew in the z direction
-          memcpy(g_blocks[1].u + ix_new, field + g_iup[ix][0], sizeof(su3));
-          memcpy(g_blocks[1].u + ix_new + 1, field + g_idn[ix][0], sizeof(su3));
-          memcpy(g_blocks[1].u + ix_new + 2, field + g_iup[ix][1], sizeof(su3));
-          memcpy(g_blocks[1].u + ix_new + 3, field + g_idn[ix][1], sizeof(su3));
-          memcpy(g_blocks[1].u + ix_new + 4, field + g_iup[ix][2], sizeof(su3));
-          memcpy(g_blocks[1].u + ix_new + 5, field + g_idn[ix][2], sizeof(su3));
-          memcpy(g_blocks[1].u + ix_new + 6, field + g_iup[ix][3], sizeof(su3));
-          memcpy(g_blocks[1].u + ix_new + 7, field + g_idn[ix][3], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new, *field + g_iup[ix][0], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 1, *field + g_idn[ix][0], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 2, *field + g_iup[ix][1], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 3, *field + g_idn[ix][1], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 4, *field + g_iup[ix][2], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 5, *field + g_idn[ix][2], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 6, *field + g_iup[ix][3], sizeof(su3));
+          memcpy(g_blocks[1].u + ix_new + 7, *field + g_idn[ix][3], sizeof(su3));
         }
       }
     }
   }
-  return 0;
 }
 
 int init_geom_blocks()

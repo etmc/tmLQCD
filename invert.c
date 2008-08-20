@@ -53,7 +53,7 @@
 #include "phmc.h"
 #include "D_psi.h"
 #include "linalg/convert_eo_to_lexic.h"
-
+#include "deflation/deflation_block.h"
 
 void usage(){
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
@@ -244,6 +244,40 @@ int main(int argc,char *argv[]) {
       MPI_Finalize();
 #endif
       return(0);
+    }
+
+
+    if(g_dflgcr_flag == 1) {
+      /* set up deflation blocks */
+      init_blocks();
+      init_geom_blocks();
+      init_gauge_blocks(g_gauge_field);
+
+      /* create set of approximate lowest eigenvectors ("global deflation subspace") */
+      spinor **app_eigenvectors;
+      generate_approx_eigenvectors(app_eigenvectors); /* TODO */
+
+
+      int nsiter;
+      for (nsiter = 0; nsiter < g_N_s; ++nsiter) {
+        /* add it to the basis */
+        add_basis_field(nsiter, app_eigenvectors[nsiter]);
+      }
+
+      /* perform local orthonormalization */
+      block_orthonormalize(g_blocks);
+      block_orthonormalize(g_blocks+1);
+
+      /* Exchange edges of local spinor basis */
+      block_exchange_edges(); /* TODO */
+
+      /* Compute little Dirac operators */
+      block_compute_little_D_diagonal(g_blocks);
+      block_compute_little_D_diagonal(g_blocks + 1);
+      block_compute_little_D_offdiagonal(g_blocks);
+      block_compute_little_D_offdiagonal(g_blocks + 1);
+
+      /* TODO Generate projectors */
     }
 
     for(ix = index_start; ix < index_end; ix++) {
