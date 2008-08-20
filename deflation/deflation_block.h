@@ -12,22 +12,16 @@ typedef struct {
   int coordinate[4];            /* global block coordinate */
   int mpilocal_coordinate[4];   /* mpi process local coordinate */
   int mpilocal_neighbour[8];    /* contains the block id of mpilocal neighbours, or -1 if non-mpilocal */
-  int **idx;                    /* provides the next neighbours for spinors on the block */
+  int *idx;                     /* provides the next neighbours for spinors on the block */
   spinor *basis;                /* generated orthonormal basis for little D [Ns x local_volume] */
   spinor **neighbour_edges;     /* boundary terms of the basis of the neighbours [8 x Ns x surface_term] */
   su3 * u;                      /* block local gauge field, for use in D */
-  
+  int spinpad;                  /* number of elements needed to store the boundaries of the spinor */
+
   /* storage will be g_Ns x (9 * g_Ns)                 */
   /* build_little_diraclocal g_Ns x g_Ns block first (the diagonal part) */
   /* then +t, -t, +x, -x, +y, -y, +z, -z               */
   complex    *little_dirac_operator;  /* full dense representation of the little D */
-
-
-  /**** 'Member' functions ****/
-  void (*orthonormalize)(void *parent);
-  spinor *(*reconstruct_global_field)(void *parent, int const index, spinor *reconstructed_field);
-  void (*compute_little_D_offdiagonal)(void *parent);
-  void (*compute_little_D_diagonal)(void *parent);
 
 } block;
 
