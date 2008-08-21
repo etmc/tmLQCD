@@ -143,6 +143,8 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     mn2p_integrator(n_int, tau, g_nr_of_psf, lambda);
   }
 
+  g_sloppy_precision = 0;
+
   weight_of_new_configuration(spinor_volume, rngrepro, &enerphi0x, &enerphi1x, &enerphi2x, &enepx, rectangle_energy, &new_rectangle_energy, plaquette_energy, &new_plaquette_energy, &gauge_energy, &new_gauge_energy, &idis0, &idis1, &idis2, &saveiter_max);
 
   /* Compute the energy difference */
@@ -187,42 +189,29 @@ int update_tm(const int integtyp, double *plaquette_energy, double *rectangle_en
     }
     g_sloppy_precision = 1;
     /* run the trajectory back */
-    if(integtyp == 1) 
-    {
-      /* Leap-frog integration scheme */
+    if(integtyp == 1) {
+	/* Leap-frog integration scheme */
       leap_frog(-dtau, Nsteps, nsmall); 
     }
-    else 
-      if(integtyp == 2) 
-      {
-        /* Sexton Weingarten integration scheme */
-        sexton(-dtau, Nsteps, nsmall);
-      }
-      else 
-        if(integtyp == 3) 
-        {
-          ext_leap_frog(n_int, -tau, g_nr_of_psf, halfstep);
-        }
-        else 
-          if(integtyp == 4) 
-          {
-            ext_sexton_weingarten(n_int, -tau, g_nr_of_psf, halfstep);
-          }
-          else 
-            if(integtyp == 5) 
-            {
-              impr_leap_frog(n_int, -tau, g_nr_of_psf);
-            }
-            else 
-              if(integtyp == 6) 
-              {
-                mn2_integrator(n_int, -tau, g_nr_of_psf, halfstep, lambda);
-              }
-              else 
-                if(integtyp == 7) 
-                {
-                  mn2p_integrator(n_int, -tau, g_nr_of_psf, lambda);
-                }
+    else if(integtyp == 2) {
+      /* Sexton Weingarten integration scheme */
+      sexton(-dtau, Nsteps, nsmall);
+    }
+    else if(integtyp == 3) {
+      ext_leap_frog(n_int, -tau, g_nr_of_psf, halfstep);
+    }
+    else if(integtyp == 4) {
+      ext_sexton_weingarten(n_int, -tau, g_nr_of_psf, halfstep);
+    }
+    else if(integtyp == 5) {
+      impr_leap_frog(n_int, -tau, g_nr_of_psf);
+    }
+    else if(integtyp == 6) {
+      mn2_integrator(n_int, -tau, g_nr_of_psf, halfstep, lambda);
+    }
+    else if(integtyp == 7) {
+      mn2p_integrator(n_int, -tau, g_nr_of_psf, lambda);
+    }
     g_sloppy_precision = 0;
     ret_enep = moment_energy();
     ret_plaquette_energy = measure_gauge_action();
