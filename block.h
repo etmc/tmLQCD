@@ -33,6 +33,7 @@ int init_gauge_blocks(su3 ** const field);
 int init_geom_blocks();
 
 void block_orthonormalize(block *parent);
+void block_exchange_edges();
 void block_reconstruct_global_field(const int index, spinor * const reconstructed_field);
 
 void block_compute_little_D_offdiagonal(block *parent);

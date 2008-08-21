@@ -5,7 +5,6 @@
    Do with them what is necessary - arguments/return values are undefined as well :) */
 
 void generate_approx_eigenvectors(void *);
-void block_exchange_edges(void *);
 void generate_projectors(void *);
 
 #endif

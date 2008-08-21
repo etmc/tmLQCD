@@ -43,21 +43,21 @@ int init_blocks()
     if ((void*)(block_list[i].neighbour_edges = calloc(8, sizeof(spinor *))) == NULL)
       CALLOC_ERROR_CRASH;
 
-    if ((void*)(block_list[i].neighbour_edges[0] = calloc(VOLUME / (2 * LX), sizeof(spinor))) == NULL)
+    if ((void*)(block_list[i].neighbour_edges[0] = calloc(VOLUME / (2 * T), sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[1] = calloc(VOLUME / (2 * LX), sizeof(spinor))) == NULL)
+    if ((void*)(block_list[i].neighbour_edges[1] = calloc(VOLUME / (2 * T), sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[2] = calloc(VOLUME / (2 * LY), sizeof(spinor))) == NULL)
+    if ((void*)(block_list[i].neighbour_edges[2] = calloc(VOLUME / (2 * LX), sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[3] = calloc(VOLUME / (2 * LY), sizeof(spinor))) == NULL)
+    if ((void*)(block_list[i].neighbour_edges[3] = calloc(VOLUME / (2 * LX), sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[4] = calloc(VOLUME / LZ, sizeof(spinor))) == NULL)
+    if ((void*)(block_list[i].neighbour_edges[4] = calloc(VOLUME / (2 * LY), sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[5] = calloc(VOLUME / LZ, sizeof(spinor))) == NULL)
+    if ((void*)(block_list[i].neighbour_edges[5] = calloc(VOLUME / (2 * LY), sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[6] = calloc(VOLUME / (2 * T), sizeof(spinor))) == NULL)
+    if ((void*)(block_list[i].neighbour_edges[6] = calloc(VOLUME / LZ, sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[7] = calloc(VOLUME / (2 * T), sizeof(spinor))) == NULL)
+    if ((void*)(block_list[i].neighbour_edges[7] = calloc(VOLUME / LZ, sizeof(spinor))) == NULL)
       CALLOC_ERROR_CRASH;
 
     if ((void*)(block_list[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(complex))) == NULL)
@@ -301,7 +301,7 @@ void block_compute_little_D_diagonal(block *parent) {
 }
 
 void surface_D_apply_contract(block *parent, int surface, spinor* offset, int stride, 
-			 int step_size, su3 *gauge_start, int direction){
+                              int step_size, su3 *gauge_start, int direction){
   int i, j, k;
   complex *iter;
   complex * aggregate;
@@ -325,7 +325,7 @@ void surface_D_apply_contract(block *parent, int surface, spinor* offset, int st
     }
   }
   memcpy(parent->little_dirac_operator + (direction + 1) * (g_N_s * g_N_s) , aggregate, g_N_s * sizeof(complex));
-  /* NOTE Is this the coerrect location within M eventually? */
+  /* NOTE Is this the correct location within M eventually? */
   free(aggregate);
 }
 
@@ -443,11 +443,54 @@ void block_orthonormalize(block *parent){
       for(k = 0; k < parent->volume; ++k){
         _spinor_mul_complex(resbasis, coeff, *(current + k));
         orig = *(next + k);
-        diff(next + k, &orig, &resbasis, 1); /* NOTE We could also subtract the complete spinors from eachother */
+        diff(next + k, &orig, &resbasis, 1); /* NOTE We could also subtract the complete spinors from each other */
       }
     }
   }
   return;
+}
+
+void block_exchange_edges()
+{
+  int bl_cnt, vec_cnt, div_cnt;
+  int div_size = LZ / 2;
+  spinor *scratch, *offset;
+
+  spinor *offsets[8] = {VOLUME,
+                        (T + 2) * LX * LY * LZ,
+                        VOLUME + 2 * LZ * (LX * LY + T * LY),
+                        VOLUME + 2 * LZ * (LX * LY + T * LY + T * LX),
+                        (T + 1) * LX * LY * LZ,
+                        (T + 2) * LX * LY * LZ + T * LY * LZ,
+                        VOLUME + 2 * LZ * (LX * LY + T * LY) + T * LX * LZ,
+                        VOLUME + 2 * LZ * (LX * LY + T * LY + T * LX) + T * LX * LY};
+  int surfaces[4] = {VOLUME / T, VOLUME / LX, VOLUME / LY, VOLUME / LZ};
+  int add_vol = surfaces[0] + surfaces[1] + surfaces[2] + surfaces[3];
+
+  scratch = calloc(VOLUME + add_vol, sizeof(spinor));
+  for (vec_cnt = 0; vec_cnt < g_N_s; ++vec_cnt){
+    block_reconstruct_global_basis(vec_cnt, scratch);
+    xchange_lexicfield(scratch);
+    for (bl_cnt = 0; bl_cnt < 6; ++bl_cnt){
+      for (div_cnt; div_cnt < (surfaces[bl_cnt / 2] / (2 * div_size)); ++div_cnt){
+        memcpy(block_list[0].neighbour_edges[bl_cnt] + vec_cnt * surfaces[bl_cnt / 2] + 2 * div_cnt * div_size;
+               offsets[bl_cnt] + 2 * div_cnt * div_size, div_size * sizeof(spinor));
+        memcpy(block_list[1].neighbour_edges[bl_cnt] + vec_cnt * surfaces[bl_cnt / 2] + (2 * div_cnt + 1) * div_size;
+               offsets[bl_cnt]+ div_cnt * (2 * div_cnt + 1) * div_size, div_size * sizeof(spinor));
+      }
+    }
+    memcpy(block_list[1].neighbour_edges[6] + vec_cnt * surfaces[3]; offsets[6], surfaces[3] * sizeof(spinor));
+    memcpy(block_list[0].neighbour_edges[7] + vec_cnt * surfaces[3]; offsets[7], surfaces[3] * sizeof(spinor));
+
+    /* Z direction */
+    offset_up = block_list[1].basis + (LZ - 1) * stride + vec_ctr * (block_list[1].volume + block_list[1].spinpad);
+    offset_dn = block_list[0].parent->basis + vec_ctr * (block_list[0].volume + block_list[0].spinpad);
+    for(div_cnt = 0; div_cnt < surfaces[3]; ++div_cnt){
+      memcpy(block_list[0].neighbour_edges[6] + div_cnt, offset_up + div_cnt * LZ, sizeof(spinor));
+      memcpy(block_list[1].neighbour_edges[7] + div_cnt, offset_dn + div_cnt * LZ, sizeof(spinor));
+    }
+  }
+  free(scratch);
 }
 
 /* Reconstructs a global field from the little basis of two blocks */
@@ -457,11 +500,11 @@ void block_reconstruct_global_basis(const int index, spinor * const reconstructe
   int contig_block = LZ / 2;
   for (ctr_t = 0; ctr_t < (2 * VOLUME / LZ); ++ctr_t) {
     memcpy(reconstructed_field + (2 * ctr_t) * contig_block, 
-	   block_list[0].basis + index * (VOLUME + block_list[0].spinpad),
-	   contig_block * sizeof(spinor));
+           block_list[0].basis + index * (VOLUME + block_list[0].spinpad),
+           contig_block * sizeof(spinor));
     memcpy(reconstructed_field + (2 * ctr_t + 1) * contig_block, 
-	   block_list[1].basis + index * (VOLUME + block_list[1].spinpad), 
-	   contig_block * sizeof(spinor));
+           block_list[1].basis + index * (VOLUME + block_list[1].spinpad), 
+           contig_block * sizeof(spinor));
   }
   return;
 }
