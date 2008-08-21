@@ -165,7 +165,6 @@ void lassign_diff_mul(complex * const R, complex * const S, const complex c, con
 void lassign_add_mul(complex * const R, complex * const S, const complex c, const int N);
 
 static void init_lgcr(const int _M, const int _V);
-static void free_lgcr();
 
 static complex ** a = NULL; 
 static complex * _a = NULL;
@@ -291,7 +290,7 @@ static void init_lgcr(const int _M, const int _V){
   }
 }
 
-static void free_lgcr() 
+void free_lgcr() 
 {
   lgcr_init = 0;
   free(a);

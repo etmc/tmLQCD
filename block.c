@@ -339,6 +339,8 @@ void surface_D_apply_contract(block *parent, int surface, spinor* offset, int st
   free(aggregate);
 }
 
+/* what happens if this routine is called in a one dimensional parallelisation? */
+/* or even serially ?                                                           */
 void block_compute_little_D_offdiagonal(block *parent) {
 /*   Here we need to multiply the boundary with the corresponding  */
 /*   U and gamma_i and take the scalar product then */
@@ -460,6 +462,8 @@ void block_orthonormalize(block *parent) {
   return;
 }
 
+/* what happens if this routine is called in a one dimensional parallelisation? */
+/* or even serially ?                                                           */
 void blocks_exchange_edges() {
   int bl_cnt, vec_cnt, div_cnt;
   int div_size = LZ / 2;
@@ -484,7 +488,11 @@ void blocks_exchange_edges() {
 
   add_vol = surfaces[0] + surfaces[1] + surfaces[2] + surfaces[3];
 
-  scratch = calloc(VOLUME + add_vol, sizeof(spinor));
+  /* for a full spinor field we need VOLUMEPLUSRAND                 */
+  /* because we use the same geometry as for the                    */
+  /* gauge field                                                    */
+  /* It is VOLUME + 2*LZ*(LY*LX + T*LY + T*LX) + 4*LZ*(LY + T + LX) */
+  scratch = calloc(VOLUMEPLUSRAND, sizeof(spinor));
   for (vec_cnt = 0; vec_cnt < g_N_s; ++vec_cnt){
     block_reconstruct_global_field(vec_cnt, scratch);
     xchange_lexicfield(scratch);

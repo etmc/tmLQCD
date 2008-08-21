@@ -275,7 +275,9 @@ int main(int argc,char *argv[]) {
       block_orthonormalize(block_list+1);
 
       /* Exchange edges of local spinor basis */
-/*       blocks_exchange_edges(); */
+#ifdef MPI
+      blocks_exchange_edges();
+#endif
       
       /* Compute little Dirac operators */
       block_compute_little_D_diagonal(block_list);
