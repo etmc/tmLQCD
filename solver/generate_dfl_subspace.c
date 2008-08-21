@@ -21,14 +21,11 @@ int generate_dfl_subspace(const int Ns, const int N) {
   int i,j, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex), 
     vol = VOLUME*sizeof(spinor)/sizeof(complex);
   double nrm, e = 0.5, d = 1.;
-
   for(i = 0; i < Ns; i++) {
     random_spinor_field(dfl_fields[i], 1, N);
-
     ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
     nrm = sqrt(square_norm(dfl_fields[i], N));
     mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
-
     for(j = 0; j < 10; j++) {
       poly_nonherm_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], e, d, 20, N);
 
@@ -52,7 +49,7 @@ int init_dfl_subspace() {
   if ((void*)(dfl_fields = calloc(g_N_s, sizeof(spinor *))) == NULL)
     return 1;
   for (i = 0; i < g_N_s; ++i) {
-    if ((void*)(dfl_fields[i] = calloc(VOLUME, sizeof(spinor))) == NULL)
+    if ((void*)(dfl_fields[i] = (spinor*)calloc(VOLUMEPLUSRAND, sizeof(spinor))) == NULL)
       return 1;
   }
   return 0;

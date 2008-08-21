@@ -68,7 +68,6 @@ void usage(){
 }
 
 extern int nstore;
-
 int check_geometry();
 
 int main(int argc,char *argv[]) {
@@ -83,9 +82,9 @@ int main(int argc,char *argv[]) {
   double plaquette_energy;
   double ratime, retime;
 
-  spinor **app_eigenvectors;
   int nsiter;
 
+  int g_dflgcr_flag = 1;
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -252,12 +251,16 @@ int main(int argc,char *argv[]) {
 
 
     if(g_dflgcr_flag == 1) {
-      g_N_s = 20;  /* NOTE hardcoded by hand here until we come up with an input way of defining it */
+      if(g_proc_id == 0) {
+        printf("Arrived inside deflation section!\n"); fflush(stdout);
+      }
+
+      g_N_s = 2;  /* NOTE hardcoded by hand here until we come up with an input way of defining it */
 
       /* set up deflation blocks */
       init_blocks();
       init_geom_blocks();
-      init_gauge_blocks(g_gauge_field);
+      init_gauge_blocks();
 
 
       /* the can stay here for now, but later we probably need */
@@ -265,26 +268,50 @@ int main(int argc,char *argv[]) {
       /* create set of approximate lowest eigenvectors ("global deflation subspace") */
 
       init_dfl_subspace();
+      if(g_proc_id == 0) {
+        printf("Initialization appears to have worked!\n"); fflush(stdout);
+      }
+
       generate_dfl_subspace(g_N_s, VOLUME);
+
+      if(g_proc_id == 0) {
+        printf("Subspace generation done!\n"); fflush(stdout);
+      }
 
       for (nsiter = 0; nsiter < g_N_s; ++nsiter) {
         /* add it to the basis */
-        add_basis_field(nsiter, app_eigenvectors[nsiter]);
+        add_basis_field(nsiter, dfl_fields[nsiter]);
+      }
+
+      if(g_proc_id == 0) {
+        printf("Vectors added to basis!\n"); fflush(stdout);
       }
 
       /* perform local orthonormalization */
       block_orthonormalize(block_list);
       block_orthonormalize(block_list+1);
+      if(g_proc_id == 0) {
+        printf("Blocks orthonormalized!\n"); fflush(stdout);
+      }
 
       /* Exchange edges of local spinor basis */
-      /* TODO */
-/*       block_exchange_edges();  */
-
+      block_exchange_edges();
+      if(g_proc_id == 0) {
+        printf("Blocks edges exchanged!\n"); fflush(stdout);
+      }
+      
       /* Compute little Dirac operators */
       block_compute_little_D_diagonal(block_list);
       block_compute_little_D_diagonal(block_list + 1);
+      if(g_proc_id == 0) {
+        printf("Little_D diagonal terms computed!\n"); fflush(stdout);
+      }
+      
       block_compute_little_D_offdiagonal(block_list);
       block_compute_little_D_offdiagonal(block_list + 1);
+      if(g_proc_id == 0) {
+        printf("Little_D off-diagonal terms computed!\n"); fflush(stdout);
+      }
 
       /* TODO Generate projectors */
     }

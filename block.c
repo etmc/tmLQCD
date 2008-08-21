@@ -298,7 +298,6 @@ void block_compute_little_D_diagonal(block *parent) {
       M[i * g_N_s + j] = block_scalar_prod(parent->basis + j * (parent->volume + parent->spinpad), tmp, parent->volume);
     }
   }
-  return;
 }
 
 void surface_D_apply_contract(block *parent, int surface, spinor* offset, int stride, 
