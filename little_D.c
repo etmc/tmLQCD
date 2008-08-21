@@ -138,7 +138,7 @@ void init_little_field_exchange(complex * w) {
 	    i, g_cart_grid, &lrequests[2*i+1]);
   
   /* send to the left, receive from the right */
-  MPI_Isend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[2*i+1], 
+  MPI_Isend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i+1], 
 	    i+1, g_cart_grid, &lrequests[2*i+2]);
   MPI_Irecv((void*)(w + no_blocks*(i+1)*g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
 	    i+1, g_cart_grid, &lrequests[2*i+3]);
@@ -149,10 +149,10 @@ void init_little_field_exchange(complex * w) {
 }
 
 void wait_little_field_exchange(const int mu) {
-
+  int err;
 #ifdef MPI
-  MPI_Waitall(4, &lrequests[4*mu], &lstatus[4*mu]);
-  waitcount -= 4;
+  err = MPI_Waitall(2, &lrequests[2*mu], &lstatus[2*mu]);
+  waitcount -= 2;
 #endif
   return;
 }
