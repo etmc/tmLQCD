@@ -15,11 +15,38 @@
 
 #define CALLOC_ERROR_CRASH {printf ("calloc errno : %d\n", errno); errno = 0; return 1;}
 
-block * block_list;
+block * block_list = NULL;
+static spinor * basis = NULL;
+static spinor * _edges = NULL;
+static spinor * edges = NULL;
+static su3 * u = NULL;
+const int spinpad = 1;
 
 int init_blocks() {
   int i,j;
   block_list = calloc(2, sizeof(block));
+  if((void*)(basis = (spinor*)calloc(g_N_s * (VOLUME + 2*spinpad)+1, sizeof(spinor))) == NULL) {
+    CALLOC_ERROR_CRASH;
+  }
+  if((void*)(_edges = (spinor*)calloc(1+2*VOLUME/T + 2*VOLUME/LX + 2*VOLUME/LY + 4*VOLUME/LZ, sizeof(spinor))) == NULL) {
+    CALLOC_ERROR_CRASH;
+  }
+  if((void*)(u = (su3*)calloc(1+8*VOLUME, sizeof(su3))) == NULL) {
+    CALLOC_ERROR_CRASH;
+  }
+
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  block_list[0].basis = (spinor*)(((unsigned long int)(basis)+ALIGN_BASE)&~ALIGN_BASE);
+  edges = (spinor*)(((unsigned long int)(_edges)+ALIGN_BASE)&~ALIGN_BASE);
+  block_list[0].u = (su3*)(((unsigned long int)(u)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  block_list[0].basis = basis;
+  edges = _edges;
+  block_list[0].u = u;
+#endif
+  block_list[1].basis = block_list[0].basis + g_N_s * (VOLUME/2 + spinpad);
+  block_list[1].u = block_list[0].u + 4*VOLUME;
+
   for (i = 0; i < 2; ++i) {
     block_list[i].volume = VOLUME/2;
     block_list[i].LX = LX;
@@ -27,61 +54,46 @@ int init_blocks() {
     block_list[i].LZ = LZ/2;
     block_list[i].T = T;
     block_list[i].ns = g_N_s;
-    block_list[i].spinpad = 1;
+    block_list[i].spinpad = spinpad;
     memcpy(block_list[i].mpilocal_coordinate, g_proc_coords, 4);
     memcpy(block_list[i].coordinate, g_proc_coords, 3);
     block_list[i].coordinate[3] = 2 * g_proc_coords[3] + i;
 
     if ((void*)(block_list[i].idx = calloc(8 * VOLUME/2, sizeof(int))) == NULL)
       CALLOC_ERROR_CRASH;
-
-    if ((void*)(block_list[i].basis = calloc(g_N_s * (VOLUME/2 + block_list[i].spinpad), sizeof(spinor))) == NULL)
-      CALLOC_ERROR_CRASH; /* block volume is half of processor volume, add one spinor for the zero element */
+    
     for (j = 0; j < g_N_s; ++j) /* write a zero element at the end of every spinor */
       _spinor_null(block_list[i].basis[j * (VOLUME/2 + block_list[i].spinpad)]);
 
     if ((void*)(block_list[i].neighbour_edges = calloc(8, sizeof(spinor *))) == NULL)
       CALLOC_ERROR_CRASH;
 
-    if ((void*)(block_list[i].neighbour_edges[0] = calloc(VOLUME / (2 * T), sizeof(spinor))) == NULL)
-      CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[1] = calloc(VOLUME / (2 * T), sizeof(spinor))) == NULL)
-      CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[2] = calloc(VOLUME / (2 * LX), sizeof(spinor))) == NULL)
-      CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[3] = calloc(VOLUME / (2 * LX), sizeof(spinor))) == NULL)
-      CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[4] = calloc(VOLUME / (2 * LY), sizeof(spinor))) == NULL)
-      CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[5] = calloc(VOLUME / (2 * LY), sizeof(spinor))) == NULL)
-      CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[6] = calloc(VOLUME / LZ, sizeof(spinor))) == NULL)
-      CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].neighbour_edges[7] = calloc(VOLUME / LZ, sizeof(spinor))) == NULL)
-      CALLOC_ERROR_CRASH;
+    block_list[i].neighbour_edges[0] = edges + i*(VOLUME/T + VOLUME/LX + VOLUME/LY + 2*VOLUME/LZ);
+    block_list[i].neighbour_edges[1] = block_list[i].neighbour_edges[0] + VOLUME / (2 * T);
+    block_list[i].neighbour_edges[2] = block_list[i].neighbour_edges[1] + VOLUME / (2 * T);
+    block_list[i].neighbour_edges[3] = block_list[i].neighbour_edges[2] + VOLUME / (2 * LX);
+    block_list[i].neighbour_edges[4] = block_list[i].neighbour_edges[3] + VOLUME / (2 * LX);
+    block_list[i].neighbour_edges[5] = block_list[i].neighbour_edges[4] + VOLUME / (2 * LY);
+    block_list[i].neighbour_edges[6] = block_list[i].neighbour_edges[5] + VOLUME / (2 * LY);
+    block_list[i].neighbour_edges[7] = block_list[i].neighbour_edges[4] + VOLUME / (LZ);
 
     if ((void*)(block_list[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(complex))) == NULL)
-      CALLOC_ERROR_CRASH;
-
-    if ((void*)(block_list[i].u = calloc(8 * VOLUME, sizeof(su3))) == NULL)
       CALLOC_ERROR_CRASH;
   }
   return 0;
 }
 
 int free_blocks() {
-  int i, j;
+  int i;
   for(i = 0; i < 2; ++i) {
-    free(block_list[i].basis);
     free(block_list[i].mpilocal_coordinate);
     free(block_list[i].coordinate);
-
-    for (j = 0; j < 8; ++j)
-      free(block_list[i].neighbour_edges[j]);
     free(block_list[i].neighbour_edges);
-
     free(block_list[i].little_dirac_operator);
   }
+  free(u);
+  free(_edges);
+  free(basis);
   free(block_list);
   return 0;
 }
@@ -283,7 +295,8 @@ void block_compute_little_D_diagonal(block *parent) {
   /* we need working space, where do we best allocate it? */
   spinor * tmp;
   complex * M;
-  tmp = (spinor *)calloc((VOLUME/2 + parent->spinpad), sizeof(spinor));
+/*   tmp = (spinor *)calloc((VOLUME/2 + parent->spinpad), sizeof(spinor)); */
+  tmp = g_spinor_field[DUM_SOLVER];
   M = parent->little_dirac_operator;
 
   for(i = 0; i < g_N_s; i++){
@@ -293,7 +306,7 @@ void block_compute_little_D_diagonal(block *parent) {
       M[i * g_N_s + j] = block_scalar_prod(parent->basis + j * (parent->volume + parent->spinpad), tmp, parent->volume);
     }
   }
-  free(tmp);
+/*   free(tmp); */
 }
 
 void surface_D_apply_contract(block *parent, int surface, spinor* offset, int stride, 
@@ -302,7 +315,7 @@ void surface_D_apply_contract(block *parent, int surface, spinor* offset, int st
   complex *iter;
   complex * aggregate;
   complex result;
-  spinor tmp;
+  static spinor tmp;
   void (*boundary_D[8])(spinor * const r, spinor * const s, su3 *u) =
     {boundary_D_0, boundary_D_1, boundary_D_2, boundary_D_3, boundary_D_4, boundary_D_5, boundary_D_6, boundary_D_7};
 

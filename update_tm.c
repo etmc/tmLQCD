@@ -128,6 +128,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /*run the trajectory*/
   Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
 						   Integrator.no_timescales-1, 1);
+
+  g_sloppy_precision = 0;
   /*   smear the gauge field */
   if(use_stout_flag == 1) stout_smear();
 
