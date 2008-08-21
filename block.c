@@ -11,6 +11,7 @@
 #include "block.h"
 #include "D_psi.h"
 #include "linalg/diff.h"
+#include "xchange_lexicfield.h"
 
 #define CALLOC_ERROR_CRASH {printf ("calloc errno : %d\n", errno); errno = 0; return 1;}
 
@@ -101,7 +102,7 @@ int add_basis_field(int const index, spinor const *field)
   return 0;
 }
 
-int init_gauge_blocks(su3 ** const field)
+int init_gauge_blocks()
 {
   /* Copies the existing gauge field on the processor into the two separate blocks in a form
   that is readable by the block Dirac operator. Specifically, in consecutive memory
@@ -115,26 +116,26 @@ int init_gauge_blocks(su3 ** const field)
         for (z = 0; z < LZ/2; ++z) {
           ix = g_ipt[t][x][y][z];
           ix_new = 8 * (z + y * LZ/2 + x * LY * LZ/2 + t * LX * LY * LZ/2); /*su3 index on this block*/
-          memcpy(block_list[0].u + ix_new, *field + g_iup[ix][0], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 1, *field + g_idn[ix][0], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 2, *field + g_iup[ix][1], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 3, *field + g_idn[ix][1], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 4, *field + g_iup[ix][2], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 5, *field + g_idn[ix][2], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 6, *field + g_iup[ix][3], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 7, *field + g_idn[ix][3], sizeof(su3));
+          memcpy(block_list[0].u + ix_new, *g_gauge_field + g_iup[ix][0], sizeof(su3));
+          memcpy(block_list[0].u + ix_new + 1, *g_gauge_field + g_idn[ix][0], sizeof(su3));
+          memcpy(block_list[0].u + ix_new + 2, *g_gauge_field + g_iup[ix][1], sizeof(su3));
+          memcpy(block_list[0].u + ix_new + 3, *g_gauge_field + g_idn[ix][1], sizeof(su3));
+          memcpy(block_list[0].u + ix_new + 4, *g_gauge_field + g_iup[ix][2], sizeof(su3));
+          memcpy(block_list[0].u + ix_new + 5, *g_gauge_field + g_idn[ix][2], sizeof(su3));
+          memcpy(block_list[0].u + ix_new + 6, *g_gauge_field + g_iup[ix][3], sizeof(su3));
+          memcpy(block_list[0].u + ix_new + 7, *g_gauge_field + g_idn[ix][3], sizeof(su3));
         }
         for (z = LZ/2; z < LZ; ++z) {
           ix = g_ipt[t][x][y][z];
           ix_new = 8 * (z - LZ/2 + y * LZ/2 + x * LY * LZ/2 + t * LX * LY * LZ/2); /*su3 index on this block, count anew in the z direction*/
-          memcpy(block_list[1].u + ix_new, *field + g_iup[ix][0], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 1, *field + g_idn[ix][0], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 2, *field + g_iup[ix][1], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 3, *field + g_idn[ix][1], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 4, *field + g_iup[ix][2], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 5, *field + g_idn[ix][2], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 6, *field + g_iup[ix][3], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 7, *field + g_idn[ix][3], sizeof(su3));
+          memcpy(block_list[1].u + ix_new, *g_gauge_field + g_iup[ix][0], sizeof(su3));
+          memcpy(block_list[1].u + ix_new + 1, *g_gauge_field + g_idn[ix][0], sizeof(su3));
+          memcpy(block_list[1].u + ix_new + 2, *g_gauge_field + g_iup[ix][1], sizeof(su3));
+          memcpy(block_list[1].u + ix_new + 3, *g_gauge_field + g_idn[ix][1], sizeof(su3));
+          memcpy(block_list[1].u + ix_new + 4, *g_gauge_field + g_iup[ix][2], sizeof(su3));
+          memcpy(block_list[1].u + ix_new + 5, *g_gauge_field + g_idn[ix][2], sizeof(su3));
+          memcpy(block_list[1].u + ix_new + 6, *g_gauge_field + g_iup[ix][3], sizeof(su3));
+          memcpy(block_list[1].u + ix_new + 7, *g_gauge_field + g_idn[ix][3], sizeof(su3));
         }
       }
     }
@@ -454,37 +455,45 @@ void block_exchange_edges()
 {
   int bl_cnt, vec_cnt, div_cnt;
   int div_size = LZ / 2;
-  spinor *scratch, *offset;
+  spinor *scratch, *offset_up, *offset_dn;
 
-  spinor *offsets[8] = {VOLUME,
-                        (T + 2) * LX * LY * LZ,
-                        VOLUME + 2 * LZ * (LX * LY + T * LY),
-                        VOLUME + 2 * LZ * (LX * LY + T * LY + T * LX),
-                        (T + 1) * LX * LY * LZ,
-                        (T + 2) * LX * LY * LZ + T * LY * LZ,
-                        VOLUME + 2 * LZ * (LX * LY + T * LY) + T * LX * LZ,
-                        VOLUME + 2 * LZ * (LX * LY + T * LY + T * LX) + T * LX * LY};
-  int surfaces[4] = {VOLUME / T, VOLUME / LX, VOLUME / LY, VOLUME / LZ};
-  int add_vol = surfaces[0] + surfaces[1] + surfaces[2] + surfaces[3];
+  int offsets[8];
+  int surfaces[4];
+  int add_vol;
+  offsets[0] = VOLUME;
+  offsets[1] = (T + 2) * LX * LY * LZ;
+  offsets[2] = VOLUME + 2 * LZ * (LX * LY + T * LY);
+  offsets[3] = VOLUME + 2 * LZ * (LX * LY + T * LY + T * LX);
+  offsets[4] = (T + 1) * LX * LY * LZ;
+  offsets[5] = (T + 2) * LX * LY * LZ + T * LY * LZ;
+  offsets[6] = VOLUME + 2 * LZ * (LX * LY + T * LY) + T * LX * LZ;
+  offsets[7] = VOLUME + 2 * LZ * (LX * LY + T * LY + T * LX) + T * LX * LY;
+
+  surfaces[0] = VOLUME / T;
+  surfaces[1] = VOLUME / LX;
+  surfaces[2] = VOLUME / LY;
+  surfaces[3] = VOLUME / LZ;
+
+  add_vol = surfaces[0] + surfaces[1] + surfaces[2] + surfaces[3];
 
   scratch = calloc(VOLUME + add_vol, sizeof(spinor));
   for (vec_cnt = 0; vec_cnt < g_N_s; ++vec_cnt){
-    block_reconstruct_global_basis(vec_cnt, scratch);
+    block_reconstruct_global_field(vec_cnt, scratch);
     xchange_lexicfield(scratch);
     for (bl_cnt = 0; bl_cnt < 6; ++bl_cnt){
-      for (div_cnt; div_cnt < (surfaces[bl_cnt / 2] / (2 * div_size)); ++div_cnt){
-        memcpy(block_list[0].neighbour_edges[bl_cnt] + vec_cnt * surfaces[bl_cnt / 2] + 2 * div_cnt * div_size;
+      for (div_cnt = 0; div_cnt < (surfaces[bl_cnt / 2] / (2 * div_size)); ++div_cnt) {
+        memcpy(block_list[0].neighbour_edges[bl_cnt] + vec_cnt * surfaces[bl_cnt / 2] + 2 * div_cnt * div_size,
                offsets[bl_cnt] + 2 * div_cnt * div_size, div_size * sizeof(spinor));
-        memcpy(block_list[1].neighbour_edges[bl_cnt] + vec_cnt * surfaces[bl_cnt / 2] + (2 * div_cnt + 1) * div_size;
+        memcpy(block_list[1].neighbour_edges[bl_cnt] + vec_cnt * surfaces[bl_cnt / 2] + (2 * div_cnt + 1) * div_size,
                offsets[bl_cnt]+ div_cnt * (2 * div_cnt + 1) * div_size, div_size * sizeof(spinor));
       }
     }
-    memcpy(block_list[1].neighbour_edges[6] + vec_cnt * surfaces[3]; offsets[6], surfaces[3] * sizeof(spinor));
-    memcpy(block_list[0].neighbour_edges[7] + vec_cnt * surfaces[3]; offsets[7], surfaces[3] * sizeof(spinor));
+    memcpy(block_list[1].neighbour_edges[6] + vec_cnt * surfaces[3], offsets[6], surfaces[3] * sizeof(spinor));
+    memcpy(block_list[0].neighbour_edges[7] + vec_cnt * surfaces[3], offsets[7], surfaces[3] * sizeof(spinor));
 
     /* Z direction */
-    offset_up = block_list[1].basis + (LZ - 1) * stride + vec_ctr * (block_list[1].volume + block_list[1].spinpad);
-    offset_dn = block_list[0].parent->basis + vec_ctr * (block_list[0].volume + block_list[0].spinpad);
+    offset_up = block_list[1].basis + (LZ - 1) * LZ + vec_cnt * (block_list[1].volume + block_list[1].spinpad);
+    offset_dn = block_list[0].basis + vec_cnt * (block_list[0].volume + block_list[0].spinpad);
     for(div_cnt = 0; div_cnt < surfaces[3]; ++div_cnt){
       memcpy(block_list[0].neighbour_edges[6] + div_cnt, offset_up + div_cnt * LZ, sizeof(spinor));
       memcpy(block_list[1].neighbour_edges[7] + div_cnt, offset_dn + div_cnt * LZ, sizeof(spinor));
@@ -494,17 +503,17 @@ void block_exchange_edges()
 }
 
 /* Reconstructs a global field from the little basis of two blocks */
-void block_reconstruct_global_basis(const int index, spinor * const reconstructed_field)
+void block_reconstruct_global_field(const int index, spinor * const reconstructed_field)
 {
   int ctr_t;
   int contig_block = LZ / 2;
-  for (ctr_t = 0; ctr_t < (2 * VOLUME / LZ); ++ctr_t) {
+  for (ctr_t = 0; ctr_t < (VOLUME / contig_block); ++ctr_t) {
     memcpy(reconstructed_field + (2 * ctr_t) * contig_block, 
-           block_list[0].basis + index * (VOLUME + block_list[0].spinpad),
-           contig_block * sizeof(spinor));
+           block_list[0].basis + index * (VOLUME + block_list[0].spinpad) + ctr_t * contig_block,
+	   contig_block * sizeof(spinor));
     memcpy(reconstructed_field + (2 * ctr_t + 1) * contig_block, 
-           block_list[1].basis + index * (VOLUME + block_list[1].spinpad), 
-           contig_block * sizeof(spinor));
+           block_list[1].basis + index * (VOLUME + block_list[1].spinpad) + ctr_t * contig_block, 
+	   contig_block * sizeof(spinor));
   }
   return;
 }
