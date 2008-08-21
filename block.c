@@ -19,7 +19,6 @@ block * block_list;
 int init_blocks()
 {
   int i,j;
-  g_N_s = 20;  /* NOTE hardcoded by hand here until we come up with an input way of defining it */
   block_list = calloc(2, sizeof(block));
   for (i = 0; i < 2; ++i) {
     block_list[i].volume = VOLUME/2;

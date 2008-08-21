@@ -54,6 +54,7 @@
 #include "D_psi.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "block.h"
+#include "solver/generate_dfl_subspace.h"
 
 void usage(){
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
@@ -251,6 +252,8 @@ int main(int argc,char *argv[]) {
 
 
     if(g_dflgcr_flag == 1) {
+      g_N_s = 20;  /* NOTE hardcoded by hand here until we come up with an input way of defining it */
+
       /* set up deflation blocks */
       init_blocks();
       init_geom_blocks();
@@ -261,7 +264,8 @@ int main(int argc,char *argv[]) {
       /* something like init_dfl_solver called somewhere else  */
       /* create set of approximate lowest eigenvectors ("global deflation subspace") */
 
-      generate_dfl_subspace(g_N_s, VOLUME); /* TODO */
+      init_dfl_subspace();
+      generate_dfl_subspace(g_N_s, VOLUME);
 
       for (nsiter = 0; nsiter < g_N_s; ++nsiter) {
         /* add it to the basis */
@@ -466,6 +470,8 @@ int main(int argc,char *argv[]) {
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
+  free_blocks();
+  free_dfl_subspace();
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)

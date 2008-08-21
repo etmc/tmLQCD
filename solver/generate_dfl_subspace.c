@@ -1,28 +1,27 @@
 /* $Id$ */
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include <config.h>
 #endif
-#include<stdlib.h>
-#include<stdio.h>
-#include<math.h>
-#include"global.h"
-#include"su3.h"
-#include"complex.h"
-#include"start.h"
-#include"D_psi.h"
-#include"poly_precon.h"
-#include"linalg_eo.h"
-#include"gram-schmidt.h"
-#include"generate_dfl_subspace.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include "global.h"
+#include "su3.h"
+#include "complex.h"
+#include "start.h"
+#include "D_psi.h"
+#include "poly_precon.h"
+#include "linalg_eo.h"
+#include "gram-schmidt.h"
+#include "generate_dfl_subspace.h"
 
 spinor ** dfl_fields;
-
 
 int generate_dfl_subspace(const int Ns, const int N) {
   int i,j, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex), 
     vol = VOLUME*sizeof(spinor)/sizeof(complex);
   double nrm, e = 0.5, d = 1.;
-  
+
   for(i = 0; i < Ns; i++) {
     random_spinor_field(dfl_fields[i], 1, N);
 
@@ -44,6 +43,25 @@ int generate_dfl_subspace(const int Ns, const int N) {
       printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm); 
     }
   }
-  
+
   return(0);
+}
+
+int init_dfl_subspace() {
+  int i;
+  if ((void*)(dfl_fields = calloc(g_N_s, sizeof(spinor *))) == NULL)
+    return 1;
+  for (i = 0; i < g_N_s; ++i) {
+    if ((void*)(dfl_fields[i] = calloc(VOLUME, sizeof(spinor))) == NULL)
+      return 1;
+  }
+  return 0;
+}
+
+int free_dfl_subspace() {
+  int i;
+  for (i = 0; i < g_N_s; ++i)
+    free(dfl_fields[i]);
+  free(dfl_fields);
+  return 0;
 }
