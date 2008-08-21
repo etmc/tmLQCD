@@ -16,6 +16,7 @@
 #include "generate_dfl_subspace.h"
 
 spinor ** dfl_fields;
+spinor * _dfl_fields;
 
 int generate_dfl_subspace(const int Ns, const int N) {
   int i,j, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex), 
@@ -46,19 +47,25 @@ int generate_dfl_subspace(const int Ns, const int N) {
 
 int init_dfl_subspace() {
   int i;
-  if ((void*)(dfl_fields = calloc(g_N_s, sizeof(spinor *))) == NULL)
-    return 1;
-  for (i = 0; i < g_N_s; ++i) {
-    if ((void*)(dfl_fields[i] = (spinor*)calloc(VOLUMEPLUSRAND, sizeof(spinor))) == NULL)
-      return 1;
+  if((void*)(_dfl_fields = calloc(g_N_s*VOLUMEPLUSRAND+1, sizeof(spinor))) == NULL) {
+    return(1);
+  }
+  if ((void*)(dfl_fields = calloc(g_N_s, sizeof(spinor *))) == NULL) {
+    return(1);
+  }
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  dfl_fields[0] = (spinor*)(((unsigned long int)(_dfl_fields)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  dfl_fields[0] = _dfl_fields;
+#endif
+  for (i = 1; i < g_N_s; ++i) {
+    dfl_fields[i] = dfl_fields[i-1] + VOLUMEPLUSRAND;
   }
   return 0;
 }
 
 int free_dfl_subspace() {
-  int i;
-  for (i = 0; i < g_N_s; ++i)
-    free(dfl_fields[i]);
   free(dfl_fields);
+  free(_dfl_fields);
   return 0;
 }
