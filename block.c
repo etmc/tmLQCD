@@ -25,7 +25,7 @@ const int spinpad = 1;
 int init_blocks() {
   int i,j;
   block_list = calloc(2, sizeof(block));
-  if((void*)(basis = (spinor*)calloc(2*g_N_s * (VOLUME/2 + spinpad)+1, sizeof(spinor))) == NULL) {
+  if((void*)(basis = (spinor*)calloc(2 * g_N_s * (VOLUME / 2 + spinpad) + 2, sizeof(spinor))) == NULL) {
     CALLOC_ERROR_CRASH;
   }
   if((void*)(_edges = (spinor*)calloc(1+2*VOLUME/T + 2*VOLUME/LX + 2*VOLUME/LY + 4*VOLUME/LZ, sizeof(spinor))) == NULL) {
@@ -44,7 +44,7 @@ int init_blocks() {
   edges = _edges;
   block_list[0].u = u;
 #endif
-  block_list[1].basis = block_list[0].basis + g_N_s * (VOLUME/2 + spinpad);
+  block_list[1].basis = block_list[0].basis + g_N_s * (VOLUME / 2 + spinpad);
   block_list[1].u = block_list[0].u + 4*VOLUME;
 
   for (i = 0; i < 2; ++i) {
@@ -62,8 +62,9 @@ int init_blocks() {
     if ((void*)(block_list[i].idx = calloc(8 * VOLUME/2, sizeof(int))) == NULL)
       CALLOC_ERROR_CRASH;
 
-    for (j = 1; j < g_N_s+1; j++) /* write a zero element at the end of every spinor */
+    for (j = 1; j < g_N_s+1; j++){ /* write a zero element at the end of every spinor */
       _spinor_null(block_list[i].basis[j * (VOLUME/2 + block_list[i].spinpad)]);
+    }
 
     if ((void*)(block_list[i].neighbour_edges = calloc(8, sizeof(spinor *))) == NULL)
       CALLOC_ERROR_CRASH;
