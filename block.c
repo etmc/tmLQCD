@@ -17,8 +17,7 @@
 
 block * block_list;
 
-int init_blocks()
-{
+int init_blocks() {
   int i,j;
   block_list = calloc(2, sizeof(block));
   for (i = 0; i < 2; ++i) {
@@ -70,10 +69,8 @@ int init_blocks()
   return 0;
 }
 
-int free_blocks()
-{
+int free_blocks() {
   int i, j;
-
   for(i = 0; i < 2; ++i) {
     free(block_list[i].basis);
     free(block_list[i].mpilocal_coordinate);
@@ -85,13 +82,11 @@ int free_blocks()
 
     free(block_list[i].little_dirac_operator);
   }
-
   free(block_list);
   return 0;
 }
 
-int add_basis_field(int const index, spinor const *field)
-{
+int add_basis_field(int const index, spinor const *field) {
   int ctr_t;
   int contig_block = LZ / 2;
   for (ctr_t = 0; ctr_t < (2 * VOLUME / LZ); ++ctr_t)
@@ -102,8 +97,7 @@ int add_basis_field(int const index, spinor const *field)
   return 0;
 }
 
-int init_gauge_blocks()
-{
+int init_gauge_blocks() {
   /* Copies the existing gauge field on the processor into the two separate blocks in a form
   that is readable by the block Dirac operator. Specifically, in consecutive memory
   now +t,-t,+x,-x,+y,-y,+z,-z gauge links are stored. This requires double the storage in
@@ -143,8 +137,7 @@ int init_gauge_blocks()
   return(0);
 }
 
-int init_geom_blocks()
-{
+int init_geom_blocks() {
   int ix;
   int zstride = 1;
   int ystride = LZ/2;
@@ -289,7 +282,9 @@ void block_compute_little_D_diagonal(block *parent) {
   int i,j;
   /* we need working space, where do we best allocate it? */
   spinor * tmp;
-  complex * M = parent->little_dirac_operator;
+  complex * M;
+  tmp = (spinor *)calloc((VOLUME/2 + parent->spinpad), sizeof(spinor));
+  M = parent->little_dirac_operator;
 
   for(i = 0; i < g_N_s; i++){
     Block_D_psi(parent, tmp, parent->basis + i * (parent->volume + parent->spinpad));
@@ -298,6 +293,7 @@ void block_compute_little_D_diagonal(block *parent) {
       M[i * g_N_s + j] = block_scalar_prod(parent->basis + j * (parent->volume + parent->spinpad), tmp, parent->volume);
     }
   }
+  free(tmp);
 }
 
 void surface_D_apply_contract(block *parent, int surface, spinor* offset, int stride, 
@@ -422,7 +418,7 @@ void block_compute_little_D_offdiagonal(block *parent) {
 }
 
 /* Uses a Modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
-void block_orthonormalize(block *parent){
+void block_orthonormalize(block *parent) {
   int i, j, k;
   spinor *current, *next, *iter;
   spinor orig, resbasis;
@@ -452,8 +448,7 @@ void block_orthonormalize(block *parent){
   return;
 }
 
-void block_exchange_edges()
-{
+void blocks_exchange_edges() {
   int bl_cnt, vec_cnt, div_cnt;
   int div_size = LZ / 2;
   spinor *scratch, *offset_up, *offset_dn;
@@ -504,8 +499,7 @@ void block_exchange_edges()
 }
 
 /* Reconstructs a global field from the little basis of two blocks */
-void block_reconstruct_global_field(const int index, spinor * const reconstructed_field)
-{
+void block_reconstruct_global_field(const int index, spinor * const reconstructed_field) {
   int ctr_t;
   int contig_block = LZ / 2;
   for (ctr_t = 0; ctr_t < (VOLUME / contig_block); ++ctr_t) {

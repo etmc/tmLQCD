@@ -251,10 +251,6 @@ int main(int argc,char *argv[]) {
 
 
     if(g_dflgcr_flag == 1) {
-      if(g_proc_id == 0) {
-        printf("Arrived inside deflation section!\n"); fflush(stdout);
-      }
-
       g_N_s = 2;  /* NOTE hardcoded by hand here until we come up with an input way of defining it */
 
       /* set up deflation blocks */
@@ -262,56 +258,31 @@ int main(int argc,char *argv[]) {
       init_geom_blocks();
       init_gauge_blocks();
 
-
       /* the can stay here for now, but later we probably need */
       /* something like init_dfl_solver called somewhere else  */
       /* create set of approximate lowest eigenvectors ("global deflation subspace") */
 
       init_dfl_subspace();
-      if(g_proc_id == 0) {
-        printf("Initialization appears to have worked!\n"); fflush(stdout);
-      }
-
       generate_dfl_subspace(g_N_s, VOLUME);
-
-      if(g_proc_id == 0) {
-        printf("Subspace generation done!\n"); fflush(stdout);
-      }
 
       for (nsiter = 0; nsiter < g_N_s; ++nsiter) {
         /* add it to the basis */
         add_basis_field(nsiter, dfl_fields[nsiter]);
       }
 
-      if(g_proc_id == 0) {
-        printf("Vectors added to basis!\n"); fflush(stdout);
-      }
-
       /* perform local orthonormalization */
       block_orthonormalize(block_list);
       block_orthonormalize(block_list+1);
-      if(g_proc_id == 0) {
-        printf("Blocks orthonormalized!\n"); fflush(stdout);
-      }
 
-      /* Exchange edges of local spinor basis */
-      block_exchange_edges();
-      if(g_proc_id == 0) {
-        printf("Blocks edges exchanged!\n"); fflush(stdout);
-      }
+      /* Exchange edges of local spinor basis
+      blocks_exchange_edges(); */
       
       /* Compute little Dirac operators */
       block_compute_little_D_diagonal(block_list);
       block_compute_little_D_diagonal(block_list + 1);
-      if(g_proc_id == 0) {
-        printf("Little_D diagonal terms computed!\n"); fflush(stdout);
-      }
       
       block_compute_little_D_offdiagonal(block_list);
       block_compute_little_D_offdiagonal(block_list + 1);
-      if(g_proc_id == 0) {
-        printf("Little_D off-diagonal terms computed!\n"); fflush(stdout);
-      }
 
       /* TODO Generate projectors */
     }
@@ -489,16 +460,15 @@ int main(int argc,char *argv[]) {
     }
     nstore+=Nsave;
   }
-
 #ifdef MPI
   MPI_Finalize();
 #endif
+  free_blocks();
+  free_dfl_subspace();
   free_gauge_field();
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
-  free_blocks();
-  free_dfl_subspace();
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
