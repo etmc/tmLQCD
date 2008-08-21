@@ -16,8 +16,4 @@ void boundary_D_5(spinor * const r, spinor * const s, su3 *u);
 void boundary_D_6(spinor * const r, spinor * const s, su3 *u);
 void boundary_D_7(spinor * const r, spinor * const s, su3 *u);
 
-
-extern void (*boundary_D[])
-  (spinor * const r, spinor * const s, su3 * restrict u);
-
 #endif

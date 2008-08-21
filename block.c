@@ -308,6 +308,8 @@ void surface_D_apply_contract(block *parent, int surface, spinor* offset, int st
   complex * aggregate;
   complex result;
   spinor tmp;
+  void (*boundary_D[8])(spinor * const r, spinor * const s, su3 *u) =
+    {boundary_D_0, boundary_D_1, boundary_D_2, boundary_D_3, boundary_D_4, boundary_D_5, boundary_D_6, boundary_D_7};
 
   aggregate = (complex*)malloc(g_N_s*sizeof(complex));
   for (iter = aggregate; iter != aggregate + g_N_s; ++iter){
@@ -483,13 +485,13 @@ void block_exchange_edges()
     for (bl_cnt = 0; bl_cnt < 6; ++bl_cnt){
       for (div_cnt = 0; div_cnt < (surfaces[bl_cnt / 2] / (2 * div_size)); ++div_cnt) {
         memcpy(block_list[0].neighbour_edges[bl_cnt] + vec_cnt * surfaces[bl_cnt / 2] + 2 * div_cnt * div_size,
-               offsets[bl_cnt] + 2 * div_cnt * div_size, div_size * sizeof(spinor));
+               scratch + offsets[bl_cnt] + 2 * div_cnt * div_size, div_size * sizeof(spinor));
         memcpy(block_list[1].neighbour_edges[bl_cnt] + vec_cnt * surfaces[bl_cnt / 2] + (2 * div_cnt + 1) * div_size,
-               offsets[bl_cnt]+ div_cnt * (2 * div_cnt + 1) * div_size, div_size * sizeof(spinor));
+               scratch + offsets[bl_cnt]+ div_cnt * (2 * div_cnt + 1) * div_size, div_size * sizeof(spinor));
       }
     }
-    memcpy(block_list[1].neighbour_edges[6] + vec_cnt * surfaces[3], offsets[6], surfaces[3] * sizeof(spinor));
-    memcpy(block_list[0].neighbour_edges[7] + vec_cnt * surfaces[3], offsets[7], surfaces[3] * sizeof(spinor));
+    memcpy(block_list[1].neighbour_edges[6] + vec_cnt * surfaces[3], scratch + offsets[6], surfaces[3] * sizeof(spinor));
+    memcpy(block_list[0].neighbour_edges[7] + vec_cnt * surfaces[3], scratch + offsets[7], surfaces[3] * sizeof(spinor));
 
     /* Z direction */
     offset_up = block_list[1].basis + (LZ - 1) * LZ + vec_cnt * (block_list[1].volume + block_list[1].spinpad);

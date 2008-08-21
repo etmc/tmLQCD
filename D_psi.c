@@ -1336,10 +1336,5 @@ void boundary_D_7(spinor * const r, spinor * const s,
   return;
 }
 
-void (*boundary_D[8])
-  (spinor * const r, spinor * const s, su3 * restrict u)=
-{boundary_D_0, boundary_D_0, boundary_D_0, boundary_D_0, boundary_D_0, boundary_D_0, boundary_D_0, boundary_D_0};
-
-
 static char const rcsid[] = "$Id$";
 
