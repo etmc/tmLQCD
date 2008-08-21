@@ -178,7 +178,7 @@ static complex * _xi = NULL;
 static complex * alpha = NULL;
 static complex * tmp = NULL;
 static complex * rho = NULL;
-
+static int lgcr_init = 0;
 
 
 int lgcr(complex * const P, complex * const Q, 
@@ -221,7 +221,7 @@ int lgcr(complex * const P, complex * const Q,
       lassign_diff_mul(rho, chi[k], c[k], N);
       err = lsquare_norm(rho, N);
       if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-	printf("GCR: %d\t%g iterated residue\n", restart*m+k, err); 
+	printf("lGCR: %d\t%g iterated residue\n", restart*m+k, err); 
 	fflush(stdout);
       }
       /* Precision reached? */
@@ -260,10 +260,10 @@ int lgcr(complex * const P, complex * const Q,
 static void init_lgcr(const int _M, const int _V){
   static int Vo = -1;
   static int M = -1;
-  static int init = 0;
+
   int i;
-  if((M != _M)||(init == 0)||(Vo != _V)){
-    if(init == 1) free_lgcr();
+  if((M != _M)||(lgcr_init == 0)||(Vo != _V)){
+    if(lgcr_init == 1) free_lgcr();
     Vo = _V;
     M = _M;
     a = calloc(M+1, sizeof(complex *));
@@ -287,12 +287,13 @@ static void init_lgcr(const int _M, const int _V){
       a[i] = a[i-1] + M;
     }
     a[M] = a[M-1] + M;
-    init = 1;
+    lgcr_init = 1;
   }
 }
 
 static void free_lgcr() 
 {
+  lgcr_init = 0;
   free(a);
   free(chi);
   free(_a);
@@ -320,23 +321,32 @@ void ldiff(complex * const Q, complex * const R, complex * const S, const int N)
 double lsquare_norm(complex * const Q, const int N) 
 {
   int i;
-  double nrm=0.;
+  double nrm=0., nrm2=0.;
   
   for(i = 0; i < N; i++) {
     nrm += _complex_square_norm(Q[i]);
   }
+#ifdef MPI
+  nrm2 = nrm;
+  MPI_Allreduce(&nrm2, &nrm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#endif
   return(nrm);
 }
 
 complex lscalar_prod(complex * const R, complex * const S, const int N) 
 {
-  complex res;
+  complex res, res2;
   int i;
   res.re = 0.;
   res.im = 0.;
+  res2 = res;
   for(i = 0; i < N; i++) {
     _add_assign_complex_conj(res, R[i], S[i]);
   }
+#ifdef MPI
+  res2 = res;
+  MPI_Allreduce(&res2, &res, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+#endif
   return(res);
 }
 
@@ -350,7 +360,7 @@ void lmul_r(complex * const R, const double c, complex * const S, const int N)
 }
 
 
-void lassign_diff_mul(complex * const R, complex * const S, const complex c, const int N)
+void lassign_add_mul(complex * const R, complex * const S, const complex c, const int N)
 {
   int i;
   for(i = 0; i < N; i++) {
@@ -359,7 +369,7 @@ void lassign_diff_mul(complex * const R, complex * const S, const complex c, con
   return;
 }
 
-void lassign_add_mul(complex * const R, complex * const S, const complex c, const int N) 
+void lassign_diff_mul(complex * const R, complex * const S, const complex c, const int N) 
 {
   int i;
   complex d;
