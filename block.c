@@ -8,16 +8,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include "global.h"
-#include "block.h"
 #include "D_psi.h"
 #include "linalg/diff.h"
 #include "xchange_lexicfield.h"
+#include "block.h"
 
 #define CALLOC_ERROR_CRASH {printf ("calloc errno : %d\n", errno); errno = 0; return 1;}
 
 block * block_list = NULL;
 static spinor * basis = NULL;
-static spinor * _edges = NULL;
+spinor * _edges = NULL;
 static spinor * edges = NULL;
 static su3 * u = NULL;
 const int spinpad = 1;
@@ -25,7 +25,7 @@ const int spinpad = 1;
 int init_blocks() {
   int i,j;
   block_list = calloc(2, sizeof(block));
-  if((void*)(basis = (spinor*)calloc(g_N_s * (VOLUME + 2*spinpad)+1, sizeof(spinor))) == NULL) {
+  if((void*)(basis = (spinor*)calloc(2*g_N_s * (VOLUME/2 + spinpad)+1, sizeof(spinor))) == NULL) {
     CALLOC_ERROR_CRASH;
   }
   if((void*)(_edges = (spinor*)calloc(1+2*VOLUME/T + 2*VOLUME/LX + 2*VOLUME/LY + 4*VOLUME/LZ, sizeof(spinor))) == NULL) {
@@ -61,8 +61,8 @@ int init_blocks() {
 
     if ((void*)(block_list[i].idx = calloc(8 * VOLUME/2, sizeof(int))) == NULL)
       CALLOC_ERROR_CRASH;
-    
-    for (j = 0; j < g_N_s; ++j) /* write a zero element at the end of every spinor */
+
+    for (j = 1; j < g_N_s+1; j++) /* write a zero element at the end of every spinor */
       _spinor_null(block_list[i].basis[j * (VOLUME/2 + block_list[i].spinpad)]);
 
     if ((void*)(block_list[i].neighbour_edges = calloc(8, sizeof(spinor *))) == NULL)
@@ -80,14 +80,13 @@ int init_blocks() {
     if ((void*)(block_list[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(complex))) == NULL)
       CALLOC_ERROR_CRASH;
   }
+
   return 0;
 }
 
 int free_blocks() {
   int i;
   for(i = 0; i < 2; ++i) {
-    free(block_list[i].mpilocal_coordinate);
-    free(block_list[i].coordinate);
     free(block_list[i].neighbour_edges);
     free(block_list[i].little_dirac_operator);
   }
@@ -103,8 +102,8 @@ int add_basis_field(int const index, spinor const *field) {
   int contig_block = LZ / 2;
   for (ctr_t = 0; ctr_t < (2 * VOLUME / LZ); ++ctr_t)
   {
-    memcpy(block_list[0].basis + index * (VOLUME + block_list[0].spinpad), field + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
-    memcpy(block_list[1].basis + index * (VOLUME + block_list[1].spinpad), field + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
+    memcpy(block_list[0].basis + index * (VOLUME/2 + block_list[0].spinpad), field + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
+    memcpy(block_list[1].basis + index * (VOLUME/2 + block_list[1].spinpad), field + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
   }
   return 0;
 }

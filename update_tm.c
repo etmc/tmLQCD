@@ -305,7 +305,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   etime = (double)clock()/((double)(CLOCKS_PER_SEC));
 #endif
 
-  if(g_proc_id==0){
+  if(g_proc_id==0) {
     datafile = fopen(filename, "a");
     fprintf(datafile,"%14.12f %14.12f %e ",
 	    (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);

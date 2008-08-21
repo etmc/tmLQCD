@@ -265,17 +265,17 @@ int main(int argc,char *argv[]) {
       init_dfl_subspace();
       generate_dfl_subspace(g_N_s, VOLUME);
 
-      for (nsiter = 0; nsiter < g_N_s; ++nsiter) {
+      for (nsiter = 0; nsiter < g_N_s; ++nsiter) { 
         /* add it to the basis */
-        add_basis_field(nsiter, dfl_fields[nsiter]);
+	add_basis_field(nsiter, dfl_fields[nsiter]);
       }
 
       /* perform local orthonormalization */
       block_orthonormalize(block_list);
       block_orthonormalize(block_list+1);
 
-      /* Exchange edges of local spinor basis
-      blocks_exchange_edges(); */
+      /* Exchange edges of local spinor basis */
+/*       blocks_exchange_edges(); */
       
       /* Compute little Dirac operators */
       block_compute_little_D_diagonal(block_list);
