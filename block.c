@@ -344,7 +344,6 @@ void surface_D_apply_contract(block *parent, int surface, spinor* offset, int st
 void block_compute_little_D_offdiagonal(block *parent) {
 /*   Here we need to multiply the boundary with the corresponding  */
 /*   U and gamma_i and take the scalar product then */
-/*   NOTE I assume the boundaries are available in parent->neighbour_edges*/
   int vec_ctr, surface;
   spinor *offset;
   int stride, step_size;
@@ -537,12 +536,12 @@ void blocks_exchange_edges() {
 void block_reconstruct_global_field(const int index, spinor * const reconstructed_field) {
   int ctr_t;
   int contig_block = LZ / 2;
-  for (ctr_t = 0; ctr_t < (VOLUME / contig_block); ++ctr_t) {
+  for (ctr_t = 0; ctr_t < (block_list[0].volume / contig_block); ++ctr_t) {
     memcpy(reconstructed_field + (2 * ctr_t) * contig_block, 
-           block_list[0].basis + index * (VOLUME + block_list[0].spinpad) + ctr_t * contig_block,
+           block_list[0].basis + index * (block_list[0].volume + block_list[0].spinpad) + ctr_t * contig_block,
 	   contig_block * sizeof(spinor));
     memcpy(reconstructed_field + (2 * ctr_t + 1) * contig_block, 
-           block_list[1].basis + index * (VOLUME + block_list[1].spinpad) + ctr_t * contig_block, 
+           block_list[1].basis + index * (block_list[1].volume + block_list[1].spinpad) + ctr_t * contig_block, 
 	   contig_block * sizeof(spinor));
   }
   return;
