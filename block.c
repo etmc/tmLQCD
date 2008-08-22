@@ -28,7 +28,7 @@ int init_blocks() {
   if((void*)(basis = (spinor*)calloc(2 * g_N_s * (VOLUME / 2 + spinpad) + 2, sizeof(spinor))) == NULL) {
     CALLOC_ERROR_CRASH;
   }
-  if((void*)(_edges = (spinor*)calloc(1+2*VOLUME/T + 2*VOLUME/LX + 2*VOLUME/LY + 4*VOLUME/LZ, sizeof(spinor))) == NULL) {
+  if((void*)(_edges = (spinor*)calloc(g_N_s * (1+2*VOLUME/T + 2*VOLUME/LX + 2*VOLUME/LY + 4*VOLUME/LZ), sizeof(spinor))) == NULL) {
     CALLOC_ERROR_CRASH;
   }
   if((void*)(u = (su3*)calloc(1+8*VOLUME, sizeof(su3))) == NULL) {
@@ -53,7 +53,6 @@ int init_blocks() {
     block_list[i].LY = LY;
     block_list[i].LZ = LZ/2;
     block_list[i].T = T;
-    block_list[i].ns = g_N_s;
     block_list[i].spinpad = spinpad;
     memcpy(block_list[i].mpilocal_coordinate, g_proc_coords, 4*sizeof(int));
     memcpy(block_list[i].coordinate, g_proc_coords, 3*sizeof(int));
@@ -76,7 +75,7 @@ int init_blocks() {
     block_list[i].neighbour_edges[4] = block_list[i].neighbour_edges[3] + VOLUME / (2 * LX);
     block_list[i].neighbour_edges[5] = block_list[i].neighbour_edges[4] + VOLUME / (2 * LY);
     block_list[i].neighbour_edges[6] = block_list[i].neighbour_edges[5] + VOLUME / (2 * LY);
-    block_list[i].neighbour_edges[7] = block_list[i].neighbour_edges[4] + VOLUME / (LZ);
+    block_list[i].neighbour_edges[7] = block_list[i].neighbour_edges[6] + VOLUME / (LZ);
 
     if ((void*)(block_list[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(complex))) == NULL)
       CALLOC_ERROR_CRASH;
@@ -465,14 +464,13 @@ void block_orthonormalize(block *parent) {
 
 /* what happens if this routine is called in a one dimensional parallelisation? */
 /* or even serially ?                                                           */
+/* it shouldn't be */
 void blocks_exchange_edges() {
   int bl_cnt, vec_cnt, div_cnt;
   int div_size = LZ / 2;
   spinor *scratch, *offset_up, *offset_dn;
 
-  int offsets[8];
-  int surfaces[4];
-  int add_vol;
+  int offsets[8];  int surfaces[4];
   offsets[0] = VOLUME;
   offsets[1] = (T + 2) * LX * LY * LZ;
   offsets[2] = VOLUME + 2 * LZ * (LX * LY + T * LY);
@@ -487,8 +485,6 @@ void blocks_exchange_edges() {
   surfaces[2] = VOLUME / LY;
   surfaces[3] = VOLUME / LZ;
 
-  add_vol = surfaces[0] + surfaces[1] + surfaces[2] + surfaces[3];
-
   /* for a full spinor field we need VOLUMEPLUSRAND                 */
   /* because we use the same geometry as for the                    */
   /* gauge field                                                    */
@@ -497,6 +493,7 @@ void blocks_exchange_edges() {
   for (vec_cnt = 0; vec_cnt < g_N_s; ++vec_cnt){
     block_reconstruct_global_field(vec_cnt, scratch);
     xchange_lexicfield(scratch);
+
     for (bl_cnt = 0; bl_cnt < 6; ++bl_cnt){
       for (div_cnt = 0; div_cnt < (surfaces[bl_cnt / 2] / (2 * div_size)); ++div_cnt) {
         memcpy(block_list[0].neighbour_edges[bl_cnt] + vec_cnt * surfaces[bl_cnt / 2] + 2 * div_cnt * div_size,
@@ -505,10 +502,11 @@ void blocks_exchange_edges() {
                scratch + offsets[bl_cnt]+ div_cnt * (2 * div_cnt + 1) * div_size, div_size * sizeof(spinor));
       }
     }
-    memcpy(block_list[1].neighbour_edges[6] + vec_cnt * surfaces[3], scratch + offsets[6], surfaces[3] * sizeof(spinor));
+
+   memcpy(block_list[1].neighbour_edges[6] + vec_cnt * surfaces[3], scratch + offsets[6], surfaces[3] * sizeof(spinor));
+   if (!g_proc_id){printf("[DEBUG] vec_cnt %u, %u\n", vec_cnt, vec_cnt * surfaces[3]);}
     memcpy(block_list[0].neighbour_edges[7] + vec_cnt * surfaces[3], scratch + offsets[7], surfaces[3] * sizeof(spinor));
 
-    /* Z direction */
     offset_up = block_list[1].basis + (LZ - 1) * LZ + vec_cnt * (block_list[1].volume + block_list[1].spinpad);
     offset_dn = block_list[0].basis + vec_cnt * (block_list[0].volume + block_list[0].spinpad);
     for(div_cnt = 0; div_cnt < surfaces[3]; ++div_cnt){
@@ -516,6 +514,7 @@ void blocks_exchange_edges() {
       memcpy(block_list[1].neighbour_edges[7] + div_cnt, offset_dn + div_cnt * LZ, sizeof(spinor));
     }
   }
+
   free(scratch);
 }
 

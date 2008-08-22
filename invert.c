@@ -251,7 +251,7 @@ int main(int argc,char *argv[]) {
 
 
     if(g_dflgcr_flag == 1) {
-      g_N_s = 2;  /* NOTE hardcoded by hand here until we come up with an input way of defining it */
+      g_N_s = 10;  /* NOTE hardcoded by hand here until we come up with an input way of defining it */
 
       /* set up deflation blocks */
       init_blocks();
