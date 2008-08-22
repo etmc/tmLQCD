@@ -349,6 +349,7 @@ void block_compute_little_D_offdiagonal(block *parent) {
   spinor *offset;
   int stride, step_size;
   su3 *gauge_start;
+  int i, j; /* DEBUG */
 
   /* +T direction (+0) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
@@ -428,6 +429,21 @@ void block_compute_little_D_offdiagonal(block *parent) {
     gauge_start = parent->u;
 
     surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 7);
+  }
+
+  /* The following is, obviously, debug code for use with small g_N_s */
+  if (g_N_s <= 5){
+    printf("\n  *** CHECKING LITTLE D ***\n");
+    for (i = 0; i < g_N_s; ++i){
+      printf(" [ ");
+      for (j = 0; j < g_N_s; ++j){
+        printf(" %f + %f i", parent->little_dirac_operator[i * g_N_s + j].re,  parent->little_dirac_operator[i * g_N_s + j].im);
+        if (j != g_N_s){
+          printf(", ");
+        }
+      }
+      printf(" ]\n\n");
+    }
   }
 }
 
