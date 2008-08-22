@@ -25,7 +25,7 @@ const int spinpad = 1;
 int init_blocks() {
   int i,j;
   block_list = calloc(2, sizeof(block));
-  if((void*)(basis = (spinor*)calloc(2 * g_N_s * (VOLUME / 2 + spinpad) + 2, sizeof(spinor))) == NULL) {
+  if((void*)(basis = (spinor*)calloc(2 * g_N_s * (VOLUME / 2 + spinpad) + 1, sizeof(spinor))) == NULL) {
     CALLOC_ERROR_CRASH;
   }
   if((void*)(_edges = (spinor*)calloc(g_N_s * (1+2*VOLUME/T + 2*VOLUME/LX + 2*VOLUME/LY + 4*VOLUME/LZ), sizeof(spinor))) == NULL) {
@@ -34,20 +34,28 @@ int init_blocks() {
   if((void*)(u = (su3*)calloc(1+8*VOLUME, sizeof(su3))) == NULL) {
     CALLOC_ERROR_CRASH;
   }
+  for(i = 0; i < 2; i++) {
+    block_list[i].basis = (spinor**)calloc(g_N_s, sizeof(spinor*));
+  }
 
 #if ( defined SSE || defined SSE2 || defined SSE3)
-  block_list[0].basis = (spinor*)(((unsigned long int)(basis)+ALIGN_BASE)&~ALIGN_BASE);
+  block_list[0].basis[0] = (spinor*)(((unsigned long int)(basis)+ALIGN_BASE)&~ALIGN_BASE);
   edges = (spinor*)(((unsigned long int)(_edges)+ALIGN_BASE)&~ALIGN_BASE);
   block_list[0].u = (su3*)(((unsigned long int)(u)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  block_list[0].basis = basis;
+  block_list[0].basis[0] = basis;
   edges = _edges;
   block_list[0].u = u;
 #endif
-  block_list[1].basis = block_list[0].basis + g_N_s * (VOLUME / 2 + spinpad);
+  block_list[1].basis[0] = block_list[0].basis[0] + g_N_s * (VOLUME / 2 + spinpad);
+  for(i = 1; i < g_N_s; i++) {
+    block_list[0].basis[i] = block_list[0].basis[i-1] + VOLUME / 2 + spinpad;
+    block_list[1].basis[i] = block_list[1].basis[i-1] + VOLUME / 2 + spinpad;
+  }
   block_list[1].u = block_list[0].u + 4*VOLUME;
 
   for (i = 0; i < 2; ++i) {
+    block_list[i].id = i;
     block_list[i].volume = VOLUME/2;
     block_list[i].LX = LX;
     block_list[i].LY = LY;
@@ -61,8 +69,8 @@ int init_blocks() {
     if ((void*)(block_list[i].idx = calloc(8 * VOLUME/2, sizeof(int))) == NULL)
       CALLOC_ERROR_CRASH;
 
-    for (j = 1; j < g_N_s+1; j++){ /* write a zero element at the end of every spinor */
-      _spinor_null(block_list[i].basis[j * (VOLUME/2 + block_list[i].spinpad)]);
+    for (j = 0; j < g_N_s; j++){ /* write a zero element at the end of every spinor */
+      _spinor_null(block_list[i].basis[j][VOLUME/2]);
     }
 
     if ((void*)(block_list[i].neighbour_edges = calloc(8, sizeof(spinor *))) == NULL)
@@ -87,6 +95,7 @@ int init_blocks() {
 int free_blocks() {
   int i;
   for(i = 0; i < 2; ++i) {
+    free(block_list[i].basis);
     free(block_list[i].neighbour_edges);
     free(block_list[i].little_dirac_operator);
   }
@@ -102,8 +111,8 @@ int add_basis_field(int const index, spinor const *field) {
   int contig_block = LZ / 2;
   for (ctr_t = 0; ctr_t < (VOLUME / LZ); ++ctr_t)
   {
-    memcpy(block_list[0].basis + index * (VOLUME/2 + block_list[0].spinpad), field + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
-    memcpy(block_list[1].basis + index * (VOLUME/2 + block_list[1].spinpad), field + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
+    memcpy(block_list[0].basis[index], field + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
+    memcpy(block_list[1].basis[index], field + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
   }
   return 0;
 }
@@ -148,15 +157,62 @@ int init_gauge_blocks() {
   return(0);
 }
 
+int check_block_geometry(block * blk) {
+  int i, k=0;
+  int * itest;
+  int * ipt;
+  
+  ipt = blk->idx;
+  itest = (int*)calloc(blk->volume + blk->spinpad, sizeof(int));
+  for(i = 0; i < 8*blk->volume; i++) {
+    if(*ipt > blk->volume + blk->spinpad-1 || *ipt < 0) {
+      if(g_proc_id == 0) {
+	printf("error in block geometry! ipt = %d dir = %d i = %d of %d\n", 
+	       (*ipt), i%8, i/8, blk->volume + blk->spinpad);
+      }
+    }
+    
+    itest[*(ipt++)]++;
+  }
+  
+  for(i = 0; i < blk->volume; i++) {
+    k += itest[i];
+    if(itest[i] <4 || itest[i] > 8) {
+      if(g_proc_id == 0) {
+	printf("error in block geometry, itest[%d] = %d\n", i, itest[i]);      
+      }
+    }
+  }
+  
+  if(itest[blk->volume + blk->spinpad-1] != 2*(blk->LX*blk->LY*blk->LZ+blk->T*blk->LX*blk->LY+blk->T*blk->LY*blk->LZ+blk->T*blk->LX*blk->LZ)) {
+    if(g_proc_id == 0){
+      printf("error in block geometry, boundary points wrong %d != %d\n", 
+	    itest[blk->volume + blk->spinpad-1], 2*(blk->LX*blk->LY*blk->LZ+blk->T*blk->LX*blk->LY+blk->T*blk->LY*blk->LZ+blk->T*blk->LX*blk->LZ));
+    }
+  }
+  k+= itest[blk->volume + blk->spinpad-1];
+  if(k != 8*blk->volume) {
+    if(g_proc_id == 0){
+      printf("error in block geometry, total number of points wrong %d != %d\n", 
+	    k, 8*blk->volume);
+    }
+  }
+  free(itest);
+  if(g_proc_id == 0) {
+    printf("# block geometry checked successfully for block %d !\n", blk->id);
+  }
+  return(0);
+}
+
 int init_geom_blocks() {
   int ix;
   int zstride = 1;
   int ystride = LZ/2;
   int xstride = LY * LZ/2;
   int tstride = LX * LY * LZ/2;
-  int boundidx = 4 * VOLUME;
+  int boundidx = VOLUME/2;
   for (ix = 0; ix < VOLUME/2; ++ix) {
-    block_list[0].idx[8 * ix + 0] = (ix           >= VOLUME - tstride ? boundidx : ix + tstride);/* +t */
+    block_list[0].idx[8 * ix + 0] = (ix           >= VOLUME/2 - tstride ? boundidx : ix + tstride);/* +t */
     block_list[0].idx[8 * ix + 1] = (ix           <  tstride          ? boundidx : ix - tstride);/* -t */
     block_list[0].idx[8 * ix + 2] = (ix % tstride >= LZ/2*LY*(LX-1)   ? boundidx : ix + xstride);/* +x */
     block_list[0].idx[8 * ix + 3] = (ix % tstride <  LZ/2*LY          ? boundidx : ix - xstride);/* -x */
@@ -166,6 +222,9 @@ int init_geom_blocks() {
     block_list[0].idx[8 * ix + 7] = (ix % ystride == 0                ? boundidx : ix - zstride);/* -z */
   }
   memcpy(block_list[1].idx, block_list[0].idx, 8 * VOLUME/2 * sizeof(int));
+  for(ix = 0; ix < 2; ix++) {
+    zstride = check_block_geometry(&block_list[ix]);
+  }
   return 0;
 }
 
@@ -299,10 +358,10 @@ void block_compute_little_D_diagonal(block *parent) {
   M = parent->little_dirac_operator;
 
   for(i = 0; i < g_N_s; i++){
-    Block_D_psi(parent, tmp, parent->basis + i * (parent->volume + parent->spinpad));
+    Block_D_psi(parent, tmp, parent->basis[i]);
     for(j = 0; j < g_N_s; j++){
       /* order correct ? */
-      M[i * g_N_s + j] = block_scalar_prod(parent->basis + j * (parent->volume + parent->spinpad), tmp, parent->volume);
+      M[i * g_N_s + j] = block_scalar_prod(parent->basis[j], tmp, parent->volume);
     }
   }
 /*   free(tmp); */
@@ -356,7 +415,7 @@ void block_compute_little_D_offdiagonal(block *parent) {
     stride    = surface;
     step_size = surface;
 
-    offset = parent->basis + (T - 1) * stride + vec_ctr * (parent->volume + parent->spinpad);
+    offset = parent->basis[vec_ctr] + (T - 1) * stride;
     gauge_start = parent->u + 8 * (parent->volume - surface);
 
     surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 0);
@@ -364,7 +423,7 @@ void block_compute_little_D_offdiagonal(block *parent) {
 
   /* -T direction (-0) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    offset = parent->basis + vec_ctr * (parent->volume + parent->spinpad);
+    offset = parent->basis[vec_ctr];
     gauge_start = parent->u;
 
     surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 1);
@@ -376,7 +435,7 @@ void block_compute_little_D_offdiagonal(block *parent) {
     stride =    LZ * LY * LX / 2;
     step_size = LZ * LY      / 2;
 
-    offset = parent->basis + (LX - 1) * stride + vec_ctr * (parent->volume + parent->spinpad);
+    offset = parent->basis[vec_ctr] + (LX - 1) * stride;
     gauge_start = parent->u + (LX - 1) * stride;  /* Pick up -X gauge throughout */
 
     surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 2);
@@ -384,7 +443,7 @@ void block_compute_little_D_offdiagonal(block *parent) {
 
   /* -X direction (-1) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    offset = parent->basis + vec_ctr * (parent->volume + parent->spinpad);
+    offset = parent->basis[vec_ctr];
     gauge_start = parent->u;
 
     surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 3);
@@ -396,7 +455,7 @@ void block_compute_little_D_offdiagonal(block *parent) {
     stride =    LZ * LY     / 2;
     step_size = LZ          / 2;
 
-    offset = parent->basis + (LY - 1) * stride + vec_ctr * (parent->volume + parent->spinpad);
+    offset = parent->basis[vec_ctr] + (LY - 1) * stride;
     gauge_start = parent->u + (LY - 1) * stride;
 
     surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 4);
@@ -404,7 +463,7 @@ void block_compute_little_D_offdiagonal(block *parent) {
 
   /* -Y direction (-2) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    offset = parent->basis + vec_ctr * (parent->volume + parent->spinpad);
+    offset = parent->basis[vec_ctr];
     gauge_start = parent->u;
 
     surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 5);
@@ -416,7 +475,7 @@ void block_compute_little_D_offdiagonal(block *parent) {
     stride =    LZ         / 2;
     step_size = 1             ;
 
-    offset = parent->basis + (LZ - 1) * stride + vec_ctr * (parent->volume + parent->spinpad);
+    offset = parent->basis[vec_ctr] + (LZ - 1) * stride;
     gauge_start = parent->u + (LZ - 1) * stride;
 
     surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 6);
@@ -424,7 +483,7 @@ void block_compute_little_D_offdiagonal(block *parent) {
 
   /* -Z direction (-3) */
   for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    offset = parent->basis + vec_ctr * (parent->volume + parent->spinpad);
+    offset = parent->basis[vec_ctr];
     gauge_start = parent->u;
 
     surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 7);
@@ -457,7 +516,7 @@ void block_orthonormalize(block *parent) {
   scale.im = 0;
   for(i = 0; i < parent->ns; ++i){
     /* rescale the current vector */
-    current = parent->basis + i * (parent->volume + parent->spinpad);
+    current = parent->basis[i];
     scale.re = 1 / sqrt(block_two_norm(current, parent->volume));
     for(iter = current; iter < current + parent->volume; ++iter){
       orig = *iter; /* we can't alias */
@@ -465,7 +524,7 @@ void block_orthonormalize(block *parent) {
     }
     /* rescaling done, now subtract this direction from all vectors that follow */
     for(j = i + 1; j < parent->ns; ++j){
-      next = parent->basis + j * (parent->volume + parent->spinpad);
+      next = parent->basis[j];
       coeff = block_scalar_prod(current, next, parent->volume);
       for(k = 0; k < parent->volume; ++k){
         _spinor_mul_complex(resbasis, coeff, *(current + k));
@@ -505,7 +564,7 @@ void blocks_exchange_edges() {
   /* gauge field                                                    */
   /* It is VOLUME + 2*LZ*(LY*LX + T*LY + T*LX) + 4*LZ*(LY + T + LX) */
   scratch = calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  for (vec_cnt = 0; vec_cnt < g_N_s; ++vec_cnt){
+  for (vec_cnt = 0; vec_cnt < 0*g_N_s; ++vec_cnt){
     block_reconstruct_global_field(vec_cnt, scratch);
     xchange_lexicfield(scratch);
 
@@ -521,8 +580,8 @@ void blocks_exchange_edges() {
     memcpy(block_list[1].neighbour_edges[6] + vec_cnt * surfaces[3], scratch + offsets[6], surfaces[3] * sizeof(spinor));
     memcpy(block_list[0].neighbour_edges[7] + vec_cnt * surfaces[3], scratch + offsets[7], surfaces[3] * sizeof(spinor));
 
-    offset_up = block_list[1].basis + (LZ - 1) * LZ + vec_cnt * (block_list[1].volume + block_list[1].spinpad);
-    offset_dn = block_list[0].basis + vec_cnt * (block_list[0].volume + block_list[0].spinpad);
+    offset_up = block_list[1].basis[vec_cnt] + (LZ - 1) * LZ;
+    offset_dn = block_list[0].basis[vec_cnt];
     for(div_cnt = 0; div_cnt < surfaces[3]; ++div_cnt){
       memcpy(block_list[0].neighbour_edges[6] + div_cnt, offset_up + div_cnt * LZ, sizeof(spinor));
       memcpy(block_list[1].neighbour_edges[7] + div_cnt, offset_dn + div_cnt * LZ, sizeof(spinor));
@@ -538,10 +597,10 @@ void block_reconstruct_global_field(const int index, spinor * const reconstructe
   int contig_block = LZ / 2;
   for (ctr_t = 0; ctr_t < (block_list[0].volume / contig_block); ++ctr_t) {
     memcpy(reconstructed_field + (2 * ctr_t) * contig_block, 
-           block_list[0].basis + index * (block_list[0].volume + block_list[0].spinpad) + ctr_t * contig_block,
+           block_list[0].basis[index] + ctr_t * contig_block,
 	   contig_block * sizeof(spinor));
     memcpy(reconstructed_field + (2 * ctr_t + 1) * contig_block, 
-           block_list[1].basis + index * (block_list[1].volume + block_list[1].spinpad) + ctr_t * contig_block, 
+           block_list[1].basis[index] + ctr_t * contig_block, 
 	   contig_block * sizeof(spinor));
   }
   return;

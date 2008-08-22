@@ -64,7 +64,7 @@ void project(spinor * const out, spinor * const in) {
   mul(psi[1], invvec[g_N_s], block_list[1].basis[0], vol);
   for(ctr_t = 1; ctr_t < g_N_s; ctr_t++) {
     assign_add_mul(psi[0], block_list[0].basis[ctr], invvec[ctr_t], vol);
-    assign_add_mul(psi[1], block_list[1].basis[ctr], invvec[ctr_t], vol);
+    assign_add_mul(psi[1], block_list[1].basis[ctr], invvec[g_N_s+ctr_t], vol);
   }
   
   /* reconstruct global field */
@@ -81,3 +81,4 @@ void project(spinor * const out, spinor * const in) {
   free(psi);
   return;
 }
+

@@ -9,13 +9,14 @@
 typedef struct {
   /**** Data members ****/
   int volume;                   /* the block local 4 volume */
+  int id;                       /* mpilocal block id */
   int LX, LY, LZ, T;            /* block local sizes */
   int ns;                       /* the number of basis fields, which is needed almost everywhere */
   int coordinate[4];            /* global block coordinate */
   int mpilocal_coordinate[4];   /* mpi process local coordinate */
   int mpilocal_neighbour[8];    /* contains the block id of mpilocal neighbours, or -1 if non-mpilocal */
   int *idx;                     /* provides the next neighbours for spinors on the block */
-  spinor *basis;                /* generated orthonormal basis for little D [Ns x local_volume] */
+  spinor **basis;                /* generated orthonormal basis for little D [Ns x local_volume] */
   spinor **neighbour_edges;     /* boundary terms of the basis of the neighbours [8 x Ns x surface_term] */
   su3 * u;                      /* block local gauge field, for use in D */
   int spinpad;                  /* number of elements needed to store the boundaries of the spinor */
