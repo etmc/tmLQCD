@@ -55,8 +55,8 @@ int init_blocks() {
     block_list[i].T = T;
     block_list[i].ns = g_N_s;
     block_list[i].spinpad = spinpad;
-    memcpy(block_list[i].mpilocal_coordinate, g_proc_coords, 4);
-    memcpy(block_list[i].coordinate, g_proc_coords, 3);
+    memcpy(block_list[i].mpilocal_coordinate, g_proc_coords, 4*sizeof(int));
+    memcpy(block_list[i].coordinate, g_proc_coords, 3*sizeof(int));
     block_list[i].coordinate[3] = 2 * g_proc_coords[3] + i;
 
     if ((void*)(block_list[i].idx = calloc(8 * VOLUME/2, sizeof(int))) == NULL)
@@ -101,7 +101,7 @@ int free_blocks() {
 int add_basis_field(int const index, spinor const *field) {
   int ctr_t;
   int contig_block = LZ / 2;
-  for (ctr_t = 0; ctr_t < (2 * VOLUME / LZ); ++ctr_t)
+  for (ctr_t = 0; ctr_t < (VOLUME / LZ); ++ctr_t)
   {
     memcpy(block_list[0].basis + index * (VOLUME/2 + block_list[0].spinpad), field + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
     memcpy(block_list[1].basis + index * (VOLUME/2 + block_list[1].spinpad), field + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
@@ -166,7 +166,7 @@ int init_geom_blocks() {
     block_list[0].idx[8 * ix + 6] = (ix % ystride == LZ/2 - 1         ? boundidx : ix + zstride);/* +z */
     block_list[0].idx[8 * ix + 7] = (ix % ystride == 0                ? boundidx : ix - zstride);/* -z */
   }
-  memcpy(block_list[1].idx, block_list[0].idx, 8 * VOLUME/2);
+  memcpy(block_list[1].idx, block_list[0].idx, 8 * VOLUME/2 * sizeof(int));
   return 0;
 }
 
