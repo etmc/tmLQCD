@@ -503,8 +503,7 @@ void blocks_exchange_edges() {
       }
     }
 
-   memcpy(block_list[1].neighbour_edges[6] + vec_cnt * surfaces[3], scratch + offsets[6], surfaces[3] * sizeof(spinor));
-   if (!g_proc_id){printf("[DEBUG] vec_cnt %u, %u\n", vec_cnt, vec_cnt * surfaces[3]);}
+    memcpy(block_list[1].neighbour_edges[6] + vec_cnt * surfaces[3], scratch + offsets[6], surfaces[3] * sizeof(spinor));
     memcpy(block_list[0].neighbour_edges[7] + vec_cnt * surfaces[3], scratch + offsets[7], surfaces[3] * sizeof(spinor));
 
     offset_up = block_list[1].basis + (LZ - 1) * LZ + vec_cnt * (block_list[1].volume + block_list[1].spinpad);
