@@ -40,10 +40,8 @@ void project(spinor * const out, spinor * const in) {
   invvec = calloc(2 * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
   
   /* no loop below because further down we also don't take this cleanly into account */
-  psi[0] = calloc(2*VOLUME, sizeof(spinor));
+  psi[0] = calloc(VOLUME, sizeof(spinor));
   psi[1] = psi[0] + VOLUME/2;
-  psi[2] = psi[0] + VOLUME;
-  psi[3] = psi[0] + 3*VOLUME/2;
 
   /*initialize the local (block) parts of the spinor*/
   for (ctr_t = 0; ctr_t < (VOLUME / LZ); ++ctr_t)
@@ -71,10 +69,10 @@ void project(spinor * const out, spinor * const in) {
   for (ctr_t = 0; ctr_t < (VOLUME / LZ); ctr_t++) {
     memcpy(out + (2 * ctr_t) * contig_block, 
            psi[0] + ctr_t * contig_block,
-	   contig_block * sizeof(spinor));
+	         contig_block * sizeof(spinor));
     memcpy(out + (2 * ctr_t + 1) * contig_block, 
            psi[1] + ctr_t * contig_block, 
-	   contig_block * sizeof(spinor));
+	         contig_block * sizeof(spinor));
   }
 
   free(psi[0]);
@@ -82,3 +80,34 @@ void project(spinor * const out, spinor * const in) {
   return;
 }
 
+void project_left(spinor * const out, spinor * const in) {
+  /* out = P_L in = in - D proj in */ 
+  spinor * temp;
+  temp = calloc(VOLUME, sizeof(spinor));
+
+  project(out, in);
+  D_psi(temp, out);
+  diff(out, in, temp, VOLUME);
+  free(temp);
+}
+
+void project_right(spinor * const out, spinor * const in) {
+  /* out = P_R in = in - proj D in */
+  spinor * temp;
+  temp = calloc(VOLUME, sizeof(spinor));
+
+  D_psi(out, in);
+  project(temp, out);
+  diff(out, in, temp, VOLUME);
+  free(temp);
+}
+
+void project_left_D(spinor * const out, spinor * const in) {
+  /* out = P_L D in  = in - D proj D in*/
+  spinor * temp;
+  temp = calloc(VOLUME, sizeof(spinor));
+
+  D_psi(temp, in);
+  project_left(out, temp);  
+  free(temp);
+}

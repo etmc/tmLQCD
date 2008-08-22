@@ -3,6 +3,9 @@
 
 #include "su3spinor.h"
 
-void project(spinor * const out, spinor * const in)
+void project(spinor * const out, spinor * const in);
+void project_left(spinor * const out, spinor * const in);
+void project_right(spinor * const out, spinor * const in);
+void project_left_D(spinor * const out, spinor * const in);
 
 #endif
