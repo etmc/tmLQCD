@@ -724,7 +724,7 @@ if test ! -e test; then
 fi
 
 
-LIBS="-lhmc -lsolver -llinalg $LIBS"
+LIBS="-lhmc -lsolver -llinalg -lhmc $LIBS"
 AUTOCONF=autoconf
 
 #AC_CONFIG_SUBDIRS(lime)
