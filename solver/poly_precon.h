@@ -1,3 +1,4 @@
+/* $Id$ */
 #ifndef _POLY_PRECON_H
 #define _POLY_PRECON_H
 

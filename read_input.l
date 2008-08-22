@@ -140,6 +140,8 @@ TYPE [0-9A-Z]+
 %x GAUGERPREC
 %x GAUGEWPREC
 %x SOLVFLAG
+%x DFLSP
+%x PRECON
 %x OPFLAG
 %x MEFLAG
 %x SAVECONF
@@ -280,6 +282,8 @@ TYPE [0-9A-Z]+
 ^PerformOnlineMeasurements{SPC}*={SPC}*    BEGIN(ONMEAS);
 ^OnlineMeasurementsFreq{SPC}*={SPC}*       BEGIN(ONFREQ);
 ^RanluxdLevel{SPC}*={SPC}*                 BEGIN(RLXDLEVEL);
+^DeflationSubspaceDimension{SPC}*={SPC}*   BEGIN(DFLSP);
+^GCRPreconditioner{SPC}*={SPC}*            BEGIN(PRECON);
 
 ^BeginMonomial{SPC}+                       BEGIN(INITMONOMIAL);
 ^BeginInt                                  BEGIN(INITINTEGRATOR);
@@ -734,6 +738,16 @@ TYPE [0-9A-Z]+
     solver_flag=6;
     if(myverbose!=0) printf("Use FGMRES solver (eigenvectors needed) \n");
   }
+  dflgcr {
+    solver_flag=10;
+    g_dflgcr_flag = 1;
+    if(myverbose!=0) printf("Use deflated GCR solver \n");
+  }
+  dflfgmres {
+    solver_flag=11;
+    g_dflgcr_flag = 1;
+    if(myverbose!=0) printf("Use deflated FGMRES solver \n");
+  }
 }
 <GMRESM>{DIGIT}+ {
   gmres_m_parameter = atoi(yytext);
@@ -742,6 +756,21 @@ TYPE [0-9A-Z]+
 <GMRESDRNEV>{DIGIT}+ {
   gmresdr_nr_ev = atoi(yytext);
   if(myverbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
+}
+<DFLSP>{DIGIT}+ {
+  g_N_s = atoi(yytext);
+  if(myverbose!=0) printf("Deflation subspace dimension set to %d \n", g_N_s);
+}
+<PRECON>{
+  none {
+    if(myverbose!=0) printf("Using no right preconditioner \n");
+  }
+  polynomial {
+    if(myverbose!=0) printf("Using polynomial as right preconditioner \n");
+  }
+  cg {
+    if(myverbose!=0) printf("Using cg as right preconditioner \n");
+  }
 }
 <SITER>{DIGIT}+ {
   max_solver_iterations = atoi(yytext);
@@ -1160,6 +1189,8 @@ int read_input(char * conf_file){
   g_running_phmc = 0;
   g_beta = _default_g_beta;
   g_c_sw = _default_g_c_sw;
+  g_N_s = _default_g_N_s;
+  g_dflgcr_flag = _default_g_dflgcr_flag;
   random_seed = _default_random_seed;
   rlxd_level = _default_rlxd_level;
   matrix_element_flag = _default_matrix_element_flag;

@@ -32,6 +32,8 @@
 #define _default_g_mu2 0.0
 #define _default_g_mu3 0.0
 #define _default_g_beta 6.0
+#define _default_g_N_s 20
+#define _default_g_dflgcr_flag 0
 #define _default_random_seed 123456
 #define _default_rlxd_level 1
 #define _default_matrix_element_flag 0

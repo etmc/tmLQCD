@@ -52,6 +52,7 @@
 #include "invert_eo.h"
 #include "phmc.h"
 #include "D_psi.h"
+#include "little_D.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "block.h"
 #include "solver/generate_dfl_subspace.h"
@@ -81,10 +82,9 @@ int main(int argc,char *argv[]) {
   char * input_filename = NULL;
   double plaquette_energy;
   double ratime, retime;
-
+  
   int nsiter;
-
-  int g_dflgcr_flag = 1;
+  complex * a1, * a2;
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -251,12 +251,9 @@ int main(int argc,char *argv[]) {
 
 
     if(g_dflgcr_flag == 1) {
-      g_N_s = 4;  /* NOTE hardcoded by hand here until we come up with an input way of defining it */
 
       /* set up deflation blocks */
       init_blocks();
-      init_geom_blocks();
-      init_gauge_blocks();
 
       /* the can stay here for now, but later we probably need */
       /* something like init_dfl_solver called somewhere else  */
@@ -285,7 +282,12 @@ int main(int argc,char *argv[]) {
       
       block_compute_little_D_offdiagonal(block_list);
       block_compute_little_D_offdiagonal(block_list + 1);
-
+      a1 = calloc(2*9*g_N_s, sizeof(complex));
+      a2 = calloc(2*9*g_N_s, sizeof(complex));
+      a1[0].re = 1.;
+      lgcr(a2, a1, 10, 100, 1.e-15, 1, 2*g_N_s, 2*9*g_N_s, &little_D);
+      free(a1);
+      free(a2);
       /* TODO Generate projectors */
     }
 

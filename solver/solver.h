@@ -13,6 +13,8 @@
 #define GCR 7
 #define GMRESDR 8
 #define PCG 9
+#define DFLGCR 10
+#define DFLFGMRES 11
 
 #include"solver/matrix_mult_typedef.h"
 #include"solver/gmres.h"

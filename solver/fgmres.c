@@ -51,9 +51,9 @@ static complex * c;
 static double * s;
 
 int fgmres(spinor * const P,spinor * const Q, 
-	  const int m, const int max_restarts,
-	  const double eps_sq, const int rel_prec,
-	  const int N, matrix_mult f){
+	   const int m, const int max_restarts,
+	   const double eps_sq, const int rel_prec,
+	   const int N, const int precon, matrix_mult f){
 
   int restart, i, j, k;
   double beta, eps, norm;
@@ -91,10 +91,12 @@ int fgmres(spinor * const P,spinor * const Q,
     for(j = 0; j < m; j++){
       /* g_spinor_field[DUM_SOLVER]=A*M^-1*v_j */
 
-/*       invert_eigenvalue_part(Z[j], V[j], 10, N); */
-      poly_nonherm_precon(Z[j], V[j], .1, 1., 4, N);
-/*       poly_precon(Z[j], V[j], alpha[0].re*alpha[0].re, 10); */
-/*       assign(Z[j], V[j], N); */
+      if(precon == 0) {
+	assign(Z[j], V[j], N);
+      }
+      else {
+	poly_nonherm_precon(Z[j], V[j], .1, 1., 4, N);
+      }
       f(r0, Z[j]); 
       /* Set h_ij and omega_j */
       /* g_spinor_field[DUM_SOLVER+1] <- omega_j */

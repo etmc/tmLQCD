@@ -32,15 +32,15 @@ int init_blocks();
 int free_blocks();
 
 int add_basis_field(int const index, spinor const *field);
-int init_gauge_blocks();
-int init_geom_blocks();
 
 void block_orthonormalize(block *parent);
-void block_exchange_edges();
+void blocks_exchange_edges();
 void block_reconstruct_global_field(const int index, spinor * const reconstructed_field);
 
 void block_compute_little_D_offdiagonal(block *parent);
 void block_compute_little_D_diagonal(block *parent);
+
+complex block_scalar_prod(spinor * const R, spinor * const S, const int N);
 
 extern block * block_list;
 

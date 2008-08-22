@@ -13,7 +13,7 @@
 #include "tm_operators.h"
 #include "boundary.h"
 #include "D_psi.h"
-#include "chebyshev_polynomial.h"
+#include "poly_precon.h"
 
 
 #define PI 3.141592653589793
@@ -164,12 +164,11 @@ void poly_precon(spinor * const R, spinor * const S, const double prec, const in
 
 
 void poly_nonherm_precon(spinor * const R, spinor * const S, 
-			 const double e, const double d, const int n) {
+			 const double e, const double d, const int n, const int N) {
   int j;
   double a1, a2, dtmp;
   static spinor *work, *work_;
   static int initpnH = 0;
-  const int N = VOLUME;
   spinor * psi, * chi, *tmp0, *tmp1, *cptmp;
 
   

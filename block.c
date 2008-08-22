@@ -15,15 +15,21 @@
 
 #define CALLOC_ERROR_CRASH {printf ("calloc errno : %d\n", errno); errno = 0; return 1;}
 
+int init_blocks_gaugefield();
+int init_blocks_geometry();
+
 block * block_list = NULL;
 static spinor * basis = NULL;
-spinor * _edges = NULL;
+static spinor * _edges = NULL;
 static spinor * edges = NULL;
 static su3 * u = NULL;
 const int spinpad = 1;
+static int block_init = 0;
 
 int init_blocks() {
   int i,j;
+  free_blocks();
+  block_init = 1;
   block_list = calloc(2, sizeof(block));
   if((void*)(basis = (spinor*)calloc(2 * g_N_s * (VOLUME / 2 + spinpad) + 1, sizeof(spinor))) == NULL) {
     CALLOC_ERROR_CRASH;
@@ -88,21 +94,26 @@ int init_blocks() {
     if ((void*)(block_list[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(complex))) == NULL)
       CALLOC_ERROR_CRASH;
   }
+  init_blocks_geometry();
+  init_blocks_gaugefield();
 
   return 0;
 }
 
 int free_blocks() {
   int i;
-  for(i = 0; i < 2; ++i) {
-    free(block_list[i].basis);
-    free(block_list[i].neighbour_edges);
-    free(block_list[i].little_dirac_operator);
+  if(block_init == 1) {
+    for(i = 0; i < 2; ++i) {
+      free(block_list[i].basis);
+      free(block_list[i].neighbour_edges);
+      free(block_list[i].little_dirac_operator);
+    }
+    free(u);
+    free(_edges);
+    free(basis);
+    free(block_list);
+    block_init = 0;
   }
-  free(u);
-  free(_edges);
-  free(basis);
-  free(block_list);
   return 0;
 }
 
@@ -117,7 +128,7 @@ int add_basis_field(int const index, spinor const *field) {
   return 0;
 }
 
-int init_gauge_blocks() {
+int init_blocks_gaugefield() {
   /* Copies the existing gauge field on the processor into the two separate blocks in a form
   that is readable by the block Dirac operator. Specifically, in consecutive memory
   now +t,-t,+x,-x,+y,-y,+z,-z gauge links are stored. This requires double the storage in
@@ -157,7 +168,7 @@ int init_gauge_blocks() {
   return(0);
 }
 
-int check_block_geometry(block * blk) {
+int check_blocks_geometry(block * blk) {
   int i, k=0;
   int * itest;
   int * ipt;
@@ -177,7 +188,7 @@ int check_block_geometry(block * blk) {
   
   for(i = 0; i < blk->volume; i++) {
     k += itest[i];
-    if(itest[i] <4 || itest[i] > 8) {
+    if(itest[i] < 1 || itest[i] > 8) {
       if(g_proc_id == 0) {
 	printf("error in block geometry, itest[%d] = %d\n", i, itest[i]);      
       }
@@ -204,7 +215,7 @@ int check_block_geometry(block * blk) {
   return(0);
 }
 
-int init_geom_blocks() {
+int init_blocks_geometry() {
   int ix;
   int zstride = 1;
   int ystride = LZ/2;
@@ -223,19 +234,13 @@ int init_geom_blocks() {
   }
   memcpy(block_list[1].idx, block_list[0].idx, 8 * VOLUME/2 * sizeof(int));
   for(ix = 0; ix < 2; ix++) {
-    zstride = check_block_geometry(&block_list[ix]);
+    zstride = check_blocks_geometry(&block_list[ix]);
   }
   return 0;
 }
 
 /* the following should be somewhere else ... */
 
-complex block_scalar_prod_Ugamma(spinor * const r, spinor * const s, 
-				const int mu, const int N) {
-  complex c;
-
-  return(c);
-}
 
 complex block_scalar_prod(spinor * const R, spinor * const S, const int N) {
   int ix;
