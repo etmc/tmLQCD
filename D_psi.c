@@ -1140,7 +1140,7 @@ void local_D(spinor * const rr, spinor * const s,
 
 /* direction +0 */
 void boundary_D_0(spinor * const r, spinor * const s, 
-		  su3 * restrict u) {
+		  su3 * const u) {
 
   static su3_vector chi, psi;
 
@@ -1148,19 +1148,24 @@ void boundary_D_0(spinor * const r, spinor * const s,
 
   _su3_multiply(chi,(*u),psi);
 
-  _complex_times_vector(psi, phase_0, chi);
+  _complex_times_vector((*r).s0, phase_0, chi);
+  _vector_assign((*r).s2,(*r).s0);
+
+/*   _complex_times_vector(psi, phase_0, chi); */
   
-  _vector_add_assign((*r).s0,psi);
-  _vector_add_assign((*r).s2,psi);
+/*   _vector_add_assign((*r).s0,psi); */
+/*   _vector_add_assign((*r).s2,psi); */
 
   _vector_add(psi,(*s).s1,(*s).s3);
 
   _su3_multiply(chi,(*u),psi);
-  u++;
 
-  _complex_times_vector(psi, phase_0, chi);
-  _vector_add_assign((*r).s1,psi);
-  _vector_add_assign((*r).s3,psi);
+  _complex_times_vector((*r).s1, phase_0, chi);
+  _vector_assign((*r).s3, (*r).s1);
+
+/*   _complex_times_vector(psi, phase_0, chi); */
+/*   _vector_add_assign((*r).s1,psi); */
+/*   _vector_add_assign((*r).s3,psi); */
 
   return;
 }
@@ -1174,18 +1179,15 @@ void boundary_D_1(spinor * const r, spinor * const s,
 
   _su3_inverse_multiply(chi, (*u), psi);
   
-  _complexcjg_times_vector(psi, phase_0, chi);
-  _vector_add_assign((*r).s0,psi);
-  _vector_sub_assign((*r).s2,psi);
+  _complexcjg_times_vector((*r).s0, phase_0, chi);
+  _vector_minus_assign((*r).s2, (*r).s0);
 
   _vector_sub(psi,(*s).s1,(*s).s3);
 
   _su3_inverse_multiply(chi,(*u),psi);
-  u++;
   
-  _complexcjg_times_vector(psi,phase_0,chi);
-  _vector_add_assign((*r).s1,psi);
-  _vector_sub_assign((*r).s3,psi);
+  _complexcjg_times_vector((*r).s1,phase_0,chi);
+  _vector_minus_assign((*r).s3, (*r).s1);
   return;
 }
 
@@ -1199,18 +1201,17 @@ void boundary_D_2(spinor * const r, spinor * const s,
   
   _su3_multiply(chi,(*u),psi);
 
-  _complex_times_vector(psi, phase_1, chi);
-  _vector_add_assign((*r).s0,psi);
-  _vector_i_sub_assign((*r).s3,psi);
+  _complex_times_vector((*r).s0, phase_1, chi);
+  _vector_null((*r).s3);
+  _vector_i_sub_assign((*r).s3, (*r).s0);
 
   _vector_i_add(psi,(*s).s1,(*s).s2);
 
   _su3_multiply(chi,(*u),psi);
-  u++;
   
-  _complex_times_vector(psi, phase_1, chi);
-  _vector_add_assign((*r).s1,psi);
-  _vector_i_sub_assign((*r).s2,psi);
+  _complex_times_vector((*r).s1, phase_1, chi);
+  _vector_null((*r).s2);
+  _vector_i_sub_assign((*r).s2, (*r).s1);
 
   return;
 }
@@ -1224,18 +1225,17 @@ void boundary_D_3(spinor * const r, spinor * const s,
   
   _su3_inverse_multiply(chi,(*u),psi);
   
-  _complexcjg_times_vector(psi, phase_1, chi);
-  _vector_add_assign((*r).s0,psi);
-  _vector_i_add_assign((*r).s3,psi);
+  _complexcjg_times_vector((*r).s0, phase_1, chi);
+  _vector_null((*r).s3);
+  _vector_i_add_assign((*r).s3, (*r).s0);
 
   _vector_i_sub(psi,(*s).s1,(*s).s2);
 
   _su3_inverse_multiply(chi,(*u),psi);
-  u++;
 
-  _complexcjg_times_vector(psi, phase_1, chi);
-  _vector_add_assign((*r).s1,psi);
-  _vector_i_add_assign((*r).s2,psi);
+  _complexcjg_times_vector((*r).s1, phase_1, chi);
+  _vector_null((*r).s2);
+  _vector_i_add_assign((*r).s2, (*r).s1);
 
   return;
 }
@@ -1249,18 +1249,15 @@ void boundary_D_4(spinor * const r, spinor * const s,
 
   _su3_multiply(chi,(*u),psi);
 
-  _complex_times_vector(psi, phase_2, chi);
-  _vector_add_assign((*r).s0,psi);
-  _vector_add_assign((*r).s3,psi);
+  _complex_times_vector((*r).s0, phase_2, chi);
+  _vector_assign((*r).s3, (*r).s0);
 
   _vector_sub(psi,(*s).s1,(*s).s2);
   
   _su3_multiply(chi,(*u),psi);
-  u++;
   
-  _complex_times_vector(psi, phase_2, chi);
-  _vector_add_assign((*r).s1,psi);
-  _vector_sub_assign((*r).s2,psi);
+  _complex_times_vector((*r).s1, phase_2, chi);
+  _vector_minus_assign((*r).s2, (*r).s1);
 
   return;
 }
@@ -1274,18 +1271,15 @@ void boundary_D_5(spinor * const r, spinor * const s,
   
   _su3_inverse_multiply(chi,(*u),psi);
   
-  _complexcjg_times_vector(psi, phase_2, chi);
-  _vector_add_assign((*r).s0,psi);
-  _vector_sub_assign((*r).s3,psi);
+  _complexcjg_times_vector((*r).s0, phase_2, chi);
+  _vector_minus_assign((*r).s3, (*r).s0);
   
   _vector_add(psi,(*s).s1,(*s).s2);
 
   _su3_inverse_multiply(chi,(*u),psi);
-  u++;
 
-  _complexcjg_times_vector(psi, phase_2, chi);
-  _vector_add_assign((*r).s1,psi);
-  _vector_add_assign((*r).s2,psi);
+  _complexcjg_times_vector((*r).s1, phase_2, chi);
+  _vector_assign((*r).s2, (*r).s1);
 
 
   return;
@@ -1300,18 +1294,17 @@ void boundary_D_6(spinor * const r, spinor * const s,
   
   _su3_multiply(chi,(*u),psi);
 
-  _complex_times_vector(psi, phase_3, chi);
-  _vector_add_assign((*r).s0,psi);
-  _vector_i_sub_assign((*r).s2,psi);
+  _complex_times_vector((*r).s0, phase_3, chi);
+  _vector_null((*r).s2);
+  _vector_i_sub_assign((*r).s2, (*r).s0);
 
   _vector_i_sub(psi,(*s).s1,(*s).s3);
 
   _su3_multiply(chi,(*u),psi);
-  u++;
 
-  _complex_times_vector(psi, phase_3, chi);
-  _vector_add_assign((*r).s1, psi);
-  _vector_i_add_assign((*r).s3, psi);
+  _complex_times_vector((*r).s1, phase_3, chi);
+  _vector_null((*r).s3);
+  _vector_i_add_assign((*r).s3, (*r).s1);
 
   return;
 }
@@ -1325,18 +1318,17 @@ void boundary_D_7(spinor * const r, spinor * const s,
 
   _su3_inverse_multiply(chi,(*u),psi);
 
-  _complexcjg_times_vector(psi, phase_3, chi);
-  _vector_add_assign((*r).s0, psi);
-  _vector_i_add_assign((*r).s2, psi);
+  _complexcjg_times_vector((*r).s0, phase_3, chi);
+  _vector_null((*r).s2);
+  _vector_i_add_assign((*r).s2, (*r).s0);
 
   _vector_i_add(psi,(*s).s1,(*s).s3);
 
   _su3_inverse_multiply(chi,(*u),psi);
-  u++;
   
-  _complexcjg_times_vector(psi, phase_3, chi);
-  _vector_add_assign((*r).s1, psi);
-  _vector_i_sub_assign((*r).s3, psi);
+  _complexcjg_times_vector((*r).s1, phase_3, chi);
+  _vector_null((*r).s3);
+  _vector_i_sub_assign((*r).s3, (*r).s1);
 
   return;
 }
