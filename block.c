@@ -19,6 +19,14 @@ int init_blocks_gaugefield();
 int init_blocks_geometry();
 double block_two_norm(spinor * const R, const int N);
 
+int **** block_ipt;
+int *** bipt__;
+int ** bipt_;
+int * bipt;
+
+static void (*boundary_D[8])(spinor * const r, spinor * const s, su3 *u) =
+{boundary_D_0, boundary_D_1, boundary_D_2, boundary_D_3, boundary_D_4, boundary_D_5, boundary_D_6, boundary_D_7};
+
 
 block * block_list = NULL;
 static spinor * basis = NULL;
@@ -61,6 +69,23 @@ int init_blocks() {
     block_list[1].basis[i] = block_list[1].basis[i-1] + VOLUME / 2 + spinpad;
   }
   block_list[1].u = block_list[0].u + 4*VOLUME;
+
+  if((void*)(block_ipt = (int****)calloc(T+4,sizeof(int*))) == NULL) return(5);
+  if((void*)(bipt__ = (int***)calloc ((T+4)*(LX+4), sizeof(int*))) == NULL) return(4);
+  if((void*)(bipt_ = (int**)calloc((T+4)*(LX+4)*(LY+4), sizeof(int*))) == NULL) return(3);
+  if((void*)(bipt = (int*)calloc((T+4)*(LX+4)*(LY+4)*(LZ/2+4), sizeof(int))) == NULL) return(8);
+  bipt_[0] = bipt;
+  bipt__[0] = bipt_;
+  block_ipt[0] = bipt__;
+  for(i = 1; i < (T+4)*(LX+4)*(LY+4); i++){
+    bipt_[i] = bipt_[i-1]+(LZ/2+4);
+  }
+  for(i = 1; i < (T+4)*(LX+4); i++){
+    bipt__[i] = bipt__[i-1]+(LY+4);
+  }
+  for(i = 1; i < (T+4); i++){
+    block_ipt[i] = block_ipt[i-1]+(LX+4);
+  }
 
   for (i = 0; i < 2; ++i) {
     block_list[i].id = i;
@@ -125,6 +150,10 @@ int free_blocks() {
       free(block_list[i].neighbour_edges);
       free(block_list[i].little_dirac_operator);
     }
+    free(block_ipt);
+    free(bipt__);
+    free(bipt_);
+    free(bipt);
     free(u);
     free(_edges);
     free(basis);
@@ -238,7 +267,7 @@ int check_blocks_geometry(block * blk) {
 }
 
 int init_blocks_geometry() {
-  int ix;
+  int ix, x, y, z, t;
   int zstride = 1;
   int ystride = LZ/2;
   int xstride = LY * LZ/2;
@@ -258,6 +287,18 @@ int init_blocks_geometry() {
   for(ix = 0; ix < 2; ix++) {
     zstride = check_blocks_geometry(&block_list[ix]);
   }
+  ix = 0;
+  for(t = 0; t < T; t++) {
+    for(x = 0; x < LX; x++) {
+      for(y = 0; y < LY; y++) {
+	for(z = 0; z < LZ/2; z++) {
+	  block_ipt[t][x][y][z] = ix;
+	  ix++;
+	}
+      }
+    }
+  }
+
   return 0;
 }
 
@@ -402,8 +443,6 @@ void surface_D_apply_contract(block *parent, int surface, spinor* offset, int st
   complex * aggregate;
   complex result;
   static spinor tmp;
-  static void (*boundary_D[8])(spinor * const r, spinor * const s, su3 *u) =
-    {boundary_D_0, boundary_D_1, boundary_D_2, boundary_D_3, boundary_D_4, boundary_D_5, boundary_D_6, boundary_D_7};
 
   aggregate = (complex*)malloc(g_N_s*sizeof(complex));
   for (iter = aggregate; iter != aggregate + g_N_s; ++iter){
@@ -523,10 +562,10 @@ void block_compute_little_D_offdiagonal(block *parent) {
     for (i = 0; i < 9 * g_N_s; ++i){
       printf(" [ ");
       for (j = 0; j < g_N_s; ++j){
-        printf(" %2.2E + %2.2f i", parent->little_dirac_operator[i * g_N_s + j].re,  parent->little_dirac_operator[i * g_N_s + j].im);
-        if (j != g_N_s){
-          printf(", ");
-        }
+	printf(" %2.2E + %2.2f i", parent->little_dirac_operator[i * g_N_s + j].re,  parent->little_dirac_operator[i * g_N_s + j].im);
+	if (j != g_N_s){
+	  printf(", ");
+	}
       }
       printf(" ]\n\n");
     }
@@ -555,7 +594,8 @@ void block_orthonormalize(block *parent) {
     for(i = 0; i < g_N_s; i++) {
       for(j = 0; j < g_N_s; j++) {
         coeff = block_scalar_prod(parent->basis[j], parent->basis[i], parent->volume);
-        if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", parent->id, j, i, coeff.re, coeff.im);
+        if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", 
+				  parent->id, j, i, coeff.re, coeff.im);
       }
     }
   }
@@ -567,54 +607,163 @@ void block_orthonormalize(block *parent) {
 void blocks_exchange_edges() {
   int bl_cnt, vec_cnt, div_cnt;
   int div_size = LZ / 2;
-  spinor *scratch, *offset_up, *offset_dn;
-
-  int offsets[8];  int surfaces[4];
-
-  offsets[0] = VOLUME;
-  offsets[1] = (T + 2) * LX * LY * LZ;
-  offsets[2] = VOLUME + 2 * LZ * (LX * LY + T * LY);
-  offsets[3] = VOLUME + 2 * LZ * (LX * LY + T * LY + T * LX);
-  offsets[4] = (T + 1) * LX * LY * LZ;
-  offsets[5] = (T + 2) * LX * LY * LZ + T * LY * LZ;
-  offsets[6] = VOLUME + 2 * LZ * (LX * LY + T * LY) + T * LX * LZ;
-  offsets[7] = VOLUME + 2 * LZ * (LX * LY + T * LY + T * LX) + T * LX * LY;
-
-  surfaces[0] = VOLUME / T;
-  surfaces[1] = VOLUME / LX;
-  surfaces[2] = VOLUME / LY;
-  surfaces[3] = VOLUME / LZ;
+  spinor *scratch, * temp;
+  spinor *r, *s, *v;
+  su3 * u;
+  int x, y, z, t, ix, iy, i, j, k, pm, mu;
+  complex c[2];
 
   /* for a full spinor field we need VOLUMEPLUSRAND                 */
   /* because we use the same geometry as for the                    */
   /* gauge field                                                    */
   /* It is VOLUME + 2*LZ*(LY*LX + T*LY + T*LX) + 4*LZ*(LY + T + LX) */
   scratch = calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  for (vec_cnt = 0; vec_cnt < g_N_s; ++vec_cnt){
-    block_reconstruct_global_field(vec_cnt, scratch);
-    xchange_lexicfield(scratch);
+  temp =  calloc(VOLUMEPLUSRAND - VOLUME, sizeof(spinor));
+  for (i = 0; i < g_N_s; i++){
+    block_reconstruct_global_field(i, scratch);
 
-    for (bl_cnt = 0; bl_cnt < 6; ++bl_cnt){
-      for (div_cnt = 0; div_cnt < (surfaces[bl_cnt / 2] / (2 * div_size)); ++div_cnt) {
-        memcpy(block_list[0].neighbour_edges[bl_cnt] + vec_cnt * surfaces[bl_cnt / 2] + 2 * div_cnt * div_size,
-               scratch + offsets[bl_cnt] + 2 * div_cnt * div_size, div_size * sizeof(spinor));
-        memcpy(block_list[1].neighbour_edges[bl_cnt] + vec_cnt * surfaces[bl_cnt / 2] + (2 * div_cnt + 1) * div_size,
-               scratch + offsets[bl_cnt]+ div_cnt * (2 * div_cnt + 1) * div_size, div_size * sizeof(spinor));
+#ifdef MPI
+    xchange_lexicfield(scratch);
+#endif
+
+    /* +- t */
+    for(pm = 0; pm < 2; pm++) {
+      if(pm == 0) t = T-1;
+      else t = 0;
+      mu = 0;
+      
+      r = temp;
+      for(x = 0; x < LX; x++) {
+	for(y = 0; y < LY; y++) {
+	  for(z = 0; z < LZ; z++) {
+	    ix = g_ipt[t][x][y][z];
+	    if(pm == 0) {
+	      s = &scratch[ g_iup[ ix ][mu] ];
+	      u = &g_gauge_field[ ix ][mu];
+	    }
+	    else {
+	      s = &scratch[ g_idn[ ix ][mu] ];
+	      u = &g_gauge_field[ g_idn[ix] ][mu];
+	    }
+	    boundary_D[pm](r, s, u);
+	    r++;
+	  }
+	}
+      }
+      r = temp;
+      /* now all the scalar products */
+      for(j = 0; j < g_N_s; j++) {
+	for(x = 0; x < LX; x++) {
+	  for(y = 0; y < LY; y++) {
+	    for(k = 0; k < 2; k++) {
+	      iy = j+i*g_N_s + (pm+1)*g_N_s*g_N_s;
+	      _complex_zero(block_list[k].little_dirac_operator[ iy ]);
+	      for(z = 0; z < LZ/2; z++) {
+		ix = block_ipt[t][x][y][z];
+		s = &block_list[k].basis[j][ ix ];
+		_add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
+		r++;
+	      }
+	    }
+	  }
+	}
       }
     }
 
-    memcpy(block_list[1].neighbour_edges[6] + vec_cnt * surfaces[3], scratch + offsets[6], surfaces[3] * sizeof(spinor));
-    memcpy(block_list[0].neighbour_edges[7] + vec_cnt * surfaces[3], scratch + offsets[7], surfaces[3] * sizeof(spinor));
-
-    offset_up = block_list[1].basis[vec_cnt] + (LZ - 1) * LZ;
-    offset_dn = block_list[0].basis[vec_cnt];
-    for(div_cnt = 0; div_cnt < surfaces[3]; ++div_cnt){
-      memcpy(block_list[0].neighbour_edges[6] + div_cnt, offset_up + div_cnt * LZ, sizeof(spinor));
-      memcpy(block_list[1].neighbour_edges[7] + div_cnt, offset_dn + div_cnt * LZ, sizeof(spinor));
+    /* +- x */
+    for(pm = 2; pm < 4; pm++) {
+      if(pm == 2) x = LX-1;
+      else x = 0;
+      mu = 1;
+      
+      r = temp;
+      for(t = 0; t < t; t++) {
+	for(y = 0; y < LY; y++) {
+	  for(z = 0; z < LZ; z++) {
+	    ix = g_ipt[t][x][y][z];
+	    if(pm == 0) {
+	      s = &scratch[ g_iup[ ix ][mu] ];
+	      u = &g_gauge_field[ ix ][mu];
+	    }
+	    else {
+	      s = &scratch[ g_idn[ ix ][mu] ];
+	      u = &g_gauge_field[ g_idn[ix] ][mu];
+	    }
+	    boundary_D[pm](r, s, u);
+	    r++;
+	  }
+	}
+      }
+      r = temp;
+      /* now all the scalar products */
+      for(j = 0; j < g_N_s; j++) {
+	for(t = 0; t < T; t++) {
+	  for(y = 0; y < LY; y++) {
+	    for(k = 0; k < 2; k++) {
+	      iy = j+i*g_N_s + (pm+1)*g_N_s*g_N_s;
+	      _complex_zero(block_list[k].little_dirac_operator[ iy ]);
+	      for(z = 0; z < LZ/2; z++) {
+		ix = block_ipt[t][x][y][z];
+		s = &block_list[k].basis[j][ ix ];
+		_add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
+		r++;
+	      }
+	    }
+	  }
+	}
+      }
     }
+
+    /* +- y */
+    for(pm = 4; pm < 6; pm++) {
+      if(pm == 4) y = LY-1;
+      else y = 0;
+      mu = 2;
+      
+      r = temp;
+      for(t = 0; t < t; t++) {
+	for(x = 0; x < LX; x++) {
+	  for(z = 0; z < LZ; z++) {
+	    ix = g_ipt[t][x][y][z];
+	    if(pm == 0) {
+	      s = &scratch[ g_iup[ ix ][mu] ];
+	      u = &g_gauge_field[ ix ][mu];
+	    }
+	    else {
+	      s = &scratch[ g_idn[ ix ][mu] ];
+	      u = &g_gauge_field[ g_idn[ix] ][mu];
+	    }
+	    boundary_D[pm](r, s, u);
+	    r++;
+	  }
+	}
+      }
+      r = temp;
+      /* now all the scalar products */
+      for(j = 0; j < g_N_s; j++) {
+	for(t = 0; t < T; t++) {
+	  for(x = 0; x < LX; x++) {
+	    for(k = 0; k < 2; k++) {
+	      iy = j+i*g_N_s + (pm+1)*g_N_s*g_N_s;
+	      _complex_zero(block_list[k].little_dirac_operator[ iy ]);
+	      for(z = 0; z < LZ/2; z++) {
+		ix = block_ipt[t][x][y][z];
+		s = &block_list[k].basis[j][ ix ];
+		_add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
+		r++;
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    /* z is different */
+    
   }
 
   free(scratch);
+  free(temp);
+  return;
 }
 
 /* Reconstructs a global field from the little basis of two blocks */
