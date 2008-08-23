@@ -9,7 +9,7 @@
 #include <string.h>
 #include "global.h"
 #include "D_psi.h"
-#include "linalg/diff.h"
+#include "linalg_eo.h"
 #include "xchange_lexicfield.h"
 #include "block.h"
 
@@ -17,6 +17,8 @@
 
 int init_blocks_gaugefield();
 int init_blocks_geometry();
+double block_two_norm(spinor * const R, const int N);
+
 
 block * block_list = NULL;
 static spinor * basis = NULL;
@@ -67,6 +69,7 @@ int init_blocks() {
     block_list[i].LY = LY;
     block_list[i].LZ = LZ/2;
     block_list[i].T = T;
+    block_list[i].ns = g_N_s;
     block_list[i].spinpad = spinpad;
     memcpy(block_list[i].mpilocal_coordinate, g_proc_coords, 4*sizeof(int));
     memcpy(block_list[i].coordinate, g_proc_coords, 3*sizeof(int));
@@ -120,11 +123,16 @@ int free_blocks() {
 int add_basis_field(int const index, spinor const *field) {
   int ctr_t;
   int contig_block = LZ / 2;
-  for (ctr_t = 0; ctr_t < (VOLUME / LZ); ++ctr_t)
-  {
-    memcpy(block_list[0].basis[index], field + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
-    memcpy(block_list[1].basis[index], field + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
+  for (ctr_t = 0; ctr_t < (VOLUME / LZ); ctr_t++) {
+    memcpy(block_list[0].basis[index] + ctr_t*contig_block, 
+	   field + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
+    memcpy(block_list[1].basis[index] + ctr_t*contig_block, 
+	   field + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
   }
+  if(g_proc_id == 0 && g_debug_level > 4) {
+    printf("basis norm = %1.3e\n", block_two_norm(block_list[1].basis[index], block_list[0].volume));
+  }
+      
   return 0;
 }
 
@@ -366,6 +374,7 @@ void block_compute_little_D_diagonal(block *parent) {
     Block_D_psi(parent, tmp, parent->basis[i]);
     for(j = 0; j < g_N_s; j++){
       /* order correct ? */
+/*       M[i * g_N_s + j] = block_scalar_prod(parent->basis[j], parent->basis[i], parent->volume); */
       M[i * g_N_s + j] = block_scalar_prod(parent->basis[j], tmp, parent->volume);
     }
   }
@@ -510,8 +519,36 @@ void block_compute_little_D_offdiagonal(block *parent) {
   }
 }
 
+void block_orthonormalize(block * blk) 
+{
+  int i, j;
+  int vol = blk->volume;
+  complex s;
+  double nrm;
+
+  for (i = 0; i < blk->ns; i ++) {
+    for (j = 0; j < i; j++) {
+      s = block_scalar_prod(blk->basis[i], blk->basis[j], vol);
+      assign_diff_mul(blk->basis[i], blk->basis[j], s, vol);
+    }
+    nrm = sqrt(block_two_norm(blk->basis[i], vol));
+    mul_r(blk->basis[i], 1./nrm, blk->basis[i], vol);
+  }
+  if(g_debug_level > 4) {
+    for(i = 0; i < blk->ns; i++) {
+      for(j = 0; j < blk->ns; j++) {
+	s = block_scalar_prod(blk->basis[j], blk->basis[i], vol);
+	if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", blk->id, j, i, s.re, s.im);
+      }
+    }
+  }
+  
+
+  return;
+}
+
 /* Uses a Modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
-void block_orthonormalize(block *parent) {
+void block_orthonormalize2(block *parent) {
   int i, j, k;
   spinor *current, *next, *iter;
   spinor orig, resbasis;
@@ -522,7 +559,7 @@ void block_orthonormalize(block *parent) {
   for(i = 0; i < parent->ns; ++i){
     /* rescale the current vector */
     current = parent->basis[i];
-    scale.re = 1 / sqrt(block_two_norm(current, parent->volume));
+    scale.re = 1. / sqrt(block_two_norm(current, parent->volume));
     for(iter = current; iter < current + parent->volume; ++iter){
       orig = *iter; /* we can't alias */
       _spinor_mul_complex(*iter, scale, orig);

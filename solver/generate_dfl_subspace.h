@@ -2,7 +2,7 @@
 #ifndef _GENERATE_DFL_SUBSPACE
 #define _GENERATE_DFL_SUBSPACE
 
-int init_dfl_subspace();
+int init_dfl_subspace(const int);
 int free_dfl_subspace();
 int generate_dfl_subspace(const int Ns, const int N);
 

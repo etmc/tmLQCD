@@ -16,14 +16,19 @@
 #include "generate_dfl_subspace.h"
 
 spinor ** dfl_fields;
-spinor * _dfl_fields;
+static spinor * _dfl_fields;
+static int init_subspace = 0;
 
 int generate_dfl_subspace(const int Ns, const int N) {
   int i,j, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex), 
     vol = VOLUME*sizeof(spinor)/sizeof(complex);
   double nrm, e = 0.5, d = 1.;
+  complex s;
+
+  if(init_subspace == 0) init_dfl_subspace(Ns);
+
   for(i = 0; i < Ns; i++) {
-    random_spinor_field(dfl_fields[i], 1, N);
+    random_spinor_field(dfl_fields[i], N, 1);
     ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
     nrm = sqrt(square_norm(dfl_fields[i], N));
     mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
@@ -42,15 +47,27 @@ int generate_dfl_subspace(const int Ns, const int N) {
     }
   }
 
+  if(g_debug_level > 4) {
+    for(i = 0; i < Ns; i++) {
+      for(j = 0; j < Ns; j++) {
+	s = scalar_prod(dfl_fields[i], dfl_fields[j], N);
+	if(g_proc_id == 0) {
+	  printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, s.re, s.im);
+	}
+      }
+    }
+  }
+
   return(0);
 }
 
-int init_dfl_subspace() {
+int init_dfl_subspace(const int N_s) {
   int i;
-  if((void*)(_dfl_fields = calloc(g_N_s*VOLUMEPLUSRAND+1, sizeof(spinor))) == NULL) {
+  init_subspace = 1;
+  if((void*)(_dfl_fields = calloc(N_s*VOLUMEPLUSRAND+1, sizeof(spinor))) == NULL) {
     return(1);
   }
-  if ((void*)(dfl_fields = calloc(g_N_s, sizeof(spinor *))) == NULL) {
+  if ((void*)(dfl_fields = calloc(N_s, sizeof(spinor *))) == NULL) {
     return(1);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
@@ -58,14 +75,17 @@ int init_dfl_subspace() {
 #else
   dfl_fields[0] = _dfl_fields;
 #endif
-  for (i = 1; i < g_N_s; ++i) {
+  for (i = 1; i < N_s; ++i) {
     dfl_fields[i] = dfl_fields[i-1] + VOLUMEPLUSRAND;
   }
   return 0;
 }
 
 int free_dfl_subspace() {
-  free(dfl_fields);
-  free(_dfl_fields);
+  if(init_subspace == 1) {
+    free(dfl_fields);
+    free(_dfl_fields);
+    init_subspace = 0;
+  }
   return 0;
 }
