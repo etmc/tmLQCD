@@ -504,7 +504,7 @@ void block_compute_little_D_offdiagonal(block *parent) {
   }
 
   /* The following is, obviously, debug code for use with small g_N_s */
-  if (g_N_s <= 5){
+  if (g_N_s <= 5 && !g_proc_id){
     printf("\n  *** CHECKING LITTLE D ***\n");
     for (i = 0; i < 9 * g_N_s; ++i){
       printf(" [ ");
@@ -519,51 +519,30 @@ void block_compute_little_D_offdiagonal(block *parent) {
   }
 }
 
-void block_orthonormalize2(block * blk) 
-{
-  int i, j;
-  int vol = blk->volume;
-  complex s;
-  double nrm;
-
-  for (i = 0; i < blk->ns; i ++) {
-    for (j = 0; j < i; j++) {
-      s = block_scalar_prod(blk->basis[i], blk->basis[j], vol);
-      assign_diff_mul(blk->basis[i], blk->basis[j], s, vol);
-    }
-    nrm = sqrt(block_two_norm(blk->basis[i], vol));
-    mul_r(blk->basis[i], 1./nrm, blk->basis[i], vol);
-  }
-  if(g_debug_level > 4) {
-    for(i = 0; i < blk->ns; i++) {
-      for(j = 0; j < blk->ns; j++) {
-	s = block_scalar_prod(blk->basis[j], blk->basis[i], vol);
-	if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", blk->id, j, i, s.re, s.im);
-      }
-    }
-  }
-
-  return;
-}
-
 /* Uses a Modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
 void block_orthonormalize(block *parent) {
   int i, j;
-  spinor *current, *next;
   complex coeff;
   double scale;
 
   for(i = 0; i < g_N_s; ++i){
     /* rescale the current vector */
-    current = parent->basis[i];
-    scale = 1. / sqrt(block_two_norm(current, parent->volume));
-    mul_r(current, scale, current, parent->volume);
+    scale = 1. / sqrt(block_two_norm(parent->basis[i], parent->volume));
+    mul_r(parent->basis[i], scale, parent->basis[i], parent->volume);
 
     /* rescaling done, now subtract this direction from all vectors that follow */
     for(j = i + 1; j < g_N_s; ++j){
-      next = parent->basis[j];
-      coeff = block_scalar_prod(current, next, parent->volume);
-      assign_diff_mul(next, current, coeff, parent->volume);
+      coeff = block_scalar_prod(parent->basis[j], parent->basis[i], parent->volume);
+      assign_diff_mul(parent->basis[j], parent->basis[i], coeff, parent->volume);
+    }
+  }
+
+  if(g_debug_level > 4) {
+    for(i = 0; i < g_N_s; i++) {
+      for(j = 0; j < g_N_s; j++) {
+        coeff = block_scalar_prod(parent->basis[j], parent->basis[i], parent->volume);
+        if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", parent->id, j, i, coeff.re, coeff.im);
+      }
     }
   }
   return;
@@ -597,7 +576,7 @@ void blocks_exchange_edges() {
   /* gauge field                                                    */
   /* It is VOLUME + 2*LZ*(LY*LX + T*LY + T*LX) + 4*LZ*(LY + T + LX) */
   scratch = calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  for (vec_cnt = 0; vec_cnt < 0*g_N_s; ++vec_cnt){
+  for (vec_cnt = 0; vec_cnt < g_N_s; ++vec_cnt){
     block_reconstruct_global_field(vec_cnt, scratch);
     xchange_lexicfield(scratch);
 
