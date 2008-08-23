@@ -310,7 +310,7 @@ complex block_scalar_prod(spinor * const R, spinor * const S, const int N) {
       (*r).s3.c0.re*(*s).s3.c0.im+(*r).s3.c0.im*(*s).s3.c0.re-
       (*r).s3.c1.re*(*s).s3.c1.im+(*r).s3.c1.im*(*s).s3.c1.re-
       (*r).s3.c2.re*(*s).s3.c2.im+(*r).s3.c2.im*(*s).s3.c2.re;
-    
+
     tr=ds+kc;
     ts=tr+ks;
     tt=ts-ks;
@@ -336,7 +336,7 @@ double block_two_norm(spinor * const R, const int N) {
 #endif  
   for (ix = 0; ix < N; ix++){
     r=(spinor *) R + ix;
-    
+
     ds=(*r).s0.c0.re*(*r).s0.c0.re+(*r).s0.c0.im*(*r).s0.c0.im+
        (*r).s0.c1.re*(*r).s0.c1.re+(*r).s0.c1.im*(*r).s0.c1.im+
        (*r).s0.c2.re*(*r).s0.c2.re+(*r).s0.c2.im*(*r).s0.c2.im+
@@ -350,7 +350,7 @@ double block_two_norm(spinor * const R, const int N) {
        (*r).s3.c1.re*(*r).s3.c1.re+(*r).s3.c1.im*(*r).s3.c1.im+
        (*r).s3.c2.re*(*r).s3.c2.re+(*r).s3.c2.im*(*r).s3.c2.im;
 
-    /* Kahan Summation */    
+    /* Kahan Summation */
     tr=ds+kc;
     ts=tr+ks;
     tt=ts-ks;
@@ -388,7 +388,7 @@ void surface_D_apply_contract(block *parent, int surface, spinor* offset, int st
   complex * aggregate;
   complex result;
   static spinor tmp;
-  void (*boundary_D[8])(spinor * const r, spinor * const s, su3 *u) =
+  static void (*boundary_D[8])(spinor * const r, spinor * const s, su3 *u) =
     {boundary_D_0, boundary_D_1, boundary_D_2, boundary_D_3, boundary_D_4, boundary_D_5, boundary_D_6, boundary_D_7};
 
   aggregate = (complex*)malloc(g_N_s*sizeof(complex));
@@ -408,7 +408,7 @@ void surface_D_apply_contract(block *parent, int surface, spinor* offset, int st
     }
   }
   memcpy(parent->little_dirac_operator + (direction + 1) * (g_N_s * g_N_s) , aggregate, g_N_s * sizeof(complex));
-  /* NOTE Is this the correct location within M eventually? */
+  /* NOTE Is this the correct location within the little Dirac operator representation eventually? */
   free(aggregate);
 }
 
@@ -506,10 +506,10 @@ void block_compute_little_D_offdiagonal(block *parent) {
   /* The following is, obviously, debug code for use with small g_N_s */
   if (g_N_s <= 5){
     printf("\n  *** CHECKING LITTLE D ***\n");
-    for (i = 0; i < g_N_s; ++i){
+    for (i = 0; i < 9 * g_N_s; ++i){
       printf(" [ ");
       for (j = 0; j < g_N_s; ++j){
-        printf(" %f + %f i", parent->little_dirac_operator[i * g_N_s + j].re,  parent->little_dirac_operator[i * g_N_s + j].im);
+        printf(" %2.2E + %2.2f i", parent->little_dirac_operator[i * g_N_s + j].re,  parent->little_dirac_operator[i * g_N_s + j].im);
         if (j != g_N_s){
           printf(", ");
         }
@@ -519,7 +519,7 @@ void block_compute_little_D_offdiagonal(block *parent) {
   }
 }
 
-void block_orthonormalize(block * blk) 
+void block_orthonormalize2(block * blk) 
 {
   int i, j;
   int vol = blk->volume;
@@ -542,37 +542,28 @@ void block_orthonormalize(block * blk)
       }
     }
   }
-  
 
   return;
 }
 
 /* Uses a Modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
-void block_orthonormalize2(block *parent) {
-  int i, j, k;
-  spinor *current, *next, *iter;
-  spinor orig, resbasis;
+void block_orthonormalize(block *parent) {
+  int i, j;
+  spinor *current, *next;
   complex coeff;
-  complex scale;
+  double scale;
 
-  scale.im = 0;
-  for(i = 0; i < parent->ns; ++i){
+  for(i = 0; i < g_N_s; ++i){
     /* rescale the current vector */
     current = parent->basis[i];
-    scale.re = 1. / sqrt(block_two_norm(current, parent->volume));
-    for(iter = current; iter < current + parent->volume; ++iter){
-      orig = *iter; /* we can't alias */
-      _spinor_mul_complex(*iter, scale, orig);
-    }
+    scale = 1. / sqrt(block_two_norm(current, parent->volume));
+    mul_r(current, scale, current, parent->volume);
+
     /* rescaling done, now subtract this direction from all vectors that follow */
-    for(j = i + 1; j < parent->ns; ++j){
+    for(j = i + 1; j < g_N_s; ++j){
       next = parent->basis[j];
       coeff = block_scalar_prod(current, next, parent->volume);
-      for(k = 0; k < parent->volume; ++k){
-        _spinor_mul_complex(resbasis, coeff, *(current + k));
-        orig = *(next + k);
-        diff(next + k, &orig, &resbasis, 1); /* NOTE We could also subtract the complete spinors from each other */
-      }
+      assign_diff_mul(next, current, coeff, parent->volume);
     }
   }
   return;
@@ -580,13 +571,13 @@ void block_orthonormalize2(block *parent) {
 
 /* what happens if this routine is called in a one dimensional parallelisation? */
 /* or even serially ?                                                           */
-/* it shouldn't be */
 void blocks_exchange_edges() {
   int bl_cnt, vec_cnt, div_cnt;
   int div_size = LZ / 2;
   spinor *scratch, *offset_up, *offset_dn;
 
   int offsets[8];  int surfaces[4];
+
   offsets[0] = VOLUME;
   offsets[1] = (T + 2) * LX * LY * LZ;
   offsets[2] = VOLUME + 2 * LZ * (LX * LY + T * LY);
