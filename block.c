@@ -71,6 +71,15 @@ int init_blocks() {
     block_list[i].T = T;
     block_list[i].ns = g_N_s;
     block_list[i].spinpad = spinpad;
+    for (j = 0 ; j < 6; ++j) {
+      #ifdef MPI
+        block_list[i].mpilocal_neighbour[j] = -1;
+      #else
+        block_list[i].mpilocal_neighbour[j] = i;
+      #endif
+    }
+    block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : -1);
+    block_list[i].mpilocal_neighbour[7] = i - 1;
     memcpy(block_list[i].mpilocal_coordinate, g_proc_coords, 4*sizeof(int));
     memcpy(block_list[i].coordinate, g_proc_coords, 3*sizeof(int));
     block_list[i].coordinate[3] = 2 * g_proc_coords[3] + i;

@@ -259,7 +259,7 @@ int main(int argc,char *argv[]) {
       /* something like init_dfl_solver called somewhere else  */
       /* create set of approximate lowest eigenvectors ("global deflation subspace") */
 
-      init_dfl_subspace();
+      init_dfl_subspace(g_N_s);
       generate_dfl_subspace(g_N_s, VOLUME);
 
       for (nsiter = 0; nsiter < g_N_s; ++nsiter) { 
