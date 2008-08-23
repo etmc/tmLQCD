@@ -172,13 +172,15 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     else if(solver_flag == DFLGCR || solver_flag == DFLFGMRES) {
       if(g_proc_id == 0) {printf("# Using deflated solver! m = %d\n", gmres_m_parameter); fflush(stdout);}
       /* apply P_L to source           */
-      project_left(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+      project_left(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI]);
       if(g_proc_id == 0) printf("Applied P_L to source\n");
       /* invert P_L D on source -> chi */
-      iter = gcr(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &project_left_D);
+      iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &project_left_D);
       /* apply P_R to chi              */
-      project_right(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+      project_right(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1]);
       /* reconstruct solution          */
+      project(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+      add(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME);
     }
     else {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
