@@ -104,6 +104,7 @@ int main(int argc,char *argv[]) {
 
   verbose = 0;
   g_use_clover_flag = 0;
+  g_dflgcr_flag = 1;
 
 #ifdef MPI
   MPI_Init(&argc, &argv);
@@ -140,6 +141,7 @@ int main(int argc,char *argv[]) {
   if(Nsave == 0){
     Nsave = 1;
   }
+
   mpi_init(argc, argv);
 
   g_dbw2rand = 0;
@@ -249,9 +251,7 @@ int main(int argc,char *argv[]) {
       return(0);
     }
 
-
     if(g_dflgcr_flag == 1) {
-
       /* set up deflation blocks */
       init_blocks();
 
@@ -271,17 +271,11 @@ int main(int argc,char *argv[]) {
       block_orthonormalize(block_list);
       block_orthonormalize(block_list+1);
 
-      /* Exchange edges of local spinor basis */
-#ifdef MPI
-      blocks_exchange_edges();
-#endif
-      
       /* Compute little Dirac operators */
       block_compute_little_D_diagonal(block_list);
       block_compute_little_D_diagonal(block_list + 1);
-      
-      block_compute_little_D_offdiagonal(block_list);
-      block_compute_little_D_offdiagonal(block_list + 1);
+
+      block_compute_little_D_offdiagonal();
       a1 = calloc(2*9*g_N_s, sizeof(complex));
       a2 = calloc(2*9*g_N_s, sizeof(complex));
       a1[0].re = 1.;

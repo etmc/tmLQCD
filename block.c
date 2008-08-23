@@ -121,18 +121,6 @@ int init_blocks() {
       _spinor_null(block_list[i].basis[j][VOLUME/2]);
     }
 
-    if ((void*)(block_list[i].neighbour_edges = calloc(8, sizeof(spinor *))) == NULL)
-      CALLOC_ERROR_CRASH;
-
-    block_list[i].neighbour_edges[0] = edges + i*(VOLUME/T + VOLUME/LX + VOLUME/LY + 2*VOLUME/LZ);
-    block_list[i].neighbour_edges[1] = block_list[i].neighbour_edges[0] + VOLUME / (2 * T);
-    block_list[i].neighbour_edges[2] = block_list[i].neighbour_edges[1] + VOLUME / (2 * T);
-    block_list[i].neighbour_edges[3] = block_list[i].neighbour_edges[2] + VOLUME / (2 * LX);
-    block_list[i].neighbour_edges[4] = block_list[i].neighbour_edges[3] + VOLUME / (2 * LX);
-    block_list[i].neighbour_edges[5] = block_list[i].neighbour_edges[4] + VOLUME / (2 * LY);
-    block_list[i].neighbour_edges[6] = block_list[i].neighbour_edges[5] + VOLUME / (2 * LY);
-    block_list[i].neighbour_edges[7] = block_list[i].neighbour_edges[6] + VOLUME / (LZ);
-
     if ((void*)(block_list[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(complex))) == NULL)
       CALLOC_ERROR_CRASH;
   }
@@ -147,7 +135,6 @@ int free_blocks() {
   if(block_init == 1) {
     for(i = 0; i < 2; ++i) {
       free(block_list[i].basis);
-      free(block_list[i].neighbour_edges);
       free(block_list[i].little_dirac_operator);
     }
     free(block_ipt);
@@ -436,142 +423,6 @@ void block_compute_little_D_diagonal(block *parent) {
 /*   free(tmp); */
 }
 
-void surface_D_apply_contract(block *parent, int surface, spinor* offset, int stride, 
-                              int step_size, su3 *gauge_start, int direction){
-  int i, j, k;
-  complex *iter;
-  complex * aggregate;
-  complex result;
-  static spinor tmp;
-
-  aggregate = (complex*)malloc(g_N_s*sizeof(complex));
-  for (iter = aggregate; iter != aggregate + g_N_s; ++iter){
-    iter->re = 0;
-    iter->im = 0;
-  }
-
-  for(i = 0; i < (surface / step_size); ++i){
-    for(j = 0; j < step_size; ++j){
-      boundary_D[direction](&tmp, offset + i * stride + j, gauge_start + 8 * (i * stride + j) + direction);
-      for(k = 0; k < g_N_s; ++k){
-        result = block_scalar_prod(&(parent->neighbour_edges[direction][i * step_size + j + k * surface]), &tmp, 1);
-        aggregate[k].re += result.re;
-        aggregate[k].im += result.im;
-      }
-    }
-  }
-  memcpy(parent->little_dirac_operator + (direction + 1) * (g_N_s * g_N_s) , aggregate, g_N_s * sizeof(complex));
-  /* NOTE Is this the correct location within the little Dirac operator representation eventually? */
-  free(aggregate);
-}
-
-/* what happens if this routine is called in a one dimensional parallelisation? */
-/* or even serially ?                                                           */
-void block_compute_little_D_offdiagonal(block *parent) {
-/*   Here we need to multiply the boundary with the corresponding  */
-/*   U and gamma_i and take the scalar product then */
-  int vec_ctr, surface;
-  spinor *offset;
-  int stride, step_size;
-  su3 *gauge_start;
-  int i, j; /* DEBUG */
-
-  /* +T direction (+0) */
-  for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    surface   = LX * LY * LZ / 2; /* Corrected for snipped Z direction */
-    stride    = surface;
-    step_size = surface;
-
-    offset = parent->basis[vec_ctr] + (T - 1) * stride;
-    gauge_start = parent->u + 8 * (parent->volume - surface);
-
-    surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 0);
-  }
-
-  /* -T direction (-0) */
-  for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    offset = parent->basis[vec_ctr];
-    gauge_start = parent->u;
-
-    surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 1);
-  }
-
-  /* +X direction (+1) */
-  for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    surface =   LZ * LY * T  / 2;
-    stride =    LZ * LY * LX / 2;
-    step_size = LZ * LY      / 2;
-
-    offset = parent->basis[vec_ctr] + (LX - 1) * stride;
-    gauge_start = parent->u + (LX - 1) * stride;  /* Pick up -X gauge throughout */
-
-    surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 2);
-  }
-
-  /* -X direction (-1) */
-  for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    offset = parent->basis[vec_ctr];
-    gauge_start = parent->u;
-
-    surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 3);
-  }
-
-  /* +Y direction (+2) */
-  for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    surface =   LZ * LX * T / 2;
-    stride =    LZ * LY     / 2;
-    step_size = LZ          / 2;
-
-    offset = parent->basis[vec_ctr] + (LY - 1) * stride;
-    gauge_start = parent->u + (LY - 1) * stride;
-
-    surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 4);
-  }
-
-  /* -Y direction (-2) */
-  for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    offset = parent->basis[vec_ctr];
-    gauge_start = parent->u;
-
-    surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 5);
-  }
-
-  /* +Z direction (+3) */
-  for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    surface =   LY * LX * T   ;
-    stride =    LZ         / 2;
-    step_size = 1             ;
-
-    offset = parent->basis[vec_ctr] + (LZ - 1) * stride;
-    gauge_start = parent->u + (LZ - 1) * stride;
-
-    surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 6);
-  }
-
-  /* -Z direction (-3) */
-  for(vec_ctr = 0; vec_ctr < g_N_s; ++vec_ctr){
-    offset = parent->basis[vec_ctr];
-    gauge_start = parent->u;
-
-    surface_D_apply_contract(parent, surface, offset, stride, step_size, gauge_start, 7);
-  }
-
-  /* The following is, obviously, debug code for use with small g_N_s */
-  if (g_N_s <= 5 && !g_proc_id){
-    printf("\n  *** CHECKING LITTLE D ***\n");
-    for (i = 0; i < 9 * g_N_s; ++i){
-      printf(" [ ");
-      for (j = 0; j < g_N_s; ++j){
-	printf(" %2.2E + %2.2f i", parent->little_dirac_operator[i * g_N_s + j].re,  parent->little_dirac_operator[i * g_N_s + j].im);
-	if (j != g_N_s){
-	  printf(", ");
-	}
-      }
-      printf(" ]\n\n");
-    }
-  }
-}
-
 /* Uses a Modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
 void block_orthonormalize(block *parent) {
   int i, j;
@@ -604,14 +455,11 @@ void block_orthonormalize(block *parent) {
 
 /* what happens if this routine is called in a one dimensional parallelisation? */
 /* or even serially ?                                                           */
-void blocks_exchange_edges() {
-  int bl_cnt, vec_cnt, div_cnt;
-  int div_size = LZ / 2;
+void block_compute_little_D_offdiagonal(){
   spinor *scratch, * temp;
-  spinor *r, *s, *v;
+  spinor *r, *s;
   su3 * u;
   int x, y, z, t, ix, iy, i, j, k, pm, mu;
-  complex c[2];
 
   /* for a full spinor field we need VOLUMEPLUSRAND                 */
   /* because we use the same geometry as for the                    */
@@ -631,7 +479,7 @@ void blocks_exchange_edges() {
       if(pm == 0) t = T-1;
       else t = 0;
       mu = 0;
-      
+
       r = temp;
       for(x = 0; x < LX; x++) {
 	for(y = 0; y < LY; y++) {
@@ -675,13 +523,13 @@ void blocks_exchange_edges() {
       if(pm == 2) x = LX-1;
       else x = 0;
       mu = 1;
-      
+
       r = temp;
       for(t = 0; t < t; t++) {
 	for(y = 0; y < LY; y++) {
 	  for(z = 0; z < LZ; z++) {
 	    ix = g_ipt[t][x][y][z];
-	    if(pm == 0) {
+	    if(pm == 2) {
 	      s = &scratch[ g_iup[ ix ][mu] ];
 	      u = &g_gauge_field[ ix ][mu];
 	    }
@@ -719,13 +567,13 @@ void blocks_exchange_edges() {
       if(pm == 4) y = LY-1;
       else y = 0;
       mu = 2;
-      
+
       r = temp;
       for(t = 0; t < t; t++) {
 	for(x = 0; x < LX; x++) {
 	  for(z = 0; z < LZ; z++) {
 	    ix = g_ipt[t][x][y][z];
-	    if(pm == 0) {
+	    if(pm == 4) {
 	      s = &scratch[ g_iup[ ix ][mu] ];
 	      u = &g_gauge_field[ ix ][mu];
 	    }
@@ -757,12 +605,136 @@ void blocks_exchange_edges() {
 	}
       }
     }
+
     /* z is different */
-    
+    /* +-z */
+    for(pm = 6; pm < 8; pm++) {
+      z = (pm == 6) ? LZ - 1 : 0;
+      mu = 3;
+
+      r = temp;
+      for(t = 0; t < t; ++t) {
+        for(x = 0; x < LX; ++x) {
+          for(y = 0; y < LY; ++y) {
+            ix = g_ipt[t][x][y][z];
+            if(pm == 6) {
+              s = &scratch[ g_iup[ ix ][mu] ];
+              u = &g_gauge_field[ ix ][mu];
+            }
+            else {
+              s = &scratch[ g_idn[ ix ][mu] ];
+              u = &g_gauge_field[ g_idn[ix][mu] ][mu];
+            }
+            boundary_D[pm](r, s, u);
+            r++;
+          }
+        }
+      }
+      r = temp;
+      /* now for all the MPI scalar products (outer edges) */
+      for(j = 0; j < g_N_s; ++j) {
+        for(t = 0; t < T; ++t) {
+          for(x = 0; x < LX; ++x) {
+            for(y = 0; y < LY; ++y){
+              iy = j + i * g_N_s + (pm + 1) * g_N_s * g_N_s;
+              _complex_zero(block_list[(pm + 1) % 2].little_dirac_operator[ iy ]);
+              ix = block_ipt[t][x][y][z];
+              s = &block_list[(pm + 1) % 2].basis[j][ ix ];
+              _add_complex(block_list[(pm + 1) % 2].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
+              r++;
+            }
+          }
+        }
+      }
+    }
+
+    /* and finally the residual inner edges - new D calculations needed here */
+    /* this is confusing enough as is, so I unrolled the pm loop for this part */
+    z =  LZ / 2 - 1; /* pm = 6 */
+    r = temp;
+    for(t = 0; t < t; ++t) {
+      for(x = 0; x < LX; ++x) {
+        for(y = 0; y < LY; ++y) {
+          ix = g_ipt[t][x][y][z];
+          iy = block_ipt[t][x][y][z]; /* highest edge of low block needed */
+          s = &block_list[ 0 ].basis[ i ][ iy ];
+          u = &g_gauge_field[ ix ][mu];
+          boundary_D[6](r, s, u);
+          r++;
+        }
+      }
+    }
+    r = temp;
+
+    /* Now contract with the lowest edge of the high block and store */
+    for(j = 0; j < g_N_s; ++j) {
+      for(t = 0; t < T; ++t) {
+        for(x = 0; x < LX; ++x) {
+          for(y = 0; y < LY; ++y){
+            iy = j + i * g_N_s + (6 + 1) * g_N_s * g_N_s;
+            _complex_zero(block_list[1].little_dirac_operator[ iy ]);
+            ix = block_ipt[t][x][y][0];
+            s = &block_list[1].basis[j][ ix ];
+            _add_complex(block_list[1].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
+            r++;
+          }
+        }
+      }
+    }
+
+    z =  LZ / 2; /* pm = 7 */
+    r = temp;
+    for(t = 0; t < t; ++t) {
+      for(x = 0; x < LX; ++x) {
+        for(y = 0; y < LY; ++y) {
+          ix = g_ipt[t][x][y][z];
+          iy = block_ipt[t][x][y][0];  /* lowest edge of high block needed */
+          s = &block_list[1].basis[ i ][ iy ];
+          u = &g_gauge_field[ g_idn[ ix ][ mu ] ][mu];
+          boundary_D[7](r, s, u);
+          r++;
+        }
+      }
+    }
+    r = temp;
+
+    /* Now contract with the highest edge of the low block and store */
+    for(j = 0; j < g_N_s; ++j) {
+      for(t = 0; t < T; ++t) {
+        for(x = 0; x < LX; ++x) {
+          for(y = 0; y < LY; ++y){
+            iy = j + i * g_N_s + (7 + 1) * g_N_s * g_N_s;
+            _complex_zero(block_list[0].little_dirac_operator[ iy ]);
+            ix = block_ipt[t][x][y][z - 1]; /* z - 1 = LZ / 2 - 1 */
+            s = &block_list[0].basis[j][ ix ];
+            _add_complex(block_list[0].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
+            r++;
+          }
+        }
+      }
+    }
   }
 
   free(scratch);
   free(temp);
+
+  if(g_debug_level > 4) {
+    if (g_N_s <= 5 && !g_cart_id){
+      printf("\n  *** CHECKING LITTLE D ***\n");
+      printf("\n  ** node 0, lower block **\n");
+      for (i = 0; i < 9 * g_N_s; ++i){
+        printf(" [ ");
+        for (j = 0; j < g_N_s; ++j){
+          printf(" %2.2E + %2.2f i", block_list->little_dirac_operator[i * g_N_s + j].re,  block_list->little_dirac_operator[i * g_N_s + j].im);
+          if (j != g_N_s){
+            printf(", ");
+          }
+        }
+        printf(" ]\n\n");
+      }
+    }
+  }
+
   return;
 }
 

@@ -17,7 +17,6 @@ typedef struct {
   int mpilocal_neighbour[8];    /* contains the block id of mpilocal neighbours, or -1 if non-mpilocal */
   int *idx;                     /* provides the next neighbours for spinors on the block */
   spinor **basis;                /* generated orthonormal basis for little D [Ns x local_volume] */
-  spinor **neighbour_edges;     /* boundary terms of the basis of the neighbours [8 x Ns x surface_term] */
   su3 * u;                      /* block local gauge field, for use in D */
   int spinpad;                  /* number of elements needed to store the boundaries of the spinor */
 
@@ -34,10 +33,9 @@ int free_blocks();
 int add_basis_field(int const index, spinor const *field);
 
 void block_orthonormalize(block *parent);
-void blocks_exchange_edges();
 void block_reconstruct_global_field(const int index, spinor * const reconstructed_field);
 
-void block_compute_little_D_offdiagonal(block *parent);
+void blocks_compute_little_D_offdiagonal();
 void block_compute_little_D_diagonal(block *parent);
 
 complex block_scalar_prod(spinor * const R, spinor * const S, const int N);
