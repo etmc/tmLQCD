@@ -643,7 +643,7 @@ void blocks_exchange_edges() {
 	    }
 	    else {
 	      s = &scratch[ g_idn[ ix ][mu] ];
-	      u = &g_gauge_field[ g_idn[ix] ][mu];
+	      u = &g_gauge_field[ g_idn[ix][mu] ][mu];
 	    }
 	    boundary_D[pm](r, s, u);
 	    r++;
@@ -687,7 +687,7 @@ void blocks_exchange_edges() {
 	    }
 	    else {
 	      s = &scratch[ g_idn[ ix ][mu] ];
-	      u = &g_gauge_field[ g_idn[ix] ][mu];
+	      u = &g_gauge_field[ g_idn[ix][mu] ][mu];
 	    }
 	    boundary_D[pm](r, s, u);
 	    r++;
@@ -731,7 +731,7 @@ void blocks_exchange_edges() {
 	    }
 	    else {
 	      s = &scratch[ g_idn[ ix ][mu] ];
-	      u = &g_gauge_field[ g_idn[ix] ][mu];
+	      u = &g_gauge_field[ g_idn[ix][mu] ][mu];
 	    }
 	    boundary_D[pm](r, s, u);
 	    r++;
