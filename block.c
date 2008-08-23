@@ -73,13 +73,18 @@ int init_blocks() {
     block_list[i].spinpad = spinpad;
     for (j = 0 ; j < 6; ++j) {
       #ifdef MPI
-        block_list[i].mpilocal_neighbour[j] = -1;
+        block_list[i].mpilocal_neighbour[j] = (g_nb_list[j] == g_cart_id) ? i : -1;
       #else
         block_list[i].mpilocal_neighbour[j] = i;
       #endif
     }
-    block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : -1);
-    block_list[i].mpilocal_neighbour[7] = i - 1;
+#ifdef MPI
+    block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : (g_nb_list[j] == g_cart_id) ? 0 : -1);
+    block_list[i].mpilocal_neighbour[7] = (i == 1 ? 0 : (g_nb_list[j] == g_cart_id) ? 1 : -1);
+#else
+    block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : 0);
+    block_list[i].mpilocal_neighbour[7] = (i == 0 ? 1 : 0);
+#endif
     memcpy(block_list[i].mpilocal_coordinate, g_proc_coords, 4*sizeof(int));
     memcpy(block_list[i].coordinate, g_proc_coords, 3*sizeof(int));
     block_list[i].coordinate[3] = 2 * g_proc_coords[3] + i;
