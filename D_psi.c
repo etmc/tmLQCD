@@ -931,8 +931,9 @@ void D_psi(spinor * const P, spinor * const Q){
 void local_D(spinor * const rr, spinor * const s, 
 	     su3 * restrict u, int * idx);
 
-/* apply the Dirac operator to the block local spinor field l */
-/* and store the result in block local spinor field k         */
+/* apply the Dirac operator to the block local spinor field s */
+/* and store the result in block local spinor field rr        */
+/* for block blk                                              */
 /* the block local gauge field is assumed to be in the order  */
 /* that is needed int local_D, which means also that it is a  */
 /* double copy                                                */

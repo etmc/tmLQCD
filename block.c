@@ -172,33 +172,36 @@ int init_blocks_gaugefield() {
   now +t,-t,+x,-x,+y,-y,+z,-z gauge links are stored. This requires double the storage in
   memory. */
 
-  int x, y, z, t, ix, ix_new;
+  int x, y, z, t, ix;
+  su3 *u0, *u1;
+  u0 = block_list[0].u;
+  u1 = block_list[1].u;
   for (t = 0; t < T; ++t) {
     for (x = 0; x < LX; ++x) {
       for (y = 0; y < LY; ++y) {
         for (z = 0; z < LZ/2; ++z) {
           ix = g_ipt[t][x][y][z];
-          ix_new = 8 * (z + y * LZ/2 + x * LY * LZ/2 + t * LX * LY * LZ/2); /*su3 index on this block*/
-          memcpy(block_list[0].u + ix_new, *g_gauge_field + g_iup[ix][0], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 1, *g_gauge_field + g_idn[ix][0], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 2, *g_gauge_field + g_iup[ix][1], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 3, *g_gauge_field + g_idn[ix][1], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 4, *g_gauge_field + g_iup[ix][2], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 5, *g_gauge_field + g_idn[ix][2], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 6, *g_gauge_field + g_iup[ix][3], sizeof(su3));
-          memcpy(block_list[0].u + ix_new + 7, *g_gauge_field + g_idn[ix][3], sizeof(su3));
+          memcpy(u0    , &g_gauge_field[ g_iup[ix][0] ][0], sizeof(su3));
+          memcpy(u0 + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
+          memcpy(u0 + 2, &g_gauge_field[ g_iup[ix][1] ][1], sizeof(su3));
+          memcpy(u0 + 3, &g_gauge_field[ g_idn[ix][1] ][1], sizeof(su3));
+          memcpy(u0 + 4, &g_gauge_field[ g_iup[ix][2] ][2], sizeof(su3));
+          memcpy(u0 + 5, &g_gauge_field[ g_idn[ix][2] ][2], sizeof(su3));
+          memcpy(u0 + 6, &g_gauge_field[ g_iup[ix][3] ][3], sizeof(su3));
+          memcpy(u0 + 7, &g_gauge_field[ g_idn[ix][3] ][3], sizeof(su3));
+	  u0 += 8;
         }
         for (z = LZ/2; z < LZ; ++z) {
           ix = g_ipt[t][x][y][z];
-          ix_new = 8 * (z - LZ/2 + y * LZ/2 + x * LY * LZ/2 + t * LX * LY * LZ/2); /*su3 index on this block, count anew in the z direction*/
-          memcpy(block_list[1].u + ix_new, *g_gauge_field + g_iup[ix][0], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 1, *g_gauge_field + g_idn[ix][0], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 2, *g_gauge_field + g_iup[ix][1], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 3, *g_gauge_field + g_idn[ix][1], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 4, *g_gauge_field + g_iup[ix][2], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 5, *g_gauge_field + g_idn[ix][2], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 6, *g_gauge_field + g_iup[ix][3], sizeof(su3));
-          memcpy(block_list[1].u + ix_new + 7, *g_gauge_field + g_idn[ix][3], sizeof(su3));
+          memcpy(u1    , &g_gauge_field[ g_iup[ix][0] ][0], sizeof(su3));
+          memcpy(u1 + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
+          memcpy(u1 + 2, &g_gauge_field[ g_iup[ix][1] ][1], sizeof(su3));
+          memcpy(u1 + 3, &g_gauge_field[ g_idn[ix][1] ][1], sizeof(su3));
+          memcpy(u1 + 4, &g_gauge_field[ g_iup[ix][2] ][2], sizeof(su3));
+          memcpy(u1 + 5, &g_gauge_field[ g_idn[ix][2] ][2], sizeof(su3));
+          memcpy(u1 + 6, &g_gauge_field[ g_iup[ix][3] ][3], sizeof(su3));
+          memcpy(u1 + 7, &g_gauge_field[ g_idn[ix][3] ][3], sizeof(su3));
+	  u1 += 8;
         }
       }
     }
@@ -207,7 +210,7 @@ int init_blocks_gaugefield() {
 }
 
 int check_blocks_geometry(block * blk) {
-  int i, k=0;
+  int i, k=0, x, y, z, t;
   int * itest;
   int * ipt;
   
@@ -246,6 +249,90 @@ int check_blocks_geometry(block * blk) {
 	    k, 8*blk->volume);
     }
   }
+
+  ipt = blk->idx;
+  for(t = 0; t < T; t++) {
+    for(x = 0; x < LX; x++) {
+      for(y = 0; y < LY; y++) {
+	for(z = 0; z < LZ/2; z++) {
+	  i = block_ipt[t][x][y][z];
+	  if(t != T-1) {
+	    if(*ipt != block_ipt[t+1][x][y][z] && g_proc_id == 0) 
+	      printf("Shit +t! %d %d %d %d %d != %d at %d\n", 
+		     t, x, y, z, *ipt, block_ipt[t+1][x][y][z], i);
+	  }
+	  else if(*ipt != VOLUME/2)
+	    printf("Shit +t! %d %d %d %d %d != %d at %d\n", 
+		   t, x, y, z, *ipt, VOLUME/2, i);
+	  ipt++;
+	  if(t != 0) {
+	    if(*ipt != block_ipt[t-1][x][y][z] && g_proc_id == 0) 
+	      printf("Shit -t! %d %d %d %d %d != %d at %d\n", 
+		     t, x, y, z, *ipt, block_ipt[t+1][x][y][z], i);
+	  }
+	  else if(*ipt != VOLUME/2)
+	    printf("Shit -t! %d %d %d %d %d != %d at %d\n", 
+		   t, x, y, z, *ipt, VOLUME/2, i);
+	  ipt++;
+	  if(x != LX-1) {
+	    if(*ipt != block_ipt[t][x+1][y][z] && g_proc_id == 0) 
+	      printf("Shit +x! %d %d %d %d %d != %d at %d\n", 
+		     t, x, y, z, *ipt, block_ipt[t][x+1][y][z], i);
+	  }
+	  else if(*ipt != VOLUME/2)
+	    printf("Shit +x! %d %d %d %d %d != %d at %d\n", 
+		   t, x, y, z, *ipt, VOLUME/2, i);
+	  ipt++;
+	  if(x != 0) {
+	    if(*ipt != block_ipt[t][x-1][y][z] && g_proc_id == 0) 
+	      printf("Shit -x! %d %d %d %d %d != %d at %d\n", 
+		     t, x, y, z, *ipt, block_ipt[t][x-1][y][z], i);
+	  }
+	  else if(*ipt != VOLUME/2)
+	    printf("Shit -x! %d %d %d %d %d != %d at %d\n", 
+		   t, x, y, z, *ipt, VOLUME/2, i);
+	  ipt++;
+	  if(y != LY-1) {
+	    if(*ipt != block_ipt[t][x][y+1][z] && g_proc_id == 0) 
+	      printf("Shit +y! %d %d %d %d %d != %d at %d\n", 
+		     t, x, y, z, *ipt, block_ipt[t][x][y+1][z], i);
+	  }
+	  else if(*ipt != VOLUME/2)
+	    printf("Shit +y! %d %d %d %d %d != %d at %d\n", 
+		   t, x, y, z, *ipt, VOLUME/2, i);
+	  ipt++;
+	  if(y != 0) {
+	    if(*ipt != block_ipt[t][x][y-1][z] && g_proc_id == 0) 
+	      printf("Shit -y! %d %d %d %d %d != %d at %d\n", 
+		     t, x, y, z, *ipt, block_ipt[t][x][y-1][z], i);
+	  }
+	  else if(*ipt != VOLUME/2)
+	    printf("Shit -y! %d %d %d %d %d != %d at %d\n", 
+		   t, x, y, z, *ipt, VOLUME/2, i);
+	  ipt++;
+	  if(z != LZ/2-1) {
+	    if(*ipt != block_ipt[t][x][y][z+1] && g_proc_id == 0) 
+	      printf("Shit +z! %d %d %d %d %d != %d at %d\n", 
+		     t, x, y, z, *ipt, block_ipt[t][x][y][z+1], i);
+	  }
+	  else if(*ipt != VOLUME/2)
+	    printf("Shit +z! %d %d %d %d %d != %d at %d\n", 
+		   t, x, y, z, *ipt, VOLUME/2, i);
+	  ipt++;
+	  if(z != 0) {
+	    if(*ipt != block_ipt[t][x][y][z-1] && g_proc_id == 0) 
+	      printf("Shit -z! %d %d %d %d %d != %d at %d\n", 
+		     t, x, y, z, *ipt, block_ipt[t][x][y][z-1], i);
+	  }
+	  else if(*ipt != VOLUME/2)
+	    printf("Shit -z! %d %d %d %d %d != %d at %d\n", 
+		   t, x, y, z, *ipt, VOLUME/2, i);
+	  ipt++;
+	}
+      }
+    }
+  }
+
   free(itest);
   if(g_proc_id == 0) {
     printf("# block geometry checked successfully for block %d !\n", blk->id);
@@ -271,9 +358,6 @@ int init_blocks_geometry() {
     block_list[0].idx[8 * ix + 7] = (ix % ystride == 0                ? boundidx : ix - zstride);/* -z */
   }
   memcpy(block_list[1].idx, block_list[0].idx, 8 * VOLUME/2 * sizeof(int));
-  for(ix = 0; ix < 2; ix++) {
-    zstride = check_blocks_geometry(&block_list[ix]);
-  }
   ix = 0;
   for(t = 0; t < T; t++) {
     for(x = 0; x < LX; x++) {
@@ -284,6 +368,9 @@ int init_blocks_geometry() {
 	}
       }
     }
+  }
+  for(ix = 0; ix < 2; ix++) {
+    zstride = check_blocks_geometry(&block_list[ix]);
   }
 
   return 0;
@@ -456,7 +543,7 @@ void block_orthonormalize(block *parent) {
 /* what happens if this routine is called in a one dimensional parallelisation? */
 /* or even serially ?                                                           */
 void block_compute_little_D_offdiagonal(){
-  spinor *scratch, * temp;
+  spinor *scratch, * temp, *_scratch;
   spinor *r, *s;
   su3 * u;
   int x, y, z, t, ix, iy, i, j, k, pm, mu;
@@ -465,8 +552,14 @@ void block_compute_little_D_offdiagonal(){
   /* because we use the same geometry as for the                    */
   /* gauge field                                                    */
   /* It is VOLUME + 2*LZ*(LY*LX + T*LY + T*LX) + 4*LZ*(LY + T + LX) */
-  scratch = calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  temp =  calloc(VOLUMEPLUSRAND - VOLUME, sizeof(spinor));
+  _scratch = calloc(2*VOLUMEPLUSRAND+1, sizeof(spinor));
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  scratch = (spinor*)(((unsigned long int)(_scratch)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  scratch = _scratch;
+#endif
+  temp = scratch + VOLUMEPLUSRAND;
+
   for (i = 0; i < g_N_s; i++){
     block_reconstruct_global_field(i, scratch);
 
@@ -475,10 +568,10 @@ void block_compute_little_D_offdiagonal(){
 #endif
 
     /* +- t */
+    mu = 0;
     for(pm = 0; pm < 2; pm++) {
       if(pm == 0) t = T-1;
       else t = 0;
-      mu = 0;
 
       r = temp;
       for(x = 0; x < LX; x++) {
@@ -520,13 +613,13 @@ void block_compute_little_D_offdiagonal(){
     }
 
     /* +- x */
+    mu = 1;
     for(pm = 2; pm < 4; pm++) {
       if(pm == 2) x = LX-1;
       else x = 0;
-      mu = 1;
 
       r = temp;
-      for(t = 0; t < t; t++) {
+      for(t = 0; t < T; t++) {
 	for(y = 0; y < LY; y++) {
 	  for(z = 0; z < LZ; z++) {
 	    ix = g_ipt[t][x][y][z];
@@ -565,13 +658,13 @@ void block_compute_little_D_offdiagonal(){
     }
 
     /* +- y */
+    mu = 2;
     for(pm = 4; pm < 6; pm++) {
       if(pm == 4) y = LY-1;
       else y = 0;
-      mu = 2;
 
       r = temp;
-      for(t = 0; t < t; t++) {
+      for(t = 0; t < T; t++) {
 	for(x = 0; x < LX; x++) {
 	  for(z = 0; z < LZ; z++) {
 	    ix = g_ipt[t][x][y][z];
@@ -611,12 +704,12 @@ void block_compute_little_D_offdiagonal(){
 
     /* z is different */
     /* +-z */
+    mu = 3;
     for(pm = 6; pm < 8; pm++) {
-      z = (pm == 6) ? LZ - 1 : 0;
-      mu = 3;
+      z = (pm == 6) ? LZ - 1 : 0 ;
 
       r = temp;
-      for(t = 0; t < t; ++t) {
+      for(t = 0; t < T; ++t) {
         for(x = 0; x < LX; ++x) {
           for(y = 0; y < LY; ++y) {
             ix = g_ipt[t][x][y][z];
@@ -656,7 +749,7 @@ void block_compute_little_D_offdiagonal(){
     /* this is confusing enough as is, so I unrolled the pm loop for this part */
     z =  LZ / 2 - 1; /* pm = 6 */
     r = temp;
-    for(t = 0; t < t; ++t) {
+    for(t = 0; t < T; ++t) {
       for(x = 0; x < LX; ++x) {
         for(y = 0; y < LY; ++y) {
           ix = g_ipt[t][x][y][z];
@@ -688,7 +781,7 @@ void block_compute_little_D_offdiagonal(){
 
     z =  LZ / 2; /* pm = 7 */
     r = temp;
-    for(t = 0; t < t; ++t) {
+    for(t = 0; t < T; ++t) {
       for(x = 0; x < LX; ++x) {
         for(y = 0; y < LY; ++y) {
           ix = g_ipt[t][x][y][z];
@@ -719,10 +812,9 @@ void block_compute_little_D_offdiagonal(){
     }
   }
 
-  free(scratch);
-  free(temp);
+  free(_scratch);
 
-  if(g_debug_level > 4) {
+  if(g_debug_level > -1) {
     if (g_N_s <= 5 && !g_cart_id){
       printf("\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");

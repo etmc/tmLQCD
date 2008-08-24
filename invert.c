@@ -262,7 +262,7 @@ int main(int argc,char *argv[]) {
       init_dfl_subspace(g_N_s);
       generate_dfl_subspace(g_N_s, VOLUME);
 
-      for (nsiter = 0; nsiter < g_N_s; ++nsiter) { 
+      for (nsiter = 0; nsiter < g_N_s; nsiter++) { 
         /* add it to the basis */
 	add_basis_field(nsiter, dfl_fields[nsiter]);
       }
@@ -279,7 +279,7 @@ int main(int argc,char *argv[]) {
       a1 = calloc(2*9*g_N_s, sizeof(complex));
       a2 = calloc(2*9*g_N_s, sizeof(complex));
       a1[0].re = 1.;
-      lgcr(a2, a1, 10, 100, 1.e-15, 1, 2*g_N_s, 2*9*g_N_s, &little_D);
+      lgcr(a2, a1, 10, 5, 1.e-15, 1, 2*g_N_s, 2*9*g_N_s, &little_D);
       free(a1);
       free(a2);
       /* TODO Generate projectors */
@@ -362,8 +362,10 @@ int main(int argc,char *argv[]) {
 		err = read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 2*ix);
 	      }
 	    }
-	    mul_r(g_spinor_field[3], 1./(2*g_kappa), g_spinor_field[3], VOLUME/2);
-	    mul_r(g_spinor_field[2], 1./(2*g_kappa), g_spinor_field[2], VOLUME/2);
+	    if(g_kappa != 0.) {
+	      mul_r(g_spinor_field[3], 1./(2*g_kappa), g_spinor_field[3], VOLUME/2);
+	      mul_r(g_spinor_field[2], 1./(2*g_kappa), g_spinor_field[2], VOLUME/2);
+	    }
 	  }
 	  else {
 	    /* trying cmi format */
@@ -390,9 +392,9 @@ int main(int argc,char *argv[]) {
 #else
       atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-      iter = invert_eo(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1], 
-		       solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag,
-		       sub_evs_cg_flag, even_odd_flag);
+       iter = invert_eo(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1],  
+ 		       solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag, 
+ 		       sub_evs_cg_flag, even_odd_flag); 
 #ifdef MPI
       etime = MPI_Wtime();
 #else
@@ -401,7 +403,7 @@ int main(int argc,char *argv[]) {
 
       /* To write in standard format */
       /* we have to mult. by 2*kappa */
-      if(write_prop_format_flag != 11) {
+      if(write_prop_format_flag != 11 && g_kappa != 0.) {
 	mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME/2);
 	mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[3], VOLUME/2);
       }
@@ -426,22 +428,30 @@ int main(int argc,char *argv[]) {
 	  }
 	}
       }
+#ifdef MPI
+      ratime = MPI_Wtime();
+#else
+      ratime = (double)clock()/(double)(CLOCKS_PER_SEC);
+#endif
       write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, 
 		       prop_precision_flag, write_prop_format_flag);
-
+      
 #ifdef MPI
-	retime = MPI_Wtime();
-	if(g_proc_id == 0) {
-	  printf("time for writing prop was %e seconds\n", retime-ratime);
-	}
+      retime = MPI_Wtime();
+#else
+      retime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-
+      if(g_proc_id == 0) {
+	printf("time for writing prop was %e seconds\n", retime-ratime);
+      }
       /* Check the result */
       M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[2], g_spinor_field[3]); 
 
       if(write_prop_format_flag != 11) {
-	mul_r(g_spinor_field[4], 1./(2*g_kappa), g_spinor_field[4], VOLUME/2);  
-	mul_r(g_spinor_field[5], 1./(2*g_kappa), g_spinor_field[5], VOLUME/2); 
+	if(g_kappa != 0.) {
+	  mul_r(g_spinor_field[4], 1./(2*g_kappa), g_spinor_field[4], VOLUME/2);  
+	  mul_r(g_spinor_field[5], 1./(2*g_kappa), g_spinor_field[5], VOLUME/2); 
+	}
       }
 
       diff(g_spinor_field[4], g_spinor_field[4], g_spinor_field[0], VOLUME/2); 
