@@ -162,7 +162,6 @@ int add_basis_field(int const index, spinor const *field) {
   if(g_proc_id == 0 && g_debug_level > 4) {
     printf("basis norm = %1.3e\n", block_two_norm(block_list[1].basis[index], block_list[0].volume));
   }
-      
   return 0;
 }
 
@@ -172,36 +171,35 @@ int init_blocks_gaugefield() {
   now +t,-t,+x,-x,+y,-y,+z,-z gauge links are stored. This requires double the storage in
   memory. */
 
-  int x, y, z, t, ix;
+  int x, y, z, t, ix, ix_new;
   su3 *u0, *u1;
   u0 = block_list[0].u;
   u1 = block_list[1].u;
+
   for (t = 0; t < T; ++t) {
     for (x = 0; x < LX; ++x) {
       for (y = 0; y < LY; ++y) {
         for (z = 0; z < LZ/2; ++z) {
+          ix_new = 8 * block_ipt[t][x][y][z]; /* SU3 index on the block */
           ix = g_ipt[t][x][y][z];
-          memcpy(u0    , &g_gauge_field[ g_iup[ix][0] ][0], sizeof(su3));
-          memcpy(u0 + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
-          memcpy(u0 + 2, &g_gauge_field[ g_iup[ix][1] ][1], sizeof(su3));
-          memcpy(u0 + 3, &g_gauge_field[ g_idn[ix][1] ][1], sizeof(su3));
-          memcpy(u0 + 4, &g_gauge_field[ g_iup[ix][2] ][2], sizeof(su3));
-          memcpy(u0 + 5, &g_gauge_field[ g_idn[ix][2] ][2], sizeof(su3));
-          memcpy(u0 + 6, &g_gauge_field[ g_iup[ix][3] ][3], sizeof(su3));
-          memcpy(u0 + 7, &g_gauge_field[ g_idn[ix][3] ][3], sizeof(su3));
-	  u0 += 8;
-        }
-        for (z = LZ/2; z < LZ; ++z) {
-          ix = g_ipt[t][x][y][z];
-          memcpy(u1    , &g_gauge_field[ g_iup[ix][0] ][0], sizeof(su3));
-          memcpy(u1 + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
-          memcpy(u1 + 2, &g_gauge_field[ g_iup[ix][1] ][1], sizeof(su3));
-          memcpy(u1 + 3, &g_gauge_field[ g_idn[ix][1] ][1], sizeof(su3));
-          memcpy(u1 + 4, &g_gauge_field[ g_iup[ix][2] ][2], sizeof(su3));
-          memcpy(u1 + 5, &g_gauge_field[ g_idn[ix][2] ][2], sizeof(su3));
-          memcpy(u1 + 6, &g_gauge_field[ g_iup[ix][3] ][3], sizeof(su3));
-          memcpy(u1 + 7, &g_gauge_field[ g_idn[ix][3] ][3], sizeof(su3));
-	  u1 += 8;
+          memcpy(u0 + ix_new,     g_gauge_field[ g_iup[ix][0] ], sizeof(su3));
+          memcpy(u0 + ix_new + 1, g_gauge_field[ g_idn[ix][0] ], sizeof(su3));
+          memcpy(u0 + ix_new + 2, g_gauge_field[ g_iup[ix][1] ], sizeof(su3));
+          memcpy(u0 + ix_new + 3, g_gauge_field[ g_idn[ix][1] ], sizeof(su3));
+          memcpy(u0 + ix_new + 4, g_gauge_field[ g_iup[ix][2] ], sizeof(su3));
+          memcpy(u0 + ix_new + 5, g_gauge_field[ g_idn[ix][2] ], sizeof(su3));
+          memcpy(u0 + ix_new + 6, g_gauge_field[ g_iup[ix][3] ], sizeof(su3));
+          memcpy(u0 + ix_new + 7, g_gauge_field[ g_idn[ix][3] ], sizeof(su3));
+
+          ix = g_ipt[t][x][y][z + LZ/2];
+          memcpy(u1 + ix_new,     g_gauge_field[ g_iup[ix][0] ], sizeof(su3));
+          memcpy(u1 + ix_new + 1, g_gauge_field[ g_idn[ix][0] ], sizeof(su3));
+          memcpy(u1 + ix_new + 2, g_gauge_field[ g_iup[ix][1] ], sizeof(su3));
+          memcpy(u1 + ix_new + 3, g_gauge_field[ g_idn[ix][1] ], sizeof(su3));
+          memcpy(u1 + ix_new + 4, g_gauge_field[ g_iup[ix][2] ], sizeof(su3));
+          memcpy(u1 + ix_new + 5, g_gauge_field[ g_idn[ix][2] ], sizeof(su3));
+          memcpy(u1 + ix_new + 6, g_gauge_field[ g_iup[ix][3] ], sizeof(su3));
+          memcpy(u1 + ix_new + 7, g_gauge_field[ g_idn[ix][3] ], sizeof(su3));
         }
       }
     }
@@ -377,8 +375,6 @@ int init_blocks_geometry() {
 }
 
 /* the following should be somewhere else ... */
-
-
 complex block_scalar_prod(spinor * const R, spinor * const S, const int N) {
   int ix;
   static double ks,kc,ds,tr,ts,tt;
@@ -395,7 +391,7 @@ complex block_scalar_prod(spinor * const R, spinor * const S, const int N) {
   for (ix = 0; ix < N; ix++){
     s=(spinor *) S + ix;
     r=(spinor *) R + ix;
-    
+
     ds=(*r).s0.c0.re*(*s).s0.c0.re+(*r).s0.c0.im*(*s).s0.c0.im+
        (*r).s0.c1.re*(*s).s0.c1.re+(*r).s0.c1.im*(*s).s0.c1.im+
        (*r).s0.c2.re*(*s).s0.c2.re+(*r).s0.c2.im*(*s).s0.c2.im+
@@ -598,7 +594,7 @@ void block_compute_little_D_offdiagonal(){
 	for(x = 0; x < LX; x++) {
 	  for(y = 0; y < LY; y++) {
 	    for(k = 0; k < 2; k++) {
-	      iy = j+i*g_N_s + (pm+1)*g_N_s*g_N_s;
+	      iy = j + i * g_N_s + (pm + 1) * g_N_s * g_N_s;
 	      _complex_zero(block_list[k].little_dirac_operator[ iy ]);
 	      for(z = 0; z < LZ/2; z++) {
 		ix = block_ipt[t][x][y][z];
@@ -643,9 +639,9 @@ void block_compute_little_D_offdiagonal(){
 	for(t = 0; t < T; t++) {
 	  for(y = 0; y < LY; y++) {
 	    for(k = 0; k < 2; k++) {
-	      iy = j+i*g_N_s + (pm+1)*g_N_s*g_N_s;
+	      iy = j + i * g_N_s + (pm + 1) * g_N_s * g_N_s;
 	      _complex_zero(block_list[k].little_dirac_operator[ iy ]);
-	      for(z = 0; z < LZ/2; z++) {
+	      for(z = 0; z < LZ / 2; z++) {
 		ix = block_ipt[t][x][y][z];
 		s = &block_list[k].basis[j][ ix ];
 		_add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
@@ -688,9 +684,9 @@ void block_compute_little_D_offdiagonal(){
 	for(t = 0; t < T; t++) {
 	  for(x = 0; x < LX; x++) {
 	    for(k = 0; k < 2; k++) {
-	      iy = j+i*g_N_s + (pm+1)*g_N_s*g_N_s;
+	      iy = j + i * g_N_s + (pm + 1) * g_N_s * g_N_s;
 	      _complex_zero(block_list[k].little_dirac_operator[ iy ]);
-	      for(z = 0; z < LZ/2; z++) {
+	      for(z = 0; z < LZ / 2; z++) {
 		ix = block_ipt[t][x][y][z];
 		s = &block_list[k].basis[j][ ix ];
 		_add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
