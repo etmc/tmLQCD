@@ -725,12 +725,14 @@ void block_compute_little_D_offdiagonal(){
       for (i = 0; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
-          printf(" %2.2E + %2.2f i", block_list->little_dirac_operator[i * g_N_s + j].re,  block_list->little_dirac_operator[i * g_N_s + j].im);
-          if (j != g_N_s){
-            printf(", ");
+          printf("%s%2.2E %s %2.2E i", block_list->little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list->little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list->little_dirac_operator[i * g_N_s + j].re : -block_list->little_dirac_operator[i * g_N_s + j].re, block_list->little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list->little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list->little_dirac_operator[i * g_N_s + j].im : -block_list->little_dirac_operator[i * g_N_s + j].im);
+          if (j != g_N_s - 1){
+            printf(",\t");
           }
         }
-        printf(" ]\n\n");
+        printf(" ]\n");
+        if ((i % g_N_s) == (g_N_s - 1) && i != (9 * g_N_s - 1))
+          printf("\n");
       }
     }
   }
