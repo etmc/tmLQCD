@@ -10,6 +10,7 @@
 # include <mpi.h>
 #endif
 #include "global.h"
+#include "start.h"
 #include "complex.h"
 #include "block.h"
 #include "linalg/blas.h"
@@ -105,4 +106,41 @@ void project_left_D(spinor * const out, spinor * const in) {
   D_psi(g_spinor_field[DUM_MATRIX+1], in);
   project_left(out, g_spinor_field[DUM_MATRIX+1]);
   return;
+}
+
+void D_project_right(spinor * const out, spinor * const in) {
+  project_right(g_spinor_field[DUM_MATRIX+1], in);
+  D_psi(out, g_spinor_field[DUM_MATRIX+1]);
+  return;
+}
+
+int check_projectors() {
+  double nrm = 0.;
+
+  random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
+
+  project_left_D(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  D_project_right(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER]);
+  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME);
+  if(g_proc_id == 0) {
+    printf("||P_L D psi - D P_R psi|| = %1.5e\n", sqrt(nrm));
+  }
+
+  project_left(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  project_left(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME);
+  if(g_proc_id == 0) {
+    printf("||P_L^2 psi - P_L psi|| = %1.5e\n", sqrt(nrm));
+  }
+
+  project_right(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  project_right(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME);
+  if(g_proc_id == 0) {
+    printf("||P_R^2 psi - P_R psi|| = %1.5e\n", sqrt(nrm));
+  }
+  return(0);
 }
