@@ -637,10 +637,10 @@ void block_compute_little_D_offdiagonal(){
           for(x = 0; x < LX; ++x) {
             for(y = 0; y < LY; ++y){
               iy = j + i * g_N_s + (pm + 1) * g_N_s * g_N_s;
-              _complex_zero(block_list[(pm + 1) % 2].little_dirac_operator[ iy ]);
+              _complex_zero(block_list[pm % 2].little_dirac_operator[ iy ]);
               ix = block_ipt[t][x][y][z];
-              s = &block_list[(pm + 1) % 2].basis[j][ ix ];
-              _add_complex(block_list[(pm + 1) % 2].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
+              s = &block_list[pm % 2].basis[j][ ix ];
+              _add_complex(block_list[pm % 2].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
               r++;
             }
           }
