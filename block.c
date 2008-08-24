@@ -494,13 +494,14 @@ void block_compute_little_D_offdiagonal(){
 	      u = &g_gauge_field[ g_idn[ix][mu] ][mu];
 	    }
 	    boundary_D[pm](r, s, u);
-	    r++;
+            r++;
 	  }
 	}
       }
-      r = temp;
+
       /* now all the scalar products */
       for(j = 0; j < g_N_s; j++) {
+        r = temp; /* We need to contract g_N_s times with the same set of fields, right? */
 	for(x = 0; x < LX; x++) {
 	  for(y = 0; y < LY; y++) {
 	    for(k = 0; k < 2; k++) {
@@ -542,9 +543,10 @@ void block_compute_little_D_offdiagonal(){
 	  }
 	}
       }
-      r = temp;
+
       /* now all the scalar products */
       for(j = 0; j < g_N_s; j++) {
+        r = temp;
 	for(t = 0; t < T; t++) {
 	  for(y = 0; y < LY; y++) {
 	    for(k = 0; k < 2; k++) {
@@ -586,9 +588,10 @@ void block_compute_little_D_offdiagonal(){
 	  }
 	}
       }
-      r = temp;
+
       /* now all the scalar products */
       for(j = 0; j < g_N_s; j++) {
+        r = temp;
 	for(t = 0; t < T; t++) {
 	  for(x = 0; x < LX; x++) {
 	    for(k = 0; k < 2; k++) {
@@ -630,9 +633,10 @@ void block_compute_little_D_offdiagonal(){
           }
         }
       }
-      r = temp;
+
       /* now for all the MPI scalar products (outer edges) */
       for(j = 0; j < g_N_s; ++j) {
+        r = temp;
         for(t = 0; t < T; ++t) {
           for(x = 0; x < LX; ++x) {
             for(y = 0; y < LY; ++y){
@@ -664,10 +668,10 @@ void block_compute_little_D_offdiagonal(){
         }
       }
     }
-    r = temp;
 
     /* Now contract with the lowest edge of the high block and store */
     for(j = 0; j < g_N_s; ++j) {
+      r = temp;
       for(t = 0; t < T; ++t) {
         for(x = 0; x < LX; ++x) {
           for(y = 0; y < LY; ++y){
@@ -696,10 +700,10 @@ void block_compute_little_D_offdiagonal(){
         }
       }
     }
-    r = temp;
 
     /* Now contract with the highest edge of the low block and store */
     for(j = 0; j < g_N_s; ++j) {
+      r = temp;
       for(t = 0; t < T; ++t) {
         for(x = 0; x < LX; ++x) {
           for(y = 0; y < LY; ++y){
