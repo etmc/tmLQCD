@@ -55,6 +55,7 @@
 #include "little_D.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "block.h"
+#include "solver/dfl_projector.h"
 #include "solver/generate_dfl_subspace.h"
 
 void usage(){
@@ -85,6 +86,7 @@ int main(int argc,char *argv[]) {
   
   int nsiter;
   complex * a1, * a2;
+
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -137,6 +139,9 @@ int main(int argc,char *argv[]) {
   /* Read the input file */
   read_input(input_filename);
   /* this DBW2 stuff is not needed for the inversion ! */
+  if(g_dflgcr_flag == 1) {
+    even_odd_flag = 0;
+  }
   g_rgi_C1 = 0;
   if(Nsave == 0){
     Nsave = 1;
@@ -274,11 +279,12 @@ int main(int argc,char *argv[]) {
       /* Compute little Dirac operators */
       block_compute_little_D_diagonal(block_list);
       block_compute_little_D_diagonal(block_list + 1);
+      block_compute_little_D_offdiagonal();
 
       check_projectors();
       check_little_D_inversion();
 
-      block_compute_little_D_offdiagonal();
+
       a1 = calloc(2*9*g_N_s, sizeof(complex));
       a2 = calloc(2*9*g_N_s, sizeof(complex));
       a1[0].re = 1.;
