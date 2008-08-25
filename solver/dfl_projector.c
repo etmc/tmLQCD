@@ -54,7 +54,8 @@ void project(spinor * const out, spinor * const in) {
   for (i = 0; i < 2; i++) {/* loop over blocks */
     /* compute inner product */
     for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
-      inprod[j + i*g_N_s] = block_scalar_prod(block_list[i].basis[j], psi[i], vol);
+      inprod[j + i*g_N_s] = block_scalar_prod(psi[i], block_list[i].basis[j], vol);
+/*       inprod[j + i*g_N_s] = block_scalar_prod(block_list[i].basis[j], psi[i], vol); */
     }
   }
 
@@ -100,7 +101,8 @@ void project2(spinor * const out, spinor * const in) {
   for (i = 0; i < 2; i++) {/* loop over blocks */
     /* compute inner product */
     for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
-      inprod[j + i*g_N_s] = block_scalar_prod(block_list[i].basis[j], psi[i], vol);
+      inprod[j + i*g_N_s] = block_scalar_prod(psi[i], block_list[i].basis[j], vol);
+/*       inprod[j + i*g_N_s] = block_scalar_prod(block_list[i].basis[j], psi[i], vol); */
     }
   }
 
@@ -270,7 +272,9 @@ void check_little_D_inversion() {
   if (dif > 1e-8 * VOLUME){
     printf("[WARNING] check_little_D_inversion: deviation found of size %1.5e!\n", dif);
   }
+#ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
+#endif
 
   if ((g_debug_level > -1) && !g_proc_id){
     printf("Inversion check on little_D\nStart:\n");

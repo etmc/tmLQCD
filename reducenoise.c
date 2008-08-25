@@ -42,11 +42,12 @@
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
 #include "init_spinor_field.h"
+#include "init_dirac_halfspinor.h"
 #include "init_moment_field.h"
 #include "update_backward_gauge.h"
 #include "tm_operators.h"
 #include "invert_eo.h"
-
+#include "gamma.h"
 
 void usage(){
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
@@ -173,6 +174,24 @@ int main(int argc,char *argv[]) {
   /* define the boundary conditions for the fermion fields */
   boundary();
 
+#ifdef _USE_HALFSPINOR
+  j = init_dirac_halfspinor();
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
+    exit(-1);
+  }
+  if(g_sloppy_precision_flag == 1) {
+    j = init_dirac_halfspinor32();
+    if ( j!= 0) {
+      fprintf(stderr, "Not enough memory for 32-Bit halffield! Aborting...\n");
+      exit(-1);
+    }
+  }
+#  if (defined _PERSISTENT)
+  init_xchange_halffield();
+#  endif
+#endif
+
 
   sprintf(conf_filename,"%s.%.4d", gauge_input_filename, nstore);
   if (g_proc_id == 0) {
@@ -223,6 +242,9 @@ int main(int argc,char *argv[]) {
   else if(source_format_flag == 1) {
       sprintf(conf_filename, "%s.applied", source_input_filename);
   }
+
+  gamma5(g_spinor_field[0], g_spinor_field[0], VOLUME);
+  gamma5(g_spinor_field[1], g_spinor_field[1], VOLUME);
   
 #ifdef MPI
   atime = MPI_Wtime();
@@ -234,6 +256,10 @@ int main(int argc,char *argv[]) {
       M_minus_1_timesC(g_spinor_field[0], g_spinor_field[1],
 		       g_spinor_field[4], g_spinor_field[5]);
   }
+
+  gamma5(g_spinor_field[0], g_spinor_field[0], VOLUME);
+  gamma5(g_spinor_field[1], g_spinor_field[1], VOLUME);
+
   
 #ifdef MPI
   etime = MPI_Wtime();

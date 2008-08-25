@@ -175,7 +175,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       project_left(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI]);
       if(g_proc_id == 0) printf("Applied P_L to source\n");
       /* invert P_L D on source -> chi */
-      iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &project_left_D);
+      iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &project_left_D);
       /* apply P_R to chi              */
       project_right(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1]);
       /* reconstruct solution          */

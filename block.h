@@ -35,7 +35,7 @@ void reconstruct_global_field(spinor * const rec_field, spinor * const block_low
 
 void block_orthonormalize(block *parent);
 
-void blocks_compute_little_D_offdiagonal();
+void block_compute_little_D_offdiagonal();
 void block_compute_little_D_diagonal(block *parent);
 
 complex block_scalar_prod(spinor * const R, spinor * const S, const int N);
