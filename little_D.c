@@ -43,6 +43,12 @@ static complex CONE, CZERO, CMONE;
 void init_little_field_exchange(complex * w);
 void wait_little_field_exchange(const int mu);
 
+void unit_little_D(complex *v, complex *w) {
+  memcpy(v, w, 2*g_N_s*sizeof(complex));
+
+  return;
+}
+
 void little_D(complex * v, complex *w) {
   int i, j, k, sq = g_N_s*g_N_s;
   CONE.re = 1.;

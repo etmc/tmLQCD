@@ -6,6 +6,8 @@
 
 typedef void (*c_matrix_mult) (complex * const, complex * const);
 void little_D(complex * v, complex *w);
+void unit_little_D(complex *v, complex *w);
+
 void free_lgcr();
 int lgcr(complex * const P, complex * const Q, 
 	 const int m, const int max_restarts,
