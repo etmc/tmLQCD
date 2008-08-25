@@ -68,17 +68,9 @@ void project(spinor * const out, spinor * const in) {
     assign_add_mul(psi[1], block_list[1].basis[ctr_t], invvec[g_N_s+ctr_t], vol);
   }
 
-  /* reconstruct global field */
-  for (ctr_t = 0; ctr_t < (VOLUME / LZ); ctr_t++) {
-    memcpy(out + (2 * ctr_t) * contig_block, 
-           psi[0] + ctr_t * contig_block,
-	   contig_block * sizeof(spinor));
-    memcpy(out + (2 * ctr_t + 1) * contig_block, 
-           psi[1] + ctr_t * contig_block, 
-	   contig_block * sizeof(spinor));
-  }
+  reconstruct_global_field(out, psi[0], psi[1]);
 
-  free(psi[0]);
+  free(*psi);
   free(psi);
   free(invvec);
   free(inprod);
@@ -157,14 +149,14 @@ void project_right(spinor * const out, spinor * const in) {
 void project_left_D(spinor * const out, spinor * const in) {
   /* out = P_L D in  = in - D proj D in*/
 
-  D_psi(g_spinor_field[DUM_MATRIX+1], in);
-  project_left(out, g_spinor_field[DUM_MATRIX+1]);
+  D_psi(g_spinor_field[DUM_SOLVER+3], in);
+  project_left(out, g_spinor_field[DUM_SOLVER+3]);
   return;
 }
 
 void D_project_right(spinor * const out, spinor * const in) {
-  project_right(g_spinor_field[DUM_MATRIX+1], in);
-  D_psi(out, g_spinor_field[DUM_MATRIX+1]);
+  project_right(g_spinor_field[DUM_SOLVER+3], in);
+  D_psi(out, g_spinor_field[DUM_SOLVER+3]);
   return;
 }
 
@@ -180,6 +172,7 @@ int check_projectors() {
   if(g_proc_id == 0) {
     printf("||P_L D psi - D P_R psi|| = %1.5e\n", sqrt(nrm));
   }
+
 
   project_left(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
   project_left(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
@@ -281,7 +274,7 @@ void check_little_D_inversion() {
     printf("\nInverted:\n");
     for(ctr_t = 0; ctr_t < 2 * g_N_s; ++ctr_t){
       printf("%1.5e + %1.5e I   ", invvec[ctr_t].re, invvec[ctr_t].im);
-      if (ctr_t == g_N_s - 1)
+      if (ctr_t == g_N_s - 1 )
         printf("\n");
     }
     printf("\nResult:\n");

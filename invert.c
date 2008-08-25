@@ -264,7 +264,7 @@ int main(int argc,char *argv[]) {
 
       for (nsiter = 0; nsiter < g_N_s; nsiter++) { 
         /* add it to the basis */
-	add_basis_field(nsiter, dfl_fields[nsiter]);
+        split_global_field(block_list[0].basis[nsiter], block_list[1].basis[nsiter], dfl_fields[nsiter]);
       }
 
       /* perform local orthonormalization */

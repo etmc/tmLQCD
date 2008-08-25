@@ -150,21 +150,6 @@ int free_blocks() {
   return 0;
 }
 
-int add_basis_field(int const index, spinor const *field) {
-  int ctr_t;
-  int contig_block = LZ / 2;
-  for (ctr_t = 0; ctr_t < (VOLUME / LZ); ctr_t++) {
-    memcpy(block_list[0].basis[index] + ctr_t*contig_block, 
-	   field + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
-    memcpy(block_list[1].basis[index] + ctr_t*contig_block, 
-	   field + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
-  }
-  if(g_proc_id == 0 && g_debug_level > 4) {
-    printf("basis norm = %1.3e\n", block_two_norm(block_list[1].basis[index], block_list[0].volume));
-  }
-  return 0;
-}
-
 int init_blocks_gaugefield() {
   /* Copies the existing gauge field on the processor into the two separate blocks in a form
   that is readable by the block Dirac operator. Specifically, in consecutive memory
@@ -557,7 +542,7 @@ void block_compute_little_D_offdiagonal(){
   temp = scratch + VOLUMEPLUSRAND;
 
   for (i = 0; i < g_N_s; i++){
-    block_reconstruct_global_field(i, scratch);
+    reconstruct_global_field(scratch, block_list[0].basis[i], block_list[1].basis[i]);
 
 #ifdef MPI
     xchange_lexicfield(scratch);
@@ -832,17 +817,27 @@ void block_compute_little_D_offdiagonal(){
   return;
 }
 
-/* Reconstructs a global field from the little basis of two blocks */
-void block_reconstruct_global_field(const int index, spinor * const reconstructed_field) {
+int split_global_field(spinor * const block_low, spinor * const block_high, spinor * const field) {
   int ctr_t;
-  int contig_block = LZ / 2;
-  for (ctr_t = 0; ctr_t < (block_list[0].volume / contig_block); ++ctr_t) {
-    memcpy(reconstructed_field + (2 * ctr_t) * contig_block, 
-           block_list[0].basis[index] + ctr_t * contig_block,
-	   contig_block * sizeof(spinor));
-    memcpy(reconstructed_field + (2 * ctr_t + 1) * contig_block, 
-           block_list[1].basis[index] + ctr_t * contig_block, 
-	   contig_block * sizeof(spinor));
+
+  for (ctr_t = 0; ctr_t < (VOLUME / LZ); ctr_t++) {
+    memcpy(block_low + ctr_t * LZ / 2, field + (2 * ctr_t) * LZ / 2, LZ / 2 * sizeof(spinor));
+    memcpy(block_high + ctr_t * LZ / 2, field + (2 * ctr_t + 1) * LZ / 2, LZ / 2 * sizeof(spinor));
+  }
+
+  if(g_proc_id == 0 && g_debug_level > 4) {
+    printf("lower basis norm = %1.3e\n", block_two_norm(block_low,  VOLUME / LZ));
+    printf("upper basis norm = %1.3e\n", block_two_norm(block_high, VOLUME / LZ));
+  }
+  return 0;
+}
+
+/* Reconstructs a global field from the little basis of two blocks */
+void reconstruct_global_field(spinor * const rec_field, spinor * const block_low, spinor * const block_high) {
+  int ctr_t;
+  for (ctr_t = 0; ctr_t < (block_list[0].volume / (LZ / 2)); ++ctr_t) {
+    memcpy(rec_field + (2 * ctr_t) * LZ / 2, block_low + ctr_t * LZ / 2, LZ / 2 * sizeof(spinor));
+    memcpy(rec_field + (2 * ctr_t + 1) * LZ / 2, block_high + ctr_t * LZ / 2, LZ / 2 * sizeof(spinor));
   }
   return;
 }

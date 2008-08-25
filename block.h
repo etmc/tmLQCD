@@ -30,10 +30,10 @@ typedef struct {
 int init_blocks();
 int free_blocks();
 
-int add_basis_field(int const index, spinor const *field);
+int split_global_field(spinor * const block_low, spinor * const block_high, spinor * const field);
+void reconstruct_global_field(spinor * const rec_field, spinor * const block_low, spinor * const block_high);
 
 void block_orthonormalize(block *parent);
-void block_reconstruct_global_field(const int index, spinor * const reconstructed_field);
 
 void blocks_compute_little_D_offdiagonal();
 void block_compute_little_D_diagonal(block *parent);
