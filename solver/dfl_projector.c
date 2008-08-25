@@ -58,7 +58,7 @@ void project(spinor * const out, spinor * const in) {
     }
   }
 
-  iter = lgcr(invvec, inprod, 10, 100, 1.e-10, 0, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
+  iter = lgcr(invvec, inprod, 10, 100, 1.e-10, 0, 2 * g_N_s, 2 * 9 * g_N_s, &unit_little_D);
 
   /* sum up */
   mul(psi[0], invvec[0], block_list[0].basis[0], vol);
@@ -165,6 +165,14 @@ int check_projectors() {
 
   random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
 
+  split_global_field(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER]);
+  reconstruct_global_field(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
+  diff(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+1], VOLUME);
+  if(g_proc_id == 0) {
+    printf("||psi_orig - psi_recon|| = %1.5e\n", sqrt(nrm));
+  }
+
   project_left_D(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
   D_project_right(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER]);
   diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
@@ -249,8 +257,8 @@ void check_little_D_inversion() {
     }
   }
 
-  lgcr(invvec, inprod, 10, 100, 1.e-12, 0, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
-  little_D(result, invvec); /* This should be a proper inverse now */
+  lgcr(invvec, inprod, 10, 100, 1.e-12, 0, 2 * g_N_s, 2 * 9 * g_N_s, &unit_little_D);
+  unit_little_D(result, invvec); /* This should be a proper inverse now */
 
   dif = 0.0;
   for(ctr_t = 0; ctr_t < 2 * g_N_s; ++ctr_t){
