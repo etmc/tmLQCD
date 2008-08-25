@@ -275,6 +275,9 @@ int main(int argc,char *argv[]) {
       block_compute_little_D_diagonal(block_list);
       block_compute_little_D_diagonal(block_list + 1);
 
+      check_projectors();
+      check_little_D_inversion();
+
       block_compute_little_D_offdiagonal();
       a1 = calloc(2*9*g_N_s, sizeof(complex));
       a2 = calloc(2*9*g_N_s, sizeof(complex));

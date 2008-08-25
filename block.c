@@ -812,18 +812,18 @@ void block_compute_little_D_offdiagonal(){
 
   if(g_debug_level > -1) {
     if (g_N_s <= 5 && !g_cart_id){
-      printf("\n  *** CHECKING LITTLE D ***\n");
+      printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");
       for (i = 0; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
-          printf("%s%2.2E %s %2.2E i", block_list->little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list->little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list->little_dirac_operator[i * g_N_s + j].re : -block_list->little_dirac_operator[i * g_N_s + j].re, block_list->little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list->little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list->little_dirac_operator[i * g_N_s + j].im : -block_list->little_dirac_operator[i * g_N_s + j].im);
+          printf("%s%1.3e %s %1.3e i", block_list->little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list->little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list->little_dirac_operator[i * g_N_s + j].re : -block_list->little_dirac_operator[i * g_N_s + j].re, block_list->little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list->little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list->little_dirac_operator[i * g_N_s + j].im : -block_list->little_dirac_operator[i * g_N_s + j].im);
           if (j != g_N_s - 1){
             printf(",\t");
           }
         }
         printf(" ]\n");
-        if ((i % g_N_s) == (g_N_s - 1) && i != (9 * g_N_s - 1))
+        if ((i % g_N_s) == (g_N_s - 1))
           printf("\n");
       }
     }
