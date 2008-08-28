@@ -15,6 +15,16 @@
 #include "linalg/blas.h"
 #include "little_D.h"
 
+/* ALL OF THIS IS GUNK */
+#include "start.h"
+#include "complex.h"
+#include "block.h"
+#include "linalg/blas.h"
+#include "D_psi.h"
+#include "little_D.h"
+#include "block.h"
+#include "linalg_eo.h"
+
 
 /* assume we have a little field w                       */
 /* which has length 9*no_blocks*N_s                      */
@@ -49,8 +59,116 @@ void unit_little_D(complex *v, complex *w) {
   return;
 }
 
+/** THIS IS A TESTING FUNCTION  */
+void retarded_little_D(complex * v, complex *w) {
+  int j;
+  spinor *psi[2], *chi, *sigma;
+  int vol = VOLUMEPLUSRAND / 2;
+
+  psi[0] = calloc(VOLUMEPLUSRAND, sizeof(spinor));
+  psi[1] = psi[0] + VOLUMEPLUSRAND/2;
+  chi    = calloc(VOLUMEPLUSRAND, sizeof(spinor));
+  sigma  = calloc(VOLUMEPLUSRAND, sizeof(spinor));
+
+  /* sum up */
+  mul(psi[0], w[0], block_list[0].basis[0], vol);
+  mul(psi[1], w[g_N_s], block_list[1].basis[0], vol);
+  for(j = 1; j < g_N_s; ++j) {
+    assign_add_mul(psi[0], block_list[0].basis[j], w[j], vol);
+    assign_add_mul(psi[1], block_list[1].basis[j], w[g_N_s+j], vol);
+  }
+
+  /* reconstruct global field */
+  reconstruct_global_field(chi, psi[0], psi[1]);
+  D_psi(sigma, chi);
+  split_global_field(psi[0], psi[1], sigma);
+
+  /* compute inner product */
+  for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
+      v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], vol);
+      v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], vol);
+  }
+
+  free(psi[0]);
+  free(chi);
+  free(sigma);
+}
+
+/** ANOTHER TESTING FUNCTION */
+void invert_little_D_spinor(spinor *r, spinor *s){
+  int j;
+  spinor *psi[2];
+  complex *v, *w;
+
+  v = calloc(2 * 9 * g_N_s, sizeof(complex));
+  w = calloc(2 * 9 * g_N_s, sizeof(complex));
+  psi[0] = calloc(VOLUME, sizeof(spinor));
+  psi[1] = psi[0] + VOLUME / 2;
+  split_global_field(psi[0], psi[1], s);
+
+  for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
+    v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
+    v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
+  }
+
+  lgcr(w, v, 10, 100, 1.e-15, 0, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
+
+  mul(psi[0], w[0], block_list[0].basis[0], VOLUME/2);
+  mul(psi[1], w[g_N_s], block_list[1].basis[0], VOLUME/2);
+  for(j = 1; j < g_N_s; ++j) {
+    assign_add_mul(psi[0], block_list[0].basis[j], w[j], VOLUME/2);
+    assign_add_mul(psi[1], block_list[1].basis[j], w[g_N_s+j], VOLUME/2);
+  }
+  reconstruct_global_field(r, psi[0], psi[1]);
+
+  free(v);
+  free(w);
+  free(psi[0]);
+}
+
+
+void project2(spinor * const out, spinor * const in);
+
+/** ANOTHER TESTING FUNCTION */
+void apply_little_D_spinor(spinor *r, spinor *s){
+  int j;
+  spinor *psi[2];
+  complex *v, *w;
+
+  v = calloc(2 * 9 * g_N_s, sizeof(complex));
+  w = calloc(2 * 9 * g_N_s, sizeof(complex));
+  psi[0] = calloc(VOLUME, sizeof(spinor));
+  psi[1] = psi[0] + VOLUME / 2;
+  split_global_field(psi[0], psi[1], s);
+
+  for (j = 0; j < g_N_s; ++j) {
+    v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
+    v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
+  }
+
+  little_D(w, v);
+
+  mul(psi[0], w[0], block_list[0].basis[0], VOLUME/2);
+  mul(psi[1], w[g_N_s], block_list[1].basis[0], VOLUME/2);
+  for(j = 1; j < g_N_s; ++j) {
+    assign_add_mul(psi[0], block_list[0].basis[j], w[j], VOLUME/2);
+    assign_add_mul(psi[1], block_list[1].basis[j], w[g_N_s+j], VOLUME/2);
+  }
+  reconstruct_global_field(r, psi[0], psi[1]);
+
+  free(v);
+  free(w);
+  free(psi[0]);
+
+/*  project2(g_spinor_field[DUM_MATRIX], s);
+  D_psi(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX]);
+  project2(r, g_spinor_field[DUM_MATRIX+1]);*/
+
+}
+
 void little_D(complex * v, complex *w) {
   int i, j, k, sq = g_N_s*g_N_s;
+  complex *vt, *wt, *M;
   CONE.re = 1.;
   CONE.im = 0.;
   CMONE.re = -1.;
@@ -65,14 +183,14 @@ void little_D(complex * v, complex *w) {
   for(i = 0; i < no_blocks; i++) {
     /* diagonal term */
     _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator,
-	       &g_N_s, w + i*g_N_s, &ONE, &CZERO, v + i*g_N_s, &ONE, 1);
+               &g_N_s, w + i*g_N_s, &ONE, &CZERO, v + i*g_N_s, &ONE, 1);
 
     /* offdiagonal terms */
     for(j = 0; j < 8; j++) {
       /* set k to neighbour in direction j */
       k = block_list[i].mpilocal_neighbour[j];
       /* if k is on the same mpi proc, but not myself */
-      if(k > -1 && k != i) {
+     if(k > -1 && k != i) {
 	_FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator + (j+1)*sq,
 		   &g_N_s, w + k*g_N_s, &ONE, &CONE, v + i*g_N_s, &ONE, 1);
       }

@@ -473,22 +473,15 @@ double block_two_norm(spinor * const R, const int N) {
 
 void block_compute_little_D_diagonal(block *parent) {
   int i,j;
-  /* we need working space, where do we best allocate it? */
-  spinor * tmp;
-  complex * M;
-/*   tmp = (spinor *)calloc((VOLUME/2 + parent->spinpad), sizeof(spinor)); */
-  tmp = g_spinor_field[DUM_SOLVER];
-  M = parent->little_dirac_operator;
+  spinor * tmp = g_spinor_field[DUM_SOLVER];
+  complex * M = parent->little_dirac_operator;
 
   for(i = 0; i < g_N_s; i++){
     Block_D_psi(parent, tmp, parent->basis[i]);
     for(j = 0; j < g_N_s; j++){
-      /* order correct ? */
-      M[i * g_N_s + j] = block_scalar_prod(parent->basis[j], tmp, parent->volume);
-/*       M[i * g_N_s + j] = block_scalar_prod(parent->basis[j], tmp, parent->volume); */
+      M[i + j* g_N_s]  = block_scalar_prod(parent->basis[j], tmp, parent->volume);
     }
   }
-/*   free(tmp); */
 }
 
 /* Uses a Modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
@@ -513,8 +506,7 @@ void block_orthonormalize(block *parent) {
     for(i = 0; i < g_N_s; i++) {
       for(j = 0; j < g_N_s; j++) {
         coeff = block_scalar_prod(parent->basis[j], parent->basis[i], parent->volume);
-        if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", 
-				  parent->id, j, i, coeff.re, coeff.im);
+        if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", parent->id, j, i, coeff.re, coeff.im);
       }
     }
   }

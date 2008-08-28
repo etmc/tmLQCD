@@ -31,9 +31,8 @@
 
 /* this is phi_k A^{-1}_{kl} (phi_k, in) */
 void project(spinor * const out, spinor * const in) {
-  int i,j,ctr_t, iter;
+  int j,ctr_t, iter;
   spinor **psi;
-  int contig_block = LZ / 2;
   int vol = block_list[0].volume;
   complex *inprod;
   complex *invvec;
@@ -47,26 +46,21 @@ void project(spinor * const out, spinor * const in) {
   psi[1] = psi[0] + VOLUME/2;
 
   /*initialize the local (block) parts of the spinor*/
-  for (ctr_t = 0; ctr_t < (VOLUME / LZ); ctr_t++) {
-    memcpy(psi[0] + ctr_t * contig_block, in + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
-    memcpy(psi[1] + ctr_t * contig_block, in + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
-  }
-  for (i = 0; i < 2; i++) {/* loop over blocks */
-    /* compute inner product */
-    for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
-      inprod[j + i*g_N_s] = block_scalar_prod(psi[i], block_list[i].basis[j], vol);
-/*       inprod[j + i*g_N_s] = block_scalar_prod(block_list[i].basis[j], psi[i], vol); */
-    }
+  split_global_field(psi[0],psi[1], in);
+
+  for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
+    inprod[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], vol);
+    inprod[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], vol);
   }
 
-  iter = lgcr(invvec, inprod, 10, 100, 1.e-10, 0, 2 * g_N_s, 2 * 9 * g_N_s, &unit_little_D);
+  iter = lgcr(invvec, inprod, 10, 100, 1.e-10, 0, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
 
   /* sum up */
   mul(psi[0], invvec[0], block_list[0].basis[0], vol);
   mul(psi[1], invvec[g_N_s], block_list[1].basis[0], vol);
   for(ctr_t = 1; ctr_t < g_N_s; ctr_t++) {
     assign_add_mul(psi[0], block_list[0].basis[ctr_t], invvec[ctr_t], vol);
-    assign_add_mul(psi[1], block_list[1].basis[ctr_t], invvec[g_N_s+ctr_t], vol);
+    assign_add_mul(psi[1], block_list[1].basis[ctr_t], invvec[g_N_s + ctr_t], vol);
   }
 
   reconstruct_global_field(out, psi[0], psi[1]);
@@ -80,9 +74,8 @@ void project(spinor * const out, spinor * const in) {
 
 
 void project2(spinor * const out, spinor * const in) {
-  int i,j,ctr_t;
+  int j;
   spinor **psi;
-  int contig_block = LZ / 2;
   int vol = block_list[0].volume;
   complex *inprod;
 
@@ -94,35 +87,24 @@ void project2(spinor * const out, spinor * const in) {
   psi[1] = psi[0] + VOLUME/2;
 
   /*initialize the local (block) parts of the spinor*/
-  for (ctr_t = 0; ctr_t < (VOLUME / LZ); ctr_t++) {
-    memcpy(psi[0] + ctr_t*contig_block, in + (2 * ctr_t) * contig_block, contig_block * sizeof(spinor));
-    memcpy(psi[1] + ctr_t*contig_block, in + (2 * ctr_t + 1) * contig_block, contig_block * sizeof(spinor));
-  }
-  for (i = 0; i < 2; i++) {/* loop over blocks */
-    /* compute inner product */
-    for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
-      inprod[j + i*g_N_s] = block_scalar_prod(psi[i], block_list[i].basis[j], vol);
-/*       inprod[j + i*g_N_s] = block_scalar_prod(block_list[i].basis[j], psi[i], vol); */
-    }
+  split_global_field(psi[0],psi[1], in);
+
+  /* compute inner product */
+  for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
+      inprod[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], vol);
+      inprod[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], vol);
   }
 
   /* sum up */
   mul(psi[0], inprod[0], block_list[0].basis[0], vol);
   mul(psi[1], inprod[g_N_s], block_list[1].basis[0], vol);
-  for(ctr_t = 1; ctr_t < g_N_s; ctr_t++) {
-    assign_add_mul(psi[0], block_list[0].basis[ctr_t], inprod[ctr_t], vol);
-    assign_add_mul(psi[1], block_list[1].basis[ctr_t], inprod[g_N_s+ctr_t], vol);
+  for(j = 1; j < g_N_s; j++) {
+    assign_add_mul(psi[0], block_list[0].basis[j], inprod[j], vol);
+    assign_add_mul(psi[1], block_list[1].basis[j], inprod[g_N_s + j], vol);
   }
 
   /* reconstruct global field */
-  for (ctr_t = 0; ctr_t < (VOLUME / LZ); ctr_t++) {
-    memcpy(out + (2 * ctr_t) * contig_block, 
-           psi[0] + ctr_t * contig_block,
-	   contig_block * sizeof(spinor));
-    memcpy(out + (2 * ctr_t + 1) * contig_block, 
-           psi[1] + ctr_t * contig_block, 
-	   contig_block * sizeof(spinor));
-  }
+  reconstruct_global_field(out, psi[0], psi[1]);
 
   free(psi[0]);
   free(psi);
@@ -149,7 +131,7 @@ void project_right(spinor * const out, spinor * const in) {
 }
 
 void project_left_D(spinor * const out, spinor * const in) {
-  /* out = P_L D in  = in - D proj D in*/
+  /* out = P_L D in  = D in - D proj D in*/
 
   D_psi(g_spinor_field[DUM_SOLVER+3], in);
   project_left(out, g_spinor_field[DUM_SOLVER+3]);
@@ -175,6 +157,14 @@ int check_projectors() {
     printf("||psi_orig - psi_recon|| = %1.5e\n", sqrt(nrm));
   }
 
+  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  project2(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME);
+  if(g_proc_id == 0) {
+    printf("||P psi - P P psi|| = %1.5e\n", sqrt(nrm));
+  }
+
   project_left_D(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
   D_project_right(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER]);
   diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
@@ -182,7 +172,6 @@ int check_projectors() {
   if(g_proc_id == 0) {
     printf("||P_L D psi - D P_R psi|| = %1.5e\n", sqrt(nrm));
   }
-
 
   project_left(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
   project_left(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
@@ -221,7 +210,78 @@ int check_projectors() {
   diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
   nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME);
   if(g_proc_id == 0) {
-    printf("||P D A^-1 psi - P psi|| = %1.5e\n", sqrt(nrm));
+    printf("||P D A^-1 P psi - P psi|| = %1.5e\n", sqrt(nrm));
+  }
+
+  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  project(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2]);
+  project2(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3]);
+  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME);
+  if(g_proc_id == 0) {
+    printf("||P A^-1 D P psi - P psi|| = %1.5e\n", sqrt(nrm));
+  }
+
+  invert_little_D_spinor(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  project2(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  D_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2]);
+  project2(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3]);
+  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME);
+  if(g_proc_id == 0) {
+    printf("||P D P (P D P)^-1 - P psi|| = %1.5e\n", sqrt(nrm));
+  }
+
+  invert_little_D_spinor(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  apply_little_D_spinor(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  project2(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]);
+  diff(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+1], VOLUME);
+  if(g_proc_id == 0) {
+    printf("||A A^-1 - P psi|| = %1.5e\n", sqrt(nrm));
+  }
+
+  invert_little_D_spinor(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  apply_little_D_spinor(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  project2(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]);
+  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
+  diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME);
+  if(g_proc_id == 0) {
+    printf("||P A A^-1 - P psi|| = %1.5e\n", sqrt(nrm));
+  }
+
+  reconstruct_global_field(g_spinor_field[DUM_SOLVER], block_list[0].basis[0], block_list[1].basis[0]);
+  apply_little_D_spinor(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]);
+  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
+  diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME);
+  if(g_proc_id == 0) {
+    printf("||P D P psi - A psi|| = %1.5e\n", sqrt(nrm));
+    printf("\n*** Comparison of the leading spinor components ***\n");
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s0.c0.re, g_spinor_field[DUM_SOLVER+3]->s0.c0.re);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s0.c0.im, g_spinor_field[DUM_SOLVER+3]->s0.c0.im);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s0.c1.re, g_spinor_field[DUM_SOLVER+3]->s0.c1.re);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s0.c1.im, g_spinor_field[DUM_SOLVER+3]->s0.c1.im);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s0.c2.re, g_spinor_field[DUM_SOLVER+3]->s0.c2.re);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s0.c2.im, g_spinor_field[DUM_SOLVER+3]->s0.c2.im);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s1.c0.re, g_spinor_field[DUM_SOLVER+3]->s1.c0.re);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s1.c0.im, g_spinor_field[DUM_SOLVER+3]->s1.c0.im);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s1.c1.re, g_spinor_field[DUM_SOLVER+3]->s1.c1.re);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s1.c1.im, g_spinor_field[DUM_SOLVER+3]->s1.c1.im);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s1.c2.re, g_spinor_field[DUM_SOLVER+3]->s1.c2.re);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s1.c2.im, g_spinor_field[DUM_SOLVER+3]->s1.c2.im);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s2.c0.re, g_spinor_field[DUM_SOLVER+3]->s2.c0.re);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s2.c0.im, g_spinor_field[DUM_SOLVER+3]->s2.c0.im);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s2.c1.re, g_spinor_field[DUM_SOLVER+3]->s2.c1.re);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s2.c1.im, g_spinor_field[DUM_SOLVER+3]->s2.c1.im);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s2.c2.re, g_spinor_field[DUM_SOLVER+3]->s2.c2.re);
+    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s2.c2.im, g_spinor_field[DUM_SOLVER+3]->s2.c2.im);
+    printf("*** End of dump ***\n\n");
   }
 
   return(0);
@@ -259,8 +319,8 @@ void check_little_D_inversion() {
     }
   }
 
-  lgcr(invvec, inprod, 10, 100, 1.e-12, 0, 2 * g_N_s, 2 * 9 * g_N_s, &unit_little_D);
-  unit_little_D(result, invvec); /* This should be a proper inverse now */
+  lgcr(invvec, inprod, 10, 100, 1.e-12, 0, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
+  little_D(result, invvec); /* This should be a proper inverse now */
 
   dif = 0.0;
   for(ctr_t = 0; ctr_t < 2 * g_N_s; ++ctr_t){
@@ -304,4 +364,20 @@ void check_little_D_inversion() {
   free(invvec);
   free(inprod);
   return;
+}
+
+void check_local_D() /* Should work for kappa = 0 */
+{
+  double nrm;
+
+  reconstruct_global_field(g_spinor_field[DUM_SOLVER], block_list[0].basis[0], block_list[1].basis[0]);
+  Block_D_psi(block_list, g_spinor_field[DUM_SOLVER + 1], block_list[0].basis[0]);
+  Block_D_psi(block_list + 1, g_spinor_field[DUM_SOLVER + 2], block_list[1].basis[0]);
+  D_psi(g_spinor_field[DUM_SOLVER + 3], g_spinor_field[DUM_SOLVER]);
+  reconstruct_global_field(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER + 1], g_spinor_field[DUM_SOLVER + 2]);
+  diff(g_spinor_field[DUM_SOLVER + 1], g_spinor_field[DUM_SOLVER + 3], g_spinor_field[DUM_SOLVER], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER + 1], VOLUME);
+  if(g_proc_id == 0) {
+    printf("\n\nCheck local D (trust for kappa=0 only): %1.5e\n", sqrt(nrm));
+  }
 }

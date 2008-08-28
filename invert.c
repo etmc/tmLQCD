@@ -283,7 +283,7 @@ int main(int argc,char *argv[]) {
 
       check_projectors();
       check_little_D_inversion();
-
+      check_local_D();
 
       a1 = calloc(2*9*g_N_s, sizeof(complex));
       a2 = calloc(2*9*g_N_s, sizeof(complex));
@@ -293,6 +293,8 @@ int main(int argc,char *argv[]) {
       free(a2);
       /* TODO Generate projectors */
     }
+
+    goto skip_shit;
 
     for(ix = index_start; ix < index_end; ix++) {
       is = (ix / 3);
@@ -480,6 +482,8 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
   MPI_Finalize();
 #endif
+
+  skip_shit:
   free_blocks();
   free_dfl_subspace();
   free_gauge_field();

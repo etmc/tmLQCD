@@ -7,6 +7,8 @@
 typedef void (*c_matrix_mult) (complex * const, complex * const);
 void little_D(complex * v, complex *w);
 void unit_little_D(complex *v, complex *w);
+void invert_little_D_spinor(spinor *r, spinor *s);
+void apply_little_D_spinor(spinor *r, spinor *s);
 
 void free_lgcr();
 int lgcr(complex * const P, complex * const Q, 
