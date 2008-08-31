@@ -294,6 +294,8 @@ int main(int argc,char *argv[]) {
       /* TODO Generate projectors */
     }
 
+    goto skip_shit;
+
     for(ix = index_start; ix < index_end; ix++) {
       is = (ix / 3);
       ic = (ix % 3);
@@ -477,6 +479,9 @@ int main(int argc,char *argv[]) {
     }
     nstore+=Nsave;
   }
+
+  skip_shit:
+
 #ifdef MPI
   MPI_Finalize();
 #endif
