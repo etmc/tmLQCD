@@ -294,8 +294,6 @@ int main(int argc,char *argv[]) {
       /* TODO Generate projectors */
     }
 
-    goto skip_shit;
-
     for(ix = index_start; ix < index_end; ix++) {
       is = (ix / 3);
       ic = (ix % 3);
@@ -483,7 +481,6 @@ int main(int argc,char *argv[]) {
   MPI_Finalize();
 #endif
 
-  skip_shit:
   free_blocks();
   free_dfl_subspace();
   free_gauge_field();

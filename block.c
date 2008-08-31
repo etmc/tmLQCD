@@ -479,7 +479,7 @@ void block_compute_little_D_diagonal(block *parent) {
   for(i = 0; i < g_N_s; i++){
     Block_D_psi(parent, tmp, parent->basis[i]);
     for(j = 0; j < g_N_s; j++){
-      M[i + j* g_N_s]  = block_scalar_prod(parent->basis[j], tmp, parent->volume);
+      M[i * g_N_s + j]  = block_scalar_prod(tmp, parent->basis[j], parent->volume);
     }
   }
 }

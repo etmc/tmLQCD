@@ -146,6 +146,9 @@ void D_project_right(spinor * const out, spinor * const in) {
 
 int check_projectors() {
   double nrm = 0.;
+  int j;
+  spinor *psi[2];
+  complex *v;
 
   random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
 
@@ -253,7 +256,43 @@ int check_projectors() {
     printf("||P A A^-1 - P psi|| = %1.5e\n", sqrt(nrm));
   }
 
-  reconstruct_global_field(g_spinor_field[DUM_SOLVER], block_list[0].basis[0], block_list[1].basis[0]);
+  reconstruct_global_field(g_spinor_field[DUM_SOLVER+1], block_list[0].basis[0], block_list[1].basis[0]);
+  apply_little_D_spinor(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
+  D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  v = calloc(2 * 9 * g_N_s, sizeof(complex));
+  psi[0] = calloc(VOLUME, sizeof(spinor));
+  psi[1] = psi[0] + VOLUME / 2;
+  split_global_field(psi[0], psi[1], g_spinor_field[DUM_SOLVER+2]);
+  if (!g_proc_id){
+    for (j = 0; j < g_N_s; ++j) {
+      v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
+      v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
+    }
+    for (j = 0; j < 2* g_N_s; ++j) {
+      printf("AFTER D: v[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
+    }
+  }
+  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
+  split_global_field(psi[0], psi[1], g_spinor_field[DUM_SOLVER+1]);
+  if (!g_proc_id){
+    for (j = 0; j < g_N_s; ++j) {
+      v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
+      v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
+    }
+    for (j = 0; j < 2* g_N_s; ++j) {
+      printf("AFTER P D: v[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
+    }
+  }
+  free(v);
+  free(psi[0]);
+
+
+  diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME);
+  if(g_proc_id == 0) {
+    printf("||(P D - A) phi || = %1.5e\n", sqrt(nrm));
+  }
+
   apply_little_D_spinor(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]);
   project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
   D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);

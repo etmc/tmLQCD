@@ -145,8 +145,19 @@ void apply_little_D_spinor(spinor *r, spinor *s){
     v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
     v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
   }
+  if (!g_proc_id){
+    for (j = 0; j < 2* g_N_s; ++j) {
+      printf("LITTLE_D: v[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
+    }
+  }
 
   little_D(w, v);
+
+  if (!g_proc_id){
+    for (j = 0; j < 2 * g_N_s; ++j) {
+      printf("LITTLE_D: w[%u] = %1.5e + %1.5e i\n", j, w[j].re, w[j].im);
+    }
+  }
 
   mul(psi[0], w[0], block_list[0].basis[0], VOLUME/2);
   mul(psi[1], w[g_N_s], block_list[1].basis[0], VOLUME/2);
