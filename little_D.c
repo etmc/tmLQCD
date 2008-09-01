@@ -50,6 +50,18 @@ int nblks_dir[4] = {1,1,1,2};
 static int ONE = 1;
 static complex CONE, CZERO, CMONE;
 
+enum{
+  NONE = 0,
+  T_UP = 1,
+  T_DN = 2,
+  X_UP = 3,
+  X_DN = 4,
+  Y_UP = 5,
+  Y_DN = 6,
+  Z_UP = 7,
+  Z_DN = 8
+} Direction;
+
 void init_little_field_exchange(complex * w);
 void wait_little_field_exchange(const int mu);
 
@@ -57,41 +69,6 @@ void unit_little_D(complex *v, complex *w) {
   memcpy(v, w, 2*g_N_s*sizeof(complex));
 
   return;
-}
-
-/** THIS IS A TESTING FUNCTION  */
-void retarded_little_D(complex * v, complex *w) {
-  int j;
-  spinor *psi[2], *chi, *sigma;
-  int vol = VOLUMEPLUSRAND / 2;
-
-  psi[0] = calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  psi[1] = psi[0] + VOLUMEPLUSRAND/2;
-  chi    = calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  sigma  = calloc(VOLUMEPLUSRAND, sizeof(spinor));
-
-  /* sum up */
-  mul(psi[0], w[0], block_list[0].basis[0], vol);
-  mul(psi[1], w[g_N_s], block_list[1].basis[0], vol);
-  for(j = 1; j < g_N_s; ++j) {
-    assign_add_mul(psi[0], block_list[0].basis[j], w[j], vol);
-    assign_add_mul(psi[1], block_list[1].basis[j], w[g_N_s+j], vol);
-  }
-
-  /* reconstruct global field */
-  reconstruct_global_field(chi, psi[0], psi[1]);
-  D_psi(sigma, chi);
-  split_global_field(psi[0], psi[1], sigma);
-
-  /* compute inner product */
-  for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
-      v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], vol);
-      v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], vol);
-  }
-
-  free(psi[0]);
-  free(chi);
-  free(sigma);
 }
 
 /** ANOTHER TESTING FUNCTION */
@@ -148,7 +125,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 
   if (!g_cart_id){
     for (j = 0; j < 2* g_N_s; ++j) {
-      printf("LITTLE_D for 0: v[%u] = %1.5e + %1.5e i\n", k, j, v[j].re, v[j].im);
+      printf("LITTLE_D for 0: v[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
     }
   }
   MPI_Barrier(MPI_COMM_WORLD);
@@ -156,7 +133,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
   if (g_debug_level > 2)
   {
     for (k = 1; k < 16; ++k){
-      if (g_proc_id == k){
+      if (g_cart_id == k){
         for (j = 0; j < 2* g_N_s; ++j) {
           printf("LITTLE_D for %u: v[%u] = %1.5e + %1.5e i\n", k, j, v[j].re, v[j].im);
         }
@@ -169,7 +146,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 
   if (!g_cart_id){
     for (j = 0; j < 2 * g_N_s; ++j) {
-      printf("LITTLE_D for 0: w[%u] = %1.5e + %1.5e i\n", k, j, w[j].re, w[j].im);
+      printf("LITTLE_D for 0: w[%u] = %1.5e + %1.5e i\n", j, w[j].re, w[j].im);
     }
   }
   MPI_Barrier(MPI_COMM_WORLD);
@@ -177,7 +154,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
   if (g_debug_level > 2)
   {
     for (k = 1; k < 16; ++k){
-      if (g_proc_id == k){
+      if (g_cart_id == k){
         for (j = 0; j < 2* g_N_s; ++j) {
           printf("LITTLE_D for %u: w[%u] = %1.5e + %1.5e i\n", k, j, w[j].re, w[j].im);
         }
@@ -204,6 +181,88 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 
 }
 
+void alt_little_field_gather(complex * w) {
+  MPI_Status *status;
+  int size = 2 * g_N_s * sizeof(complex);
+  complex *buf = malloc(size);
+  MPI_Buffer_attach((void*)buf, size);
+
+  /* LOWER BLOCK */
+
+  /* Send t up */
+  MPI_Bsend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_UP, g_cart_grid);
+  MPI_Recv((void*)(w + 2 *g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_dn, T_UP, g_cart_grid, status);
+
+  /* Send t down */
+  MPI_Bsend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_dn, T_DN, g_cart_grid);
+  MPI_Recv((void*)(w + 4 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_DN, g_cart_grid, status);
+
+  /* Send x up */
+  MPI_Bsend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_UP, g_cart_grid);
+  MPI_Recv((void*)(w + 6 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_dn, X_UP, g_cart_grid, status);
+
+  /* Send x down */
+  MPI_Bsend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_dn, X_DN, g_cart_grid);
+  MPI_Recv((void*)(w + 8 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_DN, g_cart_grid, status);
+
+  /* Send y up */
+  MPI_Bsend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_UP, g_cart_grid);
+  MPI_Recv((void*)(w + 10 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_dn, Y_UP, g_cart_grid, status);
+
+  /* Send y down */
+  MPI_Bsend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_dn, Y_DN, g_cart_grid);
+  MPI_Recv((void*)(w + 12 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_DN, g_cart_grid, status);
+
+  /* Send z up */
+  memcpy(w + 15 * g_N_s, w, g_N_s * sizeof(complex));
+
+  /* Send z down */
+  MPI_Bsend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_dn, Z_DN, g_cart_grid);
+  MPI_Recv((void*)(w + 17 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_up, Z_DN, g_cart_grid, status);
+
+  /* LOWER BLOCK */
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  /* UPPER BLOCK */
+
+  /* Send t up */
+  MPI_Bsend((void*)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_UP, g_cart_grid);
+  MPI_Recv((void*)(w + 3 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_dn, T_UP, g_cart_grid, status);
+
+  /* Send t down */
+  MPI_Bsend((void*)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_dn, T_DN, g_cart_grid);
+  MPI_Recv((void*)(w + 5 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_DN, g_cart_grid, status);
+
+  /* Send x up */
+  MPI_Bsend((void*)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_UP, g_cart_grid);
+  MPI_Recv((void*)(w + 7 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_dn, X_UP, g_cart_grid, status);
+
+  /* Send x down */
+  MPI_Bsend((void*)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_dn, X_DN, g_cart_grid);
+  MPI_Recv((void*)(w + 9 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_DN, g_cart_grid, status);
+
+  /* Send y up */
+  MPI_Bsend((void*)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_UP, g_cart_grid);
+  MPI_Recv((void*)(w + 11 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_dn, Y_UP, g_cart_grid, status);
+
+  /* Send y down */
+  MPI_Bsend((void*)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_dn, Y_DN, g_cart_grid);
+  MPI_Recv((void*)(w + 13 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_DN, g_cart_grid, status);
+
+  /* Send z up */
+  MPI_Bsend((void*)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_up, Z_UP, g_cart_grid);
+  MPI_Recv((void*)(w + 15 * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_dn, Z_UP, g_cart_grid, status);
+
+  /* Send z down */
+  memcpy(w + g_N_s, w + 16 * g_N_s, g_N_s * sizeof(complex));
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  MPI_Buffer_detach((void*)buf, &size);
+  free(buf);
+}
+
 void little_D(complex * v, complex *w) {
   int i, j, k, sq = g_N_s*g_N_s;
   complex *vt, *wt, *M;
@@ -213,10 +272,12 @@ void little_D(complex * v, complex *w) {
   CMONE.im = 0.;
   CZERO.re = 0.;
   CZERO.im = 0.;
-  
+
 #ifdef MPI
-  init_little_field_exchange(w);
+  /*init_little_field_exchange(w);*/
+  alt_little_field_gather(w);
 #endif
+
   /* all the mpilocal stuff first */
   for(i = 0; i < no_blocks; i++) {
     /* diagonal term */
@@ -224,32 +285,12 @@ void little_D(complex * v, complex *w) {
                &g_N_s, w + i*g_N_s, &ONE, &CZERO, v + i*g_N_s, &ONE, 1);
 
     /* offdiagonal terms */
-    for(j = 0; j < 8; j++) {
-      /* set k to neighbour in direction j */
-      k = block_list[i].mpilocal_neighbour[j];
+    for(j = 1; j < 9; j++) {
       /* if k is on the same mpi proc, but not myself */
-     if(k > -1 && k != i) {
-	_FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator + (j+1)*sq,
-		   &g_N_s, w + k*g_N_s, &ONE, &CONE, v + i*g_N_s, &ONE, 1);
-      }
+      _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator + j * sq,
+                 &g_N_s, w + 2 * j * g_N_s + i, &ONE, &CONE, v + i * g_N_s, &ONE, 1);
     }
   }
-
-#ifdef MPI
-  /* now all non-mpilocal stuff */
-  /* start with z direction     */
-  for(j = 7; j > -1; j--) {
-    wait_little_field_exchange(j);
-    for(i = 0; i < no_blocks; i++) {
-      k = block_list[i].mpilocal_neighbour[j];
-      if(k < 0) {
-	_FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator + (j+1)*sq,
-		   &g_N_s, w + ((j+1)*no_blocks + i)*g_N_s, &ONE, &CONE, v + i*g_N_s, &ONE, 1);
-      }
-    }
-  }
-  
-#endif
   return;
 }
 
@@ -280,30 +321,30 @@ void init_little_field_exchange(complex * w) {
   for(i = 0; i < no_dirs; i+=2) {
     /* send to the right, receive from the left */
     MPI_Isend((void*)w, no_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
-	      i, g_cart_grid, &lrequests[2*i]);
+              i, g_cart_grid, &lrequests[2*i]);
     MPI_Irecv((void*)(w + no_blocks*(i+2)*g_N_s), no_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i+1], 
-	      i, g_cart_grid, &lrequests[2*i+1]);
+              i, g_cart_grid, &lrequests[2*i+1]);
     
     /* send to the left, receive from the right */
     MPI_Isend((void*)w, no_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i+1], 
-	      i+1, g_cart_grid, &lrequests[2*i+2]);
+              i+1, g_cart_grid, &lrequests[2*i+2]);
     MPI_Irecv((void*)(w + no_blocks*(i+1)*g_N_s), no_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
-	      i+1, g_cart_grid, &lrequests[2*i+3]);
+              i+1, g_cart_grid, &lrequests[2*i+3]);
     waitcount += 4;
   }
 #  ifdef PARALLELXYZT
   /* send to the right, receive from the left */
   i = 6;
   MPI_Isend((void*)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
-	    i, g_cart_grid, &lrequests[2*i]);
+            i, g_cart_grid, &lrequests[2*i]);
   MPI_Irecv((void*)(w + (no_blocks*(i+1)+1)*g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i+1], 
-	    i, g_cart_grid, &lrequests[2*i+1]);
+            i, g_cart_grid, &lrequests[2*i+1]);
   
   /* send to the left, receive from the right */
   MPI_Isend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i+1], 
-	    i+1, g_cart_grid, &lrequests[2*i+2]);
+            i+1, g_cart_grid, &lrequests[2*i+2]);
   MPI_Irecv((void*)(w + no_blocks*(i+1)*g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
-	    i+1, g_cart_grid, &lrequests[2*i+3]);
+            i+1, g_cart_grid, &lrequests[2*i+3]);
   waitcount += 4;
 #  endif
 #endif
@@ -343,9 +384,9 @@ static int lgcr_init = 0;
 
 
 int lgcr(complex * const P, complex * const Q, 
-	 const int m, const int max_restarts,
-	 const double eps_sq, const int rel_prec,
-	 const int N, const int lda, c_matrix_mult f) {
+        const int m, const int max_restarts,
+        const double eps_sq, const int rel_prec,
+        const int N, const int lda, c_matrix_mult f) {
 
   int k, l, restart, i;
   double norm_sq, err;
@@ -373,8 +414,8 @@ int lgcr(complex * const P, complex * const Q,
       f(tmp, xi[k]); 
       /* tmp will become chi[k] */
       for(l = 0; l < k; l++) {
-	a[l][k] = lscalar_prod(chi[l], tmp, N);
-	lassign_diff_mul(tmp, chi[l], a[l][k], N);
+        a[l][k] = lscalar_prod(chi[l], tmp, N);
+        lassign_diff_mul(tmp, chi[l], a[l][k], N);
       }
       b[k] = sqrt(lsquare_norm(tmp, N));
       lmul_r(chi[k], 1./b[k], tmp, N);
@@ -382,23 +423,23 @@ int lgcr(complex * const P, complex * const Q,
       lassign_diff_mul(rho, chi[k], c[k], N);
       err = lsquare_norm(rho, N);
       if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-	printf("lGCR: %d\t%g iterated residue\n", restart*m+k, err); 
-	fflush(stdout);
+        printf("lGCR: %d\t%g iterated residue\n", restart*m+k, err); 
+        fflush(stdout);
       }
       /* Precision reached? */
       if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
-	_mult_real(c[k], c[k], 1./b[k]);
-	lassign_add_mul(P, xi[k], c[k], N);
-	for(l = k-1; l >= 0; l--) {
-	  for(i = l+1; i <= k; i++) {
-	    _mult_assign_complex(ctmp, a[l][i], c[i]);
-	    /* c[l] -= ctmp */
-	    _diff_complex(c[l], ctmp);
-	  }
-	  _mult_real(c[l], c[l], 1./b[l]);
-	  lassign_add_mul(P, xi[l], c[l], N);
-	}
-	return(restart*m+k);
+        _mult_real(c[k], c[k], 1./b[k]);
+        lassign_add_mul(P, xi[k], c[k], N);
+        for(l = k-1; l >= 0; l--) {
+          for(i = l+1; i <= k; i++) {
+            _mult_assign_complex(ctmp, a[l][i], c[i]);
+            /* c[l] -= ctmp */
+            _diff_complex(c[l], ctmp);
+          }
+          _mult_real(c[l], c[l], 1./b[l]);
+          lassign_add_mul(P, xi[l], c[l], N);
+        }
+        return(restart*m+k);
       }
     }
     /* prepare for restart */
@@ -407,9 +448,9 @@ int lgcr(complex * const P, complex * const Q,
     lassign_add_mul(P, xi[k], c[k], N);
     for(l = k-1; l >= 0; l--) {
       for(i = l+1; i <= k; i++) {
-	_mult_assign_complex(ctmp, a[l][i], c[i]);
-	/* c[l] -= ctmp */
-	_diff_complex(c[l], ctmp);
+        _mult_assign_complex(ctmp, a[l][i], c[i]);
+        /* c[l] -= ctmp */
+        _diff_complex(c[l], ctmp);
       }
       _mult_real(c[l], c[l], 1./b[l]);
       lassign_add_mul(P, xi[l], c[l], N);

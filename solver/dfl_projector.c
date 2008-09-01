@@ -277,7 +277,7 @@ int check_projectors() {
       v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
     }
     for (j = 0; j < 2* g_N_s; ++j) {
-      printf("AFTER D: v[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
+      printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
     }
   }
 
@@ -305,7 +305,7 @@ int check_projectors() {
       v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
     }
     for (j = 0; j < 2* g_N_s; ++j) {
-      printf("AFTER D: v[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
+      printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
     }
   }
   project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
