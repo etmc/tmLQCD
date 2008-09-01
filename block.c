@@ -135,6 +135,9 @@ int init_blocks() {
 
     if ((void*)(block_list[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(complex))) == NULL)
       CALLOC_ERROR_CRASH;
+    for (j = 0; j < 9 * g_N_s * g_N_s; ++j){
+      _complex_zero(block_list[i].little_dirac_operator[j]);
+    }
   }
   init_blocks_geometry();
   init_blocks_gaugefield();
@@ -570,25 +573,25 @@ void alt_block_compute_little_D() {
         block_contract_basis(0, i, NONE, psi);
         block_contract_basis(1, i, Z_DN, psi);
       }
-      if (k == g_nb_t_up){
+      else if (k == g_nb_t_up){
         block_contract_basis(0, i, T_UP, psi);
       }
-      if (k == g_nb_t_dn){
+      else if (k == g_nb_t_dn){
         block_contract_basis(0, i, T_DN, psi);
       }
-      if (k == g_nb_x_up){
+      else if (k == g_nb_x_up){
         block_contract_basis(0, i, X_UP, psi);
       }
-      if (k == g_nb_x_dn){
+      else if (k == g_nb_x_dn){
         block_contract_basis(0, i, X_DN, psi);
       }
-      if (k == g_nb_y_up){
+      else if (k == g_nb_y_up){
         block_contract_basis(0, i, Y_UP, psi);
       }
-      if (k == g_nb_y_dn){
+      else if (k == g_nb_y_dn){
         block_contract_basis(0, i, Y_DN, psi);
       }
-      if (k == g_nb_z_up){
+      else if (k == g_nb_z_up){
         block_contract_basis(1, i, Z_UP, psi);
       }
 
@@ -608,25 +611,25 @@ void alt_block_compute_little_D() {
         block_contract_basis(0, i, Z_UP, psi);
         block_contract_basis(1, i, NONE, psi);
       }
-      if (k == g_nb_t_up){
+      else if (k == g_nb_t_up){
         block_contract_basis(1, i, T_UP, psi);
       }
-      if (k == g_nb_t_dn){
+      else if (k == g_nb_t_dn){
         block_contract_basis(1, i, T_DN, psi);
       }
-      if (k == g_nb_x_up){
+      else if (k == g_nb_x_up){
         block_contract_basis(1, i, X_UP, psi);
       }
-      if (k == g_nb_x_dn){
+      else if (k == g_nb_x_dn){
         block_contract_basis(1, i, X_DN, psi);
       }
-      if (k == g_nb_y_up){
+      else if (k == g_nb_y_up){
         block_contract_basis(1, i, Y_UP, psi);
       }
-      if (k == g_nb_y_dn){
+      else if (k == g_nb_y_dn){
         block_contract_basis(1, i, Y_DN, psi);
       }
-      if (k == g_nb_z_dn){
+      else if (k == g_nb_z_dn){
         block_contract_basis(0, i, Z_DN, psi);
       }
 
