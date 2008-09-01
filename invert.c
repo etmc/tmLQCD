@@ -283,8 +283,7 @@ int main(int argc,char *argv[]) {
       alt_block_compute_little_D();
 
       check_projectors();
-      check_little_D_inversion();
-      check_local_D();
+      /*check_little_D_inversion();*/
 
       a1 = calloc(2*9*g_N_s, sizeof(complex));
       a2 = calloc(2*9*g_N_s, sizeof(complex));

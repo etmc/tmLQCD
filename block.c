@@ -570,25 +570,25 @@ void alt_block_compute_little_D() {
         block_contract_basis(0, i, NONE, psi);
         block_contract_basis(1, i, Z_DN, psi);
       }
-      else if (k == g_nb_t_up){
+      if (k == g_nb_t_up){
         block_contract_basis(0, i, T_UP, psi);
       }
-      else if (k == g_nb_t_dn){
+      if (k == g_nb_t_dn){
         block_contract_basis(0, i, T_DN, psi);
       }
-      else if (k == g_nb_x_up){
+      if (k == g_nb_x_up){
         block_contract_basis(0, i, X_UP, psi);
       }
-      else if (k == g_nb_x_dn){
+      if (k == g_nb_x_dn){
         block_contract_basis(0, i, X_DN, psi);
       }
-      else if (k == g_nb_y_up){
+      if (k == g_nb_y_up){
         block_contract_basis(0, i, Y_UP, psi);
       }
-      else if (k == g_nb_y_dn){
+      if (k == g_nb_y_dn){
         block_contract_basis(0, i, Y_DN, psi);
       }
-      else if (k == g_nb_z_up){
+      if (k == g_nb_z_up){
         block_contract_basis(1, i, Z_UP, psi);
       }
 
@@ -608,25 +608,25 @@ void alt_block_compute_little_D() {
         block_contract_basis(0, i, Z_UP, psi);
         block_contract_basis(1, i, NONE, psi);
       }
-      else if (k == g_nb_t_up){
+      if (k == g_nb_t_up){
         block_contract_basis(1, i, T_UP, psi);
       }
-      else if (k == g_nb_t_dn){
+      if (k == g_nb_t_dn){
         block_contract_basis(1, i, T_DN, psi);
       }
-      else if (k == g_nb_x_up){
+      if (k == g_nb_x_up){
         block_contract_basis(1, i, X_UP, psi);
       }
-      else if (k == g_nb_x_dn){
+      if (k == g_nb_x_dn){
         block_contract_basis(1, i, X_DN, psi);
       }
-      else if (k == g_nb_y_up){
+      if (k == g_nb_y_up){
         block_contract_basis(1, i, Y_UP, psi);
       }
-      else if (k == g_nb_y_dn){
+      if (k == g_nb_y_dn){
         block_contract_basis(1, i, Y_DN, psi);
       }
-      else if (k == g_nb_z_dn){
+      if (k == g_nb_z_dn){
         block_contract_basis(0, i, Z_DN, psi);
       }
 
