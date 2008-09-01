@@ -145,25 +145,45 @@ void apply_little_D_spinor(spinor *r, spinor *s){
     v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
     v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
   }
-  for (k = 0; k < 16; ++k){
-    if (g_proc_id == k){
-      for (j = 0; j < 2* g_N_s; ++j) {
-        printf("LITTLE_D for %u: v[%u] = %1.5e + %1.5e i\n", k, j, v[j].re, v[j].im);
-      }
+
+  if (!g_cart_id){
+    for (j = 0; j < 2* g_N_s; ++j) {
+      printf("LITTLE_D for 0: v[%u] = %1.5e + %1.5e i\n", k, j, v[j].re, v[j].im);
     }
-    MPI_Barrier(MPI_COMM_WORLD);
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if (g_debug_level > 2)
+  {
+    for (k = 1; k < 16; ++k){
+      if (g_proc_id == k){
+        for (j = 0; j < 2* g_N_s; ++j) {
+          printf("LITTLE_D for %u: v[%u] = %1.5e + %1.5e i\n", k, j, v[j].re, v[j].im);
+        }
+      }
+      MPI_Barrier(MPI_COMM_WORLD);
+    }
   }
 
   little_D(w, v);
 
-
-  for (k = 0; k < 16; ++k){
-    if (g_proc_id == k){
-      for (j = 0; j < 2 * g_N_s; ++j) {
-        printf("LITTLE_D for %u: w[%u] = %1.5e + %1.5e i\n", k, j, w[j].re, w[j].im);
-      }
+  if (!g_cart_id){
+    for (j = 0; j < 2 * g_N_s; ++j) {
+      printf("LITTLE_D for 0: w[%u] = %1.5e + %1.5e i\n", k, j, w[j].re, w[j].im);
     }
-    MPI_Barrier(MPI_COMM_WORLD);
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if (g_debug_level > 2)
+  {
+    for (k = 1; k < 16; ++k){
+      if (g_proc_id == k){
+        for (j = 0; j < 2* g_N_s; ++j) {
+          printf("LITTLE_D for %u: w[%u] = %1.5e + %1.5e i\n", k, j, w[j].re, w[j].im);
+        }
+      }
+      MPI_Barrier(MPI_COMM_WORLD);
+    }
   }
 
   mul(psi[0], w[0], block_list[0].basis[0], VOLUME/2);

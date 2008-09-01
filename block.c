@@ -25,6 +25,7 @@ int ** bipt_;
 int * bipt;
 
 enum{
+  NONE = 0,
   T_UP = 1,
   T_DN = 2,
   X_UP = 3,
@@ -525,16 +526,25 @@ void block_compute_little_D_diagonal(block *parent) {
   }
 }
 
+void block_contract_basis(int const idx, int const vecnum, int const dir, spinor * const psi){
+  int l;
+  for(l = 0; l < g_N_s; ++l){
+    block_list[idx].little_dirac_operator[dir * g_N_s * g_N_s + vecnum * g_N_s + l] =
+        block_scalar_prod(psi + idx * VOLUME/2, block_list[idx].basis[l], VOLUME/2);
+  }
+}
+
 void alt_block_compute_little_D() {
-  int i,j,k,l;
+  int i, j, k;
   spinor *rec, *app, *zero;
-  spinor *psi_dn, *psi_up;
+  spinor *psi, *psi_dn, *psi_up;
 
   rec = calloc(VOLUMEPLUSRAND, sizeof(spinor));
   app = calloc(VOLUMEPLUSRAND, sizeof(spinor));
   zero = calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  psi_dn = calloc(VOLUME/2, sizeof(spinor));
-  psi_up = calloc(VOLUME/2, sizeof(spinor));
+  psi = calloc(VOLUME, sizeof(spinor));
+  psi_dn = psi;
+  psi_up = psi + VOLUME/2;
 
   for (j = 0; j < VOLUMEPLUSRAND; ++j){
     _spinor_null(zero[j]);
@@ -557,47 +567,29 @@ void alt_block_compute_little_D() {
       split_global_field(psi_dn, psi_up, app);
 
       if (g_cart_id == k){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[0].little_dirac_operator[i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
-          block_list[1].little_dirac_operator[Z_DN * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_up, block_list[1].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_t_up){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[0].little_dirac_operator[T_UP * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_t_dn){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[0].little_dirac_operator[T_DN * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_x_up){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[0].little_dirac_operator[X_UP * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_x_dn){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[0].little_dirac_operator[X_DN * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_y_up){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[0].little_dirac_operator[Y_UP * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_y_dn){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[0].little_dirac_operator[Y_DN * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_z_up){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[0].little_dirac_operator[Z_UP * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
-        }
+        block_contract_basis(0, i, NONE, psi);
+        block_contract_basis(1, i, Z_DN, psi);
+      }
+      else if (k == g_nb_t_up){
+        block_contract_basis(0, i, T_UP, psi);
+      }
+      else if (k == g_nb_t_dn){
+        block_contract_basis(0, i, T_DN, psi);
+      }
+      else if (k == g_nb_x_up){
+        block_contract_basis(0, i, X_UP, psi);
+      }
+      else if (k == g_nb_x_dn){
+        block_contract_basis(0, i, X_DN, psi);
+      }
+      else if (k == g_nb_y_up){
+        block_contract_basis(0, i, Y_UP, psi);
+      }
+      else if (k == g_nb_y_dn){
+        block_contract_basis(0, i, Y_DN, psi);
+      }
+      else if (k == g_nb_z_up){
+        block_contract_basis(1, i, Z_UP, psi);
       }
 
       /* Upper Z block */
@@ -613,58 +605,58 @@ void alt_block_compute_little_D() {
 
       split_global_field(psi_dn, psi_up, app);
       if (g_cart_id == k){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[0].little_dirac_operator[Z_UP * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
-          block_list[1].little_dirac_operator[i * g_N_s + l] =
-              block_scalar_prod(psi_up, block_list[1].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_t_up){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[1].little_dirac_operator[T_UP * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_t_dn){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[1].little_dirac_operator[T_DN * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_x_up){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[1].little_dirac_operator[X_UP * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_x_dn){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[1].little_dirac_operator[X_DN * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_y_up){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[1].little_dirac_operator[Y_UP * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_y_dn){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[1].little_dirac_operator[Y_DN * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
-        }
-      } else if (k == g_nb_z_dn){
-        for(l = 0; l < g_N_s; ++l){
-          block_list[1].little_dirac_operator[Z_DN * g_N_s * g_N_s + i * g_N_s + l] =
-              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
-        }
+        block_contract_basis(0, i, Z_UP, psi);
+        block_contract_basis(1, i, NONE, psi);
+      }
+      else if (k == g_nb_t_up){
+        block_contract_basis(1, i, T_UP, psi);
+      }
+      else if (k == g_nb_t_dn){
+        block_contract_basis(1, i, T_DN, psi);
+      }
+      else if (k == g_nb_x_up){
+        block_contract_basis(1, i, X_UP, psi);
+      }
+      else if (k == g_nb_x_dn){
+        block_contract_basis(1, i, X_DN, psi);
+      }
+      else if (k == g_nb_y_up){
+        block_contract_basis(1, i, Y_UP, psi);
+      }
+      else if (k == g_nb_y_dn){
+        block_contract_basis(1, i, Y_DN, psi);
+      }
+      else if (k == g_nb_z_dn){
+        block_contract_basis(0, i, Z_DN, psi);
       }
 
       MPI_Barrier(MPI_COMM_WORLD);
     }
   }
 
+  if(g_debug_level > -1) {
+    if (g_N_s <= 5 && !g_cart_id){
+      printf("\n\n  *** CHECKING LITTLE D ***\n");
+      printf("\n  ** node 0, lower block **\n");
+      for (i = 0; i < 9 * g_N_s; ++i){
+        printf(" [ ");
+        for (j = 0; j < g_N_s; ++j){
+          printf("%s%1.3e %s %1.3e i", block_list->little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list->little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list->little_dirac_operator[i * g_N_s + j].re : -block_list->little_dirac_operator[i * g_N_s + j].re, block_list->little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list->little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list->little_dirac_operator[i * g_N_s + j].im : -block_list->little_dirac_operator[i * g_N_s + j].im);
+          if (j != g_N_s - 1){
+            printf(",\t");
+          }
+        }
+        printf(" ]\n");
+        if ((i % g_N_s) == (g_N_s - 1))
+          printf("\n");
+      }
+    }
+  }
+
   free(rec);
   free(app);
   free(zero);
-  free(psi_dn);
-  free(psi_up);
+  free(psi);
 }
 
 
