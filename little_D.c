@@ -131,7 +131,7 @@ void project2(spinor * const out, spinor * const in);
 
 /** ANOTHER TESTING FUNCTION */
 void apply_little_D_spinor(spinor *r, spinor *s){
-  int j;
+  int j, k;
   spinor *psi[2];
   complex *v, *w;
 
@@ -145,18 +145,25 @@ void apply_little_D_spinor(spinor *r, spinor *s){
     v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
     v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
   }
-  if (!g_proc_id){
-    for (j = 0; j < 2* g_N_s; ++j) {
-      printf("LITTLE_D: v[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
+  for (k = 0; k < 16; ++k){
+    if (g_proc_id == k){
+      for (j = 0; j < 2* g_N_s; ++j) {
+        printf("LITTLE_D for %u: v[%u] = %1.5e + %1.5e i\n", k, j, v[j].re, v[j].im);
+      }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
   }
 
   little_D(w, v);
 
-  if (!g_proc_id){
-    for (j = 0; j < 2 * g_N_s; ++j) {
-      printf("LITTLE_D: w[%u] = %1.5e + %1.5e i\n", j, w[j].re, w[j].im);
+
+  for (k = 0; k < 16; ++k){
+    if (g_proc_id == k){
+      for (j = 0; j < 2 * g_N_s; ++j) {
+        printf("LITTLE_D for %u: w[%u] = %1.5e + %1.5e i\n", k, j, w[j].re, w[j].im);
+      }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
   }
 
   mul(psi[0], w[0], block_list[0].basis[0], VOLUME/2);

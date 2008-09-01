@@ -277,9 +277,10 @@ int main(int argc,char *argv[]) {
       block_orthonormalize(block_list+1);
 
       /* Compute little Dirac operators */
-      block_compute_little_D_diagonal(block_list);
+      /*block_compute_little_D_diagonal(block_list);
       block_compute_little_D_diagonal(block_list + 1);
-      block_compute_little_D_offdiagonal();
+      block_compute_little_D_offdiagonal();*/
+      alt_block_compute_little_D();
 
       check_projectors();
       check_little_D_inversion();

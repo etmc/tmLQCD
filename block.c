@@ -24,6 +24,17 @@ int *** bipt__;
 int ** bipt_;
 int * bipt;
 
+enum{
+  T_UP = 1,
+  T_DN = 2,
+  X_UP = 3,
+  X_DN = 4,
+  Y_UP = 5,
+  Y_DN = 6,
+  Z_UP = 7,
+  Z_DN = 8
+} Direction;
+
 static void (*boundary_D[8])(spinor * const r, spinor * const s, su3 *u) =
 {boundary_D_0, boundary_D_1, boundary_D_2, boundary_D_3, boundary_D_4, boundary_D_5, boundary_D_6, boundary_D_7};
 
@@ -97,11 +108,11 @@ int init_blocks() {
     block_list[i].ns = g_N_s;
     block_list[i].spinpad = spinpad;
     for (j = 0 ; j < 6; ++j) {
-      #ifdef MPI
-        block_list[i].mpilocal_neighbour[j] = (g_nb_list[j] == g_cart_id) ? i : -1;
-      #else
-        block_list[i].mpilocal_neighbour[j] = i;
-      #endif
+#ifdef MPI
+      block_list[i].mpilocal_neighbour[j] = (g_nb_list[j] == g_cart_id) ? i : -1;
+#else
+      block_list[i].mpilocal_neighbour[j] = i;
+#endif
     }
 #ifdef MPI
     block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : (g_nb_list[j] == g_cart_id) ? 0 : -1);
@@ -202,8 +213,8 @@ int check_blocks_geometry(block * blk) {
   for(i = 0; i < 8*blk->volume; i++) {
     if(*ipt > blk->volume + blk->spinpad-1 || *ipt < 0) {
       if(g_proc_id == 0) {
-	printf("error in block geometry! ipt = %d dir = %d i = %d of %d\n", 
-	       (*ipt), i%8, i/8, blk->volume + blk->spinpad);
+        printf("error in block geometry! ipt = %d dir = %d i = %d of %d\n",
+               (*ipt), i%8, i/8, blk->volume + blk->spinpad);
       }
     }
     
@@ -214,22 +225,22 @@ int check_blocks_geometry(block * blk) {
     k += itest[i];
     if(itest[i] < 1 || itest[i] > 8) {
       if(g_proc_id == 0) {
-	printf("error in block geometry, itest[%d] = %d\n", i, itest[i]);      
+        printf("error in block geometry, itest[%d] = %d\n", i, itest[i]);
       }
     }
   }
   
   if(itest[blk->volume + blk->spinpad-1] != 2*(blk->LX*blk->LY*blk->LZ+blk->T*blk->LX*blk->LY+blk->T*blk->LY*blk->LZ+blk->T*blk->LX*blk->LZ)) {
     if(g_proc_id == 0){
-      printf("error in block geometry, boundary points wrong %d != %d\n", 
-	    itest[blk->volume + blk->spinpad-1], 2*(blk->LX*blk->LY*blk->LZ+blk->T*blk->LX*blk->LY+blk->T*blk->LY*blk->LZ+blk->T*blk->LX*blk->LZ));
+      printf("error in block geometry, boundary points wrong %d != %d\n",
+             itest[blk->volume + blk->spinpad-1], 2*(blk->LX*blk->LY*blk->LZ+blk->T*blk->LX*blk->LY+blk->T*blk->LY*blk->LZ+blk->T*blk->LX*blk->LZ));
     }
   }
   k+= itest[blk->volume + blk->spinpad-1];
   if(k != 8*blk->volume) {
     if(g_proc_id == 0){
-      printf("error in block geometry, total number of points wrong %d != %d\n", 
-	    k, 8*blk->volume);
+      printf("error in block geometry, total number of points wrong %d != %d\n",
+             k, 8*blk->volume);
     }
   }
 
@@ -237,81 +248,81 @@ int check_blocks_geometry(block * blk) {
   for(t = 0; t < T; t++) {
     for(x = 0; x < LX; x++) {
       for(y = 0; y < LY; y++) {
-	for(z = 0; z < LZ/2; z++) {
-	  i = block_ipt[t][x][y][z];
-	  if(t != T-1) {
-	    if(*ipt != block_ipt[t+1][x][y][z] && g_proc_id == 0) 
-	      printf("Shit +t! %d %d %d %d %d != %d at %d\n", 
-		     t, x, y, z, *ipt, block_ipt[t+1][x][y][z], i);
-	  }
-	  else if(*ipt != VOLUME/2)
-	    printf("Shit +t! %d %d %d %d %d != %d at %d\n", 
-		   t, x, y, z, *ipt, VOLUME/2, i);
-	  ipt++;
-	  if(t != 0) {
-	    if(*ipt != block_ipt[t-1][x][y][z] && g_proc_id == 0) 
-	      printf("Shit -t! %d %d %d %d %d != %d at %d\n", 
-		     t, x, y, z, *ipt, block_ipt[t+1][x][y][z], i);
-	  }
-	  else if(*ipt != VOLUME/2)
-	    printf("Shit -t! %d %d %d %d %d != %d at %d\n", 
-		   t, x, y, z, *ipt, VOLUME/2, i);
-	  ipt++;
-	  if(x != LX-1) {
-	    if(*ipt != block_ipt[t][x+1][y][z] && g_proc_id == 0) 
-	      printf("Shit +x! %d %d %d %d %d != %d at %d\n", 
-		     t, x, y, z, *ipt, block_ipt[t][x+1][y][z], i);
-	  }
-	  else if(*ipt != VOLUME/2)
-	    printf("Shit +x! %d %d %d %d %d != %d at %d\n", 
-		   t, x, y, z, *ipt, VOLUME/2, i);
-	  ipt++;
-	  if(x != 0) {
-	    if(*ipt != block_ipt[t][x-1][y][z] && g_proc_id == 0) 
-	      printf("Shit -x! %d %d %d %d %d != %d at %d\n", 
-		     t, x, y, z, *ipt, block_ipt[t][x-1][y][z], i);
-	  }
-	  else if(*ipt != VOLUME/2)
-	    printf("Shit -x! %d %d %d %d %d != %d at %d\n", 
-		   t, x, y, z, *ipt, VOLUME/2, i);
-	  ipt++;
-	  if(y != LY-1) {
-	    if(*ipt != block_ipt[t][x][y+1][z] && g_proc_id == 0) 
-	      printf("Shit +y! %d %d %d %d %d != %d at %d\n", 
-		     t, x, y, z, *ipt, block_ipt[t][x][y+1][z], i);
-	  }
-	  else if(*ipt != VOLUME/2)
-	    printf("Shit +y! %d %d %d %d %d != %d at %d\n", 
-		   t, x, y, z, *ipt, VOLUME/2, i);
-	  ipt++;
-	  if(y != 0) {
-	    if(*ipt != block_ipt[t][x][y-1][z] && g_proc_id == 0) 
-	      printf("Shit -y! %d %d %d %d %d != %d at %d\n", 
-		     t, x, y, z, *ipt, block_ipt[t][x][y-1][z], i);
-	  }
-	  else if(*ipt != VOLUME/2)
-	    printf("Shit -y! %d %d %d %d %d != %d at %d\n", 
-		   t, x, y, z, *ipt, VOLUME/2, i);
-	  ipt++;
-	  if(z != LZ/2-1) {
-	    if(*ipt != block_ipt[t][x][y][z+1] && g_proc_id == 0) 
-	      printf("Shit +z! %d %d %d %d %d != %d at %d\n", 
-		     t, x, y, z, *ipt, block_ipt[t][x][y][z+1], i);
-	  }
-	  else if(*ipt != VOLUME/2)
-	    printf("Shit +z! %d %d %d %d %d != %d at %d\n", 
-		   t, x, y, z, *ipt, VOLUME/2, i);
-	  ipt++;
-	  if(z != 0) {
-	    if(*ipt != block_ipt[t][x][y][z-1] && g_proc_id == 0) 
-	      printf("Shit -z! %d %d %d %d %d != %d at %d\n", 
-		     t, x, y, z, *ipt, block_ipt[t][x][y][z-1], i);
-	  }
-	  else if(*ipt != VOLUME/2)
-	    printf("Shit -z! %d %d %d %d %d != %d at %d\n", 
-		   t, x, y, z, *ipt, VOLUME/2, i);
-	  ipt++;
-	}
+        for(z = 0; z < LZ/2; z++) {
+          i = block_ipt[t][x][y][z];
+          if(t != T-1) {
+            if(*ipt != block_ipt[t+1][x][y][z] && g_proc_id == 0)
+              printf("Shit +t! %d %d %d %d %d != %d at %d\n",
+                     t, x, y, z, *ipt, block_ipt[t+1][x][y][z], i);
+          }
+          else if(*ipt != VOLUME/2)
+            printf("Shit +t! %d %d %d %d %d != %d at %d\n",
+                   t, x, y, z, *ipt, VOLUME/2, i);
+          ipt++;
+          if(t != 0) {
+            if(*ipt != block_ipt[t-1][x][y][z] && g_proc_id == 0)
+              printf("Shit -t! %d %d %d %d %d != %d at %d\n",
+                     t, x, y, z, *ipt, block_ipt[t+1][x][y][z], i);
+          }
+          else if(*ipt != VOLUME/2)
+            printf("Shit -t! %d %d %d %d %d != %d at %d\n",
+                   t, x, y, z, *ipt, VOLUME/2, i);
+          ipt++;
+          if(x != LX-1) {
+            if(*ipt != block_ipt[t][x+1][y][z] && g_proc_id == 0)
+              printf("Shit +x! %d %d %d %d %d != %d at %d\n",
+                     t, x, y, z, *ipt, block_ipt[t][x+1][y][z], i);
+          }
+          else if(*ipt != VOLUME/2)
+            printf("Shit +x! %d %d %d %d %d != %d at %d\n",
+                   t, x, y, z, *ipt, VOLUME/2, i);
+          ipt++;
+          if(x != 0) {
+            if(*ipt != block_ipt[t][x-1][y][z] && g_proc_id == 0)
+              printf("Shit -x! %d %d %d %d %d != %d at %d\n",
+                     t, x, y, z, *ipt, block_ipt[t][x-1][y][z], i);
+          }
+          else if(*ipt != VOLUME/2)
+            printf("Shit -x! %d %d %d %d %d != %d at %d\n",
+                   t, x, y, z, *ipt, VOLUME/2, i);
+          ipt++;
+          if(y != LY-1) {
+            if(*ipt != block_ipt[t][x][y+1][z] && g_proc_id == 0)
+              printf("Shit +y! %d %d %d %d %d != %d at %d\n",
+                     t, x, y, z, *ipt, block_ipt[t][x][y+1][z], i);
+          }
+          else if(*ipt != VOLUME/2)
+            printf("Shit +y! %d %d %d %d %d != %d at %d\n",
+                   t, x, y, z, *ipt, VOLUME/2, i);
+          ipt++;
+          if(y != 0) {
+            if(*ipt != block_ipt[t][x][y-1][z] && g_proc_id == 0)
+              printf("Shit -y! %d %d %d %d %d != %d at %d\n",
+                     t, x, y, z, *ipt, block_ipt[t][x][y-1][z], i);
+          }
+          else if(*ipt != VOLUME/2)
+            printf("Shit -y! %d %d %d %d %d != %d at %d\n",
+                   t, x, y, z, *ipt, VOLUME/2, i);
+          ipt++;
+          if(z != LZ/2-1) {
+            if(*ipt != block_ipt[t][x][y][z+1] && g_proc_id == 0)
+              printf("Shit +z! %d %d %d %d %d != %d at %d\n",
+                     t, x, y, z, *ipt, block_ipt[t][x][y][z+1], i);
+          }
+          else if(*ipt != VOLUME/2)
+            printf("Shit +z! %d %d %d %d %d != %d at %d\n",
+                   t, x, y, z, *ipt, VOLUME/2, i);
+          ipt++;
+          if(z != 0) {
+            if(*ipt != block_ipt[t][x][y][z-1] && g_proc_id == 0)
+              printf("Shit -z! %d %d %d %d %d != %d at %d\n",
+                     t, x, y, z, *ipt, block_ipt[t][x][y][z-1], i);
+          }
+          else if(*ipt != VOLUME/2)
+            printf("Shit -z! %d %d %d %d %d != %d at %d\n",
+                   t, x, y, z, *ipt, VOLUME/2, i);
+          ipt++;
+        }
       }
     }
   }
@@ -345,10 +356,10 @@ int init_blocks_geometry() {
   for(t = 0; t < T; t++) {
     for(x = 0; x < LX; x++) {
       for(y = 0; y < LY; y++) {
-	for(z = 0; z < LZ/2; z++) {
-	  block_ipt[t][x][y][z] = ix;
-	  ix++;
-	}
+        for(z = 0; z < LZ/2; z++) {
+          block_ipt[t][x][y][z] = ix;
+          ix++;
+        }
       }
     }
   }
@@ -372,25 +383,25 @@ complex block_scalar_prod(spinor * const R, spinor * const S, const int N) {
 #if (defined BGL && defined XLC)
   __alignx(16, S);
   __alignx(16, R);
-#endif  
+#endif
   for (ix = 0; ix < N; ix++){
     s=(spinor *) S + ix;
     r=(spinor *) R + ix;
 
     ds=(*r).s0.c0.re*(*s).s0.c0.re+(*r).s0.c0.im*(*s).s0.c0.im+
-       (*r).s0.c1.re*(*s).s0.c1.re+(*r).s0.c1.im*(*s).s0.c1.im+
-       (*r).s0.c2.re*(*s).s0.c2.re+(*r).s0.c2.im*(*s).s0.c2.im+
-       (*r).s1.c0.re*(*s).s1.c0.re+(*r).s1.c0.im*(*s).s1.c0.im+
-       (*r).s1.c1.re*(*s).s1.c1.re+(*r).s1.c1.im*(*s).s1.c1.im+
-       (*r).s1.c2.re*(*s).s1.c2.re+(*r).s1.c2.im*(*s).s1.c2.im+
-       (*r).s2.c0.re*(*s).s2.c0.re+(*r).s2.c0.im*(*s).s2.c0.im+
-       (*r).s2.c1.re*(*s).s2.c1.re+(*r).s2.c1.im*(*s).s2.c1.im+
-       (*r).s2.c2.re*(*s).s2.c2.re+(*r).s2.c2.im*(*s).s2.c2.im+
-       (*r).s3.c0.re*(*s).s3.c0.re+(*r).s3.c0.im*(*s).s3.c0.im+
-       (*r).s3.c1.re*(*s).s3.c1.re+(*r).s3.c1.im*(*s).s3.c1.im+
-       (*r).s3.c2.re*(*s).s3.c2.re+(*r).s3.c2.im*(*s).s3.c2.im;
+        (*r).s0.c1.re*(*s).s0.c1.re+(*r).s0.c1.im*(*s).s0.c1.im+
+        (*r).s0.c2.re*(*s).s0.c2.re+(*r).s0.c2.im*(*s).s0.c2.im+
+        (*r).s1.c0.re*(*s).s1.c0.re+(*r).s1.c0.im*(*s).s1.c0.im+
+        (*r).s1.c1.re*(*s).s1.c1.re+(*r).s1.c1.im*(*s).s1.c1.im+
+        (*r).s1.c2.re*(*s).s1.c2.re+(*r).s1.c2.im*(*s).s1.c2.im+
+        (*r).s2.c0.re*(*s).s2.c0.re+(*r).s2.c0.im*(*s).s2.c0.im+
+        (*r).s2.c1.re*(*s).s2.c1.re+(*r).s2.c1.im*(*s).s2.c1.im+
+        (*r).s2.c2.re*(*s).s2.c2.re+(*r).s2.c2.im*(*s).s2.c2.im+
+        (*r).s3.c0.re*(*s).s3.c0.re+(*r).s3.c0.im*(*s).s3.c0.im+
+        (*r).s3.c1.re*(*s).s3.c1.re+(*r).s3.c1.im*(*s).s3.c1.im+
+        (*r).s3.c2.re*(*s).s3.c2.re+(*r).s3.c2.im*(*s).s3.c2.im;
 
-    /* Kahan Summation */    
+    /* Kahan Summation */
     tr=ds+kc;
     ts=tr+ks;
     tt=ts-ks;
@@ -409,17 +420,17 @@ complex block_scalar_prod(spinor * const R, spinor * const S, const int N) {
     r=(spinor *) R + ix;
     
     ds=-(*r).s0.c0.re*(*s).s0.c0.im+(*r).s0.c0.im*(*s).s0.c0.re-
-      (*r).s0.c1.re*(*s).s0.c1.im+(*r).s0.c1.im*(*s).s0.c1.re-
-      (*r).s0.c2.re*(*s).s0.c2.im+(*r).s0.c2.im*(*s).s0.c2.re-
-      (*r).s1.c0.re*(*s).s1.c0.im+(*r).s1.c0.im*(*s).s1.c0.re-
-      (*r).s1.c1.re*(*s).s1.c1.im+(*r).s1.c1.im*(*s).s1.c1.re-
-      (*r).s1.c2.re*(*s).s1.c2.im+(*r).s1.c2.im*(*s).s1.c2.re-
-      (*r).s2.c0.re*(*s).s2.c0.im+(*r).s2.c0.im*(*s).s2.c0.re-
-      (*r).s2.c1.re*(*s).s2.c1.im+(*r).s2.c1.im*(*s).s2.c1.re-
-      (*r).s2.c2.re*(*s).s2.c2.im+(*r).s2.c2.im*(*s).s2.c2.re-
-      (*r).s3.c0.re*(*s).s3.c0.im+(*r).s3.c0.im*(*s).s3.c0.re-
-      (*r).s3.c1.re*(*s).s3.c1.im+(*r).s3.c1.im*(*s).s3.c1.re-
-      (*r).s3.c2.re*(*s).s3.c2.im+(*r).s3.c2.im*(*s).s3.c2.re;
+        (*r).s0.c1.re*(*s).s0.c1.im+(*r).s0.c1.im*(*s).s0.c1.re-
+        (*r).s0.c2.re*(*s).s0.c2.im+(*r).s0.c2.im*(*s).s0.c2.re-
+        (*r).s1.c0.re*(*s).s1.c0.im+(*r).s1.c0.im*(*s).s1.c0.re-
+        (*r).s1.c1.re*(*s).s1.c1.im+(*r).s1.c1.im*(*s).s1.c1.re-
+        (*r).s1.c2.re*(*s).s1.c2.im+(*r).s1.c2.im*(*s).s1.c2.re-
+        (*r).s2.c0.re*(*s).s2.c0.im+(*r).s2.c0.im*(*s).s2.c0.re-
+        (*r).s2.c1.re*(*s).s2.c1.im+(*r).s2.c1.im*(*s).s2.c1.re-
+        (*r).s2.c2.re*(*s).s2.c2.im+(*r).s2.c2.im*(*s).s2.c2.re-
+        (*r).s3.c0.re*(*s).s3.c0.im+(*r).s3.c0.im*(*s).s3.c0.re-
+        (*r).s3.c1.re*(*s).s3.c1.im+(*r).s3.c1.im*(*s).s3.c1.re-
+        (*r).s3.c2.re*(*s).s3.c2.im+(*r).s3.c2.im*(*s).s3.c2.re;
 
     tr=ds+kc;
     ts=tr+ks;
@@ -443,22 +454,22 @@ double block_two_norm(spinor * const R, const int N) {
 #if (defined BGL && defined XLC)
   __alignx(16, S);
   __alignx(16, R);
-#endif  
+#endif
   for (ix = 0; ix < N; ix++){
     r=(spinor *) R + ix;
 
     ds=(*r).s0.c0.re*(*r).s0.c0.re+(*r).s0.c0.im*(*r).s0.c0.im+
-       (*r).s0.c1.re*(*r).s0.c1.re+(*r).s0.c1.im*(*r).s0.c1.im+
-       (*r).s0.c2.re*(*r).s0.c2.re+(*r).s0.c2.im*(*r).s0.c2.im+
-       (*r).s1.c0.re*(*r).s1.c0.re+(*r).s1.c0.im*(*r).s1.c0.im+
-       (*r).s1.c1.re*(*r).s1.c1.re+(*r).s1.c1.im*(*r).s1.c1.im+
-       (*r).s1.c2.re*(*r).s1.c2.re+(*r).s1.c2.im*(*r).s1.c2.im+
-       (*r).s2.c0.re*(*r).s2.c0.re+(*r).s2.c0.im*(*r).s2.c0.im+
-       (*r).s2.c1.re*(*r).s2.c1.re+(*r).s2.c1.im*(*r).s2.c1.im+
-       (*r).s2.c2.re*(*r).s2.c2.re+(*r).s2.c2.im*(*r).s2.c2.im+
-       (*r).s3.c0.re*(*r).s3.c0.re+(*r).s3.c0.im*(*r).s3.c0.im+
-       (*r).s3.c1.re*(*r).s3.c1.re+(*r).s3.c1.im*(*r).s3.c1.im+
-       (*r).s3.c2.re*(*r).s3.c2.re+(*r).s3.c2.im*(*r).s3.c2.im;
+        (*r).s0.c1.re*(*r).s0.c1.re+(*r).s0.c1.im*(*r).s0.c1.im+
+        (*r).s0.c2.re*(*r).s0.c2.re+(*r).s0.c2.im*(*r).s0.c2.im+
+        (*r).s1.c0.re*(*r).s1.c0.re+(*r).s1.c0.im*(*r).s1.c0.im+
+        (*r).s1.c1.re*(*r).s1.c1.re+(*r).s1.c1.im*(*r).s1.c1.im+
+        (*r).s1.c2.re*(*r).s1.c2.re+(*r).s1.c2.im*(*r).s1.c2.im+
+        (*r).s2.c0.re*(*r).s2.c0.re+(*r).s2.c0.im*(*r).s2.c0.im+
+        (*r).s2.c1.re*(*r).s2.c1.re+(*r).s2.c1.im*(*r).s2.c1.im+
+        (*r).s2.c2.re*(*r).s2.c2.re+(*r).s2.c2.im*(*r).s2.c2.im+
+        (*r).s3.c0.re*(*r).s3.c0.re+(*r).s3.c0.im*(*r).s3.c0.im+
+        (*r).s3.c1.re*(*r).s3.c1.re+(*r).s3.c1.im*(*r).s3.c1.im+
+        (*r).s3.c2.re*(*r).s3.c2.re+(*r).s3.c2.im*(*r).s3.c2.im;
 
     /* Kahan Summation */
     tr=ds+kc;
@@ -469,19 +480,6 @@ double block_two_norm(spinor * const R, const int N) {
   }
   norm = ks+kc;
   return(norm);
-}
-
-void block_compute_little_D_diagonal(block *parent) {
-  int i,j;
-  spinor * tmp = g_spinor_field[DUM_SOLVER];
-  complex * M = parent->little_dirac_operator;
-
-  for(i = 0; i < g_N_s; i++){
-    Block_D_psi(parent, tmp, parent->basis[i]);
-    for(j = 0; j < g_N_s; j++){
-      M[i * g_N_s + j]  = block_scalar_prod(tmp, parent->basis[j], parent->volume);
-    }
-  }
 }
 
 /* Uses a Modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
@@ -513,6 +511,163 @@ void block_orthonormalize(block *parent) {
   return;
 }
 
+
+void block_compute_little_D_diagonal(block *parent) {
+  int i,j;
+  spinor * tmp = g_spinor_field[DUM_SOLVER];
+  complex * M = parent->little_dirac_operator;
+
+  for(i = 0; i < g_N_s; i++){
+    Block_D_psi(parent, tmp, parent->basis[i]);
+    for(j = 0; j < g_N_s; j++){
+      M[i * g_N_s + j]  = block_scalar_prod(tmp, parent->basis[j], parent->volume);
+    }
+  }
+}
+
+void alt_block_compute_little_D() {
+  int i,j,k,l;
+  spinor *rec, *app, *zero;
+  spinor *psi_dn, *psi_up;
+
+  rec = calloc(VOLUMEPLUSRAND, sizeof(spinor));
+  app = calloc(VOLUMEPLUSRAND, sizeof(spinor));
+  zero = calloc(VOLUMEPLUSRAND, sizeof(spinor));
+  psi_dn = calloc(VOLUME/2, sizeof(spinor));
+  psi_up = calloc(VOLUME/2, sizeof(spinor));
+
+  for (j = 0; j < VOLUMEPLUSRAND; ++j){
+    _spinor_null(zero[j]);
+  }
+
+  for (k = 0; k < g_nproc; ++k){
+    for (i = 0; i < g_N_s; ++i){
+
+      /* Lower Z block */
+      for (j = 0; j < VOLUMEPLUSRAND; ++j){
+        _spinor_null(rec[j]);
+      }
+
+      if (g_cart_id == k){
+        reconstruct_global_field(rec, block_list[0].basis[i], zero);
+      }
+
+      D_psi(app, rec);
+
+      split_global_field(psi_dn, psi_up, app);
+
+      if (g_cart_id == k){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[0].little_dirac_operator[i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
+          block_list[1].little_dirac_operator[Z_DN * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_up, block_list[1].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_t_up){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[0].little_dirac_operator[T_UP * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_t_dn){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[0].little_dirac_operator[T_DN * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_x_up){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[0].little_dirac_operator[X_UP * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_x_dn){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[0].little_dirac_operator[X_DN * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_y_up){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[0].little_dirac_operator[Y_UP * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_y_dn){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[0].little_dirac_operator[Y_DN * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_z_up){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[0].little_dirac_operator[Z_UP * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
+        }
+      }
+
+      /* Upper Z block */
+      for (j = 0; j < VOLUMEPLUSRAND; ++j){
+        _spinor_null(rec[j]);
+      }
+
+      if (g_proc_id == k){
+        reconstruct_global_field(rec, zero, block_list[1].basis[i]);
+      }
+
+      D_psi(app, rec);
+
+      split_global_field(psi_dn, psi_up, app);
+      if (g_cart_id == k){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[0].little_dirac_operator[Z_UP * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[0].basis[l], VOLUME/2);
+          block_list[1].little_dirac_operator[i * g_N_s + l] =
+              block_scalar_prod(psi_up, block_list[1].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_t_up){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[1].little_dirac_operator[T_UP * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_t_dn){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[1].little_dirac_operator[T_DN * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_x_up){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[1].little_dirac_operator[X_UP * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_x_dn){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[1].little_dirac_operator[X_DN * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_y_up){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[1].little_dirac_operator[Y_UP * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_y_dn){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[1].little_dirac_operator[Y_DN * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
+        }
+      } else if (k == g_nb_z_dn){
+        for(l = 0; l < g_N_s; ++l){
+          block_list[1].little_dirac_operator[Z_DN * g_N_s * g_N_s + i * g_N_s + l] =
+              block_scalar_prod(psi_dn, block_list[1].basis[l], VOLUME/2);
+        }
+      }
+
+      MPI_Barrier(MPI_COMM_WORLD);
+    }
+  }
+
+  free(rec);
+  free(app);
+  free(zero);
+  free(psi_dn);
+  free(psi_up);
+}
+
+
 /* what happens if this routine is called in a one dimensional parallelisation? */
 /* or even serially ?                                                           */
 void block_compute_little_D_offdiagonal(){
@@ -542,46 +697,47 @@ void block_compute_little_D_offdiagonal(){
 
     /* +- t */
     mu = 0;
+
     for(pm = 0; pm < 2; pm++) {
       if(pm == 0) t = T-1;
       else t = 0;
 
       r = temp;
       for(x = 0; x < LX; x++) {
-	for(y = 0; y < LY; y++) {
-	  for(z = 0; z < LZ; z++) {
-	    ix = g_ipt[t][x][y][z];
-	    if(pm == 0) {
-	      s = &scratch[ g_iup[ ix ][mu] ];
-	      u = &g_gauge_field[ ix ][mu];
-	    }
-	    else {
-	      s = &scratch[ g_idn[ ix ][mu] ];
-	      u = &g_gauge_field[ g_idn[ix][mu] ][mu];
-	    }
-	    boundary_D[pm](r, s, u);
+        for(y = 0; y < LY; y++) {
+          for(z = 0; z < LZ; z++) {
+            ix = g_ipt[t][x][y][z];
+            if(pm == 0) {
+              s = &scratch[ g_iup[ ix ][mu] ];
+              u = &g_gauge_field[ ix ][mu];
+            }
+            else {
+              s = &scratch[ g_idn[ ix ][mu] ];
+              u = &g_gauge_field[ g_idn[ix][mu] ][mu];
+            }
+            boundary_D[pm](r, s, u);
             r++;
-	  }
-	}
+          }
+        }
       }
 
       /* now all the scalar products */
       for(j = 0; j < g_N_s; j++) {
         r = temp; /* We need to contract g_N_s times with the same set of fields, right? */
-	for(x = 0; x < LX; x++) {
-	  for(y = 0; y < LY; y++) {
-	    for(k = 0; k < 2; k++) {
-	      iy = j + i * g_N_s + (pm + 1) * g_N_s * g_N_s;
-	      _complex_zero(block_list[k].little_dirac_operator[ iy ]);
-	      for(z = 0; z < LZ/2; z++) {
-		ix = block_ipt[t][x][y][z];
-		s = &block_list[k].basis[j][ ix ];
-		_add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
-		r++;
-	      }
-	    }
-	  }
-	}
+        for(x = 0; x < LX; x++) {
+          for(y = 0; y < LY; y++) {
+            for(k = 0; k < 2; k++) {
+              iy = j * g_N_s + i  + (pm + 1) * g_N_s * g_N_s;
+              _complex_zero(block_list[k].little_dirac_operator[ iy ]);
+              for(z = 0; z < LZ/2; z++) {
+                ix = block_ipt[t][x][y][z];
+                s = &block_list[k].basis[j][ ix ];
+                _add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
+                r++;
+              }
+            }
+          }
+        }
       }
     }
 
@@ -593,40 +749,40 @@ void block_compute_little_D_offdiagonal(){
 
       r = temp;
       for(t = 0; t < T; t++) {
-	for(y = 0; y < LY; y++) {
-	  for(z = 0; z < LZ; z++) {
-	    ix = g_ipt[t][x][y][z];
-	    if(pm == 2) {
-	      s = &scratch[ g_iup[ ix ][mu] ];
-	      u = &g_gauge_field[ ix ][mu];
-	    }
-	    else {
-	      s = &scratch[ g_idn[ ix ][mu] ];
-	      u = &g_gauge_field[ g_idn[ix][mu] ][mu];
-	    }
-	    boundary_D[pm](r, s, u);
-	    r++;
-	  }
-	}
+        for(y = 0; y < LY; y++) {
+          for(z = 0; z < LZ; z++) {
+            ix = g_ipt[t][x][y][z];
+            if(pm == 2) {
+              s = &scratch[ g_iup[ ix ][mu] ];
+              u = &g_gauge_field[ ix ][mu];
+            }
+            else {
+              s = &scratch[ g_idn[ ix ][mu] ];
+              u = &g_gauge_field[ g_idn[ix][mu] ][mu];
+            }
+            boundary_D[pm](r, s, u);
+            r++;
+          }
+        }
       }
 
       /* now all the scalar products */
       for(j = 0; j < g_N_s; j++) {
         r = temp;
-	for(t = 0; t < T; t++) {
-	  for(y = 0; y < LY; y++) {
-	    for(k = 0; k < 2; k++) {
-	      iy = j + i * g_N_s + (pm + 1) * g_N_s * g_N_s;
-	      _complex_zero(block_list[k].little_dirac_operator[ iy ]);
-	      for(z = 0; z < LZ / 2; z++) {
-		ix = block_ipt[t][x][y][z];
-		s = &block_list[k].basis[j][ ix ];
-		_add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
-		r++;
-	      }
-	    }
-	  }
-	}
+        for(t = 0; t < T; t++) {
+          for(y = 0; y < LY; y++) {
+            for(k = 0; k < 2; k++) {
+              iy = j  * g_N_s+ i + (pm + 1) * g_N_s * g_N_s;
+              _complex_zero(block_list[k].little_dirac_operator[ iy ]);
+              for(z = 0; z < LZ / 2; z++) {
+                ix = block_ipt[t][x][y][z];
+                s = &block_list[k].basis[j][ ix ];
+                _add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
+                r++;
+              }
+            }
+          }
+        }
       }
     }
 
@@ -638,40 +794,40 @@ void block_compute_little_D_offdiagonal(){
 
       r = temp;
       for(t = 0; t < T; t++) {
-	for(x = 0; x < LX; x++) {
-	  for(z = 0; z < LZ; z++) {
-	    ix = g_ipt[t][x][y][z];
-	    if(pm == 4) {
-	      s = &scratch[ g_iup[ ix ][mu] ];
-	      u = &g_gauge_field[ ix ][mu];
-	    }
-	    else {
-	      s = &scratch[ g_idn[ ix ][mu] ];
-	      u = &g_gauge_field[ g_idn[ix][mu] ][mu];
-	    }
-	    boundary_D[pm](r, s, u);
-	    r++;
-	  }
-	}
+        for(x = 0; x < LX; x++) {
+          for(z = 0; z < LZ; z++) {
+            ix = g_ipt[t][x][y][z];
+            if(pm == 4) {
+              s = &scratch[ g_iup[ ix ][mu] ];
+              u = &g_gauge_field[ ix ][mu];
+            }
+            else {
+              s = &scratch[ g_idn[ ix ][mu] ];
+              u = &g_gauge_field[ g_idn[ix][mu] ][mu];
+            }
+            boundary_D[pm](r, s, u);
+            r++;
+          }
+        }
       }
 
       /* now all the scalar products */
       for(j = 0; j < g_N_s; j++) {
         r = temp;
-	for(t = 0; t < T; t++) {
-	  for(x = 0; x < LX; x++) {
-	    for(k = 0; k < 2; k++) {
-	      iy = j + i * g_N_s + (pm + 1) * g_N_s * g_N_s;
-	      _complex_zero(block_list[k].little_dirac_operator[ iy ]);
-	      for(z = 0; z < LZ / 2; z++) {
-		ix = block_ipt[t][x][y][z];
-		s = &block_list[k].basis[j][ ix ];
-		_add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
-		r++;
-	      }
-	    }
-	  }
-	}
+        for(t = 0; t < T; t++) {
+          for(x = 0; x < LX; x++) {
+            for(k = 0; k < 2; k++) {
+              iy = j * g_N_s + i + (pm + 1) * g_N_s * g_N_s;
+              _complex_zero(block_list[k].little_dirac_operator[ iy ]);
+              for(z = 0; z < LZ / 2; z++) {
+                ix = block_ipt[t][x][y][z];
+                s = &block_list[k].basis[j][ ix ];
+                _add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
+                r++;
+              }
+            }
+          }
+        }
       }
     }
 
@@ -706,7 +862,7 @@ void block_compute_little_D_offdiagonal(){
         for(t = 0; t < T; ++t) {
           for(x = 0; x < LX; ++x) {
             for(y = 0; y < LY; ++y){
-              iy = j + i * g_N_s + (pm + 1) * g_N_s * g_N_s;
+              iy = j * g_N_s + i + (pm + 1) * g_N_s * g_N_s;
               _complex_zero(block_list[pm % 2].little_dirac_operator[ iy ]);
               ix = block_ipt[t][x][y][z];
               s = &block_list[pm % 2].basis[j][ ix ];
@@ -741,7 +897,7 @@ void block_compute_little_D_offdiagonal(){
       for(t = 0; t < T; ++t) {
         for(x = 0; x < LX; ++x) {
           for(y = 0; y < LY; ++y){
-            iy = j + i * g_N_s + (6 + 1) * g_N_s * g_N_s;
+            iy = j * g_N_s + i + (6 + 1) * g_N_s * g_N_s;
             _complex_zero(block_list[1].little_dirac_operator[ iy ]);
             ix = block_ipt[t][x][y][0];
             s = &block_list[1].basis[j][ ix ];
@@ -773,7 +929,7 @@ void block_compute_little_D_offdiagonal(){
       for(t = 0; t < T; ++t) {
         for(x = 0; x < LX; ++x) {
           for(y = 0; y < LY; ++y){
-            iy = j + i * g_N_s + (7 + 1) * g_N_s * g_N_s;
+            iy = j * g_N_s + i + (7 + 1) * g_N_s * g_N_s;
             _complex_zero(block_list[0].little_dirac_operator[ iy ]);
             ix = block_ipt[t][x][y][z - 1]; /* z - 1 = LZ / 2 - 1 */
             s = &block_list[0].basis[j][ ix ];
