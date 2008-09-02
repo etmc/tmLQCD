@@ -277,13 +277,13 @@ int main(int argc,char *argv[]) {
       block_orthonormalize(block_list+1);
 
       /* Compute little Dirac operators */
-      /*block_compute_little_D_diagonal(block_list);
-      block_compute_little_D_diagonal(block_list + 1);
-      block_compute_little_D_offdiagonal();*/
       alt_block_compute_little_D();
-
-      check_projectors();
-      /*check_little_D_inversion();*/
+      if (g_debug_level > 0){
+        check_projectors();
+      }
+      if (g_debug_level > 1){
+        check_little_D_inversion();
+      }
 
       a1 = calloc(2*9*g_N_s, sizeof(complex));
       a2 = calloc(2*9*g_N_s, sizeof(complex));
@@ -466,8 +466,8 @@ int main(int argc,char *argv[]) {
       diff(g_spinor_field[4], g_spinor_field[4], g_spinor_field[0], VOLUME/2); 
       diff(g_spinor_field[5], g_spinor_field[5], g_spinor_field[1], VOLUME/2); 
 
-      nrm1 = square_norm(g_spinor_field[4], VOLUME/2); 
-      nrm2 = square_norm(g_spinor_field[5], VOLUME/2); 
+      nrm1 = sqrt(square_norm(g_spinor_field[4], VOLUME/2));
+      nrm2 = sqrt(square_norm(g_spinor_field[5], VOLUME/2));
 
       if(g_proc_id == 0) {
 	printf("Inversion for source %d done in %d iterations, residue = %e!\n", ix, iter, nrm1+nrm2);

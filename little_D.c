@@ -88,7 +88,7 @@ void invert_little_D_spinor(spinor *r, spinor *s){
     v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
   }
 
-  lgcr(w, v, 10, 100, 1.e-15, 0, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
+  lgcr(w, v, 10, 100, 1e-31, 1, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
 
   mul(psi[0], w[0], block_list[0].basis[0], VOLUME/2);
   mul(psi[1], w[g_N_s], block_list[1].basis[0], VOLUME/2);
@@ -123,15 +123,16 @@ void apply_little_D_spinor(spinor *r, spinor *s){
     v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
   }
 
-  if (!g_cart_id){
-    for (j = 0; j < 2* g_N_s; ++j) {
-      printf("LITTLE_D for 0: v[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
+  if (g_debug_level > 2){
+    if (!g_cart_id){
+      for (j = 0; j < 2* g_N_s; ++j) {
+        printf("LITTLE_D for 0: v[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
+      }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
   }
-  MPI_Barrier(MPI_COMM_WORLD);
 
-  if (g_debug_level > 2)
-  {
+  if (g_debug_level > 4){
     for (k = 1; k < 16; ++k){
       if (g_cart_id == k){
         for (j = 0; j < 2* g_N_s; ++j) {
@@ -144,14 +145,16 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 
   little_D(w, v);
 
-  if (!g_cart_id){
-    for (j = 0; j < 2 * g_N_s; ++j) {
-      printf("LITTLE_D for 0: w[%u] = %1.5e + %1.5e i\n", j, w[j].re, w[j].im);
+  if (g_debug_level > 2){
+    if (!g_cart_id){
+      for (j = 0; j < 2 * g_N_s; ++j) {
+        printf("LITTLE_D for 0: w[%u] = %1.5e + %1.5e i\n", j, w[j].re, w[j].im);
+      }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
   }
-  MPI_Barrier(MPI_COMM_WORLD);
 
-  if (g_debug_level > 2)
+  if (g_debug_level > 4)
   {
     for (k = 1; k < 16; ++k){
       if (g_cart_id == k){
@@ -174,11 +177,6 @@ void apply_little_D_spinor(spinor *r, spinor *s){
   free(v);
   free(w);
   free(psi[0]);
-
-/*  project2(g_spinor_field[DUM_MATRIX], s);
-  D_psi(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX]);
-  project2(r, g_spinor_field[DUM_MATRIX+1]);*/
-
 }
 
 void alt_little_field_gather(complex * w) {
@@ -265,8 +263,7 @@ void alt_little_field_gather(complex * w) {
 }
 
 void little_D(complex * v, complex *w) {
-  int i, j, k, sq = g_N_s*g_N_s;
-  complex *vt, *wt, *M;
+  int i, j, sq = g_N_s*g_N_s;
   CONE.re = 1.;
   CONE.im = 0.;
   CMONE.re = -1.;
@@ -382,7 +379,6 @@ static complex * tmp = NULL;
 static complex * rho = NULL;
 static int lgcr_init = 0;
 
-
 int lgcr(complex * const P, complex * const Q, 
         const int m, const int max_restarts,
         const double eps_sq, const int rel_prec,
@@ -395,20 +391,19 @@ int lgcr(complex * const P, complex * const Q,
   init_lgcr(m, lda);
 
   norm_sq = lsquare_norm(Q, N);
-  
+
   for(restart = 0; restart < max_restarts; restart++) {
     f(tmp, P);
     ldiff(rho, Q, tmp, N);
     err = lsquare_norm(rho, N);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-      printf("lGCR: %d\t%g true residue\n", restart*m, err); 
+    if(g_proc_id == g_stdio_proc && g_debug_level > 1){
+      printf("lGCR: %d\t%g true residue\n", restart * m, err); 
       fflush(stdout);
     }
-    if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
-      return(restart*m);
+    if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq * norm_sq) && (rel_prec == 1))) {
+      return (restart * m);
     }
     for(k = 0; k < m; k++) {
-
       memcpy(xi[k], rho, N*sizeof(complex));
       /* here we could put in a preconditioner */
       f(tmp, xi[k]); 
@@ -422,7 +417,7 @@ int lgcr(complex * const P, complex * const Q,
       c[k] = lscalar_prod(chi[k], rho, N);
       lassign_diff_mul(rho, chi[k], c[k], N);
       err = lsquare_norm(rho, N);
-      if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+      if(g_proc_id == g_stdio_proc && g_debug_level > 1){
         printf("lGCR: %d\t%g iterated residue\n", restart*m+k, err); 
         fflush(stdout);
       }

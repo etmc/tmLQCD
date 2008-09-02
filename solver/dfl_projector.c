@@ -53,7 +53,7 @@ void project(spinor * const out, spinor * const in) {
     inprod[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], vol);
   }
 
-  iter = lgcr(invvec, inprod, 10, 100, 1.e-15, 0, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
+  iter = lgcr(invvec, inprod, 10, 100, 1.e-31, 0, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
 
   /* sum up */
   mul(psi[0], invvec[0], block_list[0].basis[0], vol);
@@ -271,7 +271,7 @@ int check_projectors() {
   psi[0] = calloc(VOLUME, sizeof(spinor));
   psi[1] = psi[0] + VOLUME / 2;
   split_global_field(psi[0], psi[1], g_spinor_field[DUM_SOLVER+2]);
-  if (g_cart_id == 0){
+  if (g_cart_id == 0 && g_debug_level > 4){
     for (j = 0; j < g_N_s; ++j) {
       v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
       v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
@@ -298,7 +298,7 @@ int check_projectors() {
   psi[0] = calloc(VOLUME, sizeof(spinor));
   psi[1] = psi[0] + VOLUME / 2;
   split_global_field(psi[0], psi[1], g_spinor_field[DUM_SOLVER+2]);
-  if (!g_proc_id){
+  if (!g_proc_id && g_debug_level > 4){
     for (j = 0; j < g_N_s; ++j) {
       v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
       v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
@@ -384,7 +384,7 @@ void check_little_D_inversion() {
     }
   }
 
-  lgcr(invvec, inprod, 10, 100, 1.e-12, 0, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
+  lgcr(invvec, inprod, 10, 100, 1.e-31, 0, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
   little_D(result, invvec); /* This should be a proper inverse now */
 
   dif = 0.0;
@@ -401,25 +401,26 @@ void check_little_D_inversion() {
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
 
-  if ((g_debug_level > -1) && !g_proc_id){
+  if ((g_debug_level > 2) && !g_proc_id){
     printf("Inversion check on little_D\nStart:\n");
     for(ctr_t = 0; ctr_t < 2 * g_N_s; ++ctr_t){
-      printf("%1.5e + %1.5e I   ", inprod[ctr_t].re, inprod[ctr_t].im);
+      printf("%1.9e + %1.9e I   ", inprod[ctr_t].re, inprod[ctr_t].im);
       if (ctr_t == g_N_s - 1)
         printf("\n");
     }
     printf("\nInverted:\n");
     for(ctr_t = 0; ctr_t < 2 * g_N_s; ++ctr_t){
-      printf("%1.5e + %1.5e I   ", invvec[ctr_t].re, invvec[ctr_t].im);
+      printf("%1.9e + %19e I   ", invvec[ctr_t].re, invvec[ctr_t].im);
       if (ctr_t == g_N_s - 1 )
         printf("\n");
     }
     printf("\nResult:\n");
     for(ctr_t = 0; ctr_t < 2 * g_N_s; ++ctr_t){
-      printf("%1.5e + %1.5e I   ", result[ctr_t].re, result[ctr_t].im);
+      printf("%1.9e + %1.9e I   ", result[ctr_t].re, result[ctr_t].im);
       if (ctr_t == g_N_s - 1)
         printf("\n");
     }
+    printf("\n");
   }
 
 
