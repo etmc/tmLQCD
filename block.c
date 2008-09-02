@@ -983,7 +983,7 @@ int split_global_field(spinor * const block_low, spinor * const block_high, spin
     memcpy(block_high + ctr_t * LZ / 2, field + (2 * ctr_t + 1) * LZ / 2, LZ / 2 * sizeof(spinor));
   }
 
-  if(g_proc_id == 0 && g_debug_level > 4) {
+  if(g_proc_id == 0 && g_debug_level > 8) {
     printf("lower basis norm = %1.3e\n", block_two_norm(block_low,  VOLUME / LZ));
     printf("upper basis norm = %1.3e\n", block_two_norm(block_high, VOLUME / LZ));
   }

@@ -214,11 +214,11 @@ void alt_little_field_gather(complex * w) {
   MPI_Recv(w + 12 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_DN, g_cart_grid, &status);
 
   /* Send z up */
-  memcpy(w + 15 * g_N_s, w, g_N_s * sizeof(complex));
+  memcpy(w + 17 * g_N_s, w, g_N_s * sizeof(complex));
 
   /* Send z down */
   MPI_Bsend(w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_dn, Z_DN, g_cart_grid);
-  MPI_Recv(w + 17 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_up, Z_DN, g_cart_grid, &status);
+  MPI_Recv(w + 15 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_up, Z_DN, g_cart_grid, &status);
 
   /* END LOWER BLOCK */
 
@@ -252,10 +252,10 @@ void alt_little_field_gather(complex * w) {
 
   /* Send z up */
   MPI_Bsend(w + g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_up, Z_UP, g_cart_grid);
-  MPI_Recv(w + 15 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_dn, Z_UP, g_cart_grid, &status);
+  MPI_Recv(w + 16 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_dn, Z_UP, g_cart_grid, &status);
 
   /* Send z down */
-  memcpy(w + 16 * g_N_s, w + g_N_s, g_N_s * sizeof(complex));
+  memcpy(w + 14 * g_N_s, w + g_N_s, g_N_s * sizeof(complex));
 
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Buffer_detach((void*)buf, &size);
@@ -288,7 +288,7 @@ void little_D(complex * v, complex *w) {
     /* offdiagonal terms */
     for(j = 1; j < 9; j++) {
       _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator + j * sq,
-          &g_N_s, w + (2 * j + i) * g_N_s, &ONE, &CONE, v + (2 * j + i) * g_N_s, &ONE, 1);
+          &g_N_s, w + (2 * j + i) * g_N_s, &ONE, &CONE, v + i * g_N_s, &ONE, 1);
     }
   }
   return;

@@ -150,8 +150,6 @@ int check_projectors() {
   spinor *psi[2];
   complex *v;
 
-  goto skip_tests;
-
   random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
 
   split_global_field(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER]);
@@ -258,7 +256,6 @@ int check_projectors() {
     printf("||P A A^-1 psi - P psi|| = %1.5e\n", sqrt(nrm));
   }
 
-  skip_tests:
   /* Different flavours for kappa != 0. First project to only a single block */
   for (j = 0; j < (VOLUME * sizeof(spinor) / sizeof(complex)); ++j){
     _complex_zero(((complex*)g_spinor_field[DUM_SOLVER+1])[j]);
@@ -288,15 +285,12 @@ int check_projectors() {
   free(v);
   free(psi[0]);
 
-
   diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], VOLUME);
   nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME);
   if(g_proc_id == 0) {
     printf("||(P D - A) phi_i || = %1.5e\n", sqrt(nrm));
   }
 
-  goto end_of_tests;
-  
   reconstruct_global_field(g_spinor_field[DUM_SOLVER+1], block_list[0].basis[0], block_list[1].basis[0]);
   apply_little_D_spinor(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
   D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
@@ -355,7 +349,6 @@ int check_projectors() {
     printf("*** End of dump ***\n\n");
   }
 
-  end_of_tests:
   return(0);
 }
 
