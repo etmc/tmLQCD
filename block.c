@@ -538,7 +538,7 @@ void block_contract_basis(int const idx, int const vecnum, int const dir, spinor
 
 void alt_block_compute_little_D() {
   int i, j, k;
-  spinor *_rec, *rec, *app, *zero;
+  spinor *_rec, *rec, *_app, *app, *zero;
   spinor *psi, *psi_dn, *psi_up;
 
   _rec = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
@@ -547,7 +547,12 @@ void alt_block_compute_little_D() {
 #else
   rec = _rec;
 #endif  
-  app = calloc(VOLUMEPLUSRAND, sizeof(spinor));
+  _app = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  app = (spinor*)(((unsigned long int)(_app)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  app = _app;
+#endif  
   zero = calloc(VOLUMEPLUSRAND, sizeof(spinor));
   psi = calloc(VOLUME, sizeof(spinor));
   psi_dn = psi;
@@ -556,6 +561,7 @@ void alt_block_compute_little_D() {
   for (j = 0; j < VOLUMEPLUSRAND; ++j){
     _spinor_null(zero[j]);
   }
+
 
   for (k = 0; k < g_nproc; ++k){
     for (i = 0; i < g_N_s; ++i){
@@ -675,8 +681,8 @@ void alt_block_compute_little_D() {
     }
   }
 
-  free(rec);
-  free(app);
+  free(_rec);
+  free(_app);
   free(zero);
   free(psi);
 }
