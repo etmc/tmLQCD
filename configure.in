@@ -20,10 +20,12 @@ if test "$host_vendor" = "cray"; then
 fi
 
 AC_PROG_CC
+AC_PROG_CC_C99
 AC_C_CONST
 AC_C_INLINE
 AC_C_BIGENDIAN
 AC_C_RESTRICT
+AC_F77_LIBRARY_LDFLAGS
 AC_PROG_LEX
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
@@ -154,7 +156,7 @@ if test "$with_lapack" = yes; then
   AC_DEFINE(HAVE_LAPACK,1,lapack available)
 elif test "$with_lapack" != no; then
   AC_MSG_RESULT(yes)
-  LAPACKLIB=$withval
+  LIBS="$LIBS $withval"
   with_lapack=yes
   AC_DEFINE(HAVE_LAPACK,1,lapack available)
 else
@@ -185,44 +187,20 @@ fi
 # AC_CONFIG_SUBDIRS( rng )
 
 # Checks for libraries.
-if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
-  if test $with_lapack = yes; then
-    AC_CHECK_LIB(essl, zaxpy, ,AC_MSG_ERROR([libessl is missing or zaxpy not available]), -lf -lm )
-    AC_CHECK_LIB(lapack, zheev, LP=yes;AC_DEFINE(HAVE_LAPACK,1,lapack available), LP="", -lessl -lblas -lf -lm )
-  fi
-elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
-  if test $with_lapack = yes; then
-    AC_CHECK_LIB(lapack, zheev, LP=yes, LP="", -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
-    echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
-  fi
-
-elif test "$host_cpu" = "ppc64" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
-  if test $with_lapack = yes; then
-    AC_CHECK_LIB(lapack, zheev, LP=yes, LP="", -lblas -lf77blas -latlas -lxlf90 -lxlfmath -lm)
-    echo "We should check for lapack here... (Is LD_LIBRARY_PATH set correctly?)!"
+function="zheev"
+if test $with_lapack = yes; then
+  if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
+    LIBS="$LIBS -lessl -lblas -lf"
+  elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
+    LIBS="$LIBS -lblas -lf77blas -latlas -lxlf90 -lxlfmath"  
+  elif test "$host_cpu" = "ppc64" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
+    LIBS="$LIBS -lblas -lf77blas -latlas -lxlf90 -lxlfmath"
+  else
+    function="zheev_"
+    LIBS="$LIBS $FLIBS"
   fi
 
-elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
-  AC_CHECK_LIB(g2c, f__cabs, G2C=yes, G2C="")
-  if test "$G2C" = yes; then
-    F2C="-lg2c"
-  fi
-  AC_CHECK_LIB(gfortran, cabs, GFTR="yes", GFTR="")
-  if test "$GFTR" = yes; then
-    F2C="-lgfortran $F2C"
-  fi
-  if test "$GFTR" != yes && test "$G2C" != yes; then
-    AC_MSG_ERROR([missing both libg2c and libgfortran])
-  fi
-
-  if test $with_lapack = yes; then
-    AC_CHECK_LIB(lapack, zheev_, LP=yes, [AC_MSG_ERROR([Cannot find lapack])],  -lblas $F2C -lm)
-    AC_CHECK_LIB(atlas, ATL_walltime, ATLAS=yes, ATLAS="")
-  fi
-else
-  if test $with_lapack = yes; then
-    AC_CHECK_LIB(lapack, zheev_, LP=yes, LP="", -lblas -lf -lm )	
-  fi
+  AC_SEARCH_LIBS([$function],[], [], [AC_MSG_ERROR([Cannot find lapack])], -lm )
 fi
 
 # Checks for header files.
@@ -259,7 +237,6 @@ AC_SUBST(DEBUG_FLAG)
 AC_SUBST(PROFILE_FLAG)
 #AC_SUBST(ARPACK)
 #AC_SUBST(PARPACK)
-AC_SUBST(F2C)
 AC_SUBST(XCHANGELIB)
 AC_SUBST(XCHANGEDIR)
 AC_SUBST(XLIB)
@@ -372,8 +349,10 @@ fi
 # Now we have to set als Flags and compiler properly
 # first for PC's
 if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
+  PGCC=`$CC -V 2>&1 | grep pgcc`
+  ICC=`$CC -V 2>&1 | grep -i intel`
 # the GNU compiler
-  if test "$GCC" = yes; then
+  if test "$GCC" = yes && test "$ICC" = ""; then
     DEPFLAGS="-MM"
     GCCVERSION1=`$CC -dumpversion | cut -d "." -f 1`
     GCCVERSION2=`$CC -dumpversion | cut -d "." -f 2`
@@ -381,12 +360,12 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     if test $enable_mpi = yes; then
 # Due to some standard problems in MPI header files
 # no -pedantic-errors...
-      CFLAGS="$CFLAGS -ansi -pedantic -Wall"
+      CFLAGS="$CFLAGS -pedantic -Wall"
     else
       if test $GCCVERSION1 -gt 2 && test $enable_sse2 = yes; then
-        CFLAGS="$CFLAGS -ansi -Wall -pedantic"
+        CFLAGS="$CFLAGS -Wall -pedantic"
       else
-	CFLAGS="$CFLAGS -ansi -Wall -pedantic"
+	CFLAGS="$CFLAGS -Wall -pedantic"
       fi
     fi
     CXXFLAGS=' -Wall'
@@ -403,10 +382,10 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
          SSE="sse2"
          DEPFLAGS="$DEPFLAGS -DP4"
       elif test $enable_p4 = yes; then
-         CFLAGS="$CFLAGS -mcpu=i686"
+         CFLAGS="$CFLAGS -mtune=i686"
          DEPFLAGS="$DEPFLAGS -DP4"
       else
-         CFLAGS="$CFLAGS -mcpu=i686"
+         CFLAGS="$CFLAGS -mtune=i686"
       fi
     else
       if test $enable_opteron = yes; then
@@ -453,9 +432,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     DEBUG_FLAG="-g"
 # other compiler
   else
-# check for pgcc
-    PGCC=`$CC -V 2>&1 | grep pgcc`
-    ICC=`$CC -V 2>&1 | grep -i intel`
+# check for pgcc and icc
     if test "$PGCC" != ""; then
       DEPFLAGS="-M"
       echo "We are using the Portland Group C compiler!"
@@ -491,19 +468,6 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       CCDEP="$CC"
     fi
   fi
-  if test $with_lapack = yes; then
-    AC_DEFINE(HAVE_LAPACK,1,lapack available)
-    if test "$LP" = "yes" && test "$host_cpu" != "x86_64"; then
-      if test "$ATLAS" = "yes"; then
-        LIBS="-llapack -lf77blas -latlas $LIBS"
-      else
-        LIBS="-llapack -lblas $LIBS"
-      fi
-    else
-      AC_MSG_ERROR("Cannot find liblapack!")
-    fi
-    LIBS="$LIBS $F2C"
-  fi
 
 # The MareNostrum: powerpc on a linux system
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
@@ -531,7 +495,6 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
 
 #The BLue Gene/L
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "blrts"; then
-  CFLAGS="$CFLAGS"
   AC_DEFINE(NOF77_,1,Fortran has not extra _)
   if test "$with_bgldram" = yes; then
     if (test -e /bgl/local/bin/blrts_gcc); then
@@ -652,14 +615,6 @@ else
   fi
   OPTARGS=
   SOPTARGS=
-
-  if test "$with_lapack" = yes; then
-    if test "$LAPACKLIB" = ""; then
-      LIBS="$LIBS -llapack -lblas -lf -lm"
-    else
-      LIBS="$LIBS $LAPACKLIB"
-    fi
-  fi
 fi
 
 
