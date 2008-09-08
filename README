@@ -54,11 +54,16 @@ and then replace
 --with-lapack="$MKL_LIB"
 
 
-on the HLRB ice installation
+on the HLRB ice installation use
 
-very similar to the Munich Altix, for lapack use
+path-to-the-sources/configure --enable-mpi --with-mpidimension=4 --disable-sse2 --disable-p4
+   --with-limedir=path-to-lime/ --enable-newdiracop CC="mpicc -std=c99" CFLAGS="-g"
 
---with-lapack="-L $LIBRARY_PATH mkl_lapack.a -lmkl_ipf -lguide -lpthread"
+where it is again important to use the Intel C compiler! 
+
+for lapack first load the module mkl and then use
+
+--with-lapack="-L$LIBRARY_PATH -llapack -lblas"
 
 on the BG/L:
 
