@@ -374,7 +374,6 @@ int init_blocks_geometry() {
   return 0;
 }
 
-/* the following should be somewhere else ... */
 complex block_scalar_prod(spinor * const R, spinor * const S, const int N) {
   int ix;
   static double ks,kc,ds,tr,ts,tt;
@@ -539,10 +538,15 @@ void block_contract_basis(int const idx, int const vecnum, int const dir, spinor
 
 void alt_block_compute_little_D() {
   int i, j, k;
-  spinor *rec, *app, *zero;
+  spinor *_rec, *rec, *app, *zero;
   spinor *psi, *psi_dn, *psi_up;
 
-  rec = calloc(VOLUMEPLUSRAND, sizeof(spinor));
+  _rec = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  rec = (spinor*)(((unsigned long int)(_rec)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  rec = _rec;
+#endif  
   app = calloc(VOLUMEPLUSRAND, sizeof(spinor));
   zero = calloc(VOLUMEPLUSRAND, sizeof(spinor));
   psi = calloc(VOLUME, sizeof(spinor));
