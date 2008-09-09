@@ -133,14 +133,14 @@ void project_right(spinor * const out, spinor * const in) {
 void project_left_D(spinor * const out, spinor * const in) {
   /* out = P_L D in  = D in - D proj D in*/
 
-  D_psi(g_spinor_field[DUM_SOLVER+3], in);
-  project_left(out, g_spinor_field[DUM_SOLVER+3]);
+  D_psi(g_spinor_field[DUM_MATRIX+1], in);
+  project_left(out, g_spinor_field[DUM_MATRIX+1]);
   return;
 }
 
 void D_project_right(spinor * const out, spinor * const in) {
-  project_right(g_spinor_field[DUM_SOLVER+3], in);
-  D_psi(out, g_spinor_field[DUM_SOLVER+3]);
+  project_right(g_spinor_field[DUM_MATRIX+1], in);
+  D_psi(out, g_spinor_field[DUM_MATRIX+1]);
   return;
 }
 

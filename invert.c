@@ -99,14 +99,13 @@ int main(int argc,char *argv[]) {
 
   DUM_DERI = 6;
   /* DUM_DERI + 2 is enough (not 7) */
-  DUM_SOLVER = DUM_DERI+2;
+  DUM_SOLVER = DUM_DERI+3;
   DUM_MATRIX = DUM_SOLVER+6;
   /* DUM_MATRIX + 2 is enough (not 6) */
   NO_OF_SPINORFIELDS = DUM_MATRIX+2;
 
   verbose = 0;
   g_use_clover_flag = 0;
-  g_dflgcr_flag = 1;
 
 #ifdef MPI
   MPI_Init(&argc, &argv);
@@ -265,7 +264,11 @@ int main(int argc,char *argv[]) {
       /* create set of approximate lowest eigenvectors ("global deflation subspace") */
 
       init_dfl_subspace(g_N_s);
+/*       g_mu = 0.; */
+/*       boundary(0.115); */
       generate_dfl_subspace(g_N_s, VOLUME);
+/*       boundary(g_kappa); */
+/*       g_mu = g_mu1; */
 
       for (nsiter = 0; nsiter < g_N_s; nsiter++) { 
         /* add it to the basis */
@@ -285,13 +288,6 @@ int main(int argc,char *argv[]) {
         check_little_D_inversion();
       }
 
-      a1 = calloc(2*9*g_N_s, sizeof(complex));
-      a2 = calloc(2*9*g_N_s, sizeof(complex));
-      a1[0].re = 1.;
-      lgcr(a2, a1, 10, 5, 1.e-15, 1, 2*g_N_s, 2*9*g_N_s, &little_D);
-      free(a1);
-      free(a2);
-      /* TODO Generate projectors */
     }
 
     for(ix = index_start; ix < index_end; ix++) {
@@ -466,11 +462,11 @@ int main(int argc,char *argv[]) {
       diff(g_spinor_field[4], g_spinor_field[4], g_spinor_field[0], VOLUME/2); 
       diff(g_spinor_field[5], g_spinor_field[5], g_spinor_field[1], VOLUME/2); 
 
-      nrm1 = sqrt(square_norm(g_spinor_field[4], VOLUME/2));
-      nrm2 = sqrt(square_norm(g_spinor_field[5], VOLUME/2));
+      nrm1 = square_norm(g_spinor_field[4], VOLUME/2);
+      nrm2 = square_norm(g_spinor_field[5], VOLUME/2);
 
       if(g_proc_id == 0) {
-	printf("Inversion for source %d done in %d iterations, residue = %e!\n", ix, iter, nrm1+nrm2);
+	printf("Inversion for source %d done in %d iterations, squared residue = %e!\n", ix, iter, nrm1+nrm2);
 	printf("Inversion done in %1.2e sec. \n", etime-atime);
         write_inverter_info(nrm1+nrm2, iter, 0, 1, conf_filename);
       }
