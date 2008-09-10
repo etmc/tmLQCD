@@ -82,21 +82,21 @@ int init_blocks() {
   }
   block_list[1].u = block_list[0].u + 4*VOLUME;
 
-  if((void*)(block_ipt = (int****)calloc(T+4,sizeof(int*))) == NULL) return(5);
-  if((void*)(bipt__ = (int***)calloc ((T+4)*(LX+4), sizeof(int*))) == NULL) return(4);
-  if((void*)(bipt_ = (int**)calloc((T+4)*(LX+4)*(LY+4), sizeof(int*))) == NULL) return(3);
-  if((void*)(bipt = (int*)calloc((T+4)*(LX+4)*(LY+4)*(LZ/2+4), sizeof(int))) == NULL) return(8);
+  if((void*)(block_ipt = (int****)calloc(T+2,sizeof(int*))) == NULL) return(5);
+  if((void*)(bipt__ = (int***)calloc ((T+2)*(LX+2), sizeof(int*))) == NULL) return(4);
+  if((void*)(bipt_ = (int**)calloc((T+2)*(LX+2)*(LY+2), sizeof(int*))) == NULL) return(3);
+  if((void*)(bipt = (int*)calloc((T+2)*(LX+2)*(LY+2)*(LZ/2+2), sizeof(int))) == NULL) return(8);
   bipt_[0] = bipt;
   bipt__[0] = bipt_;
   block_ipt[0] = bipt__;
-  for(i = 1; i < (T+4)*(LX+4)*(LY+4); i++){
-    bipt_[i] = bipt_[i-1]+(LZ/2+4);
+  for(i = 1; i < (T+2)*(LX+2)*(LY+2); i++){
+    bipt_[i] = bipt_[i-1]+(LZ/2+2);
   }
-  for(i = 1; i < (T+4)*(LX+4); i++){
-    bipt__[i] = bipt__[i-1]+(LY+4);
+  for(i = 1; i < (T+2)*(LX+2); i++){
+    bipt__[i] = bipt__[i-1]+(LY+2);
   }
-  for(i = 1; i < (T+4); i++){
-    block_ipt[i] = block_ipt[i-1]+(LX+4);
+  for(i = 1; i < (T+2); i++){
+    block_ipt[i] = block_ipt[i-1]+(LX+2);
   }
 
   for (i = 0; i < 2; ++i) {
@@ -122,6 +122,11 @@ int init_blocks() {
     block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : 0);
     block_list[i].mpilocal_neighbour[7] = (i == 0 ? 1 : 0);
 #endif
+    if(g_debug_level > 4 && g_proc_id == 0) {
+      for(j = 0; j < 8; j++) {
+	printf("block %d mpilocal_neighbour[%d] = %d\n", i, j, block_list[i].mpilocal_neighbour[j]);
+      }
+    }
     memcpy(block_list[i].mpilocal_coordinate, g_proc_coords, 4*sizeof(int));
     memcpy(block_list[i].coordinate, g_proc_coords, 3*sizeof(int));
     block_list[i].coordinate[3] = 2 * g_proc_coords[3] + i;
@@ -455,7 +460,6 @@ double block_two_norm(spinor * const R, const int N) {
   ks=0.0;
   kc=0.0;
 #if (defined BGL && defined XLC)
-  __alignx(16, S);
   __alignx(16, R);
 #endif
   for (ix = 0; ix < N; ix++){
@@ -583,28 +587,31 @@ void alt_block_compute_little_D() {
         block_contract_basis(0, i, NONE, psi);
         block_contract_basis(1, i, Z_DN, psi);
       }
+#ifdef MPI
       else if (k == g_nb_t_up){
-        block_contract_basis(0, i, T_UP, psi);
+        block_contract_basis(0, i, T_DN, psi);
+/*         block_contract_basis(0, i, T_UP, psi); */
       }
       else if (k == g_nb_t_dn){
-        block_contract_basis(0, i, T_DN, psi);
+        block_contract_basis(0, i, T_UP, psi);
+/*         block_contract_basis(0, i, T_DN, psi); */
       }
       else if (k == g_nb_x_up){
-        block_contract_basis(0, i, X_UP, psi);
-      }
-      else if (k == g_nb_x_dn){
         block_contract_basis(0, i, X_DN, psi);
       }
+      else if (k == g_nb_x_dn){
+        block_contract_basis(0, i, X_UP, psi);
+      }
       else if (k == g_nb_y_up){
-        block_contract_basis(0, i, Y_UP, psi);
+        block_contract_basis(0, i, Y_DN, psi);
       }
       else if (k == g_nb_y_dn){
-        block_contract_basis(0, i, Y_DN, psi);
+        block_contract_basis(0, i, Y_UP, psi);
       }
       else if (k == g_nb_z_up){
         block_contract_basis(1, i, Z_UP, psi);
       }
-
+#endif
       /* Upper Z block */
       for (j = 0; j < VOLUMEPLUSRAND; ++j){
         _spinor_null(rec[j]);
@@ -621,29 +628,33 @@ void alt_block_compute_little_D() {
         block_contract_basis(0, i, Z_UP, psi);
         block_contract_basis(1, i, NONE, psi);
       }
+#ifdef MPI
       else if (k == g_nb_t_up){
-        block_contract_basis(1, i, T_UP, psi);
+        block_contract_basis(1, i, T_DN, psi);
+/*         block_contract_basis(1, i, T_UP, psi); */
       }
       else if (k == g_nb_t_dn){
-        block_contract_basis(1, i, T_DN, psi);
+        block_contract_basis(1, i, T_UP, psi);
+/*         block_contract_basis(1, i, T_DN, psi); */
       }
       else if (k == g_nb_x_up){
-        block_contract_basis(1, i, X_UP, psi);
-      }
-      else if (k == g_nb_x_dn){
         block_contract_basis(1, i, X_DN, psi);
       }
+      else if (k == g_nb_x_dn){
+        block_contract_basis(1, i, X_UP, psi);
+      }
       else if (k == g_nb_y_up){
-        block_contract_basis(1, i, Y_UP, psi);
+        block_contract_basis(1, i, Y_DN, psi);
       }
       else if (k == g_nb_y_dn){
-        block_contract_basis(1, i, Y_DN, psi);
+        block_contract_basis(1, i, Y_UP, psi);
       }
       else if (k == g_nb_z_dn){
         block_contract_basis(0, i, Z_DN, psi);
       }
 
       MPI_Barrier(MPI_COMM_WORLD);
+#endif
     }
   }
 
