@@ -129,7 +129,9 @@ void apply_little_D_spinor(spinor *r, spinor *s){
         printf("LITTLE_D for 0: v[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
       }
     }
+#ifdef MPI
     MPI_Barrier(MPI_COMM_WORLD);
+#endif
   }
 
   if (g_debug_level > 4){
@@ -139,7 +141,9 @@ void apply_little_D_spinor(spinor *r, spinor *s){
           printf("LITTLE_D for %u: v[%u] = %1.5e + %1.5e i\n", k, j, v[j].re, v[j].im);
         }
       }
+#ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
+#endif
     }
   }
 
@@ -151,7 +155,9 @@ void apply_little_D_spinor(spinor *r, spinor *s){
         printf("LITTLE_D for 0: w[%u] = %1.5e + %1.5e i\n", j, w[j].re, w[j].im);
       }
     }
+#ifdef MPI
     MPI_Barrier(MPI_COMM_WORLD);
+#endif
   }
 
   if (g_debug_level > 4)
@@ -162,7 +168,9 @@ void apply_little_D_spinor(spinor *r, spinor *s){
           printf("LITTLE_D for %u: w[%u] = %1.5e + %1.5e i\n", k, j, w[j].re, w[j].im);
         }
       }
+#ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
+#endif
     }
   }
 
@@ -180,6 +188,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 }
 
 void alt_little_field_gather(complex * w) {
+#ifdef MPI
   MPI_Status status;
   int size = 25 * g_N_s * sizeof(complex);
   complex *buf = malloc(size);
@@ -259,6 +268,7 @@ void alt_little_field_gather(complex * w) {
   MPI_Buffer_detach((void*)buf, &size);
 
   free(buf);
+#endif
   return;
 }
 
