@@ -40,7 +40,7 @@
 #define _default_solver_flag 1
 #define _default_operator_flag 0
 #define _default_startoption 0
-#define _default_Ntherm 200
+#define _default_Ntherm 0
 #define _default_Nmeas 1
 #define _default_Nsave 9
 #define _default_save_config_flag 0
