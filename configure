@@ -7829,7 +7829,7 @@ fi
 
 # Checks for libraries.
 function="zheev"
-if test $with_lapack = yes; then
+if test $with_lapack = yes && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
   if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
     LIBS="$LIBS -lessl -lblas -lf"
   elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then

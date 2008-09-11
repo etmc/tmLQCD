@@ -188,7 +188,7 @@ fi
 
 # Checks for libraries.
 function="zheev"
-if test $with_lapack = yes; then
+if test $with_lapack = yes && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
   if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
     LIBS="$LIBS -lessl -lblas -lf"
   elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
@@ -557,7 +557,7 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
     XLC=yes
     AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   fi
-  LIBS="-lxlf90_r -lxlomp_ser -lxl -lxlopt -lxlfmath -lrt -lpthread  $LIBS"
+  LIBS="-lxlf90_r -lxlomp_ser -lxl -lxlopt -lxlfmath -ldl -lrt -lpthread  $LIBS"
   LDFLAGS="$LDFLAGS -L/bgsys/local/lib/ -L/opt/ibmcmp/xlf/bg/11.1/lib  -L/bgsys/drivers/ppcfloor/comm/"
   if test $with_lapack = yes; then
     LIBS="-lesslbg -llapack -lesslbg $LIBS"
