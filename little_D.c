@@ -198,27 +198,27 @@ void alt_little_field_gather(complex * w) {
 
   /* Send t up */
   MPI_Bsend(w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_UP, g_cart_grid);
-  MPI_Recv(w + 2 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_dn, T_UP, g_cart_grid, &status);
+  MPI_Recv(w + 4 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_dn, T_UP, g_cart_grid, &status);
 
   /* Send t down */
   MPI_Bsend(w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_dn, T_DN, g_cart_grid);
-  MPI_Recv(w + 4 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_DN, g_cart_grid, &status);
+  MPI_Recv(w + 2 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_DN, g_cart_grid, &status);
 
   /* Send x up */
   MPI_Bsend(w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_UP, g_cart_grid);
-  MPI_Recv(w + 6 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_dn, X_UP, g_cart_grid, &status);
+  MPI_Recv(w + 8 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_dn, X_UP, g_cart_grid, &status);
 
   /* Send x down */
   MPI_Bsend(w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_dn, X_DN, g_cart_grid);
-  MPI_Recv(w + 8 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_DN, g_cart_grid, &status);
+  MPI_Recv(w + 6 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_DN, g_cart_grid, &status);
 
   /* Send y up */
   MPI_Bsend(w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_UP, g_cart_grid);
-  MPI_Recv(w + 10 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_dn, Y_UP, g_cart_grid, &status);
+  MPI_Recv(w + 12 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_dn, Y_UP, g_cart_grid, &status);
 
   /* Send y down */
   MPI_Bsend(w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_dn, Y_DN, g_cart_grid);
-  MPI_Recv(w + 12 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_DN, g_cart_grid, &status);
+  MPI_Recv(w + 10 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_DN, g_cart_grid, &status);
 
   /* Send z up */
   memcpy(w + 17 * g_N_s, w, g_N_s * sizeof(complex));
@@ -235,27 +235,27 @@ void alt_little_field_gather(complex * w) {
 
   /* Send t up */
   MPI_Bsend(w + g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_UP, g_cart_grid);
-  MPI_Recv(w + 3 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_dn, T_UP, g_cart_grid, &status);
+  MPI_Recv(w + 5 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_dn, T_UP, g_cart_grid, &status);
 
   /* Send t down */
   MPI_Bsend(w + g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_dn, T_DN, g_cart_grid);
-  MPI_Recv(w + 5 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_DN, g_cart_grid, &status);
+  MPI_Recv(w + 3 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_DN, g_cart_grid, &status);
 
   /* Send x up */
   MPI_Bsend(w + g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_UP, g_cart_grid);
-  MPI_Recv(w + 7 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_dn, X_UP, g_cart_grid, &status);
+  MPI_Recv(w + 9 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_dn, X_UP, g_cart_grid, &status);
 
   /* Send x down */
   MPI_Bsend(w + g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_dn, X_DN, g_cart_grid);
-  MPI_Recv(w + 9 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_DN, g_cart_grid, &status);
+  MPI_Recv(w + 7 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_DN, g_cart_grid, &status);
 
   /* Send y up */
   MPI_Bsend(w + g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_UP, g_cart_grid);
-  MPI_Recv(w + 11 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_dn, Y_UP, g_cart_grid, &status);
+  MPI_Recv(w + 13 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_dn, Y_UP, g_cart_grid, &status);
 
   /* Send y down */
   MPI_Bsend(w + g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_dn, Y_DN, g_cart_grid);
-  MPI_Recv(w + 13 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_DN, g_cart_grid, &status);
+  MPI_Recv(w + 11 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_DN, g_cart_grid, &status);
 
   /* Send z up */
   MPI_Bsend(w + g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_up, Z_UP, g_cart_grid);
