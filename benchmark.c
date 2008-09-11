@@ -253,9 +253,8 @@ int main(int argc,char *argv[])
 #endif
     for (j=0;j<j_max;j++) {
       for (k=0;k<k_max;k++) {
-	Qtm_plus_psi(g_spinor_field[k+2*k_max], g_spinor_field[k]);
-/* 	Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]); */
-/* 	Hopping_Matrix(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]); */
+ 	Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
+ 	Hopping_Matrix(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]);
       }
     }
 #if defined BGL
