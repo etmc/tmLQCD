@@ -151,6 +151,10 @@ int check_projectors() {
   complex *v;
 
   random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER], VOLUME);
+  if(g_cart_id == 0) {
+    printf("||psi|| = %1.5e\n", sqrt(nrm));
+  }
 
   split_global_field(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER]);
   reconstruct_global_field(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
@@ -190,6 +194,21 @@ int check_projectors() {
   nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME);
   if(g_cart_id == 0) {
     printf("||P_R^2 psi - P_R psi|| = %1.5e\n", sqrt(nrm));
+  }
+
+  project_left(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME);
+  if(g_cart_id == 0) {
+    printf("||P_L psi - psi|| = %1.5e\n", sqrt(nrm));
+  }
+
+  D_psi(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  project_left_D(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER]);
+  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME);
+  if(g_cart_id == 0) {
+    printf("||P_L D psi - D psi|| = %1.5e\n", sqrt(nrm));
   }
 
   project_left(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
