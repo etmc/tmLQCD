@@ -31,6 +31,7 @@
 #include "boundary.h"
 #include "xchange_2fields.h"
 #include "sse.h"
+#include "update_backward_gauge.h"
 #include "deriv_Sb.h"
 
 

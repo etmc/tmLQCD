@@ -26,7 +26,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
   complex s;
 
   if(init_subspace == 0) init_dfl_subspace(Ns);
-
+  g_mu = 0.;
   for(i = 0; i < Ns; i++) {
     random_spinor_field(dfl_fields[i], N, 1);
     ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
@@ -57,7 +57,44 @@ int generate_dfl_subspace(const int Ns, const int N) {
       }
     }
   }
+  return(0);
+}
 
+int generate_dfl_subspace_free(const int Ns, const int N) {
+  int i,j, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex), 
+    vol = VOLUME*sizeof(spinor)/sizeof(complex);
+  double nrm, e = 0.5, d = 1.;
+  complex s;
+
+  if(init_subspace == 0) init_dfl_subspace(Ns);
+  g_mu = 0.;
+  for(i = 0; i < 12; i++) {
+    constant_spinor_field(dfl_fields[i], i, N);
+    ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
+    nrm = sqrt(square_norm(dfl_fields[i], N));
+    mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
+
+    /* test quality */
+    if(g_debug_level > -1) {
+      D_psi(g_spinor_field[DUM_SOLVER], dfl_fields[i]);
+      nrm = sqrt(square_norm(g_spinor_field[DUM_SOLVER], N));
+      if(g_proc_id == 0) {
+	printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm); 
+      }
+    }
+  }
+
+  if(g_debug_level > 4) {
+    for(i = 0; i < 12; i++) {
+      for(j = 0; j < 12; j++) {
+	s = scalar_prod(dfl_fields[i], dfl_fields[j], N);
+	if(g_proc_id == 0) {
+	  printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, s.re, s.im);
+	}
+      }
+    }
+  }
+  g_mu = g_mu1;
   return(0);
 }
 

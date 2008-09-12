@@ -370,8 +370,7 @@ void random_spinor_field(spinor * const k, const int V, const int repro) {
   }
 }
 
-/* Function provides a spinor field of length VOLUME/2 with
-   Gaussian distribution */
+/* Function provides a zero spinor field of length N with */
 void zero_spinor_field(spinor * const k, const int N) {
 
   int ix;
@@ -404,7 +403,48 @@ void zero_spinor_field(spinor * const k, const int N) {
     (*s).s3.c2.im=0.;
     s++;
   }
+  return;
 }
+
+/* Function provides a constant spinor field of length N with */
+void constant_spinor_field(spinor * const k, const int p, const int N) {
+
+  int ix;
+  spinor *s;
+  double * tmp;
+  s = k;
+  for (ix = 0; ix < N; ix++) {
+    (*s).s0.c0.re=0.;
+    (*s).s0.c0.im=0.;
+    (*s).s0.c1.re=0.;
+    (*s).s0.c1.im=0.;
+    (*s).s0.c2.re=0.;
+    (*s).s0.c2.im=0.;
+    (*s).s1.c0.re=0.;
+    (*s).s1.c0.im=0.;
+    (*s).s1.c1.re=0.;
+    (*s).s1.c1.im=0.;
+    (*s).s1.c2.re=0.;
+    (*s).s1.c2.im=0.;
+    (*s).s2.c0.re=0.;
+    (*s).s2.c0.im=0.;
+    (*s).s2.c1.re=0.;
+    (*s).s2.c1.im=0.;
+    (*s).s2.c2.re=0.;
+    (*s).s2.c2.im=0.;
+    (*s).s3.c0.re=0.;
+    (*s).s3.c0.im=0.;
+    (*s).s3.c1.re=0.;
+    (*s).s3.c1.im=0.;
+    (*s).s3.c2.re=0.;
+    (*s).s3.c2.im=0.;
+    tmp = (double*) s;
+    tmp[2*p] = 1.;
+    s++;
+  }
+  return;
+}
+
 
 su3 random_su3(void)
 {

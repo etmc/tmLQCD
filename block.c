@@ -10,6 +10,7 @@
 #include "global.h"
 #include "D_psi.h"
 #include "linalg_eo.h"
+#include "start.h"
 #include "xchange_lexicfield.h"
 #include "block.h"
 
@@ -518,6 +519,30 @@ void block_orthonormalize(block *parent) {
   return;
 }
 
+void block_orthonormalize_free(block *parent) {
+  int i, j;
+  complex coeff;
+  double scale;
+
+  for(i = 0; i < 12; i++){
+    /* rescale the current vector */
+    constant_spinor_field(parent->basis[i], i, parent->volume);
+    scale = 1. / sqrt(block_two_norm(parent->basis[i], parent->volume));
+    mul_r(parent->basis[i], scale, parent->basis[i], parent->volume);
+  }
+
+  if(g_debug_level > 4 && g_proc_id == 0) {
+    for(i = 0; i < g_N_s; i++) {
+      for(j = 0; j < g_N_s; j++) {
+        coeff = block_scalar_prod(parent->basis[j], parent->basis[i], parent->volume);
+        if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", parent->id, j, i, coeff.re, coeff.im);
+      }
+    }
+  }
+  return;
+}
+
+
 
 void block_compute_little_D_diagonal(block *parent) {
   int i,j;
@@ -536,7 +561,7 @@ void block_contract_basis(int const idx, int const vecnum, int const dir, spinor
   int l;
   for(l = 0; l < g_N_s; ++l){
     block_list[idx].little_dirac_operator[dir * g_N_s * g_N_s + vecnum * g_N_s + l] =
-        block_scalar_prod(psi + idx * VOLUME/2, block_list[idx].basis[l], VOLUME/2);
+      block_scalar_prod(psi + idx * VOLUME/2, block_list[idx].basis[l], VOLUME/2);
   }
 }
 

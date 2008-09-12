@@ -34,6 +34,7 @@ int split_global_field(spinor * const block_low, spinor * const block_high, spin
 void reconstruct_global_field(spinor * const rec_field, spinor * const block_low, spinor * const block_high);
 
 void block_orthonormalize(block *parent);
+void block_orthonormalize_free(block *parent);
 
 void block_compute_little_D_offdiagonal();
 void block_compute_little_D_diagonal(block *parent);
