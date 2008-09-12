@@ -62,12 +62,12 @@ int gcr(spinor * const P, spinor * const Q,
 	assign(xi[k], rho, N);
       }
       else {
-	poly_nonherm_precon(xi[k], rho, 0., 1.1, 4, N);
+	poly_nonherm_precon(xi[k], rho, 0.7, 1., 10, N);
       }
       f(tmp, xi[k]); 
       /* tmp will become chi[k] */
       for(l = 0; l < k; l++) {
-	a[l][k] = scalar_prod(chi[l], tmp, N);
+  	a[l][k] = scalar_prod(chi[l], tmp, N);
 	assign_diff_mul(tmp, chi[l], a[l][k], N);
       }
       b[k] = sqrt(square_norm(tmp, N));

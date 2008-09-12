@@ -50,6 +50,7 @@
 #include "xchange_halffield.h"
 #include "stout_smear.h"
 #include "invert_eo.h"
+#include "ranlxd.h"
 #include "phmc.h"
 #include "D_psi.h"
 #include "little_D.h"
@@ -150,6 +151,9 @@ int main(int argc,char *argv[]) {
 
   g_dbw2rand = 0;
 
+  /* needed for deflation */
+  rlxd_init(rlxd_level, random_seed + g_proc_id*97);
+
 #ifndef MPI
   g_dbw2rand = 0;
 #endif
@@ -222,6 +226,7 @@ int main(int argc,char *argv[]) {
     if (g_proc_id == 0){
       printf("done!\n"); fflush(stdout);
     }
+/*     unit_g_gauge_field(); */
 #ifdef MPI
     xchange_gauge();
 #endif
@@ -265,7 +270,7 @@ int main(int argc,char *argv[]) {
 
       init_dfl_subspace(g_N_s);
 /*       g_mu = 0.; */
-/*       boundary(0.115); */
+/*       boundary(0.125); */
       generate_dfl_subspace(g_N_s, VOLUME);
 /*       boundary(g_kappa); */
 /*       g_mu = g_mu1; */
@@ -294,8 +299,11 @@ int main(int argc,char *argv[]) {
       is = (ix / 3);
       ic = (ix % 3);
       if(read_source_flag == 0) {
-        if(source_location == 0)
-          source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
+        if(source_location == 0) {
+/* 	  random_spinor_field(g_spinor_field[0], VOLUME, 1); */
+/* 	  random_spinor_field(g_spinor_field[1], VOLUME, 1); */
+	  source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
+	}
         else
           source_spinor_field_point_from_file(g_spinor_field[0], g_spinor_field[1], is, ic, source_location);
       }
