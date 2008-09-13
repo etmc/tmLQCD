@@ -640,7 +640,7 @@ void alt_block_compute_little_D() {
         _spinor_null(rec[j]);
       }
 
-      if (g_proc_id == k){
+      if (g_cart_id == k){
         reconstruct_global_field(rec, zero, block_list[1].basis[i]);
       }
 
@@ -680,7 +680,7 @@ void alt_block_compute_little_D() {
   }
 
   if(g_debug_level > -1) {
-    if (g_N_s <= 5 && !g_cart_id){
+    if (g_N_s <= 5 && g_cart_id == 0){
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");
       for (i = 0; i < 9 * g_N_s; ++i){
