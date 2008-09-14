@@ -932,13 +932,16 @@ void D_psi(spinor * const P, spinor * const Q){
 static spinor tmpr;
 
 /* this is the hopping part only */
-void local_D(spinor * const rr, spinor * const s, su3 * restrict u, int * idx) {
+void local_D(spinor * const rr, spinor * const s, su3 * restrict u, int * _idx) {
 
   spinor * restrict sp, * restrict sm;
+  int * idx = _idx;
   static su3_vector chi, psi;
 
   /******************************* direction +0 *********************************/
-  sp = (spinor *) s + (*(idx++));
+
+  sp = (spinor *) s + (*idx);
+  idx++;
 
   _vector_add(psi,(*sp).s0,(*sp).s2);
 
@@ -959,7 +962,8 @@ void local_D(spinor * const rr, spinor * const s, su3 * restrict u, int * idx) {
   _vector_add_assign(tmpr.s3,psi);
 
   /******************************* direction -0 *********************************/
-  sm = (spinor *) s + (*(idx++));
+  sm = (spinor *) s + (*idx);
+  idx++;
 
   _vector_sub(psi, (*sm).s0, (*sm).s2);
 
@@ -979,7 +983,8 @@ void local_D(spinor * const rr, spinor * const s, su3 * restrict u, int * idx) {
   _vector_sub_assign(tmpr.s3,psi);
 
   /******************************* direction +1 *********************************/
-  sp = (spinor *) s + (*(idx++));
+  sp = (spinor *) s + (*idx);
+  idx++;
 
   _vector_i_add(psi,(*sp).s0,(*sp).s3);
 
@@ -999,7 +1004,8 @@ void local_D(spinor * const rr, spinor * const s, su3 * restrict u, int * idx) {
   _vector_i_sub_assign(tmpr.s2,psi);
 
   /******************************* direction -1 *********************************/
-  sm = (spinor *) s + (*(idx++));
+  sm = (spinor *) s + (*idx);
+  idx++;
 
   _vector_i_sub(psi,(*sm).s0,(*sm).s3);
 
@@ -1019,7 +1025,8 @@ void local_D(spinor * const rr, spinor * const s, su3 * restrict u, int * idx) {
   _vector_i_add_assign(tmpr.s2,psi);
 
   /******************************* direction +2 *********************************/
-  sp = (spinor *) s + (*(idx++));
+  sp = (spinor *) s + (*idx);
+  idx++;
 
   _vector_add(psi,(*sp).s0,(*sp).s3);
 
@@ -1039,7 +1046,8 @@ void local_D(spinor * const rr, spinor * const s, su3 * restrict u, int * idx) {
   _vector_sub_assign(tmpr.s2,psi);
 
   /******************************* direction -2 *********************************/
-  sm = (spinor *) s + (*(idx++));
+  sm = (spinor *) s + (*idx);
+  idx++;
 
   _vector_sub(psi,(*sm).s0,(*sm).s3);
 
@@ -1059,7 +1067,8 @@ void local_D(spinor * const rr, spinor * const s, su3 * restrict u, int * idx) {
   _vector_add_assign(tmpr.s2,psi);
 
   /******************************* direction +3 *********************************/
-  sp = (spinor *) s + (*(idx++));
+  sp = (spinor *) s + (*idx);
+  idx++;
 
   _vector_i_add(psi,(*sp).s0,(*sp).s2);
 
@@ -1079,7 +1088,8 @@ void local_D(spinor * const rr, spinor * const s, su3 * restrict u, int * idx) {
   _vector_i_add_assign(tmpr.s3, psi);
 
   /******************************* direction -3 *********************************/
-  sm = (spinor *) s + (*(idx++));
+  sm = (spinor *) s + (*idx);
+  idx++;
 
   _vector_i_sub(psi,(*sm).s0,(*sm).s2);
 
@@ -1131,6 +1141,8 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
     /* u and idx are incremented in local_D */
     r++;
     t++;
+    idx += 8;
+    u += 8;
   }
   return;
 }
