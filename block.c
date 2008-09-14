@@ -177,35 +177,35 @@ int init_blocks_gaugefield() {
   now +t,-t,+x,-x,+y,-y,+z,-z gauge links are stored. This requires double the storage in
   memory. */
 
-  int x, y, z, t, ix, ix_new;
+  int x, y, z, t, ix, ix_new = 0;
   su3 *u0, *u1;
   u0 = block_list[0].u;
   u1 = block_list[1].u;
 
-  for (t = 0; t < T; ++t) {
-    for (x = 0; x < LX; ++x) {
-      for (y = 0; y < LY; ++y) {
-        for (z = 0; z < LZ/2; ++z) {
-          ix_new = 8 * block_ipt[t][x][y][z]; /* SU3 index on the block */
+  for (t = 0; t < T; t++) {
+    for (x = 0; x < LX; x++) {
+      for (y = 0; y < LY; y++) {
+        for (z = 0; z < LZ/2; z++) {
           ix = g_ipt[t][x][y][z];
-          memcpy(u0 + ix_new,     g_gauge_field[ g_iup[ix][0] ], sizeof(su3));
-          memcpy(u0 + ix_new + 1, g_gauge_field[ g_idn[ix][0] ], sizeof(su3));
-          memcpy(u0 + ix_new + 2, g_gauge_field[ g_iup[ix][1] ], sizeof(su3));
-          memcpy(u0 + ix_new + 3, g_gauge_field[ g_idn[ix][1] ], sizeof(su3));
-          memcpy(u0 + ix_new + 4, g_gauge_field[ g_iup[ix][2] ], sizeof(su3));
-          memcpy(u0 + ix_new + 5, g_gauge_field[ g_idn[ix][2] ], sizeof(su3));
-          memcpy(u0 + ix_new + 6, g_gauge_field[ g_iup[ix][3] ], sizeof(su3));
-          memcpy(u0 + ix_new + 7, g_gauge_field[ g_idn[ix][3] ], sizeof(su3));
+          memcpy(u0 + ix_new,     &g_gauge_field[ ix           ][0], sizeof(su3));
+          memcpy(u0 + ix_new + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
+          memcpy(u0 + ix_new + 2, &g_gauge_field[ ix           ][1], sizeof(su3));
+          memcpy(u0 + ix_new + 3, &g_gauge_field[ g_idn[ix][1] ][1], sizeof(su3));
+          memcpy(u0 + ix_new + 4, &g_gauge_field[ ix           ][2], sizeof(su3));
+          memcpy(u0 + ix_new + 5, &g_gauge_field[ g_idn[ix][2] ][2], sizeof(su3));
+          memcpy(u0 + ix_new + 6, &g_gauge_field[ ix           ][3], sizeof(su3));
+          memcpy(u0 + ix_new + 7, &g_gauge_field[ g_idn[ix][3] ][3], sizeof(su3));
 
           ix = g_ipt[t][x][y][z + LZ/2];
-          memcpy(u1 + ix_new,     g_gauge_field[ g_iup[ix][0] ], sizeof(su3));
-          memcpy(u1 + ix_new + 1, g_gauge_field[ g_idn[ix][0] ], sizeof(su3));
-          memcpy(u1 + ix_new + 2, g_gauge_field[ g_iup[ix][1] ], sizeof(su3));
-          memcpy(u1 + ix_new + 3, g_gauge_field[ g_idn[ix][1] ], sizeof(su3));
-          memcpy(u1 + ix_new + 4, g_gauge_field[ g_iup[ix][2] ], sizeof(su3));
-          memcpy(u1 + ix_new + 5, g_gauge_field[ g_idn[ix][2] ], sizeof(su3));
-          memcpy(u1 + ix_new + 6, g_gauge_field[ g_iup[ix][3] ], sizeof(su3));
-          memcpy(u1 + ix_new + 7, g_gauge_field[ g_idn[ix][3] ], sizeof(su3));
+          memcpy(u1 + ix_new,     &g_gauge_field[ ix           ][0], sizeof(su3));
+          memcpy(u1 + ix_new + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
+          memcpy(u1 + ix_new + 2, &g_gauge_field[ ix           ][1], sizeof(su3));
+          memcpy(u1 + ix_new + 3, &g_gauge_field[ g_idn[ix][1] ][1], sizeof(su3));
+          memcpy(u1 + ix_new + 4, &g_gauge_field[ ix           ][2], sizeof(su3));
+          memcpy(u1 + ix_new + 5, &g_gauge_field[ g_idn[ix][2] ][2], sizeof(su3));
+          memcpy(u1 + ix_new + 6, &g_gauge_field[ ix           ][3], sizeof(su3));
+          memcpy(u1 + ix_new + 7, &g_gauge_field[ g_idn[ix][3] ][3], sizeof(su3));
+	  ix_new += 8;
         }
       }
     }
@@ -543,7 +543,7 @@ void block_orthonormalize_free(block *parent) {
 }
 
 
-
+/* checked CU */
 void block_compute_little_D_diagonal(block *parent) {
   int i,j;
   spinor * tmp = g_spinor_field[DUM_SOLVER];
@@ -555,6 +555,7 @@ void block_compute_little_D_diagonal(block *parent) {
       M[i * g_N_s + j]  = block_scalar_prod(tmp, parent->basis[j], parent->volume);
     }
   }
+  return;
 }
 
 void block_contract_basis(int const idx, int const vecnum, int const dir, spinor * const psi){
@@ -683,7 +684,7 @@ void alt_block_compute_little_D() {
     if (g_N_s <= 5 && g_cart_id == 0){
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");
-      for (i = 0; i < 9 * g_N_s; ++i){
+      for (i = g_N_s; i < 2 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
           printf("%s%1.3e %s %1.3e i", block_list[0].little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list[0].little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list[0].little_dirac_operator[i * g_N_s + j].re : -block_list[0].little_dirac_operator[i * g_N_s + j].re, block_list[0].little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list[0].little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list[0].little_dirac_operator[i * g_N_s + j].im : -block_list[0].little_dirac_operator[i * g_N_s + j].im);
@@ -698,7 +699,7 @@ void alt_block_compute_little_D() {
 
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, upper block **\n");
-      for (i = 0; i < 9 * g_N_s; ++i){
+      for (i = 0; i < 0*9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
           printf("%s%1.3e %s %1.3e i", block_list[1].little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list[1].little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list[1].little_dirac_operator[i * g_N_s + j].re : -block_list[1].little_dirac_operator[i * g_N_s + j].re, block_list[1].little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list[1].little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list[1].little_dirac_operator[i * g_N_s + j].im : -block_list[1].little_dirac_operator[i * g_N_s + j].im);
@@ -727,6 +728,7 @@ void block_compute_little_D_offdiagonal(){
   spinor *r, *s;
   su3 * u;
   int x, y, z, t, ix, iy, i, j, k, pm, mu;
+  complex c;
 
   /* for a full spinor field we need VOLUMEPLUSRAND                 */
   /* because we use the same geometry as for the                    */
@@ -746,11 +748,11 @@ void block_compute_little_D_offdiagonal(){
 #ifdef MPI
     xchange_lexicfield(scratch);
 #endif
-
+    zero_spinor_field(scratch, VOLUME);
     /* +- t */
     mu = 0;
 
-    for(pm = 0; pm < 2; pm++) {
+    for(pm = 0; pm < 1; pm++) {
       if(pm == 0) t = T-1;
       else t = 0;
 
@@ -775,24 +777,27 @@ void block_compute_little_D_offdiagonal(){
 
       /* now all the scalar products */
       for(j = 0; j < g_N_s; j++) {
-        r = temp; /* We need to contract g_N_s times with the same set of fields, right? */
-        for(x = 0; x < LX; x++) {
-          for(y = 0; y < LY; y++) {
-            for(k = 0; k < 2; k++) {
-              iy = j * g_N_s + i  + (pm + 1) * g_N_s * g_N_s;
-              _complex_zero(block_list[k].little_dirac_operator[ iy ]);
-              for(z = 0; z < LZ/2; z++) {
-                ix = block_ipt[t][x][y][z];
-                s = &block_list[k].basis[j][ ix ];
-                _add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
-                r++;
-              }
+	iy = j * g_N_s + i  + (pm + 1) * g_N_s * g_N_s;
+	for(k = 0; k < 2; k++) {
+	  _complex_zero(block_list[k].little_dirac_operator[ iy ]);
+	  r = temp + k*LZ/2; /* We need to contract g_N_s times with the same set of fields, right? */
+	  for(x = 0; x < LX; x++) {
+	    for(y = 0; y < LY; y++) {
+	      ix = block_ipt[t][x][y][k*LZ/2];
+	      s = &block_list[k].basis[j][ ix ];
+	      c = block_scalar_prod(s, r, LZ/2);
+	      block_list[k].little_dirac_operator[ iy ].re += c.re;
+	      block_list[k].little_dirac_operator[ iy ].im += c.im;
+/*  	      if(g_proc_id == 0 && k == 0) printf("%1.3e %1.3e %1.3e %d\n", c.re, c.im, block_list[k].little_dirac_operator[ iy ].re, iy);  */
+
+	      r+=LZ/2;
             }
           }
         }
       }
     }
 
+    if(0){
     /* +- x */
     mu = 1;
     for(pm = 2; pm < 4; pm++) {
@@ -992,17 +997,17 @@ void block_compute_little_D_offdiagonal(){
       }
     }
   }
-
+  }
   free(_scratch);
 
   if(g_debug_level > -1) {
     if (g_N_s <= 5 && !g_cart_id){
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");
-      for (i = 0; i < 9 * g_N_s; ++i){
+      for (i = 1*g_N_s; i < 2 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
-          printf("%s%1.3e %s %1.3e i", block_list[1].little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list[1].little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list[1].little_dirac_operator[i * g_N_s + j].re : -block_list[1].little_dirac_operator[i * g_N_s + j].re, block_list[1].little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list[1].little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list[1].little_dirac_operator[i * g_N_s + j].im : -block_list[1].little_dirac_operator[i * g_N_s + j].im);
+          printf("%s%1.3e %s %1.3e i", block_list[0].little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list[0].little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list[0].little_dirac_operator[i * g_N_s + j].re : -block_list[0].little_dirac_operator[i * g_N_s + j].re, block_list[0].little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list[0].little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list[0].little_dirac_operator[i * g_N_s + j].im : -block_list[0].little_dirac_operator[i * g_N_s + j].im);
           if (j != g_N_s - 1){
             printf(",\t");
           }
