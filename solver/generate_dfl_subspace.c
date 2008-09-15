@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 #include "global.h"
 #include "su3.h"
 #include "complex.h"
@@ -22,8 +23,14 @@ static int init_subspace = 0;
 int generate_dfl_subspace(const int Ns, const int N) {
   int i,j, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex), 
     vol = VOLUME*sizeof(spinor)/sizeof(complex);
-  double nrm, e = 0.5, d = 1.;
+  double nrm, e = 0.5, d = 1., atime, etime;
   complex s;
+
+#ifdef MPI
+  atime = MPI_Wtime();
+#else
+  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
+#endif
 
   if(init_subspace == 0) init_dfl_subspace(Ns);
 
@@ -56,6 +63,15 @@ int generate_dfl_subspace(const int Ns, const int N) {
 	}
       }
     }
+  }
+#ifdef MPI
+  etime = MPI_Wtime();
+#else
+  etime = (double)clock()/(double)(CLOCKS_PER_SEC);
+#endif
+  if(g_proc_id == 0) {
+    printf("time for subspace generation %1.3e s\n", etime-atime);
+    fflush(stdout);
   }
   return(0);
 }
