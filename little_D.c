@@ -272,6 +272,64 @@ void alt_little_field_gather(complex * w) {
   return;
 }
 
+#ifdef MPI
+MPI_Request lrequests[16];
+MPI_Status lstatus[16];
+int waitcount = 0;
+#endif
+
+
+void little_field_gather(complex * w) {
+#ifdef MPI
+  int err;
+  
+  /* LOWER BLOCK */
+
+  /* Send t up */
+  MPI_Isend(w, 2*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_UP, g_cart_grid, &lrequests[0]);
+  MPI_Irecv(w + 4 * g_N_s, 2*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_dn, T_UP, g_cart_grid, &lrequests[1]);
+
+  /* Send t down */
+  MPI_Isend(w, 2*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_dn, T_DN, g_cart_grid, &lrequests[2]);
+  MPI_Irecv(w + 2 * g_N_s, 2*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_DN, g_cart_grid, &lrequests[3]);
+
+  /* Send x up */
+  MPI_Isend(w, 2*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_UP, g_cart_grid, &lrequests[4]);
+  MPI_Irecv(w + 8 * g_N_s, 2*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_dn, X_UP, g_cart_grid, &lrequests[5]);
+
+  /* Send x down */
+  MPI_Isend(w, 2*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_dn, X_DN, g_cart_grid, &lrequests[6]);
+  MPI_Irecv(w + 6 * g_N_s, 2*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_DN, g_cart_grid, &lrequests[7]);
+
+  /* Send y up */
+  MPI_Isend(w, 2*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_UP, g_cart_grid, &lrequests[8]);
+  MPI_Irecv(w + 12 * g_N_s, 2*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_dn, Y_UP, g_cart_grid, &lrequests[9]);
+
+  /* Send y down */
+  MPI_Isend(w, 2*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_dn, Y_DN, g_cart_grid, &lrequests[10]);
+  MPI_Irecv(w + 10 * g_N_s, 2*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_y_up, Y_DN, g_cart_grid, &lrequests[11]);
+
+
+  /* Send z down */
+  MPI_Isend(w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_dn, Z_DN, g_cart_grid, &lrequests[12]);
+  MPI_Irecv(w + 15 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_up, Z_DN, g_cart_grid, &lrequests[13]);
+
+
+  /* Send z up */
+  MPI_Isend(w + g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_up, Z_UP, g_cart_grid, &lrequests[14]);
+  MPI_Irecv(w + 16 * g_N_s, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_z_dn, Z_UP, g_cart_grid, &lrequests[15]);
+
+  /* Send z up */
+  memcpy(w + 17 * g_N_s, w, g_N_s * sizeof(complex));
+
+  /* Send z down */
+  memcpy(w + 14 * g_N_s, w + g_N_s, g_N_s * sizeof(complex));
+
+  err = MPI_Waitall(16, lrequests, lstatus);
+#endif
+  return;
+}
+
 void little_D(complex * v, complex *w) {
   int i, j, sq = g_N_s*g_N_s;
   CONE.re = 1.;
@@ -283,7 +341,7 @@ void little_D(complex * v, complex *w) {
 
 #ifdef MPI
   /*init_little_field_exchange(w);*/
-  alt_little_field_gather(w);
+  little_field_gather(w);
 #endif
 
   /* all the mpilocal stuff first */
@@ -295,18 +353,12 @@ void little_D(complex * v, complex *w) {
     /* offdiagonal terms */
     for(j = 1; j < 9; j++) {
       _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator + j * sq,
-          &g_N_s, w + (2 * j + i) * g_N_s, &ONE, &CONE, v + i * g_N_s, &ONE, 1);
+		 &g_N_s, w + (2 * j + i) * g_N_s, &ONE, &CONE, v + i * g_N_s, &ONE, 1);
     }
   }
   return;
 }
 
-
-#ifdef MPI
-MPI_Request lrequests[16];
-MPI_Status lstatus[16];
-int waitcount = 0;
-#endif
 
 void init_little_field_exchange(complex * w) {
 #ifdef MPI

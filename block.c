@@ -544,20 +544,27 @@ void block_orthonormalize_free(block *parent) {
 
 
 /* checked CU */
-void block_compute_little_D_diagonal(block *parent) {
-  int i,j;
+void block_compute_little_D_diagonal() {
+  int i,j, blk;
   spinor * tmp = g_spinor_field[DUM_SOLVER];
-  complex * M = parent->little_dirac_operator;
-
-  for(i = 0; i < g_N_s; i++){
-    Block_D_psi(parent, tmp, parent->basis[i]);
-    for(j = 0; j < g_N_s; j++){
-      M[i * g_N_s + j]  = block_scalar_prod(tmp, parent->basis[j], parent->volume);
+  complex * M;
+  
+  for(blk = 0; blk < 2; blk++) {
+    M = block_list[blk].little_dirac_operator;
+    for(i = 0; i < g_N_s; i++) {
+      Block_D_psi(&block_list[blk], tmp, block_list[blk].basis[i]);
+      for(j = 0; j < g_N_s; j++) {
+	M[i * g_N_s + j]  = block_scalar_prod(tmp, block_list[blk].basis[j], block_list[blk].volume);
+      }
     }
   }
   return;
 }
 
+
+/* the following 2 functions are reference functions for computing little_d */
+/* but much slower than block_compute_little_D_diagonal and                 */
+/* block_compute_little_D_offdiagonal                                       */
 void block_contract_basis(int const idx, int const vecnum, int const dir, spinor * const psi){
   int l;
   for(l = 0; l < g_N_s; ++l){
@@ -684,7 +691,7 @@ void alt_block_compute_little_D() {
     if (g_N_s <= 5 && g_cart_id == 0){
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");
-      for (i = g_N_s; i < 2 * g_N_s; ++i){
+      for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
           printf("%s%1.3e %s %1.3e i", block_list[0].little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list[0].little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list[0].little_dirac_operator[i * g_N_s + j].re : -block_list[0].little_dirac_operator[i * g_N_s + j].re, block_list[0].little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list[0].little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list[0].little_dirac_operator[i * g_N_s + j].im : -block_list[0].little_dirac_operator[i * g_N_s + j].im);
@@ -699,7 +706,7 @@ void alt_block_compute_little_D() {
 
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, upper block **\n");
-      for (i = 0; i < 0*9 * g_N_s; ++i){
+      for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
           printf("%s%1.3e %s %1.3e i", block_list[1].little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list[1].little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list[1].little_dirac_operator[i * g_N_s + j].re : -block_list[1].little_dirac_operator[i * g_N_s + j].re, block_list[1].little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list[1].little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list[1].little_dirac_operator[i * g_N_s + j].im : -block_list[1].little_dirac_operator[i * g_N_s + j].im);
@@ -723,7 +730,9 @@ void alt_block_compute_little_D() {
 
 /* what happens if this routine is called in a one dimensional parallelisation? */
 /* or even serially ?                                                           */
-void block_compute_little_D_offdiagonal(){
+/* checked CU */
+void block_compute_little_D_offdiagonal()
+{
   spinor *scratch, * temp, *_scratch;
   spinor *r, *s;
   su3 * u;
@@ -751,8 +760,7 @@ void block_compute_little_D_offdiagonal(){
     zero_spinor_field(scratch, VOLUME);
     /* +- t */
     mu = 0;
-
-    for(pm = 0; pm < 1; pm++) {
+    for(pm = 0; pm < 2; pm++) {
       if(pm == 0) t = T-1;
       else t = 0;
 
@@ -777,27 +785,24 @@ void block_compute_little_D_offdiagonal(){
 
       /* now all the scalar products */
       for(j = 0; j < g_N_s; j++) {
-	iy = j * g_N_s + i  + (pm + 1) * g_N_s * g_N_s;
+ 	iy = i * g_N_s + j  + (pm + 1) * g_N_s * g_N_s;
 	for(k = 0; k < 2; k++) {
 	  _complex_zero(block_list[k].little_dirac_operator[ iy ]);
 	  r = temp + k*LZ/2; /* We need to contract g_N_s times with the same set of fields, right? */
 	  for(x = 0; x < LX; x++) {
 	    for(y = 0; y < LY; y++) {
-	      ix = block_ipt[t][x][y][k*LZ/2];
+	      ix = block_ipt[t][x][y][0];
 	      s = &block_list[k].basis[j][ ix ];
-	      c = block_scalar_prod(s, r, LZ/2);
+	      c = block_scalar_prod(r, s, LZ/2);
 	      block_list[k].little_dirac_operator[ iy ].re += c.re;
 	      block_list[k].little_dirac_operator[ iy ].im += c.im;
-/*  	      if(g_proc_id == 0 && k == 0) printf("%1.3e %1.3e %1.3e %d\n", c.re, c.im, block_list[k].little_dirac_operator[ iy ].re, iy);  */
-
-	      r+=LZ/2;
-            }
+	      r += LZ;
+	    }
           }
         }
       }
     }
 
-    if(0){
     /* +- x */
     mu = 1;
     for(pm = 2; pm < 4; pm++) {
@@ -825,18 +830,18 @@ void block_compute_little_D_offdiagonal(){
 
       /* now all the scalar products */
       for(j = 0; j < g_N_s; j++) {
-        r = temp;
-        for(t = 0; t < T; t++) {
-          for(y = 0; y < LY; y++) {
-            for(k = 0; k < 2; k++) {
-              iy = j  * g_N_s+ i + (pm + 1) * g_N_s * g_N_s;
-              _complex_zero(block_list[k].little_dirac_operator[ iy ]);
-              for(z = 0; z < LZ / 2; z++) {
-                ix = block_ipt[t][x][y][z];
-                s = &block_list[k].basis[j][ ix ];
-                _add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
-                r++;
-              }
+	iy = i  * g_N_s+ j + (pm + 1) * g_N_s * g_N_s;
+	for(k = 0; k < 2; k++) {
+	  _complex_zero(block_list[k].little_dirac_operator[ iy ]);
+	  r = temp + k*LZ/2;
+	  for(t = 0; t < T; t++) {
+	    for(y = 0; y < LY; y++) {
+	      ix = block_ipt[t][x][y][0];
+	      s = &block_list[k].basis[j][ ix ];
+	      c = block_scalar_prod(r, s, LZ/2);
+	      block_list[k].little_dirac_operator[ iy ].re += c.re;
+	      block_list[k].little_dirac_operator[ iy ].im += c.im;
+	      r += LZ;
             }
           }
         }
@@ -870,18 +875,18 @@ void block_compute_little_D_offdiagonal(){
 
       /* now all the scalar products */
       for(j = 0; j < g_N_s; j++) {
-        r = temp;
-        for(t = 0; t < T; t++) {
-          for(x = 0; x < LX; x++) {
-            for(k = 0; k < 2; k++) {
-              iy = j * g_N_s + i + (pm + 1) * g_N_s * g_N_s;
-              _complex_zero(block_list[k].little_dirac_operator[ iy ]);
-              for(z = 0; z < LZ / 2; z++) {
-                ix = block_ipt[t][x][y][z];
-                s = &block_list[k].basis[j][ ix ];
-                _add_complex(block_list[k].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
-                r++;
-              }
+	iy = i * g_N_s + j + (pm + 1) * g_N_s * g_N_s;
+	for(k = 0; k < 2; k++) {
+	  _complex_zero(block_list[k].little_dirac_operator[ iy ]);
+	  r = temp + k*LZ/2;
+	  for(t = 0; t < T; t++) {
+	    for(x = 0; x < LX; x++) {
+	      ix = block_ipt[t][x][y][0];
+	      s = &block_list[k].basis[j][ ix ];
+	      c = block_scalar_prod(r, s, LZ/2);
+	      block_list[k].little_dirac_operator[ iy ].re += c.re;
+	      block_list[k].little_dirac_operator[ iy ].im += c.im;
+	      r += LZ;
             }
           }
         }
@@ -892,7 +897,8 @@ void block_compute_little_D_offdiagonal(){
     /* +-z */
     mu = 3;
     for(pm = 6; pm < 8; pm++) {
-      z = (pm == 6) ? LZ - 1 : 0 ;
+      if(pm == 6) z = LZ-1;
+      else z = 0;
 
       r = temp;
       for(t = 0; t < T; ++t) {
@@ -912,18 +918,22 @@ void block_compute_little_D_offdiagonal(){
           }
         }
       }
-
+      if(pm == 6) z = LZ/2-1;
       /* now for all the MPI scalar products (outer edges) */
-      for(j = 0; j < g_N_s; ++j) {
+      /* this is block 0 -z and block 1 +z */
+      for(j = 0; j < g_N_s; j++) {
+	iy = i * g_N_s + j + (pm + 1) * g_N_s * g_N_s;
+
+	_complex_zero(block_list[(pm+1) % 2].little_dirac_operator[ iy ]);
         r = temp;
-        for(t = 0; t < T; ++t) {
-          for(x = 0; x < LX; ++x) {
-            for(y = 0; y < LY; ++y){
-              iy = j * g_N_s + i + (pm + 1) * g_N_s * g_N_s;
-              _complex_zero(block_list[pm % 2].little_dirac_operator[ iy ]);
+        for(t = 0; t < T; t++) {
+          for(x = 0; x < LX; x++) {
+            for(y = 0; y < LY; y++){
               ix = block_ipt[t][x][y][z];
-              s = &block_list[pm % 2].basis[j][ ix ];
-              _add_complex(block_list[pm % 2].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
+              s = &block_list[(pm+1) % 2].basis[j][ ix ];
+	      c = block_scalar_prod(r, s, 1);
+	      block_list[(pm+1) % 2].little_dirac_operator[ iy ].re += c.re;
+	      block_list[(pm+1) % 2].little_dirac_operator[ iy ].im += c.im;
               r++;
             }
           }
@@ -931,72 +941,72 @@ void block_compute_little_D_offdiagonal(){
       }
     }
 
-    /* and finally the residual inner edges - new D calculations needed here */
-    /* this is confusing enough as is, so I unrolled the pm loop for this part */
-    z =  LZ / 2 - 1; /* pm = 6 */
+    pm = 6;
+    /* we are on block 0 now and compute direction +z */
     r = temp;
-    for(t = 0; t < T; ++t) {
-      for(x = 0; x < LX; ++x) {
-        for(y = 0; y < LY; ++y) {
-          ix = g_ipt[t][x][y][z];
-          iy = block_ipt[t][x][y][z]; /* highest edge of low block needed */
-          s = &block_list[ 0 ].basis[ i ][ iy ];
-          u = &g_gauge_field[ ix ][mu];
-          boundary_D[6](r, s, u);
-          r++;
-        }
+    z = 0;
+    for(t = 0; t < T; t++) {
+      for(x = 0; x < LX; x++) {
+	for(y = 0; y < LY; y++) {
+	  ix = g_ipt[t][x][y][LZ/2-1];
+	  iy = block_ipt[t][x][y][z]; /* lowest edge of upper block needed */
+	  s = &block_list[ (pm + 1) % 2 ].basis[ i ][ iy ];
+	  u = &g_gauge_field[ ix ][mu];
+	  boundary_D[pm](r, s, u);
+	  r++;
+	}
       }
     }
-
-    /* Now contract with the lowest edge of the high block and store */
+    
     for(j = 0; j < g_N_s; ++j) {
+      iy = i * g_N_s + j + (pm + 1) * g_N_s * g_N_s;
+      _complex_zero(block_list[(pm) % 2].little_dirac_operator[ iy ]);
       r = temp;
       for(t = 0; t < T; ++t) {
-        for(x = 0; x < LX; ++x) {
-          for(y = 0; y < LY; ++y){
-            iy = j * g_N_s + i + (6 + 1) * g_N_s * g_N_s;
-            _complex_zero(block_list[1].little_dirac_operator[ iy ]);
-            ix = block_ipt[t][x][y][0];
-            s = &block_list[1].basis[j][ ix ];
-            _add_complex(block_list[1].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
-            r++;
-          }
-        }
+	for(x = 0; x < LX; ++x) {
+	  for(y = 0; y < LY; ++y){
+	    ix = block_ipt[t][x][y][LZ/2-1];
+	    s = &block_list[(pm)%2].basis[j][ ix ];
+	    _add_complex(block_list[(pm) % 2].little_dirac_operator[ iy ], block_scalar_prod(r, s, 1));
+	    r++;
+	  }
+	}
       }
     }
-
-    z =  LZ / 2; /* pm = 7 */
+    
+    /* now we are on block 1 and compute direction -z */
+    pm = 7;
+    z =  LZ/2 -1;
     r = temp;
     for(t = 0; t < T; ++t) {
       for(x = 0; x < LX; ++x) {
-        for(y = 0; y < LY; ++y) {
-          ix = g_ipt[t][x][y][z];
-          iy = block_ipt[t][x][y][0];  /* lowest edge of high block needed */
-          s = &block_list[1].basis[ i ][ iy ];
-          u = &g_gauge_field[ g_idn[ ix ][ mu ] ][mu];
-          boundary_D[7](r, s, u);
-          r++;
-        }
+	for(y = 0; y < LY; ++y) {
+	  ix = g_ipt[t][x][y][LZ/2];
+	  iy = block_ipt[t][x][y][z];  /* highest edge of lower block needed */
+	  s = &block_list[(pm+1) % 2].basis[ i ][ iy ];
+	  u = &g_gauge_field[ g_idn[ ix ][ mu ] ][mu];
+	  boundary_D[pm](r, s, u);
+	  r++;
+	}
       }
     }
-
+      
     /* Now contract with the highest edge of the low block and store */
     for(j = 0; j < g_N_s; ++j) {
+      iy = i * g_N_s + j + (pm + 1) * g_N_s * g_N_s;
+      _complex_zero(block_list[(pm) % 2].little_dirac_operator[ iy ]);
       r = temp;
       for(t = 0; t < T; ++t) {
-        for(x = 0; x < LX; ++x) {
-          for(y = 0; y < LY; ++y){
-            iy = j * g_N_s + i + (7 + 1) * g_N_s * g_N_s;
-            _complex_zero(block_list[0].little_dirac_operator[ iy ]);
-            ix = block_ipt[t][x][y][z - 1]; /* z - 1 = LZ / 2 - 1 */
-            s = &block_list[0].basis[j][ ix ];
-            _add_complex(block_list[0].little_dirac_operator[ iy ], block_scalar_prod(s, r, 1));
-            r++;
-          }
-        }
+	for(x = 0; x < LX; ++x) {
+	  for(y = 0; y < LY; ++y) {
+	    ix = block_ipt[t][x][y][0]; 
+	    s = &block_list[pm % 2].basis[j][ ix ];
+	    _add_complex(block_list[(pm) % 2].little_dirac_operator[ iy ], block_scalar_prod(r, s, 1));
+	    r++;
+	  }
+	}
       }
     }
-  }
   }
   free(_scratch);
 
@@ -1004,7 +1014,7 @@ void block_compute_little_D_offdiagonal(){
     if (g_N_s <= 5 && !g_cart_id){
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");
-      for (i = 1*g_N_s; i < 2 * g_N_s; ++i){
+      for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
           printf("%s%1.3e %s %1.3e i", block_list[0].little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list[0].little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list[0].little_dirac_operator[i * g_N_s + j].re : -block_list[0].little_dirac_operator[i * g_N_s + j].re, block_list[0].little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list[0].little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list[0].little_dirac_operator[i * g_N_s + j].im : -block_list[0].little_dirac_operator[i * g_N_s + j].im);
@@ -1015,6 +1025,22 @@ void block_compute_little_D_offdiagonal(){
         printf(" ]\n");
         if ((i % g_N_s) == (g_N_s - 1))
           printf("\n");
+      }
+      
+      printf("\n\n  *** CHECKING LITTLE D ***\n");
+      printf("\n  ** node 0, upper block **\n");
+      for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
+        printf(" [ ");
+        for (j = 0; j < g_N_s; ++j){
+          printf("%s%1.3e %s %1.3e i", block_list[1].little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list[1].little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list[1].little_dirac_operator[i * g_N_s + j].re : -block_list[1].little_dirac_operator[i * g_N_s + j].re, block_list[1].little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list[1].little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list[1].little_dirac_operator[i * g_N_s + j].im : -block_list[1].little_dirac_operator[i * g_N_s + j].im);
+          if (j != g_N_s - 1){
+            printf(",\t");
+          }
+        }
+        printf(" ]\n");
+        if ((i % g_N_s) == (g_N_s - 1))
+          printf("\n");
+	
       }
     }
   }

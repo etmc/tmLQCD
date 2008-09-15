@@ -37,7 +37,7 @@ void block_orthonormalize(block *parent);
 void block_orthonormalize_free(block *parent);
 
 void block_compute_little_D_offdiagonal();
-void block_compute_little_D_diagonal(block *parent);
+void block_compute_little_D_diagonal();
 void alt_block_compute_little_D();
 
 complex block_scalar_prod(spinor * const R, spinor * const S, const int N);

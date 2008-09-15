@@ -284,8 +284,11 @@ int main(int argc,char *argv[]) {
       block_orthonormalize(block_list);
       block_orthonormalize(block_list+1);
 
+      block_compute_little_D_diagonal();
+      block_compute_little_D_offdiagonal();
+
       /* Compute little Dirac operators */
-      alt_block_compute_little_D();
+/*       alt_block_compute_little_D(); */
       if (g_debug_level > 0){
         check_projectors();
       }

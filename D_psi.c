@@ -1147,7 +1147,7 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
   return;
 }
 
-/* direction +0 */
+/* direction +t */
 void boundary_D_0(spinor * const r, spinor * const s, su3 * const u) {
 
   static su3_vector chi, psi;
@@ -1169,6 +1169,7 @@ void boundary_D_0(spinor * const r, spinor * const s, su3 * const u) {
   return;
 }
 
+/* direction -t */
 void boundary_D_1(spinor * const r, spinor * const s, su3 * restrict u) {
 
   static su3_vector chi, psi;
@@ -1190,7 +1191,7 @@ void boundary_D_1(spinor * const r, spinor * const s, su3 * restrict u) {
   return;
 }
 
-
+/* direction +x */
 void boundary_D_2(spinor * const r, spinor * const s, su3 * restrict u) {
 
   static su3_vector chi, psi;
@@ -1214,6 +1215,7 @@ void boundary_D_2(spinor * const r, spinor * const s, su3 * restrict u) {
   return;
 }
 
+/* direction -x */
 void boundary_D_3(spinor * const r, spinor * const s, su3 * restrict u) {
 
   static su3_vector chi, psi;
@@ -1237,6 +1239,7 @@ void boundary_D_3(spinor * const r, spinor * const s, su3 * restrict u) {
   return;
 }
 
+/* direction +y */
 void boundary_D_4(spinor * const r, spinor * const s, su3 * restrict u) {
 
   static su3_vector chi, psi;
@@ -1258,6 +1261,7 @@ void boundary_D_4(spinor * const r, spinor * const s, su3 * restrict u) {
   return;
 }
 
+/* direction -y */
 void boundary_D_5(spinor * const r, spinor * const s, su3 * restrict u) {
 
   static su3_vector chi, psi;
@@ -1280,6 +1284,7 @@ void boundary_D_5(spinor * const r, spinor * const s, su3 * restrict u) {
   return;
 }
 
+/* direction +z */
 void boundary_D_6(spinor * const r, spinor * const s, su3 * restrict u) {
 
   static su3_vector chi, psi;
@@ -1303,6 +1308,7 @@ void boundary_D_6(spinor * const r, spinor * const s, su3 * restrict u) {
   return;
 }
 
+/* direction -z */
 void boundary_D_7(spinor * const r, spinor * const s, su3 * restrict u) {
 
   static su3_vector chi, psi;
