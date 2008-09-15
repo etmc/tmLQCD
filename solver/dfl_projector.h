@@ -12,4 +12,8 @@ int check_projectors();
 void check_little_D_inversion();
 void check_local_D();
 
+extern double dfl_little_D_prec;
+extern int dfl_sloppy_prec;
+
+
 #endif

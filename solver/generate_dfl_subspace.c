@@ -26,7 +26,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
   complex s;
 
   if(init_subspace == 0) init_dfl_subspace(Ns);
-  g_mu = 0.;
+
   for(i = 0; i < Ns; i++) {
     random_spinor_field(dfl_fields[i], N, 1);
     ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
@@ -67,7 +67,7 @@ int generate_dfl_subspace_free(const int Ns, const int N) {
   complex s;
 
   if(init_subspace == 0) init_dfl_subspace(Ns);
-  g_mu = 0.;
+
   for(i = 0; i < 12; i++) {
     constant_spinor_field(dfl_fields[i], i, N);
     ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
@@ -94,7 +94,7 @@ int generate_dfl_subspace_free(const int Ns, const int N) {
       }
     }
   }
-  g_mu = g_mu1;
+
   return(0);
 }
 

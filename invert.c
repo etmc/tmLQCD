@@ -408,7 +408,7 @@ int main(int argc,char *argv[]) {
 #else
       atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-       iter = invert_eo(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1],  
+      iter = invert_eo(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1],  
  		       solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag, 
  		       sub_evs_cg_flag, even_odd_flag); 
 #ifdef MPI

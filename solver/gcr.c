@@ -13,6 +13,8 @@
 /* #include"solver/mr_precon.h" */
 #include"tm_operators.h"
 #include"solver/poly_precon.h"
+#include"D_psi.h"
+#include"dfl_projector.h"
 #include"gcr.h"
 
 static void init_gcr(const int _M, const int _V);
@@ -46,6 +48,7 @@ int gcr(spinor * const P, spinor * const Q,
   norm_sq = square_norm(Q, N);
   
   for(restart = 0; restart < max_restarts; restart++) {
+    dfl_sloppy_prec = 0;
     f(tmp, P);
     diff(rho, Q, tmp, N);
     err = square_norm(rho, N);
@@ -62,8 +65,11 @@ int gcr(spinor * const P, spinor * const Q,
 	assign(xi[k], rho, N);
       }
       else {
-	poly_nonherm_precon(xi[k], rho, 0.7, 1., 10, N);
+  	poly_nonherm_precon(xi[k], rho, 0., 1., 20, N);
+/*  	gmres_precon(xi[k], rho, 20, 5, 1.e-5*err, 0, N, &D_psi); */
       }
+      dfl_sloppy_prec = 0;
+      dfl_little_D_prec = 1.e-2*err;
       f(tmp, xi[k]); 
       /* tmp will become chi[k] */
       for(l = 0; l < k; l++) {

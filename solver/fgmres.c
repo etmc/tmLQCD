@@ -95,7 +95,7 @@ int fgmres(spinor * const P,spinor * const Q,
 	assign(Z[j], V[j], N);
       }
       else {
-	poly_nonherm_precon(Z[j], V[j], .1, 1., 4, N);
+	poly_nonherm_precon(Z[j], V[j], .7, 1., 10, N);
       }
       f(r0, Z[j]); 
       /* Set h_ij and omega_j */

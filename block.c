@@ -687,7 +687,7 @@ void alt_block_compute_little_D() {
     }
   }
 
-  if(g_debug_level > -1) {
+  if(g_debug_level > 4) {
     if (g_N_s <= 5 && g_cart_id == 0){
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");
@@ -1010,7 +1010,7 @@ void block_compute_little_D_offdiagonal()
   }
   free(_scratch);
 
-  if(g_debug_level > -1) {
+  if(g_debug_level > 4) {
     if (g_N_s <= 5 && !g_cart_id){
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");
