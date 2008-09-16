@@ -59,6 +59,9 @@ void project(spinor * const out, spinor * const in) {
   if(dfl_sloppy_prec) prec = dfl_little_D_prec;
   else prec = 1.e-31;
   iter = lgcr(invvec, inprod, 10, 1000, prec, 1, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
+  if(g_proc_id == 0 && g_debug_level > -1) {
+    printf("lgcr number of iterations %d\n", iter);
+  }
 
   /* sum up */
   mul(psi[0], invvec[0], block_list[0].basis[0], vol);

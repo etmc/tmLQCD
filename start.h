@@ -6,6 +6,8 @@ su3_vector random_su3_vector(void);
 su3_vector unif_su3_vector(void);
 spinor random_spinor(void);
 void unit_spinor_field(const int k);
+
+void random_spinor_field_lexic(spinor * const k);
 void random_spinor_field(spinor * const k, const int V, const int repro);
 void zero_spinor_field(spinor * const k, const int N);
 void constant_spinor_field(spinor * const k, const int p, const int N);

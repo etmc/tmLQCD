@@ -65,11 +65,11 @@ int gcr(spinor * const P, spinor * const Q,
 	assign(xi[k], rho, N);
       }
       else {
-  	poly_nonherm_precon(xi[k], rho, 0., 1., 20, N);
-/*  	gmres_precon(xi[k], rho, 20, 5, 1.e-5*err, 0, N, &D_psi); */
+/*    	poly_nonherm_precon(xi[k], rho, 0., 1., 100, N);  */
+   	gmres_precon(xi[k], rho, 20, 1, 1.e-5*err, 0, N, &D_psi);
       }
-      dfl_sloppy_prec = 0;
-      dfl_little_D_prec = 1.e-2*err;
+      dfl_sloppy_prec = 1;
+      dfl_little_D_prec = 1.e-4*err;
       f(tmp, xi[k]); 
       /* tmp will become chi[k] */
       for(l = 0; l < k; l++) {

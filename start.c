@@ -239,6 +239,95 @@ void unit_spinor_field(const int k) {
 
 /* Function provides a spinor field of length V with
    Gaussian distribution */
+void random_spinor_field_lexic(spinor * const k) {
+  int x, y, z, t, X, Y, Z, tt, id;
+  int rlxd_state[105];
+  int coords[4];
+  spinor *s;
+  double v[24];
+
+#ifdef MPI
+  if(g_proc_id == 0) {
+    rlxd_get(rlxd_state);
+  }
+  MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+  if(g_proc_id != 0) {
+    rlxd_reset(rlxd_state);
+  }
+#endif
+  for(t = 0; t < g_nproc_t*T; t++) {
+    tt = t - g_proc_coords[0]*T;
+    coords[0] = t / T;
+    for(x = 0; x < g_nproc_x*LX; x++) {
+      X = x - g_proc_coords[1]*LX; 
+      coords[1] = x / LX;
+      for(y = 0; y < g_nproc_y*LY; y++) {
+	Y = y - g_proc_coords[2]*LY;
+	coords[2] = y / LY;
+	for(z = 0; z < g_nproc_z*LZ; z++) {
+	  Z = z - g_proc_coords[3]*LZ;
+	  coords[3] = z / LZ;
+#ifdef MPI
+	  MPI_Cart_rank(g_cart_grid, coords, &id);
+#endif
+	  if(g_cart_id == id) {
+	    gauss_vector(v, 24);
+	    s = k + g_ipt[tt][X][Y][Z];
+	    memcpy(s, v, 24*sizeof(double));
+	  }
+	  else {
+	    ranlxd(v,24);
+	  }
+	}
+      }
+    }
+  }
+  return;
+}
+
+void random_spinor_field_eo(spinor * const k) {
+  int x, y, z, t, X, Y, Z, tt, id;
+  int rlxd_state[105];
+  int coords[4];
+  spinor *s;
+  double v[24];
+
+#ifdef MPI
+  if(g_proc_id == 0) {
+    rlxd_get(rlxd_state);
+  }
+  MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+  if(g_proc_id != 0) {
+    rlxd_reset(rlxd_state);
+  }
+#endif
+  for(t = 0; t < g_nproc_t*T; t++) {
+    tt = t - g_proc_coords[0]*T;
+    coords[0] = t / T;
+    for(x = 0; x < g_nproc_x*LX; x++) {
+      X = x - g_proc_coords[1]*LX; 
+      coords[1] = x / LX;
+      for(y = 0; y < g_nproc_y*LY; y++) {
+	Y = y - g_proc_coords[2]*LY;
+	coords[2] = y / LY;
+	for(z = 0; z < g_nproc_z*LZ; z++) {
+	  Z = z - g_proc_coords[3]*LZ;
+	  coords[3] = z / LZ;
+#ifdef MPI
+	  MPI_Cart_rank(g_cart_grid, coords, &id);
+#endif
+	  gauss_vector(v, 24);
+	  if(g_cart_id == id) {
+	    s = k + g_ipt[t][x][y][z];
+	    memcpy(s, v, 24*sizeof(double));
+	  }
+	}
+      }
+    }
+  }
+  return;
+}
+
 void random_spinor_field(spinor * const k, const int V, const int repro) {
 
   int ix;

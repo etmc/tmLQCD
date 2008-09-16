@@ -12,6 +12,7 @@
 #include "start.h"
 #include "D_psi.h"
 #include "poly_precon.h"
+#include "gmres_precon.h"
 #include "linalg_eo.h"
 #include "gram-schmidt.h"
 #include "generate_dfl_subspace.h"
@@ -35,13 +36,14 @@ int generate_dfl_subspace(const int Ns, const int N) {
   if(init_subspace == 0) init_dfl_subspace(Ns);
 
   for(i = 0; i < Ns; i++) {
-    random_spinor_field(dfl_fields[i], N, 1);
+    random_spinor_field(dfl_fields[i], N, 0);
+/*     random_spinor_field_lexic(dfl_fields[i]); */
     ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
     nrm = sqrt(square_norm(dfl_fields[i], N));
     mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
-    for(j = 0; j < 10; j++) {
+    for(j = 0; j < 40; j++) {
       poly_nonherm_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], e, d, 20, N);
-
+/*       gmres_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], 20, 1, 1.e-20, 0, N, &D_psi); */
       ModifiedGS((complex*)g_spinor_field[DUM_SOLVER], vol, i, (complex*)dfl_fields[0], vpr);
       nrm = sqrt(square_norm(g_spinor_field[DUM_SOLVER], N));
       mul_r(dfl_fields[i], 1./nrm, g_spinor_field[DUM_SOLVER], N);
