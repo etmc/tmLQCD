@@ -40,8 +40,8 @@ int gcr(spinor * const P, spinor * const Q,
   spinor * rho, * tmp;
   complex ctmp;
 
-  rho = g_spinor_field[DUM_SOLVER];
-  tmp = g_spinor_field[DUM_SOLVER+1];
+  rho = g_spinor_field[DUM_SOLVER+3];
+  tmp = g_spinor_field[DUM_SOLVER+4];
 
   init_gcr(m, N+RAND);
 

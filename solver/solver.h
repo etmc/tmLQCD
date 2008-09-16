@@ -17,6 +17,7 @@
 #define DFLFGMRES 11
 
 #include"solver/matrix_mult_typedef.h"
+
 #include"solver/gmres.h"
 #include"solver/gmres_dr.h"
 #include"solver/fgmres.h"
@@ -31,6 +32,8 @@
 #include"solver/eigenvalues.h"
 
 #include"solver/sub_low_ev.h"
+#include"solver/gmres_precon.h"
+#include"solver/poly_precon.h"
 
 #include "solver/matrix_mult_typedef_bi.h"
 #include "solver/bicgstab_complex_bi.h"
