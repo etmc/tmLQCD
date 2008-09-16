@@ -151,8 +151,9 @@ int main(int argc,char *argv[]) {
 
   g_dbw2rand = 0;
 
-  /* needed for deflation */
-  rlxd_init(rlxd_level, random_seed + g_proc_id*97);
+  /* starts the single and double precision random number */
+  /* generator                                            */
+  start_ranlux(rlxd_level, random_seed);
 
 #ifndef MPI
   g_dbw2rand = 0;
@@ -268,13 +269,13 @@ int main(int argc,char *argv[]) {
       /* something like init_dfl_solver called somewhere else  */
       /* create set of approximate lowest eigenvectors ("global deflation subspace") */
 
-      init_dfl_subspace(g_N_s);
 /*       g_mu = 0.; */
 /*       boundary(0.125); */
       generate_dfl_subspace(g_N_s, VOLUME);
 /*       boundary(g_kappa); */
 /*       g_mu = g_mu1; */
 
+#ifdef blub
       for (nsiter = 0; nsiter < g_N_s; nsiter++) { 
         /* add it to the basis */
         split_global_field(block_list[0].basis[nsiter], block_list[1].basis[nsiter], dfl_fields[nsiter]);
@@ -283,6 +284,7 @@ int main(int argc,char *argv[]) {
       /* perform local orthonormalization */
       block_orthonormalize(block_list);
       block_orthonormalize(block_list+1);
+#endif
 
       block_compute_little_D_diagonal();
       block_compute_little_D_offdiagonal();

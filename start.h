@@ -20,5 +20,6 @@ void set_spinor_point(spinor * s, const double c);
 su3 set_su3(const double c);
 void source_spinor_field(spinor * const P, spinor * const Q, int is, int ic);
 void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int is, int ic, int source_indx);
+void start_ranlux(int level,int seed);
 
 #endif

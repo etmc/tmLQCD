@@ -48,6 +48,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #ifdef MPI
 # include <mpi.h>
@@ -57,6 +58,7 @@
 #include "su3.h"
 #include "su3adj.h"
 #include "ranlxd.h"
+#include "ranlxs.h"
 #include "start.h"
 
 void gauss_vector(double v[],int n)
@@ -909,4 +911,19 @@ void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int
       else if (ic==2) (*s).s3.c2.re=1.0;
     }
   }
+}
+
+void start_ranlux(int level,int seed)
+{
+   int max_seed,loc_seed;
+
+   max_seed=2147483647/g_nproc;
+   loc_seed=seed+g_proc_id*max_seed;
+
+/*    error_root((level<0)||(level>1)||(seed<1)||(seed>max_seed),1, */
+/*               "start_ranlux [start.c]", */
+/*               "level should be 0 or 1, and 0<(seed*no_of_processes)<2^31"); */
+
+   rlxs_init(level-1,loc_seed);
+   rlxd_init(level,loc_seed);
 }
