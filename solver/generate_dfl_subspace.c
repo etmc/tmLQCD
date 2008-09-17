@@ -16,12 +16,14 @@
 #include "gmres_precon.h"
 #include "linalg_eo.h"
 #include "gram-schmidt.h"
+#include "lu_solve.h"
 #include "block.h"
 #include "generate_dfl_subspace.h"
 
-spinor ** dfl_fields;
-static spinor * _dfl_fields;
+spinor ** dfl_fields = NULL;
+static spinor * _dfl_fields = NULL;
 static int init_subspace = 0;
+complex * little_A = NULL;
 
 static void random_fields(const int Ns) {
   
@@ -57,6 +59,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
 #endif
 
   if(init_subspace == 0) init_dfl_subspace(Ns);
+  little_A = (complex*)calloc(Ns*Ns, sizeof(complex));
 
   random_fields(Ns);
 
@@ -76,7 +79,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
       }
     }
     d = 1.1;
-    e=0.;
+    e=0.3;
   }
 
   for(i = 0; i < Ns; i++) {
@@ -84,7 +87,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
     nrm = sqrt(square_norm(dfl_fields[i], N));
     mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
 
-    for(j = 0; j < 40; j++) {
+    for(j = 0; j < 20; j++) {
       g_sloppy_precision = 1;
       poly_nonherm_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], e, d, 20, N);
 /*       gmres_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], 20, 1, 1.e-20, 0, N, &D_psi); */
@@ -123,6 +126,32 @@ int generate_dfl_subspace(const int Ns, const int N) {
   block_orthonormalize(block_list);
   block_orthonormalize(block_list+1);
 
+  for (i = 0; i < Ns; i++) { 
+    /* add it to the basis */
+    reconstruct_global_field(dfl_fields[i], block_list[0].basis[i], block_list[1].basis[i]);
+  }
+  for(i = 0; i < Ns; i++) {
+    D_psi(g_spinor_field[DUM_SOLVER], dfl_fields[i]);
+    for(j = 0; j < Ns; j++) {
+      little_A[i * Ns + j]  = scalar_prod(g_spinor_field[DUM_SOLVER], dfl_fields[j], N);
+      if(g_proc_id == 0 && g_debug_level > -1) {
+	printf("%1.3e %1.3ei, ", little_A[i * Ns + j].re, little_A[i * Ns + j].im);
+      }
+    }
+    if(g_proc_id == 0 && g_debug_level > -1) printf("\n");
+  }
+  if(g_proc_id == 0 && g_debug_level > -1) printf("\n");
+
+  LUInvert(Ns, little_A, Ns);
+
+  for(i = 0; i < Ns; i++) {
+    for(j = 0; j < Ns; j++) {
+      if(g_proc_id == 0 && g_debug_level > -1) {
+	printf("%1.3e %1.3ei, ", little_A[i * Ns + j].re, little_A[i * Ns + j].im);
+      }
+    }
+    if(g_proc_id == 0 && g_debug_level > -1) printf("\n");
+  }
 
 #ifdef MPI
   etime = MPI_Wtime();

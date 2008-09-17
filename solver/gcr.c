@@ -46,6 +46,9 @@ int gcr(spinor * const P, spinor * const Q,
   init_gcr(m, N+RAND);
 
   norm_sq = square_norm(Q, N);
+  if(norm_sq < 1.e-32) {
+    norm_sq = 1.;
+  }
   
   for(restart = 0; restart < max_restarts; restart++) {
     dfl_sloppy_prec = 0;

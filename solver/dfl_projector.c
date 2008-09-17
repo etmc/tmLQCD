@@ -21,7 +21,7 @@
 #include "gcr4complex.h"
 #include "dfl_projector.h"
 
-double dfl_little_D_prec = 1.e-31;
+double dfl_little_D_prec = 1.e-24;
 int dfl_sloppy_prec = 0;
 int init_dfl_projector = 0;
 spinor **psi;
