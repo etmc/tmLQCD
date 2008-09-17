@@ -6,7 +6,7 @@
 #define third_psf 4
 
 double moment_energy();
-double ini_momenta();
+double ini_momenta(const int repro);
 void update_gauge(double step);
 void gauge_momenta(double step);
 

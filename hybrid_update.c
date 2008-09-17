@@ -126,7 +126,7 @@ double moment_energy() {
  * with the gaussian distribution
  *
  **************************************/
-double ini_momenta() {
+double ini_momenta(const int repro) {
   
   su3adj *xm;
   int i,mu,k;
@@ -134,7 +134,8 @@ double ini_momenta() {
   static double y[8];
   static double tt,tr,ts,kc,ks,sum;
 
-  if(g_proc_id==0){
+  
+  if(g_proc_id == 0 || !repro) {
     kc=0.; 
     ks=0.;
     for(i=0;i<VOLUME;i++){ 
@@ -161,15 +162,15 @@ double ini_momenta() {
 	kc=tr-tt;
       }
     }
+  }
 #ifdef MPI
+  if(g_proc_id == 0 && repro) {
     /* send the state for the random-number generator to 1 */
     rlxd_get(rlxd_state);
     MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 101, MPI_COMM_WORLD);
-#endif
   }
-
-#ifdef MPI
-  if(g_proc_id != 0){
+    
+  if(g_proc_id != 0 && repro){
     MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 101, MPI_COMM_WORLD, &status);
     rlxd_reset(rlxd_state);
     kc=0.; ks=0.;
@@ -197,9 +198,9 @@ double ini_momenta() {
 	kc=tr-tt;
       }
     }
-    /* send the state fo the random-number 
+    /* send the state of the random-number 
        generator to next processor */
-
+    
     k=g_proc_id+1; 
     if(k==g_nproc){ 
       k=0;
@@ -209,15 +210,15 @@ double ini_momenta() {
   }
 #endif
   kc=0.5*(ks+kc);
-  
+    
 #ifdef MPI
-  if(g_proc_id == 0){
+  if(g_proc_id == 0 && repro){
     MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 101, MPI_COMM_WORLD, &status);
     rlxd_reset(rlxd_state);
   }
 
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return ks;
+  ks = kc;
+  MPI_Allreduce(&ks, &kc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
   return kc;
 #endif

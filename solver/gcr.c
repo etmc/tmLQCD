@@ -65,11 +65,11 @@ int gcr(spinor * const P, spinor * const Q,
 	assign(xi[k], rho, N);
       }
       else {
-/*    	poly_nonherm_precon(xi[k], rho, 0., 1., 100, N);  */
-   	gmres_precon(xi[k], rho, 20, 1, 1.e-5*err, 0, N, &D_psi);
+     	poly_nonherm_precon(xi[k], rho, 0.3, 1.1, 20, N);
+/*    	gmres_precon(xi[k], rho, 20, 1, 1.e-5*err, 0, N, &D_psi); */
       }
       dfl_sloppy_prec = 1;
-      dfl_little_D_prec = 1.e-4*err;
+      dfl_little_D_prec = 1.e-12;
       f(tmp, xi[k]); 
       /* tmp will become chi[k] */
       for(l = 0; l < k; l++) {
@@ -86,23 +86,12 @@ int gcr(spinor * const P, spinor * const Q,
 	fflush(stdout);
       }
       /* Precision reached? */
-      if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
-	_mult_real(c[k], c[k], 1./b[k]);
-	assign_add_mul(P, xi[k], c[k], N);
-	for(l = k-1; l >= 0; l--) {
-	  for(i = l+1; i <= k; i++) {
-	    _mult_assign_complex(ctmp, a[l][i], c[i]);
-	    /* c[l] -= ctmp */
-	    _diff_complex(c[l], ctmp);
-	  }
-	  _mult_real(c[l], c[l], 1./b[l]);
-	  assign_add_mul(P, xi[l], c[l], N);
-	}
-	return(restart*m+k);
+      if((k == m-1) || ((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
+	break;
       }
     }
+
     /* prepare for restart */
-    k--;
     _mult_real(c[k], c[k], 1./b[k]);
     assign_add_mul(P, xi[k], c[k], N);
     for(l = k-1; l >= 0; l--) {

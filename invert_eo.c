@@ -164,7 +164,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     else if(solver_flag == GCR) {
       if(g_proc_id == 0) {printf("# Using GCR! m = %d\n", gmres_m_parameter); fflush(stdout);}
-      iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &D_psi); 
+      iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi); 
 /*       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME); */
 /*       iter = gcr(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &Q_pm_psi); */
 /*       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]); */
@@ -177,11 +177,11 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       /* invert P_L D on source -> chi */
       if(solver_flag == DFLGCR) {
 	iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], gmres_m_parameter, 
-		   max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &project_left_D);
+		   max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &project_left_D);
       }
       else {
 	iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], gmres_m_parameter, 
-		      max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &project_left_D);
+		      max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &project_left_D);
       }
       /* apply P_R to chi              */
       project_right(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1]);

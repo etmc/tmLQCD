@@ -18,10 +18,17 @@
 #include "little_D.h"
 #include "block.h"
 #include "linalg_eo.h"
+#include "gcr4complex.h"
 #include "dfl_projector.h"
 
 double dfl_little_D_prec = 1.e-31;
 int dfl_sloppy_prec = 0;
+int init_dfl_projector = 0;
+spinor **psi;
+complex *inprod;
+complex *invvec;
+
+static void alloc_dfl_projector();
 
 /* Break up full volume spinor to blocks
  * loop over block.basis
@@ -34,19 +41,12 @@ int dfl_sloppy_prec = 0;
 /* this is phi_k A^{-1}_{kl} (phi_k, in) */
 void project(spinor * const out, spinor * const in) {
   int j,ctr_t, iter;
-  spinor **psi;
   int vol = block_list[0].volume;
-  complex *inprod;
-  complex *invvec;
   double prec;
 
-  psi = calloc(4, sizeof(spinor*)); /*block local version of global spinor */
-  inprod = calloc(2 * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
-  invvec = calloc(2 * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
-
-  /* no loop below because further down we also don't take this cleanly into account */
-  psi[0] = calloc(VOLUME, sizeof(spinor));
-  psi[1] = psi[0] + VOLUME/2;
+  if(init_dfl_projector == 0) {
+    alloc_dfl_projector();
+  }
 
   /*initialize the local (block) parts of the spinor*/
   split_global_field(psi[0],psi[1], in);
@@ -57,8 +57,9 @@ void project(spinor * const out, spinor * const in) {
   }
 
   if(dfl_sloppy_prec) prec = dfl_little_D_prec;
-  else prec = 1.e-31;
-  iter = lgcr(invvec, inprod, 10, 1000, prec, 1, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
+  else prec = 1.e-24;
+
+  iter = gcr4complex(invvec, inprod, 10, 1000, prec, 1, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D);
   if(g_proc_id == 0 && g_debug_level > -1) {
     printf("lgcr number of iterations %d\n", iter);
   }
@@ -72,27 +73,39 @@ void project(spinor * const out, spinor * const in) {
   }
 
   reconstruct_global_field(out, psi[0], psi[1]);
+  return;
+}
 
-  free(*psi);
-  free(psi);
-  free(invvec);
-  free(inprod);
+static void alloc_dfl_projector() {
+  psi = calloc(4, sizeof(spinor*)); /*block local version of global spinor */
+  inprod = calloc(2 * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
+  invvec = calloc(2 * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
+  
+  /* no loop below because further down we also don't take this cleanly into account */
+  psi[0] = calloc(VOLUME, sizeof(spinor));
+  psi[1] = psi[0] + VOLUME/2;
+  init_dfl_projector = 1;
   return;
 }
 
 
+void free_dfl_projector() {
+  free(*psi);
+  free(psi);
+  free(invvec);
+  free(inprod);
+  init_dfl_projector = 0;
+  return;
+}
+
+/* this is phi_k (phi_k, in) */
 void project2(spinor * const out, spinor * const in) {
   int j;
-  spinor **psi;
   int vol = block_list[0].volume;
-  complex *inprod;
 
-  psi = calloc(4, sizeof(spinor*)); /*block local version of global spinor */
-  inprod = calloc(2 * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
-
-  /* no loop below because further down we also don't take this cleanly into account */
-  psi[0] = calloc(VOLUME, sizeof(spinor));
-  psi[1] = psi[0] + VOLUME/2;
+  if(init_dfl_projector == 0) {
+    alloc_dfl_projector();
+  }
 
   /*initialize the local (block) parts of the spinor*/
   split_global_field(psi[0],psi[1], in);
@@ -113,10 +126,6 @@ void project2(spinor * const out, spinor * const in) {
 
   /* reconstruct global field */
   reconstruct_global_field(out, psi[0], psi[1]);
-
-  free(psi[0]);
-  free(psi);
-  free(inprod);
   return;
 }
 
@@ -155,7 +164,7 @@ void D_project_right(spinor * const out, spinor * const in) {
 int check_projectors() {
   double nrm = 0.;
   int j;
-  spinor *psi[2];
+  spinor *phi[2];
   complex *v;
 
   random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
@@ -181,7 +190,6 @@ int check_projectors() {
     printf("||P psi - P P psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
-
   project_left_D(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
   D_project_right(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER]);
   diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
@@ -292,13 +300,13 @@ int check_projectors() {
   apply_little_D_spinor(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
   D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
   v = calloc(2 * 9 * g_N_s, sizeof(complex));
-  psi[0] = calloc(VOLUME, sizeof(spinor));
-  psi[1] = psi[0] + VOLUME / 2;
-  split_global_field(psi[0], psi[1], g_spinor_field[DUM_SOLVER+2]);
+  phi[0] = calloc(VOLUME, sizeof(spinor));
+  phi[1] = phi[0] + VOLUME / 2;
+  split_global_field(phi[0], phi[1], g_spinor_field[DUM_SOLVER+2]);
   if (g_cart_id == 0 && g_debug_level > 4){
     for (j = 0; j < g_N_s; ++j) {
-      v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
-      v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
+      v[j]         = block_scalar_prod(phi[0], block_list[0].basis[j], VOLUME/2);
+      v[j + g_N_s] = block_scalar_prod(phi[1], block_list[1].basis[j], VOLUME/2);
     }
     for (j = 0; j < 2* g_N_s; ++j) {
       printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
@@ -307,7 +315,7 @@ int check_projectors() {
 
   project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
   free(v);
-  free(psi[0]);
+  free(phi[0]);
 
   diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], VOLUME);
   nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME);
@@ -320,22 +328,22 @@ int check_projectors() {
   apply_little_D_spinor(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
   D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
   v = calloc(2 * 9 * g_N_s, sizeof(complex));
-  psi[0] = calloc(VOLUME, sizeof(spinor));
-  psi[1] = psi[0] + VOLUME / 2;
-  split_global_field(psi[0], psi[1], g_spinor_field[DUM_SOLVER+2]);
+  phi[0] = calloc(VOLUME, sizeof(spinor));
+  phi[1] = phi[0] + VOLUME / 2;
+  split_global_field(phi[0], phi[1], g_spinor_field[DUM_SOLVER+2]);
   if (!g_proc_id && g_debug_level > 4){
     for (j = 0; j < g_N_s; ++j) {
-      v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
-      v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
+      v[j]         = block_scalar_prod(phi[0], block_list[0].basis[j], VOLUME/2);
+      v[j + g_N_s] = block_scalar_prod(phi[1], block_list[1].basis[j], VOLUME/2);
     }
     for (j = 0; j < 2* g_N_s; ++j) {
       printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
     }
   }
   project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
-  split_global_field(psi[0], psi[1], g_spinor_field[DUM_SOLVER+1]);
+  split_global_field(phi[0], phi[1], g_spinor_field[DUM_SOLVER+1]);
   free(v);
-  free(psi[0]);
+  free(phi[0]);
 
 
   diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], VOLUME);
@@ -381,23 +389,19 @@ int check_projectors() {
 
 void check_little_D_inversion() {
   int i,j,ctr_t;
-  spinor **psi;
   int contig_block = LZ / 2;
   int vol = block_list[0].volume;
-  complex *inprod;
   complex *result;
-  complex *invvec;
   double dif;
 
   random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
-  psi = calloc(4, sizeof(spinor*)); /*block local version of global spinor */
+  if(init_dfl_projector == 0) {
+    alloc_dfl_projector();
+  }
+
   result = calloc(2 * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
-  inprod = calloc(2 * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
-  invvec = calloc(2 * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
 
   /* no loop below because further down we also don't take this cleanly into account */
-  psi[0] = calloc(VOLUME, sizeof(spinor));
-  psi[1] = psi[0] + VOLUME/2;
 
   /*initialize the local (block) parts of the spinor*/
   for (ctr_t = 0; ctr_t < (VOLUME / LZ); ++ctr_t) {
@@ -411,7 +415,7 @@ void check_little_D_inversion() {
     }
   }
 
-  lgcr(invvec, inprod, 10, 100, 1.e-31, 0, 2 * g_N_s, 2 * 9 * g_N_s, &little_D);
+  gcr4complex(invvec, inprod, 10, 100, 1.e-31, 0, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D);
   little_D(result, invvec); /* This should be a proper inverse now */
 
   dif = 0.0;
@@ -451,11 +455,7 @@ void check_little_D_inversion() {
   }
 
 
-  free(psi[0]);
-  free(psi);
   free(result);
-  free(invvec);
-  free(inprod);
   return;
 }
 

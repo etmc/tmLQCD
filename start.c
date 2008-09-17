@@ -618,14 +618,14 @@ void unit_g_gauge_field(void) {
 }
 
 
-void random_gauge_field() {
+void random_gauge_field(const int repro) {
 
   int ix,mu;
 #ifdef MPI
   int rlxd_state[105];
   int j=0;
 
-  if(g_proc_id !=0) {
+  if(g_proc_id !=0 && repro == 1) {
     MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 102, MPI_COMM_WORLD, &status);
     rlxd_reset(rlxd_state);
   }
@@ -638,13 +638,15 @@ void random_gauge_field() {
   }
 
 #ifdef MPI
-  j = (g_proc_id + 1) % g_nproc;
-  rlxd_get(rlxd_state);
-  MPI_Send(&rlxd_state[0], 105, MPI_INT, j, 102, MPI_COMM_WORLD);
-
-  if(g_proc_id == 0) {
-    MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 102, MPI_COMM_WORLD, &status);
-    rlxd_reset(rlxd_state);
+  if(repro == 1) {
+    j = (g_proc_id + 1) % g_nproc;
+    rlxd_get(rlxd_state);
+    MPI_Send(&rlxd_state[0], 105, MPI_INT, j, 102, MPI_COMM_WORLD);
+    
+    if(g_proc_id == 0) {
+      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 102, MPI_COMM_WORLD, &status);
+      rlxd_reset(rlxd_state);
+    }
   }
 #endif
   g_update_gauge_copy = 1;

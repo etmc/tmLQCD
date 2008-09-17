@@ -214,11 +214,11 @@ int main(int argc,char *argv[]) {
     }
   }
 #  if (defined _PERSISTENT)
-  init_xchange_halffield();
+  if(even_odd_flag) init_xchange_halffield();
 #  endif
 #endif
 
-  for(j=0;j<Nmeas; j++) {
+  for(j = 0; j < Nmeas; j++) {
     sprintf(conf_filename,"%s.%.4d", gauge_input_filename, nstore);
     if (g_proc_id == 0){
       printf("Reading Gauge field from file %s\n", conf_filename); fflush(stdout);

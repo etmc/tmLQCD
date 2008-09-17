@@ -15,6 +15,7 @@
 #include "sse.h"
 #include "linalg_eo.h"
 #include "default_input_values.h"
+#include "read_input.h"
 #include "monomial.h"
 
 
@@ -148,6 +149,7 @@ int init_monomials(const int V, const int even_odd_flag) {
     if(monomial_list[i].type != GAUGE) {
       monomial_list[i].pf = __pf+no*V;
       no++;
+      monomial_list[i].rngrepro = reproduce_randomnumber_flag;
     }
     else {
       monomial_list[i].pf = NULL;

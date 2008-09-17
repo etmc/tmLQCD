@@ -12,6 +12,6 @@
 
 typedef void (*matrix_mult) (spinor * const, spinor * const);
 typedef void (*matrix_mult_clover) (spinor * const, spinor * const, const double);
-
+typedef void (*c_matrix_mult) (complex * const, complex * const);
 
 #endif

@@ -38,6 +38,7 @@
 #include "init_dirac_halfspinor.h"
 #include "test/check_geometry.h"
 #include "xchange_halffield.h"
+#include "D_psi.h"
 #include "phmc.h"
 #include "mpi_init.h"
 
@@ -70,16 +71,12 @@ int check_xchange();
 int main(int argc,char *argv[])
 {
   int j,j_max,k,k_max = 5;
-#ifdef _GAUGE_COPY
-  int kb=0;
-#endif
   
   
   static double t1,t2,dt,sdt,dts,qdt,sqdt;
 #ifdef MPI
   static double dt2;
-  int rlxd_state[105];
-
+  
   DUM_DERI = 6;
   DUM_SOLVER = DUM_DERI+2;
   DUM_MATRIX = DUM_SOLVER+6;
@@ -145,7 +142,13 @@ int main(int argc,char *argv[])
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
 #endif
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
-  j = init_spinor_field(VOLUMEPLUSRAND/2, 3*k_max);
+
+  if(even_odd_flag) {
+    j = init_spinor_field(VOLUMEPLUSRAND/2, 3*k_max);
+  }
+  else {
+    j = init_spinor_field(VOLUMEPLUSRAND, 3*k_max);
+  }
 
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
@@ -163,6 +166,12 @@ int main(int argc,char *argv[])
 	   (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(g_nproc_z*LZ));
     printf("# The local lattice size is %d x %d x %d x %d\n", 
 	   (int)(T), (int)(LX), (int)(LY),(int) LZ);
+    if(even_odd_flag) {
+      printf("# benchmarking the even/odd preconditioned Dirac operator\n");
+    }
+    else {
+      printf("# benchmarking the standard Dirac operator\n");
+    }
     fflush(stdout);
   }
   
@@ -195,57 +204,76 @@ int main(int argc,char *argv[])
   check_xchange(); 
 #endif
   
-  if(reproduce_randomnumber_flag == 1) {
-    /* here we generate exactly the same configuration as for the 
-       single node simulation */
-    if(g_proc_id==0) {
-      rlxd_init(1, 123456);   
-      random_gauge_field();
-      /*  send the state of the random-number generator to 1 */
-#ifdef MPI
-      rlxd_get(rlxd_state);
-      MPI_Send((void*)rlxd_state, 105, MPI_INT, 1, 99, MPI_COMM_WORLD);
-#endif
-    }
-#ifdef MPI
-    else {
-      /* recieve the random number state form g_proc_id-1 */
-      MPI_Recv((void*)rlxd_state, 105, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
-      rlxd_reset(rlxd_state);
-      random_gauge_field();
-      /* send the random number state to g_proc_id+1 */
-      k=g_proc_id+1; 
-      if(k==g_nproc) k=0;
-      rlxd_get(rlxd_state);
-      MPI_Send((void*)rlxd_state, 105, MPI_INT, k, 99, MPI_COMM_WORLD);
-    }
-    if(g_proc_id==0) {
-      MPI_Recv((void*)rlxd_state, 105, MPI_INT,g_nproc-1,99, MPI_COMM_WORLD, &status);
-      rlxd_reset(rlxd_state);
-    }
-#endif
-  }
-  else {
-    rlxd_init(1, 123456 + g_proc_id*97);
-    random_gauge_field();
-  }
+
+  start_ranlux(1, 123456);
+  random_gauge_field(reproduce_randomnumber_flag);
 
 #ifdef MPI
   /*For parallelization: exchange the gaugefield */
   xchange_gauge();
 #endif
 
-  /*initialize the pseudo-fermion fields*/
-  j_max=1;
-  sdt=0.;
-  for (k=0;k<k_max;k++) {
-    random_spinor_field(g_spinor_field[k], VOLUME/2, reproduce_randomnumber_flag);
-  }
-
-  while(sdt < 30.) {
+  if(even_odd_flag) {
+    /*initialize the pseudo-fermion fields*/
+    j_max=1;
+    sdt=0.;
+    for (k=0;k<k_max;k++) {
+      random_spinor_field(g_spinor_field[k], VOLUME/2, 0);
+    }
+    
+    while(sdt < 30.) {
 #ifdef MPI
-    MPI_Barrier(MPI_COMM_WORLD);
+      MPI_Barrier(MPI_COMM_WORLD);
 #endif
+#if defined BGL
+      t1 = bgl_wtime();
+#else
+      t1=(double)clock();
+#endif
+      for (j=0;j<j_max;j++) {
+	for (k=0;k<k_max;k++) {
+	  Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
+	  Hopping_Matrix(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]);
+	}
+      }
+#if defined BGL
+      t2 = bgl_wtime();
+      dt = t2 - t1;
+#else
+      t2=(double)clock();
+      dt=(t2-t1)/((double)(CLOCKS_PER_SEC));
+#endif
+#ifdef MPI
+      MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+      sdt = dt;
+#endif
+      qdt=dt*dt;
+#ifdef MPI
+      MPI_Allreduce (&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+      sqdt = qdt;
+#endif
+      sdt=sdt/((double)g_nproc);
+      sqdt=sqrt(sqdt/g_nproc-sdt*sdt);
+      j_max*=2;
+    }
+    j_max=j_max/2;
+    dts=dt;
+    sdt=1.0e6f*sdt/((double)(k_max*j_max*(VOLUME)));
+    sqdt=1.0e6f*sqdt/((double)(k_max*j_max*(VOLUME)));
+    
+    if(g_proc_id==0) {
+      printf("total time %e sec, Variance of the time %e sec \n",sdt,sqdt);
+      printf("\n");
+      printf(" (%d Mflops [%d bit arithmetic])\n",
+	     (int)(1320.0f/sdt),(int)sizeof(spinor)/3);
+      printf("\n");
+      fflush(stdout);
+    }
+    
+#ifdef MPI
+    /* isolated computation */
 #if defined BGL
     t1 = bgl_wtime();
 #else
@@ -253,59 +281,10 @@ int main(int argc,char *argv[])
 #endif
     for (j=0;j<j_max;j++) {
       for (k=0;k<k_max;k++) {
- 	Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
- 	Hopping_Matrix(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]);
+	Hopping_Matrix_nocom(0, g_spinor_field[k+k_max], g_spinor_field[k]);
+	Hopping_Matrix_nocom(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]);
       }
     }
-#if defined BGL
-    t2 = bgl_wtime();
-    dt = t2 - t1;
-#else
-    t2=(double)clock();
-    dt=(t2-t1)/((double)(CLOCKS_PER_SEC));
-#endif
-#ifdef MPI
-    MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-#else
-    sdt = dt;
-#endif
-    qdt=dt*dt;
-#ifdef MPI
-    MPI_Allreduce (&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-#else
-    sqdt = qdt;
-#endif
-    sdt=sdt/((double)g_nproc);
-    sqdt=sqrt(sqdt/g_nproc-sdt*sdt);
-    j_max*=2;
-  }
-  j_max=j_max/2;
-  dts=dt;
-  sdt=1.0e6f*sdt/((double)(k_max*j_max*(VOLUME)));
-  sqdt=1.0e6f*sqdt/((double)(k_max*j_max*(VOLUME)));
-
-  if(g_proc_id==0) {
-    printf("total time %e sec, Variance of the time %e sec \n",sdt,sqdt);
-    printf("\n");
-    printf(" (%d Mflops [%d bit arithmetic])\n",
-	   (int)(1320.0f/sdt),(int)sizeof(spinor)/3);
-    printf("\n");
-    fflush(stdout);
-  }
-
-#ifdef MPI
-  /* isolated computation */
-#if defined BGL
-    t1 = bgl_wtime();
-#else
-    t1=(double)clock();
-#endif
-  for (j=0;j<j_max;j++) {
-    for (k=0;k<k_max;k++) {
-      Hopping_Matrix_nocom(0, g_spinor_field[k+k_max], g_spinor_field[k]);
-      Hopping_Matrix_nocom(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]);
-    }
-  }
 #if defined BGL
     t2 = bgl_wtime();
     dt2 = t2 - t1;
@@ -313,35 +292,97 @@ int main(int argc,char *argv[])
     t2=(double)clock();
     dt2=(t2-t1)/((double)(CLOCKS_PER_SEC));
 #endif
-  /* compute the bandwidth */
-  dt=dts-dt2;
-  MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  sdt=sdt/((double)g_nproc);
-  MPI_Allreduce (&dt2, &dt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  dt=dt/((double)g_nproc);
-  dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
-  if(g_proc_id==0) {
-    printf("communication switched off \n");
-    printf(" (%d Mflops [%d bit arithmetic])\n",
-	   (int)(1320.0f/dt),(int)sizeof(spinor)/3);
-    printf("\n");
-    fflush(stdout);
-  }
-  sdt=sdt/((double)k_max);
-  sdt=sdt/((double)j_max);
-  sdt=sdt/((double)(2*SLICE));
-  if(g_proc_id==0) {
-    printf("The size of the package is %d Byte \n",(SLICE)*192);
-    printf("The bandwidth is %5.2f + %5.2f   MB/sec\n",
+    /* compute the bandwidth */
+    dt=dts-dt2;
+    MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    sdt=sdt/((double)g_nproc);
+    MPI_Allreduce (&dt2, &dt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    dt=dt/((double)g_nproc);
+    dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
+    if(g_proc_id==0) {
+      printf("communication switched off \n");
+      printf(" (%d Mflops [%d bit arithmetic])\n",
+	     (int)(1320.0f/dt),(int)sizeof(spinor)/3);
+      printf("\n");
+      fflush(stdout);
+    }
+    sdt=sdt/((double)k_max);
+    sdt=sdt/((double)j_max);
+    sdt=sdt/((double)(2*SLICE));
+    if(g_proc_id==0) {
+      printf("The size of the package is %d Byte \n",(SLICE)*192);
 #ifdef _USE_HALFSPINOR
-	   192./sdt/1024/1024, 192./sdt/1024./1024);
+      printf("The bandwidth is %5.2f + %5.2f   MB/sec\n",
+	     192./sdt/1024/1024, 192./sdt/1024./1024);
 #else
-	   2.*192./sdt/1024/1024, 2.*192./sdt/1024./1024);
+      printf("The bandwidth is %5.2f + %5.2f   MB/sec\n",
+	     2.*192./sdt/1024/1024, 2.*192./sdt/1024./1024);
+#endif
+      fflush(stdout);
+    }
 #endif
     fflush(stdout);
   }
+  else {
+    /* the non even/odd case now */
+    /*initialize the pseudo-fermion fields*/
+    j_max=1;
+    sdt=0.;
+    for (k=0;k<k_max;k++) {
+      random_spinor_field(g_spinor_field[k], VOLUME, 0);
+    }
+    
+    while(sdt < 3.) {
+#ifdef MPI
+      MPI_Barrier(MPI_COMM_WORLD);
 #endif
-  fflush(stdout);
+#if defined BGL
+      t1 = bgl_wtime();
+#else
+      t1=(double)clock();
+#endif
+      for (j=0;j<j_max;j++) {
+	for (k=0;k<k_max;k++) {
+	  D_psi(g_spinor_field[k+k_max], g_spinor_field[k]);
+	  if(g_proc_id == 0) printf("blub %d %d %1.3e\n", j, k, sdt);
+	}
+      }
+#if defined BGL
+      t2 = bgl_wtime();
+      dt = t2 - t1;
+#else
+      t2=(double)clock();
+      dt=(t2-t1)/((double)(CLOCKS_PER_SEC));
+#endif
+#ifdef MPI
+      MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+      sdt = dt;
+#endif
+      qdt=dt*dt;
+#ifdef MPI
+      MPI_Allreduce (&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+      sqdt = qdt;
+#endif
+      sdt=sdt/((double)g_nproc);
+      sqdt=sqrt(sqdt/g_nproc-sdt*sdt);
+      j_max*=2;
+    }
+    j_max=j_max/2;
+    dts=dt;
+    sdt=1.0e6f*sdt/((double)(k_max*j_max*(VOLUME)));
+    sqdt=1.0e6f*sqdt/((double)(k_max*j_max*(VOLUME)));
+    
+    if(g_proc_id==0) {
+      printf("total time %e sec, Variance of the time %e sec \n",sdt,sqdt);
+      printf("\n");
+      printf(" (%d Mflops [%d bit arithmetic])\n",
+	     (int)(1392.0f/sdt),(int)sizeof(spinor)/3);
+      printf("\n");
+      fflush(stdout);
+    }
+  }
 #ifdef MPI
   MPI_Finalize();
 #endif

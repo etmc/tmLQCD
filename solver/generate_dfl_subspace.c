@@ -60,6 +60,25 @@ int generate_dfl_subspace(const int Ns, const int N) {
 
   random_fields(Ns);
 
+  if(g_debug_level > 4) {
+    for(e = 0.; e < 1.; e=e+0.05) {
+      random_spinor_field(dfl_fields[0], N, 0);
+      nrm = sqrt(square_norm(dfl_fields[0], N));
+      mul_r(dfl_fields[0], 1./nrm, dfl_fields[0], N);
+      d = 1.1;
+/*       gmres_precon(g_spinor_field[DUM_SOLVER], dfl_fields[0], 20, 1, 1.e-20, 0, N, &D_psi); */
+      poly_nonherm_precon(g_spinor_field[DUM_SOLVER], dfl_fields[0], e, d, 30, N);
+      D_psi(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+      diff(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], dfl_fields[0], N);
+      nrm = square_norm(g_spinor_field[DUM_SOLVER], N);
+      if(g_proc_id == 0) {
+        printf(" e= %f d= %f nrm = %1.5e\n", e, d, nrm);
+      }
+    }
+    d = 1.1;
+    e=0.;
+  }
+
   for(i = 0; i < Ns; i++) {
     ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
     nrm = sqrt(square_norm(dfl_fields[i], N));

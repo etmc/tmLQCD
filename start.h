@@ -13,7 +13,7 @@ void zero_spinor_field(spinor * const k, const int N);
 void constant_spinor_field(spinor * const k, const int p, const int N);
 su3 random_su3(void);
 void unit_g_gauge_field(void);
-void random_gauge_field(void);
+void random_gauge_field(const int repro);
 void set_spinor_field(int k, const double c);
 void set_gauge_field(const double c);
 void set_spinor_point(spinor * s, const double c);
