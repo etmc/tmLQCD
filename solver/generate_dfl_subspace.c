@@ -133,6 +133,12 @@ int generate_dfl_subspace(const int Ns, const int N) {
     D_psi(g_spinor_field[DUM_SOLVER], dfl_fields[i]);
     for(j = 0; j < Ns; j++) {
       little_A[i * Ns + j]  = scalar_prod(g_spinor_field[DUM_SOLVER], dfl_fields[j], N);
+/*       if(i == j) { */
+/* 	_complex_one(little_A[i * Ns + j]); */
+/*       } */
+/*       else { */
+/* 	_complex_zero(little_A[i * Ns + j]); */
+/*       } */
       if(g_proc_id == 0 && g_debug_level > 4) {
 	printf("%1.3e %1.3ei, ", little_A[i * Ns + j].re, little_A[i * Ns + j].im);
       }

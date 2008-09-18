@@ -14,7 +14,8 @@ void check_local_D();
 void free_dfl_projector();
 
 void little_project(complex * const out, complex * const in, const int  N);
-void little_D_P_L(complex * const out, complex * const in);
+void little_P_L_D(complex * const out, complex * const in);
+void little_D_P_R(complex * const out, complex * const in);
 void little_P_R(complex * const out, complex * const in);
 void little_P_L(complex * const out, complex * const in);
 

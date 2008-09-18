@@ -12,13 +12,6 @@
 #include"linalg_eo.h"
 #include"gcr4complex.h"
 
-void ldiff(complex * Q, complex * const R, complex * const S, const int N);
-double lsquare_norm(complex * const Q, const int N, const int parallel);
-complex lscalar_prod(complex * const R, complex * const S, const int N, const int parallel);
-void lmul_r(complex * const R, const double c, complex * const S, const int N);
-void lassign_diff_mul(complex * const R, complex * const S, const complex c, const int N);
-void lassign_add_mul(complex * const R, complex * const S, const complex c, const int N);
-
 static void init_lgcr(const int _M, const int _V);
 static void free_lgcr();
 static complex ** a = NULL; 
@@ -158,6 +151,39 @@ void ldiff(complex * const Q, complex * const R, complex * const S,
   for(i = 0; i < N; i++) {
     Q[i].re = R[i].re - S[i].re;
     Q[i].im = R[i].im - S[i].im;
+  }
+  return;
+}
+
+void ldiff_assign(complex * const Q, complex * const S, 
+		  const int N) 
+{
+  int i;
+  for(i = 0; i < N; i++) {
+    Q[i].re -= S[i].re;
+    Q[i].im -= S[i].im;
+  }
+  return;
+}
+
+void ladd(complex * const Q, complex * const R, complex * const S, 
+	  const int N) 
+{
+  int i;
+  for(i = 0; i < N; i++) {
+    Q[i].re = R[i].re + S[i].re;
+    Q[i].im = R[i].im + S[i].im;
+  }
+  return;
+}
+
+void ladd_assign(complex * const Q, complex * const S, 
+		 const int N) 
+{
+  int i;
+  for(i = 0; i < N; i++) {
+    Q[i].re += S[i].re;
+    Q[i].im += S[i].im;
   }
   return;
 }

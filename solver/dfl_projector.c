@@ -62,12 +62,12 @@ void project(spinor * const out, spinor * const in) {
   if(dfl_sloppy_prec) prec = dfl_little_D_prec;
   else prec = 1.e-24;
 
-  if(0) {
+  if(1) {
     iter = gcr4complex(invvec, inprod, 10, 1000, prec, 1, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D);
   }
   else {
     little_P_L(v, inprod);
-    iter = gcr4complex(w, v, 10, 1000, prec, 1, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D_P_L);
+    iter = gcr4complex(w, v, 10, 1000, prec, 1, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_P_L_D);
     little_P_R(v, w);
     little_project(w, inprod, g_N_s);
     for(i = 0; i < 2*g_N_s; i++) {
@@ -180,19 +180,20 @@ void D_project_right(spinor * const out, spinor * const in) {
 
 
 void little_project(complex * const out, complex * const in, const int  N) {
-  int i, j, blk;
+  int i, j;
   int vol = N;
   double prec;
   static complex * phi, *psi;
   static int little_init = 0;
   if(little_init == 0) {
     phi = work;
-    psi = work+2*N;
+    psi = work+N;
   }
   
   for(i = 0; i < N; i++) {
-    phi[i] = in[i];
-    _add_complex(phi[i], in[i + N]);
+    phi[i].re = in[i].re + in[i+N].re;
+    phi[i].im = +in[i].im + in[i+N].im;
+/*     _add_complex(phi[i], in[i + N]); */
   }
 #ifdef MPI
   MPI_Allreduce(phi, psi, N, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
@@ -217,38 +218,63 @@ void little_project(complex * const out, complex * const in, const int  N) {
 }
 
 
+void little_project2(complex * const out, complex * const in, const int  N) {
+  int i, j, blk;
+  int vol = N;
+  double prec;
+  static complex * phi, *psi;
+  static int little_init = 0;
+  if(little_init == 0) {
+    phi = work;
+    psi = work+2*N;
+  }
+  
+  for(i = 0; i < N; i++) {
+    phi[i].re = in[i].re + in[i+N].re;
+    phi[i].im = +in[i].im + in[i+N].im;
+/*     _add_complex(phi[i], in[i + N]); */
+  }
+#ifdef MPI
+  MPI_Allreduce(phi, psi, N, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+#else
+  memcpy(psi, phi, N*sizeof(complex));
+#endif
+  
+  for(i = 0; i < N; i++) {
+    out[i]  = psi[i];
+    out[i + N] = psi[i];
+  }
+  return;
+}
+
+
+
 void little_P_L(complex * const out, complex * const in) {
-  int i;
   little_project(out, in, g_N_s);
   little_D(work, out);
-  for(i = 0; i < 2*g_N_s; i++) {
-    out[i].re = in[i].re - work[i].re;
-    out[i].im = in[i].im - work[i].im;
-  }
+  ldiff(out, in, work, 2*g_N_s);
   return;
 }
 
 void little_P_R(complex * const out, complex * const in) {
-  int i;
   little_D(out, in);
   little_project(work, out, g_N_s);
-  for(i = 0; i < 2*g_N_s; i++) {
-    out[i].re = in[i].re - work[i].re;
-    out[i].im = in[i].im - work[i].im;
-  }
+  ldiff(out, in, work, 2*g_N_s);
   return;
 }
 
-void little_D_P_L(complex * const out, complex * const in) {
-  int i;
+void little_P_L_D(complex * const out, complex * const in) {
   complex * mwork;
   mwork = work+18*g_N_s;
-  little_project(out, in, g_N_s);
-  little_D(mwork, out);
-  for(i = 0; i < 2*g_N_s; i++) {
-    mwork[i].re = in[i].re - mwork[i].re;
-    mwork[i].im = in[i].im - mwork[i].im;
-  }
+  little_D(mwork, in);
+  little_P_L(out, mwork);
+  return;
+}
+
+void little_D_P_R(complex * const out, complex * const in) {
+  complex * mwork;
+  mwork = work+18*g_N_s;
+  little_P_R(mwork, in);
   little_D(out, mwork);
   return;
 }
@@ -263,6 +289,7 @@ int check_projectors() {
   random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
   nrm = square_norm(g_spinor_field[DUM_SOLVER], VOLUME);
   if(g_cart_id == 0) {
+    printf("\nNow we check the DFL projection routines!\n\n");
     printf("||psi|| = %1.5e\n", sqrt(nrm));
   }
 
@@ -283,6 +310,7 @@ int check_projectors() {
     printf("||P psi - P P psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
+
   project_left_D(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
   D_project_right(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER]);
   diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
@@ -477,6 +505,46 @@ int check_projectors() {
     fflush(stdout);
   }
 
+  /* check little projectors now */
+  memcpy(work + 8*9*g_N_s, g_spinor_field[DUM_SOLVER], 2*g_N_s*sizeof(complex));
+  little_project2(work + 10*9*g_N_s, work + 8*9*g_N_s, g_N_s);
+  little_project2(work + 12*9*g_N_s, work + 10*9*g_N_s, g_N_s);
+  ldiff(work + 12*9*g_N_s, work + 12*9*g_N_s, work + 10*9*g_N_s, 2*g_N_s);
+  nrm = lsquare_norm(work + 12*9*g_N_s, 2*g_N_s, 1);
+  if(g_cart_id == 0) {
+    printf("\nNow the little little projection routines\n\n");
+    printf("||lP v - lP lP v|| = %1.5e\n", sqrt(nrm));
+    fflush(stdout);
+  }
+
+  little_P_L_D(work + 10*9*g_N_s, work + 8*9*g_N_s);
+  little_D_P_R(work + 12*9*g_N_s, work + 8*9*g_N_s);
+  ldiff(work + 12*9*g_N_s, work + 12*9*g_N_s, work + 10*9*g_N_s, 2*g_N_s);
+  nrm = lsquare_norm(work + 12*9*g_N_s, 2*g_N_s, 1);
+  if(g_cart_id == 0) {
+    printf("||lP_L lD v - lD lP_R v|| = %1.5e\n", sqrt(nrm));
+    fflush(stdout);
+  }
+
+  little_P_L(work + 10*9*g_N_s, work + 8*9*g_N_s);
+  little_P_L(work + 12*9*g_N_s, work + 10*9*g_N_s);
+  ldiff(work + 12*9*g_N_s, work + 12*9*g_N_s, work + 10*9*g_N_s, 2*g_N_s);
+  nrm = lsquare_norm(work + 12*9*g_N_s, 2*g_N_s, 1);
+  if(g_cart_id == 0) {
+    printf("||lP_L^2 v - lP_L v|| = %1.5e\n", sqrt(nrm));
+    fflush(stdout);
+  }
+
+  little_P_R(work + 10*9*g_N_s, work + 8*9*g_N_s);
+  little_P_R(work + 12*9*g_N_s, work + 10*9*g_N_s);
+  ldiff(work + 12*9*g_N_s, work + 12*9*g_N_s, work + 10*9*g_N_s, 2*g_N_s);
+  nrm = lsquare_norm(work + 12*9*g_N_s, 2*g_N_s, 1);
+  if(g_cart_id == 0) {
+    printf("||lP_R^2 v - lP_R v|| = %1.5e\n", sqrt(nrm));
+    fflush(stdout);
+  }
+
+
   return(0);
 }
 
@@ -510,12 +578,12 @@ void check_little_D_inversion() {
     }
   }
 
-  if(0) {
+  if(1) {
     gcr4complex(invvec, inprod, 10, 1000, 1.e-31, 0, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D);
   }
   else {
     little_P_L(v, inprod);
-    gcr4complex(w, v, 10, 1000, 1.e-31, 1, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D_P_L);
+    gcr4complex(w, v, 10, 1000, 1.e-31, 1, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_P_L_D);
     little_P_R(v, w);
     little_project(w, inprod, g_N_s);
     for(i = 0; i < 2*g_N_s; i++) {
