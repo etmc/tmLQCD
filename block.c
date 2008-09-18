@@ -24,6 +24,7 @@ int **** block_ipt;
 int *** bipt__;
 int ** bipt_;
 int * bipt;
+complex * little_A = NULL;
 
 enum{
   NONE = 0,

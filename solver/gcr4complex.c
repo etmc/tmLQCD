@@ -54,7 +54,7 @@ int gcr4complex(complex * const P, complex * const Q,
     f(tmp, P);
     ldiff(rho, Q, tmp, N);
     err = lsquare_norm(rho, N, parallel);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+    if(g_proc_id == g_stdio_proc && g_debug_level > 1){
       printf("lGCR: %d\t%g true residue %1.3e\n", restart * m, err, norm_sq); 
       fflush(stdout);
     }
@@ -75,7 +75,7 @@ int gcr4complex(complex * const P, complex * const Q,
       c[k] = lscalar_prod(chi[k], rho, N, parallel);
       lassign_diff_mul(rho, chi[k], c[k], N);
       err = lsquare_norm(rho, N, parallel);
-      if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+      if(g_proc_id == g_stdio_proc && g_debug_level > 1){
         printf("lGCR: %d\t%g iterated residue\n", restart*m+k, err); 
         fflush(stdout);
       }

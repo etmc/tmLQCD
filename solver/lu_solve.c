@@ -3,6 +3,7 @@
 #endif
 #include<stdlib.h>
 #include<math.h>
+#include "global.h"
 #include"complex.h"
 #include"solver/lu_solve.h"
 
@@ -156,15 +157,24 @@ void LUSolve( const int Nvec, complex * M, const int ldM, complex * b) {
 
 void LUInvert( const int Nvec, complex * const M, const int ldM) {
   int i, j, k, maxrow, row, col;
-  complex * b_local, * y;
+  complex * y;
   double maxnorm;
   complex tmp, sum_LU, cone;
   int * pivot;
+  complex *A;
   cone.re = 1.;
   cone.im = 0.;
 
   pivot = (int*)malloc(Nvec*sizeof(int));
-  
+  y = (complex*)malloc(Nvec*sizeof(complex));
+  if(g_debug_level > 4) {
+    A = (complex*)malloc(Nvec*Nvec*sizeof(complex));
+    for(i = 0; i < Nvec; i++) {
+      for(j = 0; j < Nvec; j++) {
+	A[i*Nvec + j] = M[i*ldM + j];
+      }
+    }
+  }
   /* -----------------------------------------------------------------
    * LU Decompose M_local, in place (Crone's algorithm?)
    * It's in Numerical Recipes but also a more understandable
@@ -267,26 +277,33 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
     _div_complex(tmp, cone, M[row*ldM + row]);
     M[row*ldM + row] = tmp;
 
-    for(j = Nvec-1; j > row; j--) {
+    for(i = row+1; i < Nvec; i++) {
       tmp.re = 0.;
       tmp.im = 0.;
-      for(i = row+1; i <= j; i++) {
-	_diff_assign_complex(tmp, M[i*ldM + j], M[j*ldM + i]);
+      for(j = i; j < Nvec; j++) {
+	_diff_assign_complex(tmp, M[row*ldM + i], M[i*ldM + j]);
       }
-      _mult_assign_complex(M[row*ldM + j], M[row*ldM + row], tmp);
+      _mult_assign_complex(M[row*ldM + i], M[row*ldM + row], tmp);
     }
   }
 
   /* last col of inv(A) already in place */
-  for(col = Nvec-2; col >= 0; col--) {
-    for(row = Nvec-1; row >=0; row--) {
-      k = row*ldM + col;
-      for(j = col+1; j < Nvec-1; j++) {
-	_diff_assign_complex(M[k], M[row*ldM + j], M[k]);
+  for(col = Nvec-2; col > -1; col--) {
+    for(row = 0; row < Nvec; row++) {
+      if(row > col) {
+	y[row].re = 0.;
+	y[row].im = 0.;
+      }
+      else y[row] = M[row*ldM + col];
+      for(j = col+1; j < Nvec; j++) {
+	_diff_assign_complex(y[row], M[row*ldM + j], M[j*ldM + col]);
       }
     }
+    for(row = 0; row < Nvec; row++) {
+      M[row*ldM+col] = y[row];
+    }
   }
-
+  if(g_proc_id == 0) printf("\n");
   /*  Swap cols of inv(A) according to pivot */
   for(j = Nvec-1; j > 0; j-- ) {
     if(pivot[j] != j) {
@@ -298,7 +315,24 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
     }
   }
 
+  if(g_debug_level > 4 && g_proc_id == 0) {
+    printf("check little_A inversion \n");
+    for(i = 0; i < Nvec; i++) {
+      for(j = 0; j < Nvec; j++) {
+	_complex_zero(tmp);
+	for(k = 0; k < Nvec; k++) {
+	  _add_assign_complex(tmp, M[i*Nvec + k], A[k*ldM + j]);
+	}
+	printf("%1.3e %1.3ei, ", tmp.re, tmp.im);
+      }
+      printf("\n");
+    }
+    printf("\n");
+  }
+
   free(pivot);
+  free(y);
+  if(g_debug_level > 4) free(A);
   return;
 }
 

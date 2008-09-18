@@ -6,6 +6,8 @@
 #include "su3.h"
 #include "su3spinor.h"
 
+complex * little_A;
+
 typedef struct {
   /**** Data members ****/
   int volume;                   /* the block local 4 volume */
