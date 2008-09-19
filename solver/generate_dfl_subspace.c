@@ -18,11 +18,17 @@
 #include "gram-schmidt.h"
 #include "lu_solve.h"
 #include "block.h"
+#include "little_D.h"
 #include "generate_dfl_subspace.h"
 
+int init_little_dfl_subspace(const int N_s);
+
 spinor ** dfl_fields = NULL;
+complex ** little_dfl_fields = NULL;
 static spinor * _dfl_fields = NULL;
+static spinor *_little_dfl_fields = NULL;
 static int init_subspace = 0;
+static int init_little_subspace = 0;
 
 static void random_fields(const int Ns) {
   
@@ -58,7 +64,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
 #endif
 
   if(init_subspace == 0) init_dfl_subspace(Ns);
-  little_A = (complex*)calloc(Ns*Ns, sizeof(complex));
+  if(init_little_subspace == 0) init_little_dfl_subspace(Ns);
 
   random_fields(Ns);
 
@@ -125,6 +131,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
   block_orthonormalize(block_list);
   block_orthonormalize(block_list+1);
 
+
   for (i = 0; i < Ns; i++) { 
     /* add it to the basis */
     reconstruct_global_field(dfl_fields[i], block_list[0].basis[i], block_list[1].basis[i]);
@@ -160,6 +167,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
     printf("time for subspace generation %1.3e s\n", etime-atime);
     fflush(stdout);
   }
+  dfl_subspace_updated = 1;
   free_dfl_subspace();
   return(0);
 }
@@ -199,6 +207,29 @@ int generate_dfl_subspace_free(const int Ns, const int N) {
     }
   }
 
+  return(0);
+}
+
+int init_little_dfl_subspace(const int N_s) {
+  int i;
+  init_little_subspace = 1;
+  if((void*)(_little_dfl_fields = calloc(N_s*2*9*N_s+1, sizeof(complex))) == NULL) {
+    return(1);
+  }
+  if((void*)(little_dfl_fields = calloc(N_s, sizeof(complex*))) == NULL) {
+    return(1);
+  }
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  little_dfl_fields[0] = (complex*)(((unsigned long int)(_little_dfl_fields)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  little_dfl_fields[0] = _little_dfl_fields;
+#endif
+  for (i = 1; i < N_s; ++i) {
+    little_dfl_fields[i] = little_dfl_fields[i-1] + 2*9*N_s;
+  }
+  if((void*)(little_A = (complex*)calloc(N_s*N_s, sizeof(complex))) == NULL) {
+    return(1);
+  }
   return(0);
 }
 

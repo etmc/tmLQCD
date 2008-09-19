@@ -275,19 +275,6 @@ int main(int argc,char *argv[]) {
 /*       boundary(g_kappa); */
 /*       g_mu = g_mu1; */
 
-#ifdef blub
-      for (nsiter = 0; nsiter < g_N_s; nsiter++) { 
-        /* add it to the basis */
-        split_global_field(block_list[0].basis[nsiter], block_list[1].basis[nsiter], dfl_fields[nsiter]);
-      }
-
-      /* perform local orthonormalization */
-      block_orthonormalize(block_list);
-      block_orthonormalize(block_list+1);
-#endif
-
-      block_compute_little_D_diagonal();
-      block_compute_little_D_offdiagonal();
 
       /* Compute little Dirac operators */
 /*       alt_block_compute_little_D(); */

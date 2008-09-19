@@ -4,6 +4,7 @@
 
 #include "complex.h"
 
+extern int dfl_subspace_updated;
 void little_D(complex * v, complex *w);
 void unit_little_D(complex *v, complex *w);
 void invert_little_D_spinor(spinor *r, spinor *s);

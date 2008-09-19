@@ -38,8 +38,8 @@ void reconstruct_global_field(spinor * const rec_field, spinor * const block_low
 void block_orthonormalize(block *parent);
 void block_orthonormalize_free(block *parent);
 
-void block_compute_little_D_offdiagonal();
-void block_compute_little_D_diagonal();
+void compute_little_D_offdiagonal();
+void compute_little_D_diagonal();
 void alt_block_compute_little_D();
 
 extern block * block_list;

@@ -438,7 +438,7 @@ void block_orthonormalize_free(block *parent) {
 
 
 /* checked CU */
-void block_compute_little_D_diagonal() {
+void compute_little_D_diagonal() {
   int i,j, blk;
   spinor * tmp = g_spinor_field[DUM_SOLVER];
   complex * M;
@@ -627,7 +627,7 @@ void alt_block_compute_little_D() {
 /* what happens if this routine is called in a one dimensional parallelisation? */
 /* or even serially ?                                                           */
 /* checked CU */
-void block_compute_little_D_offdiagonal()
+void compute_little_D_offdiagonal()
 {
   spinor *scratch, * temp, *_scratch;
   spinor *r, *s;

@@ -14,6 +14,7 @@
 #include "block.h"
 #include "linalg/blas.h"
 #include "solver/gcr4complex.h"
+#include "solver/generate_dfl_subspace.h"
 #include "block.h"
 #include "linalg_eo.h"
 #include "little_D.h"
@@ -38,6 +39,7 @@ const int nblks_x = 1;
 const int nblks_y = 1;
 const int nblks_z = 2;
 int nblks_dir[4] = {1,1,1,2};
+int dfl_subspace_updated = 1;
 
 /* some lapack related stuff */
 static int ONE = 1;
@@ -335,6 +337,12 @@ void little_D(complex * v, complex *w) {
   CMONE.im = 0.;
   CZERO.re = 0.;
   CZERO.im = 0.;
+
+  if(dfl_subspace_updated) {
+    compute_little_D_diagonal();
+    compute_little_D_offdiagonal();
+    dfl_subspace_updated = 0;
+  }
 
 #ifdef MPI
   /*init_little_field_exchange(w);*/
