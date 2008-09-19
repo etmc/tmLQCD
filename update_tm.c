@@ -149,10 +149,9 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
     new_rectangle_energy = measure_rectangles();
   }
-  
+
   /* Compute the energy difference */
   dh = dh + (enepx - enep);
-
   expmdh = exp(-dh);
   /* the random number is only taken at node zero and then distributed to 
      the other sites */

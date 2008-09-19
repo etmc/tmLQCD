@@ -50,15 +50,15 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
   int iteration;
   double err1, err2;
   
-  squarenorm = square_norm(Q_up, N);
-  squarenorm+= square_norm(Q_dn, N);
+  squarenorm = square_norm(Q_up, N, 1);
+  squarenorm+= square_norm(Q_dn, N, 1);
   /*        !!!!   INITIALIZATION    !!!! */
   assign(g_chi_up_spinor_field[DUM_SOLVER], P_up, N);
   assign(g_chi_dn_spinor_field[DUM_SOLVER], P_dn, N);
   
   /*        (r_0,r_0)  =  normsq         */
-  normsp =square_norm(P_up, N);
-  normsp+=square_norm(P_dn, N);
+  normsp =square_norm(P_up, N, 1);
+  normsp+=square_norm(P_dn, N, 1);
 
   if((subtract_ev == 1)) { 
     /* assign_sub_lowest_eigenvalues(g_chi__spinor_field[DUM_SOLVER+5], Q, 10, N); */
@@ -75,8 +75,8 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
     assign(g_chi_dn_spinor_field[DUM_SOLVER+1], g_chi_dn_spinor_field[DUM_SOLVER+5], N);
     assign(g_chi_up_spinor_field[DUM_SOLVER+2], g_chi_up_spinor_field[DUM_SOLVER+5], N);
     assign(g_chi_dn_spinor_field[DUM_SOLVER+2], g_chi_dn_spinor_field[DUM_SOLVER+5], N);
-    normsq =square_norm(Q_up, N);
-    normsq+=square_norm(Q_dn, N);
+    normsq =square_norm(Q_up, N, 1);
+    normsq+=square_norm(Q_dn, N, 1);
   }
   else{
     /* if a starting solution vector different from zero is chosen */
@@ -90,8 +90,8 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
     diff(g_chi_dn_spinor_field[DUM_SOLVER+1], g_chi_dn_spinor_field[DUM_SOLVER+5], g_chi_dn_spinor_field[DUM_SOLVER+3], N);
     assign(g_chi_up_spinor_field[DUM_SOLVER+2], g_chi_up_spinor_field[DUM_SOLVER+1], N);
     assign(g_chi_dn_spinor_field[DUM_SOLVER+2], g_chi_dn_spinor_field[DUM_SOLVER+1], N);
-    normsq =square_norm(g_chi_up_spinor_field[DUM_SOLVER+2], N);
-    normsq+=square_norm(g_chi_dn_spinor_field[DUM_SOLVER+2], N);
+    normsq =square_norm(g_chi_up_spinor_field[DUM_SOLVER+2], N, 1);
+    normsq+=square_norm(g_chi_dn_spinor_field[DUM_SOLVER+2], N, 1);
   }
 
 
@@ -107,10 +107,10 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
     if((subtract_ev == 1) && (iteration%modulo == 0)) {
       /* sub_lowest_eigenvalues(g_chi_spinor_field[DUM_SOLVER+4], g_chi_spinor_field[DUM_SOLVER+2], 10, N); */
     }
-    /* c=scalar_prod(&g_ev[0*VOLUME], g_chi_spinor_field[DUM_SOLVER+4]);
+    /* c=scalar_prod(&g_ev[0*VOLUME], g_chi_spinor_field[DUM_SOLVER+4], 1);
        printf("%e, %e\n",c.re,c.im); */
-    pro =scalar_prod_r(g_chi_up_spinor_field[DUM_SOLVER+2], g_chi_up_spinor_field[DUM_SOLVER+4], N);
-    pro+=scalar_prod_r(g_chi_dn_spinor_field[DUM_SOLVER+2], g_chi_dn_spinor_field[DUM_SOLVER+4], N);
+    pro =scalar_prod_r(g_chi_up_spinor_field[DUM_SOLVER+2], g_chi_up_spinor_field[DUM_SOLVER+4], N, 1);
+    pro+=scalar_prod_r(g_chi_dn_spinor_field[DUM_SOLVER+2], g_chi_dn_spinor_field[DUM_SOLVER+4], N, 1);
      
     /*  Compute alpha_cg(i+1)   */
     alpha_cg=normsq/pro;
@@ -123,8 +123,8 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
     assign_add_mul_r(g_chi_dn_spinor_field[DUM_SOLVER+1], g_chi_dn_spinor_field[DUM_SOLVER+4], -alpha_cg, N);
 
     /* Check whether the precision is reached ... */
-    err1 =square_norm(g_chi_up_spinor_field[DUM_SOLVER+1], N);
-    err2 =square_norm(g_chi_dn_spinor_field[DUM_SOLVER+1], N);
+    err1 =square_norm(g_chi_up_spinor_field[DUM_SOLVER+1], N, 1);
+    err2 =square_norm(g_chi_dn_spinor_field[DUM_SOLVER+1], N, 1);
     err = err1 + err2;
     if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
       printf("cg_her_nd : i = %d  esqr  %e = %e + %e \n",iteration,err, err1, err2); fflush( stdout);

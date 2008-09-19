@@ -268,7 +268,7 @@ void detratio_heatbath(const int id) {
   mnl->iter1 = 0;
   if(mnl->even_odd_flag) {
     random_spinor_field(g_spinor_field[4], VOLUME/2, mnl->rngrepro);
-    mnl->energy0  = square_norm(g_spinor_field[4], VOLUME/2);
+    mnl->energy0  = square_norm(g_spinor_field[4], VOLUME/2, 1);
 
     Qtm_plus_psi(g_spinor_field[3], g_spinor_field[4]);
     g_mu = mnl->mu2;
@@ -287,7 +287,7 @@ void detratio_heatbath(const int id) {
   }
   else {
     random_spinor_field(g_spinor_field[4], VOLUME, mnl->rngrepro);
-    mnl->energy0 = square_norm(g_spinor_field[4], VOLUME);
+    mnl->energy0 = square_norm(g_spinor_field[4], VOLUME, 1);
 
     Q_plus_psi(g_spinor_field[3], g_spinor_field[4]);
     g_mu = mnl->mu2;
@@ -328,7 +328,7 @@ double detratio_acc(const int id) {
     mnl->iter0 += bicg(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->accprec, g_relative_precision_flag); 
     /*     ITER_MAX_BCG = *saveiter_max; */
     /* Compute the energy contr. from second field */
-    mnl->energy1 = square_norm(g_spinor_field[3], VOLUME/2);
+    mnl->energy1 = square_norm(g_spinor_field[3], VOLUME/2, 1);
   }
   else {
     Q_plus_psi(g_spinor_field[DUM_DERI+5], mnl->pf);
@@ -341,7 +341,7 @@ double detratio_acc(const int id) {
 				   VOLUME, Q_plus_psi); 
     /*     ITER_MAX_BCG = *saveiter_max; */
     /* Compute the energy contr. from second field */
-    mnl->energy1 = square_norm(g_spinor_field[3], VOLUME);
+    mnl->energy1 = square_norm(g_spinor_field[3], VOLUME, 1);
   }
   g_mu = g_mu1;
   boundary(g_kappa);

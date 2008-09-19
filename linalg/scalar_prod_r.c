@@ -31,7 +31,7 @@
 
 #if ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
 
-double scalar_prod_r(spinor * const S,spinor * const R, const int N){
+double scalar_prod_r(spinor * const S,spinor * const R, const int N, const int parallel){
   int ix;
   static double ks,kc,ds,tr,ts,tt;
   spinor *s,*r;
@@ -69,9 +69,10 @@ double scalar_prod_r(spinor * const S,spinor * const R, const int N){
   kc = ks + kc;
 
 #if defined MPI
-  
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return ks;
+  if(parallel) {
+    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return ks;
+  }
 
 #endif
 
@@ -82,7 +83,7 @@ double scalar_prod_r(spinor * const S,spinor * const R, const int N){
 
 #if ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
 
-double scalar_prod_r(spinor * const S,spinor * const R, const int N){
+double scalar_prod_r(spinor * const S,spinor * const R, const int N, const int parallel){
   register int ix=0;
   register complex ds00,ds01,ds02,ds10,ds11,ds12,ds20,ds21,ds22,ds30,ds31,ds32;
   register double kc;
@@ -134,9 +135,10 @@ double scalar_prod_r(spinor * const S,spinor * const R, const int N){
  kc=creal(ds10+ds02);
 
 #if defined MPI
-  
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return ks;
+ if(parallel) {
+   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+   return ks;
+ }
 
 #endif
 
@@ -150,7 +152,7 @@ double scalar_prod_r(spinor * const S,spinor * const R, const int N){
 
 #define NOWHERE_COND(condition) ((condition) ? 0x0 : NOWHERE )
 
-double scalar_prod_r(spinor * const S,spinor * const R, const int N){
+double scalar_prod_r(spinor * const S,spinor * const R, const int N, const int parallel){
   register int ix=N;
   register complex ds00,ds01,ds02,ds10,ds11,ds12,ds20,ds21,ds22,ds30,ds31,ds32;
   register double kc;
@@ -209,10 +211,10 @@ double scalar_prod_r(spinor * const S,spinor * const R, const int N){
   kc=creal(ds10+ds02);
 
 #if defined MPI
-  
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return ks;
-
+  if(parallel) {
+    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return ks;
+  }
 #endif
 
   return kc;

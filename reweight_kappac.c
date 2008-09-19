@@ -32,7 +32,7 @@ double reweight_kappac(const int N) {
 
   /* First generate a random source: */
   random_spinor_field(g_spinor_field[2],VOLUME/2, 1);
-  sq_norm_orig = square_norm(g_spinor_field[2], VOLUME/2);
+  sq_norm_orig = square_norm(g_spinor_field[2], VOLUME/2, 1);
 
 
   /* The invert with the original kappa and store the solution: 
@@ -67,7 +67,7 @@ double reweight_kappac(const int N) {
       Qtm_pm_psi(g_spinor_field[5] , g_spinor_field[3]);
 
 
-      corr = scalar_prod_r(g_spinor_field[2], g_spinor_field[5], VOLUME/2);
+      corr = scalar_prod_r(g_spinor_field[2], g_spinor_field[5], VOLUME/2, 1);
       
       sq_norm = sq_norm_orig - corr;
       temp1 = sq_norm;

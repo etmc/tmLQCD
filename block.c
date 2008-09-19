@@ -18,7 +18,6 @@
 
 int init_blocks_gaugefield();
 int init_blocks_geometry();
-double block_two_norm(spinor * const R, const int N);
 
 int **** block_ipt;
 int *** bipt__;
@@ -381,116 +380,6 @@ int init_blocks_geometry() {
   return 0;
 }
 
-complex block_scalar_prod(spinor * const R, spinor * const S, const int N) {
-  int ix;
-  static double ks,kc,ds,tr,ts,tt;
-  complex c;
-  spinor *r, *s;
-  /* Real Part */
-
-  ks=0.0;
-  kc=0.0;
-#if (defined BGL && defined XLC)
-  __alignx(16, S);
-  __alignx(16, R);
-#endif
-  for (ix = 0; ix < N; ix++){
-    s=(spinor *) S + ix;
-    r=(spinor *) R + ix;
-
-    ds=(*r).s0.c0.re*(*s).s0.c0.re+(*r).s0.c0.im*(*s).s0.c0.im+
-        (*r).s0.c1.re*(*s).s0.c1.re+(*r).s0.c1.im*(*s).s0.c1.im+
-        (*r).s0.c2.re*(*s).s0.c2.re+(*r).s0.c2.im*(*s).s0.c2.im+
-        (*r).s1.c0.re*(*s).s1.c0.re+(*r).s1.c0.im*(*s).s1.c0.im+
-        (*r).s1.c1.re*(*s).s1.c1.re+(*r).s1.c1.im*(*s).s1.c1.im+
-        (*r).s1.c2.re*(*s).s1.c2.re+(*r).s1.c2.im*(*s).s1.c2.im+
-        (*r).s2.c0.re*(*s).s2.c0.re+(*r).s2.c0.im*(*s).s2.c0.im+
-        (*r).s2.c1.re*(*s).s2.c1.re+(*r).s2.c1.im*(*s).s2.c1.im+
-        (*r).s2.c2.re*(*s).s2.c2.re+(*r).s2.c2.im*(*s).s2.c2.im+
-        (*r).s3.c0.re*(*s).s3.c0.re+(*r).s3.c0.im*(*s).s3.c0.im+
-        (*r).s3.c1.re*(*s).s3.c1.re+(*r).s3.c1.im*(*s).s3.c1.im+
-        (*r).s3.c2.re*(*s).s3.c2.re+(*r).s3.c2.im*(*s).s3.c2.im;
-
-    /* Kahan Summation */
-    tr=ds+kc;
-    ts=tr+ks;
-    tt=ts-ks;
-    ks=ts;
-    kc=tr-tt;
-  }
-  c.re = ks+kc;
-
-  /* Imaginary Part */
-
-  ks=0.0;
-  kc=0.0;
-  
-  for (ix=0;ix<N;ix++){
-    s=(spinor *) S + ix;
-    r=(spinor *) R + ix;
-    
-    ds=-(*r).s0.c0.re*(*s).s0.c0.im+(*r).s0.c0.im*(*s).s0.c0.re-
-        (*r).s0.c1.re*(*s).s0.c1.im+(*r).s0.c1.im*(*s).s0.c1.re-
-        (*r).s0.c2.re*(*s).s0.c2.im+(*r).s0.c2.im*(*s).s0.c2.re-
-        (*r).s1.c0.re*(*s).s1.c0.im+(*r).s1.c0.im*(*s).s1.c0.re-
-        (*r).s1.c1.re*(*s).s1.c1.im+(*r).s1.c1.im*(*s).s1.c1.re-
-        (*r).s1.c2.re*(*s).s1.c2.im+(*r).s1.c2.im*(*s).s1.c2.re-
-        (*r).s2.c0.re*(*s).s2.c0.im+(*r).s2.c0.im*(*s).s2.c0.re-
-        (*r).s2.c1.re*(*s).s2.c1.im+(*r).s2.c1.im*(*s).s2.c1.re-
-        (*r).s2.c2.re*(*s).s2.c2.im+(*r).s2.c2.im*(*s).s2.c2.re-
-        (*r).s3.c0.re*(*s).s3.c0.im+(*r).s3.c0.im*(*s).s3.c0.re-
-        (*r).s3.c1.re*(*s).s3.c1.im+(*r).s3.c1.im*(*s).s3.c1.re-
-        (*r).s3.c2.re*(*s).s3.c2.im+(*r).s3.c2.im*(*s).s3.c2.re;
-
-    tr=ds+kc;
-    ts=tr+ks;
-    tt=ts-ks;
-    ks=ts;
-    kc=tr-tt;
-  }
-  c.im = ks+kc;
-  return(c);
-}
-
-double block_two_norm(spinor * const R, const int N) {
-  int ix;
-  static double ks,kc,ds,tr,ts,tt;
-  double norm;
-  spinor *r;
-  /* Real Part */
-
-  ks=0.0;
-  kc=0.0;
-#if (defined BGL && defined XLC)
-  __alignx(16, R);
-#endif
-  for (ix = 0; ix < N; ix++){
-    r=(spinor *) R + ix;
-
-    ds=(*r).s0.c0.re*(*r).s0.c0.re+(*r).s0.c0.im*(*r).s0.c0.im+
-        (*r).s0.c1.re*(*r).s0.c1.re+(*r).s0.c1.im*(*r).s0.c1.im+
-        (*r).s0.c2.re*(*r).s0.c2.re+(*r).s0.c2.im*(*r).s0.c2.im+
-        (*r).s1.c0.re*(*r).s1.c0.re+(*r).s1.c0.im*(*r).s1.c0.im+
-        (*r).s1.c1.re*(*r).s1.c1.re+(*r).s1.c1.im*(*r).s1.c1.im+
-        (*r).s1.c2.re*(*r).s1.c2.re+(*r).s1.c2.im*(*r).s1.c2.im+
-        (*r).s2.c0.re*(*r).s2.c0.re+(*r).s2.c0.im*(*r).s2.c0.im+
-        (*r).s2.c1.re*(*r).s2.c1.re+(*r).s2.c1.im*(*r).s2.c1.im+
-        (*r).s2.c2.re*(*r).s2.c2.re+(*r).s2.c2.im*(*r).s2.c2.im+
-        (*r).s3.c0.re*(*r).s3.c0.re+(*r).s3.c0.im*(*r).s3.c0.im+
-        (*r).s3.c1.re*(*r).s3.c1.re+(*r).s3.c1.im*(*r).s3.c1.im+
-        (*r).s3.c2.re*(*r).s3.c2.re+(*r).s3.c2.im*(*r).s3.c2.im;
-
-    /* Kahan Summation */
-    tr=ds+kc;
-    ts=tr+ks;
-    tt=ts-ks;
-    ks=ts;
-    kc=tr-tt;
-  }
-  norm = ks+kc;
-  return(norm);
-}
-
 /* Uses a Modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
 void block_orthonormalize(block *parent) {
   int i, j;
@@ -499,12 +388,14 @@ void block_orthonormalize(block *parent) {
 
   for(i = 0; i < g_N_s; ++i){
     /* rescale the current vector */
-    scale = 1. / sqrt(block_two_norm(parent->basis[i], parent->volume));
+/*     scale = 1. / sqrt(block_two_norm(parent->basis[i], parent->volume)); */
+    scale = 1. / sqrt(square_norm(parent->basis[i], parent->volume, 0));
     mul_r(parent->basis[i], scale, parent->basis[i], parent->volume);
 
     /* rescaling done, now subtract this direction from all vectors that follow */
     for(j = i + 1; j < g_N_s; ++j){
-      coeff = block_scalar_prod(parent->basis[j], parent->basis[i], parent->volume);
+/*       coeff = block_scalar_prod(parent->basis[j], parent->basis[i], parent->volume); */
+      coeff = scalar_prod(parent->basis[i], parent->basis[j], parent->volume, 0);
       assign_diff_mul(parent->basis[j], parent->basis[i], coeff, parent->volume);
     }
   }
@@ -512,7 +403,8 @@ void block_orthonormalize(block *parent) {
   if(g_debug_level > 4) {
     for(i = 0; i < g_N_s; i++) {
       for(j = 0; j < g_N_s; j++) {
-        coeff = block_scalar_prod(parent->basis[j], parent->basis[i], parent->volume);
+/*         coeff = block_scalar_prod(parent->basis[j], parent->basis[i], parent->volume); */
+        coeff = scalar_prod(parent->basis[i], parent->basis[j], parent->volume, 0);
         if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", parent->id, j, i, coeff.re, coeff.im);
       }
     }
@@ -528,14 +420,15 @@ void block_orthonormalize_free(block *parent) {
   for(i = 0; i < 12; i++){
     /* rescale the current vector */
     constant_spinor_field(parent->basis[i], i, parent->volume);
-    scale = 1. / sqrt(block_two_norm(parent->basis[i], parent->volume));
+    scale = 1. / sqrt(square_norm(parent->basis[i], parent->volume, 0));
     mul_r(parent->basis[i], scale, parent->basis[i], parent->volume);
   }
 
   if(g_debug_level > 4 && g_proc_id == 0) {
     for(i = 0; i < g_N_s; i++) {
       for(j = 0; j < g_N_s; j++) {
-        coeff = block_scalar_prod(parent->basis[j], parent->basis[i], parent->volume);
+/*         coeff = block_scalar_prod(parent->basis[j], parent->basis[i], parent->volume); */
+        coeff = scalar_prod(parent->basis[i], parent->basis[j], parent->volume, 0);
         if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", parent->id, j, i, coeff.re, coeff.im);
       }
     }
@@ -555,7 +448,8 @@ void block_compute_little_D_diagonal() {
     for(i = 0; i < g_N_s; i++) {
       Block_D_psi(&block_list[blk], tmp, block_list[blk].basis[i]);
       for(j = 0; j < g_N_s; j++) {
-	M[i * g_N_s + j]  = block_scalar_prod(tmp, block_list[blk].basis[j], block_list[blk].volume);
+/* 	M[i * g_N_s + j]  = block_scalar_prod(tmp, block_list[blk].basis[j], block_list[blk].volume); */
+	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
       }
     }
   }
@@ -570,7 +464,8 @@ void block_contract_basis(int const idx, int const vecnum, int const dir, spinor
   int l;
   for(l = 0; l < g_N_s; ++l){
     block_list[idx].little_dirac_operator[dir * g_N_s * g_N_s + vecnum * g_N_s + l] =
-      block_scalar_prod(psi + idx * VOLUME/2, block_list[idx].basis[l], VOLUME/2);
+/*       block_scalar_prod(psi + idx * VOLUME/2, block_list[idx].basis[l], VOLUME/2); */
+      scalar_prod(block_list[idx].basis[l], psi + idx * VOLUME/2, VOLUME/2, 0);
   }
 }
 
@@ -794,7 +689,8 @@ void block_compute_little_D_offdiagonal()
 	    for(y = 0; y < LY; y++) {
 	      ix = block_ipt[t][x][y][0];
 	      s = &block_list[k].basis[j][ ix ];
-	      c = block_scalar_prod(r, s, LZ/2);
+/* 	      c = block_scalar_prod(r, s, LZ/2); */
+	      c = scalar_prod(s, r, LZ/2, 0);
 	      block_list[k].little_dirac_operator[ iy ].re += c.re;
 	      block_list[k].little_dirac_operator[ iy ].im += c.im;
 	      r += LZ;
@@ -839,7 +735,8 @@ void block_compute_little_D_offdiagonal()
 	    for(y = 0; y < LY; y++) {
 	      ix = block_ipt[t][x][y][0];
 	      s = &block_list[k].basis[j][ ix ];
-	      c = block_scalar_prod(r, s, LZ/2);
+/* 	      c = block_scalar_prod(r, s, LZ/2); */
+	      c = scalar_prod(s, r, LZ/2, 0);
 	      block_list[k].little_dirac_operator[ iy ].re += c.re;
 	      block_list[k].little_dirac_operator[ iy ].im += c.im;
 	      r += LZ;
@@ -884,7 +781,8 @@ void block_compute_little_D_offdiagonal()
 	    for(x = 0; x < LX; x++) {
 	      ix = block_ipt[t][x][y][0];
 	      s = &block_list[k].basis[j][ ix ];
-	      c = block_scalar_prod(r, s, LZ/2);
+/* 	      c = block_scalar_prod(r, s, LZ/2); */
+	      c = scalar_prod(s, r, LZ/2, 0);
 	      block_list[k].little_dirac_operator[ iy ].re += c.re;
 	      block_list[k].little_dirac_operator[ iy ].im += c.im;
 	      r += LZ;
@@ -932,7 +830,8 @@ void block_compute_little_D_offdiagonal()
             for(y = 0; y < LY; y++){
               ix = block_ipt[t][x][y][z];
               s = &block_list[(pm+1) % 2].basis[j][ ix ];
-	      c = block_scalar_prod(r, s, 1);
+/* 	      c = block_scalar_prod(r, s, 1); */
+	      c = scalar_prod(s, r, 1, 0);
 	      block_list[(pm+1) % 2].little_dirac_operator[ iy ].re += c.re;
 	      block_list[(pm+1) % 2].little_dirac_operator[ iy ].im += c.im;
               r++;
@@ -968,7 +867,8 @@ void block_compute_little_D_offdiagonal()
 	  for(y = 0; y < LY; ++y){
 	    ix = block_ipt[t][x][y][LZ/2-1];
 	    s = &block_list[(pm)%2].basis[j][ ix ];
-	    _add_complex(block_list[(pm) % 2].little_dirac_operator[ iy ], block_scalar_prod(r, s, 1));
+/* 	    _add_complex(block_list[(pm) % 2].little_dirac_operator[ iy ], block_scalar_prod(r, s, 1)); */
+	    _add_complex(block_list[(pm) % 2].little_dirac_operator[ iy ], scalar_prod(s, r, 1, 0));
 	    r++;
 	  }
 	}
@@ -1002,7 +902,8 @@ void block_compute_little_D_offdiagonal()
 	  for(y = 0; y < LY; ++y) {
 	    ix = block_ipt[t][x][y][0]; 
 	    s = &block_list[pm % 2].basis[j][ ix ];
-	    _add_complex(block_list[(pm) % 2].little_dirac_operator[ iy ], block_scalar_prod(r, s, 1));
+/* 	    _add_complex(block_list[(pm) % 2].little_dirac_operator[ iy ], block_scalar_prod(r, s, 1)); */
+	    _add_complex(block_list[(pm) % 2].little_dirac_operator[ iy ], scalar_prod(s, r, 1, 0));
 	    r++;
 	  }
 	}
@@ -1058,8 +959,10 @@ int split_global_field(spinor * const block_low, spinor * const block_high, spin
   }
 
   if(g_proc_id == 0 && g_debug_level > 8) {
-    printf("lower basis norm = %1.3e\n", block_two_norm(block_low,  VOLUME / LZ));
-    printf("upper basis norm = %1.3e\n", block_two_norm(block_high, VOLUME / LZ));
+/*     printf("lower basis norm = %1.3e\n", block_two_norm(block_low,  VOLUME / LZ)); */
+/*     printf("upper basis norm = %1.3e\n", block_two_norm(block_high, VOLUME / LZ)); */
+    printf("lower basis norm = %1.3e\n", square_norm(block_low,  VOLUME / LZ, 0));
+    printf("upper basis norm = %1.3e\n", square_norm(block_high, VOLUME / LZ, 0));
   }
   return 0;
 }

@@ -58,12 +58,12 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
   diff(r[0], u[0], r0_tilde, N);
   zero_spinor_field(g_spinor_field[DUM_SOLVER+1], N);
   assign(r0_tilde, r[0], N);
-  squarenorm = square_norm(b, N);
+  squarenorm = square_norm(b, N, 1);
 
   rho0 = 1.;
   alpha = 0.;
   omega = 1.;
-  err = square_norm(r0_tilde, N);
+  err = square_norm(r0_tilde, N, 1);
   while( k < max_iter && (((err > eps_sq) && (rel_prec == 0)) 
 			  || ((err > eps_sq*squarenorm) && (rel_prec == 1)) 
 			  )) {
@@ -73,7 +73,7 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
 
     rho0 *= -omega;
     for(j = 0; j < l; j++) {
-      rho1 = scalar_prod_r(r[j], r0_tilde, N);
+      rho1 = scalar_prod_r(r[j], r0_tilde, N, 1);
       beta = (rho1/rho0);
       beta *= alpha; 
       rho0 = rho1;
@@ -82,7 +82,7 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
 	assign_mul_add_r(u[i], -beta, r[i], N);
       }
       f(u[j+1], u[j]);
-      gamma0 = scalar_prod_r(u[j+1], r0_tilde, N);
+      gamma0 = scalar_prod_r(u[j+1], r0_tilde, N, 1);
       alpha = rho0/gamma0;
       /* r_i = r_i - \alpha u_{i+1} */
       for(i = 0; i <= j; i++) {
@@ -91,7 +91,7 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
       f(r[j+1], r[j]);
       /* x = x + \alpha u_0 */
       assign_add_mul_r(x, u[0], alpha, N);
-      err = square_norm(r[j+1], N);
+      err = square_norm(r[j+1], N, 1);
       if(g_proc_id == 0 && g_debug_level > 1) {printf("%d %d err = %e\n", k, j, err);fflush(stdout);}
     }
 
@@ -99,11 +99,11 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
 
     for(j = 1; j <= l; j++){
       for(i = 1; i < j; i++){
-	tau[i][j] = scalar_prod_r(r[j], r[i], N)/sigma[i];
+	tau[i][j] = scalar_prod_r(r[j], r[i], N, 1)/sigma[i];
 	assign_add_mul_r(r[j], r[i], -tau[i][j], N);
       }
-      sigma[j] = scalar_prod_r(r[j], r[j], N);
-      gammap[j] = scalar_prod_r(r[0], r[j], N)/sigma[j];
+      sigma[j] = scalar_prod_r(r[j], r[j], N, 1);
+      gammap[j] = scalar_prod_r(r[0], r[j], N, 1)/sigma[j];
     }
     gamma[l] = gammap[l];
     omega = gamma[l];
@@ -129,7 +129,7 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
     for(j = 1; j < l; j++){
       assign_add_mul_r(u[0], u[j], -gamma[j], N);
     }
-    err = square_norm(r[0], N);
+    err = square_norm(r[0], N, 1);
     if(g_proc_id == 0 && g_debug_level > 0){
       printf(" BiCGstabell iterated %d %d, %e rho0 = %e, alpha = %e, gamma0= %e\n", l, k, err, rho0, alpha, gamma0);
       fflush( stdout );

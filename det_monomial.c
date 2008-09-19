@@ -229,7 +229,7 @@ void det_heatbath(const int id) {
 
   if(mnl->even_odd_flag) {
     random_spinor_field(g_spinor_field[2], VOLUME/2, mnl->rngrepro);
-    mnl->energy0 = square_norm(g_spinor_field[2], VOLUME/2);
+    mnl->energy0 = square_norm(g_spinor_field[2], VOLUME/2, 1);
 
     Qtm_plus_psi(mnl->pf, g_spinor_field[2]);
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -241,7 +241,7 @@ void det_heatbath(const int id) {
   }
   else {
     random_spinor_field(g_spinor_field[2], VOLUME, mnl->rngrepro);
-    mnl->energy0 = square_norm(g_spinor_field[2], VOLUME);
+    mnl->energy0 = square_norm(g_spinor_field[2], VOLUME, 1);
 
     Q_plus_psi(mnl->pf, g_spinor_field[2]);
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -275,7 +275,7 @@ double det_acc(const int id) {
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
     mnl->iter0 = bicg(g_spinor_field[2], mnl->pf, mnl->accprec, g_relative_precision_flag);
     /* Compute the energy contr. from first field */
-    mnl->energy1 = square_norm(g_spinor_field[2], VOLUME/2);
+    mnl->energy1 = square_norm(g_spinor_field[2], VOLUME/2, 1);
   }
   else {
     if(mnl->solver == CG) {
@@ -286,7 +286,7 @@ double det_acc(const int id) {
 			  VOLUME, Q_pm_psi, 0, 0);
       Q_minus_psi(g_spinor_field[2], g_spinor_field[DUM_DERI+5]);
       /* Compute the energy contr. from first field */
-      mnl->energy1 = square_norm(g_spinor_field[2], VOLUME);
+      mnl->energy1 = square_norm(g_spinor_field[2], VOLUME, 1);
     }
     else {
       chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -294,7 +294,7 @@ double det_acc(const int id) {
       mnl->iter0 += bicgstab_complex(g_spinor_field[2], mnl->pf, 
 				     mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
 				     VOLUME,  Q_plus_psi);
-      mnl->energy1 = square_norm(g_spinor_field[2], VOLUME);
+      mnl->energy1 = square_norm(g_spinor_field[2], VOLUME, 1);
     }
   }
   g_mu = g_mu1;

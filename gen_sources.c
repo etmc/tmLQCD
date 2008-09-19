@@ -200,7 +200,7 @@ int main(int argc,char *argv[]) {
 	source_generation_nucleon(g_spinor_field[0], g_spinor_field[1], 
 				  is, ic, t0, ts, ss, sample, nstore, typeflag);
 	
-	co = scalar_prod(g_spinor_field[1], g_spinor_field[1], VOLUME/2);
+	co = scalar_prod(g_spinor_field[1], g_spinor_field[1], VOLUME/2, 1);
 	if((is == 0 && ic == 0) || appendflag == 0) {
 	  write_source_type(0, spinorfilename);
 	}
@@ -221,7 +221,7 @@ int main(int argc,char *argv[]) {
       source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 
 				  t0, sample, nstore);
       
-      co = scalar_prod(g_spinor_field[1], g_spinor_field[1], VOLUME/2);
+      co = scalar_prod(g_spinor_field[1], g_spinor_field[1], VOLUME/2, 1);
       write_source_type(0, spinorfilename);
       write_source(g_spinor_field[0], g_spinor_field[1], spinorfilename, 1, prec);
     }

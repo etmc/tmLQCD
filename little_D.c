@@ -77,8 +77,10 @@ void invert_little_D_spinor(spinor *r, spinor *s){
   split_global_field(psi[0], psi[1], s);
 
   for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
-    v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
-    v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
+/*     v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2); */
+/*     v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2); */
+    v[j]         = scalar_prod(block_list[0].basis[j], psi[0], VOLUME/2, 0);
+    v[j + g_N_s] = scalar_prod(block_list[1].basis[j], psi[1], VOLUME/2, 0);
   }
 
   gcr4complex(w, v, 10, 100, 1e-31, 1, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D);
@@ -112,8 +114,10 @@ void apply_little_D_spinor(spinor *r, spinor *s){
   split_global_field(psi[0], psi[1], s);
 
   for (j = 0; j < g_N_s; ++j) {
-    v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2);
-    v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2);
+/*     v[j]         = block_scalar_prod(psi[0], block_list[0].basis[j], VOLUME/2); */
+    v[j]         = scalar_prod(block_list[0].basis[j], psi[0], VOLUME/2, 0);
+/*     v[j + g_N_s] = block_scalar_prod(psi[1], block_list[1].basis[j], VOLUME/2); */
+    v[j + g_N_s] = scalar_prod(block_list[1].basis[j], psi[1], VOLUME/2, 0);
   }
 
   if (g_debug_level > 2){

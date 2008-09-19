@@ -366,10 +366,10 @@ int main(int argc,char *argv[]) {
 	diff(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+3], g_spinor_field[2], VOLUME/2); 
 	diff(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+4], g_spinor_field[3], VOLUME/2); 
 	  
-	nrm1  = square_norm(g_spinor_field[DUM_DERI+1], VOLUME/2); 
-	nrm1 += square_norm(g_spinor_field[DUM_DERI+2], VOLUME/2); 
-	nrm1 += square_norm(g_spinor_field[DUM_DERI+3], VOLUME/2); 
-	nrm1 += square_norm(g_spinor_field[DUM_DERI+4], VOLUME/2); 
+	nrm1  = square_norm(g_spinor_field[DUM_DERI+1], VOLUME/2, 1); 
+	nrm1 += square_norm(g_spinor_field[DUM_DERI+2], VOLUME/2, 1); 
+	nrm1 += square_norm(g_spinor_field[DUM_DERI+3], VOLUME/2, 1); 
+	nrm1 += square_norm(g_spinor_field[DUM_DERI+4], VOLUME/2, 1); 
 	  
 	if(g_proc_id == 0) {
 	  printf("Inversion for source %d done in %d iterations, residue = %e!\n", 2*ix+fl, iter, nrm1);

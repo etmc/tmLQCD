@@ -85,17 +85,17 @@ void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[],
   CONE.re = 1.; CONE.im=0.;
   CZERO.re = 0.; CZERO.im=0.;
 
-  vnrm_old = sqrt(square_norm((spinor*) v, n*sizeof(complex)/sizeof(spinor)));
+  vnrm_old = sqrt(square_norm((spinor*) v, n*sizeof(complex)/sizeof(spinor), 1));
 
   for(i = 0; !isorth && i < max_cgs_it; i ++) {
 
     for(j = 0; j < m; j++){
-      work1[j] = scalar_prod((spinor*) (A+j*lda), (spinor*) v, n*sizeof(complex)/sizeof(spinor));
+      work1[j] = scalar_prod((spinor*) (A+j*lda), (spinor*) v, n*sizeof(complex)/sizeof(spinor), 1);
     }
 #ifdef HAVE_LAPACK
     _FT(zgemv)(fupl_n, &n, &m, &CMONE, A, &lda, work1, &ONE, &CONE, v, &ONE, 1);
 #endif
-    (*vnrm) = sqrt(square_norm((spinor*) v, n*sizeof(complex)/sizeof(spinor)));
+    (*vnrm) = sqrt(square_norm((spinor*) v, n*sizeof(complex)/sizeof(spinor), 1));
 
     isorth=((*vnrm) > alpha*vnrm_old);
     vnrm_old = (*vnrm);
@@ -118,7 +118,7 @@ void ModifiedGS_old(complex v[], int n, int m, complex A[]){
   complex s;
 
   for (i = 0; i < m; i ++) {
-    s = scalar_prod((spinor*) (A+i*n), (spinor*) v, n*sizeof(complex)/sizeof(spinor));
+    s = scalar_prod((spinor*) (A+i*n), (spinor*) v, n*sizeof(complex)/sizeof(spinor), 1);
     s.re = -s.re; s.im = -s.im;
 #ifdef HAVE_LAPACK
     _FT(zaxpy)(&n, &s, A+i*n, &ONE, v, &ONE); 
@@ -133,7 +133,7 @@ void ModifiedGS(complex v[], int n, int m, complex A[], int lda) {
   complex s;
 
   for (i = 0; i < m; i ++) {
-    s = scalar_prod((spinor*) (A+i*lda), (spinor*) v, n*sizeof(complex)/sizeof(spinor));
+    s = scalar_prod((spinor*) (A+i*lda), (spinor*) v, n*sizeof(complex)/sizeof(spinor), 1);
     s.re = -s.re; s.im = -s.im;
 #ifdef HAVE_LAPACK
     _FT(zaxpy)(&n, &s, A+i*lda, &ONE, v, &ONE); 

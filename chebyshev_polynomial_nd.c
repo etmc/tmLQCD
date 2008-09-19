@@ -311,10 +311,10 @@ void degree_of_polynomial_nd(const int degree_of_p){
   QdaggerQ_poly(&auxs[0], &auxc[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &aux2s[0], &aux2c[0]);
 
   diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);
-  temp=square_norm(&aux2s[0],VOLUME/2)/square_norm(&ss[0],VOLUME/2)/4.0;
+  temp=square_norm(&aux2s[0],VOLUME/2, 1)/square_norm(&ss[0],VOLUME/2, 1)/4.0;
 
   diff(&aux2c[0],&auxc[0],&sc[0],VOLUME/2);
-  temp2=square_norm(&aux2c[0],VOLUME/2)/square_norm(&sc[0],VOLUME/2)/4.0;
+  temp2=square_norm(&aux2c[0],VOLUME/2, 1)/square_norm(&sc[0],VOLUME/2, 1)/4.0;
 
   if(g_epsbar == 0.){ 
     temp2 = 0.0;

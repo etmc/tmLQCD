@@ -105,7 +105,7 @@ int cg_her_bi(bispinor * const P, bispinor * const Q, const int max_iter,
 /*     if((subtract_ev == 1) && (iteration%modulo == 0)){ */
 /*       sub_lowest_eigenvalues(g_bispinor_field[DUM_SOLVER+4], g_bispinor_field[DUM_SOLVER+2], 10, N); */
 /*     } */
-    /* c=scalar_prod(&g_ev[0*VOLUME], g_bispinor_field[DUM_SOLVER+4]);
+    /* c=scalar_prod(&g_ev[0*VOLUME], g_bispinor_field[DUM_SOLVER+4], 1);
        printf("%e, %e\n",c.re,c.im); */
     pro=scalar_prod_r_bi(g_bispinor_field[DUM_SOLVER+2], g_bispinor_field[DUM_SOLVER+4], N);
      

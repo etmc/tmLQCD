@@ -319,7 +319,7 @@ void jdher(int n, int lda, double tau, double tol,
   }
   for (cnt = 0; cnt < j; cnt ++) {
     ModifiedGS(V + cnt*lda, n, cnt, V, lda);
-    alpha = sqrt(square_norm((spinor*)(V+cnt*lda), N));
+    alpha = sqrt(square_norm((spinor*)(V+cnt*lda), N, 1));
     alpha = 1.0 / alpha;
     _FT(dscal)(&n2, &alpha, (double *)(V + cnt*lda), &ONE);
   }
@@ -330,7 +330,7 @@ void jdher(int n, int lda, double tau, double tol,
     A_psi((spinor*) temp1, (spinor*) (V+cnt*lda));
     idummy = cnt+1;
     for(i = 0; i < idummy; i++){
-      M[cnt*jmax+i] = scalar_prod((spinor*)(V+i*lda), (spinor*) temp1, N);
+      M[cnt*jmax+i] = scalar_prod((spinor*)(V+i*lda), (spinor*) temp1, N, 1);
     }
   }
 
@@ -415,7 +415,7 @@ void jdher(int n, int lda, double tau, double tol,
 
 	/* Compute norm of the residual and update arrays convind/keepind*/
 	resnrm_old[act] = resnrm[act];
-	resnrm[act] = sqrt(square_norm((spinor*) r, N));
+	resnrm[act] = sqrt(square_norm((spinor*) r, N, 1));
 	if (resnrm[act] < tol){
 	  convind[conv] = act; 
 	  conv = conv + 1; 
@@ -663,7 +663,7 @@ void jdher(int n, int lda, double tau, double tol,
       A_psi((spinor*) temp1, (spinor*) v);
       idummy = j+1;
       for(i = 0; i < idummy; i++) {
-	M[j*jmax+i] = scalar_prod((spinor*) (V+i*lda), (spinor*) temp1, N);
+	M[j*jmax+i] = scalar_prod((spinor*) (V+i*lda), (spinor*) temp1, N, 1);
       }
       
       /* Increasing SearchSpaceSize j */
@@ -704,7 +704,7 @@ void jdher(int n, int lda, double tau, double tol,
     theta = -lambda[act];
     A_psi((spinor*) r, (spinor*) q);
     _FT(daxpy)(&n2, &theta, (double*) q, &ONE, (double*) r, &ONE);
-    alpha = sqrt(square_norm((spinor*) r, N));
+    alpha = sqrt(square_norm((spinor*) r, N, 1));
     if(g_proc_id == 0 && verbosity > 0) {
       printf("%3d %22.15e %12.5e\n", act+1, lambda[act],
 	     alpha);
@@ -875,7 +875,7 @@ void Proj_A_psi(spinor * const y, spinor * const x){
   _FT(daxpy)(&p_n2, &mtheta, (double*) x, &ONE, (double*) y, &ONE);
   /* p_work = Q^dagger*y */ 
   for(i = 0; i < p_k; i++) {
-    p_work[i] = scalar_prod((spinor*) (p_Q+i*p_lda), (spinor*) y, p_n*sizeof(complex)/sizeof(spinor));
+    p_work[i] = scalar_prod((spinor*) (p_Q+i*p_lda), (spinor*) y, p_n*sizeof(complex)/sizeof(spinor), 1);
   }
   /* y = y - Q*p_work */ 
   _FT(zgemv)(fupl_n, &p_n, &p_k, &CMONE, p_Q, &p_lda, (complex*) p_work, &ONE, &CONE, (complex*) y, &ONE, 1);

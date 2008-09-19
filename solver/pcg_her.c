@@ -48,11 +48,11 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
   double normsp, normsq, pro, pro2, err, alpha_cg, beta_cg, squarenorm;
   int iteration;
   
-  squarenorm = square_norm(Q, N);
+  squarenorm = square_norm(Q, N, 1);
   /*        !!!!   INITIALIZATION    !!!! */
   assign(g_spinor_field[DUM_SOLVER], P, N);
   /*        (r_0,r_0)  =  normsq         */
-  normsp = square_norm(P, N);
+  normsp = square_norm(P, N, 1);
 
   assign(g_spinor_field[DUM_SOLVER+3], Q, N);
   /* initialize residue r and search vector p */
@@ -72,16 +72,16 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
   invert_eigenvalue_part(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], 10, N);
   /* p0 = z0 */
   assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], N);
-  normsq=square_norm(g_spinor_field[DUM_SOLVER+1], N);
+  normsq=square_norm(g_spinor_field[DUM_SOLVER+1], N, 1);
 
   /* Is this really real? */
-  pro2 = scalar_prod_r(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+3], N);  
+  pro2 = scalar_prod_r(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+3], N, 1);  
   /* main loop */
   for(iteration = 0; iteration < max_iter; iteration++) {
     /* A p */
     f(g_spinor_field[DUM_SOLVER+4], g_spinor_field[DUM_SOLVER+2]);
 
-    pro = scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+4], N);
+    pro = scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+4], N, 1);
     /*  Compute alpha_cg(i+1)   */
     alpha_cg=pro2/pro;
      
@@ -91,7 +91,7 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
     assign_add_mul_r(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+4], -alpha_cg, N);
 
     /* Check whether the precision is reached ... */
-    err=square_norm(g_spinor_field[DUM_SOLVER+1], N);
+    err=square_norm(g_spinor_field[DUM_SOLVER+1], N, 1);
     if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
       printf("%d\t%g\n",iteration,err); fflush( stdout);
     }
@@ -114,7 +114,7 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
 /*     invert_eigenvalue_part(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], 10, N); */
     /* Compute beta_cg(i+1)
        Compute p_(i+1) = r_i+1 + beta_(i+1) p_i     */
-    pro2 = scalar_prod_r(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+3], N);
+    pro2 = scalar_prod_r(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+3], N, 1);
     beta_cg *= pro2;
     assign_mul_add_r(g_spinor_field[DUM_SOLVER+2], beta_cg, g_spinor_field[DUM_SOLVER+3], N);
     normsq=err;

@@ -104,7 +104,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
   x0 = g_spinor_field[DUM_SOLVER+2];
   eps=sqrt(eps_sq);  
   init_gmres_dr(m, (VOLUMEPLUSRAND));
-  norm = sqrt(square_norm(Q, N));
+  norm = sqrt(square_norm(Q, N, 1));
 
   assign(x0, P, N);
 
@@ -114,7 +114,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
   diff(r0, Q, r0, N);
   
   /* v_0=r_0/||r_0|| */
-  alpha[0].re=sqrt(square_norm(r0, N));
+  alpha[0].re=sqrt(square_norm(r0, N, 1));
   err = alpha[0].re;
   
   if(g_proc_id == g_stdio_proc && g_debug_level > 0){
@@ -137,7 +137,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
     f(g_spinor_field[DUM_SOLVER+1], V[j]);
 /*     assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], N); */
     for(i = 0; i <= j; i++){
-      H[i][j] = scalar_prod(V[i], g_spinor_field[DUM_SOLVER+1], N);
+      H[i][j] = scalar_prod(V[i], g_spinor_field[DUM_SOLVER+1], N, 1);
       /* G, work and work2 are in Fortran storage: columns first */
       G[j][i] = H[i][j];
       work2[j][i] = H[i][j];
@@ -146,7 +146,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
       assign_diff_mul(g_spinor_field[DUM_SOLVER+1], V[i], H[i][j], N);
     }
     
-    _complex_set(H[j+1][j], sqrt(square_norm(g_spinor_field[DUM_SOLVER+1], N)), 0.);
+    _complex_set(H[j+1][j], sqrt(square_norm(g_spinor_field[DUM_SOLVER+1], N, 1)), 0.);
     G[j][j+1] = H[j+1][j];
     work2[j][j+1] = H[j+1][j];
     work[j+1][j].re =  H[j+1][j].re;
@@ -220,7 +220,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
 
   /* This produces c=V_m+1*r0 */
   for(i = 0; i < mp1; i++) {
-    c[i] = scalar_prod(V[i], r0, N); 
+    c[i] = scalar_prod(V[i], r0, N, 1); 
     if(g_proc_id == 0 && g_debug_level > 3) {
       printf("c: %e %e err = %e\n", c[i].re, c[i].im, err);
     }
@@ -240,7 +240,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
     if(g_debug_level > 0) {
       f(r0, x0);
       diff(r0, Q, r0, N);
-      tmp1.im=sqrt(square_norm(r0, N));
+      tmp1.im=sqrt(square_norm(r0, N, 1));
       if(g_proc_id == g_stdio_proc){
 	printf("%d\t%e true residue\n", m*restart, tmp1.im*tmp1.im); 
 	fflush(stdout);
@@ -251,7 +251,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
       assign_add_mul(r0, V[i], c[i], N);
     } 
     if(g_debug_level > 3) {
-      tmp1.im=sqrt(square_norm(r0, N));
+      tmp1.im=sqrt(square_norm(r0, N, 1));
       if(g_proc_id == g_stdio_proc){
 	printf("%d\t%e residue\n", m*restart, tmp1.im*tmp1.im); 
 	fflush(stdout);
@@ -353,7 +353,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
     if(g_debug_level > 3) {
       for(i = 0; i < np1; i++) {
 	for(l = 0; l < np1; l++) {
-	  tmp1 = scalar_prod(V[l], V[i], N);
+	  tmp1 = scalar_prod(V[l], V[i], N, 1);
 	  if(g_proc_id == 0) {
 	    printf("(V[%d], V[%d]) = %e %e %d %d %d %d %d %d %e %e\n", l, i, tmp1.re, tmp1.im, np1, mp1, ne, _m, _N, V2, H[l][i].re, H[l][i].im);
 	  }
@@ -378,7 +378,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
       /* g_spinor_field[DUM_SOLVER+1] <- omega_j */
 /*       assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], N); */
       for(i = 0; i <= j; i++){
-	H[j][i] = scalar_prod(V[i], g_spinor_field[DUM_SOLVER+1], N);  
+	H[j][i] = scalar_prod(V[i], g_spinor_field[DUM_SOLVER+1], N, 1);  
 	/* H, G, work and work2 are now all in Fortran storage: columns first */
 	G[j][i] = H[j][i];
 	work2[j][i] = H[j][i];
@@ -386,7 +386,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
 	work[i][j].im = -H[j][i].im;
 	assign_diff_mul(g_spinor_field[DUM_SOLVER+1], V[i], H[j][i], N);
       }
-      beta2 = square_norm(g_spinor_field[DUM_SOLVER+1], N);
+      beta2 = square_norm(g_spinor_field[DUM_SOLVER+1], N, 1);
       _complex_set(H[j][j+1], sqrt(beta2), 0.);
       G[j][j+1] = H[j][j+1];
       work2[j][j+1] = H[j][j+1];
@@ -398,7 +398,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
     /* Solve the least square problem for alpha*/
     /* This produces c=V_m+1*r0 */
     for(i = 0; i < mp1; i++) {      
-      c[i] = scalar_prod(V[i], r0, N);  
+      c[i] = scalar_prod(V[i], r0, N, 1);  
       alpha[i] = c[i];
       if(g_proc_id == 0 && g_debug_level > 3) {
 	printf("c: %e %e err = %e\n", c[i].re, c[i].im, err);

@@ -132,11 +132,11 @@ void poly_precon(spinor * const R, spinor * const S, const double prec, const in
     temp2=c[j];
     assign_add_mul_r(&R[0],&aux[0],temp2, N);
     /* The stoppping criterio tnorm = |T_j(Q^2)| */
-    tnorm = square_norm(aux, N);
+    tnorm = square_norm(aux, N, 1);
     tnorm *= (temp2*temp2);
      
     
-    auxnorm = square_norm(R, N);
+    auxnorm = square_norm(R, N, 1);
     if(g_proc_id == g_stdio_proc) {
       printf("j= %d\t|c T|^2= %g\t%g\t c_j= %g\t|r|^2= %g\n",j,tnorm,prec, temp2,auxnorm); fflush( stdout);
       fflush(stdout);
@@ -202,7 +202,7 @@ void poly_nonherm_precon(spinor * const R, spinor * const S,
 /*   g_mu = -g_mu; */
 /*   D_psi(aux, chi); */
 /*   diff(aux, aux, S, N); */
-/*   dtmp = square_norm(aux, N); */
+/*   dtmp = square_norm(aux, N, 1); */
 /*   printf("1 %1.3e\n", dtmp); */
 /*   boundary(-g_kappa); */
 /*   g_mu = -g_mu; */
@@ -230,7 +230,7 @@ void poly_nonherm_precon(spinor * const R, spinor * const S,
     if(g_debug_level>4) {
       D_psi(tmp0, chi);
       diff(tmp0, tmp0, S, N);
-      dtmp = square_norm(tmp0, N);
+      dtmp = square_norm(tmp0, N, 1);
       if(g_proc_id == 0) printf("poly %d %1.3e\n", j, dtmp);
     }
 /*     boundary(-g_kappa); */

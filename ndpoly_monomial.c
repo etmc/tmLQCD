@@ -134,11 +134,11 @@ void ndpoly_heatbath(const int id) {
 
   (*mnl).energy0 = 0.;
   random_spinor_field(g_chi_up_spinor_field[0], VOLUME/2, (*mnl).rngrepro);
-  (*mnl).energy0 = square_norm(g_chi_up_spinor_field[0], VOLUME/2);
+  (*mnl).energy0 = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
 
   if(g_epsbar!=0.0 || phmc_exact_poly == 0){
     random_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2, (*mnl).rngrepro);
-     (*mnl).energy0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
+     (*mnl).energy0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
   } 
   else {
      zero_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2);
@@ -214,14 +214,14 @@ void ndpoly_heatbath(const int id) {
   assign(g_chi_up_copy, g_chi_up_spinor_field[0], VOLUME/2);
   assign(g_chi_dn_copy, g_chi_dn_spinor_field[0], VOLUME/2);
 
-  temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2);
+  temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
     printf("PHMC: Then: evaluate Norm of pseudofermion heatbath BHB \n ");
     printf("PHMC: Norm of BHB up squared %e \n", temp);
   }
 
   if(g_epsbar!=0.0 || phmc_exact_poly==0) 
-    temp += square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
+    temp += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
 
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)){
     printf("PHMC: Norm of BHB up + BHB dn squared %e \n\n", temp);
@@ -268,10 +268,10 @@ double ndpoly_acc(const int id) {
     assign(g_chi_up_spinor_field[ij], g_chi_up_spinor_field[1], VOLUME/2);
     assign(g_chi_dn_spinor_field[ij], g_chi_dn_spinor_field[1], VOLUME/2);
 
-    temp = square_norm(g_chi_up_spinor_field[ij], VOLUME/2);
+    temp = square_norm(g_chi_up_spinor_field[ij], VOLUME/2, 1);
     Ener[ij] = temp;
 
-    temp = square_norm(g_chi_dn_spinor_field[ij], VOLUME/2);
+    temp = square_norm(g_chi_dn_spinor_field[ij], VOLUME/2, 1);
     Ener[ij] += temp;
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
@@ -315,8 +315,8 @@ double ndpoly_acc(const int id) {
 	Ener[j] += sgn*fact*Ener[ij];
 	sgn = -sgn;
       }
-      temp = square_norm(g_chi_up_spinor_field[j], VOLUME/2);
-      temp += square_norm(g_chi_dn_spinor_field[j], VOLUME/2);
+      temp = square_norm(g_chi_up_spinor_field[j], VOLUME/2, 1);
+      temp += square_norm(g_chi_dn_spinor_field[j], VOLUME/2, 1);
       if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
 	printf("PHMC: Here  j=%d   sign=%f  temp=%e \n", j, sgn, temp);
       }
@@ -353,10 +353,10 @@ double ndpoly_acc(const int id) {
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
     assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
 
-    temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2);
+    temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
     Ener[0] = temp;
 
-    temp = square_norm(g_chi_dn_spinor_field[0], VOLUME/2);
+    temp = square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
     Ener[0] += temp;
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
@@ -380,7 +380,7 @@ double ndpoly_acc(const int id) {
     }
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
 
-    temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2);
+    temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
     Ener[0] = temp;
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {

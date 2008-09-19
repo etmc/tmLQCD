@@ -45,7 +45,7 @@ int gcr(spinor * const P, spinor * const Q,
 
   init_gcr(m, N+RAND);
 
-  norm_sq = square_norm(Q, N);
+  norm_sq = square_norm(Q, N, 1);
   if(norm_sq < 1.e-32) {
     norm_sq = 1.;
   }
@@ -54,7 +54,7 @@ int gcr(spinor * const P, spinor * const Q,
     dfl_sloppy_prec = 0;
     f(tmp, P);
     diff(rho, Q, tmp, N);
-    err = square_norm(rho, N);
+    err = square_norm(rho, N, 1);
     if(g_proc_id == g_stdio_proc && g_debug_level > 0){
       printf("GCR: %d\t%g true residue\n", restart*m, err); 
       fflush(stdout);
@@ -76,14 +76,14 @@ int gcr(spinor * const P, spinor * const Q,
       f(tmp, xi[k]); 
       /* tmp will become chi[k] */
       for(l = 0; l < k; l++) {
-  	a[l][k] = scalar_prod(chi[l], tmp, N);
+  	a[l][k] = scalar_prod(chi[l], tmp, N, 1);
 	assign_diff_mul(tmp, chi[l], a[l][k], N);
       }
-      b[k] = sqrt(square_norm(tmp, N));
+      b[k] = sqrt(square_norm(tmp, N, 1));
       mul_r(chi[k], 1./b[k], tmp, N);
-      c[k] = scalar_prod(chi[k], rho, N);
+      c[k] = scalar_prod(chi[k], rho, N, 1);
       assign_diff_mul(rho, chi[k], c[k], N);
-      err = square_norm(rho, N);
+      err = square_norm(rho, N, 1);
       if(g_proc_id == g_stdio_proc && g_debug_level > 0){
 	printf("GCR: %d\t%g iterated residue\n", restart*m+k, err); 
 	fflush(stdout);

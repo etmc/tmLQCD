@@ -105,7 +105,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     else if(solver_flag == MR) {
       if(g_proc_id == 0) {printf("# Using MR!\n"); fflush(stdout);}
-      iter = mr(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Mtm_plus_psi);
+      iter = mr(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, 1, &Mtm_plus_psi);
     }
     else if(solver_flag == CGS) {
       if(g_proc_id == 0) {printf("# Using CGS!\n"); fflush(stdout);}

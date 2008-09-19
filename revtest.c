@@ -248,9 +248,9 @@ if(g_proc_id==0)
      if(q_off>0.) random_spinor_field(3);
      if(q_off2>0.) random_spinor_field(5);
 /*compute the square of the norm */
-     enerphi0=square_norm(2, VOLUME/2);
-     if(q_off>0.) {enerphi1=square_norm(3, VOLUME/2);} else {enerphi1=0.;}
-     if(q_off2>0.) {enerphi2=square_norm(5, VOLUME/2);} else {enerphi2=0.;}
+     enerphi0=square_norm(2, VOLUME/2, 1);
+     if(q_off>0.) {enerphi1=square_norm(3, VOLUME/2, 1);} else {enerphi1=0.;}
+     if(q_off2>0.) {enerphi2=square_norm(5, VOLUME/2, 1);} else {enerphi2=0.;}
 /*apply the fermion matrix to the spinor*/
      sw_term(); sw_invert(1);
      Q_psi(0,2,q_off);
@@ -295,14 +295,14 @@ if(g_proc_id==0)
 /*compute the energy contributions from the pseudo-fermions */
      zero_spinor_field(2);
      idis0=bicg(g_spinor_field[2], g_spinor_field[0],q_off,EPS_SQ0);
-     enerphi0x=square_norm(2, VOLUME/2);
+     enerphi0x=square_norm(2, VOLUME/2, 1);
 
      if(q_off>0.)
        {
        zero_spinor_field(3);
        idis1=bicg(g_spinor_field[3], g_spinor_field[1],q_off2,EPS_SQ0);
        Q_psi(3,3,q_off);
-       enerphi1x=square_norm(3, VOLUME/2);
+       enerphi1x=square_norm(3, VOLUME/2, 1);
        }
      else
        {
@@ -315,7 +315,7 @@ if(g_proc_id==0)
        idis2=bicg(g_spinor_field[5], g_spinor_field[4],0.,EPS_SQ0);
        gamma5(g_spinor_field[5], g_spinor_field[5], VOLUME/2);
        assign_mul_add_r(5,q_off2,4);
-       enerphi2x=square_norm(5, VOLUME/2);
+       enerphi2x=square_norm(5, VOLUME/2, 1);
        }
      else
        {

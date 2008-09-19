@@ -50,11 +50,11 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
   diff(p, Q, r, N);
   assign(r, p, N);
   assign(hatr, p, N);
-  rho0 = scalar_prod(hatr, r, N);
-  squarenorm = square_norm(Q, N);
+  rho0 = scalar_prod(hatr, r, N, 1);
+  squarenorm = square_norm(Q, N, 1);
 
   for(i = 0; i < max_iter; i++){
-    err = square_norm(r, N);
+    err = square_norm(r, N, 1);
     if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
       printf("%d %e\n", i, err);
       fflush(stdout);
@@ -64,18 +64,18 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
       return(i);
     }
     f(v, p);
-    denom = scalar_prod(hatr, v, N);
+    denom = scalar_prod(hatr, v, N, 1);
     _div_complex(alpha, rho0, denom);
     assign(s, r, N);
     assign_diff_mul(s, v, alpha, N);
     f(t, s);
-    omega = scalar_prod(t,s, N);
-    d1 = square_norm(t, N);
+    omega = scalar_prod(t,s, N, 1);
+    d1 = square_norm(t, N, 1);
     omega.re/=d1; omega.im/=d1;
     assign_add_mul_add_mul(P, p, s, alpha, omega, N);
     assign(r, s, N);
     assign_diff_mul(r, t, omega, N);
-    rho1 = scalar_prod(hatr, r, N);
+    rho1 = scalar_prod(hatr, r, N, 1);
     if(fabs(rho1.re) < 1.e-25 && fabs(rho1.im) < 1.e-25) {
       return(-1);
     }

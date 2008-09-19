@@ -8,7 +8,7 @@
 /* double square_norm(spinor * const P )
  *     Returns the square norm of *P */
 
-double square_norm(spinor * const P, const int N);
+double square_norm(spinor * const P, const int N, const int parallel);
 
 
 #endif

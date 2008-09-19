@@ -62,12 +62,12 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
   assign(r0_tilde, r[0], N); 
 /*   random_spinor_field(r0_tilde, N); */
   assign(bp, r[0], N);
-  squarenorm = square_norm(b, N);
+  squarenorm = square_norm(b, N, 1);
 
   rho0 = 1.;
   alpha = rho0;
   omega = rho0;
-  err = square_norm(r[0], N);
+  err = square_norm(r[0], N, 1);
   Mr = err;
   Mx = err;
   zeta0 = err;
@@ -79,7 +79,7 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
     /* The BiCG part */
     rho0 *= -omega; 
     for(j = 0; j < l; j++) {
-      rho1 = scalar_prod_r(r[j], r0_tilde, N);
+      rho1 = scalar_prod_r(r[j], r0_tilde, N, 1);
       beta = alpha*(rho1/rho0); 
       rho0 = rho1;
 /*       if(g_proc_id == 0) {printf("beta = %e, alpha = %e, rho0 = %e\n", beta, alpha, rho0);fflush(stdout);} */
@@ -88,7 +88,7 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
 	assign_mul_add_r(u[i], -beta, r[i], N);
       }
       f(u[j+1], u[j]);
-      sigma = scalar_prod_r(u[j+1], r0_tilde, N);
+      sigma = scalar_prod_r(u[j+1], r0_tilde, N, 1);
       alpha = rho1/sigma;
 /*       if(g_proc_id == 0) {printf("sigma = %e, alpha = %e\n", sigma, alpha);fflush(stdout);} */
       /* x = x + \alpha u_0 */
@@ -98,7 +98,7 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
 	assign_add_mul_r(r[i], u[i+1], -alpha, N);
       }
       f(r[j+1], r[j]);
-      err = square_norm(r[j+1], N);
+      err = square_norm(r[j+1], N, 1);
       if(g_proc_id == 0 && g_debug_level > 1) {printf("%d %d err = %e\n", k, j, err);fflush(stdout);}
       if(err > Mr) Mr = err;
       if(err > Mx) Mx = err;
@@ -109,7 +109,7 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
     /* Z = R* R */
     for(i = 0; i <= l; i++){
       for(j = 0; j <= i; j++){
-	Z[i][j] = scalar_prod_r(r[j], r[i], N);
+	Z[i][j] = scalar_prod_r(r[j], r[i], N, 1);
 	Z[j][i] = Z[i][j];
       }
     }

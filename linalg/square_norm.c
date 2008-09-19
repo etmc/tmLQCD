@@ -30,7 +30,7 @@
 
 #if ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext) && (!defined BGL))
 
-double square_norm(spinor * const P, const int N) {
+double square_norm(spinor * const P, const int N, const int parallel) {
   int ix;
   static double ks,kc,ds,tr,ts,tt;
   spinor *s;
@@ -63,11 +63,12 @@ double square_norm(spinor * const P, const int N) {
   }
   kc = ks + kc;
 #  ifdef MPI
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return ks;
-#  else
+  if(parallel) {
+    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return ks;
+  }
+#endif
   return kc;
-#  endif
 }
 
 #elif ((defined BGL) && (defined XLC))
@@ -81,7 +82,7 @@ double square_norm(spinor * const P, const int N) {
  ***************************************/
 
 #  include"bgl.h"
-double square_norm(spinor * const P, const int N) {
+double square_norm(spinor * const P, const int N, const int parallel) {
   int ix=0;
   double res, res2;
   double *s ALIGN;
@@ -191,16 +192,17 @@ double square_norm(spinor * const P, const int N) {
   y00 = __fpadd(y00, y08);
   res = __creal(y00)+__cimag(y00);
 #  ifdef MPI
-  MPI_Allreduce(&res, &res2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return res2;
-#  else
-  return res;
+  if(parallel) {
+    MPI_Allreduce(&res, &res2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return res2;
+  }
 #  endif
+  return res;
 }
 
 #elif ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
 
-double square_norm(spinor * const P, const int N) {
+double square_norm(spinor * const P, const int N, const int parallel) {
 
   register int ix=0;
   register complex ds00,ds01,ds02,ds10,ds11,ds12,ds20,ds21,ds22,ds30,ds31,ds32;
@@ -252,20 +254,18 @@ double square_norm(spinor * const P, const int N) {
  kc=creal(ds10+ds02);
 
 #if defined MPI
-  
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return ks;
-
+ if(parallel) {
+   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+   return ks;
+ }
 #endif
-
   return kc;
-
 }
 #elif defined apenext
 
 #define NOWHERE_COND(condition) ((condition) ? 0x0 : NOWHERE )
 
-double square_norm(spinor * const P, const int N) {
+double square_norm(spinor * const P, const int N, const int parallel) {
   register int ix=N;
   register complex ds00,ds01,ds02,ds10,ds11,ds12,ds20,ds21,ds22,ds30,ds31,ds32;
   register double kc;
@@ -324,13 +324,11 @@ double square_norm(spinor * const P, const int N) {
   kc=creal(ds10+ds02);
 
 #if defined MPI
-  
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return ks;
-
+  if(parallel) {
+    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return ks;
+  }
 #endif
-
   return kc;
-
 }
 #endif

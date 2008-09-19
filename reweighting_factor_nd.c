@@ -41,14 +41,14 @@ double reweighting_factor_nd(const int N) {
 
     phmc_ptilde_cheby_coef[0] = temp1;
 
-    temp2 = scalar_prod(g_chi_up_spinor_field[2], g_chi_up_spinor_field[3], VOLUME/2);
+    temp2 = scalar_prod(g_chi_up_spinor_field[2], g_chi_up_spinor_field[3], VOLUME/2, 1);
     if(temp2.im > 1.0e-8) {
       printf("!!! WARNING  Immaginary part of CORR-UP  LARGER than 10^-8 !!! \n");
       printf(" CORR-UP:  Re=%12.10e  Im=%12.10e \n", temp2.re, temp2.im);
     }
     corr = temp2.re;
     printf(" CORR-UP:  Re=%12.10e \n", corr);
-    temp2 = scalar_prod(g_chi_dn_spinor_field[2], g_chi_dn_spinor_field[3], VOLUME/2);
+    temp2 = scalar_prod(g_chi_dn_spinor_field[2], g_chi_dn_spinor_field[3], VOLUME/2, 1);
     if(temp2.im > 1.0e-8) {
       printf("!!! WARNING  Immaginary part of CORR_DN  LARGER than 10^-8 !!! \n");
       printf(" CORR-DN:  Re=%12.10e  Im=%12.10e \n", temp2.re, temp2.im);
@@ -70,8 +70,8 @@ double reweighting_factor_nd(const int N) {
     g_mu = mu1;
     Qtm_pm_psi(g_spinor_field[5] , g_spinor_field[3]);
 
-    sq_norm = square_norm(g_spinor_field[2], VOLUME/2);
-    corr = scalar_prod_r(g_spinor_field[2], g_spinor_field[5], VOLUME/2);
+    sq_norm = square_norm(g_spinor_field[2], VOLUME/2, 1);
+    corr = scalar_prod_r(g_spinor_field[2], g_spinor_field[5], VOLUME/2, 1);
     
     sq_norm -= corr;
     temp1 = sq_norm;

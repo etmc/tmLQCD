@@ -103,7 +103,7 @@ int main(void) {
   printf("%e %e\n",creal(a[N-1].s3.c2),cimag(a[N-1].s3.c2));
   printf("%e %e\n",creal(b[N-1].s3.c2),cimag(b[N-1].s3.c2));
 #endif
-  s=scalar_prod_r(a,b,N);
+  s=scalar_prod_r(a,b,N, 1);
   printf("scalar_prod_r(a,b,%d)=%1.16e\n",N,s);
 
   return 0;

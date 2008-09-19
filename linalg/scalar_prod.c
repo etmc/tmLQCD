@@ -11,7 +11,7 @@
 #include "scalar_prod.h"
 
 /*  <S,R>=S^* times R */
-complex scalar_prod(spinor * const S,spinor * const R, const int N){
+complex scalar_prod(spinor * const S, spinor * const R, const int N, const int parallel){
   int ix;
   static double ks,kc,ds,tr,ts,tt;
   spinor *s,*r;
@@ -52,8 +52,10 @@ complex scalar_prod(spinor * const S,spinor * const R, const int N){
   kc=ks+kc;
 
 #if defined MPI0
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  kc = ks;
+  if(parallel == 1) {
+    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    kc = ks;
+  }
 #endif
 
   c.re = kc;
@@ -89,14 +91,18 @@ complex scalar_prod(spinor * const S,spinor * const R, const int N){
   kc=ks+kc;
 
 #if defined MPI0
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  kc = ks;
+  if(parallel == 1) {
+    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    kc = ks;
+  }
 #endif
 
   c.im = kc;
 #ifdef MPI
-  d = c;
-  MPI_Allreduce(&d, &c, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+  if(parallel == 1) {
+    d = c;
+    MPI_Allreduce(&d, &c, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+  }
 #endif
   return(c);
 }

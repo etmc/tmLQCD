@@ -5,6 +5,6 @@
 
 #include "su3.h"
 /*  <S,R>=SxR^* */
-complex scalar_prod(spinor * const S,spinor * const R, const int N);
+complex scalar_prod(spinor * const S,spinor * const R, const int N, const int parallel);
 
 #endif

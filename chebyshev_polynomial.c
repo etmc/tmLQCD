@@ -283,14 +283,14 @@ chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, 0.25);
 /*   assign(&sc[0], &ss[0],VOLUME/2);
 
   Qtm_pm_psi(&auxs[0], &ss[0]);
-    temp=square_norm(&auxs[0],VOLUME/2);
+    temp=square_norm(&auxs[0],VOLUME/2, 1);
       printf("||auxs Carsten||=%e\n",temp);
 
   QdaggerNon_degenerate(&aux3s[0], &aux3c[0], &ss[0], &sc[0]);
   QNon_degenerate(&auxs[0], &auxc[0], &aux3s[0], &aux3c[0]);
-    temp=square_norm(&auxs[0],VOLUME/2);
+    temp=square_norm(&auxs[0],VOLUME/2, 1);
       printf("||auxs own||=%e\n",temp);
-    temp=square_norm(&auxc[0],VOLUME/2);
+    temp=square_norm(&auxc[0],VOLUME/2, 1);
       printf("||auxc own||=%e\n",temp); */
 
 
@@ -315,26 +315,26 @@ chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, 0.25);
     QdaggerQ_power(&auxs[0], &auxc[0], dop_cheby_coef, dop_n_cheby, &aux3s[0], &aux3c[0]);
     QdaggerQ_power(&aux3s[0], &aux3c[0], dop_cheby_coef, dop_n_cheby, &auxs[0], &auxc[0]);
     QdaggerQ_power(&auxs[0], &auxc[0], dop_cheby_coef, dop_n_cheby, &aux3s[0], &aux3c[0]);
-/*    temp=square_norm(&auxs[0],VOLUME/2);
+/*    temp=square_norm(&auxs[0],VOLUME/2, 1);
     printf("||auxs||=%e\n",temp);
-    temp=square_norm(&auxc[0],VOLUME/2);
+    temp=square_norm(&auxc[0],VOLUME/2, 1);
     printf("||auxc||=%e\n",temp); */
 
 
   QdaggerNon_degenerate(&aux2s[0], &aux2c[0], &ss[0], &sc[0]);
   QNon_degenerate(&aux3s[0], &aux3c[0], &aux2s[0], &aux2c[0]);
 
-/*    temp=square_norm(&aux3s[0],VOLUME/2);
+/*    temp=square_norm(&aux3s[0],VOLUME/2, 1);
       printf("||auxs_3||=%e\n",temp);
-    temp=square_norm(&aux3c[0],VOLUME/2);
+    temp=square_norm(&aux3c[0],VOLUME/2, 1);
       printf("||auxc_3||=%e\n",temp); */
 
     diff(&auxs[0],&auxs[0],&aux3s[0],VOLUME/2);
-    temp=square_norm(&auxs[0],VOLUME/2)/square_norm(&aux3s[0],VOLUME/2)/4.0;
+    temp=square_norm(&auxs[0],VOLUME/2)/square_norm(&aux3s[0],VOLUME/2, 1)/4.0;
     if(g_proc_id == g_stdio_proc) { 
       printf("difference=%e\n",temp);
     diff(&auxc[0],&auxc[0],&aux3c[0],VOLUME/2);
-    temp=square_norm(&auxc[0],VOLUME/2)/square_norm(&aux3c[0],VOLUME/2)/4.0;
+    temp=square_norm(&auxc[0],VOLUME/2)/square_norm(&aux3c[0],VOLUME/2, 1)/4.0;
       printf("difference=%e\n",temp);
    }  
     if(temp < stopeps ) break;

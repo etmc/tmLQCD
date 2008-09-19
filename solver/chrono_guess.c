@@ -42,7 +42,7 @@ void chrono_add_solution(spinor * const trial, spinor ** const v, int index_arra
       index_array[(*_n)] = (*_n);
       (*_n)= (*_n)+1;
       /* normalise vector */
-      norm = sqrt(square_norm(trial, V));
+      norm = sqrt(square_norm(trial, V, 1));
       mul_r(v[index_array[(*_n)-1]], 1/norm, trial, V);
     }
     else {
@@ -53,7 +53,7 @@ void chrono_add_solution(spinor * const trial, spinor ** const v, int index_arra
       }
       index_array[N-1] = (index_array[N-2]+1)%N;
       /* and normalise */
-      norm = sqrt(square_norm(trial, V));
+      norm = sqrt(square_norm(trial, V, 1));
       mul_r(v[index_array[N-1]], 1/norm, trial, V);
     }
   }
@@ -95,10 +95,10 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
     /* Construct an orthogonal basis */
     for(j = n-1; j > n-2; j--) {
       for(i = j-1; i > -1; i--) {
-	s = scalar_prod(v[index_array[j]], v[index_array[i]], V);
+	s = scalar_prod(v[index_array[j]], v[index_array[i]], V, 1);
 	assign_diff_mul(v[index_array[i]], v[index_array[j]], s, V);
 	if(g_debug_level > 2) {
-	  s = scalar_prod(v[index_array[i]], v[index_array[j]], V);
+	  s = scalar_prod(v[index_array[i]], v[index_array[j]], V, 1);
 	  if(g_proc_id == 0) {
 	    printf("CSG: <%d,%d> = %e +i %e \n", i, j, s.re, s.im);fflush(stdout);
 	  }
@@ -115,7 +115,7 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
       
       /* Only the upper triangular part is stored      */
       for(i = 0; i < j+1; i++){
-	G[i*N + j] = scalar_prod(v[index_array[i]], trial, V);  
+	G[i*N + j] = scalar_prod(v[index_array[i]], trial, V, 1);  
 	if(j != i) {
 	  _complex_conj(G[j*N + i], G[i*N + j]);
 	}
@@ -125,7 +125,7 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
 	}
       }
       /* The right hand side */
-      bn[j] = scalar_prod(v[index_array[j]], phi, V);  
+      bn[j] = scalar_prod(v[index_array[j]], phi, V, 1);  
     }
     
     /* Solver G y = bn for y and store it in bn */

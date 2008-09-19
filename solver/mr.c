@@ -46,14 +46,15 @@
 
 int mr(spinor * const P, spinor * const Q,
        const int max_iter, const double eps_sq,
-       const int rel_prec, const int N, matrix_mult f){
+       const int rel_prec, const int N, const int parallel, 
+       matrix_mult f){
   int i=0;
   double norm_r,beta;
   complex alpha;
 
   f(g_spinor_field[DUM_SOLVER+2], P);
   diff(g_spinor_field[DUM_SOLVER], Q, g_spinor_field[DUM_SOLVER+2], N);
-  norm_r=square_norm(g_spinor_field[DUM_SOLVER], N);
+  norm_r=square_norm(g_spinor_field[DUM_SOLVER], N, parallel);
   if(g_proc_id == g_stdio_proc) {
     printf("MR iteration= %d  |res|^2= %e\n", i, norm_r); 
     fflush( stdout );
@@ -61,8 +62,8 @@ int mr(spinor * const P, spinor * const Q,
   while((norm_r > eps_sq) && (i < max_iter)){
     i++;
     f(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-    alpha=scalar_prod(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], N);
-    beta=square_norm(g_spinor_field[DUM_SOLVER+1], N);
+    alpha=scalar_prod(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], N, parallel);
+    beta=square_norm(g_spinor_field[DUM_SOLVER+1], N, parallel);
     _mult_real(alpha, alpha, 1./beta);
     assign_add_mul(P, g_spinor_field[DUM_SOLVER], alpha, N);
     if(i%50 == 0){
@@ -73,7 +74,7 @@ int mr(spinor * const P, spinor * const Q,
     }
 
     diff(g_spinor_field[DUM_SOLVER], Q, g_spinor_field[DUM_SOLVER+2], N);
-    norm_r=square_norm(g_spinor_field[DUM_SOLVER], N);
+    norm_r=square_norm(g_spinor_field[DUM_SOLVER], N, parallel);
     if(g_proc_id == g_stdio_proc) {
       printf("MR iteration= %d  |res|^2= %g\n", i, norm_r); 
       fflush(stdout);

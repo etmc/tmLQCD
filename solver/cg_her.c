@@ -50,11 +50,11 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   double normsp, normsq, pro, err, alpha_cg, beta_cg, squarenorm;
   int iteration;
   
-  squarenorm = square_norm(Q, N);
+  squarenorm = square_norm(Q, N, 1);
   /*        !!!!   INITIALIZATION    !!!! */
   assign(g_spinor_field[DUM_SOLVER], P, N);
   /*        (r_0,r_0)  =  normsq         */
-  normsp=square_norm(P, N);
+  normsp=square_norm(P, N, 1);
 
   if((subtract_ev == 1)) { 
     assign_sub_lowest_eigenvalues(g_spinor_field[DUM_SOLVER+5], Q, 10, N);
@@ -68,7 +68,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     /* if a starting solution vector equal to zero is chosen */
     assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+5], N);
     assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+5], N);
-    normsq=square_norm(Q, N);
+    normsq=square_norm(Q, N, 1);
   }
   else{
     /* if a starting solution vector different from zero is chosen */
@@ -79,7 +79,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     }
     diff(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+5], g_spinor_field[DUM_SOLVER+3], N);
     assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], N);
-    normsq=square_norm(g_spinor_field[DUM_SOLVER+2], N);
+    normsq=square_norm(g_spinor_field[DUM_SOLVER+2], N, 1);
   }
   
   /* main loop */
@@ -89,9 +89,9 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     if((subtract_ev == 1) && (iteration%modulo == 0)) {
       sub_lowest_eigenvalues(g_spinor_field[DUM_SOLVER+4], g_spinor_field[DUM_SOLVER+2], 10, N);
     }
-    /* c=scalar_prod(&g_ev[0*VOLUME], g_spinor_field[DUM_SOLVER+4]);
+    /* c=scalar_prod(&g_ev[0*VOLUME], g_spinor_field[DUM_SOLVER+4], 1);
        printf("%e, %e\n",c.re,c.im); */
-    pro=scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+4], N);
+    pro=scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+4], N, 1);
      
     /*  Compute alpha_cg(i+1)   */
     alpha_cg=normsq/pro;
@@ -102,7 +102,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     assign_add_mul_r(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+4], -alpha_cg, N);
 
     /* Check whether the precision is reached ... */
-    err=square_norm(g_spinor_field[DUM_SOLVER+1], N);
+    err=square_norm(g_spinor_field[DUM_SOLVER+1], N, 1);
     if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
       printf("%d\t%g\n",iteration,err); fflush( stdout);
     }
@@ -114,7 +114,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
       assign(P, g_spinor_field[DUM_SOLVER], N);
       f(g_spinor_field[DUM_SOLVER+2], P);
       diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], Q, N);
-      err = square_norm(g_spinor_field[DUM_SOLVER+3], N);
+      err = square_norm(g_spinor_field[DUM_SOLVER+3], N, 1);
       if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
 	printf("true residue %d\t%g\t\n",iteration, err); fflush( stdout);
       }

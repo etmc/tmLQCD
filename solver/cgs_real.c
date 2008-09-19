@@ -35,23 +35,23 @@ int cgs_real(spinor * const P, spinor * const Q, const int max_iter,
   assign(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER], N); 
   assign(g_spinor_field[DUM_SOLVER+2],g_spinor_field[DUM_SOLVER], N);
   assign(g_spinor_field[DUM_SOLVER+5],g_spinor_field[DUM_SOLVER], N); /* ri=pi=ui=r0 */
-  squarenorm = square_norm(Q, N);
+  squarenorm = square_norm(Q, N, 1);
 
   /* loop! */
   for(i=0;i<=max_iter;i++) {
-    res_sq=square_norm(g_spinor_field[DUM_SOLVER], N);
+    res_sq=square_norm(g_spinor_field[DUM_SOLVER], N, 1);
     if(g_proc_id == g_stdio_proc && g_debug_level > 0) {
       printf("%d\t%g\n",i,res_sq); 
       fflush( stdout );
     }
-    rjr0 = scalar_prod_r(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+5], N);
+    rjr0 = scalar_prod_r(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+5], N, 1);
     /*     square_and_prod(&res_sq,&rjr0,g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER+5]); */
     if(((res_sq<eps_sq) && (rel_prec == 0)) || ((res_sq<eps_sq*squarenorm) && (rel_prec == 1))) {
       return i;
     }
     f(g_spinor_field[DUM_SOLVER+3],g_spinor_field[DUM_SOLVER+1]);	/* calc v */
     /* calc alpha */
-    denom=scalar_prod_r(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+5], N);
+    denom=scalar_prod_r(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+5], N, 1);
     /* _div_complex(alpha,rjr0,denom);*/
     alpha=rjr0/denom;
     /* calc q */
@@ -65,7 +65,7 @@ int cgs_real(spinor * const P, spinor * const Q, const int max_iter,
     f(g_spinor_field[DUM_SOLVER+3],g_spinor_field[DUM_SOLVER+2]);
     assign_add_mul_r(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+3], -alpha, N);
     /* calc beta */
-    nom=scalar_prod_r(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+5], N);
+    nom=scalar_prod_r(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+5], N, 1);
     /* _div_complex(beta,nom,rjr0); */
     beta = nom/rjr0;
     /* calc new u */
