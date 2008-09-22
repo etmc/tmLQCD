@@ -19,14 +19,15 @@
 #include "lu_solve.h"
 #include "block.h"
 #include "little_D.h"
+#include "gcr4complex.h"
 #include "generate_dfl_subspace.h"
 
 int init_little_dfl_subspace(const int N_s);
 
 spinor ** dfl_fields = NULL;
-complex ** little_dfl_fields = NULL;
 static spinor * _dfl_fields = NULL;
-static spinor *_little_dfl_fields = NULL;
+complex ** little_dfl_fields = NULL;
+static complex *_little_dfl_fields = NULL;
 static int init_subspace = 0;
 static int init_little_subspace = 0;
 
@@ -52,19 +53,23 @@ static void random_fields(const int Ns) {
 }
 
 int generate_dfl_subspace(const int Ns, const int N) {
-  int i,j, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex), 
+  int i, j, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex), 
     vol = VOLUME*sizeof(spinor)/sizeof(complex);
   double nrm, e = 0.3, d = 1.1, atime, etime;
   complex s;
+  complex * work;
+  spinor * r, * q, * p;
 
 #ifdef MPI
   atime = MPI_Wtime();
 #else
   atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-
-  if(init_subspace == 0) init_dfl_subspace(Ns);
-  if(init_little_subspace == 0) init_little_dfl_subspace(Ns);
+  work = (complex*)malloc(2*9*Ns*sizeof(complex));
+  if(init_subspace == 0) i = init_dfl_subspace(Ns);
+  if(1) {
+    if(init_little_subspace == 0) i = init_little_dfl_subspace(Ns);
+  }
 
   random_fields(Ns);
 
@@ -131,29 +136,60 @@ int generate_dfl_subspace(const int Ns, const int N) {
   block_orthonormalize(block_list);
   block_orthonormalize(block_list+1);
 
+  dfl_subspace_updated = 1;
 
-  for (i = 0; i < Ns; i++) { 
-    /* add it to the basis */
-    reconstruct_global_field(dfl_fields[i], block_list[0].basis[i], block_list[1].basis[i]);
+
+  for(j = 0; j < Ns; j++) {
+    for(i = 0; i < 2*9*Ns; i++) {
+      _complex_zero(little_dfl_fields[j][i]);
+      _complex_zero(work[i]);
+    }
   }
+
+  /* compute the little little basis */
+  r = g_spinor_field[DUM_SOLVER];
+  q = g_spinor_field[DUM_SOLVER+1];
+  
   for(i = 0; i < Ns; i++) {
-    D_psi(g_spinor_field[DUM_SOLVER], dfl_fields[i]);
+    split_global_field(r, q,  dfl_fields[i]);
+    /* now take the local scalar products */
     for(j = 0; j < Ns; j++) {
-      little_A[i * Ns + j]  = scalar_prod(g_spinor_field[DUM_SOLVER], dfl_fields[j], N, 1);
-/*       if(i == j) { */
-/* 	_complex_one(little_A[i * Ns + j]); */
-/*       } */
-/*       else { */
-/* 	_complex_zero(little_A[i * Ns + j]); */
-/*       } */
-      if(g_proc_id == 0 && g_debug_level > 4) {
+      p = r;
+      for(blk = 0; blk < 2; blk++) {
+	if(blk == 0) p = r;
+	else p = q;
+	little_dfl_fields[i][j + blk*Ns] = scalar_prod(block_list[blk].basis[j], p, block_list[0].volume, 0);
+      }
+    }
+  }
+
+  /* orthonormalise */
+  for(i = 0; i < Ns; i++) {
+    for (j = 0; j < i; j++) {
+      s = lscalar_prod(little_dfl_fields[j], little_dfl_fields[i], 2*Ns, 1);
+      lassign_diff_mul(little_dfl_fields[i], little_dfl_fields[j], s, 2*Ns);
+    }
+    s.re = lsquare_norm(little_dfl_fields[i], 2*Ns, 1);
+    lmul_r(little_dfl_fields[i], 1./s.re, little_dfl_fields[i], 2*Ns);
+  }
+  
+  for(i = 0; i < Ns; i++) {
+    little_D(work, little_dfl_fields[i]);
+    for(j = 0; j < Ns; j++) {
+      little_A[j * Ns + i]  = lscalar_prod(little_dfl_fields[j], work, 2*Ns, 1);
+      /*       if(i == j) { */
+      /* 	_complex_one(little_A[i * Ns + j]); */
+      /*       } */
+      /*       else { */
+      /* 	_complex_zero(little_A[i * Ns + j]); */
+      /*       } */
+      if(g_proc_id == 0 && g_debug_level > -1) {
 	printf("%1.3e %1.3ei, ", little_A[i * Ns + j].re, little_A[i * Ns + j].im);
       }
     }
-    if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
+    if(g_proc_id == 0 && g_debug_level > -1) printf("\n");
   }
-  if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
-
+  if(g_proc_id == 0 && g_debug_level > -1) printf("\n");
   /* the precision in the inversion is not yet satisfactory! */
   LUInvert(Ns, little_A, Ns);
   /* inverse of little little D now in little_A */
@@ -167,8 +203,9 @@ int generate_dfl_subspace(const int Ns, const int N) {
     printf("time for subspace generation %1.3e s\n", etime-atime);
     fflush(stdout);
   }
-  dfl_subspace_updated = 1;
+
   free_dfl_subspace();
+  free(work);
   return(0);
 }
 
@@ -212,23 +249,25 @@ int generate_dfl_subspace_free(const int Ns, const int N) {
 
 int init_little_dfl_subspace(const int N_s) {
   int i;
-  init_little_subspace = 1;
-  if((void*)(_little_dfl_fields = calloc(N_s*2*9*N_s+1, sizeof(complex))) == NULL) {
-    return(1);
-  }
-  if((void*)(little_dfl_fields = calloc(N_s, sizeof(complex*))) == NULL) {
-    return(1);
-  }
+  if(init_little_subspace == 0) {
+    if((void*)(_little_dfl_fields = (complex*)calloc((N_s)*2*9*N_s+4, sizeof(complex))) == NULL) {
+      return(1);
+    }
+    if((void*)(little_dfl_fields = (complex**)calloc(N_s, sizeof(complex*))) == NULL) {
+      return(1);
+    }
 #if ( defined SSE || defined SSE2 || defined SSE3)
-  little_dfl_fields[0] = (complex*)(((unsigned long int)(_little_dfl_fields)+ALIGN_BASE)&~ALIGN_BASE);
+    little_dfl_fields[0] = (complex*)(((unsigned long int)(_little_dfl_fields)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  little_dfl_fields[0] = _little_dfl_fields;
+    little_dfl_fields[0] = _little_dfl_fields;
 #endif
-  for (i = 1; i < N_s; ++i) {
-    little_dfl_fields[i] = little_dfl_fields[i-1] + 2*9*N_s;
-  }
-  if((void*)(little_A = (complex*)calloc(N_s*N_s, sizeof(complex))) == NULL) {
-    return(1);
+    for (i = 1; i < N_s; i++) {
+      little_dfl_fields[i] = little_dfl_fields[i-1] + 2*9*N_s;
+    }
+    if((void*)(little_A = (complex*)calloc(N_s*N_s, sizeof(complex))) == NULL) {
+      return(1);
+    }
+    init_little_subspace = 1;
   }
   return(0);
 }
@@ -236,10 +275,10 @@ int init_little_dfl_subspace(const int N_s) {
 int init_dfl_subspace(const int N_s) {
   int i;
   init_subspace = 1;
-  if((void*)(_dfl_fields = calloc(N_s*VOLUMEPLUSRAND+1, sizeof(spinor))) == NULL) {
+  if((void*)(_dfl_fields = calloc((N_s)*VOLUMEPLUSRAND+1, sizeof(spinor))) == NULL) {
     return(1);
   }
-  if ((void*)(dfl_fields = calloc(N_s, sizeof(spinor *))) == NULL) {
+  if ((void*)(dfl_fields = calloc((N_s), sizeof(spinor *))) == NULL) {
     return(1);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)

@@ -167,7 +167,7 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
 
   pivot = (int*)malloc(Nvec*sizeof(int));
   y = (complex*)malloc(Nvec*sizeof(complex));
-  if(g_debug_level > 4) {
+  if(g_debug_level > -1) {
     A = (complex*)malloc(Nvec*Nvec*sizeof(complex));
     for(i = 0; i < Nvec; i++) {
       for(j = 0; j < Nvec; j++) {
@@ -315,7 +315,7 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
     }
   }
 
-  if(g_debug_level > 4 && g_proc_id == 0) {
+  if(g_debug_level > -1 && g_proc_id == 0) {
     printf("check little_A inversion \n");
     for(i = 0; i < Nvec; i++) {
       for(j = 0; j < Nvec; j++) {
@@ -332,7 +332,7 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
 
   free(pivot);
   free(y);
-  if(g_debug_level > 4) free(A);
+  if(g_debug_level > -1) free(A);
   return;
 }
 

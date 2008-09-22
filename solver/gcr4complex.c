@@ -235,6 +235,15 @@ void lmul_r(complex * const R, const double c, complex * const S, const int N)
   return;
 }
 
+void lmul(complex * const R, const complex c, complex * const S, const int N) 
+{
+  int i;
+  for(i = 0; i < N; i++) {
+    _mult_assign_complex(R[i], c, S[i]);
+  }
+  return;
+}
+
 
 void lassign_add_mul(complex * const R, complex * const S, const complex c, const int N)
 {

@@ -11,6 +11,7 @@ void ladd(complex * Q, complex * const R, complex * const S, const int N);
 double lsquare_norm(complex * const Q, const int N, const int parallel);
 complex lscalar_prod(complex * const R, complex * const S, const int N, const int parallel);
 void lmul_r(complex * const R, const double c, complex * const S, const int N);
+void lmul(complex * const R, const complex c, complex * const S, const int N);
 void lassign_diff_mul(complex * const R, complex * const S, const complex c, const int N);
 void lassign_add_mul(complex * const R, complex * const S, const complex c, const int N);
 void ldiff_assign(complex * const Q, complex * const S, 
