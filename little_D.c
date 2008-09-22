@@ -74,8 +74,8 @@ void invert_little_D_spinor(spinor *r, spinor *s){
 
   v = calloc(2 * 9 * g_N_s, sizeof(complex));
   w = calloc(2 * 9 * g_N_s, sizeof(complex));
-  psi[0] = calloc(VOLUME, sizeof(spinor));
-  psi[1] = psi[0] + VOLUME / 2;
+  psi[0] = calloc(VOLUME+2, sizeof(spinor));
+  psi[1] = psi[0] + VOLUME / 2 +1;
   split_global_field(psi[0], psi[1], s);
 
   for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
@@ -111,8 +111,8 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 
   v = calloc(2 * 9 * g_N_s, sizeof(complex));
   w = calloc(2 * 9 * g_N_s, sizeof(complex));
-  psi[0] = calloc(VOLUME, sizeof(spinor));
-  psi[1] = psi[0] + VOLUME / 2;
+  psi[0] = calloc(VOLUME + 2, sizeof(spinor));
+  psi[1] = psi[0] + VOLUME / 2 + 1;
   split_global_field(psi[0], psi[1], s);
 
   for (j = 0; j < g_N_s; ++j) {

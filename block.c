@@ -957,6 +957,9 @@ int split_global_field(spinor * const block_low, spinor * const block_high, spin
     memcpy(block_low + ctr_t * LZ / 2, field + (2 * ctr_t) * LZ / 2, LZ / 2 * sizeof(spinor));
     memcpy(block_high + ctr_t * LZ / 2, field + (2 * ctr_t + 1) * LZ / 2, LZ / 2 * sizeof(spinor));
   }
+  /* padding with zeros at the boundaries */
+  _spinor_null(block_low[ block_list[0].volume]);
+  _spinor_null(block_high[ block_list[1].volume]);
 
   if(g_proc_id == 0 && g_debug_level > 8) {
 /*     printf("lower basis norm = %1.3e\n", block_two_norm(block_low,  VOLUME / LZ)); */

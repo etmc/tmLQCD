@@ -43,7 +43,7 @@ void update_backward_gauge() {
 void update_backward_gauge() {
   int ix=0, kb=0, kb2=0;
 
-  for(ix = 0; ix < VOLUME/2;ix++) {
+  for(ix = 0; ix < VOLUME/2; ix++) {
     kb2=g_eo2lexic[ix];
     _su3_assign(g_gauge_field_copy[ix][0],g_gauge_field[kb2][0]);
     kb=g_idn[g_eo2lexic[ix]][0];
@@ -61,7 +61,7 @@ void update_backward_gauge() {
     kb=g_idn[g_eo2lexic[ix]][3];
     _su3_assign(g_gauge_field_copy[ix][7],g_gauge_field[kb][3]);
   }
-  for(ix = (VOLUME+RAND)/2; ix < (VOLUME+RAND)/2+VOLUME/2;ix++) {
+  for(ix = (VOLUME+RAND)/2; ix < (VOLUME+RAND)/2+VOLUME/2; ix++) {
     kb2=g_eo2lexic[ix];
     _su3_assign(g_gauge_field_copy[ix][0],g_gauge_field[kb2][0]);
     kb=g_idn[g_eo2lexic[ix]][0];
