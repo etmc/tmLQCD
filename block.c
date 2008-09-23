@@ -131,6 +131,8 @@ int init_blocks() {
     memcpy(block_list[i].mpilocal_coordinate, g_proc_coords, 4*sizeof(int));
     memcpy(block_list[i].coordinate, g_proc_coords, 3*sizeof(int));
     block_list[i].coordinate[3] = 2 * g_proc_coords[3] + i;
+    block_list[i].evenodd = (block_list[i].coordinate[0] + block_list[i].coordinate[1] + 
+			     block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
     if ((void*)(block_list[i].idx = calloc(8 * VOLUME/2, sizeof(int))) == NULL)
       CALLOC_ERROR_CRASH;
@@ -962,12 +964,37 @@ int split_global_field(spinor * const block_low, spinor * const block_high, spin
   _spinor_null(block_high[ block_list[1].volume]);
 
   if(g_proc_id == 0 && g_debug_level > 8) {
-/*     printf("lower basis norm = %1.3e\n", block_two_norm(block_low,  VOLUME / LZ)); */
-/*     printf("upper basis norm = %1.3e\n", block_two_norm(block_high, VOLUME / LZ)); */
-    printf("lower basis norm = %1.3e\n", square_norm(block_low,  VOLUME / LZ, 0));
-    printf("upper basis norm = %1.3e\n", square_norm(block_high, VOLUME / LZ, 0));
+    printf("lower basis norm = %1.3e\n", square_norm(block_low,  VOLUME / 2, 0));
+    printf("upper basis norm = %1.3e\n", square_norm(block_high, VOLUME / 2, 0));
   }
   return 0;
+}
+
+
+/* copies the part of globalfields corresponding to block blk */
+/* to the block field blockfield                              */
+void copy_global_to_upperlower(spinor * const blockfield, spinor * const globalfield, const int blk) {
+  int i, vol = block_list[blk].volume;
+
+  for (i = 0; i < VOLUME/LZ; i++) {
+    memcpy(blockfield + i * LZ / 2, globalfield + (2 * i + blk) * LZ / 2, LZ / 2 * sizeof(spinor));
+  }
+  /* padding with zeros at the boundaries */
+  _spinor_null(blockfield[ vol ]);
+
+  return;
+}
+
+
+/* reconstructs the parts of globalfield corresponding to block blk */
+/* from block field blockfield                                      */
+void copy_upperlower_to_global(spinor * const globalfield, spinor * const blockfield, const int blk) {
+  int i, vol = block_list[blk].volume;
+  for (i = 0; i < (vol / (LZ / 2)); ++i) {
+    memcpy(globalfield + (2 * i + blk) * LZ / 2, blockfield + i * LZ / 2, LZ / 2 * sizeof(spinor));
+  }
+
+  return;
 }
 
 /* Reconstructs a global field from the little basis of two blocks */
