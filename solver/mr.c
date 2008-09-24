@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "global.h"
+#include "start.h"
 #include "su3.h"
 #include "linalg_eo.h"
 #include "solver/solver.h"
@@ -51,9 +52,13 @@ int mr(spinor * const P, spinor * const Q,
   int i=0;
   double norm_r,beta;
   complex alpha;
+  spinor * r, * x;
 
+  r = g_spinor_field[DUM_SOLVER];
+  
+  zero_spinor_field(P, N);
   f(g_spinor_field[DUM_SOLVER+2], P);
-  diff(g_spinor_field[DUM_SOLVER], Q, g_spinor_field[DUM_SOLVER+2], N);
+  diff(r, Q, g_spinor_field[DUM_SOLVER+2], N);
   norm_r=square_norm(g_spinor_field[DUM_SOLVER], N, parallel);
   if(g_proc_id == g_stdio_proc) {
     printf("MR iteration= %d  |res|^2= %e\n", i, norm_r); 
@@ -61,11 +66,11 @@ int mr(spinor * const P, spinor * const Q,
   }
   while((norm_r > eps_sq) && (i < max_iter)){
     i++;
-    f(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-    alpha=scalar_prod(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], N, parallel);
+    f(g_spinor_field[DUM_SOLVER+1], r);
+    alpha=scalar_prod(g_spinor_field[DUM_SOLVER+1], r, N, parallel);
     beta=square_norm(g_spinor_field[DUM_SOLVER+1], N, parallel);
     _mult_real(alpha, alpha, 1./beta);
-    assign_add_mul(P, g_spinor_field[DUM_SOLVER], alpha, N);
+    assign_add_mul(P, r, alpha, N);
     if(i%50 == 0){
       f(g_spinor_field[DUM_SOLVER+2], P);
     }
@@ -73,7 +78,7 @@ int mr(spinor * const P, spinor * const Q,
       assign_add_mul(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], alpha, N);
     }
 
-    diff(g_spinor_field[DUM_SOLVER], Q, g_spinor_field[DUM_SOLVER+2], N);
+    diff(r, Q, g_spinor_field[DUM_SOLVER+2], N);
     norm_r=square_norm(g_spinor_field[DUM_SOLVER], N, parallel);
     if(g_proc_id == g_stdio_proc) {
       printf("MR iteration= %d  |res|^2= %g\n", i, norm_r); 

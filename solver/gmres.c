@@ -40,11 +40,6 @@
 #include"linalg_eo.h"
 #include"gmres.h"
 
-#ifdef _SOLVER_OUTPUT
-#define _SO(x) x
-#else
-#define _SO(x)
-#endif
 
 static void init_gmres(const int _M, const int _V);
 
@@ -83,7 +78,7 @@ int gmres(spinor * const P,spinor * const Q,
     /* v_0=r_0/||r_0|| */
     alpha[0].re=sqrt(square_norm(g_spinor_field[DUM_SOLVER], N, parallel));
 
-    if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+    if(g_proc_id == g_stdio_proc && g_debug_level > 1){
       printf("%d\t%g true residue\n", restart*m, alpha[0].re*alpha[0].re); 
       fflush(stdout);
     }
@@ -128,7 +123,7 @@ int gmres(spinor * const P,spinor * const Q,
       _mult_assign_complex_conj(alpha[j], c[j], tmp1);
 
       /* precision reached? */
-      if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+      if(g_proc_id == g_stdio_proc && g_debug_level > 1){
 	printf("%d\t%g residue\n", restart*m+j, alpha[j+1].re*alpha[j+1].re); 
 	fflush(stdout);
       }
@@ -199,8 +194,8 @@ static void init_gmres(const int _M, const int _V){
     M = _M;
     H = calloc(M+1, sizeof(complex *));
     V = calloc(M, sizeof(spinor *));
-#if (defined SSE2 || defined SSE23)
-    _h = calloc((M+2)*M, sizeof(complex));
+#if (defined SSE || defined SSE2)
+    _h = calloc((M+2)*M+8, sizeof(complex));
     H[0] = (complex *)(((unsigned int)(_h)+ALIGN_BASE)&~ALIGN_BASE); 
     _v = calloc(M*Vo+1, sizeof(spinor));
     V[0] = (spinor *)(((unsigned int)(_v)+ALIGN_BASE)&~ALIGN_BASE);

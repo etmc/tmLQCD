@@ -46,15 +46,17 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
     eolist[0] = 1;
     eolist[1] = 0;
   }
-  zero_spinor_field(P, VOLUME);
+
   for(ncy = 0; ncy < Ncy; ncy++) {
     /* even sides first */
     for(eo = 0; eo < 2; eo++) {
-      /* compute the global residue */
+      /* compute the global residue        */
+      /* this can be done more efficiently */
+      /* here only a naive implementation  */
       D_psi(r, P);
       diff(r, Q, r, VOLUME);
       nrm = square_norm(r, VOLUME, 1);
-      if(g_proc_id == 0 && eo) {
+      if(g_proc_id == 0 && eo == 0) {
 	printf("Msap: %d %1.3e\n", ncy, nrm);
       }
       /* choose the even (odd) block */
@@ -62,30 +64,18 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
       vol = block_list[blk].volume;
       /* get part of r corresponding to block blk into b */
       copy_global_to_block(b, r, blk);
-      /* then invert on b block local*/
+      /* then invert on b block local                    */
+      /* maybe use a polynomial instead of gmres ?       */
+      /* mr does not work, why?                          */
       if(eolist[eo] == 0) {
-/* 	memcpy(a, b, vol*sizeof(spinor)); */
-    	gmres(a, b, 2, 2, 1.e-31, 1, vol, 0, &dummy_D0);
-/*    	mr(a, b, 4, 1.e-31, 1, vol, 0, &dummy_D0); */
-/* 	dummy_D0(r, a); */
-/* 	diff(b, r, b, vol); */
-/* 	nrm = square_norm(b, vol, 0); */
-/* 	if(g_proc_id == 0) { */
-/* 	  printf("test 0 : %1.3e\n", nrm); */
-/* 	} */
+     	gmres(a, b, 4, 1, 1.e-31, 1, vol, 0, &dummy_D0); 
+	/* 	mr(a, b, 4, 1.e-31, 1, vol, 0, &dummy_D0); */
       }
       else {
-/* 	memcpy(a, b, vol*sizeof(spinor)); */
-    	gmres(a, b, 2, 2, 1.e-31, 1, vol, 0, &dummy_D1);
-/* 	dummy_D1(a, b); */
-/* 	diff(b, a, b, vol); */
-/* 	nrm = square_norm(b, vol, 0); */
-/* 	if(g_proc_id == 0) { */
-/* 	  printf("test 1 : %1.3e\n", nrm); */
-/* 	} */
-/*    	mr(a, b, 4, 1.e-31, 1, vol, 0, &dummy_D1); */
+     	gmres(a, b, 4, 1, 1.e-31, 1, vol, 0, &dummy_D1);
+	/* 	mr(a, b, 4, 1.e-31, 1, vol, 0, &dummy_D1); */
       }
-      /* scale a back to full spinor P */
+      /* add a up to full spinor P */
       add_block_to_global(P, a, blk);
     }
   }

@@ -14,6 +14,7 @@
 #include"tm_operators.h"
 #include"solver/poly_precon.h"
 #include"D_psi.h"
+#include"Msap.h"
 #include"dfl_projector.h"
 #include"gcr.h"
 
@@ -35,7 +36,7 @@ int gcr(spinor * const P, spinor * const Q,
 	const double eps_sq, const int rel_prec,
 	const int N, const int precon, matrix_mult f) {
 
-  int k, l, restart, i;
+  int k, l, restart, i, iter = 0;
   double norm_sq, err;
   spinor * rho, * tmp;
   complex ctmp;
@@ -56,11 +57,11 @@ int gcr(spinor * const P, spinor * const Q,
     diff(rho, Q, tmp, N);
     err = square_norm(rho, N, 1);
     if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-      printf("GCR: %d\t%g true residue\n", restart*m, err); 
+      printf("GCR: %d\t%g true residue\n", iter, err); 
       fflush(stdout);
     }
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
-      return(restart*m);
+      return(iter);
     }
     for(k = 0; k < m; k++) {
 
@@ -68,8 +69,8 @@ int gcr(spinor * const P, spinor * const Q,
 	assign(xi[k], rho, N);
       }
       else {
-     	poly_nonherm_precon(xi[k], rho, 0.3, 1.1, 20, N);
-/*    	gmres_precon(xi[k], rho, 20, 1, 1.e-5*err, 0, N, &D_psi); */
+ 	Msap(xi[k], rho, 4);
+/*       	poly_nonherm_precon(xi[k], rho, 0.3, 1.1, 20, N); */
       }
       dfl_sloppy_prec = 1;
       dfl_little_D_prec = 1.e-12;
@@ -84,8 +85,9 @@ int gcr(spinor * const P, spinor * const Q,
       c[k] = scalar_prod(chi[k], rho, N, 1);
       assign_diff_mul(rho, chi[k], c[k], N);
       err = square_norm(rho, N, 1);
+      iter ++;
       if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-	printf("GCR: %d\t%g iterated residue\n", restart*m+k, err); 
+	printf("GCR: %d\t%g iterated residue\n", iter, err); 
 	fflush(stdout);
       }
       /* Precision reached? */

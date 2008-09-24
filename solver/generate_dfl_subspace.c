@@ -13,6 +13,7 @@
 #include "ranlxs.h"
 #include "D_psi.h"
 #include "poly_precon.h"
+#include "Msap.h"
 #include "gmres_precon.h"
 #include "linalg_eo.h"
 #include "gram-schmidt.h"
@@ -97,14 +98,15 @@ int generate_dfl_subspace(const int Ns, const int N) {
     nrm = sqrt(square_norm(dfl_fields[i], N, 1));
     mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
 
-    for(j = 0; j < 2; j++) {
+    for(j = 0; j < 10; j++) {
       g_sloppy_precision = 1;
-      poly_nonherm_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], e, d, 20, N);
+      Msap(g_spinor_field[0], dfl_fields[i], 4);
+/*       poly_nonherm_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], e, d, 20, N); */
 /*       gmres_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], 20, 1, 1.e-20, 0, N, &D_psi); */
       g_sloppy_precision = 0;
-      ModifiedGS((complex*)g_spinor_field[DUM_SOLVER], vol, i, (complex*)dfl_fields[0], vpr);
-      nrm = sqrt(square_norm(g_spinor_field[DUM_SOLVER], N, 1));
-      mul_r(dfl_fields[i], 1./nrm, g_spinor_field[DUM_SOLVER], N);
+      ModifiedGS((complex*)g_spinor_field[0], vol, i, (complex*)dfl_fields[0], vpr);
+      nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
+      mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
     }
     /* test quality */
     if(g_debug_level > -1) {
