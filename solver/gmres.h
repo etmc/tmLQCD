@@ -36,9 +36,9 @@
 #include"su3.h"
 
 int gmres(spinor * const P,spinor * const Q, 
-	   const int m, const int max_restarts,
+	  const int m, const int max_restarts,
 	  const double eps, const int rel_prec, 
-	  const int N, matrix_mult f);
+	  const int N, const int parallel, matrix_mult f);
 
 
 #endif

@@ -1130,6 +1130,9 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
   rhob.re=1.;
   rhob.im=-g_mu;
 
+  /* set the boundary term to zero */
+  _spinor_null(rr[blk->volume]);
+
   for(i = 0; i < blk->volume; i++) {
     _complex_times_vector(tmpr.s0, rhoa, (*t).s0);
     _complex_times_vector(tmpr.s1, rhoa, (*t).s1);

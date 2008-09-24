@@ -62,7 +62,7 @@ static double * s;
 int gmres(spinor * const P,spinor * const Q, 
 	  const int m, const int max_restarts,
 	  const double eps_sq, const int rel_prec,
-	  const int N, matrix_mult f){
+	  const int N, const int parallel, matrix_mult f){
 
   int restart, i, j, k;
   double beta, eps, norm;
@@ -72,7 +72,7 @@ int gmres(spinor * const P,spinor * const Q,
   eps=sqrt(eps_sq);
   init_gmres(m, VOLUMEPLUSRAND);
 
-  norm = sqrt(square_norm(Q, N, 1));
+  norm = sqrt(square_norm(Q, N, parallel));
 
   assign(g_spinor_field[DUM_SOLVER+2], P, N);
   for(restart = 0; restart < max_restarts; restart++){
@@ -81,7 +81,7 @@ int gmres(spinor * const P,spinor * const Q,
     diff(g_spinor_field[DUM_SOLVER], Q, g_spinor_field[DUM_SOLVER], N);
 
     /* v_0=r_0/||r_0|| */
-    alpha[0].re=sqrt(square_norm(g_spinor_field[DUM_SOLVER], N, 1));
+    alpha[0].re=sqrt(square_norm(g_spinor_field[DUM_SOLVER], N, parallel));
 
     if(g_proc_id == g_stdio_proc && g_debug_level > 0){
       printf("%d\t%g true residue\n", restart*m, alpha[0].re*alpha[0].re); 
@@ -104,11 +104,11 @@ int gmres(spinor * const P,spinor * const Q,
       /* g_spinor_field[DUM_SOLVER+1] <- omega_j */
       assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], N);
       for(i = 0; i <= j; i++){
-	H[i][j] = scalar_prod(V[i], g_spinor_field[DUM_SOLVER+1], N, 1);
+	H[i][j] = scalar_prod(V[i], g_spinor_field[DUM_SOLVER+1], N, parallel);
 	assign_diff_mul(g_spinor_field[DUM_SOLVER+1], V[i], H[i][j], N);
       }
 
-      _complex_set(H[j+1][j], sqrt(square_norm(g_spinor_field[DUM_SOLVER+1], N, 1)), 0.);
+      _complex_set(H[j+1][j], sqrt(square_norm(g_spinor_field[DUM_SOLVER+1], N, parallel)), 0.);
       for(i = 0; i < j; i++){
 	tmp1 = H[i][j];
 	tmp2 = H[i+1][j];
@@ -199,7 +199,7 @@ static void init_gmres(const int _M, const int _V){
     M = _M;
     H = calloc(M+1, sizeof(complex *));
     V = calloc(M, sizeof(spinor *));
-#if (defined SSE || defined SSE2)
+#if (defined SSE2 || defined SSE23)
     _h = calloc((M+2)*M, sizeof(complex));
     H[0] = (complex *)(((unsigned int)(_h)+ALIGN_BASE)&~ALIGN_BASE); 
     _v = calloc(M*Vo+1, sizeof(spinor));

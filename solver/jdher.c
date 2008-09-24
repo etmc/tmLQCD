@@ -619,7 +619,7 @@ void jdher(int n, int lda, double tau, double tol,
       if(solver_flag == GMRES){
 /* 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, &Proj_A_psi, &Proj_A_psi); */
 	info = gmres((spinor*) v, (spinor*) r, 10, linitmax/10, it_tol*it_tol, 0, 
-		     n*sizeof(complex)/sizeof(spinor), &Proj_A_psi);
+		     n*sizeof(complex)/sizeof(spinor), 1, &Proj_A_psi);
       }
       if(solver_flag == CGS){
 	info = cgs_real((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, 0,
@@ -635,7 +635,7 @@ void jdher(int n, int lda, double tau, double tol,
       }
       else{
  	info = gmres((spinor*) v, (spinor*) r, 10, linitmax, it_tol*it_tol, 0,
-		     n*sizeof(complex)/sizeof(spinor), &Proj_A_psi); 
+		     n*sizeof(complex)/sizeof(spinor), 1, &Proj_A_psi); 
       }
       g_sloppy_precision = 0;
 

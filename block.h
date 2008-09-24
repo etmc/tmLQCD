@@ -35,8 +35,9 @@ int free_blocks();
 
 int split_global_field(spinor * const block_low, spinor * const block_high, spinor * const field);
 void reconstruct_global_field(spinor * const rec_field, spinor * const block_low, spinor * const block_high);
-void copy_global_to_upperlower(spinor * const blockfield, spinor * const globalfield, const int blk);
-void copy_upperlower_to_global(spinor * const globalfield, spinor * const blockfield, const int blk);
+void copy_global_to_block(spinor * const blockfield, spinor * const globalfield, const int blk);
+void copy_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk);
+void add_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk);
 
 void block_orthonormalize(block *parent);
 void block_orthonormalize_free(block *parent);
