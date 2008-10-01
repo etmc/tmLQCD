@@ -306,7 +306,7 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
     if(pivot[j] != j) {
       for(i = 0; i < Nvec; i++) {
 	tmp = M[i*ldM + j];
-	M[i*ldM + pivot[j]] = M[i*ldM + j];
+	M[i*ldM + j] = M[i*ldM + pivot[j]];
 	M[i*ldM + pivot[j]] = tmp;
       }
     }
