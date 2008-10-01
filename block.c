@@ -442,9 +442,15 @@ void block_orthonormalize_free(block *parent) {
 /* checked CU */
 void compute_little_D_diagonal() {
   int i,j, blk;
-  spinor * tmp = g_spinor_field[DUM_SOLVER];
+  spinor * tmp, * _tmp;
   complex * M;
-  
+  _tmp = calloc( block_list[0].volume + block_list[0].spinpad + 1, sizeof(spinor));
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  tmp = (spinor*)(((unsigned long int)(_tmp)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  tmp = _tmp;
+#endif  
+
   for(blk = 0; blk < 2; blk++) {
     M = block_list[blk].little_dirac_operator;
     for(i = 0; i < g_N_s; i++) {
@@ -455,6 +461,7 @@ void compute_little_D_diagonal() {
       }
     }
   }
+  free(_tmp);
   return;
 }
 
@@ -467,7 +474,7 @@ void block_contract_basis(int const idx, int const vecnum, int const dir, spinor
   for(l = 0; l < g_N_s; ++l){
     block_list[idx].little_dirac_operator[dir * g_N_s * g_N_s + vecnum * g_N_s + l] =
 /*       block_scalar_prod(psi + idx * VOLUME/2, block_list[idx].basis[l], VOLUME/2); */
-      scalar_prod(block_list[idx].basis[l], psi + idx * VOLUME/2, VOLUME/2, 0);
+      scalar_prod(block_list[idx].basis[l], psi + idx * (VOLUME/2+1), VOLUME/2, 0);
   }
 }
 
@@ -489,9 +496,9 @@ void alt_block_compute_little_D() {
   app = _app;
 #endif  
   zero = calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  psi = calloc(VOLUME, sizeof(spinor));
+  psi = calloc(VOLUME+2, sizeof(spinor));
   psi_dn = psi;
-  psi_up = psi + VOLUME/2;
+  psi_up = psi + VOLUME/2 + 1;
 
   for (j = 0; j < VOLUMEPLUSRAND; ++j){
     _spinor_null(zero[j]);
@@ -585,7 +592,7 @@ void alt_block_compute_little_D() {
     }
   }
 
-  if(g_debug_level > 4) {
+  if(g_debug_level > -1) {
     if (g_N_s <= 5 && g_cart_id == 0){
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");
@@ -912,9 +919,8 @@ void compute_little_D_offdiagonal()
       }
     }
   }
-  free(_scratch);
 
-  if(g_debug_level > 4) {
+  if(g_debug_level > -1) {
     if (g_N_s <= 5 && !g_cart_id){
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");
@@ -948,7 +954,7 @@ void compute_little_D_offdiagonal()
       }
     }
   }
-
+  free(_scratch);
   return;
 }
 
