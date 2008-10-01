@@ -29,8 +29,8 @@ spinor **psi;
 complex *inprod;
 complex *invvec;
 complex *work_block;
-int const dfl_work_size = 12;
-complex *work[12];
+int const dfl_work_size = 13;
+complex *work[13];
 
 static void alloc_dfl_projector();
 
@@ -65,7 +65,7 @@ void project(spinor * const out, spinor * const in) {
   if(dfl_sloppy_prec) prec = dfl_little_D_prec;
   else prec = 1.e-24;
 
-  if(1) {
+  if(0) {
     iter = gcr4complex(invvec, inprod, 10, 1000, prec, 1, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D);
   }
   else {
@@ -214,7 +214,7 @@ void little_project(complex * const out, complex * const in, const int  N) {
   for(i = 0; i < g_N_s; i++) {
     _complex_zero(phi[i]);
     for(j = 0; j < g_N_s; j++) {
-      _add_assign_complex(phi[i], little_A[i*N + j], psi[j]);
+      _add_assign_complex(phi[i], little_A[j*N + i], psi[j]);
     }
   }
 
@@ -563,7 +563,6 @@ int check_projectors() {
     printf("||lP_L^2 v - lP_L v|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
-
   return(0);
 }
 
@@ -598,7 +597,7 @@ void check_little_D_inversion() {
     }
   }
 
-  if(1) {
+  if(0) {
     gcr4complex(invvec, inprod, 10, 1000, 1.e-31, 0, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D);
   }
   else {
