@@ -35,7 +35,8 @@ int init_geometry_indices(const int V) {
 
   g_lexic2eo = (int*)calloc(V, sizeof(int));
   if((void*)g_lexic2eo == NULL) return(9);
-  g_lexic2eosub = (int*)calloc(V, sizeof(int));
+  /* this +2 is for sanity reasons */
+  g_lexic2eosub = (int*)calloc(V+2, sizeof(int));
   if((void*)g_lexic2eosub == NULL) return(10);
   g_eo2lexic = (int*)calloc(V, sizeof(int));
   if((void*)g_eo2lexic == NULL) return(11);
