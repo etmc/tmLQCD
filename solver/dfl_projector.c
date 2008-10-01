@@ -67,6 +67,9 @@ void project(spinor * const out, spinor * const in) {
 
   if(0) {
     iter = gcr4complex(invvec, inprod, 10, 1000, prec, 1, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D);
+    if(g_proc_id == 0 && g_debug_level > -1) {
+      printf("lgcr number of iterations %d (no P_L)\n", iter);
+    }
   }
   else {
     little_P_L(v, inprod);
@@ -77,9 +80,9 @@ void project(spinor * const out, spinor * const in) {
       invvec[i].re = w[i].re + v[i].re;
       invvec[i].im = w[i].im + v[i].im;
     }
-  }
-  if(g_proc_id == 0 && g_debug_level > -1) {
-    printf("lgcr number of iterations %d\n", iter);
+    if(g_proc_id == 0 && g_debug_level > -1) {
+      printf("lgcr number of iterations %d (using P_L)\n", iter);
+    }
   }
 
   /* sum up */

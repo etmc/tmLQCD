@@ -181,12 +181,6 @@ int generate_dfl_subspace(const int Ns, const int N) {
     little_D(work, little_dfl_fields[i]);
     for(j = 0; j < Ns; j++) {
       little_A[i * Ns + j]  = lscalar_prod(little_dfl_fields[j], work, 2*Ns, 1);
-      /*       if(i == j) {  */
-      /*        	_complex_one(little_A[i * Ns + j]); */
-      /*       } */
-      /*       else { */
-      /*        	_complex_zero(little_A[i * Ns + j]); */
-      /*       } */
       if(g_proc_id == 0 && g_debug_level > 4) {
 	printf("%1.3e %1.3ei, ", little_A[i * Ns + j].re, little_A[i * Ns + j].im);
       }
