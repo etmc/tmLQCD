@@ -140,14 +140,6 @@ int generate_dfl_subspace(const int Ns, const int N) {
 
   dfl_subspace_updated = 1;
 
-
-  for(j = 0; j < Ns; j++) {
-    for(i = 0; i < 2*9*Ns; i++) {
-      _complex_zero(little_dfl_fields[j][i]);
-      _complex_zero(work[i]);
-    }
-  }
-
   /* compute the little little basis */
   r = g_spinor_field[DUM_SOLVER];
   q = g_spinor_field[DUM_SOLVER+1];
@@ -164,7 +156,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
       }
     }
   }
-
+  
   /* orthonormalise */
   for(i = 0; i < Ns; i++) {
     for (j = 0; j < i; j++) {
@@ -174,24 +166,34 @@ int generate_dfl_subspace(const int Ns, const int N) {
     s.re = lsquare_norm(little_dfl_fields[i], 2*Ns, 1);
     lmul_r(little_dfl_fields[i], 1./s.re, little_dfl_fields[i], 2*Ns);
   }
+  if(g_debug_level > 4) {
+    for(i = 0; i < Ns; i++) {
+      for(j = 0; j < Ns; j++) {
+	s = lscalar_prod(little_dfl_fields[i], little_dfl_fields[j], 2*Ns, 1);
+	if(g_proc_id == 0) {
+	  printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, s.re, s.im);
+	}
+      }
+    }
+  }
   
   for(i = 0; i < Ns; i++) {
     little_D(work, little_dfl_fields[i]);
     for(j = 0; j < Ns; j++) {
-      little_A[j * Ns + i]  = lscalar_prod(little_dfl_fields[j], work, 2*Ns, 1);
-      /*       if(i == j) { */
-      /* 	_complex_one(little_A[i * Ns + j]); */
+      little_A[i * Ns + j]  = lscalar_prod(little_dfl_fields[j], work, 2*Ns, 1);
+      /*       if(i == j) {  */
+      /*        	_complex_one(little_A[i * Ns + j]); */
       /*       } */
       /*       else { */
-      /* 	_complex_zero(little_A[i * Ns + j]); */
+      /*        	_complex_zero(little_A[i * Ns + j]); */
       /*       } */
-      if(g_proc_id == 0 && g_debug_level > -1) {
+      if(g_proc_id == 0 && g_debug_level > 4) {
 	printf("%1.3e %1.3ei, ", little_A[i * Ns + j].re, little_A[i * Ns + j].im);
       }
     }
-    if(g_proc_id == 0 && g_debug_level > -1) printf("\n");
+    if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
   }
-  if(g_proc_id == 0 && g_debug_level > -1) printf("\n");
+  if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
   /* the precision in the inversion is not yet satisfactory! */
   LUInvert(Ns, little_A, Ns);
   /* inverse of little little D now in little_A */

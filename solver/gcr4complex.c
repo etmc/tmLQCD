@@ -40,14 +40,14 @@ int gcr4complex(complex * const P, complex * const Q,
   init_lgcr(m, lda);
 
   norm_sq = lsquare_norm(Q, N, parallel);
-  if(norm_sq < 1.e-32) {
+  if(norm_sq < 1.e-20) {
     norm_sq = 1.;
   }
   for(restart = 0; restart < max_restarts; restart++) {
     f(tmp, P);
     ldiff(rho, Q, tmp, N);
     err = lsquare_norm(rho, N, parallel);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 1){
+    if(g_proc_id == g_stdio_proc && g_debug_level > 0){
       printf("lGCR: %d\t%g true residue %1.3e\n", restart * m, err, norm_sq); 
       fflush(stdout);
     }

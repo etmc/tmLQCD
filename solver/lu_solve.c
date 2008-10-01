@@ -300,11 +300,10 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
       M[row*ldM+col] = y[row];
     }
   }
-  if(g_proc_id == 0) printf("\n");
+
   /*  Swap cols of inv(A) according to pivot */
   for(j = Nvec-1; j > 0; j-- ) {
     if(pivot[j] != j) {
-      if (g_proc_id == 0) printf("swapped\n");
       for(i = 0; i < Nvec; i++) {
 	tmp = M[i*ldM + j];
 	M[i*ldM + pivot[j]] = M[i*ldM + j];
