@@ -29,7 +29,7 @@ spinor **psi;
 complex *inprod;
 complex *invvec;
 complex *work_block;
-int const dfl_work_size = 13;
+const int dfl_work_size = 13;
 complex *work[13];
 
 static void alloc_dfl_projector();
@@ -65,7 +65,7 @@ void project(spinor * const out, spinor * const in) {
   if(dfl_sloppy_prec) prec = dfl_little_D_prec;
   else prec = 1.e-24;
 
-  if(0) {
+  if(1) {
     iter = gcr4complex(invvec, inprod, 10, 1000, prec, 1, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D);
     if(g_proc_id == 0 && g_debug_level > -1) {
       printf("lgcr number of iterations %d (no P_L)\n", iter);
@@ -134,7 +134,6 @@ void project2(spinor * const out, spinor * const in) {
   if(init_dfl_projector == 0) {
     alloc_dfl_projector();
   }
-
   /*initialize the local (block) parts of the spinor*/
   split_global_field(psi[0],psi[1], in);
 
@@ -600,7 +599,7 @@ void check_little_D_inversion() {
     }
   }
 
-  if(0) {
+  if(1) {
     gcr4complex(invvec, inprod, 10, 1000, 1.e-31, 0, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D);
   }
   else {
