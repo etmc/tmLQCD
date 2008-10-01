@@ -167,7 +167,7 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
 
   pivot = (int*)malloc(Nvec*sizeof(int));
   y = (complex*)malloc(Nvec*sizeof(complex));
-  if(g_debug_level > -1) {
+  if(g_debug_level > 4) {
     A = (complex*)malloc(Nvec*Nvec*sizeof(complex));
     for(i = 0; i < Nvec; i++) {
       for(j = 0; j < Nvec; j++) {
@@ -271,19 +271,16 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
   
   /* now compute inv(U) */
   
-  /* loop over rows */
-  for(row = Nvec-1; row >= 0; row--) {
-    /* the diagonal element first */
+  for(row = 0; row < Nvec; row++) {
     _div_complex(tmp, cone, M[row*ldM + row]);
     M[row*ldM + row] = tmp;
-
-    for(i = row+1; i < Nvec; i++) {
+    for(col = row+1; col < Nvec; col++) {
       tmp.re = 0.;
       tmp.im = 0.;
-      for(j = i; j < Nvec; j++) {
-	_diff_assign_complex(tmp, M[row*ldM + i], M[i*ldM + j]);
+      for(j = row; j < col; j ++) {
+	_diff_assign_complex(tmp, M[row*ldM + j], M[j*ldM + col]);
       }
-      _mult_assign_complex(M[row*ldM + i], M[row*ldM + row], tmp);
+      _div_complex(M[row*ldM + col], tmp, M[col*ldM + col]);
     }
   }
 
@@ -307,6 +304,7 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
   /*  Swap cols of inv(A) according to pivot */
   for(j = Nvec-1; j > 0; j-- ) {
     if(pivot[j] != j) {
+      if (g_proc_id == 0) printf("swapped\n");
       for(i = 0; i < Nvec; i++) {
 	tmp = M[i*ldM + j];
 	M[i*ldM + pivot[j]] = M[i*ldM + j];
@@ -315,13 +313,13 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
     }
   }
 
-  if(g_debug_level > -1 && g_proc_id == 0) {
+  if(g_debug_level > 4 && g_proc_id == 0) {
     printf("check little_A inversion \n");
     for(i = 0; i < Nvec; i++) {
       for(j = 0; j < Nvec; j++) {
 	_complex_zero(tmp);
 	for(k = 0; k < Nvec; k++) {
-	  _add_assign_complex(tmp, M[i*Nvec + k], A[k*ldM + j]);
+  	  _add_assign_complex(tmp, A[i*ldM + k], M[k*Nvec + j]);
 	}
 	printf("%1.3e %1.3ei, ", tmp.re, tmp.im);
       }
@@ -332,7 +330,7 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
 
   free(pivot);
   free(y);
-  if(g_debug_level > -1) free(A);
+  if(g_debug_level > 4) free(A);
   return;
 }
 
