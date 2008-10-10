@@ -439,32 +439,6 @@ void block_orthonormalize_free(block *parent) {
 }
 
 
-/* checked CU */
-void compute_little_D_diagonal() {
-  int i,j, blk;
-  spinor * tmp, * _tmp;
-  complex * M;
-  _tmp = calloc( block_list[0].volume + block_list[0].spinpad + 1, sizeof(spinor));
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  tmp = (spinor*)(((unsigned long int)(_tmp)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  tmp = _tmp;
-#endif  
-
-  for(blk = 0; blk < 2; blk++) {
-    M = block_list[blk].little_dirac_operator;
-    for(i = 0; i < g_N_s; i++) {
-      Block_D_psi(&block_list[blk], tmp, block_list[blk].basis[i]);
-      for(j = 0; j < g_N_s; j++) {
-/* 	M[i * g_N_s + j]  = block_scalar_prod(tmp, block_list[blk].basis[j], block_list[blk].volume); */
-	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
-      }
-    }
-  }
-  free(_tmp);
-  return;
-}
-
 
 /* the following 2 functions are reference functions for computing little_d */
 /* but much slower than block_compute_little_D_diagonal and                 */
@@ -633,16 +607,44 @@ void alt_block_compute_little_D() {
 }
 
 
+/* checked CU */
+void compute_little_D_diagonal() {
+  int i,j, blk;
+  spinor * tmp, * _tmp;
+  complex * M;
+  _tmp = calloc( block_list[0].volume + block_list[0].spinpad + 1, sizeof(spinor));
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  tmp = (spinor*)(((unsigned long int)(_tmp)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  tmp = _tmp;
+#endif  
+
+  for(blk = 0; blk < 2; blk++) {
+    M = block_list[blk].little_dirac_operator;
+    for(i = 0; i < g_N_s; i++) {
+      Block_D_psi(&block_list[blk], tmp, block_list[blk].basis[i]);
+      for(j = 0; j < g_N_s; j++) {
+/* 	M[i * g_N_s + j]  = block_scalar_prod(tmp, block_list[blk].basis[j], block_list[blk].volume); */
+	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
+      }
+    }
+  }
+  free(_tmp);
+  return;
+}
+
+
+
 /* what happens if this routine is called in a one dimensional parallelisation? */
 /* or even serially ?                                                           */
 /* checked CU */
-void compute_little_D_offdiagonal()
+void compute_little_D()
 {
   spinor *scratch, * temp, *_scratch;
   spinor *r, *s;
   su3 * u;
-  int x, y, z, t, ix, iy, i, j, k, pm, mu;
-  complex c;
+  int x, y, z, t, ix, iy, i, j, k, pm, mu, blk;
+  complex c, *M;
 
   /* for a full spinor field we need VOLUMEPLUSRAND                 */
   /* because we use the same geometry as for the                    */
@@ -655,6 +657,18 @@ void compute_little_D_offdiagonal()
   scratch = _scratch;
 #endif
   temp = scratch + VOLUMEPLUSRAND;
+
+  for(blk = 0; blk < 2; blk++) {
+    M = block_list[blk].little_dirac_operator;
+    for(i = 0; i < g_N_s; i++) {
+      Block_D_psi(&block_list[blk], scratch, block_list[blk].basis[i]);
+      for(j = 0; j < g_N_s; j++) {
+/* 	M[i * g_N_s + j]  = block_scalar_prod(scratch, block_list[blk].basis[j], block_list[blk].volume); */
+	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
+      }
+    }
+  }
+
 
   for (i = 0; i < g_N_s; i++){
     reconstruct_global_field(scratch, block_list[0].basis[i], block_list[1].basis[i]);
@@ -920,7 +934,7 @@ void compute_little_D_offdiagonal()
     }
   }
 
-  if(g_debug_level > -1) {
+  if(g_debug_level > 3) {
     if (g_N_s <= 5 && !g_cart_id){
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");

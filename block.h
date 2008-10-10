@@ -42,7 +42,7 @@ void add_block_to_global(spinor * const globalfield, spinor * const blockfield, 
 void block_orthonormalize(block *parent);
 void block_orthonormalize_free(block *parent);
 
-void compute_little_D_offdiagonal();
+void compute_little_D();
 void compute_little_D_diagonal();
 void alt_block_compute_little_D();
 

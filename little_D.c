@@ -339,8 +339,7 @@ void little_D(complex * v, complex *w) {
   CZERO.im = 0.;
 
   if(dfl_subspace_updated) {
-    compute_little_D_diagonal();
-    compute_little_D_offdiagonal();
+    compute_little_D();
     dfl_subspace_updated = 0;
   }
 
