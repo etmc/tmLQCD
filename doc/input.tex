@@ -1,4 +1,4 @@
-\section{Input parameter for main program}
+\subsection{Input parameter for main program}
 
 The main programs are called {\ttfamily hmc\_tm} for the HMC algorithm
 and {\ttfamily invert} for even odd preconditioned inversion. They can
@@ -150,7 +150,9 @@ supported general input paramters:
   \item {\ttfamily DebugLevel = 2}: every iteration step is
     printed. Chronological Solver gives details about which routines
     are called, the same for the monomials. polynomial gets more verbose.
-  \item {\ttfamily DebugLevel > 2}: all available output.
+  \item {\ttfamily DebugLevel > 2}: all available normal output.
+  \item {\ttfamily DebugLevel > 3}: all debug output. Involves extra
+    computations, so the code will be (significantly) slower
   \end{itemize}
   
 \item {\ttfamily BCGstabMaxIter}:\\
@@ -184,7 +186,7 @@ supported general input paramters:
   solver. Not yet working!
 
 \item {\ttfamily SourceFormat}:\\
-  deprecated, has no effect anymore.
+  to be documented
 
 \item {\ttfamily SolverFlag}:\\
   Sets the solver to be used. Possible values are among others
@@ -262,9 +264,10 @@ supported general input paramters:
   \end{itemize}
   available. However, only the first two are implemented so far.
 
-\item {\ttfamily PerfromOnlineMeasurements}:\\
+\item {\ttfamily PerformOnlineMeasurements}:\\
   Perform some useful measurements online. This includes so far the
-  $\langle PP\rangle$ and the $\langle PA\rangle$ correlators.
+  $\langle PP\rangle$, $\langle PA_0\rangle$ and $\langle PV_0\rangle$
+  correlators.
 
 \item {\ttfamily OnlineMeasurementsFreq}:\\
   The frequency in units of trajectories with which to perform online
@@ -291,7 +294,7 @@ very same directory.
 
 \end{enumerate}
 
-\subsection{Specifying the Action to Simulate}
+\subsubsection{Specifying the Action to Simulate}
 
 Following the CHROMA notation we call every part in the action a
 monomial. A monomial is added to the action in the input file in the
@@ -322,7 +325,7 @@ EndMonomial
 \item {\ttfamily NDPOLY}: polynomial representation of the (possibly
   non-degenerate) doublet\\
   \[
-  \det(Q_{nd}(\bar\epsilon, \bar\mu))
+  [\det(Q_{nd}(\bar\epsilon, \bar\mu)^2)]^{1/2}
   \]
 \end{itemize}
 
@@ -427,7 +430,7 @@ Each of them has different options:
   might change in the future.
 \end{itemize}
 
-\subsection{The Integrator}
+\subsubsection{The Integrator}
 
 The Integrator can be specified similar to the monomials:
 \begin{verbatim}
@@ -461,7 +464,7 @@ A timescale must not be empty. Currently the maximal number of
 timescales is $10$ and there cannot be more than $10$ monomials per
 timescale. But there can be more than one monomial per timescale.
 
-\subsection{Example Input File}
+\subsubsection{Example Input File}
 
 The following is a typical HMC input file:
 \begin{verbatim}
@@ -569,7 +572,7 @@ StoutNoIterations = 10
 UseSloppyPrecision = yes
 \end{verbatim}
 
-\subsection{Reread functionality}
+\subsubsection{Reread functionality}
 
 If you store a file with name {\ttfamily hmc.reread} in the working
 directory of a running HMC, the program will read in this file after

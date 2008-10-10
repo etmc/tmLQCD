@@ -1,4 +1,4 @@
-\section{Implementing Deflation}
+\subsection{Implementing Deflation}
 
 We are aiming to solve 
 \[
@@ -14,7 +14,7 @@ is actually what we have in the MPI environment) Lets
 assume we have found $N$ approximate (global) eigenvectors $\psi_l,
 l=1,...,N$ and we have restricted them to the blocks via
 \[
-\psi_l^{\vec b}(x) =
+\phi_l^{\vec b}(x) =
 \begin{cases}
   \psi_l(x) & \textrm{if}\ x \in \Lambda(\vec b)\, ,\\
   0 & \textrm{otherwise}\,.
@@ -27,7 +27,8 @@ orthonormalised them using Gram-Schmidt or whatever.
 
 The \emph{little Dirac operator} $A$ is then computed from
 \[
-A_{(\vec a,k)(\vec b, l)} = (\psi_k^{\vec a},D\psi_l^{\vec b})
+A_{(\vec a,k)(\vec b, l)} = \langle\phi_k^{\vec a}| D\phi_l^{\vec
+  b}\rangle 
 \]
 $A_{(\vec a,k)(\vec b, l)}$ is non-zero only for $\vec a = \vec b$ or
 $\vec b = \vec a \pm \vec \mu, \mu=1,...,4$, where $\vec\mu$ is a unit
@@ -36,27 +37,26 @@ interaction.
 
 All elements with $\vec a = \vec b$ can be computed by applying the
 local Dirac operator $D^{\vec a}$ (i.e. all exterior boundaries set to
-zero, because $\psi_l^{\vec a}$ has support only on block
+zero, because $\phi_l^{\vec a}$ has support only on block
 $\Lambda(\vec a)$)
 \[
-\phi_l^{\vec a} = D \psi_l^{\vec a} = D^{\vec a} \psi_l^{\vec a},\quad
+\varphi_l^{\vec a} = D \phi_l^{\vec a} = D^{\vec a} \phi_l^{\vec a},\quad
 l=1,...,N 
 \]
-and computing the scalar products $(\psi_l^{\vec a},\phi_k^{\vec a})$
+and computing the scalar products $(\phi_l^{\vec a},\varphi_k^{\vec a})$
 for all combination of $l,k$ then. For the terms with $\vec a
 \neq \vec b$ we have to be more carefully. Probably it is best done by
 looping over all directions $\pm\mu$ and computing
 \[
-(\psi_l^{\vec a},\phi_k^{\vec a+\vec\mu})_{\partial_{\mu}\Lambda(\vec a)}
+\langle \phi_l^{\vec a}|\ \varphi_k^{\vec a+\vec\mu}\rangle_{\partial_{\mu}\Lambda(\vec a)}
 \]
 where $\partial_{\mu}\Lambda(\vec a)$ denotes the inner boundary in
-$\mu$-direction of block $\Lambda(\vec a)$, where $\phi_k^{\vec
-  a+\vec\mu}$ is non-zero. (This requires a boundary exchange in
-direction $\mu$ only.) In this way we could come away with one
-application of $D$ per global field $\psi_l$.
+$\mu$-direction of block $\Lambda(\vec a)$, where $\varphi_k^{\vec
+  a+\vec\mu}$ is non-zero. 
 
 The action of the little Dirac operator on a \emph{little
-  quark field} $w$ on block $\Lambda(\vec a)$ reads:
+  quark field} $w$ (complex field of length $N=N_S\cdot N_b$) on block
+$\Lambda(\vec a)$ reads: 
 \[
 \begin{split}
   v_k^{\vec a} &= A_{(\vec a,k)(\vec b, l)} w_l^{\vec b}\\
@@ -70,10 +70,9 @@ or in matrix notation
 v^{\vec a} = A^{\vec a,\vec a} w^{\vec a} + \sum_\mu [A^{\vec a,\vec
   a+\vec\mu} w^{\vec a+\vec\mu} +  A^{\vec a,\vec a-\vec\mu} w^{\vec a-\vec\mu}]
 \]
-This involves again only next neighbour (block) interaction. What is
-the best data type for the little fields $v,w$? We need exchange
-routines for them. Every vector $w^{\vec a}$ has $N$ complex entries
-and every $A^{\vec a,\vec b}$ is $N\times N$ complex matrix. 
+This involves again only next neighbour (block) interaction. 
+Every block matrix $A^{\vec a,\vec b}$ is a $N\times N$ complex
+matrix.
 
 \subsubsection{global mode deflation}
 
@@ -81,35 +80,39 @@ We want to use the global fields $\psi_l$ to deflate the little Dirac
 operator $A$. This requires to find vectors $\chi_l$, which fulfill
 \begin{equation}
   \label{eq:llD}
-  B_{kl} = \langle\psi_k|D \psi_l\rangle = \langle\chi_k|A \chi_l\rangle
+  B_{kl} = \langle\psi_k|D \psi_l\rangle = \langle u_k|A u_l\rangle
 \end{equation}
 for $k,l = 1,...,N_s$. We recall that the fields $\phi_i$, $i=
 1,...,N_b\cdot N_s$ were obtained by restricting the fields $\psi_l$ to
 the blocks $\vec a$ followed by an orthonormalisation process. So the
-fields $\chi_l^{\vec a}$ on block $\vec a$ are computed from
+complex vectors $u_l^{\vec a}$ of length $N=N_s\cdot N_b$ on block
+$\vec a$ are computed from 
 \begin{equation}
   \label{eq:chis}
-  (\chi^{\vec a}_l)_i = \langle\phi_i|\psi_l^{\vec a}\rangle,
+  (u^{\vec a}_l)_i = \langle\phi_i|\psi_l^{\vec
+    a}\rangle,\qquad\forall \phi_i\ \textrm{has support on block}\
+  \Lambda(\vec a)
 \end{equation}
-where the notation $(v^{\vec a})_i$ means the $i$-th component of
-vector $v$ on block $\vec a$. The little little Dirac operator $B$ is
+where the notation $(u^{\vec a})_i$ means the $i$-th component of
+vector $u$ on block $\vec a$. The little little Dirac operator $B$ is
 then given by
 \[
 \begin{split}
-  B_{kl} &= \langle\chi_k|A \chi_l\rangle =
-  \langle(\chi_k)_i|\langle\phi_i|D \phi_j\rangle (\chi_l)_j\rangle\\
+  B_{kl} &= \langle u_k|A u_l\rangle =
+  \langle(u_k)_i|\langle\phi_i|D \phi_j\rangle (u_l)_j\rangle\\
   &= \langle\psi_k|\phi_i\rangle\langle\phi_i|D
   \phi_j\rangle\langle\phi_j |\psi_l\rangle = \langle\psi_k|D \psi_l\rangle \\
 \end{split}
 \]
 where summing over equal indices is understood. The little Dirac
-operators is then deflated using the oblique projectors
+operators is then deflated using the little oblique projectors $p_L$
+and $p_R$:
 \[
 \begin{split}
   p_L v &= v - \sum_{k,l}^{N_s}
-  A\chi_k(B^{-1})_{kl}\langle\chi_l|v\rangle\\
+  A u_k(B^{-1})_{kl}\langle u_l|v\rangle\\
   p_R v &= v - \sum_{k,l}^{N_s}
-  \chi_k(B^{-1})_{kl}\langle\chi_l|A v\rangle\\
+  u_k(B^{-1})_{kl}\langle u_l|A v\rangle\\
 \end{split}
 \]
 and the same algebra as before.
@@ -118,17 +121,7 @@ and the same algebra as before.
 
 \begin{itemize}
 \item implement a suitable preconditioner
-\item implement an eigenvector generator, possibly using the
-  preconditioner 
-\item implement the construction of $A$
-\item implement the action of $A$ on a little vector $w$
-\item implement an iterative solver for $w=A^{-1}v$, do we need
-  even/odd preconditioning here? Probably we should use BiCGstab.
-\item implement the oblique projectors $P_L$ and $P_R$. (equations 3.3
-  and 3.4 in L{\"u}schers paper)
-\item implement the construction of the final solution from the
-  solution of the deflated system and the little Dirac operator (eq
-  3.10) 
+\item ...
 \end{itemize}
 %%% Local Variables: 
 %%% mode: latex

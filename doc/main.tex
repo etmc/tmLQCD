@@ -22,38 +22,39 @@
 
 \input{command}
 
-\date{}
+\date{\today}
+\title{HMC package documentation}
 
 \begin{document}
-%\begin{center}
-%{\Large\bf Even-Odd preconditioning for}\\
-%\vspace*{8mm}
-%{\bf tmQCD}
+%\begin{titlepage}
+  \begin{center}
+    {\Large\bf HMC Package Documentation}\\
+    
+  \end{center}
+%\end{titlepage}
+% \thispagestyle{empty}
 
-%\end{center}
+\tableofcontents
 
-%\thispagestyle{empty}
+\section{Usage}
 
-\myinput{eo_pre}
-
-\myinput{martins-trick}
-
-\myinput{integrationschemes}
-
-\myinput{deflation}
-
-\section{Implementation}
-
-\myinput{c-code}
-\myinput{gensources}
 \myinput{configure}
 \myinput{input}
 \myinput{output}
+\myinput{gensources}
+
+\section{Implementation}
+
+\myinput{eo_pre}
+\myinput{martins-trick}
+\myinput{deflation}
+\myinput{c-code}
+\myinput{integrationschemes}
 
 \myinput{parallel}
 \myinput{operator}
-\myinput{even_odd_preconditioning}
-\myinput{further_remarks}
+
+\section{File Formats and IO}
 \myinput{prop_format.tex}
 
 \end{document}

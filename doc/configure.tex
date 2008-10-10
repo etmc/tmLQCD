@@ -1,4 +1,4 @@
-\section{Configuring the hmc package}
+\subsection{Configuring the hmc package}
 
 In order to get a simple configuration of the hmc package it is enough
 to just call {\ttfamily ./configure} in the top level directory. The
@@ -63,10 +63,10 @@ following we describe the most important of them (check {\ttfamily
   on. The number of parallel directions can be specified. 1,2,3 and 4
   dimensional parallelisation is supported.
 
-\item {\ttfamily --with-lapack}:\\
-  Build the HMC with lapack. At the moment this is not necessary sinc
-  in the Chronological solver guess a self written LU decomposition is
-  used. This option might become relevant in the future again.
+\item {\ttfamily --with-lapack="<linker flags>"}:\\
+  the code requires lapack to be linked. All linker flags neccessary
+  to do so must be specified here. Note, that {\ttfamily LIBS="..."}
+  does not work.
 
 \item {\ttfamily --with-limedir=<dir>}:\\
  Tells configure where to find the lime package, which is required for

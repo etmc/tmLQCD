@@ -1,6 +1,6 @@
-\subsection{C-Code}
+\subsection{Some Useful Functions}
 
-\noindent {\ttfamily Hopping\_Matrix(int ieo, int l, int k)}:\\
+\noindent {\ttfamily Hopping\_Matrix(int ieo, spinor * l, spinor * k)}:\\
 Files: {\ttfamily Hopping\_Matrix.c|h}.\\
 Here the Hopping Matrix is implemented.
 \[
@@ -11,7 +11,7 @@ if {\ttfamily ieo} is set to {\ttfamily EO} ({\ttfamily
   OE}). {\ttfamily EO} and {\ttfamily OE} are defined in {\ttfamily
   Hopping\_Matrix.h}.
 
-\noindent {\ttfamily mul\_one\_pm\_imu\_inv(int l, double sign)}:\\
+\noindent {\ttfamily mul\_one\_pm\_imu\_inv(spinor * l, double sign)}:\\
 Files: {\ttfamily tm\_operators.c}.\\
 This multiplies {\ttfamily l} with 
 \[
@@ -20,7 +20,7 @@ l = (M_{ee}^{\pm})^{-1} l\, ,
 where the sign of $M_{ee}^{\pm}$ is set corresponding to {\ttfamily
   sign}. This connects even with even or odd with odd sites.
 
-\noindent{\ttfamily mul\_one\_pm\_imu\_sub\_mul\_gamma5(int l, int k, int j,
+\noindent{\ttfamily mul\_one\_pm\_imu\_sub\_mul\_gamma5(spinor * l, spinor * k, int j,
 double sign)}:\\
 Files: {\ttfamily tm\_operators.c}.\\
 This performs:
@@ -29,7 +29,7 @@ l = \gamma_5 ((1 \pm i \mu \gamma_5)k - j)\, ,
 \]
 where the sign is set corresponding to {\ttfamily sign}.
 
-\noindent{\ttfamily mul\_one\_pm\_imu\_sub\_mul(int l, int k, int j,
+\noindent{\ttfamily mul\_one\_pm\_imu\_sub\_mul(spinor * l, spinor * k, int j,
 double sign)}:\\
 Files: {\ttfamily tm\_operators.c}.\\
 This performs:
@@ -38,7 +38,7 @@ l = ((1 \pm i \mu \gamma_5)k - j)\, ,
 \]
 where the sign is set corresponding to {\ttfamily sign}.
 
-\noindent{\ttfamily Qtm\_plus\_psi(int l, int k)}:\\
+\noindent{\ttfamily Qtm\_plus\_psi(spinor * l, spinor * k)}:\\
 Files: {\ttfamily tm\_operators.c|h}.\\
 This implements:
 \[
@@ -46,9 +46,9 @@ This implements:
 \]
 The Operator is applied to {\ttfamily k} and the result is stored in
 {\ttfamily l}. $\hat Q_{-}$ is implemented in {\ttfamily
-  Qtm\_minus\_psi(int l, int k)}.
+  Qtm\_minus\_psi(spinor * l, spinor * k)}.
 
-\noindent{\ttfamily Mtm\_plus\_psi(int l, int k)}:\\
+\noindent{\ttfamily Mtm\_plus\_psi(spinor * l, spinor * k)}:\\
 Files: {\ttfamily tm\_operators.c|h}.\\
 This implements:
 \[
@@ -56,9 +56,9 @@ This implements:
 \]
 The Operator is applied to {\ttfamily k} and the result is stored in
 {\ttfamily l}. $\hat \gamma_5Q_{-}$ is implemented in {\ttfamily
-  Mtm\_minus\_psi(int l, int k)}.
+  Mtm\_minus\_psi(spinor * l, spinor * k)}.
 
-\noindent{\ttfamily Qtm\_pm\_psi(int l, int k)}:\\
+\noindent{\ttfamily Qtm\_pm\_psi(spinor * l, spinor * k)}:\\
 Files: {\ttfamily tm\_operators.c|h}.\\
 This implements:
 \[
@@ -67,7 +67,7 @@ This implements:
 The Operator is applied to {\ttfamily k} and the result is stored in
 {\ttfamily l}.
 
-\noindent{\ttfamily H\_eo\_tm\_inv\_psi(int l, int k, int ieo, double
+\noindent{\ttfamily H\_eo\_tm\_inv\_psi(spinor * l, spinor * k, int ieo, double
   sign)}:\\
 Files:  {\ttfamily tm\_operators.c|h}.\\
 This implements:
@@ -77,6 +77,44 @@ l = (M_{ee|oo}^\pm)^{-1} M_{eo|oe} k\, .
 The sign is set corresponding to {\ttfamily sign}. Setting {\ttfamily
   ieo} to {\ttfamily EO} ({\ttfamily OE}) means using $M_{eo}$
 ($M_{oe}$) and $M_{ee}$ ($M_{oo}$).
+
+\subsubsection{Even/odd preconditioning vs.\ no even/odd preconditioning}
+
+There are also operators that act on ``full size'' spinors, which
+store spinors on the full VOLUME of the lattice. These operators are
+(like all operators) in \texttt{tm\_operators.c}. Specifically we have
+so far (Oct. 5, 2007) 
+\begin{center}
+\begin{tabular}{ll}
+$\hat{Q}_+$ & \texttt{Q\_plus\_psi(spinor * const l, spinor * const
+  k)}\\ 
+$\hat{Q}_-$ & \texttt{Q\_minus\_psi(spinor * const l, spinor * const
+  k)}\\ 
+$\hat{Q}_+ \hat{Q}_-$ & \texttt{Q\_pm\_psi(spinor * const l, spinor *
+  const k)} 
+\end{tabular}
+\end{center}
+All these operators are based on the operator $D_\psi$ defined in
+\texttt{D\_psi.c}
+
+The sandwiching $\delta S_b$ with even/odd preconditioning is done in
+\texttt{deriv\_Sb.c}, whereas in the non-preconditioned case this is
+handled in \texttt{deriv\_Sb\_D\_psi.c}. All this is handled within
+\texttt{derivative\_psf.c}, so the integration scheme code does not
+need to distinguish between the the two cases (even/odd
+preconditioning vs.\ no even/odd preconditioning).
+
+\subsubsection{Further remarks}
+\begin{itemize}
+\item{}the conversion of SU(3) matrices to and from the adjoint
+  representation is not bijective. If a matrix $A$ is converted by
+  \texttt{\_trace\_lambda(B,A)} the result $B$ must be divided by
+  $-2$, if the inverse routine \texttt{\_make\_su3(A,B)} is to
+  reproduce the original $A$.   
+\item{}possibly the non even/odd operator combination $\gamma_5
+  D_\psi$ should be implemented more efficiently  
+\end{itemize}
+
 
 \subsection{Chronological Inverter}
 
