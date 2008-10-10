@@ -304,23 +304,7 @@ int main(int argc,char *argv[]) {
 #endif
 
   /* Initialise random number generator */
-  /* Continue */
-  if(startoption == 3) {
-    if( (j = read_rlxd_state(gauge_input_filename, rlxd_state, rlxdsize)) == -1) {
-      if(g_proc_id == 0) {
-	printf("no rlxd_state found in %s, switching to restart...\n", gauge_input_filename);
-	fflush(stdout);
-      }
-      startoption = 2;
-    }
-    else {
-      rlxd_reset(rlxd_state);
-    }
-  }
-  /* restart, hot and cold */
-  if(startoption != 3) {
-    rlxd_init(rlxd_level, random_seed + g_proc_id*97);
-  }
+  start_ranlux(rlxd_level, random_seed^nstore);
   
   /* Set up the gauge field */
   /* continue and restart */
