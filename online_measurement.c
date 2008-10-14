@@ -78,7 +78,7 @@ void online_measurement(const int traj, const int t0) {
       _gamma0(phi, g_spinor_field[DUM_MATRIX][j]);
       respa += _spinor_prod_re(g_spinor_field[DUM_MATRIX][j], phi);
       _gamma5(phi, phi);
-      resp4 += _spinor_prod_re(g_spinor_field[DUM_MATRIX][j], phi);
+      resp4 += _spinor_prod_im(g_spinor_field[DUM_MATRIX][j], phi);
     }
 
 #if defined MPI

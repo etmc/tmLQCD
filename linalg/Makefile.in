@@ -32,7 +32,8 @@ COMPILE = ${CC} $(DEFS) $(INCLUDES) ${CFLAGS}
 
 LIBRARIES = liblinalg
 liblinalg_TARGETS = assign_add_mul_r_add_mul \
-	assign_mul_bra_add_mul_ket_add_r scalar_prod_r \
+	assign_mul_bra_add_mul_ket_add_r \
+	scalar_prod_r scalar_prod_i \
 	square_and_prod_r assign_mul_bra_add_mul_r mul_r \
 	diff_and_square_norm assign deri_linalg \
 	scalar_prod mul_diff_r mul_diff_mul assign_add_mul add \

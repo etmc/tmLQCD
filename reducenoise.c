@@ -34,6 +34,7 @@
 #include "xchange.h"
 #endif
 #include "io.h"
+#include "gauge_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
@@ -172,7 +173,7 @@ int main(int argc,char *argv[]) {
   geometry();
 
   /* define the boundary conditions for the fermion fields */
-  boundary();
+  boundary(g_kappa);
 
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
@@ -236,29 +237,24 @@ int main(int argc,char *argv[]) {
   }
   if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
   
-  if(source_format_flag == 0) {
-      sprintf(conf_filename,"%s.applied", source_input_filename);
-  }
-  else if(source_format_flag == 1) {
-      sprintf(conf_filename, "%s.applied", source_input_filename);
-  }
-
-  gamma5(g_spinor_field[0], g_spinor_field[0], VOLUME);
-  gamma5(g_spinor_field[1], g_spinor_field[1], VOLUME);
+  sprintf(conf_filename, "%s.applied", source_input_filename);
+  
+  gamma5(g_spinor_field[0], g_spinor_field[0], VOLUME/2);
+  gamma5(g_spinor_field[1], g_spinor_field[1], VOLUME/2);
   
 #ifdef MPI
   atime = MPI_Wtime();
 #endif
   /* Now apply (1+i mu gamma_5)^-1 (M-1) Nmeas times */
-  for(j=0;j<Nmeas/2; j++) {
-      M_minus_1_timesC(g_spinor_field[4], g_spinor_field[5],
-		       g_spinor_field[0], g_spinor_field[1]);
-      M_minus_1_timesC(g_spinor_field[0], g_spinor_field[1],
-		       g_spinor_field[4], g_spinor_field[5]);
+  for(j = 0; j < Nmeas/2; j++) {
+    M_minus_1_timesC(g_spinor_field[4], g_spinor_field[5],
+		     g_spinor_field[0], g_spinor_field[1]);
+    M_minus_1_timesC(g_spinor_field[0], g_spinor_field[1],
+		     g_spinor_field[4], g_spinor_field[5]);
   }
 
-  gamma5(g_spinor_field[0], g_spinor_field[0], VOLUME);
-  gamma5(g_spinor_field[1], g_spinor_field[1], VOLUME);
+  gamma5(g_spinor_field[0], g_spinor_field[0], VOLUME/2);
+  gamma5(g_spinor_field[1], g_spinor_field[1], VOLUME/2);
 
   
 #ifdef MPI
@@ -266,14 +262,14 @@ int main(int argc,char *argv[]) {
 #endif
   
   if(write_prop_format_flag == 0) {
-      /* To write in standard format */
-      /* we have to mult. by 2*kappa */
-      mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[0], VOLUME/2);  
-      mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[1], VOLUME/2);
-      write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
+    /* To write in standard format */
+    /* we have to mult. by 2*kappa */
+    mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[0], VOLUME/2);  
+    mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[1], VOLUME/2);
+    write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
   }
   else if(write_prop_format_flag == 1) {
-      write_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename);
+    write_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename);
   }
   
   if(g_proc_id == 0) {
