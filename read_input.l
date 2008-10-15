@@ -499,19 +499,25 @@ TYPE [0-9A-Z]+
   Wilson {
     mnl->gtype = 0;
     mnl->c1 = 0.;
+    mnl->use_rectangles = 0;
     g_rgi_C1 = 0.;
+    g_dbw2rand = 0;
     BEGIN(GAUGEMONOMIAL);
   }
   tlsym {
     mnl->gtype = 1;
     mnl->c1 = -0.083333333;
     g_rgi_C1 = -0.083333333;
+    mnl->use_rectangles = 1;
+    g_dbw2rand = 1;
     BEGIN(GAUGEMONOMIAL);
   }
   Iwasaki {
     mnl->gtype = 2;
     mnl->c1 = -0.331;
     g_rgi_C1 = -0.331;
+    mnl->use_rectangles = 1;
+    g_dbw2rand = 1;
     BEGIN(GAUGEMONOMIAL);
   }
   user {
@@ -522,6 +528,8 @@ TYPE [0-9A-Z]+
     mnl->gtype = 4;
     mnl->c1 = -1.4088;
     g_rgi_C1 = -1.4088;
+    g_dbw2rand = 1;
+    mnl->use_rectangles = 1;
     BEGIN(GAUGEMONOMIAL);
   }
 }
