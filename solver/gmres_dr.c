@@ -43,7 +43,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
 	  const int m, const int nr_ev, const int max_restarts,
 	  const double eps_sq, const int rel_prec,
 	  const int N, matrix_mult f){
-  return(gmres(P, Q, m, max_restarts, eps_sq, rel_prec, N, f));
+  return(gmres(P, Q, m, max_restarts, eps_sq, rel_prec, N, 1, f));
 }
 
 #else
