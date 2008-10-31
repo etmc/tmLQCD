@@ -467,7 +467,7 @@ int main(int argc,char *argv[]) {
       if(g_proc_id == 0) {
 	printf("Inversion for source %d done in %d iterations, squared residue = %e!\n", ix, iter, nrm1+nrm2);
 	printf("Inversion done in %1.2e sec. \n", etime-atime);
-        write_inverter_info(nrm1+nrm2, iter, 0, 1, conf_filename);
+        if(write_prop_format_flag != 11) write_inverter_info(nrm1+nrm2, iter, 0, 1, conf_filename);
       }
     }
     nstore+=Nsave;

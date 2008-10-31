@@ -92,7 +92,6 @@ int main(int argc,char *argv[]) {
 
   verbose = 0;
   g_use_clover_flag = 0;
-  g_nr_of_psf = 1;
 
 #ifdef MPI
   MPI_Init(&argc, &argv);
@@ -202,10 +201,10 @@ int main(int argc,char *argv[]) {
     read_lime_gauge_field(conf_filename);
   }
   else if(gauge_precision_read_flag == 32){
-      read_lime_gauge_field_singleprec(conf_filename);
+    read_lime_gauge_field_singleprec(conf_filename);
   }
   if (g_proc_id == 0){
-      printf("done!\n"); fflush(stdout);
+    printf("done!\n"); fflush(stdout);
   }
 #ifdef MPI
   xchange_gauge();
@@ -218,7 +217,7 @@ int main(int argc,char *argv[]) {
   plaquette_energy = measure_gauge_action();
 
   if(g_proc_id == 0) {
-      printf("The plaquette value is %e\n", plaquette_energy/(6.*VOLUME*g_nproc)); fflush(stdout);
+    printf("The plaquette value is %e\n", plaquette_energy/(6.*VOLUME*g_nproc)); fflush(stdout);
   }
 
   if(source_format_flag == 0) {
@@ -274,7 +273,7 @@ int main(int argc,char *argv[]) {
   
   if(g_proc_id == 0) {
 #ifdef MPI
-      printf("Done in %e sec. (MPI_Wtime)\n", etime-atime);
+    printf("Done in %e sec. (MPI_Wtime)\n", etime-atime);
 #endif
   }
 
