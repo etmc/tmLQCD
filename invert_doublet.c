@@ -292,8 +292,9 @@ int main(int argc,char *argv[]) {
 	    gamma5(g_spinor_field[7], g_spinor_field[5], VOLUME/2);
 	    gamma5(g_spinor_field[4], g_spinor_field[6], VOLUME/2);
 	    gamma5(g_spinor_field[5], g_spinor_field[7], VOLUME/2);
-	    sprintf(conf_filename,"%s.%.2d.happlied", source_input_filename, ix);
+	    sprintf(conf_filename,"%s.%.5d.happlied", source_input_filename, ix+1);
 
+	    write_propagator_type(write_prop_format_flag, conf_filename);
 	    write_double_propagator(g_spinor_field[4], g_spinor_field[5],
 				    g_spinor_field[6], g_spinor_field[7], conf_filename, 1, 32);
 
@@ -359,7 +360,10 @@ int main(int argc,char *argv[]) {
 	if(g_proc_id == 0) {printf("mubar = %e, epsbar = %e\n", g_mubar, g_epsbar);}
 	
 	if(propagator_splitted) {
-	  sprintf(conf_filename,"%s.%.2d.hinverted", source_input_filename, ix);
+	  if(!volumesource_flag) {
+	    sprintf(conf_filename,"%s.%.2d.hinverted", source_input_filename, ix);
+	  }
+	  else sprintf(conf_filename,"%s.%.5d.hinverted", source_input_filename, ix+1);
 	}
 	else {
 	  sprintf(conf_filename,"%s.hinverted", source_input_filename);
