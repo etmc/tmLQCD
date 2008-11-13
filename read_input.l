@@ -871,20 +871,17 @@ TYPE [0-9A-Z]+
 <IDX>{DIGIT}+ {
   index_start = atoi(yytext);
   index_end = index_start+1;
-  if((index_start < 0)||(index_start >11)){
-    printf("Error in line %d! index_start must be in [0,11]! Exiting...!\n", line_of_file);
+  if((index_start < 0)||(index_start >99)){
+    printf("Error in line %d! index_start must be in [0,99]! Exiting...!\n", line_of_file);
     exit(1);
   }
   if(myverbose!=0) printf("inverting for index %s\n", yytext);
 }
 <IDX>{IDXEX}  {
   sscanf(yytext, "-%d", &index_end);
-  if((index_end < 0)||(index_end >11)){
-    printf("Error in line %d! index_end must be in [0,11]! Exiting...!\n", line_of_file);
+  if((index_end < 0)||(index_end >99)){
+    printf("Error in line %d! index_end must be in [0,99]! Exiting...!\n", line_of_file);
     exit(1);
-  }
-  if((index_end < 0)||(index_end >11)){
-    printf("Warnig! index_end bigger than index_start. Will compute no propagator!\n");
   }
   if(myverbose!=0) printf("inverting up to color index %d\n", index_end);
   index_end+=1;

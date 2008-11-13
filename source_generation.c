@@ -16,6 +16,92 @@
 # define M_PI           3.14159265358979323846
 #endif
 
+/* Generates normal distributed random numbers */
+/* using the box-muller method                 */
+
+void rnormal(double * r, const int n) 
+{
+  double u[2], s, l;
+  int i;
+
+  /* basic form, but trig. functions needed */
+/*   for(i = 0; i < n; i+=2) { */
+/*     ranlxd(u, 2); */
+/*     l = sqrt(-2*log(u[0])); */
+/*     r[i] = l*cos(2*M_PI*u[1]); */
+/*     r[i+1] = l*sin(2*M_PI*u[1]); */
+/*     printf("%f\n", r[i]); */
+/*     printf("%f\n", r[i+1]); */
+/*   } */
+/*   return; */
+  /* polar form, no trig. functions, but more random numbers */
+  /* which one is faster? */
+  for(i = 0; i < n; i+=2) {
+    ranlxd(u, 2);
+    u[0] = 2.*u[0] - 1.;
+    u[1] = 2.*u[1] - 1.;
+    s = u[0]*u[0]+u[1]*u[1];
+    while(s == 0. || s > 1.) {
+      ranlxd(u, 2);
+      u[0] = 2.*u[0] - 1.;
+      u[1] = 2.*u[1] - 1.;
+      s = u[0]*u[0]+u[1]*u[1];
+    }
+    l = sqrt(-2.*log(s)/s);
+    r[i] = u[0]*l;
+    r[i+1] = u[1]*l;
+    printf("%f\n", r[i]);
+    printf("%f\n", r[i+1]);
+  }
+  return;
+}
+
+/* Generates a volume source with gaussian noise */
+/* in all real and imaginary elements            */
+
+void gaussian_volume_source(spinor * const P, spinor * const Q,
+			    const int sample, const int nstore, const int f) 
+{
+  int x, y, z, t, i, reset = 0, seed; 
+  int rlxd_state[105];
+  spinor * p;
+
+  /* save the ranlxd_state if neccessary */
+  if(ranlxd_init == 1) {
+    rlxd_get(rlxd_state);
+    reset = 1;
+  }
+
+  /* Compute the seed */
+  seed =(int) abs(1 + sample + f*10*97 + nstore*100*53 + g_cart_id*13);
+
+  rlxd_init(1, seed);
+
+  for(t = 0; t < T; t++) {
+    for(x = 0; x < LX; x++) {
+      for(y =0; y < LY; y++) {
+	for(z = 0; z < LZ; z++) {
+	  i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
+	  if((t+x+y+z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
+	      + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+	    p = (P + i);
+	  }
+	  else {
+	    p = (Q + i);
+	  }
+	  rnormal((double*)p, 24);
+	}
+      }
+    }
+  }
+
+  /* reset the ranlxd if neccessary */
+  if(reset) {
+    rlxd_reset(rlxd_state);
+  }
+  return;
+}
+
 void extended_pion_source(spinor * const P, spinor * const Q,
 			  spinor * const R, spinor * const S,
 			  const int t0,

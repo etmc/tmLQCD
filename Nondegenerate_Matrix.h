@@ -51,4 +51,20 @@ void Qtau1_P_ND(spinor * const l_strange, spinor * const l_charm,
 void Qtm_pm_Ptm_pm_psi(spinor * const l, spinor * const k);
 void Qtm_pm_min_cconst_nrm(spinor * const l, spinor * const k,const complex z);
 
+/* ************************************************
+ * for noise reduction 
+ * this implements
+ * a = B^dagger H b
+ * 
+ * with Hopping matrix H and
+ *
+ * B = (1-i\g5\tau^1\musigma-\tau^3\mudelta)/c
+ * where
+ * c = 1+\musigma^2-\mudelta^2
+ *
+ **************************************************/
+
+void red_noise_nd(spinor * const lse, spinor * const lso, spinor * const lce, spinor * const lco);
+
+
 #endif

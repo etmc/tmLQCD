@@ -30,7 +30,6 @@
 #include "linalg_eo.h"
 #include "geometry_eo.h"
 #include "start.h"
-/*#include "eigenvalues.h"*/
 #include "observables.h"
 #ifdef MPI
 #include "xchange.h"
@@ -50,11 +49,13 @@
 #include "init_moment_field.h"
 #include "init_dirac_halfspinor.h"
 #include "init_chi_spinor_field.h"
+#include "source_generation.h"
 #include "xchange_halffield.h"
 #include "stout_smear.h"
 #include "invert_eo.h"
 #include "invert_doublet_eo.h"
 #include "D_psi.h"
+#include "gamma.h"
 #include "phmc.h"
 #include "Nondegenerate_Matrix.h"
 #include "linalg/convert_eo_to_lexic.h"
@@ -69,6 +70,7 @@ void usage(){
   fprintf(stdout, "Usage:   invert [options]\n");
   fprintf(stdout, "Options: [-f input-filename]\n");
   fprintf(stdout, "         [-o output-filename]\n");
+  fprintf(stdout, "         [-V volume sources [default: point]]\n");
   fprintf(stdout, "         [-h|-? this help]\n");
   exit(0);
 }
@@ -80,7 +82,8 @@ int check_geometry();
 int main(int argc,char *argv[]) {
 
   FILE *parameterfile=NULL;
-  int c, iter, j, ix=0, is=0, ic=0, fl=0;
+  int c, iter, j, i, ix=0, is=0, ic=0, fl=0;
+  int volumesource_flag = 0;
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
@@ -108,7 +111,7 @@ int main(int argc,char *argv[]) {
   MPI_Init(&argc, &argv);
 #endif
 
-  while ((c = getopt(argc, argv, "h?f:o:")) != -1) {
+  while ((c = getopt(argc, argv, "h?f:o:V")) != -1) {
     switch (c) {
     case 'f': 
       input_filename = calloc(200, sizeof(char));
@@ -117,6 +120,9 @@ int main(int argc,char *argv[]) {
     case 'o':
       filename = calloc(200, sizeof(char));
       strcpy(filename,optarg);
+      break;
+    case 'V':
+      volumesource_flag = 1;
       break;
     case 'h':
     case '?':
@@ -226,12 +232,7 @@ int main(int argc,char *argv[]) {
     if (g_proc_id == 0){
       printf("Reading Gauge field from file %s\n", conf_filename); fflush(stdout);
     }
-    if(gauge_precision_read_flag == 64) {
-      read_lime_gauge_field(conf_filename);
-    }
-    else if(gauge_precision_read_flag == 32){
-      read_lime_gauge_field_singleprec(conf_filename);
-    }
+    read_lime_gauge_field(conf_filename);
     if (g_proc_id == 0){
       printf("done!\n"); fflush(stdout);
     }
@@ -268,13 +269,43 @@ int main(int argc,char *argv[]) {
 	zero_spinor_field(g_spinor_field[1], VOLUME/2);
 	zero_spinor_field(g_spinor_field[2], VOLUME/2);
 	zero_spinor_field(g_spinor_field[3], VOLUME/2);
-	if(read_source_flag == 0) {
-	  if(source_location == 0) {
-	    source_spinor_field(g_spinor_field[0+fl*2], g_spinor_field[1+fl*2], is, ic);
+	if(read_source_flag == 0 || volumesource_flag == 1) {
+	  if(volumesource_flag) {
+	    if(g_proc_id == 0) {
+	      printf("Preparing volume source\n");
+	    }
+	    /* volume source in both components */
+	    gaussian_volume_source(g_spinor_field[0], g_spinor_field[1],
+				   ix, nstore, 0);
+	    gaussian_volume_source(g_spinor_field[2], g_spinor_field[3],
+				   ix, nstore, 1);
+	    /* in write_... strange and charm components are interchanged */
+	    /* thats why we fuzz around here with components */
+	    gamma5(g_spinor_field[6], g_spinor_field[0], VOLUME/2);
+	    gamma5(g_spinor_field[7], g_spinor_field[1], VOLUME/2);
+	    gamma5(g_spinor_field[4], g_spinor_field[2], VOLUME/2);
+	    gamma5(g_spinor_field[5], g_spinor_field[3], VOLUME/2);
+	    for(i = 0; i < 4; i++) {
+	      red_noise_nd(g_spinor_field[4], g_spinor_field[5], g_spinor_field[6], g_spinor_field[7]);
+	    }
+	    gamma5(g_spinor_field[6], g_spinor_field[4], VOLUME/2);
+	    gamma5(g_spinor_field[7], g_spinor_field[5], VOLUME/2);
+	    gamma5(g_spinor_field[4], g_spinor_field[6], VOLUME/2);
+	    gamma5(g_spinor_field[5], g_spinor_field[7], VOLUME/2);
+	    sprintf(conf_filename,"%s.%.2d.happlied", source_input_filename, ix);
+
+	    write_double_propagator(g_spinor_field[4], g_spinor_field[5],
+				    g_spinor_field[6], g_spinor_field[7], conf_filename, 1, 32);
+
 	  }
 	  else {
-	    source_spinor_field_point_from_file(g_spinor_field[0+fl*2], g_spinor_field[1+fl*2], 
-						is, ic, source_location);
+	    if(source_location == 0) {
+	      source_spinor_field(g_spinor_field[0+fl*2], g_spinor_field[1+fl*2], is, ic);
+	    }
+	    else {
+	      source_spinor_field_point_from_file(g_spinor_field[0+fl*2], g_spinor_field[1+fl*2], 
+						  is, ic, source_location);
+	    }
 	  }
 	}
 	else {
@@ -309,14 +340,14 @@ int main(int argc,char *argv[]) {
 	      MPI_Finalize();
 #endif
 	      exit(-1);
-	    };
+	    }
 	  }
 	}
 
 	/* the final result should be stored in the convention used in */
 	/* hep-lat/0606011                                             */
-	/* this requires multiplication of source with                 */
-	/* (1-itau_2)/sqrt(2) and the result with (1+itau_2)/sqrt(2)   */
+	/* this requires multiplication of the source with             */
+	/* (1+itau_2)/sqrt(2) and the result with (1-itau_2)/sqrt(2)   */
         
 	mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], +1., VOLUME/2);
 	mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], +1., VOLUME/2);
@@ -370,7 +401,8 @@ int main(int argc,char *argv[]) {
 	nrm1 += square_norm(g_spinor_field[DUM_DERI+2], VOLUME/2, 1); 
 	nrm1 += square_norm(g_spinor_field[DUM_DERI+3], VOLUME/2, 1); 
 	nrm1 += square_norm(g_spinor_field[DUM_DERI+4], VOLUME/2, 1); 
-	  
+	g_mu = g_mu1;
+
 	if(g_proc_id == 0) {
 	  printf("Inversion for source %d done in %d iterations, residue = %e!\n", 2*ix+fl, iter, nrm1);
 	}
@@ -390,7 +422,7 @@ int main(int argc,char *argv[]) {
 	/* the final result should be stored in the convention used in */
 	/* hep-lat/0606011                                             */
 	/* this requires multiplication of source with                 */
-	/* (1-itau_2)/sqrt(2) and the result with (1+itau_2)/sqrt(2)   */
+	/* (1+itau_2)/sqrt(2) and the result with (1-itau_2)/sqrt(2)   */
 
 	mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[DUM_DERI], 
 			 g_spinor_field[DUM_DERI+2], -1., VOLUME/2);
@@ -405,7 +437,6 @@ int main(int argc,char *argv[]) {
 	  /* write the source depending on format */
 	  if(write_prop_format_flag == 1 && fl == 0) {
 	    write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
-
 	  }
 	  write_double_propagator(g_spinor_field[4], g_spinor_field[5],
 				  g_spinor_field[6], g_spinor_field[7], conf_filename, 1, prop_precision_flag);
@@ -422,6 +453,9 @@ int main(int argc,char *argv[]) {
 	  }
 	  write_double_propagator(g_spinor_field[4], g_spinor_field[5],
 				  g_spinor_field[6], g_spinor_field[7], conf_filename, 1, prop_precision_flag);
+	}
+	if(volumesource_flag) {
+	  break;
 	}
       }
       if(g_proc_id == 0) {

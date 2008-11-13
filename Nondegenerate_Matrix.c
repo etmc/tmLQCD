@@ -837,6 +837,83 @@ void Qtm_pm_Ptm_pm_psi(spinor * const l, spinor * const k){
 }
 
 
+/* ************************************************
+ * for noise reduction 
+ * this implements
+ * a = B^dagger H b
+ * 
+ * with Hopping matrix H and
+ *
+ * B = (1-i\g5\tau^1\musigma-\tau^3\mudelta)/c
+ * where
+ * c = 1+\musigma^2-\mudelta^2
+ *
+ * so it is in the convention of hep-lat/0606011
+ * not in the internal one, see documentation
+ * 
+ **************************************************/
+
+void red_noise_nd(spinor * const lse, spinor * const lso, 
+		  spinor * const lce, spinor * const lco) 
+{
+  double nrm0 = (1.-g_epsbar)/(1+g_mubar*g_mubar-g_epsbar*g_epsbar);
+  double nrm1 = (1.+g_epsbar)/(1+g_mubar*g_mubar-g_epsbar*g_epsbar);
+  complex z,w;
+  int ix, i;
+  static su3_vector phi;
+  spinor * r, * s;
+
+  /* need B^\dagger, so change sign of g_mubar */
+  z.re = 0.;
+  z.im = g_mubar/(1+g_mubar*g_mubar-g_epsbar*g_epsbar);
+  w.re = 0;
+  w.im =  -z.im; 
+
+  /* first multiply with Hopping matrix */
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], lso);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], lse);
+
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+2], lco);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+3], lce);
+  
+  /* now with A^{-1}*/
+  mul_r(lse, nrm0, g_spinor_field[DUM_MATRIX], VOLUME/2);
+  mul_r(lso, nrm0, g_spinor_field[DUM_MATRIX+1], VOLUME/2);
+
+  mul_r(lce, nrm1, g_spinor_field[DUM_MATRIX+2], VOLUME/2);
+  mul_r(lco, nrm1, g_spinor_field[DUM_MATRIX+3], VOLUME/2);
+
+  /************ loop over all lattice sites ************/
+  for(i = 0; i < 4; i++) {
+    if(i == 0) {
+      r = lse, s = g_spinor_field[DUM_MATRIX];
+    }
+    else if(i == 1) {
+      r = lso, s = g_spinor_field[DUM_MATRIX+1];
+    }
+    else if(i == 2) {
+      r = lce, s = g_spinor_field[DUM_MATRIX+2];
+    }
+    else {
+      r = lco, s = g_spinor_field[DUM_MATRIX+3];
+    }
+    for(ix = 0; ix < (VOLUME/2); ix++){
+      /* Multiply the spinorfield with (i epsbar \gamma_5)/c */
+      /* and add it to */
+      _complex_times_vector(phi, z, (*s).s0);
+      _vector_add_assign((*r).s0, phi);
+      _complex_times_vector(phi, z, (*s).s1);
+      _vector_add_assign((*r).s1, phi);
+      _complex_times_vector(phi, w, (*s).s2);
+      _vector_add_assign((*r).s2, phi);
+      _complex_times_vector(phi, w, (*s).s3);
+      _vector_add_assign((*r).s3, phi);
+      r++; s++;
+    }  
+  }
+  return;
+}
+
 static char const rcsid[] = "$Id$";
 
 
