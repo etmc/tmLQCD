@@ -196,6 +196,27 @@ the matrices is used:
 \end{split}
 \]
 
+\subsection{Pauli matrices}
+\[
+\begin{split}
+  \tau^1 =
+  \begin{pmatrix}
+    0 & 1 \\
+    1 & 0 \\
+  \end{pmatrix},\quad
+  \tau^2 = 
+  \begin{pmatrix}
+    0 & -i \\
+    i & 0 \\
+  \end{pmatrix},\quad
+  \tau^3 = 
+  \begin{pmatrix}
+    1 & 0 \\
+    0 & -1 \\
+  \end{pmatrix}
+\end{split}
+\]
+
 \subsection{Flavour Split Doublet Operator}
 
 The convention we use internally for the flavour split doublet Dirac
@@ -210,8 +231,20 @@ D_h' = D_W + m_0 + i\bar\mu\gamma_5\tau^1 + \bar\epsilon\tau^3
 \]
 The relation between the two is given by
 \[
-D_h' = (1+i\tau^2)D_h(1-i\tau^2)\, .
+D_h' = \frac{1}{\sqrt{2}}(1+i\tau^2)\ D_h\ \frac{1}{\sqrt{2}}(1-i\tau^2)\, .
 \]
+The implementation is then such that first the source $\xi$ is multiplied
+with
+\[
+\xi\to\xi=\frac{1}{\sqrt{2}}(1-i\tau^2)\xi
+\]
+on which $D_h$ is inverted and the solution $\phi$ is obtained. The
+solution is then multiplied
+\[
+\phi \to \phi=\frac{1}{\sqrt{2}}(1+i\tau^2)\phi
+\]
+to obtain the result for $D_h'$.
+
 The convention $D_h'$ is the one of \cite{Chiarappa:2006ae} with
 $\bar\mu = \mu_\sigma$ and $\bar\epsilon = \mu_\delta$. {\ttfamily
   invert\_doublet} inverts with the source first set for the upper
@@ -220,6 +253,71 @@ flavour. The other one is set to zero. Hence, the ouput is a set of
 four Dirac fermion spinor fields, which are stored in the order upper,
 lower, upper, lower flavour. The former two correspond to the source
 in the upper flavour, the latter to the source in the lower flavour.
+
+\subsection{Stochastic Volume Sources}
+
+In order to compute disconnected contributions volume (all spin,
+colour, space and time) sources are implemented. In this case only one
+inversion is required. The volume sources are generated with gaussian
+noise ($\sigma=1$) in real and imaginary part of the whole source
+spinor. Note that the normalisation with $1/\sqrt{2}$ is \emph{not}
+done and needs to be taken care off in the analysis.
+
+For the hopping parameter noise reduction method the following is
+needed: Following the notation in Ref.~\cite{Boucaud:2008xu} the
+operator can be written as
+\[
+D_h' = A + H = (1+H\cdot B)\cdot A,\qquad B=1/A\, .
+\]
+where $H^\dagger = \gamma_5 H \gamma_5$ and
+\[
+A = 1 + i\gamma_5\tau^1\tilde\mu_\sigma + \tau^3\tilde\mu_\delta
+\]
+where in the hopping parameter representation $\tilde\mu_\sigma =
+2\kappa\mu_\sigma$ and $\tilde\mu_\delta=2\kappa\mu_\delta$. $A$ can
+be inverted easily to
+\[
+A^{-1}=\frac{1-i\gamma_5 \tau^1 \tilde\mu_\sigma - \tau_3
+  \tilde\mu_\delta}{1+\tilde\mu_\sigma^2-\tilde\mu_\delta^2} 
+\]
+It follows that
+\[
+1/D_h' = B-BHB+B(HB)^2-B(HB)^3+1/D_h'(HB)^4\ .
+\]
+Then, since $\gamma_5$ commutes with $B$ one can evaluate the last
+term stochastically for any $\gamma$ and or colour matrix $X$ like 
+\[
+X (1/D_h')(HB)^4 = \lim_{R\to\infty}\left[(\gamma_5 (B^{\dagger} H )^4
+  \gamma_5 \xi)^* X \phi\right]_R
+\]
+where
+\[
+\phi = (D_h')^{-1}\xi
+\]
+and
+\[
+B(\tilde\mu_\sigma)^\dagger \equiv B(-\tilde\mu_\sigma)\ .
+\]
+The remaining terms can be computed exactly. For any source $\xi$ we 
+therefore have to generate
+\[
+\xi_r = \gamma_5 (B^{\dagger} H )^4\gamma_5 \xi.
+\]
+
+
+%(ii)--------------------------------------------
+%Use source in all flavour spin colour space time (Z2xZ2)
+%
+%Let u,v be flavour indices (c,s) equivalent
+%
+%M \phi = \xi  with flavour explicit  M_{uv) \phi_v = \xi_u
+%
+% Then required quantity is
+%    Tr (X M^{-1} )_{uv} where X is diagonal in flavour
+% and Tr is sum over colour, spin, space (at a given time)
+%    = Tr( \xi^*_v X \ph_u )
+%    = Tr ( {(g_5 (B^{\dag} H)^4 g_5 \xi)_v}^* X \phi_u)
+% for uv element
 
 
 
