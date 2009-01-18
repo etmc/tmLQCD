@@ -4,6 +4,10 @@ abs_top_srcdir = @abs_top_srcdir@
 top_builddir =  .
 abs_top_builddir = @abs_top_builddir@
 builddir = @builddir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+program_transform_name = @program_transform_name@
 subdir = .
 
 AR = ar
@@ -66,11 +70,15 @@ SUBDIRS = linalg solver
 
 .SUFFIXES:
 
-ifneq (,$(findstring lapack,${LIBS}))
 all: Makefile all-recursive dep hmc_tm invert invert_doublet
-else
-all: Makefile all-recursive dep hmc_tm invert invert_doublet
-endif
+
+#ifneq (,$(findstring lapack,${LIBS}))
+#all: Makefile all-recursive dep hmc_tm invert invert_doublet
+#else
+#all: Makefile all-recursive dep hmc_tm invert invert_doublet
+#endif
+
+
 
 .NOTPARALLEL: 
 
@@ -110,17 +118,35 @@ ${PROGRAMS}: %: %.o libhmc.a all-recursive
 
 dep: $(addsuffix .d,$(ALLOBJ))
 
+install: Makefile
+	@mkdir -p $(bindir); \
+	for p in hmc_tm invert invert_doublet; do \
+	  progname=`echo $$p | sed '$(program_transform_name)'`; \
+	  echo Installing $$p as $$progname in $(bindir)...; \
+	  cp $$p $(bindir)/$$progname; \
+	done \
+	echo done;
+
+uninstall: Makefile
+	for p in hmc_tm invert invert_doublet; do \
+	  progname=`echo $$p | sed '$(program_transform_name)'`; \
+	  echo Un-Installing $$progname in $(bindir)...; \
+	  rm $(bindir)/$$progname; \
+	done \
+	echo done;
+
 compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d
 
 clean: clean-recursive Makefile
 	rm -f hmc_tm invert *.o *.d
+
 distclean: distclean-recursive Makefile
 	rm -f hmc_tm hybrid *.o *.d *~ Makefile config.log config.status fixed_volume.h
 	rm -f config.h
 
-.PHONY: all clean compile-clean distclean dep \
-	flex_read_input ${PROGRAMS} all-recursive \
+.PHONY: all clean compile-clean distclean dep install \
+	flex_read_input $(PROGRAMS) all-recursive \
 	all-debug-recursive all-profile-recursive \
 	clean-recursive distclean-recursive \
 	compile-clean-recursive $(LINKLIBS) \
