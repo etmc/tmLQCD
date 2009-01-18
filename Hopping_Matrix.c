@@ -1073,7 +1073,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #pragma pomp inst begin(hoppingmatrix)
 #endif
 #ifdef XLC
-#pragma disjoint(*l, *k, *U, *s);
+#pragma disjoint(*l, *k, *U, *s)
 #endif
 
 #ifdef _GAUGE_COPY

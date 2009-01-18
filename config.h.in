@@ -98,9 +98,6 @@
 /* Use even/odd geometry in the gauge fields */
 #undef _NEW_GEOMETRY
 
-/* Verbose solver output */
-#undef _SOLVER_OUTPUT
-
 /* x86 64 Bit architecture */
 #undef _x86_64
 

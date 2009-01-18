@@ -10,11 +10,6 @@ AC_CANONICAL_HOST()
 AC_PREFIX_DEFAULT($HOME)
 AC_ARG_PROGRAM
 
-if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
-  echo We are on a IBM Power PC, using xlc and xlC or mpcc/mpCC
-  CC=xlc_r
-  CXX=xlC_r
-fi
 if test "$host_vendor" = "cray"; then
   ac_cv_c_bigendian=yes
 fi
@@ -26,6 +21,7 @@ AC_C_INLINE
 AC_C_BIGENDIAN
 AC_C_RESTRICT
 AC_F77_LIBRARY_LDFLAGS
+LIBS="$LIBS $FLIBS -lm"
 AC_PROG_LEX
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
@@ -35,7 +31,6 @@ AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
 # AC_PROG_FC([ifort gfortran])
 # AC_FC_FUNC(testfunc, )
 
-LIBS="$LIBS -lm"
 LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(top_builddir)/lib"
 CCLD=${CC}
 
@@ -66,6 +61,9 @@ AC_MSG_RESULT($lime_dir)
 LDFLAGS="$LDFLAGS -L${lime_dir}/lib/"
 AC_CHECK_LIB([lime], [limeReaderNextRecord],[],
               [AC_MSG_ERROR([library liblime is missing or needed function is not available])])
+
+#LIBS="$LIBS $FLIBS -lm"
+
 
 AC_MSG_CHECKING(whether we want to use MPI)
 AC_ARG_ENABLE(mpi,
@@ -156,75 +154,53 @@ if test "$with_lapack" = yes; then
   AC_DEFINE(HAVE_LAPACK,1,lapack available)
 elif test "$with_lapack" != no; then
   AC_MSG_RESULT(yes)
-  LIBS="$LIBS $withval"
+  LIBS="$withval $LIBS"
   with_lapack=yes
   AC_DEFINE(HAVE_LAPACK,1,lapack available)
 else
   AC_MSG_RESULT(no)
+  AC_MSG_ERROR([lapack is needed! Will stop here.])
 fi
 
 if test $enable_mpi = yes; then
-# In general one cannot run mpi programs directly
-# thats why we need here cross_compiling=yes
-# for non CRAY
+  dnl In general one cannot run mpi programs directly
+  dnl thats why we need here cross_compiling=yes
+  dnl for non CRAY
   if test "$host_vendor" != "cray"; then
-    cross_compiling=yes
-  fi
-  if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
-    CC=mpcc_r
-    CXX=mpCC_r
-    CCLD=mpcc_r
-  elif test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then	
-    AC_PATH_PROG(MPICC, mpicc, /usr/bin/mpicc, /opt/mpich/gnu3/bin:/opt/mpich/gnu/bin:$PATH)
-    if test "$CC" = ""; then
-      CC=$MPICC
-    fi
     cross_compiling=yes
   fi
 fi 
 
-# for the case of other configure scripts
-# AC_CONFIG_SUBDIRS( rng )
+dnl for the case of other configure scripts
+dnl AC_CONFIG_SUBDIRS( rng )
 
-# Checks for libraries.
-function="zheev"
-if test $with_lapack = yes && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
-  if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
-    LIBS="$LIBS -lessl -lblas -lf"
-  elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
-    LIBS="$LIBS -lblas -lf77blas -latlas -lxlf90 -lxlfmath"  
-  elif test "$host_cpu" = "ppc64" && test "$host_vendor" = "ibm" && test "$host_os" != "blrts" && test "$host_os" != "bprts"; then
-    LIBS="$LIBS -lblas -lf77blas -latlas -lxlf90 -lxlfmath"
-  else
-    function="zheev_"
-    LIBS="$LIBS $FLIBS"
-  fi
-
-  AC_SEARCH_LIBS([$function],[], [], [AC_MSG_ERROR([Cannot find lapack])], -lm )
+dnl Checks for lapack and defines proper name mangling scheme for 
+dnl linking with f77 code
+AC_F77_FUNC(zheev)
+if test "$zheev" = "zheev"; then
+  AC_DEFINE(NOF77_,1,Fortran has no extra _)
 fi
+AC_SEARCH_LIBS([$zheev],[], [], [AC_MSG_ERROR([Cannot find lapack])])
 
-# Checks for header files.
+dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([float.h libintl.h limits.h stdint.h stdlib.h string.h strings.h sys/time.h unistd.h])
 AC_CHECK_HEADER( getopt.h, INCLUDES=" " )
 
-# Checks for typedefs, structures, and compiler characteristics.
+dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
 AC_HEADER_TIME
 
-# Checks for library functions.
-#AC_FUNC_ERROR_AT_LINE
+dnl Checks for library functions.
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 AC_FUNC_MALLOC
-#AC_FUNC_REALLOC
 AC_TYPE_SIGNAL
-#AC_CHECK_FUNCS([gettimeofday memset modf pow sqrt])
 AC_CHECK_FUNCS([gettimeofday pow sqrt])
 
-# We now define some replace variables
+dnl We now define some replacement variables
 AC_SUBST(OPTARGS)
 AC_SUBST(SOPTARGS)
 AC_SUBST(INCLUDES)
@@ -235,14 +211,14 @@ AC_SUBST(CCLD)
 AC_SUBST(DEPFLAGS)
 AC_SUBST(DEBUG_FLAG)
 AC_SUBST(PROFILE_FLAG)
-#AC_SUBST(ARPACK)
-#AC_SUBST(PARPACK)
 AC_SUBST(XCHANGELIB)
 AC_SUBST(XCHANGEDIR)
 AC_SUBST(XLIB)
 
 INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I../lime/include/"
-# in the following we check for extra options
+DEPFLAGS="$DEPFLAGS"
+
+dnl in the following we check for extra options
 if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
   AC_MSG_CHECKING(whether we want to use P4 instructions)
@@ -252,7 +228,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   if test $enable_p4 = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(P4,1,Use Pentium4 instructions)
-#    AC_DEFINE(ALIGN_BASE,0x3f,[Align base])
+dnl    AC_DEFINE(ALIGN_BASE,0x3f,[Align base])
   else
     AC_MSG_RESULT(no)
   fi
@@ -264,7 +240,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   if test $enable_opteron = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(OPTERON,1,Use Opteron instructions)
-#    AC_DEFINE(ALIGN_BASE,0x0f,[Align base])
+dnl    AC_DEFINE(ALIGN_BASE,0x0f,[Align base])
   else
     AC_MSG_RESULT(no)
   fi
@@ -304,28 +280,13 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
   fi
 fi
 
-AC_MSG_CHECKING(whether solvers should output convergence information)
-AC_ARG_ENABLE(solveroutput,
-  [  --enable-solveroutput   enable solver convergence output [default=no]],
-  enable_solveroutput=$enableval, enable_solveroutput=no)
-if test $enable_solveroutput = yes; then
-  AC_MSG_RESULT(yes)
-  SOLVEROUT=-D_SOLVER_OUTPUT
-  AC_DEFINE(_SOLVER_OUTPUT,1,Verbose solver output)
-else
-  AC_MSG_RESULT(no)
-  SOLVEROUT=
-fi
-
 AC_MSG_CHECKING(whether we want to use gprof as profiler)
 AC_ARG_WITH(gprof,
   [  --with-gprof            use of gprof profiler [default=yes]],
   enable_gprof=$withval, enable_gprof=yes)
 if test $enable_gprof = yes; then
   AC_MSG_RESULT(yes)
-    if test "$GCC" = yes; then
-      PROFILE_FLAG="-pg -g"
-    elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
+    if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
       PROFILE_FLAG="-pg -qfullpath -g"
     else
       PROFILE_FLAG="-pg -g"
@@ -346,57 +307,26 @@ else
   AC_MSG_RESULT(no)
 fi
 
-# Now we have to set als Flags and compiler properly
-# first for PC's
+dnl Now we have to set als Flags and compiler properly
+dnl first for PC's
+XLCGREP=`$CC -V 2>&1 | grep -i xlc`
+if test "$XLCGREP" != ""; then
+  XLC="yes"
+  AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
+fi
+PGCC=`$CC -V 2>&1 | grep pgcc`
+ICC=`$CC -V 2>&1 | grep -i intel`
+
 if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
-  PGCC=`$CC -V 2>&1 | grep pgcc`
-  ICC=`$CC -V 2>&1 | grep -i intel`
-# the GNU compiler
+dnl the GNU compiler
   if test "$GCC" = yes && test "$ICC" = ""; then
     DEPFLAGS="-MM"
-    GCCVERSION1=`$CC -dumpversion | cut -d "." -f 1`
-    GCCVERSION2=`$CC -dumpversion | cut -d "." -f 2`
-# -march=pentium4
-    if test $enable_mpi = yes; then
-# Due to some standard problems in MPI header files
-# no -pedantic-errors...
-      CFLAGS="$CFLAGS -pedantic -Wall"
-    else
-      if test $GCCVERSION1 -gt 2 && test $enable_sse2 = yes; then
-        CFLAGS="$CFLAGS -Wall -pedantic"
-      else
-	CFLAGS="$CFLAGS -Wall -pedantic"
-      fi
-    fi
-    CXXFLAGS=' -Wall'
+    CFLAGS="$CFLAGS -pedantic -Wall"
     OPTARGS='-O'
     SOPTARGS='-O'
 
-    if test "$host_cpu" != "x86_64"; then
-      if test $enable_p4 = yes && ((test $GCCVERSION1 -gt 2 && test $GCCVERSION2 -gt 1) || test $GCCVERSION1 -gt 3); then
-         CFLAGS="$CFLAGS -march=pentium4"
-         SSE="sse2"
-         DEPFLAGS="$DEPFLAGS"
-      elif test $enable_p4 = yes && $GCCVERSION1 -gt 2; then
-         CFLAGS="$CFLAGS -march=pentium"
-         SSE="sse2"
-         DEPFLAGS="$DEPFLAGS -DP4"
-      elif test $enable_p4 = yes; then
-         CFLAGS="$CFLAGS -mtune=i686"
-         DEPFLAGS="$DEPFLAGS -DP4"
-      else
-         CFLAGS="$CFLAGS -mtune=i686"
-      fi
-    else
-      if test $enable_opteron = yes; then
-        CFLAGS="$CFLAGS -march=opteron"
-        SSE="sse2"
-      fi
-    fi
-
     if test $enable_sse3 = yes; then
       echo Using SSE3 and SSE2 macros!
-      SSE="sse3"
       AC_DEFINE(SSE3,1,Compile with SSE3 support)
       DEPFLAGS="$DEPFLAGS -DSSE3"
       if test "$host_cpu" = "x86_64"; then
@@ -405,7 +335,6 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     elif test $enable_sse2 = yes && test $enable_sse = no; then
       echo Using SSE2 macros!
       DEPFLAGS="$DEPFLAGS -DSSE2"
-      SSE="sse2"
       AC_DEFINE(SSE2,1,Compile with SSE2 support)
       if test "$host_cpu" = "x86_64"; then
         CFLAGS="$CFLAGS -mfpmath=387"
@@ -413,16 +342,10 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     elif test $enable_sse = yes; then
       echo Using SSE macros!
       DEPFLAGS="$DEPFLAGS -DSSE"
-      SSE="sse"
       AC_DEFINE(SSE,1,Compile with SSE support)
     fi
 
-    if test "$host_cpu" != "x86_64"; then
-      CFLAGS="$CFLAGS -malign-double -fomit-frame-pointer -ffloat-store"
-      CXXFLAGS="$CXXFLAGS -mcpu=i686 -O -malign-double -fomit-frame-pointer -ffloat-store"
-    else
-      CFLAGS="$CFLAGS -fomit-frame-pointer -ffloat-store"
-      CXXFLAGS="$CXXFLAGS -O -fomit-frame-pointer -ffloat-store"
+    if test "$host_cpu" = "x86_64"; then
       AC_DEFINE(_x86_64,1,x86 64 Bit architecture)
     fi
     CCDEP="$CC"
@@ -430,31 +353,22 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
       CCDEP="gcc"
     fi 
     DEBUG_FLAG="-g"
-# other compiler
+dnl other compilers
   else
-# check for pgcc and icc
+dnl check for pgcc 
     if test "$PGCC" != ""; then
       DEPFLAGS="-M"
       echo "We are using the Portland Group C compiler!"
-      CFLAGS="$CFLAGS -Mdalign -fastsse"
-      if test $enable_p4 = "yes"; then
-	SSE="sse2"
-      fi
       OPTARGS="-O2"
       SOPTARGS="-O2"
       DEBUG_FLAG="-g"
       PROFILE_FLAG="-p -g"
       CCDEP="$CC"
 
-# check for icc    
+dnl check for icc    
     elif test "$ICC" != ""; then
       echo "We are using the Intel C compiler!"
       DEPFLAGS="-M"
-      CFLAGS="$CFLAGS -Wall -w1"
-      if test $enable_p4 = "yes"; then
-        CFLAGS="$CFLAGS -march=pentium4"
-	SSE="sse2"
-      fi
       OPTARGS="-O3"
       SOPTARGS="-O3"
       DEBUG_FLAG="-g"
@@ -471,18 +385,11 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
 # The MareNostrum: powerpc on a linux system
 elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
-  AC_DEFINE(NOF77_,1,Fortran has not extra _)
+
   DEBUGFLAG="-g"
-  if test "$GCC" != yes; then
+  if test "$XLC" = "yes"; then
     CFLAGS="-qsrcmsg $CFLAGS"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
-    XLC=yes
-    AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
-  fi
-
-  LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
-  if test $with_lapack = yes; then
-    LIBS="-llapack -lblas -lf77blas -latlas -lxlf90 -lxlfmath $LIBS"
   fi
 
   OPTARGS="-O3"
@@ -495,7 +402,6 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
 
 #The BLue Gene/L
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "blrts"; then
-  AC_DEFINE(NOF77_,1,Fortran has not extra _)
   if test "$with_bgldram" = yes; then
     if (test -e /bgl/local/bin/blrts_gcc); then
       BLRTSGCC=/bgl/local/bin/blrts_gcc
@@ -514,14 +420,12 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
   SOPTARGS="-O3"
   AC_DEFINE(BGL,1,[Optimize for Blue Gene/L])
 
-  if test "$GCC" != yes; then
+  if test "$XLC" = "yes"; then
     CFLAGS="-qsrcmsg $CFLAGS"
     OPTARGS="$OPTARGS -qarch=440d -qtune=440"
     SOPTARGS="$SOPTARGS -qarch=440d -qtune=440"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
 # OPTARGS="-qhot" leads to wrong code
-    XLC=yes
-    AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   fi
   LIBS="-lmpich.rts -lfmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts $LIBS"
   LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
@@ -541,28 +445,25 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
 #The BLue Gene/P
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "bprts"; then
   CFLAGS="$CFLAGS"
-  AC_DEFINE(NOF77_,1,Fortran has not extra _)
   DEBUGFLAG="-g"
   OPTARGS="-O3"
   SOPTARGS="-O3"
   AC_DEFINE(BGL,1,[Optimize for Blue Gene/L])
   AC_DEFINE(BGP,1,[Optimize for Blue Gene/P])
 
-  if test "$GCC" != yes; then
+  if test "$XLC" = "yes"; then
     CFLAGS="-qsrcmsg $CFLAGS"
     OPTARGS="$OPTARGS -qarch=450d -qtune=450"
     SOPTARGS="$SOPTARGS -qarch=450d -qtune=450"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
 # OPTARGS="-qhot" leads to wrong code
-    XLC=yes
-    AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   fi
-  LIBS="-lxlf90_r -lxlomp_ser -lxl -lxlopt -lxlfmath -ldl -lrt -lpthread  $LIBS"
-  LDFLAGS="$LDFLAGS -L/bgsys/local/lib/ -L/opt/ibmcmp/xlf/bg/11.1/lib  -L/bgsys/drivers/ppcfloor/comm/"
-  if test $with_lapack = yes; then
-    LIBS="-lesslbg -llapack -lesslbg $LIBS"
-    LDFLAGS="$LDFLAGS -L/opt/ibmmath/lib/"
-  fi
+#  LIBS="-lxlf90_r -lxlomp_ser -lxl -lxlopt -lxlfmath -ldl -lrt -lpthread  $LIBS"
+#  LDFLAGS="$LDFLAGS -L/bgsys/local/lib/ -L/opt/ibmcmp/xlf/bg/11.1/lib  -L/bgsys/drivers/ppcfloor/comm/"
+#  if test $with_lapack = yes; then
+#    LIBS="-lesslbg -llapack -lesslbg $LIBS"
+#    LDFLAGS="$LDFLAGS -L/opt/ibmmath/lib/"
+#  fi
 
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
@@ -577,13 +478,7 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
 # The IBM Power PC
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   CFLAGS="$CFLAGS -q64 -qsrcmsg"
-  AC_DEFINE(NOF77_,1,Fortran has no extra _)
-  if test $with_lapack = yes; then
-    LIBS="-lessl -llapack -lblas -lf $LIBS"
-  fi
   LDFLAGS="$LDFLAGS -q64"
-  XLC=yes
-  AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
   OPTARGS="-O3 -qhot"
   SOPTARGS="-O3 -qhot"
   DEBUG_FLAG="-qfullpath -g"
@@ -596,7 +491,8 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
 # The CRAY
 elif test "$host_vendor" = "cray"; then
   echo
-  echo "Hey, we are on the cray, you should take some time for this..."
+  echo "Hey, we are on a cray, you should take some time for this..."
+  echo "get yourself a coffee or so!"
   echo
   CFLAGS="$CFLAGS -dp"
   AC_DEFINE(CRAY,1,We are on a CRAY)
@@ -673,7 +569,7 @@ if test ! -e lib; then
   mkdir lib
 fi
 
-# create the test directory here
+dnl create the test directory here
 if test ! -e test; then
   mkdir test
 fi
@@ -681,8 +577,6 @@ fi
 
 LIBS="-lhmc -lsolver -llinalg -lhmc $LIBS"
 AUTOCONF=autoconf
-
-#AC_CONFIG_SUBDIRS(lime)
 
 AC_CONFIG_FILES([Makefile
                  linalg/Makefile

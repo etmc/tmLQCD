@@ -50,8 +50,6 @@ void rnormal(double * r, const int n)
     l = sqrt(-2.*log(s)/s);
     r[i] = u[0]*l;
     r[i+1] = u[1]*l;
-    printf("%f\n", r[i]);
-    printf("%f\n", r[i+1]);
   }
   return;
 }

@@ -1,13 +1,9 @@
 Configure with
 
-../hmc/configure --with-lapack --enable-mpi --with-mpidimension=4 --enable-gaugecopy --with-limedir=../../c-lime/ --host=ppc-ibm-bprts --build=ppc64-ibm-linux --enable-largefiles CC=mpixlc CCFLAGS="-I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
+../hmc/configure --with-lapack --enable-mpi --with-mpidimension=4 --enable-gaugecopy --with-limedir=../../c-lime/ --host=ppc-ibm-bprts --build=ppc64-ibm-linux --enable-largefile --with-lapack="-L/bgsys/local/lib/ -lesslbg -llapack -lesslbg -lxlf90_r" CC="mpixlc_r" CCFLAGS="-I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include" F77="bgf77"
 
-adjusting the lime directory. Currently I am using a self compiled
-lapack library (not time critical), which is available on jugene in
-/home5/hch02/hch026/lib/liblapack.cnk.a
-and an example for a build directory can be found in
-/home5/hch02/hch026/bglhome/head/bgp4dim/
-
+may need some path adjustment, in particular where to find ESSL for
+BG. 
 
 Running should be done with 
 NrZProcs = 4
@@ -22,13 +18,3 @@ number of processors in time direction is chosen automatically.
 
 please read README.bgl as well.
 
-some notes:
-
-fortran mpi bindings: libfmpich.cnk.a
-extra underscore: libfmpich_.cnk.a
-Common BGP message layer interface in C: libdcmf.cnk.a
-Common BGP message layer interface for general collectives in C: libdcmfcoll.cnk.a
--lesslbg -lxlf90 -lxlfmath -lxl -lxlopt
-
-
-mpixlc -o phmc_tm -L/home/cmcneile/lib -L./lib -L../../install//lib/ -L/opt/ibmcmp/xlf/bg/11.1/lib  -L/bgsys/drivers/ppcfloor/comm/ -L/opt/ibmmath/lib -L/bgsys/drivers/ppcfloor/comm/lib  phmc_tm.o -lhmc -lsolver -llinalg -lesslbg -lfmpich.cnk -lxlf90_r -lmpich.cnk -lxlomp_ser -lxl -lxlopt -lrt -lpthread -llime  -lm
