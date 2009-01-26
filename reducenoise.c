@@ -47,6 +47,7 @@
 #include "init_moment_field.h"
 #include "update_backward_gauge.h"
 #include "tm_operators.h"
+#include "stout_smear.h"
 #include "invert_eo.h"
 #include "gamma.h"
 
@@ -219,6 +220,18 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     printf("The plaquette value is %e\n", plaquette_energy/(6.*VOLUME*g_nproc)); fflush(stdout);
   }
+
+  if(use_stout_flag == 1) {
+    if( stout_smear_gauge_field(stout_rho , stout_no_iter) != 0 ) exit(1) ;
+    
+    plaquette_energy = measure_gauge_action();
+    
+    if(g_proc_id == 0) {
+      printf("The plaquette value after stouting is %e\n", plaquette_energy/(6.*VOLUME*g_nproc)); 
+      fflush(stdout);
+    }
+  }
+
 
   if(source_format_flag == 0) {
     sprintf(conf_filename,"%s", source_input_filename); 
