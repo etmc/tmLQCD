@@ -144,20 +144,20 @@ int main(int argc,char *argv[]) {
 #endif
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
-    exit(0);
+    exit(-1);
   }
   j = init_geometry_indices(VOLUMEPLUSRAND);
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for geometry indices! Aborting...\n");
-    exit(0);
+    exit(-1);
   }
   j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
-    exit(0);
+    exit(-1);
   }
 
-  g_mu = g_mu1; 
+  g_mu = g_mu1;
   if(g_proc_id == 0){    
     
 /*     fscanf(fp6,"%s",filename); */
@@ -222,7 +222,12 @@ int main(int argc,char *argv[]) {
   }
 
   if(use_stout_flag == 1) {
-    if( stout_smear_gauge_field(stout_rho , stout_no_iter) != 0 ) exit(1) ;
+    if( stout_smear_gauge_field(stout_rho , stout_no_iter) != 0 ) {
+      if(g_proc_id == 0) {
+	fprintf(stderr, "not enough memory in stou_smear_gauge_field (stout_smear.c)\n");
+      }
+      exit(-1) ;
+    }
     
     plaquette_energy = measure_gauge_action();
     
@@ -247,7 +252,7 @@ int main(int argc,char *argv[]) {
     }
     read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename, -1, 1);
   }
-  if(g_proc_id == 0) {printf("mu = %e\n", g_mu);}
+  if(g_proc_id == 0) {printf("mu = %e\n", g_mu/2./g_kappa);}
   
   sprintf(conf_filename, "%s.applied", source_input_filename);
   
@@ -273,6 +278,9 @@ int main(int argc,char *argv[]) {
   etime = MPI_Wtime();
 #endif
   
+  if(g_proc_id == 0) {
+    printf("Wrinting to file %s\n", conf_filename);
+  }
   if(write_prop_format_flag == 0) {
     /* To write in standard format */
     /* we have to mult. by 2*kappa */
