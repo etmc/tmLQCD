@@ -1554,6 +1554,7 @@ int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filen
   
   if(g_cart_id == 0) {
     ofs = fopen(filename, "w");
+    printf("# Writing in cmi format (32 Bit) to file %s\n", filename);
   }
 
   for(x = 0; x < LX*g_nproc_x; x++) {

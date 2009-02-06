@@ -101,7 +101,7 @@ int main(int argc,char *argv[]) {
   DUM_DERI = 6;
   /* DUM_DERI + 2 is enough (not 7) */
   DUM_SOLVER = DUM_DERI+3;
-  DUM_MATRIX = DUM_SOLVER+7;
+  DUM_MATRIX = DUM_SOLVER+8;
   /* DUM_MATRIX + 2 is enough (not 6) */
   NO_OF_SPINORFIELDS = DUM_MATRIX+2;
 
@@ -277,10 +277,10 @@ int main(int argc,char *argv[]) {
 
       /* Compute little Dirac operators */
 /*       alt_block_compute_little_D(); */
-      if (g_debug_level > 0){
+      if (g_debug_level > -1){
         check_projectors();
       }
-      if (g_debug_level > 1){
+      if (g_debug_level > -1){
         check_little_D_inversion();
       }
 

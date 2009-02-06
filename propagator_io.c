@@ -63,11 +63,11 @@ int read_source(spinor * const s, spinor * const r, char *filename,
 		const int format, const int position) {
   int err = 0;
 
-  if(format == 1) {
+  if(format == 11) {
     /* cmi format */
     err = read_spinorfield_cm_single(s, r, filename,  -1, 1);
   }
-  else if(format == 2) {
+  else if(format == 10) {
     /* GWC format */
     err = read_spinorfield_eo_time(s, r, filename);
   }

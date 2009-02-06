@@ -927,11 +927,11 @@ TYPE [0-9A-Z]+
   if(myverbose!=0) printf("Using standard ETMC binary format for source input file\n");
 }
 <SOURCEFORMAT>cmi      {
-  source_format_flag = 1;
+  source_format_flag = 11;
   if(myverbose!=0) printf("Using CM format for source input file\n");
 }
 <SOURCEFORMAT>gwc      {
-  source_format_flag = 2;
+  source_format_flag = 10;
   if(myverbose!=0) printf("Using GWC format for source input file\n");
 }
 <SOURCETS>{DIGIT}+   {
