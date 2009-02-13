@@ -29,11 +29,11 @@ int main(int argc,char *argv[]) {
   while ((c = getopt(argc, argv, "h?i:o:e")) != -1) {
     switch (c) {
     case 'i': 
-      ifilename = calloc(200, sizeof(char));
+      ifilename = (char*)calloc(200, sizeof(char));
       strcpy(ifilename,optarg);
       break;
     case 'o':
-      ofilename = calloc(200, sizeof(char));
+      ofilename = (char*)calloc(200, sizeof(char));
       strcpy(ofilename,optarg);
       break;
     case 'e':

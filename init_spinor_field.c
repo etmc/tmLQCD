@@ -61,7 +61,7 @@ void free_spinor_field() {
 #endif
 }
 
-
+#ifndef _BENCH_ONLY
 int init_csg_field(const int V) {
   int i = 0, j = 0, sum = 0;
   spinor * s;
@@ -124,3 +124,5 @@ int init_csg_field(const int V) {
   }
   return(0);
 }
+
+#endif

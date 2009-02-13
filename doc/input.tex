@@ -119,8 +119,9 @@ supported general input paramters:
 
 \item {\ttfamily Indices=n-m}:\\
   Compute only components $n$ to $m$ of the quark propagator. $n,m$ must
-  be in $[0,11]$. If the start index is not zero the data will be
-  appended to the propagator file. The program takes not care of the
+  be in $[0,99]$. If the start index is not zero the data will be
+  appended to the propagator file, unless {\ttfamily
+    SplittedPropagator} is chosen. The program takes not care of the
   order, the data is just appended! This parameter has only
   effect for executable {\ttfamily invert}.
 
@@ -132,11 +133,11 @@ supported general input paramters:
   If set to yes every source is expected to be stored in a seperate file.
   Default is {\ttfamily yes}.
 
-\item {\ttfamily BCAngleT=x}:\\
-  This set the angle in
-  time direction to $\theta_t = 2\pi x$. Default value is
-  zero. A value of $1$ would mean antiperiodic boundary conditions in
-  time for the fermion fields.
+\item {\ttfamily ThetaT|X|Y|Z=x}:\\
+  This sets the boundary condition angle for the fermion fields in
+  $t$, $x$, $y$ or $z$ direction to $\theta_t = \pi x$. Default value is
+  zero. A value of $1$ would mean antiperiodic boundary conditions
+  for the fermion fields.
 
 \item {\ttfamily UseRelativePrecision}:\\
   Possible values {\ttfamily yes, no}. Indicates whether relative

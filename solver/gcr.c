@@ -69,8 +69,8 @@ int gcr(spinor * const P, spinor * const Q,
 	assign(xi[k], rho, N);
       }
       else {
- 	Msap(xi[k], rho, 4);
-/*       	poly_nonherm_precon(xi[k], rho, 0.3, 1.1, 20, N); */
+/*  	Msap(xi[k], rho, 4); */
+       	poly_nonherm_precon(xi[k], rho, 0.3, 1.1, 20, N);
       }
       dfl_sloppy_prec = 1;
       dfl_little_D_prec = 1.e-12;

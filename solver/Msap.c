@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 #include "global.h"
 #include "su3.h"
 #include "start.h"
@@ -29,14 +30,14 @@ void dummy_D1(spinor * const P, spinor * const Q) {
 }
 
 void Msap(spinor * const P, spinor * const Q, const int Ncy) {
-  int blk, ncy, eo, vol, eolist[2];
+  int blk, ncy=0, eo, vol, eolist[2];
   spinor * r, * a, * b;
   double nrm;
 
   r = g_spinor_field[DUM_SOLVER+5];
   a = g_spinor_field[DUM_SOLVER+6];
-/*   b = g_spinor_field[DUM_SOLVER+7]; */
-  b = &g_spinor_field[DUM_SOLVER+6][block_list[0].volume + block_list[0].spinpad];
+  b = g_spinor_field[DUM_SOLVER+7];
+/*   b = &g_spinor_field[DUM_SOLVER+6][block_list[0].volume + block_list[0].spinpad]; */
 
   if(block_list[0].evenodd == 0) {
     eolist[0] = 0;
@@ -56,8 +57,8 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
       D_psi(r, P);
       diff(r, Q, r, VOLUME);
       nrm = square_norm(r, VOLUME, 1);
-      if(g_proc_id == 0 && eo == 0) {
-	printf("Msap: %d %1.3e\n", ncy, nrm);
+      if(g_proc_id == 0 && eo == 0 && g_debug_level > 0) {
+ 	printf("Msap: %d %1.3e\n", ncy, nrm);
       }
       /* choose the even (odd) block */
       blk = eolist[eo];
@@ -67,13 +68,15 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
       /* then invert on b block local                    */
       /* maybe use a polynomial instead of gmres ?       */
       /* mr does not work, why?                          */
+      /* 	memcpy(a, b, vol*sizeof(spinor)); */
       if(eolist[eo] == 0) {
-     	gmres(a, b, 4, 1, 1.e-31, 1, vol, 0, &dummy_D0); 
-	/* 	mr(a, b, 4, 1.e-31, 1, vol, 0, &dummy_D0); */
+
+       	gmres(a, b, 4, 1, 1.e-31, 1, vol, 0, &dummy_D0);
+/*  	mr(a, b, 4, 1.e-31, 1, vol, 0, &dummy_D0); */
       }
       else {
-     	gmres(a, b, 4, 1, 1.e-31, 1, vol, 0, &dummy_D1);
-	/* 	mr(a, b, 4, 1.e-31, 1, vol, 0, &dummy_D1); */
+	gmres(a, b, 4, 1, 1.e-31, 1, vol, 0, &dummy_D1);
+/*  	mr(a, b, 4, 1.e-31, 1, vol, 0, &dummy_D1); */
       }
       /* add a up to full spinor P */
       add_block_to_global(P, a, blk);

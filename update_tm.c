@@ -277,7 +277,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     /* put the links back to SU(3) group */
     for(ix=0;ix<VOLUME;ix++) { 
       for(mu=0;mu<4;mu++) { 
-        /* this is MIST */
         v=&g_gauge_field[ix][mu];
         *v=restoresu3(*v); 
       }
@@ -287,7 +286,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     /* reject: copy gauge_tmp to g_gauge_field */
     for(ix=0;ix<VOLUME;ix++) {
       for(mu=0;mu<4;mu++){
-        /* Auch MIST */
         v=&g_gauge_field[ix][mu];
         w=&gauge_tmp[ix][mu];
         _su3_assign(*v,*w);

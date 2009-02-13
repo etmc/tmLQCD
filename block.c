@@ -43,8 +43,6 @@ static void (*boundary_D[8])(spinor * const r, spinor * const s, su3 *u) =
 
 block * block_list = NULL;
 static spinor * basis = NULL;
-static spinor * _edges = NULL;
-static spinor * edges = NULL;
 static su3 * u = NULL;
 const int spinpad = 1;
 static int block_init = 0;
@@ -54,10 +52,7 @@ int init_blocks() {
   free_blocks();
   block_init = 1;
   block_list = calloc(2, sizeof(block));
-  if((void*)(basis = (spinor*)calloc(2 * g_N_s * (VOLUME / 2 + spinpad) + 1, sizeof(spinor))) == NULL) {
-    CALLOC_ERROR_CRASH;
-  }
-  if((void*)(_edges = (spinor*)calloc(g_N_s * (1+2*VOLUME/T + 2*VOLUME/LX + 2*VOLUME/LY + 4*VOLUME/LZ), sizeof(spinor))) == NULL) {
+  if((void*)(basis = (spinor*)calloc(3 * g_N_s * (VOLUME / 2 + spinpad) + 1, sizeof(spinor))) == NULL) {
     CALLOC_ERROR_CRASH;
   }
   if((void*)(u = (su3*)calloc(1+8*VOLUME, sizeof(su3))) == NULL) {
@@ -69,11 +64,9 @@ int init_blocks() {
 
 #if ( defined SSE || defined SSE2 || defined SSE3)
   block_list[0].basis[0] = (spinor*)(((unsigned long int)(basis)+ALIGN_BASE)&~ALIGN_BASE);
-  edges = (spinor*)(((unsigned long int)(_edges)+ALIGN_BASE)&~ALIGN_BASE);
   block_list[0].u = (su3*)(((unsigned long int)(u)+ALIGN_BASE)&~ALIGN_BASE);
 #else
   block_list[0].basis[0] = basis;
-  edges = _edges;
   block_list[0].u = u;
 #endif
   block_list[1].basis[0] = block_list[0].basis[0] + g_N_s * (VOLUME / 2 + spinpad);
@@ -165,7 +158,6 @@ int free_blocks() {
     free(bipt_);
     free(bipt);
     free(u);
-    free(_edges);
     free(basis);
     free(block_list);
     block_init = 0;
