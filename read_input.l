@@ -163,7 +163,10 @@ TYPE [0-9A-Z]+
 %x FPROP
 %x CGMAX
 %x BCGMAX
-%x BOUND
+%x BOUNDT
+%x BOUNDX
+%x BOUNDY
+%x BOUNDZ
 %x SITER
 %x SPREC
 %X READSOURCE
@@ -250,8 +253,11 @@ TYPE [0-9A-Z]+
 ^Q2{SPC}*={SPC}*                           BEGIN(Q2);
 ^BCGstabMaxIter{SPC}*={SPC}*               BEGIN(BCGMAX);
 ^CGMaxIter{SPC}*={SPC}*                    BEGIN(CGMAX);
-^BoundaryCond{SPC}*={SPC}*                 BEGIN(BOUND);
-^BCAngleT{SPC}*={SPC}*                     BEGIN(BOUND);
+^BCAngleT{SPC}*={SPC}*                     BEGIN(BOUNDT);
+^ThetaT{SPC}*={SPC}*                       BEGIN(BOUNDT);
+^ThetaX{SPC}*={SPC}*                       BEGIN(BOUNDX);
+^ThetaY{SPC}*={SPC}*                       BEGIN(BOUNDY);
+^ThetaZ{SPC}*={SPC}*                       BEGIN(BOUNDZ);
 ^MaxSolverIterations{SPC}*={SPC}*          BEGIN(SITER);
 ^SolverPrecision{SPC}*={SPC}*              BEGIN(SPREC);
 ^ReadSource{SPC}*={SPC}*                   BEGIN(READSOURCE);
@@ -906,9 +912,21 @@ TYPE [0-9A-Z]+
   ITER_MAX_CG = atoi(yytext);
   if(myverbose != 0) printf("Maximal number of iterations for CG set ro %d\n", ITER_MAX_CG);
 }
-<BOUND>{FLT} {
+<BOUNDT>{FLT} {
   X0 = atof(yytext);
   if(myverbose != 0) printf("X0 for boundary cond. in time set to %e\n", X0);
+}
+<BOUNDX>{FLT} {
+  X1 = atof(yytext);
+  if(myverbose != 0) printf("X1 for boundary cond. in time set to %e\n", X0);
+}
+<BOUNDY>{FLT} {
+  X2 = atof(yytext);
+  if(myverbose != 0) printf("X2 for boundary cond. in time set to %e\n", X0);
+}
+<BOUNDZ>{FLT} {
+  X3 = atof(yytext);
+  if(myverbose != 0) printf("X3 for boundary cond. in time set to %e\n", X0);
 }
 <READSOURCE>yes     {
   read_source_flag=1;
@@ -1220,6 +1238,9 @@ int read_input(char * conf_file){
   ITER_MAX_CG = _default_ITER_MAX_CG;
   ITER_MAX_BCG = _default_ITER_MAX_BCG;
   X0 = _default_X0;
+  X1 = _default_X1;
+  X2 = _default_X2;
+  X3 = _default_X3;
   max_solver_iterations = _default_max_solver_iterations;
   solver_precision = _default_solver_precision;
   mass_number = _default_mass_number;

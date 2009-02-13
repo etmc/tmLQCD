@@ -59,7 +59,7 @@ extern "C"
   extern int integtyp,nsmall;
   extern int ITER_MAX_BCG;
   extern int ITER_MAX_CG;
-  extern double X0;
+  extern double X0, X1, X2, X3;
   extern int max_solver_iterations;
   extern double solver_precision;
   extern int mass_number;

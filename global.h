@@ -20,13 +20,6 @@
 #include "su3.h"
 #include "su3adj.h"
 
-/* Here you can define antiperiodic  */
-/* boundary conditions with e.g.     */
-/* #define X1 1.  (in x-direction)          */
-#define X1 0.
-#define X2 0.
-#define X3 0.
-
 #define N_CHEBYMAX 49
 #define NTILDE_CHEBYMAX 2000
 

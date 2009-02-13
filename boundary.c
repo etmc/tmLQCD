@@ -1,4 +1,5 @@
 /* $Id$ */
+
 /***********************************************
  * This function defines the boundary cond.
  * 
@@ -17,11 +18,10 @@
 complex ka0, ka1, ka2, ka3;
 complex phase_0, phase_1, phase_2, phase_3;
 const double PI_ = 3.14159265358979;
-double X0;
+double X0, X1, X2, X3;
 
 void boundary(const double kappa) {
   double x0,x1,x2,x3;
-  /* anti-periodic in time */
   x0 = X0 * PI_/((T)*g_nproc_t);
   x1 = X1 * PI_/((LX)*g_nproc_x);
   x2 = X2 * PI_/((LY)*g_nproc_y);

@@ -57,9 +57,6 @@
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
 #undef HAVE_FSEEKO
 
-/* Compile with SSE support */
-#undef SSE
-
 /* Compile with SSE2 support */
 #undef SSE2
 
