@@ -1,6 +1,7 @@
-/* $Id$
-   A subset of the dml library for checksums
-
+/* $Id$ */
+/*
+  A subset of the dml library for checksums
+  taken from QIO and adapted for tmLQCD by Carsten Urbach
 */
 
 #ifdef HAVE_CONFIG_H

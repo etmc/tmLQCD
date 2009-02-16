@@ -1,16 +1,31 @@
-
-/*******************************************************************************
+/***********************************************************************
  * $Id$
+ *
+ * Copyright (C) 2001 Martin Luescher
+ * original code 
+ * changed and extended 2007,2008 Carsten Urbach
+ *
+ * Blue Gene version Copyright (C) 2006 Carsten Urbach 
+ * Block Dirac operator Copyright (C) 2008 Carsten Urbach
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Action of a Dirac operator D (Wilson or twisted) on a given spinor field
  *
- * The externally accessible function is
- *
- *   void D_psi(spinor * const P, spinor * const Q)
- *     Computes D*Q and stores the result in P
- *
- * original code by
- *       Martin Luescher <luscher@mail.desy.de>
+ * various versions including a block version.
  *
  *******************************************************************************/
 

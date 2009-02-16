@@ -11,6 +11,7 @@
 \usepackage{dsfont}
 %\usepackage[bf,footnotesize]{caption}
 %\setlength{\captionmargin}{15pt}
+\usepackage{hyperref}
 \usepackage{subfigure}
 \usepackage{pifont}
 
@@ -23,20 +24,21 @@
 \input{command}
 
 \date{\today}
-\title{HMC package documentation}
+\title{tmLQCD package documentation}
 
 \begin{document}
 %\begin{titlepage}
-  \begin{center}
-    {\Large\bf HMC Package Documentation}\\
-    
-  \end{center}
-%\end{titlepage}
-% \thispagestyle{empty}
+\begin{center}
+  {\Large\bf tmLQCD Package Documentation}\\
+\end{center}
 
 \tableofcontents
 
-\section{Usage}
+\begin{flushright}
+  Copyright \textcopyright\ 2009 Carsten Urbach
+\end{flushright}
+
+\section{Installation and Usage}
 
 \myinput{configure}
 \myinput{input}
@@ -45,17 +47,21 @@
 
 \section{Implementation}
 
-\myinput{eo_pre}
-\myinput{martins-trick}
-\myinput{deflation}
-\myinput{c-code}
-\myinput{integrationschemes}
+%\myinput{eo_pre}
+%\myinput{martins-trick}
+%\myinput{deflation}
+%\myinput{c-code}
+%\myinput{integrationschemes}
 
-\myinput{parallel}
+%\myinput{parallel}
 \myinput{operator}
+\myinput{online}
 
 \section{File Formats and IO}
 \myinput{prop_format.tex}
+
+\bibliographystyle{h-physrev5}
+\bibliography{bibliography}
 
 \end{document}
 

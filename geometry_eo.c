@@ -1,5 +1,21 @@
-/* $Id$ */
-/*******************************************************************************
+/*****************************************************************************
+ * Copyright (C) 2001 Martin Hasenbusch
+ *               2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *
  * Subroutines related to the lattice geometry
@@ -9,12 +25,6 @@
  *   void geometry_eo(void)
  *     Computes the index arrays g_ipt, g_iup, g_idn, g_lexic2eo and g_eo2lexic
  *
- * original Version by
- * Author: Martin Luescher <luscher@mail.desy.ch>
- * Date: 24.10.2000
- *
- * Totally abused by M. Hasenbusch, now used for even-odd
- * decomposition of the lattice
  *
  *******************************************************************************/
 

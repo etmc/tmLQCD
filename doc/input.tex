@@ -22,7 +22,11 @@ be called with
 
 \end{itemize}
 
-There are several input parameters read from an input file. The parser is contained in the file {\ttfamily gwc/src/bin/read\_input.l}. The file {\ttfamily read\_input.l} is converted to {\ttfamily read\_input.c} using {\ttfamily flex} and defines the following function:
+There are several input parameters read from an input file. The parser
+is contained in the file {\ttfamily gwc/src/bin/read\_input.l}. The
+file {\ttfamily read\_input.l} is converted to {\ttfamily
+  read\_input.c} using {\ttfamily flex} and defines the following
+function: 
 
 Definition:\\
 \begin{ttfamily}
@@ -44,7 +48,7 @@ lines are allowed. The order of the lines is not importand as long as
 every keyword appears only once.  If it appears more than once, the
 last appearance becomes valid. The parser is case-insensitive.
 
-In the following a list of the currently (possibly incomplete)
+In the following a list of the currently
 supported general input paramters: 
 \begin{enumerate}
 \item {\ttfamily T}:\\
@@ -82,25 +86,16 @@ supported general input paramters:
   Twisted mass parameter (the physical one) for twisted mass
   action. This is for internal reasons $2\kappa\mu$.
 
-\item {\ttfamily Startcondition}:\\
-  The starting condition for a run. Possible values are {\ttfamily
-    hot, cold, restart, continue}. Default is {\ttfamily
-    cold}. Restart uses the seed to reset the random number
-  generator. In case of {\ttfamily continue} the programme uses the
-  file {\ttfamily .nstore\_counter} to get the information about from
-  where to read the gauge and the random number status. If this file
-  does not exist (its written in the course of the HMC) then the input
-  parameter described here are used instead.
+\item {\ttfamily 2KappaMuBar}:\\
+  The average mass of the heavy doublet multiplied with $2\kappa$
+
+\item {\ttfamily 2KappaEpsBar}:\\
+  The splitting mass multiplied with $2\kappa$
 
 \item {\ttfamily Measurements}:\\
   Number of measurements in units of trajectories to be done. Default
   value is $3$. For the {\ttfamily invert} programme this counts the
   number of gauge configurations to invert on.
-
-\item {ThermalisationSweeps}:\\
-  As longer as the number of trajectories is smaller than this number
-  the acceptance test will be discarded. This might help to faster
-  equilibrate the system.
 
 \item {\ttfamily Nsave}:\\
   Save evey n-th trajectory the configuration to disk.
@@ -117,6 +112,43 @@ supported general input paramters:
 \item {\ttfamily GaugeConfigInputFile}:\\
   Name of input file for the gauge field. Default is {\ttfamily conf}
 
+\item {\ttfamily ThetaT|X|Y|Z=x}:\\
+  This sets the boundary condition angle for the fermion fields in
+  $t$, $x$, $y$ or $z$ direction to $\theta_t = \pi x$. Default value is
+  zero. A value of $1$ would mean antiperiodic boundary conditions
+  for the fermion fields.
+
+\item {\ttfamily DebugLevel}:\\
+  If set to a value larger than $0$ this causes verbose output:
+  \begin{itemize}
+  \item {\ttfamily DebugLevel = 1}: forces, iteration counts and flops are printed out.
+  \item {\ttfamily DebugLevel = 2}: every iteration step is
+    printed. Chronological Solver gives details about which routines
+    are called, the same for the monomials. polynomial gets more verbose.
+  \item {\ttfamily DebugLevel > 2}: all available normal output.
+  \item {\ttfamily DebugLevel > 3}: all debug output. Involves extra
+    computations, so the code will be (significantly) slower
+  \end{itemize}
+
+\item {\ttfamily UseSloppyPrecision}:\\
+  Use a reduced precision Dirac operator in the MC part of the
+  HMC. Possible values are yes and no, the latter being the
+  default. This could be possibly used in the invert code along the 
+  lines of {\ttfamily hep-lat/0609023} in the future.
+
+\item {\ttfamily GaugeConfigRead|WritePrecision}:\\
+  Read/Write gauge configurations in single (32) or double double (64)
+  precision. Default is 64.
+
+\item {\ttfamily UseEvenOdd}:\\
+  Whether or not to use even/odd preconditioning in the invert
+  programme.
+
+\end{enumerate}
+
+The following input parameters are {\ttfamily invert} and {\ttfamily
+  invert\_doublet} specific:
+\begin{enumerate}
 \item {\ttfamily Indices=n-m}:\\
   Compute only components $n$ to $m$ of the quark propagator. $n,m$ must
   be in $[0,99]$. If the start index is not zero the data will be
@@ -133,51 +165,12 @@ supported general input paramters:
   If set to yes every source is expected to be stored in a seperate file.
   Default is {\ttfamily yes}.
 
-\item {\ttfamily ThetaT|X|Y|Z=x}:\\
-  This sets the boundary condition angle for the fermion fields in
-  $t$, $x$, $y$ or $z$ direction to $\theta_t = \pi x$. Default value is
-  zero. A value of $1$ would mean antiperiodic boundary conditions
-  for the fermion fields.
-
 \item {\ttfamily UseRelativePrecision}:\\
   Possible values {\ttfamily yes, no}. Indicates whether relative
   precision is used in the inversions for the force and the acceptance
   computation. Default is no.
 
-\item {\ttfamily DebugLevel}:\\
-  If set to a value larger than $0$ this causes verbose output:
-  \begin{itemize}
-  \item {\ttfamily DebugLevel = 1}: forces, iteration counts and flops are printed out.
-  \item {\ttfamily DebugLevel = 2}: every iteration step is
-    printed. Chronological Solver gives details about which routines
-    are called, the same for the monomials. polynomial gets more verbose.
-  \item {\ttfamily DebugLevel > 2}: all available normal output.
-  \item {\ttfamily DebugLevel > 3}: all debug output. Involves extra
-    computations, so the code will be (significantly) slower
-  \end{itemize}
   
-\item {\ttfamily BCGstabMaxIter}:\\
-  The maximal number of iterations in the BiCGstab solver.
-
-\item {\ttfamily CGMaxIter}:\\
-  The maximal number of iterations in the CG solver.
-
-\item {\ttfamily ReversibilityCheck}:\\
-  If set to {\ttfamily yes} the program will perform a check of
-  reversibility violation in the integrator by integrating back in
-  time. If not yet existing, the program creates a file {\ttfamily
-    return\_check.data} in which it stores the reversibility violation
-  as the difference in the Hamiltonian, the difference in the gauge
-  fields and the relative difference in the Hamiltonian.
-
-\item {\ttfamily ReversibilityCheckIntervall}:\\
-  Here one can specify the intervall in terms of trajectories the
-  program should check the reversibility violation.
-
-\item {\ttfamily GaugeConfigRead|WritePrecision}:\\
-  Read/Write gauge configurations in single (32) or double double (64)
-  precision. Default is 64.
-
 \item {\ttfamily GMRESMParameter}:\\
   Krylov subspace size $m$ in GMRES($m$) and such like iterative
   solvers. Not yet working!
@@ -222,12 +215,6 @@ supported general input paramters:
   consist only of the base filename. This parameter has only
   effect for executable {\ttfamily invert}.
 
-\item {\ttfamily UseSloppyPrecision}:\\
-  Use a reduced precision Dirac operator in the MC part of the
-  HMC. Possible values are yes and no, the latter being the
-  default. This could be possibly used in the invert code along the 
-  lines of {\ttfamily hep-lat/0609023} in the future.
-
 \item {\ttfamily ComputeEVs}:\\
   compute eigenvalues and vectors before inversion in invert. Values
   can be no, yes and readin. In the latter case the eigenvalues and
@@ -251,10 +238,6 @@ supported general input paramters:
 \item {\ttfamily StoutRho} and {\ttfamily StoutNoIterations}:\\
   Stout smearing parameter.
 
-\item {\ttfamily UseEvenOdd}:\\
-  Whether or not to use even/odd preconditioning in the invert
-  programme.
-
 \item {\ttfamily WritePropagatorFormat} or {\ttfamily PropagatorType}:\\
   The type in which to store the propagator. There are 
   \begin{itemize}
@@ -265,6 +248,52 @@ supported general input paramters:
   \end{itemize}
   available. However, only the first two are implemented so far.
 
+\end{enumerate}
+
+%\noindent $n_f=2+1+1$ related input parameters, where the heavy part of the actions
+%reads
+%\begin{equation}
+%  \label{eq:haction}
+%  S_{F,h} = \bar\psi_h\left[ \delta_{x,y}(1+i\gamma_5\bar\mu\tau^3 +
+%    \bar\epsilon\tau^1)
+%  - \kappa\sum_\mu \delta_{x,y+\mu}(1+\gamma_\mu)U_{y,\mu}\right] \psi_h
+%\end{equation}
+
+The following input parameters are {\ttfamily hmc\_tm} specific:
+\begin{enumerate}
+\item {ThermalisationSweeps}:\\
+  As longer as the number of trajectories is smaller than this number
+  the acceptance test will be discarded. This might help to faster
+  equilibrate the system.
+
+\item {\ttfamily Startcondition}:\\
+  The starting condition for a run. Possible values are {\ttfamily
+    hot, cold, restart, continue}. Default is {\ttfamily
+    cold}. Restart uses the seed to reset the random number
+  generator. In case of {\ttfamily continue} the programme uses the
+  file {\ttfamily .nstore\_counter} to get the information about from
+  where to read the gauge and the random number status. If this file
+  does not exist (its written in the course of the HMC) then the input
+  parameter described here are used instead.
+
+\item {\ttfamily BCGstabMaxIter}:\\
+  The maximal number of iterations in the BiCGstab solver.
+
+\item {\ttfamily CGMaxIter}:\\
+  The maximal number of iterations in the CG solver.
+
+\item {\ttfamily ReversibilityCheck}:\\
+  If set to {\ttfamily yes} the program will perform a check of
+  reversibility violation in the integrator by integrating back in
+  time. If not yet existing, the program creates a file {\ttfamily
+    return\_check.data} in which it stores the reversibility violation
+  as the difference in the Hamiltonian, the difference in the gauge
+  fields and the relative difference in the Hamiltonian.
+
+\item {\ttfamily ReversibilityCheckIntervall}:\\
+  Here one can specify the intervall in terms of trajectories the
+  program should check the reversibility violation.
+
 \item {\ttfamily PerformOnlineMeasurements}:\\
   Perform some useful measurements online. This includes so far the
   $\langle PP\rangle$, $\langle PA_0\rangle$ and $\langle PV_0\rangle$
@@ -273,30 +302,8 @@ supported general input paramters:
 \item {\ttfamily OnlineMeasurementsFreq}:\\
   The frequency in units of trajectories with which to perform online
   measurements. 
-
+ 
 \end{enumerate}
-
-\noindent $n_f=2+1+1$ related input parameters, where the heavy part of the actions
-reads
-\begin{equation}
-  \label{eq:haction}
-  S_{F,h} = \bar\psi_h\left[ \delta_{x,y}(1+i\gamma_5\bar\mu\tau^3 +
-    \bar\epsilon\tau^1)
-  - \kappa\sum_\mu \delta_{x,y+\mu}(1+\gamma_\mu)U_{y,\mu}\right] \psi_h
-\end{equation}
-For more details see also the file {\ttfamily Status-Phmc.pdf} in the
-very same directory.
-\begin{enumerate}
-\item {\ttfamily 2KappaMuBar}:\\
-  The average mass of the heavy doublet multiplied with $2\kappa$
-
-\item {\ttfamily 2KappaEpsBar}:\\
-  The splitting mass multiplied with $2\kappa$
-
-\end{enumerate}
-
-\subsubsection{Specifying the Action to Simulate}
-
 Following the CHROMA notation we call every part in the action a
 monomial. A monomial is added to the action in the input file in the
 following way:

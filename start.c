@@ -1,47 +1,65 @@
-/* $Id$ */
-
-/*******************************************************************************
-*
-* File start.c
-*
-* Collection of useful programs that mainly serve to initialize the fields
-*
-* The externally accessible functions are
-*
-*   su3_vector random_su3_vector(void)
-*     Returns a uniformly distributed random SU(3) vector with norm 1
-*
-*   spinor random_spinor(void)
-*     Returns a random spinor with norm 1
-*
-* M.Hasenbusch:
-*   void random_spinor_field(int k)
-*     Initializes the spinor field psi[k] to a Gaussian random field
-*
-* M.Hasenbusch:
-*   void zero_spinor_field(spinor * const k, const int V)
-*     Initializes the spinor field psi[k] to  zero
-*
-*   su3 random_su3(void)
-*     Returns a uniformly distributed random SU(3) matrix
-*
-*   void unit_g_gauge_field(void)
-*     Sets the gauge field variables to unity
-*
-*   void random_gauge_field(void)
-*     Initializes the gauge field to a random configuration
-*
-* Version: 1.0
-* Author: Martin Luescher <luscher@mail.desy.de>
-* Date: 24.10.2000
-*
-* Added the function
-*   void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int is, int ic, int source_indx)
-*   which uses the new input parameter SourceLocation in the input parameter files
-*   to place the source at the desired point
-*
-*   Author: Remi Baron <baron@th.u-psud.fr> April 2007
-*******************************************************************************/
+/***********************************************************************
+ * $Id$ 
+ *
+ * Copyright (C) 2000 Martin Luescher
+ *               2002 Martin Hasenbusch, Ines Wetzorke
+ *               2003-2008 Carsten Urbach, Remi Baron
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * File start.c
+ *
+ * Collection of useful programs that mainly serve to initialize the fields
+ *
+ * The externally accessible functions are
+ *
+ *   su3_vector random_su3_vector(void)
+ *     Returns a uniformly distributed random SU(3) vector with norm 1
+ *
+ *   spinor random_spinor(void)
+ *     Returns a random spinor with norm 1
+ *
+ * M.Hasenbusch:
+ *   void random_spinor_field(int k)
+ *     Initializes the spinor field psi[k] to a Gaussian random field
+ *
+ * M.Hasenbusch:
+ *   void zero_spinor_field(spinor * const k, const int V)
+ *     Initializes the spinor field psi[k] to  zero
+ *
+ *   su3 random_su3(void)
+ *     Returns a uniformly distributed random SU(3) matrix
+ *
+ *   void unit_g_gauge_field(void)
+ *     Sets the gauge field variables to unity
+ *
+ *   void random_gauge_field(void)
+ *     Initializes the gauge field to a random configuration
+ *
+ * Version: 1.0
+ * Author: Martin Luescher <luscher@mail.desy.de>
+ * Date: 24.10.2000
+ *
+ * Added the function
+ *   void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int is, int ic, int source_indx)
+ *   which uses the new input parameter SourceLocation in the input parameter files
+ *   to place the source at the desired point
+ *
+ *   Author: Remi Baron <baron@th.u-psud.fr> April 2007
+ *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -921,10 +939,6 @@ void start_ranlux(int level,int seed)
 
    max_seed=2147483647/g_nproc;
    loc_seed=seed+g_proc_id*max_seed;
-
-/*    error_root((level<0)||(level>1)||(seed<1)||(seed>max_seed),1, */
-/*               "start_ranlux [start.c]", */
-/*               "level should be 0 or 1, and 0<(seed*no_of_processes)<2^31"); */
 
    rlxs_init(level-1,loc_seed);
    rlxd_init(level,loc_seed);

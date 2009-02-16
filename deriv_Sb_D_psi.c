@@ -1,24 +1,23 @@
-/* $Id$ */
-
-/**************************************************************
- * deriv_Sb: function to compute the derivative 
- * of the phi^{\dag} Q psi with respect
- * to the generators of the gauge group.
- * without the clover part.
+/***********************************************************************
+ * $Id$
+ * 
+ * Copyright (C) 2007,2008 Jan Volkholz, Carsten Urbach
  *
- * Version: 0.0
- * Author: Martin Hasenbusch <Martin.Hasenbusch@desy.de>
- * Date: Fri Oct 26 15:06:27 MEST 2001
+ * This file is part of tmLQCD.
  *
- **************************************************************/
-/*
-  both l and k are input
-  for ieo = 0 
-  l resides on even lattice points and k on odd lattice points
-  for ieo = 1 
-  l resides on odd lattice points and k on even lattice points
-  the output is a su3adj field that is written to df0[][]
-*/
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>

@@ -1,38 +1,54 @@
-
-/*******************************************************************************
-*
-* Random number generator "ranlxs"
-*
-* See the notes 
-*
-*   "User's guide for ranlxs and ranlxd [C programs]" (December 1997)
-*
-*   "Double precision implementation of the random number 
-*    generator ranlux" (December 1997)
-*
-* for a detailed descrg_iption
-*
-* The externally accessible functions are 
-*
-*   void ranlxs(float r[],int n)
-*     Computes the next n single-precision random numbers and 
-*     assigns them to the elements r[0],...,r[n-1] of the array r[]
-* 
-*   void rlxs_init(int level,int seed)
-*     Initialization of the generator
-*
-*   void rlxs_get(int state[])
-*     Extracts the current state of the generator and stores the 
-*     information in the array state[25]
-*
-*   void rlxs_reset(int state[])
-*     Resets the generator to the state defined by the array state[25]
-*
-* Version: 2.2
-* Author: Martin Luescher <luscher@mail.desy.de>
-* Date: 15.07.1999
-*
-*******************************************************************************/
+/***********************************************************************
+ * Copyright (C) 1999 Martin Luescher
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Random number generator "ranlxs"
+ *
+ * See the notes 
+ *
+ *   "User's guide for ranlxs and ranlxd [C programs]" (December 1997)
+ *
+ *   "Double precision implementation of the random number 
+ *    generator ranlux" (December 1997)
+ *
+ * for a detailed descrg_iption
+ *
+ * The externally accessible functions are 
+ *
+ *   void ranlxs(float r[],int n)
+ *     Computes the next n single-precision random numbers and 
+ *     assigns them to the elements r[0],...,r[n-1] of the array r[]
+ * 
+ *   void rlxs_init(int level,int seed)
+ *     Initialization of the generator
+ *
+ *   void rlxs_get(int state[])
+ *     Extracts the current state of the generator and stores the 
+ *     information in the array state[25]
+ *
+ *   void rlxs_reset(int state[])
+ *     Resets the generator to the state defined by the array state[25]
+ *
+ * Version: 2.2
+ * Author: Martin Luescher <luscher@mail.desy.de>
+ * Date: 15.07.1999
+ *
+ * minor modifications for tmLQCD by C. Urbach
+ *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>

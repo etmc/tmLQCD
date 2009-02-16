@@ -1,4 +1,23 @@
-/* $Id$ */
+/***********************************************************************
+ * $Id$ 
+ *
+ * Copyright (C) 2006,2007,2008 Thomas Chiarappa, Carsten Urbach
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -243,12 +262,8 @@ double cheb_eval(int M, double *c, double s){
  *     Computation of (QdaggerQ)^1/4
  *     by using the chebyshev approximation for the function ()^1/4  
  *
- * Author: Mauro Papinutto <papinutt@mail.desy.de> Apr 2003
- *         adapted by Ines Wetzorke <Ines.Wetzorke@desy.de> May 2003 
- *         adapted by Karl Jansen <Karl.Jansen@desy.de> June 2005 
- *         adapted Thomas Chiarappa <Thomas.Chiarappa@mib.infn.it> Mai 2006
  *
-*****************************************************************************/
+ *****************************************************************************/
 
 
 void degree_of_polynomial_nd(const int degree_of_p){

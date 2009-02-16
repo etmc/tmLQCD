@@ -1,39 +1,56 @@
-/*******************************************************************************
-* $Id$
-*
-* Random number generator "ranlxd". See the notes 
-*
-*   "User's guide for ranlxs and ranlxd v3.0" (May 2001)
-*
-*   "Algorithms used in ranlux v3.0" (May 2001)
-*
-* for a detailed description
-*
-* The externally accessible functions are 
-*
-*   void ranlxd(double * const r,const int n)
-*     Computes the next n double-precision random numbers and 
-*     assigns them to the elements r[0],...,r[n-1] of the array r[]
-* 
-*   void rlxd_init(const int level, const int seed)
-*     Initialization of the generator
-*
-*   int rlxd_size(void)
-*     Returns the number of integers required to save the state of
-*     the generator
-*
-*   void rlxd_get(int * const state)
-*     Extracts the current state of the generator and stores the 
-*     information in the array state[N] where N>=rlxd_size()
-*
-*   void rlxd_reset(const int * state)
-*     Resets the generator to the state defined by the array state[N]
-*
-* Version: 3.0
-* Author: Martin Luescher <luscher@mail.desy.de>
-* Date: 06.05.2001
-*
-*******************************************************************************/
+/***********************************************************************
+ * Copyright (C) 2001 Martin Luescher
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ * $Id$
+ *
+ * Random number generator "ranlxd". See the notes 
+ *
+ *   "User's guide for ranlxs and ranlxd v3.0" (May 2001)
+ *
+ *   "Algorithms used in ranlux v3.0" (May 2001)
+ *
+ * for a detailed description
+ *
+ * The externally accessible functions are 
+ *
+ *   void ranlxd(double * const r,const int n)
+ *     Computes the next n double-precision random numbers and 
+ *     assigns them to the elements r[0],...,r[n-1] of the array r[]
+ * 
+ *   void rlxd_init(const int level, const int seed)
+ *     Initialization of the generator
+ *
+ *   int rlxd_size(void)
+ *     Returns the number of integers required to save the state of
+ *     the generator
+ *
+ *   void rlxd_get(int * const state)
+ *     Extracts the current state of the generator and stores the 
+ *     information in the array state[N] where N>=rlxd_size()
+ *
+ *   void rlxd_reset(const int * state)
+ *     Resets the generator to the state defined by the array state[N]
+ *
+ * Version: 3.0
+ * Author: Martin Luescher <luscher@mail.desy.de>
+ * Date: 06.05.2001
+ *
+ * minor modifications for tmLQCD by C. Urbach
+ *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
