@@ -1,6 +1,8 @@
 30.05.2008: scidac checksum for gauge fields not correctly working
             different result for serial and MPI run.
 
+--> fixed
+
 16.04.2007: enable-gaugecopy and disable-newdiracop is buggy, at least
 in the 1-dim parallel case. -> fixed, wrong #ifdef in xchange_gauge 
 around MPI_Waitall
