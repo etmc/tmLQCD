@@ -167,10 +167,10 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 	      p = r;
 	    }
 	  }
-	  if(g_cart_id == id) {
-	    rank = (DML_SiteRank) (((t0*LZ*g_nproc_z + z)*LY*g_nproc_y + y)*LX*g_nproc_x + x);
-	  }
 	  if(g_cart_id == 0) {
+            /* Rank should be computed by proc 0 only */
+	    rank = (DML_SiteRank) (((t0*LZ*g_nproc_z + z)*LY*g_nproc_y + y)*LX*g_nproc_x + x);
+
 	    if(g_cart_id == id) {
 #ifndef WORDS_BIGENDIAN
 	      if(prec == 32) {

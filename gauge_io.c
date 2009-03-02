@@ -80,10 +80,9 @@ int write_binary_gauge_data(LimeWriter * limewriter,
 #ifdef MPI
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
-	  if(g_cart_id == id) {
-	    rank = (DML_SiteRank) (((t0*LZ*g_nproc_z + z)*LY*g_nproc_y + y)*LX*g_nproc_x + x);
-	  }
 	  if(g_cart_id == 0) {
+            /* Rank should be computed by proc 0 only */
+	    rank = (DML_SiteRank) (((t0*LZ*g_nproc_z + z)*LY*g_nproc_y + y)*LX*g_nproc_x + x);
 	    if(g_cart_id == id) {
 	      memcpy(&tmp3[0], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][1], sizeof(su3));
 	      memcpy(&tmp3[1], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][2], sizeof(su3));
