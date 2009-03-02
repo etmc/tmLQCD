@@ -1,4 +1,7 @@
 /******************************************************************************/
+// $Id$ 
+//
+// Copyright (C) 2005 Istvan Montvay
 // 
 //  Procedures for determining the recurrence coefficients and
 //  roots of a least-square optimized polynomial.
