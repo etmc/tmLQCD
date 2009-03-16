@@ -67,10 +67,12 @@
 #include "xchange_halffield.h"
 #include "stout_smear.h"
 #include "invert_eo.h"
+#include "monomial.h"
 #include "ranlxd.h"
 #include "phmc.h"
 #include "D_psi.h"
 #include "little_D.h"
+#include "reweighting_factor.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "block.h"
 #include "solver/dfl_projector.h"
@@ -102,12 +104,6 @@ int main(int argc,char *argv[]) {
   double plaquette_energy;
   double ratime, retime;
   
-  int nsiter;
-  complex * a1, * a2;
-
-#ifdef _GAUGE_COPY
-  int kb=0;
-#endif
   double nrm1, nrm2;
   double atime=0., etime=0.;
 #ifdef _KOJAK_INST
@@ -190,6 +186,18 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for geometry indices! Aborting...\n");
     exit(-1);
   }
+  if(no_monomials > 0) {
+    if(even_odd_flag) {
+      j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
+    }
+    else {
+      j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
+    }
+    if (j != 0) {
+      fprintf(stderr, "Not enough memory for monomial pseudo fermion  fields! Aborting...\n");
+      exit(0);
+    }
+  }
   if(even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
   }
@@ -248,6 +256,10 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
     xchange_gauge();
 #endif
+
+    if(0) {
+      reweighting_factor(10, nstore);
+    }
 
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action();

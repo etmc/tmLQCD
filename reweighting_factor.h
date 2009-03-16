@@ -1,4 +1,6 @@
 /***********************************************************************
+ * $Id$
+ *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -16,11 +18,11 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id$ */
+
 
 #ifndef _REWEIGHTING_FACTOR_H
 #define _REWEIGHTING_FACTOR_H
 
-double reweighting_factor(const int N);
+void reweighting_factor(const int N, const int nstore);
 
 #endif
