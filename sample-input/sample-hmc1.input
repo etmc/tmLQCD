@@ -1,7 +1,14 @@
 # $Id$
 # this sample corresponds to the first case in README
 # like sample-hmc0.input, but with preconditioning
-# the expected plaquette value is 0.62457(7)
+# the expected plaquette value is 0.62450(5)
+#
+# The PP correlator is (2KappaMu = 0.177, kappa = 0.177)
+# t  C(t)
+# 0  1.638(5)
+# 1  0.2020(6)
+# 2  0.0424(2)
+
 L=4
 T=4
 Measurements = 100000
@@ -10,18 +17,16 @@ Startcondition = hot
 2KappaMu = 0.177
 kappa = 0.177
 NSave = 500000
-BCAngleT = 1.
+ThetaT = 1.
 BCGstabMaxIter = 0
 CGMaxIter = 1000
-GaugeConfigInputFile = conf.save
 UseEvenOdd = yes
-PropagatorPrecision = 64
 ReversibilityCheck = yes
 ReversibilityCheckIntervall = 100
 DebugLevel = 1
 
 PerformOnlineMeasurements = yes
-OnlineMeasurementsFreq = 100
+OnlineMeasurementsFreq = 10
 
 BeginMonomial GAUGE
   Type = Wilson

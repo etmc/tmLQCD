@@ -10,7 +10,7 @@ Startcondition = hot
 2KappaMu = 0.002740961
 kappa = 0.163260
 NSave = 100
-BCAngleT = 1.
+ThetaT = 1.
 BCGstabMaxIter = 1000
 CGMaxIter = 10000
 GaugeConfigInputFile = conf.save
@@ -19,6 +19,7 @@ PropagatorPrecision = 64
 ReversibilityCheck = yes
 ReversibilityCheckIntervall = 100
 DebugLevel = 1
+InitialStoreCounter = 0
 
 PerformOnlineMeasurements = yes
 OnlineMeasurementsFreq = 100
