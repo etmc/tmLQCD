@@ -56,7 +56,6 @@
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
-/* #include "hybrid_update.h" */
 #include "update_tm.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
@@ -202,7 +201,10 @@ int main(int argc,char *argv[]) {
       trajectory_counter = 0;
     }
   }
-  
+
+  if(g_rgi_C1 == 0.) {
+    g_dbw2rand = 0;
+  }
 #ifndef MPI
   g_dbw2rand = 0;
 #endif
@@ -296,7 +298,8 @@ int main(int argc,char *argv[]) {
   
   if(g_proc_id == 0){    
     parameterfile = fopen(parameterfilename, "a");
-    write_first_messages(parameterfile, integtyp, 0);
+    write_first_messages(parameterfile, 0);
+    fclose(parameterfile);
   }
   /* define the geometry */
   geometry();
@@ -410,8 +413,6 @@ int main(int argc,char *argv[]) {
       fprintf(countfile, "n_int[%d] = %d ", j, Integrator.no_mnls_per_ts[j]);
     }
     fprintf(countfile, "\n");
-    fprintf(countfile, "Nsteps = %d, dtau = %e, tau = %e, integtyp = %d, rel. prec. = %d\n", 
-	    Nsteps, dtau, tau, integtyp, g_relative_precision_flag);
     fclose(countfile);
   }
 

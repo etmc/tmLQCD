@@ -79,31 +79,18 @@ TYPE [0-9A-Z]+
   int Ntherm;
   int Nmeas;
   int Nsave;
-  int integtyp;
-  int int_n[4];
-  double lambda[4];
-  int nsmall;
   int solver_flag;
   int gmres_m_parameter, gmresdr_nr_ev;
-  int operator_flag;
-  int matrix_element_flag;
-  int save_config_flag;
-  int save_prop_flag;
-  int save_prop_g2_flag;
   int write_cp_flag;
   int cp_interval;
   int nstore;
   int index_start, index_end;
   int random_seed;
   int rlxd_level;
-  double dtau, tau;
-  int Nsteps;
   char rlxd_input_filename[100];
   char gauge_input_filename[100];
-  int first_prop_flag;
   int max_solver_iterations;
   double solver_precision;
-  int mass_number;
   int read_source_flag;
   char source_input_filename[100];
   int return_check_flag, return_check_interval;
@@ -135,6 +122,8 @@ TYPE [0-9A-Z]+
   int write_prop_format_flag;
   int online_measurement_flag;
   int online_measurement_freq;
+  int reweighing_flag;
+  int reweighing_samples;
 %}
 
 %option never-interactive
@@ -148,8 +137,6 @@ TYPE [0-9A-Z]+
 %x MU
 %x SEED
 %x RLXDLEVEL
-%x Q1
-%x Q2
 %x NSAVE
 %x RLXDINPUTFILE
 %x GAUGEINPUTFILE
@@ -158,11 +145,6 @@ TYPE [0-9A-Z]+
 %x SOLVFLAG
 %x DFLSP
 %x PRECON
-%x OPFLAG
-%x MEFLAG
-%x SAVECONF
-%x SAVEPROP
-%x SAVEPRG2
 %x WRITECP
 %x CPINT
 %x NSTORE
@@ -176,7 +158,6 @@ TYPE [0-9A-Z]+
 %x NPROCZ
 %x IOPROC
 %x IDX
-%x FPROP
 %x CGMAX
 %x BCGMAX
 %x BOUNDT
@@ -213,6 +194,8 @@ TYPE [0-9A-Z]+
 %x PROPTYPE
 %x ONMEAS
 %x ONFREQ
+%x REWEIGH
+%x REWSAMPLES
 
 %x INITINTEGRATOR
 %x INTEGRATOR
@@ -252,11 +235,6 @@ TYPE [0-9A-Z]+
 ^RlxdStateInFile{SPC}*={SPC}*              BEGIN(RLXDINPUTFILE);
 ^SolverFlag{SPC}*={SPC}*                   BEGIN(SOLVFLAG);
 ^SubtractEVForCG{SPC}*={SPC}*              BEGIN(SUBEVCG);
-^OperatorFlag{SPC}*={SPC}*                 BEGIN(OPFLAG);
-^ComputeMatrixElements{SPC}*={SPC}*        BEGIN(MEFLAG);
-^SaveConfigurations{SPC}*={SPC}*           BEGIN(SAVECONF);
-^SavePropagators{SPC}*={SPC}*              BEGIN(SAVEPROP);
-^SaveGeneralizedPropagators{SPC}*={SPC}*   BEGIN(SAVEPRG2);
 ^WriteCheckpoints{SPC}*={SPC}*             BEGIN(WRITECP);
 ^CheckpointInterval{SPC}*={SPC}*           BEGIN(CPINT);
 ^GaugeConfigInputFile{SPC}*={SPC}*         BEGIN(GAUGEINPUTFILE);
@@ -264,9 +242,6 @@ TYPE [0-9A-Z]+
 ^InitialStoreCounter{SPC}*={SPC}*          BEGIN(NSTORE);
 ^StdIOProcessor{SPC}*={SPC}*               BEGIN(IOPROC);
 ^Indices{SPC}*={SPC}*                      BEGIN(IDX);
-^FirstPropagator{SPC}*={SPC}*              BEGIN(FPROP);
-^Q1{SPC}*={SPC}*                           BEGIN(Q1);
-^Q2{SPC}*={SPC}*                           BEGIN(Q2);
 ^BCGstabMaxIter{SPC}*={SPC}*               BEGIN(BCGMAX);
 ^CGMaxIter{SPC}*={SPC}*                    BEGIN(CGMAX);
 ^BCAngleT{SPC}*={SPC}*                     BEGIN(BOUNDT);
@@ -306,6 +281,8 @@ TYPE [0-9A-Z]+
 ^RanluxdLevel{SPC}*={SPC}*                 BEGIN(RLXDLEVEL);
 ^DeflationSubspaceDimension{SPC}*={SPC}*   BEGIN(DFLSP);
 ^GCRPreconditioner{SPC}*={SPC}*            BEGIN(PRECON);
+^ComputeReweighingFactor{SPC}*={SPC}*      BEGIN(REWEIGH);
+^NoReweighingSamples{SPC}*={SPC}*          BEGIN(REWSAMPLES);
 
 ^BeginMonomial{SPC}+                       BEGIN(INITMONOMIAL);
 ^BeginInt                                  BEGIN(INITINTEGRATOR);
@@ -687,15 +664,15 @@ TYPE [0-9A-Z]+
 }
 <MUBAR>{FLT}  {
   g_mubar=atof(yytext);
-  if(myverbose!=0) printf("mubar=%s \n", yytext);
+  if(myverbose!=0) printf("2 kappa mubar=%s \n", yytext);
 }
 <EPSBAR>{FLT}  {
   g_epsbar=atof(yytext);
-  if(myverbose!=0) printf("epsbar=%s \n", yytext);
+  if(myverbose!=0) printf("2 kappa epsbar=%s \n", yytext);
 }
 <MU>{FLT}  {
   g_mu1=atof(yytext);
-  if(myverbose!=0) printf("mu=%s \n", yytext);
+  if(myverbose!=0) printf("2 kappa mu=%s \n", yytext);
 }
 <STARTCOND>cold {
   startoption=0; 
@@ -810,50 +787,6 @@ TYPE [0-9A-Z]+
   solver_precision = atof(yytext);
   if(myverbose!=0) printf("Use %e as convergence precision for the solvers!\n", solver_precision);
 }
-<OPFLAG>Dtm {
-  operator_flag=2;
-  if(myverbose!=0) printf("Operator Flag is set to %s\n",yytext);
-}
-<OPFLAG>DWilson {
-  operator_flag=1;
-  if(myverbose!=0) printf("Operator Flag is set to %s\n",yytext);
-}
-<OPFLAG>DOverlap {
-  operator_flag=0;
-  if(myverbose!=0) printf("Operator Flag is set to %s\n",yytext);
-}
-<MEFLAG>yes {
-  matrix_element_flag=1;
-  if(myverbose!=0) printf("Compute Matrix Elements: %s\n", yytext);
-}
-<MEFLAG>no {
-  matrix_element_flag=0;
-  if(myverbose!=0) printf("Compute Matrix Elements: %s\n", yytext);
-}
-<SAVECONF>yes    {
-  save_config_flag=1;
-  if(myverbose!=0) printf("Save configurations\n");
-}
-<SAVECONF>no     {
-  save_config_flag=0;
-  if(myverbose!=0) printf("Don't save configurations\n");
-}
-<SAVEPROP>yes    {
-  save_prop_flag=1;
-  if(myverbose!=0) printf("Save propagators\n");
-}
-<SAVEPROP>no     {
-  save_prop_flag=0;
-  if(myverbose!=0) printf("Don't save propagators\n");
-}
-<SAVEPRG2>yes    {
-  save_prop_g2_flag=1;
-  if(myverbose!=0) printf("Save generalized propagators\n");
-}
-<SAVEPRG2>no     {
-  save_prop_g2_flag=0;
-  if(myverbose!=0) printf("Don't save generalized propagators\n");
-}
 <WRITECP>yes     {
   write_cp_flag=1;
   if(myverbose!=0) printf("Write Checkpoints\n");
@@ -907,18 +840,6 @@ TYPE [0-9A-Z]+
   }
   if(myverbose!=0) printf("inverting up to color index %d\n", index_end);
   index_end+=1;
-}
-<FPROP>no {
-  first_prop_flag = -1;
-  if(myverbose!=0) printf("Do not compute the first propagator (default)\n");
-}
-<FPROP>compute {
-  first_prop_flag = 0;
-  if(myverbose!=0) printf("Computing the first propagator (default)\n");
-}
-<FPROP>readin {
-  first_prop_flag = 1;
-  if(myverbose!=0) printf("Reading in the first propagator\n");
 }
 <BCGMAX>{DIGIT}+ {
   ITER_MAX_BCG = atoi(yytext);
@@ -1144,6 +1065,18 @@ TYPE [0-9A-Z]+
   online_measurement_freq = atoi(yytext);
   if(myverbose!=0) fprintf(stderr, "Frequency for online measurements set to %s\n", yytext);
 }
+<REWEIGH>yes {
+  reweighing_flag = 1;
+  if(myverbose!=0) fprintf(stderr, "Compute reweighing factor\n");
+}
+<REWEIGH>no {
+  reweighing_flag = 0;
+  if(myverbose!=0) fprintf(stderr, "Do not compute reweighing factor\n");
+}
+<REWSAMPLES>{DIGIT}+ {
+  reweighing_samples = atoi(yytext);
+  if(myverbose!=0) fprintf(stderr, "Number of reweighing samples set to %d\n", reweighing_samples);
+}
 
 <*>^#   {
    comment_caller = YY_START;   
@@ -1227,21 +1160,15 @@ int read_input(char * conf_file){
   g_dbw2rand = 0;
   g_running_phmc = 0;
   g_beta = _default_g_beta;
-  g_c_sw = _default_g_c_sw;
   g_N_s = _default_g_N_s;
   g_dflgcr_flag = _default_g_dflgcr_flag;
   random_seed = _default_random_seed;
   rlxd_level = _default_rlxd_level;
-  matrix_element_flag = _default_matrix_element_flag;
   solver_flag = _default_solver_flag;
-  operator_flag = _default_operator_flag;
   startoption = _default_startoption;
   Ntherm = _default_Ntherm;
   Nmeas = _default_Nmeas;
   Nsave = _default_Nsave;
-  save_config_flag = _default_save_config_flag;
-  save_prop_flag = _default_save_prop_flag;
-  save_prop_g2_flag = _default_save_prop_g2_flag;
   write_cp_flag = _default_write_cp_flag;
   cp_interval = _default_cp_interval;
   nstore = _default_nstore;
@@ -1250,7 +1177,6 @@ int read_input(char * conf_file){
   g_stdio_proc = _default_g_stdio_proc;
   index_start = _default_index_start;
   index_end = _default_index_end;
-  first_prop_flag = _default_first_prop_flag;
   ITER_MAX_CG = _default_ITER_MAX_CG;
   ITER_MAX_BCG = _default_ITER_MAX_BCG;
   X0 = _default_X0;
@@ -1259,7 +1185,6 @@ int read_input(char * conf_file){
   X3 = _default_X3;
   max_solver_iterations = _default_max_solver_iterations;
   solver_precision = _default_solver_precision;
-  mass_number = _default_mass_number;
   g_rgi_C1 = _default_g_rgi_C1;
   read_source_flag= _default_read_source_flag;
   strcpy(source_input_filename, _default_source_filename);
@@ -1324,7 +1249,6 @@ int read_input(char * conf_file){
   
   if(write_prop_format_flag == -1) write_prop_format_flag = source_format_flag;
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
-  g_ka_csw_8 = g_kappa*g_c_sw/8.;
   
   fclose(yyout);
   fclose(yyin);
@@ -1386,7 +1310,6 @@ int reread_input(char * conf_file){
   nstore = nst;
 
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
-  g_ka_csw_8 = g_kappa*g_c_sw/8.;
   
   g_mu = g_mu1;
 

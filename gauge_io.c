@@ -307,7 +307,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   }
 
   write_binary_gauge_data(limewriter, prec, &checksum);
-  if(g_proc_id == 0) {
+  if(g_proc_id == 0 && g_debug_level > 1) {
     printf("# checksum for Gauge field written to file %s is %#x %#x\n", 
 	   filename, checksum.suma, checksum.sumb);
   }
@@ -388,8 +388,9 @@ int read_lime_gauge_field(char * filename) {
 
   limeDestroyReader(limereader);
   fclose(ifs);
-  if(g_proc_id == 0) {
-    printf("# checksum for gaugefield %s is %#x %#x\n", filename, checksum.suma, checksum.sumb);
+  if(g_proc_id == 0 && g_debug_level > 1) {
+    printf("# checksum for gaugefield %s is %#x %#x\n", 
+	   filename, checksum.suma, checksum.sumb);
   }
   return(0);
 }

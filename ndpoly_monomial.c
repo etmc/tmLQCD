@@ -1,7 +1,7 @@
 /***********************************************************************
  * $Id$ 
  *
- * Copyright (C) 2008 Carsten Urbach
+ * Copyright (C) 2008 Thomas Chiarappa, Carsten Urbach
  *
  * This file is part of tmLQCD.
  *

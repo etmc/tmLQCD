@@ -1640,7 +1640,7 @@ int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filen
 
 
 
-int write_first_messages(FILE * parameterfile, const int integtyp, const int inv) {
+int write_first_messages(FILE * parameterfile, const int inv) {
 
   if(inv != 1) {
     printf("# This is the hmc code for twisted Mass Wilson QCD\n\nVersion %s\n", PACKAGE_VERSION);
@@ -1737,18 +1737,8 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   printf("# beta = %f , kappa= %f\n", g_beta, g_kappa);
   printf("# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
   if(inv != 1) {
-    printf("# mus = %f, %f, %f\n", g_mu1, g_mu2, g_mu3);
-    printf("# int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n", 
-	   int_n[0], int_n[1], int_n[2], int_n[3]);
+    printf("# mu = %f\n", g_mu);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
-    printf("# Integration scheme: ");
-    if(integtyp == 1) printf("leap-frog (single time scale)\n");
-    if(integtyp == 2) printf("Sexton-Weingarten (single time scale)\n");
-    if(integtyp == 3) printf("leap-frog (multiple time scales)\n");
-    if(integtyp == 4) printf("Sexton-Weingarten (multiple time scales)\n");
-    if(integtyp == 5) printf("higher order and leap-frog (multiple time scales)\n");
-    if(integtyp == 6) printf("second order minimal norm (velocity version, multiple time scales)\n");
-    if(integtyp == 7) printf("second order minimal norm (position version, multiple time scales)\n");
     printf("# Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
   }
@@ -1760,20 +1750,10 @@ int write_first_messages(FILE * parameterfile, const int integtyp, const int inv
   fprintf(parameterfile, "# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
   if(inv != 1) {
     fprintf(parameterfile, "# ITER_MAX_BCG=%d\n", ITER_MAX_BCG);
-    fprintf(parameterfile, "# dtau=%f, Nsteps=%d, Nmeas=%d, Nsave=%d, integtyp=%d, nsmall=%d \n",
-	    dtau,Nsteps,Nmeas,Nsave,integtyp,nsmall);
-    fprintf(parameterfile, "# mu = %f, mu2=%f, mu3=%f\n ", g_mu, g_mu2, g_mu3);
-    fprintf(parameterfile, "# int_n_gauge = %d, int_n_ferm1 = %d, int_n_ferm2 = %d, int_n_ferm3 = %d\n ", 
-	    int_n[0], int_n[1], int_n[2], int_n[3]);
+    fprintf(parameterfile, "# Nmeas=%d, Nsave=%d \n",
+	    Nmeas,Nsave);
+    fprintf(parameterfile, "# mu = %f\n", g_mu);
     fprintf(parameterfile, "g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
-    fprintf(parameterfile, "# Integration scheme: ");
-    if(integtyp == 1) fprintf(parameterfile, "leap-frog (single time scale)\n");
-    if(integtyp == 2) fprintf(parameterfile, "Sexton-Weingarten (single time scale)\n");
-    if(integtyp == 3) fprintf(parameterfile, "leap-frog (multiple time scales)\n");
-    if(integtyp == 4) fprintf(parameterfile, "Sexton-Weingarten (multiple time scales)\n");
-    if(integtyp == 5) fprintf(parameterfile, "higher order and leap-frog (multiple time scales)\n");
-    if(integtyp == 6) fprintf(parameterfile, "second order minimal norm (velocity version, multiple time scales)\n");
-    if(integtyp == 7) fprintf(parameterfile, "second order minimal norm (position version, multiple time scales)\n");
     fprintf(parameterfile, "# Using %s precision for the inversions!\n", 
 	    g_relative_precision_flag ? "relative" : "absolute");
   }

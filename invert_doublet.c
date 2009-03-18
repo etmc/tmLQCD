@@ -217,7 +217,8 @@ int main(int argc,char *argv[]) {
     strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
     
     parameterfile=fopen(parameterfilename, "w");
-    write_first_messages(parameterfile, 0, 1);
+    write_first_messages(parameterfile, 1);
+    fclose(parameterfile);
   }
 
   /* define the geometry */

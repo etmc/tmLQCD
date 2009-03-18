@@ -1,4 +1,6 @@
 /***********************************************************************
+ * $Id$ 
+ *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -15,10 +17,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/* $Id$ */
-
-/***********************************************************
  *
  * This routine contains the update part for
  * the HMC with up to three pseudo fermion fields
@@ -26,7 +24,7 @@
  *
  * Author: Carsten Urbach <urbach@physik.fu-berlin.de>
  *
- ***********************************************************/
+ ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>

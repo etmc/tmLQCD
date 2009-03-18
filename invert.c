@@ -216,7 +216,8 @@ int main(int argc,char *argv[]) {
     strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
     
     parameterfile=fopen(parameterfilename, "w");
-    write_first_messages(parameterfile, 0, 1);
+    write_first_messages(parameterfile, 1);
+    fclose(parameterfile);
   }
 
   /* define the geometry */
@@ -257,10 +258,6 @@ int main(int argc,char *argv[]) {
     xchange_gauge();
 #endif
 
-    if(0) {
-      reweighting_factor(10, nstore);
-    }
-
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action();
 
@@ -276,6 +273,10 @@ int main(int argc,char *argv[]) {
       if(g_proc_id == 0) {
 	printf("The plaquette value after stouting is %e\n", plaquette_energy/(6.*VOLUME*g_nproc)); fflush(stdout);
       }
+    }
+
+    if(0) {
+      reweighting_factor(10, nstore);
     }
 
     /* Compute minimal eigenvalues, if wanted */

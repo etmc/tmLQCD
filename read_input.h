@@ -50,16 +50,9 @@ extern "C"
   extern int Nsave;
   extern int solver_flag;
   extern int gmres_m_parameter, gmresdr_nr_ev;
-  extern int operator_flag;
-  extern int matrix_element_flag;
-  extern int save_config_flag;
-  extern int save_prop_flag;
-  extern int save_prop_g2_flag;
   extern int write_cp_flag;
   extern int cp_interval;
   extern int nstore;
-  extern int int_n[4];
-  extern double lambda[4];
   extern int crylov_space_dim;
   extern char rlxd_input_filename[100];
   extern char gauge_input_filename[100];
@@ -69,18 +62,13 @@ extern "C"
   extern double eigenvalue_precision;
   extern int index_start;
   extern int index_end;
-  extern int first_prop_flag;
-  extern double dtau, tau;
-  extern int Nsteps;
   extern int random_seed;
   extern int rlxd_level;
-  extern int integtyp,nsmall;
   extern int ITER_MAX_BCG;
   extern int ITER_MAX_CG;
   extern double X0, X1, X2, X3;
   extern int max_solver_iterations;
   extern double solver_precision;
-  extern int mass_number;
   extern int read_source_flag;
   extern char source_input_filename[100];
   extern int return_check_flag;
@@ -112,7 +100,9 @@ extern "C"
   extern int write_prop_format_flag;
   extern int online_measurement_flag;
   extern int online_measurement_freq;
- 
+  extern int reweighing_flag;
+  extern int reweighing_samples; 
+
   int read_input(char *);
   int reread_input(char *);
   

@@ -623,7 +623,7 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
   }
 
   status = write_binary_spinor_data(s, r, limewriter, prec, &checksum);
-  if(g_proc_id == 0) {
+  if(g_proc_id == 0 && g_debug_level > 1) {
     printf("# checksum for DiracFermion field written to file %s is %#x %#x\n", 
 	   filename, checksum.suma, checksum.sumb);
   }
@@ -802,7 +802,7 @@ int read_lime_spinor(spinor * const s, spinor * const r, char * filename, const 
 
   status = read_binary_spinor_data(s, r, limereader, prec, &checksum);
 
-  if(g_proc_id == 0) {
+  if(g_proc_id == 0 && g_debug_level > 1) {
     printf("# checksum for DiracFermion field in file %s position %d is %#x %#x\n", 
 	   filename, position, checksum.suma, checksum.sumb);
   }

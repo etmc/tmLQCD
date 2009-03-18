@@ -58,7 +58,7 @@ int write_eospinor(spinor * const s, char * filename,
 		   const double evalue, const double prec, const int nstore);
 int read_eospinor(spinor * const s, char * filename);
 
-int write_first_messages(FILE * parameterfile, const int integtyp, const int inv);
+int write_first_messages(FILE * parameterfile, const int inv);
 
 int write_rlxd_state(char * filename, int * const _state, const int rlxdsize);
 int read_rlxd_state(char * filename, int * state, const int rlxdsize);

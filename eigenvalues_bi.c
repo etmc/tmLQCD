@@ -31,8 +31,6 @@
  * input:
  *   crylov_space_dimension: Dimension of crylov space dimension
  *                           to be used in the arnoldi routines
- *   operator_flag:          Choose if we want to use D_Wilson
- *                           or D_Overlap
  *
  * Autor: Thomas Chiarappa
  *        Thomas.Chiarappa@mib.infn.it
@@ -59,7 +57,7 @@
 #include "Nondegenerate_Matrix.h"
 
 
-double eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag, 
+double eigenvalues_bi(int * nr_of_eigenvalues,  
 		      const int max_iterations, const double precision,
 		      const int maxmin) {
 

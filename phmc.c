@@ -68,14 +68,14 @@ void init_phmc() {
     
     no_eigenvalues = 10;   /* Number of lowest eigenvalues to be computed */
     if(g_epsbar!=0.0)
-      phmc_cheb_evmin = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, eigenvalue_precision, 0);
+      phmc_cheb_evmin = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0);
     else {
       phmc_cheb_evmin = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, 0, nstore, even_odd_flag);
     }
 
     no_eigenvalues = 4;   /* Number of highest eigenvalues to be computed */
     if(g_epsbar!=0.0)
-      phmc_cheb_evmax = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, eigenvalue_precision, 1);
+      phmc_cheb_evmax = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1);
     else
       phmc_cheb_evmax = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, 0, nstore, even_odd_flag);
        
@@ -195,13 +195,13 @@ void phmc_compute_ev(const int trajectory_counter,
   no_eigenvalues = 1;
 
   if(g_epsbar!=0.0)
-    temp = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, eigenvalue_precision, 0);
+    temp = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0);
   else
     temp = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, 0, nstore, even_odd_flag);
   
   no_eigenvalues = 1;
   if(g_epsbar!=0.0)
-    temp2 = eigenvalues_bi(&no_eigenvalues, operator_flag, max_iter_ev, eigenvalue_precision, 1);
+    temp2 = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1);
   else
     temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, 0, nstore, even_odd_flag);
   
