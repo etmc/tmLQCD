@@ -1,7 +1,7 @@
 /***********************************************************************
  * $Id$ 
  *
- * Copyright (C) 2008 Albert Deuzeman, Siebren Recker, Carsten Urbach
+ * Copyright (C) 2008 Albert Deuzeman, Siebren Reker, Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -88,9 +88,8 @@ int generate_dfl_subspace(const int Ns, const int N) {
 #endif
   work = (complex*)malloc(2*9*Ns*sizeof(complex));
   if(init_subspace == 0) i = init_dfl_subspace(Ns);
-  if(1) {
-    if(init_little_subspace == 0) i = init_little_dfl_subspace(Ns);
-  }
+
+  if(init_little_subspace == 0) i = init_little_dfl_subspace(Ns);
 
   random_fields(Ns);
 
@@ -113,15 +112,16 @@ int generate_dfl_subspace(const int Ns, const int N) {
     e=0.3;
   }
 
+  boundary(0.1586);
   for(i = 0; i < Ns; i++) {
     ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
     nrm = sqrt(square_norm(dfl_fields[i], N, 1));
     mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
 
-    for(j = 0; j < 10; j++) {
+    for(j = 0; j < 80; j++) {
       g_sloppy_precision = 1;
-      Msap(g_spinor_field[0], dfl_fields[i], 4);
-/*       poly_nonherm_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], e, d, 20, N); */
+/*        Msap(g_spinor_field[0], dfl_fields[i], 4); */
+      poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 20, N);
 /*       gmres_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], 20, 1, 1.e-20, 0, N, &D_psi); */
       g_sloppy_precision = 0;
       ModifiedGS((complex*)g_spinor_field[0], vol, i, (complex*)dfl_fields[0], vpr);
@@ -138,7 +138,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
     }
   }
   g_sloppy_precision = 0;
-
+  boundary(g_kappa);
   if(g_debug_level > 4) {
     for(i = 0; i < Ns; i++) {
       for(j = 0; j < Ns; j++) {
@@ -159,6 +159,13 @@ int generate_dfl_subspace(const int Ns, const int N) {
   block_orthonormalize(block_list+1);
 
   dfl_subspace_updated = 1;
+
+  for(j = 0; j < Ns; j++) {
+    for(i = 0; i < 2*9*Ns; i++) {
+      _complex_zero(little_dfl_fields[j][i]);
+      _complex_zero(work[i]);
+    }
+  }
 
   /* compute the little little basis */
   r = g_spinor_field[DUM_SOLVER];

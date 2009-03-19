@@ -1,7 +1,7 @@
 /***********************************************************************
  * $Id$ 
  *
- * Copyright (C) 2008 Alber Deuzeman, Siebren Recker, Carsten Urbach
+ * Copyright (C) 2008 Alber Deuzeman, Siebren Reker, Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -85,7 +85,7 @@ void project(spinor * const out, spinor * const in) {
   if(dfl_sloppy_prec) prec = dfl_little_D_prec;
   else prec = 1.e-24;
 
-  if(1) {
+  if(0) {
     iter = gcr4complex(invvec, inprod, 10, 1000, prec, 1, 2 * g_N_s, 1, 2 * 9 * g_N_s, &little_D);
     if(g_proc_id == 0 && g_debug_level > -1) {
       printf("lgcr number of iterations %d (no P_L)\n", iter);

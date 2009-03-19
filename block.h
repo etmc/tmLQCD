@@ -1,7 +1,7 @@
 /***********************************************************************
  * $Id$ 
  *
- * Copyright (C) 2008 Albert Deuzeman, Siebren Recker, Carsten Urbach
+ * Copyright (C) 2008 Albert Deuzeman, Siebren Reker, Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
