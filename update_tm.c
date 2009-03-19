@@ -112,7 +112,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* 
    *  copy the gauge field to gauge_tmp 
    */
-  dontdump = 1;
   for(ix=0;ix<VOLUME;ix++) { 
     for(mu=0;mu<4;mu++) {
       v=&g_gauge_field[ix][mu];
@@ -120,7 +119,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       _su3_assign(*w,*v);
     }
   }
-  dontdump = 0;
 
   /* smear the gauge field */
   if(use_stout_flag == 1) stout_smear();
@@ -289,7 +287,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     /* accept */
     (*plaquette_energy)=new_plaquette_energy;
     (*rectangle_energy)=new_rectangle_energy;
-    dontdump = 1;
     /* put the links back to SU(3) group */
     for(ix=0;ix<VOLUME;ix++) { 
       for(mu=0;mu<4;mu++) { 

@@ -1,25 +1,16 @@
-/***********************************************************************
- * Copyright (C) 2001 Martin Luescher
- *
- * This file is part of tmLQCD.
- *
- * tmLQCD is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * tmLQCD is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+/*******************************************************************************
  * $Id$
+ *
+ * File ranlxd.c
+ *
+ * Copyright (C) 2005 Martin Luescher
+ *
+ * This software is distributed under the terms of the GNU General Public
+ * License (GPL)
  *
  * Random number generator "ranlxd". See the notes 
  *
- *   "User's guide for ranlxs and ranlxd v3.0" (May 2001)
+ *   "User's guide for ranlxs and ranlxd v3.2" (December 2005)
  *
  *   "Algorithms used in ranlux v3.0" (May 2001)
  *
@@ -27,30 +18,29 @@
  *
  * The externally accessible functions are 
  *
- *   void ranlxd(double * const r,const int n)
+ *   void ranlxd(double r[],int n)
  *     Computes the next n double-precision random numbers and 
  *     assigns them to the elements r[0],...,r[n-1] of the array r[]
  * 
- *   void rlxd_init(const int level, const int seed)
+ *   void rlxd_init(int level,int seed)
  *     Initialization of the generator
  *
  *   int rlxd_size(void)
  *     Returns the number of integers required to save the state of
  *     the generator
  *
- *   void rlxd_get(int * const state)
+ *   void rlxd_get(int state[])
  *     Extracts the current state of the generator and stores the 
  *     information in the array state[N] where N>=rlxd_size()
  *
- *   void rlxd_reset(const int * state)
+ *   void rlxd_reset(int state[])
  *     Resets the generator to the state defined by the array state[N]
  *
- * Version: 3.0
- * Author: Martin Luescher <luscher@mail.desy.de>
- * Date: 06.05.2001
+ * modified by C. Urbach to work with the tmLQCD package
  *
- * minor modifications for tmLQCD by C. Urbach
  *******************************************************************************/
+
+#define RANLXD_C
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -62,22 +52,18 @@
 #include <math.h>
 #include "ranlxd.h"
 
-void errorhandler(const int i, char * c){
-
-}
+#if ((defined SSE)||(defined SSE2)||(defined SSE3))
 
 int ranlxd_init = 0;
 
-#if ((defined SSE)||(defined SSE2)||(defined SSE3))
-
 typedef struct
 {
-   float c1,c2,c3,s3;
+  float c1,c2,c3,c4;
 } vec_t __attribute__ ((aligned (16)));
 
 typedef struct
 {
-   vec_t c1,c2;
+  vec_t c1,c2;
 } dble_vec_t __attribute__ ((aligned (16)));
 
 static int init=0,pr,prm,ir,jr,is,is_old,next[96];
@@ -85,63 +71,91 @@ static vec_t one,one_bit,carry;
 
 static union
 {
-   dble_vec_t vec[12];
-   float num[96];
+  dble_vec_t vec[12];
+  float num[96];
 } x __attribute__ ((aligned (16)));
 
-#define _STEP(pi,pj) \
-  __asm__ __volatile__ ("movaps %2, %%xmm4 \n\t" \
+#define STEP(pi,pj)				 \
+  __asm__ __volatile__ ("movaps %4, %%xmm4 \n\t"     \
                         "movaps %%xmm2, %%xmm3 \n\t" \
-                        "subps %0, %%xmm4 \n\t" \
-                        "movaps %%xmm1, %%xmm5 \n\t" \
+                        "subps %2, %%xmm4 \n\t"	     \
+                        "movaps %%xmm1, %%xmm5 \n\t"	  \
                         "cmpps $0x6, %%xmm4, %%xmm2 \n\t" \
-                        "andps %%xmm2, %%xmm5 \n\t" \
-                        "subps %%xmm3, %%xmm4 \n\t" \
-                        "andps %%xmm0, %%xmm2 \n\t" \
-                        "addps %%xmm4, %%xmm5 \n\t" \
-                        "movaps %%xmm5, %0 \n\t" \
-                        "movaps %3, %%xmm6 \n\t" \
-                        "movaps %%xmm2, %%xmm3 \n\t" \
-                        "subps %1, %%xmm6 \n\t" \
-                        "movaps %%xmm1, %%xmm7 \n\t" \
+                        "andps %%xmm2, %%xmm5 \n\t"	  \
+                        "subps %%xmm3, %%xmm4 \n\t"	  \
+                        "andps %%xmm0, %%xmm2 \n\t"	  \
+                        "addps %%xmm4, %%xmm5 \n\t"	  \
+                        "movaps %%xmm5, %0 \n\t"	  \
+                        "movaps %5, %%xmm6 \n\t"	  \
+                        "movaps %%xmm2, %%xmm3 \n\t"	  \
+                        "subps %3, %%xmm6 \n\t"		  \
+                        "movaps %%xmm1, %%xmm7 \n\t"	  \
                         "cmpps $0x6, %%xmm6, %%xmm2 \n\t" \
-                        "andps %%xmm2, %%xmm7 \n\t" \
-                        "subps %%xmm3, %%xmm6 \n\t" \
-                        "andps %%xmm0, %%xmm2 \n\t" \
-                        "addps %%xmm6, %%xmm7 \n\t" \
-                        "movaps %%xmm7, %1" \
-                        : \
-                        "+m" ((*pi).c1), \
-                        "+m" ((*pi).c2) \
-                        : \
-                        "m" ((*pj).c1), \
-                        "m" ((*pj).c2))
+                        "andps %%xmm2, %%xmm7 \n\t"	  \
+                        "subps %%xmm3, %%xmm6 \n\t"	  \
+                        "andps %%xmm0, %%xmm2 \n\t"	  \
+                        "addps %%xmm6, %%xmm7 \n\t"	  \
+                        "movaps %%xmm7, %1"		  \
+                        :				  \
+							  "=m" ((*pi).c1), \
+							  "=m" ((*pi).c2) \
+                        :						\
+									"m" ((*pi).c1), \
+									"m" ((*pi).c2), \
+									"m" ((*pj).c1), \
+			"m" ((*pj).c2))
 
 
-
-static void update()
+static void error(int no)
 {
-   int k,kmax;
-   dble_vec_t *pmin,*pmax,*pi,*pj;
+  switch(no)
+    {
+    case 1:
+      fprintf(stderr, "Error in subroutine rlxd_init\n");
+      fprintf(stderr, "Bad choice of luxury level (should be 1 or 2)\n");
+      break;
+    case 2:
+      fprintf(stderr, "Error in subroutine rlxd_init\n");
+      fprintf(stderr, "Bad choice of seed (should be between 1 and 2^31-1)\n");
+      break;
+    case 3:
+      fprintf(stderr, "Error in rlxd_get\n");
+      fprintf(stderr, "Undefined state (ranlxd is not initialized\n");
+      break;
+    case 5:
+      fprintf(stderr, "Error in rlxd_reset\n");
+      fprintf(stderr, "Unexpected input data\n");
+      break;
+    }         
+  fprintf(stderr, "Program aborted\n");
+  exit(0);
+}
 
-   kmax=pr;
-   pmin=&x.vec[0];
-   pmax=pmin+12;
-   pi=&x.vec[ir];
-   pj=&x.vec[jr];
 
-   __asm__ __volatile__ ("movaps %0, %%xmm0 \n\t"
-                         "movaps %1, %%xmm1 \n\t"
-                         "movaps %2, %%xmm2"
-                         :
-                         :
-                         "m" (one_bit),
-                         "m" (one),
-                         "m" (carry));
+static void update(void)
+{
+  int k,kmax;
+  dble_vec_t *pmin,*pmax,*pi,*pj;
+  
+  kmax=pr;
+  pmin=&x.vec[0];
+  pmax=pmin+12;
+  pi=&x.vec[ir];
+  pj=&x.vec[jr];
+  
+  __asm__ __volatile__ ("movaps %0, %%xmm0 \n\t"
+			"movaps %1, %%xmm1 \n\t"
+			"movaps %2, %%xmm2"	
+			:
+			:
+			"m" (one_bit),
+			"m" (one),
+			"m" (carry));
+
    
    for (k=0;k<kmax;k++) 
    {
-      _STEP(pi,pj);
+      STEP(pi,pj);
       pi+=1; 
       pj+=1;
       if (pi==pmax)
@@ -152,8 +166,7 @@ static void update()
 
    __asm__ __volatile__ ("movaps %%xmm2, %0"
                          :
-                         :
-                         "m" (carry));
+                         "=m" (carry));
    
    ir+=prm;
    jr+=prm;
@@ -166,7 +179,7 @@ static void update()
 }
 
 
-static void define_constants()
+static void define_constants(void)
 {
    int k;
    float b;
@@ -174,13 +187,13 @@ static void define_constants()
    one.c1=1.0f;
    one.c2=1.0f;
    one.c3=1.0f;
-   one.s3=1.0f;   
+   one.c4=1.0f;   
 
    b=(float)(ldexp(1.0,-24));
    one_bit.c1=b;
    one_bit.c2=b;
    one_bit.c3=b;
-   one_bit.s3=b;
+   one_bit.c4=b;
    
    for (k=0;k<96;k++)
    {
@@ -191,7 +204,7 @@ static void define_constants()
 }
 
 
-void rlxd_init(const int level, const int seed)
+void rlxd_init(int level,int seed)
 {
    int i,k,l;
    int ibit,jbit,xbit[31];
@@ -199,16 +212,12 @@ void rlxd_init(const int level, const int seed)
 
    define_constants();
    
-   if (level==1) {
-     pr=202;
-   }
-   else if (level==2) {
-     pr=397;
-   }
-   else {
-     fprintf(stderr, "Wrong level %d in ranluxd!\n Must be 1 or 2! Aborting...\n", level);
-     exit(1000);
-   }
+   if (level==1)
+      pr=202;
+   else if (level==2)
+      pr=397;
+   else
+      error(1);
 
    i=seed;
 
@@ -218,10 +227,8 @@ void rlxd_init(const int level, const int seed)
       i/=2;
    }
 
-   if ((seed<=0)||(i!=0)) {
-     fprintf(stderr, "Seed %d out of range in ranluxd! Aborting...\n", seed);
-     exit(1001);
-   }
+   if ((seed<=0)||(i!=0))
+      error(2);
 
    ibit=0;
    jbit=18;
@@ -252,7 +259,7 @@ void rlxd_init(const int level, const int seed)
    carry.c1=0.0f;
    carry.c2=0.0f;
    carry.c3=0.0f;
-   carry.s3=0.0f;
+   carry.c4=0.0f;
    
    ir=0;
    jr=7;
@@ -264,19 +271,20 @@ void rlxd_init(const int level, const int seed)
 }
 
 
-void ranlxd(double * const r, const int n) {
-  int k;
-  
-  if (init==0) {
-    rlxd_init(1,1);
-  }
-  
-  for (k=0;k<n;k++) {
-    is=next[is];
-    if (is==is_old)
-      update();
-    r[k]=(double)(x.num[is+4])+(double)(one_bit.c1*x.num[is]);
-  }
+void ranlxd(double r[],int n)
+{
+   int k;
+
+   if (init==0)
+      rlxd_init(1,1);
+
+   for (k=0;k<n;k++) 
+   {
+      is=next[is];
+      if (is==is_old)
+         update();
+      r[k]=(double)(x.num[is+4])+(double)(one_bit.c1*x.num[is]);
+   }
 }
 
 
@@ -286,14 +294,13 @@ int rlxd_size(void)
 }
 
 
-void rlxd_get(int * const state)
+void rlxd_get(int state[])
 {
    int k;
    float base;
 
-   if (init==0) {
-     rlxd_init(1, 1);
-   }
+   if (init==0)
+      error(3);
 
    base=(float)(ldexp(1.0,24));
    state[0]=rlxd_size();
@@ -304,7 +311,7 @@ void rlxd_get(int * const state)
    state[97]=(int)(base*carry.c1);
    state[98]=(int)(base*carry.c2);
    state[99]=(int)(base*carry.c3);
-   state[100]=(int)(base*carry.s3);
+   state[100]=(int)(base*carry.c4);
 
    state[101]=pr;
    state[102]=ir;
@@ -313,37 +320,33 @@ void rlxd_get(int * const state)
 }
 
 
-void rlxd_reset(const int * state)
+void rlxd_reset(int state[])
 {
    int k;
 
    define_constants();
 
-   if (state[0]!=rlxd_size()) {
-     fprintf(stderr, "State has the wrong size in rlxd_reset! Aborting...\n");
-     exit(1003);
-   }
+   if (state[0]!=rlxd_size())
+      error(5);
 
-   for (k=0;k<96;k++) {
-     if ((state[k+1]<0)||(state[k+1]>=167777216)) {
-       fprintf(stderr, "State is wrong in rlxd_reset! Aborting...\n");
-       exit(1004);
-     }
+   for (k=0;k<96;k++)
+   {
+      if ((state[k+1]<0)||(state[k+1]>=167777216))
+         error(5);
+
       x.num[k]=(float)(ldexp((double)(state[k+1]),-24));
    }
 
    if (((state[97]!=0)&&(state[97]!=1))||
        ((state[98]!=0)&&(state[98]!=1))||
        ((state[99]!=0)&&(state[99]!=1))||
-       ((state[100]!=0)&&(state[100]!=1))) {
-       fprintf(stderr, "State is wrong in rlxd_reset! Aborting...\n");
-       exit(1005);
-   }
+       ((state[100]!=0)&&(state[100]!=1)))
+      error(5);
    
    carry.c1=(float)(ldexp((double)(state[97]),-24));
    carry.c2=(float)(ldexp((double)(state[98]),-24));
    carry.c3=(float)(ldexp((double)(state[99]),-24));
-   carry.s3=(float)(ldexp((double)(state[100]),-24));
+   carry.c4=(float)(ldexp((double)(state[100]),-24));
 
    pr=state[101];
    ir=state[102];
@@ -356,10 +359,8 @@ void rlxd_reset(const int * state)
    
    if (((pr!=202)&&(pr!=397))||
        (ir<0)||(ir>11)||(jr<0)||(jr>11)||(jr!=((ir+7)%12))||
-       (is<0)||(is>91)) {
-       fprintf(stderr, "State is wrong in rlxd_reset! Aborting...\n");
-       exit(1006);
-   }
+       (is<0)||(is>91))
+      error(5);
 }
 
 #else
@@ -369,7 +370,7 @@ void rlxd_reset(const int * state)
 
 typedef struct
 {
-   int c1,c2,c3,s3;
+   int c1,c2,c3,c4;
 } vec_t;
 
 typedef struct
@@ -387,7 +388,7 @@ static union
    int num[96];
 } x;
 
-#define _STEP(pi,pj) \
+#define STEP(pi,pj) \
       d=(*pj).c1.c1-(*pi).c1.c1-carry.c1; \
       (*pi).c2.c1+=(d<0); \
       d+=BASE; \
@@ -400,10 +401,10 @@ static union
       (*pi).c2.c3+=(d<0); \
       d+=BASE; \
       (*pi).c1.c3=d&MASK; \
-      d=(*pj).c1.s3-(*pi).c1.s3-carry.s3; \
-      (*pi).c2.s3+=(d<0); \
+      d=(*pj).c1.c4-(*pi).c1.c4-carry.c4; \
+      (*pi).c2.c4+=(d<0); \
       d+=BASE; \
-      (*pi).c1.s3=d&MASK; \
+      (*pi).c1.c4=d&MASK; \
       d=(*pj).c2.c1-(*pi).c2.c1; \
       carry.c1=(d<0); \
       d+=BASE; \
@@ -416,13 +417,47 @@ static union
       carry.c3=(d<0); \
       d+=BASE; \
       (*pi).c2.c3=d&MASK; \
-      d=(*pj).c2.s3-(*pi).c2.s3; \
-      carry.s3=(d<0); \
+      d=(*pj).c2.c4-(*pi).c2.c4; \
+      carry.c4=(d<0); \
       d+=BASE; \
-      (*pi).c2.s3=d&MASK
+      (*pi).c2.c4=d&MASK
 
 
-static void update()
+static void error(int no)
+{
+   switch(no)
+   {
+      case 0:
+         printf("Error in rlxd_init\n");
+         printf("Arithmetic on this machine is not suitable for ranlxd\n");
+         break;
+      case 1:
+         printf("Error in subroutine rlxd_init\n");
+         printf("Bad choice of luxury level (should be 1 or 2)\n");
+         break;
+      case 2:
+         printf("Error in subroutine rlxd_init\n");
+         printf("Bad choice of seed (should be between 1 and 2^31-1)\n");
+         break;
+      case 3:
+         printf("Error in rlxd_get\n");
+         printf("Undefined state (ranlxd is not initialized)\n");
+         break;
+      case 4:
+         printf("Error in rlxd_reset\n");
+         printf("Arithmetic on this machine is not suitable for ranlxd\n");
+         break;
+      case 5:
+         printf("Error in rlxd_reset\n");
+         printf("Unexpected input data\n");
+         break;
+   }         
+   printf("Program aborted\n");
+   exit(0);
+}
+  
+
+static void update(void)
 {
    int k,kmax,d;
    dble_vec_t *pmin,*pmax,*pi,*pj;
@@ -435,7 +470,7 @@ static void update()
       
    for (k=0;k<kmax;k++) 
    {
-      _STEP(pi,pj);
+      STEP(pi,pj);
       pi+=1;
       pj+=1;
       if (pi==pmax)
@@ -455,7 +490,7 @@ static void update()
 }
 
 
-static void define_constants()
+static void define_constants(void)
 {
    int k;
 
@@ -470,30 +505,24 @@ static void define_constants()
 }
 
 
-void rlxd_init(const int level, const int seed)
+void rlxd_init(int level,int seed)
 {
    int i,k,l;
    int ibit,jbit,xbit[31];
    int ix,iy;
 
    if ((INT_MAX<2147483647)||(FLT_RADIX!=2)||(FLT_MANT_DIG<24)||
-       (DBL_MANT_DIG<48)) {
-     fprintf(stderr, "Something wrong in ranluxd! Aborting...\n");
-     exit(1002);
-   }
+       (DBL_MANT_DIG<48))
+      error(0);
 
    define_constants();
    
-   if (level==1) {
-     pr=202;
-   }
-   else if (level==2) {
-     pr=397;
-   }
-   else {
-     fprintf(stderr, "Wrong level %d in ranluxd!\n Must be 1 or 2! Aborting...\n", level);
-     exit(1000);
-   }
+   if (level==1)
+      pr=202;
+   else if (level==2)
+      pr=397;
+   else
+      error(1);
    
    i=seed;
 
@@ -503,10 +532,8 @@ void rlxd_init(const int level, const int seed)
       i/=2;
    }
 
-   if ((seed<=0)||(i!=0)) {
-     fprintf(stderr, "Wrong Seed %d in ranluxd! Aborting...\n", seed);
-     exit(1001);
-   }
+   if ((seed<=0)||(i!=0))
+      error(2);
 
    ibit=0;
    jbit=18;
@@ -537,7 +564,7 @@ void rlxd_init(const int level, const int seed)
    carry.c1=0;
    carry.c2=0;
    carry.c3=0;
-   carry.s3=0;
+   carry.c4=0;
 
    ir=0;
    jr=7;
@@ -549,13 +576,12 @@ void rlxd_init(const int level, const int seed)
 }
 
 
-void ranlxd(double * const r, const int n)
+void ranlxd(double r[],int n)
 {
    int k;
 
-   if (init==0) {
-     rlxd_init(1,1);
-   }
+   if (init==0)
+      rlxd_init(1,1);
 
    for (k=0;k<n;k++) 
    {
@@ -573,13 +599,12 @@ int rlxd_size(void)
 }
 
 
-void rlxd_get(int * const state)
+void rlxd_get(int state[])
 {
    int k;
 
-   if (init==0) {
-     rlxd_init(1,1);
-   }
+   if (init==0)
+      error(3);
 
    state[0]=rlxd_size();
 
@@ -589,7 +614,7 @@ void rlxd_get(int * const state)
    state[97]=carry.c1;
    state[98]=carry.c2;
    state[99]=carry.c3;
-   state[100]=carry.s3;
+   state[100]=carry.c4;
 
    state[101]=pr;
    state[102]=ir;
@@ -598,23 +623,23 @@ void rlxd_get(int * const state)
 }
 
 
-void rlxd_reset(const int * state)
+void rlxd_reset(int state[])
 {
    int k;
 
    if ((INT_MAX<2147483647)||(FLT_RADIX!=2)||(FLT_MANT_DIG<24)||
        (DBL_MANT_DIG<48))
-      errorhandler(4, "");
+      error(4);
 
    define_constants();
 
    if (state[0]!=rlxd_size())
-      errorhandler(5, "");
+      error(5);
 
    for (k=0;k<96;k++)
    {
       if ((state[k+1]<0)||(state[k+1]>=167777216))
-         errorhandler(5, "");
+         error(5);
 
       x.num[k]=state[k+1];
    }
@@ -623,12 +648,12 @@ void rlxd_reset(const int * state)
        ((state[98]!=0)&&(state[98]!=1))||
        ((state[99]!=0)&&(state[99]!=1))||
        ((state[100]!=0)&&(state[100]!=1)))
-      errorhandler(5, "");
+      error(5);
    
    carry.c1=state[97];
    carry.c2=state[98];
    carry.c3=state[99];
-   carry.s3=state[100];
+   carry.c4=state[100];
 
    pr=state[101];
    ir=state[102];
@@ -642,7 +667,7 @@ void rlxd_reset(const int * state)
    if (((pr!=202)&&(pr!=397))||
        (ir<0)||(ir>11)||(jr<0)||(jr>11)||(jr!=((ir+7)%12))||
        (is<0)||(is>91))
-      errorhandler(5, "");
+      error(5);
 }
 
 #endif
