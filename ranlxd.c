@@ -428,31 +428,31 @@ static void error(int no)
    switch(no)
    {
       case 0:
-         printf("Error in rlxd_init\n");
-         printf("Arithmetic on this machine is not suitable for ranlxd\n");
+         fprintf(stderr, "Error in rlxd_init\n");
+         fprintf(stderr, "Arithmetic on this machine is not suitable for ranlxd\n");
          break;
       case 1:
-         printf("Error in subroutine rlxd_init\n");
-         printf("Bad choice of luxury level (should be 1 or 2)\n");
+         fprintf(stderr, "Error in subroutine rlxd_init\n");
+         fprintf(stderr, "Bad choice of luxury level (should be 1 or 2)\n");
          break;
       case 2:
-         printf("Error in subroutine rlxd_init\n");
-         printf("Bad choice of seed (should be between 1 and 2^31-1)\n");
+         fprintf(stderr, "Error in subroutine rlxd_init\n");
+         fprintf(stderr, "Bad choice of seed (should be between 1 and 2^31-1)\n");
          break;
       case 3:
-         printf("Error in rlxd_get\n");
-         printf("Undefined state (ranlxd is not initialized)\n");
+         fprintf(stderr, "Error in rlxd_get\n");
+         fprintf(stderr, "Undefined state (ranlxd is not initialized)\n");
          break;
       case 4:
-         printf("Error in rlxd_reset\n");
-         printf("Arithmetic on this machine is not suitable for ranlxd\n");
+         fprintf(stderr, "Error in rlxd_reset\n");
+         fprintf(stderr, "Arithmetic on this machine is not suitable for ranlxd\n");
          break;
       case 5:
-         printf("Error in rlxd_reset\n");
-         printf("Unexpected input data\n");
+         fprintf(stderr, "Error in rlxd_reset\n");
+         fprintf(stderr, "Unexpected input data\n");
          break;
    }         
-   printf("Program aborted\n");
+   fprintf(stderr, "Program aborted\n");
    exit(0);
 }
   

@@ -299,7 +299,6 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0){    
     parameterfile = fopen(parameterfilename, "a");
     write_first_messages(parameterfile, 0);
-    fclose(parameterfile);
   }
   /* define the geometry */
   geometry();
