@@ -40,7 +40,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
 	invert_eo invert_doublet_eo dml DML_crc32 \
-	polyakov_loop getopt \
+	polyakov_loop getopt sighandler \
 	source_generation boundary io_utils io update_tm ranlxd  \
 	mpi_init linsolve deriv_Sb deriv_Sb_D_psi ranlxs \
 	xchange_deri geometry_eo gauge_io\

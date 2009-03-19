@@ -75,6 +75,7 @@
 #include "polyakov_loop.h"
 #include "monomial.h"
 #include "integrator.h"
+#include "sighandler.h"
 #include "online_measurement.h"
 
 void usage(){
@@ -123,6 +124,10 @@ int main(int argc,char *argv[]) {
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
+#endif
+
+#if (defined SSE || defined SSE2 || SSE3)
+  signal(SIGILL,&catch_ill_inst);
 #endif
 
   strcpy(gauge_filename,"conf.save");

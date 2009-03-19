@@ -75,6 +75,7 @@
 #include "reweighting_factor.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "block.h"
+#include "sighandler.h"
 #include "solver/dfl_projector.h"
 #include "solver/generate_dfl_subspace.h"
 
@@ -109,6 +110,10 @@ int main(int argc,char *argv[]) {
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
+#endif
+
+#if (defined SSE || defined SSE2 || SSE3)
+  signal(SIGILL,&catch_ill_inst);
 #endif
 
   DUM_DERI = 6;

@@ -74,6 +74,7 @@
 #include "D_psi.h"
 #include "gamma.h"
 #include "phmc.h"
+#include "sighandler.h"
 #include "Nondegenerate_Matrix.h"
 #include "linalg/convert_eo_to_lexic.h"
 
@@ -113,6 +114,10 @@ int main(int argc,char *argv[]) {
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
+#endif
+
+#if (defined SSE || defined SSE2 || SSE3)
+  signal(SIGILL,&catch_ill_inst);
 #endif
 
   DUM_DERI = 8;
