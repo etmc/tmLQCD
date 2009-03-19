@@ -6,6 +6,8 @@
  *               2002 Martin Hasenbusch
  *               2003, 2004, 2005, 2006, 2007, 2008 Carsten Urbach
  *
+ * BG and halfspinor versions (C) 2007, 2008 Carsten Urbach
+ *
  * This file is based on an implementation of the Dirac operator 
  * written by Martin Luescher, modified by Martin Hasenbusch in 2002 
  * and modified and extended by Carsten Urbach from 2003-2008

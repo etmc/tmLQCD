@@ -2,7 +2,8 @@
  * $Id$
  * 
  * Copyright (C) 2001 Martin Hasenbusch
- *                    2002,2003,2004,2005 Carsten Urbach
+ *                    
+ * some parts change by C. Urbach 2001-2007
  *
  * This file is part of tmLQCD.
  *

@@ -293,7 +293,7 @@ int main(int argc,char *argv[]) {
 
     if(g_dflgcr_flag == 1) {
       /* set up deflation blocks */
-      init_blocks();
+      init_blocks(1, 1, 2, 1, g_N_s);
 
       /* the can stay here for now, but later we probably need */
       /* something like init_dfl_solver called somewhere else  */

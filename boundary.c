@@ -1,5 +1,7 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * $Id$
+ * Copyright (C) 2001 Martin Hasenbusch
+ * Copyright (C) 2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -15,14 +17,11 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/* $Id$ */
-
-/***********************************************
- * This function defines the boundary cond.
- * 
  *
- ***********************************************/
+ * This function defines the boundary cond.
+ * with arbitrary angle in all directions
+ *
+ ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>

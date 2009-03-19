@@ -3,9 +3,10 @@
  *
  * Copyright (C) 2001 Martin Luescher
  * original code 
- * changed and extended 2007,2008 Carsten Urbach
+ * changed and extended for twisted mass 2002 Andrea Shindler
+ *               2007,2008 Carsten Urbach
  *
- * Blue Gene version Copyright (C) 2006 Carsten Urbach 
+ * Blue Gene version Copyright (C) 2007 Carsten Urbach 
  * Block Dirac operator Copyright (C) 2008 Carsten Urbach
  *
  * This file is part of tmLQCD.

@@ -2,7 +2,10 @@
  * $Id$ 
  *
  * Copyright (C) 2001 Martin Hasenbusch
- *               2006, 2007 Carsten Urbach
+ *
+ * some changes to initial version by Carsten Urbach
+ *
+ * BG version Copyright (C) 2006, 2007 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
