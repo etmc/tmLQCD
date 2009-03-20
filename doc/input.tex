@@ -248,6 +248,14 @@ The following input parameters are {\ttfamily invert} and {\ttfamily
   \end{itemize}
   available. However, only the first two are implemented so far.
 
+\item {\ttfamily ComputeReweighingFactor}:\\
+  If enabled reweighin factors will be computed corresponding to
+  monomials that must be specified in the input file as well.
+
+\item {\ttfamily NoReweighingSamples}:\\
+  Number of random samples used per gauge configuration to estimate
+  the reweighing factor. The default is $10$.
+
 \end{enumerate}
 
 %\noindent $n_f=2+1+1$ related input parameters, where the heavy part of the actions
@@ -479,18 +487,17 @@ The following is a typical HMC input file:
 L=8
 T=16
 Measurements = 1
-startCondition = continue
-#Startcondition = hot
+Startcondition = hot
 2KappaMu = 0.03
 kappa = 0.090
-mubar = 1.
-epsbar = 0.2
+2KappaMubar = 1.
+2KappaEpsbar = 0.2
 
 #This is a comment
 
 PhmcRecEVInterval = 1
 Nsave = 50
-BCAngleT = 1.
+ThetaT = 1.
 BCGstabMaxIter = 5000
 CGMaxIter = 1000
 InitialStoreCounter = readin
@@ -553,7 +560,9 @@ BeginIntegrator
 EndIntegrator
 \end{verbatim}
 
-For the inverter a typical file would look like
+There are realistic small volume sample input files in the
+sub-directory {\ttfamily sample-input}, which also represent test runs
+for the code. For the inverter a typical file would look like
 \begin{verbatim}
 L=4
 T=4
@@ -566,7 +575,7 @@ ReadSource = no
 Measurements = 1
 2KappaMu = 0.0305
 kappa = 0.15
-BCAngleT = 1.
+ThetaT = 1.
 GaugeConfigInputFile = conf
 UseEvenOdd = no
 UseRelativePrecision=yes
@@ -578,6 +587,21 @@ UseStoutSmearing = yes
 StoutRho = 0.15
 StoutNoIterations = 10
 UseSloppyPrecision = yes
+
+# and for reweighing possibly
+BeginMonomial DETRATIO
+  Timescale = 2
+  2KappaMu = 0.03
+  2KappaMu2 = 0.0305
+  kappa = 0.15
+  kappa2 = 0.15
+  maxiter = 20000
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = detrat
+  solver = cg
+EndMonomial
+
 \end{verbatim}
 
 \subsubsection{Reread functionality}

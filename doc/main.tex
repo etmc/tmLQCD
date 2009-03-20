@@ -14,6 +14,8 @@
 \usepackage{hyperref}
 \usepackage{subfigure}
 \usepackage{pifont}
+\usepackage{algorithm}
+\usepackage{algorithmic}
 
 %\setlength{\parindent}{0pt}
 % Absatzabstand
@@ -40,12 +42,16 @@
 
 \section{Installation and Usage}
 
-\myinput{configure}
+\myinput{install}
 \myinput{input}
 \myinput{output}
 \myinput{gensources}
 
 \section{Implementation}
+
+\myinput{overview}
+\myinput{components}
+\myinput{test}
 
 %\myinput{eo_pre}
 %\myinput{martins-trick}
@@ -54,14 +60,25 @@
 %\myinput{integrationschemes}
 
 %\myinput{parallel}
-\myinput{operator}
-\myinput{online}
+%\myinput{operator}
+%\myinput{online}
 
 \section{File Formats and IO}
 \myinput{prop_format.tex}
 
+\clearpage
 \bibliographystyle{h-physrev5}
 \bibliography{bibliography}
+\clearpage
+
+\begin{appendix}
+  \section{$\gamma$  and Pauli  Matrices}
+  \myinput{gamma}
+
+  \section{Initialising the PHMC}
+  \myinput{root}
+\end{appendix}
+
 
 \end{document}
 
