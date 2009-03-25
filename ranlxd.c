@@ -52,9 +52,9 @@
 #include <math.h>
 #include "ranlxd.h"
 
-#if ((defined SSE)||(defined SSE2)||(defined SSE3))
-
 int ranlxd_init = 0;
+
+#if ((defined SSE)||(defined SSE2)||(defined SSE3))
 
 typedef struct
 {
