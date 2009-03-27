@@ -100,8 +100,8 @@ extern "C"
   extern int write_prop_format_flag;
   extern int online_measurement_flag;
   extern int online_measurement_freq;
-  extern int reweighing_flag;
-  extern int reweighing_samples; 
+  extern int reweighting_flag;
+  extern int reweighting_samples; 
 
   int read_input(char *);
   int reread_input(char *);

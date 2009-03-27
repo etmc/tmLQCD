@@ -66,7 +66,7 @@ void reweighting_factor(const int N, const int nstore) {
   
   if(g_proc_id == 0) {
     ofs = fopen("reweighing_factor.data", "a");
-    fprintf(ofs, "%d %e\n", nstore, sum);
+    fprintf(ofs, "%d %e\n", nstore, sum/N);
     fclose(ofs);
   }
 }

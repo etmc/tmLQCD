@@ -280,8 +280,8 @@ int main(int argc,char *argv[]) {
       }
     }
 
-    if(0) {
-      reweighting_factor(10, nstore);
+    if(reweighting_flag == 1) {
+      reweighting_factor(reweighting_samples, nstore);
     }
 
     /* Compute minimal eigenvalues, if wanted */

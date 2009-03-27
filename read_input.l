@@ -122,8 +122,8 @@ TYPE [0-9A-Z]+
   int write_prop_format_flag;
   int online_measurement_flag;
   int online_measurement_freq;
-  int reweighing_flag;
-  int reweighing_samples;
+  int reweighting_flag;
+  int reweighting_samples;
 %}
 
 %option never-interactive
@@ -281,8 +281,8 @@ TYPE [0-9A-Z]+
 ^RanluxdLevel{SPC}*={SPC}*                 BEGIN(RLXDLEVEL);
 ^DeflationSubspaceDimension{SPC}*={SPC}*   BEGIN(DFLSP);
 ^GCRPreconditioner{SPC}*={SPC}*            BEGIN(PRECON);
-^ComputeReweighingFactor{SPC}*={SPC}*      BEGIN(REWEIGH);
-^NoReweighingSamples{SPC}*={SPC}*          BEGIN(REWSAMPLES);
+^ComputeReweightingFactor{SPC}*={SPC}*      BEGIN(REWEIGH);
+^NoReweightingSamples{SPC}*={SPC}*          BEGIN(REWSAMPLES);
 
 ^BeginMonomial{SPC}+                       BEGIN(INITMONOMIAL);
 ^BeginInt                                  BEGIN(INITINTEGRATOR);
@@ -1066,16 +1066,16 @@ TYPE [0-9A-Z]+
   if(myverbose!=0) fprintf(stderr, "Frequency for online measurements set to %s\n", yytext);
 }
 <REWEIGH>yes {
-  reweighing_flag = 1;
-  if(myverbose!=0) fprintf(stderr, "Compute reweighing factor\n");
+  reweighting_flag = 1;
+  if(myverbose!=0) fprintf(stderr, "Compute reweighting factor\n");
 }
 <REWEIGH>no {
-  reweighing_flag = 0;
-  if(myverbose!=0) fprintf(stderr, "Do not compute reweighing factor\n");
+  reweighting_flag = 0;
+  if(myverbose!=0) fprintf(stderr, "Do not compute reweighting factor\n");
 }
 <REWSAMPLES>{DIGIT}+ {
-  reweighing_samples = atoi(yytext);
-  if(myverbose!=0) fprintf(stderr, "Number of reweighing samples set to %d\n", reweighing_samples);
+  reweighting_samples = atoi(yytext);
+  if(myverbose!=0) fprintf(stderr, "Number of reweighting samples set to %d\n", reweighting_samples);
 }
 
 <*>^#   {

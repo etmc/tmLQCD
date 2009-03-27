@@ -123,7 +123,7 @@
 #define _default_online_measurement_flag 0
 #define _default_online_measurement_freq 2
 #define _default_timescale 1
-#define _default_reweighing_flag 0
-#define _default_reweighing_samples 10
+#define _default_reweighting_flag 0
+#define _default_reweighting_samples 10
 
 #endif
