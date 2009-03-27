@@ -33,9 +33,13 @@
 
 void reweighting_factor(const int N, const int nstore) {
   int i, j, n = VOLUME;
-  double sq_norm, sum=0., x;
+  double sq_norm, x, y;
+  double * sum, * sum_sq;
   monomial * mnl;
   FILE * ofs;
+
+  sum = (double*)calloc(no_monomials, sizeof(double));
+  sum_sq = (double*)calloc(no_monomials, sizeof(double));
 
   for(i = 0; i < N; i++) {
     sq_norm = 0.;
@@ -53,20 +57,25 @@ void reweighting_factor(const int N, const int nstore) {
     for(j = 0; j < no_monomials; j++) {
       mnl = &monomial_list[j];
       if(mnl->type != GAUGE) {
-	sq_norm += -mnl->accfunction(j);
+	y = mnl->accfunction(j);
+	sq_norm -= y;
+	x = exp(sq_norm);
+	sum[j] += x;
+	sum_sq[j] += x*x;
+	if(g_proc_id == 0 && g_debug_level > 0) {
+	  printf("monomial[%d] %s, w_%d=%e W=%e\n", j, mnl->name, j, y, x);
+	}
       }
-    }
-
-    x = exp(sq_norm);
-    sum += x;
-    if(g_proc_id == 0 && g_debug_level > 0) {
-      printf("rew: sq_norm = %e, W = %e\n", sq_norm, x);
     }
   }
   
   if(g_proc_id == 0) {
     ofs = fopen("reweighting_factor.data", "a");
-    fprintf(ofs, "%d %e\n", nstore, sum/N);
+    fprintf(ofs, "%d ", nstore);
+    for(j = 0; j < no_monomials; j++) {
+      fprintf(ofs, "%e %e ", sum[j]/N, sqrt((-sum[j]*sum[j]/N/N + sum_sq[j]/N)/(N-1)/N));
+    }
+    fprintf(ofs, "\n");
     fclose(ofs);
   }
 }
