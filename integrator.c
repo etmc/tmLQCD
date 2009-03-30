@@ -66,7 +66,7 @@ int init_integrator() {
 
   for(i = 0; i < no_monomials; i++) {
     ts = monomial_list[i].timescale;
-    if(ts < Integrator.no_timescales) {
+    if(ts < Integrator.no_timescales && ts > -1) {
       Integrator.mnls_per_ts[ ts ][ Integrator.no_mnls_per_ts[ts] ] = monomial_list[i].id;
       Integrator.no_mnls_per_ts[ ts ]++;
     }
@@ -77,7 +77,7 @@ int init_integrator() {
     }
   }
   for(i = 0; i < Integrator.no_timescales; i++) {
-    if(Integrator.no_mnls_per_ts[ ts ] < 1) {
+    if(Integrator.no_mnls_per_ts[ i ] < 1) {
       fprintf(stderr, "Error, no monomial on timescale %d!\nAborting...\n", i);
       exit(-1);
     }
