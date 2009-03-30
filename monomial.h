@@ -29,6 +29,7 @@
 #define NDPOLY 4
 
 #define max_no_monomials 20
+
 typedef struct {
   int type;
   int gtype;
@@ -44,22 +45,29 @@ typedef struct {
   int csg_n, csg_n2;
   int use_rectangles;
   int * csg_index_array, *csg_index_array2;
-  double mu;
-  double mu2;
-  double kappa;
-  double kappa2;
+  /* det or detratio related */
+  double mu, mu2, kappa, kappa2;
+  /* polynomial related, not yet in use */
+  double mubar, epsbar, mubar2, epsbar2;
+  /* energies at beginning and end of trajectory */
+  double energy0; 
+  double energy1;
+  /* gauge related */
+  double c0, c1, beta;
+  /* solver related*/
   double epsilon;
   double forceprec;
   double accprec;
+  /* force normalisation */
   double forcefactor;
-  double energy0; 
-  double energy1;
-  double c0, c1;
-  double beta;
+  /* some book-keeping */
   char name[100];
+  /* pseudo fermion field */
   spinor * pf;
+  /* chronological solver fields */
   spinor ** csg_field;
   spinor ** csg_field2;
+  /* functions for the HMC update */
   void (*hbfunction) (const int no);
   double (*accfunction) (const int no);
   void (*derivativefunction) (const int no);
@@ -72,15 +80,23 @@ typedef struct {
 #include "ndpoly_monomial.h"
 #include "gauge_monomial.h"
 
-extern monomial monomial_list[20];
+/* list of all monomials */
+extern monomial monomial_list[max_no_monomials];
+/* number of initialised monomials */
 extern int no_monomials;
+/* number of gauge monomials, currently 0 or 1 */
 extern int no_gauge_monomials;
+/* number of ndpoly monomials, currently 0 or 1 */
 extern int no_ndpoly_monomials;
 
+/* add a new monomial to the list of monomials */
 int add_monomial(const int type);
+/* initialise all monomials in the list */
 int init_monomials(const int V, const int even_odd_flag);
+/* free space again */
 void free_monomials();
 
+/* some dummy functions */
 void dummy_derivative(const int id);
 void dummy_heatbath(const int id);
 double dummy_acc(const int id);
