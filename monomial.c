@@ -51,64 +51,10 @@ int add_monomial(const int type) {
     fprintf(stderr, "maximal number of monomials %d exceeded!\n", max_no_monomials);
     exit(-1);
   }
-  if(type == DET) {
-    monomial_list[no_monomials].hbfunction = &det_heatbath;
-    monomial_list[no_monomials].accfunction = &det_acc;
-    monomial_list[no_monomials].derivativefunction = &det_derivative;
-  }
-  else if(type == DETRATIO) {
-    monomial_list[no_monomials].hbfunction = &detratio_heatbath;
-    monomial_list[no_monomials].accfunction = &detratio_acc;
-    monomial_list[no_monomials].derivativefunction = &detratio_derivative;
-  }
-  else if(type == GAUGE) {
-    if(no_gauge_monomials > 0) {
-      fprintf(stderr, "maximal number of gauge monomials exceeded!\n");
-      exit(-1);
-    }
-    monomial_list[no_monomials].hbfunction = &gauge_heatbath;
-    monomial_list[no_monomials].accfunction = &gauge_acc;
-    monomial_list[no_monomials].derivativefunction = &gauge_derivative;
-    no_gauge_monomials++;
-    if( monomial_list[no_monomials].gtype == 0) {
-      monomial_list[no_monomials].use_rectangles = 0;
-      monomial_list[no_monomials].c0 = 1.;
-      monomial_list[no_monomials].c1 = 0.;
-    }
-    if(monomial_list[no_monomials].gtype == 1) {
-      monomial_list[no_monomials].use_rectangles = 1;
-      monomial_list[no_monomials].c1 = -0.083333333;
-      monomial_list[no_monomials].c0 = 1.-8*monomial_list[no_monomials].c1;
-    }
-    if(monomial_list[no_monomials].gtype == 2) {
-      monomial_list[no_monomials].use_rectangles = 1;
-      monomial_list[no_monomials].c1 = -0.331;
-      monomial_list[no_monomials].c0 = 1.-8*monomial_list[no_monomials].c1;
-    }
-    if(monomial_list[no_monomials].gtype == 4) {
-      monomial_list[no_monomials].use_rectangles = 1;
-      monomial_list[no_monomials].c1 = -1.4088;
-      monomial_list[no_monomials].c0 = 1.-8*monomial_list[no_monomials].c1;
-    }
-    if(!monomial_list[no_monomials].use_rectangles) {
-      g_rgi_C1 = 0.;
-    }
-    else g_rgi_C1 = monomial_list[no_monomials].c1;
-  }
-  else if(type == NDPOLY) {
-    if(no_ndpoly_monomials > 0) {
-      fprintf(stderr, "maximal number of ndpoly monomials (1) exceeded!\n");
-      exit(-1);
-    }
-    monomial_list[no_monomials].hbfunction = &ndpoly_heatbath;
-    monomial_list[no_monomials].accfunction = &ndpoly_acc;
-    monomial_list[no_monomials].derivativefunction = &ndpoly_derivative;
-    no_ndpoly_monomials++;
-  }
-  else {
-    fprintf(stderr, "Unknown monomial type!\n");
-    return(-1);
-  }
+  monomial_list[no_monomials].hbfunction = &dummy_heatbath;
+  monomial_list[no_monomials].accfunction = &dummy_acc;
+  monomial_list[no_monomials].derivativefunction = &dummy_derivative;
+
   monomial_list[no_monomials].pf = NULL;
   monomial_list[no_monomials].csg_field = NULL;
   monomial_list[no_monomials].csg_field2 = NULL;
@@ -165,22 +111,51 @@ int init_monomials(const int V, const int even_odd_flag) {
 
   no = 0;
   for(i = 0; i < no_monomials; i++) {
+
     if(monomial_list[i].type != GAUGE) {
+      if(monomial_list[i].type == DET) {
+	monomial_list[i].hbfunction = &det_heatbath;
+	monomial_list[i].accfunction = &det_acc;
+	monomial_list[i].derivativefunction = &det_derivative;
+      }
+      else if(monomial_list[i].type == DETRATIO) {
+	monomial_list[i].hbfunction = &detratio_heatbath;
+	monomial_list[i].accfunction = &detratio_acc;
+	monomial_list[i].derivativefunction = &detratio_derivative;
+      }
+      else if(monomial_list[i].type == NDPOLY) {
+	if(no_ndpoly_monomials > 0) {
+	  fprintf(stderr, "maximal number of ndpoly monomials (1) exceeded!\n");
+	  exit(-1);
+	}
+	monomial_list[i].hbfunction = &ndpoly_heatbath;
+	monomial_list[i].accfunction = &ndpoly_acc;
+	monomial_list[i].derivativefunction = &ndpoly_derivative;
+	no_ndpoly_monomials++;
+      }
+      
       monomial_list[i].pf = __pf+no*V;
       no++;
       monomial_list[i].rngrepro = reproduce_randomnumber_flag;
     }
     else {
       monomial_list[i].pf = NULL;
+      if(no_gauge_monomials > 0) {
+	fprintf(stderr, "maximal number of gauge monomials exceeded!\n");
+	exit(-1);
+      }
+      monomial_list[i].hbfunction = &gauge_heatbath;
+      monomial_list[i].accfunction = &gauge_acc;
+      monomial_list[i].derivativefunction = &gauge_derivative;
+      no_gauge_monomials++;
+      
       if(!monomial_list[i].use_rectangles) {
 	monomial_list[i].c1 = 0.;
-	g_rgi_C1 = 0.;
 	monomial_list[i].c0 = 1.;
-	g_rgi_C0 = 1.;
       }
-      else {
-	monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
-      }
+      g_rgi_C1 = monomial_list[i].c1;
+      monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
+      g_rgi_C0 = monomial_list[i].c0;
     }
     monomial_list[i].id = i;
     monomial_list[i].even_odd_flag = even_odd_flag;
@@ -194,10 +169,23 @@ void free_monomials() {
   return;
 }
 
+void dummy_derivative(const int id) {
+  if(g_proc_id == 0) {
+    fprintf(stderr, "dummy_derivative was called. Was that really intended?\n");
+  }
+  return;
+}
+
 void dummy_heatbath(const int id) {
+  if(g_proc_id == 0) {
+    fprintf(stderr, "dummy_heatbath was called. Was that really intended?\n");
+  }
   return;
 }
 
 double dummy_acc(const int id) {
+  if(g_proc_id == 0) {
+    fprintf(stderr, "dummy_acc was called. Was that really intended?\n");
+  }
   return(0.);
 }

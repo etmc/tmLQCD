@@ -81,6 +81,7 @@ int add_monomial(const int type);
 int init_monomials(const int V, const int even_odd_flag);
 void free_monomials();
 
+void dummy_derivative(const int id);
 void dummy_heatbath(const int id);
 double dummy_acc(const int id);
 
