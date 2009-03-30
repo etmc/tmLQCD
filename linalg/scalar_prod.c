@@ -33,7 +33,10 @@ complex scalar_prod(spinor * const S, spinor * const R, const int N, const int p
   int ix;
   static double ks,kc,ds,tr,ts,tt;
   spinor *s,*r;
-  complex c, d;
+  complex c;
+#ifdef MPI
+  complex d;
+#endif
   
   /* Real Part */
 

@@ -179,7 +179,7 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
   double maxnorm;
   complex tmp, sum_LU, cone;
   int * pivot;
-  complex *A;
+  complex *A = NULL;
   cone.re = 1.;
   cone.im = 0.;
 

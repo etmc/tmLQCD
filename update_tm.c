@@ -71,9 +71,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
   su3 *v, *w;
   static int ini_g_tmp = 0;
-  int rlxd_state[105];
   int ix, mu, accept, i=0, j=0;
-  int saveiter_max = ITER_MAX_BCG;
 
   double yy[1];
   double dh, expmdh, ret_dh=0., ret_gauge_diff=0., tmp;
@@ -81,13 +79,13 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   double ks,kc,ds,tr,ts,tt;
 
   /* Energy corresponding to the Gauge part */
-  double new_plaquette_energy=0., new_rectangle_energy = 0., gauge_energy = 0., new_gauge_energy = 0.;
+  double new_plaquette_energy=0., new_rectangle_energy = 0., gauge_energy = 0.;
 
   /* Energy corresponding to the Momenta part */
   double enep=0., enepx=0., ret_enep = 0.;
 
   /* Energy corresponding to the pseudo fermion part(s) */
-  FILE * rlxdfile=NULL, * datafile=NULL, * ret_check_file=NULL;
+  FILE * datafile=NULL, * ret_check_file=NULL;
 
 
   if(ini_g_tmp == 0) {

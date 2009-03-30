@@ -42,7 +42,7 @@ int DML_global_xor(uint32_t *x) {
   return(status);
 }
 #else
-int DML_global_xor(uint32_t *x){}
+int DML_global_xor(uint32_t *x){return(0);}
 #endif
 
 

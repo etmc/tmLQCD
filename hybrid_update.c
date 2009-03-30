@@ -150,8 +150,11 @@ double moment_energy() {
 double ini_momenta(const int repro) {
   
   su3adj *xm;
-  int i,mu,k;
+  int i, mu;
+#ifdef MPI
+  int k;
   int rlxd_state[105];
+#endif
   static double y[8];
   static double tt,tr,ts,kc,ks,sum;
   

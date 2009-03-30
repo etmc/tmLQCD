@@ -32,7 +32,6 @@ spinor * sp_cup = NULL;
 spinor * sp_cdn = NULL;
 
 int init_chi_up_copy(const int V) {
-  int i = 0;
 
   if((void*)(sp_cup = (spinor*)calloc(V+1, sizeof(spinor))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
@@ -60,7 +59,6 @@ void free_chi_up_copy() {
 
 
 int init_chi_dn_copy(const int V) {
-  int i = 0;
 
   if((void*)(sp_cdn = (spinor*)calloc(V+1, sizeof(spinor))) == NULL) {
     printf ("malloc errno : %d\n",errno); 

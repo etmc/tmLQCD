@@ -41,6 +41,7 @@
 #include "block.h"
 #include "little_D.h"
 #include "gcr4complex.h"
+#include "boundary.h"
 #include "generate_dfl_subspace.h"
 
 int init_little_dfl_subspace(const int N_s);

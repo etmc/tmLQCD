@@ -160,7 +160,7 @@ void ndpoly_heatbath(const int id) {
      (*mnl).energy0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
   } 
   else {
-     zero_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2);
+    zero_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2);
   }
 
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
