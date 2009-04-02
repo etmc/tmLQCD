@@ -3,6 +3,8 @@
  *
  * Copyright (C) 2008 Carsten Urbach
  *
+ * Modified by Jenifer Gonzalez Lopez 2009/04/01
+ *
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
@@ -79,7 +81,13 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].use_rectangles = 0;
   monomial_list[no_monomials].c1 = _default_g_rgi_C1;
   monomial_list[no_monomials].c0 = 1.;
-  monomial_list[no_monomials].beta = _default_g_beta;  
+  monomial_list[no_monomials].beta = _default_g_beta;
+  monomial_list[no_monomials].eta = _default_g_eta;
+  monomial_list[no_monomials].ct = _default_g_Ct; 
+  monomial_list[no_monomials].cs = _default_g_Cs;
+  monomial_list[no_monomials].c1ss = _default_g_C1ss; 
+  monomial_list[no_monomials].c1tss = _default_g_C1tss; 
+  monomial_list[no_monomials].c1tts = _default_g_C1tts; 
   monomial_list[no_monomials].rngrepro = _default_reproduce_randomnumber_flag;
   monomial_list[no_monomials].initialised = 1;
 
@@ -92,7 +100,7 @@ int init_monomials(const int V, const int even_odd_flag) {
   int i, no=0;
   spinor * __pf = NULL;
   for(i = 0; i < no_monomials; i++) {
-    if(monomial_list[i].type != GAUGE) no++;
+    if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
   }
   if(no_monomials > 0) {
     if((void*)(_pf = (spinor*)calloc(no*V+1, sizeof(spinor))) == NULL) {
@@ -111,8 +119,8 @@ int init_monomials(const int V, const int even_odd_flag) {
 
   no = 0;
   for(i = 0; i < no_monomials; i++) {
-
-    if(monomial_list[i].type != GAUGE) {
+    
+    if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) {
       if(monomial_list[i].type == DET) {
 	monomial_list[i].hbfunction = &det_heatbath;
 	monomial_list[i].accfunction = &det_acc;
@@ -143,19 +151,41 @@ int init_monomials(const int V, const int even_odd_flag) {
       if(no_gauge_monomials > 0) {
 	fprintf(stderr, "maximal number of gauge monomials exceeded!\n");
 	exit(-1);
-      }
-      monomial_list[i].hbfunction = &gauge_heatbath;
-      monomial_list[i].accfunction = &gauge_acc;
-      monomial_list[i].derivativefunction = &gauge_derivative;
-      no_gauge_monomials++;
-      
-      if(!monomial_list[i].use_rectangles) {
-	monomial_list[i].c1 = 0.;
-	monomial_list[i].c0 = 1.;
-      }
-      g_rgi_C1 = monomial_list[i].c1;
-      monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
-      g_rgi_C0 = monomial_list[i].c0;
+      }      
+      else if(monomial_list[i].type == GAUGE) {
+	monomial_list[i].hbfunction = &gauge_heatbath;
+	monomial_list[i].accfunction = &gauge_acc;
+	monomial_list[i].derivativefunction = &gauge_derivative;
+	no_gauge_monomials++;
+	
+	if(!monomial_list[i].use_rectangles) {
+	  monomial_list[i].c1 = 0.;
+	  monomial_list[i].c0 = 1.;
+	}
+	g_rgi_C1 = monomial_list[i].c1;
+	monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
+	g_rgi_C0 = monomial_list[i].c0;
+      }    
+      else if(monomial_list[i].type == SFGAUGE) {
+	monomial_list[i].hbfunction = &sf_gauge_heatbath;
+	monomial_list[i].accfunction = &sf_gauge_acc;
+	monomial_list[i].derivativefunction = &sf_gauge_derivative;
+	no_gauge_monomials++;	
+	
+	if(!monomial_list[i].use_rectangles) {
+	  monomial_list[i].c1 = 0.;
+	  monomial_list[i].c0 = 1.;
+	  monomial_list[i].c1ss = 0.;
+	  monomial_list[i].c1tss = 0.;
+	  monomial_list[i].c1tts = 0.;
+	}
+	g_rgi_C1 = monomial_list[i].c1;
+	monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
+	g_rgi_C0 = monomial_list[i].c0;
+	g_C1ss = monomial_list[i].c1ss;
+	g_C1tss = monomial_list[i].c1tss;
+	g_C1tts = monomial_list[i].c1tts;
+      } 
     }
     monomial_list[i].id = i;
     monomial_list[i].even_odd_flag = even_odd_flag;

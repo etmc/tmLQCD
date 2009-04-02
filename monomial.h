@@ -3,6 +3,8 @@
  *
  * Copyright (C) 2008 Carsten Urbach
  *
+ * Modified by Jenifer Gonzalez Lopez 2009/04/01
+ *
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
@@ -27,6 +29,7 @@
 #define GAUGE 2
 #define POLY 3
 #define NDPOLY 4
+#define SFGAUGE 5
 
 #define max_no_monomials 20
 
@@ -60,6 +63,10 @@ typedef struct {
   double accprec;
   /* force normalisation */
   double forcefactor;
+  /* sf */          
+  double eta;             
+  double ct, cs; 
+  double c1ss, c1tss, c1tts;
   /* some book-keeping */
   char name[100];
   /* pseudo fermion field */
@@ -79,6 +86,7 @@ typedef struct {
 #include "detratio_monomial.h"
 #include "ndpoly_monomial.h"
 #include "gauge_monomial.h"
+#include "sf_gauge_monomial.h"
 
 /* list of all monomials */
 extern monomial monomial_list[max_no_monomials];

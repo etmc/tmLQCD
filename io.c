@@ -1,6 +1,8 @@
 /***********************************************************************
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
+ * Modified by Jenifer Gonzalez Lopez 30/03/2009
+ *
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
@@ -101,6 +103,7 @@ int write_lime_gauge_field_old(char * filename, const double plaq, const int cou
   int ME_flag=0, MB_flag=0, status=0;
   int tag=0, t=0, x=0, y=0, z=0, id=0, X=0, tt=0, Y=0, Z=0;
   MPI_Status mpi_status;
+  char message[500];
   su3 tmp[4];
   int coords[4];
   n_uint64_t bytes;
@@ -214,6 +217,7 @@ int write_lime_gauge_field_old(char * filename, const double plaq, const int cou
   /* Message end and Message begin flag */
   int ME_flag=0, MB_flag=0, status=0;
   int t=0, x=0, y=0, z=0;
+  char message[100];
   n_uint64_t bytes;
 #ifndef WORDS_BIGENDIAN
   su3 tmp[4];
@@ -285,6 +289,7 @@ int write_lime_gauge_field_singleprec(char * filename, const double plaq,
   int ME_flag=0, MB_flag=0, status=0;
   int tag=0, t=0, x=0, y=0, z=0, id=0, X=0, tt=0, Y=0, Z=0;
   MPI_Status mpi_status;
+  char message[500];
   float tmp[72];
   int coords[4];
   n_uint64_t bytes;
@@ -400,6 +405,7 @@ int write_lime_gauge_field_singleprec(char * filename,
   /* Message end and Message begin flag */
   int ME_flag=0, MB_flag=0, status=0;
   int t=0, x=0, y=0, z=0;
+  char message[500];
   n_uint64_t bytes;
   float tmp[72];
 
@@ -1555,7 +1561,7 @@ int read_spinorfield_cm_swap_single(spinor * const s, spinor * const r, char * f
 
 int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filename) {
 
-  FILE * ofs = NULL;
+  FILE * ofs;
   int t, x, y , z, i = 0;
   int t0, X, Y, Z, id = 0;
   spinor * p = NULL;
@@ -1735,6 +1741,10 @@ int write_first_messages(FILE * parameterfile, const int inv) {
   if(inv != 1) {
     printf("# mu = %f\n", g_mu);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
+    printf("# SFBC parameters (gauge):\n");
+    printf("# g_Ct = %f, g_Cs = %f\n", g_Ct, g_Cs);
+    printf("# g_C1ss = %f, g_C1tss = %f, g_C1tts = %f\n", g_C1ss, g_C1tss, g_C1tts);
+    printf("# g_eta = %f\n", g_eta);
     printf("# Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
   }
@@ -1749,7 +1759,11 @@ int write_first_messages(FILE * parameterfile, const int inv) {
     fprintf(parameterfile, "# Nmeas=%d, Nsave=%d \n",
 	    Nmeas,Nsave);
     fprintf(parameterfile, "# mu = %f\n", g_mu);
-    fprintf(parameterfile, "g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
+    fprintf(parameterfile, "# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
+    fprintf(parameterfile, "# SFBC parameters (gauge):\n");
+    fprintf(parameterfile, "# g_Ct = %f, g_Cs = %f\n", g_Ct, g_Cs);
+    fprintf(parameterfile, "# g_C1ss = %f, g_C1tss = %f, g_C1tts = %f\n", g_C1ss, g_C1tss, g_C1tts);
+    fprintf(parameterfile, "# g_eta = %f\n", g_eta);
     fprintf(parameterfile, "# Using %s precision for the inversions!\n", 
 	    g_relative_precision_flag ? "relative" : "absolute");
   }

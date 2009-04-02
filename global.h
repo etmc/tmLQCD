@@ -3,6 +3,8 @@
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
+ * Modified by Jenifer Gonzalez Lopez 31.03.2009
+ *
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
@@ -118,6 +120,22 @@ EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
 EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
 EXTERN double g_rgi_C0, g_rgi_C1;
+
+/*************************/
+/* SF definitions */
+EXTERN double g_eta;                          /* background field parameter */
+EXTERN double g_Ct, g_Cs;                     /* plaquette part */
+EXTERN double g_C1ss, g_C1tss, g_C1tts;       /* rectangle part */
+EXTERN int g_Tbsf;                            /* it sets at which time slice I want to put the SF b.c. (end point)
+                                                 T = lattice time extent set by Carsten */
+/* variables specifying the value of t,x,y,z for each lattice site ix */
+EXTERN int * g_t;
+EXTERN int * g_x;
+EXTERN int * g_y;
+EXTERN int * g_z;
+/* end of SF definitions */
+/*************************/
+
 /* Parameters for non-degenrate case */
 EXTERN double g_acc_Ptilde;
 EXTERN double g_acc_Hfin;

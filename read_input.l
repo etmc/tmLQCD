@@ -3,6 +3,8 @@
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
+ * Modified by Jenifer Gonzalez Lopez 2009/04/01
+ *
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
@@ -203,6 +205,7 @@ TYPE [0-9A-Z]+
 %x INITMONOMIAL
 %x DETMONOMIAL
 %x GAUGEMONOMIAL
+%x SFGAUGEMONOMIAL
 %x NDPOLYMONOMIAL
 %x MNAME
 %x MSOLVER
@@ -309,6 +312,11 @@ TYPE [0-9A-Z]+
     mnl->gtype = 3;
     strcpy((*mnl).name, "GAUGE");
   }
+  else if(strcmp(yytext, "SFGAUGE")==0) {
+    mnl->type = SFGAUGE;
+    mnl->gtype = 6;
+    strcpy((*mnl).name, "SFGAUGE");
+  }
   else {
     fprintf(stderr, "Unknown monomial type %s in line %d\n", yytext, line_of_file);
     exit(1);
@@ -323,13 +331,14 @@ TYPE [0-9A-Z]+
   if(myverbose) printf("monomial has id %d\n", current_monomial);
 
   if(mnl->type == GAUGE) BEGIN(GAUGEMONOMIAL);
+  else if(mnl->type == SFGAUGE) BEGIN(SFGAUGEMONOMIAL);
   else if(mnl->type == NDPOLY) BEGIN(NDPOLYMONOMIAL);
   else BEGIN(DETMONOMIAL);
 }
 
 
 
-<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL>{
   {SPC}*Timescale{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->timescale = a;
@@ -424,6 +433,67 @@ TYPE [0-9A-Z]+
   }
 }
 
+<SFGAUGEMONOMIAL>{
+  {SPC}*Type{SPC}*={SPC}* BEGIN(GTYPE);
+  {SPC}*UseRectangleStaples{SPC}*={SPC}*yes {
+    mnl->use_rectangles = 1;
+    g_dbw2rand = 1;
+    if(myverbose) printf("  UseRectangleStaples set to true line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*UseRectangleStaples{SPC}*={SPC}*no {
+    mnl->use_rectangles = 0;
+    g_dbw2rand = 0;
+    if(myverbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*Beta{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    mnl->beta = c;
+    g_beta = c;
+    if(myverbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*RectangleCoefficient{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    mnl->c1 = c;
+    g_rgi_C1 = c;
+    if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*Eta{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    mnl->eta = c;
+    g_eta = c;
+    if(myverbose) printf("  eta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*PlaquetteCoefficientT{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    mnl->ct = c;
+    g_Ct = c;
+    if(myverbose) printf("  PlaquetteCoefficientT ct set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*PlaquetteCoefficientS{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    mnl->cs = c;
+    g_Cs = c;
+    if(myverbose) printf("  PlaquetteCoefficientS cs set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*RectangleCoefficientSS{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    mnl->c1ss = c;
+    g_C1ss = c;
+    if(myverbose) printf("  RectangleCoefficientSS c1ss set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*RectangleCoefficientTSS{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    mnl->c1tss = c;
+    g_C1tss = c;
+    if(myverbose) printf("  RectangleCoefficientTSS c1tss set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*RectangleCoefficientTTS{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    mnl->c1tts = c;
+    g_C1tts = c;
+    if(myverbose) printf("  RectangleCoefficientTTS c1tts set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+}
 
 
 <NDPOLYMONOMIAL>{
@@ -531,6 +601,19 @@ TYPE [0-9A-Z]+
     mnl->use_rectangles = 1;
     BEGIN(GAUGEMONOMIAL);
   }
+  sf_Wilson {
+    mnl->gtype = 5;
+    mnl->c1 = 0.;
+    mnl->use_rectangles = 0;
+    g_rgi_C1 = 0.;
+    g_dbw2rand = 0;
+    BEGIN(SFGAUGEMONOMIAL);
+  }
+  sf_user {
+    mnl->gtype = 6;
+    BEGIN(SFGAUGEMONOMIAL);
+  }
+
 }
 
 <INITINTEGRATOR>egrator{SPC}* {
@@ -1091,7 +1174,7 @@ TYPE [0-9A-Z]+
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR>\n   {
+<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR>\n   {
   line_of_file++;
 }
 <*>\n                       {
@@ -1160,6 +1243,7 @@ int read_input(char * conf_file){
   g_dbw2rand = 0;
   g_running_phmc = 0;
   g_beta = _default_g_beta;
+  g_eta = _default_g_eta;
   g_N_s = _default_g_N_s;
   g_dflgcr_flag = _default_g_dflgcr_flag;
   random_seed = _default_random_seed;
@@ -1186,6 +1270,11 @@ int read_input(char * conf_file){
   max_solver_iterations = _default_max_solver_iterations;
   solver_precision = _default_solver_precision;
   g_rgi_C1 = _default_g_rgi_C1;
+  g_Ct = _default_g_Ct;
+  g_Cs = _default_g_Cs;
+  g_C1ss = _default_g_C1ss;
+  g_C1tss = _default_g_C1tss;
+  g_C1tts = _default_g_C1tts;
   read_source_flag= _default_read_source_flag;
   strcpy(source_input_filename, _default_source_filename);
   g_relative_precision_flag = _default_g_relative_precision_flag;
@@ -1249,7 +1338,7 @@ int read_input(char * conf_file){
   
   if(write_prop_format_flag == -1) write_prop_format_flag = source_format_flag;
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
-  
+
   fclose(yyout);
   fclose(yyin);
   return(0);
@@ -1310,7 +1399,7 @@ int reread_input(char * conf_file){
   nstore = nst;
 
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
-  
+ 
   g_mu = g_mu1;
 
   fclose(yyout);
