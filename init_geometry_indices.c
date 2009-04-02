@@ -66,6 +66,12 @@ int init_geometry_indices(const int V) {
   if((void*)g_field_z_ipt_odd == NULL) return(13);
 #endif
 
+  /* This should only be used for the SFBC. */
+  /* This should not be used for anything other than the SFBC */
+  /* because it might eventually vanish. */
+  g_t = (int*)calloc(V, sizeof(int));
+  if((void*)g_t == NULL) return(14);
+
   g_idn[0] = idn;
   g_iup[0] = iup;
 
@@ -85,6 +91,7 @@ int init_geometry_indices(const int V) {
   for(i = 1; i < (T+4); i++){
     g_ipt[i] = g_ipt[i-1]+(LX+4);
   }
+
   return(0);
 }
 
@@ -104,4 +111,5 @@ void free_geometry_indices() {
   free(g_field_z_ipt_odd);
   free(g_field_z_ipt_even);
 #endif
+  free(g_t);
 }

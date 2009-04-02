@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <assert.h>
 #include "global.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -530,66 +531,6 @@ void geometry(){
 #if defined PARALLELXYZT
   startvaluez = 1;
 #endif
-
-  /*** MY MODIFICATIONS ***/
-
-  /* it finds which are the values of t,x,y,z (x0,x1,x2,x3) for each lattice site x (ix) */
-  /* the result is written in the global variables g_t[ix], g_x[ix], g_y[ix], g_z[ix], respectively */
-
-  g_t=(int*)malloc(sizeof(int)*VOLUME);
-
-  if(g_t==NULL) {
-    fprintf(stderr,"allocation of memory failed");
-    exit(-1);
-  }
-
-  g_x=(int*)malloc(sizeof(int)*VOLUME);
-
-  if(g_x==NULL) {
-    fprintf(stderr,"allocation of memory failed");
-    exit(-1);
-  }
-
-  g_y=(int*)malloc(sizeof(int)*VOLUME);
-
-  if(g_y==NULL) {
-    fprintf(stderr,"allocation of memory failed");
-    exit(-1);
-  }
-
-  g_z=(int*)malloc(sizeof(int)*VOLUME);
-
-  if(g_z==NULL) {
-    fprintf(stderr,"allocation of memory failed");
-    exit(-1);
-  }
-
-  
-  for (x0 = 0 ; x0 < T ; x0++) {
-    
-    for (x1 = 0 ; x1 < LX ; x1++) {
-      
-      for (x2 = 0 ; x2 < LY ; x2++) {
-	
-	for (x3 = 0 ; x3 < LZ ; x3++) {
-	  
-
-	  ix = Index(x0, x1, x2, x3);
-
-	  g_t[ix] = x0;
-	  g_x[ix] = x1;
-	  g_y[ix] = x2;
-	  g_z[ix] = x3;
-	
-  
-	}
-      }
-    }
-  }
-  
-  /*** END OF MY MODIFICATIONS ***/
-
-
   /* extended for boundary slices */
   for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
     for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++){
@@ -923,6 +864,22 @@ void geometry(){
       }
     }
 #endif
+  }
+
+  /* This establishes the time-coordinate values. */
+  /* This should only be used for the SFBC because */
+  /* it may eventually vanish. */
+  /* This should be merged into the above. */
+  /* FIX this later, but for now */
+  /* I'm assuming a scalar machine. */
+  for( x0 = 0; x0 <  T; x0++ )
+  for( x1 = 0; x1 < LX; x1++ )
+  for( x2 = 0; x2 < LY; x2++ )
+  for( x3 = 0; x3 < LZ; x3++ )
+  {
+    ix = Index( x0, x1, x2, x3 );
+    assert( ix == g_ipt[ x0 ][ x1 ][ x2 ][ x3 ] );
+    g_t[ix] = x0;
   }
 
   free(xeven);
