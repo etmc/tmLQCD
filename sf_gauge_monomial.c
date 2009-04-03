@@ -40,7 +40,7 @@
 #include "measure_rectangles.h"
 #include "monomial.h"
 #include "sf_gauge_monomial.h"
-
+#include "sf_utils.h"
 
 void sf_gauge_derivative(const int id) {
 
@@ -90,16 +90,42 @@ void sf_gauge_heatbath(const int id) {
   }
 }
 
-double sf_gauge_acc(const int id) {
-  monomial * mnl = &monomial_list[id];
+double sf_gauge_acc( const int id )
+{
+  monomial* mnl = &(monomial_list[id]);
+  double sq_plaq = 0;
+  double rect_plaq = 0;
+  double sq_bulk_plaq = 0;
 
-  mnl->energy1 = g_beta*(mnl->c0 * measure_gauge_action());
-  if(mnl->use_rectangles) {
-    mnl->energy1 += g_beta*(mnl->c1 * measure_rectangles());
+  sq_plaq = calc_sq_plaq();
+  rect_plaq = calc_rect_plaq();
+  sq_bulk_plaq = calc_bulk_sq_plaq();
+
+  {
+    fprintf( stderr, "sq_plaq = %e\n", sq_plaq );
+    fprintf( stderr, "beta * c0 * sq_plaq = %e\n", g_beta * mnl->c0 * sq_plaq );
+
+    fprintf( stderr, "rect_plaq = %e\n", rect_plaq );
+    fprintf( stderr, "beta * c1 * rect_plaq = %e\n", g_beta * mnl->c1 * rect_plaq );
+
+    fprintf( stderr, "sq_bulk_plaq = %e\n", sq_bulk_plaq );
+    fprintf( stderr, "beta * c0 * sq_bulk_plaq = %e\n", g_beta * mnl->c0 * sq_bulk_plaq );
+
+    fprintf( stderr, "my energy =    %e\n", g_beta * ( mnl->c0 * sq_plaq + mnl->c1 * rect_plaq ) );
   }
-  if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called gauge_acc for id %d %d dH = %1.4e\n", 
-	   id, mnl->even_odd_flag, mnl->energy0 - mnl->energy1);
+
+  mnl->energy1 = g_beta *( mnl->c0 * measure_gauge_action() );
+  if( mnl->use_rectangles )
+  {
+    mnl->energy1 += g_beta*( mnl->c1 * measure_rectangles() );
   }
-  return(mnl->energy0 - mnl->energy1);
+  fprintf( stderr, "mnl->energy1 = %e\n", mnl->energy1 );
+
+  if( ( g_proc_id == 0 ) & ( g_debug_level > 3 ) )
+  {
+    printf( "called gauge_acc for id %d %d dH = %1.4e\n", 
+	    id, mnl->even_odd_flag, mnl->energy0 - mnl->energy1 );
+  }
+
+  return ( mnl->energy0 - mnl->energy1 );
 }
