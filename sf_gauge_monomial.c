@@ -77,11 +77,14 @@ void sf_gauge_derivative(const int id) {
   return;
 }
 
-void sf_gauge_heatbath(const int id) {
-  monomial * mnl = &monomial_list[id];
-  if(mnl->use_rectangles) mnl->c0 = 1. - 8.*mnl->c1;
+void sf_gauge_heatbath( const int id )
+{
+  monomial* mnl = &(monomial_list[id]);
 
-  mnl->energy0 = g_beta*(mnl->c0 * measure_gauge_action());
+  if( mnl->use_rectangles ){ mnl->c0 = 1. - 8.*mnl->c1; }
+
+  mnl->energy0 = g_beta * ( mnl->c0 * measure_gauge_action() );
+
   if(mnl->use_rectangles) {
     mnl->energy0 += g_beta*(mnl->c1 * measure_rectangles());
   }
@@ -94,27 +97,59 @@ double sf_gauge_acc( const int id )
 {
   monomial* mnl = &(monomial_list[id]);
   double sq_plaq = 0;
-  double rect_plaq = 0;
   double sq_bulk_plaq = 0;
+  double sq_boundary_space_space_plaq = 0;
+  double sq_boundary_space_time_plaq = 0;
+  double sq_wrapped_plaq = 0;
+
+  double rect_plaq = 0;
 
   sq_plaq = calc_sq_plaq();
-  rect_plaq = calc_rect_plaq();
   sq_bulk_plaq = calc_bulk_sq_plaq();
+  sq_boundary_space_space_plaq = calc_boundary_space_space_sq_plaq();
+  sq_boundary_space_time_plaq = calc_boundary_space_time_sq_plaq();
+  sq_wrapped_plaq = calc_wrapped_sq_plaq();
 
+  rect_plaq = calc_rect_plaq();
+
+  #if 1
   {
     fprintf( stderr, "sq_plaq = %e\n", sq_plaq );
     fprintf( stderr, "beta * c0 * sq_plaq = %e\n", g_beta * mnl->c0 * sq_plaq );
 
-    fprintf( stderr, "rect_plaq = %e\n", rect_plaq );
-    fprintf( stderr, "beta * c1 * rect_plaq = %e\n", g_beta * mnl->c1 * rect_plaq );
-
     fprintf( stderr, "sq_bulk_plaq = %e\n", sq_bulk_plaq );
     fprintf( stderr, "beta * c0 * sq_bulk_plaq = %e\n", g_beta * mnl->c0 * sq_bulk_plaq );
 
+    fprintf( stderr, "sq_wrapped_plaq = %e\n", sq_wrapped_plaq );
+    fprintf( stderr, "beta * c0 * sq_wrapped_plaq = %e\n", g_beta * mnl->c0 * sq_wrapped_plaq );
+
+    fprintf( stderr, "rect_plaq = %e\n", rect_plaq );
+    fprintf( stderr, "beta * c1 * rect_plaq = %e\n", g_beta * mnl->c1 * rect_plaq );
+
+    fprintf( stderr, "bulk + bound(ss) + bound(st) + wrapped = %e + %e + %e + %e = %e =?= %e = total\n",
+             sq_bulk_plaq, sq_boundary_space_space_plaq, sq_boundary_space_time_plaq, sq_wrapped_plaq,
+             sq_bulk_plaq + sq_boundary_space_space_plaq + sq_boundary_space_time_plaq + sq_wrapped_plaq, sq_plaq );
+
     fprintf( stderr, "my energy =    %e\n", g_beta * ( mnl->c0 * sq_plaq + mnl->c1 * rect_plaq ) );
   }
+  #endif
 
-  mnl->energy1 = g_beta *( mnl->c0 * measure_gauge_action() );
+  /*mnl->energy1 = g_beta*( mnl->c0 * measure_gauge_action() );*/
+
+  /* The bulk contribution is the same. */
+  mnl->energy1  = g_beta * mnl->c0 * sq_bulk_plaq;
+
+  /* The space-time boundary contribution must be weighted differently. */
+  fprintf( stderr, "mnl->ct = %e\n", mnl->ct );
+  mnl->energy1 += g_beta * mnl->c0 * mnl->ct * sq_boundary_space_time_plaq;  
+
+  /* The space-space boundary contribution must be weighted differently. */
+  fprintf( stderr, "mnl->cs = %e\n", mnl->cs );
+  mnl->energy1 += g_beta * mnl->c0 * mnl->cs * sq_boundary_space_space_plaq;  
+
+  /* Include the missing plaquettes if requested. */
+  if( g_sf_inc_wrap_sq == 1 ){ mnl->energy1 += g_beta * mnl->c0 * sq_wrapped_plaq; }
+
   if( mnl->use_rectangles )
   {
     mnl->energy1 += g_beta*( mnl->c1 * measure_rectangles() );
@@ -123,7 +158,7 @@ double sf_gauge_acc( const int id )
 
   if( ( g_proc_id == 0 ) & ( g_debug_level > 3 ) )
   {
-    printf( "called gauge_acc for id %d %d dH = %1.4e\n", 
+    printf( "called sf_gauge_acc for id %d %d dH = %1.4e\n", 
 	    id, mnl->even_odd_flag, mnl->energy0 - mnl->energy1 );
   }
 

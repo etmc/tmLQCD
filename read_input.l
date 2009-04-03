@@ -493,6 +493,14 @@ TYPE [0-9A-Z]+
     g_C1tts = c;
     if(myverbose) printf("  RectangleCoefficientTTS c1tts set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
+  {SPC}*IncludeWrappedSquares{SPC}*={SPC}*yes {
+    g_sf_inc_wrap_sq = 1;
+    if(myverbose) printf("  IncludeWrappedSquares set to true line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*IncludeWrappedSquares{SPC}*={SPC}*no {
+    g_sf_inc_wrap_sq = 0;
+    if(myverbose) printf("  IncludeWrappedSquares set to false line %d monomial %d\n", line_of_file, current_monomial);
+  }
 }
 
 
