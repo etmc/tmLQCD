@@ -40,7 +40,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
 	invert_eo invert_doublet_eo dml DML_crc32 \
-	polyakov_loop getopt sighandler \
+	polyakov_loop getopt sighandler reweighting_factor \
 	source_generation boundary io_utils io update_tm ranlxd  \
 	mpi_init linsolve deriv_Sb deriv_Sb_D_psi ranlxs \
 	xchange_deri geometry_eo gauge_io\
@@ -49,9 +49,10 @@ MODULES = read_input gamma hybrid_update observables start \
 	init_gauge_field init_geometry_indices init_spinor_field \
 	init_dirac_halfspinor xchange_halffield stout_smear \
 	init_stout_smear_vars stout_smear_force \
-	Nondegenerate_Matrix chebyshev_polynomial_nd Ptilde_nd  \
+	Nondegenerate_Matrix \
+	chebyshev_polynomial_nd Ptilde_nd  \
 	init_chi_spinor_field init_chi_copy reweighting_factor_nd \
-	init_bispinor_field eigenvalues_bi D_psi reweighting_factor \
+	init_bispinor_field eigenvalues_bi D_psi \
 	xchange_lexicfield xchange_2fields online_measurement \
 	monomial det_monomial detratio_monomial update_momenta \
 	integrator gauge_monomial ndpoly_monomial phmc \
@@ -121,18 +122,18 @@ install: Makefile
 	@mkdir -p $(bindir); \
 	for p in hmc_tm invert invert_doublet; do \
 	  progname=`echo $$p | sed '$(program_transform_name)'`; \
-	  echo Installing $$p as $$progname in $(bindir)...; \
+	  echo "Installing $$p as $$progname in $(bindir)..."; \
 	  cp $$p $(bindir)/$$progname; \
-	done \
-	echo done;
+	done; \
+	echo "done";
 
 uninstall: Makefile
 	for p in hmc_tm invert invert_doublet; do \
 	  progname=`echo $$p | sed '$(program_transform_name)'`; \
-	  echo Un-Installing $$progname in $(bindir)...; \
+	  echo "Un-Installing $$progname in $(bindir)..."; \
 	  rm $(bindir)/$$progname; \
-	done \
-	echo done;
+	done; \
+	echo "done";
 
 compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d
