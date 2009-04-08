@@ -1,5 +1,5 @@
 Here are some remarks collected in order to configure, compile and
-test the HMC programme suit. For more information, also about running
+install the tmLQCD programme suit. For more information, also about running
 the code please read the documentation in the doc sub-directory. 
 
 CONFIGURE and COMPILE
@@ -12,12 +12,18 @@ program. Please download it at
 
 http://www.physics.utah.edu/~detar/scidac/
 
-or use the copy in the GWC scratch directory. Untar it somewhere
-configure and compile before doing the same with HMC. Then you should
-use the configure option --with-lime=dir for the HMC to set the
-correct directory where to find lime (see below). 
+Configure and compile lime before doing the same with
+tmLQCD. Then you should use the configure option --with-lime=dir for the
+tmLQCD to set the correct directory where to find lime (see below). 
 
-Building the HMC code is a two step procedure:
+For more documentation please change into the doc directory and type
+latex main.tex
+and see the sections for configuring, installing and testing the code.
+
+Here we have gathered some examples for some standard architectures.
+Building the tmLQCD executables is a three step procedure:
+
+****************************************************************************
 
 1) configure:
 
@@ -25,39 +31,45 @@ In your build directory type
 
 path-to-the-sources/configure --help
 
-to get an overview of the available options and switches. For
-instance, a scalar build on a P4 machine would look like:
+to get an overview of the available options and switches. In
+particular check out the prefix option for your installation path. 
+What follows now are some examples for a few standard architectures.
+
+- a scalar build on a P4 machine would look like:
 
 path-to-the-sources/configure --disable-mpi --enable-sse2 --enable-p4 \
---enable-gaugecopy --disable-newdiracop --with-limedir=path-to-lime/
+--enable-gaugecopy --disable-newdiracop --with-limedir=<path-to-lime> \
+--with-lapack="<linker options needed for lapack>"
 
-Opteron with SSE2:
+- Opteron with SSE2:
 
 path-to-the-sources/configure --disable-mpi --enable-sse2 --enable-opteron \
---enable-gaugecopy --disable-newdiracop --with-limedir=path-to-lime/
+--enable-gaugecopy --disable-newdiracop --with-limedir=<path-to-lime> \
+--with-lapack="<linker options needed for lapack>"
 
-A MPI parallel (4dims) build on a P4 cluster:
+- A MPI parallel (4dims) build on a P4 cluster:
 
 path-to-the-sources/configure --enable-mpi --enable-sse2 --enable-p4 \
---with-mpidimension=4 --enable-gaugecopy --disable-newdiracop
+--with-mpidimension=4 --enable-gaugecopy --disable-newdiracop \
+--with-limedir=<path-to-lime> --with-lapack="<linker options needed for lapack>"
 
-on the Munich Altix machine:
+- on the Munich Altix machine:
 
 path-to-the-sources/configure --enable-mpi --with-mpidimension=4 \
---without-lapack --with-limedir=path-to-lime/ --enable-newdiracop \
---disable-shmem CC=mpicc CFLAGS="-mcpu=itanium2 -O3 -g -c99 -mtune=itanium2"
+--with-limedir=<path-to-lime> --enable-newdiracop \
+--disable-shmem CC=mpicc CFLAGS="-mcpu=itanium2 -O3 -g -c99 -mtune=itanium2" \
+--with-lapack="<linker options needed for lapack>"
 
 if you want to use lapack on this machine please do
 module load mkl
-and then replace
---without-lapack with
---with-lapack="$MKL_LIB"
 
 
-on the HLRB ice installation use
+- on the HLRB ice installation use
 
-path-to-the-sources/configure --enable-mpi --with-mpidimension=4 --disable-sse2 --disable-p4
-   --with-limedir=path-to-lime/ --enable-newdiracop CC="mpicc -std=c99" CFLAGS="-g"
+path-to-the-sources/configure --enable-mpi --with-mpidimension=4 \
+   --disable-sse2 --disable-p4  --with-limedir=<path-to-lime> \
+   --enable-newdiracop CC="mpicc -std=c99" CFLAGS="-g" \
+   --with-lapack="<linker options needed for lapack>" 
 
 where it is again important to use the Intel C compiler! 
 
@@ -65,189 +77,27 @@ for lapack first load the module mkl and then use
 
 --with-lapack="-L$LIBRARY_PATH -llapack -lblas"
 
-on the BG/L:
+- on Blue Gene installations
 
-path-to-the-sources/configure --host=ppc-ibm-blrts --build=ppc64-ibm-linux \
---without-lapack --enable-mpi --with-mpidimension=4 \
---enable-gaugecopy --with-limedir=path-to-lime/  \
---enable-newdiracop CC=/usr/bin/blrts_xlc
+For the Blue Gene see the README.bg? files
 
-*** important ***
-for optimal performance on the BG/L use --enable-newdiracop 
-with --with-bgldram and link the executables with
-/bgl/local/bin/blrts_gcc -Xlinker --script=./elf32ppcblrts.x
-See IBM redbook for details regarding rts_get_dram_window()
-runtime function.
-You should also set
--env "BGLMPI_EAGER=500000000 BGLMPI_PACING=n" as option
-to mpirun.
-*** important ***
+You may enable or disable other configure options as needed. See the
+documentation for more details.
 
-You may enable or disable other configure options as needed.
+****************************************************************************
 
 2) make
 
 type `make` in your build directory.
 
-I there appears not error message during compilation you should end up
-with two executable in the build directory, namely `hmc_tm` and
-`invert`. 
+If there appears no error message during compilation you should end up
+with a few executable in the build directory, namely `hmc_tm`,
+`invert` and `invert_doublet`.
 
-TESTING
+****************************************************************************
 
-The following numbers might be taken as reference points:
+3) make install
 
-4^4 lattice, beta 6.0, kappa=0.177, 2*kappa*mu=0.177 (this is the input
-value), antiperiodic boundary conditions:
+type `make install`
 
-Plaquette: 0.62457(7)
-
-4^4 lattice, beta 4.0, kappa=0.1, 2*kappa*mu=0.26795, antiperiodic
-boundary conditions:
-
-Plaquette: 0.29164(2)
-
-4^4 lattice, beta 4.0, kappa=0.05, 2*kappa*mu=0.26795, antiperiodic
-boundary conditions:
-
-Plaquette: 0.29055(3)
-
-4^3 x 8 lattice, beta = 1, kappa = 0, mu = 0, antiperiodic bc, 
-DBW2 gauge action
-
-Plaquette: 0.71771(3) (Carsten serial)
-Plaquette: 0.71772(7) (Karl)
-
-
-4^4 lattice, beta 0.67, kappa=0.125 mu=0.5 2*kappa*mu=0.125 antiperiodic bc
-DBW2 gauge action.
-
-Plaquette: 0.56121(13) (HH)
-Plaquette: 0.56125(13) (Carsten serial ExtLeapFrog)
-Plaquette: 0.56127(10) (Carsten parallel t ExtLeapFrog)
-Plaquette: 0.56139(11) (Carsten parallel xt ExtLeapFrog)
-
-You can also have a look to the following numbers:
-
-mu = 0.1 -> 2kappa mu = 0.0354
-beta = 5.1
-kappa = 0.177
-4^4 Lattice
-
-          <P>                tau_int    #       dtau
-antiperiodisch
-------------------------------------------------------
-Carsten   0.5351(4)          3.16       4800    0.05
-          0.5345(4)          2.99       4800    0.05
-          0.5351(5)          4.10       4800    0.0667
-          0.5350(4)          3.97       4800    0.1
-          0.5348(5)          4.33       4800    0.1667
-------------------------------------------------------
-
-periodisch
-------------------------------------------------------
-Carsten   0.5339(5)          4.49       4850    0.05
-          0.5341(4)          4.08       4800    0.1667
-          0.5338(4)          3.02       4800    0.1667
-          0.5333(5)          4.18       4800    0.1667
-------------------------------------------------------
-
-kappa = 0.177 mu = 0
-antiperiodisch
-------------------------------------------------------
-Carsten   0.5363(4)          3.50       4800    0.1667
-          0.5363(4)                     4800    0.1667
-------------------------------------------------------
-
-periodisch
-------------------------------------------------------
-Carsten   0.5356(4)          3.19       4800    0.1667
-------------------------------------------------------
-
-mu = 0.05
-antiperiodisch
-------------------------------------------------------
-Carsten   0.5355(4)                     4800    0.1667
-------------------------------------------------------
-
-kappa = 0.177, mu = 0.3 (here I see a phase transition)
-antiperiodisch
-------------------------------------------------------
-Carsten   0.513(3)           44         4800    0.1667
-------------------------------------------------------
-
-kappa = 0.177, mu = 0.5
-antiperiodisch
-------------------------------------------------------
-Carsten   0.4678(9)          9.09       4800    0.1667
-------------------------------------------------------
-
-kappa =0, mu = 0.5
-antiperiodisch
-------------------------------------------------------
-Karl      0.4155(6)          2.31       1200    0.166
-------------------------------------------------------
-Carsten   0.4150(4)          3.08       4800    0.1667
-          0.4151(4)          3.20       4800    0.1667
-------------------------------------------------------
-
-beta =6.0, kappa=0.177, mu=0.5, 2 kappa mu = 0.177
-antiperiodisch
-------------------------------------------------------
-Karl      0.6243(3)          1.87       2200    0.166
-------------------------------------------------------
-Ines      0.6244(2)                     3600
-------------------------------------------------------
-Carsten   0.6246(2)          1.88       4800    0.1667
-------------------------------------------------------
-
-beta =6.0, kappa=0.177, mu=0.1, 2 kappa mu = 0.0354
-antiperiodisch
-------------------------------------------------------
-Karl
-------------------------------------------------------
-Carsten   0.6310(2)          2.2        4000    0.1667
-------------------------------------------------------
-
-beta =6.0, kappa=0.177, mu=0.01, 2 kappa mu = 0.00354
-antiperiodisch
-------------------------------------------------------
-Karl
-------------------------------------------------------
-Carsten   0.6308(2)          2.3        4000    0.1667
-          0.6313(2)          2.2        4000    0.1667
-------------------------------------------------------
-
-beta = 6.0, kappa = 0.177, 2 kappa mu = 0.5
-------------------------------------------------------
-Carsten   0.6095(3)          2.8        4000    0.1667
-------------------------------------------------------
-
-
-Some more or less strict coding rules:
-
-- C99 standard, configure should take care of non-conform compilers
-- variables starting with 'g_' are declared in global.h
-- constant macros are all capital letters
-  and starting with a '_'
-- other varialbes all small letters
-- as few as possible macros, inline instead...
-- as much as possible speaking names
-- all default values defined in default_input_values.h
-- order of parameters to functions should be (if applicable)
-  f(output, input)
-- indent by 2 spaces, but otherwise like
-function1() {
-  dostuff
-  do more stuff
-}
-  but never an empty line after an opening '{', because then emacs informes
-  you about an empty line, when you are at the '}' of a long block...
-  And always a space before a '{' for paren highlighting in emacs
-
-  But also your style (this is real gnu-indent-style, I guess), is okay,
-  eventhough there are sometimes really a lot of spaces in this style.
-- I usually always put braces, even if there is only one line in the block.
-- header files always enclosed in #ifnedef _NAME_H #define _NAME ... #endif
-- define parameters to	function	as const where applicable
-- first	line in	every file /* $Id$ */ for CVS
+to get the executables installed.
