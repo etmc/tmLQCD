@@ -1,8 +1,8 @@
 L=8
 T=16
 Measurements = 1
-startCondition = continue
-#Startcondition = hot
+#startCondition = continue
+Startcondition = hot
 2KappaMu = 0.03
 kappa = 0.090
 NSave = 50
@@ -19,7 +19,7 @@ DebugLevel = 1
 PerformOnlineMeasurements = yes
 OnlineMeasurementsFreq = 1
 
-BeginMonomial GAUGE
+BeginMonomial GAUGE	
   UseRectangleStaples = yes
   RectangleCoefficient = -0.0833333
   Timescale = 0
