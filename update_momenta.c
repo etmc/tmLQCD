@@ -34,7 +34,7 @@
 #include "monomial.h"
 #include "update_momenta.h"
 
-
+/* Updates the momenta: equation 16 of Gottlieb */
 void update_momenta(int * mnllist, double step, const int no) {
   int i,mu, k;
   double tmp;
