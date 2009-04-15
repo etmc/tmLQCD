@@ -24,6 +24,8 @@
  * Author: Carsten Urbach
  *         urbach@physik.fu-berlin.de
  *
+ * Modified by Jenifer Gonzalez Lopez for the Schroedinger Functional
+ *
  *******************************************************************************/
 #define MAIN_PROGRAM
 
@@ -77,6 +79,7 @@
 #include "integrator.h"
 #include "sighandler.h"
 #include "online_measurement.h"
+#include "sf_calc_action.h"
 
 void usage(){
   fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
@@ -305,6 +308,7 @@ int main(int argc,char *argv[]) {
     parameterfile = fopen(parameterfilename, "a");
     write_first_messages(parameterfile, 0);
   }
+
   /* define the geometry */
   geometry();
   
@@ -365,7 +369,23 @@ int main(int argc,char *argv[]) {
 
   if(g_running_phmc) init_phmc();
 
+  /* impose SF bc in case it was chosen in the input file */
+  if (bc_flag == 1) {    
+    dirichlet_boundary_conditions(g_Tbsf);
+    sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
+  }
+  /* Measure and print the energy of the gauge field with SF bc: */
+  fprintf(parameterfile,"# g_update_gauge_energy: %d \n", g_update_gauge_energy);
+  fprintf(parameterfile,"# First gauge plaq energy value: %14.12f \n",measure_plaquette()/(2.*3.*6.*VOLUME*g_nproc));
+  fprintf(parameterfile,"# First gauge Wil energy value: %14.12f \n",measure_wilson_action(g_beta)/(6.*VOLUME*g_nproc));
+  fprintf(parameterfile,"# First SF gauge Iwa energy value: %14.12f \n", measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)/(6.*VOLUME*g_nproc));
+  fprintf(parameterfile,"# First SF gauge Wil energy value: %14.12f \n",measure_wilson_action_sf_weights_improvement(g_Tbsf, g_beta, g_Cs, g_Ct)/(6.*VOLUME*g_nproc));
+  fprintf(parameterfile,"# First SF gauge Wil energy value sep: %14.12f \n",measure_wilson_action_sf_weights_improvement_separate_boundary(g_Tbsf, g_beta, g_Cs, g_Ct)/(6.*VOLUME*g_nproc));
+  fprintf(parameterfile,"# SF parameters: %14.12f %14.12f \n",g_rgi_C0,g_rgi_C1);
+  fprintf(parameterfile,"# SF parameters: %14.12f %14.12f %14.12f %14.12f %14.12f \n",g_Cs,g_Ct,g_C1ss,g_C1tss,g_C1tts);
+  fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);
   /*compute the energy of the gauge field*/
+  fprintf(parameterfile,"# g_update_gauge_energy: %d \n", g_update_gauge_energy);
   plaquette_energy=measure_gauge_action();
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
     rectangle_energy = measure_rectangles();
