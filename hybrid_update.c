@@ -70,6 +70,7 @@ void update_gauge(double step) {
 
   for(i = 0; i < VOLUME; i++) { 
     for(mu = 0; mu < 4; mu++){
+      /* moment[i][mu] = h_{i,mu}^{alpha} */
       xm=&moment[i][mu];
       z=&g_gauge_field[i][mu];
       _assign_const_times_mom(deriv, step, *xm);
@@ -130,6 +131,8 @@ double moment_energy() {
       kc=tr-tt;
     }
   }
+  /* from the loop I got: p^2 */
+  /* the contribution to the E is however (p^2)/2: */
   kc=0.5*(ks+kc);
 #ifdef MPI
   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -167,6 +170,9 @@ double ini_momenta(const int repro) {
 	  sum=0.;
 	  xm=&moment[i][mu];
 	  gauss_vector(y,8);
+	  /* from the previous line we get exp(-y^2) distribution */
+	  /* this means that <y^2> = sigma^2 = 1/2 */
+	  /* in order to get <y^2> = 1 distribution ==> *sqrt(2) */
 	  (*xm).d1=1.4142135623731*y[0];
 	  (*xm).d2=1.4142135623731*y[1];
 	  sum+=(*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
