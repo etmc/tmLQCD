@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2008 Carsten Urbach
  *
- * Modified by Jenifer Gonzalez Lopez 2009/04/01
+ * Modified by Jenifer Gonzalez Lopez 2009/03/27
  *
  * This file is part of tmLQCD.
  *
