@@ -41,7 +41,7 @@
 #include "monomial.h"
 #include "gauge_monomial.h"
 
-
+/* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id) {
 
   int i, mu;
