@@ -49,7 +49,8 @@ su3 exposu3(su3adj p) {
   static double fac,r;
   static double a,b;
   static complex a0,a1,a2,a1p;
-  
+
+  /* it writes 'p=a_i*lambda_i' in matrix form 'v' */  
   _make_su3(v,p);
   _su3_times_su3(v2,v,v);
   a=0.5*(v2.c00.re+v2.c11.re+v2.c22.re);
