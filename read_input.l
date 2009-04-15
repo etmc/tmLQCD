@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
- * Modified by Jenifer Gonzalez Lopez 2009/04/01
+ * Modified by Jenifer Gonzalez Lopez 2009/03/27
  *
  * This file is part of tmLQCD.
  *
@@ -121,6 +121,7 @@ TYPE [0-9A-Z]+
   double eigenvalue_precision;
   int sub_evs_cg_flag;
   int even_odd_flag;
+  int bc_flag;
   int write_prop_format_flag;
   int online_measurement_flag;
   int online_measurement_freq;
@@ -155,6 +156,7 @@ TYPE [0-9A-Z]+
 %x LLX
 %x LLY
 %x LLZ
+%x TTBSF
 %x NPROCX
 %x NPROCY
 %x NPROCZ
@@ -191,6 +193,7 @@ TYPE [0-9A-Z]+
 %x NOEV
 %x PRECEV
 %x EO
+%x BC
 %x WRPROPFLAG
 %x PROPPREC
 %x PROPTYPE
@@ -220,6 +223,7 @@ TYPE [0-9A-Z]+
 ^LX{SPC}*={SPC}*                           BEGIN(LLX);
 ^LY{SPC}*={SPC}*                           BEGIN(LLY);
 ^LZ{SPC}*={SPC}*                           BEGIN(LLZ);
+^g_Tbsf{SPC}*={SPC}*                       BEGIN(TTBSF);
 ^NRXProcs{SPC}*={SPC}*                     BEGIN(NPROCX);
 ^NRYProcs{SPC}*={SPC}*                     BEGIN(NPROCY);
 ^NRZProcs{SPC}*={SPC}*                     BEGIN(NPROCZ);
@@ -277,6 +281,7 @@ TYPE [0-9A-Z]+
 ^SplittedSource{SPC}*={SPC}*               BEGIN(SPLITSOURCE);
 ^SourceLocation{SPC}*={SPC}*               BEGIN(SRCLOC);
 ^UseEvenOdd{SPC}*={SPC}*                   BEGIN(EO);
+^Bc{SPC}*={SPC}*                           BEGIN(BC);
 ^WritePropagatorFormat{SPC}*={SPC}*        BEGIN(WRPROPFLAG);
 ^PropagatorType{SPC}*={SPC}*               BEGIN(WRPROPFLAG);
 ^PerformOnlineMeasurements{SPC}*={SPC}*    BEGIN(ONMEAS);
@@ -431,6 +436,14 @@ TYPE [0-9A-Z]+
     g_rgi_C1 = c;
     if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
+  {SPC}*IncludeWrappedSquares{SPC}*={SPC}*yes {
+    g_sf_inc_wrap_sq = 1;
+    if(myverbose) printf("  IncludeWrappedSquares set to true line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*IncludeWrappedSquares{SPC}*={SPC}*no {
+    g_sf_inc_wrap_sq = 0;
+    if(myverbose) printf("  IncludeWrappedSquares set to false line %d monomial %d\n", line_of_file, current_monomial);
+  }
 }
 
 <SFGAUGEMONOMIAL>{
@@ -492,14 +505,6 @@ TYPE [0-9A-Z]+
     mnl->c1tts = c;
     g_C1tts = c;
     if(myverbose) printf("  RectangleCoefficientTTS c1tts set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*IncludeWrappedSquares{SPC}*={SPC}*yes {
-    g_sf_inc_wrap_sq = 1;
-    if(myverbose) printf("  IncludeWrappedSquares set to true line %d monomial %d\n", line_of_file, current_monomial);
-  }
-  {SPC}*IncludeWrappedSquares{SPC}*={SPC}*no {
-    g_sf_inc_wrap_sq = 0;
-    if(myverbose) printf("  IncludeWrappedSquares set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
 }
 
@@ -722,6 +727,10 @@ TYPE [0-9A-Z]+
   LZ = atoi(yytext);
   if(myverbose!=0) printf("LZ =%s\n", yytext);
 #endif
+}
+<TTBSF>{DIGIT}+                  {
+  g_Tbsf = atoi(yytext);
+  if(myverbose!=0) printf("g_Tbsf =%s\n", yytext);
 }
 <NPROCX>{DIGIT}+              {
 #ifndef FIXEDVOLUME
@@ -1120,6 +1129,14 @@ TYPE [0-9A-Z]+
   even_odd_flag = 0;
   if(myverbose) printf("Do not use even/odd preconditioning\n");
 }
+<BC>yes {
+  bc_flag = 1;
+  if(verbose) printf("Schroedinger Functional bc\n");
+}
+<BC>no {
+  bc_flag = 0;
+  if(verbose) printf("Periodic bc\n");
+}
 <WRPROPFLAG>gwc      {
   write_prop_format_flag = 10;
   if(myverbose!=0) fprintf(stderr, "GWC format no longer supported for writing propagators\n");
@@ -1234,6 +1251,7 @@ int read_input(char * conf_file){
   LX = _default_LX;
   LY = _default_LY;
   LZ = _default_LZ;
+  g_Tbsf = _default_g_Tbsf;
   N_PROC_X = _default_N_PROC_X;
   N_PROC_Y = _default_N_PROC_Y;
   N_PROC_Z = _default_N_PROC_Z;
@@ -1315,6 +1333,7 @@ int read_input(char * conf_file){
   sub_evs_cg_flag = _default_sub_evs_cg_flag;
   phmc_exact_poly = _default_phmc_exact_poly;
   even_odd_flag = _default_even_odd_flag;
+  bc_flag = _default_bc_flag;
   online_measurement_flag = _default_online_measurement_flag;
   online_measurement_freq = _default_online_measurement_freq;
 
