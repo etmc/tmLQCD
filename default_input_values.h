@@ -129,12 +129,13 @@
 #define _default_reweighting_samples 10
 /* sf default values */
 #define _default_g_eta 0.
-#define _default_g_Tbsf 4
+#define _default_g_Tbsf 3
 #define _default_g_Ct 1.
 #define _default_g_Cs 0.5
 #define _default_g_C1 0.
 #define _default_g_C1ss 0.
 #define _default_g_C1tss 0.
 #define _default_g_C1tts 0.
+#define _default_bc_flag 0
 
 #endif

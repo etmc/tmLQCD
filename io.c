@@ -1,8 +1,6 @@
 /***********************************************************************
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
- * Modified by Jenifer Gonzalez Lopez 30/03/2009
- *
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
@@ -1722,6 +1720,16 @@ int write_first_messages(FILE * parameterfile, const int inv) {
 #  endif
 
 #endif
+  if( bc_flag == 0 )
+  {
+    printf("# Periodic boundary conditions\n");
+    fprintf(parameterfile, "# Periodic boundary conditions\n");
+  }
+  if( bc_flag == 1 )
+  {
+    printf("# Schroedinger Functional boundary conditions\n");
+    fprintf(parameterfile, "# Schroedinger Functional boundary conditions\n");
+  }
   printf("# The lattice size is %d x %d x %d x %d\n",
 	 (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(LZ*g_nproc_z));
   printf("# The local lattice size is %d x %d x %d x %d\n", 
@@ -1748,7 +1756,6 @@ int write_first_messages(FILE * parameterfile, const int inv) {
     printf("# Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
   }
-
   fprintf(parameterfile, "# The lattice size is %d x %d x %d x %d\n", (int)(g_nproc_t*T), (int)(g_nproc_x*LX), 
 	  (int)(g_nproc_y*LY), (int)(g_nproc_z*LZ));
   fprintf(parameterfile, "# The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY), (int)(LZ));
