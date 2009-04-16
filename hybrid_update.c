@@ -68,18 +68,39 @@ void update_gauge(double step) {
 #pragma pomp inst begin(updategauge)
 #endif
 
-  for(i = 0; i < VOLUME; i++) { 
-    for(mu = 0; mu < 4; mu++){
-      /* moment[i][mu] = h_{i,mu}^{alpha} */
-      xm=&moment[i][mu];
-      z=&g_gauge_field[i][mu];
-      _assign_const_times_mom(deriv, step, *xm);
-      v=restoresu3( exposu3(deriv) );
-      _su3_times_su3(w, v, *z);
-      _su3_assign(*z, w);
+  /* preparing the function for the SF case but still on the way... */
+  if (bc_flag == 0) { /* if PBC */
+    for(i = 0; i < VOLUME; i++) { 
+      for(mu = 0; mu < 4; mu++){
+	/* moment[i][mu] = h_{i,mu}^{alpha} */
+	xm=&moment[i][mu];
+	z=&g_gauge_field[i][mu];
+	_assign_const_times_mom(deriv, step, *xm);
+	v=restoresu3( exposu3(deriv) );
+	_su3_times_su3(w, v, *z);
+	_su3_assign(*z, w);
+      }
     }
   }
-
+  else if (bc_flag == 1) { /* if Dirichlet bc (not SF yet!!!) */
+    for(i = 0; i < VOLUME; i++) { 
+      for(mu = 0; mu < 4; mu++){
+	if (g_t[i] == g_Tbsf && mu==0) {
+	  
+	}
+	else {
+	  /* moment[i][mu] = h_{i,mu}^{alpha} */
+	  xm=&moment[i][mu];
+	  z=&g_gauge_field[i][mu];
+	  _assign_const_times_mom(deriv, step, *xm);
+	  v=restoresu3( exposu3(deriv) );
+	  _su3_times_su3(w, v, *z);
+	  _su3_assign(*z, w);
+	}
+      }
+    }
+  }
+  
 #ifdef MPI
   /* for parallelization */
   xchange_gauge();

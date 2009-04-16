@@ -157,11 +157,20 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   if(use_stout_flag == 1) unstout();
 
   enepx = moment_energy();
-  new_plaquette_energy = measure_gauge_action();
-  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-    new_rectangle_energy = measure_rectangles();
-  }
 
+  /* preparing for the SF case but still on the way... */
+  if (bc_flag == 0) { /* if PBC */
+    new_plaquette_energy = measure_gauge_action();
+    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+      new_rectangle_energy = measure_rectangles();
+    }
+  }
+  else if (bc_flag == 1) { /* if Dirichlet bc (not SF yet!!!) */
+    new_plaquette_energy = measure_gauge_action();
+    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+      new_rectangle_energy = measure_rectangles();
+    }
+  }
   /* Compute the energy difference */
   dh = dh + (enepx - enep);
   expmdh = exp(-dh);
@@ -286,10 +295,29 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     (*plaquette_energy)=new_plaquette_energy;
     (*rectangle_energy)=new_rectangle_energy;
     /* put the links back to SU(3) group */
-    for(ix=0;ix<VOLUME;ix++) { 
-      for(mu=0;mu<4;mu++) { 
-        v=&g_gauge_field[ix][mu];
-        *v=restoresu3(*v); 
+    if (bc_flag == 0) { /* if PBC */
+      for(ix=0;ix<VOLUME;ix++) { 
+	for(mu=0;mu<4;mu++) { 
+	  v=&g_gauge_field[ix][mu];
+	  *v=restoresu3(*v); 
+	}
+      }      
+    }    
+    else if (bc_flag == 1) { /* if Dirichlet bc (but not SF yet!!!) */
+      for(ix=0;ix<VOLUME;ix++) { 
+	for(mu=0;mu<4;mu++) { 
+	  if (g_t[ix] == g_Tbsf && mu==0) {
+	    v=&g_gauge_field[ix][mu];
+	    /* here we do not need to 'restoresu3' because of two reasons:
+	       1) these links are zero  ==> they keep updating to zero value all the time
+	       2) moreover, we actually want to avoid at all the updating of these links since it's time consuming and not needed */
+	  }
+	  else {
+	    v=&g_gauge_field[ix][mu];
+	    /* the next line: keeps unitary the gauge field which has been updated */
+	    *v=restoresu3(*v);
+	  }
+	}
       }
     }
   }
@@ -339,12 +367,13 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
 void stout_smear() {
   int ix, mu;
-  for(ix = 0; ix < VOLUME; ix++) {
-    for(mu = 0; mu < 4; mu++) {
-      _su3_assign(g_gauge_field_saved[ix][mu], g_gauge_field[ix][mu]);
+    for(ix = 0; ix < VOLUME; ix++) {
+      for(mu = 0; mu < 4; mu++) {
+	_su3_assign(g_gauge_field_saved[ix][mu], g_gauge_field[ix][mu]);
+      }
+      stout_smear_gauge_field(stout_rho , stout_no_iter);
     }
-    stout_smear_gauge_field(stout_rho , stout_no_iter);
-  }
+
   return;
 }
 void unstout() {

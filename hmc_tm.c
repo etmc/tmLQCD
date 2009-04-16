@@ -370,10 +370,14 @@ int main(int argc,char *argv[]) {
   if(g_running_phmc) init_phmc();
 
   /* impose SF bc in case it was chosen in the input file */
-  if (bc_flag == 1) {    
+#if 1
+if (bc_flag == 1) {    
     dirichlet_boundary_conditions(g_Tbsf);
-    sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
+    //sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
   }
+#endif
+
+#if 0
   /* Measure and print the energy of the gauge field with SF bc: */
   fprintf(parameterfile,"# g_update_gauge_energy: %d \n", g_update_gauge_energy);
   fprintf(parameterfile,"# First gauge plaq energy value: %14.12f \n",measure_plaquette()/(2.*3.*6.*VOLUME*g_nproc));
@@ -386,6 +390,7 @@ int main(int argc,char *argv[]) {
   fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);
   /*compute the energy of the gauge field*/
   fprintf(parameterfile,"# g_update_gauge_energy: %d \n", g_update_gauge_energy);
+#endif
   plaquette_energy=measure_gauge_action();
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
     rectangle_energy = measure_rectangles();
@@ -449,9 +454,18 @@ int main(int argc,char *argv[]) {
     if(return_check_flag == 1 && trajectory_counter%return_check_interval == 0) return_check = 1;
     else return_check = 0;
 
+#if 0
+    /* In order to get a right answer when imposing Dirichlet bc,
+       I need either to do the next line OR to eliminate the step 'restoresu3' in update_tm() */
+    if (bc_flag == 1) {
+      dirichlet_boundary_conditions(g_Tbsf);
+    }
+#endif
+
     Rate += update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check, Ntherm<trajectory_counter);
 /*     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename,  */
 /* 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag); */
+
 
     /* Measure the Polyakov loop in direction 2 and 3:*/
     polyakov_loop(&pl, 2); 
@@ -523,7 +537,7 @@ int main(int argc,char *argv[]) {
       remove("hmc.reread");
     }
     trajectory_counter++;
-  }
+  } /* end of loop over trajectories */
 
   if(g_proc_id==0) {
     printf("Acceptance Rate was: %e Prozent\n", 100.*(double)Rate/(double)Nmeas);

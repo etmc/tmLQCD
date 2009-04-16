@@ -33,6 +33,7 @@
 #include "su3spinor.h"
 #include "monomial.h"
 #include "update_momenta.h"
+#include "read_input.h"
 
 /* Updates the momenta: equation 16 of Gottlieb */
 void update_momenta(int * mnllist, double step, const int no) {
@@ -67,23 +68,51 @@ void update_momenta(int * mnllist, double step, const int no) {
 #ifdef MPI
     xchange_deri();
 #endif
-    for(i = 0; i < VOLUME; i++) {
-      for(mu = 0; mu < 4; mu++) {
-	xm=&moment[i][mu];
-	deriv=&df0[i][mu];
-	/* force monitoring */
-	if(g_debug_level > 0) {
-	  sum2 = _su3adj_square_norm(*deriv); 
-	  sum+= sum2;
-	  if(fabs(sum2) > max) max = sum2;
+    /* preparing the function for the SF case but still on the way... */
+    if (bc_flag == 0) { /* if PBC */
+      for(i = 0; i < VOLUME; i++) {
+	for(mu = 0; mu < 4; mu++) {
+	  xm=&moment[i][mu];
+	  deriv=&df0[i][mu];
+	  /* force monitoring */
+	  if(g_debug_level > 0) {
+	    sum2 = _su3adj_square_norm(*deriv); 
+	    sum+= sum2;
+	    if(fabs(sum2) > max) max = sum2;
+	  }
+	  tmp = step*monomial_list[ mnllist[k] ].forcefactor;
+	  /* the minus comes from an extra minus in trace_lambda */
+	  _minus_const_times_mom(*xm,tmp,*deriv); 
+	  /* set to zero immediately */
+	  _zero_su3adj(df0[i][mu]);
 	}
-	tmp = step*monomial_list[ mnllist[k] ].forcefactor;
-	/* the minus comes from an extra minus in trace_lambda */
-	_minus_const_times_mom(*xm,tmp,*deriv); 
-	/* set to zero immediately */
-	_zero_su3adj(df0[i][mu]);
       }
     }
+    else if (bc_flag == 1) { /* if Dirichlet bc (not SF yet!!!) */
+      for(i = 0; i < VOLUME; i++) {
+	for(mu = 0; mu < 4; mu++) {
+	  if (g_t[i] == g_Tbsf && mu==0) {
+	    
+	  }
+	  else {	    
+	    xm=&moment[i][mu];
+	    deriv=&df0[i][mu];
+	    /* force monitoring */
+	    if(g_debug_level > 0) {
+	      sum2 = _su3adj_square_norm(*deriv); 
+	      sum+= sum2;
+	      if(fabs(sum2) > max) max = sum2;
+	    }
+	    tmp = step*monomial_list[ mnllist[k] ].forcefactor;
+	    /* the minus comes from an extra minus in trace_lambda */
+	    _minus_const_times_mom(*xm,tmp,*deriv); 
+	    /* set to zero immediately */
+	    _zero_su3adj(df0[i][mu]);
+	  }
+	}
+      }
+    }
+    
 #ifdef MPI
     etime = MPI_Wtime();
 #else
