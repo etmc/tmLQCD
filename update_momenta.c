@@ -64,55 +64,30 @@ void update_momenta(int * mnllist, double step, const int no) {
 	_zero_su3adj(df0[i][mu]);
       }
     }
+    /* the next line is the only part which will change between PBC and SF:
+     when the "GAUGE MONOMIAL / SFGAUGE MONOMIAL" is chosen
+     the correct derivative function for each case is used "gauge_derivative / sf_gauge_derivative" */
     monomial_list[ mnllist[k] ].derivativefunction(mnllist[k]);
 #ifdef MPI
     xchange_deri();
 #endif
-    /* preparing the function for the SF case but still on the way... */
-    if (bc_flag == 0) { /* if PBC */
-      for(i = 0; i < VOLUME; i++) {
-	for(mu = 0; mu < 4; mu++) {
-	  xm=&moment[i][mu];
-	  deriv=&df0[i][mu];
-	  /* force monitoring */
-	  if(g_debug_level > 0) {
-	    sum2 = _su3adj_square_norm(*deriv); 
-	    sum+= sum2;
-	    if(fabs(sum2) > max) max = sum2;
-	  }
-	  tmp = step*monomial_list[ mnllist[k] ].forcefactor;
-	  /* the minus comes from an extra minus in trace_lambda */
-	  _minus_const_times_mom(*xm,tmp,*deriv); 
-	  /* set to zero immediately */
-	  _zero_su3adj(df0[i][mu]);
+    for(i = 0; i < VOLUME; i++) {
+      for(mu = 0; mu < 4; mu++) {
+	xm=&moment[i][mu];
+	deriv=&df0[i][mu];
+	/* force monitoring */
+	if(g_debug_level > 0) {
+	  sum2 = _su3adj_square_norm(*deriv); 
+	  sum+= sum2;
+	  if(fabs(sum2) > max) max = sum2;
 	}
+	tmp = step*monomial_list[ mnllist[k] ].forcefactor;
+	/* the minus comes from an extra minus in trace_lambda */
+	_minus_const_times_mom(*xm,tmp,*deriv); 
+	/* set to zero immediately */
+	_zero_su3adj(df0[i][mu]);
       }
     }
-    else if (bc_flag == 1) { /* if Dirichlet bc (not SF yet!!!) */
-      for(i = 0; i < VOLUME; i++) {
-	for(mu = 0; mu < 4; mu++) {
-	  if (g_t[i] == g_Tbsf && mu==0) {
-	    
-	  }
-	  else {	    
-	    xm=&moment[i][mu];
-	    deriv=&df0[i][mu];
-	    /* force monitoring */
-	    if(g_debug_level > 0) {
-	      sum2 = _su3adj_square_norm(*deriv); 
-	      sum+= sum2;
-	      if(fabs(sum2) > max) max = sum2;
-	    }
-	    tmp = step*monomial_list[ mnllist[k] ].forcefactor;
-	    /* the minus comes from an extra minus in trace_lambda */
-	    _minus_const_times_mom(*xm,tmp,*deriv); 
-	    /* set to zero immediately */
-	    _zero_su3adj(df0[i][mu]);
-	  }
-	}
-      }
-    }
-    
 #ifdef MPI
     etime = MPI_Wtime();
 #else

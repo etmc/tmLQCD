@@ -61,6 +61,9 @@
 #include "init_stout_smear_vars.h"
 #include "monomial.h"
 #include "integrator.h"
+/* for the SF: */
+#include "sf_calc_action.h"
+
 
 extern su3 ** g_gauge_field_saved;
 void stout_smear();
@@ -119,8 +122,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 
   /* smear the gauge field */
-  if(use_stout_flag == 1) stout_smear();
-
+  if(use_stout_flag == 1) {
+    if (bc_flag == 0) {
+      stout_smear();
+    }
+  }
   /* heatbath for all monomials */
   for(i = 0; i < Integrator.no_timescales; i++) {
     for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
@@ -129,9 +135,13 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 
   /* keep on going with the unsmeared gauge field */
-  if(use_stout_flag == 1) unstout();
+  if(use_stout_flag == 1) {
+    if (bc_flag == 0) {
+      unstout();
+    }
+  }
 
-  
+
   /* initialize the momenta  */
   enep = ini_momenta(reproduce_randomnumber_flag);
 
@@ -143,7 +153,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
   g_sloppy_precision = 0;
   /*   smear the gauge field */
-  if(use_stout_flag == 1) stout_smear();
+  if(use_stout_flag == 1) {
+    if (bc_flag == 0) {
+      stout_smear();
+    }
+  }
 
   /* compute the final energy contributions for all monomials */
   dh = 0.;
@@ -154,26 +168,38 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
   
   /*   keep on going with the unsmeared gauge field */
-  if(use_stout_flag == 1) unstout();
+  if(use_stout_flag == 1) {
+    if (bc_flag == 0) {
+      unstout();
+    }
+  }
 
   enepx = moment_energy();
 
-  /* preparing for the SF case but still on the way... */
   if (bc_flag == 0) { /* if PBC */
     new_plaquette_energy = measure_gauge_action();
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
       new_rectangle_energy = measure_rectangles();
     }
   }
-  else if (bc_flag == 1) { /* if Dirichlet bc (not SF yet!!!) */
-    new_plaquette_energy = measure_gauge_action();
+  else if (bc_flag == 1) { /* if SF bc */
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-      new_rectangle_energy = measure_rectangles();
+      new_plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_iwasaki(g_Tbsf, g_Cs, g_Ct, g_rgi_C0);
+      new_rectangle_energy = (1./(2.*3.))*measure_rectangle_sf_iwasaki(g_Tbsf, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
+    }
+    else {
+      new_plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_weights_improvement(g_Tbsf, g_Cs, g_Ct);
     }
   }
   /* Compute the energy difference */
+  printf("enepx - enep = %f\n", enepx-enep);
+  printf("enepx = %f\n", enepx);
+  printf("enep = %f\n", enep);
+  printf("dh = %f\n", dh);
   dh = dh + (enepx - enep);
+  printf("dh = %f\n", dh);
   expmdh = exp(-dh);
+  printf("expmdh = %e\n", expmdh);
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
   if(g_proc_id==0) {
@@ -213,7 +239,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     g_sloppy_precision = 0;
 
     /*   compute the energy contributions from the pseudo-fermions  */
-    if(use_stout_flag == 1) stout_smear();
+    if(use_stout_flag == 1) {
+      if (bc_flag == 0) {
+	stout_smear();
+      }
+    }
     
     ret_dh = 0.;
     for(i = 0; i < Integrator.no_timescales; i++) {
@@ -223,7 +253,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
 
     /*   keep on going with the unsmeared gauge field */
-    if(use_stout_flag == 1) unstout();
+    if(use_stout_flag == 1) {
+      if (bc_flag == 0) {
+	unstout();
+      }
+    }
 
     ret_enep = moment_energy();
 
@@ -303,14 +337,19 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 	}
       }      
     }    
-    else if (bc_flag == 1) { /* if Dirichlet bc (but not SF yet!!!) */
+    else if (bc_flag == 1) { /* if SF bc */
       for(ix=0;ix<VOLUME;ix++) { 
-	for(mu=0;mu<4;mu++) { 
-	  if (g_t[ix] == g_Tbsf && mu==0) {
+	for(mu=0;mu<4;mu++) {
+
+	  if (g_t[ix] == 0 && mu != 0) {
 	    v=&g_gauge_field[ix][mu];
-	    /* here we do not need to 'restoresu3' because of two reasons:
-	       1) these links are zero  ==> they keep updating to zero value all the time
-	       2) moreover, we actually want to avoid at all the updating of these links since it's time consuming and not needed */
+	    /* here we do not need to 'restoresu3' because these links are constant ==> we do not want to change them */
+	  }
+	  else if (g_t[ix]  == g_Tbsf) {
+	    v=&g_gauge_field[ix][mu];
+	    /* here we do not need to 'restoresu3' because of two reasons: these links are
+	       1) either zero ==> they keep updating to zero value all time
+	       2) or constant ==> we do not want to change them */
 	  }
 	  else {
 	    v=&g_gauge_field[ix][mu];
@@ -341,6 +380,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   etime = (double)clock()/((double)(CLOCKS_PER_SEC));
 #endif
 
+  /* do here the SF case too!!! */
   if(g_proc_id==0) {
     datafile = fopen(filename, "a");
     fprintf(datafile,"%14.12f %14.12f %e ",

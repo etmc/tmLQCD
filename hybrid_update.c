@@ -68,7 +68,6 @@ void update_gauge(double step) {
 #pragma pomp inst begin(updategauge)
 #endif
 
-  /* preparing the function for the SF case but still on the way... */
   if (bc_flag == 0) { /* if PBC */
     for(i = 0; i < VOLUME; i++) { 
       for(mu = 0; mu < 4; mu++){
@@ -82,14 +81,17 @@ void update_gauge(double step) {
       }
     }
   }
-  else if (bc_flag == 1) { /* if Dirichlet bc (not SF yet!!!) */
+  else if (bc_flag == 1) { /* if SF bc */
     for(i = 0; i < VOLUME; i++) { 
       for(mu = 0; mu < 4; mu++){
-	if (g_t[i] == g_Tbsf && mu==0) {
+
+	if (g_t[i] == 0 && (mu==1 || mu==2 || mu==3)) { /* do not update spatial links at zero boundary */
 	  
 	}
-	else {
-	  /* moment[i][mu] = h_{i,mu}^{alpha} */
+	if (g_t[i] == g_Tbsf) { /* do not update all the links at T boundary */
+	  
+	}
+	else { /* update all links in the bulk and the temporal link at zero */
 	  xm=&moment[i][mu];
 	  z=&g_gauge_field[i][mu];
 	  _assign_const_times_mom(deriv, step, *xm);

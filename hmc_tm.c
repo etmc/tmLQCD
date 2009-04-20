@@ -370,35 +370,47 @@ int main(int argc,char *argv[]) {
   if(g_running_phmc) init_phmc();
 
   /* impose SF bc in case it was chosen in the input file */
-#if 1
-if (bc_flag == 1) {    
+  if (bc_flag == 1) {    
     dirichlet_boundary_conditions(g_Tbsf);
-    //sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
-  }
+    sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
+    //dirichlet_boundary_conditions_spatial_links_to_one(g_Tbsf);
+    //nan_dirichlet_boundary_conditions(g_Tbsf);
+    
+#if 1
+    /* Measure and print the energy of the gauge field with SF bc: */
+    fprintf(parameterfile,"# g_update_gauge_energy: %d \n", g_update_gauge_energy);
+    fprintf(parameterfile,"# First gauge plaq energy value: %14.12f \n",measure_plaquette()/(2.*3.*6.*VOLUME*g_nproc));
+    fprintf(parameterfile,"# First gauge Wil energy value: %14.12f \n",measure_wilson_action(g_beta)/(6.*VOLUME*g_nproc));
+    fprintf(parameterfile,"# First SF gauge Iwa energy value: %14.12f \n", measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)/(6.*VOLUME*g_nproc));
+    fprintf(parameterfile,"# First SF gauge Wil energy value: %14.12f \n",measure_wilson_action_sf_weights_improvement(g_Tbsf, g_beta, g_Cs, g_Ct)/(6.*VOLUME*g_nproc));
+    fprintf(parameterfile,"# First SF gauge Wil energy value sep: %14.12f \n",measure_wilson_action_sf_weights_improvement_separate_boundary(g_Tbsf, g_beta, g_Cs, g_Ct)/(6.*VOLUME*g_nproc));
+    fprintf(parameterfile,"# SF parameters: %14.12f %14.12f \n",g_rgi_C0,g_rgi_C1);
+    fprintf(parameterfile,"# SF parameters: %14.12f %14.12f %14.12f %14.12f %14.12f \n",g_Cs,g_Ct,g_C1ss,g_C1tss,g_C1tts);
+    fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);
+    /*compute the energy of the gauge field*/
+    fprintf(parameterfile,"# g_update_gauge_energy: %d \n", g_update_gauge_energy);
 #endif
-
-#if 0
-  /* Measure and print the energy of the gauge field with SF bc: */
-  fprintf(parameterfile,"# g_update_gauge_energy: %d \n", g_update_gauge_energy);
-  fprintf(parameterfile,"# First gauge plaq energy value: %14.12f \n",measure_plaquette()/(2.*3.*6.*VOLUME*g_nproc));
-  fprintf(parameterfile,"# First gauge Wil energy value: %14.12f \n",measure_wilson_action(g_beta)/(6.*VOLUME*g_nproc));
-  fprintf(parameterfile,"# First SF gauge Iwa energy value: %14.12f \n", measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)/(6.*VOLUME*g_nproc));
-  fprintf(parameterfile,"# First SF gauge Wil energy value: %14.12f \n",measure_wilson_action_sf_weights_improvement(g_Tbsf, g_beta, g_Cs, g_Ct)/(6.*VOLUME*g_nproc));
-  fprintf(parameterfile,"# First SF gauge Wil energy value sep: %14.12f \n",measure_wilson_action_sf_weights_improvement_separate_boundary(g_Tbsf, g_beta, g_Cs, g_Ct)/(6.*VOLUME*g_nproc));
-  fprintf(parameterfile,"# SF parameters: %14.12f %14.12f \n",g_rgi_C0,g_rgi_C1);
-  fprintf(parameterfile,"# SF parameters: %14.12f %14.12f %14.12f %14.12f %14.12f \n",g_Cs,g_Ct,g_C1ss,g_C1tss,g_C1tts);
-  fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);
-  /*compute the energy of the gauge field*/
-  fprintf(parameterfile,"# g_update_gauge_energy: %d \n", g_update_gauge_energy);
-#endif
-  plaquette_energy=measure_gauge_action();
-  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-    rectangle_energy = measure_rectangles();
-    if(g_proc_id==0){
-      fprintf(parameterfile,"# First rectangle value: %14.12f \n",rectangle_energy/(12.*VOLUME*g_nproc));
+    
+    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+      plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_iwasaki(g_Tbsf, g_Cs, g_Ct, g_rgi_C0);
+      rectangle_energy = (1./(2.*3.))*measure_rectangle_sf_iwasaki(g_Tbsf, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
+      eneg = plaquette_energy + rectangle_energy;
+    }
+    else {
+      plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_weights_improvement(g_Tbsf, g_Cs, g_Ct);
+      eneg = plaquette_energy;
     }
   }
-  eneg = g_rgi_C0 * plaquette_energy + g_rgi_C1 * rectangle_energy;
+  else if (bc_flag == 0) {
+    plaquette_energy=measure_gauge_action();
+    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+      rectangle_energy = measure_rectangles();
+      if(g_proc_id==0){
+	fprintf(parameterfile,"# First rectangle value: %14.12f \n",rectangle_energy/(12.*VOLUME*g_nproc));
+      }
+    }
+    eneg = g_rgi_C0 * plaquette_energy + g_rgi_C1 * rectangle_energy;
+  }
   
   /* Measure and print the Polyakov loop: */
   polyakov_loop(&pl, dir);
@@ -459,6 +471,7 @@ if (bc_flag == 1) {
        I need either to do the next line OR to eliminate the step 'restoresu3' in update_tm() */
     if (bc_flag == 1) {
       dirichlet_boundary_conditions(g_Tbsf);
+      sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
     }
 #endif
 
