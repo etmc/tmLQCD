@@ -24,6 +24,8 @@
  *
  * Author: Carsten Urbach <urbach@physik.fu-berlin.de>
  *
+ * Modified by Jenifer Gonzalez Lopez for the Schroedinger Functional
+ *
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -192,9 +194,9 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
   /* Compute the energy difference */
-  printf("enepx - enep = %f\n", enepx-enep);
   printf("enepx = %f\n", enepx);
   printf("enep = %f\n", enep);
+  printf("enepx - enep = %f\n", enepx-enep);
   printf("dh = %f\n", dh);
   dh = dh + (enepx - enep);
   printf("dh = %f\n", dh);
@@ -322,7 +324,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     if(accept == 1) {
       read_lime_gauge_field( "conf.save");
     }
-  }
+  } /* end of reversibility check */
 
   if(accept == 1) {
     /* accept */
@@ -340,7 +342,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     else if (bc_flag == 1) { /* if SF bc */
       for(ix=0;ix<VOLUME;ix++) { 
 	for(mu=0;mu<4;mu++) {
-
 	  if (g_t[ix] == 0 && mu != 0) {
 	    v=&g_gauge_field[ix][mu];
 	    /* here we do not need to 'restoresu3' because these links are constant ==> we do not want to change them */
@@ -387,7 +388,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 	    (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-	if(monomial_list[ Integrator.mnls_per_ts[i][j] ].type != GAUGE 
+	if(monomial_list[ Integrator.mnls_per_ts[i][j] ].type != GAUGE
+	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != SFGAUGE 
 	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY) {
 	  fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
 		  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);

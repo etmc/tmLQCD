@@ -369,39 +369,44 @@ int main(int argc,char *argv[]) {
 
   if(g_running_phmc) init_phmc();
 
+
+  /*********************************************************/
   /* impose SF bc in case it was chosen in the input file */
-  if (bc_flag == 1) {    
+  /*******************************************************/
+
+  if (bc_flag == 1) { /* if SF */ 
     dirichlet_boundary_conditions(g_Tbsf);
     sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
     //dirichlet_boundary_conditions_spatial_links_to_one(g_Tbsf);
     //nan_dirichlet_boundary_conditions(g_Tbsf);
+    fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);    
     
-#if 1
-    /* Measure and print the energy of the gauge field with SF bc: */
-    fprintf(parameterfile,"# g_update_gauge_energy: %d \n", g_update_gauge_energy);
-    fprintf(parameterfile,"# First gauge plaq energy value: %14.12f \n",measure_plaquette()/(2.*3.*6.*VOLUME*g_nproc));
-    fprintf(parameterfile,"# First gauge Wil energy value: %14.12f \n",measure_wilson_action(g_beta)/(6.*VOLUME*g_nproc));
-    fprintf(parameterfile,"# First SF gauge Iwa energy value: %14.12f \n", measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)/(6.*VOLUME*g_nproc));
-    fprintf(parameterfile,"# First SF gauge Wil energy value: %14.12f \n",measure_wilson_action_sf_weights_improvement(g_Tbsf, g_beta, g_Cs, g_Ct)/(6.*VOLUME*g_nproc));
-    fprintf(parameterfile,"# First SF gauge Wil energy value sep: %14.12f \n",measure_wilson_action_sf_weights_improvement_separate_boundary(g_Tbsf, g_beta, g_Cs, g_Ct)/(6.*VOLUME*g_nproc));
-    fprintf(parameterfile,"# SF parameters: %14.12f %14.12f \n",g_rgi_C0,g_rgi_C1);
-    fprintf(parameterfile,"# SF parameters: %14.12f %14.12f %14.12f %14.12f %14.12f \n",g_Cs,g_Ct,g_C1ss,g_C1tss,g_C1tts);
-    fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);
-    /*compute the energy of the gauge field*/
-    fprintf(parameterfile,"# g_update_gauge_energy: %d \n", g_update_gauge_energy);
-#endif
-    
+    /* compute the energy of the gauge field for SF */
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+      /* NOTE: the factor (1./(2.*3.)) is due to the difference between	our normalisation and Carstens's normalisation
+	 when defining the plaquette and rectangle functions */
       plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_iwasaki(g_Tbsf, g_Cs, g_Ct, g_rgi_C0);
       rectangle_energy = (1./(2.*3.))*measure_rectangle_sf_iwasaki(g_Tbsf, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
       eneg = plaquette_energy + rectangle_energy;
+      /* print energy for SF */
+      if(g_proc_id==0){
+	fprintf(parameterfile,"# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+	fprintf(parameterfile,"# First rectangle value for SF: %14.12f \n", rectangle_energy/(12.*VOLUME*g_nproc));
+	printf("# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+	printf("# First rectangle value for SF: %14.12f \n", rectangle_energy/(12.*VOLUME*g_nproc));
+      }
     }
     else {
       plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_weights_improvement(g_Tbsf, g_Cs, g_Ct);
       eneg = plaquette_energy;
+      /* print plaquette energy for SF */
+      if(g_proc_id==0){
+	fprintf(parameterfile,"# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+	printf("# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+      }
     }
   }
-  else if (bc_flag == 0) {
+  else if (bc_flag == 0) { /*if PBC */
     plaquette_energy=measure_gauge_action();
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
       rectangle_energy = measure_rectangles();
@@ -410,26 +415,26 @@ int main(int argc,char *argv[]) {
       }
     }
     eneg = g_rgi_C0 * plaquette_energy + g_rgi_C1 * rectangle_energy;
+
+    /* Measure and print the Polyakov loop: */
+    polyakov_loop(&pl, dir);
+
+    if(g_proc_id==0){
+      fprintf(parameterfile,"# First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+      printf("# First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+      fprintf(parameterfile,"# First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
+	      dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
+    }
+   
+    dir=3;
+    polyakov_loop(&pl, dir);
+    if(g_proc_id==0){
+      fprintf(parameterfile,"# First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
+	      dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
+      fclose(parameterfile);
+    } 
   }
   
-  /* Measure and print the Polyakov loop: */
-  polyakov_loop(&pl, dir);
-
-  if(g_proc_id==0){
-    fprintf(parameterfile,"# First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
-    printf("# First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
-    fprintf(parameterfile,"# First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
-	    dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
-  }
-
-  dir=3;
-  polyakov_loop(&pl, dir);
-  if(g_proc_id==0){
-    fprintf(parameterfile,"# First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
-	    dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
-    fclose(parameterfile);
-  }
-
 
   /* set ddummy to zero */
   for(ix = 0; ix < VOLUME+RAND; ix++){
@@ -480,9 +485,11 @@ int main(int argc,char *argv[]) {
 /* 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag); */
 
 
-    /* Measure the Polyakov loop in direction 2 and 3:*/
-    polyakov_loop(&pl, 2); 
-    polyakov_loop(&pl4, 3);  
+    if (bc_flag == 0) { /* if PBC */
+      /* Measure the Polyakov loop in direction 2 and 3:*/
+      polyakov_loop(&pl, 2); 
+      polyakov_loop(&pl4, 3);  
+    }
     
     /* Save gauge configuration all Nsave times */
     if((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) {

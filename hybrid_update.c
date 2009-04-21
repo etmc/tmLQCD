@@ -5,6 +5,8 @@
  *
  * some changes by C. Urbach 2002-2008
  *
+ * Modified by Jenifer Gonzalez Lopez for the Schroedinger Functional
+ *
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
@@ -88,7 +90,7 @@ void update_gauge(double step) {
 	if (g_t[i] == 0 && (mu==1 || mu==2 || mu==3)) { /* do not update spatial links at zero boundary */
 	  
 	}
-	if (g_t[i] == g_Tbsf) { /* do not update all the links at T boundary */
+	else if (g_t[i] == g_Tbsf) { /* do not update all the links at T boundary */
 	  
 	}
 	else { /* update all links in the bulk and the temporal link at zero */
