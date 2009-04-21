@@ -12,6 +12,8 @@
 #######################
 # General parameters: #
 #######################
+# Bc=yes => SFbc / no => PBC
+Bc = yes
 L=4
 T=4
 Measurements = 5
@@ -29,6 +31,8 @@ ReversibilityCheck = no
 ReversibilityCheckIntervall = 100
 PerformOnlineMeasurements = no
 OnlineMeasurementsFreq = 10
+# g_Tbsf = at which time slice to put the SF boundary
+g_Tbsf = 3
 #########################################
 # invert and invert_doublet parameters: #
 #########################################
@@ -48,13 +52,14 @@ BeginMonomial SFGAUGE
   PlaquetteCoefficientT = 1.0
   PlaquetteCoefficientS = 0.5
   eta = 0.0
-  beta = 5.00
+  beta = 6.00
 EndMonomial
+
 
 BeginIntegrator 
   Type0 = LEAPFROG
   tau = 1.
   NumberOfTimescales = 1
-  IntegrationSteps0 = 100
+  IntegrationSteps0 = 50
   Lambda0 = 0.19
 EndIntegrator
