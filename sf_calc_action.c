@@ -444,6 +444,11 @@ double measure_plaquette_sf_weights_improvement(int t, double cs, double ct) {
 	    ac *= cs;
 	    
 	  }
+	  if ((mu1 == 0 || mu2 == 0) && mu1 != mu2) {
+	    
+	  ac = 0.;
+	    
+	  }
 
 	}
 
