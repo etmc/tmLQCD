@@ -1,6 +1,6 @@
 /*******************************************
 *
-* FILE: calc_action.h
+* FILE: sf_calc_action.h
 *
 * Author: Jenifer Gonzalez Lopez
 *
@@ -66,6 +66,7 @@ double partial_lattice_lo_effective_plaquette_action_sf(int t, double beta, doub
 /*** DEFINITION OF THE RUNNING COUPLING ***/
 double partial_plaquette_sf_respect_to_eta(int t, double ct);
 double partial_rectangle_sf_respect_to_eta(int t, double c1_tss, double c1_tts);
+double partial_wilson_action_sf_respect_to_eta(int t, double beta, double cs, double ct);
 double partial_iwasaki_action_sf_respect_to_eta(int t, double beta, double cs, double ct, double c0, double c1, double c1_ss, double c1_tss, double c1_tts);
 
 #endif

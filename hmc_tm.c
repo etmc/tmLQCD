@@ -80,6 +80,7 @@
 #include "sighandler.h"
 #include "online_measurement.h"
 #include "sf_calc_action.h"
+#include "sf_observables.h"
 
 void usage(){
   fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
@@ -379,7 +380,12 @@ int main(int argc,char *argv[]) {
     //nan_dirichlet_boundary_conditions(g_Tbsf);
     sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
     fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);    
-    
+
+#if 0 
+    sf_observables();  
+    exit(0);
+#endif
+
     /* compute the energy of the gauge field for SF */
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
       /* NOTE: the factor (1./(2.*3.)) is due to the difference between	our normalisation and Carstens's normalisation
@@ -466,24 +472,22 @@ int main(int argc,char *argv[]) {
     if(g_proc_id == 0) {
       printf("# Starting trajectory no %d\n", trajectory_counter);
     }
-
+    
     if(return_check_flag == 1 && trajectory_counter%return_check_interval == 0) return_check = 1;
     else return_check = 0;
-
-#if 0
-    /* In order to get a right answer when imposing Dirichlet bc,
-       I need either to do the next line OR to eliminate the step 'restoresu3' in update_tm() */
-    if (bc_flag == 1) {
-      dirichlet_boundary_conditions(g_Tbsf);
-      sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
+    
+    Rate += update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check, Ntherm<trajectory_counter);
+    /*     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename,  */
+    /* 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag); */
+    
+    
+#if 1
+    if (bc_flag == 1) { /* if SF */
+      sf_observables();  
     }
 #endif
 
-    Rate += update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check, Ntherm<trajectory_counter);
-/*     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename,  */
-/* 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag); */
-
-
+    
     if (bc_flag == 0) { /* if PBC */
       /* Measure the Polyakov loop in direction 2 and 3:*/
       polyakov_loop(&pl, 2); 

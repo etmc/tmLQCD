@@ -1,6 +1,6 @@
 /*******************************************
 *
-* FILE: calc_action.c
+* FILE: sf_calc_action.c
 *
 * Author: Jenifer Gonzalez Lopez
 *
@@ -33,6 +33,43 @@ void dirichlet_boundary_conditions(int t) {
     if (g_t[ix] == t) {
 
       _su3_zero(g_gauge_field[ix][0]);
+
+    }   
+  }
+}
+
+#define _su3_nan(u) \
+   (u).c00.re=1./0.0; \
+   (u).c00.im=1./0.0; \
+   (u).c01.re=1./0.0; \
+   (u).c01.im=1./0.0; \
+   (u).c02.re=1./0.0; \
+   (u).c02.im=1./0.0; \
+   (u).c10.re=1./0.0; \
+   (u).c10.im=1./0.0; \
+   (u).c11.re=1./0.0; \
+   (u).c11.im=1./0.0; \
+   (u).c12.re=1./0.0; \
+   (u).c12.im=1./0.0; \
+   (u).c20.re=1./0.0; \
+   (u).c20.im=1./0.0; \
+   (u).c21.re=1./0.0; \
+   (u).c21.im=1./0.0; \
+   (u).c22.re=1./0.0; \
+   (u).c22.im=1./0.0;
+
+/* the next function sets
+all the gauge links in the time direction (from t on) to nan.
+Note that the rest of the links at the boundaries (spatial links) are not yet touched here */
+void nan_dirichlet_boundary_conditions(int t) {
+  
+  int ix;
+  
+  for (ix=0;ix<VOLUME;ix++){
+ 
+    if (g_t[ix] == t) {
+
+      _su3_nan(g_gauge_field[ix][0]);
 
     }   
   }
@@ -99,6 +136,7 @@ void set_all_links_to_one_with_dirichlet(int t) {
     
   }
 }
+
 
 
 /* it calculates an su3 matrix "u" which is gonna be the (lattice) spatially constant abelian field */
@@ -368,7 +406,11 @@ double measure_plaquette_sf_weights(int t) {
 	    ac *= 0.5;
 	    
 	  }	  
-	  
+	  if ((mu1 == 0 || mu2 == 0) && mu1 != mu2) {
+	    
+	    ac = 0.;
+	    
+	  }	  
 	} 
 	
 	sum += ac;
@@ -652,6 +694,11 @@ double measure_plaquette_sf_weights_boundary_t (int t) {
 	      ac *= 0.5;
 	      
 	    }
+	    if ((mu1 == 0 || mu2 == 0) && mu1 != mu2) {
+	      
+	      ac = 0.;
+	      
+	    }
 	    
 	    sum += ac;
 	    
@@ -860,6 +907,11 @@ double measure_plaquette_sf_weights_improved_boundary_t (int t, double cs) {
 	      ac *= cs;
 	      
 	    }
+	    if ((mu1 == 0 || mu2 == 0) && mu1 != mu2) {
+	      
+	      ac = 0.;
+	      
+	    }
 	    
 	    sum += ac;
 	    
@@ -1000,14 +1052,15 @@ double measure_plaquette_sf_iwasaki(int t, double cs, double ct, double c0) {
 	  }
 	
 	} 
-	
-	
-	else if ((g_t[ix] == t) && (mu1 != 0 && mu2 != 0)) {
-
+	else if (g_t[ix] == t) {
+	  
+	  if (mu1 != 0 && mu2 != 0) {
 	    ac *= cs;
-	    
+	  }
+	  if ((mu1 == 0 || mu2 == 0) && mu1 != mu2) {
+	    ac = 0.;
+	  }
 	}
-
 	else if ((g_t[ix] == (t-1)) && ((mu1 == 0 || mu2 == 0) && mu1 != mu2)) {
 
 	    ac *= ct;
@@ -1101,10 +1154,20 @@ double measure_rectangle_sf_iwasaki(int t, double c1, double c1_ss, double c1_ts
 	    ac *= c1_tss;
 	  
 	  }
+	  else if (g_t[ix] == (t-1) && mu2 == 0) {/* 2 movement in t <=> 1 links on a (time) boundary */
+
+	    ac = 0.;
+	  
+	  }
 
 	  else if (g_t[ix] == (t-2) && mu2 == 0) {/* 2 movement in t <=> 1 links on a (time) boundary */
 
 	    ac *= c1_tts;
+	  
+	  }
+	  else if (g_t[ix] == t && (mu1 == 0 || mu2 == 0)) {/* out of the lattice on the right side */
+
+	    ac = 0.;
 	  
 	  }
 
@@ -1255,11 +1318,12 @@ double measure_iwasaki_action_sf(int t, double beta, double cs, double ct, doubl
   return iwasaki;
 }
 
+/****************************************************************************************/
+/****************************************************************************************/
+/****************************************************************************************/
 
 
-
-/*** FUNCTIONS NEEDED FOR THE BACKGROUND FIELD ACTION and
-     BACKGROUND FIELD ACTION AND DERIVATIVE WITH RESPECT TO ETA ***/
+/*** FUNCTIONS NEEDED FOR THE BACKGROUND FIELD ACTION and DERIVATIVE WITH RESPECT TO ETA ***/
 
 
 /* it calculates an su3 matrix "u" which is gonna be the partial with respect to eta of the
@@ -1439,10 +1503,9 @@ void induced_lattice_background(su3 **v, int t, double eta) {
 }
 
 
-
-
 /* the next function gives us the classical lattice background field (V) "plaquette action S[V]" with SF b.c. */
 /* implementation of the analytical expression taken from Rainer's notes in Schladming (eq.71)*/
+/* NOTE: there was a sign mistake in Rainer's notes!!! */
 double lattice_background_plaquette_action_sf(int t, double beta, double ct, double eta) {
 
   double pi;
@@ -1496,6 +1559,7 @@ double lattice_lo_effective_plaquette_action_sf(int t, double beta, double ct, d
 /* the next function gives us the "partial derivative" with respect to "eta"
    of the classical lattice background field (V) "plaquette action S[V]" with SF b.c. */
 /* implementation of the derivative of the analytical expression taken from Rainer's notes in Schladming (eq.71)*/
+/* NOTE: there was a sign mistake in Rainer's notes!!! */
 double partial_lattice_background_plaquette_action_sf(int t, double beta, double ct, double eta) {
 
   double pi;
@@ -1533,7 +1597,7 @@ double partial_lattice_background_plaquette_action_sf(int t, double beta, double
 
   factor1 = (1. - (1. - ct)*(2./(double)t));
 
-  printf("factor1 = %e \n", factor1);
+  //printf("factor1 = %e \n", factor1);
 
   factor2 = 2.*beta*(double)LX*(double)LX;
 
@@ -1610,9 +1674,6 @@ double partial_lattice_lo_effective_****_action_sf(int t, double beta, double ct
 
 /*-------------------------------------------------------------------------------------------------*/
 
-
-
-
 /*** DEFINITION OF THE RUNNING COUPLING ***/
 
 
@@ -1659,8 +1720,6 @@ double partial_lattice_lo_effective_****_action_sf(int t, double beta, double ct
   (u).c22.re = 0.0;						\
   (u).c22.im =-0.5;
 
-
-
 /*------------------------------------------------------------------------------------------------------------*/
  
 /*
@@ -1677,8 +1736,7 @@ void testfunc() {
 /* it has been taken from Rainer's notes in Schladming (eq.73) (we've checked and gotten the same formula) */
 /* WARNING: this function is only valid if we are considering U!=V */
 double partial_plaquette_sf_respect_to_eta(int t, double ct) {
-  
-  
+    
   int ix,ix1,ix2,mu1,mu2;  
   static su3 pr1,pr2; 
   su3 *v,*w;
@@ -2054,6 +2112,21 @@ double partial_rectangle_sf_respect_to_eta(int t, double c1_tss, double c1_tts) 
 
 /*------------------------------------------------------------------------------------------------------------*/
 
+/* the next function gives us the "derivative" of the "WILSON action" with SF b.c.
+   with respect to the background field parameter "eta" */
+/* WARNING: this function is only valid if we are considering U!=V */
+double partial_wilson_action_sf_respect_to_eta(int t, double beta, double cs, double ct) {
+
+  double partial_plaquette;
+  double partial_wilson;
+
+  partial_plaquette = partial_plaquette_sf_respect_to_eta(t, ct);
+  
+  partial_wilson = - (beta/(3.*(double)LX)) * partial_plaquette;
+  
+  return partial_wilson;
+}
+
 /* the next function gives us the "derivative" of the "IWASAKI action" with SF b.c.
    with respect to the background field parameter "eta" */
 /* WARNING: this function is only valid if we are considering U!=V */
@@ -2081,377 +2154,3 @@ double partial_iwasaki_action_sf_respect_to_eta(int t, double beta, double cs, d
   return partial_iwasaki;
 }
 
-
-/********************************************************************************************************/
-/********************************************************************************************************/
-
-#define _su3_nan(u) \
-   (u).c00.re=1./0.0; \
-   (u).c00.im=1./0.0; \
-   (u).c01.re=1./0.0; \
-   (u).c01.im=1./0.0; \
-   (u).c02.re=1./0.0; \
-   (u).c02.im=1./0.0; \
-   (u).c10.re=1./0.0; \
-   (u).c10.im=1./0.0; \
-   (u).c11.re=1./0.0; \
-   (u).c11.im=1./0.0; \
-   (u).c12.re=1./0.0; \
-   (u).c12.im=1./0.0; \
-   (u).c20.re=1./0.0; \
-   (u).c20.im=1./0.0; \
-   (u).c21.re=1./0.0; \
-   (u).c21.im=1./0.0; \
-   (u).c22.re=1./0.0; \
-   (u).c22.im=1./0.0;
-
-
-/* the next function sets
-all the gauge links in the time direction (from t on) to nan.
-Note that the rest of the links at the boundaries (spatial links) are not yet touched here */
-void nan_dirichlet_boundary_conditions(int t) {
-  
-  int ix;
-  
-  for (ix=0;ix<VOLUME;ix++){
- 
-    if (g_t[ix] == t) {
-
-      _su3_nan(g_gauge_field[ix][0]);
-
-    }   
-  }
-}
-
-
-
-
-
-
-
-
-
-/********************************************************************************************************/
-/********************************************************************************************************/
-
-
-
-
-
-
-
-
-
-
-
-/********************************************************************************************************/
-/********************************************************************************************************/
-/********************************************************************************************************/
-/********************************************************************************************************/
-/********************************************************************************************************/
-
-
-#if 0
-  double plaquette_energy;
-  double rectangle_energy;
-  double wilson_action;
-  double wilson_action_sepbound;
-  double iwasaki_action;
-  double partial_iwa;
-  double partial_iwasaki_action;
-
-
-
-  /* some parameters (Jen) */
-
-  t_bsf = T-1; /* it sets at which time slice I want to put the SF b.c. (end point) --- T = lattice time extent set by Carsten */
-  printf("\n"); fflush(stdout);
-  printf("t_bsf = %i \n", g_Tbsf); fflush(stdout);
-
-  /* Action "A" of "hep-lat/9808007" */
-#if 0
-  c_1_ss = 0.0;
-  c_1_tss = c_1;
-  c_1_tts = c_1;
-#endif
-
-  /* Action "B" of "hep-lat/9808007" */
-#if 0
-  c_1_ss = 0.0;
-  c_1_tss = (3./2.)*c_1;
-  c_1_tts = c_1;
-#endif
-
-
-  /*** PERIODIC b.c. ***/
-
-  /*compute the energy of the gauge field*/
-  /*plaquette_energy = measure_gauge_action();*/
-  plaquette_energy = measure_plaquette();
-  rectangle_energy = measure_rectangle();
-  wilson_action = measure_wilson_action(g_beta);
-  iwasaki_action = measure_iwasaki_action(g_beta, g_rgi_C0, g_rgi_C1);
-
-  if(g_proc_id == 0) {
-    printf("\n"); fflush(stdout);
-    printf("Periodic boundary conditions: \n"); fflush(stdout);
-    printf("The plaquette value is %e\n", plaquette_energy/(3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The rectangle value is %e\n", rectangle_energy/(2.*3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The Wilson action value is %e\n", wilson_action); fflush(stdout);
-    printf("The Iwasaki action value is %e\n", iwasaki_action); fflush(stdout);
-
-  }
-
-  /*** PREPARING for SF b.c. ***/
-
-  /* fix Dirichlet bc in time direction */
-  dirichlet_boundary_conditions(g_Tbsf);
-
-  /*compute the energy of the gauge field*/
-  plaquette_energy = measure_plaquette();
-  rectangle_energy = measure_rectangle();
-  wilson_action = measure_wilson_action(g_beta);
-  iwasaki_action = measure_iwasaki_action(g_beta, g_rgi_C0, g_rgi_C1);
-
-  if(g_proc_id == 0) {
-    printf("\n"); fflush(stdout);
-    printf("Dirichlet boundary conditions: \n"); fflush(stdout);
-    printf("The plaquette value is %e\n", plaquette_energy/(3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The rectangle value is %e\n", rectangle_energy/(2.*3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The Wilson action value is %e\n", wilson_action); fflush(stdout);
-    printf("The Iwasaki action value is %e\n", iwasaki_action); fflush(stdout);
-
-  }
-
-#if 0
-  /* fix Dirichlet bc in the time direction and with spatial links to one */
-  dirichlet_boundary_conditions_spatial_links_to_one(g_Tbsf);
-
-  /*compute the energy of the gauge field*/
-  plaquette_energy = measure_plaquette();
-  rectangle_energy = measure_rectangle();
-  wilson_action = measure_wilson_action(g_beta);
-  iwasaki_action = measure_iwasaki_action(g_beta, g_rgi_C0, g_rgi_C1);
-
-  if(g_proc_id == 0) {
-    printf("\n"); fflush(stdout);
-    printf("Dirichlet boundary conditions with spatial links to one: \n"); fflush(stdout);
-    printf("The plaquette value is %e\n", plaquette_energy/(3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The rectangle value is %e\n", rectangle_energy/(2.*3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The Wilson action value is %e\n", wilson_action); fflush(stdout);
-    printf("The Iwasaki action value is %e\n", iwasaki_action); fflush(stdout);
-
-  }
-#endif
-
-
-
-  /*** SF BOUNDARY CONDITIONS ***/
-
-  /* sf b.c. abelian field */
-  sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
-
-
-#if 0
-  /*compute the energy of the gauge field*/
-  plaquette_energy = measure_plaquette();
-  rectangle_energy = measure_rectangle();
-  wilson_action = measure_wilson_action(g_beta);
-  iwasaki_action = measure_iwasaki_action(g_beta, g_rgi_C0, g_rgi_C1);
-
-  if(g_proc_id == 0) {
-    printf("\n"); fflush(stdout);
-    printf("SF b.c. abelian: \n"); fflush(stdout);
-    printf("The plaquette value is %e\n", plaquette_energy/(3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The Wilson action value is %e\n", wilson_action); fflush(stdout);
-    printf("The rectangle value is %e\n", rectangle_energy/(2.*3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The Iwasaki action value is %e\n", iwasaki_action); fflush(stdout);
- 
- }
-#endif
-
-#if 0
-  /* sf b.c. abelian field and standard sf weight factors included (only plaquette here) */
-
-  /*compute the energy of the gauge field*/
-  plaquette_energy = measure_plaquette_sf_weights(g_Tbsf);
-  wilson_action = measure_wilson_action_sf(g_Tbsf, g_beta);
-  wilson_action_sepbound = measure_wilson_action_sf_separate_boundary(g_Tbsf, g_beta);
-
-  if(g_proc_id == 0) {
-    printf("\n"); fflush(stdout);
-    printf("SF b.c. abelian and standard sf weight factors included (only plaquette): \n"); fflush(stdout);
-    printf("The plaquette value is %e\n", plaquette_energy/(3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The Wilson action value is %e\n", wilson_action); fflush(stdout);
-    printf("The Wilson action value sep bound is %e\n", wilson_action_sepbound); fflush(stdout);
- 
- }
-#endif
-
-  /* sf b.c. abelian field and weight factors for O(a)-improvement included (only plaquette here) */
-
-  /*compute the energy of the gauge field*/
-  plaquette_energy = measure_plaquette_sf_weights_improvement(g_Tbsf, g_Cs, g_Ct) ;
-  wilson_action = measure_wilson_action_sf_weights_improvement(g_Tbsf, g_beta, g_Cs, g_Ct);
-  wilson_action_sepbound = measure_wilson_action_sf_weights_improvement_separate_boundary(g_Tbsf, g_beta, g_Cs, g_Ct);
-
-  if(g_proc_id == 0) {
-    printf("\n"); fflush(stdout);
-    printf("SF b.c. abelian and weight factors for O(a)-improvement included (only plaquette): \n"); fflush(stdout);
-    printf("The plaquette value is %e\n", plaquette_energy/(3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The Wilson action value is %e\n", wilson_action); fflush(stdout);
-    printf("The Wilson action value sep bound is %e\n", wilson_action_sepbound); fflush(stdout);
- 
- }
-
-  /* sf b.c. abelian field and weight factors for O(a)-improvement included (plaquette and rectangle) */
-
-  /*compute the energy of the gauge field*/
-  plaquette_energy = measure_plaquette_sf_iwasaki(g_Tbsf, g_Cs, g_Ct, g_rgi_C0) ;
-  rectangle_energy = measure_rectangle_sf_iwasaki(g_Tbsf, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-  iwasaki_action = measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-
-  if(g_proc_id == 0) {
-    printf("\n"); fflush(stdout);
-    printf("SF b.c. abelian and weight factors for O(a)-improvement included (Iwasaki = plaquette and rectangle): \n");
-    fflush(stdout);
-    printf("The plaquette value is %e\n", plaquette_energy/(3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The rectangle value is %e\n", rectangle_energy/(2.*3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The Iwasaki action value is %e\n", iwasaki_action); fflush(stdout);
-
- }
-
-
-
-  /*** CHECKS: here we calculate "S[V], Gamma[V], S'[V] and Gamma'[V]" in two ways and both should agree ***/
-  printf("\n"); fflush(stdout);
-  printf("CHECKS: \n"); fflush(stdout);
-
-#if 1
-  /* (0): here we have not yet assigned: U = V forall x_0 ==> it should not agree with the (1) and (2) */
-
-  iwasaki_action = measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-  partial_iwasaki_action = partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_eta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-  
-  printf("\n"); fflush(stdout);
-  printf(" Before assigning U=V but SF b.c. \n"); fflush(stdout);
-  printf("S[U,W',W] = %e \n", iwasaki_action); fflush(stdout);
-  printf("G[U,W',W] = %e \n", (6./g_beta)*iwasaki_action); fflush(stdout);
-  printf("S'[U,W',W] = %e \n", partial_iwasaki_action); fflush(stdout);
-  printf("G'[U,W',W] = %e \n", (6./g_beta)*partial_iwasaki_action);fflush(stdout); 
-  printf("\n"); fflush(stdout);
-#endif
-  
-  
-  /* (1): identifying the gauge fields "g_gauge_fields = V" and then calculating the plaquette as usually */
-  
-  induced_lattice_background(g_gauge_field, g_Tbsf, g_eta);
-  
-  wilson_action = measure_wilson_action_sf_weights_improvement(g_Tbsf, g_beta, g_Cs, g_Ct);
-  wilson_action_sepbound = measure_wilson_action_sf_weights_improvement_separate_boundary(g_Tbsf, g_beta, g_Cs, g_Ct);
-  iwasaki_action = measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-  partial_iwasaki_action = partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-  
-  printf(" Assigning U=V with the functions defined for that and then calculating S[V] from the same functions to calculate the actions as in previous cases \n"); fflush(stdout);
-  printf("\n"); fflush(stdout);
-  printf("S_sf_wilson_sepbound[U,W',W] = %e \n", wilson_action_sepbound); fflush(stdout);
-  printf("S_sf_wilson_notsepbd[U,W',W] = %e \n", wilson_action ); fflush(stdout);
-  printf("S_sf_iwasaki_notsepb[U,W',W] = %e \n", iwasaki_action); fflush(stdout);
-  printf("G[V] = %e \n", (6./g_beta)*iwasaki_action); fflush(stdout);
-  printf("S'[V] = %e \n", partial_iwasaki_action); fflush(stdout);
-  printf("G'[V] = %e \n", (6./g_beta)*partial_iwasaki_action);fflush(stdout);
-  printf("\n"); fflush(stdout);
-  printf("measure_plaquette_sf_weights_improved_bulk = %e \n", measure_plaquette_sf_weights_improved_bulk(g_Tbsf)); fflush(stdout);
-  printf("measure_plaquette_sf_weights_improved_boundary_0(cs,ct) = %e \n", measure_plaquette_sf_weights_improved_boundary_0(g_Cs, g_Ct)); fflush(stdout);
-  printf("measure_plaquette_sf_weights_improved_boundary_t(cs) = %e \n", measure_plaquette_sf_weights_improved_boundary_t(g_Tbsf, g_Cs)); fflush(stdout);
-  printf("measure_plaquette_sf_weights_improved_boundary_t_minus_1(ct) = %e \n",  measure_plaquette_sf_weights_improved_boundary_t_minus_1(g_Tbsf, g_Ct)); fflush(stdout);
-  printf("\n"); fflush(stdout);
-
-
-  /* obtaine normalization factor by calculation Wilson action for U=1 in all the lattice
-   and substract it to the previous result for the action.
-  Therefore, it should agree with the result obtained from the analytical expression implemented below */
-  set_all_links_to_one_with_dirichlet(g_Tbsf);
-
-  iwasaki_action -= measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-  partial_iwasaki_action -= partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-  
-  printf("\n"); fflush(stdout);
-  printf(" Previous case but substracting the normalization factor to the action: \n"); fflush(stdout);
-  printf("\n"); fflush(stdout);
-  printf("Norm - S_sf_iwasaki_notsepb[U,W',W] = %e \n", iwasaki_action); fflush(stdout);
-  printf("Norm - G[V] = %e \n", (6./g_beta)*iwasaki_action); fflush(stdout);
-  printf("Norm' - S'[V] = %e \n", partial_iwasaki_action); fflush(stdout);
-  printf("Norm' - G'[V] = %e \n", (6./g_beta)*partial_iwasaki_action);fflush(stdout);
-  printf("\n"); fflush(stdout);
-
-
-  /* (2): directly from the analytical expression which has been implemente in: */
-  printf("\n"); fflush(stdout);
-  printf(" Assigning U=V: but directly using the analytical expression of the action S[V] \n"); fflush(stdout);
-  printf("\n"); fflush(stdout);
-  printf("S[V]_analy = %e \n", lattice_background_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-  printf("G[V]_analy = %e \n", lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-  printf("S'[V]_analy = %e \n", partial_lattice_background_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-  printf("G'[V]_analy = %e \n", partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-  printf("\n"); fflush(stdout);
-
-
-#if 1
-  /* obtaine normalization factor by calculation Wilson action for U=1 in all the lattice */
-  set_all_links_to_one_with_dirichlet(g_Tbsf);
-
-  printf("\n"); fflush(stdout);
-  printf(" Setting U=Id and Dirichlet at x0= 0, t \n"); fflush(stdout);
-  printf("\n"); fflush(stdout);
-  /* The next three prints give me the same result, from 3 different functions.
-   The first two functions were cross-checked with Dru ==> they should be right.
-   Hoever, the result here obtained still differs to what we obtain by doing the
-   differenct between our result (for U=V) and the analytical expression */
-  printf("S_sf_wilson_sepbound[U,W',W] = %e \n", measure_wilson_action_sf_weights_improvement_separate_boundary(g_Tbsf, g_beta, g_Cs, g_Ct)); fflush(stdout);
-  printf("S_sf_wilson_notsepbd[U,W',W] = %e \n", measure_wilson_action_sf_weights_improvement(g_Tbsf, g_beta, g_Cs, g_Ct) ); fflush(stdout);
-  printf("S_sf_iwasaki_notsepb[U,W',W] = %e \n", measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)); fflush(stdout);
-  printf("G[U,W',W] = %e \n", (6./g_beta)*measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)); fflush(stdout);
-  printf("S'[U,W',W] = %e \n", partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)); fflush(stdout);
-  printf("G'[U,W',W] = %e \n", (6./g_beta)*partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts));fflush(stdout); 
-  printf("\n"); fflush(stdout);
-  printf("measure_plaquette_sf_weights_improved_bulk = %e \n", measure_plaquette_sf_weights_improved_bulk(g_Tbsf)); fflush(stdout);
-  printf("measure_plaquette_sf_weights_improved_boundary_0(cs,ct) = %e \n", measure_plaquette_sf_weights_improved_boundary_0(g_Cs, g_Ct)); fflush(stdout);
-  printf("measure_plaquette_sf_weights_improved_boundary_t(cs) = %e \n", measure_plaquette_sf_weights_improved_boundary_t(g_Tbsf, g_Cs)); fflush(stdout);
-  printf("measure_plaquette_sf_weights_improved_boundary_t_minus_1(ct) = %e \n",  measure_plaquette_sf_weights_improved_boundary_t_minus_1(g_Tbsf, g_Ct)); fflush(stdout);
-  printf("\n"); fflush(stdout);
-#endif
-
-
-
-#if 0
-  /* obtaine normalization factor by calculation Wilson action for U=1 in all the lattice */
-  set_all_links_to_one();
-
-  printf("\n"); fflush(stdout);
-  printf(" Setting U=Id \n"); fflush(stdout);
-  printf("\n"); fflush(stdout);
-  /* For the first case below, pbc, I've gotten the number I expected: "(Nc*12*L^4)/g02".
-   Thus, since the function "measure_iwasaki_action(g_beta, g_rgi_C0, g_rgi_C1))" was crosschecked bf with Dru it should be right.
-  It somehow tells me that also the function which assigns the gauge fields to one "set_all_links_to_one()" should be right.*/
-  printf("S_pbc[U,W',W] = %e \n", measure_iwasaki_action(g_beta, g_rgi_C0, g_rgi_C1)); fflush(stdout);
-  /* The next three prints give me the same result, from 3 different functions.
-   The first two functions were cross-checked with Dru ==> they should be right.
-   Hoever, the result here obtained still differs to what we obtain by doing the
-   differenct between our result (for U=V) and the analytical expression */
-  printf("S_sf_wilson_sepbound[U,W',W] = %e \n", measure_wilson_action_sf_weights_improvement_separate_boundary(g_Tbsf, g_beta, g_Cs, g_Ct)); fflush(stdout);
-  printf("S_sf_wilson_notsepbd[U,W',W] = %e \n", measure_wilson_action_sf_weights_improvement(g_Tbsf, g_beta, g_Cs, g_Ct) ); fflush(stdout);
-  printf("S_sf_iwasaki_notsepb[U,W',W] = %e \n", measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)); fflush(stdout);
-  printf("G[U,W',W] = %e \n", (6./g_beta)*measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)); fflush(stdout);
-  printf("S'[U,W',W] = %e \n", partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)); fflush(stdout);
-  printf("G'[U,W',W] = %e \n", (6./g_beta)*partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts));fflush(stdout); 
-  printf("\n"); fflush(stdout);
-  printf("measure_plaquette_sf_weights_improved_bulk = %e \n", measure_plaquette_sf_weights_improved_bulk(g_Tbsf)); fflush(stdout);
-  printf("measure_plaquette_sf_weights_improved_boundary_0(cs,ct) = %e \n", measure_plaquette_sf_weights_improved_boundary_0(g_Cs, g_Ct)); fflush(stdout);
-  printf("measure_plaquette_sf_weights_improved_boundary_t(cs) = %e \n", measure_plaquette_sf_weights_improved_boundary_t(g_Tbsf, g_Cs)); fflush(stdout);
-  printf("measure_plaquette_sf_weights_improved_boundary_t_minus_1(ct) = %e \n",  measure_plaquette_sf_weights_improved_boundary_t_minus_1(g_Tbsf, g_Ct)); fflush(stdout);
-  printf("\n"); fflush(stdout);
-#endif
-
-
-#endif

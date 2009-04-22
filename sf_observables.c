@@ -29,13 +29,7 @@ void sf_observables() {
   double iwasaki_action;
   double partial_iwa;
   double partial_iwasaki_action;
-  //su3 ** sf_background_gauge_field = NULL;
-
-  /*** ASIGN MEMORY to the back gauge field ***/
-
-
-  /*** INITIALISE the background gauge field ***/
-
+  //FILE * fcoupling = NULL;
 
 
   /* sf b.c. abelian field and standard sf weight factors included (only plaquette here) */
@@ -73,24 +67,36 @@ void sf_observables() {
     printf("The Iwasaki action value is %e\n", iwasaki_action); fflush(stdout);
   }  
 
-  
-#if 0
-  /*** CHECKS: here we calculate "S[V], Gamma[V], S'[V] and Gamma'[V]" in two ways and both should agree ***/
-  printf("\n"); fflush(stdout);
-  printf("CHECKS: \n"); fflush(stdout);
+  /* COUPLING CALCULATION */
 
-  /* (0): here we have not yet assigned: U = V forall x_0 ==> it should not agree with the (1) and (2) */
-  iwasaki_action = measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-  partial_iwasaki_action = partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_eta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-  
-  printf("\n"); fflush(stdout);
-  printf(" Before assigning U=V but SF b.c. \n"); fflush(stdout);
-  printf("S[U,W',W] = %e \n", iwasaki_action); fflush(stdout);
-  printf("G[U,W',W] = %e \n", (6./g_beta)*iwasaki_action); fflush(stdout);
-  printf("S'[U,W',W] = %e \n", partial_iwasaki_action); fflush(stdout);
-  printf("G'[U,W',W] = %e \n", (6./g_beta)*partial_iwasaki_action);fflush(stdout); 
-  printf("\n"); fflush(stdout);
-  
+  //fcoupling = fopen("fcoupling.dat","w+");
+  //fprintf( fcoupling, "%23.16e\n", partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct));
+  //fclose (fcoupling);
+
+  /* print the value of the leading order effective action \Gamma[V] and its derivative \Gamma'[V] (plaquette case) */
+  /* note that the derivative is precisely the constant factor in the definition of the coupling constant */
+  if(g_proc_id==0){
+    printf("\n"); fflush(stdout);
+    printf("Effective action and its derivative with respect to eta, at leading order: \n");
+    printf("Gamma[V] = %e\n", lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
+    printf("Gamma'[V] =%e\n", partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
+  }
+
+  /* print the value of the "\partial(S)/\partial(eta)" which will have to be averaged later on to obtain the coupling constant */ 
+  if(g_proc_id==0){
+    printf("\n"); fflush(stdout);
+    printf("'Definition' of the coupling constant, partial(S)/partial(eta)\n"); fflush(stdout);
+    printf("S'[V,U] = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)); fflush(stdout);
+    printf("\n"); fflush(stdout);
+  }
+
+
+
+  /*****************************************************************************************************************************/ 
+  /*****************************************************************************************************************************/ 
+  /*****************************************************************************************************************************/ 
+
+#if 0
   /* (1): identifying the gauge fields "g_gauge_fields = V" and then calculating the plaquette as usually */
   induced_lattice_background(g_gauge_field, g_Tbsf, g_eta);
   
@@ -144,7 +150,7 @@ void sf_observables() {
   printf("\n"); fflush(stdout);
 
 
-  /* obtaine normalization factor by calculation Wilson action for U=1 in all the lattice */
+  /* obtain normalization factor by calculation Wilson action for U=1 in all the lattice */
   set_all_links_to_one_with_dirichlet(g_Tbsf);
 
   printf("\n"); fflush(stdout);
@@ -168,7 +174,7 @@ void sf_observables() {
   printf("\n"); fflush(stdout);
 
 
-  /* obtaine normalization factor by calculation Wilson action for U=1 in all the lattice */
+  /* obtain normalization factor by calculation Wilson action for U=1 in all the lattice */
   set_all_links_to_one();
 
   printf("\n"); fflush(stdout);
@@ -197,6 +203,4 @@ void sf_observables() {
 
 #endif
 
-  /*** FREE MEMORY of the back gauge field ***/
-  //free(sf_background_gauge_field);
 }
