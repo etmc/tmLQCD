@@ -376,8 +376,8 @@ int main(int argc,char *argv[]) {
   /*******************************************************/
 
   if (bc_flag == 1) { /* if SF */ 
-    dirichlet_boundary_conditions(g_Tbsf);
-    //nan_dirichlet_boundary_conditions(g_Tbsf);
+    //dirichlet_boundary_conditions(g_Tbsf);
+    nan_dirichlet_boundary_conditions(g_Tbsf);
     sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
     fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);    
 
@@ -481,7 +481,7 @@ int main(int argc,char *argv[]) {
     /* 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag); */
     
     
-#if 1
+#if 0
     if (bc_flag == 1) { /* if SF */
       sf_observables();  
     }
