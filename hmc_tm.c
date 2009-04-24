@@ -376,14 +376,15 @@ int main(int argc,char *argv[]) {
   /*******************************************************/
 
   if (bc_flag == 1) { /* if SF */ 
-    //dirichlet_boundary_conditions(g_Tbsf);
-    nan_dirichlet_boundary_conditions(g_Tbsf);
+    dirichlet_boundary_conditions(g_Tbsf);
+    //nan_dirichlet_boundary_conditions(g_Tbsf);
+    //induced_lattice_background(g_gauge_field, g_Tbsf, g_eta);
     sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
     fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);    
-
-#if 0 
+    
+#if 1
     sf_observables();  
-    exit(0);
+    //exit(0);
 #endif
 
     /* compute the energy of the gauge field for SF */
@@ -481,7 +482,7 @@ int main(int argc,char *argv[]) {
     /* 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag); */
     
     
-#if 0
+#if 1
     if (bc_flag == 1) { /* if SF */
       sf_observables();  
     }

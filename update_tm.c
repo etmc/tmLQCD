@@ -218,6 +218,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 #endif
 
+  printf ("yy[0] = %f\n", yy[0]);
+
   if(expmdh > yy[0]) {
     accept = 1;
   }

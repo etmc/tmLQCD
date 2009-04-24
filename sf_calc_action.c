@@ -1796,7 +1796,6 @@ double partial_plaquette_sf_respect_to_eta(int t, double ct) {
   
   ga_0 = sum_0;
 
-  
   /* loop to calculate (E_{k}^{8})^{prime}(\vec{x}) */
   x0 = t-1;
   
@@ -1835,7 +1834,7 @@ double partial_plaquette_sf_respect_to_eta(int t, double ct) {
   }
   
   ga_tminus1 = sum_tminus1;
-  
+
   ga_int = ct*(ga_0 + ga_tminus1);
   
   /*ga_int = ct*ga_0 - ct*ga_tminus1; */ /* this was WRONG!!! */
