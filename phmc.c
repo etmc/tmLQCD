@@ -32,7 +32,6 @@
 #include "eigenvalues_bi.h"
 #include "solver/solver.h"
 #include "init_chi_spinor_field.h"
-#include "init_chi_copy.h"
 #include "chebyshev_polynomial_nd.h"
 #include "Ptilde_nd.h"
 #include "phmc.h"

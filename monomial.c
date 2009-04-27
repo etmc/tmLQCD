@@ -58,6 +58,7 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].derivativefunction = &dummy_derivative;
 
   monomial_list[no_monomials].pf = NULL;
+  monomial_list[no_monomials].pf2 = NULL;
   monomial_list[no_monomials].csg_field = NULL;
   monomial_list[no_monomials].csg_field2 = NULL;
   monomial_list[no_monomials].csg_index_array = NULL;
@@ -70,6 +71,10 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].kappa2 = _default_g_kappa;
   monomial_list[no_monomials].mu = _default_g_mu;
   monomial_list[no_monomials].mu2 = _default_g_mu;
+  monomial_list[no_monomials].mubar = _default_g_mubar;
+  monomial_list[no_monomials].mubar2 = _default_g_mubar;
+  monomial_list[no_monomials].epsbar = _default_g_epsbar;
+  monomial_list[no_monomials].epsbar2 = _default_g_epsbar;
   monomial_list[no_monomials].epsilon = _default_g_epsbar;
   monomial_list[no_monomials].timescale = _default_timescale;
   monomial_list[no_monomials].accprec = _default_g_eps_sq_acc;
@@ -101,6 +106,8 @@ int init_monomials(const int V, const int even_odd_flag) {
   spinor * __pf = NULL;
   for(i = 0; i < no_monomials; i++) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
+    /* non-degenerate monomials need two pseudo fermion fields */
+    if((monomial_list[i].type == NDPOLY) || (monomial_list[i].type == NDDETRATIO)) no++;
   }
   if(no_monomials > 0) {
     if((void*)(_pf = (spinor*)calloc(no*V+1, sizeof(spinor))) == NULL) {
@@ -121,6 +128,11 @@ int init_monomials(const int V, const int even_odd_flag) {
   for(i = 0; i < no_monomials; i++) {
     
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) {
+      
+      monomial_list[i].pf = __pf+no*V;
+      no++;
+      monomial_list[i].rngrepro = reproduce_randomnumber_flag;
+
       if(monomial_list[i].type == DET) {
 	monomial_list[i].hbfunction = &det_heatbath;
 	monomial_list[i].accfunction = &det_acc;
@@ -140,11 +152,16 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].accfunction = &ndpoly_acc;
 	monomial_list[i].derivativefunction = &ndpoly_derivative;
 	no_ndpoly_monomials++;
+	monomial_list[i].pf2 = __pf+no*V;
+	no++;
       }
-      
-      monomial_list[i].pf = __pf+no*V;
-      no++;
-      monomial_list[i].rngrepro = reproduce_randomnumber_flag;
+      else if(monomial_list[i].type == NDDETRATIO) {
+	monomial_list[i].hbfunction = &dummy_heatbath;
+	monomial_list[i].accfunction = &nddetratio_acc;
+	monomial_list[i].derivativefunction = &dummy_derivative;
+	monomial_list[i].pf2 = __pf+no*V;
+	no++;
+      }
     }
     else {
       monomial_list[i].pf = NULL;

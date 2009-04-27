@@ -68,7 +68,6 @@
 #include "init_stout_smear_vars.h"
 #include "init_bispinor_field.h"
 #include "init_chi_spinor_field.h"
-#include "init_chi_copy.h"
 #include "xchange_halffield.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
@@ -280,16 +279,6 @@ int main(int argc,char *argv[]) {
     j = init_bispinor_field(VOLUME/2, NO_OF_BISPINORFIELDS);
     if (j!= 0) {
       fprintf(stderr, "Not enough memory for Bispinor fields! Aborting...\n");
-      exit(0);
-    }
-    j = init_chi_up_copy(VOLUMEPLUSRAND/2);
-    if (j!= 0) {
-      fprintf(stderr, "Not enough memory for Bi-chi up fields! Aborting...\n");
-      exit(0);
-    }
-    j = init_chi_dn_copy(VOLUMEPLUSRAND/2);
-    if (j!= 0) {
-      fprintf(stderr, "Not enough memory for Bi-chi dn fields! Aborting...\n");
       exit(0);
     }
   }
@@ -584,8 +573,6 @@ int main(int argc,char *argv[]) {
     free_bispinor_field(); 
     free_chi_up_spinor_field(); 
     free_chi_dn_spinor_field(); 
-    free_chi_up_copy(); 
-    free_chi_dn_copy(); 
   }
   /* End IF PHMC */
 /*   if(use_stout_flag == 1) */

@@ -307,6 +307,10 @@ TYPE [0-9A-Z]+
     mnl->type = DETRATIO;
     strcpy((*mnl).name, "DETRATIO");
   }
+  else if(strcmp(yytext, "NDDETRATIO")==0) {
+    mnl->type = NDDETRATIO;
+    strcpy((*mnl).name, "NDDETRATIO");
+  }
   else if(strcmp(yytext, "NDPOLY")==0) {
     mnl->type = NDPOLY;
     strcpy((*mnl).name, "NDPOLY");
@@ -345,9 +349,15 @@ TYPE [0-9A-Z]+
 
 <DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL>{
   {SPC}*Timescale{SPC}*={SPC}*{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    mnl->timescale = a;
-    if(myverbose) printf("  timescales set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+    if(mnl->type == NDDETRATIO) {
+      mnl->timescale = -5;
+      if(myverbose) printf("  timescales set to %d line %d monomial %d since NDDETRATIO is not for MD evolution\n", a, line_of_file, current_monomial);
+    }
+    else {
+      sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+      mnl->timescale = a;
+      if(myverbose) printf("  timescales set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+    }
   }
   {SPC}*Name{SPC}*={SPC}* {
     name_caller = YY_START;   
@@ -370,7 +380,7 @@ TYPE [0-9A-Z]+
   {SPC}*2KappaMu2{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu2 = c;
-    if(myverbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2kappamu2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*Kappa{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
@@ -380,7 +390,27 @@ TYPE [0-9A-Z]+
   {SPC}*Kappa2{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->kappa2 = c;
-    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  Kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*2KappaMubar{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    mnl->mubar = c;
+    if(myverbose) printf("  2kappamubar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*2KappaMubar2{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    mnl->mubar2 = c;
+    if(myverbose) printf("  2kappamubar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*2KappaEpsbar{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    mnl->epsbar = c;
+    if(myverbose) printf("  2kappaepsbar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*2KappaEpsbar2{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    mnl->epsbar2 = c;
+    if(myverbose) printf("  2kappaepsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*CSGHistory{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);

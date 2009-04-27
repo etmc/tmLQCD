@@ -30,6 +30,7 @@
 #define POLY 3
 #define NDPOLY 4
 #define SFGAUGE 5
+#define NDDETRATIO 6
 
 #define max_no_monomials 20
 
@@ -70,7 +71,8 @@ typedef struct {
   /* some book-keeping */
   char name[100];
   /* pseudo fermion field */
-  spinor * pf;
+  /* second one needed for ND monomials */
+  spinor * pf, * pf2;
   /* chronological solver fields */
   spinor ** csg_field;
   spinor ** csg_field2;
@@ -85,6 +87,7 @@ typedef struct {
 #include "det_monomial.h"
 #include "detratio_monomial.h"
 #include "ndpoly_monomial.h"
+#include "nddetratio_monomial.h"
 #include "gauge_monomial.h"
 #include "sf_gauge_monomial.h"
 
