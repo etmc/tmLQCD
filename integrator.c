@@ -72,7 +72,7 @@ int init_integrator() {
     }
     else {
       if(g_proc_id == 0) {
-	fprintf(stderr, "Warning: monomial %d is not on a valid timescale and discarded\n", i);
+	fprintf(stderr, "Warning: monomial %d is not on a valid timescale and will not be integrated\n", i);
       }
     }
   }

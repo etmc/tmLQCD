@@ -95,6 +95,9 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].c1tts = _default_g_C1tts; 
   monomial_list[no_monomials].rngrepro = _default_reproduce_randomnumber_flag;
   monomial_list[no_monomials].initialised = 1;
+  if(monomial_list[no_monomials].type == NDDETRATIO) {
+    monomial_list[no_monomials].timescale = -5;
+  }
 
   no_monomials++;
   return(no_monomials);
@@ -160,6 +163,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].accfunction = &nddetratio_acc;
 	monomial_list[i].derivativefunction = &dummy_derivative;
 	monomial_list[i].pf2 = __pf+no*V;
+	monomial_list[i].timescale = -5;
 	no++;
       }
     }
