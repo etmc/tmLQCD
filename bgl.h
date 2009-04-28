@@ -1451,7 +1451,7 @@
   reg03 = __fxcxnsma(reg03, r01, __cimag(v01)); \
   reg10 = __fxcxnsma(reg10, r11, __cimag(v01)); \
   reg13 = __fxcxnsma(reg13, r21, __cimag(v01)); \
-  reg04 = __fxcxnsma(reg04, r01, __cimag(v11)); \ 
+  reg04 = __fxcxnsma(reg04, r01, __cimag(v11)); \
   reg11 = __fxcxnsma(reg11, r11, __cimag(v11)); \
   reg14 = __fxcxnsma(reg14, r21, __cimag(v11)); \
   reg05 = __fxcxnsma(reg05, r01, __cimag(v21)); \
@@ -1518,7 +1518,7 @@
   reg03 = __fxcxnpma(reg03, r01, __cimag(v10)); \
   reg10 = __fxcxnpma(reg10, r11, __cimag(v10)); \
   reg13 = __fxcxnpma(reg13, r21, __cimag(v10)); \
-  reg04 = __fxcxnpma(reg04, r01, __cimag(v11)); \ 
+  reg04 = __fxcxnpma(reg04, r01, __cimag(v11)); \
   reg11 = __fxcxnpma(reg11, r11, __cimag(v11)); \
   reg14 = __fxcxnpma(reg14, r21, __cimag(v11)); \
   reg05 = __fxcxnpma(reg05, r01, __cimag(v12)); \
