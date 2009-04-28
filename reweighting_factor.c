@@ -51,6 +51,10 @@ void reweighting_factor(const int N, const int nstore) {
 	}
 	random_spinor_field(mnl->pf, n, mnl->rngrepro);
 	mnl->energy0 = square_norm(mnl->pf, n, 1);
+	if(mnl->type == NDDETRATIO) {
+	  random_spinor_field(mnl->pf2, n, mnl->rngrepro);
+	  mnl->energy0 += square_norm(mnl->pf2, n, 1);
+	}
       }
     }
 

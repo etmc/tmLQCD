@@ -310,6 +310,7 @@ TYPE [0-9A-Z]+
   else if(strcmp(yytext, "NDDETRATIO")==0) {
     mnl->type = NDDETRATIO;
     strcpy((*mnl).name, "NDDETRATIO");
+    g_running_phmc = 1;
   }
   else if(strcmp(yytext, "NDPOLY")==0) {
     mnl->type = NDPOLY;

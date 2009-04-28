@@ -59,10 +59,7 @@ double nddetratio_acc(const int id) {
   g_epsbar = mnl->epsbar;
   boundary(mnl->kappa);
 
-  gamma5(g_spinor_field[0], mnl->pf , VOLUME/2);
-  gamma5(g_spinor_field[1], mnl->pf2, VOLUME/2);
-
-  iter = cg_her_nd(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1],
+  iter = cg_her_nd(g_spinor_field[2], g_spinor_field[3], mnl->pf, mnl->pf2,
 		   mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
 		   VOLUME/2, &Q_Qdagger_ND, 0, 1000);
   QdaggerNon_degenerate(g_spinor_field[0], g_spinor_field[1],

@@ -498,6 +498,10 @@ int main(int argc,char *argv[]) {
   free_gauge_field();
   free_geometry_indices();
   free_spinor_field();
+  
+  free_bispinor_field(); 
+  free_chi_up_spinor_field(); 
+  free_chi_dn_spinor_field(); 
 
   return(0);
 #ifdef _KOJAK_INST

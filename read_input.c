@@ -3426,6 +3426,7 @@ YY_RULE_SETUP
   else if(strcmp(yytext, "NDDETRATIO")==0) {
     mnl->type = NDDETRATIO;
     strcpy((*mnl).name, "NDDETRATIO");
+    g_running_phmc = 1;
   }
   else if(strcmp(yytext, "NDPOLY")==0) {
     mnl->type = NDPOLY;
@@ -3464,7 +3465,7 @@ YY_RULE_SETUP
 
 case 77:
 YY_RULE_SETUP
-#line 351 "read_input.l"
+#line 352 "read_input.l"
 {
     if(mnl->type == NDDETRATIO) {
       mnl->timescale = -5;
@@ -3479,7 +3480,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 362 "read_input.l"
+#line 363 "read_input.l"
 {
     name_caller = YY_START;   
     BEGIN(MNAME);
@@ -3487,7 +3488,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 366 "read_input.l"
+#line 367 "read_input.l"
 {
     if(myverbose) printf("monomial %d parsed line %d\n\n", current_monomial, line_of_file);
     BEGIN(0);
@@ -3497,7 +3498,7 @@ YY_RULE_SETUP
 
 case 80:
 YY_RULE_SETUP
-#line 375 "read_input.l"
+#line 376 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu = c;
@@ -3506,7 +3507,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 380 "read_input.l"
+#line 381 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu2 = c;
@@ -3515,7 +3516,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 385 "read_input.l"
+#line 386 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     mnl->kappa = c;
@@ -3524,7 +3525,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 390 "read_input.l"
+#line 391 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->kappa2 = c;
@@ -3533,7 +3534,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 395 "read_input.l"
+#line 396 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mubar = c;
@@ -3542,7 +3543,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 400 "read_input.l"
+#line 401 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mubar2 = c;
@@ -3551,7 +3552,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 405 "read_input.l"
+#line 406 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->epsbar = c;
@@ -3560,7 +3561,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 410 "read_input.l"
+#line 411 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->epsbar2 = c;
@@ -3569,7 +3570,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 415 "read_input.l"
+#line 416 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->csg_N = a;
@@ -3578,7 +3579,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 420 "read_input.l"
+#line 421 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z2] = %d", name , &a);
     mnl->csg_N2 = a;
@@ -3588,7 +3589,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 426 "read_input.l"
+#line 427 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->forceprec = c;
@@ -3597,7 +3598,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 431 "read_input.l"
+#line 432 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->accprec = c;
@@ -3606,7 +3607,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 436 "read_input.l"
+#line 437 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->maxiter = a;
@@ -3615,19 +3616,19 @@ YY_RULE_SETUP
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 441 "read_input.l"
+#line 442 "read_input.l"
 BEGIN(MSOLVER);
 	YY_BREAK
 
 
 case 94:
 YY_RULE_SETUP
-#line 446 "read_input.l"
+#line 447 "read_input.l"
 BEGIN(GTYPE);
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 447 "read_input.l"
+#line 448 "read_input.l"
 {
     mnl->use_rectangles = 1;
     g_dbw2rand = 1;
@@ -3636,7 +3637,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 452 "read_input.l"
+#line 453 "read_input.l"
 {
     mnl->use_rectangles = 0;
     g_dbw2rand = 0;
@@ -3645,7 +3646,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 457 "read_input.l"
+#line 458 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->beta = c;
@@ -3655,7 +3656,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 463 "read_input.l"
+#line 464 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1 = c;
@@ -3665,7 +3666,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 469 "read_input.l"
+#line 470 "read_input.l"
 {
     g_sf_inc_wrap_sq = 1;
     if(myverbose) printf("  IncludeWrappedSquares set to true line %d monomial %d\n", line_of_file, current_monomial);
@@ -3673,7 +3674,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 473 "read_input.l"
+#line 474 "read_input.l"
 {
     g_sf_inc_wrap_sq = 0;
     if(myverbose) printf("  IncludeWrappedSquares set to false line %d monomial %d\n", line_of_file, current_monomial);
@@ -3683,12 +3684,12 @@ YY_RULE_SETUP
 
 case 101:
 YY_RULE_SETUP
-#line 480 "read_input.l"
+#line 481 "read_input.l"
 BEGIN(GTYPE);
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 481 "read_input.l"
+#line 482 "read_input.l"
 {
     mnl->use_rectangles = 1;
     g_dbw2rand = 1;
@@ -3697,7 +3698,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 486 "read_input.l"
+#line 487 "read_input.l"
 {
     mnl->use_rectangles = 0;
     g_dbw2rand = 0;
@@ -3706,7 +3707,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-#line 491 "read_input.l"
+#line 492 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->beta = c;
@@ -3716,7 +3717,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 497 "read_input.l"
+#line 498 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1 = c;
@@ -3726,7 +3727,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
-#line 503 "read_input.l"
+#line 504 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->eta = c;
@@ -3736,7 +3737,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
-#line 509 "read_input.l"
+#line 510 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->ct = c;
@@ -3746,7 +3747,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
-#line 515 "read_input.l"
+#line 516 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->cs = c;
@@ -3756,7 +3757,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
-#line 521 "read_input.l"
+#line 522 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1ss = c;
@@ -3766,7 +3767,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 527 "read_input.l"
+#line 528 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1tss = c;
@@ -3776,7 +3777,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 533 "read_input.l"
+#line 534 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1tts = c;
@@ -3788,7 +3789,7 @@ YY_RULE_SETUP
 
 case 112:
 YY_RULE_SETUP
-#line 543 "read_input.l"
+#line 544 "read_input.l"
 {
     phmc_exact_poly = 1;
     if(myverbose!=0) printf("  phmc_exact_poly set to true line %d monomial %d\n", line_of_file, current_monomial);
@@ -3796,7 +3797,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
-#line 547 "read_input.l"
+#line 548 "read_input.l"
 {
     phmc_exact_poly = 0;
     if(myverbose!=0) printf("  phmc_exact_poly set to false line %d monomial %d\n", line_of_file, current_monomial);
@@ -3804,7 +3805,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
-#line 551 "read_input.l"
+#line 552 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     stilde_max = c;
@@ -3813,7 +3814,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 115:
 YY_RULE_SETUP
-#line 556 "read_input.l"
+#line 557 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     stilde_min = c;
@@ -3822,7 +3823,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
-#line 561 "read_input.l"
+#line 562 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     degree_of_p = a;
@@ -3831,7 +3832,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
-#line 566 "read_input.l"
+#line 567 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     g_acc_Ptilde = c;
@@ -3840,7 +3841,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
-#line 571 "read_input.l"
+#line 572 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     g_acc_Hfin = c;
@@ -3849,7 +3850,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
-#line 576 "read_input.l"
+#line 577 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     g_rec_ev = a;
@@ -3858,7 +3859,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
-#line 581 "read_input.l"
+#line 582 "read_input.l"
 {
     phmc_compute_evs=1;
     if(myverbose!=0) printf("  Compute only heavy EVs set to true line %d monomial %d\n", line_of_file, current_monomial);
@@ -3866,7 +3867,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 121:
 YY_RULE_SETUP
-#line 585 "read_input.l"
+#line 586 "read_input.l"
 {
     phmc_compute_evs=0;
     if(myverbose!=0) printf("  Compute only heavy EVs set to false line %d monomial %d\n", line_of_file, current_monomial);
@@ -3875,7 +3876,7 @@ YY_RULE_SETUP
 
 case 122:
 YY_RULE_SETUP
-#line 591 "read_input.l"
+#line 592 "read_input.l"
 {
   if(myverbose) printf("  monomial named \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
   strcpy((*mnl).name, yytext);
@@ -3885,7 +3886,7 @@ YY_RULE_SETUP
 
 case 123:
 YY_RULE_SETUP
-#line 598 "read_input.l"
+#line 599 "read_input.l"
 {
     if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 1;
@@ -3894,7 +3895,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
-#line 603 "read_input.l"
+#line 604 "read_input.l"
 {
     if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 0;
@@ -3905,7 +3906,7 @@ YY_RULE_SETUP
 
 case 125:
 YY_RULE_SETUP
-#line 611 "read_input.l"
+#line 612 "read_input.l"
 {
     mnl->gtype = 0;
     mnl->c1 = 0.;
@@ -3917,7 +3918,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-#line 619 "read_input.l"
+#line 620 "read_input.l"
 {
     mnl->gtype = 1;
     mnl->c1 = -0.083333333;
@@ -3929,7 +3930,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 127:
 YY_RULE_SETUP
-#line 627 "read_input.l"
+#line 628 "read_input.l"
 {
     mnl->gtype = 2;
     mnl->c1 = -0.331;
@@ -3941,7 +3942,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
-#line 635 "read_input.l"
+#line 636 "read_input.l"
 {
     mnl->gtype = 3;
     BEGIN(GAUGEMONOMIAL);
@@ -3949,7 +3950,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
-#line 639 "read_input.l"
+#line 640 "read_input.l"
 {
     mnl->gtype = 4;
     mnl->c1 = -1.4088;
@@ -3961,7 +3962,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
-#line 647 "read_input.l"
+#line 648 "read_input.l"
 {
     mnl->gtype = 5;
     mnl->c1 = 0.;
@@ -3973,7 +3974,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
-#line 655 "read_input.l"
+#line 656 "read_input.l"
 {
     mnl->gtype = 6;
     BEGIN(SFGAUGEMONOMIAL);
@@ -3982,7 +3983,7 @@ YY_RULE_SETUP
 
 case 132:
 YY_RULE_SETUP
-#line 662 "read_input.l"
+#line 663 "read_input.l"
 {
   Integrator.no_timescales = -1;
   Integrator.tau = 1.;
@@ -3997,7 +3998,7 @@ YY_RULE_SETUP
 
 case 133:
 YY_RULE_SETUP
-#line 673 "read_input.l"
+#line 674 "read_input.l"
 {
     type = (char*)malloc(100*sizeof(char));
     sscanf(yytext, " %[a-zA-Z]%d = %s", name, &a, type);
@@ -4021,7 +4022,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
-#line 693 "read_input.l"
+#line 694 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z]%d = %d", name, &a, &b);
     if(myverbose) printf("  timescale %d steps=%d line %d\n", a, b, line_of_file);
@@ -4031,7 +4032,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
-#line 699 "read_input.l"
+#line 700 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z]%d = %f", name, &a, &c);
     Integrator.lambda[a] = c;
@@ -4041,7 +4042,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 136:
 YY_RULE_SETUP
-#line 705 "read_input.l"
+#line 706 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     if(myverbose) printf("  Number of timescales set to %d line %d\n", a, line_of_file);
@@ -4055,7 +4056,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
-#line 715 "read_input.l"
+#line 716 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     if(myverbose) printf("  tau set to %e line %d\n", c, line_of_file);
@@ -4065,7 +4066,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 138:
 YY_RULE_SETUP
-#line 721 "read_input.l"
+#line 722 "read_input.l"
 {
     if(Integrator.no_timescales == -1) {
       fprintf(stderr, "NumberOfTimescales must be specified!\n");
@@ -4078,7 +4079,7 @@ YY_RULE_SETUP
 
 case 139:
 YY_RULE_SETUP
-#line 731 "read_input.l"
+#line 732 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   T_global = atoi(yytext);
@@ -4088,7 +4089,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 140:
 YY_RULE_SETUP
-#line 737 "read_input.l"
+#line 738 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   L = atoi(yytext);
@@ -4098,7 +4099,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
-#line 743 "read_input.l"
+#line 744 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   LX = atoi(yytext);
@@ -4108,7 +4109,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 142:
 YY_RULE_SETUP
-#line 749 "read_input.l"
+#line 750 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   LY = atoi(yytext);
@@ -4118,7 +4119,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 143:
 YY_RULE_SETUP
-#line 755 "read_input.l"
+#line 756 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   LZ = atoi(yytext);
@@ -4128,7 +4129,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 144:
 YY_RULE_SETUP
-#line 761 "read_input.l"
+#line 762 "read_input.l"
 {
   g_Tbsf = atoi(yytext);
   if(myverbose!=0) printf("g_Tbsf =%s\n", yytext);
@@ -4136,7 +4137,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 145:
 YY_RULE_SETUP
-#line 765 "read_input.l"
+#line 766 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   N_PROC_X = atoi(yytext);
@@ -4146,7 +4147,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 146:
 YY_RULE_SETUP
-#line 771 "read_input.l"
+#line 772 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   N_PROC_Y = atoi(yytext);
@@ -4156,7 +4157,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 147:
 YY_RULE_SETUP
-#line 777 "read_input.l"
+#line 778 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   N_PROC_Z = atoi(yytext);
@@ -4166,7 +4167,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 148:
 YY_RULE_SETUP
-#line 783 "read_input.l"
+#line 784 "read_input.l"
 {
   random_seed=atoi(yytext);
   if(myverbose!=0) printf("seed=%s \n", yytext);
@@ -4174,7 +4175,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
-#line 787 "read_input.l"
+#line 788 "read_input.l"
 {
   rlxd_level = atoi(yytext);
   if(myverbose!=0) printf("RanluxdLevel set to %d \n", rlxd_level);
@@ -4182,7 +4183,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 150:
 YY_RULE_SETUP
-#line 791 "read_input.l"
+#line 792 "read_input.l"
 {
   g_kappa=atof(yytext);
   if(myverbose!=0) printf("kappa=%s \n", yytext);
@@ -4190,7 +4191,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 151:
 YY_RULE_SETUP
-#line 795 "read_input.l"
+#line 796 "read_input.l"
 {
   g_mubar=atof(yytext);
   if(myverbose!=0) printf("2 kappa mubar=%s \n", yytext);
@@ -4198,7 +4199,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 152:
 YY_RULE_SETUP
-#line 799 "read_input.l"
+#line 800 "read_input.l"
 {
   g_epsbar=atof(yytext);
   if(myverbose!=0) printf("2 kappa epsbar=%s \n", yytext);
@@ -4206,7 +4207,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 153:
 YY_RULE_SETUP
-#line 803 "read_input.l"
+#line 804 "read_input.l"
 {
   g_mu1=atof(yytext);
   if(myverbose!=0) printf("2 kappa mu=%s \n", yytext);
@@ -4214,7 +4215,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 154:
 YY_RULE_SETUP
-#line 807 "read_input.l"
+#line 808 "read_input.l"
 {
   startoption=0; 
   if(myverbose!=0) printf("Start Condition is %s \n",yytext);
@@ -4223,7 +4224,7 @@ YY_RULE_SETUP
 
 case 155:
 YY_RULE_SETUP
-#line 812 "read_input.l"
+#line 813 "read_input.l"
 {
     startoption=1;
     if(myverbose!=0) printf("Start Condition is %s \n",yytext);
@@ -4231,7 +4232,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 156:
 YY_RULE_SETUP
-#line 816 "read_input.l"
+#line 817 "read_input.l"
 {
     startoption=2;
     if(myverbose!=0) printf("Start Condition is %s \n",yytext);
@@ -4239,7 +4240,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 157:
 YY_RULE_SETUP
-#line 820 "read_input.l"
+#line 821 "read_input.l"
 {
     startoption=3;
     if(myverbose!=0) printf("Start Condition is %s \n",yytext);
@@ -4248,7 +4249,7 @@ YY_RULE_SETUP
 
 case 158:
 YY_RULE_SETUP
-#line 825 "read_input.l"
+#line 826 "read_input.l"
 {
   Ntherm=atoi(yytext);
   if(myverbose!=0) printf("Nterm= %s \n",yytext);
@@ -4256,7 +4257,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 159:
 YY_RULE_SETUP
-#line 829 "read_input.l"
+#line 830 "read_input.l"
 {
   Nmeas=atoi(yytext); 
   if(myverbose!=0) printf("Nmeas= %s \n",yytext);
@@ -4264,7 +4265,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 160:
 YY_RULE_SETUP
-#line 833 "read_input.l"
+#line 834 "read_input.l"
 {
   Nsave=atoi(yytext);
   if(myverbose!=0) printf("Nsave= %s \n",yytext);
@@ -4273,7 +4274,7 @@ YY_RULE_SETUP
 
 case 161:
 YY_RULE_SETUP
-#line 838 "read_input.l"
+#line 839 "read_input.l"
 {
     solver_flag=0;
     if(myverbose!=0) printf("Use BiCGStab Solver");
@@ -4281,7 +4282,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 162:
 YY_RULE_SETUP
-#line 842 "read_input.l"
+#line 843 "read_input.l"
 {
     solver_flag=1;
     if(myverbose!=0) printf("Use CG Solver\n");
@@ -4289,7 +4290,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 163:
 YY_RULE_SETUP
-#line 846 "read_input.l"
+#line 847 "read_input.l"
 {
     solver_flag=9;
     if(myverbose!=0) printf("Use PCG Solver (eigenvectors needed) \n");
@@ -4297,7 +4298,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 164:
 YY_RULE_SETUP
-#line 850 "read_input.l"
+#line 851 "read_input.l"
 {
     solver_flag=2;
     if(myverbose!=0) printf("Use GMRES Solver\n");
@@ -4305,7 +4306,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 165:
 YY_RULE_SETUP
-#line 854 "read_input.l"
+#line 855 "read_input.l"
 {
     solver_flag=7;
     if(myverbose!=0) printf("Use GCR Solver\n");
@@ -4313,7 +4314,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 166:
 YY_RULE_SETUP
-#line 858 "read_input.l"
+#line 859 "read_input.l"
 {
     solver_flag=8;
     if(myverbose!=0) printf("Use GMRES-DR Solver\n");
@@ -4321,7 +4322,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 167:
 YY_RULE_SETUP
-#line 862 "read_input.l"
+#line 863 "read_input.l"
 {
     solver_flag=3;
     if(myverbose!=0) printf("Use CGS Solver\n");
@@ -4329,7 +4330,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 168:
 YY_RULE_SETUP
-#line 866 "read_input.l"
+#line 867 "read_input.l"
 {
     solver_flag=4;
     if(myverbose!=0) printf("Use MR Solver \n");
@@ -4337,7 +4338,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 169:
 YY_RULE_SETUP
-#line 870 "read_input.l"
+#line 871 "read_input.l"
 {
     solver_flag=5;
     if(myverbose!=0) printf("Use BiCGstab(2) Solver \n");
@@ -4345,7 +4346,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 170:
 YY_RULE_SETUP
-#line 874 "read_input.l"
+#line 875 "read_input.l"
 {
     solver_flag=6;
     if(myverbose!=0) printf("Use FGMRES solver (eigenvectors needed) \n");
@@ -4353,7 +4354,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 171:
 YY_RULE_SETUP
-#line 878 "read_input.l"
+#line 879 "read_input.l"
 {
     solver_flag=10;
     g_dflgcr_flag = 1;
@@ -4362,7 +4363,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 172:
 YY_RULE_SETUP
-#line 883 "read_input.l"
+#line 884 "read_input.l"
 {
     solver_flag=11;
     g_dflgcr_flag = 1;
@@ -4372,7 +4373,7 @@ YY_RULE_SETUP
 
 case 173:
 YY_RULE_SETUP
-#line 889 "read_input.l"
+#line 890 "read_input.l"
 {
   gmres_m_parameter = atoi(yytext);
   if(myverbose!=0) printf("Use Krylov Space of size %d in GMRES \n", gmres_m_parameter);
@@ -4380,7 +4381,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 174:
 YY_RULE_SETUP
-#line 893 "read_input.l"
+#line 894 "read_input.l"
 {
   gmresdr_nr_ev = atoi(yytext);
   if(myverbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
@@ -4388,7 +4389,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 175:
 YY_RULE_SETUP
-#line 897 "read_input.l"
+#line 898 "read_input.l"
 {
   g_N_s = atoi(yytext);
   if(myverbose!=0) printf("Deflation subspace dimension set to %d \n", g_N_s);
@@ -4397,21 +4398,21 @@ YY_RULE_SETUP
 
 case 176:
 YY_RULE_SETUP
-#line 902 "read_input.l"
+#line 903 "read_input.l"
 {
     if(myverbose!=0) printf("Using no right preconditioner \n");
   }
 	YY_BREAK
 case 177:
 YY_RULE_SETUP
-#line 905 "read_input.l"
+#line 906 "read_input.l"
 {
     if(myverbose!=0) printf("Using polynomial as right preconditioner \n");
   }
 	YY_BREAK
 case 178:
 YY_RULE_SETUP
-#line 908 "read_input.l"
+#line 909 "read_input.l"
 {
     if(myverbose!=0) printf("Using cg as right preconditioner \n");
   }
@@ -4419,7 +4420,7 @@ YY_RULE_SETUP
 
 case 179:
 YY_RULE_SETUP
-#line 912 "read_input.l"
+#line 913 "read_input.l"
 {
   max_solver_iterations = atoi(yytext);
   if(myverbose!=0) printf("Use %d iterations in the solvers!\n", max_solver_iterations);
@@ -4427,7 +4428,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 180:
 YY_RULE_SETUP
-#line 916 "read_input.l"
+#line 917 "read_input.l"
 {
   solver_precision = atof(yytext);
   if(myverbose!=0) printf("Use %e as convergence precision for the solvers!\n", solver_precision);
@@ -4435,7 +4436,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 181:
 YY_RULE_SETUP
-#line 920 "read_input.l"
+#line 921 "read_input.l"
 {
   write_cp_flag=1;
   if(myverbose!=0) printf("Write Checkpoints\n");
@@ -4443,7 +4444,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 182:
 YY_RULE_SETUP
-#line 924 "read_input.l"
+#line 925 "read_input.l"
 {
   write_cp_flag=0;
   if(myverbose!=0) printf("Don't write Checkpoints\n");
@@ -4451,7 +4452,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 183:
 YY_RULE_SETUP
-#line 928 "read_input.l"
+#line 929 "read_input.l"
 {
   cp_interval=atoi(yytext);
   if(myverbose!=0) printf("Write Checkpoint all %s measurements\n",yytext);
@@ -4459,7 +4460,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 184:
 YY_RULE_SETUP
-#line 932 "read_input.l"
+#line 933 "read_input.l"
 {
   strcpy(gauge_input_filename,yytext);
   if(myverbose!=0) printf("Gauge Configuration input filename set to %s\n",yytext);
@@ -4467,7 +4468,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 185:
 YY_RULE_SETUP
-#line 936 "read_input.l"
+#line 937 "read_input.l"
 {
   nstore=atoi(yytext);
   if(myverbose!=0) printf("Initial store counter set to %s\n",yytext);
@@ -4475,7 +4476,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 186:
 YY_RULE_SETUP
-#line 940 "read_input.l"
+#line 941 "read_input.l"
 {
   nstore=-1;
   if(myverbose!=0) printf("Trying to read InitialStoreCounter from file .nstore_counter\n");
@@ -4483,7 +4484,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 187:
 YY_RULE_SETUP
-#line 944 "read_input.l"
+#line 945 "read_input.l"
 {
   g_stdio_proc = -1;
   if(myverbose!=0) printf("All processors will give output to stdout\n");
@@ -4491,7 +4492,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 188:
 YY_RULE_SETUP
-#line 948 "read_input.l"
+#line 949 "read_input.l"
 {
   g_stdio_proc = -2;
   if(myverbose!=0) printf("No processor will give output to stdout\n");
@@ -4499,7 +4500,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 189:
 YY_RULE_SETUP
-#line 952 "read_input.l"
+#line 953 "read_input.l"
 {
   g_stdio_proc = atoi(yytext);
   if(myverbose!=0) printf("processor %s will give output to stdout\n", yytext);
@@ -4507,7 +4508,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 190:
 YY_RULE_SETUP
-#line 956 "read_input.l"
+#line 957 "read_input.l"
 {
   index_start = atoi(yytext);
   index_end = index_start+1;
@@ -4520,7 +4521,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 191:
 YY_RULE_SETUP
-#line 965 "read_input.l"
+#line 966 "read_input.l"
 {
   sscanf(yytext, "-%d", &index_end);
   if((index_end < 0)||(index_end >99)){
@@ -4533,7 +4534,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 192:
 YY_RULE_SETUP
-#line 974 "read_input.l"
+#line 975 "read_input.l"
 {
   ITER_MAX_BCG = atoi(yytext);
   if(myverbose != 0) printf("Maximal number of iterations for BCGstab set ro %d\n", ITER_MAX_BCG);
@@ -4541,7 +4542,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 193:
 YY_RULE_SETUP
-#line 978 "read_input.l"
+#line 979 "read_input.l"
 {
   ITER_MAX_CG = atoi(yytext);
   if(myverbose != 0) printf("Maximal number of iterations for CG set ro %d\n", ITER_MAX_CG);
@@ -4549,7 +4550,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 194:
 YY_RULE_SETUP
-#line 982 "read_input.l"
+#line 983 "read_input.l"
 {
   X0 = atof(yytext);
   if(myverbose != 0) printf("X0 for boundary cond. in time set to %e\n", X0);
@@ -4557,7 +4558,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 195:
 YY_RULE_SETUP
-#line 986 "read_input.l"
+#line 987 "read_input.l"
 {
   X1 = atof(yytext);
   if(myverbose != 0) printf("X1 for boundary cond. in time set to %e\n", X0);
@@ -4565,7 +4566,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 196:
 YY_RULE_SETUP
-#line 990 "read_input.l"
+#line 991 "read_input.l"
 {
   X2 = atof(yytext);
   if(myverbose != 0) printf("X2 for boundary cond. in time set to %e\n", X0);
@@ -4573,7 +4574,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 197:
 YY_RULE_SETUP
-#line 994 "read_input.l"
+#line 995 "read_input.l"
 {
   X3 = atof(yytext);
   if(myverbose != 0) printf("X3 for boundary cond. in time set to %e\n", X0);
@@ -4581,7 +4582,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 198:
 YY_RULE_SETUP
-#line 998 "read_input.l"
+#line 999 "read_input.l"
 {
   read_source_flag=1;
   if(myverbose!=0) printf("Read inversion source from file\n");
@@ -4589,7 +4590,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 199:
 YY_RULE_SETUP
-#line 1002 "read_input.l"
+#line 1003 "read_input.l"
 {
   read_source_flag=0;
   if(myverbose!=0) printf("Don't read inversion source from file\n");
@@ -4597,7 +4598,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 200:
 YY_RULE_SETUP
-#line 1006 "read_input.l"
+#line 1007 "read_input.l"
 {
   strcpy(source_input_filename,yytext);
   if(myverbose!=0) printf("source input filename set to %s\n",yytext);
@@ -4605,7 +4606,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 201:
 YY_RULE_SETUP
-#line 1010 "read_input.l"
+#line 1011 "read_input.l"
 {
   source_format_flag = 0;
   if(myverbose!=0) printf("Using standard ETMC binary format for source input file\n");
@@ -4613,7 +4614,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 202:
 YY_RULE_SETUP
-#line 1014 "read_input.l"
+#line 1015 "read_input.l"
 {
   source_format_flag = 11;
   if(myverbose!=0) printf("Using CM format for source input file\n");
@@ -4621,7 +4622,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 203:
 YY_RULE_SETUP
-#line 1018 "read_input.l"
+#line 1019 "read_input.l"
 {
   source_format_flag = 10;
   if(myverbose!=0) printf("Using GWC format for source input file\n");
@@ -4629,7 +4630,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 204:
 YY_RULE_SETUP
-#line 1022 "read_input.l"
+#line 1023 "read_input.l"
 {
   source_time_slice = atoi(yytext);
   if(myverbose!=0) printf("Using only timeslice %s of the source, padding the rest with zeros\n", yytext);
@@ -4637,7 +4638,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 205:
 YY_RULE_SETUP
-#line 1026 "read_input.l"
+#line 1027 "read_input.l"
 {
   g_relative_precision_flag = 1;
   if(myverbose!=0) printf("Using relative precision\n");
@@ -4645,7 +4646,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 206:
 YY_RULE_SETUP
-#line 1030 "read_input.l"
+#line 1031 "read_input.l"
 {
   g_relative_precision_flag = 0;
   if(myverbose!=0) printf("Using absolute precision\n");
@@ -4653,7 +4654,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 207:
 YY_RULE_SETUP
-#line 1034 "read_input.l"
+#line 1035 "read_input.l"
 {
   return_check_flag = 1;
   if(myverbose!=0) printf("Perform checks of Reversibility\n");
@@ -4661,7 +4662,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 208:
 YY_RULE_SETUP
-#line 1038 "read_input.l"
+#line 1039 "read_input.l"
 {
   return_check_flag = 0;
   if(myverbose!=0) printf("Don't perform checks of Reversibility\n");
@@ -4669,7 +4670,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 209:
 YY_RULE_SETUP
-#line 1042 "read_input.l"
+#line 1043 "read_input.l"
 {
   return_check_interval = atoi(yytext);
   if(myverbose!=0) printf("Check reversibility all %d trajectories\n", return_check_interval);
@@ -4677,7 +4678,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 210:
 YY_RULE_SETUP
-#line 1046 "read_input.l"
+#line 1047 "read_input.l"
 {
   g_debug_level = atoi(yytext);
   if(myverbose!=0) printf("Debug level = %d\n", g_debug_level);
@@ -4685,7 +4686,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 211:
 YY_RULE_SETUP
-#line 1050 "read_input.l"
+#line 1051 "read_input.l"
 {
   gauge_precision_read_flag = 32;
   if(myverbose!=0) printf("Read gauges in 32 Bit precision!\n");
@@ -4693,7 +4694,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 212:
 YY_RULE_SETUP
-#line 1054 "read_input.l"
+#line 1055 "read_input.l"
 {
   gauge_precision_read_flag = 64;
   if(myverbose!=0) printf("Read gauges in 64 Bit precision!\n");
@@ -4701,7 +4702,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 213:
 YY_RULE_SETUP
-#line 1058 "read_input.l"
+#line 1059 "read_input.l"
 {
   gauge_precision_write_flag = 32;
   if(myverbose!=0) printf("Save gauges in 32 Bit precision!\n");
@@ -4709,7 +4710,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 214:
 YY_RULE_SETUP
-#line 1062 "read_input.l"
+#line 1063 "read_input.l"
 {
   gauge_precision_write_flag = 64;
   if(myverbose!=0) printf("Save gauges in 64 Bit precision!\n");
@@ -4717,7 +4718,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 215:
 YY_RULE_SETUP
-#line 1066 "read_input.l"
+#line 1067 "read_input.l"
 {
   prop_precision_flag = 32;
   if(myverbose!=0) printf("Save propagators in 32 Bit precision!\n");
@@ -4725,7 +4726,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 216:
 YY_RULE_SETUP
-#line 1070 "read_input.l"
+#line 1071 "read_input.l"
 {
   prop_precision_flag = 64;
   if(myverbose!=0) printf("Save propagators in 64 Bit precision!\n");
@@ -4733,7 +4734,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 217:
 YY_RULE_SETUP
-#line 1074 "read_input.l"
+#line 1075 "read_input.l"
 {
   reproduce_randomnumber_flag = 1;
   if(myverbose!=0) printf("Use reproducable randomnumbers!\n");
@@ -4741,7 +4742,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 218:
 YY_RULE_SETUP
-#line 1078 "read_input.l"
+#line 1079 "read_input.l"
 {
   reproduce_randomnumber_flag = 0;
   if(myverbose!=0) printf("Use a different seed for each process in ranlxd!\n");
@@ -4749,7 +4750,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 219:
 YY_RULE_SETUP
-#line 1082 "read_input.l"
+#line 1083 "read_input.l"
 {
   g_sloppy_precision_flag = 1;
   if(myverbose!=0) printf("Use sloppy precision if available!\n");
@@ -4757,7 +4758,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 220:
 YY_RULE_SETUP
-#line 1086 "read_input.l"
+#line 1087 "read_input.l"
 {
   g_sloppy_precision_flag = 0;
   if(myverbose!=0) printf("Don't use sloppy precision!\n");
@@ -4765,7 +4766,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 221:
 YY_RULE_SETUP
-#line 1090 "read_input.l"
+#line 1091 "read_input.l"
 {
   use_stout_flag = 1;
   if(myverbose!=0) printf("Use stout smearing for invert!\n");
@@ -4773,7 +4774,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 222:
 YY_RULE_SETUP
-#line 1094 "read_input.l"
+#line 1095 "read_input.l"
 {
   use_stout_flag = 0;
   if(myverbose!=0) printf("Don't use stout smearing for invert!\n");
@@ -4781,7 +4782,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 223:
 YY_RULE_SETUP
-#line 1098 "read_input.l"
+#line 1099 "read_input.l"
 {
   stout_rho=atof(yytext);
   if(myverbose!=0) printf("use stout rho=%e!\n", stout_rho);
@@ -4789,7 +4790,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 224:
 YY_RULE_SETUP
-#line 1102 "read_input.l"
+#line 1103 "read_input.l"
 {
   stout_no_iter=atoi(yytext);
   if(myverbose!=0) printf("make %d stout iterations!\n", stout_no_iter);
@@ -4797,7 +4798,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 225:
 YY_RULE_SETUP
-#line 1106 "read_input.l"
+#line 1107 "read_input.l"
 {
   compute_evs=1;
   if(myverbose!=0) printf("Compute Eigenvalues in invert.");
@@ -4805,7 +4806,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 226:
 YY_RULE_SETUP
-#line 1110 "read_input.l"
+#line 1111 "read_input.l"
 {
   compute_evs=0;
   if(myverbose!=0) printf("Do not compute Eigenvalues in invert.");
@@ -4813,7 +4814,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 227:
 YY_RULE_SETUP
-#line 1114 "read_input.l"
+#line 1115 "read_input.l"
 {
   compute_evs=2;
   if(myverbose!=0) printf("Try to only read in eigenvalues and vectors in invert.");
@@ -4821,7 +4822,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 228:
 YY_RULE_SETUP
-#line 1118 "read_input.l"
+#line 1119 "read_input.l"
 {
   propagator_splitted=1;
   if(myverbose!=0) printf("Split the propagator in several files! (invert)\n");
@@ -4829,7 +4830,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 229:
 YY_RULE_SETUP
-#line 1122 "read_input.l"
+#line 1123 "read_input.l"
 {
   propagator_splitted=0;
   if(myverbose!=0) printf("Do not split the propagator in several files (default) (invert)!\n");
@@ -4837,7 +4838,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 230:
 YY_RULE_SETUP
-#line 1126 "read_input.l"
+#line 1127 "read_input.l"
 {
   source_splitted=1;
   if(myverbose!=0) printf("Expect source to be split in several files (invert)!\n");
@@ -4845,7 +4846,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 231:
 YY_RULE_SETUP
-#line 1130 "read_input.l"
+#line 1131 "read_input.l"
 {
   source_splitted=0;
   if(myverbose!=0) printf("Do not expect source to be split in several files (default) (invert)!\n");
@@ -4853,7 +4854,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 232:
 YY_RULE_SETUP
-#line 1134 "read_input.l"
+#line 1135 "read_input.l"
 {
   source_location=atoi(yytext);
   if(myverbose!=0) printf("source_location = %s\n",yytext);
@@ -4861,7 +4862,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 233:
 YY_RULE_SETUP
-#line 1138 "read_input.l"
+#line 1139 "read_input.l"
 {
   eigenvalue_precision = atof(yytext);
   if(myverbose!=0) printf("precision for eigenvalues = %e\n", eigenvalue_precision);
@@ -4869,7 +4870,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 234:
 YY_RULE_SETUP
-#line 1142 "read_input.l"
+#line 1143 "read_input.l"
 {
   no_eigenvalues = atoi(yytext);
   if(myverbose!=0) printf("no of eigenvalues = %d\n", no_eigenvalues);
@@ -4877,7 +4878,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 235:
 YY_RULE_SETUP
-#line 1146 "read_input.l"
+#line 1147 "read_input.l"
 {
   sub_evs_cg_flag = 1;
   if(myverbose!=0) printf("project out eigenvector subspace\n");
@@ -4885,7 +4886,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 236:
 YY_RULE_SETUP
-#line 1150 "read_input.l"
+#line 1151 "read_input.l"
 {
   sub_evs_cg_flag = 0;
   if(myverbose!=0) printf("Do no project out eigenvector subspace\n");
@@ -4893,7 +4894,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 237:
 YY_RULE_SETUP
-#line 1154 "read_input.l"
+#line 1155 "read_input.l"
 {
   even_odd_flag = 1;
   if(myverbose) printf("Use even/odd preconditioning\n");
@@ -4901,7 +4902,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 238:
 YY_RULE_SETUP
-#line 1158 "read_input.l"
+#line 1159 "read_input.l"
 {
   even_odd_flag = 0;
   if(myverbose) printf("Do not use even/odd preconditioning\n");
@@ -4909,7 +4910,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 239:
 YY_RULE_SETUP
-#line 1162 "read_input.l"
+#line 1163 "read_input.l"
 {
   bc_flag = 1;
   if(verbose) printf("Schroedinger Functional bc\n");
@@ -4917,7 +4918,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 240:
 YY_RULE_SETUP
-#line 1166 "read_input.l"
+#line 1167 "read_input.l"
 {
   bc_flag = 0;
   if(verbose) printf("Periodic bc\n");
@@ -4925,7 +4926,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 241:
 YY_RULE_SETUP
-#line 1170 "read_input.l"
+#line 1171 "read_input.l"
 {
   write_prop_format_flag = 10;
   if(myverbose!=0) fprintf(stderr, "GWC format no longer supported for writing propagators\n");
@@ -4933,7 +4934,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 242:
 YY_RULE_SETUP
-#line 1174 "read_input.l"
+#line 1175 "read_input.l"
 {
   write_prop_format_flag = 11;
   if(myverbose!=0) fprintf(stderr, "CM format no longer supported for writing propagators\n");
@@ -4941,7 +4942,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 243:
 YY_RULE_SETUP
-#line 1178 "read_input.l"
+#line 1179 "read_input.l"
 {
   write_prop_format_flag = 0;
   if(myverbose!=0) printf("Propagator type: DiracFermion_Sinks\n");
@@ -4949,7 +4950,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 244:
 YY_RULE_SETUP
-#line 1182 "read_input.l"
+#line 1183 "read_input.l"
 {
   write_prop_format_flag = 1;
   if(myverbose!=0) printf("Propagator type: DiracFermion_Source_Sink_Pairs\n");
@@ -4957,7 +4958,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 245:
 YY_RULE_SETUP
-#line 1186 "read_input.l"
+#line 1187 "read_input.l"
 {
   write_prop_format_flag = 1;
   fprintf(stderr, "Propagator type: DiracFermion_ScalarSource_TwelveSink, not yet supported\n");
@@ -4965,7 +4966,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 246:
 YY_RULE_SETUP
-#line 1190 "read_input.l"
+#line 1191 "read_input.l"
 {
   write_prop_format_flag = 1;
   fprintf(stderr, "Propagator type: DiracFermion_ScalarSource_FourSink, not yet supported\n");
@@ -4973,7 +4974,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 247:
 YY_RULE_SETUP
-#line 1194 "read_input.l"
+#line 1195 "read_input.l"
 {
   online_measurement_flag = 1;
   if(myverbose!=0) fprintf(stderr, "Switched on online measurements\n");
@@ -4981,7 +4982,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 248:
 YY_RULE_SETUP
-#line 1198 "read_input.l"
+#line 1199 "read_input.l"
 {
   online_measurement_flag = 0;
   if(myverbose!=0) fprintf(stderr, "Online measurements not switched on\n");
@@ -4989,7 +4990,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 249:
 YY_RULE_SETUP
-#line 1202 "read_input.l"
+#line 1203 "read_input.l"
 {
   online_measurement_freq = atoi(yytext);
   if(myverbose!=0) fprintf(stderr, "Frequency for online measurements set to %s\n", yytext);
@@ -4997,7 +4998,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 250:
 YY_RULE_SETUP
-#line 1206 "read_input.l"
+#line 1207 "read_input.l"
 {
   reweighting_flag = 1;
   if(myverbose!=0) fprintf(stderr, "Compute reweighting factor\n");
@@ -5005,7 +5006,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 251:
 YY_RULE_SETUP
-#line 1210 "read_input.l"
+#line 1211 "read_input.l"
 {
   reweighting_flag = 0;
   if(myverbose!=0) fprintf(stderr, "Do not compute reweighting factor\n");
@@ -5013,7 +5014,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 252:
 YY_RULE_SETUP
-#line 1214 "read_input.l"
+#line 1215 "read_input.l"
 {
   reweighting_samples = atoi(yytext);
   if(myverbose!=0) fprintf(stderr, "Number of reweighting samples set to %d\n", reweighting_samples);
@@ -5021,7 +5022,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 253:
 YY_RULE_SETUP
-#line 1219 "read_input.l"
+#line 1220 "read_input.l"
 {
    comment_caller = YY_START;   
    BEGIN(COMMENT);
@@ -5029,7 +5030,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 254:
 YY_RULE_SETUP
-#line 1223 "read_input.l"
+#line 1224 "read_input.l"
 {
    comment_caller = YY_START;
    BEGIN(COMMENT);
@@ -5037,7 +5038,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 255:
 YY_RULE_SETUP
-#line 1227 "read_input.l"
+#line 1228 "read_input.l"
 {
   BEGIN(comment_caller);
 }
@@ -5045,7 +5046,7 @@ YY_RULE_SETUP
 case 256:
 /* rule 256 can match eol */
 YY_RULE_SETUP
-#line 1232 "read_input.l"
+#line 1233 "read_input.l"
 {
   line_of_file++;
 }
@@ -5053,7 +5054,7 @@ YY_RULE_SETUP
 case 257:
 /* rule 257 can match eol */
 YY_RULE_SETUP
-#line 1235 "read_input.l"
+#line 1236 "read_input.l"
 {
   line_of_file++;
   BEGIN(0);
@@ -5061,14 +5062,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 258:
 YY_RULE_SETUP
-#line 1240 "read_input.l"
+#line 1241 "read_input.l"
 {
   BEGIN(ERROR);
 }
 	YY_BREAK
 case 259:
 YY_RULE_SETUP
-#line 1243 "read_input.l"
+#line 1244 "read_input.l"
 {
   printf("Parsing error in line %d\nAborting...!\n", line_of_file);
   exit(1);
@@ -5076,10 +5077,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 260:
 YY_RULE_SETUP
-#line 1249 "read_input.l"
+#line 1250 "read_input.l"
 ECHO;
 	YY_BREAK
-#line 5083 "<stdout>"
+#line 5084 "<stdout>"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(STARTCOND):
 case YY_STATE_EOF(THERMSWEEPS):
@@ -6147,7 +6148,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 1249 "read_input.l"
+#line 1250 "read_input.l"
 
 
 

@@ -64,6 +64,8 @@
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
 #include "init_dirac_halfspinor.h"
+#include "init_bispinor_field.h"
+#include "init_chi_spinor_field.h"
 #include "xchange_halffield.h"
 #include "stout_smear.h"
 #include "invert_eo.h"
@@ -165,6 +167,10 @@ int main(int argc,char *argv[]) {
     Nsave = 1;
   }
 
+  if(g_running_phmc) {
+    NO_OF_SPINORFIELDS = DUM_MATRIX+8;
+  }
+
   mpi_init(argc, argv);
 
   g_dbw2rand = 0;
@@ -214,6 +220,19 @@ int main(int argc,char *argv[]) {
     exit(-1);
   }
 
+  if(g_running_phmc) {
+    j = init_chi_up_spinor_field(VOLUMEPLUSRAND/2, 20);
+    if ( j!= 0) {
+      fprintf(stderr, "Not enough memory for PHMC Chi_up fields! Aborting...\n");
+      exit(0);
+    }
+    j = init_chi_dn_spinor_field(VOLUMEPLUSRAND/2, 20);
+    if ( j!= 0) {
+      fprintf(stderr, "Not enough memory for PHMC Chi_dn fields! Aborting...\n");
+      exit(0);
+    }
+  }
+
   g_mu = g_mu1; 
   if(g_proc_id == 0){    
     /*construct the filenames for the observables and the parameters*/
@@ -230,6 +249,9 @@ int main(int argc,char *argv[]) {
 
   /* define the boundary conditions for the fermion fields */
   boundary(g_kappa);
+
+  phmc_invmaxev = 1.;
+
 
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
@@ -518,6 +540,10 @@ int main(int argc,char *argv[]) {
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
+  if(g_running_phmc) {
+    free_chi_up_spinor_field(); 
+    free_chi_dn_spinor_field(); 
+  }
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
