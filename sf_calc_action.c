@@ -1772,14 +1772,18 @@ double partial_plaquette_sf_respect_to_eta(int t, double ct) {
 	  ix2=g_iup[ix][mu2];
 	  
 	  v=&g_gauge_field[ix][mu1];
+	  //print_su3_matrix (g_gauge_field[ix][mu1]);
 	  w=&g_gauge_field[ix1][mu2];
-	  
+	  //print_su3_matrix (g_gauge_field[ix1][mu2]);	  
+
 	  _su3_times_su3(pr11,*v,*w);
 	  
 	  _su3_times_su3(pr1,i_lambda8, pr11);
 	  
 	  v=&g_gauge_field[ix][mu2];
+	  //print_su3_matrix (g_gauge_field[ix][mu2]);
 	  w=&g_gauge_field[ix2][mu1];
+	  //print_su3_matrix (g_gauge_field[ix2][mu1]);
 	  
 	  _su3_times_su3(pr2,*v,*w);
 	  
@@ -1813,13 +1817,18 @@ double partial_plaquette_sf_respect_to_eta(int t, double ct) {
 	  ix2=g_iup[ix][mu2];
 	  
 	  v=&g_gauge_field[ix][mu1];
+	  //print_su3_matrix (g_gauge_field[ix][mu1]);
 	  w=&g_gauge_field[ix1][mu2];
-	  
+	  //print_su3_matrix (g_gauge_field[ix1][mu2]);
+
 	  _su3_times_su3(pr11,*v,*w);
-	  _su3_times_su3(pr1,i_lambda8,pr11);
+	  //_su3_times_su3(pr1,i_lambda8,pr11);
+	  _su3_times_su3(pr1,pr11,i_lambda8);
 	  
 	  v=&g_gauge_field[ix][mu2];
+	  //print_su3_matrix (g_gauge_field[ix][mu2]);
 	  w=&g_gauge_field[ix2][mu1];
+	  //print_su3_matrix (g_gauge_field[ix2][mu1]);
 	  
 	  _su3_times_su3(pr2,*v,*w);
 	  
@@ -1835,6 +1844,7 @@ double partial_plaquette_sf_respect_to_eta(int t, double ct) {
   
   ga_tminus1 = sum_tminus1;
 
+  printf ("ga_0 = %f ga_tminus1 = %f \n", ga_0, ga_tminus1);
   ga_int = ct*(ga_0 + ga_tminus1);
   
   /*ga_int = ct*ga_0 - ct*ga_tminus1; */ /* this was WRONG!!! */

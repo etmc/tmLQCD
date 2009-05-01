@@ -29,8 +29,7 @@ void sf_observables() {
   double iwasaki_action;
   double partial_iwa;
   double partial_iwasaki_action;
-  //FILE * fcoupling = NULL;
-
+  double factor;
 
   /* sf b.c. abelian field and standard sf weight factors included (only plaquette here) */
   plaquette_energy = measure_plaquette_sf_weights(g_Tbsf);
@@ -69,9 +68,7 @@ void sf_observables() {
 
   /* COUPLING CALCULATION */
 
-  //fcoupling = fopen("fcoupling.dat","w+");
-  //fprintf( fcoupling, "%23.16e\n", partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct));
-  //fclose (fcoupling);
+  factor = 1./(1. - (1. - g_Ct)*(2./((double)g_Tbsf)));
 
   /* print the value of the leading order effective action \Gamma[V] and its derivative \Gamma'[V] (plaquette case) */
   /* note that the derivative is precisely the constant factor in the definition of the coupling constant */
@@ -80,6 +77,7 @@ void sf_observables() {
     printf("Effective action and its derivative with respect to eta, at leading order: \n");
     printf("Gamma[V] = %e\n", lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
     printf("Gamma'[V] = %e\n", partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
+    printf("factor*Gamma'[V] = %e\n", factor*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
   }
 
   /* print the value of the "\partial(S)/\partial(eta)" which will have to be averaged later on to obtain the coupling constant */ 
@@ -88,10 +86,9 @@ void sf_observables() {
     printf("'Definition' of the coupling constant, partial(S)/partial(eta)\n"); fflush(stdout);
     printf("S'[V,U] = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)); fflush(stdout);
     printf("S'[V,U]/Gamma'[V] = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)/partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-    printf("Gamma'[V]/S'[V,U] = %e\n",partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)/partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)); fflush(stdout);
+    printf("S'[V,U]/(factor*Gamma'[V]) = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)/(factor*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta))); fflush(stdout);
     printf("\n"); fflush(stdout);
   }
-
 
 
   /*****************************************************************************************************************************/ 
