@@ -51,7 +51,7 @@ void init_phmc() {
   FILE *roots;
   char *filename_phmc_root = "Square_root_BR_roots.dat";
   char *filename_phmc_root_oox = "Square_root_BR_roots.dat.oox";
-  char title[50];
+  char title[100];
 
   FILE *Const;
   char *filename_const = "normierungLocal.dat";
