@@ -392,7 +392,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     else if (bc_flag == 1) {
       fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %14.12f %e ",
-	      (partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)/partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta))/((1./(1. - (1. - g_Ct)*(2./((double)g_Tbsf))))), (g_Ct/(1. - (1. - g_Ct)*(2./((double)g_Tbsf))))*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta), partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct), (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
+	      (partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)/partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta))/((1./(1. - (1. - g_Ct)*(2./((double)g_Tbsf))))), (1./(1. - (1. - g_Ct)*(2./((double)g_Tbsf))))*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta), partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct), (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
     }
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {

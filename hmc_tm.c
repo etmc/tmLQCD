@@ -366,9 +366,9 @@ int main(int argc,char *argv[]) {
 
   if (bc_flag == 1) { /* if SF */ 
     dirichlet_boundary_conditions(g_Tbsf);
+    sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
     //nan_dirichlet_boundary_conditions(g_Tbsf);
     //induced_lattice_background(g_gauge_field, g_Tbsf, g_eta);
-    sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
     fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);    
     
 #if 1
