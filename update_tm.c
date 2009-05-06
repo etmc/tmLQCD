@@ -92,6 +92,9 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* Energy corresponding to the pseudo fermion part(s) */
   FILE * datafile=NULL, * ret_check_file=NULL;
 
+  /* SF variables: corresponding to the coupling constant */
+  double normalisation=0., partial_effective_action=0., coupling=0.; 
+
 
   if(ini_g_tmp == 0) {
     ini_g_tmp = init_gauge_tmp(VOLUME);
@@ -383,21 +386,31 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   etime = (double)clock()/((double)(CLOCKS_PER_SEC));
 #endif
 
-  /* do here the SF case too!!! */
+  /* printining data in the .data file */
   if(g_proc_id==0) {
     datafile = fopen(filename, "a");
-    if (bc_flag == 0) {
+    if (bc_flag == 0) { /* if PBC */
       fprintf(datafile,"%14.12f %14.12f %e ",
 	      (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
     }
-    else if (bc_flag == 1) {
-      if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+    else if (bc_flag == 1) { /* if SF */
+      if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) { /* SF with rectangle working */
+	
+	normalisation = partial_lattice_lo_effective_iwasaki_action_sf(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta);
+	partial_effective_action = partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
+	coupling = normalisation/partial_effective_action;
+	
 	fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %14.12f %e ",
-		partial_lattice_lo_effective_iwasaki_action_sf(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta)/partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts), partial_lattice_lo_effective_iwasaki_action_sf(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta) , partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts), (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
+		coupling, normalisation , partial_effective_action, (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
       }
-	else {
+      else { /* SF with only Wilson */
+
+	normalisation = (1./(1. - (1. - g_Ct)*(2./((double)g_Tbsf))))*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta);
+	partial_effective_action = partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct);
+	coupling = normalisation/partial_effective_action;
+	
 	fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %14.12f %e ",
-		(partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)/partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta))/((1./(1. - (1. - g_Ct)*(2./((double)g_Tbsf))))), (1./(1. - (1. - g_Ct)*(2./((double)g_Tbsf))))*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta), partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct), (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
+		coupling, normalisation, partial_effective_action, (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
       }
     }
     for(i = 0; i < Integrator.no_timescales; i++) {

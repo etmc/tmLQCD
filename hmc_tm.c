@@ -367,14 +367,11 @@ int main(int argc,char *argv[]) {
   if (bc_flag == 1) { /* if SF */ 
     dirichlet_boundary_conditions(g_Tbsf);
     sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
+    /* the next two lines are just here to test some things. they have to be removed later on */
     //nan_dirichlet_boundary_conditions(g_Tbsf);
     //induced_lattice_background(g_gauge_field, g_Tbsf, g_eta);
     fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);    
-    
-#if 1
-    sf_observables();  
-    //exit(0);
-#endif
+
 
     /* compute the energy of the gauge field for SF */
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
@@ -392,6 +389,8 @@ int main(int argc,char *argv[]) {
       }
     }
     else {
+      /* NOTE: the factor (1./(2.*3.)) is due to the difference between	our normalisation and Carstens's normalisation
+	 when defining the plaquette and rectangle functions */
       plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_weights_improvement(g_Tbsf, g_Cs, g_Ct);
       eneg = plaquette_energy;
       /* print plaquette energy for SF */
@@ -470,13 +469,6 @@ int main(int argc,char *argv[]) {
     /*     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename,  */
     /* 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag); */
     
-    
-#if 1
-    if (bc_flag == 1) { /* if SF */
-      sf_observables();  
-    }
-#endif
-
     
     if (bc_flag == 0) { /* if PBC */
       /* Measure the Polyakov loop in direction 2 and 3:*/
