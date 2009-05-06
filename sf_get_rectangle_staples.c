@@ -27,6 +27,7 @@
 #include "su3.h"
 #include "sf_get_rectangle_staples.h"
 
+/* at the moment this function is valid ONLY IF Nt => 6 */
 void sf_get_rectangle_staples(su3 * const v, const int x, const int mu) {
   static su3 tmp1, tmp2;
   int y, z, nu;

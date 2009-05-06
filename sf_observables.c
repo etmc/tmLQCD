@@ -68,29 +68,54 @@ void sf_observables() {
 
   /* COUPLING CALCULATION */
 
-  factor = 1./(1. - (1. - g_Ct)*(2./((double)g_Tbsf)));
+  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
 
-  /* print the value of the leading order effective action \Gamma[V] and its derivative \Gamma'[V] (plaquette case) */
-  /* note that the derivative is precisely the constant factor in the definition of the coupling constant */
-  if(g_proc_id==0){
-    printf("\n"); fflush(stdout);
-    printf("Effective action and its derivative with respect to eta, at leading order: \n");
-    printf("Gamma[V] = %e\n", lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-    printf("Gamma'[V] = %e\n", partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-    printf("factor*Gamma'[V] = %e\n", factor*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
+    /* print the value of the leading order effective action \Gamma[V] and its derivative \Gamma'[V] (plaquette case) */
+    /* note that the derivative is precisely the constant factor in the definition of the coupling constant */
+    if(g_proc_id==0){
+      printf("\n"); fflush(stdout);
+      printf("Constant factor K: \n");
+      printf("K = %e\n", partial_lattice_lo_effective_iwasaki_action_sf(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta)); fflush(stdout);
+    }
+
+    /* print the value of the "\partial(S)/\partial(eta)" which will have to be averaged later on to obtain the coupling constant */ 
+    if(g_proc_id==0){
+      printf("\n"); fflush(stdout);
+      printf("'Definition' of the coupling constant, partial(S)/partial(eta)\n"); fflush(stdout);
+      printf("S'[V,U] = %e\n", partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0,
+						g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)); fflush(stdout);
+      printf("S'[V,U]/K = %e\n",partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0,
+									 g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)/partial_lattice_lo_effective_iwasaki_action_sf(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta)); fflush(stdout);
+      printf("\n"); fflush(stdout);
+    }
+    
   }
-
-  /* print the value of the "\partial(S)/\partial(eta)" which will have to be averaged later on to obtain the coupling constant */ 
-  if(g_proc_id==0){
-    printf("\n"); fflush(stdout);
-    printf("'Definition' of the coupling constant, partial(S)/partial(eta)\n"); fflush(stdout);
-    printf("S'[V,U] = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)); fflush(stdout);
-    printf("S'[V,U]/Gamma'[V] = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)/partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-    printf("S'[V,U]/(factor*Gamma'[V]) = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)/(factor*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta))); fflush(stdout);
-    printf("\n"); fflush(stdout);
+  
+  else {
+    
+    factor = 1./(1. - (1. - g_Ct)*(2./((double)g_Tbsf)));
+    
+    /* print the value of the leading order effective action \Gamma[V] and its derivative \Gamma'[V] (plaquette case) */
+    /* note that the derivative is precisely the constant factor in the definition of the coupling constant */
+    if(g_proc_id==0){
+      printf("\n"); fflush(stdout);
+      printf("Effective action and its derivative with respect to eta, at leading order: \n");
+      printf("Gamma[V] = %e\n", lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
+      printf("Gamma'[V] = %e\n", partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
+      printf("factor*Gamma'[V] = %e\n", factor*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
+    }
+    
+    /* print the value of the "\partial(S)/\partial(eta)" which will have to be averaged later on to obtain the coupling constant */ 
+    if(g_proc_id==0){
+      printf("\n"); fflush(stdout);
+      printf("'Definition' of the coupling constant, partial(S)/partial(eta)\n"); fflush(stdout);
+      printf("S'[V,U] = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)); fflush(stdout);
+      printf("S'[V,U]/Gamma'[V] = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)/partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
+      printf("S'[V,U]/(factor*Gamma'[V]) = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)/(factor*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta))); fflush(stdout);
+      printf("\n"); fflush(stdout);
+    }
   }
-
-
+  
   /*****************************************************************************************************************************/ 
   /*****************************************************************************************************************************/ 
   /*****************************************************************************************************************************/ 

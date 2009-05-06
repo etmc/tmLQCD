@@ -60,7 +60,7 @@ double partial_lattice_background_plaquette_action_sf(int t, double beta, double
 double partial_lattice_lo_effective_plaquette_action_sf(int t, double beta, double ct, double eta) ;
 /** IWASAKI **/
 /* STILL TO DO!!!!!!!!!! */
-
+double partial_lattice_lo_effective_iwasaki_action_sf(int t, double beta, double c0, double c1, double eta);
 
 
 /*** DEFINITION OF THE RUNNING COUPLING ***/

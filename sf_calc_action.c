@@ -1654,23 +1654,33 @@ double partial_lattice_lo_effective_plaquette_action_sf(int t, double beta, doub
 /* Therefore, whenever we are not considering this case B,
    the minimal lattice action (Iwasaki) configuration V must be found only numerically */
 
-double lattice_background_******_action_sf(int t, double beta, double ct, double eta) {
+double lattice_background_iwasaki_action_sf(int t, double beta, double ct, double eta) {
 
 }
 
 
-double lattice_lo_effective_*****_action_sf(int t, double beta, double ct, double eta) {
+double lattice_lo_effective_iwasaki_action_sf(int t, double beta, double ct, double eta) {
 
 }
 
-double partial_lattice_background_****_action_sf(int t, double beta, double ct, double eta) {
-
-}
-
-double partial_lattice_lo_effective_****_action_sf(int t, double beta, double ct, double eta) {
-
-}
 #endif
+/* expression taken from the CP-PACS paper == K (eq. II.14) */
+double partial_lattice_lo_effective_iwasaki_action_sf(int t, double beta, double c0, double c1, double eta) {
+  double pi;
+  double factor1, factor;
+  double partial_eff_lo;
+
+  pi = acos(-1.);
+
+  factor1 = 12.*(double)LX*(double)LX;
+
+  factor = (1./((double)LX*(double)t))*(eta + pi/3.0);
+
+  partial_eff_lo = factor1*(c0*(sin(factor) + sin(2.*factor)) + 4.*c1*(sin(2.*factor) + sin(4.*factor)));
+
+
+  return partial_eff_lo;
+}
 
 /*-------------------------------------------------------------------------------------------------*/
 
@@ -2032,7 +2042,8 @@ double partial_rectangle_sf_respect_to_eta(int t, double c1_tss, double c1_tts) 
 	  
 	  _su3_times_su3(pr_r1,*v_r1,*w_r1);
 	  _su3_times_su3(pr_r11,pr_r1,*z_r1);
-	  _su3_times_su3(pr1,i_lambda8,pr_r11);	    
+	  //_su3_times_su3(pr1,i_lambda8,pr_r11);
+	  _su3_times_su3(pr1,pr_r11,i_lambda8);	    
 	  
 	  
 	  v_r2 = &g_gauge_field[ix][mu2];
@@ -2083,8 +2094,8 @@ double partial_rectangle_sf_respect_to_eta(int t, double c1_tss, double c1_tts) 
 	  
 	  _su3_times_su3(pr_r1,*v_r1,*w_r1);
 	  _su3_times_su3(pr_r11,pr_r1,*z_r1);
-	  _su3_times_su3(pr1,i_lambda8,pr_r11);	    
-	  
+	  //_su3_times_su3(pr1,i_lambda8,pr_r11);	    
+	  _su3_times_su3(pr1,pr_r11,i_lambda8);
 	  
 	  v_r2 = &g_gauge_field[ix][mu2];
 	  w_r2 = &g_gauge_field[ix2][mu2];
@@ -2108,7 +2119,7 @@ double partial_rectangle_sf_respect_to_eta(int t, double c1_tss, double c1_tts) 
 
     ga_tminus2_tts = sum_tminus2_tts;
 
-
+    printf ("ga_0_tss = %e  ga_0_tts = %e  ga_tminus2_tts = %e  ga_tminus1_tss = %e \n", ga_0_tss, ga_0_tts, ga_tminus2_tts, ga_tminus1_tss);
 
     /* ga = c1_tss*(ga_0_tss - ga_tminus1_tss) + c1_tts*(ga_0_tts - ga_tminus2_tts); */ /* it was also WRONG!!! */
     ga = 2.*c1_tss*(ga_0_tss + ga_tminus1_tss) + c1_tts*(ga_0_tts + ga_tminus2_tts);
