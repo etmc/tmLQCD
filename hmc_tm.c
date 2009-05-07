@@ -52,6 +52,12 @@
 #ifdef MPI
 # include "xchange.h"
 #endif
+#ifdef PARIO
+# ifndef MPI
+#  error "Parallel IO without MPI not supported"
+# endif
+# include "parallel_io.h"
+#endif
 #include "io.h"
 #include "propagator_io.h"
 #include "gauge_io.h"
@@ -333,11 +339,19 @@ int main(int argc,char *argv[]) {
       fflush(stdout);
     }
     if(gauge_precision_read_flag == 64) {
+#ifdef PARIO
+      read_lime_gauge_field_parallel(gauge_input_filename);
+#else
       read_lime_gauge_field(gauge_input_filename);
+#endif
 /*       read_gauge_field_time_p(gauge_input_filename); */
     }
     else if(gauge_precision_read_flag == 32){
+#ifdef PARIO
+      read_lime_gauge_field_singleprec_parallel(gauge_input_filename);
+#else
       read_lime_gauge_field_singleprec(gauge_input_filename);
+#endif
     }
     if (g_proc_id == 0){
       printf("# done!\n"); fflush(stdout);
@@ -495,14 +509,20 @@ int main(int argc,char *argv[]) {
     if(((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
       /* Write the gauge configuration first to a temporary file */
 /*       write_gauge_field_time_p( tmp_filename); */
+#ifdef PARIO
+      write_lime_gauge_field_parallel( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), 
+                  trajectory_counter, gauge_precision_write_flag);
+      write_rlxd_state_parallel(tmp_filename, rlxdsize);
+#else
       write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), 
-   			      trajectory_counter, gauge_precision_write_flag); 
-
+                  trajectory_counter, gauge_precision_write_flag); 
       /*  write the status of the random number generator to a file */
       if(g_proc_id==0) {
-	rlxd_get(rlxd_state);
- 	write_rlxd_state(tmp_filename, rlxd_state, rlxdsize);
+    rlxd_get(rlxd_state);
+    write_rlxd_state(tmp_filename, rlxd_state, rlxdsize);
       }
+#endif
+
       
       /* Now move it! */
       if(g_proc_id == 0) {
