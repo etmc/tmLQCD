@@ -1305,15 +1305,8 @@ double measure_iwasaki_action_sf(int t, double beta, double cs, double ct, doubl
 
   rectangle = measure_rectangle_sf_iwasaki(t, c1, c1_ss, c1_tss, c1_tts);
 
-  if (c0 == 1.) {
-    iwasaki = - (beta/(2.*3.)) * plaquette;
-  }
-  else if (c0 == 0.) {
-    iwasaki = - (beta/(2.*3.)) * rectangle;
-  }
-  else {
-    iwasaki = - (beta/(2.*3.)) * ( plaquette + rectangle );
-  }
+
+  iwasaki = - (beta/(2.*3.)) * ( plaquette + rectangle );  
   
   return iwasaki;
 }
@@ -1597,8 +1590,6 @@ double partial_lattice_background_plaquette_action_sf(int t, double beta, double
 
   factor1 = (1. - (1. - ct)*(2./(double)t));
 
-  //printf("factor1 = %e \n", factor1);
-
   factor2 = 2.*beta*(double)LX*(double)LX;
 
   factor3 = factor1*factor2;
@@ -1639,13 +1630,30 @@ double partial_lattice_lo_effective_plaquette_action_sf(int t, double beta, doub
   return partial_eff_lo;
 }
 
+/* the next function gives the normalisation factor "K" for the definition of the coupling constant
+   when considering only the plaquette, as taken from the ALPHA SU(3) paper */
+double partial_lattice_lo_effective_plaquette_action_sf_k(int t, double beta, double ct, double eta) {
+
+  double pi;
+  double factor1, factor;
+  double partial_eff_lo;
+
+  pi = acos(-1.);
+  
+  factor1 = 12.*(double)LX*(double)LX;
+  
+  factor = (1./((double)LX*(double)t))*(eta + pi/3.0);
+
+  partial_eff_lo = factor1*(sin(factor) + sin(2.*factor));
+
+  return partial_eff_lo;
+}
+
 
 /*--------------------------------------------------------------------------------------------------*/
 
-
-#if 0
 /** IWASAKI **/
-/* STILL TO DO!!!!!!!!!! */
+
 /* these are all implementations of analytical expressions */
 /* note that we ONLY know analytically a solution for the EOM for the lattice background field
    of the IWASAKI acion in the case we choose Option_B of the paper: hep-lat/9808007, 
@@ -1654,18 +1662,10 @@ double partial_lattice_lo_effective_plaquette_action_sf(int t, double beta, doub
 /* Therefore, whenever we are not considering this case B,
    the minimal lattice action (Iwasaki) configuration V must be found only numerically */
 
-double lattice_background_iwasaki_action_sf(int t, double beta, double ct, double eta) {
 
-}
-
-
-double lattice_lo_effective_iwasaki_action_sf(int t, double beta, double ct, double eta) {
-
-}
-
-#endif
 /* expression taken from the CP-PACS paper == K (eq. II.14) */
-double partial_lattice_lo_effective_iwasaki_action_sf(int t, double beta, double c0, double c1, double eta) {
+double partial_lattice_lo_effective_iwasaki_action_sf_k(int t, double beta, double c0, double c1, double eta) {
+
   double pi;
   double factor1, factor;
   double partial_eff_lo;
@@ -1676,8 +1676,8 @@ double partial_lattice_lo_effective_iwasaki_action_sf(int t, double beta, double
 
   factor = (1./((double)LX*(double)t))*(eta + pi/3.0);
 
-  partial_eff_lo = factor1*(c0*(sin(factor) + sin(2.*factor)) + 4.*c1*(sin(2.*factor) + sin(4.*factor)));
 
+  partial_eff_lo = factor1*(c0*(sin(factor) + sin(2.*factor)) + 4.*c1*(sin(2.*factor) + sin(4.*factor)));
 
   return partial_eff_lo;
 }
@@ -1731,14 +1731,6 @@ double partial_lattice_lo_effective_iwasaki_action_sf(int t, double beta, double
   (u).c22.im =-0.5;
 
 /*------------------------------------------------------------------------------------------------------------*/
- 
-/*
-void testfunc() {
-  static  su3 a,b,c;
-  _su3_times_su3(a,b,c);
-}
-*/
-
 
 
 /* it gives the expression of the "derivative" of the "PLAQUETTE" with SF b.c.
@@ -1782,18 +1774,14 @@ double partial_plaquette_sf_respect_to_eta(int t, double ct) {
 	  ix2=g_iup[ix][mu2];
 	  
 	  v=&g_gauge_field[ix][mu1];
-	  //print_su3_matrix (g_gauge_field[ix][mu1]);
 	  w=&g_gauge_field[ix1][mu2];
-	  //print_su3_matrix (g_gauge_field[ix1][mu2]);	  
 
 	  _su3_times_su3(pr11,*v,*w);
 	  
 	  _su3_times_su3(pr1,i_lambda8, pr11);
 	  
 	  v=&g_gauge_field[ix][mu2];
-	  //print_su3_matrix (g_gauge_field[ix][mu2]);
 	  w=&g_gauge_field[ix2][mu1];
-	  //print_su3_matrix (g_gauge_field[ix2][mu1]);
 	  
 	  _su3_times_su3(pr2,*v,*w);
 	  
@@ -1827,18 +1815,13 @@ double partial_plaquette_sf_respect_to_eta(int t, double ct) {
 	  ix2=g_iup[ix][mu2];
 	  
 	  v=&g_gauge_field[ix][mu1];
-	  //print_su3_matrix (g_gauge_field[ix][mu1]);
 	  w=&g_gauge_field[ix1][mu2];
-	  //print_su3_matrix (g_gauge_field[ix1][mu2]);
 
 	  _su3_times_su3(pr11,*v,*w);
-	  //_su3_times_su3(pr1,i_lambda8,pr11);
 	  _su3_times_su3(pr1,pr11,i_lambda8);
 	  
 	  v=&g_gauge_field[ix][mu2];
-	  //print_su3_matrix (g_gauge_field[ix][mu2]);
 	  w=&g_gauge_field[ix2][mu1];
-	  //print_su3_matrix (g_gauge_field[ix2][mu1]);
 	  
 	  _su3_times_su3(pr2,*v,*w);
 	  
@@ -1853,31 +1836,11 @@ double partial_plaquette_sf_respect_to_eta(int t, double ct) {
   }
   
   ga_tminus1 = sum_tminus1;
-
-  printf ("ga_0 = %f ga_tminus1 = %f \n", ga_0, ga_tminus1);
+  
   ga_int = ct*(ga_0 + ga_tminus1);
   
-  /*ga_int = ct*ga_0 - ct*ga_tminus1; */ /* this was WRONG!!! */
   ga = ga_int;
   
-#if 0
-  
-    printf("\n"); fflush(stdout);
-    printf("sum_0 = %e \n",sum_0); fflush(stdout);
-    printf("ga_0 = %e \n",ga_0); fflush(stdout);
-    
-    printf("\n"); fflush(stdout);
-    printf("sum_tminus1 = %e \n",sum_tminus1); fflush(stdout);
-    printf("ga_tminus1 = %e \n",ga_tminus1); fflush(stdout);
-    
-    printf("\n"); fflush(stdout);
-    printf("ct = %e \n", ct); fflush(stdout);
-    
-    printf("\n"); fflush(stdout);  /* if I eliminate this line ===> segmentation fault */
-    printf("ga = %e \n", ga); fflush(stdout);
-    printf("\n"); fflush(stdout);
-#endif
-
   return ga;
   
 }
@@ -2042,7 +2005,6 @@ double partial_rectangle_sf_respect_to_eta(int t, double c1_tss, double c1_tts) 
 	  
 	  _su3_times_su3(pr_r1,*v_r1,*w_r1);
 	  _su3_times_su3(pr_r11,pr_r1,*z_r1);
-	  //_su3_times_su3(pr1,i_lambda8,pr_r11);
 	  _su3_times_su3(pr1,pr_r11,i_lambda8);	    
 	  
 	  
@@ -2094,7 +2056,6 @@ double partial_rectangle_sf_respect_to_eta(int t, double c1_tss, double c1_tts) 
 	  
 	  _su3_times_su3(pr_r1,*v_r1,*w_r1);
 	  _su3_times_su3(pr_r11,pr_r1,*z_r1);
-	  //_su3_times_su3(pr1,i_lambda8,pr_r11);	    
 	  _su3_times_su3(pr1,pr_r11,i_lambda8);
 	  
 	  v_r2 = &g_gauge_field[ix][mu2];
@@ -2119,9 +2080,6 @@ double partial_rectangle_sf_respect_to_eta(int t, double c1_tss, double c1_tts) 
 
     ga_tminus2_tts = sum_tminus2_tts;
 
-    printf ("ga_0_tss = %e  ga_0_tts = %e  ga_tminus2_tts = %e  ga_tminus1_tss = %e \n", ga_0_tss, ga_0_tts, ga_tminus2_tts, ga_tminus1_tss);
-
-    /* ga = c1_tss*(ga_0_tss - ga_tminus1_tss) + c1_tts*(ga_0_tts - ga_tminus2_tts); */ /* it was also WRONG!!! */
     ga = 2.*c1_tss*(ga_0_tss + ga_tminus1_tss) + c1_tts*(ga_0_tts + ga_tminus2_tts);
 
 
@@ -2157,19 +2115,11 @@ double partial_iwasaki_action_sf_respect_to_eta(int t, double beta, double cs, d
   double partial_rectangle;
   double partial_iwasaki;
 
-
   partial_plaquette = partial_plaquette_sf_respect_to_eta(t, ct);
   partial_rectangle = partial_rectangle_sf_respect_to_eta(t, c1_tss, c1_tts);
   
-  if (c0 == 1.) {
-    partial_iwasaki = - (beta/(3.*(double)LX)) * partial_plaquette;
-  }
-  else if (c0 == 0.) {
-    partial_iwasaki = - (beta/(3.*(double)LX)) * partial_rectangle;
-  }
-  else {
-    partial_iwasaki = - (beta/(3.*(double)LX)) * ( partial_plaquette + partial_rectangle );
-  }
+  
+  partial_iwasaki = - (beta/(3.*(double)LX)) * ( partial_plaquette + partial_rectangle );
   
   return partial_iwasaki;
 }

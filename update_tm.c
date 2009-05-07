@@ -396,7 +396,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     else if (bc_flag == 1) { /* if SF */
       if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) { /* SF with rectangle working */
 	
-	normalisation = partial_lattice_lo_effective_iwasaki_action_sf(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta);
+	normalisation = partial_lattice_lo_effective_iwasaki_action_sf_k(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta);
 	partial_effective_action = partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
 	coupling = normalisation/partial_effective_action;
 	
@@ -405,7 +405,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       }
       else { /* SF with only Wilson */
 
-	normalisation = (1./(1. - (1. - g_Ct)*(2./((double)g_Tbsf))))*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta);
+	normalisation = partial_lattice_lo_effective_plaquette_action_sf_k(g_Tbsf, g_beta, g_Ct, g_eta);
 	partial_effective_action = partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct);
 	coupling = normalisation/partial_effective_action;
 	

@@ -372,7 +372,6 @@ int main(int argc,char *argv[]) {
     //induced_lattice_background(g_gauge_field, g_Tbsf, g_eta);
     fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);    
 
-
     /* compute the energy of the gauge field for SF */
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
       /* NOTE: the factor (1./(2.*3.)) is due to the difference between	our normalisation and Carstens's normalisation
