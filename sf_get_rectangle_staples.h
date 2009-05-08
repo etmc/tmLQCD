@@ -20,5 +20,7 @@
 #define _SF_GET_RECTANGLE_STAPLES_H
 
 void sf_get_rectangle_staples(su3 * const v, const int x, const int mu);
+void sf_get_rectangle_staples_4(su3 * const v, const int x, const int mu);
+void sf_get_rectangle_staples_5(su3 * const v, const int x, const int mu);
 
 #endif
