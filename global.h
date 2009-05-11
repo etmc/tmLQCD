@@ -1,5 +1,5 @@
 /***********************************************************************
- * $Id$ 
+ * $Id$
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
@@ -11,12 +11,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -80,7 +80,7 @@ EXTERN int RAND, EDGES, VOLUMEPLUSRAND;
 
 /* translates from lexicographic order to even/odd order */
 EXTERN int * g_lexic2eo;
-/* translates from even/odd order to lexicograhic order  */    
+/* translates from even/odd order to lexicograhic order  */
 EXTERN int * g_eo2lexic;
 EXTERN int * g_lexic2eosub;
 EXTERN int g_sloppy_precision_flag;
@@ -131,7 +131,7 @@ EXTERN int* g_t;
 EXTERN int* g_x;
 EXTERN int* g_y;
 EXTERN int* g_z;
-EXTERN int g_sf_inc_wrap_sq; 
+EXTERN int g_sf_inc_wrap_sq;
 /* end of SF definitions */
 /*************************/
 
@@ -175,6 +175,10 @@ EXTERN int counter_Spsi;
 
 EXTERN int ITER_MAX_BCG;
 EXTERN int ITER_MAX_CG;
+
+#ifdef PARIO
+EXTERN int const rlxdsize;
+#endif
 
 #undef EXTERN
 /* #undef ALIGN */

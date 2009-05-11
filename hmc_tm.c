@@ -1,5 +1,5 @@
 /***********************************************************************
- * $Id$ 
+ * $Id$
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
@@ -9,12 +9,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -99,12 +99,12 @@ void usage(){
   exit(0);
 }
 
-
 extern int nstore;
-const int rlxdsize = 105;
+
+int const rlxdsize = 105;
 
 int main(int argc,char *argv[]) {
- 
+
   FILE *parameterfile=NULL, *countfile=NULL;
   char * filename = NULL;
   char datafilename[50];
@@ -113,7 +113,9 @@ int main(int argc,char *argv[]) {
   char nstore_filename[50];
   char tmp_filename[50];
   char * input_filename = NULL;
-  int rlxd_state[105];
+
+  int rlxd_state[rlxdsize];
+
   int j,ix,mu, trajectory_counter=1;
   struct timeval t1;
 
@@ -156,7 +158,7 @@ int main(int argc,char *argv[]) {
 
   while ((c = getopt(argc, argv, "h?vf:o:")) != -1) {
     switch (c) {
-    case 'f': 
+    case 'f':
       input_filename = calloc(200, sizeof(char));
       strcpy(input_filename,optarg);
       break;
@@ -179,7 +181,7 @@ int main(int argc,char *argv[]) {
   }
   if(filename == NULL){
     filename = "output";
-  } 
+  }
 
   /* Read the input file */
   read_input(input_filename);
@@ -293,24 +295,24 @@ int main(int argc,char *argv[]) {
   zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME);
   zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME);
 
-  if(use_stout_flag == 1) 
-    init_stout_smear_vars(VOLUMEPLUSRAND, stout_no_iter); 
+  if(use_stout_flag == 1)
+    init_stout_smear_vars(VOLUMEPLUSRAND, stout_no_iter);
 
   /*construct the filenames for the observables and the parameters*/
   strcpy(datafilename,filename);  strcat(datafilename,".data");
   strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
-  
-  if(g_proc_id == 0){    
+
+  if(g_proc_id == 0){
     parameterfile = fopen(parameterfilename, "a");
     write_first_messages(parameterfile, 0);
   }
 
   /* define the geometry */
   geometry();
-  
+
   /* define the boundary conditions for the fermion fields */
   boundary(g_kappa);
-  
+
   check_geometry();
 
 #ifdef _USE_HALFSPINOR
@@ -329,30 +331,26 @@ int main(int argc,char *argv[]) {
 
   /* Initialise random number generator */
   start_ranlux(rlxd_level, random_seed^nstore);
-  
+
   /* Set up the gauge field */
   /* continue and restart */
   if(startoption==3 || startoption == 2) {
     if(g_proc_id == 0) {
-      printf("# Reading Gauge field from file %s in %d Bit\n", 
-	     gauge_input_filename, gauge_precision_read_flag); 
+      printf("# Reading Gauge field from file %s in %d Bit\n",
+	     gauge_input_filename, gauge_precision_read_flag);
       fflush(stdout);
     }
-    if(gauge_precision_read_flag == 64) {
 #ifdef PARIO
-      read_lime_gauge_field_parallel(gauge_input_filename);
+      read_lime_gauge_field_parallel(gauge_input_filename, rlxd_state);
 #else
+    if(gauge_precision_read_flag == 64) {
       read_lime_gauge_field(gauge_input_filename);
-#endif
-/*       read_gauge_field_time_p(gauge_input_filename); */
     }
     else if(gauge_precision_read_flag == 32){
-#ifdef PARIO
-      read_lime_gauge_field_singleprec_parallel(gauge_input_filename);
-#else
       read_lime_gauge_field_singleprec(gauge_input_filename);
-#endif
     }
+    #endif
+
     if (g_proc_id == 0){
       printf("# done!\n"); fflush(stdout);
     }
@@ -363,7 +361,7 @@ int main(int argc,char *argv[]) {
   }
   else if(startoption == 0) {
     /* cold */
-    unit_g_gauge_field();    
+    unit_g_gauge_field();
   }
 
   /*For parallelization: exchange the gaugefield */
@@ -378,13 +376,13 @@ int main(int argc,char *argv[]) {
   /* impose SF bc in case it was chosen in the input file */
   /*******************************************************/
 
-  if (bc_flag == 1) { /* if SF */ 
+  if (bc_flag == 1) { /* if SF */
     dirichlet_boundary_conditions(g_Tbsf);
     sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta);
     /* the next two lines are just here to test some things. they have to be removed later on */
     //nan_dirichlet_boundary_conditions(g_Tbsf);
     //induced_lattice_background(g_gauge_field, g_Tbsf, g_eta);
-    fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);    
+    fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);
 
     /* compute the energy of the gauge field for SF */
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
@@ -432,16 +430,16 @@ int main(int argc,char *argv[]) {
       fprintf(parameterfile,"# First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
 	      dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
     }
-   
+
     dir=3;
     polyakov_loop(&pl, dir);
     if(g_proc_id==0){
       fprintf(parameterfile,"# First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
 	      dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
       fclose(parameterfile);
-    } 
+    }
   }
-  
+
 
   /* set ddummy to zero */
   for(ix = 0; ix < VOLUME+RAND; ix++){
@@ -460,8 +458,8 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     gettimeofday(&t1,NULL);
     countfile = fopen("history_hmc_tm", "a");
-    fprintf(countfile, "!!! Timestamp %ld, Nsave = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, ", 
-	    t1.tv_sec, Nsave, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1); 
+    fprintf(countfile, "!!! Timestamp %ld, Nsave = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, ",
+	    t1.tv_sec, Nsave, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1);
     for(j = 0; j < Integrator.no_timescales; j++) {
       fprintf(countfile, "n_int[%d] = %d ", j, Integrator.no_mnls_per_ts[j]);
     }
@@ -474,27 +472,27 @@ int main(int argc,char *argv[]) {
     if(g_proc_id == 0) {
       printf("# Starting trajectory no %d\n", trajectory_counter);
     }
-    
+
     if(return_check_flag == 1 && trajectory_counter%return_check_interval == 0) return_check = 1;
     else return_check = 0;
-    
+
     Rate += update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check, Ntherm<trajectory_counter);
     /*     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename,  */
     /* 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag); */
-    
-    
+
+
     if (bc_flag == 0) { /* if PBC */
       /* Measure the Polyakov loop in direction 2 and 3:*/
-      polyakov_loop(&pl, 2); 
-      polyakov_loop(&pl4, 3);  
+      polyakov_loop(&pl, 2);
+      polyakov_loop(&pl4, 3);
     }
-    
+
     /* Save gauge configuration all Nsave times */
     if((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) {
       sprintf(gauge_filename,"conf.%.4d", nstore);
       if(g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
-	fprintf(countfile, "%.4d, measurement %d of %d, Nsave = %d, Plaquette = %e, |L(%d)| = %e, |L(%d)| = %e trajectory nr = %d\n", 
+	fprintf(countfile, "%.4d, measurement %d of %d, Nsave = %d, Plaquette = %e, |L(%d)| = %e, |L(%d)| = %e trajectory nr = %d\n",
 		nstore, j, Nmeas, Nsave, plaquette_energy/(6.*VOLUME*g_nproc),
 		2, sqrt(pl.re*pl.re+pl.im*pl.im),
 		dir, sqrt(pl4.re*pl4.re+pl4.im*pl4.im), trajectory_counter);
@@ -505,17 +503,16 @@ int main(int argc,char *argv[]) {
     else {
       sprintf(gauge_filename,"conf.save");
     }
-    
+
     if(((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
       /* Write the gauge configuration first to a temporary file */
 /*       write_gauge_field_time_p( tmp_filename); */
 #ifdef PARIO
-      write_lime_gauge_field_parallel( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), 
+      write_lime_gauge_field_parallel( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc),
                   trajectory_counter, gauge_precision_write_flag);
-      write_rlxd_state_parallel(tmp_filename, rlxdsize);
 #else
-      write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc), 
-                  trajectory_counter, gauge_precision_write_flag); 
+      write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc),
+                  trajectory_counter, gauge_precision_write_flag);
       /*  write the status of the random number generator to a file */
       if(g_proc_id==0) {
     rlxd_get(rlxd_state);
@@ -523,7 +520,7 @@ int main(int argc,char *argv[]) {
       }
 #endif
 
-      
+
       /* Now move it! */
       if(g_proc_id == 0) {
   	rename(tmp_filename, gauge_filename);
@@ -533,7 +530,7 @@ int main(int argc,char *argv[]) {
       }
     }
     if(online_measurement_flag && (trajectory_counter%online_measurement_freq == 0)) {
-      online_measurement(trajectory_counter, 
+      online_measurement(trajectory_counter,
 			 ((int)(100000*plaquette_energy/(6.*VOLUME*g_nproc)))%(g_nproc_t*T));
     }
 
@@ -555,19 +552,19 @@ int main(int argc,char *argv[]) {
 #endif
     if(ix == 0 && g_proc_id == 0) {
       countfile = fopen("history_hmc_tm", "a");
-      fprintf(countfile, "# Changed parameter according to hmc.reread: measurment %d of %d\n", j, Nmeas); 
+      fprintf(countfile, "# Changed parameter according to hmc.reread: measurement %d of %d\n", j, Nmeas);
       fclose(countfile);
-      printf("# Changed parameter according to hmc.reread (see stdout): measurment %d of %d\n", j, Nmeas); 
+      printf("# Changed parameter according to hmc.reread (see stdout): measurement %d of %d\n", j, Nmeas);
       remove("hmc.reread");
     }
     trajectory_counter++;
   } /* end of loop over trajectories */
 
   if(g_proc_id==0) {
-    printf("Acceptance Rate was: %e Prozent\n", 100.*(double)Rate/(double)Nmeas);
+    printf("Acceptance Rate was: %e Percent\n", 100.*(double)Rate/(double)Nmeas);
     fflush(stdout);
     parameterfile = fopen(parameterfilename, "a");
-    fprintf(parameterfile, "Acceptance Rate was: %e Prozent\n", 100.*(double)Rate/(double)Nmeas);
+    fprintf(parameterfile, "Acceptance Rate was: %e Percent\n", 100.*(double)Rate/(double)Nmeas);
     fclose(parameterfile);
   }
 
@@ -581,9 +578,9 @@ int main(int argc,char *argv[]) {
   free_moment_field();
   free_monomials();
   if(g_running_phmc) {
-    free_bispinor_field(); 
-    free_chi_up_spinor_field(); 
-    free_chi_dn_spinor_field(); 
+    free_bispinor_field();
+    free_chi_up_spinor_field();
+    free_chi_dn_spinor_field();
   }
   /* End IF PHMC */
 /*   if(use_stout_flag == 1) */
