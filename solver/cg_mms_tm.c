@@ -48,6 +48,7 @@
 #include "gamma.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "propagator_io.h"
 #include "solver/matrix_mult_typedef.h"
 #include "cg_mms_tm.h"
 
@@ -69,20 +70,21 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 	      double eps_sq, const int rel_prec, const int N, matrix_mult f) {
 
   static double normsq, pro, err, alpha_cg = 1., beta_cg = 0., normsp, squarenorm;
-  int iteration, im, tot_m1, g_total_nr_masses = 2;
+  int iteration, im, tot_m1, g_total_nr_masses = 3;
   char conf_filename[100];
   
   static double gamma,alpham1;
   
   double tmp_mu = g_mu;
   /* added for shortness */
-  double g_mms_mu[2];
+  double g_mms_mu[3];
   
   tot_m1 = g_total_nr_masses - 1;  /* Total number of masses - 1 */
   init_mms_tm(tot_m1);
 
   /*  Value of the bare MMS-masses (\mu^2 - \mu_0^2) */
   for(im = 0; im < tot_m1; im++) {
+    g_mms_mu[0] = 2*g_mu;
     sigma[im] = g_mms_mu[im]*g_mms_mu[im] - g_mu*g_mu;
   }
 
@@ -180,15 +182,19 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
       }
       g_sloppy_precision = 0;
       g_mu = tmp_mu;
-      return(iteration+1);
-      
+
       /* save all the results of (Q^dagger Q)^(-1) \gamma_5 \phi */
       /* here ... */
       for(im = 0; im < tot_m1; im++) {
-	sprintf(conf_filename,".%.4d.inverted", im);
-
+	sprintf(conf_filename,".%.4d.inverted", im+1);
+	printf("writing to %s\n", conf_filename);
+	write_propagator_type(0, conf_filename);
+	convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], xs_mms_solver[im]);
+ 	write_propagator(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1],
+ 			 conf_filename, 1, 32, 0);
+ 
       }
-
+      return(iteration+1);
     }
     
     /* Compute beta_cg(i+1) = (r(i+1),r(i+1))/(r(i),r(i))
