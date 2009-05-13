@@ -33,6 +33,7 @@
 #define PCG 9
 #define DFLGCR 10
 #define DFLFGMRES 11
+#define CGMMS 12
 
 #include"solver/matrix_mult_typedef.h"
 
@@ -48,6 +49,7 @@
 #include"solver/mr.h"
 #include"solver/gcr.h"
 #include"solver/eigenvalues.h"
+#include"solver/cg_mms_tm.h"
 
 #include"solver/sub_low_ev.h"
 #include"solver/gmres_precon.h"

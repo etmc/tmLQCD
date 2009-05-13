@@ -886,6 +886,10 @@ TYPE [0-9A-Z]+
     g_dflgcr_flag = 1;
     if(myverbose!=0) printf("Use deflated FGMRES solver \n");
   }
+  cgmms {
+    solver_flag = 12;
+    if(myverbose!=0) printf("Use CGMMS solver (only without even/odd)\n");
+  }
 }
 <GMRESM>{DIGIT}+ {
   gmres_m_parameter = atoi(yytext);

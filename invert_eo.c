@@ -208,6 +208,13 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       project(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
       add(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME);
     }
+    else if (solver_flag == CGMMS) {
+      if(g_proc_id == 0) {printf("# Using multi mass CG!\n"); fflush(stdout);}
+      gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+      iter = cg_mms_tm(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], 
+		       max_iter, precision, rel_prec, VOLUME, &Q_pm_psi);
+      Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+    }
     else {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);

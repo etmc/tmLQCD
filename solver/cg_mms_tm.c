@@ -65,12 +65,12 @@ void init_mms_tm(const int nr);
 
 
 /* P output = solution , Q input = source */
-int cg_mms_tm(spinor * const P,spinor * const Q, const int max_iter, 
+int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter, 
 	      double eps_sq, const int rel_prec, const int N, matrix_mult f) {
 
-  static double normsq, pro, err, alpha_cg, beta_cg, normsqp;
-  int iteration, im, tot_m1, g_total_nr_masses=2;
-  spinor *r, *p, *h, *x, *q2p, *tmp1, *tmp2;
+  static double normsq, pro, err, alpha_cg = 1., beta_cg = 0., normsp, squarenorm;
+  int iteration, im, tot_m1, g_total_nr_masses = 2;
+  char conf_filename[100];
   
   static double gamma,alpham1;
   
@@ -86,38 +86,38 @@ int cg_mms_tm(spinor * const P,spinor * const Q, const int max_iter,
     sigma[im] = g_mms_mu[im]*g_mms_mu[im] - g_mu*g_mu;
   }
 
-  /*        !!!!   INITIALIZATION    !!!! */
-  x = g_spinor_field[ DUM_SOLVER+0 ];
-  r = g_spinor_field[ DUM_SOLVER+1 ];
-  p = g_spinor_field[ DUM_SOLVER+2 ];
-  tmp1 = g_spinor_field[ DUM_SOLVER+3 ];
-  q2p = g_spinor_field[ DUM_SOLVER+4 ];
-  tmp2= g_spinor_field[ DUM_SOLVER+4 ];
-  h = g_spinor_field[ DUM_SOLVER+5 ];
-
-  assign(x, P, N);
-  assign(h, Q, N);
  
-  for(im=0;im<tot_m1;im++) {
+  for(im = 0; im < tot_m1; im++) {
     assign(xs_mms_solver[im], P, N);
   }
 
-  zero_spinor_field(P, N);
+  squarenorm = square_norm(Q, N, 1);
+  /*        !!!!   INITIALIZATION    !!!! */
+  assign(g_spinor_field[DUM_SOLVER], P, N);
   /*        (r_0,r_0)  =  normsq         */
-/*   normsqp = square_norm(P, N, 1); */
-  normsqp = 0.;
-  
+  normsp = square_norm(P, N, 1);
+
+  assign(g_spinor_field[DUM_SOLVER+5], Q, N);
+
   /* initialize residue r and search vector p */
-  assign(r, h, N);
-  assign(p, r, N);
-  normsq=square_norm(Q, N, 1);
-  
+  if(normsp == 0){
+    /* if a starting solution vector equal to zero is chosen */
+    assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+5], N);
+    assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+5], N);
+    normsq=square_norm(Q, N, 1);
+  }
+  else{
+    /* if a starting solution vector different from zero is chosen */
+    f(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]);
+   
+    diff(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+5], g_spinor_field[DUM_SOLVER+3], N);
+    assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], N);
+    normsq=square_norm(g_spinor_field[DUM_SOLVER+2], N, 1);
+  }
+
   for(im = 0; im < tot_m1; im++) {
     assign(ps_mms_solver[im], Q, N);
   }
-  
-  alpha_cg = 1.0;
-  beta_cg = 0.0;
   
   for(im = 0; im < tot_m1; im++) {
     zitam1[im] = 1.0;
@@ -130,8 +130,8 @@ int cg_mms_tm(spinor * const P,spinor * const Q, const int max_iter,
   for(iteration = 0; iteration < max_iter; iteration++) {
     
     /*   Q^2*p and then (p,Q^2*p)  */
-    f(q2p, p);
-    pro = scalar_prod_r(p, q2p, N, 1);
+    f(g_spinor_field[DUM_SOLVER+4], g_spinor_field[DUM_SOLVER+2]);
+    pro = scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+4], N, 1);
     
     /* For the update of the coeff. of the shifted pol. we need alpha_cg(i-1) and alpha_cg(i).
        This is the reason why we need this double definition of alpha */
@@ -152,16 +152,17 @@ int cg_mms_tm(spinor * const P,spinor * const Q, const int max_iter,
       /* Update of alphas(i) = alpha_cg(i)*zita(i+1)/zita(i) */ 
       alphas[im] = alpha_cg*zita[im]/zitam1[im];
       /* Compute xs(i+1) = xs(i) + alphas(i)*ps(i) */
-      assign_add_mul_r(xs_mms_solver[im], ps_mms_solver[im], alphas[im], N);
-    }
+      assign_add_mul_r(xs_mms_solver[im], ps_mms_solver[im], alphas[im], N); 
+    } 
     
-    /* Compute x_(i+1) = x_i + alpha_cg(i+1) p_i
-       Compute r_(i+1) = r_i - alpha_cg(i+1) Qp_i  */
-    assign_add_mul_r(x, p,  alpha_cg, N);
-    assign_add_mul_r(r, q2p, -alpha_cg, N);
+    /*  Compute x_(i+1) = x_i + alpha_cg(i+1) p_i    */
+    assign_add_mul_r(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2],  alpha_cg, N);
+    /*  Compute r_(i+1) = r_i - alpha_cg(i+1) Qp_i   */
+    assign_add_mul_r(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+4], -alpha_cg, N);
+
     /* Check whether the precision eps_sq is reached */
     
-    err=square_norm(r, N, 1);
+    err = square_norm(g_spinor_field[DUM_SOLVER+1], N, 1);
     if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
       printf("CG MMS %d\t%g\n", iteration, err); fflush( stdout );
     }
@@ -169,34 +170,31 @@ int cg_mms_tm(spinor * const P,spinor * const Q, const int max_iter,
     if( ((err <= eps_sq) && (rel_prec == 0)) ||
 	((err <= eps_sq*normsq) && (rel_prec == 1)) ) {
 
-      assign(P, x, N);
+      assign(P, g_spinor_field[DUM_SOLVER], N);
       f(g_spinor_field[DUM_SOLVER+2], P);
       diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], Q, N);
       err = square_norm(g_spinor_field[DUM_SOLVER+3], N, 1);
       if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
-	printf("CG MMS true residue %d\t%g\t\n",iteration, err); 
+	printf("true residue %d\t%g\t\n",iteration, err); 
 	fflush( stdout);
       }
       g_sloppy_precision = 0;
       g_mu = tmp_mu;
       return(iteration+1);
       
-      /* this we don't want to do here, do IO instead */
+      /* save all the results of (Q^dagger Q)^(-1) \gamma_5 \phi */
+      /* here ... */
       for(im = 0; im < tot_m1; im++) {
-	g_mu = (g_mms_mu[im]);
-	gamma5(xs_mms_solver[im], xs_mms_solver[im], N);
-	g_mu = -g_mu;
-	f(tmp1, xs_mms_solver[im]);
-	gamma5(xs_mms_solver[im], tmp1, N);
-	g_mu = -g_mu;	    
-	/* assign(qprop[im+1][is][ic],&xs_mms_solver[im][0], N); */
+	sprintf(conf_filename,".%.4d.inverted", im);
+
       }
+
     }
     
     /* Compute beta_cg(i+1) = (r(i+1),r(i+1))/(r(i),r(i))
        Compute p(i+1) = r(i+1) + beta(i+1)*p(i)  */
     beta_cg = err/normsq;
-    assign_mul_add_r(p, beta_cg, r, N);
+    assign_mul_add_r(g_spinor_field[DUM_SOLVER+2], beta_cg, g_spinor_field[DUM_SOLVER+1], N);
     normsq = err;
     
     /* Compute betas(i+1) = beta_cg(i)*(zita(i+1)*alphas(i))/(zita(i)*alpha_cg(i))
@@ -206,7 +204,9 @@ int cg_mms_tm(spinor * const P,spinor * const Q, const int max_iter,
       assign_mul_add_mul_r(ps_mms_solver[im], g_spinor_field[DUM_SOLVER+1], betas[im], zita[im], N);
     }
   }
-  return -1;
+  assign(P, g_spinor_field[DUM_SOLVER], N);
+  g_sloppy_precision = 0;
+  return(-1);
 }
 
 
