@@ -1,3 +1,5 @@
+14.05.2009: bug in reread functionality fixed.
+
 30.05.2008: scidac checksum for gauge fields not correctly working
             different result for serial and MPI run.
 

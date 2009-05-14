@@ -1,3 +1,21 @@
+14.05.2009: multiple mass solver (CG) for twisted mass
+	    implemented, input is solverflag = cgmms
+	    the number of additional masses has to be specified with
+  	    CGMMSNoExtraMasses = N
+	    and the extra masses have to be given line by line in a file called
+	    "extra_masses.input"
+	    The CGMMS solver writes for every mass (extra + the original one) one
+	    propagator storing the result of (Q^\dagger Q)^(-1) \gamma_5 \phi
+	    where \phi is the source.
+	    Hence the result for +\mu and -\mu can be extracted at any later
+	    stage, respectively.
+
+14.05.2009: in the propagator files we now store additional info, namely
+	    the xlf-info message is copied from the original gauge field, if 
+	    existing, as well as the scidac-checksum and the ildg-data-lfn
+	    messages. This should ease the mapping from a propagator to the corresponding
+	    gauge configuration file.
+
 01.08.2008: online measurements implemented for
             PP and PA correlators. Input variables are
             PerformOnlineMeasurements = yes|no and

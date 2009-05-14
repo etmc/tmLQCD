@@ -1,3 +1,7 @@
+Release 5.0.0:
+new input file structure (monomials) allowing for any even 
+number of quarks
+
 Release 4.0.0:
 new IO format
 inversion for split doublet
