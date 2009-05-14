@@ -98,7 +98,7 @@ int write_checksum(char * filename, DML_Checksum * checksum) {
 }
 
 int write_inverter_info(const double epssq, const int iter, const int heavy, 
-			const int append, char * filename) {
+			const int append, char * filename, const int mms) {
   FILE * ofs;
   LimeWriter * limewriter = NULL;
   LimeRecordHeader * limeheader = NULL;
@@ -113,7 +113,13 @@ int write_inverter_info(const double epssq, const int iter, const int heavy,
   
 
   gettimeofday(&t1,NULL);
-  if(!heavy) {
+  if(mms > -1) {
+    sprintf(message,"\n result is for Q^dagger Q!\n multiple mass solver\n epssq = %e\n noiter = %d\n kappa = %f, inverted mu = %f, lowest mu = %f\n time = %ld\n hmcversion = %s\n date = %s", 
+	    epssq, iter, g_kappa, g_extra_masses[mms]/2./g_kappa,
+	    g_mu/2./g_kappa,t1.tv_sec, PACKAGE_VERSION, 
+	    ctime(&t1.tv_sec));
+  }
+  else if(!heavy) {
     sprintf(message,"\n epssq = %e\n noiter = %d\n kappa = %f, mu = %f\n time = %ld\n hmcversion = %s\n date = %s", 
 	    epssq, iter, g_kappa, g_mu/2./g_kappa,t1.tv_sec, PACKAGE_VERSION, 
 	    ctime(&t1.tv_sec));
@@ -168,7 +174,8 @@ int write_inverter_info(const double epssq, const int iter, const int heavy,
   return(0);
 }
 
-int write_xlf_info(const double plaq, const int counter, char * filename, const int append) {
+int write_xlf_info(const double plaq, const int counter, char * filename, 
+		   const int append, char * data_buf) {
   FILE * ofs;
   LimeWriter * limewriter = NULL;
   LimeRecordHeader * limeheader = NULL;
@@ -178,6 +185,7 @@ int write_xlf_info(const double plaq, const int counter, char * filename, const 
   MPI_Status mpi_status;
 #endif
   char message[5000];
+  char * buf;
   n_uint64_t bytes;
   struct timeval t1;
   
@@ -192,7 +200,14 @@ int write_xlf_info(const double plaq, const int counter, char * filename, const 
     sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f\n date = %s", 
 	    plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1, ctime(&t1.tv_sec));
   }
-  bytes = strlen( message );
+  if(data_buf != (char*)NULL) {
+    bytes = strlen( data_buf );
+    buf = data_buf;
+  }
+  else {
+    bytes = strlen( message );
+    buf = message;
+  }
   if(g_cart_id == 0) {
     if(append) {
       ofs = fopen(filename, "a");
@@ -227,7 +242,7 @@ int write_xlf_info(const double plaq, const int counter, char * filename, const 
       exit(500);
     }
     limeDestroyHeader( limeheader );
-    limeWriteRecordData(message, &bytes, limewriter);
+    limeWriteRecordData(buf, &bytes, limewriter);
     
     limeDestroyWriter( limewriter );
     fflush(ofs);
@@ -237,7 +252,129 @@ int write_xlf_info(const double plaq, const int counter, char * filename, const 
   return(0);
 }
 
+char * read_message(char * filename, char * type) {
+  
+  FILE * ifs;
+  char * data_buf = NULL;
+  int status;
+  n_uint64_t bytes, read_bytes;
+  char * header_type;
+  LimeReader * limereader;
 
+  ifs = fopen(filename, "r");
+  if(ifs == (FILE *)NULL) {
+    fprintf(stderr, "Could not open file %s\n return empty message... (read_xlf_info)\n", filename);
+    return(NULL);
+  }
+  limereader = limeCreateReader( ifs );
+  if( limereader == (LimeReader *)NULL ) {
+    fprintf(stderr, "Unable to open LimeReader\n return empty message... (read_xlf_info)\n");
+    return(NULL);
+  }
+  while( (status = limeReaderNextRecord(limereader)) != LIME_EOF ) {
+    if(status != LIME_SUCCESS ) {
+      fprintf(stderr, "limeReaderNextRecord returned error with status = %d!\n", status);
+      status = LIME_EOF;
+      break;
+    }
+    header_type = limeReaderType(limereader);
+    if(strcmp(type, header_type) == 0) break;
+  }
+  if(status == LIME_EOF) {
+    if(g_proc_id == 0) {
+      fprintf(stderr, "no %s record found in file %s\n", type, filename);
+    }
+    limeDestroyReader(limereader);
+    fclose(ifs);
+    return(NULL);
+  }
+  bytes = limeReaderBytes(limereader);
+
+  data_buf = (char *)malloc(bytes+1);
+  if( (data_buf = (char *)malloc(bytes+1)) == (char *)NULL) {
+    fprintf(stderr, "Couldn't malloc data buf\n");
+    return(NULL);
+  }
+  read_bytes = bytes;
+  status = limeReaderReadData((void *)data_buf, &read_bytes, limereader);
+
+  if( status < 0 ) {
+    if( status != LIME_EOR ) {
+      fprintf(stderr, "LIME read error occurred: status= %d  %llu bytes wanted, %llu read\n",
+	      status, (unsigned long long)bytes,
+	      (unsigned long long)read_bytes);
+      free(data_buf);
+      data_buf = NULL;
+      return(NULL);
+    }
+  }
+  data_buf[bytes]='\0';
+
+  limeDestroyReader(limereader);
+  fclose(ifs);
+
+  return(data_buf);
+}
+
+int write_message(char * filename, char * data_buf, char * type, const int append) {
+
+  FILE * ofs;
+  LimeWriter * limewriter = NULL;
+  LimeRecordHeader * limeheader = NULL;
+  /* Message end and Message begin flag */
+  int ME_flag=1, MB_flag=1, status=0;
+#ifdef MPI
+  MPI_Status mpi_status;
+#endif
+  n_uint64_t bytes;
+
+  if(data_buf == (char*)NULL) return(0);
+
+  bytes = strlen( data_buf );
+
+  if(g_cart_id == 0) {
+    if(append) {
+      ofs = fopen(filename, "a");
+    }
+    else ofs = fopen(filename, "w");
+    if(ofs == (FILE*)NULL) {
+      fprintf(stderr, "Could not open file %s for writing!\n Aborting...\n", filename);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    limewriter = limeCreateWriter( ofs );
+    if(limewriter == (LimeWriter*)NULL) {
+      fprintf(stderr, "LIME error in file %s for writing!\n Aborting...\n", filename);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    
+    limeheader = limeCreateHeader(MB_flag, ME_flag, type, bytes);
+    status = limeWriteRecordHeader( limeheader, limewriter);
+    if(status < 0 ) {
+      fprintf(stderr, "LIME write header error %d\n", status);
+#ifdef MPI
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      MPI_Finalize();
+#endif
+      exit(500);
+    }
+    limeDestroyHeader( limeheader );
+    limeWriteRecordData(data_buf, &bytes, limewriter);
+    
+    limeDestroyWriter( limewriter );
+    fflush(ofs);
+    fclose(ofs);
+    
+  }
+  return(0);
+}
 
 int big_endian(){
   union{

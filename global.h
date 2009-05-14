@@ -173,6 +173,10 @@ EXTERN double DeltaTtot, DeltaTcd, DeltaTev;
 EXTERN int counter_Spsi;
 /* end of the something ... */
 
+/* Info for CGMMS solver */
+EXTERN int g_no_extra_masses;
+EXTERN double g_extra_masses[30];
+
 EXTERN int ITER_MAX_BCG;
 EXTERN int ITER_MAX_CG;
 

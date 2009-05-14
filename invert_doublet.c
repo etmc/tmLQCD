@@ -107,6 +107,9 @@ int main(int argc,char *argv[]) {
   char parameterfilename[50];
   char conf_filename[50];
   char * input_filename = NULL;
+  char * xlfmessage = NULL;
+  char * gaugelfn = NULL;
+  char * gaugecksum = NULL;
   double plaquette_energy;
 
   double nrm1;
@@ -256,6 +259,12 @@ int main(int argc,char *argv[]) {
       printf("Reading Gauge field from file %s\n", conf_filename); fflush(stdout);
     }
     read_lime_gauge_field(conf_filename);
+    if(xlfmessage != (char*)NULL) free(xlfmessage);
+    if(gaugelfn != (char*)NULL) free(gaugelfn);
+    if(gaugecksum != (char*)NULL) free(gaugecksum);
+    xlfmessage = read_message(conf_filename, "xlf-info");
+    gaugelfn = read_message(conf_filename, "ildg-data-lfn");
+    gaugecksum = read_message(conf_filename, "scidac-checksum");
     if (g_proc_id == 0){
       printf("done!\n"); fflush(stdout);
     }
@@ -459,8 +468,10 @@ int main(int argc,char *argv[]) {
 	if(propagator_splitted) {
 	  if(fl == 1) {
 	    write_propagator_type(write_prop_format_flag, conf_filename);
+	    write_message(conf_filename, gaugelfn, "gauge-ildg-data-lfn-copy", 1);
+	    write_message(conf_filename, gaugecksum, "gauge-scidac-checksum-copy", 1);
+	    write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1, xlfmessage);
 	  }
-	  write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
 	  /* write the source depending on format */
 	  if(write_prop_format_flag == 1 && fl == 0) {
 	    write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
@@ -472,8 +483,11 @@ int main(int argc,char *argv[]) {
 	  /* 	sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore); */
 	  if(ix == index_start && fl == 1) {
 	    write_propagator_type(write_prop_format_flag, conf_filename);
+	    write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1, xlfmessage);
+	    write_message(conf_filename, gaugelfn, "gauge-ildg-data-lfn-copy", 1);
+	    write_message(conf_filename, gaugecksum, "gauge-scidac-checksum-copy", 1);
 	  }
-	  write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
+
 	  /* write the source depending on format */
 	  if(write_prop_format_flag == 1 && fl == 1) {
 	    write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
@@ -486,7 +500,7 @@ int main(int argc,char *argv[]) {
 	}
       }
       if(g_proc_id == 0) {
-	write_inverter_info(nrm1, iter, 0, 1, conf_filename);
+	write_inverter_info(nrm1, iter, 0, 1, conf_filename, -1);
       }
     }
     nstore+=Nsave;
@@ -499,7 +513,7 @@ int main(int argc,char *argv[]) {
   free_geometry_indices();
   free_spinor_field();
   
-  free_bispinor_field(); 
+/*   free_bispinor_field();  */
   free_chi_up_spinor_field(); 
   free_chi_dn_spinor_field(); 
 

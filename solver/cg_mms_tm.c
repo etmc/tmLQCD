@@ -1,4 +1,7 @@
 /***********************************************************************
+ *
+ * $Id$
+ *
  * Copyright (C) 2004 Andrea Shindler
  *               2009 Carsten Urbach
  *
@@ -16,26 +19,10 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-
-
-/**************************************************************************
- *
- * $Id$
- *
- *
- * The externally accessible functions are
- *
- *
- *   int cg_mms_tm(spinor * const, spinor * const, double)
- *     CG-M solver for the twisted mass operator
- *
- *     
  * 
  * Author: Andrea Shindler <shindler@ifh.de> Jan 2004
  * 
- *
- **************************************************************************/
+ ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -70,43 +57,40 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 	      double eps_sq, const int rel_prec, const int N, matrix_mult f) {
 
   static double normsq, pro, err, alpha_cg = 1., beta_cg = 0., normsp, squarenorm;
-  int iteration, im, tot_m1, g_total_nr_masses = 3;
+  int iteration, im;
   char conf_filename[100];
-  
   static double gamma,alpham1;
   
   double tmp_mu = g_mu;
-  /* added for shortness */
-  double g_mms_mu[3];
   
-  tot_m1 = g_total_nr_masses - 1;  /* Total number of masses - 1 */
-  init_mms_tm(tot_m1);
+  init_mms_tm(g_no_extra_masses);
 
+  /* currently only implemented for P=0 */
+  zero_spinor_field(P, N);
   /*  Value of the bare MMS-masses (\mu^2 - \mu_0^2) */
-  for(im = 0; im < tot_m1; im++) {
-    g_mms_mu[0] = 2*g_mu;
-    sigma[im] = g_mms_mu[im]*g_mms_mu[im] - g_mu*g_mu;
-  }
-
- 
-  for(im = 0; im < tot_m1; im++) {
+  for(im = 0; im < g_no_extra_masses; im++) {
+    sigma[im] = g_extra_masses[im]*g_extra_masses[im] - g_mu*g_mu;
     assign(xs_mms_solver[im], P, N);
+    assign(ps_mms_solver[im], Q, N);
+    zitam1[im] = 1.0;
+    zita[im] = 1.0;
+    alphas[im] = 1.0;
+    betas[im] = 0.0;
   }
-
+ 
   squarenorm = square_norm(Q, N, 1);
-  /*        !!!!   INITIALIZATION    !!!! */
   assign(g_spinor_field[DUM_SOLVER], P, N);
-  /*        (r_0,r_0)  =  normsq         */
   normsp = square_norm(P, N, 1);
-
   assign(g_spinor_field[DUM_SOLVER+5], Q, N);
 
   /* initialize residue r and search vector p */
-  if(normsp == 0){
+/*   if(normsp == 0){ */
+  /* currently only implemented for P=0 */
+  if(1) {
     /* if a starting solution vector equal to zero is chosen */
     assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+5], N);
     assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+5], N);
-    normsq=square_norm(Q, N, 1);
+    normsq = square_norm(Q, N, 1);
   }
   else{
     /* if a starting solution vector different from zero is chosen */
@@ -114,20 +98,9 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
    
     diff(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+5], g_spinor_field[DUM_SOLVER+3], N);
     assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], N);
-    normsq=square_norm(g_spinor_field[DUM_SOLVER+2], N, 1);
+    normsq = square_norm(g_spinor_field[DUM_SOLVER+2], N, 1);
   }
 
-  for(im = 0; im < tot_m1; im++) {
-    assign(ps_mms_solver[im], Q, N);
-  }
-  
-  for(im = 0; im < tot_m1; im++) {
-    zitam1[im] = 1.0;
-    zita[im] = 1.0;
-    alphas[im] = 1.0;
-    betas[im] = 0.0;
-  }
-  
   /* main loop */
   for(iteration = 0; iteration < max_iter; iteration++) {
     
@@ -141,7 +114,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
     /* Compute alpha_cg(i+1) */
     alpha_cg = normsq/pro;
-    for(im = 0; im < tot_m1; im++) {
+    for(im = 0; im < g_no_extra_masses; im++) {
       
       /* Now gamma is a temp variable that corresponds to zita(i+1) */ 
       gamma = zita[im]*alpham1/(alpha_cg*beta_cg*(1.-zita[im]/zitam1[im]) 
@@ -185,10 +158,22 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
       /* save all the results of (Q^dagger Q)^(-1) \gamma_5 \phi */
       /* here ... */
-      for(im = 0; im < tot_m1; im++) {
-	sprintf(conf_filename,".%.4d.inverted", im+1);
-	printf("writing to %s\n", conf_filename);
+      sprintf(conf_filename,".cgmms.%.2d.inverted", 0);
+      write_propagator_type(0, conf_filename);
+      if(g_kappa != 0) {
+	mul_r(g_spinor_field[DUM_SOLVER], (2*g_kappa)*(2*g_kappa), g_spinor_field[DUM_SOLVER], N);
+      }
+      convert_lexic_to_eo(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], 
+			  g_spinor_field[DUM_SOLVER]);
+      write_propagator(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1],
+		       conf_filename, 1, 32, 0);
+
+      for(im = 0; im < g_no_extra_masses; im++) {
+	sprintf(conf_filename,".cgmms.%.2d.inverted", im+1);
 	write_propagator_type(0, conf_filename);
+	if(g_kappa != 0) {
+	  mul_r(xs_mms_solver[im], (2*g_kappa)*(2*g_kappa), xs_mms_solver[im], N);
+	}
 	convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], xs_mms_solver[im]);
  	write_propagator(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1],
  			 conf_filename, 1, 32, 0);
@@ -205,7 +190,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
     
     /* Compute betas(i+1) = beta_cg(i)*(zita(i+1)*alphas(i))/(zita(i)*alpha_cg(i))
        Compute ps(i+1) = zita(i+1)*r(i+1) + betas(i+1)*ps(i)  */
-    for(im = 0; im < tot_m1; im++) {
+    for(im = 0; im < g_no_extra_masses; im++) {
       betas[im] = beta_cg*zita[im]*alphas[im]/(zitam1[im]*alpha_cg);
       assign_mul_add_mul_r(ps_mms_solver[im], g_spinor_field[DUM_SOLVER+1], betas[im], zita[im], N);
     }

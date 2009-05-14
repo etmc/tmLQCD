@@ -180,6 +180,7 @@ TYPE [0-9A-Z]+
 %x DEBUG
 %x GMRESM
 %x GMRESDRNEV
+%x CGMMSNMS
 %x REPRORND
 %x SLOPPYPREC
 %x USESTOUT
@@ -268,6 +269,7 @@ TYPE [0-9A-Z]+
 ^DebugLevel{SPC}*={SPC}*                   BEGIN(DEBUG);
 ^GMRESMParameter{SPC}*={SPC}*              BEGIN(GMRESM);
 ^GMRESDRNrEv{SPC}*={SPC}*                  BEGIN(GMRESDRNEV);
+^CGMMSNoExtraMasses{SPC}*={SPC}*           BEGIN(CGMMSNMS);
 ^GaugeConfigReadPrecision{SPC}*={SPC}*     BEGIN(GAUGERPREC);
 ^GaugeConfigWritePrecision{SPC}*={SPC}*    BEGIN(GAUGEWPREC);
 ^PropagatorPrecision{SPC}*={SPC}*          BEGIN(PROPPREC);
@@ -899,6 +901,10 @@ TYPE [0-9A-Z]+
   gmresdr_nr_ev = atoi(yytext);
   if(myverbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
 }
+<CGMMSNMS>{DIGIT}+ {
+  g_no_extra_masses = atoi(yytext);
+  if(myverbose!=0) printf("Number of extra MMS masses set to %d\n", g_no_extra_masses);
+}
 <DFLSP>{DIGIT}+ {
   g_N_s = atoi(yytext);
   if(myverbose!=0) printf("Deflation subspace dimension set to %d \n", g_N_s);
@@ -1346,6 +1352,7 @@ int read_input(char * conf_file){
   source_time_slice = _default_source_time_slice;
   gmres_m_parameter = _default_gmres_m_parameter;
   gmresdr_nr_ev = _default_gmresdr_nr_ev;
+  g_no_extra_masses = _default_g_no_extra_masses;
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
   prop_precision_flag = _default_prop_precision_flag;
@@ -1429,6 +1436,7 @@ int reread_input(char * conf_file){
   if(verbose && g_proc_id == 0) {
     myverbose = 1;
   }
+  current_monomial=-1;
   reread = 1;
 
   /********************************************

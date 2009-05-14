@@ -215,13 +215,12 @@ int write_lime_gauge_field_old(char * filename, const double plaq, const int cou
   /* Message end and Message begin flag */
   int ME_flag=0, MB_flag=0, status=0;
   int t=0, x=0, y=0, z=0;
-  char message[100];
   n_uint64_t bytes;
 #ifndef WORDS_BIGENDIAN
   su3 tmp[4];
 #endif
 
-  write_xlf_info(plaq, counter, filename, 0);
+  write_xlf_info(plaq, counter, filename, 0, (char*)NULL);
 
   ofs = fopen(filename, "a");
   if(ofs == (FILE*)NULL) {
@@ -403,11 +402,10 @@ int write_lime_gauge_field_singleprec(char * filename,
   /* Message end and Message begin flag */
   int ME_flag=0, MB_flag=0, status=0;
   int t=0, x=0, y=0, z=0;
-  char message[500];
   n_uint64_t bytes;
   float tmp[72];
 
-  write_xlf_info(plaq, counter, filename, 0);
+  write_xlf_info(plaq, counter, filename, 0, (char*)NULL);
 
   ofs = fopen(filename, "a");
   if(ofs == (FILE*)NULL) {
@@ -1559,7 +1557,7 @@ int read_spinorfield_cm_swap_single(spinor * const s, spinor * const r, char * f
 
 int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filename) {
 
-  FILE * ofs;
+  FILE * ofs = NULL;
   int t, x, y , z, i = 0;
   int t0, X, Y, Z, id = 0;
   spinor * p = NULL;

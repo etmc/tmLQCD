@@ -47,8 +47,12 @@ int write_ildg_format_xml(char *filename, LimeWriter * limewriter, const int pre
 void single2double_cm(spinor * const R, float * const S);
 void double2single_cm(float * const S, spinor * const R);
 void zero_spinor(spinor * const R);
-int write_xlf_info(const double plaq, const int counter, char * filename, const int append);
+int write_xlf_info(const double plaq, const int counter, char * filename, 
+		   const int append, char * data_buf);
 int write_inverter_info(const double epssq, const int iter, const int heavy, 
-			const int append, char * filename);
+			const int append, char * filename, const int mms);
+
+char * read_message(char * filename, char * type);
+int write_message(char * filename, char * data_buf, char * type, const int append);
 
 #endif

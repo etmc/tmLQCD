@@ -103,7 +103,11 @@ int main(int argc,char *argv[]) {
   char datafilename[50];
   char parameterfilename[50];
   char conf_filename[50];
+  char tmp_filename[50];
   char * input_filename = NULL;
+  char * xlfmessage = NULL;
+  char * gaugelfn = NULL;
+  char * gaugecksum = NULL;
   double plaquette_energy;
   double ratime, retime;
   
@@ -158,6 +162,11 @@ int main(int argc,char *argv[]) {
 
   /* Read the input file */
   read_input(input_filename);
+  if(solver_flag == 12 && even_odd_flag == 1) {
+    even_odd_flag = 0;
+    if(g_proc_id == 0) fprintf(stderr, "CGMMS works only without even/odd! Forcing!\n");
+  }
+
   /* this DBW2 stuff is not needed for the inversion ! */
   if(g_dflgcr_flag == 1) {
     even_odd_flag = 0;
@@ -244,6 +253,23 @@ int main(int argc,char *argv[]) {
     fclose(parameterfile);
   }
 
+  /* this is for the extra masses of the CGMMS */
+  if(solver_flag == 12 && g_no_extra_masses > 0) {
+    if((parameterfile = fopen("extra_masses.input", "r")) != NULL) {
+      for(j = 0; j < g_no_extra_masses; j++) {
+	fscanf(parameterfile, "%lf", &g_extra_masses[j]);
+	if(g_proc_id == 0 && g_debug_level > 0) {
+	  printf("# g_extra_masses[%d] = %lf\n", j, g_extra_masses[j]);
+	}
+      }
+      fclose(parameterfile);
+    }
+    else {
+      fprintf(stderr, "Could not open file extra_masses.input!\n");
+      g_no_extra_masses = 0;
+    }
+  }
+
   /* define the geometry */
   geometry();
 
@@ -276,7 +302,15 @@ int main(int argc,char *argv[]) {
     if (g_proc_id == 0){
       printf("Reading Gauge field from file %s\n", conf_filename); fflush(stdout);
     }
+    if(xlfmessage != (char*)NULL) free(xlfmessage);
+    if(gaugelfn != (char*)NULL) free(gaugelfn);
+    if(gaugecksum != (char*)NULL) free(gaugecksum);
     read_lime_gauge_field(conf_filename);
+    xlfmessage = read_message(conf_filename, "xlf-info");
+    gaugelfn = read_message(conf_filename, "ildg-data-lfn");
+    gaugecksum = read_message(conf_filename, "scidac-checksum");
+    printf("%s \n", gaugecksum);
+
     if (g_proc_id == 0){
       printf("done!\n"); fflush(stdout);
     }
@@ -470,23 +504,15 @@ int main(int argc,char *argv[]) {
       }
 
       if(write_prop_format_flag < 10) {
-	if(propagator_splitted) {
+	if(propagator_splitted || ix == index_start) {
 	  write_propagator_type(write_prop_format_flag, conf_filename);
-	  write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
-	  /* write the source depending on format */
-	  if(write_prop_format_flag == 1) {
-	    write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
-	  }
+	  write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1, xlfmessage);
+	  write_message(conf_filename, gaugelfn, "gauge-ildg-data-lfn-copy", 1);
+	  write_message(conf_filename, gaugecksum, "gauge-scidac-checksum-copy", 1);
 	}
-	else {
-	  if(ix == index_start) {
-	    write_propagator_type(write_prop_format_flag, conf_filename);
-	  }
-	  write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1);
-	  /* write the source depending on format */
-	  if(write_prop_format_flag == 1) {
-	    write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
-	  }
+	/* write the source depending on format */
+	if(write_prop_format_flag == 1) {
+	  write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
 	}
       }
 #ifdef MPI
@@ -524,7 +550,18 @@ int main(int argc,char *argv[]) {
       if(g_proc_id == 0) {
 	printf("Inversion for source %d done in %d iterations, squared residue = %e!\n", ix, iter, nrm1+nrm2);
 	printf("Inversion done in %1.2e sec. \n", etime-atime);
-        if(write_prop_format_flag != 11) write_inverter_info(nrm1+nrm2, iter, 0, 1, conf_filename);
+        if(write_prop_format_flag != 11) write_inverter_info(nrm1+nrm2, iter, 0, 1, conf_filename, -1);
+      }
+      if(solver_flag == 12 && g_no_extra_masses > 0) {
+	for(j = 0; j < g_no_extra_masses+1; j++) {
+	  sprintf(conf_filename,"%s.%.2d.Qsq.mass%.2d.inverted", source_input_filename, ix, j);
+	  sprintf(tmp_filename,".cgmms.%.2d.inverted", j);
+	  rename(tmp_filename, conf_filename);
+	  write_inverter_info(nrm1+nrm2, iter, 0, 1, conf_filename, j);
+	  write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1, xlfmessage);
+	  write_message(conf_filename, gaugelfn, "gauge-ildg-data-lfn-copy", 1);
+	  write_message(conf_filename, gaugecksum, "gauge-scidac-checksum-copy", 1);
+	}
       }
     }
     nstore+=Nsave;

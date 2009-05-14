@@ -267,7 +267,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   n_uint64_t bytes;
   DML_Checksum checksum;
   
-  write_xlf_info(plaq, counter, filename, 0);
+  write_xlf_info(plaq, counter, filename, 0, (char*)NULL);
 
   if(g_cart_id == 0) {
     ofs = fopen(filename, "a");
