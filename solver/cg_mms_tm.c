@@ -224,7 +224,7 @@ void init_mms_tm(const int nr) {
       ps_mms_solver[i]=(spinor*)(((unsigned long int)(ps_qmms)+ALIGN_BASE)&~ALIGN_BASE) + i*VOLUMEPLUSRAND;
     }
 #else
-    xs_qmms = (spinor)calloc(VOLUMEPLUSRAND*(nr),sizeof(spinor));
+    xs_qmms = (spinor*)calloc(VOLUMEPLUSRAND*(nr),sizeof(spinor));
     xs_mms_solver = (spinor**)calloc((nr),sizeof(spinor*));
 
     ps_qmms = (spinor*)calloc(VOLUMEPLUSRAND*(nr),sizeof(spinor));
