@@ -66,10 +66,11 @@ AC_CHECK_LIB([lime], [limeReaderNextRecord],[],
 
 AC_MSG_CHECKING(whether we want to use lemon)
 AC_ARG_WITH(lemondir,
-            [  --with-lemondir[=dir]      use lemon from dir],
+            [  --with-lemondir[=dir]     use lemon, to be found in dir],
              [echo yes
               lemon_dir=$withval
-              LDFLAGS="$LDFLAGS -L${lemon_dir}/lib/"
+              LDFLAGS="$LDFLAGS -L${lemon_dir}/lib"
+              INCLUDES="$INCLUDES -I${lemon_dir}/include"
               AC_CHECK_LIB([lemon],
                            [lemonReaderNextRecord],
                            [],
@@ -196,7 +197,7 @@ AC_SEARCH_LIBS([$zheev],[], [], [AC_MSG_ERROR([Cannot find lapack])])
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([float.h libintl.h limits.h stdint.h stdlib.h string.h strings.h sys/time.h unistd.h])
-AC_CHECK_HEADER( getopt.h, INCLUDES=" " )
+AC_CHECK_HEADER( getopt.h, [])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

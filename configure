@@ -1397,7 +1397,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-limedir=dir      search lime in dir default=./lime
-  --with-lemondir=dir      use lemon from dir
+  --with-lemondir=dir     use lemon, to be found in dir
   --with-mpidimension=n   use n dimensional parallelisation default=1
   --with-persistentmpi    use persistent MPI calls for halfspinor default=no
   --with-nonblockingmpi   use non-blocking MPI calls for spinor and gauge default=yes
@@ -7773,7 +7773,8 @@ $as_echo_n "checking whether we want to use lemon... " >&6; }
 if test "${with_lemondir+set}" = set; then
   withval=$with_lemondir; echo yes
               lemon_dir=$withval
-              LDFLAGS="$LDFLAGS -L${lemon_dir}/lib/"
+              LDFLAGS="$LDFLAGS -L${lemon_dir}/lib"
+              INCLUDES="$INCLUDES -I${lemon_dir}/include"
 
 { $as_echo "$as_me:$LINENO: checking for lemonReaderNextRecord in -llemon" >&5
 $as_echo_n "checking for lemonReaderNextRecord in -llemon... " >&6; }
@@ -9104,9 +9105,6 @@ fi
 { $as_echo "$as_me:$LINENO: result: $ac_cv_header_getopt_h" >&5
 $as_echo "$ac_cv_header_getopt_h" >&6; }
 
-fi
-if test "x$ac_cv_header_getopt_h" = x""yes; then
-  INCLUDES=" "
 fi
 
 
