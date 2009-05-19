@@ -14,7 +14,6 @@ void set_all_links_to_one();
 void set_all_links_to_one_with_dirichlet(int t);
 void print_su3_matrix (su3 u);
 void sf_boundary_conditions_spatially_constant_abelian_field(int t, double eta);
-void nan_dirichlet_boundary_conditions(int t);
 
 /*** MEASUREMENTS ***/
 

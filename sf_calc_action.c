@@ -38,42 +38,6 @@ void dirichlet_boundary_conditions(int t) {
   }
 }
 
-#define _su3_nan(u) \
-   (u).c00.re=1./0.0; \
-   (u).c00.im=1./0.0; \
-   (u).c01.re=1./0.0; \
-   (u).c01.im=1./0.0; \
-   (u).c02.re=1./0.0; \
-   (u).c02.im=1./0.0; \
-   (u).c10.re=1./0.0; \
-   (u).c10.im=1./0.0; \
-   (u).c11.re=1./0.0; \
-   (u).c11.im=1./0.0; \
-   (u).c12.re=1./0.0; \
-   (u).c12.im=1./0.0; \
-   (u).c20.re=1./0.0; \
-   (u).c20.im=1./0.0; \
-   (u).c21.re=1./0.0; \
-   (u).c21.im=1./0.0; \
-   (u).c22.re=1./0.0; \
-   (u).c22.im=1./0.0;
-
-/* the next function sets
-all the gauge links in the time direction (from t on) to nan.
-Note that the rest of the links at the boundaries (spatial links) are not yet touched here */
-void nan_dirichlet_boundary_conditions(int t) {
-  
-  int ix;
-  
-  for (ix=0;ix<VOLUME;ix++){
- 
-    if (g_t[ix] == t) {
-
-      _su3_nan(g_gauge_field[ix][0]);
-
-    }   
-  }
-}
 
 /* this function sets all the spatial links located at the time boundaries to one
    it does nothing to the time-like links */
