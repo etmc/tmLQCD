@@ -106,7 +106,7 @@ int write_lime_gauge_field_old(char * filename, const double plaq, const int cou
   int coords[4];
   n_uint64_t bytes;
 
-  write_xlf_info(plaq, counter, filename, 0);
+  write_xlf_info(plaq, counter, filename, 0, (char*)NULL);
 
   if(g_cart_id == 0) {
     ofs = fopen(filename, "a");
@@ -291,7 +291,7 @@ int write_lime_gauge_field_singleprec(char * filename, const double plaq,
   int coords[4];
   n_uint64_t bytes;
 
-  write_xlf_info(plaq, counter, filename, 0);
+  write_xlf_info(plaq, counter, filename, 0, (char*)NULL);
 
   if(g_cart_id == 0) {
     ofs = fopen(filename, "a");
