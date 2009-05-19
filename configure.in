@@ -69,10 +69,11 @@ AC_ARG_WITH(lemondir,
             [  --with-lemondir[=dir]      use lemon from dir],
              [echo yes
               lemon_dir=$withval
+              LDFLAGS="$LDFLAGS -L${lemon_dir}/lib/"
               AC_CHECK_LIB([lemon],
                            [lemonReaderNextRecord],
-                           [LDFLAGS="$LDFLAGS -L${lemon_dir}/lib/"],
-                           [AC_MSG_RESULT([library liblemon was not found])])],
+                           [],
+                           [AC_MSG_ERROR([library liblemon was not found])])],
              [echo no])
 
 AC_MSG_CHECKING(whether we want to use MPI)
