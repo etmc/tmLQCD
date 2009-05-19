@@ -12,6 +12,9 @@
 /* Define to 1 if you have the `lime' library (-llime). */
 #undef HAVE_LIBLIME
 
+/* Define to 1 if you have the `lemon' library (-llemon). */
+#undef HAVE_LIBLEMON
+
 /* Compile with MPI support */
 #undef MPI
 

@@ -180,7 +180,7 @@ EXTERN double g_extra_masses[30];
 EXTERN int ITER_MAX_BCG;
 EXTERN int ITER_MAX_CG;
 
-#ifdef PARIO
+#ifdef HAVE_LIBLEMON
 EXTERN int const rlxdsize;
 #endif
 

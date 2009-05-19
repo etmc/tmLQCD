@@ -52,7 +52,7 @@
 #ifdef MPI
 # include "xchange.h"
 #endif
-#ifdef PARIO
+#ifdef HAVE_LIBLEMON
 # ifndef MPI
 #  error "Parallel IO without MPI not supported"
 # endif
@@ -340,8 +340,8 @@ int main(int argc,char *argv[]) {
 	     gauge_input_filename, gauge_precision_read_flag);
       fflush(stdout);
     }
-#ifdef PARIO
-      read_lime_gauge_field_parallel(gauge_input_filename, rlxd_state);
+#ifdef HAVE_LIBLEMON
+      read_lemon_gauge_field_parallel(gauge_input_filename, rlxd_state);
 #else
     if(gauge_precision_read_flag == 64) {
       read_lime_gauge_field(gauge_input_filename);
@@ -505,8 +505,8 @@ int main(int argc,char *argv[]) {
     if(((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
       /* Write the gauge configuration first to a temporary file */
 /*       write_gauge_field_time_p( tmp_filename); */
-#ifdef PARIO
-      write_lime_gauge_field_parallel( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc),
+#ifdef HAVE_LIBLEMON
+      write_lemon_gauge_field_parallel( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc),
                   trajectory_counter, gauge_precision_write_flag);
 #else
       write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc),

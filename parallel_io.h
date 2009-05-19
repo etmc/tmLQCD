@@ -21,21 +21,22 @@
 #ifndef _PARALLEL_IO_H
 #define _PARALLEL_IO_H
 
-#include <c-lemon/include/lime.h>
+#include <lemon.h>
 #include"dml.h"
 
-int read_lime_gauge_field_parallel(char *filename, int *ranlxd_state);
-int read_lime_gauge_field_singleprec_parallel(char const * filename);
+int read_lemon_gauge_field_parallel(char *filename, int *ranlxd_state);
+int read_lemon_gauge_field_singleprec_parallel(char const * filename);
 
-int read_binary_gauge_data_parallel(LimeReader * limereader, DML_Checksum * checksum);
-int read_checksum_parallel(LimeReader * limereader, DML_Checksum * checksum);
-int read_rlxd_state_parallel(LimeReader * limereader, int * state);
+int read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * checksum);
+int read_checksum_parallel(LemonReader * lemonreader, DML_Checksum * checksum);
+int read_rlxd_state_parallel(LemonReader * lemonreader, int * state);
 
-int write_lime_gauge_field_parallel(char * filename, const double plaq, const int counter, const int prec);
+int write_lemon_gauge_field_parallel(char * filename, const double plaq, const int counter, const int prec);
 
-int write_binary_gauge_data_parallel(LimeWriter * limewriter, const int prec, DML_Checksum * ans);
-int write_checksum_parallel(LimeWriter * limewriter, DML_Checksum * checksum);
-int write_rlxd_state_parallel(LimeWriter * limewriter);
-int write_xlf_info_parallel(LimeWriter * limewriter, const double plaq, const int counter);
+int write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, DML_Checksum * ans);
+int write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum * checksum);
+int write_rlxd_state_parallel(LemonWriter * lemonwriter);
+int write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const int counter);
+int write_ildg_format_parallel(LemonWriter *writer, const int prec);
 
 #endif
