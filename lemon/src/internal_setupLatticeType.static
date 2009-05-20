@@ -1,0 +1,24 @@
+#pragma once
+
+static void setupLatticeType(MPI_Datatype *derivType, MPI_Datatype etype, MPI_Comm cartesian, int const L)
+{
+  int lattice_sizes[4] = {L, L, L, 2 * L};
+
+  int coords[4];
+  int dims[4];
+  int periods[4];
+  int local_sizes[4];
+  int starts[4];
+  size_t idx;
+
+  MPI_Cart_get(cartesian, 4, dims, periods, coords);
+
+  for (idx = 0; idx < 4; ++idx)
+  {
+    local_sizes[idx] = lattice_sizes[idx] / dims[idx];
+    starts[idx] = local_sizes[idx] * coords[idx];
+  }
+
+  MPI_Type_create_subarray(4, lattice_sizes, local_sizes, starts,
+                           MPI_ORDER_C, etype, derivType);
+}

@@ -1,0 +1,11 @@
+#pragma once
+
+#include "internal_bigEndian.static"
+#include "internal_byteSwap.static"
+
+static uint32_t big_endian_long(uint32_t ul)
+{
+   if( lemon_big_endian() == 0 )
+     lemon_byte_swap(&ul, sizeof(uint32_t), 1);
+   return ul;
+}

@@ -1,0 +1,96 @@
+#pragma once
+
+#include <stdio.h>
+
+#include <lemon_binheader.h>
+
+#include "internal_bigEndianShort.static"
+#include "internal_bigEndianLong.static"
+#include "internal_bigEndianLongLong.static"
+
+static int readAndParseHeader(LemonReader *reader)
+{
+  unsigned int i_version;
+  int i_MB, i_ME;
+  uint32_t i_magic_no;
+  uint64_t  i_data_length;
+  unsigned char *typebuf;
+  MPI_Status status;
+  int err;
+  int msg_begin = 1;
+#ifdef LEMONDEBUG
+  MPI_Offset size;
+#endif
+
+  /* Destroy any old header structure kicking about */
+  if( reader->curr_header != (LemonRecordHeader *)NULL )
+  {
+    msg_begin = reader->is_last;   /* Remember whether we finished a message */
+    lemonDestroyHeader(reader->curr_header);
+    reader->curr_header = (LemonRecordHeader *)NULL;
+  }
+
+  /* Read the entire header */
+  MPI_Barrier(reader->cartesian);
+  err = MPI_File_read_at_all(*reader->fh, reader->off + reader->pos, lemon_header.int64, HDR_SIZE_BYTES, MPI_BYTE, &status);
+#ifdef LEMONDEBUG
+  if (reader->my_rank == 0)
+    fprintf(stderr, "[LEMON DEBUG] Reading header at position: %#x.\n", (unsigned)(reader->off + reader->pos));
+  MPI_File_get_size(*reader->fh, &size);
+  if (reader->my_rank == 0)
+    fprintf(stderr, "[LEMON DEBUG] Current file size:          %#x.\n", (unsigned)(size));
+#endif
+  reader->pos += HDR_SIZE_BYTES;
+
+  if (err)
+  {
+    fprintf(stderr, "Node %d reports in readAndParseHeader: MPI_File_read_at_all returned code %d.\n", reader->my_rank, err);
+    return LEMON_ERR_HEADER_NEXT;
+  }
+
+  MPI_Get_count(&status, MPI_BYTE, &err);
+
+  if (err == 0)
+    return LEMON_EOF;
+  if (err != HDR_SIZE_BYTES)
+  {
+    fprintf(stderr, "Node %d reports in readAndParseHeader: only %d bytes were read.\n", reader->my_rank, err);
+    return LEMON_ERR_HEADER_NEXT;
+  }
+
+  /* Check magic number */
+  i_magic_no = big_endian_long(*lemon_hdr_magic_no);
+  if(i_magic_no != LEMON_MAGIC_NO)
+  {
+    fprintf(stderr, "Node %d reports in readAndParseHeader: read %x for magic number, expected %x.\n", reader->my_rank, i_magic_no, LEMON_MAGIC_NO);
+    return LEMON_ERR_HEADER_NEXT;
+  }
+
+  /* LEMON version number */
+  i_version = big_endian_short(*lemon_hdr_version);
+
+  /* Message flags */
+  i_MB = (*lemon_hdr_mbme & MB_MASK) ? 1 : 0;
+  i_ME = (*lemon_hdr_mbme & ME_MASK) ? 1 : 0;
+
+  /* Data length */
+  i_data_length = big_endian_long_long(*lemon_hdr_data_len);
+
+  /* Record type. */
+  typebuf = (unsigned char *)lemon_hdr_rec_type;
+
+  /* Sanity Checking */
+  MPI_Barrier(reader->cartesian);
+  reader->curr_header = lemonCreateHeader(i_MB, i_ME, (char*)typebuf, i_data_length);
+  if (reader->curr_header == (LemonRecordHeader *)NULL )
+  {
+    fprintf(stderr, "Node %d reports in readAndParseHeader: header storage failed.\n", reader->my_rank);
+    return LEMON_ERR_HEADER_NEXT;
+  }
+
+  MPI_Barrier(reader->cartesian);
+  reader->off += reader->pos;
+  reader->pos = 0;
+
+  return LEMON_SUCCESS;
+}

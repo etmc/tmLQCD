@@ -1,0 +1,13 @@
+#pragma once
+
+static int lemon_big_endian()
+{
+  union
+	{
+    int  l;
+    char c[sizeof(int)];
+  } u;
+  u.l = 1;
+
+  return (u.c[sizeof(int)-1] == 1 ? 1 : 0);
+}

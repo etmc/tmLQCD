@@ -1,0 +1,6 @@
+#pragma once
+
+static int skipLemonRecordBinaryHeader(MPI_File *fh)
+{
+  return MPI_File_seek(*fh, (MPI_Offset)HDR_SIZE_BYTES, MPI_SEEK_CUR);
+}

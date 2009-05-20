@@ -1,0 +1,25 @@
+#pragma once
+
+static void lemon_byte_swap(void *ptr, size_t size, size_t nmemb)
+{
+  unsigned int i, j;
+  char char_in[8];
+  char *cast;
+
+  if (size == 1)
+    return;
+
+  if (size > 8)
+    return;
+
+  cast = (char*)ptr;
+
+  for (i = 0; i < nmemb; ++i)
+  {
+    for (j = 0; j < size; ++j)
+      char_in[(size - 1) - j] = cast[i * size + j];
+
+    for (j = 0; j < size; ++j)
+      cast[i * size + j] = char_in[j];
+  }
+}

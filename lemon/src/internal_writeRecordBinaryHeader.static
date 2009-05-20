@@ -1,0 +1,64 @@
+#pragma once
+
+#include <string.h>
+
+#include <lemon_binheader.h>
+
+#include "internal_bigEndianShort.static"
+#include "internal_bigEndianLong.static"
+#include "internal_bigEndianLongLong.static"
+
+static int writeLemonRecordBinaryHeader(LemonWriter *writer, LemonRecordHeader *header)
+{
+  int i;
+  int result;
+  MPI_Status status;
+
+  /* Clear header */
+  for(i = 0; i < HDR_SIZE_BYTES / sizeof(uint64_t); ++i)
+    lemon_header.int64[i] = 0;
+
+  /* Load values, converting integers to big endian if needed */
+  *lemon_hdr_magic_no = big_endian_long(LEMON_MAGIC_NO);
+  *lemon_hdr_version  = big_endian_short(header->lemon_version);
+
+  /* MB flag. */
+  if (header->MB_flag == 1 )
+    *lemon_hdr_mbme = ( *lemon_hdr_mbme | MB_MASK );
+
+  /* ME flag */
+  if (header->ME_flag == 1 )
+    *lemon_hdr_mbme = ( *lemon_hdr_mbme | ME_MASK );
+
+  /* Data length */
+  *lemon_hdr_data_len =
+    big_endian_long_long((uint64_t)header->data_length);
+
+  /* Record type string - trailing nulls  */
+  strncpy((char*)lemon_hdr_rec_type, header->type, MAX_LEMON_HDR_REC_TYPE);
+
+  /* Write the header */
+  if (writer->my_rank == 0) /* Writing should be done by a single node! */
+  {
+    MPI_File_write_at(*writer->fh, writer->off + writer->pos, lemon_header.int64, HDR_SIZE_BYTES, MPI_BYTE, &status);
+    MPI_Get_count(&status, MPI_BYTE, &result);
+  }
+  MPI_File_sync(*writer->fh);
+  MPI_Bcast(&result, 1, MPI_INT, 0, writer->cartesian);
+  MPI_Barrier(writer->cartesian);
+  if (result != HDR_SIZE_BYTES)
+  {
+    fprintf(stderr, "Node %d reports in writeLemonRecordBinaryHeader: could not write header.\n", writer->my_rank);
+    return LEMON_ERR_WRITE;
+  }
+
+  writer->pos = 0;
+  writer->off += HDR_SIZE_BYTES;
+
+  /* Set the file view for data writing. */
+  if (writer->my_rank == 0)
+    if (result < HDR_SIZE_BYTES)
+       return LEMON_ERR_WRITE;
+
+  return LEMON_SUCCESS;
+}
