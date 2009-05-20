@@ -22,6 +22,7 @@
 #define _IO_UTILS_H
 
 #include"dml.h"
+#include <lime.h>
 
 #ifndef isnan
 # define isnan(x)						 \

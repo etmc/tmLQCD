@@ -20,7 +20,7 @@
 #define _FILE_OFFSET_BITS 64
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include<config.h>
 #endif
 
 #if HAVE_LIBLEMON
@@ -43,9 +43,7 @@
 
 #define PACKAGE_VERSION "5.0.2"
 
-#include "ranlxd.h"
-
-int read_lemon_gauge_field_parallel(char *filename, int *ranlxd_state)
+int read_lemon_gauge_field_parallel(char *filename)
 {
   MPI_File ifs;
   int status;
@@ -55,7 +53,6 @@ int read_lemon_gauge_field_parallel(char *filename, int *ranlxd_state)
   DML_Checksum checksum_calc;
   int DML_read_flag = 0;
   int gauge_read_flag = 0;
-  int ranlxd_read_flag = 0;
 
   status = MPI_File_open(g_cart_grid, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &ifs);
   if (status)
@@ -75,16 +72,16 @@ int read_lemon_gauge_field_parallel(char *filename, int *ranlxd_state)
     exit(500);
   }
 
-  /* This is added for convenience - not sure about calling conventions here. */
-  while( (status = lemonReaderNextRecord(lemonreader)) == LEMON_SUCCESS )
+  while ((status = lemonReaderNextRecord(lemonreader)) != LEMON_EOF)
   {
-    header_type = lemonReaderType(lemonreader);
-    if (strcmp("ranluxd-state", header_type) == 0)
+    if (status != LEMON_SUCCESS)
     {
-      read_rlxd_state_parallel(lemonreader, ranlxd_state);
-      ranlxd_read_flag = 1;
+      fprintf(stderr, "lemonReaderNextRecord returned status %d.\n", status);
+      break;
     }
-    else if (strcmp("ildg-binary-data", header_type) == 0)
+    header_type = lemonReaderType(lemonreader);
+
+    if (strcmp("ildg-binary-data", header_type) == 0)
     {
       read_binary_gauge_data_parallel(lemonreader, &checksum_calc);
       gauge_read_flag = 1;
@@ -108,20 +105,11 @@ int read_lemon_gauge_field_parallel(char *filename, int *ranlxd_state)
       fprintf(stderr, "Panic! Aborting...\n");
       fflush(stderr);
     }
-    MPI_File_close(lemonreader->fh);
+    lemonDestroyReader(lemonreader);
+    MPI_File_close(&ifs);
     MPI_Abort(MPI_COMM_WORLD, 1);
     MPI_Finalize();
     exit(501);
-  }
-
-  if (!ranlxd_read_flag)
-  {
-    if (g_cart_id == 0)
-    {
-      fprintf(stderr, "Did not find a ranluxd-state record in %s.\n", filename);
-      fprintf(stderr, "Leaving state uninitialized.\n");
-      fflush(stderr);
-    }
   }
 
   if (g_debug_level > 1 && g_cart_id == 0)
@@ -131,12 +119,13 @@ int read_lemon_gauge_field_parallel(char *filename, int *ranlxd_state)
     if (DML_read_flag)
       printf("# read:       %#x %#x.\n", checksum_read.suma, checksum_read.sumb);
     else
-      printf("# A DML checksum record was not found in %s.\n", filename);
+      printf("# No DML checksum record found in %s.\n", filename);
     fflush(stderr);
   }
 
+  lemonDestroyReader(lemonreader);
   MPI_File_close(&ifs);
-  return 0; /*TODO Error handling, etc.*/
+  return 0;
 }
 
 int read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * checksum)
@@ -157,7 +146,7 @@ int read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * ch
     prec = 32;
   else
   {
-    fprintf(stderr, "Probably wrong lattice size or precision (bytes=%lu).s\n", (unsigned long)bytes);
+    fprintf(stderr, "Probably wrong lattice size or precision (bytes=%lu).\n", (unsigned long)bytes);
     fprintf(stderr, "Panic! Aborting...\n");
     fflush( stdout );
     MPI_File_close(lemonreader->fh);
@@ -209,11 +198,10 @@ int read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * ch
           }
           else
           {
-            /* NOTE Changed size of element here - seemed wrong. Check!!! */
-            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3)/4);
-            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3)/4);
-            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3)/4);
-            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3)/4);
+            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3)/8);
+            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3)/8);
+            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3)/8);
+            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3)/8);
           }
 #else
           if(prec == 32)
@@ -234,6 +222,9 @@ int read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * ch
         }
   DML_global_xor(&checksum->suma);
   DML_global_xor(&checksum->sumb);
+
+  free(filebuffer);
+
   return(0);
 }
 
@@ -249,48 +240,14 @@ int read_checksum_parallel(LemonReader * lemonreader, DML_Checksum * checksum)
   lemonReaderReadData(message, &bytes_read, lemonreader);
   message[bytes] = '\0';
 
-  /* So, yeah, that means we're going to have to parse the XML */
+  /* So, yeah, that means we're going to have to parse the XML properly later on */
   sscanf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                    "<scidacChecksum>\n"
                    "  <version>1.0</version>\n"
-                   "  <suma>%#x</suma>\n"
-                   "  <sumb>%#x</sumb>\n"
+                   "  <suma>%x</suma>\n"
+                   "  <sumb>%x</sumb>\n"
                    "</scidacChecksum>", &checksum->suma, &checksum->sumb);
-
-  return(0);
-}
-
-int read_rlxd_state_parallel(LemonReader *lemonreader, int *state)
-{
-  /* We assume we are passed a reader set to the appropriate record */
-  int status;
-  uint64_t len;
-
-  len = lemonReaderBytes(lemonreader);
-  if((int)len != rlxdsize*sizeof(int))
-  {
-    fprintf(stderr, "Wrong size for ranluxd-state (len=%d!=%d)\n", (int)len, (int)(rlxdsize*sizeof(int)));
-    fprintf(stderr, "Panic! Aborting...!\n");
-    fflush( stdout );
-    MPI_File_close(lemonreader->fh);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(501);
-  }
-  status = lemonReaderReadData(state, &len, lemonreader);
-
-  if(status < 0 && status != LEMON_EOR)
-  {
-    fprintf(stderr, "LEMON read error occured with status = %d!\nPanic! Aborting...\n", status);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(500);
-  }
-
-  #ifndef WORDS_BIGENDIAN
-  byte_swap(state, rlxdsize);
-  #endif
-
+  free(message);
   return(0);
 }
 
@@ -336,7 +293,6 @@ int write_lemon_gauge_field_parallel(char * filename, const double plaq, const i
     fflush(stderr);
   }
   write_checksum_parallel(lemonwriter, &checksum);
-  write_rlxd_state_parallel(lemonwriter);
   MPI_Barrier(MPI_COMM_WORLD);
   lemonDestroyWriter( lemonwriter );
   MPI_File_close(&ofs);
@@ -402,6 +358,8 @@ int write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, 
 
   DML_global_xor(&ans->suma);
   DML_global_xor(&ans->sumb);
+
+  free(filebuffer);
   return(0);
 }
 
@@ -451,20 +409,30 @@ int write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum * checksum)
   LemonRecordHeader * lemonheader = NULL;
   int status = 0;
   int MB_flag = 0, ME_flag = 1;
-  char message[500];
+  char *message;
   uint64_t bytes;
 
+  message = (char*)malloc(512);
+  if (message == (char*)NULL )
+  {
+    fprintf(stderr, "Memory error in write_checksum_parallel. Aborting\n");
+    MPI_File_close(lemonwriter->fh);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+    exit(500);
+  }
   sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                    "<scidacChecksum>\n"
                    "  <version>1.0</version>\n"
-                   "  <suma>%#x</suma>\n"
-                   "  <sumb>%#x</sumb>\n"
+                   "  <suma>%x</suma>\n"
+                   "  <sumb>%x</sumb>\n"
                    "</scidacChecksum>", checksum->suma, checksum->sumb);
   bytes = strlen( message );
   lemonheader = lemonCreateHeader(MB_flag, ME_flag, "scidac-checksum", bytes);
   status = lemonWriteRecordHeader( lemonheader, lemonwriter);
   if(status < 0 ) {
     fprintf(stderr, "LEMON write header error %d\n", status);
+    MPI_File_close(lemonwriter->fh);
     MPI_Abort(MPI_COMM_WORLD, 1);
     MPI_Finalize();
     exit(500);
@@ -472,16 +440,26 @@ int write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum * checksum)
   lemonDestroyHeader( lemonheader );
   lemonWriteRecordData(message, &bytes, lemonwriter);
   lemonWriterCloseRecord(lemonwriter);
+  free(message);
   return(0);
 }
 
 int write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const int counter){
   LemonRecordHeader * lemonheader = NULL;
   int status=0;
-  char message[5000];
+  char *message;
   uint64_t bytes;
   struct timeval t1;
 
+  message = (char*)malloc(512);
+  if (message == (char*)NULL )
+  {
+    fprintf(stderr, "Memory error in write_xlf_info_parallel. Aborting\n");
+    MPI_File_close(lemonwriter->fh);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+    exit(500);
+  }
   gettimeofday(&t1,NULL);
   if(g_kappa > 0. || g_kappa < 0.) {
     sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n time = %ld\n hmcversion = %s\n mubar = %f\n epsilonbar = %f\n date = %s",
@@ -498,6 +476,7 @@ int write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const 
 
   if(status < 0 ) {
     fprintf(stderr, "LEMON write header error %d\n", status);
+    MPI_File_close(lemonwriter->fh);
     MPI_Abort(MPI_COMM_WORLD, 1);
     MPI_Finalize();
     exit(500);
@@ -506,50 +485,8 @@ int write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const 
   lemonWriteRecordData(message, &bytes, lemonwriter);
   lemonWriterCloseRecord(lemonwriter);
 
-  return(0);
-}
+  free(message);
 
-int write_rlxd_state_parallel(LemonWriter *writer)
-{
-  uint64_t len;
-  LemonRecordHeader *header = NULL;
-  int * state;
-  int status;
-
-  len = rlxdsize * sizeof(int);
-
-  state = (int*)malloc(len);
-  if (g_proc_id == 0)
-    rlxd_get(state);
-  MPI_Barrier(writer->cartesian);
-  MPI_Bcast(state, rlxdsize, MPI_INTEGER, 0, MPI_COMM_WORLD);
-  MPI_Barrier(writer->cartesian);
-
-  header = lemonCreateHeader(1, 1, "ranluxd-state", len);
-  status = lemonWriteRecordHeader(header, writer);
-  if(status < 0 )
-  {
-    fprintf(stderr, "LEMON write header error %d\n", status);
-    MPI_File_close(writer->fh);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(500);
-  }
-  lemonDestroyHeader(header);
-
-#ifndef WORDS_BIGENDIAN
-  byte_swap(state, rlxdsize);
-#endif
-  status = lemonWriteRecordData(state, &len, writer);
-  if(status < 0 )
-  {
-    fprintf(stderr, "LEMON write error %d\n", status);
-    MPI_File_close(writer->fh);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(500);
-  }
-  free(state);
   return(0);
 }
 

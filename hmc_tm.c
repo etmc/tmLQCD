@@ -28,9 +28,8 @@
  *
  *******************************************************************************/
 #define MAIN_PROGRAM
-
-#ifdef HAVE_CONFIG_H
-# include<config.h>
+#if HAVE_CONFIG_H
+#include<config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -197,6 +196,7 @@ int main(int argc,char *argv[]) {
   }
   DUM_BI_DERI = 6;
   DUM_BI_SOLVER = DUM_BI_DERI+7;
+
   DUM_BI_MATRIX = DUM_BI_SOLVER+6;
   NO_OF_BISPINORFIELDS = DUM_BI_MATRIX+6;
 
@@ -341,7 +341,7 @@ int main(int argc,char *argv[]) {
       fflush(stdout);
     }
 #ifdef HAVE_LIBLEMON
-      read_lemon_gauge_field_parallel(gauge_input_filename, rlxd_state);
+      read_lemon_gauge_field_parallel(gauge_input_filename);
 #else
     if(gauge_precision_read_flag == 64) {
       read_lime_gauge_field(gauge_input_filename);
