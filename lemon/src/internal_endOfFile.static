@@ -1,0 +1,19 @@
+#pragma once
+
+/* Needed as a workaround for buggy EOF detection in collective ROMIO routines. */
+
+static int endOfFile(LemonReader *reader)
+{
+  MPI_Status stat;
+  unsigned char test;
+  int read;
+
+  if (reader->my_rank == 0)
+  {
+    MPI_File_read_at(*reader->fh, reader->off + reader->pos, &test, 1, MPI_UNSIGNED_CHAR, &stat);
+    MPI_Get_count(&stat, MPI_CHAR, &read);
+  }
+  MPI_Bcast(&test, 1, MPI_UNSIGNED_CHAR, 0, reader->cartesian);
+
+  return (test == 0);
+}

@@ -30,14 +30,14 @@
 
 static union
 {
-  uint64_t int64[HDR_SIZE_BYTES / 8];
-  uint32_t int32[HDR_SIZE_BYTES / 4];
-  uint16_t int16[HDR_SIZE_BYTES / 2];
-  unsigned char uchr[HDR_SIZE_BYTES];
+  uint64_t      int64[HDR_SIZE_BYTES / 8];
+  uint32_t      int32[HDR_SIZE_BYTES / 4];
+  uint16_t      int16[HDR_SIZE_BYTES / 2];
+  unsigned char uchr [HDR_SIZE_BYTES    ];
 } lemon_header;
 
-static unsigned char *lemon_hdr_rec_type = &lemon_header.uchr[16];
-static uint32_t    *lemon_hdr_magic_no = &lemon_header.int32[0];
-static uint16_t    *lemon_hdr_version  = &lemon_header.int16[2];
-static uint64_t    *lemon_hdr_data_len = &lemon_header.int64[1];
-static unsigned char *lemon_hdr_mbme     = &lemon_header.uchr[6];
+static uint32_t      *lemon_hdr_magic_no = &lemon_header.int32[ 0];
+static uint16_t      *lemon_hdr_version  = &lemon_header.int16[ 2];
+static uint64_t      *lemon_hdr_data_len = &lemon_header.int64[ 1];
+static unsigned char *lemon_hdr_mbme     = &lemon_header.uchr [ 6];
+static unsigned char *lemon_hdr_rec_type = &lemon_header.uchr [16];

@@ -1,12 +1,13 @@
 #pragma once
 
 #include <stdio.h>
-
+#include <memory.h>
 #include <lemon_binheader.h>
 
 #include "internal_bigEndianShort.static"
 #include "internal_bigEndianLong.static"
 #include "internal_bigEndianLongLong.static"
+#include "internal_endOfFile.static"
 
 static int readAndParseHeader(LemonReader *reader)
 {
@@ -18,8 +19,12 @@ static int readAndParseHeader(LemonReader *reader)
   MPI_Status status;
   int err;
   int msg_begin = 1;
+
 #ifdef LEMONDEBUG
   MPI_Offset size;
+  MPI_Status dstat;
+  unsigned char test[144];
+  int        read;
 #endif
 
   /* Destroy any old header structure kicking about */
@@ -32,15 +37,53 @@ static int readAndParseHeader(LemonReader *reader)
 
   /* Read the entire header */
   MPI_Barrier(reader->cartesian);
+
+#ifdef LEMONDEBUG
+  if (reader->my_rank == 0)
+  {
+    fprintf(stderr, "[LEMON DEBUG] Contents of header before:");
+    for (read = 0; read < HDR_SIZE_BYTES; ++read)
+    {
+      if (!(read % 24))
+        fprintf(stderr, "\n[LEMON DEBUG]\t");
+      fprintf(stderr, "%2.2x ", (unsigned)(lemon_header.uchr[read]));
+    }
+    fprintf(stderr, "\n");
+  }
+#endif
+
+  if (endOfFile(reader))
+    return LEMON_EOF;
+
   err = MPI_File_read_at_all(*reader->fh, reader->off + reader->pos, lemon_header.int64, HDR_SIZE_BYTES, MPI_BYTE, &status);
+
 #ifdef LEMONDEBUG
   if (reader->my_rank == 0)
     fprintf(stderr, "[LEMON DEBUG] Reading header at position: %#x.\n", (unsigned)(reader->off + reader->pos));
   MPI_File_get_size(*reader->fh, &size);
   if (reader->my_rank == 0)
     fprintf(stderr, "[LEMON DEBUG] Current file size:          %#x.\n", (unsigned)(size));
+  for (read = 0; read < HDR_SIZE_BYTES; ++read)
+    test[read] = 0x00;
+  MPI_File_read_at_all(*reader->fh, size, test, 144, MPI_BYTE, &dstat);
+  MPI_Get_count(&dstat, MPI_CHAR, &read);
+  if (reader->my_rank == 0)
+  {
+    if (read == 0)
+      fprintf(stderr, "[LEMON DEBUG] EOF detected correctly.\n");
+    else
+    {
+      fprintf(stderr, "[LEMON DEBUG] Read at EOF:                %d.", read);
+      for (read = 0; read < HDR_SIZE_BYTES; ++read)
+      {
+        if (!(read % 24))
+          fprintf(stderr, "\n[LEMON DEBUG]\t");
+        fprintf(stderr, "%2.2x ", (unsigned)(test[read]));
+      }
+      fprintf(stderr, "\n");
+    }
+  }
 #endif
-  reader->pos += HDR_SIZE_BYTES;
 
   if (err)
   {
@@ -48,6 +91,23 @@ static int readAndParseHeader(LemonReader *reader)
     return LEMON_ERR_HEADER_NEXT;
   }
 
+  reader->pos += HDR_SIZE_BYTES;
+
+#ifdef LEMONDEBUG
+  if (reader->my_rank == 0)
+  {
+    fprintf(stderr, "[LEMON DEBUG] Contents of header after:");
+    for (read = 0; read < HDR_SIZE_BYTES; ++read)
+    {
+      if (!(read % 24))
+        fprintf(stderr, "\n[LEMON DEBUG]\t");
+      fprintf(stderr, "%2.2x ", (unsigned)(lemon_header.uchr[read]));
+    }
+    fprintf(stderr, "\n");
+  }
+#endif
+
+  /* This should work, but seems to fail after a collective read */
   MPI_Get_count(&status, MPI_BYTE, &err);
 
   if (err == 0)
