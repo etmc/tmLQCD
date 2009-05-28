@@ -7,18 +7,18 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 #define _FILE_OFFSET_BITS 64
 
-#include"lime.h" 
+#include"lime.h"
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -26,41 +26,50 @@
 #include<stdio.h>
 #include<string.h>
 #include<time.h>
-#include<sys/time.h> 
+#include<sys/time.h>
 #include<sys/types.h>
 #ifdef MPI
 # include<mpi.h>
-# include<unistd.h> 
+# include<unistd.h>
 #endif
 #include<math.h>
 #include"global.h"
 #include"su3.h"
-#include"lime.h" 
+#include"lime.h"
 #include"read_input.h"
 #include"io_utils.h"
 #include"dml.h"
 #include"io.h"
 #include"gauge_io.h"
+#include <io/utils.h>
 
 /* #define MAXBUF 1048576 */
 
 
 int write_binary_gauge_data(LimeWriter * limewriter,
 			    const int prec, DML_Checksum * ans) {
-  
+
   int x, X, y, Y, z, Z, tt, t0, tag=0, id=0, status=0;
   su3 tmp[4];
   su3 tmp3[4];
   float tmp2[72];
   int coords[4];
+  double tick = 0, tock = 0;
+  char measure[64];
 /*   n_uint64_t bytes; */
-  n_uint64_t bytes; 
+  n_uint64_t bytes;
   DML_SiteRank rank;
 #ifdef MPI
   MPI_Status mpi_status;
 #endif
 
   DML_checksum_init(ans);
+
+  if (g_debug_level > 0)
+  {
+    MPI_Barrier(g_cart_grid);
+    tick = MPI_Wtime();
+  }
 
   if(prec == 32) bytes = (n_uint64_t)2*sizeof(su3);
   else bytes = (n_uint64_t)4*sizeof(su3);
@@ -75,7 +84,7 @@ int write_binary_gauge_data(LimeWriter * limewriter,
 	Y = y - g_proc_coords[2]*LY;
 	coords[2] = y / LY;
 	for(x = 0; x < LX*g_nproc_x; x++) {
-	  X = x - g_proc_coords[1]*LX; 
+	  X = x - g_proc_coords[1]*LX;
 	  coords[1] = x / LX;
 #ifdef MPI
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
@@ -91,7 +100,7 @@ int write_binary_gauge_data(LimeWriter * limewriter,
 
 #ifndef WORDS_BIGENDIAN
 	      if(prec == 32) {
-		byte_swap_assign_double2single(tmp2, tmp3, 4*sizeof(su3)/8); 
+		byte_swap_assign_double2single(tmp2, tmp3, 4*sizeof(su3)/8);
 		DML_checksum_accum(ans, rank, (char*) tmp2, 4*sizeof(su3)/2);
 		status = limeWriteRecordData((void*)&tmp2, &bytes, limewriter);
 	      }
@@ -102,7 +111,7 @@ int write_binary_gauge_data(LimeWriter * limewriter,
 	      }
 #else
 	      if(prec == 32) {
-		double2single(tmp2, tmp3, 4*sizeof(su3)/8); 
+		double2single(tmp2, tmp3, 4*sizeof(su3)/8);
 		DML_checksum_accum(ans, rank, (char*) tmp2, 4*sizeof(su3)/2);
 		status = limeWriteRecordData((void*)&tmp2, &bytes, limewriter);
 	      }
@@ -129,7 +138,7 @@ int write_binary_gauge_data(LimeWriter * limewriter,
 	    if(status < 0 ) {
 	      fprintf(stderr, "LIME write error %d\n", status);
 	      fprintf(stderr, "x %d, y %d, z %d, t %d (%d,%d,%d,%d)\n",x,y,z,tt,X,Y,Z,tt);
-	      fprintf(stderr, "id = %d, bytes = %lu, size = %d\n", g_proc_id, bytes,  4*sizeof(su3)/8); 
+	      fprintf(stderr, "id = %d, bytes = %lu, size = %d\n", g_proc_id, bytes,  (int)(4*sizeof(su3)/8));
 #ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 1);
 	      MPI_Finalize();
@@ -173,20 +182,47 @@ int write_binary_gauge_data(LimeWriter * limewriter,
       }
     }
   }
+
+  if (g_debug_level > 0)
+  {
+    MPI_Barrier(g_cart_grid);
+    tock = MPI_Wtime();
+
+    if (g_cart_id == 0)
+    {
+      engineering(measure, L * L * L * T_global * bytes, "b");
+      fprintf(stdout, "Time spent writing %s ", measure);
+      engineering(measure, tock-tick, "s");
+      fprintf(stdout, "was %s.\n", measure);
+      engineering(measure, (L * L * L * T_global) * bytes / (tock-tick), "b/s");
+      fprintf(stdout, "Writing speed: %s", measure);
+      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock-tick)), "b/s");
+      fprintf(stdout, " (%s per MPI process).\n", measure);
+    }
+  }
+
   return(0);
 }
 
 
-int read_binary_gauge_data(LimeReader * limereader, 
+int read_binary_gauge_data(LimeReader * limereader,
 			   const double prec, DML_Checksum * ans) {
   int t, x, y , z, status=0;
 /*   n_uint64_t bytes; */
   n_uint64_t bytes;
   su3 tmp[4];
   float tmp2[72];
+  double tick = 0, tock = 0;
+  char measure[64];
   DML_SiteRank rank;
 
   DML_checksum_init(ans);
+
+  if (g_debug_level > 0)
+  {
+    MPI_Barrier(g_cart_grid);
+    tick = MPI_Wtime();
+  }
 
   if(prec == 32) bytes = (n_uint64_t) 4*sizeof(su3)/2;
   else bytes = (n_uint64_t) 4*sizeof(su3);
@@ -194,15 +230,15 @@ int read_binary_gauge_data(LimeReader * limereader,
     for(z = 0; z < LZ; z++){
       for(y = 0; y < LY; y++){
 #if (defined MPI)
-	limeReaderSeek(limereader,(n_uint64_t) 
-		       (((n_uint64_t) g_proc_coords[1]*LX) + 
-			((n_uint64_t) (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
+	limeReaderSeek(limereader,(n_uint64_t)
+		       (((n_uint64_t) g_proc_coords[1]*LX) +
+			((n_uint64_t) (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
 			 + g_proc_coords[2]*LY+y)*LX*g_nproc_x))*bytes,
 		       SEEK_SET);
 #endif
 	for(x = 0; x < LX; x++) {
-	  rank = (DML_SiteRank) (g_proc_coords[1]*LX + 
-				 (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
+	  rank = (DML_SiteRank) (g_proc_coords[1]*LX +
+				 (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
 				  + g_proc_coords[2]*LY+y)*((DML_SiteRank)LX*g_nproc_x) + x);
 	  if(prec == 32) {
 	    status = limeReaderReadData(tmp2, &bytes, limereader);
@@ -251,6 +287,25 @@ int read_binary_gauge_data(LimeReader * limereader,
       }
     }
   }
+
+  if (g_debug_level > 0)
+  {
+    MPI_Barrier(g_cart_grid);
+    tock = MPI_Wtime();
+
+    if (g_cart_id == 0)
+    {
+      engineering(measure, L * L * L * T_global * bytes, "b");
+      fprintf(stdout, "Time spent reading %s ", measure);
+      engineering(measure, tock-tick, "s");
+      fprintf(stdout, "was %s.\n", measure);
+      engineering(measure, (L * L * L * T_global) * bytes / (tock-tick), "b/s");
+      fprintf(stdout, "Reading speed: %s", measure);
+      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock-tick)), "b/s");
+      fprintf(stdout, " (%s per MPI process).\n", measure);
+    }
+  }
+
 #ifdef MPI
   DML_checksum_combine(ans);
 #endif
@@ -266,7 +321,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
   int ME_flag=0, MB_flag=0, status=0;
   n_uint64_t bytes;
   DML_Checksum checksum;
-  
+
   write_xlf_info(plaq, counter, filename, 0, (char*)NULL);
 
   if(g_cart_id == 0) {
@@ -289,7 +344,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
       exit(500);
     }
     write_ildg_format_xml("temp.xml", limewriter, prec);
-    
+
     bytes = ((n_uint64_t)LX*g_nproc_x)*((n_uint64_t)LY*g_nproc_y)*((n_uint64_t)LZ*g_nproc_z)*((n_uint64_t)T*g_nproc_t)*((n_uint64_t)4*sizeof(su3));
     if(prec == 32) bytes = bytes/((n_uint64_t)2);
     MB_flag=0; ME_flag=0;
@@ -308,7 +363,7 @@ int write_lime_gauge_field(char * filename, const double plaq, const int counter
 
   write_binary_gauge_data(limewriter, prec, &checksum);
   if(g_proc_id == 0 && g_debug_level > 1) {
-    printf("# checksum for Gauge field written to file %s is %#x %#x\n", 
+    printf("# checksum for Gauge field written to file %s is %#x %#x\n",
 	   filename, checksum.suma, checksum.sumb);
   }
 
@@ -389,7 +444,7 @@ int read_lime_gauge_field(char * filename) {
   limeDestroyReader(limereader);
   fclose(ifs);
   if(g_proc_id == 0 && g_debug_level > 1) {
-    printf("# checksum for gaugefield %s is %#x %#x\n", 
+    printf("# checksum for gaugefield %s is %#x %#x\n",
 	   filename, checksum.suma, checksum.sumb);
   }
   return(0);

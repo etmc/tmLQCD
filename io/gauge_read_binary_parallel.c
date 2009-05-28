@@ -60,22 +60,29 @@ int read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * ch
 
   filebuffer = malloc(VOLUME * bytes);
 
-  MPI_Barrier(g_cart_grid);
-  tick = MPI_Wtime();
-  lemonReadLatticeParallel(lemonreader, filebuffer, bytes, latticeSize);
-  MPI_Barrier(g_cart_grid);
-  tock = MPI_Wtime();
-
-  if (g_cart_id == 0)
+  if (g_debug_level > 0)
   {
-    engineering(measure, L * L * L * T_global * bytes, "b");
-    fprintf(stderr, "Time spent reading %s ", measure);
-    engineering(measure, tock-tick, "s");
-    fprintf(stderr, "was %s.\n", measure);
-    engineering(measure, (L * L * L * T_global) * bytes / (tock-tick), "b/s");
-    fprintf(stderr, "Reading speed: %s", measure);
-    engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock-tick)), "b/s");
-    fprintf(stderr, " (%s per MPI process).\n", measure);
+    MPI_Barrier(g_cart_grid);
+    tick = MPI_Wtime();
+  }
+  lemonReadLatticeParallel(lemonreader, filebuffer, bytes, latticeSize);
+
+  if (g_debug_level > 0)
+  {
+    MPI_Barrier(g_cart_grid);
+    tock = MPI_Wtime();
+
+    if (g_cart_id == 0)
+    {
+      engineering(measure, L * L * L * T_global * bytes, "b");
+      fprintf(stderr, "Time spent reading %s ", measure);
+      engineering(measure, tock-tick, "s");
+      fprintf(stderr, "was %s.\n", measure);
+      engineering(measure, (L * L * L * T_global) * bytes / (tock-tick), "b/s");
+      fprintf(stderr, "Reading speed: %s", measure);
+      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock-tick)), "b/s");
+      fprintf(stderr, " (%s per MPI process).\n", measure);
+    }
   }
 
   if(status < 0 && status != LEMON_EOR)

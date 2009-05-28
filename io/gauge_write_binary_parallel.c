@@ -77,22 +77,30 @@ int write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, 
     }
   }
 
-  MPI_Barrier(g_cart_grid);
-  tick = MPI_Wtime();
-  lemonWriteLatticeParallel(lemonwriter, filebuffer, bytes, globaldims);
-  MPI_Barrier(g_cart_grid);
-  tock = MPI_Wtime();
-
-  if (g_cart_id == 0)
+  if (g_debug_level > 0)
   {
-    engineering(measure, L * L * L * T_global * bytes, "b");
-    fprintf(stderr, "Time spent writing %s ", measure);
-    engineering(measure, tock-tick, "s");
-    fprintf(stderr, "was %s.\n", measure);
-    engineering(measure, (L * L * L * T_global) * bytes / (tock-tick), "b/s");
-    fprintf(stderr, "Writing speed: %s", measure);
-    engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock-tick)), "b/s");
-    fprintf(stderr, " (%s per MPI process).\n", measure);
+    MPI_Barrier(g_cart_grid);
+    tick = MPI_Wtime();
+  }
+
+  lemonWriteLatticeParallel(lemonwriter, filebuffer, bytes, globaldims);
+
+  if (g_debug_level > 0)
+  {
+    MPI_Barrier(g_cart_grid);
+    tock = MPI_Wtime();
+
+    if (g_cart_id == 0)
+    {
+      engineering(measure, L * L * L * T_global * bytes, "b");
+      fprintf(stdout, "Time spent writing %s ", measure);
+      engineering(measure, tock-tick, "s");
+      fprintf(stdout, "was %s.\n", measure);
+      engineering(measure, (L * L * L * T_global) * bytes / (tock-tick), "b/s");
+      fprintf(stdout, "Writing speed: %s", measure);
+      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock-tick)), "b/s");
+      fprintf(stdout, " (%s per MPI process).\n", measure);
+    }
   }
 
   lemonWriterCloseRecord(lemonwriter);
