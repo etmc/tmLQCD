@@ -14,23 +14,23 @@ AR = ar
 RANLIB = @RANLIB@
 CC = @CC@
 CCDEP = @CCDEP@
-CFLAGS = @CFLAGS@ 
+CFLAGS = @CFLAGS@
 LDFLAGS = @LDFLAGS@
 DEPFLAGS = @DEPFLAGS@
 CPPFLAGS = @CPPFLAGS@
 CCLD = @CCLD@
-LEX = @LEX@ 
+LEX = @LEX@
 AUTOCONF = @AUTOCONF@
-LIBS = @LIBS@ 
+LIBS = @LIBS@
 SHELL = @SHELL@
 OPTARGS = @OPTARGS@
 SOPTARGS = @SOPTARGS@
 DEFS = @DEFS@
 
-INCLUDES = @INCLUDES@ 
+INCLUDES = @INCLUDES@
 LINK = $(CCLD) -o $@ ${LDFLAGS}
 LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
-	${top_builddir}/solver/libsolver.a
+	${top_builddir}/solver/libsolver.a ${top_builddir}/io/libio.a
 COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
 SMODULES = Hopping_Matrix_nocom Hopping_Matrix tm_operators
@@ -56,9 +56,8 @@ MODULES = read_input gamma hybrid_update observables start \
 	xchange_lexicfield xchange_2fields online_measurement \
 	monomial det_monomial detratio_monomial update_momenta \
 	integrator gauge_monomial ndpoly_monomial phmc \
-	little_D block parallel_io \
-        sf_gauge_monomial sf_utils sf_calc_action sf_get_staples sf_get_rectangle_staples \
-	sf_observables
+	little_D block sf_gauge_monomial sf_utils sf_calc_action \
+	sf_get_staples sf_get_rectangle_staples sf_observables
 
 NOOPTMOD = test/check_xchange test/check_geometry
 
@@ -67,7 +66,7 @@ PROGRAMS = hmc_tm benchmark invert invert_doublet gwc2ildg \
 	check_locallity
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
-SUBDIRS = linalg solver
+SUBDIRS = io linalg solver
 
 .SUFFIXES:
 
@@ -81,7 +80,7 @@ all: Makefile all-recursive dep hmc_tm invert invert_doublet
 
 
 
-.NOTPARALLEL: 
+.NOTPARALLEL:
 
 -include $(addsuffix .d,$(ALLOBJ))
 
@@ -99,17 +98,17 @@ libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
 	@cp libhmc.a ${top_builddir}/lib/libhmc.a
 
 #${addsuffix .o, ${ALLOBJ}}: %.o: ${srcdir}/%.c %.d Makefile
-#	${COMPILE} ${OPTARGS} -c $< 
+#	${COMPILE} ${OPTARGS} -c $<
 
 $(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile
-	${COMPILE} ${OPTARGS} -c $< 
+	${COMPILE} ${OPTARGS} -c $<
 
 #here we don't need optimisation
 $(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile
-	${COMPILE} -c $< 
+	${COMPILE} -c $<
 
 ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile
-	${COMPILE} ${SOPTARGS} -c $< 
+	${COMPILE} ${SOPTARGS} -c $<
 
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile
 	${COMPILE} ${OPTARGS} -c $<

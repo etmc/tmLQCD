@@ -60,7 +60,7 @@ int read_lemon_gauge_field_parallel(char *filename)
     if (strcmp("ildg-binary-data", header_type) == 0)
     {
       read_binary_gauge_data_parallel(lemonreader, &checksum_calc);
-      /*gauge_read_flag = 1;*/
+      gauge_read_flag = 1;
     }
     else if (strcmp("scidac-checksum", header_type) == 0)
     {

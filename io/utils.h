@@ -1,5 +1,5 @@
 /***********************************************************************
- * $Id$ 
+ * $Id$
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -21,10 +21,8 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-/* Forward declarations, no need to expose structs globally */
-struct LemonReader;
-struct LemonWriter;
-struct DML_Checksum;
+#include <lemon.h>
+#include <dml.h>
 
 char * read_message(char * filename, char * type);
 int write_message(char * filename, char * data_buf, char * type, const int append);
@@ -33,5 +31,7 @@ int read_checksum_parallel(LemonReader * lemonreader, DML_Checksum * checksum);
 
 int write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum * checksum);
 int write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const int counter);
+
+void engineering(char *result, double value, char const *units);
 
 #endif

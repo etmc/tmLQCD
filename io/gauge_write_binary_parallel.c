@@ -33,6 +33,9 @@ int write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, 
   bytes = (uint64_t)sizeof(su3) * (prec == 32 ? 2 :4);
   bufoffset = 0;
   filebuffer = (char*)malloc(bytes * VOLUME);
+  double tick, tock;
+  char measure[64];
+
   for(t0 = 0; t0 < T*g_nproc_t; t0++) {
     tt = t0 - g_proc_coords[0]*T;
     coords[0] = t0 / T;
@@ -62,7 +65,7 @@ int write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, 
             if(prec == 32)
               double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
             else
-              memcpy(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
+              memcpy(filebuffer + bufoffset, tmp3, 4*sizeof(su3));
             #endif
             DML_checksum_accum(ans, rank, (char*) filebuffer + bufoffset, bytes);
 
@@ -73,7 +76,25 @@ int write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, 
       }
     }
   }
+
+  MPI_Barrier(g_cart_grid);
+  tick = MPI_Wtime();
   lemonWriteLatticeParallel(lemonwriter, filebuffer, bytes, globaldims);
+  MPI_Barrier(g_cart_grid);
+  tock = MPI_Wtime();
+
+  if (g_cart_id == 0)
+  {
+    engineering(measure, L * L * L * T_global * bytes, "b");
+    fprintf(stderr, "Time spent writing %s ", measure);
+    engineering(measure, tock-tick, "s");
+    fprintf(stderr, "was %s.\n", measure);
+    engineering(measure, (L * L * L * T_global) * bytes / (tock-tick), "b/s");
+    fprintf(stderr, "Writing speed: %s", measure);
+    engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock-tick)), "b/s");
+    fprintf(stderr, " (%s per MPI process).\n", measure);
+  }
+
   lemonWriterCloseRecord(lemonwriter);
 
   DML_global_xor(&ans->suma);

@@ -18,6 +18,7 @@
 ***********************************************************************/
 
 #include "utils.ih"
+#define PACKAGE_VERSION "5.0.1"
 
 int write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const int counter){
   LemonRecordHeader * lemonheader = NULL;

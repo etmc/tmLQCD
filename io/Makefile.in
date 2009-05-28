@@ -37,7 +37,8 @@ libio_TARGETS = gauge_read_binary_parallel \
 		gauge_write_parallel \
 		utils_read_checksum_parallel \
 		utils_write_checksum_parallel \
-		utils_write_xlf_parallel
+		utils_write_xlf_parallel \
+		utils_engineering
 
 libio_OBJECTS = $(addsuffix .o, ${libio_TARGETS})
 
@@ -56,6 +57,7 @@ profile all-profile: all
 
 #include dep rules
 
+
 -include $(addsuffix .d,${libio_TARGETS})
 
 include ${top_srcdir}/Makefile.global
@@ -67,7 +69,6 @@ include ${top_srcdir}/Makefile.global
 
 
 # rule to make liblinalg
-
 libio.a: ${libio_OBJECTS} Makefile
 	@rm -f libio.a
 	@${AR} cru libio.a $(libio_OBJECTS)
@@ -88,7 +89,7 @@ dep: ${addsuffix .d, ${libio_TARGETS}}
 compile-clean: Makefile
 	rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} *.d
 
-clean: compile-clean 
+clean: compile-clean
 	rm -f $(addsuffix .a, ${LIBRARIES})
 	rm -f ../lib/libio.a
 
