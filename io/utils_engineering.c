@@ -10,9 +10,7 @@ void engineering(char *result, double value, char const *units)
 
   logscale = (int)floor(logval/3);
 
-  if (logscale == 0)
-     sprintf(result, "%.0f %2s", value, units);
-  else if (logscale > -6 && logscale < 6)
+  if (logscale > -6 && logscale < 6)
   {
     value /= pow(1E3, (double)logscale);
     digits = 2 - (int)log10(value);
