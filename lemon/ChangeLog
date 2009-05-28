@@ -1,0 +1,430 @@
+------------------------------------------------------------------------
+r108 | albert | 2009-05-16 00:21:25 +0200 (Sat, 16 May 2009) | 1 line
+
+Beginnings of autotools usage.
+------------------------------------------------------------------------
+r107 | albert | 2009-05-15 17:48:29 +0200 (Fri, 15 May 2009) | 1 line
+
+Added closing of record for large records.
+------------------------------------------------------------------------
+r106 | albert | 2009-05-15 15:51:02 +0200 (Fri, 15 May 2009) | 1 line
+
+Modified to avoid linker issues.
+------------------------------------------------------------------------
+r105 | albert | 2009-05-13 22:01:41 +0200 (Wed, 13 May 2009) | 1 line
+
+Added forgotten target.
+------------------------------------------------------------------------
+r104 | albert | 2009-05-13 22:01:18 +0200 (Wed, 13 May 2009) | 1 line
+
+Renamed everything to lemon, should now not have any name clashes anymore.
+------------------------------------------------------------------------
+r103 | albert | 2009-05-13 10:30:04 +0200 (Wed, 13 May 2009) | 1 line
+
+Duplicating communicator.
+------------------------------------------------------------------------
+r102 | albert | 2009-05-13 09:56:34 +0200 (Wed, 13 May 2009) | 1 line
+
+Fixed some issues with padding.
+------------------------------------------------------------------------
+r101 | albert | 2009-05-13 00:55:18 +0200 (Wed, 13 May 2009) | 1 line
+
+Removed spurious debugging line.
+------------------------------------------------------------------------
+r100 | albert | 2009-05-13 00:39:40 +0200 (Wed, 13 May 2009) | 1 line
+
+Major rewrite - removed byte queries.
+------------------------------------------------------------------------
+r99 | albert | 2009-05-12 17:27:47 +0200 (Tue, 12 May 2009) | 1 line
+
+
+------------------------------------------------------------------------
+r98 | albert | 2009-05-12 17:17:15 +0200 (Tue, 12 May 2009) | 1 line
+
+
+------------------------------------------------------------------------
+r97 | albert | 2009-05-12 17:13:27 +0200 (Tue, 12 May 2009) | 1 line
+
+Added a series of MPI_File_sync calls.
+------------------------------------------------------------------------
+r96 | albert | 2009-05-12 17:06:01 +0200 (Tue, 12 May 2009) | 1 line
+
+
+------------------------------------------------------------------------
+r95 | albert | 2009-05-12 16:54:49 +0200 (Tue, 12 May 2009) | 1 line
+
+Cosmetics.
+------------------------------------------------------------------------
+r94 | albert | 2009-05-12 16:51:35 +0200 (Tue, 12 May 2009) | 1 line
+
+Extended nfstalker in hopes of causing a crash now.
+------------------------------------------------------------------------
+r93 | albert | 2009-05-12 14:47:15 +0200 (Tue, 12 May 2009) | 1 line
+
+Made nfstalker more realistic.
+------------------------------------------------------------------------
+r92 | albert | 2009-05-12 11:24:32 +0200 (Tue, 12 May 2009) | 1 line
+
+Consolidating minor improvements.
+------------------------------------------------------------------------
+r91 | albert | 2009-05-11 21:59:49 +0200 (Mon, 11 May 2009) | 1 line
+
+Introduced fileview.
+------------------------------------------------------------------------
+r90 | albert | 2009-05-11 19:52:19 +0200 (Mon, 11 May 2009) | 1 line
+
+Changed nfstalker to reading.
+------------------------------------------------------------------------
+r89 | albert | 2009-05-11 19:36:33 +0200 (Mon, 11 May 2009) | 1 line
+
+Added a target to test NFS interaction specifically.
+------------------------------------------------------------------------
+r88 | albert | 2009-05-11 17:06:29 +0200 (Mon, 11 May 2009) | 1 line
+
+Removed hyphen from dist-clean.
+------------------------------------------------------------------------
+r87 | albert | 2009-05-10 10:31:27 +0200 (Sun, 10 May 2009) | 1 line
+
+Now actually fixed reader_latticeParallel :)
+------------------------------------------------------------------------
+r86 | albert | 2009-05-10 10:27:57 +0200 (Sun, 10 May 2009) | 1 line
+
+Replaced MPI_All_reduce call in reader by MPI_UNSIGNED_LONG variety.
+------------------------------------------------------------------------
+r85 | albert | 2009-05-10 00:00:05 +0200 (Sun, 10 May 2009) | 1 line
+
+Fixed integer size error in construction of header datatype, probably the cause of the number of bytes being reported wrongly on BG/P systems. Rewrote file pointer synchronization to avoid MPI_MAX not defined for MPI_UNSIGNED_LONG_LONG errors on BG/P systems. Currently switched to MPI_UNSIGNED_LONG, which may not be a solution yet.
+------------------------------------------------------------------------
+r84 | albert | 2009-05-08 14:57:47 +0200 (Fri, 08 May 2009) | 1 line
+
+Everything written in terms of uint??_t instead of n_uint??_t
+------------------------------------------------------------------------
+r83 | albert | 2009-05-08 14:15:15 +0200 (Fri, 08 May 2009) | 1 line
+
+Removed Werr, changed output to consistent %llu in cast.
+------------------------------------------------------------------------
+r82 | albert | 2009-05-08 14:12:17 +0200 (Fri, 08 May 2009) | 1 line
+
+Added casting test.
+------------------------------------------------------------------------
+r81 | albert | 2009-05-08 14:12:09 +0200 (Fri, 08 May 2009) | 1 line
+
+Added casting test.
+------------------------------------------------------------------------
+r80 | albert | 2009-05-08 13:46:17 +0200 (Fri, 08 May 2009) | 1 line
+
+Added newlines that the BG/P gcc compiler complained about, performing casts in writeouts.
+------------------------------------------------------------------------
+r79 | albert | 2009-05-08 13:30:46 +0200 (Fri, 08 May 2009) | 1 line
+
+Makefile dist-clean target added.
+------------------------------------------------------------------------
+r78 | albert | 2009-05-08 13:29:42 +0200 (Fri, 08 May 2009) | 1 line
+
+Corrected placing of header.
+------------------------------------------------------------------------
+r77 | albert | 2009-05-08 13:26:53 +0200 (Fri, 08 May 2009) | 1 line
+
+Added sizes target to check for size of datatypes.
+------------------------------------------------------------------------
+r76 | albert | 2009-05-07 17:41:06 +0200 (Thu, 07 May 2009) | 1 line
+
+Code compiles.
+------------------------------------------------------------------------
+r75 | albert | 2009-05-07 17:38:44 +0200 (Thu, 07 May 2009) | 1 line
+
+Added extensive debugging code.
+------------------------------------------------------------------------
+r74 | albert | 2009-05-06 17:28:48 +0200 (Wed, 06 May 2009) | 1 line
+
+Set root to the correct value in broadcast.
+------------------------------------------------------------------------
+r73 | albert | 2009-05-06 17:24:47 +0200 (Wed, 06 May 2009) | 1 line
+
+Removed flags from Makefile for compatibility (should be fixed through config).
+------------------------------------------------------------------------
+r72 | albert | 2009-05-06 17:21:49 +0200 (Wed, 06 May 2009) | 1 line
+
+Corrected endianness/integer size problem in recordData/readData.
+------------------------------------------------------------------------
+r71 | albert | 2009-05-06 16:35:06 +0200 (Wed, 06 May 2009) | 1 line
+
+Rewrote offset setting to be more consistent for parallel writes (preserve disp).
+------------------------------------------------------------------------
+r70 | albert | 2009-05-06 13:58:22 +0200 (Wed, 06 May 2009) | 1 line
+
+Added reading checks on tests.
+------------------------------------------------------------------------
+r69 | albert | 2009-05-05 15:12:27 +0200 (Tue, 05 May 2009) | 1 line
+
+Parallel example now actually works.
+------------------------------------------------------------------------
+r68 | albert | 2009-05-05 15:03:30 +0200 (Tue, 05 May 2009) | 1 line
+
+Added a test case for parallel writing.
+------------------------------------------------------------------------
+r67 | albert | 2009-05-05 13:34:58 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r66 | albert | 2009-05-05 13:34:07 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r65 | albert | 2009-05-05 13:21:42 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r64 | albert | 2009-05-05 13:16:32 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r63 | albert | 2009-05-05 13:14:56 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r62 | albert | 2009-05-05 13:13:37 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r61 | albert | 2009-05-05 13:09:46 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r60 | albert | 2009-05-05 13:03:41 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r59 | albert | 2009-05-05 13:01:37 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r58 | albert | 2009-05-05 12:58:21 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r57 | albert | 2009-05-05 12:50:56 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r56 | albert | 2009-05-05 12:42:04 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r55 | albert | 2009-05-05 12:37:48 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r54 | albert | 2009-05-05 12:19:10 +0200 (Tue, 05 May 2009) | 1 line
+
+Added debug in parallel write.
+------------------------------------------------------------------------
+r53 | albert | 2009-05-05 12:12:51 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r52 | albert | 2009-05-05 12:12:04 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r51 | albert | 2009-05-05 12:09:59 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r50 | albert | 2009-05-05 12:08:54 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r49 | albert | 2009-05-05 12:07:30 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r48 | albert | 2009-05-05 12:05:18 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r47 | albert | 2009-05-05 12:04:20 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r46 | albert | 2009-05-05 12:03:26 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r45 | albert | 2009-05-05 12:02:59 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r44 | albert | 2009-05-05 12:02:14 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r43 | albert | 2009-05-05 12:01:11 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r42 | albert | 2009-05-05 11:59:52 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r41 | albert | 2009-05-05 11:57:54 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r40 | albert | 2009-05-05 11:57:11 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r39 | albert | 2009-05-05 11:55:59 +0200 (Tue, 05 May 2009) | 1 line
+
+Added barrier.
+------------------------------------------------------------------------
+r38 | albert | 2009-05-05 11:54:48 +0200 (Tue, 05 May 2009) | 1 line
+
+Removed some barriers.
+------------------------------------------------------------------------
+r37 | albert | 2009-05-05 11:51:58 +0200 (Tue, 05 May 2009) | 1 line
+
+Data write debug.
+------------------------------------------------------------------------
+r36 | albert | 2009-05-05 11:49:19 +0200 (Tue, 05 May 2009) | 1 line
+
+Data write debug.
+------------------------------------------------------------------------
+r35 | albert | 2009-05-05 11:49:05 +0200 (Tue, 05 May 2009) | 1 line
+
+Data write debug.
+------------------------------------------------------------------------
+r34 | albert | 2009-05-05 11:40:05 +0200 (Tue, 05 May 2009) | 1 line
+
+Data write debug.
+------------------------------------------------------------------------
+r33 | albert | 2009-05-05 11:33:59 +0200 (Tue, 05 May 2009) | 1 line
+
+Added some lame debug code.
+------------------------------------------------------------------------
+r32 | albert | 2009-05-05 11:28:58 +0200 (Tue, 05 May 2009) | 1 line
+
+Added some lame debug code.
+------------------------------------------------------------------------
+r31 | albert | 2009-05-05 11:27:40 +0200 (Tue, 05 May 2009) | 1 line
+
+Added some lame debug code.
+------------------------------------------------------------------------
+r30 | albert | 2009-05-05 11:27:23 +0200 (Tue, 05 May 2009) | 1 line
+
+Added some lame debug code.
+------------------------------------------------------------------------
+r29 | albert | 2009-05-05 11:10:01 +0200 (Tue, 05 May 2009) | 1 line
+
+Added some lame debug code.
+------------------------------------------------------------------------
+r28 | albert | 2009-05-05 11:07:46 +0200 (Tue, 05 May 2009) | 1 line
+
+Added some lame debug code.
+------------------------------------------------------------------------
+r27 | albert | 2009-05-05 11:04:30 +0200 (Tue, 05 May 2009) | 1 line
+
+Added flushes to file writing routines.
+------------------------------------------------------------------------
+r26 | albert | 2009-05-04 21:03:09 +0200 (Mon, 04 May 2009) | 1 line
+
+Added MPI_File_close call to xlf.c - solves complaints on barriers.
+------------------------------------------------------------------------
+r25 | albert | 2009-05-04 20:41:39 +0200 (Mon, 04 May 2009) | 1 line
+
+Added another test, specifically for xlf writing. Removed some debug clutter. Fixed a buffer overflow in header_construct.
+------------------------------------------------------------------------
+r24 | albert | 2009-05-04 17:37:18 +0200 (Mon, 04 May 2009) | 1 line
+
+Removed debug line.
+------------------------------------------------------------------------
+r23 | albert | 2009-05-04 14:03:15 +0200 (Mon, 04 May 2009) | 1 line
+
+Modified Makefile (cleaner) and added headers to all .h files.
+------------------------------------------------------------------------
+r22 | siebren | 2009-04-27 14:48:21 +0200 (Mon, 27 Apr 2009) | 2 lines
+
+Added removing of lib to make clean target.
+
+------------------------------------------------------------------------
+r21 | albert | 2009-04-25 22:01:54 +0200 (Sat, 25 Apr 2009) | 1 line
+
+Fixes with respect to offsets.
+------------------------------------------------------------------------
+r20 | albert | 2009-04-25 11:16:00 +0200 (Sat, 25 Apr 2009) | 1 line
+
+MPI_UNSIGNED_LONG_LONG used for filepointers.
+------------------------------------------------------------------------
+r19 | albert | 2009-04-24 19:09:08 +0200 (Fri, 24 Apr 2009) | 1 line
+
+Removed incompatible MPI size datatype.
+------------------------------------------------------------------------
+r18 | albert | 2009-04-24 13:25:22 +0200 (Fri, 24 Apr 2009) | 1 line
+
+Fiddled around to remove errors in hmc (i.e. debugging).
+------------------------------------------------------------------------
+r17 | albert | 2009-04-24 09:19:10 +0200 (Fri, 24 Apr 2009) | 1 line
+
+Seem to have fixed problems with reading not detecting EOF signals correctly - but I'm not sure why and that is a bit troublesome. Moving from MPI_File_read_all to MPI_File_read on all nodes seems to have done the trick...
+------------------------------------------------------------------------
+r16 | albert | 2009-04-23 20:27:13 +0200 (Thu, 23 Apr 2009) | 1 line
+
+Trying to squeeze bugs from reading.
+------------------------------------------------------------------------
+r15 | albert | 2009-04-23 17:59:53 +0200 (Thu, 23 Apr 2009) | 1 line
+
+Changed whole infrastructure to work in collective calls throughout.
+------------------------------------------------------------------------
+r14 | albert | 2009-04-23 13:52:10 +0200 (Thu, 23 Apr 2009) | 1 line
+
+Prepared for inclusion in phmc.
+------------------------------------------------------------------------
+r13 | albert | 2009-04-23 12:13:10 +0200 (Thu, 23 Apr 2009) | 1 line
+
+First draft of blocking collective write.
+------------------------------------------------------------------------
+r12 | albert | 2009-04-23 10:01:01 +0200 (Thu, 23 Apr 2009) | 1 line
+
+Added strict compiler error flags to catch hidden errors (that seems to be a very necessary practice in C). Implemented the functions necessary to define a custom datarep - an experiment in enforcing IEEE32 through different means.
+------------------------------------------------------------------------
+r11 | albert | 2009-04-23 00:00:46 +0200 (Thu, 23 Apr 2009) | 1 line
+
+Fixes to the writer infrastructure, beginning of parallel implementation.
+------------------------------------------------------------------------
+r10 | albert | 2009-04-22 18:09:02 +0200 (Wed, 22 Apr 2009) | 1 line
+
+Fixed both tests - now running correctly. Writer will still need some fixing.
+------------------------------------------------------------------------
+r9 | albert | 2009-04-21 23:55:55 +0200 (Tue, 21 Apr 2009) | 1 line
+
+Bug squashing in progress - commit to safeguard progress.
+------------------------------------------------------------------------
+r8 | albert | 2009-04-21 21:05:48 +0200 (Tue, 21 Apr 2009) | 1 line
+
+Further fixes.
+------------------------------------------------------------------------
+r7 | albert | 2009-04-21 18:06:15 +0200 (Tue, 21 Apr 2009) | 1 line
+
+Ported another application, squeezed out some errors.
+------------------------------------------------------------------------
+r6 | albert | 2009-04-21 14:25:26 +0200 (Tue, 21 Apr 2009) | 1 line
+
+Added missing dependency
+------------------------------------------------------------------------
+r5 | albert | 2009-04-21 14:23:17 +0200 (Tue, 21 Apr 2009) | 1 line
+
+Added internals, test case.
+------------------------------------------------------------------------
+r4 | albert | 2009-04-21 12:01:24 +0200 (Tue, 21 Apr 2009) | 1 line
+
+Added makefile, checked compilation of all source files.
+------------------------------------------------------------------------
+r3 | albert | 2009-04-20 23:32:53 +0200 (Mon, 20 Apr 2009) | 1 line
+
+All functions roughly defined.
+------------------------------------------------------------------------
+r2 | albert | 2009-04-20 22:45:19 +0200 (Mon, 20 Apr 2009) | 1 line
+
+Reproducing c-lime capabilities
+------------------------------------------------------------------------
