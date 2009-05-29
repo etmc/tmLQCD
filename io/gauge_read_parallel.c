@@ -96,7 +96,7 @@ int read_lemon_gauge_field_parallel(char *filename)
       printf("# read:       %#x %#x.\n", checksum_read.suma, checksum_read.sumb);
     else
       printf("# No DML checksum record found in %s.\n", filename);
-    fflush(stderr);
+    fflush(stdout);
   }
 
   lemonDestroyReader(lemonreader);

@@ -21,16 +21,17 @@
 #ifndef _GAUGE_H
 #define _GAUGE_H
 
-/* Forward declarations, no need to expose structs globally */
-struct LemonReader;
-struct LemonWriter;
-struct DML_Checksum;
+#ifdef HAVE_LIBLEMON
+# include <lemon.h>
+#endif /* HAVE_LIBLEMON */
 
+#ifdef HAVE_LIBLEMON
 int read_lemon_gauge_field_parallel(char *filename);
 int read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * checksum);
 
 int write_lemon_gauge_field_parallel(char * filename, const double plaq, const int counter, const int prec);
 int write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, DML_Checksum * ans);
 int write_ildg_format_parallel(LemonWriter *writer, const int prec);
+#endif /* HAVE_LIBLEMON */
 
 #endif

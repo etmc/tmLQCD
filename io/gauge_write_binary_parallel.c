@@ -100,6 +100,7 @@ int write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, 
       fprintf(stdout, "Writing speed: %s", measure);
       engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock-tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
+      fflush(stdout);
     }
   }
 

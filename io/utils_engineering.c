@@ -6,16 +6,22 @@ void engineering(char *result, double value, char const *units)
 {
   double logval = log10(value);
   int logscale;
-  int digits;
+  int digits = 2;
 
   logscale = (int)floor(logval/3);
 
   if (logscale > -6 && logscale < 6)
   {
     value /= pow(1E3, (double)logscale);
-    digits = 2 - (int)log10(value);
+    if (value > 100)
+      digits = 0;
+    else if (value > 10)
+      digits = 1;
 
-    sprintf(result, "%.*f %c%s", digits, value, prefix[logscale + 6], units);
+    if (logscale)
+      sprintf(result, "%.*f %c%s", digits, value, prefix[logscale + 6], units);
+    else
+      sprintf(result, "%.*f %s", digits, value, units);
   }
   else
   {

@@ -57,8 +57,8 @@ int write_lemon_gauge_field_parallel(char * filename, const double plaq, const i
   write_binary_gauge_data_parallel(lemonwriter, prec, &checksum);
 
   if(g_cart_id == 0) {
-    fprintf(stderr, "Checksum A: %#x \nChecksum B: %#x\n", checksum.suma, checksum.sumb);
-    fflush(stderr);
+    fprintf(stdout, "Checksum A: %#x \nChecksum B: %#x\n", checksum.suma, checksum.sumb);
+    fflush(stdout);
   }
   write_checksum_parallel(lemonwriter, &checksum);
   MPI_Barrier(MPI_COMM_WORLD);

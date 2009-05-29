@@ -21,7 +21,7 @@
 
 int read_checksum_parallel(LemonReader * lemonreader, DML_Checksum * checksum)
 {
-  char *message;
+  char *message = 0, *pos = 0;
   uint64_t bytes, bytes_read;
 
   bytes = lemonReaderBytes(lemonreader);
@@ -31,13 +31,24 @@ int read_checksum_parallel(LemonReader * lemonreader, DML_Checksum * checksum)
   lemonReaderReadData(message, &bytes_read, lemonreader);
   message[bytes] = '\0';
 
-  /* So, yeah, that means we're going to have to parse the XML properly later on */
-  sscanf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                   "<scidacChecksum>\n"
-                   "  <version>1.0</version>\n"
-                   "  <suma>%x</suma>\n"
-                   "  <sumb>%x</sumb>\n"
-                   "</scidacChecksum>", &checksum->suma, &checksum->sumb);
+  /* So, yeah, that means we're going to have to parse the XML */
+  pos = strtok(message, "<> \n\t");
+
+  while (pos)
+  {
+    if (!strncmp(pos, "suma", 4))
+    {
+      pos = strtok(0, "<> \n\t");
+      sscanf(pos, "%x", &checksum->suma);
+    }
+    if (!strncmp(pos, "sumb", 4))
+    {
+      pos = strtok(0, "<> \n\t");
+      sscanf(pos, "%x", &checksum->sumb);
+    }
+    pos = strtok(0, "<> \n\t");
+  }
+
   free(message);
   return(0);
 }

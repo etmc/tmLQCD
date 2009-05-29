@@ -21,16 +21,18 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-#include <lemon.h>
 #include <dml.h>
 
-char * read_message(char * filename, char * type);
-int write_message(char * filename, char * data_buf, char * type, const int append);
+#ifdef HAVE_LIBLEMON
+# include <lemon.h>
+#endif /* HAVE_LIBLEMON */
 
+#ifdef HAVE_LIBLEMON
 int read_checksum_parallel(LemonReader * lemonreader, DML_Checksum * checksum);
 
 int write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum * checksum);
 int write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const int counter);
+#endif /* HAVE_LIBLEMON */
 
 void engineering(char *result, double value, char const *units);
 
