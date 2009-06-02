@@ -24,21 +24,29 @@ LEX = @LEX@
 AUTOCONF = @AUTOCONF@
 DEFS = @DEFS@
 
+LEMON_AVAILABLE = @LEMON_AVAILABLE@
+
 INCLUDES = @INCLUDES@
 LDADD =
-#COMPILE = ${CC} ${DEFS} $(INCLUDES) ${CFLAGS}
 COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS} ${OPTARGS}
 
 LIBRARIES = libio
-libio_TARGETS = gauge_read_binary_parallel \
+
+libio_TARGETS_PLAIN = utils_engineering
+libio_TARGETS_LEMON = gauge_read_binary_parallel \
 		gauge_read_parallel \
 		gauge_write_binary_parallel \
 		gauge_write_format_parallel \
 		gauge_write_parallel \
 		utils_read_checksum_parallel \
 		utils_write_checksum_parallel \
-		utils_write_xlf_parallel \
-		utils_engineering
+		utils_write_xlf_parallel
+
+ifeq (${LEMON_AVAILABLE}, 1)
+libio_TARGETS = ${libio_TARGETS_PLAIN} ${libio_TARGETS_LEMON}
+else
+libio_TARGETS = ${libio_TARGETS_PLAIN}
+endif
 
 libio_OBJECTS = $(addsuffix .o, ${libio_TARGETS})
 
@@ -58,7 +66,7 @@ profile all-profile: all
 #include dep rules
 
 
--include $(addsuffix .d,${libio_TARGETS})
+-include $(addsuffix .d,${libio_TARGETS} $libio_TARGETS_LEMON)
 
 include ${top_srcdir}/Makefile.global
 
@@ -68,7 +76,7 @@ include ${top_srcdir}/Makefile.global
 	$(COMPILE) -c $<
 
 
-# rule to make liblinalg
+# rule to make libio
 libio.a: ${libio_OBJECTS} Makefile
 	@rm -f libio.a
 	@${AR} cru libio.a $(libio_OBJECTS)

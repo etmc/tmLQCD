@@ -68,13 +68,15 @@ AC_MSG_CHECKING(whether we want to use lemon)
 AC_ARG_WITH(lemondir,
             [  --with-lemondir[=dir]     use lemon, to be found in dir],
              [echo yes
+              LEMON_AVAILABLE=1
               lemon_dir=$withval
               LDFLAGS="$LDFLAGS -L${lemon_dir}/lib"
               AC_CHECK_LIB([lemon],
                            [lemonReaderNextRecord],
                            [],
                            [AC_MSG_ERROR([library liblemon was not found])])],
-             [echo no])
+             [echo no
+              LEMON_AVAILABLE=0])
 
 AC_MSG_CHECKING(whether we want to use MPI)
 AC_ARG_ENABLE(mpi,
@@ -225,6 +227,7 @@ AC_SUBST(PROFILE_FLAG)
 AC_SUBST(XCHANGELIB)
 AC_SUBST(XCHANGEDIR)
 AC_SUBST(XLIB)
+AC_SUBST([LEMON_AVAILABLE])
 
 INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
 DEPFLAGS="$DEPFLAGS"

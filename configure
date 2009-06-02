@@ -639,6 +639,7 @@ ac_includes_default="\
 #endif"
 
 ac_subst_vars='LTLIBOBJS
+LEMON_AVAILABLE
 XLIB
 XCHANGEDIR
 XCHANGELIB
@@ -7772,6 +7773,7 @@ $as_echo_n "checking whether we want to use lemon... " >&6; }
 # Check whether --with-lemondir was given.
 if test "${with_lemondir+set}" = set; then
   withval=$with_lemondir; echo yes
+              LEMON_AVAILABLE=1
               lemon_dir=$withval
               LDFLAGS="$LDFLAGS -L${lemon_dir}/lib"
 
@@ -7855,6 +7857,7 @@ fi
 
 else
   echo no
+              LEMON_AVAILABLE=0
 fi
 
 
@@ -10506,6 +10509,7 @@ _ACEOF
 
 fi
 done
+
 
 
 
