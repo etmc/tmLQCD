@@ -324,7 +324,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
    * necessary randomly generated.                                          *
    *                                                                        *
    **************************************************************************/
-  
+
   /* copy V0 to V */
   _FT(zlacpy)(fupl_a, &n, &V0dim, V0, &lda, V, &lda, 1);
   j = V0dim;
@@ -340,7 +340,6 @@ void jdher_bi(int n, int lda, double tau, double tol,
     alpha = 1.0 / alpha;
     _FT(dscal)(&n2, &alpha, (double *)(V + cnt*lda), &ONE);
   }
-
   /* Generate interaction matrix M = V^dagger*A*V. Only the upper triangle
      is computed. */
   for (cnt = 0; cnt < j; cnt++){
@@ -350,7 +349,6 @@ void jdher_bi(int n, int lda, double tau, double tol,
       M[cnt*jmax+i] = scalar_prod_bi((bispinor*)(V+i*lda), (bispinor*) temp1, N);
     }
   }
-
   /* Other initializations */
   k = 0; (*it) = 0; 
   if((*k_conv) > 0) {
@@ -368,9 +366,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
    * Main JD-iteration loop                                                   *
    *                                                                          *
    ****************************************************************************/
-
   while((*it) < itmax) {
-
     /****************************************************************************
      *                                                                          *
      * Solving the projected eigenproblem                                       *
@@ -630,10 +626,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
       /* 	r[i].re*=-1.; */
       /* 	r[i].im*=-1.; */
       /*       } */
-
-      i = g_sloppy_precision_flag;
       g_sloppy_precision = 1;
-      g_sloppy_precision_flag = 1;
       /* Solve the correction equation ...  */
       if (solver_flag == BICGSTAB){
 	info = bicgstab_complex_bi((bispinor*) v, (bispinor*) r, linitmax, 
@@ -648,8 +641,6 @@ void jdher_bi(int n, int lda, double tau, double tol,
 				   it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &Proj_A_psi_bi);
       }
       g_sloppy_precision = 0;
-      g_sloppy_precision_flag = i;
-
       /* Actualizing profiling data */
       if (info == -1){
 	CntCorrIts += linitmax;
@@ -883,7 +874,9 @@ void Proj_A_psi_bi(bispinor * const y, bispinor * const x){
   double mtheta = -p_theta;
   int i;
   /* y = A*x */
+
   p_A_psi_bi(y, x); 
+
   /* y = -theta*x+y*/
   _FT(daxpy)(&p_n2, &mtheta, (double*) x, &ONE, (double*) y, &ONE);
   /* p_work_bi = Q^dagger*y */ 
