@@ -28,7 +28,7 @@ int read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * ch
   MPI_Offset bytes;
   uint64_t fbsu3;
   char *filebuffer, *current;
-  double tick, tock;
+  double tick = 0, tock = 0;
   char measure[64];
 
   bytes = lemonReaderBytes(lemonreader);

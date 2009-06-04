@@ -26,7 +26,7 @@
 #endif /* HAVE_LIBLEMON */
 
 #ifdef HAVE_LIBLEMON
-int read_lemon_gauge_field_parallel(char *filename);
+int read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum, char **xlf_info, char **ildg_data_lfn);
 int read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * checksum);
 
 int write_lemon_gauge_field_parallel(char * filename, const double plaq, const int counter, const int prec);

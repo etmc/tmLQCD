@@ -33,7 +33,7 @@ int write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, 
   bytes = (uint64_t)sizeof(su3) * (prec == 32 ? 2 :4);
   bufoffset = 0;
   filebuffer = (char*)malloc(bytes * VOLUME);
-  double tick, tock;
+  double tick = 0, tock = 0;
   char measure[64];
 
   for(t0 = 0; t0 < T*g_nproc_t; t0++) {

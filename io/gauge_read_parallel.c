@@ -19,7 +19,7 @@
 
 #include "gauge.ih"
 
-int read_lemon_gauge_field_parallel(char *filename)
+int read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum, char **xlf_info, char **ildg_data_lfn)
 {
   MPI_File ifs;
   int status;
@@ -64,10 +64,25 @@ int read_lemon_gauge_field_parallel(char *filename)
     }
     else if (strcmp("scidac-checksum", header_type) == 0)
     {
-      if (g_debug_level > 1)
+      if (scidac_checksum != (char**)NULL)
       {
-        read_checksum_parallel(lemonreader, &checksum_read);
+        read_message_parallel(lemonreader, scidac_checksum);
+        parse_checksum_xml(*scidac_checksum, &checksum_read);
         DML_read_flag = 1;
+      }
+    }
+    else if (strcmp("xlf-info", header_type) == 0)
+    {
+      if (xlf_info != (char**)NULL)
+      {
+        read_message_parallel(lemonreader, xlf_info);
+      }
+    }
+    else if (strcmp("ildg-data-lfn", header_type) == 0)
+    {
+      if (ildg_data_lfn != (char**)NULL)
+      {
+        read_message_parallel(lemonreader, ildg_data_lfn);
       }
     }
     lemonReaderCloseRecord(lemonreader);
@@ -95,7 +110,7 @@ int read_lemon_gauge_field_parallel(char *filename)
     if (DML_read_flag)
       printf("# read:       %#x %#x.\n", checksum_read.suma, checksum_read.sumb);
     else
-      printf("# No DML checksum record found in %s.\n", filename);
+      printf("# Scidac checksum record not found or not read.\n");
     fflush(stdout);
   }
 

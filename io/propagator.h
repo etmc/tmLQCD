@@ -18,23 +18,18 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _UTILS_H
-#define _UTILS_H
+#ifndef _PROPAGATOR_H
+#define _PROPAGATOR_H
 
-#include <dml.h>
+#include <su3.h>
 
 #ifdef HAVE_LIBLEMON
 # include <lemon.h>
 #endif /* HAVE_LIBLEMON */
 
 #ifdef HAVE_LIBLEMON
-int read_message_parallel(LemonReader * lemonreader, char **buffer);
-
-int write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum * checksum);
-int write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const int counter);
+int read_spinor_parallel(spinor * const s, spinor * const r, char * filename, const int position);
+int read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonReader * lemonreader, DML_Checksum * ans);
 #endif /* HAVE_LIBLEMON */
-
-void engineering(char *result, double value, char const *units);
-void parse_checksum_xml(char *message, DML_Checksum * checksum);
 
 #endif
