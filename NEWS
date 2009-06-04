@@ -1,3 +1,8 @@
+04.06.2009: bug in eigensolver routine for ND case fixed
+	    parallel IO included using lemon library
+	    Schroedinger functional boundary conditions for
+	    gauge case included
+
 14.05.2009: multiple mass solver (CG) for twisted mass
 	    implemented, input is solverflag = cgmms
 	    the number of additional masses has to be specified with
