@@ -197,14 +197,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
   /* Compute the energy difference */
-  printf("enepx = %f\n", enepx);
-  printf("enep = %f\n", enep);
-  printf("enepx - enep = %f\n", enepx-enep);
-  printf("dh = %f\n", dh);
   dh = dh + (enepx - enep);
-  printf("dh = %f\n", dh);
   expmdh = exp(-dh);
-  printf("expmdh = %e\n", expmdh);
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
   if(g_proc_id==0) {
@@ -220,8 +214,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     MPI_Recv(&yy[0], 1, MPI_DOUBLE, 0, 31, MPI_COMM_WORLD, &status);
   }
 #endif
-
-  printf ("yy[0] = %f\n", yy[0]);
 
   if(expmdh > yy[0]) {
     accept = 1;
