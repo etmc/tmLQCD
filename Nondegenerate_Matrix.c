@@ -433,31 +433,39 @@ void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
 void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
 
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
+  static int memalloc = 0;
 
-
-  spinor *k_strange, *k_charm, *k_strange_, *k_charm_;
-  spinor *l_strange, *l_charm, *l_strange_, *l_charm_;
+  static spinor *k_strange, *k_charm;
+  static spinor *l_strange, *l_charm;
 
 #if ( defined SSE || defined SSE2 || defined SSE3)
-  k_strange_ = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-  k_strange  = (spinor *)(((unsigned long int)(k_strange_)+ALIGN_BASE)&~ALIGN_BASE);
-  k_charm_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-  k_charm    = (spinor *)(((unsigned long int)(k_charm_)+ALIGN_BASE)&~ALIGN_BASE);
+  static spinor *k_strange_, *k_charm_;
+  static spinor *l_strange_, *l_charm_;
+  if(memalloc == 0) {
+    memalloc = 1;
+    k_strange_ = (spinor*)calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
+    k_strange  = (spinor *)(((unsigned long int)(k_strange_)+ALIGN_BASE)&~ALIGN_BASE);
+    k_charm_   = (spinor*)calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
+    k_charm    = (spinor *)(((unsigned long int)(k_charm_)+ALIGN_BASE)&~ALIGN_BASE);
 
-  l_strange_ = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-  l_strange  = (spinor *)(((unsigned long int)(l_strange_)+ALIGN_BASE)&~ALIGN_BASE);
-  l_charm_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
-  l_charm    = (spinor *)(((unsigned long int)(l_charm_)+ALIGN_BASE)&~ALIGN_BASE);
+    l_strange_ = (spinor*)calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
+    l_strange  = (spinor *)(((unsigned long int)(l_strange_)+ALIGN_BASE)&~ALIGN_BASE);
+    l_charm_   = (spinor*)calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
+    l_charm    = (spinor *)(((unsigned long int)(l_charm_)+ALIGN_BASE)&~ALIGN_BASE);
+  }
 #else
-  k_strange  =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-  k_charm    =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-
-  l_strange  =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-  l_charm    =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
+  if(memalloc == 0) {
+    memalloc = 1;
+    k_strange  = (spinor*)calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
+    k_charm    = (spinor*)calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
+    
+    l_strange  = (spinor*)calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
+    l_charm    = (spinor*)calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
+  }
 #endif
 
   /*  CREATE 2 SPINORS OUT OF 1 (INPUT) BISPINOR  */
-  decompact(&k_strange[0], &k_charm[0], &bisp_k[0]);
+  decompact(k_strange, k_charm, bisp_k);
 
   /* FIRST THE  Qhat(2x2)^dagger  PART*/
 
@@ -475,7 +483,7 @@ void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
   mul_r(g_spinor_field[DUM_MATRIX+3], nrm, g_spinor_field[DUM_MATRIX+3], VOLUME/2);
   /* where nrm (= 1/(1+mu^2 -eps^2)) has been defined at the beginning of 
      the subroutine */
-  
+
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+2]);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+3]);
 
@@ -521,7 +529,7 @@ void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
   mul_r(g_spinor_field[DUM_MATRIX+3], nrm, g_spinor_field[DUM_MATRIX+3], VOLUME/2);
   /* where nrm (= 1/(1+mu^2 -eps^2)) has been defined at the beginning of 
      the subroutine */
-  
+
   Hopping_Matrix(OE, l_strange, g_spinor_field[DUM_MATRIX+2]);
   Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+3]);
 
@@ -545,25 +553,8 @@ void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
   mul_r(l_strange, phmc_invmaxev*phmc_invmaxev, l_strange, VOLUME/2);
 
 
-  /*    !!!  I HAVE REPLACED THE ABOVE LINES BY ASSIGNMENTS  !!!     */
-
-
   /*  CREATE 1 (OUTPUT) BISPINOR OUT OF 2 SPINORS  */
-  compact(&bisp_l[0], &l_strange[0], &l_charm[0]);
-
-
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  free(k_strange_);
-  free(k_charm_);
-  free(l_strange_);
-  free(l_charm_);
-#else
-  free(k_strange);
-  free(k_charm);
-  free(l_strange);
-  free(l_charm);
-#endif  
-
+  compact(bisp_l, l_strange, l_charm);
 }
 
 
