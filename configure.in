@@ -332,8 +332,7 @@ dnl the GNU compiler
       if test "$host_cpu" = "x86_64"; then
         CFLAGS="$CFLAGS -mfpmath=387"
       fi
-    elif test $enable_sse2 = yes && test $enable_sse = no; then
-      echo Using SSE2 macros!
+    elif test $enable_sse2 = yes; then
       DEPFLAGS="$DEPFLAGS -DSSE2"
       AC_DEFINE(SSE2,1,Compile with SSE2 support)
       if test "$host_cpu" = "x86_64"; then
@@ -577,6 +576,6 @@ AUTOCONF=autoconf
 AC_CONFIG_FILES([Makefile
                  linalg/Makefile
 	         solver/Makefile
-	         io/Makefile])
+		 io/Makefile])
 
 AC_OUTPUT
