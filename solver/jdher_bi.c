@@ -631,9 +631,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
       /* 	r[i].im*=-1.; */
       /*       } */
 
-      i = g_sloppy_precision_flag;
       g_sloppy_precision = 1;
-      g_sloppy_precision_flag = 1;
       /* Solve the correction equation ...  */
       if (solver_flag == BICGSTAB){
 	info = bicgstab_complex_bi((bispinor*) v, (bispinor*) r, linitmax, 
@@ -648,7 +646,6 @@ void jdher_bi(int n, int lda, double tau, double tol,
 				   it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &Proj_A_psi_bi);
       }
       g_sloppy_precision = 0;
-      g_sloppy_precision_flag = i;
 
       /* Actualizing profiling data */
       if (info == -1){
