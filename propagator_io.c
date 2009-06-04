@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -20,7 +20,7 @@
 
 #define _FILE_OFFSET_BITS 64
 
-#include"lime.h" 
+#include"lime.h"
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -28,24 +28,26 @@
 #include<stdio.h>
 #include<string.h>
 #include<time.h>
-#include<sys/time.h> 
+#include<sys/time.h>
 #include<sys/types.h>
 #ifdef MPI
-# include<unistd.h> 
+# include<unistd.h>
 #endif
 #include<math.h>
 #include"global.h"
 #include"su3.h"
-#include"lime.h" 
+#include"lime.h"
 #include"read_input.h"
 #include"io_utils.h"
 #include"propagator_io.h"
 #include"dml.h"
 #include"io.h"
 
+#include <io/propagator.h>
+
 /* write a one flavour propagator to file */
 
-int write_propagator(spinor * const s, spinor * const r, char * filename, 
+int write_propagator(spinor * const s, spinor * const r, char * filename,
 		     const int append, const int prec, const int format) {
   int err = 0;
 
@@ -67,7 +69,7 @@ int write_propagator(spinor * const s, spinor * const r, char * filename,
 
 /* write a one flavour source to file */
 
-int write_source(spinor * const s, spinor * const r, char * filename, 
+int write_source(spinor * const s, spinor * const r, char * filename,
 		 const int append, const int prec) {
   int err = 0;
 
@@ -77,7 +79,7 @@ int write_source(spinor * const s, spinor * const r, char * filename,
 }
 
 
-int read_source(spinor * const s, spinor * const r, char *filename, 
+int read_source(spinor * const s, spinor * const r, char *filename,
 		const int format, const int position) {
   int err = 0;
 
@@ -91,7 +93,12 @@ int read_source(spinor * const s, spinor * const r, char *filename,
   }
   else {
     /* ETMC standard format */
-    if(read_lime_spinor(g_spinor_field[0], g_spinor_field[1], filename, position) != 0) err = -2;
+#ifdef HAVE_LIBLEMON
+    read_spinor_parallel(g_spinor_field[0], g_spinor_field[1], filename, position);
+#else /* HAVE_LIBLEMON */
+    if(read_lime_spinor(g_spinor_field[0], g_spinor_field[1], filename, position) != 0)
+      err = -2;
+#endif /* HAVE_LIBLEMON */
   }
 
   if(err != 0) {
@@ -109,7 +116,7 @@ int read_source(spinor * const s, spinor * const r, char *filename,
 
 /* write two flavour operator to file */
 
-int write_double_propagator(spinor * const s, spinor * const r, 
+int write_double_propagator(spinor * const s, spinor * const r,
 			    spinor * const p, spinor * const q,
 			    char * filename, const int append, const int prec) {
   int err = 0;
@@ -127,7 +134,7 @@ int write_double_propagator(spinor * const s, spinor * const r,
 
 int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * limewriter,
 				      const int prec, DML_Checksum * ans) {
-  
+
   int x, X, y, Y, z, Z, t, t0, tag=0, id=0, i=0, status=0;
   spinor * p = NULL;
   spinor tmp[1];
@@ -144,7 +151,7 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
   else bytes = (n_uint64_t)sizeof(spinor);
   for(t0 = 0; t0 < T*g_nproc_t; t0++) {
     t = t0 - T*g_proc_coords[0];
-    coords[0] = t0 / T;  
+    coords[0] = t0 / T;
     for(z = 0; z < LZ*g_nproc_z; z++) {
       Z = z - g_proc_coords[3]*LZ;
       coords[3] = z / LZ;
@@ -159,7 +166,7 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 #endif
 	  if(g_cart_id == id) {
 	    i = g_lexic2eosub[ g_ipt[t][X][Y][Z] ];
-	    if((t+X+Y+Z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
+	    if((t+X+Y+Z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY
 		+ g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
 	      p = s;
 	    }
@@ -174,7 +181,7 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 	    if(g_cart_id == id) {
 #ifndef WORDS_BIGENDIAN
 	      if(prec == 32) {
-		byte_swap_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8); 
+		byte_swap_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
 		DML_checksum_accum(ans,rank,(char *) tmp2,sizeof(spinor)/2);
 		status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
 	      }
@@ -185,7 +192,7 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 	      }
 #else
 	      if(prec == 32) {
-		double2single((float*)tmp2, (p + i), sizeof(spinor)/8); 
+		double2single((float*)tmp2, (p + i), sizeof(spinor)/8);
 		DML_checksum_accum(ans,rank,(char *) tmp2,sizeof(spinor)/2);
 		status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
 	      }
@@ -224,20 +231,20 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 	      }
 #  else
 	      if(prec == 32) {
-		double2single((float*)tmp2, (p + i), sizeof(spinor)/8); 
+		double2single((float*)tmp2, (p + i), sizeof(spinor)/8);
 		MPI_Send((void*) tmp2, sizeof(spinor)/8, MPI_FLOAT, 0, tag, g_cart_grid);
 	      }
 	      else {
 		MPI_Send((void*) (p + i), sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 	      }
-#  endif		  
+#  endif
 	    }
 	  }
 #endif
 	  tag++;
 	}
 #ifdef MPI
- 	MPI_Barrier(g_cart_grid); 
+ 	MPI_Barrier(g_cart_grid);
 #endif
 	tag=0;
       }
@@ -246,7 +253,7 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
   return(0);
 }
 
-int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * limereader, 
+int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * limereader,
 			    const double prec, DML_Checksum * ans) {
   int t, x, y , z, i = 0, status=0;
   n_uint64_t bytes;
@@ -256,16 +263,16 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
   DML_SiteRank rank;
 
   DML_checksum_init(ans);
-  
+
   if(prec == 32) bytes = sizeof(spinor)/2;
   else bytes = sizeof(spinor);
   for(t = 0; t < T; t++){
     for(z = 0; z < LZ; z++){
       for(y = 0; y < LY; y++){
 #if (defined MPI)
-	limeReaderSeek(limereader,(n_uint64_t) 
-		       (g_proc_coords[1]*LX + 
-			(((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
+	limeReaderSeek(limereader,(n_uint64_t)
+		       (g_proc_coords[1]*LX +
+			(((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
 			 + g_proc_coords[2]*LY+y)*LX*g_nproc_x)*bytes,
 		       SEEK_SET);
 #endif
@@ -279,8 +286,8 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
 	  else {
 	    p = r;
 	  }
-	  rank = (DML_SiteRank) (g_proc_coords[1]*LX + 
-				 (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY 
+	  rank = (DML_SiteRank) (g_proc_coords[1]*LX +
+				 (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
 				  + g_proc_coords[2]*LY+y)*((DML_SiteRank)LX*g_nproc_x) + x);
 	  if(prec == 32) {
 	    status = limeReaderReadData(tmp2, &bytes, limereader);
@@ -462,8 +469,6 @@ int write_propagator_format(char * filename, const int prec, const int no_flavou
   int ME_flag=0, MB_flag=1;
   char message[500];
   n_uint64_t bytes;
-  /*   char * message; */
-
 
   if(g_cart_id == 0) {
     ofs = fopen(filename, "a");
@@ -567,7 +572,7 @@ int write_source_format(char * filename, const int prec, const int no_flavours,
 }
 
 
-int write_lime_spinor(spinor * const s, spinor * const r, char * filename, 
+int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
 		      const int append, const int prec) {
 
   FILE * ofs = NULL;
@@ -577,10 +582,6 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
   int ME_flag=0, MB_flag=0;
   n_uint64_t bytes;
   DML_Checksum checksum;
-#ifdef MPI
-  MPI_Status mpistatus;
-#endif
-
 
   if(g_cart_id == 0) {
     if(append) {
@@ -606,7 +607,7 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
 #endif
       exit(500);
     }
-  
+
     bytes = (n_uint64_t)LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*(n_uint64_t)(sizeof(spinor)*prec/64);
     MB_flag=0; ME_flag=1;
     limeheader = limeCreateHeader(MB_flag, ME_flag, "scidac-binary-data", bytes);
@@ -624,7 +625,7 @@ int write_lime_spinor(spinor * const s, spinor * const r, char * filename,
 
   status = write_binary_spinor_data(s, r, limewriter, prec, &checksum);
   if(g_proc_id == 0 && g_debug_level > 1) {
-    printf("# checksum for DiracFermion field written to file %s is %#x %#x\n", 
+    printf("# checksum for DiracFermion field written to file %s is %#x %#x\n",
 	   filename, checksum.suma, checksum.sumb);
   }
 
@@ -646,7 +647,7 @@ int get_propagator_type(char * filename) {
   n_uint64_t bytes;
   char * tmp;
   LimeReader * limereader;
-  
+
 
   if((ifs = fopen(filename, "r")) == (FILE*)NULL) {
     if(g_proc_id == 0) {
@@ -685,7 +686,7 @@ int get_propagator_type(char * filename) {
   status = limeReaderReadData(tmp, &bytes, limereader);
   limeDestroyReader(limereader);
   fclose(ifs);
-  
+
   if(strcmp("DiracFermion_Sink", tmp) == 0) ret = 0;
   else if(strcmp("DiracFermion_Source_Sink_Pairs", tmp) == 0) ret =1;
   else if(strcmp("DiracFermion_ScalarSource_TwelveSink", tmp) == 0) ret = 2;
@@ -700,7 +701,7 @@ int get_source_type(char * filename) {
   n_uint64_t bytes;
   char * tmp;
   LimeReader * limereader;
-  
+
   if((ifs = fopen(filename, "r")) == (FILE*)NULL) {
     if(g_proc_id == 0) {
       fprintf(stderr, "Error opening file %s\n", filename);
@@ -745,7 +746,7 @@ int get_source_type(char * filename) {
   return(ret);
 }
 
- 
+
 int read_lime_spinor(spinor * const s, spinor * const r, char * filename, const int position) {
   FILE * ifs;
   int status=0, getpos=-1;
@@ -754,7 +755,7 @@ int read_lime_spinor(spinor * const s, spinor * const r, char * filename, const 
   LimeReader * limereader;
   int prec = 32;
   DML_Checksum checksum;
-  
+
   if((ifs = fopen(filename, "r")) == (FILE*)NULL) {
     if(g_proc_id == 0) {
       fprintf(stderr, "Error opening file %s\n", filename);
@@ -792,7 +793,7 @@ int read_lime_spinor(spinor * const s, spinor * const r, char * filename, const 
   else if((int)bytes == LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*sizeof(spinor)/2) prec = 32;
   else {
     if(g_proc_id == 0) {
-      fprintf(stderr, "wrong length in eospinor: bytes = %lu, not %d. Aborting read!\n", bytes, LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*sizeof(spinor)/2);
+      fprintf(stderr, "wrong length in eospinor: bytes = %lu, not %d. Aborting read!\n", bytes, LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z*T*g_nproc_t*(int)sizeof(spinor)/2);
     }
     return(-1);
   }
@@ -803,12 +804,12 @@ int read_lime_spinor(spinor * const s, spinor * const r, char * filename, const 
   status = read_binary_spinor_data(s, r, limereader, prec, &checksum);
 
   if(g_proc_id == 0 && g_debug_level > 1) {
-    printf("# checksum for DiracFermion field in file %s position %d is %#x %#x\n", 
+    printf("# checksum for DiracFermion field in file %s position %d is %#x %#x\n",
 	   filename, position, checksum.suma, checksum.sumb);
   }
 
   if(status < 0) {
-    fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", 
+    fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n",
 	    status, filename);
 #ifdef MPI
     MPI_Abort(MPI_COMM_WORLD, 1);

@@ -9,12 +9,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -81,6 +81,8 @@
 #include "solver/dfl_projector.h"
 #include "solver/generate_dfl_subspace.h"
 
+#include <io/gauge.h>
+
 void usage(){
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
   fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
@@ -110,7 +112,7 @@ int main(int argc,char *argv[]) {
   char * gaugecksum = NULL;
   double plaquette_energy;
   double ratime, retime;
-  
+
   double nrm1, nrm2;
   double atime=0., etime=0.;
 #ifdef _KOJAK_INST
@@ -138,7 +140,7 @@ int main(int argc,char *argv[]) {
 
   while ((c = getopt(argc, argv, "h?f:o:")) != -1) {
     switch (c) {
-    case 'f': 
+    case 'f':
       input_filename = calloc(200, sizeof(char));
       strcpy(input_filename,optarg);
       break;
@@ -158,7 +160,7 @@ int main(int argc,char *argv[]) {
   }
   if(filename == NULL){
     filename = "output";
-  } 
+  }
 
   /* Read the input file */
   read_input(input_filename);
@@ -242,12 +244,12 @@ int main(int argc,char *argv[]) {
     }
   }
 
-  g_mu = g_mu1; 
-  if(g_proc_id == 0){    
+  g_mu = g_mu1;
+  if(g_proc_id == 0){
     /*construct the filenames for the observables and the parameters*/
     strcpy(datafilename,filename);  strcat(datafilename,".data");
     strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
-    
+
     parameterfile=fopen(parameterfilename, "w");
     write_first_messages(parameterfile, 1);
     fclose(parameterfile);
@@ -302,6 +304,9 @@ int main(int argc,char *argv[]) {
     if (g_proc_id == 0){
       printf("Reading Gauge field from file %s\n", conf_filename); fflush(stdout);
     }
+#ifdef HAVE_LIBLEMON
+    read_lemon_gauge_field_parallel(conf_filename, &gaugecksum, &xlfmessage, &gaugelfn);
+#else /* HAVE_LIBLEMON */
     if(xlfmessage != (char*)NULL) free(xlfmessage);
     if(gaugelfn != (char*)NULL) free(gaugelfn);
     if(gaugecksum != (char*)NULL) free(gaugecksum);
@@ -310,7 +315,7 @@ int main(int argc,char *argv[]) {
     gaugelfn = read_message(conf_filename, "ildg-data-lfn");
     gaugecksum = read_message(conf_filename, "scidac-checksum");
     printf("%s \n", gaugecksum);
-
+#endif /* HAVE_LIBLEMON */
     if (g_proc_id == 0){
       printf("done!\n"); fflush(stdout);
     }
@@ -342,7 +347,7 @@ int main(int argc,char *argv[]) {
 
     /* Compute minimal eigenvalues, if wanted */
     if(compute_evs != 0) {
-      eigenvalues(&no_eigenvalues, max_solver_iterations, eigenvalue_precision, 
+      eigenvalues(&no_eigenvalues, max_solver_iterations, eigenvalue_precision,
 		  0, compute_evs, nstore, even_odd_flag);
     }
     if(phmc_compute_evs != 0) {
@@ -487,9 +492,9 @@ int main(int argc,char *argv[]) {
 #else
       atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-      iter = invert_eo(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1],  
- 		       solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag, 
- 		       sub_evs_cg_flag, even_odd_flag); 
+      iter = invert_eo(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1],
+ 		       solver_precision, max_solver_iterations, solver_flag,g_relative_precision_flag,
+ 		       sub_evs_cg_flag, even_odd_flag);
 #ifdef MPI
       etime = MPI_Wtime();
 #else
@@ -520,9 +525,9 @@ int main(int argc,char *argv[]) {
 #else
       ratime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-      write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, 
+      write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1,
 		       prop_precision_flag, write_prop_format_flag);
-      
+
 #ifdef MPI
       retime = MPI_Wtime();
 #else
@@ -532,17 +537,17 @@ int main(int argc,char *argv[]) {
 	printf("time for writing prop was %e seconds\n", retime-ratime);
       }
       /* Check the result */
-      M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[2], g_spinor_field[3]); 
+      M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[2], g_spinor_field[3]);
 
       if(write_prop_format_flag != 11) {
 	if(g_kappa != 0.) {
-	  mul_r(g_spinor_field[4], 1./(2*g_kappa), g_spinor_field[4], VOLUME/2);  
-	  mul_r(g_spinor_field[5], 1./(2*g_kappa), g_spinor_field[5], VOLUME/2); 
+	  mul_r(g_spinor_field[4], 1./(2*g_kappa), g_spinor_field[4], VOLUME/2);
+	  mul_r(g_spinor_field[5], 1./(2*g_kappa), g_spinor_field[5], VOLUME/2);
 	}
       }
 
-      diff(g_spinor_field[4], g_spinor_field[4], g_spinor_field[0], VOLUME/2); 
-      diff(g_spinor_field[5], g_spinor_field[5], g_spinor_field[1], VOLUME/2); 
+      diff(g_spinor_field[4], g_spinor_field[4], g_spinor_field[0], VOLUME/2);
+      diff(g_spinor_field[5], g_spinor_field[5], g_spinor_field[1], VOLUME/2);
 
       nrm1 = square_norm(g_spinor_field[4], VOLUME/2, 1);
       nrm2 = square_norm(g_spinor_field[5], VOLUME/2, 1);
@@ -578,8 +583,8 @@ int main(int argc,char *argv[]) {
   free_spinor_field();
   free_moment_field();
   if(g_running_phmc) {
-    free_chi_up_spinor_field(); 
-    free_chi_dn_spinor_field(); 
+    free_chi_up_spinor_field();
+    free_chi_dn_spinor_field();
   }
   return(0);
 #ifdef _KOJAK_INST

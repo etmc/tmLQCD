@@ -51,12 +51,6 @@
 #ifdef MPI
 # include "xchange.h"
 #endif
-#ifdef HAVE_LIBLEMON
-# ifndef MPI
-#  error "Parallel IO without MPI not supported"
-# endif
-# include "parallel_io.h"
-#endif
 #include "io.h"
 #include "propagator_io.h"
 #include "gauge_io.h"
@@ -112,6 +106,7 @@ int main(int argc,char *argv[]) {
   char nstore_filename[50];
   char tmp_filename[50];
   char * input_filename = NULL;
+  char **scidac_checksum;
 
   int rlxd_state[rlxdsize];
 
@@ -341,7 +336,7 @@ int main(int argc,char *argv[]) {
       fflush(stdout);
     }
 #ifdef HAVE_LIBLEMON
-      read_lemon_gauge_field_parallel(gauge_input_filename);
+      read_lemon_gauge_field_parallel(gauge_input_filename, scidac_checksum, NULL, NULL);
 #else
     if(gauge_precision_read_flag == 64) {
       read_lime_gauge_field(gauge_input_filename);
