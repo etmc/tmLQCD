@@ -67,15 +67,12 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
   static bispinor  *eigenvectors_bi = NULL;
   static double * eigenvls_bi = NULL;
 
-
-
   /**********************
    * For Jacobi-Davidson 
    **********************/
   int verbosity = g_debug_level, converged = 0, blocksize = 1, blockwise = 0;
   int solver_it_max = 200, j_max, j_min; 
   /*int it_max = 10000;*/
-  complex *eigv_ = NULL, *eigv;
   double decay_min = 1.7, decay_max = 1.5, prec,
     threshold_min = 1.e-3, threshold_max = 5.e-2, 
     startvalue, threshold, decay, returnvalue;
@@ -86,12 +83,7 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
    * General variables
    **********************/
   int returncode=0;
-
-  int i, iVol, ix;
-
-  FILE *conf_bifile=NULL;
   char * filename = NULL;
-  char conf_bifilename[50];
 
   
   filename = calloc(200, sizeof(char));
@@ -149,7 +141,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
     printf(" Values of   mu = %e     mubar = %e     eps = %e     precision = %e  \n \n", g_mu, g_mubar, g_epsbar, precision);
   }
  
-
   jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(complex), (VOLUME)/2*sizeof(bispinor)/sizeof(complex),
 	    startvalue, prec, 
 	    (*nr_of_eigenvalues), j_max, j_min, 
