@@ -634,7 +634,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
       }
       else if(solver_flag == CG){ 
 	info = cg_her_bi((bispinor*) v, (bispinor*) r, linitmax, 
-			 it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &Proj_A_psi_bi, 0, 0); 
+			 it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &Proj_A_psi_bi); 
       } 
       else{
 	info = bicgstab_complex_bi((bispinor*) v, (bispinor*) r, linitmax, 
