@@ -570,7 +570,7 @@ if test ! -e test; then
 fi
 
 
-LIBS="-lhmc -lsolver -llinalg -lio -lhmc $LIBS"
+LIBS="-lhmc -lsolver -llinalg -lhmc -lio $LIBS"
 AUTOCONF=autoconf
 
 AC_CONFIG_FILES([Makefile
