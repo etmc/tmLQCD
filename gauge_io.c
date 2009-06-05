@@ -447,5 +447,7 @@ int read_lime_gauge_field(char * filename) {
     printf("# checksum for gaugefield %s is %#x %#x\n",
 	   filename, checksum.suma, checksum.sumb);
   }
+  g_update_gauge_copy = 1;
+  g_update_gauge_energy = 1;
   return(0);
 }
