@@ -65,11 +65,12 @@ int write_binary_gauge_data(LimeWriter * limewriter,
 
   DML_checksum_init(ans);
 
-  if (g_debug_level > 0)
-  {
+#ifdef MPI
+  if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
   }
+#endif
 
   if(prec == 32) bytes = (n_uint64_t)2*sizeof(su3);
   else bytes = (n_uint64_t)4*sizeof(su3);
@@ -183,13 +184,12 @@ int write_binary_gauge_data(LimeWriter * limewriter,
     }
   }
 
-  if (g_debug_level > 0)
-  {
+#ifdef MPI
+  if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tock = MPI_Wtime();
 
-    if (g_cart_id == 0)
-    {
+    if (g_cart_id == 0) {
       engineering(measure, L * L * L * T_global * bytes, "b");
       fprintf(stdout, "Time spent writing %s ", measure);
       engineering(measure, tock-tick, "s");
@@ -200,6 +200,7 @@ int write_binary_gauge_data(LimeWriter * limewriter,
       fprintf(stdout, " (%s per MPI process).\n", measure);
     }
   }
+#endif
 
   return(0);
 }
@@ -218,11 +219,12 @@ int read_binary_gauge_data(LimeReader * limereader,
 
   DML_checksum_init(ans);
 
-  if (g_debug_level > 0)
-  {
+#ifdef MPI
+  if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
   }
+#endif
 
   if(prec == 32) bytes = (n_uint64_t) 4*sizeof(su3)/2;
   else bytes = (n_uint64_t) 4*sizeof(su3);
@@ -288,13 +290,12 @@ int read_binary_gauge_data(LimeReader * limereader,
     }
   }
 
-  if (g_debug_level > 0)
-  {
+#ifdef MPI
+  if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tock = MPI_Wtime();
 
-    if (g_cart_id == 0)
-    {
+    if (g_cart_id == 0) {
       engineering(measure, L * L * L * T_global * bytes, "b");
       fprintf(stdout, "Time spent reading %s ", measure);
       engineering(measure, tock-tick, "s");
@@ -306,7 +307,6 @@ int read_binary_gauge_data(LimeReader * limereader,
     }
   }
 
-#ifdef MPI
   DML_checksum_combine(ans);
 #endif
   return(0);

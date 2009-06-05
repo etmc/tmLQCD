@@ -19,6 +19,8 @@
 #include "geometry_eo.h"
 #include "sf_calc_action.h"
 
+int Index(const int x0, const int x1, const int x2, const int x3);
+
 /**************************************************************************************************/
 
 /* the next function imposes Dirichlet b.c.

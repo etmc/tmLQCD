@@ -27,7 +27,9 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <mpi.h>
+#ifdef MPI
+# include <mpi.h>
+#endif
 #include <unistd.h>
 #include <math.h>
 
