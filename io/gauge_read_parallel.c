@@ -19,7 +19,7 @@
 
 #include "gauge.ih"
 
-int read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum, char **xlf_info, char **ildg_data_lfn)
+void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum, char **xlf_info, char **ildg_data_lfn)
 {
   MPI_File ifs;
   int status;
@@ -31,22 +31,12 @@ int read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum, char
   int gauge_read_flag = 0;
 
   status = MPI_File_open(g_cart_grid, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &ifs);
-  if (status)
-  {
-    fprintf(stderr, "Could not open file %s\n Aborting...\n", filename);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(500);
-  }
+  if (status != MPI_SUCCESS)
+    kill_with_error(&ifs, g_cart_id, "Could not open file. Aborting...\n");
+
   lemonreader = lemonCreateReader(&ifs, g_cart_grid);
-  if( lemonreader == (LemonReader *)NULL )
-  {
-    fprintf(stderr, "Unable to open LemonReader\n");
-    MPI_File_close(&ifs);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(500);
-  }
+  if (lemonreader == (LemonReader *)NULL)
+    kill_with_error(&ifs, g_cart_id, "Could not create lemon reader. Aborting...\n");
 
   while ((status = lemonReaderNextRecord(lemonreader)) != LEMON_EOF)
   {
@@ -89,19 +79,7 @@ int read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum, char
   }
 
   if (!gauge_read_flag)
-  {
-    if (g_cart_id == 0)
-    {
-      fprintf(stderr, "Did not find gauge record in %s.\n", filename);
-      fprintf(stderr, "Panic! Aborting...\n");
-      fflush(stderr);
-    }
-    lemonDestroyReader(lemonreader);
-    MPI_File_close(&ifs);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(501);
-  }
+    kill_with_error(&ifs, g_cart_id, "Did not find gauge record. Aborting...\n");
 
   if (g_debug_level > 1 && g_cart_id == 0)
   {
@@ -116,5 +94,4 @@ int read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum, char
 
   lemonDestroyReader(lemonreader);
   MPI_File_close(&ifs);
-  return 0;
 }

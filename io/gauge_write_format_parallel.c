@@ -18,11 +18,9 @@
 ***********************************************************************/
 
 #include "gauge.ih"
-int write_ildg_format_parallel(LemonWriter *writer, const int prec)
+void write_ildg_format_parallel(LemonWriter *writer, const int prec)
 {
   uint64_t bytes;
-  int status = 0;
-  LemonRecordHeader *header;
   char *buf;
 
   buf = (char*)malloc(512);
@@ -40,21 +38,8 @@ int write_ildg_format_parallel(LemonWriter *writer, const int prec)
                "</ildgFormat>", prec, LX*g_nproc_x, LY*g_nproc_y, LZ*g_nproc_z, T*g_nproc_t);
 
   bytes = strlen(buf);
-  header = lemonCreateHeader(1, 0, "ildg-format", bytes);
-  if(header == (LemonRecordHeader*)NULL)
-  {
-    fprintf(stderr, "LEMON create header ildg-format error\nPanic! Aborting...\n");
-    exit(500);
-  }
-  status = lemonWriteRecordHeader(header, writer);
-  if(status < 0 )
-  {
-    fprintf(stderr, "LEMON write header ildg-format error %d\nPanic! Aborting...\n", status);
-    exit(500);
-  }
-  lemonDestroyHeader(header);
-  lemonWriteRecordData(buf, &bytes, writer);
+  write_header_parallel(writer, 1, 0, "ildg-format", bytes);
+  write_message_parallel(writer, buf, bytes);
   lemonWriterCloseRecord(writer);
   free(buf);
-  return 0;
 }

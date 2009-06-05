@@ -26,12 +26,12 @@
 #endif /* HAVE_LIBLEMON */
 
 #ifdef HAVE_LIBLEMON
-int read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum, char **xlf_info, char **ildg_data_lfn);
-int read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * checksum);
+void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum, char **xlf_info, char **ildg_data_lfn);
+void read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * checksum);
 
-int write_lemon_gauge_field_parallel(char * filename, const double plaq, const int counter, const int prec);
-int write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, DML_Checksum * ans);
-int write_ildg_format_parallel(LemonWriter *writer, const int prec);
+void write_lemon_gauge_field_parallel(char * filename, const double plaq, const int counter, const int prec);
+void write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, DML_Checksum * ans);
+void write_ildg_format_parallel(LemonWriter *writer, const int prec);
 #endif /* HAVE_LIBLEMON */
 
 #endif

@@ -19,42 +19,27 @@
 
 #include "utils.ih"
 
-int write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum * checksum)
+void write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum * checksum)
 {
-  LemonRecordHeader * lemonheader = NULL;
-  int status = 0;
-  int MB_flag = 0, ME_flag = 1;
   char *message;
   uint64_t bytes;
 
   message = (char*)malloc(512);
   if (message == (char*)NULL )
   {
-    fprintf(stderr, "Memory error in write_checksum_parallel. Aborting\n");
-    MPI_File_close(lemonwriter->fh);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(500);
+    kill_with_error(lemonwriter->fh, lemonwriter->my_rank,
+                    "Memory allocation error in write_checksum_parallel. Aborting\n");
   }
+
   sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                    "<scidacChecksum>\n"
                    "  <version>1.0</version>\n"
                    "  <suma>%x</suma>\n"
                    "  <sumb>%x</sumb>\n"
                    "</scidacChecksum>", checksum->suma, checksum->sumb);
-  bytes = strlen( message );
-  lemonheader = lemonCreateHeader(MB_flag, ME_flag, "scidac-checksum", bytes);
-  status = lemonWriteRecordHeader( lemonheader, lemonwriter);
-  if(status < 0 ) {
-    fprintf(stderr, "LEMON write header error %d\n", status);
-    MPI_File_close(lemonwriter->fh);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(500);
-  }
-  lemonDestroyHeader( lemonheader );
-  lemonWriteRecordData(message, &bytes, lemonwriter);
+  bytes = strlen(message);
+  write_header_parallel(lemonwriter, 0, 1, "scidac-checksum", bytes);
+  write_message_parallel(lemonwriter, message, bytes);
   lemonWriterCloseRecord(lemonwriter);
   free(message);
-  return(0);
 }

@@ -34,15 +34,25 @@ LIBRARIES = libio
 
 libio_TARGETS_PLAIN = utils_engineering \
 		utils_parse_checksum_xml
+		
 libio_TARGETS_LEMON = gauge_read_binary_parallel \
 		gauge_read_parallel \
 		gauge_write_binary_parallel \
 		gauge_write_format_parallel \
 		gauge_write_parallel \
-		propagator_read_parallel \
-		propagator_read_binary_parallel \
+		spinor_read_parallel \
+		spinor_read_binary_parallel \
+		spinor_write_parallel \
+		spinor_write_binary_parallel \
+		spinor_write_propagator_format_parallel \
+		spinor_write_propagator_parallel \
+		spinor_write_source_format_parallel \
+		spinor_write_source_parallel \
+		utils_kill_with_error \
 		utils_read_message_parallel \
 		utils_write_checksum_parallel \
+		utils_write_header_parallel \
+		utils_write_message_parallel \
 		utils_write_xlf_parallel
 
 ifeq (${LEMON_AVAILABLE}, 1)

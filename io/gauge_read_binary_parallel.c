@@ -19,7 +19,7 @@
 
 #include "gauge.ih"
 
-int read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * checksum)
+void read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * checksum)
 {
   int t, x, y, z, status=0;
   int latticeSize[] = {L, L, L, T_global};
@@ -141,7 +141,5 @@ int read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * ch
   DML_global_xor(&checksum->sumb);
 
   free(filebuffer);
-
-  return(0);
 }
 

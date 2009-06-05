@@ -19,7 +19,7 @@
 
 #include "gauge.ih"
 
-int write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, DML_Checksum * ans) {
+void write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, DML_Checksum * ans) {
   int x, X, y, Y, z, Z, tt, t0, tag=0, id=0;
   su3 tmp3[4];
   int coords[4];
@@ -110,5 +110,4 @@ int write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, 
   DML_global_xor(&ans->sumb);
 
   free(filebuffer);
-  return(0);
 }

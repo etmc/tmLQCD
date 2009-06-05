@@ -28,10 +28,13 @@
 #endif /* HAVE_LIBLEMON */
 
 #ifdef HAVE_LIBLEMON
-int read_message_parallel(LemonReader * lemonreader, char **buffer);
+void kill_with_error(MPI_File *fh, int const rank, char const *error);
+void read_message_parallel(LemonReader * lemonreader, char **buffer);
+void write_message_parallel(LemonWriter * lemonwriter, char *buffer, uint64_t bytes);
+void write_header_parallel(LemonWriter * lemonwriter, int MB, int ME, char *type, uint64_t bytes);
 
-int write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum * checksum);
-int write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const int counter);
+void write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum * checksum);
+void write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const int counter);
 #endif /* HAVE_LIBLEMON */
 
 void engineering(char *result, double value, char const *units);

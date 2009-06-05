@@ -20,9 +20,8 @@
 #include "utils.ih"
 #define PACKAGE_VERSION "5.0.1"
 
-int write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const int counter){
-  LemonRecordHeader * lemonheader = NULL;
-  int status=0;
+void write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const int counter)
+{
   char *message;
   uint64_t bytes;
   struct timeval t1;
@@ -30,38 +29,26 @@ int write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const 
   message = (char*)malloc(512);
   if (message == (char*)NULL )
   {
-    fprintf(stderr, "Memory error in write_xlf_info_parallel. Aborting\n");
-    MPI_File_close(lemonwriter->fh);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(500);
+    kill_with_error(lemonwriter->fh, lemonwriter->my_rank,
+                    "Memory allocation error in write_xlf_info_parallel. Aborting\n");
   }
   gettimeofday(&t1,NULL);
-  if(g_kappa > 0. || g_kappa < 0.) {
+  if(g_kappa > 0. || g_kappa < 0.)
+  {
     sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, mu = %f, c2_rec = %f\n time = %ld\n hmcversion = %s\n mubar = %f\n epsilonbar = %f\n date = %s",
         plaq, counter, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1,t1.tv_sec, PACKAGE_VERSION,
         g_mubar/2./g_kappa, g_epsbar/2./g_kappa, ctime(&t1.tv_sec));
   }
-  else {
+  else
+  {
     sprintf(message,"\n plaquette = %e\n trajectory nr = %d\n beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f\n date = %s",
         plaq, counter, g_beta, g_kappa, g_mu, g_rgi_C1, ctime(&t1.tv_sec));
   }
   bytes = strlen( message );
-  lemonheader = lemonCreateHeader(1, 1, "xlf-info", bytes);  /* Message end and Message begin flags are 1 */
-  status = lemonWriteRecordHeader( lemonheader, lemonwriter);
 
-  if(status < 0 ) {
-    fprintf(stderr, "LEMON write header error %d\n", status);
-    MPI_File_close(lemonwriter->fh);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(500);
-  }
-  lemonDestroyHeader( lemonheader );
-  lemonWriteRecordData(message, &bytes, lemonwriter);
+  write_header_parallel(lemonwriter, 1, 1, "xlf-info", bytes);
+  write_message_parallel(lemonwriter, message, bytes);
+
   lemonWriterCloseRecord(lemonwriter);
-
   free(message);
-
-  return(0);
 }

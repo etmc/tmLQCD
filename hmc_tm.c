@@ -507,10 +507,6 @@ int main(int argc,char *argv[]) {
       write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc),
                   trajectory_counter, gauge_precision_write_flag);
       /*  write the status of the random number generator to a file */
-      if(g_proc_id==0) {
-    rlxd_get(rlxd_state);
-    write_rlxd_state(tmp_filename, rlxd_state, rlxdsize);
-      }
 #endif
 
 
