@@ -19,36 +19,13 @@
 
 #include "utils.ih"
 
-int read_checksum_parallel(LemonReader * lemonreader, DML_Checksum * checksum)
+void write_message_parallel(LemonWriter * lemonwriter, char *buffer, uint64_t bytes)
 {
-  char *message = 0, *pos = 0;
-  uint64_t bytes, bytes_read;
+  int status;
+  uint64_t bytesWritten = bytes;
 
-  bytes = lemonReaderBytes(lemonreader);
-  bytes_read = bytes;
-  message = (char*)malloc(bytes + 1); /* Allow for an explicit closing byte. */
+  status = lemonWriteRecordData(buffer, &bytesWritten, lemonwriter);
 
-  lemonReaderReadData(message, &bytes_read, lemonreader);
-  message[bytes] = '\0';
-
-  /* So, yeah, that means we're going to have to parse the XML */
-  pos = strtok(message, "<> \n\t");
-
-  while (pos)
-  {
-    if (!strncmp(pos, "suma", 4))
-    {
-      pos = strtok(0, "<> \n\t");
-      sscanf(pos, "%x", &checksum->suma);
-    }
-    if (!strncmp(pos, "sumb", 4))
-    {
-      pos = strtok(0, "<> \n\t");
-      sscanf(pos, "%x", &checksum->sumb);
-    }
-    pos = strtok(0, "<> \n\t");
-  }
-
-  free(message);
-  return(0);
+  if (status != LEMON_SUCCESS || bytes != bytesWritten)
+    kill_with_error(lemonwriter->fh, lemonwriter->my_rank, "I/O error on writing message. Aborting...\n");
 }

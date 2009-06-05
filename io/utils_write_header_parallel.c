@@ -17,23 +17,17 @@
 * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
 ***********************************************************************/
 
-#ifdef HAVE_CONFIG_H
-#include<config.h>
-#endif
+#include "utils.ih"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <mpi.h>
-#include <unistd.h>
-#include <math.h>
+void write_header_parallel(LemonWriter * lemonwriter, int MB, int ME, char *type, uint64_t bytes)
+{
+  int status;
+  LemonRecordHeader *lemonheader;
 
-#include <global.h>
-#include <io_utils.h>
+  lemonheader= lemonCreateHeader(MB, ME, type, bytes);
+  status = lemonWriteRecordHeader(lemonheader, lemonwriter);
+  lemonDestroyHeader(lemonheader);
 
-#include <io/gauge.h>
-#include <io/propagator.h>
-#include <io/utils.h>
+  if(status != LEMON_SUCCESS)
+    kill_with_error(lemonwriter->fh, lemonwriter->my_rank, "LEMON header writing error. Aborting\n");
+}

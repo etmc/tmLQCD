@@ -1,6 +1,6 @@
-#include "propagator.ih"
+#include "spinor.ih"
 
-int read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonReader * lemonreader, DML_Checksum *checksum)
+void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonReader * lemonreader, DML_Checksum *checksum)
 {
   int t, x, y , z, i = 0, status=0;
   int latticeSize[] = {L, L, L, T_global};
@@ -111,6 +111,4 @@ int read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonRe
   DML_global_xor(&checksum->sumb);
 
   free(filebuffer);
-
-  return(0);
 }

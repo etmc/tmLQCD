@@ -1,6 +1,6 @@
-#include "propagator.ih"
+#include "spinor.ih"
 
-int write_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonWriter * lemonwriter, DML_Checksum *checksum, int const prec)
+void write_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonWriter * lemonwriter, DML_Checksum *checksum, int const prec)
 {
   int x, X, y, Y, z, Z, tt, t0, id=0, i=0;
   int coords[4];
@@ -103,5 +103,6 @@ int write_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonW
   DML_global_xor(&checksum->sumb);
 
   free(filebuffer);
-  return(0);
+
+  /* TODO Error handling */
 }
