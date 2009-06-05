@@ -30,6 +30,9 @@
 #ifdef HAVE_LIBLEMON
 int read_spinor_parallel(spinor * const s, spinor * const r, char * filename, const int position);
 int read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonReader * lemonreader, DML_Checksum * ans);
+
+int write_spinor_parallel(spinor * const s, spinor * const r, char * filename, const int append, const int prec);
+int write_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonWriter * lemonwriter, DML_Checksum *checksum, int const prec);
 #endif /* HAVE_LIBLEMON */
 
 #endif

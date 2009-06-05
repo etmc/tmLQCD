@@ -13,8 +13,6 @@ int read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonRe
   uint64_t fbspin;
   char measure[64];
 
-  DML_checksum_init(checksum);
-
   bytes = lemonReaderBytes(lemonreader);
 
   if (bytes == g_nproc * VOLUME * sizeof(spinor))
@@ -51,7 +49,7 @@ int read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonRe
   }
   lemonReadLatticeParallel(lemonreader, filebuffer, bytes, latticeSize);
 
-    if (g_debug_level > 0)
+  if (g_debug_level > 0)
   {
     MPI_Barrier(g_cart_grid);
     tock = MPI_Wtime();
