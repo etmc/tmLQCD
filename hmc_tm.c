@@ -40,6 +40,10 @@
 #include <signal.h>
 #ifdef MPI
 # include <mpi.h>
+# ifdef HAVE_LIBLEMON
+#  include <io/params.h>
+#  include <io/gauge.h>
+# endif
 #endif
 #include "global.h"
 #include "getopt.h"
@@ -126,6 +130,10 @@ int main(int argc,char *argv[]) {
   /* For the Polyakov loop: */
   int dir = 2;
   complex pl, pl4;
+#ifdef HAVE_LIBLEMON
+  paramsXlfInfo *xlfInfo;
+#endif
+
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
@@ -501,8 +509,9 @@ int main(int argc,char *argv[]) {
       /* Write the gauge configuration first to a temporary file */
 /*       write_gauge_field_time_p( tmp_filename); */
 #ifdef HAVE_LIBLEMON
-      write_lemon_gauge_field_parallel( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc),
-                  trajectory_counter, gauge_precision_write_flag);
+      xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+      write_lemon_gauge_field_parallel( tmp_filename , gauge_precision_write_flag, xlfInfo);
+      free(xlfInfo);
 #else
       write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc),
                   trajectory_counter, gauge_precision_write_flag);
