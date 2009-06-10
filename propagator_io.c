@@ -67,8 +67,6 @@ int write_propagator(spinor * const s, spinor * const r, char * filename,
   else {
     /* standard ETMC */
 #ifdef HAVE_LIBLEMON
-    ss[0] = s; rr[0] = r;
-    write_propagator_parallel(ss, rr, 1, filename, append, prec);
 #else /* HAVE_LIBLEMON */
     write_propagator_format(filename, prec, 1);
     err = write_lime_spinor(s, r, filename, append, prec);
@@ -89,7 +87,6 @@ int write_source(spinor * const s, spinor * const r, char * filename,
   int err = 0;
 #ifdef HAVE_LIBLEMON
   ss[0] = s; rr[0] = r;
-  write_source_parallel(ss, rr, 1, 4, 3, filename, append, prec);
 #else /* HAVE_LIBLEMON */
   write_source_format(filename, prec, 1, T, LX, LY, LZ, 4, 3);
   err = write_lime_spinor(s, r, filename, append, prec);
@@ -114,7 +111,6 @@ int read_source(spinor * const s, spinor * const r, char *filename,
   {
     /* ETMC standard format */
 #ifdef HAVE_LIBLEMON
-    read_spinor_parallel(g_spinor_field[0], g_spinor_field[1], filename, position);
 #else /* HAVE_LIBLEMON */
     if(read_lime_spinor(g_spinor_field[0], g_spinor_field[1], filename, position) != 0)
       err = -2;
@@ -150,8 +146,6 @@ int write_double_propagator(spinor * const s, spinor * const r,
   /* charm   -> (mu_sigma + mu_delta)             */
   /* they are in reversed order in our code    */
 #ifdef HAVE_LIBLEMON
-  ss[0] = s; ss[1] = p; rr[0] = r; rr[1] = q;
-  write_propagator_parallel(ss, rr, 2, filename, append, prec);
 #else /* HAVE_LIBLEMON */
   write_propagator_format(filename, prec, 2);
   err = write_lime_spinor(p, q, filename, append, prec);
