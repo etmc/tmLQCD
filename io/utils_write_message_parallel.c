@@ -19,7 +19,7 @@
 
 #include "utils.ih"
 
-void write_message_parallel(LemonWriter * lemonwriter, char *buffer, uint64_t bytes)
+void write_message_parallel(LemonWriter * lemonwriter, char const *buffer, uint64_t bytes)
 {
   int status;
   uint64_t bytesWritten = bytes;

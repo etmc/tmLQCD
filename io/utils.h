@@ -22,6 +22,7 @@
 #define _UTILS_H
 
 #include <dml.h>
+#include <io/params.h>
 
 #ifdef HAVE_LIBLEMON
 # include <lemon.h>
@@ -30,11 +31,11 @@
 #ifdef HAVE_LIBLEMON
 void kill_with_error(MPI_File *fh, int const rank, char const *error);
 void read_message_parallel(LemonReader * lemonreader, char **buffer);
-void write_message_parallel(LemonWriter * lemonwriter, char *buffer, uint64_t bytes);
+void write_message_parallel(LemonWriter * lemonwriter, char const *buffer, uint64_t bytes);
 void write_header_parallel(LemonWriter * lemonwriter, int MB, int ME, char *type, uint64_t bytes);
 
-void write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum * checksum);
-void write_xlf_info_parallel(LemonWriter * lemonwriter, const double plaq, const int counter);
+void write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum const *checksum);
+void write_xlf_info_parallel(LemonWriter * lemonwriter, paramsXlfInfo const *info);
 #endif /* HAVE_LIBLEMON */
 
 void engineering(char *result, double value, char const *units);

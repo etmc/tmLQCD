@@ -24,10 +24,10 @@ void write_header_parallel(LemonWriter * lemonwriter, int MB, int ME, char *type
   int status;
   LemonRecordHeader *lemonheader;
 
-  lemonheader= lemonCreateHeader(MB, ME, type, bytes);
+  lemonheader = lemonCreateHeader(MB, ME, type, bytes);
   status = lemonWriteRecordHeader(lemonheader, lemonwriter);
   lemonDestroyHeader(lemonheader);
 
-  if(status != LEMON_SUCCESS)
+  if (status != LEMON_SUCCESS)
     kill_with_error(lemonwriter->fh, lemonwriter->my_rank, "LEMON header writing error. Aborting\n");
 }

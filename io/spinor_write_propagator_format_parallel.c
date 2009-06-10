@@ -1,25 +1,27 @@
 #include "spinor.ih"
 
-void write_propagator_format_parallel(LemonWriter *writer, const int prec, const int flavours)
+void write_propagator_format_parallel(LemonWriter *writer, paramsPropagatorFormat const *format)
 {
   uint64_t bytes;
-  char *buf;
+  char *message;
 
-  buf = (char*)malloc(512);
-  sprintf(buf, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-               "<etmcFormat>\n"
-               "  <field>diracFermion</field>\n"
-               "  <precision>%d</precision>\n"
-               "  <flavours>%d</flavours>\n"
-               "  <lx>%d</lx>\n"
-               "  <ly>%d</ly>\n"
-               "  <lz>%d</lz>\n"
-               "  <lt>%d</lt>\n"
-               "</etmcFormat>", prec, flavours, LX*g_nproc_x, LY*g_nproc_y, LZ*g_nproc_z, T*g_nproc_t);
+  message = (char*)malloc(512);
+  sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                   "<etmcFormat>\n"
+                   "  <field>diracFermion</field>\n"
+                   "  <precision>%d</precision>\n"
+                   "  <flavours>%d</flavours>\n"
+                   "  <lx>%d</lx>\n"
+                   "  <ly>%d</ly>\n"
+                   "  <lz>%d</lz>\n"
+                   "  <lt>%d</lt>\n"
+                   "</etmcFormat>",
+          format->prec, format->flavours,
+          format->nx, format->ny, format->nx, format->nt);
 
-  bytes = strlen(buf);
-  write_header_parallel(writer, 1, 0, "etmc-propagator-format", bytes);
-  write_message_parallel(writer, buf, bytes);
+  bytes = strlen(message);
+  write_header_parallel(writer, 1, 1, "etmc-propagator-format", bytes);
+  write_message_parallel(writer, message, bytes);
   lemonWriterCloseRecord(writer);
-  free(buf);
+  free(message);
 }

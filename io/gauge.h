@@ -25,13 +25,15 @@
 # include <lemon.h>
 #endif /* HAVE_LIBLEMON */
 
+#include <io/utils.h>
+
 #ifdef HAVE_LIBLEMON
 void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum, char **xlf_info, char **ildg_data_lfn);
 void read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * checksum);
 
-void write_lemon_gauge_field_parallel(char * filename, const double plaq, const int counter, const int prec);
+void write_lemon_gauge_field_parallel(char * filename, int prec, paramsXlfInfo const *xlfInfo);
 void write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, DML_Checksum * ans);
-void write_ildg_format_parallel(LemonWriter *writer, const int prec);
+void write_ildg_format_parallel(LemonWriter *writer, paramsIldgFormat const *format);
 #endif /* HAVE_LIBLEMON */
 
 #endif

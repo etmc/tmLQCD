@@ -8,15 +8,16 @@ void engineering(char *result, double value, char const *units)
   int logscale;
   int digits = 2;
 
-  logscale = (int)floor(logval/3);
+  logscale = (int)floor(logval / 3);
 
   if (logscale > -6 && logscale < 6)
   {
     value /= pow(1E3, (double)logscale);
     if (value > 100)
       digits = 0;
-    else if (value > 10)
-      digits = 1;
+    else
+      if (value > 10)
+        digits = 1;
 
     if (logscale)
       sprintf(result, "%.*f %c%s", digits, value, prefix[logscale + 6], units);

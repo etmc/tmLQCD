@@ -19,13 +19,13 @@
 
 #include "utils.ih"
 
-void write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum * checksum)
+void write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum const *checksum)
 {
   char *message;
   uint64_t bytes;
 
   message = (char*)malloc(512);
-  if (message == (char*)NULL )
+  if (message == (char*)NULL)
   {
     kill_with_error(lemonwriter->fh, lemonwriter->my_rank,
                     "Memory allocation error in write_checksum_parallel. Aborting\n");

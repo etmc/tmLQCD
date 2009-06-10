@@ -2,14 +2,15 @@
 
 void write_source_parallel(spinor ** const s, spinor ** const r,
                            const int flavours, const int spins, const int colours,
-                           char * filename, const int append, const int prec)
+                           char * filename, const int append, const int prec,
+                           paramsInverterInfo *inverterInfo)
 {
   MPI_File ofs;
   LemonWriter *writer = NULL;
   int amode = MPI_MODE_CREATE | MPI_MODE_WRONLY;
   int err = 0;
 
-  if(append)
+  if (append)
     amode |= MPI_MODE_APPEND;
 
   err = MPI_File_open(g_cart_grid, filename, amode, MPI_INFO_NULL, &ofs);
@@ -23,4 +24,5 @@ void write_source_parallel(spinor ** const s, spinor ** const r,
 
   write_source_format_parallel(writer, prec, flavours, spins, colours);
   write_spinor_parallel(writer, s, r, flavours, prec);
+  write_inverter_info_parallel(writer, inverterInfo);
 }
