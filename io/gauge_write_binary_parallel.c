@@ -21,10 +21,8 @@
 
 void write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, DML_Checksum * ans)
 {
-  int x, X, y, Y, z, Z, tt, t0, tag = 0, id = 0;
+  int x, xG, y, yG, z, zG, t, tG;
   su3 tmp3[4];
-  int coords[4];
-
   int globaldims[] = {L, L, L, T_global};
   unsigned long bufoffset;
   char *filebuffer;
@@ -37,51 +35,38 @@ void write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec,
   double tick = 0, tock = 0;
   char measure[64];
 
-  for (t0 = 0; t0 < T*g_nproc_t; t0++)
-  {
-    tt = t0 - g_proc_coords[0] * T;
-    coords[0] = t0 / T;
-    for (z = 0; z < LZ*g_nproc_z; z++)
-    {
-      Z = z - g_proc_coords[3] * LZ;
-      coords[3] = z / LZ;
-      for (y = 0; y < LY*g_nproc_y; y++)
-      {
-        tag = 0;
-        Y = y - g_proc_coords[2] * LY;
-        coords[2] = y / LY;
-        for (x = 0; x < LX*g_nproc_x; x++)
-        {
-          X = x - g_proc_coords[1] * LX;
-          coords[1] = x / LX;
-          MPI_Cart_rank(g_cart_grid, coords, &id);
-          rank = (DML_SiteRank)(((t0 * LZ * g_nproc_z + z) * LY * g_nproc_y + y) * LX * g_nproc_x + x);
-          if (g_cart_id == id)
-          {
-            memcpy(&tmp3[0], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][1], sizeof(su3));
-            memcpy(&tmp3[1], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][2], sizeof(su3));
-            memcpy(&tmp3[2], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][3], sizeof(su3));
-            memcpy(&tmp3[3], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][0], sizeof(su3));
-#ifndef WORDS_BIGENDIAN
-            if (prec == 32)
-              byte_swap_assign_double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3) / 8);
+  tG = g_proc_coords[0]*T;
+  zG = g_proc_coords[3]*LZ;
+  yG = g_proc_coords[2]*LY;
+  xG = g_proc_coords[1]*LX;
+  for(t = 0; t < T; t++) {
+      for(z = 0; z < LZ; z++) {
+        for(y = 0; y < LY; y++) {
+          for(x = 0; x < LX; x++) {
+            rank = (DML_SiteRank) ((((tG + t)*L + zG + z)*L + yG + y)*L + xG + x);
+            memcpy(&tmp3[0], &g_gauge_field[ g_ipt[t][x][y][z] ][1], sizeof(su3));
+            memcpy(&tmp3[1], &g_gauge_field[ g_ipt[t][x][y][z] ][2], sizeof(su3));
+            memcpy(&tmp3[2], &g_gauge_field[ g_ipt[t][x][y][z] ][3], sizeof(su3));
+            memcpy(&tmp3[3], &g_gauge_field[ g_ipt[t][x][y][z] ][0], sizeof(su3));
+  #ifndef WORDS_BIGENDIAN
+            if(prec == 32)
+              byte_swap_assign_double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
             else
-              byte_swap_assign(filebuffer + bufoffset, tmp3, 4*sizeof(su3) / 8);
-#else
-            if (prec == 32)
-              double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3) / 8);
+              byte_swap_assign(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
+  #else
+            if(prec == 32)
+              double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
             else
               memcpy(filebuffer + bufoffset, tmp3, 4*sizeof(su3));
-#endif
+  #endif
             DML_checksum_accum(ans, rank, (char*) filebuffer + bufoffset, bytes);
 
             bufoffset += bytes;
           }
-          tag++;
         }
       }
     }
-  }
+
 
   if (g_debug_level > 0)
   {

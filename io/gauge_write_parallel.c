@@ -27,9 +27,9 @@ void write_lemon_gauge_field_parallel(char * filename, int prec, paramsXlfInfo c
   uint64_t bytes;
 
   DML_Checksum     checksum;
-  paramsIldgFormat ildg;
+  paramsIldgFormat *ildg;
 
-  bytes = (uint64_t)ildg.nx * ildg.ny * ildg.nz * ildg.nt  * sizeof(su3) * prec / 16;
+  bytes = (uint64_t)L * L * L * T * sizeof(su3) * prec / 16;
 
   MPI_File_open(g_cart_grid, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &ofs);
 
@@ -38,7 +38,11 @@ void write_lemon_gauge_field_parallel(char * filename, int prec, paramsXlfInfo c
     kill_with_error(writer->fh, writer->my_rank, "Cannot construct LemonWriter. Aborting...\n");
 
   write_xlf_info_parallel(writer, xlfInfo);
-  write_ildg_format_parallel(writer, &ildg);
+
+  ildg = construct_paramsIldgFormat(prec);
+  write_ildg_format_parallel(writer, ildg);
+  free(ildg);
+
   write_header_parallel(writer, 0, 0, "ildg-binary-data", bytes);
   write_binary_gauge_data_parallel(writer, prec, &checksum);
   write_checksum_parallel(writer, &checksum);
