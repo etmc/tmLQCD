@@ -1,8 +1,8 @@
 #include "spinor.ih"
 
 void write_source_parallel(spinor ** const s, spinor ** const r,
-                           const int flavours, const int spins, const int colours,
-                           char * filename, const int append, const int prec,
+                           char * filename, const int append,
+                           paramsSourceFormat *sourceFormat,
                            paramsInverterInfo *inverterInfo)
 {
   MPI_File ofs;
@@ -22,7 +22,7 @@ void write_source_parallel(spinor ** const s, spinor ** const r,
   if (writer == (LemonWriter*)NULL)
     kill_with_error(&ofs, g_cart_id, "Error in attempt to create LemonWriter!\n Aborting...\n");
 
-  write_source_format_parallel(writer, prec, flavours, spins, colours);
-  write_spinor_parallel(writer, s, r, flavours, prec);
+  write_source_format_parallel(writer, sourceFormat);
+  write_spinor_parallel(writer, s, r, sourceFormat->flavours, sourceFormat->prec);
   write_inverter_info_parallel(writer, inverterInfo);
 }

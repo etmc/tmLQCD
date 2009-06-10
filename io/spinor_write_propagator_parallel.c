@@ -36,6 +36,6 @@ void write_propagator_parallel(spinor **const s, spinor **const r,
   write_message_parallel(writer, gaugeChecksum, bytes);
   lemonWriterCloseRecord(writer);
 
-  write_propagator_format_parallel(writer, prec, flavours);
-  write_spinor_parallel(writer, s, r, flavours, prec);
+  write_propagator_format_parallel(writer, propagatorFormat);
+  write_spinor_parallel(writer, s, r, propagatorFormat->flavours, propagatorFormat->prec);
 }
