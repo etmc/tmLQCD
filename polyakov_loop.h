@@ -20,5 +20,6 @@
 #define _POLYAKOV_LOOP_H
 
 void polyakov_loop(complex * pl_, const int mu);
+int polyakov_loop_0(const int nstore,complex* pl);
 
 #endif
