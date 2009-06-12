@@ -34,6 +34,7 @@
 
 #ifdef MPI
 /* Datatypes for the data exchange */
+MPI_Datatype mpi_su3;
 MPI_Datatype gauge_point;
 MPI_Datatype gauge_time_slice_cont;
 MPI_Datatype gauge_time_slice_split;
@@ -286,8 +287,10 @@ void mpi_init(int argc,char *argv[]) {
   /* one. */
 
   /* first the gauge fields */
+  MPI_Type_contiguous(18, MPI_DOUBLE, &mpi_su3);
+  MPI_Type_commit(&mpi_su3);
   /* This is a gauge field on one space-time point */
-  MPI_Type_contiguous(72, MPI_DOUBLE, &gauge_point);
+  MPI_Type_contiguous(4, mpi_su3, &gauge_point);
   /* This is a type for one gauge time slice continuous */ 
   MPI_Type_contiguous(LX*LY*LZ, gauge_point, &gauge_time_slice_cont);
   /* This is a type for one gauge time slice dis-continuous -> NEW_GEOMETRY */

@@ -25,6 +25,7 @@
 
 
 /* Datatypes for the data exchange */
+extern MPI_Datatype mpi_su3;
 extern MPI_Datatype gauge_time_slice_cont;
 extern MPI_Datatype gauge_time_slice_split;
 extern MPI_Datatype deri_time_slice_cont;
