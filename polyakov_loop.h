@@ -21,5 +21,6 @@
 
 void polyakov_loop(complex * pl_, const int mu);
 int polyakov_loop_0(const int nstore,complex* pl);
+int polyakov_loop_dir(const int nstore, complex *pl, const int dir);
 
 #endif

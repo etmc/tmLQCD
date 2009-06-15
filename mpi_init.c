@@ -118,7 +118,6 @@ MPI_Datatype halffield_y_slice_gath;
 MPI_Datatype halffield_z_slice_cont;
 
 
-
 #ifdef PARALLELXYZT
 spinor * field_buffer_z ALIGN;
 spinor * field_buffer_z2 ALIGN;
@@ -128,6 +127,28 @@ halfspinor * halffield_buffer_z ALIGN;
 halfspinor * halffield_buffer_z2 ALIGN;
 #endif
 
+MPI_Op mpi_reduce_su3_ray;
+
+void reduce_su3_ray(
+    void *u_i        /* in */,
+    void *u_io       /* in/out */,
+    int *len         /* in */,
+    MPI_Datatype *dt /* in */) {
+
+   int n;
+   su3 *u, *v, tmp;
+   u = (su3 *)u_i;
+   v = (su3 *)u_io;
+
+   if(*dt != mpi_su3) {
+      fprintf(stderr, "\nInvalid datatype for reduce_su3_ray(); abort.\n");
+      MPI_Abort(MPI_COMM_WORLD, 1);
+   }
+   for(n=0; n<*len; n++) {
+      _su3_times_su3(tmp,*(u+n),*(v+n))
+      _su3_assign(*(v+n),tmp)
+   }
+}
 
 #endif
 
@@ -482,7 +503,7 @@ void mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(T*LX, 1, LY, halffield_y_subslice, &halffield_y_slice_gath); 
   MPI_Type_commit(&halffield_y_slice_gath);
 
-  /* For observables we need communicators for catesian time slices */
+  /* For observables we need communicators for Cartesian time slices */
   MPI_Comm_split(g_cart_grid, g_proc_coords[0], g_cart_id, &g_mpi_time_slices);
   MPI_Comm_rank(g_mpi_time_slices, &g_mpi_time_rank);
   if(g_debug_level > 4) {
@@ -491,8 +512,34 @@ void mpi_init(int argc,char *argv[]) {
 	    g_cart_id);
   }
 
+  /* and communicators for Cartesian z-slices */
+  MPI_Comm_split(g_cart_grid, g_proc_coords[3], g_cart_id, &g_mpi_z_slices);
+  MPI_Comm_rank(g_mpi_z_slices, &g_mpi_z_rank);
+  if(g_debug_level > -1) {
+    fprintf(stdout, "# My mpi_z_rank = %d, g_proc_coords = (%d,%d,%d,%d), g_cart_id = %d\n", 
+	    g_mpi_z_rank, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3],
+	    g_cart_id);
+  }
+
   /* and spatial volume slices */
   MPI_Comm_split(g_cart_grid, g_mpi_time_rank, g_proc_coords[0], &g_mpi_SV_slices);
+  MPI_Comm_rank(g_mpi_SV_slices, &g_mpi_SV_rank);
+  if(g_debug_level > -1) {
+    fprintf(stdout, "# My mpi_SV_rank = %d, g_proc_coords = (%d,%d,%d,%d), g_cart_id = %d\n", 
+	    g_mpi_SV_rank, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3],
+	    g_cart_id);
+  }
+
+  /* and tim-volume slices orthogonal to the z-direction */
+  MPI_Comm_split(g_cart_grid, g_mpi_z_rank, g_proc_coords[3], &g_mpi_ST_slices);
+  MPI_Comm_rank(g_mpi_ST_slices, &g_mpi_ST_rank);
+  if(g_debug_level > -1) {
+    fprintf(stdout, "# My mpi_ST_rank = %d, g_proc_coords = (%d,%d,%d,%d), g_cart_id = %d\n", 
+	    g_mpi_ST_rank, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3],
+	    g_cart_id);
+  }
+
+  MPI_Op_create(reduce_su3_ray, 0, &mpi_reduce_su3_ray);
 
 #else
   g_nproc = 1;
@@ -503,6 +550,9 @@ void mpi_init(int argc,char *argv[]) {
   g_nproc_t = 1;
   g_cart_id = 0;
   g_mpi_time_rank = 0;
+  g_mpi_z_rank = 0;
+  g_mpi_SV_rank = 0;
+  g_mpi_ST_rank = 0;
   g_stdio_proc = 0;
 
 #  ifndef FIXEDVOLUME
