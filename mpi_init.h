@@ -95,6 +95,9 @@ extern halfspinor * halffield_buffer_z ALIGN;
 extern halfspinor * halffield_buffer_z2 ALIGN;
 #endif
 
+extern MPI_Op mpi_reduce_su3_ray;
+void reduce_su3_ray(void *u_i, void *u_io, int *len, MPI_Datatype *dt);
+
 #endif
 
 
