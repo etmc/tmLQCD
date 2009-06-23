@@ -74,7 +74,7 @@ int write_checksum(char * filename, DML_Checksum * checksum) {
       exit(500);
     }
 
-    sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><scidacChecksum><version>1.0</version><suma>%#x</suma><sumb>%#x</sumb></scidacChecksum>", (*checksum).suma, (*checksum).sumb);
+    sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><scidacChecksum><version>1.0</version><suma>%#010x</suma><sumb>%#010x</sumb></scidacChecksum>", (*checksum).suma, (*checksum).sumb);
     bytes = strlen( message );
     limeheader = limeCreateHeader(MB_flag, ME_flag, "scidac-checksum", bytes);
     status = limeWriteRecordHeader( limeheader, limewriter);

@@ -34,8 +34,8 @@ void write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum const *chec
   sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                    "<scidacChecksum>\n"
                    "  <version>1.0</version>\n"
-                   "  <suma>%x</suma>\n"
-                   "  <sumb>%x</sumb>\n"
+                   "  <suma>%08x</suma>\n"
+                   "  <sumb>%08x</sumb>\n"
                    "</scidacChecksum>", checksum->suma, checksum->sumb);
   bytes = strlen(message);
   write_header_parallel(lemonwriter, 0, 1, "scidac-checksum", bytes);
