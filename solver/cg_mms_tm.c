@@ -143,7 +143,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
     }
     
     if( ((err <= eps_sq) && (rel_prec == 0)) ||
-	((err <= eps_sq*normsq) && (rel_prec == 1)) ) {
+	((err <= eps_sq*squarenorm) && (rel_prec == 1)) ) {
 
       assign(P, g_spinor_field[DUM_SOLVER], N);
       f(g_spinor_field[DUM_SOLVER+2], P);
