@@ -248,67 +248,84 @@ void jdher_bi(int n, int lda, double tau, double tol,
   eigworklen = (2 + _FT(ilaenv)(&ONE, filaenv, fvu, &jmax, &MONE, &MONE, &MONE, 6, 2)) * jmax;
 
   /* Allocating memory for matrices & vectors */ 
+  if((void*)(V_ = (complex *)malloc((lda * jmax + 4) * sizeof(complex))) == NULL) {
+    errno = 0;
+    jderrorhandler(300,"V in jdher_bi");
+  }
 #if (defined SSE || defined SSE2 || defined SSE3)
-  V_ = (complex *)malloc((lda * jmax + 4) * sizeof(complex));
   V = (complex*)(((unsigned long int)(V_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  V_ = (complex *)malloc(lda * jmax * sizeof(complex));
   V = V_;
 #endif
-  if(errno == ENOMEM) jderrorhandler(300,"V in jdher");
-  U = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) jderrorhandler(300,"U in jdher");
-  s = (double *)malloc(jmax * sizeof(double));
-  if(errno == ENOMEM) jderrorhandler(300,"s in jdher");
+  if((void*)(U = (complex *)malloc(jmax * jmax * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"U in jdher_bi");
+  }
+  if((void*)(s = (double *)malloc(jmax * sizeof(double))) == NULL) {
+    jderrorhandler(300,"s in jdher_bi");
+  }
+  if((void*)(Res_ = (complex *)malloc((lda * blksize+4) * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"Res in jdher_bi");
+  }
 #if (defined SSE || defined SSE2 || defined SSE3)
-  Res_ = (complex *)malloc((lda * blksize+4) * sizeof(complex));
   Res = (complex*)(((unsigned long int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  Res_ = (complex *)malloc(lda * blksize * sizeof(complex));
   Res = Res_;
 #endif
-  if(errno == ENOMEM) jderrorhandler(300,"Res in jdher");
-  resnrm = (double *)malloc(blksize * sizeof(double));
-  if(errno == ENOMEM) jderrorhandler(300,"resnrm in jdher");
-  resnrm_old = (double *)calloc(blksize,sizeof(double));
-  if(errno == ENOMEM) jderrorhandler(300,"resnrm_old in jdher");
-  M = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) jderrorhandler(300,"M in jdher");
-  Vtmp = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) jderrorhandler(300,"Vtmp in jdher");
-  p_work_bi = (complex *)malloc(lda * sizeof(complex));
-  if(errno == ENOMEM) jderrorhandler(300,"p_work_bi in jdher");
+  if((void*)(resnrm = (double *)malloc(blksize * sizeof(double))) == NULL) {
+    jderrorhandler(300,"resnrm in jdher_bi");
+  }
+  if((void*)(resnrm_old = (double *)calloc(blksize,sizeof(double))) == NULL) {
+    jderrorhandler(300,"resnrm_old in jdher_bi");
+  }
+  if((void*)(M = (complex *)malloc(jmax * jmax * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"M in jdher_bi");
+  }
+  if((void*)(Vtmp = (complex *)malloc(jmax * jmax * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"Vtmp in jdher_bi");
+  }
+  if((void*)(p_work_bi = (complex *)malloc(lda * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"p_work_bi in jdher_bi");
+  }
 
   /* ... */
-  idx1 = (int *)malloc(jmax * sizeof(int));
-  if(errno == ENOMEM) jderrorhandler(300,"idx1 in jdher");
-  idx2 = (int *)malloc(jmax * sizeof(int));
-  if(errno == ENOMEM) jderrorhandler(300,"idx2 in jdher");
+  if((void*)(idx1 = (int *)malloc(jmax * sizeof(int))) == NULL) {
+    jderrorhandler(300,"idx1 in jdher_bi");
+  }
+  if((void*)(idx2 = (int *)malloc(jmax * sizeof(int))) == NULL) {
+    jderrorhandler(300,"idx2 in jdher_bi");
+  }
 
   /* Indices for (non-)converged approximations */
-  convind = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) jderrorhandler(300,"convind in jdher");
-  keepind = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) jderrorhandler(300,"keepind in jdher");
-  solvestep = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) jderrorhandler(300,"solvestep in jdher");
-  actcorrits = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) jderrorhandler(300,"actcorrits in jdher");
+  if((void*)(convind = (int *)malloc(blksize * sizeof(int))) == NULL) {
+    jderrorhandler(300,"convind in jdher_bi");
+  }
+  if((void*)(keepind = (int *)malloc(blksize * sizeof(int))) == NULL) {
+    jderrorhandler(300,"keepind in jdher_bi");
+  }
+  if((void*)(solvestep = (int *)malloc(blksize * sizeof(int))) == NULL) {
+    jderrorhandler(300,"solvestep in jdher_bi");
+  }
+  if((void*)(actcorrits = (int *)malloc(blksize * sizeof(int))) == NULL) {
+    jderrorhandler(300,"actcorrits in jdher_bi");
+  }
 
-  eigwork = (complex *)malloc(eigworklen * sizeof(complex));
-  if(errno == ENOMEM) jderrorhandler(300,"eigwork in jdher");
-  rwork = (double *)malloc(3*jmax * sizeof(double));
-  if(errno == ENOMEM) jderrorhandler(300,"rwork in jdher");
+  if((void*)(eigwork = (complex *)malloc(eigworklen * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"eigwork in jdher_bi");
+  }
+  if((void*)(rwork = (double *)malloc(3*jmax * sizeof(double))) == NULL) {
+    jderrorhandler(300,"rwork in jdher_bi");
+  }
+  if((void*)(temp1_ = (complex *)malloc((lda+4) * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"temp1 in jdher_bi");
+  }
 #if (defined SSE || defined SSE2 || defined SSE3)
-  temp1_ = (complex *)malloc((lda+4) * sizeof(complex));
   temp1 = (complex*)(((unsigned long int)(temp1_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  temp1_ = (complex *)malloc(lda * sizeof(complex));
   temp1 = temp1_;
 #endif
-  if(errno == ENOMEM) jderrorhandler(300,"temp1 in jdher");
-  dtemp = (double *)malloc(lda * sizeof(complex));
-  if(errno == ENOMEM) jderrorhandler(300,"dtemp in jdher");
+  if((void*)(dtemp = (double *)malloc(lda * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"dtemp in jdher_bi");
+  }
 
   /* Set variables for Projection routines */
   n2 = 2*n;
@@ -324,7 +341,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
    * necessary randomly generated.                                          *
    *                                                                        *
    **************************************************************************/
-  
+
   /* copy V0 to V */
   _FT(zlacpy)(fupl_a, &n, &V0dim, V0, &lda, V, &lda, 1);
   j = V0dim;
@@ -340,7 +357,6 @@ void jdher_bi(int n, int lda, double tau, double tol,
     alpha = 1.0 / alpha;
     _FT(dscal)(&n2, &alpha, (double *)(V + cnt*lda), &ONE);
   }
-
   /* Generate interaction matrix M = V^dagger*A*V. Only the upper triangle
      is computed. */
   for (cnt = 0; cnt < j; cnt++){
@@ -350,7 +366,6 @@ void jdher_bi(int n, int lda, double tau, double tol,
       M[cnt*jmax+i] = scalar_prod_bi((bispinor*)(V+i*lda), (bispinor*) temp1, N);
     }
   }
-
   /* Other initializations */
   k = 0; (*it) = 0; 
   if((*k_conv) > 0) {
@@ -368,9 +383,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
    * Main JD-iteration loop                                                   *
    *                                                                          *
    ****************************************************************************/
-
   while((*it) < itmax) {
-
     /****************************************************************************
      *                                                                          *
      * Solving the projected eigenproblem                                       *
@@ -630,7 +643,6 @@ void jdher_bi(int n, int lda, double tau, double tol,
       /* 	r[i].re*=-1.; */
       /* 	r[i].im*=-1.; */
       /*       } */
-
       g_sloppy_precision = 1;
       /* Solve the correction equation ...  */
       if (solver_flag == BICGSTAB){
@@ -639,14 +651,13 @@ void jdher_bi(int n, int lda, double tau, double tol,
       }
       else if(solver_flag == CG){ 
 	info = cg_her_bi((bispinor*) v, (bispinor*) r, linitmax, 
-			 it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &Proj_A_psi_bi, 0, 0); 
+			 it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &Proj_A_psi_bi); 
       } 
       else{
 	info = bicgstab_complex_bi((bispinor*) v, (bispinor*) r, linitmax, 
 				   it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &Proj_A_psi_bi);
       }
       g_sloppy_precision = 0;
-
       /* Actualizing profiling data */
       if (info == -1){
 	CntCorrIts += linitmax;
@@ -726,7 +737,8 @@ void jdher_bi(int n, int lda, double tau, double tol,
   }
 
   free(V_); free(Vtmp); free(U); 
-  free(s); free(Res_); free(resnrm); 
+  free(s); free(Res_); 
+  free(resnrm); free(resnrm_old); 
   free(M); free(Z);
   free(eigwork); free(temp1_);
   free(dtemp); free(rwork);
@@ -880,7 +892,9 @@ void Proj_A_psi_bi(bispinor * const y, bispinor * const x){
   double mtheta = -p_theta;
   int i;
   /* y = A*x */
+
   p_A_psi_bi(y, x); 
+
   /* y = -theta*x+y*/
   _FT(daxpy)(&p_n2, &mtheta, (double*) x, &ONE, (double*) y, &ONE);
   /* p_work_bi = Q^dagger*y */ 

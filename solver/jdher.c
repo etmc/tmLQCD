@@ -249,67 +249,85 @@ void jdher(int n, int lda, double tau, double tol,
   eigworklen = (2 + _FT(ilaenv)(&ONE, filaenv, fvu, &jmax, &MONE, &MONE, &MONE, 6, 2)) * jmax;
 
   /* Allocating memory for matrices & vectors */ 
+
+  if((void*)(V_ = (complex *)malloc((lda * jmax + 4) * sizeof(complex))) == NULL) {
+    errno = 0;
+    jderrorhandler(300,"V in jdher");
+  }
 #if (defined SSE || defined SSE2 || defined SSE3)
-  V_ = (complex *)malloc((lda * jmax + 4) * sizeof(complex));
   V = (complex*)(((unsigned long int)(V_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  V_ = (complex *)malloc(lda * jmax * sizeof(complex));
   V = V_;
 #endif
-  if(errno == ENOMEM) jderrorhandler(300,"V in jdher");
-  U = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) jderrorhandler(300,"U in jdher");
-  s = (double *)malloc(jmax * sizeof(double));
-  if(errno == ENOMEM) jderrorhandler(300,"s in jdher");
+  if((void*)(U = (complex *)malloc(jmax * jmax * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"U in jdher");
+  }
+  if((void*)(s = (double *)malloc(jmax * sizeof(double))) == NULL) {
+    jderrorhandler(300,"s in jdher");
+  }
+  if((void*)(Res_ = (complex *)malloc((lda * blksize+4) * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"Res in jdher");
+  }
 #if (defined SSE || defined SSE2 || defined SSE3)
-  Res_ = (complex *)malloc((lda * blksize+4) * sizeof(complex));
   Res = (complex*)(((unsigned long int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  Res_ = (complex *)malloc(lda * blksize * sizeof(complex));
   Res = Res_;
 #endif
-  if(errno == ENOMEM) jderrorhandler(300,"Res in jdher");
-  resnrm = (double *)malloc(blksize * sizeof(double));
-  if(errno == ENOMEM) jderrorhandler(300,"resnrm in jdher");
-  resnrm_old = (double *)calloc(blksize,sizeof(double));
-  if(errno == ENOMEM) jderrorhandler(300,"resnrm_old in jdher");
-  M = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) jderrorhandler(300,"M in jdher");
-  Vtmp = (complex *)malloc(jmax * jmax * sizeof(complex));
-  if(errno == ENOMEM) jderrorhandler(300,"Vtmp in jdher");
-  p_work = (complex *)malloc(lda * sizeof(complex));
-  if(errno == ENOMEM) jderrorhandler(300,"p_work in jdher");
+  if((void*)(resnrm = (double *)malloc(blksize * sizeof(double))) == NULL) {
+    jderrorhandler(300,"resnrm in jdher");
+  }
+  if((void*)(resnrm_old = (double *)calloc(blksize,sizeof(double))) == NULL) {
+    jderrorhandler(300,"resnrm_old in jdher");
+  }
+  if((void*)(M = (complex *)malloc(jmax * jmax * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"M in jdher");
+  }
+  if((void*)(Vtmp = (complex *)malloc(jmax * jmax * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"Vtmp in jdher");
+  }
+  if((void*)(p_work = (complex *)malloc(lda * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"p_work in jdher");
+  }
 
   /* ... */
-  idx1 = (int *)malloc(jmax * sizeof(int));
-  if(errno == ENOMEM) jderrorhandler(300,"idx1 in jdher");
-  idx2 = (int *)malloc(jmax * sizeof(int));
-  if(errno == ENOMEM) jderrorhandler(300,"idx2 in jdher");
+  if((void*)(idx1 = (int *)malloc(jmax * sizeof(int))) == NULL) {
+    jderrorhandler(300,"idx1 in jdher");
+  }
+  if((void*)(idx2 = (int *)malloc(jmax * sizeof(int))) == NULL) {
+    jderrorhandler(300,"idx2 in jdher");
+  }
 
   /* Indices for (non-)converged approximations */
-  convind = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) jderrorhandler(300,"convind in jdher");
-  keepind = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) jderrorhandler(300,"keepind in jdher");
-  solvestep = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) jderrorhandler(300,"solvestep in jdher");
-  actcorrits = (int *)malloc(blksize * sizeof(int));
-  if(errno == ENOMEM) jderrorhandler(300,"actcorrits in jdher");
+  if((void*)(convind = (int *)malloc(blksize * sizeof(int))) == NULL) {
+    jderrorhandler(300,"convind in jdher");
+  }
+  if((void*)(keepind = (int *)malloc(blksize * sizeof(int))) == NULL) {
+    jderrorhandler(300,"keepind in jdher");
+  }
+  if((void*)(solvestep = (int *)malloc(blksize * sizeof(int))) == NULL) {
+    jderrorhandler(300,"solvestep in jdher");
+  }
+  if((void*)(actcorrits = (int *)malloc(blksize * sizeof(int))) == NULL) {
+    jderrorhandler(300,"actcorrits in jdher");
+  }
 
-  eigwork = (complex *)malloc(eigworklen * sizeof(complex));
-  if(errno == ENOMEM) jderrorhandler(300,"eigwork in jdher");
-  rwork = (double *)malloc(3*jmax * sizeof(double));
-  if(errno == ENOMEM) jderrorhandler(300,"rwork in jdher");
+  if((void*)(eigwork = (complex *)malloc(eigworklen * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"eigwork in jdher");
+  }
+  if((void*)(rwork = (double *)malloc(3*jmax * sizeof(double))) == NULL) {
+    jderrorhandler(300,"rwork in jdher");
+  }
+  if((void*)(temp1_ = (complex *)malloc((lda+4) * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"temp1 in jdher");
+  }
 #if (defined SSE || defined SSE2 || defined SSE3)
-  temp1_ = (complex *)malloc((lda+4) * sizeof(complex));
   temp1 = (complex*)(((unsigned long int)(temp1_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  temp1_ = (complex *)malloc(lda * sizeof(complex));
   temp1 = temp1_;
 #endif
-  if(errno == ENOMEM) jderrorhandler(300,"temp1 in jdher");
-  dtemp = (double *)malloc(lda * sizeof(complex));
-  if(errno == ENOMEM) jderrorhandler(300,"dtemp in jdher");
+  if((void*)(dtemp = (double *)malloc(lda * sizeof(complex))) == NULL) {
+    jderrorhandler(300,"dtemp in jdher");
+  }
 
   /* Set variables for Projection routines */
   n2 = 2*n;
@@ -734,7 +752,8 @@ void jdher(int n, int lda, double tau, double tol,
   }
 
   free(V_); free(Vtmp); free(U); 
-  free(s); free(Res_); free(resnrm); 
+  free(s); free(Res_); 
+  free(resnrm); free(resnrm_old); 
   free(M); free(Z);
   free(eigwork); free(temp1_);
   free(dtemp); free(rwork);
@@ -742,6 +761,7 @@ void jdher(int n, int lda, double tau, double tol,
   free(idx1); free(idx2); 
   free(convind); free(keepind); free(solvestep); free(actcorrits);
   
+  return;
 } /* jdher(.....) */
 
 
