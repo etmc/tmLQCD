@@ -5809,6 +5809,7 @@ int reread_input(char * conf_file){
   if(verbose && g_proc_id == 0) {
     myverbose = 1;
   }
+  current_monomial = -1;
   reread = 1;
 
   /********************************************
