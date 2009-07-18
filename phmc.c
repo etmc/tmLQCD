@@ -191,6 +191,10 @@ void phmc_compute_ev(const int trajectory_counter,
   max_iter_ev = 1000;
   g_mu = g_mu1;
   
+  if((g_proc_id == 0) && (g_debug_level > 0)) {
+    printf("# Computing eigenvalues for heavy doublet\n");
+  }
+
   no_eigenvalues = 1;
 
   if(g_epsbar!=0.0)
@@ -205,9 +209,9 @@ void phmc_compute_ev(const int trajectory_counter,
     temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, 0, nstore, even_odd_flag);
   
   if((g_proc_id == 0) && (g_debug_level > 0)) {
-    printf("PHMC: lowest eigenvalue end of trajectory %d = %e\n", 
+    printf("# PHMC: lowest eigenvalue end of trajectory %d = %e\n", 
 	   trajectory_counter, temp);
-    printf("PHMC: maximal eigenvalue end of trajectory %d = %e\n", 
+    printf("# PHMC: maximal eigenvalue end of trajectory %d = %e\n", 
 	   trajectory_counter, temp2);
   }
   if(g_proc_id == 0) {
@@ -222,6 +226,6 @@ void phmc_compute_ev(const int trajectory_counter,
   etime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
   if((g_proc_id == 0)) {
-    printf("PHMC: time/s for eigenvalue computation %e\n", etime-atime);
+    printf("# PHMC: time/s for eigenvalue computation %e\n", etime-atime);
   }
 }

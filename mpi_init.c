@@ -515,7 +515,7 @@ void mpi_init(int argc,char *argv[]) {
   /* and communicators for Cartesian z-slices */
   MPI_Comm_split(g_cart_grid, g_proc_coords[3], g_cart_id, &g_mpi_z_slices);
   MPI_Comm_rank(g_mpi_z_slices, &g_mpi_z_rank);
-  if(g_debug_level > -1) {
+  if(g_debug_level > 4) {
     fprintf(stdout, "# My mpi_z_rank = %d, g_proc_coords = (%d,%d,%d,%d), g_cart_id = %d\n", 
 	    g_mpi_z_rank, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3],
 	    g_cart_id);
@@ -524,7 +524,7 @@ void mpi_init(int argc,char *argv[]) {
   /* and spatial volume slices */
   MPI_Comm_split(g_cart_grid, g_mpi_time_rank, g_proc_coords[0], &g_mpi_SV_slices);
   MPI_Comm_rank(g_mpi_SV_slices, &g_mpi_SV_rank);
-  if(g_debug_level > -1) {
+  if(g_debug_level > 4) {
     fprintf(stdout, "# My mpi_SV_rank = %d, g_proc_coords = (%d,%d,%d,%d), g_cart_id = %d\n", 
 	    g_mpi_SV_rank, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3],
 	    g_cart_id);
@@ -533,7 +533,7 @@ void mpi_init(int argc,char *argv[]) {
   /* and tim-volume slices orthogonal to the z-direction */
   MPI_Comm_split(g_cart_grid, g_mpi_z_rank, g_proc_coords[3], &g_mpi_ST_slices);
   MPI_Comm_rank(g_mpi_ST_slices, &g_mpi_ST_rank);
-  if(g_debug_level > -1) {
+  if(g_debug_level > 4) {
     fprintf(stdout, "# My mpi_ST_rank = %d, g_proc_coords = (%d,%d,%d,%d), g_cart_id = %d\n", 
 	    g_mpi_ST_rank, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3],
 	    g_cart_id);
