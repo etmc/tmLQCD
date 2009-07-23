@@ -2,7 +2,7 @@
  * $Id$ 
  *
  * Copyright (C) 2005 Urs Wenger
- *               2008 Marcus Petschlies
+ *               2008,2009 Marcus Petschlies
  *
  * This file is part of tmLQCD.
  *
@@ -347,11 +347,10 @@ int polyakov_loop_0(const int nstore, complex *pl) {
 
 int polyakov_loop_dir(
     const int nstore /* in  */,
-    complex *pl      /* out */,
     const int dir    /* in  */) {
 
     int ixyz, ixyzt, ixyzt_up, VOL3, VOLUME3, ix, iy, iz, it;
-    complex pl_tmp, tr, ts, tt, kc, ks;
+    complex pl_tmp, tr, ts, tt, kc, ks, pl;
     su3 *tmp_loc, tmp, tmp2;
     su3 *u, *v, *w;
     double ratime, retime;
@@ -371,8 +370,8 @@ int polyakov_loop_dir(
       return(-1);
     }
 
-    (*pl).re = 0.;
-    (*pl).im = 0.;
+    pl.re = 0.;
+    pl.im = 0.;
 
 /********************************************************************************/
 
@@ -547,7 +546,7 @@ int polyakov_loop_dir(
 	pl_tmp.im = ks.im + kc.im;
 
 #ifdef MPI
-        MPI_Reduce(&pl_tmp, pl, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, slice);
+        MPI_Reduce(&pl_tmp, &pl, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, slice);
     }
 #  ifndef PARALLELXYZT
     if(dir==0) {
@@ -558,8 +557,8 @@ int polyakov_loop_dir(
 #  endif
 
 #else
-   (*pl).re = pl_tmp.re;
-   (*pl).im = pl_tmp.im;
+   pl.re = pl_tmp.re;
+   pl.im = pl_tmp.im;
 #endif
 
     /* normalization pl |-> pl / ( 3 * 3-dim. volume)*/
@@ -575,8 +574,8 @@ int polyakov_loop_dir(
 	VOLUME3 = VOLUME3 * g_nproc_t*g_nproc_x*g_nproc_y;
       }
 #endif
-	(*pl).re /= 3. * (double)VOLUME3;
-	(*pl).im /= 3. * (double)VOLUME3;
+	pl.re /= 3. * (double)VOLUME3;
+	pl.im /= 3. * (double)VOLUME3;
 
         /* write result to file */
         sprintf(filename, "pl_dir%1d", dir);
@@ -590,7 +589,7 @@ int polyakov_loop_dir(
           fprintf(stderr, "Could not open file %s for writing\n", filename);
           return(-1);
         }
-	fprintf(ofs, "%4d\t%2d\t%25.16e\t%25.16e\n", nstore, dir, (*pl).re, (*pl).im);
+	fprintf(ofs, "%4d\t%2d\t%25.16e\t%25.16e\n", nstore, dir, pl.re, pl.im);
 	fclose(ofs);
 #if defined MPI
     }
