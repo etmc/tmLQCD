@@ -1,5 +1,8 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * $Id$
+ *
+ * Copyright (C) 2003 Ines Wetzorke
+ *               2009 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -15,22 +18,18 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/* $Id$ */
-#ifndef _EIGENVALUES_H
-#define _EIGENVALUES_H
+ *
+ * Action of the overlap Dirac operator D on a given spinor field
+ *
+ * This software is distributed under the terms of the GNU General Public
+ * License (GPL)
+ *
+ ************************************************************************/
 
-extern spinor * eigenvectors;
-extern double * eigenvls;
-extern double * inv_eigenvls;
-extern int eigenvalues_for_cg_computed;
+#ifndef _DOV_PSI_H
+#define _DOV_PSI_H
 
-/* the folowing two are needed for the overlap */
-extern double ev_qnorm, ev_minev;
-
-double eigenvalues(int * nr_of_eigenvalues, const int max_iterations, 
-		   const double precision, const int maxmin,
-		   const int readwrite, const int nstore,
-		   const int even_odd_flag);
+void Dov_psi(spinor * const, spinor * const);
+void Qov_psi(spinor * const, spinor * const);
 
 #endif

@@ -57,7 +57,8 @@ MODULES = read_input gamma hybrid_update observables start \
 	monomial det_monomial detratio_monomial update_momenta \
 	integrator gauge_monomial ndpoly_monomial phmc \
 	little_D block sf_gauge_monomial sf_utils sf_calc_action \
-	sf_get_staples sf_get_rectangle_staples sf_observables
+	sf_get_staples sf_get_rectangle_staples sf_observables \
+	Dov_psi
 
 NOOPTMOD = test/check_xchange test/check_geometry
 

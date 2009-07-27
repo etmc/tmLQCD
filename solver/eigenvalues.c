@@ -1,4 +1,6 @@
 /***********************************************************************
+ * $Id$
+ *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -15,9 +17,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
- * $Id$
  *
  * Here we compute the nr_of_eigenvalues lowest eigenvalues
  * of (gamma5*D)^2. Therefore we use the arnoldi routines.
@@ -31,7 +30,7 @@
  *
  * Autor: Carsten Urbach <urbach@ifh.de>
  *
- *******************************************************************************/
+ **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -51,8 +50,12 @@
 
 spinor  *eigenvectors = NULL;
 double * eigenvls = NULL;
+double max_eigenvalue;
 double * inv_eigenvls = NULL;
 int eigenvalues_for_cg_computed = 0;
+
+/* the folowing two are needed for the overlap */
+double ev_minev=-1., ev_qnorm=-1.;
 
 double eigenvalues(int * nr_of_eigenvalues, const int max_iterations, 
 		   const double precision, const int maxmin,
@@ -89,6 +92,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
    * General variables
    **********************/
   int returncode=0;
+  int returncode2=0;
 
   if(!even_odd_flag) {
     N = (VOLUME);
@@ -146,6 +150,16 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
     inv_eigenvls = (double*)malloc((*nr_of_eigenvalues)*sizeof(double));
   }
 
+  /* compute the maximal one first */
+  jdher(N*sizeof(spinor)/sizeof(complex), N2*sizeof(spinor)/sizeof(complex),
+	50., 1.e-12, 
+	1, 15, 8, max_iterations, 1, 0, 0, NULL,
+	CG, solver_it_max,
+	threshold, decay, verbosity,
+	&converged, (complex*) eigenvectors, (double*) &max_eigenvalue,
+	&returncode2, JD_MAXIMAL, 1,
+	f);
+
   if(readwrite && even_odd_flag) {
     for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
       sprintf(filename, "eigenvector.%s.%.2d.%.4d", maxmin ? "max" : "min", v0dim, nstore);
@@ -191,6 +205,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   }
 
   (*nr_of_eigenvalues) = converged;
+  ev_minev = eigenvls[(*nr_of_eigenvalues)-1];
   if(maxmin == JD_MINIMAL) {
     eigenvalues_for_cg_computed = converged;
   }
@@ -213,6 +228,10 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   for(v0dim = 0; v0dim < converged; v0dim++) {
     inv_eigenvls[v0dim] = 1./eigenvls[v0dim];
   }
+
+  ev_qnorm=1.0/(sqrt(max_eigenvalue)+0.1);
+  ev_minev*=ev_qnorm*ev_qnorm;
+
   returnvalue=eigenvls[0];
 #else
   fprintf(stderr, "lapack not available, so JD method for EV computation not available \n");
