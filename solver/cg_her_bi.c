@@ -72,8 +72,8 @@
 
 /* P output = solution , Q input = source */
 int cg_her_bi(bispinor * const P, bispinor * const Q, const int max_iter, 
-       double eps_sq, const int rel_prec, const int N, matrix_mult_bi f, 
-       const int subtract_ev, const int modulo){
+       double eps_sq, const int rel_prec, const int N, matrix_mult_bi f) {
+
   double normsp, normsq, pro, err, alpha_cg, beta_cg, squarenorm;
   int iteration;
 
