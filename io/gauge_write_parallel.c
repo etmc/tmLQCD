@@ -29,7 +29,7 @@ void write_lemon_gauge_field_parallel(char * filename, int prec, paramsXlfInfo c
   DML_Checksum     checksum;
   paramsIldgFormat *ildg;
 
-  bytes = (uint64_t)L * L * L * T * sizeof(su3) * prec / 16;
+  bytes = (uint64_t)L * L * L * T_global * sizeof(su3) * prec / 16;
 
   MPI_File_open(g_cart_grid, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &ofs);
 
