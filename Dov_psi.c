@@ -72,8 +72,9 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
 		       const int n, spinor * const S,
 		       const double rnorm, const double minev);
 
-double ov_s = 0.;
-const int ov_n_cheby=100;
+double ov_s = 0.6;
+double m_ov = 0.1;
+const int ov_n_cheby = 100;
 double * ov_cheby_coef = NULL;
 
 void Dov_psi(spinor * const P, spinor * const S) {
@@ -83,7 +84,9 @@ void Dov_psi(spinor * const P, spinor * const S) {
   spinor **s, *s_;
   static int n_cheby = 0;
   static int rec_coefs = 1;
-  ov_s = (1./g_kappa - 8.)/2.+1.;
+
+  ov_s = 0.5*(1./g_kappa - 8.) - 1.;
+
   if(n_cheby != ov_n_cheby || rec_coefs) {
     if(ov_cheby_coef != NULL) free(ov_cheby_coef);
     ov_cheby_coef = (double*)malloc(ov_n_cheby*sizeof(double));
@@ -92,19 +95,21 @@ void Dov_psi(spinor * const P, spinor * const S) {
     n_cheby = ov_n_cheby;
   }
 
-  s_=calloc(2*VOLUMEPLUSRAND+1, sizeof(spinor));
-  s= calloc(2, sizeof(spinor*));
+  s_ = calloc(2*VOLUMEPLUSRAND+1, sizeof(spinor));
+  s  = calloc(2, sizeof(spinor*));
 
   for(i = 0; i < 2; i++) {
 #if (defined SSE3 || defined SSE2 || defined SSE)
-    s[i]=(spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
+    s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
 #else
-    s[i]=s_+i*VOLUMEPLUSRAND;
+    s[i] = s_+i*VOLUMEPLUSRAND;
 #endif
   }
 
-  c0 = 1.0 + ov_s - 0.5*g_mu;
-  c1 = c0 + g_mu;
+  /* here we do with M = 1 + s */
+  /* M + m_ov/2 + (M - m_ov/2) \gamma_5 sign(Q(-M)) */
+  c0 = 1.0 + ov_s - 0.5*m_ov;
+  c1 = 1.0 + ov_s + 0.5*m_ov;
 
   Q_over_sqrt_Q_sqr(s[0], ov_cheby_coef, ov_n_cheby, S, ev_qnorm, ev_minev);
   gamma5(s[1], s[0], VOLUME);
