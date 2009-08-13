@@ -53,6 +53,7 @@ double * eigenvls = NULL;
 double max_eigenvalue;
 double * inv_eigenvls = NULL;
 int eigenvalues_for_cg_computed = 0;
+int no_eigenvalues;
 
 /* the folowing two are needed for the overlap */
 double ev_minev=-1., ev_qnorm=-1.;
@@ -80,13 +81,13 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   /*int it_max = 10000;*/
   /* complex *eigv_ = NULL, *eigv; */
   double decay_min = 1.7, decay_max = 1.5, prec,
-    threshold_min = 1.e-3, threshold_max = 5.e-2,
-    startvalue, threshold, decay;
+    threshold_min = 1.e-3, threshold_max = 5.e-2;
+
   /* static int v0dim = 0; */
   int v0dim = 0;
   matrix_mult f;
   int N = (VOLUME)/2, N2 = (VOLUMEPLUSRAND)/2;
-  
+  spinor * max_eigenvector_ = NULL, * max_eigenvector;
 
   /**********************
    * General variables
@@ -94,6 +95,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   int returncode=0;
   int returncode2=0;
 
+  no_eigenvalues = *nr_of_eigenvalues;
   if(!even_odd_flag) {
     N = (VOLUME);
     N2 = (VOLUMEPLUSRAND);
@@ -101,19 +103,6 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   }
   else {
     f = &Qtm_pm_psi;
-  }
-
-  if(maxmin == JD_MINIMAL) {
-    startvalue = 0.;
-    threshold = threshold_min;
-    decay = decay_min;
-    solver_it_max = 200;
-  }
-  else {
-    startvalue = 50.;
-    threshold = threshold_max;
-    decay = decay_max;
-    solver_it_max = 50;
   }
 
   if(g_proc_id == g_stdio_proc && g_debug_level >0) {
@@ -136,6 +125,14 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   else{
     prec = precision;
   }
+#if (defined SSE || defined SSE2 || defined SSE3)
+    max_eigenvector_ = calloc(N2+1, sizeof(spinor));
+    max_eigenvector = (spinor *)(((unsigned long int)(max_eigenvector_)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+    max_eigenvector_= calloc(N2, sizeof(spinor));
+    max_eigenvector = max_eigenvectors;
+#endif  
+
 
   if(allocated == 0) {
     allocated = 1;
@@ -150,13 +147,14 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
     inv_eigenvls = (double*)malloc((*nr_of_eigenvalues)*sizeof(double));
   }
 
+  solver_it_max = 50;
   /* compute the maximal one first */
   jdher(N*sizeof(spinor)/sizeof(complex), N2*sizeof(spinor)/sizeof(complex),
 	50., 1.e-12, 
 	1, 15, 8, max_iterations, 1, 0, 0, NULL,
 	CG, solver_it_max,
-	threshold, decay, verbosity,
-	&converged, (complex*) eigenvectors, (double*) &max_eigenvalue,
+	threshold_max, decay_max, verbosity,
+	&converged, (complex*) max_eigenvector, (double*) &max_eigenvalue,
 	&returncode2, JD_MAXIMAL, 1,
 	f);
 
@@ -174,15 +172,16 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
     atime = MPI_Wtime();
 #endif
     /* (re-) compute minimal eigenvalues */
-    
+    converged = 0;
+    solver_it_max = 200;
     jdher(N*sizeof(spinor)/sizeof(complex), N2*sizeof(spinor)/sizeof(complex),
-	  startvalue, prec, 
+	  0., prec, 
 	  (*nr_of_eigenvalues), j_max, j_min, 
 	  max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors,
 	  CG, solver_it_max,
-	  threshold, decay, verbosity,
+	  threshold_min, decay_min, verbosity,
 	  &converged, (complex*) eigenvectors, eigenvls,
-	  &returncode, maxmin, 1,
+	  &returncode, JD_MINIMAL, 1,
 	  f);
     
 #ifdef MPI
@@ -205,6 +204,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   }
 
   (*nr_of_eigenvalues) = converged;
+  no_eigenvalues = converged;
   ev_minev = eigenvls[(*nr_of_eigenvalues)-1];
   if(maxmin == JD_MINIMAL) {
     eigenvalues_for_cg_computed = converged;
@@ -236,5 +236,6 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
 #else
   fprintf(stderr, "lapack not available, so JD method for EV computation not available \n");
 #endif
+  free(max_eigenvector_);
   return(returnvalue);
 }

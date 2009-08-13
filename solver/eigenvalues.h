@@ -24,6 +24,7 @@ extern spinor * eigenvectors;
 extern double * eigenvls;
 extern double * inv_eigenvls;
 extern int eigenvalues_for_cg_computed;
+extern int no_eigenvalues;
 
 /* the folowing two are needed for the overlap */
 extern double ev_qnorm, ev_minev;

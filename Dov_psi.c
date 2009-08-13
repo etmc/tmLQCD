@@ -67,14 +67,14 @@ void norm_Q_sqr_psi(spinor * const R, spinor * const S,
 /* |R>=rnorm^n Q^n |S>  where m is a mass                                  */
 void norm_Q_n_psi(spinor * const R, spinor * const S, 
 		  const int n, const double rnorm);
+/* this is Q/sqrt(Q^2) */
 void Q_over_sqrt_Q_sqr(spinor * const R, double * const c, 
 		       const int n, spinor * const S,
 		       const double rnorm, const double minev);
 
-double ov_s = 0;
+double ov_s = 0.;
 const int ov_n_cheby=100;
 double * ov_cheby_coef = NULL;
-int nr_of_eigenvalues = 10;
 
 void Dov_psi(spinor * const P, spinor * const S) {
 
@@ -132,8 +132,8 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
   static int * ev_sign = NULL;
   
   if(eigenvls[0] != save_ev[0] && eigenvls[1] != save_ev[1] ) {
-    if(g_proc_id == 0 && g_debug_level > 0) {
-      printf("Recoputing eigenvalue signs!\n");
+    if(g_proc_id == 0 && g_debug_level > 1) {
+      printf("# Recomputing eigenvalue signs!\n");
       fflush(stdout);
     }
     for(j = 0; j < 2; j++) {
@@ -275,7 +275,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
   zero_spinor_field(d, VOLUME);
   zero_spinor_field(dd, VOLUME); 
   
-  assign_sub_lowest_eigenvalues(aux3, S, nr_of_eigenvalues, VOLUME);
+  assign_sub_lowest_eigenvalues(aux3, S, no_eigenvalues, VOLUME);
   /* assign(&aux3[0], &S[0]);  */
   
   /* Check whether switch for adaptive precision is on */
@@ -288,7 +288,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
       assign(sv, d, VOLUME); 
       
       if ( (j%10) == 0 ) {
-	assign_sub_lowest_eigenvalues(aux, d, nr_of_eigenvalues, VOLUME);
+	assign_sub_lowest_eigenvalues(aux, d, no_eigenvalues, VOLUME);
       }
       else {
 	assign(aux, d, VOLUME);
@@ -301,7 +301,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
       assign(dd, sv, VOLUME);
     } 
     
-    assign_sub_lowest_eigenvalues(R, d, nr_of_eigenvalues, VOLUME);
+    assign_sub_lowest_eigenvalues(R, d, no_eigenvalues, VOLUME);
     
     norm_Q_sqr_psi(aux, R, rnorm);
     temp1=-1.0;
@@ -362,7 +362,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
 
   }
   /* add in piece from projected subspace */
-  addproj_q_invsqrt(R, S, nr_of_eigenvalues, VOLUME);
+  addproj_q_invsqrt(R, S, no_eigenvalues, VOLUME);
   
   free(sv_);
   free(d_);
