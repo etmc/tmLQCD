@@ -24,6 +24,7 @@ void write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec,
   int x, xG, y, yG, z, zG, t, tG;
   su3 tmp3[4];
   int globaldims[] = {L, L, L, T_global};
+  int scidacMapping[] = {0, 3, 2, 1};
   unsigned long bufoffset;
   char *filebuffer;
   uint64_t bytes;
@@ -74,7 +75,7 @@ void write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec,
     tick = MPI_Wtime();
   }
 
-  lemonWriteLatticeParallel(lemonwriter, filebuffer, bytes, globaldims);
+  lemonWriteLatticeParallelMapped(lemonwriter, filebuffer, bytes, globaldims, scidacMapping);
 
   if (g_debug_level > 0)
   {

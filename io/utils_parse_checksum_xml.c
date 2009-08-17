@@ -19,22 +19,29 @@
 
 #include "utils.ih"
 
-void parse_checksum_xml(char *message, DML_Checksum* checksum)
+int parse_checksum_xml(char *message, DML_Checksum *checksum)
 {
-  char *pos = strtok(message, "< \n\t");
-
+  int  read_suma = 0, read_sumb = 0;
+  char *pos = strtok(message, "<> \n\t");
+  
+  if (checksum == (DML_Checksum*)NULL)
+    return;
+  
   while (pos)
   {
     if (!strncmp(pos, "suma", 4))
     {
-      pos = strtok(0, ">");
+      pos = strtok(0, "<> \n\t");
       sscanf(pos, "%x", &checksum->suma);
+      read_suma = 1;
     }
     if (!strncmp(pos, "sumb", 4))
     {
-      pos = strtok(0, ">");
+      pos = strtok(0, "<> \n\t");
       sscanf(pos, "%x", &checksum->sumb);
+      read_sumb = 1;
     }
-    pos = strtok(0, "< \n\t");
+    pos = strtok(0, "<> \n\t");
   }
+  return (read_suma && read_sumb);
 }

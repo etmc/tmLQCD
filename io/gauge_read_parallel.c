@@ -19,16 +19,18 @@
 
 #include "gauge.ih"
 
-void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum, char **xlf_info, char **ildg_data_lfn)
+void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum,
+			 char **xlf_info, char **ildg_data_lfn)
 {
   MPI_File ifs;
   int status;
-  char * header_type;
-  LemonReader * lemonreader;
-  DML_Checksum checksum_read;
+  char *header_type;
+  LemonReader *lemonreader;
   DML_Checksum checksum_calc;
+  DML_Checksum checksum_read;
   int DML_read_flag = 0;
   int gauge_read_flag = 0;
+  char *checksum_string = NULL;
 
   status = MPI_File_open(g_cart_grid, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &ifs);
   if (status != MPI_SUCCESS)
@@ -52,35 +54,32 @@ void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum, cha
       read_binary_gauge_data_parallel(lemonreader, &checksum_calc);
       gauge_read_flag = 1;
     }
-    else
-      if (strcmp("scidac-checksum", header_type) == 0)
+    else if (strcmp("scidac-checksum", header_type) == 0)
+    {
+      checksum_string = (char*)malloc(256);
+      read_message_parallel(lemonreader, &checksum_string);
+      checksum_string[255] = '\0';
+      DML_read_flag = parse_checksum_xml(checksum_string, &checksum_read);
+      if (scidac_checksum != (char**)NULL)
       {
-        if (scidac_checksum != (char**)NULL)
-        {
-          read_message_parallel(lemonreader, scidac_checksum);
-          parse_checksum_xml(*scidac_checksum, &checksum_read);
-          DML_read_flag = 1;
-        }
+        if ((*scidac_checksum) != NULL)
+          free(*scidac_checksum);
+        *scidac_checksum = (char*)malloc(strlen(checksum_string) + 1);
+        strcpy(*scidac_checksum, checksum_string);
       }
-      else
-        if (strcmp("xlf-info", header_type) == 0)
-        {
-          if (xlf_info != (char**)NULL)
-          {
-            read_message_parallel(lemonreader, xlf_info);
-          }
-        }
-        else
-          if (strcmp("ildg-data-lfn", header_type) == 0)
-          {
-            if (ildg_data_lfn != (char**)NULL)
-            {
-              read_message_parallel(lemonreader, ildg_data_lfn);
-            }
-          }
+      free(checksum_string);
+    }
+    else if (strcmp("xlf-info", header_type) == 0)
+    {
+      read_message_parallel(lemonreader, xlf_info);
+    }
+    else if (strcmp("ildg-data-lfn", header_type) == 0)
+    {
+      read_message_parallel(lemonreader, ildg_data_lfn);
+    }
     lemonReaderCloseRecord(lemonreader);
   }
-
+  
   if (!gauge_read_flag)
     kill_with_error(&ifs, g_cart_id, "Did not find gauge record. Aborting...\n");
 

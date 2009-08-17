@@ -103,14 +103,13 @@ int const rlxdsize = 105;
 int main(int argc,char *argv[]) {
 
   FILE *parameterfile=NULL, *countfile=NULL;
-  char * filename = NULL;
+  char *filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
   char gauge_filename[50];
   char nstore_filename[50];
   char tmp_filename[50];
-  char * input_filename = NULL;
-  char **scidac_checksum;
+  char *input_filename = NULL;
 
   int rlxd_state[rlxdsize];
 
@@ -344,7 +343,7 @@ int main(int argc,char *argv[]) {
       fflush(stdout);
     }
 #ifdef HAVE_LIBLEMON
-      read_lemon_gauge_field_parallel(gauge_input_filename, scidac_checksum, NULL, NULL);
+    read_lemon_gauge_field_parallel(gauge_input_filename, NULL, NULL, NULL);
 #else
     if(gauge_precision_read_flag == 64) {
       read_lime_gauge_field(gauge_input_filename);
@@ -510,7 +509,7 @@ int main(int argc,char *argv[]) {
 /*       write_gauge_field_time_p( tmp_filename); */
 #ifdef HAVE_LIBLEMON
       xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-      write_lemon_gauge_field_parallel( tmp_filename , gauge_precision_write_flag, xlfInfo);
+      write_lemon_gauge_field_parallel( tmp_filename, gauge_precision_write_flag, xlfInfo);
       free(xlfInfo);
 #else
       write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc),

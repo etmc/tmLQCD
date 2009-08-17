@@ -25,6 +25,9 @@ void read_message_parallel(LemonReader * lemonreader, char **buffer)
   uint64_t bytes = lemonReaderBytes(lemonreader);
   uint64_t bytesRead = bytes;
 
+  if (buffer == (char**)NULL)
+    return;
+  
   if ((*buffer) != (char*)NULL)
     free(*buffer);
 
@@ -35,7 +38,7 @@ void read_message_parallel(LemonReader * lemonreader, char **buffer)
   if (status != LEMON_SUCCESS || bytes != bytesRead)
     if (lemonreader->my_rank == 0)
     {
-      fprintf(stderr, "Error in writing message.\n");
+      fprintf(stderr, "Error in reading message.\n");
       MPI_File_close(lemonreader->fh);
       MPI_Abort(MPI_COMM_WORLD, 1);
       MPI_Finalize();

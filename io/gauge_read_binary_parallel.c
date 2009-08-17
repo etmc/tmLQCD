@@ -23,6 +23,7 @@ void read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * c
 {
   int t, x, y, z, status = 0;
   int latticeSize[] = {L, L, L, T_global};
+  int scidacMapping[] = {0, 3, 2, 1};
   int prec;
   DML_SiteRank rank;
   MPI_Offset bytes;
@@ -66,7 +67,7 @@ void read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * c
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
   }
-  lemonReadLatticeParallel(lemonreader, filebuffer, bytes, latticeSize);
+  lemonReadLatticeParallelMapped(lemonreader, filebuffer, bytes, latticeSize, scidacMapping);
 
   if (g_debug_level > 0)
   {
