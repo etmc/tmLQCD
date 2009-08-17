@@ -130,7 +130,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
     max_eigenvector = (spinor *)(((unsigned long int)(max_eigenvector_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
     max_eigenvector_= calloc(N2, sizeof(spinor));
-    max_eigenvector = max_eigenvectors;
+    max_eigenvector = max_eigenvector;
 #endif  
 
 
