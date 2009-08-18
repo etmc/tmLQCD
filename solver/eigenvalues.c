@@ -45,6 +45,7 @@
 #include "solver/solver.h"
 #include "solver/jdher.h"
 #include "solver/matrix_mult_typedef.h"
+#include "linalg_eo.h"
 #include "eigenvalues.h"
 
 
@@ -53,7 +54,7 @@ double * eigenvls = NULL;
 double max_eigenvalue;
 double * inv_eigenvls = NULL;
 int eigenvalues_for_cg_computed = 0;
-int no_eigenvalues;
+int no_eigenvalues, evlength;
 
 /* the folowing two are needed for the overlap */
 double ev_minev=-1., ev_qnorm=-1.;
@@ -63,7 +64,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
 		   const int readwrite, const int nstore, 
 		   const int even_odd_flag) {
   double returnvalue;
-
+  complex norm2;
 #ifdef HAVE_LAPACK
   static spinor * eigenvectors_ = NULL;
   static int allocated = 0;
@@ -77,7 +78,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
    * For Jacobi-Davidson 
    **********************/
   int verbosity = g_debug_level, converged = 0, blocksize = 1, blockwise = 0;
-  int solver_it_max = 50, j_max, j_min;
+  int solver_it_max = 50, j_max, j_min, ii, jj;
   /*int it_max = 10000;*/
   /* complex *eigv_ = NULL, *eigv; */
   double decay_min = 1.7, decay_max = 1.5, prec,
@@ -104,7 +105,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   else {
     f = &Qtm_pm_psi;
   }
-
+  evlength = N2;
   if(g_proc_id == g_stdio_proc && g_debug_level >0) {
     printf("Number of %s eigenvalues to compute = %d\n",
 	   maxmin ? "maximal" : "minimal",(*nr_of_eigenvalues));
@@ -206,13 +207,35 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   (*nr_of_eigenvalues) = converged;
   no_eigenvalues = converged;
   ev_minev = eigenvls[(*nr_of_eigenvalues)-1];
-  if(maxmin == JD_MINIMAL) {
-    eigenvalues_for_cg_computed = converged;
+  eigenvalues_for_cg_computed = converged;
+
+  for (ii = 0; ii < (*nr_of_eigenvalues); ii++){
+    for (jj = 0; jj <= ii; jj++){
+      norm2 = scalar_prod(&(eigenvectors[ii*N2]),&(eigenvectors[jj*N2]), VOLUME, 1);
+      if(ii==jj){
+        if((fabs(1.-norm2.re)>1e-12) || (fabs(norm2.im)>1e-12) || 1) {
+          if(g_proc_id == g_stdio_proc){
+            printf("< %d | %d>  =\t   %e  +i * %e \n", ii+1, jj+1, norm2.re, norm2.im);
+            fflush(stdout);
+          }
+        }
+      }
+      else{
+        if((fabs(norm2.re)>1e-12) || (fabs(norm2.im)>1e-12) || 1) {
+          if(g_proc_id == g_stdio_proc){
+            printf("< %d | %d>  =\t   %e  +i * %e \n", ii+1, jj+1, norm2.re, norm2.im);
+            fflush(stdout);
+          }
+        }
+      }
+    }
   }
+
+
   if(readwrite == 1 && even_odd_flag) {
     for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
       sprintf(filename, "eigenvector.%s.%.2d.%.4d", maxmin ? "max" : "min", v0dim, nstore);
-      if((write_eospinor(&eigenvectors[v0dim*(VOLUMEPLUSRAND)/2], filename, eigenvls[v0dim], prec, nstore)) != 0) {
+      if((write_eospinor(&eigenvectors[v0dim*N2], filename, eigenvls[v0dim], prec, nstore)) != 0) {
 	break;
       }
     }

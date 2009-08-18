@@ -73,8 +73,8 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
 		       const double rnorm, const double minev);
 
 double ov_s = 0.6;
-double m_ov = 0.1;
-const int ov_n_cheby = 100;
+double m_ov = 0.;
+const int ov_n_cheby = 150;
 double * ov_cheby_coef = NULL;
 
 void Dov_psi(spinor * const P, spinor * const S) {
@@ -154,10 +154,10 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
     aux = aux_;
 #endif
     for(j=0; j < n-1; j++) {
-      D_psi(aux, &(eigenvectors[j*VOLUMEPLUSRAND]));
+      D_psi(aux, &(eigenvectors[j*evlength]));
       gamma5(aux, aux, N);
       
-      lambda = scalar_prod(&(eigenvectors[j*VOLUMEPLUSRAND]), aux, N, 1);
+      lambda = scalar_prod(&(eigenvectors[j*evlength]), aux, N, 1);
       if (lambda.re < 0) {
 	ev_sign[j] = -1;
       }
@@ -169,12 +169,12 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
   }
 
   for(j = 0; j < n-1; j++) {
-    cnorm = scalar_prod(&(eigenvectors[j*VOLUMEPLUSRAND]), P, N, 1);
+    cnorm = scalar_prod(&(eigenvectors[j*evlength]), P, N, 1);
     
     cnorm.re *= (double)ev_sign[j];
     cnorm.im *= (double)ev_sign[j];
     
-    assign_add_mul(Q, &(eigenvectors[j*VOLUMEPLUSRAND]), cnorm, N);
+    assign_add_mul(Q, &(eigenvectors[j*evlength]), cnorm, N);
   }
   return;
 }
@@ -271,7 +271,9 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
   aux3_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
   aux3 = aux3_;
 #endif
-  
+
+  eigenvalues_for_cg_computed = no_eigenvalues - 1;
+  if(eigenvalues_for_cg_computed < 0) eigenvalues_for_cg_computed = 0;
   maxev=1.0;
   
   fact1=4/(maxev-minev);
@@ -280,8 +282,8 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
   zero_spinor_field(d, VOLUME);
   zero_spinor_field(dd, VOLUME); 
   
-  assign_sub_lowest_eigenvalues(aux3, S, no_eigenvalues, VOLUME);
-  /* assign(&aux3[0], &S[0]);  */
+  if(1) assign_sub_lowest_eigenvalues(aux3, S, no_eigenvalues, VOLUME);
+  else assign(aux3, S, VOLUME);
   
   /* Check whether switch for adaptive precision is on */
   /* this might be implemented again in the future */
@@ -300,19 +302,22 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
       }
       
       norm_Q_sqr_psi(R, aux, rnorm);
+      printf("%e %e\n", R[0].s0.c0.re, R[0].s0.c0.im);
+      printf("%e %e\n", R[0].s1.c0.re, R[0].s1.c0.im);
       temp1=-1.0;
       temp2=c[j];
       assign_mul_add_mul_add_mul_add_mul_r(d, R, dd, aux3, fact2, fact1, temp1, temp2, VOLUME);
       assign(dd, sv, VOLUME);
     } 
     
-    assign_sub_lowest_eigenvalues(R, d, no_eigenvalues, VOLUME);
+    if(1) assign_sub_lowest_eigenvalues(R, d, no_eigenvalues, VOLUME);
+    else assign(R, d, VOLUME);
     
     norm_Q_sqr_psi(aux, R, rnorm);
     temp1=-1.0;
-    temp2=c[0]/2;
-    temp3=fact1/2;
-    temp4=fact2/2;
+    temp2=c[0]/2.;
+    temp3=fact1/2.;
+    temp4=fact2/2.;
     assign_mul_add_mul_add_mul_add_mul_r(aux, d, dd, aux3, temp3, temp4, temp1, temp2, VOLUME);
     norm_Q_n_psi(R, aux, 1, rnorm);
   }
@@ -325,12 +330,12 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
     assign(d, aux3, VOLUME);
     /* dd = T_1(Q^2) */
     norm_Q_sqr_psi(dd, d, rnorm);
-    temp3 = fact1/2;
-    temp4 = fact2/2;  
+    temp3 = fact1/2.;
+    temp4 = fact2/2.;  
     assign_mul_add_mul_r(dd, d, temp3, temp4, VOLUME);
-    /* r = c_1 T_1(Q^2) + 1/2 c_0 */
+    /* r = c_1 T_1(Q^2) + 1./2 c_0 */
     temp1 = c[1];
-    temp2 = c[0]/2;
+    temp2 = c[0]/2.;
     mul_add_mul_r(R, dd, d, temp1, temp2, VOLUME);
     
     temp1=-1.0;
