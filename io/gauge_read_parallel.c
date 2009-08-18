@@ -24,8 +24,8 @@ void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum,
 {
   MPI_File ifs;
   int status;
-  char *header_type;
-  LemonReader *lemonreader;
+  char *header_type = NULL;
+  LemonReader *lemonreader = NULL;
   DML_Checksum checksum_calc;
   DML_Checksum checksum_read;
   int DML_read_flag = 0;
@@ -48,6 +48,7 @@ void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum,
       break;
     }
     header_type = lemonReaderType(lemonreader);
+    fprintf(stdout, "Read header: %s\n", header_type); fflush(stdout);
 
     if (strcmp("ildg-binary-data", header_type) == 0)
     {
@@ -56,9 +57,9 @@ void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum,
     }
     else if (strcmp("scidac-checksum", header_type) == 0)
     {
-      checksum_string = (char*)malloc(256);
+      checksum_string = (char*)malloc(1024);
       read_message_parallel(lemonreader, &checksum_string);
-      checksum_string[255] = '\0';
+      checksum_string[1023] = '\0';
       DML_read_flag = parse_checksum_xml(checksum_string, &checksum_read);
       if (scidac_checksum != (char**)NULL)
       {
@@ -94,6 +95,7 @@ void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum,
     fflush(stdout);
   }
 
+  fprintf(stdout, "Ready to destroy reader.\n"); fflush(stdout);
   lemonDestroyReader(lemonreader);
   MPI_File_close(&ifs);
 }
