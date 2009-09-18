@@ -418,28 +418,28 @@ static void error(int no)
    switch(no)
    {
       case 0:
-         printf(stderr, "Error in rlxs_init\n");
-         printf(stderr, "Arithmetic on this machine is not suitable for ranlxs\n");
+         fprintf(stderr, "Error in rlxs_init\n");
+         fprintf(stderr, "Arithmetic on this machine is not suitable for ranlxs\n");
          break;
       case 1:
-         printf(stderr, "Error in subroutine rlxs_init\n");
-         printf(stderr, "Bad choice of luxury level (should be 0,1 or 2)\n");
+         fprintf(stderr, "Error in subroutine rlxs_init\n");
+         fprintf(stderr, "Bad choice of luxury level (should be 0,1 or 2)\n");
          break;
       case 2:
-         printf(stderr, "Error in subroutine rlxs_init\n");
-         printf(stderr, "Bad choice of seed (should be between 1 and 2^31-1)\n");
+         fprintf(stderr, "Error in subroutine rlxs_init\n");
+         fprintf(stderr, "Bad choice of seed (should be between 1 and 2^31-1)\n");
          break;
       case 3:
-         printf(stderr, "Error in rlxs_get\n");
-         printf(stderr, "Undefined state (ranlxs is not initialized)\n");
+         fprintf(stderr, "Error in rlxs_get\n");
+         fprintf(stderr, "Undefined state (ranlxs is not initialized)\n");
          break;
       case 4:
-         printf(stderr, "Error in rlxs_reset\n");
-         printf(stderr, "Arithmetic on this machine is not suitable for ranlxs\n");
+         fprintf(stderr, "Error in rlxs_reset\n");
+         fprintf(stderr, "Arithmetic on this machine is not suitable for ranlxs\n");
          break;
       case 5:
-         printf(stderr, "Error in rlxs_reset\n");
-         printf(stderr, "Unexpected input data\n");
+         fprintf(stderr, "Error in rlxs_reset\n");
+         fprintf(stderr, "Unexpected input data\n");
          break;
    }         
    fprintf(stderr, "Program aborted\n");
