@@ -382,7 +382,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   if(g_proc_id==0) {
     datafile = fopen(filename, "a");
     if (bc_flag == 0) { /* if PBC */
-      fprintf(datafile,"%14.12f %14.12f %e ",
+      fprintf(datafile, "%14.12f %14.12f %e ",
 	      (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
     }
     else if (bc_flag == 1) { /* if SF */
@@ -401,7 +401,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 	partial_effective_action = partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct);
 	coupling = normalisation/partial_effective_action;
 	
-	fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %14.12f %e ",
+	fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %e ",
 		coupling, normalisation, partial_effective_action, (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
       }
     }
