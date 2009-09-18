@@ -5091,7 +5091,7 @@ fi
 # AC_PROG_FC([ifort gfortran])
 # AC_FC_FUNC(testfunc, )
 
-LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(top_builddir)/lib"
+LDFLAGS="$LDFLAGS -L\${HOME}/lib -L\${top_builddir}/lib"
 CCLD=${CC}
 
 
