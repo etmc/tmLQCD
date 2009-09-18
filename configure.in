@@ -31,7 +31,7 @@ AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
 # AC_PROG_FC([ifort gfortran])
 # AC_FC_FUNC(testfunc, )
 
-LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(top_builddir)/lib"
+LDFLAGS="$LDFLAGS -L\${HOME}/lib -L\${top_builddir}/lib"
 CCLD=${CC}
 
 AC_CHECK_HEADERS([stdint.h],

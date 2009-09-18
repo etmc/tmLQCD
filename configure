@@ -5093,7 +5093,7 @@ fi
 # AC_PROG_FC([ifort gfortran])
 # AC_FC_FUNC(testfunc, )
 
-LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(top_builddir)/lib"
+LDFLAGS="$LDFLAGS -L\${HOME}/lib -L\${top_builddir}/lib"
 CCLD=${CC}
 
 
@@ -10650,7 +10650,7 @@ if test ! -e test; then
 fi
 
 
-LIBS="-lhmc -lsolver -llinalg -lio -lhmc $LIBS"
+LIBS="-lhmc -lsolver -llinalg -lhmc -lio $LIBS"
 AUTOCONF=autoconf
 
 ac_config_files="$ac_config_files Makefile linalg/Makefile solver/Makefile io/Makefile"
