@@ -7,20 +7,25 @@ void write_binary_spinor_data_parallel(spinor * const s, spinor * const r, Lemon
 
   int globaldims[] = {L, L, L, T_global};
   unsigned long bufoffset;
-  char *filebuffer;
+  char *filebuffer = NULL;
   uint64_t bytes;
   DML_SiteRank rank;
-
-  spinor *p;
+  double tick = 0, tock = 0;
+  char measure[64];
+  spinor *p = NULL;
 
   DML_checksum_init(checksum);
   bytes = (uint64_t)sizeof(spinor);
-  if (prec == 32)
+  if (prec == 32) {
     bytes /= 2;
+  }
   bufoffset = 0;
-  filebuffer = (char*)malloc(bytes * VOLUME);
-  double tick = 0, tock = 0;
-  char measure[64];
+  if((void*)(filebuffer = malloc(VOLUME * bytes)) == NULL) {
+    printf ("malloc errno in write_binary_spinor_data_parallel: %d\n", errno); 
+    errno = 0;
+    /* do we need to abort here? */
+    return;
+  }
 
   for (t0 = 0; t0 < T*g_nproc_t; t0++)
   {

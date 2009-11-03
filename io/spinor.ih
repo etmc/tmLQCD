@@ -11,6 +11,7 @@
 #include <mpi.h>
 #include <unistd.h>
 #include <math.h>
+#include <errno.h>
 
 #include <global.h>
 #include <io_utils.h>

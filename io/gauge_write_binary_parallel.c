@@ -26,15 +26,21 @@ void write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec,
   int globaldims[] = {L, L, L, T_global};
   int scidacMapping[] = {0, 3, 2, 1};
   unsigned long bufoffset;
-  char *filebuffer;
+  char * filebuffer = NULL;
   uint64_t bytes;
-  DML_SiteRank rank;
-  DML_checksum_init(ans);
-  bytes = (uint64_t)sizeof(su3) * (prec == 32 ? 2 : 4);
-  bufoffset = 0;
-  filebuffer = (char*)malloc(bytes * VOLUME);
   double tick = 0, tock = 0;
   char measure[64];
+  DML_SiteRank rank;
+  DML_checksum_init(ans);
+
+  bytes = (uint64_t)sizeof(su3) * (prec == 32 ? 2 : 4);
+  bufoffset = 0;
+  if((void*)(filebuffer = (char*)malloc(bytes * VOLUME)) == NULL) {
+    printf ("malloc errno in write_binary_gauge_data_parallel: %d\n",errno); 
+    errno = 0;
+    /* do we need to abort here? */
+    return;
+  }
 
   tG = g_proc_coords[0]*T;
   zG = g_proc_coords[3]*LZ;

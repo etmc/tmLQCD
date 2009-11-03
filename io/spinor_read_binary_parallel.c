@@ -7,7 +7,7 @@ void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonR
   int prec;
   n_uint64_t bytes;
   spinor *p = NULL;
-  char *filebuffer, *current;
+  char *filebuffer = NULL, *current = NULL;
   double tick = 0, tock = 0;
   DML_SiteRank rank;
   uint64_t fbspin;
@@ -41,7 +41,12 @@ void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonR
     fbspin /= 2;
   bytes = fbspin;
 
-  filebuffer = malloc(VOLUME * bytes);
+  if((void*)(filebuffer = malloc(VOLUME * bytes)) == NULL) {
+    printf ("malloc errno in read_binary_spinor_data_parallel: %d\n", errno); 
+    errno = 0;
+    /* do we need to abort here? */
+    return;
+  }
 
   if (g_debug_level > 0)
   {

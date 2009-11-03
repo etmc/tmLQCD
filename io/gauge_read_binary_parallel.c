@@ -28,7 +28,7 @@ void read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * c
   DML_SiteRank rank;
   MPI_Offset bytes;
   uint64_t fbsu3;
-  char *filebuffer, *current;
+  char * filebuffer = NULL, * current = NULL;
   double tick = 0, tock = 0;
   char measure[64];
 
@@ -60,7 +60,12 @@ void read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * c
     fbsu3 /= 2;
   bytes = 4 * fbsu3;
 
-  filebuffer = malloc(VOLUME * bytes);
+  if((void*)(filebuffer = malloc(VOLUME * bytes)) == NULL) {
+    printf ("malloc errno in read_binary_gauge_data_parallel: %d\n", errno); 
+    errno = 0;
+    /* do we need to abort here? */
+    return;
+  }
 
   if (g_debug_level > 0)
   {
@@ -141,7 +146,6 @@ void read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * c
         }
   DML_global_xor(&checksum->suma);
   DML_global_xor(&checksum->sumb);
-
   free(filebuffer);
 }
 
