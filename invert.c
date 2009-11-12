@@ -100,13 +100,8 @@ void usage()
 extern int nstore;
 int check_geometry();
 
-#ifdef BATCH_INVERT
-int invert(int argc, char *argv[])
-#else
 int main(int argc, char *argv[])
-#endif
 {
-
   FILE *parameterfile = NULL, *ifs = NULL;
   int c, iter, j, ix = 0, is = 0, ic = 0, err = 0;
   char * filename = NULL;
@@ -660,7 +655,11 @@ int main(int argc, char *argv[])
         /* write the source depending on format */
         if (write_prop_format_flag == 1)
         {
-          write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
+#ifdef HAVE_LIBLEMON
+          write_source_parallel(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
+#else  /* HAVE_LIBLEMON */
+	  write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
+#endif /* HAVE_LIBLEMON */
         }
       }
 #ifdef MPI
@@ -668,8 +667,13 @@ int main(int argc, char *argv[])
 #else
       ratime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
+#ifdef HAVE_LIBLEMON
+      write_propagator_parallel(g_spinor_field[2], g_spinor_field[3], conf_filename, 1,
+                       prop_precision_flag, write_prop_format_flag);
+#else  /* HAVE_LIBLEMON */
       write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1,
                        prop_precision_flag, write_prop_format_flag);
+#endif /* HAVE_LIBLEMON */
 
 #ifdef MPI
       retime = MPI_Wtime();
@@ -742,49 +746,3 @@ int main(int argc, char *argv[])
 #pragma pomp inst end(main)
 #endif
 }
-
-#ifdef BATCH_INVERT
-void batch_usage()
-{
-  fprintf(stderr, "Error occurred for batch inverter.\n");
-  fprintf(stderr, "Syntax: batch_invert [prefix] [initial] [skip] [final]\n");
-  return;
-}
-
-int main(int argc, char **argv)
-{
-  char submit[256];
-  char *sub_argv[3];
-  char *prefix, *addition;
-  int init, final, skip, ctr;
-  
-  if (argc < 5)
-  {
-    batch_usage();
-    return 1;
-  }
-  
-  submit[255] = '\0';
-  prefix = argv[1];
-  init = atoi(argv[2]);
-  skip = atoi(argv[3]);
-  final = atoi(argv[4]);
-  
-  sub_argv[0] = submit;
-  strcpy(submit, "invert_singlet_new \0");
-  sub_argv[1] = submit + strlen(submit);
-  strcpy(sub_argv[1], "-f \0");
-  sub_argv[2] = submit + strlen(submit);
-  strcpy(sub_argv[2], prefix);
-  addition = submit + strlen(submit);
-  
-  sub_argv[1] = submit + 7;
-  for (ctr = init, ctr < final, ctr += skip)
-  {
-    itoa(ctr, addition, 10);
-    invert(3, sub_argv);
-  }
-  
-  return 0;
-}
-#endif
