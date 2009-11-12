@@ -83,6 +83,7 @@
 
 #include <io/params.h>
 #include <io/gauge.h>
+#include <io/spinor.h>
 
 void usage()
 {
@@ -99,7 +100,11 @@ void usage()
 extern int nstore;
 int check_geometry();
 
+#ifdef BATCH_INVERT
+int invert(int argc, char *argv[])
+#else
 int main(int argc, char *argv[])
+#endif
 {
 
   FILE *parameterfile = NULL, *ifs = NULL;
@@ -126,8 +131,8 @@ int main(int argc, char *argv[])
 #ifdef HAVE_LIBLEMON
   MPI_File fh;
   LemonWriter *lemonWriter;
-  paramsXlfInfo *xlfInfo;
-  paramsPropagatorFormat *propagatorFormat;
+//  paramsXlfInfo *xlfInfo;
+//  paramsPropagatorFormat *propagatorFormat;
 #endif
 
 #if (defined SSE || defined SSE2 || SSE3)
@@ -637,14 +642,14 @@ int main(int argc, char *argv[])
         if (propagator_splitted || ix == index_start)
         {
 #ifdef HAVE_LIBLEMON
-          xlfInfo = create_paramsXlfInfo(plaquette_energy / (6.*VOLUME*g_nproc), nstore);
-          write_propagator_type_parallel(lemonWriter, write_prop_format_flag);
-          write_xlf_info_parallel(lemonWriter, xlfInfo);
+//          xlfInfo = create_paramsXlfInfo(plaquette_energy / (6.*VOLUME*g_nproc), nstore);
+//          write_propagator_type_parallel(lemonWriter, write_prop_format_flag);
+//          write_xlf_info_parallel(lemonWriter, xlfInfo);
           write_header_parallel(lemonWriter, 1, 1, "gauge-ildg-data-lfn-copy", strlen(gaugelfn));
           write_message_parallel(lemonWriter, gaugelfn, strlen(gaugelfn));
           write_header_parallel(lemonWriter, 1, 1, "gauge-scidac-checksum-copy", strlen(gaugecksum));
           write_message_parallel(lemonWriter, gaugecksum, strlen(gaugecksum));
-          free(xlfInfo);
+//          free(xlfInfo);
 #else /* HAVE_LIBLEMON */
           write_propagator_type(write_prop_format_flag, conf_filename);
           write_xlf_info(plaquette_energy / (6.*VOLUME*g_nproc), nstore, conf_filename, 1, xlfmessage);
@@ -652,9 +657,6 @@ int main(int argc, char *argv[])
           write_message(conf_filename, gaugecksum, "gauge-scidac-checksum-copy", 1);
 #endif /* HAVE_LIBLEMON */
         }
-/** HERE **/
-/** HERE **/
-/** HERE **/
         /* write the source depending on format */
         if (write_prop_format_flag == 1)
         {
@@ -740,3 +742,49 @@ int main(int argc, char *argv[])
 #pragma pomp inst end(main)
 #endif
 }
+
+#ifdef BATCH_INVERT
+void batch_usage()
+{
+  fprintf(stderr, "Error occurred for batch inverter.\n");
+  fprintf(stderr, "Syntax: batch_invert [prefix] [initial] [skip] [final]\n");
+  return;
+}
+
+int main(int argc, char **argv)
+{
+  char submit[256];
+  char *sub_argv[3];
+  char *prefix, *addition;
+  int init, final, skip, ctr;
+  
+  if (argc < 5)
+  {
+    batch_usage();
+    return 1;
+  }
+  
+  submit[255] = '\0';
+  prefix = argv[1];
+  init = atoi(argv[2]);
+  skip = atoi(argv[3]);
+  final = atoi(argv[4]);
+  
+  sub_argv[0] = submit;
+  strcpy(submit, "invert_singlet_new \0");
+  sub_argv[1] = submit + strlen(submit);
+  strcpy(sub_argv[1], "-f \0");
+  sub_argv[2] = submit + strlen(submit);
+  strcpy(sub_argv[2], prefix);
+  addition = submit + strlen(submit);
+  
+  sub_argv[1] = submit + 7;
+  for (ctr = init, ctr < final, ctr += skip)
+  {
+    itoa(ctr, addition, 10);
+    invert(3, sub_argv);
+  }
+  
+  return 0;
+}
+#endif
