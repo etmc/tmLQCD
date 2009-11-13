@@ -98,4 +98,7 @@ void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum,
   fprintf(stdout, "Ready to destroy reader.\n"); fflush(stdout);
   lemonDestroyReader(lemonreader);
   MPI_File_close(&ifs);
+  g_update_gauge_copy = 1;
+  g_update_gauge_energy = 1;
+  return;
 }
