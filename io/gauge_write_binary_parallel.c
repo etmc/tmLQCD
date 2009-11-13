@@ -23,7 +23,7 @@ void write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec,
 {
   int x, xG, y, yG, z, zG, t, tG;
   su3 tmp3[4];
-  int globaldims[] = {L, L, L, T_global};
+  int globaldims[] = {T_global, L, L, L};
   int scidacMapping[] = {0, 3, 2, 1};
   unsigned long bufoffset;
   char * filebuffer = NULL;

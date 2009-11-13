@@ -22,7 +22,7 @@
 void read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * checksum)
 {
   int t, x, y, z, status = 0;
-  int latticeSize[] = {L, L, L, T_global};
+  int latticeSize[] = {T_global, L, L, L};
   int scidacMapping[] = {0, 3, 2, 1};
   int prec;
   DML_SiteRank rank;
