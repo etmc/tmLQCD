@@ -25,4 +25,5 @@ paramsXlfInfo *construct_paramsXlfInfo(double const plaq, int const counter)
   info->epsilonbar = g_epsbar / 2. / g_kappa;
 
   strcpy(info->date, ctime(&t1.tv_sec));
+  return(info);
 }

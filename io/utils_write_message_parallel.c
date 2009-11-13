@@ -24,7 +24,7 @@ void write_message_parallel(LemonWriter * lemonwriter, char const *buffer, uint6
   int status;
   uint64_t bytesWritten = bytes;
 
-  status = lemonWriteRecordData(buffer, &bytesWritten, lemonwriter);
+  status = lemonWriteRecordData((void*)buffer, &bytesWritten, lemonwriter);
 
   if (status != LEMON_SUCCESS || bytes != bytesWritten)
     kill_with_error(lemonwriter->fh, lemonwriter->my_rank, "I/O error on writing message. Aborting...\n");
