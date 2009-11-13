@@ -37,6 +37,13 @@
 #if (defined BGL && !defined BGP)
 #  include <rts.h>
 #endif
+#ifdef MPI
+# include <mpi.h>
+# ifdef HAVE_LIBLEMON
+#  include <io/params.h>
+#  include <io/gauge.h>
+# endif
+#endif
 #include "su3.h"
 #include "su3adj.h"
 #include "ranlxd.h"
@@ -89,6 +96,9 @@ int check_xchange();
 int main(int argc,char *argv[])
 {
   int j,j_max,k,k_max = 5;
+#ifdef HAVE_LIBLEMON
+  paramsXlfInfo *xlfInfo;
+#endif
   
   
   static double t1,t2,dt,sdt,dts,qdt,sqdt;
@@ -401,6 +411,19 @@ int main(int argc,char *argv[])
       fflush(stdout);
     }
   }
+#ifdef HAVE_LIBLEMON
+  if(g_proc_id==0) {
+    printf("doing parallel IO test ...\n");
+  }
+  xlfInfo = construct_paramsXlfInfo(0.5, 0);
+  write_lemon_gauge_field_parallel( "conf.test", 64, xlfInfo);
+  free(xlfInfo);
+  if(g_proc_id==0) {
+    printf("done ...\n");
+  }
+#endif
+
+
 #ifdef MPI
   MPI_Finalize();
 #endif
