@@ -61,6 +61,7 @@
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
 #include "init_dirac_halfspinor.h"
+#include "update_backward_gauge.h"
 #include "test/check_geometry.h"
 #include "xchange_halffield.h"
 #include "D_psi.h"
@@ -72,9 +73,15 @@
 #elif defined PARALLELXT
 #  define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2))
 #elif defined PARALLELXYT
-#  define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2) + (T*LX*LZ))
+#  define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2) + (T*LX*LZ/2))
 #elif defined PARALLELXYZT
-#  define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2) + (T*LX*LZ) + (T*LX*LY))
+#  define SLICE ((LX*LY*LZ/2)+(T*LY*LZ/2) + (T*LX*LZ/2) + (T*LX*LY/2))
+#elif defined PARALLELX
+#  define SLICE ((LY*LZ*T/2))
+#elif defined PARALLELXY
+#  define SLICE ((LY*LZ*T/2) + (LX*LZ*T/2))
+#elif defined PARALLELXYZ
+#  define SLICE ((LY*LZ*T/2) + (LX*LZ*T/2) + (LX*LY*T/2))
 #endif
 
 #if (defined BGL && !defined BGP)
@@ -95,13 +102,14 @@ int check_xchange();
 
 int main(int argc,char *argv[])
 {
-  int j,j_max,k,k_max = 5;
+  int j,j_max,k,k_max = 1;
 #ifdef HAVE_LIBLEMON
   paramsXlfInfo *xlfInfo;
 #endif
   
   
   static double t1,t2,dt,sdt,dts,qdt,sqdt;
+  double antioptaway=0.0;
 #ifdef MPI
   static double dt2;
   
@@ -172,10 +180,10 @@ int main(int argc,char *argv[])
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
 
   if(even_odd_flag) {
-    j = init_spinor_field(VOLUMEPLUSRAND/2, 3*k_max);
+    j = init_spinor_field(VOLUMEPLUSRAND/2, 2*k_max);
   }
   else {
-    j = init_spinor_field(VOLUMEPLUSRAND, 3*k_max);
+    j = init_spinor_field(VOLUMEPLUSRAND, 2*k_max);
   }
 
   if ( j!= 0) {
@@ -241,6 +249,10 @@ int main(int argc,char *argv[])
   xchange_gauge();
 #endif
 
+#ifdef _GAUGE_COPY
+  update_backward_gauge();
+#endif
+
   if(even_odd_flag) {
     /*initialize the pseudo-fermion fields*/
     j_max=1;
@@ -258,10 +270,12 @@ int main(int argc,char *argv[])
 #else
       t1=(double)clock();
 #endif
+      antioptaway=0.0;
       for (j=0;j<j_max;j++) {
 	for (k=0;k<k_max;k++) {
 	  Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
-	  Hopping_Matrix(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]);
+	  Hopping_Matrix(1, g_spinor_field[k], g_spinor_field[k+k_max]);
+          antioptaway+=g_spinor_field[k][0].s0.c0.re;
 	}
       }
 #if defined BGL
@@ -292,7 +306,8 @@ int main(int argc,char *argv[])
     sqdt=1.0e6f*sqdt/((double)(k_max*j_max*(VOLUME)));
     
     if(g_proc_id==0) {
-      printf("total time %e sec, Variance of the time %e sec \n",sdt,sqdt);
+      printf("Print 1 result, to make sure that the calculation is not optimized away: %e  \n",antioptaway);
+      printf("total time %e sec, Variance of the time %e sec. (itarations=%d). \n",sdt,sqdt,j_max);
       printf("\n");
       printf(" (%d Mflops [%d bit arithmetic])\n",
 	     (int)(1320.0f/sdt),(int)sizeof(spinor)/3);
@@ -310,8 +325,9 @@ int main(int argc,char *argv[])
     for (j=0;j<j_max;j++) {
       for (k=0;k<k_max;k++) {
 	Hopping_Matrix_nocom(0, g_spinor_field[k+k_max], g_spinor_field[k]);
-	Hopping_Matrix_nocom(1, g_spinor_field[k+2*k_max], g_spinor_field[k+k_max]);
+	Hopping_Matrix_nocom(1, g_spinor_field[k], g_spinor_field[k+k_max]);
       }
+      antioptaway+=g_spinor_field[k][0].s0.c0.re;
     }
 #if defined BGL
     t2 = bgl_wtime();
@@ -328,6 +344,7 @@ int main(int argc,char *argv[])
     dt=dt/((double)g_nproc);
     dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
     if(g_proc_id==0) {
+      printf("Print 1 result, to make sure that the calculation is not optimized away: %e  \n",antioptaway);
       printf("communication switched off \n");
       printf(" (%d Mflops [%d bit arithmetic])\n",
 	     (int)(1320.0f/dt),(int)sizeof(spinor)/3);
@@ -374,6 +391,7 @@ int main(int argc,char *argv[])
 	  D_psi(g_spinor_field[k+k_max], g_spinor_field[k]);
 	  if(g_proc_id == 0) printf("blub %d %d %1.3e\n", j, k, sdt);
 	}
+        antioptaway+=g_spinor_field[k+k_max][0].s0.c0.re;
       }
 #if defined BGL
       t2 = bgl_wtime();
@@ -403,7 +421,8 @@ int main(int argc,char *argv[])
     sqdt=1.0e6f*sqdt/((double)(k_max*j_max*(VOLUME)));
     
     if(g_proc_id==0) {
-      printf("total time %e sec, Variance of the time %e sec \n",sdt,sqdt);
+      printf("Print 1 result, to make sure that the calculation is not optimized away: %e  \n",antioptaway);
+      printf("total time %e sec, Variance of the time %e sec. (iterations=%d). \n",sdt,sqdt,j_max);
       printf("\n");
       printf(" (%d Mflops [%d bit arithmetic])\n",
 	     (int)(1392.0f/sdt),(int)sizeof(spinor)/3);
