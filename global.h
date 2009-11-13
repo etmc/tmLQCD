@@ -89,6 +89,10 @@ EXTERN int g_sloppy_precision;
 EXTERN int **** g_ipt;
 EXTERN int ** g_iup;
 EXTERN int ** g_idn;
+EXTERN int ** g_iup_eo; // NEW GIUPDNEO
+EXTERN int ** g_idn_eo;
+EXTERN int ** g_coord;
+
 
 EXTERN int * g_field_z_ipt_even;
 EXTERN int * g_field_z_ipt_odd;
@@ -96,6 +100,58 @@ EXTERN int * g_field_z_ipt_odd;
 EXTERN spinor ** g_spinor_field;
 
 EXTERN bispinor ** g_bispinor_field;
+EXTERN spinor * g_tbuff;
+
+/* Index independent geometry */
+
+EXTERN int * g_field_z_ipt_even;
+EXTERN int * g_field_z_ipt_odd;
+EXTERN int * g_field_z_disp_even_dn;
+EXTERN int * g_field_z_disp_even_up;
+EXTERN int * g_field_z_disp_odd_dn;
+EXTERN int * g_field_z_disp_odd_up;
+
+/* this if statement will be removed in future and _INDEX_INDEP_GEOM will be the default */
+#ifdef _INDEX_INDEP_GEOM
+EXTERN int g_1st_t_int_dn,g_1st_t_int_up,g_1st_t_ext_dn,g_1st_t_ext_up;
+EXTERN int g_1st_x_int_dn,g_1st_x_int_up,g_1st_x_ext_dn,g_1st_x_ext_up;
+EXTERN int g_1st_y_int_dn,g_1st_y_int_up,g_1st_y_ext_dn,g_1st_y_ext_up;
+EXTERN int g_1st_z_int_dn,g_1st_z_int_up,g_1st_z_ext_dn,g_1st_z_ext_up;
+EXTERN int gI_0_0_0_0,gI_L_0_0_0,gI_Lm1_0_0_0,gI_m1_0_0_0,gI_p1_0_0_0,gI_Lp1_0_0_0,gI_Lm2_0_0_0,gI_m2_0_0_0;
+EXTERN int gI_0_L_0_0,gI_0_Lm1_0_0,gI_0_m1_0_0,gI_0_p1_0_0,gI_0_Lp1_0_0,gI_0_Lm2_0_0,gI_0_m2_0_0,gI_L_L_0_0;
+EXTERN int gI_Lm1_L_0_0,gI_m1_L_0_0,gI_p1_L_0_0,gI_Lp1_L_0_0,gI_Lm2_L_0_0,gI_m2_L_0_0,gI_L_Lp1_0_0,gI_Lm1_Lp1_0_0;
+EXTERN int gI_m1_Lp1_0_0,gI_0_0_L_0,gI_0_0_Lm1_0,gI_0_0_m1_0,gI_0_0_p1_0,gI_0_0_Lp1_0,gI_0_0_Lm2_0,gI_0_0_m2_0;
+EXTERN int gI_0_L_L_0,gI_0_Lm1_L_0,gI_0_m1_L_0,gI_L_0_L_0,gI_L_0_Lm1_0,gI_L_0_m1_0,gI_0_p1_L_0,gI_0_Lp1_L_0;
+EXTERN int gI_0_Lm2_L_0,gI_0_m2_L_0,gI_0_L_Lp1_0,gI_0_Lm1_Lp1_0,gI_0_m1_Lp1_0,gI_Lp1_0_L_0,gI_Lp1_0_Lm1_0;
+EXTERN int gI_Lp1_0_m1_0,gI_L_0_p1_0,gI_L_0_Lp1_0,gI_L_0_Lm2_0,gI_L_0_m2_0,gI_0_0_0_L,gI_0_0_0_Lm1,gI_0_0_0_m1;
+EXTERN int gI_0_0_0_p1,gI_0_0_0_Lp1,gI_0_0_0_Lm2,gI_0_0_0_m2,gI_0_L_0_L,gI_0_Lm1_0_L,gI_0_m1_0_L,gI_L_0_0_L;
+EXTERN int gI_L_0_0_Lm1,gI_L_0_0_m1,gI_0_L_0_L,gI_0_Lm1_0_L,gI_0_m1_0_L,gI_Lp1_0_0_L,gI_Lp1_0_0_Lm1,gI_Lp1_0_0_m1;
+EXTERN int gI_L_0_0_p1,gI_L_0_0_Lp1,gI_L_0_0_Lm2,gI_L_0_0_m2,gI_0_L_0_Lp1,gI_0_Lm1_0_Lp1,gI_0_m1_0_Lp1,gI_0_p1_0_L;
+EXTERN int gI_0_Lp1_0_L,gI_0_Lm2_0_L,gI_0_m2_0_L,gI_0_0_L_Lp1,gI_0_0_Lm1_Lp1,gI_0_0_m1_Lp1,gI_0_0_p1_L;
+EXTERN int gI_0_0_Lp1_L,gI_0_0_Lm2_L,gI_0_0_m2_L,gI_Lp1_m1_0_0,gI_m2_m1_0_0,gI_m2_0_L_0,gI_m2_0_m1_0,gI_0_Lp1_m1_0;
+EXTERN int gI_0_m2_m1_0,gI_m2_0_0_L,gI_m2_0_0_m1,gI_0_Lp1_0_m1,gI_0_m2_0_m1,gI_0_0_Lp1_m1,gI_0_0_m2_m1,gI_m1_0_0_m2;
+
+# ifdef _USE_TSPLITPAR
+EXTERN int ** g_field_zt_disp_even_dn;
+EXTERN int ** g_field_zt_disp_even_up;
+EXTERN int ** g_field_zt_disp_odd_dn;
+EXTERN int ** g_field_zt_disp_odd_up;
+EXTERN int TEOSLICE;
+EXTERN int ** g_1st_eot;
+EXTERN int * g_1st_xt_int_dn;
+EXTERN int * g_1st_xt_int_up;
+EXTERN int * g_1st_xt_ext_dn;
+EXTERN int * g_1st_xt_ext_up;
+EXTERN int * g_1st_yt_int_dn;
+EXTERN int * g_1st_yt_int_up;
+EXTERN int * g_1st_yt_ext_dn;
+EXTERN int * g_1st_yt_ext_up;
+EXTERN int * g_1st_zt_int_dn;
+EXTERN int * g_1st_zt_int_up;
+EXTERN int * g_1st_zt_ext_dn;
+EXTERN int * g_1st_zt_ext_up;
+# endif
+#endif /* _INDEX_INDEP_GEOM */ 
 
 /* IF PHMC  */
 EXTERN spinor ** g_chi_up_spinor_field;
@@ -106,6 +162,9 @@ EXTERN int g_running_phmc;
 EXTERN su3 ** g_gauge_field;
 #ifdef _USE_HALFSPINOR
 EXTERN su3 *** g_gauge_field_copy;
+#elif (defined _USE_TSPLITPAR )
+EXTERN su3 ** g_gauge_field_copyt;
+EXTERN su3 ** g_gauge_field_copys;
 #else
 EXTERN su3 ** g_gauge_field_copy;
 #endif
