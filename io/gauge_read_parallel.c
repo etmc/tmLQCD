@@ -55,7 +55,7 @@ void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum,
       read_binary_gauge_data_parallel(lemonreader, &checksum_calc);
       gauge_read_flag = 1;
     }
-    else if (strcmp("scidac-checksum", header_type) == 0)
+    else if (strcmp("XXscidac-checksum", header_type) == 0)
     {
       checksum_string = (char*)malloc(1024);
       read_message_parallel(lemonreader, &checksum_string);
