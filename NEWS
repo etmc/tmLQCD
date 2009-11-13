@@ -1,3 +1,6 @@
+13.11.2009: parallel IO for gauge fields tested and working.
+            parallel reading of Checksum still buggy, but not essential
+
 09.11.2009: MMS successfully checked. Little code for checking
             in contractions/check_propagators/check_mms_props.cc
 
