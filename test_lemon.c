@@ -51,31 +51,23 @@
 #include "read_input.h"
 #include "start.h"
 #include "boundary.h"
-#include "Hopping_Matrix.h"
-#include "Hopping_Matrix_nocom.h"
-#include "tm_operators.h"
 #include "global.h"
 #include "xchange.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
-#include "init_spinor_field.h"
-#include "init_moment_field.h"
-#include "init_dirac_halfspinor.h"
-#include "test/check_geometry.h"
-#include "xchange_halffield.h"
-#include "D_psi.h"
-#include "phmc.h"
+#include "gauge_io.h"
+#include "observables.h"
 #include "mpi_init.h"
 
 
-int main(int argc,char *argv[])
-{
-  int j,j_max,k,k_max = 5;
+int main(int argc,char *argv[]) {
+
+  double plaquette_energy;
 #ifdef HAVE_LIBLEMON
   paramsXlfInfo *xlfInfo;
 #endif
   
-  double plaquette_energy;
+
 #ifdef MPI
   
   MPI_Init(&argc, &argv);
@@ -170,13 +162,20 @@ int main(int argc,char *argv[])
   }
 #endif
 
+  if(g_proc_id == 0) {
+    printf("# now we read with lime from conf.lime\n");
+  }
+  read_lime_gauge_field("conf.lime");
+  plaquette_energy = measure_gauge_action() / (6.*VOLUME*g_nproc);
+  if(g_proc_id == 0) {
+    printf("# the plaquette value after lime read of conf.lime is %e\n", plaquette_energy);
+  }
+
 
 #ifdef MPI
   MPI_Finalize();
 #endif
   free_gauge_field();
   free_geometry_indices();
-  free_spinor_field();
-  free_moment_field();
   return(0);
 }
