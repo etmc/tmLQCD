@@ -42,6 +42,18 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Index independent addressing */
+#undef _INDEX_INDEP_GEOM
+
+/* X parallelisation */
+#undef PARALLELX
+
+/* XY parallelisation */
+#undef PARALLELXY
+
+/* XYZ parallelisation */
+#undef PARALLELXYZ
+
 /* One dimensional parallelisation */
 #undef PARALLELT
 
@@ -53,6 +65,9 @@
 
 /* Four dimensional parallelisation */
 #undef PARALLELXYZT
+
+/* timeslice-splitted communications */
+#undef _USE_TSLITPAR
 
 /* Fixed volume at compiletime */
 #undef FIXEDVOLUME
