@@ -50,7 +50,7 @@ void read_spinor_parallel(spinor * const s, spinor * const r,
     else
       kill_with_error(&ifs, g_cart_id, "Wrong length in eospinor. Aborting read!\n");
   if (g_proc_id == 0 && g_debug_level > 2)
-    printf("# %d Bit precision read\n", prec);
+    printf("# %d bit precision read\n", prec);
 
   read_binary_spinor_data_parallel(s, r, lemonreader, &checksum);
 

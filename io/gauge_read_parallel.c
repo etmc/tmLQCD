@@ -48,7 +48,6 @@ void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum,
       break;
     }
     header_type = lemonReaderType(lemonreader);
-    fprintf(stdout, "Read header: %s\n", header_type); fflush(stdout);
 
     if (strcmp("ildg-binary-data", header_type) == 0)
     {
@@ -84,7 +83,7 @@ void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum,
   if (!gauge_read_flag)
     kill_with_error(&ifs, g_cart_id, "Did not find gauge record. Aborting...\n");
 
-  if (g_debug_level > 1 && g_cart_id == 0)
+  if (g_debug_level > 0 && g_cart_id == 0)
   {
     printf("# checksum for gaugefield %s\n", filename);
     printf("# calculated: %#x %#x.\n", checksum_calc.suma, checksum_calc.sumb);
@@ -95,7 +94,6 @@ void read_lemon_gauge_field_parallel(char *filename, char **scidac_checksum,
     fflush(stdout);
   }
 
-  fprintf(stdout, "Ready to destroy reader.\n"); fflush(stdout);
   lemonDestroyReader(lemonreader);
   MPI_File_close(&ifs);
   g_update_gauge_copy = 1;
