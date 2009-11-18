@@ -1,13 +1,9 @@
-For PHMC:
-- cleaning up the code.
-- make more integration schemes available
-- phmc with nf=2 degenerate
+- clean up source generation plus source input filename scheme
+- parallel IO for propagators
+- deflation
+- inverter for overlap (needs a new structure, partially available)
+- mixed precision solver, single precision Dirac operator
+- GPU implementation...
+- test RHMC?
+- dynamical overlap code
 
-For Blue Gene/L:
-- tune get_staples and get_rectangular_staples (su3_times_su3, prefetching)
-- tune xchange_gauge and xchange_deri like xchange_field
-- linear algebra: add __alignx and unrolling in the most important routines.
-  maybe write for the most important ones versions with intrinsic functions
-- the usage of the random number generator should be changed for this machine
-  moreover a usage should be available for testing which reproduces
-  exactly the scalar case. 

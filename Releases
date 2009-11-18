@@ -1,3 +1,12 @@
+Release 5.1.1: 
+Multi Mass solver added
+overlap operator added
+parallel IO added
+
+Release 5.0.3: 
+bug fix release, release published in computer 
+physics communications
+
 Release 5.0.0:
 new input file structure (monomials) allowing for any even 
 number of quarks
