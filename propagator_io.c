@@ -50,10 +50,6 @@
 int write_propagator(spinor * const s, spinor * const r, char * filename,
 		     const int append, const int prec, const int format)
 {
-#ifdef HAVE_LIBLEMON
-  spinor *ss[1];
-  spinor *rr[1];
-#endif /* HAVE_LIBLEMON */
   int err = 0;
 
   if(format == 11) {
@@ -66,11 +62,8 @@ int write_propagator(spinor * const s, spinor * const r, char * filename,
   }
   else {
     /* standard ETMC */
-#ifdef HAVE_LIBLEMON
-#else /* HAVE_LIBLEMON */
     write_propagator_format(filename, prec, 1);
     err = write_lime_spinor(s, r, filename, append, prec);
-#endif /* HAVE_LIBLEMON */
   }
   return(err);
 }
@@ -80,17 +73,9 @@ int write_propagator(spinor * const s, spinor * const r, char * filename,
 int write_source(spinor * const s, spinor * const r, char * filename,
 		 const int append, const int prec)
 {
-#ifdef HAVE_LIBLEMON
-  spinor *ss[1];
-  spinor *rr[1];
-#endif /* HAVE_LIBLEMON */
   int err = 0;
-#ifdef HAVE_LIBLEMON
-  ss[0] = s; rr[0] = r;
-#else /* HAVE_LIBLEMON */
   write_source_format(filename, prec, 1, T, LX, LY, LZ, 4, 3);
   err = write_lime_spinor(s, r, filename, append, prec);
-#endif /* HAVE_LIBLEMON */
   return(err);
 }
 
@@ -110,11 +95,8 @@ int read_source(spinor * const s, spinor * const r, char *filename,
   else
   {
     /* ETMC standard format */
-#ifdef HAVE_LIBLEMON
-#else /* HAVE_LIBLEMON */
     if(read_lime_spinor(g_spinor_field[0], g_spinor_field[1], filename, position) != 0)
       err = -2;
-#endif /* HAVE_LIBLEMON */
   }
 
   if(err != 0) {
@@ -135,22 +117,15 @@ int read_source(spinor * const s, spinor * const r, char *filename,
 int write_double_propagator(spinor * const s, spinor * const r,
 			    spinor * const p, spinor * const q,
 			    char * filename, const int append, const int prec) {
-#ifdef HAVE_LIBLEMON
-  spinor *ss[2];
-  spinor *rr[2];
-#endif
   int err = 0;
 
   /* we store strange component first, then charm */
   /* strange -> (mu_sigma - mu_delta)             */
   /* charm   -> (mu_sigma + mu_delta)             */
   /* they are in reversed order in our code    */
-#ifdef HAVE_LIBLEMON
-#else /* HAVE_LIBLEMON */
   write_propagator_format(filename, prec, 2);
   err = write_lime_spinor(p, q, filename, append, prec);
   err += write_lime_spinor(s, r, filename, append, prec);
-#endif /* HAVE_LIBLEMON */
   return(err);
 }
 
