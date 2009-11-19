@@ -11,7 +11,7 @@ void write_spinor_parallel(LemonWriter *writer, spinor ** const s, spinor ** con
 
   for (i = 0; i < flavours; ++i)
   {
-    write_header_parallel(writer, 1, 0, "scidac-binary-data", bytes);
+    write_header_parallel(writer, 1, 1, "scidac-binary-data", bytes);
     write_binary_spinor_data_parallel(s[i], r[i], writer, &checksum, prec);
     /* write_checksum_parallel(writer, &checksum); */
   }

@@ -49,7 +49,7 @@ void write_xlf_info_parallel(LemonWriter * lemonwriter, paramsXlfInfo const *inf
                      " beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f\n"
                      " date = %s",
             info->plaq, info->counter, info->beta, info->kappa,
-            info->mu, info->c2_rec, info->time);
+            info->mu, info->c2_rec, info->date);
   }
   bytes = strlen(message);
 

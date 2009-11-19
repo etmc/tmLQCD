@@ -24,7 +24,6 @@ int parse_checksum_xml(char *message, DML_Checksum *checksum)
   int  read_suma = 0, read_sumb = 0;
   char *pos = strtok(message, "<> \n\t");
  
-  
   if (checksum == (DML_Checksum*)NULL)
     return 0;
   

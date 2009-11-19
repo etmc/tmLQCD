@@ -25,7 +25,7 @@ void write_propagator_type_parallel(LemonWriter *writer, const int type)
   bytes = strlen(message);
 
   write_header_parallel(writer, 1, 1, "propagator-type", bytes);
-  write_message_parallel(writer, buf, bytes);
+  write_message_parallel(writer, message, bytes);
 
   lemonWriterCloseRecord(writer);
   free(message);

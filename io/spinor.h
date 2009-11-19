@@ -39,8 +39,7 @@ void write_propagator_parallel(spinor **const s, spinor **const r,
                                int const type, char const *gaugeXlfInfo,
                                char const *gaugeChecksum,
                                paramsPropagatorFormat const *propagatorFormat);
-void write_spinor_parallel(LemonWriter *writer, spinor ** const s, spinor ** const r,
-                           const int flavours, const int prec);
+void write_spinor_parallel(LemonWriter *writer, spinor ** const s, spinor ** const r, const int flavours, const int prec);
 
 void write_binary_spinor_data_parallel(spinor * const s, spinor * const r,
                                        LemonWriter * lemonwriter, DML_Checksum *checksum, int const prec);
