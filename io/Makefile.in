@@ -50,6 +50,7 @@ libio_TARGETS_LEMON = gauge_read_binary_parallel \
 		spinor_write_binary_parallel \
 		spinor_write_inverter_info_parallel \
 		spinor_write_propagator_format_parallel \
+		spinor_write_propagator_type_parallel \
 		spinor_write_propagator_parallel \
 		spinor_write_source_format_parallel \
 		spinor_write_source_parallel \

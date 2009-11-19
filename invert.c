@@ -643,7 +643,7 @@ int main(int argc, char *argv[])
         {
 #ifdef HAVE_LIBLEMON
           xlfInfo = construct_paramsXlfInfo(plaquette_energy / (6.*VOLUME*g_nproc), nstore);
-          write_propagator_format_parallel(lemonWriter, write_prop_format_flag);
+          write_propagator_type_parallel(lemonWriter, write_prop_format_flag);
           write_xlf_info_parallel(lemonWriter, xlfInfo);
           if (gaugelfn != NULL)
           {
