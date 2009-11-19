@@ -297,11 +297,11 @@ int read_binary_gauge_data(LimeReader * limereader,
 
     if (g_cart_id == 0) {
       engineering(measure, L * L * L * T_global * bytes, "b");
-      fprintf(stdout, "Time spent reading %s ", measure);
+      fprintf(stdout, "# Time spent reading %s ", measure);
       engineering(measure, tock-tick, "s");
       fprintf(stdout, "was %s.\n", measure);
       engineering(measure, (L * L * L * T_global) * bytes / (tock-tick), "b/s");
-      fprintf(stdout, "Reading speed: %s", measure);
+      fprintf(stdout, "# Reading speed: %s", measure);
       engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock-tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
     }
