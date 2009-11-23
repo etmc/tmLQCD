@@ -31,7 +31,7 @@ void write_binary_spinor_data_parallel(spinor * const s, spinor * const r, Lemon
   zG = g_proc_coords[3]*LZ;
   yG = g_proc_coords[2]*LY;
   xG = g_proc_coords[1]*LX;
-  for(t = 0; t < 0*T; t++) {
+  for(t = 0; t < T; t++) {
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {
 	for(x = 0; x < LX; x++) {
