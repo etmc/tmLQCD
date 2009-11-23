@@ -20,7 +20,8 @@ void write_binary_spinor_data_parallel(spinor * const s, spinor * const r, Lemon
     bytes /= 2;
   }
   if((void*)(filebuffer = malloc(VOLUME * bytes)) == NULL) {
-    printf ("malloc errno in write_binary_spinor_data_parallel: %d\n", errno); 
+    fprintf (stderr, "malloc errno in write_binary_spinor_data_parallel: %d\n", errno); 
+    fflush(stderr);
     errno = 0;
     /* do we need to abort here? */
     return;
@@ -30,14 +31,14 @@ void write_binary_spinor_data_parallel(spinor * const s, spinor * const r, Lemon
   zG = g_proc_coords[3]*LZ;
   yG = g_proc_coords[2]*LY;
   xG = g_proc_coords[1]*LX;
-  for(t = 0; t < T; t++) {
+  for(t = 0; t < 0*T; t++) {
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {
 	for(x = 0; x < LX; x++) {
 	  rank = (DML_SiteRank) ((((tG + t)*L + zG + z)*L + yG + y)*L + xG + x);
 	  i = g_lexic2eosub[g_ipt[t][x][y][z]];
 	  if ((z  + zG + y  + yG +
-	       x  + xG + t + gG) % 2 == 0)
+	       x  + xG + t + tG) % 2 == 0)
 	    p = s;
 	  else
 	    p = r;

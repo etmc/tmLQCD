@@ -36,7 +36,8 @@ void write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec,
   bytes = (uint64_t)sizeof(su3) * (prec == 32 ? 2 : 4);
   bufoffset = 0;
   if((void*)(filebuffer = (char*)malloc(bytes * VOLUME)) == NULL) {
-    printf ("malloc errno in write_binary_gauge_data_parallel: %d\n",errno); 
+    fprintf (stderr, "malloc errno in write_binary_gauge_data_parallel: %d\n",errno); 
+    fflush(stderr);
     errno = 0;
     /* do we need to abort here? */
     return;
