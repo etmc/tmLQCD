@@ -5,7 +5,8 @@ void write_binary_spinor_data_parallel(spinor * const s, spinor * const r, Lemon
   int x, X, y, Y, z, Z, tt, t0, id = 0, i = 0;
   int coords[4];
 
-  int globaldims[] = {L, L, L, T_global};
+  int globaldims[] = {T_global, L, L, L};
+  int scidacMapping[] = {0, 3, 2, 1};
   unsigned long bufoffset;
   char *filebuffer = NULL;
   uint64_t bytes;
@@ -81,7 +82,7 @@ void write_binary_spinor_data_parallel(spinor * const s, spinor * const r, Lemon
     tick = MPI_Wtime();
   }
 
-  lemonWriteLatticeParallel(lemonwriter, filebuffer, bytes, globaldims);
+  lemonWriteLatticeParallelMapped(lemonwriter, filebuffer, bytes, globaldims, scidacMapping);
 
   if (g_debug_level > 0)
   {
