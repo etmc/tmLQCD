@@ -17,27 +17,39 @@
 * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
 ***********************************************************************/
 
-#ifdef HAVE_CONFIG_H
-# include<config.h>
-#endif
+#include "utils.ih"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#ifdef MPI
-# include <mpi.h>
-#endif
-#include <lime.h>
-#include <unistd.h>
-#include <math.h>
-#include <errno.h>
-#include "global.h"
-#include "su3.h"
+int read_message(LimeReader * limereader, char **buffer) {
+  
+  int status;
+  n_uint64_t bytes, read_bytes;
 
-#include <io_utils.h>
-#include <io/utils.h>
-#include <io/gauge.h>
+  if (buffer == (char**)NULL)
+    return(-1);
+  
+  if ((*buffer) != (char*)NULL)
+    free(*buffer);
 
+
+  bytes = limeReaderBytes(limereader);
+
+  if((*buffer = (char*)malloc(bytes + 1)) == (char*)NULL) {
+    fprintf(stderr, "Couldn't malloc data buf in read_message\n");
+    return(-1);
+  }
+  read_bytes = bytes;
+  status = limeReaderReadData((void *)*buffer, &read_bytes, limereader);
+
+  if( status < 0 ) {
+    if( status != LIME_EOR ) {
+      fprintf(stderr, "LIME read error occurred: status= %d  %llu bytes wanted, %llu read\n",
+	      status, (unsigned long long)bytes,
+	      (unsigned long long)read_bytes);
+      free(*buffer);
+      *buffer = NULL;
+      return(-1);
+    }
+  }
+  buffer[bytes]='\0';
+  return(0);
+}

@@ -21,6 +21,8 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
+#include <stdlib.h>
+#include <stdio.h>
 #include <dml.h>
 #include <io/params.h>
 
@@ -36,7 +38,16 @@ void write_header_parallel(LemonWriter *lemonwriter, int MB, int ME, char *type,
 
 void write_checksum_parallel(LemonWriter *lemonwriter, DML_Checksum const *checksum);
 void write_xlf_info_parallel(LemonWriter *lemonwriter, paramsXlfInfo const *info);
+#else
+void kill_with_error(FILE *fh, int const rank, char const *error);
 #endif /* HAVE_LIBLEMON */
+
+int read_message(LimeReader *limereader, char **buffer);
+int write_message(LimeWriter * limewriter, char const *buffer, uint64_t bytes);
+void write_header(LimeWriter *limewriter, int MB, int ME, char *type, uint64_t bytes);
+
+void write_checksum(LimeWriter *limewriter, DML_Checksum const *checksum);
+void write_xlf_info(LimeWriter *limewriter, paramsXlfInfo const *info);
 
 void engineering(char *result, double value, char const *units);
 int parse_checksum_xml(char *message, DML_Checksum *checksum);

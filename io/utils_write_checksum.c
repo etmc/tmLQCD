@@ -17,27 +17,29 @@
 * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
 ***********************************************************************/
 
-#ifdef HAVE_CONFIG_H
-# include<config.h>
-#endif
+#include "utils.ih"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#ifdef MPI
-# include <mpi.h>
-#endif
-#include <lime.h>
-#include <unistd.h>
-#include <math.h>
-#include <errno.h>
-#include "global.h"
-#include "su3.h"
+void write_checksum_parallel(LimeWriter * limewriter, DML_Checksum const *checksum)
+{
+  char *message;
+  uint64_t bytes;
 
-#include <io_utils.h>
-#include <io/utils.h>
-#include <io/gauge.h>
+  message = (char*)malloc(512);
+  if (message == (char*)NULL)
+  {
+    kill_with_error(limewriter->fp, g_cart_id,
+                    "Memory allocation error in write_checksum_parallel. Aborting\n");
+  }
 
+  sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                   "<scidacChecksum>\n"
+                   "  <version>1.0</version>\n"
+                   "  <suma>%08x</suma>\n"
+                   "  <sumb>%08x</sumb>\n"
+                   "</scidacChecksum>", checksum->suma, checksum->sumb);
+  bytes = strlen(message);
+  write_header(limewriter, 0, 1, "scidac-checksum", bytes);
+  write_message(limewriter, message, bytes);
+  limeWriterCloseRecord(limewriter);
+  free(message);
+}

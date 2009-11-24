@@ -24,6 +24,7 @@
 #ifdef HAVE_LIBLEMON
 # include <lemon.h>
 #endif /* HAVE_LIBLEMON */
+#include <lime.h>
 
 #include <io/utils.h>
 
@@ -35,5 +36,11 @@ void write_lemon_gauge_field_parallel(char * filename, int prec, paramsXlfInfo c
 void write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, DML_Checksum * ans);
 void write_ildg_format_parallel(LemonWriter *writer, paramsIldgFormat const *format);
 #endif /* HAVE_LIBLEMON */
+int read_lime_gauge_field(char * filename, DML_Checksum *scidac_checksum,
+			  char **xlf_info, char **ildg_data_lfn);
+void write_lime_gauge_field(char * filename, int prec, paramsXlfInfo const *xlfInfo);
+int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * ans);
+int write_binary_gauge_data(LimeWriter * limewriter,
+			    const int prec, DML_Checksum * ans);
 
 #endif

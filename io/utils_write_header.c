@@ -17,27 +17,18 @@
 * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
 ***********************************************************************/
 
-#ifdef HAVE_CONFIG_H
-# include<config.h>
-#endif
+#include "utils.ih"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#ifdef MPI
-# include <mpi.h>
-#endif
-#include <lime.h>
-#include <unistd.h>
-#include <math.h>
-#include <errno.h>
-#include "global.h"
-#include "su3.h"
+void write_header(LimeWriter * limewriter, int MB, int ME, char *type, uint64_t bytes)
+{
+  int status;
+  LimeRecordHeader *limeheader;
 
-#include <io_utils.h>
-#include <io/utils.h>
-#include <io/gauge.h>
+  limeheader = limeCreateHeader(MB, ME, type, bytes);
+  status = limeWriteRecordHeader(limeheader, limewriter);
+  limeDestroyHeader(limeheader);
 
+  if (status != LIME_SUCCESS)
+    kill_with_error(limewriter->fp, g_cart_id, "LEMON header writing error. Aborting\n");
+  return;
+}

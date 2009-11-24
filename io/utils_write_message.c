@@ -17,27 +17,20 @@
 * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
 ***********************************************************************/
 
-#ifdef HAVE_CONFIG_H
-# include<config.h>
-#endif
+#include "utils.ih"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/types.h>
+int write_message(LimeWriter * limewriter, char const *buffer, uint64_t bytes) {
+
+  int status;
 #ifdef MPI
-# include <mpi.h>
+  MPI_Status mpi_status;
 #endif
-#include <lime.h>
-#include <unistd.h>
-#include <math.h>
-#include <errno.h>
-#include "global.h"
-#include "su3.h"
+  n_uint64_t bytesWritten = bytes;
 
-#include <io_utils.h>
-#include <io/utils.h>
-#include <io/gauge.h>
+  if(buffer == (char*)NULL) return(0);
 
+  status = limeWriteRecordData((void*)buffer, &bytes, limewriter);
+  if (status != LIME_SUCCESS || bytes != bytesWritten)
+    kill_with_error(limewriter->fp, g_proc_id, "I/O error on writing message. Aborting...\n");
+  return(0);
+}
