@@ -690,9 +690,9 @@ int main(int argc, char *argv[])
       ratime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
 #ifdef HAVE_LIBLEMON
-      propagatorFormat = construct_paramsPropagatorFormat(32, 1);
+      propagatorFormat = construct_paramsPropagatorFormat(prop_precision_flag, 1);
       write_propagator_format_parallel(lemonWriter, propagatorFormat);
-      write_spinor_parallel(lemonWriter, &g_spinor_field[2], &g_spinor_field[3], 1, 32);
+      write_spinor_parallel(lemonWriter, &g_spinor_field[2], &g_spinor_field[3], 1, prop_precision_flag);
 #else  /* HAVE_LIBLEMON */
       write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1,
                        prop_precision_flag, write_prop_format_flag);
