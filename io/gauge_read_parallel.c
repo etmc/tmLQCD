@@ -54,16 +54,14 @@ void read_lemon_gauge_field_parallel(char *filename, DML_Checksum *scidac_checks
       read_binary_gauge_data_parallel(lemonreader, &checksum_calc);
       gauge_read_flag = 1;
     }
-/*    else if (strcmp("scidac-checksum", header_type) == 0)
+    else if (strcmp("scidac-checksum", header_type) == 0)
     {
-      checksum_string = (char*)malloc(1024);
       read_message_parallel(lemonreader, &checksum_string);
-      checksum_string[1023] = '\0';
       DML_read_flag = parse_checksum_xml(checksum_string, &checksum_read);
       if (DML_read_flag && scidac_checksum != (DML_Checksum*)NULL)
 	*scidac_checksum = checksum_read;
       free(checksum_string); 
-    }*/
+    }
     else if (strcmp("xlf-info", header_type) == 0)
     {
       read_message_parallel(lemonreader, xlf_info);
