@@ -3,7 +3,8 @@
 void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonReader * lemonreader, DML_Checksum *checksum)
 {
   int t, x, y , z, i = 0, status = 0;
-  int latticeSize[] = {L, L, L, T_global};
+  int latticeSize[] = {T_global, L, L, L};
+  int scidacMapping[] = {0, 3, 2, 1};
   int prec;
   n_uint64_t bytes;
   spinor *p = NULL;
@@ -53,7 +54,7 @@ void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonR
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
   }
-  lemonReadLatticeParallel(lemonreader, filebuffer, bytes, latticeSize);
+  lemonReadLatticeParallelMapped(lemonreader, filebuffer, bytes, latticeSize, scidacMapping);
 
   if (g_debug_level > 0)
   {
