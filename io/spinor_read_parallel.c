@@ -1,3 +1,22 @@
+/***********************************************************************
+* Copyright (C) 2009 Siebren Recker, Albert Deuzeman, Carsten Urbach
+*
+* This file is part of tmLQCD.
+*
+* tmLQCD is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* tmLQCD is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+***********************************************************************/
+
 #include "spinor.ih"
 
 void read_spinor_parallel(spinor * const s, spinor * const r,
@@ -49,12 +68,12 @@ void read_spinor_parallel(spinor * const s, spinor * const r,
       prec = 32;
     else
       kill_with_error(&ifs, g_cart_id, "Wrong length in eospinor. Aborting read!\n");
-  if (g_proc_id == 0 && g_debug_level > 2)
+  if (g_cart_id == 0 && g_debug_level > 2)
     printf("# %d bit precision read\n", prec);
 
   read_binary_spinor_data_parallel(s, r, lemonreader, &checksum);
 
-  if (g_proc_id == 0 && g_debug_level > 1)
+  if (g_cart_id == 0 && g_debug_level > 1)
     printf("# checksum for DiracFermion field in file %s position %d is %#x %#x\n",
            filename, position, checksum.suma, checksum.sumb);
 

@@ -111,7 +111,7 @@ int write_binary_gauge_data(LimeWriter * limewriter,
 	    if(status < 0 ) {
 	      fprintf(stderr, "LIME write error %d\n", status);
 	      fprintf(stderr, "x %d, y %d, z %d, t %d (%d,%d,%d,%d)\n",x,y,z,tt,X,Y,Z,tt);
-	      fprintf(stderr, "id = %d, bytes = %lu, size = %d\n", g_proc_id, bytes,  (int)(4*sizeof(su3)/8));
+	      fprintf(stderr, "id = %d, bytes = %lu, size = %d\n", g_cart_id, bytes,  (int)(4*sizeof(su3)/8));
 #ifdef MPI
 	      MPI_Abort(MPI_COMM_WORLD, 1);
 	      MPI_Finalize();

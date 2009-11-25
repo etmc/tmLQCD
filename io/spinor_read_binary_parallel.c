@@ -1,7 +1,27 @@
+/***********************************************************************
+* Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+*
+* This file is part of tmLQCD.
+*
+* tmLQCD is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* tmLQCD is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+***********************************************************************/
+
 #include "spinor.ih"
 
-void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonReader * lemonreader, DML_Checksum *checksum)
-{
+void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, 
+				      LemonReader * lemonreader, DML_Checksum *checksum) {
+
   int t, x, y , z, i = 0, status = 0;
   int latticeSize[] = {T_global, L, L, L};
   int scidacMapping[] = {0, 3, 2, 1};
@@ -18,11 +38,10 @@ void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonR
 
   if (bytes == g_nproc * VOLUME * sizeof(spinor))
     prec = 64;
-  else
+  else {
     if (bytes == g_nproc * VOLUME * sizeof(spinor) / 2)
       prec = 32;
-    else
-    {
+    else {
       fprintf(stderr, "Probably wrong lattice size or precision (bytes=%lu).\n", (unsigned long)bytes);
       fprintf(stderr, "Panic! Aborting...\n");
       fflush(stdout);
@@ -31,6 +50,7 @@ void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonR
       MPI_Finalize();
       exit(501);
     }
+  }
 
   if (g_cart_id == 0 && g_debug_level > 2)
     printf("# %d Bit precision read.\n", prec);
@@ -49,20 +69,17 @@ void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonR
     return;
   }
 
-  if (g_debug_level > 0)
-  {
+  if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
   }
   lemonReadLatticeParallelMapped(lemonreader, filebuffer, bytes, latticeSize, scidacMapping);
 
-  if (g_debug_level > 0)
-  {
+  if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tock = MPI_Wtime();
 
-    if (g_cart_id == 0)
-    {
+    if (g_cart_id == 0) {
       engineering(measure, L * L * L * T_global * bytes, "b");
       fprintf(stdout, "Time spent reading %s ", measure);
       engineering(measure, tock - tick, "s");
@@ -75,8 +92,7 @@ void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonR
     }
   }
 
-  if (status < 0 && status != LEMON_EOR)
-  {
+  if (status < 0 && status != LEMON_EOR) {
     fprintf(stderr, "LEMON read error occured with status = %d while reading!\nPanic! Aborting...\n", status);
     MPI_File_close(lemonreader->fh);
     MPI_Abort(MPI_COMM_WORLD, 1);
@@ -84,19 +100,18 @@ void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonR
     exit(500);
   }
 
-  for (t = 0; t < T; t++)
-    for (z = 0; z < LZ; z++)
-      for (y = 0; y < LY; y++)
-        for (x = 0; x < LX; x++)
-        {
+  for (t = 0; t < T; t++) {
+    for (z = 0; z < LZ; z++) {
+      for (y = 0; y < LY; y++) {
+        for (x = 0; x < LX; x++) {
           rank = (DML_SiteRank)(g_proc_coords[1] * LX +
                                 (((g_proc_coords[0] * T  + t) * g_nproc_z * LZ
-                                 + g_proc_coords[3] * LZ + z) * g_nproc_y * LY
+				  + g_proc_coords[3] * LZ + z) * g_nproc_y * LY
                                  + g_proc_coords[2] * LY + y) *
                                 ((DML_SiteRank) LX * g_nproc_x) + x);
           current = filebuffer + bytes * (x + (y + (t * LZ + z) * LY) * LX);
           DML_checksum_accum(checksum, rank, current, bytes);
-
+	  
           i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
           p = ((t + x + y + z +
                 g_proc_coords[3] * LZ + g_proc_coords[2] * LY +
@@ -113,6 +128,9 @@ void read_binary_spinor_data_parallel(spinor * const s, spinor * const r, LemonR
             memcpy(p + i, current, sizeof(spinor) / 8);
 #endif
         }
+      }
+    }
+  }
 
   DML_global_xor(&checksum->suma);
   DML_global_xor(&checksum->sumb);

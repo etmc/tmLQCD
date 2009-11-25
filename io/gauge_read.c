@@ -25,8 +25,7 @@ int read_lime_gauge_field(char * filename, DML_Checksum *scidac_checksum,
   read_lemon_gauge_field_parallel(filename, scidac_checksum, &xlf_info, &ildg_data_lfn);
 #else
   FILE * ifs;
-  int status, prec = 64;
-  n_uint64_t bytes;
+  int status;
   char * header_type;
   LimeReader * limereader;
   DML_Checksum checksum_read;
@@ -79,14 +78,13 @@ int read_lime_gauge_field(char * filename, DML_Checksum *scidac_checksum,
     }
   }
   if(found_ildg_binary_data == 0) {
-    if(g_proc_id == 0) {
+    if(g_cart_id == 0) {
       fprintf(stderr, "no ildg-binary-data record found in file %s\n",filename);
       fprintf(stderr, "trying old deprecated file format!\n");
     }
     limeDestroyReader(limereader);
     fclose(ifs);
-    read_gauge_field_time_p(filename);
-    return(0);
+    return(-1);
   }
   if (g_debug_level > 0 && g_cart_id == 0) {
     printf("# checksum for gaugefield %s\n", filename);

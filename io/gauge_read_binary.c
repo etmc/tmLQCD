@@ -53,7 +53,7 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * ans) {
 #endif
     exit(501);
   }
-  if(g_proc_id == 0 && g_debug_level > 2) {
+  if(g_cart_id == 0 && g_debug_level > 2) {
     printf("# %d Bit precision read\n", prec);
   }
   for(t = 0; t < T; t++){

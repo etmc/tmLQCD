@@ -49,7 +49,7 @@ void write_lemon_gauge_field_parallel(char * filename, int prec, paramsXlfInfo c
 
   if (g_cart_id == 0)
   {
-    fprintf(stdout, "Checksum A: %#x \nChecksum B: %#x\n", checksum.suma, checksum.sumb);
+    fprintf(stdout, "# Checksum A: %#x \nChecksum B: %#x\n", checksum.suma, checksum.sumb);
     fflush(stdout);
   }
 

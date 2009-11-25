@@ -24,32 +24,33 @@ int read_message(LimeReader * limereader, char **buffer) {
   int status;
   n_uint64_t bytes, read_bytes;
 
-  if (buffer == (char**)NULL)
-    return(-1);
-  
-  if ((*buffer) != (char*)NULL)
-    free(*buffer);
-
-
-  bytes = limeReaderBytes(limereader);
-
-  if((*buffer = (char*)malloc(bytes + 1)) == (char*)NULL) {
-    fprintf(stderr, "Couldn't malloc data buf in read_message\n");
-    return(-1);
-  }
-  read_bytes = bytes;
-  status = limeReaderReadData((void *)*buffer, &read_bytes, limereader);
-
-  if( status < 0 ) {
-    if( status != LIME_EOR ) {
-      fprintf(stderr, "LIME read error occurred: status= %d  %llu bytes wanted, %llu read\n",
-	      status, (unsigned long long)bytes,
-	      (unsigned long long)read_bytes);
+  if(g_cart_id == 0) {
+    if (buffer == (char**)NULL)
+      return(-1);
+    
+    if ((*buffer) != (char*)NULL)
       free(*buffer);
-      *buffer = NULL;
+
+    bytes = limeReaderBytes(limereader);
+    
+    if((*buffer = (char*)malloc(bytes + 1)) == (char*)NULL) {
+      fprintf(stderr, "Couldn't malloc data buf in read_message\n");
       return(-1);
     }
+    read_bytes = bytes;
+    status = limeReaderReadData((void *)*buffer, &read_bytes, limereader);
+    
+    if( status < 0 ) {
+      if( status != LIME_EOR ) {
+	fprintf(stderr, "LIME read error occurred: status= %d  %llu bytes wanted, %llu read\n",
+		status, (unsigned long long)bytes,
+		(unsigned long long)read_bytes);
+	free(*buffer);
+	*buffer = NULL;
+	return(-1);
+      }
+    }
+    buffer[bytes]='\0';
   }
-  buffer[bytes]='\0';
   return(0);
 }

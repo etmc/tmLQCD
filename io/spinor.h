@@ -40,6 +40,10 @@ void write_propagator_parallel(spinor **const s, spinor **const r,
                                char const *gaugeChecksum,
                                paramsPropagatorFormat const *propagatorFormat);
 void write_spinor_parallel(LemonWriter *writer, spinor ** const s, spinor ** const r, const int flavours, const int prec);
+void write_spinor_info_parallel(LemonWriter *lemonWriter,
+				paramsXlfInfo * xlfInfo, const int write_prop_format_flag,
+				paramsInverterInfo * InverterInfo, char * gaugelfn,
+				char * gaugecksum);
 
 void write_binary_spinor_data_parallel(spinor * const s, spinor * const r,
                                        LemonWriter * lemonwriter, DML_Checksum *checksum, int const prec);
@@ -47,6 +51,21 @@ void write_propagator_format_parallel(LemonWriter *writer, paramsPropagatorForma
 void write_propagator_type_parallel(LemonWriter *writer, const int type);
 void write_inverter_info_parallel(LemonWriter *writer, paramsInverterInfo const *info);
 void write_source_format_parallel(LemonWriter *writer, paramsSourceFormat const *format);
+
 #endif /* HAVE_LIBLEMON */
+
+void read_spinor(spinor * const s, spinor * const r, char * filename, const int position);
+void write_spinor_info(LimeWriter *limeWriter,
+		       paramsXlfInfo * xlfInfo, const int write_prop_format_flag,
+		       paramsInverterInfo * InverterInfo, char * gaugelfn,
+		       char * gaugecksum);
+void write_spinor(LimeWriter *limeWriter, spinor ** const s, spinor ** const r, const int flavours, const int prec);
+void write_source_format(LimeWriter *writer, paramsSourceFormat const *format);
+void write_propagator_format(LimeWriter *writer, paramsPropagatorFormat const *format);
+void write_propagator_type(LimeWriter *writer, const int type);
+int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * limewriter,
+			     DML_Checksum * ans, const int prec);
+int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * limereader,
+			    DML_Checksum * ans);
 
 #endif

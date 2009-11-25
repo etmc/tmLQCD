@@ -20,28 +20,28 @@
 
 #include "spinor.ih"
 
-void write_spinor_info_parallel(LemonWriter *lemonWriter,
-				paramsXlfInfo * xlfInfo, const int write_prop_format_flag,
-				paramsInverterInfo * InverterInfo, char * gaugelfn,
-				char * gaugecksum) {
+void write_spinor_info(LimeWriter *limeWriter,
+		       paramsXlfInfo * xlfInfo, const int write_prop_format_flag,
+		       paramsInverterInfo * InverterInfo, char * gaugelfn,
+		       char * gaugecksum) {
 
-  write_propagator_type_parallel(Writer, write_prop_format_flag);
-  write_xlf_info_parallel(Writer, xlfInfo);
-  write_inverter_info_parallel(Writer, InverterInfo);
+  write_propagator_type(limeWriter, write_prop_format_flag);
+  write_xlf_info(limeWriter, xlfInfo);
+  write_inverter_info(limeWriter, InverterInfo);
   if (gaugelfn != NULL) {
-    write_header_parallel(lemonWriter, 1, 1, "gauge-ildg-data-lfn-copy", strlen(gaugelfn));
-    write_message_parallel(lemonWriter, gaugelfn, strlen(gaugelfn));
-    lemonWriterCloseRecord(lemonWriter);
+    write_header(limeWriter, 1, 1, "gauge-ildg-data-lfn-copy", strlen(gaugelfn));
+    write_message(limeWriter, gaugelfn, strlen(gaugelfn));
+    limeWriterCloseRecord(limeWriter);
   }
   if(gaugecksum != NULL) {
-    write_header_parallel(lemonWriter, 1, 1, "gauge-scidac-checksum-copy", strlen(gaugecksum));
-    write_message_parallel(lemonWriter, gaugecksum, strlen(gaugecksum));
-    lemonWriterCloseRecord(lemonWriter);
+    write_header(limeWriter, 1, 1, "gauge-scidac-checksum-copy", strlen(gaugecksum));
+    write_message(limeWriter, gaugecksum, strlen(gaugecksum));
+    limeWriterCloseRecord(limeWriter);
   }
   return;
 }
 
-void write_spinor_parallel(LemonWriter *lemonWriter, spinor ** const s, spinor ** const r, const int flavours, const int prec) {
+void write_spinor(LimeWriter *limeWriter, spinor ** const s, spinor ** const r, const int flavours, const int prec) {
 
   DML_Checksum checksum;
   uint64_t bytes;
@@ -50,9 +50,8 @@ void write_spinor_parallel(LemonWriter *lemonWriter, spinor ** const s, spinor *
   bytes = (n_uint64_t)LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * (n_uint64_t)(sizeof(spinor) * prec / 64);
 
   for (i = 0; i < flavours; ++i) {
-    write_header_parallel(lemonWriter, 1, 1, "scidac-binary-data", bytes);
-    write_binary_spinor_data_parallel(s[i], r[i], lemonWriter, &checksum, prec);
-    /* write_checksum_parallel(writer, &checksum); */
+    write_header(limeWriter, 1, 1, "scidac-binary-data", bytes);
+    write_binary_spinor_data(s[i], r[i], limeWriter, &checksum, prec);
   }
   return;
 }

@@ -17,27 +17,35 @@
 * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
 ***********************************************************************/
 
-#include <lime.h>
-#ifdef HAVE_CONFIG_H
-# include<config.h>
-#endif
+#include "spinor.ih"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#ifdef MPI
-# include <mpi.h>
-#endif
-#include <unistd.h>
-#include <math.h>
-#include <errno.h>
-#include "global.h"
-#include "su3.h"
+void write_source_format(LimeWriter *writer,
+			 paramsSourceFormat const *format)
+{
+  uint64_t bytes;
+  char *buf;
 
-#include <io_utils.h>
-#include <io/utils.h>
-#include <io/gauge.h>
-
+  buf = (char*)malloc(512);
+  sprintf(buf, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	  "<etmcFormat>\n"
+	  "  <field>diracFermion</field>\n"
+	  "  <precision>%d</precision>\n"
+	  "  <flavours>%d</flavours>\n"
+	  "  <lx>%d</lx>\n"
+	  "  <ly>%d</ly>\n"
+	  "  <lz>%d</lz>\n"
+	  "  <lt>%d</lt>\n"
+	  "  <spin>%d</spin>\n"
+	  "  <colour>%d</colour>\n"
+	  "</etmcFormat>",
+          format->prec, format->flavours,
+          format->nx, format->ny, format->nz, format->nt,
+          format->spins, format->colours);
+  bytes = strlen(buf);
+  write_header(writer, 1, 1, "etmc-source-format", bytes);
+  write_message(writer, buf, bytes);
+  if(g_cart_id == 0) {
+    limeWriterCloseRecord(writer);
+  }
+  free(buf);
+}

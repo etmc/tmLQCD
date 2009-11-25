@@ -26,36 +26,35 @@ void write_xlf_info(LimeWriter * limewriter, paramsXlfInfo const *info)
 
   message = (char*)malloc(512);
   if (message == (char*)NULL)
-    kill_with_error(limewriter->fp, g_proc_id, "Memory allocation error in write_xlf_info_parallel. Aborting\n");
-
-  if (info->kappa != 0.0)
-  {
+    kill_with_error(limewriter->fp, g_cart_id, "Memory allocation error in write_xlf_info_parallel. Aborting\n");
+  
+  if (info->kappa != 0.0) {
     sprintf(message, "\n plaquette = %e\n"
-                     " trajectory nr = %d\n"
-                     " beta = %f, kappa = %f, mu = %f, c2_rec = %f\n"
-                     " time = %ld\n"
-                     " hmcversion = %s\n"
-                     " mubar = %f\n"
-                     " epsilonbar = %f\n"
-                     " date = %s",
-            info->plaq, info->counter, info->beta, info->kappa,
-            info->mu, info->c2_rec, info->time, info->package_version,
-            info->mubar, info->epsilonbar, info->date);
+	    " trajectory nr = %d\n"
+	    " beta = %f, kappa = %f, mu = %f, c2_rec = %f\n"
+	    " time = %ld\n"
+	    " hmcversion = %s\n"
+	    " mubar = %f\n"
+	    " epsilonbar = %f\n"
+	    " date = %s",
+	    info->plaq, info->counter, info->beta, info->kappa,
+	    info->mu, info->c2_rec, info->time, info->package_version,
+	    info->mubar, info->epsilonbar, info->date);
   }
-  else
-  {
+  else {
     sprintf(message, "\n plaquette = %e\n"
-                     " trajectory nr = %d\n"
-                     " beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f\n"
-                     " date = %s",
-            info->plaq, info->counter, info->beta, info->kappa,
-            info->mu, info->c2_rec, info->date);
+	    " trajectory nr = %d\n"
+	    " beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f\n"
+	    " date = %s",
+	    info->plaq, info->counter, info->beta, info->kappa,
+	    info->mu, info->c2_rec, info->date);
   }
   bytes = strlen(message);
-
+  
   write_header(limewriter, 1, 1, "xlf-info", bytes);
   write_message(limewriter, message, bytes);
-
+  
   limeWriterCloseRecord(limewriter);
   free(message);
+  return;
 }

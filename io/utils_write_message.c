@@ -26,11 +26,13 @@ int write_message(LimeWriter * limewriter, char const *buffer, uint64_t bytes) {
   MPI_Status mpi_status;
 #endif
   n_uint64_t bytesWritten = bytes;
-
-  if(buffer == (char*)NULL) return(0);
-
-  status = limeWriteRecordData((void*)buffer, &bytes, limewriter);
-  if (status != LIME_SUCCESS || bytes != bytesWritten)
-    kill_with_error(limewriter->fp, g_proc_id, "I/O error on writing message. Aborting...\n");
+  
+  if(g_cart_id == 0) {
+    if(buffer == (char*)NULL) return(0);
+    
+    status = limeWriteRecordData((void*)buffer, &bytes, limewriter);
+    if (status != LIME_SUCCESS || bytes != bytesWritten)
+      kill_with_error(limewriter->fp, g_cart_id, "I/O error on writing message. Aborting...\n");
+  }
   return(0);
 }

@@ -19,10 +19,10 @@
 
 #include "gauge.ih"
 
-void write_lime_gauge_field(char * filename, int prec, paramsXlfInfo const *xlfInfo)
+void write_lime_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfInfo)
 {
 #ifdef HAVE_LIBLEMON
-  write_lemon_gauge_field_parallel( filename, pre, xlfInfo);
+  write_lemon_gauge_field_parallel( filename, prec, xlfInfo);
 #else
   FILE * ofs;
   LimeWriter * writer = NULL;
@@ -38,25 +38,25 @@ void write_lime_gauge_field(char * filename, int prec, paramsXlfInfo const *xlfI
 
     writer = limeCreateWriter(ofs);
     if (writer == (LimeWriter*)NULL)
-      kill_with_error(writer->fp, g_cart_id, "Cannot construct LemonWriter. Aborting...\n");
-
-    write_xlf_info(writer, xlfInfo);
+      kill_with_error(writer->fp, g_cart_id, "Cannot construct LimeWriter. Aborting...\n");
+  }
+  write_xlf_info(writer, xlfInfo);
     
-    ildg = construct_paramsIldgFormat(prec);
-    write_ildg_format(writer, ildg);
-    free(ildg);
+  ildg = construct_paramsIldgFormat(prec);
+  write_ildg_format(writer, ildg);
+  free(ildg);
 
-    write_header(writer, 0, 0, "ildg-binary-data", bytes);
-  }
+  write_header(writer, 0, 0, "ildg-binary-data", bytes);
+
   write_binary_gauge_data(writer, prec, &checksum);
+  write_checksum(writer, &checksum);
+
   if(g_cart_id == 0) {
-    write_checksum(writer, &checksum);
-
-    fprintf(stdout, "Checksum A: %#x \nChecksum B: %#x\n", checksum.suma, checksum.sumb);
+    fprintf(stdout, "# Checksum A: %#x \nChecksum B: %#x\n", checksum.suma, checksum.sumb);
     fflush(stdout);
+    limeDestroyWriter(writer);
+    fclose(ofs);
   }
-
-  limeDestroyWriter(writer);
-  fclose(ofs);
+  return;
 #endif
 }

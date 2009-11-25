@@ -19,27 +19,27 @@
 
 #include "utils.ih"
 
-void write_checksum_parallel(LimeWriter * limewriter, DML_Checksum const *checksum)
+void write_checksum(LimeWriter * limewriter, DML_Checksum const *checksum)
 {
   char *message;
   uint64_t bytes;
-
   message = (char*)malloc(512);
   if (message == (char*)NULL)
-  {
-    kill_with_error(limewriter->fp, g_cart_id,
-                    "Memory allocation error in write_checksum_parallel. Aborting\n");
-  }
-
+    {
+      kill_with_error(limewriter->fp, g_cart_id,
+		      "Memory allocation error in write_checksum_parallel. Aborting\n");
+    }
+    
   sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                   "<scidacChecksum>\n"
-                   "  <version>1.0</version>\n"
-                   "  <suma>%08x</suma>\n"
-                   "  <sumb>%08x</sumb>\n"
-                   "</scidacChecksum>", checksum->suma, checksum->sumb);
+	  "<scidacChecksum>\n"
+	  "  <version>1.0</version>\n"
+	  "  <suma>%08x</suma>\n"
+	  "  <sumb>%08x</sumb>\n"
+	  "</scidacChecksum>", checksum->suma, checksum->sumb);
   bytes = strlen(message);
   write_header(limewriter, 0, 1, "scidac-checksum", bytes);
   write_message(limewriter, message, bytes);
   limeWriterCloseRecord(limewriter);
   free(message);
+  return;
 }

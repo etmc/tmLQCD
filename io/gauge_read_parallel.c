@@ -48,7 +48,7 @@ void read_lemon_gauge_field_parallel(char *filename, DML_Checksum *scidac_checks
       break;
     }
     header_type = lemonReaderType(lemonreader);
-    if(g_proc_id == 0 && g_debug_level > 0) {
+    if(g_cart_id == 0 && g_debug_level > 1) {
       fprintf(stderr, "found header %s, will now read the message\n", header_type);
     }
 

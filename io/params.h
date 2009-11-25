@@ -25,12 +25,13 @@ typedef struct
 {
   char   date[64];
   char   package_version[32];
+  char   inverter[32];
 
   double epssq;
   double epsbar;
   double kappa;
   double mu;
-  double mu_bar;
+  double mubar;
   double mu_inverted;
   double mu_lowest;
 
@@ -39,7 +40,8 @@ typedef struct
   int    mms;
   int    iter;
   int    heavy;
-
+  int    noflavours;
+  
   long int time;
 }
 paramsInverterInfo;
@@ -94,12 +96,12 @@ typedef struct
   int    nz;
   int    nt;
   int    prec;
-}
-paramsIldgFormat;
+} paramsIldgFormat;
 
 paramsIldgFormat       *construct_paramsIldgFormat(int const prec);
 paramsPropagatorFormat *construct_paramsPropagatorFormat(int const prec, int const flavours);
 paramsSourceFormat     *construct_paramsSourceFormat(int const prec, int const flavours, int const spins, int const sources);
 paramsXlfInfo          *construct_paramsXlfInfo(double const plaq, int const counter);
-
+paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int iter, 
+						 const int solver, const int noflavours);
 #endif

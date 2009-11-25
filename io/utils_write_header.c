@@ -23,12 +23,13 @@ void write_header(LimeWriter * limewriter, int MB, int ME, char *type, uint64_t 
 {
   int status;
   LimeRecordHeader *limeheader;
-
-  limeheader = limeCreateHeader(MB, ME, type, bytes);
-  status = limeWriteRecordHeader(limeheader, limewriter);
-  limeDestroyHeader(limeheader);
-
-  if (status != LIME_SUCCESS)
-    kill_with_error(limewriter->fp, g_cart_id, "LEMON header writing error. Aborting\n");
+  if(g_cart_id == 0) {
+    limeheader = limeCreateHeader(MB, ME, type, bytes);
+    status = limeWriteRecordHeader(limeheader, limewriter);
+    limeDestroyHeader(limeheader);
+    
+    if (status != LIME_SUCCESS)
+      kill_with_error(limewriter->fp, g_cart_id, "LEMON header writing error. Aborting\n");
+  }
   return;
 }
