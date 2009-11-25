@@ -47,7 +47,7 @@
  *
  **********************************************************************/
 
-
+#include <lime.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -61,12 +61,12 @@
 #include "su3adj.h"
 #include "expo.h"
 #include "ranlxd.h"
-#include "gauge_io.h"
 #include "sse.h"
 #include "get_staples.h"
 #include "xchange_gauge.h"
 #include "xchange.h"
 #include "io.h"
+#include "io/gauge.h"
 #include "update_backward_gauge.h"
 #include "stout_smear.h"
 
@@ -251,7 +251,7 @@ void  load_config_from_file(su3 **in, char * filename)
       _su3_assign(temp_su3[x][mu], g_gauge_field[x][mu]);
     }
   }
-  read_lime_gauge_field(filename);
+  read_lime_gauge_field(filename, NULL, NULL, NULL);
   for(x = 0; x < VOLUME; x++) {
     for(mu = 0; mu < 4; mu++) {
       _su3_assign((in[x][mu]), g_gauge_field[x][mu]);

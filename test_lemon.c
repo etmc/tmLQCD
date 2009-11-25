@@ -39,11 +39,9 @@
 #endif
 #ifdef MPI
 # include <mpi.h>
-# ifdef HAVE_LIBLEMON
-#  include <io/params.h>
-#  include <io/gauge.h>
-# endif
 #endif
+#include <io/params.h>
+#include <io/gauge.h>
 #include "su3.h"
 #include "su3adj.h"
 #include "ranlxd.h"
@@ -55,7 +53,6 @@
 #include "xchange.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
-#include "gauge_io.h"
 #include "observables.h"
 #include "mpi_init.h"
 

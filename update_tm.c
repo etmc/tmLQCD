@@ -28,6 +28,7 @@
  *
  ***********************************************************************/
 
+#include <lime.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -44,7 +45,8 @@
 #include "tm_operators.h"
 #include "linalg_eo.h"
 #include "io.h"
-#include "gauge_io.h"
+#include "io/gauge.h"
+#include "io/params.h"
 #include "observables.h"
 #include "hybrid_update.h"
 #include "ranlxd.h"
@@ -94,7 +96,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
   /* SF variables: corresponding to the coupling constant */
   double normalisation=0., partial_effective_action=0., coupling=0.; 
-
+  paramsXlfInfo *xlfInfo;
 
   if(ini_g_tmp == 0) {
     ini_g_tmp = init_gauge_tmp(VOLUME);
@@ -228,7 +230,9 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* The trajectory is integrated back      */
   if(return_check == 1) {
     if(accept == 1) {
-      write_lime_gauge_field( "conf.save", gauge_energy/(6.*VOLUME*g_nproc), 0, 64);
+      xlfInfo = construct_paramsXlfInfo((*plaquette_energy)/(6.*VOLUME*g_nproc), -1);
+      write_lime_gauge_field( "conf.save", 64, xlfInfo);
+      free(xlfInfo);
     }
     g_sloppy_precision = 1;
     /* run the trajectory back */
@@ -319,7 +323,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
 
     if(accept == 1) {
-      read_lime_gauge_field( "conf.save");
+      read_lime_gauge_field( "conf.save", NULL, NULL, NULL);
     }
   } /* end of reversibility check */
 

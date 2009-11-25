@@ -24,5 +24,7 @@
 
 int get_propagator_type(char * filename);
 int get_source_type(char * filename);
+int read_source(spinor * const s, spinor * const r, char *filename,
+                const int format, const int position);
 
 #endif
