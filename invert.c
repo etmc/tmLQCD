@@ -53,7 +53,6 @@
 #include "io.h"
 #include "io_utils.h"
 #include "propagator_io.h"
-#include "gauge_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
@@ -113,9 +112,7 @@ int main(int argc, char *argv[])
   char * input_filename = NULL;
   char * xlfmessage = NULL;
   char * gaugelfn = NULL;
-#ifdef HAVE_LIBLEMON
   DML_Checksum gaugecksum_num;
-#endif /* HAVE_LIBLEMON */
   char * gaugecksum = NULL;
   double plaquette_energy;
   double ratime, retime;
@@ -129,11 +126,16 @@ int main(int argc, char *argv[])
 
 #ifdef HAVE_LIBLEMON
   MPI_File fh;
-  LemonWriter *lemonWriter;
+  LemonWriter *Writer;
+#else
+  FILE * fh;
+  LimeWriter *Writer;
+#endif
+  
   paramsXlfInfo *xlfInfo;
   paramsSourceFormat *sourceFormat;
   paramsPropagatorFormat *propagatorFormat;
-#endif
+  paramsInverterInfo *inverterInfo;
 
 #if (defined SSE || defined SSE2 || SSE3)
   signal(SIGILL, &catch_ill_inst);
@@ -355,21 +357,7 @@ int main(int argc, char *argv[])
       printf("Reading Gauge field from file %s\n", conf_filename);
       fflush(stdout);
     }
-#ifdef HAVE_LIBLEMON
-    read_lemon_gauge_field_parallel(conf_filename, &gaugecksum_num, &xlfmessage, &gaugelfn);
-#else /* HAVE_LIBLEMON */
-    if (xlfmessage != (char*)NULL)
-      free(xlfmessage);
-    if (gaugelfn != (char*)NULL)
-      free(gaugelfn);
-    if (gaugecksum != (char*)NULL)
-      free(gaugecksum);
-    read_lime_gauge_field(conf_filename);
-    xlfmessage = read_message(conf_filename, "xlf-info");
-    gaugelfn = read_message(conf_filename, "ildg-data-lfn");
-    gaugecksum = read_message(conf_filename, "scidac-checksum");
-    printf("%s \n", gaugecksum);
-#endif /* HAVE_LIBLEMON */
+    read_lime_gauge_field(conf_filename, &gaugecksum_num, &xlfmessage, &gaugelfn);
     if (g_proc_id == 0)
     {
       printf("done!\n");
@@ -472,18 +460,12 @@ int main(int argc, char *argv[])
 #else
         ratime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
-        if (source_splitted)
-        {
-          sprintf(conf_filename, "%s.%.2d", source_input_filename, ix);
-          if (g_proc_id == 0)
-          {
+        if (source_splitted) {
+          sprintf(conf_filename, "%s.%.4d.%.2d", source_input_filename, nstore, ix);
+          if (g_proc_id == 0) {
             printf("Reading source from %s\n", conf_filename);
           }
-#ifdef HAVE_LIBLEMON
-           read_spinor_parallel(g_spinor_field[0], g_spinor_field[1], conf_filename, 0);
-#else /* HAVE_LIBLEMON */
-          read_source(g_spinor_field[0], g_spinor_field[1], conf_filename, source_format_flag, 0);
-#endif /* HAVE_LIBLEMON */
+	  read_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 0);
         }
         else
         {
@@ -492,11 +474,7 @@ int main(int argc, char *argv[])
           {
             printf("Reading source no %d from %s\n", ix, conf_filename);
           }
-#ifdef HAVE_LIBLEMON
-           read_spinor_parallel(g_spinor_field[0], g_spinor_field[1], conf_filename, ix);
-#else /* HAVE_LIBLEMON */
-          read_source(g_spinor_field[0], g_spinor_field[1], conf_filename, source_format_flag, ix);
-#endif /* HAVE_LIBLEMON */
+	  read_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, ix);
         }
 #ifdef MPI
         retime = MPI_Wtime();
@@ -538,45 +516,22 @@ int main(int argc, char *argv[])
           fclose(ifs);
           err = 0;
           iter = get_propagator_type(conf_filename);
-          if (iter > -1)
-          {
-            if (iter == 1)
-            {
-              if (propagator_splitted)
-              {
-#ifdef HAVE_LIBLEMON
-                read_spinor_parallel(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
-#else /* HAVE_LIBLEMON */
-                err = read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
-#endif /* HAVE_LIBLEMON */
+          if (iter > -1) {
+            if (iter == 1) {
+              if (propagator_splitted) {
+                read_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
               }
-              else
-              {
-#ifdef HAVE_LIBLEMON
-                read_spinor_parallel(g_spinor_field[2], g_spinor_field[3], conf_filename, ix);
-#else /* HAVE_LIBLEMON */
-                err = read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, ix);
-#endif /* HAVE_LIBLEMON */
+              else {
+                read_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, ix);
               }
             }
             else
-              if (iter == 0)
-              {
-                if (propagator_splitted)
-                {
-#ifdef HAVE_LIBLEMON
-                  read_spinor_parallel(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
-#else /* HAVE_LIBLEMON */
-               err = read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
-#endif /* HAVE_LIBLEMON */
+              if (iter == 0) {
+                if (propagator_splitted) {
+                  read_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
                 }
-                else
-                {
-#ifdef HAVE_LIBLEMON
-                  read_spinor_parallel(g_spinor_field[2], g_spinor_field[3], conf_filename, 2 * ix);
-#else /* HAVE_LIBLEMON */
-                  err = read_lime_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 2 * ix);
-#endif /* HAVE_LIBLEMON */
+                else {
+                  read_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 2 * ix);
                 }
               }
             if (g_kappa != 0.)
@@ -633,24 +588,19 @@ int main(int argc, char *argv[])
       }
 
 #ifdef HAVE_LIBLEMON
-  MPI_File_open(g_cart_grid, conf_filename, MPI_MODE_WRONLY | MPI_MODE_CREATE | MPI_MODE_APPEND, MPI_INFO_NULL, &fh);
-  lemonWriter = lemonCreateWriter(&fh, g_cart_grid);
+      MPI_File_open(g_cart_grid, conf_filename, MPI_MODE_WRONLY | MPI_MODE_CREATE | MPI_MODE_APPEND, MPI_INFO_NULL, &fh);
+      Writer = lemonCreateWriter(&fh, g_cart_grid);
+#else
+      fh = fopen(conf_filename, "a");
+      Writer = limeCreateWriter(fh);
 #endif
 
       if (write_prop_format_flag < 10)
       {
         if (propagator_splitted || ix == index_start)
         {
-#ifdef HAVE_LIBLEMON
           xlfInfo = construct_paramsXlfInfo(plaquette_energy / (6.*VOLUME*g_nproc), nstore);
-          write_propagator_type_parallel(lemonWriter, write_prop_format_flag);
-          write_xlf_info_parallel(lemonWriter, xlfInfo);
-          if (gaugelfn != NULL)
-          {
-            write_header_parallel(lemonWriter, 1, 1, "gauge-ildg-data-lfn-copy", strlen(gaugelfn));
-            write_message_parallel(lemonWriter, gaugelfn, strlen(gaugelfn));
-            lemonWriterCloseRecord(lemonWriter);
-          }
+	  inverterInfo = construct_paramsInverterInfo(solver_precision, iter, solver_flag, 1);
 	  gaugecksum = (char*)malloc(512);
 	  sprintf(gaugecksum, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                               "<scidacChecksum>\n"
@@ -658,30 +608,27 @@ int main(int argc, char *argv[])
                               "  <suma>%08x</suma>\n"
                               "  <sumb>%08x</sumb>\n"
                               "</scidacChecksum>", gaugecksum_num.suma, gaugecksum_num.sumb);
-          write_header_parallel(lemonWriter, 1, 1, "gauge-scidac-checksum-copy", strlen(gaugecksum));
-          write_message_parallel(lemonWriter, gaugecksum, strlen(gaugecksum));
-          lemonWriterCloseRecord(lemonWriter);
+#ifdef HAVE_LIBLEMON
+	  write_spinor_info_parallel(Writer, xlfInfo, write_prop_format_flag, inverterInfo, gaugelfn, gaugecksum);
+#else /* HAVE_LIBLEMON */
+	  write_spinor_info(Writer, xlfInfo, write_prop_format_flag, inverterInfo, gaugelfn, gaugecksum);
+#endif /* HAVE_LIBLEMON */
           free(xlfInfo);
 	  free(gaugecksum);
-#else /* HAVE_LIBLEMON */
-          write_propagator_type(write_prop_format_flag, conf_filename);
-          write_xlf_info(plaquette_energy / (6.*VOLUME*g_nproc), nstore, conf_filename, 1, xlfmessage);
-          write_message(conf_filename, gaugelfn, "gauge-ildg-data-lfn-copy", 1);
-          write_message(conf_filename, gaugecksum, "gauge-scidac-checksum-copy", 1);
-#endif /* HAVE_LIBLEMON */
+	  free(inverterInfo);
         }
 
         /* write the source depending on format */
-        if (write_prop_format_flag == 1)
-        {
-#ifdef HAVE_LIBLEMON
+        if (write_prop_format_flag == 1) {
           sourceFormat = construct_paramsSourceFormat(32, 1, 4, 3);
-          write_source_format_parallel(lemonWriter, sourceFormat);
-          write_spinor_parallel(lemonWriter, &g_spinor_field[0], &g_spinor_field[1], 1, 32);
-          free(sourceFormat);
-#else  /* HAVE_LIBLEMON */
-	  write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
+#ifdef HAVE_LIBLEMON
+          write_source_format_parallel(Writer, sourceFormat);
+          write_spinor_parallel(Writer, &g_spinor_field[0], &g_spinor_field[1], 1, 32);
+#else /* HAVE_LIBLEMON */
+          write_source_format(Writer, sourceFormat);
+	  write_spinor(Writer, &g_spinor_field[0], &g_spinor_field[1], 1, 32);
 #endif /* HAVE_LIBLEMON */
+          free(sourceFormat);
         }
       }
 #ifdef MPI
@@ -689,13 +636,13 @@ int main(int argc, char *argv[])
 #else
       ratime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
-#ifdef HAVE_LIBLEMON
       propagatorFormat = construct_paramsPropagatorFormat(prop_precision_flag, 1);
-      write_propagator_format_parallel(lemonWriter, propagatorFormat);
-      write_spinor_parallel(lemonWriter, &g_spinor_field[2], &g_spinor_field[3], 1, prop_precision_flag);
+#ifdef HAVE_LIBLEMON
+      write_propagator_format_parallel(Writer, propagatorFormat);
+      write_spinor_parallel(Writer, &g_spinor_field[2], &g_spinor_field[3], 1, prop_precision_flag);
 #else  /* HAVE_LIBLEMON */
-      write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1,
-                       prop_precision_flag, write_prop_format_flag);
+      write_propagator_format(Writer, propagatorFormat);
+      write_spinor(Writer, &g_spinor_field[2], &g_spinor_field[3], 1, prop_precision_flag);
 #endif /* HAVE_LIBLEMON */
 
 #ifdef MPI
@@ -703,17 +650,14 @@ int main(int argc, char *argv[])
 #else
       retime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
-      if (g_proc_id == 0)
-      {
+      if (g_proc_id == 0) {
         printf("time for writing prop was %e seconds\n", retime - ratime);
       }
       /* Check the result */
       M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[2], g_spinor_field[3]);
 
-      if (write_prop_format_flag != 11)
-      {
-        if (g_kappa != 0.)
-        {
+      if (write_prop_format_flag != 11) {
+        if (g_kappa != 0.) {
           mul_r(g_spinor_field[4], 1. / (2*g_kappa), g_spinor_field[4], VOLUME / 2);
           mul_r(g_spinor_field[5], 1. / (2*g_kappa), g_spinor_field[5], VOLUME / 2);
         }
@@ -732,16 +676,14 @@ int main(int argc, char *argv[])
       }
       
 #ifdef HAVE_LIBLEMON /* Need to clear up the file to allow LIME routines access again - to be moved down eventually */
-      lemonDestroyWriter(lemonWriter);
+      lemonDestroyWriter(Writer);
       MPI_File_close(&fh);
+#else /* HAVE_LIBLEMON */
+      limeDestroyWriter(Writer);
+      fclose(fh);
 #endif /* HAVE_LIBLEMON */
  
 #ifndef HAVE_LIBLEMON
-      if (g_proc_id == 0)
-      {
-        if (write_prop_format_flag != 11)
-          write_inverter_info(nrm1 + nrm2, iter, 0, 1, conf_filename, -1);
-      }
       if (solver_flag == 12 && g_no_extra_masses > 0)
       {
         for (j = 0; j < g_no_extra_masses + 1; j++)
@@ -749,10 +691,10 @@ int main(int argc, char *argv[])
           sprintf(conf_filename, "%s.%.2d.Qsq.mass%.2d.inverted", source_input_filename, ix, j);
           sprintf(tmp_filename, ".cgmms.%.2d.inverted", j);
           rename(tmp_filename, conf_filename);
-          write_inverter_info(nrm1 + nrm2, iter, 0, 1, conf_filename, j);
-          write_xlf_info(plaquette_energy / (6.*VOLUME*g_nproc), nstore, conf_filename, 1, xlfmessage);
-          write_message(conf_filename, gaugelfn, "gauge-ildg-data-lfn-copy", 1);
-          write_message(conf_filename, gaugecksum, "gauge-scidac-checksum-copy", 1);
+/*           write_inverter_info(nrm1 + nrm2, iter, 0, 1, conf_filename, j); */
+/*           write_xlf_info(plaquette_energy / (6.*VOLUME*g_nproc), nstore, conf_filename, 1, xlfmessage); */
+/*           write_message(conf_filename, gaugelfn, "gauge-ildg-data-lfn-copy", 1); */
+/*           write_message(conf_filename, gaugecksum, "gauge-scidac-checksum-copy", 1); */
         }
       }
 #endif /* !HAVE_LIBLEMON */
@@ -770,8 +712,7 @@ int main(int argc, char *argv[])
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
-  if (g_running_phmc)
-  {
+  if (g_running_phmc) {
     free_chi_up_spinor_field();
     free_chi_dn_spinor_field();
   }

@@ -28,6 +28,7 @@
  *
  *******************************************************************************/
 #define MAIN_PROGRAM
+#include "lime.h"
 #if HAVE_CONFIG_H
 #include<config.h>
 #endif
@@ -40,12 +41,10 @@
 #include <signal.h>
 #ifdef MPI
 # include <mpi.h>
-# ifdef HAVE_LIBLEMON
-#  include <io/params.h>
-#  include <io/gauge.h>
-# endif
 #endif
 #include "global.h"
+#include <io/params.h>
+#include <io/gauge.h>
 #include "getopt.h"
 #include "ranlxd.h"
 #include "geometry_eo.h"
@@ -57,7 +56,6 @@
 #endif
 #include "io.h"
 #include "propagator_io.h"
-#include "gauge_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
@@ -129,9 +127,7 @@ int main(int argc,char *argv[]) {
   /* For the Polyakov loop: */
   int dir = 2;
   complex pl, pl4;
-#ifdef HAVE_LIBLEMON
   paramsXlfInfo *xlfInfo;
-#endif
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -342,16 +338,7 @@ int main(int argc,char *argv[]) {
 	     gauge_input_filename, gauge_precision_read_flag);
       fflush(stdout);
     }
-#ifdef HAVE_LIBLEMON
-    read_lemon_gauge_field_parallel(gauge_input_filename, NULL, NULL, NULL);
-#else
-    if(gauge_precision_read_flag == 64) {
-      read_lime_gauge_field(gauge_input_filename);
-    }
-    else if(gauge_precision_read_flag == 32){
-      read_lime_gauge_field_singleprec(gauge_input_filename);
-    }
-    #endif
+    read_lime_gauge_field(gauge_input_filename, NULL, NULL, NULL);
 
     if (g_proc_id == 0){
       printf("# done!\n"); fflush(stdout);
@@ -507,15 +494,10 @@ int main(int argc,char *argv[]) {
     if(((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
       /* Write the gauge configuration first to a temporary file */
 /*       write_gauge_field_time_p( tmp_filename); */
-#ifdef HAVE_LIBLEMON
+
       xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-      write_lemon_gauge_field_parallel( tmp_filename, gauge_precision_write_flag, xlfInfo);
+      write_lime_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo);
       free(xlfInfo);
-#else
-      write_lime_gauge_field( tmp_filename , plaquette_energy/(6.*VOLUME*g_nproc),
-                  trajectory_counter, gauge_precision_write_flag);
-      /*  write the status of the random number generator to a file */
-#endif
 
 
       /* Now move it! */
