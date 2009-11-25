@@ -46,7 +46,7 @@
 #include "geometry_eo.h"
 #include "start.h"
 #include "io.h"
-#include "io_utils.h"
+#include <io/utils.h>
 #include "propagator_io.h"
 #include "read_input.h"
 #include "mpi_init.h"

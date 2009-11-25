@@ -21,11 +21,15 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
+#include <lime.h>
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
-#include <dml.h>
 #include <io/params.h>
-#include <lime.h>
+#include <io/dml.h>
+
 
 #ifndef isnan
 # define isnan(x)						 \

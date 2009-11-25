@@ -89,7 +89,7 @@ EXTERN int g_sloppy_precision;
 EXTERN int **** g_ipt;
 EXTERN int ** g_iup;
 EXTERN int ** g_idn;
-EXTERN int ** g_iup_eo; // NEW GIUPDNEO
+EXTERN int ** g_iup_eo; /*  NEW GIUPDNEO */
 EXTERN int ** g_idn_eo;
 EXTERN int ** g_coord;
 

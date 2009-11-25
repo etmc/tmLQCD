@@ -38,5 +38,4 @@
 #include <su3.h>
 #include <read_input.h>
 
-#include <io_utils.h>
 #include <io/utils.h>

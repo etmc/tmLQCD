@@ -18,9 +18,8 @@
 #include"su3.h"
 #include"lime.h"
 #include"read_input.h"
-#include"io_utils.h"
 #include"propagator_io.h"
-#include"dml.h"
+#include<io/dml.h>
 #include"io.h"
 #include "io/spinor.h"
 

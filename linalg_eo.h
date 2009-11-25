@@ -34,7 +34,7 @@
 #include "linalg/assign_mul_add_mul_add_mul_add_mul_r.h"
 #include "linalg/diff_and_square_norm.h"
 #include "linalg/assign.h"
-//#include "linalg/deri_linalg.h"
+/* #include "linalg/deri_linalg.h" */
 #include "linalg/assign_mul_add_r.h"
 #include "linalg/scalar_prod.h"
 #include "linalg/mul_diff_mul.h"

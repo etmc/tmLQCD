@@ -29,9 +29,9 @@
 
 #define MAIN_PROGRAM
 
-#include"lime.h"
+#include <lime.h>
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include <config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -52,9 +52,7 @@
 #include "xchange.h"
 #endif
 #include "io.h"
-#include "io_utils.h"
 #include "propagator_io.h"
-#include "gauge_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
@@ -118,6 +116,19 @@ int main(int argc,char *argv[]) {
 #pragma pomp inst init
 #pragma pomp inst begin(main)
 #endif
+
+#ifdef HAVE_LIBLEMON
+  MPI_File fh;
+  LemonWriter *Writer;
+#else
+  FILE * fh;
+  LimeWriter *Writer;
+#endif
+  
+  paramsXlfInfo *xlfInfo;
+  paramsSourceFormat *sourceFormat;
+  paramsPropagatorFormat *propagatorFormat;
+  paramsInverterInfo *inverterInfo;
 
 #if (defined SSE || defined SSE2 || SSE3)
   signal(SIGILL,&catch_ill_inst);
@@ -465,6 +476,14 @@ int main(int argc,char *argv[]) {
 	mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[DUM_DERI+1], 
 			 g_spinor_field[DUM_DERI+3], -1., VOLUME/2);
 	
+#ifdef HAVE_LIBLEMON
+	MPI_File_open(g_cart_grid, conf_filename, MPI_MODE_WRONLY | MPI_MODE_CREATE | MPI_MODE_APPEND, MPI_INFO_NULL, &fh);
+	Writer = lemonCreateWriter(&fh, g_cart_grid);
+#else
+	fh = fopen(conf_filename, "a");
+	Writer = limeCreateWriter(fh);
+#endif
+
 	if(propagator_splitted) {
 	  if(fl == 1) {
 	    write_propagator_type(write_prop_format_flag, conf_filename);

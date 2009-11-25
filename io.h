@@ -38,16 +38,9 @@
 #ifndef _IO_H
 #define _IO_H
 
-int write_gauge_field_time_p(char * filename);
-int read_gauge_field_time_p(char * filename);
-
 int write_spinorfield_eo_time_p(spinor * const s, spinor * const r, char * filename, const int append);
 int read_spinorfield_eo_time(spinor * const s, spinor * const r, char * filename);
 void write_su3(su3 * up, FILE * f);
-int write_lime_gauge_field_old(char * filename, const double plaq, const int counter);
-int write_lime_gauge_field_singleprec(char * filename, const double plaq, const int counter);
-int read_lime_gauge_field_old(char * filename);
-int read_lime_gauge_field_singleprec(char * filename);
 int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filename, 
 			       const int ts, const int vol);
 int read_spinorfield_cm_swap_single(spinor * const s, spinor * const r, char * filename,
