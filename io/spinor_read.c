@@ -47,14 +47,7 @@ void read_spinor(spinor * const s, spinor * const r,
       break;
     }
     header_type = limeReaderType(limereader);
-<<<<<<< spinor_read.c
-    fprintf(stderr, "[DEBUG] Header read: %s.\n", header_type);
-
-    if (strcmp("scidac-binary-data", header_type) == 0)
-    {
-=======
     if (strcmp("scidac-binary-data", header_type) == 0) {
->>>>>>> 1.3
       if (getpos == position)
         break;
       else
