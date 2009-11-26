@@ -19,17 +19,14 @@
 
 #include "utils.ih"
 
-void write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum const *checksum)
+void write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum const *checksum, char const *name)
 {
   char *message;
   uint64_t bytes;
 
   message = (char*)malloc(512);
   if (message == (char*)NULL)
-  {
-    kill_with_error(lemonwriter->fh, lemonwriter->my_rank,
-                    "Memory allocation error in write_checksum_parallel. Aborting\n");
-  }
+    kill_with_error(limewriter->fp, g_cart_id, "Memory allocation error in write_checksum_parallel. Aborting\n");
 
   sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                    "<scidacChecksum>\n"
@@ -38,7 +35,13 @@ void write_checksum_parallel(LemonWriter * lemonwriter, DML_Checksum const *chec
                    "  <sumb>%08x</sumb>\n"
                    "</scidacChecksum>", checksum->suma, checksum->sumb);
   bytes = strlen(message);
-  write_header_parallel(lemonwriter, 0, 1, "scidac-checksum", bytes);
+
+  if (name == NULL)
+      write_header_parallel(lemonwriter, 0, 1, "scidac-checksum", bytes);
+  else
+      write_header_parallel(lemonwriter, 0, 1, name, bytes);
+
+  write_header_parallel(lemonwriter, 0, 1, name, bytes);
   write_message_parallel(lemonwriter, message, bytes);
   lemonWriterCloseRecord(lemonwriter);
   free(message);

@@ -51,7 +51,7 @@ void read_message_parallel(LemonReader *lemonreader, char **buffer);
 void write_message_parallel(LemonWriter *lemonwriter, char const *buffer, uint64_t bytes);
 void write_header_parallel(LemonWriter *lemonwriter, int MB, int ME, char *type, uint64_t bytes);
 
-void write_checksum_parallel(LemonWriter *lemonwriter, DML_Checksum const *checksum);
+void write_checksum_parallel(LemonWriter *lemonwriter, DML_Checksum const *checksum, char const *name);
 void write_xlf_info_parallel(LemonWriter *lemonwriter, paramsXlfInfo const *info);
 #else
 void kill_with_error(FILE *fh, int const rank, char const *error);
@@ -61,7 +61,7 @@ int read_message(LimeReader *limereader, char **buffer);
 int write_message(LimeWriter * limewriter, char const *buffer, uint64_t bytes);
 void write_header(LimeWriter *limewriter, int MB, int ME, char *type, uint64_t bytes);
 
-void write_checksum(LimeWriter *limewriter, DML_Checksum const *checksum);
+void write_checksum(LimeWriter *limewriter, DML_Checksum const *checksum, char const *name);
 void write_xlf_info(LimeWriter *limewriter, paramsXlfInfo const *info);
 void write_inverter_info(LimeWriter * writer,
 			 paramsInverterInfo const *info);

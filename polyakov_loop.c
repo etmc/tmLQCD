@@ -420,7 +420,7 @@ int polyakov_loop_dir(
     }
     }
   }
-  else { // z-direction <=> dir==3
+  else { /* z-direction <=> dir==3 */
     VOL3 = T*LX*LY;
     tmp_loc = (su3 *)calloc(VOL3, sizeof(su3));
     if((void*)tmp_loc == NULL) {

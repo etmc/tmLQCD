@@ -43,7 +43,7 @@ void write_spinor_parallel(LemonWriter *writer, spinor ** const s, spinor ** con
 void write_spinor_info_parallel(LemonWriter *lemonWriter,
 				paramsXlfInfo * xlfInfo, const int write_prop_format_flag,
 				paramsInverterInfo * InverterInfo, char * gaugelfn,
-				char * gaugecksum);
+                                DML_Checksum const * gaugecksum);
 
 void write_binary_spinor_data_parallel(spinor * const s, spinor * const r,
                                        LemonWriter * lemonwriter, DML_Checksum *checksum, int const prec);
@@ -58,7 +58,7 @@ void read_spinor(spinor * const s, spinor * const r, char * filename, const int 
 void write_spinor_info(LimeWriter *limeWriter,
 		       paramsXlfInfo * xlfInfo, const int write_prop_format_flag,
 		       paramsInverterInfo * InverterInfo, char * gaugelfn,
-		       char * gaugecksum);
+                       DML_Checksum const * gaugecksum);
 void write_spinor(LimeWriter *limeWriter, spinor ** const s, spinor ** const r, const int flavours, const int prec);
 void write_source_format(LimeWriter *writer, paramsSourceFormat const *format);
 void write_propagator_format(LimeWriter *writer, paramsPropagatorFormat const *format);

@@ -49,7 +49,7 @@ void write_lime_gauge_field(char * filename, const int prec, paramsXlfInfo const
   write_header(writer, 0, 0, "ildg-binary-data", bytes);
 
   write_binary_gauge_data(writer, prec, &checksum);
-  write_checksum(writer, &checksum);
+  write_checksum(writer, &checksum, NULL);
 
   if(g_cart_id == 0) {
     fprintf(stdout, "# Checksum A: %#x \nChecksum B: %#x\n", checksum.suma, checksum.sumb);

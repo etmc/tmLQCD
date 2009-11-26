@@ -112,8 +112,7 @@ int main(int argc, char *argv[])
   char * input_filename = NULL;
   char * xlfmessage = NULL;
   char * gaugelfn = NULL;
-  DML_Checksum gaugecksum_num;
-  char * gaugecksum = NULL;
+  DML_Checksum gaugecksum;
   double plaquette_energy;
   double ratime, retime;
 
@@ -357,7 +356,7 @@ int main(int argc, char *argv[])
       printf("Reading Gauge field from file %s\n", conf_filename);
       fflush(stdout);
     }
-    read_lime_gauge_field(conf_filename, &gaugecksum_num, &xlfmessage, &gaugelfn);
+    read_lime_gauge_field(conf_filename, &gaugecksum, &xlfmessage, &gaugelfn);
     if (g_proc_id == 0)
     {
       printf("done!\n");
@@ -446,8 +445,8 @@ int main(int argc, char *argv[])
       {
         if (source_location == 0)
         {
-//           random_spinor_field(g_spinor_field[0], VOLUME, 1);
-//           random_spinor_field(g_spinor_field[1], VOLUME, 1);
+/*           random_spinor_field(g_spinor_field[0], VOLUME, 1);
+           random_spinor_field(g_spinor_field[1], VOLUME, 1);*/
           source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
         }
         else
@@ -601,20 +600,12 @@ int main(int argc, char *argv[])
         {
           xlfInfo = construct_paramsXlfInfo(plaquette_energy / (6.*VOLUME*g_nproc), nstore);
 	  inverterInfo = construct_paramsInverterInfo(solver_precision, iter, solver_flag, 1);
-	  gaugecksum = (char*)malloc(512);
-	  sprintf(gaugecksum, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                              "<scidacChecksum>\n"
-                              "  <version>1.0</version>\n"
-                              "  <suma>%08x</suma>\n"
-                              "  <sumb>%08x</sumb>\n"
-                              "</scidacChecksum>", gaugecksum_num.suma, gaugecksum_num.sumb);
 #ifdef HAVE_LIBLEMON
-	  write_spinor_info_parallel(Writer, xlfInfo, write_prop_format_flag, inverterInfo, gaugelfn, gaugecksum);
+          write_spinor_info_parallel(Writer, xlfInfo, write_prop_format_flag, inverterInfo, gaugelfn, &gaugecksum);
 #else /* HAVE_LIBLEMON */
-	  write_spinor_info(Writer, xlfInfo, write_prop_format_flag, inverterInfo, gaugelfn, gaugecksum);
+          write_spinor_info(Writer, xlfInfo, write_prop_format_flag, inverterInfo, gaugelfn, &gaugecksum);
 #endif /* HAVE_LIBLEMON */
           free(xlfInfo);
-	  free(gaugecksum);
 	  free(inverterInfo);
         }
 

@@ -23,7 +23,7 @@
 void write_spinor_info(LimeWriter *limeWriter,
 		       paramsXlfInfo * xlfInfo, const int write_prop_format_flag,
 		       paramsInverterInfo * InverterInfo, char * gaugelfn,
-		       char * gaugecksum) {
+                       DML_Checksum const * gaugecksum) {
 
   write_propagator_type(limeWriter, write_prop_format_flag);
   write_xlf_info(limeWriter, xlfInfo);
@@ -33,11 +33,8 @@ void write_spinor_info(LimeWriter *limeWriter,
     write_message(limeWriter, gaugelfn, strlen(gaugelfn));
     limeWriterCloseRecord(limeWriter);
   }
-  if(gaugecksum != NULL) {
-    write_header(limeWriter, 1, 1, "gauge-scidac-checksum-copy", strlen(gaugecksum));
-    write_message(limeWriter, gaugecksum, strlen(gaugecksum));
-    limeWriterCloseRecord(limeWriter);
-  }
+  if(gaugecksum != NULL)
+    write_checksum(limeWriter, gaugecksum, "gauge-scidac-checksum-copy");
   return;
 }
 

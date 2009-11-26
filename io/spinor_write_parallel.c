@@ -23,21 +23,18 @@
 void write_spinor_info_parallel(LemonWriter *lemonWriter,
 				paramsXlfInfo * xlfInfo, const int write_prop_format_flag,
 				paramsInverterInfo * InverterInfo, char * gaugelfn,
-				char * gaugecksum) {
+                                DML_Checksum const *gaugecksum) {
 
-  write_propagator_type_parallel(Writer, write_prop_format_flag);
-  write_xlf_info_parallel(Writer, xlfInfo);
-  write_inverter_info_parallel(Writer, InverterInfo);
+  write_propagator_type_parallel(lemonWriter, write_prop_format_flag);
+  write_xlf_info_parallel(lemonWriter, xlfInfo);
+  write_inverter_info_parallel(lemonWriter, InverterInfo);
   if (gaugelfn != NULL) {
     write_header_parallel(lemonWriter, 1, 1, "gauge-ildg-data-lfn-copy", strlen(gaugelfn));
     write_message_parallel(lemonWriter, gaugelfn, strlen(gaugelfn));
     lemonWriterCloseRecord(lemonWriter);
   }
-  if(gaugecksum != NULL) {
-    write_header_parallel(lemonWriter, 1, 1, "gauge-scidac-checksum-copy", strlen(gaugecksum));
-    write_message_parallel(lemonWriter, gaugecksum, strlen(gaugecksum));
-    lemonWriterCloseRecord(lemonWriter);
-  }
+  if(gaugecksum != NULL)
+    write_checksum_parallel(lemonWriter, gaugecksum, "gauge-scidac-checksum-copy");
   return;
 }
 
@@ -52,7 +49,7 @@ void write_spinor_parallel(LemonWriter *lemonWriter, spinor ** const s, spinor *
   for (i = 0; i < flavours; ++i) {
     write_header_parallel(lemonWriter, 1, 1, "scidac-binary-data", bytes);
     write_binary_spinor_data_parallel(s[i], r[i], lemonWriter, &checksum, prec);
-    /* write_checksum_parallel(writer, &checksum); */
+    write_checksum_parallel(lemonWriter, &checksum, NULL);
   }
   return;
 }

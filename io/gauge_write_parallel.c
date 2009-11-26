@@ -45,7 +45,7 @@ void write_lemon_gauge_field_parallel(char * filename, int prec, paramsXlfInfo c
 
   write_header_parallel(writer, 0, 0, "ildg-binary-data", bytes);
   write_binary_gauge_data_parallel(writer, prec, &checksum);
-  write_checksum_parallel(writer, &checksum);
+  write_checksum_parallel(writer, &checksum, NULL);
 
   if (g_cart_id == 0)
   {

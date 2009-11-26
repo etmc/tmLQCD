@@ -1172,7 +1172,7 @@ double measure_wilson_action(double beta) {
   plaquette = measure_plaquette();
 
   wilson = - (beta/(2.*3.)) * plaquette;
-  //wilson = beta * (6.*VOLUME*g_nproc - plaquette);
+  /* wilson = beta * (6.*VOLUME*g_nproc - plaquette); */
 
   return wilson;
 }
