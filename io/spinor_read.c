@@ -31,26 +31,25 @@ void read_spinor(spinor * const s, spinor * const r,
   LimeReader *limereader;
   DML_Checksum checksum;
 
-  ifs = fopen(filename, "a");
+  ifs = fopen(filename, "r");
   if (ifs == NULL)
     kill_with_error(ifs, g_cart_id, "Unable to open file.\n");
 
   limereader = limeCreateReader(ifs);
   if (limereader == (LimeReader *)NULL)
-    kill_with_error(ifs, g_cart_id, "Unable to create lemon reader.\n");
+    kill_with_error(ifs, g_cart_id, "Unable to create lime reader.\n");
 
+  printf("filename is %s\n", filename);
   /* Find the desired propagator (could be more than one in a file) */
-  while ((status = limeReaderNextRecord(limereader)) != LIME_EOF)
-  {
-    if (status != LIME_SUCCESS)
-    {
+  while ((status = limeReaderNextRecord(limereader)) != LIME_EOF) {
+    printf("here\n");
+    if (status != LIME_SUCCESS) {
       fprintf(stderr, "limeReaderNextRecord returned status %d.\n", status);
       break;
     }
     header_type = limeReaderType(limereader);
-
-    if (strcmp("scidac-binary-data", header_type) == 0)
-    {
+    printf("%s\n", header_type);
+    if (strcmp("scidac-binary-data", header_type) == 0) {
       if (getpos == position)
         break;
       else
