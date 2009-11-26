@@ -32,6 +32,8 @@
 #include <math.h>
 #include "global.h"
 #include "su3.h"
+#include <io/spinor.h>
+#include <io/params.h>
 #include "gamma.h"
 #include "linalg_eo.h"
 #include "start.h"
@@ -62,6 +64,13 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
   static double gamma,alpham1;
   
   double tmp_mu = g_mu;
+#ifdef HAVE_LIBLEMON
+  MPI_File fh;
+  LemonWriter *Writer;
+#else
+  FILE * fh;
+  LimeWriter *Writer;
+#endif
   
   init_mms_tm(g_no_extra_masses);
 
@@ -159,25 +168,52 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
       /* save all the results of (Q^dagger Q)^(-1) \gamma_5 \phi */
       /* here ... */
       sprintf(conf_filename,".cgmms.%.2d.inverted", 0);
-/*      write_propagator_type(0, conf_filename);*/
       if(g_kappa != 0) {
 	mul_r(g_spinor_field[DUM_SOLVER], (2*g_kappa)*(2*g_kappa), g_spinor_field[DUM_SOLVER], N);
       }
+#ifdef HAVE_LIBLEMON
+      MPI_File_open(g_cart_grid, conf_filename, MPI_MODE_WRONLY | MPI_MODE_CREATE | MPI_INFO_NULL, &fh);
+      Writer = lemonCreateWriter(&fh, g_cart_grid);
+#else
+      fh = fopen(conf_filename, "w");
+      Writer = limeCreateWriter(fh);
+#endif
       convert_lexic_to_eo(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], 
 			  g_spinor_field[DUM_SOLVER]);
-/*      write_propagator(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1],
-		       conf_filename, 1, 32, 0);*/
+#ifdef HAVE_LIBLEMON
+      write_spinor_parallel(Writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
+      lemonDestroyWriter(Writer);
+      MPI_File_close(&fh);
+#else
+      write_spinor(Writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
+      limeDestroyWriter(Writer);
+      fclose(fh);
+#endif
 
       for(im = 0; im < g_no_extra_masses; im++) {
 	sprintf(conf_filename,".cgmms.%.2d.inverted", im+1);
-	write_propagator_type(0, conf_filename);
+#ifdef HAVE_LIBLEMON
+	MPI_File_open(g_cart_grid, conf_filename, MPI_MODE_WRONLY | MPI_MODE_CREATE | MPI_INFO_NULL, &fh);
+	Writer = lemonCreateWriter(&fh, g_cart_grid);
+#else
+	fh = fopen(conf_filename, "w");
+	Writer = limeCreateWriter(fh);
+#endif
+
 	if(g_kappa != 0) {
 	  mul_r(xs_mms_solver[im], (2*g_kappa)*(2*g_kappa), xs_mms_solver[im], N);
 	}
 	convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], xs_mms_solver[im]);
-/* 	write_propagator(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1],
- 			 conf_filename, 1, 32, 0);*/
- 
+
+#ifdef HAVE_LIBLEMON
+	write_spinor_parallel(Writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
+	lemonDestroyWriter(Writer);
+	MPI_File_close(&fh);
+#else
+	write_spinor(Writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
+	limeDestroyWriter(Writer);
+	fclose(fh);
+#endif
       }
       return(iteration+1);
     }
