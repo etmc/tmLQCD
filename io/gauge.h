@@ -33,19 +33,29 @@
 #include <io/utils.h>
 
 #ifdef HAVE_LIBLEMON
-void read_lemon_gauge_field_parallel(char *filename, DML_Checksum *scidac_checksum, char **xlf_info, char **ildg_data_lfn);
-void read_binary_gauge_data_parallel(LemonReader * lemonreader, DML_Checksum * checksum);
-
-void write_lemon_gauge_field_parallel(char * filename, int prec, paramsXlfInfo const *xlfInfo);
-void write_binary_gauge_data_parallel(LemonWriter * lemonwriter, const int prec, DML_Checksum * ans);
-void write_ildg_format_parallel(LemonWriter *writer, paramsIldgFormat const *format);
-#endif /* HAVE_LIBLEMON */
-int read_lime_gauge_field(char * filename, DML_Checksum *scidac_checksum,
-			  char **xlf_info, char **ildg_data_lfn);
-void write_lime_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfInfo);
-int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * ans);
-int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksum * ans);
-void write_ildg_format(LimeWriter *writer, paramsIldgFormat const *format);			    
-
-
+#  define LIME_FILE MPI_File
+#  define WRITER LemonWriter
+#  define READER LemonReader
+#  define CreateReader lemonCreateReader
+#  define ReaderNextRecord lemonReaderNextRecord
+#  define ReaderType lemonReaderType
+#  define ReaderCloseRecord lemonReaderCloseRecord
+#  define DestroyReader lemonDestroyReader
+#else /* HAVE_LIBLEMON */
+#  define LIME_FILE FILE
+#  define WRITER LimeWriter
+#  define READER LimeReader
+#  define CreateReader limeCreateReader
+#  define ReaderNextRecord limeReaderNextRecord
+#  define ReaderType limeReaderType
+#  define ReaderCloseRecord limeReaderCloseRecord
+#  define DestroyReader limeDestroyReader
 #endif
+
+void read_gauge_field(char *filename, DML_Checksum *scidac_checksum, char **xlf_info, char **ildg_data_lfn);
+void read_binary_gauge_data(READER *reader, DML_Checksum *checksum);
+
+void write_gauge_field(char * filename, int prec, paramsXlfInfo const *xlfInfo);
+void write_binary_gauge_data(WRITER *writer, const int prec, DML_Checksum * checksum);
+
+void write_ildg_format(WRITER *writer, paramsIldgFormat const *format);

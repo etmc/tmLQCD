@@ -19,74 +19,78 @@
 
 #include "gauge.ih"
 
-int read_lime_gauge_field(char * filename, DML_Checksum *scidac_checksum,
-			 char **xlf_info, char **ildg_data_lfn) {
-#ifdef HAVE_LIBLEMON
-  read_lemon_gauge_field_parallel(filename, scidac_checksum, xlf_info, ildg_data_lfn);
-#else
-  FILE * ifs;
-  int status;
-  char * header_type;
-  LimeReader * limereader;
+int read_gauge_field(char * filename, DML_Checksum *scidac_checksum,
+                     char **xlf_info, char **ildg_data_lfn) {
+  int status = 0;
+  char *header_type = NULL;
+  READER *reader = NULL;
+
   DML_Checksum checksum_read;
   DML_Checksum checksum_calc;
   int DML_read_flag = 0;
+  int gauge_read_flag = 0;
   char *checksum_string = NULL;
-  int found_ildg_binary_data = 0;
+  LIME_FILE *ifs = NULL;
 
+#ifdef HAVE_LIBLEMON
+  MPI_File ifs_object;
+
+  ifs = &ifs_object;
+  status = MPI_File_open(g_cart_grid, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, ifs);
+  if (status != MPI_SUCCESS)
+    kill_with_error(ifs, g_cart_id, "Could not open file. Aborting...\n");
+#else /* HAVE_LIBLEMON */
   ifs = fopen(filename, "r");
-  if(ifs == (FILE *)NULL) {
-    fprintf(stderr, "Could not open file %s\n Aborting...\n", filename);
-#  ifdef MPI
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-#  endif
-    exit(500);
-  }
-  limereader = limeCreateReader( ifs );
-  if( limereader == (LimeReader *)NULL ) {
-    fprintf(stderr, "Unable to open LimeReader\n");
-#  ifdef MPI
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-#  endif
-    exit(500);
-  }
-  while( (status = limeReaderNextRecord(limereader)) != LIME_EOF ) {
-    if(status != LIME_SUCCESS ) {
-      fprintf(stderr, "limeReaderNextRecord returned error with status = %d!\n", status);
-      status = LIME_EOF;
+  if (ifs == (FILE *)NULL)
+    kill_with_error(ifs, g_cart_id, "Could not open file. Aborting...\n");
+#endif /* HAVE_LIBLEMON */
+
+  reader = CreateReader(&ifs, g_cart_grid);
+  if (reader == (READER *)NULL)
+    kill_with_error(ifs, g_cart_id, "Could not create reader. Aborting...\n");
+
+  while ((status = ReaderNextRecord(reader)) != LEMON_EOF)
+  {
+    if (status != LEMON_SUCCESS)
+    {
+      fprintf(stderr, "ReaderNextRecord returned status %d.\n", status);
       break;
     }
-    header_type = limeReaderType(limereader);
-    if(strcmp("ildg-binary-data",header_type) == 0) {
-      read_binary_gauge_data(limereader, &checksum_calc);
-      found_ildg_binary_data = 1;
+    header_type = ReaderType(reader);
+    if(g_cart_id == 0 && g_debug_level > 1) {
+      fprintf(stderr, "found header %s, will now read the message\n", header_type);
     }
-    else if(strcmp("xlf-info", header_type) == 0) {
-      read_message(limereader, xlf_info);
+
+    if (strcmp("ildg-binary-data", header_type) == 0)
+    {
+      read_binary_gauge_data(reader, &checksum_calc);
+      gauge_read_flag = 1;
     }
-    else if(strcmp("ildg-data-lfn", header_type) == 0) {
-      read_message(limereader, ildg_data_lfn);
-    }
-    else if (strcmp("scidac-checksum", header_type) == 0) {
-      read_message(limereader, &checksum_string);
+    else if (strcmp("scidac-checksum", header_type) == 0)
+    {
+      read_message(reader, &checksum_string);
       DML_read_flag = parse_checksum_xml(checksum_string, &checksum_read);
       if (DML_read_flag && scidac_checksum != (DML_Checksum*)NULL)
-	*scidac_checksum = checksum_read;
-      free(checksum_string); 
+        *scidac_checksum = checksum_read;
+      free(checksum_string);
     }
-  }
-  if(found_ildg_binary_data == 0) {
-    if(g_cart_id == 0) {
-      fprintf(stderr, "no ildg-binary-data record found in file %s\n",filename);
-      fprintf(stderr, "trying old deprecated file format!\n");
+    else if (strcmp("xlf-info", header_type) == 0)
+    {
+      read_message(reader, xlf_info);
     }
-    limeDestroyReader(limereader);
-    fclose(ifs);
-    return(-1);
+    else if (strcmp("ildg-data-lfn", header_type) == 0)
+    {
+      read_message(reader, ildg_data_lfn);
+    }
+    ReaderCloseRecord(reader);
   }
-  if (g_debug_level > 0 && g_cart_id == 0) {
+
+  if (!gauge_read_flag)
+    kill_with_error(&ifs, g_cart_id, "Did not find gauge record. Aborting...\n");
+
+
+  if (g_debug_level > 0 && g_cart_id == 0)
+  {
     printf("# checksum for gaugefield %s\n", filename);
     printf("# calculated: %#x %#x.\n", checksum_calc.suma, checksum_calc.sumb);
     if (DML_read_flag)
@@ -96,11 +100,16 @@ int read_lime_gauge_field(char * filename, DML_Checksum *scidac_checksum,
     fflush(stdout);
   }
 
+  DestroyReader(reader);
 
-  limeDestroyReader(limereader);
+#ifdef HAVE_LIBLEMON
+  MPI_File_close(ifs);
+#else /* HAVE_LIBLEMON */
   fclose(ifs);
+#endif /* HAVE_LIBLEMON */
+
   g_update_gauge_copy = 1;
   g_update_gauge_energy = 1;
-#endif
-  return(0);
+
+  return 0;
 }
