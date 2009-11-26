@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
         ratime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
         if (source_splitted) {
-          sprintf(conf_filename, "%s.%.4d.%.2d", source_input_filename, nstore, ix);
+          sprintf(conf_filename, "%s.%.4d.%.2d.%.2d", source_input_filename, nstore, source_time_slice, ix);
           if (g_proc_id == 0) {
             printf("Reading source from %s\n", conf_filename);
           }
@@ -492,11 +492,11 @@ int main(int argc, char *argv[])
 
       if (propagator_splitted)
       {
-        sprintf(conf_filename, "%s.%.2d.inverted", source_input_filename, ix);
+        sprintf(conf_filename, "%s.%.4d.%.2d.%.2d.inverted", source_input_filename, nstore, source_time_slice, ix);
       }
       else
       {
-        sprintf(conf_filename, "%s.inverted", source_input_filename);
+        sprintf(conf_filename, "%s.%.4d.inverted", source_input_filename, nstore);
       }
 
       /* If the solver is _not_ CG we might read in */

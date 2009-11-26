@@ -1,5 +1,5 @@
-- clean up source generation plus source input filename scheme
-- parallel IO for propagators
+- source generation inside the code
+- lime headers for propagators and sources
 - deflation
 - inverter for overlap (needs a new structure, partially available)
 - mixed precision solver, single precision Dirac operator
