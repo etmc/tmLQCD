@@ -496,7 +496,7 @@ int main(int argc, char *argv[])
       }
       else
       {
-        sprintf(conf_filename, "%s.%.4d.inverted", source_input_filename, nstore);
+        sprintf(conf_filename, "%s.%.4d.%.2d.inverted", source_input_filename, nstore, source_time_slice);
       }
 
       /* If the solver is _not_ CG we might read in */
