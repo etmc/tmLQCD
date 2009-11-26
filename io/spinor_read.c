@@ -23,7 +23,7 @@ void read_spinor(spinor * const s, spinor * const r,
 		 char * filename, const int position)
 {
 #ifdef HAVE_LIBLEMON
-  read_spinor(s, r, filename, position);
+  read_spinor_parallel(s, r, filename, position);
 #else
   FILE * ifs = NULL;
   int status = 0, getpos = 0;
