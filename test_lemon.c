@@ -26,6 +26,7 @@
 
 #define MAIN_PROGRAM
 
+#include <lime.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -40,10 +41,11 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
-#include <io/params.h>
-#include <io/gauge.h>
 #include "su3.h"
 #include "su3adj.h"
+#include <io/params.h>
+#include <io/gauge.h>
+
 #include "ranlxd.h"
 #include "geometry_eo.h"
 #include "read_input.h"
@@ -60,9 +62,7 @@
 int main(int argc,char *argv[]) {
 
   double plaquette_energy;
-#ifdef HAVE_LIBLEMON
   paramsXlfInfo *xlfInfo;
-#endif
   
 
 #ifdef MPI
@@ -116,13 +116,13 @@ int main(int argc,char *argv[]) {
   }
 
   /* write with lime first */
-  write_lime_gauge_field( "conf.lime" , plaquette_energy,
-			  0, 64);
+  xlfInfo = construct_paramsXlfInfo(plaquette_energy, 0);
+  write_lime_gauge_field( "conf.lime", 64, xlfInfo);
+
 #ifdef HAVE_LIBLEMON
   if(g_proc_id == 0) {
     printf("Now we do write with lemon to conf.lemon...\n");
   }
-  xlfInfo = construct_paramsXlfInfo(plaquette_energy, 0);
   write_lemon_gauge_field_parallel( "conf.lemon", 64, xlfInfo);
 
 
@@ -162,7 +162,7 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     printf("# now we read with lime from conf.lime\n");
   }
-  read_lime_gauge_field("conf.lime");
+  read_lime_gauge_field("conf.lime", NULL, NULL, NULL);
   plaquette_energy = measure_gauge_action() / (6.*VOLUME*g_nproc);
   if(g_proc_id == 0) {
     printf("# the plaquette value after lime read of conf.lime is %e\n", plaquette_energy);
