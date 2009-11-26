@@ -22,7 +22,7 @@
 int read_lime_gauge_field(char * filename, DML_Checksum *scidac_checksum,
 			 char **xlf_info, char **ildg_data_lfn) {
 #ifdef HAVE_LIBLEMON
-  read_lemon_gauge_field_parallel(filename, scidac_checksum, &xlf_info, &ildg_data_lfn);
+  read_lemon_gauge_field_parallel(filename, scidac_checksum, xlf_info, ildg_data_lfn);
 #else
   FILE * ifs;
   int status;
