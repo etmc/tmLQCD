@@ -53,6 +53,8 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
     printf("# %d Bit precision read\n", prec);
   }
 
+  if(prec == 32) bytes = (n_uint64_t)sizeof(spinor)/2;
+  else bytes = (n_uint64_t)sizeof(spinor);
   for(t = 0; t < T; t++) {
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {

@@ -56,6 +56,8 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * ans) {
   if(g_cart_id == 0 && g_debug_level > 2) {
     printf("# %d Bit precision read\n", prec);
   }
+  if(prec == 32) bytes = (n_uint64_t)2*sizeof(su3);
+  else bytes = (n_uint64_t)4*sizeof(su3);
   for(t = 0; t < T; t++){
     for(z = 0; z < LZ; z++){
       for(y = 0; y < LY; y++){
