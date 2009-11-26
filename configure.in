@@ -2,7 +2,7 @@
 #
 # Process this file with autoconf to produce a configure script
 #
-AC_PREREQ(2.53)
+AC_PREREQ(2.59)
 AC_INIT(tmLQCD, 5.1.2, curbach@gmx.de)
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
@@ -15,7 +15,7 @@ if test "$host_vendor" = "cray"; then
 fi
 
 AC_PROG_CC
-#AC_PROG_CC_C99
+AC_PROG_CC_C99
 AC_C_CONST
 AC_C_INLINE
 AC_C_BIGENDIAN

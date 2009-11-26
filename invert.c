@@ -590,7 +590,12 @@ int main(int argc, char *argv[])
       MPI_File_open(g_cart_grid, conf_filename, MPI_MODE_WRONLY | MPI_MODE_CREATE | MPI_MODE_APPEND, MPI_INFO_NULL, &fh);
       Writer = lemonCreateWriter(&fh, g_cart_grid);
 #else
-      fh = fopen(conf_filename, "a");
+      if(propagator_splitted || ix == 0) {
+	fh = fopen(conf_filename, "w");
+      }
+      else {
+	fh = fopen(conf_filename, "a");
+      }
       Writer = limeCreateWriter(fh);
 #endif
 
