@@ -20,6 +20,8 @@
 #include "params.ih"
 #include "solver/solver.h"
 
+/* This needs fixing */
+
 paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int iter, 
 						 const int solver, const int noflavours) {
   struct timeval t1;
@@ -49,6 +51,8 @@ paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int i
     info->epsbar = 0.;
   }
   strcpy(info->date, ctime(&t1.tv_sec));
+  info->mms = -1;
+  info->heavy = 0;
   switch (solver) {
   case CG:
     strcpy(info->inverter, "CG");
@@ -61,6 +65,7 @@ paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int i
     break;
   case CGMMS:
     strcpy(info->inverter, "CG MMS");
+    info->mms = 0;
     break;
   case CGS:
     strcpy(info->inverter, "CGS");

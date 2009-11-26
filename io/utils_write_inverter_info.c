@@ -25,7 +25,7 @@ void write_inverter_info(LimeWriter * writer,
   char *message;
   n_uint64_t bytes;
 
-  message = (char*)malloc(512);
+  message = (char*)malloc(1024);
   
   if (info->mms > -1) {
     sprintf(message, "\n solver = %s\n"
