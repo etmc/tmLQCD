@@ -30,28 +30,12 @@ int read_gauge_field(char * filename, DML_Checksum *scidac_checksum,
   int DML_read_flag = 0;
   int gauge_read_flag = 0;
   char *checksum_string = NULL;
-  LIME_FILE *ifs = NULL;
 
-#ifdef HAVE_LIBLEMON
-  MPI_File ifs_object;
+  construct_reader(reader, filename);
 
-  ifs = &ifs_object;
-  status = MPI_File_open(g_cart_grid, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, ifs);
-  if (status != MPI_SUCCESS)
-    kill_with_error(ifs, g_cart_id, "Could not open file. Aborting...\n");
-#else /* HAVE_LIBLEMON */
-  ifs = fopen(filename, "r");
-  if (ifs == (FILE *)NULL)
-    kill_with_error(ifs, g_cart_id, "Could not open file. Aborting...\n");
-#endif /* HAVE_LIBLEMON */
-
-  reader = CreateReader(&ifs, g_cart_grid);
-  if (reader == (READER *)NULL)
-    kill_with_error(ifs, g_cart_id, "Could not create reader. Aborting...\n");
-
-  while ((status = ReaderNextRecord(reader)) != LEMON_EOF)
+  while ((status = ReaderNextRecord(reader)) != LIME_EOF)
   {
-    if (status != LEMON_SUCCESS)
+    if (status != LIME_SUCCESS)
     {
       fprintf(stderr, "ReaderNextRecord returned status %d.\n", status);
       break;
@@ -100,13 +84,7 @@ int read_gauge_field(char * filename, DML_Checksum *scidac_checksum,
     fflush(stdout);
   }
 
-  DestroyReader(reader);
-
-#ifdef HAVE_LIBLEMON
-  MPI_File_close(ifs);
-#else /* HAVE_LIBLEMON */
-  fclose(ifs);
-#endif /* HAVE_LIBLEMON */
+  destruct_reader(reader);
 
   g_update_gauge_copy = 1;
   g_update_gauge_energy = 1;

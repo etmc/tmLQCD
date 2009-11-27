@@ -22,31 +22,14 @@
 void write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfInfo)
 {
   WRITER * writer = NULL;
-  LIME_FILE *ofs = NULL;
   uint64_t bytes;
 
   DML_Checksum     checksum;
   paramsIldgFormat *ildg;
 
-#ifdef HAVE_LIBLEMON
-  MPI_File ofs_object;
-
-  ofs = &ofs_object;
-  MPI_File_open(g_cart_grid, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &ofs);
-#else /* HAVE_LIBLEMON */
-  if(g_cart_id == 0)
-    ofs = fopen(filename, "w");
-#endif /* HAVE_LIBLEMON */
-
   bytes = (uint64_t)L * L * L * T_global * sizeof(su3) * prec / 16;
 
-  writer = CreateWriter(ofs, g_cart_grid);
-  if (writer == (WRITER*)NULL)
-#ifdef HAVE_LIBLEMON
-    kill_with_error(writer->fh, writer->my_rank, "Cannot construct writer. Aborting...\n");
-#else /* HAVE_LIBLEMON */
-    kill_with_error(writer->fp, writer->my_rank, "Cannot construct writer. Aborting...\n");
-#endif /* HAVE_LIBLEMON */
+  construct_writer(writer, filename);
 
   write_xlf_info(writer, xlfInfo);
 
@@ -62,16 +45,11 @@ void write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlf
   {
     fprintf(stdout, "# Checksum A: %#x \nChecksum B: %#x\n", checksum.suma, checksum.sumb);
     fflush(stdout);
-#ifndef HAVE_LIBLEMON
-    limeDestroyWriter(writer);
-    fclose(ofs);
-#endif /* ! HAVE_LIBLEMON */
   }
-#ifdef HAVE_LIBLEMON
-  MPI_Barrier(MPI_COMM_WORLD);
-  DestroyWriter(writer);
-  MPI_File_close(&ofs);
-#endif /* HAVE_LIBLEMON */
+#ifdef MPI
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif /* MPI */
 
+  destruct_writer(writer);
   return;
 }

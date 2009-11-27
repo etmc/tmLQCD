@@ -41,6 +41,20 @@
 
 #endif
 
+/* These are factory functions, since the constructors for c-lime and lemon are different
+   and they need different ways of opening files. Moving this to utility functions unclutters
+   the main code, since we don't need additional #ifdefs anymore.
+   Since lemon is collective and c-lime isn't, some care needs to be taken. For now, a writer
+   will only be constructed on the node with g_cart_id == 0 for c-lime, while a reader will
+   be created everywhere to exploit trivial parallellization. Be careful not to call
+   construct_writer and friends from within a "if (node_num == 0)" type statement, because
+   it will cause lemon to get deadlocked! */
+void construct_writer(WRITER * writer, char const *filename);
+void destruct_writer(WRITER * writer);
+
+void construct_reader(READER * reader, char const *filename);
+void destruct_reader(READER * reader);
+
 void kill_with_error(LIME_FILE *fh, int const rank, char const *error);
 
 int read_message(READER *reader, char **buffer);

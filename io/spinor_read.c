@@ -19,35 +19,22 @@
 
 #include "spinor.ih"
 
-void read_spinor(spinor * const s, spinor * const r,
-		 char * filename, const int position)
+void read_spinor(spinor * const s, spinor * const r, char * filename, const int position)
 {
-  LIME_FILE * ifs = NULL;
   int status = 0, getpos = 0;
   char *header_type = NULL;
   READER *reader = NULL;
   DML_Checksum checksum;
-#ifdef HAVE_LIBLEMON
-  LIME_FILE ifs_object;
 
-  ifs = &ifs_object;
-  status = MPI_File_open(g_cart_grid, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &ifs);
-  if (status)
-    kill_with_error(&ifs, g_cart_id, "Unable to open file.\n");
-#else /* HAVE_LIBLEMON */
-  ifs = fopen(filename, "r");
-  if (ifs == NULL)
-    kill_with_error(ifs, g_cart_id, "Unable to open file.\n");
-#endif /* HAVE_LIBLEMON */
-
-  reader = CreateReader(ifs);
+  construct_reader(reader, filename);
   if (reader == (READER *)NULL)
     kill_with_error(ifs, g_cart_id, "Unable to create reader.\n");
 
   /* Find the desired propagator (could be more than one in a file) */
-  while ((status = ReaderNextRecord(reader)) != LIME_EOF) {
-
-    if (status != LIME_SUCCESS) {
+  while ((status = ReaderNextRecord(reader)) != LIME_EOF)
+  {
+    if (status != LIME_SUCCESS)
+    {
       fprintf(stderr, "ReaderNextRecord returned status %d.\n", status);
       break;
     }
@@ -79,12 +66,7 @@ void read_spinor(spinor * const s, spinor * const r,
   if (g_cart_id == 0 && g_debug_level > 1)
     printf("# checksum for DiracFermion field in file %s position %d is %#x %#x\n", filename, position, checksum.suma, checksum.sumb);
 
-  DestroyReader(reader);
-#ifdef HAVE_LIBLEMON
-  MPI_File_close(ifs);
-#else /* HAVE_LIBLEMON */
-  fclose(ifs);
-#endif /* HAVE_LIBLEMON */
+  destruct_reader(reader);
 
   return;
 }

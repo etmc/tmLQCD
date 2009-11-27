@@ -32,7 +32,7 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS} ${OPTARGS}
 
 LIBRARIES = libio
 
-libio_TARGETS_PLAIN = utils_engineering \
+libio_TARGETS = utils_engineering \
 		utils_parse_checksum_xml \
 		utils_write_message \
 		utils_read_message \
@@ -58,34 +58,7 @@ libio_TARGETS_PLAIN = utils_engineering \
 		spinor_write_source_format \
 		spinor_write_propagator_format \
 		spinor_write_propagator_type \
-		utils DML_crc32 dml \
-
-libio_TARGETS_LEMON = gauge_read_binary_parallel \
-		gauge_read_parallel \
-		gauge_write_binary_parallel \
-		gauge_write_format_parallel \
-		gauge_write_parallel \
-		spinor_read_parallel \
-		spinor_read_binary_parallel \
-		spinor_write_parallel \
-		spinor_write_binary_parallel \
-		spinor_write_inverter_info_parallel \
-		spinor_write_propagator_format_parallel \
-		spinor_write_propagator_type_parallel \
-		spinor_write_propagator_parallel \
-		spinor_write_source_format_parallel \
-		spinor_write_source_parallel \
-		utils_read_message_parallel \
-		utils_write_checksum_parallel \
-		utils_write_header_parallel \
-		utils_write_message_parallel \
-		utils_write_xlf_parallel 
-
-ifeq (${LEMON_AVAILABLE}, 1)
-libio_TARGETS = ${libio_TARGETS_PLAIN} ${libio_TARGETS_LEMON}
-else
-libio_TARGETS = ${libio_TARGETS_PLAIN}
-endif
+		utils DML_crc32 dml
 
 libio_OBJECTS = $(addsuffix .o, ${libio_TARGETS})
 
