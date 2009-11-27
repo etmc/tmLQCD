@@ -88,7 +88,6 @@ int init_stout_smear_vars(const int V, const int stout_no_iter)
 
   int i, k, x, mu;
 
-  su3* tmp_su3_pointer;
   i = 0;
   k = 0;
   mu = 0;

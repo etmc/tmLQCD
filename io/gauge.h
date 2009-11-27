@@ -28,10 +28,12 @@
 #include <io/selector.h>
 #include <io/utils.h>
 
-void read_gauge_field(char *filename, DML_Checksum *scidac_checksum, char **xlf_info, char **ildg_data_lfn);
-void read_binary_gauge_data(READER *reader, DML_Checksum *checksum);
+int read_gauge_field(char *filename, DML_Checksum *scidac_checksum, char **xlf_info, char **ildg_data_lfn);
+int read_binary_gauge_data(READER *reader, DML_Checksum *checksum);
 
-void write_gauge_field(char * filename, int prec, paramsXlfInfo const *xlfInfo);
-void write_binary_gauge_data(WRITER *writer, const int prec, DML_Checksum * checksum);
+int write_gauge_field(char * filename, int prec, paramsXlfInfo const *xlfInfo);
+int write_binary_gauge_data(WRITER * writer, const int prec, DML_Checksum * checksum);
 
 void write_ildg_format(WRITER *writer, paramsIldgFormat const *format);
+
+#endif

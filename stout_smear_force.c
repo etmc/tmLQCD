@@ -37,7 +37,7 @@
 /*void stout_smear_force(int x, int mu, su3 force){*/
 void stout_smear_force()
 {
-  su3adj tttt, before_force;
+  su3adj before_force;
 
   extern su3 ** g_gauge_field_smeared;
   extern su3 ** g_stout_force_field;

@@ -41,10 +41,10 @@ MODULES = read_input gamma hybrid_update observables start \
 	test/check_geometry test/check_xchange \
 	invert_eo invert_doublet_eo \
 	polyakov_loop getopt sighandler reweighting_factor \
-	source_generation boundary io update_tm ranlxd  \
+	source_generation boundary update_tm ranlxd  \
 	mpi_init linsolve deriv_Sb deriv_Sb_D_psi ranlxs \
 	xchange_deri geometry_eo \
-	init_moment_field init_gauge_tmp  propagator_io \
+	init_moment_field init_gauge_tmp \
 	xchange_field xchange_gauge \
 	init_gauge_field init_geometry_indices init_spinor_field \
 	init_dirac_halfspinor xchange_halffield stout_smear \
@@ -58,7 +58,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	integrator gauge_monomial ndpoly_monomial phmc \
 	little_D block sf_gauge_monomial sf_utils sf_calc_action \
 	sf_get_staples sf_get_rectangle_staples sf_observables \
-	Dov_psi
+	Dov_psi io propagator_io
 
 NOOPTMOD = test/check_xchange test/check_geometry
 

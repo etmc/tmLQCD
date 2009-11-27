@@ -53,7 +53,7 @@ int check_xchange()
 
 #ifdef MPI
   double * x;
-  int i,ix, mu, x0, x1, x2, x3, k;
+  int i,ix, mu, x0, x1, x2, x3 = 0, k;
   int mp, pm, mm, pp, di[4];
 
 

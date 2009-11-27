@@ -19,16 +19,14 @@
 
 #include "spinor.ih"
 
-void read_spinor(spinor * const s, spinor * const r, char * filename, const int position)
+int read_spinor(spinor * const s, spinor * const r, char * filename, const int position)
 {
-  int status = 0, getpos = 0;
+  int status = 0, getpos = 0, bytes = 0, prec = 0;
   char *header_type = NULL;
   READER *reader = NULL;
   DML_Checksum checksum;
 
-  construct_reader(reader, filename);
-  if (reader == (READER *)NULL)
-    kill_with_error(ifs, g_cart_id, "Unable to create reader.\n");
+  construct_reader(&reader, filename);
 
   /* Find the desired propagator (could be more than one in a file) */
   while ((status = ReaderNextRecord(reader)) != LIME_EOF)
@@ -48,7 +46,7 @@ void read_spinor(spinor * const s, spinor * const r, char * filename, const int 
   }
 
   if (status == LIME_EOF)
-    kill_with_error(ifs, g_cart_id, "No scidac-binary-data record found in file.\n");
+    kill_with_error(reader->fp, g_cart_id, "No scidac-binary-data record found in file.\n");
 
   bytes = ReaderBytes(reader);
   if ((int)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor))
@@ -57,7 +55,7 @@ void read_spinor(spinor * const s, spinor * const r, char * filename, const int 
     if ((int)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor) / 2)
       prec = 32;
     else
-      kill_with_error(ifs, g_cart_id, "Wrong length in eospinor. Aborting read!\n");
+      kill_with_error(reader->fp, g_cart_id, "Wrong length in eospinor. Aborting read!\n");
   if (g_cart_id == 0 && g_debug_level > 2)
     printf("# %d bit precision read.\n", prec);
 
@@ -68,5 +66,5 @@ void read_spinor(spinor * const s, spinor * const r, char * filename, const int 
 
   destruct_reader(reader);
 
-  return;
+  return 0;
 }

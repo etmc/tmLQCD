@@ -33,7 +33,6 @@
 #include "global.h"
 #include "getopt.h"
 #include "io.h"
-#include "gauge_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #ifdef MPI

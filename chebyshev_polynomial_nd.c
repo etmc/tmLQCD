@@ -90,7 +90,7 @@ void QdaggerQ_poly(spinor *R_s, spinor *R_c, double *c, int n,
                    spinor *S_s, spinor *S_c){
 
   int j;
-  double fact1, fact2, temp, temp1, temp2, temp3, temp4;
+  double fact1, fact2, temp1, temp2, temp3, temp4;
 
   spinor *svs_=NULL, *svs=NULL, *ds_=NULL, *ds=NULL, *dds_=NULL, *dds=NULL, 
          *auxs_=NULL, *auxs=NULL, *aux2s_=NULL, *aux2s=NULL, *aux3s_=NULL, 
@@ -267,7 +267,7 @@ double cheb_eval(int M, double *c, double s){
 
 
 void degree_of_polynomial_nd(const int degree_of_p){
-  int i, j;
+  int j;
   double temp, temp2;
   static int ini=0;
 

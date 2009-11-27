@@ -46,6 +46,10 @@ libio_TARGETS = utils_engineering \
 		utils_write_checksum \
 		utils_write_inverter_info \
 		utils_kill_with_error \
+                utils_construct_reader \
+		utils_destruct_reader \
+		utils_construct_writer \
+		utils_destruct_writer \
 		params_construct_ildgFormat \
 		params_construct_propagatorFormat \
 		params_construct_sourceFormat \
@@ -55,6 +59,7 @@ libio_TARGETS = utils_engineering \
 		spinor_read \
 		spinor_write_binary \
 		spinor_read_binary \
+                spinor_write_info \
 		spinor_write_source_format \
 		spinor_write_propagator_format \
 		spinor_write_propagator_type \

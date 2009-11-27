@@ -19,25 +19,11 @@
 
 #include "spinor.ih"
 
-static int write_binary_spinor_data_lime(spinor * const s, spinor * const r, LimeWriter * writer,
-                                         DML_Checksum * checksum, const int prec);
-static int write_binary_spinor_data_lemon(spinor * const s, spinor * const r, LemonWriter * writer,
-                                          DML_Checksum * checksum, const int prec);
-
-int write_binary_spinor_data(spinor * const s, spinor * const r, WRITER * writer, DML_Checksum * checksum, const int prec)
-{
 #ifdef HAVE_LIBLEMON
-  return write_binary_spinor_data_lemon(s, r, writer, checksum, prec);
-#else /* HAVE_LIBLEMON */
-  return write_binary_spinor_data_lime(s, r, writer, checksum, prec);
-#endif /* HAVE_LIBLEMON */
-}
-
-static int write_binary_spinor_data_lemon(spinor * const s, spinor * const r,
-                                       LemonWriter * lemonwriter, DML_Checksum *checksum, int const prec) {
-
+int write_binary_spinor_data(spinor * const s, spinor * const r,
+                             LemonWriter * lemonwriter, DML_Checksum *checksum, int const prec)
+{
   int x, y, z, t, i = 0, xG, yG, zG, tG;
-  int coords[4];
   int globaldims[] = {T_global, L, L, L};
   int scidacMapping[] = {0, 3, 2, 1};
   unsigned long bufoffset = 0;
@@ -58,7 +44,7 @@ static int write_binary_spinor_data_lemon(spinor * const s, spinor * const r,
     fflush(stderr);
     errno = 0;
     /* do we need to abort here? */
-    return;
+    return 1;
   }
 
   tG = g_proc_coords[0]*T;
@@ -125,12 +111,13 @@ static int write_binary_spinor_data_lemon(spinor * const s, spinor * const r,
   DML_global_xor(&checksum->sumb);
 
   free(filebuffer);
+  return 0;
 
   /* TODO Error handling */
 }
 
-
-static int write_binary_spinor_data_lime(spinor * const s, spinor * const r, LimeWriter * writer, DML_Checksum * checksum, const int prec)
+#else /* HAVE_LIBLEMON */
+int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * writer, DML_Checksum * checksum, const int prec)
 {
   int x, X, y, Y, z, Z, t, t0, tag=0, id=0, i=0, status=0;
   spinor * p = NULL;
@@ -153,99 +140,100 @@ static int write_binary_spinor_data_lime(spinor * const s, spinor * const r, Lim
       Z = z - g_proc_coords[3]*LZ;
       coords[3] = z / LZ;
       for(y = 0; y < LY*g_nproc_y; y++) {
-	Y = y - g_proc_coords[2]*LY;
-	coords[2] = y / LY;
-	for(x = 0; x < LX*g_nproc_x; x++) {
-	  X = x - g_proc_coords[1]*LX;
-	  coords[1] = x / LX;
+        Y = y - g_proc_coords[2]*LY;
+        coords[2] = y / LY;
+        for(x = 0; x < LX*g_nproc_x; x++) {
+          X = x - g_proc_coords[1]*LX;
+          coords[1] = x / LX;
 #ifdef MPI
-	  MPI_Cart_rank(g_cart_grid, coords, &id);
+          MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
-	  if(g_cart_id == id) {
-	    i = g_lexic2eosub[ g_ipt[t][X][Y][Z] ];
-	    if((t+X+Y+Z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY
-		+ g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
-	      p = s;
-	    }
-	    else {
-	      p = r;
-	    }
-	  }
-	  if(g_cart_id == 0) {
+          if(g_cart_id == id) {
+            i = g_lexic2eosub[ g_ipt[t][X][Y][Z] ];
+            if((t+X+Y+Z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY
+                + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+              p = s;
+            }
+            else {
+              p = r;
+            }
+          }
+          if(g_cart_id == 0) {
             /* Rank should be computed by proc 0 only */
-	    rank = (DML_SiteRank) (((t0*LZ*g_nproc_z + z)*LY*g_nproc_y + y)*LX*g_nproc_x + x);
+            rank = (DML_SiteRank) (((t0*LZ*g_nproc_z + z)*LY*g_nproc_y + y)*LX*g_nproc_x + x);
 
-	    if(g_cart_id == id) {
+            if(g_cart_id == id) {
 #ifndef WORDS_BIGENDIAN
-	      if(prec == 32) {
-		byte_swap_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
-		DML_checksum_accum(ans,rank,(char *) tmp2,sizeof(spinor)/2);
-		status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
-	      }
-	      else {
-		byte_swap_assign(tmp, p + i , sizeof(spinor)/8);
-		DML_checksum_accum(ans,rank,(char *) tmp,sizeof(spinor));
-		status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
-	      }
+              if(prec == 32) {
+                byte_swap_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
+                DML_checksum_accum(ans,rank,(char *) tmp2,sizeof(spinor)/2);
+                status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
+              }
+              else {
+                byte_swap_assign(tmp, p + i , sizeof(spinor)/8);
+                DML_checksum_accum(ans,rank,(char *) tmp,sizeof(spinor));
+                status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
+              }
 #else
-	      if(prec == 32) {
-		double2single((float*)tmp2, (p + i), sizeof(spinor)/8);
-		DML_checksum_accum(ans,rank,(char *) tmp2,sizeof(spinor)/2);
-		status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
-	      }
-	      else {
-		status = limeWriteRecordData((void*)(p + i), &bytes, limewriter);
-		DML_checksum_accum(ans,rank,(char *) (p + i), sizeof(spinor));
-	      }
+              if(prec == 32) {
+                double2single((float*)tmp2, (p + i), sizeof(spinor)/8);
+                DML_checksum_accum(ans,rank,(char *) tmp2,sizeof(spinor)/2);
+                status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
+              }
+              else {
+                status = limeWriteRecordData((void*)(p + i), &bytes, limewriter);
+                DML_checksum_accum(ans,rank,(char *) (p + i), sizeof(spinor));
+              }
 #endif
-	    }
+            }
 #ifdef MPI
-	    else{
-	      if(prec == 32) {
-		MPI_Recv((void*)tmp2, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &mstatus);
-		DML_checksum_accum(ans,rank,(char *) tmp2, sizeof(spinor)/2);
-		status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
-	      }
-	      else {
-		MPI_Recv((void*)tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &mstatus);
-		DML_checksum_accum(ans,rank,(char *) tmp, sizeof(spinor));
-		status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
-	      }
-	    }
+            else{
+              if(prec == 32) {
+                MPI_Recv((void*)tmp2, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &mstatus);
+                DML_checksum_accum(ans,rank,(char *) tmp2, sizeof(spinor)/2);
+                status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
+              }
+              else {
+                MPI_Recv((void*)tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &mstatus);
+                DML_checksum_accum(ans,rank,(char *) tmp, sizeof(spinor));
+                status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
+              }
+            }
 #endif
-	  }
+          }
 #ifdef MPI
-	  else{
-	    if(g_cart_id == id){
+          else{
+            if(g_cart_id == id){
 #  ifndef WORDS_BIGENDIAN
-	      if(prec == 32) {
-		byte_swap_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
-		MPI_Send((void*) tmp2, sizeof(spinor)/8, MPI_FLOAT, 0, tag, g_cart_grid);
-	      }
-	      else {
-		byte_swap_assign(tmp, p + i, sizeof(spinor)/8);
-		MPI_Send((void*) tmp, sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
-	      }
+              if(prec == 32) {
+                byte_swap_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
+                MPI_Send((void*) tmp2, sizeof(spinor)/8, MPI_FLOAT, 0, tag, g_cart_grid);
+              }
+              else {
+                byte_swap_assign(tmp, p + i, sizeof(spinor)/8);
+                MPI_Send((void*) tmp, sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+              }
 #  else
-	      if(prec == 32) {
-		double2single((float*)tmp2, (p + i), sizeof(spinor)/8);
-		MPI_Send((void*) tmp2, sizeof(spinor)/8, MPI_FLOAT, 0, tag, g_cart_grid);
-	      }
-	      else {
-		MPI_Send((void*) (p + i), sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
-	      }
+              if(prec == 32) {
+                double2single((float*)tmp2, (p + i), sizeof(spinor)/8);
+                MPI_Send((void*) tmp2, sizeof(spinor)/8, MPI_FLOAT, 0, tag, g_cart_grid);
+              }
+              else {
+                MPI_Send((void*) (p + i), sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
+              }
 #  endif
-	    }
-	  }
+            }
+          }
 #endif
-	  tag++;
-	}
+          tag++;
+        }
 #ifdef MPI
- 	MPI_Barrier(g_cart_grid);
+        MPI_Barrier(g_cart_grid);
 #endif
-	tag=0;
+        tag=0;
       }
     }
   }
   return(0);
 }
+#endif /* HAVE_LIBLEMON */

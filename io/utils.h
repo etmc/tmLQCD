@@ -49,21 +49,21 @@
    be created everywhere to exploit trivial parallellization. Be careful not to call
    construct_writer and friends from within a "if (node_num == 0)" type statement, because
    it will cause lemon to get deadlocked! */
-void construct_writer(WRITER * writer, char const *filename);
+void construct_writer(WRITER ** writer, char const *filename);
 void destruct_writer(WRITER * writer);
 
-void construct_reader(READER * reader, char const *filename);
+void construct_reader(READER ** reader, char const *filename);
 void destruct_reader(READER * reader);
 
 void kill_with_error(LIME_FILE *fh, int const rank, char const *error);
 
 int read_message(READER *reader, char **buffer);
 int write_message(WRITER * writer, char const *buffer, uint64_t bytes);
-void write_header(WRITER * writer, int MB, int ME, char *type, uint64_t bytes);
+void write_header(WRITER * writer, int MB, int ME, char const *type, uint64_t bytes);
 
 void write_checksum(WRITER *writer, DML_Checksum const *checksum, char const *name);
 void write_xlf_info(WRITER *writer, paramsXlfInfo const *info);
-void write_inverter_info(LimeWriter * writer, paramsInverterInfo const *info);
+void write_inverter_info(WRITER * writer, paramsInverterInfo const *info);
 
 void engineering(char *result, double value, char const *units);
 int parse_checksum_xml(char *message, DML_Checksum *checksum);

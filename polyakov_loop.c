@@ -361,7 +361,6 @@ int polyakov_loop_dir(
 #ifdef MPI
     int rank_slice, rank_ray;
     MPI_Comm slice, ray;
-    MPI_Status status;
     su3 *tmp_ray;
 #endif
 

@@ -27,8 +27,6 @@ void sf_observables() {
   double wilson_action;
   double wilson_action_sepbound;
   double iwasaki_action;
-  double partial_iwa;
-  double partial_iwasaki_action;
   double factor;
 
   /* sf b.c. abelian field and standard sf weight factors included (only plaquette here) */

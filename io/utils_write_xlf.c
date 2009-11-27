@@ -54,7 +54,7 @@ void write_xlf_info(WRITER * writer, paramsXlfInfo const *info)
   write_header(writer, 1, 1, "xlf-info", bytes);
   write_message(writer, message, bytes);
   
-  WriterCloseRecord(limewriter);
+  WriterCloseRecord(writer);
   free(message);
   return;
 }

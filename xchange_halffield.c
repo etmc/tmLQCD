@@ -240,7 +240,6 @@ void xchange_halffield() {
 #  elif defined PARALLELXYT
   int reqcount = 12;
 #  elif defined PARALLELXYZT
-  int x0=0, x1=0, x2=0, ix=0;
   int reqcount = 16;
 #  endif
 #  if (defined XLC && defined BGL)
@@ -403,7 +402,6 @@ void xchange_halffield32() {
 #  elif defined PARALLELXYT
   int reqcount = 12;
 #  elif defined PARALLELXYZT
-  int x0=0, x1=0, x2=0, ix=0;
   int reqcount = 16;
 #  endif
 #ifdef _KOJAK_INST

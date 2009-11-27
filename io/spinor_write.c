@@ -20,24 +20,7 @@
 
 #include "spinor.ih"
 
-void write_spinor_info(WRITER * writer, paramsXlfInfo * xlfInfo, const int write_prop_format_flag,
-                       paramsInverterInfo * InverterInfo, char * gaugelfn, DML_Checksum const *gaugecksum)
-{
-  write_propagator_type(writer, write_prop_format_flag);
-  write_xlf_info(writer, xlfInfo);
-  write_inverter_info(writer, InverterInfo);
-  if (gaugelfn != NULL)
-  {
-    write_header(writer, 1, 1, "gauge-ildg-data-lfn-copy", strlen(gaugelfn));
-    write_message(writer, gaugelfn, strlen(gaugelfn));
-    WriterCloseRecord(writer);
-  }
-  if(gaugecksum != NULL)
-    write_checksum(writer, gaugecksum, "gauge-scidac-checksum-copy");
-  return;
-}
-
-void write_spinor(WRITER * writer, spinor ** const s, spinor ** const r, const int flavours, const int prec)
+int write_spinor(WRITER * writer, spinor ** const s, spinor ** const r, const int flavours, const int prec)
 {
   DML_Checksum checksum;
   uint64_t bytes;
@@ -51,5 +34,5 @@ void write_spinor(WRITER * writer, spinor ** const s, spinor ** const r, const i
     write_binary_spinor_data(s[i], r[i], writer, &checksum, prec);
     write_checksum(writer, &checksum, NULL);
   }
-  return;
+  return 0;
 }

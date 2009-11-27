@@ -86,7 +86,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   double ks,kc,ds,tr,ts,tt;
 
   /* Energy corresponding to the Gauge part */
-  double new_plaquette_energy=0., new_rectangle_energy = 0., gauge_energy = 0.;
+  double new_plaquette_energy=0., new_rectangle_energy = 0.;
 
   /* Energy corresponding to the Momenta part */
   double enep=0., enepx=0., ret_enep = 0.;
@@ -231,7 +231,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   if(return_check == 1) {
     if(accept == 1) {
       xlfInfo = construct_paramsXlfInfo((*plaquette_energy)/(6.*VOLUME*g_nproc), -1);
-      write_lime_gauge_field( "conf.save", 64, xlfInfo);
+      write_gauge_field( "conf.save", 64, xlfInfo);
       free(xlfInfo);
     }
     g_sloppy_precision = 1;
@@ -323,7 +323,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
 
     if(accept == 1) {
-      read_lime_gauge_field( "conf.save", NULL, NULL, NULL);
+      read_gauge_field( "conf.save", NULL, NULL, NULL);
     }
   } /* end of reversibility check */
 
@@ -396,8 +396,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 	partial_effective_action = partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
 	coupling = normalisation/partial_effective_action;
 	
-	fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %14.12f %e ",
-		coupling, normalisation , partial_effective_action, (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
+        fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %e ", coupling, normalisation , partial_effective_action, (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
       }
       else { /* SF with only Wilson */
 

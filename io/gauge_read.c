@@ -31,7 +31,7 @@ int read_gauge_field(char * filename, DML_Checksum *scidac_checksum,
   int gauge_read_flag = 0;
   char *checksum_string = NULL;
 
-  construct_reader(reader, filename);
+  construct_reader(&reader, filename);
 
   while ((status = ReaderNextRecord(reader)) != LIME_EOF)
   {
@@ -70,7 +70,7 @@ int read_gauge_field(char * filename, DML_Checksum *scidac_checksum,
   }
 
   if (!gauge_read_flag)
-    kill_with_error(&ifs, g_cart_id, "Did not find gauge record. Aborting...\n");
+    kill_with_error(reader->fp, g_cart_id, "Did not find gauge record. Aborting...\n");
 
 
   if (g_debug_level > 0 && g_cart_id == 0)

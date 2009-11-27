@@ -1,7 +1,6 @@
 #include "utils.ih"
 
-
-void kill_with_error(LEMON_FILE *fh, int const rank, char const *error)
+void kill_with_error(LIME_FILE *fh, int const rank, char const *error)
 {
   if (rank == 0)
     fprintf(stderr, "%s", error);

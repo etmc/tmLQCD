@@ -198,7 +198,6 @@ int stout_smear_gauge_field(const double rho , const int no_iters) {
 
 void  project_anti_herm(su3 *omega) {
   double tr_omega ; 
-  su3 tmp ; 
 
   tr_omega = (omega->c00.im + omega->c11.im + omega->c22.im) / 3.0 ; 
 
@@ -251,7 +250,7 @@ void  load_config_from_file(su3 **in, char * filename)
       _su3_assign(temp_su3[x][mu], g_gauge_field[x][mu]);
     }
   }
-  read_lime_gauge_field(filename, NULL, NULL, NULL);
+  read_gauge_field(filename, NULL, NULL, NULL);
   for(x = 0; x < VOLUME; x++) {
     for(mu = 0; mu < 4; mu++) {
       _su3_assign((in[x][mu]), g_gauge_field[x][mu]);

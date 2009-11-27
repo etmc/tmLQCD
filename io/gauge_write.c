@@ -19,7 +19,7 @@
 
 #include "gauge.ih"
 
-void write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfInfo)
+int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfInfo)
 {
   WRITER * writer = NULL;
   uint64_t bytes;
@@ -51,5 +51,5 @@ void write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlf
 #endif /* MPI */
 
   destruct_writer(writer);
-  return;
+  return 0;
 }

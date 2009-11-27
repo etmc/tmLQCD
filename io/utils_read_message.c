@@ -22,7 +22,7 @@
 int read_message(READER * reader, char **buffer)
 {
   int status;
-  n_uint64_t bytes, read_bytes;
+  n_uint64_t bytes, bytesRead;
 
 #ifndef HAVE_LIBLEMON
   if (g_cart_id == 0){
@@ -44,6 +44,9 @@ int read_message(READER * reader, char **buffer)
   }
 
   status = ReaderReadData(*buffer, &bytesRead, reader);
+#ifdef MPI
+  MPI_Barrier(g_cart_grid);
+#endif
 
   if (status != LEMON_SUCCESS || bytes != bytesRead)
     kill_with_error(reader->fp, g_cart_id, "Error in reading message.\n");

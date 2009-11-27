@@ -44,6 +44,7 @@ int phmc_dop_n_cheby;
 double * phmc_dop_cheby_coef;
 int phmc_ptilde_n_cheby;
 double * phmc_ptilde_cheby_coef;
+int errcode;
 
 void init_phmc() {
   int max_iter_ev, j, k;
@@ -137,7 +138,7 @@ void init_phmc() {
   if(g_epsbar==0.0 && phmc_exact_poly ==1) 
     filename_const=filename_const_oox;
   if((Const=fopen(filename_const,"r")) != (FILE*)NULL) {
-    fscanf(Const, " %lf \n", &phmc_Cpol);
+    errcode = fscanf(Const, " %lf \n", &phmc_Cpol);
     fclose(Const);
   }
   else {
@@ -155,16 +156,23 @@ void init_phmc() {
   if(g_epsbar==0.0 && phmc_exact_poly == 1) 
     filename_phmc_root=filename_phmc_root_oox;
   if((roots=fopen(filename_phmc_root,"r")) != (FILE*)NULL) {
-    fgets(title, 100, roots);
+    if (fgets(title, 100, roots) == NULL)
+    {
+      fprintf(stderr, "Error in reading %s! Aborting...\n", filename_phmc_root);
+      #ifdef MPI
+         MPI_Finalize();
+      #endif
+      exit(6);
+    }
     
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
     for(j=0; j<(2*phmc_dop_n_cheby-2); j++){
-      fscanf(roots," %d %lf %lf \n", &k, &phmc_root[j].re, &phmc_root[j].im);
+      errcode = fscanf(roots," %d %lf %lf \n", &k, &phmc_root[j].re, &phmc_root[j].im);
     }
     fclose(roots);
   }
   else {
-    fprintf(stderr, "File %s is missing! Aborting ...\n", filename_phmc_root);
+    fprintf(stderr, "File %s is missing! Aborting...\n", filename_phmc_root);
 #ifdef MPI
     MPI_Finalize();
 #endif

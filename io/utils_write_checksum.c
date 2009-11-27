@@ -34,9 +34,9 @@ void write_checksum(WRITER * writer, DML_Checksum const *checksum, char const *n
 	  "</scidacChecksum>", checksum->suma, checksum->sumb);
   bytes = strlen(message);
   if (name == NULL)
-      write_header(writer, 0, 1, "scidac-checksum", bytes);
+      write_header(writer, 1, 1, "scidac-checksum", bytes);
   else
-      write_header(writer, 0, 1, name, bytes);
+      write_header(writer, 1, 1, name, bytes);
 
   write_message(writer, message, bytes);
   WriterCloseRecord(writer);

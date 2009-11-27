@@ -19,7 +19,7 @@
 
 #include "utils.ih"
 
-void write_header(WRITER * writer, int MB, int ME, char *type, uint64_t bytes)
+void write_header(WRITER * writer, int MB, int ME, char const *type, uint64_t bytes)
 {
   int status;
   RECORD_HEADER *header;
@@ -27,7 +27,8 @@ void write_header(WRITER * writer, int MB, int ME, char *type, uint64_t bytes)
 #ifndef HAVE_LIBLEMON
   if(g_cart_id == 0) {
 #endif /* ! HAVE_LIBLEMON */
-    header = CreateHeader(MB, ME, type, bytes);
+    /* Nasty (but probably harmless) hack to get rid of const qualifier - the original c-lime was sloppy here. */
+    header = CreateHeader(MB, ME, (char*)type, bytes);
     status = WriteRecordHeader(header, writer);
     DestroyHeader(header);
     
