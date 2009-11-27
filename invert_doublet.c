@@ -76,6 +76,10 @@
 #include "Nondegenerate_Matrix.h"
 #include "linalg/convert_eo_to_lexic.h"
 
+#include <io/gauge.h>
+#include <io/spinor.h>
+#include <io/utils.h>
+
 
 void usage(){
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
@@ -107,27 +111,19 @@ int main(int argc,char *argv[]) {
   char * input_filename = NULL;
   char * xlfmessage = NULL;
   char * gaugelfn = NULL;
-  char * gaugecksum = NULL;
+  DML_Checksum gaugecksum;
   double plaquette_energy;
 
   double nrm1;
   double atime=0., etime=0.;
+
+  WRITER *writer;
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
 #endif
 
-#ifdef HAVE_LIBLEMON
-  MPI_File fh;
-  LemonWriter *Writer;
-#else
-  FILE * fh;
-  LimeWriter *Writer;
-#endif
-  
   paramsXlfInfo *xlfInfo;
-  paramsSourceFormat *sourceFormat;
-  paramsPropagatorFormat *propagatorFormat;
   paramsInverterInfo *inverterInfo;
 
 #if (defined SSE || defined SSE2 || SSE3)
@@ -269,13 +265,7 @@ int main(int argc,char *argv[]) {
     if (g_proc_id == 0){
       printf("Reading Gauge field from file %s\n", conf_filename); fflush(stdout);
     }
-    read_lime_gauge_field(conf_filename);
-    if(xlfmessage != (char*)NULL) free(xlfmessage);
-    if(gaugelfn != (char*)NULL) free(gaugelfn);
-    if(gaugecksum != (char*)NULL) free(gaugecksum);
-    xlfmessage = read_message(conf_filename, "xlf-info");
-    gaugelfn = read_message(conf_filename, "ildg-data-lfn");
-    gaugecksum = read_message(conf_filename, "scidac-checksum");
+    read_gauge_field(conf_filename, &gaugecksum, &xlfmessage, &gaugelfn);
     if (g_proc_id == 0){
       printf("done!\n"); fflush(stdout);
     }
@@ -337,10 +327,11 @@ int main(int argc,char *argv[]) {
 	    gamma5(g_spinor_field[5], g_spinor_field[7], VOLUME/2);
 	    sprintf(conf_filename,"%s.%.5d.happlied", source_input_filename, ix+1);
 
-	    write_propagator_type(write_prop_format_flag, conf_filename);
-	    write_double_propagator(g_spinor_field[4], g_spinor_field[5],
-				    g_spinor_field[6], g_spinor_field[7], conf_filename, 1, 32);
-
+            construct_writer(&writer, conf_filename);
+            write_propagator_type(writer, write_prop_format_flag);
+            write_spinor(writer, &g_spinor_field[4], &g_spinor_field[5], 1, prop_precision_flag);
+            write_spinor(writer, &g_spinor_field[6], &g_spinor_field[7], 1, prop_precision_flag);
+            destruct_writer(writer);
 	  }
 	  else {
 	    if(source_location == 0) {
@@ -358,7 +349,7 @@ int main(int argc,char *argv[]) {
 	    if(g_proc_id == 0) {
 	      printf("Reading source from %s\n", conf_filename);
 	    }
-	    if(read_lime_spinor(g_spinor_field[0+fl*2], g_spinor_field[1+fl*2], conf_filename, 0) != 0) {
+            if(read_spinor(g_spinor_field[0+fl*2], g_spinor_field[1+fl*2], conf_filename, 0) != 0) {
 	      if(g_proc_id == 0) {
 		printf("Error reading source! Aborting...\n");
 	      }
@@ -375,7 +366,7 @@ int main(int argc,char *argv[]) {
 	      printf("Reading source from %s\n", conf_filename);
 	    }
 /*  	    if(read_lime_spinor(g_spinor_field[0+((fl+1)%2)*2], g_spinor_field[1+((fl+1)%2)*2], conf_filename, 0) != 0) { */
- 	    if(read_lime_spinor(g_spinor_field[0+2*fl], g_spinor_field[1+2*fl], conf_filename, ix) != 0) {
+            if(read_spinor(g_spinor_field[0+2*fl], g_spinor_field[1+2*fl], conf_filename, ix) != 0) {
 	      if(g_proc_id == 0) {
 		printf("Error reading source! Aborting...\n");
 	      }
@@ -476,51 +467,56 @@ int main(int argc,char *argv[]) {
 	mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[DUM_DERI+1], 
 			 g_spinor_field[DUM_DERI+3], -1., VOLUME/2);
 	
-#ifdef HAVE_LIBLEMON
-	MPI_File_open(g_cart_grid, conf_filename, MPI_MODE_WRONLY | MPI_MODE_CREATE | MPI_MODE_APPEND, MPI_INFO_NULL, &fh);
-	Writer = lemonCreateWriter(&fh, g_cart_grid);
-#else
-	fh = fopen(conf_filename, "a");
-	Writer = limeCreateWriter(fh);
-#endif
+        construct_writer(&writer, conf_filename);
 
 	if(propagator_splitted) {
 	  if(fl == 1) {
-	    write_propagator_type(write_prop_format_flag, conf_filename);
-	    write_message(conf_filename, gaugelfn, "gauge-ildg-data-lfn-copy", 1);
-	    write_message(conf_filename, gaugecksum, "gauge-scidac-checksum-copy", 1);
-	    write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1, xlfmessage);
+            write_propagator_type(writer, write_prop_format_flag);
+            write_header(writer, 1, 1, "gauge-ildg-data-lfn-copy", strlen(gaugelfn));
+            write_message(writer, gaugelfn, strlen(gaugelfn));
+            WriterCloseRecord(writer);
+            write_checksum(writer, &gaugecksum, "gauge-scidac-checksum-copy");
+            xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), nstore);
+            write_xlf_info(writer, xlfInfo);
+            free(xlfInfo);
 	  }
 	  /* write the source depending on format */
-	  if(write_prop_format_flag == 1 && fl == 0) {
-	    write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
+          if(write_prop_format_flag == 1 && fl == 0)
+          {
+            write_spinor(writer, &g_spinor_field[0], &g_spinor_field[1], 1, prop_precision_flag);
 	  }
-	  write_double_propagator(g_spinor_field[4], g_spinor_field[5],
-				  g_spinor_field[6], g_spinor_field[7], conf_filename, 1, prop_precision_flag);
+          write_spinor(writer, &g_spinor_field[4], &g_spinor_field[5], 1, prop_precision_flag);
+          write_spinor(writer, &g_spinor_field[6], &g_spinor_field[7], 1, prop_precision_flag);
 	}
 	else {
 	  /* 	sprintf(conf_filename,"%s%.2d.%.4d", "prop.mass", mass_number, nstore); */
 	  if(ix == index_start && fl == 1) {
-	    write_propagator_type(write_prop_format_flag, conf_filename);
-	    write_xlf_info(plaquette_energy/(6.*VOLUME*g_nproc), nstore, conf_filename, 1, xlfmessage);
-	    write_message(conf_filename, gaugelfn, "gauge-ildg-data-lfn-copy", 1);
-	    write_message(conf_filename, gaugecksum, "gauge-scidac-checksum-copy", 1);
-	  }
+            write_propagator_type(writer, write_prop_format_flag);
+            xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), nstore);
+            write_xlf_info(writer, xlfInfo);
+            free(xlfInfo);
+            write_header(writer, 1, 1, "gauge-ildg-data-lfn-copy", strlen(gaugelfn));
+            write_message(writer, gaugelfn, strlen(gaugelfn));
+            WriterCloseRecord(writer);
+            write_checksum(writer, &gaugecksum, "gauge-scidac-checksum-copy");
+          }
 
 	  /* write the source depending on format */
 	  if(write_prop_format_flag == 1 && fl == 1) {
-	    write_source(g_spinor_field[0], g_spinor_field[1], conf_filename, 1, 32);
+            write_spinor(writer, &g_spinor_field[0], &g_spinor_field[1], 1, prop_precision_flag);
 	  }
-	  write_double_propagator(g_spinor_field[4], g_spinor_field[5],
-				  g_spinor_field[6], g_spinor_field[7], conf_filename, 1, prop_precision_flag);
+          write_spinor(writer, &g_spinor_field[4], &g_spinor_field[5], 1, prop_precision_flag);
+          write_spinor(writer, &g_spinor_field[6], &g_spinor_field[7], 1, prop_precision_flag);
 	}
-	if(volumesource_flag) {
+
+        destruct_writer(writer);
+        if(volumesource_flag) {
 	  break;
 	}
       }
-      if(g_proc_id == 0) {
-	write_inverter_info(nrm1, iter, 0, 1, conf_filename, -1);
-      }
+      inverterInfo = construct_paramsInverterInfo(nrm1,iter, 0, 1);
+      write_inverter_info(writer, inverterInfo);
+      free(inverterInfo);
     }
     nstore+=Nsave;
   }

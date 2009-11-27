@@ -338,7 +338,7 @@ int main(int argc,char *argv[]) {
 	     gauge_input_filename, gauge_precision_read_flag);
       fflush(stdout);
     }
-    read_lime_gauge_field(gauge_input_filename, NULL, NULL, NULL);
+    read_gauge_field(gauge_input_filename, NULL, NULL, NULL);
 
     if (g_proc_id == 0){
       printf("# done!\n"); fflush(stdout);
@@ -496,7 +496,7 @@ int main(int argc,char *argv[]) {
 /*       write_gauge_field_time_p( tmp_filename); */
 
       xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-      write_lime_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo);
+      write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo);
       free(xlfInfo);
 
 

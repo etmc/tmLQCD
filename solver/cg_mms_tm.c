@@ -64,13 +64,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
   static double gamma,alpham1;
   
   double tmp_mu = g_mu;
-#ifdef HAVE_LIBLEMON
-  MPI_File fh;
-  LemonWriter *Writer;
-#else
-  FILE * fh;
-  LimeWriter *Writer;
-#endif
+  WRITER * writer;
   
   init_mms_tm(g_no_extra_masses);
 
@@ -171,49 +165,25 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
       if(g_kappa != 0) {
 	mul_r(g_spinor_field[DUM_SOLVER], (2*g_kappa)*(2*g_kappa), g_spinor_field[DUM_SOLVER], N);
       }
-#ifdef HAVE_LIBLEMON
-      MPI_File_open(g_cart_grid, conf_filename, MPI_MODE_WRONLY | MPI_MODE_CREATE | MPI_INFO_NULL, &fh);
-      Writer = lemonCreateWriter(&fh, g_cart_grid);
-#else
-      fh = fopen(conf_filename, "w");
-      Writer = limeCreateWriter(fh);
-#endif
+
+      construct_writer(&writer, conf_filename);
       convert_lexic_to_eo(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], 
 			  g_spinor_field[DUM_SOLVER]);
-#ifdef HAVE_LIBLEMON
-      write_spinor_parallel(Writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
-      lemonDestroyWriter(Writer);
-      MPI_File_close(&fh);
-#else
-      write_spinor(Writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
-      limeDestroyWriter(Writer);
-      fclose(fh);
-#endif
+      write_spinor(writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
+      destruct_writer(writer);
 
       for(im = 0; im < g_no_extra_masses; im++) {
 	sprintf(conf_filename,".cgmms.%.2d.inverted", im+1);
-#ifdef HAVE_LIBLEMON
-	MPI_File_open(g_cart_grid, conf_filename, MPI_MODE_WRONLY | MPI_MODE_CREATE | MPI_INFO_NULL, &fh);
-	Writer = lemonCreateWriter(&fh, g_cart_grid);
-#else
-	fh = fopen(conf_filename, "w");
-	Writer = limeCreateWriter(fh);
-#endif
+
+      construct_writer(&writer, conf_filename);
 
 	if(g_kappa != 0) {
 	  mul_r(xs_mms_solver[im], (2*g_kappa)*(2*g_kappa), xs_mms_solver[im], N);
 	}
 	convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], xs_mms_solver[im]);
 
-#ifdef HAVE_LIBLEMON
-	write_spinor_parallel(Writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
-	lemonDestroyWriter(Writer);
-	MPI_File_close(&fh);
-#else
-	write_spinor(Writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
-	limeDestroyWriter(Writer);
-	fclose(fh);
-#endif
+        write_spinor(writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
+        destruct_writer(writer);
       }
       return(iteration+1);
     }
