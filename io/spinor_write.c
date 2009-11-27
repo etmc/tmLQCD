@@ -20,35 +20,36 @@
 
 #include "spinor.ih"
 
-void write_spinor_info(LimeWriter *limeWriter,
-		       paramsXlfInfo * xlfInfo, const int write_prop_format_flag,
-		       paramsInverterInfo * InverterInfo, char * gaugelfn,
-                       DML_Checksum const * gaugecksum) {
-
-  write_propagator_type(limeWriter, write_prop_format_flag);
-  write_xlf_info(limeWriter, xlfInfo);
-  write_inverter_info(limeWriter, InverterInfo);
-  if (gaugelfn != NULL) {
-    write_header(limeWriter, 1, 1, "gauge-ildg-data-lfn-copy", strlen(gaugelfn));
-    write_message(limeWriter, gaugelfn, strlen(gaugelfn));
-    limeWriterCloseRecord(limeWriter);
+void write_spinor_info(WRITER * writer, paramsXlfInfo * xlfInfo, const int write_prop_format_flag,
+                       paramsInverterInfo * InverterInfo, char * gaugelfn, DML_Checksum const *gaugecksum)
+{
+  write_propagator_type(writer, write_prop_format_flag);
+  write_xlf_info(writer, xlfInfo);
+  write_inverter_info(writer, InverterInfo);
+  if (gaugelfn != NULL)
+  {
+    write_header(writer, 1, 1, "gauge-ildg-data-lfn-copy", strlen(gaugelfn));
+    write_message(writer, gaugelfn, strlen(gaugelfn));
+    WriterCloseRecord(writer);
   }
   if(gaugecksum != NULL)
-    write_checksum(limeWriter, gaugecksum, "gauge-scidac-checksum-copy");
+    write_checksum(writer, gaugecksum, "gauge-scidac-checksum-copy");
   return;
 }
 
-void write_spinor(LimeWriter *limeWriter, spinor ** const s, spinor ** const r, const int flavours, const int prec) {
-
+void write_spinor(WRITER * writer, spinor ** const s, spinor ** const r, const int flavours, const int prec)
+{
   DML_Checksum checksum;
   uint64_t bytes;
   int i = 0;
 
   bytes = (n_uint64_t)LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * (n_uint64_t)(sizeof(spinor) * prec / 64);
 
-  for (i = 0; i < flavours; ++i) {
-    write_header(limeWriter, 1, 1, "scidac-binary-data", bytes);
-    write_binary_spinor_data(s[i], r[i], limeWriter, &checksum, prec);
+  for (i = 0; i < flavours; ++i)
+  {
+    write_header(writer, 1, 1, "scidac-binary-data", bytes);
+    write_binary_spinor_data(s[i], r[i], writer, &checksum, prec);
+    write_checksum(writer, &checksum, NULL);
   }
   return;
 }

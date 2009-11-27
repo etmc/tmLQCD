@@ -19,17 +19,22 @@
 
 #include "utils.ih"
 
-void write_header(LimeWriter * limewriter, int MB, int ME, char *type, uint64_t bytes)
+void write_header(WRITER * writer, int MB, int ME, char *type, uint64_t bytes)
 {
   int status;
-  LimeRecordHeader *limeheader;
+  RECORD_HEADER *header;
+
+#ifndef HAVE_LIBLEMON
   if(g_cart_id == 0) {
-    limeheader = limeCreateHeader(MB, ME, type, bytes);
-    status = limeWriteRecordHeader(limeheader, limewriter);
-    limeDestroyHeader(limeheader);
+#endif /* ! HAVE_LIBLEMON */
+    header = CreateHeader(MB, ME, type, bytes);
+    status = WriteRecordHeader(header, writer);
+    DestroyHeader(header);
     
     if (status != LIME_SUCCESS)
-      kill_with_error(limewriter->fp, g_cart_id, "LEMON header writing error. Aborting\n");
+      kill_with_error(writer->fp, g_cart_id, "Header writing error. Aborting\n");
+#ifndef HAVE_LIBLEMON
   }
+#endif /* ! HAVE_LIBLEMON */
   return;
 }

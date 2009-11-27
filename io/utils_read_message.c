@@ -19,38 +19,38 @@
 
 #include "utils.ih"
 
-int read_message(LimeReader * limereader, char **buffer) {
-  
+int read_message(READER * reader, char **buffer)
+{
   int status;
   n_uint64_t bytes, read_bytes;
 
-  if(g_cart_id == 0) {
-    if (buffer == (char**)NULL)
-      return(-1);
+#ifndef HAVE_LIBLEMON
+  if (g_cart_id == 0){
+#endif /* HAVE_LIBLEMON */
+  if (buffer == (char**)NULL)
+    return(-1);
     
-    if ((*buffer) != (char*)NULL)
-      free(*buffer);
+  if ((*buffer) != (char*)NULL)
+    free(*buffer);
 
-    bytes = limeReaderBytes(limereader);
-    
-    if((*buffer = (char*)malloc(bytes + 1)) == (char*)NULL) {
-      fprintf(stderr, "Couldn't malloc data buf in read_message\n");
-      return(-1);
-    }
-    read_bytes = bytes;
-    status = limeReaderReadData((void *)*buffer, &read_bytes, limereader);
-    
-    if( status < 0 ) {
-      if( status != LIME_EOR ) {
-	fprintf(stderr, "LIME read error occurred: status= %d  %llu bytes wanted, %llu read\n",
-		status, (unsigned long long)bytes,
-		(unsigned long long)read_bytes);
-	free(*buffer);
-	*buffer = NULL;
-	return(-1);
-      }
-    }
-    buffer[bytes]='\0';
+  bytes = ReaderBytes(reader);
+
+  *buffer = (char*)malloc(bytes + 1);
+
+  if (*buffer  == (char*)NULL)
+  {
+    fprintf(stderr, "Couldn't malloc data buffer in read_message.\n");
+    return(-1);
   }
+
+  status = ReaderReadData(*buffer, &bytesRead, reader);
+
+  if (status != LEMON_SUCCESS || bytes != bytesRead)
+    kill_with_error(reader->fp, g_cart_id, "Error in reading message.\n");
+
+  buffer[bytes] = '\0'; /* Force termination for safety */
+#ifndef HAVE_LIBLEMON
+  }
+#endif /* HAVE_LIBLEMON */
   return(0);
 }

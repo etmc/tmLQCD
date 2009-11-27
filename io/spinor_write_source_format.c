@@ -19,12 +19,13 @@
 
 #include "spinor.ih"
 
-void write_source_format(LimeWriter *writer,
-			 paramsSourceFormat const *format)
+void write_source_format(WRITER *writer, paramsSourceFormat const *format)
 {
   uint64_t bytes;
-  char *buf;
-
+  char *buf = NULL;
+#ifndef HAVE_LIBLEMON
+  if(g_cart_id == 0) {
+#endif /* ! HAVE_LIBLEMON */
   buf = (char*)malloc(512);
   sprintf(buf, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 	  "<etmcFormat>\n"
@@ -44,8 +45,10 @@ void write_source_format(LimeWriter *writer,
   bytes = strlen(buf);
   write_header(writer, 1, 1, "etmc-source-format", bytes);
   write_message(writer, buf, bytes);
-  if(g_cart_id == 0) {
-    limeWriterCloseRecord(writer);
-  }
+  WriterCloseRecord(writer);
+
   free(buf);
+#ifndef HAVE_LIBLEMON
+  }
+#endif /* ! HAVE_LIBLEMON */
 }

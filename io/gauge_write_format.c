@@ -19,7 +19,7 @@
 
 #include "gauge.ih"
 
-void write_ildg_format(LimeWriter *writer, paramsIldgFormat const *format)
+void write_ildg_format(WRITER *writer, paramsIldgFormat const *format)
 {
   uint64_t bytes;
   char *buf;
@@ -45,6 +45,6 @@ void write_ildg_format(LimeWriter *writer, paramsIldgFormat const *format)
   bytes = strlen(buf);
   write_header(writer, 1, 0, "ildg-format", bytes);
   write_message(writer, buf, bytes);
-  limeWriterCloseRecord(writer);
+  WriterCloseRecord(writer);
   free(buf);
 }

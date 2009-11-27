@@ -19,14 +19,14 @@
 
 #include "utils.ih"
 
-void write_xlf_info(LimeWriter * limewriter, paramsXlfInfo const *info)
+void write_xlf_info(WRITER * writer, paramsXlfInfo const *info)
 {
   char *message;
   uint64_t bytes;
 
   message = (char*)malloc(512);
   if (message == (char*)NULL)
-    kill_with_error(limewriter->fp, g_cart_id, "Memory allocation error in write_xlf_info_parallel. Aborting\n");
+    kill_with_error(writer->fp, g_cart_id, "Memory allocation error in write_xlf_info_parallel. Aborting\n");
   
   if (info->kappa != 0.0) {
     sprintf(message, "\n plaquette = %e\n"
@@ -51,10 +51,10 @@ void write_xlf_info(LimeWriter * limewriter, paramsXlfInfo const *info)
   }
   bytes = strlen(message);
   
-  write_header(limewriter, 1, 1, "xlf-info", bytes);
-  write_message(limewriter, message, bytes);
+  write_header(writer, 1, 1, "xlf-info", bytes);
+  write_message(writer, message, bytes);
   
-  limeWriterCloseRecord(limewriter);
+  WriterCloseRecord(limewriter);
   free(message);
   return;
 }

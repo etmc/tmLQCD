@@ -19,8 +19,7 @@
 
 #include "spinor.ih"
 
-void write_inverter_info(LimeWriter * writer,
-			 paramsInverterInfo const *info)
+void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
 {
   char *message;
   n_uint64_t bytes;
@@ -72,7 +71,7 @@ void write_inverter_info(LimeWriter * writer,
   bytes = strlen(message);
   write_header(writer, 1, 1, "inverter-info", bytes);
   write_message(writer, message, bytes);
-  limeWriterCloseRecord(writer);
+  WriterCloseRecord(writer);
   free(message);
   return;
 }

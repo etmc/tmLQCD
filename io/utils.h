@@ -21,12 +21,14 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-#include <lime.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+
 #include <stdlib.h>
 #include <stdio.h>
+
+#include <io/selector.h>
 #include <io/params.h>
 #include <io/dml.h>
 
@@ -39,32 +41,15 @@
 
 #endif
 
+void kill_with_error(LIME_FILE *fh, int const rank, char const *error);
 
+int read_message(READER *reader, char **buffer);
+int write_message(WRITER * writer, char const *buffer, uint64_t bytes);
+void write_header(WRITER * writer, int MB, int ME, char *type, uint64_t bytes);
 
-#ifdef HAVE_LIBLEMON
-# include <lemon.h>
-#endif /* HAVE_LIBLEMON */
-
-#ifdef HAVE_LIBLEMON
-void kill_with_error(MPI_File *fh, int const rank, char const *error);
-void read_message_parallel(LemonReader *lemonreader, char **buffer);
-void write_message_parallel(LemonWriter *lemonwriter, char const *buffer, uint64_t bytes);
-void write_header_parallel(LemonWriter *lemonwriter, int MB, int ME, char *type, uint64_t bytes);
-
-void write_checksum_parallel(LemonWriter *lemonwriter, DML_Checksum const *checksum, char const *name);
-void write_xlf_info_parallel(LemonWriter *lemonwriter, paramsXlfInfo const *info);
-#else
-void kill_with_error(FILE *fh, int const rank, char const *error);
-#endif /* HAVE_LIBLEMON */
-
-int read_message(LimeReader *limereader, char **buffer);
-int write_message(LimeWriter * limewriter, char const *buffer, uint64_t bytes);
-void write_header(LimeWriter *limewriter, int MB, int ME, char *type, uint64_t bytes);
-
-void write_checksum(LimeWriter *limewriter, DML_Checksum const *checksum, char const *name);
-void write_xlf_info(LimeWriter *limewriter, paramsXlfInfo const *info);
-void write_inverter_info(LimeWriter * writer,
-			 paramsInverterInfo const *info);
+void write_checksum(WRITER *writer, DML_Checksum const *checksum, char const *name);
+void write_xlf_info(WRITER *writer, paramsXlfInfo const *info);
+void write_inverter_info(LimeWriter * writer, paramsInverterInfo const *info);
 
 void engineering(char *result, double value, char const *units);
 int parse_checksum_xml(char *message, DML_Checksum *checksum);
@@ -80,6 +65,5 @@ int write_ildg_format_xml(char *filename, LimeWriter * limewriter, const int pre
 void single2double_cm(spinor * const R, float * const S);
 void double2single_cm(float * const S, spinor * const R);
 void zero_spinor(spinor * const R);
-
 
 #endif

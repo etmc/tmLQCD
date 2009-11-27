@@ -19,11 +19,13 @@
 
 #include "spinor.ih"
 
-void write_propagator_format(LimeWriter *writer, paramsPropagatorFormat const *format) {
+void write_propagator_format(WRITER *writer, paramsPropagatorFormat const *format)
+{
   uint64_t bytes;
   char *message;
-
+#ifndef HAVE_LIBLEMON
   if(g_cart_id == 0) {
+#endif /* ! HAVE_LIBLEMON */
     message = (char*)malloc(512);
     sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 	    "<etmcFormat>\n"
@@ -41,9 +43,11 @@ void write_propagator_format(LimeWriter *writer, paramsPropagatorFormat const *f
     bytes = strlen(message);
     write_header(writer, 1, 1, "etmc-propagator-format", bytes);
     write_message(writer, message, bytes);
-    limeWriterCloseRecord(writer);
+    WriterCloseRecord(writer);
     free(message);
+#ifndef HAVE_LIBLEMON
   }
+#endif /* ! HAVE_LIBLEMON */
   return;
 }
 

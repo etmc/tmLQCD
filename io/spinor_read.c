@@ -22,31 +22,36 @@
 void read_spinor(spinor * const s, spinor * const r,
 		 char * filename, const int position)
 {
-#ifdef HAVE_LIBLEMON
-  read_spinor_parallel(s, r, filename, position);
-#else
-  FILE * ifs = NULL;
+  LIME_FILE * ifs = NULL;
   int status = 0, getpos = 0;
-  char *header_type;
-  LimeReader *limereader;
+  char *header_type = NULL;
+  READER *reader = NULL;
   DML_Checksum checksum;
+#ifdef HAVE_LIBLEMON
+  LIME_FILE ifs_object;
 
+  ifs = &ifs_object;
+  status = MPI_File_open(g_cart_grid, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &ifs);
+  if (status)
+    kill_with_error(&ifs, g_cart_id, "Unable to open file.\n");
+#else /* HAVE_LIBLEMON */
   ifs = fopen(filename, "r");
   if (ifs == NULL)
     kill_with_error(ifs, g_cart_id, "Unable to open file.\n");
+#endif /* HAVE_LIBLEMON */
 
-  limereader = limeCreateReader(ifs);
-  if (limereader == (LimeReader *)NULL)
-    kill_with_error(ifs, g_cart_id, "Unable to create lime reader.\n");
+  reader = CreateReader(ifs);
+  if (reader == (READER *)NULL)
+    kill_with_error(ifs, g_cart_id, "Unable to create reader.\n");
 
   /* Find the desired propagator (could be more than one in a file) */
-  while ((status = limeReaderNextRecord(limereader)) != LIME_EOF) {
+  while ((status = ReaderNextRecord(reader)) != LIME_EOF) {
 
     if (status != LIME_SUCCESS) {
-      fprintf(stderr, "limeReaderNextRecord returned status %d.\n", status);
+      fprintf(stderr, "ReaderNextRecord returned status %d.\n", status);
       break;
     }
-    header_type = limeReaderType(limereader);
+    header_type = ReaderType(reader);
     if (strcmp("scidac-binary-data", header_type) == 0) {
       if (getpos == position)
         break;
@@ -58,14 +63,28 @@ void read_spinor(spinor * const s, spinor * const r,
   if (status == LIME_EOF)
     kill_with_error(ifs, g_cart_id, "No scidac-binary-data record found in file.\n");
 
-  read_binary_spinor_data(s, r, limereader, &checksum);
+  bytes = ReaderBytes(reader);
+  if ((int)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor))
+    prec = 64;
+  else
+    if ((int)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor) / 2)
+      prec = 32;
+    else
+      kill_with_error(ifs, g_cart_id, "Wrong length in eospinor. Aborting read!\n");
+  if (g_cart_id == 0 && g_debug_level > 2)
+    printf("# %d bit precision read.\n", prec);
+
+  read_binary_spinor_data(s, r, reader, &checksum);
 
   if (g_cart_id == 0 && g_debug_level > 1)
-    printf("# checksum for DiracFermion field in file %s position %d is %#x %#x\n",
-           filename, position, checksum.suma, checksum.sumb);
+    printf("# checksum for DiracFermion field in file %s position %d is %#x %#x\n", filename, position, checksum.suma, checksum.sumb);
 
-  limeDestroyReader(limereader);
+  DestroyReader(reader);
+#ifdef HAVE_LIBLEMON
+  MPI_File_close(ifs);
+#else /* HAVE_LIBLEMON */
   fclose(ifs);
-#endif
+#endif /* HAVE_LIBLEMON */
+
   return;
 }
