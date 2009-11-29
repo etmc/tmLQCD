@@ -14,7 +14,7 @@ void construct_writer(WRITER ** writer, char const *filename)
 #else /* HAVE_LIBLEMON */
   if (g_cart_id == 0)
   {
-    fh = fopen(conf_filename, "a");
+    fh = fopen(filename, "a");
     status = (fh == NULL) ? 0 : 1;
     *writer = limeCreateWriter(fh);
     status = status || (writer == NULL);

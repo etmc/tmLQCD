@@ -10,12 +10,15 @@ void construct_reader(READER ** reader, char const *filename)
   status = MPI_File_open(g_cart_grid, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, fh);
   status = (status == MPI_SUCCESS) ? 0 : 1;
 #else /* HAVE_LIBLEMON */
-  fh = fopen(conf_filename, "r");
-  status = (fh == NULL) ? 0 : 1;
+  fh = fopen(filename, "r");
+  status = (fh == NULL) ? 1 : 0;
+  fflush(stderr);
 #endif /* HAVE_LIBLEMON */
 
   if (status)
+  {
     kill_with_error(fh, g_cart_id, "Could not open file. Aborting...\n");
+  }
 
 #ifdef HAVE_LIBLEMON
   *reader = lemonCreateReader(fh, g_cart_grid);

@@ -13,7 +13,7 @@ void destruct_writer(WRITER * writer)
   if (g_cart_id == 0)
   {
     fh = writer->fp;
-    lemonDestroyWriter(writer);
+    limeDestroyWriter(writer);
     fclose(fh);
   }
 #endif /* HAVE_LIBLEMON */

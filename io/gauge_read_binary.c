@@ -166,7 +166,7 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
   DML_SiteRank rank;
   double prec;
 
-  DML_checksum_init(ans);
+  DML_checksum_init(checksum);
 
 #ifdef MPI
   if (g_debug_level > 0) {
@@ -210,11 +210,11 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
                                   + g_proc_coords[2]*LY+y)*((DML_SiteRank)LX*g_nproc_x) + x);
           if(prec == 32) {
             status = limeReaderReadData(tmp2, &bytes, reader);
-            DML_checksum_accum(ans, rank, (char *) tmp2, bytes);
+            DML_checksum_accum(checksum, rank, (char *) tmp2, bytes);
           }
           else {
             status = limeReaderReadData(tmp, &bytes, reader);
-            DML_checksum_accum(ans, rank, (char *) tmp, bytes);
+            DML_checksum_accum(checksum, rank, (char *) tmp, bytes);
           }
           if(status < 0 && status != LIME_EOR) {
             fprintf(stderr, "LIME read error occured with status = %d while reading!\n Aborting...\n", status);
@@ -273,7 +273,7 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
     }
   }
 
-  DML_checksum_combine(ans);
+  DML_checksum_combine(checksum);
 #endif
   return(0);
 }

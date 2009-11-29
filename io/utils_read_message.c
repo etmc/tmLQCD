@@ -48,7 +48,7 @@ int read_message(READER * reader, char **buffer)
   MPI_Barrier(g_cart_grid);
 #endif
 
-  if (status != LEMON_SUCCESS || bytes != bytesRead)
+  if (status != LIME_SUCCESS || bytes != bytesRead)
     kill_with_error(reader->fp, g_cart_id, "Error in reading message.\n");
 
   buffer[bytes] = '\0'; /* Force termination for safety */

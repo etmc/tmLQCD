@@ -354,7 +354,7 @@ int main(int argc, char *argv[])
     sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nstore);
     if (g_proc_id == 0)
     {
-      printf("Reading Gauge field from file %s\n", conf_filename);
+      printf("Reading gauge field from file %s\n", conf_filename);
       fflush(stdout);
     }
     read_gauge_field(conf_filename, &gaugecksum, &xlfmessage, &gaugelfn);

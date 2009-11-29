@@ -540,7 +540,7 @@ int main(int argc,char *argv[]) {
   } /* end of loop over trajectories */
 
   if(g_proc_id==0) {
-    printf("Acceptance Rate was: %e Percent\n", 100.*(double)Rate/(double)Nmeas);
+    printf("Acceptance rate was: %e percent\n", 100.*(double)Rate/(double)Nmeas);
     fflush(stdout);
     parameterfile = fopen(parameterfilename, "a");
     fprintf(parameterfile, "Acceptance Rate was: %e Percent\n", 100.*(double)Rate/(double)Nmeas);

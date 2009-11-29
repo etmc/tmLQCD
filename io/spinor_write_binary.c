@@ -129,7 +129,7 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
 #ifdef MPI
   MPI_Status mstatus;
 #endif
-  DML_checksum_init(ans);
+  DML_checksum_init(checksum);
 
   if(prec == 32) bytes = (n_uint64_t)sizeof(spinor)/2;
   else bytes = (n_uint64_t)sizeof(spinor);
@@ -166,23 +166,23 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
 #ifndef WORDS_BIGENDIAN
               if(prec == 32) {
                 byte_swap_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
-                DML_checksum_accum(ans,rank,(char *) tmp2,sizeof(spinor)/2);
-                status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
+                DML_checksum_accum(checksum,rank,(char *) tmp2,sizeof(spinor)/2);
+                status = limeWriteRecordData((void*)tmp2, &bytes, writer);
               }
               else {
                 byte_swap_assign(tmp, p + i , sizeof(spinor)/8);
-                DML_checksum_accum(ans,rank,(char *) tmp,sizeof(spinor));
-                status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
+                DML_checksum_accum(checksum,rank,(char *) tmp,sizeof(spinor));
+                status = limeWriteRecordData((void*)tmp, &bytes, writer);
               }
 #else
               if(prec == 32) {
                 double2single((float*)tmp2, (p + i), sizeof(spinor)/8);
-                DML_checksum_accum(ans,rank,(char *) tmp2,sizeof(spinor)/2);
-                status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
+                DML_checksum_accum(checksum,rank,(char *) tmp2,sizeof(spinor)/2);
+                status = limeWriteRecordData((void*)tmp2, &bytes, writer);
               }
               else {
-                status = limeWriteRecordData((void*)(p + i), &bytes, limewriter);
-                DML_checksum_accum(ans,rank,(char *) (p + i), sizeof(spinor));
+                status = limeWriteRecordData((void*)(p + i), &bytes, writer);
+                DML_checksum_accum(checksum,rank,(char *) (p + i), sizeof(spinor));
               }
 #endif
             }
@@ -190,13 +190,13 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
             else{
               if(prec == 32) {
                 MPI_Recv((void*)tmp2, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &mstatus);
-                DML_checksum_accum(ans,rank,(char *) tmp2, sizeof(spinor)/2);
-                status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
+                DML_checksum_accum(checksum,rank,(char *) tmp2, sizeof(spinor)/2);
+                status = limeWriteRecordData((void*)tmp2, &bytes, writer);
               }
               else {
                 MPI_Recv((void*)tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &mstatus);
-                DML_checksum_accum(ans,rank,(char *) tmp, sizeof(spinor));
-                status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
+                DML_checksum_accum(checksum,rank,(char *) tmp, sizeof(spinor));
+                status = limeWriteRecordData((void*)tmp, &bytes, writer);
               }
             }
 #endif
