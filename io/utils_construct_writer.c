@@ -15,7 +15,7 @@ void construct_writer(WRITER ** writer, char const *filename)
   if (g_cart_id == 0)
   {
     fh = fopen(filename, "a");
-    status = (fh == NULL) ? 0 : 1;
+    status = (fh == NULL);
     *writer = limeCreateWriter(fh);
     status = status || (writer == NULL);
   }
