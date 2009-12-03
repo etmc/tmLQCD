@@ -23,7 +23,4 @@ void close_writer_record(WRITER *writer)
 {
   if (writer != NULL)
     WriterCloseRecord(writer);
-  #ifdef MPI
-  MPI_Barrier(g_cart_grid);
-  #endif
 }
