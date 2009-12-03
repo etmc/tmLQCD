@@ -29,7 +29,7 @@ void write_spinor_info(WRITER * writer, paramsXlfInfo * xlfInfo, const int write
   {
     write_header(writer, 1, 1, "gauge-ildg-data-lfn-copy", strlen(gaugelfn));
     write_message(writer, gaugelfn, strlen(gaugelfn));
-    WriterCloseRecord(writer);
+    close_writer_record(writer);
   }
   if(gaugecksum != NULL)
     write_checksum(writer, gaugecksum, "gauge-scidac-checksum-copy");

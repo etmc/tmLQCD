@@ -43,7 +43,7 @@ void write_propagator_format(WRITER *writer, paramsPropagatorFormat const *forma
     bytes = strlen(message);
     write_header(writer, 1, 1, "etmc-propagator-format", bytes);
     write_message(writer, message, bytes);
-    WriterCloseRecord(writer);
+    close_writer_record(writer);
     free(message);
 #ifndef HAVE_LIBLEMON
   }

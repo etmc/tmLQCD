@@ -45,7 +45,7 @@ void write_source_format(WRITER *writer, paramsSourceFormat const *format)
   bytes = strlen(buf);
   write_header(writer, 1, 1, "etmc-source-format", bytes);
   write_message(writer, buf, bytes);
-  WriterCloseRecord(writer);
+  writer_close_record(writer);
 
   free(buf);
 #ifndef HAVE_LIBLEMON

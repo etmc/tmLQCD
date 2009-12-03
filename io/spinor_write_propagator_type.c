@@ -31,7 +31,7 @@ void write_propagator_type(WRITER *writer, const int type)
   write_header(writer, 1, 1, "propagator-type", bytes);
   write_message(writer, message, bytes);
 
-  WriterCloseRecord(writer);
+  close_writer_record(writer);
   free(message);
 #ifndef HAVE_LIBLEMON
   }
