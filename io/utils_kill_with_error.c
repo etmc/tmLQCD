@@ -2,8 +2,8 @@
 
 void kill_with_error(LIME_FILE *fh, int const rank, char const *error)
 {
-  if (rank == 0)
-    fprintf(stderr, "%s", error);
+  fprintf(stderr, "KILL_WITH_ERROR on node %d: %s", rank, error);
+  fflush(stderr);
 #ifdef HAVE_LIBLEMON
   MPI_File_close(fh);
 #else
