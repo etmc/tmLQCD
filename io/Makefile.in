@@ -50,6 +50,7 @@ libio_TARGETS = utils_engineering \
 		utils_destruct_reader \
 		utils_construct_writer \
 		utils_destruct_writer \
+		utils_close_writer_record \
 		params_construct_ildgFormat \
 		params_construct_propagatorFormat \
 		params_construct_sourceFormat \

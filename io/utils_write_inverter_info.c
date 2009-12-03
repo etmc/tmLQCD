@@ -71,7 +71,9 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
   bytes = strlen(message);
   write_header(writer, 1, 1, "inverter-info", bytes);
   write_message(writer, message, bytes);
-  WriterCloseRecord(writer);
+
+  close_writer_record(writer);
+  
   free(message);
   return;
 }

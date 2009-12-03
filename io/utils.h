@@ -65,6 +65,9 @@ void write_checksum(WRITER *writer, DML_Checksum const *checksum, char const *na
 void write_xlf_info(WRITER *writer, paramsXlfInfo const *info);
 void write_inverter_info(WRITER * writer, paramsInverterInfo const *info);
 
+void close_reader_record(READER *reader);
+void close_writer_record(WRITER *writer);
+
 void engineering(char *result, double value, char const *units);
 int parse_checksum_xml(char *message, DML_Checksum *checksum);
 

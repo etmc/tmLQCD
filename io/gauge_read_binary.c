@@ -164,7 +164,7 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
   double tick = 0, tock = 0;
   char measure[64];
   DML_SiteRank rank;
-  double prec;
+  int prec;
 
   DML_checksum_init(checksum);
 
@@ -190,14 +190,14 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
     exit(501);
   }
   if(g_cart_id == 0 && g_debug_level > 2) {
-    printf("# %d Bit precision read\n", prec);
+    printf("# %d bit precision read\n", prec);
   }
   if(prec == 32) bytes = (n_uint64_t)2*sizeof(su3);
   else bytes = (n_uint64_t)4*sizeof(su3);
   for(t = 0; t < T; t++){
     for(z = 0; z < LZ; z++){
       for(y = 0; y < LY; y++){
-#if (defined MPI)
+#ifdef MPI
         limeReaderSeek(reader,(n_uint64_t)
                        (((n_uint64_t) g_proc_coords[1]*LX) +
                         ((n_uint64_t) (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY

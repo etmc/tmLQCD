@@ -21,7 +21,6 @@
 
 int read_message(READER * reader, char **buffer) 
 {
-
   int status;
   n_uint64_t bytes, bytesRead;
 

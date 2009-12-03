@@ -19,28 +19,11 @@
 
 #include "utils.ih"
 
-void write_checksum(WRITER * writer, DML_Checksum const *checksum, char const *name)
+void close_writer_record(WRITER *writer)
 {
-  char *message;
-  uint64_t bytes;
-  message = (char*)malloc(512);
-  if (message == (char*)NULL)
-    kill_with_error(writer->fp, g_cart_id, "Memory allocation error in write_checksum_parallel. Aborting\n");
-  sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-	  "<scidacChecksum>\n"
-	  "  <version>1.0</version>\n"
-	  "  <suma>%08x</suma>\n"
-	  "  <sumb>%08x</sumb>\n"
-	  "</scidacChecksum>", checksum->suma, checksum->sumb);
-  bytes = strlen(message);
-  if (name == NULL)
-      write_header(writer, 1, 1, "scidac-checksum", bytes);
-  else
-      write_header(writer, 1, 1, name, bytes);
-
-  write_message(writer, message, bytes);
-
-  close_writer_record(writer);
-  free(message);
-  return;
+  if (writer != NULL)
+    WriterCloseRecord(writer);
+  #ifdef MPI
+  MPI_Barrier(g_cart_grid);
+  #endif
 }
