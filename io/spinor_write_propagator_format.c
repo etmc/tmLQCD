@@ -23,31 +23,25 @@ void write_propagator_format(WRITER *writer, paramsPropagatorFormat const *forma
 {
   uint64_t bytes;
   char *message;
-#ifndef HAVE_LIBLEMON
-  if(g_cart_id == 0) {
-#endif /* ! HAVE_LIBLEMON */
-    message = (char*)malloc(512);
-    sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-	    "<etmcFormat>\n"
-	    "  <field>diracFermion</field>\n"
-	    "  <precision>%d</precision>\n"
-	    "  <flavours>%d</flavours>\n"
-	    "  <lx>%d</lx>\n"
-	    "  <ly>%d</ly>\n"
-	    "  <lz>%d</lz>\n"
-	    "  <lt>%d</lt>\n"
-	    "</etmcFormat>",
-	    format->prec, format->flavours,
-	    format->nx, format->ny, format->nx, format->nt);
+  message = (char*)malloc(512);
+  sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+   "<etmcFormat>\n"
+   "  <field>diracFermion</field>\n"
+   "  <precision>%d</precision>\n"
+   "  <flavours>%d</flavours>\n"
+   "  <lx>%d</lx>\n"
+   "  <ly>%d</ly>\n"
+   "  <lz>%d</lz>\n"
+   "  <lt>%d</lt>\n"
+   "</etmcFormat>",
+   format->prec, format->flavours,
+   format->nx, format->ny, format->nx, format->nt);
     
-    bytes = strlen(message);
-    write_header(writer, 1, 1, "etmc-propagator-format", bytes);
-    write_message(writer, message, bytes);
-    close_writer_record(writer);
-    free(message);
-#ifndef HAVE_LIBLEMON
-  }
-#endif /* ! HAVE_LIBLEMON */
+  bytes = strlen(message);
+  write_header(writer, 1, 1, "etmc-propagator-format", bytes);
+  write_message(writer, message, bytes);
+  close_writer_record(writer);
+  free(message);
   return;
 }
 
