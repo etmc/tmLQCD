@@ -19,41 +19,36 @@
 
 #include "utils.ih"
 
-int read_message(READER * reader, char **buffer) {
+int read_message(READER * reader, char **buffer) 
+{
 
   int status;
   n_uint64_t bytes, bytesRead;
 
-#ifndef HAVE_LIBLEMON
-  /* this is quite dangerous: no MPI possible within this if statement! */
-  if (g_cart_id == 0) {
-#endif /* HAVE_LIBLEMON */
-    if (buffer == (char**)NULL)
-      return(-1);
-    
-    if ((*buffer) != (char*)NULL)
-      free(*buffer);
-    
-    bytes = ReaderBytes(reader);
-    
-    *buffer = (char*)malloc(bytes + 1);
-    
-    if (*buffer  == (char*)NULL) {
-      fprintf(stderr, "Couldn't malloc data buffer in read_message.\n");
-      return(-1);
-    }
+  if (buffer == (char**)NULL)
+    return(-1);
+  
+  if ((*buffer) != (char*)NULL)
+    free(*buffer);
+  
+  bytes = ReaderBytes(reader);
+  
+  *buffer = (char*)malloc(bytes + 1);
+  
+  if (*buffer  == (char*)NULL) {
+    fprintf(stderr, "Couldn't malloc data buffer in read_message.\n");
+    return(-1);
+  }
 
-    status = ReaderReadData(*buffer, &bytesRead, reader);
-#if (defined MPI && HAVE_LIBLEMON)
-    MPI_Barrier(g_cart_grid);
+  status = ReaderReadData(*buffer, &bytesRead, reader);
+#if MPI
+  MPI_Barrier(g_cart_grid);
 #endif
 
-    if (status != LIME_SUCCESS || bytes != bytesRead)
-      kill_with_error(reader->fp, g_cart_id, "Error in reading message.\n");
+  if (status != LIME_SUCCESS || bytes != bytesRead)
+    kill_with_error(reader->fp, g_cart_id, "Error in reading message.\n");
     
     buffer[bytes] = '\0'; /* Force termination for safety */
-#ifndef HAVE_LIBLEMON
-  }
-#endif /* HAVE_LIBLEMON */
-  return(0);
+
+return(0);
 }
