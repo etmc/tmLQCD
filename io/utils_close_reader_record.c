@@ -19,9 +19,9 @@
 
 #include "utils.ih"
 
-void close_reader_record(READER *writer)
+void close_reader_record(READER *reader)
 {
-  if (writer != NULL)
+  if (reader != NULL)
     ReaderCloseRecord(reader);
   #ifdef MPI
   MPI_Barrier(g_cart_grid);
