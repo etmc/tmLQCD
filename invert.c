@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
   if (solver_flag == 12 && even_odd_flag == 1)
   {
     even_odd_flag = 0;
-    if (g_proc_id == 0)
+    if (g_cart_id == 0)
       fprintf(stderr, "CGMMS works only without even/odd! Forcing!\n");
   }
 
@@ -276,7 +276,7 @@ int main(int argc, char *argv[])
   }
 
   g_mu = g_mu1;
-  if (g_proc_id == 0)
+  if (g_cart_id == 0)
   {
     /*construct the filenames for the observables and the parameters*/
     strcpy(datafilename, filename);
@@ -300,11 +300,11 @@ int main(int argc, char *argv[])
         if (fscanf(parameterfile, "%lf", &g_extra_masses[j]) == EOF)
         {
           g_no_extra_masses = j + 1;
-          if (g_proc_id == 0 )
+          if (g_cart_id == 0 )
             fprintf(stderr, "Reduced the number of extra masses to %d for lack of input values.\n", g_no_extra_masses);
           break;
         }
-        if (g_proc_id == 0 && g_debug_level > 0)
+        if (g_cart_id == 0 && g_debug_level > 0)
         {
           printf("# g_extra_masses[%d] = %lf\n", j, g_extra_masses[j]);
         }
@@ -352,14 +352,14 @@ int main(int argc, char *argv[])
   for (j = 0; j < Nmeas; j++)
   {
     sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nstore);
-    if (g_proc_id == 0)
+    if (g_cart_id == 0)
     {
       printf("Reading gauge field from file %s\n", conf_filename);
       fflush(stdout);
     }
     read_gauge_field(conf_filename, &gaugecksum, &xlfmessage, &gaugelfn);
 
-    if (g_proc_id == 0)
+    if (g_cart_id == 0)
     {
       printf("done!\n");
       fflush(stdout);
@@ -372,7 +372,7 @@ int main(int argc, char *argv[])
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action();
 
-    if (g_proc_id == 0)
+    if (g_cart_id == 0)
     {
       printf("The plaquette value is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
       fflush(stdout);
@@ -385,7 +385,7 @@ int main(int argc, char *argv[])
 
       plaquette_energy = measure_gauge_action();
 
-      if (g_proc_id == 0)
+      if (g_cart_id == 0)
       {
         printf("The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
         fflush(stdout);
@@ -463,7 +463,7 @@ int main(int argc, char *argv[])
 #endif
         if (source_splitted) {
           sprintf(conf_filename, "%s.%.4d.%.2d.%.2d", source_input_filename, nstore, source_time_slice, ix);
-          if (g_proc_id == 0) {
+          if (g_cart_id == 0) {
             printf("Reading source from %s\n", conf_filename);
           }
 	  read_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 0);
@@ -471,7 +471,7 @@ int main(int argc, char *argv[])
         else
         {
           sprintf(conf_filename, "%s", source_input_filename);
-          if (g_proc_id == 0)
+          if (g_cart_id == 0)
           {
             printf("Reading source no %d from %s\n", ix, conf_filename);
           }
@@ -482,12 +482,12 @@ int main(int argc, char *argv[])
 #else
         retime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
-        if (g_proc_id == 0)
+        if (g_cart_id == 0)
         {
           printf("time for reading source was %e seconds\n", retime - ratime);
         }
       }
-      if (g_proc_id == 0)
+      if (g_cart_id == 0)
       {
         printf("mu = %e\n", g_mu);
       }
@@ -509,7 +509,7 @@ int main(int argc, char *argv[])
         ifs = fopen(conf_filename, "r");
         if (ifs != NULL)
         {
-          if (g_proc_id == g_stdio_proc)
+          if (g_cart_id == g_stdio_proc)
           {
             printf("# Trying to read guess from file %s\n", conf_filename);
             fflush(stdout);
@@ -544,7 +544,7 @@ int main(int argc, char *argv[])
           else
           {
             /* trying cmi format */
-            if (g_proc_id == g_stdio_proc)
+            if (g_cart_id == g_stdio_proc)
             {
               printf("# Trying cmi format instead of ETMC standard\n");
               fflush(stdout);
@@ -630,7 +630,7 @@ int main(int argc, char *argv[])
 #else
       retime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
-      if (g_proc_id == 0) {
+      if (g_cart_id == 0) {
         printf("time for writing prop was %e seconds\n", retime - ratime);
       }
       /* Check the result */
@@ -649,7 +649,7 @@ int main(int argc, char *argv[])
       nrm1 = square_norm(g_spinor_field[4], VOLUME / 2, 1);
       nrm2 = square_norm(g_spinor_field[5], VOLUME / 2, 1);
 
-      if (g_proc_id == 0)
+      if (g_cart_id == 0)
       {
         printf("Inversion for source %d done in %d iterations, squared residue = %e!\n", ix, iter, nrm1 + nrm2);
         printf("Inversion done in %1.2e sec. \n", etime - atime);

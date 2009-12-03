@@ -67,7 +67,7 @@ int read_gauge_field(char * filename, DML_Checksum *scidac_checksum,
     {
       read_message(reader, ildg_data_lfn);
     }
-    ReaderCloseRecord(reader);
+    close_reader_record(reader);
   }
 
   if (!gauge_read_flag)
