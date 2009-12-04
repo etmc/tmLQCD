@@ -401,6 +401,7 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign){
   int ix;
   double sign=-1.; 
   spinor *r;
+  static su3_vector phi1;
   double nrm = 1./(1.+g_mu*g_mu);
 #if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
@@ -664,6 +665,7 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
   complex ione;
   int ix;
   spinor *r, *s, *t;
+  static su3_vector phi1;
 #if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
@@ -738,7 +740,10 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k,
   int ix;
   double sign=1.;
   spinor *r, *s, *t;
-  static su3_vector phi1, phi2, phi3, phi4;
+  static su3_vector phi1;
+#if !(defined SSE22 || defined SSE32)
+  static su3_vector  phi2, phi3, phi4;
+#endif
 
   if(_sign < 0.){
     sign = -1.;
@@ -804,6 +809,10 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
   int ix;
   double sign=1.;
   spinor *r, *s, *t;
+  static su3_vector phi1;
+#if !(defined SSE22 || defined SSE32)
+  static su3_vector  phi2, phi3, phi4;
+#endif
 #if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
