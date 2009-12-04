@@ -19,11 +19,11 @@
 
 #include "utils.ih"
 
-int read_message(READER * reader, char **buffer) 
-{
+int read_message(READER * reader, char **buffer) {
+
   int status;
   n_uint64_t bytes, bytesRead;
-
+  
   if (buffer == (char**)NULL)
     return(-1);
   
@@ -31,6 +31,7 @@ int read_message(READER * reader, char **buffer)
     free(*buffer);
   
   bytes = ReaderBytes(reader);
+  bytesRead = bytes;
   
   *buffer = (char*)malloc(bytes + 1);
   
@@ -46,8 +47,8 @@ int read_message(READER * reader, char **buffer)
 
   if (status != LIME_SUCCESS || bytes != bytesRead)
     kill_with_error(reader->fp, g_cart_id, "Error in reading message.\n");
-    
-    buffer[bytes] = '\0'; /* Force termination for safety */
-
-return(0);
+  
+  buffer[bytes] = '\0'; /* Force termination for safety */
+  
+  return(0);
 }
