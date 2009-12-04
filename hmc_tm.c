@@ -107,8 +107,6 @@ int main(int argc,char *argv[]) {
   char tmp_filename[50];
   char *input_filename = NULL;
 
-  int rlxd_state[rlxdsize];
-
   int j,ix,mu, trajectory_counter=1;
   struct timeval t1;
 
