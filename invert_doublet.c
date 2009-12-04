@@ -51,7 +51,6 @@
 #ifdef MPI
 #include "xchange.h"
 #endif
-#include "io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"

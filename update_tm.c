@@ -44,7 +44,6 @@
 #include "sighandler.h"
 #include "tm_operators.h"
 #include "linalg_eo.h"
-#include "io.h"
 #include "io/gauge.h"
 #include "io/params.h"
 #include "observables.h"

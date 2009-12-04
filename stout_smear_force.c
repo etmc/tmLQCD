@@ -32,7 +32,6 @@
 #include "read_input.h"
 
 #include "lime.h"
-#include "io.h"
 
 /*void stout_smear_force(int x, int mu, su3 force){*/
 void stout_smear_force()

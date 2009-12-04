@@ -40,7 +40,7 @@
 #include <math.h>
 #include "global.h"
 #include "su3.h"
-#include "io.h"
+#include <io/eospinor.h>
 #include "tm_operators.h"
 #include "solver/solver.h"
 #include "solver/jdher.h"

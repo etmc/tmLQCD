@@ -30,6 +30,7 @@
 
 #define MAIN_PROGRAM
 
+#include <lime.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -51,7 +52,9 @@
 #ifdef MPI
 #include "xchange.h"
 #endif
-#include "io.h"
+#include <io/utils.h>
+#include <io/gauge.h>
+#include <io/spinor.h>
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
@@ -69,7 +72,8 @@
 #include "gamma.h"
 
 void usage(){
-  fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
+  fprintf(stdout, "Application of four times the Hopping Matrix to a source\n");
+  fprintf(stdout, "for noise reduction\n");
   fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
   fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   invert [options]\n");
@@ -100,6 +104,12 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
   double atime=0., etime=0.;
 #endif
+  WRITER *writer = NULL;
+  paramsSourceFormat *sourceFormat = NULL;
+  char * xlfmessage = NULL;
+  char * gaugelfn = NULL;
+  DML_Checksum gaugecksum;
+
 
   DUM_DERI = 6;
   /* DUM_DERI + 2 is enough (not 7) */
@@ -183,7 +193,7 @@ int main(int argc,char *argv[]) {
     strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
     
     parameterfile=fopen(parameterfilename, "w");
-    write_first_messages(parameterfile, 0, 1);
+    write_first_messages(parameterfile, 1);
   }
 
   /* define the geometry */
@@ -215,12 +225,7 @@ int main(int argc,char *argv[]) {
   if (g_proc_id == 0) {
     printf("Reading Gauge field from file %s\n", conf_filename); fflush(stdout);
   }
-  if(gauge_precision_read_flag == 64) {
-    read_lime_gauge_field(conf_filename);
-  }
-  else if(gauge_precision_read_flag == 32){
-    read_lime_gauge_field_singleprec(conf_filename);
-  }
+  read_gauge_field(conf_filename, &gaugecksum, &xlfmessage, &gaugelfn);
   if (g_proc_id == 0){
     printf("done!\n"); fflush(stdout);
   }
@@ -254,21 +259,12 @@ int main(int argc,char *argv[]) {
     }
   }
 
+  if(g_proc_id == 0) {
+    printf("Reading source from %s\n", conf_filename);
+  }
+  read_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 0);
+    if(g_proc_id == 0) printf("...done\n", conf_filename);
 
-  if(source_format_flag == 0) {
-    sprintf(conf_filename,"%s", source_input_filename); 
-    if(g_proc_id == 0) {
-      printf("Reading source from %s\n", conf_filename);
-    }
-    read_spinorfield_eo_time(g_spinor_field[0], g_spinor_field[1], conf_filename); 
-  }
-  else if(source_format_flag == 11) {
-    sprintf(conf_filename,"%s", source_input_filename);
-    if(g_proc_id == 0) {
-      printf("Reading source from %s\n", conf_filename);
-    }
-    read_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename, -1, 1);
-  }
   if(g_proc_id == 0) {printf("mu = %e\n", g_mu/2./g_kappa);}
   
   sprintf(conf_filename, "%s.applied", source_input_filename);
@@ -298,20 +294,15 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     printf("Wrinting to file %s\n", conf_filename);
   }
-  if(write_prop_format_flag < 0) {
-    /* To write in standard format */
-    /* we have to mult. by 2*kappa */
-    mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[0], VOLUME/2);  
-    mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[1], VOLUME/2);
-    write_propagator(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, 
-		     prop_precision_flag, write_prop_format_flag);
 
-/*     write_spinorfield_eo_time_p(g_spinor_field[2], g_spinor_field[3], conf_filename, 0); */
-  }
-  else if(write_prop_format_flag == 11) {
-    write_spinorfield_cm_single(g_spinor_field[0], g_spinor_field[1], conf_filename);
-  }
-  
+  mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[0], VOLUME/2);  
+  mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[1], VOLUME/2);
+  construct_writer(&writer, conf_filename);
+  sourceFormat = construct_paramsSourceFormat(32, 1, 4, 3);
+  write_source_format(writer, sourceFormat);
+  write_spinor(writer, &g_spinor_field[2], &g_spinor_field[3], 1, 32);
+  free(sourceFormat);
+
   if(g_proc_id == 0) {
 #ifdef MPI
     printf("Done in %e sec. (MPI_Wtime)\n", etime-atime);

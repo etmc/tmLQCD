@@ -45,7 +45,6 @@
 #include "getopt.h"
 #include "geometry_eo.h"
 #include "start.h"
-#include "io.h"
 #include <io/utils.h>
 #include "read_input.h"
 #include "mpi_init.h"

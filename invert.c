@@ -50,7 +50,6 @@
 #ifdef MPI
 #include "xchange.h"
 #endif
-#include "io.h"
 #include <io/utils.h>
 #include "read_input.h"
 #include "mpi_init.h"
@@ -147,10 +146,8 @@ int main(int argc, char *argv[])
   MPI_Init(&argc, &argv);
 #endif
 
-  while ((c = getopt(argc, argv, "h?f:o:")) != -1)
-  {
-    switch (c)
-    {
+  while ((c = getopt(argc, argv, "h?f:o:")) != -1) {
+    switch (c) {
       case 'f':
         input_filename = calloc(200, sizeof(char));
         strcpy(input_filename, optarg);
@@ -166,37 +163,31 @@ int main(int argc, char *argv[])
         break;
     }
   }
-  if (input_filename == NULL)
-  {
+  if (input_filename == NULL) {
     input_filename = "hmc.input";
   }
-  if (filename == NULL)
-  {
+  if (filename == NULL) {
     filename = "output";
   }
 
   /* Read the input file */
   read_input(input_filename);
-  if (solver_flag == 12 && even_odd_flag == 1)
-  {
+  if (solver_flag == 12 && even_odd_flag == 1) {
     even_odd_flag = 0;
     if (g_cart_id == 0)
       fprintf(stderr, "CGMMS works only without even/odd! Forcing!\n");
   }
 
   /* this DBW2 stuff is not needed for the inversion ! */
-  if (g_dflgcr_flag == 1)
-  {
+  if (g_dflgcr_flag == 1) {
     even_odd_flag = 0;
   }
   g_rgi_C1 = 0;
-  if (Nsave == 0)
-  {
+  if (Nsave == 0) {
     Nsave = 1;
   }
 
-  if (g_running_phmc)
-  {
+  if (g_running_phmc) {
     NO_OF_SPINORFIELDS = DUM_MATRIX + 8;
   }
 
@@ -217,66 +208,53 @@ int main(int argc, char *argv[])
 #else
   j = init_gauge_field(VOLUMEPLUSRAND, 0);
 #endif
-  if (j != 0)
-  {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(-1);
   }
   j = init_geometry_indices(VOLUMEPLUSRAND);
-  if (j != 0)
-  {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for geometry indices! Aborting...\n");
     exit(-1);
   }
-  if (no_monomials > 0)
-  {
-    if (even_odd_flag)
-    {
+  if (no_monomials > 0) {
+    if (even_odd_flag) {
       j = init_monomials(VOLUMEPLUSRAND / 2, even_odd_flag);
     }
-    else
-    {
+    else {
       j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
     }
-    if (j != 0)
-    {
+    if (j != 0) {
       fprintf(stderr, "Not enough memory for monomial pseudo fermion  fields! Aborting...\n");
       exit(0);
     }
   }
-  if (even_odd_flag)
-  {
+  if (even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
   }
-  else
-  {
+  else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
   }
-  if (j != 0)
-  {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(-1);
   }
 
-  if (g_running_phmc)
-  {
+  if (g_running_phmc) {
     j = init_chi_up_spinor_field(VOLUMEPLUSRAND / 2, 20);
-    if (j != 0)
-    {
+    if (j != 0) {
       fprintf(stderr, "Not enough memory for PHMC Chi_up fields! Aborting...\n");
       exit(0);
     }
     j = init_chi_dn_spinor_field(VOLUMEPLUSRAND / 2, 20);
-    if (j != 0)
-    {
+    if (j != 0) {
       fprintf(stderr, "Not enough memory for PHMC Chi_dn fields! Aborting...\n");
       exit(0);
     }
   }
 
   g_mu = g_mu1;
-  if (g_cart_id == 0)
-  {
+  if (g_cart_id == 0) {
     /*construct the filenames for the observables and the parameters*/
     strcpy(datafilename, filename);
     strcat(datafilename, ".data");
@@ -289,29 +267,23 @@ int main(int argc, char *argv[])
   }
 
   /* this is for the extra masses of the CGMMS */
-  if (solver_flag == 12 && g_no_extra_masses > 0)
-  {
-    if ((parameterfile = fopen("extra_masses.input", "r")) != NULL)
-    {
-      for (j = 0; j < g_no_extra_masses; j++)
-      {
+  if (solver_flag == 12 && g_no_extra_masses > 0) {
+    if ((parameterfile = fopen("extra_masses.input", "r")) != NULL) {
+      for (j = 0; j < g_no_extra_masses; j++) {
         /* Code added below mainly to stop the compiler from whining! */
-        if (fscanf(parameterfile, "%lf", &g_extra_masses[j]) == EOF)
-        {
+        if (fscanf(parameterfile, "%lf", &g_extra_masses[j]) == EOF) {
           g_no_extra_masses = j + 1;
           if (g_cart_id == 0 )
             fprintf(stderr, "Reduced the number of extra masses to %d for lack of input values.\n", g_no_extra_masses);
           break;
         }
-        if (g_cart_id == 0 && g_debug_level > 0)
-        {
+        if (g_cart_id == 0 && g_debug_level > 0) {
           printf("# g_extra_masses[%d] = %lf\n", j, g_extra_masses[j]);
         }
       }
       fclose(parameterfile);
     }
-    else
-    {
+    else {
       fprintf(stderr, "Could not open file extra_masses.input!\n");
       g_no_extra_masses = 0;
     }
@@ -328,13 +300,11 @@ int main(int argc, char *argv[])
 
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
-  if (j != 0)
-  {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(-1);
   }
-  if (g_sloppy_precision_flag == 1)
-  {
+  if (g_sloppy_precision_flag == 1) {
     j = init_dirac_halfspinor32();
     if (j != 0)
     {
@@ -348,22 +318,18 @@ int main(int argc, char *argv[])
 #  endif
 #endif
 
-  for (j = 0; j < Nmeas; j++)
-  {
+  for (j = 0; j < Nmeas; j++) {
     sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nstore);
-    if (g_cart_id == 0)
-    {
+    if (g_cart_id == 0) {
       printf("Reading gauge field from file %s\n", conf_filename);
       fflush(stdout);
     }
     read_gauge_field(conf_filename, &gaugecksum, &xlfmessage, &gaugelfn);
 
-    if (g_cart_id == 0)
-    {
+    if (g_cart_id == 0) {
       printf("done!\n");
       fflush(stdout);
     }
-    /*     unit_g_gauge_field(); */
 #ifdef MPI
     xchange_gauge();
 #endif
@@ -371,47 +337,40 @@ int main(int argc, char *argv[])
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action();
 
-    if (g_cart_id == 0)
-    {
+    if (g_cart_id == 0) {
       printf("The plaquette value is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
       fflush(stdout);
     }
 
-    if (use_stout_flag == 1)
-    {
+    if (use_stout_flag == 1) {
       if (stout_smear_gauge_field(stout_rho , stout_no_iter) != 0)
         exit(1) ;
 
       plaquette_energy = measure_gauge_action();
 
-      if (g_cart_id == 0)
-      {
+      if (g_cart_id == 0) {
         printf("The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
         fflush(stdout);
       }
     }
 
-    if (reweighting_flag == 1)
-    {
+    if (reweighting_flag == 1) {
       reweighting_factor(reweighting_samples, nstore);
     }
 
     /* Compute minimal eigenvalues, if wanted */
-    if (compute_evs != 0)
-    {
+    if (compute_evs != 0) {
       eigenvalues(&no_eigenvalues, max_solver_iterations, eigenvalue_precision,
                   0, compute_evs, nstore, even_odd_flag);
     }
-    if (phmc_compute_evs != 0)
-    {
+    if (phmc_compute_evs != 0) {
 #ifdef MPI
       MPI_Finalize();
 #endif
       return(0);
     }
 
-    if (g_dflgcr_flag == 1)
-    {
+    if (g_dflgcr_flag == 1) {
       /* set up deflation blocks */
       init_blocks(1, 1, 2, 1, g_N_s);
 
@@ -438,23 +397,17 @@ int main(int argc, char *argv[])
 
     }
 
-    for (ix = index_start; ix < index_end; ix++)
-    {
+    for (ix = index_start; ix < index_end; ix++) {
       is = (ix / 3);
       ic = (ix % 3);
-      if (read_source_flag == 0)
-      {
-        if (source_location == 0)
-        {
-/*           random_spinor_field(g_spinor_field[0], VOLUME, 1);
-           random_spinor_field(g_spinor_field[1], VOLUME, 1);*/
+      if (read_source_flag == 0) {
+        if (source_location == 0) {
           source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
         }
         else
           source_spinor_field_point_from_file(g_spinor_field[0], g_spinor_field[1], is, ic, source_location);
       }
-      else
-      {
+      else {
 #ifdef MPI
         ratime = MPI_Wtime();
 #else
@@ -467,11 +420,9 @@ int main(int argc, char *argv[])
           }
 	  read_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 0);
         }
-        else
-        {
+        else {
           sprintf(conf_filename, "%s", source_input_filename);
-          if (g_cart_id == 0)
-          {
+          if (g_cart_id == 0) {
             printf("Reading source no %d from %s\n", ix, conf_filename);
           }
 	  read_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, ix);
@@ -481,35 +432,28 @@ int main(int argc, char *argv[])
 #else
         retime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
-        if (g_cart_id == 0)
-        {
+        if (g_cart_id == 0) {
           printf("time for reading source was %e seconds\n", retime - ratime);
         }
       }
-      if (g_cart_id == 0)
-      {
+      if (g_cart_id == 0) {
         printf("mu = %e\n", g_mu);
       }
 
-      if (propagator_splitted)
-      {
+      if (propagator_splitted) {
         sprintf(conf_filename, "%s.%.4d.%.2d.%.2d.inverted", source_input_filename, nstore, source_time_slice, ix);
       }
-      else
-      {
+      else {
         sprintf(conf_filename, "%s.%.4d.%.2d.inverted", source_input_filename, nstore, source_time_slice);
       }
 
       /* If the solver is _not_ CG we might read in */
       /* here some better guess                     */
       /* This also works for re-iteration           */
-      if (solver_flag != CG && solver_flag != PCG)
-      {
+      if (solver_flag != CG && solver_flag != PCG) {
         ifs = fopen(conf_filename, "r");
-        if (ifs != NULL)
-        {
-          if (g_cart_id == g_stdio_proc)
-          {
+        if (ifs != NULL) {
+          if (g_cart_id == g_stdio_proc) {
             printf("# Trying to read guess from file %s\n", conf_filename);
             fflush(stdout);
           }
@@ -531,13 +475,11 @@ int main(int argc, char *argv[])
             zero_spinor_field(g_spinor_field[3], VOLUME / 2);
           }
         }
-        else
-        {
+        else {
           zero_spinor_field(g_spinor_field[3], VOLUME / 2);
         }
       }
-      else
-      {
+      else {
         zero_spinor_field(g_spinor_field[3], VOLUME / 2);
       }
 
@@ -557,35 +499,33 @@ int main(int argc, char *argv[])
 
       /* To write in standard format */
       /* we have to mult. by 2*kappa */
-      if (write_prop_format_flag != 11 && g_kappa != 0.)
-      {
+      if (g_kappa != 0.) {
         mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[2], VOLUME / 2);
         mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[3], VOLUME / 2);
       }
 
       construct_writer(&writer, conf_filename);
 
-      if (write_prop_format_flag < 10) {
-        if (propagator_splitted || ix == index_start) {
-          xlfInfo = construct_paramsXlfInfo(plaquette_energy / (6.*VOLUME*g_nproc), nstore);
-	  inverterInfo = construct_paramsInverterInfo(solver_precision, iter, solver_flag, 1);
-
-          write_spinor_info(writer, xlfInfo, write_prop_format_flag, inverterInfo, gaugelfn, &gaugecksum);
-
-          free(xlfInfo);
-	  free(inverterInfo);
-        }
-
-        /* write the source depending on format */
-        if (write_prop_format_flag == 1) {
-          sourceFormat = construct_paramsSourceFormat(32, 1, 4, 3);
-
-          write_source_format(writer, sourceFormat);
-          write_spinor(writer, &g_spinor_field[0], &g_spinor_field[1], 1, 32);
-
-          free(sourceFormat);
-        }
+      if (propagator_splitted || ix == index_start) {
+	xlfInfo = construct_paramsXlfInfo(plaquette_energy / (6.*VOLUME*g_nproc), nstore);
+	inverterInfo = construct_paramsInverterInfo(solver_precision, iter, solver_flag, 1);
+	
+	write_spinor_info(writer, xlfInfo, write_prop_format_flag, inverterInfo, gaugelfn, &gaugecksum);
+	
+	free(xlfInfo);
+	free(inverterInfo);
       }
+      
+      /* write the source depending on format */
+      if (write_prop_format_flag == 1) {
+	sourceFormat = construct_paramsSourceFormat(32, 1, 4, 3);
+	
+	write_source_format(writer, sourceFormat);
+	write_spinor(writer, &g_spinor_field[0], &g_spinor_field[1], 1, 32);
+	
+	free(sourceFormat);
+      }
+
 #ifdef MPI
       ratime = MPI_Wtime();
 #else
@@ -622,8 +562,7 @@ int main(int argc, char *argv[])
       nrm1 = square_norm(g_spinor_field[4], VOLUME / 2, 1);
       nrm2 = square_norm(g_spinor_field[5], VOLUME / 2, 1);
 
-      if (g_cart_id == 0)
-      {
+      if (g_cart_id == 0) {
         printf("Inversion for source %d done in %d iterations, squared residue = %e!\n", ix, iter, nrm1 + nrm2);
         printf("Inversion done in %1.2e sec. \n", etime - atime);
       }

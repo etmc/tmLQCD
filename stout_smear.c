@@ -65,7 +65,6 @@
 #include "get_staples.h"
 #include "xchange_gauge.h"
 #include "xchange.h"
-#include "io.h"
 #include "io/gauge.h"
 #include "update_backward_gauge.h"
 #include "stout_smear.h"

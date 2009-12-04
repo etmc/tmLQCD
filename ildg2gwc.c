@@ -32,7 +32,6 @@
 #endif
 #include "global.h"
 #include "getopt.h"
-#include "io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #ifdef MPI
