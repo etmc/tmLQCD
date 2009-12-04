@@ -40,7 +40,7 @@ int read_gauge_field(char * filename, DML_Checksum *scidac_checksum,
     }
     header_type = ReaderType(reader);
 
-    if(g_cart_id != -1 && g_debug_level > 1) {
+    if(g_cart_id == 0 && g_debug_level > 1) {
       fprintf(stderr, "found header %s, will now read the message\n", header_type);
     }
 

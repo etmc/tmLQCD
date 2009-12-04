@@ -31,16 +31,21 @@ int parse_propagator_type(READER * reader) {
       break;
     }
     header_type = ReaderType(reader);
+    if(g_cart_id == 0 && g_debug_level > 1) {
+      fprintf(stderr, "found header %s, will now read the message\n", header_type);
+      fflush(stdout);
+    }
     if (strcmp("propagator-type", header_type) == 0) {
       read_message(reader, &prop_type_string);
       if(g_cart_id == 0 && g_debug_level > 1) {
-	printf("# file is of type %s", prop_type_string);
+	printf("# file is of type %s for proc %d\n", prop_type_string, g_cart_id);
       }
       if(strcmp("DiracFermion_Sink", prop_type_string) == 0) prop_type = 0;
       else if(strcmp("DiracFermion_Source_Sink_Pairs", prop_type_string) == 0) prop_type =1;
       else if(strcmp("DiracFermion_ScalarSource_TwelveSink", prop_type_string) == 0) prop_type = 2;
       else if(strcmp("DiracFermion_ScalarSource_FourSink", prop_type_string) == 0) prop_type = 3;
       free(prop_type_string);
+      close_reader_record(reader);
       break;
     }
     if (strcmp("source-type", header_type) == 0) {
@@ -53,8 +58,10 @@ int parse_propagator_type(READER * reader) {
       else if(strcmp("DiracFermion_FourScalarSource", prop_type_string) == 0) prop_type =12;
       else if(strcmp("DiracFermion_TwelveScalarSource", prop_type_string) == 0) prop_type =13;
       free(prop_type_string);
+      close_reader_record(reader);
       break;
     }
+    close_reader_record(reader);
   }
   return(prop_type);
 }

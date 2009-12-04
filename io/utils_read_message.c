@@ -32,8 +32,11 @@ int read_message(READER * reader, char **buffer) {
   
   bytes = ReaderBytes(reader);
   bytesRead = bytes;
-  
-  *buffer = (char*)malloc(bytes + 1);
+
+  /* this termination force gives sometimes random results and hanging code ... */
+  /* with calloc instead of malloc it seems to be fine                          */
+  *buffer = (char*)calloc(bytes + 1, sizeof(char));
+  /* *buffer = (char*)calloc(bytes, sizeof(char)); */
   
   if (*buffer  == (char*)NULL) {
     fprintf(stderr, "Couldn't malloc data buffer in read_message.\n");
