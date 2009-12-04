@@ -67,7 +67,9 @@ libio_TARGETS = utils_engineering \
 		spinor_write_source_format \
 		spinor_write_propagator_format \
 		spinor_write_propagator_type \
-		utils DML_crc32 dml
+		utils DML_crc32 dml \
+		eospinor_write \
+		eospinor_read
 
 libio_OBJECTS = $(addsuffix .o, ${libio_TARGETS})
 
