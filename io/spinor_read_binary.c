@@ -159,10 +159,6 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * rea
     }
   }
 
-  if(g_cart_id == 0 && g_debug_level > 2) {
-    printf("# %d Bit precision read\n", prec);
-  }
-
   if(prec == 32) bytes = (n_uint64_t)sizeof(spinor)/2;
   else bytes = (n_uint64_t)sizeof(spinor);
   for(t = 0; t < T; t++) {
