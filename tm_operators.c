@@ -810,7 +810,7 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
   int ix;
   double sign=1.;
   spinor *r, *s, *t;
-#if (!defined SSE2 && !defined SSE3 && !defined BGL3 && !defined XLC)
+#if (!defined SSE2 && !defined SSE3 && !defined BGL3)
   static su3_vector  phi1, phi2, phi3, phi4;
 #endif
 #if (defined BGL3 && defined XLC)
