@@ -19,20 +19,32 @@
 
 #include "spinor.ih"
 
-int read_spinor(spinor * const s, spinor * const r, char * filename, const int position)
-{
-  int status = 0, getpos = 0, bytes = 0, prec = 0;
+int read_spinor(spinor * const s, spinor * const r, char * filename, const int position_) {
+  int status = 0, getpos = 0, bytes = 0, prec = 0, prop_type, position = position_;
   char *header_type = NULL;
   READER *reader = NULL;
   DML_Checksum checksum;
 
   construct_reader(&reader, filename);
+  /* determine the propagator type */
+
+  prop_type = parse_propagator_type(reader);
+  if ( prop_type == -1 ) {
+    kill_with_error(reader->fp, g_cart_id, "Did not find propagator or source type. Aborting...\n");
+  }
+
+  if(prop_type == 1) position = 2*position_;
+  /* anything else needs implementation! */
+  else if(prop_type == 2 || prop_type == 3) 
+    kill_with_error(reader->fp, g_cart_id, "Propagator type not yet implemented. Aborting read!\n");
+  else if(prop_type == 11 || prop_type == 12 || prop_type == 13) 
+    kill_with_error(reader->fp, g_cart_id, "Source type not yet implemented. Aborting read!\n");
+  else if(prop_type == -1)
+    kill_with_error(reader->fp, g_cart_id, "No propagator or source type record in file. Aborting read!\n");
 
   /* Find the desired propagator (could be more than one in a file) */
-  while ((status = ReaderNextRecord(reader)) != LIME_EOF)
-  {
-    if (status != LIME_SUCCESS)
-    {
+  while ((status = ReaderNextRecord(reader)) != LIME_EOF) {
+    if (status != LIME_SUCCESS) {
       fprintf(stderr, "ReaderNextRecord returned status %d.\n", status);
       break;
     }
@@ -56,6 +68,7 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
       prec = 32;
     else
       kill_with_error(reader->fp, g_cart_id, "Wrong length in eospinor. Aborting read!\n");
+
   if (g_cart_id == 0 && g_debug_level > 2)
     printf("# %d bit precision read.\n", prec);
 

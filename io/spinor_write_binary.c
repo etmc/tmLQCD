@@ -127,9 +127,18 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
   n_uint64_t bytes;
   DML_SiteRank rank;
 #ifdef MPI
+  double tick = 0, tock = 0;
+  char measure[64];
   MPI_Status mstatus;
 #endif
   DML_checksum_init(checksum);
+
+#ifdef MPI
+  if (g_debug_level > 0) {
+    MPI_Barrier(g_cart_grid);
+    tick = MPI_Wtime();
+  }
+#endif
 
   if(prec == 32) bytes = (n_uint64_t)sizeof(spinor)/2;
   else bytes = (n_uint64_t)sizeof(spinor);
@@ -234,6 +243,24 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
       }
     }
   }
+#ifdef MPI
+  if (g_debug_level > 0) {
+    MPI_Barrier(g_cart_grid);
+    tock = MPI_Wtime();
+
+    if (g_cart_id == 0) {
+      engineering(measure, L * L * L * T_global * bytes, "b");
+      fprintf(stdout, "Time spent writing %s ", measure);
+      engineering(measure, tock - tick, "s");
+      fprintf(stdout, "was %s.\n", measure);
+      engineering(measure, (L * L * L * T_global) * bytes / (tock - tick), "b/s");
+      fprintf(stdout, "Writing speed: %s", measure);
+      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock - tick)), "b/s");
+      fprintf(stdout, " (%s per MPI process).\n", measure);
+      fflush(stdout);
+    }
+  }
+#endif
   return(0);
 }
 #endif /* HAVE_LIBLEMON */

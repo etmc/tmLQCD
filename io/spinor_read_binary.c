@@ -46,9 +46,6 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * re
     }
   }
 
-  if (g_cart_id == 0 && g_debug_level > 2)
-    printf("# %d Bit precision read.\n", prec);
-
   DML_checksum_init(checksum);
 
   fbspin = sizeof(spinor);

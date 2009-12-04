@@ -56,7 +56,6 @@ void write_xlf_info(WRITER * writer, paramsXlfInfo const *info)
   
   close_writer_record(writer);
   
-  MPI_Barrier(g_cart_grid);
   free(message);
   return;
 }

@@ -47,54 +47,50 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
     return 1;
   }
 
+  if (g_debug_level > 0) {
+    MPI_Barrier(g_cart_grid);
+    tick = MPI_Wtime();
+  }
+  
   tG = g_proc_coords[0]*T;
   zG = g_proc_coords[3]*LZ;
   yG = g_proc_coords[2]*LY;
   xG = g_proc_coords[1]*LX;
   for(t = 0; t < T; t++) {
-      for(z = 0; z < LZ; z++) {
-        for(y = 0; y < LY; y++) {
-          for(x = 0; x < LX; x++) {
-            rank = (DML_SiteRank) ((((tG + t)*L + zG + z)*L + yG + y)*L + xG + x);
-            memcpy(&tmp3[0], &g_gauge_field[ g_ipt[t][x][y][z] ][1], sizeof(su3));
-            memcpy(&tmp3[1], &g_gauge_field[ g_ipt[t][x][y][z] ][2], sizeof(su3));
-            memcpy(&tmp3[2], &g_gauge_field[ g_ipt[t][x][y][z] ][3], sizeof(su3));
-            memcpy(&tmp3[3], &g_gauge_field[ g_ipt[t][x][y][z] ][0], sizeof(su3));
-  #ifndef WORDS_BIGENDIAN
-            if(prec == 32)
-              byte_swap_assign_double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
-            else
-              byte_swap_assign(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
-  #else
-            if(prec == 32)
-              double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
-            else
-              memcpy(filebuffer + bufoffset, tmp3, 4*sizeof(su3));
-  #endif
-            DML_checksum_accum(checksum, rank, (char*) filebuffer + bufoffset, bytes);
-
-            bufoffset += bytes;
-          }
-        }
+    for(z = 0; z < LZ; z++) {
+      for(y = 0; y < LY; y++) {
+	for(x = 0; x < LX; x++) {
+	  rank = (DML_SiteRank) ((((tG + t)*L + zG + z)*L + yG + y)*L + xG + x);
+	  memcpy(&tmp3[0], &g_gauge_field[ g_ipt[t][x][y][z] ][1], sizeof(su3));
+	  memcpy(&tmp3[1], &g_gauge_field[ g_ipt[t][x][y][z] ][2], sizeof(su3));
+	  memcpy(&tmp3[2], &g_gauge_field[ g_ipt[t][x][y][z] ][3], sizeof(su3));
+	  memcpy(&tmp3[3], &g_gauge_field[ g_ipt[t][x][y][z] ][0], sizeof(su3));
+#ifndef WORDS_BIGENDIAN
+	  if(prec == 32)
+	    byte_swap_assign_double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
+	  else
+	    byte_swap_assign(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
+#else
+	  if(prec == 32)
+	    double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
+	  else
+	    memcpy(filebuffer + bufoffset, tmp3, 4*sizeof(su3));
+#endif
+	  DML_checksum_accum(checksum, rank, (char*) filebuffer + bufoffset, bytes);
+	  
+	  bufoffset += bytes;
+	}
       }
     }
-
-
-  if (g_debug_level > 0)
-  {
-    MPI_Barrier(g_cart_grid);
-    tick = MPI_Wtime();
   }
 
   lemonWriteLatticeParallelMapped(lemonwriter, filebuffer, bytes, globaldims, scidacMapping);
 
-  if (g_debug_level > 0)
-  {
+  if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tock = MPI_Wtime();
 
-    if (g_cart_id == 0)
-    {
+    if (g_cart_id == 0) {
       engineering(measure, L * L * L * T_global * bytes, "b");
       fprintf(stdout, "Time spent writing %s ", measure);
       engineering(measure, tock - tick, "s");
@@ -125,11 +121,11 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
   su3 tmp3[4];
   float tmp2[72];
   int coords[4];
-  double tick = 0, tock = 0;
-  char measure[64];
   n_uint64_t bytes;
   DML_SiteRank rank;
 #ifdef MPI
+  double tick = 0, tock = 0;
+  char measure[64];
   MPI_Status mpi_status;
 #endif
 

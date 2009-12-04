@@ -37,7 +37,6 @@
 #include "gamma.h"
 #include "linalg_eo.h"
 #include "start.h"
-#include "propagator_io.h"
 #include "solver/matrix_mult_typedef.h"
 #include "cg_mms_tm.h"
 

@@ -47,7 +47,6 @@
 #include "start.h"
 #include "io.h"
 #include <io/utils.h>
-#include "propagator_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "source_generation.h"

@@ -52,7 +52,6 @@
 #endif
 #include "io.h"
 #include <io/utils.h>
-#include "propagator_io.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
@@ -516,43 +515,19 @@ int main(int argc, char *argv[])
           }
           fclose(ifs);
           err = 0;
-          iter = get_propagator_type(conf_filename);
-          if (iter > -1) {
-            if (iter == 1) {
-              if (propagator_splitted) {
-                read_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
-              }
-              else {
-                read_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, ix);
-              }
-            }
-            else
-              if (iter == 0) {
-                if (propagator_splitted) {
-                  read_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
-                }
-                else {
-                  read_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 2 * ix);
-                }
-              }
-            if (g_kappa != 0.)
-            {
-              mul_r(g_spinor_field[3], 1. / (2*g_kappa), g_spinor_field[3], VOLUME / 2);
-              mul_r(g_spinor_field[2], 1. / (2*g_kappa), g_spinor_field[2], VOLUME / 2);
-            }
-          }
-          else
-          {
-            /* trying cmi format */
-            if (g_cart_id == g_stdio_proc)
-            {
-              printf("# Trying cmi format instead of ETMC standard\n");
-              fflush(stdout);
-            }
-            err = read_source(g_spinor_field[2], g_spinor_field[3], conf_filename, 1, 0);
-          }
-          if (err != 0)
-          {
+/*           iter = get_propagator_type(conf_filename); */
+	  if (propagator_splitted) {
+	    read_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 0);
+	  }
+	  else {
+	    read_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, ix);
+	  }
+	  if (g_kappa != 0.) {
+	    mul_r(g_spinor_field[3], 1. / (2*g_kappa), g_spinor_field[3], VOLUME / 2);
+	    mul_r(g_spinor_field[2], 1. / (2*g_kappa), g_spinor_field[2], VOLUME / 2);
+	  }
+
+          if (err != 0) {
             zero_spinor_field(g_spinor_field[3], VOLUME / 2);
           }
         }
@@ -590,10 +565,8 @@ int main(int argc, char *argv[])
 
       construct_writer(&writer, conf_filename);
 
-      if (write_prop_format_flag < 10)
-      {
-        if (propagator_splitted || ix == index_start)
-        {
+      if (write_prop_format_flag < 10) {
+        if (propagator_splitted || ix == index_start) {
           xlfInfo = construct_paramsXlfInfo(plaquette_energy / (6.*VOLUME*g_nproc), nstore);
 	  inverterInfo = construct_paramsInverterInfo(solver_precision, iter, solver_flag, 1);
 

@@ -33,38 +33,32 @@ int read_gauge_field(char * filename, DML_Checksum *scidac_checksum,
 
   construct_reader(&reader, filename);
 
-  while ((status = ReaderNextRecord(reader)) != LIME_EOF)
-  {
-    if (status != LIME_SUCCESS)
-    {
+  while ((status = ReaderNextRecord(reader)) != LIME_EOF) {
+    if (status != LIME_SUCCESS) {
       fprintf(stderr, "ReaderNextRecord returned status %d.\n", status);
       break;
     }
     header_type = ReaderType(reader);
 
-    if(g_cart_id == 0 && g_debug_level > 1) {
+    if(g_cart_id != -1 && g_debug_level > 1) {
       fprintf(stderr, "found header %s, will now read the message\n", header_type);
     }
 
-    if (strcmp("ildg-binary-data", header_type) == 0)
-    {
+    if (strcmp("ildg-binary-data", header_type) == 0) {
       read_binary_gauge_data(reader, &checksum_calc);
       gauge_read_flag = 1;
     }
-    else if (strcmp("scidac-checksum", header_type) == 0)
-    {
+    else if (strcmp("scidac-checksum", header_type) == 0) {
       read_message(reader, &checksum_string);
       DML_read_flag = parse_checksum_xml(checksum_string, &checksum_read);
       if (DML_read_flag && scidac_checksum != (DML_Checksum*)NULL)
         *scidac_checksum = checksum_read;
       free(checksum_string);
     }
-    else if (strcmp("xlf-info", header_type) == 0)
-    {
+    else if (strcmp("xlf-info", header_type) == 0) {
       read_message(reader, xlf_info);
     }
-    else if (strcmp("ildg-data-lfn", header_type) == 0)
-    {
+    else if (strcmp("ildg-data-lfn", header_type) == 0) {
       read_message(reader, ildg_data_lfn);
     }
     close_reader_record(reader);
