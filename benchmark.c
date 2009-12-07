@@ -180,7 +180,7 @@ int main(int argc,char *argv[])
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
 
   if(even_odd_flag) {
-    j = init_spinor_field(VOLUMEPLUSRAND/2, 2*k_max);
+    j = init_spinor_field(VOLUMEPLUSRAND/2, 2*k_max+1);
   }
   else {
     j = init_spinor_field(VOLUMEPLUSRAND, 2*k_max);
@@ -257,7 +257,7 @@ int main(int argc,char *argv[])
     /*initialize the pseudo-fermion fields*/
     j_max=1;
     sdt=0.;
-    for (k=0;k<k_max;k++) {
+    for (k = 0; k < k_max; k++) {
       random_spinor_field(g_spinor_field[k], VOLUME/2, 0);
     }
     
@@ -274,8 +274,8 @@ int main(int argc,char *argv[])
       for (j=0;j<j_max;j++) {
 	for (k=0;k<k_max;k++) {
 	  Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
-	  Hopping_Matrix(1, g_spinor_field[k], g_spinor_field[k+k_max]);
-          antioptaway+=g_spinor_field[k][0].s0.c0.re;
+	  Hopping_Matrix(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
+          antioptaway+=g_spinor_field[2*k_max][0].s0.c0.re;
 	}
       }
 #if defined BGL
@@ -322,12 +322,13 @@ int main(int argc,char *argv[])
 #else
     t1=(double)clock();
 #endif
+    antioptaway=0.0;
     for (j=0;j<j_max;j++) {
       for (k=0;k<k_max;k++) {
 	Hopping_Matrix_nocom(0, g_spinor_field[k+k_max], g_spinor_field[k]);
-	Hopping_Matrix_nocom(1, g_spinor_field[k], g_spinor_field[k+k_max]);
+	Hopping_Matrix_nocom(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
+	antioptaway+=g_spinor_field[2*k_max][0].s0.c0.re;
       }
-      antioptaway+=g_spinor_field[k][0].s0.c0.re;
     }
 #if defined BGL
     t2 = bgl_wtime();
@@ -389,9 +390,8 @@ int main(int argc,char *argv[])
       for (j=0;j<j_max;j++) {
 	for (k=0;k<k_max;k++) {
 	  D_psi(g_spinor_field[k+k_max], g_spinor_field[k]);
-	  if(g_proc_id == 0) printf("blub %d %d %1.3e\n", j, k, sdt);
+	  antioptaway+=g_spinor_field[k+k_max][0].s0.c0.re;
 	}
-        antioptaway+=g_spinor_field[k+k_max][0].s0.c0.re;
       }
 #if defined BGL
       t2 = bgl_wtime();
