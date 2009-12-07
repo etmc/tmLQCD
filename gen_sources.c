@@ -175,7 +175,7 @@ int main(int argc,char *argv[]) {
     exit(1);
   }
 
-  mpi_init(argc, argv);
+  tmlqcd_mpi_init(argc, argv);
 
   j = init_geometry_indices(VOLUMEPLUSRAND);
   if ( j!= 0) {

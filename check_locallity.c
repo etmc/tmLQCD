@@ -158,7 +158,7 @@ int main(int argc,char *argv[]) {
   if(Nsave == 0){
     Nsave = 1;
   }
-  mpi_init(argc, argv);
+  tmlqcd_mpi_init(argc, argv);
 
   g_dbw2rand = 0;
 

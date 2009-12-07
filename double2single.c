@@ -108,7 +108,7 @@ int main(int argc,char *argv[]) {
     usage();
   }
 
-  mpi_init(argc, argv);
+  tmlqcd_mpi_init(argc, argv);
 
   if(g_rgi_C1 == 0.) {
     g_dbw2rand = 0;

@@ -74,7 +74,7 @@ int main(int argc,char *argv[]) {
   /* Read the input file */
   read_input("benchmark.input");
   
-  mpi_init(argc, argv);
+  tmlqcd_mpi_init(argc, argv);
   
   
 #ifdef _GAUGE_COPY

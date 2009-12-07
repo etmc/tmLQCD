@@ -100,7 +100,6 @@ void reduce_su3_ray(void *u_i, void *u_io, int *len, MPI_Datatype *dt);
 
 #endif
 
-
-void mpi_init(int argc, char *argv[]);
+void tmlqcd_mpi_init(int argc, char *argv[]);
 
 #endif

@@ -194,7 +194,7 @@ int main(int argc,char *argv[]) {
   DUM_BI_MATRIX = DUM_BI_SOLVER+6;
   NO_OF_BISPINORFIELDS = DUM_BI_MATRIX+6;
 
-  mpi_init(argc, argv);
+  tmlqcd_mpi_init(argc, argv);
 
   init_integrator();
 

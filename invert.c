@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
     NO_OF_SPINORFIELDS = DUM_MATRIX + 8;
   }
 
-  mpi_init(argc, argv);
+  tmlqcd_mpi_init(argc, argv);
 
   g_dbw2rand = 0;
 

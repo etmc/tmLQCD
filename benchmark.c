@@ -126,7 +126,7 @@ int main(int argc,char *argv[])
   /* Read the input file */
   read_input("benchmark.input");
   
-  mpi_init(argc, argv);
+  tmlqcd_mpi_init(argc, argv);
   
   if(g_proc_id==0) {
 #ifdef SSE

@@ -154,7 +154,7 @@ void reduce_su3_ray(
 
 
 
-void mpi_init(int argc,char *argv[]) {
+void tmlqcd_mpi_init(int argc,char *argv[]) {
   int i;
 #ifdef MPI
   int periods[] = {1,1,1,1};
@@ -221,6 +221,18 @@ void mpi_init(int argc,char *argv[]) {
   g_nproc_y = dims[2];
   g_nproc_z = dims[3];
 
+  if( (dims[0] <= 1 || dims[1] <= 1 || dims[2] <= 1 || dims[3] <= 1) ||
+      (LX%dims[1] != 0 || LY%dims[2] != 0 || LZ%dims[3] != 0 || T_global%dims[0] != 0) ) {
+    if(g_proc_id == 0) {
+      fprintf(stderr, "The lattice cannot be perperly mapped on the processor grid\n");
+      fprintf(stderr, "Please check your number of processors and the NR?Procs input variables\n");
+      fprintf(stderr, "Aborting...!\n");
+    }
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Finalize();
+    exit(-1);
+  }
+
 #  ifndef FIXEDVOLUME
   N_PROC_X = g_nproc_x;
   N_PROC_Y = g_nproc_y;
@@ -233,25 +245,25 @@ void mpi_init(int argc,char *argv[]) {
 #    ifdef PARALLELT  
   RAND = (2*LX*LY*LZ);
   EDGES = 0;
-#    elif defined PARALLELXT
+#    elif defined PARALLELXT /* ifdef PARALLELT */
   RAND = 2*LZ*(LY*LX + T*LY);
   EDGES = 4*LZ*LY;
   /* Note that VOLUMEPLUSRAND not equal to VOLUME+RAND in this case */
   /* VOLUMEPLUSRAND rather includes the edges */
-#    elif defined PARALLELXYT
+#    elif defined PARALLELXYT /* ifdef PARALLELT */
   RAND = 2*LZ*(LY*LX + T*LY + T*LX);
   EDGES = 4*LZ*(LY + T + LX);
-#  elif defined PARALLELXYZT
+#    elif defined PARALLELXYZT /* ifdef PARALLELT */
   RAND = 2*LZ*LY*LX + 2*LZ*T*LY + 2*LZ*T*LX + 2*T*LX*LY;
   EDGES = 4*LZ*LY + 4*LZ*T + 4*LZ*LX + 4*LY*T + 4*LY*LX + 4*T*LX;
-#    else
+#    else /* ifdef PARALLELT */
   RAND = 0;
   EDGES = 0;
-#    endif
+#    endif /* ifdef PARALLELT */
   /* Note that VOLUMEPLUSRAND is not always equal to VOLUME+RAND */
   /* VOLUMEPLUSRAND rather includes the edges */
   VOLUMEPLUSRAND = VOLUME + RAND + EDGES;
-#  endif
+#  endif /* ifndef FIXEDVOLUME */
   g_dbw2rand = (RAND + 2*EDGES);
 
 #  ifdef PARALLELXYZT
