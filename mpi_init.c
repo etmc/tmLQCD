@@ -221,10 +221,10 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   g_nproc_y = dims[2];
   g_nproc_z = dims[3];
 
-  if( (dims[0] <= 1 || dims[1] <= 1 || dims[2] <= 1 || dims[3] <= 1) ||
-      (LX%dims[1] != 0 || LY%dims[2] != 0 || LZ%dims[3] != 0 || T_global%dims[0] != 0) ) {
+  if( (g_nproc_t < 1 || g_nproc_x < 1 || g_nproc_y < 1 || g_nproc_z < 1) ||
+      (LX%g_nproc_x != 0 || LY%g_nproc_y != 0 || LZ%g_nproc_z != 0 || T_global%g_nproc_t != 0) ) {
     if(g_proc_id == 0) {
-      fprintf(stderr, "The lattice cannot be perperly mapped on the processor grid\n");
+      fprintf(stderr, "The lattice cannot be properly mapped on the processor grid\n");
       fprintf(stderr, "Please check your number of processors and the NR?Procs input variables\n");
       fprintf(stderr, "Aborting...!\n");
     }
