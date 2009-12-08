@@ -99,9 +99,9 @@ int write_first_messages(FILE * parameterfile, const int inv) {
          "# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #  endif
 #  ifdef HAVE_LIBLEMON
-  printf("# the code was compiled with MPIIO/lemon\n");
+  printf("# the code was compiled with MPI IO / Lemon\n");
   fprintf(parameterfile,
-	  "# the code was compiled with MPIIO/lemon\n");
+	  "# the code was compiled with MPI IO / Lemon\n");
 #  endif
 #endif
   if( bc_flag == 0 ) {
