@@ -133,7 +133,7 @@ typedef unsigned int flex_uint32_t;
 #define YY_STATE_EOF(state) (YY_END_OF_BUFFER + state + 1)
 
 /* Special action meaning "start processing a new file". */
-#define YY_NEW_FILE yyrestart(yyin  )
+#define YY_NEW_FILE tmlqcdrestart(tmlqcdin  )
 
 #define YY_END_OF_BUFFER_CHAR 0
 
@@ -151,9 +151,9 @@ typedef unsigned int flex_uint32_t;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 #endif
 
-extern int yyleng;
+extern int tmlqcdleng;
 
-extern FILE *yyin, *yyout;
+extern FILE *tmlqcdin, *tmlqcdout;
 
 #define EOB_ACT_CONTINUE_SCAN 0
 #define EOB_ACT_END_OF_FILE 1
@@ -165,13 +165,13 @@ extern FILE *yyin, *yyout;
 #define yyless(n) \
 	do \
 		{ \
-		/* Undo effects of setting up yytext. */ \
+		/* Undo effects of setting up tmlqcdtext. */ \
         int yyless_macro_arg = (n); \
         YY_LESS_LINENO(yyless_macro_arg);\
 		*yy_cp = (yy_hold_char); \
 		YY_RESTORE_YY_MORE_OFFSET \
 		(yy_c_buf_p) = yy_cp = yy_bp + yyless_macro_arg - YY_MORE_ADJ; \
-		YY_DO_BEFORE_ACTION; /* set up yytext again */ \
+		YY_DO_BEFORE_ACTION; /* set up tmlqcdtext again */ \
 		} \
 	while ( 0 )
 
@@ -244,8 +244,8 @@ struct yy_buffer_state
 	 * possible backing-up.
 	 *
 	 * When we actually see the EOF, we change the status to "new"
-	 * (via yyrestart()), so that the user can continue scanning by
-	 * just pointing yyin at a new input file.
+	 * (via tmlqcdrestart()), so that the user can continue scanning by
+	 * just pointing tmlqcdin at a new input file.
 	 */
 #define YY_BUFFER_EOF_PENDING 2
 
@@ -272,51 +272,51 @@ static YY_BUFFER_STATE * yy_buffer_stack = 0; /**< Stack as an array. */
  */
 #define YY_CURRENT_BUFFER_LVALUE (yy_buffer_stack)[(yy_buffer_stack_top)]
 
-/* yy_hold_char holds the character lost when yytext is formed. */
+/* yy_hold_char holds the character lost when tmlqcdtext is formed. */
 static char yy_hold_char;
 static int yy_n_chars;		/* number of characters read into yy_ch_buf */
-int yyleng;
+int tmlqcdleng;
 
 /* Points to current character in buffer. */
 static char *yy_c_buf_p = (char *) 0;
 static int yy_init = 0;		/* whether we need to initialize */
 static int yy_start = 0;	/* start state number */
 
-/* Flag which is used to allow yywrap()'s to do buffer switches
- * instead of setting up a fresh yyin.  A bit of a hack ...
+/* Flag which is used to allow tmlqcdwrap()'s to do buffer switches
+ * instead of setting up a fresh tmlqcdin.  A bit of a hack ...
  */
 static int yy_did_buffer_switch_on_eof;
 
-void yyrestart (FILE *input_file  );
-void yy_switch_to_buffer (YY_BUFFER_STATE new_buffer  );
-YY_BUFFER_STATE yy_create_buffer (FILE *file,int size  );
-void yy_delete_buffer (YY_BUFFER_STATE b  );
-void yy_flush_buffer (YY_BUFFER_STATE b  );
-void yypush_buffer_state (YY_BUFFER_STATE new_buffer  );
-void yypop_buffer_state (void );
+void tmlqcdrestart (FILE *input_file  );
+void tmlqcd_switch_to_buffer (YY_BUFFER_STATE new_buffer  );
+YY_BUFFER_STATE tmlqcd_create_buffer (FILE *file,int size  );
+void tmlqcd_delete_buffer (YY_BUFFER_STATE b  );
+void tmlqcd_flush_buffer (YY_BUFFER_STATE b  );
+void tmlqcdpush_buffer_state (YY_BUFFER_STATE new_buffer  );
+void tmlqcdpop_buffer_state (void );
 
-static void yyensure_buffer_stack (void );
-static void yy_load_buffer_state (void );
-static void yy_init_buffer (YY_BUFFER_STATE b,FILE *file  );
+static void tmlqcdensure_buffer_stack (void );
+static void tmlqcd_load_buffer_state (void );
+static void tmlqcd_init_buffer (YY_BUFFER_STATE b,FILE *file  );
 
-#define YY_FLUSH_BUFFER yy_flush_buffer(YY_CURRENT_BUFFER )
+#define YY_FLUSH_BUFFER tmlqcd_flush_buffer(YY_CURRENT_BUFFER )
 
-YY_BUFFER_STATE yy_scan_buffer (char *base,yy_size_t size  );
-YY_BUFFER_STATE yy_scan_string (yyconst char *yy_str  );
-YY_BUFFER_STATE yy_scan_bytes (yyconst char *bytes,int len  );
+YY_BUFFER_STATE tmlqcd_scan_buffer (char *base,yy_size_t size  );
+YY_BUFFER_STATE tmlqcd_scan_string (yyconst char *yy_str  );
+YY_BUFFER_STATE tmlqcd_scan_bytes (yyconst char *bytes,int len  );
 
-void *yyalloc (yy_size_t  );
-void *yyrealloc (void *,yy_size_t  );
-void yyfree (void *  );
+void *tmlqcdalloc (yy_size_t  );
+void *tmlqcdrealloc (void *,yy_size_t  );
+void tmlqcdfree (void *  );
 
-#define yy_new_buffer yy_create_buffer
+#define yy_new_buffer tmlqcd_create_buffer
 
 #define yy_set_interactive(is_interactive) \
 	{ \
 	if ( ! YY_CURRENT_BUFFER ){ \
-        yyensure_buffer_stack (); \
+        tmlqcdensure_buffer_stack (); \
 		YY_CURRENT_BUFFER_LVALUE =    \
-            yy_create_buffer(yyin,YY_BUF_SIZE ); \
+            tmlqcd_create_buffer(tmlqcdin,YY_BUF_SIZE ); \
 	} \
 	YY_CURRENT_BUFFER_LVALUE->yy_is_interactive = is_interactive; \
 	}
@@ -324,9 +324,9 @@ void yyfree (void *  );
 #define yy_set_bol(at_bol) \
 	{ \
 	if ( ! YY_CURRENT_BUFFER ){\
-        yyensure_buffer_stack (); \
+        tmlqcdensure_buffer_stack (); \
 		YY_CURRENT_BUFFER_LVALUE =    \
-            yy_create_buffer(yyin,YY_BUF_SIZE ); \
+            tmlqcd_create_buffer(tmlqcdin,YY_BUF_SIZE ); \
 	} \
 	YY_CURRENT_BUFFER_LVALUE->yy_at_bol = at_bol; \
 	}
@@ -337,16 +337,13 @@ void yyfree (void *  );
 
 typedef unsigned char YY_CHAR;
 
-FILE *yyin = (FILE *) 0, *yyout = (FILE *) 0;
+FILE *tmlqcdin = (FILE *) 0, *tmlqcdout = (FILE *) 0;
 
 typedef int yy_state_type;
 
-extern int yylineno;
-
-int yylineno = 1;
-
-extern char *yytext;
-#define yytext_ptr yytext
+extern int tmlqcdlineno;
+extern char *tmlqcdtext;
+#define yytext_ptr tmlqcdtext
 
 static yy_state_type yy_get_previous_state (void );
 static yy_state_type yy_try_NUL_trans (yy_state_type current_state  );
@@ -354,11 +351,11 @@ static int yy_get_next_buffer (void );
 static void yy_fatal_error (yyconst char msg[]  );
 
 /* Done after the current pattern has been matched and before the
- * corresponding action - sets up yytext.
+ * corresponding action - sets up tmlqcdtext.
  */
 #define YY_DO_BEFORE_ACTION \
 	(yytext_ptr) = yy_bp; \
-	yyleng = (size_t) (yy_cp - yy_bp); \
+	tmlqcdleng = (size_t) (yy_cp - yy_bp); \
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
@@ -2521,8 +2518,8 @@ static yyconst flex_int16_t yy_chk[5569] =
 static yy_state_type yy_last_accepting_state;
 static char *yy_last_accepting_cpos;
 
-extern int yy_flex_debug;
-int yy_flex_debug = 0;
+extern int tmlqcd_flex_debug;
+int tmlqcd_flex_debug = 0;
 
 /* The intent behind this definition is that it'll catch
  * any uses of REJECT which flex missed.
@@ -2531,7 +2528,7 @@ int yy_flex_debug = 0;
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-char *yytext;
+char *tmlqcdtext;
 #line 1 "read_input.l"
 /***********************************************************************
  * $Id$ 
@@ -2732,7 +2729,7 @@ char *yytext;
 
 
 
-#line 2736 "<stdout>"
+#line 2733 "<stdout>"
 
 #define INITIAL 0
 #define STARTCOND 1
@@ -2839,13 +2836,13 @@ static int yy_init_globals (void );
 
 #ifndef YY_SKIP_YYWRAP
 #ifdef __cplusplus
-extern "C" int yywrap (void );
+extern "C" int tmlqcdwrap (void );
 #else
-extern int yywrap (void );
+extern int tmlqcdwrap (void );
 #endif
 #endif
 
-//    static void yyunput (int c,char *buf_ptr  );
+    static void yyunput (int c,char *buf_ptr  );
     
 #ifndef yytext_ptr
 static void yy_flex_strncpy (char *,yyconst char *,int );
@@ -2857,11 +2854,11 @@ static int yy_flex_strlen (yyconst char * );
 
 #ifndef YY_NO_INPUT
 
-//#ifdef __cplusplus
-//static int yyinput (void );
-//#else
-//static int input (void );
-//#endif
+#ifdef __cplusplus
+static int yyinput (void );
+#else
+static int input (void );
+#endif
 
 #endif
 
@@ -2875,7 +2872,7 @@ static int yy_flex_strlen (yyconst char * );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
-#define ECHO (void) fwrite( yytext, yyleng, 1, yyout )
+#define ECHO (void) fwrite( tmlqcdtext, tmlqcdleng, 1, tmlqcdout )
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or YY_NULL,
@@ -2888,18 +2885,18 @@ static int yy_flex_strlen (yyconst char * );
 		int c = '*'; \
 		size_t n; \
 		for ( n = 0; n < max_size && \
-			     (c = getc( yyin )) != EOF && c != '\n'; ++n ) \
+			     (c = getc( tmlqcdin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
 		if ( c == '\n' ) \
 			buf[n++] = (char) c; \
-		if ( c == EOF && ferror( yyin ) ) \
+		if ( c == EOF && ferror( tmlqcdin ) ) \
 			YY_FATAL_ERROR( "input in flex scanner failed" ); \
 		result = n; \
 		} \
 	else \
 		{ \
 		errno=0; \
-		while ( (result = fread(buf, 1, max_size, yyin))==0 && ferror(yyin)) \
+		while ( (result = fread(buf, 1, max_size, tmlqcdin))==0 && ferror(tmlqcdin)) \
 			{ \
 			if( errno != EINTR) \
 				{ \
@@ -2907,7 +2904,7 @@ static int yy_flex_strlen (yyconst char * );
 				break; \
 				} \
 			errno=0; \
-			clearerr(yyin); \
+			clearerr(tmlqcdin); \
 			} \
 		}\
 \
@@ -2940,12 +2937,12 @@ static int yy_flex_strlen (yyconst char * );
 #ifndef YY_DECL
 #define YY_DECL_IS_OURS 1
 
-extern int yylex (void);
+extern int tmlqcdlex (void);
 
-#define YY_DECL int yylex (void)
+#define YY_DECL int tmlqcdlex (void)
 #endif /* !YY_DECL */
 
-/* Code executed at the beginning of each rule, after yytext and yyleng
+/* Code executed at the beginning of each rule, after tmlqcdtext and tmlqcdleng
  * have been set up.
  */
 #ifndef YY_USER_ACTION
@@ -2958,9 +2955,9 @@ extern int yylex (void);
 #endif
 
 #define YY_RULE_SETUP \
-	if ( yyleng > 0 ) \
+	if ( tmlqcdleng > 0 ) \
 		YY_CURRENT_BUFFER_LVALUE->yy_at_bol = \
-				(yytext[yyleng - 1] == '\n'); \
+				(tmlqcdtext[tmlqcdleng - 1] == '\n'); \
 	YY_USER_ACTION
 
 /** The main scanner function which does all the work.
@@ -2973,7 +2970,7 @@ YY_DECL
     
 #line 221 "read_input.l"
 
-#line 2977 "<stdout>"
+#line 2974 "<stdout>"
 
 	if ( !(yy_init) )
 		{
@@ -2986,26 +2983,26 @@ YY_DECL
 		if ( ! (yy_start) )
 			(yy_start) = 1;	/* first start state */
 
-		if ( ! yyin )
-			yyin = stdin;
+		if ( ! tmlqcdin )
+			tmlqcdin = stdin;
 
-		if ( ! yyout )
-			yyout = stdout;
+		if ( ! tmlqcdout )
+			tmlqcdout = stdout;
 
 		if ( ! YY_CURRENT_BUFFER ) {
-			yyensure_buffer_stack ();
+			tmlqcdensure_buffer_stack ();
 			YY_CURRENT_BUFFER_LVALUE =
-				yy_create_buffer(yyin,YY_BUF_SIZE );
+				tmlqcd_create_buffer(tmlqcdin,YY_BUF_SIZE );
 		}
 
-		yy_load_buffer_state( );
+		tmlqcd_load_buffer_state( );
 		}
 
 	while ( 1 )		/* loops until end-of-file is reached */
 		{
 		yy_cp = (yy_c_buf_p);
 
-		/* Support of yytext. */
+		/* Support of tmlqcdtext. */
 		*yy_cp = (yy_hold_char);
 
 		/* yy_bp points to the position in yy_ch_buf of the start of
@@ -3440,36 +3437,36 @@ YY_RULE_SETUP
   current_monomial++;
   mnl = &monomial_list[current_monomial];
   mnl->id = current_monomial;
-  if(strcmp(yytext, "DET")==0) {
+  if(strcmp(tmlqcdtext, "DET")==0) {
     mnl->type = DET;
     strcpy((*mnl).name, "DET");
   }
-  else if(strcmp(yytext, "DETRATIO")==0) {
+  else if(strcmp(tmlqcdtext, "DETRATIO")==0) {
     mnl->type = DETRATIO;
     strcpy((*mnl).name, "DETRATIO");
   }
-  else if(strcmp(yytext, "NDDETRATIO")==0) {
+  else if(strcmp(tmlqcdtext, "NDDETRATIO")==0) {
     mnl->type = NDDETRATIO;
     strcpy((*mnl).name, "NDDETRATIO");
     g_running_phmc = 1;
   }
-  else if(strcmp(yytext, "NDPOLY")==0) {
+  else if(strcmp(tmlqcdtext, "NDPOLY")==0) {
     mnl->type = NDPOLY;
     strcpy((*mnl).name, "NDPOLY");
     g_running_phmc = 1;
   }
-  else if(strcmp(yytext, "GAUGE")==0) {
+  else if(strcmp(tmlqcdtext, "GAUGE")==0) {
     mnl->type = GAUGE;
     mnl->gtype = 3;
     strcpy((*mnl).name, "GAUGE");
   }
-  else if(strcmp(yytext, "SFGAUGE")==0) {
+  else if(strcmp(tmlqcdtext, "SFGAUGE")==0) {
     mnl->type = SFGAUGE;
     mnl->gtype = 6;
     strcpy((*mnl).name, "SFGAUGE");
   }
   else {
-    fprintf(stderr, "Unknown monomial type %s in line %d\n", yytext, line_of_file);
+    fprintf(stderr, "Unknown monomial type %s in line %d\n", tmlqcdtext, line_of_file);
     exit(1);
   }
   if(!reread) {
@@ -3478,7 +3475,7 @@ YY_RULE_SETUP
       exit(1);
     }
   }
-  if(myverbose) printf("initialising monomial with type %s %d line %d\n", yytext, mnl->type, line_of_file);
+  if(myverbose) printf("initialising monomial with type %s %d line %d\n", tmlqcdtext, mnl->type, line_of_file);
   if(myverbose) printf("monomial has id %d\n", current_monomial);
 
   if(mnl->type == GAUGE) BEGIN(GAUGEMONOMIAL);
@@ -3497,7 +3494,7 @@ YY_RULE_SETUP
       if(myverbose) printf("  timescales set to %d line %d monomial %d since NDDETRATIO is not for MD evolution\n", a, line_of_file, current_monomial);
     }
     else {
-      sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+      sscanf(tmlqcdtext, " %[a-zA-Z] = %d", name, &a);
       mnl->timescale = a;
       if(myverbose) printf("  timescales set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
     }
@@ -3525,7 +3522,7 @@ case 81:
 YY_RULE_SETUP
 #line 378 "read_input.l"
 {
-    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu = c;
     if(myverbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -3534,7 +3531,7 @@ case 82:
 YY_RULE_SETUP
 #line 383 "read_input.l"
 {
-    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu2 = c;
     if(myverbose) printf("  2kappamu2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -3543,7 +3540,7 @@ case 83:
 YY_RULE_SETUP
 #line 388 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f", name, &c);
     mnl->kappa = c;
     if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -3552,7 +3549,7 @@ case 84:
 YY_RULE_SETUP
 #line 393 "read_input.l"
 {
-    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
     mnl->kappa2 = c;
     if(myverbose) printf("  Kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -3561,7 +3558,7 @@ case 85:
 YY_RULE_SETUP
 #line 398 "read_input.l"
 {
-    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mubar = c;
     if(myverbose) printf("  2kappamubar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -3570,7 +3567,7 @@ case 86:
 YY_RULE_SETUP
 #line 403 "read_input.l"
 {
-    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mubar2 = c;
     if(myverbose) printf("  2kappamubar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -3579,7 +3576,7 @@ case 87:
 YY_RULE_SETUP
 #line 408 "read_input.l"
 {
-    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
     mnl->epsbar = c;
     if(myverbose) printf("  2kappaepsbar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -3588,7 +3585,7 @@ case 88:
 YY_RULE_SETUP
 #line 413 "read_input.l"
 {
-    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
     mnl->epsbar2 = c;
     if(myverbose) printf("  2kappaepsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -3597,7 +3594,7 @@ case 89:
 YY_RULE_SETUP
 #line 418 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %d", name, &a);
     mnl->csg_N = a;
     if(myverbose) printf("  csg history length set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
@@ -3606,7 +3603,7 @@ case 90:
 YY_RULE_SETUP
 #line 423 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z2] = %d", name , &a);
+    sscanf(tmlqcdtext, " %[a-zA-Z2] = %d", name , &a);
     mnl->csg_N2 = a;
     if(myverbose) printf("  csg history2 length (for bicgstab) set to %d line %d monomial %d\n", 
                        a, line_of_file, current_monomial);
@@ -3616,7 +3613,7 @@ case 91:
 YY_RULE_SETUP
 #line 429 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     mnl->forceprec = c;
     if(myverbose) printf("  ForcePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -3625,7 +3622,7 @@ case 92:
 YY_RULE_SETUP
 #line 434 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     mnl->accprec = c;
     if(myverbose) printf("  AcceptancePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -3634,7 +3631,7 @@ case 93:
 YY_RULE_SETUP
 #line 439 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %d", name, &a);
     mnl->maxiter = a;
     if(myverbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
@@ -3673,7 +3670,7 @@ case 98:
 YY_RULE_SETUP
 #line 460 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     mnl->beta = c;
     g_beta = c;
     if(myverbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -3683,7 +3680,7 @@ case 99:
 YY_RULE_SETUP
 #line 466 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1 = c;
     g_rgi_C1 = c;
     if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -3734,7 +3731,7 @@ case 105:
 YY_RULE_SETUP
 #line 494 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     mnl->beta = c;
     g_beta = c;
     if(myverbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -3744,7 +3741,7 @@ case 106:
 YY_RULE_SETUP
 #line 500 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1 = c;
     g_rgi_C1 = c;
     if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -3754,7 +3751,7 @@ case 107:
 YY_RULE_SETUP
 #line 506 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     mnl->eta = c;
     g_eta = c;
     if(myverbose) printf("  eta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -3764,7 +3761,7 @@ case 108:
 YY_RULE_SETUP
 #line 512 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     mnl->ct = c;
     g_Ct = c;
     if(myverbose) printf("  PlaquetteCoefficientT ct set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -3774,7 +3771,7 @@ case 109:
 YY_RULE_SETUP
 #line 518 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     mnl->cs = c;
     g_Cs = c;
     if(myverbose) printf("  PlaquetteCoefficientS cs set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -3784,7 +3781,7 @@ case 110:
 YY_RULE_SETUP
 #line 524 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1ss = c;
     g_C1ss = c;
     if(myverbose) printf("  RectangleCoefficientSS c1ss set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -3794,7 +3791,7 @@ case 111:
 YY_RULE_SETUP
 #line 530 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1tss = c;
     g_C1tss = c;
     if(myverbose) printf("  RectangleCoefficientTSS c1tss set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -3804,7 +3801,7 @@ case 112:
 YY_RULE_SETUP
 #line 536 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1tts = c;
     g_C1tts = c;
     if(myverbose) printf("  RectangleCoefficientTTS c1tts set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -3832,7 +3829,7 @@ case 115:
 YY_RULE_SETUP
 #line 554 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     stilde_max = c;
     if(myverbose!=0) printf("  Stilde max set to %e line %d monomial %d\n", stilde_max, line_of_file, current_monomial);
   }
@@ -3841,7 +3838,7 @@ case 116:
 YY_RULE_SETUP
 #line 559 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     stilde_min = c;
     if(myverbose!=0) printf("  Stilde min set to %e line %d monomial %d\n", stilde_min, line_of_file, current_monomial);
   }
@@ -3850,7 +3847,7 @@ case 117:
 YY_RULE_SETUP
 #line 564 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %d", name, &a);
     degree_of_p = a;
     if(myverbose!=0) printf("  Degree of MD polynomial set to %d line %d monomial %d\n", degree_of_p, line_of_file, current_monomial);
   }
@@ -3859,7 +3856,7 @@ case 118:
 YY_RULE_SETUP
 #line 569 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     g_acc_Ptilde = c;
     if(myverbose!=0) printf("  Precision for Ptilde set to %e line %d monomial %d\n", g_acc_Ptilde, line_of_file, current_monomial);
   }
@@ -3868,7 +3865,7 @@ case 119:
 YY_RULE_SETUP
 #line 574 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
     g_acc_Hfin = c;
     if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", g_acc_Hfin, line_of_file, current_monomial);
   }
@@ -3877,7 +3874,7 @@ case 120:
 YY_RULE_SETUP
 #line 579 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %d", name, &a);
     g_rec_ev = a;
     if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", g_acc_Hfin, line_of_file, current_monomial);
   }
@@ -3903,8 +3900,8 @@ case 123:
 YY_RULE_SETUP
 #line 594 "read_input.l"
 {
-  if(myverbose) printf("  monomial named \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
-  strcpy((*mnl).name, yytext);
+  if(myverbose) printf("  monomial named \"%s\" line %d monomial %d\n", tmlqcdtext, line_of_file, current_monomial);
+  strcpy((*mnl).name, tmlqcdtext);
   BEGIN(name_caller);
 }
 	YY_BREAK
@@ -3913,7 +3910,7 @@ case 124:
 YY_RULE_SETUP
 #line 601 "read_input.l"
 {
-    if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", tmlqcdtext, line_of_file, current_monomial);
     mnl->solver = 1;
     BEGIN(DETMONOMIAL);
   }
@@ -3922,7 +3919,7 @@ case 125:
 YY_RULE_SETUP
 #line 606 "read_input.l"
 {
-    if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", tmlqcdtext, line_of_file, current_monomial);
     mnl->solver = 0;
     BEGIN(DETMONOMIAL);
   }
@@ -4026,7 +4023,7 @@ YY_RULE_SETUP
 #line 676 "read_input.l"
 {
     type = (char*)malloc(100*sizeof(char));
-    sscanf(yytext, " %[a-zA-Z]%d = %s", name, &a, type);
+    sscanf(tmlqcdtext, " %[a-zA-Z]%d = %s", name, &a, type);
     if(strcmp(type, "LEAPFROG")==0) {
       Integrator.type[a] = LEAPFROG;
     }
@@ -4037,7 +4034,7 @@ YY_RULE_SETUP
       Integrator.type[a] = MN2p;
     }
     else {
-      fprintf(stderr, "Unknown integrator type %s in line %d\n", yytext, line_of_file);
+      fprintf(stderr, "Unknown integrator type %s in line %d\n", tmlqcdtext, line_of_file);
       exit(1);
     }
 
@@ -4049,7 +4046,7 @@ case 135:
 YY_RULE_SETUP
 #line 696 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z]%d = %d", name, &a, &b);
+    sscanf(tmlqcdtext, " %[a-zA-Z]%d = %d", name, &a, &b);
     if(myverbose) printf("  timescale %d steps=%d line %d\n", a, b, line_of_file);
     Integrator.n_int[a] = b;
     BEGIN(INTEGRATOR);
@@ -4059,7 +4056,7 @@ case 136:
 YY_RULE_SETUP
 #line 702 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z]%d = %f", name, &a, &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z]%d = %f", name, &a, &c);
     Integrator.lambda[a] = c;
     if(myverbose) printf("  timescale %d Lambda=%f line %d\n", a, c, line_of_file);
     BEGIN(INTEGRATOR);
@@ -4069,7 +4066,7 @@ case 137:
 YY_RULE_SETUP
 #line 708 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %d", name, &a);
     if(myverbose) printf("  Number of timescales set to %d line %d\n", a, line_of_file);
     if(a > 10) {
       if(g_proc_id == 0) fprintf(stderr, "maximal number of timescales is 10! Aborting...!\n");
@@ -4083,7 +4080,7 @@ case 138:
 YY_RULE_SETUP
 #line 718 "read_input.l"
 {
-    sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %f", name, &c);
     if(myverbose) printf("  tau set to %e line %d\n", c, line_of_file);
     Integrator.tau = c;
     BEGIN(INTEGRATOR);
@@ -4107,8 +4104,8 @@ YY_RULE_SETUP
 #line 734 "read_input.l"
 {
 #ifndef FIXEDVOLUME
-  T_global = atoi(yytext);
-  if(myverbose!=0) printf("T =%s\n", yytext);
+  T_global = atoi(tmlqcdtext);
+  if(myverbose!=0) printf("T =%s\n", tmlqcdtext);
 #endif
 }
 	YY_BREAK
@@ -4117,8 +4114,8 @@ YY_RULE_SETUP
 #line 740 "read_input.l"
 {
 #ifndef FIXEDVOLUME
-  L = atoi(yytext);
-  if(myverbose!=0) printf("L =%s\n", yytext);
+  L = atoi(tmlqcdtext);
+  if(myverbose!=0) printf("L =%s\n", tmlqcdtext);
 #endif
 }
 	YY_BREAK
@@ -4127,8 +4124,8 @@ YY_RULE_SETUP
 #line 746 "read_input.l"
 {
 #ifndef FIXEDVOLUME
-  LX = atoi(yytext);
-  if(myverbose!=0) printf("LX =%s\n", yytext);
+  LX = atoi(tmlqcdtext);
+  if(myverbose!=0) printf("LX =%s\n", tmlqcdtext);
 #endif
 }
 	YY_BREAK
@@ -4137,8 +4134,8 @@ YY_RULE_SETUP
 #line 752 "read_input.l"
 {
 #ifndef FIXEDVOLUME
-  LY = atoi(yytext);
-  if(myverbose!=0) printf("LY =%s\n", yytext);
+  LY = atoi(tmlqcdtext);
+  if(myverbose!=0) printf("LY =%s\n", tmlqcdtext);
 #endif
 }
 	YY_BREAK
@@ -4147,8 +4144,8 @@ YY_RULE_SETUP
 #line 758 "read_input.l"
 {
 #ifndef FIXEDVOLUME
-  LZ = atoi(yytext);
-  if(myverbose!=0) printf("LZ =%s\n", yytext);
+  LZ = atoi(tmlqcdtext);
+  if(myverbose!=0) printf("LZ =%s\n", tmlqcdtext);
 #endif
 }
 	YY_BREAK
@@ -4156,8 +4153,8 @@ case 145:
 YY_RULE_SETUP
 #line 764 "read_input.l"
 {
-  g_Tbsf = atoi(yytext);
-  if(myverbose!=0) printf("g_Tbsf =%s\n", yytext);
+  g_Tbsf = atoi(tmlqcdtext);
+  if(myverbose!=0) printf("g_Tbsf =%s\n", tmlqcdtext);
 }
 	YY_BREAK
 case 146:
@@ -4165,8 +4162,8 @@ YY_RULE_SETUP
 #line 768 "read_input.l"
 {
 #ifndef FIXEDVOLUME
-  N_PROC_X = atoi(yytext);
-  if(myverbose!=0) printf("Nr of processors in x direction = %s\n", yytext);
+  N_PROC_X = atoi(tmlqcdtext);
+  if(myverbose!=0) printf("Nr of processors in x direction = %s\n", tmlqcdtext);
 #endif
 }
 	YY_BREAK
@@ -4175,8 +4172,8 @@ YY_RULE_SETUP
 #line 774 "read_input.l"
 {
 #ifndef FIXEDVOLUME
-  N_PROC_Y = atoi(yytext);
-  if(myverbose!=0) printf("Nr of processors in y direction = %s\n", yytext);
+  N_PROC_Y = atoi(tmlqcdtext);
+  if(myverbose!=0) printf("Nr of processors in y direction = %s\n", tmlqcdtext);
 #endif
 }
 	YY_BREAK
@@ -4185,8 +4182,8 @@ YY_RULE_SETUP
 #line 780 "read_input.l"
 {
 #ifndef FIXEDVOLUME
-  N_PROC_Z = atoi(yytext);
-  if(myverbose!=0) printf("Nr of processors in z direction = %s\n", yytext);
+  N_PROC_Z = atoi(tmlqcdtext);
+  if(myverbose!=0) printf("Nr of processors in z direction = %s\n", tmlqcdtext);
 #endif
 }
 	YY_BREAK
@@ -4194,15 +4191,15 @@ case 149:
 YY_RULE_SETUP
 #line 786 "read_input.l"
 {
-  random_seed=atoi(yytext);
-  if(myverbose!=0) printf("seed=%s \n", yytext);
+  random_seed=atoi(tmlqcdtext);
+  if(myverbose!=0) printf("seed=%s \n", tmlqcdtext);
 }
 	YY_BREAK
 case 150:
 YY_RULE_SETUP
 #line 790 "read_input.l"
 {
-  rlxd_level = atoi(yytext);
+  rlxd_level = atoi(tmlqcdtext);
   if(myverbose!=0) printf("RanluxdLevel set to %d \n", rlxd_level);
 }
 	YY_BREAK
@@ -4210,32 +4207,32 @@ case 151:
 YY_RULE_SETUP
 #line 794 "read_input.l"
 {
-  g_kappa=atof(yytext);
-  if(myverbose!=0) printf("kappa=%s \n", yytext);
+  g_kappa=atof(tmlqcdtext);
+  if(myverbose!=0) printf("kappa=%s \n", tmlqcdtext);
 }
 	YY_BREAK
 case 152:
 YY_RULE_SETUP
 #line 798 "read_input.l"
 {
-  g_mubar=atof(yytext);
-  if(myverbose!=0) printf("2 kappa mubar=%s \n", yytext);
+  g_mubar=atof(tmlqcdtext);
+  if(myverbose!=0) printf("2 kappa mubar=%s \n", tmlqcdtext);
 }
 	YY_BREAK
 case 153:
 YY_RULE_SETUP
 #line 802 "read_input.l"
 {
-  g_epsbar=atof(yytext);
-  if(myverbose!=0) printf("2 kappa epsbar=%s \n", yytext);
+  g_epsbar=atof(tmlqcdtext);
+  if(myverbose!=0) printf("2 kappa epsbar=%s \n", tmlqcdtext);
 }
 	YY_BREAK
 case 154:
 YY_RULE_SETUP
 #line 806 "read_input.l"
 {
-  g_mu1=atof(yytext);
-  if(myverbose!=0) printf("2 kappa mu=%s \n", yytext);
+  g_mu1=atof(tmlqcdtext);
+  if(myverbose!=0) printf("2 kappa mu=%s \n", tmlqcdtext);
 }
 	YY_BREAK
 case 155:
@@ -4243,7 +4240,7 @@ YY_RULE_SETUP
 #line 810 "read_input.l"
 {
   startoption=0; 
-  if(myverbose!=0) printf("Start Condition is %s \n",yytext);
+  if(myverbose!=0) printf("Start Condition is %s \n",tmlqcdtext);
 }
 	YY_BREAK
 
@@ -4252,7 +4249,7 @@ YY_RULE_SETUP
 #line 815 "read_input.l"
 {
     startoption=1;
-    if(myverbose!=0) printf("Start Condition is %s \n",yytext);
+    if(myverbose!=0) printf("Start Condition is %s \n",tmlqcdtext);
   }
 	YY_BREAK
 case 157:
@@ -4260,7 +4257,7 @@ YY_RULE_SETUP
 #line 819 "read_input.l"
 {
     startoption=2;
-    if(myverbose!=0) printf("Start Condition is %s \n",yytext);
+    if(myverbose!=0) printf("Start Condition is %s \n",tmlqcdtext);
   }
 	YY_BREAK
 case 158:
@@ -4268,7 +4265,7 @@ YY_RULE_SETUP
 #line 823 "read_input.l"
 {
     startoption=3;
-    if(myverbose!=0) printf("Start Condition is %s \n",yytext);
+    if(myverbose!=0) printf("Start Condition is %s \n",tmlqcdtext);
   }
 	YY_BREAK
 
@@ -4276,24 +4273,24 @@ case 159:
 YY_RULE_SETUP
 #line 828 "read_input.l"
 {
-  Ntherm=atoi(yytext);
-  if(myverbose!=0) printf("Nterm= %s \n",yytext);
+  Ntherm=atoi(tmlqcdtext);
+  if(myverbose!=0) printf("Nterm= %s \n",tmlqcdtext);
 }
 	YY_BREAK
 case 160:
 YY_RULE_SETUP
 #line 832 "read_input.l"
 {
-  Nmeas=atoi(yytext); 
-  if(myverbose!=0) printf("Nmeas= %s \n",yytext);
+  Nmeas=atoi(tmlqcdtext); 
+  if(myverbose!=0) printf("Nmeas= %s \n",tmlqcdtext);
 }
 	YY_BREAK
 case 161:
 YY_RULE_SETUP
 #line 836 "read_input.l"
 {
-  Nsave=atoi(yytext);
-  if(myverbose!=0) printf("Nsave= %s \n",yytext);
+  Nsave=atoi(tmlqcdtext);
+  if(myverbose!=0) printf("Nsave= %s \n",tmlqcdtext);
 }
 	YY_BREAK
 
@@ -4408,7 +4405,7 @@ case 175:
 YY_RULE_SETUP
 #line 896 "read_input.l"
 {
-  gmres_m_parameter = atoi(yytext);
+  gmres_m_parameter = atoi(tmlqcdtext);
   if(myverbose!=0) printf("Use Krylov Space of size %d in GMRES \n", gmres_m_parameter);
 }
 	YY_BREAK
@@ -4416,7 +4413,7 @@ case 176:
 YY_RULE_SETUP
 #line 900 "read_input.l"
 {
-  gmresdr_nr_ev = atoi(yytext);
+  gmresdr_nr_ev = atoi(tmlqcdtext);
   if(myverbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
 }
 	YY_BREAK
@@ -4424,7 +4421,7 @@ case 177:
 YY_RULE_SETUP
 #line 904 "read_input.l"
 {
-  g_no_extra_masses = atoi(yytext);
+  g_no_extra_masses = atoi(tmlqcdtext);
   if(myverbose!=0) printf("Number of extra MMS masses set to %d\n", g_no_extra_masses);
 }
 	YY_BREAK
@@ -4432,7 +4429,7 @@ case 178:
 YY_RULE_SETUP
 #line 908 "read_input.l"
 {
-  g_N_s = atoi(yytext);
+  g_N_s = atoi(tmlqcdtext);
   if(myverbose!=0) printf("Deflation subspace dimension set to %d \n", g_N_s);
 }
 	YY_BREAK
@@ -4463,7 +4460,7 @@ case 182:
 YY_RULE_SETUP
 #line 923 "read_input.l"
 {
-  max_solver_iterations = atoi(yytext);
+  max_solver_iterations = atoi(tmlqcdtext);
   if(myverbose!=0) printf("Use %d iterations in the solvers!\n", max_solver_iterations);
 }
 	YY_BREAK
@@ -4471,7 +4468,7 @@ case 183:
 YY_RULE_SETUP
 #line 927 "read_input.l"
 {
-  solver_precision = atof(yytext);
+  solver_precision = atof(tmlqcdtext);
   if(myverbose!=0) printf("Use %e as convergence precision for the solvers!\n", solver_precision);
 }
 	YY_BREAK
@@ -4495,24 +4492,24 @@ case 186:
 YY_RULE_SETUP
 #line 939 "read_input.l"
 {
-  cp_interval=atoi(yytext);
-  if(myverbose!=0) printf("Write Checkpoint all %s measurements\n",yytext);
+  cp_interval=atoi(tmlqcdtext);
+  if(myverbose!=0) printf("Write Checkpoint all %s measurements\n",tmlqcdtext);
 }
 	YY_BREAK
 case 187:
 YY_RULE_SETUP
 #line 943 "read_input.l"
 {
-  strcpy(gauge_input_filename,yytext);
-  if(myverbose!=0) printf("Gauge Configuration input filename set to %s\n",yytext);
+  strcpy(gauge_input_filename,tmlqcdtext);
+  if(myverbose!=0) printf("Gauge Configuration input filename set to %s\n",tmlqcdtext);
 }
 	YY_BREAK
 case 188:
 YY_RULE_SETUP
 #line 947 "read_input.l"
 {
-  nstore=atoi(yytext);
-  if(myverbose!=0) printf("Initial store counter set to %s\n",yytext);
+  nstore=atoi(tmlqcdtext);
+  if(myverbose!=0) printf("Initial store counter set to %s\n",tmlqcdtext);
 }
 	YY_BREAK
 case 189:
@@ -4543,28 +4540,28 @@ case 192:
 YY_RULE_SETUP
 #line 963 "read_input.l"
 {
-  g_stdio_proc = atoi(yytext);
-  if(myverbose!=0) printf("processor %s will give output to stdout\n", yytext);
+  g_stdio_proc = atoi(tmlqcdtext);
+  if(myverbose!=0) printf("processor %s will give output to stdout\n", tmlqcdtext);
 }
 	YY_BREAK
 case 193:
 YY_RULE_SETUP
 #line 967 "read_input.l"
 {
-  index_start = atoi(yytext);
+  index_start = atoi(tmlqcdtext);
   index_end = index_start+1;
   if((index_start < 0)||(index_start >99)){
     printf("Error in line %d! index_start must be in [0,99]! Exiting...!\n", line_of_file);
     exit(1);
   }
-  if(myverbose!=0) printf("inverting for index %s\n", yytext);
+  if(myverbose!=0) printf("inverting for index %s\n", tmlqcdtext);
 }
 	YY_BREAK
 case 194:
 YY_RULE_SETUP
 #line 976 "read_input.l"
 {
-  sscanf(yytext, "-%d", &index_end);
+  sscanf(tmlqcdtext, "-%d", &index_end);
   if((index_end < 0)||(index_end >99)){
     printf("Error in line %d! index_end must be in [0,99]! Exiting...!\n", line_of_file);
     exit(1);
@@ -4577,7 +4574,7 @@ case 195:
 YY_RULE_SETUP
 #line 985 "read_input.l"
 {
-  ITER_MAX_BCG = atoi(yytext);
+  ITER_MAX_BCG = atoi(tmlqcdtext);
   if(myverbose != 0) printf("Maximal number of iterations for BCGstab set ro %d\n", ITER_MAX_BCG);
 }
 	YY_BREAK
@@ -4585,7 +4582,7 @@ case 196:
 YY_RULE_SETUP
 #line 989 "read_input.l"
 {
-  ITER_MAX_CG = atoi(yytext);
+  ITER_MAX_CG = atoi(tmlqcdtext);
   if(myverbose != 0) printf("Maximal number of iterations for CG set ro %d\n", ITER_MAX_CG);
 }
 	YY_BREAK
@@ -4593,7 +4590,7 @@ case 197:
 YY_RULE_SETUP
 #line 993 "read_input.l"
 {
-  X0 = atof(yytext);
+  X0 = atof(tmlqcdtext);
   if(myverbose != 0) printf("X0 for boundary cond. in time set to %e\n", X0);
 }
 	YY_BREAK
@@ -4601,7 +4598,7 @@ case 198:
 YY_RULE_SETUP
 #line 997 "read_input.l"
 {
-  X1 = atof(yytext);
+  X1 = atof(tmlqcdtext);
   if(myverbose != 0) printf("X1 for boundary cond. in time set to %e\n", X0);
 }
 	YY_BREAK
@@ -4609,7 +4606,7 @@ case 199:
 YY_RULE_SETUP
 #line 1001 "read_input.l"
 {
-  X2 = atof(yytext);
+  X2 = atof(tmlqcdtext);
   if(myverbose != 0) printf("X2 for boundary cond. in time set to %e\n", X0);
 }
 	YY_BREAK
@@ -4617,7 +4614,7 @@ case 200:
 YY_RULE_SETUP
 #line 1005 "read_input.l"
 {
-  X3 = atof(yytext);
+  X3 = atof(tmlqcdtext);
   if(myverbose != 0) printf("X3 for boundary cond. in time set to %e\n", X0);
 }
 	YY_BREAK
@@ -4641,8 +4638,8 @@ case 203:
 YY_RULE_SETUP
 #line 1017 "read_input.l"
 {
-  strcpy(source_input_filename,yytext);
-  if(myverbose!=0) printf("source input filename set to %s\n",yytext);
+  strcpy(source_input_filename,tmlqcdtext);
+  if(myverbose!=0) printf("source input filename set to %s\n",tmlqcdtext);
 }
 	YY_BREAK
 case 204:
@@ -4673,8 +4670,8 @@ case 207:
 YY_RULE_SETUP
 #line 1033 "read_input.l"
 {
-  source_time_slice = atoi(yytext);
-  if(myverbose!=0) printf("Using only timeslice %s of the source, padding the rest with zeros\n", yytext);
+  source_time_slice = atoi(tmlqcdtext);
+  if(myverbose!=0) printf("Using only timeslice %s of the source, padding the rest with zeros\n", tmlqcdtext);
 }
 	YY_BREAK
 case 208:
@@ -4713,7 +4710,7 @@ case 212:
 YY_RULE_SETUP
 #line 1053 "read_input.l"
 {
-  return_check_interval = atoi(yytext);
+  return_check_interval = atoi(tmlqcdtext);
   if(myverbose!=0) printf("Check reversibility all %d trajectories\n", return_check_interval);
 }
 	YY_BREAK
@@ -4721,7 +4718,7 @@ case 213:
 YY_RULE_SETUP
 #line 1057 "read_input.l"
 {
-  g_debug_level = atoi(yytext);
+  g_debug_level = atoi(tmlqcdtext);
   if(myverbose!=0) printf("Debug level = %d\n", g_debug_level);
 }
 	YY_BREAK
@@ -4825,7 +4822,7 @@ case 226:
 YY_RULE_SETUP
 #line 1109 "read_input.l"
 {
-  stout_rho=atof(yytext);
+  stout_rho=atof(tmlqcdtext);
   if(myverbose!=0) printf("use stout rho=%e!\n", stout_rho);
 }
 	YY_BREAK
@@ -4833,7 +4830,7 @@ case 227:
 YY_RULE_SETUP
 #line 1113 "read_input.l"
 {
-  stout_no_iter=atoi(yytext);
+  stout_no_iter=atoi(tmlqcdtext);
   if(myverbose!=0) printf("make %d stout iterations!\n", stout_no_iter);
 }
 	YY_BREAK
@@ -4897,15 +4894,15 @@ case 235:
 YY_RULE_SETUP
 #line 1145 "read_input.l"
 {
-  source_location=atoi(yytext);
-  if(myverbose!=0) printf("source_location = %s\n",yytext);
+  source_location=atoi(tmlqcdtext);
+  if(myverbose!=0) printf("source_location = %s\n",tmlqcdtext);
 }
 	YY_BREAK
 case 236:
 YY_RULE_SETUP
 #line 1149 "read_input.l"
 {
-  eigenvalue_precision = atof(yytext);
+  eigenvalue_precision = atof(tmlqcdtext);
   if(myverbose!=0) printf("precision for eigenvalues = %e\n", eigenvalue_precision);
 }
 	YY_BREAK
@@ -4913,7 +4910,7 @@ case 237:
 YY_RULE_SETUP
 #line 1153 "read_input.l"
 {
-  no_eigenvalues = atoi(yytext);
+  no_eigenvalues = atoi(tmlqcdtext);
   if(myverbose!=0) printf("no of eigenvalues = %d\n", no_eigenvalues);
 }
 	YY_BREAK
@@ -5033,8 +5030,8 @@ case 252:
 YY_RULE_SETUP
 #line 1213 "read_input.l"
 {
-  online_measurement_freq = atoi(yytext);
-  if(myverbose!=0) fprintf(stderr, "Frequency for online measurements set to %s\n", yytext);
+  online_measurement_freq = atoi(tmlqcdtext);
+  if(myverbose!=0) fprintf(stderr, "Frequency for online measurements set to %s\n", tmlqcdtext);
 }
 	YY_BREAK
 case 253:
@@ -5057,7 +5054,7 @@ case 255:
 YY_RULE_SETUP
 #line 1225 "read_input.l"
 {
-  reweighting_samples = atoi(yytext);
+  reweighting_samples = atoi(tmlqcdtext);
   if(myverbose!=0) fprintf(stderr, "Number of reweighting samples set to %d\n", reweighting_samples);
 }
 	YY_BREAK
@@ -5121,7 +5118,7 @@ YY_RULE_SETUP
 #line 1260 "read_input.l"
 ECHO;
 	YY_BREAK
-#line 5125 "<stdout>"
+#line 5122 "<stdout>"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(STARTCOND):
 case YY_STATE_EOF(THERMSWEEPS):
@@ -5221,15 +5218,15 @@ case YY_STATE_EOF(ERROR):
 			{
 			/* We're scanning a new file or input source.  It's
 			 * possible that this happened because the user
-			 * just pointed yyin at a new source and called
-			 * yylex().  If so, then we have to assure
+			 * just pointed tmlqcdin at a new source and called
+			 * tmlqcdlex().  If so, then we have to assure
 			 * consistency between YY_CURRENT_BUFFER and our
 			 * globals.  Here is the right place to do so, because
 			 * this is the first action (other than possibly a
 			 * back-up) that will match for the new input source.
 			 */
 			(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_n_chars;
-			YY_CURRENT_BUFFER_LVALUE->yy_input_file = yyin;
+			YY_CURRENT_BUFFER_LVALUE->yy_input_file = tmlqcdin;
 			YY_CURRENT_BUFFER_LVALUE->yy_buffer_status = YY_BUFFER_NORMAL;
 			}
 
@@ -5283,11 +5280,11 @@ case YY_STATE_EOF(ERROR):
 				{
 				(yy_did_buffer_switch_on_eof) = 0;
 
-				if ( yywrap( ) )
+				if ( tmlqcdwrap( ) )
 					{
 					/* Note: because we've taken care in
 					 * yy_get_next_buffer() to have set up
-					 * yytext, we can now set up
+					 * tmlqcdtext, we can now set up
 					 * yy_c_buf_p so that if some total
 					 * hoser (like flex itself) wants to
 					 * call the scanner after we return the
@@ -5336,7 +5333,7 @@ case YY_STATE_EOF(ERROR):
 			"fatal flex scanner internal error--no action found" );
 	} /* end of action switch */
 		} /* end of scanning one token */
-} /* end of yylex */
+} /* end of tmlqcdlex */
 
 /* yy_get_next_buffer - try to read in a new buffer
  *
@@ -5414,7 +5411,7 @@ static int yy_get_next_buffer (void)
 
 				b->yy_ch_buf = (char *)
 					/* Include room in for 2 EOB chars. */
-					yyrealloc((void *) b->yy_ch_buf,b->yy_buf_size + 2  );
+					tmlqcdrealloc((void *) b->yy_ch_buf,b->yy_buf_size + 2  );
 				}
 			else
 				/* Can't grow it, we don't own it. */
@@ -5436,7 +5433,7 @@ static int yy_get_next_buffer (void)
 
 		/* Read in more data. */
 		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
-			(yy_n_chars), (size_t) num_to_read );
+			(yy_n_chars), num_to_read );
 
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars = (yy_n_chars);
 		}
@@ -5446,7 +5443,7 @@ static int yy_get_next_buffer (void)
 		if ( number_to_move == YY_MORE_ADJ )
 			{
 			ret_val = EOB_ACT_END_OF_FILE;
-			yyrestart(yyin  );
+			tmlqcdrestart(tmlqcdin  );
 			}
 
 		else
@@ -5527,150 +5524,150 @@ static int yy_get_next_buffer (void)
 	return yy_is_jam ? 0 : yy_current_state;
 }
 
-//static void yyunput (int c, register char * yy_bp )
-//{
-//	register char *yy_cp;
-//
-//    yy_cp = (yy_c_buf_p);
-//
-//	/* undo effects of setting up yytext */
-//	*yy_cp = (yy_hold_char);
-//
-//	if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
-//		{ /* need to shift things up to make room */
-//		/* +2 for EOB chars. */
-//		register int number_to_move = (yy_n_chars) + 2;
-//		register char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
-//					YY_CURRENT_BUFFER_LVALUE->yy_buf_size + 2];
-//		register char *source =
-//				&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move];
-//
-//		while ( source > YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
-//			*--dest = *--source;
-//
-//		yy_cp += (int) (dest - source);
-//		yy_bp += (int) (dest - source);
-//		YY_CURRENT_BUFFER_LVALUE->yy_n_chars =
-//			(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_buf_size;
-//
-//		if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
-//			YY_FATAL_ERROR( "flex scanner push-back overflow" );
-//		}
-//
-//	*--yy_cp = (char) c;
-//
-//	(yytext_ptr) = yy_bp;
-//	(yy_hold_char) = *yy_cp;
-//	(yy_c_buf_p) = yy_cp;
-//}
+    static void yyunput (int c, register char * yy_bp )
+{
+	register char *yy_cp;
+    
+    yy_cp = (yy_c_buf_p);
 
-//#ifndef YY_NO_INPUT
-//#ifdef __cplusplus
-//    static int yyinput (void)
-//#else
-//    static int input  (void)
-//#endif
-//
-//{
-//	int c;
-//
-//	*(yy_c_buf_p) = (yy_hold_char);
-//
-//	if ( *(yy_c_buf_p) == YY_END_OF_BUFFER_CHAR )
-//		{
-//		/* yy_c_buf_p now points to the character we want to return.
-//		 * If this occurs *before* the EOB characters, then it's a
-//		 * valid NUL; if not, then we've hit the end of the buffer.
-//		 */
-//		if ( (yy_c_buf_p) < &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[(yy_n_chars)] )
-//			/* This was really a NUL. */
-//			*(yy_c_buf_p) = '\0';
-//
-//		else
-//			{ /* need more input */
-//			int offset = (yy_c_buf_p) - (yytext_ptr);
-//			++(yy_c_buf_p);
-//
-//			switch ( yy_get_next_buffer(  ) )
-//				{
-//				case EOB_ACT_LAST_MATCH:
-//					/* This happens because yy_g_n_b()
-//					 * sees that we've accumulated a
-//					 * token and flags that we need to
-//					 * try matching the token before
-//					 * proceeding.  But for input(),
-//					 * there's no matching to consider.
-//					 * So convert the EOB_ACT_LAST_MATCH
-//					 * to EOB_ACT_END_OF_FILE.
-//					 */
-//
-//					/* Reset buffer status. */
-//					yyrestart(yyin );
-//
-//					/*FALLTHROUGH*/
-//
-//				case EOB_ACT_END_OF_FILE:
-//					{
-//					if ( yywrap( ) )
-//						return EOF;
-//
-//					if ( ! (yy_did_buffer_switch_on_eof) )
-//						YY_NEW_FILE;
-//#ifdef __cplusplus
-//					return yyinput();
-//#else
-//					return input();
-//#endif
-//					}
-//
-//				case EOB_ACT_CONTINUE_SCAN:
-//					(yy_c_buf_p) = (yytext_ptr) + offset;
-//					break;
-//				}
-//			}
-//		}
-//
-//	c = *(unsigned char *) (yy_c_buf_p);	/* cast for 8-bit char's */
-//	*(yy_c_buf_p) = '\0';	/* preserve yytext */
-//	(yy_hold_char) = *++(yy_c_buf_p);
-//
-//	YY_CURRENT_BUFFER_LVALUE->yy_at_bol = (c == '\n');
-//
-//	return c;
-//}
-//#endif	/* ifndef YY_NO_INPUT */
+	/* undo effects of setting up tmlqcdtext */
+	*yy_cp = (yy_hold_char);
+
+	if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
+		{ /* need to shift things up to make room */
+		/* +2 for EOB chars. */
+		register int number_to_move = (yy_n_chars) + 2;
+		register char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
+					YY_CURRENT_BUFFER_LVALUE->yy_buf_size + 2];
+		register char *source =
+				&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move];
+
+		while ( source > YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
+			*--dest = *--source;
+
+		yy_cp += (int) (dest - source);
+		yy_bp += (int) (dest - source);
+		YY_CURRENT_BUFFER_LVALUE->yy_n_chars =
+			(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_buf_size;
+
+		if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
+			YY_FATAL_ERROR( "flex scanner push-back overflow" );
+		}
+
+	*--yy_cp = (char) c;
+
+	(yytext_ptr) = yy_bp;
+	(yy_hold_char) = *yy_cp;
+	(yy_c_buf_p) = yy_cp;
+}
+
+#ifndef YY_NO_INPUT
+#ifdef __cplusplus
+    static int yyinput (void)
+#else
+    static int input  (void)
+#endif
+
+{
+	int c;
+    
+	*(yy_c_buf_p) = (yy_hold_char);
+
+	if ( *(yy_c_buf_p) == YY_END_OF_BUFFER_CHAR )
+		{
+		/* yy_c_buf_p now points to the character we want to return.
+		 * If this occurs *before* the EOB characters, then it's a
+		 * valid NUL; if not, then we've hit the end of the buffer.
+		 */
+		if ( (yy_c_buf_p) < &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[(yy_n_chars)] )
+			/* This was really a NUL. */
+			*(yy_c_buf_p) = '\0';
+
+		else
+			{ /* need more input */
+			int offset = (yy_c_buf_p) - (yytext_ptr);
+			++(yy_c_buf_p);
+
+			switch ( yy_get_next_buffer(  ) )
+				{
+				case EOB_ACT_LAST_MATCH:
+					/* This happens because yy_g_n_b()
+					 * sees that we've accumulated a
+					 * token and flags that we need to
+					 * try matching the token before
+					 * proceeding.  But for input(),
+					 * there's no matching to consider.
+					 * So convert the EOB_ACT_LAST_MATCH
+					 * to EOB_ACT_END_OF_FILE.
+					 */
+
+					/* Reset buffer status. */
+					tmlqcdrestart(tmlqcdin );
+
+					/*FALLTHROUGH*/
+
+				case EOB_ACT_END_OF_FILE:
+					{
+					if ( tmlqcdwrap( ) )
+						return EOF;
+
+					if ( ! (yy_did_buffer_switch_on_eof) )
+						YY_NEW_FILE;
+#ifdef __cplusplus
+					return yyinput();
+#else
+					return input();
+#endif
+					}
+
+				case EOB_ACT_CONTINUE_SCAN:
+					(yy_c_buf_p) = (yytext_ptr) + offset;
+					break;
+				}
+			}
+		}
+
+	c = *(unsigned char *) (yy_c_buf_p);	/* cast for 8-bit char's */
+	*(yy_c_buf_p) = '\0';	/* preserve tmlqcdtext */
+	(yy_hold_char) = *++(yy_c_buf_p);
+
+	YY_CURRENT_BUFFER_LVALUE->yy_at_bol = (c == '\n');
+
+	return c;
+}
+#endif	/* ifndef YY_NO_INPUT */
 
 /** Immediately switch to a different input stream.
  * @param input_file A readable stream.
  * 
  * @note This function does not reset the start condition to @c INITIAL .
  */
-    void yyrestart  (FILE * input_file )
+    void tmlqcdrestart  (FILE * input_file )
 {
     
 	if ( ! YY_CURRENT_BUFFER ){
-        yyensure_buffer_stack ();
+        tmlqcdensure_buffer_stack ();
 		YY_CURRENT_BUFFER_LVALUE =
-            yy_create_buffer(yyin,YY_BUF_SIZE );
+            tmlqcd_create_buffer(tmlqcdin,YY_BUF_SIZE );
 	}
 
-	yy_init_buffer(YY_CURRENT_BUFFER,input_file );
-	yy_load_buffer_state( );
+	tmlqcd_init_buffer(YY_CURRENT_BUFFER,input_file );
+	tmlqcd_load_buffer_state( );
 }
 
 /** Switch to a different input buffer.
  * @param new_buffer The new input buffer.
  * 
  */
-    void yy_switch_to_buffer  (YY_BUFFER_STATE  new_buffer )
+    void tmlqcd_switch_to_buffer  (YY_BUFFER_STATE  new_buffer )
 {
     
 	/* TODO. We should be able to replace this entire function body
 	 * with
-	 *		yypop_buffer_state();
-	 *		yypush_buffer_state(new_buffer);
+	 *		tmlqcdpop_buffer_state();
+	 *		tmlqcdpush_buffer_state(new_buffer);
      */
-	yyensure_buffer_stack ();
+	tmlqcdensure_buffer_stack ();
 	if ( YY_CURRENT_BUFFER == new_buffer )
 		return;
 
@@ -5683,21 +5680,21 @@ static int yy_get_next_buffer (void)
 		}
 
 	YY_CURRENT_BUFFER_LVALUE = new_buffer;
-	yy_load_buffer_state( );
+	tmlqcd_load_buffer_state( );
 
 	/* We don't actually know whether we did this switch during
-	 * EOF (yywrap()) processing, but the only time this flag
-	 * is looked at is after yywrap() is called, so it's safe
+	 * EOF (tmlqcdwrap()) processing, but the only time this flag
+	 * is looked at is after tmlqcdwrap() is called, so it's safe
 	 * to go ahead and always set it.
 	 */
 	(yy_did_buffer_switch_on_eof) = 1;
 }
 
-static void yy_load_buffer_state  (void)
+static void tmlqcd_load_buffer_state  (void)
 {
     	(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_n_chars;
 	(yytext_ptr) = (yy_c_buf_p) = YY_CURRENT_BUFFER_LVALUE->yy_buf_pos;
-	yyin = YY_CURRENT_BUFFER_LVALUE->yy_input_file;
+	tmlqcdin = YY_CURRENT_BUFFER_LVALUE->yy_input_file;
 	(yy_hold_char) = *(yy_c_buf_p);
 }
 
@@ -5707,35 +5704,35 @@ static void yy_load_buffer_state  (void)
  * 
  * @return the allocated buffer state.
  */
-    YY_BUFFER_STATE yy_create_buffer  (FILE * file, int  size )
+    YY_BUFFER_STATE tmlqcd_create_buffer  (FILE * file, int  size )
 {
 	YY_BUFFER_STATE b;
     
-	b = (YY_BUFFER_STATE) yyalloc(sizeof( struct yy_buffer_state )  );
+	b = (YY_BUFFER_STATE) tmlqcdalloc(sizeof( struct yy_buffer_state )  );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in tmlqcd_create_buffer()" );
 
 	b->yy_buf_size = size;
 
 	/* yy_ch_buf has to be 2 characters longer than the size given because
 	 * we need to put in 2 end-of-buffer characters.
 	 */
-	b->yy_ch_buf = (char *) yyalloc(b->yy_buf_size + 2  );
+	b->yy_ch_buf = (char *) tmlqcdalloc(b->yy_buf_size + 2  );
 	if ( ! b->yy_ch_buf )
-		YY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in tmlqcd_create_buffer()" );
 
 	b->yy_is_our_buffer = 1;
 
-	yy_init_buffer(b,file );
+	tmlqcd_init_buffer(b,file );
 
 	return b;
 }
 
 /** Destroy the buffer.
- * @param b a buffer created with yy_create_buffer()
+ * @param b a buffer created with tmlqcd_create_buffer()
  * 
  */
-    void yy_delete_buffer (YY_BUFFER_STATE  b )
+    void tmlqcd_delete_buffer (YY_BUFFER_STATE  b )
 {
     
 	if ( ! b )
@@ -5745,27 +5742,27 @@ static void yy_load_buffer_state  (void)
 		YY_CURRENT_BUFFER_LVALUE = (YY_BUFFER_STATE) 0;
 
 	if ( b->yy_is_our_buffer )
-		yyfree((void *) b->yy_ch_buf  );
+		tmlqcdfree((void *) b->yy_ch_buf  );
 
-	yyfree((void *) b  );
+	tmlqcdfree((void *) b  );
 }
 
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
- * such as during a yyrestart() or at EOF.
+ * such as during a tmlqcdrestart() or at EOF.
  */
-    static void yy_init_buffer  (YY_BUFFER_STATE  b, FILE * file )
+    static void tmlqcd_init_buffer  (YY_BUFFER_STATE  b, FILE * file )
 
 {
 	int oerrno = errno;
     
-	yy_flush_buffer(b );
+	tmlqcd_flush_buffer(b );
 
 	b->yy_input_file = file;
 	b->yy_fill_buffer = 1;
 
-    /* If b is the current buffer, then yy_init_buffer was _probably_
-     * called from yyrestart() or through yy_get_next_buffer.
+    /* If b is the current buffer, then tmlqcd_init_buffer was _probably_
+     * called from tmlqcdrestart() or through yy_get_next_buffer.
      * In that case, we don't want to reset the lineno or column.
      */
     if (b != YY_CURRENT_BUFFER){
@@ -5782,7 +5779,7 @@ static void yy_load_buffer_state  (void)
  * @param b the buffer state to be flushed, usually @c YY_CURRENT_BUFFER.
  * 
  */
-    void yy_flush_buffer (YY_BUFFER_STATE  b )
+    void tmlqcd_flush_buffer (YY_BUFFER_STATE  b )
 {
     	if ( ! b )
 		return;
@@ -5802,7 +5799,7 @@ static void yy_load_buffer_state  (void)
 	b->yy_buffer_status = YY_BUFFER_NEW;
 
 	if ( b == YY_CURRENT_BUFFER )
-		yy_load_buffer_state( );
+		tmlqcd_load_buffer_state( );
 }
 
 /** Pushes the new state onto the stack. The new state becomes
@@ -5811,14 +5808,14 @@ static void yy_load_buffer_state  (void)
  *  @param new_buffer The new state.
  *  
  */
-void yypush_buffer_state (YY_BUFFER_STATE new_buffer )
+void tmlqcdpush_buffer_state (YY_BUFFER_STATE new_buffer )
 {
     	if (new_buffer == NULL)
 		return;
 
-	yyensure_buffer_stack();
+	tmlqcdensure_buffer_stack();
 
-	/* This block is copied from yy_switch_to_buffer. */
+	/* This block is copied from tmlqcd_switch_to_buffer. */
 	if ( YY_CURRENT_BUFFER )
 		{
 		/* Flush out information for old buffer. */
@@ -5832,8 +5829,8 @@ void yypush_buffer_state (YY_BUFFER_STATE new_buffer )
 		(yy_buffer_stack_top)++;
 	YY_CURRENT_BUFFER_LVALUE = new_buffer;
 
-	/* copied from yy_switch_to_buffer. */
-	yy_load_buffer_state( );
+	/* copied from tmlqcd_switch_to_buffer. */
+	tmlqcd_load_buffer_state( );
 	(yy_did_buffer_switch_on_eof) = 1;
 }
 
@@ -5841,18 +5838,18 @@ void yypush_buffer_state (YY_BUFFER_STATE new_buffer )
  *  The next element becomes the new top.
  *  
  */
-void yypop_buffer_state (void)
+void tmlqcdpop_buffer_state (void)
 {
     	if (!YY_CURRENT_BUFFER)
 		return;
 
-	yy_delete_buffer(YY_CURRENT_BUFFER );
+	tmlqcd_delete_buffer(YY_CURRENT_BUFFER );
 	YY_CURRENT_BUFFER_LVALUE = NULL;
 	if ((yy_buffer_stack_top) > 0)
 		--(yy_buffer_stack_top);
 
 	if (YY_CURRENT_BUFFER) {
-		yy_load_buffer_state( );
+		tmlqcd_load_buffer_state( );
 		(yy_did_buffer_switch_on_eof) = 1;
 	}
 }
@@ -5860,7 +5857,7 @@ void yypop_buffer_state (void)
 /* Allocates the stack if it does not exist.
  *  Guarantees space for at least one push.
  */
-static void yyensure_buffer_stack (void)
+static void tmlqcdensure_buffer_stack (void)
 {
 	int num_to_alloc;
     
@@ -5871,7 +5868,7 @@ static void yyensure_buffer_stack (void)
 		 * immediate realloc on the next call.
          */
 		num_to_alloc = 1;
-		(yy_buffer_stack) = (struct yy_buffer_state**)yyalloc
+		(yy_buffer_stack) = (struct yy_buffer_state**)tmlqcdalloc
 								(num_to_alloc * sizeof(struct yy_buffer_state*)
 								);
 		
@@ -5888,7 +5885,7 @@ static void yyensure_buffer_stack (void)
 		int grow_size = 8 /* arbitrary grow size */;
 
 		num_to_alloc = (yy_buffer_stack_max) + grow_size;
-		(yy_buffer_stack) = (struct yy_buffer_state**)yyrealloc
+		(yy_buffer_stack) = (struct yy_buffer_state**)tmlqcdrealloc
 								((yy_buffer_stack),
 								num_to_alloc * sizeof(struct yy_buffer_state*)
 								);
@@ -5905,7 +5902,7 @@ static void yyensure_buffer_stack (void)
  * 
  * @return the newly allocated buffer state object. 
  */
-YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
+YY_BUFFER_STATE tmlqcd_scan_buffer  (char * base, yy_size_t  size )
 {
 	YY_BUFFER_STATE b;
     
@@ -5915,9 +5912,9 @@ YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
 		/* They forgot to leave room for the EOB's. */
 		return 0;
 
-	b = (YY_BUFFER_STATE) yyalloc(sizeof( struct yy_buffer_state )  );
+	b = (YY_BUFFER_STATE) tmlqcdalloc(sizeof( struct yy_buffer_state )  );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in yy_scan_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in tmlqcd_scan_buffer()" );
 
 	b->yy_buf_size = size - 2;	/* "- 2" to take care of EOB's */
 	b->yy_buf_pos = b->yy_ch_buf = base;
@@ -5929,33 +5926,33 @@ YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
 	b->yy_fill_buffer = 0;
 	b->yy_buffer_status = YY_BUFFER_NEW;
 
-	yy_switch_to_buffer(b  );
+	tmlqcd_switch_to_buffer(b  );
 
 	return b;
 }
 
-/** Setup the input buffer state to scan a string. The next call to yylex() will
+/** Setup the input buffer state to scan a string. The next call to tmlqcdlex() will
  * scan from a @e copy of @a str.
- * @param yystr a NUL-terminated string to scan
+ * @param str a NUL-terminated string to scan
  * 
  * @return the newly allocated buffer state object.
  * @note If you want to scan bytes that may contain NUL values, then use
- *       yy_scan_bytes() instead.
+ *       tmlqcd_scan_bytes() instead.
  */
-YY_BUFFER_STATE yy_scan_string (yyconst char * yystr )
+YY_BUFFER_STATE tmlqcd_scan_string (yyconst char * yystr )
 {
     
-	return yy_scan_bytes(yystr,strlen(yystr) );
+	return tmlqcd_scan_bytes(yystr,strlen(yystr) );
 }
 
-/** Setup the input buffer state to scan the given bytes. The next call to yylex() will
+/** Setup the input buffer state to scan the given bytes. The next call to tmlqcdlex() will
  * scan from a @e copy of @a bytes.
  * @param bytes the byte buffer to scan
  * @param len the number of bytes in the buffer pointed to by @a bytes.
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE yy_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
+YY_BUFFER_STATE tmlqcd_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
 {
 	YY_BUFFER_STATE b;
 	char *buf;
@@ -5964,18 +5961,18 @@ YY_BUFFER_STATE yy_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = _yybytes_len + 2;
-	buf = (char *) yyalloc(n  );
+	buf = (char *) tmlqcdalloc(n  );
 	if ( ! buf )
-		YY_FATAL_ERROR( "out of dynamic memory in yy_scan_bytes()" );
+		YY_FATAL_ERROR( "out of dynamic memory in tmlqcd_scan_bytes()" );
 
 	for ( i = 0; i < _yybytes_len; ++i )
 		buf[i] = yybytes[i];
 
 	buf[_yybytes_len] = buf[_yybytes_len+1] = YY_END_OF_BUFFER_CHAR;
 
-	b = yy_scan_buffer(buf,n );
+	b = tmlqcd_scan_buffer(buf,n );
 	if ( ! b )
-		YY_FATAL_ERROR( "bad buffer in yy_scan_bytes()" );
+		YY_FATAL_ERROR( "bad buffer in tmlqcd_scan_bytes()" );
 
 	/* It's okay to grow etc. this buffer, and we should throw it
 	 * away when we're done.
@@ -6001,101 +5998,82 @@ static void yy_fatal_error (yyconst char* msg )
 #define yyless(n) \
 	do \
 		{ \
-		/* Undo effects of setting up yytext. */ \
+		/* Undo effects of setting up tmlqcdtext. */ \
         int yyless_macro_arg = (n); \
         YY_LESS_LINENO(yyless_macro_arg);\
-		yytext[yyleng] = (yy_hold_char); \
-		(yy_c_buf_p) = yytext + yyless_macro_arg; \
+		tmlqcdtext[tmlqcdleng] = (yy_hold_char); \
+		(yy_c_buf_p) = tmlqcdtext + yyless_macro_arg; \
 		(yy_hold_char) = *(yy_c_buf_p); \
 		*(yy_c_buf_p) = '\0'; \
-		yyleng = yyless_macro_arg; \
+		tmlqcdleng = yyless_macro_arg; \
 		} \
 	while ( 0 )
 
 /* Accessor  methods (get/set functions) to struct members. */
 
-/** Get the current line number.
- * 
- */
-int yyget_lineno  (void)
-{
-        
-    return yylineno;
-}
-
 /** Get the input stream.
  * 
  */
-FILE *yyget_in  (void)
+FILE *tmlqcdget_in  (void)
 {
-        return yyin;
+        return tmlqcdin;
 }
 
 /** Get the output stream.
  * 
  */
-FILE *yyget_out  (void)
+FILE *tmlqcdget_out  (void)
 {
-        return yyout;
+        return tmlqcdout;
 }
 
 /** Get the length of the current token.
  * 
  */
-int yyget_leng  (void)
+int tmlqcdget_leng  (void)
 {
-        return yyleng;
+        return tmlqcdleng;
 }
 
 /** Get the current token.
  * 
  */
 
-char *yyget_text  (void)
+char *tmlqcdget_text  (void)
 {
-        return yytext;
-}
-
-/** Set the current line number.
- * @param line_number
- * 
- */
-void yyset_lineno (int  line_number )
-{
-    
-    yylineno = line_number;
+        return tmlqcdtext;
 }
 
 /** Set the input stream. This does not discard the current
  * input buffer.
  * @param in_str A readable stream.
  * 
- * @see yy_switch_to_buffer
+ * @see tmlqcd_switch_to_buffer
  */
-void yyset_in (FILE *  in_str )
+void tmlqcdset_in (FILE *  in_str )
 {
-        yyin = in_str ;
+        tmlqcdin = in_str ;
 }
 
-void yyset_out (FILE *  out_str )
+void tmlqcdset_out (FILE *  out_str )
 {
-        yyout = out_str ;
+        tmlqcdout = out_str ;
 }
 
-int yyget_debug  (void)
+int tmlqcdget_debug  (void)
 {
-        return yy_flex_debug;
+        return tmlqcd_flex_debug;
 }
 
-void yyset_debug (int  bdebug )
+void tmlqcdset_debug (int  bdebug )
 {
-        yy_flex_debug = bdebug ;
+        tmlqcd_flex_debug = bdebug ;
 }
 
 static int yy_init_globals (void)
 {
         /* Initialization is the same as for the non-reentrant scanner.
-     * This function is called from yylex_destroy(), so don't allocate here.
+     * This function is called from tmlqcdlex_destroy(), so don't allocate here.
      */
 
     (yy_buffer_stack) = 0;
@@ -6107,36 +6085,36 @@ static int yy_init_globals (void)
 
 /* Defined in main.c */
 #ifdef YY_STDINIT
-    yyin = stdin;
-    yyout = stdout;
+    tmlqcdin = stdin;
+    tmlqcdout = stdout;
 #else
-    yyin = (FILE *) 0;
-    yyout = (FILE *) 0;
+    tmlqcdin = (FILE *) 0;
+    tmlqcdout = (FILE *) 0;
 #endif
 
     /* For future reference: Set errno on error, since we are called by
-     * yylex_init()
+     * tmlqcdlex_init()
      */
     return 0;
 }
 
-/* yylex_destroy is for both reentrant and non-reentrant scanners. */
-int yylex_destroy  (void)
+/* tmlqcdlex_destroy is for both reentrant and non-reentrant scanners. */
+int tmlqcdlex_destroy  (void)
 {
     
     /* Pop the buffer stack, destroying each element. */
 	while(YY_CURRENT_BUFFER){
-		yy_delete_buffer(YY_CURRENT_BUFFER  );
+		tmlqcd_delete_buffer(YY_CURRENT_BUFFER  );
 		YY_CURRENT_BUFFER_LVALUE = NULL;
-		yypop_buffer_state();
+		tmlqcdpop_buffer_state();
 	}
 
 	/* Destroy the stack itself. */
-	yyfree((yy_buffer_stack) );
+	tmlqcdfree((yy_buffer_stack) );
 	(yy_buffer_stack) = NULL;
 
     /* Reset the globals. This is important in a non-reentrant scanner so the next time
-     * yylex() is called, initialization will occur. */
+     * tmlqcdlex() is called, initialization will occur. */
     yy_init_globals( );
 
     return 0;
@@ -6166,12 +6144,12 @@ static int yy_flex_strlen (yyconst char * s )
 }
 #endif
 
-void *yyalloc (yy_size_t  size )
+void *tmlqcdalloc (yy_size_t  size )
 {
 	return (void *) malloc( size );
 }
 
-void *yyrealloc  (void * ptr, yy_size_t  size )
+void *tmlqcdrealloc  (void * ptr, yy_size_t  size )
 {
 	/* The cast to (char *) in the following accommodates both
 	 * implementations that use char* generic pointers, and those
@@ -6183,9 +6161,9 @@ void *yyrealloc  (void * ptr, yy_size_t  size )
 	return (void *) realloc( (char *) ptr, size );
 }
 
-void yyfree (void * ptr )
+void tmlqcdfree (void * ptr )
 {
-	free( (char *) ptr );	/* see yyrealloc() for (char *) cast */
+	free( (char *) ptr );	/* see tmlqcdrealloc() for (char *) cast */
 }
 
 #define YYTABLES_NAME "yytables"
@@ -6198,7 +6176,7 @@ void yyfree (void * ptr )
  *  Dummy (but not dumb) routine - well, function
  */
 
-int yywrap()
+int tmlqcdwrap()
 {
   return(1);
 }
@@ -6322,10 +6300,10 @@ int read_input(char * conf_file){
   if(verbose && g_proc_id == 0) {
     myverbose = 1;
   }
-  if ((yyin = fopen(conf_file, "rt")) == NULL){
+  if ((tmlqcdin = fopen(conf_file, "rt")) == NULL){
     return(2);
   }
-  yyout = fopen("/dev/null", "w");
+  tmlqcdout = fopen("/dev/null", "w");
 
   parse_config();  
 #ifndef FIXEDVOLUME
@@ -6343,8 +6321,8 @@ int read_input(char * conf_file){
   if(write_prop_format_flag == -1) write_prop_format_flag = source_format_flag;
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
 
-  fclose(yyout);
-  fclose(yyin);
+  fclose(tmlqcdout);
+  fclose(tmlqcdin);
   return(0);
 }
 
@@ -6380,10 +6358,10 @@ int reread_input(char * conf_file){
 
   /********************************************/
 
-  if ((yyin = fopen(conf_file, "rt")) == NULL){
+  if ((tmlqcdin = fopen(conf_file, "rt")) == NULL){
     return(2);
   }
-  yyout = fopen("/dev/null", "w");
+  tmlqcdout = fopen("/dev/null", "w");
 
   parse_config();  
 
@@ -6407,8 +6385,8 @@ int reread_input(char * conf_file){
  
   g_mu = g_mu1;
 
-  fclose(yyout);
-  fclose(yyin);
+  fclose(tmlqcdout);
+  fclose(tmlqcdin);
   return(0);
 }
 
