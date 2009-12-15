@@ -30,6 +30,7 @@
 # include <mpp/shmem.h>
 #endif
 #include "global.h"
+#include "read_input.h"
 #include "mpi_init.h"
 
 #ifdef MPI
@@ -584,7 +585,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   /* Here we perform some checks in order not to */
   /* run into trouble later                      */
 #if (defined PARALLELXYZT)
-  if((T*LX*LY)%2 != 0) {
+  if((T*LX*LY)%2 != 0 && even_odd_flag == 1) {
     fprintf(stderr, "T*LX*LY must be even!\n Aborting prgram...\n");
 #  ifdef MPI 
     MPI_Finalize();
@@ -593,7 +594,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   }
 #endif
 
-  if(LZ%2 != 0) {
+  if(LZ%2 != 0 && even_odd_flag == 1) {
     fprintf(stderr, "LZ must be even!\n Aborting prgram...\n");
 #ifdef MPI
     MPI_Finalize();
