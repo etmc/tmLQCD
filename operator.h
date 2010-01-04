@@ -22,24 +22,29 @@
 #ifndef _OPERATOR_H
 #define _OPERATOR_H
 
-#include "spinor.h"
+#include "su3.h"
 
 #define TMWILSON 0
 #define OVERLAP 1
 #define WILSON 2
 
-#define max_no_operators 1
+#define max_no_operators 10
 
 typedef struct {
   int type;
+  int id;
   int n_cheby;
   int deg_poly;
   int sloppy_precision;
   int even_odd;
+  int solver;
+  int N_s;
+  int initialised;
   
   double kappa;
   double m;
   double s;
+  double mu;
 
   double * coefs;
   void (*applyD) (spinor * const, spinor * const);
@@ -47,8 +52,12 @@ typedef struct {
   void (*applyQp) (spinor * const, spinor * const);
   void (*applyQm) (spinor * const, spinor * const);
   void (*applyQsq) (spinor * const, spinor * const);
+  int (*inverter) (spinor * const, spinor * const, spinor * const, spinor * const,
+		   const int op_id);
 } operator;
 
 extern operator operator_list[max_no_operators];
+
+int add_operator(const int type);
 
 #endif

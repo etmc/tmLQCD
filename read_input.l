@@ -56,6 +56,7 @@ TYPE [0-9A-Z]+
 #include"default_input_values.h"
 #include"monomial.h"
 #include"integrator.h"
+#include"operator.h"
 
   /* Name of the parsing routine */
 #define YY_DECL         int parse_config()
@@ -63,10 +64,12 @@ TYPE [0-9A-Z]+
 
   /* declaration of input parameters */
   int i=0;
-  int line_of_file=1;
-  int current_monomial=-1;
+  int line_of_file = 1;
+  int current_monomial = -1;
+  int current_operator = -1;
   extern int no_monomials;
-  monomial * mnl;
+  monomial * mnl = NULL;
+  operator * optr = NULL;
   int comment_caller;
   int name_caller;
   int a,b;
@@ -206,6 +209,13 @@ TYPE [0-9A-Z]+
 %x INITINTEGRATOR
 %x INTEGRATOR
 
+%x INITOPERATOR
+%x TMOP
+%x WILSONOP
+%x OVERLAPOP
+%x TMSOLVER
+%x OVSOLVER
+
 %x INITMONOMIAL
 %x DETMONOMIAL
 %x GAUGEMONOMIAL
@@ -296,6 +306,153 @@ TYPE [0-9A-Z]+
 
 ^BeginMonomial{SPC}+                       BEGIN(INITMONOMIAL);
 ^BeginInt                                  BEGIN(INITINTEGRATOR);
+^BeginOperator{SPC}+                       BEGIN(INITOPERATOR);
+
+<INITOPERATOR>{TYPE} {
+  current_operator++;
+  optr = &operator_list[current_operator];
+  optr->id = current_operator;
+  optr->initialised = 0;
+  if(strcmp(yytext, "WILSON")==0) {
+    optr->type = WILSON;
+  }
+  else if(strcmp(yytext, "TMWILSON")==0) {
+    optr->type = TMWILSON;
+  }
+  else if(strcmp(yytext, "OVERLAP")==0) {
+    optr->type = OVERLAP;
+  }
+  else {
+    fprintf(stderr, "Unknown operator type %s in line %d\n", yytext, line_of_file);
+    exit(1);
+  }
+  if(!reread) {
+    if(add_operator(optr->type) < 0) {
+      fprintf(stderr, "Something went wrong in adding operators\nAborting...!\n");
+      exit(1);
+    }
+  }
+  if(myverbose) printf("initialising operator with type %s (%d) line %d\n", yytext, optr->type, line_of_file);
+  if(myverbose) printf("operator has id %d\n", current_operator);
+
+  if(optr->type == WILSON) BEGIN(WILSONOP);
+  else if(optr->type == TMWILSON) BEGIN(TMOP);
+  else BEGIN(OVERLAPOP);
+}
+
+<WILSONOP,TMOP,OVERLAPOP>{
+  {SPC}*kappa{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    optr->kappa = c;
+    if(myverbose) printf("  kappa set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  ^EndOperator{SPC}*  {
+    if(myverbose) printf("operator %d parsed line %d\n\n", current_operator, line_of_file);
+    BEGIN(0);
+  }
+}
+
+<WILSONOP,TMOP>{
+  {SPC}*Solver{SPC}*={SPC}* {
+    name_caller = YY_START; 
+    BEGIN(TMSOLVER);
+  }
+}
+
+<TMOP>{
+  {SPC}*2KappaMu{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    optr->mu = c;
+    if(myverbose) printf("  2KappaMu set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
+}
+
+<OVERLAPOP>{
+  {SPC}*Solver{SPC}*={SPC}* BEGIN(OVSOLVER);
+  {SPC}*m{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    optr->m = c;
+    if(myverbose) printf("  m set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*s{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    optr->s = c;
+    if(myverbose) printf("  s set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
+}
+
+<TMSOLVER>{
+  bicgstab {
+    optr->solver=0;
+    if(myverbose) printf("  Solver set to BiCGstab line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  cg {
+    optr->solver=1;
+    if(myverbose) printf("  Solver set to CG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  pcg {
+    optr->solver=9;
+    if(myverbose) printf("  Solver set to PCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  gmres {
+    optr->solver=2;
+    if(myverbose) printf("  Solver set to GMRES line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  gcr {
+    optr->solver=7;
+    if(myverbose) printf("  Solver set to GCR line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  gmresdr {
+    optr->solver=8;
+    if(myverbose) printf("  Solver set to GMRES-DR line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  cgs {
+    optr->solver=3;
+    if(myverbose) printf("  Solver set to CGS line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  mr {
+    optr->solver=4;
+    if(myverbose) printf("  Solver set to MR line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  fgmres {
+    optr->solver=6;
+    if(myverbose) printf("  Solver set to FGMRES line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  dflgcr {
+    optr->solver=10;
+    g_dflgcr_flag = 1;
+    if(myverbose) printf("  Solver set to DFL-GCR line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  dflfgmres {
+    optr->solver=11;
+    g_dflgcr_flag = 1;
+    if(myverbose) printf("  Solver set to DFL-FGMRES line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  cgmms {
+    optr->solver = 12;
+    if(myverbose) printf("  Solver set to CGMMS line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+}
+
+<OVSOLVER>{
+  sumr {
+    optr->solver = 13;
+    if(myverbose) printf("  Solver set to SUMR line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(OVERLAPOP);
+  }
+}
 
 <INITMONOMIAL>{TYPE} {
   current_monomial++;
@@ -363,7 +520,7 @@ TYPE [0-9A-Z]+
     }
   }
   {SPC}*Name{SPC}*={SPC}* {
-    name_caller = YY_START;   
+    name_caller = YY_START;
     BEGIN(MNAME);
   }
   ^EndMonomial{SPC}*  {
@@ -1240,7 +1397,7 @@ TYPE [0-9A-Z]+
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR>\n   {
+<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITOPERATOR,TMOP,OVERLAPOP,WILSONOP>\n   {
   line_of_file++;
 }
 <*>\n                       {
@@ -1252,7 +1409,8 @@ TYPE [0-9A-Z]+
   BEGIN(ERROR);
 }
 <ERROR>[^\t\n]*             {
-  printf("Parsing error in line %d\nAborting...!\n", line_of_file);
+  fprintf(stderr, "Parsing error in line %d\nAborting...!\n", line_of_file);
+  fprintf(stderr, "Could not make sense out off: %s\n", yytext);
   exit(1);
 }
 

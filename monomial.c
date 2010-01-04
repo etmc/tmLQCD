@@ -223,6 +223,7 @@ void free_monomials() {
 void dummy_derivative(const int id) {
   if(g_proc_id == 0) {
     fprintf(stderr, "dummy_derivative was called. Was that really intended?\n");
+    fprintf(stderr, "callers monomial ID was %d\n", id);
   }
   return;
 }
@@ -230,6 +231,7 @@ void dummy_derivative(const int id) {
 void dummy_heatbath(const int id) {
   if(g_proc_id == 0) {
     fprintf(stderr, "dummy_heatbath was called. Was that really intended?\n");
+    fprintf(stderr, "callers monomial ID was %d\n", id);
   }
   return;
 }
@@ -237,6 +239,7 @@ void dummy_heatbath(const int id) {
 double dummy_acc(const int id) {
   if(g_proc_id == 0) {
     fprintf(stderr, "dummy_acc was called. Was that really intended?\n");
+    fprintf(stderr, "callers monomial ID was %d\n", id);
   }
   return(0.);
 }
