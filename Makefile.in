@@ -43,7 +43,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	polyakov_loop getopt sighandler reweighting_factor \
 	source_generation boundary update_tm ranlxd  \
 	mpi_init linsolve deriv_Sb deriv_Sb_D_psi ranlxs \
-	xchange_deri geometry_eo \
+	xchange_deri geometry_eo invert_overlap \
 	init_moment_field init_gauge_tmp \
 	xchange_field xchange_gauge \
 	init_gauge_field init_geometry_indices init_spinor_field \
