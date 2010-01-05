@@ -45,7 +45,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	mpi_init linsolve deriv_Sb deriv_Sb_D_psi ranlxs \
 	xchange_deri geometry_eo invert_overlap \
 	init_moment_field init_gauge_tmp \
-	xchange_field xchange_gauge \
+	xchange_field xchange_gauge prepare_source \
 	init_gauge_field init_geometry_indices init_spinor_field \
 	init_dirac_halfspinor xchange_halffield stout_smear \
 	init_stout_smear_vars stout_smear_force \
