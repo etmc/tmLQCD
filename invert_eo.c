@@ -61,7 +61,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	      const int sub_evs_flag, const int even_odd_flag) {
 
   int iter = 0;
-
+  double nrm1 = 0., nrm2 = 0.;
   /* here comes the inversion using even/odd preconditioning */
   if(even_odd_flag) {
     if(g_proc_id == 0) {printf("# Using Even/Odd preconditioning!\n"); fflush(stdout);}
@@ -223,6 +223,14 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
   }
+  /* convert to standard normalisation  */
+  /* we have to mult. by 2*kappa        */
+  if (g_kappa != 0.) {
+    mul_r(Even_new, (2*g_kappa), Even_new, VOLUME / 2);
+    mul_r(Odd_new, (2*g_kappa), Odd_new, VOLUME / 2);
+  }
+
+
   return(iter);
 }
 

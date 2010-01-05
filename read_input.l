@@ -43,6 +43,7 @@ FLT {SIGN}?{DIGIT}*+"."{DIGIT}*(e("-"|"+")?{DIGIT}+)?
 FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 NAME [a-zA-Z0-9_]+
 TYPE [0-9A-Z]+
+EQL {SPC}*={SPC}*
 
 %{
 #ifdef HAVE_CONFIG_H
@@ -211,9 +212,11 @@ TYPE [0-9A-Z]+
 
 %x INITOPERATOR
 %x TMOP
+%x DBTMOP
 %x WILSONOP
 %x OVERLAPOP
 %x TMSOLVER
+%x DBTMSOLVER
 %x OVSOLVER
 
 %x INITMONOMIAL
@@ -229,80 +232,80 @@ TYPE [0-9A-Z]+
 %x ERROR
 
 %%
-^T{SPC}*={SPC}*                            BEGIN(TT);
-^L{SPC}*={SPC}*                            BEGIN(LL);
-^LX{SPC}*={SPC}*                           BEGIN(LLX);
-^LY{SPC}*={SPC}*                           BEGIN(LLY);
-^LZ{SPC}*={SPC}*                           BEGIN(LLZ);
-^g_Tbsf{SPC}*={SPC}*                       BEGIN(TTBSF);
-^NRXProcs{SPC}*={SPC}*                     BEGIN(NPROCX);
-^NRYProcs{SPC}*={SPC}*                     BEGIN(NPROCY);
-^NRZProcs{SPC}*={SPC}*                     BEGIN(NPROCZ);
-^kappa{SPC}*={SPC}*                        BEGIN(KAPPA);
-^2KappaMu{SPC}*={SPC}*                     BEGIN(MU);
-^2KappaMubar{SPC}*={SPC}*                  BEGIN(MUBAR);
-^2KappaEpsBar{SPC}*={SPC}*                 BEGIN(EPSBAR);
-^NoEigenvalues{SPC}*={SPC}*                BEGIN(NOEV);
-^EigenvaluePrecision{SPC}*={SPC}*          BEGIN(PRECEV);
-^seed{SPC}*={SPC}*                         BEGIN(SEED);
-^StartCondition{SPC}*={SPC}*               BEGIN(STARTCOND);
-^ThermalisationSweeps{SPC}*={SPC}*         BEGIN(THERMSWEEPS);
-^Measurements{SPC}*={SPC}*                 BEGIN(NMEAS);
-^NSave{SPC}*={SPC}*                        BEGIN(NSAVE);
-^GaugeFieldInFile{SPC}*={SPC}*             BEGIN(GAUGEINPUTFILE);
-^RlxdStateInFile{SPC}*={SPC}*              BEGIN(RLXDINPUTFILE);
-^SolverFlag{SPC}*={SPC}*                   BEGIN(SOLVFLAG);
-^SubtractEVForCG{SPC}*={SPC}*              BEGIN(SUBEVCG);
-^WriteCheckpoints{SPC}*={SPC}*             BEGIN(WRITECP);
-^CheckpointInterval{SPC}*={SPC}*           BEGIN(CPINT);
-^GaugeConfigInputFile{SPC}*={SPC}*         BEGIN(GAUGEINPUTFILE);
-^RlxdInputFile{SPC}*={SPC}*                BEGIN(RLXDINPUTFILE);
-^InitialStoreCounter{SPC}*={SPC}*          BEGIN(NSTORE);
-^StdIOProcessor{SPC}*={SPC}*               BEGIN(IOPROC);
-^Indices{SPC}*={SPC}*                      BEGIN(IDX);
-^BCGstabMaxIter{SPC}*={SPC}*               BEGIN(BCGMAX);
-^CGMaxIter{SPC}*={SPC}*                    BEGIN(CGMAX);
-^BCAngleT{SPC}*={SPC}*                     BEGIN(BOUNDT);
-^ThetaT{SPC}*={SPC}*                       BEGIN(BOUNDT);
-^ThetaX{SPC}*={SPC}*                       BEGIN(BOUNDX);
-^ThetaY{SPC}*={SPC}*                       BEGIN(BOUNDY);
-^ThetaZ{SPC}*={SPC}*                       BEGIN(BOUNDZ);
-^MaxSolverIterations{SPC}*={SPC}*          BEGIN(SITER);
-^SolverPrecision{SPC}*={SPC}*              BEGIN(SPREC);
-^ReadSource{SPC}*={SPC}*                   BEGIN(READSOURCE);
-^SourceInputFilename{SPC}*={SPC}*          BEGIN(SOURCEFILE);
-^SourceFormat{SPC}*={SPC}*                 BEGIN(SOURCEFORMAT);
-^SourceTimeSlice{SPC}*={SPC}*              BEGIN(SOURCETS);
-^UseRelativePrecision{SPC}*={SPC}*         BEGIN(RELPREC);
-^ReversibilityCheck{SPC}*={SPC}*           BEGIN(REVCHECK);
-^ReversibilityCheckIntervall{SPC}*={SPC}*  BEGIN(REVINT);
-^DebugLevel{SPC}*={SPC}*                   BEGIN(DEBUG);
-^GMRESMParameter{SPC}*={SPC}*              BEGIN(GMRESM);
-^GMRESDRNrEv{SPC}*={SPC}*                  BEGIN(GMRESDRNEV);
-^CGMMSNoExtraMasses{SPC}*={SPC}*           BEGIN(CGMMSNMS);
-^GaugeConfigReadPrecision{SPC}*={SPC}*     BEGIN(GAUGERPREC);
-^GaugeConfigWritePrecision{SPC}*={SPC}*    BEGIN(GAUGEWPREC);
-^PropagatorPrecision{SPC}*={SPC}*          BEGIN(PROPPREC);
-^ReproduceRandomNumbers{SPC}*={SPC}*       BEGIN(REPRORND);
-^UseSloppyPrecision{SPC}*={SPC}*           BEGIN(SLOPPYPREC);
-^UseStoutSmearing{SPC}*={SPC}*             BEGIN(USESTOUT);
-^StoutRho{SPC}*={SPC}*                     BEGIN(STOUTRHO);
-^StoutNoIterations{SPC}*={SPC}*            BEGIN(STOUTITER);
-^ComputeEVs{SPC}*={SPC}*                   BEGIN(COMPUTEEVS);
-^SplittedPropagator{SPC}*={SPC}*           BEGIN(SPLITPROP);
-^SplittedSource{SPC}*={SPC}*               BEGIN(SPLITSOURCE);
-^SourceLocation{SPC}*={SPC}*               BEGIN(SRCLOC);
-^UseEvenOdd{SPC}*={SPC}*                   BEGIN(EO);
-^Bc{SPC}*={SPC}*                           BEGIN(BC);
-^WritePropagatorFormat{SPC}*={SPC}*        BEGIN(WRPROPFLAG);
-^PropagatorType{SPC}*={SPC}*               BEGIN(WRPROPFLAG);
-^PerformOnlineMeasurements{SPC}*={SPC}*    BEGIN(ONMEAS);
-^OnlineMeasurementsFreq{SPC}*={SPC}*       BEGIN(ONFREQ);
-^RanluxdLevel{SPC}*={SPC}*                 BEGIN(RLXDLEVEL);
-^DeflationSubspaceDimension{SPC}*={SPC}*   BEGIN(DFLSP);
-^GCRPreconditioner{SPC}*={SPC}*            BEGIN(PRECON);
-^ComputeReweightingFactor{SPC}*={SPC}*      BEGIN(REWEIGH);
-^NoReweightingSamples{SPC}*={SPC}*          BEGIN(REWSAMPLES);
+^T{EQL}                            BEGIN(TT);
+^L{EQL}                            BEGIN(LL);
+^LX{EQL}                           BEGIN(LLX);
+^LY{EQL}                           BEGIN(LLY);
+^LZ{EQL}                           BEGIN(LLZ);
+^g_Tbsf{EQL}                       BEGIN(TTBSF);
+^NRXProcs{EQL}                     BEGIN(NPROCX);
+^NRYProcs{EQL}                     BEGIN(NPROCY);
+^NRZProcs{EQL}                     BEGIN(NPROCZ);
+^kappa{EQL}                        BEGIN(KAPPA);
+^2KappaMu{EQL}                     BEGIN(MU);
+^2KappaMubar{EQL}                  BEGIN(MUBAR);
+^2KappaEpsBar{EQL}                 BEGIN(EPSBAR);
+^NoEigenvalues{EQL}                BEGIN(NOEV);
+^EigenvaluePrecision{EQL}          BEGIN(PRECEV);
+^seed{EQL}                         BEGIN(SEED);
+^StartCondition{EQL}               BEGIN(STARTCOND);
+^ThermalisationSweeps{EQL}         BEGIN(THERMSWEEPS);
+^Measurements{EQL}                 BEGIN(NMEAS);
+^NSave{EQL}                        BEGIN(NSAVE);
+^GaugeFieldInFile{EQL}             BEGIN(GAUGEINPUTFILE);
+^RlxdStateInFile{EQL}              BEGIN(RLXDINPUTFILE);
+^SolverFlag{EQL}                   BEGIN(SOLVFLAG);
+^SubtractEVForCG{EQL}              BEGIN(SUBEVCG);
+^WriteCheckpoints{EQL}             BEGIN(WRITECP);
+^CheckpointInterval{EQL}           BEGIN(CPINT);
+^GaugeConfigInputFile{EQL}         BEGIN(GAUGEINPUTFILE);
+^RlxdInputFile{EQL}                BEGIN(RLXDINPUTFILE);
+^InitialStoreCounter{EQL}          BEGIN(NSTORE);
+^StdIOProcessor{EQL}               BEGIN(IOPROC);
+^Indices{EQL}                      BEGIN(IDX);
+^BCGstabMaxIter{EQL}               BEGIN(BCGMAX);
+^CGMaxIter{EQL}                    BEGIN(CGMAX);
+^BCAngleT{EQL}                     BEGIN(BOUNDT);
+^ThetaT{EQL}                       BEGIN(BOUNDT);
+^ThetaX{EQL}                       BEGIN(BOUNDX);
+^ThetaY{EQL}                       BEGIN(BOUNDY);
+^ThetaZ{EQL}                       BEGIN(BOUNDZ);
+^MaxSolverIterations{EQL}          BEGIN(SITER);
+^SolverPrecision{EQL}              BEGIN(SPREC);
+^ReadSource{EQL}                   BEGIN(READSOURCE);
+^SourceInputFilename{EQL}          BEGIN(SOURCEFILE);
+^SourceFormat{EQL}                 BEGIN(SOURCEFORMAT);
+^SourceTimeSlice{EQL}              BEGIN(SOURCETS);
+^UseRelativePrecision{EQL}         BEGIN(RELPREC);
+^ReversibilityCheck{EQL}           BEGIN(REVCHECK);
+^ReversibilityCheckIntervall{EQL}  BEGIN(REVINT);
+^DebugLevel{EQL}                   BEGIN(DEBUG);
+^GMRESMParameter{EQL}              BEGIN(GMRESM);
+^GMRESDRNrEv{EQL}                  BEGIN(GMRESDRNEV);
+^CGMMSNoExtraMasses{EQL}           BEGIN(CGMMSNMS);
+^GaugeConfigReadPrecision{EQL}     BEGIN(GAUGERPREC);
+^GaugeConfigWritePrecision{EQL}    BEGIN(GAUGEWPREC);
+^PropagatorPrecision{EQL}          BEGIN(PROPPREC);
+^ReproduceRandomNumbers{EQL}       BEGIN(REPRORND);
+^UseSloppyPrecision{EQL}           BEGIN(SLOPPYPREC);
+^UseStoutSmearing{EQL}             BEGIN(USESTOUT);
+^StoutRho{EQL}                     BEGIN(STOUTRHO);
+^StoutNoIterations{EQL}            BEGIN(STOUTITER);
+^ComputeEVs{EQL}                   BEGIN(COMPUTEEVS);
+^SplittedPropagator{EQL}           BEGIN(SPLITPROP);
+^SplittedSource{EQL}               BEGIN(SPLITSOURCE);
+^SourceLocation{EQL}               BEGIN(SRCLOC);
+^UseEvenOdd{EQL}                   BEGIN(EO);
+^Bc{EQL}                           BEGIN(BC);
+^WritePropagatorFormat{EQL}        BEGIN(WRPROPFLAG);
+^PropagatorType{EQL}               BEGIN(WRPROPFLAG);
+^PerformOnlineMeasurements{EQL}    BEGIN(ONMEAS);
+^OnlineMeasurementsFreq{EQL}       BEGIN(ONFREQ);
+^RanluxdLevel{EQL}                 BEGIN(RLXDLEVEL);
+^DeflationSubspaceDimension{EQL}   BEGIN(DFLSP);
+^GCRPreconditioner{EQL}            BEGIN(PRECON);
+^ComputeReweightingFactor{EQL}      BEGIN(REWEIGH);
+^NoReweightingSamples{EQL}          BEGIN(REWSAMPLES);
 
 ^BeginMonomial{SPC}+                       BEGIN(INITMONOMIAL);
 ^BeginInt                                  BEGIN(INITINTEGRATOR);
@@ -318,6 +321,9 @@ TYPE [0-9A-Z]+
   }
   else if(strcmp(yytext, "TMWILSON")==0) {
     optr->type = TMWILSON;
+  }
+  else if(strcmp(yytext, "DBTMWILSON")==0) {
+    optr->type = DBTMWILSON;
   }
   else if(strcmp(yytext, "OVERLAP")==0) {
     optr->type = OVERLAP;
@@ -337,14 +343,28 @@ TYPE [0-9A-Z]+
 
   if(optr->type == WILSON) BEGIN(WILSONOP);
   else if(optr->type == TMWILSON) BEGIN(TMOP);
+  else if(optr->type == DBTMWILSON) BEGIN(DBTMOP);
   else BEGIN(OVERLAPOP);
 }
 
-<WILSONOP,TMOP,OVERLAPOP>{
-  {SPC}*kappa{SPC}*={SPC}*{FLT} {
+<WILSONOP,TMOP,OVERLAPOP,DBTMOP>{
+  {SPC}*kappa{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     optr->kappa = c;
     if(myverbose) printf("  kappa set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*MaxSolverIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    optr->maxiter = a;
+    if(myverbose) printf("  MaxSolverIterations set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*PropagatorPrecision{EQL}32 {
+    optr->prop_precision = 32;
+    if(myverbose) printf("  PropagatorPrecision set to 32 line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*PropagatorPrecision{EQL}64 {
+    optr->prop_precision = 64;
+    if(myverbose) printf("  PropagatorPrecision set to 64 line %d operator %d\n", line_of_file, current_operator);
   }
   ^EndOperator{SPC}*  {
     if(myverbose) printf("operator %d parsed line %d\n\n", current_operator, line_of_file);
@@ -353,14 +373,31 @@ TYPE [0-9A-Z]+
 }
 
 <WILSONOP,TMOP>{
-  {SPC}*Solver{SPC}*={SPC}* {
+  {SPC}*Solver{EQL} {
     name_caller = YY_START; 
     BEGIN(TMSOLVER);
   }
 }
 
+<DBTMOP>{
+  {SPC}*2KappaMubar{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    optr->mubar = c;
+    if(myverbose) printf("  2KappaMubar set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*2KappaEpsbar{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    optr->epsbar = c;
+    if(myverbose) printf("  2KappaEpsbar set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*Solver{EQL} {
+    name_caller = YY_START; 
+    BEGIN(DBTMSOLVER);
+  }
+}
+
 <TMOP>{
-  {SPC}*2KappaMu{SPC}*={SPC}*{FLT} {
+  {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     optr->mu = c;
     if(myverbose) printf("  2KappaMu set to %f line %d operator %d\n", c, line_of_file, current_operator);
@@ -368,16 +405,39 @@ TYPE [0-9A-Z]+
 }
 
 <OVERLAPOP>{
-  {SPC}*Solver{SPC}*={SPC}* BEGIN(OVSOLVER);
-  {SPC}*m{SPC}*={SPC}*{FLT} {
+  {SPC}*Solver{EQL} BEGIN(OVSOLVER);
+  {SPC}*m{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     optr->m = c;
     if(myverbose) printf("  m set to %f line %d operator %d\n", c, line_of_file, current_operator);
   }
-  {SPC}*s{SPC}*={SPC}*{FLT} {
+  {SPC}*s{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     optr->s = c;
     if(myverbose) printf("  s set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*DegreeOfPolynomial{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    optr->deg_poly = a;
+    if(myverbose) printf("  DegreeOfPolynomial set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*NoKernelEigenvalues{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    optr->no_ev = a;
+    if(myverbose) printf("  NoKernelEigenvalues set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*KernelEigenvaluePrecision{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    optr->ev_prec = c;
+    if(myverbose) printf("  KernelEigenvaluePrecision set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
+}
+
+<DBTMSOLVER,TMSOLVER>{
+  cg {
+    optr->solver=1;
+    if(myverbose) printf("  Solver set to CG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
   }
 }
 
@@ -385,11 +445,6 @@ TYPE [0-9A-Z]+
   bicgstab {
     optr->solver=0;
     if(myverbose) printf("  Solver set to BiCGstab line %d operator %d\n", line_of_file, current_operator);
-    BEGIN(name_caller);
-  }
-  cg {
-    optr->solver=1;
-    if(myverbose) printf("  Solver set to CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   pcg {
@@ -508,7 +563,7 @@ TYPE [0-9A-Z]+
 
 
 <DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL>{
-  {SPC}*Timescale{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*Timescale{EQL}{DIGIT}+ {
     if(mnl->type == NDDETRATIO) {
       mnl->timescale = -5;
       if(myverbose) printf("  timescales set to %d line %d monomial %d since NDDETRATIO is not for MD evolution\n", a, line_of_file, current_monomial);
@@ -519,7 +574,7 @@ TYPE [0-9A-Z]+
       if(myverbose) printf("  timescales set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
     }
   }
-  {SPC}*Name{SPC}*={SPC}* {
+  {SPC}*Name{EQL} {
     name_caller = YY_START;
     BEGIN(MNAME);
   }
@@ -532,165 +587,165 @@ TYPE [0-9A-Z]+
 
 
 <DETMONOMIAL>{
-  {SPC}*2KappaMu{SPC}*={SPC}*{FLT} {
+  {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu = c;
     if(myverbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*2KappaMu2{SPC}*={SPC}*{FLT} {
+  {SPC}*2KappaMu2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu2 = c;
     if(myverbose) printf("  2kappamu2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*Kappa{SPC}*={SPC}*{FLT} {
+  {SPC}*Kappa{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     mnl->kappa = c;
     if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*Kappa2{SPC}*={SPC}*{FLT} {
+  {SPC}*Kappa2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->kappa2 = c;
     if(myverbose) printf("  Kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*2KappaMubar{SPC}*={SPC}*{FLT} {
+  {SPC}*2KappaMubar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mubar = c;
     if(myverbose) printf("  2kappamubar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*2KappaMubar2{SPC}*={SPC}*{FLT} {
+  {SPC}*2KappaMubar2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mubar2 = c;
     if(myverbose) printf("  2kappamubar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*2KappaEpsbar{SPC}*={SPC}*{FLT} {
+  {SPC}*2KappaEpsbar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->epsbar = c;
     if(myverbose) printf("  2kappaepsbar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*2KappaEpsbar2{SPC}*={SPC}*{FLT} {
+  {SPC}*2KappaEpsbar2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->epsbar2 = c;
     if(myverbose) printf("  2kappaepsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*CSGHistory{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*CSGHistory{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->csg_N = a;
     if(myverbose) printf("  csg history length set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
-  {SPC}*CSGHistory2{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*CSGHistory2{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z2] = %d", name , &a);
     mnl->csg_N2 = a;
     if(myverbose) printf("  csg history2 length (for bicgstab) set to %d line %d monomial %d\n", 
                        a, line_of_file, current_monomial);
   }
-  {SPC}*ForcePrecision{SPC}*={SPC}*{FLT} {
+  {SPC}*ForcePrecision{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->forceprec = c;
     if(myverbose) printf("  ForcePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*AcceptancePrecision{SPC}*={SPC}*{FLT} {
+  {SPC}*AcceptancePrecision{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->accprec = c;
     if(myverbose) printf("  AcceptancePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*MaxSolverIterations{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*MaxSolverIterations{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->maxiter = a;
     if(myverbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
-  {SPC}*Solver{SPC}*={SPC}* BEGIN(MSOLVER);
+  {SPC}*Solver{EQL} BEGIN(MSOLVER);
 }
 
 
 <GAUGEMONOMIAL>{
-  {SPC}*Type{SPC}*={SPC}* BEGIN(GTYPE);
-  {SPC}*UseRectangleStaples{SPC}*={SPC}*yes {
+  {SPC}*Type{EQL} BEGIN(GTYPE);
+  {SPC}*UseRectangleStaples{EQL}yes {
     mnl->use_rectangles = 1;
     g_dbw2rand = 1;
     if(myverbose) printf("  UseRectangleStaples set to true line %d monomial %d\n", line_of_file, current_monomial);
   }
-  {SPC}*UseRectangleStaples{SPC}*={SPC}*no {
+  {SPC}*UseRectangleStaples{EQL}no {
     mnl->use_rectangles = 0;
     g_dbw2rand = 0;
     if(myverbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
-  {SPC}*Beta{SPC}*={SPC}*{FLT} {
+  {SPC}*Beta{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->beta = c;
     g_beta = c;
     if(myverbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*RectangleCoefficient{SPC}*={SPC}*{FLT} {
+  {SPC}*RectangleCoefficient{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1 = c;
     g_rgi_C1 = c;
     if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*IncludeWrappedSquares{SPC}*={SPC}*yes {
+  {SPC}*IncludeWrappedSquares{EQL}yes {
     g_sf_inc_wrap_sq = 1;
     if(myverbose) printf("  IncludeWrappedSquares set to true line %d monomial %d\n", line_of_file, current_monomial);
   }
-  {SPC}*IncludeWrappedSquares{SPC}*={SPC}*no {
+  {SPC}*IncludeWrappedSquares{EQL}no {
     g_sf_inc_wrap_sq = 0;
     if(myverbose) printf("  IncludeWrappedSquares set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
 }
 
 <SFGAUGEMONOMIAL>{
-  {SPC}*Type{SPC}*={SPC}* BEGIN(GTYPE);
-  {SPC}*UseRectangleStaples{SPC}*={SPC}*yes {
+  {SPC}*Type{EQL} BEGIN(GTYPE);
+  {SPC}*UseRectangleStaples{EQL}yes {
     mnl->use_rectangles = 1;
     g_dbw2rand = 1;
     if(myverbose) printf("  UseRectangleStaples set to true line %d monomial %d\n", line_of_file, current_monomial);
   }
-  {SPC}*UseRectangleStaples{SPC}*={SPC}*no {
+  {SPC}*UseRectangleStaples{EQL}no {
     mnl->use_rectangles = 0;
     g_dbw2rand = 0;
     if(myverbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
-  {SPC}*Beta{SPC}*={SPC}*{FLT} {
+  {SPC}*Beta{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->beta = c;
     g_beta = c;
     if(myverbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*RectangleCoefficient{SPC}*={SPC}*{FLT} {
+  {SPC}*RectangleCoefficient{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1 = c;
     g_rgi_C1 = c;
     if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*Eta{SPC}*={SPC}*{FLT} {
+  {SPC}*Eta{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->eta = c;
     g_eta = c;
     if(myverbose) printf("  eta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*PlaquetteCoefficientT{SPC}*={SPC}*{FLT} {
+  {SPC}*PlaquetteCoefficientT{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->ct = c;
     g_Ct = c;
     if(myverbose) printf("  PlaquetteCoefficientT ct set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*PlaquetteCoefficientS{SPC}*={SPC}*{FLT} {
+  {SPC}*PlaquetteCoefficientS{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->cs = c;
     g_Cs = c;
     if(myverbose) printf("  PlaquetteCoefficientS cs set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*RectangleCoefficientSS{SPC}*={SPC}*{FLT} {
+  {SPC}*RectangleCoefficientSS{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1ss = c;
     g_C1ss = c;
     if(myverbose) printf("  RectangleCoefficientSS c1ss set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*RectangleCoefficientTSS{SPC}*={SPC}*{FLT} {
+  {SPC}*RectangleCoefficientTSS{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1tss = c;
     g_C1tss = c;
     if(myverbose) printf("  RectangleCoefficientTSS c1tss set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*RectangleCoefficientTTS{SPC}*={SPC}*{FLT} {
+  {SPC}*RectangleCoefficientTTS{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1tts = c;
     g_C1tts = c;
@@ -700,49 +755,49 @@ TYPE [0-9A-Z]+
 
 
 <NDPOLYMONOMIAL>{
-  {SPC}*ExactPolynomial{SPC}*={SPC}*yes {
+  {SPC}*ExactPolynomial{EQL}yes {
     phmc_exact_poly = 1;
     if(myverbose!=0) printf("  phmc_exact_poly set to true line %d monomial %d\n", line_of_file, current_monomial);
   }
-  {SPC}*ExactPolynomial{SPC}*={SPC}*no {
+  {SPC}*ExactPolynomial{EQL}no {
     phmc_exact_poly = 0;
     if(myverbose!=0) printf("  phmc_exact_poly set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
-  {SPC}*StildeMax{SPC}*={SPC}*{FLT} {
+  {SPC}*StildeMax{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     stilde_max = c;
     if(myverbose!=0) printf("  Stilde max set to %e line %d monomial %d\n", stilde_max, line_of_file, current_monomial);
   }
-  {SPC}*StildeMin{SPC}*={SPC}*{FLT} {
+  {SPC}*StildeMin{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     stilde_min = c;
     if(myverbose!=0) printf("  Stilde min set to %e line %d monomial %d\n", stilde_min, line_of_file, current_monomial);
   }
-  {SPC}*DegreeOfMDPolynomial{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*DegreeOfMDPolynomial{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     degree_of_p = a;
     if(myverbose!=0) printf("  Degree of MD polynomial set to %d line %d monomial %d\n", degree_of_p, line_of_file, current_monomial);
   }
-  {SPC}*PrecisionPtilde{SPC}*={SPC}*{FLT} {
+  {SPC}*PrecisionPtilde{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     g_acc_Ptilde = c;
     if(myverbose!=0) printf("  Precision for Ptilde set to %e line %d monomial %d\n", g_acc_Ptilde, line_of_file, current_monomial);
   }
-  {SPC}*PrecisionHfinal{SPC}*={SPC}*{FLT} {
+  {SPC}*PrecisionHfinal{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     g_acc_Hfin = c;
     if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", g_acc_Hfin, line_of_file, current_monomial);
   }
-  {SPC}*ComputeEVFreq{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*ComputeEVFreq{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     g_rec_ev = a;
     if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", g_acc_Hfin, line_of_file, current_monomial);
   }
-  {SPC}*ComputeOnlyEVs{SPC}*={SPC}*yes {
+  {SPC}*ComputeOnlyEVs{EQL}yes {
     phmc_compute_evs=1;
     if(myverbose!=0) printf("  Compute only heavy EVs set to true line %d monomial %d\n", line_of_file, current_monomial);
   }
-  {SPC}*ComputeOnlyEVs{SPC}*={SPC}*no {
+  {SPC}*ComputeOnlyEVs{EQL}no {
     phmc_compute_evs=0;
     if(myverbose!=0) printf("  Compute only heavy EVs set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
@@ -830,7 +885,7 @@ TYPE [0-9A-Z]+
   BEGIN(INTEGRATOR);
 }
 <INTEGRATOR>{
-  {SPC}*Type{DIGIT}{SPC}*={SPC}*{TYPE} {
+  {SPC}*Type{DIGIT}{EQL}{TYPE} {
     type = (char*)malloc(100*sizeof(char));
     sscanf(yytext, " %[a-zA-Z]%d = %s", name, &a, type);
     if(strcmp(type, "LEAPFROG")==0) {
@@ -850,19 +905,19 @@ TYPE [0-9A-Z]+
     if(myverbose) printf("  timescale %d type = %s line %d\n", a, type, line_of_file);
     free(type);
   }
-  {SPC}*IntegrationSteps{DIGIT}{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*IntegrationSteps{DIGIT}{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z]%d = %d", name, &a, &b);
     if(myverbose) printf("  timescale %d steps=%d line %d\n", a, b, line_of_file);
     Integrator.n_int[a] = b;
     BEGIN(INTEGRATOR);
   }
-  {SPC}*Lambda{DIGIT}{SPC}*={SPC}*{FLT} {
+  {SPC}*Lambda{DIGIT}{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z]%d = %f", name, &a, &c);
     Integrator.lambda[a] = c;
     if(myverbose) printf("  timescale %d Lambda=%f line %d\n", a, c, line_of_file);
     BEGIN(INTEGRATOR);
   }
-  {SPC}*NumberOfTimescales{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*NumberOfTimescales{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     if(myverbose) printf("  Number of timescales set to %d line %d\n", a, line_of_file);
     if(a > 10) {
@@ -872,7 +927,7 @@ TYPE [0-9A-Z]+
     Integrator.no_timescales = a;
     BEGIN(INTEGRATOR);
   }
-  {SPC}*Tau{SPC}*={SPC}*{FLT} {
+  {SPC}*Tau{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     if(myverbose) printf("  tau set to %e line %d\n", c, line_of_file);
     Integrator.tau = c;
@@ -1397,7 +1452,7 @@ TYPE [0-9A-Z]+
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITOPERATOR,TMOP,OVERLAPOP,WILSONOP>\n   {
+<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP>\n   {
   line_of_file++;
 }
 <*>\n                       {

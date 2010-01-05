@@ -79,7 +79,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   /* Here we invert the hermitean operator squared */
 
   if(g_proc_id == 0) {
-    printf("# Using CG for flavour doublet!\n"); 
+    printf("# Using CG for TMWILSON flavour doublet!\n"); 
     fflush(stdout);
   }
   gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);

@@ -74,8 +74,8 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
 
 double ov_s = 0.6;
 double m_ov = 0.;
-const int ov_n_cheby = 150;
-double * ov_cheby_coef = NULL;
+extern const int ov_n_cheby;
+extern double * ov_cheby_coef;
 
 void Dov_psi(spinor * const P, spinor * const S) {
 

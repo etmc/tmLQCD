@@ -23,41 +23,82 @@
 #define _OPERATOR_H
 
 #include "su3.h"
+#include <io/utils.h>
 
 #define TMWILSON 0
 #define OVERLAP 1
 #define WILSON 2
+#define DBTMWILSON 3
 
 #define max_no_operators 10
 
 typedef struct {
+  /* ID of the operator */
   int type;
   int id;
+  /* for overlap */
   int n_cheby;
   int deg_poly;
+  int no_ev;
+  
   int sloppy_precision;
-  int even_odd;
+  int even_odd_flag;
   int solver;
   int N_s;
   int initialised;
-  
+  int rel_prec;
+  int maxiter;
+  int iterations;
+  int prop_precision;
+
+  int error_code;
+
   double kappa;
+  /* for twisted */
+  double mu;
+  double mubar;
+  /* for 2 flavour twisted */
+  double epsbar;
+  double eps_sq;
+  double reached_prec;
+  /* for the overlap */
   double m;
   double s;
-  double mu;
+  double ev_qnorm;
+  double ev_minev;
+  double ev_prec;
+  /* generic place for sources */
+  spinor *sr0, *sr1, *sr2, *sr3;
+  /* generic place for propagators */
+  spinor *prop0, *prop1, *prop2, *prop3;
 
+  /* chebyshef coefficients for the overlap */
   double * coefs;
-  void (*applyD) (spinor * const, spinor * const);
+  /* various versions of the Dirac operator */
+  void (*applyM) (spinor * const, spinor * const);
   void (*applyQ) (spinor * const, spinor * const);
+  /* with even/odd */
   void (*applyQp) (spinor * const, spinor * const);
   void (*applyQm) (spinor * const, spinor * const);
   void (*applyQsq) (spinor * const, spinor * const);
-  int (*inverter) (spinor * const, spinor * const, spinor * const, spinor * const,
-		   const int op_id);
+  void (*applyMp) (spinor * const, spinor * const);
+  void (*applyMm) (spinor * const, spinor * const);
+  void (*applyDbQsq) (spinor * const, spinor * const, spinor * const, spinor * const);
+  /* the generic invert function */
+  void (*inverter) (const int op_id);
+  /* write the propagator */
+  void (*write_prop) (const int nstore, const int isample, const int ix, const int op_id, 
+		      const int source_time_slice, const int propagator_splitted, 
+		      const int index_start, const int write_prop_format_flag,
+		      char * source_input_filename, char *gaugelfn, DML_Checksum *gaugecksum);
+
 } operator;
 
+/* operator list defined in operator.c */
 extern operator operator_list[max_no_operators];
+extern int no_operators;
 
 int add_operator(const int type);
+int init_operators();
 
 #endif

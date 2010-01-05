@@ -138,7 +138,7 @@ int main(int argc,char *argv[]) {
   strcpy(nstore_filename,".nstore_counter");
   strcpy(tmp_filename, ".conf.tmp");
 
-  verbose = 0;
+  verbose = 1;
   g_use_clover_flag = 0;
 
 #ifdef MPI
