@@ -54,6 +54,7 @@ int read_gauge_field(char * filename, DML_Checksum *scidac_checksum,
       if (DML_read_flag && scidac_checksum != (DML_Checksum*)NULL)
         *scidac_checksum = checksum_read;
       free(checksum_string);
+      checksum_string=(char*)NULL;
     }
     else if (strcmp("xlf-info", header_type) == 0) {
       read_message(reader, xlf_info);
