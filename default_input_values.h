@@ -67,7 +67,7 @@
 #define _default_rlxd_input_filename "last_state"
 #define _default_gauge_input_filename "conf"
 #define _default_read_source_flag 0
-#define _default_source_filename "source.mass"
+#define _default_source_filename "source"
 #define _default_g_stdio_proc 0
 #define _default_index_start 0
 #define _default_index_end 12

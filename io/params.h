@@ -116,12 +116,21 @@ typedef struct {
 } paramsPropInfo;
 
 typedef struct {
+  /* later usage for the type of source */
   int type;
+  /* splitted or not (really needed?) */
   int splitted;
+  /* the IO format (needed?) */
   int format;
+  /* the IO precision */
   int precision;
+  /* the source location, where it applies*/
   int t, x, y, z;
+  /* sample, gauge no and index of source */
   int sample, nstore, ix;
+  /* is this a 2 flavour source */
+  int no_flavours;
+  /* the base filename */
   char * basename;
 } paramsSourceInfo;
 

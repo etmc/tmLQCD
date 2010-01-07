@@ -24,6 +24,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <errno.h>
 #include <time.h>
@@ -181,6 +182,8 @@ void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * co
 void op_invert(const int op_id, const int index_start) {
   operator * optr = &operator_list[op_id];
   double atime = 0., etime = 0., nrm1 = 0., nrm2 = 0.;
+  spinor * tmp;
+  int i;
   optr->iterations = 0;
   optr->reached_prec = -1.;
   g_kappa = optr->kappa;
@@ -223,50 +226,63 @@ void op_invert(const int op_id, const int index_start) {
   else if(optr->type == DBTMWILSON) {
     g_mubar = optr->mubar;
     g_epsbar = optr->epsbar;
-    optr->iterations = invert_doublet_eo(optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
-					 optr->sr0, optr->sr1, optr->sr2, optr->sr3,
-					 optr->eps_sq, optr->maxiter,
-					 optr->solver, optr->rel_prec);
+    for(i = 0; i < SourceInfo.no_flavours; i++) {
+      optr->iterations = invert_doublet_eo(optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
+					   optr->sr0, optr->sr1, optr->sr2, optr->sr3,
+					   optr->eps_sq, optr->maxiter,
+					   optr->solver, optr->rel_prec);
+      
+      
+      g_mu = optr->mubar;
+      M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1); 
+      assign_add_mul_r(g_spinor_field[DUM_DERI+1], optr->prop2, -optr->epsbar, VOLUME/2);
+      assign_add_mul_r(g_spinor_field[DUM_DERI+2], optr->prop3, -optr->epsbar, VOLUME/2);
+      
+      g_mu = -g_mu;
+      M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3); 
+      assign_add_mul_r(g_spinor_field[DUM_DERI+3], optr->prop0, -optr->epsbar, VOLUME/2);
+      assign_add_mul_r(g_spinor_field[DUM_DERI+4], optr->prop1, -optr->epsbar, VOLUME/2);
+      
+      diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr0, VOLUME/2); 
+      diff(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], optr->sr1, VOLUME/2); 
+      diff(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+3], optr->sr2, VOLUME/2); 
+      diff(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+4], optr->sr3, VOLUME/2); 
+      
+      nrm1  = square_norm(g_spinor_field[DUM_DERI+1], VOLUME/2, 1); 
+      nrm1 += square_norm(g_spinor_field[DUM_DERI+2], VOLUME/2, 1); 
+      nrm1 += square_norm(g_spinor_field[DUM_DERI+3], VOLUME/2, 1); 
+      nrm1 += square_norm(g_spinor_field[DUM_DERI+4], VOLUME/2, 1); 
+      optr->reached_prec = nrm1;
+      g_mu = g_mu1;
+      /* For standard normalisation */
+      /* we have to mult. by 2*kappa */
+      mul_r(g_spinor_field[DUM_DERI], (2*optr->kappa), optr->prop0, VOLUME/2);
+      mul_r(g_spinor_field[DUM_DERI+1], (2*optr->kappa), optr->prop1, VOLUME/2);
+      mul_r(g_spinor_field[DUM_DERI+2], (2*optr->kappa), optr->prop2, VOLUME/2);
+      mul_r(g_spinor_field[DUM_DERI+3], (2*optr->kappa), optr->prop3, VOLUME/2);
+      /* the final result should be stored in the convention used in */
+      /* hep-lat/0606011                                             */
+      /* this requires multiplication of source with                 */
+      /* (1+itau_2)/sqrt(2) and the result with (1-itau_2)/sqrt(2)   */
+      
+      mul_one_pm_itau2(optr->prop0, optr->prop2, g_spinor_field[DUM_DERI], 
+		       g_spinor_field[DUM_DERI+2], -1., VOLUME/2);
+      mul_one_pm_itau2(optr->prop1, optr->prop3, g_spinor_field[DUM_DERI+1], 
+		       g_spinor_field[DUM_DERI+3], -1., VOLUME/2);
+      /* write propagator */
 
-    
-    g_mu = g_mubar;
-    M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1); 
-    assign_add_mul_r(g_spinor_field[DUM_DERI+1], optr->prop2, -g_epsbar, VOLUME/2);
-    assign_add_mul_r(g_spinor_field[DUM_DERI+2], optr->prop3, -g_epsbar, VOLUME/2);
-    
-    g_mu = -g_mu;
-    M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3); 
-    assign_add_mul_r(g_spinor_field[DUM_DERI+3], optr->prop0, -g_epsbar, VOLUME/2);
-    assign_add_mul_r(g_spinor_field[DUM_DERI+4], optr->prop1, -g_epsbar, VOLUME/2);
-    
-    diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr0, VOLUME/2); 
-    diff(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], optr->sr1, VOLUME/2); 
-    diff(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+3], optr->sr2, VOLUME/2); 
-    diff(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+4], optr->sr3, VOLUME/2); 
-    
-    nrm1  = square_norm(g_spinor_field[DUM_DERI+1], VOLUME/2, 1); 
-    nrm1 += square_norm(g_spinor_field[DUM_DERI+2], VOLUME/2, 1); 
-    nrm1 += square_norm(g_spinor_field[DUM_DERI+3], VOLUME/2, 1); 
-    nrm1 += square_norm(g_spinor_field[DUM_DERI+4], VOLUME/2, 1); 
-    optr->reached_prec = nrm1;
-    g_mu = g_mu1;
-    /* For standard normalisation */
-    /* we have to mult. by 2*kappa */
-    mul_r(g_spinor_field[DUM_DERI], (2*optr->kappa), optr->prop0, VOLUME/2);
-    mul_r(g_spinor_field[DUM_DERI+1], (2*optr->kappa), optr->prop1, VOLUME/2);
-    mul_r(g_spinor_field[DUM_DERI+2], (2*optr->kappa), optr->prop2, VOLUME/2);
-    mul_r(g_spinor_field[DUM_DERI+3], (2*optr->kappa), optr->prop3, VOLUME/2);
-    /* the final result should be stored in the convention used in */
-    /* hep-lat/0606011                                             */
-    /* this requires multiplication of source with                 */
-    /* (1+itau_2)/sqrt(2) and the result with (1-itau_2)/sqrt(2)   */
-    
-    mul_one_pm_itau2(optr->prop0, optr->prop2, g_spinor_field[DUM_DERI], 
-		     g_spinor_field[DUM_DERI+2], -1., VOLUME/2);
-    mul_one_pm_itau2(optr->prop1, optr->prop3, g_spinor_field[DUM_DERI+1], 
-		     g_spinor_field[DUM_DERI+3], -1., VOLUME/2);
+      optr->write_prop(op_id, index_start);
 
-
+      /* mirror source */
+      if(SourceInfo.no_flavours == 2) {
+	tmp = optr->sr0;
+	optr->sr0 = optr->sr1;
+	optr->sr1 = tmp;
+	tmp = optr->sr2;
+	optr->sr2 = optr->sr3;
+	optr->sr3 = tmp;
+      }
+    }
   }
   else if(optr->type == OVERLAP) {
     invert_overlap(op_id, index_start);
@@ -289,66 +305,74 @@ void op_write_prop(const int op_id, const int index_start) {
   operator * optr = &operator_list[op_id];
   double ratime = 0., retime = 0.;
   char conf_filename[100];
-
+  char ending[15];
   WRITER *writer = NULL;
 
   paramsSourceFormat *sourceFormat = NULL;
   paramsPropagatorFormat *propagatorFormat = NULL;
   paramsInverterInfo *inverterInfo = NULL;
-  
-  
-  if (PropInfo.splitted) {
-    sprintf(conf_filename, "%s.%.4d.%.2d.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix);
+  if(optr->type == DBTMWILSON) {
+    strcpy(ending, "hinverted");
+  }
+  else if(optr->type == OVERLAP) {
+    strcpy(ending, "ovinverted");
   }
   else {
-    sprintf(conf_filename, "%s.%.4d.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t);
+    strcpy(ending, "inverted");
+  }
+  
+  if (PropInfo.splitted) {
+    sprintf(conf_filename, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
+  }
+  else {
+    sprintf(conf_filename, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
   }
   
   construct_writer(&writer, conf_filename);
-  
-  if(optr->type == TMWILSON || optr->type == WILSON) {
-    if (PropInfo.splitted || SourceInfo.ix == index_start) {
-      inverterInfo = construct_paramsInverterInfo(optr->reached_prec, optr->iterations, optr->solver, 1);
-      
-      write_spinor_info(writer, PropInfo.format, inverterInfo);
-      
-      free(inverterInfo);
-    }
+  if (PropInfo.splitted || SourceInfo.ix == index_start) {
+    inverterInfo = construct_paramsInverterInfo(optr->reached_prec, optr->iterations, optr->solver, optr->no_flavours);
     
-    /* write the source depending on format */
-    if (PropInfo.format == 1) {
-      sourceFormat = construct_paramsSourceFormat(SourceInfo.precision, 1, 4, 3);
-      
-      write_source_format(writer, sourceFormat);
-      write_spinor(writer, &operator_list[op_id].sr0, &operator_list[op_id].sr1, 1, SourceInfo.precision);
-      
-      free(sourceFormat);
-    }
+    write_spinor_info(writer, PropInfo.format, inverterInfo);
     
-#ifdef MPI
-    ratime = MPI_Wtime();
-#else
-    ratime = (double)clock() / (double)(CLOCKS_PER_SEC);
-#endif
-    propagatorFormat = construct_paramsPropagatorFormat(optr->prop_precision, 1);
-    
-    write_propagator_format(writer, propagatorFormat);
-    write_spinor(writer, &operator_list[op_id].prop0, &operator_list[op_id].prop1, 1, optr->prop_precision);
-    
-    free(propagatorFormat);
-    
-#ifdef MPI
-    retime = MPI_Wtime();
-#else
-    retime = (double)clock() / (double)(CLOCKS_PER_SEC);
-#endif
-    if (g_cart_id == 0) {
-      printf("time for writing prop was %e seconds\n", retime - ratime);
-    }
+    free(inverterInfo);
   }
-  else {
+  /* write the source depending on format */
+  /* to be fixed for 2 fl tmwilson        */
+  if (PropInfo.format == 1) {
+    sourceFormat = construct_paramsSourceFormat(SourceInfo.precision, optr->no_flavours, 4, 3);
+    
+    write_source_format(writer, sourceFormat);
+    write_spinor(writer, &operator_list[op_id].sr0, &operator_list[op_id].sr1, 1, SourceInfo.precision);
+    if(optr->no_flavours == 2) {
+      write_spinor(writer, &operator_list[op_id].sr2, &operator_list[op_id].sr3, 1, SourceInfo.precision);
+    }
+    free(sourceFormat);
+  }
 
+#ifdef MPI
+  ratime = MPI_Wtime();
+#else
+  ratime = (double)clock() / (double)(CLOCKS_PER_SEC);
+#endif
+  propagatorFormat = construct_paramsPropagatorFormat(optr->prop_precision, optr->no_flavours);
+  
+  write_propagator_format(writer, propagatorFormat);
+  free(propagatorFormat);
+
+  write_spinor(writer, &operator_list[op_id].prop0, &operator_list[op_id].prop1, 1, optr->prop_precision);
+  if(optr->no_flavours == 2) {
+    write_spinor(writer, &operator_list[op_id].prop2, &operator_list[op_id].prop3, 1, optr->prop_precision);
   }
+  
+#ifdef MPI
+  retime = MPI_Wtime();
+#else
+  retime = (double)clock() / (double)(CLOCKS_PER_SEC);
+#endif
+  if (g_cart_id == 0) {
+    printf("time for writing prop was %e seconds\n", retime - ratime);
+  }
+  
   destruct_writer(writer);
   
   return;

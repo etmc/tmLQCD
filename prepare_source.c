@@ -156,15 +156,16 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     /*       convert_eo_to_lexic(optr->sr0, g_spinor_field[0], g_spinor_field[1]); */
     /*     } */
   }
-  else {
-    zero_spinor_field(g_spinor_field[2], VOLUME/2);
-    zero_spinor_field(g_spinor_field[3], VOLUME/2);
+  else { /* for the ND 2 flavour twisted operator */
+    SourceInfo.no_flavours = 2;
+    zero_spinor_field(g_spinor_field[0], VOLUME/2);
+    zero_spinor_field(g_spinor_field[1], VOLUME/2);
     if(read_source_flag == 0) {
       if(source_location == 0) {
-	source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
+	source_spinor_field(g_spinor_field[2], g_spinor_field[3], is, ic);
       }
       else {
-	source_spinor_field_point_from_file(g_spinor_field[0], g_spinor_field[1], 
+	source_spinor_field_point_from_file(g_spinor_field[2], g_spinor_field[3], 
 					    is, ic, source_location);
       }
     }
@@ -174,7 +175,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
 	if(g_proc_id == 0) {
 	  printf("Reading source from %s\n", conf_filename);
 	}
-	if(read_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 0) != 0) {
+	if(read_spinor(g_spinor_field[2], g_spinor_field[3], conf_filename, 0) != 0) {
 	  if(g_proc_id == 0) {
 	    printf("Error reading source! Aborting...\n");
 	  }

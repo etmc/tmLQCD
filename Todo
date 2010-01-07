@@ -1,3 +1,5 @@
+- SourceSink_Pairs propagator format broken for 2 fl. tmwilson
+
 - source generation inside the code
 - lime headers for propagators and sources
 - deflation
