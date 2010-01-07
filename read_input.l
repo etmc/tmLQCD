@@ -58,6 +58,7 @@ EQL {SPC}*={SPC}*
 #include"monomial.h"
 #include"integrator.h"
 #include"operator.h"
+#include<io/params.h>
 
   /* Name of the parsing routine */
 #define YY_DECL         int parse_config()
@@ -1228,22 +1229,32 @@ EQL {SPC}*={SPC}*
 }
 <SOURCEFILE>{FILENAME} {
   strcpy(source_input_filename,yytext);
+  if(SourceInfo.basename == NULL) free(SourceInfo.basename);
+  SourceInfo.basename = (char*)malloc((strlen(yytext)+1)*sizeof(char));
+  strcpy(SourceInfo.basename, yytext);
+  if(PropInfo.basename == NULL) free(PropInfo.basename);
+  PropInfo.basename = (char*)malloc((strlen(yytext)+1)*sizeof(char));
+  strcpy(PropInfo.basename, yytext);
   if(myverbose!=0) printf("source input filename set to %s\n",yytext);
 }
 <SOURCEFORMAT>etmc      {
   source_format_flag = 0;
+  SourceInfo.format = 0;
   if(myverbose!=0) printf("Using standard ETMC binary format for source input file\n");
 }
 <SOURCEFORMAT>cmi      {
   source_format_flag = 11;
+  SourceInfo.format = 11;
   if(myverbose!=0) printf("Using CM format for source input file\n");
 }
 <SOURCEFORMAT>gwc      {
   source_format_flag = 10;
+  SourceInfo.format = 10;
   if(myverbose!=0) printf("Using GWC format for source input file\n");
 }
 <SOURCETS>{DIGIT}+   {
   source_time_slice = atoi(yytext);
+  SourceInfo.t = atoi(yytext);
   if(myverbose!=0) printf("Using only timeslice %s of the source, padding the rest with zeros\n", yytext);
 }
 <RELPREC>yes  {
@@ -1288,10 +1299,12 @@ EQL {SPC}*={SPC}*
 }
 <PROPPREC>32 {
   prop_precision_flag = 32;
+  PropInfo.precision = 32;
   if(myverbose!=0) printf("Save propagators in 32 Bit precision!\n");
 }
 <PROPPREC>64 {
   prop_precision_flag = 64;
+  PropInfo.precision = 64;
   if(myverbose!=0) printf("Save propagators in 64 Bit precision!\n");
 }
 <REPRORND>yes {
@@ -1392,26 +1405,32 @@ EQL {SPC}*={SPC}*
 }
 <WRPROPFLAG>gwc      {
   write_prop_format_flag = 10;
+  PropInfo.format = 10;
   if(myverbose!=0) fprintf(stderr, "GWC format no longer supported for writing propagators\n");
 }
 <WRPROPFLAG>cmi      {
   write_prop_format_flag = 11;
+  PropInfo.format = 11;
   if(myverbose!=0) fprintf(stderr, "CM format no longer supported for writing propagators\n");
 }
 <WRPROPFLAG>DiracFermion_Sink {
   write_prop_format_flag = 0;
+  PropInfo.format = 0;
   if(myverbose!=0) printf("Propagator type: DiracFermion_Sinks\n");
 }
 <WRPROPFLAG>DiracFermion_Source_Sink_Pairs {
   write_prop_format_flag = 1;
+  PropInfo.format = 1;
   if(myverbose!=0) printf("Propagator type: DiracFermion_Source_Sink_Pairs\n");
 }
 <WRPROPFLAG>DiracFermion_ScalarSource_TwelveSink {
+  PropInfo.format = 1;
   write_prop_format_flag = 1;
   fprintf(stderr, "Propagator type: DiracFermion_ScalarSource_TwelveSink, not yet supported\n");
 }
 <WRPROPFLAG>DiracFermion_ScalarSource_FourSink {
   write_prop_format_flag = 1;
+  PropInfo.format = 1;
   fprintf(stderr, "Propagator type: DiracFermion_ScalarSource_FourSink, not yet supported\n");
 }
 <ONMEAS>yes {
@@ -1557,12 +1576,17 @@ int read_input(char * conf_file){
   g_C1tts = _default_g_C1tts;
   read_source_flag= _default_read_source_flag;
   strcpy(source_input_filename, _default_source_filename);
+  if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(100*sizeof(char));
+  strcpy(SourceInfo.basename, _default_source_filename);
+  if(PropInfo.basename == NULL) PropInfo.basename = (char*)malloc(100*sizeof(char));
+  strcpy(PropInfo.basename, _default_source_filename);
   g_relative_precision_flag = _default_g_relative_precision_flag;
   return_check_flag = _default_return_check_flag;
   return_check_interval = _default_return_check_interval;
   g_debug_level = _default_g_debug_level;
   source_format_flag = _default_source_format_flag;
   source_time_slice = _default_source_time_slice;
+  SourceInfo.t = _default_source_time_slice;
   gmres_m_parameter = _default_gmres_m_parameter;
   gmresdr_nr_ev = _default_gmresdr_nr_ev;
   g_no_extra_masses = _default_g_no_extra_masses;

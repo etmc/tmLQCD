@@ -107,7 +107,6 @@ int main(int argc,char *argv[]) {
   char parameterfilename[50];
   char conf_filename[50];
   char * input_filename = NULL;
-  char * xlfmessage = NULL;
   char * gaugelfn = NULL;
   DML_Checksum gaugecksum;
   double plaquette_energy;
@@ -208,14 +207,9 @@ int main(int argc,char *argv[]) {
     exit(-1);
   }
   /* Chi`s-spinors  memory allocation */
-  j = init_chi_up_spinor_field(VOLUMEPLUSRAND/2, 20);
+  j = init_chi_spinor_field(VOLUMEPLUSRAND/2, 20);
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for PHMC Chi_up fields! Aborting...\n");
-    exit(0);
-  }
-  j = init_chi_dn_spinor_field(VOLUMEPLUSRAND/2, 20);
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for PHMC Chi_dn fields! Aborting...\n");
     exit(0);
   }
 
@@ -263,7 +257,7 @@ int main(int argc,char *argv[]) {
     if (g_proc_id == 0){
       printf("Reading Gauge field from file %s\n", conf_filename); fflush(stdout);
     }
-    read_gauge_field(conf_filename, &gaugecksum, &xlfmessage, &gaugelfn);
+    read_gauge_field(conf_filename);
     if (g_proc_id == 0){
       printf("done!\n"); fflush(stdout);
     }
@@ -527,8 +521,7 @@ int main(int argc,char *argv[]) {
   free_spinor_field();
   
 /*   free_bispinor_field();  */
-  free_chi_up_spinor_field(); 
-  free_chi_dn_spinor_field(); 
+  free_chi_spinor_field(); 
 
   return(0);
 #ifdef _KOJAK_INST

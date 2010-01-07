@@ -19,8 +19,9 @@
 
 #include "gauge.ih"
 
-int read_gauge_field(char * filename, DML_Checksum *scidac_checksum,
-                     char **xlf_info, char **ildg_data_lfn) {
+paramsGaugeInfo GaugeInfo = { 0., 0, {0,0}, NULL, NULL};
+
+int read_gauge_field(char * filename) {
   int status = 0;
   char *header_type = NULL;
   READER *reader = NULL;
@@ -32,7 +33,7 @@ int read_gauge_field(char * filename, DML_Checksum *scidac_checksum,
   char *checksum_string = NULL;
 
   construct_reader(&reader, filename);
-
+  GaugeInfo.gaugeRead = 0;
   while ((status = ReaderNextRecord(reader)) != LIME_EOF) {
     if (status != LIME_SUCCESS) {
       fprintf(stderr, "ReaderNextRecord returned status %d.\n", status);
@@ -47,20 +48,20 @@ int read_gauge_field(char * filename, DML_Checksum *scidac_checksum,
     if (strcmp("ildg-binary-data", header_type) == 0) {
       read_binary_gauge_data(reader, &checksum_calc);
       gauge_read_flag = 1;
+      GaugeInfo.gaugeRead = 1;
+      GaugeInfo.checksum = checksum_calc;
     }
     else if (strcmp("scidac-checksum", header_type) == 0) {
       read_message(reader, &checksum_string);
       DML_read_flag = parse_checksum_xml(checksum_string, &checksum_read);
-      if (DML_read_flag && scidac_checksum != (DML_Checksum*)NULL)
-        *scidac_checksum = checksum_read;
       free(checksum_string);
       checksum_string=(char*)NULL;
     }
     else if (strcmp("xlf-info", header_type) == 0) {
-      read_message(reader, xlf_info);
+      read_message(reader, &GaugeInfo.xlfInfo);
     }
     else if (strcmp("ildg-data-lfn", header_type) == 0) {
-      read_message(reader, ildg_data_lfn);
+      read_message(reader, &GaugeInfo.ildg_data_lfn);
     }
     close_reader_record(reader);
   }

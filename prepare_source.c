@@ -40,19 +40,24 @@
 #include "su3.h"
 #include "operator.h"
 #include "linalg_eo.h"
+#include "Nondegenerate_Matrix.h"
 #include "prepare_source.h"
 
 void prepare_source(const int nstore, const int isample, const int ix, const int op_id, 
-		    const int read_source_flag, const int source_splitted, 
-		    const int source_location, const int source_time_slice,
-		    const int source_type, const int propagator_splitted, 
-		    char * source_input_filename) {
+		    const int read_source_flag, 
+		    const int source_location,
+		    const int source_type) {
 
   FILE * ifs = NULL;
   int is = ix / 3, ic = ix %3, err = 0;
   double ratime = 0., retime = 0.;
   operator * optr = &operator_list[op_id];
   char conf_filename[100];
+
+  SourceInfo.nstore = nstore;
+  SourceInfo.sample = isample;
+  SourceInfo.ix = ix;
+  SourceInfo.type = source_type;
 
   if(optr->type != DBTMWILSON) {
     if (read_source_flag == 0) {
@@ -69,15 +74,15 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
 #else
       ratime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
-      if (source_splitted) {
-	sprintf(conf_filename, "%s.%.4d.%.2d.%.2d", source_input_filename, nstore, source_time_slice, ix);
+      if (SourceInfo.splitted) {
+	sprintf(conf_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
 	if (g_cart_id == 0) {
 	  printf("Reading source from %s\n", conf_filename);
 	}
 	read_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 0);
       }
       else {
-	sprintf(conf_filename, "%s", source_input_filename);
+	sprintf(conf_filename, "%s", SourceInfo.basename);
 	if (g_cart_id == 0) {
 	  printf("Reading source no %d from %s\n", ix, conf_filename);
 	}
@@ -98,11 +103,11 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     optr->prop0 = g_spinor_field[2];
     optr->prop1 = g_spinor_field[3];
 
-    if (propagator_splitted) {
-      sprintf(conf_filename, "%s.%.4d.%.2d.%.2d.inverted", source_input_filename, nstore, source_time_slice, ix);
+    if (PropInfo.splitted) {
+      sprintf(conf_filename, "%s.%.4d.%.2d.%.2d.inverted", PropInfo.basename, nstore, SourceInfo.t, ix);
     }
     else {
-      sprintf(conf_filename, "%s.%.4d.%.2d.inverted", source_input_filename, nstore, source_time_slice);
+      sprintf(conf_filename, "%s.%.4d.%.2d.inverted", PropInfo.basename, nstore, SourceInfo.t);
     }
 	
     /* If the solver is _not_ CG we might read in */
@@ -118,7 +123,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
 	fclose(ifs);
 	err = 0;
 	/*           iter = get_propagator_type(conf_filename); */
-	if (propagator_splitted) {
+	if (PropInfo.splitted) {
 	  read_spinor(optr->prop0, optr->prop1, conf_filename, 0);
 	}
 	else {
@@ -152,7 +157,66 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     /*     } */
   }
   else {
-    /* for flavour doublet */
+    zero_spinor_field(g_spinor_field[2], VOLUME/2);
+    zero_spinor_field(g_spinor_field[3], VOLUME/2);
+    if(read_source_flag == 0) {
+      if(source_location == 0) {
+	source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
+      }
+      else {
+	source_spinor_field_point_from_file(g_spinor_field[0], g_spinor_field[1], 
+					    is, ic, source_location);
+      }
+    }
+    else {
+      if(SourceInfo.splitted) {
+	sprintf(conf_filename,"%s.%.2d", SourceInfo.basename, ix);
+	if(g_proc_id == 0) {
+	  printf("Reading source from %s\n", conf_filename);
+	}
+	if(read_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 0) != 0) {
+	  if(g_proc_id == 0) {
+	    printf("Error reading source! Aborting...\n");
+	  }
+#ifdef MPI
+	  MPI_Abort(MPI_COMM_WORLD, 1);
+	  MPI_Finalize();
+#endif
+	  exit(-1);
+	};
+      }
+      else {
+	sprintf(conf_filename,"%s", SourceInfo.basename);
+	if(g_proc_id == 0) {
+	  printf("Reading source from %s\n", conf_filename);
+	}
+	if(read_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, ix) != 0) {
+	  if(g_proc_id == 0) {
+	    printf("Error reading source! Aborting...\n");
+	  }
+#ifdef MPI
+	  MPI_Abort(MPI_COMM_WORLD, 1);
+	  MPI_Finalize();
+#endif
+	  exit(-1);
+	}
+      }
+    }
+    mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], +1., VOLUME/2);
+    mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], +1., VOLUME/2);
+    assign(g_spinor_field[0], g_spinor_field[4], VOLUME/2);
+    assign(g_spinor_field[1], g_spinor_field[5], VOLUME/2);
+    assign(g_spinor_field[2], g_spinor_field[6], VOLUME/2);
+    assign(g_spinor_field[3], g_spinor_field[7], VOLUME/2);
+    
+    optr->sr0 = g_spinor_field[0];
+    optr->sr1 = g_spinor_field[1];
+    optr->sr2 = g_spinor_field[2];
+    optr->sr3 = g_spinor_field[3];
+    optr->prop0 = g_spinor_field[4];
+    optr->prop1 = g_spinor_field[5];
+    optr->prop2 = g_spinor_field[6];
+    optr->prop3 = g_spinor_field[7];
   }
 
   return;

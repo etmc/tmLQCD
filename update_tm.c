@@ -322,7 +322,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
 
     if(accept == 1) {
-      read_gauge_field( "conf.save", NULL, NULL, NULL);
+      read_gauge_field( "conf.save");
     }
   } /* end of reversibility check */
 

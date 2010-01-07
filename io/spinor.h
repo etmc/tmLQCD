@@ -32,7 +32,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, READER * reader,
 int write_spinor(WRITER * writer, spinor ** const s, spinor ** const r, const int flavours, const int prec);
 int write_binary_spinor_data(spinor * const s, spinor * const r, WRITER * writer, DML_Checksum *checksum, int const prec);
 
-void write_spinor_info(WRITER * writer, paramsXlfInfo * xlfInfo, const int write_prop_format_flag, paramsInverterInfo * InverterInfo, char * gaugelfn, DML_Checksum const * gaugecksum);
+void write_spinor_info(WRITER * writer, const int write_prop_format_flag, paramsInverterInfo * InverterInfo);
 void write_source_format(WRITER *writer, paramsSourceFormat const *format);
 void write_propagator_format(WRITER *writer, paramsPropagatorFormat const *format);
 void write_propagator_type(WRITER *writer, const int type);

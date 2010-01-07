@@ -27,70 +27,65 @@
 #include "global.h"
 #include "su3.h"
 #include "sse.h"
+#include "init_chi_spinor_field.h"
 
 spinor * sp_up = NULL;
 spinor * sp_dn = NULL;
 
-int init_chi_up_spinor_field(const int V, const int nr) {
+static int chi_initialised = 0;
+
+int init_chi_spinor_field(const int V, const int nr) {
   int i = 0;
+  static int _nr = 0;
 
-  if((void*)(sp_up = (spinor*)calloc(nr*V+1, sizeof(spinor))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(1);
-  }
-  if((void*)(g_chi_up_spinor_field = malloc(nr*sizeof(spinor*))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(2);
-  }
+  if(!chi_initialised || nr > _nr) {
+    free_chi_spinor_field();
+    _nr = nr;
+    chi_initialised = 1;
+    if((void*)(sp_up = (spinor*)calloc(nr*V+1, sizeof(spinor))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(1);
+    }
+    if((void*)(g_chi_up_spinor_field = malloc(nr*sizeof(spinor*))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(2);
+    }
+    if((void*)(sp_dn = (spinor*)calloc(nr*V+1, sizeof(spinor))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(1);
+    }
+    if((void*)(g_chi_dn_spinor_field = malloc(nr*sizeof(spinor*))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(2);
+    }
 #if ( defined SSE || defined SSE2 || defined SSE3)
-  g_chi_up_spinor_field[0] = (spinor*)(((unsigned long int)(sp_up)+ALIGN_BASE)&~ALIGN_BASE);
+    g_chi_up_spinor_field[0] = (spinor*)(((unsigned long int)(sp_up)+ALIGN_BASE)&~ALIGN_BASE);
+    g_chi_dn_spinor_field[0] = (spinor*)(((unsigned long int)(sp_dn)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  g_chi_up_spinor_field[0] = sp_up;
+    g_chi_up_spinor_field[0] = sp_up;
+    g_chi_dn_spinor_field[0] = sp_dn;
 #endif
-  
-  for(i = 1; i < nr; i++){
-    g_chi_up_spinor_field[i] = g_chi_up_spinor_field[i-1]+V;
+    
+    for(i = 1; i < nr; i++){
+      g_chi_up_spinor_field[i] = g_chi_up_spinor_field[i-1]+V;
+      g_chi_dn_spinor_field[i] = g_chi_dn_spinor_field[i-1]+V;
+    }
   }
-
   return(0);
 }
 
-void free_chi_up_spinor_field() {
-
-  free(sp_up);
+void free_chi_spinor_field() {
+  if(chi_initialised) {
+    free(sp_up);
+    free(sp_dn);
+    free(g_chi_dn_spinor_field);
+    free(g_chi_up_spinor_field);
+  }
+  return;
 }
 
-
-int init_chi_dn_spinor_field(const int V, const int nr) {
-  int i = 0;
-
-  if((void*)(sp_dn = (spinor*)calloc(nr*V+1, sizeof(spinor))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(1);
-  }
-  if((void*)(g_chi_dn_spinor_field = malloc(nr*sizeof(spinor*))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(2);
-  }
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  g_chi_dn_spinor_field[0] = (spinor*)(((unsigned long int)(sp_dn)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  g_chi_dn_spinor_field[0] = sp_dn;
-#endif
-  
-  for(i = 1; i < nr; i++){
-    g_chi_dn_spinor_field[i] = g_chi_dn_spinor_field[i-1]+V;
-  }
-
-  return(0);
-}
-
-void free_chi_dn_spinor_field() {
-
-  free(sp_dn);
-}
 

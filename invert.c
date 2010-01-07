@@ -108,9 +108,6 @@ int main(int argc, char *argv[])
   char parameterfilename[50];
   char conf_filename[50];
   char * input_filename = NULL;
-  char * xlfmessage = NULL;
-  char * gaugelfn = NULL;
-  DML_Checksum gaugecksum;
   double plaquette_energy;
 
 #ifdef _KOJAK_INST
@@ -232,14 +229,9 @@ int main(int argc, char *argv[])
   }
 
   if (g_running_phmc) {
-    j = init_chi_up_spinor_field(VOLUMEPLUSRAND / 2, 20);
+    j = init_chi_spinor_field(VOLUMEPLUSRAND / 2, 20);
     if (j != 0) {
-      fprintf(stderr, "Not enough memory for PHMC Chi_up fields! Aborting...\n");
-      exit(0);
-    }
-    j = init_chi_dn_spinor_field(VOLUMEPLUSRAND / 2, 20);
-    if (j != 0) {
-      fprintf(stderr, "Not enough memory for PHMC Chi_dn fields! Aborting...\n");
+      fprintf(stderr, "Not enough memory for PHMC Chi fields! Aborting...\n");
       exit(0);
     }
   }
@@ -317,7 +309,7 @@ int main(int argc, char *argv[])
       printf("Reading gauge field from file %s\n", conf_filename);
       fflush(stdout);
     }
-    read_gauge_field(conf_filename, &gaugecksum, &xlfmessage, &gaugelfn);
+    read_gauge_field(conf_filename);
 
     if (g_cart_id == 0) {
       printf("done!\n");
@@ -393,18 +385,14 @@ int main(int argc, char *argv[])
     for(isample = 0; isample < 1; isample++) {
       for (ix = index_start; ix < index_end; ix++) {
 	for(op_id = 0; op_id < no_operators; op_id++) {
-	  /* we use g_spinor_field[0-3] for sources and props for the moment */
+	  /* we use g_spinor_field[0-7] for sources and props for the moment */
+	  /* 0-3 in case of 1 flavour  */
+	  /* 0-7 in case of 2 flavours */
 	  prepare_source(nstore, isample, ix, op_id, 
-			 read_source_flag, source_splitted, 
-			 source_location, source_time_slice,
-			 0, propagator_splitted, 
-			 source_input_filename);
-	  operator_list[op_id].inverter(op_id);
-	  operator_list[op_id].write_prop(nstore, isample, ix, op_id, 
-					  source_time_slice, propagator_splitted, 
-					  index_start, write_prop_format_flag,
-					  source_input_filename, gaugelfn, &gaugecksum);
-
+			 read_source_flag,
+			 source_location,
+			 0);
+	  operator_list[op_id].inverter(op_id, index_start);
 	}
       }
     }
@@ -421,10 +409,7 @@ int main(int argc, char *argv[])
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
-  if (g_running_phmc) {
-    free_chi_up_spinor_field();
-    free_chi_dn_spinor_field();
-  }
+  free_chi_spinor_field();
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)

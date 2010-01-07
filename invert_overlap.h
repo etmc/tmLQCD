@@ -21,6 +21,6 @@
 #ifndef _INVERT_OVERLAP_H
 #define _INVERT_OVERLAP_H
 
-void invert_overlap(const int op_id);
+void invert_overlap(const int op_id, const int index_start);
 
 #endif

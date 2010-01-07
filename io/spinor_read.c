@@ -18,6 +18,10 @@
 ***********************************************************************/
 
 #include "spinor.ih"
+#include "default_input_values.h"
+
+paramsPropInfo PropInfo = {_default_propagator_splitted, _default_source_format_flag, _default_prop_precision_flag, NULL};
+paramsSourceInfo SourceInfo = {0, _default_propagator_splitted, _default_source_format_flag, _default_prop_precision_flag, 0, 0, 0, 0, 0, 0, 0, NULL};
 
 int read_spinor(spinor * const s, spinor * const r, char * filename, const int position_) {
   int status = 0, getpos = 0, bytes = 0, prec = 0, prop_type, position = position_;

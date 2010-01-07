@@ -23,9 +23,8 @@
 #define _PREPARE_SOURCE_H
 
 void prepare_source(const int nstore, const int isample, const int ix, const int op_id, 
-		    const int read_source_flag, const int source_splitted, 
-		    const int source_location, const int source_time_slice,
-		    const int source_type, const int propagator_splitted,
-		    char * source_input_filename);
+		    const int read_source_flag,
+		    const int source_location,
+		    const int source_type);
 
 #endif

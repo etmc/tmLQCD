@@ -21,6 +21,8 @@
 #ifndef _PARAMS_H
 #define _PARAMS_H
 
+#include <io/dml.h>
+
 typedef struct
 {
   char   date[64];
@@ -98,10 +100,41 @@ typedef struct
   int    prec;
 } paramsIldgFormat;
 
-paramsIldgFormat       *construct_paramsIldgFormat(int const prec);
-paramsPropagatorFormat *construct_paramsPropagatorFormat(int const prec, int const flavours);
-paramsSourceFormat     *construct_paramsSourceFormat(int const prec, int const flavours, int const spins, int const sources);
-paramsXlfInfo          *construct_paramsXlfInfo(double const plaq, int const counter);
-paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int iter, 
-						 const int solver, const int noflavours);
+typedef struct {
+  double plaquetteEnergy;
+  int gaugeRead;
+  DML_Checksum checksum;
+  char * xlfInfo;
+  char * ildg_data_lfn;
+} paramsGaugeInfo;
+
+typedef struct {
+  int splitted;
+  int format;
+  int precision;
+  char * basename;
+} paramsPropInfo;
+
+typedef struct {
+  int type;
+  int splitted;
+  int format;
+  int precision;
+  int t, x, y, z;
+  int sample, nstore, ix;
+  char * basename;
+} paramsSourceInfo;
+
+/* defined in gauge_read.c */
+extern paramsGaugeInfo GaugeInfo;
+/* defined in spinor_read.c */
+extern paramsPropInfo PropInfo;
+extern paramsSourceInfo SourceInfo;
+
+paramsIldgFormat       * construct_paramsIldgFormat(int const prec);
+paramsPropagatorFormat * construct_paramsPropagatorFormat(int const prec, int const flavours);
+paramsSourceFormat     * construct_paramsSourceFormat(int const prec, int const flavours, int const spins, int const sources);
+paramsXlfInfo          * construct_paramsXlfInfo(double const plaq, int const counter);
+paramsInverterInfo     * construct_paramsInverterInfo(double const epssq, const int iter, 
+						      const int solver, const int noflavours);
 #endif

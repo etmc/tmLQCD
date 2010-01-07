@@ -334,7 +334,7 @@ int main(int argc,char *argv[]) {
 	     gauge_input_filename, gauge_precision_read_flag);
       fflush(stdout);
     }
-    read_gauge_field(gauge_input_filename, NULL, NULL, NULL);
+    read_gauge_field(gauge_input_filename);
 
     if (g_proc_id == 0){
       printf("# done!\n"); fflush(stdout);
@@ -554,8 +554,7 @@ int main(int argc,char *argv[]) {
   free_monomials();
   if(g_running_phmc) {
     free_bispinor_field();
-    free_chi_up_spinor_field();
-    free_chi_dn_spinor_field();
+    free_chi_spinor_field();
   }
   /* End IF PHMC */
 /*   if(use_stout_flag == 1) */

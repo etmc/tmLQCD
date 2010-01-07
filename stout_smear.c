@@ -249,7 +249,7 @@ void  load_config_from_file(su3 **in, char * filename)
       _su3_assign(temp_su3[x][mu], g_gauge_field[x][mu]);
     }
   }
-  read_gauge_field(filename, NULL, NULL, NULL);
+  read_gauge_field(filename);
   for(x = 0; x < VOLUME; x++) {
     for(mu = 0; mu < 4; mu++) {
       _su3_assign((in[x][mu]), g_gauge_field[x][mu]);

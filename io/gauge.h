@@ -26,9 +26,11 @@
 #endif
 
 #include <io/selector.h>
+#include <io/params.h>
 #include <io/utils.h>
 
-int read_gauge_field(char *filename, DML_Checksum *scidac_checksum, char **xlf_info, char **ildg_data_lfn);
+
+int read_gauge_field(char *filename);
 int read_binary_gauge_data(READER *reader, DML_Checksum *checksum);
 
 int write_gauge_field(char * filename, int prec, paramsXlfInfo const *xlfInfo);

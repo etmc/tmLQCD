@@ -50,6 +50,7 @@ typedef struct {
   int maxiter;
   int iterations;
   int prop_precision;
+  int no_flavours;
 
   int error_code;
 
@@ -85,12 +86,9 @@ typedef struct {
   void (*applyMm) (spinor * const, spinor * const);
   void (*applyDbQsq) (spinor * const, spinor * const, spinor * const, spinor * const);
   /* the generic invert function */
-  void (*inverter) (const int op_id);
+  void (*inverter) (const int op_id, const int index_start);
   /* write the propagator */
-  void (*write_prop) (const int nstore, const int isample, const int ix, const int op_id, 
-		      const int source_time_slice, const int propagator_splitted, 
-		      const int index_start, const int write_prop_format_flag,
-		      char * source_input_filename, char *gaugelfn, DML_Checksum *gaugecksum);
+  void (*write_prop) (const int op_id, const int index_start);
 
 } operator;
 

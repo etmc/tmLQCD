@@ -113,16 +113,12 @@ void init_phmc() {
   }
 
   /* Chi`s-spinors  memory allocation */
-  j = init_chi_up_spinor_field(VOLUMEPLUSRAND/2, (phmc_dop_n_cheby+1));
+  j = init_chi_spinor_field(VOLUMEPLUSRAND/2, (phmc_dop_n_cheby+1));
   if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for PHMC Chi_up fields! Aborting...\n");
+    fprintf(stderr, "Not enough memory for PHMC Chi fields! Aborting...\n");
     exit(0);
   }
-  j = init_chi_dn_spinor_field(VOLUMEPLUSRAND/2, (phmc_dop_n_cheby+1));
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for PHMC Chi_dn fields! Aborting...\n");
-    exit(0);
-  }
+
   /* End memory allocation */
   /* Here we prepare the precise polynomial */
   degree_of_Ptilde();

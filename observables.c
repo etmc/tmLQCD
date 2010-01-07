@@ -38,6 +38,7 @@
 #include "su3adj.h"
 #include "geometry_eo.h"
 #include "global.h"
+#include <io/params.h>
 #include "observables.h"
 
 double measure_gauge_action() {
@@ -74,6 +75,7 @@ double measure_gauge_action() {
     MPI_Allreduce(&ga, &gas, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     ga = gas;
 #endif
+    GaugeInfo.plaquetteEnergy = ga;
     g_update_gauge_energy = 0;
   }
   return ga;

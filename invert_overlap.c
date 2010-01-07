@@ -28,7 +28,7 @@
 #include"operator.h"
 #include"invert_overlap.h"
 
-void invert_overlap(const int op_id) {
+void invert_overlap(const int op_id, const int index_start) {
   operator * optr;
   optr = &operator_list[op_id];
   /* here we need to (re)compute the kernel eigenvectors */
