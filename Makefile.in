@@ -62,7 +62,7 @@ MODULES = read_input gamma hybrid_update observables start \
 
 NOOPTMOD = test/check_xchange test/check_geometry
 
-PROGRAMS = hmc_tm benchmark invert invert_doublet gwc2ildg \
+PROGRAMS = hmc_tm benchmark invert gwc2ildg \
 	ildg2gwc single2double double2single reducenoise gen_sources  \
 	check_locallity test_lemon
 
@@ -71,12 +71,12 @@ SUBDIRS = io linalg solver
 
 .SUFFIXES:
 
-all: Makefile all-recursive dep hmc_tm invert invert_doublet
+all: Makefile all-recursive dep hmc_tm invert
 
 #ifneq (,$(findstring lapack,${LIBS}))
-#all: Makefile all-recursive dep hmc_tm invert invert_doublet
+#all: Makefile all-recursive dep hmc_tm invert
 #else
-#all: Makefile all-recursive dep hmc_tm invert invert_doublet
+#all: Makefile all-recursive dep hmc_tm invert
 #endif
 
 
@@ -121,7 +121,7 @@ dep: $(addsuffix .d,$(ALLOBJ))
 
 install: Makefile
 	@mkdir -p $(bindir); \
-	for p in hmc_tm invert invert_doublet; do \
+	for p in hmc_tm invert; do \
 	  progname=`echo $$p | sed '$(program_transform_name)'`; \
 	  echo "Installing $$p as $$progname in $(bindir)..."; \
 	  cp $$p $(bindir)/$$progname; \
@@ -129,7 +129,7 @@ install: Makefile
 	echo "done";
 
 uninstall: Makefile
-	for p in hmc_tm invert invert_doublet; do \
+	for p in hmc_tm invert; do \
 	  progname=`echo $$p | sed '$(program_transform_name)'`; \
 	  echo "Un-Installing $$progname in $(bindir)..."; \
 	  rm $(bindir)/$$progname; \
