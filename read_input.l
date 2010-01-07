@@ -86,7 +86,6 @@ EQL {SPC}*={SPC}*
   int Ntherm;
   int Nmeas;
   int Nsave;
-  int solver_flag;
   int gmres_m_parameter, gmresdr_nr_ev;
   int write_cp_flag;
   int cp_interval;
@@ -96,16 +95,10 @@ EQL {SPC}*={SPC}*
   int rlxd_level;
   char rlxd_input_filename[100];
   char gauge_input_filename[100];
-  int max_solver_iterations;
-  double solver_precision;
   int read_source_flag;
-  char source_input_filename[100];
   int return_check_flag, return_check_interval;
-  int source_format_flag;
-  int source_time_slice;
   int gauge_precision_read_flag;
   int gauge_precision_write_flag;
-  int prop_precision_flag;
   int gmres_m_parameter, gmresdr_nr_ev;
   int reproduce_randomnumber_flag;
   double stout_rho;
@@ -127,7 +120,6 @@ EQL {SPC}*={SPC}*
   int sub_evs_cg_flag;
   int even_odd_flag;
   int bc_flag;
-  int write_prop_format_flag;
   int online_measurement_flag;
   int online_measurement_freq;
   int reweighting_flag;
@@ -150,7 +142,6 @@ EQL {SPC}*={SPC}*
 %x GAUGEINPUTFILE
 %x GAUGERPREC
 %x GAUGEWPREC
-%x SOLVFLAG
 %x DFLSP
 %x PRECON
 %x WRITECP
@@ -173,8 +164,6 @@ EQL {SPC}*={SPC}*
 %x BOUNDX
 %x BOUNDY
 %x BOUNDZ
-%x SITER
-%x SPREC
 %X READSOURCE
 %x SOURCEFORMAT
 %x SOURCEFILE
@@ -192,8 +181,6 @@ EQL {SPC}*={SPC}*
 %x STOUTRHO
 %x STOUTITER
 %x COMPUTEEVS
-%x SPLITPROP
-%x SPLITSOURCE
 %x SRCLOC
 %x SUBEVCG
 %x NOEV
@@ -201,7 +188,6 @@ EQL {SPC}*={SPC}*
 %x EO
 %x BC
 %x WRPROPFLAG
-%x PROPPREC
 %x PROPTYPE
 %x ONMEAS
 %x ONFREQ
@@ -255,7 +241,6 @@ EQL {SPC}*={SPC}*
 ^NSave{EQL}                        BEGIN(NSAVE);
 ^GaugeFieldInFile{EQL}             BEGIN(GAUGEINPUTFILE);
 ^RlxdStateInFile{EQL}              BEGIN(RLXDINPUTFILE);
-^SolverFlag{EQL}                   BEGIN(SOLVFLAG);
 ^SubtractEVForCG{EQL}              BEGIN(SUBEVCG);
 ^WriteCheckpoints{EQL}             BEGIN(WRITECP);
 ^CheckpointInterval{EQL}           BEGIN(CPINT);
@@ -271,12 +256,7 @@ EQL {SPC}*={SPC}*
 ^ThetaX{EQL}                       BEGIN(BOUNDX);
 ^ThetaY{EQL}                       BEGIN(BOUNDY);
 ^ThetaZ{EQL}                       BEGIN(BOUNDZ);
-^MaxSolverIterations{EQL}          BEGIN(SITER);
-^SolverPrecision{EQL}              BEGIN(SPREC);
 ^ReadSource{EQL}                   BEGIN(READSOURCE);
-^SourceInputFilename{EQL}          BEGIN(SOURCEFILE);
-^SourceFormat{EQL}                 BEGIN(SOURCEFORMAT);
-^SourceTimeSlice{EQL}              BEGIN(SOURCETS);
 ^UseRelativePrecision{EQL}         BEGIN(RELPREC);
 ^ReversibilityCheck{EQL}           BEGIN(REVCHECK);
 ^ReversibilityCheckIntervall{EQL}  BEGIN(REVINT);
@@ -286,15 +266,12 @@ EQL {SPC}*={SPC}*
 ^CGMMSNoExtraMasses{EQL}           BEGIN(CGMMSNMS);
 ^GaugeConfigReadPrecision{EQL}     BEGIN(GAUGERPREC);
 ^GaugeConfigWritePrecision{EQL}    BEGIN(GAUGEWPREC);
-^PropagatorPrecision{EQL}          BEGIN(PROPPREC);
 ^ReproduceRandomNumbers{EQL}       BEGIN(REPRORND);
 ^UseSloppyPrecision{EQL}           BEGIN(SLOPPYPREC);
 ^UseStoutSmearing{EQL}             BEGIN(USESTOUT);
 ^StoutRho{EQL}                     BEGIN(STOUTRHO);
 ^StoutNoIterations{EQL}            BEGIN(STOUTITER);
 ^ComputeEVs{EQL}                   BEGIN(COMPUTEEVS);
-^SplittedPropagator{EQL}           BEGIN(SPLITPROP);
-^SplittedSource{EQL}               BEGIN(SPLITSOURCE);
 ^SourceLocation{EQL}               BEGIN(SRCLOC);
 ^UseEvenOdd{EQL}                   BEGIN(EO);
 ^Bc{EQL}                           BEGIN(BC);
@@ -367,6 +344,11 @@ EQL {SPC}*={SPC}*
     optr->prop_precision = 64;
     if(myverbose) printf("  PropagatorPrecision set to 64 line %d operator %d\n", line_of_file, current_operator);
   }
+  {SPC}*SolverPrecision{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    optr->eps_sq = c;
+    if(myverbose) printf("  SolverPrecision set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
   ^EndOperator{SPC}*  {
     if(myverbose) printf("operator %d parsed line %d\n\n", current_operator, line_of_file);
     BEGIN(0);
@@ -377,6 +359,12 @@ EQL {SPC}*={SPC}*
   {SPC}*Solver{EQL} {
     name_caller = YY_START; 
     BEGIN(TMSOLVER);
+  }
+  {SPC}*UseEvenOdd{EQL}yes {
+    optr->even_odd_flag = 1;
+  }
+  {SPC}*UseEvenOdd{EQL}no {
+    optr->even_odd_flag = 0;
   }
 }
 
@@ -1050,62 +1038,6 @@ EQL {SPC}*={SPC}*
   Nsave=atoi(yytext);
   if(myverbose!=0) printf("Nsave= %s \n",yytext);
 }
-<SOLVFLAG>{
-  bicgstab {
-    solver_flag=0;
-    if(myverbose!=0) printf("Use BiCGStab Solver");
-  }
-  cg {
-    solver_flag=1;
-    if(myverbose!=0) printf("Use CG Solver\n");
-  }
-  pcg {
-    solver_flag=9;
-    if(myverbose!=0) printf("Use PCG Solver (eigenvectors needed) \n");
-  }
-  gmres {
-    solver_flag=2;
-    if(myverbose!=0) printf("Use GMRES Solver\n");
-  }
-  gcr {
-    solver_flag=7;
-    if(myverbose!=0) printf("Use GCR Solver\n");
-  }
-  gmresdr {
-    solver_flag=8;
-    if(myverbose!=0) printf("Use GMRES-DR Solver\n");
-  }
-  cgs {
-    solver_flag=3;
-    if(myverbose!=0) printf("Use CGS Solver\n");
-  }
-  mr {
-    solver_flag=4;
-    if(myverbose!=0) printf("Use MR Solver \n");
-  }
-  bicgstabell {
-    solver_flag=5;
-    if(myverbose!=0) printf("Use BiCGstab(2) Solver \n");
-  }
-  fgmres {
-    solver_flag=6;
-    if(myverbose!=0) printf("Use FGMRES solver (eigenvectors needed) \n");
-  }
-  dflgcr {
-    solver_flag=10;
-    g_dflgcr_flag = 1;
-    if(myverbose!=0) printf("Use deflated GCR solver \n");
-  }
-  dflfgmres {
-    solver_flag=11;
-    g_dflgcr_flag = 1;
-    if(myverbose!=0) printf("Use deflated FGMRES solver \n");
-  }
-  cgmms {
-    solver_flag = 12;
-    if(myverbose!=0) printf("Use CGMMS solver (only without even/odd)\n");
-  }
-}
 <GMRESM>{DIGIT}+ {
   gmres_m_parameter = atoi(yytext);
   if(myverbose!=0) printf("Use Krylov Space of size %d in GMRES \n", gmres_m_parameter);
@@ -1132,14 +1064,6 @@ EQL {SPC}*={SPC}*
   cg {
     if(myverbose!=0) printf("Using cg as right preconditioner \n");
   }
-}
-<SITER>{DIGIT}+ {
-  max_solver_iterations = atoi(yytext);
-  if(myverbose!=0) printf("Use %d iterations in the solvers!\n", max_solver_iterations);
-}
-<SPREC>{FLT} {
-  solver_precision = atof(yytext);
-  if(myverbose!=0) printf("Use %e as convergence precision for the solvers!\n", solver_precision);
 }
 <WRITECP>yes     {
   write_cp_flag=1;
@@ -1228,7 +1152,6 @@ EQL {SPC}*={SPC}*
   if(myverbose!=0) printf("Don't read inversion source from file\n");
 }
 <SOURCEFILE>{FILENAME} {
-  strcpy(source_input_filename,yytext);
   if(SourceInfo.basename == NULL) free(SourceInfo.basename);
   SourceInfo.basename = (char*)malloc((strlen(yytext)+1)*sizeof(char));
   strcpy(SourceInfo.basename, yytext);
@@ -1238,22 +1161,18 @@ EQL {SPC}*={SPC}*
   if(myverbose!=0) printf("source input filename set to %s\n",yytext);
 }
 <SOURCEFORMAT>etmc      {
-  source_format_flag = 0;
   SourceInfo.format = 0;
   if(myverbose!=0) printf("Using standard ETMC binary format for source input file\n");
 }
 <SOURCEFORMAT>cmi      {
-  source_format_flag = 11;
   SourceInfo.format = 11;
   if(myverbose!=0) printf("Using CM format for source input file\n");
 }
 <SOURCEFORMAT>gwc      {
-  source_format_flag = 10;
   SourceInfo.format = 10;
   if(myverbose!=0) printf("Using GWC format for source input file\n");
 }
 <SOURCETS>{DIGIT}+   {
-  source_time_slice = atoi(yytext);
   SourceInfo.t = atoi(yytext);
   if(myverbose!=0) printf("Using only timeslice %s of the source, padding the rest with zeros\n", yytext);
 }
@@ -1296,16 +1215,6 @@ EQL {SPC}*={SPC}*
 <GAUGEWPREC>64 {
   gauge_precision_write_flag = 64;
   if(myverbose!=0) printf("Save gauges in 64 Bit precision!\n");
-}
-<PROPPREC>32 {
-  prop_precision_flag = 32;
-  PropInfo.precision = 32;
-  if(myverbose!=0) printf("Save propagators in 32 Bit precision!\n");
-}
-<PROPPREC>64 {
-  prop_precision_flag = 64;
-  PropInfo.precision = 64;
-  if(myverbose!=0) printf("Save propagators in 64 Bit precision!\n");
 }
 <REPRORND>yes {
   reproduce_randomnumber_flag = 1;
@@ -1351,22 +1260,6 @@ EQL {SPC}*={SPC}*
   compute_evs=2;
   if(myverbose!=0) printf("Try to only read in eigenvalues and vectors in invert.");
 }
-<SPLITPROP>yes {
-  propagator_splitted=1;
-  if(myverbose!=0) printf("Split the propagator in several files! (invert)\n");
-}
-<SPLITPROP>no {
-  propagator_splitted=0;
-  if(myverbose!=0) printf("Do not split the propagator in several files (default) (invert)!\n");
-}
-<SPLITSOURCE>yes {
-  source_splitted=1;
-  if(myverbose!=0) printf("Expect source to be split in several files (invert)!\n");
-}
-<SPLITSOURCE>no {
-  source_splitted=0;
-  if(myverbose!=0) printf("Do not expect source to be split in several files (default) (invert)!\n");
-}
 <SRCLOC>{DIGIT}+ {
   source_location=atoi(yytext);
   if(myverbose!=0) printf("source_location = %s\n",yytext);
@@ -1404,32 +1297,26 @@ EQL {SPC}*={SPC}*
   if(verbose) printf("Periodic bc\n");
 }
 <WRPROPFLAG>gwc      {
-  write_prop_format_flag = 10;
   PropInfo.format = 10;
   if(myverbose!=0) fprintf(stderr, "GWC format no longer supported for writing propagators\n");
 }
 <WRPROPFLAG>cmi      {
-  write_prop_format_flag = 11;
   PropInfo.format = 11;
   if(myverbose!=0) fprintf(stderr, "CM format no longer supported for writing propagators\n");
 }
 <WRPROPFLAG>DiracFermion_Sink {
-  write_prop_format_flag = 0;
   PropInfo.format = 0;
   if(myverbose!=0) printf("Propagator type: DiracFermion_Sinks\n");
 }
 <WRPROPFLAG>DiracFermion_Source_Sink_Pairs {
-  write_prop_format_flag = 1;
   PropInfo.format = 1;
   if(myverbose!=0) printf("Propagator type: DiracFermion_Source_Sink_Pairs\n");
 }
 <WRPROPFLAG>DiracFermion_ScalarSource_TwelveSink {
   PropInfo.format = 1;
-  write_prop_format_flag = 1;
   fprintf(stderr, "Propagator type: DiracFermion_ScalarSource_TwelveSink, not yet supported\n");
 }
 <WRPROPFLAG>DiracFermion_ScalarSource_FourSink {
-  write_prop_format_flag = 1;
   PropInfo.format = 1;
   fprintf(stderr, "Propagator type: DiracFermion_ScalarSource_FourSink, not yet supported\n");
 }
@@ -1547,7 +1434,6 @@ int read_input(char * conf_file){
   g_dflgcr_flag = _default_g_dflgcr_flag;
   random_seed = _default_random_seed;
   rlxd_level = _default_rlxd_level;
-  solver_flag = _default_solver_flag;
   startoption = _default_startoption;
   Ntherm = _default_Ntherm;
   Nmeas = _default_Nmeas;
@@ -1566,8 +1452,6 @@ int read_input(char * conf_file){
   X1 = _default_X1;
   X2 = _default_X2;
   X3 = _default_X3;
-  max_solver_iterations = _default_max_solver_iterations;
-  solver_precision = _default_solver_precision;
   g_rgi_C1 = _default_g_rgi_C1;
   g_Ct = _default_g_Ct;
   g_Cs = _default_g_Cs;
@@ -1575,7 +1459,6 @@ int read_input(char * conf_file){
   g_C1tss = _default_g_C1tss;
   g_C1tts = _default_g_C1tts;
   read_source_flag= _default_read_source_flag;
-  strcpy(source_input_filename, _default_source_filename);
   if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(100*sizeof(char));
   strcpy(SourceInfo.basename, _default_source_filename);
   if(PropInfo.basename == NULL) PropInfo.basename = (char*)malloc(100*sizeof(char));
@@ -1584,15 +1467,12 @@ int read_input(char * conf_file){
   return_check_flag = _default_return_check_flag;
   return_check_interval = _default_return_check_interval;
   g_debug_level = _default_g_debug_level;
-  source_format_flag = _default_source_format_flag;
-  source_time_slice = _default_source_time_slice;
   SourceInfo.t = _default_source_time_slice;
   gmres_m_parameter = _default_gmres_m_parameter;
   gmresdr_nr_ev = _default_gmresdr_nr_ev;
   g_no_extra_masses = _default_g_no_extra_masses;
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
-  prop_precision_flag = _default_prop_precision_flag;
   reproduce_randomnumber_flag = _default_reproduce_randomnumber_flag;
   g_sloppy_precision_flag = _default_g_sloppy_precision_flag;
   use_stout_flag = _default_use_stout_flag;
@@ -1604,8 +1484,6 @@ int read_input(char * conf_file){
   stilde_min = _default_stilde_min;
   stilde_max = _default_stilde_max;
   degree_of_p = _default_degree_of_p;
-  propagator_splitted = _default_propagator_splitted;
-  source_splitted = _default_source_splitted;
   source_location = _default_source_location;
   eigenvalue_precision = _default_eigenvalue_precision;
   no_eigenvalues = _default_no_eigenvalues;
@@ -1616,9 +1494,9 @@ int read_input(char * conf_file){
   online_measurement_flag = _default_online_measurement_flag;
   online_measurement_freq = _default_online_measurement_freq;
 
-  /* Put -1 in write_prop_format_flag to see if parse_config() will
+  /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */
-  write_prop_format_flag = -1;
+  PropInfo.format = -1;
   /********************************************/
 
   if(verbose && g_proc_id == 0) {
@@ -1642,7 +1520,7 @@ int read_input(char * conf_file){
   }
 #endif
   
-  if(write_prop_format_flag == -1) write_prop_format_flag = source_format_flag;
+  if(PropInfo.format == -1) PropInfo.format = SourceInfo.format;
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
 
   fclose(yyout);

@@ -126,6 +126,7 @@ int add_operator(const int type) {
 }
 
 int init_operators() {
+  FILE * ifs;
   int i;
   operator * optr;
   for(i = 0; i < no_operators; i++) {
@@ -144,6 +145,34 @@ int init_operators() {
 	optr->applyQsq = &Q_pm_psi;
 	optr->applyMp = &D_psi;
 	optr->applyMm = &D_psi;
+      }
+      if(optr->solver == 12) {
+	if (g_cart_id == 0 && optr->even_odd_flag == 1)
+	  fprintf(stderr, "CGMMS works only without even/odd! Forcing!\n");
+	optr->even_odd_flag = 0;
+
+	/* this is for the extra masses of the CGMMS */
+	if (g_no_extra_masses > 0) {
+	  if ((ifs = fopen("extra_masses.input", "r")) != NULL) {
+	    for (i = 0; i < g_no_extra_masses; i++) {
+	      /* Code added below mainly to stop the compiler from whining! */
+	      if (fscanf(ifs, "%lf", &g_extra_masses[i]) == EOF) {
+		g_no_extra_masses = i + 1;
+		if (g_cart_id == 0 )
+		  fprintf(stderr, "Reduced the number of extra masses to %d for lack of input values.\n", g_no_extra_masses);
+		break;
+	      }
+	      if (g_cart_id == 0 && g_debug_level > 0) {
+		printf("# g_extra_masses[%d] = %lf\n", i, g_extra_masses[i]);
+	      }
+	    }
+	    fclose(ifs);
+	  }
+	  else {
+	    fprintf(stderr, "Could not open file extra_masses.input!\n");
+	    g_no_extra_masses = 0;
+	  }
+	}
       }
     }
     else if(optr->type == OVERLAP) {

@@ -1,9 +1,21 @@
-- SourceSink_Pairs propagator format broken for 2 fl. tmwilson
+- even/odd is not consistently implemented in invert
+  if there is one operator without we need to get the memory 
+  for even_odd_flag == 0!!
 
+- SourceSink_Pairs propagator format possibly broken for 2 fl. tmwilson
+- residuum check for 2 fl nd twisted fails
+- do we need basenames per operator
+- introduce source types
+- volume sources
+- spin shifts in sources
+- adaptive precision for overlap
+- adapt online measuremnts for new operator structure
+- incorporate stouting into new operator structure
+- Remove the DUM_* variables and g_spinor_fields
+- incorporate overlap operator
+- append/not append feature for spinor fields
 - source generation inside the code
-- lime headers for propagators and sources
 - deflation
-- inverter for overlap (needs a new structure, partially available)
 - mixed precision solver, single precision Dirac operator
 - GPU implementation...
 - test RHMC?

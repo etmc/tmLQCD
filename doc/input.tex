@@ -157,19 +157,10 @@ The following input parameters are {\ttfamily invert} and {\ttfamily
   order, the data is just appended! This parameter has only
   effect for executable {\ttfamily invert}.
 
-\item {\ttfamily SplittedPropagator}:\\
-  If set to yes the propagators will written splitted to disk: one
-  file per spinor color component. Default is {\ttfamily yes}.
-
-\item {\ttfamily SplittedSource}:\\
-  If set to yes every source is expected to be stored in a seperate file.
-  Default is {\ttfamily yes}.
-
 \item {\ttfamily UseRelativePrecision}:\\
   Possible values {\ttfamily yes, no}. Indicates whether relative
   precision is used in the inversions for the force and the acceptance
   computation. Default is no.
-
   
 \item {\ttfamily GMRESMParameter}:\\
   Krylov subspace size $m$ in GMRES($m$) and such like iterative
@@ -179,29 +170,9 @@ The following input parameters are {\ttfamily invert} and {\ttfamily
   Number of eigenvalues to be deflated in GMRES-DR iterative
   solver. Not yet working!
 
-\item {\ttfamily SourceFormat}:\\
-  to be documented
-
-\item {\ttfamily SolverFlag}:\\
-  Sets the solver to be used. Possible values are among others
-  {\ttfamily CG, BiCGstab, CGS, GMRES, PCG}. This parameter has only
-  effect for executable {\ttfamily invert}.
-
-\item {\ttfamily SolverPrecision}:\\
-  Stopping criterion for solver in programme invert. The squared
-  residue must be set. This parameter has only
-  effect for executable {\ttfamily invert}.
-
 \item {\ttfamily ReadSource}:\\
   If set to yes, then the source vector is read from a file. This
   parameter has only effect for executable {\ttfamily invert}.
-
-\item {\ttfamily SourceInputFilename}:\\
-  Base filename of the source vector to be read in. The filename will
-  be constructed as {\ttfamily basefilename.is*ic},
-  unless propagator is not splitted, i.e. stored in only one file,
-  which has the name {\ttfamily basefilename} then.
-  Parameter has only effect for executable {\ttfamily invert}.
 
 \item {\ttfamily SourceTimeSlice}:\\
   not used right now.
@@ -248,13 +219,13 @@ The following input parameters are {\ttfamily invert} and {\ttfamily
   \end{itemize}
   available. However, only the first two are implemented so far.
 
-\item {\ttfamily ComputeReweighingFactor}:\\
-  If enabled reweighin factors will be computed corresponding to
+\item {\ttfamily ComputeReweightingFactor}:\\
+  If enabled reweighting factors will be computed corresponding to
   monomials that must be specified in the input file as well.
 
-\item {\ttfamily NoReweighingSamples}:\\
+\item {\ttfamily NoReweighringSamples}:\\
   Number of random samples used per gauge configuration to estimate
-  the reweighing factor. The default is $10$.
+  the reweighting factor. The default is $10$.
 
 \end{enumerate}
 
@@ -344,7 +315,6 @@ EndMonomial
   [\det(Q_{nd}(\bar\epsilon, \bar\mu)^2)]^{1/2}
   \]
 \end{itemize}
-
 Each of them has different options:
 \begin{itemize}
 \item {\ttfamily DET}:
@@ -480,6 +450,51 @@ A timescale must not be empty. Currently the maximal number of
 timescales is $10$ and there cannot be more than $10$ monomials per
 timescale. But there can be more than one monomial per timescale.
 
+\subsubsection{Chosing the Operator for Inversions}
+
+\begin{verbatim}
+BeginOperator TYPE
+  Option = value
+EndOperator
+\end{verbatim}
+{\ttfamily TYPE} can be one of the following
+\begin{itemize}
+\item {\ttfamily WILSON}: simple Wilson Dirac operator, with options:
+  \begin{itemize}
+  \item {\ttfamily UseEvenOdd}
+  \end{itemize}
+\item {\ttfamily TMWILSON}: Wilson Twisted Mass Dirac operator, with
+  options:
+  \begin{itemize}
+  \item {\ttfamily 2KappaMu}
+  \item {\ttfamily UseEvenOdd}
+  \end{itemize}
+\item {\ttfamily DBTMWILSON}: two flavour mass non-degenerate Wilson
+  Twisted Mass Dirac operator:
+  \begin{itemize}
+  \item {\ttfamily 2KappaMubar}
+  \item {\ttfamily 2KappaEpsbar}
+  \end{itemize}
+\item {\ttfamily OVERLAP}: overlap  operator:
+  \begin{itemize}
+  \item {\ttfamily m}
+  \item {\ttfamily s}
+  \item {\ttfamily DegreeOfPolynomial}
+  \item {\ttfamily NoKernerlEigenvalues}
+  \item {\ttfamily KernelEigenvaluePrecision}
+  \end{itemize}
+\end{itemize}
+All of the provide the following options available:
+\begin{itemize}
+\item {\ttfamily kappa}:
+\item {\ttfamily Solver}:\\
+  Sets the solver to be used. Possible values are among others
+  {\ttfamily CG, BiCGstab, CGS, GMRES, PCG}.
+\item {\ttfamily MaxSolverIterations}:
+\item {\ttfamily PropagatorPrecision}:
+\item {\ttfamily SolverPrecision}:
+\end{itemize}
+
 \subsubsection{Example Input File}
 
 The following is a typical HMC input file:
@@ -502,7 +517,6 @@ BCGstabMaxIter = 5000
 CGMaxIter = 1000
 InitialStoreCounter = readin
 UseEvenOdd = yes
-PropagatorPrecision = 64
 ReversibilityCheck = no
 ReversibilityCheckIntervall = 1
 DebugLevel = 3
@@ -566,29 +580,40 @@ for the code. For the inverter a typical file would look like
 \begin{verbatim}
 L=4
 T=4
-SolverFlag = cg
 DebugLevel = 2
-SolverPrecision = 1.e-14
 InitialStoreCounter = 1
 Indices = 0-7
 ReadSource = no
 Measurements = 1
-2KappaMu = 0.0305
-kappa = 0.15
 ThetaT = 1.
-GaugeConfigInputFile = conf
 UseEvenOdd = no
-UseRelativePrecision=yes
+UseRelativePrecision = yes
 SplittedPropagator = yes
 SplittedSource = yes
 PropagatorPrecision = 64
 PropagatorType = DiracFermion_Source_Sink_Pairs
-UseStoutSmearing = yes
+UseStoutSmearing = no
 StoutRho = 0.15
 StoutNoIterations = 10
 UseSloppyPrecision = yes
 
-# and for reweighing possibly
+# both operators will be inverted for
+BeginOperator TMWILSON
+  Solver = CG
+  2KappaMu = 0.177
+  kappa = 0.177
+  SolverPrecision = 1.e-15
+  UseEvenOdd = yes
+EndOperator
+
+BeginOperator DBTMWILSON
+  2KappaMubar = 0.177
+  2KappaEpsbar = 0.190
+  kappa = 0.177
+EndOperator
+
+
+# and for reweighting possibly
 BeginMonomial DETRATIO
   Timescale = 2
   2KappaMu = 0.03
@@ -597,7 +622,6 @@ BeginMonomial DETRATIO
   kappa2 = 0.15
   maxiter = 20000
   AcceptancePrecision =  1.e-20
-  ForcePrecision = 1.e-12
   Name = detrat
   solver = cg
 EndMonomial

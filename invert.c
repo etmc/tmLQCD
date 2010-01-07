@@ -120,9 +120,9 @@ int main(int argc, char *argv[])
   signal(SIGILL, &catch_ill_inst);
 #endif
 
-  DUM_DERI = 6;
+  DUM_DERI = 8;
   /* DUM_DERI + 2 is enough (not 7) */
-  DUM_SOLVER = DUM_DERI + 3;
+  DUM_SOLVER = DUM_DERI + 5;
   DUM_MATRIX = DUM_SOLVER + 8;
   /* DUM_MATRIX + 2 is enough (not 6) */
   NO_OF_SPINORFIELDS = DUM_MATRIX + 2;
@@ -160,11 +160,6 @@ int main(int argc, char *argv[])
 
   /* Read the input file */
   read_input(input_filename);
-  if (solver_flag == 12 && even_odd_flag == 1) {
-    even_odd_flag = 0;
-    if (g_cart_id == 0)
-      fprintf(stderr, "CGMMS works only without even/odd! Forcing!\n");
-  }
 
   /* this DBW2 stuff is not needed for the inversion ! */
   if (g_dflgcr_flag == 1) {
@@ -249,29 +244,6 @@ int main(int argc, char *argv[])
     fclose(parameterfile);
   }
 
-  /* this is for the extra masses of the CGMMS */
-  if (solver_flag == 12 && g_no_extra_masses > 0) {
-    if ((parameterfile = fopen("extra_masses.input", "r")) != NULL) {
-      for (j = 0; j < g_no_extra_masses; j++) {
-        /* Code added below mainly to stop the compiler from whining! */
-        if (fscanf(parameterfile, "%lf", &g_extra_masses[j]) == EOF) {
-          g_no_extra_masses = j + 1;
-          if (g_cart_id == 0 )
-            fprintf(stderr, "Reduced the number of extra masses to %d for lack of input values.\n", g_no_extra_masses);
-          break;
-        }
-        if (g_cart_id == 0 && g_debug_level > 0) {
-          printf("# g_extra_masses[%d] = %lf\n", j, g_extra_masses[j]);
-        }
-      }
-      fclose(parameterfile);
-    }
-    else {
-      fprintf(stderr, "Could not open file extra_masses.input!\n");
-      g_no_extra_masses = 0;
-    }
-  }
-
   /* define the geometry */
   geometry();
 
@@ -282,7 +254,7 @@ int main(int argc, char *argv[])
 
   init_operators();
 
-  /* this should be moved to the operators */
+  /* this could be maybe moved to init_operators */
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
   if (j != 0) {
@@ -345,7 +317,7 @@ int main(int argc, char *argv[])
 
     /* Compute minimal eigenvalues, if wanted */
     if (compute_evs != 0) {
-      eigenvalues(&no_eigenvalues, max_solver_iterations, eigenvalue_precision,
+      eigenvalues(&no_eigenvalues, 5000, eigenvalue_precision,
                   0, compute_evs, nstore, even_odd_flag);
     }
     if (phmc_compute_evs != 0) {

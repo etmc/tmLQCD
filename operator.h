@@ -60,7 +60,9 @@ typedef struct {
   double mubar;
   /* for 2 flavour twisted */
   double epsbar;
+  /* solver residue */
   double eps_sq;
+  /* precision reached during inversion */
   double reached_prec;
   /* for the overlap */
   double m;
