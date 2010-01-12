@@ -29,7 +29,14 @@
 #ifndef _DOV_PSI_H
 #define _DOV_PSI_H
 
+#include "su3.h"
+
 void Dov_psi(spinor * const, spinor * const);
 void Qov_psi(spinor * const, spinor * const);
+
+void Q_over_sqrt_Q_sqr(spinor * const R, double * const c, 
+		       const int n, spinor * const S,
+		       const double rnorm, const double minev);
+
 
 #endif
