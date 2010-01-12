@@ -60,7 +60,7 @@ int read_gauge_field(char * filename) {
       }
       else {
 	fprintf(stderr, "Warning! possibly a second scidac-checksum record in %s\n", filename);
-	frpintf(stderr, "Check the configuration %s!\n", filename);
+	fprintf(stderr, "Check the configuration %s!\n", filename);
       }
     }
     else if (strcmp("xlf-info", header_type) == 0) {
