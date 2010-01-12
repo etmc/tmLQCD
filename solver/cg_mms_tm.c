@@ -59,7 +59,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
   static double normsq, pro, err, alpha_cg = 1., beta_cg = 0., normsp, squarenorm;
   int iteration, im;
-  char conf_filename[100];
+  char filename[100];
   static double gamma,alpham1;
   
   double tmp_mu = g_mu;
@@ -160,21 +160,22 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
       /* save all the results of (Q^dagger Q)^(-1) \gamma_5 \phi */
       /* here ... */
-      sprintf(conf_filename,".cgmms.%.2d.inverted", 0);
+      sprintf(filename,".cgmms.%.2d.inverted", 0);
       if(g_kappa != 0) {
 	mul_r(g_spinor_field[DUM_SOLVER], (2*g_kappa)*(2*g_kappa), g_spinor_field[DUM_SOLVER], N);
       }
 
-      construct_writer(&writer, conf_filename);
+      /* the 0 is for appending */
+      construct_writer(&writer, filename, 0);
       convert_lexic_to_eo(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], 
 			  g_spinor_field[DUM_SOLVER]);
       write_spinor(writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
       destruct_writer(writer);
 
       for(im = 0; im < g_no_extra_masses; im++) {
-	sprintf(conf_filename,".cgmms.%.2d.inverted", im+1);
+	sprintf(filename,".cgmms.%.2d.inverted", im+1);
 
-      construct_writer(&writer, conf_filename);
+	construct_writer(&writer, filename, 0);
 
 	if(g_kappa != 0) {
 	  mul_r(xs_mms_solver[im], (2*g_kappa)*(2*g_kappa), xs_mms_solver[im], N);

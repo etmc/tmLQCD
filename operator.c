@@ -333,7 +333,7 @@ void op_invert(const int op_id, const int index_start) {
 void op_write_prop(const int op_id, const int index_start) {
   operator * optr = &operator_list[op_id];
   double ratime = 0., retime = 0.;
-  char conf_filename[100];
+  char filename[100];
   char ending[15];
   WRITER *writer = NULL;
 
@@ -351,13 +351,14 @@ void op_write_prop(const int op_id, const int index_start) {
   }
   
   if (PropInfo.splitted) {
-    sprintf(conf_filename, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
+    sprintf(filename, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
   }
   else {
-    sprintf(conf_filename, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
+    sprintf(filename, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
   }
   
-  construct_writer(&writer, conf_filename);
+  /* the 1 is for appending */
+  construct_writer(&writer, filename, 1);
   if (PropInfo.splitted || SourceInfo.ix == index_start) {
     inverterInfo = construct_paramsInverterInfo(optr->reached_prec, optr->iterations, optr->solver, optr->no_flavours);
     

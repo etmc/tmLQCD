@@ -1,6 +1,6 @@
 #include "utils.ih"
 
-void construct_reader(READER ** reader, char const *filename)
+void construct_reader(READER ** reader, char * filename)
 {
   LIME_FILE *fh = NULL;
   int status = 0;
