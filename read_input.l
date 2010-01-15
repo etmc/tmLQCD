@@ -42,6 +42,7 @@ SIGN ("+"|"-")
 FLT {SIGN}?{DIGIT}*+"."{DIGIT}*(e("-"|"+")?{DIGIT}+)?
 FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 NAME [a-zA-Z0-9_]+
+CSTR \"[a-zA-Z0-9\-\._]+\"
 TYPE [0-9A-Z]+
 EQL {SPC}*={SPC}*
 
@@ -60,9 +61,25 @@ EQL {SPC}*={SPC}*
 #include"operator.h"
 #include<io/params.h>
 
+inline void rmQuotes(char *str){
+  char* strsave=str;
+
+  while(*str== ' ' || *str == '\t') str++;
+
+  if(*str=='\"') *(strsave++)=*( ++str );
+  else fprintf(stderr,"Error in removing quotes from string:\n %s  \n" ,  str);
+  ++str;
+
+  while( !( *str=='\0' || *str == '\"' || *str == '\n') ) *(strsave++)=*(str++);
+  *strsave='\0';
+}
+
   /* Name of the parsing routine */
 #define YY_DECL         int parse_config()
 #define YY_NO_UNPUT
+  /* helper vars */
+  char *cstring_to_parse=NULL;
+  int cstring_caller;
 
   /* declaration of input parameters */
   int i=0;
@@ -211,7 +228,9 @@ EQL {SPC}*={SPC}*
 %x GAUGEMONOMIAL
 %x SFGAUGEMONOMIAL
 %x NDPOLYMONOMIAL
+%x POLYMONOMIAL
 %x MNAME
+%x MCSTR
 %x MSOLVER
 %x GTYPE
 
@@ -520,6 +539,10 @@ EQL {SPC}*={SPC}*
     strcpy((*mnl).name, "NDPOLY");
     g_running_phmc = 1;
   }
+  else if(strcmp(yytext, "POLY")==0) {
+    mnl->type = POLY;
+    strcpy((*mnl).name, "POLY");
+  }
   else if(strcmp(yytext, "GAUGE")==0) {
     mnl->type = GAUGE;
     mnl->gtype = 3;
@@ -546,12 +569,13 @@ EQL {SPC}*={SPC}*
   if(mnl->type == GAUGE) BEGIN(GAUGEMONOMIAL);
   else if(mnl->type == SFGAUGE) BEGIN(SFGAUGEMONOMIAL);
   else if(mnl->type == NDPOLY) BEGIN(NDPOLYMONOMIAL);
+  else if(mnl->type == POLY)  BEGIN(POLYMONOMIAL); 
   else BEGIN(DETMONOMIAL);
 }
 
 
 
-<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
     if(mnl->type == NDDETRATIO) {
       mnl->timescale = -5;
@@ -575,7 +599,7 @@ EQL {SPC}*={SPC}*
 
 
 
-<DETMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL>{
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu = c;
@@ -792,11 +816,61 @@ EQL {SPC}*={SPC}*
   }
 }
 
+<POLYMONOMIAL>{
+  {SPC}*Degree{SPC}*={SPC}*{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->MDPolyDegree = a;
+    if(myverbose!=0) printf("  Degree of degenerate MD polynomial set to %d line %d monomial %d\n", mnl->MDPolyDegree, line_of_file, current_monomial);
+  }
+  {SPC}*Lmin{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
+    mnl->MDPolyLmin = c;
+    if(myverbose!=0)
+      printf("  lower bound of degenerate MD polynomial set to %f line %d monomial %d\n",
+        mnl->MDPolyLmin, line_of_file, current_monomial);
+  }
+  {SPC}*Lmax{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
+    mnl->MDPolyLmax = c;
+    if(myverbose!=0)
+      printf("  upper bound of degenerate MD polynomial set to %f line %d monomial %d\n",
+       mnl->MDPolyLmax, line_of_file, current_monomial);
+  }
+  {SPC}*LocNormConst{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
+    mnl->MDPolyLocNormConst = c;
+    if(myverbose!=0)
+      printf("  local normalisation constant MD polynomial set to %f line %d monomial %d\n",
+       mnl->MDPolyLocNormConst, line_of_file, current_monomial);
+  }
+  {SPC}*RootsFile{SPC}*={SPC}* {
+    cstring_to_parse=mnl->MDPolyRootsFile;
+    cstring_caller = YY_START;
+    BEGIN(MCSTR);
+  }
+  {SPC}*RootsFile{SPC}*={SPC}*{NAME} {
+    sscanf(yytext, " %[a-zA-Z] = %s", name, mnl->MDPolyRootsFile);
+    if(myverbose!=0)
+      printf("  Roots file for MD polynomial set to \"%s\" line %d monomial %d\n",
+                       mnl->MDPolyRootsFile, line_of_file, current_monomial);
+  }
+}
+
 <MNAME>{NAME} {
   if(myverbose) printf("  monomial named \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
   strcpy((*mnl).name, yytext);
   BEGIN(name_caller);
 }
+
+<MCSTR>{CSTR} {
+  if(myverbose) printf("  monomial named \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+  strcpy(cstring_to_parse, yytext);
+  rmQuotes(cstring_to_parse);
+  /* reset variable */
+  cstring_to_parse=NULL;
+  BEGIN(cstring_caller);
+}
+
 
 <MSOLVER>{
   CG {
@@ -1358,7 +1432,7 @@ EQL {SPC}*={SPC}*
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP>\n   {
+<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,POLYMONOMIAL>\n   {
   line_of_file++;
 }
 <*>\n                       {
