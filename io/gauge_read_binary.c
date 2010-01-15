@@ -135,17 +135,17 @@ int read_binary_gauge_data(LemonReader * reader, DML_Checksum * checksum)
 #else
           if (prec == 32)
           {
-            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current            , sizeof(su3) / 8);
-            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current +     fbsu3, sizeof(su3) / 8);
-            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current + 2 * fbsu3, sizeof(su3) / 8);
-            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 3 * fbsu3, sizeof(su3) / 8);
+            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
+            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
+            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
+            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
           }
           else
           {
-            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current            , sizeof(su3));
-            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current +     fbsu3, sizeof(su3));
-            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current + 2 * fbsu3, sizeof(su3));
-            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 3 * fbsu3, sizeof(su3));
+            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3));
+            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3));
+            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3));
+            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3));
           }
 #endif
         }
@@ -161,7 +161,9 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
   n_uint64_t bytes;
   su3 tmp[4];
   float tmp2[72];
+#ifdef MPI
   double tick = 0, tock = 0;
+#endif
   char measure[64];
   DML_SiteRank rank;
   int prec;
