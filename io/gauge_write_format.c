@@ -26,7 +26,7 @@ void write_ildg_format(WRITER *writer, paramsIldgFormat const *format)
 
   buf = (char*)malloc(512);
   if (buf == (char*)NULL)
-    kill_with_error(writer->fp, g_cart_id, "Memory allocation error in write_ildg_format_parallel. Aborting\n");
+    kill_with_error(writer->fp, g_cart_id, "Memory allocation error in write_ildg_format. Aborting\n");
 
   sprintf(buf, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
           "<ildgFormat xmlns=\"http://www.lqcd.org/ildg\"\n"

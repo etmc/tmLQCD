@@ -25,7 +25,7 @@ void write_checksum(WRITER * writer, DML_Checksum const *checksum, char const *n
   uint64_t bytes;
   message = (char*)malloc(512);
   if (message == (char*)NULL)
-    kill_with_error(writer->fp, g_cart_id, "Memory allocation error in write_checksum_parallel. Aborting\n");
+    kill_with_error(writer->fp, g_cart_id, "Memory allocation error in write_checksum. Aborting\n");
   sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 	  "<scidacChecksum>\n"
 	  "  <version>1.0</version>\n"

@@ -26,7 +26,7 @@ void write_xlf_info(WRITER * writer, paramsXlfInfo const *info)
 
   message = (char*)malloc(512);
   if (message == (char*)NULL)
-    kill_with_error(writer->fp, g_cart_id, "Memory allocation error in write_xlf_info_parallel. Aborting\n");
+    kill_with_error(writer->fp, g_cart_id, "Memory allocation error in write_xlf_info. Aborting\n");
   
   if (info->kappa != 0.0) {
     sprintf(message, "\n plaquette = %e\n"
