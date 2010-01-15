@@ -73,6 +73,14 @@ typedef struct {
   /* pseudo fermion field */
   /* second one needed for ND monomials */
   spinor * pf, * pf2;
+  /* parameters for the POLY Monomial*/
+  int MDPolyDegree;
+  double MDPolyLmin;
+  double MDPolyLmax;
+  char MDPolyRootsFile[256];
+  complex *MDPolyRoots;
+  spinor **MDPoly_chi_spinor_fields;
+  double MDPolyLocNormConst;
   /* chronological solver fields */
   spinor ** csg_field;
   spinor ** csg_field2;
@@ -106,6 +114,10 @@ int add_monomial(const int type);
 int init_monomials(const int V, const int even_odd_flag);
 /* free space again */
 void free_monomials();
+
+/* initialisation function for a poly monomial */
+int init_poly_monomial(const int V,const int id);
+
 
 /* some dummy functions */
 void dummy_derivative(const int id);

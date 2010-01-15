@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <errno.h>
+#include <string.h>
 #include "global.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -37,6 +38,7 @@
 #include "linalg_eo.h"
 #include "default_input_values.h"
 #include "read_input.h"
+#include "poly_monomial.h"
 #include "monomial.h"
 
 
@@ -94,6 +96,17 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].c1tss = _default_g_C1tss; 
   monomial_list[no_monomials].c1tts = _default_g_C1tts; 
   monomial_list[no_monomials].rngrepro = _default_reproduce_randomnumber_flag;
+  /* poly monomial */
+  monomial_list[no_monomials].MDPolyDegree = _default_MDPolyDegree;
+  monomial_list[no_monomials].MDPolyLmin = _default_MDPolyLmin;
+  monomial_list[no_monomials].MDPolyLmax = _default_MDPolyLmax;
+  strcpy(monomial_list[no_monomials].MDPolyRootsFile,_default_MDPolyRootsFile);
+  monomial_list[no_monomials].MDPolyRoots = NULL;
+  monomial_list[no_monomials].MDPoly_chi_spinor_fields = (spinor**)NULL;
+  monomial_list[no_monomials].MDPolyLocNormConst = _default_MDPolyLocNormConst;
+
+
+
   monomial_list[no_monomials].initialised = 1;
   if(monomial_list[no_monomials].type == NDDETRATIO) {
     monomial_list[no_monomials].timescale = -5;
@@ -106,6 +119,7 @@ int add_monomial(const int type) {
 
 int init_monomials(const int V, const int even_odd_flag) {
   int i, no=0;
+  int retval;
   spinor * __pf = NULL;
   for(i = 0; i < no_monomials; i++) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
@@ -145,6 +159,16 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &detratio_heatbath;
 	monomial_list[i].accfunction = &detratio_acc;
 	monomial_list[i].derivativefunction = &detratio_derivative;
+      }
+      else if(monomial_list[i].type == POLY) {
+/* 	monomial_list[i].hbfunction = &poly_heatbath; */
+/* 	monomial_list[i].accfunction = &poly_acc; */
+/* 	monomial_list[i].derivativefunction = &poly_derivative; */
+	monomial_list[i].hbfunction = &dummy_heatbath;
+	monomial_list[i].accfunction = &dummy_acc;
+	monomial_list[i].derivativefunction = &dummy_derivative;
+	retval=init_poly_monomial(V,i);
+	if(retval!=0) return retval;
       }
       else if(monomial_list[i].type == NDPOLY) {
 	if(no_ndpoly_monomials > 0) {
@@ -218,6 +242,92 @@ void free_monomials() {
   
   free(_pf);
   return;
+}
+
+
+int init_poly_monomial(const int V,const int id){
+
+  monomial * mnl = &monomial_list[id];
+  int i,j,k;
+  FILE* rootsFile=NULL;
+  char title[101];
+  int errcode;
+
+  spinor *_pf=(spinor*)NULL;
+
+  if((void*)(_pf = (spinor*)calloc((mnl->MDPolyDegree/2+2)*V+1, sizeof(spinor))) == NULL) {
+      printf ("malloc errno in init_poly_monomial pf fields: %d\n",errno); 
+      errno = 0;
+      return(1);
+    }
+
+    if(  (void*) (mnl->MDPoly_chi_spinor_fields=(spinor**)calloc(mnl->MDPolyDegree/2+2,sizeof(spinor*)) ) ==NULL ){
+      printf ("malloc errno in init_poly_monomial pf fields: %d\n",errno); 
+      errno = 0;
+      return(2);
+    }
+
+#if ( defined SSE || defined SSE2 || defined SSE3)
+      (mnl->MDPoly_chi_spinor_fields)[0] = (spinor*)(((unsigned long int)(_pf)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+      (mnl->MDPoly_chi_spinor_fields)[0] = _pf;
+#endif
+
+
+  for(i = 1; i < (mnl->MDPolyDegree/2+2); i++){
+    mnl->MDPoly_chi_spinor_fields[i] = mnl->MDPoly_chi_spinor_fields[i-1]+V;
+  }
+
+
+
+
+  /* read in the roots from the given file */
+
+    if(  (void*) (mnl->MDPolyRoots=(complex*)calloc(mnl->MDPolyDegree,sizeof(complex)) ) ==NULL ){
+      printf ("malloc errno in init_poly_monomial roots array: %d\n",errno); 
+      errno = 0;
+      return(3);
+    }
+
+
+  if((rootsFile=fopen(mnl->MDPolyRootsFile,"r")) != (FILE*)NULL) {
+    if (fgets(title, 100, rootsFile) == NULL)
+    {
+      fprintf(stderr, "Cant read Roots file: %s Aborting...\n", mnl->MDPolyRootsFile);
+      #ifdef MPI
+         MPI_Finalize();
+      #endif
+      exit(6);
+    }
+    
+    /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
+    for(j=0; j<(mnl->MDPolyDegree); j++){
+      errcode = fscanf(rootsFile," %d %lf %lf \n", &k, &mnl->MDPolyRoots[j].re, &mnl->MDPolyRoots[j].im);
+    }
+    fclose(rootsFile);
+  }
+  else {
+    fprintf(stderr, "Roots File %s is missing! Aborting...\n", mnl->MDPolyRootsFile );
+#ifdef MPI
+    MPI_Finalize();
+#endif
+    exit(6);
+  }
+
+
+  printf("Here come the roots\n");
+
+    for(j=0; j<(mnl->MDPolyDegree); j++){
+      printf("%lf %lf\n",  mnl->MDPolyRoots[j].re, mnl->MDPolyRoots[j].im);
+    }
+
+
+
+
+
+
+  return 0;
+
 }
 
 void dummy_derivative(const int id) {
