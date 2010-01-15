@@ -397,7 +397,9 @@ void random_spinor_field(spinor * const k, const int V, const int repro) {
     /* send the state for the random-number generator to 1 */
     rlxd_get(rlxd_state);
 #ifdef MPI
-    MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 102, MPI_COMM_WORLD);
+    if(g_nproc > 1) {
+      MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 102, MPI_COMM_WORLD);
+    }
 #endif
   }
 #ifdef MPI
@@ -436,6 +438,7 @@ void random_spinor_field(spinor * const k, const int V, const int repro) {
       (*s).s3.c2.im=v[5];
     }
     /* send the state fo the random-number generator to k+1 */
+    
     j=g_proc_id+1;
     if(j==g_nproc){
       j=0;
@@ -443,7 +446,7 @@ void random_spinor_field(spinor * const k, const int V, const int repro) {
     rlxd_get(rlxd_state);
     MPI_Send(&rlxd_state[0], 105, MPI_INT, j, 102, MPI_COMM_WORLD);
   }
-  if(g_proc_id==0 && repro == 1) {
+  if(g_nproc > 1 && g_proc_id==0 && repro == 1) {
     MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 102, MPI_COMM_WORLD, &status);
     rlxd_reset(rlxd_state);
   }
