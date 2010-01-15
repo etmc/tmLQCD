@@ -66,6 +66,10 @@ void ndpoly_derivative(const int id) {
   if (g_epsbar!=0.0 || phmc_exact_poly==0){
     /* Here comes the definitions for the chi_j fields */
     /* from  j=0  (chi_0 = phi)  .....  to j = n-1 */
+    /* in  g_chi_up_spinor_field[0] (g_chi_dn_spinor_field[0] we expect */
+    /* to find the phi field, the pseudo fermion field                  */
+    /* i.e. must be equal to mnl->pf (mnl->pf2)                          */
+
     for(k = 1; k < (phmc_dop_n_cheby-1); k++) {
       Q_tau1_min_cconst_ND(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
 			   g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
@@ -301,7 +305,7 @@ double ndpoly_acc(const int id) {
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
       printf("PHMC: Here comes the computation of H_new with \n \n");
 
-      printf("PHMC: At j=%d  P+HMC Final Energy %e \n", ij, mnl->energy1+Ener[ij]);
+      printf("PHMC: At j=%d  PHMC Final Energy %e \n", ij, mnl->energy1+Ener[ij]);
       printf("PHMC: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[ij]);
     }
     
@@ -419,6 +423,10 @@ double ndpoly_acc(const int id) {
       printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[0], mnl->energy1);
     }
   }
+
+  /* in case of reversibility checks we need this back! */
+  assign(g_chi_up_spinor_field[0], mnl->pf, VOLUME/2);
+  assign(g_chi_dn_spinor_field[0], mnl->pf2, VOLUME/2);
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called ndpoly_acc for id %d %d dH = %1.4e\n", id, g_running_phmc, mnl->energy1 - mnl->energy0);
   }
