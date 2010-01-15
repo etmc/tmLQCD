@@ -3,7 +3,7 @@
 # Process this file with autoconf to produce a configure script
 #
 AC_PREREQ(2.53)
-AC_INIT(tmLQCD, 5.0.1, curbach@gmx.de)
+AC_INIT(tmLQCD, 5.0.4, curbach@gmx.de)
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()
@@ -31,7 +31,7 @@ AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
 # AC_PROG_FC([ifort gfortran])
 # AC_FC_FUNC(testfunc, )
 
-LDFLAGS="$LDFLAGS -L\$(HOME)/lib -L\$(top_builddir)/lib"
+LDFLAGS="$LDFLAGS -L\${HOME}/lib -L\${top_builddir}/lib"
 CCLD=${CC}
 
 AC_CHECK_HEADERS([stdint.h],
@@ -318,7 +318,7 @@ dnl the GNU compiler
       if test "$host_cpu" = "x86_64"; then
         CFLAGS="$CFLAGS -mfpmath=387"
       fi
-    elif test $enable_sse2 = yes && test $enable_sse = no; then
+    elif test $enable_sse2 = yes; then
       echo Using SSE2 macros!
       DEPFLAGS="$DEPFLAGS -DSSE2"
       AC_DEFINE(SSE2,1,Compile with SSE2 support)

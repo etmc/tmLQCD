@@ -66,6 +66,10 @@ void ndpoly_derivative(const int id) {
   if (g_epsbar!=0.0 || phmc_exact_poly==0){
     /* Here comes the definitions for the chi_j fields */
     /* from  j=0  (chi_0 = phi)  .....  to j = n-1 */
+    /* in  g_chi_up_spinor_field[0] (g_chi_dn_spinor_field[0] we expect */
+    /* to find the phi field, the pseudo fermion field                  */
+    /* i.e. must be equal to mnl->pf (mnl->pf2)                          */
+
     for(k = 1; k < (phmc_dop_n_cheby-1); k++) {
       Q_tau1_min_cconst_ND(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
 			   g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
@@ -230,8 +234,8 @@ void ndpoly_heatbath(const int id) {
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
   }
 
-  assign(g_chi_up_copy, g_chi_up_spinor_field[0], VOLUME/2);
-  assign(g_chi_dn_copy, g_chi_dn_spinor_field[0], VOLUME/2);
+  assign(mnl->pf, g_chi_up_spinor_field[0], VOLUME/2);
+  assign(mnl->pf2, g_chi_dn_spinor_field[0], VOLUME/2);
 
   temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
@@ -258,8 +262,9 @@ double ndpoly_acc(const int id) {
   double Ener[8];
   double factor[8];
   monomial * mnl = &monomial_list[id];
-  
-  (*mnl).energy1 = 0.;
+  spinor *up0, *dn0, *up1, *dn1, *dummy;
+
+  mnl->energy1 = 0.;
   Ener[0] = 0;
   factor[0] = 1.0;
   for(j = 1; j < 8; j++){
@@ -267,25 +272,29 @@ double ndpoly_acc(const int id) {
     Ener[j] = 0;
   }
   /* IF PHMC */
-
+  up0 = g_chi_up_spinor_field[0];
+  up1 = g_chi_up_spinor_field[1];
+  dn0 = g_chi_dn_spinor_field[0];
+  dn1 = g_chi_dn_spinor_field[1];
   /* This is needed if we consider only "1" in eq. 9 */
-  assign(g_chi_up_spinor_field[1], g_chi_up_copy, VOLUME/2);
-  assign(g_chi_dn_spinor_field[1], g_chi_dn_copy,  VOLUME/2);
+  assign(up0, mnl->pf , VOLUME/2);
+  assign(dn0, mnl->pf2, VOLUME/2);
 
   if(phmc_exact_poly==0) {
     for(j = 1; j <= (phmc_dop_n_cheby-1); j++) {
-      assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
-      assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
-      
       /* Change this name !!*/
-      Q_tau1_min_cconst_ND(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
-			   g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
-			   phmc_root[j-1]);
+      Q_tau1_min_cconst_ND(up1, dn1, up0, dn0, phmc_root[j-1]);
+
+      dummy = up1; up1 = up0; up0 = dummy;
+      dummy = dn1; dn1 = dn0; dn0 = dummy;
+      /* result always in up0 and dn0 */
     }
   
     ij=0;
-    assign(g_chi_up_spinor_field[ij], g_chi_up_spinor_field[1], VOLUME/2);
-    assign(g_chi_dn_spinor_field[ij], g_chi_dn_spinor_field[1], VOLUME/2);
+    if(up0 != g_chi_up_spinor_field[ij]) {
+      assign(g_chi_up_spinor_field[ij], up0, VOLUME/2);
+      assign(g_chi_dn_spinor_field[ij], dn0, VOLUME/2);
+    }
 
     temp = square_norm(g_chi_up_spinor_field[ij], VOLUME/2, 1);
     Ener[ij] = temp;
@@ -296,7 +305,7 @@ double ndpoly_acc(const int id) {
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
       printf("PHMC: Here comes the computation of H_new with \n \n");
 
-      printf("PHMC: At j=%d  P+HMC Final Energy %e \n", ij, (*mnl).energy1+Ener[ij]);
+      printf("PHMC: At j=%d  PHMC Final Energy %e \n", ij, mnl->energy1+Ener[ij]);
       printf("PHMC: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[ij]);
     }
     
@@ -354,23 +363,24 @@ double ndpoly_acc(const int id) {
 	break;
       }
     }
-    (*mnl).energy1 += Ener[ij];  /* this is quite sticky */
+    mnl->energy1 += Ener[ij];  /* this is quite sticky */
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-      printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], (*mnl).energy1);
+      printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], mnl->energy1);
     }
   } 
   else if(phmc_exact_poly==1 && g_epsbar!=0.0) {
     /* B(Q*tau1) */
     for(j = 1; j <= (phmc_dop_n_cheby-1); j++){
-      assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
-      assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
-      Q_tau1_min_cconst_ND(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1],
-			g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0],
-			phmc_root[j-1]);
-    }
+      Q_tau1_min_cconst_ND(up1, dn1, up0, dn0, phmc_root[j-1]);
 
-    assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
-    assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
+      dummy = up1; up1 = up0; up0 = dummy;
+      dummy = dn1; dn1 = dn0; dn0 = dummy;
+      /* result always in up0 and dn0 */
+    }
+    if(up0 != g_chi_up_spinor_field[0]) {
+      assign(g_chi_up_spinor_field[0], up0, VOLUME/2);
+      assign(g_chi_dn_spinor_field[0], dn0, VOLUME/2);
+    }
 
     temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
     Ener[0] = temp;
@@ -381,13 +391,13 @@ double ndpoly_acc(const int id) {
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
       ij=0;
       printf("PHMC: Here comes the computation of H_new with \n \n");
-      printf("PHMC: At j=%d  P+HMC Final Energy %e \n", ij, (*mnl).energy1+Ener[0]);
+      printf("PHMC: At j=%d  P+HMC Final Energy %e \n", ij, mnl->energy1+Ener[0]);
       printf("PHMC: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[0]);
     }
 
-    (*mnl).energy1 += Ener[0];
+    mnl->energy1 += Ener[0];
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-      printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[0], (*mnl).energy1);
+      printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[0], mnl->energy1);
     }
   } 
   else if(phmc_exact_poly == 1 && g_epsbar == 0.0) {
@@ -404,15 +414,19 @@ double ndpoly_acc(const int id) {
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
       printf("PHMC: Here comes the computation of H_new with \n \n");
-      printf("PHMC: At j=%d  P+HMC Final Energy %e \n", ij, (*mnl).energy1+Ener[0]);
+      printf("PHMC: At j=%d  P+HMC Final Energy %e \n", ij, mnl->energy1+Ener[0]);
       printf("PHMC: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[0]);
     }
 
-    (*mnl).energy1 += Ener[0];
+    mnl->energy1 += Ener[0];
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-      printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[0], (*mnl).energy1);
+      printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[0], mnl->energy1);
     }
   }
+
+  /* in case of reversibility checks we need this back! */
+  assign(g_chi_up_spinor_field[0], mnl->pf, VOLUME/2);
+  assign(g_chi_dn_spinor_field[0], mnl->pf2, VOLUME/2);
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called ndpoly_acc for id %d %d dH = %1.4e\n", id, g_running_phmc, mnl->energy1 - mnl->energy0);
   }

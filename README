@@ -1,5 +1,5 @@
 Here are some remarks collected in order to configure, compile and
-test the HMC programme suit. For more information, also about running
+install the tmLQCD programme suit. For more information, also about running
 the code please read the documentation in the doc sub-directory. 
 
 CONFIGURE and COMPILE
@@ -7,17 +7,24 @@ CONFIGURE and COMPILE
 It is recommended to build the code not in the source directory but in
 a separate directory.
 
-The lime library (version 1.2.3) is needed to compile the
+The lime library (tested with version 1.2.3) is needed to compile the
 program. Please download it at
 
-http://www.physics.utah.edu/~detar/scidac/
+http://usqcd.jlab.org/usqcd-software/c-lime/
 
-or use the copy in the GWC scratch directory. Untar it somewhere
-configure and compile before doing the same with HMC. Then you should
-use the configure option --with-lime=dir for the HMC to set the
-correct directory where to find lime (see below). 
+Configure and compile lime (for documentation see
+http://usqcd.jlab.org/usqcd-docs/c-lime/) first.
+Then you should use the configure option --with-lime=dir for the
+tmLQCD to set the correct directory where to find lime (see below). 
 
-Building the HMC code is a two step procedure:
+For more documentation please change into the doc directory and type
+latex main.tex
+and see the sections for configuring, installing and testing the code.
+
+Here we have gathered some examples for some standard architectures.
+Building the tmLQCD executables is a three step procedure:
+
+****************************************************************************
 
 1) configure:
 
@@ -25,39 +32,48 @@ In your build directory type
 
 path-to-the-sources/configure --help
 
-to get an overview of the available options and switches. For
-instance, a scalar build on a P4 machine would look like:
+to get an overview of the available options and switches. In
+particular check out the prefix option for your installation path. 
+What follows now are some examples for a few standard architectures.
+
+- a scalar build on a P4 machine would look like:
 
 path-to-the-sources/configure --disable-mpi --enable-sse2 --enable-p4 \
---enable-gaugecopy --disable-newdiracop --with-limedir=path-to-lime/
+  --enable-gaugecopy --disable-newdiracop --with-limedir=<path-to-lime> \
+  --with-lapack="<linker options needed for lapack>" \
+  CC=<cc>
 
-Opteron with SSE2:
+- Opteron with SSE2:
 
 path-to-the-sources/configure --disable-mpi --enable-sse2 --enable-opteron \
---enable-gaugecopy --disable-newdiracop --with-limedir=path-to-lime/
+  --enable-gaugecopy --disable-newdiracop --with-limedir=<path-to-lime> \
+  --with-lapack="<linker options needed for lapack>" \
+  CC=<cc>
 
-A MPI parallel (4dims) build on a P4 cluster:
+- A MPI parallel (4dims) build on a P4 cluster:
 
 path-to-the-sources/configure --enable-mpi --enable-sse2 --enable-p4 \
---with-mpidimension=4 --enable-gaugecopy --disable-newdiracop
+  --with-mpidimension=4 --enable-gaugecopy --disable-newdiracop \
+  --with-limedir=<path-to-lime> --with-lapack="<linker options needed for lapack>" \
+  CC=<mpicc>
 
-on the Munich Altix machine:
+- on the Munich Altix machine:
 
 path-to-the-sources/configure --enable-mpi --with-mpidimension=4 \
---without-lapack --with-limedir=path-to-lime/ --enable-newdiracop \
---disable-shmem CC=mpicc CFLAGS="-mcpu=itanium2 -O3 -g -c99 -mtune=itanium2"
+  --with-limedir=<path-to-lime> --enable-newdiracop \
+  --disable-shmem --with-lapack="<linker options needed for lapack>" \
+  CC=mpicc CFLAGS="-mcpu=itanium2 -O3 -g -c99 -mtune=itanium2" 
 
-if you want to use lapack on this machine please do
+for lapack on this machine please type
 module load mkl
-and then replace
---without-lapack with
---with-lapack="$MKL_LIB"
 
 
-on the HLRB ice installation use
+- on the HLRB ice installation use
 
-path-to-the-sources/configure --enable-mpi --with-mpidimension=4 --disable-sse2 --disable-p4
-   --with-limedir=path-to-lime/ --enable-newdiracop CC="mpicc -std=c99" CFLAGS="-g"
+path-to-the-sources/configure --enable-mpi --with-mpidimension=4 \
+   --disable-sse2 --disable-p4  --with-limedir=<path-to-lime> \
+   --enable-newdiracop --with-lapack="<linker options needed for lapack>" \
+   CC="mpicc -std=c99" CFLAGS="-g" \
 
 where it is again important to use the Intel C compiler! 
 
@@ -65,189 +81,285 @@ for lapack first load the module mkl and then use
 
 --with-lapack="-L$LIBRARY_PATH -llapack -lblas"
 
-on the BG/L:
+- on Blue Gene installations
 
-path-to-the-sources/configure --host=ppc-ibm-blrts --build=ppc64-ibm-linux \
---without-lapack --enable-mpi --with-mpidimension=4 \
---enable-gaugecopy --with-limedir=path-to-lime/  \
---enable-newdiracop CC=/usr/bin/blrts_xlc
+For the Blue Gene see the README.bg? files
 
-*** important ***
-for optimal performance on the BG/L use --enable-newdiracop 
-with --with-bgldram and link the executables with
-/bgl/local/bin/blrts_gcc -Xlinker --script=./elf32ppcblrts.x
-See IBM redbook for details regarding rts_get_dram_window()
-runtime function.
-You should also set
--env "BGLMPI_EAGER=500000000 BGLMPI_PACING=n" as option
-to mpirun.
-*** important ***
+You may enable or disable other configure options as needed. See the
+documentation for more details.
 
-You may enable or disable other configure options as needed.
+****************************************************************************
 
 2) make
 
 type `make` in your build directory.
 
-I there appears not error message during compilation you should end up
-with two executable in the build directory, namely `hmc_tm` and
-`invert`. 
+If there appears no error message during compilation you should end up
+with a few executable in the build directory, namely `hmc_tm`,
+`invert` and `invert_doublet`.
 
-TESTING
+****************************************************************************
 
-The following numbers might be taken as reference points:
+3) make install
 
-4^4 lattice, beta 6.0, kappa=0.177, 2*kappa*mu=0.177 (this is the input
-value), antiperiodic boundary conditions:
+type `make install`
 
-Plaquette: 0.62457(7)
-
-4^4 lattice, beta 4.0, kappa=0.1, 2*kappa*mu=0.26795, antiperiodic
-boundary conditions:
-
-Plaquette: 0.29164(2)
-
-4^4 lattice, beta 4.0, kappa=0.05, 2*kappa*mu=0.26795, antiperiodic
-boundary conditions:
-
-Plaquette: 0.29055(3)
-
-4^3 x 8 lattice, beta = 1, kappa = 0, mu = 0, antiperiodic bc, 
-DBW2 gauge action
-
-Plaquette: 0.71771(3) (Carsten serial)
-Plaquette: 0.71772(7) (Karl)
+to get the executables installed.
 
 
-4^4 lattice, beta 0.67, kappa=0.125 mu=0.5 2*kappa*mu=0.125 antiperiodic bc
-DBW2 gauge action.
 
-Plaquette: 0.56121(13) (HH)
-Plaquette: 0.56125(13) (Carsten serial ExtLeapFrog)
-Plaquette: 0.56127(10) (Carsten parallel t ExtLeapFrog)
-Plaquette: 0.56139(11) (Carsten parallel xt ExtLeapFrog)
+****************************************************************************
+****************************************************************************
 
-You can also have a look to the following numbers:
+in the following we provide a "codemap", giving a short explanation
+for the contents of each c-file:
 
-mu = 0.1 -> 2kappa mu = 0.0354
-beta = 5.1
-kappa = 0.177
-4^4 Lattice
+****************************************************************************
+top directory: apart from the main routines all routines are compiled into
+	       the run-time library libhmc.
 
-          <P>                tau_int    #       dtau
-antiperiodisch
-------------------------------------------------------
-Carsten   0.5351(4)          3.16       4800    0.05
-          0.5345(4)          2.99       4800    0.05
-          0.5351(5)          4.10       4800    0.0667
-          0.5350(4)          3.97       4800    0.1
-          0.5348(5)          4.33       4800    0.1667
-------------------------------------------------------
+DML_crc32.c: invert, invert_doublet, hmc_tm
+	     some helper functions to compute the SCIDAC 
+	     checksum
+D_psi.c:     invert, invert_doublet, hmc_tm
+	     Wilson twisted mass Dirac operator, not even/odd 
+	     preconditioned 
+Hopping_Matrix.c: invert, invert_doublet, hmc_tm
+	     Hopping matrix for the even/odd preconditioned 
+	     Dirac operator
+Hopping_Matrix_nocom.c: benchmark
+	     Hopping matrix for the even/odd preconditioned 
+	     Dirac operator, communication switched off
+Nondegenerate_Matrix.c: invert_doublet, hmc_tm
+	     operators needed for even/odd preconditioning 
+	     the non-degenerate flavour doublet Dirac operator
+Ptilde_nd.c: hmc_tm
+	     the more precise polynomial $\tilde P$ needed for 
+	     the PHMC for the non-degenerate flavour doublet
+benchmark.c: main routine
+	     benchmark code for D_psi and Hopping_Matrix
+block.c:     experimental
+boundary.c:  invert, invert_doublet, hmc_tm
+	     implements the twisted boundary conditions for the
+	     spinor fields
+chebyshev_polynomial.c: experimental
+chebyshev_polynomial_nd.c: hmc_tm
+	     implements the generation of coefficients for the 
+	     chebyshev polynomial using the clenshaw recursion 
+	     relation
+deriv_Sb.c:  hmc_tm
+	     the variation of Q=gamma_5 D with respect to the 
+	     gauge fields in the even/odd case 
+deriv_Sb_D_psi.c: hmc_tm
+	     the variation of Q=gamma_5 D with respect to the 
+	     gauge fields in the non even/odd case 
+det_monomial.c: hmc_tm
+	     implements the functions needed for a det monomial
+detratio_monomial.c: hmc_tm
+	     implements the functions needed for a detratio monomial
+dml.c:       invert, invert_doublet, hmc_tm
+	     some helper functions to compute the SCIDAC 
+	     checksum
+double2single.c: main routine
+	     can convert a gauge field from double to single precision
+single2double.c: main routine
+	     can convert a gauge field from single to double precision
+eigenvalues_bi.c: hmc_tm
+	     computes eigenvalues of the mass non-degenerate two flavour 
+	     Dirac operatoe
+expo.c:      hmc_tm
+	     implements the exponetial function of an su(3) element
+gamma.c:     invert, invert_doublet, hmc_tm
+	     implements multiplication of gamma matrices and some useful
+	     combination of those with a spinor field
+gauge_io.c:  invert, invert_doublet, hmc_tm
+	     IO routines for gauge fields 
+gauge_monomial.c: hmc_tm
+	     implements the functions needed for a gauge monomial
+gen_sources.c: invert, invert_doublet, hmc_tm
+	     implements the generation of source spinor fields
+geometry_eo.c: invert, invert_doublet, hmc_tm
+	     anything related to gauge and spinor field geometry
+get_rectangle_staples.c: hmc_tm
+             computes rectangular staples of gauge links as needed for
+	     e.g. the Iwasaki gauge action and its derivative
+get_staples.c: hmc_tm
+             computes plaquette staples of gauge links as needed for
+	     for all gauge actions and their derivatives
+getopt.c:    invert, invert_doublet, hmc_tm
+	     needed for command line options
+hmc_tm.c:    main routine
+	     hmc_tm executable
+hybrid_update.c: hmc_tm
+	     implements the functions for the gauge field update and
+	     the momenta update
+init_bispinor_field.c 
+init_chi_copy.c
+init_chi_spinor_field.c
+init_dirac_halfspinor.c
+init_gauge_field.c
+init_gauge_tmp.c
+init_geometry_indices.c
+init_moment_field.c
+init_spinor_field.c
+init_stout_smear_vars.c: invert, invert_doublet, hmc_tm
+	     provide routines to allocate memory for the corresponding
+	     objects
+integrator.c: hmc_tm
+	     implements the routines needed for the integrator in the
+	     MD udpate
+invert.c:    main routine
+	     invert executable
+invert_doublet.c: main routine
+	     invert_doublet executable
+invert_doublet_eo.c: invert_doublet
+	     performs an inversion of the flavour doublet operator using
+	     even/odd preconditioning and the CG solver
+invert_eo.c: invert
+	     performs an inversion of the Wilson twisted mass Dirac operator
+	     using a solver as specified in the input file. Depending on the 
+	     input file even/odd preconditioning is used or not
+io.c:        invert, invert_doublet, hmc_tm
+	     helper routines: some deprecated IO routines for gauge and spinor 
+	     spinor fields, and the routine writing the initial stdout message
+	     of the executables
+io_utils.c:  invert, invert_doublet, hmc_tm
+	     IO helper routines related to swap endian and checksums
+linsolve.c:  hmc_tm
+	     CG and bicgstab solvers as used only in the HMC
+little_D.c:  experimental
+measure_rectangles.c: hmc_tm
+	     computes the gauge action related to the rectangular part
+monomial.c:  hmc_tm
+             provides the definition for monomials and initialisation functions
+mpi_init.c:  invert, invert_doublet, hmc_tm, benchmark
+	     MPI initialisation routine
+ndpoly_monomial.c: hmc_tm
+	     implements the functions needed for a ndpoly monomial
+observables.c: hmc_tm, invert, invert_doublet
+	     computes the gauge action related to the Wilson plaquette part
+online_measurement.c: hmc_tm
+	     anything related to online measurements
+phmc.c       hmc_tm
+	     functions and variables as needed for the PHC
+polyakov_loop.c: hmc_tm
+	     measures the polyakov loop
+propagator_io.c: invert, invert_doublet, hmc_tm
+	     functions related to spinor field IO
+ranlxd.c:    invert, invert_doublet, hmc_tm
+	     RANLUX random number generator (64 Bit)
+ranlxs.c:    invert, invert_doublet, hmc_tm
+	     RANLUX random number generator (32 Bit)
+read_input.l: invert, invert_doublet, hmc_tm
+             definition of the input file parser (flex)
+reweighting_factor.c: experimental
+reweighting_factor_nd.c: experimental
+sighandler.c: invert, invert_doublet, hmc_tm
+	     handles signal related to illegal instructions
+start.c:     invert, invert_doublet, hmc_tm
+	     functions needed to give initial values to gauge and spinor fields
+stout_smear.c: invert, invert_doublet
+	     functions to stout smear a given gauge configuration
+stout_smear_force.c: experimental
+tm_operators.c: invert, invert_doublet, hmc_tm
+	     operators needed for even/odd preconditioning the Wilson
+	     twisted mass Dirac operator
+update_backward_gauge.c: invert, invert_doublet, hmc_tm
+	     functions to update the gauge copy
+update_momenta.c: hmc_tm
+	     function to update the momenta in the HMC MD part
+update_tm.c: hmc_tm
+	     the HMC MD part
+xchange_2fields.c: invert, invert_doublet, hmc_tm
+	     implements the MPI communication of two even/odd spinor fields
+	     at once
+xchange_deri.c: hmc_tm
+	     implements the MPI communication of derivatives
+xchange_field.c: invert, invert_doublet, hmc_tm
+	     implements the MPI communication of a single even/odd spinor
+	     field
+xchange_gauge.c: invert, invert_doublet, hmc_tm
+	     implements the MPI communication of the gauge field
+xchange_halffield.c: invert, invert_doublet, hmc_tm
+	     implements the MPI communication of a half spinor field
+xchange_lexicfield.c: invert, invert_doublet, hmc_tm
+	     implements the MPI communication of a single (full) spinor
+	     field
 
-periodisch
-------------------------------------------------------
-Carsten   0.5339(5)          4.49       4850    0.05
-          0.5341(4)          4.08       4800    0.1667
-          0.5338(4)          3.02       4800    0.1667
-          0.5333(5)          4.18       4800    0.1667
-------------------------------------------------------
+****************************************************************************
+the linalg directory: all routines here are compiled into the liblinalg
+                      runtime library
+                      capital letters are spinor fields, others scalars
+add.c:                Q = R + S
+assign.c:             R = S
+assign_add_mul.c:     P = P + c Q with c complex
+assign_add_mul_r.c:   P = P + c Q with c real
+assign_add_mul_add_mul.c:   R = R + c1*S + c2*U with c1 and c2 complex variables
+assign_add_mul_add_mul_r.c: R = R + c1*S + c2*U with c1 and c2 real variables
+assign_diff_mul.c:    S=S-c*Q
+assign_mul_add_mul_add_mul_add_mul_r.c: R = c1*R + c2*S + c3*U + c4*V
+			 		with c1, c2, c3, c4 real variables
+assign_mul_add_mul_add_mul_r.c:         R = c1*R + c2*S + c3*U 
+					with c1, c2 and c3 real variables
+assign_mul_add_mul_r.c:     R = c1*R + c2*S , c1 and c2 are real constants 
+assign_mul_add_r.c:         R = c*R + S  c is a real constant
+assign_mul_bra_add_mul_ket_add.c:       R = c2*(R + c1*S) + (*U)
+					with c1 and c2 complex variables
+assign_mul_bra_add_mul_ket_add_r.c:     R = c2*(R + c1*S) + (*U)
+					with c1 and c2 complex variables
+assign_mul_bra_add_mul_r.c:             R = c1*(R + c2*S)
+					with c1 and c2 complex variables
+comp_decomp.c:                          Splits the Bi-spinor R in the spinors S and T 
+convert_eo_to_lexic.c:                  convert to even odd spinors to one full spinor
+diff.c:                 Q = R - S
+diff_and_square_norm.c: Q = R - S and ||Q||^2
+mattimesvec.c:          w = M*v for complex vectors w,v and and complex square matrix M
+mul.c:                  R = c*S, for complex c
+mul_r.c:                R = c*S, for real c
+mul_add_mul.c:          R = c1*S + c2*U , c1 and c2 are complex constants
+mul_add_mul_r.c         R = c1*S + c2*U , c1 and c2 are real constants
+mul_diff_mul.c:         R = c1*S - c2*U , c1 and c2 are complex constants
+mul_diff_mul_r.c        R = c1*S - c2*U , c1 and c2 are real constants
+mul_diff_r.c            R = c1*S - U , c1 is a real constant 
+scalar_prod.c:          c = (R, S)
+scalar_prod_i.c:        c = Im(R, S)
+scalar_prod_r.c:        c = Re(R, S)
+square_and_prod_r.c:    Returns Re(R,S) and the square norm of S
+square_norm.c:          c = ||Q||^2
 
-kappa = 0.177 mu = 0
-antiperiodisch
-------------------------------------------------------
-Carsten   0.5363(4)          3.50       4800    0.1667
-          0.5363(4)                     4800    0.1667
-------------------------------------------------------
+****************************************************************************
+solver directory: all routines here are compiled into the libsolver
+                  runtime library
+		  the solvers are for spinor fields, if not indicated
+		  otherwise.
 
-periodisch
-------------------------------------------------------
-Carsten   0.5356(4)          3.19       4800    0.1667
-------------------------------------------------------
-
-mu = 0.05
-antiperiodisch
-------------------------------------------------------
-Carsten   0.5355(4)                     4800    0.1667
-------------------------------------------------------
-
-kappa = 0.177, mu = 0.3 (here I see a phase transition)
-antiperiodisch
-------------------------------------------------------
-Carsten   0.513(3)           44         4800    0.1667
-------------------------------------------------------
-
-kappa = 0.177, mu = 0.5
-antiperiodisch
-------------------------------------------------------
-Carsten   0.4678(9)          9.09       4800    0.1667
-------------------------------------------------------
-
-kappa =0, mu = 0.5
-antiperiodisch
-------------------------------------------------------
-Karl      0.4155(6)          2.31       1200    0.166
-------------------------------------------------------
-Carsten   0.4150(4)          3.08       4800    0.1667
-          0.4151(4)          3.20       4800    0.1667
-------------------------------------------------------
-
-beta =6.0, kappa=0.177, mu=0.5, 2 kappa mu = 0.177
-antiperiodisch
-------------------------------------------------------
-Karl      0.6243(3)          1.87       2200    0.166
-------------------------------------------------------
-Ines      0.6244(2)                     3600
-------------------------------------------------------
-Carsten   0.6246(2)          1.88       4800    0.1667
-------------------------------------------------------
-
-beta =6.0, kappa=0.177, mu=0.1, 2 kappa mu = 0.0354
-antiperiodisch
-------------------------------------------------------
-Karl
-------------------------------------------------------
-Carsten   0.6310(2)          2.2        4000    0.1667
-------------------------------------------------------
-
-beta =6.0, kappa=0.177, mu=0.01, 2 kappa mu = 0.00354
-antiperiodisch
-------------------------------------------------------
-Karl
-------------------------------------------------------
-Carsten   0.6308(2)          2.3        4000    0.1667
-          0.6313(2)          2.2        4000    0.1667
-------------------------------------------------------
-
-beta = 6.0, kappa = 0.177, 2 kappa mu = 0.5
-------------------------------------------------------
-Carsten   0.6095(3)          2.8        4000    0.1667
-------------------------------------------------------
-
-
-Some more or less strict coding rules:
-
-- C99 standard, configure should take care of non-conform compilers
-- variables starting with 'g_' are declared in global.h
-- constant macros are all capital letters
-  and starting with a '_'
-- other varialbes all small letters
-- as few as possible macros, inline instead...
-- as much as possible speaking names
-- all default values defined in default_input_values.h
-- order of parameters to functions should be (if applicable)
-  f(output, input)
-- indent by 2 spaces, but otherwise like
-function1() {
-  dostuff
-  do more stuff
-}
-  but never an empty line after an opening '{', because then emacs informes
-  you about an empty line, when you are at the '}' of a long block...
-  And always a space before a '{' for paren highlighting in emacs
-
-  But also your style (this is real gnu-indent-style, I guess), is okay,
-  eventhough there are sometimes really a lot of spaces in this style.
-- I usually always put braces, even if there is only one line in the block.
-- header files always enclosed in #ifnedef _NAME_H #define _NAME ... #endif
-- define parameters to	function	as const where applicable
-- first	line in	every file /* $Id$ */ for CVS
+Msap.c:                 experimental SAP preconditioner
+bicgstab_complex.c:     BiCGstab for complex fields
+bicgstabell.c:          experimental
+cg_her.c :              CG solver for hermitian operators
+cg_her_nd.c:            CG solver for hermitian heavy doublet operators
+cgs_real.c:             CGS solver
+chrono_guess.c:         routines for the chronological solver
+dfl_projector.c:        experimental
+diagonalise_general_matrix.c:  subroutine to diagonalise a complex n times n
+                               matrix. Input is a complex matrix in _C_ like
+                               order. Output is again _C_ like. Uses lapack
+eigenvalues.c           compute the nr_of_eigenvalues lowest eigenvalues
+                        of (gamma5*D)^2
+fgmres.c:               FGMRES (flexible GMRES) solver
+gcr.c:                  GCR solver
+gcr4complex.c:          GCR solver for complex fields
+generate_dfl_subspace.c: experimental
+gmres.c:                GMRES solver
+gmres_dr.c:             GMRES-DR solver
+gmres_precon.c:         GMRES usable for preconditioning other solvers (experimental)
+gram-schmidt.c:         Gram-Schmidt orthonormalisation routines
+jdher.c:                Jacobi Davidson for hermitian matrices (to compute EVs)
+lu_solve.c:             compute the inverse of a matrix with LU decomposition
+mr.c:                   MR solver
+pcg_her.c:              PCG solver
+poly_precon.c:          polynomial preconditioner using Chebysheff polynomials
+			with complex argument
+quicksort.c:            a quicksort routine
+sub_low_ev.c:           routines to subtract exactly computed eigenvectors from
+			a given spinor field

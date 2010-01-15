@@ -1,3 +1,5 @@
+04.06.2009: bug fixed in eigensolver for ND case
+
 01.08.2008: online measurements implemented for
             PP and PA correlators. Input variables are
             PerformOnlineMeasurements = yes|no and
