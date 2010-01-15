@@ -20,7 +20,6 @@ BCGstabMaxIter = 0
 CGMaxIter = 1000
 GaugeConfigInputFile = conf.save
 UseEvenOdd = yes
-PropagatorPrecision = 64
 ReversibilityCheck = yes
 ReversibilityCheckIntervall = 100
 DebugLevel = 1
