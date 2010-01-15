@@ -26,10 +26,10 @@ int read_message(READER * reader, char **buffer) {
 
   if (buffer == (char**)NULL)
     return(-1);
-  
+
   if ((*buffer) != (char*)NULL)
     free(*buffer);
-  
+
   bytes = ReaderBytes(reader);
   bytesRead = bytes;
 
@@ -37,7 +37,7 @@ int read_message(READER * reader, char **buffer) {
   /* with calloc instead of malloc it seems to be fine                          */
   *buffer = (char*)calloc(bytes + 1, sizeof(char));
   /* *buffer = (char*)calloc(bytes, sizeof(char)); */
-  
+
   if (*buffer  == (char*)NULL) {
     fprintf(stderr, "Couldn't malloc data buffer in read_message.\n");
     return(-1);
@@ -50,8 +50,8 @@ int read_message(READER * reader, char **buffer) {
 
   if (status != LIME_SUCCESS || bytes != bytesRead)
     kill_with_error(reader->fp, g_cart_id, "Error in reading message.\n");
-  
-  buffer[bytes] = '\0'; /* Force termination for safety */
-  
+
+  (*buffer)[bytes] = '\0'; /* Force termination for safety */
+
   return(0);
 }
