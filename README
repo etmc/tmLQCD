@@ -157,6 +157,9 @@ det_monomial.c: hmc_tm
 	     implements the functions needed for a det monomial
 detratio_monomial.c: hmc_tm
 	     implements the functions needed for a detratio monomial
+poly_monomial.c: hmc_tm
+             implements function needed for a POLY monomial 
+             (PHMC for light degenerate quarks)
 dml.c:       invert, invert_doublet, hmc_tm
 	     some helper functions to compute the SCIDAC 
 	     checksum
