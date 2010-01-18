@@ -1,3 +1,4 @@
+
 - even/odd is not consistently implemented in invert
   if there is one operator without we need to get the memory 
   for even_odd_flag == 0!!

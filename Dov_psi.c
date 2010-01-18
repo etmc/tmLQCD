@@ -153,7 +153,7 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
     aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
     aux = aux_;
 #endif
-    for(j=0; j < n-1; j++) {
+    for(j=0; j < n; j++) {
       D_psi(aux, &(eigenvectors[j*evlength]));
       gamma5(aux, aux, N);
       
@@ -282,7 +282,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
   zero_spinor_field(d, VOLUME);
   zero_spinor_field(dd, VOLUME); 
   
-  if(1) assign_sub_lowest_eigenvalues(aux3, S, no_eigenvalues, VOLUME);
+  if(1) assign_sub_lowest_eigenvalues(aux3, S, no_eigenvalues-1, VOLUME);
   else assign(aux3, S, VOLUME);
   
   /* Check whether switch for adaptive precision is on */
@@ -295,7 +295,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
       assign(sv, d, VOLUME); 
       
       if ( (j%10) == 0 ) {
-	assign_sub_lowest_eigenvalues(aux, d, no_eigenvalues, VOLUME);
+	assign_sub_lowest_eigenvalues(aux, d, no_eigenvalues-1, VOLUME);
       }
       else {
 	assign(aux, d, VOLUME);
@@ -310,7 +310,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
       assign(dd, sv, VOLUME);
     } 
     
-    if(1) assign_sub_lowest_eigenvalues(R, d, no_eigenvalues, VOLUME);
+    if(1) assign_sub_lowest_eigenvalues(R, d, no_eigenvalues-1, VOLUME);
     else assign(R, d, VOLUME);
     
     norm_Q_sqr_psi(aux, R, rnorm);
@@ -372,7 +372,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
 
   }
   /* add in piece from projected subspace */
-  addproj_q_invsqrt(R, S, no_eigenvalues, VOLUME);
+  addproj_q_invsqrt(R, S, no_eigenvalues-1, VOLUME);
   
   free(sv_);
   free(d_);
@@ -381,5 +381,52 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
   free(aux3_);
   return;
 }
+
+void CheckApproximation(spinor * const P, spinor * const S) {
+
+  int i;
+  double c0,c1;
+  spinor **s, *s_;
+  static int n_cheby = 0;
+  static int rec_coefs = 1;
+
+  ov_s = 0.5*(1./g_kappa - 8.) - 1.;
+
+  if(n_cheby != ov_n_cheby || rec_coefs) {
+    if(ov_cheby_coef != NULL) free(ov_cheby_coef);
+    ov_cheby_coef = (double*)malloc(ov_n_cheby*sizeof(double));
+    chebyshev_coefs(ev_minev, 1., ov_cheby_coef, ov_n_cheby, -0.5);
+    rec_coefs = 0;
+    n_cheby = ov_n_cheby;
+  }
+
+  s_ = calloc(2*VOLUMEPLUSRAND+1, sizeof(spinor));
+  s  = calloc(2, sizeof(spinor*));
+
+  for(i = 0; i < 2; i++) {
+#if (defined SSE3 || defined SSE2 || defined SSE)
+    s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
+#else
+    s[i] = s_+i*VOLUMEPLUSRAND;
+#endif
+  }
+
+  /* here we do with M = 1 + s */
+  /* M + m_ov/2 + (M - m_ov/2) \gamma_5 sign(Q(-M)) */
+//  c0 = 1.0 + ov_s - 0.5*m_ov;
+//  c1 = 1.0 + ov_s + 0.5*m_ov;
+
+  Q_over_sqrt_Q_sqr(s[0], ov_cheby_coef, ov_n_cheby, S, ev_qnorm, ev_minev);
+  Q_over_sqrt_Q_sqr(s[1], ov_cheby_coef, ov_n_cheby, s[0], ev_qnorm, ev_minev);
+
+//  gamma5(s[1], s[0], VOLUME);
+  //assign_mul_add_mul_r(s[1], S, 1.0, -1., VOLUME);
+  assign(P, s[1], VOLUME);
+
+  free(s);
+  free(s_);
+  return;
+}
+
 
 static char const rcsid[] = "$Id$";
