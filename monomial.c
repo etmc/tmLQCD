@@ -161,12 +161,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].derivativefunction = &detratio_derivative;
       }
       else if(monomial_list[i].type == POLY) {
-/* 	monomial_list[i].hbfunction = &poly_heatbath; */
-/* 	monomial_list[i].accfunction = &poly_acc; */
-/* 	monomial_list[i].derivativefunction = &poly_derivative; */
-	monomial_list[i].hbfunction = &dummy_heatbath;
-	monomial_list[i].accfunction = &dummy_acc;
-	monomial_list[i].derivativefunction = &dummy_derivative;
+	monomial_list[i].hbfunction = &poly_heatbath;
+	monomial_list[i].accfunction = &poly_acc;
+	monomial_list[i].derivativefunction = &poly_derivative;
 	retval=init_poly_monomial(V,i);
 	if(retval!=0) return retval;
       }
