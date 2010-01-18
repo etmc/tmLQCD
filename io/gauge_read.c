@@ -42,7 +42,7 @@ int read_gauge_field(char * filename) {
     }
     header_type = ReaderType(reader);
 
-    if(g_cart_id == 0 && g_debug_level > 0) {
+    if(g_cart_id == 0 && g_debug_level > 1) {
       fprintf(stderr, "found header %s, will now read the message\n", header_type);
     }
 
