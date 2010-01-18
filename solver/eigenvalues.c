@@ -175,7 +175,19 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
     /* (re-) compute minimal eigenvalues */
     converged = 0;
     solver_it_max = 200;
-    jdher(N*sizeof(spinor)/sizeof(complex), N2*sizeof(spinor)/sizeof(complex),
+
+    if(maxmin)
+      jdher(N*sizeof(spinor)/sizeof(complex), N2*sizeof(spinor)/sizeof(complex),
+	  50., prec, 
+	  (*nr_of_eigenvalues), j_max, j_min, 
+	  max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors,
+	  CG, solver_it_max,
+	  threshold_max, decay_max, verbosity,
+	  &converged, (complex*) eigenvectors, eigenvls,
+	  &returncode, JD_MAXIMAL, 1,
+	  f);
+    else
+      jdher(N*sizeof(spinor)/sizeof(complex), N2*sizeof(spinor)/sizeof(complex),
 	  0., prec, 
 	  (*nr_of_eigenvalues), j_max, j_min, 
 	  max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors,
