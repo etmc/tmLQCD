@@ -314,6 +314,10 @@ EndMonomial
   \[
   [\det(Q_{nd}(\bar\epsilon, \bar\mu)^2)]^{1/2}
   \]
+\item {\ttfamily POLY}: polynomial approximation ($P_n(x) \approx \frac{1}{x}$) of the mass degenerate determinant\\
+  \[
+  \frac{1}{\det(P_{n}(Q^2(\kappa) + \mu^2))}
+  \]
 \end{itemize}
 Each of them has different options:
 \begin{itemize}
@@ -414,6 +418,20 @@ Each of them has different options:
   \end{itemize}
   So far, there is maximally one instance allowed for this type. This
   might change in the future.
+\item {\ttfamily POLY}:
+  \begin{itemize}
+  \item {\ttfamily Degree}:
+    Degree of the Polynomial.
+  \item {\ttfamily Lmin}:
+    Lower bound of approximation interval.
+  \item {\ttfamily Lmax}:
+    Upper bound of approximation interval.
+  \item {\ttfamily LocNormConst}:
+    Constant (local normalisation constant) which is multiplied to each monomial (of the polynomial $P_n$).
+  \item {\ttfamily RootsFile}:
+    File name specifying a file containing the $n=$ {\ttfamily Degree} roots of the Polynomial
+  \end{itemize}
+There can be arbitrary many POLY monomials. But take into account that there will be allocated $n/2$ number of spinor fields for EACH poly monomial. (Maybe in the future we should think about to share these fields with all POLY/NDPOLY monomials as there are used only for the computation of the force and have to be updated before each successive calculation of the force.)
 \end{itemize}
 
 \subsubsection{The Integrator}
