@@ -45,6 +45,7 @@ double * phmc_dop_cheby_coef;
 int phmc_ptilde_n_cheby;
 double * phmc_ptilde_cheby_coef;
 int errcode;
+phmc_vars *phmc_var_stack=NULL;
 
 void init_phmc() {
   int max_iter_ev, j, k;
@@ -232,4 +233,68 @@ void phmc_compute_ev(const int trajectory_counter,
   if((g_proc_id == 0)) {
     printf("# PHMC: time/s for eigenvalue computation %e\n", etime-atime);
   }
+}
+
+
+/**
+ * creates a new stack element and stores a set of phmc
+ * variables needed in the operators
+ */
+void pushPhmcVars(){
+  if(phmc_var_stack==NULL){
+    phmc_var_stack=(phmc_vars*)malloc(sizeof(phmc_vars));
+    phmc_var_stack->previous=NULL;
+    phmc_var_stack->stacksize=1;
+  } else {
+    phmc_var_stack->next=malloc(sizeof(phmc_vars));
+    ((phmc_vars*)phmc_var_stack->next)->previous=(void*)phmc_var_stack;
+    phmc_var_stack=(phmc_vars*)phmc_var_stack->next;
+    phmc_var_stack->stacksize=((phmc_vars*)phmc_var_stack->previous)->stacksize+1;
+  }
+
+  phmc_var_stack->next=NULL;
+
+  /* save global phmc variables */
+  phmc_var_stack->invmaxev=phmc_invmaxev;
+  phmc_var_stack->Cpol=phmc_Cpol;
+  phmc_var_stack->root=phmc_root;
+  phmc_var_stack->dop_n_cheby=phmc_dop_n_cheby;
+
+  if(g_proc_id==0)
+    fprintf(stderr,"phmc variable stack size is now %d \n",phmc_var_stack->stacksize);
+
+}
+
+/**
+ * restores the variables to the values stored in the 
+ * top stack element and removes it
+ */
+void popPhmcVars(){
+
+  if(phmc_var_stack!=NULL){
+    phmc_vars *prev;
+    
+    /* restore global phmc variables */
+    phmc_invmaxev=phmc_var_stack->invmaxev;
+    phmc_Cpol=phmc_var_stack->Cpol;
+    phmc_root=phmc_var_stack->root;
+    phmc_dop_n_cheby=phmc_var_stack->dop_n_cheby;
+
+    
+    
+    prev=(phmc_vars*)phmc_var_stack->previous;
+    
+    free(phmc_var_stack);
+    
+    phmc_var_stack=prev;
+
+    if(phmc_var_stack!=NULL)
+      phmc_var_stack->next=NULL;
+
+  } else {
+    if(g_proc_id==0)
+      fprintf(stderr,"Error: there is no element on the stack\n");
+  }
+
+
 }

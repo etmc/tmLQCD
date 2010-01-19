@@ -37,6 +37,24 @@ extern double * phmc_dop_cheby_coef;
 extern int phmc_ptilde_n_cheby;
 extern double * phmc_ptilde_cheby_coef;
 
+/* structure for holding a set of phmc specific variables*/
+typedef struct phmc_vars_ {
+  void *previous,*next;
+  double invmaxev;
+  double Cpol;
+  int dop_n_cheby;
+  complex *root;
+  int stacksize;
+} phmc_vars;
+
+/* stack for saving and restoring phmc variables*/
+extern phmc_vars *phmc_var_stack;
+
+/* functions for pushing and poping phmc vars */
+void pushPhmcVars();
+void popPhmcVars();
+
+
 void init_phmc();
 void phmc_compute_ev(const int trajectory_counter,
 		     const double plaquette_energy);
