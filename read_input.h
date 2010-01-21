@@ -93,6 +93,7 @@ extern "C"
   extern int online_measurement_freq;
   extern int reweighting_flag;
   extern int reweighting_samples; 
+  extern int no_samples;
 
   int read_input(char *);
   int reread_input(char *);

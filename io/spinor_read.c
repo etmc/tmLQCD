@@ -37,7 +37,8 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
     kill_with_error(reader->fp, g_cart_id, "Did not find propagator or source type. Aborting...\n");
   }
 
-  if(prop_type == 1) position = 2*position_;
+  /* strictly speeking the following depends on whether we read a source or a propagator */
+  if(prop_type == 1) position = 2*position_ + 1;
   /* anything else needs implementation! */
   else if(prop_type == 2 || prop_type == 3) 
     kill_with_error(reader->fp, g_cart_id, "Propagator type not yet implemented. Aborting read!\n");

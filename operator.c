@@ -302,8 +302,8 @@ void op_invert(const int op_id, const int index_start) {
 
       optr->write_prop(op_id, index_start);
 
-      /* mirror source */
-      if(SourceInfo.no_flavours == 2) {
+      /* mirror source, but not for volume sources */
+      if(SourceInfo.no_flavours == 2 && SourceInfo.type != 1) {
 	tmp = optr->sr0;
 	optr->sr0 = optr->sr1;
 	optr->sr1 = tmp;
@@ -311,6 +311,8 @@ void op_invert(const int op_id, const int index_start) {
 	optr->sr2 = optr->sr3;
 	optr->sr3 = tmp;
       }
+      /* volume sources need only one inversion */
+      else if(SourceInfo.type == 1) i++;
     }
   }
   else if(optr->type == OVERLAP) {
@@ -336,6 +338,7 @@ void op_write_prop(const int op_id, const int index_start) {
   char filename[100];
   char ending[15];
   WRITER *writer = NULL;
+  int append = 0;
 
   paramsSourceFormat *sourceFormat = NULL;
   paramsPropagatorFormat *propagatorFormat = NULL;
@@ -350,15 +353,21 @@ void op_write_prop(const int op_id, const int index_start) {
     strcpy(ending, "inverted");
   }
   
-  if (PropInfo.splitted) {
-    sprintf(filename, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
+  if(SourceInfo.type != 1) {
+    if (PropInfo.splitted) {
+      sprintf(filename, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
+    }
+    else {
+      sprintf(filename, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
+    }
   }
   else {
-    sprintf(filename, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
+    sprintf(filename, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
   }
   
+  if(!PropInfo.splitted) append = 0;
   /* the 1 is for appending */
-  construct_writer(&writer, filename, 1);
+  construct_writer(&writer, filename, append);
   if (PropInfo.splitted || SourceInfo.ix == index_start) {
     inverterInfo = construct_paramsInverterInfo(optr->reached_prec, optr->iterations, optr->solver, optr->no_flavours);
     

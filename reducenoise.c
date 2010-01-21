@@ -225,7 +225,7 @@ int main(int argc,char *argv[]) {
   if (g_proc_id == 0) {
     printf("Reading Gauge field from file %s\n", conf_filename); fflush(stdout);
   }
-  read_gauge_field(conf_filename, &gaugecksum, &xlfmessage, &gaugelfn);
+  read_gauge_field(conf_filename);
   if (g_proc_id == 0){
     printf("done!\n"); fflush(stdout);
   }
@@ -259,30 +259,33 @@ int main(int argc,char *argv[]) {
     }
   }
 
+  sprintf(conf_filename, "%s", SourceInfo.basename);
   if(g_proc_id == 0) {
     printf("Reading source from %s\n", conf_filename);
   }
   read_spinor(g_spinor_field[0], g_spinor_field[1], conf_filename, 0);
-    if(g_proc_id == 0) printf("...done\n", conf_filename);
+    if(g_proc_id == 0) printf("...done\n");
 
   if(g_proc_id == 0) {printf("mu = %e\n", g_mu/2./g_kappa);}
   
-  sprintf(conf_filename, "%s.applied", source_input_filename);
+  sprintf(conf_filename, "%s.applied", SourceInfo.basename);
   
+
   gamma5(g_spinor_field[0], g_spinor_field[0], VOLUME/2);
   gamma5(g_spinor_field[1], g_spinor_field[1], VOLUME/2);
-  
+
 #ifdef MPI
   atime = MPI_Wtime();
 #endif
   /* Now apply (1+i mu gamma_5)^-1 (M-1) Nmeas times */
-  for(j = 0; j < Nmeas/2; j++) {
+  g_mu = -g_mu;
+  for(j = 0; j < 2; j++) {
     M_minus_1_timesC(g_spinor_field[4], g_spinor_field[5],
 		     g_spinor_field[0], g_spinor_field[1]);
     M_minus_1_timesC(g_spinor_field[0], g_spinor_field[1],
-		     g_spinor_field[4], g_spinor_field[5]);
+ 		     g_spinor_field[4], g_spinor_field[5]);
   }
-
+  
   gamma5(g_spinor_field[0], g_spinor_field[0], VOLUME/2);
   gamma5(g_spinor_field[1], g_spinor_field[1], VOLUME/2);
 
@@ -294,13 +297,11 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     printf("Wrinting to file %s\n", conf_filename);
   }
-
-  mul_r(g_spinor_field[2], (2*g_kappa), g_spinor_field[0], VOLUME/2);  
-  mul_r(g_spinor_field[3], (2*g_kappa), g_spinor_field[1], VOLUME/2);
-  construct_writer(&writer, conf_filename);
+  g_mu = -g_mu;
+  construct_writer(&writer, conf_filename, 0);
   sourceFormat = construct_paramsSourceFormat(32, 1, 4, 3);
   write_source_format(writer, sourceFormat);
-  write_spinor(writer, &g_spinor_field[2], &g_spinor_field[3], 1, 32);
+  write_spinor(writer, &g_spinor_field[0], &g_spinor_field[1], 1, 32);
   free(sourceFormat);
 
   if(g_proc_id == 0) {

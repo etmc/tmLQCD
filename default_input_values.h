@@ -128,6 +128,9 @@
 #define _default_timescale 1
 #define _default_reweighting_flag 0
 #define _default_reweighting_samples 10
+#define _default_source_type_flag 0
+#define _default_no_samples 1
+
 /* sf default values */
 #define _default_g_eta 0.
 #define _default_g_Tbsf 3

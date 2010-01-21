@@ -24,7 +24,6 @@
 
 void prepare_source(const int nstore, const int isample, const int ix, const int op_id, 
 		    const int read_source_flag,
-		    const int source_location,
-		    const int source_type);
+		    const int source_location);
 
 #endif

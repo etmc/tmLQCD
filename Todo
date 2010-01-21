@@ -1,3 +1,6 @@
+- read_spinor does not distingiush between a source and a
+propagator. In case there is source and sink in the same file, one
+cannot read the source, probably. To be fixed!
 
 - even/odd is not consistently implemented in invert
   if there is one operator without we need to get the memory 

@@ -354,7 +354,11 @@ int main(int argc, char *argv[])
       }
 
     }
-    for(isample = 0; isample < 1; isample++) {
+    if(SourceInfo.type == 1) {
+      index_start = 0;
+      index_end = 1;
+    }
+    for(isample = 0; isample < no_samples; isample++) {
       for (ix = index_start; ix < index_end; ix++) {
 	for(op_id = 0; op_id < no_operators; op_id++) {
 	  /* we use g_spinor_field[0-7] for sources and props for the moment */
@@ -362,8 +366,7 @@ int main(int argc, char *argv[])
 	  /* 0-7 in case of 2 flavours */
 	  prepare_source(nstore, isample, ix, op_id, 
 			 read_source_flag,
-			 source_location,
-			 0);
+			 source_location);
 	  operator_list[op_id].inverter(op_id, index_start);
 	}
       }

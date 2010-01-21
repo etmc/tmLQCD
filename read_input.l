@@ -129,8 +129,6 @@ inline void rmQuotes(char *str){
   double stilde_max;
   double stilde_min;
   int degree_of_p;
-  int propagator_splitted;
-  int source_splitted;
   int source_location;
   int no_eigenvalues;
   double eigenvalue_precision;
@@ -141,6 +139,7 @@ inline void rmQuotes(char *str){
   int online_measurement_freq;
   int reweighting_flag;
   int reweighting_samples;
+  int no_samples;
 %}
 
 %option never-interactive
@@ -185,6 +184,9 @@ inline void rmQuotes(char *str){
 %x SOURCEFORMAT
 %x SOURCEFILE
 %x SOURCETS
+%x SOURCETYPE
+%x PROPSPLIT
+%x NOSAMPLES
 %x RELPREC
 %x REVCHECK
 %x REVINT
@@ -238,6 +240,7 @@ inline void rmQuotes(char *str){
 %x ERROR
 
 %%
+^SourceFilename{EQL}               BEGIN(SOURCEFILE);
 ^T{EQL}                            BEGIN(TT);
 ^L{EQL}                            BEGIN(LL);
 ^LX{EQL}                           BEGIN(LLX);
@@ -301,12 +304,16 @@ inline void rmQuotes(char *str){
 ^RanluxdLevel{EQL}                 BEGIN(RLXDLEVEL);
 ^DeflationSubspaceDimension{EQL}   BEGIN(DFLSP);
 ^GCRPreconditioner{EQL}            BEGIN(PRECON);
-^ComputeReweightingFactor{EQL}      BEGIN(REWEIGH);
-^NoReweightingSamples{EQL}          BEGIN(REWSAMPLES);
+^ComputeReweightingFactor{EQL}     BEGIN(REWEIGH);
+^NoReweightingSamples{EQL}         BEGIN(REWSAMPLES);
+^SourceTimeSlice{EQL}              BEGIN(SOURCETS);
+^SourceType{EQL}                   BEGIN(SOURCETYPE);
+^NoSamples{EQL}                    BEGIN(NOSAMPLES);
+^SplittedPropagator{EQL}           BEGIN(PROPSPLIT);
 
-^BeginMonomial{SPC}+                       BEGIN(INITMONOMIAL);
-^BeginInt                                  BEGIN(INITINTEGRATOR);
-^BeginOperator{SPC}+                       BEGIN(INITOPERATOR);
+^BeginMonomial{SPC}+               BEGIN(INITMONOMIAL);
+^BeginInt                          BEGIN(INITINTEGRATOR);
+^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
 
 <INITOPERATOR>{TYPE} {
   current_operator++;
@@ -1006,6 +1013,34 @@ inline void rmQuotes(char *str){
   }
 }
 
+<SOURCETYPE>{
+  Point {
+    SourceInfo.type = 0;
+    if(myverbose) printf("Using Point Sources\n");
+  }
+  Volume {
+    SourceInfo.type = 1;
+    if(myverbose) printf("Using Volume Sources\n");
+  }
+  TimeSlice {
+    SourceInfo.type = 2;
+    if(myverbose) printf("Using TimeSlice Sources\n");
+  }
+}
+<PROPSPLIT>{
+  yes {
+    PropInfo.splitted = 1;
+    if(myverbose) printf("Writing Propagators in seperate files\n");
+  }
+  no {
+    PropInfo.splitted = 0;
+    if(myverbose) printf("Writing all Propagators per gague into one single files\n");
+  }
+}
+<NOSAMPLES>{DIGIT}+ {
+  no_samples = atoi(yytext);
+  if(myverbose) printf("Inverting for %d samples\n", no_samples);
+}
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
   T_global = atoi(yytext);
@@ -1178,19 +1213,19 @@ inline void rmQuotes(char *str){
 <IDX>{DIGIT}+ {
   index_start = atoi(yytext);
   index_end = index_start+1;
-  if((index_start < 0)||(index_start >99)){
-    printf("Error in line %d! index_start must be in [0,99]! Exiting...!\n", line_of_file);
+  if((index_start < 0)||(index_start > 11)){
+    printf("Error in line %d! index_start must be in [0,11]! Exiting...!\n", line_of_file);
     exit(1);
   }
   if(myverbose!=0) printf("inverting for index %s\n", yytext);
 }
 <IDX>{IDXEX}  {
   sscanf(yytext, "-%d", &index_end);
-  if((index_end < 0)||(index_end >99)){
-    printf("Error in line %d! index_end must be in [0,99]! Exiting...!\n", line_of_file);
+  if((index_end < 0)||(index_end > 11)){
+    printf("Error in line %d! index_end must be in [0,11]! Exiting...!\n", line_of_file);
     exit(1);
   }
-  if(myverbose!=0) printf("inverting up to color index %d\n", index_end);
+  if(myverbose!=0) printf("inverting up to spin-color index %d\n", index_end);
   index_end+=1;
 }
 <BCGMAX>{DIGIT}+ {
@@ -1537,6 +1572,8 @@ int read_input(char * conf_file){
   strcpy(SourceInfo.basename, _default_source_filename);
   if(PropInfo.basename == NULL) PropInfo.basename = (char*)malloc(100*sizeof(char));
   strcpy(PropInfo.basename, _default_source_filename);
+  PropInfo.splitted = _default_propagator_splitted;
+  SourceInfo.splitted = _default_source_splitted;
   g_relative_precision_flag = _default_g_relative_precision_flag;
   return_check_flag = _default_return_check_flag;
   return_check_interval = _default_return_check_interval;
@@ -1567,6 +1604,8 @@ int read_input(char * conf_file){
   bc_flag = _default_bc_flag;
   online_measurement_flag = _default_online_measurement_flag;
   online_measurement_freq = _default_online_measurement_freq;
+  SourceInfo.type = _default_source_type_flag;
+  no_samples = _default_no_samples;
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */
