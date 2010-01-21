@@ -27,7 +27,7 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
   message = (char*)malloc(1024);
   
   if (info->mms > -1) {
-    sprintf(message, "\n solver = %s\n"
+    sprintf(message, "solver = %s\n"
 	    " result is for Q^dagger Q!\n"
 	    " multiple mass solver\n"
 	    " epssq = %e\n"
@@ -43,7 +43,7 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
   }
   else
     if (!info->heavy) {
-      sprintf(message, "\n solver = %s\n"
+      sprintf(message, "solver = %s\n"
 	      " epssq = %e\n"
 	      " noiter = %d\n"
 	      " kappa = %f, mu = %f\n"
@@ -55,7 +55,7 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
 	      info->time, info->package_version, info->date);
     }
     else {
-      sprintf(message, "\n solver = %s\n"
+      sprintf(message, "solver = %s\n"
 	      " epssq = %e\n"
 	      " noiter = %d\n"
 	      " kappa = %f, mubar = %f, epsbar=%f\n"

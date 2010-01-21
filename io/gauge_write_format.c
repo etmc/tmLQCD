@@ -32,13 +32,13 @@ void write_ildg_format(WRITER *writer, paramsIldgFormat const *format)
           "<ildgFormat xmlns=\"http://www.lqcd.org/ildg\"\n"
           "            xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
           "            xsi:schemaLocation=\"http://www.lqcd.org/ildg filefmt.xsd\">\n"
-          "  <version> 1.0 </version>\n"
-          "  <field> su3gauge </field>\n"
-          "  <precision> %d </precision>\n"
-          "  <lx> %d </lx>\n"
-          "  <ly> %d </ly>\n"
-          "  <lz> %d </lz>\n"
-          "  <lt> %d </lt>\n"
+          "  <version>1.0</version>\n"
+          "  <field>su3gauge</field>\n"
+          "  <precision>%d</precision>\n"
+          "  <lx>%d</lx>\n"
+          "  <ly>%d</ly>\n"
+          "  <lz>%d</lz>\n"
+          "  <lt>%d</lt>\n"
           "</ildgFormat>",
           format->prec, format->nx, format->ny, format->nz, format->nt);
 
