@@ -35,6 +35,7 @@
 #include "chebyshev_polynomial_nd.h"
 #include "Ptilde_nd.h"
 #include "phmc.h"
+#include "monomial.h"
 
 double phmc_Cpol;
 double phmc_cheb_evmin, phmc_cheb_evmax;
@@ -56,8 +57,17 @@ void init_phmc() {
   char title[100];
 
   FILE *Const;
-  char *filename_const = "normierungLocal.dat";
+  char *filename_const     = "normierungLocal.dat";
   char *filename_const_oox = "normierungLocal.dat.oox";
+
+  /* contains info about the mnl poly_monomial*/
+  monomial *mnl=NULL;
+
+  for(j=0;j<no_monomials;j++)
+    if(monomial_list[j].type == NDPOLY) mnl= monomial_list + j;
+
+  if(mnl==NULL)
+    fprintf(stderr,"Warning: couldnt find the NDPOLY monomial. Thats VERY strange.\n");
 
   /* START IF PHMC */
 
@@ -132,19 +142,25 @@ void init_phmc() {
      constant appearing in the multiplication representing the 
      polinomial in  sqrt(s) .
   */
-  if(g_epsbar==0.0 && phmc_exact_poly ==1) 
-    filename_const=filename_const_oox;
-  if((Const=fopen(filename_const,"r")) != (FILE*)NULL) {
-    errcode = fscanf(Const, " %lf \n", &phmc_Cpol);
-    fclose(Const);
-  }
-  else {
-    fprintf(stderr, "File %s is missing! Aborting...\n", filename_const);
+
+  if(mnl->MDPolyLocNormConst == -1.0){
+    if(!(g_epsbar!=0.0 || phmc_exact_poly==0))
+      filename_const=filename_const_oox;
+    if((Const=fopen(filename_const,"r")) != (FILE*)NULL) {
+      errcode = fscanf(Const, " %lf \n", &phmc_Cpol);
+      fclose(Const);
+    } else {
+      fprintf(stderr, "File %s is missing! Aborting...\n", filename_const);
 #ifdef MPI
-    MPI_Finalize();
+      MPI_Finalize();
 #endif
-    exit(6);
+      exit(6);
+    }
+  } else { 
+    phmc_Cpol=mnl->MDPolyLocNormConst;
+    fprintf(stderr,"phmc_Cpol set to %e " , phmc_Cpol);
   }
+
   if(g_epsbar!=0.0 || phmc_exact_poly==0) phmc_Cpol = sqrt(phmc_Cpol);
 
   phmc_root = calloc((2*phmc_dop_n_cheby-2),sizeof(complex));
@@ -152,6 +168,10 @@ void init_phmc() {
 
   if(g_epsbar==0.0 && phmc_exact_poly == 1) 
     filename_phmc_root=filename_phmc_root_oox;
+
+  if(strlen(mnl->MDPolyRootsFile)!=0)
+    filename_phmc_root=mnl->MDPolyRootsFile;
+
   if((roots=fopen(filename_phmc_root,"r")) != (FILE*)NULL) {
     if (fgets(title, 100, roots) == NULL)
     {

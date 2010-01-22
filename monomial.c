@@ -121,6 +121,7 @@ int init_monomials(const int V, const int even_odd_flag) {
   int i, no=0;
   int retval;
   spinor * __pf = NULL;
+  char filename[257];
   for(i = 0; i < no_monomials; i++) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
     /* non-degenerate monomials need two pseudo fermion fields */
@@ -248,6 +249,8 @@ int init_poly_monomial(const int V,const int id){
   int i,j,k;
   FILE* rootsFile=NULL;
   char title[101];
+  char filename[257];
+  FILE* constFile;
   int errcode;
 
   spinor *_pf=(spinor*)NULL;
@@ -277,14 +280,44 @@ int init_poly_monomial(const int V,const int id){
 
 
 
+  if(strlen(monomial_list[id].MDPolyRootsFile)==0){
+    sprintf(monomial_list[id].MDPolyRootsFile,
+	    "%s_deg_%d_eps_%1.16e.roots",
+	    "1overX_poly",
+	    monomial_list[id].MDPolyDegree,
+	    monomial_list[id].MDPolyLmin/monomial_list[id].MDPolyLmax
+	    );
+    fprintf(stderr,"Warning you didnt specify a rootsfilename -> guessing:\n%s\n",filename);
+  }
+  if(monomial_list[id].MDPolyLocNormConst==-1.0){
+    sprintf(filename,
+	    "%s_deg_%d_eps_%1.16e.roots",
+	    "1overX_poly.const",
+	    monomial_list[id].MDPolyDegree,
+	    monomial_list[id].MDPolyLmin/monomial_list[id].MDPolyLmax
+	    );
+    fprintf(stderr,"Warning you didnt specify a local normalization: trying to read it from\n%s\n",filename);
+    if((constFile=fopen(filename,"r"))!=NULL) {
+      fscanf(constFile,"%lf\n",&(mnl->MDPolyLocNormConst));
+      fclose(constFile);
+      fprintf(stderr, "normierung local succesfully read -> lnc =  %e \n", mnl->MDPolyLocNormConst);
+    } else {
+      fprintf(stderr,"Reading local normalization from file FAILED\n Borting Ab\n");
+      #ifdef MPI
+         MPI_Finalize();
+      #endif
+      exit(6);
+    }
+  }
+
 
   /* read in the roots from the given file */
 
-    if(  (void*) (mnl->MDPolyRoots=(complex*)calloc(mnl->MDPolyDegree,sizeof(complex)) ) ==NULL ){
-      printf ("malloc errno in init_poly_monomial roots array: %d\n",errno); 
-      errno = 0;
-      return(3);
-    }
+  if(  (void*) (mnl->MDPolyRoots=(complex*)calloc(mnl->MDPolyDegree,sizeof(complex)) ) ==NULL ){
+    printf ("malloc errno in init_poly_monomial roots array: %d\n",errno); 
+    errno = 0;
+    return(3);
+  }
 
 
   if((rootsFile=fopen(mnl->MDPolyRootsFile,"r")) != (FILE*)NULL) {
@@ -312,16 +345,12 @@ int init_poly_monomial(const int V,const int id){
   }
 
 
+
   printf("Here come the roots\n");
 
     for(j=0; j<(mnl->MDPolyDegree); j++){
       printf("%lf %lf\n",  mnl->MDPolyRoots[j].re, mnl->MDPolyRoots[j].im);
     }
-
-
-
-
-
 
   return 0;
 

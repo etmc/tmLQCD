@@ -843,6 +843,10 @@ inline void rmQuotes(char *str){
       printf("  upper bound of degenerate MD polynomial set to %f line %d monomial %d\n",
        mnl->MDPolyLmax, line_of_file, current_monomial);
   }
+}
+
+
+<POLYMONOMIAL,NDPOLYMONOMIAL>{
   {SPC}*LocNormConst{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     mnl->MDPolyLocNormConst = c;
@@ -855,13 +859,8 @@ inline void rmQuotes(char *str){
     cstring_caller = YY_START;
     BEGIN(MCSTR);
   }
-  {SPC}*RootsFile{SPC}*={SPC}*{NAME} {
-    sscanf(yytext, " %[a-zA-Z] = %s", name, mnl->MDPolyRootsFile);
-    if(myverbose!=0)
-      printf("  Roots file for MD polynomial set to \"%s\" line %d monomial %d\n",
-                       mnl->MDPolyRootsFile, line_of_file, current_monomial);
-  }
 }
+
 
 <MNAME>{NAME} {
   if(myverbose) printf("  monomial named \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
