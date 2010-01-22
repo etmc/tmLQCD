@@ -431,7 +431,10 @@ Each of them has different options:
   \item {\ttfamily RootsFile}:
     File name specifying a file containing the $n=$ {\ttfamily Degree} roots of the Polynomial
   \end{itemize}
-There can be arbitrary many POLY monomials. But take into account that there will be allocated $n/2$ number of spinor fields for EACH poly monomial. (Maybe in the future we should think about to share these fields with all POLY/NDPOLY monomials as there are used only for the computation of the force and have to be updated before each successive calculation of the force.)
+There can be arbitrary many POLY monomials. But take into account that there will be allocated $n/2$ number of spinor fields for EACH poly monomial. (Maybe in the future we should think about to share these fields with all POLY/NDPOLY monomials as there are used only for the computation of the force and have to be updated before each successive calculation of the force.)\\
+This monomial needs a valid {\ttfamily RootsFile} and {\ttfamily LocNormConst} parameter. Both can be obtained from the {\ttfamily oox} program in the {\ttfamily util/oox} subdirectory of the hmc code. It can be invoked by the command:\\
+{\ttfamily \$ oox -d <degree> -e <epsilon>}\\
+{\ttfamily <epsilon>} is to be replaced by the ratio  {\ttfamily Lmin/Lmax}.
 \end{itemize}
 
 \subsubsection{The Integrator}
