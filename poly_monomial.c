@@ -53,12 +53,9 @@
 
 
 
-
-
-
 inline void setPhmcVars(monomial *mnl){
   phmc_invmaxev=1.0/mnl->MDPolyLmax;
-  phmc_dop_n_cheby=mnl->MDPolyDegree/2+1;
+  phmc_dop_n_cheby=(mnl->MDPolyDegree/2)+1;
   phmc_Cpol=mnl->MDPolyLocNormConst;
   phmc_root=mnl->MDPolyRoots;
 }
@@ -71,10 +68,6 @@ void poly_derivative(const int id){
 
   spinor** chi_spinor_field=mnl->MDPoly_chi_spinor_fields;
 
-  g_mu=mnl->mu;
-
-  boundary(mnl->kappa);
-
 
   (*mnl).forcefactor = -2.*mnl->MDPolyLocNormConst/mnl->MDPolyLmax;
 
@@ -86,7 +79,19 @@ void poly_derivative(const int id){
 
   if(mnl->even_odd_flag){
 
-    assign(chi_spinor_field[0],mnl->pf,VOLUME/2);
+
+
+    if(mnl->MDPolyDetRatio==1){
+      g_mu=mnl->mu2;
+      boundary(mnl->kappa2);
+      Qtm_plus_psi(chi_spinor_field[0],mnl->pf);
+    } else {
+      assign(chi_spinor_field[0],mnl->pf,VOLUME/2);
+    }
+
+
+    g_mu=mnl->mu;
+    boundary(mnl->kappa);
 
     
     /* Here comes the definitions for the chi_j fields */
@@ -109,8 +114,8 @@ void poly_derivative(const int id){
 	     chi_spinor_field[degreehalf+1], VOLUME/2);
       
       Qtm_pm_min_cconst_nrm(chi_spinor_field[degreehalf+1], 
-				 chi_spinor_field[degreehalf],
-				 mnl->MDPolyRoots[mnl->MDPolyDegree-(j+1)]);
+			    chi_spinor_field[degreehalf],
+			    mnl->MDPolyRoots[mnl->MDPolyDegree-(j+1)]);
       
 
       Qtm_minus_psi(g_spinor_field[DUM_DERI+3],chi_spinor_field[j-1]); 
@@ -129,8 +134,38 @@ void poly_derivative(const int id){
       
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], chi_spinor_field[j-1], EO, -1.); 
       deriv_Sb(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
-    
-  }
+      
+    }
+
+
+    if(mnl->MDPolyDetRatio==1){
+      /******************************************
+      * multiply with the last missing monomial *
+      * such that we get an evaluation of P     *
+      ******************************************/
+      Qtm_pm_min_cconst_nrm(chi_spinor_field[degreehalf], 
+			    chi_spinor_field[degreehalf+1],
+			    mnl->MDPolyRoots[mnl->MDPolyDegree-1]);
+      
+    /* devide by this factor cause its multiplied again in update_fermion_momenta see comment below */
+    mul_r(chi_spinor_field[degreehalf],
+	  1./mnl->MDPolyLocNormConst*mnl->MDPolyLmax,
+	  chi_spinor_field[degreehalf],
+	  VOLUME/2);
+
+
+      g_mu=mnl->mu2;
+      boundary(mnl->kappa2);
+
+      H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2],chi_spinor_field[degreehalf], EO, -1.);
+      deriv_Sb(OE, mnl->pf , g_spinor_field[DUM_DERI+2]);
+      
+      H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], mnl->pf, EO, +1.);
+      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf]);
+
+
+
+    }
 
 
 
@@ -147,7 +182,7 @@ void poly_derivative(const int id){
     return;
   }
 
-
+  /* restore all changed global vars */
   g_mu = g_mu1;
   boundary(g_kappa);
   popPhmcVars();
@@ -166,19 +201,26 @@ double poly_acc(const int id){
 
 
 
-  g_mu = mnl->mu;
-  boundary(mnl->kappa);
-
-
 
   if(mnl->even_odd_flag){
+
+    if(mnl->MDPolyDetRatio==1){
+      g_mu = mnl->mu2;
+      boundary(mnl->kappa2);
+
+      Qtm_plus_psi(spinor2,mnl->pf);
+
+    } else {
+      assign(spinor2,mnl->pf,VOLUME/2);
+    }
+
+    g_mu = mnl->mu;
+    boundary(mnl->kappa);
 
     /* push and set phmc vars */
     pushPhmcVars();
     setPhmcVars(mnl);
 
-
-    assign(spinor2,mnl->pf,VOLUME/2);
     /* apply B */
     for(j = 0; j < mnl->MDPolyDegree/2; j++){
       assign(spinor1, spinor2, VOLUME/2);
@@ -186,6 +228,7 @@ double poly_acc(const int id){
 			    spinor1,
 			    mnl->MDPolyRoots[j]);
     }
+
     mnl->energy1 =  square_norm(spinor2, VOLUME/2,1);
 
     /* calculate evs */
@@ -238,7 +281,6 @@ void poly_heatbath(const int id){
   spinor* spinor1=g_spinor_field[2];
   spinor* spinor2=g_spinor_field[3];
 
-
   mnl->csg_n = 0;
   mnl->csg_n2 = 0;
   mnl->iter0 = 0;
@@ -261,11 +303,8 @@ void poly_heatbath(const int id){
       fprintf(stderr," Poly energy0     = %e \n" , mnl->energy0);
     }
 
-
-
     /* calculate the phmc hamiltonian */
     Qtm_pm_psi(spinor2, spinor1);
-
 
     /* solve (Q+)*(Q-)*P((Q+)*(Q-)) *x=y */
     cg_her(spinor1, spinor2,
@@ -279,11 +318,31 @@ void poly_heatbath(const int id){
 				 mnl->MDPolyRoots[mnl->MDPolyDegree/2+j]);
     }
 
-    /* store constructed phi field */
-    assign(mnl->pf, spinor1, VOLUME/2);
+
+    if(mnl->MDPolyDetRatio==1){
+      g_mu = mnl->mu2;
+      boundary(mnl->kappa2);
+      zero_spinor_field(mnl->pf,VOLUME/2);
+      if(mnl->solver == CG) ITER_MAX_BCG = 0;
+      ITER_MAX_CG = mnl->maxiter;
+      mnl->iter0 += bicg(mnl->pf, spinor1, mnl->accprec, g_relative_precision_flag);
+      
+      chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
+			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
+      
+      if(mnl->solver != CG) {
+	chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2,
+			    mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
+      }
+    } else {
+      /* store constructed phi field */
+      assign(mnl->pf, spinor1, VOLUME/2);
+    }
     
   }
   else {
+    /* not implemented */
+    fprintf(stderr,"Error: non even odd preconditioned \"light\" phmc not implemented \n");
   }
 
   g_mu = g_mu1;

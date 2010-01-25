@@ -31,6 +31,7 @@
 #define NDPOLY 4
 #define SFGAUGE 5
 #define NDDETRATIO 6
+#define POLYDETRATIO 7
 
 #define max_no_monomials 20
 
@@ -81,6 +82,7 @@ typedef struct {
   complex *MDPolyRoots;
   spinor **MDPoly_chi_spinor_fields;
   double MDPolyLocNormConst;
+  int MDPolyDetRatio;
   /* chronological solver fields */
   spinor ** csg_field;
   spinor ** csg_field2;

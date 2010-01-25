@@ -104,6 +104,8 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].MDPolyRoots = NULL;
   monomial_list[no_monomials].MDPoly_chi_spinor_fields = (spinor**)NULL;
   monomial_list[no_monomials].MDPolyLocNormConst = _default_MDPolyLocNormConst;
+  monomial_list[no_monomials].MDPolyDetRatio = _default_MDPolyDetRatio;
+
 
 
 
@@ -165,6 +167,14 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &poly_heatbath;
 	monomial_list[i].accfunction = &poly_acc;
 	monomial_list[i].derivativefunction = &poly_derivative;
+	retval=init_poly_monomial(V,i);
+	if(retval!=0) return retval;
+      }
+      else if(monomial_list[i].type == POLYDETRATIO) {
+	monomial_list[i].hbfunction = &poly_heatbath;
+	monomial_list[i].accfunction = &poly_acc;
+	monomial_list[i].derivativefunction = &poly_derivative;
+	monomial_list[i].MDPolyDetRatio = 1;
 	retval=init_poly_monomial(V,i);
 	if(retval!=0) return retval;
       }
@@ -252,6 +262,7 @@ int init_poly_monomial(const int V,const int id){
   char filename[257];
   FILE* constFile;
   int errcode;
+  double eps;
 
   spinor *_pf=(spinor*)NULL;
 
@@ -290,11 +301,12 @@ int init_poly_monomial(const int V,const int id){
     fprintf(stderr,"Warning you didnt specify a rootsfilename -> guessing:\n%s\n",filename);
   }
   if(monomial_list[id].MDPolyLocNormConst==-1.0){
+    eps=monomial_list[id].MDPolyLmin/monomial_list[id].MDPolyLmax;
     sprintf(filename,
-	    "%s_deg_%d_eps_%1.16e.roots",
-	    "1overX_poly.const",
+	    "%s_deg_%d_eps_%1.16e.const",
+	    "1overX_poly",
 	    monomial_list[id].MDPolyDegree,
-	    monomial_list[id].MDPolyLmin/monomial_list[id].MDPolyLmax
+	    eps
 	    );
     fprintf(stderr,"Warning you didnt specify a local normalization: trying to read it from\n%s\n",filename);
     if((constFile=fopen(filename,"r"))!=NULL) {

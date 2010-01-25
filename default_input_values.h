@@ -147,5 +147,6 @@
 #define _default_MDPolyLmax 3.0
 #define _default_MDPolyRootsFile ""
 #define _default_MDPolyLocNormConst -1.0
+#define _default_MDPolyDetRatio 0
 
 #endif

@@ -2838,7 +2838,7 @@ static char *yy_last_accepting_cpos;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1 "read_input.l"
 #define INITIAL 0
 /***********************************************************************
  * $Id$ 
@@ -2873,7 +2873,7 @@ char *yytext;
  * Autor: Carsten Urbach
  *        urbach@physik.fu-berlin.de
  ***********************************************************************/
-#line 50 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 50 "read_input.l"
 #ifdef HAVE_CONFIG_H
 #  include<config.h>
 #endif
@@ -2907,6 +2907,7 @@ inline void rmQuotes(char *str){
   /* helper vars */
   char *cstring_to_parse=NULL;
   int cstring_caller;
+  int solver_caller;
 
   /* declaration of input parameters */
   int i=0;
@@ -3301,7 +3302,7 @@ YY_DECL
 	register char *yy_cp = NULL, *yy_bp = NULL;
 	register int yy_act;
 
-#line 242 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 243 "read_input.l"
 
 
 	if ( yy_init )
@@ -3388,372 +3389,372 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 243 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 244 "read_input.l"
 BEGIN(SOURCEFILE);
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 244 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 245 "read_input.l"
 BEGIN(TT);
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 245 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 246 "read_input.l"
 BEGIN(LL);
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 246 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 247 "read_input.l"
 BEGIN(LLX);
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 247 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 248 "read_input.l"
 BEGIN(LLY);
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 248 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 249 "read_input.l"
 BEGIN(LLZ);
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 249 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 250 "read_input.l"
 BEGIN(TTBSF);
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 250 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 251 "read_input.l"
 BEGIN(NPROCX);
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 251 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 252 "read_input.l"
 BEGIN(NPROCY);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 252 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 253 "read_input.l"
 BEGIN(NPROCZ);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 253 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 254 "read_input.l"
 BEGIN(KAPPA);
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 254 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 255 "read_input.l"
 BEGIN(MU);
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 255 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 256 "read_input.l"
 BEGIN(MUBAR);
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 256 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 257 "read_input.l"
 BEGIN(EPSBAR);
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 257 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 258 "read_input.l"
 BEGIN(NOEV);
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 258 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 259 "read_input.l"
 BEGIN(PRECEV);
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 259 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 260 "read_input.l"
 BEGIN(SEED);
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 260 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 261 "read_input.l"
 BEGIN(STARTCOND);
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 261 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 262 "read_input.l"
 BEGIN(THERMSWEEPS);
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 262 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 263 "read_input.l"
 BEGIN(NMEAS);
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 263 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 264 "read_input.l"
 BEGIN(NSAVE);
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 264 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 265 "read_input.l"
 BEGIN(GAUGEINPUTFILE);
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 265 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 266 "read_input.l"
 BEGIN(RLXDINPUTFILE);
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 266 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 267 "read_input.l"
 BEGIN(SUBEVCG);
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 267 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 268 "read_input.l"
 BEGIN(WRITECP);
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 268 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 269 "read_input.l"
 BEGIN(CPINT);
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 269 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 270 "read_input.l"
 BEGIN(GAUGEINPUTFILE);
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 270 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 271 "read_input.l"
 BEGIN(RLXDINPUTFILE);
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 271 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 272 "read_input.l"
 BEGIN(NSTORE);
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 272 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 273 "read_input.l"
 BEGIN(IOPROC);
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 273 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 274 "read_input.l"
 BEGIN(IDX);
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 274 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 275 "read_input.l"
 BEGIN(BCGMAX);
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 275 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 276 "read_input.l"
 BEGIN(CGMAX);
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 276 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 277 "read_input.l"
 BEGIN(BOUNDT);
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 277 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 278 "read_input.l"
 BEGIN(BOUNDT);
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 278 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 279 "read_input.l"
 BEGIN(BOUNDX);
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 279 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 280 "read_input.l"
 BEGIN(BOUNDY);
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 280 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 281 "read_input.l"
 BEGIN(BOUNDZ);
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 281 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 282 "read_input.l"
 BEGIN(READSOURCE);
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 282 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 283 "read_input.l"
 BEGIN(RELPREC);
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 283 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 284 "read_input.l"
 BEGIN(REVCHECK);
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 284 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 285 "read_input.l"
 BEGIN(REVINT);
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 285 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 286 "read_input.l"
 BEGIN(DEBUG);
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 286 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 287 "read_input.l"
 BEGIN(GMRESM);
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 287 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 288 "read_input.l"
 BEGIN(GMRESDRNEV);
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 288 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 289 "read_input.l"
 BEGIN(CGMMSNMS);
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 289 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 290 "read_input.l"
 BEGIN(GAUGERPREC);
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 290 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 291 "read_input.l"
 BEGIN(GAUGEWPREC);
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 291 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 292 "read_input.l"
 BEGIN(REPRORND);
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 292 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 293 "read_input.l"
 BEGIN(SLOPPYPREC);
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 293 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 294 "read_input.l"
 BEGIN(USESTOUT);
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 294 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 295 "read_input.l"
 BEGIN(STOUTRHO);
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 295 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 296 "read_input.l"
 BEGIN(STOUTITER);
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 296 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 297 "read_input.l"
 BEGIN(COMPUTEEVS);
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 297 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 298 "read_input.l"
 BEGIN(SRCLOC);
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 298 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 299 "read_input.l"
 BEGIN(EO);
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 299 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 300 "read_input.l"
 BEGIN(BC);
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 300 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 301 "read_input.l"
 BEGIN(WRPROPFLAG);
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 301 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 302 "read_input.l"
 BEGIN(WRPROPFLAG);
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 302 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 303 "read_input.l"
 BEGIN(ONMEAS);
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 303 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 304 "read_input.l"
 BEGIN(ONFREQ);
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 304 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 305 "read_input.l"
 BEGIN(RLXDLEVEL);
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 305 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 306 "read_input.l"
 BEGIN(DFLSP);
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 306 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 307 "read_input.l"
 BEGIN(PRECON);
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 307 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 308 "read_input.l"
 BEGIN(REWEIGH);
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 308 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 309 "read_input.l"
 BEGIN(REWSAMPLES);
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 309 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 310 "read_input.l"
 BEGIN(SOURCETS);
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 310 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 311 "read_input.l"
 BEGIN(SOURCETYPE);
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 311 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 312 "read_input.l"
 BEGIN(NOSAMPLES);
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 312 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 313 "read_input.l"
 BEGIN(PROPSPLIT);
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 314 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 315 "read_input.l"
 BEGIN(INITMONOMIAL);
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 315 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 316 "read_input.l"
 BEGIN(INITINTEGRATOR);
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 316 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 317 "read_input.l"
 BEGIN(INITOPERATOR);
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 318 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 319 "read_input.l"
 {
   current_operator++;
   optr = &operator_list[current_operator];
@@ -3793,7 +3794,7 @@ YY_RULE_SETUP
 
 case 75:
 YY_RULE_SETUP
-#line 355 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 356 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     optr->kappa = c;
@@ -3802,7 +3803,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 360 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 361 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     optr->maxiter = a;
@@ -3811,7 +3812,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 365 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 366 "read_input.l"
 {
     optr->prop_precision = 32;
     if(myverbose) printf("  PropagatorPrecision set to 32 line %d operator %d\n", line_of_file, current_operator);
@@ -3819,7 +3820,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 369 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 370 "read_input.l"
 {
     optr->prop_precision = 64;
     if(myverbose) printf("  PropagatorPrecision set to 64 line %d operator %d\n", line_of_file, current_operator);
@@ -3827,7 +3828,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 373 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 374 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     optr->eps_sq = c;
@@ -3836,7 +3837,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 378 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 379 "read_input.l"
 {
     if(myverbose) printf("operator %d parsed line %d\n\n", current_operator, line_of_file);
     BEGIN(0);
@@ -3846,7 +3847,7 @@ YY_RULE_SETUP
 
 case 81:
 YY_RULE_SETUP
-#line 385 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 386 "read_input.l"
 {
     name_caller = YY_START; 
     BEGIN(TMSOLVER);
@@ -3854,14 +3855,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 389 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 390 "read_input.l"
 {
     optr->even_odd_flag = 1;
   }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 392 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 393 "read_input.l"
 {
     optr->even_odd_flag = 0;
   }
@@ -3870,7 +3871,7 @@ YY_RULE_SETUP
 
 case 84:
 YY_RULE_SETUP
-#line 398 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 399 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     optr->mubar = c;
@@ -3879,7 +3880,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 403 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 404 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     optr->epsbar = c;
@@ -3888,7 +3889,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 408 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 409 "read_input.l"
 {
     name_caller = YY_START; 
     BEGIN(DBTMSOLVER);
@@ -3898,7 +3899,7 @@ YY_RULE_SETUP
 
 case 87:
 YY_RULE_SETUP
-#line 415 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 416 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     optr->mu = c;
@@ -3909,12 +3910,12 @@ YY_RULE_SETUP
 
 case 88:
 YY_RULE_SETUP
-#line 423 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 424 "read_input.l"
 BEGIN(OVSOLVER);
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 424 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 425 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     optr->m = c;
@@ -3923,7 +3924,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 429 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 430 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     optr->s = c;
@@ -3932,7 +3933,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 434 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 435 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     optr->deg_poly = a;
@@ -3941,7 +3942,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 439 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 440 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     optr->no_ev = a;
@@ -3950,7 +3951,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 444 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 445 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     optr->ev_prec = c;
@@ -3961,7 +3962,7 @@ YY_RULE_SETUP
 
 case 94:
 YY_RULE_SETUP
-#line 452 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 453 "read_input.l"
 {
     optr->solver=1;
     if(myverbose) printf("  Solver set to CG line %d operator %d\n", line_of_file, current_operator);
@@ -3972,7 +3973,7 @@ YY_RULE_SETUP
 
 case 95:
 YY_RULE_SETUP
-#line 460 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 461 "read_input.l"
 {
     optr->solver=0;
     if(myverbose) printf("  Solver set to BiCGstab line %d operator %d\n", line_of_file, current_operator);
@@ -3981,7 +3982,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 465 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 466 "read_input.l"
 {
     optr->solver=9;
     if(myverbose) printf("  Solver set to PCG line %d operator %d\n", line_of_file, current_operator);
@@ -3990,7 +3991,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 470 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 471 "read_input.l"
 {
     optr->solver=2;
     if(myverbose) printf("  Solver set to GMRES line %d operator %d\n", line_of_file, current_operator);
@@ -3999,7 +4000,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 475 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 476 "read_input.l"
 {
     optr->solver=7;
     if(myverbose) printf("  Solver set to GCR line %d operator %d\n", line_of_file, current_operator);
@@ -4008,7 +4009,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 480 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 481 "read_input.l"
 {
     optr->solver=8;
     if(myverbose) printf("  Solver set to GMRES-DR line %d operator %d\n", line_of_file, current_operator);
@@ -4017,7 +4018,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 485 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 486 "read_input.l"
 {
     optr->solver=3;
     if(myverbose) printf("  Solver set to CGS line %d operator %d\n", line_of_file, current_operator);
@@ -4026,7 +4027,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 490 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 491 "read_input.l"
 {
     optr->solver=4;
     if(myverbose) printf("  Solver set to MR line %d operator %d\n", line_of_file, current_operator);
@@ -4035,7 +4036,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 495 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 496 "read_input.l"
 {
     optr->solver=6;
     if(myverbose) printf("  Solver set to FGMRES line %d operator %d\n", line_of_file, current_operator);
@@ -4044,7 +4045,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 500 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 501 "read_input.l"
 {
     optr->solver=10;
     g_dflgcr_flag = 1;
@@ -4054,7 +4055,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-#line 506 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 507 "read_input.l"
 {
     optr->solver=11;
     g_dflgcr_flag = 1;
@@ -4064,7 +4065,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 512 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 513 "read_input.l"
 {
     optr->solver = 12;
     if(myverbose) printf("  Solver set to CGMMS line %d operator %d\n", line_of_file, current_operator);
@@ -4075,7 +4076,7 @@ YY_RULE_SETUP
 
 case 106:
 YY_RULE_SETUP
-#line 520 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 521 "read_input.l"
 {
     optr->solver = 13;
     if(myverbose) printf("  Solver set to SUMR line %d operator %d\n", line_of_file, current_operator);
@@ -4085,7 +4086,7 @@ YY_RULE_SETUP
 
 case 107:
 YY_RULE_SETUP
-#line 527 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 528 "read_input.l"
 {
   current_monomial++;
   mnl = &monomial_list[current_monomial];
@@ -4111,6 +4112,10 @@ YY_RULE_SETUP
   else if(strcmp(yytext, "POLY")==0) {
     mnl->type = POLY;
     strcpy((*mnl).name, "POLY");
+  }
+  else if(strcmp(yytext, "POLYDETRATIO")==0) {
+    mnl->type = POLYDETRATIO;
+    strcpy((*mnl).name, "POLYDETRATIO");
   }
   else if(strcmp(yytext, "GAUGE")==0) {
     mnl->type = GAUGE;
@@ -4138,14 +4143,17 @@ YY_RULE_SETUP
   if(mnl->type == GAUGE) BEGIN(GAUGEMONOMIAL);
   else if(mnl->type == SFGAUGE) BEGIN(SFGAUGEMONOMIAL);
   else if(mnl->type == NDPOLY) BEGIN(NDPOLYMONOMIAL);
-  else if(mnl->type == POLY)  BEGIN(POLYMONOMIAL); 
+  else if(mnl->type == POLY || mnl->type == POLYDETRATIO)  {
+          fprintf(stderr,"starting to parse poly(detratio) monomial\n");
+          BEGIN(POLYMONOMIAL); 
+  }
   else BEGIN(DETMONOMIAL);
 }
 	YY_BREAK
 
 case 108:
 YY_RULE_SETUP
-#line 586 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 594 "read_input.l"
 {
     if(mnl->type == NDDETRATIO) {
       mnl->timescale = -5;
@@ -4160,7 +4168,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
-#line 597 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 605 "read_input.l"
 {
     name_caller = YY_START;
     BEGIN(MNAME);
@@ -4168,7 +4176,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 601 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 609 "read_input.l"
 {
     if(myverbose) printf("monomial %d parsed line %d\n\n", current_monomial, line_of_file);
     BEGIN(0);
@@ -4178,7 +4186,7 @@ YY_RULE_SETUP
 
 case 111:
 YY_RULE_SETUP
-#line 610 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 618 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu = c;
@@ -4187,7 +4195,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-#line 615 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 623 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mu2 = c;
@@ -4196,7 +4204,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
-#line 620 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 628 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     mnl->kappa = c;
@@ -4205,7 +4213,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
-#line 625 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 633 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->kappa2 = c;
@@ -4214,7 +4222,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 115:
 YY_RULE_SETUP
-#line 630 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 638 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mubar = c;
@@ -4223,7 +4231,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
-#line 635 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 643 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->mubar2 = c;
@@ -4232,7 +4240,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
-#line 640 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 648 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->epsbar = c;
@@ -4241,7 +4249,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
-#line 645 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 653 "read_input.l"
 {
     sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
     mnl->epsbar2 = c;
@@ -4250,7 +4258,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
-#line 650 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 658 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->csg_N = a;
@@ -4259,7 +4267,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
-#line 655 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 663 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z2] = %d", name , &a);
     mnl->csg_N2 = a;
@@ -4269,7 +4277,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 121:
 YY_RULE_SETUP
-#line 661 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 669 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->forceprec = c;
@@ -4278,7 +4286,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
-#line 666 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 674 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->accprec = c;
@@ -4287,7 +4295,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 123:
 YY_RULE_SETUP
-#line 671 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 679 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->maxiter = a;
@@ -4296,19 +4304,22 @@ YY_RULE_SETUP
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
-#line 676 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
-BEGIN(MSOLVER);
+#line 684 "read_input.l"
+{
+   solver_caller=YY_START;
+   BEGIN(MSOLVER);
+  }
 	YY_BREAK
 
 
 case 125:
 YY_RULE_SETUP
-#line 681 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 692 "read_input.l"
 BEGIN(GTYPE);
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-#line 682 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 693 "read_input.l"
 {
     mnl->use_rectangles = 1;
     g_dbw2rand = 1;
@@ -4317,7 +4328,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 127:
 YY_RULE_SETUP
-#line 687 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 698 "read_input.l"
 {
     mnl->use_rectangles = 0;
     g_dbw2rand = 0;
@@ -4326,7 +4337,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
-#line 692 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 703 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->beta = c;
@@ -4336,7 +4347,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
-#line 698 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 709 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1 = c;
@@ -4346,7 +4357,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
-#line 704 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 715 "read_input.l"
 {
     g_sf_inc_wrap_sq = 1;
     if(myverbose) printf("  IncludeWrappedSquares set to true line %d monomial %d\n", line_of_file, current_monomial);
@@ -4354,7 +4365,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
-#line 708 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 719 "read_input.l"
 {
     g_sf_inc_wrap_sq = 0;
     if(myverbose) printf("  IncludeWrappedSquares set to false line %d monomial %d\n", line_of_file, current_monomial);
@@ -4364,12 +4375,12 @@ YY_RULE_SETUP
 
 case 132:
 YY_RULE_SETUP
-#line 715 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 726 "read_input.l"
 BEGIN(GTYPE);
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
-#line 716 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 727 "read_input.l"
 {
     mnl->use_rectangles = 1;
     g_dbw2rand = 1;
@@ -4378,7 +4389,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
-#line 721 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 732 "read_input.l"
 {
     mnl->use_rectangles = 0;
     g_dbw2rand = 0;
@@ -4387,7 +4398,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
-#line 726 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 737 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->beta = c;
@@ -4397,7 +4408,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 136:
 YY_RULE_SETUP
-#line 732 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 743 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1 = c;
@@ -4407,7 +4418,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
-#line 738 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 749 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->eta = c;
@@ -4417,7 +4428,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 138:
 YY_RULE_SETUP
-#line 744 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 755 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->ct = c;
@@ -4427,7 +4438,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
-#line 750 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 761 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->cs = c;
@@ -4437,7 +4448,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 140:
 YY_RULE_SETUP
-#line 756 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 767 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1ss = c;
@@ -4447,7 +4458,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
-#line 762 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 773 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1tss = c;
@@ -4457,7 +4468,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 142:
 YY_RULE_SETUP
-#line 768 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 779 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     mnl->c1tts = c;
@@ -4469,7 +4480,7 @@ YY_RULE_SETUP
 
 case 143:
 YY_RULE_SETUP
-#line 778 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 789 "read_input.l"
 {
     phmc_exact_poly = 1;
     if(myverbose!=0) printf("  phmc_exact_poly set to true line %d monomial %d\n", line_of_file, current_monomial);
@@ -4477,7 +4488,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 144:
 YY_RULE_SETUP
-#line 782 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 793 "read_input.l"
 {
     phmc_exact_poly = 0;
     if(myverbose!=0) printf("  phmc_exact_poly set to false line %d monomial %d\n", line_of_file, current_monomial);
@@ -4485,7 +4496,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 145:
 YY_RULE_SETUP
-#line 786 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 797 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     stilde_max = c;
@@ -4494,7 +4505,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 146:
 YY_RULE_SETUP
-#line 791 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 802 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     stilde_min = c;
@@ -4503,7 +4514,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 147:
 YY_RULE_SETUP
-#line 796 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 807 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     degree_of_p = a;
@@ -4512,7 +4523,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 148:
 YY_RULE_SETUP
-#line 801 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 812 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     g_acc_Ptilde = c;
@@ -4521,7 +4532,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
-#line 806 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 817 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
     g_acc_Hfin = c;
@@ -4530,7 +4541,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 150:
 YY_RULE_SETUP
-#line 811 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 822 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     g_rec_ev = a;
@@ -4539,7 +4550,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 151:
 YY_RULE_SETUP
-#line 816 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 827 "read_input.l"
 {
     phmc_compute_evs=1;
     if(myverbose!=0) printf("  Compute only heavy EVs set to true line %d monomial %d\n", line_of_file, current_monomial);
@@ -4547,7 +4558,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 152:
 YY_RULE_SETUP
-#line 820 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 831 "read_input.l"
 {
     phmc_compute_evs=0;
     if(myverbose!=0) printf("  Compute only heavy EVs set to false line %d monomial %d\n", line_of_file, current_monomial);
@@ -4557,7 +4568,7 @@ YY_RULE_SETUP
 
 case 153:
 YY_RULE_SETUP
-#line 827 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 838 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->MDPolyDegree = a;
@@ -4566,7 +4577,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 154:
 YY_RULE_SETUP
-#line 832 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 843 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     mnl->MDPolyLmin = c;
@@ -4577,7 +4588,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 155:
 YY_RULE_SETUP
-#line 839 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 850 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     mnl->MDPolyLmax = c;
@@ -4590,7 +4601,7 @@ YY_RULE_SETUP
 
 case 156:
 YY_RULE_SETUP
-#line 850 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 861 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     mnl->MDPolyLocNormConst = c;
@@ -4601,7 +4612,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 157:
 YY_RULE_SETUP
-#line 857 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 868 "read_input.l"
 {
     cstring_to_parse=mnl->MDPolyRootsFile;
     cstring_caller = YY_START;
@@ -4611,7 +4622,7 @@ YY_RULE_SETUP
 
 case 158:
 YY_RULE_SETUP
-#line 865 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 876 "read_input.l"
 {
   if(myverbose) printf("  monomial named \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
   strcpy((*mnl).name, yytext);
@@ -4620,7 +4631,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 159:
 YY_RULE_SETUP
-#line 871 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 882 "read_input.l"
 {
   if(myverbose) printf("  monomial named \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
   strcpy(cstring_to_parse, yytext);
@@ -4633,27 +4644,27 @@ YY_RULE_SETUP
 
 case 160:
 YY_RULE_SETUP
-#line 882 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 893 "read_input.l"
 {
     if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 1;
-    BEGIN(DETMONOMIAL);
+    BEGIN(solver_caller);
   }
 	YY_BREAK
 case 161:
 YY_RULE_SETUP
-#line 887 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 898 "read_input.l"
 {
     if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 0;
-    BEGIN(DETMONOMIAL);
+    BEGIN(solver_caller);
   }
 	YY_BREAK
 
 
 case 162:
 YY_RULE_SETUP
-#line 895 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 906 "read_input.l"
 {
     mnl->gtype = 0;
     mnl->c1 = 0.;
@@ -4665,7 +4676,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 163:
 YY_RULE_SETUP
-#line 903 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 914 "read_input.l"
 {
     mnl->gtype = 1;
     mnl->c1 = -0.083333333;
@@ -4677,7 +4688,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 164:
 YY_RULE_SETUP
-#line 911 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 922 "read_input.l"
 {
     mnl->gtype = 2;
     mnl->c1 = -0.331;
@@ -4689,7 +4700,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 165:
 YY_RULE_SETUP
-#line 919 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 930 "read_input.l"
 {
     mnl->gtype = 3;
     BEGIN(GAUGEMONOMIAL);
@@ -4697,7 +4708,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 166:
 YY_RULE_SETUP
-#line 923 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 934 "read_input.l"
 {
     mnl->gtype = 4;
     mnl->c1 = -1.4088;
@@ -4709,7 +4720,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 167:
 YY_RULE_SETUP
-#line 931 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 942 "read_input.l"
 {
     mnl->gtype = 5;
     mnl->c1 = 0.;
@@ -4721,7 +4732,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 168:
 YY_RULE_SETUP
-#line 939 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 950 "read_input.l"
 {
     mnl->gtype = 6;
     BEGIN(SFGAUGEMONOMIAL);
@@ -4730,7 +4741,7 @@ YY_RULE_SETUP
 
 case 169:
 YY_RULE_SETUP
-#line 946 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 957 "read_input.l"
 {
   Integrator.no_timescales = -1;
   Integrator.tau = 1.;
@@ -4745,7 +4756,7 @@ YY_RULE_SETUP
 
 case 170:
 YY_RULE_SETUP
-#line 957 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 968 "read_input.l"
 {
     type = (char*)malloc(100*sizeof(char));
     sscanf(yytext, " %[a-zA-Z]%d = %s", name, &a, type);
@@ -4769,7 +4780,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 171:
 YY_RULE_SETUP
-#line 977 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 988 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z]%d = %d", name, &a, &b);
     if(myverbose) printf("  timescale %d steps=%d line %d\n", a, b, line_of_file);
@@ -4779,7 +4790,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 172:
 YY_RULE_SETUP
-#line 983 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 994 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z]%d = %f", name, &a, &c);
     Integrator.lambda[a] = c;
@@ -4789,7 +4800,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 173:
 YY_RULE_SETUP
-#line 989 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1000 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     if(myverbose) printf("  Number of timescales set to %d line %d\n", a, line_of_file);
@@ -4803,7 +4814,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 174:
 YY_RULE_SETUP
-#line 999 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1010 "read_input.l"
 {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     if(myverbose) printf("  tau set to %e line %d\n", c, line_of_file);
@@ -4813,7 +4824,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 175:
 YY_RULE_SETUP
-#line 1005 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1016 "read_input.l"
 {
     if(Integrator.no_timescales == -1) {
       fprintf(stderr, "NumberOfTimescales must be specified!\n");
@@ -4827,7 +4838,7 @@ YY_RULE_SETUP
 
 case 176:
 YY_RULE_SETUP
-#line 1016 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1027 "read_input.l"
 {
     SourceInfo.type = 0;
     if(myverbose) printf("Using Point Sources\n");
@@ -4835,7 +4846,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 177:
 YY_RULE_SETUP
-#line 1020 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1031 "read_input.l"
 {
     SourceInfo.type = 1;
     if(myverbose) printf("Using Volume Sources\n");
@@ -4843,7 +4854,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 178:
 YY_RULE_SETUP
-#line 1024 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1035 "read_input.l"
 {
     SourceInfo.type = 2;
     if(myverbose) printf("Using TimeSlice Sources\n");
@@ -4853,7 +4864,7 @@ YY_RULE_SETUP
 
 case 179:
 YY_RULE_SETUP
-#line 1030 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1041 "read_input.l"
 {
     PropInfo.splitted = 1;
     if(myverbose) printf("Writing Propagators in seperate files\n");
@@ -4861,7 +4872,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 180:
 YY_RULE_SETUP
-#line 1034 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1045 "read_input.l"
 {
     PropInfo.splitted = 0;
     if(myverbose) printf("Writing all Propagators per gague into one single files\n");
@@ -4870,7 +4881,7 @@ YY_RULE_SETUP
 
 case 181:
 YY_RULE_SETUP
-#line 1039 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1050 "read_input.l"
 {
   no_samples = atoi(yytext);
   if(myverbose) printf("Inverting for %d samples\n", no_samples);
@@ -4878,7 +4889,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 182:
 YY_RULE_SETUP
-#line 1043 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1054 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   T_global = atoi(yytext);
@@ -4888,7 +4899,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 183:
 YY_RULE_SETUP
-#line 1049 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1060 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   L = atoi(yytext);
@@ -4898,7 +4909,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 184:
 YY_RULE_SETUP
-#line 1055 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1066 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   LX = atoi(yytext);
@@ -4908,7 +4919,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 185:
 YY_RULE_SETUP
-#line 1061 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1072 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   LY = atoi(yytext);
@@ -4918,7 +4929,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 186:
 YY_RULE_SETUP
-#line 1067 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1078 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   LZ = atoi(yytext);
@@ -4928,7 +4939,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 187:
 YY_RULE_SETUP
-#line 1073 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1084 "read_input.l"
 {
   g_Tbsf = atoi(yytext);
   if(myverbose!=0) printf("g_Tbsf =%s\n", yytext);
@@ -4936,7 +4947,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 188:
 YY_RULE_SETUP
-#line 1077 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1088 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   N_PROC_X = atoi(yytext);
@@ -4946,7 +4957,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 189:
 YY_RULE_SETUP
-#line 1083 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1094 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   N_PROC_Y = atoi(yytext);
@@ -4956,7 +4967,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 190:
 YY_RULE_SETUP
-#line 1089 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1100 "read_input.l"
 {
 #ifndef FIXEDVOLUME
   N_PROC_Z = atoi(yytext);
@@ -4966,7 +4977,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 191:
 YY_RULE_SETUP
-#line 1095 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1106 "read_input.l"
 {
   random_seed=atoi(yytext);
   if(myverbose!=0) printf("seed=%s \n", yytext);
@@ -4974,7 +4985,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 192:
 YY_RULE_SETUP
-#line 1099 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1110 "read_input.l"
 {
   rlxd_level = atoi(yytext);
   if(myverbose!=0) printf("RanluxdLevel set to %d \n", rlxd_level);
@@ -4982,7 +4993,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 193:
 YY_RULE_SETUP
-#line 1103 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1114 "read_input.l"
 {
   g_kappa=atof(yytext);
   if(myverbose!=0) printf("kappa=%s \n", yytext);
@@ -4990,7 +5001,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 194:
 YY_RULE_SETUP
-#line 1107 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1118 "read_input.l"
 {
   g_mubar=atof(yytext);
   if(myverbose!=0) printf("2 kappa mubar=%s \n", yytext);
@@ -4998,7 +5009,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 195:
 YY_RULE_SETUP
-#line 1111 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1122 "read_input.l"
 {
   g_epsbar=atof(yytext);
   if(myverbose!=0) printf("2 kappa epsbar=%s \n", yytext);
@@ -5006,7 +5017,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 196:
 YY_RULE_SETUP
-#line 1115 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1126 "read_input.l"
 {
   g_mu1=atof(yytext);
   if(myverbose!=0) printf("2 kappa mu=%s \n", yytext);
@@ -5014,7 +5025,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 197:
 YY_RULE_SETUP
-#line 1119 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1130 "read_input.l"
 {
   startoption=0; 
   if(myverbose!=0) printf("Start Condition is %s \n",yytext);
@@ -5023,7 +5034,7 @@ YY_RULE_SETUP
 
 case 198:
 YY_RULE_SETUP
-#line 1124 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1135 "read_input.l"
 {
     startoption=1;
     if(myverbose!=0) printf("Start Condition is %s \n",yytext);
@@ -5031,7 +5042,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 199:
 YY_RULE_SETUP
-#line 1128 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1139 "read_input.l"
 {
     startoption=2;
     if(myverbose!=0) printf("Start Condition is %s \n",yytext);
@@ -5039,7 +5050,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 200:
 YY_RULE_SETUP
-#line 1132 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1143 "read_input.l"
 {
     startoption=3;
     if(myverbose!=0) printf("Start Condition is %s \n",yytext);
@@ -5048,7 +5059,7 @@ YY_RULE_SETUP
 
 case 201:
 YY_RULE_SETUP
-#line 1137 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1148 "read_input.l"
 {
   Ntherm=atoi(yytext);
   if(myverbose!=0) printf("Nterm= %s \n",yytext);
@@ -5056,7 +5067,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 202:
 YY_RULE_SETUP
-#line 1141 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1152 "read_input.l"
 {
   Nmeas=atoi(yytext); 
   if(myverbose!=0) printf("Nmeas= %s \n",yytext);
@@ -5064,7 +5075,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 203:
 YY_RULE_SETUP
-#line 1145 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1156 "read_input.l"
 {
   Nsave=atoi(yytext);
   if(myverbose!=0) printf("Nsave= %s \n",yytext);
@@ -5072,7 +5083,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 204:
 YY_RULE_SETUP
-#line 1149 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1160 "read_input.l"
 {
   gmres_m_parameter = atoi(yytext);
   if(myverbose!=0) printf("Use Krylov Space of size %d in GMRES \n", gmres_m_parameter);
@@ -5080,7 +5091,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 205:
 YY_RULE_SETUP
-#line 1153 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1164 "read_input.l"
 {
   gmresdr_nr_ev = atoi(yytext);
   if(myverbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
@@ -5088,7 +5099,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 206:
 YY_RULE_SETUP
-#line 1157 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1168 "read_input.l"
 {
   g_no_extra_masses = atoi(yytext);
   if(myverbose!=0) printf("Number of extra MMS masses set to %d\n", g_no_extra_masses);
@@ -5096,7 +5107,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 207:
 YY_RULE_SETUP
-#line 1161 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1172 "read_input.l"
 {
   g_N_s = atoi(yytext);
   if(myverbose!=0) printf("Deflation subspace dimension set to %d \n", g_N_s);
@@ -5105,21 +5116,21 @@ YY_RULE_SETUP
 
 case 208:
 YY_RULE_SETUP
-#line 1166 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1177 "read_input.l"
 {
     if(myverbose!=0) printf("Using no right preconditioner \n");
   }
 	YY_BREAK
 case 209:
 YY_RULE_SETUP
-#line 1169 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1180 "read_input.l"
 {
     if(myverbose!=0) printf("Using polynomial as right preconditioner \n");
   }
 	YY_BREAK
 case 210:
 YY_RULE_SETUP
-#line 1172 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1183 "read_input.l"
 {
     if(myverbose!=0) printf("Using cg as right preconditioner \n");
   }
@@ -5127,7 +5138,7 @@ YY_RULE_SETUP
 
 case 211:
 YY_RULE_SETUP
-#line 1176 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1187 "read_input.l"
 {
   write_cp_flag=1;
   if(myverbose!=0) printf("Write Checkpoints\n");
@@ -5135,7 +5146,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 212:
 YY_RULE_SETUP
-#line 1180 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1191 "read_input.l"
 {
   write_cp_flag=0;
   if(myverbose!=0) printf("Don't write Checkpoints\n");
@@ -5143,7 +5154,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 213:
 YY_RULE_SETUP
-#line 1184 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1195 "read_input.l"
 {
   cp_interval=atoi(yytext);
   if(myverbose!=0) printf("Write Checkpoint all %s measurements\n",yytext);
@@ -5151,7 +5162,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 214:
 YY_RULE_SETUP
-#line 1188 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1199 "read_input.l"
 {
   strcpy(gauge_input_filename,yytext);
   if(myverbose!=0) printf("Gauge Configuration input filename set to %s\n",yytext);
@@ -5159,7 +5170,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 215:
 YY_RULE_SETUP
-#line 1192 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1203 "read_input.l"
 {
   nstore=atoi(yytext);
   if(myverbose!=0) printf("Initial store counter set to %s\n",yytext);
@@ -5167,7 +5178,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 216:
 YY_RULE_SETUP
-#line 1196 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1207 "read_input.l"
 {
   nstore=-1;
   if(myverbose!=0) printf("Trying to read InitialStoreCounter from file .nstore_counter\n");
@@ -5175,7 +5186,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 217:
 YY_RULE_SETUP
-#line 1200 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1211 "read_input.l"
 {
   g_stdio_proc = -1;
   if(myverbose!=0) printf("All processors will give output to stdout\n");
@@ -5183,7 +5194,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 218:
 YY_RULE_SETUP
-#line 1204 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1215 "read_input.l"
 {
   g_stdio_proc = -2;
   if(myverbose!=0) printf("No processor will give output to stdout\n");
@@ -5191,7 +5202,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 219:
 YY_RULE_SETUP
-#line 1208 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1219 "read_input.l"
 {
   g_stdio_proc = atoi(yytext);
   if(myverbose!=0) printf("processor %s will give output to stdout\n", yytext);
@@ -5199,7 +5210,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 220:
 YY_RULE_SETUP
-#line 1212 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1223 "read_input.l"
 {
   index_start = atoi(yytext);
   index_end = index_start+1;
@@ -5212,7 +5223,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 221:
 YY_RULE_SETUP
-#line 1221 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1232 "read_input.l"
 {
   sscanf(yytext, "-%d", &index_end);
   if((index_end < 0)||(index_end > 11)){
@@ -5225,7 +5236,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 222:
 YY_RULE_SETUP
-#line 1230 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1241 "read_input.l"
 {
   ITER_MAX_BCG = atoi(yytext);
   if(myverbose != 0) printf("Maximal number of iterations for BCGstab set ro %d\n", ITER_MAX_BCG);
@@ -5233,7 +5244,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 223:
 YY_RULE_SETUP
-#line 1234 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1245 "read_input.l"
 {
   ITER_MAX_CG = atoi(yytext);
   if(myverbose != 0) printf("Maximal number of iterations for CG set ro %d\n", ITER_MAX_CG);
@@ -5241,7 +5252,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 224:
 YY_RULE_SETUP
-#line 1238 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1249 "read_input.l"
 {
   X0 = atof(yytext);
   if(myverbose != 0) printf("X0 for boundary cond. in time set to %e\n", X0);
@@ -5249,7 +5260,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 225:
 YY_RULE_SETUP
-#line 1242 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1253 "read_input.l"
 {
   X1 = atof(yytext);
   if(myverbose != 0) printf("X1 for boundary cond. in time set to %e\n", X0);
@@ -5257,7 +5268,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 226:
 YY_RULE_SETUP
-#line 1246 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1257 "read_input.l"
 {
   X2 = atof(yytext);
   if(myverbose != 0) printf("X2 for boundary cond. in time set to %e\n", X0);
@@ -5265,7 +5276,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 227:
 YY_RULE_SETUP
-#line 1250 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1261 "read_input.l"
 {
   X3 = atof(yytext);
   if(myverbose != 0) printf("X3 for boundary cond. in time set to %e\n", X0);
@@ -5273,7 +5284,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 228:
 YY_RULE_SETUP
-#line 1254 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1265 "read_input.l"
 {
   read_source_flag=1;
   if(myverbose!=0) printf("Read inversion source from file\n");
@@ -5281,7 +5292,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 229:
 YY_RULE_SETUP
-#line 1258 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1269 "read_input.l"
 {
   read_source_flag=0;
   if(myverbose!=0) printf("Don't read inversion source from file\n");
@@ -5289,7 +5300,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 230:
 YY_RULE_SETUP
-#line 1262 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1273 "read_input.l"
 {
   if(SourceInfo.basename == NULL) free(SourceInfo.basename);
   SourceInfo.basename = (char*)malloc((strlen(yytext)+1)*sizeof(char));
@@ -5302,7 +5313,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 231:
 YY_RULE_SETUP
-#line 1271 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1282 "read_input.l"
 {
   SourceInfo.format = 0;
   if(myverbose!=0) printf("Using standard ETMC binary format for source input file\n");
@@ -5310,7 +5321,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 232:
 YY_RULE_SETUP
-#line 1275 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1286 "read_input.l"
 {
   SourceInfo.format = 11;
   if(myverbose!=0) printf("Using CM format for source input file\n");
@@ -5318,7 +5329,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 233:
 YY_RULE_SETUP
-#line 1279 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1290 "read_input.l"
 {
   SourceInfo.format = 10;
   if(myverbose!=0) printf("Using GWC format for source input file\n");
@@ -5326,7 +5337,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 234:
 YY_RULE_SETUP
-#line 1283 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1294 "read_input.l"
 {
   SourceInfo.t = atoi(yytext);
   if(myverbose!=0) printf("Using only timeslice %s of the source, padding the rest with zeros\n", yytext);
@@ -5334,7 +5345,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 235:
 YY_RULE_SETUP
-#line 1287 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1298 "read_input.l"
 {
   g_relative_precision_flag = 1;
   if(myverbose!=0) printf("Using relative precision\n");
@@ -5342,7 +5353,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 236:
 YY_RULE_SETUP
-#line 1291 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1302 "read_input.l"
 {
   g_relative_precision_flag = 0;
   if(myverbose!=0) printf("Using absolute precision\n");
@@ -5350,7 +5361,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 237:
 YY_RULE_SETUP
-#line 1295 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1306 "read_input.l"
 {
   return_check_flag = 1;
   if(myverbose!=0) printf("Perform checks of Reversibility\n");
@@ -5358,7 +5369,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 238:
 YY_RULE_SETUP
-#line 1299 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1310 "read_input.l"
 {
   return_check_flag = 0;
   if(myverbose!=0) printf("Don't perform checks of Reversibility\n");
@@ -5366,7 +5377,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 239:
 YY_RULE_SETUP
-#line 1303 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1314 "read_input.l"
 {
   return_check_interval = atoi(yytext);
   if(myverbose!=0) printf("Check reversibility all %d trajectories\n", return_check_interval);
@@ -5374,7 +5385,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 240:
 YY_RULE_SETUP
-#line 1307 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1318 "read_input.l"
 {
   g_debug_level = atoi(yytext);
   if(myverbose!=0) printf("Debug level = %d\n", g_debug_level);
@@ -5382,7 +5393,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 241:
 YY_RULE_SETUP
-#line 1311 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1322 "read_input.l"
 {
   gauge_precision_read_flag = 32;
   if(myverbose!=0) printf("Read gauges in 32 Bit precision!\n");
@@ -5390,7 +5401,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 242:
 YY_RULE_SETUP
-#line 1315 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1326 "read_input.l"
 {
   gauge_precision_read_flag = 64;
   if(myverbose!=0) printf("Read gauges in 64 Bit precision!\n");
@@ -5398,7 +5409,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 243:
 YY_RULE_SETUP
-#line 1319 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1330 "read_input.l"
 {
   gauge_precision_write_flag = 32;
   if(myverbose!=0) printf("Save gauges in 32 Bit precision!\n");
@@ -5406,7 +5417,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 244:
 YY_RULE_SETUP
-#line 1323 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1334 "read_input.l"
 {
   gauge_precision_write_flag = 64;
   if(myverbose!=0) printf("Save gauges in 64 Bit precision!\n");
@@ -5414,7 +5425,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 245:
 YY_RULE_SETUP
-#line 1327 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1338 "read_input.l"
 {
   reproduce_randomnumber_flag = 1;
   if(myverbose!=0) printf("Use reproducable randomnumbers!\n");
@@ -5422,7 +5433,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 246:
 YY_RULE_SETUP
-#line 1331 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1342 "read_input.l"
 {
   reproduce_randomnumber_flag = 0;
   if(myverbose!=0) printf("Use a different seed for each process in ranlxd!\n");
@@ -5430,7 +5441,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 247:
 YY_RULE_SETUP
-#line 1335 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1346 "read_input.l"
 {
   g_sloppy_precision_flag = 1;
   if(myverbose!=0) printf("Use sloppy precision if available!\n");
@@ -5438,7 +5449,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 248:
 YY_RULE_SETUP
-#line 1339 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1350 "read_input.l"
 {
   g_sloppy_precision_flag = 0;
   if(myverbose!=0) printf("Don't use sloppy precision!\n");
@@ -5446,7 +5457,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 249:
 YY_RULE_SETUP
-#line 1343 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1354 "read_input.l"
 {
   use_stout_flag = 1;
   if(myverbose!=0) printf("Use stout smearing for invert!\n");
@@ -5454,7 +5465,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 250:
 YY_RULE_SETUP
-#line 1347 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1358 "read_input.l"
 {
   use_stout_flag = 0;
   if(myverbose!=0) printf("Don't use stout smearing for invert!\n");
@@ -5462,7 +5473,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 251:
 YY_RULE_SETUP
-#line 1351 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1362 "read_input.l"
 {
   stout_rho=atof(yytext);
   if(myverbose!=0) printf("use stout rho=%e!\n", stout_rho);
@@ -5470,7 +5481,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 252:
 YY_RULE_SETUP
-#line 1355 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1366 "read_input.l"
 {
   stout_no_iter=atoi(yytext);
   if(myverbose!=0) printf("make %d stout iterations!\n", stout_no_iter);
@@ -5478,7 +5489,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 253:
 YY_RULE_SETUP
-#line 1359 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1370 "read_input.l"
 {
   compute_evs=1;
   if(myverbose!=0) printf("Compute Eigenvalues in invert.");
@@ -5486,7 +5497,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 254:
 YY_RULE_SETUP
-#line 1363 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1374 "read_input.l"
 {
   compute_evs=0;
   if(myverbose!=0) printf("Do not compute Eigenvalues in invert.");
@@ -5494,7 +5505,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 255:
 YY_RULE_SETUP
-#line 1367 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1378 "read_input.l"
 {
   compute_evs=2;
   if(myverbose!=0) printf("Try to only read in eigenvalues and vectors in invert.");
@@ -5502,7 +5513,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 256:
 YY_RULE_SETUP
-#line 1371 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1382 "read_input.l"
 {
   source_location=atoi(yytext);
   if(myverbose!=0) printf("source_location = %s\n",yytext);
@@ -5510,7 +5521,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 257:
 YY_RULE_SETUP
-#line 1375 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1386 "read_input.l"
 {
   eigenvalue_precision = atof(yytext);
   if(myverbose!=0) printf("precision for eigenvalues = %e\n", eigenvalue_precision);
@@ -5518,7 +5529,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 258:
 YY_RULE_SETUP
-#line 1379 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1390 "read_input.l"
 {
   no_eigenvalues = atoi(yytext);
   if(myverbose!=0) printf("no of eigenvalues = %d\n", no_eigenvalues);
@@ -5526,7 +5537,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 259:
 YY_RULE_SETUP
-#line 1383 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1394 "read_input.l"
 {
   sub_evs_cg_flag = 1;
   if(myverbose!=0) printf("project out eigenvector subspace\n");
@@ -5534,7 +5545,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 260:
 YY_RULE_SETUP
-#line 1387 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1398 "read_input.l"
 {
   sub_evs_cg_flag = 0;
   if(myverbose!=0) printf("Do no project out eigenvector subspace\n");
@@ -5542,7 +5553,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 261:
 YY_RULE_SETUP
-#line 1391 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1402 "read_input.l"
 {
   even_odd_flag = 1;
   if(myverbose) printf("Use even/odd preconditioning\n");
@@ -5550,7 +5561,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 262:
 YY_RULE_SETUP
-#line 1395 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1406 "read_input.l"
 {
   even_odd_flag = 0;
   if(myverbose) printf("Do not use even/odd preconditioning\n");
@@ -5558,7 +5569,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 263:
 YY_RULE_SETUP
-#line 1399 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1410 "read_input.l"
 {
   bc_flag = 1;
   if(verbose) printf("Schroedinger Functional bc\n");
@@ -5566,7 +5577,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 264:
 YY_RULE_SETUP
-#line 1403 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1414 "read_input.l"
 {
   bc_flag = 0;
   if(verbose) printf("Periodic bc\n");
@@ -5574,7 +5585,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 265:
 YY_RULE_SETUP
-#line 1407 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1418 "read_input.l"
 {
   PropInfo.format = 10;
   if(myverbose!=0) fprintf(stderr, "GWC format no longer supported for writing propagators\n");
@@ -5582,7 +5593,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 266:
 YY_RULE_SETUP
-#line 1411 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1422 "read_input.l"
 {
   PropInfo.format = 11;
   if(myverbose!=0) fprintf(stderr, "CM format no longer supported for writing propagators\n");
@@ -5590,7 +5601,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 267:
 YY_RULE_SETUP
-#line 1415 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1426 "read_input.l"
 {
   PropInfo.format = 0;
   if(myverbose!=0) printf("Propagator type: DiracFermion_Sinks\n");
@@ -5598,7 +5609,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 268:
 YY_RULE_SETUP
-#line 1419 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1430 "read_input.l"
 {
   PropInfo.format = 1;
   if(myverbose!=0) printf("Propagator type: DiracFermion_Source_Sink_Pairs\n");
@@ -5606,7 +5617,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 269:
 YY_RULE_SETUP
-#line 1423 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1434 "read_input.l"
 {
   PropInfo.format = 1;
   fprintf(stderr, "Propagator type: DiracFermion_ScalarSource_TwelveSink, not yet supported\n");
@@ -5614,7 +5625,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 270:
 YY_RULE_SETUP
-#line 1427 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1438 "read_input.l"
 {
   PropInfo.format = 1;
   fprintf(stderr, "Propagator type: DiracFermion_ScalarSource_FourSink, not yet supported\n");
@@ -5622,7 +5633,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 271:
 YY_RULE_SETUP
-#line 1431 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1442 "read_input.l"
 {
   online_measurement_flag = 1;
   if(myverbose!=0) fprintf(stderr, "Switched on online measurements\n");
@@ -5630,7 +5641,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 272:
 YY_RULE_SETUP
-#line 1435 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1446 "read_input.l"
 {
   online_measurement_flag = 0;
   if(myverbose!=0) fprintf(stderr, "Online measurements not switched on\n");
@@ -5638,7 +5649,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 273:
 YY_RULE_SETUP
-#line 1439 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1450 "read_input.l"
 {
   online_measurement_freq = atoi(yytext);
   if(myverbose!=0) fprintf(stderr, "Frequency for online measurements set to %s\n", yytext);
@@ -5646,7 +5657,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 274:
 YY_RULE_SETUP
-#line 1443 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1454 "read_input.l"
 {
   reweighting_flag = 1;
   if(myverbose!=0) fprintf(stderr, "Compute reweighting factor\n");
@@ -5654,7 +5665,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 275:
 YY_RULE_SETUP
-#line 1447 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1458 "read_input.l"
 {
   reweighting_flag = 0;
   if(myverbose!=0) fprintf(stderr, "Do not compute reweighting factor\n");
@@ -5662,7 +5673,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 276:
 YY_RULE_SETUP
-#line 1451 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1462 "read_input.l"
 {
   reweighting_samples = atoi(yytext);
   if(myverbose!=0) fprintf(stderr, "Number of reweighting samples set to %d\n", reweighting_samples);
@@ -5670,7 +5681,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 277:
 YY_RULE_SETUP
-#line 1456 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1467 "read_input.l"
 {
    comment_caller = YY_START;   
    BEGIN(COMMENT);
@@ -5678,7 +5689,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 278:
 YY_RULE_SETUP
-#line 1460 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1471 "read_input.l"
 {
    comment_caller = YY_START;
    BEGIN(COMMENT);
@@ -5686,21 +5697,21 @@ YY_RULE_SETUP
 	YY_BREAK
 case 279:
 YY_RULE_SETUP
-#line 1464 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1475 "read_input.l"
 {
   BEGIN(comment_caller);
 }
 	YY_BREAK
 case 280:
 YY_RULE_SETUP
-#line 1469 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1480 "read_input.l"
 {
   line_of_file++;
 }
 	YY_BREAK
 case 281:
 YY_RULE_SETUP
-#line 1472 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1483 "read_input.l"
 {
   line_of_file++;
   BEGIN(0);
@@ -5708,14 +5719,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 282:
 YY_RULE_SETUP
-#line 1477 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1488 "read_input.l"
 {
   BEGIN(ERROR);
 }
 	YY_BREAK
 case 283:
 YY_RULE_SETUP
-#line 1480 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1491 "read_input.l"
 {
   fprintf(stderr, "Parsing error in line %d\nAborting...!\n", line_of_file);
   fprintf(stderr, "Could not make sense out off: %s\n", yytext);
@@ -5724,7 +5735,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 284:
 YY_RULE_SETUP
-#line 1487 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1498 "read_input.l"
 ECHO;
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
@@ -6700,7 +6711,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 1487 "/afs/ifh.de/user/a/annube/andreas/dev/maiden_hmc/hmc/read_input.l"
+#line 1498 "read_input.l"
 
 
 /*

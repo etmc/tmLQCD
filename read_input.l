@@ -80,6 +80,7 @@ inline void rmQuotes(char *str){
   /* helper vars */
   char *cstring_to_parse=NULL;
   int cstring_caller;
+  int solver_caller;
 
   /* declaration of input parameters */
   int i=0;
@@ -550,6 +551,10 @@ inline void rmQuotes(char *str){
     mnl->type = POLY;
     strcpy((*mnl).name, "POLY");
   }
+  else if(strcmp(yytext, "POLYDETRATIO")==0) {
+    mnl->type = POLYDETRATIO;
+    strcpy((*mnl).name, "POLYDETRATIO");
+  }
   else if(strcmp(yytext, "GAUGE")==0) {
     mnl->type = GAUGE;
     mnl->gtype = 3;
@@ -576,7 +581,10 @@ inline void rmQuotes(char *str){
   if(mnl->type == GAUGE) BEGIN(GAUGEMONOMIAL);
   else if(mnl->type == SFGAUGE) BEGIN(SFGAUGEMONOMIAL);
   else if(mnl->type == NDPOLY) BEGIN(NDPOLYMONOMIAL);
-  else if(mnl->type == POLY)  BEGIN(POLYMONOMIAL); 
+  else if(mnl->type == POLY || mnl->type == POLYDETRATIO)  {
+          fprintf(stderr,"starting to parse poly(detratio) monomial\n");
+          BEGIN(POLYMONOMIAL); 
+  }
   else BEGIN(DETMONOMIAL);
 }
 
@@ -673,7 +681,10 @@ inline void rmQuotes(char *str){
     mnl->maxiter = a;
     if(myverbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
-  {SPC}*Solver{EQL} BEGIN(MSOLVER);
+  {SPC}*Solver{EQL} {
+   solver_caller=YY_START;
+   BEGIN(MSOLVER);
+  }
 }
 
 
@@ -824,19 +835,19 @@ inline void rmQuotes(char *str){
 }
 
 <POLYMONOMIAL>{
-  {SPC}*Degree{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*Degree{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->MDPolyDegree = a;
     if(myverbose!=0) printf("  Degree of degenerate MD polynomial set to %d line %d monomial %d\n", mnl->MDPolyDegree, line_of_file, current_monomial);
   }
-  {SPC}*Lmin{SPC}*={SPC}*{FLT} {
+  {SPC}*Lmin{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     mnl->MDPolyLmin = c;
     if(myverbose!=0)
       printf("  lower bound of degenerate MD polynomial set to %f line %d monomial %d\n",
         mnl->MDPolyLmin, line_of_file, current_monomial);
   }
-  {SPC}*Lmax{SPC}*={SPC}*{FLT} {
+  {SPC}*Lmax{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     mnl->MDPolyLmax = c;
     if(myverbose!=0)
@@ -847,14 +858,14 @@ inline void rmQuotes(char *str){
 
 
 <POLYMONOMIAL,NDPOLYMONOMIAL>{
-  {SPC}*LocNormConst{SPC}*={SPC}*{FLT} {
+  {SPC}*LocNormConst{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
     mnl->MDPolyLocNormConst = c;
     if(myverbose!=0)
       printf("  local normalisation constant MD polynomial set to %f line %d monomial %d\n",
        mnl->MDPolyLocNormConst, line_of_file, current_monomial);
   }
-  {SPC}*RootsFile{SPC}*={SPC}* {
+  {SPC}*RootsFile{EQL} {
     cstring_to_parse=mnl->MDPolyRootsFile;
     cstring_caller = YY_START;
     BEGIN(MCSTR);
@@ -882,12 +893,12 @@ inline void rmQuotes(char *str){
   CG {
     if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 1;
-    BEGIN(DETMONOMIAL);
+    BEGIN(solver_caller);
   }
   bicgstab {
     if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 0;
-    BEGIN(DETMONOMIAL);
+    BEGIN(solver_caller);
   }
 }
 
