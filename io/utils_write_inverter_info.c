@@ -35,9 +35,9 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
 	    " kappa = %f, inverted mu = %f, lowest mu = %f\n"
 	    " time = %ld\n hmcversion = %s\n"
 	    " date = %s",
-	    info->inverter,
+ 	    info->inverter,
 	    info->epssq, info->iter, info->kappa,
-	    info->extra_masses[info->mms] / 2. / info->kappa,
+	    info->extra_masses[info->mms-1] / 2. / info->kappa,
 	    info->mu / 2. / info->kappa, info->time, info->package_version,
 	    info->date);
   }

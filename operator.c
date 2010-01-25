@@ -157,7 +157,7 @@ int init_operators() {
 	    for (i = 0; i < g_no_extra_masses; i++) {
 	      /* Code added below mainly to stop the compiler from whining! */
 	      if (fscanf(ifs, "%lf", &g_extra_masses[i]) == EOF) {
-		g_no_extra_masses = i + 1;
+		g_no_extra_masses = i;
 		if (g_cart_id == 0 )
 		  fprintf(stderr, "Reduced the number of extra masses to %d for lack of input values.\n", g_no_extra_masses);
 		break;

@@ -24,6 +24,7 @@
 
 paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int iter, 
 						 const int solver, const int noflavours) {
+  int i;
   struct timeval t1;
   paramsInverterInfo *info = malloc(sizeof(paramsInverterInfo));
 
@@ -64,7 +65,11 @@ paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int i
     strcpy(info->inverter, "GMRES");
     break;
   case CGMMS:
-    strcpy(info->inverter, "CG MMS");
+    strcpy(info->inverter, "CGMMS");
+    info->extra_masses = (double*)malloc(g_no_extra_masses*sizeof(double));
+    for(i=0; i < g_no_extra_masses; i++) {
+      info->extra_masses[i] = g_extra_masses[i];
+    }
     info->mms = 0;
     break;
   case CGS:
