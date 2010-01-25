@@ -316,7 +316,11 @@ EndMonomial
   \]
 \item {\ttfamily POLY}: polynomial approximation ($P_n(x) \approx \frac{1}{x}$) of the mass degenerate determinant\\
   \[
-  \frac{1}{\det(P_{n}(Q^2(\kappa) + \mu^2))}
+  \left[\det(P_{n}(Q^2(\kappa) + \mu^2))\right]^{-1}
+  \]
+\item {\ttfamily POLYDETRATIO}: pseudo fermion representation of (for PHMC + mass precondition)\\
+  \[
+  \left[\det(P_{n}(Q^2(\kappa) + \mu^2)) det(Q^2(\kappa_2) + \mu^2_2)\right]^{-1}
   \]
 \end{itemize}
 Each of them has different options:
@@ -410,6 +414,11 @@ Each of them has different options:
     degree of the less precise polynomial $P$. Must be identical to the
     degree used to compute the roots.
 
+  \item {\ttfamily LocNormConst}:
+    Constant (local normalisation constant) which is multiplied to each monomial (of the polynomial $P_n$).
+  \item {\ttfamily RootsFile}:
+    File name specifying a file containing the $n=$ {\ttfamily Degree} roots of the Polynomial
+
   \item {\ttfamily PrecisionPtilde}:
     Precision of the more precise polynomial $\tilde P$ used in the
     heat-bath and the acceptance step of the PHMC.
@@ -418,7 +427,7 @@ Each of them has different options:
   \end{itemize}
   So far, there is maximally one instance allowed for this type. This
   might change in the future.
-\item {\ttfamily POLY}:
+\item {\ttfamily POLY, POLYDETRATIO}:
   \begin{itemize}
   \item {\ttfamily Degree}:
     Degree of the Polynomial.
@@ -430,6 +439,7 @@ Each of them has different options:
     Constant (local normalisation constant) which is multiplied to each monomial (of the polynomial $P_n$).
   \item {\ttfamily RootsFile}:
     File name specifying a file containing the $n=$ {\ttfamily Degree} roots of the Polynomial
+  \item {\ttfamily + Parameters from DET \& DETRATIO monomial}
   \end{itemize}
 There can be arbitrary many POLY monomials. But take into account that there will be allocated $n/2$ number of spinor fields for EACH poly monomial. (Maybe in the future we should think about to share these fields with all POLY/NDPOLY monomials as there are used only for the computation of the force and have to be updated before each successive calculation of the force.)\\
 This monomial needs a valid {\ttfamily RootsFile} and {\ttfamily LocNormConst} parameter. Both can be obtained from the {\ttfamily oox} program in the {\ttfamily util/oox} subdirectory of the hmc code. It can be invoked by the command:\\
