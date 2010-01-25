@@ -39,7 +39,7 @@
 #include "start.h"
 #include "solver/matrix_mult_typedef.h"
 #include "cg_mms_tm.h"
-
+#include <io/params.h>
 
 static spinor * xs_qmms;
 static spinor * ps_qmms;
@@ -160,7 +160,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
       /* save all the results of (Q^dagger Q)^(-1) \gamma_5 \phi */
       /* here ... */
-      sprintf(filename,".cgmms.%.2d.inverted", 0);
+      sprintf(filename,"%s.%.4d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, 0);
       if(g_kappa != 0) {
 	mul_r(g_spinor_field[DUM_SOLVER], (2*g_kappa)*(2*g_kappa), g_spinor_field[DUM_SOLVER], N);
       }
