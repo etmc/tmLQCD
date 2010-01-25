@@ -173,7 +173,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
       destruct_writer(writer);
 
       for(im = 0; im < g_no_extra_masses; im++) {
-	sprintf(filename,".cgmms.%.2d.inverted", im+1);
+	sprintf(filename,"%s.%.4d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, im+1);
 
 	construct_writer(&writer, filename, 0);
 

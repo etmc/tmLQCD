@@ -119,7 +119,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
     /* Check whether the precision is reached ... */
     err=square_norm(g_spinor_field[DUM_SOLVER+1], N, 1);
-    if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
+    if(g_debug_level > 1 && g_proc_id == g_stdio_proc) {
       printf("%d\t%g\n",iteration,err); fflush( stdout);
     }
 
