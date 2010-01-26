@@ -11,18 +11,22 @@ BCGstabMaxIter = 0
 CGMaxIter = 1000
 GaugeConfigInputFile = conf.save
 UseEvenOdd = yes
-PropagatorPrecision = 64
+#PropagatorPrecision = 64
 ReversibilityCheck = no
 ReversibilityCheckIntervall = 1
 DebugLevel = 1
 
-PerformOnlineMeasurements = yes
-OnlineMeasurementsFreq = 1
+BeginMeasurement ONLINE
+EndMeasurement
 
-BeginMonomial GAUGE	
+BeginMeasurement PIONNORM
+ Frequency = 1 
+EndMeasurement
+
+BeginMonomial GAUGE
   UseRectangleStaples = yes
   RectangleCoefficient = -0.0833333
-  Timescale = 0
+  Timescale=0
   Beta = 6.0
 EndMonomial
 

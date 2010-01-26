@@ -57,6 +57,7 @@ EQL {SPC}*={SPC}*
 #include"read_input.h"
 #include"default_input_values.h"
 #include"monomial.h"
+#include"measurements.h"
 #include"integrator.h"
 #include"operator.h"
 #include<io/params.h>
@@ -86,9 +87,12 @@ inline void rmQuotes(char *str){
   int i=0;
   int line_of_file = 1;
   int current_monomial = -1;
+  int current_measurement=-1;
   int current_operator = -1;
   extern int no_monomials;
+  extern int no_measurements;
   monomial * mnl = NULL;
+  measurement * meas = NULL;
   operator * optr = NULL;
   int comment_caller;
   int name_caller;
@@ -96,6 +100,7 @@ inline void rmQuotes(char *str){
   float c;
   int reread = 0;
   char name[100];
+  char yesno[20];
   char * type;
 
   int verbose = 0;
@@ -209,13 +214,18 @@ inline void rmQuotes(char *str){
 %x BC
 %x WRPROPFLAG
 %x PROPTYPE
-%x ONMEAS
-%x ONFREQ
+
+%x INITMEASUREMENT
+%x ONLINEMEAS
+%x PIONNORMMEAS
+
 %x REWEIGH
 %x REWSAMPLES
 
 %x INITINTEGRATOR
 %x INTEGRATOR
+
+
 
 %x INITOPERATOR
 %x TMOP
@@ -300,8 +310,6 @@ inline void rmQuotes(char *str){
 ^Bc{EQL}                           BEGIN(BC);
 ^WritePropagatorFormat{EQL}        BEGIN(WRPROPFLAG);
 ^PropagatorType{EQL}               BEGIN(WRPROPFLAG);
-^PerformOnlineMeasurements{EQL}    BEGIN(ONMEAS);
-^OnlineMeasurementsFreq{EQL}       BEGIN(ONFREQ);
 ^RanluxdLevel{EQL}                 BEGIN(RLXDLEVEL);
 ^DeflationSubspaceDimension{EQL}   BEGIN(DFLSP);
 ^GCRPreconditioner{EQL}            BEGIN(PRECON);
@@ -311,6 +319,8 @@ inline void rmQuotes(char *str){
 ^SourceType{EQL}                   BEGIN(SOURCETYPE);
 ^NoSamples{EQL}                    BEGIN(NOSAMPLES);
 ^SplittedPropagator{EQL}           BEGIN(PROPSPLIT);
+
+^BeginMeasurement{SPC}+            BEGIN(INITMEASUREMENT);
 
 ^BeginMonomial{SPC}+               BEGIN(INITMONOMIAL);
 ^BeginInt                          BEGIN(INITINTEGRATOR);
@@ -1051,6 +1061,74 @@ inline void rmQuotes(char *str){
   no_samples = atoi(yytext);
   if(myverbose) printf("Inverting for %d samples\n", no_samples);
 }
+
+
+
+
+<INITMEASUREMENT>{TYPE} {
+ if(myverbose) printf("initialising measurements line %d\n", line_of_file);
+  current_measurement++;
+  meas = &measurement_list[current_measurement];
+  meas->id = current_measurement;
+  if(strcmp(yytext, "ONLINE")==0) {
+    meas->type = ONLINE;
+    strcpy((*meas).name, "ONLINE");
+  }
+  else if(strcmp(yytext, "PIONNORM")==0) {
+    meas->type = PIONNORM;
+    strcpy((*meas).name, "PIONNORM");
+  }
+  else {
+    fprintf(stderr, "Unknown measurement type %s in line %d\n", yytext, line_of_file);
+    exit(1);
+  }
+  /*set default frequency here, in case it is not specified
+    in the input file */  
+  meas->freq = _default_measurement_freq;
+  if(!reread) {
+    if(add_measurement(meas->type) < 0) {
+      fprintf(stderr, "Something went wrong in adding measurements\nAborting...!\n");
+      exit(1);
+    }
+  }
+  if(myverbose) printf("initialising measurement with type %s %d line %d\n", yytext, meas->type, line_of_file);
+  if(myverbose) printf("measurement has id %d\n", current_measurement);
+
+  if(meas->type == ONLINE) BEGIN(ONLINEMEAS);
+  else if(meas->type == PIONNORM) BEGIN(PIONNORMMEAS);  
+}
+
+
+<ONLINEMEAS>{
+  {SPC}*Frequency{SPC}*={SPC}*{DIGIT}+{SPC}* {
+  sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+  meas->freq = a;
+  if(myverbose!=0) fprintf(stderr, "  Frequency for online measurements set to %d\n", meas->freq);
+  BEGIN(ONLINEMEAS);
+  }
+  ^EndMeasurement{SPC}* {
+   if(myverbose) printf("Measurement with id %d parsed in line %d\n\n",meas->id, line_of_file);
+    BEGIN(0);
+   }
+}
+
+<PIONNORMMEAS>{
+  {SPC}*Frequency{SPC}*={SPC}*{DIGIT}+{SPC}* {
+
+  sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+  meas->freq = a;
+  if(myverbose!=0) fprintf(stderr, "  Frequency for online measurement of pion norm set to %d\n", meas->freq );
+  BEGIN(PIONNORMMEAS);
+  }
+  ^EndMeasurement{SPC}* {
+   if(myverbose) printf("Measurement with id %d parsed in line %d\n\n",meas->id, line_of_file);
+    BEGIN(0);
+   }
+}
+
+
+
+
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
   T_global = atoi(yytext);
@@ -1439,18 +1517,6 @@ inline void rmQuotes(char *str){
   PropInfo.format = 1;
   fprintf(stderr, "Propagator type: DiracFermion_ScalarSource_FourSink, not yet supported\n");
 }
-<ONMEAS>yes {
-  online_measurement_flag = 1;
-  if(myverbose!=0) fprintf(stderr, "Switched on online measurements\n");
-}
-<ONMEAS>no {
-  online_measurement_flag = 0;
-  if(myverbose!=0) fprintf(stderr, "Online measurements not switched on\n");
-}
-<ONFREQ>{DIGIT}+ {
-  online_measurement_freq = atoi(yytext);
-  if(myverbose!=0) fprintf(stderr, "Frequency for online measurements set to %s\n", yytext);
-}
 <REWEIGH>yes {
   reweighting_flag = 1;
   if(myverbose!=0) fprintf(stderr, "Compute reweighting factor\n");
@@ -1477,7 +1543,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,POLYMONOMIAL>\n   {
+<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,POLYMONOMIAL>\n   {
   line_of_file++;
 }
 <*>\n                       {
@@ -1612,8 +1678,6 @@ int read_input(char * conf_file){
   phmc_exact_poly = _default_phmc_exact_poly;
   even_odd_flag = _default_even_odd_flag;
   bc_flag = _default_bc_flag;
-  online_measurement_flag = _default_online_measurement_flag;
-  online_measurement_freq = _default_online_measurement_freq;
   SourceInfo.type = _default_source_type_flag;
   no_samples = _default_no_samples;
 

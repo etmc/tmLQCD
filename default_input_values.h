@@ -123,8 +123,7 @@
 #define _default_phmc_heavy_timescale 0
 #define _default_phmc_exact_poly 0
 #define _default_even_odd_flag 1
-#define _default_online_measurement_flag 0
-#define _default_online_measurement_freq 2
+#define _default_measurement_freq 10
 #define _default_timescale 1
 #define _default_reweighting_flag 0
 #define _default_reweighting_samples 10

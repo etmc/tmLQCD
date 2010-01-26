@@ -76,7 +76,7 @@
 #include "monomial.h"
 #include "integrator.h"
 #include "sighandler.h"
-#include "online_measurement.h"
+#include "measurements.h"
 #include "sf_calc_action.h"
 #include "sf_observables.h"
 
@@ -124,6 +124,10 @@ int main(int argc,char *argv[]) {
   int dir = 2;
   complex pl, pl4;
   paramsXlfInfo *xlfInfo;
+
+/* For online measurements */
+  measurement * meas;
+  int imeas;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -284,6 +288,16 @@ int main(int argc,char *argv[]) {
       exit(0);
     }
   }
+  
+  
+     /* list and initialize measurements*/
+   if(g_proc_id == 0) {
+    printf("\n");
+    for(j = 0; j < no_measurements; j++) {
+      printf("# measurement id %d, type = %d: Frequency %d\n", j, measurement_list[j].type, measurement_list[j].freq);
+    }
+   }
+   init_measurements();
 
   zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME);
   zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME);
@@ -504,9 +518,14 @@ int main(int argc,char *argv[]) {
         fclose(countfile);
       }
     }
-    if(online_measurement_flag && (trajectory_counter%online_measurement_freq == 0)) {
-      online_measurement(trajectory_counter,
-			 ((int)(100000*plaquette_energy/(6.*VOLUME*g_nproc)))%(g_nproc_t*T));
+    
+    /* online measurements */
+    for(imeas=0; imeas<no_measurements; imeas++){
+      meas = &measurement_list[imeas];
+      if(trajectory_counter%meas->freq == 0){
+        meas->measurefunc(trajectory_counter,
+        (((int)(100000*plaquette_energy/(6.*VOLUME*g_nproc)))%meas->max_source_slice) );
+      }
     }
 
     if((g_rec_ev !=0) && (trajectory_counter%g_rec_ev == 0) && (g_running_phmc)) {
