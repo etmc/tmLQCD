@@ -129,6 +129,8 @@
 #define _default_reweighting_samples 10
 #define _default_source_type_flag 0
 #define _default_no_samples 1
+#define _default_online_measurement_flag 1
+#define _default_online_measurement_freq 5
 
 /* sf default values */
 #define _default_g_eta 0.
