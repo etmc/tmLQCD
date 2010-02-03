@@ -39,10 +39,10 @@ int read_binary_gauge_data(LemonReader * reader, DML_Checksum * checksum)
 
   bytes = lemonReaderBytes(reader);
 
-  if (bytes == g_nproc * VOLUME * 4 * sizeof(su3))
+  if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3))
     prec = 64;
   else
-    if (bytes == g_nproc * VOLUME * 4 * sizeof(su3) / 2)
+    if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3) / 2)
       prec = 32;
     else
     {

@@ -36,10 +36,10 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * re
 
   bytes = lemonReaderBytes(reader);
 
-  if (bytes == g_nproc * VOLUME * sizeof(spinor))
+  if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor))
     prec = 64;
   else {
-    if (bytes == g_nproc * VOLUME * sizeof(spinor) / 2)
+    if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor) / 2)
       prec = 32;
     else {
       kill_with_error(reader->fp, g_cart_id, "Detected wrong lattice size. Aborting...\n");
