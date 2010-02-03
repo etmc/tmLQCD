@@ -160,7 +160,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
       /* save all the results of (Q^dagger Q)^(-1) \gamma_5 \phi */
       /* here ... */
-      sprintf(filename,"%s.%.4d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, 0);
+      sprintf(filename,"%s.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, 0);
       if(g_kappa != 0) {
 	mul_r(g_spinor_field[DUM_SOLVER], (2*g_kappa)*(2*g_kappa), g_spinor_field[DUM_SOLVER], N);
       }
@@ -173,14 +173,14 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
       destruct_writer(writer);
 
       for(im = 0; im < g_no_extra_masses; im++) {
-	sprintf(filename,"%s.%.4d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, im+1);
+	sprintf(filename,"%s.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im+1);
 
 	construct_writer(&writer, filename, 0);
 
 	if(g_kappa != 0) {
 	  mul_r(xs_mms_solver[im], (2*g_kappa)*(2*g_kappa), xs_mms_solver[im], N);
 	}
-	convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], xs_mms_solver[im]);
+	convert_lexic_to_eo(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], xs_mms_solver[im]);
 
         write_spinor(writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
         destruct_writer(writer);
