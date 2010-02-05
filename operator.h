@@ -90,7 +90,7 @@ typedef struct {
   /* the generic invert function */
   void (*inverter) (const int op_id, const int index_start);
   /* write the propagator */
-  void (*write_prop) (const int op_id, const int index_start);
+  void (*write_prop) (const int op_id, const int index_start, const int append_);
 
 } operator;
 

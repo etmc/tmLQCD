@@ -54,7 +54,7 @@
 void dummy_D(spinor * const, spinor * const);
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q);
 void op_invert(const int op_id, const int index_start);
-void op_write_prop(const int op_id, const int index_start);
+void op_write_prop(const int op_id, const int index_start, const int append_);
 
 operator operator_list[max_no_operators];
 
@@ -300,7 +300,7 @@ void op_invert(const int op_id, const int index_start) {
 		       g_spinor_field[DUM_DERI+3], -1., VOLUME/2);
       /* write propagator */
 
-      optr->write_prop(op_id, index_start);
+      optr->write_prop(op_id, index_start, i);
 
       /* mirror source, but not for volume sources */
       if(SourceInfo.no_flavours == 2 && SourceInfo.type != 1) {
@@ -332,7 +332,7 @@ void op_invert(const int op_id, const int index_start) {
 }
 
 
-void op_write_prop(const int op_id, const int index_start) {
+void op_write_prop(const int op_id, const int index_start, const int append_) {
   operator * optr = &operator_list[op_id];
   double ratime = 0., retime = 0.;
   char filename[100];
@@ -366,6 +366,7 @@ void op_write_prop(const int op_id, const int index_start) {
   }
   
   if(!PropInfo.splitted) append = 0;
+  if(append_) append=1;
   /* the 1 is for appending */
   construct_writer(&writer, filename, append);
   if (PropInfo.splitted || SourceInfo.ix == index_start) {
