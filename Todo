@@ -1,3 +1,5 @@
+- source filename for heavy-light operator not consistent
+
 - read_spinor does not distingiush between a source and a
 propagator. In case there is source and sink in the same file, one
 cannot read the source, probably. To be fixed!
