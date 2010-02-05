@@ -250,7 +250,7 @@ void op_invert(const int op_id, const int index_start) {
       mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
       mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);
     }
-    optr->write_prop(op_id, index_start);
+    optr->write_prop(op_id, index_start, 0);
   }
   else if(optr->type == DBTMWILSON) {
     g_mubar = optr->mubar;
