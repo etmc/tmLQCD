@@ -303,6 +303,11 @@ void Qtm_pm_psi_nocom(spinor * const l, spinor * const k){
   mul_one_pm_imu_sub_mul_gamma5(l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], +1.);
 }
 
+
+
+
+
+
 /* the "full" operators */
 void Q_pm_psi(spinor * const l, spinor * const k) {
   /* Q */
@@ -322,6 +327,30 @@ void Q_pm_psi(spinor * const l, spinor * const k) {
   D_psi(l, g_spinor_field[DUM_MATRIX]);
   gamma5(l, l, VOLUME);
 }
+
+
+
+/* This is the version for the gpu with interchanged order of gamma5 and D_psi (Florian Burger)*/
+void Q_pm_psi_gpu(spinor * const l, spinor * const k) {
+  /* Q */
+/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
+/*   g_mu = g_mu; */
+/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
+/*   gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME); */
+/*   g_mu = -g_mu; */
+/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
+/*   g_mu = -g_mu; */
+
+  gamma5(k, k, VOLUME);
+  g_mu = -g_mu;
+  D_psi(l, k);
+  gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME);
+  g_mu = -g_mu;
+  D_psi(l, g_spinor_field[DUM_MATRIX]);
+  
+}
+
+
 
 /* the "full" operators */
 void Q_pm_psi2(spinor * const l, spinor * const k) {
@@ -355,6 +384,24 @@ void Q_minus_psi(spinor * const l, spinor * const k) {
   g_mu = -g_mu;
   gamma5(l, l, VOLUME);
 }
+
+
+/* This is the version for the gpu (Florian Burger)*/
+void Q_minus_psi_gpu(spinor * const l, spinor * const k) {
+/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
+/*   g_mu = -g_mu; */
+/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
+/*   g_mu = -g_mu; */
+
+  gamma5(k,k,VOLUME);
+  g_mu = -g_mu;
+  D_psi(l, k);
+  g_mu = -g_mu;
+  gamma5(l, l, VOLUME);
+}
+
+
+
 
 void Q_plus_psi(spinor * const l, spinor * const k) {
 /*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */

@@ -54,6 +54,15 @@
 #include"invert_eo.h"
 
 
+#ifdef HAVE_GPU
+extern int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
+           double eps, const int rel_prec,const int N);
+extern  int mixed_solve_eo (spinor * const P, spinor * const Q, const int max_iter, 
+           double eps, const int rel_prec, const int N);
+#endif
+
+
+
 int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
 	      spinor * const Even, spinor * const Odd,
 	      const double precision, const int max_iter,
@@ -114,11 +123,17 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     else if(solver_flag == CG) {
       /* Here we invert the hermitean operator squared */
-      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
+#ifdef HAVE_GPU  
+      if(g_proc_id == 0) {printf("Using GPU for inversion\n");
+      fflush(stdout);}
+      iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2); 
+#else        
       iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
 		    VOLUME/2, &Qtm_pm_psi, sub_evs_flag, 1000);
       Qtm_minus_psi(Odd_new, Odd_new);
+#endif
     }
     else if(solver_flag == MR) {
       if(g_proc_id == 0) {printf("# Using MR!\n"); fflush(stdout);}
@@ -131,9 +146,15 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     else {
       if(g_proc_id == 0) {printf("# Using CG as default solver!\n"); fflush(stdout);}
-      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+#ifdef HAVE_GPU
+      if(g_proc_id == 0) {printf("Using GPU for inversion\n");
+      fflush(stdout);}
+      iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
+#else
       iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0);
       Qtm_minus_psi(Odd_new, Odd_new);
+#endif
     }
     
     /* In case of failure, redo with CG */
@@ -216,9 +237,15 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     else {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
+#ifdef HAVE_GPU
+      if(g_proc_id == 0) {printf("Using GPU for inversion\n");
+      fflush(stdout);}      
+      iter = mixed_solve(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME);      
+#else
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
       iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, rel_prec, VOLUME, &Q_pm_psi, 0, 0);
       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+#endif      
     }
     convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
   }
