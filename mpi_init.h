@@ -26,6 +26,7 @@
 
 /* Datatypes for the data exchange */
 extern MPI_Datatype mpi_su3;
+extern MPI_Datatype field_point;
 extern MPI_Datatype gauge_time_slice_cont;
 extern MPI_Datatype gauge_time_slice_split;
 extern MPI_Datatype deri_time_slice_cont;
@@ -74,6 +75,7 @@ extern MPI_Datatype gauge_z_slice_gath;
 extern MPI_Datatype gauge_z_slice_cont;
 
 extern MPI_Datatype field_z_slice_cont;
+extern MPI_Datatype field_z_slice_gath;
 extern MPI_Datatype lfield_z_slice_cont;
 extern MPI_Datatype lfield_z_slice_gath;
 extern MPI_Datatype field_z_slice_half;
@@ -86,13 +88,39 @@ extern MPI_Datatype halffield_y_slice_cont;
 extern MPI_Datatype halffield_y_slice_gath;
 extern MPI_Datatype halffield_z_slice_cont;
 
-#ifdef PARALLELXYZT
+#ifdef _USE_TSPLITPAR
+extern MPI_Datatype field_xt_slice_int;
+extern MPI_Datatype field_yt_slice_int;
+extern MPI_Datatype field_xt_slice_ext;
+extern MPI_Datatype field_yt_slice_ext;
+# ifdef PARALLELXYZ
+extern MPI_Datatype field_zt_slice_ext_L;
+extern MPI_Datatype field_zt_slice_ext_S;
+extern MPI_Datatype field_zt_slice_even_dn_et;
+extern MPI_Datatype field_zt_slice_even_up_et;
+extern MPI_Datatype field_zt_slice_odd_dn_et;
+extern MPI_Datatype field_zt_slice_odd_up_et;
+extern MPI_Datatype field_zt_slice_even_dn_ot;
+extern MPI_Datatype field_zt_slice_even_up_ot;
+extern MPI_Datatype field_zt_slice_odd_dn_ot;
+extern MPI_Datatype field_zt_slice_odd_up_ot;
+# endif
+#endif
+
+#if ( defined PARALLELXYZT || defined PARALLELXYZ )
+extern MPI_Datatype field_z_slice_even_dn;
+extern MPI_Datatype field_z_slice_even_up;
+extern MPI_Datatype field_z_slice_odd_dn;
+extern MPI_Datatype field_z_slice_odd_up;
+
+# if (!defined _INDEX_INDEP_GEOM)
 extern spinor * field_buffer_z ALIGN;
 extern spinor * field_buffer_z2 ALIGN;
 extern spinor * field_buffer_z3 ALIGN;
 extern spinor * field_buffer_z4 ALIGN;
 extern halfspinor * halffield_buffer_z ALIGN;
 extern halfspinor * halffield_buffer_z2 ALIGN;
+# endif
 #endif
 
 extern MPI_Op mpi_reduce_su3_ray;

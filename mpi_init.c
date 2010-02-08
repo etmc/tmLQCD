@@ -72,6 +72,7 @@ MPI_Datatype lfield_y_slice_gath;
 MPI_Datatype lfield_y_slice_cont;
 MPI_Datatype lfield_y_subslice;
 
+MPI_Datatype field_z_slice_gath;
 MPI_Datatype field_z_subslice;
 MPI_Datatype field_z_slice_cont;
 MPI_Datatype lfield_z_slice_gath;
@@ -119,13 +120,39 @@ MPI_Datatype halffield_y_slice_gath;
 MPI_Datatype halffield_z_slice_cont;
 
 
-#ifdef PARALLELXYZT
+#ifdef _USE_TSPLITPAR
+MPI_Datatype field_xt_slice_int;
+MPI_Datatype field_xt_slice_ext;
+MPI_Datatype field_yt_slice_int;
+MPI_Datatype field_yt_slice_ext;
+# ifdef PARALLELXYZ
+MPI_Datatype field_zt_slice_ext_L;
+MPI_Datatype field_zt_slice_ext_S;
+MPI_Datatype field_zt_slice_even_dn_et;
+MPI_Datatype field_zt_slice_even_up_et;
+MPI_Datatype field_zt_slice_odd_dn_et;
+MPI_Datatype field_zt_slice_odd_up_et;
+MPI_Datatype field_zt_slice_even_dn_ot;
+MPI_Datatype field_zt_slice_even_up_ot;
+MPI_Datatype field_zt_slice_odd_dn_ot;
+MPI_Datatype field_zt_slice_odd_up_ot;
+# endif
+#endif
+
+#if ( defined PARALLELXYZT || defined PARALLELXYZ )
+MPI_Datatype field_z_slice_even_dn;
+MPI_Datatype field_z_slice_even_up;
+MPI_Datatype field_z_slice_odd_dn;
+MPI_Datatype field_z_slice_odd_up;
+
+# if (!defined _INDEX_INDEP_GEOM)
 spinor * field_buffer_z ALIGN;
 spinor * field_buffer_z2 ALIGN;
 spinor * field_buffer_z3 ALIGN;
 spinor * field_buffer_z4 ALIGN;
 halfspinor * halffield_buffer_z ALIGN;
 halfspinor * halffield_buffer_z2 ALIGN;
+# endif
 #endif
 
 MPI_Op mpi_reduce_su3_ray;
@@ -154,13 +181,13 @@ void reduce_su3_ray(
 #endif
 
 
-
 void tmlqcd_mpi_init(int argc,char *argv[]) {
   int i;
 #ifdef MPI
   int periods[] = {1,1,1,1};
   int dims[] = {0,0,0,0};
   int ndims = 0;
+  int nalldims = 4;
   int reorder = 1, namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
 #endif
@@ -172,6 +199,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
     g_nb_list[i] = 0;
   }
 
+
 #ifdef MPI
 #  ifdef _USE_SHMEM
   /* we need that the PE number in MPI_COMM_WORL  */
@@ -179,10 +207,20 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   reorder = 0;
 #  endif
 
-#  ifdef PARALLELT
+  N_PROC_T=0; /* the other N_PROC_? are read from input, if not constraint below */
+              /* N_PROC_T will be set by MPI_Dims_create, if not constraint below */
+#  if defined PARALLELT
   ndims = 1;
 #    ifndef FIXEDVOLUME
   N_PROC_X = 1;
+  N_PROC_Y = 1;
+  N_PROC_Z = 1;
+#    endif
+#  endif
+#  if defined PARALLELX
+  ndims = 1;
+#    ifndef FIXEDVOLUME
+  N_PROC_T = 1;
   N_PROC_Y = 1;
   N_PROC_Z = 1;
 #    endif
@@ -194,15 +232,29 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   N_PROC_Z = 1;
 #    endif
 #  endif
+#  if defined PARALLELXY
+  ndims = 2;
+#    ifndef FIXEDVOLUME
+  N_PROC_T = 1;
+  N_PROC_Z = 1;
+#    endif
+#  endif
 #  if defined PARALLELXYT
   ndims = 3;
 #    ifndef FIXEDVOLUME
   N_PROC_Z = 1;
 #    endif
 #  endif
+#  if defined PARALLELXYZ
+  ndims = 3;
+#    ifndef FIXEDVOLUME
+  N_PROC_T = 1;
+#    endif
+#  endif
 #  if defined PARALLELXYZT
   ndims = 4;
 #  endif
+  dims[0] = N_PROC_T;
   dims[1] = N_PROC_X;
   dims[2] = N_PROC_Y;
   dims[3] = N_PROC_Z;
@@ -211,7 +263,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   MPI_Comm_size(MPI_COMM_WORLD, &g_nproc);
   MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
   MPI_Get_processor_name(processor_name, &namelen);
-  MPI_Dims_create(g_nproc, ndims, dims);
+  MPI_Dims_create(g_nproc, nalldims, dims);
   if(g_proc_id == 0){
     printf("Creating the following cartesian grid for a %d dimensional parallelisation:\n%d x %d x %d x %d\n"
 	   , ndims, dims[0], dims[1], dims[2], dims[3]);
@@ -235,6 +287,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   }
 
 #  ifndef FIXEDVOLUME
+  N_PROC_T = g_nproc_t;
   N_PROC_X = g_nproc_x;
   N_PROC_Y = g_nproc_y;
   N_PROC_Z = g_nproc_z;
@@ -243,18 +296,28 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   LY = LY/g_nproc_y;
   LZ = LZ/g_nproc_z;
   VOLUME = (T*LX*LY*LZ);
+#    ifdef _USE_TSPLITPAR
+  TEOSLICE = (LX*LY*LZ)/2;
+#    endif
 #    ifdef PARALLELT  
   RAND = (2*LX*LY*LZ);
   EDGES = 0;
-#    elif defined PARALLELXT /* ifdef PARALLELT */
+#    elif defined PARALLELX  
+  RAND = (2*T*LY*LZ);
+  EDGES = 0;
+#    elif defined PARALLELXT
   RAND = 2*LZ*(LY*LX + T*LY);
   EDGES = 4*LZ*LY;
-  /* Note that VOLUMEPLUSRAND not equal to VOLUME+RAND in this case */
-  /* VOLUMEPLUSRAND rather includes the edges */
-#    elif defined PARALLELXYT /* ifdef PARALLELT */
+#    elif defined PARALLELXY
+  RAND = 2*LZ*T*(LX + LY);
+  EDGES = 4*LZ*T;
+#    elif defined PARALLELXYT
   RAND = 2*LZ*(LY*LX + T*LY + T*LX);
   EDGES = 4*LZ*(LY + T + LX);
-#    elif defined PARALLELXYZT /* ifdef PARALLELT */
+#    elif defined PARALLELXYZ
+  RAND = 2*T*(LY*LZ + LX*LZ + LX*LY);
+  EDGES = 4*T*(LX + LY + LZ);
+#    elif defined PARALLELXYZT
   RAND = 2*LZ*LY*LX + 2*LZ*T*LY + 2*LZ*T*LX + 2*T*LX*LY;
   EDGES = 4*LZ*LY + 4*LZ*T + 4*LZ*LX + 4*LY*T + 4*LY*LX + 4*T*LX;
 #    else /* ifdef PARALLELT */
@@ -267,7 +330,8 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 #  endif /* ifndef FIXEDVOLUME */
   g_dbw2rand = (RAND + 2*EDGES);
 
-#  ifdef PARALLELXYZT
+#  if (!defined _INDEX_INDEP_GEOM)
+#   if ( defined PARALLELXYZT ||  defined PARALLELXYZ )
   field_buffer_z = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
   field_buffer_z2 = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
 #    ifdef _NON_BLOCKING
@@ -277,10 +341,11 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   halffield_buffer_z = (halfspinor*)malloc(T*LX*LY/2*sizeof(halfspinor));
   halffield_buffer_z2 = (halfspinor*)malloc(T*LX*LY/2*sizeof(halfspinor));
 #  endif
+# endif
 
-  MPI_Cart_create(MPI_COMM_WORLD, ndims, dims, periods, reorder, &g_cart_grid);
+  MPI_Cart_create(MPI_COMM_WORLD, nalldims, dims, periods, reorder, &g_cart_grid);
   MPI_Comm_rank(g_cart_grid, &g_cart_id);
-  MPI_Cart_coords(g_cart_grid, g_cart_id, ndims, g_proc_coords);
+  MPI_Cart_coords(g_cart_grid, g_cart_id, nalldims, g_proc_coords);
 
   fprintf(stdout,"Process %d of %d on %s: cart_id %d, coordinates (%d %d %d %d)\n",
 	  g_proc_id, g_nproc, processor_name, g_cart_id, 
@@ -293,20 +358,22 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   for(i = 0; i < 8; i++) {
     g_nb_list[i] = g_cart_id;
   }
+#  if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   MPI_Cart_shift(g_cart_grid, 0, 1, &g_nb_t_dn, &g_nb_t_up);
   g_nb_list[0] = g_nb_t_up;  
   g_nb_list[1] = g_nb_t_dn;
-#  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#  endif
+#  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
   MPI_Cart_shift(g_cart_grid, 1, 1, &g_nb_x_dn, &g_nb_x_up);
   g_nb_list[2] = g_nb_x_up;  
   g_nb_list[3] = g_nb_x_dn;
 #  endif
-#  if (defined PARALLELXYT  || defined PARALLELXYZT)
+#  if (defined PARALLELXYT  || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ )
   MPI_Cart_shift(g_cart_grid, 2, 1, &g_nb_y_dn, &g_nb_y_up);
   g_nb_list[4] = g_nb_y_up;  
   g_nb_list[5] = g_nb_y_dn;
 #  endif
-#  if defined PARALLELXYZT
+#  if (defined PARALLELXYZT || defined PARALLELXYZ ) 
   MPI_Cart_shift(g_cart_grid, 3, 1, &g_nb_z_dn, &g_nb_z_up);
   g_nb_list[0] = g_nb_z_up;  
   g_nb_list[1] = g_nb_z_dn;
@@ -434,6 +501,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   MPI_Type_commit(&field_x_slice_gath);
   MPI_Type_commit(&field_x_slice_cont);
 
+  /* this is the not even/odd field */
   MPI_Type_contiguous(T*LY*LZ, field_point, &lfield_x_slice_cont);
   MPI_Type_contiguous(LY*LZ, field_point, &lfield_x_subslice);
   MPI_Type_vector(T, 1, LX, lfield_x_subslice, &lfield_x_slice_gath);
@@ -443,35 +511,55 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   /* This is an even or odd continuous spinor field y-slice */
   MPI_Type_contiguous(T*LX*LZ/2, field_point, &field_y_slice_cont); 
 /*   MPI_Type_contiguous(12*T*LX*LZ, MPI_DOUBLE, &field_y_slice_cont); */
-  /* this is an even or odd continuoues spinor field xt-slice */
+  /* this is an even or odd continuoues spinor field txy-slice */
   MPI_Type_contiguous(LZ/2, field_point, &field_y_subslice);
-  /* this type puts T*LX xt-slices together being the internal x-boundary in */
+  /* this type puts T*LX xt-slices together being the internal y-boundary in */
   /* even/odd ordered spinor fields */
   MPI_Type_vector(T*LX, 1, LY, field_y_subslice, &field_y_slice_gath); 
 /*   MPI_Type_vector(T*LX, 12*LZ, 12*LY*LZ, MPI_DOUBLE, &field_y_slice_gath); */
   MPI_Type_commit(&field_y_slice_gath);
   MPI_Type_commit(&field_y_slice_cont);
 
+  /* this is the not even/odd field */
   MPI_Type_contiguous(T*LX*LZ, field_point, &lfield_y_slice_cont);
   MPI_Type_contiguous(LZ, field_point, &lfield_y_subslice);
   MPI_Type_vector(T*LX, 1, LY, lfield_y_subslice, &lfield_y_slice_gath);
   MPI_Type_commit(&lfield_y_slice_cont);
   MPI_Type_commit(&lfield_y_slice_gath);
 
-
+  /* If z-dir is parallelized, I have assumed that both LZ and T*LX*LY are even */
   /* This is an even or odd continuous spinor field z-slice */
   MPI_Type_contiguous(T*LX*LY/2, field_point, &field_z_slice_cont);
-  MPI_Type_vector(T*LX*LY/2, 12, 24, MPI_DOUBLE, &field_z_slice_half);
-  /* this type puts T*LX xt-slices together being the internal x-boundary in */
+
+  /* this type puts T*LX*LY field_point together being the internal z-boundary in */
   /* even/odd ordered spinor fields */
+  MPI_Type_vector(T*LX*LY/2, 12, 24, MPI_DOUBLE, &field_z_slice_half); /* this is ?!? (Not used) */
   MPI_Type_commit(&field_z_slice_half);
   MPI_Type_commit(&field_z_slice_cont);
 
+  /* this is the not even/odd field */
   MPI_Type_contiguous(T*LX*LY, field_point, &lfield_z_slice_cont);
   MPI_Type_vector(T*LX*LY, 1, LZ, field_point, &lfield_z_slice_gath);
   MPI_Type_commit(&lfield_z_slice_cont);
   MPI_Type_commit(&lfield_z_slice_gath);
 
+#ifdef _USE_TSPLITPAR
+  /* here I construct the xt yt zt edges for use in _USE_TSPLITPAR  */
+  MPI_Type_contiguous(LY*LZ/2, field_point, &field_xt_slice_int); /* OK */
+  MPI_Type_vector(LX, LZ/2, LY*LZ/2, field_point, &field_yt_slice_int);  /* OK */
+  MPI_Type_contiguous(LY*LZ/2, field_point, &field_xt_slice_ext);  /* OK */
+  MPI_Type_contiguous(LX*LZ/2, field_point, &field_yt_slice_ext);  /* OK */
+  MPI_Type_contiguous((LX*LY+1)/2, field_point, &field_zt_slice_ext_L);  /* OK */
+  MPI_Type_contiguous(LX*LY/2, field_point, &field_zt_slice_ext_S);  /* OK */
+  MPI_Type_commit(&field_xt_slice_int);
+  MPI_Type_commit(&field_xt_slice_ext);
+  MPI_Type_commit(&field_yt_slice_int);
+  MPI_Type_commit(&field_yt_slice_ext);
+  MPI_Type_commit(&field_zt_slice_ext_L);
+  MPI_Type_commit(&field_zt_slice_ext_S);
+#endif
+
+  /* The internal z_ and zt_ slices are constructed in geometry() with MPI_Type_indexed() */
 
   /* Now the derivative fields */
   /* this is a derivative field on one space-time point */
@@ -554,7 +642,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 
   MPI_Op_create(reduce_su3_ray, 0, &mpi_reduce_su3_ray);
 
-#else
+#else /*ifdef MPI */
   g_nproc = 1;
   g_proc_id = 0;
   g_nproc_x = 1;
@@ -571,20 +659,23 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 #  ifndef FIXEDVOLUME
   T = T_global;
   VOLUME = (T*LX*LY*LZ);
+#    ifdef _USE_TSPLITPAR
+  TEOSLICE = (LX*LY*LZ)/2;
+#    endif
   RAND = 0;
   EDGES = 0;
   VOLUMEPLUSRAND = VOLUME;
+  N_PROC_T = 1;
   N_PROC_X = 1;
   N_PROC_Y = 1;
   N_PROC_Z = 1;
 #  endif
   g_dbw2rand = 0;
-  /*ifdef MPI */
-#endif
+#endif   /*ifdef MPI */
 
   /* Here we perform some checks in order not to */
   /* run into trouble later                      */
-#if (defined PARALLELXYZT)
+#if (defined PARALLELXYZT || defined PARALLELXYZ )
   if((T*LX*LY)%2 != 0 && even_odd_flag == 1) {
     fprintf(stderr, "T*LX*LY must be even!\n Aborting prgram...\n");
 #  ifdef MPI 
