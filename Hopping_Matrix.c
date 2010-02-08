@@ -58,14 +58,18 @@
  *   #endif
  * #else * thats _USE_HALFSPINOR *
  *   #if ((defined SSE2)||(defined SSE3))
+ *     #if (defined _USE_TSPLITPAR)
  *     4.
- *   #elif (defined BGL && defined XLC)
+ *     #else
  *     5.
- *   #elif defined XLC
+ *     #endif
+ *   #elif (defined BGL && defined XLC)
  *     6.
+ *   #elif defined XLC
+ *     7.
  *   * else of If defined SSE2  and if defined XLC *
  *   #else
- *     7.
+ *     8.
  *   #endif
  * #endif * thats _USE_HALFSPINOR *
  *
@@ -93,6 +97,7 @@
 #if defined _USE_HALFSPINOR
 #  if ((defined SSE2)||(defined SSE3))
 
+/* 1. */
 /* input on k; output on l */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int ix, i;
@@ -506,6 +511,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
  **********************************/
 
 
+/* 2. */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int i, ix;
   su3 * restrict U ALIGN;
@@ -1062,6 +1068,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #  else
 
+/* 3. */
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
@@ -1517,6 +1524,372 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #  if ((defined SSE2)||(defined SSE3))
 
+#    if (defined _USE_TSPLITPAR) /* needs also SSE */
+
+/***********************************
+ * 
+ * Aurora version
+ * Author: Luigi Scorzato (scorzato@ect.it)
+ * (last modified 20.4.2009)
+ * The strategy of the code is explained in the file Strategy.txt
+ *
+ ************************************/
+
+/* 4. */
+/* input on k; output on l */
+void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+  int icx,icz,ioff;
+  int ix,iz;
+  int x0,icx0,jj;
+  su3 *restrict up;
+  su3 * restrict um;
+  spinor * restrict sp;
+  spinor * restrict sm;
+  spinor * restrict rn;
+
+# if (defined MPI)
+#  ifdef PARALLELX
+#   define  REQC 4
+#  elif defined PARALLELXY
+#   define  REQC 8
+#  elif defined PARALLELXYZ
+#   define  REQC 12
+#  endif
+  MPI_Request requests[REQC];
+  MPI_Status status[REQC];
+# endif
+
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge();
+  }
+#endif
+
+  if(ieo == 0){ /* even out - odd in */
+    ioff = 0;
+  } 
+  else{ /* odd out - even in */
+    ioff = (VOLUME+RAND)/2;
+  }
+
+  /* Loop over time direction. This is the outmost loop */
+  for(x0=0;x0<T;x0++){
+
+    /* start the communication of the timslice borders (non-blocking send and receive)*/
+#    if (defined MPI && !defined _NO_COMM)
+   xchange_field_open(k, ieo, x0, requests, status);
+#    endif
+    
+
+  /* loop over timeslice. At: contribution of timelike links  */
+   icx0=g_1st_eot[x0][ieo];
+   jj =0;
+   um=&g_gauge_field_copyt[icx0][0]-1; /* allowed? */
+   for(icx = icx0; icx < icx0+TEOSLICE; icx++){
+     rn=l+(icx-ioff);
+    /*********************** direction +0 ************************/
+
+    sp=k+g_iup_eo[icx][0]; /* all sp,sm,up,um could be moved up */
+    up=um+1;
+
+    _sse_load((*sp).s0);
+    _sse_load_up((*sp).s2);
+    _sse_vector_add();
+
+    _sse_su3_multiply((*up));
+    _sse_vector_cmplx_mul(ka0);
+    _sse_store_up((*rn).s0);
+    _sse_store_up((*rn).s2);      
+      
+    _sse_load((*sp).s1);
+    _sse_load_up((*sp).s3);
+    _sse_vector_add();
+      
+    _sse_su3_multiply((*up));
+    _sse_vector_cmplx_mul(ka0);
+    _sse_store_up((*rn).s1);
+    _sse_store_up((*rn).s3); 
+
+    /*********************** direction -0 ************************/
+
+    sm=k+g_idn_eo[icx][0];
+    um=up+1;
+
+    _sse_load((*sm).s0);
+    _sse_load_up((*sm).s2);
+    _sse_vector_sub();
+      
+    _sse_su3_inverse_multiply((*um));
+    _sse_vector_cmplxcg_mul(ka0);
+      
+    _sse_load((*rn).s0);
+    _sse_vector_add();
+    _sse_store((*rn).s0);
+
+    _sse_load((*rn).s2);
+    _sse_vector_sub();
+    _sse_store((*rn).s2);
+      
+    _sse_load((*sm).s1);
+    _sse_load_up((*sm).s3);
+    _sse_vector_sub();
+      
+    _sse_su3_inverse_multiply((*um));
+    _sse_vector_cmplxcg_mul(ka0);
+      
+    _sse_load((*rn).s1);
+    _sse_vector_add();
+    _sse_store((*rn).s1);
+
+    _sse_load((*rn).s3);
+    _sse_vector_sub();
+    _sse_store((*rn).s3);
+    jj++;
+   } /* end of loop over timeslice (At)*/
+
+       
+   /* complete the communication of the timslice borders (and wait) */
+#if (defined MPI && !defined _NO_COMM)
+   xchange_field_close(requests, status, REQC); /*    MPI_Waitall */
+#endif
+
+   /* loop over timeslice. Bt: contribution of spacelike links  */
+   um=&g_gauge_field_copys[icx0][0]-1;
+   for(icx = icx0; icx < icx0+TEOSLICE; icx++){
+    ix=g_eo2lexic[icx];
+    rn=l+(icx-ioff);
+    /*********************** direction +1 ************************/
+
+    sp=k+g_iup_eo[icx][1];
+    up=um+1;
+
+    _sse_load((*sp).s0);
+    _sse_load_up((*sp).s3);
+    _sse_vector_i_mul();
+    _sse_vector_add();
+
+    _sse_su3_multiply((*up));
+    _sse_vector_cmplx_mul(ka1);
+
+    _sse_load((*rn).s0);
+    _sse_vector_add();
+    _sse_store((*rn).s0);
+
+    _sse_load((*rn).s3);
+    _sse_vector_i_mul();      
+    _sse_vector_sub();
+    _sse_store((*rn).s3); 
+      
+    _sse_load((*sp).s1);
+    _sse_load_up((*sp).s2);
+    _sse_vector_i_mul();
+    _sse_vector_add();
+
+    _sse_su3_multiply((*up));
+    _sse_vector_cmplx_mul(ka1);
+
+    _sse_load((*rn).s1);
+    _sse_vector_add();
+    _sse_store((*rn).s1);
+
+    _sse_load((*rn).s2);
+    _sse_vector_i_mul();      
+    _sse_vector_sub();
+    _sse_store((*rn).s2);       
+
+    /*********************** direction -1 ************************/
+
+    sm=k+g_idn_eo[icx][1];
+    um=up+1;
+
+    _sse_load((*sm).s0);
+    _sse_load_up((*sm).s3);
+    _sse_vector_i_mul();
+    _sse_vector_sub();
+      
+    _sse_su3_inverse_multiply((*um));
+    _sse_vector_cmplxcg_mul(ka1);
+      
+    _sse_load((*rn).s0);
+    _sse_vector_add();
+    _sse_store((*rn).s0);
+
+    _sse_load((*rn).s3);
+    _sse_vector_i_mul();      
+    _sse_vector_add();
+    _sse_store((*rn).s3);
+
+    _sse_load((*sm).s1);
+    _sse_load_up((*sm).s2);
+    _sse_vector_i_mul();
+    _sse_vector_sub();
+      
+    _sse_su3_inverse_multiply((*um));
+    _sse_vector_cmplxcg_mul(ka1);
+      
+    _sse_load((*rn).s1);
+    _sse_vector_add();
+    _sse_store((*rn).s1);
+
+    _sse_load((*rn).s2);
+    _sse_vector_i_mul();      
+    _sse_vector_add();
+    _sse_store((*rn).s2);
+
+    /*********************** direction +2 ************************/
+
+    sp=k+g_iup_eo[icx][2];
+    up=um+1;
+
+    _sse_load((*sp).s0);
+    _sse_load_up((*sp).s3);
+    _sse_vector_add();
+
+    _sse_su3_multiply((*up));
+    _sse_vector_cmplx_mul(ka2);
+
+    _sse_load((*rn).s0);
+    _sse_vector_add();
+    _sse_store((*rn).s0);
+
+    _sse_load((*rn).s3);
+    _sse_vector_add();
+    _sse_store((*rn).s3);
+      
+    _sse_load((*sp).s1);
+    _sse_load_up((*sp).s2);
+    _sse_vector_sub();
+
+    _sse_su3_multiply((*up));
+    _sse_vector_cmplx_mul(ka2);
+
+    _sse_load((*rn).s1);
+    _sse_vector_add();
+    _sse_store((*rn).s1);
+
+    _sse_load((*rn).s2);
+    _sse_vector_sub();
+    _sse_store((*rn).s2);      
+
+    /*********************** direction -2 ************************/
+
+    sm=k+g_idn_eo[icx][2];
+    um=up+1;
+
+    _sse_load((*sm).s0);
+    _sse_load_up((*sm).s3);
+    _sse_vector_sub();
+      
+    _sse_su3_inverse_multiply((*um));
+    _sse_vector_cmplxcg_mul(ka2);
+      
+    _sse_load((*rn).s0);
+    _sse_vector_add();
+    _sse_store((*rn).s0);
+
+    _sse_load((*rn).s3);
+    _sse_vector_sub();
+    _sse_store((*rn).s3);
+      
+    _sse_load((*sm).s1);
+    _sse_load_up((*sm).s2);
+    _sse_vector_add();
+      
+    _sse_su3_inverse_multiply((*um));
+    _sse_vector_cmplxcg_mul(ka2);
+      
+    _sse_load((*rn).s1);
+    _sse_vector_add();
+    _sse_store((*rn).s1);
+
+    _sse_load((*rn).s2);
+    _sse_vector_add();
+    _sse_store((*rn).s2);      
+      
+    /*********************** direction +3 ************************/
+
+    sp=k+g_iup_eo[icx][3];
+    up=um+1;
+
+    _sse_load((*sp).s0);
+    _sse_load_up((*sp).s2);
+    _sse_vector_i_mul();
+    _sse_vector_add();
+
+    _sse_su3_multiply((*up));
+    _sse_vector_cmplx_mul(ka3);
+
+    _sse_load((*rn).s0);
+    _sse_vector_add();
+    _sse_store((*rn).s0);
+
+    _sse_load((*rn).s2);
+    _sse_vector_i_mul();      
+    _sse_vector_sub();
+    _sse_store((*rn).s2);
+      
+    _sse_load((*sp).s1);
+    _sse_load_up((*sp).s3);
+    _sse_vector_i_mul();
+    _sse_vector_sub();
+
+    _sse_su3_multiply((*up));
+    _sse_vector_cmplx_mul(ka3);
+
+    _sse_load((*rn).s1);
+    _sse_vector_add();
+    _sse_store((*rn).s1);
+
+    _sse_load((*rn).s3);
+    _sse_vector_i_mul();      
+    _sse_vector_add();
+    _sse_store((*rn).s3);
+      
+    /*********************** direction -3 ************************/
+
+    sm=k+g_idn_eo[icx][3];
+    um=up+1;
+
+    _sse_load((*sm).s0);
+    _sse_load_up((*sm).s2);
+    _sse_vector_i_mul();
+    _sse_vector_sub();
+      
+    _sse_su3_inverse_multiply((*um));
+    _sse_vector_cmplxcg_mul(ka3);
+
+    _sse_load((*rn).s0);
+    _sse_vector_add();
+    _sse_store((*rn).s0);
+
+    _sse_load((*rn).s2);
+    _sse_vector_i_mul();
+    _sse_vector_add();
+    _sse_store((*rn).s2);
+
+    _sse_load((*sm).s1);
+    _sse_load_up((*sm).s3);
+    _sse_vector_i_mul();
+    _sse_vector_add();
+      
+    _sse_su3_inverse_multiply((*um));
+    _sse_vector_cmplxcg_mul(ka3);
+
+    _sse_load((*rn).s1);
+    _sse_vector_add();
+    _sse_store((*rn).s1);
+
+    _sse_load((*rn).s3);
+    _sse_vector_i_mul();      
+    _sse_vector_sub();
+    _sse_store((*rn).s3);
+   }  /* end of loop over timeslice (Bt)*/
+  } /* x0=0; x0<T */
+}
+
+#    else /* _USE_TSPLITPAR */
+
+/* 5. */
 /* input on k; output on l */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int icx,icy,icz,ioff,ioff2;
@@ -1928,6 +2301,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_store_nt((*rn).s3);
   }
 }
+#    endif /* _USE_TSPLITPAR */
 
 #  elif (defined BGL && defined XLC)
 
@@ -1939,6 +2313,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
  *
  **********************************/
 
+/* 6. */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int icx,icy,icz,ioff,ioff2;
   int ix,iy,iz;
@@ -2246,6 +2621,7 @@ static su3_vector psi1, psi2, psi, chi, phi1, phi3;
 
 #include"xlc_prefetch.h"
 
+/* 7. */
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
 void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
@@ -2546,6 +2922,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 
 static su3_vector psi1, psi2, psi, chi, phi1, phi3;
 
+/* 8. */
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
 void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
