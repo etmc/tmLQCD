@@ -42,4 +42,6 @@ void source_spinor_field(spinor * const P, spinor * const Q, int is, int ic);
 void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int is, int ic, int source_indx);
 void start_ranlux(int level,int seed);
 
+void gen_test_spinor_field(spinor * const k , const int eoflag);
+void write_test_spinor_field(spinor * const k , const int eoflag, char * postfix);
 #endif
