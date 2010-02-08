@@ -59,18 +59,78 @@ int init_geometry_indices(const int V) {
   g_eo2lexic = (int*)calloc(V, sizeof(int));
   if((void*)g_eo2lexic == NULL) return(11);
 
-#if defined PARALLELXYZT
+#if ( defined PARALLELXYZT || defined PARALLELXYZ )
   g_field_z_ipt_even = (int*)calloc(T*LX*LY, sizeof(int));
   if((void*)g_field_z_ipt_even == NULL) return(12);
   g_field_z_ipt_odd  = (int*)calloc(T*LX*LY, sizeof(int));
   if((void*)g_field_z_ipt_odd == NULL) return(13);
+
+  g_field_z_disp_even_dn = (int*)calloc(T*LX*LY/2, sizeof(int));
+  if((void*)g_field_z_disp_even_dn == NULL) return(14);
+  g_field_z_disp_even_up = (int*)calloc(T*LX*LY/2, sizeof(int));
+  if((void*)g_field_z_disp_even_up == NULL) return(15);
+  g_field_z_disp_odd_dn = (int*)calloc(T*LX*LY/2, sizeof(int));
+  if((void*)g_field_z_disp_odd_dn == NULL) return(16);
+  g_field_z_disp_odd_up = (int*)calloc(T*LX*LY/2, sizeof(int));
+  if((void*)g_field_z_disp_odd_up == NULL) return(17);
 #endif
+
+#ifdef _USE_TSPLITPAR
+  g_1st_eot= (int**)calloc(T, sizeof(int*));
+  if((void*)g_1st_eot == NULL) return(18);
+  for(i=0;i<T;i++){
+    g_1st_eot[i]= (int *)calloc(2, sizeof(int));
+  }
+  g_1st_xt_int_dn = (int*)calloc(T, sizeof(int));
+  g_1st_xt_int_up = (int*)calloc(T, sizeof(int));
+  g_1st_xt_ext_dn = (int*)calloc(T, sizeof(int));
+  g_1st_xt_ext_up = (int*)calloc(T, sizeof(int));
+  g_1st_yt_int_dn = (int*)calloc(T, sizeof(int));
+  g_1st_yt_int_up = (int*)calloc(T, sizeof(int));
+  g_1st_yt_ext_dn = (int*)calloc(T, sizeof(int));
+  g_1st_yt_ext_up = (int*)calloc(T, sizeof(int));
+  g_1st_zt_int_dn = (int*)calloc(T, sizeof(int));
+  g_1st_zt_int_up = (int*)calloc(T, sizeof(int));
+  g_1st_zt_ext_dn = (int*)calloc(T, sizeof(int));
+  g_1st_zt_ext_up = (int*)calloc(T, sizeof(int));
+
+  g_field_zt_disp_even_dn = (int **)calloc(T, sizeof(int*));
+  g_field_zt_disp_even_up = (int **)calloc(T, sizeof(int*));
+  g_field_zt_disp_odd_dn = (int **)calloc(T, sizeof(int*));
+  g_field_zt_disp_odd_up = (int **)calloc(T, sizeof(int*));
+  for(i=0;i<T;i++){
+    g_field_zt_disp_even_dn[i] = (int *)calloc((LX*LY+1)/2, sizeof(int));
+    g_field_zt_disp_even_up[i] = (int *)calloc((LX*LY+1)/2, sizeof(int));
+    g_field_zt_disp_odd_dn[i] = (int *)calloc((LX*LY+1)/2, sizeof(int));
+    g_field_zt_disp_odd_up[i] = (int *)calloc((LX*LY+1)/2, sizeof(int));
+  }
+
+#endif
+
+  g_coord= (int**)calloc(VOLUME, sizeof(int*));
+  if((void*)g_coord == NULL) return(19);
+  for(i=0;i<VOLUME;i++){
+    g_coord[i]= (int*)calloc(4, sizeof(int));
+  }
+
+  g_iup_eo= (int**)calloc(VOLUME+RAND, sizeof(int*));  // NEW GIUPDNEO
+  if((void*)g_iup_eo == NULL) return(21);
+  for(i=0;i<VOLUME+RAND;i++){
+    g_iup_eo[i]= (int*)calloc(4, sizeof(int));
+  }
+
+  g_idn_eo= (int**)calloc(VOLUME+RAND, sizeof(int*));
+  if((void*)g_idn_eo == NULL) return(22);
+  for(i=0;i<VOLUME+RAND;i++){
+    g_idn_eo[i]= (int*)calloc(4, sizeof(int));
+  }
+
 
   /* This should only be used for the SFBC. */
   /* This should not be used for anything other than the SFBC */
   /* because it might eventually vanish. */
   g_t = (int*)calloc(V, sizeof(int));
-  if((void*)g_t == NULL) return(14);
+  if((void*)g_t == NULL) return(20);
 
   g_idn[0] = idn;
   g_iup[0] = iup;
@@ -107,7 +167,7 @@ void free_geometry_indices() {
   free(g_eo2lexic);
   free(g_lexic2eosub);
   free(g_lexic2eo);
-#ifdef PARALLELXYZT
+#if ( defined PARALLELXYZT || defined PARALLELXYZ )
   free(g_field_z_ipt_odd);
   free(g_field_z_ipt_even);
 #endif
