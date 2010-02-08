@@ -41,7 +41,238 @@
 #include "global.h"
 #include "su3.h"
 #include "su3adj.h"
+#include "mpi_init.h"
 
+#if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ))
+
+/* This is the version of the function Index  introduced for Aurora-like parallelizations (mainly xyz)  */
+int Index(const int x0, const int x1, const int x2, const int x3) {
+  /* defined for all points in the internal lattice */
+  /* and for those points in the external lattice such that: */
+  /* - up to 2 directions out of the lattice, */
+  /* - one direction up to distance 2 out of the lattice, */ 
+  /* - the other direction up to distance 1 out of the lattice. */
+
+  int y0, y1, y2, y3, ix;
+
+  y0 = (x0 + T ) % T; 
+  y1 = (x1 + LX) % LX; 
+  y2 = (x2 + LY) % LY; 
+  y3 = (x3 + LZ) % LZ;
+  ix = ((y0*LX + y1)*LY + y2)*LZ + y3;
+
+  /* x-Rand */
+  if(x1 == LX){
+    ix = VOLUME + y0*LY*LZ + y2*LZ + y3;
+  }
+  if(x1 == -1){
+    ix = VOLUME + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
+  }   
+
+#if (defined PARALLELXY || defined PARALLELXYZ)
+  /* y-Rand */
+  if(x2 == LY) {
+    ix = VOLUME + 2*T*LY*LZ    + y0*LX*LZ + y1*LZ + y3;
+  }
+  if(x2 == -1) {
+    ix = VOLUME + 2*T*LY*LZ + T*LX*LZ    + y0*LX*LZ + y1*LZ + y3;
+  }
+  /* yx-edge  */
+  if(x1 == LX) {
+    if(x2 == LY) {
+      ix = VOLUME + RAND    + y0*LZ + y3;
+    }
+    if(x2 == -1) {
+      ix = VOLUME + RAND + T*LZ    + y0*LZ + y3;
+    }
+  }
+  if(x1 == -1) {
+    if(x2 == LY) {
+      ix = VOLUME + RAND + 2*T*LZ    + y0*LZ + y3;
+    }
+    if(x2 == -1) {
+      ix = VOLUME + RAND + 3*T*LZ    + y0*LZ + y3;
+    }
+  }
+#endif /* endif of PARALLELXY  || PARALLELXYZ */
+
+#if defined PARALLELXYZ
+  /* z-Rand */
+  if(x3 == LZ) {
+    ix = VOLUME + 2*T*LY*LZ + 2*T*LX*LZ     + y0*LX*LY + y1*LY + y2;
+  }
+  if(x3 == -1) {
+    ix = VOLUME + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY     + y0*LX*LY + y1*LY + y2;
+  }
+  /* zx-edge  */
+  if(x1 == LX) {
+    if(x3 == LZ) {
+      ix = VOLUME + RAND + 4*T*LZ      + y0*LY + y2;
+    }
+    if(x3 == -1) {
+      ix = VOLUME + RAND + 4*T*LZ + T*LY 	+ y0*LY + y2;
+    }
+  }
+  if(x1 == -1) {
+    if(x3 == LZ) {
+      ix = VOLUME + RAND + 4*T*LZ + 2*T*LY	+ y0*LY + y2;
+    }
+    if(x3 == -1) {
+      ix = VOLUME + RAND + 4*T*LZ + 3*T*LY 	+ y0*LY + y2;
+    }
+  }
+  /* zy-edge */
+  if(x3 == LZ) {
+    if(x2 == LY) {
+      ix = VOLUME + RAND + 4*T*LZ + 4*T*LY 	+ y0*LX + y1;
+    }
+    if(x2 == -1) {
+      ix = VOLUME + RAND + 4*T*LZ + 4*T*LY + 2*T*LX 	+ y0*LX + y1;
+    }
+  }
+  if(x3 == -1) {
+    if(x2 == LY) {
+      ix = VOLUME + RAND + 4*T*LZ + 4*T*LY + T*LX 	+ y0*LX + y1;
+    }
+    if(x2 == -1) {
+      ix = VOLUME + RAND + 4*T*LZ + 4*T*LY + 3*T*LX 	+ y0*LX + y1;
+    }
+  }
+
+#endif /* endif of PARALLELXYZ */
+
+  /* The DBW2 stuff --> second boundary slice */
+  /* This we put a the very end.              */
+
+  /* x2-rand+ */
+  if(x1 == LX+1) {
+    ix = VOLUMEPLUSRAND + y0*LY*LZ + y2*LZ + y3;
+# if (defined PARALLELXY || defined PARALLELXYZ)
+    /* x2y */
+    if(x2 == LY) {
+      ix = VOLUMEPLUSRAND + RAND 	+ y0*LZ + y3;
+    }
+    else if(x2 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 1*T*LZ 	+ y0*LZ + y3;
+    }
+# endif /* endif of PARALLELXY || PARALLELXYZ  */
+# if defined PARALLELXYZ
+    /* x2z */
+    else if(x3 == LZ) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 4*T*LY 	+ y0*LY + y2;      
+    }
+    else if(x3 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 5*T*LY 	+ y0*LY + y2;      
+    }
+# endif /* endif of PARALLELXYZ  */
+  }
+  /* x2-rand- */
+  if(x1 == -2) {
+    ix = VOLUMEPLUSRAND + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
+# if (defined PARALLELXY || defined PARALLELXYZ)
+    /* x2y */
+    if(x2 == LY) {
+      ix = VOLUMEPLUSRAND + RAND + 2*T*LZ 	+ y0*LZ + y3;
+    }
+    else if(x2 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 3*T*LZ	+ y0*LZ + y3;
+    }
+# endif /* endif of PARALLELXY || PARALLELXYZ  */
+# if defined PARALLELXYZ
+    /* x2z */
+    else if(x3 == LZ) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 6*T*LY	+ y0*LY + y2;      
+    }
+    else if(x3 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 7*T*LY	+ y0*LY + y2;      
+    }
+# endif /* endif of  PARALLELXYZ  */
+  }   
+#if (defined PARALLELXY || defined PARALLELXYZ)
+  /* y2-rand+ */
+  if(x2 == LY+1) {
+    ix = VOLUMEPLUSRAND + 2*T*LY*LZ + y0*LX*LZ + y1*LZ + y3;
+    /* y2x */
+    if(x1 == LX) {
+      ix = VOLUMEPLUSRAND + RAND + 4*T*LZ	+ y0*LZ + y3;
+    }
+    else if (x1 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 6*T*LZ	+ y0*LZ + y3;
+    }
+#  if defined PARALLELXYZ
+    /* y2z */
+    else if(x3 == LZ) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 8*T*LY + 4*T*LX	+ y0*LX + y1;      
+    }
+    else if(x3 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 8*T*LY + 5*T*LX	+ y0*LX + y1;      
+    }
+#  endif /* endif of PARALLELXYZ  */
+  }
+  /* y2-rand- */
+  if(x2 == -2) {
+    ix = VOLUMEPLUSRAND + 2*T*LY*LZ + T*LX*LZ + y0*LX*LZ + y1*LZ + y3;      
+    /* y2x */
+    if(x1 == LX) {
+      ix = VOLUMEPLUSRAND + RAND + 5*T*LZ	+ y0*LZ + y3;
+    }
+    else if (x1 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 7*T*LZ	+ y0*LZ + y3;
+    }
+#  if defined PARALLELXYZ
+    /* y2z */
+    else if(x3 == LZ) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 8*T*LY + 6*T*LX	+ y0*LX + y1;      
+    }
+    else if(x3 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 8*T*LY + 7*T*LX	+ y0*LX + y1;      
+    }
+# endif /* endif of PARALLELXYZ  */
+  }
+#endif /* endif of PARALLELXY || PARALLELXYZ  */
+#if defined PARALLELXYZ
+  /* z2-rand+ */
+  if(x3 == LZ+1) {
+    ix = VOLUMEPLUSRAND + 2*T*LY*LZ + 2*T*LX*LZ    + y0*LX*LY + y1*LY + y2;
+    /* z2x */
+    if(x1 == LX) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ 	+ y0*LY + y2;
+    }
+    else if (x1 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 2*T*LY	+ y0*LY + y2;
+    }
+    /* z2y */
+    else if(x2 == LY) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 8*T*LY 	+ y0*LX + y1;      
+    }
+    else if(x2 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 8*T*LY + 2*T*LX	+ y0*LX + y1;      
+    }
+  }
+  /* z2-rand- */
+  if(x3 == -2) {
+    ix = VOLUMEPLUSRAND + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY    + y0*LX*LY + y1*LY + y2;
+    /* z2x */
+    if(x1 == LX) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + T*LY 	+ y0*LY + y2;
+    }
+    else if(x1 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 3*T*LY	+ y0*LY + y2;
+    }
+    /* z2y */
+    else if(x2 == LY) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 8*T*LY + 1*T*LX	+ y0*LX + y1;      
+    }
+    else if(x2 == -1) {
+      ix = VOLUMEPLUSRAND + RAND + 8*T*LZ + 8*T*LY + 3*T*LX	+ y0*LX + y1;      
+    }
+  }
+#endif /* endif of PARALLELXYZ  */
+
+  return(ix);
+}
+
+#else /* original version of Index(): used for no parallelization  or PARALLEL*T */
 
 int Index(const int x0, const int x1, const int x2, const int x3) {
   int y0, y1, y2, y3, ix;
@@ -52,7 +283,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
   y3 = (x3 + LZ) % LZ;
   ix = ((y0*LX + y1)*LY + y2)*LZ + y3;
   
-  y0=x0;
+  y0=x0; /* ?!? */
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
   if(x0 == T) {
     ix = VOLUME + y3 + LZ*y2 + LZ*LY*y1;
@@ -87,8 +318,8 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUME+RAND+3*LY*LZ+y2*LZ+y3;
     }
   }
-  /* endif of PARALLELXT || PARALLELXYT*/
-#endif
+  
+#endif /* endif of PARALLELXT || PARALLELXYT || PARALLELXYZT */
 
 #if (defined PARALLELXYT || defined PARALLELXYZT)
   /* y-Rand */
@@ -137,8 +368,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     }
   }
 
-  /* endif of PARALLELXYT */
-#endif
+#endif /* endif of PARALLELXYT  || PARALLELXYZT */
 #if defined PARALLELXYZT
   /* z-Rand */
   if(x3 == LZ) {
@@ -215,8 +445,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
   }
 
 
-  /* endif of PARALLELXYZT */
-#endif
+#endif /* endif of PARALLELXYZT */
 
   /* The DBW2 stuff --> second boundary slice */
   /* This we put a the very end.              */
@@ -233,7 +462,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 1*LY*LZ
 	+ y2*LZ + y3;
     }
-# endif
+# endif /* endif of PARALLELXT || PARALLELXYT || PARALLELXYZT  */
 # if (defined PARALLELXYT || defined PARALLELXYZT)
     /* t2y */
     else if(x2 == LY) {
@@ -244,7 +473,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 2*LX*LZ
 	+ y1*LZ + y3;
     }    
-# endif
+# endif /* endif of PARALLELXYT || PARALLELXYZT  */
 # if defined PARALLELXYZT
     /* t2z */
     else if(x3 == LZ) {
@@ -255,7 +484,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 2*LX*LY
 	+ y1*LY + y2;
     }
-# endif
+# endif /* endif of PARALLELXYZT  */
   }
   /* the slice at time -2 is put behind the one at time T+1 */
   else if(x0 == -2) {
@@ -270,7 +499,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 3*LY*LZ
 	+ y2*LZ + y3;
     }
-# endif
+# endif /* endif of PARALLELXT || PARALLELXYT || PARALLELXYZT  */
 # if (defined PARALLELXYT || defined PARALLELXYZT)
     /* t2y */
     else if(x2 == LY) {
@@ -281,7 +510,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 3*LX*LZ
 	+ y1*LZ + y3;
     }    
-# endif
+# endif /* endif of PARALLELXYT || PARALLELXYZT  */
 # if defined PARALLELXYZT
     /* t2z */
     else if(x3 == LZ) {
@@ -292,9 +521,9 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 3*LX*LY
 	+ y1*LY + y2;
     }
-# endif
+# endif /* endif of PARALLELXYZT  */
   }  
-#endif
+#endif  /* endif of PARALLELT || PARALLELXT || PARALLELXYT || PARALLELXYZT  */
 #if ((defined PARALLELXT) || (defined PARALLELXYT) || defined PARALLELXYZT)
   if(x1 == LX+1) {
     ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + y0*LY*LZ + y2*LZ + y3;
@@ -317,7 +546,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 1*T*LZ 
 	+ y0*LZ + y3;
     }
-# endif
+# endif /* endif of PARALLELXYT || PARALLELXYZT  */
 # if defined PARALLELXYZT
     /* x2z */
     else if(x3 == LZ) {
@@ -328,7 +557,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 5*T*LY
 	+ y0*LY + y2;      
     }
-# endif
+# endif /* endif of PARALLELXYZT  */
   }
   if(x1 == -2) {
     ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + T*LY*LZ + y0*LY*LZ + y2*LZ + y3;
@@ -351,7 +580,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 3*T*LZ
 	+ y0*LZ + y3;
     }
-# endif
+# endif /* endif of PARALLELXYT || PARALLELXYZT  */
 # if defined PARALLELXYZT
     /* x2z */
     else if(x3 == LZ) {
@@ -362,9 +591,9 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 7*T*LY
 	+ y0*LY + y2;      
     }
-# endif
+# endif /* endif of  PARALLELXYZT  */
   }   
-#endif
+#endif /* endif of PARALLELXT || PARALLELXYT || PARALLELXYZT  */
 #if (defined PARALLELXYT || defined PARALLELXYZT)
   if(x2 == LY+1) {
     ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + y0*LX*LZ + y1*LZ + y3;
@@ -396,7 +625,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 5*T*LX
 	+ y0*LX + y1;      
     }
-#  endif
+#  endif /* endif of PARALLELXYZT  */
   }
   if(x2 == -2) {
     ix = VOLUMEPLUSRAND + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ + y0*LX*LZ + y1*LZ + y3;      
@@ -428,9 +657,9 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8*LY*LZ + 8*T*LZ + 8*LX*LZ + 8*LX*LY + 8*T*LY + 7*T*LX
 	+ y0*LX + y1;      
     }
-# endif
+# endif /* endif of PARALLELXYZT  */
   }
-#endif
+#endif /* endif of PARALLELXYT || PARALLELXYZT  */
 #if defined PARALLELXYZT
   /* z2-Rand */
   if(x3 == LZ+1) {
@@ -497,13 +726,14 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 	+ y0*LX + y1;      
     }
   }
-#endif
+#endif /* endif of PARALLELXYZT  */
 /*   if(ix == 372) { */
 /*     printf("## %d %d %d %d ix = %d, %d %d %d %d\n", x0, x1, x2, x3, ix, T, LX, LY, LZ); */
 /*   } */
   return(ix);
 }
 
+#endif /* PARALLEL???  */
 
 void geometry(){
   
@@ -516,23 +746,25 @@ void geometry(){
   int startvaluey = 0;
   int startvaluez = 0;
   int * xeven;
-  
+  int isp, *ones, *oneS, *oneL, j;
+  int lsliceS, lsliceL, check_struct_zt;
+
   xeven = malloc(VOLUMEPLUSRAND*sizeof(int));
 
 #if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   startvaluet = 1;
 #endif
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
   startvaluex = 1;
 #endif
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ )
   startvaluey = 1;
 #endif
-#if defined PARALLELXYZT
+#if (defined PARALLELXYZT || defined PARALLELXYZ )
   startvaluez = 1;
 #endif
 
-  /*** MY MODIFICATIONS ***/
+  /*** Coordinates for SFBC ***/
 
   /* it finds which are the values of t,x,y,z (x0,x1,x2,x3) for each lattice site x (ix) */
   /* the result is written in the global variables g_t[ix], g_x[ix], g_y[ix], g_z[ix], respectively */
@@ -588,8 +820,7 @@ void geometry(){
     }
   }
   
-  /*** END OF MY MODIFICATIONS ***/
-
+  /*** END OF coordinates SFBC ***/
 
   /* extended for boundary slices */
   for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
@@ -645,6 +876,12 @@ void geometry(){
 	    g_iup[ix][3] = Index(x0, x1, x2, x3+1);
 	    g_idn[ix][3] = Index(x0, x1, x2, x3-1);
 
+	    if(ix<VOLUME){
+	      g_coord[ix][0]=x0+g_proc_coords[0]*T;
+	      g_coord[ix][1]=x1+g_proc_coords[1]*LX;
+	      g_coord[ix][2]=x2+g_proc_coords[2]*LY;
+	      g_coord[ix][3]=x3+g_proc_coords[3]*LZ;
+	    }
 	  }
 	}
       }
@@ -669,28 +906,241 @@ void geometry(){
     }
   }
 
+  for(j=0; j<4; j++){  // NEW GIUPDNEO
+    for(ix=0;ix< (VOLUME+RAND);ix++){
+      g_iup_eo[ix][j]=g_lexic2eosub[g_iup[g_eo2lexic[ix]][j]];
+      g_idn_eo[ix][j]=g_lexic2eosub[g_idn[g_eo2lexic[ix]][j]];
+    }
+  }
 
-#if defined PARALLELXYZT
+/* this if statement will be removed in future and _INDEX_INDEP_GEOM will be the default */
+#if defined _INDEX_INDEP_GEOM 
+# ifdef _USE_TSPLITPAR
+  /* compute the first point (in eo system) of each timeslice */ 
+  for (x0 = 0; x0 < T; x0++){
+    ix = Index(x0,0,0,0);
+    if(xeven[ix]==1){
+      g_1st_eot[x0][0]=g_lexic2eo[ix];
+      g_1st_eot[x0][1]=g_lexic2eo[ix+1];
+    }else{
+      g_1st_eot[x0][0]=g_lexic2eo[ix+1];
+      g_1st_eot[x0][1]=g_lexic2eo[ix];
+    }
+
+    /* Starting points of ?t slices (eo) */
+    g_1st_xt_int_dn[x0]=g_lexic2eosub[Index(x0,0,0,0)];
+    g_1st_xt_int_up[x0]=g_lexic2eosub[Index(x0,LX-1,0,0)];
+    g_1st_xt_ext_dn[x0]=g_lexic2eosub[Index(x0,-1,0,0)];
+    g_1st_xt_ext_up[x0]=g_lexic2eosub[Index(x0,LX,0,0)];
+
+    g_1st_yt_int_dn[x0]=g_lexic2eosub[Index(x0,0,0,0)];
+    g_1st_yt_int_up[x0]=g_lexic2eosub[Index(x0,0,LY-1,0)];
+    g_1st_yt_ext_dn[x0]=g_lexic2eosub[Index(x0,0,-1,0)];
+    g_1st_yt_ext_up[x0]=g_lexic2eosub[Index(x0,0,LY,0)];
+
+    g_1st_zt_int_dn[x0]=g_lexic2eosub[Index(x0,0,0,0)];
+    g_1st_zt_int_up[x0]=g_lexic2eosub[Index(x0,0,0,LZ-1)];
+    g_1st_zt_ext_dn[x0]=g_lexic2eosub[Index(x0,0,0,-1)];
+    g_1st_zt_ext_up[x0]=g_lexic2eosub[Index(x0,0,0,LZ)];
+  }
+# endif
+  /* Starting points of the t, x, y, z slices at the borders (eo) */
+  g_1st_t_int_dn=g_lexic2eosub[Index(0,0,0,0)];
+  g_1st_t_int_up=g_lexic2eosub[Index(T-1,0,0,0)];
+  g_1st_t_ext_dn=g_lexic2eosub[Index(-1,0,0,0)];
+  g_1st_t_ext_up=g_lexic2eosub[Index(T,0,0,0)];
+  
+  g_1st_x_int_dn=g_lexic2eosub[Index(0,0,0,0)];
+  g_1st_x_int_up=g_lexic2eosub[Index(0,LX-1,0,0)];
+  g_1st_x_ext_dn=g_lexic2eosub[Index(0,-1,0,0)];
+  g_1st_x_ext_up=g_lexic2eosub[Index(0,LX,0,0)];
+  
+  g_1st_y_int_dn=g_lexic2eosub[Index(0,0,0,0)];
+  g_1st_y_int_up=g_lexic2eosub[Index(0,0,LY-1,0)];
+  g_1st_y_ext_dn=g_lexic2eosub[Index(0,0,-1,0)];
+  g_1st_y_ext_up=g_lexic2eosub[Index(0,0,LY,0)];
+  
+  g_1st_z_int_dn=g_lexic2eosub[Index(0,0,0,0)];
+  g_1st_z_int_up=g_lexic2eosub[Index(0,0,0,LZ-1)];
+  g_1st_z_ext_dn=g_lexic2eosub[Index(0,0,0,-1)];
+  g_1st_z_ext_up=g_lexic2eosub[Index(0,0,0,LZ)];
+
+  /* non even-odd */
+  gI_0_0_0_0=Index(0,0,0,0);
+
+  gI_L_0_0_0=Index(T,0,0,0);
+  gI_Lm1_0_0_0=Index(T-1,0,0,0);
+  gI_m1_0_0_0=Index(-1,0,0,0);
+  gI_p1_0_0_0=Index(1,0,0,0);
+  gI_Lp1_0_0_0=Index(T+1,0,0,0);
+  gI_Lm2_0_0_0=Index(T-2,0,0,0);
+  gI_m2_0_0_0=Index(-2,0,0,0);
+
+  gI_0_L_0_0=Index(0,LX,0,0);
+  gI_0_Lm1_0_0=Index(0,LX-1,0,0);
+  gI_0_m1_0_0=Index(0,-1,0,0);
+  gI_0_p1_0_0=Index(0,1,0,0);
+  gI_0_Lp1_0_0=Index(0,LX+1,0,0);
+  gI_0_Lm2_0_0=Index(0,LX-2,0,0);
+  gI_0_m2_0_0=Index(0,-2,0,0);
+
+  gI_0_0_L_0=Index(0,0,LY,0);
+  gI_0_0_Lm1_0=Index(0,0,LY-1,0);
+  gI_0_0_m1_0=Index(0,0,-1,0);
+  gI_0_0_p1_0=Index(0,0,1,0);
+  gI_0_0_Lp1_0=Index(0,0,LY+1,0);
+  gI_0_0_Lm2_0=Index(0,0,LY-2,0);
+  gI_0_0_m2_0=Index(0,0,-2,0);
+
+  gI_0_0_0_L=Index(0,0,0,LZ);
+  gI_0_0_0_Lm1=Index(0,0,0,LZ-1);
+  gI_0_0_0_m1=Index(0,0,0,-1);
+  gI_0_0_0_p1=Index(0,0,0,1);
+  gI_0_0_0_Lp1=Index(0,0,0,LZ+1);
+  gI_0_0_0_Lm2=Index(0,0,0,LZ-2);
+  gI_0_0_0_m2=Index(0,0,0,-2);
+
+  gI_L_L_0_0=Index(T,LX,0,0);
+  gI_Lm1_L_0_0=Index(T-1,LX,0,0);
+  gI_m1_L_0_0=Index(-1,LX,0,0);
+
+  gI_p1_L_0_0=Index(1,LX,0,0);
+  gI_Lp1_L_0_0=Index(T+1,LX,0,0);
+  gI_Lm2_L_0_0=Index(T-2,LX,0,0);
+  gI_m2_L_0_0=Index(-2,LX,0,0);
+
+  gI_L_Lp1_0_0=Index(T,LX+1,0,0);
+  gI_Lm1_Lp1_0_0=Index(T-1,LX+1,0,0);
+  gI_m1_Lp1_0_0=Index(-1,LX+1,0,0);
+
+  gI_0_L_L_0=Index(0,LX,LY,0);
+  gI_0_Lm1_L_0=Index(0,LX-1,LY,0);
+  gI_0_m1_L_0=Index(0,-1,LY,0);
+
+  gI_L_0_L_0=Index(T,0,LY,0);
+  gI_L_0_Lm1_0=Index(T,0,LY-1,0);
+  gI_L_0_m1_0=Index(T,0,-1,0);
+
+  gI_0_p1_L_0=Index(0,1,LY,0);
+  gI_0_Lp1_L_0=Index(0,LX+1,LY,0);
+  gI_0_Lm2_L_0=Index(0,LX-2,LY,0);
+  gI_0_m2_L_0=Index(0,-2,LY,0);
+
+  gI_0_L_Lp1_0=Index(0,LX,LY+1,0);
+  gI_0_Lm1_Lp1_0=Index(0,LX-1,LY+1,0);
+  gI_0_m1_Lp1_0=Index(0,-1,LY+1,0);
+
+  gI_Lp1_0_L_0=Index(T+1,0,LY,0);
+  gI_Lp1_0_Lm1_0=Index(T+1,0,LY-1,0);
+  gI_Lp1_0_m1_0=Index(T+1,0,-1,0);
+
+  gI_L_0_p1_0=Index(T,0,1,0);
+  gI_L_0_Lp1_0=Index(T,0,LY+1,0);
+  gI_L_0_Lm2_0=Index(T,0,LY-2,0);
+  gI_L_0_m2_0=Index(T,0,-2,0);
+
+  gI_0_L_0_L=Index(0,LX,0,LZ);
+  gI_0_Lm1_0_L=Index(0,LX-1,0,LZ);
+  gI_0_m1_0_L=Index(0,-1,0,LZ);
+
+  gI_L_0_0_L=Index(T,0,0,LZ);
+  gI_L_0_0_Lm1=Index(T,0,0,LZ-1);
+  gI_L_0_0_m1=Index(T,0,0,-1);
+
+  gI_0_L_0_L=Index(0,LX,0,LZ);
+  gI_0_Lm1_0_L=Index(0,LX-1,0,LZ);
+  gI_0_m1_0_L=Index(0,-1,0,LZ);
+
+  gI_Lp1_0_0_L=Index(T+1,0,0,LZ);
+  gI_Lp1_0_0_Lm1=Index(T+1,0,0,LZ-1);
+  gI_Lp1_0_0_m1=Index(T+1,0,0,-1);
+
+  gI_L_0_0_p1=Index(T,0,0,1);
+  gI_L_0_0_Lp1=Index(T,0,0,LZ+1);
+  gI_L_0_0_Lm2=Index(T,0,0,LZ-2);
+  gI_L_0_0_m2=Index(T,0,0,-2);
+
+  gI_0_L_0_Lp1=Index(0,LX,0,LZ+1);
+  gI_0_Lm1_0_Lp1=Index(0,LX-1,0,LZ+1);
+  gI_0_m1_0_Lp1=Index(0,-1,0,LZ+1);
+
+  gI_0_p1_0_L=Index(0,1,0,LZ);
+  gI_0_Lp1_0_L=Index(0,LX+1,0,LZ);
+  gI_0_Lm2_0_L=Index(0,LX-2,0,LZ);
+  gI_0_m2_0_L=Index(0,-2,0,LZ);
+
+  gI_0_0_L_L=Index(0,0,LY,LZ);
+  gI_0_0_Lm1_L=Index(0,0,LY-1,LZ);
+  gI_0_0_m1_L=Index(0,0,-1,LZ);
+
+  gI_0_0_L_Lp1=Index(0,0,LY,LZ+1);
+  gI_0_0_Lm1_Lp1=Index(0,0,LY-1,LZ+1);
+  gI_0_0_m1_Lp1=Index(0,0,-1,LZ+1);
+
+  gI_0_0_p1_L=Index(0,0,1,LZ);
+  gI_0_0_Lp1_L=Index(0,0,LY+1,LZ);
+  gI_0_0_Lm2_L=Index(0,0,LY-2,LZ);
+  gI_0_0_m2_L=Index(0,0,-2,LZ);
+
+  gI_Lp1_m1_0_0=Index(T+1,-1,0,0);
+  gI_m2_m1_0_0=Index(-2,-1,0,0);
+  gI_m2_0_L_0=Index(-2,0,LY,0);
+  gI_m2_0_m1_0=Index(-2,0,-1,0);
+  gI_0_Lp1_m1_0=Index(0,LX+1,-1,0);
+  gI_0_m2_m1_0=Index(0,-2,-1,0);
+  gI_m2_0_0_L=Index(-2,0,0,LZ);
+  gI_m2_0_0_m1=Index(-2,0,0,-1);
+  gI_0_Lp1_0_m1=Index(0,LX+1,0,-1);
+  gI_0_m2_0_m1=Index(0,-2,0,-1);
+  gI_0_0_Lp1_m1=Index(0,0,LY+1,-1);
+  gI_0_0_m2_m1=Index(0,0,-2,-1);
+  gI_m1_0_0_m2=Index(-1,0,0,-2);
+#endif /* _INDEX_INDEP_GEOM */
+
+#if ( defined PARALLELXYZT || defined PARALLELXYZ )
+  check_struct_zt=0;
   ix = 0;
   for(x0 = 0; x0 < T; x0++) {
+    isp = 0;
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	if((x0 + x1 + x2 +  
 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==0) { 
 	  g_field_z_ipt_even[ix] = g_lexic2eosub[ g_ipt[x0][x1][x2][0]];
+# ifdef _INDEX_INDEP_GEOM
+	  g_field_z_disp_even_dn[ix] = g_field_z_ipt_even[ix] - g_1st_z_int_dn;
+#  if defined _USE_TSPLITPAR
+	  g_field_zt_disp_even_dn[x0][isp] = g_lexic2eosub[ g_ipt[x0][x1][x2][0]]-g_1st_zt_int_dn[x0];
+	  if(g_field_zt_disp_even_dn[x0][isp] != g_field_zt_disp_even_dn[x0 % 2][isp]){
+	    check_struct_zt=1;
+	  }
+	  isp++;
+#  endif
+# endif
 	  ix++;
 	}
       }
     }
   }
   for(x0 = 0; x0 < T; x0++) {
+    isp = 0;
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	if((x0 + x1 + x2 + (LZ-1) + 
 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==0) { 
 	  g_field_z_ipt_even[ix] = g_lexic2eosub[ g_ipt[x0][x1][x2][LZ-1]];
+# ifdef _INDEX_INDEP_GEOM
+	  g_field_z_disp_even_up[ix-T*LX*LY/2] = g_field_z_ipt_even[ix] - g_1st_z_int_up;
+#  if defined _USE_TSPLITPAR
+	  g_field_zt_disp_even_up[x0][isp] = g_lexic2eosub[ g_ipt[x0][x1][x2][LZ-1]]-g_1st_zt_int_up[x0];
+	  if(g_field_zt_disp_even_up[x0][isp] != g_field_zt_disp_even_up[x0 % 2][isp]){
+	    check_struct_zt=1;
+	  }
+	  isp++;
+#  endif
+# endif
 	  ix++;
 	}
       }
@@ -698,38 +1148,118 @@ void geometry(){
   }
   ix = 0;
   for(x0 = 0; x0 < T; x0++) {
+    isp = 0;
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	if((x0 + x1 + x2 +  
 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==1) { 
 	  g_field_z_ipt_odd[ix] = g_lexic2eosub[ g_ipt[x0][x1][x2][0]];
+# ifdef _INDEX_INDEP_GEOM
+	  g_field_z_disp_odd_dn[ix] = g_field_z_ipt_odd[ix] - g_1st_z_int_dn;
+#  if defined _USE_TSPLITPAR
+	  g_field_zt_disp_odd_dn[x0][isp] = g_lexic2eosub[ g_ipt[x0][x1][x2][0]]-g_1st_zt_int_dn[x0];
+	  if(g_field_zt_disp_odd_dn[x0][isp] != g_field_zt_disp_odd_dn[x0 % 2][isp]){
+	    check_struct_zt=1;
+	  }
+	  isp++;
+#  endif
+# endif
 	  ix++;
 	}
       }
     }
   }
   for(x0 = 0; x0 < T; x0++) {
+    isp = 0;
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	if((x0 + x1 + x2 + (LZ-1) + 
 	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
 	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2==1) { 
 	  g_field_z_ipt_odd[ix] = g_lexic2eosub[ g_ipt[x0][x1][x2][LZ-1]];
+# ifdef _INDEX_INDEP_GEOM
+	  g_field_z_disp_odd_up[ix-T*LX*LY/2] = g_field_z_ipt_odd[ix] - g_1st_z_int_up;
+#  if defined _USE_TSPLITPAR
+	  g_field_zt_disp_odd_up[x0][isp] = g_lexic2eosub[ g_ipt[x0][x1][x2][LZ-1]]-g_1st_zt_int_up[x0];
+	  if(g_field_zt_disp_odd_up[x0][isp] != g_field_zt_disp_odd_up[x0 % 2][isp]){
+	    check_struct_zt=1;
+	  }
+	  isp++;
+#  endif
+# endif
 	  ix++;
 	}
       }
     }
   }
-#endif
+
+#  if defined _USE_TSPLITPAR
+  if(check_struct_zt !=0){
+    if(g_proc_id == 0) {
+      fprintf(stderr,"Error in assuming the structure of dispacements of zt slice\n");
+      fflush(stderr);
+      MPI_Finalize();
+      exit(-1);
+    }
+  }
+#  endif
+
+# ifdef _INDEX_INDEP_GEOM
+  /* Define the MPI_Types using the displacement vectors above and MPI_Type_indexed() */
+  ones=malloc(T*LX*LY/2*sizeof(int));
+  for(j=0;j<T*LX*LY/2;j++) ones[j]=1;
+  MPI_Type_indexed(T*LX*LY/2,ones,g_field_z_disp_even_dn,field_point,&field_z_slice_even_dn);
+  MPI_Type_indexed(T*LX*LY/2,ones,g_field_z_disp_even_up,field_point,&field_z_slice_even_up);
+  MPI_Type_indexed(T*LX*LY/2,ones,g_field_z_disp_odd_dn,field_point,&field_z_slice_odd_dn);
+  MPI_Type_indexed(T*LX*LY/2,ones,g_field_z_disp_odd_up,field_point,&field_z_slice_odd_up);
+  MPI_Type_commit(&field_z_slice_even_dn);
+  MPI_Type_commit(&field_z_slice_even_up);
+  MPI_Type_commit(&field_z_slice_odd_dn);
+  MPI_Type_commit(&field_z_slice_odd_up);
+  free(ones);
+
+#  if defined _USE_TSPLITPAR
+  /* LZ and T*LX*LY are required to be even, but LX*LY does not need to */
+  /* length zt slice=ceil(LX*LY/2) = (LX*LY+1)/2, if parity(t)*parity(z)*globalparity=1   */
+  /* length zt slice=floor(LX*LY/2) = LX*LY/2, if parity(t)*parity(z)*globalparity=-1   */
+  lsliceL=(LX*LY+1)/2;
+  lsliceS=(LX*LY/2);
+  oneL=malloc(lsliceL*sizeof(int));
+  oneS=malloc(lsliceS*sizeof(int));
+  for(j=0;j<lsliceL;j++) oneL[j]=1;
+  for(j=0;j<lsliceS;j++) oneS[j]=1;
+
+  MPI_Type_indexed(lsliceL,oneL,g_field_zt_disp_even_dn[0],field_point,&field_zt_slice_even_dn_et);
+  MPI_Type_commit(&field_zt_slice_even_dn_et);
+  MPI_Type_indexed(lsliceS,oneS,g_field_zt_disp_even_up[0],field_point,&field_zt_slice_even_up_et);
+  MPI_Type_commit(&field_zt_slice_even_up_et);
+  MPI_Type_indexed(lsliceS,oneS,g_field_zt_disp_odd_dn[0],field_point,&field_zt_slice_odd_dn_et);
+  MPI_Type_commit(&field_zt_slice_odd_dn_et);
+  MPI_Type_indexed(lsliceL,oneL,g_field_zt_disp_odd_up[0],field_point,&field_zt_slice_odd_up_et);
+  MPI_Type_commit(&field_zt_slice_odd_up_et);
+  MPI_Type_indexed(lsliceS,oneS,g_field_zt_disp_even_dn[1],field_point,&field_zt_slice_even_dn_ot);
+  MPI_Type_commit(&field_zt_slice_even_dn_ot);
+  MPI_Type_indexed(lsliceL,oneL,g_field_zt_disp_even_up[1],field_point,&field_zt_slice_even_up_ot);
+  MPI_Type_commit(&field_zt_slice_even_up_ot);
+  MPI_Type_indexed(lsliceL,oneL,g_field_zt_disp_odd_dn[1],field_point,&field_zt_slice_odd_dn_ot);
+  MPI_Type_commit(&field_zt_slice_odd_dn_ot);
+  MPI_Type_indexed(lsliceS,oneS,g_field_zt_disp_odd_up[1],field_point,&field_zt_slice_odd_up_ot);
+  MPI_Type_commit(&field_zt_slice_odd_up_ot);
+
+#  endif
+# endif
+
+#endif /* PARALLELXYZ || PARALLELXYZT*/
+
   /* The rectangular gauge action part */
   /* Everything is stored behind VOLUMEPLUSRAND-1 !*/
   if(g_dbw2rand != 0) {
-#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
     if(g_proc_id == 0) {
       printf("# Initialising rectangular gauge action stuff\n");
       fflush(stdout);
     }
+#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
     for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++){
       for (x2 = -startvaluey; x2 < (LY+startvaluey); x2++) {
 	for (x3 = -startvaluez; x3 < (LZ+startvaluez); x3++) {
@@ -779,7 +1309,7 @@ void geometry(){
       }
     }    
 #endif
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ)
     for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
       for (x2 = -startvaluey; x2 < (LY+startvaluey); x2++) {
 	for (x3 = -startvaluez; x3 < (LZ+startvaluez); x3++) {
@@ -827,7 +1357,7 @@ void geometry(){
       }
     }
 #endif
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ)
     for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
       for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++) {
 	for (x3 = -startvaluez; x3 < (LZ+startvaluez); x3++) {
@@ -875,7 +1405,7 @@ void geometry(){
       }
     }
 #endif
-#if (defined PARALLELXYZT)
+#if (defined PARALLELXYZT || defined PARALLELXYZ)
     for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
       for (x1 = -startvaluex; x1 < (LX+startvaluex); x1++) {
 	for (x2 = -startvaluey; x2 < (LY+startvaluey); x2++) {

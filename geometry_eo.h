@@ -19,6 +19,7 @@
 #ifndef _GEOMETRY_EO_H
 #define _GEOMETRY_EO_H
 
+int Index(const int, const int, const int, const int);
 void geometry();
 
 #endif
