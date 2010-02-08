@@ -950,3 +950,82 @@ void start_ranlux(int level,int seed)
    rlxs_init(level-1,loc_seed);
    rlxd_init(level,loc_seed);
 }
+
+void gen_test_spinor_field(spinor * const k, const int eoflag) {
+
+  int ix,iy,effvol;
+  spinor *s;
+  double invind,invvol;
+
+  if (eoflag==1) {
+    effvol=VOLUME/2;
+  }else{
+    effvol=VOLUME;
+  }
+
+  invvol=1/(VOLUME*100);
+  s = k;
+
+  for(ix = 0; ix < effvol; ix++){
+    if (eoflag==1) {
+      iy=g_eo2lexic[ix];
+    }else{
+      iy=ix;
+    }
+    
+    invind=(double)(((g_coord[iy][0]*g_nproc_x*LX + g_coord[iy][1])*g_nproc_y*LY + g_coord[iy][2])*g_nproc_z*LZ + g_coord[iy][3] + 1.0);
+    invind=1.0/invind;
+    (*s).s0.c0.re=invind;
+    (*s).s0.c0.im=0.;
+    (*s).s0.c1.re=invind+invvol;
+    (*s).s0.c1.im=0.;
+    (*s).s0.c2.re=invind+invvol/2.0;
+    (*s).s0.c2.im=0.;
+    (*s).s1.c0.re=invind+invvol/3.0;
+    (*s).s1.c0.im=0.;
+    (*s).s1.c1.re=invind+invvol/4.0;
+    (*s).s1.c1.im=0.;
+    (*s).s1.c2.re=invind+invvol/5.0;
+    (*s).s1.c2.im=0.;
+    (*s).s2.c0.re=invind+invvol/6.0;
+    (*s).s2.c0.im=0.;
+    (*s).s2.c1.re=invind+invvol/7.0;
+    (*s).s2.c1.im=0.;
+    (*s).s2.c2.re=invind+invvol/8.0;
+    (*s).s2.c2.im=0.;
+    (*s).s3.c0.re=invind+invvol/9.0;
+    (*s).s3.c0.im=0.;
+    (*s).s3.c1.re=invind+invvol/10.0;
+    (*s).s3.c1.im=0.;
+    (*s).s3.c2.re=invind+invvol/11.0;
+    (*s).s3.c2.im=0.;
+    s++;
+  }
+
+}
+
+void write_test_spinor_field(spinor * const k, const int eoflag, char * postfix) {
+  FILE * testout;
+  char  filenames[50];
+  int ix,iy,effvol;
+
+  sprintf(filenames,"test_out.%.4d.",g_proc_id);
+  strcat(filenames,postfix);
+  testout=fopen(filenames,"w");
+
+  if (eoflag==1) {
+    effvol=VOLUME/2;
+  }else{
+    effvol=VOLUME;
+  }
+
+  for(ix = 0; ix < effvol; ix++){
+    if (eoflag==1) {
+      iy=g_eo2lexic[ix];
+    }else{
+      iy=ix;
+    }
+    fprintf(testout,"[%d,%d,%d,%d;0,0]:%e\n",g_coord[iy][0],g_coord[iy][1],g_coord[iy][2],g_coord[iy][3],(k[ix]).s0.c0.re);
+  }
+  fclose(testout);
+}
