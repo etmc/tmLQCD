@@ -23,5 +23,6 @@
 int init_spinor_field(const int V, const int nr);
 int init_csg_field(const int V);
 void free_spinor_field();
+int init_timslice_buffer_field(const int t_slice);
 
 #endif

@@ -34,6 +34,7 @@
 
 spinor * sp = NULL;
 spinor * sp_csg = NULL;
+spinor * sp_tbuff = NULL;
 
 int init_spinor_field(const int V, const int nr) {
   int i = 0;
@@ -144,3 +145,20 @@ int init_csg_field(const int V) {
 }
 
 #endif
+
+int init_timslice_buffer_field(const int t_slice) {
+  
+  if((void*)(sp_tbuff = (spinor*)calloc(t_slice+1, sizeof(spinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno);
+    errno = 0;
+    return(3);
+  }
+
+#if (( defined SSE || defined SSE2 || defined SSE3) && defined _USE_TSPLITPAR )
+  g_tbuff = (spinor*)(((unsigned long int)(sp_tbuff)+ALIGN_BASE)&~ALIGN_BASE);
+#else 
+  g_tbuff = sp_tbuff;
+#endif
+  
+  return(0);
+}
