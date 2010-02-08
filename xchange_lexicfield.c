@@ -46,9 +46,118 @@
 #include "su3.h"
 #include "xchange_lexicfield.h"
 
+/* this version uses non-blocking MPI calls */
 #if (defined _NON_BLOCKING)
 
-/* this version uses non-blocking MPI calls */
+/* this is the version independent of the content of the function Index (only available with non-blocking)) */
+/* this if statement will be removed in future and _INDEX_INDEP_GEOM will be the default */
+# if defined _INDEX_INDEP_GEOM
+
+void xchange_lexicfield(spinor * const l) {
+
+#ifdef MPI
+  MPI_Request requests[16];
+  MPI_Status status[16];
+#endif
+  int ireq;
+#  if ( defined PARALLELT || defined PARALLELX )
+  int reqcount = 4;
+#  elif ( defined PARALLELXT || defined PARALLELXY )
+  int reqcount = 8;
+#  elif ( defined PARALLELXYT || defined PARALLELXYZ )
+  int reqcount = 12;
+#  elif defined PARALLELXYZT
+  int ix=0;
+  int reqcount = 16;
+#  endif
+
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(xchange_lexicfield)
+#endif
+#  if (defined BGL && defined XLC)
+  __alignx(16, l);
+#  endif
+
+#  ifdef MPI
+
+
+  ireq=0;
+
+#    if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT )
+  /* send the data to the neighbour on the left */
+  /* recieve the data from the neighbour on the right */
+  MPI_Isend((void*)(l+gI_0_0_0_0), 1, lfield_time_slice_cont, g_nb_t_dn, 5081, g_cart_grid, &requests[ireq]);
+  MPI_Irecv((void*)(l+gI_L_0_0_0), 1, lfield_time_slice_cont, g_nb_t_up, 5081, g_cart_grid, &requests[ireq+1]);
+  ireq=ireq+4;
+#    endif
+
+
+#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
+  /* send the data to the neighbour on the left in x direction */
+  /* recieve the data from the neighbour on the right in x direction */
+  MPI_Isend((void*)(l+gI_0_0_0_0), 1, lfield_x_slice_gath, g_nb_x_dn, 5091, g_cart_grid,  &requests[ireq]);
+  MPI_Irecv((void*)(l+gI_0_L_0_0), 1, lfield_x_slice_cont, g_nb_x_up, 5091, g_cart_grid, &requests[ireq+1]);
+  ireq=ireq+4;
+#    endif
+  
+#    if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ )
+  /* send the data to the neighbour on the left in y direction */
+  /* recieve the data from the neighbour on the right in y direction */
+  MPI_Isend((void*)(l+gI_0_0_0_0), 1, lfield_y_slice_gath, g_nb_y_dn, 5101, g_cart_grid, &requests[ireq]);
+  MPI_Irecv((void*)(l+gI_0_0_L_0), 1, lfield_y_slice_cont, g_nb_y_up, 5101, g_cart_grid, &requests[ireq+1]);
+  ireq=ireq+4;
+#    endif
+  
+#    if (defined PARALLELXYZT || defined PARALLELXYZ )  
+  /* send the data to the neighbour on the left in z direction */
+  /* recieve the data from the neighbour on the right in z direction */
+  MPI_Isend((void*)(l+gI_0_0_0_0), 1, lfield_z_slice_gath, g_nb_z_dn, 5503, g_cart_grid, &requests[ireq]); 
+  MPI_Irecv((void*)(l+gI_0_0_0_L), 1, lfield_z_slice_cont, g_nb_z_up, 5503, g_cart_grid, &requests[ireq+1]); 
+  ireq=ireq+4;
+#    endif
+
+  ireq=2;
+
+#    if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT )
+  /* send the data to the neighbour on the right */
+  /* recieve the data from the neighbour on the left */
+  MPI_Isend((void*)(l+gI_Lm1_0_0_0), 1, lfield_time_slice_cont, g_nb_t_up, 5082, g_cart_grid, &requests[ireq]);
+  MPI_Irecv((void*)(l+gI_m1_0_0_0), 1, lfield_time_slice_cont, g_nb_t_dn, 5082, g_cart_grid, &requests[ireq+1]);
+  ireq=ireq+4;
+#endif
+  
+#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
+  /* send the data to the neighbour on the right in x direction */
+  /* recieve the data from the neighbour on the left in x direction */  
+  MPI_Isend((void*)(l+gI_0_Lm1_0_0), 1, lfield_x_slice_gath, g_nb_x_up, 5092, g_cart_grid, &requests[ireq]);
+  MPI_Irecv((void*)(l+gI_0_m1_0_0), 1, lfield_x_slice_cont, g_nb_x_dn, 5092, g_cart_grid, &requests[ireq+1]);
+  ireq=ireq+4;
+#    endif
+  
+#    if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ )
+  /* send the data to the neighbour on the right in y direction */
+  /* recieve the data from the neighbour on the left in y direction */  
+  MPI_Isend((void*)(l+gI_0_0_Lm1_0), 1, lfield_y_slice_gath, g_nb_y_up, 5102, g_cart_grid, &requests[ireq]);
+  MPI_Irecv((void*)(l+gI_0_0_m1_0), 1, lfield_y_slice_cont, g_nb_y_dn, 5102, g_cart_grid, &requests[ireq+1]);
+  ireq=ireq+4;
+#    endif
+  
+#    if ( defined PARALLELXYZT || defined PARALLELXYZ )  
+  /* send the data to the neighbour on the right in y direction */
+  /* recieve the data from the neighbour on the left in y direction */  
+  MPI_Isend((void*)(l+gI_0_0_0_Lm1), 1, lfield_z_slice_gath, g_nb_z_up, 5504, g_cart_grid, &requests[ireq]); 
+  MPI_Irecv((void*)(l+gI_0_0_0_m1), 1, lfield_z_slice_cont, g_nb_z_dn, 5504, g_cart_grid, &requests[ireq+1]); 
+#    endif
+  
+  MPI_Waitall(reqcount, requests, status);
+
+#  endif
+  return;
+#ifdef _KOJAK_INST
+#pragma pomp inst end(xchange_lexicfield)
+#endif
+}
+# else /* _INDEX_INDEP_GEOM */
 
 void xchange_lexicfield(spinor * const l) {
 
@@ -134,7 +243,9 @@ void xchange_lexicfield(spinor * const l) {
 #pragma pomp inst end(xchange_lexicfield)
 #endif
 }
-#else
+
+# endif /* _INDEX_INDEP_GEOM */
+#else /* _NON_BLOCKING */
 
 
 /* Here comes the naive version */  

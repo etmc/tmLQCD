@@ -48,9 +48,10 @@
 #include "init_dirac_halfspinor.h"
 #include "xchange_halffield.h"
 
-
+#if (!defined _INDEX_INDEP_GEOM)
 #if (defined _USE_SHMEM && defined _USE_HALFSPINOR)
 # include <mpp/shmem.h>
+/* 1. */
 void xchange_halffield() {
 
 #ifdef _KOJAK_INST
@@ -98,7 +99,7 @@ void xchange_halffield() {
 #    endif
 
   shmem_barrier_all();
-#  endif
+#  endif /* MPI */
   return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(xchangehalf)
@@ -109,6 +110,7 @@ void xchange_halffield() {
 
 MPI_Request prequests[16];
 
+/* 2. */
 void init_xchange_halffield() {
 
 #  ifdef MPI
@@ -197,8 +199,11 @@ void init_xchange_halffield() {
   MPI_Recv_init((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
 		T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &prequests[15]); 
 #  endif
+#  endif /* MPI */
+  return;
 }
 
+/* 3. */
 void xchange_halffield() {
 #  ifdef MPI
 
@@ -219,14 +224,13 @@ void xchange_halffield() {
   MPI_Startall(reqcount, prequests);
 
   MPI_Waitall(reqcount, prequests, status); 
-#  endif
+#  endif /* MPI */
   return;
-
-#  endif
 }
 
-#else
+#else /* def _USE_HALFSPINOR && (_USE_SHMEM || _PERSISTENT) */ 
 
+/* 4. */
 void xchange_halffield() {
 
 #  ifdef MPI
@@ -321,7 +325,7 @@ void xchange_halffield() {
 #    endif
 
   MPI_Waitall(reqcount, requests, status); 
-#  endif
+#  endif /* MPI */
   return;
 
 #ifdef _KOJAK_INST
@@ -329,10 +333,12 @@ void xchange_halffield() {
 #endif
 }
 
-#endif
+#endif /* def _USE_HALFSPINOR && (_USE_SHMEM || _PERSISTENT) */ 
 
 #if (defined _USE_SHMEM && defined _USE_HALFSPINOR)
 # include <mpp/shmem.h>
+
+/* 32-1. */
 void xchange_halffield32() {
 
 #ifdef _KOJAK_INST
@@ -380,15 +386,16 @@ void xchange_halffield32() {
 #    endif
 
   shmem_barrier_all();
-#  endif
+#  endif /* MPI */
   return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(xchangehalf32)
 #endif
 }
 
-#else
+#else /* (defined _USE_SHMEM && defined _USE_HALFSPINOR) */
 
+/* 32-2. */
 void xchange_halffield32() {
 
 #  ifdef MPI
@@ -483,11 +490,13 @@ void xchange_halffield32() {
 #    endif
 
   MPI_Waitall(reqcount, requests, status); 
-#  endif
+#  endif /* MPI */
   return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(xchangehalf32)
 #endif
 }
-#endif
+#endif /* (defined _USE_SHMEM && defined _USE_HALFSPINOR) */
+#endif /* (!defined _INDEX_INDEP_GEOM) */
+
 static char const rcsid[] = "$Id$";
