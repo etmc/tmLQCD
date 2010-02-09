@@ -64,7 +64,7 @@ NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert gwc2ildg \
 	ildg2gwc single2double double2single reducenoise gen_sources  \
-	check_locallity test_lemon
+	check_locallity test_lemon hopping_test
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = io linalg solver
