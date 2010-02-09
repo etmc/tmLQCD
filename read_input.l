@@ -1348,6 +1348,10 @@ inline void rmQuotes(char *str){
   read_source_flag=0;
   if(myverbose!=0) printf("Don't read inversion source from file\n");
 }
+<READSOURCE>nobutsave {
+  read_source_flag=2;
+  if(myverbose!=0) printf("Don't read inversion source from file, but save the one generated\n");
+}
 <SOURCEFILE>{FILENAME} {
   if(SourceInfo.basename == NULL) free(SourceInfo.basename);
   SourceInfo.basename = (char*)malloc((strlen(yytext)+1)*sizeof(char));
