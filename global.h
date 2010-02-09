@@ -89,7 +89,7 @@ EXTERN int g_sloppy_precision;
 EXTERN int **** g_ipt;
 EXTERN int ** g_iup;
 EXTERN int ** g_idn;
-EXTERN int ** g_iup_eo; /*  NEW GIUPDNEO */
+EXTERN int ** g_iup_eo; /* NEW GIUPDNEO */
 EXTERN int ** g_idn_eo;
 EXTERN int ** g_coord;
 
@@ -130,6 +130,7 @@ EXTERN int gI_L_0_0_p1,gI_L_0_0_Lp1,gI_L_0_0_Lm2,gI_L_0_0_m2,gI_0_L_0_Lp1,gI_0_L
 EXTERN int gI_0_Lp1_0_L,gI_0_Lm2_0_L,gI_0_m2_0_L,gI_0_0_L_Lp1,gI_0_0_Lm1_Lp1,gI_0_0_m1_Lp1,gI_0_0_p1_L;
 EXTERN int gI_0_0_Lp1_L,gI_0_0_Lm2_L,gI_0_0_m2_L,gI_Lp1_m1_0_0,gI_m2_m1_0_0,gI_m2_0_L_0,gI_m2_0_m1_0,gI_0_Lp1_m1_0;
 EXTERN int gI_0_m2_m1_0,gI_m2_0_0_L,gI_m2_0_0_m1,gI_0_Lp1_0_m1,gI_0_m2_0_m1,gI_0_0_Lp1_m1,gI_0_0_m2_m1,gI_m1_0_0_m2;
+EXTERN int gI_0_0_L_L, gI_0_0_m1_L, gI_0_0_Lm1_L;
 
 # ifdef _USE_TSPLITPAR
 EXTERN int ** g_field_zt_disp_even_dn;
