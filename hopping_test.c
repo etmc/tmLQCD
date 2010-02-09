@@ -113,14 +113,8 @@ int main(int argc,char *argv[])
   int ix, n, *nn,i;
   double delta, deltamax;
   spinor rsp;
-  su3_vector ctemp;
 
-  static double t1,t2,dt,sdt,dts,qdt,sqdt;
-  double antioptaway=0.0;
 #ifdef MPI
-  static double dt2;
-  
-
   DUM_DERI = 6;
   DUM_SOLVER = DUM_DERI+2;
   DUM_MATRIX = DUM_SOLVER+6;
@@ -274,21 +268,20 @@ int main(int argc,char *argv[])
   if(even_odd_flag) {
     /*initialize the pseudo-fermion fields*/
     j_max=1;
-    sdt=0.;
     for (k = 0; k < k_max; k++) {
       random_spinor_field(g_spinor_field[k], VOLUME/2, 0);
     }
 
     if (read_source_flag == 2) { /* save */
       /* even first, odd second */
-      write_spinorfield_cm_single(g_spinor_field[0],g_spinor_field[1],source_input_filename);  
+      write_spinorfield_cm_single(g_spinor_field[0],g_spinor_field[1],SourceInfo.basename);  
     }	else if (read_source_flag == 1) { /* yes */
       /* even first, odd second */
-      read_spinorfield_cm_single(g_spinor_field[0],g_spinor_field[1],source_input_filename,-1,0); 
+      read_spinorfield_cm_single(g_spinor_field[0],g_spinor_field[1],SourceInfo.basename,-1,0); 
 # if (!defined MPI)
       if (write_cp_flag == 1) {
-	strcat(source_input_filename,".2");
-	read_spinorfield_cm_single(g_spinor_field[2],g_spinor_field[3],source_input_filename,-1,0); 
+	strcat(SourceInfo.basename,".2");
+	read_spinorfield_cm_single(g_spinor_field[2],g_spinor_field[3],SourceInfo.basename,-1,0); 
 
 	nn=(int*)calloc(VOLUME,sizeof(int));
 	if((void*)nn == NULL) return(100);
@@ -381,8 +374,8 @@ int main(int argc,char *argv[])
       /* first spinorial arg is output, the second is input */
       Hopping_Matrix(1, g_spinor_field[1], g_spinor_field[0]);      /*ieo=1 M_{eo}*/
       Hopping_Matrix(0, g_spinor_field[0], g_spinor_field[1]);      /*ieo=0 M_{oe}*/
-      strcat(source_input_filename,".out");
-      write_spinorfield_cm_single(g_spinor_field[0],g_spinor_field[1],source_input_filename);
+      strcat(SourceInfo.basename,".out");
+      write_spinorfield_cm_single(g_spinor_field[0],g_spinor_field[1],SourceInfo.basename);
       printf("Check-field printed. Exiting...\n");
       fflush(stdout);
     }
