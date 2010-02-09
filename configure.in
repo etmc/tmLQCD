@@ -614,7 +614,7 @@ fi
 if test $enable_iig = yes && test $enable_halfspinor = yes ; then
   AC_MSG_ERROR(ERROR! indexindepgeom is not compatible with  halfspinors )
 fi
-if test $enable_tsp = yes && test $enable_iig != yes; then
+if test $enable_tsp = yes && test $enable_iig = no; then
   AC_MSG_ERROR(ERROR! tsplitpar needs indexindepgeom)
 fi
 if test $enable_tsp = yes && test $enable_halfspinor = yes ; then
