@@ -1,0 +1,27 @@
+hopping_test allows the debug of new version of the hopping matrix
+(parallel or not) against a previous and reliable one.
+
+1. compile hopping_test.c (main directory hmc) using the reliable
+Hopping_Matrix for a single processor and call the executable, say,
+hopping_test_ref
+
+2. compile hopping_test.c using the new parallel Hopping_Matrix and
+call it, say hopping_test_new
+
+3. use the script hopping_test_generate_script to generate input
+random gauge configs, input random spinor configs and output random
+spinor configs that are saved in the new directory confs. This is
+repeated for all the choices of L and T specified in the loop inside
+the script.  The script will need also the template input files
+hopping_test.input.start See comments in hopping_test_generate_script
+for more info.
+
+4. use the script hopping_test_qscript to check that the new
+Hopping_Matrix produces the same spinor output, after reading the
+gauge and spinor input saved before.  The script hopping_test_qscript
+needs the specification of the number of processes and tries all
+allowed parallelization for all the lattice sizes specified in the
+loop.  Results arewritten in files res_$suff/out_* and
+res_$suff/diff_*.  The script will need also the template input files
+hopping_test.input.new hopping_test.input.compare.  See comments in
+hopping_test_qscript for more info.

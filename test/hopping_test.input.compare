@@ -1,4 +1,4 @@
-# This only compares SourceInputFilename with SourceInputFilename.2 (no MPI)
+# This only compares SourceFilename with SourceFilename.2 (no MPI)
 T=TT
 L=LL
 NrXProcs=NX
@@ -14,6 +14,6 @@ Startcondition = cold
 GaugeConfigInputFile = gaugeconf
 #ReadSource:yes(read from SourceInputFilename), no(random), save(random spinor, written on SourceInputFilename).
 ReadSource = yes
-SourceInputFilename = spincolorfield
+SourceFilename = spincolorfield
 
 WriteCheckpoints = yes

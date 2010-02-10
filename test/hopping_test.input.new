@@ -1,5 +1,6 @@
 T=TT
 L=LL
+
 NrXProcs=NX
 NrYProcs=NY
 NrZProcs=NZ
@@ -13,6 +14,6 @@ Startcondition = continue
 GaugeConfigInputFile = gaugeconf
 #ReadSource:yes(read from SourceInputFilename), no(random), save(random spinor, written on SourceInputFilename).
 ReadSource = yes
-SourceInputFilename = spincolorfield
+SourceFilename = spincolorfield
 
 WriteCheckpoints = no

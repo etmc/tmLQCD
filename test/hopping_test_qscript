@@ -8,17 +8,20 @@
 #$ -o outfile
 #$ -pe mpi 8
 
-#######  README:
-# This script should be run after generate_ref_iofields (see explamations there)
-######## parameters to set
-suff=XYZtsp
-nxmax=100 # 100 if x direction is not parallelized, 100 otherwise
-nymax=100 # 100 if y direction is not parallelized, 100 otherwise
-nzmax=100 # 100 if z direction is not parallelized, 100 otherwise
+#######  
+# This script should be run after hopping_test_generate_script (see explamations there)
+# see hopping_test.README for a general overview
+# see below for the explanation of the parameters
+######## parameters to set:
+suff=XYZtsp # suffix for the program name and also suffix of the directory name 
+            # res_$suff containing the results
+nxmax=100 # 1 if x direction is not parallelized, 100 otherwise
+nymax=100 # 1 if y direction is not parallelized, 100 otherwise
+nzmax=100 # 1 if z direction is not parallelized, 100 otherwise
 ntmax=1 # 1 if t direction is not parallelized, 100 otherwise
-joke=0
 ###################
 
+joke=0
 ini openmpi
 program=hopping_test_${suff}
 procs=$NSLOTS

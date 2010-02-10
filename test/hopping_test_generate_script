@@ -9,17 +9,19 @@
 # produces the same result for all allowed parallelizations (with the number of procs and 
 # lattices specified there)
 
-mkdir -f confs
+program=hopping_test_ref
+
+mkdir -p confs
 
 for ll in 4 6 8 10 12 14 16 ; do
- for tt in 4 5 6 7 8 9 10 16 20 24 ; do
+    for tt in 4 5 6 7 8 9 10 16 20 24 ; do
 
   echo "$ll - $tt"
 
   rm -f spincolorfield spincolorfield.out gaugeconf
 
-  sed s/TT/${tt}/g hopping_test.input.start  | sed s/LL/${ll}/g | sed s/NX/${nx}/g | sed s/NY/${ny}/g | sed s/NZ/${nz}/g > hopping_test.input
-  ./hopping_test_ref > confs/out_L${ll}T${tt}
+  sed s/TT/${tt}/g hopping_test.input.start  | sed s/LL/${ll}/g | sed s/NX/1/g | sed s/NY/1/g | sed s/NZ/1/g > hopping_test.input
+  ./$program > confs/out_L${ll}T${tt}
   mv spincolorfield confs/spincolorfield.in.L${ll}T${tt}
   mv spincolorfield.out confs/spincolorfield.out.L${ll}T${tt}
   mv gaugeconf confs/gaugeconf.L${ll}T${tt}
