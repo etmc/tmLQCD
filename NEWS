@@ -1,3 +1,18 @@
+10.02.2010: New hopping_test.c routing to test the parallel version of
+	    an Hopping_Matrix
+
+10.02.2010: when compiling with --enable-tsplitpar, the communications in the 
+	    Hopping Matrix are splitted and performed after each timeslice. 
+            This allows the overlap of communications and computations.
+	    tsplitpar needs indexindepgeom, SSE2/3, gaugecopy
+
+10.02.2010: when compiling with --enable-indexindepgeom, the xchange routines do not 
+	    rely of absolute addressing anymore, but on addresses gI_?_?_?_? which are
+	    defined based on the function Index.
+	    This enable the parallelization in X, XY, XYZ directions
+	    which is obtained --with-mpidimension=XYZ ...
+	    indexindepgeom is still not compatible with blocking-mpi of halfspinors
+
 13.11.2009: parallel IO for gauge fields tested and working.
             parallel reading of Checksum still buggy, but not essential
 
