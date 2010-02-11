@@ -1,25 +1,3 @@
-/***********************************************************************
- * Copyright (C) 2010 Florian Burger 
- *
- * This file is part of tmLQCD.
- *
- * tmLQCD is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * tmLQCD is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-
-/***********************************************************************
- * This provides a NVIDIA CUDA implementation of a mixed-precision solver 
-************************************************************************/
 
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -36,27 +14,31 @@
 
 
 extern "C" {
-#include "../tm_operators.h"
-#include "../linalg_eo.h"
-#include "../start.h"
-#include "../complex.h"
-#include "../read_input.h"
-#include "../geometry_eo.h"
-#include "../boundary.h"
+#include "tm_operators.h"
+#include "linalg_eo.h"
+#include "start.h"
+#include "complex.h"
+#include "read_input.h"
+#include "geometry_eo.h"
+#include "boundary.h"
+#include "su3.h"
 }
 
 #define ACCUM_N 2048
 #define DOTPROD_DIM 128
 
-
+//#define GF_8
 
 
 int g_numofgpu;
 
-
+#ifdef GF_8
+dev_su3_8 * dev_gf;
+dev_su3_8 * h2d_gf;
+#else
 dev_su3_2v * dev_gf;
 dev_su3_2v * h2d_gf;
-
+#endif
 
 
 dev_spinor* dev_spin1;
@@ -1105,11 +1087,9 @@ __device__ void dev_reconstructgf_2vtexref_dagger (int pos, dev_su3* gf){
 
 
 
-
-
-
-
-
+/*
+// reconstruction of the gf using 8 real parameters as 
+// described in the appendix of hep-lat 0911.3191 (M.Clark et al.)
 __device__ void dev_reconstructgf_8texref (int pos, dev_su3* gf){
 
   float4 gfin;
@@ -1125,7 +1105,7 @@ __device__ void dev_reconstructgf_8texref (int pos, dev_su3* gf){
  
   help = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
   N = sqrtf(help);
-  one_over_N = 1.0/N;
+  one_over_N = 1.0f/N;
   
   // read theta_a1, theta_c1, b1
   gfin = tex1Dfetch(gf_tex,2*pos + 1);
@@ -1145,7 +1125,7 @@ __device__ void dev_reconstructgf_8texref (int pos, dev_su3* gf){
 
 
   // reconstruct c1
-  help = sqrtf(1.0 - 
+  help = sqrtf(1.0f - 
               (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
               (*gf)[1][0].re * (*gf)[1][0].re - (*gf)[1][0].im * (*gf)[1][0].im
           );
@@ -1167,8 +1147,8 @@ __device__ void dev_reconstructgf_8texref (int pos, dev_su3* gf){
   // calculate b3
   chelp1 = dev_cmult(p1,  dev_cconj( (*gf)[0][1] )   );
   chelp2 = dev_cmult(p2, dev_cmult( dev_cconj((*gf)[0][0]) , (*gf)[0][2] )  );
-  chelp1 = dev_cadd(chelp1, chelp2);
-  (*gf)[1][2] = dev_crealmult(chelp1, -one_over_N);
+  chelp1 = dev_csub(chelp1, chelp2);
+  (*gf)[1][2] = dev_crealmult(chelp1, one_over_N);
   
   // calculate c2
   chelp1 = dev_cmult(  dev_cconj(p2) ,  dev_cconj( (*gf)[0][2] )   );
@@ -1184,10 +1164,14 @@ __device__ void dev_reconstructgf_8texref (int pos, dev_su3* gf){
   chelp2 = dev_cmult(  dev_cconj(p1) , 
                        dev_cmult(  dev_cconj( (*gf)[0][0] ) , (*gf)[0][2] )
                      );
-  chelp1 = dev_csub(chelp1, chelp2);
-  (*gf)[2][2] = dev_crealmult(chelp1, one_over_N);
+  chelp1 = dev_cadd(chelp1, chelp2);
+  (*gf)[2][2] = dev_crealmult(chelp1, -one_over_N);
                        
 }
+
+
+
+
 
 
 
@@ -1200,14 +1184,14 @@ __device__ void dev_reconstructgf_8texref_dagger (int pos, dev_su3* gf){
   
   gfin = tex1Dfetch(gf_tex,2*pos);
   // read a2 a3
-  (*gf)[0][1].re = gfin.x;
-  (*gf)[0][1].im = gfin.y;
-  (*gf)[0][2].re = gfin.z;
-  (*gf)[0][2].im = gfin.w;  
+  (*gf)[1][0].re = gfin.x;
+  (*gf)[1][0].im = -gfin.y;
+  (*gf)[2][0].re = gfin.z;
+  (*gf)[2][0].im = -gfin.w;  
  
   help = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
   N = sqrtf(help);
-  one_over_N = 1.0/N;
+  one_over_N = 1.0f/N;
   
   // read theta_a1, theta_c1, b1
   gfin = tex1Dfetch(gf_tex,2*pos + 1);
@@ -1215,7 +1199,106 @@ __device__ void dev_reconstructgf_8texref_dagger (int pos, dev_su3* gf){
   // reconstruct a1
   help = sqrtf(1.0f - help);
   (*gf)[0][0].re = help*cosf(gfin.x);
-  (*gf)[0][0].im = help*sinf(gfin.x);
+  (*gf)[0][0].im = -help*sinf(gfin.x);
+  
+  // assign b1
+  (*gf)[0][1].re = gfin.z;
+  (*gf)[0][1].im = -gfin.w;
+  
+  // p2 = 1/N b1
+  p2.re = one_over_N*(*gf)[0][1].re;
+  p2.im = -one_over_N*(*gf)[0][1].im;  
+
+
+  // reconstruct c1
+  help = sqrtf(1.0f - 
+              (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
+              (*gf)[0][1].re * (*gf)[0][1].re - (*gf)[0][1].im * (*gf)[0][1].im
+          );
+  (*gf)[0][2].re = help*cosf(gfin.y);
+  (*gf)[0][2].im = -help*sinf(gfin.y);
+
+  
+  // p1 = 1/N*cconj(c1)
+  p1.re = one_over_N*(*gf)[0][2].re;
+  p1.im = one_over_N*(*gf)[0][2].im;
+  
+  
+  // calculate b2
+  chelp1 = dev_cmult(p1,   (*gf)[2][0]    );
+  chelp2 = dev_cmult(p2, dev_cmult( (*gf)[0][0] , dev_cconj((*gf)[1][0] ))  );
+  chelp1 = dev_cadd(chelp1, chelp2);
+  (*gf)[1][1] = dev_cconj(dev_crealmult(chelp1, -one_over_N));
+  
+  // calculate b3
+  chelp1 = dev_cmult(p1,   (*gf)[1][0]    );
+  chelp2 = dev_cmult(p2, dev_cmult( (*gf)[0][0] , dev_cconj((*gf)[2][0] ))  );
+  chelp1 = dev_csub(chelp1, chelp2);
+  (*gf)[2][1] = dev_cconj(dev_crealmult(chelp1, one_over_N));
+  
+  // calculate c2
+  chelp1 = dev_cmult(  dev_cconj(p2) ,  (*gf)[2][0]    );
+  chelp2 = dev_cmult(  dev_cconj(p1) , 
+                       dev_cmult(   (*gf)[0][0]  , dev_cconj( (*gf)[1][0]) )
+                     );
+  chelp1 = dev_csub(chelp1, chelp2);
+  (*gf)[1][2] = dev_cconj(dev_crealmult(chelp1, one_over_N));
+  
+  
+  // calculate c3
+  chelp1 = dev_cmult(  dev_cconj(p2) ,   (*gf)[1][0]    );
+  chelp2 = dev_cmult(  dev_cconj(p1) , 
+                       dev_cmult(   (*gf)[0][0]  , dev_cconj((*gf)[2][0] ) )
+                     );
+  chelp1 = dev_cadd(chelp1, chelp2);
+  (*gf)[2][2] = dev_cconj(dev_crealmult(chelp1, -one_over_N));
+
+}
+
+
+
+
+
+
+
+
+*/
+
+
+
+
+
+
+
+
+
+// reconstruction of the gf using 8 real parameters as 
+// described in the appendix of hep-lat 0911.3191 (M.Clark et al.)
+// optimized once
+__device__ void dev_reconstructgf_8texref (int pos, dev_su3* gf){
+
+  float4 gfin;
+  REAL one_over_N;
+  dev_complex p1,p2;
+  
+  gfin = tex1Dfetch(gf_tex,2*pos);
+  // read a2 a3
+  (*gf)[0][1].re = gfin.x;
+  (*gf)[0][1].im = gfin.y;
+  (*gf)[0][2].re = gfin.z;
+  (*gf)[0][2].im = gfin.w;  
+ 
+  p1.re = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
+  one_over_N = sqrtf(p1.re);
+  one_over_N = 1.0f/one_over_N;
+  
+  // read theta_a1, theta_c1, b1
+  gfin = tex1Dfetch(gf_tex,2*pos + 1);
+  
+  // reconstruct a1
+  p1.re = sqrtf(1.0f - p1.re);
+  (*gf)[0][0].re = p1.re*cosf(gfin.x);
+  (*gf)[0][0].im = p1.re*sinf(gfin.x);
   
   // assign b1
   (*gf)[1][0].re = gfin.z;
@@ -1227,12 +1310,12 @@ __device__ void dev_reconstructgf_8texref_dagger (int pos, dev_su3* gf){
 
 
   // reconstruct c1
-  help = sqrtf(1.0 - 
+  p1.re = sqrtf(1.0f - 
               (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
               (*gf)[1][0].re * (*gf)[1][0].re - (*gf)[1][0].im * (*gf)[1][0].im
           );
-  (*gf)[2][0].re = help*cosf(gfin.y);
-  (*gf)[2][0].im = help*sinf(gfin.y);
+  (*gf)[2][0].re = p1.re*cosf(gfin.y);
+  (*gf)[2][0].im = p1.re*sinf(gfin.y);
 
   
   // p1 = 1/N*cconj(c1)
@@ -1240,62 +1323,129 @@ __device__ void dev_reconstructgf_8texref_dagger (int pos, dev_su3* gf){
   p1.im = - one_over_N*(*gf)[2][0].im;
   
   
+  
+  //use the last reconstructed gf component gf[2][2] (c3) as a help variable for b2,b3 and c2
+  //this is in order to save registers and to prevent extra loading and storing from global mem
   // calculate b2
-  chelp1 = dev_cmult(p1,  dev_cconj( (*gf)[0][2] )   );
-  chelp2 = dev_cmult(p2, dev_cmult( dev_cconj((*gf)[0][0]) , (*gf)[0][1] )  );
-  chelp1 = dev_cadd(chelp1, chelp2);
-  (*gf)[1][1] = dev_crealmult(chelp1, -one_over_N);
+  (*gf)[1][1] = dev_cmult(p1,  dev_cconj( (*gf)[0][2] )   );
+  (*gf)[2][2] = dev_cmult(p2, dev_cmult( dev_cconj((*gf)[0][0]) , (*gf)[0][1] )  );
+  (*gf)[1][1] = dev_cadd((*gf)[1][1], (*gf)[2][2]);
+  (*gf)[1][1] = dev_crealmult((*gf)[1][1], -one_over_N);
   
   // calculate b3
-  chelp1 = dev_cmult(p1,  dev_cconj( (*gf)[0][1] )   );
-  chelp2 = dev_cmult(p2, dev_cmult( dev_cconj((*gf)[0][0]) , (*gf)[0][2] )  );
-  chelp1 = dev_cadd(chelp1, chelp2);
-  (*gf)[1][2] = dev_crealmult(chelp1, -one_over_N);
+  (*gf)[1][2] = dev_cmult(p1,  dev_cconj( (*gf)[0][1] )   );
+  (*gf)[2][2] = dev_cmult(p2, dev_cmult( dev_cconj((*gf)[0][0]) , (*gf)[0][2] )  );
+  (*gf)[1][2] = dev_csub((*gf)[1][2], (*gf)[2][2]);
+  (*gf)[1][2] = dev_crealmult((*gf)[1][2], one_over_N);
   
   // calculate c2
-  chelp1 = dev_cmult(  dev_cconj(p2) ,  dev_cconj( (*gf)[0][2] )   );
-  chelp2 = dev_cmult(  dev_cconj(p1) , 
+  (*gf)[2][1] = dev_cmult(  dev_cconj(p2) ,  dev_cconj( (*gf)[0][2] )   );
+  (*gf)[2][2] = dev_cmult(  dev_cconj(p1) , 
                        dev_cmult(  dev_cconj( (*gf)[0][0] ) , (*gf)[0][1] )
                      );
-  chelp1 = dev_csub(chelp1, chelp2);
-  (*gf)[2][1] = dev_crealmult(chelp1, one_over_N);
+  (*gf)[2][1] = dev_csub((*gf)[2][1], (*gf)[2][2]);
+  (*gf)[2][1] = dev_crealmult((*gf)[2][1], one_over_N);
   
   
+  
+  // now we have to use p2 as a help variable, as this is not needed any more after the first
+  // step
   // calculate c3
-  chelp1 = dev_cmult(  dev_cconj(p2) ,  dev_cconj( (*gf)[0][1] )   );
-  chelp2 = dev_cmult(  dev_cconj(p1) , 
+  (*gf)[2][2] = dev_cmult(  dev_cconj(p2) ,  dev_cconj( (*gf)[0][1] )   );
+  p2 = dev_cmult(  dev_cconj(p1) , 
                        dev_cmult(  dev_cconj( (*gf)[0][0] ) , (*gf)[0][2] )
                      );
-  chelp1 = dev_csub(chelp1, chelp2);
-  (*gf)[2][2] = dev_crealmult(chelp1, one_over_N);
-
-
-
-
-  // till here this was the reconstruction of the link (not daggered)
-  // calculate now U^dagger trivially
-  // this should be implemented more efficiently !!
-  
-  
-  //diagonal
-  (*gf)[0][0] = dev_cconj((*gf)[0][0]);
-  (*gf)[1][1] = dev_cconj((*gf)[1][1]);
-  (*gf)[2][2] = dev_cconj((*gf)[2][2]);
-  
-  //off-diagonals
-  chelp1 = dev_cconj(  (*gf)[0][1] );
-  (*gf)[0][1] = dev_cconj ( (*gf)[1][0]  );
-  (*gf)[1][0] = chelp1;
-  
-  chelp1 = dev_cconj(  (*gf)[0][2] );
-  (*gf)[0][2] = dev_cconj ( (*gf)[2][0]  );
-  (*gf)[2][0] = chelp1;
-  
-  chelp1 = dev_cconj(  (*gf)[1][0] );
-  (*gf)[1][0] = dev_cconj ( (*gf)[0][1]  );
-  (*gf)[0][1] = chelp1;
-  
+  (*gf)[2][2] = dev_cadd((*gf)[2][2], p2);
+  (*gf)[2][2] = dev_crealmult((*gf)[2][2], -one_over_N);
+                       
 }
+
+
+
+
+
+
+__device__ void dev_reconstructgf_8texref_dagger (int pos, dev_su3* gf){
+
+
+  float4 gfin;
+  REAL one_over_N;
+  dev_complex p1,p2;
+  
+  gfin = tex1Dfetch(gf_tex,2*pos);
+  // read a2 a3
+  (*gf)[1][0].re = gfin.x;
+  (*gf)[1][0].im = -gfin.y;
+  (*gf)[2][0].re = gfin.z;
+  (*gf)[2][0].im = -gfin.w;  
+ 
+  p1.re = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
+  one_over_N = sqrtf(p1.re);
+  one_over_N = 1.0f/one_over_N;
+  
+  // read theta_a1, theta_c1, b1
+  gfin = tex1Dfetch(gf_tex,2*pos + 1);
+  
+  // reconstruct a1
+  p1.re = sqrtf(1.0f - p1.re);
+  (*gf)[0][0].re = p1.re*cosf(gfin.x);
+  (*gf)[0][0].im = -p1.re*sinf(gfin.x);
+  
+  // assign b1
+  (*gf)[0][1].re = gfin.z;
+  (*gf)[0][1].im = -gfin.w;
+  
+  // p2 = 1/N b1
+  p2.re = one_over_N*(*gf)[0][1].re;
+  p2.im = -one_over_N*(*gf)[0][1].im;  
+
+
+  // reconstruct c1
+  p1.re = sqrtf(1.0f - 
+              (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
+              (*gf)[0][1].re * (*gf)[0][1].re - (*gf)[0][1].im * (*gf)[0][1].im
+          );
+  (*gf)[0][2].re = p1.re*cosf(gfin.y);
+  (*gf)[0][2].im = -p1.re*sinf(gfin.y);
+
+  
+  // p1 = 1/N*cconj(c1)
+  p1.re = one_over_N*(*gf)[0][2].re;
+  p1.im = one_over_N*(*gf)[0][2].im;
+  
+  //use the last reconstructed gf component gf[2][2] (c3) as a help variable for b2,b3 and c2
+  //this is in order to save registers and to prevent extra loading and storing from global mem
+  // calculate b2
+  (*gf)[1][1] = dev_cmult(p1,   (*gf)[2][0]    );
+  (*gf)[2][2] = dev_cmult(p2, dev_cmult( (*gf)[0][0] , dev_cconj((*gf)[1][0] ))  );
+  (*gf)[1][1] = dev_cadd((*gf)[1][1], (*gf)[2][2]);
+  (*gf)[1][1] = dev_cconj(dev_crealmult((*gf)[1][1], -one_over_N));
+  
+  // calculate b3
+  (*gf)[2][1] = dev_cmult(p1,   (*gf)[1][0]    );
+  (*gf)[2][2] = dev_cmult(p2, dev_cmult( (*gf)[0][0] , dev_cconj((*gf)[2][0] ))  );
+  (*gf)[2][1] = dev_csub((*gf)[2][1], (*gf)[2][2]);
+  (*gf)[2][1] = dev_cconj(dev_crealmult((*gf)[2][1], one_over_N));
+  
+  // calculate c2
+  (*gf)[1][2] = dev_cmult(  dev_cconj(p2) ,  (*gf)[2][0]    );
+  (*gf)[2][2] = dev_cmult(  dev_cconj(p1) , 
+                       dev_cmult(   (*gf)[0][0]  , dev_cconj( (*gf)[1][0]) )
+                     );
+  (*gf)[1][2] = dev_csub((*gf)[1][2], (*gf)[2][2]);
+  (*gf)[1][2] = dev_cconj(dev_crealmult((*gf)[1][2], one_over_N));
+  
+  // use p2 as help variable after the first step
+  // calculate c3
+  (*gf)[2][2] = dev_cmult(  dev_cconj(p2) ,   (*gf)[1][0]    );
+  p2 = dev_cmult(  dev_cconj(p1) , 
+                       dev_cmult(   (*gf)[0][0]  , dev_cconj((*gf)[2][0] ) )
+                     );
+  (*gf)[2][2] = dev_cadd((*gf)[2][2], p2);
+  (*gf)[2][2] = dev_cconj(dev_crealmult((*gf)[2][2], -one_over_N));
+
+}
+
 
 
 
@@ -1349,36 +1499,46 @@ __global__ void dev_swapmu(){
 
 // computes sout = 1/(1 +- mutilde gamma5) sin = (1 -+ i mutilde gamma5)/(1+mutilde^2) sin
 // mutilde = 2 kappa mu
+// uses shared local memory for manipulation
 __global__ void dev_mul_one_pm_imu_inv(dev_spinor* sin, dev_spinor* sout, const REAL sign){
-  
+   __shared__ dev_spinor slocal[BLOCK][6];
+   
    //need the inverse sign in the numerator because of inverse
    dev_complex pm_imu = dev_initcomplex(0.0,-1.0*sign*twokappamu);
    
    REAL one_plus_musquare_inv = 1.0/(1.0 + twokappamu*twokappamu);
    int pos;
    pos= threadIdx.x + blockDim.x*blockIdx.x;  
+   int ix = threadIdx.x;
    if(pos < dev_VOLUME){
-     dev_skalarmult_spinor(&(sin[6*pos]), pm_imu, &(sout[6*pos]));
-     dev_Gamma5(&(sout[6*pos]));
-     dev_add_spinor_assign(&(sout[6*pos]), &(sin[6*pos]));
-     dev_realmult_spinor(&(sout[6*pos]), one_plus_musquare_inv);
+     dev_skalarmult_spinor(&(sin[6*pos]), pm_imu, &(slocal[ix][0]));
+     dev_Gamma5(&(slocal[ix][0]));
+     dev_add_spinor_assign(&(slocal[ix][0]), &(sin[6*pos]));
+     dev_realmult_spinor(&(slocal[ix][0]), one_plus_musquare_inv);
+     dev_copy_spinor(&(slocal[ix][0]), &(sout[6*pos])); 
    }
 }
 
-// sout = gamma_5*((1\pm i\mutilde \gamma_5)*sin1 - sin2)
-__global__ void dev_mul_one_pm_imu_sub_mul_gamma5(dev_spinor* sin1, dev_spinor* sin2, dev_spinor* sout, const REAL sign){
 
+
+// sout = gamma_5*((1\pm i\mutilde \gamma_5)*sin1 - sin2)
+// uses shared local memory for manipulation
+__global__ void dev_mul_one_pm_imu_sub_mul_gamma5(dev_spinor* sin1, dev_spinor* sin2, dev_spinor* sout, const REAL sign){
+   __shared__ dev_spinor slocal[BLOCK][6];
    dev_complex pm_imu = dev_initcomplex(0.0, sign*twokappamu); // i mutilde
    int pos;
-   pos= threadIdx.x + blockDim.x*blockIdx.x;  
+   pos= threadIdx.x + blockDim.x*blockIdx.x; 
+   int ix = threadIdx.x;
    if(pos < dev_VOLUME){
-     dev_skalarmult_spinor(&(sin1[6*pos]), pm_imu, &(sout[6*pos]));
-     dev_Gamma5(&(sout[6*pos]));
-     dev_add_spinor_assign(&(sout[6*pos]), &(sin1[6*pos]));
-     dev_sub_spinor_assign(&(sout[6*pos]), &(sin2[6*pos]));
-     dev_Gamma5(&(sout[6*pos]));
+     dev_skalarmult_spinor(&(sin1[6*pos]), pm_imu, &(slocal[ix][0]));
+     dev_Gamma5(&(slocal[ix][0]));
+     dev_add_spinor_assign(&(slocal[ix][0]), &(sin1[6*pos]));
+     dev_sub_spinor_assign(&(slocal[ix][0]), &(sin2[6*pos]));
+     dev_Gamma5(&(slocal[ix][0]));
+     dev_copy_spinor(&(slocal[ix][0]), &(sout[6*pos])); 
    }   
 }
+
 
 
 
@@ -1411,7 +1571,12 @@ __global__ void dev_Hopping_Matrix(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //positive direction
             hoppos = nn_evenodd[8*pos];
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(4*(gfindex_site[pos]),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref(4*(gfindex_site[pos]),&(gfsmem[ix]));
+            #endif
+            
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r - gamma_mu)
             dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
@@ -1421,7 +1586,11 @@ __global__ void dev_Hopping_Matrix(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //negative direction
             hoppos = nn_evenodd[8*pos+4]; 
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(4*gfindex_nextsite[hoppos],&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref_dagger(4*gfindex_nextsite[hoppos],&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));     
             //-kappa(r + gamma_mu)
             dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
@@ -1433,7 +1602,11 @@ __global__ void dev_Hopping_Matrix(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //positive direction
             hoppos = nn_evenodd[8*pos+3];
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(4*(gfindex_site[pos])+(3),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref(4*(gfindex_site[pos])+(3),&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r - gamma_mu)
             dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
@@ -1443,7 +1616,11 @@ __global__ void dev_Hopping_Matrix(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //negative direction
             hoppos = nn_evenodd[8*pos+7]; 
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(4*gfindex_nextsite[hoppos]+(3),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref_dagger(4*gfindex_nextsite[hoppos]+(3),&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r + gamma_mu)
             dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
@@ -1455,7 +1632,11 @@ __global__ void dev_Hopping_Matrix(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //positive direction
             hoppos = nn_evenodd[8*pos+2];
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(4*(gfindex_site[pos])+(2),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref(4*(gfindex_site[pos])+(2),&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r - gamma_mu)
             dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
@@ -1465,7 +1646,11 @@ __global__ void dev_Hopping_Matrix(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //negative direction
             hoppos = nn_evenodd[8*pos+6]; 
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(4*gfindex_nextsite[hoppos]+(2),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref_dagger(4*gfindex_nextsite[hoppos]+(2),&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r + gamma_mu)
             dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
@@ -1477,7 +1662,11 @@ __global__ void dev_Hopping_Matrix(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //positive direction
             hoppos = nn_evenodd[8*pos+1];
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(4*(gfindex_site[pos])+(1),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref(4*(gfindex_site[pos])+(1),&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r - gamma_mu)
             dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
@@ -1487,7 +1676,11 @@ __global__ void dev_Hopping_Matrix(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //negative direction
             hoppos = nn_evenodd[8*pos+5]; 
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(4*gfindex_nextsite[hoppos]+(1),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref_dagger(4*gfindex_nextsite[hoppos]+(1),&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r + gamma_mu)
             dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
@@ -1573,7 +1766,11 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //positive direction
             hoppos = dev_nn[8*pos];
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(4*pos,&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref(4*pos,&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r - gamma_mu)
             dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
@@ -1584,7 +1781,11 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //negative direction
             hoppos = dev_nn[8*pos+4];
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(4*hoppos,&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref_dagger(4*hoppos,&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));     
             //-kappa(r + gamma_mu)
             dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
@@ -1597,7 +1798,11 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //positive direction
             hoppos = dev_nn[8*pos+3];
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(4*pos+(3),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref(4*pos+(3),&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r - gamma_mu)
             dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
@@ -1608,7 +1813,11 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //negative direction
             hoppos = dev_nn[8*pos+7];
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(4*hoppos+(3),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref_dagger(4*hoppos+(3),&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r + gamma_mu)
             dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
@@ -1621,7 +1830,11 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //positive direction
             hoppos = dev_nn[8*pos+2];
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(4*pos+(2),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref(4*pos+(2),&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r - gamma_mu)
             dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
@@ -1632,7 +1845,11 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //negative direction
             hoppos = dev_nn[8*pos+6];
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(4*hoppos+(2),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref_dagger(4*hoppos+(2),&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r + gamma_mu)
             dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
@@ -1645,7 +1862,11 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //positive direction
             hoppos = dev_nn[8*pos+1];
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(4*pos+(1),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref(4*pos+(1),&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r - gamma_mu)
             dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
@@ -1656,7 +1877,11 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //negative direction
             hoppos = dev_nn[8*pos+5];
             //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(4*hoppos+(1),&(gfsmem[ix]));
+            #else
             dev_reconstructgf_2vtexref_dagger(4*hoppos+(1),&(gfsmem[ix]));
+            #endif
             dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
             //-kappa(r + gamma_mu)
             dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
@@ -2183,7 +2408,13 @@ return(1);
 
 extern "C" int bind_texture_gf(dev_su3_2v * gf){
  //printf("Binding texture to gaugefield\n");
+ 
+ #ifdef GF_8
+ size_t size = sizeof(float4)*2*VOLUME*4;
+ #else
  size_t size = sizeof(float4)*3*VOLUME*4;
+ #endif
+ 
  cudaGetTextureReference(&gf_texRefPtr, "gf_tex");
  gf_channelDesc =  cudaCreateChannelDesc<float4>();
  cudaBindTexture(0, gf_texRefPtr, gf, &gf_channelDesc, size);
@@ -2832,7 +3063,55 @@ void shownn_eo(){
 }
 
 
+void show_su3(su3 gf1){
+   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",gf1.c00.re,
+   					gf1.c00.im,
+   					gf1.c01.re,
+   					gf1.c01.im,
+   					gf1.c02.re,
+   					gf1.c02.im
+   );
+   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",gf1.c10.re,
+   					gf1.c10.im,
+   					gf1.c11.re,
+   					gf1.c11.im,
+   					gf1.c12.re,
+   					gf1.c12.im
+   );
+   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",gf1.c20.re,
+   					gf1.c20.im,
+   					gf1.c21.re,
+   					gf1.c21.im,
+   					gf1.c22.re,
+   					gf1.c22.im
+   ); 
+}
 
+
+void show_dev_su3(dev_su3 gf1){
+   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",gf1[0][0].re,
+   					gf1[0][0].im,
+   					gf1[0][1].re,
+   					gf1[0][1].im,
+   					gf1[0][2].re,
+   					gf1[0][2].im
+   );   
+   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",gf1[1][0].re,
+   					gf1[1][0].im,
+   					gf1[1][1].re,
+   					gf1[1][1].im,
+   					gf1[1][2].re,
+   					gf1[1][2].im
+   );
+   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",gf1[2][0].re,
+   					gf1[2][0].im,
+   					gf1[2][1].re,
+   					gf1[2][1].im,
+   					gf1[2][2].re,
+   					gf1[2][2].im
+   ); 
+
+}
 
 
 void lptovec(int k){
@@ -2909,10 +3188,38 @@ void su3to2vf4(su3** gf, dev_su3_2v* h2d_gf){
 
 
 
+// bring gf into the form
+// a2 a3, theta_a1, theta_c1, b1
+// 
+void su3to8(su3** gf, dev_su3_8* h2d_gf){
+  int i,j;
+  for (i=0;i<VOLUME;i++){
+   for(j=0;j<4;j++){
+   // a2, a3
+    h2d_gf[2*(4*i+j)].x = (REAL) gf[i][j].c01.re;
+    h2d_gf[2*(4*i+j)].y = (REAL) gf[i][j].c01.im;
+    h2d_gf[2*(4*i+j)].z = (REAL) gf[i][j].c02.re;
+    h2d_gf[2*(4*i+j)].w = (REAL) gf[i][j].c02.im;
+    
+   // theta_a1, theta_c1
+   // use atan2 for this: following the reference, atan2 should give an angle -pi < phi < +pi  
+   h2d_gf[2*(4*i+j)+1].x = (REAL)( atan2((REAL) gf[i][j].c00.im,(REAL) gf[i][j].c00.re ));
+   h2d_gf[2*(4*i+j)+1].y = (REAL) ( atan2((REAL) gf[i][j].c20.im,(REAL)gf[i][j].c20.re ));
+     
+   // b1
+    h2d_gf[2*(4*i+j)+1].z = (REAL) gf[i][j].c10.re ;
+    h2d_gf[2*(4*i+j)+1].w = (REAL) gf[i][j].c10.im ;
+     
+  } 
+ }
+}
 
 
 
-// this is to reconstruc the gf on the host from 2 rows of the link
+
+
+
+// this is to reconstruct the gf on the host from 2 rows of the link
 // may be used for tests
 void reconstructgf_2v (dev_su3* gf){
   complex help1;
@@ -2943,9 +3250,165 @@ void reconstructgf_2v (dev_su3* gf){
 
 
 
+
+
+
+
+__global__ void dev_check_gauge_reconstruction_8(int pos, dev_su3 * outgf1, dev_su3* outgf2){
+  dev_reconstructgf_8texref (pos, outgf1);
+  dev_reconstructgf_8texref_dagger (pos, outgf2);
+}
+
+
+
+
+
+
+
+void check_gauge_reconstruction_8(su3 ** gf1, dev_su3_2v * gf2, int ind1, int mu){
+  dev_su3 * reconst_g , * reconst_g_dagger;
+  dev_su3  result, result_dagger;
+   printf("Checking 8 paramater reconstruction of gauge field:\n");  
+  su3 gfdagger;
+  
+  bind_texture_gf(gf2);
+  printf("\n");
+  size_t cpsize = sizeof(dev_su3); // parallel in t and z direction
+  cudaMalloc((void **) &reconst_g, cpsize); 
+  cudaMalloc((void **) &reconst_g_dagger, cpsize); 
+  
+  show_su3(gf1[ind1][mu]);
+  printf("\n");
+  
+  dev_check_gauge_reconstruction_8  <<< 1 , 1 >>> (4*ind1 + mu, reconst_g, reconst_g_dagger);
+  cudaMemcpy(&result, reconst_g, cpsize, cudaMemcpyDeviceToHost);
+  cudaMemcpy(&result_dagger, reconst_g_dagger, cpsize, cudaMemcpyDeviceToHost);
+
+  show_dev_su3(result);
+  printf("\n");
+  
+  _su3_dagger(gfdagger,gf1[ind1][mu]);
+  show_su3(gfdagger);
+  printf("\n");
+  show_dev_su3(result_dagger);
+
+
+
+
+  unbind_texture_gf();
+  cudaFree(reconst_g);
+}
+
+
+
+
+
+// this is to reconstruct the gf on the host from 2 rows of the link
+// may be used for tests
+void reconstructgf_8 (dev_su3_8 * h2d_gf, dev_su3* gf){
+
+  float4 gfin;
+  REAL N, one_over_N, help;
+  complex p1,p2, chelp1, chelp2, chelp3, chelpconj, chelpconj2;
+  
+  gfin = h2d_gf[0];
+  // read a2 a3
+  (*gf)[0][1].re = gfin.x;
+  (*gf)[0][1].im = gfin.y;
+  (*gf)[0][2].re = gfin.z;
+  (*gf)[0][2].im = gfin.w;  
+ 
+  help = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
+  N = sqrt(help);
+  one_over_N = 1.0f/N;
+  
+  // read theta_a1, theta_c1, b1
+  gfin = h2d_gf[1];
+  
+  // reconstruct a1
+  help = sqrt(1.0f - help);
+  (*gf)[0][0].re = help*cos(gfin.x);
+  (*gf)[0][0].im = help*sin(gfin.x);
+  
+  // assign b1
+  (*gf)[1][0].re = gfin.z;
+  (*gf)[1][0].im = gfin.w;
+  
+  // p2 = 1/N b1
+  p2.re = one_over_N*(*gf)[1][0].re;
+  p2.im = one_over_N*(*gf)[1][0].im;  
+
+
+  // reconstruct c1
+  help = sqrt(1.0f - 
+              (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
+              (*gf)[1][0].re * (*gf)[1][0].re - (*gf)[1][0].im * (*gf)[1][0].im
+          );
+  (*gf)[2][0].re = help*cos(gfin.y);
+  (*gf)[2][0].im = help*sin(gfin.y);
+
+  
+  // p1 = 1/N*cconj(c1)
+  p1.re = one_over_N*(*gf)[2][0].re;
+  p1.im = - one_over_N*(*gf)[2][0].im;
+  
+  
+  float temp = p1.re*p1.re + p1.im*p1.im + p2.re*p2.re + p2.im*p2.im;
+  printf("p1**2 + p2**2 = %f\n", temp);
+  
+  
+  // calculate b2
+  _complex_conj(chelpconj, (*gf)[0][2] );
+  _mult_assign_complex(chelp1, p1, chelpconj   );
+  _complex_conj(chelpconj, (*gf)[0][0]);
+  _mult_assign_complex(chelp3, chelpconj , (*gf)[0][1] ); 
+  _mult_assign_complex(chelp2, p2, chelp3);
+  _add_complex(chelp1, chelp2);
+  _mult_real((*gf)[1][1], chelp1, -one_over_N);
+
+  
+  // calculate b3
+  _complex_conj(chelpconj, (*gf)[0][1] );
+  _mult_assign_complex(chelp1, p1,  chelpconj  );
+  _complex_conj(chelpconj, (*gf)[0][0]);
+  _mult_assign_complex(chelp3, chelpconj  , (*gf)[0][2] );  
+  _mult_assign_complex(chelp2, p2, chelp3 );
+  _diff_complex(chelp1, chelp2);
+  _mult_real((*gf)[1][2],chelp1, one_over_N);
+
+  
+  // calculate c2
+  _complex_conj(chelpconj, p2);
+  _complex_conj(chelpconj2, (*gf)[0][2]);
+  _mult_assign_complex(chelp1, chelpconj , chelpconj2 );
+  _complex_conj(chelpconj,(*gf)[0][0]);
+  _mult_assign_complex(chelp3, chelpconj  , (*gf)[0][1] );
+  _complex_conj(chelpconj2,p1);
+  _mult_assign_complex(chelp2, chelpconj2  , chelp3);
+  _diff_complex(chelp1, chelp2);
+  _mult_real((*gf)[2][1],chelp1, one_over_N);
+  
+  
+  // calculate c3
+  _complex_conj(chelpconj, p2);
+  _complex_conj(chelpconj2, (*gf)[0][1] );
+  _mult_assign_complex(chelp1, chelpconj  , chelpconj2   );
+  _complex_conj(chelpconj,(*gf)[0][0]);
+  _mult_assign_complex(chelp3, chelpconj ,(*gf)[0][2]);
+  _complex_conj(chelpconj,p1);
+  _mult_assign_complex( chelp2, chelpconj  , chelp3 );
+  _add_complex(chelp1, chelp2);
+  _mult_real((*gf)[2][2], chelp1, -one_over_N);
+                  
+}
+
+
+
+
 void showcompare_gf(int t, int x, int y, int z, int mu){
    int ind1 = g_ipt[t][x][y][z];
    su3 ** gf1 = g_gauge_field;
+   
    printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",gf1[ind1][mu].c00.re,
    					gf1[ind1][mu].c00.im,
    					gf1[ind1][mu].c01.re,
@@ -2970,6 +3433,42 @@ void showcompare_gf(int t, int x, int y, int z, int mu){
    printf("\n\n");
 
    int ind2 =  z + LZ*(y + LY*(x + LX*t));
+#ifdef GF_8
+   printf("8-field:\t(%f,%f,%f,%f) (%f,%f,%f,%f)\n",
+     h2d_gf[2*(4*ind2+mu)].x,
+     h2d_gf[2*(4*ind2+mu)].y,
+     h2d_gf[2*(4*ind2+mu)].z,
+     h2d_gf[2*(4*ind2+mu)].w,
+     h2d_gf[2*(4*ind2+mu)+1].x,
+     h2d_gf[2*(4*ind2+mu)+1].y,
+     h2d_gf[2*(4*ind2+mu)+1].z,
+     h2d_gf[2*(4*ind2+mu)+1].w
+   );
+   dev_su3 help; 
+   reconstructgf_8( &(h2d_gf[2*(4*ind2+mu)]) , &help );
+   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",help[0][0].re,
+   					help[0][0].im,
+   					help[0][1].re,
+   					help[0][1].im,
+   					help[0][2].re,
+   					help[0][2].im
+   );   
+   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",help[1][0].re,
+   					help[1][0].im,
+   					help[1][1].re,
+   					help[1][1].im,
+   					help[1][2].re,
+   					help[1][2].im
+   );
+   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",help[2][0].re,
+   					help[2][0].im,
+   					help[2][1].re,
+   					help[2][1].im,
+   					help[2][2].re,
+   					help[2][2].im
+   );   
+   
+#else
    printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",h2d_gf[3*(4*ind2+mu)].x,
    					h2d_gf[3*(4*ind2+mu)].y,
    					h2d_gf[3*(4*ind2+mu)].z,
@@ -3011,8 +3510,9 @@ void showcompare_gf(int t, int x, int y, int z, int mu){
    					help[2][2].re,
    					help[2][2].im
    );
-     
+#endif 
 }
+
 
 
 
@@ -3120,8 +3620,14 @@ void init_mixedsolve(su3** gf){
 cudaError_t cudaerr;
 
   
+  
+  #ifdef GF_8
+  /* allocate 8 floats of gf = 2*4*VOLUME float4's*/
+  size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8);
+  #else
   /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
   size_t dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v); 
+  #endif
   
   if((cudaerr=cudaMalloc((void **) &dev_gf, dev_gfsize)) != cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of gauge field failed. Aborting...\n");
@@ -3131,9 +3637,13 @@ cudaError_t cudaerr;
     printf("Allocated gauge field on device\n");
   }  
   
-  
+  #ifdef GF_8
+  h2d_gf = (dev_su3_8 *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
+  su3to8(gf,h2d_gf);  
+  #else
   h2d_gf = (dev_su3_2v *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
   su3to2vf4(gf,h2d_gf);
+  #endif
   cudaMemcpy(dev_gf, h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
 
 
@@ -3196,9 +3706,14 @@ void init_mixedsolve_eo(su3** gf){
 cudaError_t cudaerr;
   dev_complex help;
 
+  
+  #ifdef GF_8
+  /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
+  size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8); 
+  #else
   /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
   size_t dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v); 
-  
+  #endif
   
   
   if((cudaerr=cudaMalloc((void **) &dev_gf, dev_gfsize)) != cudaSuccess){
@@ -3210,8 +3725,14 @@ cudaError_t cudaerr;
   }  
   
   
+  
+  #ifdef GF_8
+  h2d_gf = (dev_su3_8 *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
+  su3to8(gf,h2d_gf);
+  #else
   h2d_gf = (dev_su3_2v *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
   su3to2vf4(gf,h2d_gf);
+  #endif
   cudaMemcpy(dev_gf, h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
 
 
@@ -3241,6 +3762,7 @@ cudaError_t cudaerr;
   
   //shownn();
   //showcompare_gf(T-1, LX-1, LY-1, LZ-1, 3);
+  //check_gauge_reconstruction_8(gf, dev_gf, 0, 0);
   cudaMemcpy(dev_nn, nn, nnsize, cudaMemcpyHostToDevice);
   cudaMemcpy(dev_nn_eo, nn_eo, nnsize/2, cudaMemcpyHostToDevice);
   cudaMemcpy(dev_nn_oe, nn_oe, nnsize/2, cudaMemcpyHostToDevice);
@@ -3293,8 +3815,6 @@ cudaError_t cudaerr;
   cudaMalloc((void **) &dev_grid, 5*sizeof(int));
   cudaMemcpy(dev_grid, &(grid[0]), 5*sizeof(int), cudaMemcpyHostToDevice);
   
-  
-
 }
 
 
