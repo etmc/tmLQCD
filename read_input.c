@@ -3890,7 +3890,7 @@ case 74:
 YY_RULE_SETUP
 #line 366 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     optr->kappa = c;
     if(myverbose) printf("  kappa set to %f line %d operator %d\n", c, line_of_file, current_operator);
   }
@@ -3924,7 +3924,7 @@ case 78:
 YY_RULE_SETUP
 #line 384 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     optr->eps_sq = c;
     if(myverbose) printf("  SolverPrecision set to %f line %d operator %d\n", c, line_of_file, current_operator);
   }
@@ -3967,7 +3967,7 @@ case 83:
 YY_RULE_SETUP
 #line 409 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     optr->mubar = c;
     if(myverbose) printf("  2KappaMubar set to %f line %d operator %d\n", c, line_of_file, current_operator);
   }
@@ -3976,7 +3976,7 @@ case 84:
 YY_RULE_SETUP
 #line 414 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     optr->epsbar = c;
     if(myverbose) printf("  2KappaEpsbar set to %f line %d operator %d\n", c, line_of_file, current_operator);
   }
@@ -3995,7 +3995,7 @@ case 86:
 YY_RULE_SETUP
 #line 426 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     optr->mu = c;
     if(myverbose) printf("  2KappaMu set to %f line %d operator %d\n", c, line_of_file, current_operator);
   }
@@ -4011,7 +4011,7 @@ case 88:
 YY_RULE_SETUP
 #line 435 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     optr->m = c;
     if(myverbose) printf("  m set to %f line %d operator %d\n", c, line_of_file, current_operator);
   }
@@ -4020,7 +4020,7 @@ case 89:
 YY_RULE_SETUP
 #line 440 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     optr->s = c;
     if(myverbose) printf("  s set to %f line %d operator %d\n", c, line_of_file, current_operator);
   }
@@ -4047,7 +4047,7 @@ case 92:
 YY_RULE_SETUP
 #line 455 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     optr->ev_prec = c;
     if(myverbose) printf("  KernelEigenvaluePrecision set to %f line %d operator %d\n", c, line_of_file, current_operator);
   }
@@ -4282,7 +4282,7 @@ case 110:
 YY_RULE_SETUP
 #line 628 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu = c;
     if(myverbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -4291,7 +4291,7 @@ case 111:
 YY_RULE_SETUP
 #line 633 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu2 = c;
     if(myverbose) printf("  2kappamu2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -4300,7 +4300,7 @@ case 112:
 YY_RULE_SETUP
 #line 638 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf", name, &c);
     mnl->kappa = c;
     if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -4309,7 +4309,7 @@ case 113:
 YY_RULE_SETUP
 #line 643 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->kappa2 = c;
     if(myverbose) printf("  Kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -4318,7 +4318,7 @@ case 114:
 YY_RULE_SETUP
 #line 648 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mubar = c;
     if(myverbose) printf("  2kappamubar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -4327,7 +4327,7 @@ case 115:
 YY_RULE_SETUP
 #line 653 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mubar2 = c;
     if(myverbose) printf("  2kappamubar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -4336,7 +4336,7 @@ case 116:
 YY_RULE_SETUP
 #line 658 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->epsbar = c;
     if(myverbose) printf("  2kappaepsbar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -4345,7 +4345,7 @@ case 117:
 YY_RULE_SETUP
 #line 663 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->epsbar2 = c;
     if(myverbose) printf("  2kappaepsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -4373,7 +4373,7 @@ case 120:
 YY_RULE_SETUP
 #line 679 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     mnl->forceprec = c;
     if(myverbose) printf("  ForcePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -4382,7 +4382,7 @@ case 121:
 YY_RULE_SETUP
 #line 684 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     mnl->accprec = c;
     if(myverbose) printf("  AcceptancePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -4433,7 +4433,7 @@ case 127:
 YY_RULE_SETUP
 #line 713 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     mnl->beta = c;
     g_beta = c;
     if(myverbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -4443,7 +4443,7 @@ case 128:
 YY_RULE_SETUP
 #line 719 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     mnl->c1 = c;
     g_rgi_C1 = c;
     if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -4494,7 +4494,7 @@ case 134:
 YY_RULE_SETUP
 #line 747 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     mnl->beta = c;
     g_beta = c;
     if(myverbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -4504,7 +4504,7 @@ case 135:
 YY_RULE_SETUP
 #line 753 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     mnl->c1 = c;
     g_rgi_C1 = c;
     if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -4514,7 +4514,7 @@ case 136:
 YY_RULE_SETUP
 #line 759 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     mnl->eta = c;
     g_eta = c;
     if(myverbose) printf("  eta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -4524,7 +4524,7 @@ case 137:
 YY_RULE_SETUP
 #line 765 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     mnl->ct = c;
     g_Ct = c;
     if(myverbose) printf("  PlaquetteCoefficientT ct set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -4534,7 +4534,7 @@ case 138:
 YY_RULE_SETUP
 #line 771 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     mnl->cs = c;
     g_Cs = c;
     if(myverbose) printf("  PlaquetteCoefficientS cs set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -4544,7 +4544,7 @@ case 139:
 YY_RULE_SETUP
 #line 777 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     mnl->c1ss = c;
     g_C1ss = c;
     if(myverbose) printf("  RectangleCoefficientSS c1ss set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -4554,7 +4554,7 @@ case 140:
 YY_RULE_SETUP
 #line 783 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     mnl->c1tss = c;
     g_C1tss = c;
     if(myverbose) printf("  RectangleCoefficientTSS c1tss set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -4564,7 +4564,7 @@ case 141:
 YY_RULE_SETUP
 #line 789 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     mnl->c1tts = c;
     g_C1tts = c;
     if(myverbose) printf("  RectangleCoefficientTTS c1tts set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -4592,7 +4592,7 @@ case 144:
 YY_RULE_SETUP
 #line 807 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     stilde_max = c;
     if(myverbose!=0) printf("  Stilde max set to %e line %d monomial %d\n", stilde_max, line_of_file, current_monomial);
   }
@@ -4601,7 +4601,7 @@ case 145:
 YY_RULE_SETUP
 #line 812 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     stilde_min = c;
     if(myverbose!=0) printf("  Stilde min set to %e line %d monomial %d\n", stilde_min, line_of_file, current_monomial);
   }
@@ -4619,7 +4619,7 @@ case 147:
 YY_RULE_SETUP
 #line 822 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     g_acc_Ptilde = c;
     if(myverbose!=0) printf("  Precision for Ptilde set to %e line %d monomial %d\n", g_acc_Ptilde, line_of_file, current_monomial);
   }
@@ -4628,7 +4628,7 @@ case 148:
 YY_RULE_SETUP
 #line 827 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf",name , &c);
     g_acc_Hfin = c;
     if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", g_acc_Hfin, line_of_file, current_monomial);
   }
@@ -4639,7 +4639,7 @@ YY_RULE_SETUP
 {
     sscanf(tmlqcdtext, " %[a-zA-Z] = %d", name, &a);
     g_rec_ev = a;
-    if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", g_acc_Hfin, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  Frequency for computing EV's set to %d in line %d monomial %d\n", g_rec_ev, line_of_file, current_monomial);
   }
 	YY_BREAK
 case 150:
@@ -4673,7 +4673,7 @@ case 153:
 YY_RULE_SETUP
 #line 853 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf", name, &c);
     mnl->MDPolyLmin = c;
     if(myverbose!=0)
       printf("  lower bound of degenerate MD polynomial set to %f line %d monomial %d\n",
@@ -4684,7 +4684,7 @@ case 154:
 YY_RULE_SETUP
 #line 860 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf", name, &c);
     mnl->MDPolyLmax = c;
     if(myverbose!=0)
       printf("  upper bound of degenerate MD polynomial set to %f line %d monomial %d\n",
@@ -4697,7 +4697,7 @@ case 155:
 YY_RULE_SETUP
 #line 871 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf", name, &c);
     mnl->MDPolyLocNormConst = c;
     if(myverbose!=0)
       printf("  local normalisation constant MD polynomial set to %f line %d monomial %d\n",
@@ -4886,7 +4886,7 @@ case 171:
 YY_RULE_SETUP
 #line 1004 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z]%d = %f", name, &a, &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z]%d = %lf", name, &a, &c);
     Integrator.lambda[a] = c;
     if(myverbose) printf("  timescale %d Lambda=%f line %d\n", a, c, line_of_file);
     BEGIN(INTEGRATOR);
@@ -4910,7 +4910,7 @@ case 173:
 YY_RULE_SETUP
 #line 1020 "read_input.l"
 {
-    sscanf(tmlqcdtext, " %[a-zA-Z] = %f", name, &c);
+    sscanf(tmlqcdtext, " %[a-zA-Z] = %lf", name, &c);
     if(myverbose) printf("  tau set to %e line %d\n", c, line_of_file);
     Integrator.tau = c;
     BEGIN(INTEGRATOR);
