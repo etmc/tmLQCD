@@ -97,7 +97,7 @@ inline void rmQuotes(char *str){
   int comment_caller;
   int name_caller;
   int a,b;
-  float c;
+  double c;
   int reread = 0;
   char name[100];
   char yesno[20];
