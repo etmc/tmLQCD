@@ -349,22 +349,22 @@ TYPE [0-9A-Z]+
 
 <DETMONOMIAL>{
   {SPC}*2KappaMu{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu = c;
     if(myverbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*2KappaMu2{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu2 = c;
     if(myverbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*Kappa{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->kappa = c;
     if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*Kappa2{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->kappa2 = c;
     if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -380,12 +380,12 @@ TYPE [0-9A-Z]+
                        a, line_of_file, current_monomial);
   }
   {SPC}*ForcePrecision{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->forceprec = c;
     if(myverbose) printf("  ForcePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*AcceptancePrecision{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->accprec = c;
     if(myverbose) printf("  AcceptancePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
@@ -411,13 +411,13 @@ TYPE [0-9A-Z]+
     if(myverbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
   {SPC}*Beta{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->beta = c;
     g_beta = c;
     if(myverbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*RectangleCoefficient{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->c1 = c;
     g_rgi_C1 = c;
     if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -436,12 +436,12 @@ TYPE [0-9A-Z]+
     if(myverbose!=0) printf("  phmc_exact_poly set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
   {SPC}*StildeMax{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     stilde_max = c;
     if(myverbose!=0) printf("  Stilde max set to %e line %d monomial %d\n", stilde_max, line_of_file, current_monomial);
   }
   {SPC}*StildeMin{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     stilde_min = c;
     if(myverbose!=0) printf("  Stilde min set to %e line %d monomial %d\n", stilde_min, line_of_file, current_monomial);
   }
@@ -451,12 +451,12 @@ TYPE [0-9A-Z]+
     if(myverbose!=0) printf("  Degree of MD polynomial set to %d line %d monomial %d\n", degree_of_p, line_of_file, current_monomial);
   }
   {SPC}*PrecisionPtilde{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     g_acc_Ptilde = c;
     if(myverbose!=0) printf("  Precision for Ptilde set to %e line %d monomial %d\n", g_acc_Ptilde, line_of_file, current_monomial);
   }
   {SPC}*PrecisionHfinal{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %f",name , &c);
+    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     g_acc_Hfin = c;
     if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", g_acc_Hfin, line_of_file, current_monomial);
   }
@@ -571,7 +571,7 @@ TYPE [0-9A-Z]+
     BEGIN(INTEGRATOR);
   }
   {SPC}*Lambda{DIGIT}{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[a-zA-Z]%d = %f", name, &a, &c);
+    sscanf(yytext, " %[a-zA-Z]%d = %lf", name, &a, &c);
     Integrator.lambda[a] = c;
     if(myverbose) printf("  timescale %d Lambda=%f line %d\n", a, c, line_of_file);
     BEGIN(INTEGRATOR);
@@ -587,7 +587,7 @@ TYPE [0-9A-Z]+
     BEGIN(INTEGRATOR);
   }
   {SPC}*Tau{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %f", name, &c);
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     if(myverbose) printf("  tau set to %e line %d\n", c, line_of_file);
     Integrator.tau = c;
     BEGIN(INTEGRATOR);
