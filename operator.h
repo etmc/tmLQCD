@@ -51,6 +51,7 @@ typedef struct {
   int iterations;
   int prop_precision;
   int no_flavours;
+  int DownProp;
 
   int error_code;
 

@@ -90,6 +90,7 @@ int add_operator(const int type) {
   optr->error_code = 0;
   optr->prop_precision = _default_prop_precision_flag;
   optr->no_flavours = 1;
+  optr->DownProp = 0;
 
   optr->applyM = &dummy_D;
   optr->applyQ = &dummy_D;
@@ -224,33 +225,39 @@ void op_invert(const int op_id, const int index_start) {
   atime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
   if(optr->type == TMWILSON || optr->type == WILSON) {
-    g_mu = optr->mu;
-    if (g_cart_id == 0) {
-      printf("mu = %e\n", g_mu);
+    for(i = 0; i < 2; i++) {
+      g_mu = optr->mu;
+      if (g_cart_id == 0) {
+	printf("mu = %e\n", g_mu);
+      }
+      
+      optr->iterations = invert_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+				   optr->eps_sq, optr->maxiter,
+				   optr->solver, optr->rel_prec,
+				   0, optr->even_odd_flag);
+      
+      /* check result */
+      M_full(g_spinor_field[4], g_spinor_field[5], optr->prop0, optr->prop1);
+      
+      diff(g_spinor_field[4], g_spinor_field[4], optr->sr0, VOLUME / 2);
+      diff(g_spinor_field[5], g_spinor_field[5], optr->sr1, VOLUME / 2);
+      
+      nrm1 = square_norm(g_spinor_field[4], VOLUME / 2, 1);
+      nrm2 = square_norm(g_spinor_field[5], VOLUME / 2, 1);
+      optr->reached_prec = nrm1 + nrm2;
+      
+      /* convert to standard normalisation  */
+      /* we have to mult. by 2*kappa        */
+      if (optr->kappa != 0.) {
+	mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
+	mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);
+      }
+      optr->write_prop(op_id, index_start, i);
+      if(optr->DownProp) {
+	optr->mu = -optr->mu;
+      }
+      else break;
     }
-    
-    optr->iterations = invert_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
-				 optr->eps_sq, optr->maxiter,
-				 optr->solver, optr->rel_prec,
-				 0, optr->even_odd_flag);
-    
-    /* check result */
-    M_full(g_spinor_field[4], g_spinor_field[5], optr->prop0, optr->prop1);
-    
-    diff(g_spinor_field[4], g_spinor_field[4], optr->sr0, VOLUME / 2);
-    diff(g_spinor_field[5], g_spinor_field[5], optr->sr1, VOLUME / 2);
-    
-    nrm1 = square_norm(g_spinor_field[4], VOLUME / 2, 1);
-    nrm2 = square_norm(g_spinor_field[5], VOLUME / 2, 1);
-    optr->reached_prec = nrm1 + nrm2;
-
-    /* convert to standard normalisation  */
-    /* we have to mult. by 2*kappa        */
-    if (optr->kappa != 0.) {
-      mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
-      mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);
-    }
-    optr->write_prop(op_id, index_start, 0);
   }
   else if(optr->type == DBTMWILSON) {
     g_mubar = optr->mubar;
@@ -302,13 +309,22 @@ void op_invert(const int op_id, const int index_start) {
 
       optr->write_prop(op_id, index_start, i);
 
+      mul_r(optr->prop0, 1./(2*optr->kappa), g_spinor_field[DUM_DERI], VOLUME/2);
+      mul_r( optr->prop1, 1./(2*optr->kappa), g_spinor_field[DUM_DERI+1], VOLUME/2);
+      mul_r(optr->prop2, 1./(2*optr->kappa), g_spinor_field[DUM_DERI+2], VOLUME/2);
+      mul_r(optr->prop3, 1./(2*optr->kappa), g_spinor_field[DUM_DERI+3], VOLUME/2);
+
       /* mirror source, but not for volume sources */
-      if(SourceInfo.no_flavours == 2 && SourceInfo.type != 1) {
+      if(i == 0 && SourceInfo.no_flavours == 2 && SourceInfo.type != 1) {
+	if (g_cart_id == 0) {
+	  fprintf(stdout, "Inversion done in %d iterations, squared residue = %e!\n",
+		  optr->iterations, optr->reached_prec);
+	}
 	tmp = optr->sr0;
-	optr->sr0 = optr->sr1;
-	optr->sr1 = tmp;
-	tmp = optr->sr2;
-	optr->sr2 = optr->sr3;
+	optr->sr0 = optr->sr2;
+	optr->sr2 = tmp;
+	tmp = optr->sr1;
+	optr->sr1 = optr->sr3;
 	optr->sr3 = tmp;
       }
       /* volume sources need only one inversion */
@@ -403,7 +419,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   if(optr->no_flavours == 2) {
     write_spinor(writer, &operator_list[op_id].prop2, &operator_list[op_id].prop3, 1, optr->prop_precision);
   }
-  
+
 #ifdef MPI
   retime = MPI_Wtime();
 #else

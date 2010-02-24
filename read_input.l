@@ -100,7 +100,6 @@ inline void rmQuotes(char *str){
   double c;
   int reread = 0;
   char name[100];
-  char yesno[20];
   char * type;
 
   int verbose = 0;
@@ -427,6 +426,14 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->mu = c;
     if(myverbose) printf("  2KappaMu set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*AddDownPropagator{EQL}yes {
+    optr->DownProp = 1;
+    if(myverbose) printf("  Invert for + and - mu set in line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*AddDownPropagator{EQL}no {
+    optr->DownProp = 0;
+    if(myverbose) printf("  Don't nvert for + and - mu set in line %d operator %d\n", line_of_file, current_operator);
   }
 }
 
