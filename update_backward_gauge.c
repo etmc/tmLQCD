@@ -97,8 +97,7 @@ void update_backward_gauge() {
     kb=g_idn[g_eo2lexic[ix]][3];
     _su3_assign(g_gauge_field_copys[ix][5],g_gauge_field[kb][3]);
   }
-  g_update_gauge_copys = 0;
-  g_update_gauge_copyt = 0;
+  g_update_gauge_copy = 0;
   return;
 }
 
