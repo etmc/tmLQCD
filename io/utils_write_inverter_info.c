@@ -37,8 +37,8 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
 	    " date = %s",
  	    info->inverter,
 	    info->epssq, info->iter, info->kappa,
-	    info->extra_masses[info->mms-1] / 2. / info->kappa,
-	    info->mu / 2. / info->kappa, info->time, info->package_version,
+	    info->extra_masses[info->mms-1],
+	    info->mu, info->time, info->package_version,
 	    info->date);
   }
   else
@@ -51,7 +51,7 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
 	      " hmcversion = %s\n"
 	      " date = %s",
 	      info->inverter,
-	      info->epssq, info->iter, info->kappa, info->mu / 2. / info->kappa,
+	      info->epssq, info->iter, info->kappa, info->mu,
 	      info->time, info->package_version, info->date);
     }
     else {
@@ -63,8 +63,8 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
 	      " hmcversion = %s\n"
 	      " date = %s",
 	      info->inverter,
-	      info->epssq, info->iter, info->kappa, info->mubar / 2. / info->kappa,
-	      info->epsbar / 2. / info->kappa, info->time,
+	      info->epssq, info->iter, info->kappa, info->mubar,
+	      info->epsbar , info->time,
 	      info->package_version, info->date);
     }
   
