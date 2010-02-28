@@ -37,7 +37,7 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
 	    " date = %s",
  	    info->inverter,
 	    info->epssq, info->iter, info->kappa,
-	    info->extra_masses[info->mms-1],
+	    info->extra_masses[0],
 	    info->mu, info->time, info->package_version,
 	    info->date);
   }
