@@ -13,7 +13,7 @@ Makefile: $(srcdir)/Makefile.in  $(abs_top_builddir)/config.status
 $(abs_top_builddir)/config.status: $(top_srcdir)/configure
 	( cd ${abs_top_builddir} && $(SHELL) ./config.status --recheck ) 
 
-$(abs_top_builddir)/config.h: $(top_srcdir)/config.h.in $(abs_top_builddir)/config.status
+$(abs_top_builddir)/config.h: $(top_srcdir)/config.h.in $(abs_top_builddir)/config.status $(top_srcdir)/configure
 	( cd ${abs_top_builddir} && $(SHELL) ./config.status --header=config.h )
 
 #$(top_srcdir)/configure: $(top_srcdir)/configure.in 
@@ -27,7 +27,7 @@ $(addsuffix .o,$(EXTERNMODULES)): %.o:
 
 #extern libs
 
-$(LINKLIBS): %.a: Makefile
+$(LINKLIBS): %.a: Makefile $(abs_top_builddir)/config.status $(top_srcdir)/configure
 	@( cd $(dir $@) && ${MAKE} $(notdir $@) )
 
 #dep rule

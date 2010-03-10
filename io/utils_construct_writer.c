@@ -20,6 +20,7 @@ void construct_writer(WRITER ** writer, char * filename, const int append)
   }
   else {
     status = MPI_File_open(g_cart_grid, filename, MPI_MODE_WRONLY | MPI_MODE_CREATE, MPI_INFO_NULL, fh);
+    if(status == MPI_SUCCESS) status = MPI_File_set_size(*fh, 0);
   }
   status = (status == MPI_SUCCESS) ? 0 : 1;
   *writer = lemonCreateWriter(fh, g_cart_grid);
