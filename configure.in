@@ -3,7 +3,7 @@
 # Process this file with autoconf to produce a configure script
 #
 AC_PREREQ(2.59)
-AC_INIT(tmLQCD, 5.1.3, curbach@gmx.de)
+AC_INIT(tmLQCD, 5.1.4, curbach@gmx.de)
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()
@@ -228,7 +228,7 @@ AC_SEARCH_LIBS([$zheev],[], [], [AC_MSG_ERROR([Cannot find lapack])])
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([float.h libintl.h limits.h stdint.h stdlib.h string.h strings.h sys/time.h unistd.h])
+AC_CHECK_HEADERS([float.h libintl.h limits.h stdint.h stdlib.h string.h strings.h sys/time.h unistd.h endian.h])
 AC_CHECK_HEADER( getopt.h, [])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
