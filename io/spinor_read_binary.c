@@ -108,9 +108,9 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * re
                 g_proc_coords[3] * LZ + g_proc_coords[2] * LY +
                 g_proc_coords[1] * LX + g_proc_coords[0] * T) % 2) ? r : s;
           if (prec == 32)
-            byte_swap_assign_single2double(p + i, current, sizeof(spinor) / 8);
+            be_to_cpu_assign_single2double(p + i, current, sizeof(spinor) / 8);
           else
-            byte_swap_assign(p + i, current, sizeof(spinor) / 8);
+            be_to_cpu_assign(p + i, current, sizeof(spinor) / 8);
         }
       }
     }
@@ -186,10 +186,10 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * rea
             DML_checksum_accum(checksum,rank,(char *) tmp, bytes);
           }
           if(prec == 32) {
-            byte_swap_assign_single2double(p+i, (float*)tmp2, sizeof(spinor)/8);
+            be_to_cpu_assign_single2double(p+i, (float*)tmp2, sizeof(spinor)/8);
           }
           else {
-            byte_swap_assign(p + i, tmp, sizeof(spinor)/8);
+            be_to_cpu_assign(p + i, tmp, sizeof(spinor)/8);
           }
           if(status < 0 && status != LIME_EOR) {
             return(-1);

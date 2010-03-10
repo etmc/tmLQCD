@@ -66,9 +66,9 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
 	  memcpy(&tmp3[2], &g_gauge_field[ g_ipt[t][x][y][z] ][3], sizeof(su3));
 	  memcpy(&tmp3[3], &g_gauge_field[ g_ipt[t][x][y][z] ][0], sizeof(su3));
 	  if(prec == 32)
-	    byte_swap_assign_double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
+	    be_to_cpu_assign_double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
 	  else
-	    byte_swap_assign(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
+	    be_to_cpu_assign(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
 	  DML_checksum_accum(checksum, rank, (char*) filebuffer + bufoffset, bytes);
 	  
 	  bufoffset += bytes;
@@ -159,12 +159,12 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
               memcpy(&tmp3[3], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][0], sizeof(su3));
 
               if(prec == 32) {
-                byte_swap_assign_double2single(tmp2, tmp3, 4*sizeof(su3)/8);
+                be_to_cpu_assign_double2single(tmp2, tmp3, 4*sizeof(su3)/8);
                 DML_checksum_accum(checksum, rank, (char*) tmp2, 4*sizeof(su3)/2);
                 status = limeWriteRecordData((void*)&tmp2, &bytes, limewriter);
               }
               else {
-                byte_swap_assign(tmp, tmp3, 4*sizeof(su3)/8);
+                be_to_cpu_assign(tmp, tmp3, 4*sizeof(su3)/8);
                 DML_checksum_accum(checksum, rank, (char*) tmp, 4*sizeof(su3));
                 status = limeWriteRecordData((void*)&tmp, &bytes, limewriter);
               }
@@ -202,11 +202,11 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
               memcpy(&tmp3[2], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][3], sizeof(su3));
               memcpy(&tmp3[3], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][0], sizeof(su3));
               if(prec == 32) {
-                byte_swap_assign_double2single(tmp2, tmp3, 4*sizeof(su3)/8);
+                be_to_cpu_assign_double2single(tmp2, tmp3, 4*sizeof(su3)/8);
                 MPI_Send((void*) tmp2, 4*sizeof(su3)/8, MPI_FLOAT, 0, tag, g_cart_grid);
               }
               else {
-                byte_swap_assign(tmp, tmp3, 4*sizeof(su3)/8);
+                be_to_cpu_assign(tmp, tmp3, 4*sizeof(su3)/8);
                 MPI_Send((void*) tmp, 4*sizeof(su3)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
               }
             }

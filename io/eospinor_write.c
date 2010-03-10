@@ -119,7 +119,7 @@ int write_eospinor(spinor * const s, char * filename,
 	      + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
 	    if(g_cart_id == 0) {
 	      if(g_cart_id == id) {
-		byte_swap_assign(tmp, s + i , sizeof(spinor)/8);
+		be_to_cpu_assign(tmp, s + i , sizeof(spinor)/8);
 		status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
 	      }
 #ifdef MPI
@@ -140,7 +140,7 @@ int write_eospinor(spinor * const s, char * filename,
 #ifdef MPI
 	    else {
 	      if(g_cart_id == id) {
-		byte_swap_assign(tmp, s + i, sizeof(spinor)/8);
+		be_to_cpu_assign(tmp, s + i, sizeof(spinor)/8);
 		MPI_Send((void*) tmp, sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
 	      }
 	    }

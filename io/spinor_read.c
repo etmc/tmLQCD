@@ -35,6 +35,8 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
   prop_type = parse_propagator_type(reader);
   if ( prop_type == -1 ) {
     kill_with_error(reader->fp, g_cart_id, "Did not find propagator or source type. Aborting...\n");
+/*     if(g_proc_id == 0) fprintf(stderr, "hack here, please prepare sources with correct headers!\n"); */
+/*     prop_type = 10; */
   }
 
   /* strictly speeking the following depends on whether we read a source or a propagator */

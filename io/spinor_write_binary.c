@@ -64,9 +64,9 @@ int write_binary_spinor_data(spinor * const s, spinor * const r,
             p = r;
 
           if (prec == 32)
-            byte_swap_assign_double2single((float*)(filebuffer + bufoffset), (double*)(p + i), sizeof(spinor) / 8);
+            be_to_cpu_assign_double2single((float*)(filebuffer + bufoffset), (double*)(p + i), sizeof(spinor) / 8);
           else
-            byte_swap_assign((double*)(filebuffer + bufoffset), (double*)(p + i),  sizeof(spinor) / 8);
+            be_to_cpu_assign((double*)(filebuffer + bufoffset), (double*)(p + i),  sizeof(spinor) / 8);
             DML_checksum_accum(checksum, rank, (char*) filebuffer + bufoffset, bytes);
             bufoffset += bytes;
         }
@@ -166,12 +166,12 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
 
             if(g_cart_id == id) {
               if(prec == 32) {
-                byte_swap_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
+                be_to_cpu_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
                 DML_checksum_accum(checksum,rank,(char *) tmp2,sizeof(spinor)/2);
                 status = limeWriteRecordData((void*)tmp2, &bytes, writer);
               }
               else {
-                byte_swap_assign(tmp, p + i , sizeof(spinor)/8);
+                be_to_cpu_assign(tmp, p + i , sizeof(spinor)/8);
                 DML_checksum_accum(checksum,rank,(char *) tmp,sizeof(spinor));
                 status = limeWriteRecordData((void*)tmp, &bytes, writer);
               }
@@ -195,11 +195,11 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
           else{
             if(g_cart_id == id){
               if(prec == 32) {
-                byte_swap_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
+                be_to_cpu_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
                 MPI_Send((void*) tmp2, sizeof(spinor)/8, MPI_FLOAT, 0, tag, g_cart_grid);
               }
               else {
-                byte_swap_assign(tmp, p + i, sizeof(spinor)/8);
+                be_to_cpu_assign(tmp, p + i, sizeof(spinor)/8);
                 MPI_Send((void*) tmp, sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
               }
             }

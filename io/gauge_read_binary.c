@@ -119,17 +119,17 @@ int read_binary_gauge_data(LemonReader * reader, DML_Checksum * checksum)
           DML_checksum_accum(checksum, rank, current, bytes);
           if (prec == 32)
           {
-            byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
-            byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
-            byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
-            byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
+            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
+            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
+            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
+            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
           }
           else
           {
-            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
-            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
-            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
-            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
+            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
+            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
+            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
+            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
           }
         }
   DML_global_xor(&checksum->suma);
@@ -210,16 +210,16 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
             exit(500);
           }
           if(prec == 32) {
-            byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp2[3*18], sizeof(su3)/8);
-            byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &tmp2[0*18], sizeof(su3)/8);
-            byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &tmp2[1*18], sizeof(su3)/8);
-            byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], &tmp2[2*18], sizeof(su3)/8);
+            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp2[3*18], sizeof(su3)/8);
+            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &tmp2[0*18], sizeof(su3)/8);
+            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &tmp2[1*18], sizeof(su3)/8);
+            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], &tmp2[2*18], sizeof(su3)/8);
           }
           else {
-            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp[3], sizeof(su3)/8);
-            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &tmp[0], sizeof(su3)/8);
-            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &tmp[1], sizeof(su3)/8);
-            byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][3], &tmp[2], sizeof(su3)/8);
+            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp[3], sizeof(su3)/8);
+            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &tmp[0], sizeof(su3)/8);
+            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &tmp[1], sizeof(su3)/8);
+            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][3], &tmp[2], sizeof(su3)/8);
           }
         }
       }

@@ -132,7 +132,7 @@ int read_spinorfield_cm_swap_single(spinor * const s, spinor * const r, char * f
             fread(tmp, sizeof(spinor)/2, 1, ifs);
 
             /* Swap and convert from single to double precision */
-            byte_swap_assign_single2double(p+i, tmp, sizeof(spinor)/8);
+            be_to_cpu_assign_single2double(p+i, tmp, sizeof(spinor)/8);
           }
           else {
             if(vol > 0) {

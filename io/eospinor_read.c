@@ -87,7 +87,7 @@ int read_eospinor(spinor * const s, char * filename) {
 	      +g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
 	    
 	    status = limeReaderReadData(tmp, &bytes, limereader);
-	    byte_swap_assign(s + i, tmp, sizeof(spinor)/8);
+	    be_to_cpu_assign(s + i, tmp, sizeof(spinor)/8);
 	    if(status < 0 && status != LIME_EOR) {
 	      fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", status, filename);
 #ifdef MPI
