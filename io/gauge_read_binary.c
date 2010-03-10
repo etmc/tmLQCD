@@ -117,7 +117,6 @@ int read_binary_gauge_data(LemonReader * reader, DML_Checksum * checksum)
                                  + g_proc_coords[2] * LY + y) * ((DML_SiteRank)LX * g_nproc_x) + x);
           current = filebuffer + bytes * (x + (y + (t * LZ + z) * LY) * LX);
           DML_checksum_accum(checksum, rank, current, bytes);
-#ifndef WORDS_BIGENDIAN
           if (prec == 32)
           {
             byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
@@ -132,22 +131,6 @@ int read_binary_gauge_data(LemonReader * reader, DML_Checksum * checksum)
             byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
             byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
           }
-#else
-          if (prec == 32)
-          {
-            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
-            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
-            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
-            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
-          }
-          else
-          {
-            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3));
-            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3));
-            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3));
-            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3));
-          }
-#endif
         }
   DML_global_xor(&checksum->suma);
   DML_global_xor(&checksum->sumb);
@@ -226,7 +209,6 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
 #endif
             exit(500);
           }
-#ifndef WORDS_BIGENDIAN
           if(prec == 32) {
             byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp2[3*18], sizeof(su3)/8);
             byte_swap_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &tmp2[0*18], sizeof(su3)/8);
@@ -239,20 +221,6 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
             byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &tmp[1], sizeof(su3)/8);
             byte_swap_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][3], &tmp[2], sizeof(su3)/8);
           }
-#else
-          if(prec == 32) {
-            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp2[3*18], sizeof(su3)/8);
-            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &tmp2[0], sizeof(su3)/8);
-            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &tmp2[18], sizeof(su3)/8);
-            single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], &tmp2[2*18], sizeof(su3)/8);
-          }
-          else {
-            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp[3], sizeof(su3));
-            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &tmp[0], sizeof(su3));
-            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &tmp[1], sizeof(su3));
-            memcpy(&g_gauge_field[ g_ipt[t][x][y][z] ][3], &tmp[2], sizeof(su3));
-          }
-#endif
         }
       }
     }

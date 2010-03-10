@@ -44,6 +44,8 @@ void write_su3(su3 * up, FILE * f) {
 	     (*up).c22.re, (*up).c22.im, g_cart_id);
 }
 
+#if BYTE_ORDER == LITTLE_ENDIAN
+
 void byte_swap(void * ptr, int nmemb){
   int j;
   char char_in[4];
@@ -64,6 +66,15 @@ void byte_swap(void * ptr, int nmemb){
     in_ptr[3] = char_in[0];
   }
 }
+
+#else
+
+void byte_swap(void * ptr, int nmemb){
+  return;
+}
+#endif
+
+#if BYTE_ORDER == LITTLE_ENDIAN
 
 void byte_swap_assign(void * out_ptr, void * in_ptr, int nmemb){
   int j;
@@ -87,7 +98,17 @@ void byte_swap_assign(void * out_ptr, void * in_ptr, int nmemb){
     double_in_ptr++;
     double_out_ptr++;
   }
+  return;
 }
+
+#else
+
+void byte_swap_assign(void * out_ptr, void * in_ptr, int nmemb){
+  memcpy(out_ptr, in_ptr, 8*nmemb);
+  return;
+}
+
+#endif
 
 void single2double(void * out_ptr, void * in_ptr, int nmemb) {
   int i;
@@ -117,6 +138,8 @@ void double2single(void * out_ptr, void * in_ptr, int nmemb) {
 
 }
 
+#if BYTE_ORDER == LITTLE_ENDIAN
+
 void byte_swap_assign_single2double(void * out_ptr, void * in_ptr, int nmemb){
   int j;
   char * char_in_ptr, * char_out_ptr;
@@ -138,7 +161,28 @@ void byte_swap_assign_single2double(void * out_ptr, void * in_ptr, int nmemb){
     float_in_ptr++;
     double_out_ptr++;
   }
+  return;
 }
+
+#else 
+
+void byte_swap_assign_single2double(void * out_ptr, void * in_ptr, int nmemb){
+  int i;
+  float * float_ptr = (float*) in_ptr;
+  double * double_ptr = (double*) out_ptr;
+
+  for(i = 0; i < nmemb; i++) {
+    (*double_ptr) = (double) (*float_ptr);
+
+    float_ptr++;
+    double_ptr++;
+  }
+  return;
+}
+
+#endif
+
+#if BYTE_ORDER == LITTLE_ENDIAN
 
 void byte_swap_assign_double2single(void * out_ptr, void * in_ptr, int nmemb){
   int j;
@@ -162,8 +206,25 @@ void byte_swap_assign_double2single(void * out_ptr, void * in_ptr, int nmemb){
     float_out_ptr++;
     double_in_ptr++;
   }
+  return;
 }
 
+#else
+
+void byte_swap_assign_double2single(void * out_ptr, void * in_ptr, int nmemb){
+  int i;
+  float * float_ptr = (float*) out_ptr;
+  double * double_ptr = (double*) in_ptr;
+
+  for(i = 0; i < nmemb; i++) {
+    (*float_ptr) = (float) (*double_ptr);
+
+    float_ptr++;
+    double_ptr++;
+  }
+  return;
+}
+#endif
 
 void single2double_cm(spinor * const R, float * const S) {
   (*R).s0.c0.re = (double) S[0];

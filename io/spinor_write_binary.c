@@ -63,17 +63,10 @@ int write_binary_spinor_data(spinor * const s, spinor * const r,
           else
             p = r;
 
-#ifndef WORDS_BIGENDIAN
           if (prec == 32)
             byte_swap_assign_double2single((float*)(filebuffer + bufoffset), (double*)(p + i), sizeof(spinor) / 8);
           else
             byte_swap_assign((double*)(filebuffer + bufoffset), (double*)(p + i),  sizeof(spinor) / 8);
-#else
-          if (prec == 32)
-            double2single((float*)(filebuffer + bufoffset), (double*)(p + i), sizeof(spinor) / 8);
-          else
-            memcpy((double*)(filebuffer + bufoffset), (double*)(p + i), sizeof(spinor));
-#endif
             DML_checksum_accum(checksum, rank, (char*) filebuffer + bufoffset, bytes);
             bufoffset += bytes;
         }
@@ -172,7 +165,6 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
             rank = (DML_SiteRank) (((t0*LZ*g_nproc_z + z)*LY*g_nproc_y + y)*LX*g_nproc_x + x);
 
             if(g_cart_id == id) {
-#ifndef WORDS_BIGENDIAN
               if(prec == 32) {
                 byte_swap_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
                 DML_checksum_accum(checksum,rank,(char *) tmp2,sizeof(spinor)/2);
@@ -183,17 +175,6 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
                 DML_checksum_accum(checksum,rank,(char *) tmp,sizeof(spinor));
                 status = limeWriteRecordData((void*)tmp, &bytes, writer);
               }
-#else
-              if(prec == 32) {
-                double2single((float*)tmp2, (p + i), sizeof(spinor)/8);
-                DML_checksum_accum(checksum,rank,(char *) tmp2,sizeof(spinor)/2);
-                status = limeWriteRecordData((void*)tmp2, &bytes, writer);
-              }
-              else {
-                status = limeWriteRecordData((void*)(p + i), &bytes, writer);
-                DML_checksum_accum(checksum,rank,(char *) (p + i), sizeof(spinor));
-              }
-#endif
             }
 #ifdef MPI
             else{
@@ -213,7 +194,6 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
 #ifdef MPI
           else{
             if(g_cart_id == id){
-#  ifndef WORDS_BIGENDIAN
               if(prec == 32) {
                 byte_swap_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
                 MPI_Send((void*) tmp2, sizeof(spinor)/8, MPI_FLOAT, 0, tag, g_cart_grid);
@@ -222,15 +202,6 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
                 byte_swap_assign(tmp, p + i, sizeof(spinor)/8);
                 MPI_Send((void*) tmp, sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
               }
-#  else
-              if(prec == 32) {
-                double2single((float*)tmp2, (p + i), sizeof(spinor)/8);
-                MPI_Send((void*) tmp2, sizeof(spinor)/8, MPI_FLOAT, 0, tag, g_cart_grid);
-              }
-              else {
-                MPI_Send((void*) (p + i), sizeof(spinor)/8, MPI_DOUBLE, 0, tag, g_cart_grid);
-              }
-#  endif
             }
           }
 #endif

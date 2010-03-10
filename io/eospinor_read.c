@@ -28,9 +28,7 @@ int read_eospinor(spinor * const s, char * filename) {
 #ifdef MPI
   int position;
 #endif
-#ifndef WORDS_BIGENDIAN
   spinor tmp[1];
-#endif
   
   if((ifs = fopen(filename, "r")) == (FILE*)NULL) {
     if(g_proc_id == 0) {
@@ -88,12 +86,8 @@ int read_eospinor(spinor * const s, char * filename) {
 	      g_proc_coords[3]*LZ+g_proc_coords[2]*LY
 	      +g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
 	    
-#ifndef WORDS_BIGENDIAN
 	    status = limeReaderReadData(tmp, &bytes, limereader);
 	    byte_swap_assign(s + i, tmp, sizeof(spinor)/8);
-#else
-	    status = limeReaderReadData((s+i), &bytes, limereader);
-#endif
 	    if(status < 0 && status != LIME_EOR) {
 	      fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", status, filename);
 #ifdef MPI
