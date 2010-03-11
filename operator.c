@@ -45,6 +45,7 @@
 #include "observables.h"
 #include "boundary.h"
 #include "init_chi_spinor_field.h"
+#include "start.h"
 #include <io/params.h>
 #include <io/gauge.h>
 #include <io/spinor.h>
@@ -212,7 +213,6 @@ void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * co
 void op_invert(const int op_id, const int index_start) {
   operator * optr = &operator_list[op_id];
   double atime = 0., etime = 0., nrm1 = 0., nrm2 = 0.;
-  spinor * tmp;
   int i;
   optr->iterations = 0;
   optr->reached_prec = -1.;
@@ -320,12 +320,12 @@ void op_invert(const int op_id, const int index_start) {
 	  fprintf(stdout, "Inversion done in %d iterations, squared residue = %e!\n",
 		  optr->iterations, optr->reached_prec);
 	}
-	tmp = optr->sr0;
-	optr->sr0 = optr->sr2;
-	optr->sr2 = tmp;
-	tmp = optr->sr1;
-	optr->sr1 = optr->sr3;
-	optr->sr3 = tmp;
+	mul_one_pm_itau2(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], optr->sr0, optr->sr2, -1., VOLUME/2);
+	mul_one_pm_itau2(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+3], optr->sr1, optr->sr3, -1., VOLUME/2);
+
+	mul_one_pm_itau2(optr->sr0, optr->sr2, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI], +1., VOLUME/2);
+	mul_one_pm_itau2(optr->sr1, optr->sr3, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], +1., VOLUME/2);
+    
       }
       /* volume sources need only one inversion */
       else if(SourceInfo.type == 1) i++;
