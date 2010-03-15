@@ -196,7 +196,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       }
       else {
 	if(SourceInfo.splitted) {
-	  sprintf(source_filename,"%s.%.2d", SourceInfo.basename, ix);
+	  sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
 	  if(g_proc_id == 0) {
 	    printf("Reading source from %s\n", source_filename);
 	  }
