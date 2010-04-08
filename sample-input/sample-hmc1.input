@@ -25,8 +25,9 @@ ReversibilityCheck = yes
 ReversibilityCheckIntervall = 100
 DebugLevel = 1
 
-PerformOnlineMeasurements = yes
-OnlineMeasurementsFreq = 10
+BeginMeasurement CORRELATORS
+  Frequency = 100
+EndMeasurement
 
 BeginMonomial GAUGE
   Type = Wilson

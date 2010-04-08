@@ -20,8 +20,9 @@ ReversibilityCheckIntervall = 100
 DebugLevel = 1
 InitialStoreCounter = 0
 
-PerformOnlineMeasurements = yes
-OnlineMeasurementsFreq = 100
+BeginMeasurement CORRELATORS
+  Frequency = 100
+EndMeasurement
 
 BeginMonomial GAUGE
   Type = Iwasaki

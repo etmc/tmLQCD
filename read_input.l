@@ -1061,7 +1061,7 @@ inline void rmQuotes(char *str){
   }
   no {
     PropInfo.splitted = 0;
-    if(myverbose) printf("Writing all Propagators per gague into one single files\n");
+    if(myverbose) printf("Writing all Propagators per gauge into one single files\n");
   }
 }
 <NOSAMPLES>{DIGIT}+ {
@@ -1069,17 +1069,14 @@ inline void rmQuotes(char *str){
   if(myverbose) printf("Inverting for %d samples\n", no_samples);
 }
 
-
-
-
 <INITMEASUREMENT>{TYPE} {
  if(myverbose) printf("initialising measurements line %d\n", line_of_file);
   current_measurement++;
   meas = &measurement_list[current_measurement];
   meas->id = current_measurement;
-  if(strcmp(yytext, "ONLINE")==0) {
+  if(strcmp(yytext, "CORRELATORS")==0) {
     meas->type = ONLINE;
-    strcpy((*meas).name, "ONLINE");
+    strcpy((*meas).name, "CORRELATORS");
   }
   else if(strcmp(yytext, "PIONNORM")==0) {
     meas->type = PIONNORM;
@@ -1105,35 +1102,17 @@ inline void rmQuotes(char *str){
   else if(meas->type == PIONNORM) BEGIN(PIONNORMMEAS);  
 }
 
-
-<ONLINEMEAS>{
-  {SPC}*Frequency{SPC}*={SPC}*{DIGIT}+{SPC}* {
-  sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-  meas->freq = a;
-  if(myverbose!=0) fprintf(stderr, "  Frequency for online measurements set to %d\n", meas->freq);
-  BEGIN(ONLINEMEAS);
-  }
+<ONLINEMEAS,PIONNORMMEAS>{
   ^EndMeasurement{SPC}* {
-   if(myverbose) printf("Measurement with id %d parsed in line %d\n\n",meas->id, line_of_file);
+    if(myverbose) printf("Measurement with id %d parsed in line %d\n\n", meas->id, line_of_file);
     BEGIN(0);
-   }
-}
-
-<PIONNORMMEAS>{
-  {SPC}*Frequency{SPC}*={SPC}*{DIGIT}+{SPC}* {
-
-  sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-  meas->freq = a;
-  if(myverbose!=0) fprintf(stderr, "  Frequency for online measurement of pion norm set to %d\n", meas->freq );
-  BEGIN(PIONNORMMEAS);
   }
-  ^EndMeasurement{SPC}* {
-   if(myverbose) printf("Measurement with id %d parsed in line %d\n\n",meas->id, line_of_file);
-    BEGIN(0);
-   }
+  {SPC}*Frequency{SPC}*={SPC}*{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    meas->freq = a;
+    if(myverbose!=0) fprintf(stderr, "  Frequency for measurement with id %d set to %d\n", meas->id, meas->freq);
+  }
 }
-
-
 
 
 <TT>{DIGIT}+                  {

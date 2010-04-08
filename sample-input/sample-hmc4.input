@@ -20,8 +20,9 @@ ReversibilityCheck = no
 ReversibilityCheckIntervall = 1
 DebugLevel = 1
 
-PerformOnlineMeasurements = yes
-OnlineMeasurementsFreq = 20
+BeginMeasurement CORRELATORS
+  Frequency = 20
+EndMeasurement
 
 BeginMonomial GAUGE
   Timescale = 0

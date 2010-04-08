@@ -26,8 +26,9 @@ DebugLevel = 1
 StartCondition = restart
 ComputeEVs = no
 
-PerformOnlineMeasurements = yes
-OnlineMeasurementsFreq = 5
+BeginMeasurement CORREATORS
+  Frequency = 5
+EndMeasurement
 
 BeginMonomial GAUGE
   Type = Wilson

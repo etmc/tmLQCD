@@ -10,7 +10,7 @@
 
 L=4
 T=4
-Measurements = 100000
+Measurements = 1
 Startcondition = hot
 2KappaMu = 0.177
 kappa = 0.177
@@ -24,8 +24,9 @@ ReversibilityCheckIntervall = 100
 InitialStoreCounter = 0
 DebugLevel = 1
 
-PerformOnlineMeasurements = yes
-OnlineMeasurementsFreq = 5
+BeginMeasurement CORRELATORS
+  Frequency = 2
+EndMeasurement
 
 BeginMonomial GAUGE
   Type = Wilson
