@@ -23,6 +23,9 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#undef SSE
+#undef SSE2
+#undef SSE3
 #include "global.h"
 #include "su3.h"
 #include "sf_get_rectangle_staples.h"
