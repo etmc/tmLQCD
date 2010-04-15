@@ -475,6 +475,11 @@ inline void rmQuotes(char *str){
 }
 
 <TMSOLVER>{
+  mixedcg {
+    optr->solver=13;
+    if(myverbose) printf("  Solver set to MixedCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
   bicgstab {
     optr->solver=0;
     if(myverbose) printf("  Solver set to BiCGstab line %d operator %d\n", line_of_file, current_operator);
