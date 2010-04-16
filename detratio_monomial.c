@@ -100,8 +100,10 @@ void detratio_derivative(const int no) {
       /* X_W -> DUM_DERI+1 */
       chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->csg_field, 
 		   mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
-      mnl->iter1 += solve_cg(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->forceprec, 
-			     g_relative_precision_flag);
+/*       mnl->iter1 += solve_cg(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->forceprec,  */
+/* 			     g_relative_precision_flag); */
+      mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, 
+			   mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi);
       chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       /* Y_W -> DUM_DERI  */
@@ -183,7 +185,7 @@ void detratio_derivative(const int no) {
 		   mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
       mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], 
 			   mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
-			   VOLUME, &Q_pm_psi, 0, 1);
+			   VOLUME, &Q_pm_psi);
       chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       

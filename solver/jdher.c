@@ -667,7 +667,7 @@ void jdher(int n, int lda, double tau, double tol,
       }
       else if (solver_flag == CG){
 	info = cg_her((spinor*) v, (spinor*) r, linitmax, it_tol*it_tol, 0, 
-		      n*sizeof(complex)/sizeof(spinor), &Proj_A_psi, 0, 0);
+		      n*sizeof(complex)/sizeof(spinor), &Proj_A_psi);
       }
       else{
  	info = gmres((spinor*) v, (spinor*) r, 10, linitmax, it_tol*it_tol, 0,

@@ -66,7 +66,6 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   spinor *x, *delta, *y;
 
   squarenorm = square_norm(Q, N, 1);
-  sqnrm = square_norm(P, N, 1);
 
   delta = g_spinor_field[DUM_SOLVER+3];
   x = g_spinor_field[DUM_SOLVER+4];
@@ -91,7 +90,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   for(i = 0; i < 20; i++) {
 
     g_sloppy_precision = 1;
-    /* main CG loop */
+    /* main CG loop in lower precision */
     zero_spinor_field(x, N);
     assign(g_spinor_field[DUM_SOLVER+1], delta, N);
     assign(g_spinor_field[DUM_SOLVER+2], delta, N);
@@ -106,7 +105,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       err = square_norm(g_spinor_field[DUM_SOLVER], N, 1);
 
       if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
-	printf("inner CG: %d res^2 %g\n", iter, err);
+	printf("inner CG: %d res^2 %g\n", iter+j, err);
 	fflush(stdout);
       }
     

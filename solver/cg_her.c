@@ -1,7 +1,9 @@
 /***********************************************************************
+ * $Id$
+ *
  * Copyright (C) 2001 Martin Hasenbusch
  *               2003 Thomas Chiarappa
- *               2002,2003,2004,2005 Carsten Urbach
+ *               2002,2003,2004,2005,2010 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -17,9 +19,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-
-/**************************************************************************
  *
  * $Id$
  *  
@@ -34,9 +33,6 @@
  *     CG solver
  *
  * input:
- *   m: Mass to be use in D_psi
- *   subtrac_ev: if set to 1, the lowest eigenvectors of Q^2 will
- *               be projected out.
  *   Q: source
  * inout:
  *   P: initial guess and result
@@ -50,6 +46,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
+#ifdef MPI
+# include <mpi.h>
+#endif
 #include "global.h"
 #include "su3.h"
 #include "linalg_eo.h"
@@ -59,83 +59,45 @@
 #include "poly_precon.h"
 #include "cg_her.h"
 
-/* P output = solution , Q input = source */
 int cg_her(spinor * const P, spinor * const Q, const int max_iter, 
-	   double eps_sq, const int rel_prec, const int N, matrix_mult f, 
-	   const int subtract_ev, const int modulo){
-  double normsp, normsq, pro, err, alpha_cg, beta_cg, squarenorm;
-  int iteration;
-  
-  squarenorm = square_norm(Q, N, 1);
-  /*        !!!!   INITIALIZATION    !!!! */
-  assign(g_spinor_field[DUM_SOLVER], P, N);
-  /*        (r_0,r_0)  =  normsq         */
-  normsp=square_norm(P, N, 1);
+	   double eps_sq, const int rel_prec, const int N, matrix_mult f) {
 
-  if((subtract_ev == 1)) { 
-    assign_sub_lowest_eigenvalues(g_spinor_field[DUM_SOLVER+5], Q, 10, N);
-  }
-  else{
-    assign(g_spinor_field[DUM_SOLVER+5], Q, N);
-  }
+  static double normsq,pro,err,alpha_cg,beta_cg,squarenorm;
+  int iteration;
+  int save_sloppy = g_sloppy_precision;
+  double atime, etime, flops;
   
   /* initialize residue r and search vector p */
-  if(normsp==0){
-    /* if a starting solution vector equal to zero is chosen */
-    assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+5], N);
-    assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+5], N);
-    normsq=square_norm(Q, N, 1);
-  }
-  else{
-    /* if a starting solution vector different from zero is chosen */
-    f(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]);
-   
-    if((subtract_ev == 1)) {
-      sub_lowest_eigenvalues(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER], 10, N);
-    }
-    diff(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+5], g_spinor_field[DUM_SOLVER+3], N);
-    assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], N);
-    normsq=square_norm(g_spinor_field[DUM_SOLVER+2], N, 1);
-  }
+#ifdef MPI
+  atime = MPI_Wtime();
+#else
+  atime = ((double)clock())/((double)(CLOCKS_PER_SEC));
+#endif
+  squarenorm = square_norm(Q, N, 1);
+  
+  f(g_spinor_field[DUM_SOLVER], P); 
+  
+  diff(g_spinor_field[DUM_SOLVER+1], Q, g_spinor_field[DUM_SOLVER], N);
+  assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], N);
+  normsq=square_norm(g_spinor_field[DUM_SOLVER+1], N, 1);
   
   /* main loop */
-  for(iteration=0;iteration<max_iter;iteration++){
-    f(g_spinor_field[DUM_SOLVER+4], g_spinor_field[DUM_SOLVER+2]);
+  for(iteration = 1; iteration <= max_iter; iteration++) {
+    f(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2]);
+    pro = scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], N, 1);
+    alpha_cg = normsq / pro;
+    assign_add_mul_r(P, g_spinor_field[DUM_SOLVER+2], alpha_cg, N);
+    
+    assign_mul_add_r(g_spinor_field[DUM_SOLVER], -alpha_cg, g_spinor_field[DUM_SOLVER+1], N);
+    err=square_norm(g_spinor_field[DUM_SOLVER], N, 1);
 
-    if((subtract_ev == 1) && (iteration%modulo == 0)) {
-      sub_lowest_eigenvalues(g_spinor_field[DUM_SOLVER+4], g_spinor_field[DUM_SOLVER+2], 10, N);
+    if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
+      printf("CG: iterations: %d res^2 %e\n", iteration, err);
+      fflush(stdout);
     }
-    /* c=scalar_prod(&g_ev[0*VOLUME], g_spinor_field[DUM_SOLVER+4], 1);
-       printf("%e, %e\n",c.re,c.im); */
-    pro=scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+4], N, 1);
-     
-    /*  Compute alpha_cg(i+1)   */
-    alpha_cg=normsq/pro;
-     
-    /*  Compute x_(i+1) = x_i + alpha_cg(i+1) p_i    */
-    assign_add_mul_r(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2],  alpha_cg, N);
-    /*  Compute r_(i+1) = r_i - alpha_cg(i+1) Qp_i   */
-    assign_add_mul_r(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+4], -alpha_cg, N);
-
-    /* Check whether the precision is reached ... */
-    err=square_norm(g_spinor_field[DUM_SOLVER+1], N, 1);
-    if(g_debug_level > 1 && g_proc_id == g_stdio_proc) {
-      printf("%d\t%g\n",iteration,err); fflush( stdout);
-    }
-
-    if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) {
-      if((subtract_ev == 1)){
-	assign_add_invert_subtracted_part(g_spinor_field[DUM_SOLVER], Q, 10, N);
-      } 
-      assign(P, g_spinor_field[DUM_SOLVER], N);
-      f(g_spinor_field[DUM_SOLVER+2], P);
-      diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], Q, N);
-      err = square_norm(g_spinor_field[DUM_SOLVER+3], N, 1);
-      if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
-	printf("true residue %d\t%g\t\n",iteration, err); fflush( stdout);
-      }
-      g_sloppy_precision = 0;
-      return(iteration+1);
+    
+    if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) {
+      break;
     }
 #ifdef _USE_HALFSPINOR
     if(((err*err <= eps_sq) && (rel_prec == 0)) || ((err*err <= eps_sq*squarenorm) && (rel_prec == 1))) {
@@ -145,18 +107,28 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
       }
     }
 #endif
-    /* Compute beta_cg(i+1)
-       Compute p_(i+1) = r_i+1 + beta_(i+1) p_i     */
-    beta_cg=err/normsq;
-    assign_mul_add_r(g_spinor_field[DUM_SOLVER+2], beta_cg, g_spinor_field[DUM_SOLVER+1], N);
-    normsq=err;
+
+    beta_cg = err / normsq;
+    assign_mul_add_r(g_spinor_field[DUM_SOLVER+2], beta_cg, g_spinor_field[DUM_SOLVER], N);
+    assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], N);
+    normsq = err;
   }
-  if((subtract_ev == 1)) { 
-    assign_add_invert_subtracted_part(g_spinor_field[DUM_SOLVER], Q, 10, N);
+#ifdef MPI
+  etime = MPI_Wtime();
+#else
+  etime = ((double)clock())/((double)(CLOCKS_PER_SEC));
+#endif
+  g_sloppy_precision = save_sloppy;
+  /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
+  /* 2*1320.0 because the linalg is over VOLUME/2 */
+  flops = (2*(2*1320.0+2*3*4) + 2*3*4 + iteration*(2.*(2*1320.0+2*3*4) + 10*3*4))*N/1.0e6f;
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iteration, eps_sq, etime-atime); 
+    printf("CG: flopcount (for tmWilson with even/odd only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+	   etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
   }
-  assign(P, g_spinor_field[DUM_SOLVER], N);
-  g_sloppy_precision = 0;
-  return(-1);
+  if(iteration > max_iter) return(-1);
+  return(iteration);
 }
 
 static char const rcsid[] = "$Id$";

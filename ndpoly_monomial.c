@@ -226,7 +226,7 @@ void ndpoly_heatbath(const int id) {
 
     /* solve (Q+)*(Q-)*P((Q+)*(Q-)) *x=y */
     cg_her(g_chi_up_spinor_field[1], g_chi_up_spinor_field[0],
-             1000,1.e-16,0,VOLUME/2, Qtm_pm_Ptm_pm_psi  ,0,1);
+             1000,1.e-16,0,VOLUME/2, Qtm_pm_Ptm_pm_psi);
 
     /*  phi= Bdagger phi  */
     for(j = 1; j < (phmc_dop_n_cheby); j++){

@@ -92,7 +92,8 @@ void det_derivative(const int id) {
       /* X_o -> DUM_DERI+1 */
       chrono_guess(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
-      mnl->iter1 += solve_cg(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->forceprec, g_relative_precision_flag);
+/*       mnl->iter1 += solve_cg(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->forceprec, g_relative_precision_flag); */
+      mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->maxiter, mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi);
       chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       /*       assign(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+4], VOLUME/2); */
@@ -153,7 +154,7 @@ void det_derivative(const int id) {
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
       mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], mnl->pf, 
 			mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
-			VOLUME, &Q_pm_psi, 0, 1);
+			VOLUME, &Q_pm_psi);
       chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
 
@@ -282,7 +283,7 @@ void det_heatbath(const int id) {
 double det_acc(const int id) {
   monomial * mnl = &monomial_list[id];
   int save_iter = ITER_MAX_BCG;
-
+  int save_sloppy = g_sloppy_precision_flag;
   g_mu = mnl->mu;
   boundary(mnl->kappa);
   if(mnl->even_odd_flag) {
@@ -292,7 +293,9 @@ double det_acc(const int id) {
     }
     chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
+    g_sloppy_precision_flag = 0;
     mnl->iter0 = bicg(g_spinor_field[2], mnl->pf, mnl->accprec, g_relative_precision_flag);
+    g_sloppy_precision_flag = save_sloppy;
     /* Compute the energy contr. from first field */
     mnl->energy1 = square_norm(g_spinor_field[2], VOLUME/2, 1);
   }
@@ -302,7 +305,7 @@ double det_acc(const int id) {
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
       mnl->iter0 = cg_her(g_spinor_field[DUM_DERI+5], mnl->pf, 
 			  mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
-			  VOLUME, Q_pm_psi, 0, 0);
+			  VOLUME, Q_pm_psi);
       Q_minus_psi(g_spinor_field[2], g_spinor_field[DUM_DERI+5]);
       /* Compute the energy contr. from first field */
       mnl->energy1 = square_norm(g_spinor_field[2], VOLUME, 1);

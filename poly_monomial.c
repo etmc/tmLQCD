@@ -308,7 +308,7 @@ void poly_heatbath(const int id){
 
     /* solve (Q+)*(Q-)*P((Q+)*(Q-)) *x=y */
     cg_her(spinor1, spinor2,
-	   1000,mnl->accprec,g_relative_precision_flag,VOLUME/2, Qtm_pm_Ptm_pm_psi  ,0,1);
+	   1000,mnl->accprec,g_relative_precision_flag,VOLUME/2, Qtm_pm_Ptm_pm_psi);
     
     /*  phi= Bdagger phi  */
     for(j = 0; j < (mnl->MDPolyDegree/2); j++){

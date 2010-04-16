@@ -45,9 +45,11 @@
 /* k output , l input */
 int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) {
 
-  static double normsq,pro,err,alpha_cg,beta_cg,squarenorm;
-  int iteration;
+  static double normsq, pro, err, alpha_cg, beta_cg, squarenorm, sqnrm, sqnrm2;
+  int iteration = 0, i, j;
+  int save_sloppy = g_sloppy_precision;
   double atime, etime, flops;
+  spinor *x, *delta, *y;
   
   /* initialize residue r and search vector p */
 #ifdef MPI
@@ -56,35 +58,96 @@ int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_pr
   atime = ((double)clock())/((double)(CLOCKS_PER_SEC));
 #endif
   squarenorm = square_norm(l, VOLUME/2, 1);
-  
-  Qtm_pm_psi(g_spinor_field[DUM_SOLVER], k); 
-  
-  diff(g_spinor_field[DUM_SOLVER+1], l, g_spinor_field[DUM_SOLVER], VOLUME/2);
-  assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME/2);
-  normsq=square_norm(g_spinor_field[DUM_SOLVER+1], VOLUME/2, 1);
-  
-  /* main loop */
-  for(iteration=1;iteration<=ITER_MAX_CG;iteration++) {
-    Qtm_pm_psi(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2]);
-    pro=scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], VOLUME/2, 1);
-    alpha_cg=normsq/pro;
-    assign_add_mul_r(k, g_spinor_field[DUM_SOLVER+2], alpha_cg, VOLUME/2);
-    
-    assign_mul_add_r(g_spinor_field[DUM_SOLVER], -alpha_cg, g_spinor_field[DUM_SOLVER+1], VOLUME/2);
-    err=square_norm(g_spinor_field[DUM_SOLVER], VOLUME/2, 1);
 
-    if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
-      printf("CG: iterations: %d res^2 %e\n", iteration, err);
-      fflush(stdout);
+  if(g_sloppy_precision_flag == 1) { 
+    delta = g_spinor_field[DUM_SOLVER+3];
+    x = g_spinor_field[DUM_SOLVER+4];
+    y = g_spinor_field[DUM_SOLVER+5];
+    assign(delta, l, VOLUME/2);
+    Qtm_pm_psi(y, k);
+    diff(delta, l, y, VOLUME/2);
+    sqnrm = square_norm(delta, VOLUME/2, 1);
+    if(((sqnrm <= eps_sq) && (rel_prec == 0)) || ((sqnrm <= eps_sq*squarenorm) && (rel_prec == 1))) {
+      return(0);
     }
     
-    if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
-      break;
+    for(i = 0; i < 20; i++) {
+      g_sloppy_precision = 1;
+      /* main CG loop in lower precision */
+      zero_spinor_field(x, VOLUME/2);
+      assign(g_spinor_field[DUM_SOLVER+1], delta, VOLUME/2);
+      assign(g_spinor_field[DUM_SOLVER+2], delta, VOLUME/2);
+      sqnrm2 = sqnrm;
+      for(j = 0; j <= ITER_MAX_CG; j++) {
+	Qtm_pm_psi(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2]);
+	pro = scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], VOLUME/2, 1);
+	alpha_cg = sqnrm2 / pro;
+	assign_add_mul_r(x, g_spinor_field[DUM_SOLVER+2], alpha_cg, VOLUME/2);
+	
+	assign_mul_add_r(g_spinor_field[DUM_SOLVER], -alpha_cg, g_spinor_field[DUM_SOLVER+1], VOLUME/2);
+	err = square_norm(g_spinor_field[DUM_SOLVER], VOLUME/2, 1);
+	
+	if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
+	  printf("inner CG: %d res^2 %g\n", iteration+j+1, err);
+	  fflush(stdout);
+	}
+	
+	if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
+	  break;
+	}
+	beta_cg = err / sqnrm2;
+	assign_mul_add_r(g_spinor_field[DUM_SOLVER+2], beta_cg, g_spinor_field[DUM_SOLVER], VOLUME/2);
+	assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], VOLUME/2);
+	sqnrm2 = err;
+      }
+      /* end main CG loop */
+      iteration += j;
+      g_sloppy_precision = 0;
+      add(k, k, x, VOLUME/2);
+      
+      Qtm_pm_psi(y, x);
+      diff(delta, delta, y, VOLUME/2);
+      sqnrm = square_norm(delta, VOLUME/2, 1);
+      if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
+	printf("mixed CG(linsolve): true residue %d\t%g\t\n",iteration, sqnrm); fflush( stdout);
+      }
+      
+      if(((sqnrm <= eps_sq) && (rel_prec == 0)) || ((sqnrm <= eps_sq*squarenorm) && (rel_prec == 1))) {
+	break;
+      }
+      iteration++;
     }
-    beta_cg = err/normsq;
-    assign_mul_add_r(g_spinor_field[DUM_SOLVER+2], beta_cg, g_spinor_field[DUM_SOLVER], VOLUME/2);
-    assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], VOLUME/2);
-    normsq=err;
+  }
+  else {
+    Qtm_pm_psi(g_spinor_field[DUM_SOLVER], k); 
+    
+    diff(g_spinor_field[DUM_SOLVER+1], l, g_spinor_field[DUM_SOLVER], VOLUME/2);
+    assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME/2);
+    normsq=square_norm(g_spinor_field[DUM_SOLVER+1], VOLUME/2, 1);
+    
+    /* main loop */
+    for(iteration = 1; iteration <= ITER_MAX_CG; iteration++) {
+      Qtm_pm_psi(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2]);
+      pro=scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], VOLUME/2, 1);
+      alpha_cg=normsq/pro;
+      assign_add_mul_r(k, g_spinor_field[DUM_SOLVER+2], alpha_cg, VOLUME/2);
+      
+      assign_mul_add_r(g_spinor_field[DUM_SOLVER], -alpha_cg, g_spinor_field[DUM_SOLVER+1], VOLUME/2);
+      err=square_norm(g_spinor_field[DUM_SOLVER], VOLUME/2, 1);
+      
+      if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
+	printf("CG (linsolve): iterations: %d res^2 %e\n", iteration, err);
+	fflush(stdout);
+      }
+      
+      if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
+	break;
+      }
+      beta_cg = err/normsq;
+      assign_mul_add_r(g_spinor_field[DUM_SOLVER+2], beta_cg, g_spinor_field[DUM_SOLVER], VOLUME/2);
+      assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], VOLUME/2);
+      normsq=err;
+    }
   }
 #ifdef MPI
   etime = MPI_Wtime();
@@ -99,7 +162,8 @@ int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_pr
     printf("CG: flopcount: t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
 	   etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
   }
-  return iteration;
+  g_sloppy_precision = save_sloppy;
+  return(iteration);
 }
 
 

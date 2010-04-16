@@ -139,7 +139,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2); 
 #else        
       iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
-		    VOLUME/2, &Qtm_pm_psi, sub_evs_flag, 1000);
+		    VOLUME/2, &Qtm_pm_psi);
       Qtm_minus_psi(Odd_new, Odd_new);
 #endif
     }
@@ -160,7 +160,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       fflush(stdout);}
       iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
 #else
-      iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0);
+      iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
       Qtm_minus_psi(Odd_new, Odd_new);
 #endif
     }
@@ -171,7 +171,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       mul_one_pm_imu(g_spinor_field[DUM_DERI], +1.); 
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
       if(g_proc_id == 0) {printf("# Redoing it with CG!\n"); fflush(stdout);}
-      iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi, 0, 0.);
+      iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
       Qtm_minus_psi(Odd_new, Odd_new);
     }
     
@@ -248,10 +248,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 #ifdef HAVE_GPU
       if(g_proc_id == 0) {printf("Using GPU for inversion\n");
       fflush(stdout);}      
-      iter = mixed_solve(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME);      
+      iter = mixed_solve(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, 
+			 rel_prec, VOLUME);      
 #else
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
-      iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, rel_prec, VOLUME, &Q_pm_psi, 0, 0);
+      iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
+		    rel_prec, VOLUME, &Q_pm_psi);
       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
 #endif      
     }
