@@ -284,6 +284,7 @@ double det_acc(const int id) {
   monomial * mnl = &monomial_list[id];
   int save_iter = ITER_MAX_BCG;
   int save_sloppy = g_sloppy_precision_flag;
+
   g_mu = mnl->mu;
   boundary(mnl->kappa);
   if(mnl->even_odd_flag) {

@@ -336,6 +336,7 @@ void detratio_heatbath(const int id) {
 double detratio_acc(const int id) {
   monomial * mnl = &monomial_list[id];
   int saveiter = ITER_MAX_BCG;
+  int save_sloppy = g_sloppy_precision_flag;
 
   g_mu = mnl->mu2;
   boundary(mnl->kappa2);
@@ -347,7 +348,9 @@ double detratio_acc(const int id) {
     ITER_MAX_CG = mnl->maxiter;
     chrono_guess(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->csg_field, mnl->csg_index_array, 
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
+    g_sloppy_precision_flag = 0;    
     mnl->iter0 += bicg(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->accprec, g_relative_precision_flag); 
+    g_sloppy_precision_flag = save_sloppy;
     /*     ITER_MAX_BCG = *saveiter_max; */
     /* Compute the energy contr. from second field */
     mnl->energy1 = square_norm(g_spinor_field[3], VOLUME/2, 1);
