@@ -47,7 +47,8 @@ adjust the input parameters to match \emph{exactly} the values used
 for the root computation. I.e. the input parameters {\ttfamily
   StildeMin}, {\ttfamily StildeMax} and {\ttfamily
   DegreeOfMDPolynomial} must be set appropriately in the {\ttfamily
-  NDPOLY} monomial.
+  NDPOLY} monomial. The maximal degree $\tilde n_\mathrm{max}$ for
+$\tilde P$ can be influenced using {\ttfamily MaxPtildeDegree}.
 
 The minimal and maximal eigenvalue of the non-degenerate flavour
 doublet can be computed as an online measurement. The frequency can be
@@ -59,6 +60,19 @@ polynomial is chosen wrongly the algorithm performance might
 deteriorate drastically, in particular if the upper bound is set
 wrongly. It is therefore advisable to introduce some security measure
 in particular in the value of $\tilde s_\mathrm{max}$. 
+
+While the degree of the MD polynomial can be adjusted in the input
+file, the degree of $\tilde P$ used in the heatbath and acceptance
+steps is computed at the beginning of the run depending on the
+precision specified in the input file. The procedure is as
+follows: Compute the first $\tilde n_\mathrm{max}$
+coefficients $d_i$ of the polynomial. Then determine the degree
+$\tilde n$ of $\tilde P$ such that 
+\[
+\sum_{i=n}^{n_\mathrm{max}} d_i < \epsilon
+\]
+where $\epsilon$ is set using the input parameter {\ttfamily
+  PrecisionPtilde}. 
 
 %%% Local Variables: 
 %%% mode: latex

@@ -315,8 +315,8 @@ void degree_of_polynomial_nd(const int degree_of_p){
   random_spinor_field(sc,VOLUME/2, 1);
 
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)){
-    printf("PHMC: in P: EVmin = %e  EVmax = %e  \n", phmc_cheb_evmin, phmc_cheb_evmax);
-    printf("PHMC: the degree of polynomial P set to: %d\n", phmc_dop_n_cheby);
+    printf("NDPOLY MD Polynomial: EVmin = %e  EVmax = %e  \n", phmc_cheb_evmin, phmc_cheb_evmax);
+    printf("NDPOLY MD Polynomial: the degree was set to: %d\n", phmc_dop_n_cheby);
     fflush(stdout);
   }
 
@@ -329,40 +329,30 @@ void degree_of_polynomial_nd(const int degree_of_p){
   temp=square_norm(&aux2s[0],VOLUME/2, 1)/square_norm(&ss[0],VOLUME/2, 1)/4.0;
 
   diff(&aux2c[0],&auxc[0],&sc[0],VOLUME/2);
-  temp2=square_norm(&aux2c[0],VOLUME/2, 1)/square_norm(&sc[0],VOLUME/2, 1)/4.0;
+  temp2 = square_norm(&aux2c[0],VOLUME/2, 1)/square_norm(&sc[0],VOLUME/2, 1)/4.0;
 
   if(g_epsbar == 0.){ 
     temp2 = 0.0;
   }
-  if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
-    printf("PHMC: At n=%d  || differences ||^2 :  UP=%e  DN=%e \n",phmc_dop_n_cheby, temp, temp2);
-    fflush(stdout);
-  }
-   
 
-  sum=0;
-  for(j=phmc_dop_n_cheby; j<N_CHEBYMAX; j++){
-    sum += fabs(phmc_dop_cheby_coef[j]);
-  }
-  if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
-    printf("PHMC: Sum remaining | c_n |=%e \n", sum);
-    fflush(stdout);
-  }
-  
   if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-    printf("PHMC: Achieved Accuracies for P :\n");
-    printf("PHMC: Uniform: Sum |c_n|=%e \n", sum);
-    printf("PHMC: RND:  || (P S P - 1)X ||^2 /|| 2X ||^2 :  UP=%e  DN=%e \n",temp, temp2);
+    /* this is || (P S P - 1)X ||^2 /|| 2X ||^2 */
+    /* where X is a random spinor field         */
+    printf("NDPOLY MD Polynomial: relative squared accuracy in components:\n UP=%e  DN=%e \n", temp, temp2);
+    /*     printf("NDPOLY: Sum remaining | c_n | = %e \n", sum); */
+    fflush(stdout);
   }
 
-  temp = cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
-  temp *= phmc_cheb_evmin;
-  temp *= cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
-  temp = 0.5*fabs(temp - 1);
-  if(g_proc_id == g_stdio_proc && g_debug_level > 1){
-    printf("PHMC: Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", phmc_cheb_evmin, temp);
+  if(g_debug_level > 1) {
+    temp = cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
+    temp *= phmc_cheb_evmin;
+    temp *= cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
+    temp = 0.5*fabs(temp - 1);
+    if(g_proc_id == g_stdio_proc) {
+      printf("PHMC: Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", phmc_cheb_evmin, temp);
+    }
   }
-    /* RECALL THAT WE NEED AN EVEN DEGREE !!!! */
+  /* RECALL THAT WE NEED AN EVEN DEGREE !!!! */
 
 #if ( defined SSE || defined SSE2 || defined SSE3)
    free(ss_);   

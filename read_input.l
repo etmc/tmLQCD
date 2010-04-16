@@ -60,6 +60,7 @@ EQL {SPC}*={SPC}*
 #include"measurements.h"
 #include"integrator.h"
 #include"operator.h"
+#include"phmc.h"
 #include<io/params.h>
 
 inline void rmQuotes(char *str){
@@ -826,6 +827,12 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     stilde_min = c;
     if(myverbose!=0) printf("  Stilde min set to %e line %d monomial %d\n", stilde_min, line_of_file, current_monomial);
+  }
+  {SPC}*MaxPtildeDegree{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    /* mnl->MaxPtildeDegree = a; */
+    phmc_max_ptilde_degree = a;
+    if(myverbose!=0) printf("  Maximal Degree of Ptilde set to %d line %d monomial %d\n", mnl->MaxPtildeDegree, line_of_file, current_monomial);
   }
   {SPC}*DegreeOfMDPolynomial{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);

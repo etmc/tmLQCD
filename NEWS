@@ -1,3 +1,19 @@
+16.04.2010: mixed precision CG implemented for invert and HMC
+            determination of the Ptilde degree optimised
+	    new input parameter for NDPOLY monomial: MaxPtildeDegree
+
+16.04.2010: as online measurements are available CORRELATORS, PIONNORM, POLYAKOV
+            syntax
+            BeginMeasurement TYPE
+              option = value
+            EndMeasurement
+
+March.2010: parallel IO implemented and tested to work.
+            new operator syntax in input file
+            Begin Operator TYPE
+              option=value
+            EndOperator
+
 10.02.2010: New hopping_test.c routing to test the parallel version of
 	    an Hopping_Matrix
 
@@ -9,7 +25,7 @@
 10.02.2010: when compiling with --enable-indexindepgeom, the xchange routines do not 
 	    rely of absolute addressing anymore, but on addresses gI_?_?_?_? which are
 	    defined based on the function Index.
-	    This enable the parallelization in X, XY, XYZ directions
+	    This enables the parallelization in X, XY, XYZ directions
 	    which is obtained --with-mpidimension=XYZ ...
 	    indexindepgeom is still not compatible with blocking-mpi of halfspinors
 

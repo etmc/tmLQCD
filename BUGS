@@ -1,8 +1,10 @@
+16.04.2010: order in propagators for the heavy doublet inverted in 
+            file -> fixed
+
 14.05.2009: bug in reread functionality fixed.
 
 30.05.2008: scidac checksum for gauge fields not correctly working
-            different result for serial and MPI run.
-
+            different result for serial and MPI run
 --> fixed (Remi 02.03.2009)
     problem was a wrong computation of rank for I/O writing functions only
     when MPI was used

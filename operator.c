@@ -415,10 +415,10 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   write_propagator_format(writer, propagatorFormat);
   free(propagatorFormat);
 
-  write_spinor(writer, &operator_list[op_id].prop0, &operator_list[op_id].prop1, 1, optr->prop_precision);
   if(optr->no_flavours == 2) {
     write_spinor(writer, &operator_list[op_id].prop2, &operator_list[op_id].prop3, 1, optr->prop_precision);
   }
+  write_spinor(writer, &operator_list[op_id].prop0, &operator_list[op_id].prop1, 1, optr->prop_precision);
 
 #ifdef MPI
   retime = MPI_Wtime();

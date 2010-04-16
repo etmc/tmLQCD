@@ -48,6 +48,7 @@ int phmc_ptilde_n_cheby;
 double * phmc_ptilde_cheby_coef;
 int errcode;
 phmc_vars *phmc_var_stack=NULL;
+int phmc_max_ptilde_degree = NTILDE_CHEBYMAX;
 
 void init_phmc() {
   int max_iter_ev, j, k;

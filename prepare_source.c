@@ -197,35 +197,22 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       else {
 	if(SourceInfo.splitted) {
 	  sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
-	  if(g_proc_id == 0) {
-	    printf("Reading source from %s\n", source_filename);
-	  }
-	  if(read_spinor(g_spinor_field[2], g_spinor_field[3], source_filename, 0) != 0) {
-	    if(g_proc_id == 0) {
-	      printf("Error reading source! Aborting...\n");
-	    }
-#ifdef MPI
-	    MPI_Abort(MPI_COMM_WORLD, 1);
-	    MPI_Finalize();
-#endif
-	    exit(-1);
-	  };
 	}
 	else {
 	  sprintf(source_filename,"%s", SourceInfo.basename);
+	}
+	if(g_proc_id == 0) {
+	  printf("Reading source from %s\n", source_filename);
+	}
+	if(read_spinor(g_spinor_field[2], g_spinor_field[3], source_filename, 0) != 0) {
 	  if(g_proc_id == 0) {
-	    printf("Reading source from %s\n", source_filename);
+	    printf("Error reading source! Aborting...\n");
 	  }
-	  if(read_spinor(g_spinor_field[0], g_spinor_field[1], source_filename, ix) != 0) {
-	    if(g_proc_id == 0) {
-	      printf("Error reading source! Aborting...\n");
-	    }
 #ifdef MPI
-	    MPI_Abort(MPI_COMM_WORLD, 1);
-	    MPI_Finalize();
+	  MPI_Abort(MPI_COMM_WORLD, 1);
+	  MPI_Finalize();
 #endif
-	    exit(-1);
-	  }
+	  exit(-1);
 	}
       }
     }

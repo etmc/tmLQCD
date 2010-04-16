@@ -36,6 +36,7 @@ extern double * phmc_dop_cheby_coef;
 /* degree of coefs \tilde P */
 extern int phmc_ptilde_n_cheby;
 extern double * phmc_ptilde_cheby_coef;
+extern int phmc_max_ptilde_degree;
 
 /* structure for holding a set of phmc specific variables*/
 typedef struct phmc_vars_ {

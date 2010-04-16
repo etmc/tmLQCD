@@ -105,9 +105,7 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].MDPoly_chi_spinor_fields = (spinor**)NULL;
   monomial_list[no_monomials].MDPolyLocNormConst = _default_MDPolyLocNormConst;
   monomial_list[no_monomials].MDPolyDetRatio = _default_MDPolyDetRatio;
-
-
-
+  monomial_list[no_monomials].MaxPtildeDegree = NTILDE_CHEBYMAX;
 
   monomial_list[no_monomials].initialised = 1;
   if(monomial_list[no_monomials].type == NDDETRATIO) {

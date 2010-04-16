@@ -83,6 +83,7 @@ typedef struct {
   spinor **MDPoly_chi_spinor_fields;
   double MDPolyLocNormConst;
   int MDPolyDetRatio;
+  int MaxPtildeDegree;
   /* chronological solver fields */
   spinor ** csg_field;
   spinor ** csg_field2;
