@@ -1,8 +1,7 @@
 /***********************************************************************
  *
  * Copyright (C) 2008 Carsten Urbach
- *
- * Adapted from online_measurement.c by Florian Burger 2009/12/16
+ *               2009 Florian Burger
  *
  * This file is part of tmLQCD.
  *
@@ -30,27 +29,23 @@
 #include "global.h"
 #include "start.h"
 #include "ranlxd.h"
+#include "ranlxs.h"
 #include "su3spinor.h"
 #include "source_generation.h"
 #include "invert_eo.h"
 #include "solver/solver.h"
 #include "geometry_eo.h"
 #include "linalg/convert_eo_to_lexic.h"
+#include "measurements.h"
 #include "pion_norm.h"
 
-
-
-
-/*  Florian Burger 4.11.2009 
-    calculates pionnorm using a stochastic source in the z0-slice in
-    z-direction
-*/
-void pion_norm(const int traj, const int z0) {
-  int i, j, z, zz;
+void pion_norm(const int traj, const int id) {
+  int i, j, z, zz, z0;
   double *Cpp;
   double res = 0.;
   double pionnorm;
   double atime, etime;
+  float tmp;
 #ifdef MPI
   double mpi_res = 0.;
 #endif
@@ -64,7 +59,14 @@ void pion_norm(const int traj, const int z0) {
   sourcefilename=buf3;
   sprintf(filename,"pionnormcorrelator_finiteT.%.6d",traj);
   sprintf(filename2,"%s", "pion_norm.data");
-  
+
+  /* generate random source point */
+  if(ranlxs_init == 0) {
+    rlxs_init(1, 123456);
+  }
+  ranlxs(&tmp, 1);
+  z0 = (int)(measurement_list[id].max_source_slice*tmp);
+
 #ifdef MPI
   atime = MPI_Wtime();
 #else
@@ -83,7 +85,7 @@ void pion_norm(const int traj, const int z0) {
   /* invert on the stochastic source */
   invert_eo(g_spinor_field[2], g_spinor_field[3], 
             g_spinor_field[0], g_spinor_field[1],
-            1.e-14, 10000, CG, 1, 0, 1);
+            1.e-14, measurement_list[id].max_iter, CG, 1, 0, 1);
 
   /* now we bring it to normal format */
   /* here we use implicitly DUM_MATRIX and DUM_MATRIX+1 */

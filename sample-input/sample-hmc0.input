@@ -10,7 +10,7 @@
 
 L=4
 T=4
-Measurements = 1
+Measurements = 1000
 Startcondition = hot
 2KappaMu = 0.177
 kappa = 0.177

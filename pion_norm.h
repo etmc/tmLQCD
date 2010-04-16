@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2008 Carsten Urbach
+ * Copyright (C) 2009 Florian Burger
  *
  * Adapted from online_measurement.h by Florian Burger 2009/12/16
  *
@@ -23,12 +23,7 @@
 #ifndef _PION_NORM_H
 #define _PION_NORM_H
 
-
-
-/* Florian Burger 4.11.2009 */
-void pion_norm(const int traj, const int z0);
-/* end Florian Burger 4.11.2009 */
-
+void pion_norm(const int traj, const int id);
 
 #endif
 

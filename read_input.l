@@ -217,6 +217,7 @@ inline void rmQuotes(char *str){
 %x INITMEASUREMENT
 %x ONLINEMEAS
 %x PIONNORMMEAS
+%x PLOOP
 
 %x REWEIGH
 %x REWSAMPLES
@@ -1079,6 +1080,8 @@ inline void rmQuotes(char *str){
   current_measurement++;
   meas = &measurement_list[current_measurement];
   meas->id = current_measurement;
+  meas->direction = 0;
+  meas->max_iter = 15000;
   if(strcmp(yytext, "CORRELATORS")==0) {
     meas->type = ONLINE;
     strcpy((*meas).name, "CORRELATORS");
@@ -1086,6 +1089,10 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "PIONNORM")==0) {
     meas->type = PIONNORM;
     strcpy((*meas).name, "PIONNORM");
+  }
+  else if(strcmp(yytext, "POLYAKOVLOOP")==0) {
+    meas->type = POLYAKOV;
+    strcpy((*meas).name, "POLYAKOV");
   }
   else {
     fprintf(stderr, "Unknown measurement type %s in line %d\n", yytext, line_of_file);
@@ -1104,10 +1111,11 @@ inline void rmQuotes(char *str){
   if(myverbose) printf("measurement has id %d\n", current_measurement);
 
   if(meas->type == ONLINE) BEGIN(ONLINEMEAS);
-  else if(meas->type == PIONNORM) BEGIN(PIONNORMMEAS);  
+  else if(meas->type == PIONNORM) BEGIN(PIONNORMMEAS);
+  else if(meas->type == POLYAKOV) BEGIN(PLOOP);
 }
 
-<ONLINEMEAS,PIONNORMMEAS>{
+<ONLINEMEAS,PIONNORMMEAS,PLOOP>{
   ^EndMeasurement{SPC}* {
     if(myverbose) printf("Measurement with id %d parsed in line %d\n\n", meas->id, line_of_file);
     BEGIN(0);
@@ -1119,6 +1127,21 @@ inline void rmQuotes(char *str){
   }
 }
 
+<ONLINEMEAS,PIONNORMMEAS>{
+  {SPC}*MaxSolverIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    meas->max_iter = a;
+    if(myverbose) printf("  MaxSolverIterations set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+}
+
+<PLOOP>{
+  {SPC}*Direction{EQL}[03] {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    meas->direction = a;
+    if(myverbose!=0) fprintf(stderr, "  Direction for polyakov loop set to %d\n", meas->direction);
+  }
+}
 
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
@@ -1538,7 +1561,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,POLYMONOMIAL>\n   {
+<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,POLYMONOMIAL,PLOOP>\n   {
   line_of_file++;
 }
 <*>\n                       {

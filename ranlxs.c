@@ -49,6 +49,8 @@
 #include <stdio.h>
 #include <math.h>
 
+int ranlxs_init = 0;
+
 #if ((defined SSE)||(defined SSE2)||(defined SSE3))
 
 typedef struct
@@ -259,6 +261,7 @@ void rlxs_init(int level,int seed)
    is_old=0;
    prm=pr%12;
    init=1;
+   ranlxs_init = 1;
 }
 
 
@@ -559,6 +562,7 @@ void rlxs_init(int level,int seed)
    is_old=0;
    prm=pr%12;
    init=1;
+   ranlxs_init = 1;
 }
 
 

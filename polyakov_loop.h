@@ -19,8 +19,11 @@
 #ifndef _POLYAKOV_LOOP_H
 #define _POLYAKOV_LOOP_H
 
+#include "measurements.h"
+
 void polyakov_loop(complex * pl_, const int mu);
 int polyakov_loop_0(const int nstore,complex* pl);
 int polyakov_loop_dir(const int nstore, const int dir);
+void polyakov_loop_measurement(const int nstore, const int id);
 
 #endif

@@ -28,6 +28,7 @@
 /* Give the measurements a unambiguous number*/
 #define ONLINE 0
 #define PIONNORM 1
+#define POLYAKOV 2
 
 typedef struct {
   int type;
@@ -36,6 +37,10 @@ typedef struct {
   
   /* frequency of the measurement */
   int freq;
+  /* for maximal iterations in inversions for correlators */
+  int max_iter;
+  /* for polyakov loop */
+  int direction;
   
   /* how it's usually called */
   char name[100];
@@ -47,7 +52,7 @@ typedef struct {
   int max_source_slice;
   
   /* functions for the measurement */
-  void (*measurefunc) (const int traj, const int slice);
+  void (*measurefunc) (const int traj, const int id);
 } measurement;
 
 
@@ -62,6 +67,6 @@ int init_measurements();
 /* free space again */
 void free_measurements();
 
-void dummy_meas(const int traj, const int slice);
+void dummy_meas(const int traj, const int id);
 
 #endif

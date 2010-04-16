@@ -28,13 +28,14 @@
 #include <time.h>
 #include "global.h"
 #include "start.h"
-#include "ranlxd.h"
+#include "ranlxs.h"
 #include "su3spinor.h"
 #include "source_generation.h"
 #include "invert_eo.h"
 #include "solver/solver.h"
 #include "geometry_eo.h"
 #include "linalg/convert_eo_to_lexic.h"
+#include "measurements.h"
 #include "online_measurement.h"
 
 /******************************************************
@@ -50,11 +51,12 @@
  *
  ******************************************************/
 
-void online_measurement(const int traj, const int t0) {
-  int i, j, t, tt;
+void online_measurement(const int traj, const int id) {
+  int i, j, t, tt, t0;
   double *Cpp, *Cpa, *Cp4;
   double res = 0., respa = 0., resp4 = 0.;
   double atime, etime;
+  float tmp;
 #ifdef MPI
   double mpi_res = 0., mpi_respa = 0., mpi_resp4 = 0.;
 #endif
@@ -65,6 +67,12 @@ void online_measurement(const int traj, const int t0) {
   filename=buf;
   sprintf(filename,"%s%.6d", "onlinemeas." ,traj);
 
+  /* generate random timeslice */
+  if(ranlxs_init == 0) {
+    rlxs_init(1, 123456);
+  }
+  ranlxs(&tmp, 1);
+  t0 = (int)(measurement_list[id].max_source_slice*tmp);
 #ifdef MPI
   atime = MPI_Wtime();
 #else
@@ -80,7 +88,7 @@ void online_measurement(const int traj, const int t0) {
   
   invert_eo(g_spinor_field[2], g_spinor_field[3], 
 	    g_spinor_field[0], g_spinor_field[1],
-	    1.e-14, 10000, CG, 1, 0, 1);
+	    1.e-14, measurement_list[id].max_iter, CG, 1, 0, 1);
 
   /* now we bring it to normal format */
   /* here we use implicitly DUM_MATRIX and DUM_MATRIX+1 */

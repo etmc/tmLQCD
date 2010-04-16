@@ -21,6 +21,8 @@ extern "C"
 {
 #endif /* __cplusplus */
 
+  extern int ranlxs_init;
+
   void ranlxs(float r[],int n);
   void rlxs_init(int level,int seed);
   void rlxs_get(int state[]);

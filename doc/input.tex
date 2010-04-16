@@ -186,6 +186,15 @@ The following input parameters are {\ttfamily invert} and {\ttfamily
   consist only of the base filename. This parameter has only
   effect for executable {\ttfamily invert}.
 
+\item {\ttfamily NoSamples}:\\
+  in case of stochastic source the number of samples. This parameter
+  has only effect for executable {\ttfamily invert}.
+
+\item {\ttfamily SourceType}:\\
+  lets you chose the source type: {\ttfamily Volume, Point, TimeSlice}
+  are possible here. This parameter has only
+  effect for executable {\ttfamily invert}.
+
 \item {\ttfamily ComputeEVs}:\\
   compute eigenvalues and vectors before inversion in invert. Values
   can be no, yes and readin. In the latter case the eigenvalues and
@@ -273,15 +282,6 @@ The following input parameters are {\ttfamily hmc\_tm} specific:
   Here one can specify the intervall in terms of trajectories the
   program should check the reversibility violation.
 
-\item {\ttfamily PerformOnlineMeasurements}:\\
-  Perform some useful measurements online. This includes so far the
-  $\langle PP\rangle$, $\langle PA_0\rangle$ and $\langle PV_0\rangle$
-  correlators.
-
-\item {\ttfamily OnlineMeasurementsFreq}:\\
-  The frequency in units of trajectories with which to perform online
-  measurements. 
- 
 \end{enumerate}
 Following the CHROMA notation we call every part in the action a
 monomial. A monomial is added to the action in the input file in the
@@ -515,7 +515,7 @@ EndOperator
   \item {\ttfamily KernelEigenvaluePrecision}
   \end{itemize}
 \end{itemize}
-All of the provide the following options available:
+All of them provide the following options available:
 \begin{itemize}
 \item {\ttfamily kappa}:
 \item {\ttfamily Solver}:\\
@@ -525,6 +525,36 @@ All of the provide the following options available:
 \item {\ttfamily PropagatorPrecision}:
 \item {\ttfamily SolverPrecision}:
 \end{itemize}
+
+\subsubsection{Online Measurements}
+
+A number of measurements can be performed online while the hmc is
+running. 
+\begin{verbatim}
+BeginMeasurement TYPE
+  Option = value
+EndMeasurement
+\end{verbatim}
+where {\ttfamily TYPE} can be currently one of the following:
+\begin{itemize}
+\item {\ttfamily CORRELATORS}:
+  \begin{itemize}
+  \item {\ttfamily MaxSolverIterations}
+  \end{itemize}
+  this is for zero temperature, so the stochastic source is at fixed $t$.
+\item {\ttfamily PIONNORM}:
+  \begin{itemize}
+  \item {\ttfamily MaxSolverIterations}
+  \end{itemize}
+  this is for finite temperature, the stochastic source is at fixed $z$.
+
+\item {\ttfamily POLYAKOVLOOP}:
+  \begin{itemize}
+  \item {\ttfamily Directions} can be either $0$ for time- or $3$ for z-direction.
+  \end{itemize}
+\end{itemize}
+The frequency of measuring all of these can be adjusted with the
+Option {\ttfamily Frequency}. 
 
 \subsubsection{Example Input File}
 

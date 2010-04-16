@@ -1,8 +1,7 @@
 /***********************************************************************
  *  
  * Copyright (C) 2008 Carsten Urbach
- *
- * Adapted from monomial.c by Florian Burger 2009/12/16
+ *               2009 Florian Burger
  *
  * This file is part of tmLQCD.
  *
@@ -32,12 +31,11 @@
 #include "read_input.h"
 #include "pion_norm.h"
 #include "online_measurement.h"
+#include "polyakov_loop.h"
 #include "measurements.h"
 
 measurement measurement_list[max_no_measurements];
 int no_measurements = 0;
-
-
 
 int add_measurement(const int type) {
  
@@ -47,13 +45,9 @@ int add_measurement(const int type) {
   }
   measurement_list[no_measurements].measurefunc = &dummy_meas;
   measurement_list[no_measurements].initialised = 1;
-
   no_measurements++;
   return(no_measurements);
 }
-
-
-
 
 int init_measurements(){
  int i;
@@ -67,7 +61,11 @@ int init_measurements(){
     if(measurement_list[i].type == PIONNORM) {
       measurement_list[i].measurefunc = &pion_norm;
       measurement_list[i].max_source_slice = g_nproc_z*LZ;
-    }  
+    }
+    
+    if(measurement_list[i].type == POLYAKOV) {
+      measurement_list[i].measurefunc = &polyakov_loop_measurement;
+    }
     
     measurement_list[i].id = i;
  }
@@ -83,9 +81,9 @@ void free_measurements(){
 
 
 
-void dummy_meas(const int traj, const int slice) {
+void dummy_meas(const int traj, const int id) {
   if(g_proc_id == 0) {
-    fprintf(stderr, "dummy_meas was called. Was that really intended?\n");
+    fprintf(stderr, "dummy_meas was called for measurement with id=%d. Was that really intended?\n", id);
   }
   return;
 }

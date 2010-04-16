@@ -72,7 +72,6 @@
 #include "boundary.h"
 #include "phmc.h"
 #include "solver/solver.h"
-#include "polyakov_loop.h"
 #include "monomial.h"
 #include "integrator.h"
 #include "sighandler.h"
@@ -120,9 +119,6 @@ int main(int argc,char *argv[]) {
   /* For getopt */
   int c;
 
-  /* For the Polyakov loop: */
-  int dir = 2;
-  complex pl, pl4;
   paramsXlfInfo *xlfInfo;
 
 /* For online measurements */
@@ -418,21 +414,9 @@ int main(int argc,char *argv[]) {
     }
     eneg = g_rgi_C0 * plaquette_energy + g_rgi_C1 * rectangle_energy;
 
-    /* Measure and print the Polyakov loop: */
-    polyakov_loop(&pl, dir);
-
-    if(g_proc_id==0){
+    if(g_proc_id == 0) {
       fprintf(parameterfile,"# First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
       printf("# First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
-      fprintf(parameterfile,"# First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
-	      dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
-    }
-
-    dir=3;
-    polyakov_loop(&pl, dir);
-    if(g_proc_id==0){
-      fprintf(parameterfile,"# First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
-	      dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
       fclose(parameterfile);
     }
   }
@@ -474,25 +458,16 @@ int main(int argc,char *argv[]) {
     else return_check = 0;
 
     Rate += update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check, Ntherm<trajectory_counter);
-    /*     Rate += update_tm(integtyp, &plaquette_energy, &rectangle_energy, datafilename,  */
-    /* 		      dtau, Nsteps, nsmall, tau, int_n, return_check, lambda, reproduce_randomnumber_flag); */
 
-
-    if (bc_flag == 0) { /* if PBC */
-      /* Measure the Polyakov loop in direction 2 and 3:*/
-      polyakov_loop(&pl, 2);
-      polyakov_loop(&pl4, 3);
-    }
 
     /* Save gauge configuration all Nsave times */
     if((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) {
       sprintf(gauge_filename,"conf.%.4d", nstore);
       if(g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
-	fprintf(countfile, "%.4d, measurement %d of %d, Nsave = %d, Plaquette = %e, |L(%d)| = %e, |L(%d)| = %e trajectory nr = %d\n",
+	fprintf(countfile, "%.4d, measurement %d of %d, Nsave = %d, Plaquette = %e, trajectory nr = %d\n",
 		nstore, j, Nmeas, Nsave, plaquette_energy/(6.*VOLUME*g_nproc),
-		2, sqrt(pl.re*pl.re+pl.im*pl.im),
-		dir, sqrt(pl4.re*pl4.re+pl4.im*pl4.im), trajectory_counter);
+		trajectory_counter);
 	fclose(countfile);
       }
       nstore ++;
@@ -523,8 +498,7 @@ int main(int argc,char *argv[]) {
     for(imeas=0; imeas<no_measurements; imeas++){
       meas = &measurement_list[imeas];
       if(trajectory_counter%meas->freq == 0){
-        meas->measurefunc(trajectory_counter,
-        (((int)(100000*plaquette_energy/(6.*VOLUME*g_nproc)))%meas->max_source_slice) );
+        meas->measurefunc(trajectory_counter, imeas);
       }
     }
 

@@ -344,43 +344,47 @@ int polyakov_loop_0(const int nstore, complex *pl) {
    z- (dir==3) direction
    the reduction operation is defined in mpi_init.h
 */
+void polyakov_loop_measurement(const int nstore, const int id) {
+  polyakov_loop_dir(nstore, measurement_list[id].direction);
+}
+
 
 int polyakov_loop_dir(
-    const int nstore /* in  */,
-    const int dir    /* in  */) {
+		      const int nstore /* in  */,
+		      const int dir    /* in  */) {
 
-    int ixyz, ixyzt, ixyzt_up, VOL3, VOLUME3, ix, iy, iz, it;
-    complex pl_tmp, tr, ts, tt, kc, ks, pl;
-    su3 *tmp_loc, tmp, tmp2;
-    su3 *u, *v, *w;
-    double ratime, retime;
-    char filename[50];
+  int ixyz, ixyzt, ixyzt_up, VOL3, VOLUME3, ix, iy, iz, it;
+  complex pl_tmp, tr, ts, tt, kc, ks, pl;
+  su3 *tmp_loc, tmp, tmp2;
+  su3 *u, *v, *w;
+  double ratime, retime;
+  char filename[50];
 
-    FILE *ofs;
+  FILE *ofs;
 
 #ifdef MPI
-    int rank_slice, rank_ray;
-    MPI_Comm slice, ray;
-    su3 *tmp_ray;
+  int rank_slice, rank_ray;
+  MPI_Comm slice, ray;
+  su3 *tmp_ray;
 #endif
 
-    if(dir!=0 && dir!=3 && g_proc_id==0) {
-      fprintf(stderr, "Wrong direction; must be 0 (t) or 3 (z)\n");
-      return(-1);
-    }
+  if(dir!=0 && dir!=3 && g_proc_id==0) {
+    fprintf(stderr, "Wrong direction; must be 0 (t) or 3 (z)\n");
+    return(-1);
+  }
 
-    pl.re = 0.;
-    pl.im = 0.;
+  pl.re = 0.;
+  pl.im = 0.;
 
-/********************************************************************************/
+  /********************************************************************************/
 
-/**************
- * local part *
- **************/
+  /**************
+   * local part *
+   **************/
 #ifdef MPI
-    ratime = MPI_Wtime();
+  ratime = MPI_Wtime();
 #else
-    ratime = (double)clock()/(double)(CLOCKS_PER_SEC);
+  ratime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
 
   if(dir==0) {
@@ -392,31 +396,31 @@ int polyakov_loop_dir(
     }
 
     for(ix=0; ix<LX; ix++) {
-    for(iy=0; iy<LY; iy++) {
-    for(iz=0; iz<LZ; iz++) {
-      /* ixyz = ix*LY*LZ + iy*LZ + iz */
-      ixyz = (ix * LY + iy) * LZ + iz;
-      it = 0;
-      ixyzt    = g_ipt[it][ix][iy][iz];
-      ixyzt_up = g_iup[ixyzt][0];
-      v = &g_gauge_field[ixyzt][0];
-      w = &g_gauge_field[ixyzt_up][0];
-      u = &tmp;
-      _su3_times_su3(*u, *v, *w);
-      v = &tmp2;
-      for(it=1; it<T-2; it++) {
-        /* swap u and v via w */
-        w = u; u = v; v = w;
-        ixyzt_up = g_iup[ixyzt_up][0];
-        w = &g_gauge_field[ixyzt_up][0];
-        _su3_times_su3(*u, *v, *w);
+      for(iy=0; iy<LY; iy++) {
+	for(iz=0; iz<LZ; iz++) {
+	  /* ixyz = ix*LY*LZ + iy*LZ + iz */
+	  ixyz = (ix * LY + iy) * LZ + iz;
+	  it = 0;
+	  ixyzt    = g_ipt[it][ix][iy][iz];
+	  ixyzt_up = g_iup[ixyzt][0];
+	  v = &g_gauge_field[ixyzt][0];
+	  w = &g_gauge_field[ixyzt_up][0];
+	  u = &tmp;
+	  _su3_times_su3(*u, *v, *w);
+	  v = &tmp2;
+	  for(it=1; it<T-2; it++) {
+	    /* swap u and v via w */
+	    w = u; u = v; v = w;
+	    ixyzt_up = g_iup[ixyzt_up][0];
+	    w = &g_gauge_field[ixyzt_up][0];
+	    _su3_times_su3(*u, *v, *w);
+	  }
+	  /* last multiplication for it=T-1 */
+	  ixyzt_up = g_iup[ixyzt_up][0];
+	  w = &g_gauge_field[ixyzt_up][0];
+	  _su3_times_su3(tmp_loc[ixyz],*u, *w);
+	}
       }
-      /* last multiplication for it=T-1 */
-      ixyzt_up = g_iup[ixyzt_up][0];
-      w = &g_gauge_field[ixyzt_up][0];
-      _su3_times_su3(tmp_loc[ixyz],*u, *w);
-    }
-    }
     }
   }
   else { /* z-direction <=> dir==3 */
@@ -427,172 +431,172 @@ int polyakov_loop_dir(
     }
 
     for(it=0; it<T;  it++) {
-    for(ix=0; ix<LX; ix++) {
-    for(iy=0; iy<LY; iy++) {
-      /* ixyz = it*LX*LY + ix*LY + iy */
-      ixyz = (it * LX + ix) * LY + iy;
-      iz = 0;
-      ixyzt    = g_ipt[it][ix][iy][iz];
-      ixyzt_up = g_iup[ixyzt][3];
-      v = &g_gauge_field[ixyzt][3];
-      w = &g_gauge_field[ixyzt_up][3];
-      u = &tmp;
-      _su3_times_su3(*u, *v, *w);
-      v = &tmp2;
-      for(iz=1; iz<LZ-2; iz++) {
-        /* swap u and v via w */
-        w = u; u = v; v = w;
-        ixyzt_up = g_iup[ixyzt_up][3];
-        w = &g_gauge_field[ixyzt_up][3];
-        _su3_times_su3(*u, *v, *w);
+      for(ix=0; ix<LX; ix++) {
+	for(iy=0; iy<LY; iy++) {
+	  /* ixyz = it*LX*LY + ix*LY + iy */
+	  ixyz = (it * LX + ix) * LY + iy;
+	  iz = 0;
+	  ixyzt    = g_ipt[it][ix][iy][iz];
+	  ixyzt_up = g_iup[ixyzt][3];
+	  v = &g_gauge_field[ixyzt][3];
+	  w = &g_gauge_field[ixyzt_up][3];
+	  u = &tmp;
+	  _su3_times_su3(*u, *v, *w);
+	  v = &tmp2;
+	  for(iz=1; iz<LZ-2; iz++) {
+	    /* swap u and v via w */
+	    w = u; u = v; v = w;
+	    ixyzt_up = g_iup[ixyzt_up][3];
+	    w = &g_gauge_field[ixyzt_up][3];
+	    _su3_times_su3(*u, *v, *w);
+	  }
+	  ixyzt_up = g_iup[ixyzt_up][3];
+	  w = &g_gauge_field[ixyzt_up][3];
+	  _su3_times_su3(tmp_loc[ixyz], *u, *w);
+	}
       }
-      ixyzt_up = g_iup[ixyzt_up][3];
-      w = &g_gauge_field[ixyzt_up][3];
-      _su3_times_su3(tmp_loc[ixyz], *u, *w);
-    }
-    }
     }
 
   }
 #ifdef MPI
-    retime = MPI_Wtime();
+  retime = MPI_Wtime();
 #else
-    retime = (double)clock()/(double)(CLOCKS_PER_SEC);
+  retime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-    if(g_debug_level>0) {
-      fprintf(stdout, "[pl02 dir%1d proc%.2d] time for calculating local part"\
-        " = %e seconds\n", dir, g_cart_id, retime-ratime);
-    }
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    fprintf(stdout, "# [pl02 dir%1d proc%.2d] time for calculating local part"\
+	    " = %e seconds\n", dir, g_cart_id, retime-ratime);
+  }
 
-/********************************************************************************/
+  /********************************************************************************/
 
 #ifdef MPI
-/***************
- * global part *
- ***************/
-    /* choose the slice and ray communicators according to direction */
-    if(dir==0) {
-      slice      = g_mpi_time_slices;
-      ray        = g_mpi_SV_slices;
-      rank_slice = g_mpi_time_rank;
-      rank_ray   = g_mpi_SV_rank;
-    }
-    else {
-      slice      = g_mpi_z_slices;
-      ray        = g_mpi_ST_slices;
-      rank_slice = g_mpi_z_rank;
-      rank_ray   = g_mpi_ST_rank;
-    }
+  /***************
+   * global part *
+   ***************/
+  /* choose the slice and ray communicators according to direction */
+  if(dir==0) {
+    slice      = g_mpi_time_slices;
+    ray        = g_mpi_SV_slices;
+    rank_slice = g_mpi_time_rank;
+    rank_ray   = g_mpi_SV_rank;
+  }
+  else {
+    slice      = g_mpi_z_slices;
+    ray        = g_mpi_ST_slices;
+    rank_slice = g_mpi_z_rank;
+    rank_ray   = g_mpi_ST_rank;
+  }
  
-    ratime = MPI_Wtime();
+  ratime = MPI_Wtime();
 
-/* (1) collect contributions from different time/z slices to nodes with rank=0 
-       in spatial volume/space-time slices */
+  /* (1) collect contributions from different time/z slices to nodes with rank=0 
+     in spatial volume/space-time slices */
 #  ifndef PARALLELXYZT
-    if(dir==0) {
+  if(dir==0) {
 #  endif
-      tmp_ray = (su3*)calloc(VOL3, sizeof(su3)); /* */
-      if((void*)tmp_ray== NULL) {
-        fprintf(stderr, "[%2d] Could not allocate memory for tmp_ray\n", g_proc_id);
-        return(-1);
-      }
-
-      MPI_Reduce(tmp_loc, tmp_ray, VOL3, mpi_su3, mpi_reduce_su3_ray, 0, ray);
-#  ifndef PARALLELXYZT
-    }
-#  endif
-
-
-    retime = MPI_Wtime();
-    if(g_proc_id==0 && g_debug_level>0) {
-      fprintf(stdout, "[pl02 dir%1d proc%.2d] time for calculating global part"\
-        " = %e seconds\n", dir, g_cart_id, retime-ratime);
+    tmp_ray = (su3*)calloc(VOL3, sizeof(su3)); /* */
+    if((void*)tmp_ray== NULL) {
+      fprintf(stderr, "[%2d] Could not allocate memory for tmp_ray\n", g_proc_id);
+      return(-1);
     }
 
-    if(rank_ray == 0) {
+    MPI_Reduce(tmp_loc, tmp_ray, VOL3, mpi_su3, mpi_reduce_su3_ray, 0, ray);
+#  ifndef PARALLELXYZT
+  }
+#  endif
+
+
+  retime = MPI_Wtime();
+  if(g_proc_id==0 && g_debug_level>0) {
+    fprintf(stdout, "# [pl02 dir%1d proc%.2d] time for calculating global part"\
+	    " = %e seconds\n", dir, g_cart_id, retime-ratime);
+  }
+
+  if(rank_ray == 0) {
 
 #endif
-	_complex_zero(pl_tmp);
-	_complex_zero(kc);
-        _complex_zero(ks);
+    _complex_zero(pl_tmp);
+    _complex_zero(kc);
+    _complex_zero(ks);
 
 #ifdef MPI
 #  ifdef PARALLELXYZT
-        u = tmp_ray;
+    u = tmp_ray;
 #  else
-        if(dir==0) { u = tmp_ray; }
-        else       { u = tmp_loc; }
+    if(dir==0) { u = tmp_ray; }
+    else       { u = tmp_loc; }
 #  endif
 #else
-        u = tmp_loc;
+    u = tmp_loc;
 #endif
 
-	for(ixyz=0; ixyz<VOL3; ixyz++) /* Kahan-summation of traces */ {
-	    pl_tmp.re = (u[ixyz]).c00.re + (u[ixyz]).c11.re + (u[ixyz]).c22.re;
-	    pl_tmp.im = (u[ixyz]).c00.im + (u[ixyz]).c11.im + (u[ixyz]).c22.im;
-	    tr.re=pl_tmp.re+kc.re;
-	    ts.re=tr.re+ks.re;
-	    tt.re=ts.re-ks.re;
-	    ks.re=ts.re;
-	    kc.re=tr.re-tt.re;
-	    tr.im=pl_tmp.im+kc.im;
-	    ts.im=tr.im+ks.im;
-	    tt.im=ts.im-ks.im;
-	    ks.im=ts.im;
-	    kc.im=tr.im-tt.im;
-	}
-	pl_tmp.re = ks.re + kc.re;
-	pl_tmp.im = ks.im + kc.im;
+    for(ixyz=0; ixyz<VOL3; ixyz++) /* Kahan-summation of traces */ {
+      pl_tmp.re = (u[ixyz]).c00.re + (u[ixyz]).c11.re + (u[ixyz]).c22.re;
+      pl_tmp.im = (u[ixyz]).c00.im + (u[ixyz]).c11.im + (u[ixyz]).c22.im;
+      tr.re=pl_tmp.re+kc.re;
+      ts.re=tr.re+ks.re;
+      tt.re=ts.re-ks.re;
+      ks.re=ts.re;
+      kc.re=tr.re-tt.re;
+      tr.im=pl_tmp.im+kc.im;
+      ts.im=tr.im+ks.im;
+      tt.im=ts.im-ks.im;
+      ks.im=ts.im;
+      kc.im=tr.im-tt.im;
+    }
+    pl_tmp.re = ks.re + kc.re;
+    pl_tmp.im = ks.im + kc.im;
 
 #ifdef MPI
-        MPI_Reduce(&pl_tmp, &pl, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, slice);
-    }
+    MPI_Reduce(&pl_tmp, &pl, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, slice);
+  }
 #  ifndef PARALLELXYZT
-    if(dir==0) {
+  if(dir==0) {
 #  endif
-      free(tmp_ray);
+    free(tmp_ray);
 #  ifndef PARALLELXYZT
-    }
+  }
 #  endif
-
+    
 #else
-   pl.re = pl_tmp.re;
-   pl.im = pl_tmp.im;
+  pl.re = pl_tmp.re;
+  pl.im = pl_tmp.im;
 #endif
 
-    /* normalization pl |-> pl / ( 3 * 3-dim. volume)*/
-    VOLUME3 = VOL3;
-
+  /* normalization pl |-> pl / ( 3 * 3-dim. volume)*/
+  VOLUME3 = VOL3;
+   
 #ifdef MPI
-    if(rank_slice==0 && rank_ray==0) { /* this process has the sum 
-                                          of the Polyakov loop values */
-      if(dir==0) { 
-	VOLUME3 = VOLUME3 * g_nproc_x*g_nproc_y*g_nproc_z;
-      }
-      else {
-	VOLUME3 = VOLUME3 * g_nproc_t*g_nproc_x*g_nproc_y;
-      }
+  if(rank_slice==0 && rank_ray==0) { /* this process has the sum 
+					of the Polyakov loop values */
+    if(dir==0) { 
+      VOLUME3 = VOLUME3 * g_nproc_x*g_nproc_y*g_nproc_z;
+    }
+    else {
+      VOLUME3 = VOLUME3 * g_nproc_t*g_nproc_x*g_nproc_y;
+    }
 #endif
-	pl.re /= 3. * (double)VOLUME3;
-	pl.im /= 3. * (double)VOLUME3;
+    pl.re /= 3. * (double)VOLUME3;
+    pl.im /= 3. * (double)VOLUME3;
 
-        /* write result to file */
-        sprintf(filename, "pl_dir%1d", dir);
-	if (nstore == 0) {
-	    ofs = fopen(filename,"w");
-	}
-	else {
-	    ofs = fopen(filename,"a");
-        }
-        if((void*)ofs == NULL) {
-          fprintf(stderr, "Could not open file %s for writing\n", filename);
-          return(-1);
-        }
-	fprintf(ofs, "%4d\t%2d\t%25.16e\t%25.16e\n", nstore, dir, pl.re, pl.im);
-	fclose(ofs);
+    /* write result to file */
+    sprintf(filename, "polyakovloop_dir%1d", dir);
+    if (nstore == 0) {
+      ofs = fopen(filename,"w");
+    }
+    else {
+      ofs = fopen(filename,"a");
+    }
+    if((void*)ofs == NULL) {
+      fprintf(stderr, "Could not open file %s for writing\n", filename);
+      return(-1);
+    }
+    fprintf(ofs, "%4d\t%2d\t%25.16e\t%25.16e\n", nstore, dir, pl.re, pl.im);
+    fclose(ofs);
 #if defined MPI
-    }
+  }
 #endif
-    free(tmp_loc);
-    return(0);
+  free(tmp_loc);
+  return(0);
 }
