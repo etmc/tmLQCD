@@ -46,6 +46,7 @@
 #include "solver/jdher.h"
 #include "solver/matrix_mult_typedef.h"
 #include "linalg_eo.h"
+#include "Dov_psi.h"
 #include "eigenvalues.h"
 
 
@@ -127,13 +128,12 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
     prec = precision;
   }
 #if (defined SSE || defined SSE2 || defined SSE3)
-    max_eigenvector_ = calloc(N2+1, sizeof(spinor));
-    max_eigenvector = (spinor *)(((unsigned long int)(max_eigenvector_)+ALIGN_BASE)&~ALIGN_BASE);
+  max_eigenvector_ = calloc(N2+1, sizeof(spinor));
+  max_eigenvector = (spinor *)(((unsigned long int)(max_eigenvector_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-    max_eigenvector_= calloc(N2, sizeof(spinor));
-    max_eigenvector = max_eigenvector;
+  max_eigenvector_= calloc(N2, sizeof(spinor));
+  max_eigenvector = max_eigenvector_;
 #endif  
-
 
   if(allocated == 0) {
     allocated = 1;
@@ -266,7 +266,8 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
 
   ev_qnorm=1.0/(sqrt(max_eigenvalue)+0.1);
   ev_minev*=ev_qnorm*ev_qnorm;
-
+  ov_n_cheby = (int)(-log(1.e-12)/(2*sqrt(ev_minev)));
+  ov_n_cheby = 100;
   returnvalue=eigenvls[0];
 #else
   fprintf(stderr, "lapack not available, so JD method for EV computation not available \n");

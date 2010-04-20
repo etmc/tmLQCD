@@ -46,10 +46,12 @@
 #include "boundary.h"
 #include "init_chi_spinor_field.h"
 #include "start.h"
+#include "solver/eigenvalues.h"
 #include <io/params.h>
 #include <io/gauge.h>
 #include <io/spinor.h>
 #include <io/utils.h>
+#include "test/overlaptests.h"
 #include "operator.h"
 
 void dummy_D(spinor * const, spinor * const);
@@ -114,7 +116,7 @@ int add_operator(const int type) {
     optr->deg_poly = 50;
     optr->s = 0.6;
     optr->m = 0.;
-    optr->inverter = &invert_overlap;
+    optr->inverter = &op_invert;
   }
   if(optr->type == DBTMWILSON) {
     optr->no_flavours = 2;
@@ -332,7 +334,12 @@ void op_invert(const int op_id, const int index_start) {
     }
   }
   else if(optr->type == OVERLAP) {
-    invert_overlap(op_id, index_start);
+    g_mu = 0.;
+/*     ov_m = optr->m; */
+    eigenvalues(&optr->no_ev, 5000, 1.e-12, 0, 0, 0, optr->even_odd_flag);
+/*     ov_check_locality(); */
+    if(g_debug_level > 3) ov_check_ginsparg_wilson_relation_strong(); 
+    invert_overlap(op_id, index_start); 
   }
 #ifdef MPI
   etime = MPI_Wtime();

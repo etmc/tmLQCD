@@ -31,6 +31,10 @@
 
 #include "su3.h"
 
+extern double m_ov;
+extern int ov_n_cheby;
+extern double * ov_cheby_coef;
+
 void Dov_psi(spinor * const, spinor * const);
 void Qov_psi(spinor * const, spinor * const);
 

@@ -61,8 +61,6 @@
 #define DEBUG_SUMR 0
 
 /* to be fixed somewhere else */
-const int ov_n_cheby = 150;
-double * ov_cheby_coef = NULL;
 
 
 /* P output = solution , Q input = source */
@@ -78,6 +76,7 @@ int sumr(spinor * const P, spinor * const Q, const int max_iter,
   const int N=VOLUME;
   spinor *x, *r, *p, *v, *v_til, *w, *u, *b, *tmp, *tmp2;
 
+  printf("Starting SUMR!\n");
   /*        !!!!   INITIALIZATION    !!!! */
   init_solver_field(VOLUMEPLUSRAND, 10);
   x = solver_field[0];

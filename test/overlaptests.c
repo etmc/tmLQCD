@@ -1,3 +1,28 @@
+#include"lime.h"
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include <time.h>
+#include <string.h>
+#include <signal.h>
+#ifdef MPI
+#include <mpi.h>
+#endif
+#include "global.h"
+#include "su3spinor.h"
+#include "linalg_eo.h"
+#include "start.h"
+#ifdef MPI
+# include "xchange.h"
+#endif
+#include "read_input.h"
+#include "boundary.h"
+#include "linalg/convert_eo_to_lexic.h"
+#include "Dov_psi.h"
+
 #include "overlaptests.h"
 #include "gamma.h"
 
@@ -708,9 +733,9 @@ void ov_check_ginsparg_wilson_relation(void) {
       for(z = 0; z < LZ; z++)
 	for(t = 0; t < T; t++) {
 	  i = g_ipt[t][x][y][z];
-	  _spinor_norm_sq(norm_diff, S_diff[i]);
-	  _spinor_norm_sq(norm_left, S_left[i]);
-	  _spinor_norm_sq(norm_right, S_right[i]);
+ 	  _spinor_norm_sq(norm_diff, S_diff[i]); 
+ 	  _spinor_norm_sq(norm_left, S_left[i]); 
+ 	  _spinor_norm_sq(norm_right, S_right[i]); 
 	  norm_diff = sqrt(norm_diff);
 	  norm_left = sqrt(norm_left);
 	  norm_right = sqrt(norm_right);

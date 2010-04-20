@@ -74,8 +74,8 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
 
 double ov_s = 0.6;
 double m_ov = 0.;
-extern const int ov_n_cheby;
-extern double * ov_cheby_coef;
+int ov_n_cheby;
+double * ov_cheby_coef = NULL;
 
 void Dov_psi(spinor * const P, spinor * const S) {
 
@@ -86,7 +86,7 @@ void Dov_psi(spinor * const P, spinor * const S) {
   static int rec_coefs = 1;
 
   ov_s = 0.5*(1./g_kappa - 8.) - 1.;
-
+  printf("Degree of Polynomial set to %d\n", ov_n_cheby);
   if(n_cheby != ov_n_cheby || rec_coefs) {
     if(ov_cheby_coef != NULL) free(ov_cheby_coef);
     ov_cheby_coef = (double*)malloc(ov_n_cheby*sizeof(double));
@@ -108,8 +108,8 @@ void Dov_psi(spinor * const P, spinor * const S) {
 
   /* here we do with M = 1 + s */
   /* M + m_ov/2 + (M - m_ov/2) \gamma_5 sign(Q(-M)) */
-  c0 = 1.0 + ov_s - 0.5*m_ov;
-  c1 = 1.0 + ov_s + 0.5*m_ov;
+  c0 = -(1.0 + ov_s - 0.5*m_ov);
+  c1 = -(1.0 + ov_s + 0.5*m_ov);
 
   Q_over_sqrt_Q_sqr(s[0], ov_cheby_coef, ov_n_cheby, S, ev_qnorm, ev_minev);
   gamma5(s[1], s[0], VOLUME);
@@ -168,7 +168,7 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
     free(aux_);
   }
 
-  for(j = 0; j < n-1; j++) {
+  for(j = 0; j < n; j++) {
     cnorm = scalar_prod(&(eigenvectors[j*evlength]), P, N, 1);
     
     cnorm.re *= (double)ev_sign[j];
@@ -302,8 +302,8 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
       }
       
       norm_Q_sqr_psi(R, aux, rnorm);
-      printf("%e %e\n", R[0].s0.c0.re, R[0].s0.c0.im);
-      printf("%e %e\n", R[0].s1.c0.re, R[0].s1.c0.im);
+/*       printf("%d %e %e\n", j, R[0].s0.c0.re, R[0].s0.c0.im); */
+/*       printf("%e %e\n", R[0].s1.c0.re, R[0].s1.c0.im); */
       temp1=-1.0;
       temp2=c[j];
       assign_mul_add_mul_add_mul_add_mul_r(d, R, dd, aux3, fact2, fact1, temp1, temp2, VOLUME);

@@ -182,6 +182,11 @@ int main(int argc, char *argv[])
   /* generator                                            */
   start_ranlux(rlxd_level, random_seed);
 
+  /* we need to make sure that we don't have even_odd_flag = 1 */
+  /* if any of the operators doesn't use it                    */
+  /* in this way even/odd can still be used by other operators */
+  for(j = 0; j < no_operators; j++) if(!operator_list[j].even_odd_flag) even_odd_flag = 0;
+
 #ifndef MPI
   g_dbw2rand = 0;
 #endif
@@ -358,9 +363,13 @@ int main(int argc, char *argv[])
       index_start = 0;
       index_end = 1;
     }
+
     for(isample = 0; isample < no_samples; isample++) {
       for (ix = index_start; ix < index_end; ix++) {
 	for(op_id = 0; op_id < no_operators; op_id++) {
+	  boundary(operator_list[op_id].kappa);
+          g_kappa = operator_list[op_id].kappa; 
+	  g_mu = 0.;
 	  /* we use g_spinor_field[0-7] for sources and props for the moment */
 	  /* 0-3 in case of 1 flavour  */
 	  /* 0-7 in case of 2 flavours */
