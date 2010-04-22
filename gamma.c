@@ -115,3 +115,37 @@ void gamma53( const int Q,  const int P, const int V){
     _gamma53(g_spinor_field[Q][ix],g_spinor_field[P][ix]);
   }
 }
+
+void P_plus(spinor * const Q, spinor * const P, const int V){
+  int ix;
+  
+  for (ix = 0; ix < V; ix++){
+    _P_plus(*(Q + ix),*(P + ix));
+  }
+}
+
+void P_minus(spinor * const Q, spinor * const P, const int V){
+  int ix;
+  
+  for (ix = 0; ix < V; ix++){
+    _P_minus(*(Q + ix),*(P + ix));
+  }
+}
+
+void Proj(spinor * const Q, spinor * const P, const int V, const int flag){
+  int ix;
+  
+  if(flag == 0){ 
+    for (ix = 0; ix < V; ix++){
+      _P_plus(*(Q + ix),*(P + ix));
+    }
+  }
+  else if(flag == 1){
+    for (ix = 0; ix < V; ix++){
+      _P_minus(*(Q + ix),*(P + ix));
+    }
+  }
+  else{
+    printf("wrong flag to Proj! (0/1) \n") ;
+  }
+}

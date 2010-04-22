@@ -37,4 +37,11 @@ void gamma51( const int Q,  const int P, const int V);
 void gamma52( const int Q,  const int P, const int V);
 void gamma53( const int Q,  const int P, const int V);
 
+void P_plus(spinor * const Q, spinor * const P, const int V); 
+void P_minus(spinor * const Q, spinor * const P, const int V); 
+void Proj(spinor * const Q, spinor * const P, const int V, const int flag); 
+
 #endif
+
+
+
