@@ -127,7 +127,7 @@ int write_first_messages(FILE * parameterfile, const int inv) {
   printf("# beta = %f , kappa= %f\n", g_beta, g_kappa);
   printf("# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
   if(inv != 1) {
-    printf("# mu = %f\n", g_mu);
+    printf("# mu = %f\n", g_mu/2./g_kappa);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
     printf("# SFBC parameters (gauge):\n");
     printf("# g_Ct = %f, g_Cs = %f\n", g_Ct, g_Cs);
@@ -145,7 +145,7 @@ int write_first_messages(FILE * parameterfile, const int inv) {
     fprintf(parameterfile, "# ITER_MAX_BCG=%d\n", ITER_MAX_BCG);
     fprintf(parameterfile, "# Nmeas=%d, Nsave=%d \n",
 	    Nmeas,Nsave);
-    fprintf(parameterfile, "# mu = %f\n", g_mu);
+    fprintf(parameterfile, "# mu = %f\n", g_mu/2./g_kappa);
     fprintf(parameterfile, "# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
     fprintf(parameterfile, "# SFBC parameters (gauge):\n");
     fprintf(parameterfile, "# g_Ct = %f, g_Cs = %f\n", g_Ct, g_Cs);
