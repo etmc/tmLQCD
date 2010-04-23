@@ -159,7 +159,10 @@ int main(int argc, char *argv[])
   }
 
   /* Read the input file */
-  read_input(input_filename);
+  if( (j = read_input(input_filename)) != 0) {
+    fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
+    exit(-1);
+  }
 
   /* this DBW2 stuff is not needed for the inversion ! */
   if (g_dflgcr_flag == 1) {

@@ -178,7 +178,8 @@ int main(int argc,char *argv[]) {
 
   /* Read the input file */
   if( (j = read_input(input_filename)) != 0) {
-    fprintf(stderr, "Could not find input file %s\nAborting...\n", input_filename);
+    fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
+    exit(-1);
   }
 
   DUM_DERI = 6;
