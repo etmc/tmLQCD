@@ -177,7 +177,9 @@ int main(int argc,char *argv[]) {
   }
 
   /* Read the input file */
-  read_input(input_filename);
+  if( (j = read_input(input_filename)) != 0) {
+    fprintf(stderr, "Could not find input file %s\nAborting...\n", input_filename);
+  }
 
   DUM_DERI = 6;
   DUM_SOLVER = DUM_DERI+8;
@@ -323,7 +325,7 @@ int main(int argc,char *argv[]) {
   j = init_dirac_halfspinor();
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
-    exit(0);
+    exit(-1);
   }
   if(g_sloppy_precision_flag == 1) {
     init_dirac_halfspinor32();
@@ -344,7 +346,10 @@ int main(int argc,char *argv[]) {
 	     gauge_input_filename, gauge_precision_read_flag);
       fflush(stdout);
     }
-    read_gauge_field(gauge_input_filename);
+    if( (j = read_gauge_field(gauge_input_filename)) !=0) {
+      fprintf(stderr, "error %d while reading gauge field from %s\n Aborting...\n", j, gauge_input_filename);
+      exit(-2);
+    }
 
     if (g_proc_id == 0){
       printf("# done!\n"); fflush(stdout);

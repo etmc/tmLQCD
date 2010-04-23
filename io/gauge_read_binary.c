@@ -39,37 +39,35 @@ int read_binary_gauge_data(LemonReader * reader, DML_Checksum * checksum)
 
   bytes = lemonReaderBytes(reader);
 
-  if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3))
+  if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3)) {
     prec = 64;
-  else
-    if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3) / 2)
+  }
+  else {
+    if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3) / 2) {
       prec = 32;
-    else
-    {
-      fprintf(stderr, "Probably wrong lattice size or precision (bytes=%lu).\n", (unsigned long)bytes);
-      fprintf(stderr, "Panic! Aborting...\n");
-      fflush(stdout);
-      MPI_File_close(reader->fp);
-      MPI_Abort(MPI_COMM_WORLD, 1);
-      MPI_Finalize();
-      exit(501);
     }
-
-  if (g_cart_id == 0 && g_debug_level > 2)
+    else {
+      fprintf(stderr, "Probably wrong lattice size or precision (bytes=%lu).\n", (unsigned long)bytes);
+      return(-3);
+    }
+  }
+  if (g_cart_id == 0 && g_debug_level > 2) {
     printf("# %d Bit precision read.\n", prec);
+  }
 
   DML_checksum_init(checksum);
 
   fbsu3 = sizeof(su3);
-  if (prec == 32)
+  if (prec == 32) {
     fbsu3 /= 2;
+  }
   bytes = 4 * fbsu3;
 
   if((void*)(filebuffer = malloc(VOLUME * bytes)) == NULL) {
     printf ("malloc errno in read_binary_gauge_data_parallel: %d\n", errno);
     errno = 0;
     /* do we need to abort here? */
-    return 1;
+    return(-1);
   }
 
   if (g_debug_level > 0)
@@ -100,42 +98,40 @@ int read_binary_gauge_data(LemonReader * reader, DML_Checksum * checksum)
 
   if (status < 0 && status != LEMON_EOR)
   {
-    fprintf(stderr, "LEMON read error occured with status = %d while reading!\nPanic! Aborting...\n", status);
-    MPI_File_close(reader->fp);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(500);
+    free(filebuffer);
+    fprintf(stderr, "LEMON read error occured with status = %d while reading!\n", status);
+    return(-2);
   }
 
-  for (t = 0; t < T; t++)
-    for (z = 0; z < LZ; z++)
-      for (y = 0; y < LY; y++)
-        for (x = 0; x < LX; x++)
-        {
+  for (t = 0; t < T; t++) {
+    for (z = 0; z < LZ; z++) {
+      for (y = 0; y < LY; y++) {
+        for (x = 0; x < LX; x++) {
           rank = (DML_SiteRank)(g_proc_coords[1] * LX +
                                 (((g_proc_coords[0] * T + t) * g_nproc_z * LZ + g_proc_coords[3] * LZ + z) * g_nproc_y * LY
                                  + g_proc_coords[2] * LY + y) * ((DML_SiteRank)LX * g_nproc_x) + x);
           current = filebuffer + bytes * (x + (y + (t * LZ + z) * LY) * LX);
           DML_checksum_accum(checksum, rank, current, bytes);
-          if (prec == 32)
-          {
+          if (prec == 32) {
             be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
             be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
             be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
             be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
           }
-          else
-          {
+          else {
             be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
             be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
             be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
             be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
           }
         }
+      }
+    }
+  }
   DML_global_xor(&checksum->suma);
   DML_global_xor(&checksum->sumb);
   free(filebuffer);
-  return 0;
+  return(0);
 }
 #else /* HAVE_LIBLEMON */
 int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
@@ -165,23 +161,17 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
   if(bytes == ((n_uint64_t)LX*g_nproc_x)*((n_uint64_t)LY*g_nproc_y)*((n_uint64_t)LZ*g_nproc_z)*((n_uint64_t)T*g_nproc_t)*((n_uint64_t)4*sizeof(su3))) prec = 64;
   else if(bytes == ((n_uint64_t)LX*g_nproc_x)*((n_uint64_t)LY*g_nproc_y)*((n_uint64_t)LZ*g_nproc_z)*((n_uint64_t)T*g_nproc_t)*((n_uint64_t)4*sizeof(su3)/2)) prec = 32;
   else {
-    fprintf(stderr, "Probably wrong lattice size or precision (bytes=%lu)\n", bytes);
-    fprintf(stderr, "Aborting...!\n");
-    fflush( stdout );
-#ifdef MPI
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-#endif
-    exit(501);
+    fprintf(stderr, "Probably wrong lattice size or precision in gauge_read_binary.c (bytes=%lu)\n", bytes);
+    return(-3);
   }
   if(g_cart_id == 0 && g_debug_level > 2) {
     printf("# %d bit precision read\n", prec);
   }
   if(prec == 32) bytes = (n_uint64_t)2*sizeof(su3);
   else bytes = (n_uint64_t)4*sizeof(su3);
-  for(t = 0; t < T; t++){
-    for(z = 0; z < LZ; z++){
-      for(y = 0; y < LY; y++){
+  for(t = 0; t < T; t++) {
+    for(z = 0; z < LZ; z++) {
+      for(y = 0; y < LY; y++) {
 #ifdef MPI
         limeReaderSeek(reader,(n_uint64_t)
                        (((n_uint64_t) g_proc_coords[1]*LX) +
@@ -202,12 +192,8 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
             DML_checksum_accum(checksum, rank, (char *) tmp, bytes);
           }
           if(status < 0 && status != LIME_EOR) {
-            fprintf(stderr, "LIME read error occured with status = %d while reading!\n Aborting...\n", status);
-#ifdef MPI
-            MPI_Abort(MPI_COMM_WORLD, 1);
-            MPI_Finalize();
-#endif
-            exit(500);
+            fprintf(stderr, "LIME read error occured with status = %d while reading in gauge_read_binary.c!\n", status);
+	    return(-2);
           }
           if(prec == 32) {
             be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp2[3*18], sizeof(su3)/8);

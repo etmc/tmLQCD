@@ -72,18 +72,21 @@ int read_gauge_field(char * filename) {
     close_reader_record(reader);
   }
 
-  if (!gauge_read_flag)
-    kill_with_error(reader->fp, g_cart_id, "Did not find gauge record. Aborting...\n");
-
+  if (!gauge_read_flag) {
+    fprintf(stderr, "Did not find gauge record!\n Aborting read!");
+    return(-1);
+  }
 
   if (g_debug_level > 0 && g_cart_id == 0)
   {
     printf("# checksum for gaugefield %s\n", filename);
     printf("# calculated: %#x %#x.\n", checksum_calc.suma, checksum_calc.sumb);
-    if (DML_read_flag)
+    if (DML_read_flag) {
       printf("# read:       %#x %#x.\n", checksum_read.suma, checksum_read.sumb);
-    else
+    }
+    else {
       printf("# Scidac checksum record not found or malformed.\n");
+    }
     fflush(stdout);
   }
 
@@ -92,5 +95,5 @@ int read_gauge_field(char * filename) {
   g_update_gauge_copy = 1;
   g_update_gauge_energy = 1;
 
-  return 0;
+  return(0);
 }

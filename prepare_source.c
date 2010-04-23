@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <assert.h>
 #ifdef MPI
 # include <mpi.h>
 #endif
@@ -49,7 +50,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
 		    const int source_location) {
 
   FILE * ifs = NULL;
-  int is = ix / 3, ic = ix %3, err = 0;
+  int is = ix / 3, ic = ix %3, err = 0, rstat=0;
   double ratime = 0., retime = 0.;
   operator * optr = &operator_list[op_id];
   char source_filename[100];
@@ -85,14 +86,18 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
 	  if (g_cart_id == 0) {
 	    printf("Reading source from %s\n", source_filename);
 	  }
-	  read_spinor(g_spinor_field[0], g_spinor_field[1], source_filename, 0);
+	  rstat = read_spinor(g_spinor_field[0], g_spinor_field[1], source_filename, 0);
 	}
 	else {
 	  sprintf(source_filename, "%s", SourceInfo.basename);
 	  if (g_cart_id == 0) {
 	    printf("Reading source no %d from %s\n", ix, source_filename);
 	  }
-	  read_spinor(g_spinor_field[0], g_spinor_field[1], source_filename, ix);
+	  rstat = read_spinor(g_spinor_field[0], g_spinor_field[1], source_filename, ix);
+	}
+	if(rstat) {
+	  fprintf(stderr, "Error reading file %s in prepare_source.c, rstat = %d\n", source_filename, rstat);
+	  assert(rstat == 0);
 	}
 #ifdef MPI
 	retime = MPI_Wtime();
@@ -124,7 +129,11 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
 	if (g_cart_id == 0) {
 	  printf("Reading source from %s\n", source_filename);
 	}
-	read_spinor(g_spinor_field[0], g_spinor_field[1], source_filename, 0);
+	rstat = read_spinor(g_spinor_field[0], g_spinor_field[1], source_filename, 0);
+	if(rstat) {
+	  fprintf(stderr, "Error reading file %s in prepare_source.c, rstat = %d\n", source_filename, rstat);
+	  assert(rstat == 0);
+	}
       }
       sprintf(source_filename, "%s.%.4d.%.5d.inverted", PropInfo.basename, nstore, isample);
     }
@@ -148,10 +157,14 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
 	err = 0;
 	/*           iter = get_propagator_type(source_filename); */
 	if (PropInfo.splitted) {
-	  read_spinor(optr->prop0, optr->prop1, source_filename, 0);
+	  rstat = read_spinor(optr->prop0, optr->prop1, source_filename, 0);
 	}
 	else {
-	  read_spinor(optr->prop0, optr->prop1, source_filename, ix);
+	  rstat = read_spinor(optr->prop0, optr->prop1, source_filename, ix);
+	}
+	if(rstat) {
+	  fprintf(stderr, "Error reading file %s in prepare_source.c, rstat = %d\n", source_filename, rstat);
+	  assert(rstat == 0);
 	}
 	if (g_kappa != 0.) {
 	  mul_r(optr->prop1, 1. / (2*optr->kappa), optr->prop1, VOLUME / 2);

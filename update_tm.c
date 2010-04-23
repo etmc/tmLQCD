@@ -322,7 +322,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
 
     if(accept == 1) {
-      read_gauge_field( "conf.save");
+      if(read_gauge_field("conf.save") != 0) {
+	fprintf(stderr, "could not re-read gauge from conf.save (in update_tm.c)\nAborting...\n");
+	exit(-1);
+      }
     }
   } /* end of reversibility check */
 

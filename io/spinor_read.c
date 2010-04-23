@@ -24,7 +24,7 @@ paramsPropInfo PropInfo = {_default_propagator_splitted, _default_source_format_
 paramsSourceInfo SourceInfo = {0, _default_propagator_splitted, _default_source_format_flag, _default_prop_precision_flag, 0, 0, 0, 0, 0, 0, 0, 1, NULL};
 
 int read_spinor(spinor * const s, spinor * const r, char * filename, const int position_) {
-  int status = 0, getpos = 0, bytes = 0, prec = 0, prop_type, position = position_;
+  int status = 0, getpos = 0, bytes = 0, prec = 0, prop_type, position = position_, rstat=0;
   char *header_type = NULL;
   READER *reader = NULL;
   DML_Checksum checksum;
@@ -34,20 +34,21 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
 
   prop_type = parse_propagator_type(reader);
   if ( prop_type == -1 ) {
-    kill_with_error(reader->fp, g_cart_id, "Did not find propagator or source type. Aborting...\n");
-/*     if(g_proc_id == 0) fprintf(stderr, "hack here, please prepare sources with correct headers!\n"); */
-/*     prop_type = 10; */
+    return(-1);
   }
 
   /* strictly speeking the following depends on whether we read a source or a propagator */
   if(prop_type == 1) position = 2*position_ + 1;
   /* anything else needs implementation! */
-  else if(prop_type == 2 || prop_type == 3) 
-    kill_with_error(reader->fp, g_cart_id, "Propagator type not yet implemented. Aborting read!\n");
-  else if(prop_type == 11 || prop_type == 12 || prop_type == 13) 
-    kill_with_error(reader->fp, g_cart_id, "Source type not yet implemented. Aborting read!\n");
-  else if(prop_type == -1)
-    kill_with_error(reader->fp, g_cart_id, "No propagator or source type record in file. Aborting read!\n");
+  else if(prop_type == 2 || prop_type == 3) {
+    return(-2);
+  }
+  else if(prop_type == 11 || prop_type == 12 || prop_type == 13) {
+    return(-3);
+  }
+  else if(prop_type == -1) {
+    return(-4);
+  }
 
   /* Find the desired propagator (could be more than one in a file) */
   while ((status = ReaderNextRecord(reader)) != LIME_EOF) {
@@ -57,34 +58,51 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
     }
     header_type = ReaderType(reader);
     if (strcmp("scidac-binary-data", header_type) == 0) {
-      if (getpos == position)
+      if (getpos == position) {
         break;
-      else
+      }
+      else {
         ++getpos;
+      }
     }
   }
 
-  if (status == LIME_EOF)
-    kill_with_error(reader->fp, g_cart_id, "No scidac-binary-data record found in file.\n");
+  if (status == LIME_EOF) {
+    return(-5);
+  }
 
   bytes = ReaderBytes(reader);
-  if ((int)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor))
+  if ((int)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor)) {
     prec = 64;
-  else
-    if ((int)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor) / 2)
+  }
+  else {
+    if ((int)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor) / 2) {
       prec = 32;
-    else
-      kill_with_error(reader->fp, g_cart_id, "Wrong length in eospinor. Aborting read!\n");
+    }
+    else {
+      if(g_debug_level > 0 && g_proc_id == 0) {
+	fprintf(stderr, "binary data has wrong lenght, should be %ld", bytes);
+      }
+      return(-6);
+    }
+  }
 
-  if (g_cart_id == 0 && g_debug_level > 2)
+  if (g_cart_id == 0 && g_debug_level > 2) {
     printf("# %d bit precision read.\n", prec);
+  }
 
-  read_binary_spinor_data(s, r, reader, &checksum);
+  if( (rstat = read_binary_spinor_data(s, r, reader, &checksum)) != 0) {
+    if(g_debug_level > 0 && g_proc_id == 0) {
+      fprintf(stderr, "read_binary_spinor_data failed with return value %d", rstat);
+    }
+    return(-7);
+  }
 
-  if (g_cart_id == 0 && g_debug_level > 1)
+  if (g_cart_id == 0 && g_debug_level > 1) {
     printf("# checksum for DiracFermion field in file %s position %d is %#x %#x\n", filename, position, checksum.suma, checksum.sumb);
+  }
 
   destruct_reader(reader);
 
-  return 0;
+  return(0);
 }

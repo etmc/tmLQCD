@@ -286,7 +286,11 @@ int main(int argc, char *argv[])
       printf("Reading gauge field from file %s\n", conf_filename);
       fflush(stdout);
     }
-    read_gauge_field(conf_filename);
+    if( (j = read_gauge_field(conf_filename)) !=0) {
+      fprintf(stderr, "error %d while reading gauge field from %s\n Aborting...\n", j, conf_filename);
+      exit(-2);
+    }
+
 
     if (g_cart_id == 0) {
       printf("done!\n");

@@ -42,7 +42,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * re
     if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor) / 2)
       prec = 32;
     else {
-      kill_with_error(reader->fp, g_cart_id, "Detected wrong lattice size. Aborting...\n");
+      return(-3);
     }
   }
 
@@ -54,17 +54,14 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * re
   bytes = fbspin;
 
   if((void*)(filebuffer = malloc(VOLUME * bytes)) == NULL) {
-    printf ("malloc errno in read_binary_spinor_data_parallel: %d\n", errno);
-    errno = 0;
-    /* do we need to abort here? */
-    return 1;
+    return(-1);
   }
 
   if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
   }
-  lemonReadLatticeParallelMapped(reader, filebuffer, bytes, latticeSize, scidacMapping);
+  status = lemonReadLatticeParallelMapped(reader, filebuffer, bytes, latticeSize, scidacMapping);
 
   if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
@@ -84,11 +81,9 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * re
   }
 
   if (status < 0 && status != LEMON_EOR) {
-    fprintf(stderr, "LEMON read error occured with status = %d while reading!\nPanic! Aborting...\n", status);
-    MPI_File_close(reader->fp);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-    MPI_Finalize();
-    exit(500);
+    fprintf(stderr, "lemonReadLatticeParallelMapped returned error %d in spinor_read_binary.c", status);
+    free(filebuffer);
+    return(-2);
   }
 
   for (t = 0; t < T; t++) {
@@ -141,14 +136,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * rea
     if (bytes == g_nproc * VOLUME * sizeof(spinor) / 2)
       prec = 32;
     else {
-      fprintf(stderr, "Probably wrong lattice size or precision (bytes=%lu).\n", (unsigned long)bytes);
-      fprintf(stderr, "Panic! Aborting...\n");
-      fflush(stdout);
-#ifdef MPI
-      MPI_Abort(MPI_COMM_WORLD, 1);
-      MPI_Finalize();
-#endif
-      exit(501);
+      return(-3);
     }
   }
 
@@ -192,7 +180,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * rea
             be_to_cpu_assign(p + i, tmp, sizeof(spinor)/8);
           }
           if(status < 0 && status != LIME_EOR) {
-            return(-1);
+	    return(-2);
           }
         }
       }
