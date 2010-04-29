@@ -94,7 +94,8 @@ int add_operator(const int type) {
   optr->prop_precision = _default_prop_precision_flag;
   optr->no_flavours = 1;
   optr->DownProp = 0;
-
+  optr->conf_input = _default_gauge_input_filename;
+  
   optr->applyM = &dummy_D;
   optr->applyQ = &dummy_D;
   optr->applyQp = &dummy_D;
@@ -112,6 +113,7 @@ int add_operator(const int type) {
     optr->even_odd_flag = 0;
     optr->solver = 13;
     optr->no_ev = 10;
+    optr->no_ev_index = 8;
     optr->ev_prec = 1.e-15;
     optr->deg_poly = 50;
     optr->s = 0.6;
@@ -338,6 +340,7 @@ void op_invert(const int op_id, const int index_start) {
 /*     ov_m = optr->m; */
     eigenvalues(&optr->no_ev, 5000, 1.e-12, 0, 0, 0, optr->even_odd_flag);
 /*     ov_check_locality(); */
+    index_jd(&optr->no_ev_index, 5000, 1.e-12, optr->conf_input, 0, 4);
     if(g_debug_level > 3) ov_check_ginsparg_wilson_relation_strong(); 
     invert_overlap(op_id, index_start); 
   }
