@@ -52,6 +52,7 @@
 #include <io/spinor.h>
 #include <io/utils.h>
 #include "test/overlaptests.h"
+#include "solver/index_jd.h"
 #include "operator.h"
 
 void dummy_D(spinor * const, spinor * const);

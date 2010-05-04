@@ -52,6 +52,7 @@ typedef struct {
   int prop_precision;
   int no_flavours;
   int DownProp;
+  int no_ev_index;
 
   int error_code;
 
@@ -92,7 +93,8 @@ typedef struct {
   void (*inverter) (const int op_id, const int index_start);
   /* write the propagator */
   void (*write_prop) (const int op_id, const int index_start, const int append_);
-
+  char * conf_input;
+  
 } operator;
 
 /* operator list defined in operator.c */
