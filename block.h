@@ -2,7 +2,7 @@
  * $Id$ 
  *
  * Copyright (C) 2008 Albert Deuzeman, Siebren Reker, Carsten Urbach
- *
+ *               2010 Claude Tadonki
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
@@ -65,6 +65,29 @@ void block_orthonormalize_free(block *parent);
 void compute_little_D();
 void compute_little_D_diagonal();
 void alt_block_compute_little_D();
+
+/* CT:
+The parameter "DflFieldIter" (default 80) refers to what is called
+GSL in Gilbert reports, and "DflPolyIter" (default 20) is the
+number of iterations in the polynomial preconditioner. 
+*/
+extern int dfl_field_iter;
+extern int dfl_poly_iter;
+
+extern int dfl_nblock_t;
+extern int dfl_nblock_x;
+extern int dfl_nblock_y;
+extern int dfl_nblock_z;
+int nb_blocks;
+int nblks_t;
+int nblks_x;
+int nblks_y;
+int nblks_z;
+int nblks_dir[4];
+void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi, int nb_blocks);
+void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const block_list, int id, int nb_blocks);
+int split_global_field_GEN(spinor ** const psi, spinor * const field, int nb_blocks);
+int split_global_field_GEN_ID(block * const block_list, int id, spinor * const field, int nb_blocks);
 
 extern block * block_list;
 

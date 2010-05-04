@@ -138,6 +138,12 @@ typedef struct
    (r).c2.re= (double) (s).c2.re; \
    (r).c2.im= (double) (s).c2.im;
 
+#define _spinor_assign(r,s) \
+   _vector_assign((r).s0,(s).s0);\
+   _vector_assign((r).s1,(s).s1);\
+   _vector_assign((r).s2,(s).s2);\
+   _vector_assign((r).s3,(s).s3);
+
 
 /* M. Hasenbusch Mon Sep 24
 * r.c1=-s.c1
