@@ -192,6 +192,9 @@ int init_blocks() {
 
     if ((void*)(block_list[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(complex))) == NULL)
       CALLOC_ERROR_CRASH;
+    if ((void*)(block_list[i].little_dirac_operator32 = calloc(9 * g_N_s * g_N_s, sizeof(complex32))) == NULL)
+      CALLOC_ERROR_CRASH;
+
     for (j = 0; j < 9 * g_N_s * g_N_s; ++j){
       _complex_zero(block_list[i].little_dirac_operator[j]);
     }
@@ -208,6 +211,7 @@ int free_blocks() {
     for(i = 0; i < nb_blocks; ++i) {
       free(block_list[i].basis);
       free(block_list[i].little_dirac_operator);
+      free(block_list[i].little_dirac_operator32);
     }
     free(block_ipt);
     free(bipt__);
@@ -670,7 +674,6 @@ void compute_little_D_diagonal() {
     for(i = 0; i < g_N_s; i++) {
       Block_D_psi(&block_list[blk], tmp, block_list[blk].basis[i]);
       for(j = 0; j < g_N_s; j++) {
-	/* 	M[i * g_N_s + j]  = block_scalar_prod(tmp, block_list[blk].basis[j], block_list[blk].volume); */
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
       }
     }
@@ -685,8 +688,7 @@ void compute_little_D_diagonal() {
 /* or even serially ?                                                           */
 /* checked CU */
 void compute_little_D(){
-  /*CT: I discoevered that this routine was not very useful as scratch is set to 0 *
-    so I decided just to do so                                                 */
+  /* this still needs adaption to the new block structure!! */
 
   spinor *scratch, * temp, *_scratch;
   spinor *r, *s;
@@ -697,9 +699,6 @@ void compute_little_D(){
   int bx, by, bz, bt, block_id;
   int dT, dX, dY, dZ;
   dT = T/nblks_t; dX = LX/nblks_x; dY = LY/nblks_y; dZ = LZ/nblks_z;
-
-
-
 
   /* for a full spinor field we need VOLUMEPLUSRAND                 */
   /* because we use the same geometry as for the                    */
@@ -718,44 +717,6 @@ void compute_little_D(){
     for(i = 0; i < g_N_s; i++) {
       Block_D_psi(&block_list[blk], scratch, block_list[blk].basis[i]);
       for(j = 0; j < g_N_s; j++) {
-	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
-      }
-    }
-  }
-}
-void compute_little_DD()
-{
-  spinor *scratch, * temp, *_scratch;
-  spinor *r, *s;
-  su3 * u;
-  int x, y, z, t, ix, iy, i, j, k, pm, mu, blk;
-  complex c, *M;
-
-  int bx, by, bz, bt, block_id;
-  int dT, dX, dY, dZ;
-  dT = T/nblks_t; dX = LX/nblks_x; dY = LY/nblks_y; dZ = LZ/nblks_z;
-
-
-
-
-  /* for a full spinor field we need VOLUMEPLUSRAND                 */
-  /* because we use the same geometry as for the                    */
-  /* gauge field                                                    */
-  /* It is VOLUME + 2*LZ*(LY*LX + T*LY + T*LX) + 4*LZ*(LY + T + LX) */
-  _scratch = calloc(2*VOLUMEPLUSRAND+1, sizeof(spinor));
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  scratch = (spinor*)(((unsigned long int)(_scratch)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  scratch = _scratch;
-#endif
-  temp = scratch + VOLUMEPLUSRAND;
-
-  for(blk = 0; blk < nb_blocks; blk++) {
-    M = block_list[blk].little_dirac_operator;
-    for(i = 0; i < g_N_s; i++) {
-      Block_D_psi(&block_list[blk], scratch, block_list[blk].basis[i]);
-      for(j = 0; j < g_N_s; j++) {
-	/* 	M[i * g_N_s + j]  = block_scalar_prod(scratch, block_list[blk].basis[j], block_list[blk].volume); */
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
       }
     }
@@ -764,10 +725,11 @@ void compute_little_DD()
 
   for (i = 0; i < g_N_s; i++){
     reconstruct_global_field_GEN_ID(scratch, block_list,i, nb_blocks);
-
 #ifdef MPI
     xchange_lexicfield(scratch);
 #endif
+    /* this sets all elements of scratch to zero, but the boundaries */
+    /* and this is what we need here!!                               */
     zero_spinor_field(scratch, VOLUME);
     /* +- t */
     mu = 0;
