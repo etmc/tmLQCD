@@ -124,6 +124,17 @@ TYPE [0-9A-Z]+
   int online_measurement_freq;
   int reweighting_flag;
   int reweighting_samples;
+  
+  int propagator_comparison;
+  int nb_cores;
+  
+  int dfl_nblock_t;
+  int dfl_nblock_x;
+  int dfl_nblock_y;
+  int dfl_nblock_z;
+  
+  int dfl_field_iter;
+  int dfl_poly_iter;
 %}
 
 %option never-interactive
@@ -211,6 +222,17 @@ TYPE [0-9A-Z]+
 %x COMMENT
 %x ERROR
 
+%x PCOMP
+%x NBCORES
+
+%x DFLNBLOCKT
+%x DFLNBLOCKX
+%x DFLNBLOCKY
+%x DFLNBLOCKZ
+
+%x DFLFIELDITER
+%x DFLPOLYITER
+
 %%
 ^T{SPC}*={SPC}*                            BEGIN(TT);
 ^L{SPC}*={SPC}*                            BEGIN(LL);
@@ -286,6 +308,17 @@ TYPE [0-9A-Z]+
 
 ^BeginMonomial{SPC}+                       BEGIN(INITMONOMIAL);
 ^BeginInt                                  BEGIN(INITINTEGRATOR);
+
+^PropagatorComparison{SPC}*={SPC}*         BEGIN(PCOMP);
+^NbCoresPerNode{SPC}*={SPC}*			   BEGIN(NBCORES);
+
+^NoBlocksT{SPC}*={SPC}*			       BEGIN(DFLNBLOCKT);
+^NoBlocksX{SPC}*={SPC}*			       BEGIN(DFLNBLOCKX);
+^NoBlocksY{SPC}*={SPC}*			       BEGIN(DFLNBLOCKY);
+^NoBlocksZ{SPC}*={SPC}*			       BEGIN(DFLNBLOCKZ);
+
+^DflFieldIter{SPC}*={SPC}*			       BEGIN(DFLFIELDITER);
+^DflPolyIter{SPC}*={SPC}*			       BEGIN(DFLPOLYITER);
 
 <INITMONOMIAL>{TYPE} {
   current_monomial++;
@@ -649,6 +682,38 @@ TYPE [0-9A-Z]+
   N_PROC_Z = atoi(yytext);
   if(myverbose!=0) printf("Nr of processors in z direction = %s\n", yytext);
 #endif
+}
+<PCOMP>{DIGIT}+               {
+  propagator_comparison=atoi(yytext);
+  if(myverbose!=0) printf("propagator_comparison = %s \n", yytext);
+}
+<NBCORES>{DIGIT}+               {
+  nb_cores=atoi(yytext);
+  if(myverbose!=0) printf("nb_cores = %s \n", yytext);
+}
+<DFLNBLOCKT>{DIGIT}+               {
+  dfl_nblock_t=atoi(yytext);
+  if(myverbose!=0) printf("dfl_nblock_t = %s \n", yytext);
+}
+<DFLNBLOCKX>{DIGIT}+               {
+  dfl_nblock_x=atoi(yytext);
+  if(myverbose!=0) printf("dfl_nblock_x = %s \n", yytext);
+}
+<DFLNBLOCKY>{DIGIT}+               {
+  dfl_nblock_y=atoi(yytext);
+  if(myverbose!=0) printf("dfl_nblock_y = %s \n", yytext);
+}
+<DFLNBLOCKZ>{DIGIT}+               {
+  dfl_nblock_z=atoi(yytext);
+  if(myverbose!=0) printf("dfl_nblock_z = %s \n", yytext);
+}
+<DFLFIELDITER>{DIGIT}+               {
+  dfl_field_iter=atoi(yytext);
+  if(myverbose!=0) printf("dfl_fields_iter = %s \n", yytext);
+}
+<DFLPOLYITER>{DIGIT}+               {
+  dfl_poly_iter=atoi(yytext);
+  if(myverbose!=0) printf("dfl_poly_iter = %s \n", yytext);
 }
 <SEED>{DIGIT}+               {
   random_seed=atoi(yytext);
@@ -1147,6 +1212,17 @@ int read_input(char * conf_file){
   N_PROC_Y = _default_N_PROC_Y;
   N_PROC_Z = _default_N_PROC_Z;
 #endif
+  propagator_comparison = 0;
+  nb_cores = 1;
+  
+  dfl_nblock_t=1;
+  dfl_nblock_x=1;
+  dfl_nblock_y=1;
+  dfl_nblock_z;
+  
+  dfl_field_iter = 80;
+  dfl_poly_iter = 20;
+  
   g_kappa = _default_g_kappa;
   g_acc_Ptilde = _default_g_acc_Ptilde;
   g_acc_Hfin = _default_g_acc_Hfin;
