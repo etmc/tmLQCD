@@ -47,7 +47,7 @@ static spinor * _chi;
 static spinor ** xi;
 static spinor * _xi;
 static complex * alpha;
-
+extern int dfl_poly_iter;
 
 int gcr(spinor * const P, spinor * const Q, 
 	const int m, const int max_restarts,
@@ -82,17 +82,19 @@ int gcr(spinor * const P, spinor * const Q,
       return(iter);
     }
     for(k = 0; k < m; k++) {
-
+      
       if(precon == 0) {
 	assign(xi[k], rho, N);
       }
       else {
-/*  	Msap(xi[k], rho, 4); */
-       	poly_nonherm_precon(xi[k], rho, 0.3, 1.1, 20, N);
+	/*  	Msap(xi[k], rho, 4); */
+       	poly_nonherm_precon(xi[k], rho, 0.3, 1.1, dfl_poly_iter, N);
       }
+	  
       dfl_sloppy_prec = 1;
       dfl_little_D_prec = 1.e-12;
       f(tmp, xi[k]); 
+	  
       /* tmp will become chi[k] */
       for(l = 0; l < k; l++) {
   	a[l][k] = scalar_prod(chi[l], tmp, N, 1);
@@ -166,6 +168,7 @@ static void init_gcr(const int _M, const int _V){
     _xi = calloc(M*Vo, sizeof(spinor));
     xi[0] = _xi;
 #endif
+    if(_xi == NULL) {printf("Unable to allocated space for GCR iterations\n");exit(0);  }
     b = calloc(M, sizeof(double));
     c = calloc(M, sizeof(complex));
     alpha = calloc(M+1, sizeof(complex));

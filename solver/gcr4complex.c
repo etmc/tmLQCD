@@ -1,5 +1,6 @@
 /***********************************************************************
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ *               2010 claude Tadonki
  *
  * This file is part of tmLQCD.
  *
@@ -65,7 +66,7 @@ int gcr4complex(complex * const P, complex * const Q,
     f(tmp, P);
     ldiff(rho, Q, tmp, N);
     err = lsquare_norm(rho, N, parallel);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+    if(g_proc_id == g_stdio_proc && g_debug_level > 1){/*CT: was "g_debug_level > 0" */
       printf("lGCR: %d\t%g true residue %1.3e\n", restart * m, err, norm_sq); 
       fflush(stdout);
     }
@@ -135,7 +136,7 @@ static void init_lgcr(const int _M, const int _V){
     b = calloc(M, sizeof(double));
     c = calloc(M, sizeof(complex));
     alpha = calloc(M+1, sizeof(complex));
-    for(i = 1; i < M; i++){
+    for(i = 1; i < M; i++) { 
       chi[i] = chi[i-1] + Vo;
       xi[i] = xi[i-1] + Vo;
       a[i] = a[i-1] + M;

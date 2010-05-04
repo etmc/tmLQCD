@@ -17,7 +17,10 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+
+ This file was modified according to a flexible number of blocks
+ by Claude Tadonki - PetaQCD - April 2010 ( claude.tadonki@lal.in2p3.fr )
+***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -75,6 +78,7 @@ static void random_fields(const int Ns) {
 }
 
 int generate_dfl_subspace(const int Ns, const int N) {
+
   int i, j, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex), 
     vol = VOLUME*sizeof(spinor)/sizeof(complex);
   double nrm, e = 0.3, d = 1.1, atime, etime;
@@ -87,7 +91,8 @@ int generate_dfl_subspace(const int Ns, const int N) {
 #else
   atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-  work = (complex*)malloc(2*9*Ns*sizeof(complex));
+  work = (complex*)malloc(nb_blocks*9*Ns*sizeof(complex));
+  
   if(init_subspace == 0) i = init_dfl_subspace(Ns);
 
   if(init_little_subspace == 0) i = init_little_dfl_subspace(Ns);
@@ -100,7 +105,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
       nrm = sqrt(square_norm(dfl_fields[0], N, 1));
       mul_r(dfl_fields[0], 1./nrm, dfl_fields[0], N);
       d = 1.1;
-/*       gmres_precon(g_spinor_field[DUM_SOLVER], dfl_fields[0], 20, 1, 1.e-20, 0, N, &D_psi); */
+      /*       gmres_precon(g_spinor_field[DUM_SOLVER], dfl_fields[0], 20, 1, 1.e-20, 0, N, &D_psi); */
       poly_nonherm_precon(g_spinor_field[DUM_SOLVER], dfl_fields[0], e, d, 30, N);
       D_psi(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
       diff(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], dfl_fields[0], N);
@@ -114,16 +119,16 @@ int generate_dfl_subspace(const int Ns, const int N) {
   }
 
   boundary(0.1586);
+  
   for(i = 0; i < Ns; i++) {
+    /*CT: We do Ns x 80 x 20 evaluation of Dpsi */
     ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
     nrm = sqrt(square_norm(dfl_fields[i], N, 1));
     mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
 
-    for(j = 0; j < 80; j++) {
+    for(j = 0; j < dfl_field_iter; j++) {/*dfl_fields_iter = 80  by default */
       g_sloppy_precision = 1;
-/*        Msap(g_spinor_field[0], dfl_fields[i], 4); */
-      poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 20, N);
-/*       gmres_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], 20, 1, 1.e-20, 0, N, &D_psi); */
+      poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, dfl_poly_iter, N); /*dfl_poly_iter = 20 by default */
       g_sloppy_precision = 0;
       ModifiedGS((complex*)g_spinor_field[0], vol, i, (complex*)dfl_fields[0], vpr);
       nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
@@ -152,17 +157,18 @@ int generate_dfl_subspace(const int Ns, const int N) {
   }
   for (i = 0; i < Ns; i++) { 
     /* add it to the basis */
-    split_global_field(block_list[0].basis[i], block_list[1].basis[i], dfl_fields[i]);
+    /* split_global_field(block_list[0].basis[i], block_list[1].basis[i], dfl_fields[i]); */
+    split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
   }
 
   /* perform local orthonormalization */
-  block_orthonormalize(block_list);
-  block_orthonormalize(block_list+1);
+  for(i=0;i<nb_blocks;i++) block_orthonormalize(block_list+i);
+  /* block_orthonormalize(block_list+1); */
 
   dfl_subspace_updated = 1;
 
   for(j = 0; j < Ns; j++) {
-    for(i = 0; i < 2*9*Ns; i++) {
+    for(i = 0; i < nb_blocks*9*Ns; i++) {
       _complex_zero(little_dfl_fields[j][i]);
       _complex_zero(work[i]);
     }
@@ -177,7 +183,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
     /* now take the local scalar products */
     for(j = 0; j < Ns; j++) {
       p = r;
-      for(blk = 0; blk < 2; blk++) {
+      for(blk = 0; blk < nb_blocks; blk++) {
 	if(blk == 0) p = r;
 	else p = q;
 	little_dfl_fields[i][j + blk*Ns] = scalar_prod(block_list[blk].basis[j], p, block_list[0].volume, 0);
@@ -188,16 +194,16 @@ int generate_dfl_subspace(const int Ns, const int N) {
   /* orthonormalise */
   for(i = 0; i < Ns; i++) {
     for (j = 0; j < i; j++) {
-      s = lscalar_prod(little_dfl_fields[j], little_dfl_fields[i], 2*Ns, 1);
-      lassign_diff_mul(little_dfl_fields[i], little_dfl_fields[j], s, 2*Ns);
+      s = lscalar_prod(little_dfl_fields[j], little_dfl_fields[i], nb_blocks*Ns, 1);
+      lassign_diff_mul(little_dfl_fields[i], little_dfl_fields[j], s, nb_blocks*Ns);
     }
-    s.re = lsquare_norm(little_dfl_fields[i], 2*Ns, 1);
-    lmul_r(little_dfl_fields[i], 1./s.re, little_dfl_fields[i], 2*Ns);
+    s.re = lsquare_norm(little_dfl_fields[i], nb_blocks*Ns, 1);
+    lmul_r(little_dfl_fields[i], 1./s.re, little_dfl_fields[i], nb_blocks*Ns);
   }
   if(g_debug_level > 4) {
     for(i = 0; i < Ns; i++) {
       for(j = 0; j < Ns; j++) {
-	s = lscalar_prod(little_dfl_fields[i], little_dfl_fields[j], 2*Ns, 1);
+	s = lscalar_prod(little_dfl_fields[i], little_dfl_fields[j], nb_blocks*Ns, 1);
 	if(g_proc_id == 0) {
 	  printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, s.re, s.im);
 	}
@@ -208,7 +214,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
   for(i = 0; i < Ns; i++) {
     little_D(work, little_dfl_fields[i]);
     for(j = 0; j < Ns; j++) {
-      little_A[i * Ns + j]  = lscalar_prod(little_dfl_fields[j], work, 2*Ns, 1);
+      little_A[i * Ns + j]  = lscalar_prod(little_dfl_fields[j], work, nb_blocks*Ns, 1);
       if(g_proc_id == 0 && g_debug_level > 4) {
 	printf("%1.3e %1.3ei, ", little_A[i * Ns + j].re, little_A[i * Ns + j].im);
       }
@@ -276,7 +282,7 @@ int generate_dfl_subspace_free(const int Ns, const int N) {
 int init_little_dfl_subspace(const int N_s) {
   int i;
   if(init_little_subspace == 0) {
-    if((void*)(_little_dfl_fields = (complex*)calloc((N_s)*2*9*N_s+4, sizeof(complex))) == NULL) {
+    if((void*)(_little_dfl_fields = (complex*)calloc((N_s)*nb_blocks*9*N_s+4, sizeof(complex))) == NULL) {
       return(1);
     }
     if((void*)(little_dfl_fields = (complex**)calloc(N_s, sizeof(complex*))) == NULL) {
@@ -288,7 +294,7 @@ int init_little_dfl_subspace(const int N_s) {
     little_dfl_fields[0] = _little_dfl_fields;
 #endif
     for (i = 1; i < N_s; i++) {
-      little_dfl_fields[i] = little_dfl_fields[i-1] + 2*9*N_s;
+      little_dfl_fields[i] = little_dfl_fields[i-1] + nb_blocks*9*N_s;
     }
     if((void*)(little_A = (complex*)calloc(N_s*N_s, sizeof(complex))) == NULL) {
       return(1);
