@@ -462,7 +462,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
 
     sp = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
     up=&g_gauge_field_copy[icx][0];
 #else
     up=&g_gauge_field[ix][0];
@@ -483,7 +483,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
 
     sm = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
     um = up+1;
 #else
     um=&g_gauge_field[iy][0];
@@ -506,7 +506,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
 
     sp = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
     up=um+1;
 #else
     up=&g_gauge_field[ix][1];      
@@ -527,7 +527,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
 
     sm = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
       um=up+1;
 #else
     um=&g_gauge_field[iy][1];
@@ -548,7 +548,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
 
     sp = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
     up=um+1;
 #else
     up=&g_gauge_field[ix][2];
@@ -569,7 +569,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
 
     sm = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
       um = up +1;
 #else
     um=&g_gauge_field[iy][2];
@@ -590,7 +590,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
 
     sp = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
     up=um+1;
 #else
     up=&g_gauge_field[ix][3];
@@ -611,7 +611,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
 
     sm = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR )
+#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
     um = up+1;
 #else
     um=&g_gauge_field[iy][3];

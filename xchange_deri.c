@@ -58,10 +58,10 @@ void xchange_deri() {
   /* recieve the data from the neighbour on the right in time direction */
   MPI_Isend(&df0[gI_m1_0_0_0][0].d1,    1, deri_time_slice_cont, g_nb_t_dn, 43,
 	    g_cart_grid, &request[cntr]);
-  cntr++;
+  
   MPI_Irecv(&ddummy[gI_Lm1_0_0_0][0].d1, 1, deri_time_slice_cont, g_nb_t_up, 43,
-	    g_cart_grid, &request[cntr]);
-  cntr++;
+	    g_cart_grid, &request[cntr+1]);
+  cntr=cntr+2;
 #    endif
 
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
@@ -70,10 +70,9 @@ void xchange_deri() {
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Isend(&df0[gI_0_m1_0_0][0],    1, deri_x_slice_cont, g_nb_x_dn, 44,
 	    g_cart_grid, &request[cntr]);
-  cntr++;
   MPI_Irecv(&ddummy[gI_0_Lm1_0_0][0],             1, deri_x_slice_gath, g_nb_x_up, 44,
-	    g_cart_grid, &request[cntr]);
-  cntr++;
+	    g_cart_grid, &request[cntr+1]);
+  cntr=cntr+2;
 #    endif
 #    if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ )
   /* send the data to the neighbour on the left in y direction */
@@ -81,11 +80,10 @@ void xchange_deri() {
   MPI_Isend((void*)df0[gI_0_0_m1_0], 
 	    1, deri_y_slice_cont, g_nb_y_dn, 45,
 	    g_cart_grid, &request[cntr]);
-  cntr++;
   MPI_Irecv((void*)ddummy[gI_0_0_Lm1_0],
 	    1, deri_y_slice_gath, g_nb_y_up, 45,
-	    g_cart_grid, &request[cntr]);
-  cntr++;
+	    g_cart_grid, &request[cntr+1]);
+  cntr=cntr+2;
 #    endif
 #    if (defined PARALLELXYZT || defined PARALLELXYZ )
   /* send the data to the neighbour on the left in z direction */
@@ -93,11 +91,10 @@ void xchange_deri() {
   MPI_Isend((void*)df0[gI_0_0_0_m1], 
 	    1, deri_z_slice_cont, g_nb_z_dn, 46,
 	    g_cart_grid, &request[cntr]);
-  cntr++;
   MPI_Irecv((void*)ddummy[gI_0_0_0_Lm1],
 	    1, deri_z_slice_gath, g_nb_z_up, 46,
-	    g_cart_grid, &request[cntr]);
-  cntr++;
+	    g_cart_grid, &request[cntr+1]);
+  cntr=cntr+2;
 #    endif
   MPI_Waitall(cntr, request, status);
 
@@ -339,10 +336,9 @@ void xchange_deri() {
   /* recieve the data from the neighbour on the right in time direction */
   MPI_Isend(&df0[(T+1)*LX*LY*LZ][0].d1,    1, deri_time_slice_cont, g_nb_t_dn, 43,
 	    g_cart_grid, &request[cntr]);
-  cntr++;
   MPI_Irecv(&ddummy[(T-1)*LX*LY*LZ][0].d1, 1, deri_time_slice_cont, g_nb_t_up, 43,
-	    g_cart_grid, &request[cntr]);
-  cntr++;
+	    g_cart_grid, &request[cntr+1]);
+  cntr=cntr+2;
 
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
 
@@ -350,10 +346,9 @@ void xchange_deri() {
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Isend(&df0[(T+2)*LX*LY*LZ + T*LY*LZ][0],    1, deri_x_slice_cont, g_nb_x_dn, 44,
 	    g_cart_grid, &request[cntr]);
-  cntr++;
   MPI_Irecv(&ddummy[(LX-1)*LY*LZ][0],             1, deri_x_slice_gath, g_nb_x_up, 44,
-	    g_cart_grid, &request[cntr]);
-  cntr++;
+	    g_cart_grid, &request[cntr+1]);
+  cntr=cntr+2;
 #    endif
 #    if (defined PARALLELXYT || defined PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
@@ -361,11 +356,10 @@ void xchange_deri() {
   MPI_Isend((void*)df0[VOLUME + 2*LZ*(LX*LY + T*LY) + T*LX*LZ], 
 	    1, deri_y_slice_cont, g_nb_y_dn, 45,
 	    g_cart_grid, &request[cntr]);
-  cntr++;
   MPI_Irecv((void*)ddummy[(LY-1)*LZ],
 	    1, deri_y_slice_gath, g_nb_y_up, 45,
-	    g_cart_grid, &request[cntr]);
-  cntr++;
+	    g_cart_grid, &request[cntr+1]);
+  cntr=cntr+2;
 #    endif
 #    ifdef PARALLELXYZT
   /* send the data to the neighbour on the left in y direction */
@@ -373,11 +367,10 @@ void xchange_deri() {
   MPI_Isend((void*)df0[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY], 
 	    1, deri_z_slice_cont, g_nb_z_dn, 46,
 	    g_cart_grid, &request[cntr]);
-  cntr++;
   MPI_Irecv((void*)ddummy[LZ-1],
 	    1, deri_z_slice_gath, g_nb_z_up, 46,
-	    g_cart_grid, &request[cntr]);
-  cntr++;
+	    g_cart_grid, &request[cntr+1]);
+  cntr=cntr+2;
 #    endif
   MPI_Waitall(cntr, request, status);
   /* add ddummy to df0 */

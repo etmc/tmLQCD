@@ -67,7 +67,7 @@
 #undef PARALLELXYZT
 
 /* timeslice-splitted communications */
-#undef _USE_TSLITPAR
+#undef _USE_TSPLITPAR
 
 /* Fixed volume at compiletime */
 #undef FIXEDVOLUME

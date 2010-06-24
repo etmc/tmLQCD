@@ -103,7 +103,7 @@ void xchange_field(spinor * const l, const int ieo) {
     MPI_Irecv((void*)(l+g_1st_t_ext_up), 1, field_time_slice_cont, g_nb_t_up, 81, g_cart_grid, &requests[ireq+1]);
     ireq=ireq+4;
 #    endif
-
+    
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
     /* send the data to the neighbour on the left in x direction */
     /* recieve the data from the neighbour on the right in x direction */
@@ -128,10 +128,11 @@ void xchange_field(spinor * const l, const int ieo) {
 
     if(ieo == 1) { 
       MPI_Isend((void*)(l+g_1st_z_int_dn),1,field_z_slice_even_dn,g_nb_z_dn,503,g_cart_grid,&requests[ireq]); 
+      MPI_Irecv((void*)(l+g_1st_z_ext_up),1,field_z_slice_cont,g_nb_z_up,503,g_cart_grid,&requests[ireq+1]); 
     } else { 
       MPI_Isend((void*)(l+g_1st_z_int_dn),1,field_z_slice_odd_dn,g_nb_z_dn,503,g_cart_grid,&requests[ireq]); 
+      MPI_Irecv((void*)(l+g_1st_z_ext_up),1,field_z_slice_cont,g_nb_z_up,503,g_cart_grid,&requests[ireq+1]); 
     } 
-    MPI_Irecv((void*)(l+g_1st_z_ext_up),1,field_z_slice_cont,g_nb_z_up,503,g_cart_grid,&requests[ireq+1]); 
 
 #    endif
 
@@ -167,10 +168,11 @@ void xchange_field(spinor * const l, const int ieo) {
   /* recieve the data from the neighbour on the left in z direction */  
     if(ieo == 1) { 
       MPI_Isend((void*)(l+g_1st_z_int_up),1,field_z_slice_even_up,g_nb_z_up,504,g_cart_grid,&requests[ireq]); 
+      MPI_Irecv((void*)(l+g_1st_z_ext_dn),1,field_z_slice_cont,g_nb_z_dn,504,g_cart_grid,&requests[ireq+1]); 
     } else {  
       MPI_Isend((void*)(l+g_1st_z_int_up),1,field_z_slice_odd_up,g_nb_z_up,504,g_cart_grid,&requests[ireq]); 
+      MPI_Irecv((void*)(l+g_1st_z_ext_dn),1,field_z_slice_cont,g_nb_z_dn,504,g_cart_grid,&requests[ireq+1]); 
     } 
-    MPI_Irecv((void*)(l+g_1st_z_ext_dn),1,field_z_slice_cont,g_nb_z_dn,504,g_cart_grid,&requests[ireq+1]); 
 #    endif
 
   } else {
@@ -206,10 +208,11 @@ void xchange_field(spinor * const l, const int ieo) {
     /* recieve the data from the neighbour on the right in z direction */
     if(ieo == 1) { 
       MPI_Isend((void*)(l+g_1st_z_int_dn),1,field_z_slice_even_dn,g_nb_z_dn,503,g_cart_grid,&requests[ireq]);
+      MPI_Irecv((void*)(l+g_1st_z_ext_up),1,field_z_slice_cont,g_nb_z_up,503,g_cart_grid,&requests[ireq+1]);
     } else { 
       MPI_Isend((void*)(l+g_1st_z_int_dn),1,field_z_slice_odd_dn,g_nb_z_dn,503,g_cart_grid,&requests[ireq]);
+      MPI_Irecv((void*)(l+g_1st_z_ext_up),1,field_z_slice_cont,g_nb_z_up,503,g_cart_grid,&requests[ireq+1]);
     } 
-    MPI_Irecv((void*)(l+g_1st_z_ext_up),1,field_z_slice_cont,g_nb_z_up,503,g_cart_grid,&requests[ireq+1]);
 #    endif    
 
     ireq=2;
@@ -243,10 +246,11 @@ void xchange_field(spinor * const l, const int ieo) {
     /* recieve the data from the neighbour on the left in z direction */  
     if(ieo == 1) { 
       MPI_Isend((void*)(l+g_1st_z_int_up),1,field_z_slice_even_up,g_nb_z_up,504,g_cart_grid,&requests[ireq]);
+      MPI_Irecv((void*)(l+g_1st_z_ext_dn),1,field_z_slice_cont,g_nb_z_dn,504,g_cart_grid,&requests[ireq+1]);
     } else { 
       MPI_Isend((void*)(l+g_1st_z_int_up),1,field_z_slice_odd_up,g_nb_z_up,504,g_cart_grid,&requests[ireq]);
+      MPI_Irecv((void*)(l+g_1st_z_ext_dn),1,field_z_slice_cont,g_nb_z_dn,504,g_cart_grid,&requests[ireq+1]);
     } 
-    MPI_Irecv((void*)(l+g_1st_z_ext_dn),1,field_z_slice_cont,g_nb_z_dn,504,g_cart_grid,&requests[ireq+1]);
 #    endif
 
   }

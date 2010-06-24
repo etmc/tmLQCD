@@ -549,14 +549,17 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(LX, LZ/2, LY*LZ/2, field_point, &field_yt_slice_int);  /* OK */
   MPI_Type_contiguous(LY*LZ/2, field_point, &field_xt_slice_ext);  /* OK */
   MPI_Type_contiguous(LX*LZ/2, field_point, &field_yt_slice_ext);  /* OK */
-  MPI_Type_contiguous((LX*LY+1)/2, field_point, &field_zt_slice_ext_L);  /* OK */
-  MPI_Type_contiguous(LX*LY/2, field_point, &field_zt_slice_ext_S);  /* OK */
   MPI_Type_commit(&field_xt_slice_int);
   MPI_Type_commit(&field_xt_slice_ext);
   MPI_Type_commit(&field_yt_slice_int);
   MPI_Type_commit(&field_yt_slice_ext);
+# ifdef PARALLELXYZ
+  MPI_Type_contiguous((LX*LY+1)/2, field_point, &field_zt_slice_ext_L);  /* OK */
+  MPI_Type_contiguous(LX*LY/2, field_point, &field_zt_slice_ext_S);  /* OK */
   MPI_Type_commit(&field_zt_slice_ext_L);
   MPI_Type_commit(&field_zt_slice_ext_S);
+# endif
+
 #endif
 
   /* The internal z_ and zt_ slices are constructed in geometry() with MPI_Type_indexed() */
