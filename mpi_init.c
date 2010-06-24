@@ -375,8 +375,8 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 #  endif
 #  if (defined PARALLELXYZT || defined PARALLELXYZ ) 
   MPI_Cart_shift(g_cart_grid, 3, 1, &g_nb_z_dn, &g_nb_z_up);
-  g_nb_list[0] = g_nb_z_up;  
-  g_nb_list[1] = g_nb_z_dn;
+  g_nb_list[6] = g_nb_z_up;  
+  g_nb_list[7] = g_nb_z_dn;
 #  endif
 
   /* With internal boundary we mean the fields that are send */
