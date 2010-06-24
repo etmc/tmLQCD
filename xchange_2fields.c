@@ -179,7 +179,7 @@ void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
       MPI_Isend((void*)(l+g_1st_z_int_dn),1,field_z_slice_odd_dn,g_nb_z_dn,503,g_cart_grid,&requests[reqcount]); 
     } 
     reqcount++;
-    MPI_Irecv((void*)(l+g_1st_z_ext_up),1,field_z_slice_cont,g_nb_z_up,503,g_cart_grid,&requests[reqcount+1]); 
+    MPI_Irecv((void*)(l+g_1st_z_ext_up),1,field_z_slice_cont,g_nb_z_up,503,g_cart_grid,&requests[reqcount]); 
     reqcount++;
     if(ieo == 1) { 
       MPI_Isend((void*)(k+g_1st_z_int_dn),1,field_z_slice_even_dn,g_nb_z_dn,505,g_cart_grid,&requests[reqcount]); 
@@ -187,7 +187,7 @@ void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
       MPI_Isend((void*)(k+g_1st_z_int_dn),1,field_z_slice_odd_dn,g_nb_z_dn,505,g_cart_grid,&requests[reqcount]); 
     } 
     reqcount++;
-    MPI_Irecv((void*)(k+g_1st_z_ext_up),1,field_z_slice_cont,g_nb_z_up,505,g_cart_grid,&requests[reqcount+1]); 
+    MPI_Irecv((void*)(k+g_1st_z_ext_up),1,field_z_slice_cont,g_nb_z_up,505,g_cart_grid,&requests[reqcount]); 
     reqcount++;
 
   /* send the data to the neighbour on the right in z direction */
@@ -198,7 +198,7 @@ void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
       MPI_Isend((void*)(l+g_1st_z_int_up),1,field_z_slice_odd_up,g_nb_z_up,504,g_cart_grid,&requests[reqcount]);
     } 
     reqcount++;
-    MPI_Irecv((void*)(l+g_1st_z_ext_dn),1,field_z_slice_cont,g_nb_z_dn,504,g_cart_grid,&requests[reqcount+1]);
+    MPI_Irecv((void*)(l+g_1st_z_ext_dn),1,field_z_slice_cont,g_nb_z_dn,504,g_cart_grid,&requests[reqcount]);
     reqcount++;
     if(ieo == 1) { 
       MPI_Isend((void*)(k+g_1st_z_int_up),1,field_z_slice_even_up,g_nb_z_up,506,g_cart_grid,&requests[reqcount]);
@@ -206,7 +206,7 @@ void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
       MPI_Isend((void*)(k+g_1st_z_int_up),1,field_z_slice_odd_up,g_nb_z_up,506,g_cart_grid,&requests[reqcount]);
     } 
     reqcount++;
-    MPI_Irecv((void*)(k+g_1st_z_ext_dn),1,field_z_slice_cont,g_nb_z_dn,506,g_cart_grid,&requests[reqcount+1]);
+    MPI_Irecv((void*)(k+g_1st_z_ext_dn),1,field_z_slice_cont,g_nb_z_dn,506,g_cart_grid,&requests[reqcount]);
     reqcount++;
 
 #    endif
