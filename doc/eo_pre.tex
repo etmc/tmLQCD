@@ -137,6 +137,50 @@ beginning of each molecular dynamics trajectory with
 where $R$ is a random spinor field taken from a Gaussian distribution
 with norm one.
 
+\subsubsection{Symmetric even/odd Preconditioning}
+
+One may write instead of eq. (\ref{eq:eo2}) the following symmetrical
+factorisation of $\Qpm$:
+\begin{equation}
+  \label{eq:sym1}
+  \Qpm =
+  \gamma_5\begin{pmatrix}
+    M_{ee}^\pm & 0 \\
+    M_{oe}  &  M_{oo}^\pm \\
+  \end{pmatrix}
+  \begin{pmatrix}
+    1       & (M_{ee}^\pm)^{-1}M_{eo}\\
+    0       & (1-(M_{oo}^\pm)^{-1} M_{oe} (M_{ee}^\pm)^{-1} M_{eo})\\
+  \end{pmatrix}\, .
+\end{equation}
+Where we can now re-define
+\begin{equation}
+  \label{eq:sym2}
+  \hat Q_\pm = \gamma_5(1-(M_{oo}^\pm)^{-1} M_{oe} (M_{ee}^\pm)^{-1}
+  M_{eo}) 
+\end{equation}
+With this re-definition the procedure is analogous to what we
+discussed previously. Only the vectors $X$ and $Y$ need to be modified
+to  
+\begin{equation}
+  \begin{split}
+    \label{eq:eo9}
+    X &= 
+    \begin{pmatrix}
+      -(M_{ee}^-)^{-1}M_{eo}(M_{oo}^-)^{-1}X_o \\ X_o\\
+    \end{pmatrix},\\
+    Y &= 
+    \begin{pmatrix}
+      -(M_{ee}^+)^{-1}M_{eo}(M_{oo}^+)^{-1}Y_o \\ Y_o\\
+    \end{pmatrix}.\\
+  \end{split}
+\end{equation}
+Note that the variation of the action is still given by
+\begin{equation}
+  \label{eq:sym3}
+  \delta S_\mathrm{PF} = -\re(X^\dagger \delta Q_+ Y)\ .
+\end{equation}
+
 \subsubsection{Mass non-degenerate flavour doublet}
 
 Even/odd preconditioning can also be implemented for the mass
@@ -285,6 +329,40 @@ Dirac operator $D_h$ eq.~(\ref{eq:Dh}). The corresponding equations
 follow immediately from the previous discussion and the definition
 from eq.~(\ref{eq:Dheo}).
 
+\subsubsection{Inverting $M$ on $\phi_o$}
+
+In case inverting the full matrix $M$ is much faster than inverting
+the even/odd preconditioned matrix -- as might be the case with
+deflation, one may use for symmetric even/odd preconditioining
+\begin{equation}
+  (\hat M^\pm)^{-1}\phi_o\ =\ P_{l\to o}\ (M_\pm)^{-1}\ P_{o\to l}\
+  M^\pm_{oo}\ \phi_o
+\end{equation}
+Where $P_{l\to o}$ projects the odd sides of a full spinor and
+$P_{o\to l}$ reverses this by filling up with zeros. $M_\pm$ is here just
+$\gamma_5 Q_\pm$. For asymmetric even/odd preconditioning the formula
+reads
+\begin{equation}
+  (\hat M^\pm)^{-1}\phi_o\ =\ P_{l\to o}\ (M_\pm)^{-1}\ P_{o\to l}\
+  \phi_o\, .
+\end{equation}
+It is based on the observation that
+\[
+M^{-1} = 
+\begin{pmatrix}
+  A_{ee} & A_{eo} \\
+  A_{oe} & A_{oo} \\
+\end{pmatrix}
+\]
+with (skipping the $\pm$ index for brevity)
+\[
+\begin{split}
+  A_{ee}\quad &=\quad (1- M_{ee}^{-1} M_{eo} M_{oo}^{-1} M_{oe})^{-1}\ M_{ee}^{-1} \\
+  A_{eo}\quad &=\quad -M_{ee}^{-1}\ M_{eo}\ A_{oo} \\
+  A_{oe}\quad &=\quad -M_{oo}^{-1}\ M_{oe}\ A_{ee} \\
+  A_{oo}\quad &=\quad (1- M_{oo}^{-1} M_{oe} M_{ee}^{-1} M_{eo})^{-1}\ M_{oo}^{-1} \\
+\end{split}
+\]
 \endinput
 
 %%% Local Variables: 
