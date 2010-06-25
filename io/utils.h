@@ -85,10 +85,10 @@ inline static void byte_swap(void * ptr, int nmemb){
   int j;
   char char_in[8];
   char * in_ptr;
-  int * int_ptr;
+  double * d_ptr;
 
-  for(j = 0, int_ptr = (int *) ptr; j < nmemb; j++, int_ptr++){
-    in_ptr = (char *) int_ptr;
+  for(j = 0, d_ptr = (int *) ptr; j < nmemb; j++, d_ptr++){
+    in_ptr = (char *) d_ptr;
     
     char_in[0] = in_ptr[0];
     char_in[1] = in_ptr[1];
