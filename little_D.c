@@ -384,11 +384,11 @@ void little_D(complex * v, complex *w) {
 }
 
 void init_little_field_exchange(complex * w) {
-#ifdef MPI
+#ifdef MPI     /* PARALLELX,XY,XYZ not tested  */
   int i = 0;
-#  ifdef PARALLELT
+#  if (defined PARALLELT || defined PARALLELX)
   int no_dirs = 2;
-#  elif defined PARALLELXT
+#  elif (defined PARALLELXT || defined PARALLELXY || defined PARALLELXYZ)
   int no_dirs = 4;
 #  elif (defined PARALLELXYT || defined PARALLELXYZT)
   int no_dirs = 6;
@@ -414,7 +414,7 @@ void init_little_field_exchange(complex * w) {
               i+1, g_cart_grid, &lrequests[2*i+3]);
     waitcount += 4;
   }
-#  ifdef PARALLELXYZT
+#  if (defined PARALLELXYZT || defined PARALLELXYZ )
   /* send to the right, receive from the left */
   i = 6;
   MPI_Isend((void*)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
