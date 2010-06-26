@@ -110,7 +110,7 @@ int main(int argc,char *argv[])
 {
   int j,j_max,k,k_max = 2;
   paramsXlfInfo *xlfInfo;
-  int ix, n, *nn,i;
+  int ix, n, *nn,*mm,i;
   double delta, deltamax;
   spinor rsp;
 
@@ -163,9 +163,15 @@ int main(int argc,char *argv[])
     printf("# the code was compiled for persistent MPI calls (halfspinor only)\n");
 #  endif
 #endif
+#ifdef _INDEX_INDEP_GEOM
+    printf("# the code was compiled with index independent geometry\n");
+#endif
 #ifdef MPI
 #  ifdef _NON_BLOCKING
     printf("# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
+#  endif
+#  ifdef _USE_TSPLITPAR
+    printf("# the code was compiled with tsplit parallelization\n");
 #  endif
 #endif
     printf("\n");
@@ -285,6 +291,8 @@ int main(int argc,char *argv[])
 
 	nn=(int*)calloc(VOLUME,sizeof(int));
 	if((void*)nn == NULL) return(100);
+	mm=(int*)calloc(VOLUME,sizeof(int));
+	if((void*)mm == NULL) return(100);
 
 	n=0;
 	deltamax=0.0;
@@ -316,6 +324,7 @@ int main(int argc,char *argv[])
 	  _spinor_norm_sq(delta,rsp);
 	  if (delta > 1.0e-12) {
 	    nn[n] = g_eo2lexic[ix];
+	    mm[n]=ix;
 	    n++;	    
 	  }
 	  if(delta>deltamax) deltamax=delta;
@@ -323,7 +332,7 @@ int main(int argc,char *argv[])
 	if (n>0){
 	  printf("mismatch in even spincolorfield in %d points:\n",n);
 	  for(i=0; i< MIN(n,1000); i++){
-	    printf("%d,(%d,%d,%d,%d)\n",nn[i],g_coord[nn[i]][0],g_coord[nn[i]][1],g_coord[nn[i]][2],g_coord[nn[i]][3]);fflush(stdout);
+	    printf("%d,(%d,%d,%d,%d):%f vs. %f\n",nn[i],g_coord[nn[i]][0],g_coord[nn[i]][1],g_coord[nn[i]][2],g_coord[nn[i]][3],(g_spinor_field[2][mm[i]].s0).c0.re, (g_spinor_field[0][mm[i]].s0).c0.re);fflush(stdout);
 	  }
 	}
 	n = 0;
@@ -355,6 +364,7 @@ int main(int argc,char *argv[])
 	  _spinor_norm_sq(delta,rsp);
 	  if (delta > 1.0e-12) {
 	    nn[n]=g_eo2lexic[ix+(VOLUME+RAND)/2];
+	    mm[n]=ix;
 	    n++;	    
 	  }
 	  if(delta>deltamax) deltamax=delta;
@@ -362,7 +372,7 @@ int main(int argc,char *argv[])
 	if (n>0){
 	  printf("mismatch in odd spincolorfield in %d points:\n",n);
 	  for(i=0; i< MIN(n,1000); i++){
-	    printf("%d,(%d,%d,%d,%d)\n",nn[i],g_coord[nn[i]][0],g_coord[nn[i]][1],g_coord[nn[i]][2],g_coord[nn[i]][3]);fflush(stdout);
+	    printf("%d,(%d,%d,%d,%d):%f vs. %f\n",nn[i],g_coord[nn[i]][0],g_coord[nn[i]][1],g_coord[nn[i]][2],g_coord[nn[i]][3],(g_spinor_field[3][mm[i]].s0).c0.re, (g_spinor_field[1][mm[i]].s0).c0.re);fflush(stdout);
 	  }
 	}
 	printf("max delta=%e",deltamax);fflush(stdout);
