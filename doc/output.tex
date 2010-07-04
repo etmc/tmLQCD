@@ -12,7 +12,7 @@ trajectory. Each line has entries with the following meaning:
   is the number of CG or BiCGstab solveriterations used in the acceptance
   and heatbath steps, the second is the number of CG (BiCGstab) iterations 
   used for the force computation.
-\item Acceptance.
+\item Acceptance (0 is rejected, 1 is accepted).
 \item Time in seconds needed for this trajectory. In case of non MPI
   this is zero, because not measured.
 \item Value of the rectangle part in the gauge action, if used.
