@@ -392,7 +392,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
     sprintf(filename, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
   }
   
-  if(!PropInfo.splitted) append = 0;
+  if(!PropInfo.splitted) append = 1;
   if(append_) append=1;
   /* the 1 is for appending */
   construct_writer(&writer, filename, append);
