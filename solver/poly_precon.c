@@ -256,8 +256,10 @@ void poly_nonherm_precon(spinor * const R, spinor * const S,
     a1 = a2;
   }
   assign(R, chi, N);
-/*   boundary(-g_kappa); */
-/*   g_mu = -g_mu; */
+  boundary(g_kappa);
+  g_mu = dtmp;
+
+ 
   return;
 }
 

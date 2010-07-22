@@ -2,7 +2,7 @@
  * $Id$ 
  *
  * Copyright (C) 2008 Albert Deuzeman, Siebren Reker, Carsten Urbach
- *               2010 Claude Tadonki
+ *
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
@@ -46,10 +46,7 @@ typedef struct {
   /* storage will be g_Ns x (9 * g_Ns)                 */
   /* build_little_diraclocal g_Ns x g_Ns block first (the diagonal part) */
   /* then +t, -t, +x, -x, +y, -y, +z, -z               */
-  /* full dense representation of the little D */
-  complex    *little_dirac_operator;  
-  /* full dense representation of the little D in 32 bit */
-  complex32  *little_dirac_operator32;
+  complex    *little_dirac_operator;  /* full dense representation of the little D */
 
 } block;
 
@@ -69,11 +66,7 @@ void compute_little_D();
 void compute_little_D_diagonal();
 void alt_block_compute_little_D();
 
-/* CT:
-The parameter "DflFieldIter" (default 80) refers to what is called
-GSL in Gilbert reports, and "DflPolyIter" (default 20) is the
-number of iterations in the polynomial preconditioner. 
-*/
+/*CT*/
 extern int dfl_field_iter;
 extern int dfl_poly_iter;
 
@@ -91,6 +84,11 @@ void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi,
 void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const block_list, int id, int nb_blocks);
 int split_global_field_GEN(spinor ** const psi, spinor * const field, int nb_blocks);
 int split_global_field_GEN_ID(block * const block_list, int id, spinor * const field, int nb_blocks);
+
+/* Functions for index manipulation related to blocks, C. Tadonki */
+int index_a(int t, int x, int y, int z);
+int index_b(int t, int x, int y, int z);
+int block_index(int t, int x, int y, int z);
 
 extern block * block_list;
 

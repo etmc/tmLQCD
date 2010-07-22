@@ -2,6 +2,7 @@
  * $Id$ 
  *
  * Copyright (C) 2008 Albert Deuzeman, Siebren Reker, Carsten Urbach
+ *                    Claude Tadonki
  *
  * This file is part of tmLQCD.
  *
@@ -20,7 +21,7 @@
 
  This file was modified according to a flexible number of blocks
  by Claude Tadonki - PetaQCD - April 2010 ( claude.tadonki@lal.in2p3.fr )
-***********************************************************************/
+ ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -78,27 +79,30 @@ static void random_fields(const int Ns) {
 }
 
 int generate_dfl_subspace(const int Ns, const int N) {
-
-  int i, j, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex), 
+  int i, j, k, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex),
     vol = VOLUME*sizeof(spinor)/sizeof(complex);
+  spinor **psi;
   double nrm, e = 0.3, d = 1.1, atime, etime;
   complex s;
   complex * work;
-  spinor * r, * q, * p;
-
+  
+  FILE *fp_dfl_fields; char file_name[500]; // CT
+  
 #ifdef MPI
   atime = MPI_Wtime();
 #else
   atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
   work = (complex*)malloc(nb_blocks*9*Ns*sizeof(complex));
+  psi = (spinor **)calloc(nb_blocks, sizeof(spinor *));
+  psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
+  for(i=1;i<nb_blocks;i++) psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
   
   if(init_subspace == 0) i = init_dfl_subspace(Ns);
-
+  
   if(init_little_subspace == 0) i = init_little_dfl_subspace(Ns);
-
+  
   random_fields(Ns);
-
   if(g_debug_level > 4) {
     for(e = 0.; e < 1.; e=e+0.05) {
       random_spinor_field(dfl_fields[0], N, 0);
@@ -111,41 +115,75 @@ int generate_dfl_subspace(const int Ns, const int N) {
       diff(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], dfl_fields[0], N);
       nrm = square_norm(g_spinor_field[DUM_SOLVER], N, 1);
       if(g_proc_id == 0) {
-        printf(" e= %f d= %f nrm = %1.5e\n", e, d, nrm);
+	printf(" e= %f d= %f nrm = %1.5e\n", e, d, nrm);
       }
     }
     d = 1.1;
     e=0.3;
   }
-
-  boundary(0.1586);
+  
+  boundary(g_kappa);
+  /*
+    CT: We try to read dfl_fields[i] from file if it exists, 
+    otherwise we recalculate it                               
+  */
   
   for(i = 0; i < Ns; i++) {
-    /*CT: We do Ns x 80 x 20 evaluation of Dpsi */
-    ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
-    nrm = sqrt(square_norm(dfl_fields[i], N, 1));
-    mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
-
-    for(j = 0; j < dfl_field_iter; j++) {/*dfl_fields_iter = 80  by default */
-      g_sloppy_precision = 1;
-      poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, dfl_poly_iter, N); /*dfl_poly_iter = 20 by default */
-      g_sloppy_precision = 0;
-      ModifiedGS((complex*)g_spinor_field[0], vol, i, (complex*)dfl_fields[0], vpr);
-      nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
-      mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
+    sprintf(file_name,"%d%s%d%s",g_proc_id,"_",i,"_dfl_fields");
+    if(fp_dfl_fields = fopen(file_name, "r")) {
+      fread(dfl_fields[i], sizeof(spinor), N, fp_dfl_fields);
+      fclose(fp_dfl_fields);
+      if((g_proc_id == 0)&&(i==0)) printf("Get fields from file\n");
     }
-    /* test quality */
-    if(g_debug_level > -1) {
-      D_psi(g_spinor_field[DUM_SOLVER], dfl_fields[i]);
-      nrm = sqrt(square_norm(g_spinor_field[DUM_SOLVER], N, 1));
-      if(g_proc_id == 0) {
-	printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm); 
+    else break;
+  }
+  
+  if((g_proc_id == 0)&&(i==0))  printf("Compute fields from scratch\n");
+  /*CT: We do Ns x 80 x 20 evaluation of Dpsi */
+  /*      ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr); */
+  /*      nrm = sqrt(square_norm(dfl_fields[i], N, 1)); */
+  /*      mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N); */
+  if(i == 0) {
+    for(j = 0; j < 4; j++) {/*dfl_field_iter = 80  by default */
+      for(i = 0; i < Ns; i++) {
+	ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
+	nrm = sqrt(square_norm(dfl_fields[i], N, 1));
+	mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
+	for(k = 0; k < dfl_field_iter/4; k++) {
+	  g_sloppy_precision = 1;
+	  /* dfl_poly_iter = 20 by default */
+	  poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, dfl_poly_iter, N); 
+	  g_sloppy_precision = 0;
+	  ModifiedGS((complex*)g_spinor_field[0], vol, i, (complex*)dfl_fields[0], vpr);
+	  nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
+	  mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
+	}
+	
+	/* test quality */
+	if(g_debug_level > -1) {
+	  D_psi(g_spinor_field[DUM_SOLVER], dfl_fields[i]);
+	  nrm = sqrt(square_norm(g_spinor_field[DUM_SOLVER], N, 1));
+	  if(g_proc_id == 0) {
+	    printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm);
+	  }
+	}
       }
     }
+    for(i = 0; i < Ns; i++) {
+      /*
+	CT: We save dfl_fields[i] in a binary file, 
+	using a generic nomenclature proc_i__dfl_fields for later reads                               
+      */
+      sprintf(file_name,"%d%s%d%s",g_proc_id,"_",i,"_dfl_fields");
+      fp_dfl_fields = fopen(file_name, "w");
+      fwrite(dfl_fields[i], sizeof(spinor), N, fp_dfl_fields);
+      fclose(fp_dfl_fields);  
+    }
   }
+
   g_sloppy_precision = 0;
   boundary(g_kappa);
-  if(g_debug_level > 4) {
+  if(g_debug_level > 2) {
     for(i = 0; i < Ns; i++) {
       for(j = 0; j < Ns; j++) {
 	s = scalar_prod(dfl_fields[i], dfl_fields[j], N, 1);
@@ -155,38 +193,38 @@ int generate_dfl_subspace(const int Ns, const int N) {
       }
     }
   }
-  for (i = 0; i < Ns; i++) { 
+  for (i = 0; i < Ns; i++) {
     /* add it to the basis */
-    /* split_global_field(block_list[0].basis[i], block_list[1].basis[i], dfl_fields[i]); */
+    ////////split_global_field(block_list[0].basis[i], block_list[1].basis[i], dfl_fields[i]);
     split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
   }
-
+  
   /* perform local orthonormalization */
-  for(i=0;i<nb_blocks;i++) block_orthonormalize(block_list+i);
-  /* block_orthonormalize(block_list+1); */
-
+  for(i = 0; i < nb_blocks; i++) block_orthonormalize(block_list+i);
+  //block_orthonormalize(block_list+1);
+  
   dfl_subspace_updated = 1;
-
+  
   for(j = 0; j < Ns; j++) {
     for(i = 0; i < nb_blocks*9*Ns; i++) {
       _complex_zero(little_dfl_fields[j][i]);
       _complex_zero(work[i]);
     }
   }
-
+  
   /* compute the little little basis */
-  r = g_spinor_field[DUM_SOLVER];
-  q = g_spinor_field[DUM_SOLVER+1];
+  //r = g_spinor_field[DUM_SOLVER];
+  //q = g_spinor_field[DUM_SOLVER+1];
   
   for(i = 0; i < Ns; i++) {
-    split_global_field(r, q,  dfl_fields[i]);
+    //split_global_field(r, q,  dfl_fields[i]);
+    split_global_field_GEN(psi, dfl_fields[i], nb_blocks);
     /* now take the local scalar products */
     for(j = 0; j < Ns; j++) {
-      p = r;
+      //p = r;
       for(blk = 0; blk < nb_blocks; blk++) {
-	if(blk == 0) p = r;
-	else p = q;
-	little_dfl_fields[i][j + blk*Ns] = scalar_prod(block_list[blk].basis[j], p, block_list[0].volume, 0);
+	//if(blk == 0) p = r; else p = q;
+	little_dfl_fields[i][j + blk*Ns] = scalar_prod(block_list[blk].basis[j], psi[blk], block_list[0].volume, 0);
       }
     }
   }
@@ -200,7 +238,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
     s.re = lsquare_norm(little_dfl_fields[i], nb_blocks*Ns, 1);
     lmul_r(little_dfl_fields[i], 1./s.re, little_dfl_fields[i], nb_blocks*Ns);
   }
-  if(g_debug_level > 4) {
+  if(g_debug_level > 2) {
     for(i = 0; i < Ns; i++) {
       for(j = 0; j < Ns; j++) {
 	s = lscalar_prod(little_dfl_fields[i], little_dfl_fields[j], nb_blocks*Ns, 1);
@@ -225,7 +263,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
   /* the precision in the inversion is not yet satisfactory! */
   LUInvert(Ns, little_A, Ns);
   /* inverse of little little D now in little_A */
-
+  
 #ifdef MPI
   etime = MPI_Wtime();
 #else
@@ -235,9 +273,11 @@ int generate_dfl_subspace(const int Ns, const int N) {
     printf("time for subspace generation %1.3e s\n", etime-atime);
     fflush(stdout);
   }
-
+  
   free_dfl_subspace();
   free(work);
+  free(psi[0]);
+  free(psi);
   return(0);
 }
 

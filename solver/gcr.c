@@ -153,7 +153,7 @@ static void init_gcr(const int _M, const int _V){
     a = calloc(M+1, sizeof(complex *));
     chi = calloc(M, sizeof(spinor *));
     xi = calloc(M, sizeof(spinor *));
-#if (defined SSE || defined SSE2)
+#if (defined SSE || defined SSE2 || defined SSE3)
     _a = calloc((M+2)*M, sizeof(complex));
     a[0] = (complex *)(((unsigned int)(_a)+ALIGN_BASE)&~ALIGN_BASE); 
     _chi = calloc(M*Vo+1, sizeof(spinor));
