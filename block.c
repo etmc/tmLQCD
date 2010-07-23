@@ -2,7 +2,7 @@
  * $Id$
  * 
  * Copyright (C) 2008 Albert Deuzeman, Siebren Reker, Carsten Urbach
- *               2010 Claude Tadonki
+ *               2010 Claude Tadonki, Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -96,14 +96,14 @@ int block_index(int t, int x, int y, int z){
  return ((t*nblks_x + x)*nblks_y + y)*(nblks_z) + z;
 }
 
-int init_blocks() {
+int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   ///////////////////////
   /*CT: Initialization of global variables for blocks */
   nb_blocks = 1; 
-  nblks_t = dfl_nblock_t;
-  nblks_x = dfl_nblock_x;
-  nblks_y = dfl_nblock_y;
-  nblks_z = dfl_nblock_z;
+  nblks_t = nt;
+  nblks_x = nx;
+  nblks_y = ny;
+  nblks_z = nz;
   nblks_dir[0] = nblks_t;
   nblks_dir[1] = nblks_x;
   nblks_dir[2] = nblks_y;

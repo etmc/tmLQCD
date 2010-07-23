@@ -2,6 +2,7 @@
  * $Id$ 
  *
  * Copyright (C) 2008 Albert Deuzeman, Siebren Reker, Carsten Urbach
+ *               2010 Claude Tadonki, Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -50,7 +51,7 @@ typedef struct {
 
 } block;
 
-int init_blocks();
+int init_blocks(const int nt, const int nx, const int ny, const int nz);
 int free_blocks();
 
 int split_global_field(spinor * const block_low, spinor * const block_high, spinor * const field);
@@ -66,14 +67,9 @@ void compute_little_D();
 void compute_little_D_diagonal();
 void alt_block_compute_little_D();
 
-/*CT*/
 extern int dfl_field_iter;
 extern int dfl_poly_iter;
 
-extern int dfl_nblock_t;
-extern int dfl_nblock_x;
-extern int dfl_nblock_y;
-extern int dfl_nblock_z;
 int nb_blocks;
 int nblks_t;
 int nblks_x;

@@ -95,6 +95,8 @@ extern "C"
   extern int reweighting_samples; 
   extern int no_samples;
 
+  extern int nblocks_t, nblocks_x, nblocks_y, nblocks_z;
+
   int read_input(char *);
   int reread_input(char *);
   

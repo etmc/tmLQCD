@@ -151,10 +151,10 @@ inline void rmQuotes(char *str){
   int propagator_comparison;
   int nb_cores;
   
-  int dfl_nblock_t;
-  int dfl_nblock_x;
-  int dfl_nblock_y;
-  int dfl_nblock_z;
+  int nblocks_t;
+  int nblocks_x;
+  int nblocks_y;
+  int nblocks_z;
   
   int dfl_field_iter;
   int dfl_poly_iter;
@@ -349,6 +349,18 @@ inline void rmQuotes(char *str){
 ^BeginMonomial{SPC}+               BEGIN(INITMONOMIAL);
 ^BeginInt                          BEGIN(INITINTEGRATOR);
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
+
+^PropagatorComparison{EQL}         BEGIN(PCOMP);
+^NbCoresPerNode{EQL}		   BEGIN(NBCORES);
+
+^NoBlocksT{EQL}                    BEGIN(DFLNBLOCKT);
+^NoBlocksX{EQL}                    BEGIN(DFLNBLOCKX);
+^NoBlocksY{EQL}                    BEGIN(DFLNBLOCKY);
+^NoBlocksZ{EQL}                    BEGIN(DFLNBLOCKZ);
+
+^DflFieldIter{EQL}                 BEGIN(DFLFIELDITER);
+^DflPolyIter{EQL}                  BEGIN(DFLPOLYITER);
+
 
 <INITOPERATOR>{TYPE} {
   current_operator++;
@@ -572,16 +584,6 @@ inline void rmQuotes(char *str){
   }
 }
 
-^PropagatorComparison{SPC}*={SPC}*         BEGIN(PCOMP);
-^NbCoresPerNode{SPC}*={SPC}*			   BEGIN(NBCORES);
-
-^NoBlocksT{SPC}*={SPC}*			       BEGIN(DFLNBLOCKT);
-^NoBlocksX{SPC}*={SPC}*			       BEGIN(DFLNBLOCKX);
-^NoBlocksY{SPC}*={SPC}*			       BEGIN(DFLNBLOCKY);
-^NoBlocksZ{SPC}*={SPC}*			       BEGIN(DFLNBLOCKZ);
-
-^DflFieldIter{SPC}*={SPC}*			       BEGIN(DFLFIELDITER);
-^DflPolyIter{SPC}*={SPC}*			       BEGIN(DFLPOLYITER);
 
 <INITMONOMIAL>{TYPE} {
   current_monomial++;
@@ -1245,20 +1247,20 @@ inline void rmQuotes(char *str){
   if(myverbose!=0) printf("nb_cores = %s \n", yytext);
 }
 <DFLNBLOCKT>{DIGIT}+               {
-  dfl_nblock_t=atoi(yytext);
-  if(myverbose!=0) printf("dfl_nblock_t = %s \n", yytext);
+  nblocks_t=atoi(yytext);
+  if(myverbose!=0) printf("nblocks_t = %s \n", yytext);
 }
 <DFLNBLOCKX>{DIGIT}+               {
-  dfl_nblock_x=atoi(yytext);
-  if(myverbose!=0) printf("dfl_nblock_x = %s \n", yytext);
+  nblocks_x=atoi(yytext);
+  if(myverbose!=0) printf("nblocks_x = %s \n", yytext);
 }
 <DFLNBLOCKY>{DIGIT}+               {
-  dfl_nblock_y=atoi(yytext);
-  if(myverbose!=0) printf("dfl_nblock_y = %s \n", yytext);
+  nblocks_y=atoi(yytext);
+  if(myverbose!=0) printf("nblocks_y = %s \n", yytext);
 }
 <DFLNBLOCKZ>{DIGIT}+               {
-  dfl_nblock_z=atoi(yytext);
-  if(myverbose!=0) printf("dfl_nblock_z = %s \n", yytext);
+  nblocks_z=atoi(yytext);
+  if(myverbose!=0) printf("nblocks_z = %s \n", yytext);
 }
 <DFLFIELDITER>{DIGIT}+               {
   dfl_field_iter=atoi(yytext);
@@ -1695,10 +1697,10 @@ int read_input(char * conf_file){
   propagator_comparison = 0;
   nb_cores = 1;
   
-  dfl_nblock_t=1;
-  dfl_nblock_x=1;
-  dfl_nblock_y=1;
-  dfl_nblock_z;
+  nblocks_t = 1;
+  nblocks_x = 1;
+  nblocks_y = 1;
+  nblocks_z = 1;
   
   dfl_field_iter = 80;
   dfl_poly_iter = 20;
