@@ -47,6 +47,7 @@ int *** bipt__;
 int ** bipt_;
 int * bipt;
 complex * little_A = NULL;
+complex32 * little_A32 = NULL;
 
 enum{
   NONE = 0,
@@ -212,8 +213,11 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
 
     if ((void*)(block_list[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(complex))) == NULL)
       CALLOC_ERROR_CRASH;
+    if ((void*)(block_list[i].little_dirac_operator32 = calloc(9 * g_N_s * g_N_s, sizeof(complex32))) == NULL)
+      CALLOC_ERROR_CRASH;
     for (j = 0; j < 9 * g_N_s * g_N_s; ++j) {
       _complex_zero(block_list[i].little_dirac_operator[j]);
+      _complex_zero(block_list[i].little_dirac_operator32[j]);
     }
   }
   
@@ -229,6 +233,7 @@ int free_blocks() {
     for(i = 0; i < nb_blocks; ++i) {
       free(block_list[i].basis);
       free(block_list[i].little_dirac_operator);
+      free(block_list[i].little_dirac_operator32);
     }
     free(block_ipt);
     free(bipt__);
@@ -691,6 +696,8 @@ void compute_little_D_diagonal() {
       Block_D_psi(&block_list[blk], tmp, block_list[blk].basis[i]);
       for(j = 0; j < g_N_s; j++) {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
+	block_list[blk].little_dirac_operator32[i*g_N_s + j].re = M[i * g_N_s + j].re;
+	block_list[blk].little_dirac_operator32[i*g_N_s + j].im = M[i * g_N_s + j].im;
       }
     }
   }
@@ -717,7 +724,7 @@ void compute_little_D() {
   int t_start, t_end, x_start, x_end, y_start, y_end, z_start, z_end;
   complex c, *M;
   int count=0;
-  int bx, by, bz, bt, block_id, is_up=0, ib;
+  int bx, by, bz, bt, block_id = 0, is_up = 0, ib;
   int dT, dX, dY, dZ;
   dT = T/nblks_t; dX = LX/nblks_x; dY = LY/nblks_y; dZ = LZ/nblks_z;
 
@@ -872,7 +879,15 @@ void compute_little_D() {
 	}
       }
     }
-  } 
+  }
+  for(i = 0; i < nb_blocks; i++) {
+    for(j = 0; j < 9 * g_N_s * g_N_s; j++) {
+      block_list[i].little_dirac_operator32[j].re =
+	(float)block_list[i].little_dirac_operator[ iy ].re;
+      block_list[i].little_dirac_operator32[j].im =
+	(float)block_list[i].little_dirac_operator[ iy ].im;
+    }
+  }
 
   if(g_debug_level > 3) {
     if (g_N_s <= 5 && !g_cart_id){

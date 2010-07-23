@@ -48,7 +48,7 @@ typedef struct {
   /* build_little_diraclocal g_Ns x g_Ns block first (the diagonal part) */
   /* then +t, -t, +x, -x, +y, -y, +z, -z               */
   complex    *little_dirac_operator;  /* full dense representation of the little D */
-
+  complex32  *little_dirac_operator32;
 } block;
 
 int init_blocks(const int nt, const int nx, const int ny, const int nz);
