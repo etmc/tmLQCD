@@ -79,7 +79,7 @@ static void random_fields(const int Ns) {
 }
 
 int generate_dfl_subspace(const int Ns, const int N) {
-  int i, j, k, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex),
+  int i, j, k, p, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex),
     vol = VOLUME*sizeof(spinor)/sizeof(complex);
   spinor **psi;
   double nrm, e = 0.3, d = 1.1, atime, etime;
@@ -96,7 +96,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
   work = (complex*)malloc(nb_blocks*9*Ns*sizeof(complex));
   psi = (spinor **)calloc(nb_blocks, sizeof(spinor *));
   psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
-  for(i=1;i<nb_blocks;i++) psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
+  for(i = 1; i < nb_blocks; i++) psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
   
   if(init_subspace == 0) i = init_dfl_subspace(Ns);
   
@@ -128,24 +128,24 @@ int generate_dfl_subspace(const int Ns, const int N) {
     otherwise we recalculate it                               
   */
   
-  for(i = 0; i < Ns; i++) {
+  for(p = 0; p < Ns; p++) {
     sprintf(file_name,"%d%s%d%s",g_proc_id,"_",i,"_dfl_fields");
-    if(fp_dfl_fields = fopen(file_name, "r")) {
+    if((fp_dfl_fields = fopen(file_name, "r")) != NULL) {
       fread(dfl_fields[i], sizeof(spinor), N, fp_dfl_fields);
       fclose(fp_dfl_fields);
-      if((g_proc_id == 0)&&(i==0)) printf("Get fields from file\n");
+      if((g_proc_id == 0) && (g_debug_level > 0)) printf("Get field %d from file\n", p);
     }
     else break;
   }
   
-  if((g_proc_id == 0)&&(i==0))  printf("Compute fields from scratch\n");
+  if((g_proc_id == 0) && (p < Ns) && (g_debug_level > 0))  printf("Compute remaining fields from scratch\n");
   /*CT: We do Ns x 80 x 20 evaluation of Dpsi */
   /*      ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr); */
   /*      nrm = sqrt(square_norm(dfl_fields[i], N, 1)); */
   /*      mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N); */
-  if(i == 0) {
+  if(p < Ns) {
     for(j = 0; j < 4; j++) {/*dfl_field_iter = 80  by default */
-      for(i = 0; i < Ns; i++) {
+      for(i = p; i < Ns; i++) {
 	ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
 	nrm = sqrt(square_norm(dfl_fields[i], N, 1));
 	mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
@@ -195,13 +195,13 @@ int generate_dfl_subspace(const int Ns, const int N) {
   }
   for (i = 0; i < Ns; i++) {
     /* add it to the basis */
-    ////////split_global_field(block_list[0].basis[i], block_list[1].basis[i], dfl_fields[i]);
+    /* split_global_field(block_list[0].basis[i], block_list[1].basis[i], dfl_fields[i]); */
     split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
   }
   
   /* perform local orthonormalization */
   for(i = 0; i < nb_blocks; i++) block_orthonormalize(block_list+i);
-  //block_orthonormalize(block_list+1);
+  /* block_orthonormalize(block_list+1); */
   
   dfl_subspace_updated = 1;
   
@@ -213,11 +213,11 @@ int generate_dfl_subspace(const int Ns, const int N) {
   }
   
   /* compute the little little basis */
-  //r = g_spinor_field[DUM_SOLVER];
-  //q = g_spinor_field[DUM_SOLVER+1];
+  /* r = g_spinor_field[DUM_SOLVER]; */
+  /* q = g_spinor_field[DUM_SOLVER+1]; */
   
   for(i = 0; i < Ns; i++) {
-    //split_global_field(r, q,  dfl_fields[i]);
+    /* split_global_field(r, q,  dfl_fields[i]); */
     split_global_field_GEN(psi, dfl_fields[i], nb_blocks);
     /* now take the local scalar products */
     for(j = 0; j < Ns; j++) {
@@ -236,9 +236,9 @@ int generate_dfl_subspace(const int Ns, const int N) {
       lassign_diff_mul(little_dfl_fields[i], little_dfl_fields[j], s, nb_blocks*Ns);
     }
     s.re = lsquare_norm(little_dfl_fields[i], nb_blocks*Ns, 1);
-    lmul_r(little_dfl_fields[i], 1./s.re, little_dfl_fields[i], nb_blocks*Ns);
+    lmul_r(little_dfl_fields[i], 1./sqrt(s.re), little_dfl_fields[i], nb_blocks*Ns);
   }
-  if(g_debug_level > 2) {
+  if(g_debug_level > 0) {
     for(i = 0; i < Ns; i++) {
       for(j = 0; j < Ns; j++) {
 	s = lscalar_prod(little_dfl_fields[i], little_dfl_fields[j], nb_blocks*Ns, 1);

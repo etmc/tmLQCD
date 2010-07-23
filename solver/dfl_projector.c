@@ -56,11 +56,11 @@ complex *work[13];
 static void alloc_dfl_projector();
 
 double sum(double *P, int N){
- double s;
- int i;
- for(i=0;i<N;i++) s+=P[i];
- printf("SUM = %10.7f\n",s);
- return s;
+  double s;
+  int i;
+  for(i=0;i<N;i++) s+=P[i];
+  printf("SUM = %10.7f\n",s);
+  return s;
 }
 
 /* Break up full volume spinor to blocks
@@ -86,22 +86,22 @@ void project(spinor * const out, spinor * const in) {
   /*initialize the local (block) parts of the spinor*/
   split_global_field_GEN(psi, in, nb_blocks);
   for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
-	  for(i = 0; i < nb_blocks; i++){
-		  inprod[j + i*g_N_s]  = scalar_prod(block_list[i].basis[j], psi[i], vol, 0);
-	  }
+    for(i = 0; i < nb_blocks; i++){
+      inprod[j + i*g_N_s]  = scalar_prod(block_list[i].basis[j], psi[i], vol, 0);
+    }
   }
   if(dfl_sloppy_prec) prec = dfl_little_D_prec;
   else prec = 1.e-24;
 
-  if(1) {
-    iter = gcr4complex(invvec, inprod, 10, 20, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
+  if(0) {
+    iter = gcr4complex(invvec, inprod, 10, 20, prec*1.e-5, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
     if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
       printf("lgcr number of iterations %d (no P_L)\n", iter);
     }
   }
   else {
     little_P_L(v, inprod);
-    iter = gcr4complex(w, v, 10, 20, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
+    iter = gcr4complex(w, v, 10, 20, prec*1.e-5, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
     little_P_R(v, w);
     little_project(w, inprod, g_N_s);
     for(i = 0; i < nb_blocks*g_N_s; i++) {
@@ -112,7 +112,7 @@ void project(spinor * const out, spinor * const in) {
       printf("lgcr number of iterations %d (using P_L)\n", iter);
     }
   }
-    /* sum up */
+  /* sum up */
   for(i = 0 ; i < nb_blocks ; i++) mul(psi[i], invvec[i*g_N_s], block_list[i].basis[0], vol);
   for(j = 1; j < g_N_s; j++) {
     for(i = 0 ; i < nb_blocks ; i++) assign_add_mul(psi[i], block_list[i].basis[j], invvec[i*g_N_s + j], vol);
@@ -165,14 +165,14 @@ void project2(spinor * const out, spinor * const in) {
 
   /* compute inner product */
   for (j = 0; j < g_N_s; j++) {
-	  /*loop over block.basis */
-	  for(i = 0 ; i < nb_blocks ; i++)  inprod[j + i*g_N_s]  = scalar_prod(block_list[i].basis[j], psi[i], vol, 0);
+    /*loop over block.basis */
+    for(i = 0 ; i < nb_blocks ; i++)  inprod[j + i*g_N_s]  = scalar_prod(block_list[i].basis[j], psi[i], vol, 0);
   }
   
   /* sum up */
   for(i = 0 ; i < nb_blocks ; i++) mul(psi[i], inprod[i*g_N_s], block_list[i].basis[0], vol);
   for(j = 1; j < g_N_s; j++) {
-	  for(i = 0 ; i < nb_blocks ; i++) assign_add_mul(psi[i], block_list[i].basis[j], inprod[i*g_N_s + j], vol);
+    for(i = 0 ; i < nb_blocks ; i++) assign_add_mul(psi[i], block_list[i].basis[j], inprod[i*g_N_s + j], vol);
   }
 
   /* reconstruct global field */
@@ -213,6 +213,7 @@ void D_project_right(spinor * const out, spinor * const in) {
 }
 
 
+/* out = |phi_k> A^{-1}_kl <phi_l|in> */
 void little_project(complex * const out, complex * const in, const int  N) {
   int i, j;
   static complex *phi;
@@ -251,15 +252,18 @@ void little_project(complex * const out, complex * const in, const int  N) {
   return;
 }
 
+/* out = |phi_k> delta_kl <phi_l|in> */
 void little_project2(complex * const out, complex * const in, const int  N) {
   int i;
   static complex *phi;
   static complex *psi;
   
-  if(init_dfl_projector == 0) {alloc_dfl_projector();}
+  if(init_dfl_projector == 0) {
+    alloc_dfl_projector();
+  }
   phi = work[4];
   psi = work[5];
-
+  /* |phi> = <little_fields|in> */ 
   for(i = 0; i < N; i++) {
     phi[i] = lscalar_prod(little_dfl_fields[i], in, nb_blocks*g_N_s, 0);
   }
@@ -316,6 +320,7 @@ int check_projectors() {
   spinor **wphi;
   complex *v;
   phi = malloc(nb_blocks*sizeof(spinor *));
+  wphi = malloc(nb_blocks*sizeof(spinor *));
 
   random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
   nrm = square_norm(g_spinor_field[DUM_SOLVER], VOLUME, 1);
@@ -328,7 +333,9 @@ int check_projectors() {
 
   /* Check generalized split/reconstruct */
   phi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
-  for(j=1;j<nb_blocks;j++) phi[j] = phi[j-1] + (VOLUME/nb_blocks + 1);
+  for(j = 1; j < nb_blocks; j++) {
+    phi[j] = phi[j-1] + (VOLUME/nb_blocks + 1);
+  }
   split_global_field_GEN(phi, g_spinor_field[DUM_SOLVER],nb_blocks);
   reconstruct_global_field_GEN(g_spinor_field[DUM_SOLVER+1],phi,nb_blocks);
   diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], VOLUME);
@@ -543,7 +550,9 @@ int check_projectors() {
   if(g_cart_id == 0) {
     printf("\nNow the little little projection routines\n\n");
   }
-  if(init_dfl_projector == 0) {alloc_dfl_projector();}
+  if(init_dfl_projector == 0) {
+    alloc_dfl_projector();
+  }
   
   memcpy(work[10], g_spinor_field[DUM_SOLVER], nb_blocks*g_N_s*sizeof(complex));
   little_project2(work[11], work[10], g_N_s);
@@ -593,6 +602,7 @@ int check_projectors() {
 
   free(phi[0]);
   free(phi);
+  free(wphi);
 
   return(0);
 }
@@ -617,13 +627,13 @@ void check_little_D_inversion() {
 
   /*initialize the local (block) parts of the spinor*/
   for (ctr_t = 0; ctr_t < (VOLUME / LZ); ++ctr_t) {
-   for(i=0; i< nb_blocks; i++)
-	       memcpy(psi[i] + ctr_t * contig_block, g_spinor_field[DUM_SOLVER] + (nb_blocks * ctr_t + i) * contig_block, contig_block * sizeof(spinor));
+    for(i=0; i< nb_blocks; i++)
+      memcpy(psi[i] + ctr_t * contig_block, g_spinor_field[DUM_SOLVER] + (nb_blocks * ctr_t + i) * contig_block, contig_block * sizeof(spinor));
   }
   for (i = 0; i < nb_blocks; ++i) {/* loop over blocks */
     /* compute inner product */
     for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
-/*       inprod[j + i*g_N_s] = block_scalar_prod(block_list[i].basis[j], psi[i], vol); */
+      /*       inprod[j + i*g_N_s] = block_scalar_prod(block_list[i].basis[j], psi[i], vol); */
       inprod[j + i*g_N_s] = scalar_prod(psi[i], block_list[i].basis[j], vol, 0);
     }
   }

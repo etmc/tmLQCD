@@ -52,7 +52,7 @@ int gcr4complex(complex * const P, complex * const Q,
 		const int N, const int parallel, 
 		const int lda, c_matrix_mult f) {
   
-  int k, l, restart, i;
+  int k, l, restart, i, p=0;
   double norm_sq, err;
   complex ctmp;
 
@@ -71,7 +71,7 @@ int gcr4complex(complex * const P, complex * const Q,
       fflush(stdout);
     }
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq * norm_sq) && (rel_prec == 1))) {
-      return (restart * m);
+      return (p);
     }
     for(k = 0; ; k++) {
       memcpy(xi[k], rho, N*sizeof(complex));
@@ -91,6 +91,7 @@ int gcr4complex(complex * const P, complex * const Q,
         printf("lGCR: %d\t%g iterated residue\n", restart*m+k, err); 
         fflush(stdout);
       }
+      p++;
       /* Precision reached? */
       if((k == m-1) || ((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
 	break;
