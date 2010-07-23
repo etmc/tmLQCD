@@ -77,9 +77,9 @@ int nblks_y;
 int nblks_z;
 int nblks_dir[4];
 void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi, int nb_blocks);
-void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const block_list, int id, int nb_blocks);
+void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const block_list, const int id, const int nb_blocks);
 int split_global_field_GEN(spinor ** const psi, spinor * const field, int nb_blocks);
-int split_global_field_GEN_ID(block * const block_list, int id, spinor * const field, int nb_blocks);
+int split_global_field_GEN_ID(block * const block_list, const int id, spinor * const field, const int nb_blocks);
 
 /* Functions for index manipulation related to blocks, C. Tadonki */
 int index_a(int t, int x, int y, int z);

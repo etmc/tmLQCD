@@ -929,38 +929,7 @@ int split_global_field(spinor * const block_low, spinor * const block_high, spin
   return 0;
 }
 
-int split_global_field_GEN(spinor ** const psi, spinor * const field, int nb_blocks) {
-  int j,ctr_t=0;
-  int x, y, z, t;
-  int bx, by, bz, bt, block_id;
-  for (t = 0; t < dT; t++) {
-    for (x = 0; x < dX; x++) {
-      for (y = 0; y < dY; y++) {
-	for (z = 0; z < dZ; z++) {
-	  block_id = 0;
-	  for(bt = 0; bt < nblks_t; bt++) {
-	    for(bx = 0; bx < nblks_x; bx++) {
-	      for(by = 0; by < nblks_y; by++) {
-		for(bz = 0; bz < nblks_z; bz++){
-		  _spinor_assign(*(psi[block_id] + ctr_t), *(field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)))
-		    block_id++;
-		}
-	      }
-	    }
-	  }
-	  ctr_t++;
-	}
-      }
-    }
-  }
-
-  if(g_proc_id == 0 && g_debug_level > 8) {
-    for(j = 0;j < nb_blocks;j++)
-      printf("Basis norm %2d = %1.3e\n", j, square_norm(psi[j],  VOLUME / nb_blocks, 0));
-  }
-  return 0;
-}
-int split_global_field_GEN_ID(block * const block_list, int id, spinor * const field, int nb_blocks){
+int split_global_field_GEN(spinor ** const psi, spinor * const field, const int nb_blocks) {
   int j,ctr_t=0;
   int x, y, z, t;
   int bx, by, bz, bt, block_id;
@@ -973,7 +942,41 @@ int split_global_field_GEN_ID(block * const block_list, int id, spinor * const f
 	    for(bx = 0; bx < nblks_x; bx++) {
 	      for(by = 0; by < nblks_y; by++) {
 		for(bz = 0; bz < nblks_z; bz++) {
-		  _spinor_assign(*(block_list[block_id].basis[id] + ctr_t), *(field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)))
+		  _spinor_assign(*(psi[block_id] + ctr_t), 
+				 *(field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)));
+		  block_id++;
+		}
+	      }
+	    }
+	  }
+	  ctr_t++;
+	}
+      }
+    }
+  }
+
+  if(g_proc_id == 0 && g_debug_level > 8) {
+    for(j = 0; j < nb_blocks; j++)
+      printf("Basis norm %2d = %1.3e\n", j, square_norm(psi[j],  VOLUME / nb_blocks, 0));
+  }
+  return 0;
+}
+
+int split_global_field_GEN_ID(block * const block_list, const int id, spinor * const field, const int nb_blocks){
+  int j,ctr_t=0;
+  int x, y, z, t;
+  int bx, by, bz, bt, block_id;
+  for (t = 0; t < dT; t++) {
+    for (x = 0; x < dX; x++) {
+      for (y = 0; y < dY; y++) {
+	for (z = 0; z < dZ; z++) {
+	  block_id = 0;
+	  for(bt = 0; bt < nblks_t; bt++) {
+	    for(bx = 0; bx < nblks_x; bx++) {
+	      for(by = 0; by < nblks_y; by++) {
+		for(bz = 0; bz < nblks_z; bz++) {
+		  _spinor_assign(*(block_list[block_id].basis[id] + ctr_t), 
+				 *(field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)));
 		    block_id++;
 		}
 	      }
@@ -986,7 +989,7 @@ int split_global_field_GEN_ID(block * const block_list, int id, spinor * const f
   }
 
   if(g_proc_id == 0 && g_debug_level > 8) {
-    for(j = 0;j < nb_blocks;j++)
+    for(j = 0; j < nb_blocks; j++)
       printf("Basis norm %2d = %1.3e\n", j, square_norm(block_list[j].basis[id],  VOLUME / nb_blocks, 0));
   }
   return 0;
@@ -1027,7 +1030,7 @@ void reconstruct_global_field(spinor * const rec_field, spinor * const block_low
 }
 
 /* Reconstructs a global field from the little basis of nb_blocks blocks */
-void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi, int nb_blocks) {
+void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi, const int nb_blocks) {
   int ctr_t=0;
   int x, y, z, t;
   int bx, by, bz, bt, block_id;
@@ -1056,7 +1059,7 @@ void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi,
 }
 
 /* Reconstructs a global field from the little basis of nb_blocks blocks taken from block_list[*].basis[id] */
-void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const block_list, int id, int nb_blocks) {
+void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const block_list, const int id, const int nb_blocks) {
   int ctr_t=0;
   int x, y, z, t;
   int bx, by, bz, bt, block_id;
