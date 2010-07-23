@@ -94,14 +94,14 @@ void project(spinor * const out, spinor * const in) {
   else prec = 1.e-24;
 
   if(0) {
-    iter = gcr4complex(invvec, inprod, 10, 20, prec*1.e-5, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
+    iter = gcr4complex(invvec, inprod, 10, 100, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
     if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
       printf("lgcr number of iterations %d (no P_L)\n", iter);
     }
   }
   else {
     little_P_L(v, inprod);
-    iter = gcr4complex(w, v, 10, 20, prec*1.e-5, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
+    iter = gcr4complex(w, v, 10, 100, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
     little_P_R(v, w);
     little_project(w, inprod, g_N_s);
     for(i = 0; i < nb_blocks*g_N_s; i++) {

@@ -65,16 +65,17 @@ static void random_fields(const int Ns) {
   
   r=(float)(1.0/sqrt(24.0*(double)(VOLUME)));
   
-  for (i=0;i<Ns;i++) {
+  for (i = 0; i < Ns; i++) {
     t=(double*)(dfl_fields[i]);
     for (ix = 0; ix < VOLUME; ix++){
       ranlxs(s,24);
       for (j = 0; j < 24; j++) {
-	(*t)=(double)(r*(s[j]-0.5f));
-	t+=1;
+ 	(*t) = (double)(r*(s[j]-0.5f)); 
+	/* (*t) = 1.; */
+ 	t += 1; 
       }
     }
-  }  
+  }
   return;
 }
 
@@ -127,11 +128,11 @@ int generate_dfl_subspace(const int Ns, const int N) {
     CT: We try to read dfl_fields[i] from file if it exists, 
     otherwise we recalculate it                               
   */
-  
+  /* CU: reading and writing should be done with lemon! */
   for(p = 0; p < Ns; p++) {
-    sprintf(file_name,"%d%s%d%s",g_proc_id,"_",i,"_dfl_fields");
+    sprintf(file_name,"%d%s%d%s",g_proc_id,"_",p,"_dfl_fields");
     if((fp_dfl_fields = fopen(file_name, "r")) != NULL) {
-      fread(dfl_fields[i], sizeof(spinor), N, fp_dfl_fields);
+      fread(dfl_fields[p], sizeof(spinor), N, fp_dfl_fields);
       fclose(fp_dfl_fields);
       if((g_proc_id == 0) && (g_debug_level > 0)) printf("Get field %d from file\n", p);
     }
