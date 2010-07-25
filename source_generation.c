@@ -36,7 +36,8 @@
 
 /* Generates normal distributed random numbers */
 /* using the box-muller method                 */
-
+/* this is even standard normal distributed    */
+/* so mean = 0, sd = 1                         */
 void rnormal(double * r, const int n) 
 {
   double u[2], s, l;
