@@ -1013,10 +1013,34 @@ int split_global_field_GEN_ID(block * const block_list, const int id, spinor * c
 /* copies the part of globalfields corresponding to block blk */
 /* to the block field blockfield                              */
 void copy_global_to_block(spinor * const blockfield, spinor * const globalfield, const int blk) {
-  int i;
-  /*CT: This procedure should changed if multi-dimensional split is considered */
-  for (i = 0; i < VOLUME/LZ; i++) {
-    memcpy(blockfield + i*(LZ/nb_blocks), globalfield + (nb_blocks * i + blk)*(LZ/nb_blocks), (LZ/nb_blocks)*sizeof(spinor));
+  int i,it,ix,iy,iz;
+  int ibt,ibx,iby,ibz;
+  int itb,ixb,iyb,izb;
+  int ixcurrent;
+  
+  ibz = blk%nblks_z;
+  iby = (blk / nblks_z)%nblks_y;
+  ibx = (blk / (nblks_y * nblks_z))%nblks_x;
+  ibt = blk / (nblks_x * nblks_y*nblks_z);
+
+  ixcurrent=0;
+  for (i = 0; i < VOLUME; i++) {
+
+    iz = i%LZ;
+    iy = (i / LZ)%LY;
+    ix = (i / (LY * LZ))%LX;
+    it = i / (LX * LY * LZ);
+
+
+    izb = iz / block_list[blk].LZ;
+    iyb = iy / block_list[blk].LY;
+    ixb = ix / block_list[blk].LX;
+    itb = it / block_list[blk].T;
+    
+    if ((ibz == izb) && (iby == iyb) && (ibx == ixb) && (ibt==itb)) {
+      memcpy(blockfield+ixcurrent, globalfield+i, sizeof(spinor));
+      ixcurrent++;
+    }
   }
   return;
 }
@@ -1032,6 +1056,8 @@ void copy_block_to_global(spinor * const globalfield, spinor * const blockfield,
   }
   return;
 }
+
+
 
 
 /* Reconstructs a global field from the little basis of two blocks */
@@ -1105,11 +1131,37 @@ void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const blo
 void add_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk) {
   int i, vol = block_list[blk].volume;
   spinor * r, * s;
-  /*CT: This procedure should changed if multi-dimensional split is considered */
-  for (i = 0; i < (vol / (LZ / nb_blocks)); i++) {
-    r = globalfield + (nb_blocks*i + blk)*(LZ/nb_blocks);
-    s = blockfield + i*(LZ/nb_blocks);
-    add(r, r, s, LZ/nb_blocks);
-  }  
+  int it,ix,iy,iz;
+  int ibt,ibx,iby,ibz;
+  int itb,ixb,iyb,izb;
+  int ixcurrent;
+  
+  ibz = blk%nblks_z;
+  iby = (blk / nblks_z)%nblks_y;
+  ibx = (blk / (nblks_y * nblks_z))%nblks_x;
+  ibt = blk / (nblks_x * nblks_y * nblks_z);
+  
+  ixcurrent = 0;
+  for (i = 0; i < VOLUME; i++) {
+   
+    iz = i%LZ;
+    iy = (i / LZ)%LY;
+    ix = (i / (LY * LZ))%LX;
+    it = i / (LX * LY * LZ);
+    
+
+    izb = iz / block_list[blk].LZ;
+    iyb = iy / block_list[blk].LY;
+    ixb = ix / block_list[blk].LX;
+    itb = it / block_list[blk].T;
+
+    if ((ibz == izb) && (iby == iyb) && (ibx == ixb) && (ibt == itb)) {
+      r = globalfield + i;
+      s = blockfield + ixcurrent;
+      add(r, r, s, 1);
+      ixcurrent++;
+    }
+  }
   return;
 }
+

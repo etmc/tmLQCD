@@ -29,6 +29,7 @@
 #define _MATRIX_MULT_TYPEDEF_H
 
 typedef void (*matrix_mult) (spinor * const, spinor * const);
+typedef void (*matrix_mult_blk) (spinor * const, spinor * const, const int);
 typedef void (*matrix_mult_clover) (spinor * const, spinor * const, const double);
 typedef void (*c_matrix_mult) (complex * const, complex * const);
 

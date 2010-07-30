@@ -36,6 +36,10 @@
 #include "block.h"
 #include "D_psi.h"
 
+void dummy_D(spinor * const P, spinor * const Q, const int i) {
+  Block_D_psi(&block_list[i], P, Q);
+  return;
+}
 
 void dummy_D0(spinor * const P, spinor * const Q) {
   Block_D_psi(&block_list[0], P, Q);
@@ -48,57 +52,42 @@ void dummy_D1(spinor * const P, spinor * const Q) {
 }
 
 void Msap(spinor * const P, spinor * const Q, const int Ncy) {
-  int blk, ncy=0, eo, vol, eolist[2];
+  int blk, ncy = 0, eo, vol;
   spinor * r, * a, * b;
   double nrm;
 
   r = g_spinor_field[DUM_SOLVER+5];
   a = g_spinor_field[DUM_SOLVER+6];
   b = g_spinor_field[DUM_SOLVER+7];
-/*   b = &g_spinor_field[DUM_SOLVER+6][block_list[0].volume + block_list[0].spinpad]; */
-
-  if(block_list[0].evenodd == 0) {
-    eolist[0] = 0;
-    eolist[1] = 1;
-  }
-  else {
-    eolist[0] = 1;
-    eolist[1] = 0;
-  }
 
   for(ncy = 0; ncy < Ncy; ncy++) {
     /* even sides first */
-    for(eo = 0; eo < 2; eo++) {
-      /* compute the global residue        */
-      /* this can be done more efficiently */
-      /* here only a naive implementation  */
-      D_psi(r, P);
-      diff(r, Q, r, VOLUME);
-      nrm = square_norm(r, VOLUME, 1);
-      if(g_proc_id == 0 && eo == 0 && g_debug_level > 0) {
- 	printf("Msap: %d %1.3e\n", ncy, nrm);
-      }
-      /* choose the even (odd) block */
-      blk = eolist[eo];
+    /*   for(eo = 0; eo < 2; eo++) { */
+    /* compute the global residue        */
+    /* this can be done more efficiently */
+    /* here only a naive implementation  */
+    D_psi(r, P);
+    diff(r, Q, r, VOLUME);
+    nrm = square_norm(r, VOLUME, 1);
+    if(g_proc_id == 0 && eo == 0 && g_debug_level > 0) {
+      printf("Msap: %d %1.3e\n", ncy, nrm);
+    }
+    /* choose the even (odd) block */
+    
+    /*blk = eolist[eo];*/
+    
+    for (blk = 0; blk < nb_blocks; blk++) {
+      
       vol = block_list[blk].volume;
+      
       /* get part of r corresponding to block blk into b */
       copy_global_to_block(b, r, blk);
-      /* then invert on b block local                    */
-      /* maybe use a polynomial instead of gmres ?       */
-      /* mr does not work, why?                          */
-      /* 	memcpy(a, b, vol*sizeof(spinor)); */
-      if(eolist[eo] == 0) {
-
-       	gmres(a, b, 4, 1, 1.e-31, 1, vol, 0, &dummy_D0);
-/*  	mr(a, b, 4, 1.e-31, 1, vol, 0, &dummy_D0); */
-      }
-      else {
-	gmres(a, b, 4, 1, 1.e-31, 1, vol, 0, &dummy_D1);
-/*  	mr(a, b, 4, 1.e-31, 1, vol, 0, &dummy_D1); */
-      }
+      
+      mrblk(a, b, 4, 1.e-31, 1, vol, &dummy_D ,blk);
+      
       /* add a up to full spinor P */
       add_block_to_global(P, a, blk);
     }
-  }
+  } 
   return;
 }
