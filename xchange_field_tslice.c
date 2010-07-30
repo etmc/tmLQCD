@@ -28,9 +28,10 @@
 #include "su3.h"
 #include "xchange_field_tslice.h"
 
+#ifdef MPI
 void xchange_field_open(spinor * const l, const int ieo, const int x0, MPI_Request * requests, 
 			MPI_Status * status) {
-
+  
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchangetslicefield)
 #endif
@@ -133,3 +134,5 @@ void xchange_field_close(MPI_Request * requests, MPI_Status * status, int reqcou
 #endif
 
 }
+
+#endif
