@@ -120,17 +120,22 @@ int mrblk(spinor * const P, spinor * const Q,
   complex alpha;
   spinor * r, * x;
   const int parallel = 0;
-  
-  spinor * s[3];
-  s[0] = calloc(3*N, sizeof(spinor));
-  s[1] = s[0] + N;
-  s[2] = s[1] + N;
+  spinor * s[3], *s_=NULL;
+
+  s_ = calloc(3*(N+1)+1, sizeof(spinor));  
+#if (defined SSE || defined SSE2 || defined SSE3)
+  s[0] = (complex *)(((unsigned int)(s_)+ALIGN_BASE)&~ALIGN_BASE); 
+#else
+  s[0] = s_;
+#endif
+  s[1] = s[0] + N + 1;
+  s[2] = s[1] + N + 1;
 
   r = s[0];
   norm_r=square_norm(Q, N, parallel);
   
   zero_spinor_field(P, N);
-  f(s[2], P,blk);
+  f(s[2], P, blk);
   diff(r, Q, s[2], N);
   norm_r = square_norm(r, N, parallel);
   if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
@@ -159,7 +164,7 @@ int mrblk(spinor * const P, spinor * const Q,
       fflush(stdout);
     }
   }
-  free(s[0]);
+  free(s_);
   if(norm_r > eps_sq){
     return(-1);
   }

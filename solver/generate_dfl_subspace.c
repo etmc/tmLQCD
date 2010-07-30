@@ -150,10 +150,12 @@ int generate_dfl_subspace(const int Ns, const int N) {
 	ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
 	nrm = sqrt(square_norm(dfl_fields[i], N, 1));
 	mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
-	for(k = 0; k < dfl_field_iter/4; k++) {
+	for(k = 0; k < 2; k++) {
 	  g_sloppy_precision = 1;
 	  /* dfl_poly_iter = 20 by default */
-	  poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, dfl_poly_iter, N); 
+	  zero_spinor_field(g_spinor_field[0],VOLUME);
+ 	  Msap(g_spinor_field[0], dfl_fields[i], 2*(k+1));
+/*  	  poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 4, N);  */
 	  g_sloppy_precision = 0;
 	  ModifiedGS((complex*)g_spinor_field[0], vol, i, (complex*)dfl_fields[0], vpr);
 	  nrm = sqrt(square_norm(g_spinor_field[0], N, 1));

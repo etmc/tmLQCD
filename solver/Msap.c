@@ -36,7 +36,7 @@
 #include "block.h"
 #include "D_psi.h"
 
-void dummy_D(spinor * const P, spinor * const Q, const int i) {
+void dummy_Di(spinor * const P, spinor * const Q, const int i) {
   Block_D_psi(&block_list[i], P, Q);
   return;
 }
@@ -83,7 +83,7 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
       /* get part of r corresponding to block blk into b */
       copy_global_to_block(b, r, blk);
       
-      mrblk(a, b, 4, 1.e-31, 1, vol, &dummy_D ,blk);
+      mrblk(a, b, 4, 1.e-31, 1, vol, &dummy_Di, blk);
       
       /* add a up to full spinor P */
       add_block_to_global(P, a, blk);
