@@ -28,11 +28,20 @@ int write_spinor(WRITER * writer, spinor ** const s, spinor ** const r, const in
 
   bytes = (n_uint64_t)LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * (n_uint64_t)(sizeof(spinor) * prec / 64);
 
-  for (i = 0; i < flavours; ++i)
-  {
-    write_header(writer, 1, 1, "scidac-binary-data", bytes);
-    write_binary_spinor_data(s[i], r[i], writer, &checksum, prec);
-    write_checksum(writer, &checksum, NULL);
+  if(r == NULL) {
+    for (i = 0; i < flavours; ++i) {
+      write_header(writer, 1, 1, "scidac-binary-data", bytes);
+      write_binary_spinor_data_l(s[i], writer, &checksum, prec);
+      write_checksum(writer, &checksum, NULL);
+    }
+  }
+  else {
+    for (i = 0; i < flavours; ++i) {
+      write_header(writer, 1, 1, "scidac-binary-data", bytes);
+      write_binary_spinor_data(s[i], r[i], writer, &checksum, prec);
+      write_checksum(writer, &checksum, NULL);
+    }
   }
   return 0;
 }
+

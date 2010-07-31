@@ -91,11 +91,21 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
     printf("# %d bit precision read.\n", prec);
   }
 
-  if( (rstat = read_binary_spinor_data(s, r, reader, &checksum)) != 0) {
-    if(g_debug_level > 0 && g_proc_id == 0) {
-      fprintf(stderr, "read_binary_spinor_data failed with return value %d", rstat);
+  if(r == NULL) {
+    if( (rstat = read_binary_spinor_data_l(s, reader, &checksum)) != 0) {
+      if(g_debug_level > 0 && g_proc_id == 0) {
+	fprintf(stderr, "read_binary_spinor_data_l failed with return value %d", rstat);
+      }
+      return(-7);
     }
-    return(-7);
+  }
+  else {
+    if( (rstat = read_binary_spinor_data(s, r, reader, &checksum)) != 0) {
+      if(g_debug_level > 0 && g_proc_id == 0) {
+	fprintf(stderr, "read_binary_spinor_data failed with return value %d", rstat);
+      }
+      return(-7);
+    }
   }
 
   if (g_cart_id == 0 && g_debug_level > 1) {
@@ -106,3 +116,5 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
 
   return(0);
 }
+
+
