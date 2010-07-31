@@ -66,28 +66,31 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
     /* compute the global residue        */
     /* this can be done more efficiently */
     /* here only a naive implementation  */
-    D_psi(r, P);
-    diff(r, Q, r, VOLUME);
-    nrm = square_norm(r, VOLUME, 1);
-    if(g_proc_id == 0 && eo == 0 && g_debug_level > 0) {
-      printf("Msap: %d %1.3e\n", ncy, nrm);
+    for(eo = 0; eo < 2; eo++) {
+      D_psi(r, P);
+      diff(r, Q, r, VOLUME);
+      nrm = square_norm(r, VOLUME, 1);
+      if(g_proc_id == 0 && g_debug_level > 1) {
+	printf("Msap: %d %1.3e\n", ncy, nrm);
+      }
+      /* choose the even (odd) block */
+      
+      /*blk = eolist[eo];*/
+      
+      for (blk = 0; blk < nb_blocks; blk++) {
+      	if(block_list[blk].evenodd == eo) {
+	  vol = block_list[blk].volume;
+	  
+	  /* get part of r corresponding to block blk into b */
+	  copy_global_to_block(b, r, blk);
+	  
+	  mrblk(a, b, 4, 1.e-31, 1, vol, &dummy_Di, blk);
+	  
+	  /* add a up to full spinor P */
+	  add_block_to_global(P, a, blk);
+	}
+      }
     }
-    /* choose the even (odd) block */
-    
-    /*blk = eolist[eo];*/
-    
-    for (blk = 0; blk < nb_blocks; blk++) {
-      
-      vol = block_list[blk].volume;
-      
-      /* get part of r corresponding to block blk into b */
-      copy_global_to_block(b, r, blk);
-      
-      mrblk(a, b, 4, 1.e-31, 1, vol, &dummy_Di, blk);
-      
-      /* add a up to full spinor P */
-      add_block_to_global(P, a, blk);
-    }
-  } 
+  }
   return;
 }

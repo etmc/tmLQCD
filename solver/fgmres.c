@@ -50,6 +50,7 @@
 #include"tm_operators.h"
 #include"sub_low_ev.h"
 #include"poly_precon.h"
+#include "Msap.h"
 #include"gamma.h"
 #include"fgmres.h"
 
@@ -113,7 +114,7 @@ int fgmres(spinor * const P,spinor * const Q,
 	assign(Z[j], V[j], N);
       }
       else {
-	poly_nonherm_precon(Z[j], V[j], .7, 1., 10, N);
+ 	Msap(Z[j], V[j], dfl_poly_iter);
       }
       f(r0, Z[j]); 
       /* Set h_ij and omega_j */

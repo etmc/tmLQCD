@@ -46,6 +46,10 @@
 #include "little_D.h"
 #include "gcr4complex.h"
 #include "boundary.h"
+#include <io/params.h>
+#include <io/gauge.h>
+#include <io/spinor.h>
+#include <io/utils.h>
 #include "generate_dfl_subspace.h"
 
 int init_little_dfl_subspace(const int N_s);
@@ -86,8 +90,9 @@ int generate_dfl_subspace(const int Ns, const int N) {
   double nrm, e = 0.3, d = 1.1, atime, etime;
   complex s;
   complex * work;
-  
-  FILE *fp_dfl_fields; char file_name[500]; // CT
+  WRITER *writer = NULL;  
+  FILE *fp_dfl_fields; 
+  char file_name[500]; // CT
   
 #ifdef MPI
   atime = MPI_Wtime();
@@ -130,11 +135,11 @@ int generate_dfl_subspace(const int Ns, const int N) {
   */
   /* CU: reading and writing should be done with lemon! */
   for(p = 0; p < Ns; p++) {
-    sprintf(file_name,"%d%s%d%s",g_proc_id,"_",p,"_dfl_fields");
+    sprintf(file_name,"dfl_fields.%.2d", p);
     if((fp_dfl_fields = fopen(file_name, "r")) != NULL) {
-      fread(dfl_fields[p], sizeof(spinor), N, fp_dfl_fields);
       fclose(fp_dfl_fields);
       if((g_proc_id == 0) && (g_debug_level > 0)) printf("Get field %d from file\n", p);
+      read_spinor(dfl_fields[p], NULL, file_name, 0);
     }
     else break;
   }
@@ -177,10 +182,10 @@ int generate_dfl_subspace(const int Ns, const int N) {
 	CT: We save dfl_fields[i] in a binary file, 
 	using a generic nomenclature proc_i__dfl_fields for later reads                               
       */
-      sprintf(file_name,"%d%s%d%s",g_proc_id,"_",i,"_dfl_fields");
-      fp_dfl_fields = fopen(file_name, "w");
-      fwrite(dfl_fields[i], sizeof(spinor), N, fp_dfl_fields);
-      fclose(fp_dfl_fields);  
+      sprintf(file_name,"dfl_fields.%.2d", i);
+      construct_writer(&writer, file_name, 0);
+      write_spinor(writer, &dfl_fields[i], NULL, 1, 32);
+      destruct_writer(writer);
     }
   }
 
