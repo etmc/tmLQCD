@@ -115,14 +115,19 @@ int mrblk(spinor * const P, spinor * const Q,
 	  const int max_iter, const double eps_sq,
 	  const int rel_prec, const int N, 
 	  matrix_mult_blk f, const int blk) {
+  static int mr_init=0;
   int i = 0, ix;
   double norm_r,beta;
   complex alpha;
   spinor * r, * x;
   const int parallel = 0;
-  spinor * s[3], *s_=NULL;
+  spinor * s[3];
+  static spinor *s_=NULL;
 
-  s_ = calloc(3*(N+1)+1, sizeof(spinor));  
+  if(mr_init == 0) {
+    s_ = calloc(3*(N+1)+1, sizeof(spinor));
+    mr_init = 1;
+  }
 #if (defined SSE || defined SSE2 || defined SSE3)
   s[0] = (complex *)(((unsigned int)(s_)+ALIGN_BASE)&~ALIGN_BASE); 
 #else
@@ -132,14 +137,14 @@ int mrblk(spinor * const P, spinor * const Q,
   s[2] = s[1] + N + 1;
 
   r = s[0];
-  norm_r=square_norm(Q, N, parallel);
+  norm_r = square_norm(Q, N, parallel);
   
   zero_spinor_field(P, N);
   f(s[2], P, blk);
   diff(r, Q, s[2], N);
   norm_r = square_norm(r, N, parallel);
-  if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
-    printf("MR iteration= %d  |res|^2= %e\n", i, norm_r);
+  if(g_proc_id == g_stdio_proc && g_debug_level > 1 && blk == 0) {
+    printf("MRblk iteration= %d  |res|^2= %e\n", i, norm_r);
     fflush( stdout );
   }
   
@@ -150,7 +155,7 @@ int mrblk(spinor * const P, spinor * const Q,
     beta = square_norm(s[1], N, parallel);
     _mult_real(alpha, alpha, 1./beta);
     assign_add_mul(P, r, alpha, N);
-    if(i%50 == 0){
+    if(i%50 == 0) {
       f(s[2], P,blk);
     }
     else{
@@ -159,12 +164,12 @@ int mrblk(spinor * const P, spinor * const Q,
     
     diff(r, Q, s[2], N);
     norm_r = square_norm(r, N, parallel);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
-      printf("MR iteration= %d  |res|^2= %g\n", i, norm_r);
+    if(g_proc_id == g_stdio_proc && g_debug_level > 1 && blk == 0) {
+      printf("MRblk iteration= %d  |res|^2= %g\n", i, norm_r);
       fflush(stdout);
     }
   }
-  free(s_);
+  /* free(s_); */
   if(norm_r > eps_sq){
     return(-1);
   }

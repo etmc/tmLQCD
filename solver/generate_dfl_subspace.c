@@ -75,7 +75,7 @@ static void random_fields(const int Ns) {
       ranlxs(s,24);
       for (j = 0; j < 24; j++) {
  	(*t) = (double)(r*(s[j]-0.5f)); 
-	/* (*t) = 1.; */
+	(*t) = 1.; 
  	t += 1; 
       }
     }
@@ -84,7 +84,7 @@ static void random_fields(const int Ns) {
 }
 
 int generate_dfl_subspace(const int Ns, const int N) {
-  int i, j, k, p, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex),
+  int ix, i, j, k, p, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex),
     vol = VOLUME*sizeof(spinor)/sizeof(complex);
   spinor **psi;
   double nrm, e = 0.3, d = 1.1, atime, etime;
@@ -136,12 +136,18 @@ int generate_dfl_subspace(const int Ns, const int N) {
   /* CU: reading and writing should be done with lemon! */
   for(p = 0; p < Ns; p++) {
     sprintf(file_name,"dfl_fields.%.2d", p);
-    if((fp_dfl_fields = fopen(file_name, "r")) != NULL) {
-      fclose(fp_dfl_fields);
-      if((g_proc_id == 0) && (g_debug_level > 0)) printf("Get field %d from file\n", p);
-      read_spinor(dfl_fields[p], NULL, file_name, 0);
+    if((fp_dfl_fields = fopen(file_name,  "r")) == NULL) {
+      break;
     }
-    else break;
+    else {
+      fclose(fp_dfl_fields);
+      if((i = read_spinor(dfl_fields[p], NULL, file_name, 0)) != 0) {
+	if(g_proc_id == 0) {
+	  fprintf(stderr, "Could not read from file %s err = %d\n", file_name, i);
+	}
+	break;
+      }
+    }
   }
   
   if((g_proc_id == 0) && (p < Ns) && (g_debug_level > 0))  printf("Compute remaining fields from scratch\n");
@@ -150,29 +156,68 @@ int generate_dfl_subspace(const int Ns, const int N) {
   /*      nrm = sqrt(square_norm(dfl_fields[i], N, 1)); */
   /*      mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N); */
   if(p < Ns) {
-    for(j = 0; j < 4; j++) {/*dfl_field_iter = 80  by default */
-      for(i = p; i < Ns; i++) {
-	ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
-	nrm = sqrt(square_norm(dfl_fields[i], N, 1));
-	mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
-	for(k = 0; k < 2; k++) {
+    if(1) {
+      for(i = 0; i < Ns; i++) {
+	/*    ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
+	      nrm = sqrt(square_norm(dfl_fields[i], N, 1));
+	      mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
+	*/
+	for(j = 0; j < 20; j++) {
+	  zero_spinor_field(g_spinor_field[0],VOLUME);  
 	  g_sloppy_precision = 1;
-	  /* dfl_poly_iter = 20 by default */
-	  zero_spinor_field(g_spinor_field[0],VOLUME);
- 	  Msap(g_spinor_field[0], dfl_fields[i], 2*(k+1));
-/*  	  poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 4, N);  */
+	  Msap(g_spinor_field[0], dfl_fields[i], j+1); 
+	  /*      poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 2, N);*/
+	  /*       gmres_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], 20, 1, 1.e-20, 0, N, &D_psi); */
+	  
+	  for (ix=0;ix<VOLUME;ix++) {
+	    _spinor_assign((*(dfl_fields[i] + ix)),(*(g_spinor_field[0]+ix)));
+	  }
+	  
 	  g_sloppy_precision = 0;
+	  /*       for (i=0;i<Ns; i++) { */
 	  ModifiedGS((complex*)g_spinor_field[0], vol, i, (complex*)dfl_fields[0], vpr);
 	  nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
 	  mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
 	}
-	
+      }
+  
+      for (i=0; i<Ns; i++) {
 	/* test quality */
 	if(g_debug_level > -1) {
 	  D_psi(g_spinor_field[DUM_SOLVER], dfl_fields[i]);
 	  nrm = sqrt(square_norm(g_spinor_field[DUM_SOLVER], N, 1));
 	  if(g_proc_id == 0) {
-	    printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm);
+	    printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm*nrm);
+	  }
+	}
+      }
+    }
+
+    if(0) {
+      for(j = 0; j < 4; j++) {/*dfl_field_iter = 80  by default */
+	for(i = p; i < Ns; i++) {
+	  ModifiedGS((complex*)dfl_fields[i], vol, i, (complex*)dfl_fields[0], vpr);
+	  nrm = sqrt(square_norm(dfl_fields[i], N, 1));
+	  mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
+	  for(k = 0; k < 3; k++) {
+	    g_sloppy_precision = 1;
+	    /* dfl_poly_iter = 20 by default */
+	    zero_spinor_field(g_spinor_field[0],VOLUME);
+	    Msap(g_spinor_field[0], dfl_fields[i], 4);
+	    /* poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 4, N);  */
+	    g_sloppy_precision = 0;
+	    ModifiedGS((complex*)g_spinor_field[0], vol, i, (complex*)dfl_fields[0], vpr);
+	    nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
+	    mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
+	  }
+	  
+	  /* test quality */
+	  if(g_debug_level > -1) {
+	    D_psi(g_spinor_field[DUM_SOLVER], dfl_fields[i]);
+	    nrm = sqrt(square_norm(g_spinor_field[DUM_SOLVER], N, 1));
+	    if(g_proc_id == 0) {
+	      printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm);
+	    }
 	  }
 	}
       }
@@ -184,7 +229,8 @@ int generate_dfl_subspace(const int Ns, const int N) {
       */
       sprintf(file_name,"dfl_fields.%.2d", i);
       construct_writer(&writer, file_name, 0);
-      write_spinor(writer, &dfl_fields[i], NULL, 1, 32);
+      write_propagator_type(writer, 4);
+      write_spinor(writer, &dfl_fields[i], NULL, 1, 64);
       destruct_writer(writer);
     }
   }

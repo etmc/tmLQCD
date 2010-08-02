@@ -90,18 +90,18 @@ void project(spinor * const out, spinor * const in) {
       inprod[j + i*g_N_s]  = scalar_prod(block_list[i].basis[j], psi[i], vol, 0);
     }
   }
-  if(dfl_sloppy_prec) prec = dfl_little_D_prec;
+  /* if(dfl_sloppy_prec) prec = dfl_little_D_prec; */
+  if(dfl_sloppy_prec) prec = 1.e-12;
   else prec = 1.e-24;
-
   if(0) {
-    iter = gcr4complex(invvec, inprod, 10, 100, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
+    iter = gcr4complex(invvec, inprod, 10, 50000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
     if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
       printf("lgcr number of iterations %d (no P_L)\n", iter);
     }
   }
   else {
     little_P_L(v, inprod);
-    iter = gcr4complex(w, v, 10, 100, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
+    iter = gcr4complex(w, v, 20, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
     little_P_R(v, w);
     little_project(w, inprod, g_N_s);
     for(i = 0; i < nb_blocks*g_N_s; i++) {
@@ -228,26 +228,34 @@ void little_project(complex * const out, complex * const in, const int  N) {
   
   /* NOTE IS THIS REALLY NECESSARY/CORRECT? */
   for(i = 0; i < N; i++) {
-    phi[i] = lscalar_prod(little_dfl_fields[i], in, nb_blocks*g_N_s, 0);
+    phi[i] = lscalar_prod(little_dfl_fields[i], in, nb_blocks*N, 0);
   }
 
 #ifdef MPI
-  MPI_Allreduce(phi, psi, g_N_s, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(phi, psi, N, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
 #else
-  memcpy(psi, phi, g_N_s*sizeof(complex));
+  memcpy(psi, phi, N*sizeof(complex));
 #endif
   
   /* apply inverse of little_A */
-  for(i = 0; i < g_N_s; i++) {
-    _complex_zero(phi[i]);
-    for(j = 0; j < g_N_s; j++) {
+  for(i = 0; i < N; i++) {
+    _mult_assign_complex(phi[i], little_A[i], psi[0]);
+  }
+  for(j = 1; j < N; j++) {
+    for(i = 0; i < N; i++) {
       _add_assign_complex(phi[i], little_A[j*N + i], psi[j]);
     }
   }
+  /* for(i = 0; i < N; i++) { */
+  /*   _complex_zero(phi[i]); */
+  /*   for(j = 0; j < N; j++) { */
+  /*     _add_assign_complex(phi[i], little_A[j*N + i], psi[j]); */
+  /*   } */
+  /* } */
 
-  lmul(out, phi[0], little_dfl_fields[0], nb_blocks*g_N_s);
+  lmul(out, phi[0], little_dfl_fields[0], nb_blocks*N);
   for(i = 1; i < N; i++) {
-    lassign_add_mul(out, little_dfl_fields[i], phi[i], nb_blocks*g_N_s);
+    lassign_add_mul(out, little_dfl_fields[i], phi[i], nb_blocks*N);
   }
   return;
 }

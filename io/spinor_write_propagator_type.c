@@ -11,20 +11,22 @@ void write_propagator_type(WRITER *writer, const int type)
 
   message = (char*)malloc(128);
 
-  switch (type)
-  {
-    case 0:
-      sprintf(message, "DiracFermion_Sink");
-      break;
-    case 1:
-      sprintf(message, "DiracFermion_Source_Sink_Pairs");
-      break;
-    case 2:
-      sprintf(message, "DiracFermion_ScalarSource_TwelveSink");
-      break;
-    case 3:
-      sprintf(message, "DiracFermion_ScalarSource_FourSink");
-      break;
+  switch (type) {
+  case 0:
+    sprintf(message, "DiracFermion_Sink");
+    break;
+  case 1:
+    sprintf(message, "DiracFermion_Source_Sink_Pairs");
+    break;
+  case 2:
+    sprintf(message, "DiracFermion_ScalarSource_TwelveSink");
+    break;
+  case 3:
+    sprintf(message, "DiracFermion_ScalarSource_FourSink");
+    break;
+  case 4:
+    sprintf(message, "DiracFermion_Deflation_Field");
+    break;
   }
   bytes = strlen(message);
 

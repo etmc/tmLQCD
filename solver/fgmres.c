@@ -68,6 +68,7 @@ static complex * _h;
 static complex * alpha;
 static complex * c;
 static double * s;
+extern int dfl_poly_iter;
 
 int fgmres(spinor * const P,spinor * const Q, 
 	   const int m, const int max_restarts,
@@ -114,7 +115,9 @@ int fgmres(spinor * const P,spinor * const Q,
 	assign(Z[j], V[j], N);
       }
       else {
- 	Msap(Z[j], V[j], dfl_poly_iter);
+	zero_spinor_field(Z[j], N);
+	/* poly_nonherm_precon(Z[j], V[j], 0.3, 1.1, 80, N); */
+	Msap(Z[j], V[j], 8);
       }
       f(r0, Z[j]); 
       /* Set h_ij and omega_j */

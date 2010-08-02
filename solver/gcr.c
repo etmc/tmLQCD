@@ -28,9 +28,10 @@
 #include"su3.h"
 #include"linalg_eo.h"
 #include"solver/gmres_precon.h"
-/* #include"solver/mr_precon.h" */
+#include"start.h"
 #include"tm_operators.h"
 #include"solver/poly_precon.h"
+#include"solver/cg_her.h"
 #include"D_psi.h"
 #include"Msap.h"
 #include"dfl_projector.h"
@@ -87,8 +88,14 @@ int gcr(spinor * const P, spinor * const Q,
 	assign(xi[k], rho, N);
       }
       else {
- 	Msap(xi[k], rho, dfl_poly_iter);
-/* 	poly_nonherm_precon(xi[k], rho, 0.3, 1.1, dfl_poly_iter, N); */
+	zero_spinor_field(xi[k], N);  
+	Msap(xi[k], rho, 8);   
+	/* poly_nonherm_precon(xi[k], rho, 0.3, 1.1, 20, N); */
+	/* gamma5(rho, rho, N); */
+	/* cg_her(tmp, rho, dfl_poly_iter, 1.e-60, 1, N, &Q_pm_psi); */
+	/* Q_minus_psi(xi[k], tmp); */
+	/* gamma5(rho, rho, N);  */
+ 	/* Msap(xi[k], rho, dfl_poly_iter); */
       }
 	  
       dfl_sloppy_prec = 1;
@@ -107,7 +114,8 @@ int gcr(spinor * const P, spinor * const Q,
       err = square_norm(rho, N, 1);
       iter ++;
       if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-	printf("GCR: %d\t%g iterated residue\n", iter, err); 
+	if(rel_prec == 1) printf("GCR: %d\t%g >= %g iterated residue\n", iter, err, eps_sq*norm_sq); 
+	else printf("GCR: %d\t%g >= %giterated residue\n", iter, err, eps_sq);
 	fflush(stdout);
       }
       /* Precision reached? */

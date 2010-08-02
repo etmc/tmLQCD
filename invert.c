@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
   /* DUM_MATRIX + 2 is enough (not 6) */
   NO_OF_SPINORFIELDS = DUM_MATRIX + 2;
 
-  verbose = 1;
+  verbose = 0;
   g_use_clover_flag = 0;
 
 #ifdef MPI
@@ -356,11 +356,11 @@ int main(int argc, char *argv[])
 
       /* Compute little Dirac operators */
       /*       alt_block_compute_little_D(); */
-      if (g_debug_level > -1)
+      if (g_debug_level > 1)
       {
         check_projectors();
       }
-      if (g_debug_level > -1)
+      if (g_debug_level > 1)
       {
         check_little_D_inversion();
       }
