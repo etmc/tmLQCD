@@ -11899,7 +11899,7 @@ if test $enable_tsp = yes; then
 echo "${ECHO_T}yes" >&6; }
 
 cat >>confdefs.h <<\_ACEOF
-#define _USE_TSLITPAR 1
+#define _USE_TSPLITPAR 1
 _ACEOF
 
 else
