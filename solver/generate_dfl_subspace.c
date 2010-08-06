@@ -93,7 +93,8 @@ int generate_dfl_subspace(const int Ns, const int N) {
   WRITER *writer = NULL;  
   FILE *fp_dfl_fields; 
   char file_name[500]; // CT
-  
+  double musave = g_mu;
+
 #ifdef MPI
   atime = MPI_Wtime();
 #else
@@ -129,6 +130,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
   }
   
   boundary(g_kappa);
+  g_mu = 0.;
   /*
     CT: We try to read dfl_fields[i] from file if it exists, 
     otherwise we recalculate it                               
@@ -234,7 +236,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
       destruct_writer(writer);
     }
   }
-
+  g_mu = musave;
   g_sloppy_precision = 0;
   boundary(g_kappa);
   if(g_debug_level > 2) {

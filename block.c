@@ -48,7 +48,8 @@ int ** bipt_;
 int * bipt;
 complex * little_A = NULL;
 complex32 * little_A32 = NULL;
-
+int * block_idx;
+int * block_eoidx;
 enum{
   NONE = 0,
   T_UP = 1,
@@ -204,7 +205,10 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].evenodd = (block_list[i].coordinate[0] + block_list[i].coordinate[1] + 
 			     block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
-    if ((void*)(block_list[i].idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
+    if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
+      CALLOC_ERROR_CRASH;
+
+    if ((void*)(block_eoidx = calloc(8 * (VOLUME/nb_blocks/2), sizeof(int))) == NULL)
       CALLOC_ERROR_CRASH;
 
     for (j = 0; j < g_N_s; j++) { /* write a zero element at the end of every spinor */
@@ -248,7 +252,7 @@ int free_blocks() {
 }
 int init_blocks_gaugefield() {
   /* 
-     Copies the existing gauge field on the processor into the two separate blocks in a form
+     Copies the existing gauge field on the processor into the separate blocks in a form
      that is readable by the block Dirac operator. Specifically, in consecutive memory
      now +t,-t,+x,-x,+y,-y,+z,-z gauge links are stored. This requires double the storage in
      memory. 
@@ -412,8 +416,8 @@ int check_blocks_geometry(block * blk) {
   }
 
   free(itest);
-  if(g_proc_id == 0) {
-    if(g_debug_level > 1) printf("# block geometry checked successfully for block %d !\n", blk->id);
+  if(g_proc_id == 0 && g_debug_level > 1) {
+    printf("# block geometry checked successfully for block %d !\n", blk->id);
   }
   return(0);
 }
@@ -426,17 +430,30 @@ int init_blocks_geometry() {
   int tstride = dX * dY * dZ;
   int boundidx = VOLUME/nb_blocks;
   for (ix = 0; ix < VOLUME/nb_blocks; ++ix) {
-    block_list[0].idx[8 * ix + 0] = (ix           >= VOLUME/nb_blocks - tstride ? boundidx : ix + tstride);/* +t */
-    block_list[0].idx[8 * ix + 1] = (ix           <  tstride                    ? boundidx : ix - tstride);/* -t */
-    block_list[0].idx[8 * ix + 2] = (ix % tstride >= dZ * dY * (dX - 1)		? boundidx : ix + xstride);/* +x */
-    block_list[0].idx[8 * ix + 3] = (ix % tstride <  dZ * dY			? boundidx : ix - xstride);/* -x */
-    block_list[0].idx[8 * ix + 4] = (ix % xstride >= dZ * (dY - 1)		? boundidx : ix + ystride);/* +y */
-    block_list[0].idx[8 * ix + 5] = (ix % xstride <  dZ				? boundidx : ix - ystride);/* -y */
-    block_list[0].idx[8 * ix + 6] = (ix % ystride == dZ - 1			? boundidx : ix + zstride);/* +z */
-    block_list[0].idx[8 * ix + 7] = (ix % ystride == 0				? boundidx : ix - zstride);/* -z */
+    block_idx[8 * ix + 0] = (ix           >= VOLUME/nb_blocks - tstride ? boundidx : ix + tstride);/* +t */
+    block_idx[8 * ix + 1] = (ix           <  tstride                    ? boundidx : ix - tstride);/* -t */
+    block_idx[8 * ix + 2] = (ix % tstride >= dZ * dY * (dX - 1)		? boundidx : ix + xstride);/* +x */
+    block_idx[8 * ix + 3] = (ix % tstride <  dZ * dY			? boundidx : ix - xstride);/* -x */
+    block_idx[8 * ix + 4] = (ix % xstride >= dZ * (dY - 1)		? boundidx : ix + ystride);/* +y */
+    block_idx[8 * ix + 5] = (ix % xstride <  dZ				? boundidx : ix - ystride);/* -y */
+    block_idx[8 * ix + 6] = (ix % ystride == dZ - 1			? boundidx : ix + zstride);/* +z */
+    block_idx[8 * ix + 7] = (ix % ystride == 0				? boundidx : ix - zstride);/* -z */
+    /* Assume that all direction have even extension */
+    /* even and odd versions should be equal         */
+    if((ix % 2) == 0) {
+      block_eoidx[8*(ix/2) + 0] = block_idx[8 * ix + 0] / 2;
+      block_eoidx[8*(ix/2) + 1] = block_idx[8 * ix + 1] / 2;
+      block_eoidx[8*(ix/2) + 2] = block_idx[8 * ix + 2] / 2;
+      block_eoidx[8*(ix/2) + 3] = block_idx[8 * ix + 3] / 2;
+      block_eoidx[8*(ix/2) + 4] = block_idx[8 * ix + 4] / 2;
+      block_eoidx[8*(ix/2) + 5] = block_idx[8 * ix + 5] / 2;
+      block_eoidx[8*(ix/2) + 6] = block_idx[8 * ix + 6] / 2;
+      block_eoidx[8*(ix/2) + 7] = block_idx[8 * ix + 7] / 2;
+    }
   }
-  for(i=1;i<nb_blocks;i++) {
-    memcpy(block_list[i].idx, block_list[0].idx, 8 * (VOLUME/nb_blocks) * sizeof(int));
+  for(i = 0; i < nb_blocks; i++) {
+    block_list[i].idx = block_idx;
+    block_list[i].eoidx = block_eoidx;
   }
   ix = 0;
   for(t = 0; t < dT; t++) {

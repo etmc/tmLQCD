@@ -48,6 +48,226 @@
 #include "block.h"
 #include "D_psi.h"
 
+#if (defined SSE23 || defined SSE33)
+
+#elif (defined BGL3 && defined XLC)
+
+#else
+
+static spinor tmpr;
+
+static inline void p0add(spinor * restrict const s, 
+			 su3 * restrict const u, const complex phase) {
+  static su3_vector chi, psi;
+
+  _vector_add(psi,(*s).s0, (*s).s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s0, psi);
+  _vector_add_assign(tmpr.s2, psi);
+
+  _vector_add(psi, (*s).s1, (*s).s3);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s1, psi);
+  _vector_add_assign(tmpr.s3, psi);
+
+  return;
+}
+
+
+static inline void m0add(spinor * restrict const s, 
+			 su3 * restrict const u, const complex phase) {
+  static su3_vector chi, psi;
+
+  _vector_sub(psi, (*s).s0, (*s).s2);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s0, psi);
+  _vector_sub_assign(tmpr.s2, psi);
+
+  _vector_sub(psi, (*s).s1, (*s).s3);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s1, psi);
+  _vector_sub_assign(tmpr.s3, psi);
+
+  return;
+}
+
+static inline void p1add(spinor * restrict const s, 
+			 su3 * restrict const u, const complex phase) {
+  static su3_vector chi, psi;
+
+  _vector_i_add(psi,(*s).s0,(*s).s3);
+  _su3_multiply(chi,(*u),psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s0, psi);
+  _vector_i_sub_assign(tmpr.s3, psi);
+ 
+  _vector_i_add(psi, (*s).s1, (*s).s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s1, psi);
+  _vector_i_sub_assign(tmpr.s2, psi);
+
+  return;
+}
+
+static inline void m1add(spinor * restrict const s, 
+			 su3 * restrict const u, const complex phase) {
+  static su3_vector chi, psi;
+
+  _vector_i_sub(psi,(*s).s0, (*s).s3);
+  _su3_inverse_multiply(chi,(*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s0, psi);
+  _vector_i_add_assign(tmpr.s3, psi);
+
+  _vector_i_sub(psi, (*s).s1, (*s).s2);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s1, psi);
+  _vector_i_add_assign(tmpr.s2, psi);
+
+  return;
+}
+
+static inline void p2add(spinor * restrict const s, 
+			 su3 * restrict const u, const complex phase) {
+  static su3_vector chi, psi;
+
+  _vector_add(psi,(*s).s0,(*s).s3);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s0, psi);
+  _vector_add_assign(tmpr.s3, psi);
+
+  _vector_sub(psi,(*s).s1,(*s).s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s1, psi);
+  _vector_sub_assign(tmpr.s2, psi);
+
+
+  return;
+}
+
+static inline void m2add(spinor * restrict const s, 
+			 su3 * restrict const u, const complex phase) {
+  static su3_vector chi, psi;
+
+  _vector_sub(psi, (*s).s0, (*s).s3);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s0, psi);
+  _vector_sub_assign(tmpr.s3, psi);
+
+  _vector_add(psi, (*s).s1, (*s).s2);
+  _su3_inverse_multiply(chi, (*u),psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s1, psi);
+  _vector_add_assign(tmpr.s2, psi);
+
+  return;
+}
+
+static inline void p3add(spinor * restrict const s, 
+			 su3 * restrict const u, const complex phase) {
+  static su3_vector chi, psi;
+
+  _vector_i_add(psi, (*s).s0, (*s).s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s0, psi);
+  _vector_i_sub_assign(tmpr.s2, psi);
+
+  _vector_i_sub(psi,(*s).s1, (*s).s3);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr.s1, psi);
+  _vector_i_add_assign(tmpr.s3, psi);
+
+  return;
+}
+
+static inline void m3addandstore(spinor * restrict const r, spinor * restrict const s, 
+				 su3 * restrict const u, const complex phase) {
+  static su3_vector chi, psi;
+
+  _vector_i_sub(psi,(*s).s0, (*s).s2);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add((*r).s0, tmpr.s0, psi);
+  _vector_i_add((*r).s2, tmpr.s2, psi);
+
+  _vector_i_add(psi, (*s).s1, (*s).s3);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add((*r).s1, tmpr.s1, psi);
+  _vector_i_sub((*r).s3, tmpr.s3, psi);
+
+  return;
+}
+
+/* this is the hopping part only */
+static inline void local_H(spinor * const rr, spinor * const s, su3 * restrict u, int * _idx) {
+
+  int * idx = _idx;
+
+  /****** direction +0 ******/
+  p0add(s + (*idx), u, phase_0);
+  u++;
+  idx++;
+  /****** direction -0 ******/
+  m0add(s + (*idx), u, phase_0);
+  u++;
+  idx++;
+  /****** direction +1 ******/
+  p1add(s + (*idx), u, phase_1);
+  u++;
+  idx++;
+  /****** direction -1 ******/
+  m1add(s + (*idx), u, phase_1);
+  u++;
+  idx++;
+  /****** direction +2 ******/
+  p2add(s + (*idx), u, phase_2);
+  u++;
+  idx++;
+  /****** direction -2 ******/
+  m2add(s + (*idx), u, phase_2);
+  u++;
+  idx++;
+  /****** direction +3 ******/
+  p3add(s + (*idx), u, phase_3);
+  u++;
+  idx++;
+  /****** direction -3 ******/
+  m3addandstore(rr, s + (*idx), u, phase_3);
+
+  return;
+}
+
+
+#endif
+
 #if (defined SSE2 || defined SSE3)
 
 static spinor rs __attribute__ ((aligned (16)));
@@ -714,11 +934,9 @@ void D_psi(spinor * const P, spinor * const Q){
 /* Serially Checked ! */
 
 static complex rho1,rho2;
-static su3_vector psi,chi;
 
 void D_psi(spinor * const P, spinor * const Q){
   int ix,iy;
-  static spinor r;
   su3 * restrict up,* restrict um;
   spinor * restrict rr,* restrict s,* restrict sp,* restrict sm;
 
@@ -749,198 +967,58 @@ void D_psi(spinor * const P, spinor * const Q){
     rr  = (spinor *) P +ix;
     s  = (spinor *) Q +ix;
 
-    _complex_times_vector(r.s0,rho1,(*s).s0);
-    _complex_times_vector(r.s1,rho1,(*s).s1);
-    _complex_times_vector(r.s2,rho2,(*s).s2);
-    _complex_times_vector(r.s3,rho2,(*s).s3);
+    _complex_times_vector(tmpr.s0, rho1, (*s).s0);
+    _complex_times_vector(tmpr.s1, rho1, (*s).s1);
+    _complex_times_vector(tmpr.s2, rho2, (*s).s2);
+    _complex_times_vector(tmpr.s3, rho2, (*s).s3);
 
     /******************************* direction +0 *********************************/
-
     iy=g_iup[ix][0];
-
     sp = (spinor *) Q +iy;
     up=&g_gauge_field[ix][0];
-
-    _vector_add(psi,(*sp).s0,(*sp).s2);
-
-    _su3_multiply(chi,(*up),psi);
-
-    _complex_times_vector(psi, phase_0, chi);
-
-    _vector_add_assign(r.s0,psi);
-    _vector_add_assign(r.s2,psi);
-
-    _vector_add(psi,(*sp).s1,(*sp).s3);
-
-    _su3_multiply(chi,(*up),psi);
-
-    _complex_times_vector(psi, phase_0, chi);
-    _vector_add_assign(r.s1,psi);
-    _vector_add_assign(r.s3,psi);
+    p0add(sp, up, phase_0);
 
     /******************************* direction -0 *********************************/
-
     iy=g_idn[ix][0];
-
     sm  = (spinor *) Q +iy;
     um=&g_gauge_field[iy][0];
-
-    _vector_sub(psi,(*sm).s0,(*sm).s2);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-
-    _complexcjg_times_vector(psi, phase_0, chi);
-    _vector_add_assign(r.s0,psi);
-    _vector_sub_assign(r.s2,psi);
-
-    _vector_sub(psi,(*sm).s1,(*sm).s3);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-
-    _complexcjg_times_vector(psi,phase_0,chi);
-    _vector_add_assign(r.s1,psi);
-    _vector_sub_assign(r.s3,psi);
+    m0add(sm, um, phase_0);
 
     /******************************* direction +1 *********************************/
-
     iy=g_iup[ix][1];
-
     sp = (spinor *) Q +iy;
     up=&g_gauge_field[ix][1];
-
-    _vector_i_add(psi,(*sp).s0,(*sp).s3);
-
-    _su3_multiply(chi,(*up),psi);
-
-    _complex_times_vector(psi, phase_1, chi);
-    _vector_add_assign(r.s0,psi);
-    _vector_i_sub_assign(r.s3,psi);
-
-    _vector_i_add(psi,(*sp).s1,(*sp).s2);
-
-    _su3_multiply(chi,(*up),psi);
-
-    _complex_times_vector(psi, phase_1, chi);
-    _vector_add_assign(r.s1,psi);
-    _vector_i_sub_assign(r.s2,psi);
+    p1add(sp, up, phase_1);
 
     /******************************* direction -1 *********************************/
-
     iy=g_idn[ix][1];
-
     sm = (spinor *) Q +iy;
     um=&g_gauge_field[iy][1];
-
-    _vector_i_sub(psi,(*sm).s0,(*sm).s3);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-
-    _complexcjg_times_vector(psi, phase_1, chi);
-    _vector_add_assign(r.s0,psi);
-    _vector_i_add_assign(r.s3,psi);
-
-    _vector_i_sub(psi,(*sm).s1,(*sm).s2);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-
-    _complexcjg_times_vector(psi, phase_1, chi);
-    _vector_add_assign(r.s1,psi);
-    _vector_i_add_assign(r.s2,psi);
+    m1add(sm, um, phase_1);
 
     /******************************* direction +2 *********************************/
-
     iy=g_iup[ix][2];
-
     sp = (spinor *) Q +iy;
     up=&g_gauge_field[ix][2];
-
-    _vector_add(psi,(*sp).s0,(*sp).s3);
-
-    _su3_multiply(chi,(*up),psi);
-
-    _complex_times_vector(psi, phase_2, chi);
-    _vector_add_assign(r.s0,psi);
-    _vector_add_assign(r.s3,psi);
-
-    _vector_sub(psi,(*sp).s1,(*sp).s2);
-
-    _su3_multiply(chi,(*up),psi);
-
-    _complex_times_vector(psi, phase_2, chi);
-    _vector_add_assign(r.s1,psi);
-    _vector_sub_assign(r.s2,psi);
+    p2add(sp, up, phase_2);
 
     /******************************* direction -2 *********************************/
-
     iy=g_idn[ix][2];
-
     sm = (spinor *) Q +iy;
     um=&g_gauge_field[iy][2];
-
-    _vector_sub(psi,(*sm).s0,(*sm).s3);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-
-    _complexcjg_times_vector(psi, phase_2, chi);
-    _vector_add_assign(r.s0,psi);
-    _vector_sub_assign(r.s3,psi);
-
-    _vector_add(psi,(*sm).s1,(*sm).s2);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-
-    _complexcjg_times_vector(psi, phase_2, chi);
-    _vector_add_assign(r.s1,psi);
-    _vector_add_assign(r.s2,psi);
+    m2add(sm, um, phase_2);
 
     /******************************* direction +3 *********************************/
-
     iy=g_iup[ix][3];
-
     sp = (spinor *) Q +iy;
     up=&g_gauge_field[ix][3];
-
-    _vector_i_add(psi,(*sp).s0,(*sp).s2);
-
-    _su3_multiply(chi,(*up),psi);
-
-    _complex_times_vector(psi, phase_3, chi);
-    _vector_add_assign(r.s0,psi);
-    _vector_i_sub_assign(r.s2,psi);
-
-    _vector_i_sub(psi,(*sp).s1,(*sp).s3);
-
-    _su3_multiply(chi,(*up),psi);
-
-    _complex_times_vector(psi, phase_3, chi);
-    _vector_add_assign(r.s1, psi);
-    _vector_i_add_assign(r.s3, psi);
+    p3add(sp, up, phase_3);
 
     /******************************* direction -3 *********************************/
-
     iy=g_idn[ix][3];
-
     sm = (spinor *) Q +iy;
     um=&g_gauge_field[iy][3];
-
-    _vector_i_sub(psi,(*sm).s0,(*sm).s2);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-
-    _complexcjg_times_vector(psi, phase_3, chi);
-    _vector_add((*rr).s0, r.s0, psi);
-    _vector_i_add((*rr).s2, r.s2, psi);
-
-    _vector_i_add(psi,(*sm).s1,(*sm).s3);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-
-    _complexcjg_times_vector(psi, phase_3, chi);
-    _vector_add((*rr).s1, r.s1, psi);
-    _vector_i_sub((*rr).s3, r.s3, psi);
-
-    /******************************** end of loop *********************************/
-
+    m3addandstore(rr, sm, um, phase_3);
   }
 }
 
@@ -1148,190 +1226,6 @@ void local_D(spinor * const rr, spinor * const s, su3 * u, int * _idx) {
 
 }
 
-#else
-
-static spinor tmpr;
-
-/* this is the hopping part only */
-void local_D(spinor * const rr, spinor * const s, su3 * restrict u, int * _idx) {
-
-  spinor * restrict sp, * restrict sm;
-  int * idx = _idx;
-  static su3_vector chi, psi;
-
-  /******************************* direction +0 *********************************/
-
-  sp = (spinor *) s + (*idx);
-  idx++;
-
-  _vector_add(psi,(*sp).s0,(*sp).s2);
-
-  _su3_multiply(chi,(*u),psi);
-
-  _complex_times_vector(psi, phase_0, chi);
-
-  _vector_add_assign(tmpr.s0,psi);
-  _vector_add_assign(tmpr.s2,psi);
-
-  _vector_add(psi,(*sp).s1,(*sp).s3);
-
-  _su3_multiply(chi,(*u),psi);
-  u++;
-
-  _complex_times_vector(psi, phase_0, chi);
-  _vector_add_assign(tmpr.s1,psi);
-  _vector_add_assign(tmpr.s3,psi);
-
-  /******************************* direction -0 *********************************/
-  sm = (spinor *) s + (*idx);
-  idx++;
-
-  _vector_sub(psi, (*sm).s0, (*sm).s2);
-
-  _su3_inverse_multiply(chi, (*u), psi);
-
-  _complexcjg_times_vector(psi, phase_0, chi);
-  _vector_add_assign(tmpr.s0,psi);
-  _vector_sub_assign(tmpr.s2,psi);
-
-  _vector_sub(psi,(*sm).s1,(*sm).s3);
-
-  _su3_inverse_multiply(chi,(*u),psi);
-  u++;
-
-  _complexcjg_times_vector(psi,phase_0,chi);
-  _vector_add_assign(tmpr.s1,psi);
-  _vector_sub_assign(tmpr.s3,psi);
-
-  /******************************* direction +1 *********************************/
-  sp = (spinor *) s + (*idx);
-  idx++;
-
-  _vector_i_add(psi,(*sp).s0,(*sp).s3);
-
-  _su3_multiply(chi,(*u),psi);
-
-  _complex_times_vector(psi, phase_1, chi);
-  _vector_add_assign(tmpr.s0,psi);
-  _vector_i_sub_assign(tmpr.s3,psi);
-
-  _vector_i_add(psi,(*sp).s1,(*sp).s2);
-
-  _su3_multiply(chi,(*u),psi);
-  u++;
-
-  _complex_times_vector(psi, phase_1, chi);
-  _vector_add_assign(tmpr.s1,psi);
-  _vector_i_sub_assign(tmpr.s2,psi);
-
-  /******************************* direction -1 *********************************/
-  sm = (spinor *) s + (*idx);
-  idx++;
-
-  _vector_i_sub(psi,(*sm).s0,(*sm).s3);
-
-  _su3_inverse_multiply(chi,(*u),psi);
-
-  _complexcjg_times_vector(psi, phase_1, chi);
-  _vector_add_assign(tmpr.s0,psi);
-  _vector_i_add_assign(tmpr.s3,psi);
-
-  _vector_i_sub(psi,(*sm).s1,(*sm).s2);
-
-  _su3_inverse_multiply(chi,(*u),psi);
-  u++;
-
-  _complexcjg_times_vector(psi, phase_1, chi);
-  _vector_add_assign(tmpr.s1,psi);
-  _vector_i_add_assign(tmpr.s2,psi);
-
-  /******************************* direction +2 *********************************/
-  sp = (spinor *) s + (*idx);
-  idx++;
-
-  _vector_add(psi,(*sp).s0,(*sp).s3);
-
-  _su3_multiply(chi,(*u),psi);
-
-  _complex_times_vector(psi, phase_2, chi);
-  _vector_add_assign(tmpr.s0,psi);
-  _vector_add_assign(tmpr.s3,psi);
-
-  _vector_sub(psi,(*sp).s1,(*sp).s2);
-
-  _su3_multiply(chi,(*u),psi);
-  u++;
-
-  _complex_times_vector(psi, phase_2, chi);
-  _vector_add_assign(tmpr.s1,psi);
-  _vector_sub_assign(tmpr.s2,psi);
-
-  /******************************* direction -2 *********************************/
-  sm = (spinor *) s + (*idx);
-  idx++;
-
-  _vector_sub(psi,(*sm).s0,(*sm).s3);
-
-  _su3_inverse_multiply(chi,(*u),psi);
-
-  _complexcjg_times_vector(psi, phase_2, chi);
-  _vector_add_assign(tmpr.s0,psi);
-  _vector_sub_assign(tmpr.s3,psi);
-
-  _vector_add(psi,(*sm).s1,(*sm).s2);
-
-  _su3_inverse_multiply(chi,(*u),psi);
-  u++;
-
-  _complexcjg_times_vector(psi, phase_2, chi);
-  _vector_add_assign(tmpr.s1,psi);
-  _vector_add_assign(tmpr.s2,psi);
-
-  /******************************* direction +3 *********************************/
-  sp = (spinor *) s + (*idx);
-  idx++;
-
-  _vector_i_add(psi,(*sp).s0,(*sp).s2);
-
-  _su3_multiply(chi,(*u),psi);
-
-  _complex_times_vector(psi, phase_3, chi);
-  _vector_add_assign(tmpr.s0,psi);
-  _vector_i_sub_assign(tmpr.s2,psi);
-
-  _vector_i_sub(psi,(*sp).s1,(*sp).s3);
-
-  _su3_multiply(chi,(*u),psi);
-  u++;
-
-  _complex_times_vector(psi, phase_3, chi);
-  _vector_add_assign(tmpr.s1, psi);
-  _vector_i_add_assign(tmpr.s3, psi);
-
-  /******************************* direction -3 *********************************/
-  sm = (spinor *) s + (*idx);
-  idx++;
-
-  _vector_i_sub(psi,(*sm).s0,(*sm).s2);
-
-  _su3_inverse_multiply(chi,(*u),psi);
-
-  _complexcjg_times_vector(psi, phase_3, chi);
-  _vector_add((*rr).s0, tmpr.s0, psi);
-  _vector_i_add((*rr).s2, tmpr.s2, psi);
-
-  _vector_i_add(psi,(*sm).s1,(*sm).s3);
-
-  _su3_inverse_multiply(chi,(*u),psi);
-  u++;
-
-  _complexcjg_times_vector(psi, phase_3, chi);
-  _vector_add((*rr).s1, tmpr.s1, psi);
-  _vector_i_sub((*rr).s3, tmpr.s3, psi);
-
-  return;
-}
-
 #endif
 
 /* apply the Dirac operator to the block local spinor field s */
@@ -1360,11 +1254,6 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
   _spinor_null(rr[blk->volume]);
 
   for(i = 0; i < blk->volume; i++) {
-    if(g_proc_id == -1) {
-      printf("here %d\n", i);
-      fflush(stdout);
-    }
-
 #if (defined BGL && defined XLC)
     _bgl_load_rs0((*t).s0);
     _bgl_load_rs1((*t).s1);
@@ -1378,12 +1267,33 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
     _complex_times_vector(tmpr.s3, rhob, (*t).s3);
 #endif
 
-    local_D(r, s, u, idx);
+    local_H(r, s, u, idx);
 
-    /* u and idx are incremented in local_D */
     r++;
     t++;
     idx += 8;
+    u += 8;
+  }
+  return;
+}
+
+/* Apply Hopping Matrix to a even(odd) spinor */
+void Block_H_psi(block * blk, spinor * const rr, spinor * const s) {
+  int i;
+  spinor *r = rr;
+  su3 * u = blk->u;
+  int * eoidx = blk->eoidx;
+
+  /* set the boundary term to zero */
+  _spinor_null(rr[blk->volume/2]);
+  
+  for(i = 0; i < blk->volume/2; i++) {
+    _spinor_null(tmpr);
+
+    local_H(r, s, u, eoidx);
+
+    r++;
+    eoidx += 8;
     u += 8;
   }
   return;
