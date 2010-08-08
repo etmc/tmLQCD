@@ -148,6 +148,11 @@ inline void rmQuotes(char *str){
   int reweighting_samples;
   int no_samples;
   
+  int usegpu_flag;
+  int max_innersolver_it;
+  int device_num;
+  double innersolver_precision;  
+  
   int propagator_comparison;
   int nb_cores;
   
@@ -238,7 +243,8 @@ inline void rmQuotes(char *str){
 %x INITINTEGRATOR
 %x INTEGRATOR
 
-
+%x GPU
+%x INITGPU
 
 %x INITOPERATOR
 %x TMOP
@@ -360,6 +366,38 @@ inline void rmQuotes(char *str){
 
 ^DflFieldIter{EQL}                 BEGIN(DFLFIELDITER);
 ^DflPolyIter{EQL}                  BEGIN(DFLPOLYITER);
+
+^BeginGPU                          BEGIN(INITGPU);
+
+
+
+<INITGPU>Init{SPC}* {
+ if(myverbose) printf("Initialising GPU line %d\n", line_of_file); 
+ usegpu_flag = 1;
+  if(myverbose!=0) printf("  Using help of GPU for inversions\n"); 
+ BEGIN(GPU);
+ }
+<GPU>{
+  {SPC}*InnersolverPrecision{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    innersolver_precision = c;
+    if(myverbose) printf("  Inner solver precision set to %f line %d\n", c, line_of_file);
+  }
+  {SPC}*MaxInnersolverIteration{SPC}*={SPC}*{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    max_innersolver_it = a;
+    if(myverbose) printf("  Inner solver iterations set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*DeviceNum{SPC}*={SPC}*{DIGIT}+ {
+      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+      device_num = a;
+      if(myverbose) printf("  Device Number set to %d line %d\n", a, line_of_file);
+  }
+  EndGPUInit{SPC}* {
+  if(myverbose) printf("GPU parsed in line %d\n\n", line_of_file);
+  BEGIN(0);
+  }
+}
 
 
 <INITOPERATOR>{TYPE} {
@@ -1638,7 +1676,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,POLYMONOMIAL,PLOOP>\n   {
+<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
   line_of_file++;
 }
 <*>\n                       {

@@ -26,6 +26,11 @@ SHELL = @SHELL@
 OPTARGS = @OPTARGS@
 SOPTARGS = @SOPTARGS@
 DEFS = @DEFS@
+GPUDIR = @GPUDIR@
+USESUBDIRS = @USESUBDIRS@
+NVCC = @NVCC@
+
+
 
 INCLUDES = @INCLUDES@
 LINK = $(CCLD) -o $@ ${LDFLAGS}
@@ -60,7 +65,13 @@ MODULES = read_input gamma hybrid_update observables start \
 	little_D block sf_gauge_monomial sf_utils sf_calc_action \
 	sf_get_staples sf_get_rectangle_staples sf_observables \
 	Dov_psi operator poly_monomial measurements pion_norm Dov_proj \
-	xchange_field_tslice
+	xchange_field_tslice temporalgauge
+
+
+## the GPU modules (all .cu files in $GPUDIR)
+GPUSOURCES := $(wildcard $(GPUDIR)/*.cu)
+GPUOBJECTS := $(patsubst $(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
+
 
 NOOPTMOD = test/check_xchange test/check_geometry
 
@@ -69,7 +80,10 @@ PROGRAMS = hmc_tm benchmark invert gwc2ildg \
 	check_locallity test_lemon hopping_test
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
-SUBDIRS = io linalg solver
+SUBDIRS = ${USESUBDIRS}
+
+
+
 
 .SUFFIXES:
 
@@ -116,8 +130,11 @@ ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
 	${COMPILE} ${OPTARGS} -c $<
 
+
+
 ${PROGRAMS}: %: %.o libhmc.a all-recursive
-	 ${LINK}  $@.o $(LIBS)
+	 ${LINK}  $@.o $(GPUOBJECTS) $(LIBS)
+
 
 dep: $(addsuffix .d,$(ALLOBJ))
 

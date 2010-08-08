@@ -95,6 +95,11 @@ extern "C"
   extern int reweighting_samples; 
   extern int no_samples;
 
+  extern int usegpu_flag;
+  extern int max_innersolver_it;
+  extern double innersolver_precision;
+  extern int device_num;
+
   extern int nblocks_t, nblocks_x, nblocks_y, nblocks_z;
 
   int read_input(char *);

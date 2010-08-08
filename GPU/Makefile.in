@@ -1,0 +1,74 @@
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+abs_top_srcdir = @abs_top_srcdir@
+top_builddir =  .
+abs_top_builddir = @abs_top_builddir@
+builddir = @builddir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+program_transform_name = @program_transform_name@
+subdir = .
+
+AR = ar
+RANLIB = @RANLIB@
+CC = 
+CCDEP = 
+CFLAGS = @GPUCFLAGS@ 
+LDFLAGS = @LDFLAGS@
+DEPFLAGS = 
+CPPFLAGS = @CPPFLAGS@
+CCLD = @CCLD@
+LEX = @LEX@
+AUTOCONF = @AUTOCONF@
+LIBS = @LIBS@
+SHELL = @SHELL@
+OPTARGS = @OPTARGS@
+SOPTARGS = @SOPTARGS@
+DEFS = @DEFS@
+GPUOBJECTS = @GPUDIR@
+USESUBDIRS = @USESUBDIRS@
+NVCC = @NVCC@
+
+INCLUDES = @INCLUDES@
+
+COMPILE = ${NVCC} -c ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
+
+
+GPUSOURCES := $(wildcard *.cu)
+GPUOBJECTS := $(patsubst %.cu, %.o, $(GPUSOURCES))
+DEPS := $(patsubst %.o,%.d,$(GPUOBJECTS))
+
+.SUFFIXES:
+
+all: Makefile dummy 
+
+#ifneq (,$(findstring lapack,${LIBS}))
+#all: Makefile all-recursive dep hmc_tm invert invert_doublet
+#else
+#all: Makefile all-recursive dep hmc_tm invert invert_doublet
+#endif
+
+
+.NOTPARALLEL:
+
+-include $(addsuffix .d,$(GPUTARGETS))
+
+include ${top_srcdir}/Makefile.global
+
+
+%.o: ${srcdir}/%.cu Makefile
+	@$(COMPILE) ${INCLUDES} $< > $@
+
+dummy: ${GPUOBJECTS} Makefile
+	@echo "Have generated all %.o files"
+
+compile-clean: Makefile
+	rm -f ${GPUOBJECTS} *.d
+
+clean: compile-clean 
+	
+distclean: compile-clean
+	rm -f Makefile
+
+.PHONY: all  compile-clean 

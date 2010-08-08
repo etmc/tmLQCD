@@ -601,6 +601,51 @@ else
  AC_MSG_RESULT(no)
 fi
 
+
+AC_MSG_CHECKING(whether we want to use CUDA GPU)
+AC_ARG_ENABLE(gpu,
+  [  --enable-gpu          use GPU [default=no]],
+  usegpu=$enableval, usegpu=no)
+if test $usegpu = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_GPU,1,Using CUDA GPU)
+  NVCC="nvcc"
+  USESUBDIRS="io linalg solver GPU"
+  GPUDIR="$srcdir/GPU"
+  LIBS="$LIBS -lcuda -lcudart -lcublas"
+  
+  AC_MSG_CHECKING([where to search for CUDA libs])
+  AC_ARG_WITH(cuda,
+    [  --with-cuda[=dir]      use CUDA GPU with lib dir [default=/usr/local/cuda/lib]],
+    cuda_dir=$withval, cuda_dir="/usr/local/cuda/lib")
+  AC_MSG_RESULT($cuda_dir)
+  if test $usegpu = yes; then  
+    LDFLAGS="$LDFLAGS -L$cuda_dir"
+  fi
+
+
+  AC_MSG_CHECKING([CUDA compile args])
+  AC_ARG_WITH(cudacompileargs,
+    [  --with-cudacompileargs[=string]      use CUDA compile args [default=--gpu-architecture sm_13 --use_fast_math -O3]],
+    cuda_compileargs=$withval, cuda_compileargs="--gpu-architecture sm_13 --use_fast_math -O3")
+  AC_MSG_RESULT($cuda_compileargs)
+  if test $usegpu = yes; then  
+    GPUCFLAGS="$GPUCFLAGS $cuda_compileargs"
+  fi  
+else
+  AC_MSG_RESULT(no)
+  USESUBDIRS="io linalg solver"
+  NVCC=""
+fi
+
+
+AC_SUBST(USESUBDIRS)
+AC_SUBST(NVCC)
+AC_SUBST(GPUDIR)
+AC_SUBST(GPUCFLAGS)
+
+
+
 AC_MSG_CHECKING(checking consistency)
 if test $enable_mpi = yes ; then
  if test $enable_iig = yes && test $withnonblock != yes ; then
@@ -642,6 +687,7 @@ AUTOCONF=autoconf
 AC_CONFIG_FILES([Makefile
                  linalg/Makefile
 	         solver/Makefile
-		 io/Makefile])
+		 io/Makefile
+                 GPU/Makefile])
 
 AC_OUTPUT

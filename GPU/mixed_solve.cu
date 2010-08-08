@@ -1,3 +1,47 @@
+/***********************************************************************
+ *
+ * Copyright (C) 2010 Florian Burger
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *  
+ * File: mixed_solve.cu
+ *
+ * CUDA GPU mixed_solver for EO and non-EO
+ * CUDA kernels for Hopping-Matrix and D_tm
+ *
+ * The externally accessible functions are
+ *
+ *
+ *   extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max_iter, 
+           double eps, const int rel_prec, const int N)
+ *
+ *  extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
+           double eps, const int rel_prec,const int N)
+ *
+ * input:
+ *   Q: source
+ * inout:
+ *   P: initial guess and result
+ * 
+ *
+ **************************************************************************/
+
+
+
 
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -7,27 +51,29 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "global.h"
+#include "../global.h"
 #include "cudaglobal.h"
 #include "mixed_solve.h"
+#include "cudadefs.h"
 #include <math.h>
 
 
 extern "C" {
-#include "tm_operators.h"
-#include "linalg_eo.h"
-#include "start.h"
-#include "complex.h"
-#include "read_input.h"
-#include "geometry_eo.h"
-#include "boundary.h"
-#include "su3.h"
+#include "../tm_operators.h"
+#include "../linalg_eo.h"
+#include "../start.h"
+#include "../complex.h"
+#include "../read_input.h"
+#include "../geometry_eo.h"
+#include "../boundary.h"
+#include "../su3.h"
+#include "../temporalgauge.h"
+#include "../observables.h"
 }
 
-#define ACCUM_N 2048
-#define DOTPROD_DIM 128
 
-//#define GF_8
+
+
 
 
 int g_numofgpu;
@@ -71,7 +117,7 @@ int * dev_eoidx_odd;
 size_t output_size;
 int* dev_grid;
 float * dev_output;
-
+int havedevice = 0;
 
 
 REAL hostr;
@@ -97,6 +143,19 @@ __device__ dev_complex dev_mk2;
 __device__ dev_complex dev_mk3;
 
 
+
+__constant__ __device__ dev_complex dev_k0c;
+__constant__ __device__ dev_complex dev_k1c;
+__constant__ __device__ dev_complex dev_k2c;
+__constant__ __device__ dev_complex dev_k3c;
+
+__constant__ __device__ dev_complex dev_mk0c;
+__constant__ __device__ dev_complex dev_mk1c;
+__constant__ __device__ dev_complex dev_mk2c;
+__constant__ __device__ dev_complex dev_mk3c;
+
+
+
 __device__  int  dev_LX,dev_LY,dev_LZ,dev_T,dev_VOLUME;
 
 
@@ -114,6 +173,14 @@ __device__  int  dev_LX,dev_LY,dev_LZ,dev_T,dev_VOLUME;
  texture<float4,1, cudaReadModeElementType> spin_tex2;
  const textureReference* spin_texRefPtr2 = NULL;
  cudaChannelFormatDesc spin_channelDesc2;
+
+
+ /* texture for nearest neighbours*/
+ texture<int,1, cudaReadModeElementType> nn_tex;
+ const textureReference* nn_texRefPtr = NULL;
+ cudaChannelFormatDesc nn_channelDesc;
+
+
 
 __device__ inline dev_complex dev_cconj (dev_complex c){ /*konjugiert komplexe Zahl*/
  dev_complex erg;
@@ -273,6 +340,185 @@ __device__ void inline dev_skalarmult_spinor(dev_spinor * in, dev_complex lambda
 
 
 
+/*
+__device__ void inline dev_skalarmult_gamma5_spinor(dev_spinor * out, const dev_complex lambda, dev_spinor * in){
+
+
+ (*(out)).x = (*(in)).x*lambda.re;
+ (*(out)).x -= (*(in)).y*lambda.im;
+ 
+ (*(out)).y = (*(in)).y*lambda.re;
+ (*(out)).y += (*(in)).x*lambda.im;
+ 
+ (*(out)).z = (*(in)).z*lambda.re;
+ (*(out)).z -= (*(in)).w*lambda.im;
+
+ (*(out)).w = (*(in)).w*lambda.re;
+ (*(out)).w += (*(in)).z*lambda.im;
+
+ 
+ (*(out+1)).x = (*(in+1)).x*lambda.re;
+ (*(out+1)).x -= (*(in+1)).y*lambda.im;
+ 
+ (*(out+1)).y = (*(in+1)).y*lambda.re;
+ (*(out+1)).y += (*(in+1)).x*lambda.im;
+ 
+ (*(out+1)).z = (*(in+1)).z*lambda.re;
+ (*(out+1)).z -= (*(in+1)).w*lambda.im;
+
+ (*(out+1)).w = (*(in+1)).w*lambda.re;
+ (*(out+1)).w += (*(in+1)).z*lambda.im;
+
+
+ (*(out+2)).x = (*(in+2)).x*lambda.re;
+ (*(out+2)).x -= (*(in+2)).y*lambda.im;
+
+ (*(out+2)).y = (*(in+2)).y*lambda.re;
+ (*(out+2)).y += (*(in+2)).x*lambda.im;
+ 
+ (*(out+2)).z = (*(in+2)).z*lambda.re;
+ (*(out+2)).z -= (*(in+2)).w*lambda.im;
+
+ (*(out+2)).w = (*(in+2)).w*lambda.re;
+ (*(out+2)).w += (*(in+2)).z*lambda.im;
+
+
+ (*(out+3)).x = (*(in+3)).y*lambda.im;
+ (*(out+3)).x -= (*(in+3)).x*lambda.re;
+
+ (*(out+3)).y = - (*(in+3)).x*lambda.im;
+ (*(out+3)).y -= (*(in+3)).y*lambda.re;
+ 
+ (*(out+3)).z = (*(in+3)).w*lambda.im;
+ (*(out+3)).z -= (*(in+3)).z*lambda.re;
+
+ (*(out+3)).w = -(*(in+3)).z*lambda.im;
+ (*(out+3)).w -= (*(in+3)).w*lambda.re;
+
+
+ (*(out+4)).x = (*(in+4)).y*lambda.im;
+ (*(out+4)).x -= (*(in+4)).x*lambda.re;
+
+ (*(out+4)).y = - (*(in+4)).x*lambda.im;
+ (*(out+4)).y -= (*(in+4)).y*lambda.re;
+ 
+ (*(out+4)).z = (*(in+4)).w*lambda.im;
+ (*(out+4)).z -= (*(in+4)).z*lambda.re;
+
+ (*(out+4)).w = -(*(in+4)).z*lambda.im;
+ (*(out+4)).w -= (*(in+4)).w*lambda.re;
+
+
+ (*(out+5)).x = (*(in+5)).y*lambda.im;
+ (*(out+5)).x -= (*(in+5)).x*lambda.re;
+
+ (*(out+5)).y = - (*(in+5)).x*lambda.im;
+ (*(out+5)).y -= (*(in+5)).y*lambda.re;
+ 
+ (*(out+5)).z = (*(in+5)).w*lambda.im;
+ (*(out+5)).z -= (*(in+5)).z*lambda.re;
+
+ (*(out+5)).w = -(*(in+5)).z*lambda.im;
+ (*(out+5)).w -= (*(in+5)).w*lambda.re;
+
+}
+*/
+
+
+__device__ void inline dev_skalarmult_gamma5_spinor(dev_spinor * out, dev_complex lambda, dev_spinor * in){
+int i;
+ dev_spinor shelp, tempout;
+
+shelp = *(in);
+ tempout.x = shelp.x*lambda.re;
+ tempout.x -= shelp.y*lambda.im;
+ 
+ tempout.y = shelp.y*lambda.re;
+ tempout.y += shelp.x*lambda.im;
+ 
+ tempout.z = shelp.z*lambda.re;
+ tempout.z -= shelp.w*lambda.im;
+
+ tempout.w = shelp.w*lambda.re;
+ tempout.w += shelp.z*lambda.im;
+(*(out)) = tempout;
+ 
+ 
+shelp = *(in+1);
+ tempout.x = shelp.x*lambda.re;
+ tempout.x -= shelp.y*lambda.im;
+ 
+ tempout.y = shelp.y*lambda.re;
+ tempout.y += shelp.x*lambda.im;
+ 
+ tempout.z = shelp.z*lambda.re;
+ tempout.z -= shelp.w*lambda.im;
+
+ tempout.w = shelp.w*lambda.re;
+ tempout.w += shelp.z*lambda.im;
+(*(out+1)) = tempout; 
+ 
+ 
+shelp = *(in+2);
+ tempout.x = shelp.x*lambda.re;
+ tempout.x -= shelp.y*lambda.im;
+
+ tempout.y = shelp.y*lambda.re;
+ tempout.y += shelp.x*lambda.im;
+ 
+ tempout.z = shelp.z*lambda.re;
+ tempout.z -= shelp.w*lambda.im;
+
+ tempout.w = shelp.w*lambda.re;
+ tempout.w += shelp.z*lambda.im;
+(*(out+2)) = tempout; 
+
+ 
+shelp = *(in+3);
+ tempout.x = shelp.y*lambda.im;
+ tempout.x -= shelp.x*lambda.re;
+
+ tempout.y = - shelp.x*lambda.im;
+ tempout.y -= shelp.y*lambda.re;
+ 
+ tempout.z = shelp.w*lambda.im;
+ tempout.z -= shelp.z*lambda.re;
+
+ tempout.w = -shelp.z*lambda.im;
+ tempout.w -= shelp.w*lambda.re;
+(*(out+3)) = tempout;
+
+shelp = *(in+4);
+ tempout.x = shelp.y*lambda.im;
+ tempout.x -= shelp.x*lambda.re;
+
+ tempout.y = - shelp.x*lambda.im;
+ tempout.y -= shelp.y*lambda.re;
+ 
+ tempout.z = shelp.w*lambda.im;
+ tempout.z -= shelp.z*lambda.re;
+
+ tempout.w = -shelp.z*lambda.im;
+ tempout.w -= shelp.w*lambda.re;
+(*(out+4)) = tempout;
+
+shelp = *(in+5);
+ tempout.x = shelp.y*lambda.im;
+ tempout.x -= shelp.x*lambda.re;
+
+ tempout.y = - shelp.x*lambda.im;
+ tempout.y -= shelp.y*lambda.re;
+ 
+ tempout.z = shelp.w*lambda.im;
+ tempout.z -= shelp.z*lambda.re;
+
+ tempout.w = -shelp.z*lambda.im;
+ tempout.w -= shelp.w*lambda.re;
+(*(out+5)) = tempout;
+}
+
+
+
 __device__ void inline dev_realmult_spinor(dev_spinor * in, REAL lambda){
   int i;
   #pragma unroll 6
@@ -287,7 +533,46 @@ __device__ void inline dev_realmult_spinor(dev_spinor * in, REAL lambda){
 }
 
 
+__device__ void inline dev_realmult_spinor_assign(dev_spinor* out, REAL lambda, dev_spinor* in){
+int i;
+#pragma unroll 6
+  for(i=0;i<6;i++){ //color + spin
+  //out[i] = in[i]*lambda;
+      (*(out+i)).x = (*(in+i)).x*lambda;
+	  (*(out+i)).y = (*(in+i)).y*lambda;
+      
+	  (*(out+i)).z = (*(in+i)).z*lambda;
+      (*(out+i)).w = (*(in+i)).w*lambda;
+  }
+}
 
+
+
+
+__device__ void dev_assign_realmult_add_spinor(dev_spinor* out, REAL lambda, dev_spinor* in1,  dev_spinor* in2){
+int i;
+REAL help;
+//out = lambda*(in1 + in2)
+#pragma unroll 6
+  for(i=0;i<6;i++){ //color + spin
+
+      help = (*(in1+i)).x*lambda;
+      help += (*(in2+i)).x*lambda;
+      (*(out+i)).x = help;
+      
+      help = (*(in1+i)).y*lambda;
+      help += (*(in2+i)).y*lambda;
+      (*(out+i)).y = help;      
+
+      help = (*(in1+i)).z*lambda;
+      help += (*(in2+i)).z*lambda;
+      (*(out+i)).z = help;
+
+      help = (*(in1+i)).w*lambda;
+      help += (*(in2+i)).w*lambda;
+      (*(out+i)).w = help;
+  } 
+}
 
 
 __device__ inline void dev_add_spinor_assign(dev_spinor * i1, dev_spinor * i2){
@@ -317,6 +602,123 @@ __device__ inline void dev_sub_spinor_assign(dev_spinor * i1, dev_spinor * i2){
 
 
 
+/*
+//multipliziert su3-Matrix mal Spinor im Dirac-Raum
+//code in su3_MtV.txt -- generated with codegen
+__device__ void dev_su3MtV_spintex(dev_su3 M, int pos, dev_spinor * out){
+
+dev_spinor s1, s2;
+
+s1 = tex1Dfetch(spin_tex,6*pos);
+s2 = tex1Dfetch(spin_tex,6*pos+1);
+
+
+//(*(out+0)).x =  ( M[0][0].re*s1.x - M[0][0].im*s1.y ) + ( M[0][1].re*s1.z - M[0][1].im*s1.w ) + ( M[0][2].re*s2.x - M[0][2].im*s2.y );
+//(*(out+0)).y = ( M[0][0].re*s1.y + M[0][0].im*s1.x ) + ( M[0][1].re*s1.w + M[0][1].im*s1.z ) + ( M[0][2].re*s2.y + M[0][2].im*s2.x );
+
+(*(out+0)).x =  M[0][0].re*s1.x;
+  (*(out+0)).y =  M[0][0].re*s1.y;
+(*(out+0)).x -= M[0][0].im*s1.y;
+  (*(out+0)).y += M[0][0].im*s1.x;
+(*(out+0)).x += M[0][1].re*s1.z;
+  (*(out+0)).y += M[0][1].re*s1.w;
+(*(out+0)).x -= M[0][1].im*s1.w;
+  (*(out+0)).y += M[0][1].im*s1.z;
+(*(out+0)).x += M[0][2].re*s2.x;
+  (*(out+0)).y += M[0][2].re*s2.y;
+(*(out+0)).x -= M[0][2].im*s2.y;
+  (*(out+0)).y += M[0][2].im*s2.x;
+
+
+
+//(*(out+0)).z =  ( M[1][0].re*s1.x - M[1][0].im*s1.y ) + ( M[1][1].re*s1.z - M[1][1].im*s1.w ) + ( M[1][2].re*s2.x - M[1][2].im*s2.y );
+//(*(out+0)).w =  ( M[1][0].re*s1.y + M[1][0].im*s1.x ) + ( M[1][1].re*s1.w + M[1][1].im*s1.z ) + ( M[1][2].re*s2.y + M[1][2].im*s2.x );
+
+
+(*(out+0)).z = M[1][0].re*s1.x;
+  (*(out+0)).w = M[1][0].re*s1.y;
+(*(out+0)).z -= M[1][0].im*s1.y;
+  (*(out+0)).w += M[1][0].im*s1.x;
+(*(out+0)).z += M[1][1].re*s1.z;
+  (*(out+0)).w += M[1][1].re*s1.w;
+(*(out+0)).z -= M[1][1].im*s1.w;
+  (*(out+0)).w += M[1][1].im*s1.z;
+(*(out+0)).z += M[1][2].re*s2.x;
+  (*(out+0)).w += M[1][2].re*s2.y;
+(*(out+0)).z -= M[1][2].im*s2.y;
+  (*(out+0)).w += M[1][2].im*s2.x;
+
+
+
+//(*(out+1)).x = ( M[2][0].re*s1.x - M[2][0].im*s1.y ) + ( M[2][1].re*s1.z - M[2][1].im*s1.w ) + ( M[2][2].re*s2.x - M[2][2].im*s2.y );
+//(*(out+1)).y =  ( M[2][0].re*s1.y + M[2][0].im*s1.x ) + ( M[2][1].re*s1.w + M[2][1].im*s1.z ) + ( M[2][2].re*s2.y + M[2][2].im*s2.x );
+
+
+(*(out+1)).x = M[2][0].re*s1.x;
+  (*(out+1)).y = M[2][0].re*s1.y;
+(*(out+1)).x -= M[2][0].im*s1.y;
+  (*(out+1)).y += M[2][0].im*s1.x;
+(*(out+1)).x += M[2][1].re*s1.z;
+  (*(out+1)).y += M[2][1].re*s1.w;
+(*(out+1)).x -= M[2][1].im*s1.w;
+  (*(out+1)).y += M[2][1].im*s1.z;
+(*(out+1)).x += M[2][2].re*s2.x;
+  (*(out+1)).y += M[2][2].re*s2.y;
+(*(out+1)).x -= M[2][2].im*s2.y;
+  (*(out+1)).y += M[2][2].im*s2.x;
+
+
+
+
+
+s1 = tex1Dfetch(spin_tex,6*pos+2);
+(*(out+1)).z =  ( M[0][0].re*s2.z - M[0][0].im*s2.w ) + ( M[0][1].re*s1.x - M[0][1].im*s1.y ) + ( M[0][2].re*s1.z - M[0][2].im*s1.w );
+(*(out+1)).w =  ( M[0][0].re*s2.w + M[0][0].im*s2.z ) + ( M[0][1].re*s1.y + M[0][1].im*s1.x ) + ( M[0][2].re*s1.w + M[0][2].im*s1.z );
+
+
+(*(out+2)).x = ( M[1][0].re*s2.z - M[1][0].im*s2.w ) + ( M[1][1].re*s1.x - M[1][1].im*s1.y ) + ( M[1][2].re*s1.z - M[1][2].im*s1.w );
+(*(out+2)).y =  ( M[1][0].re*s2.w + M[1][0].im*s2.z ) + ( M[1][1].re*s1.y + M[1][1].im*s1.x ) + ( M[1][2].re*s1.w + M[1][2].im*s1.z );
+
+
+(*(out+2)).z =  ( M[2][0].re*s2.z - M[2][0].im*s2.w ) + ( M[2][1].re*s1.x - M[2][1].im*s1.y ) + ( M[2][2].re*s1.z - M[2][2].im*s1.w );
+(*(out+2)).w =  ( M[2][0].re*s2.w + M[2][0].im*s2.z ) + ( M[2][1].re*s1.y + M[2][1].im*s1.x ) + ( M[2][2].re*s1.w + M[2][2].im*s1.z );
+
+
+
+s1 = tex1Dfetch(spin_tex,6*pos+3);
+s2 = tex1Dfetch(spin_tex,6*pos+4);
+(*(out+3)).x =  ( M[0][0].re*s1.x - M[0][0].im*s1.y ) + ( M[0][1].re*s1.z - M[0][1].im*s1.w ) + ( M[0][2].re*s2.x - M[0][2].im*s2.y );
+(*(out+3)).y =   ( M[0][0].re*s1.y + M[0][0].im*s1.x ) + ( M[0][1].re*s1.w + M[0][1].im*s1.z ) + ( M[0][2].re*s2.y + M[0][2].im*s2.x );
+
+
+(*(out+3)).z =  ( M[1][0].re*s1.x - M[1][0].im*s1.y ) + ( M[1][1].re*s1.z - M[1][1].im*s1.w ) + ( M[1][2].re*s2.x - M[1][2].im*s2.y );
+(*(out+3)).w =  ( M[1][0].re*s1.y + M[1][0].im*s1.x ) + ( M[1][1].re*s1.w + M[1][1].im*s1.z ) + ( M[1][2].re*s2.y + M[1][2].im*s2.x );
+
+
+(*(out+4)).x =  ( M[2][0].re*s1.x - M[2][0].im*s1.y ) + ( M[2][1].re*s1.z - M[2][1].im*s1.w ) + ( M[2][2].re*s2.x - M[2][2].im*s2.y );
+(*(out+4)).y =  ( M[2][0].re*s1.y + M[2][0].im*s1.x ) + ( M[2][1].re*s1.w + M[2][1].im*s1.z ) + ( M[2][2].re*s2.y + M[2][2].im*s2.x );
+
+
+
+s1 = tex1Dfetch(spin_tex,6*pos+5);
+(*(out+4)).z =  ( M[0][0].re*s2.z - M[0][0].im*s2.w ) + ( M[0][1].re*s1.x - M[0][1].im*s1.y ) + ( M[0][2].re*s1.z - M[0][2].im*s1.w );
+(*(out+4)).w =   ( M[0][0].re*s2.w + M[0][0].im*s2.z ) + ( M[0][1].re*s1.y + M[0][1].im*s1.x ) + ( M[0][2].re*s1.w + M[0][2].im*s1.z );
+
+
+(*(out+5)).x = ( M[1][0].re*s2.z - M[1][0].im*s2.w ) + ( M[1][1].re*s1.x - M[1][1].im*s1.y ) + ( M[1][2].re*s1.z - M[1][2].im*s1.w );
+(*(out+5)).y =  ( M[1][0].re*s2.w + M[1][0].im*s2.z ) + ( M[1][1].re*s1.y + M[1][1].im*s1.x ) + ( M[1][2].re*s1.w + M[1][2].im*s1.z );
+
+
+(*(out+5)).z =  ( M[2][0].re*s2.z - M[2][0].im*s2.w ) + ( M[2][1].re*s1.x - M[2][1].im*s1.y ) + ( M[2][2].re*s1.z - M[2][2].im*s1.w );
+(*(out+5)).w =  ( M[2][0].re*s2.w + M[2][0].im*s2.z ) + ( M[2][1].re*s1.y + M[2][1].im*s1.x ) + ( M[2][2].re*s1.w + M[2][2].im*s1.z );
+
+
+}
+*/
+
+
+
+
 
 //multipliziert su3-Matrix mal Spinor im Dirac-Raum
 //code in su3_MtV.txt -- generated with codegen
@@ -332,9 +734,9 @@ s2 = tex1Dfetch(spin_tex,6*pos+1);
 (*(out+0)).y = ( M[0][0].re*s1.y + M[0][0].im*s1.x ) + ( M[0][1].re*s1.w + M[0][1].im*s1.z ) + ( M[0][2].re*s2.y + M[0][2].im*s2.x );
 
 
-/* checked by look of eye */
+//checked by look of eye
 (*(out+0)).z =  ( M[1][0].re*s1.x - M[1][0].im*s1.y ) + ( M[1][1].re*s1.z - M[1][1].im*s1.w ) + ( M[1][2].re*s2.x - M[1][2].im*s2.y );
-/* checked */
+// checked 
 
 (*(out+0)).w =  ( M[1][0].re*s1.y + M[1][0].im*s1.x ) + ( M[1][1].re*s1.w + M[1][1].im*s1.z ) + ( M[1][2].re*s2.y + M[1][2].im*s2.x );
 
@@ -399,7 +801,7 @@ s1 = tex1Dfetch(spin_tex,6*pos+5);
 
 //multipliziert su3-Matrix mal Spinor im Dirac-Raum
 //code in su3_MtV.txt -- generated with codegen
-__device__ void dev_su3MtV(dev_su3 M, dev_spinor * s, dev_spinor * out){
+__device__ void dev_su3MtV(dev_su3 M, const dev_spinor * s, dev_spinor * out){
 
 (*(out+0)).x =  ( M[0][0].re*(*(s+0)).x - M[0][0].im*(*(s+0)).y ) + ( M[0][1].re*(*(s+0)).z - M[0][1].im*(*(s+0)).w ) + ( M[0][2].re*(*(s+1)).x - M[0][2].im*(*(s+1)).y );
 (*(out+0)).y = ( M[0][0].re*(*(s+0)).y + M[0][0].im*(*(s+0)).x ) + ( M[0][1].re*(*(s+0)).w + M[0][1].im*(*(s+0)).z ) + ( M[0][2].re*(*(s+1)).y + M[0][2].im*(*(s+1)).x );
@@ -742,6 +1144,37 @@ __device__ void dev_Gamma5(dev_spinor * in){
 }
 
 
+__device__ void dev_Gamma5_assign(dev_spinor* out, dev_spinor* in){
+  (*(out)).x = (*(in)).x;
+  (*(out)).y = (*(in)).y;
+  (*(out)).z = (*(in)).z;
+  (*(out)).w = (*(in)).w;
+  (*(out+1)).x = (*(in+1)).x;
+  (*(out+1)).y = (*(in+1)).y;
+
+  (*(out+1)).z = (*(in+1)).z;
+  (*(out+1)).w = (*(in+1)).w;
+  (*(out+2)).x = (*(in+2)).x;
+  (*(out+2)).y = (*(in+2)).y;
+  (*(out+2)).z = (*(in+2)).z;
+  (*(out+2)).w = (*(in+2)).w;
+
+  (*(out+3)).x = -1.0*(*(in+3)).x;
+  (*(out+3)).y = -1.0*(*(in+3)).y;
+  (*(out+3)).z = -1.0*(*(in+3)).z;
+  (*(out+3)).w = -1.0*(*(in+3)).w;
+  (*(out+4)).x = -1.0*(*(in+4)).x;
+  (*(out+4)).y = -1.0*(*(in+4)).y;
+
+  (*(out+4)).z = -1.0*(*(in+4)).z;
+  (*(out+4)).w = -1.0*(*(in+4)).w;
+  (*(out+5)).x = -1.0*(*(in+5)).x;
+  (*(out+5)).y = -1.0*(*(in+5)).y;
+  (*(out+5)).z = -1.0*(*(in+5)).z;
+  (*(out+5)).w = -1.0*(*(in+5)).w;
+
+}
+
 
 
 
@@ -971,48 +1404,78 @@ __device__ void dev_GammatV(int mu, dev_spinor * in){//multipliziert Gamma(mu)*V
 
 // reconstruction of the link fields from two rows of the su3 matrix
 // numbers are fetched from texture cache
-__device__ void dev_reconstructgf_2vtexref (int pos, dev_su3* gf){
+__device__ void dev_reconstructgf_2vtexref (const dev_su3_2v* field, int pos, dev_su3* gf){
   dev_complex help1;
   dev_complex help2;
   float4 gfin;
   
-  gfin = tex1Dfetch(gf_tex,3*pos);
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,3*pos);
+  #else
+    gfin = field[3*pos];
+  #endif
   //first row
   (*gf)[0][0].re = gfin.x;
   (*gf)[0][0].im = gfin.y;
   (*gf)[0][1].re = gfin.z;
   (*gf)[0][1].im = gfin.w;
-  gfin = tex1Dfetch(gf_tex,3*pos+1);
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,3*pos+1);
+  #else
+    gfin = field[3*pos + 1];
+  #endif
   (*gf)[0][2].re = gfin.x;
   (*gf)[0][2].im = gfin.y;
   //second row
   (*gf)[1][0].re = gfin.z;
   (*gf)[1][0].im = gfin.w;
-  gfin = tex1Dfetch(gf_tex,3*pos+2);
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,3*pos+2);
+  #else
+    gfin = field[3*pos + 2];
+  #endif
   (*gf)[1][1].re = gfin.x;
   (*gf)[1][1].im = gfin.y;
   (*gf)[1][2].re = gfin.z;
   (*gf)[1][2].im = gfin.w;
   
   //third row from cconj(cross product of first and second row)
-  help1 = dev_cmult((*gf)[0][1],(*gf)[1][2]);
-  help2 = dev_cmult((*gf)[0][2],(*gf)[1][1]);
-  help1 = dev_cconj(dev_csub(help1,help2));
-  (*gf)[2][0] = help1;
+
+  (*gf)[2][0].re = (*gf)[0][1].re * (*gf)[1][2].re;
+  (*gf)[2][0].re -= (*gf)[0][1].im * (*gf)[1][2].im;
+  (*gf)[2][0].re -= (*gf)[0][2].re * (*gf)[1][1].re;
+  (*gf)[2][0].re += (*gf)[0][2].im * (*gf)[1][1].im;
+  
+  (*gf)[2][0].im = -(*gf)[0][1].re * (*gf)[1][2].im;
+  (*gf)[2][0].im -= (*gf)[0][1].im * (*gf)[1][2].re;
+  (*gf)[2][0].im += (*gf)[0][2].re * (*gf)[1][1].im;
+  (*gf)[2][0].im += (*gf)[0][2].im * (*gf)[1][1].re;
+  
+
+
+  (*gf)[2][1].re = (*gf)[0][2].re * (*gf)[1][0].re;
+  (*gf)[2][1].re -= (*gf)[0][2].im * (*gf)[1][0].im;
+  (*gf)[2][1].re -= (*gf)[0][0].re * (*gf)[1][2].re;
+  (*gf)[2][1].re += (*gf)[0][0].im * (*gf)[1][2].im;
+  
+  (*gf)[2][1].im = -(*gf)[0][2].re * (*gf)[1][0].im;
+  (*gf)[2][1].im -= (*gf)[0][2].im * (*gf)[1][0].re;
+  (*gf)[2][1].im += (*gf)[0][0].re * (*gf)[1][2].im;
+  (*gf)[2][1].im += (*gf)[0][0].im * (*gf)[1][2].re;
+
 
   
-  help1 = dev_cmult((*gf)[0][2],(*gf)[1][0]);
-  help2 = dev_cmult((*gf)[0][0],(*gf)[1][2]);
-  help1 = dev_cconj(dev_csub(help1,help2));
+  (*gf)[2][2].re = (*gf)[0][0].re * (*gf)[1][1].re;
+  (*gf)[2][2].re -= (*gf)[0][0].im * (*gf)[1][1].im;
+  (*gf)[2][2].re -= (*gf)[0][1].re * (*gf)[1][0].re;
+  (*gf)[2][2].re += (*gf)[0][1].im * (*gf)[1][0].im;
   
-  (*gf)[2][1] = help1;
+  (*gf)[2][2].im = -(*gf)[0][0].re * (*gf)[1][1].im;
+  (*gf)[2][2].im -= (*gf)[0][0].im * (*gf)[1][1].re;
+  (*gf)[2][2].im += (*gf)[0][1].re * (*gf)[1][0].im;
+  (*gf)[2][2].im += (*gf)[0][1].im * (*gf)[1][0].re;
   
-  help1 = dev_cmult((*gf)[0][0],(*gf)[1][1]);
-  help2 = dev_cmult((*gf)[0][1],(*gf)[1][0]);
-  help1 = dev_cconj(dev_csub(help1,help2));
-  
-  (*gf)[2][2] = help1;
-  
+
   return;
 }
 
@@ -1020,252 +1483,77 @@ __device__ void dev_reconstructgf_2vtexref (int pos, dev_su3* gf){
 
 
 // su3 - dagger reconstruction from two rows  
-__device__ void dev_reconstructgf_2vtexref_dagger (int pos, dev_su3* gf){
-  dev_complex help1;
-  dev_complex help2;
+__device__ void dev_reconstructgf_2vtexref_dagger (const dev_su3_2v* field, int pos, dev_su3* gf){
+  //dev_complex help1;
+  //dev_complex help2;
   float4 gfin;
   
   
   //first column (minus in im for complex conj.)
-  gfin = tex1Dfetch(gf_tex,3*pos);
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,3*pos);
+  #else
+    gfin = field[3*pos];
+  #endif
   (*gf)[0][0].re = gfin.x;
   (*gf)[0][0].im = -gfin.y;
   (*gf)[1][0].re = gfin.z;
   (*gf)[1][0].im = -gfin.w;
-  gfin = tex1Dfetch(gf_tex,3*pos+1);
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,3*pos+1);
+  #else
+    gfin = field[3*pos +1];
+  #endif
   (*gf)[2][0].re = gfin.x;
   (*gf)[2][0].im = -gfin.y;
   
   //second  column (minus in im for complex conj.)
   (*gf)[0][1].re = gfin.z;
   (*gf)[0][1].im = -gfin.w;
-  gfin = tex1Dfetch(gf_tex,3*pos+2);
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,3*pos+2);
+  #else
+    gfin = field[3*pos +2];
+  #endif
   (*gf)[1][1].re = gfin.x;
   (*gf)[1][1].im = -gfin.y;
   (*gf)[2][1].re = gfin.z;
   (*gf)[2][1].im = -gfin.w;
   
-  //third column from (cross product of cconj(first column) and cconj(second column))
- 
-  help1 = dev_cconj(dev_cmult((*gf)[1][0],(*gf)[2][1]));
-  help2 = dev_cconj(dev_cmult((*gf)[2][0],(*gf)[1][1]));
-  help1 = dev_csub(help1,help2);
-  (*gf)[0][2] = help1;
 
-  
-  help1 = dev_cconj(dev_cmult((*gf)[2][0],(*gf)[0][1]));
-  help2 = dev_cconj(dev_cmult((*gf)[0][0],(*gf)[2][1]));
-  help1 = dev_csub(help1,help2);
-  (*gf)[1][2] = help1;
 
+  (*gf)[0][2].re = (*gf)[1][0].re * (*gf)[2][1].re;
+  (*gf)[0][2].re -= (*gf)[1][0].im * (*gf)[2][1].im;
+  (*gf)[0][2].re -= (*gf)[2][0].re * (*gf)[1][1].re;
+  (*gf)[0][2].re += (*gf)[2][0].im * (*gf)[1][1].im;
   
-  help1 = dev_cconj(dev_cmult((*gf)[0][0],(*gf)[1][1]));
-  help2 = dev_cconj(dev_cmult((*gf)[1][0],(*gf)[0][1]));
-  help1 = dev_csub(help1,help2);
-  (*gf)[2][2] = help1;
+  (*gf)[0][2].im = -(*gf)[1][0].re* (*gf)[2][1].im;
+  (*gf)[0][2].im -= (*gf)[1][0].im* (*gf)[2][1].re;
+  (*gf)[0][2].im += (*gf)[2][0].re*(*gf)[1][1].im;
+  (*gf)[0][2].im += (*gf)[2][0].im*(*gf)[1][1].re;
   
-  
-  /* does this also work?
-  help1 = dev_cmult((*gf)[1][0],(*gf)[2][1]);
-  help2 = dev_cmult((*gf)[2][0],(*gf)[1][1]);
-  help1 = dev_cconj(dev_csub(help1,help2));
-  (*gf)[0][2] = help1;
 
+  (*gf)[1][2].re = (*gf)[2][0].re*(*gf)[0][1].re;
+  (*gf)[1][2].re -= (*gf)[2][0].im*(*gf)[0][1].im;
+  (*gf)[1][2].re -= (*gf)[0][0].re*(*gf)[2][1].re;
+  (*gf)[1][2].re += (*gf)[0][0].im*(*gf)[2][1].im;
   
-  help1 = dev_cmult((*gf)[2][0],(*gf)[0][1]);
-  help2 = dev_cmult((*gf)[0][0],(*gf)[2][1]);
-  help1 = dev_cconj(dev_csub(help1,help2));
-  (*gf)[1][2] = help1;
-
+  (*gf)[1][2].im = -(*gf)[2][0].re * (*gf)[0][1].im;
+  (*gf)[1][2].im -= (*gf)[2][0].im * (*gf)[0][1].re;
+  (*gf)[1][2].im += (*gf)[0][0].re * (*gf)[2][1].im;
+  (*gf)[1][2].im += (*gf)[0][0].im * (*gf)[2][1].re;
   
-  help1 = dev_cmult((*gf)[0][0],(*gf)[1][1]);
-  help2 = dev_cmult((*gf)[1][0],(*gf)[0][1]));
-  help1 = dev_cconj(dev_csub(help1,help2));
-  (*gf)[2][2] = help1;
-  */
+  (*gf)[2][2].re = (*gf)[0][0].re * (*gf)[1][1].re;
+  (*gf)[2][2].re -= (*gf)[0][0].im * (*gf)[1][1].im;
+  (*gf)[2][2].re -= (*gf)[1][0].re * (*gf)[0][1].re;
+  (*gf)[2][2].re += (*gf)[1][0].im * (*gf)[0][1].im;
+  
+  (*gf)[2][2].im = -(*gf)[0][0].re * (*gf)[1][1].im;
+  (*gf)[2][2].im -= (*gf)[0][0].im * (*gf)[1][1].re;
+  (*gf)[2][2].im += (*gf)[1][0].re * (*gf)[0][1].im;
+  (*gf)[2][2].im += (*gf)[1][0].im * (*gf)[0][1].re;
+  
 }
-
-
-
-/*
-// reconstruction of the gf using 8 real parameters as 
-// described in the appendix of hep-lat 0911.3191 (M.Clark et al.)
-__device__ void dev_reconstructgf_8texref (int pos, dev_su3* gf){
-
-  float4 gfin;
-  REAL N, one_over_N, help;
-  dev_complex p1,p2, chelp1, chelp2;
-  
-  gfin = tex1Dfetch(gf_tex,2*pos);
-  // read a2 a3
-  (*gf)[0][1].re = gfin.x;
-  (*gf)[0][1].im = gfin.y;
-  (*gf)[0][2].re = gfin.z;
-  (*gf)[0][2].im = gfin.w;  
- 
-  help = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
-  N = sqrtf(help);
-  one_over_N = 1.0f/N;
-  
-  // read theta_a1, theta_c1, b1
-  gfin = tex1Dfetch(gf_tex,2*pos + 1);
-  
-  // reconstruct a1
-  help = sqrtf(1.0f - help);
-  (*gf)[0][0].re = help*cosf(gfin.x);
-  (*gf)[0][0].im = help*sinf(gfin.x);
-  
-  // assign b1
-  (*gf)[1][0].re = gfin.z;
-  (*gf)[1][0].im = gfin.w;
-  
-  // p2 = 1/N b1
-  p2.re = one_over_N*(*gf)[1][0].re;
-  p2.im = one_over_N*(*gf)[1][0].im;  
-
-
-  // reconstruct c1
-  help = sqrtf(1.0f - 
-              (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
-              (*gf)[1][0].re * (*gf)[1][0].re - (*gf)[1][0].im * (*gf)[1][0].im
-          );
-  (*gf)[2][0].re = help*cosf(gfin.y);
-  (*gf)[2][0].im = help*sinf(gfin.y);
-
-  
-  // p1 = 1/N*cconj(c1)
-  p1.re = one_over_N*(*gf)[2][0].re;
-  p1.im = - one_over_N*(*gf)[2][0].im;
-  
-  
-  // calculate b2
-  chelp1 = dev_cmult(p1,  dev_cconj( (*gf)[0][2] )   );
-  chelp2 = dev_cmult(p2, dev_cmult( dev_cconj((*gf)[0][0]) , (*gf)[0][1] )  );
-  chelp1 = dev_cadd(chelp1, chelp2);
-  (*gf)[1][1] = dev_crealmult(chelp1, -one_over_N);
-  
-  // calculate b3
-  chelp1 = dev_cmult(p1,  dev_cconj( (*gf)[0][1] )   );
-  chelp2 = dev_cmult(p2, dev_cmult( dev_cconj((*gf)[0][0]) , (*gf)[0][2] )  );
-  chelp1 = dev_csub(chelp1, chelp2);
-  (*gf)[1][2] = dev_crealmult(chelp1, one_over_N);
-  
-  // calculate c2
-  chelp1 = dev_cmult(  dev_cconj(p2) ,  dev_cconj( (*gf)[0][2] )   );
-  chelp2 = dev_cmult(  dev_cconj(p1) , 
-                       dev_cmult(  dev_cconj( (*gf)[0][0] ) , (*gf)[0][1] )
-                     );
-  chelp1 = dev_csub(chelp1, chelp2);
-  (*gf)[2][1] = dev_crealmult(chelp1, one_over_N);
-  
-  
-  // calculate c3
-  chelp1 = dev_cmult(  dev_cconj(p2) ,  dev_cconj( (*gf)[0][1] )   );
-  chelp2 = dev_cmult(  dev_cconj(p1) , 
-                       dev_cmult(  dev_cconj( (*gf)[0][0] ) , (*gf)[0][2] )
-                     );
-  chelp1 = dev_cadd(chelp1, chelp2);
-  (*gf)[2][2] = dev_crealmult(chelp1, -one_over_N);
-                       
-}
-
-
-
-
-
-
-
-__device__ void dev_reconstructgf_8texref_dagger (int pos, dev_su3* gf){
-
-
-  float4 gfin;
-  REAL N, one_over_N, help;
-  dev_complex p1,p2, chelp1, chelp2;
-  
-  gfin = tex1Dfetch(gf_tex,2*pos);
-  // read a2 a3
-  (*gf)[1][0].re = gfin.x;
-  (*gf)[1][0].im = -gfin.y;
-  (*gf)[2][0].re = gfin.z;
-  (*gf)[2][0].im = -gfin.w;  
- 
-  help = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
-  N = sqrtf(help);
-  one_over_N = 1.0f/N;
-  
-  // read theta_a1, theta_c1, b1
-  gfin = tex1Dfetch(gf_tex,2*pos + 1);
-  
-  // reconstruct a1
-  help = sqrtf(1.0f - help);
-  (*gf)[0][0].re = help*cosf(gfin.x);
-  (*gf)[0][0].im = -help*sinf(gfin.x);
-  
-  // assign b1
-  (*gf)[0][1].re = gfin.z;
-  (*gf)[0][1].im = -gfin.w;
-  
-  // p2 = 1/N b1
-  p2.re = one_over_N*(*gf)[0][1].re;
-  p2.im = -one_over_N*(*gf)[0][1].im;  
-
-
-  // reconstruct c1
-  help = sqrtf(1.0f - 
-              (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
-              (*gf)[0][1].re * (*gf)[0][1].re - (*gf)[0][1].im * (*gf)[0][1].im
-          );
-  (*gf)[0][2].re = help*cosf(gfin.y);
-  (*gf)[0][2].im = -help*sinf(gfin.y);
-
-  
-  // p1 = 1/N*cconj(c1)
-  p1.re = one_over_N*(*gf)[0][2].re;
-  p1.im = one_over_N*(*gf)[0][2].im;
-  
-  
-  // calculate b2
-  chelp1 = dev_cmult(p1,   (*gf)[2][0]    );
-  chelp2 = dev_cmult(p2, dev_cmult( (*gf)[0][0] , dev_cconj((*gf)[1][0] ))  );
-  chelp1 = dev_cadd(chelp1, chelp2);
-  (*gf)[1][1] = dev_cconj(dev_crealmult(chelp1, -one_over_N));
-  
-  // calculate b3
-  chelp1 = dev_cmult(p1,   (*gf)[1][0]    );
-  chelp2 = dev_cmult(p2, dev_cmult( (*gf)[0][0] , dev_cconj((*gf)[2][0] ))  );
-  chelp1 = dev_csub(chelp1, chelp2);
-  (*gf)[2][1] = dev_cconj(dev_crealmult(chelp1, one_over_N));
-  
-  // calculate c2
-  chelp1 = dev_cmult(  dev_cconj(p2) ,  (*gf)[2][0]    );
-  chelp2 = dev_cmult(  dev_cconj(p1) , 
-                       dev_cmult(   (*gf)[0][0]  , dev_cconj( (*gf)[1][0]) )
-                     );
-  chelp1 = dev_csub(chelp1, chelp2);
-  (*gf)[1][2] = dev_cconj(dev_crealmult(chelp1, one_over_N));
-  
-  
-  // calculate c3
-  chelp1 = dev_cmult(  dev_cconj(p2) ,   (*gf)[1][0]    );
-  chelp2 = dev_cmult(  dev_cconj(p1) , 
-                       dev_cmult(   (*gf)[0][0]  , dev_cconj((*gf)[2][0] ) )
-                     );
-  chelp1 = dev_cadd(chelp1, chelp2);
-  (*gf)[2][2] = dev_cconj(dev_crealmult(chelp1, -one_over_N));
-
-}
-
-
-
-
-
-
-
-
-*/
-
-
-
 
 
 
@@ -1275,13 +1563,17 @@ __device__ void dev_reconstructgf_8texref_dagger (int pos, dev_su3* gf){
 // reconstruction of the gf using 8 real parameters as 
 // described in the appendix of hep-lat 0911.3191 (M.Clark et al.)
 // optimized once
-__device__ void dev_reconstructgf_8texref (int pos, dev_su3* gf){
+__device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, dev_su3* gf){
 
   float4 gfin;
-  REAL one_over_N;
+  REAL one_over_N, help;
   dev_complex p1,p2;
   
-  gfin = tex1Dfetch(gf_tex,2*pos);
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,2*pos);
+  #else
+    gfin = field[2*pos];
+  #endif
   // read a2 a3
   (*gf)[0][1].re = gfin.x;
   (*gf)[0][1].im = gfin.y;
@@ -1289,16 +1581,29 @@ __device__ void dev_reconstructgf_8texref (int pos, dev_su3* gf){
   (*gf)[0][2].im = gfin.w;  
  
   p1.re = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
-  one_over_N = sqrtf(p1.re);
-  one_over_N = 1.0f/one_over_N;
-  
+  one_over_N = rsqrtf(p1.re); //reciprocal sqrt
+
   // read theta_a1, theta_c1, b1
-  gfin = tex1Dfetch(gf_tex,2*pos + 1);
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,2*pos + 1);
+  #else
+    gfin = field[2*pos + 1];
+  #endif
   
-  // reconstruct a1
-  p1.re = sqrtf(1.0f - p1.re);
-  (*gf)[0][0].re = p1.re*cosf(gfin.x);
-  (*gf)[0][0].im = p1.re*sinf(gfin.x);
+  // reconstruct a1 use sqrt instead of sin
+  help = 1.0f - p1.re;
+  if(help > 0.0f){
+     p1.re = sqrtf(help);
+  }
+  else{
+    p1.re = 0.0f;
+  }
+  
+  sincos(gfin.x, &(*gf)[0][0].im, &(*gf)[0][0].re);
+  (*gf)[0][0].re = (*gf)[0][0].re * p1.re;
+  (*gf)[0][0].im = (*gf)[0][0].im * p1.re;
+  
+  
   
   // assign b1
   (*gf)[1][0].re = gfin.z;
@@ -1309,14 +1614,21 @@ __device__ void dev_reconstructgf_8texref (int pos, dev_su3* gf){
   p2.im = one_over_N*(*gf)[1][0].im;  
 
 
-  // reconstruct c1
-  p1.re = sqrtf(1.0f - 
+  // reconstruct c1 use sqrt instead of sin
+  help =1.0f - 
               (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
-              (*gf)[1][0].re * (*gf)[1][0].re - (*gf)[1][0].im * (*gf)[1][0].im
-          );
-  (*gf)[2][0].re = p1.re*cosf(gfin.y);
-  (*gf)[2][0].im = p1.re*sinf(gfin.y);
-
+              (*gf)[1][0].re * (*gf)[1][0].re - (*gf)[1][0].im * (*gf)[1][0].im;
+  if(help > 0.0f){
+    p1.re = sqrtf(help);
+  }   
+  else{      
+    p1.re = 0.0f;  
+  }
+  sincos(gfin.y, &(*gf)[2][0].im, &(*gf)[2][0].re);
+  (*gf)[2][0].re = (*gf)[2][0].re * p1.re; 
+  (*gf)[2][0].im = (*gf)[2][0].im * p1.re;
+   
+  
   
   // p1 = 1/N*cconj(c1)
   p1.re = one_over_N*(*gf)[2][0].re;
@@ -1327,37 +1639,81 @@ __device__ void dev_reconstructgf_8texref (int pos, dev_su3* gf){
   //use the last reconstructed gf component gf[2][2] (c3) as a help variable for b2,b3 and c2
   //this is in order to save registers and to prevent extra loading and storing from global mem
   // calculate b2
-  (*gf)[1][1] = dev_cmult(p1,  dev_cconj( (*gf)[0][2] )   );
-  (*gf)[2][2] = dev_cmult(p2, dev_cmult( dev_cconj((*gf)[0][0]) , (*gf)[0][1] )  );
-  (*gf)[1][1] = dev_cadd((*gf)[1][1], (*gf)[2][2]);
-  (*gf)[1][1] = dev_crealmult((*gf)[1][1], -one_over_N);
+  
+  (*gf)[1][1].re = p1.re*(*gf)[0][2].re;
+  (*gf)[1][1].re += p1.im*(*gf)[0][2].im;
+  (*gf)[1][1].im = p1.im*(*gf)[0][2].re;
+  (*gf)[1][1].im -= p1.re*(*gf)[0][2].im;
+  
+  (*gf)[2][2].re = (*gf)[0][0].re * (*gf)[0][1].re;
+  (*gf)[2][2].re += (*gf)[0][0].im * (*gf)[0][1].im;
+  
+  (*gf)[2][2].im = (*gf)[0][0].re * (*gf)[0][1].im;
+  (*gf)[2][2].im -= (*gf)[0][0].im * (*gf)[0][1].re;
+  (*gf)[2][2] = dev_cmult(p2, (*gf)[2][2]);
+  
+  (*gf)[1][1].re = -one_over_N*( (*gf)[1][1].re + (*gf)[2][2].re);
+  (*gf)[1][1].im = -one_over_N*((*gf)[1][1].im + (*gf)[2][2].im);
+  
+  
+  
+  
   
   // calculate b3
-  (*gf)[1][2] = dev_cmult(p1,  dev_cconj( (*gf)[0][1] )   );
-  (*gf)[2][2] = dev_cmult(p2, dev_cmult( dev_cconj((*gf)[0][0]) , (*gf)[0][2] )  );
-  (*gf)[1][2] = dev_csub((*gf)[1][2], (*gf)[2][2]);
-  (*gf)[1][2] = dev_crealmult((*gf)[1][2], one_over_N);
+  (*gf)[1][2].re = p1.re*(*gf)[0][1].re;
+  (*gf)[1][2].re += p1.im*(*gf)[0][1].im;
+  (*gf)[1][2].im = p1.im*(*gf)[0][1].re;
+  (*gf)[1][2].im -= p1.re*(*gf)[0][1].im;
+  
+  (*gf)[2][2].re = (*gf)[0][0].re*(*gf)[0][2].re;
+  (*gf)[2][2].re += (*gf)[0][0].im*(*gf)[0][2].im;
+  (*gf)[2][2].im = (*gf)[0][0].re*(*gf)[0][2].im;
+  (*gf)[2][2].im -= (*gf)[0][0].im*(*gf)[0][2].re;
+  (*gf)[2][2] = dev_cmult(p2,(*gf)[2][2]);
+  
+  (*gf)[1][2].re = one_over_N*( (*gf)[1][2].re - (*gf)[2][2].re);
+  (*gf)[1][2].im = one_over_N*( (*gf)[1][2].im - (*gf)[2][2].im);
+  
   
   // calculate c2
-  (*gf)[2][1] = dev_cmult(  dev_cconj(p2) ,  dev_cconj( (*gf)[0][2] )   );
-  (*gf)[2][2] = dev_cmult(  dev_cconj(p1) , 
-                       dev_cmult(  dev_cconj( (*gf)[0][0] ) , (*gf)[0][1] )
-                     );
-  (*gf)[2][1] = dev_csub((*gf)[2][1], (*gf)[2][2]);
-  (*gf)[2][1] = dev_crealmult((*gf)[2][1], one_over_N);
+  (*gf)[2][1].re = p2.re*(*gf)[0][2].re;
+  (*gf)[2][1].re -= p2.im*(*gf)[0][2].im;
+  (*gf)[2][1].im = -p2.re*(*gf)[0][2].im;
+  (*gf)[2][1].im -= p2.im*(*gf)[0][2].re;
   
   
+
+  (*gf)[2][2].re = (*gf)[0][0].re*(*gf)[0][1].re;
+  (*gf)[2][2].re += (*gf)[0][0].im*(*gf)[0][1].im;
+  (*gf)[2][2].im = (*gf)[0][0].re* (*gf)[0][1].im;
+  (*gf)[2][2].im -= (*gf)[0][0].im* (*gf)[0][1].re;
+  help = (*gf)[2][2].re;
+  (*gf)[2][2].re = p1.re*(*gf)[2][2].re;
+  (*gf)[2][2].re += p1.im*(*gf)[2][2].im;
+  (*gf)[2][2].im = p1.re*(*gf)[2][2].im - p1.im*help;
   
-  // now we have to use p2 as a help variable, as this is not needed any more after the first
+  
+  (*gf)[2][1].re = one_over_N*((*gf)[2][1].re - (*gf)[2][2].re);
+  (*gf)[2][1].im = one_over_N*((*gf)[2][1].im - (*gf)[2][2].im);
+  
+  // now we have to use p2 and p1 as a help variable, as this is not 
+  // needed any more after the first
   // step
   // calculate c3
-  (*gf)[2][2] = dev_cmult(  dev_cconj(p2) ,  dev_cconj( (*gf)[0][1] )   );
-  p2 = dev_cmult(  dev_cconj(p1) , 
-                       dev_cmult(  dev_cconj( (*gf)[0][0] ) , (*gf)[0][2] )
-                     );
+  (*gf)[2][2].re = p2.re * (*gf)[0][1].re;
+  (*gf)[2][2].re -= p2.im * (*gf)[0][1].im;
+  (*gf)[2][2].im = - p2.im*(*gf)[0][1].re;
+  (*gf)[2][2].im -= p2.re*(*gf)[0][1].im;
+  
+  p2.re = (*gf)[0][0].re * (*gf)[0][2].re;
+  p2.re += (*gf)[0][0].im * (*gf)[0][2].im;
+  p2.im = (*gf)[0][0].re * (*gf)[0][2].im;
+  p2.im -= (*gf)[0][0].im * (*gf)[0][2].re;
+  p2 = dev_cmult(  dev_cconj(p1) , p2);
+  
   (*gf)[2][2] = dev_cadd((*gf)[2][2], p2);
   (*gf)[2][2] = dev_crealmult((*gf)[2][2], -one_over_N);
-                       
+                      
 }
 
 
@@ -1365,14 +1721,20 @@ __device__ void dev_reconstructgf_8texref (int pos, dev_su3* gf){
 
 
 
-__device__ void dev_reconstructgf_8texref_dagger (int pos, dev_su3* gf){
+
+
+__device__ void dev_reconstructgf_8texref_dagger (const dev_su3_2v* field,int pos, dev_su3* gf){
 
 
   float4 gfin;
-  REAL one_over_N;
+  REAL one_over_N, help;
   dev_complex p1,p2;
   
-  gfin = tex1Dfetch(gf_tex,2*pos);
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,2*pos);
+  #else
+    gfin = field[2*pos];
+  #endif
   // read a2 a3
   (*gf)[1][0].re = gfin.x;
   (*gf)[1][0].im = -gfin.y;
@@ -1380,16 +1742,33 @@ __device__ void dev_reconstructgf_8texref_dagger (int pos, dev_su3* gf){
   (*gf)[2][0].im = -gfin.w;  
  
   p1.re = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
-  one_over_N = sqrtf(p1.re);
-  one_over_N = 1.0f/one_over_N;
+  one_over_N = rsqrtf(p1.re);  // reciprocal sqrt
+
   
   // read theta_a1, theta_c1, b1
-  gfin = tex1Dfetch(gf_tex,2*pos + 1);
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,2*pos + 1);
+  #else
+    gfin = field[2*pos + 1];
+  #endif
   
   // reconstruct a1
-  p1.re = sqrtf(1.0f - p1.re);
-  (*gf)[0][0].re = p1.re*cosf(gfin.x);
-  (*gf)[0][0].im = -p1.re*sinf(gfin.x);
+  help = 1.0f - p1.re;
+  if(help > 0.0f){
+     p1.re = sqrtf(help);   
+  }
+  else{
+    p1.re = 0.0f;
+  }
+  //(*gf)[0][0].re = p1.re*cosf(gfin.x);
+  //(*gf)[0][0].im = -p1.re*sinf(gfin.x);
+  
+  sincos(gfin.x, &(*gf)[0][0].im, &(*gf)[0][0].re);
+  (*gf)[0][0].re = (*gf)[0][0].re * p1.re;
+  (*gf)[0][0].im = -(*gf)[0][0].im * p1.re;
+    
+  
+  
   
   // assign b1
   (*gf)[0][1].re = gfin.z;
@@ -1401,13 +1780,22 @@ __device__ void dev_reconstructgf_8texref_dagger (int pos, dev_su3* gf){
 
 
   // reconstruct c1
-  p1.re = sqrtf(1.0f - 
+  help = 1.0f - 
               (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
-              (*gf)[0][1].re * (*gf)[0][1].re - (*gf)[0][1].im * (*gf)[0][1].im
-          );
-  (*gf)[0][2].re = p1.re*cosf(gfin.y);
-  (*gf)[0][2].im = -p1.re*sinf(gfin.y);
-
+              (*gf)[0][1].re * (*gf)[0][1].re - (*gf)[0][1].im * (*gf)[0][1].im;
+  if(help > 0.0f){
+    p1.re = sqrtf(help);
+  }
+  else{
+    p1.re = 0.0f;
+  }
+  //(*gf)[0][2].re = p1.re*cosf(gfin.y);
+  //(*gf)[0][2].im = -p1.re*sinf(gfin.y);
+  
+  sincos(gfin.y, &(*gf)[0][2].im, &(*gf)[0][2].re);
+  (*gf)[0][2].re = (*gf)[0][2].re * p1.re;
+  (*gf)[0][2].im = -(*gf)[0][2].im * p1.re;
+     
   
   // p1 = 1/N*cconj(c1)
   p1.re = one_over_N*(*gf)[0][2].re;
@@ -1445,9 +1833,6 @@ __device__ void dev_reconstructgf_8texref_dagger (int pos, dev_su3* gf){
   (*gf)[2][2] = dev_cconj(dev_crealmult((*gf)[2][2], -one_over_N));
 
 }
-
-
-
 
 
 
@@ -1497,12 +1882,16 @@ __global__ void dev_swapmu(){
 }
 
 
+
+
+
+
 // computes sout = 1/(1 +- mutilde gamma5) sin = (1 -+ i mutilde gamma5)/(1+mutilde^2) sin
 // mutilde = 2 kappa mu
 // uses shared local memory for manipulation
 __global__ void dev_mul_one_pm_imu_inv(dev_spinor* sin, dev_spinor* sout, const REAL sign){
-   __shared__ dev_spinor slocal[BLOCK][6];
    
+   dev_spinor slocal[6];
    //need the inverse sign in the numerator because of inverse
    dev_complex pm_imu = dev_initcomplex(0.0,-1.0*sign*twokappamu);
    
@@ -1511,37 +1900,778 @@ __global__ void dev_mul_one_pm_imu_inv(dev_spinor* sin, dev_spinor* sout, const 
    pos= threadIdx.x + blockDim.x*blockIdx.x;  
    int ix = threadIdx.x;
    if(pos < dev_VOLUME){
-     dev_skalarmult_spinor(&(sin[6*pos]), pm_imu, &(slocal[ix][0]));
-     dev_Gamma5(&(slocal[ix][0]));
-     dev_add_spinor_assign(&(slocal[ix][0]), &(sin[6*pos]));
-     dev_realmult_spinor(&(slocal[ix][0]), one_plus_musquare_inv);
-     dev_copy_spinor(&(slocal[ix][0]), &(sout[6*pos])); 
+     //dev_skalarmult_spinor(&(sin[6*pos]), pm_imu, &(slocal[0]));
+     //dev_Gamma5(&(slocal[0]));
+     dev_skalarmult_gamma5_spinor(&(slocal[0]), pm_imu, &(sin[6*pos]) );
+	 dev_add_spinor_assign(&(slocal[0]), &(sin[6*pos]));
+     //dev_realmult_spinor(&(slocal[0]), one_plus_musquare_inv);
+     //dev_copy_spinor(&(slocal[0]), &(sout[6*pos])); 
+     dev_realmult_spinor_assign(&(sout[6*pos]), one_plus_musquare_inv, &(slocal[0]) );
    }
 }
+
+
 
 
 
 // sout = gamma_5*((1\pm i\mutilde \gamma_5)*sin1 - sin2)
 // uses shared local memory for manipulation
 __global__ void dev_mul_one_pm_imu_sub_mul_gamma5(dev_spinor* sin1, dev_spinor* sin2, dev_spinor* sout, const REAL sign){
-   __shared__ dev_spinor slocal[BLOCK][6];
+   dev_spinor slocal[6];
    dev_complex pm_imu = dev_initcomplex(0.0, sign*twokappamu); // i mutilde
    int pos;
    pos= threadIdx.x + blockDim.x*blockIdx.x; 
    int ix = threadIdx.x;
    if(pos < dev_VOLUME){
-     dev_skalarmult_spinor(&(sin1[6*pos]), pm_imu, &(slocal[ix][0]));
-     dev_Gamma5(&(slocal[ix][0]));
-     dev_add_spinor_assign(&(slocal[ix][0]), &(sin1[6*pos]));
-     dev_sub_spinor_assign(&(slocal[ix][0]), &(sin2[6*pos]));
-     dev_Gamma5(&(slocal[ix][0]));
-     dev_copy_spinor(&(slocal[ix][0]), &(sout[6*pos])); 
+     //dev_skalarmult_spinor(&(sin1[6*pos]), pm_imu, &(slocal[0]));
+     //dev_Gamma5(&(slocal[0]));
+     dev_skalarmult_gamma5_spinor(&(slocal[0]),pm_imu,&(sin1[6*pos]));
+	 dev_add_spinor_assign(&(slocal[0]), &(sin1[6*pos]));
+     dev_sub_spinor_assign(&(slocal[0]), &(sin2[6*pos]));
+     //dev_Gamma5(&(slocal[0]));
+     //dev_copy_spinor(&(slocal[0]), &(sout[6*pos]));
+     dev_Gamma5_assign(&(sout[6*pos]), &(slocal[0]));
    }   
 }
 
 
 
 
+
+
+//-kappa(r - gamma_mu)
+__device__ void dev_kappaP1_plus(dev_spinor * out, dev_spinor * in, REAL kappa){
+
+     (*(out+0)).x -= kappa*( (*(in+0)).x - (*(in+4)).w);
+     (*(out+0)).y -= kappa*( (*(in+0)).y + (*(in+4)).z);
+     (*(out+0)).z -= kappa*( (*(in+0)).z - (*(in+5)).y);
+     (*(out+0)).w -= kappa*( (*(in+0)).w + (*(in+5)).x);    
+
+     (*(out+1)).x -= kappa*((*(in+1)).x - (*(in+5)).w);
+     (*(out+1)).y -= kappa*((*(in+1)).y + (*(in+5)).z); 
+     (*(out+1)).z -= kappa*((*(in+1)).z - (*(in+3)).y);
+     (*(out+1)).w -= kappa*((*(in+1)).w + (*(in+3)).x); 
+     
+     (*(out+2)).x -= kappa*((*(in+2)).x - (*(in+3)).w);
+     (*(out+2)).y -= kappa*((*(in+2)).y + (*(in+3)).z);
+     (*(out+2)).z -= kappa*((*(in+2)).z - (*(in+4)).y);
+     (*(out+2)).w -= kappa*((*(in+2)).w + (*(in+4)).x);     
+     
+     (*(out+3)).x -= kappa*((*(in+3)).x + (*(in+1)).w);
+     (*(out+3)).y -= kappa*((*(in+3)).y - (*(in+1)).z);     
+     (*(out+3)).z -= kappa*((*(in+3)).z + (*(in+2)).y);
+     (*(out+3)).w -= kappa*((*(in+3)).w - (*(in+2)).x);       
+     
+     (*(out+4)).z -= kappa*( (*(in+4)).z + (*(in+0)).y);
+     (*(out+4)).w -= kappa*( (*(in+4)).w - (*(in+0)).x);    
+     (*(out+4)).x -= kappa*((*(in+4)).x + (*(in+2)).w);
+     (*(out+4)).y -= kappa*((*(in+4)).y - (*(in+2)).z);     
+
+     (*(out+5)).x -= kappa*( (*(in+5)).x + (*(in+0)).w);
+     (*(out+5)).y -= kappa*( (*(in+5)).y - (*(in+0)).z);     
+     (*(out+5)).z -= kappa*((*(in+5)).z + (*(in+1)).y);
+     (*(out+5)).w -= kappa*((*(in+5)).w - (*(in+1)).x);     
+     
+}
+
+
+//-kappa(r + gamma_mu)
+__device__ void dev_kappaP1_minus(dev_spinor * out, dev_spinor * in, REAL kappa){
+
+     (*(out+0)).x -= kappa*( (*(in+0)).x + (*(in+4)).w);
+     (*(out+0)).y -= kappa*( (*(in+0)).y - (*(in+4)).z);
+     (*(out+0)).z -= kappa*( (*(in+0)).z + (*(in+5)).y);
+     (*(out+0)).w -= kappa*( (*(in+0)).w - (*(in+5)).x);    
+
+     (*(out+1)).x -= kappa*((*(in+1)).x + (*(in+5)).w);
+     (*(out+1)).y -= kappa*((*(in+1)).y - (*(in+5)).z); 
+     (*(out+1)).z -= kappa*((*(in+1)).z + (*(in+3)).y);
+     (*(out+1)).w -= kappa*((*(in+1)).w - (*(in+3)).x); 
+     
+     (*(out+2)).x -= kappa*((*(in+2)).x + (*(in+3)).w);
+     (*(out+2)).y -= kappa*((*(in+2)).y - (*(in+3)).z);
+     (*(out+2)).z -= kappa*((*(in+2)).z + (*(in+4)).y);
+     (*(out+2)).w -= kappa*((*(in+2)).w - (*(in+4)).x);     
+     
+     (*(out+3)).x -= kappa*((*(in+3)).x - (*(in+1)).w);
+     (*(out+3)).y -= kappa*((*(in+3)).y + (*(in+1)).z);     
+     (*(out+3)).z -= kappa*((*(in+3)).z - (*(in+2)).y);
+     (*(out+3)).w -= kappa*((*(in+3)).w + (*(in+2)).x);       
+     
+     (*(out+4)).z -= kappa*( (*(in+4)).z - (*(in+0)).y);
+     (*(out+4)).w -= kappa*( (*(in+4)).w + (*(in+0)).x);    
+     (*(out+4)).x -= kappa*((*(in+4)).x - (*(in+2)).w);
+     (*(out+4)).y -= kappa*((*(in+4)).y + (*(in+2)).z);     
+
+     (*(out+5)).x -= kappa*( (*(in+5)).x - (*(in+0)).w);
+     (*(out+5)).y -= kappa*( (*(in+5)).y + (*(in+0)).z);     
+     (*(out+5)).z -= kappa*((*(in+5)).z - (*(in+1)).y);
+     (*(out+5)).w -= kappa*((*(in+5)).w + (*(in+1)).x);     
+     
+}
+
+
+
+
+
+//-kappa(r - gamma_mu)
+__device__ void dev_kappaP2_plus(dev_spinor * out, dev_spinor * in, REAL kappa){
+
+
+     (*(out+0)).x -= kappa*( (*(in+0)).x + (*(in+4)).z);
+     (*(out+0)).y -= kappa*( (*(in+0)).y + (*(in+4)).w);
+     (*(out+4)).z -= kappa*( (*(in+4)).z + (*(in+0)).x);
+     (*(out+4)).w -= kappa*( (*(in+4)).w + (*(in+0)).y);    
+     
+ 
+     (*(out+0)).z -= kappa*( (*(in+0)).z + (*(in+5)).x);
+     (*(out+0)).w -= kappa*( (*(in+0)).w + (*(in+5)).y);
+     (*(out+5)).x -= kappa*( (*(in+5)).x + (*(in+0)).z);
+     (*(out+5)).y -= kappa*( (*(in+5)).y + (*(in+0)).w);     
+     
+     
+     (*(out+1)).x -= kappa*( (*(in+1)).x + (*(in+5)).z);
+     (*(out+1)).y -= kappa*( (*(in+1)).y + (*(in+5)).w);
+     (*(out+5)).z -= kappa*( (*(in+5)).z + (*(in+1)).x);
+     (*(out+5)).w -= kappa*( (*(in+5)).w + (*(in+1)).y);     
+     
+     
+     (*(out+1)).z -= kappa*( (*(in+1)).z - (*(in+3)).x);
+     (*(out+1)).w -= kappa*( (*(in+1)).w - (*(in+3)).y);
+     (*(out+3)).x -= kappa*( (*(in+3)).x - (*(in+1)).z);
+     (*(out+3)).y -= kappa*( (*(in+3)).y - (*(in+1)).w);     
+     
+     
+     (*(out+2)).x -= kappa*( (*(in+2)).x - (*(in+3)).z);
+     (*(out+2)).y -= kappa*( (*(in+2)).y - (*(in+3)).w);
+     (*(out+3)).z -= kappa*( (*(in+3)).z - (*(in+2)).x);
+     (*(out+3)).w -= kappa*( (*(in+3)).w - (*(in+2)).y);     
+     
+     
+     (*(out+2)).z -= kappa*( (*(in+2)).z - (*(in+4)).x);
+     (*(out+2)).w -= kappa*( (*(in+2)).w - (*(in+4)).y);
+     (*(out+4)).x -= kappa*( (*(in+4)).x - (*(in+2)).z);
+     (*(out+4)).y -= kappa*( (*(in+4)).y - (*(in+2)).w);
+   
+     
+}
+
+
+//-kappa(r + gamma_mu)  kappa reell !!!!
+__device__ void dev_kappaP2_minus(dev_spinor * out, dev_spinor * in, REAL kappa){
+
+
+     (*(out+0)).x -= kappa*( (*(in+0)).x - (*(in+4)).z);
+     (*(out+0)).y -= kappa*( (*(in+0)).y - (*(in+4)).w);
+     (*(out+4)).z -= kappa*( (*(in+4)).z - (*(in+0)).x);
+     (*(out+4)).w -= kappa*( (*(in+4)).w - (*(in+0)).y);    
+     
+ 
+     (*(out+0)).z -= kappa*( (*(in+0)).z - (*(in+5)).x);
+     (*(out+0)).w -= kappa*( (*(in+0)).w - (*(in+5)).y);
+     (*(out+5)).x -= kappa*( (*(in+5)).x - (*(in+0)).z);
+     (*(out+5)).y -= kappa*( (*(in+5)).y - (*(in+0)).w);     
+     
+     
+     (*(out+1)).x -= kappa*( (*(in+1)).x - (*(in+5)).z);
+     (*(out+1)).y -= kappa*( (*(in+1)).y - (*(in+5)).w);
+     (*(out+5)).z -= kappa*( (*(in+5)).z - (*(in+1)).x);
+     (*(out+5)).w -= kappa*( (*(in+5)).w - (*(in+1)).y);     
+     
+     
+     (*(out+1)).z -= kappa*( (*(in+1)).z + (*(in+3)).x);
+     (*(out+1)).w -= kappa*( (*(in+1)).w + (*(in+3)).y);
+     (*(out+3)).x -= kappa*( (*(in+3)).x + (*(in+1)).z);
+     (*(out+3)).y -= kappa*( (*(in+3)).y + (*(in+1)).w);     
+     
+     
+     (*(out+2)).x -= kappa*( (*(in+2)).x + (*(in+3)).z);
+     (*(out+2)).y -= kappa*( (*(in+2)).y + (*(in+3)).w);
+     (*(out+3)).z -= kappa*( (*(in+3)).z + (*(in+2)).x);
+     (*(out+3)).w -= kappa*( (*(in+3)).w + (*(in+2)).y);     
+     
+     
+     (*(out+2)).z -= kappa*( (*(in+2)).z + (*(in+4)).x);
+     (*(out+2)).w -= kappa*( (*(in+2)).w + (*(in+4)).y);
+     (*(out+4)).x -= kappa*( (*(in+4)).x + (*(in+2)).z);
+     (*(out+4)).y -= kappa*( (*(in+4)).y + (*(in+2)).w);
+   
+     
+}
+
+
+
+//-kappa(r - gamma_mu) kappa reell !!!!
+__device__ void dev_kappaP3_plus(dev_spinor * out, dev_spinor * in, REAL kappa){
+
+     (*(out+0)).x -= kappa*( (*(in+0)).x - (*(in+3)).y);
+     (*(out+0)).y -= kappa*( (*(in+0)).y + (*(in+3)).x);
+     (*(out+3)).x -= kappa*( (*(in+3)).x + (*(in+0)).y);
+     (*(out+3)).y -= kappa*( (*(in+3)).y - (*(in+0)).x);    
+     
+
+     (*(out+0)).z -= kappa*( (*(in+0)).z - (*(in+3)).w);
+     (*(out+0)).w -= kappa*( (*(in+0)).w + (*(in+3)).z);
+     (*(out+3)).z -= kappa*( (*(in+3)).z + (*(in+0)).w);
+     (*(out+3)).w -= kappa*( (*(in+3)).w - (*(in+0)).z);    
+     
+     
+     (*(out+1)).x -= kappa*( (*(in+1)).x - (*(in+4)).y);
+     (*(out+1)).y -= kappa*( (*(in+1)).y + (*(in+4)).x);
+     (*(out+4)).x -= kappa*( (*(in+4)).x + (*(in+1)).y);
+     (*(out+4)).y -= kappa*( (*(in+4)).y - (*(in+1)).x);     
+     
+     
+     (*(out+1)).z -= kappa*( (*(in+1)).z + (*(in+4)).w);
+     (*(out+1)).w -= kappa*( (*(in+1)).w - (*(in+4)).z);
+     (*(out+4)).z -= kappa*( (*(in+4)).z - (*(in+1)).w);
+     (*(out+4)).w -= kappa*( (*(in+4)).w + (*(in+1)).z);     
+     
+       
+     (*(out+2)).x -= kappa*( (*(in+2)).x + (*(in+5)).y);
+     (*(out+2)).y -= kappa*( (*(in+2)).y - (*(in+5)).x);
+     (*(out+5)).x -= kappa*( (*(in+5)).x - (*(in+2)).y);
+     (*(out+5)).y -= kappa*( (*(in+5)).y + (*(in+2)).x);    
+     
+
+     (*(out+2)).z -= kappa*( (*(in+2)).z + (*(in+5)).w);
+     (*(out+2)).w -= kappa*( (*(in+2)).w - (*(in+5)).z);
+     (*(out+5)).z -= kappa*( (*(in+5)).z - (*(in+2)).w);
+     (*(out+5)).w -= kappa*( (*(in+5)).w + (*(in+2)).z);
+  
+}
+
+
+//-kappa(r + gamma_mu) kappa reell !!!
+__device__ void dev_kappaP3_minus(dev_spinor * out, dev_spinor * in, REAL kappa){
+
+     (*(out+0)).x -= kappa*( (*(in+0)).x + (*(in+3)).y);
+     (*(out+0)).y -= kappa*( (*(in+0)).y - (*(in+3)).x);
+     (*(out+3)).x -= kappa*( (*(in+3)).x - (*(in+0)).y);
+     (*(out+3)).y -= kappa*( (*(in+3)).y + (*(in+0)).x);    
+     
+
+     (*(out+0)).z -= kappa*( (*(in+0)).z + (*(in+3)).w);
+     (*(out+0)).w -= kappa*( (*(in+0)).w - (*(in+3)).z);
+     (*(out+3)).z -= kappa*( (*(in+3)).z - (*(in+0)).w);
+     (*(out+3)).w -= kappa*( (*(in+3)).w + (*(in+0)).z);    
+     
+     
+     (*(out+1)).x -= kappa*( (*(in+1)).x + (*(in+4)).y);
+     (*(out+1)).y -= kappa*( (*(in+1)).y - (*(in+4)).x);
+     (*(out+4)).x -= kappa*( (*(in+4)).x - (*(in+1)).y);
+     (*(out+4)).y -= kappa*( (*(in+4)).y + (*(in+1)).x);     
+     
+     
+     (*(out+1)).z -= kappa*( (*(in+1)).z - (*(in+4)).w);
+     (*(out+1)).w -= kappa*( (*(in+1)).w + (*(in+4)).z);
+     (*(out+4)).z -= kappa*( (*(in+4)).z + (*(in+1)).w);
+     (*(out+4)).w -= kappa*( (*(in+4)).w - (*(in+1)).z);     
+     
+       
+     (*(out+2)).x -= kappa*( (*(in+2)).x - (*(in+5)).y);
+     (*(out+2)).y -= kappa*( (*(in+2)).y + (*(in+5)).x);
+     (*(out+5)).x -= kappa*( (*(in+5)).x + (*(in+2)).y);
+     (*(out+5)).y -= kappa*( (*(in+5)).y - (*(in+2)).x);    
+     
+
+     (*(out+2)).z -= kappa*( (*(in+2)).z - (*(in+5)).w);
+     (*(out+2)).w -= kappa*( (*(in+2)).w + (*(in+5)).z);
+     (*(out+5)).z -= kappa*( (*(in+5)).z + (*(in+2)).w);
+     (*(out+5)).w -= kappa*( (*(in+5)).w - (*(in+2)).z);
+  
+}
+
+
+
+
+
+
+
+//-kappa(r - gamma_mu)
+__device__ void dev_kappaP0_plus(dev_spinor * out, dev_spinor * in, dev_complex kappa){
+
+
+     (*(out+0)).x -= (*(in+0)).x*kappa.re - (*(in+0)).y*kappa.im;
+     (*(out+0)).y -= (*(in+0)).y*kappa.re + (*(in+0)).x*kappa.im;
+     (*(out+0)).x -= (*(in+3)).x*kappa.re - (*(in+3)).y*kappa.im;
+     (*(out+0)).y -= (*(in+3)).y*kappa.re + (*(in+3)).x*kappa.im;
+     
+     (*(out+3)).x -= (*(in+3)).x*kappa.re - (*(in+3)).y*kappa.im;
+     (*(out+3)).y -= (*(in+3)).y*kappa.re + (*(in+3)).x*kappa.im;   
+     (*(out+3)).x -= (*(in+0)).x*kappa.re - (*(in+0)).y*kappa.im;
+     (*(out+3)).y -= (*(in+0)).y*kappa.re + (*(in+0)).x*kappa.im; 
+
+
+
+     (*(out+0)).z -= (*(in+0)).z*kappa.re - (*(in+0)).w*kappa.im;
+     (*(out+0)).w -= (*(in+0)).w*kappa.re + (*(in+0)).z*kappa.im;
+     (*(out+0)).z -= (*(in+3)).z*kappa.re - (*(in+3)).w*kappa.im;
+     (*(out+0)).w -= (*(in+3)).w*kappa.re + (*(in+3)).z*kappa.im;     
+          
+     (*(out+3)).z -= (*(in+3)).z*kappa.re - (*(in+3)).w*kappa.im;
+     (*(out+3)).w -= (*(in+3)).w*kappa.re + (*(in+3)).z*kappa.im;
+     (*(out+3)).z -= (*(in+0)).z*kappa.re - (*(in+0)).w*kappa.im;
+     (*(out+3)).w -= (*(in+0)).w*kappa.re + (*(in+0)).z*kappa.im;
+
+ 
+  
+     (*(out+1)).x -= (*(in+1)).x*kappa.re - (*(in+1)).y*kappa.im;
+     (*(out+1)).y -= (*(in+1)).y*kappa.re + (*(in+1)).x*kappa.im;
+     (*(out+1)).x -= (*(in+4)).x*kappa.re - (*(in+4)).y*kappa.im;
+     (*(out+1)).y -= (*(in+4)).y*kappa.re + (*(in+4)).x*kappa.im;     
+     
+     (*(out+4)).x -= (*(in+4)).x*kappa.re - (*(in+4)).y*kappa.im;
+     (*(out+4)).y -= (*(in+4)).y*kappa.re + (*(in+4)).x*kappa.im;    
+     (*(out+4)).x -= (*(in+1)).x*kappa.re - (*(in+1)).y*kappa.im;
+     (*(out+4)).y -= (*(in+1)).y*kappa.re + (*(in+1)).x*kappa.im; 
+ 
+ 
+ 
+     (*(out+1)).z -= (*(in+1)).z*kappa.re - (*(in+1)).w*kappa.im;
+     (*(out+1)).w -= (*(in+1)).w*kappa.re + (*(in+1)).z*kappa.im;
+     (*(out+1)).z -= (*(in+4)).z*kappa.re - (*(in+4)).w*kappa.im;
+     (*(out+1)).w -= (*(in+4)).w*kappa.re + (*(in+4)).z*kappa.im;     
+     
+     (*(out+4)).z -= (*(in+4)).z*kappa.re - (*(in+4)).w*kappa.im;
+     (*(out+4)).w -= (*(in+4)).w*kappa.re + (*(in+4)).z*kappa.im;    
+     (*(out+4)).z -= (*(in+1)).z*kappa.re - (*(in+1)).w*kappa.im;
+     (*(out+4)).w -= (*(in+1)).w*kappa.re + (*(in+1)).z*kappa.im;      
+ 
+
+     
+     (*(out+2)).x -= (*(in+2)).x*kappa.re - (*(in+2)).y*kappa.im;
+     (*(out+2)).y -= (*(in+2)).y*kappa.re + (*(in+2)).x*kappa.im;
+     (*(out+2)).x -= (*(in+5)).x*kappa.re - (*(in+5)).y*kappa.im;
+     (*(out+2)).y -= (*(in+5)).y*kappa.re + (*(in+5)).x*kappa.im;
+                
+     (*(out+5)).x -= (*(in+5)).x*kappa.re - (*(in+5)).y*kappa.im;
+     (*(out+5)).y -= (*(in+5)).y*kappa.re + (*(in+5)).x*kappa.im;   
+     (*(out+5)).x -= (*(in+2)).x*kappa.re - (*(in+2)).y*kappa.im;
+     (*(out+5)).y -= (*(in+2)).y*kappa.re + (*(in+2)).x*kappa.im; 
+   
+   
+        
+     (*(out+2)).z -= (*(in+2)).z*kappa.re - (*(in+2)).w*kappa.im;
+     (*(out+2)).w -= (*(in+2)).w*kappa.re + (*(in+2)).z*kappa.im;
+     (*(out+2)).z -= (*(in+5)).z*kappa.re - (*(in+5)).w*kappa.im;
+     (*(out+2)).w -= (*(in+5)).w*kappa.re + (*(in+5)).z*kappa.im;
+               
+     (*(out+5)).z -= (*(in+5)).z*kappa.re - (*(in+5)).w*kappa.im;
+     (*(out+5)).w -= (*(in+5)).w*kappa.re + (*(in+5)).z*kappa.im;   
+     (*(out+5)).z -= (*(in+2)).z*kappa.re - (*(in+2)).w*kappa.im;
+     (*(out+5)).w -= (*(in+2)).w*kappa.re + (*(in+2)).z*kappa.im; 
+  
+}
+
+
+
+
+
+
+//-kappa(r - gamma_mu)
+__device__ void dev_kappaP0_minus(dev_spinor * out, dev_spinor * in, dev_complex kappa){
+
+
+     (*(out+0)).x -= (*(in+0)).x*kappa.re - (*(in+0)).y*kappa.im;
+     (*(out+0)).y -= (*(in+0)).y*kappa.re + (*(in+0)).x*kappa.im;
+     (*(out+0)).x += (*(in+3)).x*kappa.re - (*(in+3)).y*kappa.im;
+     (*(out+0)).y += (*(in+3)).y*kappa.re + (*(in+3)).x*kappa.im;
+     
+     (*(out+3)).x -= (*(in+3)).x*kappa.re - (*(in+3)).y*kappa.im;
+     (*(out+3)).y -= (*(in+3)).y*kappa.re + (*(in+3)).x*kappa.im;   
+     (*(out+3)).x += (*(in+0)).x*kappa.re - (*(in+0)).y*kappa.im;
+     (*(out+3)).y += (*(in+0)).y*kappa.re + (*(in+0)).x*kappa.im; 
+
+
+
+     (*(out+0)).z -= (*(in+0)).z*kappa.re - (*(in+0)).w*kappa.im;
+     (*(out+0)).w -= (*(in+0)).w*kappa.re + (*(in+0)).z*kappa.im;
+     (*(out+0)).z += (*(in+3)).z*kappa.re - (*(in+3)).w*kappa.im;
+     (*(out+0)).w += (*(in+3)).w*kappa.re + (*(in+3)).z*kappa.im;     
+          
+     (*(out+3)).z -= (*(in+3)).z*kappa.re - (*(in+3)).w*kappa.im;
+     (*(out+3)).w -= (*(in+3)).w*kappa.re + (*(in+3)).z*kappa.im;
+     (*(out+3)).z += (*(in+0)).z*kappa.re - (*(in+0)).w*kappa.im;
+     (*(out+3)).w += (*(in+0)).w*kappa.re + (*(in+0)).z*kappa.im;
+
+ 
+ 
+     (*(out+1)).x -= (*(in+1)).x*kappa.re - (*(in+1)).y*kappa.im;
+     (*(out+1)).y -= (*(in+1)).y*kappa.re + (*(in+1)).x*kappa.im;
+     (*(out+1)).x += (*(in+4)).x*kappa.re - (*(in+4)).y*kappa.im;
+     (*(out+1)).y += (*(in+4)).y*kappa.re + (*(in+4)).x*kappa.im;     
+     
+     (*(out+4)).x -= (*(in+4)).x*kappa.re - (*(in+4)).y*kappa.im;
+     (*(out+4)).y -= (*(in+4)).y*kappa.re + (*(in+4)).x*kappa.im;    
+     (*(out+4)).x += (*(in+1)).x*kappa.re - (*(in+1)).y*kappa.im;
+     (*(out+4)).y += (*(in+1)).y*kappa.re + (*(in+1)).x*kappa.im; 
+ 
+ 
+ 
+     (*(out+1)).z -= (*(in+1)).z*kappa.re - (*(in+1)).w*kappa.im;
+     (*(out+1)).w -= (*(in+1)).w*kappa.re + (*(in+1)).z*kappa.im;
+     (*(out+1)).z += (*(in+4)).z*kappa.re - (*(in+4)).w*kappa.im;
+     (*(out+1)).w += (*(in+4)).w*kappa.re + (*(in+4)).z*kappa.im;     
+     
+     (*(out+4)).z -= (*(in+4)).z*kappa.re - (*(in+4)).w*kappa.im;
+     (*(out+4)).w -= (*(in+4)).w*kappa.re + (*(in+4)).z*kappa.im;    
+     (*(out+4)).z += (*(in+1)).z*kappa.re - (*(in+1)).w*kappa.im;
+     (*(out+4)).w += (*(in+1)).w*kappa.re + (*(in+1)).z*kappa.im;      
+ 
+
+     
+     (*(out+2)).x -= (*(in+2)).x*kappa.re - (*(in+2)).y*kappa.im;
+     (*(out+2)).y -= (*(in+2)).y*kappa.re + (*(in+2)).x*kappa.im;
+     (*(out+2)).x += (*(in+5)).x*kappa.re - (*(in+5)).y*kappa.im;
+     (*(out+2)).y += (*(in+5)).y*kappa.re + (*(in+5)).x*kappa.im;
+                
+     (*(out+5)).x -= (*(in+5)).x*kappa.re - (*(in+5)).y*kappa.im;
+     (*(out+5)).y -= (*(in+5)).y*kappa.re + (*(in+5)).x*kappa.im;   
+     (*(out+5)).x += (*(in+2)).x*kappa.re - (*(in+2)).y*kappa.im;
+     (*(out+5)).y += (*(in+2)).y*kappa.re + (*(in+2)).x*kappa.im; 
+   
+   
+       
+     (*(out+2)).z -= (*(in+2)).z*kappa.re - (*(in+2)).w*kappa.im;
+     (*(out+2)).w -= (*(in+2)).w*kappa.re + (*(in+2)).z*kappa.im;
+     (*(out+2)).z += (*(in+5)).z*kappa.re - (*(in+5)).w*kappa.im;
+     (*(out+2)).w += (*(in+5)).w*kappa.re + (*(in+5)).z*kappa.im;
+               
+     (*(out+5)).z -= (*(in+5)).z*kappa.re - (*(in+5)).w*kappa.im;
+     (*(out+5)).w -= (*(in+5)).w*kappa.re + (*(in+5)).z*kappa.im;   
+     (*(out+5)).z += (*(in+2)).z*kappa.re - (*(in+2)).w*kappa.im;
+     (*(out+5)).w += (*(in+2)).w*kappa.re + (*(in+2)).z*kappa.im; 
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+//applies the Hopping Part Even-Odd !
+//the gauge field is the complete gaugefield!
+//the gauge field at the local point is reconstructed by 2*pos+eo where pos is the eo-position
+//from 0..VOLUME/2-1, eo = 0 or 1
+//the positions in the gauge fields are passed in "gfindex_site" for gf's that are attached at
+//the actual positions and in "gfindex_nextsite" for gf's that start at a position of the 
+//other eo-sublattice.
+//for the hopping positions of the eo-spinor field we use on of the two dedicated eo-nn fields
+//the boundary conditions are implemented as in Hopping_Matrix.c
+//mult with complex conjugate k0,k1,k2,k3 in positive direction because
+// psi(x+mu) != exp(i theta_mu) psi(x)  
+__global__ void dev_Hopping_Matrix(const dev_su3_2v * gf, const dev_spinor * sin, dev_spinor * sout, const int * gfindex_site, const int* gfindex_nextsite, const int * nn_evenodd, const int eo){
+
+  int pos,hoppos;
+    dev_spinor shelp1[6], ssum[6];
+    __shared__ dev_su3_pad gfsmem[BLOCK];
+
+
+
+  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  int ix = threadIdx.x;
+  
+  
+  if(pos < dev_VOLUME){
+  
+
+  dev_zero_spinor(&(ssum[0])); // zero sum        
+ #ifdef TEMPORALGAUGE
+  int spatialvol = dev_LX*dev_LY*dev_LZ;
+ #endif
+
+
+//hopping term                
+//l==0,t
+            //positive direction
+            hoppos = nn_evenodd[8*pos];
+             //hoppos = tex1Dfetch(nn_tex,8*pos);
+            //color
+            
+            #ifdef TEMPORALGAUGE
+              // gf == ID for t != T-1 => just read the spinor
+              
+              if((gfindex_site[pos]/spatialvol) != (dev_T-1) ){
+              #ifdef USETEXTURE
+                shelp1[0] = tex1Dfetch(spin_tex,6*hoppos);
+                shelp1[1] = tex1Dfetch(spin_tex,6*hoppos+1);
+                shelp1[2] = tex1Dfetch(spin_tex,6*hoppos+2);
+                shelp1[3] = tex1Dfetch(spin_tex,6*hoppos+3);
+                shelp1[4] = tex1Dfetch(spin_tex,6*hoppos+4);
+                shelp1[5] = tex1Dfetch(spin_tex,6*hoppos+5);
+              #else
+                shelp1[0] = sin[6*hoppos];
+                shelp1[1] = sin[6*hoppos+1];
+                shelp1[2] = sin[6*hoppos+2];
+                shelp1[3] = sin[6*hoppos+3];
+                shelp1[4] = sin[6*hoppos+4];
+                shelp1[5] = sin[6*hoppos+5];
+              #endif
+              }
+              else{
+                // gf != ID for t == T-1 => mult spinor with gf
+                #ifdef GF_8
+                dev_reconstructgf_8texref(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
+                #else
+                dev_reconstructgf_2vtexref(gf,4*(gfindex_site[pos]),&(gfsmem[ix].m));
+                #endif
+                #ifdef USETEXTURE
+                  dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+                #else
+                  dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+                #endif
+              }
+            #else
+              #ifdef GF_8
+              dev_reconstructgf_8texref(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
+              #else
+              dev_reconstructgf_2vtexref(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
+              #endif
+              #ifdef USETEXTURE
+                dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+              #else
+                dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+              #endif
+            #endif
+            
+            //-kappa(r - gamma_mu)
+            #ifdef GF_8
+             dev_kappaP0_plus(&(ssum[0]), &(shelp1[0]), dev_cconj(dev_k0));
+            #else
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma0(&(shelp1[0]));
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_k0,&(shelp1[0]), &(ssum[0]));
+	    #endif
+	    
+//l==0,t
+            //negative direction
+            hoppos = nn_evenodd[8*pos+4]; 
+             //hoppos = tex1Dfetch(nn_tex,8*pos+4);
+            //color
+            #ifdef TEMPORALGAUGE
+              // gf == ID for t != T-1 => just read the spinor
+              if((gfindex_nextsite[hoppos]/spatialvol) != (dev_T-1) ){
+               #ifdef USETEXTURE
+                shelp1[0] = tex1Dfetch(spin_tex,6*hoppos);
+                shelp1[1] = tex1Dfetch(spin_tex,6*hoppos+1);
+                shelp1[2] = tex1Dfetch(spin_tex,6*hoppos+2);
+                shelp1[3] = tex1Dfetch(spin_tex,6*hoppos+3);
+                shelp1[4] = tex1Dfetch(spin_tex,6*hoppos+4);
+                shelp1[5] = tex1Dfetch(spin_tex,6*hoppos+5);
+               #else
+                shelp1[0] = sin[6*hoppos];
+                shelp1[1] = sin[6*hoppos+1];
+                shelp1[2] = sin[6*hoppos+2];
+                shelp1[3] = sin[6*hoppos+3];
+                shelp1[4] = sin[6*hoppos+4];
+                shelp1[5] = sin[6*hoppos+5];
+               #endif
+              }
+              else{
+                // gf != ID for t == T-1 => mult spinor with gf
+                #ifdef GF_8
+                dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
+                #else
+                dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
+                #endif
+                #ifdef USETEXTURE
+                  dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+                #else
+                  dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+                #endif 
+              }
+            #else            
+              #ifdef GF_8
+              dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
+              #else
+              dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
+              #endif
+              #ifdef USETEXTURE
+                dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));  
+              #else
+                dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+              #endif 
+            #endif
+            
+            //-kappa(r + gamma_mu)
+            #ifdef GF_8
+              dev_kappaP0_minus(&(ssum[0]), &(shelp1[0]), dev_k0);
+            #else
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma0(&(shelp1[0]));
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
+            #endif
+
+
+
+
+//l==3,z 
+            //positive direction
+            hoppos = nn_evenodd[8*pos+3];
+             //hoppos = tex1Dfetch(nn_tex,8*pos+3);
+            //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(gf,4*(gfindex_site[pos])+(3),&(gfsmem[ix].m));
+            #else
+            dev_reconstructgf_2vtexref(gf, 4*(gfindex_site[pos])+(3),&(gfsmem[ix].m));
+            #endif
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
+            //-kappa(r - gamma_mu)    
+            #ifdef GF_8
+            dev_kappaP3_plus(&(ssum[0]), &(shelp1[0]), dev_k3.re);
+            #else
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma3(&(shelp1[0]));
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_k3,&(shelp1[0]), &(ssum[0]));
+	    #endif
+//l==3,z               
+            
+            //negative direction
+            hoppos = nn_evenodd[8*pos+7];
+             //hoppos = tex1Dfetch(nn_tex,8*pos+7); 
+            //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos]+(3),&(gfsmem[ix].m));
+            #else
+            dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos]+(3),&(gfsmem[ix].m));
+            #endif
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
+            //-kappa(r + gamma_mu)
+            #ifdef GF_8
+              dev_kappaP3_minus(&(ssum[0]), &(shelp1[0]), dev_k3.re);
+            #else
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma3(&(shelp1[0]));
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
+            #endif
+
+
+
+
+//l==2,y 
+            //positive direction
+            hoppos = nn_evenodd[8*pos+2];
+             //hoppos = tex1Dfetch(nn_tex,8*pos+2);
+            //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(gf,4*(gfindex_site[pos])+(2),&(gfsmem[ix].m));
+            #else
+            dev_reconstructgf_2vtexref(gf,4*(gfindex_site[pos])+(2),&(gfsmem[ix].m));
+            #endif
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
+            //-kappa(r - gamma_mu)
+            #ifdef GF_8
+              dev_kappaP2_plus(&(ssum[0]), &(shelp1[0]), dev_k2.re);
+            #else
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma2(&(shelp1[0]));
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_k2,&(shelp1[0]), &(ssum[0]));
+            #endif
+
+//l==2,y        
+
+            
+            //negative direction
+            hoppos = nn_evenodd[8*pos+6]; 
+             //hoppos = tex1Dfetch(nn_tex,8*pos+6);
+            //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos]+(2),&(gfsmem[ix].m));
+            #else
+            dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos]+(2),&(gfsmem[ix].m));
+            #endif
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
+            //-kappa(r + gamma_mu)
+            #ifdef GF_8
+              dev_kappaP2_minus(&(ssum[0]), &(shelp1[0]), dev_k2.re);
+            #else
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma2(&(shelp1[0]));
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
+	    #endif
+
+
+
+//l==1,x 
+            //positive direction
+            hoppos = nn_evenodd[8*pos+1];
+             //hoppos = tex1Dfetch(nn_tex,8*pos+1);
+            //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(gf,4*(gfindex_site[pos])+(1),&(gfsmem[ix].m));
+            #else
+            dev_reconstructgf_2vtexref(gf,4*(gfindex_site[pos])+(1),&(gfsmem[ix].m));
+            #endif
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
+            //-kappa(r - gamma_mu)
+            #ifdef GF_8
+              dev_kappaP1_plus(&(ssum[0]), &(shelp1[0]), dev_k1.re);
+            #else
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma1(&(shelp1[0]));
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_k1,&(shelp1[0]), &(ssum[0]));
+	    #endif
+
+
+//l==1,x 
+            
+            //negative direction
+            hoppos = nn_evenodd[8*pos+5]; 
+             //hoppos = tex1Dfetch(nn_tex,8*pos+5);
+            //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos]+(1),&(gfsmem[ix].m));
+            #else
+            dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos]+(1),&(gfsmem[ix].m));
+            #endif
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
+            //-kappa(r + gamma_mu)
+            #ifdef GF_8
+              dev_kappaP1_minus(&(ssum[0]), &(shelp1[0]), dev_k1.re);
+            #else
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma1(&(shelp1[0]));
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));      
+            #endif
+ 
+        //copy to output spinor
+        dev_copy_spinor(&(ssum[0]),&(sout[6*pos])); 
+  }
+}
+
+
+
+/*
 
 //applies the Hopping Part Even-Odd !
 //the gauge field is the complete gaugefield!
@@ -1695,39 +2825,68 @@ __global__ void dev_Hopping_Matrix(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
 
 
 
+*/
+
 
 
 // aequivalent to Qtm_pm_psi in tm_operators.c
-extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, int blocksize){
+extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, int blocksize, int gridsize2, int blocksize2){
   //spinin == odd
   //spinout == odd
   
   //Q_{-}
-  bind_texture_spin(spinin,1);
+  #ifdef USETEXTURE
+    bind_texture_spin(spinin,1);
+  #endif
+  //bind_texture_nn(dev_nn_eo);
+  //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
     dev_Hopping_Matrix<<<gridsize, blocksize>>>
-             (dev_gf, spinin, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0
-  unbind_texture_spin(1);
-  dev_mul_one_pm_imu_inv<<<gridsize, blocksize>>>(dev_spin_eo1,dev_spin_eo2, -1.);
+             (dev_gf, spinin, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0           
+  //unbind_texture_nn();           
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,dev_spin_eo2, -1.);
   
-  bind_texture_spin(dev_spin_eo2,1);
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2,1);
+  #endif
+  //bind_texture_nn(dev_nn_oe);
+  //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
     dev_Hopping_Matrix<<<gridsize, blocksize>>>
             (dev_gf, dev_spin_eo2, dev_spin_eo1, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
-  unbind_texture_spin(1);
-  dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize, blocksize>>>(spinin, dev_spin_eo1,  dev_spin_eo2, -1.);
+  //unbind_texture_nn();
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(spinin, dev_spin_eo1,  dev_spin_eo2, -1.);
   
   //Q_{+}
-  bind_texture_spin(dev_spin_eo2,1);
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2,1);
+  #endif
+  //bind_texture_nn(dev_nn_eo);
+  //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
     dev_Hopping_Matrix<<<gridsize, blocksize>>>
           (dev_gf, dev_spin_eo2, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0
-  unbind_texture_spin(1);
-  dev_mul_one_pm_imu_inv<<<gridsize, blocksize>>>(dev_spin_eo1,spinout, +1.);
+  //unbind_texture_nn();      
+  #ifdef USETEXTURE  
+    unbind_texture_spin(1);
+  #endif
+  dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,spinout, +1.);
   
-  bind_texture_spin(spinout,1);
+  #ifdef USETEXTURE
+    bind_texture_spin(spinout,1);
+  #endif
+  //bind_texture_nn(dev_nn_oe);
+  //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
     dev_Hopping_Matrix<<<gridsize, blocksize>>>
              (dev_gf, spinout, dev_spin_eo1, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
-  unbind_texture_spin(1);
-  dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize, blocksize>>>(dev_spin_eo2, dev_spin_eo1,  spinout , +1.); 
-  
+  //unbind_texture_nn();  
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo2, dev_spin_eo1,  spinout , +1.); 
 }
 
 
@@ -1753,13 +2912,21 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
         
           //dev_zero_spinor(&(ssum[0])); // zero sum
           //skalarer Term
+         #ifdef USETEXTURE
           ssum[0] = tex1Dfetch(spin_tex,6*pos);
           ssum[1] = tex1Dfetch(spin_tex,6*pos+1);
           ssum[2] = tex1Dfetch(spin_tex,6*pos+2);
           ssum[3] = tex1Dfetch(spin_tex,6*pos+3);
           ssum[4] = tex1Dfetch(spin_tex,6*pos+4);
           ssum[5] = tex1Dfetch(spin_tex,6*pos+5);
-
+	 #else
+	  ssum[0] = sin[6*pos];
+          ssum[1] = sin[6*pos+1];
+          ssum[2] = sin[6*pos+2];
+          ssum[3] = sin[6*pos+3];
+          ssum[4] = sin[6*pos+4];
+          ssum[5] = sin[6*pos+5];
+	 #endif
           
 //hopping term                
 //l==0,t
@@ -1767,11 +2934,15 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             hoppos = dev_nn[8*pos];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref(4*pos,&(gfsmem[ix]));
+            dev_reconstructgf_8texref(gf,4*pos,&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref(4*pos,&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref(gf,4*pos,&(gfsmem[ix]));
             #endif
-            dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
             //-kappa(r - gamma_mu)
             dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(0,&(shelp1[0]));
@@ -1782,11 +2953,15 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             hoppos = dev_nn[8*pos+4];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref_dagger(4*hoppos,&(gfsmem[ix]));
+            dev_reconstructgf_8texref_dagger(gf,4*hoppos,&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref_dagger(4*hoppos,&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref_dagger(gf,4*hoppos,&(gfsmem[ix]));
             #endif
-            dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));     
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));  
+            #else
+              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+            #endif    
             //-kappa(r + gamma_mu)
             dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(0,&(shelp1[0]));
@@ -1799,11 +2974,15 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             hoppos = dev_nn[8*pos+3];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref(4*pos+(3),&(gfsmem[ix]));
+            dev_reconstructgf_8texref(gf,4*pos+(3),&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref(4*pos+(3),&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref(gf,4*pos+(3),&(gfsmem[ix]));
             #endif
-            dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
             //-kappa(r - gamma_mu)
             dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(3,&(shelp1[0]));
@@ -1814,11 +2993,15 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             hoppos = dev_nn[8*pos+7];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref_dagger(4*hoppos+(3),&(gfsmem[ix]));
+            dev_reconstructgf_8texref_dagger(gf,4*hoppos+(3),&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref_dagger(4*hoppos+(3),&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref_dagger(gf,4*hoppos+(3),&(gfsmem[ix]));
             #endif
-            dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
             //-kappa(r + gamma_mu)
             dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(3,&(shelp1[0]));
@@ -1831,11 +3014,15 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             hoppos = dev_nn[8*pos+2];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref(4*pos+(2),&(gfsmem[ix]));
+            dev_reconstructgf_8texref(gf,4*pos+(2),&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref(4*pos+(2),&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref(gf,4*pos+(2),&(gfsmem[ix]));
             #endif
-            dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
             //-kappa(r - gamma_mu)
             dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(2,&(shelp1[0]));
@@ -1846,11 +3033,15 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             hoppos = dev_nn[8*pos+6];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref_dagger(4*hoppos+(2),&(gfsmem[ix]));
+            dev_reconstructgf_8texref_dagger(gf,4*hoppos+(2),&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref_dagger(4*hoppos+(2),&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref_dagger(gf,4*hoppos+(2),&(gfsmem[ix]));
             #endif
-            dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
             //-kappa(r + gamma_mu)
             dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(2,&(shelp1[0]));
@@ -1863,11 +3054,15 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             hoppos = dev_nn[8*pos+1];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref(4*pos+(1),&(gfsmem[ix]));
+            dev_reconstructgf_8texref(gf,4*pos+(1),&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref(4*pos+(1),&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref(gf,4*pos+(1),&(gfsmem[ix]));
             #endif
-            dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
             //-kappa(r - gamma_mu)
             dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(1,&(shelp1[0]));
@@ -1878,11 +3073,15 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             hoppos = dev_nn[8*pos+5];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref_dagger(4*hoppos+(1),&(gfsmem[ix]));
+            dev_reconstructgf_8texref_dagger(gf,4*hoppos+(1),&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref_dagger(4*hoppos+(1),&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref_dagger(gf,4*hoppos+(1),&(gfsmem[ix]));
             #endif
-            dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
             //-kappa(r + gamma_mu)
             dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(1,&(shelp1[0]));
@@ -1892,13 +3091,21 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
           
           
           //gamma5 term
+         #ifdef USETEXTURE
           shelp1[0] = tex1Dfetch(spin_tex,6*pos);
           shelp1[1] = tex1Dfetch(spin_tex,6*pos+1);
           shelp1[2] = tex1Dfetch(spin_tex,6*pos+2);
           shelp1[3] = tex1Dfetch(spin_tex,6*pos+3);
           shelp1[4] = tex1Dfetch(spin_tex,6*pos+4);
           shelp1[5] = tex1Dfetch(spin_tex,6*pos+5);
-          
+         #else
+          shelp1[0] = sin[6*pos];
+          shelp1[1] = sin[6*pos+1];
+          shelp1[2] = sin[6*pos+2];
+          shelp1[3] = sin[6*pos+3];
+          shelp1[4] = sin[6*pos+4];
+          shelp1[5] = sin[6*pos+5];
+         #endif 
           
           
           //dev_GammatV(4,&(shelp1[0]));
@@ -1906,6 +3113,7 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
           dev_complexmult_add_assign_spinor(&(ssum[0]),dev_initcomplex(0.0,2.0*kappa*mu),&(shelp1[0]), &(sout[6*pos]));
   }
 }
+
 
 
 
@@ -1926,7 +3134,7 @@ extern "C" void dev_tm_dirac_dagger_kappa(dev_su3_2v * gf,dev_spinor* spinin, de
  
   dim3 blockdim3(BLOCK,1,1);
  if( VOLUME >= BLOCK){
-   gridsize =VOLUME/BLOCK;
+   gridsize = (int)(VOLUME/BLOCK) + 1;
  }
  else{
    gridsize=1;
@@ -2432,6 +3640,33 @@ extern "C" int unbind_texture_gf(){
 
 
 
+extern "C" int bind_texture_nn(int* nn){
+ //printf("Binding texture to nn field\n");
+  size_t size;
+  if(even_odd_flag){
+    size = sizeof(int)*8*VOLUME/2;
+  }
+  else{
+    size = sizeof(int)*8*VOLUME;
+  }
+ 
+
+ cudaGetTextureReference(&nn_texRefPtr, "nn_tex");
+ nn_channelDesc =  cudaCreateChannelDesc<int>();
+ cudaBindTexture(0, nn_texRefPtr, nn, &nn_channelDesc, size);
+ //printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
+ return(0);
+}
+
+
+extern "C" int unbind_texture_nn(){
+ //printf("Unbinding texture to nn field\n");
+ cudaUnbindTexture(nn_texRefPtr);
+ //printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
+ return(0);
+}
+
+
 
 
 
@@ -2454,7 +3689,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  
  dim3 blockdim3(BLOCK,1,1);
  if( VOLUME >= BLOCK){
-   gridsize =VOLUME/BLOCK;
+   gridsize = (int) VOLUME/BLOCK + 1;
  }
  else{
    gridsize=1;
@@ -2472,16 +3707,18 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  
   REAL scaleparam = sqrt(1.0/(2.0 * (REAL) hostkappa));
   dev_skalarmult_spinor_field<<<griddim2, blockdim2 >>>(spinin,scaleparam*scaleparam, spin4);
-  
- bind_texture_gf(gf);
- bind_texture_spin(spin4,1);
-  
+ 
+ #ifdef USETEXTURE
+   bind_texture_gf(gf);
+   bind_texture_spin(spin4,1);
+ #endif 
   // apply D_tm
   dev_tm_dirac_kappa <<<griddim3, blockdim3 >>>(gf, spin4, spinout, nn_grid);
 
-
+ #ifdef USETEXTURE
   unbind_texture_gf();
   unbind_texture_spin(1);
+ #endif
 }
 
 
@@ -2521,13 +3758,13 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  dim3 griddim2(gridsize,1,1);
  
  
- if(VOLUME%BLOCK != 0){
-   printf("Error: VOLUME is not a multiple of BLOCK. Aborting...\n");
-   exit(100);
- }
+ //if(VOLUME%BLOCK != 0){
+ //  printf("Error: VOLUME is not a multiple of BLOCK. Aborting...\n");
+ //  exit(100);
+ //}
  dim3 blockdim3(BLOCK,1,1);
  if( VOLUME >= BLOCK){
-   gridsize =VOLUME/BLOCK;
+   gridsize = (int) (VOLUME/BLOCK) +1;
  }
  else{
    gridsize=1;
@@ -2536,11 +3773,12 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  
  size_t size2 = sizeof(float4)*6*VOLUME;
  
- //Bind texture gf
- bind_texture_gf(gf);
- //Bind texture spinor to spin4 (D_tm is always applied to spin4)
- bind_texture_spin(spin4,1);
- 
+ #ifdef USETEXTURE
+   //Bind texture gf
+   bind_texture_gf(gf);
+  //Bind texture spinor to spin4 (D_tm is always applied to spin4)
+  bind_texture_spin(spin4,1);
+ #endif
  
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
@@ -2596,19 +3834,26 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
   // D Ddagger    --   Ddagger = gamma5 D gamma5  for Wilson Dirac Operator
   // mu -> -mu for twisted term
   // DO NOT USE tm_dirac_dagger_kappa here, otherwise spin2 will be overwritten!!!
-  
-  unbind_texture_spin(1);
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
      // GAMMA5, mu -> -mu
      dev_gamma5 <<<griddim2, blockdim2 >>> (spin2,spin4);
      dev_swapmu <<<1,1>>> ();
-  bind_texture_spin(spin4,1);
+  #ifdef USETEXTURE
+   bind_texture_spin(spin4,1);
+  #endif
      //D_tm 
      dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
-  unbind_texture_spin(1);
+  #ifdef USETEXTURE
+   unbind_texture_spin(1);
+  #endif
      //GAMMA5 mu -> -mu
      dev_gamma5 <<<griddim2, blockdim2 >>>(spin3,spin4);
      dev_swapmu <<<1,1>>> ();
-  bind_texture_spin(spin4,1);
+  #ifdef USETEXTURE
+   bind_texture_spin(spin4,1);
+  #endif
      //D_tm
      dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
   
@@ -2654,10 +3899,14 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
     // DO NOT USE tm_dirac_dagger_kappa here, otherwise spin2 will be overwritten!!!
       
       //GAMMA5
-    unbind_texture_spin(1);
+    #ifdef USETEXTURE
+     unbind_texture_spin(1);
+    #endif
       dev_gamma5 <<<griddim2, blockdim2 >>> (spin1,spin4);
       dev_swapmu <<<1,1>>> ();
-    bind_texture_spin(spin4,1);
+    #ifdef USETEXTURE
+     bind_texture_spin(spin4,1);
+    #endif
    
       //D_tm GAMMA5, mu -> -mu
       dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
@@ -2665,10 +3914,14 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
       dev_swapmu <<<1,1>>> ();
   
     //printf("Unbinding texture of spinorfield\n");
-    unbind_texture_spin(1);
+    #ifdef USETEXTURE
+     unbind_texture_spin(1);
+    #endif
     cudaMemcpy(spin4, spinout,size2, cudaMemcpyDeviceToDevice);
     //printf("Rebinding texture to spinorfield\n");
-    bind_texture_spin(spin4,1);
+    #ifdef USETEXTURE
+     bind_texture_spin(spin4,1);
+    #endif
       
       //D_tm
       dev_tm_dirac_kappa<<<griddim3, blockdim3 >>>(gf, spin4, spin3, dev_nn);
@@ -2690,14 +3943,20 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  if(rescalekappa == 1){  //want D^-1 rescaled by 2*kappa
   
 //multiply with D^dagger
-    unbind_texture_spin(1);
+    #ifdef USETEXTURE
+     unbind_texture_spin(1);
+    #endif
       dev_gamma5 <<<griddim2, blockdim2 >>> (spin1,spin4);
       dev_swapmu <<<1,1>>> ();
-    bind_texture_spin(spin4,1);
+    #ifdef USETEXTURE
+     bind_texture_spin(spin4,1);
+    #endif
       dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
       dev_gamma5 <<<griddim2, blockdim2 >>>(spin3,spin1);
       dev_swapmu <<<1,1>>> ();
-    unbind_texture_spin(1);
+    #ifdef USETEXTURE
+     unbind_texture_spin(1);
+    #endif
 
 
  //go over to non-kappa, Ddagger = g5 D g5
@@ -2710,8 +3969,9 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
    dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spin1,spinout);
   }
   
-  
-  unbind_texture_gf();
+  #ifdef USETEXTURE
+   unbind_texture_gf();
+  #endif
   cudaFree(dotprod);
   cudaFree(dotprod2);
   cudaFree(rk);
@@ -2727,7 +3987,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
 // this is the eo version of the device cg inner solver 
 // we invert the hermitean Q_{-} Q_{+}
 extern "C" void dev_cg_eo(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
-dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, REAL* output,REAL* erg, int xsize, int ysize, int rescalekappa){
+dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, REAL* output,REAL* erg, int xsize, int ysize, int rescalekappa, REAL epsfinal){
  
  
  REAL host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
@@ -2738,9 +3998,9 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  int i, gridsize;
  int maxit = max_innersolver_it;
  REAL eps = (REAL) innersolver_precision;
- int N_recalcres = 10; // after N_recalcres iterations calculate r = A x_k - b
+ int N_recalcres = 40; // after N_recalcres iterations calculate r = A x_k - b
  
- 
+ cudaError_t cudaerr;
 
  dim3 blockdim(1,1);
  dim3 blockdim2(128,1,1);
@@ -2751,34 +4011,63 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
    gridsize=1;
  }
  dim3 griddim2(gridsize,1,1);
+
  
- 
- if((VOLUME/2)%BLOCK != 0){
-   printf("Error: VOLUME/2 is not a multiple of BLOCK. Aborting...\n");
-   exit(100);
- }
+ //if((VOLUME/2)%BLOCK != 0){
+ //  printf("Error: VOLUME/2 is not a multiple of BLOCK. Aborting...\n");
+ //  exit(100);
+ //}
  int blockdim3=BLOCK;
  if( VOLUME/2 >= BLOCK){
-   gridsize =VOLUME/2/BLOCK;
+   gridsize = (int)(VOLUME/2/BLOCK) + 1;
  }
  else{
    gridsize=1;
  }
+ printf("gridsize = %d\n", gridsize);
  int griddim3=gridsize; 
+ 
+ // for dev_mul_one_pm...
+ int blockdim4=BLOCK2;
+ if( VOLUME/2 >= BLOCK2){
+   gridsize = (int)(VOLUME/2/BLOCK2) + 1;
+ }
+ else{
+   gridsize=1;
+ }
+ int griddim4=gridsize;  
+ 
  
  size_t size2 = sizeof(float4)*6*VOLUME/2;
  
- //Bind texture gf
- bind_texture_gf(gf);
- 
- 
+ #ifdef USETEXTURE
+  //Bind texture gf
+  bind_texture_gf(gf);
+ #endif
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
-  dev_complex h0,h1,h2,h3;
+  dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
   h0.re = (REAL)ka0.re;    h0.im = -(REAL)ka0.im;
   h1.re = (REAL)ka1.re;    h1.im = -(REAL)ka1.im;
   h2.re = (REAL)ka2.re;    h2.im = -(REAL)ka2.im;
   h3.re = (REAL)ka3.re;    h3.im = -(REAL)ka3.im;
+  
+  mh0.re = -(REAL)ka0.re;    mh0.im = (REAL)ka0.im;
+  mh1.re = -(REAL)ka1.re;    mh1.im = (REAL)ka1.im;
+  mh2.re = -(REAL)ka2.re;    mh2.im = (REAL)ka2.im;
+  mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
+  
+  // try using constant mem for kappas
+  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(dev_complex)) ;
+  
+  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
+  
   he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
  
@@ -2813,6 +4102,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  
  
  
+
  //relative precision -> get initial residue
  sourcesquarenorm = cublasSdot (24*VOLUME/2, (const float *)spinin, 1, (const float *)spinin, 1);
  host_rk = sourcesquarenorm; //for use in main loop
@@ -2823,7 +4113,12 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  for(i=0;i<maxit;i++){ //MAIN LOOP
   
   // Q_{-}Q{+}
-  dev_Qtm_pm_psi(spin2, spin3, griddim3, blockdim3);
+  dev_Qtm_pm_psi(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4);
+  if((cudaerr=cudaGetLastError()) != cudaSuccess){
+    printf("%s\n", cudaGetErrorString(cudaerr));
+    exit(200);
+  }
+  
   
   
  //alpha
@@ -2842,7 +4137,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
   //Abbruch?
   host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin0, 1,(const float *) spin0, 1);
   
- if ((host_dotprod <= eps*sourcesquarenorm)){//error-limit erreicht
+ if (((host_dotprod <= eps*sourcesquarenorm) && (i > maxit / 2) ) || ( host_dotprod <= epsfinal/2.)){//error-limit erreicht (epsfinal/2 sollte ausreichen um auch in double precision zu bestehen)
    break; 
  }
   printf("iter %d: err = %.8e\n", i, host_dotprod);
@@ -2864,7 +4159,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
     // DO NOT USE tm_dirac_dagger_kappa here, otherwise spin2 will be overwritten!!!
       
     // Q_{-}Q{+}
-    dev_Qtm_pm_psi(spin1, spin3, griddim3, blockdim3);
+    dev_Qtm_pm_psi(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4);
       
         
     
@@ -2884,8 +4179,9 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
   //no multiplication with D^{dagger} here and no return to non-kappa basis as in dev_cg!
   dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spin1,spinout);
   
-  
-  unbind_texture_gf();
+  #ifdef USETEXTURE
+   unbind_texture_gf();
+  #endif
   cudaFree(dotprod);
   cudaFree(dotprod2);
   cudaFree(rk);
@@ -3254,9 +4550,9 @@ void reconstructgf_2v (dev_su3* gf){
 
 
 
-__global__ void dev_check_gauge_reconstruction_8(int pos, dev_su3 * outgf1, dev_su3* outgf2){
-  dev_reconstructgf_8texref (pos, outgf1);
-  dev_reconstructgf_8texref_dagger (pos, outgf2);
+__global__ void dev_check_gauge_reconstruction_8(dev_su3_2v* gf, int pos, dev_su3 * outgf1, dev_su3* outgf2){
+  dev_reconstructgf_8texref (gf,pos, outgf1);
+  dev_reconstructgf_8texref_dagger (gf,pos, outgf2);
 }
 
 
@@ -3270,8 +4566,9 @@ void check_gauge_reconstruction_8(su3 ** gf1, dev_su3_2v * gf2, int ind1, int mu
   dev_su3  result, result_dagger;
    printf("Checking 8 paramater reconstruction of gauge field:\n");  
   su3 gfdagger;
-  
-  bind_texture_gf(gf2);
+  #ifdef USETEXTURE
+    bind_texture_gf(gf2);
+  #endif
   printf("\n");
   size_t cpsize = sizeof(dev_su3); // parallel in t and z direction
   cudaMalloc((void **) &reconst_g, cpsize); 
@@ -3280,7 +4577,7 @@ void check_gauge_reconstruction_8(su3 ** gf1, dev_su3_2v * gf2, int ind1, int mu
   show_su3(gf1[ind1][mu]);
   printf("\n");
   
-  dev_check_gauge_reconstruction_8  <<< 1 , 1 >>> (4*ind1 + mu, reconst_g, reconst_g_dagger);
+  dev_check_gauge_reconstruction_8  <<< 1 , 1 >>> (dev_gf,4*ind1 + mu, reconst_g, reconst_g_dagger);
   cudaMemcpy(&result, reconst_g, cpsize, cudaMemcpyDeviceToHost);
   cudaMemcpy(&result_dagger, reconst_g_dagger, cpsize, cudaMemcpyDeviceToHost);
 
@@ -3294,8 +4591,9 @@ void check_gauge_reconstruction_8(su3 ** gf1, dev_su3_2v * gf2, int ind1, int mu
 
 
 
-
-  unbind_texture_gf();
+  #ifdef USETEXTURE
+   unbind_texture_gf();
+  #endif
   cudaFree(reconst_g);
 }
 
@@ -3619,16 +4917,43 @@ void convert2REAL4_spin(spinor* spin, dev_spinor* h2d){
 void init_mixedsolve(su3** gf){
 cudaError_t cudaerr;
 
-  
-  
+   // get number of devices
+   if(havedevice == 0){
+     int ndev = find_devices();
+	   if(ndev == 0){
+	       fprintf(stderr, "Error: no CUDA devices found. Aborting...\n");
+	       exit(300);
+	    }
+	 // try to set active device to device_num given in input file
+	    if(device_num < ndev){
+	     printf("Setting active device to: %d\n", device_num);
+	     cudaSetDevice(device_num);
+	    }
+	    else{
+	      fprintf(stderr, "Error: There is no CUDA device with No. %d. Aborting...\n",device_num);
+	      exit(301);
+	    }
+	    if((cudaerr=cudaGetLastError())!=cudaSuccess){
+	    printf("Error in init_mixedsolve_eo(): Could not set active device. Aborting...\n");
+	    exit(302);
+	    }
+    havedevice = 1;
+    }
   #ifdef GF_8
   /* allocate 8 floats of gf = 2*4*VOLUME float4's*/
+  printf("Using GF 8 reconstruction\n");
   size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8);
   #else
   /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
+  printf("Using GF 12 reconstruction\n");
   size_t dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v); 
   #endif
   
+  #ifdef USETEXTURE
+    printf("Using texture references\n");
+  #else
+    printf("NOT using texture references\n");
+  #endif
   if((cudaerr=cudaMalloc((void **) &dev_gf, dev_gfsize)) != cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of gauge field failed. Aborting...\n");
     exit(200);
@@ -3706,15 +5031,43 @@ void init_mixedsolve_eo(su3** gf){
 cudaError_t cudaerr;
   dev_complex help;
 
-  
+  if(havedevice == 0){
+   // get number of devices
+     int ndev = find_devices();
+	   if(ndev == 0){
+	       fprintf(stderr, "Error: no CUDA devices found. Aborting...\n");
+	       exit(300);
+	    }
+	 // try to set active device to device_num given in input file
+	    if(device_num < ndev){
+	     printf("Setting active device to: %d\n", device_num);
+	     cudaSetDevice(device_num);
+	    }
+	    else{
+	      fprintf(stderr, "Error: There is no CUDA device with No. %d. Aborting...\n",device_num);
+	      exit(301);
+	    }
+	    if((cudaerr=cudaGetLastError())!=cudaSuccess){
+	    printf("Error in init_mixedsolve_eo(): Could not set active device. Aborting...\n");
+	    exit(302);
+	    }  
+   havedevice=1;
+  }
   #ifdef GF_8
   /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
+  printf("Using GF 8 reconstruction\n");
   size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8); 
   #else
   /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
+  printf("Using GF 12 reconstruction\n");
   size_t dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v); 
   #endif
   
+  #ifdef USETEXTURE
+    printf("Using texture references\n");
+  #else
+    printf("NOT using texture references\n");
+  #endif
   
   if((cudaerr=cudaMalloc((void **) &dev_gf, dev_gfsize)) != cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of gauge field failed. Aborting...\n");
@@ -3840,7 +5193,6 @@ void finalize_mixedsolve(){
     cudaFree(dev_eoidx_odd);
     cudaFree(dev_nn_eo);
     cudaFree(dev_nn_oe);
-  
   }
   
   
@@ -3880,6 +5232,8 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
   zero_spinor_field(g_spinor_field[DUM_SOLVER+2],  N);
   printf("The VOLUME is: %d\n",N);
   
+  
+  
 for(iter=0; iter<max_iter; iter++){
 
    printf("Applying double precision Dirac-Op...\n");
@@ -3889,6 +5243,13 @@ for(iter=0; iter<max_iter; iter++){
     // r_k = b - D x_k
    
    rk = square_norm(g_spinor_field[DUM_SOLVER], N, 0);
+  
+   #ifdef GF_8
+    if(isnan(rk)){
+      fprintf(stderr, "Error in mixed_solve_eo: Residue is NaN.\n  May happen with GF 8 reconstruction. Aborting ...\n");
+      exit(200);
+    }
+   #endif
    
    printf("Residue after %d inner solver iterations: %.18e\n",outercount,rk);
    if(((rk <= eps) && (rel_prec == 0)) || ((rk <= eps*sourcesquarenorm) && (rel_prec == 1)))
@@ -3952,30 +5313,151 @@ for(iter=0; iter<max_iter; iter++){
 
 
 
+void dummy (dev_spinor* a, dev_spinor* b){
+
+}
+
+
+void benchmark(spinor * const Q){
+  
+  double timeelapsed = 0.0;
+  clock_t start, stop;
+  int i;
+  
+  size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
+  convert2REAL4_spin(Q,h2d_spin);
+  cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
+  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+  assert((start = clock())!=-1);
+
+ #ifdef USETEXTURE
+  //Bind texture gf
+  bind_texture_gf(dev_gf);
+ #endif
+
+ //Initialize some stuff
+  printf("mu = %f\n", g_mu);
+  dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
+  h0.re = (REAL)ka0.re;    h0.im = -(REAL)ka0.im;
+  h1.re = (REAL)ka1.re;    h1.im = -(REAL)ka1.im;
+  h2.re = (REAL)ka2.re;    h2.im = -(REAL)ka2.im;
+  h3.re = (REAL)ka3.re;    h3.im = -(REAL)ka3.im;
+  
+  mh0.re = -(REAL)ka0.re;    mh0.im = (REAL)ka0.im;
+  mh1.re = -(REAL)ka1.re;    mh1.im = (REAL)ka1.im;
+  mh2.re = -(REAL)ka2.re;    mh2.im = (REAL)ka2.im;
+  mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
+  
+  // try using constant mem for kappas
+  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(dev_complex)) ;
+  
+  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
+  
+  
+  int blockdim3=BLOCK;
+  int gridsize;
+  if( VOLUME/2 >= BLOCK){
+    gridsize = (int)(VOLUME/2/BLOCK) + 1;
+  }
+  else{
+    gridsize=1;
+  }
+ printf("gridsize = %d\n", gridsize);
+ int griddim3=gridsize; 
+  
+  
+  he_cg_init<<< 1, 1 >>> (dev_grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
+  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+  printf("Applying H 1000 times\n");
+  for(i=0; i<1000; i++){
+      #ifdef USETEXTURE
+       bind_texture_spin(dev_spinin,1);
+      #endif
+       //bind_texture_nn(dev_nn_eo);
+      //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
+      dev_Hopping_Matrix<<<griddim3, blockdim3>>>
+             (dev_gf, dev_spinin, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0
+       //unbind_texture_nn();
+    #ifdef USETEXTURE             
+     unbind_texture_spin(1);
+    #endif
+
+    #ifdef USETEXTURE
+     bind_texture_spin(dev_spin_eo1,1);
+    #endif
+  //bind_texture_nn(dev_nn_oe);
+   // cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
+    dev_Hopping_Matrix<<<griddim3, blockdim3>>>
+            (dev_gf, dev_spin_eo1, dev_spinin, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
+  //unbind_texture_nn();
+    #ifdef USETEXTURE
+     unbind_texture_spin(1);
+    #endif
+
+  }  
+  printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+  printf("Done\n"); 
+  
+  assert((stop = clock())!=-1);
+  timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
+  // x2 because 2x Hopping per iteration
+  double benchres = 1400.0*2*(VOLUME/2)* 1000 / timeelapsed / 1.0e9;
+  printf("Benchmark: %f Gflops\n", benchres); 
+   
+  #ifdef USETEXTURE
+    unbind_texture_gf();
+  #endif
+}
+
 
 
 
 
 extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max_iter, 
 	   double eps, const int rel_prec, const int N){
-  
+
   // source in Q, initial solution in P (not yet implemented)
   double rk;
   int outercount=0;
   clock_t start, stop, startinner, stopinner; 
   double timeelapsed = 0.0;
   double sourcesquarenorm;
-  int iter;
+  int iter, retval;
   
-  
+
   size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
+    
   init_mixedsolve_eo(g_gauge_field);
   
+  /*
+  // small benchmark
+    assign(g_spinor_field[DUM_SOLVER],Q,N);
+    benchmark(g_spinor_field[DUM_SOLVER]);
+  // end small benchmark
+  
+  exit(100);
+  */
+ 
+ 
+
+
   // Start timer
   assert((start = clock())!=-1);
-  
   rk = square_norm(Q, N, 1);
   sourcesquarenorm=rk; // for relative prec
+  double finaleps;
+  if(rel_prec == 1){
+    finaleps = eps * sourcesquarenorm;
+  }
+  else{
+    finaleps = eps;
+  }
   assign(g_spinor_field[DUM_SOLVER],Q,N);
   printf("Initial residue: %.16e\n",rk);
   zero_spinor_field(g_spinor_field[DUM_SOLVER+1],  N);//spin2 = x_k
@@ -3991,21 +5473,28 @@ for(iter=0; iter<max_iter; iter++){
     // r_k = b - D x_k
    
    rk = square_norm(g_spinor_field[DUM_SOLVER], N, 0);
+   #ifdef GF_8
+    if(isnan(rk)){
+      fprintf(stderr, "Error in mixed_solve_eo: Residue is NaN.\n  May happen with GF 8 reconstruction. Aborting ...\n");
+      exit(200);
+    }
+   #endif
    
    printf("Residue after %d inner solver iterations: %.18e\n",outercount,rk);
    
    if(((rk <= eps) && (rel_prec == 0)) || ((rk <= eps*sourcesquarenorm) && (rel_prec == 1)))
    {
      printf("Reached solver precision of eps=%.2e\n",eps);
-     //multiply with D^dagger
+     //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
      Qtm_minus_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
      assign(P, g_spinor_field[DUM_SOLVER+3], N);
-  
 
-     stop = clock();
-     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
      printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
    
+  
+     stop = clock();
+     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
+        
      finalize_mixedsolve();
      return(iter*max_innersolver_it);  // MAYBE ONE SHOULD KEEP TRACK OF REAL INNER SOLVER STEPS
    }
@@ -4020,35 +5509,31 @@ for(iter=0; iter<max_iter; iter++){
    // D p_k = r_k
    printf("Entering inner solver\n");
    assert((startinner = clock())!=-1);
-   dev_cg_eo(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, dev_output,NULL, T, LZ,0);
+   dev_cg_eo(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, dev_output,NULL, T, LZ,0,(REAL) finaleps);
    stopinner = clock();
    timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;
    printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
-   
-  
+ 
    // copy back
    cudaMemcpy(h2d_spin, dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
    
    convert2double_spin(h2d_spin, g_spinor_field[DUM_SOLVER+2]);
-   
-   add(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+2],N);
    // x_(k+1) = x_k + p_k
-   
-   outercount ++;
-    
+   add(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+2],N);
+
+   outercount ++;   
 }// outer loop 
     
      printf("Did NOT reach solver precision of eps=%.2e\n",eps);
-     //multiply with D^dagger
-     Q_minus_psi_gpu(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
+     //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
+     Qtm_minus_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
      assign(P, g_spinor_field[DUM_SOLVER+3], N);
-  
+    
 
-    stop = clock();
+    assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
-
 
   finalize_mixedsolve();
   return(-1);

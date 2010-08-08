@@ -170,6 +170,8 @@
 /* Define to 1 for rts_get_dram_window usage for halfspinor on BG/L */
 #undef BGL2
 
+/* Define if we want to use CUDA GPU */
+#undef HAVE_GPU
 
 #endif
 
