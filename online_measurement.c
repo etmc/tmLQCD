@@ -73,6 +73,11 @@ void online_measurement(const int traj, const int id) {
   }
   ranlxs(&tmp, 1);
   t0 = (int)(measurement_list[id].max_source_slice*tmp);
+  MPI_Bcast(&t0, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# timeslice set to %d (T=%d) for online measurement\n", t0, g_nproc_t*T);
+    printf("# online measurements parameters: kappa = %g, mu = %g\n", g_kappa, g_mu/2./g_kappa);
+  }
 #ifdef MPI
   atime = MPI_Wtime();
 #else
@@ -85,7 +90,7 @@ void online_measurement(const int traj, const int id) {
 
   source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 
 			      t0, 0, traj);
-  
+
   invert_eo(g_spinor_field[2], g_spinor_field[3], 
 	    g_spinor_field[0], g_spinor_field[1],
 	    1.e-14, measurement_list[id].max_iter, CG, 1, 0, 1);
