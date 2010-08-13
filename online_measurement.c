@@ -40,8 +40,8 @@
 
 /******************************************************
  *
- * This routine computes the two correlator
- * <PP> and <PA>  (<source sink>)
+ * This routine computes the correlators
+ * <PP>, <PA> and <PV> (<source sink>)
  * using a stochastic time slice source
  * and only one inversion (actually A_0)
  * 
@@ -73,7 +73,9 @@ void online_measurement(const int traj, const int id) {
   }
   ranlxs(&tmp, 1);
   t0 = (int)(measurement_list[id].max_source_slice*tmp);
+#ifdef MPI
   MPI_Bcast(&t0, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
   if(g_debug_level > 1 && g_proc_id == 0) {
     printf("# timeslice set to %d (T=%d) for online measurement\n", t0, g_nproc_t*T);
     printf("# online measurements parameters: kappa = %g, mu = %g\n", g_kappa, g_mu/2./g_kappa);
@@ -99,7 +101,7 @@ void online_measurement(const int traj, const int id) {
   /* here we use implicitly DUM_MATRIX and DUM_MATRIX+1 */
   convert_eo_to_lexic(g_spinor_field[DUM_MATRIX], g_spinor_field[2], g_spinor_field[3]);
   
-  /* now we sums only over local space for every t */
+  /* now we sum only over local space for every t */
   for(t = 0; t < T; t++) {
     j = g_ipt[t][0][0][0];
     res = 0.;
@@ -125,8 +127,8 @@ void online_measurement(const int traj, const int id) {
     Cpa[t+g_proc_coords[0]*T] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
     Cp4[t+g_proc_coords[0]*T] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
   }
-#ifdef MPI
 
+#ifdef MPI
   /* some gymnastics needed in case of parallelisation */
   if(g_mpi_time_rank == 0) {
     MPI_Gather(&Cpp[g_proc_coords[0]*T], T, MPI_DOUBLE, Cpp, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
