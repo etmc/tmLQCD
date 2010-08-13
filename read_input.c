@@ -6630,7 +6630,7 @@ YY_RULE_SETUP
 {
     sscanf(tmlqcdtext, " %[a-zA-Z] = %d", name, &a);
     meas->freq = a;
-    if(myverbose!=0) fprintf(stderr, "  Frequency for measurement with id %d set to %d\n", meas->id, meas->freq);
+    if(myverbose!=0) printf("  Frequency for measurement with id %d set to %d\n", meas->id, meas->freq);
   }
 	YY_BREAK
 

@@ -181,7 +181,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       if(g_proc_id == 0) {
 	printf("# Using CG!\n"); 
-	printf("# mu = %f\n", g_mu);
+	printf("# mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
 	fflush(stdout);
       }
    #ifdef HAVE_GPU
