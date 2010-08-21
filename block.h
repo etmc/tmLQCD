@@ -55,11 +55,16 @@ typedef struct {
 int init_blocks(const int nt, const int nx, const int ny, const int nz);
 int free_blocks();
 
+int init_blocks_gaugefield();
+int init_blocks_eo_gaugefield();
+
 int split_global_field(spinor * const block_low, spinor * const block_high, spinor * const field);
 void reconstruct_global_field(spinor * const rec_field, spinor * const block_low, spinor * const block_high);
 void copy_global_to_block(spinor * const blockfield, spinor * const globalfield, const int blk);
 void copy_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk);
+void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, spinor * const globalfield, const int blk);
 void add_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk);
+void add_eo_block_to_global(spinor * const globalfield, spinor * const beven, spinor * const bodd, const int blk);
 
 void block_orthonormalize(block *parent);
 void block_orthonormalize_free(block *parent);
@@ -77,6 +82,7 @@ int nblks_x;
 int nblks_y;
 int nblks_z;
 int nblks_dir[4];
+int blk_gauge_eo;
 void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi, int nb_blocks);
 void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const block_list, const int id, const int nb_blocks);
 int split_global_field_GEN(spinor ** const psi, spinor * const field, int nb_blocks);

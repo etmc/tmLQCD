@@ -39,7 +39,6 @@
 #define CALLOC_ERROR_CRASH {printf ("calloc errno : %d\n", errno); errno = 0; return 1;}
 
 
-int init_blocks_gaugefield();
 int init_blocks_geometry();
 
 int **** block_ipt;
@@ -106,6 +105,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   nblks_x = nx;
   nblks_y = ny;
   nblks_z = nz;
+  blk_gauge_eo = -1;
   nblks_dir[0] = nblks_t;
   nblks_dir[1] = nblks_x;
   nblks_dir[2] = nblks_y;
@@ -118,8 +118,8 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("# Number of deflation blocks = %d\n  n_block_t = %d\n  n_block_x = %d\n  n_block_y = %d\n  n_block_z = %d\n",
 	   nb_blocks, nblks_t, nblks_x, nblks_y, nblks_z);
-    printf("# Number of iteration with the polynomial preconditioner = %d \n", dfl_field_iter);
-    printf("# Number of iteration in the polynomial preconditioner   = %d \n", dfl_poly_iter);
+    /*     printf("# Number of iteration with the polynomial preconditioner = %d \n", dfl_field_iter); */
+    /*     printf("# Number of iteration in the polynomial preconditioner   = %d \n", dfl_poly_iter); */
   }
 
   free_blocks();
@@ -179,6 +179,8 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].ns = g_N_s;
     block_list[i].spinpad = spinpad;
 
+    /* The following has not yet been adapted for */
+    /* new block geometry right? (C.U.)           */
     for (j = 0 ; j < 6; ++j) {
 #ifdef MPI
       block_list[i].mpilocal_neighbour[j] = (g_nb_list[j] == g_cart_id) ? i : -1;
@@ -198,10 +200,18 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
 	printf("block %d mpilocal_neighbour[%d] = %d\n", i, j, block_list[i].mpilocal_neighbour[j]);
       }
     }
+    /* till here... (C.U.)                        */
 
-    memcpy(block_list[i].mpilocal_coordinate, g_proc_coords, 4*sizeof(int));
-    memcpy(block_list[i].coordinate, g_proc_coords, 3*sizeof(int));
-    block_list[i].coordinate[3] = nb_blocks * g_proc_coords[3] + i;
+    /* block coordinate on the mpilocal processor */
+    block_list[i].mpilocal_coordinate[0] = (i / (nblks_x * nblks_y * nblks_z));
+    block_list[i].mpilocal_coordinate[1] = (i / (nblks_y * nblks_z)) % nblks_x;
+    block_list[i].mpilocal_coordinate[2] = (i / (nblks_z)) % nblks_y;
+    block_list[i].mpilocal_coordinate[3] = (i % nblks_z);
+    /* global block coordinate                    */
+    for(j = 0; j < 4; j++) {
+      block_list[i].coordinate[j] = nblks_dir[j] * g_proc_coords[j] + block_list[i].mpilocal_coordinate[j];
+    }
+    /* even/odd id of block coordinate            */
     block_list[i].evenodd = (block_list[i].coordinate[0] + block_list[i].coordinate[1] + 
 			     block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
@@ -269,7 +279,7 @@ int init_blocks_gaugefield() {
 	  for(bt = 0; bt < nblks_t; bt ++) {
 	    for(bx = 0; bx < nblks_x; bx ++) {
 	      for(by = 0; by < nblks_y; by ++) {
-		for(bz = 0; bz < nblks_z; bz ++){
+		for(bz = 0; bz < nblks_z; bz ++) {
 		  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
 		  memcpy(block_list[i].u + ix_new,     &g_gauge_field[ ix           ][0], sizeof(su3));
 		  memcpy(block_list[i].u + ix_new + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
@@ -289,8 +299,62 @@ int init_blocks_gaugefield() {
       }
     }
   }
+  blk_gauge_eo = 0;
   return(0);
 }
+
+int init_blocks_eo_gaugefield() {
+  /* 
+     Copies the existing gauge field on the processor into the separate blocks in a form
+     that is readable by the block Hopping matrix. Specifically, in consecutive memory
+     now +t,-t,+x,-x,+y,-y,+z,-z gauge links are stored. This requires double the storage in
+     memory. 
+  */
+
+  int i, x, y, z, t, ix, ix_even = 0, ix_odd = (dT*dX*dY*dZ*8)/2, ixeo;
+  int bx, by, bz, bt, even=0;
+
+  for (t = 0; t < dT;  t++) {
+    for (x = 0; x < dX; x++) {
+      for (y = 0; y < dY; y++) {
+	for (z = 0; z < dZ; z++) {
+	  if((t+x+y+z)%2 == 0) {
+	    even = 1;
+	    ixeo = ix_even;
+	  }
+	  else {
+	    even = 0;
+	    ixeo = ix_odd;
+	  }
+	  i = 0;
+	  for(bt = 0; bt < nblks_t; bt ++) {
+	    for(bx = 0; bx < nblks_x; bx ++) {
+	      for(by = 0; by < nblks_y; by ++) {
+		for(bz = 0; bz < nblks_z; bz ++) {
+		  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
+		  memcpy(block_list[i].u + ixeo,     &g_gauge_field[ ix           ][0], sizeof(su3));
+		  memcpy(block_list[i].u + ixeo + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
+		  memcpy(block_list[i].u + ixeo + 2, &g_gauge_field[ ix           ][1], sizeof(su3));
+		  memcpy(block_list[i].u + ixeo + 3, &g_gauge_field[ g_idn[ix][1] ][1], sizeof(su3));
+		  memcpy(block_list[i].u + ixeo + 4, &g_gauge_field[ ix           ][2], sizeof(su3));
+		  memcpy(block_list[i].u + ixeo + 5, &g_gauge_field[ g_idn[ix][2] ][2], sizeof(su3));
+		  memcpy(block_list[i].u + ixeo + 6, &g_gauge_field[ ix           ][3], sizeof(su3));
+		  memcpy(block_list[i].u + ixeo + 7, &g_gauge_field[ g_idn[ix][3] ][3], sizeof(su3));
+		  i++;
+		}
+	      }
+	    }
+	  }
+	  if(even) ix_even += 8;
+	  else ix_odd += 8;
+	}
+      }
+    }
+  }
+  blk_gauge_eo = 1;
+  return(0);
+}
+
 
 int check_blocks_geometry(block * blk) {
   int i, k=0, x, y, z, t;
@@ -1043,12 +1107,13 @@ void copy_global_to_block(spinor * const blockfield, spinor * const globalfield,
   ixcurrent=0;
   for (i = 0; i < VOLUME; i++) {
 
+    /* global coordinates */
     iz = i%LZ;
     iy = (i / LZ)%LY;
     ix = (i / (LY * LZ))%LX;
     it = i / (LX * LY * LZ);
 
-
+    /* block coordinates */
     izb = iz / block_list[blk].LZ;
     iyb = iy / block_list[blk].LY;
     ixb = ix / block_list[blk].LX;
@@ -1057,6 +1122,37 @@ void copy_global_to_block(spinor * const blockfield, spinor * const globalfield,
     if ((ibz == izb) && (iby == iyb) && (ibx == ixb) && (ibt==itb)) {
       memcpy(blockfield+ixcurrent, globalfield+i, sizeof(spinor));
       ixcurrent++;
+    }
+  }
+  return;
+}
+
+/* copies the part of globalfields corresponding to block blk */
+/* to the even and odd block field blockfield                 */
+void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, spinor * const globalfield, const int blk) {
+  int t, x, y, z;
+  int i,it,ix,iy,iz;
+  int even = 0, odd = 0;
+  
+  for(t = 0; t < block_list[blk].T; t++) {
+    it = t + block_list[blk].mpilocal_coordinate[0]*block_list[blk].T;
+    for(x = 0; x < block_list[blk].LX; x++) {
+      ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].LX;
+      for(y = 0; y < block_list[blk].LY; y++) {
+	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].LY;
+	for(z = 0; z < block_list[blk].LZ; z++) {
+	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].LZ;
+	  i = g_ipt[it][ix][iy][iz];
+	  if((t+x+y+z)%2 == 0) {
+	    memcpy(beven + even, globalfield + i, sizeof(spinor));
+	    even++;
+	  }
+	  else {
+	    memcpy(bodd + odd, globalfield + i, sizeof(spinor));
+	    odd++;
+	  }
+	}
+      }
     }
   }
   return;
@@ -1145,8 +1241,37 @@ void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const blo
   return;
 }
 
+void add_eo_block_to_global(spinor * const globalfield, spinor * const beven, spinor * const bodd, const int blk) {
+  int t, x, y, z;
+  int i,it,ix,iy,iz;
+  int even = 0, odd = 0;
+
+  for(t = 0; t < block_list[blk].T; t++) {
+    it = t + block_list[blk].mpilocal_coordinate[0]*block_list[blk].T;
+    for(x = 0; x < block_list[blk].LX; x++) {
+      ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].LX;
+      for(y = 0; y < block_list[blk].LY; y++) {
+	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].LY;
+	for(z = 0; z < block_list[blk].LZ; z++) {
+	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].LZ;
+	  i = g_ipt[it][ix][iy][iz];
+	  if((t+x+y+z)%2 == 0) {
+	    add(globalfield + i, globalfield + i, beven + even, 1);
+	    even++;
+	  }
+	  else {
+	    add(globalfield + i, globalfield + i, bodd + odd, 1);
+	    odd++;
+	  }
+	}
+      }
+    }
+  }
+  return;
+}
+
 void add_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk) {
-  int i, vol = block_list[blk].volume;
+  int i;
   spinor * r, * s;
   int it,ix,iy,iz;
   int ibt,ibx,iby,ibz;

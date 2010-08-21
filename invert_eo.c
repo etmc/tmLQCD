@@ -55,17 +55,17 @@
 
 
 #ifdef HAVE_GPU
-  #include"GPU/cudadefs.h"
-  #include"temporalgauge.h"
-  #include"observables.h"
+#include"GPU/cudadefs.h"
+#include"temporalgauge.h"
+#include"observables.h"
 
-  extern int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
-           double eps, const int rel_prec,const int N);
-  extern  int mixed_solve_eo (spinor * const P, spinor * const Q, const int max_iter, 
-           double eps, const int rel_prec, const int N);
-  #ifdef TEMPORALGAUGE
-    extern su3* g_trafo;
-  #endif
+extern int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
+			double eps, const int rel_prec,const int N);
+extern  int mixed_solve_eo (spinor * const P, spinor * const Q, const int max_iter, 
+			    double eps, const int rel_prec, const int N);
+#ifdef TEMPORALGAUGE
+extern su3* g_trafo;
+#endif
 #endif
 
 
@@ -81,46 +81,46 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   if(even_odd_flag) {
     if(g_proc_id == 0) {printf("# Using Even/Odd preconditioning!\n"); fflush(stdout);}
     
- #ifdef HAVE_GPU
-   #ifdef TEMPORALGAUGE
-   /* initialize temporal gauge here */
-  int retval;
-  double dret;
-  double plaquette = 0.0;
+#ifdef HAVE_GPU
+#ifdef TEMPORALGAUGE
+    /* initialize temporal gauge here */
+    int retval;
+    double dret;
+    double plaquette = 0.0;
 
- if(usegpu_flag){
+    if(usegpu_flag){
     
-    /* need VOLUME here (not N=VOLUME/2)*/
-    if((retval=init_temporalgauge_trafo(VOLUME, g_gauge_field)) !=0){
-      if(g_proc_id == 0) printf("Error while gauge fixing to temporal gauge. Aborting...\n");   
-      exit(200);
-    }
-    plaquette = measure_gauge_action();
-    if(g_proc_id == 0) printf("Plaquette before gauge fixing: %.16e\n", plaquette/6./VOLUME);
-    /* do trafo */
-    apply_gtrafo(g_gauge_field, g_trafo);
-    plaquette = measure_gauge_action();
-    if(g_proc_id == 0) printf("Plaquette after gauge fixing: %.16e\n", plaquette/6./VOLUME);
+      /* need VOLUME here (not N=VOLUME/2)*/
+      if((retval=init_temporalgauge_trafo(VOLUME, g_gauge_field)) !=0){
+	if(g_proc_id == 0) printf("Error while gauge fixing to temporal gauge. Aborting...\n");   
+	exit(200);
+      }
+      plaquette = measure_gauge_action();
+      if(g_proc_id == 0) printf("Plaquette before gauge fixing: %.16e\n", plaquette/6./VOLUME);
+      /* do trafo */
+      apply_gtrafo(g_gauge_field, g_trafo);
+      plaquette = measure_gauge_action();
+      if(g_proc_id == 0) printf("Plaquette after gauge fixing: %.16e\n", plaquette/6./VOLUME);
     
-    /* do trafo to odd part of source */
-    dret = square_norm(Odd, VOLUME/2 , 1);
-    if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
-    apply_gtrafo_spinor_odd(Odd, g_trafo);
-    dret = square_norm(Odd, VOLUME/2, 1);
-    if(g_proc_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);       
+      /* do trafo to odd part of source */
+      dret = square_norm(Odd, VOLUME/2 , 1);
+      if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+      apply_gtrafo_spinor_odd(Odd, g_trafo);
+      dret = square_norm(Odd, VOLUME/2, 1);
+      if(g_proc_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);       
     
-    /* do trafo to even part of source */
-    dret = square_norm(Even, VOLUME/2 , 1);
-    if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
-    apply_gtrafo_spinor_even(Even, g_trafo);
-    dret = square_norm(Even, VOLUME/2, 1);
-    if(g_proc_id == 0) printf("square norm after gauge fixing: %.16f\n", dret);      
-   } 
-   #endif  
- #endif /* HAVE_GPU*/    
+      /* do trafo to even part of source */
+      dret = square_norm(Even, VOLUME/2 , 1);
+      if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+      apply_gtrafo_spinor_even(Even, g_trafo);
+      dret = square_norm(Even, VOLUME/2, 1);
+      if(g_proc_id == 0) printf("square norm after gauge fixing: %.16f\n", dret);      
+    } 
+#endif  
+#endif /* HAVE_GPU*/    
     
  
-    assign_mul_one_pm_imu_inv(Even_new, Even, +1.);
+    assign_mul_one_pm_imu_inv(Even_new, Even, +1., VOLUME/2);
     
     Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new); 
     /* The sign is plus, since in Hopping_Matrix */
@@ -131,23 +131,23 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     
     if(solver_flag == BICGSTAB) {
       if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}
-      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.); 
+      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2); 
       iter = bicgstab_complex(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
     }
     else if(solver_flag == GMRES) {
       if(g_proc_id == 0) {printf("# Using GMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
-      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
+      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
       iter = gmres(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, 1, &Mtm_plus_sym_psi);
     }
     else if(solver_flag == GCR) {
       if(g_proc_id == 0) {printf("# Using GCR! m = %d\n", gmres_m_parameter); fflush(stdout);}
-      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
+      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
       iter = gcr(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, 0, &Mtm_plus_sym_psi);
     }
     else if(solver_flag == GMRESDR) {
       if(g_proc_id == 0) {printf("# Using GMRES-DR! m = %d, NrEv = %d\n", 
 				 gmres_m_parameter, gmresdr_nr_ev); fflush(stdout);}
-      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
+      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
       iter = gmres_dr(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, gmresdr_nr_ev, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
     }
     else if(solver_flag == FGMRES) {
@@ -158,7 +158,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     else if(solver_flag == BICGSTABELL) {
       if(g_proc_id == 0) {printf("# Using BiCGstab2!\n"); fflush(stdout);}
-      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.); 
+      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2); 
       iter = bicgstabell(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 3, VOLUME/2, &Mtm_plus_sym_psi);
     }
     else if(solver_flag == PCG) {
@@ -184,20 +184,20 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	printf("# mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
 	fflush(stdout);
       }
-   #ifdef HAVE_GPU
+#ifdef HAVE_GPU
       if(usegpu_flag){
-          if(g_proc_id == 0) printf("Using GPU for inversion\n");
-          iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
+	if(g_proc_id == 0) printf("Using GPU for inversion\n");
+	iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
       }
       else{
         iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
         Qtm_minus_psi(Odd_new, Odd_new);
       }
-  #else        
+#else        
       iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
 		    VOLUME/2, &Qtm_pm_psi);
       Qtm_minus_psi(Odd_new, Odd_new);
-  #endif /*HAVE_GPU*/
+#endif /*HAVE_GPU*/
     }
     else if(solver_flag == MR) {
       if(g_proc_id == 0) {printf("# Using MR!\n"); fflush(stdout);}
@@ -205,7 +205,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     else if(solver_flag == CGS) {
       if(g_proc_id == 0) {printf("# Using CGS!\n"); fflush(stdout);}
-      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.); 
+      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2); 
       iter = cgs_real(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
     }
     else {
@@ -213,7 +213,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
 #ifdef HAVE_GPU
       if(g_proc_id == 0) {printf("Using GPU for inversion\n");
-      fflush(stdout);}
+	fflush(stdout);}
       iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
 #else
       iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
@@ -233,59 +233,59 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     
     /* Reconstruct the even sites                */
     Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new);
-    mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1.);
+    mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
     /* The sign is plus, since in Hopping_Matrix */
     /* the minus is missing                      */
     assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2);
  
- #ifdef HAVE_GPU  
-  /* return from temporal gauge again */
-  #ifdef TEMPORALGAUGE
-   if(usegpu_flag){ 
-        plaquette = measure_gauge_action();
-    if(g_proc_id == 0) printf("Plaquette before inverse gauge fixing: %.16e\n", plaquette/6./VOLUME);
+#ifdef HAVE_GPU  
+    /* return from temporal gauge again */
+#ifdef TEMPORALGAUGE
+    if(usegpu_flag){ 
+      plaquette = measure_gauge_action();
+      if(g_proc_id == 0) printf("Plaquette before inverse gauge fixing: %.16e\n", plaquette/6./VOLUME);
     
-    /* undo trafo */
+      /* undo trafo */
     
-    /*apply_inv_gtrafo(g_gauge_field, g_trafo);*/
-    /* copy back the saved original field located in g_tempgauge_field -> update necessary*/
-    copy_gauge_field(g_gauge_field, g_tempgauge_field);
-    g_update_gauge_copy = 1;
+      /*apply_inv_gtrafo(g_gauge_field, g_trafo);*/
+      /* copy back the saved original field located in g_tempgauge_field -> update necessary*/
+      copy_gauge_field(g_gauge_field, g_tempgauge_field);
+      g_update_gauge_copy = 1;
     
     
-    plaquette = measure_gauge_action();
-    if(g_proc_id == 0) printf("Plaquette after inverse gauge fixing: %.16e\n", plaquette/6./VOLUME);
+      plaquette = measure_gauge_action();
+      if(g_proc_id == 0) printf("Plaquette after inverse gauge fixing: %.16e\n", plaquette/6./VOLUME);
    
-    /* undo trafo to source (Even, Odd) */
-    dret = square_norm(Even, VOLUME/2 , 1);
-    if(g_proc_id == 0) printf("square norm before gauge fixing: %.16f\n", dret); 
-    apply_inv_gtrafo_spinor_even(Even, g_trafo);
-    dret = square_norm(Even, VOLUME/2, 1);
-    if(g_proc_id == 0) printf("square norm after gauge fixing: %.16f\n", dret);  
-    dret = square_norm(Odd, VOLUME/2 , 1);
-    if(g_proc_id == 0) printf("square norm before gauge fixing: %.16f\n", dret); 
-    apply_inv_gtrafo_spinor_odd(Odd, g_trafo);
-    dret = square_norm(Odd, VOLUME/2, 1);
-    if(g_proc_id == 0) printf("square norm after gauge fixing: %.16f\n", dret); 
+      /* undo trafo to source (Even, Odd) */
+      dret = square_norm(Even, VOLUME/2 , 1);
+      if(g_proc_id == 0) printf("square norm before gauge fixing: %.16f\n", dret); 
+      apply_inv_gtrafo_spinor_even(Even, g_trafo);
+      dret = square_norm(Even, VOLUME/2, 1);
+      if(g_proc_id == 0) printf("square norm after gauge fixing: %.16f\n", dret);  
+      dret = square_norm(Odd, VOLUME/2 , 1);
+      if(g_proc_id == 0) printf("square norm before gauge fixing: %.16f\n", dret); 
+      apply_inv_gtrafo_spinor_odd(Odd, g_trafo);
+      dret = square_norm(Odd, VOLUME/2, 1);
+      if(g_proc_id == 0) printf("square norm after gauge fixing: %.16f\n", dret); 
     
     
-    dret = square_norm(Even_new, VOLUME/2 , 1);
-    if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
-    apply_inv_gtrafo_spinor_even(Even_new, g_trafo);
-    dret = square_norm(Even_new, VOLUME/2, 1);
-    if(g_proc_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);  
+      dret = square_norm(Even_new, VOLUME/2 , 1);
+      if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+      apply_inv_gtrafo_spinor_even(Even_new, g_trafo);
+      dret = square_norm(Even_new, VOLUME/2, 1);
+      if(g_proc_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);  
 
-    dret = square_norm(Odd_new, VOLUME/2 , 1);
-    if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
-    apply_inv_gtrafo_spinor_odd(Odd_new, g_trafo);
-    dret = square_norm(Odd_new, VOLUME/2, 1);
-    if(g_proc_id == 0) printf("square norm after gauge fixing: %.16e\n", dret); 
+      dret = square_norm(Odd_new, VOLUME/2 , 1);
+      if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+      apply_inv_gtrafo_spinor_odd(Odd_new, g_trafo);
+      dret = square_norm(Odd_new, VOLUME/2, 1);
+      if(g_proc_id == 0) printf("square norm after gauge fixing: %.16e\n", dret); 
   
     
-    finalize_temporalgauge();
-   }
-  #endif
- #endif     
+      finalize_temporalgauge();
+    }
+#endif
+#endif     
   
   
   }
@@ -311,16 +311,16 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     else if(solver_flag == FGMRES) {
       if(g_proc_id == 0) {printf("# Using FGMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
       iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi); 
-/*       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME); */
-/*       iter = fgmres(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &Q_pm_psi);  */
-/*       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]); */
+      /*       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME); */
+      /*       iter = fgmres(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &Q_pm_psi);  */
+      /*       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]); */
     }
     else if(solver_flag == GCR) {
       if(g_proc_id == 0) {printf("# Using GCR! m = %d\n", gmres_m_parameter); fflush(stdout);}
       iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi); 
-/*       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME); */
-/*       iter = gcr(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &Q_pm_psi); */
-/*       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]); */
+      /*       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME); */
+      /*       iter = gcr(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &Q_pm_psi); */
+      /*       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]); */
     }
     else if(solver_flag == DFLGCR || solver_flag == DFLFGMRES) {
       if(g_proc_id == 0) {printf("# Using deflated solver! m = %d\n", gmres_m_parameter); fflush(stdout);}
@@ -352,23 +352,23 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     else {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
-     #ifdef HAVE_GPU 
-        if(usegpu_flag){
-          if(g_proc_id == 0) printf("Using GPU for inversion\n");
-          iter = mixed_solve(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME);
-        }
-        else{
-          gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
-          iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
-                    rel_prec, VOLUME, &Q_pm_psi);
-          Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+#ifdef HAVE_GPU 
+      if(usegpu_flag){
+	if(g_proc_id == 0) printf("Using GPU for inversion\n");
+	iter = mixed_solve(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME);
       }
-    #else
+      else{
+	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+	iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
+		      rel_prec, VOLUME, &Q_pm_psi);
+	Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+      }
+#else
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
       iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
 		    rel_prec, VOLUME, &Q_pm_psi);
       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
-   #endif      
+#endif      
     }
     convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
   }
@@ -407,9 +407,9 @@ void M_minus_1_timesC(spinor * const Even_new, spinor * const Odd_new,
 		      spinor * const Even, spinor * const Odd) {
   /* Even sites */
   Hopping_Matrix(EO, Even_new, Odd);
-  mul_one_pm_imu_inv(Even_new, 1.); 
+  mul_one_pm_imu_inv(Even_new, 1., VOLUME/2); 
 
   /* Odd sites */
   Hopping_Matrix(OE, Odd_new, Even);
-  mul_one_pm_imu_inv(Odd_new, 1.); 
+  mul_one_pm_imu_inv(Odd_new, 1., VOLUME/2); 
 }
