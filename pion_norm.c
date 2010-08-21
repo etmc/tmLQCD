@@ -66,6 +66,9 @@ void pion_norm(const int traj, const int id) {
   }
   ranlxs(&tmp, 1);
   z0 = (int)(measurement_list[id].max_source_slice*tmp);
+#ifdef MPI
+  MPI_Bcast(&z0, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
 
 #ifdef MPI
   atime = MPI_Wtime();
