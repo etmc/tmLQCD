@@ -84,7 +84,7 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
 	  /* get part of r corresponding to block blk into b */
 	  copy_global_to_block(b, r, blk);
 	  
-	  mrblk(a, b, 4, 1.e-31, 1, vol, &dummy_Di, blk);
+	  mrblk(a, b, 16, 1.e-31, 1, vol, &dummy_Di, blk);
 	  
 	  /* add a up to full spinor P */
 	  add_block_to_global(P, a, blk);

@@ -463,8 +463,9 @@
   reg05 = __fxcxnpma(reg02, reg05, c.im); \
   reg15 = __fxcxnpma(reg12, reg15, c.im); 
 
-/* complex number c times rs0 and rs1 */
+/* complex number c times rs0 and rs1         */
 /* complex number c times cjgt of rs2 and rs3 */
+/* for gamma_5 mu multiplication              */
 
 #define _bgl_vector_cmplx_mul_rs(c)			\
   reg20 = __lfpd((double*)&c);					\

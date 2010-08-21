@@ -34,9 +34,10 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
 
   prop_type = parse_propagator_type(reader);
   if ( prop_type == -1 ) {
-    return(-1);
+    prop_type = 0;
   }
 
+  if(prop_type == 4) prop_type = 0;
   /* strictly speeking the following depends on whether we read a source or a propagator */
   if(prop_type == 1) position = 2*position_ + 1;
   /* anything else needs implementation! */
@@ -57,6 +58,7 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
       break;
     }
     header_type = ReaderType(reader);
+    if(g_proc_id == 0) printf("%s\n", header_type);
     if (strcmp("scidac-binary-data", header_type) == 0) {
       if (getpos == position) {
         break;
@@ -108,7 +110,7 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
     }
   }
 
-  if (g_cart_id == 0 && g_debug_level > 1) {
+  if (g_cart_id == 0 && g_debug_level > 0) {
     printf("# checksum for DiracFermion field in file %s position %d is %#x %#x\n", filename, position, checksum.suma, checksum.sumb);
   }
 

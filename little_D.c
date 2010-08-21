@@ -54,17 +54,7 @@
 /* +z                , -z                                */
 /* wasting some memory here...                           */
 
-//const int nb_blocks = 2;
-/*const int nblks_t = 1;
-const int nblks_x = 1;
-const int nblks_y = 1;
-int nblks_z = 2;
-int nblks_dir[4] = {1,1,1,2};*/
 int dfl_subspace_updated = 1;
-
-
-
-
 
 /* some lapack related stuff */
 static int ONE = 1;
@@ -93,25 +83,36 @@ void unit_little_D(complex *v, complex *w) {
 
 /** ANOTHER TESTING FUNCTION */
 void invert_little_D_spinor(spinor *r, spinor *s){
-  int i,j;
+  int i, j;
   spinor **psi;
   complex *v, *w;
   psi = calloc(nb_blocks, sizeof(spinor));
   v = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
   w = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
   psi[0] = calloc(VOLUME+nb_blocks, sizeof(spinor));
-  for(i=1; i<nb_blocks;i++) psi[i] = psi[i-1] + (VOLUME / nb_blocks) +1;
+  for(i = 1; i < nb_blocks; i++) {
+    psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
+  }
   split_global_field_GEN(psi, s, nb_blocks); // ADAPT THIS 
 
   for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
-    for(i=0;i<nb_blocks;i++) v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME/nb_blocks, 0);
+    for(i = 0; i < nb_blocks; i++) {
+      v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME/nb_blocks, 0);
+    }
   }
   
-  gcr4complex(w, v, 10, 100, 1e-31, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
+  i = gcr4complex(w, v, 10, 10000, 1e-25, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
+  if(g_proc_id == 0 && g_debug_level > 0) {
+    printf("lgcr: %d iterations in invert_little_D_spinor\n", i);
+  }
   
-  for(i=0;i<nb_blocks;i++) mul(psi[i], w[i*g_N_s], block_list[i].basis[0], VOLUME/nb_blocks);
+  for(i = 0; i < nb_blocks; i++) {
+    mul(psi[i], w[i*g_N_s], block_list[i].basis[0], VOLUME/nb_blocks);
+  }
   for(j = 1; j < g_N_s; ++j) {
-    for(i=0;i<nb_blocks;i++) assign_add_mul(psi[i], block_list[i].basis[j], w[j+i*g_N_s], VOLUME/nb_blocks);
+    for(i = 0; i < nb_blocks; i++) {
+      assign_add_mul(psi[i], block_list[i].basis[j], w[j+i*g_N_s], VOLUME/nb_blocks);
+    }
   }
   reconstruct_global_field_GEN(r, psi, nb_blocks); // ADAPT THIS
 
@@ -134,15 +135,17 @@ void apply_little_D_spinor(spinor *r, spinor *s){
   v = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
   w = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
   psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
-  for(i = 1; i < nb_blocks; i++) psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
+  for(i = 1; i < nb_blocks; i++) {
+    psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
+  }
   split_global_field_GEN(psi, s, nb_blocks);  
 
   for (j = 0; j < g_N_s; ++j) {
     for(i = 0; i < nb_blocks; i++) v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME/nb_blocks, 0);
   }
 
-  if (g_debug_level > 2){
-    if (!g_cart_id){
+  if (g_debug_level > 2) {
+    if (!g_cart_id) {
       for (j = 0; j < nb_blocks* g_N_s; ++j) {
         printf("LITTLE_D for 0: v[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
       }
@@ -152,8 +155,8 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 #endif
   }
 
-  if (g_debug_level > 4){
-    for (k = 1; k < 16; ++k){
+  if (g_debug_level > 4) {
+    for (k = 1; k < 16; ++k) {
       if (g_cart_id == k){
         for (j = 0; j < nb_blocks* g_N_s; ++j) {
           printf("LITTLE_D for %u: v[%u] = %1.5e + %1.5e i\n", k, j, v[j].re, v[j].im);
@@ -167,7 +170,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 
   little_D(w, v);
 
-  if (g_debug_level > 2){
+  if (g_debug_level > 2) {
     if (!g_cart_id){
       for (j = 0; j < nb_blocks * g_N_s; ++j) {
         printf("LITTLE_D for 0: w[%u] = %1.5e + %1.5e i\n", j, w[j].re, w[j].im);
@@ -178,26 +181,25 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 #endif
   }
 
-  if (g_debug_level > 4)
-  {
+  if (g_debug_level > 4) {
     for (k = 1; k < 16; ++k){
       if (g_cart_id == k){
-        for (j = 0; j < nb_blocks* g_N_s; ++j) {
-          printf("LITTLE_D for %u: w[%u] = %1.5e + %1.5e i\n", k, j, w[j].re, w[j].im);
-        }
+	for (j = 0; j < nb_blocks* g_N_s; ++j) {
+	  printf("LITTLE_D for %u: w[%u] = %1.5e + %1.5e i\n", k, j, w[j].re, w[j].im);
+	}
       }
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
     }
   }
-  for(i = 0; i < nb_blocks; i++){
-   mul(psi[i], w[i*g_N_s], block_list[i].basis[0], VOLUME/nb_blocks);
+  for(i = 0; i < nb_blocks; i++) {
+    mul(psi[i], w[i*g_N_s], block_list[i].basis[0], VOLUME/nb_blocks);
   }
-  for(j = 1; j < g_N_s; ++j){
-	  for(i = 0; i < nb_blocks; i++){
-		  assign_add_mul(psi[i], block_list[i].basis[j], w[i*g_N_s + j], VOLUME/nb_blocks);
-	  }
+  for(j = 1; j < g_N_s; ++j) {
+    for(i = 0; i < nb_blocks; i++) {
+      assign_add_mul(psi[i], block_list[i].basis[j], w[i*g_N_s + j], VOLUME/nb_blocks);
+    }
   }
   reconstruct_global_field_GEN(r, psi, nb_blocks);
 
@@ -365,59 +367,59 @@ void little_field_gather(complex * w) {
   /* We proceed like this for code simplicity, maybe will be optimized later */
 
   for(pm = 0; pm < 8; pm++) {
-	for(bt = 0; bt < nblks_t; bt++)
-    for(bx = 0; bx < nblks_x; bx++)
-    for(by = 0; by < nblks_y; by++)
-	for(bz = 0; bz < nblks_z; bz++){
-	  ib = block_index(bt, bx, by, bz) * g_N_s;
-	  switch(pm){ 
+    for(bt = 0; bt < nblks_t; bt++)
+      for(bx = 0; bx < nblks_x; bx++)
+	for(by = 0; by < nblks_y; by++)
+	  for(bz = 0; bz < nblks_z; bz++){
+	    ib = block_index(bt, bx, by, bz) * g_N_s;
+	    switch(pm){ 
 	    case 0: /* Direction +t */
-		  w_dest = wt + ib;
-		  if( bt == nblks_t - 1 ) {ib = block_index(0, bx, by, bz) * g_N_s; w_source = wt_buf + ib;}					 // got it from the MPI exchange
-		  else  {ib = block_index(bt + 1, bx, by, bz) * g_N_s; w_source = w + ib;}										 // got it from the diagonal block
-		  break; 
+	      w_dest = wt + ib;
+	      if( bt == nblks_t - 1 ) {ib = block_index(0, bx, by, bz) * g_N_s; w_source = wt_buf + ib;}					 // got it from the MPI exchange
+	      else  {ib = block_index(bt + 1, bx, by, bz) * g_N_s; w_source = w + ib;}										 // got it from the diagonal block
+	      break; 
 	    case 1: /* Direction -t */
-		  w_dest = wt + ib + nb_blocks * g_N_s;
-		  if( bt == 0 ) {ib = block_index(nblks_t - 1, bx, by, bz) * g_N_s; w_source = wt_buf + ib + nb_blocks * g_N_s;} // got it from the MPI exchange
-		  else  {ib = block_index(bt - 1, bx, by, bz) * g_N_s;w_source = w + ib;}										 // got it from the diagonal block
-		  break; 
+	      w_dest = wt + ib + nb_blocks * g_N_s;
+	      if( bt == 0 ) {ib = block_index(nblks_t - 1, bx, by, bz) * g_N_s; w_source = wt_buf + ib + nb_blocks * g_N_s;} // got it from the MPI exchange
+	      else  {ib = block_index(bt - 1, bx, by, bz) * g_N_s;w_source = w + ib;}										 // got it from the diagonal block
+	      break; 
 	    case 2: /* Direction +x */
-		  w_dest = wx + ib;
-		  if( bx == nblks_x - 1 ) {ib = block_index(bt, 0, by, bz) * g_N_s; w_source = wx_buf + ib;}					 // got it from the MPI exchange
-		  else  {ib = block_index(bt, bx + 1, by, bz) * g_N_s; w_source = w + ib;}									     // got it from the diagonal block
-		  break; 
+	      w_dest = wx + ib;
+	      if( bx == nblks_x - 1 ) {ib = block_index(bt, 0, by, bz) * g_N_s; w_source = wx_buf + ib;}					 // got it from the MPI exchange
+	      else  {ib = block_index(bt, bx + 1, by, bz) * g_N_s; w_source = w + ib;}									     // got it from the diagonal block
+	      break; 
 	    case 3: /* Direction -x */
-		  w_dest = wx + ib + nb_blocks * g_N_s;
-		  if( bx == 0 ) {ib = block_index(bt, nblks_x - 1, by, bz) * g_N_s; w_source = wx_buf + ib + nb_blocks * g_N_s;} // got it from the MPI exchange
-		  else  {ib = block_index(bt, bx - 1, by, bz) * g_N_s;w_source = w + ib;}									     // got it from the diagonal block
-		  break; 
+	      w_dest = wx + ib + nb_blocks * g_N_s;
+	      if( bx == 0 ) {ib = block_index(bt, nblks_x - 1, by, bz) * g_N_s; w_source = wx_buf + ib + nb_blocks * g_N_s;} // got it from the MPI exchange
+	      else  {ib = block_index(bt, bx - 1, by, bz) * g_N_s;w_source = w + ib;}									     // got it from the diagonal block
+	      break; 
 	    case 4: /* Direction +y */
-		  w_dest = wy + ib;
-		  if( by == nblks_y - 1 ) {ib = block_index(bt, bx, 0, bz) * g_N_s; w_source = wy_buf + ib;}			         // got it from the MPI exchange
-		  else  {ib = block_index(bt, bx, by + 1, bz) * g_N_s; w_source = w + ib;}									     // got it from the diagonal block
-		  break; 
+	      w_dest = wy + ib;
+	      if( by == nblks_y - 1 ) {ib = block_index(bt, bx, 0, bz) * g_N_s; w_source = wy_buf + ib;}			         // got it from the MPI exchange
+	      else  {ib = block_index(bt, bx, by + 1, bz) * g_N_s; w_source = w + ib;}									     // got it from the diagonal block
+	      break; 
 	    case 5: /* Direction -y */
-		  w_dest = wy + ib + nb_blocks * g_N_s;
-		  if( by == 0 ) {ib = block_index(bt, bx, nblks_y - 1, bz) * g_N_s; w_source = wy_buf + ib + nb_blocks * g_N_s;} // got it from the MPI exchange
-		  else  {ib = block_index(bt, bx, by - 1, bz) * g_N_s;w_source = w + ib;}									     // got it from the diagonal block
-		  break; 
+	      w_dest = wy + ib + nb_blocks * g_N_s;
+	      if( by == 0 ) {ib = block_index(bt, bx, nblks_y - 1, bz) * g_N_s; w_source = wy_buf + ib + nb_blocks * g_N_s;} // got it from the MPI exchange
+	      else  {ib = block_index(bt, bx, by - 1, bz) * g_N_s;w_source = w + ib;}									     // got it from the diagonal block
+	      break; 
 	    case 6: /* Direction +z */
-		  w_dest = wz + ib;
-		  if( bz == nblks_z - 1 ) {ib = block_index(bt, bx, by, 0) * g_N_s; w_source = wz_buf + ib;	}		             // got it from the MPI exchange
-		  else  {ib = block_index(bt, bx, by, bz + 1) * g_N_s; w_source = w + ib;	}						             // got it from the diagonal block
-		  break; 
+	      w_dest = wz + ib;
+	      if( bz == nblks_z - 1 ) {ib = block_index(bt, bx, by, 0) * g_N_s; w_source = wz_buf + ib;	}		             // got it from the MPI exchange
+	      else  {ib = block_index(bt, bx, by, bz + 1) * g_N_s; w_source = w + ib;	}						             // got it from the diagonal block
+	      break; 
 	    case 7: /* Direction -z */
-		  w_dest = wz + ib + nb_blocks * g_N_s;
-		  if( bz == 0 ) {ib = block_index(bt, bx, by, nblks_z - 1) * g_N_s; w_source = wz_buf + ib + nb_blocks * g_N_s;} // got it from the MPI exchange
-		  else  {ib = block_index(bt, bx, by, bz - 1) * g_N_s; w_source = w + ib; }                                      // got it from the diagonal block
-		  break; 
+	      w_dest = wz + ib + nb_blocks * g_N_s;
+	      if( bz == 0 ) {ib = block_index(bt, bx, by, nblks_z - 1) * g_N_s; w_source = wz_buf + ib + nb_blocks * g_N_s;} // got it from the MPI exchange
+	      else  {ib = block_index(bt, bx, by, bz - 1) * g_N_s; w_source = w + ib; }                                      // got it from the diagonal block
+	      break; 
 
-		default: ;
+	    default: ;
+	    }
+	    memcpy(w_dest, w_source, g_N_s * sizeof(complex));
 	  }
-	  memcpy(w_dest, w_source, g_N_s * sizeof(complex));
-	}
   }
-free(w_buf);  
+  free(w_buf);  
 #endif
   return;
 }
@@ -441,7 +443,7 @@ void little_D(complex * v, complex *w) {
   little_field_gather(w);
 #endif
 
-    /* all the mpilocal stuff first */
+  /* all the mpilocal stuff first */
   for(i = 0; i < nb_blocks; i++) {
     /* diagonal term */
     _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator,
@@ -453,7 +455,7 @@ void little_D(complex * v, complex *w) {
 		 &g_N_s, w + (nb_blocks * j + i) * g_N_s, &ONE, &CONE, v + i * g_N_s, &ONE, 1);
     }
   }
-   return;
+  return;
 }
 
 void init_little_field_exchange(complex * w) {

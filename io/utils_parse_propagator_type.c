@@ -44,6 +44,7 @@ int parse_propagator_type(READER * reader) {
       else if(strcmp("DiracFermion_Source_Sink_Pairs", prop_type_string) == 0) prop_type =1;
       else if(strcmp("DiracFermion_ScalarSource_TwelveSink", prop_type_string) == 0) prop_type = 2;
       else if(strcmp("DiracFermion_ScalarSource_FourSink", prop_type_string) == 0) prop_type = 3;
+      else if(strcmp("DiracFermion_Deflation_Field", prop_type_string) == 0) prop_type = 4;
       free(prop_type_string);
       close_reader_record(reader);
       break;
