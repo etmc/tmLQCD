@@ -1278,11 +1278,16 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
 }
 
 /* Apply Hopping Matrix to a even(odd) spinor */
-void Block_H_psi(block * blk, spinor * const rr, spinor * const s) {
+void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo) {
   int i;
   spinor *r = rr;
   su3 * u = blk->u;
   int * eoidx = blk->eoidx;
+
+  /* for OE */
+  if(eo == 1) {
+    u = blk->u + (*blk).volume*8/2;
+  }
 
   /* set the boundary term to zero */
   _spinor_null(rr[blk->volume/2]);
