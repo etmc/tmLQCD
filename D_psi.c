@@ -1267,7 +1267,7 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
     _complex_times_vector(tmpr.s3, rhob, (*t).s3);
 #endif
 
-    local_H(r, s, u, idx);
+    local_D(r, s, u, idx);
 
     r++;
     t++;
