@@ -131,8 +131,6 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
   }
 
   for(ncy = 0; ncy < Ncy; ncy++) {
-    /* even sides first */
-    /*   for(eo = 0; eo < 2; eo++) { */
     /* compute the global residue        */
     /* this can be done more efficiently */
     /* here only a naive implementation  */
@@ -159,10 +157,8 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
 
 	  Block_H_psi(&block_list[blk], b_even, b_odd, EO);
 	  mul_one_pm_imu_inv(b_even, +1., vol);
-	  /* The sign is plus, since in Hopping_Matrix */
-	  /* the minus is missing                      */
 	  /* a_even = a_even + b_even */
-	  assign_add_mul_r(a_even, b_even, +1., vol);
+	  assign_add_mul_r(a_even, b_even, -1., vol);
 
 	  /* add even and odd part up to full spinor P */
 	  add_eo_block_to_global(P, a_even, b_odd, blk);
