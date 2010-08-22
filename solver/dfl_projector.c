@@ -41,6 +41,8 @@
 #include "linalg_eo.h"
 #include "gcr4complex.h"
 #include "generate_dfl_subspace.h"
+#include "tm_operators.h"
+#include "boundary.h"
 #include "dfl_projector.h"
 
 double dfl_little_D_prec = 1.e-24;
@@ -59,14 +61,6 @@ const int dfl_work_size = 13;
 complex *work[13];
 
 static void alloc_dfl_projector();
-
-double sum(double *P, int N){
- double s;
- int i;
- for(i=0;i<N;i++) s+=P[i];
- printf("SUM = %10.7f\n",s);
- return s;
-}
 
 /* Break up full volume spinor to blocks
  * loop over block.basis
@@ -851,9 +845,9 @@ void check_little_D_inversion() {
 
 void check_local_D() /* Should work for kappa = 0 */
 {
-  int j, vol = block_list[0].volume/2;
+  int j, vol = block_list[0].volume/2, i;
   double nrm;
-  boundary(1.);
+  boundary(0.1);
   g_mu = 0.;
   block_convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], block_list[0].basis[0]);
   block_convert_eo_to_lexic(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1]);
@@ -872,22 +866,27 @@ void check_local_D() /* Should work for kappa = 0 */
     block_convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], block_list[j].basis[0]);
   
     /* Even sites */
-    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], g_spinor_field[DUM_SOLVER+1], OE);
+    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], g_spinor_field[DUM_SOLVER+1], EO);
     assign_mul_one_pm_imu(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], 1., vol); 
-    assign_add_mul_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_DERI], -1., vol);
+    assign_add_mul_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_DERI], 1., vol);
 
     /* Odd sites */
-    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], g_spinor_field[DUM_SOLVER], EO);
+    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], g_spinor_field[DUM_SOLVER], OE);
     assign_mul_one_pm_imu(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], 1., vol); 
-    assign_add_mul_r(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_DERI], -1., vol);
+    assign_add_mul_r(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_DERI], 1., vol);
 
     /* convert back to block spinor */
     block_convert_eo_to_lexic(g_spinor_field[DUM_SOLVER+5], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3]);
-
+    if(g_proc_id == 0 && g_debug_level > 5) for(i = 0; i < block_list[0].volume; i++) {
+      if(fabs(g_spinor_field[DUM_SOLVER+6][i].s0.c0.re) > 1.e-15 || fabs(g_spinor_field[DUM_SOLVER+5][i].s0.c0.re) > 1.e-15) {
+	printf("%d %e %d\n", i, g_spinor_field[DUM_SOLVER+6][i].s0.c0.re, block_list[0].volume);
+	printf("%d %e\n", i, g_spinor_field[DUM_SOLVER+5][i].s0.c0.re);
+      }
+    }
     diff(g_spinor_field[DUM_SOLVER + 4], g_spinor_field[DUM_SOLVER + 5], g_spinor_field[DUM_SOLVER+6], block_list[0].volume);
     nrm = square_norm(g_spinor_field[DUM_SOLVER + 4], block_list[0].volume, 0);
     if(g_proc_id == 0) {
-      printf("\nCheck local D against Hopping Matrix: %1.5e block %d\n", sqrt(nrm), j);
+      printf("Check local D against Hopping Matrix: %1.5e block %d\n", sqrt(nrm), j);
     }
   }
   boundary(g_kappa);

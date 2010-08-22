@@ -359,6 +359,7 @@ int main(int argc, char *argv[])
       if (g_debug_level > 1)
       {
         check_projectors();
+	check_local_D();
       }
       if (g_debug_level > 1)
       {

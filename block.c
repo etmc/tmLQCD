@@ -48,7 +48,8 @@ int * bipt;
 complex * little_A = NULL;
 complex32 * little_A32 = NULL;
 int * block_idx;
-int * block_eoidx;
+int * block_evenidx;
+int * block_oddidx;
 enum{
   NONE = 0,
   T_UP = 1,
@@ -224,7 +225,10 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
       CALLOC_ERROR_CRASH;
 
-    if ((void*)(block_eoidx = calloc(8 * (VOLUME/nb_blocks/2), sizeof(int))) == NULL)
+    if ((void*)(block_evenidx = calloc(8 * (VOLUME/nb_blocks/2), sizeof(int))) == NULL)
+      CALLOC_ERROR_CRASH;
+
+    if ((void*)(block_oddidx = calloc(8 * (VOLUME/nb_blocks/2), sizeof(int))) == NULL)
       CALLOC_ERROR_CRASH;
 
     for (j = 0; j < g_N_s; j++) { /* write a zero element at the end of every spinor */
@@ -498,7 +502,7 @@ int check_blocks_geometry(block * blk) {
   for(i = 0; i < blk->volume; i++) {
     itest[i] = 0;
   }
-  ipt = blk->eoidx;
+  ipt = blk->evenidx;
   for(i = 0; i < 8*blk->volume/2; i++) {
     if(*ipt > (blk->volume/2 + blk->spinpad)-1 || *ipt < 0) {
       if(g_proc_id == 0) {
@@ -527,7 +531,7 @@ int check_blocks_geometry(block * blk) {
     }
   }
 
-  ipt = blk->eoidx;
+  ipt = blk->evenidx;
   for(t = 0; t < T/nblks_t; t++) {
     for(x = 0; x < LX/nblks_x; x++) {
       for(y = 0; y < LY/nblks_y; y++) {
@@ -641,19 +645,30 @@ int init_blocks_geometry() {
     eo = ((ix%dZ)+(ix/ystride)%dY+(ix/(xstride))%dX
 	  +ix/(tstride))%2;
     if(eo == 0) {
-      block_eoidx[8*(ix/2) + 0] = block_idx[8 * ix + 0] / 2;
-      block_eoidx[8*(ix/2) + 1] = block_idx[8 * ix + 1] / 2;
-      block_eoidx[8*(ix/2) + 2] = block_idx[8 * ix + 2] / 2;
-      block_eoidx[8*(ix/2) + 3] = block_idx[8 * ix + 3] / 2;
-      block_eoidx[8*(ix/2) + 4] = block_idx[8 * ix + 4] / 2;
-      block_eoidx[8*(ix/2) + 5] = block_idx[8 * ix + 5] / 2;
-      block_eoidx[8*(ix/2) + 6] = block_idx[8 * ix + 6] / 2;
-      block_eoidx[8*(ix/2) + 7] = block_idx[8 * ix + 7] / 2;
+      block_evenidx[8*(ix/2) + 0] = block_idx[8 * ix + 0] / 2;
+      block_evenidx[8*(ix/2) + 1] = block_idx[8 * ix + 1] / 2;
+      block_evenidx[8*(ix/2) + 2] = block_idx[8 * ix + 2] / 2;
+      block_evenidx[8*(ix/2) + 3] = block_idx[8 * ix + 3] / 2;
+      block_evenidx[8*(ix/2) + 4] = block_idx[8 * ix + 4] / 2;
+      block_evenidx[8*(ix/2) + 5] = block_idx[8 * ix + 5] / 2;
+      block_evenidx[8*(ix/2) + 6] = block_idx[8 * ix + 6] / 2;
+      block_evenidx[8*(ix/2) + 7] = block_idx[8 * ix + 7] / 2;
+    }
+    else {
+      block_oddidx[8*(ix/2) + 0] = block_idx[8 * ix + 0] / 2;
+      block_oddidx[8*(ix/2) + 1] = block_idx[8 * ix + 1] / 2;
+      block_oddidx[8*(ix/2) + 2] = block_idx[8 * ix + 2] / 2;
+      block_oddidx[8*(ix/2) + 3] = block_idx[8 * ix + 3] / 2;
+      block_oddidx[8*(ix/2) + 4] = block_idx[8 * ix + 4] / 2;
+      block_oddidx[8*(ix/2) + 5] = block_idx[8 * ix + 5] / 2;
+      block_oddidx[8*(ix/2) + 6] = block_idx[8 * ix + 6] / 2;
+      block_oddidx[8*(ix/2) + 7] = block_idx[8 * ix + 7] / 2;
     }
   }
   for(i = 0; i < nb_blocks; i++) {
     block_list[i].idx = block_idx;
-    block_list[i].eoidx = block_eoidx;
+    block_list[i].evenidx = block_evenidx;
+    block_list[i].oddidx = block_oddidx;
   }
   ix = 0;
   for(t = 0; t < dT; t++) {
