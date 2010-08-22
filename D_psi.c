@@ -1245,6 +1245,10 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
 #if (defined BGL && defined XLC)
   __alignx(16,s);
 #endif
+  if(blk_gauge_eo) {
+    init_blocks_gaugefield();
+  }
+
   rhoa.re=1.;
   rhoa.im=g_mu;
   rhob.re=1.;
@@ -1283,6 +1287,10 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
   spinor *r = rr;
   su3 * u = blk->u;
   int * eoidx = blk->eoidx;
+
+  if(!blk_gauge_eo) {
+    init_blocks_eo_gaugefield();
+  }
 
   /* for OE */
   if(eo == 1) {

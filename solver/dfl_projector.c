@@ -36,6 +36,7 @@
 #include "block.h"
 #include "linalg/blas.h"
 #include "D_psi.h"
+#include "Hopping_Matrix.h"
 #include "little_D.h"
 #include "block.h"
 #include "linalg_eo.h"
@@ -352,8 +353,16 @@ int check_projectors() {
     printf("||psi_orig - psi_recon|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
-
-
+  /* Check even/odd split reconstruct   */
+  assign(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER], VOLUME);
+  copy_global_to_block_eo(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], 0);
+  copy_block_eo_to_global(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2], 0);
+  diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+3], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME, 1);
+  if(g_cart_id == 0) {
+    printf("even/odd split: ||psi_orig - psi_recon|| = %1.5e\n", sqrt(nrm));
+    fflush(stdout);
+  }
 
   project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
   project2(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
@@ -704,26 +713,48 @@ void check_little_D_inversion() {
 
 void check_local_D() /* Should work for kappa = 0 */
 {
-  int j;
+  int j, vol = block_list[0].volume/2;
   double nrm;
-
-  for (j = 0; j < (VOLUME * sizeof(spinor) / sizeof(complex)); ++j){
-    _complex_zero(((complex*)g_spinor_field[DUM_SOLVER])[j]);
-  }
-
-  if (!g_proc_id){
-    reconstruct_global_field(g_spinor_field[DUM_SOLVER], block_list[0].basis[0], block_list[1].basis[0]);
-  }
-
-  Block_D_psi(block_list, g_spinor_field[DUM_SOLVER + 1], block_list[0].basis[0]);
-  Block_D_psi(block_list + 1, g_spinor_field[DUM_SOLVER + 2], block_list[1].basis[0]);
-  D_psi(g_spinor_field[DUM_SOLVER + 3], g_spinor_field[DUM_SOLVER]);
-  reconstruct_global_field(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER + 1], g_spinor_field[DUM_SOLVER + 2]);
-  diff(g_spinor_field[DUM_SOLVER + 1], g_spinor_field[DUM_SOLVER + 3], g_spinor_field[DUM_SOLVER], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER + 1], VOLUME, 1);
+  boundary(1.);
+  g_mu = 0.;
+  block_convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], block_list[0].basis[0]);
+  block_convert_eo_to_lexic(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1]);
+  diff(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2], block_list[0].basis[0], block_list[0].volume);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER], block_list[0].volume, 0);
   if(g_proc_id == 0) {
-    printf("\n\nCheck local D (trust for kappa=0 only): %1.5e\n", sqrt(nrm));
+    printf("\nblock even/odd: ||psi - psi_recon|| = %1.5e\n", sqrt(nrm));
   }
+
+  for(j = 0; j < nb_blocks; j++) {
+    zero_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME);
+    Block_D_psi(&block_list[j], g_spinor_field[DUM_SOLVER+6], block_list[j].basis[0]);
+
+    /* Now test the block hopping matrix */
+    /* split into even/odd sites         */
+    block_convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], block_list[j].basis[0]);
+  
+    /* Even sites */
+    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], g_spinor_field[DUM_SOLVER+1], OE);
+    assign_mul_one_pm_imu(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], 1., vol); 
+    assign_add_mul_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_DERI], -1., vol);
+
+    /* Odd sites */
+    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], g_spinor_field[DUM_SOLVER], EO);
+    assign_mul_one_pm_imu(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], 1., vol); 
+    assign_add_mul_r(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_DERI], -1., vol);
+
+    /* convert back to block spinor */
+    block_convert_eo_to_lexic(g_spinor_field[DUM_SOLVER+5], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3]);
+
+    diff(g_spinor_field[DUM_SOLVER + 4], g_spinor_field[DUM_SOLVER + 5], g_spinor_field[DUM_SOLVER+6], block_list[0].volume);
+    nrm = square_norm(g_spinor_field[DUM_SOLVER + 4], block_list[0].volume, 0);
+    if(g_proc_id == 0) {
+      printf("\nCheck local D against Hopping Matrix: %1.5e block %d\n", sqrt(nrm), j);
+    }
+  }
+  boundary(g_kappa);
+  g_mu = 0.;
+  return;
 }
 
 

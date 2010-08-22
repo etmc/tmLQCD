@@ -644,7 +644,7 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
   }
 }
 
-void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sign){
+void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sign, const int N){
   complex z,w;
   int ix;
   double sign = 1.; 
@@ -667,7 +667,7 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
   __alignx(16,k);
 #endif
   /************ loop over all lattice sites ************/
-  for(ix = 0; ix < (VOLUME/2); ix++){
+  for(ix = 0; ix < N; ix++){
     s=l+ix;
     r=k+ix;
 

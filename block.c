@@ -1138,21 +1138,6 @@ void compute_little_D() {
 }
 
 
-int split_global_field(spinor * const block_low, spinor * const block_high, spinor * const field) {
-  int ctr_t;
-
-  for (ctr_t = 0; ctr_t < (VOLUME / LZ); ctr_t++) {
-    memcpy(block_low + ctr_t * LZ / 2, field + (2 * ctr_t) * LZ / 2, LZ / 2 * sizeof(spinor));
-    memcpy(block_high + ctr_t * LZ / 2, field + (2 * ctr_t + 1) * LZ / 2, LZ / 2 * sizeof(spinor));
-  }
-  if(g_proc_id == 0 && g_debug_level > 8) {
-    printf("lower basis norm = %1.3e\n", square_norm(block_low,  VOLUME / 2, 0));
-    printf("upper basis norm = %1.3e\n", square_norm(block_high, VOLUME / 2, 0));
-  }
-
-  return 0;
-}
-
 int split_global_field_GEN(spinor ** const psi, spinor * const field, const int nb_blocks) {
   int j,ctr_t=0;
   int x, y, z, t;
@@ -1256,7 +1241,7 @@ void copy_global_to_block(spinor * const blockfield, spinor * const globalfield,
 }
 
 /* copies the part of globalfields corresponding to block blk */
-/* to the even and odd block field blockfield                 */
+/* to the even and odd block fields                           */
 void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, spinor * const globalfield, const int blk) {
   int t, x, y, z;
   int i,it,ix,iy,iz;
@@ -1286,30 +1271,76 @@ void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, spinor *
   return;
 }
 
+/* reverts copy_global_to_block_eo */
+void copy_block_eo_to_global(spinor * const globalfield, spinor * const beven, spinor * const bodd, const int blk) {
+  int t, x, y, z;
+  int i,it,ix,iy,iz;
+  int even = 0, odd = 0;
+  
+  for(t = 0; t < block_list[blk].T; t++) {
+    it = t + block_list[blk].mpilocal_coordinate[0]*block_list[blk].T;
+    for(x = 0; x < block_list[blk].LX; x++) {
+      ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].LX;
+      for(y = 0; y < block_list[blk].LY; y++) {
+	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].LY;
+	for(z = 0; z < block_list[blk].LZ; z++) {
+	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].LZ;
+	  i = g_ipt[it][ix][iy][iz];
+	  if((t+x+y+z)%2 == 0) {
+	    memcpy(globalfield + i, beven + even, sizeof(spinor));
+	    even++;
+	  }
+	  else {
+	    memcpy(globalfield + i, bodd + odd, sizeof(spinor));
+	    odd++;
+	  }
+	}
+      }
+    }
+  }
+  return;
+}
+
 
 /* reconstructs the parts of globalfield corresponding to block blk */
 /* from block field blockfield                                      */
 void copy_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk) {
-  int i, vol = block_list[blk].volume;
-  /*CT: This procedure should changed if multi-dimensional split is considered */
-  for (i = 0; i < (vol / (LZ / nb_blocks)); ++i) {
-    memcpy(globalfield + (nb_blocks*i + blk)*(LZ/nb_blocks), blockfield + i*(LZ/nb_blocks), (LZ/nb_blocks)*sizeof(spinor));
+  int i,it,ix,iy,iz;
+  int ibt,ibx,iby,ibz;
+  int itb,ixb,iyb,izb;
+  int ixcurrent;
+  
+  ibz = blk%nblks_z;
+  iby = (blk / nblks_z)%nblks_y;
+  ibx = (blk / (nblks_y * nblks_z))%nblks_x;
+  ibt = blk / (nblks_x * nblks_y*nblks_z);
+
+  ixcurrent=0;
+  for (i = 0; i < VOLUME; i++) {
+
+    /* global coordinates */
+    iz = i%LZ;
+    iy = (i / LZ)%LY;
+    ix = (i / (LY * LZ))%LX;
+    it = i / (LX * LY * LZ);
+
+    /* block coordinates */
+    izb = iz / block_list[blk].LZ;
+    iyb = iy / block_list[blk].LY;
+    ixb = ix / block_list[blk].LX;
+    itb = it / block_list[blk].T;
+    
+    if ((ibz == izb) && (iby == iyb) && (ibx == ixb) && (ibt==itb)) {
+      memcpy(globalfield+i, blockfield+ixcurrent, sizeof(spinor));
+      ixcurrent++;
+    }
   }
+
   return;
 }
 
 
 
-
-/* Reconstructs a global field from the little basis of two blocks */
-void reconstruct_global_field(spinor * const rec_field, spinor * const block_low, spinor * const block_high) {
-  int ctr_t;
-  for (ctr_t = 0; ctr_t < ((VOLUME/2) / (LZ / 2)); ++ctr_t) {
-    memcpy(rec_field + (2 * ctr_t) * LZ / 2, block_low + ctr_t * LZ / 2, LZ / 2 * sizeof(spinor));
-    memcpy(rec_field + (2 * ctr_t + 1) * LZ / 2, block_high + ctr_t * LZ / 2, LZ / 2 * sizeof(spinor));
-  }
-  return;
-}
 
 /* Reconstructs a global field from the little basis of nb_blocks blocks */
 void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi, const int nb_blocks) {
@@ -1326,8 +1357,8 @@ void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi,
 	      for(by = 0; by < nblks_y; by++) {
 		for(bz = 0; bz < nblks_z; bz++) {
 		  _spinor_assign(*(rec_field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)), 
-				 *(psi[block_id] + ctr_t))
-		    block_id++;
+				 *(psi[block_id] + ctr_t));
+		  block_id++;
 		}
 	      }
 	    }
@@ -1355,8 +1386,8 @@ void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const blo
 	      for(by = 0; by < nblks_y; by++) {
 		for(bz = 0; bz < nblks_z; bz++) {
 		  _spinor_assign(*(rec_field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)), 
-				 *(block_list[block_id].basis[id] + ctr_t))
-		    block_id++;
+				 *(block_list[block_id].basis[id] + ctr_t));
+		  block_id++;
 		}
 	      }
 	    }
@@ -1435,3 +1466,60 @@ void add_block_to_global(spinor * const globalfield, spinor * const blockfield, 
   return;
 }
 
+/*      eo -> lexic
+ *      P: new spinor with full volume 
+ *      s: source spinor even 
+ *      r: source spinor odd 
+ */
+void block_convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * const r) {
+  int x, y, z, t, i, ix;
+  spinor * p = NULL;
+
+  for(x = 0; x < dX; x++) {
+    for(y = 0; y < dY; y++) {
+      for(z = 0; z < dZ; z++) {
+	for(t = 0; t < dT; t++) {
+	  ix = block_ipt[t][x][y][z];
+	  i = ix / 2;
+	  if((x + y + z + t)%2 == 0) {
+	    p = s;
+	  }
+	  else {
+	    p = r;
+	  }
+	  memcpy((P+ix), (p+i), sizeof(spinor));
+	}
+      }
+    }
+  }
+  return;
+}
+
+/*      lexic -> eo
+ *      P: source spinor with full volume 
+ *      s: new spinor even 
+ *      r: new spinor odd 
+ */
+void block_convert_lexic_to_eo(spinor * const s, spinor * const r, spinor * const P) {
+  int x, y, z, t, i, ix;
+  spinor * p = NULL;
+
+  for(x = 0; x < dX; x++) {
+    for(y = 0; y < dY; y++) {
+      for(z = 0; z < dZ; z++) {
+	for(t = 0; t < dT; t++) {
+	  ix = block_ipt[t][x][y][z];
+	  i = ix / 2;
+	  if((x + y + z + t)%2 == 0) {
+	    p = s;
+	  }
+	  else {
+	    p = r;
+	  }
+	  memcpy((p+i), (P+ix), sizeof(spinor));
+	}
+      }
+    }
+  }
+  return;
+}
