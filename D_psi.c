@@ -1293,9 +1293,17 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
   _spinor_null(rr[blk->volume/2]);
   
   for(i = 0; i < blk->volume/2; i++) {
+#if (defined BGL && defined XLC)
     _spinor_null(tmpr);
+    _bgl_load_rs0(tmpr.s0);
+    _bgl_load_rs1(tmpr.s1);
+    _bgl_load_rs2(tmpr.s2);
+    _bgl_load_rs3(tmpr.s3);
+#else
+    _spinor_null(tmpr);
+#endif
 
-    local_H(r, s, u, eoidx);
+    local_D(r, s, u, eoidx);
 
     r++;
     eoidx += 8;

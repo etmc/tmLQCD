@@ -207,6 +207,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].mpilocal_coordinate[1] = (i / (nblks_y * nblks_z)) % nblks_x;
     block_list[i].mpilocal_coordinate[2] = (i / (nblks_z)) % nblks_y;
     block_list[i].mpilocal_coordinate[3] = (i % nblks_z);
+
     /* global block coordinate                    */
     for(j = 0; j < 4; j++) {
       block_list[i].coordinate[j] = nblks_dir[j] * g_proc_coords[j] + block_list[i].mpilocal_coordinate[j];
@@ -215,6 +216,10 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].evenodd = (block_list[i].coordinate[0] + block_list[i].coordinate[1] + 
 			     block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
+    block_list[i].evenodd = i % 2;
+    if(g_proc_id == 0) {
+      printf("%d %d (%d %d %d %d)\n", i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], block_list[i].coordinate[2], block_list[i].coordinate[3]);
+    }
     if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
       CALLOC_ERROR_CRASH;
 
@@ -479,15 +484,136 @@ int check_blocks_geometry(block * blk) {
     }
   }
 
-  free(itest);
   if(g_proc_id == 0 && g_debug_level > 1) {
     printf("# block geometry checked successfully for block %d !\n", blk->id);
   }
+  for(i = 0; i < blk->volume; i++) {
+    itest[i] = 0;
+  }
+  ipt = blk->eoidx;
+  for(i = 0; i < 8*blk->volume/2; i++) {
+    if(*ipt > (blk->volume/2 + blk->spinpad)-1 || *ipt < 0) {
+      if(g_proc_id == 0) {
+        printf("error in block eo geometry! ipt = %d dir = %d i = %d of %d\n",
+               (*ipt), i%8, i/8, (blk->volume/2 + blk->spinpad));
+      }
+    }
+    
+    itest[*(ipt++)]++;
+  }
+
+  k = 0;
+  for(i = 0; i < blk->volume/2; i++) {
+    k += itest[i];
+    if(itest[i] < 1 || itest[i] > 8) {
+      if(g_proc_id == 0) {
+        printf("error in block eo geometry, itest[%d] = %d\n", i, itest[i]);
+      }
+    }
+  }
+  k += itest[blk->volume/2 + blk->spinpad-1];
+  if(k != 8*blk->volume/2) {
+    if(g_proc_id == 0) {
+      printf("error in block eo geometry, total number of points wrong %d != %d\n",
+             k, 8*blk->volume/2);
+    }
+  }
+
+  ipt = blk->eoidx;
+  for(t = 0; t < T/nblks_t; t++) {
+    for(x = 0; x < LX/nblks_x; x++) {
+      for(y = 0; y < LY/nblks_y; y++) {
+        for(z = 0; z < LZ/nblks_z; z++) {
+	  if((x + y + z + t)%2 == 0) {
+	    i = block_ipt[t][x][y][z]/2;
+	    if(t != T/nblks_t-1) {
+	      if(*ipt != block_ipt[t+1][x][y][z]/2 && g_proc_id == 0)
+		printf("Shit +t! (%d %d %d %d): %d != %d at %d\n",
+		       t, x, y, z, *ipt, block_ipt[t+1][x][y][z]/2, i);
+	    }
+	    else if(*ipt != VOLUME/nb_blocks/2)
+	      printf("Shit +t! (%d %d %d %d): %d != %d at %d\n",
+                   t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+	    ipt++;
+	    if(t != 0) {
+	      if(*ipt != block_ipt[t-1][x][y][z]/2 && g_proc_id == 0)
+		printf("Shit -t! (%d %d %d %d): %d != %d at %d\n",
+		       t, x, y, z, *ipt, block_ipt[t+1][x][y][z]/2, i);
+	    }
+	    else if(*ipt != VOLUME/nb_blocks/2)
+	      printf("Shit -t! (%d %d %d %d): %d != %d at %d\n",
+		     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+	    ipt++;
+	    if(x != LX/nblks_x-1) {
+	      if(*ipt != block_ipt[t][x+1][y][z]/2 && g_proc_id == 0)
+		printf("Shit +x! (%d %d %d %d): %d != %d at %d\n",
+		       t, x, y, z, *ipt, block_ipt[t][x+1][y][z]/2, i);
+	    }
+	    else if(*ipt != VOLUME/nb_blocks/2)
+	      printf("Shit +x! (%d %d %d %d): %d != %d at %d\n",
+		     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+	    ipt++;
+	    if(x != 0) {
+	      if(*ipt != block_ipt[t][x-1][y][z]/2 && g_proc_id == 0)
+		printf("Shit -x! (%d %d %d %d): %d != %d at %d\n",
+		       t, x, y, z, *ipt, block_ipt[t][x-1][y][z]/2, i);
+	    }
+	    else if(*ipt != VOLUME/nb_blocks/2)
+	      printf("Shit -x! (%d %d %d %d): %d != %d at %d\n",
+		     t, x, y, z, *ipt, VOLUME/nb_blocks, i);
+	    ipt++;
+	    if(y != LY/nblks_y-1) {
+	      if(*ipt != block_ipt[t][x][y+1][z]/2 && g_proc_id == 0)
+		printf("Shit +y! (%d %d %d %d): %d != %d at %d\n",
+		       t, x, y, z, *ipt, block_ipt[t][x][y+1][z]/2, i);
+	    }
+	    else if(*ipt != VOLUME/nb_blocks/2)
+	      printf("Shit +y! (%d %d %d %d): %d != %d at %d\n",
+		     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+	    ipt++;
+	    if(y != 0) {
+	      if(*ipt != block_ipt[t][x][y-1][z]/2 && g_proc_id == 0)
+		printf("Shit -y! (%d %d %d %d): %d != %d at %d\n",
+		       t, x, y, z, *ipt, block_ipt[t][x][y-1][z]/2, i);
+	    }
+	    else if(*ipt != VOLUME/nb_blocks/2)
+	      printf("Shit -y! (%d %d %d %d): %d != %d at %d\n",
+		     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+	    ipt++;
+	    if(z != LZ/nblks_z-1) {
+	      if(*ipt != block_ipt[t][x][y][z+1]/2 && g_proc_id == 0)
+		printf("Shit +z! (%d %d %d %d): %d != %d at %d\n",
+		       t, x, y, z, *ipt, block_ipt[t][x][y][z+1]/2, i);
+	    }
+	    else if(*ipt != VOLUME/nb_blocks/2)
+	      printf("Shit +z! (%d %d %d %d): %d != %d at %d\n",
+		     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+	    ipt++;
+	    if(z != 0) {
+	      if(*ipt != block_ipt[t][x][y][z-1]/2 && g_proc_id == 0)
+		printf("Shit -z! (%d %d %d %d): %d != %d at %d\n",
+		       t, x, y, z, *ipt, block_ipt[t][x][y][z-1]/2, i);
+	    }
+	    else if(*ipt != VOLUME/nb_blocks/2)
+	      printf("Shit -z! (%d %d %d %d): %d != %d at %d\n",
+		     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+	    ipt++;
+	  }
+        }
+      }
+    }
+  }
+
+  if(g_proc_id == 0 && g_debug_level > 1) {
+    printf("# block eo geometry checked successfully for block %d !\n", blk->id);
+  }
+
+  free(itest);
   return(0);
 }
 
 int init_blocks_geometry() {
-  int i, ix, x, y, z, t;
+  int i, ix, x, y, z, t, eo;
   int zstride = 1;
   int ystride = dZ;
   int xstride = dY * dZ;
@@ -502,9 +628,11 @@ int init_blocks_geometry() {
     block_idx[8 * ix + 5] = (ix % xstride <  dZ				? boundidx : ix - ystride);/* -y */
     block_idx[8 * ix + 6] = (ix % ystride == dZ - 1			? boundidx : ix + zstride);/* +z */
     block_idx[8 * ix + 7] = (ix % ystride == 0				? boundidx : ix - zstride);/* -z */
-    /* Assume that all direction have even extension */
-    /* even and odd versions should be equal         */
-    if((ix % 2) == 0) {
+    /* Assume that all directions have even extension */
+    /* even and odd versions should be equal          */
+    eo = ((ix%dZ)+(ix/ystride)%dY+(ix/(xstride))%dX
+	  +ix/(tstride))%2;
+    if(eo == 0) {
       block_eoidx[8*(ix/2) + 0] = block_idx[8 * ix + 0] / 2;
       block_eoidx[8*(ix/2) + 1] = block_idx[8 * ix + 1] / 2;
       block_eoidx[8*(ix/2) + 2] = block_idx[8 * ix + 2] / 2;
