@@ -218,6 +218,7 @@ EXTERN int g_nb_list[8];
 /* Deflation information */
 EXTERN int g_dflgcr_flag;
 EXTERN int g_N_s;
+EXTERN int * index_block_eo;
 
 #ifdef MPI
 EXTERN MPI_Status status;
