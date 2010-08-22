@@ -38,7 +38,6 @@
 
 #define CALLOC_ERROR_CRASH {printf ("calloc errno : %d\n", errno); errno = 0; return 1;}
 
-spinor * spb = NULL;
 
 int init_blocks_geometry();
 
@@ -157,9 +156,6 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   if((void*)(bipt__ = (int***)calloc ((T/nblks_t+2)*(LX/nblks_x+2), sizeof(int*))) == NULL) return(4);
   if((void*)(bipt_ = (int**)calloc((T/nblks_t+2)*(LX/nblks_x+2)*(LY/nblks_y+2), sizeof(int*))) == NULL) return(3);
   if((void*)(bipt = (int*)calloc((T/nblks_t+2)*(LX/nblks_x+2)*(LY/nblks_y+2)*(LZ/nblks_z+2), sizeof(int))) == NULL) return(8);
-  if((void*)(block_g_eo2lexic = (int*)calloc((T/nblks_t)*(LX/nblks_x)*(LY/nblks_y)*(LZ/nblks_z), sizeof(int))) == NULL) return(8);
-  if((void*)(block_g_lexic2eosub = (int*)calloc((T/nblks_t)*(LX/nblks_x)*(LY/nblks_y)*(LZ/nblks_z), sizeof(int))) == NULL) return(8);
-  if((void*)(block_g_lexic2eo = (int*)calloc((T/nblks_t)*(LX/nblks_x)*(LY/nblks_y)*(LZ/nblks_z), sizeof(int))) == NULL) return(8);
   if((void*)(index_block_eo = (int*)calloc(nblks_t*nblks_x*nblks_y*nblks_z, sizeof(int))) == NULL) return(8);
   bipt_[0] = bipt;
   bipt__[0] = bipt_;
@@ -249,25 +245,6 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   }
  
  
-    if((void*)(spb = (spinor*)calloc(NO_OF_SPINORFIELDS*(block_list[0].volume+1)+1, sizeof(spinor))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(1);
-   }
-   if((void*)(block_g_spinor_field = (spinor**)malloc(NO_OF_SPINORFIELDS*sizeof(spinor*))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(2);
-  }
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  block_g_spinor_field[0] = (spinor*)(((unsigned long int)(spb)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  block_g_spinor_field[0] = spb;
-#endif
-  
-  for(i = 1; i < NO_OF_SPINORFIELDS; i++){
-    block_g_spinor_field[i] = block_g_spinor_field[i-1]+block_list[0].volume+1;
-  }
    
   init_blocks_geometry();
   init_blocks_gaugefield();
@@ -288,11 +265,7 @@ int free_blocks() {
     free(bipt__);
     free(bipt_);
     free(bipt);
-    free(block_g_eo2lexic);
-    free(block_g_lexic2eosub);
-    free(block_g_lexic2eo);
     free(index_block_eo);
-    free(spb);
     free(u);
     free(basis);
     free(block_list);
@@ -713,31 +686,6 @@ int init_blocks_geometry() {
   }
   }
   
-  ix = 0;
-  i_even=0;
-  i_odd=0;
-  for(t = 0; t < dT; t++) {
-    for(x = 0; x < dX; x++) {
-      for(y = 0; y < dY; y++) {
-        for(z = 0; z < dZ; z++) {
-          block_ipt[t][x][y][z] = ix;
-          if ((t+x+y+z)%2==0) {
-	  block_g_lexic2eo[ix] = i_even;
-          block_g_lexic2eosub[ix] = i_even;
-          block_g_eo2lexic[i_even] = ix;
-          i_even++;
-          }
-	  else {
-	  block_g_lexic2eo[ix] = boundidx/2+i_odd;
-          block_g_lexic2eosub[ix] = i_odd;
-          block_g_eo2lexic[boundidx/2+i_odd] = ix;
-      	  i_odd++;
-          }
-	  ix++;
-        }
-      }
-    }
-  }
 
 
   for(ix = 0; ix < nb_blocks; ix++) {
