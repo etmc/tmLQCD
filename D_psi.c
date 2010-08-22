@@ -1248,7 +1248,6 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
   if(blk_gauge_eo) {
     init_blocks_gaugefield();
   }
-
   rhoa.re=1.;
   rhoa.im=g_mu;
   rhob.re=1.;
@@ -1256,6 +1255,7 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
 
   /* set the boundary term to zero */
   _spinor_null(rr[blk->volume]);
+  _spinor_null(s[blk->volume]);
 
   for(i = 0; i < blk->volume; i++) {
 #if (defined BGL && defined XLC)
@@ -1264,15 +1264,16 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
     _bgl_load_rs2((*t).s2);
     _bgl_load_rs3((*t).s3);
     _bgl_vector_cmplx_mul_rs(rhoa);
+
+    local_D(r, s, u, idx);
 #else
     _complex_times_vector(tmpr.s0, rhoa, (*t).s0);
     _complex_times_vector(tmpr.s1, rhoa, (*t).s1);
     _complex_times_vector(tmpr.s2, rhob, (*t).s2);
     _complex_times_vector(tmpr.s3, rhob, (*t).s3);
+
+    local_H(r, s, u, idx);
 #endif
-
-    local_D(r, s, u, idx);
-
     r++;
     t++;
     idx += 8;
@@ -1286,7 +1287,7 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
   int i;
   spinor *r = rr;
   su3 * u = blk->u;
-  int * eoidx = blk->eoidx;
+  int * eoidx = blk->evenidx;
 
   if(!blk_gauge_eo) {
     init_blocks_eo_gaugefield();
@@ -1295,10 +1296,12 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
   /* for OE */
   if(eo == 1) {
     u = blk->u + (*blk).volume*8/2;
+    eoidx = blk->oddidx;
   }
 
   /* set the boundary term to zero */
   _spinor_null(rr[blk->volume/2]);
+  _spinor_null(s[blk->volume/2]);
   
   for(i = 0; i < blk->volume/2; i++) {
 #if (defined BGL && defined XLC)
@@ -1310,9 +1313,7 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
 #else
     _spinor_null(tmpr);
 #endif
-
-    local_D(r, s, u, eoidx);
-
+    local_H(r, s, u, eoidx);
     r++;
     eoidx += 8;
     u += 8;

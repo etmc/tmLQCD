@@ -34,6 +34,7 @@
 #include "start.h"
 #include "xchange_lexicfield.h"
 #include "block.h"
+#include "solver/lu_solve.h"
 #include "su3.h"
 
 #define CALLOC_ERROR_CRASH {printf ("calloc errno : %d\n", errno); errno = 0; return 1;}
@@ -218,7 +219,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].evenodd = (block_list[i].coordinate[0] + block_list[i].coordinate[1] + 
 			     block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
-/*    block_list[i].evenodd = i % 2;*/
+    block_list[i].evenodd = i % 2;
     if(g_proc_id == 0) {
       printf("%d %d (%d %d %d %d)\n", i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], block_list[i].coordinate[2], block_list[i].coordinate[3]);
     }
