@@ -38,6 +38,7 @@
 
 #define CALLOC_ERROR_CRASH {printf ("calloc errno : %d\n", errno); errno = 0; return 1;}
 
+spinor * spb = NULL;
 
 int init_blocks_geometry();
 
@@ -121,7 +122,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     /*     printf("# Number of iteration with the polynomial preconditioner = %d \n", dfl_field_iter); */
     /*     printf("# Number of iteration in the polynomial preconditioner   = %d \n", dfl_poly_iter); */
   }
-
+  
   free_blocks();
   block_init = 1;
   block_list = calloc(nb_blocks, sizeof(block));
@@ -156,6 +157,10 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   if((void*)(bipt__ = (int***)calloc ((T/nblks_t+2)*(LX/nblks_x+2), sizeof(int*))) == NULL) return(4);
   if((void*)(bipt_ = (int**)calloc((T/nblks_t+2)*(LX/nblks_x+2)*(LY/nblks_y+2), sizeof(int*))) == NULL) return(3);
   if((void*)(bipt = (int*)calloc((T/nblks_t+2)*(LX/nblks_x+2)*(LY/nblks_y+2)*(LZ/nblks_z+2), sizeof(int))) == NULL) return(8);
+  if((void*)(block_g_eo2lexic = (int*)calloc((T/nblks_t)*(LX/nblks_x)*(LY/nblks_y)*(LZ/nblks_z), sizeof(int))) == NULL) return(8);
+  if((void*)(block_g_lexic2eosub = (int*)calloc((T/nblks_t)*(LX/nblks_x)*(LY/nblks_y)*(LZ/nblks_z), sizeof(int))) == NULL) return(8);
+  if((void*)(block_g_lexic2eo = (int*)calloc((T/nblks_t)*(LX/nblks_x)*(LY/nblks_y)*(LZ/nblks_z), sizeof(int))) == NULL) return(8);
+  if((void*)(index_block_eo = (int*)calloc(nblks_t*nblks_x*nblks_y*nblks_z, sizeof(int))) == NULL) return(8);
   bipt_[0] = bipt;
   bipt__[0] = bipt_;
   block_ipt[0] = bipt__;
@@ -216,7 +221,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].evenodd = (block_list[i].coordinate[0] + block_list[i].coordinate[1] + 
 			     block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
-    block_list[i].evenodd = i % 2;
+/*    block_list[i].evenodd = i % 2;*/
     if(g_proc_id == 0) {
       printf("%d %d (%d %d %d %d)\n", i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], block_list[i].coordinate[2], block_list[i].coordinate[3]);
     }
@@ -234,12 +239,36 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
       CALLOC_ERROR_CRASH;
     if ((void*)(block_list[i].little_dirac_operator32 = calloc(9 * g_N_s * g_N_s, sizeof(complex32))) == NULL)
       CALLOC_ERROR_CRASH;
+    if ((void*)(block_list[i].little_dirac_operator_eo = calloc(9*g_N_s * g_N_s, sizeof(complex))) == NULL)
+      CALLOC_ERROR_CRASH;
     for (j = 0; j < 9 * g_N_s * g_N_s; ++j) {
       _complex_zero(block_list[i].little_dirac_operator[j]);
       _complex_zero(block_list[i].little_dirac_operator32[j]);
+      _complex_zero(block_list[i].little_dirac_operator_eo[j]);
     }
   }
+ 
+ 
+    if((void*)(spb = (spinor*)calloc(NO_OF_SPINORFIELDS*(block_list[0].volume+1)+1, sizeof(spinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+   }
+   if((void*)(block_g_spinor_field = (spinor**)malloc(NO_OF_SPINORFIELDS*sizeof(spinor*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(2);
+  }
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  block_g_spinor_field[0] = (spinor*)(((unsigned long int)(spb)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  block_g_spinor_field[0] = spb;
+#endif
   
+  for(i = 1; i < NO_OF_SPINORFIELDS; i++){
+    block_g_spinor_field[i] = block_g_spinor_field[i-1]+block_list[0].volume+1;
+  }
+   
   init_blocks_geometry();
   init_blocks_gaugefield();
 
@@ -253,11 +282,17 @@ int free_blocks() {
       free(block_list[i].basis);
       free(block_list[i].little_dirac_operator);
       free(block_list[i].little_dirac_operator32);
+      free(block_list[i].little_dirac_operator_eo);
     }
     free(block_ipt);
     free(bipt__);
     free(bipt_);
     free(bipt);
+    free(block_g_eo2lexic);
+    free(block_g_lexic2eosub);
+    free(block_g_lexic2eo);
+    free(index_block_eo);
+    free(spb);
     free(u);
     free(basis);
     free(block_list);
@@ -613,7 +648,7 @@ int check_blocks_geometry(block * blk) {
 }
 
 int init_blocks_geometry() {
-  int i, ix, x, y, z, t, eo;
+  int i, ix, x, y, z, t, eo, i_even, i_odd;
   int zstride = 1;
   int ystride = dZ;
   int xstride = dY * dZ;
@@ -658,6 +693,53 @@ int init_blocks_geometry() {
       }
     }
   }
+
+  i_even=0;
+  i_odd=0;
+  for (t=0;t<nblks_t;t++) {
+  for (x=0;x<nblks_x;x++) {
+  for (y=0;y<nblks_y;y++) {
+  for (z=0;z<nblks_z;z++) {
+  if ((t+x+y+z)%2==0) {
+  index_block_eo[block_index(t,x,y,z)]=i_even;
+  i_even++;
+  }
+  if ((t+x+y+z)%2==1) {
+  index_block_eo[block_index(t,x,y,z)]=i_odd;
+  i_odd++;
+  }
+  }
+  }
+  }
+  }
+  
+  ix = 0;
+  i_even=0;
+  i_odd=0;
+  for(t = 0; t < dT; t++) {
+    for(x = 0; x < dX; x++) {
+      for(y = 0; y < dY; y++) {
+        for(z = 0; z < dZ; z++) {
+          block_ipt[t][x][y][z] = ix;
+          if ((t+x+y+z)%2==0) {
+	  block_g_lexic2eo[ix] = i_even;
+          block_g_lexic2eosub[ix] = i_even;
+          block_g_eo2lexic[i_even] = ix;
+          i_even++;
+          }
+	  else {
+	  block_g_lexic2eo[ix] = boundidx/2+i_odd;
+          block_g_lexic2eosub[ix] = i_odd;
+          block_g_eo2lexic[boundidx/2+i_odd] = ix;
+      	  i_odd++;
+          }
+	  ix++;
+        }
+      }
+    }
+  }
+
+
   for(ix = 0; ix < nb_blocks; ix++) {
     zstride = check_blocks_geometry(&block_list[ix]);
   }
@@ -933,7 +1015,7 @@ void compute_little_D() {
   int t_start, t_end, x_start, x_end, y_start, y_end, z_start, z_end;
   complex c, *M;
   int count=0;
-  int bx, by, bz, bt, block_id = 0, is_up = 0, ib;
+  int bx, by, bz, bt, block_id = 0, block_id_e, block_id_o,is_up = 0, ib;
   int dT, dX, dY, dZ;
   dT = T/nblks_t; dX = LX/nblks_x; dY = LY/nblks_y; dZ = LZ/nblks_z;
 
@@ -952,24 +1034,47 @@ void compute_little_D() {
 #endif
   temp = scratch + VOLUMEPLUSRAND;
   // NEED TO BE REWRITTEN
+  block_id_e=0;
+  block_id_o=0;
   for(blk = 0; blk < nb_blocks; blk++) {
     M = block_list[blk].little_dirac_operator;
     for(i = 0; i < g_N_s; i++) {
       Block_D_psi(&block_list[blk], scratch, block_list[blk].basis[i]);
       for(j = 0; j < g_N_s; j++) {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
+      
+        	  if (block_list[blk].evenodd==0) {
+		  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j].re=M[i * g_N_s + j].re;
+		  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j].im=M[i * g_N_s + j].im;
+		  }
+		  if (block_list[blk].evenodd==1) {
+		  block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j].re=M[i * g_N_s + j].re;
+		  block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j].im=M[i * g_N_s + j].im;
+		  }
+	
       }
     }
+  
+  if (block_list[blk].evenodd==0) block_id_e++;
+  if (block_list[blk].evenodd==1) block_id_o++;
+  
   }
-
-
+  
+  
+  /* computation of little_Dhat^{-1}_ee */
+  
+  for(blk = 0; blk < nb_blocks/2; blk++) 
+  LUInvert(g_N_s,block_list[blk].little_dirac_operator_eo,g_N_s);
+ 
   for (i = 0; i < g_N_s; i++){if(i==0)count = 0;
     reconstruct_global_field_GEN_ID(scratch, block_list,i, nb_blocks);
 
 #ifdef MPI
     xchange_lexicfield(scratch);
 #endif
-    zero_spinor_field(scratch, VOLUME);
+ 
+ /* the initialisation causes troubles on a single processor */
+ /*   zero_spinor_field(scratch, VOLUME);*/
     /* +-t +-x +-y +-z */
     for(pm = 0; pm < 8; pm++) {
       /* We set up the generic bounds */
@@ -1060,12 +1165,16 @@ void compute_little_D() {
       for(j = 0; j < g_N_s; j++) {
 	iy = i * g_N_s + j  + (pm + 1) * g_N_s * g_N_s;
 	block_id = 0;
+	block_id_e=0;
+	block_id_o=0;
 	r = temp;
 	for(bt = 0; bt < nblks_t; bt++) {
 	  for(bx = 0; bx < nblks_x; bx++) {
             for(by = 0; by < nblks_y; by++) {
 	      for(bz = 0; bz < nblks_z; bz++){
 		_complex_zero(block_list[block_id].little_dirac_operator[ iy ]);
+		if (block_list[block_id].evenodd==0) {_complex_zero(block_list[block_id_e].little_dirac_operator_eo[ iy ]);}
+ 		if (block_list[block_id].evenodd==1) {_complex_zero(block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ]);}
 		/* We need to contract g_N_s times with the same set of fields */
 		for(t = t_start; t < t_end; t++) {
 		  for(x = x_start; x < x_end; x++) {
@@ -1076,11 +1185,22 @@ void compute_little_D() {
 			c = scalar_prod(s, r, 1, 0);// TO BE INLINED
 			block_list[block_id].little_dirac_operator[ iy ].re += c.re;
 			block_list[block_id].little_dirac_operator[ iy ].im += c.im;
+		if (block_list[block_id].evenodd==0) {
+		block_list[block_id_e].little_dirac_operator_eo[ iy ].re += c.re;
+		block_list[block_id_e].little_dirac_operator_eo[ iy ].im += c.im;
+		}
+		if (block_list[block_id].evenodd==1) {
+		block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ].re += c.re;
+		block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ].im += c.im;
+		}
 			r++;
 		      }
+			   
 		    }
 		  }
 		}
+		if (block_list[block_id].evenodd==0) block_id_e++;
+		if (block_list[block_id].evenodd==1) block_id_o++;	
 		block_id++;
 	      }
 	    }
