@@ -2,7 +2,6 @@
  * $Id$ 
  *
  * Copyright (C) 2008 Alber Deuzeman, Siebren Reker, Carsten Urbach
- *               2010 Claude Tadonki
  *
  * This file is part of tmLQCD.
  *
@@ -49,7 +48,12 @@ int dfl_sloppy_prec = 0;
 int init_dfl_projector = 0;
 spinor **psi;
 complex *inprod;
+complex *inprod_eo;
+complex *inprod_o;
+complex *inprod_e;
 complex *invvec;
+complex *invvec_eo;
+complex *ctmp;
 complex *work_block;
 const int dfl_work_size = 13;
 complex *work[13];
@@ -57,11 +61,11 @@ complex *work[13];
 static void alloc_dfl_projector();
 
 double sum(double *P, int N){
-  double s;
-  int i;
-  for(i=0;i<N;i++) s+=P[i];
-  printf("SUM = %10.7f\n",s);
-  return s;
+ double s;
+ int i;
+ for(i=0;i<N;i++) s+=P[i];
+ printf("SUM = %10.7f\n",s);
+ return s;
 }
 
 /* Break up full volume spinor to blocks
@@ -74,11 +78,11 @@ double sum(double *P, int N){
 
 /* this is phi_k A^{-1}_{kl} (phi_k, in) */
 void project(spinor * const out, spinor * const in) {
-  int i,j, iter;
+  int i,j, i_e,i_o,iter;
   int vol = block_list[0].volume;
   complex * v, * w;
   double prec;
-
+  
   if(init_dfl_projector == 0) {
     alloc_dfl_projector();
   }
@@ -86,42 +90,155 @@ void project(spinor * const out, spinor * const in) {
   w = work[1]; 
   /*initialize the local (block) parts of the spinor*/
   split_global_field_GEN(psi, in, nb_blocks);
-  for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
-    for(i = 0; i < nb_blocks; i++){
-      inprod[j + i*g_N_s]  = scalar_prod(block_list[i].basis[j], psi[i], vol, 0);
-    }
+  
+  for (j=0;j<g_N_s*nb_blocks*9;j++) {
+  _complex_zero(inprod[j]);
+  _complex_zero(inprod_o[j]);
+  _complex_zero(inprod_eo[j]);
+  _complex_zero(inprod_e[j]);
+  _complex_zero(invvec[j]);
+  _complex_zero(invvec_eo[j]);
+  _complex_zero(ctmp[j]);
   }
-  /* if(dfl_sloppy_prec) prec = dfl_little_D_prec; */
+  
+  
+  for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
+	
+	i_o=0;
+	i_e=0;
+	  for(i = 0; i < nb_blocks; i++){
+
+	  inprod[j + i*g_N_s]  = scalar_prod(block_list[i].basis[j], psi[i], vol, 0);
+
+	
+	if (block_list[i].evenodd==0) {
+	inprod_eo[j + i_e*g_N_s].re=inprod[j + i*g_N_s].re;
+	inprod_eo[j + i_e*g_N_s].im=inprod[j + i*g_N_s].im;
+	i_e++;
+	}
+	if (block_list[i].evenodd==1) {
+	inprod_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].re=inprod[j + i*g_N_s].re;
+	inprod_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].im=inprod[j + i*g_N_s].im;
+	i_o++;
+	}
+   	
+	
+       }
+       
+  }
+  
+   	
+    little_D_ee_inv(inprod_e,inprod_eo);
+    little_D_hop(1,inprod_o, inprod_e);
+    little_Dhat_rhs(1,inprod_o,-1,inprod_eo);
+    
+  	
+/* if(dfl_sloppy_prec) prec = dfl_little_D_prec;*/
   if(dfl_sloppy_prec) prec = 1.e-12;
   else prec = 1.e-24;
-  if(0) {
-    iter = gcr4complex(invvec, inprod, 10, 50000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
+  
+   if(dfl_sloppy_prec==0) {
+
+/*   iter = gcr4complex(invvec, inprod, 10, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
+*/
+    
+   	
+   
+    iter=gcr4complex(invvec_eo,inprod_o,10,1000,prec,1,nb_blocks*g_N_s,1,nb_blocks*9*g_N_s,&little_D_sym);
+    
+    little_D_hop(0,ctmp, invvec_eo);
+    little_D_ee_inv(invvec_eo,ctmp);
+    little_Dhat_rhs(0,invvec_eo, -1., inprod_e);
+    
+   for (j = 0; j < g_N_s; j++) {
+	
+	i_o=0;
+	i_e=0;
+	for(i = 0; i < nb_blocks; i++){
+
+	if (block_list[i].evenodd==0) {
+	invvec[j + i*g_N_s].re=invvec_eo[j + i_e*g_N_s].re;
+	invvec[j + i*g_N_s].im=invvec_eo[j + i_e*g_N_s].im;
+	i_e++;
+	}
+	if (block_list[i].evenodd==1) {
+	invvec[j + i*g_N_s].re=invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].re;
+	invvec[j + i*g_N_s].im=invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].im;
+	i_o++;
+	}
+	
+        }
+    }
+    
+    	
+   
     if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
       printf("lgcr number of iterations %d (no P_L)\n", iter);
     }
   }
   else {
-    little_P_L(v, inprod);
-    iter = gcr4complex(w, v, 20, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
+    
+    
+    little_P_L_sym(v, inprod_o);
+    iter = gcr4complex(w, v, 10, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D_sym);
+    little_P_R_sym(v, w);
+    little_project(w, inprod_o, g_N_s);
+    for(i = 0; i < nb_blocks*g_N_s; i++) {
+      invvec_eo[i].re = w[i].re + v[i].re;
+      invvec_eo[i].im = w[i].im + v[i].im;
+    }
+    little_D_hop(0,ctmp, invvec_eo);
+    little_D_ee_inv(invvec_eo,ctmp);
+    little_Dhat_rhs(0,invvec_eo, -1., inprod_e);
+    for (j = 0; j < g_N_s; j++) {
+	
+	i_o=0;
+	i_e=0;
+	for(i = 0; i < nb_blocks; i++){
+
+	if (block_list[i].evenodd==0) {
+	invvec[j + i*g_N_s].re=invvec_eo[j + i_e*g_N_s].re;
+	invvec[j + i*g_N_s].im=invvec_eo[j + i_e*g_N_s].im;
+	i_e++;
+	}
+	if (block_list[i].evenodd==1) {
+	invvec[j + i*g_N_s].re=invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].re;
+	invvec[j + i*g_N_s].im=invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].im;
+	i_o++;
+	}
+	
+        }
+    } 
+    
+   	
+    
+/*    little_P_L(v, inprod);
+    iter = gcr4complex(w, v, 10, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
     little_P_R(v, w);
     little_project(w, inprod, g_N_s);
     for(i = 0; i < nb_blocks*g_N_s; i++) {
       invvec[i].re = w[i].re + v[i].re;
       invvec[i].im = w[i].im + v[i].im;
-    }
+    }*/
+    
+    
     if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
       printf("lgcr number of iterations %d (using P_L)\n", iter);
     }
   }
-  /* sum up */
+    /* sum up */
   for(i = 0 ; i < nb_blocks ; i++) mul(psi[i], invvec[i*g_N_s], block_list[i].basis[0], vol);
   for(j = 1; j < g_N_s; j++) {
-    for(i = 0 ; i < nb_blocks ; i++) assign_add_mul(psi[i], block_list[i].basis[j], invvec[i*g_N_s + j], vol);
+     for(i = 0 ; i < nb_blocks ; i++) assign_add_mul(psi[i], block_list[i].basis[j], invvec[i*g_N_s + j], vol);
   }
 
   /* reconstruct global field */
   reconstruct_global_field_GEN(out, psi, nb_blocks);
+  free_dfl_projector();
   return;
+
+
+
 }
 
 static void alloc_dfl_projector() {
@@ -129,7 +246,12 @@ static void alloc_dfl_projector() {
   
   psi = calloc(2*nb_blocks, sizeof(spinor*)); /*block local version of global spinor */
   inprod = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
+  inprod_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
+  inprod_o = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
+  inprod_e = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
+  ctmp = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
   invvec = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
+  invvec_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
   work_block = calloc(dfl_work_size * nb_blocks * 9 * g_N_s, sizeof(complex));
   for(i = 0; i < dfl_work_size; ++i){
     work[i] = work_block + i * nb_blocks * 9 * g_N_s;
@@ -147,7 +269,12 @@ void free_dfl_projector() {
   free(*psi);
   free(psi);
   free(invvec);
+  free(invvec_eo);
   free(inprod);
+  free(inprod_eo);
+  free(inprod_e);
+  free(inprod_o);
+  free(ctmp);
   free(work_block);
   init_dfl_projector = 0;
   return;
@@ -173,7 +300,7 @@ void project2(spinor * const out, spinor * const in) {
   /* sum up */
   for(i = 0 ; i < nb_blocks ; i++) mul(psi[i], inprod[i*g_N_s], block_list[i].basis[0], vol);
   for(j = 1; j < g_N_s; j++) {
-    for(i = 0 ; i < nb_blocks ; i++) assign_add_mul(psi[i], block_list[i].basis[j], inprod[i*g_N_s + j], vol);
+	  for(i = 0 ; i < nb_blocks ; i++) assign_add_mul(psi[i], block_list[i].basis[j], inprod[i*g_N_s + j], vol);
   }
 
   /* reconstruct global field */
@@ -201,7 +328,6 @@ void project_right(spinor * const out, spinor * const in) {
 
 void project_left_D(spinor * const out, spinor * const in) {
   /* out = P_L D in  = D in - D proj D in*/
-
   D_psi(g_spinor_field[DUM_MATRIX+1], in);
   project_left(out, g_spinor_field[DUM_MATRIX+1]);
   return;
@@ -240,19 +366,11 @@ void little_project(complex * const out, complex * const in, const int  N) {
   
   /* apply inverse of little_A */
   for(i = 0; i < N; i++) {
-    _mult_assign_complex(phi[i], little_A[i], psi[0]);
-  }
-  for(j = 1; j < N; j++) {
-    for(i = 0; i < N; i++) {
+    _complex_zero(phi[i]);
+    for(j = 0; j < N; j++) {
       _add_assign_complex(phi[i], little_A[j*N + i], psi[j]);
     }
   }
-  /* for(i = 0; i < N; i++) { */
-  /*   _complex_zero(phi[i]); */
-  /*   for(j = 0; j < N; j++) { */
-  /*     _add_assign_complex(phi[i], little_A[j*N + i], psi[j]); */
-  /*   } */
-  /* } */
 
   lmul(out, phi[0], little_dfl_fields[0], nb_blocks*N);
   for(i = 1; i < N; i++) {
@@ -261,20 +379,17 @@ void little_project(complex * const out, complex * const in, const int  N) {
   return;
 }
 
-/* out = |phi_k> delta_kl <phi_l|in> */
 void little_project2(complex * const out, complex * const in, const int  N) {
   int i;
   static complex *phi;
   static complex *psi;
   
-  if(init_dfl_projector == 0) {
-    alloc_dfl_projector();
-  }
+  if(init_dfl_projector == 0) {alloc_dfl_projector();}
   phi = work[4];
   psi = work[5];
-  /* |phi> = <little_fields|in> */ 
+
   for(i = 0; i < N; i++) {
-    phi[i] = lscalar_prod(little_dfl_fields[i], in, nb_blocks*g_N_s, 0);
+    phi[i] = lscalar_prod(little_dfl_fields[i], in, nb_blocks*N, 0);
   }
 #ifdef MPI
   MPI_Allreduce(phi, psi, g_N_s, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
@@ -307,10 +422,33 @@ void little_P_R(complex * const out, complex * const in) {
   return;
 }
 
+void little_P_L_sym(complex * const out, complex * const in) {
+  if(init_dfl_projector == 0) {alloc_dfl_projector();}
+  little_project(out, in, g_N_s);
+  little_D_sym(work[6], out);
+  ldiff(out, in, work[6], nb_blocks*g_N_s);
+  return;
+}
+
+void little_P_R_sym(complex * const out, complex * const in) {
+  if(init_dfl_projector == 0) {alloc_dfl_projector();}
+  little_D_sym(out, in);
+  little_project(work[7], out, g_N_s);
+  ldiff(out, in, work[7], nb_blocks*g_N_s);
+  return;
+}
+
 void little_P_L_D(complex * const out, complex * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   little_D(work[8], in);
   little_P_L(out, work[8]);
+  return;
+}
+
+void little_P_L_D_sym(complex * const out, complex * const in) {
+  if(init_dfl_projector == 0) {alloc_dfl_projector();}
+  little_D_sym(work[8], in);
+  little_P_L_sym(out, work[8]);
   return;
 }
 
@@ -342,8 +480,8 @@ int check_projectors() {
 
   /* Check generalized split/reconstruct */
   phi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
-  for(j = 1; j < nb_blocks; j++) {
-    phi[j] = phi[j-1] + (VOLUME/nb_blocks + 1);
+  for(j=1;j<nb_blocks;j++) {
+  phi[j] = phi[j-1] + (VOLUME/nb_blocks + 1);
   }
   split_global_field_GEN(phi, g_spinor_field[DUM_SOLVER],nb_blocks);
   reconstruct_global_field_GEN(g_spinor_field[DUM_SOLVER+1],phi,nb_blocks);
@@ -479,50 +617,50 @@ int check_projectors() {
   }
 
   if (!g_cart_id){
-    wphi[0] = block_list[0].basis[0];
-    for(i = 1; i< nb_blocks; i++) wphi[i] = g_spinor_field[DUM_SOLVER+2];
-    reconstruct_global_field_GEN(g_spinor_field[DUM_SOLVER+1], wphi, nb_blocks);
+	wphi[0] = block_list[0].basis[0];
+	for(i = 1; i< nb_blocks; i++) wphi[i] = g_spinor_field[DUM_SOLVER+2];
+	reconstruct_global_field_GEN(g_spinor_field[DUM_SOLVER+1], wphi, nb_blocks);
   }
   apply_little_D_spinor(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
   D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
   
   if (g_cart_id == 0 && g_debug_level > 4){
-    v = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
-    split_global_field_GEN(phi, g_spinor_field[DUM_SOLVER+2], nb_blocks);
-    
-    for (j = 0; j < g_N_s; ++j) 
-      for(i = 0; i < nb_blocks; i++)
-	v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], phi[i], VOLUME/nb_blocks, 0);
-    
-    for (j = 0; j < nb_blocks* g_N_s; ++j) {
-      printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
-    }
-    free(v);
+	  v = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
+	  split_global_field_GEN(phi, g_spinor_field[DUM_SOLVER+2], nb_blocks);
+
+	  for (j = 0; j < g_N_s; ++j) 
+		  for(i = 0; i < nb_blocks; i++)
+			  v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], phi[i], VOLUME/nb_blocks, 0);
+
+	  for (j = 0; j < nb_blocks* g_N_s; ++j) {
+		  printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
+	  }
+	  free(v);
   }
-  
+
   project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
   
-  
+
   diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], VOLUME);
   nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME, 1);
   if(g_proc_id == 0) {
     printf("||(P D - A) phi_i || = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
-  
+
   reconstruct_global_field_GEN_ID(g_spinor_field[DUM_SOLVER+1], block_list, 0, nb_blocks);
   apply_little_D_spinor(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
   D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
   if (!g_proc_id && g_debug_level > 4){
-    v = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
-    split_global_field_GEN(phi, g_spinor_field[DUM_SOLVER+2],nb_blocks);
-    for (j = 0; j < g_N_s; ++j) 
-      for(i = 0; i < nb_blocks; i++)
-	v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], phi[i], VOLUME/nb_blocks, 0);
-    for (j = 0; j < nb_blocks* g_N_s; ++j) {
-      printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
-    }
-    free(v);
+	  v = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
+	  split_global_field_GEN(phi, g_spinor_field[DUM_SOLVER+2],nb_blocks);
+	  for (j = 0; j < g_N_s; ++j) 
+		  for(i = 0; i < nb_blocks; i++)
+			  v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], phi[i], VOLUME/nb_blocks, 0);
+	  for (j = 0; j < nb_blocks* g_N_s; ++j) {
+		  printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
+	  }
+	  free(v);
   }
   project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
   diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], VOLUME);
@@ -531,7 +669,7 @@ int check_projectors() {
     printf("||(P D - A) phi || = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
-  
+
   apply_little_D_spinor(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]);
   project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
   D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
@@ -568,7 +706,7 @@ int check_projectors() {
     printf("\nNow the little little projection routines\n\n");
   }
   if(init_dfl_projector == 0) {
-    alloc_dfl_projector();
+  alloc_dfl_projector();
   }
   
   memcpy(work[10], g_spinor_field[DUM_SOLVER], nb_blocks*g_N_s*sizeof(complex));
@@ -644,13 +782,13 @@ void check_little_D_inversion() {
 
   /*initialize the local (block) parts of the spinor*/
   for (ctr_t = 0; ctr_t < (VOLUME / LZ); ++ctr_t) {
-    for(i=0; i< nb_blocks; i++)
-      memcpy(psi[i] + ctr_t * contig_block, g_spinor_field[DUM_SOLVER] + (nb_blocks * ctr_t + i) * contig_block, contig_block * sizeof(spinor));
+   for(i=0; i< nb_blocks; i++)
+	       memcpy(psi[i] + ctr_t * contig_block, g_spinor_field[DUM_SOLVER] + (nb_blocks * ctr_t + i) * contig_block, contig_block * sizeof(spinor));
   }
   for (i = 0; i < nb_blocks; ++i) {/* loop over blocks */
     /* compute inner product */
     for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
-      /*       inprod[j + i*g_N_s] = block_scalar_prod(block_list[i].basis[j], psi[i], vol); */
+/*       inprod[j + i*g_N_s] = block_scalar_prod(block_list[i].basis[j], psi[i], vol); */
       inprod[j + i*g_N_s] = scalar_prod(psi[i], block_list[i].basis[j], vol, 0);
     }
   }
