@@ -220,7 +220,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
 			     block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
     /* block_list[i].evenodd = i % 2; */
-    if(g_proc_id == 0) {
+    if(g_proc_id == 0 && g_debug_level > 1) {
       printf("%d %d (%d %d %d %d)\n", i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], block_list[i].coordinate[2], block_list[i].coordinate[3]);
     }
     if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)

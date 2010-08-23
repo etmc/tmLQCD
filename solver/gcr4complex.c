@@ -71,7 +71,7 @@ int gcr4complex(complex * const P, complex * const Q,
       fflush(stdout);
     }
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq * norm_sq) && (rel_prec == 1))) {
-      if(g_proc_id == 0) printf("lgcr: %d %e %e %e %e\n", p, err, norm_sq, err/norm_sq, eps_sq);
+      if(g_proc_id == 0 && g_debug_level > 1) printf("lgcr: %d %e %e %e %e\n", p, err, norm_sq, err/norm_sq, eps_sq);
       return (p);
     }
     for(k = 0; ; k++) {
@@ -111,7 +111,7 @@ int gcr4complex(complex * const P, complex * const Q,
       lassign_add_mul(P, xi[l], c[l], N);
     }
   }
-  if(g_proc_id == 0) printf("lgcr: for -1 %d %e %e %e %e\n", p, err, norm_sq, err/norm_sq, eps_sq);
+  if(g_proc_id == 0 && g_debug_level > 1) printf("lgcr: for -1 %d %e %e %e %e\n", p, err, norm_sq, err/norm_sq, eps_sq);
   return(-1);
 }
 

@@ -356,13 +356,11 @@ int main(int argc, char *argv[])
 
       /* Compute little Dirac operators */
       /*       alt_block_compute_little_D(); */
-      if (g_debug_level > 1)
-      {
+      if (g_debug_level > 0) {
         check_projectors();
 	check_local_D();
       }
-      if (g_debug_level > 1)
-      {
+      if (g_debug_level > 1) {
         check_little_D_inversion();
       }
 

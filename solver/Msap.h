@@ -23,5 +23,6 @@
 
 void Msap(spinor * const P, spinor * const Q, const int Ncy);
 void Msap_eo(spinor * const P, spinor * const Q, const int Ncy);
-
+void Mtm_plus_block_psi(spinor * const l, spinor * const k, const int i);
+void Mtm_plus_sym_block_psi(spinor * const l, spinor * const k, const int i);
 #endif

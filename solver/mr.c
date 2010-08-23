@@ -123,8 +123,13 @@ int mrblk(spinor * const P, spinor * const Q,
   const int parallel = 0;
   spinor * s[3];
   static spinor *s_=NULL;
+  static int N_;
 
-  if(mr_init == 0) {
+  if(mr_init == 0 || N != N_) {
+    if(N!= N_ && mr_init != 0) {
+      free(s_);
+    }
+    N_ = N;
     s_ = calloc(3*(N+1)+1, sizeof(spinor));
     mr_init = 1;
   }

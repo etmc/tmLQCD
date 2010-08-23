@@ -53,6 +53,18 @@ void Mtm_plus_block_psi(spinor * const l, spinor * const k, const int i) {
   return;
 }
 
+void Mtm_plus_sym_block_psi(spinor * const l, spinor * const k, const int i) {
+  block * blk = &block_list[i];
+  int vol = (*blk).volume/2;
+  Block_H_psi(blk, g_spinor_field[DUM_MATRIX+1], k, EO);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1., vol);
+  Block_H_psi(blk, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], OE);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX], +1., vol);
+  diff(l, k, g_spinor_field[DUM_MATRIX], vol);
+  return;
+}
+
+
 void dummy_D0(spinor * const P, spinor * const Q) {
   Block_D_psi(&block_list[0], P, Q);
   return;
