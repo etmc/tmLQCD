@@ -1310,10 +1310,12 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
     _bgl_load_rs1(tmpr.s1);
     _bgl_load_rs2(tmpr.s2);
     _bgl_load_rs3(tmpr.s3);
+    local_D(r, s, u, eoidx);
 #else
     _spinor_null(tmpr);
-#endif
     local_H(r, s, u, eoidx);
+#endif
+
     r++;
     eoidx += 8;
     u += 8;

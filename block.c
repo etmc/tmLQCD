@@ -219,7 +219,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].evenodd = (block_list[i].coordinate[0] + block_list[i].coordinate[1] + 
 			     block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
-    block_list[i].evenodd = i % 2;
+    /* block_list[i].evenodd = i % 2; */
     if(g_proc_id == 0) {
       printf("%d %d (%d %d %d %d)\n", i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], block_list[i].coordinate[2], block_list[i].coordinate[3]);
     }
@@ -683,26 +683,24 @@ int init_blocks_geometry() {
     }
   }
 
-  i_even=0;
-  i_odd=0;
+  i_even = 0;
+  i_odd = 0;
   for (t=0;t<nblks_t;t++) {
-  for (x=0;x<nblks_x;x++) {
-  for (y=0;y<nblks_y;y++) {
-  for (z=0;z<nblks_z;z++) {
-  if ((t+x+y+z)%2==0) {
-  index_block_eo[block_index(t,x,y,z)]=i_even;
-  i_even++;
+    for (x=0;x<nblks_x;x++) {
+      for (y=0;y<nblks_y;y++) {
+	for (z=0;z<nblks_z;z++) {
+	  if ((t+x+y+z)%2==0) {
+	    index_block_eo[block_index(t,x,y,z)]=i_even;
+	    i_even++;
+	  }
+	  if ((t+x+y+z)%2==1) {
+	    index_block_eo[block_index(t,x,y,z)]=i_odd;
+	    i_odd++;
+	  }
+	}
+      }
+    }
   }
-  if ((t+x+y+z)%2==1) {
-  index_block_eo[block_index(t,x,y,z)]=i_odd;
-  i_odd++;
-  }
-  }
-  }
-  }
-  }
-  
-
 
   for(ix = 0; ix < nb_blocks; ix++) {
     zstride = check_blocks_geometry(&block_list[ix]);
@@ -781,7 +779,6 @@ void alt_block_compute_little_D() {
   spinor *_rec, *rec, *_app, *app, *zero;
   spinor *psi, **psi_blocks;
 
-
   _rec = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
 #if ( defined SSE || defined SSE2 || defined SSE3)
   rec = (spinor*)(((unsigned long int)(_rec)+ALIGN_BASE)&~ALIGN_BASE);
@@ -803,47 +800,42 @@ void alt_block_compute_little_D() {
     _spinor_null(zero[j]);
   }
 
-
-  for (k = 0; k < g_nproc; ++k){
-    for (i = 0; i < g_N_s; ++i){
-      for(l=0;l<nb_blocks;l++){
+  for (k = 0; k < g_nproc; ++k) {
+    for (i = 0; i < g_N_s; ++i) {
+      for(l=0;l<nb_blocks;l++) {
 	/* Lower Z block */
 	for (j = 0; j < VOLUMEPLUSRAND; ++j){
 	  _spinor_null(rec[j]);
 	}
-
-	if (g_cart_id == k){
+	if (g_cart_id == k) {
 	  reconstruct_global_field_GEN_ID(rec, block_list, i, nb_blocks);
 	}
-
 	D_psi(app, rec);
-
 	split_global_field_GEN(psi_blocks, app, nb_blocks);
-
-	if (g_cart_id == k){
+	if (g_cart_id == k) {
 	  block_contract_basis(0, i, NONE, psi);
 	  block_contract_basis(1, i, Z_DN, psi);
 	}
 #ifdef MPI
-	else if (k == g_nb_t_up){
+	else if (k == g_nb_t_up) {
 	  block_contract_basis(0, i, T_UP, psi);
 	}
-	else if (k == g_nb_t_dn){
+	else if (k == g_nb_t_dn) {
 	  block_contract_basis(0, i, T_DN, psi);
 	}
-	else if (k == g_nb_x_up){
+	else if (k == g_nb_x_up) {
 	  block_contract_basis(0, i, X_UP, psi);
 	}
-	else if (k == g_nb_x_dn){
+	else if (k == g_nb_x_dn) {
 	  block_contract_basis(0, i, X_DN, psi);
 	}
-	else if (k == g_nb_y_up){
+	else if (k == g_nb_y_up) {
 	  block_contract_basis(0, i, Y_UP, psi);
 	}
-	else if (k == g_nb_y_dn){
+	else if (k == g_nb_y_dn) {
 	  block_contract_basis(0, i, Y_DN, psi);
 	}
-	else if (k == g_nb_z_up){
+	else if (k == g_nb_z_up) {
 	  block_contract_basis(1, i, Z_UP, psi);
 	}
 #endif
@@ -961,8 +953,6 @@ void compute_little_D_diagonal() {
 }
 
 
-
-
 /* what happens if this routine is called in a one dimensional parallelisation? */
 /* or even serially ?                                                           */
 /* checked CU */
@@ -998,47 +988,44 @@ void compute_little_D() {
 #endif
   temp = scratch + VOLUMEPLUSRAND;
   // NEED TO BE REWRITTEN
-  block_id_e=0;
-  block_id_o=0;
+  block_id_e = 0;
+  block_id_o = 0;
   for(blk = 0; blk < nb_blocks; blk++) {
     M = block_list[blk].little_dirac_operator;
     for(i = 0; i < g_N_s; i++) {
       Block_D_psi(&block_list[blk], scratch, block_list[blk].basis[i]);
       for(j = 0; j < g_N_s; j++) {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
-      
-        	  if (block_list[blk].evenodd==0) {
-		  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j].re=M[i * g_N_s + j].re;
-		  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j].im=M[i * g_N_s + j].im;
-		  }
-		  if (block_list[blk].evenodd==1) {
-		  block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j].re=M[i * g_N_s + j].re;
-		  block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j].im=M[i * g_N_s + j].im;
-		  }
 	
+	if (block_list[blk].evenodd==0) {
+	  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j].re=M[i * g_N_s + j].re;
+	  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j].im=M[i * g_N_s + j].im;
+	}
+	if (block_list[blk].evenodd==1) {
+	  block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j].re=M[i * g_N_s + j].re;
+	  block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j].im=M[i * g_N_s + j].im;
+	}
       }
     }
-  
-  if (block_list[blk].evenodd==0) block_id_e++;
-  if (block_list[blk].evenodd==1) block_id_o++;
-  
+    if (block_list[blk].evenodd==0) block_id_e++;
+    if (block_list[blk].evenodd==1) block_id_o++;
   }
-  
   
   /* computation of little_Dhat^{-1}_ee */
   
-  for(blk = 0; blk < nb_blocks/2; blk++) 
-  LUInvert(g_N_s,block_list[blk].little_dirac_operator_eo,g_N_s);
- 
-  for (i = 0; i < g_N_s; i++){if(i==0)count = 0;
-    reconstruct_global_field_GEN_ID(scratch, block_list,i, nb_blocks);
-
+  for(blk = 0; blk < nb_blocks/2; blk++) {
+    LUInvert(g_N_s,block_list[blk].little_dirac_operator_eo,g_N_s);
+  }
+  for (i = 0; i < g_N_s; i++) {
+    if(i==0) count = 0;
+    reconstruct_global_field_GEN_ID(scratch, block_list, i , nb_blocks);
+    
 #ifdef MPI
     xchange_lexicfield(scratch);
 #endif
- 
- /* the initialisation causes troubles on a single processor */
- /*   zero_spinor_field(scratch, VOLUME);*/
+    
+    /* the initialisation causes troubles on a single processor */
+    if(g_nproc == -1) zero_spinor_field(scratch, VOLUME);
     /* +-t +-x +-y +-z */
     for(pm = 0; pm < 8; pm++) {
       /* We set up the generic bounds */
