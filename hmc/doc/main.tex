@@ -1,0 +1,93 @@
+% $Id$
+\documentclass[a4paper,12pt,dvips]{article}
+%amsmath
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amscd}
+\usepackage{latexsym}
+\usepackage{epsfig}
+\usepackage{multirow}
+\usepackage{color}
+\usepackage{dsfont}
+%\usepackage[bf,footnotesize]{caption}
+%\setlength{\captionmargin}{15pt}
+\usepackage{hyperref}
+\usepackage{subfigure}
+\usepackage{pifont}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+%\setlength{\parindent}{0pt}
+% Absatzabstand
+\setlength{\parskip}{3pt plus 3pt}
+% Hoehe der Kopfzeilen
+%\setlength{\headheight}{26pt}
+
+\input{command}
+
+\date{\today}
+\title{tmLQCD package documentation}
+
+\begin{document}
+%\begin{titlepage}
+\begin{center}
+  {\Large\bf tmLQCD Package Documentation}\\
+\end{center}
+
+\tableofcontents
+
+\begin{flushright}
+  Copyright \textcopyright\ 2009 Carsten Urbach
+\end{flushright}
+
+\section{Installation and Usage}
+
+\myinput{install}
+\myinput{input}
+\myinput{output}
+\myinput{gensources}
+
+\section{Implementation}
+
+\myinput{overview}
+\myinput{components}
+\myinput{test}
+
+%\myinput{eo_pre}
+%\myinput{martins-trick}
+%\myinput{deflation}
+%\myinput{c-code}
+%\myinput{integrationschemes}
+
+%\myinput{parallel}
+%\myinput{operator}
+%\myinput{online}
+
+\section{File Formats and IO}
+\myinput{prop_format.tex}
+
+\clearpage
+\bibliographystyle{h-physrev5}
+\bibliography{bibliography}
+\clearpage
+
+\begin{appendix}
+  \section{$\gamma$  and Pauli  Matrices}
+  \myinput{gamma}
+
+  \section{Initialising the PHMC}
+  \myinput{root}
+  \section{Even/Odd Preconditioning}
+  \myinput{eo_pre}
+  \myinput{martins-trick}
+  \section{Deflation}
+  \myinput{deflation}
+\end{appendix}
+
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

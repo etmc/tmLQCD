@@ -1,0 +1,180 @@
+
+ ********************************
+ *    "2+1+1"  HOWTO         ****
+ ***  Written by Andreas Nube ***
+ ********************************
+
+Introduction:
+
+In this HOWTO i shall describe how to run the PHMC code with "2+1+1"
+setup. "2+1+1" in this context means that we have two degenerate LIGHT
+quarks and two non-degenerate HEAVY quarks. This HOWTO addresses the
+setup of all necessary input files and also the monitoring of the
+thermalization progress due to necessary re-adjustments of the
+polynomial.
+
+ 0. Building the code
+ ------------------------------------
+
+Well, this should be quite automatic. However, you need lapack and
+blas in order to build the executable. Make sure that you have
+both available and configure/make the hmc code accordingly. If
+successful, you will find the executable hmc_tm in your build
+directory.
+
+ 1. Setup the "hmc.input" file
+ ------------------------------------
+   
+Set the parameters for your desired simulation (only 1+1 specific parameters are 
+discussed here) :
+hmc.input:
+
+# hopping parameter
+# set this to kappa_critical for maximum twist
+kappa = 0.1234  
+
+# twisted mass, set this parameter to
+# 2*kappa*mu_desired
+# where mu_desired is the quark mass you want to simulate 
+# in the LIGHT quark sector
+2KappaMu = 0.00005    
+
+# twisted mass for the heavy sector
+# set this to the mean value of the mass of the HEAVY quarks
+# you want to simulate e.g. M_s=0.02 M_c=0.2  ==>
+2KappaMubar = 0.11
+
+# split of the mass in the HEAVY quark sector
+# set this to (M_c-M_s)/2
+# such that you get finally: 
+# M_s=PhmcMubar - PhmcEpsbar
+# M_c=PhmcMubar + PhmcEpsbar
+2KappaEpsbar = 0.09
+
+# Setting the polynomial parameters:
+# create a NDPOLY monomial first (see docu)
+BeginMonomial NDPOLY
+
+# If you want to calculate the eigenvalues every n'th trajectory 
+# then set this parameter to n if you want no eigenvalues set this to 0
+# during thermalization you should set this to 1 or 2 to follow the evolution
+# of smallest and largest eigenvalue to adjust the approximation interval
+# of the polynomial (see below)
+  ComputeEVFreq = 1
+
+# ---------------------------------
+# you should have a first estimate for the smallest and largest eigenvalue
+# of the HEAVY quark operator. as an estimate you can take
+# StildeMin = 2*(PhmcMubar^2-PhmcEpsbar^2) and
+# StildeMax = 1/2/sqrt(PhmcMubar^2 + PhmcEpsbar^2) (taken from 
+# [1] )
+# set the following parameter to your estimate of the smallest eigenvalue
+# or a little below
+#
+  StildeMin = 0.008
+
+# and this to an upper bound of all eigenvalues
+# 
+  StildeMax = 3.6
+
+# an estimate for the error of an approximation of 1/sqrt(x) by a chebycheff
+# polynomial is given by (found in [2]): 
+# delta = 2*((1-sqrt(ratio))/(1+sqrt(ratio)))^(n+1)
+# where ratio = PhmcStildeMin/PhmcStildeMax 
+# and "n" is the degree of the chebycheff polynomial
+# e.g.: if you take the values from above and want an delta of 0.0001
+# you have to set the degree to 104:
+ DegreeOfMDPolynomial = 104
+
+# To make the calculation of the hamiltonian more precise the program uses
+# a second polynomial Ptilde.
+# with the following parameter you can adjust the
+# precision of the whole approximation of 1/sqrt(x)= Ptilde(x)*P(x)*(1+Rtilde(x))
+# with |Rtilde(x)| ~ PhmcPrecisionPtilde (see also [1]) 
+
+  PrecisionPtilde = 1.0e-9 
+
+# and you have to specify on which timescale to integrate the 1+1 part
+  Timescale = 1
+
+EndMonomial
+# you will need other monomials and an integrator, see docu
+# end of hmc.input
+
+Now you should have a proper hmc.input file. For a complete example
+see the file
+hmc/sample-input/sample-hmc2.input
+and the comments therein.
+
+2. Creating a polynomial
+-----------------------------------
+
+Change to the directory hmc/util/laguer !
+Edit the file "chebyRoot.H" !
+Find the definition of "EPSILON" (not the out commented ones)
+and set it to the "ratio" defined above:
+e.g. if you have PhmcStildeMin = 0.008 , PhmcStildeMax=3.6
+then ratio = 0.002222222222222
+and you have to set EPSILON to this value in CLN notation:
+
+  EPSILON =  "0.00222222222222222e+0_700"
+
+Moreover, you have to set the degree of the polynomial to the correct
+value, e.g.
+
+int   MAXPOW = 104;
+
+This _must_ be identical to the degree used in the hmc code. If not,
+the PHMC will fail.
+
+To actually compile the code the CLN library is needed, which is
+available from 
+   http://www.ginac.de/CLN/
+Please download it and install it in a convenient place. CLN provides
+arbitrary precision. Edit the Makefile accordingly and run on command
+line
+
+ make
+
+to make the "chebyRoot" program!
+run this program!
+Now the program should have created this files
+ 
+ Square_root_BR_roots.dat
+ normierungLocal.dat
+
+Attention: The files that might exist before will be overwritten.
+So make a copy of these files if they took a lot of time to be computed.
+(you might guess what happened to me several times ;-)
+
+Now copy this two files to the directory where you are going to RUN the 
+program together with the hmc.input file.
+
+Now you should be able to run the "phmc_tm" program in "2+1+1" mode.
+
+During the thermalization you should keep track of the lowest and largest
+ eigenvalue. this can be done by filtering the job output file.
+cat job.12345.out|grep -A6 LAMBDA
+. Alternating you get the (actually) four smallest and four largest
+ eigenvalues normalized to the value of StildeMax you set in
+ hmc.input file. To get the unscaled eigenvalue you have to multiply the 
+values by StildeMax.
+If the eigenvalues you measured are outside the approximation interval
+ [StildeMin, StildeMax] you have to re-adjust these values (in hmc.input) and 
+also regenerate the files 
+
+ Square_root_BR_roots.dat
+ normierungLocal.dat
+
+according to the steps described above.
+
+
+Have a nice simulation!
+
+
+
+References:
+
+[1] Thomas Chiarappa, "Status of the Phmc-code" found  in hmc/doc
+[2] Roberto Frezzotti, Karl Jansen, hep-lat/970201, "A Polynomial Hybrid Monte Carlo Algorithm"
+

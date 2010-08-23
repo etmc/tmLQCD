@@ -1,0 +1,134 @@
+\subsection{Fermion Field File Formats}
+
+We note at the beginning, that we do not use a different format for
+source or sink fermion fields. They are both stored using the same
+lime records. The meta-data stored in the same lime-packed file is
+supposed to clarify all other things.
+
+\subsubsection{Propagators}
+
+Here we mainly concentrate on storing propagators (sink). The file can
+contain only sources, or both, source and sink. We (plan to) support
+four different formats
+\begin{enumerate}
+\item (arbitrary number of) sink, no sources
+\item (arbitrary number of) source/sink pairs
+\item one source, 12 sink
+\item one source, 4 sink
+\end{enumerate}
+This is very similar to the formats in use in parts of the US
+community. However, they use XML as a markup language, which we don't
+(yet) use.
+
+We adopt the SCIDAC chechsum for gauge and propagator files.
+
+Every source and sink has to be in a seperate lime record. The order
+in one file for the four formats mentioned above is supposed to be 
+\begin{enumerate}
+\item sink, no sources: -
+\item source/sink pairs: first source, then sink
+\item one source, 12 sink: first source, then 12 sinks
+\item one source, 4 sink: first source, then 4 sinks
+\end{enumerate}
+All fermion field files must have a record indicating the type. The
+record itself is of type {\ttfamily propagator-type} and the
+record has a single entry (ascii string) which can contain one of 
+\begin{itemize}
+\item {\ttfamily DiracFermion\_Sink}
+\item {\ttfamily DiracFermion\_Source\_Sink\_Pairs}
+\item {\ttfamily DiracFermion\_ScalarSource\_TwelveSink}
+\item {\ttfamily DiracFermion\_ScalarSource\_FourSink}
+\end{itemize}
+Those strings are also used in the input files of the hmc code for the
+input parameter {\ttfamily PropagatorType}.
+The binary data corresponding to one Dirac fermion field (source or
+sink) is then stored with at least two (three) records. The first is
+of type \\
+{\ttfamily etmc-propagator-format} \\
+and should contain the following information:
+\begin{verbatim}
+<?xml version="1.0" encoding="UTF-8"?>
+<etmcFormat>
+  <field>diracFermion</field>
+  <precision>32</precision>
+  <flavours>1</flavours>
+  <lx>4</lx>
+  <ly>4</ly>
+  <lz>4</lz>
+  <lt>4</lt>
+</etmcFormat>
+\end{verbatim}
+The {\ttfamily flavours} entry must be set to {\ttfamily 1} for a one
+flavour propagator (flavour diagonal case) and to {\ttfamily 2} for a two
+flavour propagator (flavour non-diagonal 2-flavour operator). In the
+former case there follows one record of type
+{\ttfamily scidac-binary-data}, which is identical to the SCIDAC
+format, containing the fermion field. In the latter case there follow
+two of such records, the first of which is the upper flavour. To be
+precise, lets call the two flavours $s$ and $c$. Then we always store
+the $s$ component first and then the $c$ component.
+Any number of other records can be added for convenience.
+
+The first two types are by now supported. In the future the other two
+might follow.
+
+The indices in the binary data {\ttfamily scidac-binary-data} are in
+the following order:
+\[
+t, z, y, x, s, c\, ,
+\]
+where $t$ is the slowest and colour the fastest running index.
+The binary data is stored big endian and either in single or in double
+precision, depending on the {\ttfamily precision} parameter in the
+{\ttfamily etmc-propagator-format} record. 
+
+The $\gamma$-matrix convention is the one of the HMC code (see
+subsection \ref{gammas}) and the operator is normalised to
+\[
+D =
+\frac{1}{2}[\gamma_\mu(\nabla_\mu+\nabla_\mu^*)-a\nabla_\mu^*\nabla_\mu]
++ m_0 + i \mu\gamma_5\tau^3\, .
+\]
+For the non-degenerate case with the two flavour operator the
+following operator is inverted:
+\[
+D_\mathrm{nd} =
+\frac{1}{2}[\gamma_\mu(\nabla_\mu+\nabla_\mu^*)-a\nabla_\mu^*\nabla_\mu]
++ m_0 + i\bar\mu\gamma_5\tau_1+\bar\epsilon\tau_3
+\]
+
+\subsubsection{Source Fields}
+
+Source fields are, as mentioned before, stored with the same binary
+data format. There are again several types of source files possible:
+\begin{itemize}
+\item {\ttfamily DiracFermion\_Source}
+\item {\ttfamily DiracFermion\_ScalarSource}
+\item {\ttfamily DiracFermion\_FourScalarSource}
+\item {\ttfamily DiracFermion\_TwelveScalarSource}
+\end{itemize}
+This type is stored in a record called {\ttfamily source-type} in the
+lime file. There might be several sources stored within the same
+file. We add a format reacord {\ttfamily etmc-source-format} looking like
+\begin{verbatim}
+<?xml version="1.0" encoding="UTF-8"?>
+<etmcFormat>
+  <field>diracFermion</field>
+  <precision>32</precision>
+  <flavours>1</flavours>
+  <lx>4</lx>
+  <ly>4</ly>
+  <lz>4</lz>
+  <lt>4</lt>
+  <spin>4</spin>
+  <colour>3</colour>
+</etmcFormat>
+\end{verbatim}
+with obvious meaning for every {\ttfamily scidac-binary-data} record
+within the lime packed file. This format record also allows to store a
+subset of the whole field, e.g. a timeslize.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

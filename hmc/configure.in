@@ -1,0 +1,694 @@
+# $Id$
+#
+# Process this file with autoconf to produce a configure script
+#
+AC_PREREQ(2.59)
+AC_INIT(tmLQCD, 5.1.6, curbach@gmx.de)
+AC_CONFIG_HEADER(config.h)
+AC_CONFIG_SRCDIR([hmc_tm.c])
+AC_CANONICAL_HOST()
+AC_PREFIX_DEFAULT($HOME)
+AC_ARG_PROGRAM
+
+if test "$host_vendor" = "cray"; then
+  ac_cv_c_bigendian=yes
+fi
+
+AC_PROG_CC
+AC_PROG_CC_C99
+dnl AC_PROG_CC_STDC
+AC_C_CONST
+AC_C_INLINE
+AC_C_RESTRICT
+AC_F77_LIBRARY_LDFLAGS
+LIBS="$LIBS $FLIBS -lm"
+AC_PROG_LEX
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
+#(endian="", AC_DEFINE(LITTLE_ENDIAN,1,The endian of the architechture))
+
+# AC_PROG_FC([ifort gfortran])
+# AC_FC_FUNC(testfunc, )
+
+LDFLAGS="$LDFLAGS -L\${HOME}/lib -L\${top_builddir}/lib"
+CCLD=${CC}
+
+AC_CHECK_HEADERS([stdint.h],
+[ dnl for inttypes.h and stdint.h for uint_xxx types
+  dnl if successful check for the actual types too
+  AC_CHECK_TYPES([uint16_t, uint32_t, uint64_t],
+                 [],
+                 [AC_MSG_ERROR([stdint.h found but either uint16_t, uint32_t or uint64_t not found]) ]
+                )
+],
+[
+  dnl no inttypes.h or stdint.h found check common unsigned types
+  dnl for sizes and make appropriate decisions in the lime_fixed_types.h file
+  AC_CHECK_SIZEOF(unsigned char)
+  AC_CHECK_SIZEOF(unsigned short)
+  AC_CHECK_SIZEOF(unsigned int)
+  AC_CHECK_SIZEOF(unsigned long)
+  AC_CHECK_SIZEOF(unsigned long long)
+]
+)
+
+AC_MSG_CHECKING(where to find lime)
+AC_ARG_WITH(limedir,
+  [  --with-limedir[=dir]      search lime in dir [default=./lime]],
+  lime_dir=$withval, lime_dir="./lime")
+AC_MSG_RESULT($lime_dir)
+LDFLAGS="$LDFLAGS -L${lime_dir}/lib/"
+AC_CHECK_LIB([lime], [limeReaderNextRecord],[],
+              [AC_MSG_ERROR([library liblime is missing or needed function is not available])])
+
+#LIBS="$LIBS $FLIBS -lm"
+
+AC_MSG_CHECKING(whether we want to use lemon)
+AC_ARG_WITH(lemondir,
+            [  --with-lemondir[=dir]     use lemon, to be found in dir],
+             [echo yes
+              LEMON_AVAILABLE=1
+              lemon_dir=$withval
+              LDFLAGS="$LDFLAGS -L${lemon_dir}/lib"
+              AC_CHECK_LIB([lemon],
+                           [lemonReaderNextRecord],
+                           [],
+                           [AC_MSG_ERROR([library liblemon was not found])])],
+             [echo no
+              LEMON_AVAILABLE=0])
+
+AC_MSG_CHECKING(whether we use the general geometry)
+AC_ARG_ENABLE(indexindepgeom,
+  [  --enable-indexindepgeom   enable Index independent addressing [default=no]],
+  enable_iig=$enableval, enable_iig=no)
+if test $enable_iig = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(_INDEX_INDEP_GEOM,1,Index independent addressing)
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(whether we want to use MPI)
+AC_ARG_ENABLE(mpi,
+  [  --enable-mpi            enable use of mpi [default=yes]],
+  enable_mpi=$enableval, enable_mpi=yes)
+if test $enable_mpi = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(MPI,1,Compile with MPI support)
+else
+  AC_MSG_RESULT(no)
+fi
+
+if test $enable_mpi = yes; then
+  AC_MSG_CHECKING(which parallelisation to use for MPI)
+  AC_ARG_WITH(mpidimension,
+    [  --with-mpidimension[=n]   use n dimensional parallelisation [default=1]],
+    withmpidimension=$withval, withmpidimension=1)
+  if test $withmpidimension = 1; then
+    AC_MSG_RESULT(n=1 [t])
+    AC_DEFINE(PARALLELT,1,One dimensional parallelisation)
+  elif test $withmpidimension = 2; then
+    AC_MSG_RESULT(n=2 [xt])
+    AC_DEFINE(PARALLELXT,1,Two dimensional parallelisation)
+  elif test $withmpidimension = 3; then
+    AC_MSG_RESULT(n=3 [xyt])
+    AC_DEFINE(PARALLELXYT,1,Three dimensional parallelisation)
+  elif test $withmpidimension = 4; then
+    AC_MSG_RESULT(n=4 [xyzt])
+    AC_DEFINE(PARALLELXYZT,1,Four dimensional parallelisation)
+  elif test $withmpidimension = X; then
+    AC_MSG_RESULT(n=1 [x])
+    AC_DEFINE(PARALLELX,1, X parallelisation)
+  elif test $withmpidimension = XY; then
+    AC_MSG_RESULT(n=2 [xy])
+    AC_DEFINE(PARALLELXY,1, XY parallelisation)
+  elif test $withmpidimension = XYZ; then
+    AC_MSG_RESULT(n=3 [xyz])
+    AC_DEFINE(PARALLELXYZ,1, XYZ parallelisation)
+  elif test $withmpidimension = T; then
+    AC_MSG_RESULT(n=1 [t])
+    AC_DEFINE(PARALLELT,1, T parallelisation)
+  elif test $withmpidimension = XT; then
+    AC_MSG_RESULT(n=2 [xt])
+    AC_DEFINE(PARALLELXT,1, XT parallelisation)
+  elif test $withmpidimension = XYT; then
+    AC_MSG_RESULT(n=3 [xyt])
+    AC_DEFINE(PARALLELXYT,1, XYT parallelisation)
+  elif test $withmpidimension = XYZT; then
+    AC_MSG_RESULT(n=4 [xyzt])
+    AC_DEFINE(PARALLELXYZT,1, XYZT parallelisation)
+  else
+    AC_MSG_RESULT(unknown)
+    AC_MSG_ERROR([Only t, xt, xyt, xyzt, x, xy, xyz parallelisation available])
+  fi
+
+  AC_MSG_CHECKING(whether we shall use persistent MPI calls for halfspinor)
+  AC_ARG_WITH([persistentmpi],
+    [  --with-persistentmpi    use persistent MPI calls for halfspinor [default=no]],
+    withpersistent=$withval, withpersistent=no)
+  if test $withpersistent = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(_PERSISTENT,1,use persistent MPI calls for halfspinor)
+  else
+    AC_MSG_RESULT(no)
+  fi
+
+  AC_MSG_CHECKING(whether we shall use non-blocking MPI calls)
+  AC_ARG_WITH([nonblockingmpi],
+    [  --with-nonblockingmpi   use non-blocking MPI calls for spinor and gauge [default=yes]],
+    withnonblock=$withval, withnonblock=yes)
+  if test $withnonblock = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(_NON_BLOCKING,1,use non-blocking MPI calls for spinor ang gauge)
+  else
+    AC_MSG_RESULT(no)
+  fi
+fi
+
+AC_MSG_CHECKING([whether we want to fix volume at compiletime])
+AC_ARG_WITH([fixedvolume],
+  [  --with-fixedvolume      fix volume at compiletime [default=no]],
+  with_fixvol=$withval, with_fixvol=no)
+if test $with_fixvol = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(FIXEDVOLUME,1,Fixed volume at compiletime)
+  AC_CONFIG_FILES([fixed_volume.h])
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING([whether we want to use KOJAK instrumentalisation])
+AC_ARG_WITH([kojakinst],
+  [  --with-kojakinst        instrumentalise for KOJAK [default=no]],
+  with_kojakinst=$withval, with_kojakinst=no)
+if test $with_fixvol = yes; then
+  AC_MSG_RESULT(yes)
+  CC="kinst-pomp ${CC}"
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(whether we want to use lapack and blas)
+AC_ARG_WITH(lapack,
+  [  --with-lapack           enable use of lapack [default=yes]],
+  with_lapack=$withval, with_lapack=yes)
+if test "$with_lapack" = yes; then
+  AC_MSG_RESULT(yes)
+  LAPACKLIB=
+  AC_DEFINE(HAVE_LAPACK,1,lapack available)
+elif test "$with_lapack" != no; then
+  AC_MSG_RESULT(yes)
+  LIBS="$withval $LIBS"
+  with_lapack=yes
+  AC_DEFINE(HAVE_LAPACK,1,lapack available)
+else
+  AC_MSG_RESULT(no)
+  AC_MSG_ERROR([lapack is needed! Will stop here.])
+fi
+
+if test $enable_mpi = yes; then
+  dnl In general one cannot run mpi programs directly
+  dnl thats why we need here cross_compiling=yes
+  dnl for non CRAY
+  if test "$host_vendor" != "cray"; then
+    cross_compiling=yes
+  fi
+fi
+
+dnl for the case of other configure scripts
+dnl AC_CONFIG_SUBDIRS( rng )
+
+dnl Checks for lapack and defines proper name mangling scheme for
+dnl linking with f77 code
+AC_F77_FUNC(zheev)
+if test "$zheev" = "zheev"; then
+  AC_DEFINE(NOF77_,1,Fortran has no extra _)
+fi
+AC_SEARCH_LIBS([$zheev],[], [], [AC_MSG_ERROR([Cannot find lapack])])
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS([float.h libintl.h limits.h stdint.h stdlib.h string.h strings.h sys/time.h unistd.h endian.h])
+AC_CHECK_HEADER( getopt.h, [])
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_OFF_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+dnl Checks for library functions.
+AC_SYS_LARGEFILE
+AC_FUNC_FSEEKO
+AC_FUNC_MALLOC
+AC_TYPE_SIGNAL
+AC_CHECK_FUNCS([gettimeofday pow sqrt])
+
+dnl We now define some replacement variables
+AC_SUBST(OPTARGS)
+AC_SUBST(SOPTARGS)
+AC_SUBST(INCLUDES)
+AC_SUBST(AUTOCONF)
+AC_SUBST(SOLVEROUT)
+AC_SUBST(CCDEP)
+AC_SUBST(CCLD)
+AC_SUBST(DEPFLAGS)
+AC_SUBST(DEBUG_FLAG)
+AC_SUBST(PROFILE_FLAG)
+AC_SUBST(XCHANGELIB)
+AC_SUBST(XCHANGEDIR)
+AC_SUBST(XLIB)
+AC_SUBST([LEMON_AVAILABLE])
+
+INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
+DEPFLAGS="$DEPFLAGS"
+
+dnl in the following we check for extra options
+if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
+
+  AC_MSG_CHECKING(whether we want to use P4 instructions)
+  AC_ARG_ENABLE(p4,
+    [  --enable-p4             enable use of P4 instructions [default=yes]],
+    enable_p4=$enableval, enable_p4=yes)
+  if test $enable_p4 = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(P4,1,Use Pentium4 instructions)
+dnl    AC_DEFINE(ALIGN_BASE,0x3f,[Align base])
+  else
+    AC_MSG_RESULT(no)
+  fi
+
+  AC_MSG_CHECKING(whether we want to use Opteron instructions)
+  AC_ARG_ENABLE(opteron,
+    [  --enable-opteron        enable use of Opteron instructions [default=no]],
+    enable_opteron=$enableval, enable_opteron=no)
+  if test $enable_opteron = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(OPTERON,1,Use Opteron instructions)
+dnl    AC_DEFINE(ALIGN_BASE,0x0f,[Align base])
+  else
+    AC_MSG_RESULT(no)
+  fi
+
+  AC_MSG_CHECKING(whether we want to use SSE2 instructions)
+  AC_ARG_ENABLE(sse2,
+    [  --enable-sse2           enable use of SSE2 instructions [default=yes]],
+    enable_sse2=$enableval, enable_sse2=yes)
+  if test $enable_sse2 = yes; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
+
+  AC_MSG_CHECKING(whether we want to use SSE3 instructions)
+  AC_ARG_ENABLE(sse3,
+    [  --enable-sse3           enable use of SSE3 instructions [default=no]],
+    enable_sse3=$enableval, enable_sse3=no)
+  if test $enable_sse3 = yes; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
+fi
+
+AC_MSG_CHECKING(whether we want to use gprof as profiler)
+AC_ARG_WITH(gprof,
+  [  --with-gprof            use of gprof profiler [default=yes]],
+  enable_gprof=$withval, enable_gprof=yes)
+if test $enable_gprof = yes; then
+  AC_MSG_RESULT(yes)
+    if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
+      PROFILE_FLAG="-pg -qfullpath -g"
+    else
+      PROFILE_FLAG="-pg -g"
+    fi
+else
+  AC_MSG_RESULT(no)
+  PROFILE_FLAG=
+fi
+
+AC_MSG_CHECKING(whether we shall use rts dram window)
+AC_ARG_WITH([bgldram],
+  [  --with-bgldram          use BGL dram window (BGL only!) [default=yes]],
+  with_bgldram=$withval, with_bgldram=yes)
+if test $with_bgldram = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(_USE_BGLDRAM,1,use BGL dram window)
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl Now we have to set als Flags and compiler properly
+dnl first for PC's
+XLCGREP=`$CC -V 2>&1 | grep -i xlc`
+if test "$XLCGREP" != ""; then
+  XLC="yes"
+  AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
+fi
+PGCC=`$CC -V 2>&1 | grep pgcc`
+ICC=`$CC -V 2>&1 | grep -i intel`
+
+if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
+dnl the GNU compiler
+  if test "$GCC" = yes && test "$ICC" = ""; then
+    DEPFLAGS="-MM"
+    CFLAGS="$CFLAGS -pedantic -Wall"
+    OPTARGS='-O'
+    SOPTARGS='-O'
+
+    if test $enable_sse3 = yes; then
+      echo Using SSE3 and SSE2 macros!
+      AC_DEFINE(SSE3,1,Compile with SSE3 support)
+      DEPFLAGS="$DEPFLAGS -DSSE3"
+      if test "$host_cpu" = "x86_64"; then
+        CFLAGS="$CFLAGS -mfpmath=387"
+      fi
+    elif test $enable_sse2 = yes; then
+      DEPFLAGS="$DEPFLAGS -DSSE2"
+      AC_DEFINE(SSE2,1,Compile with SSE2 support)
+      if test "$host_cpu" = "x86_64"; then
+        CFLAGS="$CFLAGS -mfpmath=387"
+      fi
+    fi
+
+    if test "$host_cpu" = "x86_64"; then
+      AC_DEFINE(_x86_64,1,x86 64 Bit architecture)
+    fi
+    CCDEP="$CC"
+    if test $enable_mpi = yes; then
+      CCDEP="gcc"
+    fi
+    DEBUG_FLAG="-g"
+dnl other compilers
+  else
+dnl check for pgcc
+    if test "$PGCC" != ""; then
+      DEPFLAGS="-M"
+      echo "We are using the Portland Group C compiler!"
+      OPTARGS="-O2"
+      SOPTARGS="-O2"
+      DEBUG_FLAG="-g"
+      PROFILE_FLAG="-p -g"
+      CCDEP="$CC"
+
+dnl check for icc
+    elif test "$ICC" != ""; then
+      echo "We are using the Intel C compiler!"
+      DEPFLAGS="-M"
+      OPTARGS="-O3"
+      SOPTARGS="-O3"
+      DEBUG_FLAG="-g"
+      PROFILE_FLAG="-p -g"
+      CCDEP="$CC"
+
+    else
+      DEPFLAGS="-M"
+      CFLAGS="$CFLAGS -O"
+      DEBUG_FLAG="-g"
+      CCDEP="$CC"
+    fi
+  fi
+
+# The MareNostrum: powerpc on a linux system
+elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
+
+  DEBUGFLAG="-g"
+  if test "$XLC" = "yes"; then
+    CFLAGS="-qsrcmsg $CFLAGS"
+    DEBUGFLAG="$DEBUGFLAG -qfullpath"
+  fi
+
+  OPTARGS="-O3"
+  SOPTARGS="-O3"
+  if test "$CCDEP" = "gcc"; then
+    DEPFLAGS="-MM"
+  else
+    DEPFLAGS="-M"
+  fi
+
+#The BLue Gene/L
+elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "blrts"; then
+  if test "$with_bgldram" = yes; then
+    if (test -e /bgl/local/bin/blrts_gcc); then
+      BLRTSGCC=/bgl/local/bin/blrts_gcc
+    elif (test -e /bgl/BlueLight/ppcfloor/blrts-gnu/bin/powerpc-bgl-blrts-gnu-gcc); then
+      BLRTSGCC=/bgl/BlueLight/ppcfloor/blrts-gnu/bin/powerpc-bgl-blrts-gnu-gcc
+    else
+      AC_MSG_ERROR([Sorry, don't know where to find blrts_gcc, see README.bgl!])
+    fi
+    CCLD="$BLRTSGCC -Xlinker --script=./elf32ppcblrts.x"
+    if (!(test -s ./elf32ppcblrts.x)); then
+      AC_MSG_ERROR([Sorry, elf32ppcblrts.x is missing, see README.bgl!])
+    fi
+  fi
+  DEBUGFLAG="-g"
+  OPTARGS="-O3"
+  SOPTARGS="-O3"
+  AC_DEFINE(BGL,1,[Optimize for Blue Gene/L])
+
+  if test "$XLC" = "yes"; then
+    CFLAGS="-qsrcmsg $CFLAGS"
+    OPTARGS="$OPTARGS -qarch=440d -qtune=440"
+    SOPTARGS="$SOPTARGS -qarch=440d -qtune=440"
+    DEBUGFLAG="$DEBUGFLAG -qfullpath"
+# OPTARGS="-qhot" leads to wrong code
+  fi
+  LIBS="-lmpich.rts -lfmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts $LIBS"
+  LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
+  if test $with_lapack = yes; then
+    LIBS="-lesslbg -llapack.rts -lesslbg -lxlf90 -lxlfmath -lxl -lxlopt $LIBS"
+    LDFLAGS="$LDFLAGS -L/opt/ibmcmp/xlf/bg/10.1/blrts_lib -L/bgl/local/lib/ -L/opt/ibmmath/lib/"
+  fi
+
+  if test "$CCDEP" = "gcc"; then
+    DEPFLAGS="-MM"
+  else
+    DEPFLAGS="-M"
+  fi
+  CPPFLAGS="-I/bgl/BlueLight/ppcfloor/bglsys/include"
+  INCLUDES="$INCLUDES -I/bgl/BlueLight/ppcfloor/bglsys/include/"
+
+#The BLue Gene/P
+elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "bprts"; then
+  CFLAGS="$CFLAGS"
+  DEBUGFLAG="-g"
+  OPTARGS="-O3"
+  SOPTARGS="-O3"
+  AC_DEFINE(BGL,1,[Optimize for Blue Gene/L])
+  AC_DEFINE(BGP,1,[Optimize for Blue Gene/P])
+
+  if test "$XLC" = "yes"; then
+    CFLAGS="-qsrcmsg $CFLAGS"
+    OPTARGS="$OPTARGS -qarch=450d -qtune=450"
+    SOPTARGS="$SOPTARGS -qarch=450d -qtune=450"
+    DEBUGFLAG="$DEBUGFLAG -qfullpath"
+# OPTARGS="-qhot" leads to wrong code
+  fi
+#  LIBS="-lxlf90_r -lxlomp_ser -lxl -lxlopt -lxlfmath -ldl -lrt -lpthread  $LIBS"
+#  LDFLAGS="$LDFLAGS -L/bgsys/local/lib/ -L/opt/ibmcmp/xlf/bg/11.1/lib  -L/bgsys/drivers/ppcfloor/comm/"
+#  if test $with_lapack = yes; then
+#    LIBS="-lesslbg -llapack -lesslbg $LIBS"
+#    LDFLAGS="$LDFLAGS -L/opt/ibmmath/lib/"
+#  fi
+
+  if test "$CCDEP" = "gcc"; then
+    DEPFLAGS="-MM"
+  else
+    DEPFLAGS="-M"
+  fi
+  CPPFLAGS="-I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
+  INCLUDES="$INCLUDES -I/bgsys/local/include/ -I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
+
+
+
+# The IBM Power PC
+elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
+  CFLAGS="$CFLAGS -q64 -qsrcmsg"
+  LDFLAGS="$LDFLAGS -q64"
+  OPTARGS="-O3 -qhot"
+  SOPTARGS="-O3 -qhot"
+  DEBUG_FLAG="-qfullpath -g"
+  if test "$CCDEP" = "gcc"; then
+    DEPFLAGS="-MM"
+  else
+    DEPFLAGS="-M"
+  fi
+
+# The CRAY
+elif test "$host_vendor" = "cray"; then
+  echo
+  echo "Hey, we are on a cray, you should take some time for this..."
+  echo "get yourself a coffee or so!"
+  echo
+  CFLAGS="$CFLAGS -dp"
+  AC_DEFINE(CRAY,1,We are on a CRAY)
+  OPTARGS="-O3"
+  SOPTARGS="-O3"
+  DEBUG_FLAG="-g"
+  CCDEP="$CC"
+  DEPFLAGS="-M"
+
+else
+  AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
+  if test "$CCDEP" = "gcc"; then
+    DEPFLAGS="-MM"
+  else
+    DEPFLAGS="-M"
+  fi
+  OPTARGS=
+  SOPTARGS=
+fi
+
+
+AC_MSG_CHECKING(whether we want to switch on optimisation)
+AC_ARG_ENABLE(optimize,
+  [  --enable-optimize       enable optimisation [default=yes]],
+  enable_optimize=$enableval, enable_optimize=yes)
+if test $enable_optimize = no; then
+  AC_MSG_RESULT(no)
+  OPTARGS=
+  SOPTARGS=
+else
+  AC_MSG_RESULT(yes)
+fi
+
+AC_MSG_CHECKING(whether we want to use a copy of the gauge field)
+AC_ARG_ENABLE(gaugecopy,
+  [  --enable-gaugecopy      enable use of a copy of the gauge field [default=yes]],
+  enable_gaugecopy=$enableval, enable_gaugecopy=yes)
+if test $enable_gaugecopy = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(_GAUGE_COPY,1,Construct an extra copy of the gauge fields)
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(whether we want to use a Dirac Op. with halfspinor exchange)
+AC_ARG_ENABLE(halfspinor,
+  [  --enable-halfspinor     use a Dirac Op. with halfspinor exchange [default=yes]],
+  enable_halfspinor=$enableval, enable_halfspinor=yes)
+if test $enable_halfspinor = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(_USE_HALFSPINOR,1,Exchange only a halfspinor in the Dirac Operator)
+  if test $enable_gaugecopy = no; then
+    AC_MSG_WARN([switching on gaugecopy for Dirac operator with halfspinor!])
+    AC_DEFINE(_GAUGE_COPY,1,Construct an extra copy of the gauge fields)
+  fi
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(whether we want to use shmem API)
+AC_ARG_ENABLE(shmem,
+  [  --enable-shmem          use shmem API [default=no]],
+  enable_shmem=$enableval, enable_shmem=no)
+if test $enable_shmem = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(_USE_SHMEM,1,Use shmem API)
+  LIBS="$LIBS -lsma"
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(whether we want to use timeslice-splitted communications)
+AC_ARG_ENABLE(tsplitpar,
+  [  --enable-tsplitpar   enable timeslice-splitted communications [default=no]],
+  enable_tsp=$enableval, enable_tsp=no)
+if test $enable_tsp = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(_USE_TSPLITPAR,1,timeslice-splitted communications)
+else
+ AC_MSG_RESULT(no)
+fi
+
+
+AC_MSG_CHECKING(whether we want to use CUDA GPU)
+AC_ARG_ENABLE(gpu,
+  [  --enable-gpu          use GPU [default=no]],
+  usegpu=$enableval, usegpu=no)
+if test $usegpu = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_GPU,1,Using CUDA GPU)
+  NVCC="nvcc"
+  USESUBDIRS="io linalg solver GPU"
+  GPUDIR="$srcdir/GPU"
+  LIBS="$LIBS -lcuda -lcudart -lcublas"
+  
+  AC_MSG_CHECKING([where to search for CUDA libs])
+  AC_ARG_WITH(cuda,
+    [  --with-cuda[=dir]      use CUDA GPU with lib dir [default=/usr/local/cuda/lib]],
+    cuda_dir=$withval, cuda_dir="/usr/local/cuda/lib")
+  AC_MSG_RESULT($cuda_dir)
+  if test $usegpu = yes; then  
+    LDFLAGS="$LDFLAGS -L$cuda_dir"
+  fi
+
+
+  AC_MSG_CHECKING([CUDA compile args])
+  AC_ARG_WITH(cudacompileargs,
+    [  --with-cudacompileargs[=string]      use CUDA compile args [default=--gpu-architecture sm_13 --use_fast_math -O3]],
+    cuda_compileargs=$withval, cuda_compileargs="--gpu-architecture sm_13 --use_fast_math -O3")
+  AC_MSG_RESULT($cuda_compileargs)
+  if test $usegpu = yes; then  
+    GPUCFLAGS="$GPUCFLAGS $cuda_compileargs"
+  fi  
+else
+  AC_MSG_RESULT(no)
+  USESUBDIRS="io linalg solver"
+  NVCC=""
+fi
+
+
+AC_SUBST(USESUBDIRS)
+AC_SUBST(NVCC)
+AC_SUBST(GPUDIR)
+AC_SUBST(GPUCFLAGS)
+
+
+
+AC_MSG_CHECKING(checking consistency)
+if test $enable_mpi = yes ; then
+ if test $enable_iig = yes && test $withnonblock != yes ; then
+  AC_MSG_ERROR(ERROR! indexindepgeom is compatible with  nonblockingmpi, only )
+ fi
+ if test $enable_tsp = yes && test $withnonblock != yes ; then
+  AC_MSG_ERROR(ERROR! tsplitpar needs nonblockingmpi)
+ fi
+fi
+if test $enable_iig = yes && test $enable_halfspinor = yes ; then
+  AC_MSG_ERROR(ERROR! indexindepgeom is not compatible with  halfspinors )
+fi
+if test $enable_tsp = yes && test $enable_iig = no; then
+  AC_MSG_ERROR(ERROR! tsplitpar needs indexindepgeom)
+fi
+if test $enable_tsp = yes && test $enable_halfspinor = yes ; then
+  AC_MSG_ERROR(ERROR! tsplitpar is incompatible with halfspinor)
+fi
+if test $enable_tsp = yes && test $enable_sse2 != yes ; then
+  AC_MSG_ERROR(ERROR! tsplitpar needs at least SSE2 )
+fi
+if test $enable_tsp = yes && test $enable_gaugecopy != yes ; then
+  AC_MSG_ERROR(ERROR! tsplitpar needs gaugecopy)
+fi
+
+if test ! -e lib; then
+  mkdir lib
+fi
+
+dnl create the test directory here
+if test ! -e test; then
+  mkdir test
+fi
+
+
+LIBS="-lhmc -lsolver -llinalg -lhmc -lio $LIBS"
+AUTOCONF=autoconf
+
+AC_CONFIG_FILES([Makefile
+                 linalg/Makefile
+	         solver/Makefile
+		 io/Makefile
+                 GPU/Makefile])
+
+AC_OUTPUT

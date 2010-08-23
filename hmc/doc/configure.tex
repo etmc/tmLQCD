@@ -1,0 +1,131 @@
+The software ships with a GNU autoconf environment and a configure
+script, which will generate GNU Makefiles to build the programmes. It
+is supported and recommended to configure and build the executables in
+a seperate directory. This also allows to have several builds with
+different options from the same source code directory. 
+
+\subsection{Prerequisites}
+
+In order to compile the programmes you need the {\ttfamily
+  LAPACK}~\cite{lapack:web} library (fortran version) installed. You also
+need to find out which linker options are needed to link against
+{\ttfamily LAPACK}, e.g. {\ttfamily -Lpath-to-lapack -llapack
+  -lblas}. In addition you need to download and compile the latest
+version (tested is version 1.2.3) of {\ttfamily
+  C-LIME}~\cite{lime:web}, which is used as a packaging scheme to
+read and write gauge configurations and propagators to files.
+
+If you want to use a C-compiler that is not the standard one on the
+architecture you are working on, you also need to know the
+C-compiler. On some platforms you may also need to know the
+corresponding fortran 77 compiler, in particular in cases where you
+cross-compile. 
+
+\subsection{Configuring the hmc package}
+\label{sec:config}
+
+In order to get a simple configuration of the hmc package it is enough
+to just type 
+\begin{verbatim}
+patch-to-src-code/configure   --with-lime=<path-to-lime> \
+     --with-lapack=<linker-flags> CC=<mycc> \
+     F77=<myf77> CFLAGS=<c-compiler flags>
+\end{verbatim}
+in your build directory. If 
+you do not  specify {\ttfamily CC, F77} and {\ttfamily CFLGAS},
+{\ttfamily configure} will guess them.
+
+The code was successfully compiled and run at least on the following
+platforms: i686 and compatible, x64 and compatible, IBM Regatta
+systems, IBM Blue Gene/L, IBM Blue Gene/P, SGI Altix and SGI PC
+clusters, powerpc clusters.
+
+The configure script accepts certain options to influence the building
+procedure. One can get an overview over all supported options with
+{\ttfamily configure --help}. There are {\ttfamily enable|disable}
+options switching on and off optional features and {\ttfamily
+  with|without} switches usually related to optional packages. In the
+following we describe the most important of them (check {\ttfamily
+  configure --help} for the defaults and more options):
+
+\begin{itemize}
+\item {\ttfamily --enable-mpi}:\\
+  This option switches on the support for MPI. On certain platforms it
+  automatically chooses the correct parallel compiler or searches for
+  a command {\ttfamily mpicc} in the searchpath.
+
+\item {\ttfamily --enable-p4}:\\
+  Enable the use of special petium4 instruction set and cache
+  management.
+
+\item {\ttfamily --enable-opteron}:\\
+  Enable the use of special opteron instruction set and cache
+  management.
+
+%\item {\ttfamily --enable-sse}:\\
+%  Enable the use of SSE instruction set. This means not much when 64
+%  Bit precision is used.
+
+\item {\ttfamily --enable-sse2}:\\
+  Enable the use of SSE2 instruction set. This is a huge improvement
+  on pentium4 and equivalent systems.
+
+\item {\ttfamily --enable-sse3}:\\
+  Enable the use of SSE3 instruction set. This will give another 20\%
+  of speedup when compared to only SSE2. However, only a few
+  processors are capable of SSE3 so far.
+
+\item {\ttfamily --enable-gaugecopy}:\\
+  See section \ref{sec:dirac} for details on this option. It will
+  increase the memory requirement of the code.
+
+\item {\ttfamily --enable-halfspinor}:\\
+  If this option is enabled the Dirac operator using half spinor
+  fields is used. See sub-section \ref{sec:dirac} for details. If this
+  feature is switched on, also the gauge copy feature is switched
+  automatically. 
+
+%\item {\ttfamily --enable-shmem}:\\
+%  Use shared memory API instead of MPI for the communication of spinor
+%  fields. This is currently only usable on the Munich Altix machine.
+
+\item {\ttfamily --with-mpidimension=n}:\\
+  This option has only effect if the preceeding one is switched
+  on. The number of parallel directions can be specified. 1,2,3 and 4
+  dimensional parallelisation is supported.
+
+\item {\ttfamily --with-lapack="<linker flags>"}:\\
+  the code requires lapack to be linked. All linker flags neccessary
+  to do so must be specified here. Note, that {\ttfamily LIBS="..."}
+  works similar.
+
+\item {\ttfamily --with-limedir=<dir>}:\\
+  Tells configure where to find the lime package, which is required for
+  the build of the HMC. It is used for the ILDG file format.
+ 
+\end{itemize}
+
+The configure script will guess at the very beginning on which
+platform the build is done. In case this fails or a cross compilation
+must be performed please use the option {\ttfamily --host=HOST}. For
+instance in order to compile for the BG/P you have to specify
+{\ttfamily --host=ppc-ibm-bprts --build=ppc64-ibm-linux}. 
+
+For certain architectures like the Blue Gene systems there are
+{\ttfamily README.arch} files in the top source directory with
+exsample configure calls.
+
+\subsection{Building and Installing}
+
+After successfully configuring the package you can build the code by
+simply typing {\ttfamily make} in the build directory. This will
+compile the standard executables. Typing {\ttfamily make install} will
+copy these executables into the install directory. The default install
+directory is {\ttfamily \$HOME/bin}, which can be influenced e.g. with
+the {\ttfamily --prefix} option to {\ttfamily configure}. 
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

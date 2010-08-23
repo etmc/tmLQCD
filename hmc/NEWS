@@ -1,0 +1,393 @@
+16.04.2010: mixed precision CG implemented for invert and HMC
+            determination of the Ptilde degree optimised
+	    new input parameter for NDPOLY monomial: MaxPtildeDegree
+
+16.04.2010: as online measurements are available CORRELATORS, PIONNORM, POLYAKOV
+            syntax
+            BeginMeasurement TYPE
+              option = value
+            EndMeasurement
+
+March.2010: parallel IO implemented and tested to work.
+            new operator syntax in input file
+            Begin Operator TYPE
+              option=value
+            EndOperator
+
+10.02.2010: New hopping_test.c routing to test the parallel version of
+	    an Hopping_Matrix
+
+10.02.2010: when compiling with --enable-tsplitpar, the communications in the 
+	    Hopping Matrix are splitted and performed after each timeslice. 
+            This allows the overlap of communications and computations.
+	    tsplitpar needs indexindepgeom, SSE2/3, gaugecopy
+
+10.02.2010: when compiling with --enable-indexindepgeom, the xchange routines do not 
+	    rely of absolute addressing anymore, but on addresses gI_?_?_?_? which are
+	    defined based on the function Index.
+	    This enables the parallelization in X, XY, XYZ directions
+	    which is obtained --with-mpidimension=XYZ ...
+	    indexindepgeom is still not compatible with blocking-mpi of halfspinors
+
+13.11.2009: parallel IO for gauge fields tested and working.
+            parallel reading of Checksum still buggy, but not essential
+
+09.11.2009: MMS successfully checked. Little code for checking
+            in contractions/check_propagators/check_mms_props.cc
+
+04.06.2009: bug in eigensolver routine for ND case fixed
+	    parallel IO included using lemon library
+	    Schroedinger functional boundary conditions for
+	    gauge case included
+
+14.05.2009: multiple mass solver (CG) for twisted mass
+	    implemented, input is solverflag = cgmms
+	    the number of additional masses has to be specified with
+  	    CGMMSNoExtraMasses = N
+	    and the extra masses have to be given line by line in a file called
+	    "extra_masses.input"
+	    The CGMMS solver writes for every mass (extra + the original one) one
+	    propagator storing the result of (Q^\dagger Q)^(-1) \gamma_5 \phi
+	    where \phi is the source.
+	    Hence the result for +\mu and -\mu can be extracted at any later
+	    stage, respectively.
+
+14.05.2009: in the propagator files we now store additional info, namely
+	    the xlf-info message is copied from the original gauge field, if 
+	    existing, as well as the scidac-checksum and the ildg-data-lfn
+	    messages. This should ease the mapping from a propagator to the corresponding
+	    gauge configuration file.
+
+01.08.2008: online measurements implemented for
+            PP and PA correlators. Input variables are
+            PerformOnlineMeasurements = yes|no and
+            OnlineMeasuremntsFreq = n
+	    Result will be written to a file called
+	    onlinemeas.trajno
+	    tested to work scalar and parallel
+
+30.05.2008: support now for three formats for source and propagator, for compatibility:
+            cmi, GWC, ETMC. The latter is the standard and recommended.
+
+07.12.2007: inversion for the flavour split doublet implemented and tested
+	    new spinor field IO format implemented and tested
+	    scidac checksums implemented
+
+19.10.2007: hmc runs now also without even/odd preconditioning.
+	    Set UseEvenOdd=no in the input file (thanks to Jan Volkholz).
+
+05.09.2007: invert suppports now also inversions using D_psi. This is
+	    triggered by UseEvenOdd (default = yes) as input parameter.
+
+04.09.2007: D_psi in three versions tested, also parallel
+	    versions. BG/L version of deriv_Sb still not checked.
+
+31.08.2007: D_psi for full spinor field (no even/odd) implemented and tested
+	    for SSE2 and normal version. new deriv_Sb implemented and tested.
+	    BG/L versions still need testing.
+
+08.08.2007: all integration schemes available for the PHMC
+	    new input paramter 
+	    TimeScaleHeavyDoublet
+	    which must be set to an integeter >=0 specifying the timescale
+	    on which to integrate the heavy doublet on. Note that 0 is
+	    the smallest possible timescale, which is the smallest
+	    timescale available for pseudo fermion fields. (the gauge
+	    field is one scale below)
+	    not completely tested yet.
+
+15.04.2007: eigenvalue computation for squared one flavour operator
+	    implemented, few new input parameters connected to this,
+            see documentation.
+	    Preconditioned CG added and tested with eigenvalues
+	    estimates. However, CG with exact eigenvector subspace
+	    projected out is faster.
+
+	    Sloppy precision now also available for CG.
+
+03.04.2007: Addition of 2 input parameters:
+            SplittedPropagator and SourceLocation
+            New function in start.c to use the SourceLocation
+            when its value is different from 0.
+            The same modification was done in the GWC code.
+
+01.04.2007: many changes to PHMC
+	    new input parameters:
+	    PhmcNoFlavours (2+1+1 or 1+1)
+	    PhmcComputeOnlyEVs (yes or no: compute EVs only and exit then)
+	    PhmcStildeMax (flaot, upper bound for appr. interval)
+	    PhmcStildeMin (float, lower bound for appr. interval)
+	    PhmcDegreeOfP (int, degree of P, the less precise polynomial)
+	    PhmcRecEVInterval (int, recompute EV's every n trajectories)
+
+	    parallel Eigenvalue computation works now, also on BG/L
+
+	    PHMC fuer 1+1 flavours exists and works
+
+18.01.2007: towards version 4.0
+	    merged with branch phmc. hmc_tm and phmc_tm
+	    are both compiling and running. phmc needs
+	    lapack.
+	    phmc has so far only on integration scheme
+	    available. The PHMC code is tested against a 
+	    code of I. Montway.
+	    Credits to T. Chiarappa for the PHMC, see
+	    doc directory for more details.
+	    Tested so far only on PC's
+
+15.01.2007: stout smearing for invert implemented by Craig McNeile
+            input parameters are: UseStoutSmearing, StoutRho and
+            StoutNoIterations (hopefully self explaining)
+	    Tested against Chroma-3.17.0
+
+            stouting for hmc not yet implemented
+
+12.12.2006: run time call for dram window on BG/L implemented (--with-bgldram)
+            persistent MPI for halfspinor available (--with-persistentmpi)
+            non-blocking MPI calls also for gauge fields implemented
+            now generally available with --with-nonblockingmpi for all platforms
+	    The BG/L performance is now close to 18% peak.
+
+	    Improved performance for opteron CPU's
+
+02.09.2006: New Dirac operator implemented and working
+	    On BG/L this brings a 20% improvement
+	    it can be switched on with --enable-newdiraop
+
+	    The exchange routines are now also with shmem API
+	    available. Usable with --enable-shmem. this
+	    feature is not yet completely tested.
+
+15.04.2006: Various new input parameters, see doc/input.tex.
+	    removing of hmc.reread now also works on BG/L.
+	    The file conf.save is now almost always save: a new
+	    configuration is first stored in .conf.temp and then moved
+	    to conf.save. There might be still a problem in case the
+	    job chrashes when .nstore_counter is written...
+
+28.03.2006: chronological solver guess now independent of lapack
+	    the current filename is now saved in .nstore_counter
+	    last_configuration and last_state are therefore obsolet.
+	    random number state now saved in lime format in the gauge file
+	    rlxd_state files are not any longer produced, but will still be
+	    read.
+
+14.02.2006: --enable-gaugcopy will work now also without
+	    --enable-eogeom . But it requires two additional
+	    copies of the gauge fields instead of one.
+
+	    A reasonably well tuned BG/L Dirac operator available
+	    about 10% of peak scaling up to 2048 processors.
+
+13.02.2006: four dimensional parallelisation more or less tested
+
+12.02.2006: But in all but four dimensional parallelisation 
+	    fixed.
+
+10.02.2006: package will compile only with lime >= 1.2.3!
+
+10.02.2006: Build in separate directory possible now.
+
+09.02.2006: Bug in io.c fixed
+
+08.02.2006: Bug in write ILDG configs fixed
+
+07.02.2006: In case of 4-dim. parallelisation the product
+	    T*LX*LY _must_ be even, otherwise the field exchange
+	    in z-direction does not work.
+
+07.02.2006: 3 and 4 dimensional parallelisation implemented
+	    working both so far _only_ with --disable-eogeom
+	    (maybe configure then also --disable-gaugecopy)
+	    New input parameter NrZProcs
+	    local LZ _must_ be even
+
+	    everything is not yet finally tested.
+
+06.02.2006: Added the possibility for fixed volume at compiletime
+	    --with-fixedvolume
+	    please edit fixed_volume.h accordingly
+	    not at all tested tested!
+
+30.01.2006: New input parameter NrYProcs
+
+29.01.2006: running and partially tested on the BGL in Juelich 
+	    configure with
+	    ./configure --host=powerpc64-bgl-linux-gnu --without-lapack CC=/opt/ibmcmp/vac/7.0/bin/blrts_xlc
+	    and other options. Also lime needs to be configured
+	    with ./configure CC=/opt/ibmcmp/vac/7.0/bin/blrts_xlc
+	    please use lime-1.2.3 _at least_! Earlier version might not
+	    work.
+
+30.01.2006: at least for BGL lime needs to be configured with
+	    ./configure CC=/opt/ibmcmp/vac/7.0/bin/blrts_xlc --enable-largefile
+	    and (remember) lime-1.2.3.
+
+25.01.2006: Trying to setup a versioning system:
+	    last digit -> bug fixes
+	    second digit odd -> developement Version
+	    second digit even -> stable release
+
+
+25.01.2006: changed --disalbe-lapack to --without-lapack ...
+
+05.01.2006: By setting the history parameters for the CSG to zero one gets
+	    now a zero spinor as trial guess for the solvers.
+	    Moreover, by specifying --disable-lapack to configure it is
+	    possible to compile without the need of the external libs lapack
+	    and blas and the fortran-lib.
+
+14.11.2005: For the flavour non-degenerate eigenvalues computation, a new 
+            structure, called bispinor, has been introduced. Consequently, 
+            a serial and a parallel new Jacoby-Davidson routine working 
+            with bispinors has been implemented, as well as two new solvers, 
+            bicgstab_complex and cg_her, respectively. A bunch of linear 
+            algebra files have been adapted to work with bispinors. All these 
+            files are distinguished by the suffix "_bi" (e.g: "file_bi.c").
+
+14.11.2005: New global parameters (g_mubar, g_epsbar) have been introduced. 
+            These are the mass parameters needed in the eigenvalues 
+            computation of the flavour non-degenerate case Dirac operator.
+
+11.11.2005: gcc-4.x does not use libg2c anymore. One has to link 
+	    against gfortran, which is done now.
+
+26.10.2005: Added gauge file format conversion programs for
+	    gwc -> ildg and ildg -> gwc
+
+	    All solver have additional parameter now. It is now possible
+	    to invert with realtive precision. Moreover, the propagator 
+	    (or source) format of Chris Michael can be read in.
+	    The new input parameter is:
+	    SourceFormat = cmi (otherwise gwc assumed)
+	    other related input parameters are
+	    ReadSource = yes
+	    SolverPrecision = 1.e-10
+	    SourceInputFilename = random_test
+	    UseRelativePrecision = yes
+
+11.08.2005: 2MN integrator implemented and tested. Two versions
+	    available: velocity and position version (hep-lat/0505020).
+	    Integrator=2MN or 2MNposition
+
+29.06.2005: ILDG LIME file format introduced.
+	    old file format deprecated. But it will be still
+	    automatically detected and read in.
+	
+	    trajectory counter introduced which will now allow
+	    to correctly keep the Nskip's between the confs.
+	    this is as well as the plaquette value stored as 
+	    xlf-info record in the new LIME format.
+
+10.03.2005: Precisions in the solver for force and Acceptance are input
+	    parameter now for each mu parameter:
+  	    ForcePrecisionMu, ForcePrecisionMu2, ForcePrecisionMu3
+	    AcceptancePrecisionMu, 
+	    AcceptancePrecisionMu2, AcceptancePrecisionMu3
+	   
+	    ExtIntStepsMu0 is now called IntegrationStepsMu,
+	    ExtIntStepsMu1 is now called IntegrationStepsMu2,
+	    ExtIntStepsMu2 is now called IntegrationStepsMu3,
+	    matchin the input names for the mu parameter.
+	    The old one are still usable.
+
+	    Added an input parameter DebugLevel to control the 
+	    debug output. Setting it to one will cause the program
+	    to compute and print out the norms of the forces.
+
+17.02.2005: Reversibility check implemented. Input parameters are
+	    ReversibilityCheck = yes|no (default no)
+	    ReversibilityCheckIntervall = 100 (default 100)
+
+	    Precisions in the solver for force and Acceptance are input
+	    parameter now:
+  	    ForcePrecision = float (default 1.e-7)
+	    AcceptancePrecision = float (default 16.e-7)
+  	    
+	    One can choose to have relative precision:
+	    UseRelativePrecision = yes|no (default no)
+
+13.02.2005: Integration scheme with error cancellation implemented.
+            It is only implemented for the highest level and should
+	    have errors in \delta\tau^5 only.
+
+07.02.2005: LX,LY,LZ now possible as input parameter.
+
+07.01.2005: Extended leap-frog and extended Sexton-Weingarten
+	    integration schemes (multiple time scales) implemented 
+	    and tested.
+
+17.12.2004: Possibility for rereading some parameters added.
+	    If there is a file hmc.reread, it will be parsed
+	    automatically and deleted afterwards. It is not possible
+	    to change T, L, RGIC1 from zero to a non zero value, NrXProcs.
+
+13.12.2004: Extended leapfrog integration scheme implemented
+	    and tested. 
+
+23.11.2004: The lattice size must be now set in the input file.
+	    Recompilation is only needed for one or two dimensional
+	    parallelisation.
+	    
+	    For invert there is a new input parameter:
+	    ReadSource = yes|no
+	    SourceInputFilename = filename
+	    This let's you read in a generalised source for the
+  	    inversion. The real filename must be of the form
+	    filename${massnumber}.is${is}ic${ic}.${nstore}
+
+22.11.2004: DBW2 implemented for the serial code and the parallel
+	    code with new and old geometry.
+	    Input parameter BoundaryCond is supplemented by
+	    BCAngleT, like in the GWC code. BoundaryCond is 
+	    deprecated now.
+
+28.09.2004: input parameter added:
+	    input parameter MaxSolverIterations 
+	    and SolverPrecision available.
+
+	    history_hmc_tm file added with history of
+	    written configurations and corresponding 
+	    Plaquette values and timestamp
+
+20.08.2004: SSE3 Version of the most important macros added and
+	    tested. SSE3 versus SSE2: 1.84 Gflops versus 1.64 Gflops.
+            (P4  3.20GHz prescott)
+
+17.08.2004: 64 Bit Version of the code running and tested
+	    Cache Optimisation for Opteron added.
+	    New configure options: 
+	    --enable-opteron   : Enables cache optimisation 
+	                         for Opteron                [default=no]
+	    --enable-gaugecopy : Enables usage of a copy of 
+	                         the gauge field            [default=yes]
+	    --enable-eogeom    : Enables usage of EO geometry 
+				 also for the gauge fields  [default=yes]
+
+13.08.2004  New EO geometry for gauge fields implemented also
+	    for the 2-dim parallelisation and tested.
+
+04.05.2004: additional parallelisation in x-direction added
+	    and tested. IO added as well and tested, apart
+	    from write and read for spinor fields.
+	    extended test functions written (hmc/test)
+
+05.04.2004: Bug fix. serial version without MPI running now.
+	    Bug was in geometry_eo.c
+	    program for thermal cycles added.
+
+11.03.2004: third pseudo fermion field added and tested.
+
+09.03.2004: .nstore_counter file introduced to easily restart the
+	    programm. Just set InitialStoreCounter = readin. Also a
+	    sighandler was added to savely finish the program.
+
+04.03.2004: Hasenbusch trick tested and working.
+	    New version of the Hopping matrix for the IBM implemented
+	    with special improvements. Even Odd ordering translated
+	    also to the gauge fields and tested, but not yet default.
+
+03.03.2004: second pseudo fermion (trick of Martin Hasenbusch)
+	    implemented also for tmQCD
+
+02.03.2004: Release 1.0.1

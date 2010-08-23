@@ -1,0 +1,129 @@
+\subsection{Implementing Deflation}
+
+We are aiming to solve 
+\[
+D\psi = \eta
+\]
+using L{\"u}schers deflation method. Note that $D$ is the
+non-hermitian (twisted) Wilson Dirac operator.
+
+Lets assume we have devided the whole lattice completely into blocks
+$\Lambda(\vec b)$ on a four dimensional grid. Every block has a grid
+coordinate $\vec b$ and we have a total number of $N_b$ blocks. (This
+is actually what we have in the MPI environment) Lets
+assume we have found $N$ approximate (global) eigenvectors $\psi_l,
+l=1,...,N$ and we have restricted them to the blocks via
+\[
+\phi_l^{\vec b}(x) =
+\begin{cases}
+  \psi_l(x) & \textrm{if}\ x \in \Lambda(\vec b)\, ,\\
+  0 & \textrm{otherwise}\,.
+\end{cases}
+\]
+obtaining in total $N_b\cdot N$ fields. And we have already
+orthonormalised them using Gram-Schmidt or whatever.
+
+\subsubsection*{Construction of the little Dirac operator}
+
+The \emph{little Dirac operator} $A$ is then computed from
+\[
+A_{(\vec a,k)(\vec b, l)} = \langle\phi_k^{\vec a}| D\phi_l^{\vec
+  b}\rangle 
+\]
+$A_{(\vec a,k)(\vec b, l)}$ is non-zero only for $\vec a = \vec b$ or
+$\vec b = \vec a \pm \vec \mu, \mu=1,...,4$, where $\vec\mu$ is a unit
+vector in block space, because $D$ involves only next neighbour
+interaction. 
+
+All elements with $\vec a = \vec b$ can be computed by applying the
+local Dirac operator $D^{\vec a}$ (i.e. all exterior boundaries set to
+zero, because $\phi_l^{\vec a}$ has support only on block
+$\Lambda(\vec a)$)
+\[
+\varphi_l^{\vec a} = D \phi_l^{\vec a} = D^{\vec a} \phi_l^{\vec a},\quad
+l=1,...,N 
+\]
+and computing the scalar products $(\phi_l^{\vec a},\varphi_k^{\vec a})$
+for all combination of $l,k$ then. For the terms with $\vec a
+\neq \vec b$ we have to be more carefully. Probably it is best done by
+looping over all directions $\pm\mu$ and computing
+\[
+\langle \phi_l^{\vec a}|\ \varphi_k^{\vec a+\vec\mu}\rangle_{\partial_{\mu}\Lambda(\vec a)}
+\]
+where $\partial_{\mu}\Lambda(\vec a)$ denotes the inner boundary in
+$\mu$-direction of block $\Lambda(\vec a)$, where $\varphi_k^{\vec
+  a+\vec\mu}$ is non-zero. 
+
+The action of the little Dirac operator on a \emph{little
+  quark field} $w$ (complex field of length $N=N_S\cdot N_b$) on block
+$\Lambda(\vec a)$ reads: 
+\[
+\begin{split}
+  v_k^{\vec a} &= A_{(\vec a,k)(\vec b, l)} w_l^{\vec b}\\
+  &= \sum_{l=1}^N  A_{(\vec a,k)(\vec a, l)} w_l^{\vec a} + 
+  \sum_{\mu} \sum_{l=1}^N [A_{(\vec a,k)(\vec a+\vec\mu, l)} w_l^{\vec
+    a+\vec\mu} + A_{(\vec a,k)(\vec a-\vec\mu, l)} w_l^{\vec a - \vec\mu}]\\
+\end{split}
+\]
+or in matrix notation
+\[
+v^{\vec a} = A^{\vec a,\vec a} w^{\vec a} + \sum_\mu [A^{\vec a,\vec
+  a+\vec\mu} w^{\vec a+\vec\mu} +  A^{\vec a,\vec a-\vec\mu} w^{\vec a-\vec\mu}]
+\]
+This involves again only next neighbour (block) interaction. 
+Every block matrix $A^{\vec a,\vec b}$ is a $N\times N$ complex
+matrix.
+
+\subsubsection{global mode deflation}
+
+We want to use the global fields $\psi_l$ to deflate the little Dirac
+operator $A$. This requires to find vectors $\chi_l$, which fulfill
+\begin{equation}
+  \label{eq:llD}
+  B_{kl} = \langle\psi_k|D \psi_l\rangle = \langle u_k|A u_l\rangle
+\end{equation}
+for $k,l = 1,...,N_s$. We recall that the fields $\phi_i$, $i=
+1,...,N_b\cdot N_s$ were obtained by restricting the fields $\psi_l$ to
+the blocks $\vec a$ followed by an orthonormalisation process. So the
+complex vectors $u_l^{\vec a}$ of length $N=N_s\cdot N_b$ on block
+$\vec a$ are computed from 
+\begin{equation}
+  \label{eq:chis}
+  (u^{\vec a}_l)_i = \langle\phi_i|\psi_l^{\vec
+    a}\rangle,\qquad\forall \phi_i\ \textrm{has support on block}\
+  \Lambda(\vec a)
+\end{equation}
+where the notation $(u^{\vec a})_i$ means the $i$-th component of
+vector $u$ on block $\vec a$. The little little Dirac operator $B$ is
+then given by
+\[
+\begin{split}
+  B_{kl} &= \langle u_k|A u_l\rangle =
+  \langle(u_k)_i|\langle\phi_i|D \phi_j\rangle (u_l)_j\rangle\\
+  &= \langle\psi_k|\phi_i\rangle\langle\phi_i|D
+  \phi_j\rangle\langle\phi_j |\psi_l\rangle = \langle\psi_k|D \psi_l\rangle \\
+\end{split}
+\]
+where summing over equal indices is understood. The little Dirac
+operators is then deflated using the little oblique projectors $p_L$
+and $p_R$:
+\[
+\begin{split}
+  p_L v &= v - \sum_{k,l}^{N_s}
+  A u_k(B^{-1})_{kl}\langle u_l|v\rangle\\
+  p_R v &= v - \sum_{k,l}^{N_s}
+  u_k(B^{-1})_{kl}\langle u_l|A v\rangle\\
+\end{split}
+\]
+and the same algebra as before.
+
+\subsubsection*{What needs to be done}
+
+\begin{itemize}
+\item implement a suitable preconditioner
+\item ...
+\end{itemize}
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

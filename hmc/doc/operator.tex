@@ -1,0 +1,150 @@
+\subsection{Dirac Operator}
+\label{sec:dirac}
+
+The Dirac operator is the kernel routine of any lattice QCD
+application, because its inverse is needed for the HMC update
+procedure and also for computing correlation functions. The inversion
+is usually performed by means of iterative solvers, like the conjugate
+gradient algorithm, and hence the repeated application of the Dirac
+operator to a spinor field is needed. Thus the optimisation of this
+routine deserves special attention.
+
+At some space-time point $x$ the application of a Wilson type Dirac
+operator is mainly given by
+\begin{equation}
+  \label{eq:Dpsi}
+  \begin{split}
+    \phi(x) = & (m_0 + 4r +i\mu_q\gamma_5)\psi(x) \\
+    &- \frac{1}{2}\sum_{\mu = 1}^4\Bigl[
+    U_{x,\mu}(r+\gamma_\mu) \psi(x+a\hat\mu)  + U^\dagger_{x-a\hat\mu,\mu}
+    (r-\gamma_\mu)\psi(x-a\hat\mu)\Bigr] \\
+  \end{split}
+\end{equation}
+where $r$ is the Wilson parameter, which we set to one in the
+following. The most computer time consuming part is the next-neighbour
+interaction part.
+
+For this part it is useful to observe that 
+\[
+(1\pm \gamma_\mu)\psi
+\]
+has only two independent spinor components, the other two follow
+trivially. So only two of the components need to be computed, the
+multiplied with the corresponding gauge field $U$, and then the other
+two components are to be reconstructed.
+
+The operation (\ref{eq:Dpsi}) must be performed for each space-time
+point $x$. If the loop over $x$ is performed such that all elements
+of $\phi$ are accessed sequentially (one output stream), it is clear
+that the elements in $\psi$ and $U$ cannot be accessed sequentially as
+well. This non-sequential access may lead to serious performance
+degradations due to too many cache misses, because modern processing
+units have only a very limited number of input streams available. 
+
+While the $\psi$  field is usually different from
+one to the next application of the Dirac operator, the gauge field
+stays often the same for a large number of applications. This is for
+instance so in iterative solvers, where the Dirac operator is applied
+$\mathcal{O}(1000)$ times with fixed gauge fields. Therefore it is
+useful to construct a double copy of the original gauge field sorted
+such that the elements are accessed exactly in the order needed in the
+Dirac operator. For the price of additional memory, with this simple
+change one can obtain large performance improvements, depending on the
+architecture. The double copy must be updated whenever the gauge field
+change. This feature is available in the code at configure time, the
+relevant switch is {\ttfamily --with-gaugecopy}.
+
+Above we were assuming that we run sequentially through the resulting
+spinor field $\phi$. Another possibility is to run sequentially
+through the source spinor field $\psi$. Moreover, one could split up
+the operation (\ref{eq:Dpsi}) as follows, introducing intermediate
+result vectors $\varphi^\pm$ with only two spinor components per lattice
+site\footnote{We thank Peter Boyle for useful discussions on this
+  point.}. Concentrating on the hopping part only, we would have 
+\begin{equation}
+  \label{eq:Dsplit}
+  \begin{split}
+    \varphi^+(x, \mu) &= P_\mu^{4\to2}\ U_{x,\mu}(r+\gamma_\mu) \psi(x) \\
+    \varphi^-(x, \mu) &= P_\mu^{4\to2}\ (r-\gamma_\mu) \psi(x) \\
+  \end{split}
+\end{equation}
+From $\varphi^\pm$ we can then reconstruct the resulting spinor field 
+as
+\begin{equation}
+  \label{eq:Dunsplit}
+  \begin{split}
+    \phi(x-a\hat\mu) &= P_\mu^{2\to4}\ \varphi^+(x, \mu) \\
+    \phi(x+a\hat\mu) &= P_\mu^{2\to4}\
+    U^\dagger_{x-a\hat\mu,\mu}\varphi^-(x, \mu)
+  \end{split}
+\end{equation}
+Here we denote with $P_\mu^{4\to2}$ the projetion to the two
+independent spinor components for $\gamma_\mu$ and with
+$P_\mu^{2\to4}$ the reconstruction from two to four spinor
+components. The half spinor fields $\varphi^\pm$ can be interlayed in
+memory such that $\psi(x)$ as well as $\varphi^\pm(x)$ are always
+accessed sequentially in memory. The same is possible for the gauge
+fields, as explained above. However, so far we did not win much,
+apart from a more balanced treatment of forward and backward
+directions. 
+
+The advantage of this implementation of the Dirac operator comes
+in the parallel case. In step (\ref{eq:Dsplit}) we need only $\psi(x)$
+locally available on each node. So this step can be performed without
+any communication. In between step (\ref{eq:Dsplit}) and
+(\ref{eq:Dunsplit}) one then needs to communicate part of
+$\varphi^\pm$, however only half the amount is needed compared to a
+communication of $\psi$. After the second step there is then no
+further communication needed. Hence, one can reduce the amount of data
+to be send by a factor of two. 
+
+There is yet another performance improvement possible with this form
+of the Dirac operator, this time for the price of precision. One can
+store the intermediate fields $\varphi^\pm$ with reduced precision,
+e.g. in single precision when the regular spinor fields are in double
+precision. This will lead to a result with reduced precision, however,
+in situation where this is not important, as for instance in the MD
+update procedure, it reduces the data to be communicated by another
+factor of two. And the required memory bandwith is reduced as well.
+This version of the hopping matrix (currently it is only implemented
+for the hopping matrix) is available at configure time with the switch
+{\ttfamily --enable-halfspinor}. 
+
+The reduced precision version (sloppy precision) is available through
+the input parameter {\ttfamily UseSloppyPrecision}. It will be used in
+the MD update where appropriate. Moreover, it is implemented in the CG
+iterative solver following the ideas outlined in
+Ref.~\cite{Chiarappa:2006hz} for the overlap operator.
+
+The various implementation of the Dirac operator can be found in the
+file {\ttfamily D\_psi.c} and -- as needed for even/odd
+preconditioning -- the hopping matrix in the file {\ttfamily
+  Hopping\_Matrix.c}. There are many different versions of these two
+routines available, each optimised for a particular architecture,
+e.g. for the Blue Gene/P double hummer processor or the streaming SIMD
+extensions of modern PC processors (SSE2 and SSE3), see also
+Ref.~\cite{Luscher:2001tx}. Martin L{\"u}scher has made available his
+standard C and SSE/SSE2 Dirac operator~\cite{Luscher:sse} under the
+GNU General Public License, which are partly included into the tmLQCD
+package.
+
+\subsubsection{Boundary Conditions}
+
+As discussed previously we allow for arbitrary phase factors in the
+boundary conditions of the fermion fields. This is conveniently
+implemented in the Dirac operator as a phase factor in the hopping
+term
+\[
+\sum \Bigl[
+    e^{i\theta_\mu \pi/L_\mu}\ U_{x,\mu}(r+\gamma_\mu)
+    \psi(x+a\hat\mu)  + e^{-i\theta_\mu \pi/L_\mu}\
+    U^\dagger_{x-a\hat\mu,\mu} 
+    (r-\gamma_\mu)\psi(x-a\hat\mu)\Bigr]\, .
+\]
+The relevant input parameters are {\ttfamily ThetaT}, {\ttfamily
+  ThetaX}, {\ttfamily ThetaY}, {\ttfamily ThetaZ}. 
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

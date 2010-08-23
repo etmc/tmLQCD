@@ -1,0 +1,111 @@
+Release 5.1.1: 
+Multi Mass solver added
+overlap operator added
+parallel IO added
+
+Release 5.0.3: 
+bug fix release, release published in computer 
+physics communications
+
+Release 5.0.0:
+new input file structure (monomials) allowing for any even 
+number of quarks
+
+Release 4.0.0:
+new IO format
+inversion for split doublet
+checksums
+improvements for the PHMC
+preconditioning for the CG
+
+Release 4.0.0-rc2:
+Improvements for the PHMC
+preconditioning for the CG
+
+Release 4.0.0-rc1:
+PHMC merged into main trunk and first running version,
+also for 1+1 flavours
+
+Release 3.2.2:
+performance improvements for BG/L and opteron
+target machines
+
+Release 3.2.1:
+Bugfix release. Basically bug fixed on the altix for
+shmem version.
+
+Release 3.2.0:
+New Dirac Operator where only half of the spinor is
+exchanged. This bring a 20% improvement on the BG/L
+Moreover, shmem versions of the exchange routines
+are available.
+
+shmem not yet completely testet!
+
+Release 3.1.0:
+Running with an extra BG/L Dirac operator
+
+Release 2.3.6:
+Bug fix release and some minor important new features.
+
+Release 2.3.5:
+Bug fix release and some new input parameter, see
+NEWS for details.
+
+Release 2.3.4:
+Integration scheme with error cancellation 
+Reversibility check implemented
+Relative precision possible
+Precisions are input parameter now
+
+Release 2.3.3:
+some bug fixes
+extended leap frog and Sexton-Weingarten integration
+scheme (multiple time scales) implemented and tested
+
+Release 2.3.2:
+some bug fixes, extended leap frog integrator
+
+Release 2.3.1:
+some bug fixes
+
+Release 2.3:
+T and L can be set in the input file now.
+The number of processors in x direction
+is also set now in the input file.
+T= integer
+L= integer
+NrXProcs = integer
+
+Release 2.2:
+DBW2 inplemented and working. New input parameter:
+RGIC1 = floating point number
+memory dynamically allocated now.
+
+Release 2.1:
+working and optimised for x86_64 and AMD Opteron. benchmark tool
+added. Even Odd geometry also for the gauge fields and the possibility
+to use a copy of the gauge fields for a better cache usage.
+New configure options: 
+--enable-opteron   : Enables cache optimisation for Opteron [default=no]
+--enable-gaugecopy : Enables usage of a copy of the gauge field [default=yes]
+--enable-eogeom    : Enables usage of EO geometry also for the gauge fields [default=yes]
+
+Release 2.0:
+second parallel direction introduced
+
+Release 1.2.0:
+Implementation of the Hasebusch trick with a third pseudo fermion
+field.
+
+Release 1.1.0:
+Implementation of the Hasenbusch trick with two pseudo fermion
+fields. This is also tested.
+
+Release 1.0.1:
+fully parallelized tm, Wilson and clover impr. dynamical QCD code with
+SSE2 improvement for P4 and improvement for IBM power4. Serial version
+gives not the correct results. EO order implemented for also for the
+gauge fields, but not yet switched on per default. To do so one has to
+undef OlD in geometry_eo.c and xchange.c. This order will not yet work
+with clover improved Wilson.

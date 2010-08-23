@@ -1,0 +1,37 @@
+\subsection{Integration schemes}
+\label{sec:integrators}
+
+Most of the details for the integration schemes can be found in
+{\ttfamily hep-lat/0506011}. Therefore we give here only details for
+the symplectic integration schemes {\ttfamily 2MN} and {\ttfamily
+  2MNposition}. 
+
+The second order minimal norm (2MN) integration scheme is a
+generalisation of the Sexton-Weingarten scheme. While the latter is
+build by the baisc integration step:
+\begin{equation}
+  \label{int:0}
+  T_{\mathrm{SW}_0}\ =\ T_{\mathrm{S}_0}(\dtau_0/6)\
+  T_\mathrm{U}(\dtau_0/2)\ T_{\mathrm{S}_0}(2\dtau_0/3)\
+  T_\mathrm{U}(\dtau_0/2)\ T_{\mathrm{S}_0}(\dtau_0/6)\, ,
+\end{equation}
+the 2MN scheme is build onto
+\begin{equation}
+  \label{int:1}
+  T_{\mathrm{2MN}_0}\ =\ T_{\mathrm{S}_0}(\lambda_0\dtau_0)\
+  T_\mathrm{U}(\dtau_0/2)\ T_{\mathrm{S}_0}((1-2\lambda_0)\dtau_0)\
+  T_\mathrm{U}(\dtau_0/2)\ T_{\mathrm{S}_0}(\lambda_0\dtau_0)\, .
+\end{equation}
+$\lambda_0$ is a dimensionless parameter and the 2MN coincides with
+the Sexton-Weingarten scheme in case $\lambda_0=1/6$. The optimal
+value for $\lambda_0$ was given in Ref.~\cite{Takaishi:2005tz} to be
+around $0.19$. But its value is likely to depend on the mass values
+and the time scale under consideration.
+
+We can now introduce a parameter $\lambda_i$ for each timescale
+$\dtau_i$ and tune them seperatly.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

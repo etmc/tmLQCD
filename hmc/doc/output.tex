@@ -1,0 +1,48 @@
+\subsection{Output files}
+
+\subsubsection*{\ttfamily output.data}
+
+The file {\ttfamily output.data} contains lines for each performed
+trajectory. Each line has entries with the following meaning:
+\begin{enumerate}
+\item Plaquette value.
+\item $\Delta H$
+\item $\exp(-\Delta H)$
+\item number of pseudo fermion monomials times two integers. The first
+  is the number of CG or BiCGstab solveriterations used in the acceptance
+  and heatbath steps, the second is the number of CG (BiCGstab) iterations 
+  used for the force computation.
+\item Acceptance (0 is rejected, 1 is accepted).
+\item Time in seconds needed for this trajectory. In case of non MPI
+  this is zero, because not measured.
+\item Value of the rectangle part in the gauge action, if used.
+\end{enumerate}
+Every new run will append its numbers to an already existing file.
+
+\subsubsection*{\ttfamily output.para}
+This file contains the parameters used in this run. Old files will be
+overwritten. 
+
+\subsubsection*{\ttfamily history\_hmc\_tm}
+This file provides a mapping between the configuration number and its
+plaquette and Poliakov loop values. Moreover the simulation parameters
+are stored there and in case of a reread the time point can be found there. 
+
+\subsubsection*{\ttfamily return\_check.data}
+Contains the reversibility violation measurements, if they are
+performed. 
+
+\subsubsection*{\ttfamily conf.save}
+This file is written after each trajectory, if no regular
+configuration is saved. It contains the most recent gauge
+configuration and the status of the random number generator for a
+restart of the programme. 
+
+\subsubsection*{\ttfamily onlinemeas.N}
+Contains the online measurement for trajectory {\ttfamily N} if this
+feature is switched on.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

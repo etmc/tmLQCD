@@ -1,0 +1,65 @@
+# $Id$
+# this sample corresponds to the first case in README
+# like sample-hmc0.input, but with preconditioning
+# the expected plaquette value is 0.62450(5)
+#
+# The PP correlator is (2KappaMu = 0.177, kappa = 0.177)
+# t  C(t)
+# 0  1.638(5)
+# 1  0.2020(6)
+# 2  0.0424(2)
+
+#######################
+# General parameters: #
+#######################
+# Bc=yes => SFbc / no => PBC
+Bc = yes
+L=4
+T=4
+Measurements = 5
+NSave = 500000
+ThetaT = 0.
+UseEvenOdd = yes
+DebugLevel = 1
+######################
+# hmc_tm parameters: #
+######################
+Startcondition = hot
+BCGstabMaxIter = 0
+CGMaxIter = 1000
+ReversibilityCheck = no
+ReversibilityCheckIntervall = 100
+PerformOnlineMeasurements = no
+OnlineMeasurementsFreq = 10
+# g_Tbsf = at which time slice to put the SF boundary
+g_Tbsf = 3
+#########################################
+# invert and invert_doublet parameters: #
+#########################################
+
+##############
+# MONOMIALS: #
+##############
+
+BeginMonomial SFGAUGE
+  Type = sf_user
+  Timescale = 0
+  UseRectangleStaples = no
+  RectangleCoefficient = 0.
+  RectangleCoefficientSS = 0.
+  RectangleCoefficientTSS = 0.
+  RectangleCoefficientTTS = 0.
+  PlaquetteCoefficientT = 1.0
+  PlaquetteCoefficientS = 0.5
+  eta = 0.0
+  beta = 6.00
+EndMonomial
+
+
+BeginIntegrator 
+  Type0 = LEAPFROG
+  tau = 1.
+  NumberOfTimescales = 1
+  IntegrationSteps0 = 50
+  Lambda0 = 0.19
+EndIntegrator

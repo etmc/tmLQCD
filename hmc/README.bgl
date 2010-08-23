@@ -1,0 +1,33 @@
+This summarises some info for the Blue Gene light system
+
+The configure command should be something like the following:
+
+path-to-the-sources/configure --host=ppc-ibm-blrts --build=ppc64-ibm-linux \
+--without-lapack --enable-mpi --with-mpidimension=4 \
+--enable-gaugecopy --with-limedir=path-to-lime/  \
+--enable-newdiracop CC=/usr/bin/blrts_xlc CPPFLAGS=-I/bgl/BlueLight/ppcfloor/bglsys/include/ \
+--with-nonblockingmpi --with-persistentmpi --with-bgldram
+
+some comments are important: 
+- if option --with-bgldram is used, then the executables have to be
+  relinked with /bgl/local/bin/blrts_gcc -Xlinker --script=./elf32ppcblrts.x .
+  The linker is now replaced automatically.
+  the file elf32ppcblrts.x can be obtained from
+  blrts-gnu/powerpc-bgl-blrts-gnu/lib/ldscripts/elf32ppcblrts.x
+  and it needs the change of the line
+  PROVIDE (__executable_start = 0x00200000); . = 0x00200000 + SIZEF_HEADERS;
+  to
+  PROVIDE (__executable_start = 0x01000000); . = 0x01000000 + SIZEF_HEADERS;
+
+  otherwise the code will stop with the message that there is not enough memory
+  for halfspinor fields. 
+
+  note that this option is default for the BGL build!
+
+- the new Dirac operator implementation is useful for bad boundary to volume
+  ratios. In case of large local volumes it might be better to use 
+  --disable-newdiraop
+
+- running should be done with something like 
+  -env "BGLMPI_EAGER=500000000 BGLMPI_PACING=n"
+  as options to mpirun.

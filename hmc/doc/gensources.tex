@@ -1,0 +1,41 @@
+\subsection{Programme {\ttfamily gen\_sources}}
+
+The programme {\ttfamily gen\_sources} provides an interface to
+generate stochastic sources for several different situations. It is
+able to generate those for the nucleon case (which should not be used,
+because point sources are optimal), for mesons in general and for the
+special case of the pion only.
+
+The programme offers command line options as follows:
+\begin{itemize}
+\item {\ttfamily -h|?} a help.
+\item {\ttfamily -L} the spatical lattice size
+\item {\ttfamily -T} the temporal lattice size
+\item {\ttfamily -o} the base filename of the sources (default is
+  {\ttfamily source})
+\item {\ttfamily -n} the configuration number (default is $0$)
+\item {\ttfamily -s} the sample number (default is $0$)
+\item {\ttfamily -t} the value of the start timeslice (default $0$)
+\item {\ttfamily -S} the spatial spacing/dilution (default $1$)
+\item {\ttfamily -P} the temporal spacing/dilution (default $T$)
+\item {\ttfamily -N} produce nucleon sources (default meson sources)
+\item {\ttfamily -p} plain output filename (see below)
+\item {\ttfamily -O} the special pion only case
+\item {\ttfamily -E} extended sources for pion three point
+  functions. Together with {\ttfamily -O}
+\item {\ttfamily -d} write source in double precision (default single)
+\item {\ttfamily -a} write all sources in one file rather than $12$
+  (pion only is one file anyhow)
+\end{itemize}
+The output filename is generated like {\ttfamily
+  base.sampleno.gaugeno.tsno.00 -11}, unless {\ttfamily -p} is chosen,
+which would correspond to {\ttfamily base.00-11}.
+
+The special pion only case corresponds to a single timeslice source
+without any dilution in spin or colour or space.
+
+\endinput
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

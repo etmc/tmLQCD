@@ -1,0 +1,101 @@
+% $Id$
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{theo}{Theorem}[section]
+\newtheorem{exam}{Theorem}[section]
+\newtheorem{example}[exam]{Example}
+\newtheorem{corollary}[theorem]{Lemma}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theo]{Definition}
+\newtheorem{remark}[exam]{Remark}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{question}[theorem]{Question}
+\newtheorem{satz}[theorem]{Theorem}
+\newtheorem{Aussage}[theorem]{Aussage}
+
+\newenvironment{proof}{\noindent{\bf Proof:~}}%
+{\null\hfill $\Box$\par\medskip}
+\newenvironment{fixme}{\noindent{\bf FIXME:\\~}}%
+{\\{\bf ENDFIXME}\par\medskip}
+\newenvironment{Bemerkung}{\noindent{\bf Remark:\\~}}%
+{}
+
+%\renewcommand{\theequation}{\thesection-\arabic{equation}}
+%\renewcommand{\thefigure}{\thesection.\arabic{figure}}
+\renewcommand{\topfraction}{1}
+\renewcommand{\bottomfraction}{1}
+\renewcommand{\textfraction}{0}
+%\renewcommand{\chaptermark}[1]%
+%{\markboth{\chaptername\ \thechapter\ #1}{}}
+\renewcommand{\sectionmark}[1]%
+{\markright{\thesection\ #1}}
+
+%Spur, Real- und Imaginaerteil
+\newcommand{\tr}{\operatorname{Tr}}
+\newcommand{\re}{\operatorname{Re}}
+\newcommand{\im}{\operatorname{Im}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ID}{\mathbb{I}}
+\newcommand{\rf}{\mathcal{R}_5^{\mathbf{sp}}}
+\newcommand{\hQpm}{\hat Q_{\pm}}
+\newcommand{\hWpm}{\hat W_{\pm}}
+\newcommand{\hQp}{\hat Q_{+}}
+\newcommand{\hQm}{\hat Q_{-}}
+\newcommand{\hWp}{\hat W_{+}}
+\newcommand{\hWm}{\hat W_{-}}
+\newcommand{\Wpm}{W_{\pm}}
+\newcommand{\Qpm}{Q_{\pm}}
+\newcommand{\Qp}{Q_{+}}
+\newcommand{\Qm}{Q_{-}}
+\newcommand{\Wp}{W_{+}}
+\newcommand{\Wm}{W_{-}}
+\newcommand{\Qnd}{Q_{\textrm{ND}}}
+%\newcommand{\myinput}[1]{\def\old{\filename}%
+%  \def\filename{\tiny [#1.tex,\today]}%
+%  \cfoot{\filename}%
+%  \input{#1}%
+%  \cfoot{\old}%
+%}
+\newcommand{\dtau}{\Delta\hspace{-.06cm}\tau}
+\newcommand{\npf}{N_\mathrm{PF}}
+
+\newcommand{\myinput}[1]{%
+  \input{#1}%
+}
+
+%229und 230 oder 235
+%\newcommand{\totheright}{\ding{230}{\sffamily\scshape Rechts}: }
+\newcommand{\totheright}{(b): }
+%\newcommand{\toright}{\ding{230}{\sffamily\scshape Right}}
+\newcommand{\toright}{b}
+%\newcommand{\totheleft}{\reflectbox{\ding{229}}{\sffamily\scshape Links}: }
+\newcommand{\totheleft}{(a): }
+%\newcommand{\toleft}{\reflectbox{\ding{229}}{\sffamily\scshape Links}}
+\newcommand{\toleft}{a}
+\newcommand{\Mathlogo}{{\scshape Mathematica}\Pisymbol{psy}{226} }
+
+%Farben von root nach dessen nummern
+\definecolor{eins}{rgb}{0,0,0}%black
+\definecolor{zwei}{rgb}{1,0,0}%red
+\definecolor{drei}{rgb}{0,1,0}%green
+\definecolor{vier}{rgb}{0,0,1}%blue
+\definecolor{fuenf}{rgb}{1,1,0}%yellow
+\definecolor{pink}{rgb}{1,0,1}
+\definecolor{sechs}{rgb}{1,0,1}%pink
+\definecolor{sieben}{rgb}{0,1,1}%cyan
+\definecolor{acht}{rgb}{0.35,0.83,0.33}%darkgreen
+\definecolor{neun}{rgb}{0.35,0.33,0.85}%darkblue
+
+\def\sometext{%
+Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text %
+Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text %
+Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text %
+Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text %
+}
+
+\endinput
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

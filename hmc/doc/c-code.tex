@@ -1,0 +1,327 @@
+\subsection{Some Useful Functions}
+
+\noindent {\ttfamily Hopping\_Matrix(int ieo, spinor * l, spinor * k)}:\\
+Files: {\ttfamily Hopping\_Matrix.c|h}.\\
+Here the Hopping Matrix is implemented.
+\[
+\kappa\sum_\mu \delta_{x,y+\hat\mu}(1+\gamma_\mu)
+\]
+It connect even (odd) sites in {\ttfamily l} with odd  (even) sites in {\ttfamily k}
+if {\ttfamily ieo} is set to {\ttfamily EO} ({\ttfamily
+  OE}). {\ttfamily EO} and {\ttfamily OE} are defined in {\ttfamily
+  Hopping\_Matrix.h}.
+
+\noindent {\ttfamily mul\_one\_pm\_imu\_inv(spinor * l, double sign)}:\\
+Files: {\ttfamily tm\_operators.c}.\\
+This multiplies {\ttfamily l} with 
+\[
+l = (M_{ee}^{\pm})^{-1} l\, ,
+\]
+where the sign of $M_{ee}^{\pm}$ is set corresponding to {\ttfamily
+  sign}. This connects even with even or odd with odd sites.
+
+\noindent{\ttfamily mul\_one\_pm\_imu\_sub\_mul\_gamma5(spinor * l, spinor * k, int j,
+double sign)}:\\
+Files: {\ttfamily tm\_operators.c}.\\
+This performs:
+\[
+l = \gamma_5 ((1 \pm i \mu \gamma_5)k - j)\, ,
+\]
+where the sign is set corresponding to {\ttfamily sign}.
+
+\noindent{\ttfamily mul\_one\_pm\_imu\_sub\_mul(spinor * l, spinor * k, int j,
+double sign)}:\\
+Files: {\ttfamily tm\_operators.c}.\\
+This performs:
+\[
+l = ((1 \pm i \mu \gamma_5)k - j)\, ,
+\]
+where the sign is set corresponding to {\ttfamily sign}.
+
+\noindent{\ttfamily Qtm\_plus\_psi(spinor * l, spinor * k)}:\\
+Files: {\ttfamily tm\_operators.c|h}.\\
+This implements:
+\[
+\hat Q_{+} = \gamma_5(M_{oo}^+ - M_{oe}(M_{ee}^+ )^{-1}M_{eo})\, .
+\]
+The Operator is applied to {\ttfamily k} and the result is stored in
+{\ttfamily l}. $\hat Q_{-}$ is implemented in {\ttfamily
+  Qtm\_minus\_psi(spinor * l, spinor * k)}.
+
+\noindent{\ttfamily Mtm\_plus\_psi(spinor * l, spinor * k)}:\\
+Files: {\ttfamily tm\_operators.c|h}.\\
+This implements:
+\[
+\hat \gamma_5Q_{+} = (M_{oo}^+ - M_{oe}(M_{ee}^+ )^{-1}M_{eo})\, .
+\]
+The Operator is applied to {\ttfamily k} and the result is stored in
+{\ttfamily l}. $\hat \gamma_5Q_{-}$ is implemented in {\ttfamily
+  Mtm\_minus\_psi(spinor * l, spinor * k)}.
+
+\noindent{\ttfamily Qtm\_pm\_psi(spinor * l, spinor * k)}:\\
+Files: {\ttfamily tm\_operators.c|h}.\\
+This implements:
+\[
+\hat Q_{+} \hat Q_{-}\, .
+\]
+The Operator is applied to {\ttfamily k} and the result is stored in
+{\ttfamily l}.
+
+\noindent{\ttfamily H\_eo\_tm\_inv\_psi(spinor * l, spinor * k, int ieo, double
+  sign)}:\\
+Files:  {\ttfamily tm\_operators.c|h}.\\
+This implements:
+\[
+l = (M_{ee|oo}^\pm)^{-1} M_{eo|oe} k\, .
+\]
+The sign is set corresponding to {\ttfamily sign}. Setting {\ttfamily
+  ieo} to {\ttfamily EO} ({\ttfamily OE}) means using $M_{eo}$
+($M_{oe}$) and $M_{ee}$ ($M_{oo}$).
+
+\subsubsection{Even/odd preconditioning vs.\ no even/odd preconditioning}
+
+There are also operators that act on ``full size'' spinors, which
+store spinors on the full VOLUME of the lattice. These operators are
+(like all operators) in \texttt{tm\_operators.c}. Specifically we have
+so far (Oct. 5, 2007) 
+\begin{center}
+\begin{tabular}{ll}
+$\hat{Q}_+$ & \texttt{Q\_plus\_psi(spinor * const l, spinor * const
+  k)}\\ 
+$\hat{Q}_-$ & \texttt{Q\_minus\_psi(spinor * const l, spinor * const
+  k)}\\ 
+$\hat{Q}_+ \hat{Q}_-$ & \texttt{Q\_pm\_psi(spinor * const l, spinor *
+  const k)} 
+\end{tabular}
+\end{center}
+All these operators are based on the operator $D_\psi$ defined in
+\texttt{D\_psi.c}
+
+The sandwiching $\delta S_b$ with even/odd preconditioning is done in
+\texttt{deriv\_Sb.c}, whereas in the non-preconditioned case this is
+handled in \texttt{deriv\_Sb\_D\_psi.c}. All this is handled within
+\texttt{derivative\_psf.c}, so the integration scheme code does not
+need to distinguish between the the two cases (even/odd
+preconditioning vs.\ no even/odd preconditioning).
+
+\subsubsection{Further remarks}
+\begin{itemize}
+\item{}the conversion of SU(3) matrices to and from the adjoint
+  representation is not bijective. If a matrix $A$ is converted by
+  \texttt{\_trace\_lambda(B,A)} the result $B$ must be divided by
+  $-2$, if the inverse routine \texttt{\_make\_su3(A,B)} is to
+  reproduce the original $A$.   
+\item{}possibly the non even/odd operator combination $\gamma_5
+  D_\psi$ should be implemented more efficiently  
+\end{itemize}
+
+
+\subsection{Chronological Inverter}
+
+The implementation of the chronological inverter \cite{Brower:1995vx}
+can be found in the direction {\ttfamily solver} in the files
+{\ttfamily chrono\_guess.c|h}. These files define basically two
+funtions:
+
+\noindent{\ttfamily void chrono\_add\_solution(spinor * const trial, spinor
+  ** const v, int index\_array[], const int N, const int \_n, const
+  int V)}\\
+This function adds the spinor {\ttfamily trial} to the stack of
+already existing solutions. These are stored in the array {\ttfamily
+  v}. In the integer array {\ttfamily index\_array} the current order
+of the spinor fields in {\ttfamily v} is stored. {\ttfamily N} must
+contain the maximal number of solutions to store in {\ttfamily v},
+{\ttfamily \_n} contains the current index and {\ttfamily V} the volume.
+
+The memory for {\ttfamily v} must be allocated by the user and it must
+be of size {\ttfamily V*N}. The bookholding with {\ttfamily \_n} and
+{\ttfamily index\_array} is done by the function and should not be
+changed by the user elsewhere.
+
+\noindent{\ttfamily int chrono\_guess(spinor * const trial, spinor *
+  const phi, spinor ** const v, int index\_array[],
+  const int \_N, const int \_n, const int V, matrix\_mult f)}\\
+This fuction returns in the spinor {\ttfamily trial} a trial guess
+computed with the chronological guess algorithm. Apart from the
+parametes explained already above: {\ttfamily phi} is the source
+spinor and {\ttfamily matric\_mult} is a pointer to the matrix to be
+inverted.
+
+Note that the chronological solver guess uses lapack functions and is
+switched off when it is not available, and as well as when the history
+length is chosen to be zero, a zero spinor field is returned by the
+chrono guess function. See also input parameters concerning CSG.
+
+\subsection{$\gamma$ matrices}
+\label{gammas}
+$\gamma_5$ ist defined as follows:
+\[
+  \gamma_5 =
+  \begin{pmatrix}
+    +1 & 0 & 0 & 0 \\
+    0 & +1 & 0 & 0 \\
+    0 & 0 & -1 & 0 \\
+    0 & 0 & 0 & -1 \\    
+  \end{pmatrix}\ .
+\]
+
+In the operator the following notation for
+the matrices is used:
+\[
+\begin{split}
+  \gamma_0 = \begin{pmatrix}
+    0 & 0 & -1 & 0 \\
+    0 & 0 & 0 & -1 \\
+    -1 & 0 & 0 & 0 \\
+    0 & -1 & 0 & 0 \\
+  \end{pmatrix},\quad
+  \gamma_1 = \begin{pmatrix}
+    0 & 0 & 0 & -i \\
+    0 & 0 & -i & 0 \\
+    0 & +i & 0 & 0 \\
+    +i & 0 & 0 & 0 \\    
+  \end{pmatrix},\\
+  \gamma_2 = \begin{pmatrix}
+    0 & 0 & 0 & -1 \\
+    0 & 0 & +1 & 0 \\
+    0 & +1 & 0 & 0 \\
+    -1 & 0 & 0 & 0 \\   
+  \end{pmatrix},\quad
+  \gamma_3 = \begin{pmatrix}
+    0 & 0 & -i & 0 \\
+    0 & 0 & 0 & +i \\
+    +i & 0 & 0 & 0 \\
+    0 & -i & 0 & 0 \\
+  \end{pmatrix}\ .\\
+\end{split}
+\]
+
+\subsection{Pauli matrices}
+\[
+\begin{split}
+  \tau^1 =
+  \begin{pmatrix}
+    0 & 1 \\
+    1 & 0 \\
+  \end{pmatrix},\quad
+  \tau^2 = 
+  \begin{pmatrix}
+    0 & -i \\
+    i & 0 \\
+  \end{pmatrix},\quad
+  \tau^3 = 
+  \begin{pmatrix}
+    1 & 0 \\
+    0 & -1 \\
+  \end{pmatrix}
+\end{split}
+\]
+
+\subsection{Flavour Split Doublet Operator}
+
+The convention we use internally for the flavour split doublet Dirac
+operator is 
+\[
+D_h = D_W + m_0 + i\bar\mu\gamma_5\tau^3 - \bar\epsilon\tau^1
+\]
+The programme {\ttfamily invert\_doublet} inverts this operator, but
+the source and sink are written in a convention corresponding to
+\[
+D_h' = D_W + m_0 + i\bar\mu\gamma_5\tau^1 + \bar\epsilon\tau^3
+\]
+The relation between the two is given by
+\[
+D_h' = \frac{1}{\sqrt{2}}(1+i\tau^2)\ D_h\ \frac{1}{\sqrt{2}}(1-i\tau^2)\, .
+\]
+The implementation is then such that first the source $\xi$ is multiplied
+with
+\[
+\xi\to\xi=\frac{1}{\sqrt{2}}(1-i\tau^2)\xi
+\]
+on which $D_h$ is inverted and the solution $\phi$ is obtained. The
+solution is then multiplied
+\[
+\phi \to \phi=\frac{1}{\sqrt{2}}(1+i\tau^2)\phi
+\]
+to obtain the result for $D_h'$.
+
+The convention $D_h'$ is the one of \cite{Chiarappa:2006ae} with
+$\bar\mu = \mu_\sigma$ and $\bar\epsilon = \mu_\delta$. {\ttfamily
+  invert\_doublet} inverts with the source first set for the upper
+flavour and then with the same source set for the lower
+flavour. The other one is set to zero. Hence, the ouput is a set of
+four Dirac fermion spinor fields, which are stored in the order upper,
+lower, upper, lower flavour. The former two correspond to the source
+in the upper flavour, the latter to the source in the lower flavour.
+
+\subsection{Stochastic Volume Sources}
+
+In order to compute disconnected contributions volume (all spin,
+colour, space and time) sources are implemented. In this case only one
+inversion is required. The volume sources are generated with gaussian
+noise ($\sigma=1$) in real and imaginary part of the whole source
+spinor. Note that the normalisation with $1/\sqrt{2}$ is \emph{not}
+done and needs to be taken care off in the analysis.
+
+For the hopping parameter noise reduction method the following is
+needed: Following the notation in Ref.~\cite{Boucaud:2008xu} the
+operator can be written as
+\[
+D_h' = A + H = (1+H\cdot B)\cdot A,\qquad B=1/A\, .
+\]
+where $H^\dagger = \gamma_5 H \gamma_5$ and
+\[
+A = 1 + i\gamma_5\tau^1\tilde\mu_\sigma + \tau^3\tilde\mu_\delta
+\]
+where in the hopping parameter representation $\tilde\mu_\sigma =
+2\kappa\mu_\sigma$ and $\tilde\mu_\delta=2\kappa\mu_\delta$. $A$ can
+be inverted easily to
+\[
+A^{-1}=\frac{1-i\gamma_5 \tau^1 \tilde\mu_\sigma - \tau_3
+  \tilde\mu_\delta}{1+\tilde\mu_\sigma^2-\tilde\mu_\delta^2} 
+\]
+It follows that
+\[
+1/D_h' = B-BHB+B(HB)^2-B(HB)^3+1/D_h'(HB)^4\ .
+\]
+Then, since $\gamma_5$ commutes with $B$ one can evaluate the last
+term stochastically for any $\gamma$ and or colour matrix $X$ like 
+\[
+X (1/D_h')(HB)^4 = \lim_{R\to\infty}\left[(\gamma_5 (B^{\dagger} H )^4
+  \gamma_5 \xi)^* X \phi\right]_R
+\]
+where
+\[
+\phi = (D_h')^{-1}\xi
+\]
+and
+\[
+B(\tilde\mu_\sigma)^\dagger \equiv B(-\tilde\mu_\sigma)\ .
+\]
+The remaining terms can be computed exactly. For any source $\xi$ we 
+therefore have to generate
+\[
+\xi_r = \gamma_5 (B^{\dagger} H )^4\gamma_5 \xi.
+\]
+
+
+%(ii)--------------------------------------------
+%Use source in all flavour spin colour space time (Z2xZ2)
+%
+%Let u,v be flavour indices (c,s) equivalent
+%
+%M \phi = \xi  with flavour explicit  M_{uv) \phi_v = \xi_u
+%
+% Then required quantity is
+%    Tr (X M^{-1} )_{uv} where X is diagonal in flavour
+% and Tr is sum over colour, spin, space (at a given time)
+%    = Tr( \xi^*_v X \ph_u )
+%    = Tr ( {(g_5 (B^{\dag} H)^4 g_5 \xi)_v}^* X \phi_u)
+% for uv element
+
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

@@ -1,0 +1,30 @@
+
+
+
+The CUDA code can be switched on via ./configure by adding the following
+arguments to it:
+
+--enable-gpu=yes 
+--with-cuda=/usr/local/cuda/lib  or any other path, where libcuda.so,
+                                 libcudart.so etc. are located   
+--with-cudacompileargs=string    additional arguments to nvcc 
+                                 
+Examples to --with-cudacompileargs:                              
+    "--gpu-architecture sm_13 --use_fast_math -O3" for devices with compute capability < 2.0
+    "-c -prec-sqrt=false -prec-div=false -Xptxas -dlcm=ca -O3" for devices with compute capability 2.0
+
+
+A proper installation of CUDA and nvcc is required.
+
+For devices with compute capability = 2.0 (Fermi cards) the definition 
+#define USE_TEXTURE in GPU/cudadefs.h should be commented out in order to 
+gain more performance
+
+By commenting out #define GF_8 (#define TEMPORALGAUGE) in GPU/cudadefs.h 
+the reconstruction of the gauge field (the usage of temporal gauge for the 
+gauge fields) can be switched off. This results in lower performance.
+ 
+A sample input file can be found in sample-invert0_gpu.input.
+
+
+

@@ -1,0 +1,36 @@
+16.04.2010: order in propagators for the heavy doublet inverted in 
+            file -> fixed
+
+14.05.2009: bug in reread functionality fixed.
+
+30.05.2008: scidac checksum for gauge fields not correctly working
+            different result for serial and MPI run
+--> fixed (Remi 02.03.2009)
+    problem was a wrong computation of rank for I/O writing functions only
+    when MPI was used
+
+
+16.04.2007: enable-gaugecopy and disable-newdiracop is buggy, at least
+in the 1-dim parallel case. -> fixed, wrong #ifdef in xchange_gauge 
+around MPI_Waitall
+
+18.1.2007: phmc does not work with halfspinor, seg fault in Hopping_Matrix.
+--> fixed
+
+For x86_64 there seems to be a compiler bug in gcc 3.3.3. The code
+is not working with the default sse2 optimisation done by the compiler
+and now switched of with mfpmath=387. It has to be checked, whether this 
+is really a compiler bug, a strange interplay between our sse2 units and 
+the compiler units or a bug in the code (17.08.2004) --> fixed
+
+bug in the serial version of the code fixed. (16.08.2004)
+
+there are now two exchange routines for the spinor fields, since at
+least on the iwarp pc cluster the version with MPI_Type_vector is not
+working for small local lattices. Maybe this is a bug in the MPI
+implementation, but maybe not ...
+Seems to be a bug in the MPI driver for infiniband. (17.08.2004)
+
+write and read of spinor fields not yet tested --> tested
+
+--disable-mpi will be configured correctly, but the code is not correct. --> fixed

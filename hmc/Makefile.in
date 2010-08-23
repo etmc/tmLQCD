@@ -1,0 +1,173 @@
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+abs_top_srcdir = @abs_top_srcdir@
+top_builddir =  .
+abs_top_builddir = @abs_top_builddir@
+builddir = @builddir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+program_transform_name = @program_transform_name@
+subdir = .
+
+AR = ar
+RANLIB = @RANLIB@
+CC = @CC@
+CCDEP = @CCDEP@
+CFLAGS = @CFLAGS@
+LDFLAGS = @LDFLAGS@
+DEPFLAGS = @DEPFLAGS@
+CPPFLAGS = @CPPFLAGS@
+CCLD = @CCLD@
+LEX = @LEX@
+AUTOCONF = @AUTOCONF@
+LIBS = @LIBS@
+SHELL = @SHELL@
+OPTARGS = @OPTARGS@
+SOPTARGS = @SOPTARGS@
+DEFS = @DEFS@
+GPUDIR = @GPUDIR@
+USESUBDIRS = @USESUBDIRS@
+NVCC = @NVCC@
+
+
+
+INCLUDES = @INCLUDES@
+LINK = $(CCLD) -o $@ ${LDFLAGS}
+LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
+	${top_builddir}/solver/libsolver.a ${top_builddir}/io/libio.a
+COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
+
+SMODULES = Hopping_Matrix_nocom Hopping_Matrix tm_operators
+
+MODULES = read_input gamma hybrid_update observables start \
+	expo get_staples update_backward_gauge \
+	measure_rectangles get_rectangle_staples  \
+	test/check_geometry test/check_xchange \
+	test/overlaptests \
+	invert_eo invert_doublet_eo \
+	polyakov_loop getopt sighandler reweighting_factor \
+	source_generation boundary update_tm ranlxd  \
+	mpi_init linsolve deriv_Sb deriv_Sb_D_psi ranlxs \
+	xchange_deri geometry_eo invert_overlap \
+	init_moment_field init_gauge_tmp \
+	xchange_field xchange_gauge prepare_source \
+	init_gauge_field init_geometry_indices init_spinor_field \
+	init_dirac_halfspinor xchange_halffield stout_smear \
+	init_stout_smear_vars stout_smear_force \
+	Nondegenerate_Matrix nddetratio_monomial \
+	chebyshev_polynomial_nd Ptilde_nd  \
+	init_chi_spinor_field reweighting_factor_nd \
+	init_bispinor_field eigenvalues_bi D_psi \
+	xchange_lexicfield xchange_2fields online_measurement \
+	monomial det_monomial detratio_monomial update_momenta \
+	integrator gauge_monomial ndpoly_monomial phmc \
+	little_D block sf_gauge_monomial sf_utils sf_calc_action \
+	sf_get_staples sf_get_rectangle_staples sf_observables \
+	Dov_psi operator poly_monomial measurements pion_norm Dov_proj \
+	xchange_field_tslice temporalgauge
+
+
+## the GPU modules (all .cu files in $GPUDIR)
+GPUSOURCES := $(wildcard $(GPUDIR)/*.cu)
+GPUOBJECTS := $(patsubst $(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
+
+
+NOOPTMOD = test/check_xchange test/check_geometry
+
+PROGRAMS = hmc_tm benchmark invert gwc2ildg \
+	ildg2gwc single2double double2single reducenoise gen_sources  \
+	check_locallity test_lemon hopping_test
+
+ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
+SUBDIRS = ${USESUBDIRS}
+
+
+
+
+.SUFFIXES:
+
+all: Makefile all-recursive dep hmc_tm invert
+
+#ifneq (,$(findstring lapack,${LIBS}))
+#all: Makefile all-recursive dep hmc_tm invert
+#else
+#all: Makefile all-recursive dep hmc_tm invert
+#endif
+
+
+
+.NOTPARALLEL:
+
+-include $(addsuffix .d,$(ALLOBJ))
+
+include ${top_srcdir}/Makefile.global
+
+ifneq (,$(findstring lex,${LEX}))
+read_input.c: ${srcdir}/read_input.l
+	${LEX} -P tmlqcd -i -t $< > ${srcdir}/read_input.c
+endif
+
+libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
+	@rm -f libhmc.a
+	@${AR} cru libhmc.a ${addsuffix .o, ${MODULES} ${SMODULES}}
+	@$(RANLIB) libhmc.a
+	@cp libhmc.a ${top_builddir}/lib/libhmc.a
+
+#${addsuffix .o, ${ALLOBJ}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
+#	${COMPILE} ${OPTARGS} -c $<
+
+$(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
+	${COMPILE} ${OPTARGS} -c $<
+
+#here we don't need optimisation
+$(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
+	${COMPILE} -c $<
+
+${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
+	${COMPILE} ${SOPTARGS} -c $<
+
+${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
+	${COMPILE} ${OPTARGS} -c $<
+
+
+
+${PROGRAMS}: %: %.o libhmc.a all-recursive
+	 ${LINK}  $@.o $(GPUOBJECTS) $(LIBS)
+
+
+dep: $(addsuffix .d,$(ALLOBJ))
+
+install: Makefile
+	@mkdir -p $(bindir); \
+	for p in hmc_tm invert; do \
+	  progname=`echo $$p | sed '$(program_transform_name)'`; \
+	  echo "Installing $$p as $$progname in $(bindir)..."; \
+	  cp $$p $(bindir)/$$progname; \
+	done; \
+	echo "done";
+
+uninstall: Makefile
+	for p in hmc_tm invert; do \
+	  progname=`echo $$p | sed '$(program_transform_name)'`; \
+	  echo "Un-Installing $$progname in $(bindir)..."; \
+	  rm $(bindir)/$$progname; \
+	done; \
+	echo "done";
+
+compile-clean: compile-clean-recursive Makefile
+	rm -f *.o *.d
+
+clean: clean-recursive Makefile
+	rm -f hmc_tm invert *.o *.d
+
+distclean: distclean-recursive Makefile
+	rm -f hmc_tm hybrid *.o *.d *~ Makefile config.log config.status fixed_volume.h
+	rm -f config.h
+
+.PHONY: all clean compile-clean distclean dep install \
+	flex_read_input $(PROGRAMS) all-recursive \
+	all-debug-recursive all-profile-recursive \
+	clean-recursive distclean-recursive \
+	compile-clean-recursive $(LINKLIBS) \
+	libhmc.a

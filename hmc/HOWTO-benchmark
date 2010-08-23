@@ -1,0 +1,91 @@
+Benchmark of the even-odd preconditioned Dirac operator
+
+Example commands to compile the program you can find at the end of this
+file. You may paste them into a file ccc and use it to compile the
+benchmark tool.
+
+The examples from below need to be edited in order to give the proper path for
+the mpicc or cc. Maybe also the compile-option has to be adopted.
+In particular
+-DSSE2 -DP4  
+should only be given for a Pentium4 (R) system,
+-DSSE3 -DP4
+only for Petium4 prescott (R).
+And
+-DSSE2 -DOPTERON
+should only be given for a AMD Opteron (R) system. -DSSE2|3 is tested
+only to work with the gnu compiler. SSE3 work for gcc version >= 3.3.4 
+(3.3.3 on x86_64).
+
+You should allways set -D_GAUGE_COPY and -D_NEW_GEOMERY.
+
+There are two different parallelisations available, a one dimensionale
+parallelisation (set -DMPI -DPARALLELT) and a two dimensional
+parallelisation (set -DMPI -DPARALLELXT). 
+If none of them are used, you will get a serial version of the program.
+
+The local lattice size in the case of the one dimensional
+prallelisation is controlled by the parameters in the file
+benchmark.input:
+
+T = 32
+L = 16
+
+which will give a 32 x 16^3 global lattice.
+
+NrXProcs = 2
+
+needs only to be set in case of a 2-dim. parallelisation and sets
+the number of processes in x-direction. The number of processes in
+t-direction is computed from NrXProcs and the total number of processes.
+You should only take care that all this fits with the lattice size.
+
+
+
+the package size of the data that are send and recieved is 
+192 * (1/2) * L^3 Byte in case of the one dimensional parallelisation.
+In case of the two dimensional parallelisation it is
+192 * (1/2) ((L*L*L/N_PROC_X)+(T*L*L)) Byte.
+
+A run of the benchmark takes about one minute.
+
+The out-put of the program is something like this: (T=2,L=16)
+
+The number of processes is 12 
+The local lattice size is 2 x 16 ^3 
+total time 4.681349e+00 sec, Variance of the time 6.314982e-03 sec 
+
+ (297 Mflops [64 bit arithmetic])
+
+communication switched off 
+ (577 Mflops [64 bit arithmetic])
+
+The size of the package is 393216 Byte 
+The bandwidth is 84.49 + 84.49   MB/sec
+
+
+If you use the serial version of course the part depending on the
+parallel setup will be missing.
+
+
+Compilation commands (you need a c-compiler with c99 standard, otherwise you may need to define inline, restrict etc. to nothing):
+
+in general (gcc)
+gcc -std=c99 -I. -I./ -I.. -o benchmark -D_GAUGE_COPY -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c update_backward_gauge.c D_psi.c ranlxs.c -lm
+
+gcc and OPTERON (64 Bit architecture):
+gcc -std=c99 -I. -I./ -I.. -o benchmark -DOPTERON -DSSE2 -mfpmath=387 -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY  -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c update_backward_gauge.c D_psi.c ranlxs.c -lm
+
+gcc and pentium4:
+gcc -std=c99 -I. -I./ -I.. -o benchmark -DSSE2 -DP4 -march=pentium4  -malign-double -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY  -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c update_backward_gauge.c D_psi.c ranlxs.c -lm
+
+mpicc (gcc) general, four dimensional parallelisation:
+mpicc -std=c99 -I. -I./ -I.. -o benchmark -O3  -DMPI -DPARALLELXYZT -D_GAUGE_COPY  -O Hopping_Matrix.c Hopping_Matrix_nocom.c xchange_deri.c xchange_field.c xchange_gauge.c xchange_halffield.c xchange_lexicfield.c  mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c update_backward_gauge.c D_psi.c ranlxs.c init_dirac_halfspinor.c -lm
+
+
+xlc and IBM powerpc (threadsave: xlc_r):
+xlc_r -I. -I./ -I.. -o benchmark -q64 -qsrcmsg -DXLC -D_GAUGE_COPY -O3 -qhot  Hopping_Matrix.c Hopping_Matrix_nocom.c xchange.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c update_backward_gauge.c D_psi.c ranlxs.c -lm
+
+mpcc and IBM powerpc and _one_ dimensional parallelisation (threadsave:mpcc_r):
+mpcc_r -I. -I./ -I.. -o benchmark -q64 -qsrcmsg -DXLC  -DMPI -DPARALLELT -D_GAUGE_COPY -O3 -qhot  Hopping_Matrix.c Hopping_Matrix_nocom.c xchange.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c update_backward_gauge.c D_psi.c ranlxs.c -lm
+

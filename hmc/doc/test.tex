@@ -1,0 +1,82 @@
+\begin{table}[t]
+  \centering
+  \begin{tabular}{lccc}
+    \hline\hline
+     & TR$_0$ & TR$_1$ & TR$_2$ \\
+    \hline
+    input-file & sample-hmc0.input & sample-hmc2.input &
+    sample-hmc3.input \\
+    $L^3\times T$ & $4^3\times 4$ & $4^3\times 4$ &
+    $4^3\times 4$ \\
+
+    $S_\mathrm{G}$ & Wilson & TlSym & Iwasaki \\
+    $\beta $       & $6.0$  & $3.3$ & $1.95$ \\
+    $\kappa$       & $0.177$ & $0.17$ & $0.163260$ \\
+    $2\kappa\mu_q$ & $0.177$ & $0.01$ & $0.002740961$ \\
+    $2\kappa \bar\mu$ & $-$  & $0.1105$ & $-$ \\
+    $2\kappa \bar\epsilon$ & $-$ &$0.0935$ & $-$ \\
+    $\langle P\rangle$ & $0.62457(7)$ & $0.53347(17)$ & $0.5951(2)$ \\
+    $\langle R\rangle$ & $-$ & $0.30393(22)$ & $0.3637(3)$ \\
+    \hline\hline
+  \end{tabular}
+  \caption{}
+  \label{tab:testruns}
+\end{table}
+
+The source code ships with a number of sample input files. They are
+located in the {\ttfamily sample-input} sub-directory. They are small
+volume $V=4^4$ test runs designated to measure for instance the
+average plaquette values.
+
+Such a testrun can be performed for instance on a scalar machine by
+typing 
+\begin{quote}
+  {\ttfamily ./hmc\_tm -f sample-hmc0.input}\ .
+\end{quote}
+Depending on the environment you are running in, you may need to adjust
+the input parameters to match the maximal run-time and so on. The
+expected average plaquette values are quoted in
+table~\ref{tab:testruns} and also in the sample input files.
+
+\subsection{Benchmark Executable}
+
+Another useful test executable is a benchmark code. It can be build by
+typing {\ttfamily make benchmark} and it will, when run, measure the
+performance of the Dirac operator. It can be run in the serial or
+parallel case. It reads its input from a file {\ttfamily
+  benchmark.input} and the relevant input parameters are the
+following:
+\begin{verbatim}
+L = 4
+T = 4
+NrXProcs = 2
+NrYProcs = 2
+NrZProcs = 2
+UseEvenOdd = yes
+UseSloppyPrecision = no
+\end{verbatim}
+In case of even/odd preconditioning the performance of the hopping
+matrix is evaluated, in case of no even/odd the performance of the
+Dirac operator. The important part of the output of the code is as
+follows
+\begin{verbatim}
+[...]
+
+ (1429 Mflops [64 bit arithmetic])
+
+communication switched off
+ (2592 Mflops [64 bit arithmetic])
+
+The size of the package is 36864 Byte
+The bandwidth is 662.91 + 662.91   MB/sec
+\end{verbatim}
+The bandwidth is not measured directly but computed from the
+performance difference among with and without communication and the
+package size. In case of a serial run the output is obviously
+reduced. 
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

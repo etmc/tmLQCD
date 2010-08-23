@@ -1,0 +1,29 @@
+- source filename for heavy-light operator not consistent
+
+- read_spinor does not distingiush between a source and a
+propagator. In case there is source and sink in the same file, one
+cannot read the source, probably. To be fixed!
+
+- even/odd is not consistently implemented in invert
+  if there is one operator without we need to get the memory 
+  for even_odd_flag == 0!!
+
+- SourceSink_Pairs propagator format possibly broken for 2 fl. tmwilson
+- residuum check for 2 fl nd twisted fails
+- do we need basenames per operator
+- introduce source types
+- volume sources
+- spin shifts in sources
+- adaptive precision for overlap
+- adapt online measuremnts for new operator structure
+- incorporate stouting into new operator structure
+- Remove the DUM_* variables and g_spinor_fields
+- incorporate overlap operator
+- append/not append feature for spinor fields
+- source generation inside the code
+- deflation
+- mixed precision solver, single precision Dirac operator
+- GPU implementation...
+- test RHMC?
+- dynamical overlap code
+- create simpler test suite

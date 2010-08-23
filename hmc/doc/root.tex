@@ -1,0 +1,80 @@
+\label{sec:root}
+
+The function $1/\sqrt{s}$ in the interval $[\epsilon,1]$ can be
+approximated using polynomials or rational functions of different
+sorts. In the tmLQCD package we use Chebysheff polynomials, which
+are easy to construct. They can be constructed as to provide a desired
+overall precision in the interval $[\epsilon,1]$. 
+
+As discussed in sub-section~\ref{sec:ndphmc}, the roots of the
+polynomial $P_{n,\epsilon}$ are needed for the evaluation of the
+force. Even though the roots come in complex conjugate pairs, for our
+case the roots cannot be computed analytically, hence we need to
+determine them numerically. Such an evaluation requires usually
+high precision. This is why these roots need to be determined
+\emph{before} a PHMC run using an external program, i.e. they cannot
+be computed at the beginning of a run in the {\ttfamily hmc\_tm}
+program. 
+
+Such an external program ships with the tmLQCD code, which is located in the
+{\ttfamily util/laguere} directory\footnote{We thank Istvan Montvay
+  for providing us with his code.}. It is based on Laguerre's
+method and uses the Class Library for Numbers
+(CLN)~\cite{cln:web}, which provides arbitrary precision data
+types. In order to compute roots the CLN library must be available,
+which is free software.
+
+Taking for granted that the CLN library is available,
+the procedure for computing the roots is as follows: assuming the
+non-degenerate Dirac operator has eigenvalues in the interval $[\tilde
+s_\mathrm{min},\tilde s_\mathrm{max}]$, i.e. $\epsilon = \tilde
+s_\mathrm{min}/\tilde s_\mathrm{max}$, and the polynomial degree is
+$n$. Edit the file {\ttfamily chebyRoot.H} and set the
+variable {\ttfamily EPSILON} to the value of $\epsilon$. Moreover,
+set the variable {\ttfamily MAXPOW} to the degree $n$. Adapt the
+{\ttfamily Makefile} to your local installation and compile the code
+by typing {\ttfamily make}. After running the {\ttfamily ChebyRoot}
+program successfully, you should find two files in the directory
+\begin{enumerate}
+\item {\ttfamily Square\_root\_BR\_roots.dat}:\\
+  which contains the roots of the polynomial in bit-reverse
+  order~\cite{Frezzotti:1997ym}.
+\item {\ttfamily normierungLocal.dat}:\\
+  which contains a normalisation constant. 
+\end{enumerate}
+Copy these two files into the directory where you run the code and
+adjust the input parameters to match \emph{exactly} the values used
+for the root computation. I.e. the input parameters {\ttfamily
+  StildeMin}, {\ttfamily StildeMax} and {\ttfamily
+  DegreeOfMDPolynomial} must be set appropriately in the {\ttfamily
+  NDPOLY} monomial. The maximal degree $\tilde n_\mathrm{max}$ for
+$\tilde P$ can be influenced using {\ttfamily MaxPtildeDegree}.
+
+The minimal and maximal eigenvalue of the non-degenerate flavour
+doublet can be computed as an online measurement. The frequency can be
+specified in the {\ttfamily NDPOLY} monomial with the input parameter
+{\ttfamily ComputeEVFreq} and they are written to the file called
+{\ttfamily phmc.data}. Note that this is not a cheap operation in
+terms of computer time. However, if the approximation interval of the
+polynomial is chosen wrongly the algorithm performance might
+deteriorate drastically, in particular if the upper bound is set
+wrongly. It is therefore advisable to introduce some security measure
+in particular in the value of $\tilde s_\mathrm{max}$. 
+
+While the degree of the MD polynomial can be adjusted in the input
+file, the degree of $\tilde P$ used in the heatbath and acceptance
+steps is computed at the beginning of the run depending on the
+precision specified in the input file. The procedure is as
+follows: Compute the first $\tilde n_\mathrm{max}$
+coefficients $d_i$ of the polynomial. Then determine the degree
+$\tilde n$ of $\tilde P$ such that 
+\[
+\sum_{i=n}^{n_\mathrm{max}} d_i < \epsilon
+\]
+where $\epsilon$ is set using the input parameter {\ttfamily
+  PrecisionPtilde}. 
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

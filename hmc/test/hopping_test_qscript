@@ -1,0 +1,102 @@
+#!/bin/zsh
+#
+#$ -N test
+#$ -l h_cpu=02:30:00
+#$ -l h_vmem=800M
+###$ -m bea scorzato@ect.it
+#$ -e errfile
+#$ -o outfile
+#$ -pe mpi 8
+
+#######  
+# This script should be run after hopping_test_generate_script (see explamations there)
+# see hopping_test.README for a general overview
+# see below for the explanation of the parameters
+######## parameters to set:
+suff=XYZtsp # suffix for the program name and also suffix of the directory name 
+            # res_$suff containing the results
+nxmax=100 # 1 if x direction is not parallelized, 100 otherwise
+nymax=100 # 1 if y direction is not parallelized, 100 otherwise
+nzmax=100 # 1 if z direction is not parallelized, 100 otherwise
+ntmax=1 # 1 if t direction is not parallelized, 100 otherwise
+###################
+
+joke=0
+ini openmpi
+program=hopping_test_${suff}
+procs=$NSLOTS
+cd /afs/ifh.de/group/nic/scratch/pool1/scorzato/hmc-test
+mkdir -p res_${suff}
+
+echo "nprocs: $procs, running: $program" > list
+
+for ll in 4 6 8 10 12 14 16 ; do
+    for tt in 4 5 6 7 8 9 10 16 20 24 ; do
+
+#ll=4
+#tt=5
+
+	for nx in `seq $(( $ll - 1 ))` ; do
+	    if [ $nx -le $nxmax ] ; then
+		lx=$(($ll / $nx))
+		if [ $(($nx * $lx)) -eq $ll ] ; then
+		    for ny in `seq $(( $ll - 1 ))` ; do
+			if [ $ny -le $nymax ] ; then
+			    ly=$(($ll / $ny))
+			    if [ $(($ny * $ly)) -eq $ll ] ; then
+				for nz in `seq $(( $ll - 1 ))` ; do
+				    if [ $nz -le $nzmax ] ; then
+					lz=$(($ll / $nz))
+					if [ $(($nz * $lz)) -eq $ll ] ; then
+					    for nt in `seq $(( $tt - 1 ))` ; do
+						if [ $nt -le $ntmax ] ; then
+						    lt=$(($tt / $nt))
+						    if [ $(($nt * $lt)) -eq $tt ] ; then
+							
+							if [ $(( $nx * $ny * $nz * $nt )) -eq $procs ] ; then
+							    if [ $((2 * $(($lz / 2)))) -eq $lz ] ; then
+								svol=$(( $lx * $ly * $lt ))
+								if [ $((2 * $(($svol / 2)))) -eq $svol ] ; then
+								    
+								    echo "$ll - $tt : $nx - $ny - $nz - $nt : $procs" >> list
+								    
+								    
+								    if [ $joke -eq 0 ] ; then
+									rm -f spincolorfield spincolorfield.2 spincolorfield.out gaugeconf
+									
+									cp confs/spincolorfield.in.L${ll}T${tt} spincolorfield
+									cp confs/gaugeconf.L${ll}T${tt} gaugeconf
+									
+									sed s/TT/${tt}/g hopping_test.input.new  | sed s/LL/${ll}/g | sed s/NX/${nx}/g | sed s/NY/${ny}/g | sed s/NZ/${nz}/g > hopping_test.input
+									if [ $procs -eq 1 ] ; then
+									    ./$program  &> res_${suff}/out_L${ll}T${tt}_nx${nx}ny${ny}nz${nz}nt${nt}_P${procs}
+									else
+									    mpirun --mca btl "^udapl"  -np $NSLOTS $program  &> res_${suff}/out_L${ll}T${tt}_nx${nx}ny${ny}nz${nz}nt${nt}_P${procs}
+									fi
+									mv spincolorfield.out spincolorfield.2
+									cp confs/spincolorfield.out.L${ll}T${tt} spincolorfield
+									
+									sed s/TT/${tt}/g hopping_test.input.compare  | sed s/LL/${ll}/g | sed s/NX/${nx}/g | sed s/NY/${ny}/g | sed s/NZ/${nz}/g > hopping_test.input
+									
+									./hopping_test_refv &> res_${suff}/diff_L${ll}T${tt}_nx${nx}ny${ny}nz${nz}nt${nt}_P${procs}
+								    fi
+								fi
+							    fi
+							    
+							fi
+							
+						    fi
+						fi
+					    done
+					fi
+				    fi
+				done
+			    fi
+			fi
+		    done
+		fi
+	    fi
+	done
+
+    done
+done

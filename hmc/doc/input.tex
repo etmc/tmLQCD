@@ -1,0 +1,712 @@
+\subsection{Input parameter for main program}
+
+The main programs are called {\ttfamily hmc\_tm} for the HMC algorithm
+and {\ttfamily invert} for even odd preconditioned inversion. They can
+be called with
+\begin{itemize}
+\item {\ttfamily -f filename}:\\
+  where {\ttfamily filename} is the name of the input file to be
+  used. The default name is {\ttfamily hmc.input}.
+
+\item {\ttfamily -o name}:\\
+  {\ttfamily name} will be used as name for several output files. This
+  files differ by their suffix. Default for {\ttfamily name} is
+  {\ttfamily output}.
+
+\item {\ttfamily -v  }:\\
+  makes the code a bit more verbose. Unrelated to input parameter
+  {\ttfamily DebugLevel}.
+
+\item {\ttfamily -?|-h}:\\
+  This will produce help output and exit then.
+
+\end{itemize}
+
+There are several input parameters read from an input file. The parser
+is contained in the file {\ttfamily gwc/src/bin/read\_input.l}. The
+file {\ttfamily read\_input.l} is converted to {\ttfamily
+  read\_input.c} using {\ttfamily flex} and defines the following
+function: 
+
+Definition:\\
+\begin{ttfamily}
+  int read\_input(char * conf\_file)
+\end{ttfamily}\\
+
+\begin{tabular}[h]{l l l}
+{\ttfamily conf\_file} & in & string with input file name\\ 
+\end{tabular}
+
+The functions returns $0$, if no error occurs, $2$, if the input file
+could not be opened. If no input file could be opened or if there is
+no value given in the input file for a paramter, default values are
+used. All default values can be found in the file {\ttfamily
+  gwc/src/bin/default\_input\_values.h}. The syntax is mostly
+{\ttfamily keyword = value} and {\ttfamily keyword} must be at the
+beginning of the line. Comments starting with {\ttfamily \#} and empty
+lines are allowed. The order of the lines is not importand as long as
+every keyword appears only once.  If it appears more than once, the
+last appearance becomes valid. The parser is case-insensitive.
+
+In the following a list of the currently
+supported general input paramters: 
+\begin{enumerate}
+\item {\ttfamily T}:\\
+  The global time extension of the lattice. Default is $4$.
+
+\item {\ttfamily L}:\\
+  The global spatial extension of the lattice. Default is $4$.
+
+\item {\ttfamily LX}:\\
+  The global spatial x-extension of the lattice. Default is $4$.
+
+\item {\ttfamily LY}:\\
+  The global spatial y-extension of the lattice. Default is $4$.
+
+\item {\ttfamily LZ}:\\
+  The global spatial z-extension of the lattice. Default is $4$.
+
+\item {\ttfamily NrXProcs}:\\
+  The number of processors in x-direction in case of two dimensional
+  parallelisation. This has no effect in case of one dimensional
+  parallelisation. In case of two dimensional parallelisation it must
+  be properly set. The number of processors in time direction is
+  automatically computed.
+
+\item {\ttfamily NrYProcs, NrZProcs}:\\
+  See {\ttfamily NrXProcs}.
+
+\item {\ttfamily seed}:\\
+  The seed for the random number generator. Default value is $123456$.
+
+\item {\ttfamily kappa}:\\
+  The $\kappa$ value. Default is $0.12$.
+
+\item {\ttfamily 2KappaMu}:\\
+  Twisted mass parameter (the physical one) for twisted mass
+  action. This is for internal reasons $2\kappa\mu$.
+
+\item {\ttfamily 2KappaMuBar}:\\
+  The average mass of the heavy doublet multiplied with $2\kappa$
+
+\item {\ttfamily 2KappaEpsBar}:\\
+  The splitting mass multiplied with $2\kappa$
+
+\item {\ttfamily Measurements}:\\
+  Number of measurements in units of trajectories to be done. Default
+  value is $3$. For the {\ttfamily invert} programme this counts the
+  number of gauge configurations to invert on.
+
+\item {\ttfamily Nsave}:\\
+  Save evey n-th trajectory the configuration to disk.
+  For the {\ttfamily invert} programme it means that every n-th
+  configuration is measured. This was formerly called {\ttfamily
+    Nskip}.
+
+\item {\ttfamily InitialStoreCounter}:\\
+  Start with value to label measurements. Default is $0$. Can be also
+  set to {\ttfamily readin} which causes to let the code check for a
+  file {\ttfamily .nstore\_counter} and reads the initial value from
+  this file. If it is not existing, the counter will be set to $0$.
+
+\item {\ttfamily GaugeConfigInputFile}:\\
+  Name of input file for the gauge field. Default is {\ttfamily conf}
+
+\item {\ttfamily ThetaT|X|Y|Z=x}:\\
+  This sets the boundary condition angle for the fermion fields in
+  $t$, $x$, $y$ or $z$ direction to $\theta_t = \pi x$. Default value is
+  zero. A value of $1$ would mean antiperiodic boundary conditions
+  for the fermion fields.
+
+\item {\ttfamily DebugLevel}:\\
+  If set to a value larger than $0$ this causes verbose output:
+  \begin{itemize}
+  \item {\ttfamily DebugLevel = 1}: forces, iteration counts and flops are printed out.
+  \item {\ttfamily DebugLevel = 2}: every iteration step is
+    printed. Chronological Solver gives details about which routines
+    are called, the same for the monomials. polynomial gets more verbose.
+  \item {\ttfamily DebugLevel > 2}: all available normal output.
+  \item {\ttfamily DebugLevel > 3}: all debug output. Involves extra
+    computations, so the code will be (significantly) slower
+  \end{itemize}
+
+\item {\ttfamily UseSloppyPrecision}:\\
+  Use a reduced precision Dirac operator in the MC part of the
+  HMC. Possible values are yes and no, the latter being the
+  default. This could be possibly used in the invert code along the 
+  lines of {\ttfamily hep-lat/0609023} in the future.
+
+\item {\ttfamily GaugeConfigRead|WritePrecision}:\\
+  Read/Write gauge configurations in single (32) or double double (64)
+  precision. Default is 64.
+
+\item {\ttfamily UseEvenOdd}:\\
+  Whether or not to use even/odd preconditioning in the invert
+  programme.
+
+\end{enumerate}
+
+The following input parameters are {\ttfamily invert} and {\ttfamily
+  invert\_doublet} specific:
+\begin{enumerate}
+\item {\ttfamily Indices=n-m}:\\
+  Compute only components $n$ to $m$ of the quark propagator. $n,m$ must
+  be in $[0,99]$. If the start index is not zero the data will be
+  appended to the propagator file, unless {\ttfamily
+    SplittedPropagator} is chosen. The program takes not care of the
+  order, the data is just appended! This parameter has only
+  effect for executable {\ttfamily invert}.
+
+\item {\ttfamily UseRelativePrecision}:\\
+  Possible values {\ttfamily yes, no}. Indicates whether relative
+  precision is used in the inversions for the force and the acceptance
+  computation. Default is no.
+  
+\item {\ttfamily GMRESMParameter}:\\
+  Krylov subspace size $m$ in GMRES($m$) and such like iterative
+  solvers. Not yet working!
+
+\item {\ttfamily GMRESDRNrEv}:\\
+  Number of eigenvalues to be deflated in GMRES-DR iterative
+  solver. Not yet working!
+
+\item {\ttfamily ReadSource}:\\
+  If set to yes, then the source vector is read from a file. This
+  parameter has only effect for executable {\ttfamily invert}.
+
+\item {\ttfamily SourceTimeSlice}:\\
+  not used right now.
+  The time slice of the source to be read (in case of cmi format). At
+  the moment used only for
+  the automatic construction of filenames. The filename will then be
+  constructed as {\ttfamily basefilename.nstore.ts.index}.
+  {\ttfamily SourceTimeSlice} must be set to something
+  smaller than 0 or larger than T in order to let the code not
+  automatically construct the filenames. The filename will then
+  consist only of the base filename. This parameter has only
+  effect for executable {\ttfamily invert}.
+
+\item {\ttfamily NoSamples}:\\
+  in case of stochastic source the number of samples. This parameter
+  has only effect for executable {\ttfamily invert}.
+
+\item {\ttfamily SourceType}:\\
+  lets you chose the source type: {\ttfamily Volume, Point, TimeSlice}
+  are possible here. This parameter has only
+  effect for executable {\ttfamily invert}.
+
+\item {\ttfamily ComputeEVs}:\\
+  compute eigenvalues and vectors before inversion in invert. Values
+  can be no, yes and readin. In the latter case the eigenvalues and
+  vectors are only read from disk, if possible. In case of yes it is
+  also tried to read them from disk, but they are also recomputed, to
+  a possibly higher precision.
+
+\item {\ttfamily NoEigenvalues}:\\
+  number of eigenvalues to compute.
+
+\item {\ttfamily EigenvaluePrecision}:\\
+  precision for eigenvalues.
+
+\item {\ttfamily SourceLocation}:\\
+  integer indicating the location of the source. The location is computed as
+  {\ttfamily SourceLocation = z+L*y+L*L*x+L*L*L*t}.
+
+\item {\ttfamily UseStoutSmearing}:\\
+  Whether or not to stout smear the configuration before inversion.
+
+\item {\ttfamily StoutRho} and {\ttfamily StoutNoIterations}:\\
+  Stout smearing parameter.
+
+\item {\ttfamily WritePropagatorFormat} or {\ttfamily PropagatorType}:\\
+  The type in which to store the propagator. There are 
+  \begin{itemize}
+  \item {\ttfamily DiracFermion\_Sink}
+  \item {\ttfamily DiracFermion\_Source\_Sink\_Pairs}
+  \item {\ttfamily DiracFermion\_ScalarSource\_TwelveSink}
+  \item {\ttfamily DiracFermion\_ScalarSource\_FourSink}
+  \end{itemize}
+  available. However, only the first two are implemented so far.
+
+\item {\ttfamily ComputeReweightingFactor}:\\
+  If enabled reweighting factors will be computed corresponding to
+  monomials that must be specified in the input file as well.
+
+\item {\ttfamily NoReweighringSamples}:\\
+  Number of random samples used per gauge configuration to estimate
+  the reweighting factor. The default is $10$.
+
+\end{enumerate}
+
+%\noindent $n_f=2+1+1$ related input parameters, where the heavy part of the actions
+%reads
+%\begin{equation}
+%  \label{eq:haction}
+%  S_{F,h} = \bar\psi_h\left[ \delta_{x,y}(1+i\gamma_5\bar\mu\tau^3 +
+%    \bar\epsilon\tau^1)
+%  - \kappa\sum_\mu \delta_{x,y+\mu}(1+\gamma_\mu)U_{y,\mu}\right] \psi_h
+%\end{equation}
+
+The following input parameters are {\ttfamily hmc\_tm} specific:
+\begin{enumerate}
+\item {ThermalisationSweeps}:\\
+  As longer as the number of trajectories is smaller than this number
+  the acceptance test will be discarded. This might help to faster
+  equilibrate the system.
+
+\item {\ttfamily Startcondition}:\\
+  The starting condition for a run. Possible values are {\ttfamily
+    hot, cold, restart, continue}. Default is {\ttfamily
+    cold}. Restart uses the seed to reset the random number
+  generator. In case of {\ttfamily continue} the programme uses the
+  file {\ttfamily .nstore\_counter} to get the information about from
+  where to read the gauge and the random number status. If this file
+  does not exist (its written in the course of the HMC) then the input
+  parameter described here are used instead.
+
+\item {\ttfamily BCGstabMaxIter}:\\
+  The maximal number of iterations in the BiCGstab solver.
+
+\item {\ttfamily CGMaxIter}:\\
+  The maximal number of iterations in the CG solver.
+
+\item {\ttfamily ReversibilityCheck}:\\
+  If set to {\ttfamily yes} the program will perform a check of
+  reversibility violation in the integrator by integrating back in
+  time. If not yet existing, the program creates a file {\ttfamily
+    return\_check.data} in which it stores the reversibility violation
+  as the difference in the Hamiltonian, the difference in the gauge
+  fields and the relative difference in the Hamiltonian.
+
+\item {\ttfamily ReversibilityCheckIntervall}:\\
+  Here one can specify the intervall in terms of trajectories the
+  program should check the reversibility violation.
+
+\end{enumerate}
+Following the CHROMA notation we call every part in the action a
+monomial. A monomial is added to the action in the input file in the
+following way:
+\begin{verbatim}
+BeginMonomial TYPE
+  Option = value
+EndMonomial
+\end{verbatim}
+{\ttfamily TYPE} can be one of the following
+\begin{itemize}
+\item {\ttfamily DET}: pseudo fermion representation of the (mass degenerate)\\
+  \[
+  \det(Q^2(\kappa) + \mu^2)
+  \]
+\item {\ttfamily DETRATIO}: pseudo fermion representation of\\
+  \[
+  \det(Q^2(\kappa) + \mu^2)/\det(Q^2(\kappa_2) + \mu_2^2)
+  \]
+\item {\ttfamily GAUGE}:\\
+  \[
+  \frac{\beta}{3}\sum_x\left(  c_0\sum_{\substack{
+        \mu,\nu=1\\1\leq\mu<\nu}}^4\{1-\re\tr(U^{1\times1}_{x,\mu,\nu})\}\Bigr. 
+    \Bigl.\ +\ 
+    c_1\sum_{\substack{\mu,\nu=1\\\mu\neq\nu}}^4\{1
+    -\re\tr(U^{1\times2}_{x,\mu,\nu})\}\right)\,  ,
+  \]
+\item {\ttfamily NDPOLY}: polynomial representation of the (possibly
+  non-degenerate) doublet\\
+  \[
+  [\det(Q_{nd}(\bar\epsilon, \bar\mu)^2)]^{1/2}
+  \]
+\item {\ttfamily POLY}: polynomial approximation ($P_n(x) \approx \frac{1}{x}$) of the mass degenerate determinant\\
+  \[
+  \left[\det(P_{n}(Q^2(\kappa) + \mu^2))\right]^{-1}
+  \]
+\item {\ttfamily POLYDETRATIO}: pseudo fermion representation of (for PHMC + mass precondition)\\
+  \[
+  \left[\det(P_{n}(Q^2(\kappa) + \mu^2)) det(Q^2(\kappa_2) + \mu^2_2)\right]^{-1}
+  \]
+\end{itemize}
+Each of them has different options:
+\begin{itemize}
+\item {\ttfamily DET}:
+  \begin{itemize}
+  \item {\ttfamily 2KappaMu}
+  \item {\ttfamily Kappa}
+  \item {\ttfamily Timescale}: the timescale on which to integrate
+    this monomial. Counting starts from zero up to the total number of
+    timescales minus 1.
+  \item {\ttfamily CSGHistory}: the maximal number of vectors to store
+    for the chronolical predictor (for CG and BiCGstab), default $0$.
+  \item {\ttfamily CSGHistory2}: the maximal number of vectors to store
+    for the second chronolical predictor (for BiCGstab only), default
+    $0$.
+  \item {\ttfamily ForcePrecision}: the solver precision used in the
+    force computation
+  \item {\ttfamily AcceptancePrecision}: the solver precision used in the
+    acceptance and heatbath
+  \item {\ttfamily MaxSolverIterations}: default is $5000$
+  \item {\ttfamily Solver}: the solver to be used, either CG or
+    BiCGstab. Default is CG.
+  \item {\ttfamily Name}: a name to be assigned to the monomial. The
+    default is {\ttfamily DET}
+  \end{itemize}
+\item {\ttfamily DETRATIO}: the same as for {\ttfamily DET}, but in
+  addition:
+  \begin{itemize}
+  \item {\ttfamily 2KappaMu2}
+  \item {\ttfamily Kappa2}
+  \item {\ttfamily Name}: a name to be assigned to the monomial. The
+    default is {\ttfamily DETRATIO}
+  \end{itemize}
+
+
+\item {\ttfamily GAUGE}: 
+  \begin{itemize}
+  \item {\ttfamily Timescale}: the timescale on which to integrate
+    this monomial. Counting starts from zero up to the total number of
+    timescales minus 1.
+  \item {\ttfamily Name}: a name to be assigned to the monomial. The
+    default is {\ttfamily GAUGE}.
+
+  \item {\ttfamily beta}:\\
+    The invers coupling $\beta$. Default value is $5.2$.
+    
+  \item {\ttfamily Type}: can be one of\ {\ttfamily Wilson, tlsym,
+      Iwasaki, DBW2, user}. For type user you can specify also the two
+    following options. Default is {\ttfamily user} here.
+  \item {\ttfamily UseRectangleStaples}: can be yes or no, indicating
+    whether to use also the rectangle staples. No corresponds to pure
+    Wilson plaquette. Default is no. Is effective only for {\ttfamily
+      type = user}.
+  \item {\ttfamily RectangleCoefficient}: the value of the parameter
+    $c_1$. The coefficient $c_0$ is computed from $c_0 = 1-8c_1$. Is
+    effective only for {\ttfamily type = user}.
+  \end{itemize}
+  There is maximally one instance allowed of this type.
+
+
+\item {\ttfamily NDPOLY}: more a dummy monomial so far, but switches
+  on the PHMC part for the non-degenerate heavy doublet and lets you
+  specify the timescale on which to integrate this and the parameters.
+  \begin{itemize}
+
+  \item {\ttfamily Timescale}: the timescale on which to integrate
+    this monomial. Counting starts from zero up to the total number of
+    timescales minus 1.
+
+  \item {\ttfamily Name}: a name to be assigned to the monomial. The
+    default is {\ttfamily NDPOLY}
+
+  \item {\ttfamily ComputeEVFreq}:
+    If you want to calculate the eigenvalues every n'th trajectory
+    then set this parameter to n if you want no eigenvalues set this to 0
+    during thermalization you should set this to 1 or 2 to follow the evolution
+    of smallest and largest eigenvalue to adjust the approximation interval
+    of the polynomial
+
+  \item {\ttfamily ComputeOnlyEVs}: Computes only once at the very
+    beginning of the run the eigenvalues of the heavy split operator
+    and exits.
+
+  \item {\ttfamily StildeMin}: lower bound for the approximation interval of the polynomial
+
+  \item {\ttfamily StildeMax}:
+    upper bound for the approximation interval of the polynomial
+
+  \item {\ttfamily DegreeOfMDPolynomial}:
+    degree of the less precise polynomial $P$. Must be identical to the
+    degree used to compute the roots.
+
+  \item {\ttfamily LocNormConst}:
+    Constant (local normalisation constant) which is multiplied to each monomial (of the polynomial $P_n$).
+  \item {\ttfamily RootsFile}:
+    File name specifying a file containing the $n=$ {\ttfamily Degree} roots of the Polynomial
+
+  \item {\ttfamily PrecisionPtilde}:
+    Precision of the more precise polynomial $\tilde P$ used in the
+    heat-bath and the acceptance step of the PHMC.
+
+  \item {\ttfamily PrecisionHfinal}:
+  \end{itemize}
+  So far, there is maximally one instance allowed for this type. This
+  might change in the future.
+\item {\ttfamily POLY, POLYDETRATIO}:
+  \begin{itemize}
+  \item {\ttfamily Degree}:
+    Degree of the Polynomial.
+  \item {\ttfamily Lmin}:
+    Lower bound of approximation interval.
+  \item {\ttfamily Lmax}:
+    Upper bound of approximation interval.
+  \item {\ttfamily LocNormConst}:
+    Constant (local normalisation constant) which is multiplied to each monomial (of the polynomial $P_n$).
+  \item {\ttfamily RootsFile}:
+    File name specifying a file containing the $n=$ {\ttfamily Degree} roots of the Polynomial
+  \item {\ttfamily + Parameters from DET \& DETRATIO monomial}
+  \end{itemize}
+There can be arbitrary many POLY monomials. But take into account that there will be allocated $n/2$ number of spinor fields for EACH poly monomial. (Maybe in the future we should think about to share these fields with all POLY/NDPOLY monomials as there are used only for the computation of the force and have to be updated before each successive calculation of the force.)\\
+This monomial needs a valid {\ttfamily RootsFile} and {\ttfamily LocNormConst} parameter. Both can be obtained from the {\ttfamily oox} program in the {\ttfamily util/oox} subdirectory of the hmc code. It can be invoked by the command:\\
+{\ttfamily \$ oox -d <degree> -e <epsilon>}\\
+{\ttfamily <epsilon>} is to be replaced by the ratio  {\ttfamily Lmin/Lmax}.
+\end{itemize}
+
+\subsubsection{The Integrator}
+
+The Integrator can be specified similar to the monomials:
+\begin{verbatim}
+BeginIntegrator
+  Option = value
+EndIntegrator
+\end{verbatim}
+with the following options available:
+\begin{itemize}
+\item {\ttfamily Tau}: total trajectory length.
+\item {\ttfamily NumberOfTimescales}: total number of timescales.
+\item {\ttfamily IntegrationStepsN = M} where {\ttfamily N} is the
+  timescale (as integer value, counting starts from zero and goes up
+  to the number of timescales minus 1) and {\ttfamily M} is the number
+  of integration steps on that timescale. Note, that the integrators
+  or defined recursively.
+\item {\ttfamily LambdaN = F} where {\ttfamily N} is the
+  timescale and {\ttfamily F} is a floating point number specifying
+  the $\lambda$ value to be used on this timescale in case of the
+  second order minimal norm integrator (2MN, 2MNPOSITION). The default
+  value is $0.19$. Note, that $\lambda = 1/6$ is the Sexton-Weingarte
+  scheme. 
+\item {\ttfamily TypeN = TYPE}: set the type of integrator to be used
+  on timescale {\ttfamily N}. The following types available:
+  {\ttfamily 2MN, 2MNPOSITION, LEAPFROG}
+
+  The position versions are not compatible with the velocity versions,
+  thus they must not be used together.
+\end{itemize}
+A timescale must not be empty. Currently the maximal number of
+timescales is $10$ and there cannot be more than $10$ monomials per
+timescale. But there can be more than one monomial per timescale.
+
+\subsubsection{Chosing the Operator for Inversions}
+
+\begin{verbatim}
+BeginOperator TYPE
+  Option = value
+EndOperator
+\end{verbatim}
+{\ttfamily TYPE} can be one of the following
+\begin{itemize}
+\item {\ttfamily WILSON}: simple Wilson Dirac operator, with options:
+  \begin{itemize}
+  \item {\ttfamily UseEvenOdd}
+  \end{itemize}
+\item {\ttfamily TMWILSON}: Wilson Twisted Mass Dirac operator, with
+  options:
+  \begin{itemize}
+  \item {\ttfamily 2KappaMu}
+  \item {\ttfamily UseEvenOdd}
+  \end{itemize}
+\item {\ttfamily DBTMWILSON}: two flavour mass non-degenerate Wilson
+  Twisted Mass Dirac operator:
+  \begin{itemize}
+  \item {\ttfamily 2KappaMubar}
+  \item {\ttfamily 2KappaEpsbar}
+  \end{itemize}
+\item {\ttfamily OVERLAP}: overlap  operator:
+  \begin{itemize}
+  \item {\ttfamily m}
+  \item {\ttfamily s}
+  \item {\ttfamily DegreeOfPolynomial}
+  \item {\ttfamily NoKernerlEigenvalues}
+  \item {\ttfamily KernelEigenvaluePrecision}
+  \end{itemize}
+\end{itemize}
+All of them provide the following options available:
+\begin{itemize}
+\item {\ttfamily kappa}:
+\item {\ttfamily Solver}:\\
+  Sets the solver to be used. Possible values are among others
+  {\ttfamily CG, BiCGstab, CGS, GMRES, PCG}.
+\item {\ttfamily MaxSolverIterations}:
+\item {\ttfamily PropagatorPrecision}:
+\item {\ttfamily SolverPrecision}:
+\end{itemize}
+
+\subsubsection{Online Measurements}
+
+A number of measurements can be performed online while the hmc is
+running. 
+\begin{verbatim}
+BeginMeasurement TYPE
+  Option = value
+EndMeasurement
+\end{verbatim}
+where {\ttfamily TYPE} can be currently one of the following:
+\begin{itemize}
+\item {\ttfamily CORRELATORS}:
+  \begin{itemize}
+  \item {\ttfamily MaxSolverIterations}
+  \end{itemize}
+  this is for zero temperature, so the stochastic source is at fixed $t$.
+\item {\ttfamily PIONNORM}:
+  \begin{itemize}
+  \item {\ttfamily MaxSolverIterations}
+  \end{itemize}
+  this is for finite temperature, the stochastic source is at fixed $z$.
+
+\item {\ttfamily POLYAKOVLOOP}:
+  \begin{itemize}
+  \item {\ttfamily Directions} can be either $0$ for time- or $3$ for z-direction.
+  \end{itemize}
+\end{itemize}
+The frequency of measuring all of these can be adjusted with the
+Option {\ttfamily Frequency}. 
+
+\subsubsection{Example Input File}
+
+The following is a typical HMC input file:
+\begin{verbatim}
+L=8
+T=16
+Measurements = 1
+Startcondition = hot
+2KappaMu = 0.03
+kappa = 0.090
+2KappaMubar = 1.
+2KappaEpsbar = 0.2
+
+#This is a comment
+
+PhmcRecEVInterval = 1
+Nsave = 50
+ThetaT = 1.
+BCGstabMaxIter = 5000
+CGMaxIter = 1000
+InitialStoreCounter = readin
+UseEvenOdd = yes
+ReversibilityCheck = no
+ReversibilityCheckIntervall = 1
+DebugLevel = 3
+
+PerformOnlineMeasurements = yes
+OnlineMeasurementsFreq = 1
+
+BeginMonomial GAUGE
+  beta = 3.30
+  Timescale = 0
+  Type = tlsym
+EndMonomial
+
+BeginMonomial DET
+  Timescale = 1
+  2KappaMu = 0.
+  kappa = 0.125
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = det
+  solver   = cg
+  CSGHistory = 10
+  CSGHistory2 = 10
+EndMonomial
+
+BeginMonomial DETRATIO
+  Timescale = 2
+  2KappaMu = 0.03
+  2KappaMu2 = 0.1
+  kappa = 0.125
+  kappa2 = 0.125
+  maxiter = 20000
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = detrat
+  solver = cg
+EndMonomial
+
+# this is a NDPOLY monomial
+# but commented out
+#BeginMonomial NDPOLY
+#  Timescale = 1
+#EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  Type2 = 2MN
+  IntegrationSteps0 = 1
+  IntegrationSteps1 = 2
+  IntegrationSteps2 = 3
+  tau = 1.
+  Lambda0 = 0.19
+  NumberOfTimescales = 3
+EndIntegrator
+\end{verbatim}
+
+There are realistic small volume sample input files in the
+sub-directory {\ttfamily sample-input}, which also represent test runs
+for the code. For the inverter a typical file would look like
+\begin{verbatim}
+L=4
+T=4
+DebugLevel = 2
+InitialStoreCounter = 1
+Indices = 0-7
+ReadSource = no
+Measurements = 1
+ThetaT = 1.
+UseEvenOdd = no
+UseRelativePrecision = yes
+SplittedPropagator = yes
+PropagatorPrecision = 64
+PropagatorType = DiracFermion_Source_Sink_Pairs
+UseStoutSmearing = no
+StoutRho = 0.15
+StoutNoIterations = 10
+UseSloppyPrecision = yes
+
+# both operators will be inverted for
+BeginOperator TMWILSON
+  Solver = CG
+  2KappaMu = 0.177
+  kappa = 0.177
+  SolverPrecision = 1.e-15
+  UseEvenOdd = yes
+EndOperator
+
+BeginOperator DBTMWILSON
+  2KappaMubar = 0.177
+  2KappaEpsbar = 0.190
+  kappa = 0.177
+EndOperator
+
+
+# and for reweighting possibly
+BeginMonomial DETRATIO
+  Timescale = 2
+  2KappaMu = 0.03
+  2KappaMu2 = 0.0305
+  kappa = 0.15
+  kappa2 = 0.15
+  maxiter = 20000
+  AcceptancePrecision =  1.e-20
+  Name = detrat
+  solver = cg
+EndMonomial
+
+\end{verbatim}
+
+\subsubsection{Reread functionality}
+
+If you store a file with name {\ttfamily hmc.reread} in the working
+directory of a running HMC, the program will read in this file after
+the next finished trajectory. Then it will change the parameters
+accordingly without the need of restarting the program. 
+
+One cannot change from gauge action without rectangle part to gauge
+action with rectangle part. If one wants to change $\mu$-,
+$\epsilon^2$- or $N_i$-parameter one has to give allways all of
+them. Otherwise the internal matching does not work and the program
+will do nonsense.
+
+The file will be deleted automatically, if it was used. A message will
+be posted to standard output and to the file {\ttfamily
+  history\_hmc\_tm} to let you identify the exact point where the
+parameters changed.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

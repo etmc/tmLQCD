@@ -1,0 +1,50 @@
+# $Id$
+# This Makefile is included from the other Makefiles
+# It contains some overall targets...
+
+# refresh Makefile and other stuff
+
+.SUFFIXES:
+
+Makefile: $(srcdir)/Makefile.in  $(abs_top_builddir)/config.status 
+	cd $(abs_top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+$(abs_top_builddir)/config.status: $(top_srcdir)/configure
+	( cd ${abs_top_builddir} && $(SHELL) ./config.status --recheck ) 
+
+$(abs_top_builddir)/config.h: $(top_srcdir)/config.h.in $(abs_top_builddir)/config.status $(top_srcdir)/configure
+	( cd ${abs_top_builddir} && $(SHELL) ./config.status --header=config.h )
+
+#$(top_srcdir)/configure: $(top_srcdir)/configure.in 
+#$(top_srcdir)/configure:
+#	( cd $(top_srcdir) && $(AUTOCONF) )
+
+#extern modules
+
+$(addsuffix .o,$(EXTERNMODULES)): %.o:
+	( cd $(dir $@) && ${MAKE} $(notdir $@) )
+
+#extern libs
+
+$(LINKLIBS): %.a: Makefile $(abs_top_builddir)/config.status $(top_srcdir)/configure
+	@( cd $(dir $@) && ${MAKE} $(notdir $@) )
+
+#dep rule
+
+$(addsuffix .d,$(ALLOBJ)): %.d: ${srcdir}/%.c Makefile
+	 @ $(CCDEP) ${DEPFLAGS} ${CPPFLAGS} ${INCLUDES} ${DEFS} $< > $@ 
+
+${top_builddir}/fixed_volume.h: ${top_srcdir}/fixed_volume.h.in ${top_builddir}/config.status
+	cd ${abs_top_builddir} && CONFIG_FILES=fixed_volume.h CONFIG_HEADERS= $(SHELL) ${top_builddir}/config.status
+
+all-recursive all-debug-recursive all-profile-recursive clean-recursive distclean-recursive compile-clean-recursive: Makefile
+	@set fnord ${MAKEFLAGS}; amf=$$2; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  local_target="$$target"; \
+	  ( cd $$subdir && $(MAKE) $$local_target ) \
+	    || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done; test -z "$$fail";

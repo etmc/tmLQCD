@@ -1,0 +1,55 @@
+# $Id$
+# the expected plaquette value is 0.624(2)
+# in this example the topologie should be fixed.
+# expect huge autocorrelation times
+#
+
+L=4
+T=4
+Measurements = 100000
+Startcondition = cold
+ThermalisationSweeps=100
+2KappaMu = 0.083333
+kappa = 0.208333
+NSave = 10000
+ThetaT = 1.
+BCGstabMaxIter = 0
+CGMaxIter = 1000
+UseEvenOdd = yes
+ReversibilityCheck = no
+ReversibilityCheckIntervall = 1
+DebugLevel = 1
+
+BeginMeasurement CORRELATORS
+  Frequency = 20
+EndMeasurement
+
+BeginMonomial GAUGE
+  Timescale = 0
+  Beta = 2.3
+  Type = Iwasaki
+EndMonomial
+
+BeginMonomial DETRATIO
+  Timescale = 1
+  2KappaMu = 0.0
+  2KappaMu2 = 0.083333
+  kappa = 0.208333
+  kappa2 = 0.208333
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = detrat
+  solver = CG
+  CSGHistory = 0
+EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  IntegrationSteps0 = 2
+  IntegrationSteps1 = 4
+  tau = 0.5
+  Lambda0 = 0.19
+  Lambda1 = 0.21
+  NumberOfTimescales = 2
+EndIntegrator

@@ -1,0 +1,20 @@
+Configure with
+
+../hmc/configure --with-lapack --enable-mpi --with-mpidimension=4 --enable-gaugecopy --with-limedir=../../c-lime/ --host=ppc-ibm-bprts --build=ppc64-ibm-linux --enable-largefile --with-lapack="-L/bgsys/local/lib/ -lesslbg -llapack -lesslbg -lxlf90_r" CC="mpixlc_r" CCFLAGS="-I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include" F77="bgf77"
+
+may need some path adjustment, in particular where to find ESSL for
+BG. 
+
+Running should be done with 
+NrZProcs = 4
+always. Matching the physical torus works with
+        : T*LX*LY*LZ
+midplane: 8*8*8*4
+rack:     16*8*8*4
+2rack:    32*8*8*4
+4rack:    32*16*8*4
+
+number of processors in time direction is chosen automatically.
+
+please read README.bgl as well.
+

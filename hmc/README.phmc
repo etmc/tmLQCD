@@ -1,0 +1,42 @@
+See doc/2+1+1_howto.text for more details
+
+as a test the following parameter set can be used (see also
+sample-input/sample-hmc2.input):
+Kappa = 0.170
+2KappaMu = 0.01
+2Kappamubar = 0.1105
+2Kappaepsbar = 0.0935
+beta=3.3
+tlsym gauge action
+antiperiodic boundary conditions for quark fields
+
+P     = 0.53347(17)
+P_rec = 0.30393(22)
+
+
+How it roughly works:
+- Decide for a fixed order n of the less accurate polynomial
+  P
+- Decide also for an approximation interval
+- compute the n roots of the polynomial using the programme
+  in util/laguer/
+  This will store the monomials in Square_root_BR_roots.dat
+  and the normalisation factor in normierungLocal.dat
+- the normalisation factor in the latter file corresponds
+  to n-th root of C_total. In the monomial repr. the square
+  root of this is needed. This rooting is done in phmc_tm.c
+- the polynomial approximates 1/sqrt(x)
+- copy the files normierungLocal.dat and Square_root_BR_roots.dat
+  to your running directory
+- the order used in the PHMC for P must be fixed to the same
+  order as used for the root computation (or vice versa)
+
+
+todo:
+- fixed order of P as input parameter
+- maybe more meaningful names for input/output files?
+- generic way to use n_f=2 PHMC degenerate and non-degenerate
+- eigenvalue computation - in parallel?
+                         - on BG/L?
+- reduce memory usage?
+

@@ -1,0 +1,212 @@
+\subsection{Online Measurements}
+
+The HMC program includes the possibility to perform a certain number
+of measurements after every trajectory \emph{online}, whether or not
+the configuration is stored on disk. Some of those are done per
+default, namely all that are written to the output file {\ttfamily
+  output.data}: 
+\begin{enumerate}
+\item the plaquette expectation value, defined as:
+  \[
+  \langle P\rangle = \frac{1}{6 V}\ \sum_{\substack{
+        \mu,\nu=1\ 1\leq\mu<\nu}}^4\{1-\re\tr(U^{1\times1}_{x,\mu,\nu})\}\, ,
+  \]
+  where $V$ is the global lattice volume.
+\item the rectangle expectation value, defined as:
+  \[
+  \langle R\rangle = \frac{1}{12V}\ \sum_{\substack{\mu,\nu=1 \mu\neq\nu}}^4\{1
+    -\re\tr(U^{1\times2}_{x,\mu,\nu})\}
+  \]
+\item $\Delta\mathcal{H}$ and $\exp(-\Delta\mathcal{H})$ defined in
+  the obvious way.
+\end{enumerate}
+See the overview section for details about the {\ttfamily output.data}
+file. These observables all come with no extra computational cost.
+
+Optionally, other online mesurements can be performed, which --
+however -- need in general extra inversions of the Dirac
+operator. First of all the computation of certain correlation
+functions is implemented. They need \emph{one} extra inversion of the
+Dirac operator, as discussed in Ref.~\cite{Boucaud:2008xu}, using the
+one-end-trick. Define a stochastic source $\xi$ as follows
+\begin{equation}
+  \label{eq:source}
+  \lim_{R\to\infty}[\xi_i^*\xi_j] = \delta_{ij},\quad
+  \lim_{R\to\infty}[\xi_i\xi_j] = 0\, .
+\end{equation}
+Here $i$ labels all degrees of freedom. Then
+\begin{equation}
+  \label{oneend}
+  [\phi_i^{r*}\phi_j^r]_R = M_{ik}^{-1*}\cdot M_{jk}^{-1} +
+  \textrm{noise}\, ,
+\end{equation}
+if $\phi$ was computed from
+\[
+\phi_j^r  = M^{-1}_{jk}\xi_k^r\, .
+\]
+Having in mind the $\gamma_5$-hermiticity property of the Wilson and
+Wilson twisted mass Dirac propagator $G_{u,d}$, i.e.
+\[
+G_u(x,y) = \gamma_5 G_d(y,x)^\dagger \gamma_5
+\]
+it is clear that eq.~(\ref{oneend}) can be used to evaluate
+\[
+C_\pi(t) = \langle \tr[G_u(0,t)\gamma_5 G_d(t,0)\gamma_5]\rangle =
+\langle \tr[G_u(0,t) G_u(0,t)^\dagger]\rangle
+\]
+with only one inversion. But, even if the one gamma structure at the
+source is fixed to be $\gamma_5$ due to the $\gamma_5$-hermiticity
+trick, we are still free insert any $\gamma$-structure $\Gamma$ at the source,
+i.e. we can evaluate any correlation function of the form
+\[
+C_{P\Gamma}(t) = \langle\tr[G_u(0,t) \gamma_5 G_d(t,0) \Gamma]\rangle
+= \langle \tr[G_u(0,t) G_u(0,t)^\dagger\gamma_5\Gamma]\rangle\, .
+\]
+Useful combinations of correlation functions are $\langle P P\rangle$,
+$\langle PA\rangle$ and $\langle PV\rangle$, with
+\[
+  P^\alpha = \bar\chi \gamma_5 \frac{\tau^\alpha}{2}\chi\, ,\quad
+  V^\alpha_\mu = \bar\chi \gamma_\mu\frac{\tau^\alpha}{2}\chi\, ,\quad
+  A^\alpha_\mu = \bar\chi \gamma_5\gamma_\mu\frac{\tau^\alpha}{2}\chi
+\]
+From $\langle P P\rangle$ one can extract the pseudo scalar mass, and
+-- in the twisted mass case -- the pseudo scalar decay
+constant. $\langle PA\rangle$ can be used together with $\langle P
+P\rangle$ to extract the so called PCAC quark mass and $\langle
+PV\rangle$ to measure the renormalisation constant $Z_\mathrm{V}$. For
+details we refer the reader to Ref.~\cite{Boucaud:2008xu}.
+
+These online measurements are controlled with the input parameters
+{\ttfamily PerformOnlineMeasurements} to switch them on or off and
+{\ttfamily OnlineMeasurementsFreq} to specify the frequency. The three
+correlation functions are saved in files named {\ttfamily
+  onlinemeas.n}, where {\ttfamily n} is the trajectory number. Every
+file contains five columns, specifying the type, the operator type and the
+Euclidean time $t$. The last two colums are the values of the
+correlation function itself, $C(t)$ and $C(-t)$, respectively. The
+type is equal to $1$, $2$ or $6$ for the $\langle P P\rangle$, the
+$\langle PA\rangle$ and the $\langle PV\rangle$ correlation
+functions. The operator type is for online measurements always equal
+to $1$ for local source and sink (no smearing of any kind), and the
+time runs from $0$ to $T/2$. Hence, $C(-t)= C(T-t)$. $C(-0)$ and
+$C(-T/2)$ are set to zero for convenience.
+
+In addition to correlation functions also the minimal and the maximal
+eigenvalues of the $(\gamma_5 D)^2$ can be measured.
+
+An online measurement not related to physics, but related to the
+algorithm are checks of reversibility violations. The HMC algorithm is
+exact, if 
+and only if the integration scheme is reversible. On a computer with
+finite precision this is only guaranteed up to machine precision.
+These violations can be estimated by integrating a trajectory
+forward and then backward in Monte Carlo time. The difference among
+the original Hamiltonian $\mathcal{H}$ and the final one
+$\mathcal{H}''$ after integrating back can serve as one measure for
+those violations, another one is provided by the difference among the
+original gauge field $U$ and the final one $U''$
+\[
+\delta\Delta U = \frac{1}{12V}
+\sum_{x,\mu}\sum_{i,j} (U_{x,\mu}-U_{x,\mu}'')_{i,j}^2
+\]
+where we indicate with the $\delta\Delta$ that this is obtained after
+integrating a trajectory forward and backward in time. The results for
+$\delta\Delta \mathcal{H}$ and $\delta\Delta U$ are
+stored in the file {\ttfamily return\_check.data}. The relevant input
+parameters are {\ttfamily ReversibilityCheck} and {\ttfamily
+  ReversibilityCheckInterval}.
+
+\subsection{Iterative Solver and Eigensolver}
+
+There are several iterative solvers implemented in the tmLQCD
+package for solving 
+\[
+D\ \chi = \phi
+\]
+for $\chi$. The minimal residual (MR), the conjugate gradient (CG), the
+conjugate gradient squared (CGS), the generalised minimal residual
+(GMRES), the generalised conjugate residual and the stabilised
+bi-conjugate gradient (BiCGstab). For details regarding these
+algorithms we refer to Refs.~\cite{saad:2003a,meister:1999}.
+
+For the {\ttfamily hmc\_tm} executable only the CG and the BiCGstab
+solvers are available, while all the others can be used in the
+{\ttfamily invert} executables. Most of them are both available with
+and without even/odd preconditioning. For a performance comparison we
+refer to Ref.~\cite{Chiarappa:2004ry,Chiarappa:2006hz}.
+
+The stopping criterion is implemented in two ways: the first is an
+absolute stopping criterion, i.e. the solver is stopped when the
+squared norm of the residual vector (depending on the solver this
+might be the iterated residual or the real residual) fulfilles
+\[
+\|r\|^2 < \epsilon^2\, .
+\]
+The second is relative to the source vector, i.e.
+\[
+\frac{\|r\|^2}{\|\phi\|^2} < \epsilon^2\, .
+\]
+The value of $\epsilon^2$ and relative of absolute precision can be
+influenced via input parameters.
+
+The reduced precision Dirac operator, as discussed in sub-section
+\ref{sec:dirac}, is available for the CG solver. In the CG solver the 
+full precision Dirac operator is only required at the beginning of the
+CG search, because the relative size of the contribution to the
+resulting vector decreases with the number of iterations. Thus, as soon
+as a certain precision is achived in the CG algorithm we can switch to
+the reduced precision Dirac operator without spoiling the precision of
+the final result. Our experience is that this switch can be performed
+when the precision is $\sqrt{\epsilon}$ is reached where aiming for a
+final precision of $\epsilon < 1$.
+
+The eigensolver used to compute the eigenvalues (and vectors) of
+$(\gamma_5 D)^2$ is the so called Jacobi-Davidson 
+method~\cite{Sleijpen:1996aa,Geus:2002}. For a discussion for the
+application of this algorithm to lattice QCD we refer again to
+Ref.~\cite{Chiarappa:2004ry,Chiarappa:2006hz}. 
+
+All solver related files can be found in the sub-directory {\ttfamily
+  solver}. Note that there are a few more solvers implemented which
+are, however, in an experimental status.
+
+\subsection{Stout Smearing}
+
+Smearing techniques have become an important tool to reduce
+ultraviolet fluctuations in the gauge fields. One of those techniques,
+coming with the advantage of being usable in the MD update, is usually
+called stout smearing~\cite{Morningstar:2003gk}. 
+
+The $(n+1)^{\rm th}$ level of stout smeared gauge links is obtained iteratively
+from the $n^{\rm th}$ level by
+\begin{equation*}
+  U_\mu^{(n+1)}(x)\;=\;e^{i\,Q_\mu^{(n)}(x)}\,U_\mu^{(n)}(x).
+\end{equation*}
+We refer to the unsmeared (``thin'') gauge field as $U_\mu\equiv
+U_\mu^{(0)}$.
+The ${\rm SU}(3)$ matrices $Q_\mu$ are defined via the staples $C_\mu$:
+\begin{eqnarray}
+  Q_\mu^{(n)}(x) &=& \frac{i}2\Big[U^{(n)}_\mu(x){C_\mu^{(n)}}^\dagger(x)
+  - {\mathrm{h.c.}}\Big]\,-\,\frac{i}{6}\tr\Big[U^{(n)}_\mu(x){C_\mu^{(n)}}^\dagger(x)
+  - {\mathrm{h.c.}}\Big]\,,\nonumber\\
+  C_\mu^{(n)} &=& \sum_{\nu\neq\mu}\,\rho_{\mu\nu}\,
+  \Big(U_\nu^{(n)}(x)U_\mu^{(n)}(x+\hat\nu){U_\nu^{(n)}}^\dagger(x+\hat\mu)
+  \nonumber\\
+  && \;\;\;
+  +{U_\nu^{(n)}}^\dagger(x-\hat\nu)U_\mu^{(n)}(x-\hat\nu)U_\nu^{(n)}(x-\hat\nu+\hat\mu)
+  \Big)\,,\nonumber
+\end{eqnarray}
+where in general $\rho_{\mu\nu}$ is the smearing matrix.
+In the tmLQCD package we have only implemented isotropic $4$-dimensional
+smearing, i.e., $\rho_{\mu\nu}=\rho$.
+
+Currently stout smearing is only implemented for the {\ttfamily
+  invert} executables. I.e. the gauge field can be stout smeared at
+the beginning of an inversion. The input parameters are {\ttfamily
+  UseStoutSmearing}, {\ttfamily StoutRho} and {\ttfamily
+  StoutNoIterations}. 
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

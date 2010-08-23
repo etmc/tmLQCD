@@ -1,0 +1,70 @@
+# $Id$
+# this sample corresponds to the first case in README
+# like sample-hmc0.input, but with preconditioning
+# the expected plaquette value is 0.62450(5)
+#
+# The PP correlator is (2KappaMu = 0.177, kappa = 0.177)
+# t  C(t)
+# 0  1.638(5)
+# 1  0.2020(6)
+# 2  0.0424(2)
+
+L=4
+T=4
+Measurements = 100000
+#startCondition = continue
+Startcondition = hot
+2KappaMu = 0.177
+kappa = 0.177
+NSave = 500000
+ThetaT = 1.
+BCGstabMaxIter = 0
+CGMaxIter = 1000
+UseEvenOdd = yes
+ReversibilityCheck = yes
+ReversibilityCheckIntervall = 100
+DebugLevel = 1
+
+BeginMeasurement CORRELATORS
+  Frequency = 100
+EndMeasurement
+
+BeginMonomial GAUGE
+  Type = Wilson
+  beta = 6.00
+  Timescale = 0
+EndMonomial
+
+BeginMonomial DET
+  Timescale = 1
+  2KappaMu = 0.5
+  kappa = 0.177
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = det
+  solver = CG
+EndMonomial
+
+BeginMonomial DETRATIO
+  Timescale = 2
+  2KappaMu = 0.177
+  2KappaMu2 = 0.5
+  kappa = 0.177
+  kappa2 = 0.177
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = detrat
+  solver = CG
+EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  Type2 = 2MN
+  IntegrationSteps0 = 1
+  IntegrationSteps1 = 2
+  IntegrationSteps2 = 4
+  tau = 1.
+  Lambda0 = 0.19
+  NumberOfTimescales = 3
+EndIntegrator

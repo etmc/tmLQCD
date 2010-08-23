@@ -1,0 +1,73 @@
+L=8
+T=16
+Measurements = 1
+#startCondition = continue
+Startcondition = hot
+2KappaMu = 0.03
+kappa = 0.090
+NSave = 50
+BCAngleT = 1.
+BCGstabMaxIter = 0
+CGMaxIter = 1000
+GaugeConfigInputFile = conf.save
+UseEvenOdd = yes
+#PropagatorPrecision = 64
+ReversibilityCheck = no
+ReversibilityCheckIntervall = 1
+DebugLevel = 1
+
+BeginMeasurement ONLINE
+EndMeasurement
+
+BeginMeasurement PIONNORM
+ Frequency = 1 
+EndMeasurement
+
+BeginMonomial GAUGE
+  UseRectangleStaples = yes
+  RectangleCoefficient = -0.0833333
+  Timescale=0
+  Beta = 6.0
+EndMonomial
+
+BeginMonomial DET
+  Timescale = 1
+  2KappaMu = 0.1
+  kappa = 0.125
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = det
+  solver   =    CG
+#  CSGHistory = 7
+#  CSGHistory2 = 3
+EndMonomial
+
+
+BeginMonomial DETRATIO
+  Timescale = 2
+  2KappaMu = 0.03
+  2KappaMu2 = 0.1
+  kappa = 0.125
+  kappa2 = 0.125
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = detrat
+  solver = CG
+  CSGHistory = 0
+EndMonomial
+
+#BeginMonomial NDPOLY
+#  Timescale = 1
+#EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  Type2 = 2MN
+  IntegrationSteps0 = 1
+  IntegrationSteps1 = 2
+  IntegrationSteps2 = 3
+  tau = 1.
+  Lambda0 = 0.19
+  NumberOfTimescales = 3
+EndIntegrator

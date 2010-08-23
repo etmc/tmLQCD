@@ -1,0 +1,19 @@
+T=TT
+L=LL
+
+NrXProcs=NX
+NrYProcs=NY
+NrZProcs=NZ
+
+UseEvenOdd = yes
+
+
+#StartCondition can be: hot (random gauge), cold (unit gauge), continue (read from GaugeConfigInputFile), 
+#restart (random gauge, written on GaugeConfigInputFile).
+Startcondition = continue
+GaugeConfigInputFile = gaugeconf
+#ReadSource:yes(read from SourceInputFilename), no(random), save(random spinor, written on SourceInputFilename).
+ReadSource = yes
+SourceFilename = spincolorfield
+
+WriteCheckpoints = no
