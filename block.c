@@ -48,7 +48,8 @@ int * bipt;
 complex * little_A = NULL;
 complex32 * little_A32 = NULL;
 int * block_idx;
-int * block_eoidx;
+int * block_evenidx;
+int * block_oddidx;
 enum{
   NONE = 0,
   T_UP = 1,
@@ -216,14 +217,16 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].evenodd = (block_list[i].coordinate[0] + block_list[i].coordinate[1] + 
 			     block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
-    block_list[i].evenodd = i % 2;
-    if(g_proc_id == 0) {
-      printf("%d %d (%d %d %d %d)\n", i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], block_list[i].coordinate[2], block_list[i].coordinate[3]);
+    block_list[i].evenodd = i%2;
+    if(g_proc_id == 0 && g_debug_level > 2) {
+      printf("block parameters: %d %d (%d %d %d %d)\n", i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], block_list[i].coordinate[2], block_list[i].coordinate[3]);
     }
     if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
       CALLOC_ERROR_CRASH;
 
-    if ((void*)(block_eoidx = calloc(8 * (VOLUME/nb_blocks/2), sizeof(int))) == NULL)
+    if ((void*)(block_evenidx = calloc(8 * (VOLUME/nb_blocks/2), sizeof(int))) == NULL)
+      CALLOC_ERROR_CRASH;
+    if ((void*)(block_oddidx = calloc(8 * (VOLUME/nb_blocks/2), sizeof(int))) == NULL)
       CALLOC_ERROR_CRASH;
 
     for (j = 0; j < g_N_s; j++) { /* write a zero element at the end of every spinor */
@@ -490,7 +493,7 @@ int check_blocks_geometry(block * blk) {
   for(i = 0; i < blk->volume; i++) {
     itest[i] = 0;
   }
-  ipt = blk->eoidx;
+  ipt = blk->evenidx;
   for(i = 0; i < 8*blk->volume/2; i++) {
     if(*ipt > (blk->volume/2 + blk->spinpad)-1 || *ipt < 0) {
       if(g_proc_id == 0) {
@@ -519,7 +522,7 @@ int check_blocks_geometry(block * blk) {
     }
   }
 
-  ipt = blk->eoidx;
+  ipt = blk->evenidx;
   for(t = 0; t < T/nblks_t; t++) {
     for(x = 0; x < LX/nblks_x; x++) {
       for(y = 0; y < LY/nblks_y; y++) {
@@ -633,19 +636,30 @@ int init_blocks_geometry() {
     eo = ((ix%dZ)+(ix/ystride)%dY+(ix/(xstride))%dX
 	  +ix/(tstride))%2;
     if(eo == 0) {
-      block_eoidx[8*(ix/2) + 0] = block_idx[8 * ix + 0] / 2;
-      block_eoidx[8*(ix/2) + 1] = block_idx[8 * ix + 1] / 2;
-      block_eoidx[8*(ix/2) + 2] = block_idx[8 * ix + 2] / 2;
-      block_eoidx[8*(ix/2) + 3] = block_idx[8 * ix + 3] / 2;
-      block_eoidx[8*(ix/2) + 4] = block_idx[8 * ix + 4] / 2;
-      block_eoidx[8*(ix/2) + 5] = block_idx[8 * ix + 5] / 2;
-      block_eoidx[8*(ix/2) + 6] = block_idx[8 * ix + 6] / 2;
-      block_eoidx[8*(ix/2) + 7] = block_idx[8 * ix + 7] / 2;
+      block_evenidx[8*(ix/2) + 0] = block_idx[8 * ix + 0] / 2;
+      block_evenidx[8*(ix/2) + 1] = block_idx[8 * ix + 1] / 2;
+      block_evenidx[8*(ix/2) + 2] = block_idx[8 * ix + 2] / 2;
+      block_evenidx[8*(ix/2) + 3] = block_idx[8 * ix + 3] / 2;
+      block_evenidx[8*(ix/2) + 4] = block_idx[8 * ix + 4] / 2;
+      block_evenidx[8*(ix/2) + 5] = block_idx[8 * ix + 5] / 2;
+      block_evenidx[8*(ix/2) + 6] = block_idx[8 * ix + 6] / 2;
+      block_evenidx[8*(ix/2) + 7] = block_idx[8 * ix + 7] / 2;
+    }
+    else {
+      block_oddidx[8*(ix/2) + 0] = block_idx[8 * ix + 0] / 2;
+      block_oddidx[8*(ix/2) + 1] = block_idx[8 * ix + 1] / 2;
+      block_oddidx[8*(ix/2) + 2] = block_idx[8 * ix + 2] / 2;
+      block_oddidx[8*(ix/2) + 3] = block_idx[8 * ix + 3] / 2;
+      block_oddidx[8*(ix/2) + 4] = block_idx[8 * ix + 4] / 2;
+      block_oddidx[8*(ix/2) + 5] = block_idx[8 * ix + 5] / 2;
+      block_oddidx[8*(ix/2) + 6] = block_idx[8 * ix + 6] / 2;
+      block_oddidx[8*(ix/2) + 7] = block_idx[8 * ix + 7] / 2;
     }
   }
   for(i = 0; i < nb_blocks; i++) {
     block_list[i].idx = block_idx;
-    block_list[i].eoidx = block_eoidx;
+    block_list[i].evenidx = block_evenidx;
+    block_list[i].oddidx = block_oddidx;
   }
   ix = 0;
   for(t = 0; t < dT; t++) {
@@ -963,13 +977,14 @@ void compute_little_D() {
   }
 
 
-  for (i = 0; i < g_N_s; i++){if(i==0)count = 0;
+  for (i = 0; i < g_N_s; i++) {
+    if(i==0) count = 0;
     reconstruct_global_field_GEN_ID(scratch, block_list,i, nb_blocks);
-
+    
 #ifdef MPI
     xchange_lexicfield(scratch);
 #endif
-    zero_spinor_field(scratch, VOLUME);
+    /* zero_spinor_field(scratch, VOLUME); */
     /* +-t +-x +-y +-z */
     for(pm = 0; pm < 8; pm++) {
       /* We set up the generic bounds */
@@ -977,7 +992,7 @@ void compute_little_D() {
       x_start = 0; x_end = dX;
       y_start = 0; y_end = dY;
       z_start = 0; z_end = dZ;
-      switch(pm){ 
+      switch(pm) { 
       case 0: t_start = dT - 1; t_end = t_start + 1; mu = 0; is_up = 1; break; /* Boundary in direction +t */
       case 1: t_start = 0;      t_end = t_start + 1; mu = 0; is_up = 0; break; /* Boundary in direction -t */
       case 2: x_start = dX - 1; x_end = x_start + 1; mu = 1; is_up = 1; break; /* Boundary in direction +x */

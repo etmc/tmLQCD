@@ -39,7 +39,8 @@ typedef struct {
   int mpilocal_coordinate[4];   /* mpi process local coordinate */
   int mpilocal_neighbour[8];    /* contains the block id of mpilocal neighbours, or -1 if non-mpilocal */
   int *idx;                     /* provides the next neighbours for spinors on the block */
-  int *eoidx;                   /* provides the next neighbours for spinors on the block even/odd case */
+  int *evenidx;                   /* provides the next neighbours for spinors on the block even/odd case */
+  int *oddidx;                   /* provides the next neighbours for spinors on the block even/odd case */
   spinor **basis;               /* generated orthonormal basis for little D [Ns x local_volume] */
   su3 * u;                      /* block local gauge field, for use in D */
   int spinpad;                  /* number of elements needed to store the boundaries of the spinor */
@@ -64,6 +65,10 @@ void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, spinor *
 void copy_block_eo_to_global(spinor * const globalfield, spinor * const beven, spinor * const bodd, const int blk);
 void add_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk);
 void add_eo_block_to_global(spinor * const globalfield, spinor * const beven, spinor * const bodd, const int blk);
+
+void block_convert_lexic_to_eo(spinor * const s, spinor * const r, spinor * const P);
+void block_convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * const r);
+
 
 void block_orthonormalize(block *parent);
 void block_orthonormalize_free(block *parent);

@@ -143,7 +143,7 @@ int mrblk(spinor * const P, spinor * const Q,
   f(s[2], P, blk);
   diff(r, Q, s[2], N);
   norm_r = square_norm(r, N, parallel);
-  if(g_proc_id == g_stdio_proc && g_debug_level > 1 && blk == 0) {
+  if(g_proc_id == g_stdio_proc && g_debug_level > 0 && blk == 0) {
     printf("MRblk iteration= %d  |res|^2= %e\n", i, norm_r);
     fflush( stdout );
   }
@@ -164,7 +164,7 @@ int mrblk(spinor * const P, spinor * const Q,
     
     diff(r, Q, s[2], N);
     norm_r = square_norm(r, N, parallel);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 1 && blk == 0) {
+    if(g_proc_id == g_stdio_proc && g_debug_level > 0 && blk == 0) {
       printf("MRblk iteration= %d  |res|^2= %g\n", i, norm_r);
       fflush(stdout);
     }

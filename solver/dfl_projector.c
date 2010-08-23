@@ -42,6 +42,10 @@
 #include "linalg_eo.h"
 #include "gcr4complex.h"
 #include "generate_dfl_subspace.h"
+#include "tm_operators.h"
+#include "solver/Msap.h"
+#include "solver/mr.h"
+#include "boundary.h"
 #include "dfl_projector.h"
 
 double dfl_little_D_prec = 1.e-24;
@@ -56,13 +60,6 @@ complex *work[13];
 
 static void alloc_dfl_projector();
 
-double sum(double *P, int N){
-  double s;
-  int i;
-  for(i=0;i<N;i++) s+=P[i];
-  printf("SUM = %10.7f\n",s);
-  return s;
-}
 
 /* Break up full volume spinor to blocks
  * loop over block.basis
@@ -713,16 +710,16 @@ void check_little_D_inversion() {
 
 void check_local_D() /* Should work for kappa = 0 */
 {
-  int j, vol = block_list[0].volume/2;
+  spinor * r[8];
+  int j, vol = block_list[0].volume/2, i;
   double nrm;
-  boundary(1.);
-  g_mu = 0.;
   block_convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], block_list[0].basis[0]);
   block_convert_eo_to_lexic(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1]);
   diff(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2], block_list[0].basis[0], block_list[0].volume);
   nrm = square_norm(g_spinor_field[DUM_SOLVER], block_list[0].volume, 0);
   if(g_proc_id == 0) {
     printf("\nblock even/odd: ||psi - psi_recon|| = %1.5e\n", sqrt(nrm));
+    fflush(stdout);
   }
 
   for(j = 0; j < nb_blocks; j++) {
@@ -734,26 +731,114 @@ void check_local_D() /* Should work for kappa = 0 */
     block_convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], block_list[j].basis[0]);
   
     /* Even sites */
-    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], g_spinor_field[DUM_SOLVER+1], OE);
+    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], g_spinor_field[DUM_SOLVER+1], EO);
     assign_mul_one_pm_imu(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], 1., vol); 
-    assign_add_mul_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_DERI], -1., vol);
+    assign_add_mul_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_DERI], 1., vol);
 
     /* Odd sites */
-    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], g_spinor_field[DUM_SOLVER], EO);
+    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], g_spinor_field[DUM_SOLVER], OE);
     assign_mul_one_pm_imu(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], 1., vol); 
-    assign_add_mul_r(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_DERI], -1., vol);
+    assign_add_mul_r(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_DERI], 1., vol);
 
     /* convert back to block spinor */
     block_convert_eo_to_lexic(g_spinor_field[DUM_SOLVER+5], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3]);
 
+    if(g_proc_id == 0 && g_debug_level > 5) {
+      for(i = 0; i < block_list[0].volume; i++) {
+	if(fabs(g_spinor_field[DUM_SOLVER+6][i].s0.c0.re) > 1.e-15 || fabs(g_spinor_field[DUM_SOLVER+5][i].s0.c0.re) > 1.e-15) {
+	  printf("%d %e %d\n", i, g_spinor_field[DUM_SOLVER+6][i].s0.c0.re, block_list[0].volume);
+	  printf("%d %e\n", i, g_spinor_field[DUM_SOLVER+5][i].s0.c0.re);
+	}
+      }
+    }
+
     diff(g_spinor_field[DUM_SOLVER + 4], g_spinor_field[DUM_SOLVER + 5], g_spinor_field[DUM_SOLVER+6], block_list[0].volume);
     nrm = square_norm(g_spinor_field[DUM_SOLVER + 4], block_list[0].volume, 0);
-    if(g_proc_id == 0) {
-      printf("\nCheck local D against Hopping Matrix: %1.5e block %d\n", sqrt(nrm), j);
+    if(sqrt(nrm) > 1.e-12) {
+      printf("Check failed for local D against Hopping Matrix: ||delta|| = %1.5e block %d process %d\n", sqrt(nrm), j, g_proc_id);
     }
   }
-  boundary(g_kappa);
-  g_mu = 0.;
+  /* check Msap and Msap_eo on a radom vector */
+  random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
+  zero_spinor_field(g_spinor_field[DUM_SOLVER+1], VOLUME);
+  Msap(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], 10);
+  D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  if(g_proc_id == 0) {
+    printf("Msap relaxed the residue to ||r||^2 = %1.5e\n", nrm);
+  }
+
+  zero_spinor_field(g_spinor_field[DUM_SOLVER+1], VOLUME);
+  Msap_eo(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], 10);
+  D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  if(g_proc_id == 0) {
+    printf("Msap_eo relaxed the residue to ||r||^2 = %1.5e\n", nrm);
+  }
+  g_debug_level ++;
+
+  for(j = 0; j < 6; j++) {
+    r[j] = g_spinor_field[DUM_SOLVER+j];
+  }
+  for(j = 0; j < nb_blocks; j++) {
+    
+    block_convert_lexic_to_eo(r[0], r[1], block_list[j].basis[0]);
+    /* check even/odd inversion for Block_D_psi*/
+    /* varphi_e in r[2] */
+    assign_mul_one_pm_imu_inv(r[2], r[0], +1., vol);
+    Block_H_psi(&block_list[j], r[3], r[2], OE);
+    /* a_odd = a_odd + b_odd */
+    /* varphi_o in r[3] */
+    assign_mul_add_r(r[3], -1., r[1], vol);
+    /* psi_o in r[1] */
+    mrblk(r[1], r[3], 16, 1.e-31, 1, vol, &Mtm_plus_block_psi, j);
+    
+    Block_H_psi(&block_list[j], r[0], r[1], EO);
+    mul_one_pm_imu_inv(r[0], +1., vol);
+    /* a_even = a_even + b_even */
+    /* check this sign +1 seems to be right in Msap_eo */
+    assign_add_mul_r(r[2], r[0], -1., vol);
+    
+    block_convert_eo_to_lexic(r[4], r[2], r[1]);
+    
+    Block_D_psi(&block_list[j], r[5], r[4]);
+    diff(r[0], block_list[j].basis[0], r[5], block_list[j].volume);
+    nrm = square_norm(r[0], block_list[j].volume, 0);
+    if(g_proc_id == 0) {
+      printf("mr_eo, block=%d: ||r||^2 = %1.5e\n", nrm, j);
+    }
+  }
+  for(j = 0; j < nb_blocks; j++) {
+    block_convert_lexic_to_eo(r[0], r[1], block_list[j].basis[0]);
+    /* check even/odd inversion for Block_D_psi*/
+    /* varphi_e in r[2] */
+    assign_mul_one_pm_imu_inv(r[2], r[0], +1., vol);
+    Block_H_psi(&block_list[j], r[3], r[2], OE);
+    /* a_odd = a_odd + b_odd */
+    /* varphi_o in r[3] */
+    assign_mul_add_r(r[3], -1., r[1], vol);
+    /* psi_o in r[1] */
+    mul_one_pm_imu_inv(r[3], +1., vol); 
+    mrblk(r[1], r[3], 16, 1.e-31, 1, vol, &Mtm_plus_sym_block_psi, j);
+    
+    Block_H_psi(&block_list[j], r[0], r[1], EO);
+    mul_one_pm_imu_inv(r[0], +1., vol);
+    /* a_even = a_even + b_even */
+    /* check this sign +1 seems to be right in Msap_eo */
+    assign_add_mul_r(r[2], r[0], -1., vol);
+    
+    block_convert_eo_to_lexic(r[4], r[2], r[1]);
+    
+    Block_D_psi(&block_list[j], r[5], r[4]);
+    diff(r[0], block_list[j].basis[0], r[5], block_list[j].volume);
+    nrm = square_norm(r[0], block_list[j].volume, 0);
+    if(g_proc_id == 0) {
+      printf("mr_eo (symmetric eo), block=%d: ||r||^2 = %1.5e\n", nrm, j);
+    }
+  }
+  g_debug_level--;
   return;
 }
 
