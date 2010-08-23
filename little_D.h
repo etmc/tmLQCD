@@ -26,11 +26,6 @@
 
 extern int dfl_subspace_updated;
 void little_D(complex * v, complex *w);
-void little_D_sym(complex * v, complex *w);
-void little_D_ee_inv(complex * v, complex *w);
-void little_D_hop(int eo,complex * v, complex *w);
-void little_Dhat_lhs(complex * v, complex *w, complex *u);
-void little_Dhat_rhs(int eo, complex * v, double r, complex *w);
 void unit_little_D(complex *v, complex *w);
 void invert_little_D_spinor(spinor *r, spinor *s);
 void apply_little_D_spinor(spinor *r, spinor *s);

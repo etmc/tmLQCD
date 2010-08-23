@@ -294,7 +294,6 @@ int main(int argc, char *argv[])
       exit(-2);
     }
 
-
     if (g_cart_id == 0) {
       printf("done!\n");
       fflush(stdout);
@@ -356,12 +355,11 @@ int main(int argc, char *argv[])
 
       /* Compute little Dirac operators */
       /*       alt_block_compute_little_D(); */
-      if (g_debug_level > 1)
-      {
+      if (g_debug_level > 0) {
         check_projectors();
+	check_local_D();
       }
-      if (g_debug_level > 1)
-      {
+      if (g_debug_level > 1) {
         check_little_D_inversion();
       }
 

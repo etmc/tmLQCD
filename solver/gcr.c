@@ -89,7 +89,7 @@ int gcr(spinor * const P, spinor * const Q,
       }
       else {
 	zero_spinor_field(xi[k], N);  
-	Msap(xi[k], rho, 8);   
+	Msap_eo(xi[k], rho, 8);   
 	/* poly_nonherm_precon(xi[k], rho, 0.3, 1.1, 20, N); */
 	/* gamma5(rho, rho, N); */
 	/* cg_her(tmp, rho, dfl_poly_iter, 1.e-60, 1, N, &Q_pm_psi); */

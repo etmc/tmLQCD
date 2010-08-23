@@ -72,10 +72,6 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
   a = g_spinor_field[DUM_SOLVER+6];
   b = g_spinor_field[DUM_SOLVER+7];
 
-  if(blk_gauge_eo) {
-    init_blocks_gaugefield();
-  }
-
   for(ncy = 0; ncy < Ncy; ncy++) {
     /* even sides first */
     /*   for(eo = 0; eo < 2; eo++) { */
@@ -126,13 +122,8 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
   b_odd = b + vol + 1;
   a_even = a;
   a_odd = a + vol + 1;
-  if(!blk_gauge_eo) {
-    init_blocks_eo_gaugefield();
-  }
 
   for(ncy = 0; ncy < Ncy; ncy++) {
-    /* even sides first */
-    /*   for(eo = 0; eo < 2; eo++) { */
     /* compute the global residue        */
     /* this can be done more efficiently */
     /* here only a naive implementation  */
@@ -155,14 +146,12 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
 	  /* a_odd = a_odd + b_odd */
 	  assign_mul_add_r(a_odd, +1., b_odd, vol);
 	  
-	  mrblk(b_odd, a_odd, 3, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
+	  mrblk(b_odd, a_odd, 16, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
 
 	  Block_H_psi(&block_list[blk], b_even, b_odd, EO);
 	  mul_one_pm_imu_inv(b_even, +1., vol);
-	  /* The sign is plus, since in Hopping_Matrix */
-	  /* the minus is missing                      */
 	  /* a_even = a_even + b_even */
-	  assign_add_mul_r(a_even, b_even, +1., vol);
+	  assign_add_mul_r(a_even, b_even, -1., vol);
 
 	  /* add even and odd part up to full spinor P */
 	  add_eo_block_to_global(P, a_even, b_odd, blk);
