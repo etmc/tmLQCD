@@ -48,7 +48,7 @@ void Mtm_plus_block_psi(spinor * const l, spinor * const k, const int i) {
   int vol = (*blk).volume/2;
   Block_H_psi(blk, g_spinor_field[DUM_MATRIX+1], k, EO);
   mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1., vol);
-  Block_H_psi(blk, g_spinor_field[DUM_MATRIX+1], k, OE);
+  Block_H_psi(blk, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], OE);
   mul_one_pm_imu_sub_mul(l, k, g_spinor_field[DUM_MATRIX], +1., vol);
   return;
 }
@@ -151,7 +151,7 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
 	  assign_mul_one_pm_imu_inv(a_even, b_even, +1., vol);
 	  Block_H_psi(&block_list[blk], a_odd, a_even, OE);
 	  /* a_odd = a_odd + b_odd */
-	  assign_mul_add_r(a_odd, +1., b_odd, vol);
+	  assign_mul_add_r(a_odd, -1., b_odd, vol);
 	  
 	  mrblk(b_odd, a_odd, 3, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
 

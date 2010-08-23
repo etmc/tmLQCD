@@ -1264,14 +1264,12 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
     _bgl_load_rs2((*t).s2);
     _bgl_load_rs3((*t).s3);
     _bgl_vector_cmplx_mul_rs(rhoa);
-
     local_D(r, s, u, idx);
 #else
     _complex_times_vector(tmpr.s0, rhoa, (*t).s0);
     _complex_times_vector(tmpr.s1, rhoa, (*t).s1);
     _complex_times_vector(tmpr.s2, rhob, (*t).s2);
     _complex_times_vector(tmpr.s3, rhob, (*t).s3);
-
     local_H(r, s, u, idx);
 #endif
     r++;
