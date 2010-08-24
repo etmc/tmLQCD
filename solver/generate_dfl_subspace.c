@@ -167,7 +167,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
 	for(j = 0; j < 20; j++) {
 	  zero_spinor_field(g_spinor_field[0],VOLUME);  
 	  g_sloppy_precision = 1;
-	  Msap(g_spinor_field[0], dfl_fields[i], j+1); 
+	  Msap_eo(g_spinor_field[0], dfl_fields[i], j+1); 
 	  /*      poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 2, N);*/
 	  /*       gmres_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], 20, 1, 1.e-20, 0, N, &D_psi); */
 	  
@@ -205,7 +205,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
 	    g_sloppy_precision = 1;
 	    /* dfl_poly_iter = 20 by default */
 	    zero_spinor_field(g_spinor_field[0],VOLUME);
-	    Msap(g_spinor_field[0], dfl_fields[i], 4);
+	    Msap_eo(g_spinor_field[0], dfl_fields[i], 4);
 	    /* poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 4, N);  */
 	    g_sloppy_precision = 0;
 	    ModifiedGS((complex*)g_spinor_field[0], vol, i, (complex*)dfl_fields[0], vpr);

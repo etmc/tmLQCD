@@ -48,13 +48,226 @@
 #include "block.h"
 #include "D_psi.h"
 
+static spinor tmpr;
+
+
 #if (defined SSE23 || defined SSE33)
 
-#elif (defined BGL3 && defined XLC)
+#elif (defined BGL && defined XLC)
+
+/* We have 32 registers available */
+static double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
+static double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
+/* For the gauge field, reuse the first three!*/
+static double _Complex u00, u01, u02, u10, u11, u12;
+static double _Complex reg20, reg21;
+/* The following contains the result spinor (12 regs) */
+static double _Complex rs00, rs01, rs02, rs10, rs11, rs12, rs20, rs21, rs22, 
+  rs30, rs31, rs32;
+
+
+/* this is the hopping part only */
+void local_H(spinor * const rr, spinor * const s, su3 * u, int * _idx) {
+
+  int * idx = _idx;
+  su3 * restrict up ALIGN;
+  su3 * restrict um ALIGN;
+  spinor * restrict sp ALIGN;
+  spinor * restrict sm ALIGN;
+
+#pragma disjoint(*s, *sp, *sm, *rr, *up, *um)
+
+  __alignx(16,rr);
+  __alignx(16,s);
+
+  /*********************** direction +0 ************************/
+  up = u;
+  sp = (spinor *) s + (*idx);
+  idx++;
+
+  um = up+1;
+  _prefetch_su3(um); 
+  sm = (spinor *) s + (*idx);
+  _prefetch_spinor(sm); 
+  idx++;
+
+  _bgl_load_reg0((*sp).s0);
+  _bgl_load_reg1((*sp).s1);
+  _bgl_load_reg0_up((*sp).s2);
+  _bgl_load_reg1_up((*sp).s3);
+  _bgl_vector_add_reg0();
+  _bgl_vector_add_reg1();
+  /* result is now in regx0, regx1, regx2 x = 0,1 */
+  
+  _bgl_su3_multiply_double((*up));
+  _bgl_vector_cmplx_mul_double(phase_0);
+  _bgl_add_to_rs0_reg0();
+  _bgl_add_to_rs2_reg0();
+  _bgl_add_to_rs1_reg1();
+  _bgl_add_to_rs3_reg1();
+
+  /*********************** direction -0 ************************/
+  up = um+1;
+  _prefetch_su3(up); 
+  sp = (spinor*) s + (*idx);
+  _prefetch_spinor(sp); 
+  idx++;
+
+  _bgl_load_reg0((*sm).s0);
+  _bgl_load_reg1((*sm).s1);
+  _bgl_load_reg0_up((*sm).s2);
+  _bgl_load_reg1_up((*sm).s3);
+  _bgl_vector_sub_reg0();
+  _bgl_vector_sub_reg1();
+  
+  _bgl_su3_inverse_multiply_double((*um));
+  _bgl_vector_cmplxcg_mul_double(phase_0);
+  
+  _bgl_add_to_rs0_reg0();
+  _bgl_sub_from_rs2_reg0();
+  _bgl_add_to_rs1_reg1();
+  _bgl_sub_from_rs3_reg1();
+  
+  /*********************** direction +1 ************************/
+  
+  um = up+1;
+  _prefetch_su3(um); 
+  sm = (spinor*) s + (*idx);
+  _prefetch_spinor(sm); 
+  idx++;
+
+  _bgl_load_reg0((*sp).s0);
+  _bgl_load_reg1((*sp).s1);
+  _bgl_load_reg0_up((*sp).s3);
+  _bgl_load_reg1_up((*sp).s2);
+  _bgl_vector_i_mul_add_reg0();
+  _bgl_vector_i_mul_add_reg1();
+  
+  _bgl_su3_multiply_double((*up));
+  _bgl_vector_cmplx_mul_double(phase_1);
+  
+  _bgl_add_to_rs0_reg0();
+  _bgl_i_mul_sub_from_rs3_reg0();
+  _bgl_add_to_rs1_reg1();
+  _bgl_i_mul_sub_from_rs2_reg1();
+  
+  /*********************** direction -1 ************************/
+
+  up = um+1;
+  _prefetch_su3(up); 
+  sp = (spinor*) s + (*idx);
+  _prefetch_spinor(sp); 
+  idx++;
+
+  _bgl_load_reg0((*sm).s0);
+  _bgl_load_reg1((*sm).s1);
+  _bgl_load_reg0_up((*sm).s3);
+  _bgl_load_reg1_up((*sm).s2);
+  _bgl_vector_i_mul_sub_reg0();
+  _bgl_vector_i_mul_sub_reg1();
+  
+  _bgl_su3_inverse_multiply_double((*um));
+  _bgl_vector_cmplxcg_mul_double(phase_1);
+  
+  _bgl_add_to_rs0_reg0();
+  _bgl_add_to_rs1_reg1();
+  _bgl_i_mul_add_to_rs3_reg0();
+  _bgl_i_mul_add_to_rs2_reg1();      
+  
+  /*********************** direction +2 ************************/
+  
+  um = up+1;
+  _prefetch_su3(um); 
+  sm = (spinor*) s + (*idx);
+  _prefetch_spinor(sm); 
+  idx++;
+
+  _bgl_load_reg0((*sp).s0);
+  _bgl_load_reg1((*sp).s1);
+  _bgl_load_reg1_up((*sp).s2);
+  _bgl_load_reg0_up((*sp).s3);
+  _bgl_vector_add_reg0();
+  _bgl_vector_sub_reg1();
+  
+  _bgl_su3_multiply_double((*up));
+  _bgl_vector_cmplx_mul_double(phase_2);
+  
+  _bgl_add_to_rs0_reg0();
+  _bgl_add_to_rs1_reg1();
+  _bgl_sub_from_rs2_reg1();
+  _bgl_add_to_rs3_reg0();
+  
+
+  /*********************** direction -2 ************************/
+  up = um+1;
+  _prefetch_su3(up); 
+  sp = (spinor*) s + (*idx);
+  _prefetch_spinor(sp); 
+  idx++;
+
+  _bgl_load_reg0((*sm).s0);
+  _bgl_load_reg1((*sm).s1);
+  _bgl_load_reg1_up((*sm).s2);
+  _bgl_load_reg0_up((*sm).s3);
+  _bgl_vector_sub_reg0();
+  _bgl_vector_add_reg1();
+  
+  _bgl_su3_inverse_multiply_double((*um));
+  _bgl_vector_cmplxcg_mul_double(phase_2);
+  
+  _bgl_add_to_rs0_reg0();
+  _bgl_add_to_rs1_reg1();
+  _bgl_add_to_rs2_reg1();
+  _bgl_sub_from_rs3_reg0();
+  
+  /*********************** direction +3 ************************/
+  um = up+1;
+  _prefetch_su3(um); 
+  sm = (spinor*) s + (*idx);
+  _prefetch_spinor(sm); 
+
+  _bgl_load_reg0((*sp).s0);
+  _bgl_load_reg1((*sp).s1);
+  _bgl_load_reg0_up((*sp).s2);
+  _bgl_load_reg1_up((*sp).s3);
+  _bgl_vector_i_mul_add_reg0();
+  _bgl_vector_i_mul_sub_reg1();
+  
+  _bgl_su3_multiply_double((*up));
+  _bgl_vector_cmplx_mul_double(phase_3);
+  
+  _bgl_add_to_rs0_reg0();
+  _bgl_add_to_rs1_reg1();
+  _bgl_i_mul_sub_from_rs2_reg0();
+  _bgl_i_mul_add_to_rs3_reg1();
+  
+  /*********************** direction -3 ************************/
+
+  _bgl_load_reg0((*sm).s0);
+  _bgl_load_reg1((*sm).s1);
+  _bgl_load_reg0_up((*sm).s2);
+  _bgl_load_reg1_up((*sm).s3);
+  _bgl_vector_i_mul_sub_reg0();
+  _bgl_vector_i_mul_add_reg1();
+  
+  _bgl_su3_inverse_multiply_double((*um));
+  _bgl_vector_cmplxcg_mul_double(phase_3);
+  
+  _bgl_add_to_rs0_reg0();
+  _bgl_store_rs0((*rr).s0);
+  _bgl_i_mul_add_to_rs2_reg0();
+  _bgl_store_rs2((*rr).s2);
+  
+  _bgl_add_to_rs1_reg1();
+  _bgl_store_rs1((*rr).s1);
+  _bgl_i_mul_sub_from_rs3_reg1();
+  _bgl_store_rs3((*rr).s3);
+
+}
+
 
 #else
 
-static spinor tmpr;
 
 static inline void p0add(spinor * restrict const s, 
 			 su3 * restrict const u, const complex phase) {
@@ -662,16 +875,6 @@ void D_psi(spinor * const P, spinor * const Q){
 
 #elif ((defined BGL) && (defined XLC))
 
-/* We have 32 registers available */
-static double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
-static double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
-/* For the gauge field, reuse the first three!*/
-static double _Complex u00, u01, u02, u10, u11, u12;
-static double _Complex reg20, reg21;
-/* The following contains the result spinor (12 regs) */
-static double _Complex rs00, rs01, rs02, rs10, rs11, rs12, rs20, rs21, rs22, 
-  rs30, rs31, rs32;
-
 
 /**********************************
  *
@@ -1025,209 +1228,6 @@ void D_psi(spinor * const P, spinor * const Q){
 #endif
 
 
-#if ((defined BGL) && (defined XLC))
-
-/* this is the hopping part only */
-void local_D(spinor * const rr, spinor * const s, su3 * u, int * _idx) {
-
-  int * idx = _idx;
-  su3 * restrict up ALIGN;
-  su3 * restrict um ALIGN;
-  spinor * restrict sp ALIGN;
-  spinor * restrict sm ALIGN;
-
-#pragma disjoint(*s, *sp, *sm, *rr, *up, *um)
-
-  __alignx(16,rr);
-  __alignx(16,s);
-
-  /*********************** direction +0 ************************/
-  up = u;
-  sp = (spinor *) s + (*idx);
-  idx++;
-
-  um = up+1;
-  _prefetch_su3(um); 
-  sm = (spinor *) s + (*idx);
-  _prefetch_spinor(sm); 
-  idx++;
-
-  _bgl_load_reg0((*sp).s0);
-  _bgl_load_reg1((*sp).s1);
-  _bgl_load_reg0_up((*sp).s2);
-  _bgl_load_reg1_up((*sp).s3);
-  _bgl_vector_add_reg0();
-  _bgl_vector_add_reg1();
-  /* result is now in regx0, regx1, regx2 x = 0,1 */
-  
-  _bgl_su3_multiply_double((*up));
-  _bgl_vector_cmplx_mul_double(phase_0);
-  _bgl_add_to_rs0_reg0();
-  _bgl_add_to_rs2_reg0();
-  _bgl_add_to_rs1_reg1();
-  _bgl_add_to_rs3_reg1();
-
-  /*********************** direction -0 ************************/
-  up = um+1;
-  _prefetch_su3(up); 
-  sp = (spinor*) s + (*idx);
-  _prefetch_spinor(sp); 
-  idx++;
-
-  _bgl_load_reg0((*sm).s0);
-  _bgl_load_reg1((*sm).s1);
-  _bgl_load_reg0_up((*sm).s2);
-  _bgl_load_reg1_up((*sm).s3);
-  _bgl_vector_sub_reg0();
-  _bgl_vector_sub_reg1();
-  
-  _bgl_su3_inverse_multiply_double((*um));
-  _bgl_vector_cmplxcg_mul_double(phase_0);
-  
-  _bgl_add_to_rs0_reg0();
-  _bgl_sub_from_rs2_reg0();
-  _bgl_add_to_rs1_reg1();
-  _bgl_sub_from_rs3_reg1();
-  
-  /*********************** direction +1 ************************/
-  
-  um = up+1;
-  _prefetch_su3(um); 
-  sm = (spinor*) s + (*idx);
-  _prefetch_spinor(sm); 
-  idx++;
-
-  _bgl_load_reg0((*sp).s0);
-  _bgl_load_reg1((*sp).s1);
-  _bgl_load_reg0_up((*sp).s3);
-  _bgl_load_reg1_up((*sp).s2);
-  _bgl_vector_i_mul_add_reg0();
-  _bgl_vector_i_mul_add_reg1();
-  
-  _bgl_su3_multiply_double((*up));
-  _bgl_vector_cmplx_mul_double(phase_1);
-  
-  _bgl_add_to_rs0_reg0();
-  _bgl_i_mul_sub_from_rs3_reg0();
-  _bgl_add_to_rs1_reg1();
-  _bgl_i_mul_sub_from_rs2_reg1();
-  
-  /*********************** direction -1 ************************/
-
-  up = um+1;
-  _prefetch_su3(up); 
-  sp = (spinor*) s + (*idx);
-  _prefetch_spinor(sp); 
-  idx++;
-
-  _bgl_load_reg0((*sm).s0);
-  _bgl_load_reg1((*sm).s1);
-  _bgl_load_reg0_up((*sm).s3);
-  _bgl_load_reg1_up((*sm).s2);
-  _bgl_vector_i_mul_sub_reg0();
-  _bgl_vector_i_mul_sub_reg1();
-  
-  _bgl_su3_inverse_multiply_double((*um));
-  _bgl_vector_cmplxcg_mul_double(phase_1);
-  
-  _bgl_add_to_rs0_reg0();
-  _bgl_add_to_rs1_reg1();
-  _bgl_i_mul_add_to_rs3_reg0();
-  _bgl_i_mul_add_to_rs2_reg1();      
-  
-  /*********************** direction +2 ************************/
-  
-  um = up+1;
-  _prefetch_su3(um); 
-  sm = (spinor*) s + (*idx);
-  _prefetch_spinor(sm); 
-  idx++;
-
-  _bgl_load_reg0((*sp).s0);
-  _bgl_load_reg1((*sp).s1);
-  _bgl_load_reg1_up((*sp).s2);
-  _bgl_load_reg0_up((*sp).s3);
-  _bgl_vector_add_reg0();
-  _bgl_vector_sub_reg1();
-  
-  _bgl_su3_multiply_double((*up));
-  _bgl_vector_cmplx_mul_double(phase_2);
-  
-  _bgl_add_to_rs0_reg0();
-  _bgl_add_to_rs1_reg1();
-  _bgl_sub_from_rs2_reg1();
-  _bgl_add_to_rs3_reg0();
-  
-
-  /*********************** direction -2 ************************/
-  up = um+1;
-  _prefetch_su3(up); 
-  sp = (spinor*) s + (*idx);
-  _prefetch_spinor(sp); 
-  idx++;
-
-  _bgl_load_reg0((*sm).s0);
-  _bgl_load_reg1((*sm).s1);
-  _bgl_load_reg1_up((*sm).s2);
-  _bgl_load_reg0_up((*sm).s3);
-  _bgl_vector_sub_reg0();
-  _bgl_vector_add_reg1();
-  
-  _bgl_su3_inverse_multiply_double((*um));
-  _bgl_vector_cmplxcg_mul_double(phase_2);
-  
-  _bgl_add_to_rs0_reg0();
-  _bgl_add_to_rs1_reg1();
-  _bgl_add_to_rs2_reg1();
-  _bgl_sub_from_rs3_reg0();
-  
-  /*********************** direction +3 ************************/
-  um = up+1;
-  _prefetch_su3(um); 
-  sm = (spinor*) s + (*idx);
-  _prefetch_spinor(sm); 
-
-  _bgl_load_reg0((*sp).s0);
-  _bgl_load_reg1((*sp).s1);
-  _bgl_load_reg0_up((*sp).s2);
-  _bgl_load_reg1_up((*sp).s3);
-  _bgl_vector_i_mul_add_reg0();
-  _bgl_vector_i_mul_sub_reg1();
-  
-  _bgl_su3_multiply_double((*up));
-  _bgl_vector_cmplx_mul_double(phase_3);
-  
-  _bgl_add_to_rs0_reg0();
-  _bgl_add_to_rs1_reg1();
-  _bgl_i_mul_sub_from_rs2_reg0();
-  _bgl_i_mul_add_to_rs3_reg1();
-  
-  /*********************** direction -3 ************************/
-
-  _bgl_load_reg0((*sm).s0);
-  _bgl_load_reg1((*sm).s1);
-  _bgl_load_reg0_up((*sm).s2);
-  _bgl_load_reg1_up((*sm).s3);
-  _bgl_vector_i_mul_sub_reg0();
-  _bgl_vector_i_mul_add_reg1();
-  
-  _bgl_su3_inverse_multiply_double((*um));
-  _bgl_vector_cmplxcg_mul_double(phase_3);
-  
-  _bgl_add_to_rs0_reg0();
-  _bgl_store_rs0((*rr).s0);
-  _bgl_i_mul_add_to_rs2_reg0();
-  _bgl_store_rs2((*rr).s2);
-  
-  _bgl_add_to_rs1_reg1();
-  _bgl_store_rs1((*rr).s1);
-  _bgl_i_mul_sub_from_rs3_reg1();
-  _bgl_store_rs3((*rr).s3);
-
-}
-
-#endif
-
 /* apply the Dirac operator to the block local spinor field s */
 /* and store the result in block local spinor field rr        */
 /* for block blk                                              */
@@ -1264,14 +1264,15 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
     _bgl_load_rs2((*t).s2);
     _bgl_load_rs3((*t).s3);
     _bgl_vector_cmplx_mul_rs(rhoa);
-    local_D(r, s, u, idx);
 #else
     _complex_times_vector(tmpr.s0, rhoa, (*t).s0);
     _complex_times_vector(tmpr.s1, rhoa, (*t).s1);
     _complex_times_vector(tmpr.s2, rhob, (*t).s2);
     _complex_times_vector(tmpr.s3, rhob, (*t).s3);
-    local_H(r, s, u, idx);
 #endif
+
+    local_H(r, s, u, idx);
+
     r++;
     t++;
     idx += 8;
@@ -1308,11 +1309,11 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
     _bgl_load_rs1(tmpr.s1);
     _bgl_load_rs2(tmpr.s2);
     _bgl_load_rs3(tmpr.s3);
-    local_D(r, s, u, eoidx);
 #else
     _spinor_null(tmpr);
-    local_H(r, s, u, eoidx);
 #endif
+
+    local_H(r, s, u, eoidx);
 
     r++;
     eoidx += 8;
