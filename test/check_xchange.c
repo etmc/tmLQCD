@@ -45,7 +45,7 @@
 void set_deri_point();
 int check_geometry();
 
-#if defined _INDEX_INDEP_GEOM
+#if (defined _INDEX_INDEP_GEOM)
 
 int check_xchange()
 {
@@ -146,8 +146,8 @@ int check_xchange()
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_up);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+        exit(0);
       }
     }
     
@@ -158,8 +158,8 @@ int check_xchange()
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_dn);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
-	exit(0); 
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+        exit(0); 
       }
     }
 #  endif
@@ -172,8 +172,8 @@ int check_xchange()
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_x_up);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
-	exit(0); 
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+        exit(0); 
       }
     }
     
@@ -184,8 +184,8 @@ int check_xchange()
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_x_dn);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
-	exit(0); 
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+        exit(0); 
       }
     }
 #  endif
@@ -198,8 +198,8 @@ int check_xchange()
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_y_up);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
-	exit(0); 
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+        exit(0); 
       }
     }
     
@@ -210,8 +210,8 @@ int check_xchange()
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_y_dn);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
-	exit(0); 
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+        exit(0); 
       }
     }
 #  endif
@@ -246,8 +246,8 @@ int check_xchange()
 	printf("between %d and %d is not correct at i=%d\n", g_cart_id, g_nb_z_up,i);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0); 
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0); 
       }
     }
 
@@ -258,8 +258,8 @@ int check_xchange()
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_z_dn);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
-	exit(0); 
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+        exit(0); 
       }
     }
 
@@ -292,8 +292,8 @@ int check_xchange()
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_z_up);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
-	exit(0); 
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+        exit(0); 
       }
     }
     
@@ -304,8 +304,8 @@ int check_xchange()
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_z_dn);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
-	exit(0); 
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+        exit(0); 
       }
     }
 #  endif
@@ -386,8 +386,8 @@ int check_xchange()
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_up);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -398,8 +398,8 @@ int check_xchange()
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_dn);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 #  endif
@@ -412,8 +412,8 @@ int check_xchange()
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -425,8 +425,8 @@ int check_xchange()
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 #  endif
@@ -440,8 +440,8 @@ int check_xchange()
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -453,8 +453,8 @@ int check_xchange()
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 #  endif
@@ -468,8 +468,8 @@ int check_xchange()
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -481,8 +481,8 @@ int check_xchange()
 	printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 #  endif
@@ -636,8 +636,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -649,8 +649,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -662,12 +662,12 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
-    x = (double*) g_gauge_field[Index(-1,-1,0,0)]; //gI_m1_m1_0_0
+    x = (double*) g_gauge_field[Index(-1,-1,0,0)]; // gI_m1_m1_0_0
     for(i = 0; i < LY*LZ*72; i++, x++) {
       if((int)(*x) != mm) {
 	printf("The exchange of gaugefields edges (xt) in direction -x-t\n");
@@ -675,8 +675,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 #  endif
@@ -705,8 +705,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -718,8 +718,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -731,8 +731,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -744,8 +744,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -775,8 +775,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -788,8 +788,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -801,8 +801,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -814,8 +814,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 #  endif
@@ -843,8 +843,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -856,8 +856,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -869,8 +869,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -882,8 +882,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 #  endif
@@ -911,12 +911,12 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
-    x = (double*) g_gauge_field[Index(-1,0,0,LZ)]; //gI_m1_0_0_L
+    x = (double*) g_gauge_field[Index(-1,0,0,LZ)]; // gI_m1_0_0_L
     for(i = 0; i < LX*LY*72; i++, x++) {
       if((int)(*x) != mp) {
 	printf("The exchange of gaugefields edges (tz) in direction -t+z\n");
@@ -924,8 +924,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -937,8 +937,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -950,8 +950,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 #  endif
@@ -981,8 +981,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -994,8 +994,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -1007,8 +1007,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 
@@ -1020,8 +1020,8 @@ int check_xchange()
 	printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	printf("Program aborted\n");
 	fflush(stdout);fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+        exit(0);
       }
     }
 #  endif
@@ -1089,8 +1089,8 @@ int check_xchange()
 	  printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_up);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1101,8 +1101,8 @@ int check_xchange()
 	  printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_dn);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 #  endif
@@ -1115,8 +1115,8 @@ int check_xchange()
 	  printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
       
@@ -1128,8 +1128,8 @@ int check_xchange()
 	  printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 #  endif
@@ -1143,8 +1143,8 @@ int check_xchange()
 	  printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1156,8 +1156,8 @@ int check_xchange()
 	  printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 #  endif
@@ -1171,8 +1171,8 @@ int check_xchange()
 	  printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1184,8 +1184,8 @@ int check_xchange()
 	  printf("%d %d %d\n", g_cart_id, i, (int)(*x));
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 #  endif
@@ -1209,7 +1209,7 @@ int check_xchange()
 	}
       }
 #  endif
-#  if ( defined PARALLELXT || defined PARALLELXYT || defined PARALLELXY || defined PARALLELXYZ )      
+#  if ( defined PARALLELXYT || defined PARALLELXY || defined PARALLELXYZ || defined PARALLELXYZT )      
       /* Set the xy boundary */
       for(x0 = 0; x0 < T; x0++) {
 	for(x3 = 0; x3 < LZ; x3++) {
@@ -1320,8 +1320,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
       
@@ -1333,8 +1333,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
       
@@ -1346,8 +1346,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
       
@@ -1359,8 +1359,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1372,8 +1372,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1385,8 +1385,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1398,8 +1398,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1411,8 +1411,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 #  endif
@@ -1442,8 +1442,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1455,8 +1455,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
       
@@ -1468,8 +1468,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1481,8 +1481,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1494,8 +1494,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1507,8 +1507,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
       
@@ -1520,8 +1520,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1533,8 +1533,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1563,8 +1563,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1576,8 +1576,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1589,8 +1589,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1602,8 +1602,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1615,8 +1615,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1628,8 +1628,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1641,8 +1641,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1654,8 +1654,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 #  endif
@@ -1684,8 +1684,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
       x = (double*) g_gauge_field[gI_m2_0_0_L];
@@ -1696,8 +1696,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1709,8 +1709,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1722,8 +1722,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1735,8 +1735,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1748,8 +1748,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
       
@@ -1761,8 +1761,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1774,8 +1774,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1805,8 +1805,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1818,8 +1818,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1831,8 +1831,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1844,8 +1844,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1857,8 +1857,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1870,8 +1870,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1883,8 +1883,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1896,8 +1896,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 #  endif
@@ -1927,8 +1927,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1940,8 +1940,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1953,8 +1953,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1966,8 +1966,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1979,8 +1979,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -1992,8 +1992,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), pm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -2005,8 +2005,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mp);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -2018,8 +2018,8 @@ int check_xchange()
 	  printf("%d %d (%d != %d)\n", g_cart_id, i, (int)(*x), mm);
 	  printf("Program aborted\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -2159,8 +2159,8 @@ int check_xchange()
 	      printf("%d %d %d %d %f %d %d\n", ix, x1, x2, x3, df0[ix][mu].d1, g_nb_t_up, mu, (T-1+x1+x2+x3)%2);
 	      printf("Aborting program!");
 	      fflush(stdout);fflush(stderr);
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2184,8 +2184,8 @@ int check_xchange()
 	      printf("Exchange of derivatives is working not correctly (2)!\n");
 	      printf("Aborting program!");
 	      fflush(stdout);fflush(stderr);
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2207,8 +2207,8 @@ int check_xchange()
 	      printf("Exchange of derivatives is working not correctly (3)!\n");
 	      printf("Aborting program!");
 	      fflush(stdout);fflush(stderr);
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2229,8 +2229,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (4)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2255,8 +2255,8 @@ int check_xchange()
 	      printf("%f %d %d\n", df0[ix][mu].d8, g_nb_t_up, g_nb_t_dn);
  	      printf("Aborting program!\n"); 
 	      fflush(stdout);fflush(stderr);
- 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
- 	      exit(0); 
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+              exit(0); 
 	    }
 	  }
 	}
@@ -2278,8 +2278,8 @@ int check_xchange()
 	      printf("Exchange of derivatives is working not correctly (6)!\n");
 	      printf("Aborting program!\n");
 	      fflush(stdout);fflush(stderr);
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2302,8 +2302,8 @@ int check_xchange()
 	      printf("%d %d %d %d %d\n", x0, x1, x3, ix, g_proc_id);
 	      printf("Aborting program!\n");
 	      fflush(stdout);fflush(stderr);
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2324,8 +2324,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (8)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2345,8 +2345,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (9)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2366,8 +2366,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (10)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2386,8 +2386,8 @@ int check_xchange()
 	  printf("Exchange of derivatives is working not correctly (11)!\n");
 	  printf("Aborting program!\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
     }
@@ -2413,8 +2413,8 @@ int check_xchange()
 	      printf("%f %d %d\n", df0[ix][mu].d8, g_nb_t_up, g_nb_t_dn);
  	      printf("Aborting program!\n"); 
 	      fflush(stdout);fflush(stderr);
- 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
- 	      exit(0); 
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+              exit(0); 
 	    }
 	  }
 	}
@@ -2436,8 +2436,8 @@ int check_xchange()
 	      printf("Exchange of derivatives is working not correctly (13)!\n");
 	      printf("Aborting program!\n");
 	      fflush(stdout);fflush(stderr);
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2460,8 +2460,8 @@ int check_xchange()
 	      printf("%d %d %d %d %d\n", x0, x1, x3, ix, g_proc_id);
 	      printf("Aborting program!\n");
 	      fflush(stdout);fflush(stderr);
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2484,8 +2484,8 @@ int check_xchange()
 	      printf("%d %d %d %d %d\n", x0, x1, x3, ix, g_proc_id);
 	      printf("Aborting program!\n");
 	      fflush(stdout);fflush(stderr);
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2506,8 +2506,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (16)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2527,8 +2527,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (17)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2548,8 +2548,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (18)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2570,8 +2570,8 @@ int check_xchange()
 	    printf("%f %d %d %d\n", df0[ix][mu].d1, g_nb_x_up + g_nb_z_up, g_nb_x_up, g_nb_z_up); 
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2591,8 +2591,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (20)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2612,8 +2612,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (21)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2632,8 +2632,8 @@ int check_xchange()
 	  printf("Exchange of derivatives is working not correctly (22)!\n");
 	  printf("Aborting program!\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
     }
@@ -2650,8 +2650,8 @@ int check_xchange()
 	   df0[ix][mu].d8 != (double)(g_nb_t_up + g_nb_x_up + g_nb_z_up)){
 	  printf("Exchange of derivatives is working not correctly (23)!\n");
 	  printf("Aborting program!\n");
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
     }
@@ -2669,8 +2669,8 @@ int check_xchange()
 	  printf("Exchange of derivatives is working not correctly (24)!\n");
 	  printf("Aborting program!\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
     }
@@ -2688,8 +2688,8 @@ int check_xchange()
 	  printf("Exchange of derivatives is working not correctly (25)!\n");
 	  printf("Aborting program!\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
     }
@@ -2706,8 +2706,8 @@ int check_xchange()
 	  printf("Exchange of derivatives is working not correctly (26)!\n");
 	  printf("Aborting program!\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
 
@@ -2730,8 +2730,8 @@ int check_xchange()
 	      printf("Exchange of derivatives is working not correctly (27)!\n");
 	      printf("Aborting program!");
 	      fflush(stdout);fflush(stderr);
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2755,8 +2755,8 @@ int check_xchange()
 	      printf("Exchange of derivatives is working not correctly (28)!\n");
 	      printf("Aborting program!");
 	      fflush(stdout);fflush(stderr);
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2777,9 +2777,9 @@ int check_xchange()
 	       df0[ix][mu].d8 != (double)g_nb_x_up){
 	      printf("Exchange of derivatives is working not correctly (29)!\n");
 	      printf("Aborting program!");
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 	      fflush(stdout);fflush(stderr);
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2800,8 +2800,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (30)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2825,8 +2825,8 @@ int check_xchange()
 	      printf("Exchange of derivatives is working not correctly (31)!\n");
  	      printf("Aborting program!\n"); 
 	      fflush(stdout);fflush(stderr);
- 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
- 	      exit(0); 
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+              exit(0); 
 	    }
 	  }
 	}
@@ -2848,8 +2848,8 @@ int check_xchange()
 	      printf("Exchange of derivatives is working not correctly (32)!\n");
 	      printf("Aborting program!\n");
 	      fflush(stdout);fflush(stderr);
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2871,8 +2871,8 @@ int check_xchange()
 	      printf("Exchange of derivatives is working not correctly (33)!\n");
 	      printf("Aborting program!\n");
 	      fflush(stdout);fflush(stderr);
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+              MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+              exit(0);
 	    }
 	  }
 	}
@@ -2893,8 +2893,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (34)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2914,8 +2914,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (35)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2935,8 +2935,8 @@ int check_xchange()
 	    printf("Exchange of derivatives is working not correctly (36)!\n");
 	    printf("Aborting program!\n");
 	    fflush(stdout);fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+            MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+            exit(0);
 	  }
 	}
       }
@@ -2955,8 +2955,8 @@ int check_xchange()
 	  printf("Exchange of derivatives is working not correctly (37)!\n");
 	  printf("Aborting program!\n");
 	  fflush(stdout);fflush(stderr);
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+          MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+          exit(0);
 	}
       }
     }
@@ -3040,8 +3040,8 @@ int check_xchange()
 	printf("The exchange up of fields in time direction\n");
 	printf("between %d and %d is not correct\n", g_cart_id, g_nb_t_up);
 	printf("Program aborted\n");
-	MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
-	exit(0);
+        MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+        exit(0);
       }
     }
 
