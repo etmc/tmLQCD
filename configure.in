@@ -648,22 +648,14 @@ AC_SUBST(GPUCFLAGS)
 
 
 AC_MSG_CHECKING(checking consistency)
-if test $enable_mpi = yes ; then
- if test $enable_iig = yes && test $withnonblock != yes ; then
-  AC_MSG_ERROR(ERROR! indexindepgeom is compatible with  nonblockingmpi, only )
- fi
- if test $enable_tsp = yes && test $withnonblock != yes ; then
-  AC_MSG_ERROR(ERROR! tsplitpar needs nonblockingmpi)
- fi
+if test $enable_iig = yes && test $withpersistent = yes ; then
+ AC_MSG_ERROR(ERROR! indexindepgeom is not compatible with persistent communications )
 fi
-if test $enable_iig = yes && test $enable_halfspinor = yes ; then
-  AC_MSG_ERROR(ERROR! indexindepgeom is not compatible with  halfspinors )
+if test $enable_iig = yes && test $enable_shmem = yes ; then
+  AC_MSG_ERROR(ERROR! indexindepgeom is not compatible with shmem API )
 fi
 if test $enable_tsp = yes && test $enable_iig = no; then
   AC_MSG_ERROR(ERROR! tsplitpar needs indexindepgeom)
-fi
-if test $enable_tsp = yes && test $enable_halfspinor = yes ; then
-  AC_MSG_ERROR(ERROR! tsplitpar is incompatible with halfspinor)
 fi
 if test $enable_tsp = yes && test $enable_sse2 != yes ; then
   AC_MSG_ERROR(ERROR! tsplitpar needs at least SSE2 )

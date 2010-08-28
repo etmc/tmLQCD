@@ -379,6 +379,22 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   g_nb_list[7] = g_nb_z_dn;
 #  endif
 
+
+#  if ((defined _INDEX_INDEP_GEOM) && (defined _USE_HALFSPINOR))
+#   if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+  g_HS_shift_t = 0;
+  g_HS_shift_x = LX*LY*LZ;
+  g_HS_shift_y = LX*LY*LZ + T*LY*LZ;
+  g_HS_shift_z = LX*LY*LZ + T*LY*LZ + T*LX*LZ;
+#   endif
+#   if (defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
+  g_HS_shift_t = 0;
+  g_HS_shift_x = 0;
+  g_HS_shift_y = T*LY*LZ;
+  g_HS_shift_z = T*LY*LZ + T*LX*LZ;
+#   endif
+#  endif
+
   /* With internal boundary we mean the fields that are send */
   /* to another processor. It is located wihtin the local    */
   /* volume, whereas the external boundary is the boundary   */

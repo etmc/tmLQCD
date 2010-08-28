@@ -111,7 +111,7 @@ void xchange_lexicfield(spinor * const l) {
 #    if (defined PARALLELXYZT || defined PARALLELXYZ )  
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
-  MPI_Isend((void*)(l+gI_0_0_0_0), 1, lfield_z_slice_gath, g_nb_z_dn, 5503, g_cart_grid, &requests[ireq]); 
+  MPI_Isend((void*)(l+gI_0_0_0_0), 1, lfield_z_slice_gath, g_nb_z_dn, 5503, g_cart_grid, &requests[ireq]);
   MPI_Irecv((void*)(l+gI_0_0_0_L), 1, lfield_z_slice_cont, g_nb_z_up, 5503, g_cart_grid, &requests[ireq+1]); 
   ireq=ireq+4;
 #    endif
@@ -145,7 +145,7 @@ void xchange_lexicfield(spinor * const l) {
 #    if ( defined PARALLELXYZT || defined PARALLELXYZ )  
   /* send the data to the neighbour on the right in y direction */
   /* recieve the data from the neighbour on the left in y direction */  
-  MPI_Isend((void*)(l+gI_0_0_0_Lm1), 1, lfield_z_slice_gath, g_nb_z_up, 5504, g_cart_grid, &requests[ireq]); 
+  MPI_Isend((void*)(l+gI_0_0_0_Lm1), 1, lfield_z_slice_gath, g_nb_z_up, 5504, g_cart_grid, &requests[ireq]);
   MPI_Irecv((void*)(l+gI_0_0_0_m1), 1, lfield_z_slice_cont, g_nb_z_dn, 5504, g_cart_grid, &requests[ireq+1]); 
 #    endif
   
@@ -205,7 +205,7 @@ void xchange_lexicfield(spinor * const l) {
   
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
-  MPI_Isend((void*)l, 1, lfield_z_slice_gath, g_nb_z_dn, 5503, g_cart_grid, &requests[12]); 
+  MPI_Isend((void*)l, 1, lfield_z_slice_gath, g_nb_z_dn, 5503, g_cart_grid, &requests[12]);
   MPI_Irecv((void*)(l+VOLUME + 2*LZ*(LX*LY + T*LY) + 2*LZ*T*LX), 1, lfield_z_slice_cont, g_nb_z_up, 5503, g_cart_grid, &requests[13]); 
 #    endif
   /* send the data to the neighbour on the right */
@@ -231,7 +231,7 @@ void xchange_lexicfield(spinor * const l) {
   
   /* send the data to the neighbour on the right in y direction */
   /* recieve the data from the neighbour on the left in y direction */  
-  MPI_Isend((void*)(l+LZ-1), 1, lfield_z_slice_gath, g_nb_z_up, 5504, g_cart_grid, &requests[14]); 
+  MPI_Isend((void*)(l+LZ-1), 1, lfield_z_slice_gath, g_nb_z_up, 5504, g_cart_grid, &requests[14]);
   MPI_Irecv((void*)(l+VOLUME + 2*LZ*(LX*LY + T*LY) + 2*T*LX*LZ + T*LX*LY), 1, lfield_z_slice_cont, g_nb_z_dn, 5504, g_cart_grid, &requests[15]); 
 #    endif
   
@@ -245,11 +245,94 @@ void xchange_lexicfield(spinor * const l) {
 }
 
 # endif /* _INDEX_INDEP_GEOM */
-#else /* _NON_BLOCKING */
-
 
 /* Here comes the naive version */  
 /* Using MPI_Sendrecv */
+#else /* _NON_BLOCKING */
+
+/* this is the version independent of the content of the function Index (only available with non-blocking)) */
+/* this if statement will be removed in future and _INDEX_INDEP_GEOM will be the default */
+# if defined _INDEX_INDEP_GEOM
+
+/* exchanges the field  l */
+void xchange_lexicfield(spinor * const l) {
+  
+#  ifdef PARALLELXYZT
+  int x0=0, x1=0, x2=0, ix=0;
+#  endif
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(xchange_lexicfield)
+#endif
+
+#  ifdef MPI
+    
+#    if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+  MPI_Status status;
+  /* send the data to the neighbour on the left */
+  /* recieve the data from the neighbour on the right */
+  MPI_Sendrecv((void*)(l+gI_0_0_0_0), 1, lfield_time_slice_cont, g_nb_t_dn, 5081,
+	       (void*)(l+gI_L_0_0_0), 1, lfield_time_slice_cont, g_nb_t_up, 5081,
+	       g_cart_grid, &status);
+    
+  /* send the data to the neighbour on the right */
+  /* recieve the data from the neighbour on the left */
+  MPI_Sendrecv((void*)(l+gI_Lm1_0_0_0), 1, lfield_time_slice_cont, g_nb_t_up, 5082,
+	       (void*)(l+gI_m1_0_0_0), 1, lfield_time_slice_cont, g_nb_t_dn, 5082,
+	       g_cart_grid, &status);
+#    endif
+#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
+  /* send the data to the neighbour on the left in x direction */
+  /* recieve the data from the neighbour on the right in x direction */
+  MPI_Sendrecv((void*)(l+gI_0_0_0_0), 1, lfield_x_slice_gath, g_nb_x_dn, 5091, 
+	       (void*)(l+gI_0_L_0_0), 1, lfield_x_slice_cont, g_nb_x_up, 5091,
+	       g_cart_grid, &status);
+    
+  /* send the data to the neighbour on the right in x direction */
+  /* recieve the data from the neighbour on the left in x direction */  
+  MPI_Sendrecv((void*)(l+gI_0_Lm1_0_0), 1, lfield_x_slice_gath, g_nb_x_up, 5092, 
+	       (void*)(l+gI_0_m1_0_0), 1, lfield_x_slice_cont, g_nb_x_dn, 5092,
+	       g_cart_grid, &status);
+    
+#    endif
+    
+#    if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ )
+  /* send the data to the neighbour on the left in y direction */
+  /* recieve the data from the neighbour on the right in y direction */
+  MPI_Sendrecv((void*)(l+gI_0_0_0_0), 1, lfield_y_slice_gath, g_nb_y_dn, 5101, 
+	       (void*)(l+gI_0_0_L_0), 1, lfield_y_slice_cont, g_nb_y_up, 5101,
+	       g_cart_grid, &status);
+    
+  /* send the data to the neighbour on the right in y direction */
+  /* recieve the data from the neighbour on the left in y direction */  
+  MPI_Sendrecv((void*)(l+gI_0_0_Lm1_0), 1, lfield_y_slice_gath, g_nb_y_up, 5102, 
+	       (void*)(l+gI_0_0_m1_0), 1, lfield_y_slice_cont, g_nb_y_dn, 5102,
+	       g_cart_grid, &status);
+    
+#    endif
+    
+#    if (defined PARALLELXYZT || defined PARALLELXYZ )  
+  /* send the data to the neighbour on the left in z direction */
+  /* recieve the data from the neighbour on the right in z direction */
+  MPI_Sendrecv((void*)(l+gI_0_0_0_0), 1, lfield_z_slice_gath, g_nb_z_dn, 5503,  
+	       (void*)(l+gI_0_0_0_L), 1, lfield_z_slice_cont, g_nb_z_up, 5503, 
+	       g_cart_grid, &status); 
+    
+  /* send the data to the neighbour on the right in y direction */
+  /* recieve the data from the neighbour on the left in y direction */  
+  MPI_Sendrecv((void*)(l+gI_0_0_0_Lm1), 1, lfield_z_slice_gath, g_nb_z_up, 5504, 
+	       (void*)(l+gI_0_0_0_m1), 1, lfield_z_slice_cont, g_nb_z_dn, 5504, 
+	       g_cart_grid, &status); 
+    
+#    endif
+#  endif
+  return;
+#ifdef _KOJAK_INST
+#pragma pomp inst end(xchange_lexicfield)
+#endif
+}
+
+# else // _INDEX_INDEP_GEOM
+
 /* exchanges the field  l */
 void xchange_lexicfield(spinor * const l) {
   
@@ -330,5 +413,17 @@ void xchange_lexicfield(spinor * const l) {
 #endif
 }
 
+# endif // _INDEX_INDEP_GEOM
 
 #endif
+
+
+
+
+
+
+
+
+
+
+

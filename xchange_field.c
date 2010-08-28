@@ -55,7 +55,7 @@
 /* this version uses non-blocking MPI calls */
 #if (defined _NON_BLOCKING)
 
-/* this is the version independent of the content of the function Index (only available with non-blocking)) */
+/* this is the version independent of the content of the function Index  */
 /* this if statement will be removed in future and _INDEX_INDEP_GEOM will be the default */
 # ifdef  _INDEX_INDEP_GEOM
 
@@ -100,7 +100,7 @@ void xchange_field(spinor * const l, const int ieo) {
     /* send the data to the neighbour on the left */
     /* recieve the data from the neighbour on the right */
     MPI_Isend((void*)(l+g_1st_t_int_dn), 1, field_time_slice_cont, g_nb_t_dn, 81, g_cart_grid, &requests[ireq]);
-    MPI_Irecv((void*)(l+g_1st_t_ext_up), 1, field_time_slice_cont, g_nb_t_up, 81, g_cart_grid, &requests[ireq+1]);
+    MPI_Irecv( (void*)(l+g_1st_t_ext_up), 1, field_time_slice_cont, g_nb_t_up, 81, g_cart_grid, &requests[ireq+1]);
     ireq=ireq+4;
 #    endif
     
@@ -127,10 +127,10 @@ void xchange_field(spinor * const l, const int ieo) {
 
 
     if(ieo == 1) { 
-      MPI_Isend((void*)(l+g_1st_z_int_dn),1,field_z_slice_even_dn,g_nb_z_dn,503,g_cart_grid,&requests[ireq]); 
+      MPI_Isend((void*)(l+g_1st_z_int_dn),1,field_z_slice_even_dn,g_nb_z_dn,503,g_cart_grid,&requests[ireq]);
       MPI_Irecv((void*)(l+g_1st_z_ext_up),1,field_z_slice_cont,g_nb_z_up,503,g_cart_grid,&requests[ireq+1]); 
     } else { 
-      MPI_Isend((void*)(l+g_1st_z_int_dn),1,field_z_slice_odd_dn,g_nb_z_dn,503,g_cart_grid,&requests[ireq]); 
+      MPI_Isend((void*)(l+g_1st_z_int_dn),1,field_z_slice_odd_dn,g_nb_z_dn,503,g_cart_grid,&requests[ireq]);
       MPI_Irecv((void*)(l+g_1st_z_ext_up),1,field_z_slice_cont,g_nb_z_up,503,g_cart_grid,&requests[ireq+1]); 
     } 
 
@@ -167,10 +167,10 @@ void xchange_field(spinor * const l, const int ieo) {
   /* send the data to the neighbour on the right in z direction */
   /* recieve the data from the neighbour on the left in z direction */  
     if(ieo == 1) { 
-      MPI_Isend((void*)(l+g_1st_z_int_up),1,field_z_slice_even_up,g_nb_z_up,504,g_cart_grid,&requests[ireq]); 
+      MPI_Isend((void*)(l+g_1st_z_int_up),1,field_z_slice_even_up,g_nb_z_up,504,g_cart_grid,&requests[ireq]);
       MPI_Irecv((void*)(l+g_1st_z_ext_dn),1,field_z_slice_cont,g_nb_z_dn,504,g_cart_grid,&requests[ireq+1]); 
     } else {  
-      MPI_Isend((void*)(l+g_1st_z_int_up),1,field_z_slice_odd_up,g_nb_z_up,504,g_cart_grid,&requests[ireq]); 
+      MPI_Isend((void*)(l+g_1st_z_int_up),1,field_z_slice_odd_up,g_nb_z_up,504,g_cart_grid,&requests[ireq]);
       MPI_Irecv((void*)(l+g_1st_z_ext_dn),1,field_z_slice_cont,g_nb_z_dn,504,g_cart_grid,&requests[ireq+1]); 
     } 
 #    endif
@@ -339,7 +339,7 @@ void xchange_field(spinor * const l, const int ieo) {
 
     /* send the data to the neighbour on the left in z direction */
     /* recieve the data from the neighbour on the right in z direction */
-    MPI_Isend((void*)field_buffer_z, 12*T*LX*LY, MPI_DOUBLE, g_nb_z_dn, 503, g_cart_grid, &requests[12]); 
+    MPI_Isend((void*)field_buffer_z, 12*T*LX*LY, MPI_DOUBLE, g_nb_z_dn, 503, g_cart_grid, &requests[12]);
     MPI_Irecv((void*)(l+(VOLUME/2 + LX*LY*LZ + T*LY*LZ +T*LX*LZ)), 12*T*LX*LY, MPI_DOUBLE, g_nb_z_up, 503, g_cart_grid, &requests[13]); 
 
 #    endif
@@ -375,7 +375,7 @@ void xchange_field(spinor * const l, const int ieo) {
     } 
   /* send the data to the neighbour on the right in y direction */
   /* recieve the data from the neighbour on the left in y direction */  
-    MPI_Isend((void*)field_buffer_z2, 12*T*LX*LY, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &requests[14]); 
+    MPI_Isend((void*)field_buffer_z2, 12*T*LX*LY, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &requests[14]);
     MPI_Irecv((void*)(l+(VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY)/2), 12*T*LX*LY, MPI_DOUBLE, g_nb_z_dn, 504, g_cart_grid, &requests[15]); 
 #    endif
 
@@ -415,7 +415,7 @@ void xchange_field(spinor * const l, const int ieo) {
     } 
     /* send the data to the neighbour on the left in z direction */
     /* recieve the data from the neighbour on the right in z direction */
-    MPI_Isend((void*)field_buffer_z, 12*T*LX*LY, MPI_DOUBLE, g_nb_z_dn, 503, g_cart_grid, &requests[12]); 
+    MPI_Isend((void*)field_buffer_z, 12*T*LX*LY, MPI_DOUBLE, g_nb_z_dn, 503, g_cart_grid, &requests[12]);
     MPI_Irecv((void*)(l+(VOLUME/2 + LX*LY*LZ + T*LY*LZ +T*LX*LZ)), 12*T*LX*LY, MPI_DOUBLE, g_nb_z_up, 503, g_cart_grid, &requests[13]); 
 #    endif    
 
@@ -450,7 +450,7 @@ void xchange_field(spinor * const l, const int ieo) {
     } 
     /* send the data to the neighbour on the right in y direction */
     /* recieve the data from the neighbour on the left in y direction */  
-    MPI_Isend((void*)field_buffer_z2, 12*T*LX*LY, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &requests[14]); 
+    MPI_Isend((void*)field_buffer_z2, 12*T*LX*LY, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &requests[14]);
     MPI_Irecv((void*)(l+(VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY)/2), 12*T*LX*LY, MPI_DOUBLE, g_nb_z_dn, 504, g_cart_grid, &requests[15]); 
 #    endif
 
@@ -579,10 +579,108 @@ void xchange_field(spinor * const l, const int ieo) {
 }
 
 
-#else  /* _NON_BLOCKING _USE_SHMEM */
-
 /* Here comes the naive version */  
 /* Using MPI_Sendrecv */
+#else  /* _NON_BLOCKING _USE_SHMEM */
+
+
+/* this is the version independent of the content of the function Index  */
+# ifdef  _INDEX_INDEP_GEOM
+
+/* exchanges the field  l */
+void xchange_field(spinor * const l, const int ieo) {
+  
+#  ifdef PARALLELXYZT
+  int x0=0, x1=0, x2=0, ix=0;
+#  endif
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(xchangefield)
+#endif
+
+#  ifdef MPI
+    
+  MPI_Status status;
+
+#    if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT )
+  /* send the data to the neighbour on the left */
+  /* recieve the data from the neighbour on the right */
+  MPI_Sendrecv((void*)(l+g_1st_t_int_dn),  1, field_time_slice_cont, g_nb_t_dn, 81,
+	       (void*)(l+g_1st_t_ext_up), 1, field_time_slice_cont, g_nb_t_up, 81,
+	       g_cart_grid, &status);
+    
+  /* send the data to the neighbour on the right */
+  /* recieve the data from the neighbour on the left */
+  MPI_Sendrecv((void*)(l+g_1st_t_int_up), 1, field_time_slice_cont, g_nb_t_up, 82,
+	       (void*)(l+g_1st_t_ext_dn), 1, field_time_slice_cont, g_nb_t_dn, 82,
+	       g_cart_grid, &status);
+#    endif    
+
+#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
+  /* send the data to the neighbour on the left in x direction */
+  /* recieve the data from the neighbour on the right in x direction */
+  MPI_Sendrecv((void*)(l+g_1st_x_int_dn), 1, field_x_slice_gath, g_nb_x_dn, 91, 
+	       (void*)(l+g_1st_x_ext_up), 1, field_x_slice_cont, g_nb_x_up, 91,
+	       g_cart_grid, &status);
+    
+  /* send the data to the neighbour on the right in x direction */
+  /* recieve the data from the neighbour on the left in x direction */  
+  MPI_Sendrecv((void*)(l+g_1st_x_int_up), 1, field_x_slice_gath, g_nb_x_up, 92, 
+	       (void*)(l+g_1st_x_ext_dn), 1, field_x_slice_cont, g_nb_x_dn, 92,
+	       g_cart_grid, &status);
+    
+#    endif
+    
+#    if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ )
+  /* send the data to the neighbour on the left in y direction */
+  /* recieve the data from the neighbour on the right in y direction */
+  MPI_Sendrecv((void*)(l+g_1st_y_int_dn), 1, field_y_slice_gath, g_nb_y_dn, 101, 
+	       (void*)(l+g_1st_y_ext_up), 1, field_y_slice_cont, g_nb_y_up, 101,
+	       g_cart_grid, &status);
+    
+  /* send the data to the neighbour on the right in y direction */
+  /* recieve the data from the neighbour on the left in y direction */  
+  MPI_Sendrecv((void*)(l+g_1st_y_int_up), 1, field_y_slice_gath, g_nb_y_up, 102, 
+	       (void*)(l+g_1st_y_ext_dn), 1, field_y_slice_cont, g_nb_y_dn, 102,
+	       g_cart_grid, &status);
+    
+#    endif
+    
+#    if (defined PARALLELXYZT || defined PARALLELXYZ )
+  /* send the data to the neighbour on the left in z direction */
+  /* recieve the data from the neighbour on the right in z direction */
+  if(ieo == 1){
+    MPI_Sendrecv((void*)(l+g_1st_z_int_dn),1,field_z_slice_even_dn, g_nb_z_dn, 503,  
+		 (void*)(l+g_1st_z_ext_up),1,field_z_slice_cont, g_nb_z_up, 503, 
+		 g_cart_grid, &status); 
+  } else {
+    MPI_Sendrecv((void*)(l+g_1st_z_int_dn),1,field_z_slice_odd_dn, g_nb_z_dn, 503,  
+		 (void*)(l+g_1st_z_ext_up),1,field_z_slice_cont, g_nb_z_up, 503, 
+		 g_cart_grid, &status); 
+  }
+    
+  /* send the data to the neighbour on the right in z direction */
+  /* recieve the data from the neighbour on the left in z direction */  
+  if(ieo == 1){
+    MPI_Sendrecv((void*)(l+g_1st_z_int_up),1,field_z_slice_even_up, g_nb_z_up, 504, 
+		 (void*)(l+g_1st_z_ext_dn),1,field_z_slice_cont, g_nb_z_dn, 504, 
+		 g_cart_grid, &status); 
+  } else {
+    MPI_Sendrecv((void*)(l+g_1st_z_int_up),1,field_z_slice_odd_up, g_nb_z_up, 504, 
+		 (void*)(l+g_1st_z_ext_dn),1,field_z_slice_cont, g_nb_z_dn, 504, 
+		 g_cart_grid, &status); 
+  }
+
+#    endif
+#  endif // MPI
+  return;
+#ifdef _KOJAK_INST
+#pragma pomp inst end(xchangefield)
+#endif
+}
+
+
+# else  /* _INDEX_INDEP_GEOM */
+
 /* exchanges the field  l */
 void xchange_field(spinor * const l, const int ieo) {
   
@@ -685,7 +783,22 @@ void xchange_field(spinor * const l, const int ieo) {
 #pragma pomp inst end(xchangefield)
 #endif
 }
+
+
+# endif /* _INDEX_INDEP_GEOM */
+
 #endif /* _NON_BLOCKING */
 
 static char const rcsid[] = "$Id$";
+
+
+
+
+
+
+
+
+
+
+
 

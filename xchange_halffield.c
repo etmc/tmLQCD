@@ -48,8 +48,8 @@
 #include "init_dirac_halfspinor.h"
 #include "xchange_halffield.h"
 
-#if (!defined _INDEX_INDEP_GEOM)
-#if (defined _USE_SHMEM && defined _USE_HALFSPINOR)
+#if (defined _USE_HALFSPINOR)
+#if (defined _USE_SHMEM) 
 # include <mpp/shmem.h>
 /* 1. */
 void xchange_halffield() {
@@ -106,7 +106,7 @@ void xchange_halffield() {
 #endif
 }
 
-#elif (defined _USE_HALFSPINOR && defined _PERSISTENT)
+#elif (defined _PERSISTENT)
 
 MPI_Request prequests[16];
 
@@ -228,7 +228,101 @@ void xchange_halffield() {
   return;
 }
 
-#else /* def _USE_HALFSPINOR && (_USE_SHMEM || _PERSISTENT) */ 
+#else /* def (_USE_SHMEM || _PERSISTENT) */ 
+
+# if defined _INDEX_INDEP_GEOM
+
+/* 4. -IIG */
+void xchange_halffield() {
+
+#  ifdef MPI
+
+  MPI_Request requests[16];
+  MPI_Status status[16];
+#  if ((defined PARALLELT) || (defined PARALLELX))
+  int reqcount = 4;
+#  elif ((defined PARALLELXT) || (defined PARALLELXY))
+  int reqcount = 8;
+#  elif ((defined PARALLELXYT) || (defined PARALLELXYZ))
+  int reqcount = 12;
+#  elif defined PARALLELXYZT
+  int reqcount = 16;
+#  endif
+#  if (defined XLC && defined BGL)
+  __alignx(16, HalfSpinor);
+#  endif
+
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(xchangehalf)
+#endif
+
+#    if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT )
+  /* send the data to the neighbour on the right in t direction */
+  /* recieve the data from the neighbour on the left in t direction */
+  MPI_Isend((void*)(HalfSpinor + 4*VOLUME + g_HS_shift_t), LX*LY*LZ*12/2, MPI_DOUBLE, 
+	    g_nb_t_up, 81, g_cart_grid, &requests[0]);
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + g_HS_shift_t + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
+	    g_nb_t_dn, 81, g_cart_grid, &requests[1]);
+  /* send the data to the neighbour on the left in t direction */
+  /* recieve the data from the neighbour on the right in t direction */
+  MPI_Isend((void*)(HalfSpinor + 4*VOLUME + g_HS_shift_t + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
+	    g_nb_t_dn, 82, g_cart_grid, &requests[2]);
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + g_HS_shift_t), LX*LY*LZ*12/2, MPI_DOUBLE, 
+	    g_nb_t_up, 82, g_cart_grid, &requests[3]);
+#    endif
+#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
+  /* send the data to the neighbour on the right in x direction */
+  /* recieve the data from the neighbour on the left in x direction */
+  MPI_Isend((void*)(HalfSpinor + 4*VOLUME + g_HS_shift_x), T*LY*LZ*12/2, MPI_DOUBLE, 
+	    g_nb_x_up, 91, g_cart_grid, &requests[4]);
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + g_HS_shift_x + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
+	    g_nb_x_dn, 91, g_cart_grid, &requests[5]);
+  /* send the data to the neighbour on the left in x direction */
+  /* recieve the data from the neighbour on the right in x direction */  
+  MPI_Isend((void*)(HalfSpinor + 4*VOLUME + g_HS_shift_x + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
+ 	    g_nb_x_dn, 92, g_cart_grid, &requests[6]);
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + g_HS_shift_x), T*LY*LZ*12/2, MPI_DOUBLE,
+ 	    g_nb_x_up, 92, g_cart_grid, &requests[7]);
+#    endif
+#    if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ )
+    /* send the data to the neighbour on the right in y direction */
+    /* recieve the data from the neighbour on the left in y direction */
+  MPI_Isend((void*)(HalfSpinor + 4*VOLUME + g_HS_shift_y), T*LX*LZ*12/2, MPI_DOUBLE, 
+	    g_nb_y_up, 101, g_cart_grid, &requests[8]);
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + g_HS_shift_y + T*LX*LZ/2), T*LX*LZ*12/2, MPI_DOUBLE, 
+	    g_nb_y_dn, 101, g_cart_grid, &requests[9]);
+    /* send the data to the neighbour on the leftt in y direction */
+    /* recieve the data from the neighbour on the right in y direction */
+  MPI_Isend((void*)(HalfSpinor + 4*VOLUME + g_HS_shift_y + T*LX*LZ/2), T*LX*LZ*12/2, MPI_DOUBLE, 
+	    g_nb_y_dn, 102, g_cart_grid, &requests[10]);
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + g_HS_shift_y), T*LX*LZ*12/2, MPI_DOUBLE, 
+	    g_nb_y_up, 102, g_cart_grid, &requests[11]);
+#    endif
+#    if (defined PARALLELXYZT || defined PARALLELXYZ )
+  /* send the data to the neighbour on the right in z direction */
+  /* recieve the data from the neighbour on the left in z direction */
+  MPI_Isend((void*)(HalfSpinor + 4*VOLUME + g_HS_shift_z), T*LX*LY*12/2, MPI_DOUBLE, 
+		g_nb_z_up, 503, g_cart_grid, &requests[12]);
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + g_HS_shift_z + T*LX*LY/2), T*LX*LY*12/2, MPI_DOUBLE, 
+		g_nb_z_dn, 503, g_cart_grid, &requests[13]); 
+  /* send the data to the neighbour on the left in z direction */
+  /* recieve the data from the neighbour on the right in z direction */
+  MPI_Isend((void*)(HalfSpinor + 4*VOLUME + g_HS_shift_z + T*LX*LY/2), 12*T*LX*LY/2, MPI_DOUBLE, 
+		g_nb_z_dn, 504, g_cart_grid, &requests[14]);
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + g_HS_shift_z), T*LX*LY*12/2, MPI_DOUBLE, 
+		g_nb_z_up, 504, g_cart_grid, &requests[15]); 
+#    endif
+
+  MPI_Waitall(reqcount, requests, status); 
+#  endif /* MPI */
+  return;
+
+#ifdef _KOJAK_INST
+#pragma pomp inst end(xchangehalf)
+#endif
+}
+
+# else /* _INDEX_INDEP_GEOM */
 
 /* 4. */
 void xchange_halffield() {
@@ -257,16 +351,14 @@ void xchange_halffield() {
   /* recieve the data from the neighbour on the left in t direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_up, 81, g_cart_grid, &requests[0]);
-
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
+	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_dn, 81, g_cart_grid, &requests[1]);
 
   /* send the data to the neighbour on the left in t direction */
   /* recieve the data from the neighbour on the right in t direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_dn, 82, g_cart_grid, &requests[2]);
-
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
+	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_up, 82, g_cart_grid, &requests[3]);
 
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
@@ -275,16 +367,14 @@ void xchange_halffield() {
   /* recieve the data from the neighbour on the left in x direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ), T*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_x_up, 91, g_cart_grid, &requests[4]);
-
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
+	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
 	    g_nb_x_dn, 91, g_cart_grid, &requests[5]);
 
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */  
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
  	    g_nb_x_dn, 92, g_cart_grid, &requests[6]);
-
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ), T*LY*LZ*12/2, MPI_DOUBLE,
+	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ), T*LY*LZ*12/2, MPI_DOUBLE,
  	    g_nb_x_up, 92, g_cart_grid, &requests[7]);
 #    endif
     
@@ -293,16 +383,14 @@ void xchange_halffield() {
     /* recieve the data from the neighbour on the left in y direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_up, 101, g_cart_grid, &requests[8]);
-
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_DOUBLE, 
+	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_dn, 101, g_cart_grid, &requests[9]);
 
     /* send the data to the neighbour on the leftt in y direction */
     /* recieve the data from the neighbour on the right in y direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_dn, 102, g_cart_grid, &requests[10]);
-
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_DOUBLE, 
+	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_up, 102, g_cart_grid, &requests[11]);
 #    endif
     
@@ -310,17 +398,15 @@ void xchange_halffield() {
   /* send the data to the neighbour on the right in z direction */
   /* recieve the data from the neighbour on the left in z direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
-	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 503, g_cart_grid, &requests[12]); 
-
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2), 
+	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 503, g_cart_grid, &requests[12]);
+	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2), 
 	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_dn, 503, g_cart_grid, &requests[13]); 
 
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2), 
-	    12*T*LX*LY/2, MPI_DOUBLE, g_nb_z_dn, 504, g_cart_grid, &requests[14]); 
-
-  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
+	    12*T*LX*LY/2, MPI_DOUBLE, g_nb_z_dn, 504, g_cart_grid, &requests[14]);
+	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
 	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &requests[15]); 
 #    endif
 
@@ -333,9 +419,11 @@ void xchange_halffield() {
 #endif
 }
 
-#endif /* def _USE_HALFSPINOR && (_USE_SHMEM || _PERSISTENT) */ 
+# endif /* _INDEX_INDEP_GEOM */
 
-#if (defined _USE_SHMEM && defined _USE_HALFSPINOR)
+#endif /* def (_USE_SHMEM || _PERSISTENT) */ 
+
+#if (defined _USE_SHMEM)
 # include <mpp/shmem.h>
 
 /* 32-1. */
@@ -393,8 +481,11 @@ void xchange_halffield32() {
 #endif
 }
 
-#else /* (defined _USE_SHMEM && defined _USE_HALFSPINOR) */
+#else /* (defined _USE_SHMEM) */
 
+# if defined _INDEX_INDEP_GEOM
+// IIG xchange_halffield32 still Missing
+# else // defined _INDEX_INDEP_GEOM
 /* 32-2. */
 void xchange_halffield32() {
 
@@ -422,16 +513,14 @@ void xchange_halffield32() {
   /* recieve the data from the neighbour on the left in t direction */
   MPI_Isend((void*)(HalfSpinor32 + 4*VOLUME), LX*LY*LZ*12/2, MPI_FLOAT, 
 	    g_nb_t_up, 81, g_cart_grid, &requests[0]);
-
-  MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_FLOAT, 
+	 MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_FLOAT, 
 	    g_nb_t_dn, 81, g_cart_grid, &requests[1]);
 
   /* send the data to the neighbour on the left in t direction */
   /* recieve the data from the neighbour on the right in t direction */
   MPI_Isend((void*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_FLOAT, 
 	    g_nb_t_dn, 82, g_cart_grid, &requests[2]);
-
-  MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2), LX*LY*LZ*12/2, MPI_FLOAT, 
+	 MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2), LX*LY*LZ*12/2, MPI_FLOAT, 
 	    g_nb_t_up, 82, g_cart_grid, &requests[3]);
 
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
@@ -440,16 +529,14 @@ void xchange_halffield32() {
   /* recieve the data from the neighbour on the left in x direction */
   MPI_Isend((void*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ), T*LY*LZ*12/2, MPI_FLOAT, 
 	    g_nb_x_up, 91, g_cart_grid, &requests[4]);
-
-  MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_FLOAT,
+	 MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_FLOAT,
 	    g_nb_x_dn, 91, g_cart_grid, &requests[5]);
 
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */  
   MPI_Isend((void*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_FLOAT,
  	    g_nb_x_dn, 92, g_cart_grid, &requests[6]);
-
-  MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ), T*LY*LZ*12/2, MPI_FLOAT,
+	 MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ), T*LY*LZ*12/2, MPI_FLOAT,
  	    g_nb_x_up, 92, g_cart_grid, &requests[7]);
 #    endif
     
@@ -458,16 +545,14 @@ void xchange_halffield32() {
     /* recieve the data from the neighbour on the left in y direction */
   MPI_Isend((void*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_FLOAT, 
 	    g_nb_y_up, 101, g_cart_grid, &requests[8]);
-
-  MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_FLOAT, 
+	 MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_FLOAT, 
 	    g_nb_y_dn, 101, g_cart_grid, &requests[9]);
 
     /* send the data to the neighbour on the leftt in y direction */
     /* recieve the data from the neighbour on the right in y direction */
   MPI_Isend((void*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_FLOAT, 
 	    g_nb_y_dn, 102, g_cart_grid, &requests[10]);
-
-  MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_FLOAT, 
+	 MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_FLOAT, 
 	    g_nb_y_up, 102, g_cart_grid, &requests[11]);
 #    endif
     
@@ -475,17 +560,15 @@ void xchange_halffield32() {
   /* send the data to the neighbour on the right in z direction */
   /* recieve the data from the neighbour on the left in z direction */
   MPI_Isend((void*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
-	    T*LX*LY*12/2, MPI_FLOAT, g_nb_z_up, 503, g_cart_grid, &requests[12]); 
-
-  MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2), 
+	    T*LX*LY*12/2, MPI_FLOAT, g_nb_z_up, 503, g_cart_grid, &requests[12]);
+	 MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2), 
 	    T*LX*LY*12/2, MPI_FLOAT, g_nb_z_dn, 503, g_cart_grid, &requests[13]); 
 
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
   MPI_Isend((void*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2), 
-	    12*T*LX*LY/2, MPI_FLOAT, g_nb_z_dn, 504, g_cart_grid, &requests[14]); 
-
-  MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
+	    12*T*LX*LY/2, MPI_FLOAT, g_nb_z_dn, 504, g_cart_grid, &requests[14]);
+	 MPI_Irecv((void*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
 	    T*LX*LY*12/2, MPI_FLOAT, g_nb_z_up, 504, g_cart_grid, &requests[15]); 
 #    endif
 
@@ -496,7 +579,19 @@ void xchange_halffield32() {
 #pragma pomp inst end(xchangehalf32)
 #endif
 }
-#endif /* (defined _USE_SHMEM && defined _USE_HALFSPINOR) */
-#endif /* (!defined _INDEX_INDEP_GEOM) */
+# endif /* defined _INDEX_INDEP_GEOM */
+#endif /* defined _USE_SHMEM */
+#endif /* defined _USE_HALFSPINOR */
 
 static char const rcsid[] = "$Id$";
+
+
+
+
+
+
+
+
+
+
+

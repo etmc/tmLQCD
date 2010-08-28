@@ -41,6 +41,7 @@
 #endif
 #include "su3.h"
 #include "su3adj.h"
+//#  include <tormpi_export.h>
 
 #define N_CHEBYMAX 49
 #define NTILDE_CHEBYMAX 2000
@@ -131,6 +132,10 @@ EXTERN int gI_0_Lp1_0_L,gI_0_Lm2_0_L,gI_0_m2_0_L,gI_0_0_L_Lp1,gI_0_0_Lm1_Lp1,gI_
 EXTERN int gI_0_0_Lp1_L,gI_0_0_Lm2_L,gI_0_0_m2_L,gI_Lp1_m1_0_0,gI_m2_m1_0_0,gI_m2_0_L_0,gI_m2_0_m1_0,gI_0_Lp1_m1_0;
 EXTERN int gI_0_m2_m1_0,gI_m2_0_0_L,gI_m2_0_0_m1,gI_0_Lp1_0_m1,gI_0_m2_0_m1,gI_0_0_Lp1_m1,gI_0_0_m2_m1,gI_m1_0_0_m2;
 EXTERN int gI_0_0_L_L, gI_0_0_m1_L, gI_0_0_Lm1_L;
+
+# ifdef _USE_HALFSPINOR
+EXTERN int g_HS_shift_t,g_HS_shift_x,g_HS_shift_y,g_HS_shift_z;
+# endif
 
 # ifdef _USE_TSPLITPAR
 EXTERN int ** g_field_zt_disp_even_dn;
