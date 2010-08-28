@@ -576,6 +576,17 @@ int check_projectors() {
     fflush(stdout);
   }
 
+  
+  invert_little_D_spinor(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
+  invert_little_D_eo_spinor(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER]);
+  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2], VOLUME);
+  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  if(g_cart_id == 0) {
+    printf("||A^-1 psi - A^-1_eo psi|| = %1.5e\n", sqrt(nrm));
+    fflush(stdout);
+  }
+
+
   invert_little_D_spinor(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
   apply_little_D_spinor(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
   project2(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]);
@@ -895,7 +906,7 @@ void check_local_D()
   /* check Msap and Msap_eo on a radom vector */
   random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
   zero_spinor_field(g_spinor_field[DUM_SOLVER+1], VOLUME);
-  Msap(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], 10);
+  Msap(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], 2);
   D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
   diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], VOLUME);
   nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
@@ -904,7 +915,7 @@ void check_local_D()
   }
 
   zero_spinor_field(g_spinor_field[DUM_SOLVER+1], VOLUME);
-  Msap_eo(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], 10);
+  Msap_eo(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], 2);
   D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
   diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], VOLUME);
   nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
@@ -926,7 +937,7 @@ void check_local_D()
     /* varphi_o in r[3] */
     assign_mul_add_r(r[3], -1., r[1], vol);
     /* psi_o in r[1] */
-    mrblk(r[1], r[3], 16, 1.e-31, 1, vol, &Mtm_plus_block_psi, j);
+    mrblk(r[1], r[3], 3, 1.e-31, 1, vol, &Mtm_plus_block_psi, j);
     
     Block_H_psi(&block_list[j], r[0], r[1], EO);
     mul_one_pm_imu_inv(r[0], +1., vol);
@@ -954,7 +965,7 @@ void check_local_D()
     assign_mul_add_r(r[3], -1., r[1], vol);
     /* psi_o in r[1] */
     mul_one_pm_imu_inv(r[3], +1., vol); 
-    mrblk(r[1], r[3], 16, 1.e-31, 1, vol, &Mtm_plus_sym_block_psi, j);
+    mrblk(r[1], r[3], 3, 1.e-31, 1, vol, &Mtm_plus_sym_block_psi, j);
     
     Block_H_psi(&block_list[j], r[0], r[1], EO);
     mul_one_pm_imu_inv(r[0], +1., vol);
