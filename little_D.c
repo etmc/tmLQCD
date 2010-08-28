@@ -92,14 +92,14 @@ void invert_little_D_spinor(spinor *r, spinor *s){
   for(i = 1; i < nb_blocks; i++) {
     psi[i] = psi[i-1] + (VOLUME / nb_blocks) +1;
   }
-  split_global_field_GEN(psi, s, nb_blocks); // ADAPT THIS 
-
+  split_global_field_GEN(psi, s, nb_blocks); // ADAPT THIS
+     
   for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
     for(i=0;i<nb_blocks;i++) {
       v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME/nb_blocks, 0);
     }
   }
-  
+
   i = gcr4complex(w, v, 10, 100, 1e-31, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("lgcr: %d iterations in invert_little_D_spinor\n", i);
@@ -114,9 +114,99 @@ void invert_little_D_spinor(spinor *r, spinor *s){
     }
   }
   reconstruct_global_field_GEN(r, psi, nb_blocks); // ADAPT THIS
+      
+  free(v);
+  free(w);
+  free(psi[0]);
+  free(psi);
+}
+
+
+/** ANOTHER TESTING FUNCTION */
+void invert_little_D_eo_spinor(spinor *r, spinor *s){
+  int i, j, iter,i_o, i_e;
+  spinor **psi;
+  complex *v, *w, *v_o, *v_e, * v_eo, * w_eo, * ctmp2;
+  psi = calloc(nb_blocks, sizeof(spinor));
+  v = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
+  w = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
+  v_e = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
+  v_o = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
+  v_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
+  w_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
+  ctmp2 = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
+  psi[0] = calloc(VOLUME+nb_blocks, sizeof(spinor));
+  for(i = 1; i < nb_blocks; i++) {
+    psi[i] = psi[i-1] + (VOLUME / nb_blocks) +1;
+  }
+  split_global_field_GEN(psi, s, nb_blocks); // ADAPT THIS 
+  
+  for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
+    i_e=0;
+    i_o=0;
+    for(i=0;i<nb_blocks;i++) {
+      v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME/nb_blocks, 0);
+      if (block_list[i].evenodd==0) {
+      v_eo[j+i_e*g_N_s].re=v[j+i*g_N_s].re;
+      v_eo[j+i_e*g_N_s].im=v[j+i*g_N_s].im;
+      i_e++;
+      }
+      if (block_list[i].evenodd==1) {
+      v_eo[j+nb_blocks*g_N_s/2+i_o*g_N_s].re=v[j+i*g_N_s].re;
+      v_eo[j+nb_blocks*g_N_s/2+i_o*g_N_s].im=v[j+i*g_N_s].im;
+      i_o++; 
+      }
+    }
+  }
+  
+  little_D_ee_inv(v_e,v_eo);
+  little_D_hop(1,v_o,v_e);
+  little_Dhat_rhs(1,v_o,-1,v_eo);
+  
+  iter = gcr4complex(w_eo, v_o, 10, 100, 1e-31, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D_sym);
+
+      little_D_hop(0,ctmp2, w_eo);   
+      little_D_ee_inv(w_eo,ctmp2);
+      little_Dhat_rhs(0,w_eo, -1., v_e);
+            
+      for (j = 0; j < g_N_s; j++) {
+        i_o=0;
+        i_e=0;
+        for(i = 0; i < nb_blocks; i++) {
+         if (block_list[i].evenodd==0) {
+            w[j + i*g_N_s].re=w_eo[j + i_e*g_N_s].re;
+            w[j + i*g_N_s].im=w_eo[j + i_e*g_N_s].im;
+            i_e++;
+          }
+          if (block_list[i].evenodd==1) {
+            w[j + i*g_N_s].re=w_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].re;
+            w[j + i*g_N_s].im=w_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].im;
+            i_o++;
+          }
+        }
+      }
+
+  if(g_proc_id == 0 && g_debug_level > 0) {
+    printf("lgcr: %d iterations in invert_little_D_eo_spinor\n", iter);
+  }
+  
+  for(i = 0; i < nb_blocks; i++) {
+    mul(psi[i], w[i*g_N_s], block_list[i].basis[0], VOLUME/nb_blocks);
+  }
+  for(j = 1; j < g_N_s; ++j) {
+    for(i = 0; i < nb_blocks; i++) {
+      assign_add_mul(psi[i], block_list[i].basis[j], w[j+i*g_N_s], VOLUME/nb_blocks);
+    }
+  }
+  reconstruct_global_field_GEN(r, psi, nb_blocks); // ADAPT THIS
 
   free(v);
   free(w);
+  free(w_eo);
+  free(v_eo);
+  free(v_o);
+  free(v_e);
+  free(ctmp2);
   free(psi[0]);
   free(psi);
 }
