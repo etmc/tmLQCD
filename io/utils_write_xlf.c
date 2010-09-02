@@ -44,7 +44,10 @@ void write_xlf_info(WRITER * writer, paramsXlfInfo const *info)
   else {
     sprintf(message, "plaquette = %e\n"
 	    " trajectory nr = %d\n"
-	    " beta = %f, kappa = %f, 2*kappa*mu = %f, c2_rec = %f\n"
+	    " beta = %f\n"
+	    " kappa = %f\n"
+	    " 2*kappa*mu = %f\n"
+	    " c2_rec = %f\n"
 	    " date = %s",
 	    info->plaq, info->counter, info->beta, info->kappa,
 	    info->mu, info->c2_rec, info->date);
