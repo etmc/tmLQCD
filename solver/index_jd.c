@@ -66,8 +66,8 @@ void index_jd(int * nr_of_eigenvalues_ov,
   
   double ap_eps_sq;
   int switch_on_adaptive_precision = 0;
-  double ov_s;
-  ov_s = 0.5*(1./g_kappa - 8.) - 1.;
+  double ov_s = 0;
+  //  ov_s = 0.5*(1./g_kappa - 8.) - 1.;
   ap_eps_sq = precision_ov*precision_ov; 
 
 #if (defined SSE || defined SSE2 )
@@ -226,9 +226,11 @@ void index_jd(int * nr_of_eigenvalues_ov,
     /* Here we set the (absolute) precision to be  */
     /* such that we can compare to the lowest mode */
     /* in the other sector                         */
+
     prec = (lowestmodes[first_blocksize*((intsign+1)%2)])*1.e-1;
 
     eigenvalues_ov = (double*)malloc((*nr_of_eigenvalues_ov)*sizeof(double));
+
     /* Copy the allready computed eigenvectors_ov */
     for(i = 0; i < first_blocksize; i++) { 
       assign(&eigenvectors_ov[i], &lowvectors[(first_blocksize*intsign+i)*VOLUMEPLUSRAND],N2);
@@ -272,11 +274,11 @@ void index_jd(int * nr_of_eigenvalues_ov,
       jdher(VOLUME*sizeof(spinor)/sizeof(complex),
 	    VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex),
 	    shift, prec, blocksize, j_max, j_min,
-	    max_iter, blocksize, blockwise, v0dim, (complex*) &lowvectors[first_blocksize*intsign*VOLUMEPLUSRAND],
+	    max_iter, blocksize, blockwise, v0dim, (complex*) &eigenvectors_ov[i*VOLUMEPLUSRAND],
 	    CG, solver_it_max,
 	    threshold_min, decay_min, verbosity,
-	    &converged, (complex*) &lowvectors[first_blocksize*intsign*VOLUMEPLUSRAND],
-	    &lowestmodes[first_blocksize*intsign],
+	    &converged, (complex*) eigenvectors_ov,
+	    eigenvalues_ov,
 	    &returncode, JD_MINIMAL, 1,
 	    Operator[intsign]);
 #endif
