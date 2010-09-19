@@ -49,6 +49,7 @@ static double * sigma;
 static double * zitam1, * zita;
 static double * alphas, * betas;
 
+extern int index_start;
 
 void init_mms_tm(const int nr);
 
@@ -58,12 +59,15 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 	      double eps_sq, const int rel_prec, const int N, matrix_mult f) {
 
   static double normsq, pro, err, alpha_cg = 1., beta_cg = 0., normsp, squarenorm;
-  int iteration, im;
+  int iteration, im,append;
   char filename[100];
   static double gamma,alpham1;
   
   double tmp_mu = g_mu;
   WRITER * writer;
+  paramsInverterInfo *inverterInfo = NULL;
+  paramsPropagatorFormat *propagatorFormat = NULL;
+  spinor * temp_save; //used to save all the masses
   
   init_mms_tm(g_no_extra_masses);
 
@@ -160,30 +164,40 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
       /* save all the results of (Q^dagger Q)^(-1) \gamma_5 \phi */
       /* here ... */
-      sprintf(filename,"%s.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, 0);
-      if(g_kappa != 0) {
-	mul_r(g_spinor_field[DUM_SOLVER], (2*g_kappa)*(2*g_kappa), g_spinor_field[DUM_SOLVER], N);
-      }
+      /* when im == -1 save the base mass*/
+      for(im = -1; im < g_no_extra_masses; im++) {
+	
+	if(im==-1) temp_save=g_spinor_field[DUM_SOLVER];
+        else temp_save=xs_mms_solver[im];
+	
+	if(SourceInfo.type != 1)
+	  if (PropInfo.splitted) sprintf(filename, "%s.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im+1);
+	  else sprintf(filename, "%s.%.4d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, im+1);
+      	else sprintf(filename, "%s.%.4d.%.5d.cgmms.%.2d.0", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, im+1);
+	
+	if(g_kappa != 0) mul_r(temp_save, (2*g_kappa)*(2*g_kappa), temp_save, N);
+      
+	if(PropInfo.splitted) append=0;
+	else append=1;
 
-      /* the 0 is for appending */
-      construct_writer(&writer, filename, 0);
-      convert_lexic_to_eo(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], 
-			  g_spinor_field[DUM_SOLVER]);
-      write_spinor(writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
-      destruct_writer(writer);
+	construct_writer(&writer, filename, append);
 
-      for(im = 0; im < g_no_extra_masses; im++) {
-	sprintf(filename,"%s.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im+1);
-
-	construct_writer(&writer, filename, 0);
-
-	if(g_kappa != 0) {
-	  mul_r(xs_mms_solver[im], (2*g_kappa)*(2*g_kappa), xs_mms_solver[im], N);
+	//Write the header /NOTE: always writes TWILSON and 1 flavour (to be adjusted)
+	if (PropInfo.splitted || SourceInfo.ix == index_start) {
+	  inverterInfo = construct_paramsInverterInfo(err, iteration+1, 12, 1);
+    	  write_spinor_info(writer, PropInfo.format, inverterInfo);
+    	  free(inverterInfo);
 	}
-	convert_lexic_to_eo(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], xs_mms_solver[im]);
+	
+	//Again, 1 flavour
+	propagatorFormat = construct_paramsPropagatorFormat(err,1);
+	write_propagator_format(writer, propagatorFormat);
+	free(propagatorFormat);
 
-        write_spinor(writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
-        destruct_writer(writer);
+	convert_lexic_to_eo(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], 
+			    temp_save);
+	write_spinor(writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
+	destruct_writer(writer);
       }
       return(iteration+1);
     }
