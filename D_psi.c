@@ -47,6 +47,7 @@
 #include "update_backward_gauge.h"
 #include "block.h"
 #include "D_psi.h"
+#include "solver/dirac_operator_eigenvectors.h"
 
 static spinor tmpr;
 
