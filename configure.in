@@ -107,15 +107,16 @@ AC_ARG_ENABLE(fftw,
   enable_fftw=$enableval, enable_fftw=no)
 if test $enable_fftw = yes; then
   AC_MSG_RESULT(yes)
-  AC_DEFINE(FFTW,1,Compile with FFTW support)
+  AC_DEFINE(HAVE_FFTW,1,Compile with FFTW support)
   LIBS="-lfftw3 ${LIBS}"
 elif test $enable_fftw = no; then
   AC_MSG_RESULT(no)
 else
   AC_MSG_RESULT(yes)
-  AC_DEFINE(FFTW,1,Compile with FFTW support)
+  AC_DEFINE(HAVE_FFTW,1,Compile with FFTW support)
   fftw_lib=${enable_fftw}
-  LDFLAGS="$LDFLAGS -L${fftw_lib}/lib"
+  LDFLAGS="$LDFLAGS -L${fftw_lib}/lib64"
+  LIBS="-lfftw3 ${LIBS}"
   INCLUDES="-I${fftw_lib}/include ${INCLUDES}"
 fi
 

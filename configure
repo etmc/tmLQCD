@@ -5327,7 +5327,6 @@ else
 $as_echo "no" >&6; }
 fi
 
-
 fftw_lib=/usr
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether we want to use FFTW" >&5
 $as_echo_n "checking whether we want to use FFTW... " >&6; }
@@ -5342,7 +5341,7 @@ if test $enable_fftw = yes; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 
-$as_echo "#define FFTW 1" >>confdefs.h
+$as_echo "#define HAVE_FFTW 1" >>confdefs.h
 
   LIBS="-lfftw3 ${LIBS}"
 elif test $enable_fftw = no; then
@@ -5352,13 +5351,13 @@ else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 
-$as_echo "#define FFTW 1" >>confdefs.h
+$as_echo "#define HAVE_FFTW 1" >>confdefs.h
 
   fftw_lib=${enable_fftw}
-  LDFLAGS="$LDFLAGS -L${fftw_lib}/lib"
+  LDFLAGS="$LDFLAGS -L${fftw_lib}/lib64"
+  LIBS="-lfftw3 ${LIBS}"
   INCLUDES="-I${fftw_lib}/include ${INCLUDES}"
 fi
-
 
 if test $enable_mpi = yes; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking which parallelisation to use for MPI" >&5
@@ -5559,15 +5558,11 @@ $as_echo "no" >&6; }
   as_fn_error $? "lapack is needed! Will stop here." "$LINENO" 5
 fi
 
-
 if test $enable_mpi = yes; then
         if test "$host_vendor" != "cray"; then
     cross_compiling=yes
   fi
 fi
-
-
-
 
 
 ac_ext=f
