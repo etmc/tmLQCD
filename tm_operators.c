@@ -43,6 +43,9 @@
 #ifdef BGL
 #  include "bgl.h"
 #endif
+
+#include "solver/dirac_operator_eigenvectors.h"
+
 #include "tm_operators.h"
 
 #if (defined SSE2 || defined SSE3 || defined BGL)
@@ -326,6 +329,48 @@ void Q_pm_psi(spinor * const l, spinor * const k) {
   g_mu = -g_mu;
   D_psi(l, g_spinor_field[DUM_MATRIX]);
   gamma5(l, l, VOLUME);
+}
+
+
+/* the "full" operators */
+void Q_pm_psi_prec(spinor * const l, spinor * const k) {
+  /* Q */
+/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
+/*   g_mu = g_mu; */
+/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
+/*   gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME); */
+/*   g_mu = -g_mu; */
+/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
+/*   g_mu = -g_mu; */
+
+  /* todo: do preconditioning */
+  spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
+  static complex alpha={-1.0,0};
+
+  if(g_prec_sequence_d_dagger_d[0]!=0.0){
+    alpha.re=g_prec_sequence_d_dagger_d[0];
+    spinorPrecondition(l,k,ws,T,L,alpha,0,1);
+  } else 
+    assign(l,k,VOLUME);
+
+  g_mu = -g_mu;
+  D_psi(g_spinor_field[DUM_MATRIX], l);
+  gamma5(l, g_spinor_field[DUM_MATRIX], VOLUME);
+  g_mu = -g_mu;
+
+  if(g_prec_sequence_d_dagger_d[1]!=0.0){
+    alpha.re=g_prec_sequence_d_dagger_d[1];
+    spinorPrecondition(l,l,ws,T,L,alpha,0,1);
+  }
+
+  D_psi(g_spinor_field[DUM_MATRIX], l);
+  gamma5(l, g_spinor_field[DUM_MATRIX], VOLUME);
+
+  if(g_prec_sequence_d_dagger_d[2]!=0.0){
+    alpha.re=g_prec_sequence_d_dagger_d[2]; 
+    spinorPrecondition(l,l,ws,T,L,alpha,0,1);
+  }
+
 }
 
 

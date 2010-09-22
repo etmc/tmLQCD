@@ -55,6 +55,8 @@
 #include "solver/eigenvalues.h"
 #include "solver/sub_low_ev.h"
 #include "Dov_psi.h"
+#include "solver/dirac_operator_eigenvectors.h"
+#include "init_spinor_field.h"
 
 void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const int N);
 /* |R>=rnorm^2 Q^2 |S> */
@@ -74,56 +76,187 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
 
 double ov_s = 0.6;
 double m_ov = 0.;
-int ov_n_cheby;
+int ov_n_cheby=100;
 double * ov_cheby_coef = NULL;
+Dov_WS *dov_ws=NULL;
+
+
+void Dov_psi_prec(spinor * const P, spinor * const S) {
+  /* todo: do preconditioning */
+  spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
+  static complex alpha;
+  Dov_psi(P,S);
+  alpha.re=-1.;
+  alpha.im=0.0;
+  spinorPrecondition(P,P,ws,T,L,alpha,0,1);
+
+}
+
+void calculateOverlapPolynomial(){
+  if(ov_cheby_coef != NULL) free(ov_cheby_coef);
+  ov_cheby_coef = (double*)malloc(ov_n_cheby*sizeof(double));
+  chebyshev_coefs(ev_minev, 1., ov_cheby_coef, ov_n_cheby, -0.5);
+  printf("last chebycheff coefficients\n");
+  for(int i = ov_n_cheby-3;i<ov_n_cheby;i++)
+    printf("%d %e\n",i,ov_cheby_coef[i]);
+}
+
+/**
+ * initializes the Dov workspace
+ */
+void init_Dov_WS(){
+  int i;
+  dov_ws=(Dov_WS*)malloc(sizeof(Dov_WS));
+  dov_ws->n_spinors=7;
+  if(g_proc_id==0) printf("Initilizing Dov spinor workspace with %d spinors!!!\n",dov_ws->n_spinors);
+/* int allocate_spinor_field_array(spinor ***spinors,spinor **sp,const int V, const int nr); */
+  allocate_spinor_field_array(&(dov_ws->dum_spinors),&(dov_ws->dum_spinors_membuf),VOLUMEPLUSRAND,dov_ws->n_spinors);
+  dov_ws->lock_map=malloc(sizeof(int)*dov_ws->n_spinors);
+  for(i = 0 ; i< dov_ws->n_spinors;i++)
+    dov_ws->lock_map[i]=0;
+}
+
+void free_Dov_WS(){
+  if(dov_ws!=NULL){
+    free_spinor_field_array(&(dov_ws->dum_spinors_membuf));
+    free(dov_ws->lock_map);
+    free(dov_ws);
+    dov_ws=NULL;
+  }
+}
+
+
+spinor * lock_Dov_WS_spinor(int num){
+  int i;
+
+  if(num<dov_ws->n_spinors){
+    if(dov_ws->lock_map[num]==0){
+      dov_ws->lock_map[num]=1;
+
+/*       fprintf(stdout,"printing lock map in lock:\n"); */
+/*       for(i = 0 ; i< dov_ws->n_spinors;i++) */
+/* 	fprintf(stdout,"%d ",dov_ws->lock_map[i]); */
+/*       fprintf(stdout,"\n "); */
+
+      return dov_ws->dum_spinors[num];
+    } else {
+      if(g_proc_id == 0) fprintf(stderr,"spinor %d locked already\n" , num+1); 
+      return NULL;
+    }
+  } else {
+    if(g_proc_id == 0) fprintf(stderr,"Error number of spinor fields exceeded: adjust it to %d in Dov_psi.c !!!!\n" , num+1); 
+    return NULL;
+  }
+
+}
+
+void unlock_Dov_WS_spinor(int num){
+  int i;
+  if(num<dov_ws->n_spinors){
+    if(dov_ws->lock_map[num]==1){
+      dov_ws->lock_map[num]=0;
+    } else {
+      if(g_proc_id == 0) fprintf(stderr,"spinor %d was not locked already (double unlock ?? )\n" , num+1); 
+    }
+  } else {
+    if(g_proc_id == 0) fprintf(stderr,"Error number of spinor fields exceeded  (in unlock ?? check your unlock indices against lock indices !!! ): adjust it to %d in Dov_psi.c !!!!\n" , num+1); 
+  }
+
+/*   fprintf(stdout,"printing lock map in unlock:\n"); */
+/*   for(i = 0 ; i< dov_ws->n_spinors;i++) */
+/*     fprintf(stdout,"%d ",dov_ws->lock_map[i]); */
+/*   fprintf(stdout,"\n "); */
+
+
+}
 
 void Dov_psi(spinor * const P, spinor * const S) {
 
-  int i;
   double c0,c1;
-  spinor **s, *s_;
+  spinor *s, *s_;
   static int n_cheby = 0;
   static int rec_coefs = 1;
 
   ov_s = 0.5*(1./g_kappa - 8.) - 1.;
-  printf("Degree of Polynomial set to %d\n", ov_n_cheby);
+/*   printf("Degree of Polynomial set to %d\n", ov_n_cheby); */
   if(n_cheby != ov_n_cheby || rec_coefs) {
-    if(ov_cheby_coef != NULL) free(ov_cheby_coef);
-    ov_cheby_coef = (double*)malloc(ov_n_cheby*sizeof(double));
-    chebyshev_coefs(ev_minev, 1., ov_cheby_coef, ov_n_cheby, -0.5);
-    rec_coefs = 0;
+    calculateOverlapPolynomial();
     n_cheby = ov_n_cheby;
+    rec_coefs = 0;
   }
 
-  s_ = calloc(2*VOLUMEPLUSRAND+1, sizeof(spinor));
-  s  = calloc(2, sizeof(spinor*));
-
-  for(i = 0; i < 2; i++) {
-#if (defined SSE3 || defined SSE2 || defined SSE)
-    s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
-#else
-    s[i] = s_+i*VOLUMEPLUSRAND;
-#endif
+  if(dov_ws==NULL){
+    init_Dov_WS();
   }
+
+/*   s_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
+
+/* #if (defined SSE3 || defined SSE2 || defined SSE) */
+/*   s = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE); */
+/* #else */
+/*   s = s_; */
+/* #endif */
+
+  s=lock_Dov_WS_spinor(0);
 
   /* here we do with M = 1 + s */
   /* M + m_ov/2 + (M - m_ov/2) \gamma_5 sign(Q(-M)) */
   c0 = -(1.0 + ov_s - 0.5*m_ov);
   c1 = -(1.0 + ov_s + 0.5*m_ov);
 
-  Q_over_sqrt_Q_sqr(s[0], ov_cheby_coef, ov_n_cheby, S, ev_qnorm, ev_minev);
-  gamma5(s[1], s[0], VOLUME);
-  assign_mul_add_mul_r(s[1], S, c0, c1, VOLUME);
-  assign(P, s[1], VOLUME);
+  Q_over_sqrt_Q_sqr(s, ov_cheby_coef, ov_n_cheby, S, ev_qnorm, ev_minev);
+  gamma5(s, s, VOLUME);
+  assign_mul_add_mul_r(s, S, c0, c1, VOLUME);
+  assign(P, s, VOLUME);
 
-  free(s);
-  free(s_);
+/*   free(s_); */
+  unlock_Dov_WS_spinor(0);
   return;
 }
 
 void Qov_psi(spinor * const P, spinor * const S) {
   Dov_psi(P, S);
   gamma5(P, P, VOLUME);
+  return;
+}
+
+void Qov_sq_psi(spinor * const P, spinor * const S) {
+  Dov_psi(g_spinor_field[DUM_MATRIX], S);
+  gamma5(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX], VOLUME);
+  Dov_psi(P,g_spinor_field[DUM_MATRIX]);
+  gamma5(P,P, VOLUME);
+
+  return;
+}
+
+void Qov_sq_psi_prec(spinor * const P, spinor * const S) {
+
+
+  spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
+  static complex alpha={0,0};
+
+  alpha.re=ws->precExpo[0];
+  spinorPrecondition(P,S,ws,T,L,alpha,0,1);
+
+
+  Dov_psi(g_spinor_field[DUM_MATRIX], P);
+  gamma5(P, g_spinor_field[DUM_MATRIX], VOLUME);
+
+  alpha.re=ws->precExpo[1];
+  spinorPrecondition(P,P,ws,T,L,alpha,0,1);
+
+  Dov_psi(g_spinor_field[DUM_MATRIX], P);
+  gamma5(P, g_spinor_field[DUM_MATRIX], VOLUME);
+
+  alpha.re=ws->precExpo[2];
+  spinorPrecondition(P,P,ws,T,L,alpha,0,1);
+
+
+/*   Dov_psi(g_spinor_field[DUM_MATRIX], S); */
+/*   gamma5(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX], VOLUME); */
+/*   Dov_psi(P,g_spinor_field[DUM_MATRIX]); */
+/*   gamma5(P,P, VOLUME); */
+
   return;
 }
 
@@ -146,13 +279,16 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
     }
     free(ev_sign);
     ev_sign = (int*) malloc(n * sizeof(int));
-#if ( defined SSE || defined SSE2 || defined SSE3)
-    aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-    aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-    aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-    aux = aux_;
-#endif
+
+/* #if ( defined SSE || defined SSE2 || defined SSE3) */
+/*     aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
+/*     aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
+/* #else */
+/*     aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
+/*     aux = aux_; */
+/* #endif */
+    aux=lock_Dov_WS_spinor(1);
+
     for(j=0; j < n; j++) {
       D_psi(aux, &(eigenvectors[j*evlength]));
       gamma5(aux, aux, N);
@@ -165,7 +301,9 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
 	ev_sign[j] = 1;
       }
     }
-    free(aux_);
+
+    unlock_Dov_WS_spinor(1);
+/*     free(aux_); */
   }
 
   for(j = 0; j < n; j++) {
@@ -185,13 +323,14 @@ void norm_Q_sqr_psi(spinor * const R, spinor * const S,
 		    const double rnorm) { 
 
   spinor *aux_,*aux;
-#if ( defined SSE || defined SSE2 || defined SSE3 )
-  aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  aux = aux_;
-#endif
+/* #if ( defined SSE || defined SSE2 || defined SSE3 ) */
+/*   aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
+/*   aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
+/* #else */
+/*   aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
+/*   aux = aux_; */
+/* #endif */
+  aux=lock_Dov_WS_spinor(1);
 
   /* Term -1-s is done in D_psi! does this comment make sense for HMC? */
   /* no, it doesn't, we do have to work on this */
@@ -202,7 +341,8 @@ void norm_Q_sqr_psi(spinor * const R, spinor * const S,
   gamma5(R, R, VOLUME);
   mul_r(R, rnorm*rnorm, R, VOLUME);
 
-  free(aux_);
+/*   free(aux_); */
+  unlock_Dov_WS_spinor(1);
   return;
 }
 
@@ -215,18 +355,20 @@ void norm_Q_n_psi(spinor * const R, spinor * const S,
 		  const int n, const double rnorm) { 
 
   int i;
-  double s_par, npar = 1.;
+  double npar = 1.;
   spinor *aux_,*aux;
-#if (defined SSE || defined SSE2 || defined SSE3)
-  aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  aux = aux_;
-#endif
+/* #if (defined SSE || defined SSE2 || defined SSE3) */
+/*   aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
+/*   aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
+/* #else */
+/*   aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
+/*   aux = aux_; */
+/* #endif */
+
+  aux=lock_Dov_WS_spinor(1);
+
   assign(aux, S, VOLUME);
   
-  s_par=-(ov_s+1);
   
   for(i=0; i < n; i++){
     D_psi(R, aux);
@@ -235,7 +377,8 @@ void norm_Q_n_psi(spinor * const R, spinor * const S,
     npar *= rnorm;
   }
   mul_r(R, npar, aux, VOLUME);
-  free(aux_);
+/*   free(aux_); */
+  unlock_Dov_WS_spinor(1);
   return;
 }
 
@@ -247,30 +390,36 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
   double fact1, fact2, temp1, temp2, temp3, temp4, maxev, tnorm;
   spinor *sv_, *sv, *d_, *d, *dd_, *dd, *aux_, *aux, *aux3_, *aux3;
   double ap_eps_sq = 0.;
-  
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  sv_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  sv   = (spinor *)(((unsigned long int)(sv_)+ALIGN_BASE)&~ALIGN_BASE);
-  d_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  d    = (spinor *)(((unsigned long int)(d_)+ALIGN_BASE)&~ALIGN_BASE);
-  dd_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  dd   = (spinor *)(((unsigned long int)(dd_)+ALIGN_BASE)&~ALIGN_BASE);
-  aux_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  aux  = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE);
-  aux3_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  aux3 = (spinor *)(((unsigned long int)(aux3_)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  sv_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  sv = sv_;
-  d_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  d = d_;
-  dd_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  dd = dd_;
-  aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  aux = aux_;
-  aux3_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  aux3 = aux3_;
-#endif
+
+/* #if ( defined SSE || defined SSE2 || defined SSE3) */
+/*   sv_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
+/*   sv   = (spinor *)(((unsigned long int)(sv_)+ALIGN_BASE)&~ALIGN_BASE); */
+/*   d_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
+/*   d    = (spinor *)(((unsigned long int)(d_)+ALIGN_BASE)&~ALIGN_BASE); */
+/*   dd_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
+/*   dd   = (spinor *)(((unsigned long int)(dd_)+ALIGN_BASE)&~ALIGN_BASE); */
+/*   aux_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
+/*   aux  = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
+/*   aux3_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
+/*   aux3 = (spinor *)(((unsigned long int)(aux3_)+ALIGN_BASE)&~ALIGN_BASE); */
+/* #else */
+/*   sv_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
+/*   sv = sv_; */
+/*   d_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
+/*   d = d_; */
+/*   dd_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
+/*   dd = dd_; */
+/*   aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
+/*   aux = aux_; */
+/*   aux3_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
+/*   aux3 = aux3_; */
+/* #endif */
+  sv=lock_Dov_WS_spinor(2);
+  d=lock_Dov_WS_spinor(3);
+  dd=lock_Dov_WS_spinor(4);
+  aux=lock_Dov_WS_spinor(5);
+  aux3=lock_Dov_WS_spinor(6);
+
 
   eigenvalues_for_cg_computed = no_eigenvalues - 1;
   if(eigenvalues_for_cg_computed < 0) eigenvalues_for_cg_computed = 0;
@@ -374,57 +523,48 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
   /* add in piece from projected subspace */
   addproj_q_invsqrt(R, S, no_eigenvalues-1, VOLUME);
   
-  free(sv_);
-  free(d_);
-  free(dd_);
-  free(aux_);
-  free(aux3_);
+/*   free(sv_); */
+/*   free(d_); */
+/*   free(dd_); */
+/*   free(aux_); */
+/*   free(aux3_); */
+  unlock_Dov_WS_spinor(2);
+  unlock_Dov_WS_spinor(3);
+  unlock_Dov_WS_spinor(4);
+  unlock_Dov_WS_spinor(5);
+  unlock_Dov_WS_spinor(6);
   return;
 }
 
 void CheckApproximation(spinor * const P, spinor * const S) {
 
-  int i;
-  double c0,c1;
-  spinor **s, *s_;
+  spinor *s, *s_;
   static int n_cheby = 0;
   static int rec_coefs = 1;
 
   ov_s = 0.5*(1./g_kappa - 8.) - 1.;
 
   if(n_cheby != ov_n_cheby || rec_coefs) {
-    if(ov_cheby_coef != NULL) free(ov_cheby_coef);
-    ov_cheby_coef = (double*)malloc(ov_n_cheby*sizeof(double));
-    chebyshev_coefs(ev_minev, 1., ov_cheby_coef, ov_n_cheby, -0.5);
-    rec_coefs = 0;
+    calculateOverlapPolynomial();
     n_cheby = ov_n_cheby;
+    rec_coefs = 0;
   }
 
-  s_ = calloc(2*VOLUMEPLUSRAND+1, sizeof(spinor));
-  s  = calloc(2, sizeof(spinor*));
+  s_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
 
-  for(i = 0; i < 2; i++) {
 #if (defined SSE3 || defined SSE2 || defined SSE)
-    s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
+  s = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-    s[i] = s_+i*VOLUMEPLUSRAND;
+  s = s_;
 #endif
-  }
+  
 
-  /* here we do with M = 1 + s */
-  /* M + m_ov/2 + (M - m_ov/2) \gamma_5 sign(Q(-M)) */
-//  c0 = 1.0 + ov_s - 0.5*m_ov;
-//  c1 = 1.0 + ov_s + 0.5*m_ov;
 
-  Q_over_sqrt_Q_sqr(s[0], ov_cheby_coef, ov_n_cheby, S, ev_qnorm, ev_minev);
-  Q_over_sqrt_Q_sqr(s[1], ov_cheby_coef, ov_n_cheby, s[0], ev_qnorm, ev_minev);
+  Q_over_sqrt_Q_sqr(s, ov_cheby_coef, ov_n_cheby, S, ev_qnorm, ev_minev);
+  Q_over_sqrt_Q_sqr(P, ov_cheby_coef, ov_n_cheby, s, ev_qnorm, ev_minev);
 
-//  gamma5(s[1], s[0], VOLUME);
-  //assign_mul_add_mul_r(s[1], S, 1.0, -1., VOLUME);
-  assign(P, s[1], VOLUME);
 
   free(s);
-  free(s_);
   return;
 }
 

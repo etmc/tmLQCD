@@ -22,6 +22,10 @@
 
 int init_spinor_field(const int V, const int nr);
 int init_csg_field(const int V);
+
+int allocate_spinor_field_array(spinor ***spinors,spinor **sp,const int V, const int nr);
+void free_spinor_field_array(spinor** sp);
+
 void free_spinor_field();
 int init_timslice_buffer_field(const int t_slice);
 

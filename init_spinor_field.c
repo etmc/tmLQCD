@@ -80,6 +80,54 @@ void free_spinor_field() {
 #endif
 }
 
+
+/** 
+ * costumized spinor allocation routines
+ */
+int allocate_spinor_field_array(spinor ***spinors,spinor **sp,const int V, const int nr) {
+  int i = 0;
+
+#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+  if((void*)((*sp) = (spinor*)shmalloc((nr*V+1)*sizeof(spinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+#else
+  if((void*)((*sp) = (spinor*)calloc(nr*V+1, sizeof(spinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+#endif
+  if((void*)((*spinors) = (spinor**)malloc(nr*sizeof(spinor*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(2);
+  }
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  (*spinors)[0] = (spinor*)(((unsigned long int)(*sp)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  (*spinors)[0] = *sp;
+#endif
+  
+  for(i = 1; i < nr; i++){
+    (*spinors)[i] = (*spinors)[i-1]+V;
+  }
+
+  return(0);
+}
+
+void free_spinor_field_array(spinor** sp) {
+#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+  shfree(*sp);
+#else
+  free(*sp);
+#endif
+}
+
+
+
 #ifndef _BENCH_ONLY
 int init_csg_field(const int V) {
   int i = 0, j = 0, sum = 0;
