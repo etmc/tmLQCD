@@ -50,6 +50,10 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
   else if(prop_type == -1) {
     return(-4);
   }
+  destruct_reader(reader);
+
+  /* seek back to beginning of file*/
+  construct_reader(&reader, filename);
 
   /* Find the desired propagator (could be more than one in a file) */
   while ((status = ReaderNextRecord(reader)) != LIME_EOF) {
@@ -118,5 +122,3 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
 
   return(0);
 }
-
-
