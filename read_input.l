@@ -163,6 +163,8 @@ inline void rmQuotes(char *str){
   
   int dfl_field_iter;
   int dfl_poly_iter;
+
+  int use_preconditioning;
 %}
 
 %option never-interactive
@@ -280,6 +282,9 @@ inline void rmQuotes(char *str){
 %x DFLFIELDITER
 %x DFLPOLYITER
 
+%x PRECONDITIONING
+
+
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
 ^T{EQL}                            BEGIN(TT);
@@ -349,6 +354,7 @@ inline void rmQuotes(char *str){
 ^SourceType{EQL}                   BEGIN(SOURCETYPE);
 ^NoSamples{EQL}                    BEGIN(NOSAMPLES);
 ^SplittedPropagator{EQL}           BEGIN(PROPSPLIT);
+^UsePreconditioning{EQL}           BEGIN(PRECONDITIONING);
 
 ^BeginMeasurement{SPC}+            BEGIN(INITMEASUREMENT);
 
@@ -379,7 +385,7 @@ inline void rmQuotes(char *str){
  }
 <GPU>{
   {SPC}*InnersolverPrecision{SPC}*={SPC}*{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %f", name, &c);
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     innersolver_precision = c;
     if(myverbose) printf("  Inner solver precision set to %f line %d\n", c, line_of_file);
   }
@@ -459,6 +465,16 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->eps_sq = c;
     if(myverbose) printf("  SolverPrecision set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*SolverRelativePrecision{EQL}yes {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    optr->rel_prec = 1;
+    if(myverbose) printf("  SolverRelativePrecision set to YES line %d operator %d\n",  line_of_file, current_operator);
+  }
+  {SPC}*SolverRelativePrecision{EQL}no {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    optr->rel_prec = 0;
+    if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
   ^EndOperator{SPC}*  {
     if(myverbose) printf("operator %d parsed line %d\n\n", current_operator, line_of_file);
@@ -540,6 +556,14 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->ev_prec = c;
     if(myverbose) printf("  KernelEigenvaluePrecision set to %f line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*KernelEigenvectorsReadWrite{EQL}yes {
+    optr->ev_readwrite = 1;
+    if(myverbose) printf("  KernelEigenvectorsReadWrite set to 1 line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*KernelEigenvectorsReadWrite{EQL}no {
+    optr->ev_readwrite = 0;
+    if(myverbose) printf("  KernelEigenvectorsReadWrite set to 0 line %d operator %d\n", line_of_file, current_operator);
   }
 }
 
@@ -1153,6 +1177,7 @@ inline void rmQuotes(char *str){
     if(myverbose) printf("Writing all Propagators per gauge into one single files\n");
   }
 }
+
 <NOSAMPLES>{DIGIT}+ {
   no_samples = atoi(yytext);
   if(myverbose) printf("Inverting for %d samples\n", no_samples);
@@ -1570,6 +1595,16 @@ inline void rmQuotes(char *str){
   use_stout_flag = 0;
   if(myverbose!=0) printf("Don't use stout smearing for invert!\n");
 }
+
+<PRECONDITIONING>yes {
+  use_preconditioning = 1;
+  if(myverbose) printf("Using project \"QCD-Preconditioning\"\n");
+}
+<PRECONDITIONING>no {
+  use_preconditioning = 0;
+  if(myverbose) printf("not using project \"QCD-Preconditioning\"\n");
+}
+
 <STOUTRHO>{FLT} {
   stout_rho=atof(yytext);
   if(myverbose!=0) printf("use stout rho=%e!\n", stout_rho);
@@ -1807,6 +1842,7 @@ int read_input(char * conf_file){
   reproduce_randomnumber_flag = _default_reproduce_randomnumber_flag;
   g_sloppy_precision_flag = _default_g_sloppy_precision_flag;
   use_stout_flag = _default_use_stout_flag;
+  use_preconditioning = _default_use_preconditioning;
   stout_rho = _default_stout_rho;
   stout_no_iter = _default_stout_no_iter;
   /* check for reread ! */ 
@@ -1853,6 +1889,7 @@ int read_input(char * conf_file){
   
   if(PropInfo.format == -1) PropInfo.format = SourceInfo.format;
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
+
 
   fclose(yyout);
   fclose(yyin);
