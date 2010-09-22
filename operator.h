@@ -24,6 +24,7 @@
 
 #include "su3.h"
 #include <io/utils.h>
+#include "solver/dirac_operator_eigenvectors.h"
 
 #define TMWILSON 0
 #define OVERLAP 1
@@ -72,6 +73,7 @@ typedef struct {
   double ev_qnorm;
   double ev_minev;
   double ev_prec;
+  int ev_readwrite;
   /* generic place for sources */
   spinor *sr0, *sr1, *sr2, *sr3;
   /* generic place for propagators */
@@ -94,6 +96,8 @@ typedef struct {
   /* write the propagator */
   void (*write_prop) (const int op_id, const int index_start, const int append_);
   char * conf_input;
+
+  spinorPrecWS *precWS;
   
 } operator;
 

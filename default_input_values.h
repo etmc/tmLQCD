@@ -150,4 +150,6 @@
 #define _default_MDPolyLocNormConst -1.0
 #define _default_MDPolyDetRatio 0
 
+#define _default_use_preconditioning 0
+
 #endif
