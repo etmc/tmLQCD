@@ -18,6 +18,9 @@
 /* Compile with MPI support */
 #undef MPI
 
+/* Compile with FFTW support */
+#undef HAVE_FFTW
+
 /* Fortran has not extra _ */
 #undef NOF77_
 
