@@ -107,14 +107,8 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
 
   no_eigenvalues = *nr_of_eigenvalues;
 
-  if(prefix!=NULL){
-    sprintf(eigenvector_prefix,"eigenvector_%s.%%s.%%.2d.%%.4d",prefix);
-    sprintf(eigenvalue_prefix,"eigenvalues_%s.%%s.%%.4d",prefix);
-  } else {
-    sprintf(eigenvector_prefix,"eigenvector.%%s.%%.2d.%%.4d");
-    sprintf(eigenvalue_prefix,"eigenvalues.%%s.%%.4d");
-  }
-
+  sprintf(eigenvector_prefix,"eigenvector.%%s.%%.2d.%%.4d");
+  sprintf(eigenvalue_prefix,"eigenvalues.%%s.%%.4d");
 
   if(!even_odd_flag) {
     N = (VOLUME);
