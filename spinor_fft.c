@@ -48,7 +48,7 @@ void spinor_fft_transpose_xp_t(spinor *fieldout,spinor* fieldin,int dim0,int dim
  */
 void spinor_fft_reduce_2d(spinor *localSpinorField,int *collectionRank,spinor*** field_collection,spinor **membuff){
   /* this implementation is intended for four dimensional parallelisation */
-#if (defined  PARALLELXYZT  && defined MPI)
+#if (defined  PARALLELXYZT  && defined MPI && defined HAVE_FFTW)
 
   int sendRecvCoord[4];
   int i;
@@ -199,7 +199,7 @@ void spinor_fft_reduce_2d(spinor *localSpinorField,int *collectionRank,spinor***
  */
 void spinor_fft_redist_2d(spinor *localSpinorField,int collectionRank,spinor** field_collection,spinor *membuff){
   /* this implementation is intended for four dimensional parallelisation */
-#if ( defined PARALLELXYZT && defined MPI )
+#if ( defined PARALLELXYZT && defined MPI && defined HAVE_FFTW)
 
   int sendRecvCoord[4];
   int i;

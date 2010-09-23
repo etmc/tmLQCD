@@ -109,7 +109,6 @@ void init_Dov_WS(){
   dov_ws=(Dov_WS*)malloc(sizeof(Dov_WS));
   dov_ws->n_spinors=7;
   if(g_proc_id==0) printf("Initilizing Dov spinor workspace with %d spinors!!!\n",dov_ws->n_spinors);
-/* int allocate_spinor_field_array(spinor ***spinors,spinor **sp,const int V, const int nr); */
   allocate_spinor_field_array(&(dov_ws->dum_spinors),&(dov_ws->dum_spinors_membuf),VOLUMEPLUSRAND,dov_ws->n_spinors);
   dov_ws->lock_map=malloc(sizeof(int)*dov_ws->n_spinors);
   for(i = 0 ; i< dov_ws->n_spinors;i++)
@@ -127,17 +126,10 @@ void free_Dov_WS(){
 
 
 spinor * lock_Dov_WS_spinor(int num){
-  int i;
 
   if(num<dov_ws->n_spinors){
     if(dov_ws->lock_map[num]==0){
       dov_ws->lock_map[num]=1;
-
-/*       fprintf(stdout,"printing lock map in lock:\n"); */
-/*       for(i = 0 ; i< dov_ws->n_spinors;i++) */
-/* 	fprintf(stdout,"%d ",dov_ws->lock_map[i]); */
-/*       fprintf(stdout,"\n "); */
-
       return dov_ws->dum_spinors[num];
     } else {
       if(g_proc_id == 0) fprintf(stderr,"spinor %d locked already\n" , num+1); 
@@ -151,7 +143,6 @@ spinor * lock_Dov_WS_spinor(int num){
 }
 
 void unlock_Dov_WS_spinor(int num){
-  int i;
   if(num<dov_ws->n_spinors){
     if(dov_ws->lock_map[num]==1){
       dov_ws->lock_map[num]=0;
@@ -162,18 +153,12 @@ void unlock_Dov_WS_spinor(int num){
     if(g_proc_id == 0) fprintf(stderr,"Error number of spinor fields exceeded  (in unlock ?? check your unlock indices against lock indices !!! ): adjust it to %d in Dov_psi.c !!!!\n" , num+1); 
   }
 
-/*   fprintf(stdout,"printing lock map in unlock:\n"); */
-/*   for(i = 0 ; i< dov_ws->n_spinors;i++) */
-/*     fprintf(stdout,"%d ",dov_ws->lock_map[i]); */
-/*   fprintf(stdout,"\n "); */
-
-
 }
 
 void Dov_psi(spinor * const P, spinor * const S) {
 
   double c0,c1;
-  spinor *s, *s_;
+  spinor *s;
   static int n_cheby = 0;
   static int rec_coefs = 1;
 
@@ -251,12 +236,6 @@ void Qov_sq_psi_prec(spinor * const P, spinor * const S) {
   alpha.re=ws->precExpo[2];
   spinorPrecondition(P,P,ws,T,L,alpha,0,1);
 
-
-/*   Dov_psi(g_spinor_field[DUM_MATRIX], S); */
-/*   gamma5(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX], VOLUME); */
-/*   Dov_psi(P,g_spinor_field[DUM_MATRIX]); */
-/*   gamma5(P,P, VOLUME); */
-
   return;
 }
 
@@ -264,7 +243,7 @@ void Qov_sq_psi_prec(spinor * const P, spinor * const S) {
 void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const int N) {
   
   int j;
-  spinor *aux_ = NULL, *aux;
+  spinor  *aux;
   complex cnorm, lambda;
   static double save_ev[2]={-1.,-1.};
   static int * ev_sign = NULL;
@@ -280,13 +259,6 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
     free(ev_sign);
     ev_sign = (int*) malloc(n * sizeof(int));
 
-/* #if ( defined SSE || defined SSE2 || defined SSE3) */
-/*     aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*     aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
-/* #else */
-/*     aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*     aux = aux_; */
-/* #endif */
     aux=lock_Dov_WS_spinor(1);
 
     for(j=0; j < n; j++) {
@@ -322,14 +294,7 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
 void norm_Q_sqr_psi(spinor * const R, spinor * const S, 
 		    const double rnorm) { 
 
-  spinor *aux_,*aux;
-/* #if ( defined SSE || defined SSE2 || defined SSE3 ) */
-/*   aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*   aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
-/* #else */
-/*   aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*   aux = aux_; */
-/* #endif */
+  spinor *aux;
   aux=lock_Dov_WS_spinor(1);
 
   /* Term -1-s is done in D_psi! does this comment make sense for HMC? */
@@ -341,7 +306,6 @@ void norm_Q_sqr_psi(spinor * const R, spinor * const S,
   gamma5(R, R, VOLUME);
   mul_r(R, rnorm*rnorm, R, VOLUME);
 
-/*   free(aux_); */
   unlock_Dov_WS_spinor(1);
   return;
 }
@@ -356,14 +320,7 @@ void norm_Q_n_psi(spinor * const R, spinor * const S,
 
   int i;
   double npar = 1.;
-  spinor *aux_,*aux;
-/* #if (defined SSE || defined SSE2 || defined SSE3) */
-/*   aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*   aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
-/* #else */
-/*   aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*   aux = aux_; */
-/* #endif */
+  spinor *aux;
 
   aux=lock_Dov_WS_spinor(1);
 
@@ -377,7 +334,6 @@ void norm_Q_n_psi(spinor * const R, spinor * const S,
     npar *= rnorm;
   }
   mul_r(R, npar, aux, VOLUME);
-/*   free(aux_); */
   unlock_Dov_WS_spinor(1);
   return;
 }
@@ -388,32 +344,9 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
   
   int j;
   double fact1, fact2, temp1, temp2, temp3, temp4, maxev, tnorm;
-  spinor *sv_, *sv, *d_, *d, *dd_, *dd, *aux_, *aux, *aux3_, *aux3;
+  spinor  *sv, *d,  *dd,  *aux,  *aux3;
   double ap_eps_sq = 0.;
 
-/* #if ( defined SSE || defined SSE2 || defined SSE3) */
-/*   sv_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*   sv   = (spinor *)(((unsigned long int)(sv_)+ALIGN_BASE)&~ALIGN_BASE); */
-/*   d_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*   d    = (spinor *)(((unsigned long int)(d_)+ALIGN_BASE)&~ALIGN_BASE); */
-/*   dd_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*   dd   = (spinor *)(((unsigned long int)(dd_)+ALIGN_BASE)&~ALIGN_BASE); */
-/*   aux_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*   aux  = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
-/*   aux3_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*   aux3 = (spinor *)(((unsigned long int)(aux3_)+ALIGN_BASE)&~ALIGN_BASE); */
-/* #else */
-/*   sv_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*   sv = sv_; */
-/*   d_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*   d = d_; */
-/*   dd_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*   dd = dd_; */
-/*   aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*   aux = aux_; */
-/*   aux3_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*   aux3 = aux3_; */
-/* #endif */
   sv=lock_Dov_WS_spinor(2);
   d=lock_Dov_WS_spinor(3);
   dd=lock_Dov_WS_spinor(4);
@@ -523,11 +456,6 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
   /* add in piece from projected subspace */
   addproj_q_invsqrt(R, S, no_eigenvalues-1, VOLUME);
   
-/*   free(sv_); */
-/*   free(d_); */
-/*   free(dd_); */
-/*   free(aux_); */
-/*   free(aux3_); */
   unlock_Dov_WS_spinor(2);
   unlock_Dov_WS_spinor(3);
   unlock_Dov_WS_spinor(4);
