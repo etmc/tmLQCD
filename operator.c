@@ -33,6 +33,7 @@
 #endif
 #include "global.h"
 #include "default_input_values.h"
+#include "read_input.h"
 #include "su3.h"
 #include "tm_operators.h"
 #include "linalg_eo.h"
@@ -116,6 +117,7 @@ int add_operator(const int type) {
     optr->no_ev = 10;
     optr->no_ev_index = 8;
     optr->ev_prec = 1.e-15;
+    optr->ev_readwrite = 0;
     optr->deg_poly = 50;
     optr->s = 0.6;
     optr->m = 0.;
@@ -125,6 +127,8 @@ int add_operator(const int type) {
     optr->no_flavours = 2;
     g_running_phmc = 1;
   }
+
+  optr->precWS=NULL;
 
   optr->initialised = 1;
 
@@ -237,7 +241,15 @@ void op_invert(const int op_id, const int index_start) {
       if (g_cart_id == 0) {
 	printf("mu = %e\n", g_mu);
       }
-      
+
+      if(use_preconditioning==1){
+	g_precWS=(void*)optr->precWS;
+	if(PRECWSOPERATORSELECT[optr->solver] == PRECWS_D_DAGGER_D)
+	  fitPrecParams(op_id);
+      }
+      else
+	g_precWS=NULL;
+
       optr->iterations = invert_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 				   optr->eps_sq, optr->maxiter,
 				   optr->solver, optr->rel_prec,
@@ -340,12 +352,23 @@ void op_invert(const int op_id, const int index_start) {
   }
   else if(optr->type == OVERLAP) {
     g_mu = 0.;
-/*     ov_m = optr->m; */
-    eigenvalues(&optr->no_ev, 5000, 1.e-12, 0, 0, 0, optr->even_odd_flag);
+    m_ov=optr->m;
+    eigenvalues(&optr->no_ev, 5000, optr->ev_prec, 0, optr->ev_readwrite, nstore, optr->even_odd_flag);
 /*     ov_check_locality(); */
-    index_jd(&optr->no_ev_index, 5000, 1.e-12, optr->conf_input, 0, 4);
+/*      index_jd(&optr->no_ev_index, 5000, 1.e-12, optr->conf_input, nstore, 4);  */
+    ov_n_cheby=optr->deg_poly;
+
+    if(use_preconditioning==1)
+      g_precWS=(void*)optr->precWS;
+    else
+      g_precWS=NULL;
+
+
     if(g_debug_level > 3) ov_check_ginsparg_wilson_relation_strong(); 
+
     invert_overlap(op_id, index_start); 
+
+    optr->write_prop(op_id, index_start, 0);
   }
 #ifdef MPI
   etime = MPI_Wtime();

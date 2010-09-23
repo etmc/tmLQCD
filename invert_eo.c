@@ -52,7 +52,7 @@
 #include"solver/poly_precon.h"
 #include"solver/dfl_projector.h"
 #include"invert_eo.h"
-
+#include "solver/dirac_operator_eigenvectors.h"
 
 #ifdef HAVE_GPU
 #include"GPU/cudadefs.h"
@@ -298,15 +298,37 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     
     if(solver_flag == BICGSTAB) {
       if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}
-      iter = bicgstab_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi);
+      if(use_preconditioning==1 && g_precWS!=NULL){
+	if(g_proc_id == 0) {printf("Using preconditioning!!!\n");}
+	iter = bicgstab_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi_prec);
+      } else {
+	if(g_proc_id == 0) {printf("Not using preconditioning!!!\n");}
+	iter = bicgstab_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi);
+      }
     }
     else if(solver_flag == CGS) {
       if(g_proc_id == 0) {printf("# Using CGS!\n"); fflush(stdout);}
-      iter = cgs_real(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi);
+
+      if(use_preconditioning==1 && g_precWS!=NULL){
+	if(g_proc_id == 0) {printf("Using preconditioning!!!\n");}
+	iter = cgs_real(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi_prec);
+      } else {
+	if(g_proc_id == 0) {printf("Not using preconditioning!!!\n");}
+	iter = cgs_real(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi);
+      }
+
+
     }    
     else if(solver_flag == GMRES) {
       if(g_proc_id == 0) {printf("# Using GMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
-      iter = gmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi);
+
+      if(use_preconditioning==1 && g_precWS!=NULL){
+	if(g_proc_id == 0) {printf("Using preconditioning!!!\n");}
+	iter = gmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi_prec);
+      } else {
+	if(g_proc_id == 0) {printf("not using preconditioning!!!\n");}
+	iter = gmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi);
+      }
     }
     else if(solver_flag == FGMRES) {
       if(g_proc_id == 0) {printf("# Using FGMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
@@ -365,10 +387,43 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       }
 #else
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
-      iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
-		    rel_prec, VOLUME, &Q_pm_psi);
+
+      if(use_preconditioning==1 && g_precWS!=NULL){
+	spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
+	static complex alpha={0,0};
+	if(g_proc_id==0) {printf("Using preconditioning!!!\n");}
+
+	if(g_prec_sequence_d_dagger_d[2] != 0.0){
+	  alpha.re=g_prec_sequence_d_dagger_d[2];
+	  spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
+	}
+
+	iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
+		    rel_prec, VOLUME, &Q_pm_psi_prec);
+
+	if(g_prec_sequence_d_dagger_d[0] != 0.0){
+	  alpha.re=g_prec_sequence_d_dagger_d[0];
+	  spinorPrecondition(g_spinor_field[DUM_DERI],g_spinor_field[DUM_DERI],ws,T,L,alpha,0,1);
+	}
+
+      } else {
+	if(g_proc_id==0) {printf("Not using preconditioning!!!\n");}
+	iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
+		      rel_prec, VOLUME, &Q_pm_psi);
+      }
+
+
       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
-#endif      
+
+      if(use_preconditioning==1 && g_precWS!=NULL){
+	spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
+	static complex alpha={0,0};
+	if(g_prec_sequence_d_dagger_d[1] != 0.0){
+	  alpha.re=g_prec_sequence_d_dagger_d[1];
+	  spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
+	}
+      }
+#endif
     }
     convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
   }

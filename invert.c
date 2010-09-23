@@ -83,6 +83,10 @@
 #include <io/gauge.h>
 #include <io/spinor.h>
 #include <io/utils.h>
+#include "solver/dirac_operator_eigenvectors.h"
+
+#include "tm_operators.h"
+#include "Dov_psi.h"
 
 void usage()
 {
@@ -134,7 +138,7 @@ int main(int argc, char *argv[])
   MPI_Init(&argc, &argv);
 #endif
 
-  while ((c = getopt(argc, argv, "h?f:o:")) != -1) {
+  while ((c = getopt(argc, argv, "h?vf:o:")) != -1) {
     switch (c) {
       case 'f':
         input_filename = calloc(200, sizeof(char));
@@ -143,6 +147,9 @@ int main(int argc, char *argv[])
       case 'o':
         filename = calloc(200, sizeof(char));
         strcpy(filename, optarg);
+        break;
+      case 'v':
+        verbose = 1;
         break;
       case 'h':
       case '?':
@@ -370,12 +377,47 @@ int main(int argc, char *argv[])
       index_end = 1;
     }
 
+
+
+
+    g_precWS=NULL;
+    if(use_preconditioning == 1){
+      /* todo load fftw wisdom */
+#if (defined HAVE_FFTW ) && !( defined MPI)
+      loadFFTWWisdom(g_spinor_field[0],g_spinor_field[1],T,LX);
+#else
+      use_preconditioning=0;
+#endif
+
+    }
+
+
+
     for(isample = 0; isample < no_samples; isample++) {
       for (ix = index_start; ix < index_end; ix++) {
 	for(op_id = 0; op_id < no_operators; op_id++) {
 	  boundary(operator_list[op_id].kappa);
           g_kappa = operator_list[op_id].kappa; 
 	  g_mu = 0.;
+
+	  if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
+
+	    printf(" Using preconditioning with treelevel preconditioning operator: %s \n",
+		   precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
+	    /* initial preconditioning workspace */
+	    operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
+
+
+	    spinorPrecWS_Init(operator_list[op_id].precWS,
+			      operator_list[op_id].kappa,
+			      operator_list[op_id].mu/2./operator_list[op_id].kappa,
+			      -(0.5/operator_list[op_id].kappa-4.),
+			      PRECWSOPERATORSELECT[operator_list[op_id].solver]);
+
+	    g_precWS = operator_list[op_id].precWS;
+
+	  }
+
 	  /* we use g_spinor_field[0-7] for sources and props for the moment */
 	  /* 0-3 in case of 1 flavour  */
 	  /* 0-7 in case of 2 flavours */
@@ -383,6 +425,18 @@ int main(int argc, char *argv[])
 			 read_source_flag,
 			 source_location);
 	  operator_list[op_id].inverter(op_id, index_start);
+
+	  if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
+	    /* free preconditioning workspace */
+	    spinorPrecWS_Free(operator_list[op_id].precWS);
+	    free(operator_list[op_id].precWS);
+			      
+	  }
+
+	  if(operator_list[op_id].type == OVERLAP){
+	    free_Dov_WS();
+	  }
+
 	}
       }
     }
