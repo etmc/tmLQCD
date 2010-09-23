@@ -23,6 +23,11 @@
 #include "gamma.h"
 #include "index_jd.h"
 
+#include <io/gauge.h>
+#include <io/spinor.h>
+#include <io/utils.h>
+
+
 double shift;
 
 #define min(a,b) ((a)<(b) ? (a) : (b))
@@ -57,16 +62,22 @@ void index_jd(int * nr_of_eigenvalues_ov,
   double * eigenvalues_ov = NULL;
   double decay_min = 1.7, threshold_min = 1.e-3, prec;
 
+  WRITER *writer=NULL;
+  spinor *s;
+  double sqnorm;
+  paramsPropagatorFormat *propagatorFormat = NULL;
+  
+  double ap_eps_sq;
+  int switch_on_adaptive_precision = 0;
+  double ov_s = 0;
+
   /**********************                                                 
    * General variables                                                    
    **********************/
 
   eval= calloc((*nr_of_eigenvalues_ov),sizeof(complex));
   shift = 0.0;
-  
-  double ap_eps_sq;
-  int switch_on_adaptive_precision = 0;
-  double ov_s = 0;
+
   //  ov_s = 0.5*(1./g_kappa - 8.) - 1.;
   ap_eps_sq = precision_ov*precision_ov; 
 
@@ -150,14 +161,23 @@ void index_jd(int * nr_of_eigenvalues_ov,
       max_iter = 70;
       /* Save the allready computed eigenvectors_ov */
       for(i = 0; i< first_blocksize; i++) {
-	if(intsign == 0) {
-	  sprintf(filename, "eigenvector_of_Dplus.%.2d.%s.%.4d",i , conf_filename, nstore);
-	  /*	  write_spinorfield(&lowvectors[(v0dim*intsign+i)*VOLUMEPLUSRAND], filename);*/
-	}
-	else {
-	  sprintf(filename, "eigenvector_of_Dminus.%.2d.%s.%.4d",i , conf_filename, nstore);
-	  /*	  write_spinorfield(&lowvectors[(v0dim*intsign+i)*VOLUMEPLUSRAND], filename);*/
-	}
+	sprintf(filename, "eigenvector_of_D%s.%.2d.%s.%.4d",((intsign==0)?"plus":"minus"),i , conf_filename, nstore);
+
+	  construct_writer(&writer, filename, 0);
+	  /* todo write propagator format */
+	  propagatorFormat = construct_paramsPropagatorFormat(64, 1);
+	  write_propagator_format(writer, propagatorFormat);
+	  free(propagatorFormat);
+
+
+	  s=(spinor*)&lowvectors[first_blocksize*intsign*VOLUMEPLUSRAND];
+	  write_spinor(writer, &s,NULL, 1, 64);
+	  destruct_writer(writer);
+	  writer=NULL;
+	  sqnorm=square_norm(s,VOLUME,1);
+	  printf(" wrote eigenvector of overlap operator !!! | |^2 = %e \n",sqnorm);
+
+
       }
     }
   }

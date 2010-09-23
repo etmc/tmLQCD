@@ -41,6 +41,10 @@
 #include "global.h"
 #include "su3.h"
 #include <io/eospinor.h>
+#include <io/params.h>
+#include <io/gauge.h>
+#include <io/spinor.h>
+#include <io/utils.h>
 #include "tm_operators.h"
 #include "solver/solver.h"
 #include "solver/jdher.h"
@@ -97,7 +101,21 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   int returncode=0;
   int returncode2=0;
 
+  char eigenvector_prefix[512];
+  char eigenvalue_prefix[512];
+
+
   no_eigenvalues = *nr_of_eigenvalues;
+
+  if(prefix!=NULL){
+    sprintf(eigenvector_prefix,"eigenvector_%s.%%s.%%.2d.%%.4d",prefix);
+    sprintf(eigenvalue_prefix,"eigenvalues_%s.%%s.%%.4d",prefix);
+  } else {
+    sprintf(eigenvector_prefix,"eigenvector.%%s.%%.2d.%%.4d");
+    sprintf(eigenvalue_prefix,"eigenvalues.%%s.%%.4d");
+  }
+
+
   if(!even_odd_flag) {
     N = (VOLUME);
     N2 = (VOLUMEPLUSRAND);
@@ -159,11 +177,34 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
 	&returncode2, JD_MAXIMAL, 1,
 	f);
 
-  if(readwrite && even_odd_flag) {
-    for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
-      sprintf(filename, "eigenvector.%s.%.2d.%.4d", maxmin ? "max" : "min", v0dim, nstore);
-      if((read_eospinor(&eigenvectors[v0dim*N2], filename)) != 0) {
-	break;
+  if(readwrite) {
+    if(even_odd_flag){
+      for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
+	sprintf(filename, eigenvector_prefix , maxmin ? "max" : "min", v0dim, nstore);
+	if((read_eospinor(&eigenvectors[v0dim*N2], filename)) != 0) {
+	  break;
+	}
+      }
+    } else {
+      FILE *testfile;
+      spinor *s;
+      double sqnorm;
+      for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
+	sprintf(filename, eigenvector_prefix, maxmin ? "max" : "min", v0dim, nstore);
+
+	printf("reading eigenvectors ... ");
+	testfile=fopen(filename,"r");
+	if( testfile != NULL){
+	  fclose(testfile);
+	  s=(spinor*)&eigenvectors[v0dim*N2];
+	  read_spinor(s,NULL, filename,0);
+	  sqnorm=square_norm(s,VOLUME,1);
+	  printf(" has | |^2 = %e \n",sqnorm);
+
+	} else {
+	  printf(" no more eigenvectors \n");
+	  break;
+	}
       }
     }
   }
@@ -205,7 +246,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
 #endif
   }
   else {
-    sprintf(filename, "eigenvalues.%s.%.4d", maxmin ? "max" : "min", nstore); 
+    sprintf(filename, eigenvalue_prefix, maxmin ? "max" : "min", nstore); 
     if((ofs = fopen(filename, "r")) != (FILE*) NULL) {
       for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
 	fscanf(ofs, "%d %lf\n", &v0dim, &eigenvls[v0dim]);
@@ -244,16 +285,43 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   }
 
 
-  if(readwrite == 1 && even_odd_flag) {
-    for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
-      sprintf(filename, "eigenvector.%s.%.2d.%.4d", maxmin ? "max" : "min", v0dim, nstore);
-      if((write_eospinor(&eigenvectors[v0dim*N2], filename, eigenvls[v0dim], prec, nstore)) != 0) {
-	break;
+  if(readwrite == 1 ) {
+    if(even_odd_flag)
+      for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
+	sprintf(filename, eigenvector_prefix, maxmin ? "max" : "min", v0dim, nstore);
+	if((write_eospinor(&eigenvectors[v0dim*N2], filename, eigenvls[v0dim], prec, nstore)) != 0) {
+	  break;
+	}
+      }
+    else{
+      WRITER *writer=NULL;
+      spinor *s;
+      double sqnorm;
+      paramsPropagatorFormat *propagatorFormat = NULL;
+
+      for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
+	sprintf(filename, eigenvector_prefix, maxmin ? "max" : "min", v0dim, nstore);
+
+	construct_writer(&writer, filename, 0);
+	/* todo write propagator format */
+	propagatorFormat = construct_paramsPropagatorFormat(64, 1);
+	write_propagator_format(writer, propagatorFormat);
+	free(propagatorFormat);
+
+
+	s=(spinor*)&eigenvectors[v0dim*N2];
+	write_spinor(writer, &s,NULL, 1, 64);
+	destruct_writer(writer);
+	writer=NULL;
+	sqnorm=square_norm(s,VOLUME,1);
+	printf(" wrote eigenvector | |^2 = %e \n",sqnorm);
+
+
       }
     }
   }
   if(g_proc_id == 0 && readwrite != 2) {
-    sprintf(filename, "eigenvalues.%s.%.4d", maxmin ? "max" : "min", nstore); 
+    sprintf(filename, eigenvalue_prefix , maxmin ? "max" : "min", nstore); 
     ofs = fopen(filename, "w");
     for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
       fprintf(ofs, "%d %e\n", v0dim, eigenvls[v0dim]);
@@ -266,8 +334,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
 
   ev_qnorm=1.0/(sqrt(max_eigenvalue)+0.1);
   ev_minev*=ev_qnorm*ev_qnorm;
-  ov_n_cheby = (int)(-log(1.e-12)/(2*sqrt(ev_minev)));
-  ov_n_cheby = 100;
+  /* ov_n_cheby is initialized in Dov_psi.c */
   returnvalue=eigenvls[0];
 #else
   fprintf(stderr, "lapack not available, so JD method for EV computation not available \n");

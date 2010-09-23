@@ -22,18 +22,92 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#include<stdlib.h>
-#include"global.h"
-#include"solver/sumr.h"
-#include"operator.h"
-#include"invert_overlap.h"
+#include <stdlib.h>
+#include "global.h"
+#include "solver/sumr.h"
+#include "solver/cgs_real.h"
+#include "operator.h"
+#include "invert_overlap.h"
+#include "Dov_psi.h"
+#include "linalg_eo.h"
+#include "read_input.h"
+#include "tm_operators.h"
+#include "gamma.h"
+#include "solver/cg_her.h"
+
 
 void invert_overlap(const int op_id, const int index_start) {
   operator * optr;
+  void (*op)(spinor*,spinor*);
   optr = &operator_list[op_id];
+  int solver=0;
+
+
+  op=&Dov_psi;
+
   /* here we need to (re)compute the kernel eigenvectors */
   /* for new gauge fields                                */
 
-  optr->iterations = sumr(optr->prop0, optr->sr0, optr->maxiter, optr->eps_sq);
+
+  if(g_proc_id == 0) {printf("# Not using Even/Odd preconditioning!\n"); fflush(stdout);}
+  convert_eo_to_lexic(g_spinor_field[DUM_DERI], optr->sr0, optr->sr1);
+  convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
+  
+
+
+  if(optr->solver == 13 ){
+    optr->iterations = sumr(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI] , optr->maxiter, optr->eps_sq);
+  } else if(optr->solver == 1 /* CG */){
+
+    gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+  
+    if(use_preconditioning==1 && g_precWS!=NULL){
+      spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
+      static complex alpha={0,0};
+      printf("Using preconditioning!!!\n");
+    
+      alpha.re=ws->precExpo[2];
+      spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
+
+      /* 	iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision,  */
+      /* 		    rel_prec, VOLUME, &Q_pm_psi_prec); */
+      optr->iterations = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->maxiter, optr->eps_sq,
+				optr->rel_prec, VOLUME, &Qov_sq_psi_prec);
+    
+      alpha.re=ws->precExpo[0];
+      spinorPrecondition(g_spinor_field[DUM_DERI],g_spinor_field[DUM_DERI],ws,T,L,alpha,0,1);
+    
+    } else {
+      printf("Not using preconditioning!!!\n");
+      /* 	iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision,  */
+      /* 		      rel_prec, VOLUME, &Q_pm_psi); */
+      optr->iterations = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->maxiter, optr->eps_sq,
+				optr->rel_prec, VOLUME, &Qov_sq_psi);
+    }
+  
+  
+    Qov_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+  
+    if(use_preconditioning==1 && g_precWS!=NULL){
+      spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
+      static complex alpha={0,0};
+      alpha.re=ws->precExpo[1];
+      spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
+    }
+  
+  }
+  
+  
+  op(g_spinor_field[4],g_spinor_field[DUM_DERI+1]);
+  
+
+  convert_eo_to_lexic(g_spinor_field[DUM_DERI], optr->sr0, optr->sr1);
+
+  optr->reached_prec=diff_and_square_norm(g_spinor_field[4],g_spinor_field[DUM_DERI],VOLUME);
+  
+  convert_lexic_to_eo(optr->prop0, optr->prop1 , g_spinor_field[DUM_DERI+1]);
+  
+  
+
   return;
 }
