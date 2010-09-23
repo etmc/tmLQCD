@@ -136,6 +136,8 @@ int sumr(spinor * const P, spinor * const Q, const int max_iter,
     ap_eps_sq = 1.0e-2 * eps_sq;
   }
 
+  if(ov_cheby_coef==NULL) calculateOverlapPolynomial();
+
   /* main loop */
   for(iteration = 0; iteration < max_iter; iteration++) {
     Q_over_sqrt_Q_sqr(tmp, ov_cheby_coef, ov_n_cheby, v, ev_qnorm, ev_minev);

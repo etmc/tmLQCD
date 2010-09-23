@@ -44,13 +44,13 @@ tm_operator PRECWSOPERATORSELECT[14]={PRECWS_DTM,           /* BICGSTAB 0 */
 				      PRECWS_DTM,	    /* CGS 3 */         
 				      PRECWS_NO,	    /* MR 4 */          
 				      PRECWS_NO,	    /* BICGSTABELL 5 */ 
-				      PRECWS_DTM,	    /* FGMRES 6 */      
-				      PRECWS_DTM,	    /* GCR 7 */         
+				      PRECWS_NO,	    /* FGMRES 6 */      
+				      PRECWS_NO,	    /* GCR 7 */         
 				      PRECWS_NO,	    /* GMRESDR 8 */     
 				      PRECWS_NO,            /* PCG 9 */         
 				      PRECWS_NO,	    /* DFLGCR 10 */     
 				      PRECWS_NO,	    /* DFLFGMRES 11 */  
-				      PRECWS_D_DAGGER_D,    /* CGMMS 12 */
+				      PRECWS_NO,            /* CGMMS 12 */
 				      PRECWS_DOV_DAGGER_DOV /* MIXEDCG 13 */
 };
 
