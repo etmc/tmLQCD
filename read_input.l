@@ -531,7 +531,9 @@ inline void rmQuotes(char *str){
 }
 
 <OVERLAPOP>{
-  {SPC}*Solver{EQL} BEGIN(OVSOLVER);
+  {SPC}*Solver{EQL} { 
+   BEGIN(OVSOLVER); 
+  }
   {SPC}*m{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->m = c;
@@ -643,6 +645,11 @@ inline void rmQuotes(char *str){
 <OVSOLVER>{
   sumr {
     optr->solver = 13;
+    if(myverbose) printf("  Solver set to SUMR line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(OVERLAPOP);
+  }
+  cg {
+    optr->solver = 1;
     if(myverbose) printf("  Solver set to SUMR line %d operator %d\n", line_of_file, current_operator);
     BEGIN(OVERLAPOP);
   }
