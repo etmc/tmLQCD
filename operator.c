@@ -244,8 +244,6 @@ void op_invert(const int op_id, const int index_start) {
 
       if(use_preconditioning==1){
 	g_precWS=(void*)optr->precWS;
-	if(PRECWSOPERATORSELECT[optr->solver] == PRECWS_D_DAGGER_D)
-	  fitPrecParams(op_id);
       }
       else
 	g_precWS=NULL;
@@ -355,7 +353,7 @@ void op_invert(const int op_id, const int index_start) {
     m_ov=optr->m;
     eigenvalues(&optr->no_ev, 5000, optr->ev_prec, 0, optr->ev_readwrite, nstore, optr->even_odd_flag);
 /*     ov_check_locality(); */
-/*      index_jd(&optr->no_ev_index, 5000, 1.e-12, optr->conf_input, nstore, 4);  */
+/*      index_jd(&optr->no_ev_index, 5000, 1.e-12, optr->conf_input, nstore, 4); */
     ov_n_cheby=optr->deg_poly;
 
     if(use_preconditioning==1)

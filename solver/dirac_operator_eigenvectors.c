@@ -1829,6 +1829,7 @@ int * makeRandomPmuMap(int n){
 void fitPrecParams(const int op_id){
 
   double g_mu_save=g_mu;
+  double g_kappa_save=g_kappa;
   operator * optr = &operator_list[op_id];
   spinorPrecWS *g_precWS_save=g_precWS;
   int rawp[4],rawp2[4];
@@ -1854,7 +1855,7 @@ void fitPrecParams(const int op_id){
   int lapackInfo=0;
 
   g_mu = optr->mu;
-
+  g_kappa=optr->kappa;
 
   
   g_precWS=optr->precWS;
@@ -1969,6 +1970,7 @@ void fitPrecParams(const int op_id){
   
   free(pmumap);
   g_mu=g_mu_save;
+  g_kappa=g_kappa_save;
   g_precWS=g_precWS_save;
 }
 

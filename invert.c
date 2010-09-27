@@ -393,30 +393,34 @@ int main(int argc, char *argv[])
 
 
 
-    for(isample = 0; isample < no_samples; isample++) {
-      for (ix = index_start; ix < index_end; ix++) {
-	for(op_id = 0; op_id < no_operators; op_id++) {
-	  boundary(operator_list[op_id].kappa);
-          g_kappa = operator_list[op_id].kappa; 
-	  g_mu = 0.;
+    for(op_id = 0; op_id < no_operators; op_id++) {
+      boundary(operator_list[op_id].kappa);
+      g_kappa = operator_list[op_id].kappa; 
+      g_mu = 0.;
+      
+      if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
+	
+	printf(" Using preconditioning with treelevel preconditioning operator: %s \n",
+	       precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
+	/* initial preconditioning workspace */
+	operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
+	
+	
+	spinorPrecWS_Init(operator_list[op_id].precWS,
+			  operator_list[op_id].kappa,
+			  operator_list[op_id].mu/2./operator_list[op_id].kappa,
+			  -(0.5/operator_list[op_id].kappa-4.),
+			  PRECWSOPERATORSELECT[operator_list[op_id].solver]);
+	
+	g_precWS = operator_list[op_id].precWS;
 
-	  if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
+	if(PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D)
+	  fitPrecParams(op_id);
 
-	    printf(" Using preconditioning with treelevel preconditioning operator: %s \n",
-		   precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
-	    /* initial preconditioning workspace */
-	    operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
+      }
 
-
-	    spinorPrecWS_Init(operator_list[op_id].precWS,
-			      operator_list[op_id].kappa,
-			      operator_list[op_id].mu/2./operator_list[op_id].kappa,
-			      -(0.5/operator_list[op_id].kappa-4.),
-			      PRECWSOPERATORSELECT[operator_list[op_id].solver]);
-
-	    g_precWS = operator_list[op_id].precWS;
-
-	  }
+      for(isample = 0; isample < no_samples; isample++) {
+	for (ix = index_start; ix < index_end; ix++) {
 
 	  /* we use g_spinor_field[0-7] for sources and props for the moment */
 	  /* 0-3 in case of 1 flavour  */
@@ -426,19 +430,23 @@ int main(int argc, char *argv[])
 			 source_location);
 	  operator_list[op_id].inverter(op_id, index_start);
 
-	  if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
-	    /* free preconditioning workspace */
-	    spinorPrecWS_Free(operator_list[op_id].precWS);
-	    free(operator_list[op_id].precWS);
-			      
-	  }
-
-	  if(operator_list[op_id].type == OVERLAP){
-	    free_Dov_WS();
-	  }
 
 	}
       }
+
+
+      if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
+	/* free preconditioning workspace */
+	spinorPrecWS_Free(operator_list[op_id].precWS);
+	free(operator_list[op_id].precWS);
+	
+      }
+
+      if(operator_list[op_id].type == OVERLAP){
+	free_Dov_WS();
+      }
+
+
     }
     nstore += Nsave;
   }
