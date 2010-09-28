@@ -786,9 +786,9 @@ void little_Dhat_rhs(int eo, complex * v, double r, complex *w) {
 void init_little_field_exchange(complex * w) {
 #ifdef MPI
   int i = 0;
-#  ifdef PARALLELT
+#  if (defined PARALLELT || defined PARALLELX)
   int no_dirs = 2;
-#  elif defined PARALLELXT
+#  elif (defined PARALLELXT || defined PARALLELXY || defined PARALLELXYZ)
   int no_dirs = 4;
 #  elif (defined PARALLELXYT || defined PARALLELXYZT)
   int no_dirs = 6;
