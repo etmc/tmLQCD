@@ -53,6 +53,7 @@ all: Makefile dummy
 .NOTPARALLEL:
 
 -include $(addsuffix .d,$(GPUTARGETS))
+-include $(DEPS)
 
 include ${top_srcdir}/Makefile.global
 

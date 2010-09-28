@@ -52,6 +52,12 @@
 #include"Nondegenerate_Matrix.h"
 #include"invert_doublet_eo.h"
 
+
+#ifdef HAVE_GPU
+  int mixedsolve_eo_nd (spinor *, spinor *, spinor *, spinor *, int, double, int);
+#endif
+
+
 int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s, 
 		      spinor * const Even_new_c, spinor * const Odd_new_c, 
 		      spinor * const Even_s, spinor * const Odd_s,
@@ -84,12 +90,25 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   }
   gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
   gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME/2);
-
-  iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-		   max_iter, precision, rel_prec, 
-		   VOLUME/2, &Q_Qdagger_ND, 0, 1000);
-
-
+  
+  
+  #ifdef HAVE_GPU
+    if (usegpu_flag) {	// GPU, mixed precision solver
+      iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                              max_iter, precision, rel_prec);
+    }
+    else {		// CPU, conjugate gradient
+      iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+		       max_iter, precision, rel_prec, 
+		       VOLUME/2, &Q_Qdagger_ND, 0, 1000);
+    }
+  #else			// CPU, conjugate gradient
+    iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+		     max_iter, precision, rel_prec, 
+		     VOLUME/2, &Q_Qdagger_ND, 0, 1000);
+  #endif
+  
+  
   QdaggerNon_degenerate(Odd_new_s, Odd_new_c,
 			Odd_new_s, Odd_new_c);
   

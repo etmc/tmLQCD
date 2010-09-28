@@ -153,6 +153,11 @@ inline void rmQuotes(char *str){
   int device_num;
   double innersolver_precision;  
   
+  double innersolver_precision_abs;
+  double innersolver_precision_rel;
+  int innersolver_precision_check_abs;
+  int innersolver_precision_check_rel;
+  
   int propagator_comparison;
   int nb_cores;
   
@@ -387,7 +392,7 @@ inline void rmQuotes(char *str){
   {SPC}*InnersolverPrecision{SPC}*={SPC}*{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     innersolver_precision = c;
-    if(myverbose) printf("  Inner solver precision set to %f line %d\n", c, line_of_file);
+    if(myverbose) printf("  Inner solver precision set to %lf line %d\n", c, line_of_file);
   }
   {SPC}*MaxInnersolverIteration{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
@@ -398,6 +403,26 @@ inline void rmQuotes(char *str){
       sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
       device_num = a;
       if(myverbose) printf("  Device Number set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*InnersolverPrecisionAbs{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    innersolver_precision_abs = c;
+    if(myverbose) printf("  innersolver_precision_abs set to %lf line %d\n", c, line_of_file);
+  }
+  {SPC}*InnersolverPrecisionRel{SPC}*={SPC}*{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    innersolver_precision_rel = c;
+    if(myverbose) printf("  innersolver_precision_rel set to %lf line %d\n", c, line_of_file);
+  }
+  {SPC}*InnersolverPrecisionCheckAbs{SPC}*={SPC}*{DIGIT}+ {
+      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+      innersolver_precision_check_abs = a;
+      if(myverbose) printf("  innersolver_precision_check_abs set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*InnersolverPrecisionCheckRel{SPC}*={SPC}*{DIGIT}+ {
+      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+      innersolver_precision_check_rel = a;
+      if(myverbose) printf("  innersolver_precision_check_rel set to %d line %d\n", a, line_of_file);
   }
   EndGPUInit{SPC}* {
   if(myverbose) printf("GPU parsed in line %d\n\n", line_of_file);
