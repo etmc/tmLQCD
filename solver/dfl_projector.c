@@ -59,8 +59,8 @@ complex *invvec;
 complex *invvec_eo;
 complex *ctmp;
 complex *work_block;
-const int dfl_work_size = 13;
-complex *work[13];
+const int dfl_work_size = 16;
+complex *work[16];
 
 static void alloc_dfl_projector();
 
@@ -97,6 +97,8 @@ void project(spinor * const out, spinor * const in) {
     _complex_zero(invvec[j]);
     _complex_zero(invvec_eo[j]);
     _complex_zero(ctmp[j]);
+    _complex_zero(w[j]);
+    _complex_zero(v[j]);
   }
   
   for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
@@ -124,10 +126,13 @@ void project(spinor * const out, spinor * const in) {
     little_D_hop(1,inprod_o, inprod_e);
     little_Dhat_rhs(1,inprod_o,-1,inprod_eo);
   }
-  	
+  
+  
   /* if(dfl_sloppy_prec) prec = dfl_little_D_prec;*/
   if(dfl_sloppy_prec) prec = 1.e-12;
   else prec = 1.e-24;
+  
+  
   
   if(!usePL) {
     if(evenodd) {
@@ -413,16 +418,16 @@ void little_P_R(complex * const out, complex * const in) {
 void little_P_L_sym(complex * const out, complex * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   little_project(out, in, g_N_s);
-  little_D_sym(work[6], out);
-  ldiff(out, in, work[6], nb_blocks*g_N_s);
+  little_D_sym(work[13], out);
+  ldiff(out, in, work[13], nb_blocks*g_N_s);
   return;
 }
 
 void little_P_R_sym(complex * const out, complex * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   little_D_sym(out, in);
-  little_project(work[7], out, g_N_s);
-  ldiff(out, in, work[7], nb_blocks*g_N_s);
+  little_project(work[14], out, g_N_s);
+  ldiff(out, in, work[14], nb_blocks*g_N_s);
   return;
 }
 
@@ -435,8 +440,8 @@ void little_P_L_D(complex * const out, complex * const in) {
 
 void little_P_L_D_sym(complex * const out, complex * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
-  little_D_sym(work[8], in);
-  little_P_L_sym(out, work[8]);
+  little_D_sym(work[15], in);
+  little_P_L_sym(out, work[15]);
   return;
 }
 
@@ -798,11 +803,11 @@ void check_little_D_inversion() {
   }
 
   if(1) {
-    gcr4complex(invvec, inprod, 10, 1000, 1.e-31, 0, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
+    gcr4complex(invvec, inprod, 10, 1000, 1.e-24, 0, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
   }
   else {
     little_P_L(v, inprod);
-    gcr4complex(w, v, 10, 1000, 1.e-31, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
+    gcr4complex(w, v, 10, 1000, 1.e-24, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
     little_P_R(v, w);
     little_project(w, inprod, g_N_s);
     for(i = 0; i < nb_blocks*g_N_s; i++) {
