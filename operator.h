@@ -107,5 +107,6 @@ extern int no_operators;
 
 int add_operator(const int type);
 int init_operators();
+void write_cgmms_headers(const int op_id, const int index_start, const int append_);
 
 #endif

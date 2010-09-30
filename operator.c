@@ -247,7 +247,10 @@ void op_invert(const int op_id, const int index_start) {
       }
       else
 	g_precWS=NULL;
-
+      
+      // This is for the CGMMS: it header here because binary data will be wrote inside cg_mms
+      if (g_no_extra_masses > 0) write_cgmms_headers(op_id,index_start,i);
+      
       optr->iterations = invert_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 				   optr->eps_sq, optr->maxiter,
 				   optr->solver, optr->rel_prec,
@@ -465,5 +468,65 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   
   destruct_writer(writer);
   
+  return;
+}
+
+//This will write all the headers for (DD+)^-1*eta files, for all the masses
+void write_cgmms_headers(const int op_id, const int index_start, const int append_) {
+  operator * optr = &operator_list[op_id];
+  char filename[100];
+  char ending[15];
+  WRITER *writer = NULL;
+  int append = 0;
+  int im;
+
+  paramsSourceFormat *sourceFormat = NULL;
+  paramsPropagatorFormat *propagatorFormat = NULL;
+  paramsInverterInfo *inverterInfo = NULL;
+
+  for(im=0;im<=g_no_extra_masses;im++) {
+    
+    if(optr->type == DBTMWILSON) strcpy(ending, "hinverted");
+    else if(optr->type == OVERLAP) strcpy(ending, "ovinverted");
+    else strcpy(ending, "inverted");
+    
+    if(SourceInfo.type != 1)
+      if (PropInfo.splitted) sprintf(filename, "%s.%.4d.%.2d.%.2d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im, ending);
+      else sprintf(filename, "%s.%.4d.%.2d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, im,ending);
+    else sprintf(filename, "%s.%.4d.%.5d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, im,ending);
+    
+    // the 1 is for appending
+    if(!PropInfo.splitted) append = 1;
+    if(append_) append=1;
+    construct_writer(&writer, filename, append);
+    
+    // write information about the inverter
+    // but only if the propagator is splitted or
+    // we are at the beginning of an unsplitted one
+    if (PropInfo.splitted || SourceInfo.ix == index_start) {
+      inverterInfo = construct_paramsInverterInfo(optr->reached_prec, optr->iterations, optr->solver, optr->no_flavours);
+      write_spinor_info(writer, PropInfo.format, inverterInfo);
+      free(inverterInfo);
+    }
+
+    // write the source depending on format
+    // (to be fixed for 2 fl tmwilson)
+    if (PropInfo.format == 1) {
+      sourceFormat = construct_paramsSourceFormat(SourceInfo.precision, optr->no_flavours, 4, 3);
+      write_source_format(writer, sourceFormat);
+      
+      write_spinor(writer, &operator_list[op_id].sr0, &operator_list[op_id].sr1, 1, SourceInfo.precision);
+      if(optr->no_flavours == 2) write_spinor(writer, &operator_list[op_id].sr2, &operator_list[op_id].sr3, 1, SourceInfo.precision);
+      free(sourceFormat);
+    }
+    
+    //write precision (32 or 64) and number of flavours
+    propagatorFormat = construct_paramsPropagatorFormat(optr->prop_precision, optr->no_flavours);
+    write_propagator_format(writer, propagatorFormat);
+    free(propagatorFormat);
+    
+    destruct_writer(writer);
+  }
+
   return;
 }

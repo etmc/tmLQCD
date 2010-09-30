@@ -177,10 +177,9 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 	
 	if(g_kappa != 0) mul_r(temp_save, (2*g_kappa)*(2*g_kappa), temp_save, N);
       
-	if(PropInfo.splitted) append=0;
-	else append=1;
-
-	construct_writer(&writer, filename, append);
+        // Always append, because the header is created in "operator.c"
+        append=1;
+        construct_writer(&writer, filename, append);
 
 	//Write the header /NOTE: always writes TWILSON and 1 flavour (to be adjusted)
 	if (PropInfo.splitted || SourceInfo.ix == index_start) {
