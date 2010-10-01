@@ -211,11 +211,11 @@ __device__ float mubar, epsbar;
 
 // benchmark
 #if defined(GPU_BENCHMARK) || defined(GPU_BENCHMARK2)
-  int device_flops = 0;
+  unsigned long long int device_flops = 0;
 #endif
 
 #ifdef CPU_BENCHMARK
- int host_flops = 0;
+  unsigned long long int host_flops = 0;
 #endif
 
 
@@ -6316,7 +6316,11 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
 
 
 
-void flopcount(int& total, int add) {
+
+// will be used to count the floating point operations per (24 * (#lattice sites)) = (#floats)
+// i.e total has to be multiplied by N_floats
+
+void flopcount(unsigned long long int& total, int add) {
 
   total = total + add;
   
@@ -6844,7 +6848,8 @@ int cg_eo_nd (dev_su3_2v * gf,
   
   		// benchmark
   		#ifdef GPU_BENCHMARK
-  		  flopcount(device_flops, 2*2*N_floats);
+  		  flopcount(device_flops, 2*2);
+  		  // flopcount(device_flops, 2*2*N_floats);
   		#endif
   
   
@@ -6892,7 +6897,8 @@ int cg_eo_nd (dev_su3_2v * gf,
     		
     		// benchmark
     		#ifdef GPU_BENCHMARK
-      		  flopcount(device_flops, 1448*N_floats);
+    		  flopcount(device_flops, 1448);
+      		  // flopcount(device_flops, 1448*N_floats);
     		#endif
     
     #else
@@ -6931,7 +6937,8 @@ int cg_eo_nd (dev_su3_2v * gf,
     
     		// benchmark
     		#ifdef GPU_BENCHMARK
-    		  flopcount(device_flops, 2*2*N_floats);
+    		  flopcount(device_flops, 2*2);
+    		  // flopcount(device_flops, 2*2*N_floats);
     		#endif
     
     
@@ -6941,7 +6948,8 @@ int cg_eo_nd (dev_su3_2v * gf,
     
     		// benchmark
     		#ifdef GPU_BENCHMARK
-    		  flopcount(device_flops, 2*2*N_floats);
+    		  flopcount(device_flops, 2*2);
+    		  // flopcount(device_flops, 2*2*N_floats);
     		#endif
     
     
@@ -6952,7 +6960,8 @@ int cg_eo_nd (dev_su3_2v * gf,
       
       		// benchmark
       		#ifdef GPU_BENCHMARK
-      		  flopcount(device_flops, 2*2*N_floats);
+      		  flopcount(device_flops, 2*2);
+      		  // flopcount(device_flops, 2*2*N_floats);
       		#endif
     }
     
@@ -6970,7 +6979,8 @@ int cg_eo_nd (dev_su3_2v * gf,
       
       		// benchmark
       		#ifdef GPU_BENCHMARK
-      		  flopcount(device_flops, 1448*N_floats);
+      		  flopcount(device_flops, 1448);
+      		  // flopcount(device_flops, 1448*N_floats);
       		#endif
       
       // r(k+1) = b - A*x(k+1)
@@ -6981,7 +6991,8 @@ int cg_eo_nd (dev_su3_2v * gf,
       
       		// benchmark
       		#ifdef GPU_BENCHMARK
-      		  flopcount(device_flops, 2*2*N_floats);
+      		  flopcount(device_flops, 2*2);
+      		  // flopcount(device_flops, 2*2*N_floats);
       		#endif
     
     }
@@ -6999,7 +7010,8 @@ int cg_eo_nd (dev_su3_2v * gf,
 		
 		//benchmark
     		#ifdef GPU_BENCHMARK
-    		  flopcount(device_flops, 2*2*N_floats);
+    		  flopcount(device_flops, 2*2);
+    		  // flopcount(device_flops, 2*2*N_floats);
     		#endif
     
     
@@ -7077,7 +7089,8 @@ int cg_eo_nd (dev_su3_2v * gf,
     		
     		// benchmark
     		#ifdef GPU_BENCHMARK
-    		  flopcount(device_flops, 2*3*N_floats);
+    		  flopcount(device_flops, 2*3);
+    		  // flopcount(device_flops, 2*3*N_floats);
     		#endif
   
   
@@ -7386,7 +7399,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   
   
   		// benchmark
-  		#if defined(GPU_BENCHMARK) || defined(GPU_BENCHMARK2)
+  		#ifdef GPU_BENCHMARK
   		  device_flops = 0;
   		#endif
   		
@@ -7415,7 +7428,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     bb = square_norm(P_up, N_sites, 0) + square_norm(P_dn, N_sites, 0);
     		// benchmark
     		#ifdef CPU_BENCHMARK
-    		  flopcount(host_flops, 2*2*N_floats);
+    		  flopcount(host_flops, 2*2);
+    		  // flopcount(host_flops, 2*2*N_floats);
     		#endif
     printf("bb = %.10e\n", bb);
     if (bb == 0) {
@@ -7429,7 +7443,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       diff(r_dn, Q_dn, Ax_dn, N_sites);
       		// benchmark
       		#ifdef CPU_BENCHMARK
-      		  flopcount(host_flops, 2*2*(55+2+2+1+55)*N_floats + 2*N_floats);
+      		  flopcount(host_flops, 2*2*(55+2+2+1+55) + 2);
+      		  // flopcount(host_flops, 2*2*(55+2+2+1+55)*N_floats + 2*N_floats);
       		#endif
       printf("x(0) != 0\n");
     }
@@ -7443,7 +7458,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   
   		// benchmark
   		#ifdef CPU_BENCHMARK
-  		  flopcount(host_flops, 2*2*N_floats);
+  		  flopcount(host_flops, 2*2);
+  		  // flopcount(host_flops, 2*2*N_floats);
   		#endif
   
   
@@ -7564,7 +7580,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     
     		// benchmark
   		#ifdef CPU_BENCHMARK
-  		  flopcount(host_flops, 2*N_floats);
+  		  flopcount(host_flops, 2);
+  		  // flopcount(host_flops, 2*N_floats);
   		#endif
     
     
@@ -7589,7 +7606,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     
     		// benchmark
   		#ifdef CPU_BENCHMARK
-  		  flopcount(host_flops, 2*2*(55+2+2+1+55)*N_floats + 2*N_floats);
+  		  flopcount(host_flops, 2*2*(55+2+2+1+55) + 2);
+  		  // flopcount(host_flops, 2*2*(55+2+2+1+55)*N_floats + 2*N_floats);
   		#endif
     
     
@@ -7609,7 +7627,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     		
     		// benchmark
   		#ifdef CPU_BENCHMARK
-  		  flopcount(host_flops, 2*2*N_floats);
+  		  flopcount(host_flops, 2*2);
+  		  // flopcount(host_flops, 2*2*N_floats);
   		#endif
     
     
@@ -7623,6 +7642,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		/*
       		// benchmark
   		#ifdef GPU_BENCHMARK2
+  		  device_flops = 0;
   		  int help = ( 4 + outercount*(1448+5*4+6) + outercount/10*1448 ) * N_floats;
   		  flopcount(device_flops, help);			// N_recalcres = 10
   		#endif
@@ -7638,18 +7658,20 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		printf("Outer solver done in: %.4e sec\n", double(stopouter-startouter) / double(CLOCKS_PER_SEC));
       		// benchmark
       		#if defined(GPU_BENCHMARK) || defined(GPU_BENCHMARK2)
-      		  flops = device_flops / (double(totalinnerclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
+      		  // REMARK: device_flops has to be multiplied by N_floats !!
+      		  flops = device_flops * N_floats / (double(totalinnerclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
       		  printf("Inner solver BENCHMARK:\n");
       		  printf("\ttotal inner solver time:   %.2e sec\n", double(totalinnerclocks) / double(CLOCKS_PER_SEC));
-      		  printf("\tfloating point operations: %i Flops\n", device_flops);
+      		  printf("\tfloating point operations: %.2e Flops\n", double(device_flops) * double(N_floats));
       		  printf("\tinner solver performance:  %.2e Gflop/s\n", flops);
       		#endif
       		
       		#ifdef CPU_BENCHMARK
-      		  flops = host_flops / (double(totalouterclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
+      		  // REMARK: host_flops has to be multiplied by N_floats !!
+      		  flops = host_flops * N_floats / (double(totalouterclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
       		  printf("Outer solver BENCHMARK:\n");
       		  printf("\ttotal outer solver time:   %.2e sec\n", double(totalouterclocks) / double(CLOCKS_PER_SEC));
-      		  printf("\tfloating point operations: %i Flops\n", host_flops);
+      		  printf("\tfloating point operations: %.2e Flops\n", double(host_flops) * double(N_floats));
       		  printf("\touter solver performance:  %.2e Gflop/s\n", flops);
       		#endif
       
@@ -7715,18 +7737,20 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		printf("Outer solver done in: %.4e sec\n", double(stopouter-startouter)/CLOCKS_PER_SEC);
       		// benchmark
       		#if defined(GPU_BENCHMARK) || defined(GPU_BENCHMARK2)
-      		  flops = device_flops / (double(totalinnerclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
+      		  // REMARK: device_flops has to be multiplied by N_floats !!
+      		  flops = device_flops * N_floats / (double(totalinnerclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
       		  printf("Inner solver BENCHMARK:\n");
       		  printf("\ttotal inner solver time:   %.2e sec\n", double(totalinnerclocks) / double(CLOCKS_PER_SEC));
-      		  printf("\tfloating point operations: %i Flops\n", device_flops);
+      		  printf("\tfloating point operations: %.2e Flops\n", double(device_flops) * double(N_floats));
       		  printf("\tinner solver performance:  %.2e Gflop/s\n", flops);
       		#endif
       		
       		#ifdef CPU_BENCHMARK
-      		  flops = host_flops / (double(totalouterclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
+      		  // REMARK: host_flops has to be multiplied by N_floats !!
+      		  flops = host_flops * N_floats / (double(totalouterclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
       		  printf("Outer solver BENCHMARK:\n");
       		  printf("\ttotal outer solver time:   %.2e sec\n", double(totalouterclocks) / double(CLOCKS_PER_SEC));
-      		  printf("\tfloating point operations: %i Flops\n", host_flops);
+      		  printf("\tfloating point operations: %.2e Flops\n", double(host_flops) * double(N_floats));
       		  printf("\touter solver performance:  %.2e Gflop/s\n", flops);
       		#endif
   
