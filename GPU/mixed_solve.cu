@@ -6362,6 +6362,7 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
   clock_t start_benchmark, stop_benchmark;
   int i;
   double flops;
+  double device_flops;
   int flops_per_app = 34768;
   cudaError_t cudaerr;
   cublasStatus cublasstatus;
@@ -6561,12 +6562,12 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
   
   
   timeelapsed = double(stop_benchmark - start_benchmark) / double(CLOCKS_PER_SEC);
-  printf("\ttime:        %.2e sec\n", timeelapsed);
-  
-  
+  device_flops = N * VOLUME/2 * flops_per_app;
   flops = N * VOLUME/2 / timeelapsed / 1.0e9 * flops_per_app;
   
   
+  printf("\ttime:        %.2e sec\n", timeelapsed);
+  printf("\tflop's:      %.2e flops\n", device_flops);
   printf("\tperformance: %.2e Gflop/s\n", flops);
   
   
@@ -7662,7 +7663,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		  flops = device_flops * N_floats / (double(totalinnerclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
       		  printf("Inner solver BENCHMARK:\n");
       		  printf("\ttotal inner solver time:   %.2e sec\n", double(totalinnerclocks) / double(CLOCKS_PER_SEC));
-      		  printf("\tfloating point operations: %.2e Flops\n", double(device_flops) * double(N_floats));
+      		  printf("\tfloating point operations: %.2e flops\n", double(device_flops) * double(N_floats));
       		  printf("\tinner solver performance:  %.2e Gflop/s\n", flops);
       		#endif
       		
@@ -7671,7 +7672,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		  flops = host_flops * N_floats / (double(totalouterclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
       		  printf("Outer solver BENCHMARK:\n");
       		  printf("\ttotal outer solver time:   %.2e sec\n", double(totalouterclocks) / double(CLOCKS_PER_SEC));
-      		  printf("\tfloating point operations: %.2e Flops\n", double(host_flops) * double(N_floats));
+      		  printf("\tfloating point operations: %.2e flops\n", double(host_flops) * double(N_floats));
       		  printf("\touter solver performance:  %.2e Gflop/s\n", flops);
       		#endif
       
@@ -7741,7 +7742,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		  flops = device_flops * N_floats / (double(totalinnerclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
       		  printf("Inner solver BENCHMARK:\n");
       		  printf("\ttotal inner solver time:   %.2e sec\n", double(totalinnerclocks) / double(CLOCKS_PER_SEC));
-      		  printf("\tfloating point operations: %.2e Flops\n", double(device_flops) * double(N_floats));
+      		  printf("\tfloating point operations: %.2e flops\n", double(device_flops) * double(N_floats));
       		  printf("\tinner solver performance:  %.2e Gflop/s\n", flops);
       		#endif
       		
@@ -7750,7 +7751,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		  flops = host_flops * N_floats / (double(totalouterclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
       		  printf("Outer solver BENCHMARK:\n");
       		  printf("\ttotal outer solver time:   %.2e sec\n", double(totalouterclocks) / double(CLOCKS_PER_SEC));
-      		  printf("\tfloating point operations: %.2e Flops\n", double(host_flops) * double(N_floats));
+      		  printf("\tfloating point operations: %.2e flops\n", double(host_flops) * double(N_floats));
       		  printf("\touter solver performance:  %.2e Gflop/s\n", flops);
       		#endif
   
