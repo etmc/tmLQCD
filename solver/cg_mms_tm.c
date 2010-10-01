@@ -188,11 +188,6 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
     	  free(inverterInfo);
 	}
 	
-	//Again, 1 flavour
-	propagatorFormat = construct_paramsPropagatorFormat(err,1);
-	write_propagator_format(writer, propagatorFormat);
-	free(propagatorFormat);
-
 	convert_lexic_to_eo(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], 
 			    temp_save);
 	write_spinor(writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);

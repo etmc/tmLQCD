@@ -249,7 +249,7 @@ void op_invert(const int op_id, const int index_start) {
 	g_precWS=NULL;
       
       // This is for the CGMMS: it header here because binary data will be wrote inside cg_mms
-      if (g_no_extra_masses > 0) write_cgmms_headers(op_id,index_start,i);
+      write_cgmms_headers(op_id,index_start,i);
       
       optr->iterations = invert_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 				   optr->eps_sq, optr->maxiter,
@@ -482,7 +482,6 @@ void write_cgmms_headers(const int op_id, const int index_start, const int appen
 
   paramsSourceFormat *sourceFormat = NULL;
   paramsPropagatorFormat *propagatorFormat = NULL;
-  paramsInverterInfo *inverterInfo = NULL;
 
   for(im=0;im<=g_no_extra_masses;im++) {
     
@@ -500,15 +499,6 @@ void write_cgmms_headers(const int op_id, const int index_start, const int appen
     if(append_) append=1;
     construct_writer(&writer, filename, append);
     
-    // write information about the inverter
-    // but only if the propagator is splitted or
-    // we are at the beginning of an unsplitted one
-    if (PropInfo.splitted || SourceInfo.ix == index_start) {
-      inverterInfo = construct_paramsInverterInfo(optr->reached_prec, optr->iterations, optr->solver, optr->no_flavours);
-      write_spinor_info(writer, PropInfo.format, inverterInfo);
-      free(inverterInfo);
-    }
-
     // write the source depending on format
     // (to be fixed for 2 fl tmwilson)
     if (PropInfo.format == 1) {
