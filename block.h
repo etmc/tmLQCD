@@ -28,6 +28,10 @@
 #include "su3spinor.h"
 
 complex * little_A;
+complex32 * little_A32;
+complex * little_A_eo;
+complex32 * little_A32_eo;
+
 
 typedef struct {
   /**** Data members ****/
