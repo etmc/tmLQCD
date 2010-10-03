@@ -243,9 +243,10 @@ __device__ float mubar, epsbar;
 #include "Hopping_Matrix.cuh"
 // the non-EO twisted mass dirac operator
 #include "tm_diracoperator.cuh"
-
-
-
+// the device su3 functions
+#include "su3.cuh"
+// the plaquette and rectangle routines
+#include "observables.cuh"
 
 
 
@@ -933,6 +934,8 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
   
   he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
+ 
+ 
  
  // Init x,p,r for k=0
  // Allocate some numbers for host <-> device interaction
@@ -1623,6 +1626,19 @@ cudaError_t cudaerr;
  
   cudaMalloc((void **) &dev_grid, 5*sizeof(int));
   cudaMemcpy(dev_grid, &(grid[0]), 5*sizeof(int), cudaMemcpyHostToDevice);
+  
+  
+  
+  init_dev_observables();
+  cudaMemcpyToSymbol("dev_VOLUME", &VOLUME, sizeof(int)) ; 
+  
+  float devplaq = calc_plaquette(dev_gf);
+  printf("Calculating Plaquette on device: plaq(device) = %.8f\n", devplaq);
+  
+  float hostplaq = (float) measure_gauge_action()/(6.*VOLUME*g_nproc);
+  printf("Calculating Plaquette on host: plaq(host) = %.8f\n", hostplaq);
+
+  exit(100); 
   
 }
 

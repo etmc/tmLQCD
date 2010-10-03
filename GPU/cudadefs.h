@@ -14,6 +14,9 @@
 #define REAL float
 #define BLOCK 192 // Block Size
 #define BLOCK2 320 // Block Size 2 for dev_mul_one_pm...
+
+#define BLOCKPLAQ 64 // Block Size for plaquette calculation, must be LARGER than LZ !!!!
+
 #define maxblockdim 512
 
 
