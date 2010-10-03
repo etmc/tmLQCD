@@ -75,8 +75,8 @@ static void alloc_dfl_projector();
 /* this is phi_k A^{-1}_{kl} (phi_k, in) */
 void project(spinor * const out, spinor * const in) {
   int i,j, i_e, i_o, iter;
-  int evenodd = 0;
-  int usePL = 0;
+  int evenodd = 1;
+  int usePL = 1;
   int vol = block_list[0].volume;
   complex * v, * w;
   double prec;
@@ -174,7 +174,8 @@ void project(spinor * const out, spinor * const in) {
       little_P_L_sym(v, inprod_o);
       iter = gcr4complex(w, v, 10, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D_sym);
       little_P_R_sym(v, w);
-      little_project(w, inprod_o, g_N_s);
+/*      little_project(w, inprod_o, g_N_s);*/
+      little_project_eo(w,inprod_o,g_N_s);
       for(i = 0; i < nb_blocks*g_N_s; i++) {
 	invvec_eo[i].re = w[i].re + v[i].re;
 	invvec_eo[i].im = w[i].im + v[i].im;
@@ -372,7 +373,47 @@ void little_project(complex * const out, complex * const in, const int  N) {
   return;
 }
 
-void little_project2(complex * const out, complex * const in, const int  N) {
+void little_project_eo(complex * const out, complex * const in, const int  N) {
+  int i, j;
+  static complex *phi;
+  static complex *psi;
+  
+  if(init_dfl_projector == 0) {
+    alloc_dfl_projector();
+  }
+      
+  phi = work[2];
+  psi = work[3];
+
+  /* NOTE IS THIS REALLY NECESSARY/CORRECT? */
+  for(i = 0; i < N; i++) {
+    phi[i] = lscalar_prod(little_dfl_fields_eo[i], in, nb_blocks*N, 0);
+  }
+  
+#ifdef MPI
+  MPI_Allreduce(phi, psi, N, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+#else
+  memcpy(psi, phi, N*sizeof(complex));
+#endif
+
+  /* apply inverse of little_A_eo */
+  for(i = 0; i < N; i++) {
+    _complex_zero(phi[i]);
+    for(j = 0; j < N; j++) {
+      _add_assign_complex(phi[i], little_A_eo[j*N + i], psi[j]);
+    }
+  }
+  
+  lmul(out, phi[0], little_dfl_fields_eo[0], nb_blocks*N);
+  for(i = 1; i < N; i++) {
+    lassign_add_mul(out, little_dfl_fields_eo[i], phi[i], nb_blocks*N);
+  }
+  return;
+}
+
+
+void little_project2(complex * const out, complex * const 
+in, const int  N) {
   int i;
   static complex *phi;
   static complex *psi;
@@ -417,7 +458,8 @@ void little_P_R(complex * const out, complex * const in) {
 
 void little_P_L_sym(complex * const out, complex * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
-  little_project(out, in, g_N_s);
+/*  little_project(out, in, g_N_s);*/
+  little_project_eo(out,in,g_N_s);
   little_D_sym(work[13], out);
   ldiff(out, in, work[13], nb_blocks*g_N_s);
   return;
@@ -426,7 +468,8 @@ void little_P_L_sym(complex * const out, complex * const in) {
 void little_P_R_sym(complex * const out, complex * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   little_D_sym(out, in);
-  little_project(work[14], out, g_N_s);
+/*  little_project(work[14], out, g_N_s);*/
+  little_project_eo(work[14],out,g_N_s);
   ldiff(out, in, work[14], nb_blocks*g_N_s);
   return;
 }
