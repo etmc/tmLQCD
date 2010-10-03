@@ -58,6 +58,8 @@ spinor ** dfl_fields = NULL;
 static spinor * _dfl_fields = NULL;
 complex ** little_dfl_fields = NULL;
 static complex *_little_dfl_fields = NULL;
+complex ** little_dfl_fields_eo = NULL;
+static complex *_little_dfl_fields_eo = NULL;
 static int init_subspace = 0;
 static int init_little_subspace = 0;
 
@@ -84,7 +86,7 @@ static void random_fields(const int Ns) {
 }
 
 int generate_dfl_subspace(const int Ns, const int N) {
-  int ix, i, j, k, p, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex),
+  int ix, i_o,i, j, k, p, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex),
     vol = VOLUME*sizeof(spinor)/sizeof(complex);
   spinor **psi;
   double nrm, e = 0.3, d = 1.1, atime, etime;
@@ -319,6 +321,70 @@ int generate_dfl_subspace(const int Ns, const int N) {
   /* the precision in the inversion is not yet satisfactory! */
   LUInvert(Ns, little_A, Ns);
   /* inverse of little little D now in little_A */
+
+
+  for(j = 0; j < Ns; j++) {
+    for(i = 0; i < nb_blocks*9*Ns; i++) {
+      _complex_zero(little_dfl_fields_eo[j][i]);
+      _complex_zero(work[i]);
+    }
+  }
+
+  /* compute the eo little little basis */
+  /* r = g_spinor_field[DUM_SOLVER]; */
+  /* q = g_spinor_field[DUM_SOLVER+1]; */
+      
+  for(i = 0; i < Ns; i++) {
+    /* split_global_field(r, q,  dfl_fields[i]); */
+    split_global_field_GEN(psi, dfl_fields[i], nb_blocks);
+    /* now take the local scalar products */
+    for(j = 0; j < Ns; j++) {
+      i_o=0;
+      for(blk = 0; blk < nb_blocks; blk++) {
+         if (block_list[blk].evenodd==1) {
+	 little_dfl_fields_eo[i][j + (nb_blocks/2+i_o)*Ns] = scalar_prod(block_list[blk].basis[j], psi[blk], block_list[0].volume, 0);
+         i_o++;
+	 }	
+      }
+    }
+  }  
+     
+  /* orthonormalise */
+  for(i = 0; i < Ns; i++) {
+    for (j = 0; j < i; j++) {
+      s = lscalar_prod(little_dfl_fields_eo[j], little_dfl_fields_eo[i], nb_blocks*Ns, 1);
+      lassign_diff_mul(little_dfl_fields_eo[i], little_dfl_fields_eo[j], s, nb_blocks*Ns);
+    }
+    s.re = lsquare_norm(little_dfl_fields_eo[i], nb_blocks*Ns, 1);
+    lmul_r(little_dfl_fields_eo[i], 1./sqrt(s.re), little_dfl_fields_eo[i], nb_blocks*Ns);
+  }
+  if(g_debug_level > 0) {
+    for(i = 0; i < Ns; i++) {
+      for(j = 0; j < Ns; j++) {
+        s = lscalar_prod(little_dfl_fields_eo[i], little_dfl_fields_eo[j], nb_blocks*Ns, 1);
+        if(g_proc_id == 0) {
+          printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, s.re, s.im);
+        }
+      }
+    }
+  }
+  
+  for(i = 0; i < Ns; i++) {  
+    little_D_sym(work, little_dfl_fields_eo[i]);
+    for(j = 0; j < Ns; j++) {
+      little_A_eo[i * Ns + j]  = lscalar_prod(little_dfl_fields_eo[j], work, nb_blocks*Ns, 1);
+      if(g_proc_id == 0 && g_debug_level > 4) {
+        printf("%1.3e %1.3ei, ", little_A_eo[i * Ns + j].re, little_A_eo[i * Ns + j].im); 
+      }
+    }
+    if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
+  }
+  if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
+  /* the precision in the inversion is not yet satisfactory! */
+  LUInvert(Ns, little_A_eo, Ns);
+  /* inverse of eo little little D now in little_A_eo */
+
+
   
 #ifdef MPI
   etime = MPI_Wtime();
@@ -384,17 +450,29 @@ int init_little_dfl_subspace(const int N_s) {
     if((void*)(little_dfl_fields = (complex**)calloc(N_s, sizeof(complex*))) == NULL) {
       return(1);
     }
+    if((void*)(_little_dfl_fields_eo = (complex*)calloc((N_s)*nb_blocks*9*N_s+4, sizeof(complex))) == NULL) {
+      return(1);
+    }
+    if((void*)(little_dfl_fields_eo = (complex**)calloc(N_s, sizeof(complex*))) == NULL) {
+      return(1);
+    }
 #if ( defined SSE || defined SSE2 || defined SSE3)
     little_dfl_fields[0] = (complex*)(((unsigned long int)(_little_dfl_fields)+ALIGN_BASE)&~ALIGN_BASE);
+    little_dfl_fields_eo[0] = (complex*)(((unsigned long int)(_little_dfl_fields_eo)+ALIGN_BASE)&~ALIGN_BASE);
 #else
     little_dfl_fields[0] = _little_dfl_fields;
+    little_dfl_fields_eo[0] = _little_dfl_fields_eo;
 #endif
     for (i = 1; i < N_s; i++) {
       little_dfl_fields[i] = little_dfl_fields[i-1] + nb_blocks*9*N_s;
+      little_dfl_fields_eo[i] = little_dfl_fields_eo[i-1] + nb_blocks*9*N_s;
     }
     if((void*)(little_A = (complex*)calloc(N_s*N_s, sizeof(complex))) == NULL) {
       return(1);
     }
+    if((void*)(little_A_eo = (complex*)calloc(N_s*N_s, sizeof(complex))) == NULL) {
+      return(1);
+    }   
     init_little_subspace = 1;
   }
   return(0);
