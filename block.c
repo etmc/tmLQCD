@@ -48,6 +48,8 @@ int ** bipt_;
 int * bipt;
 complex * little_A = NULL;
 complex32 * little_A32 = NULL;
+complex * little_A_eo = NULL;
+complex32 * little_A32_eo = NULL;
 int * block_idx;
 int * block_evenidx;
 int * block_oddidx;
