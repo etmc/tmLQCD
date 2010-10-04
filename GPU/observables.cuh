@@ -339,12 +339,12 @@ float calc_plaquette(dev_su3_2v * U, int* nn){
 //        |
 //        
 __device__ float dev_onerect(int * dev_nn, dev_su3_2v * gf,
- 				int t, int x, int y, int z, int mu, int nu ){
-              int x0pos, x1pos, x2pos;
+ 				int x0pos, int mu, int nu ){
+              int x1pos, x2pos;
               dev_su3 su3matrix,su3matrix2, M1,M2;
              
              
-              x0pos = z + dev_LZ*(y + dev_LY*(x + dev_LX*t));
+              
               x1pos = dev_nn[8*x0pos + mu];
               x2pos = dev_nn[8*x1pos + nu];          
 
@@ -377,8 +377,6 @@ __device__ float dev_onerect(int * dev_nn, dev_su3_2v * gf,
          x2pos = dev_nn[8*x1pos + mu];
 
 
-
-
 /* Udagger_mu(x+e_nu+e_mu)*/
             #ifdef GF_8
               dev_reconstructgf_8texref_dagger(gf, (4*x2pos+mu),&M1);
@@ -403,8 +401,8 @@ __device__ float dev_onerect(int * dev_nn, dev_su3_2v * gf,
   
 
               
-            float chelp = dev_su3Retrace(&su3matrix2);
-return(chelp);  
+            float help = dev_su3Retrace(&su3matrix2);
+return(help);  
 }
 
 
@@ -415,56 +413,38 @@ return(chelp);
 // N_grid = T, N_block = LZ
 // CPU has to do last summation over T
 // BLOCKPLAQ MUST be larger than LZ !!! -> define correctly in cudaglobal.h
-__global__ void dev_rectangle(float* reductionfield_rect, 
+__global__ void dev_rectangle(float* reductionfield, 
             int * dev_nn, dev_su3_2v * gf){
   float mrect = 0.0;
-  int iz,x,y,z,t,mu,nu;
-  dev_complex chelp;
-  
-  //space for the sum of blocks
-  __shared__ float output[BLOCKPLAQ];
-  
-  t = blockIdx.x;
-  z = threadIdx.x;
-  
+  int x0pos,mu,nu;
 
-      for(y=0; y<dev_LY; y++){
-        for(x=0; x<dev_LX; x++){
-          
-          mrect += dev_onerect(dev_nn, gf, t, x, y, z, 0, 1);
-          mrect += dev_onerect(dev_nn, gf, t, x, y, z, 0, 2);
-          mrect += dev_onerect(dev_nn, gf, t, x, y, z, 0, 3);
-          
-          mrect += dev_onerect(dev_nn, gf, t, x, y, z, 1, 0);
-          mrect += dev_onerect(dev_nn, gf, t, x, y, z, 1, 2);
-          mrect += dev_onerect(dev_nn, gf, t, x, y, z, 1, 3);
-          
-          mrect += dev_onerect(dev_nn, gf, t, x, y, z, 2, 0);
-          mrect += dev_onerect(dev_nn, gf, t, x, y, z, 2, 1);
-          mrect += dev_onerect(dev_nn, gf, t, x, y, z, 2, 3);
-          
-          mrect += dev_onerect(dev_nn, gf, t, x, y, z, 3, 0);
-          mrect += dev_onerect(dev_nn, gf, t, x, y, z, 3, 1);
-          mrect += dev_onerect(dev_nn, gf, t, x, y, z, 3, 2);
-
-           
-        }
-      } 
-    output[z] = mrect;
-
-  __syncthreads();
   
-  if(threadIdx.x == 0){
+  x0pos = threadIdx.x + blockDim.x*blockIdx.x;  
+
+ if(x0pos < dev_VOLUME){
+  
+          
+          mrect += dev_onerect(dev_nn, gf, x0pos, 0, 1);
+          mrect += dev_onerect(dev_nn, gf, x0pos, 0, 2);
+          mrect += dev_onerect(dev_nn, gf, x0pos, 0, 3);
+          
+          mrect += dev_onerect(dev_nn, gf, x0pos, 1, 0);
+          mrect += dev_onerect(dev_nn, gf, x0pos, 1, 2);
+          mrect += dev_onerect(dev_nn, gf, x0pos, 1, 3);
+          
+          mrect += dev_onerect(dev_nn, gf, x0pos, 2, 0);
+          mrect += dev_onerect(dev_nn, gf, x0pos, 2, 1);
+          mrect += dev_onerect(dev_nn, gf, x0pos, 2, 3);
+          
+          mrect += dev_onerect(dev_nn, gf, x0pos, 3, 0);
+          mrect += dev_onerect(dev_nn, gf, x0pos, 3, 1);
+          mrect += dev_onerect(dev_nn, gf, x0pos, 3, 2);
+
+
     
-    /* normieren */
-    float accum = 0.0;
-    for(iz=0; iz < dev_LZ; iz++){
-      accum += output[iz];  
-    }
-    accum = accum*(1.0/(6.0*dev_VOLUME));
-    reductionfield_rect[t] = accum;
+    reductionfield[x0pos] = mrect;
+  
   }
-  __syncthreads();
   
 }
 
