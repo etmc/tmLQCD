@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <endian.h>
+#include <string.h>
 
 #include <io/selector.h>
 #include <io/params.h>
