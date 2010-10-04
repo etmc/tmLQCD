@@ -60,6 +60,7 @@ void dummy_D(spinor * const, spinor * const);
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q);
 void op_invert(const int op_id, const int index_start);
 void op_write_prop(const int op_id, const int index_start, const int append_);
+void write_cgmms_headers(const int op_id, const int index_start, const int append_);
 
 operator operator_list[max_no_operators];
 
@@ -249,7 +250,9 @@ void op_invert(const int op_id, const int index_start) {
 	g_precWS=NULL;
       
       // This is for the CGMMS: it header here because binary data will be wrote inside cg_mms
-      write_cgmms_headers(op_id,index_start,i);
+      if(optr->solver == 12) {
+	write_cgmms_headers(op_id,index_start,i);
+      }
       
       optr->iterations = invert_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 				   optr->eps_sq, optr->maxiter,
@@ -483,16 +486,23 @@ void write_cgmms_headers(const int op_id, const int index_start, const int appen
   paramsSourceFormat *sourceFormat = NULL;
   paramsPropagatorFormat *propagatorFormat = NULL;
 
-  for(im=0;im<=g_no_extra_masses;im++) {
+  for(im = 0; im <= g_no_extra_masses; im++) {
     
     if(optr->type == DBTMWILSON) strcpy(ending, "hinverted");
     else if(optr->type == OVERLAP) strcpy(ending, "ovinverted");
     else strcpy(ending, "inverted");
     
-    if(SourceInfo.type != 1)
-      if (PropInfo.splitted) sprintf(filename, "%s.%.4d.%.2d.%.2d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im, ending);
-      else sprintf(filename, "%s.%.4d.%.2d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, im,ending);
-    else sprintf(filename, "%s.%.4d.%.5d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, im,ending);
+    if(SourceInfo.type != 1) {
+      if (PropInfo.splitted) {
+	sprintf(filename, "%s.%.4d.%.2d.%.2d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im, ending);
+      }
+      else {
+	sprintf(filename, "%s.%.4d.%.2d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, im,ending);
+      }
+    }
+    else { 
+      sprintf(filename, "%s.%.4d.%.5d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, im,ending);
+    }
     
     // the 1 is for appending
     if(!PropInfo.splitted) append = 1;
