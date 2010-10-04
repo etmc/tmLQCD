@@ -65,7 +65,7 @@ include ${top_srcdir}/Makefile.global
 
 # rule to compile objects
 
-%.o: ${srcdir}/%.c %.d Makefile
+%.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
 	$(COMPILE) -c $<
 
 
