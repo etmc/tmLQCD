@@ -37,7 +37,7 @@
 #include "Hopping_Matrix.h"
 #include "Hopping_Matrix_nocom.h"
 #include "sse.h"
-#include "linalg/diff.h"
+#include "linalg_eo.h"
 #include "gamma.h"
 #include "D_psi.h"
 #ifdef BGL
@@ -350,8 +350,10 @@ void Q_pm_psi_prec(spinor * const l, spinor * const k) {
   if(g_prec_sequence_d_dagger_d[0]!=0.0){
     alpha.re=g_prec_sequence_d_dagger_d[0];
     spinorPrecondition(l,k,ws,T,L,alpha,0,1);
-  } else 
+  } 
+  else {
     assign(l,k,VOLUME);
+  }
 
   g_mu = -g_mu;
   D_psi(g_spinor_field[DUM_MATRIX], l);

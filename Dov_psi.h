@@ -71,7 +71,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
 		       const int n, spinor * const S,
 		       const double rnorm, const double minev);
 
-void caclulateOverlapPolynomial();
+void calculateOverlapPolynomial();
 
 void free_Dov_WS();
 #endif

@@ -738,7 +738,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 void geometry(){
   
   int x0,x1,x2,x3,ix;
-  int y0, y1, y2, y3;
+  int y0, y1, y2, y3, j;
   int bndcnt=0;
   int i_even,i_odd;
   int startvaluet = 0;
@@ -746,8 +746,10 @@ void geometry(){
   int startvaluey = 0;
   int startvaluez = 0;
   int * xeven;
-  int isp, *ones, *oneS, *oneL, j;
+#if defined _USE_TSPLITPAR
+  int isp, *ones, *oneS, *oneL;
   int lsliceS, lsliceL, check_struct_zt;
+#endif
 
   xeven = malloc(VOLUMEPLUSRAND*sizeof(int));
 

@@ -18,6 +18,7 @@
 #include "su3.h"
 #include "linalg_eo.h"
 #include "Dov_proj.h"
+#include "gamma.h"
 #include "Dov_psi.h"
 
 

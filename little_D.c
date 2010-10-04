@@ -680,7 +680,6 @@ void little_D(complex * v, complex *w) {
 
 
 void little_D_sym(complex * v, complex *w) {
-  int i, j;
   
   complex* tmpc1, * tmpc2, * tmpc3;
   tmpc1 = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
@@ -834,8 +833,8 @@ void init_little_field_exchange(complex * w) {
 }
 
 void wait_little_field_exchange(const int mu) {
-  int err;
 #ifdef MPI
+  int err;
   err = MPI_Waitall(2, &lrequests[2*mu], &lstatus[2*mu]);
   waitcount -= 2;
 #endif
