@@ -8,11 +8,8 @@
 /// Think of porting this to double !
 
 
-float*  redfield_plaq;
-float * dev_redfield_plaq;
-
-float*  redfield_rect;
-float * dev_redfield_rect;
+float*  redfield;
+float * dev_redfield;
 
 
 
@@ -20,23 +17,45 @@ float * dev_redfield_rect;
 int init_dev_observables(){
   cudaError_t cudaerr;
   
-  cudaMalloc((void **) &dev_redfield_plaq, T*sizeof(float));
-  if((redfield_plaq = (float*)malloc(T*sizeof(float)))==(void*)NULL){
+  int little_redsize;
+  if((VOLUME%REDUCTION_N) == 0){
+    little_redsize = VOLUME/REDUCTION_N;
+  }
+  else{
+    fprintf(stderr,"Error: Volume is not a multiple of REDUCTION_N (%d). Aborting...\n", REDUCTION_N);
+    exit(100);
+  }
+  
+  //VOLUME * float on device
+  cudaMalloc((void **) &dev_redfield, VOLUME*sizeof(float));
+  // after reduce kernel we need only smaller amount of mem on host
+  
+  /*
+  if((redfield = (float*)malloc(VOLUME*sizeof(float)))==(void*)NULL){
     fprintf(stderr,"Error in init_dev_observables: malloc error(plaq)\n");
     return(1);
   }
-
-  cudaMalloc((void **) &dev_redfield_rect, T*sizeof(float));
-  if((redfield_rect = (float*)malloc(T*sizeof(float)))==(void*)NULL){
-    fprintf(stderr,"Error in init_dev_observables: malloc error(rect)\n");
+  */
+  
+  if((redfield = (float*)malloc(little_redsize*sizeof(float)))==(void*)NULL){
+    fprintf(stderr,"Error in init_dev_observables: malloc error(plaq)\n");
     return(1);
   }
+  
 
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
     fprintf(stderr, "Error in init_dev_observables(): GPU memory allocation of reduction fields failed. Aborting...\n");
     return(2);
   }
   
+  
+  cudaMemcpyToSymbol("dev_VOLUME", &VOLUME, sizeof(int)) ; 
+  cudaMemcpyToSymbol("dev_LX", &LX, sizeof(int)) ;
+  cudaMemcpyToSymbol("dev_LY", &LY, sizeof(int)) ;
+  cudaMemcpyToSymbol("dev_LZ", &LZ, sizeof(int)) ;
+  cudaMemcpyToSymbol("dev_T", &T, sizeof(int)) ;
+
+
  return(0);
 }
 
@@ -46,12 +65,47 @@ int init_dev_observables(){
 
 void finalize_dev_observables(){
 
-  free(redfield_plaq);
-  free(redfield_rect);
-  cudaFree(dev_redfield_plaq);
-  cudaFree(dev_redfield_rect);
-  
+  free(redfield);
+  cudaFree(dev_redfield);
+
 }
+
+
+
+
+
+
+__global__ void reduce(float *g_idata, float *g_odata, unsigned int n)
+{
+    extern __shared__ float sdata[];
+
+    // load shared mem
+    unsigned int tid = threadIdx.x;
+    unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
+    
+    sdata[tid] = (i < n) ? g_idata[i] : 0;
+    
+    __syncthreads();
+
+    // do reduction in shared mem
+    for(unsigned int s=blockDim.x/2; s>0; s>>=1) 
+    {
+        if (tid < s) 
+        {
+            sdata[tid] += sdata[tid + s];
+        }
+        __syncthreads();
+    }
+
+    // write result for this block to global mem
+    if (tid == 0) g_odata[blockIdx.x] = sdata[0];
+}
+
+
+
+
+
+
 
 
 
@@ -83,28 +137,90 @@ void update_dev_gaugefield(su3** gf){
 
 
 // calculates the mean plaquette of the gauge field
-// uses 2d parallelization:
-// N_grid = T, N_block = LZ
-// CPU has to do last summation over T
-// BLOCKPLAQ MUST be larger than LZ !!! -> define correctly in cudaglobal.h
-__global__ void dev_mean_plaq(float* reductionfield_plaq, int * dev_nn, dev_su3_2v * gf){
+__global__ void dev_mean_plaq(float* reductionfield, int * dev_nn, dev_su3_2v * gf){
   float mplaq = 0.0;
   int x0pos, x1pos, x2pos ; /* x0pos = basepoint of plaquette, x1pos = x0pos + e_mu, x2pos = x0pos + e_nu */
-  int iz,x,y,z,t,mu,nu;
+  int t,mu,nu;
   dev_su3 su3matrix,su3matrix2, M1,M2,M3,M4;
-  dev_complex chelp;
   
+ x0pos = threadIdx.x + blockDim.x*blockIdx.x;  
+ #ifdef TEMPORALGAUGE
+  int spatialvol = dev_LX*dev_LY*dev_LZ;
+ #endif
+ 
+ 
+ if(x0pos < dev_VOLUME){
+    
+    
+    //nu == T-direction -> beware temporal gauge and GF8
+      nu = 0;
+      for(mu =nu+1; mu < 4; mu++){
+          x1pos = dev_nn[8*x0pos + mu];
+          x2pos = dev_nn[8*x0pos + nu];          
 
-  __shared__ float output[BLOCKPLAQ];
-  t = blockIdx.x;
-  z = threadIdx.x;
-  
+/* U_mu(x) */
+            #ifdef GF_8
+              dev_reconstructgf_8texref(gf, (4*x0pos+mu),&M1);
+            #else
+              dev_reconstructgf_2vtexref(gf, (4*x0pos+mu),&M1);
+            #endif
+/* U_nu(x+e_mu) */
+     #ifdef TEMPORALGAUGE
+       t = x0pos/spatialvol; // are we on timeslice T-1? no -> U==ID
+       if(t != (dev_T-1) ){ 
+         dev_unit_su3(&M2);
+       }
+       else{
+         #ifdef GF_8
+           dev_reconstructgf_8texref(gf, (4*x1pos+nu),&M2);
+         #else
+           dev_reconstructgf_2vtexref(gf, (4*x1pos+nu),&M2);
+         #endif
+       }
+     #else
+            #ifdef GF_8
+              dev_reconstructgf_8texref(gf, (4*x1pos+nu),&M2);
+            #else
+              dev_reconstructgf_2vtexref(gf, (4*x1pos+nu),&M2);
+            #endif
+     #endif /*TEMPORALGAUGE*/
+/* Udagger_mu(x+e_nu) */
+            #ifdef GF_8
+              dev_reconstructgf_8texref_dagger(gf, (4*x2pos+mu),&M3);
+            #else
+              dev_reconstructgf_2vtexref_dagger(gf, (4*x2pos+mu),&M3);
+            #endif
+/* Udagger_nu(x)*/
+     #ifdef TEMPORALGAUGE
+       if(t != (dev_T-1) ){ 
+          dev_unit_su3(&M4);
+       }
+       else{
+         #ifdef GF_8
+           dev_reconstructgf_8texref_dagger(gf, (4*x0pos+nu),&M4);
+         #else
+           dev_reconstructgf_2vtexref_dagger(gf, (4*x0pos+nu),&M4);
+         #endif
+       }
+     #else
+       #ifdef GF_8
+         dev_reconstructgf_8texref_dagger(gf, (4*x0pos+nu),&M4);
+       #else
+         dev_reconstructgf_2vtexref_dagger(gf, (4*x0pos+nu),&M4);
+       #endif
+     #endif  /*TEMPORALGAUGE*/
+     /* multiply these and store in su3matrix*/
+     dev_su3_ti_su3(&su3matrix, &M3,&M4);
+              dev_su3_ti_su3(&su3matrix2, &M2,&su3matrix);
+              dev_su3_ti_su3(&su3matrix, &M1,&su3matrix2);
 
-      for(y=0; y<dev_LY; y++){
-        for(x=0; x<dev_LX; x++){
-          for(nu=0;nu <3; nu++){
+               mplaq += dev_su3Retrace(&su3matrix)/3.0;
+      }
+                   
+          
+  // nu != T-direction -> no problem with temporal gauge and GF8
+          for(nu=1;nu <3; nu++){
             for(mu =nu+1; mu < 4; mu++){
-              x0pos = x + dev_LX*(y + dev_LY*(z + dev_LZ*t));
               x1pos = dev_nn[8*x0pos + mu];
               x2pos = dev_nn[8*x0pos + nu];          
 
@@ -143,24 +259,9 @@ __global__ void dev_mean_plaq(float* reductionfield_plaq, int * dev_nn, dev_su3_
             }
           }
            
-        }
-      } 
-    output[z] = mplaq;
-
-  __syncthreads();
-  
-  if(threadIdx.x == 0){
     
-    /* normieren */
-    float accum = 0.0;
-    for(iz=0; iz < dev_LZ; iz++){
-      accum += output[iz];  
-    }
-    accum = accum*(1.0/(6.0*dev_VOLUME));
-    reductionfield_plaq[t] = accum;
+    reductionfield[x0pos] = mplaq;
   }
-  __syncthreads();
-  
 }
 
 
@@ -169,25 +270,59 @@ __global__ void dev_mean_plaq(float* reductionfield_plaq, int * dev_nn, dev_su3_
 
 
 
-
-
-
-
-
-
-float calc_plaquette(dev_su3_2v * U){
-   float erg=0.0;
-   int j;
-   dev_mean_plaq <<< T , LZ >>> (dev_redfield_plaq, dev_nn, U) ;
-   cudaMemcpy(redfield_plaq, dev_redfield_plaq, (size_t)(T*sizeof(float)), cudaMemcpyDeviceToHost);
-   // we have to add up the final sum on host
-   for(j=0; j<T; j++){
-     erg+=redfield_plaq[j];
-     //printf("%e\n", redfield_plaq[j]);
-   }
-   printf("PLAQ = %.8f\n",erg);
-   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-   return(erg);
+float calc_plaquette(dev_su3_2v * U, int* nn){
+  float erg=0.0;
+  int j;
+  #ifdef USETEXTURE
+   //Bind texture gf
+   bind_texture_gf(U);
+  #endif 
+  
+  int gridsize;
+  int blocksize=BLOCK2;
+  if( VOLUME >= BLOCK2){
+   gridsize = (int)(VOLUME/BLOCK2) + 1;
+  }
+  else{
+    gridsize=1;
+  }
+    
+  dev_mean_plaq <<< gridsize , blocksize >>> (dev_redfield, nn, U) ;
+  printf("Plaquette calculation on device: %s\n", cudaGetErrorString(cudaGetLastError()));
+  
+  #ifdef USETEXTURE
+    unbind_texture_gf();
+  #endif
+  
+  int redblocks;
+  if(VOLUME%REDUCTION_N == 0){
+    redblocks = VOLUME/REDUCTION_N;
+  }
+  else{
+    fprintf(stderr,"Error: Volume is not a multiple of REDUCTION_N (%d). Aborting...\n", REDUCTION_N);
+    exit(100);
+  }
+  
+  float * dev_little_redfield;
+  cudaMalloc((void **) &dev_little_redfield, redblocks*sizeof(float));
+  reduce <<< redblocks, REDUCTION_N, REDUCTION_N*sizeof(float) >>> 
+        ( dev_redfield, dev_little_redfield,  VOLUME);
+  printf("Reduction of data: %s\n", cudaGetErrorString(cudaGetLastError()));
+  cudaMemcpy(redfield, dev_little_redfield, (size_t)(redblocks*sizeof(float)), cudaMemcpyDeviceToHost);
+  
+  // we have to add up the final sum on host
+  for(j=0; j<redblocks; j++){
+    erg+=redfield[j];
+    //printf("%e\n", redfield[j]);
+  }
+  erg=erg/6.0/VOLUME;
+  cudaFree(dev_little_redfield);
+  
+  
+  
+  //printf("PLAQ = %.8f\n",erg);
+  //printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+  return(erg);
 }
 
 
@@ -209,7 +344,7 @@ __device__ float dev_onerect(int * dev_nn, dev_su3_2v * gf,
               dev_su3 su3matrix,su3matrix2, M1,M2;
              
              
-              x0pos = x + dev_LX*(y + dev_LY*(z + dev_LZ*t));
+              x0pos = z + dev_LZ*(y + dev_LY*(x + dev_LX*t));
               x1pos = dev_nn[8*x0pos + mu];
               x2pos = dev_nn[8*x1pos + nu];          
 
@@ -335,6 +470,32 @@ __global__ void dev_rectangle(float* reductionfield_rect,
 
 
 
+
+/*
+float calc_rectangle(dev_su3_2v * U){
+   float erg=0.0;
+   int j;
+     
+   #ifdef USETEXTURE
+     //Bind texture gf
+     bind_texture_gf(U);
+   #endif   
+   dev_rectangle <<< T , LZ >>> (dev_redfield, dev_nn, U) ;
+   #ifdef USETEXTURE
+    unbind_texture_gf();
+   #endif   
+   cudaMemcpy(redfield_rect, dev_redfield_rect, (size_t)(T*sizeof(float)), cudaMemcpyDeviceToHost);
+   // we have to add up the final sum on host
+   for(j=0; j<T; j++){
+     erg+=redfield_rect[j];
+     printf("%e\n", redfield_rect[j]);
+   }
+   printf("RECT = %.8f\n",erg);
+   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+   return(erg);
+}
+
+*/
 
 
 

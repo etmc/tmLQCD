@@ -7,7 +7,7 @@
 //#define MATRIX_DEBUG		// enables the matrix multiplication on the CPU (in the inner CG solver)
 //#define CG_DEBUG		// enables the CG on the CPU
 
-//#define OPERATOR_BENCHMARK
+#define OPERATOR_BENCHMARK
 //#define CPU_BENCHMARK
 #define GPU_BENCHMARK
 
@@ -18,11 +18,11 @@
 
 // CUDA parameters
 
-#define BLOCKSIZE1 128
-#define BLOCKSIZE2 128
-#define BLOCKSIZE3 128
-#define BLOCKSIZE4 128
-#define BLOCKSIZE5 128
+#define BLOCKSIZE1 192
+#define BLOCKSIZE2 192
+#define BLOCKSIZE3 192
+#define BLOCKSIZE4 192
+#define BLOCKSIZE5 192
 
 
 

@@ -68,6 +68,7 @@ extern "C" {
 #include "../su3.h"
 #include "../temporalgauge.h"
 #include "../observables.h"
+#include "../measure_rectangles.h"
 }
 
 
@@ -459,6 +460,20 @@ __global__ void he_cg_init (int* grid, REAL param_kappa, REAL param_mu, dev_comp
   dev_mk3.re = -k3.re;
   dev_mk3.im = -k3.im;
 }
+
+
+
+
+
+// init the gpu, assign dimensions 
+__global__ void dev_init_grid (int* grid){
+  dev_LX = grid[0];
+  dev_LY = grid[1];
+  dev_LZ = grid[2];
+  dev_T = grid[3];
+  dev_VOLUME = grid[4]; // grid[4] is initialized 1/2 VOLUME for eo
+}
+
 
 
 
@@ -1630,13 +1645,52 @@ cudaError_t cudaerr;
   
   
   init_dev_observables();
-  cudaMemcpyToSymbol("dev_VOLUME", &VOLUME, sizeof(int)) ; 
+ 
   
-  float devplaq = calc_plaquette(dev_gf);
+  clock_t start, stop; 
+  double timeelapsed = 0.0;
+  int count;
+  
+  assert((start = clock())!=-1);
+  float devplaq;
+  for(count=0; count<200; count++){
+    devplaq = calc_plaquette(dev_gf, dev_nn);
+  }
+  assert((stop = clock())!=-1);
+  timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
   printf("Calculating Plaquette on device: plaq(device) = %.8f\n", devplaq);
+  printf("Time spent calculating: %f sec\n", timeelapsed);
   
-  float hostplaq = (float) measure_gauge_action()/(6.*VOLUME*g_nproc);
+  assert((start = clock())!=-1);
+  float hostplaq;
+  int a = 0;
+  for(count=0; count<200; count++){
+    g_update_gauge_energy = 1;
+    hostplaq = (float) measure_gauge_action()/(6.*VOLUME*g_nproc);
+  }
+  assert((stop = clock())!=-1);
+  timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
   printf("Calculating Plaquette on host: plaq(host) = %.8f\n", hostplaq);
+  printf("Time spent calculating: %f sec\n", timeelapsed);
+
+  /*
+  assert((start = clock())!=-1);
+  float devrect = calc_rectangle(dev_gf);
+  assert((stop = clock())!=-1);
+  timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
+  printf("Calculating Rectangles on device: rectangle(device) = %.8f\n", devrect);
+  printf("Time spent calculating: %f sec\n", timeelapsed);
+  
+  g_update_rectangle_energy = 1;
+  assert((start = clock())!=-1);
+  float hostrect = (float) measure_rectangles()/(12.*VOLUME*g_nproc);
+  assert((stop = clock())!=-1);
+  timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
+  printf("Calculating Rectangles on host: rectangle(host) = %.8f\n", hostrect);
+  printf("Time spent calculating: %f sec\n", timeelapsed);
+  */ 
+  
+  finalize_dev_observables();
 
   exit(100); 
   
