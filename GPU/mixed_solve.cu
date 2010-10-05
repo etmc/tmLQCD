@@ -1653,7 +1653,7 @@ cudaError_t cudaerr;
   
   assert((start = clock())!=-1);
   float devplaq;
-  for(count=0; count<200; count++){
+  for(count=0; count<1; count++){
     devplaq = calc_plaquette(dev_gf, dev_nn);
   }
   assert((stop = clock())!=-1);
@@ -1664,7 +1664,7 @@ cudaError_t cudaerr;
   assert((start = clock())!=-1);
   float hostplaq;
   int a = 0;
-  for(count=0; count<200; count++){
+  for(count=0; count<1; count++){
     g_update_gauge_energy = 1;
     hostplaq = (float) measure_gauge_action()/(6.*VOLUME*g_nproc);
   }
@@ -1673,22 +1673,27 @@ cudaError_t cudaerr;
   printf("Calculating Plaquette on host: plaq(host) = %.8f\n", hostplaq);
   printf("Time spent calculating: %f sec\n", timeelapsed);
 
-  /*
+  float devrect;
   assert((start = clock())!=-1);
-  float devrect = calc_rectangle(dev_gf);
+  for(count=0; count<100; count++){
+    devrect = calc_rectangle(dev_gf, dev_nn);
+  }
   assert((stop = clock())!=-1);
   timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
   printf("Calculating Rectangles on device: rectangle(device) = %.8f\n", devrect);
   printf("Time spent calculating: %f sec\n", timeelapsed);
   
-  g_update_rectangle_energy = 1;
+  float hostrect;
   assert((start = clock())!=-1);
-  float hostrect = (float) measure_rectangles()/(12.*VOLUME*g_nproc);
+  for(count=0; count<100; count++){
+    g_update_rectangle_energy = 1;
+    hostrect = (float) measure_rectangles()/(12.*VOLUME*g_nproc);
+  }
   assert((stop = clock())!=-1);
   timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
   printf("Calculating Rectangles on host: rectangle(host) = %.8f\n", hostrect);
   printf("Time spent calculating: %f sec\n", timeelapsed);
-  */ 
+  
   
   finalize_dev_observables();
 
