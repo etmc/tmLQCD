@@ -520,8 +520,8 @@ void write_cgmms_headers(const int op_id, const int index_start, const int appen
       free(sourceFormat);
     }
     
-    //write precision (32 or 64) and number of flavours
-    propagatorFormat = construct_paramsPropagatorFormat(optr->prop_precision, optr->no_flavours);
+    //write precision (always 32 at the moment) and number of flavours
+    propagatorFormat = construct_paramsPropagatorFormat(32, optr->no_flavours);
     write_propagator_format(writer, propagatorFormat);
     free(propagatorFormat);
     
