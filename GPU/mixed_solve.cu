@@ -605,7 +605,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
 
 // this is the eo version of the device cg inner solver 
 // we invert the hermitean D_tm D_tm^{+}
-extern "C" void dev_cg(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
+extern "C" int dev_cg(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
 dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, REAL* output,REAL* erg, int xsize, int ysize, int rescalekappa){
  
  
@@ -857,6 +857,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
   cudaFree(alpha);
   cudaFree(beta);
   cublasShutdown();
+  return(i);
 }
 
 
@@ -865,7 +866,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
 
 // this is the eo version of the device cg inner solver 
 // we invert the hermitean Q_{-} Q_{+}
-extern "C" void dev_cg_eo(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
+extern "C" int dev_cg_eo(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
 dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, REAL* output,REAL* erg, int xsize, int ysize, int rescalekappa, REAL epsfinal){
  
  
@@ -877,7 +878,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  int i, gridsize;
  int maxit = max_innersolver_it;
  REAL eps = (REAL) innersolver_precision;
- int N_recalcres = 40; // after N_recalcres iterations calculate r = A x_k - b
+ int N_recalcres = 20; // after N_recalcres iterations calculate r = A x_k - b
  
  cudaError_t cudaerr;
 
@@ -1018,7 +1019,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
   //Abbruch?
   host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin0, 1,(const float *) spin0, 1);
   
- if (((host_dotprod <= eps*sourcesquarenorm) && (i > maxit / 2) ) || ( host_dotprod <= epsfinal/2.)){//error-limit erreicht (epsfinal/2 sollte ausreichen um auch in double precision zu bestehen)
+ if (((host_dotprod <= eps*sourcesquarenorm) && (i > maxit / 4) ) || ( host_dotprod <= epsfinal/2.)){//error-limit erreicht (epsfinal/2 sollte ausreichen um auch in double precision zu bestehen)
    break; 
  }
   printf("iter %d: err = %.8e\n", i, host_dotprod);
@@ -1069,6 +1070,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
   cudaFree(alpha);
   cudaFree(beta);
   cublasShutdown();
+  return(i);
 }
 
 
@@ -1646,7 +1648,7 @@ cudaError_t cudaerr;
   
   init_dev_observables();
  
-  
+  /*
   clock_t start, stop; 
   double timeelapsed = 0.0;
   int count;
@@ -1693,12 +1695,10 @@ cudaError_t cudaerr;
   timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
   printf("Calculating Rectangles on host: rectangle(host) = %.8f\n", hostrect);
   printf("Time spent calculating: %f sec\n", timeelapsed);
-  
-  
   finalize_dev_observables();
 
   exit(100); 
-  
+  */
 }
 
 
@@ -1744,6 +1744,7 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
   // source in Q, initial solution in P (not yet implemented)
   double rk;
   int outercount=0;
+  int totalcount=0;
   clock_t start, stop, startinner, stopinner; 
   double timeelapsed = 0.0;
   double sourcesquarenorm;
@@ -1795,7 +1796,7 @@ for(iter=0; iter<max_iter; iter++){
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
     finalize_mixedsolve();
-    return(iter*max_innersolver_it);  // MAYBE ONE SHOULD KEEP TRACK OF REAL INNER SOLVER STEPS
+    return(totalcount);  
    }
    
 
@@ -1809,7 +1810,7 @@ for(iter=0; iter<max_iter; iter++){
    // D p_k = r_k
    printf("Entering inner solver\n");
    assert((startinner = clock())!=-1);
-   dev_cg(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, dev_output,NULL, T, LZ,0);
+   totalcount += dev_cg(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, dev_output,NULL, T, LZ,0);
    stopinner = clock();
    timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;
    printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
@@ -1953,6 +1954,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   // source in Q, initial solution in P (not yet implemented)
   double rk;
   int outercount=0;
+  int totalcount=0;
   clock_t start, stop, startinner, stopinner; 
   double timeelapsed = 0.0;
   double sourcesquarenorm;
@@ -2024,7 +2026,7 @@ for(iter=0; iter<max_iter; iter++){
      timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
         
      finalize_mixedsolve();
-     return(iter*max_innersolver_it);  // MAYBE ONE SHOULD KEEP TRACK OF REAL INNER SOLVER STEPS
+     return(totalcount);  
    }
    
   //initialize spin fields on device
@@ -2037,7 +2039,7 @@ for(iter=0; iter<max_iter; iter++){
    // D p_k = r_k
    printf("Entering inner solver\n");
    assert((startinner = clock())!=-1);
-   dev_cg_eo(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, dev_output,NULL, T, LZ,0,(REAL) finaleps);
+   totalcount += dev_cg_eo(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, dev_output,NULL, T, LZ,0,(REAL) finaleps);
    stopinner = clock();
    timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;
    printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
