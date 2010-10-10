@@ -737,7 +737,7 @@ void calc_polyakov_0(float2* ret, dev_su3_2v * U, int* nn){
   for(j=0; j<redblocks; j++){
     erg.x +=polyredfield[j].x;
     erg.y +=polyredfield[j].y;
-    printf("%e\n", polyredfield[j].x);
+    //printf("%e\n", polyredfield[j].x);
   }
 
  

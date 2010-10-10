@@ -1701,8 +1701,8 @@ cudaError_t cudaerr;
 
   calc_polyakov_0(&ret, dev_gf, dev_nn);
   printf("Calculating Polyakov loop on device:\n");  
-  printf("pl_0 (Re) = %.8f\n",ret.x);
-  printf("pl_0 (Im) = %.8f\n",ret.y);
+  printf("pl_0 (Re) = %.8e\n",ret.x);
+  printf("pl_0 (Im) = %.8e\n",ret.y);
   
   //polyakov_loop_dir(1, 0);
   //printf("Calculating Polyakov loop on host:\n");  
