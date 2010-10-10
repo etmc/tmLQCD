@@ -69,6 +69,7 @@ extern "C" {
 #include "../temporalgauge.h"
 #include "../observables.h"
 #include "../measure_rectangles.h"
+#include "../polyakov_loop.h"
 }
 
 
@@ -1648,16 +1649,15 @@ cudaError_t cudaerr;
   
   init_dev_observables();
  
-  /*
   clock_t start, stop; 
   double timeelapsed = 0.0;
   int count;
   
   assert((start = clock())!=-1);
   float devplaq;
-  for(count=0; count<1; count++){
+  //for(count=0; count<1; count++){
     devplaq = calc_plaquette(dev_gf, dev_nn);
-  }
+  //}
   assert((stop = clock())!=-1);
   timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
   printf("Calculating Plaquette on device: plaq(device) = %.8f\n", devplaq);
@@ -1666,10 +1666,10 @@ cudaError_t cudaerr;
   assert((start = clock())!=-1);
   float hostplaq;
   int a = 0;
-  for(count=0; count<1; count++){
+  //for(count=0; count<1; count++){
     g_update_gauge_energy = 1;
     hostplaq = (float) measure_gauge_action()/(6.*VOLUME*g_nproc);
-  }
+  //}
   assert((stop = clock())!=-1);
   timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
   printf("Calculating Plaquette on host: plaq(host) = %.8f\n", hostplaq);
@@ -1677,9 +1677,9 @@ cudaError_t cudaerr;
 
   float devrect;
   assert((start = clock())!=-1);
-  for(count=0; count<100; count++){
+  //for(count=0; count<100; count++){
     devrect = calc_rectangle(dev_gf, dev_nn);
-  }
+  //}
   assert((stop = clock())!=-1);
   timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
   printf("Calculating Rectangles on device: rectangle(device) = %.8f\n", devrect);
@@ -1687,18 +1687,31 @@ cudaError_t cudaerr;
   
   float hostrect;
   assert((start = clock())!=-1);
-  for(count=0; count<100; count++){
+  //for(count=0; count<100; count++){
     g_update_rectangle_energy = 1;
     hostrect = (float) measure_rectangles()/(12.*VOLUME*g_nproc);
-  }
+  //}
   assert((stop = clock())!=-1);
   timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
   printf("Calculating Rectangles on host: rectangle(host) = %.8f\n", hostrect);
   printf("Time spent calculating: %f sec\n", timeelapsed);
+ 
+ 
+  float2 ret;
+
+  calc_polyakov_0(&ret, dev_gf, dev_nn);
+  printf("Calculating Polyakov loop on device:\n");  
+  printf("pl_0 (Re) = %.8f\n",ret.x);
+  printf("pl_0 (Im) = %.8f\n",ret.y);
+  
+  //polyakov_loop_dir(1, 0);
+  //printf("Calculating Polyakov loop on host:\n");  
+ 
   finalize_dev_observables();
 
-  exit(100); 
-  */
+  exit(100);
+  
+
 }
 
 

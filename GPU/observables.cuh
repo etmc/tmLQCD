@@ -8,17 +8,30 @@
 /// Think of porting this to double !
 
 
+// reduction field on host and device
 float*  redfield;
 float * dev_redfield;
 float * dev_sredfield;
 float * dev_ssredfield;
+
+// same for polyakov loop
+float2 * dev_polyredfield;
+float2 * dev_polysredfield;
+float2 * dev_polyssredfield;
+float2 * polyredfield;
+
+// size of the first (small) and second (smallsmall) reduction fields 
 int sredsize, ssredsize;
+
+// same for polyakov loop
+int polysredsize, polyssredsize;
 
 
 int init_dev_observables(){
   cudaError_t cudaerr;
   
   
+  // IMPLEMENT THIS FOR ALL LATTICE SIZES !!!!!!!!!!!!!!!!!!!!
   if((VOLUME%REDUCTION_N) == 0){
     sredsize = VOLUME/REDUCTION_N;
   }
@@ -55,6 +68,44 @@ int init_dev_observables(){
     return(2);
   }
   
+
+
+  int spatialvol = LX*LY*LZ;
+  if((spatialvol%REDUCTION_N) == 0){
+    polysredsize = spatialvol/REDUCTION_N;
+  }
+  else{
+    fprintf(stderr,"Error: spatial Volume is not a multiple of REDUCTION_N (%d). Aborting...\n", REDUCTION_N);
+    exit(100);
+  }
+  
+  if(polysredsize < REDUCTION_N){
+    polyssredsize = 1;
+  }
+  else{
+    if(polysredsize%REDUCTION_N == 0){
+      polyssredsize = polysredsize/REDUCTION_N;
+    }
+    else{
+      polyssredsize = polysredsize/REDUCTION_N + 1;
+    }
+  }
+  
+
+  // spatial volume*2 (->complex) field for Polyakov loop data
+  cudaMalloc((void **) &dev_polyredfield, spatialvol*sizeof(float2));
+  if((polyredfield = (float2*)malloc(spatialvol*sizeof(float2)))==(void*)NULL){
+    fprintf(stderr,"Error in init_dev_observables: malloc error(poly)\n");
+    return(1);
+  }
+  cudaMalloc((void **) &dev_polysredfield, polysredsize*sizeof(float2));//complex !!
+  cudaMalloc((void **) &dev_polyssredfield, polyssredsize*sizeof(float2));//complex !!
+
+  if((cudaerr=cudaGetLastError())!=cudaSuccess){
+    fprintf(stderr, "Error in init_dev_observables(): GPU memory allocation of poly reduction fields failed. Aborting...\n");
+    return(2);
+  }
+
   
   cudaMemcpyToSymbol("dev_VOLUME", &VOLUME, sizeof(int)) ; 
   cudaMemcpyToSymbol("dev_LX", &LX, sizeof(int)) ;
@@ -75,14 +126,17 @@ void finalize_dev_observables(){
   cudaFree(dev_redfield);
   cudaFree(dev_sredfield);
   cudaFree(dev_ssredfield);
+  cudaFree(dev_polyredfield);
+  cudaFree(dev_polysredfield);
+  cudaFree(dev_polyssredfield); 
 }
 
 
 
 
 
-
-__global__ void reduce(float *g_idata, float *g_odata, unsigned int n)
+// this is a reduction algorithm for float based on the CUDA SDK 
+__global__ void reduce_float(float *g_idata, float *g_odata, unsigned int n)
 {
     extern __shared__ float sdata[];
 
@@ -110,6 +164,38 @@ __global__ void reduce(float *g_idata, float *g_odata, unsigned int n)
 
 
 
+
+// this is the version for float2 
+__global__ void reduce_float2(float2 *g_idata, float2 *g_odata, unsigned int n)
+{
+    extern __shared__ float2 sdata2[];
+
+    // load shared mem
+    unsigned int tid = threadIdx.x;
+    unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
+    
+    sdata2[tid].x = (i < n) ? g_idata[i].x : 0;
+    sdata2[tid].y = (i < n) ? g_idata[i].y : 0;
+    
+    __syncthreads();
+
+    // do reduction in shared mem
+    for(unsigned int s=blockDim.x/2; s>0; s>>=1) 
+    {
+        if (tid < s) 
+        {
+            sdata2[tid].x += sdata2[tid + s].x;
+            sdata2[tid].y += sdata2[tid + s].y;
+        }
+        __syncthreads();
+    }
+
+    // write result for this block to global mem
+    if (tid == 0) {
+      g_odata[blockIdx.x].x = sdata2[0].x;
+      g_odata[blockIdx.x].y = sdata2[0].y;
+    }
+}
 
 
 
@@ -312,32 +398,34 @@ float calc_plaquette(dev_su3_2v * U, int* nn){
     unbind_texture_gf();
   #endif
   
-  
-  
-  int redblocks = sredsize; // VOLUME/REDUCTION_N
-  
-  reduce <<< redblocks, REDUCTION_N, REDUCTION_N*sizeof(float) >>> 
+  int redblocks;
+  if(sredsize > 1){
+    redblocks = sredsize; // VOLUME/REDUCTION_N
+    reduce_float <<< redblocks, REDUCTION_N, REDUCTION_N*sizeof(float) >>> 
         ( dev_redfield, dev_sredfield,  VOLUME);
-  printf("Reduction 1 of data: %s\n", cudaGetErrorString(cudaGetLastError()));
-  
-
-  redblocks = ssredsize; 
-  reduce <<< redblocks, REDUCTION_N, REDUCTION_N*sizeof(float) >>> 
+   printf("Reduction 1 of data: %s\n", cudaGetErrorString(cudaGetLastError()));
+  }
+  if(ssredsize > 1){
+    redblocks = ssredsize; 
+    reduce_float <<< redblocks, REDUCTION_N, REDUCTION_N*sizeof(float) >>> 
         ( dev_sredfield, dev_ssredfield,  sredsize );
-  printf("Reduction 2 of data: %s\n", cudaGetErrorString(cudaGetLastError()));
+    printf("Reduction 2 of data: %s\n", cudaGetErrorString(cudaGetLastError()));
   
-  cudaMemcpy(redfield, dev_ssredfield, (size_t)(redblocks*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaMemcpy(redfield, dev_ssredfield, (size_t)(redblocks*sizeof(float)), cudaMemcpyDeviceToHost);
+  }
+  else{
+    cudaMemcpy(redfield, dev_sredfield, (size_t)(redblocks*sizeof(float)), cudaMemcpyDeviceToHost);
+  }
+  
   // we have to add up the final sum on host
   for(j=0; j<redblocks; j++){
     erg+=redfield[j];
-    printf("%e\n", redfield[j]);
+    //printf("%e\n", redfield[j]);
   }
 
   
 /*
   cudaMemcpy(redfield, dev_sredfield, (size_t)(redblocks*sizeof(float)), cudaMemcpyDeviceToHost);
-  
-  
   
   // we have to add up the final sum on host
   for(j=0; j<redblocks; j++){
@@ -349,12 +437,10 @@ float calc_plaquette(dev_su3_2v * U, int* nn){
   erg=erg/6.0/VOLUME;
   
   
-  
   //printf("PLAQ = %.8f\n",erg);
   //printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   return(erg);
 }
-
 
 
 
@@ -505,46 +591,173 @@ float calc_rectangle(dev_su3_2v * U, int* nn){
     unbind_texture_gf();
   #endif
   
+  int redblocks;
+  if(sredsize > 0){
+    redblocks = sredsize; // VOLUME/REDUCTION_N
   
-  
-  int redblocks = sredsize; // VOLUME/REDUCTION_N
-  
-  reduce <<< redblocks, REDUCTION_N, REDUCTION_N*sizeof(float) >>> 
+    reduce_float <<< redblocks, REDUCTION_N, REDUCTION_N*sizeof(float) >>> 
         ( dev_redfield, dev_sredfield,  VOLUME);
-  printf("Reduction 1 of data: %s\n", cudaGetErrorString(cudaGetLastError()));
-  
-
-  redblocks = ssredsize; 
-  reduce <<< redblocks, REDUCTION_N, REDUCTION_N*sizeof(float) >>> 
-        ( dev_sredfield, dev_ssredfield,  sredsize );
-  printf("Reduction 2 of data: %s\n", cudaGetErrorString(cudaGetLastError()));
-  
-  cudaMemcpy(redfield, dev_ssredfield, (size_t)(redblocks*sizeof(float)), cudaMemcpyDeviceToHost);
-  // we have to add up the final sum on host
-  for(j=0; j<redblocks; j++){
-    erg+=redfield[j];
-    printf("%e\n", redfield[j]);
+    printf("Reduction 1 of data: %s\n", cudaGetErrorString(cudaGetLastError()));
   }
-
+  if(ssredsize > 0){
+    redblocks = ssredsize; 
+    reduce_float <<< redblocks, REDUCTION_N, REDUCTION_N*sizeof(float) >>> 
+        ( dev_sredfield, dev_ssredfield,  sredsize );
+    printf("Reduction 2 of data: %s\n", cudaGetErrorString(cudaGetLastError()));
   
-/*
-  cudaMemcpy(redfield, dev_sredfield, (size_t)(redblocks*sizeof(float)), cudaMemcpyDeviceToHost);
-  
-  
-  
+    cudaMemcpy(redfield, dev_ssredfield, (size_t)(redblocks*sizeof(float)), cudaMemcpyDeviceToHost); 
+  }
+  else{
+    cudaMemcpy(redfield, dev_sredfield, (size_t)(redblocks*sizeof(float)), cudaMemcpyDeviceToHost);
+  }
   // we have to add up the final sum on host
   for(j=0; j<redblocks; j++){
     erg+=redfield[j];
     //printf("%e\n", redfield[j]);
   }
-*/
-  
+
   erg=erg/12.0/VOLUME;
   
-  //printf("PLAQ = %.8f\n",erg);
+  //printf("RECT = %.8f\n",erg);
   //printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   return(erg);
 }
+
+
+
+
+
+
+
+
+
+
+// calculates the polyakov loop in time direction
+__global__ void dev_polyakov_0(float2* reductionfield, int * dev_nn, dev_su3_2v * gf){
+  float2 poly;
+  poly.x = 0.0; poly.y = 0.0;
+  
+  int t, newpos, spatialpos;
+  dev_su3 M1,  gather, tmp;
+  
+ spatialpos = threadIdx.x + blockDim.x*blockIdx.x;  
+ int spatialvol = dev_LX*dev_LY*dev_LZ;
+
+ if(spatialpos < spatialvol){
+   //initialize the polyakov loop su3 matrix 
+   dev_unit_su3(&gather);
+   
+   // t is slowest index, such that the starting gauge field at x,y,z,t=0
+   // is actually located at spatialpos
+   // -> set actualpos to spatialpos
+   int actualpos = spatialpos; 
+   
+    for(t=0; t < dev_T; t++){
+                 
+/* U_0(x) */
+            #ifdef GF_8
+              dev_reconstructgf_8texref(gf, (4*actualpos),&M1);
+            #else
+              dev_reconstructgf_2vtexref(gf, (4*actualpos),&M1);
+            #endif
+          
+        //multiply 
+        dev_su3_ti_su3(&tmp, &gather, &M1);
+        //store again gather
+        dev_su3_assign(&gather, &tmp);
+
+        //go one step in 0-direction
+        actualpos = dev_nn[8*actualpos];  
+    }
+    dev_su3trace(&poly, &gather);
+    reductionfield[spatialpos].x = poly.x/3.0;
+    reductionfield[spatialpos].y = poly.y/3.0;
+  }
+}
+
+
+
+
+
+
+
+
+
+void calc_polyakov_0(float2* ret, dev_su3_2v * U, int* nn){
+  int j;
+  float2 erg;
+  #ifdef USETEXTURE
+   //Bind texture gf
+   bind_texture_gf(U);
+  #endif 
+  
+  int gridsize;
+  int blocksize=BLOCK2;
+  int spatialvol = LX*LY*LZ;
+  if( spatialvol >= BLOCK2){
+   gridsize = (int)(spatialvol/BLOCK2) + 1;
+  }
+  else{
+    gridsize=1;
+  }
+    
+  dev_polyakov_0 <<< gridsize , blocksize >>> (dev_polyredfield, nn, U) ;
+  printf("Polyakov loop calculation on device: %s\n", cudaGetErrorString(cudaGetLastError()));
+  
+  #ifdef USETEXTURE
+    unbind_texture_gf();
+  #endif
+  
+  
+  
+  
+  int redblocks = polysredsize; // VOLUME/REDUCTION_N
+  cudaMemcpy(polyredfield, dev_polyredfield, (size_t)(redblocks*sizeof(float2)), cudaMemcpyDeviceToHost);
+  /* write to file */
+  
+  if(polysredsize > 1){
+    reduce_float2 <<< redblocks, REDUCTION_N, REDUCTION_N*sizeof(float2) >>> 
+        ( dev_polyredfield, dev_polysredfield,  spatialvol);
+    printf("Reduction 1 of data: %s\n", cudaGetErrorString(cudaGetLastError()));
+  }
+  if(polyssredsize > 1){
+    redblocks = polyssredsize; 
+    reduce_float2 <<< redblocks, REDUCTION_N, REDUCTION_N*sizeof(float2) >>> 
+        ( dev_polysredfield, dev_polyssredfield,  polysredsize );
+    printf("Reduction 2 of data: %s\n", cudaGetErrorString(cudaGetLastError()));
+  
+    cudaMemcpy(polyredfield, dev_polyssredfield, (size_t)(redblocks*sizeof(float2)), cudaMemcpyDeviceToHost);
+  }
+  else{
+     cudaMemcpy(polyredfield, dev_polysredfield, (size_t)(redblocks*sizeof(float2)), cudaMemcpyDeviceToHost);
+  }  
+    
+    
+  // we have to add up the final sum on host
+  for(j=0; j<redblocks; j++){
+    erg.x +=polyredfield[j].x;
+    erg.y +=polyredfield[j].y;
+    printf("%e\n", polyredfield[j].x);
+  }
+
+ 
+  
+  erg.x=erg.x/spatialvol;
+  erg.y=erg.y/spatialvol;
+  
+  
+  //printf("pl_0 (Re) = %.8f\n",erg.x);
+  //printf("pl_0 (Im) = %.8f\n",erg.y);
+  
+  (*ret).x = erg.x;
+  (*ret).y = erg.y;
+  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+ 
+}
+
+
+
+
 
 
 
