@@ -35,8 +35,8 @@ INCLUDES = @INCLUDES@
 COMPILE = ${NVCC} -c ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
 
-GPUSOURCES := $(wildcard *.cu)
-GPUOBJECTS := $(patsubst %.cu, %.o, $(GPUSOURCES))
+GPUSOURCES := $(wildcard ${srcdir}/*.cu)
+GPUOBJECTS := $(patsubst ${srcdir}/%.cu, %.o, $(GPUSOURCES))
 DEPS := $(patsubst %.o,%.d,$(GPUOBJECTS))
 
 .SUFFIXES:

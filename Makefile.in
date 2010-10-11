@@ -69,8 +69,8 @@ MODULES = read_input gamma hybrid_update observables start \
 
 
 ## the GPU modules (all .cu files in $GPUDIR)
-GPUSOURCES := $(wildcard $(GPUDIR)/*.cu)
-GPUOBJECTS := $(patsubst $(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
+GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)
+GPUOBJECTS := $(patsubst $(srcdir)/$(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
 
 
 NOOPTMOD = test/check_xchange test/check_geometry

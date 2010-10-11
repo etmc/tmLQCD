@@ -7197,7 +7197,7 @@ $as_echo "#define HAVE_GPU 1" >>confdefs.h
 
   NVCC="nvcc"
   USESUBDIRS="io linalg solver GPU"
-  GPUDIR="$srcdir/GPU"
+  GPUDIR="GPU"
   LIBS="$LIBS -lcuda -lcudart -lcublas"
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking where to search for CUDA libs" >&5
