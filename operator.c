@@ -468,9 +468,9 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   if (g_cart_id == 0) {
     printf("time for writing prop was %e seconds\n", retime - ratime);
   }
-  
+
   destruct_writer(writer);
-  
+
   return;
 }
 
@@ -482,51 +482,59 @@ void write_cgmms_headers(const int op_id, const int index_start, const int appen
   WRITER *writer = NULL;
   int append = 0;
   int im;
+  /* The precision for the CG-MMS propagators is currently not a user input parameter
+   * Because of this, it is hardcoded at 32 in the binary writer, so also hardcoded here */
+  const int cg_mms_default_precision = 32;
 
   paramsSourceFormat *sourceFormat = NULL;
   paramsPropagatorFormat *propagatorFormat = NULL;
 
   for(im = 0; im <= g_no_extra_masses; im++) {
-    
-    if(optr->type == DBTMWILSON) strcpy(ending, "hinverted");
-    else if(optr->type == OVERLAP) strcpy(ending, "ovinverted");
-    else strcpy(ending, "inverted");
-    
+
+    if(optr->type == DBTMWILSON) {
+      strcpy(ending, "hinverted");
+    }
+    else if(optr->type == OVERLAP) 
+    {
+      strcpy(ending, "ovinverted");
+    }
+    else {
+      strcpy(ending, "inverted");
+    }
+
     if(SourceInfo.type != 1) {
       if (PropInfo.splitted) {
-	sprintf(filename, "%s.%.4d.%.2d.%.2d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im, ending);
+        sprintf(filename, "%s.%.4d.%.2d.%.2d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im, ending);
       }
       else {
-	sprintf(filename, "%s.%.4d.%.2d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, im,ending);
+        sprintf(filename, "%s.%.4d.%.2d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, im,ending);
       }
     }
-    else { 
+    else {
       sprintf(filename, "%s.%.4d.%.5d.cgmms.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, im,ending);
     }
-    
-    // the 1 is for appending
-    if(!PropInfo.splitted) append = 1;
-    if(append_) append=1;
+
+    append = (!PropInfo.splitted || append_);
     construct_writer(&writer, filename, append);
-    
+
     // write the source depending on format
-    // (to be fixed for 2 fl tmwilson)
+    // (to be fixed for 2 flavour tmwilson)
     if (PropInfo.format == 1) {
       sourceFormat = construct_paramsSourceFormat(SourceInfo.precision, optr->no_flavours, 4, 3);
       write_source_format(writer, sourceFormat);
-      
+
       write_spinor(writer, &operator_list[op_id].sr0, &operator_list[op_id].sr1, 1, SourceInfo.precision);
-      if(optr->no_flavours == 2) write_spinor(writer, &operator_list[op_id].sr2, &operator_list[op_id].sr3, 1, SourceInfo.precision);
+      if(optr->no_flavours == 2) {
+        write_spinor(writer, &operator_list[op_id].sr2, &operator_list[op_id].sr3, 1, SourceInfo.precision);
+      }
       free(sourceFormat);
     }
-    
-    //write precision (always 32 at the moment) and number of flavours
-    propagatorFormat = construct_paramsPropagatorFormat(32, optr->no_flavours);
+
+    //write a lime header with precision and number of flavours
+    propagatorFormat = construct_paramsPropagatorFormat(cg_mms_default_precision, optr->no_flavours);
     write_propagator_format(writer, propagatorFormat);
     free(propagatorFormat);
-    
     destruct_writer(writer);
   }
-
   return;
 }
