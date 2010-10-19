@@ -178,9 +178,9 @@ void xchange_gauge() {
 
     /* send the data to the neighbour on the left in t direction */
     /* recieve the data from the neighbour on the right in t direction */
-    /* x2t-edge */
+    /* x2t-edge */   /* x=L+1 comes before x=-2. see [DEP!]  */
     MPI_Isend(g_gauge_field[gI_0_Lp1_0_0], 1, gauge_xt_edge_gath, g_nb_t_dn, 104,
-	      g_cart_grid, &request[cntr]); /* x=L+1 comes before x=-2. see [DEP!]  */
+	      g_cart_grid, &request[cntr]);
     MPI_Irecv(g_gauge_field[gI_L_Lp1_0_0], 1, gauge_xt_edge_cont, g_nb_t_up, 104, 
 	      g_cart_grid, &request[cntr+1]);
     cntr=cntr+2;
@@ -291,9 +291,9 @@ void xchange_gauge() {
 
     /* send the data to the neighbour on the left in y direction */
     /* recieve the data from the neighbour on the right in y direction */
-    /* x2y edge */
+    /* x2y edge */  /* y=L comes before y=-1 */
     MPI_Isend(g_gauge_field[gI_0_p1_L_0], 1, gauge_yx_edge_gath, g_nb_x_dn, 114,
-	      g_cart_grid, &request[cntr]); /* y=L comes before y=-1 */
+	      g_cart_grid, &request[cntr]);
     MPI_Irecv(g_gauge_field[gI_0_Lp1_L_0], 1, gauge_yx_edge_cont, g_nb_x_up, 114, 
 	      g_cart_grid, &request[cntr+1]);
     cntr=cntr+2;
@@ -483,9 +483,9 @@ void xchange_gauge() {
 #    if (defined PARALLELXYZT)
     /* send the data to the neighbour on the left in z direction */
     /* recieve the data from the neighbour on the right in z direction */
-    /* t2z edge */
+    /* t2z edge */ /* t=L+1 comes before t=-2*/
     MPI_Isend(g_gauge_field[gI_Lp1_0_0_0], 1, gauge_tz_edge_gath, g_nb_z_dn, 132,
-	      g_cart_grid, &request[cntr]); /* t=L+1 comes before t=-2*/
+	      g_cart_grid, &request[cntr]);
     MPI_Irecv(g_gauge_field[gI_Lp1_0_0_L], 1, gauge_tz_edge_cont, g_nb_z_up, 132, 
 	      g_cart_grid, &request[cntr+1]);
     cntr=cntr+2;
@@ -560,9 +560,9 @@ void xchange_gauge() {
 #    if (defined PARALLELXYZT || defined PARALLELXYZ )
     /* send the data to the neighbour on the left in y direction */
     /* recieve the data from the neighbour on the right in y direction */
-    /* z2y-edge */
+    /* z2y-edge */ /* z=L+1 comes before z=-2 */
     MPI_Isend(g_gauge_field[gI_0_0_0_Lp1], 1, gauge_zy_edge_gath, g_nb_y_dn, 140,
-	      g_cart_grid, &request[cntr]); /* z=L+1 comes before z=-2 */
+	      g_cart_grid, &request[cntr]);
     MPI_Irecv(g_gauge_field[gI_0_0_L_Lp1], 1, gauge_zy_edge_cont, g_nb_y_up, 140, 
 	      g_cart_grid, &request[cntr+1]);
     cntr=cntr+2;
@@ -578,9 +578,9 @@ void xchange_gauge() {
 
     /* send the data to the neighbour on the left in y direction */
     /* recieve the data from the neighbour on the right in y direction */
-    /* y2z edge */
+    /* y2z edge */ /* z=L comes before z=-1 */
     MPI_Isend(g_gauge_field[gI_0_0_p1_L], 1, gauge_zy_edge_gath, g_nb_y_dn, 142,
-	      g_cart_grid, &request[cntr]); /* z=L comes before z=-1 */
+	      g_cart_grid, &request[cntr]);
     MPI_Irecv(g_gauge_field[gI_0_0_Lp1_L], 1, gauge_zy_edge_cont, g_nb_y_up, 142, 
 	      g_cart_grid, &request[cntr+1]);
     cntr=cntr+2;
