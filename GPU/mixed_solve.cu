@@ -1576,7 +1576,7 @@ cudaError_t cudaerr;
   cudaMemcpy(dev_grid, &(grid[0]), 5*sizeof(int), cudaMemcpyHostToDevice);
   
   
-  
+  /*
   init_dev_observables();
  
   clock_t start, stop; 
@@ -1640,7 +1640,7 @@ cudaError_t cudaerr;
   finalize_dev_observables();
 
   exit(100);
-  
+  */
 
 }
 
