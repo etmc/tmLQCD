@@ -52,7 +52,8 @@
 
 #include "../global.h"
 #include "cudaglobal.h"
-#include "mixed_solve.h"
+//#include "mixed_solve.h"
+#include "HEADER.cuh"
 #include "cudadefs.h"
 #include <math.h>
 
