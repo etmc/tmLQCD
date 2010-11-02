@@ -58,6 +58,7 @@
   #include"temporalgauge.h"
   #include"observables.h"
   int mixedsolve_eo_nd (spinor *, spinor *, spinor *, spinor *, int, double, int);
+  int mixedsolve_eo_nd_mpi(spinor *, spinor *, spinor *, spinor *, int, double, int);
   #ifdef TEMPORALGAUGE
     extern su3* g_trafo;
   #endif
@@ -152,8 +153,16 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   
   #ifdef HAVE_GPU
     if (usegpu_flag) {	// GPU, mixed precision solver
-      iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-                              max_iter, precision, rel_prec);
+      #if defined(MPI) && defined(PARALLELT)
+        iter = mixedsolve_eo_nd_mpi(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                                    max_iter, precision, rel_prec);
+      #elif !defined(MPI) && !defined(PARALLELT)
+        iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                                max_iter, precision, rel_prec);
+      #else
+        printf("MPI and/or PARALLELT are not appropriately set for the GPU implementation. Aborting...\n");
+        exit(-1);
+      #endif
     }
     else {		// CPU, conjugate gradient
       iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],

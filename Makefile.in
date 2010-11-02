@@ -72,6 +72,9 @@ MODULES = read_input gamma hybrid_update observables start \
 GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)
 GPUOBJECTS := $(patsubst $(srcdir)/$(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
 
+#GPUSOURCES_C := $(wildcard $(srcdir)/$(GPUDIR)/*.c)
+#GPUOBJECTS_C := $(patsubst $(srcdir)/$(GPUDIR)/%.c, $(GPUDIR)/%.o, $(GPUSOURCES_C))
+
 
 NOOPTMOD = test/check_xchange test/check_geometry
 
@@ -133,7 +136,7 @@ ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 
 
 ${PROGRAMS}: %: %.o libhmc.a all-recursive
-	 ${LINK}  $@.o $(GPUOBJECTS) $(LIBS)
+	 ${LINK}  $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
 
 
 dep: $(addsuffix .d,$(ALLOBJ))

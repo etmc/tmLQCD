@@ -2,19 +2,55 @@
 
 
 
+	//////////////////////////////////////////////////////////////////
+	//								//
+	//    this is the implementation of the EO, ND mixed solver	//
+	//								//
+	//////////////////////////////////////////////////////////////////
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
+
+// the debugging functions can be included here via:	#include "./DEBUG/MATRIX_DEBUG.cuh"
+//							#include "./DEBUG/MATRIX_MPI_DEBUG.cuh"
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+#ifdef HAVE_CONFIG_H
+  #include<config.h>
+#endif
 
 extern "C" {
 #include "../Nondegenerate_Matrix.h"
+#include "../Hopping_Matrix.h"
 #include "../solver/cg_her_nd.h"
+#ifdef MPI
+  #include "xchange.h"
+  #include "communication.h"
+#endif
 }
+/*
+#ifdef MPI				// have to divide host- and device- and communication- and execution code more strictly for MPI purposes
+  #include <mpi.h>			//	code with kernels and kernel launches syntax has to be compiled with nvcc
+  //#include "mpi_init.h"
+#endif
+*/
 
 #include "MACROS.cuh"
-
 
 
 // spinor fields (pointing to device)
@@ -31,7 +67,7 @@ dev_spinor * dev_spin5_up;
 dev_spinor * dev_spin5_dn;
 */
 
-dev_spinor * dev_spinin_up;		// host/device interaction
+dev_spinor * dev_spinin_up;		// host/device interaction	// mixedsolve_eo_nd()  <-->  cg_eo_nd()
 dev_spinor * dev_spinin_dn;		// inner/outer interaction
 dev_spinor * dev_spinout_up;
 dev_spinor * dev_spinout_dn;
@@ -53,7 +89,7 @@ __device__ float mubar, epsbar;
 
 // benchmark
 #if defined(GPU_BENCHMARK) || defined(GPU_BENCHMARK2)
-  unsigned long long int device_flops = 0;
+  unsigned long long int device_flops = 0;	// attention: integer overflow ....
 #endif
 
 #ifdef CPU_BENCHMARK
@@ -61,6 +97,30 @@ __device__ float mubar, epsbar;
 #endif
 
 
+#ifdef MPI && PARALLELT				// collecting variables for the MPI implementation
+  int * iseven;
+  int * dev_g_iup;
+  int * dev_g_idn;
+  int * dev_g_lexic2eo;
+  int * dev_g_lexic2eosub;
+  int * dev_g_eo2lexic;
+  int * dev_g_ipt;
+  spinor * spinor_xchange;			// for xchange_field_wrapper()
+  spinor * spinor_debug_in;			// for Hopping_Matrix_wrapper()
+  spinor * spinor_debug_out;			// for Hopping_Matrix_wrapper()
+  __device__ int dev_RAND;			// not used, maybe later ...
+  __device__ int dev_VOLUMEPLUSRAND;		// is now used in dev_Hopping_Matrix_mpi()
+#endif
+
+/*
+#if defined(MPI) && defined(PARALLELT)		// put to mixed_solve.cu
+  #include "MPI.cuh"
+#endif
+*/
+
+
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +129,16 @@ __device__ float mubar, epsbar;
 
 
 
-// host/ device interaction
+
+
+// host/device interaction
+
+// remark: the host spinors are double precision and therefore need twice the memory !!
+//		dev_spinor * device:    dev_spinsize
+//		spinor * host:          2*dev_spinsize
+//		dev_spinor * auxiliary: dev_spinsize
+//         the parameter "size" specifies the memory needed for the spinor n the device !!
+//         
 
 void to_device (dev_spinor * device, spinor * host, dev_spinor * auxiliary, int size) {
 
@@ -113,7 +182,7 @@ __global__ void he_cg_init_nd_additional (float param_mubar, float param_epsbar)
 
 __global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin,
                                               dev_spinor * sout,
-                                              REAL sign         ) {
+                                              float sign         ) {
    
   dev_spinor slocal[6];									// dev_spinor = float4		// 6*float4 = 24 floats		// auxiliary for each thread
   
@@ -127,6 +196,110 @@ __global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin,
     dev_realmult_spinor_assign(&(sout[6*pos]), 1.0, &(slocal[0]) );			// sout    =  slocal
   }
 }
+
+
+
+
+
+
+
+void init_nnspinor_eo_test() {
+									
+  int x, y, z, t, ind, nnpos, j;					// mixed_solve_eo(...) allocates 8 integers per even or odd lattice site: size_t nnsize = 8*VOLUME*sizeof(int);
+  									
+  for (t = 0; t < T; t++) {						// loop goes over all INTERN latice sites !!
+    for (x = 0; x < LX; x++) {						// doesn't refer to any EXTERN BOUNDARIES !!  ->  CORRESPONDS TO THE WHOLE LATTICE (I.E. WHEN NO SUBLATTICES ARE ASSIGNED) !!
+      for (y = 0; y < LY; y++) {					//						  because of the behaviour of  g_iup[][] in the non-parallel case
+        for (z = 0; z < LZ; z++) {
+        								// NOTICE: g_ipt, g_iup, g_idn, and g_lexic2eosub  refer to pos. of lin. proj. pos. of the lattice
+          ind = g_ipt[t][x][y][z];					// g_ipt[t][x][y][z] 	returns the linearly projected position of (t,x,y,z) of the lattice
+          								//	indexes computed in geometry_eo() from geometry_eo.c
+          								//	memory for the index array allocated by init_geometry_indices() from init_geometry_indices.c
+          //if ((t+x+y+z)%2 == 0) { // EVEN
+          if ((t + x + y + z + g_proc_coords[0]*T  + g_proc_coords[1]*LX + 
+	  	               g_proc_coords[2]*LY + g_proc_coords[3]*LZ) % 2 == 0) {
+          
+            nnpos = g_lexic2eosub[ind];					// g_lexic2eosub[ind] 	returns the position of [ind] in the sub-eo-notation
+            										      ////////////////
+            for (j = 0; j < 4; j++) { // plus direction			// here are also the  // BOUNDARIES //  included and properly mapped:
+            								//		      ////////////////
+              nn_eo[8*nnpos+j] = g_lexic2eosub[ g_iup[ind][j] ];	// g_iup[ind][j] 	returns the position of the nearest neighbour of [ind] in direction +[j]
+            }								//				-->  for the non-parallized code g_iup[][] maps INTERN !!
+            for (j = 0; j < 4; j++) { // minus direction
+              nn_eo[8*nnpos+4+j] = g_lexic2eosub[ g_idn[ind][j] ];	// g_idn[ind][j] 	returns the position of the nearest neighbour of [ind] in direction -[j]
+            }
+          }
+          
+          else {		  // ODD
+          
+            nnpos = g_lexic2eosub[ind];
+            
+            for (j = 0; j < 4; j++) { // plus direction
+              nn_oe[8*nnpos+j] = g_lexic2eosub[ g_iup[ind][j] ];	// nn_oe	      will return the nearest neigbours
+            }								// nn_eo  and  nn_oe  strictly refer to the 4d-spacetime lattice
+            
+            for (j = 0; j < 4; j++) { // minus direction
+              nn_oe[8*nnpos+4+j] = g_lexic2eosub[ g_idn[ind][j] ];
+            }
+          }
+  }}}} // for loops
+}
+
+
+
+
+
+void init_idxgauge_test() {		// works
+
+  int t, x, y, z;
+  int pos_eo, pos_global;
+  
+  for (t = -1; t < T+1; t++) {
+    for (x = 0; x < LX; x++) {
+      for (y = 0; y < LY; y++) {
+        for (z = 0; z < LZ; z++) {
+        
+        //pos_global = g_ipt[t][x][y][z];
+        pos_global = Index(t,x,y,z);
+        pos_eo     = g_lexic2eosub[pos_global];
+        
+        //if ((t+x+y+z)%2 == 0) { // EVEN
+        if ((t + x + y + z + g_proc_coords[0]*T  + g_proc_coords[1]*LX + 
+	  	             g_proc_coords[2]*LY + g_proc_coords[3]*LZ) % 2 == 0) {
+          eoidx_even[pos_eo] = pos_global;
+        }
+        else  {			// ODD
+          eoidx_odd[pos_eo] = pos_global;
+        }
+  }}}} // for loop over the INTERN lattice
+  
+  printf("This was init_idxgauge_mpi().\n");
+  
+}
+
+
+/*
+void init_idxgauge_test() {		// works
+
+  int pos_eo, pos_global_even, pos_global_odd;
+  
+  for (pos_eo = 0; pos_eo < VOLUME/2; pos_eo++) {
+      // even
+      pos_global_even = g_eo2lexic[pos_eo];
+      eoidx_even[pos_eo] = pos_global_even;
+      // odd
+      pos_global_odd = g_eo2lexic[(VOLUME+RAND)/2 + pos_eo];
+      eoidx_odd[pos_eo] = pos_global_odd;
+  }
+  
+  printf("This was init_idxgauge_mpi().\n");
+  
+}
+*/
+
+
+
+
 
 
 
@@ -211,11 +384,11 @@ void init_mixedsolve_eo_nd(su3** gf) {	// gf is the full gauge field
   #ifdef GF_8
     /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
     printf("Using GF 8 reconstruction.\n");			// dev_su3_8 = float4
-    dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8);		// allocates for each lattice site and for 4 directions  2*float4 = 8 floats  = 8 real parameters
+    dev_gfsize = 4*VOLUME * 2*sizeof(dev_su3_8);		// allocates for each lattice site and for 4 directions  2*float4 = 8 floats  = 8 real parameters
   #else
     /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
     printf("Using GF 12 reconstruction.\n");			// dev_su3_2v = float4
-    dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v); 		// allocates for each lattice site and for 4 directions  3*float4 = 12 floats = 2 rows of complex 3-vectors
+    dev_gfsize = 4*VOLUME * 3*sizeof(dev_su3_2v); 		// allocates for each lattice site and for 4 directions  3*float4 = 12 floats = 2 rows of complex 3-vectors
   #endif
   
   
@@ -270,8 +443,10 @@ void init_mixedsolve_eo_nd(su3** gf) {	// gf is the full gauge field
   
   
   initnn();							// initialize nearest-neighbour table for gpu
-  initnn_eo();							// initialize nearest-neighbour table for gpu with even-odd enabled
-  
+  //initnn_eo();							// initialize nearest-neighbour table for gpu with even-odd enabled
+  // test:
+  init_nnspinor_eo_test();
+  init_idxgauge_test();
   
   cudaMemcpy(dev_nn, nn, nnsize, cudaMemcpyHostToDevice);	// copies the previous initialized index-arrays from host to device memory
   cudaMemcpy(dev_nn_eo, nn_eo, nnsize/2, cudaMemcpyHostToDevice);
@@ -849,15 +1024,15 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
   //Initialize some stuff
   dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
   
-  h0.re = (REAL)ka0.re;    h0.im = -(REAL)ka0.im;
-  h1.re = (REAL)ka1.re;    h1.im = -(REAL)ka1.im;
-  h2.re = (REAL)ka2.re;    h2.im = -(REAL)ka2.im;
-  h3.re = (REAL)ka3.re;    h3.im = -(REAL)ka3.im;
+  h0.re = (float)ka0.re;    h0.im = -(float)ka0.im;
+  h1.re = (float)ka1.re;    h1.im = -(float)ka1.im;
+  h2.re = (float)ka2.re;    h2.im = -(float)ka2.im;
+  h3.re = (float)ka3.re;    h3.im = -(float)ka3.im;
   
-  mh0.re = -(REAL)ka0.re;    mh0.im = (REAL)ka0.im;
-  mh1.re = -(REAL)ka1.re;    mh1.im = (REAL)ka1.im;
-  mh2.re = -(REAL)ka2.re;    mh2.im = (REAL)ka2.im;
-  mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
+  mh0.re = -(float)ka0.re;    mh0.im = (float)ka0.im;
+  mh1.re = -(float)ka1.re;    mh1.im = (float)ka1.im;
+  mh2.re = -(float)ka2.re;    mh2.im = (float)ka2.im;
+  mh3.re = -(float)ka3.re;    mh3.im = (float)ka3.im;
   
   // try using constant mem for kappas
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)); 
@@ -938,7 +1113,7 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
   
   
   /*		// only when externally called
-  he_cg_init<<< 1, 1 >>> (dev_grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0, h1, h2, h3);
+  he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0, h1, h2, h3);
   
   		// debug	// kernel
   		#ifdef CUDA_DEBUG
@@ -1232,7 +1407,7 @@ int cg_eo_nd (dev_su3_2v * gf,
   */
   
   /*		// relocated to mixedsolve_eo_nd(), before here were:
-  he_cg_init<<< 1, 1 >>> (dev_grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0, h1, h2, h3);
+  he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0, h1, h2, h3);
   
   		// debug	// kernel
   		#ifdef CUDA_DEBUG
@@ -1330,8 +1505,8 @@ int cg_eo_nd (dev_su3_2v * gf,
     
     #ifndef MATRIX_DEBUG
     
-    // A*d(k)
-    matrix_multiplication32(Ad_up, Ad_dn,										// normally:  matrix_multiplication32()
+      // A*d(k)
+      matrix_multiplication32(Ad_up, Ad_dn,										// normally:  matrix_multiplication32()
                              d_up,  d_dn,										// debugging: matrix_debug1(), matrix_multiplication_test()
                             griddim2, blockdim2,
                             griddim3, blockdim3,
@@ -1382,6 +1557,12 @@ int cg_eo_nd (dev_su3_2v * gf,
     dAd_dn = cublasSdot(N_floats, (float *) d_dn, 1, (float *) Ad_dn, 1);
     dAd    = dAd_up + dAd_dn;
     
+    		// debug	// is NaN ?
+    		if isnan(dAd) {
+    		  printf("Error in cg_eo_nd(). dAd is NaN.\n");
+    		  exit(-1);
+    		}
+    
     alpha  = rr_old / dAd;	// rr_old is taken from the last iteration respectively
     
     		// benchmark
@@ -1418,19 +1599,40 @@ int cg_eo_nd (dev_su3_2v * gf,
     					//	"feedback"
       		// debug
       		printf("Recalculating the inner residue.\n");
-      // A*x(k+1)
-      matrix_multiplication32(Ax_up, Ax_dn,
-                               x_up,  x_dn,
-                              griddim2, blockdim2,
-                              griddim3, blockdim3,
-                              griddim4, blockdim4,
-                              griddim5, blockdim5);
       
-      		// benchmark
-      		#ifdef GPU_BENCHMARK
-      		  flopcount(device_flops, 1448);
-      		  // flopcount(device_flops, 1448*N_floats);
-      		#endif
+      
+      #ifndef MATRIX_DEBUG
+        // A*x(k+1)
+        matrix_multiplication32(Ax_up, Ax_dn,
+                                 x_up,  x_dn,
+                                griddim2, blockdim2,
+                                griddim3, blockdim3,
+                                griddim4, blockdim4,
+                                griddim5, blockdim5);
+      #else
+      		// debug	// apply the host matrix on trial
+    		
+    		// host/device interaction
+    		to_host(g_chi_up_spinor_field[DUM_SOLVER+3], x_up, h2d_spin_up, dev_spinsize);
+    		to_host(g_chi_dn_spinor_field[DUM_SOLVER+3], x_dn, h2d_spin_dn, dev_spinsize);
+    		
+    		// matrix multiplication
+    		printf("This is Q_Qdagger_ND(). ");
+    		Q_Qdagger_ND(g_chi_up_spinor_field[DUM_SOLVER+4], g_chi_dn_spinor_field[DUM_SOLVER+4],
+    		             g_chi_up_spinor_field[DUM_SOLVER+3], g_chi_dn_spinor_field[DUM_SOLVER+3] );
+    		
+    		// host/device interaction
+    		to_device(Ax_up, g_chi_up_spinor_field[DUM_SOLVER+4], h2d_spin_up, dev_spinsize);
+    		to_device(Ax_dn, g_chi_dn_spinor_field[DUM_SOLVER+4], h2d_spin_dn, dev_spinsize);
+    		
+    		
+    				// debug	// CUDA
+  				#ifdef CUDA_DEBUG
+  			  	// CUDA_CHECK("CUDA error in cg_eo_nd(). Applying the matrix on CPU failed.", "The matrix was applied on CPU.");
+  			  	CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in cg_eo_nd(). Applying the matrix on CPU failed.");
+  				#endif
+      #endif
+      
       
       // r(k+1) = b - A*x(k+1)
       cublasScopy(N_floats, (float *) Q_up, 1, (float *) r_up, 1);		// r_up = Q_up
@@ -1585,7 +1787,7 @@ int cg_eo_nd (dev_su3_2v * gf,
 //////////////////
 
 // iterative refinement, defect correction
-// that function is to replace the call of  cg_her_nd  in  invert_doublet_eo.c
+// that function is to replace the call of  cg_her_nd()  in  invert_doublet_eo.c
 // solves the odd part of the full eo and nd problem
 //	more precisely we have to invert  Qhat(2x2)*Qhat(2x2)^dagger
 //	multiplying by  Qhat(2x2)^dagger  is done in  invert_doublet_eo.c
@@ -1674,15 +1876,17 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   // INITIALIZING //
   //////////////////
   
+  
   		//debug
   		printf("init_mixedsolve_eo_nd():\n");
   
-  init_mixedsolve_eo_nd(g_gauge_field);				// initializes and allocates all quantities for the mixed solver
+  
+    init_mixedsolve_eo_nd(g_gauge_field);			// initializes and allocates all quantities for the mixed solver
   								// more precise:
   								//	puts the gauge field on device as "2 rows" or "8 floats" per SU(3)-matrix
   								//	allocates memory for all spinor fields
   								//	puts the nn- and eoidx-fields on device memory
-  
+
   		//debug
   		printf("mixedsolve_eo_nd():\n");
   
@@ -1692,15 +1896,15 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   // Initialize some stuff
   dev_complex h0, h1, h2, h3, mh0, mh1, mh2, mh3;
   
-  h0.re  =  (REAL) ka0.re;	h0.im  = -(REAL) ka0.im;	// ka{0-4} are defined in boundary.c
-  h1.re  =  (REAL) ka1.re;	h1.im  = -(REAL) ka1.im;	// what is the meaning?
-  h2.re  =  (REAL) ka2.re;	h2.im  = -(REAL) ka2.im;
-  h3.re  =  (REAL) ka3.re;	h3.im  = -(REAL) ka3.im;
+  h0.re  =  (float) ka0.re;	h0.im  = -(float) ka0.im;	// ka{0-4} are defined in boundary.c
+  h1.re  =  (float) ka1.re;	h1.im  = -(float) ka1.im;	// what is the meaning?
+  h2.re  =  (float) ka2.re;	h2.im  = -(float) ka2.im;
+  h3.re  =  (float) ka3.re;	h3.im  = -(float) ka3.im;
   
-  mh0.re = -(REAL) ka0.re;	mh0.im =  (REAL) ka0.im;
-  mh1.re = -(REAL) ka1.re;	mh1.im =  (REAL) ka1.im;
-  mh2.re = -(REAL) ka2.re;	mh2.im =  (REAL) ka2.im;
-  mh3.re = -(REAL) ka3.re;	mh3.im =  (REAL) ka3.im;
+  mh0.re = -(float) ka0.re;	mh0.im =  (float) ka0.im;
+  mh1.re = -(float) ka1.re;	mh1.im =  (float) ka1.im;
+  mh2.re = -(float) ka2.re;	mh2.im =  (float) ka2.im;
+  mh3.re = -(float) ka3.re;	mh3.im =  (float) ka3.im;
   /*
   // try using constant mem for kappas		// constant memory is cached!
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex));
@@ -1726,7 +1930,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     		#endif
   
   
-  he_cg_init<<< 1, 1 >>> (dev_grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0, h1, h2, h3);
+  he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0, h1, h2, h3);
   		// "he" = "host entry"
   		// BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)	// ??
   		

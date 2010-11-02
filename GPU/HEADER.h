@@ -1,6 +1,13 @@
+
 #ifndef _MIXED_SOLVE_H_
 
-// own functions
+
+///////////////////
+// own functions //
+///////////////////
+
+
+// eo, nd 
 
 void to_device (dev_spinor * device, spinor * host, dev_spinor * auxiliary, int size);
 
@@ -34,11 +41,55 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 
 
 
+// eo, nd, MPI
+
+void convert2double_spin_mpi (dev_spinor* spin, spinor* h2d, int start, int end);
+void convert2REAL4_spin_mpi (spinor* spin, dev_spinor* h2d, int start, int end);
+void to_device_mpi (dev_spinor * device, spinor * host, dev_spinor * auxiliary, int size, int start, int end);
+void to_host_mpi (spinor * host, dev_spinor * device, dev_spinor * auxiliary, int size, int start, int end);
+void xchange_field_wrapper (dev_spinor * dev_spin, int ieo);
+void Hopping_Matrix_wrapper (int ieo, dev_spinor * out, dev_spinor * in);
+void su3to2vf4_mpi(su3** gf, dev_su3_2v* h2d_gf);
+void su3to8_mpi(su3** gf, dev_su3_8* h2d_gf);
+void init_iseven();
+void init_nnspinor_eo_mpi();
+void init_idxgauge_mpi();
+void init_gpu_indexfields();
+void free_gpu_indexfields();
+__global__ void he_cg_init_nd_additional_mpi (int param_VOLUMEPLUSRAND, int param_RAND);
+void init_mixedsolve_eo_nd_mpi(su3** gf);
+void finalize_mixedsolve_eo_nd_mpi(void);
+
+__global__ void dev_Hopping_Matrix_mpi (const dev_su3_2v * gf, const dev_spinor * sin, dev_spinor * sout,
+                                        int * dev_iup, int * dev_idn, int * dev_eo2lexic, int * dev_lexic2eosub,
+                                        int ieo);
+
+void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
+                                  dev_spinor * spinin_up , dev_spinor * spinin_dn ,
+                                  int gridsize1, int blocksize1, int gridsize2, int blocksize2,
+                                  int gridsize3, int blocksize3, int gridsize4, int blocksize4);
+
+int cg_eo_nd_mpi (dev_su3_2v * gf,
+                  dev_spinor * P_up, dev_spinor * P_dn,
+                  dev_spinor * Q_up, dev_spinor * Q_dn,
+                  int max_iter,
+                  int check_abs , int check_rel,
+                  double eps_abs, double eps_rel       );
+
+extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
+                                     spinor * Q_up, spinor * Q_dn,
+                                     int max_iter, double eps_sq, int rel_prec);
 
 
 
 
-// Florian's functions
+
+
+/////////////////////////
+// Florian's functions //
+/////////////////////////
+
+// eo, non-eo, non-nd
 
 __device__ inline dev_complex dev_cconj (dev_complex c);
 __device__ inline void dev_ccopy(dev_complex* von, dev_complex* nach);
@@ -144,8 +195,6 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
 #define _MIXED_SOLVE_H_
 
 #endif
-
-
 
 
 

@@ -2018,6 +2018,12 @@ for(iter=0; iter<max_iter; iter++){
 // mixed solver, even/odd, non-degenerate two flavour
 #include "mixed_solve_eo_nd.cuh"
 
+/*
+#if defined(MPI) && defined(PARALLELT)
+  //#include "./DEBUG/MATRIX_MPI_DEBUG.cuh"		// for debugging
+  #include "MPI.cuh"
+#endif
+*/
 
 
 

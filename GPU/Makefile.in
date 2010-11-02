@@ -33,7 +33,7 @@ NVCC = @NVCC@
 INCLUDES = @INCLUDES@
 
 COMPILE = ${NVCC} -c ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
-
+#COMPILE = ${NVCC} -c ${DEFS} --compiler-bindir mpicc ${INCLUDES} -o $@ ${CFLAGS}
 
 GPUSOURCES := $(wildcard ${srcdir}/*.cu)
 GPUOBJECTS := $(patsubst ${srcdir}/%.cu, %.o, $(GPUSOURCES))
@@ -60,6 +60,10 @@ include ${top_srcdir}/Makefile.global
 
 %.o: ${srcdir}/%.cu Makefile
 	@$(COMPILE) ${INCLUDES} $< > $@
+
+#%.o: ${srcdir}/%.c Makefile
+#	$(NVCC) -c $(DEFS) --compiler-bindir mpicc ${INCLUDES} -o $@ $(CFLAGS) $< > $@
+#	mpicc -c ${CUBLAS} $< > $@
 
 dummy: ${GPUOBJECTS} Makefile
 	@echo "Have generated all %.o files"

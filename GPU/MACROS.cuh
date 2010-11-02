@@ -1,17 +1,34 @@
 
 
-// general
+/////////////
+// general //
+/////////////
+
+
+
+// output & debug
 
 #define CUDA_DEBUG		// provides some tests and output specific to the used CUDA code
 #define STUFF_DEBUG		// some stuff
+//#define HOPPING_DEBUG		// enables the Hopping Matrix on the CPU (inside matrix_multiplication32_mpi())
 //#define MATRIX_DEBUG		// enables the matrix multiplication on the CPU (in the inner CG solver)
 //#define CG_DEBUG		// enables the CG on the CPU
 
-#define OPERATOR_BENCHMARK
+
+
+// benchmarks
+
+//#define OPERATOR_BENCHMARK
 //#define CPU_BENCHMARK
 #define GPU_BENCHMARK
 
 
+
+// alternative code
+
+#define ALTERNATE_FIELD_XCHANGE		// 
+//#define ALTERNATE_HOPPING_MATRIX	// at the moment: provides an alternative way of passing the (nn-)positions to dev_Hopping_Matrix()
+					//		  does not work properly yet
 
 
 
@@ -29,8 +46,9 @@
 
 
 
-// debugging macros for CUDA, CUBLAS and kernel functions
-
+////////////////////////////////////////////////////////////
+// debugging macros for CUDA, CUBLAS and kernel functions //
+////////////////////////////////////////////////////////////
 
 
 // debug	// CUDA

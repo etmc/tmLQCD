@@ -5,9 +5,9 @@
 #define ACCUM_N 2048
 #define DOTPROD_DIM 128
 
-#define GF_8
+//#define GF_8
 //#define TEMPORALGAUGE
-#define USETEXTURE
+//#define USETEXTURE
 
 
 
