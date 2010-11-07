@@ -26,7 +26,7 @@
 
 // alternative code
 
-#define ALTERNATE_FIELD_XCHANGE		// 
+//#define ALTERNATE_FIELD_XCHANGE	// to come ...
 //#define ALTERNATE_HOPPING_MATRIX	// at the moment: provides an alternative way of passing the (nn-)positions to dev_Hopping_Matrix()
 					//		  does not work properly yet
 
@@ -35,11 +35,11 @@
 
 // CUDA parameters
 
-#define BLOCKSIZE1 192
-#define BLOCKSIZE2 192
-#define BLOCKSIZE3 192
-#define BLOCKSIZE4 192
-#define BLOCKSIZE5 192
+#define BLOCKSIZE1 128
+#define BLOCKSIZE2 128
+#define BLOCKSIZE3 128
+#define BLOCKSIZE4 128
+#define BLOCKSIZE5 128
 
 
 

@@ -39,6 +39,7 @@
 void convert2double_spin_mpi (dev_spinor * spin, spinor * h2d, int start, int end) {
 
   int i;
+  /*
   int Vol;
   
   if(even_odd_flag){
@@ -48,7 +49,8 @@ void convert2double_spin_mpi (dev_spinor * spin, spinor * h2d, int start, int en
     Vol = (VOLUME+RAND);
   }
   
-  //for (i = 0; i < Vol; i++) {
+  for (i = 0; i < Vol; i++) {
+  */
   for (i = start; i < end; i++) {
   
         h2d[i].s0.c0.re = (double) spin[6*i+0].x;
@@ -91,6 +93,7 @@ void convert2double_spin_mpi (dev_spinor * spin, spinor * h2d, int start, int en
 void convert2REAL4_spin_mpi (spinor * spin, dev_spinor * h2d, int start, int end) {
 
   int i;
+  /*
   int Vol;
   
   if(even_odd_flag){
@@ -100,7 +103,8 @@ void convert2REAL4_spin_mpi (spinor * spin, dev_spinor * h2d, int start, int end
     Vol = (VOLUME+RAND);
   }
   
-  //for (i = 0; i < Vol; i++) {
+  for (i = 0; i < Vol; i++) {
+  */
   for (i = start; i < end; i++) {
     
         h2d[6*i+0].x = (float) spin[i].s0.c0.re;
@@ -201,8 +205,8 @@ void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
 
 
 // copies the boundary t-slices t=0 and t=T-1 to host
-// exchanges
-// copies RAND back to device
+//	exchanges
+//		copies RAND back to device
 
 void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
 
@@ -230,16 +234,25 @@ void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
   
   void Hopping_Matrix_wrapper (int ieo, dev_spinor * out, dev_spinor * in) {
   
-    size_t size = (VOLUME+RAND)/2 * 6*sizeof(dev_spinor);
-  
-    //to_host(g_chi_up_spinor_field[DUM_SOLVER+3], in, h2d_spin_up, size);
-    //Hopping_Matrix(ieo, g_chi_dn_spinor_field[DUM_SOLVER+3], g_chi_up_spinor_field[DUM_SOLVER+3]);
-    //to_device(out, g_chi_dn_spinor_field[DUM_SOLVER+3], h2d_spin_up, size);
-  
-    to_host_mpi(spinor_debug_in, in, h2d_spin_up, size);
-    Hopping_Matrix(ieo, spinor_debug_out, spinor_debug_in);
-    to_device_mpi(out, spinor_debug_out, h2d_spin_dn, size);
-  
+    #ifdef MPI
+      size_t size = (VOLUME+RAND)/2 * 6*sizeof(dev_spinor);
+      
+      //to_host(g_chi_up_spinor_field[DUM_SOLVER+3], in, h2d_spin_up, size);
+      //Hopping_Matrix(ieo, g_chi_dn_spinor_field[DUM_SOLVER+3], g_chi_up_spinor_field[DUM_SOLVER+3]);
+      //to_device(out, g_chi_dn_spinor_field[DUM_SOLVER+3], h2d_spin_up, size);
+      
+      to_host_mpi(spinor_debug_in, in, h2d_spin_up, size, 0, (VOLUME+RAND)/2);
+      Hopping_Matrix(ieo, spinor_debug_out, spinor_debug_in);
+      to_device_mpi(out, spinor_debug_out, h2d_spin_dn, size, 0, (VOLUME+RAND)/2);
+    #else
+      size_t size = VOLUME/2 * 6*sizeof(dev_spinor);
+      
+      to_host(spinor_debug_in, in, h2d_spin_up, size);
+      Hopping_Matrix(ieo, spinor_debug_out, spinor_debug_in);
+      to_device(out, spinor_debug_out, h2d_spin_dn, size);  
+    #endif
+    
+    
   }
 
 #endif
@@ -273,7 +286,7 @@ float cublasSdot_wrapper(int size, float * A, int incx, float * B, int incy) {
   
 }
 		// COMMENT: this is so far the only function with MPI AND(!) CUDA code
-		//          either seperate this from the code and compile it with the appropriately
+		//          either seperate this from the code and compile it appropriately
 		//          or use the "--use-bindir"-option to nvcc in order to wrap mpicc with nvcc
 
 		// PRELIMINARILY: was put to communication.c
@@ -289,26 +302,30 @@ float cublasSdot_wrapper(int size, float * A, int incx, float * B, int incy) {
 // get 2 first rows of gf float4 type
 //  
 //
-void su3to2vf4_mpi(su3** gf, dev_su3_2v* h2d_gf){
-  int i,j;
+void su3to2vf4_mpi (su3** gf, dev_su3_2v* h2d_gf) {
+
+  int i, j;
+  
   for (i = 0; i < (VOLUME+RAND); i++){
-   for (j = 0; j < 4; j++){
-   //first row
-    h2d_gf[3*(4*i+j)].x = (float) gf[i][j].c00.re;
-    h2d_gf[3*(4*i+j)].y = (float) gf[i][j].c00.im;
-    h2d_gf[3*(4*i+j)].z = (float) gf[i][j].c01.re;
-    h2d_gf[3*(4*i+j)].w = (float) gf[i][j].c01.im;
-    h2d_gf[3*(4*i+j)+1].x = (float) gf[i][j].c02.re;
-    h2d_gf[3*(4*i+j)+1].y = (float) gf[i][j].c02.im;      
-   //second row
-    h2d_gf[3*(4*i+j)+1].z = (float) gf[i][j].c10.re;
-    h2d_gf[3*(4*i+j)+1].w = (float) gf[i][j].c10.im;
-    h2d_gf[3*(4*i+j)+2].x = (float) gf[i][j].c11.re;
-    h2d_gf[3*(4*i+j)+2].y = (float) gf[i][j].c11.im;
-    h2d_gf[3*(4*i+j)+2].z = (float) gf[i][j].c12.re;
-    h2d_gf[3*(4*i+j)+2].w = (float) gf[i][j].c12.im;      
-  } 
- }
+    for (j = 0; j < 4; j++) {
+    
+      //first row
+      h2d_gf[3*(4*i+j)].x = (float) gf[i][j].c00.re;
+      h2d_gf[3*(4*i+j)].y = (float) gf[i][j].c00.im;
+      h2d_gf[3*(4*i+j)].z = (float) gf[i][j].c01.re;
+      h2d_gf[3*(4*i+j)].w = (float) gf[i][j].c01.im;
+      h2d_gf[3*(4*i+j)+1].x = (float) gf[i][j].c02.re;
+      h2d_gf[3*(4*i+j)+1].y = (float) gf[i][j].c02.im;      
+      //second row
+      h2d_gf[3*(4*i+j)+1].z = (float) gf[i][j].c10.re;
+      h2d_gf[3*(4*i+j)+1].w = (float) gf[i][j].c10.im;
+      h2d_gf[3*(4*i+j)+2].x = (float) gf[i][j].c11.re;
+      h2d_gf[3*(4*i+j)+2].y = (float) gf[i][j].c11.im;
+      h2d_gf[3*(4*i+j)+2].z = (float) gf[i][j].c12.re;
+      h2d_gf[3*(4*i+j)+2].w = (float) gf[i][j].c12.im;      
+
+    } 
+  }
 }
 
 
@@ -317,27 +334,30 @@ void su3to2vf4_mpi(su3** gf, dev_su3_2v* h2d_gf){
 // bring gf into the form
 // a2 a3, theta_a1, theta_c1, b1
 // 
-void su3to8_mpi(su3** gf, dev_su3_8* h2d_gf){
-  int i,j;
-  for (i = 0; i < (VOLUME+RAND); i++){
-   for (j = 0; j < 4; j++){
-   // a2, a3
-    h2d_gf[2*(4*i+j)].x = (float) gf[i][j].c01.re;
-    h2d_gf[2*(4*i+j)].y = (float) gf[i][j].c01.im;
-    h2d_gf[2*(4*i+j)].z = (float) gf[i][j].c02.re;
-    h2d_gf[2*(4*i+j)].w = (float) gf[i][j].c02.im;
+void su3to8_mpi (su3** gf, dev_su3_8* h2d_gf) {
+
+  int i, j;
+  
+  for (i = 0; i < (VOLUME+RAND); i++) {
+    for (j = 0; j < 4; j++) {
     
-   // theta_a1, theta_c1
-   // use atan2 for this: following the reference, atan2 should give an angle -pi < phi < +pi  
-   h2d_gf[2*(4*i+j)+1].x = (float)( atan2((float) gf[i][j].c00.im,(float) gf[i][j].c00.re ));
-   h2d_gf[2*(4*i+j)+1].y = (float) ( atan2((float) gf[i][j].c20.im,(float)gf[i][j].c20.re ));
-     
-   // b1
-    h2d_gf[2*(4*i+j)+1].z = (float) gf[i][j].c10.re ;
-    h2d_gf[2*(4*i+j)+1].w = (float) gf[i][j].c10.im ;
-     
-  } 
- }
+      // a2, a3
+      h2d_gf[2*(4*i+j)].x = (float) gf[i][j].c01.re;
+      h2d_gf[2*(4*i+j)].y = (float) gf[i][j].c01.im;
+      h2d_gf[2*(4*i+j)].z = (float) gf[i][j].c02.re;
+      h2d_gf[2*(4*i+j)].w = (float) gf[i][j].c02.im;
+      
+      // theta_a1, theta_c1
+      // use atan2 for this: following the reference, atan2 should give an angle -pi < phi < +pi  
+      h2d_gf[2*(4*i+j)+1].x = (float)( atan2((float) gf[i][j].c00.im,(float) gf[i][j].c00.re ));
+      h2d_gf[2*(4*i+j)+1].y = (float) ( atan2((float) gf[i][j].c20.im,(float)gf[i][j].c20.re ));
+      
+      // b1
+      h2d_gf[2*(4*i+j)+1].z = (float) gf[i][j].c10.re ;
+      h2d_gf[2*(4*i+j)+1].w = (float) gf[i][j].c10.im ;
+      
+    } 
+  }
 }
 
 
@@ -663,10 +683,13 @@ void free_gpu_indexfields() {
 
 
 // puts the additional variables VOLUMEPLUSRAND and RAND on the device
-__global__ void he_cg_init_nd_additional_mpi (int param_VOLUMEPLUSRAND, int param_RAND) {
+__global__ void he_cg_init_nd_additional_mpi (int param_VOLUMEPLUSRAND, int param_RAND, int rank, int nproc) {
 
   dev_VOLUMEPLUSRAND  = param_VOLUMEPLUSRAND;
   dev_RAND            = param_RAND;
+  
+  dev_rank            = rank;
+  dev_nproc           = nproc;
 
 }
 
@@ -814,8 +837,8 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
   initnn();							// initialize nearest-neighbour table for gpu
   //initnn_eo();
   
-  iseven = (int *) malloc((VOLUME+RAND)*sizeof(int));
-  init_iseven();
+  //iseven = (int *) malloc((VOLUME+RAND)*sizeof(int));
+  //init_iseven();
   
   init_nnspinor_eo_mpi();					// initialize nearest-neighbour table for gpu with even-odd enabled
   init_idxgauge_mpi();
@@ -1048,7 +1071,7 @@ void finalize_mixedsolve_eo_nd_mpi(void) {
 
 
 
-
+/*
 ////////////////////
 // hopping matrix //
 ////////////////////
@@ -1453,7 +1476,7 @@ __global__ void dev_Hopping_Matrix_alternate (const dev_su3_2v * gf, const dev_s
   
   
 }//dev_Hopping_Matrix_alternate<<<>>>()
-
+*/
 
 
 
@@ -2211,7 +2234,7 @@ int cg_eo_nd_mpi (dev_su3_2v * gf,
     		to_host(g_chi_dn_spinor_field[DUM_SOLVER+3], d_dn, h2d_spin_dn, dev_spinsize_ext);
     		
     		// matrix multiplication
-    		printf("This is Q_Qdagger_ND(). ");
+    		if (g_proc_id == 0) printf("This is Q_Qdagger_ND(). ");
     		Q_Qdagger_ND(g_chi_up_spinor_field[DUM_SOLVER+4], g_chi_dn_spinor_field[DUM_SOLVER+4],			// normally:  Q_Qdagger_ND()
     		             g_chi_up_spinor_field[DUM_SOLVER+3], g_chi_dn_spinor_field[DUM_SOLVER+3] );		// debugging: matrix_mpi_debug10()
     		
@@ -2294,7 +2317,7 @@ int cg_eo_nd_mpi (dev_su3_2v * gf,
     		to_host(g_chi_dn_spinor_field[DUM_SOLVER+3], x_dn, h2d_spin_dn, dev_spinsize_ext);
     		
     		// matrix multiplication
-    		printf("This is Q_Qdagger_ND(). ");
+    		if (g_proc_id == 0) printf("This is Q_Qdagger_ND(). ");
     		Q_Qdagger_ND(g_chi_up_spinor_field[DUM_SOLVER+4], g_chi_dn_spinor_field[DUM_SOLVER+4],			// normally:  Q_Qdagger_ND()
     		             g_chi_up_spinor_field[DUM_SOLVER+3], g_chi_dn_spinor_field[DUM_SOLVER+3] );		// debugging: matrix_mpi_debug10()
     		
@@ -2695,7 +2718,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   		#endif
   
   
-  he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND, RAND);
+  he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND, RAND, g_cart_id, g_nproc);
   
   		// debug	// kernel
   		#ifdef CUDA_DEBUG

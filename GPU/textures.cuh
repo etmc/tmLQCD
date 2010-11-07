@@ -27,6 +27,11 @@
  **************************************************************************/
 
 
+#ifdef HAVE_CONFIG_H
+  #include<config.h>
+#endif
+
+
  /* texture for gauge field */
  texture<float4,1, cudaReadModeElementType> gf_tex;
  const textureReference* gf_texRefPtr = NULL;
@@ -59,12 +64,22 @@
 extern "C" int bind_texture_spin(dev_spinor* s, int i){
   
   size_t size;
-  if(even_odd_flag){
-    size = sizeof(float4)*6*VOLUME/2;
-  }
-  else{
-    size = sizeof(float4)*6*VOLUME;
-  }
+  
+  #ifdef MPI
+    if(even_odd_flag){
+      size = sizeof(float4)*6*(VOLUME+RAND)/2;
+    }
+    else{
+      size = sizeof(float4)*6*(VOLUME+RAND);
+    }
+  #else
+    if(even_odd_flag){
+      size = sizeof(float4)*6*VOLUME/2;
+    }
+    else{
+      size = sizeof(float4)*6*VOLUME;
+    }
+  #endif
    
   
   switch(i){
@@ -112,11 +127,19 @@ return(1);
 extern "C" int bind_texture_gf(dev_su3_2v * gf){
  //printf("Binding texture to gaugefield\n");
  
- #ifdef GF_8
- size_t size = sizeof(float4)*2*VOLUME*4;
- #else
- size_t size = sizeof(float4)*3*VOLUME*4;
- #endif
+#ifdef MPI
+#ifdef GF_8
+     size_t size = sizeof(float4)*2*(VOLUME+RAND)*4;
+#else
+     size_t size = sizeof(float4)*3*(VOLUME+RAND)*4;
+#endif
+#else
+#ifdef GF_8
+     size_t size = sizeof(float4)*2*VOLUME*4;
+#else
+     size_t size = sizeof(float4)*3*VOLUME*4;
+#endif
+#endif
  
  cudaGetTextureReference(&gf_texRefPtr, "gf_tex");
  gf_channelDesc =  cudaCreateChannelDesc<float4>();
@@ -138,12 +161,22 @@ extern "C" int unbind_texture_gf(){
 extern "C" int bind_texture_nn(int* nn){
  //printf("Binding texture to nn field\n");
   size_t size;
-  if(even_odd_flag){
-    size = sizeof(int)*8*VOLUME/2;
-  }
-  else{
-    size = sizeof(int)*8*VOLUME;
-  }
+  
+  #ifdef MPI
+    if(even_odd_flag){
+      size = sizeof(int)*8*(VOLUME+RAND)/2;
+    }
+    else{
+      size = sizeof(int)*8*(VOLUME+RAND);
+    }
+  #else
+    if(even_odd_flag){
+      size = sizeof(int)*8*VOLUME/2;
+    }
+    else{
+      size = sizeof(int)*8*VOLUME;
+    }
+  #endif
  
 
  cudaGetTextureReference(&nn_texRefPtr, "nn_tex");

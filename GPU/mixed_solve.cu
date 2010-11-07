@@ -75,7 +75,9 @@ extern "C" {
 
 
 
-
+#ifdef HAVE_CONFIG_H
+  #include<config.h>
+#endif
 
 
 
@@ -163,6 +165,10 @@ __constant__ __device__ dev_complex dev_mk3c;
 __device__  int  dev_LX,dev_LY,dev_LZ,dev_T,dev_VOLUME;
 
 
+#ifdef MPI
+__device__ int dev_rank;		// will be put to mixed_solve_eo_nd.cuh ...
+__device__ int dev_nproc;
+#endif
 
 
 // include files with other GPU code as all GPU code has to reside in one file 
@@ -2018,12 +2024,12 @@ for(iter=0; iter<max_iter; iter++){
 // mixed solver, even/odd, non-degenerate two flavour
 #include "mixed_solve_eo_nd.cuh"
 
-/*
+
 #if defined(MPI) && defined(PARALLELT)
   //#include "./DEBUG/MATRIX_MPI_DEBUG.cuh"		// for debugging
   #include "MPI.cuh"
 #endif
-*/
+
 
 
 

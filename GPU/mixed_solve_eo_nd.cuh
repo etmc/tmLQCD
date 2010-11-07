@@ -110,6 +110,8 @@ __device__ float mubar, epsbar;
   spinor * spinor_debug_out;			// for Hopping_Matrix_wrapper()
   __device__ int dev_RAND;			// not used, maybe later ...
   __device__ int dev_VOLUMEPLUSRAND;		// is now used in dev_Hopping_Matrix_mpi()
+  //__device__ int dev_rank;			// was for the moment put to mixed_solve.cu ...
+  //__device__ int dev_nproc;
 #endif
 
 /*
@@ -201,8 +203,8 @@ __global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin,
 
 
 
-
-
+// TEST:
+/*
 void init_nnspinor_eo_test() {
 									
   int x, y, z, t, ind, nnpos, j;					// mixed_solve_eo(...) allocates 8 integers per even or odd lattice site: size_t nnsize = 8*VOLUME*sizeof(int);
@@ -244,11 +246,10 @@ void init_nnspinor_eo_test() {
           }
   }}}} // for loops
 }
+*/
 
 
-
-
-
+/*
 void init_idxgauge_test() {		// works
 
   int t, x, y, z;
@@ -276,6 +277,7 @@ void init_idxgauge_test() {		// works
   printf("This was init_idxgauge_mpi().\n");
   
 }
+*/
 
 
 /*
@@ -443,10 +445,10 @@ void init_mixedsolve_eo_nd(su3** gf) {	// gf is the full gauge field
   
   
   initnn();							// initialize nearest-neighbour table for gpu
-  //initnn_eo();							// initialize nearest-neighbour table for gpu with even-odd enabled
+  initnn_eo();							// initialize nearest-neighbour table for gpu with even-odd enabled
   // test:
-  init_nnspinor_eo_test();
-  init_idxgauge_test();
+  //init_nnspinor_eo_test();
+  //init_idxgauge_test();
   
   cudaMemcpy(dev_nn, nn, nnsize, cudaMemcpyHostToDevice);	// copies the previous initialized index-arrays from host to device memory
   cudaMemcpy(dev_nn_eo, nn_eo, nnsize/2, cudaMemcpyHostToDevice);

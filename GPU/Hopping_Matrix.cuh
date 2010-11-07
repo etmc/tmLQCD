@@ -488,8 +488,13 @@ __global__ void dev_Hopping_Matrix(const dev_su3_2v * gf, const dev_spinor * sin
             
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
+              #ifdef MPI
+                if ( ((gfindex_site[pos]) < (dev_T-1)*spatialvol) || (dev_rank < dev_nproc-1) ) {
+                //if ((gfindex_site[pos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
+              #else
+                if ((gfindex_site[pos]/spatialvol) != (dev_T-1) ) {
+              #endif
               
-              if((gfindex_site[pos]/spatialvol) != (dev_T-1) ){
               #ifdef USETEXTURE
                 shelp1[0] = tex1Dfetch(spin_tex,6*hoppos);
                 shelp1[1] = tex1Dfetch(spin_tex,6*hoppos+1);
@@ -548,7 +553,13 @@ __global__ void dev_Hopping_Matrix(const dev_su3_2v * gf, const dev_spinor * sin
             //color
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              if((gfindex_nextsite[hoppos]/spatialvol) != (dev_T-1) ){
+              #ifdef MPI
+                if ( ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) || (dev_rank > 0) ) {
+                //if ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
+              #else
+                if ((gfindex_nextsite[hoppos]/spatialvol) != (dev_T-1) ) {
+              #endif
+              
                #ifdef USETEXTURE
                 shelp1[0] = tex1Dfetch(spin_tex,6*hoppos);
                 shelp1[1] = tex1Dfetch(spin_tex,6*hoppos+1);
