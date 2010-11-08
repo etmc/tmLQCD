@@ -42,6 +42,7 @@
 #    define LY (Ydef/N_PROC_Y)
 #    define LZ (Zdef/N_PROC_Z)
 #    define VOLUME (T*LX*LY*LZ)
+#    define TEOSLICE ((LX*LY*LZ)/2)
 
 #    ifdef PARALLELT  
 #      define RAND (2*LX*LY*LZ)
