@@ -127,19 +127,19 @@ return(1);
 extern "C" int bind_texture_gf(dev_su3_2v * gf){
  //printf("Binding texture to gaugefield\n");
  
-#ifdef MPI
-#ifdef GF_8
+  #ifdef MPI
+    #ifdef GF_8
      size_t size = sizeof(float4)*2*(VOLUME+RAND)*4;
-#else
+    #else
      size_t size = sizeof(float4)*3*(VOLUME+RAND)*4;
-#endif
-#else
-#ifdef GF_8
+    #endif
+  #else
+    #ifdef GF_8
      size_t size = sizeof(float4)*2*VOLUME*4;
-#else
+    #else
      size_t size = sizeof(float4)*3*VOLUME*4;
-#endif
-#endif
+    #endif
+  #endif
  
  cudaGetTextureReference(&gf_texRefPtr, "gf_tex");
  gf_channelDesc =  cudaCreateChannelDesc<float4>();

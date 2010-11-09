@@ -2582,6 +2582,12 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   int innercount;				// latest inner solver iterations
   int outercount = 0;				// total inner solver iterations
   double flops;
+  #ifdef EFFECTIVE_BENCHMARK
+    double effectiveflops;			// will used to count the "effective" flop's (from the algorithmic perspective)
+    double hoppingflops = 1600.0;
+    double matrixflops  = 2  *  (  2 * ( (2*hoppingflops+12+3) + (2*hoppingflops+3) + (12+2) + 12 )  );
+    double allflops;				// flops added for all processes
+  #endif
   
   // timing
   clock_t startouter, stopouter;
@@ -2590,6 +2596,12 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   clock_t innerclocks;
   clock_t totalinnerclocks = 0;
   clock_t totalouterclocks = 0;
+  #ifdef EFFECTIVE_BENCHMARK
+    double starteffective;
+    double stopeffective;
+    double singletime;				// time for each process = stopeffective - starteffective
+    double maxtime;				// max. parallel process time
+  #endif
   
   // (auxiliary) fields
   spinor *  r_up, *  r_dn,
@@ -2845,6 +2857,10 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   // timer
   startouter = clock();
   
+  #ifdef EFFECTIVE_BENCHMARK
+    starteffective = MPI_Wtime();
+  #endif
+  
   
   // r(0)
   if (!initial_guess) {		// r(0) = b = Q	// for x(0) = 0
@@ -3069,6 +3085,10 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
       stopouter = clock();
       totalouterclocks = stopouter-startouter - totalinnerclocks;
       
+      #ifdef EFFECTIVE_BENCHMARK
+        stopeffective = MPI_Wtime();
+      #endif
+      
       		/*
       		// benchmark
   		#ifdef GPU_BENCHMARK2
@@ -3087,6 +3107,27 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
       		printf("Squared residue: %.10e\n", rr); 
       		printf("Outer solver done in: %.4e sec\n", double(stopouter-startouter) / double(CLOCKS_PER_SEC));
       		// benchmark
+      		#ifdef EFFECTIVE_BENCHMARK
+      		  // will now count the number of effective flops
+      		  // effectiveflops  =  #(inner iterations)*(matrixflops+linalgflops)*VOLUME/2  +  #(outer iterations)*(matrixflops+linalgflops)*VOLUME/2
+      		  // outer loop: linalg  =  flops for calculating  r(k+1) and x(k+1)
+      		  // inner loop: linalg  =  flops for calculating  alpha, x(k+1), r(k+1), beta, d(k+1)
+      		  singletime = double(stopeffective-starteffective);
+      		  effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/2;
+      		  MPI_Allreduce(&singletime, &maxtime, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+      		  MPI_Allreduce(&effectiveflops, &allflops, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      		  if (g_proc_id == 0) printf("effective BENCHMARK:\n");
+      		  if (g_proc_id == 0) printf("\ttotal mixed solver time:   %.2e sec\n", double(maxtime));
+      		  if (g_proc_id == 0) printf("\tfloating point operations: %.2e flops\n", double(allflops));
+      		  if (g_proc_id == 0) printf("\tinner solver performance:  %.2e Gflop/s\n", double(allflops) / double(maxtime) / 1.0e9);
+      		  /*
+      		  printf("this is for checking:\n");
+      		  printf("\ttotal mixed solver time:   %.2e sec\n", double(stopeffective-starteffective));
+      		  printf("\tfloating point operations: %.2e flops\n", effectiveflops);
+      		  printf("\tinner solver performance:  %.2e Gflop/s\n", double(effectiveflops) / double(stopeffective-starteffective) / 1.0e9);
+      		  */
+      		#endif
+      		
       		#if defined(GPU_BENCHMARK) || defined(GPU_BENCHMARK2)
       		  // REMARK: device_flops has to be multiplied by N_floats !!
       		  flops = device_flops * N_floats_int / (double(totalinnerclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;
@@ -3149,6 +3190,10 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   stopouter = clock();
   totalouterclocks = stopouter-startouter - totalinnerclocks;
   
+  #ifdef EFFECTIVE_BENCHMARK
+    stopeffective = MPI_Wtime();
+  #endif
+  
   		/*
   		// benchmark
   		#ifdef GPU_BENCHMARK2
@@ -3166,6 +3211,27 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
       		printf("Squared residue: %.10e\n", rr); 
       		printf("Outer solver done in: %.4e sec\n", double(stopouter-startouter)/CLOCKS_PER_SEC);
       		// benchmark
+      		#ifdef EFFECTIVE_BENCHMARK
+      		  // will now count the number of effective flops
+      		  // effectiveflops  =  #(inner iterations)*(matrixflops+linalgflops)*VOLUME/2  +  #(outer iterations)*(matrixflops+linalgflops)*VOLUME/2
+      		  // outer loop: linalg  =  flops for calculating  r(k+1) and x(k+1)
+      		  // inner loop: linalg  =  flops for calculating  alpha, x(k+1), r(k+1), beta, d(k+1)
+      		  singletime = double(stopeffective-starteffective);
+      		  effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/2;
+      		  MPI_Allreduce(&singletime, &maxtime, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+      		  MPI_Allreduce(&effectiveflops, &allflops, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      		  if (g_proc_id == 0) printf("effective BENCHMARK:\n");
+      		  if (g_proc_id == 0) printf("\ttotal mixed solver time:   %.2e sec\n", double(maxtime));
+      		  if (g_proc_id == 0) printf("\tfloating point operations: %.2e flops\n", double(allflops));
+      		  if (g_proc_id == 0) printf("\tinner solver performance:  %.2e Gflop/s\n", double(allflops) / double(maxtime) / 1.0e9);
+      		  /*
+      		  printf("this is for checking:\n");
+      		  printf("\ttotal mixed solver time:   %.2e sec\n", double(stopeffective-starteffective));
+      		  printf("\tfloating point operations: %.2e flops\n", effectiveflops);
+      		  printf("\tinner solver performance:  %.2e Gflop/s\n", double(effectiveflops) / double(stopeffective-starteffective) / 1.0e9);
+      		  */
+      		#endif
+      		
       		#if defined(GPU_BENCHMARK) || defined(GPU_BENCHMARK2)
       		  // REMARK: device_flops has to be multiplied by N_floats !!
       		  flops = device_flops * N_floats_int / (double(totalinnerclocks)/double(CLOCKS_PER_SEC)) / 1.0e9;

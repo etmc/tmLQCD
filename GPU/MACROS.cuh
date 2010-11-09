@@ -20,7 +20,8 @@
 
 //#define OPERATOR_BENCHMARK
 //#define CPU_BENCHMARK
-#define GPU_BENCHMARK
+//#define GPU_BENCHMARK
+#define EFFECTIVE_BENCHMARK	// counts the number of effective flops
 
 
 
