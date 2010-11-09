@@ -564,21 +564,18 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
    exit(100); 
  }
 
+ // this is the partitioning for the copying of fields 
  dim3 blockdim(1,1);
  dim3 blockdim2(128,1,1);
  if( VOLUME >= 128){
-   gridsize =VOLUME/128;
+   gridsize = (int) VOLUME/128 + 1;
  }
  else{
    gridsize=1;
  }
  dim3 griddim2(gridsize,1,1);
  
- 
- //if(VOLUME%BLOCK != 0){
- //  printf("Error: VOLUME is not a multiple of BLOCK. Aborting...\n");
- //  exit(100);
- //}
+ // this is the partitioning for the Dirac-Kernel
  dim3 blockdim3(BLOCK,1,1);
  if( VOLUME >= BLOCK){
    gridsize = (int) (VOLUME/BLOCK) +1;
@@ -819,11 +816,11 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  int N_recalcres = 20; // after N_recalcres iterations calculate r = A x_k - b
  
  cudaError_t cudaerr;
-
+ // this is the partitioning for the copying of fields
  dim3 blockdim(1,1);
  dim3 blockdim2(128,1,1);
  if( VOLUME/2 >= 128){
-   gridsize =VOLUME/2/128;
+   gridsize = (int) VOLUME/2/128 + 1;
  }
  else{
    gridsize=1;
@@ -831,10 +828,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  dim3 griddim2(gridsize,1,1);
 
  
- //if((VOLUME/2)%BLOCK != 0){
- //  printf("Error: VOLUME/2 is not a multiple of BLOCK. Aborting...\n");
- //  exit(100);
- //}
+ //this is the partitioning for the HoppingMatrix kernel
  int blockdim3=BLOCK;
  if( VOLUME/2 >= BLOCK){
    gridsize = (int)(VOLUME/2/BLOCK) + 1;
@@ -845,7 +839,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  printf("gridsize = %d\n", gridsize);
  int griddim3=gridsize; 
  
- // for dev_mul_one_pm...
+ //this is the partitioning for dev_mul_one_pm...
  int blockdim4=BLOCK2;
  if( VOLUME/2 >= BLOCK2){
    gridsize = (int)(VOLUME/2/BLOCK2) + 1;
