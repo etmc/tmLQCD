@@ -41,6 +41,7 @@
 #    define LX (Xdef/N_PROC_X)
 #    define LY (Ydef/N_PROC_Y)
 #    define LZ (Zdef/N_PROC_Z)
+#    define L  LX
 #    define VOLUME (T*LX*LY*LZ)
 #    define TEOSLICE ((LX*LY*LZ)/2)
 

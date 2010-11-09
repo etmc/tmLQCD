@@ -5518,7 +5518,7 @@ else
   with_kojakinst=no
 fi
 
-if test $with_fixvol = yes; then
+if test $with_kojakinst = yes; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
   CC="kinst-pomp ${CC}"

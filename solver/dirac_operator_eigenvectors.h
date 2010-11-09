@@ -15,7 +15,7 @@
 #include "linalg/lapack.h"
 
 /* some macros for 4d loops */
-#define FORXYZT(t,x,y,z,T,L) for(t=0;t<T;t++){ for(x=0;x<L;x++){ for(y=0;y<L;y++){ for(z=0;z<L;z++){ 
+#define FORXYZT(t,x,y,z,tt,ll) for(t=0;t<tt;t++){ for(x=0;x<ll;x++){ for(y=0;y<ll;y++){ for(z=0;z<ll;z++){ 
 #define ENDFORXYZT }}}}
 
 /* define pi if it wasnt */
@@ -51,7 +51,7 @@ extern double g_prec_sequence_d_dagger_d[3];
 
 
 #ifdef HAVE_FFTW
-  fftw_plan spinor_fftw_plan(spinor *spinor_in,spinor *spinor_out,int T,int L,unsigned int forward,int fftw_flags);
+  fftw_plan spinor_fftw_plan(spinor *spinor_in,spinor *spinor_out,int tt,int ll,unsigned int forward,int fftw_flags);
 #endif
 
 /* translates a tm_operator value to a human readable string */
@@ -109,17 +109,17 @@ void spinorPrecWS_Free(spinorPrecWS *ws);
  *@param k further free solution parameter, can be 0 or 1
  *@param color the color index, can be 0 1 2
  *@param rawp raw lattice momentum (how it goes to the fft), will be converted to the correct lattice momentum internally
- *@param T,L time and spacial extend
+ *@param tt,ll time and spacial extend
  */
-void spinorStructEigenvecDtm(spinor *fv,double mu,int epsilon,int k,int color,int rawp[4],int T,int L);
-void spinorStructEigenvecQtm(spinor *fv,double kappa,double mu,int epsilon,int k,int color,int rawp[4],int T,int L);
+void spinorStructEigenvecDtm(spinor *fv,double mu,int epsilon,int k,int color,int rawp[4],int tt,int ll);
+void spinorStructEigenvecQtm(spinor *fv,double kappa,double mu,int epsilon,int k,int color,int rawp[4],int tt,int ll);
 
 
 /**
  * the su3 variant pack the different eigenvectors into the color components of the given spinor
  */
-void spinorStructEigenvecDtmSu3Vector(spinor *fv,double mu,int epsilon,int k,int store_color,int rawp[4],int T,int L);
-void spinorStructEigenvecQtmSu3Vector(spinor *fv,double kappa,double mu,int epsilon,int k,int store_color,int rawp[4],int T,int L);
+void spinorStructEigenvecDtmSu3Vector(spinor *fv,double mu,int epsilon,int k,int store_color,int rawp[4],int tt,int ll);
+void spinorStructEigenvecQtmSu3Vector(spinor *fv,double kappa,double mu,int epsilon,int k,int store_color,int rawp[4],int tt,int ll);
 
 
 /* calculate a complete treelevel eigenvector for the Wilson-Twisted-Mass Operator */
@@ -129,13 +129,13 @@ void eigenvector_Dtm(spinor *two_spinor,double mu,int epsilon,int k,int color,in
  * the fanction performing the actual precondition 
  * this function applies the desired treelevel Dirac operator with an arbitrary (complex) exponent to the given spinor
  */
-void spinorPrecondition(spinor *spinor_out,const spinor* spinor_in,spinorPrecWS* ws,int T,int L,const complex alpha,unsigned int dagger,unsigned int autofft);
+void spinorPrecondition(spinor *spinor_out,const spinor* spinor_in,spinorPrecWS* ws,int tt,int ll,const complex alpha,unsigned int dagger,unsigned int autofft);
 
 /**
  * creates a plane wave representation in momentum or space time domain depending on 
  * the parameter momspace
  */
-void planeWave(spinor *spinor,int k,int rawp[4],int T,int L,unsigned int momspace/* =false */);
+void planeWave(spinor *spinor,int k,int rawp[4],int tt,int ll,unsigned int momspace/* =false */);
 
 /**
  * applies a (half) phase factor to the spinor
@@ -151,8 +151,8 @@ void spinor_mulp_half_phase(spinor *spinor_out,const spinor *spinor_in,
  * this is supposed to speed up things
  */
 #ifdef HAVE_FFTW
-void writeFFTWWisdom(int T,int L);
-void loadFFTWWisdom(spinor *spinor_in,spinor *spinor_out,int T,int L);
+void writeFFTWWisdom(int tt,int ll);
+void loadFFTWWisdom(spinor *spinor_in,spinor *spinor_out,int tt,int ll);
 #endif
 
 /**

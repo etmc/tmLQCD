@@ -177,10 +177,10 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   for (i = 0; i < nb_blocks; ++i) {
     block_list[i].id = i;
     block_list[i].volume = VOLUME/nb_blocks;
-    block_list[i].LX = LX/nblks_x;
-    block_list[i].LY = LY/nblks_y;
-    block_list[i].LZ = LZ/nblks_z;
-    block_list[i].T  = T/nblks_t;
+    block_list[i].BLX = LX/nblks_x;
+    block_list[i].BLY = LY/nblks_y;
+    block_list[i].BLZ = LZ/nblks_z;
+    block_list[i].BT  = T/nblks_t;
     block_list[i].ns = g_N_s;
     block_list[i].spinpad = spinpad;
 
@@ -402,10 +402,10 @@ int check_blocks_geometry(block * blk) {
     }
   }
   
-  if(itest[blk->volume + blk->spinpad-1] != 2*(blk->LX*blk->LY*blk->LZ+blk->T*blk->LX*blk->LY+blk->T*blk->LY*blk->LZ+blk->T*blk->LX*blk->LZ)) {
+  if(itest[blk->volume + blk->spinpad-1] != 2*(blk->BLX*blk->BLY*blk->BLZ+blk->BT*blk->BLX*blk->BLY+blk->BT*blk->BLY*blk->BLZ+blk->BT*blk->BLX*blk->BLZ)) {
     if(g_proc_id == 0){
       printf("error in block geometry, boundary points wrong %d != %d\n",
-             itest[blk->volume + blk->spinpad-1], 2*(blk->LX*blk->LY*blk->LZ+blk->T*blk->LX*blk->LY+blk->T*blk->LY*blk->LZ+blk->T*blk->LX*blk->LZ));
+             itest[blk->volume + blk->spinpad-1], 2*(blk->BLX*blk->BLY*blk->BLZ+blk->BT*blk->BLX*blk->BLY+blk->BT*blk->BLY*blk->BLZ+blk->BT*blk->BLX*blk->BLZ));
     }
   }
   k+= itest[blk->volume + blk->spinpad-1];
@@ -1300,10 +1300,10 @@ void copy_global_to_block(spinor * const blockfield, spinor * const globalfield,
     it = i / (LX * LY * LZ);
 
     /* block coordinates */
-    izb = iz / block_list[blk].LZ;
-    iyb = iy / block_list[blk].LY;
-    ixb = ix / block_list[blk].LX;
-    itb = it / block_list[blk].T;
+    izb = iz / block_list[blk].BLZ;
+    iyb = iy / block_list[blk].BLY;
+    ixb = ix / block_list[blk].BLX;
+    itb = it / block_list[blk].BT;
     
     if ((ibz == izb) && (iby == iyb) && (ibx == ixb) && (ibt==itb)) {
       memcpy(blockfield+ixcurrent, globalfield+i, sizeof(spinor));
@@ -1320,14 +1320,14 @@ void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, spinor *
   int i,it,ix,iy,iz;
   int even = 0, odd = 0;
   
-  for(t = 0; t < block_list[blk].T; t++) {
-    it = t + block_list[blk].mpilocal_coordinate[0]*block_list[blk].T;
-    for(x = 0; x < block_list[blk].LX; x++) {
-      ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].LX;
-      for(y = 0; y < block_list[blk].LY; y++) {
-	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].LY;
-	for(z = 0; z < block_list[blk].LZ; z++) {
-	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].LZ;
+  for(t = 0; t < block_list[blk].BT; t++) {
+    it = t + block_list[blk].mpilocal_coordinate[0]*block_list[blk].BT;
+    for(x = 0; x < block_list[blk].BLX; x++) {
+      ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].BLX;
+      for(y = 0; y < block_list[blk].BLY; y++) {
+	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
+	for(z = 0; z < block_list[blk].BLZ; z++) {
+	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
 	  i = g_ipt[it][ix][iy][iz];
 	  if((t+x+y+z)%2 == 0) {
 	    memcpy(beven + even, globalfield + i, sizeof(spinor));
@@ -1350,14 +1350,14 @@ void copy_block_eo_to_global(spinor * const globalfield, spinor * const beven, s
   int i,it,ix,iy,iz;
   int even = 0, odd = 0;
   
-  for(t = 0; t < block_list[blk].T; t++) {
-    it = t + block_list[blk].mpilocal_coordinate[0]*block_list[blk].T;
-    for(x = 0; x < block_list[blk].LX; x++) {
-      ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].LX;
-      for(y = 0; y < block_list[blk].LY; y++) {
-	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].LY;
-	for(z = 0; z < block_list[blk].LZ; z++) {
-	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].LZ;
+  for(t = 0; t < block_list[blk].BT; t++) {
+    it = t + block_list[blk].mpilocal_coordinate[0]*block_list[blk].BT;
+    for(x = 0; x < block_list[blk].BLX; x++) {
+      ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].BLX;
+      for(y = 0; y < block_list[blk].BLY; y++) {
+	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
+	for(z = 0; z < block_list[blk].BLZ; z++) {
+	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
 	  i = g_ipt[it][ix][iy][iz];
 	  if((t+x+y+z)%2 == 0) {
 	    memcpy(globalfield + i, beven + even, sizeof(spinor));
@@ -1398,10 +1398,10 @@ void copy_block_to_global(spinor * const globalfield, spinor * const blockfield,
     it = i / (LX * LY * LZ);
 
     /* block coordinates */
-    izb = iz / block_list[blk].LZ;
-    iyb = iy / block_list[blk].LY;
-    ixb = ix / block_list[blk].LX;
-    itb = it / block_list[blk].T;
+    izb = iz / block_list[blk].BLZ;
+    iyb = iy / block_list[blk].BLY;
+    ixb = ix / block_list[blk].BLX;
+    itb = it / block_list[blk].BT;
     
     if ((ibz == izb) && (iby == iyb) && (ibx == ixb) && (ibt==itb)) {
       memcpy(globalfield+i, blockfield+ixcurrent, sizeof(spinor));
@@ -1478,14 +1478,14 @@ void add_eo_block_to_global(spinor * const globalfield, spinor * const beven, sp
   int i,it,ix,iy,iz;
   int even = 0, odd = 0;
 
-  for(t = 0; t < block_list[blk].T; t++) {
-    it = t + block_list[blk].mpilocal_coordinate[0]*block_list[blk].T;
-    for(x = 0; x < block_list[blk].LX; x++) {
-      ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].LX;
-      for(y = 0; y < block_list[blk].LY; y++) {
-	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].LY;
-	for(z = 0; z < block_list[blk].LZ; z++) {
-	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].LZ;
+  for(t = 0; t < block_list[blk].BT; t++) {
+    it = t + block_list[blk].mpilocal_coordinate[0]*block_list[blk].BT;
+    for(x = 0; x < block_list[blk].BLX; x++) {
+      ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].BLX;
+      for(y = 0; y < block_list[blk].BLY; y++) {
+	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
+	for(z = 0; z < block_list[blk].BLZ; z++) {
+	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
 	  i = g_ipt[it][ix][iy][iz];
 	  if((t+x+y+z)%2 == 0) {
 	    add(globalfield + i, globalfield + i, beven + even, 1);
@@ -1524,10 +1524,10 @@ void add_block_to_global(spinor * const globalfield, spinor * const blockfield, 
     it = i / (LX * LY * LZ);
     
 
-    izb = iz / block_list[blk].LZ;
-    iyb = iy / block_list[blk].LY;
-    ixb = ix / block_list[blk].LX;
-    itb = it / block_list[blk].T;
+    izb = iz / block_list[blk].BLZ;
+    iyb = iy / block_list[blk].BLY;
+    ixb = ix / block_list[blk].BLX;
+    itb = it / block_list[blk].BT;
 
     if ((ibz == izb) && (iby == iyb) && (ibx == ixb) && (ibt == itb)) {
       r = globalfield + i;

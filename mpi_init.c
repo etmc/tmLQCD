@@ -207,8 +207,11 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   reorder = 0;
 #  endif
 
+#    ifndef FIXEDVOLUME
   N_PROC_T=0; /* the other N_PROC_? are read from input, if not constraint below */
               /* N_PROC_T will be set by MPI_Dims_create, if not constraint below */
+#    endif
+
 #  if defined PARALLELT
   ndims = 1;
 #    ifndef FIXEDVOLUME

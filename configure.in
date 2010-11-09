@@ -202,7 +202,7 @@ AC_MSG_CHECKING([whether we want to use KOJAK instrumentalisation])
 AC_ARG_WITH([kojakinst],
   [  --with-kojakinst        instrumentalise for KOJAK [default=no]],
   with_kojakinst=$withval, with_kojakinst=no)
-if test $with_fixvol = yes; then
+if test $with_kojakinst = yes; then
   AC_MSG_RESULT(yes)
   CC="kinst-pomp ${CC}"
 else

@@ -130,9 +130,9 @@ int cyclicDiff(int a,int b, int period){
   }
 }
 
-inline void calcPmuLattice(const int *praw,double *p_mu,int T,int L){
-  p_mu[0]=M_PI/(double)T*(2.*(double)praw[0]+1.);
-  p_mu[1]=p_mu[2]=p_mu[3]=2*M_PI/(double)L;
+inline void calcPmuLattice(const int *praw,double *p_mu,int tt,int ll){
+  p_mu[0]=M_PI/(double)tt*(2.*(double)praw[0]+1.);
+  p_mu[1]=p_mu[2]=p_mu[3]=2*M_PI/(double)ll;
   p_mu[1]*=(double)praw[1];
   p_mu[2]*=(double)praw[2];
   p_mu[3]*=(double)praw[3];
@@ -143,9 +143,9 @@ inline void calcPmuLattice(const int *praw,double *p_mu,int T,int L){
   p_mu[3]=sin(p_mu[3]);
 }
 
-inline double calcPmuLatticeSq(const int *praw,int T,int L){
-  return sin(M_PI/(double)T*(2.*(double)praw[0]+1.))*
-         sin(M_PI/(double)T*(2.*(double)praw[0]+1.))+
+inline double calcPmuLatticeSq(const int *praw,int tt,int ll){
+  return sin(M_PI/(double)tt*(2.*(double)praw[0]+1.))*
+         sin(M_PI/(double)tt*(2.*(double)praw[0]+1.))+
 
     sin(2*M_PI*(double)praw[1]/(double)LX)*
     sin(2*M_PI*(double)praw[1]/(double)LX)+
@@ -159,15 +159,15 @@ inline double calcPmuLatticeSq(const int *praw,int T,int L){
 
 
 
-inline void calcPmuLatticeTilde(const int *praw,double *p_mu_t,int T,int L/* ,unsigned int aperiodic */){
+inline void calcPmuLatticeTilde(const int *praw,double *p_mu_t,int tt,int ll/* ,unsigned int aperiodic */){
   int i;
 /*   if(aperiodic) */
-    p_mu_t[0]=M_PI/(double)(2*T)*(2.*(double)praw[0]+1.);
+    p_mu_t[0]=M_PI/(double)(2*tt)*(2.*(double)praw[0]+1.);
 /*   else */
-/*     p_mu_t[0]=M_PI/(double)T*(double)praw[0]; */
+/*     p_mu_t[0]=M_PI/(double)tt*(double)praw[0]; */
 
 
-  p_mu_t[1]=p_mu_t[2]=p_mu_t[3]=M_PI/(double)L;
+  p_mu_t[1]=p_mu_t[2]=p_mu_t[3]=M_PI/(double)ll;
   p_mu_t[1]*=(double)praw[1];
   p_mu_t[2]*=(double)praw[2];
   p_mu_t[3]*=(double)praw[3];
@@ -177,10 +177,10 @@ inline void calcPmuLatticeTilde(const int *praw,double *p_mu_t,int T,int L/* ,un
   }
 }
 
-inline double calcPmuLatticeTildeSq(const int *praw,int T,int L){
+inline double calcPmuLatticeTildeSq(const int *praw,int tt,int ll){
   return 4*(
-	    sin(M_PI/(double)(2*T)*(2.*(double)praw[0]+1.))*
-	    sin(M_PI/(double)(2*T)*(2.*(double)praw[0]+1.))+
+	    sin(M_PI/(double)(2*tt)*(2.*(double)praw[0]+1.))*
+	    sin(M_PI/(double)(2*tt)*(2.*(double)praw[0]+1.))+
 
 	    sin(M_PI*(double)praw[1]/(double)LX)*
 	    sin(M_PI*(double)praw[1]/(double)LX)+
@@ -193,7 +193,7 @@ inline double calcPmuLatticeTildeSq(const int *praw,int T,int L){
 }
 
 
-inline complex calcDtmEvalue(const int *praw,double kappa,double mu,int T,int L,double sign){
+inline complex calcDtmEvalue(const int *praw,double kappa,double mu,int tt,int ll,double sign){
 
   static double p_mu[4];
   static double p_mu_t[4];
@@ -201,10 +201,10 @@ inline complex calcDtmEvalue(const int *praw,double kappa,double mu,int T,int L,
   complex lambda;
 
 
-  calcPmuLattice(praw,p_mu,T,L);
+  calcPmuLattice(praw,p_mu,tt,ll);
   psq=p_mu[0]*p_mu[0]+p_mu[1]*p_mu[1]+p_mu[2]*p_mu[2]+p_mu[3]*p_mu[3];
 
-  calcPmuLatticeTilde(praw,p_mu_t,T,L);
+  calcPmuLatticeTilde(praw,p_mu_t,tt,ll);
   psq_tilde=p_mu_t[0]*p_mu_t[0]+p_mu_t[1]*p_mu_t[1]+p_mu_t[2]*p_mu_t[2]+p_mu_t[3]*p_mu_t[3];
 
   (lambda).re=0.5/kappa-4+0.5*psq_tilde;
@@ -213,7 +213,7 @@ inline complex calcDtmEvalue(const int *praw,double kappa,double mu,int T,int L,
 
 }
 
-inline complex calcDovEvalue(const int *praw,double kappa,double rho,int T,int L,double sign){
+inline complex calcDovEvalue(const int *praw,double kappa,double rho,int tt,int ll,double sign){
 
   static double p_mu[4];
   static double p_mu_t[4];
@@ -221,10 +221,10 @@ inline complex calcDovEvalue(const int *praw,double kappa,double rho,int T,int L
   complex lambda;
   double denominator;
 
-  calcPmuLattice(praw,p_mu,T,L);
+  calcPmuLattice(praw,p_mu,tt,ll);
   psq=p_mu[0]*p_mu[0]+p_mu[1]*p_mu[1]+p_mu[2]*p_mu[2]+p_mu[3]*p_mu[3];
 
-  calcPmuLatticeTilde(praw,p_mu_t,T,L);
+  calcPmuLatticeTilde(praw,p_mu_t,tt,ll);
   psq_tilde=p_mu_t[0]*p_mu_t[0]+p_mu_t[1]*p_mu_t[1]+p_mu_t[2]*p_mu_t[2]+p_mu_t[3]*p_mu_t[3];
 
 
@@ -242,16 +242,16 @@ inline complex calcDovEvalue(const int *praw,double kappa,double rho,int T,int L
 }
 
 
-inline complex calcQtmEvalue(const int *praw,double kappa,double mu,int T,int L,double sign/* =1.0 */){
+inline complex calcQtmEvalue(const int *praw,double kappa,double mu,int tt,int ll,double sign/* =1.0 */){
   static double p_mu[4];
   static double p_mu_t[4];
   double psq,psq_tilde,M_wilson;
   complex lambda;
 
-  calcPmuLattice(praw,p_mu,T,L);
+  calcPmuLattice(praw,p_mu,tt,ll);
   psq=p_mu[0]*p_mu[0]+p_mu[1]*p_mu[1]+p_mu[2]*p_mu[2]+p_mu[3]*p_mu[3];
 
-  calcPmuLatticeTilde(praw,p_mu_t,T,L);
+  calcPmuLatticeTilde(praw,p_mu_t,tt,ll);
   psq_tilde=p_mu_t[0]*p_mu_t[0]+p_mu_t[1]*p_mu_t[1]+p_mu_t[2]*p_mu_t[2]+p_mu_t[3]*p_mu_t[3];
 
   M_wilson=((0.5/kappa-4.)+0.5*psq_tilde);
@@ -262,17 +262,17 @@ inline complex calcQtmEvalue(const int *praw,double kappa,double mu,int T,int L,
 
 }
 
-inline complex calcDDaggerDtmEvalue(const int *praw,double kappa,double mu,int T,int L){
+inline complex calcDDaggerDtmEvalue(const int *praw,double kappa,double mu,int tt,int ll){
   static double p_mu[4];
   static double p_mu_t[4];
   double M_wilson;
   complex lambda;
   double psq_tilde,psq;
 
-  calcPmuLattice(praw,p_mu,T,L);
+  calcPmuLattice(praw,p_mu,tt,ll);
   psq=p_mu[0]*p_mu[0]+p_mu[1]*p_mu[1]+p_mu[2]*p_mu[2]+p_mu[3]*p_mu[3];
 
-  calcPmuLatticeTilde(praw,p_mu_t,T,L);
+  calcPmuLatticeTilde(praw,p_mu_t,tt,ll);
   psq_tilde=p_mu_t[0]*p_mu_t[0]+p_mu_t[1]*p_mu_t[1]+p_mu_t[2]*p_mu_t[2]+p_mu_t[3]*p_mu_t[3];
 
   M_wilson=((0.5/kappa-4.)+0.5*psq_tilde);
@@ -286,21 +286,21 @@ inline complex calcDDaggerDtmEvalue(const int *praw,double kappa,double mu,int T
 }
 
 
-inline complex calcDDaggerDovEvalue(const int *praw,double kappa,double rho,int T,int L){
+inline complex calcDDaggerDovEvalue(const int *praw,double kappa,double rho,int tt,int ll){
   static double p_mu[4];
   static double p_mu_t[4];
   complex lambda;
   double abslam,diff;
   double u,v;
 
-  calcPmuLattice(praw,p_mu,T,L);
+  calcPmuLattice(praw,p_mu,tt,ll);
   v=p_mu[0]*p_mu[0]+p_mu[1]*p_mu[1]+p_mu[2]*p_mu[2]+p_mu[3]*p_mu[3];
 
-  calcPmuLatticeTilde(praw,p_mu_t,T,L);
+  calcPmuLatticeTilde(praw,p_mu_t,tt,ll);
   u=p_mu_t[0]*p_mu_t[0]+p_mu_t[1]*p_mu_t[1]+p_mu_t[2]*p_mu_t[2]+p_mu_t[3]*p_mu_t[3];
   u=u*0.5-rho;
 
-  lambda=calcDovEvalue(praw,kappa,rho,T,L,1.);
+  lambda=calcDovEvalue(praw,kappa,rho,tt,ll,1.);
   abslam=_complex_square_norm(lambda);
 /*   printf(" for Dov |lambda| = %lf \n",abslam); */
 
@@ -318,9 +318,9 @@ inline complex calcDDaggerDovEvalue(const int *praw,double kappa,double rho,int 
 }
 
 
-inline void  spinor_fft(spinor * spinor_in,spinor *spinor_out,int T,int L,unsigned int  forward){
+inline void  spinor_fft(spinor * spinor_in,spinor *spinor_out,int tt,int ll,unsigned int  forward){
 #ifdef HAVE_FFTW
-  fftw_plan plan=spinor_fftw_plan(spinor_in,spinor_out,T,L,forward,FFTW_WISDOM_ONLY);
+  fftw_plan plan=spinor_fftw_plan(spinor_in,spinor_out,tt,ll,forward,FFTW_WISDOM_ONLY);
   fftw_execute(plan);
 #else
   fprintf(stderr,"Error fftw not available. Thus cant perform spinor_fft !!!\n");
@@ -683,9 +683,9 @@ void eigenvector_Dtm(spinor *spin,double mu,int epsilon,int k,int color,int rawp
 
 
 #ifdef HAVE_FFTW
-fftw_plan spinor_fftw_plan(spinor *spinor_in,spinor *spinor_out,int T,int L,unsigned int forward,int fftw_flags){
+fftw_plan spinor_fftw_plan(spinor *spinor_in,spinor *spinor_out,int T,int ll,unsigned int forward,int fftw_flags){
 
-/*    int index_s = gsi(get_index(it, ix, iy, iz, T, L)); */
+/*    int index_s = gsi(get_index(it, ix, iy, iz, tt, ll)); */
 /*    double *xi_ = xi + index_s; */
 
   int Dim1[4];
@@ -700,7 +700,7 @@ fftw_plan spinor_fftw_plan(spinor *spinor_in,spinor *spinor_out,int T,int L,unsi
   fftw_plan plan;
 
 
-  Dim1[0]=T;
+  Dim1[0]=tt;
   Dim1[1]=LX;Dim1[2]=LY;Dim1[3]=LZ;
 
 
@@ -723,7 +723,7 @@ fftw_plan spinor_fftw_plan(spinor *spinor_in,spinor *spinor_out,int T,int L,unsi
 }
 #endif
 
-void planeWave(spinor *spinor,int k,int rawp[4],int T,int L,unsigned int momspace){
+void planeWave(spinor *spinor,int k,int rawp[4],int tt,int ll,unsigned int momspace){
   int i;
   int u_index;
 
@@ -753,7 +753,7 @@ void planeWave(spinor *spinor,int k,int rawp[4],int T,int L,unsigned int momspac
 
   if(momspace==0) {
     _spinor_muleq_real(spinor[u_index],1.0/sqrt((double)(VOLUME)));
-    spinor_fft(spinor,spinor,T,L,0);
+    spinor_fft(spinor,spinor,tt,ll,0);
 /*     spinor_mulp_half_phase(spinor,spinor,NULL,NULL,0,1.); */
   }
 
@@ -761,7 +761,7 @@ void planeWave(spinor *spinor,int k,int rawp[4],int T,int L,unsigned int momspac
 
 
 
-void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS* ws,int T,int L,const complex alpha,unsigned int dagger,unsigned int autofft){
+void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS* ws,int tt,int ll,const complex alpha,unsigned int dagger,unsigned int autofft){
 
   /*   static int epsilon[12]={1,1,1,1,1,1,-1,-1,-1,-1,-1,-1}; */
   /*   static int k[12]      ={0,0,0,1,1,1,0,0,0,1,1,1}; */
@@ -792,7 +792,7 @@ void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS*
 
 #ifdef HAVE_FFTW
     /*     spinor_mulp_half_phase(spinor_out,spinor_in,ws->c_table, ws->s_table,1,1.); */
-    plan_fw=spinor_fftw_plan(spinor_in,spinor_out,T,L,1 /* = true */,FFTW_WISDOM_ONLY);
+    plan_fw=spinor_fftw_plan(spinor_in,spinor_out,tt,ll,1 /* = true */,FFTW_WISDOM_ONLY);
     fftw_execute(plan_fw);
 #endif
   } else if(spinor_in!=spinor_out) {
@@ -805,7 +805,7 @@ void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS*
     /*     printf("projection is inplace \n"); */
 
 
-    FORXYZT(rawp[0],rawp[1],rawp[2],rawp[3],T,LX);
+    FORXYZT(rawp[0],rawp[1],rawp[2],rawp[3],tt,LX);
 
     index=Index(rawp[0],rawp[1],rawp[2],rawp[3]);
       
@@ -869,7 +869,7 @@ void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS*
   } else if(projectionInplace==0) {
     printf("projection is out of place \n");
     fflush(stdout);
-    FORXYZT(rawp[0],rawp[1],rawp[2],rawp[3],T,LX);
+    FORXYZT(rawp[0],rawp[1],rawp[2],rawp[3],tt,LX);
 
 
     index=Index(rawp[0],rawp[1],rawp[2],rawp[3]);
@@ -945,7 +945,7 @@ void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS*
   
   if(autofft == 1){
 #ifdef HAVE_FFTW
-    plan_bw=spinor_fftw_plan(spinor_out,spinor_out,T,LX,0,FFTW_WISDOM_ONLY);
+    plan_bw=spinor_fftw_plan(spinor_out,spinor_out,tt,LX,0,FFTW_WISDOM_ONLY);
     fftw_execute(plan_bw);
 #endif
     mul_r(spinor_out,OOVOL,spinor_out,VOLUME);
@@ -953,7 +953,7 @@ void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS*
   }
 }
 
-void spinorStructEigenvecDtm(spinor *fv,double mu,int epsilon,int k,int color,int rawp[4],int T,int L){
+void spinorStructEigenvecDtm(spinor *fv,double mu,int epsilon,int k,int color,int rawp[4],int tt,int ll){
   double q[8];
   double p_mu[4];
   double prefactor;
@@ -962,7 +962,7 @@ void spinorStructEigenvecDtm(spinor *fv,double mu,int epsilon,int k,int color,in
   int index;
   double *fv_=(double*)fv;
 
-  calcPmuLattice(rawp,p_mu,T,LX);
+  calcPmuLattice(rawp,p_mu,tt,LX);
 
   psq=p_mu[0]*p_mu[0]+
     p_mu[1]*p_mu[1]+
@@ -1025,14 +1025,14 @@ void spinorStructEigenvecDtm(spinor *fv,double mu,int epsilon,int k,int color,in
 }
 
 
-void spinorStructEigenvecDtmSu3Vector(spinor *fv,double mu,int epsilon,int k,int store_color,int rawp[4],int T,int L){
+void spinorStructEigenvecDtmSu3Vector(spinor *fv,double mu,int epsilon,int k,int store_color,int rawp[4],int tt,int ll){
   double q[8];
   double p_mu[4];
   double prefactor;
   double psq;
   double beta,norm_factor;
 
-  calcPmuLattice(rawp,p_mu,T,LX);
+  calcPmuLattice(rawp,p_mu,tt,LX);
 
   psq=p_mu[0]*p_mu[0]+
     p_mu[1]*p_mu[1]+
@@ -1103,7 +1103,7 @@ void spinorStructEigenvecDtmSu3Vector(spinor *fv,double mu,int epsilon,int k,int
 
 }
 
-void spinorStructEigenvecQtm(spinor *fv,double kappa,double mu,int epsilon,int k,int color,int rawp[4],int T,int L){
+void spinorStructEigenvecQtm(spinor *fv,double kappa,double mu,int epsilon,int k,int color,int rawp[4],int tt,int ll){
   double q[8];
   double p_mu[4];
   double p_mu_t[4];
@@ -1111,13 +1111,13 @@ void spinorStructEigenvecQtm(spinor *fv,double kappa,double mu,int epsilon,int k
   double *fv_=(double*)fv;
   int index;
 
-  calcPmuLattice(rawp,p_mu,T,L);
+  calcPmuLattice(rawp,p_mu,tt,ll);
   psq=p_mu[0]*p_mu[0]+
     p_mu[1]*p_mu[1]+
     p_mu[2]*p_mu[2]+
     p_mu[3]*p_mu[3];
 
-  calcPmuLatticeTilde(rawp,p_mu_t,T,L);
+  calcPmuLatticeTilde(rawp,p_mu_t,tt,ll);
   psq_tilde=p_mu_t[0]*p_mu_t[0]+p_mu_t[1]*p_mu_t[1]+p_mu_t[2]*p_mu_t[2]+p_mu_t[3]*p_mu_t[3];
 
   makeQuaternionAsSu2(q,p_mu,1/* dagger ? */, 1 /* gamma_0 convention */);
@@ -1180,19 +1180,19 @@ void spinorStructEigenvecQtm(spinor *fv,double kappa,double mu,int epsilon,int k
 }
 
 
-void spinorStructEigenvecQtmSu3Vector(spinor *fv,double kappa,double mu,int epsilon,int k,int store_color,int rawp[4],int T,int L){
+void spinorStructEigenvecQtmSu3Vector(spinor *fv,double kappa,double mu,int epsilon,int k,int store_color,int rawp[4],int tt,int ll){
   double q[8];
   double p_mu[4];
   double p_mu_t[4];
   double psq,psq_tilde,M_wilson,prefactor,beta,norm_factor,swap_dummy;
 
-  calcPmuLattice(rawp,p_mu,T,L);
+  calcPmuLattice(rawp,p_mu,tt,ll);
   psq=p_mu[0]*p_mu[0]+
     p_mu[1]*p_mu[1]+
     p_mu[2]*p_mu[2]+
     p_mu[3]*p_mu[3];
 
-  calcPmuLatticeTilde(rawp,p_mu_t,T,L);
+  calcPmuLatticeTilde(rawp,p_mu_t,tt,ll);
   psq_tilde=p_mu_t[0]*p_mu_t[0]+p_mu_t[1]*p_mu_t[1]+p_mu_t[2]*p_mu_t[2]+p_mu_t[3]*p_mu_t[3];
 
   makeQuaternionAsSu2(q,p_mu,1/* dagger ? */, 1 /* gamma_0 convention */);
@@ -1342,12 +1342,12 @@ void spinor_mulp_half_phase(spinor *spinor_out,const spinor *spinor_in,
  */
 
 #ifdef HAVE_FFTW
-void loadFFTWWisdom(spinor *spinor_in,spinor *spinor_out,int T,int L){
+void loadFFTWWisdom(spinor *spinor_in,spinor *spinor_out,int tt,int ll){
 
 /*   ostringstream filename_fftw_wisdom; */
 /*   filename_fftw_wisdom << "fftw_wisdom_" << setw(2) << setfill('0') << T << "x"<< setw(2) << setfill('0') << L; */
   char filename_fftw_wisdom[513];
-  sprintf(filename_fftw_wisdom,"fftw_wisdom_%02dx%02d",T,L);
+  sprintf(filename_fftw_wisdom,"fftw_wisdom_%02dx%02d",tt,ll);
 
 
   FILE *wisdomFile;
@@ -1358,43 +1358,43 @@ void loadFFTWWisdom(spinor *spinor_in,spinor *spinor_out,int T,int L){
     if(result==0 ) 
       fprintf(stderr, " >>>>> sorry could not load fftw wisdom <<<<<\n");
     else 
-      fprintf(stderr, " >>>>> Successfully loaded FFTW WISDOM for Lattice size %02d x %02d <<<<<<<<<<<<<<<\n" , T , L );
+      fprintf(stderr, " >>>>> Successfully loaded FFTW WISDOM for Lattice size %02d x %02d <<<<<<<<<<<<<<<\n" , tt , ll );
     fclose(wisdomFile);
   }
 
   /* out of place plan */
-  fftw_plan plan=spinor_fftw_plan(spinor_in,spinor_out,T,L,1,FFTW_WISDOM_ONLY);
+  fftw_plan plan=spinor_fftw_plan(spinor_in,spinor_out,tt,ll,1,FFTW_WISDOM_ONLY);
   if(plan==NULL){
     fftw_forget_wisdom();
-    /* fftw_plan spinor_fftw_plan(spinor *spinor_in,spinor *spinor_out,int T,int L,unsigned int forward,int fftw_flags){ */
+    /* fftw_plan spinor_fftw_plan(spinor *spinor_in,spinor *spinor_out,int tt,int ll,unsigned int forward,int fftw_flags){ */
 
     /* forward plan */
-    fftw_plan plan=spinor_fftw_plan(spinor_in,spinor_out,T,L,1,FFTW_MEASURE | FFTW_EXHAUSTIVE | FFTW_PATIENT);
+    fftw_plan plan=spinor_fftw_plan(spinor_in,spinor_out,tt,ll,1,FFTW_MEASURE | FFTW_EXHAUSTIVE | FFTW_PATIENT);
     /* backward plan */
-    plan=spinor_fftw_plan(spinor_in,spinor_out,T,L,0,FFTW_MEASURE | FFTW_EXHAUSTIVE | FFTW_PATIENT);
-/*     plan=spinor_fftw_plan(spinor_in,spinor_out,T,L,0,FFTW_WISDOM_ONLY); */
+    plan=spinor_fftw_plan(spinor_in,spinor_out,tt,ll,0,FFTW_MEASURE | FFTW_EXHAUSTIVE | FFTW_PATIENT);
+/*     plan=spinor_fftw_plan(spinor_in,spinor_out,tt,ll,0,FFTW_WISDOM_ONLY); */
     writeWisdom=1;
   }
 
   /* inplace plan */
-  plan=spinor_fftw_plan(spinor_in,spinor_in,T,L,1,FFTW_WISDOM_ONLY);
+  plan=spinor_fftw_plan(spinor_in,spinor_in,tt,ll,1,FFTW_WISDOM_ONLY);
   if(plan==NULL){
     /* forward plan */
-    fftw_plan plan=spinor_fftw_plan(spinor_in,spinor_in,T,L,1,FFTW_MEASURE | FFTW_EXHAUSTIVE | FFTW_PATIENT);
+    fftw_plan plan=spinor_fftw_plan(spinor_in,spinor_in,tt,ll,1,FFTW_MEASURE | FFTW_EXHAUSTIVE | FFTW_PATIENT);
     /* backward plan */
-    plan=spinor_fftw_plan(spinor_in,spinor_in,T,L,0,FFTW_MEASURE | FFTW_EXHAUSTIVE | FFTW_PATIENT);
+    plan=spinor_fftw_plan(spinor_in,spinor_in,tt,ll,0,FFTW_MEASURE | FFTW_EXHAUSTIVE | FFTW_PATIENT);
     writeWisdom=1;
   }
   if(writeWisdom==1){
-    writeFFTWWisdom(T,L);
+    writeFFTWWisdom(tt,ll);
   }
 }
 
-void writeFFTWWisdom(int T,int L){
+void writeFFTWWisdom(int tt,int ll){
 /*   ostringstream filename_fftw_wisdom; */
 /*   filename_fftw_wisdom << "fftw_wisdom_" << setw(2) << setfill('0') << T << "x"<< setw(2) << setfill('0') << L; */
   char filename_fftw_wisdom[513];
-  sprintf(filename_fftw_wisdom,"fftw_wisdom_%02dx%02d",T,L);
+  sprintf(filename_fftw_wisdom,"fftw_wisdom_%02dx%02d",tt,ll);
 
 
   FILE *wisdomFile;

@@ -77,6 +77,7 @@ EXTERN int T_global;
 EXTERN int T, L, LX, LY, LZ, VOLUME;
 EXTERN int N_PROC_T, N_PROC_X, N_PROC_Y, N_PROC_Z;
 EXTERN int RAND, EDGES, VOLUMEPLUSRAND;
+EXTERN int TEOSLICE;
 #endif
 
 /* translates from lexicographic order to even/odd order */
@@ -142,7 +143,6 @@ EXTERN int ** g_field_zt_disp_even_dn;
 EXTERN int ** g_field_zt_disp_even_up;
 EXTERN int ** g_field_zt_disp_odd_dn;
 EXTERN int ** g_field_zt_disp_odd_up;
-EXTERN int TEOSLICE;
 EXTERN int ** g_1st_eot;
 EXTERN int * g_1st_xt_int_dn;
 EXTERN int * g_1st_xt_int_up;
