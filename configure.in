@@ -652,7 +652,15 @@ if test $usegpu = yes; then
   AC_MSG_RESULT($cuda_compileargs)
   if test $usegpu = yes; then  
     GPUCFLAGS="$GPUCFLAGS $cuda_compileargs"
-  fi  
+  fi
+  if test $enable_mpi = yes; then
+    GPUMPICOMPILER="--compiler-bindir mpicc"
+    if test $withmpidimension != 1; then
+      AC_MSG_ERROR(ERROR! The GPU Code is only parallelized in t-direction so far!)
+    fi
+  else
+    GPUMPICOMPILER=""
+  fi
 else
   AC_MSG_RESULT(no)
   USESUBDIRS="io linalg solver"
@@ -664,7 +672,7 @@ AC_SUBST(USESUBDIRS)
 AC_SUBST(NVCC)
 AC_SUBST(GPUDIR)
 AC_SUBST(GPUCFLAGS)
-
+AC_SUBST(GPUMPICOMPILER)
 
 
 AC_MSG_CHECKING(checking consistency)
