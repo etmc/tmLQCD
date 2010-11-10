@@ -1512,6 +1512,7 @@ __global__ void dev_Hopping_Matrix_alternate (const dev_su3_2v * gf, const dev_s
 
 
 
+
 ///////////////////////////
 // MATRIX MULTIPLICATION //
 ///////////////////////////

@@ -29,11 +29,11 @@ DEFS = @DEFS@
 GPUOBJECTS = @GPUDIR@
 USESUBDIRS = @USESUBDIRS@
 NVCC = @NVCC@
-
+GPUMPICOMPILER = @GPUMPICOMPILER@
 INCLUDES = @INCLUDES@
 
-COMPILE = ${NVCC} -c ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
-#COMPILE = ${NVCC} -c ${DEFS} --compiler-bindir mpicc ${INCLUDES} -o $@ ${CFLAGS}
+COMPILE = ${NVCC} -c ${DEFS} ${GPUMPICOMPILER} ${INCLUDES} -o $@ ${CFLAGS}
+
 
 GPUSOURCES := $(wildcard ${srcdir}/*.cu)
 GPUOBJECTS := $(patsubst ${srcdir}/%.cu, %.o, $(GPUSOURCES))
