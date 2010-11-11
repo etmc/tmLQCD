@@ -30,6 +30,11 @@
 #ifdef HAVE_CONFIG_H
   #include<config.h>
 #endif
+ 
+ /* texture for nearest neighbours*/
+ texture<int,1, cudaReadModeElementType> nn_tex;
+ const textureReference* nn_texRefPtr = NULL;
+ cudaChannelFormatDesc nn_channelDesc;
 
 #ifndef HALF
  /* texture for gauge field */
@@ -48,10 +53,6 @@
  cudaChannelFormatDesc spin_channelDesc2;
 
 
- /* texture for nearest neighbours*/
- texture<int,1, cudaReadModeElementType> nn_tex;
- const textureReference* nn_texRefPtr = NULL;
- cudaChannelFormatDesc nn_channelDesc;
 #else 
 
  /* texture for gauge field */
@@ -63,6 +64,12 @@
  texture<short4,1, cudaReadModeNormalizedFloat> spin_tex;
  const textureReference* spin_texRefPtr = NULL;
  cudaChannelFormatDesc spin_channelDesc;
+ 
+ /* texture for spinor field */
+ texture<short4,1, cudaReadModeNormalizedFloat> spin_tex2;
+ const textureReference* spin_texRefPtr2 = NULL;
+ cudaChannelFormatDesc spin_channelDesc2; 
+
 
 /* texture for norm of spinor field 1*/
  texture<float,1, cudaReadModeElementType> spinnorm_tex;

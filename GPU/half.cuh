@@ -20,10 +20,10 @@ __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float
     //store unit direction vector
     #pragma unroll
     for(i=0; i<6; i++){
-       sh[6*pos+i].x = __float2half(slocal[i].x/norm);
-       sh[6*pos+i].y = __float2half(slocal[i].y/norm);
-       sh[6*pos+i].z = __float2half(slocal[i].z/norm);
-       sh[6*pos+i].w = __float2half(slocal[i].w/norm);
+       sh[6*pos+i].x = __float2half_rn(slocal[i].x/norm);
+       sh[6*pos+i].y = __float2half_rn(slocal[i].y/norm);
+       sh[6*pos+i].z = __float2half_rn(slocal[i].z/norm);
+       sh[6*pos+i].w = __float2half_rn(slocal[i].w/norm);
     } 
   }
 }
@@ -34,29 +34,30 @@ __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float
 // for GF_8 we have to be careful, as we have two angles in -Pi .. Pi
 // so we have to divide them by (2 Pi) This is taken care of in the gauge
 // reconstruction routines
-__global__ float2half_gaugefield(dev_su3_2v* gf, dev_su3_2v_half* gfh){
+__global__ void float2half_gaugefield(dev_su3_2v* gf, dev_su3_2v_half* gfh){
 
   int pos=threadIdx.x + blockDim.x*blockIdx.x;
   int nf4;
   if(pos < dev_VOLUME){
   #ifdef GF_8
-    gfh[nf4*pos].x = __float2half(gf[nf4*pos].x);
-    gfh[nf4*pos].y = __float2half(gf[nf4*pos].y);
-    gfh[nf4*pos].z = __float2half(gf[nf4*pos].z);
-    gfh[nf4*pos].w = __float2half(gf[nf4*pos].w);
+    nf4 = 2;
+    gfh[nf4*pos].x = __float2half_rn(gf[nf4*pos].x);
+    gfh[nf4*pos].y = __float2half_rn(gf[nf4*pos].y);
+    gfh[nf4*pos].z = __float2half_rn(gf[nf4*pos].z);
+    gfh[nf4*pos].w = __float2half_rn(gf[nf4*pos].w);
     
-    gfh[nf4*pos+1].x = __float2half(gf[nf4*pos+1].x/twopi_float);
-    gfh[nf4*pos+1].y = __float2half(gf[nf4*pos+1].y/twopi_float);
-    gfh[nf4*pos+1].z = __float2half(gf[nf4*pos+1].z);
-    gfh[nf4*pos+1].w = __float2half(gf[nf4*pos+1].w);
+    gfh[nf4*pos+1].x = __float2half_rn(gf[nf4*pos+1].x/twopi_float);
+    gfh[nf4*pos+1].y = __float2half_rn(gf[nf4*pos+1].y/twopi_float);
+    gfh[nf4*pos+1].z = __float2half_rn(gf[nf4*pos+1].z);
+    gfh[nf4*pos+1].w = __float2half_rn(gf[nf4*pos+1].w);
   #else
-    int nf4 = 3;
+    nf4 = 3;
     #pragma unroll
     for(i=0; i<nf4; i++){
-       gfh[nf4*pos+i].x = __float2half(gf[nf4*pos+i].x);
-       gfh[nf4*pos+i].y = __float2half(gf[nf4*pos+i].y);
-       gfh[nf4*pos+i].z = __float2half(gf[nf4*pos+i].z);
-       gfh[nf4*pos+i].w = __float2half(gf[nf4*pos+i].w);
+       gfh[nf4*pos+i].x = __float2half_rn(gf[nf4*pos+i].x);
+       gfh[nf4*pos+i].y = __float2half_rn(gf[nf4*pos+i].y);
+       gfh[nf4*pos+i].z = __float2half_rn(gf[nf4*pos+i].z);
+       gfh[nf4*pos+i].w = __float2half_rn(gf[nf4*pos+i].w);
     } 
   #endif
   }
@@ -136,12 +137,13 @@ return(0);
 
 
 /////    SOME BLAS KERNELs - work in progress //////////
-
-__global__ float2half ( dev_halfspinor* erg, float* erg_norm, dev_spinor* in){
+// optimize this with shared !!!
+__global__ void float2half ( dev_spinor_half* erg, float* erg_norm, dev_spinor* in){
   int pos=threadIdx.x + blockDim.x*blockIdx.x;
   if(pos < dev_VOLUME){
      float norm=0.0;
      float4 help;
+     int i;
      //calculate norm over float4 spinor
      for(i=0; i<6; i++){
        help = in[6*pos+i];
@@ -152,11 +154,10 @@ __global__ float2half ( dev_halfspinor* erg, float* erg_norm, dev_spinor* in){
      erg_norm[pos] = norm;
      // normalize and save to erg
      for(i=0; i<6; i++){
-       help = in[6*pos+i];
-       erg.x[6*pos+i].x = help.x/norm;
-       erg.y[6*pos+i].y = help.y/norm;
-       erg.z[6*pos+i].z = help.z/norm;
-       erg.w[6*pos+i].w = help.w/norm;
+       erg[6*pos+i].x = in[6*pos+i].x/norm;
+       erg[6*pos+i].y = in[6*pos+i].y/norm;
+       erg[6*pos+i].z = in[6*pos+i].z/norm;
+       erg[6*pos+i].w = in[6*pos+i].w/norm;
      }
   }
 }
@@ -168,7 +169,7 @@ __global__ float2half ( dev_halfspinor* erg, float* erg_norm, dev_spinor* in){
 
 
 // erg(float) = alpha*x(half) + y(half) 
-__global__ void saxpy_half_kernel (float alpha, dev_spinor* erg, dev_halfspinor* x, float* x_norm, dev_halfspinor* y, float* y_norm){
+__global__ void saxpy_half_kernel (float alpha, dev_spinor* erg, dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float* y_norm){
    int pos= threadIdx.x + blockDim.x*blockIdx.x;
    float4 xhelp,yhelp;
    int i;
@@ -177,15 +178,15 @@ __global__ void saxpy_half_kernel (float alpha, dev_spinor* erg, dev_halfspinor*
     // this is the loop over the 6 float4 forming one spinor
     #pragma unroll
     for(i=0; i<6; i++){
-       xhelp = tex1Dfetch(x, 6*pos+i);
+       xhelp = tex1Dfetch(spin_tex, 6*pos+i);
        xnhelp = x_norm[pos];
        xhelp.x = xhelp.x*xnhelp;
        xhelp.y = xhelp.y*xnhelp;
        xhelp.z = xhelp.z*xnhelp;
        xhelp.w = xhelp.w*xnhelp;
 
-       yhelp = tex1Dfetch(y, 6*pos+i);
-       ynhelp = y_norm[pos];
+       yhelp = tex1Dfetch(spin_tex, 6*pos+i);
+       ynhelp = tex1Dfetch(spinnorm_tex, pos);;
        yhelp.x = yhelp.x*ynhelp;
        yhelp.y = yhelp.y*ynhelp;
        yhelp.z = yhelp.z*ynhelp;
@@ -200,16 +201,16 @@ __global__ void saxpy_half_kernel (float alpha, dev_spinor* erg, dev_halfspinor*
 }
 
 
-
+/*
 // helperg = alpha*x + y 
 // y = normalize_half (helperg)
-void saxpy_half(int N, float alpha, dev_spinor* helperg, dev_halfspinor* x, float* x_norm, dev_halfspinor* y, float* ynorm,  ){
+void saxpy_half(int N, float alpha, dev_spinor* helperg, dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float* ynorm ){
   // N is total number of floats Vol*6*4
   // -> number of ushort4's = N/4
   int Neff = N/4/6;
 
 }
-
+*/
 
 /////////////////////  BLAS KERNELs  ////////////////////////////
 

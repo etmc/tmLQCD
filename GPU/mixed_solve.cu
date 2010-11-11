@@ -108,9 +108,9 @@ dev_spinor * h2d_spin;
   float* dev_half_norm;
   // a half precsion gauge field
   #ifdef GF_8
-   dev_su3_8 * dev_gf_half;
+   dev_su3_8_half * dev_gf_half;
   #else
-   dev_su3_2v * dev_gf_half;
+   dev_su3_2v_half * dev_gf_half;
   #endif
 #endif 
 
@@ -270,7 +270,7 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
    #ifndef HALF
     bind_texture_spin(spinin,1);
    #else
-    prepare_halfspinor_texture(spinin);
+    prepare_halfspinor_texture(spinin, dev_half_aux, dev_half_norm);
    #endif
   #endif
   //bind_texture_nn(dev_nn_eo);
@@ -291,7 +291,7 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
    #ifndef HALF
     bind_texture_spin(dev_spin_eo2,1);
    #else
-    prepare_halfspinor_texture(dev_spin_eo2);
+    prepare_halfspinor_texture(dev_spin_eo2, dev_half_aux, dev_half_norm);
    #endif
   #endif
   //bind_texture_nn(dev_nn_oe);
@@ -313,7 +313,7 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
    #ifndef HALF
     bind_texture_spin(dev_spin_eo2,1);
    #else
-    prepare_halfspinor_texture(dev_spin_eo2);
+    prepare_halfspinor_texture(dev_spin_eo2, dev_half_aux, dev_half_norm);
    #endif
   #endif
   //bind_texture_nn(dev_nn_eo);
@@ -334,7 +334,7 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
    #ifndef HALF
     bind_texture_spin(spinout,1);
    #else
-    prepare_halfspinor_texture(spinout);
+    prepare_halfspinor_texture(spinout, dev_half_aux, dev_half_norm);
    #endif
   #endif
   //bind_texture_nn(dev_nn_oe);
