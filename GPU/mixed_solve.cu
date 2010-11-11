@@ -102,6 +102,12 @@ dev_spinor* dev_spinout;
 dev_spinor * h2d_spin;
 
 
+#ifdef HALF
+  // some additional fields for half prec.
+  dev_spinor_half* dev_half_aux;
+  float* dev_half_norm;
+#endif 
+
 //additional spinors for even-odd
 dev_spinor* dev_spin_eo1;
 dev_spinor* dev_spin_eo2;
@@ -187,7 +193,10 @@ __device__ int dev_nproc;
 // the plaquette and rectangle routines
 #include "observables.cuh"
 
-
+// if we want to use half precision
+#ifdef HALF 
+ #include "half.cuh"
+#endif
 
 
 
@@ -252,7 +261,11 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
   
   //Q_{-}
   #ifdef USETEXTURE
+   #ifndef HALF
     bind_texture_spin(spinin,1);
+   #else
+    prepare_halfspinor_texture(spinin);
+   #endif
   #endif
   //bind_texture_nn(dev_nn_eo);
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
@@ -260,12 +273,20 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
              (dev_gf, spinin, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0           
   //unbind_texture_nn();           
   #ifdef USETEXTURE
+   #ifndef HALF
     unbind_texture_spin(1);
+   #else
+    release_halfspinor_texture();
+   #endif
   #endif
   dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,dev_spin_eo2, -1.);
   
   #ifdef USETEXTURE
+   #ifndef HALF
     bind_texture_spin(dev_spin_eo2,1);
+   #else
+    prepare_halfspinor_texture(dev_spin_eo2);
+   #endif
   #endif
   //bind_texture_nn(dev_nn_oe);
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
@@ -273,13 +294,21 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
             (dev_gf, dev_spin_eo2, dev_spin_eo1, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
   //unbind_texture_nn();
   #ifdef USETEXTURE
+   #ifndef HALF
     unbind_texture_spin(1);
+   #else
+    release_halfspinor_texture();
+   #endif
   #endif
   dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(spinin, dev_spin_eo1,  dev_spin_eo2, -1.);
   
   //Q_{+}
   #ifdef USETEXTURE
+   #ifndef HALF
     bind_texture_spin(dev_spin_eo2,1);
+   #else
+    prepare_halfspinor_texture(dev_spin_eo2);
+   #endif
   #endif
   //bind_texture_nn(dev_nn_eo);
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
@@ -287,12 +316,20 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
           (dev_gf, dev_spin_eo2, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0
   //unbind_texture_nn();      
   #ifdef USETEXTURE  
+   #ifndef HALF
     unbind_texture_spin(1);
+   #else
+    release_halfspinor_texture();
+   #endif
   #endif
   dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,spinout, +1.);
   
   #ifdef USETEXTURE
+   #ifndef HALF
     bind_texture_spin(spinout,1);
+   #else
+    prepare_halfspinor_texture(spinout);
+   #endif
   #endif
   //bind_texture_nn(dev_nn_oe);
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
@@ -300,7 +337,11 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
              (dev_gf, spinout, dev_spin_eo1, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
   //unbind_texture_nn();  
   #ifdef USETEXTURE
+   #ifndef HALF
     unbind_texture_spin(1);
+   #else
+    release_halfspinor_texture();
+   #endif
   #endif
   dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo2, dev_spin_eo1,  spinout , +1.); 
 }

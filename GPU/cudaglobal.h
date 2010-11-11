@@ -34,7 +34,9 @@ typedef struct dev_spinor_smem{
 typedef dev_complex dev_propmatrix[12][12];
 typedef dev_complex dev_fbyf[4][4];
 
-
+#ifdef HALF
+ typedef short4 dev_spinor_half;
+#endif
 
 
 /* END GPU Stuff */

@@ -31,7 +31,7 @@
   #include<config.h>
 #endif
 
-
+#ifndef HALF
  /* texture for gauge field */
  texture<float4,1, cudaReadModeElementType> gf_tex;
  const textureReference* gf_texRefPtr = NULL;
@@ -52,7 +52,24 @@
  texture<int,1, cudaReadModeElementType> nn_tex;
  const textureReference* nn_texRefPtr = NULL;
  cudaChannelFormatDesc nn_channelDesc;
+#else 
 
+ /* texture for gauge field */
+ texture<short4,1, cudaReadModeNormalizedFloat> gf_tex;
+ const textureReference* gf_texRefPtr = NULL;
+ cudaChannelFormatDesc gf_channelDesc;
+ 
+ /* texture for spinor field */
+ texture<short4,1, cudaReadModeNormalizedFloat> spin_tex;
+ const textureReference* spin_texRefPtr = NULL;
+ cudaChannelFormatDesc spin_channelDesc;
+
+/* texture for norm of spinor field 1*/
+ texture<float,1, cudaReadModeElementType> spinnorm_tex;
+ const textureReference* spinnorm_texRefPtr = NULL;
+ cudaChannelFormatDesc spinnorm_channelDesc;
+
+#endif // NOT HALF
 
 
 

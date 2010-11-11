@@ -574,17 +574,29 @@ __device__ void dev_su3MtV_spintex(dev_su3 M, int pos, dev_spinor * out){
 dev_spinor s1, s2;
 
 s1 = tex1Dfetch(spin_tex,6*pos);
-s2 = tex1Dfetch(spin_tex,6*pos+1);
+#ifdef HALF
+ float norm = tex1Dfetch(spinnorm_tex,pos);
+ s1.x = s1.x*norm; 
+ s1.y = s1.y*norm; 
+ s1.z = s1.z*norm;
+ s1.w = s1.w*norm;
+#endif
 
+s2 = tex1Dfetch(spin_tex,6*pos+1);
+#ifdef HALF
+ norm = tex1Dfetch(spinnorm_tex,pos);
+ s2.x = s2.x*norm; 
+ s2.y = s2.y*norm; 
+ s2.z = s2.z*norm; 
+ s2.w = s2.w*norm;
+#endif
 
 (*(out+0)).x =  ( M[0][0].re*s1.x - M[0][0].im*s1.y ) + ( M[0][1].re*s1.z - M[0][1].im*s1.w ) + ( M[0][2].re*s2.x - M[0][2].im*s2.y );
 (*(out+0)).y = ( M[0][0].re*s1.y + M[0][0].im*s1.x ) + ( M[0][1].re*s1.w + M[0][1].im*s1.z ) + ( M[0][2].re*s2.y + M[0][2].im*s2.x );
 
 
-//checked by look of eye
-(*(out+0)).z =  ( M[1][0].re*s1.x - M[1][0].im*s1.y ) + ( M[1][1].re*s1.z - M[1][1].im*s1.w ) + ( M[1][2].re*s2.x - M[1][2].im*s2.y );
-// checked 
 
+(*(out+0)).z =  ( M[1][0].re*s1.x - M[1][0].im*s1.y ) + ( M[1][1].re*s1.z - M[1][1].im*s1.w ) + ( M[1][2].re*s2.x - M[1][2].im*s2.y );
 (*(out+0)).w =  ( M[1][0].re*s1.y + M[1][0].im*s1.x ) + ( M[1][1].re*s1.w + M[1][1].im*s1.z ) + ( M[1][2].re*s2.y + M[1][2].im*s2.x );
 
 
@@ -594,6 +606,14 @@ s2 = tex1Dfetch(spin_tex,6*pos+1);
 
 
 s1 = tex1Dfetch(spin_tex,6*pos+2);
+#ifdef HALF
+ norm = tex1Dfetch(spinnorm_tex,pos);
+ s1.x = s1.x*norm; 
+ s1.y = s1.y*norm; 
+ s1.z = s1.z*norm;
+ s1.w = s1.w*norm;
+#endif
+
 (*(out+1)).z =  ( M[0][0].re*s2.z - M[0][0].im*s2.w ) + ( M[0][1].re*s1.x - M[0][1].im*s1.y ) + ( M[0][2].re*s1.z - M[0][2].im*s1.w );
 (*(out+1)).w =  ( M[0][0].re*s2.w + M[0][0].im*s2.z ) + ( M[0][1].re*s1.y + M[0][1].im*s1.x ) + ( M[0][2].re*s1.w + M[0][2].im*s1.z );
 
@@ -608,7 +628,21 @@ s1 = tex1Dfetch(spin_tex,6*pos+2);
 
 
 s1 = tex1Dfetch(spin_tex,6*pos+3);
+#ifdef HALF
+ norm = tex1Dfetch(spinnorm_tex,pos);
+ s1.x = s1.x*norm; 
+ s1.y = s1.y*norm; 
+ s1.z = s1.z*norm;
+ s1.w = s1.w*norm;
+#endif
 s2 = tex1Dfetch(spin_tex,6*pos+4);
+#ifdef HALF
+ norm = tex1Dfetch(spinnorm_tex,pos);
+ s2.x = s2.x*norm; 
+ s2.y = s2.y*norm; 
+ s2.z = s2.z*norm; 
+ s2.w = s2.w*norm;
+#endif
 (*(out+3)).x =  ( M[0][0].re*s1.x - M[0][0].im*s1.y ) + ( M[0][1].re*s1.z - M[0][1].im*s1.w ) + ( M[0][2].re*s2.x - M[0][2].im*s2.y );
 (*(out+3)).y =   ( M[0][0].re*s1.y + M[0][0].im*s1.x ) + ( M[0][1].re*s1.w + M[0][1].im*s1.z ) + ( M[0][2].re*s2.y + M[0][2].im*s2.x );
 
@@ -623,6 +657,13 @@ s2 = tex1Dfetch(spin_tex,6*pos+4);
 
 
 s1 = tex1Dfetch(spin_tex,6*pos+5);
+#ifdef HALF
+ norm = tex1Dfetch(spinnorm_tex,pos);
+ s1.x = s1.x*norm; 
+ s1.y = s1.y*norm; 
+ s1.z = s1.z*norm;
+ s1.w = s1.w*norm;
+#endif
 (*(out+4)).z =  ( M[0][0].re*s2.z - M[0][0].im*s2.w ) + ( M[0][1].re*s1.x - M[0][1].im*s1.y ) + ( M[0][2].re*s1.z - M[0][2].im*s1.w );
 (*(out+4)).w =   ( M[0][0].re*s2.w + M[0][0].im*s2.z ) + ( M[0][1].re*s1.y + M[0][1].im*s1.x ) + ( M[0][2].re*s1.w + M[0][2].im*s1.z );
 
