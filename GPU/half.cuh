@@ -10,7 +10,7 @@ __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float
   if(pos < dev_VOLUME){
     dev_copy_spinor(&(s[6*pos]), &(slocal[0]));
     // calculate norm
-    #pragma unroll
+    #pragma unroll 6
     for(i=0; i<6; i++){
        norm += slocal[i].x*slocal[i].x + slocal[i].y*slocal[i].y 
              + slocal[i].z*slocal[i].z + slocal[i].w*slocal[i].w; 
@@ -18,7 +18,7 @@ __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float
     //store norm
     shnorm[pos] = sqrt(norm);
     //store unit direction vector
-    #pragma unroll
+    #pragma unroll 6
     for(i=0; i<6; i++){
        sh[6*pos+i].x = __float2half_rn(slocal[i].x/norm);
        sh[6*pos+i].y = __float2half_rn(slocal[i].y/norm);
@@ -37,7 +37,7 @@ __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float
 __global__ void float2half_gaugefield(dev_su3_2v* gf, dev_su3_2v_half* gfh){
 
   int pos=threadIdx.x + blockDim.x*blockIdx.x;
-  int nf4;
+  int nf4,i;
   if(pos < dev_VOLUME){
   #ifdef GF_8
     nf4 = 2;
@@ -99,11 +99,11 @@ extern "C" int prepare_halfspinor_texture(dev_spinor* s, dev_spinor_half* sh, fl
       gridsize=1;
     }
    
-   printf("Converting spinor to half precision... ");
+   //printf("Converting spinor to half precision... ");
      float2half_spinorfield <<< gridsize, BLOCK2  >>>(s, sh, shnorm);
-   printf("Done\n");
+   //printf("Done\n");
    
-   printf("Binding textures to half spinorfield\n");
+   //printf("Binding textures to half spinorfield\n");
     // bind texture for vector
     spin_texRefPtr = NULL;
     cudaGetTextureReference(&spin_texRefPtr, "spin_tex");
@@ -123,7 +123,7 @@ return(0);
 
 
 extern "C" int release_halfspinor_texture(){
-   printf("Unbinding textures of half spinorfield\n");
+   //printf("Unbinding textures of half spinorfield\n");
    cudaUnbindTexture(spin_texRefPtr);
    cudaUnbindTexture(spinnorm_texRefPtr);
    //printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
