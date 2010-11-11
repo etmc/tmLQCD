@@ -1950,28 +1950,44 @@ void benchmark(spinor * const Q){
   printf("Applying H 1000 times\n");
   for(i=0; i<1000; i++){
       #ifdef USETEXTURE
-       bind_texture_spin(dev_spinin,1);
-      #endif
+	   #ifndef HALF
+         bind_texture_spin(dev_spinin,1);
+       #else
+          prepare_halfspinor_texture(dev_spinin, dev_half_aux, dev_half_norm);
+	   #endif
+	  #endif
        //bind_texture_nn(dev_nn_eo);
       //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
       dev_Hopping_Matrix<<<griddim3, blockdim3>>>
              (dev_gf, dev_spinin, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0
        //unbind_texture_nn();
     #ifdef USETEXTURE             
-     unbind_texture_spin(1);
-    #endif
+	 #ifndef HALF
+      unbind_texture_spin(1);
+     #else
+      release_halfspinor_texture();
+	 #endif
+	#endif
 
     #ifdef USETEXTURE
-     bind_texture_spin(dev_spin_eo1,1);
-    #endif
+	 #ifndef HALF
+       bind_texture_spin(dev_spin_eo1,1);
+     #else
+      prepare_halfspinor_texture(dev_spin_eo1, dev_half_aux, dev_half_norm);
+	 #endif
+	#endif
   //bind_texture_nn(dev_nn_oe);
    // cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
     dev_Hopping_Matrix<<<griddim3, blockdim3>>>
             (dev_gf, dev_spin_eo1, dev_spinin, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
   //unbind_texture_nn();
     #ifdef USETEXTURE
-     unbind_texture_spin(1);
-    #endif
+	 #ifndef HALF
+      unbind_texture_spin(1);
+	 #else
+      release_halfspinor_texture();
+	 #endif
+   #endif
 
   }  
   printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
@@ -2009,7 +2025,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     
   init_mixedsolve_eo(g_gauge_field);
   
-  /*
+  /*  
   // small benchmark
     assign(g_spinor_field[DUM_SOLVER],Q,N);
     benchmark(g_spinor_field[DUM_SOLVER]);
