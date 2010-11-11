@@ -36,6 +36,8 @@ typedef dev_complex dev_fbyf[4][4];
 
 #ifdef HALF
  typedef short4 dev_spinor_half;
+ typedef short4 dev_su3_2v_half;
+ typedef short4 dev_su3_8_half;
 #endif
 
 

@@ -33,7 +33,9 @@
 ////////////////////// DEVICE FUNCTIONS FOR GAUGE RECONSTRUCTION ////////////////////
 
 
-
+#ifdef HALF
+  #define twopi_float 6.283185307f
+#endif 
 
 
 
@@ -233,7 +235,11 @@ __device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, de
   else{
     p1.re = 0.0f;
   }
-  
+  #ifdef HALF
+    // we have to multiply by two pi because normalization to -1..1
+    gfin.x = gfin.x*twopi_float;
+    gfin.y = gfin.y*twopi_float;
+  #endif
   sincos(gfin.x, &(*gf)[0][0].im, &(*gf)[0][0].re);
   (*gf)[0][0].re = (*gf)[0][0].re * p1.re;
   (*gf)[0][0].im = (*gf)[0][0].im * p1.re;
@@ -398,13 +404,17 @@ __device__ void dev_reconstructgf_8texref_dagger (const dev_su3_2v* field,int po
   //(*gf)[0][0].re = p1.re*cosf(gfin.x);
   //(*gf)[0][0].im = -p1.re*sinf(gfin.x);
   
+  #ifdef HALF
+    // we have to multiply by two pi because normalization to -1..1
+    gfin.x = gfin.x*twopi_float;
+    gfin.y = gfin.y*twopi_float;
+  #endif  
+  
   sincos(gfin.x, &(*gf)[0][0].im, &(*gf)[0][0].re);
   (*gf)[0][0].re = (*gf)[0][0].re * p1.re;
   (*gf)[0][0].im = -(*gf)[0][0].im * p1.re;
     
-  
-  
-  
+
   // assign b1
   (*gf)[0][1].re = gfin.z;
   (*gf)[0][1].im = -gfin.w;
