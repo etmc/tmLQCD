@@ -724,6 +724,80 @@ __global__ void he_cg_init_nd_additional_mpi (int param_VOLUMEPLUSRAND, int para
 
 
 
+
+// code to list available devices, not yet included in main code
+// this is copied from the CUDA sdk 
+extern "C" int find_devices_mpi() {
+
+int deviceCount, dev;
+
+    cudaGetDeviceCount(&deviceCount);
+    if (deviceCount == 0)
+        if (g_cart_id == 0) printf("There is no device supporting CUDA\n");
+    for (dev = 0; dev < deviceCount; ++dev) {
+        cudaDeviceProp deviceProp;
+        cudaGetDeviceProperties(&deviceProp, dev);
+        if (dev == 0) {
+            if (deviceProp.major == 9999 && deviceProp.minor == 9999)
+                if (g_cart_id == 0) printf("There is no device supporting CUDA.\n");
+            else if (deviceCount == 1)
+                if (g_cart_id == 0) printf("There is 1 device supporting CUDA\n");
+            else
+                if (g_cart_id == 0) printf("There are %d devices supporting CUDA\n", deviceCount);
+        }
+        if (g_cart_id == 0) {
+          printf("\nDevice %d: \"%s\"\n", dev, deviceProp.name);
+          printf("  Major revision number:                         %d\n",
+               deviceProp.major);
+          printf("  Minor revision number:                         %d\n",
+               deviceProp.minor);
+          printf("  Total amount of global memory:                 %u bytes\n",
+               deviceProp.totalGlobalMem);
+    #if CUDART_VERSION >= 2000
+          printf("  Number of multiprocessors:                     %d\n",
+               deviceProp.multiProcessorCount);
+          printf("  Number of cores:                               %d\n",
+               8 * deviceProp.multiProcessorCount);
+    #endif
+          printf("  Total amount of constant memory:               %u bytes\n",
+               deviceProp.totalConstMem); 
+          printf("  Total amount of shared memory per block:       %u bytes\n",
+               deviceProp.sharedMemPerBlock);
+          printf("  Total number of registers available per block: %d\n",
+               deviceProp.regsPerBlock);
+          printf("  Warp size:                                     %d\n",
+               deviceProp.warpSize);
+          printf("  Maximum number of threads per block:           %d\n",
+               deviceProp.maxThreadsPerBlock);
+          printf("  Maximum sizes of each dimension of a block:    %d x %d x %d\n",
+               deviceProp.maxThreadsDim[0],
+               deviceProp.maxThreadsDim[1],
+               deviceProp.maxThreadsDim[2]);
+          printf("  Maximum sizes of each dimension of a grid:     %d x %d x %d\n",
+               deviceProp.maxGridSize[0],
+               deviceProp.maxGridSize[1],
+               deviceProp.maxGridSize[2]);
+          printf("  Maximum memory pitch:                          %u bytes\n",
+               deviceProp.memPitch);
+          printf("  Texture alignment:                             %u bytes\n",
+               deviceProp.textureAlignment);
+          printf("  Clock rate:                                    %.2f GHz\n",
+               deviceProp.clockRate * 1e-6f);
+    #if CUDART_VERSION >= 2000
+          printf("  Concurrent copy and execution:                 %s\n",
+               deviceProp.deviceOverlap ? "Yes" : "No");
+    #endif
+      }
+    }
+    return(deviceCount);
+}
+
+
+
+
+
+
+
 // initializes and allocates all quantities for the mixed solver
 // more precise:
 //	puts the gauge field on device as "2 rows" or "8 floats" per SU(3)-matrix
@@ -770,20 +844,33 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
   
   
   // get number of devices										// HAVE TO: mechanism to choose the device
-  ndev = find_devices();
+  ndev = find_devices_mpi();
   if (ndev == 0) {
     fprintf(stderr, "Process %d of %d: Error: no CUDA devices found. Aborting...\n", g_proc_id, g_nproc);
     exit(300);
   }
-  // try to set active device to device_num given in input file
-  if (device_num < ndev) {
-    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, device_num);	// each process gets bounded to the same GPU , preliminary !!
-    cudaSetDevice(device_num);
-  }
-  else{
-    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, device_num);
-    exit(301);
-  }
+  #ifndef DEVICE_EQUAL_RANK
+    // try to set active device to device_num given in input file
+    // each process gets bounded to the same GPU , preliminary !!
+    if (device_num < ndev) {
+      printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, device_num);
+      cudaSetDevice(device_num);
+    }
+    else {
+      fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, device_num);
+      exit(301);
+    }
+  #else
+    // device number = mpi rank
+    if (g_cart_id < ndev) {
+      printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, g_cart_id);
+      cudaSetDevice(g_cart_id);
+    }
+    else {
+      fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, g_cart_id);
+      exit(301);
+    }
+  #endif
   if ((cudaerr=cudaGetLastError()) != cudaSuccess) {
     printf("Process %d of %d: Error in init_mixedsolve_eo_nd(): Could not set active device. Aborting...\n", g_proc_id, g_nproc);
     exit(302);
@@ -1952,6 +2039,323 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
 
 
 
+extern "C" void benchmark_eo_nd_mpi (spinor * Q_up, spinor * Q_dn, int N) {
+
+  
+  
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //													//
+  // total FLOPS  =  (#iterations) * (FLOPS/matrix application) * (#lattice sites)			//
+  //													//
+  //													//
+  // FLOPS per lattice site and application of the function,						//
+  // count the floating point op's on device:								//
+  //													//
+  // dev_Hopping_Matrix	          = 4136								//
+  // dev_mul_one_pm_imubar_gamma5 = 120									//
+  // dev_gamma5                   = 12									//
+  //													//
+  // cublasSaxpy                  = 24*2 = 48								//
+  // cublasSscal                  = 24*1 = 24								//
+  //													//
+  //													//
+  // (FLOPS/matrix application)  =  2 * (4*4136 + 4*120 + 6*48 + 2*24 + 2*12)  =  2 * 17384  =  34768	//
+  //													//
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  
+  // timing
+  double singleTimeElapsed;
+  double maxTimeElapsed;
+  double startBenchmark;
+  double stopBenchmark;
+  
+  // counter
+  int i;
+  
+  // flop counting
+  double realFlopsPerApp = 34768.0;
+  double effectiveFlopsPerApp = 23984.0;
+  
+  double realDeviceFlops;
+  double allRealDeviceFlops;
+  double realFlops;
+  
+  double effectiveDeviceFlops;
+  double allEffectiveDeviceFlops;
+  double effectiveFlops;
+  
+  // CUDA errors
+  cudaError_t cudaerr;
+  cublasStatus cublasstatus;
+  
+  // size of a spinor
+  size_t dev_spinsize = 6*(VOLUME+RAND)/2 * sizeof(dev_spinor);
+  
+  // formal parameters
+  int staticsource = 0;		// 1: applies matrix every time on the same source
+  				// 0: applies matrix consecutively ...
+  
+  
+  // init_mixedsolve_eo_nd(g_gauge_field);		// only when externally called
+  
+  
+  dev_spinor * A_up;
+  dev_spinor * A_dn;
+  dev_spinor * B_up;
+  dev_spinor * B_dn;
+  
+  dev_spinor * C_up;
+  dev_spinor * C_dn;
+  
+  cudaMalloc((void **) &A_up, dev_spinsize);
+  cudaMalloc((void **) &A_dn, dev_spinsize);
+  cudaMalloc((void **) &B_up, dev_spinsize);
+  cudaMalloc((void **) &B_dn, dev_spinsize);
+  
+  		// debug	// CUDA
+  		#ifdef CUDA_DEBUG
+  		  CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in benchmark_eo_nd(). Memory allocation of spinor fields failed.");
+  		#endif
+  
+  
+  /*
+  #ifdef USETEXTURE
+    bind_texture_gf(dev_gf);
+  #endif
+  */
+  
+  
+  /*		// only when externally called
+  //Initialize some stuff
+  dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
+  
+  h0.re = (float)ka0.re;    h0.im = -(float)ka0.im;
+  h1.re = (float)ka1.re;    h1.im = -(float)ka1.im;
+  h2.re = (float)ka2.re;    h2.im = -(float)ka2.im;
+  h3.re = (float)ka3.re;    h3.im = -(float)ka3.im;
+  
+  mh0.re = -(float)ka0.re;    mh0.im = (float)ka0.im;
+  mh1.re = -(float)ka1.re;    mh1.im = (float)ka1.im;
+  mh2.re = -(float)ka2.re;    mh2.im = (float)ka2.im;
+  mh3.re = -(float)ka3.re;    mh3.im = (float)ka3.im;
+  
+  // try using constant mem for kappas
+  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)); 
+  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)); 
+  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)); 
+  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(dev_complex));
+  
+  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(dev_complex)); 
+  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)); 
+  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)); 
+  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex));
+  */
+  
+  
+  
+  int blocksize;		// auxiliary
+  
+  blocksize = BLOCKSIZE1;
+  int blockdim1, griddim1;					// here:	dev_zero_spinor_field , dev_copy_spinor_field
+  if ( (VOLUME/2) % blocksize == 0 ) {
+    blockdim1 = blocksize;
+    griddim1  = VOLUME/2/blocksize;
+  }
+  else {
+    blockdim1 = blocksize;
+    griddim1  = (int) ((VOLUME/2/blocksize) + 1);
+  }
+  
+  blocksize = BLOCKSIZE2;
+  int blockdim2, griddim2;					// passed:	dev_Hopping_Matrix
+  if ( (VOLUME/2) % blocksize == 0 ) {
+    blockdim2 = blocksize;
+    griddim2  = VOLUME/2/blocksize;
+  }
+  else {
+    blockdim2 = blocksize;
+    griddim2  = (int) ((VOLUME/2/blocksize) + 1);
+  }
+  
+  blocksize = BLOCKSIZE3;
+  int blockdim3, griddim3;					// passed:	dev_mul_one_pm_imubar_gamma5
+  if ( (VOLUME/2) % blocksize == 0 ) {
+    blockdim3 = blocksize;
+    griddim3  = VOLUME/2/blocksize;
+  }
+  else {
+    blockdim3 = blocksize;
+    griddim3  = (int) ((VOLUME/2/blocksize) + 1);
+  }
+  
+  blocksize = BLOCKSIZE4;
+  int blockdim4, griddim4;					// passed:	dev_gamma5
+  if ( (VOLUME/2) % blocksize == 0 ) {
+    blockdim4 = blocksize;
+    griddim4  = VOLUME/2/blocksize;
+  }
+  else {
+    blockdim4 = blocksize;
+    griddim4  = (int) ((VOLUME/2/blocksize) + 1);
+  }
+  
+  blocksize = BLOCKSIZE5;
+  int blockdim5, griddim5;					// passed:	dev_copy_spinor_field
+  if ( (VOLUME/2) % blocksize == 0 ) {
+    blockdim5 = blocksize;
+    griddim5  = VOLUME/2/blocksize;
+  }
+  else {
+    blockdim5 = blocksize;
+    griddim5  = (int) ((VOLUME/2/blocksize) + 1);
+  }
+  
+  
+  		//debug
+  		if (g_proc_id == 0) printf("\nStarting a little BENCHMARK. benchmark_eo_nd_mpi().\n");
+  
+  
+  
+  
+  /*		// only when externally called
+  he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0, h1, h2, h3);
+  
+  		// debug	// kernel
+  		#ifdef CUDA_DEBUG
+  		  CUDA_KERNEL_CHECK_NO_SUCCESS_MSG("Kernel error in he_cg_init(). Couldn't initialize some stuff.");
+  		#endif
+  
+  
+  he_cg_init_nd_additional<<<1,1>>> (g_mubar, g_epsbar);
+  
+  		// debug	// kernel
+  		#ifdef CUDA_DEBUG
+  		  CUDA_KERNEL_CHECK_NO_SUCCESS_MSG("Kernel error in he_cg_init_nd_additional(). Couldn't initialize some stuff.");
+  		#endif
+  */
+  
+  
+  
+  		/*
+  		// debug	// CUBLAS helper function
+  		#ifdef CUDA_DEBUG
+  		  CUBLAS_HELPER_CHECK_NO_SUCCESS_MSG(cublasInit(), "CUBLAS error in benchmark_eo_nd(). Couldn't initialize CUBLAS.");
+  		#else
+  		  cublasInit();
+  		#endif
+  		*/
+  
+  
+  		// debug
+  		if (g_proc_id == 0) printf("Applying the eo-preconditioned matrix %i times.\n", N);
+  
+  
+  to_device_mpi(B_up, Q_up, h2d_spin_up, dev_spinsize, 0, (VOLUME+RAND)/2);
+  to_device_mpi(B_dn, Q_dn, h2d_spin_dn, dev_spinsize, 0, (VOLUME+RAND)/2);
+  
+  
+  // timer
+  startBenchmark = MPI_Wtime();
+  
+  
+  
+  for (i = 0; i < N; i++) {
+  
+    matrix_multiplication32_mpi(A_up, A_dn,				// A = (matrix)*B
+                                B_up, B_dn,
+                                griddim2, blockdim2,
+                                griddim3, blockdim3,
+                                griddim4, blockdim4,
+                                griddim5, blockdim5);
+    
+    if (staticsource = 0) {
+      // swaps A and B
+      C_up = B_up;
+      C_dn = B_dn;
+      B_up = A_up;
+      B_dn = A_dn;
+      A_up = C_up;
+      A_dn = C_dn;
+    }
+    else {
+      // do nothing
+    }
+    
+  }
+  
+  		// debug	// CUDA
+  		#ifdef CUDA_DEBUG
+  		  // CUDA_CHECK("CUDA error in matrix_muliplication32(). Applying the matrix on GPU failed.", "The matrix was applied on GPU.");
+  		  CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in matrix_muliplication32(). Applying the matrix on GPU failed.");
+  		#endif
+  
+  
+  
+  // timer
+  stopBenchmark = MPI_Wtime();
+  
+  
+  singleTimeElapsed = stopBenchmark - startBenchmark;
+  MPI_Allreduce(&singleTimeElapsed, &maxTimeElapsed, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  
+  realDeviceFlops      = N * VOLUME/2 * realFlopsPerApp;
+  MPI_Allreduce(&realDeviceFlops, &allRealDeviceFlops, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  realFlops            = allRealDeviceFlops / maxTimeElapsed / 1.0e9;
+  
+  effectiveDeviceFlops = N * VOLUME/2 * effectiveFlopsPerApp;
+  MPI_Allreduce(&effectiveDeviceFlops, &allEffectiveDeviceFlops, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  effectiveFlops       = allEffectiveDeviceFlops / maxTimeElapsed / 1.0e9;
+  
+  
+  if (g_proc_id == 0) {
+    /*
+    printf("\tTEST:\n");
+    printf("\ttime:        %.2e sec\n", singleTimeElapsed);
+    printf("\tflop's:      %.2e flops\n", realDeviceFlops);
+    printf("\tperformance: %.2e Gflop/s\n\n", realDeviceFlops / singleTimeElapsed / 1.0e9);
+  
+    printf("\tREAL:\n");
+    printf("\ttime:        %.2e sec\n", maxTimeElapsed);
+    printf("\tflop's:      %.2e flops\n", allRealDeviceFlops);
+    printf("\tperformance: %.2e Gflop/s\n\n", realFlops);
+    */
+    printf("\tEFFECTIVE:\n");
+    printf("\ttime:        %.2e sec\n", maxTimeElapsed);
+    printf("\tflop's:      %.2e flops\n", allEffectiveDeviceFlops);
+    printf("\tperformance: %.2e Gflop/s\n\n", effectiveFlops);
+  }
+  
+  
+  cudaFree(A_up);
+  cudaFree(A_dn);
+  cudaFree(B_up);
+  cudaFree(B_dn);
+  
+  // finalize_mixedsolve_eo_nd();		// only when externally called
+  
+  /*
+  #ifdef USETEXTURE
+    unbind_texture_gf();
+  #endif
+  
+  
+  		// debug	// CUBLAS helper function
+  		#ifdef CUDA_DEBUG
+  		  CUBLAS_HELPER_CHECK_NO_SUCCESS_MSG(cublasShutdown(), "CUBLAS error in benchmark_eo_nd(). Couldn't shut down CUBLAS.");
+  		#else
+  		  cublasShutdown();
+  		#endif
+  */
+  
+  
+}//benchmark_eo_nd_mpi()
+
+
+
+
+
+
 ////////////////////////
 // CONJUGATE GRADIENT //
 ////////////////////////
@@ -2217,7 +2621,7 @@ int cg_eo_nd_mpi (dev_su3_2v * gf,
   //////////
   
   		// debug
-    		printf("\nEntering inner loop.\n");
+    		if (g_cart_id == 0) printf("\nEntering inner loop.\n");
   
   		// debug	// CUBLAS core function
 		#ifdef CUDA_DEBUG
@@ -2226,7 +2630,7 @@ int cg_eo_nd_mpi (dev_su3_2v * gf,
 		#endif
   
   		// debug
-  		printf("Initial inner residue: %.6e\n", r0r0);
+  		if (g_cart_id == 0) printf("Initial inner residue: %.6e\n", r0r0);
   
   
   for (j = 0; j < max_iter; j++) {
@@ -2414,20 +2818,24 @@ int cg_eo_nd_mpi (dev_su3_2v * gf,
     // aborting ?? // check wether precision is reached ...
     if ( (check_abs)&&(rr <= eps_abs) || (check_rel)&&(rr <= eps_rel*r0r0) ) {
       
+      if (g_cart_id == 0) {
+      
       		// debug
       		printf("Finished inner loop because of reached precision.\n");
-      
-      if ((check_rel)&&(rr <= eps_rel*r0r0)) {
+        
+        if ((check_rel)&&(rr <= eps_rel*r0r0)) {
       		// debug
       		printf("Reached relative inner solver precision of eps_rel = %.2e\n", eps_rel);
-      }
-      if ((check_abs)&&(rr <= eps_abs)) {
+        }
+        if ((check_abs)&&(rr <= eps_abs)) {
       		// debug
       		printf("Reached absolute inner solver precision of eps_abs = %.2e\n", eps_abs);
-      }
-      
+        }
+        
       		//debug
       		printf("Final inner residue: %.6e\n", rr);
+      	
+      }
       
       /*
       #ifdef USETEXTURE
@@ -2484,8 +2892,8 @@ int cg_eo_nd_mpi (dev_su3_2v * gf,
   
   
   		// debug
-  		printf("Finished inner loop beacuse of maximal number of inner iterations.\n");
-  		printf("Final inner residue: %.6e\n", rr);
+  		if (g_cart_id == 0) printf("Finished inner loop beacuse of maximal number of inner iterations.\n");
+  		if (g_cart_id == 0) printf("Final inner residue: %.6e\n", rr);
   
   /*
   #ifdef USETEXTURE
@@ -2542,7 +2950,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   
   		// debug
   		if (g_proc_id == 0) {
-  		  printf("\n\nmixedsolve_eo_nd():\n");
+  		  printf("\n\nmixedsolve_eo_nd_mpi():\n");
   		  
   		  printf("SOLVER PARAMETERS:\n");
   		  
@@ -2585,7 +2993,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   double flops;
   #ifdef EFFECTIVE_BENCHMARK
     double effectiveflops;			// will used to count the "effective" flop's (from the algorithmic perspective)
-    double hoppingflops = 1600.0;
+    double hoppingflops = 1488.0;
     double matrixflops  = 2  *  (  2 * ( (2*hoppingflops+12+3) + (2*hoppingflops+3) + (12+2) + 12 )  );
     double allflops;				// flops added for all processes
   #endif
@@ -2633,7 +3041,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   
   
   		//debug
-  		printf("init_mixedsolve_eo_nd():\n");
+  		if (g_cart_id == 0) printf("init_mixedsolve_eo_nd_mpi():\n");
   
   
   init_mixedsolve_eo_nd_mpi(g_gauge_field);			// initializes and allocates all quantities for the mixed solver
@@ -2644,7 +3052,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
     
   
   		//debug
-  		printf("mixedsolve_eo_nd():\n");
+  		if (g_cart_id == 0) printf("mixedsolve_eo_nd_mpi():\n");
   
   
   // the following initializations are moved from cg_eo_nd():
@@ -2795,7 +3203,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   
   
   #ifdef OPERATOR_BENCHMARK
-    benchmark_eo_nd(Q_up, Q_dn, 1000);
+    benchmark_eo_nd_mpi(Q_up, Q_dn, OPERATOR_BENCHMARK);
   #endif
   
   
@@ -2821,7 +3229,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
     Ax_up = Ad_up;
     Ax_dn = Ad_dn;
   		// debug
-  		printf("Now using the fields g_chi_up/dn_spinor_field[DUM_SOLVER{ , +1, +2}] in the mixedsolve_eo_nd().\n");
+  		if (g_cart_id == 0) printf("Now using the fields g_chi_up/dn_spinor_field[DUM_SOLVER{ , +1, +2}] in the mixedsolve_eo_nd().\n");
   
   #else
   
@@ -2834,7 +3242,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   		Ax_up = Ad_up;
   		Ax_dn = Ad_dn;
   				// debug
-  				printf("Now allocating new host space for the fields in mixedsolve_eo_nd().\n");
+  				if (g_cart_id == 0) printf("Now allocating new host space for the fields in mixedsolve_eo_nd().\n");
   
   #endif
   
@@ -2867,7 +3275,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   if (!initial_guess) {		// r(0) = b = Q	// for x(0) = 0
     assign(r_up, Q_up, N_sites_int);
     assign(r_dn, Q_dn, N_sites_int);
-    printf("x(0) = 0\n");
+    if (g_cart_id == 0) printf("x(0) = 0\n");
   }
   else {			// r(0) = b - A*x(0) = Q - A*P
     bb = square_norm(P_up, N_sites_int, 1) + square_norm(P_dn, N_sites_int, 1);			// NOTICE: for the parallel case we have to set "1" in the interface of square_norm()
@@ -2876,11 +3284,11 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
     		  flopcount(host_flops, 2*2);
     		  // flopcount(host_flops, 2*2*N_floats);
     		#endif
-    printf("bb = %.10e\n", bb);
+    if (g_cart_id == 0) printf("bb = %.10e\n", bb);
     if (bb == 0) {
       assign(r_up, Q_up, N_sites_int);
       assign(r_dn, Q_dn, N_sites_int);
-      printf("x(0) = 0\n");
+      if (g_cart_id == 0) printf("x(0) = 0\n");
     }
     else {
       Q_Qdagger_ND(Ax_up, Ax_dn, P_up, P_dn);
@@ -2891,7 +3299,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
       		  flopcount(host_flops, 2*2*(55+2+2+1+55) + 2);
       		  // flopcount(host_flops, 2*2*(55+2+2+1+55)*N_floats + 2*N_floats);
       		#endif
-      printf("x(0) != 0\n");
+      if (g_cart_id == 0) printf("x(0) != 0\n");
     }
   }
   
@@ -2912,7 +3320,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   rr_old = rr; // for the first iteration
   
   		// debug
-  		printf("Initial outer residue: %.10e\n", rr_old);
+  		if (g_cart_id == 0) printf("Initial outer residue: %.10e\n", rr_old);
   
   
   // set to zero	// x_up, x_dn  will be added up		// as  x_up/dn = P_up/dn  up to here  P_up/dn  was not changed
@@ -2927,7 +3335,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   ////////////////
   
   		// debug
-    		printf("\nEntering outer loop.");
+    		if (g_cart_id == 0) printf("\nEntering outer loop.");
   
   
   do {		// for (i = 0; i < max_iter; i++) {
@@ -2935,7 +3343,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
     i++;
   
     		// debug
-    		printf("\nouter iteration i = %i\n", i);
+    		if (g_cart_id == 0) printf("\nouter iteration i = %i\n", i);
     
     
     
@@ -2963,7 +3371,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
       startinner = clock();
       
       		// debug
-      		printf("cg_eo_nd():\n");
+      		if (g_cart_id == 0) printf("cg_eo_nd():\n");
       
       // solves A*p(k+1) = r(k)
       //        A*p(0)   = r(0) = b
@@ -2982,7 +3390,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
       totalinnerclocks = totalinnerclocks + innerclocks;
       
     		// debug
-    		printf("Inner solver done in: %.4e sec\n", double(innerclocks) / double(CLOCKS_PER_SEC));
+    		if (g_cart_id == 0) printf("Inner solver done in: %.4e sec\n", double(innerclocks) / double(CLOCKS_PER_SEC));
     
     
       // host/device interaction
@@ -3000,7 +3408,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
     
     
     				// debug
-    				printf("cg_her_nd():\n");
+    				if (g_cart_id == 0) printf("cg_her_nd():\n");
     		
     		innercount = cg_her_nd(d_up, d_dn, r_up, r_dn,
 				       1000, eps_sq/2, 0,
@@ -3009,7 +3417,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
     		outercount = outercount + innercount;
     		
     				// debug
-    				printf("cg_her_nd() on host was used for debugging purposes.\n");
+    				if (g_cart_id == 0) printf("cg_her_nd() on host was used for debugging purposes.\n");
     
     
     #endif	// CG_DEBUG
@@ -3018,7 +3426,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
     
     
     		// debug
-    		printf("mixedsolve_eo_nd():\n");
+    		if (g_cart_id == 0) printf("mixedsolve_eo_nd():\n");
     
     
     // x(k+1) = x(k) + d(k+1)
@@ -3037,7 +3445,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
       // A*x(k+1)
       Q_Qdagger_ND(Ax_up, Ax_dn, x_up, x_dn);
       		// debug
-      		printf("The matrix was applied on CPU in double precision. r = b - Ax\n");
+      		if (g_cart_id == 0) printf("The matrix was applied on CPU in double precision. r = b - Ax\n");
       diff(r_up, Q_up, Ax_up, N_sites_int);
       diff(r_dn, Q_dn, Ax_dn, N_sites_int);
     }
@@ -3045,7 +3453,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
       // A*d(k+1)
       Q_Qdagger_ND(Ad_up, Ad_dn, d_up, d_dn);
     		// debug
-    		printf("The matrix was applied on CPU in double precision. r = r - Ad\n");
+    		if (g_cart_id == 0) printf("The matrix was applied on CPU in double precision. r = r - Ad\n");
       // r(k+1) = r(k) - A*d(k+1)
       diff(r_up, r_up, Ad_up, N_sites_int);
       diff(r_dn, r_dn, Ad_dn, N_sites_int);
@@ -3064,7 +3472,7 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
     rr    = rr_up + rr_dn;
     
     		// debug
-    		printf("Outer residue in the outer iteration i = %i after %i total inner iterations : %.10e\n", i, outercount, rr);
+    		if (g_cart_id == 0) printf("Outer residue in the outer iteration i = %i after %i total inner iterations : %.10e\n", i, outercount, rr);
     		
     		// debug	// is NaN ?
     		if isnan(rr) {
@@ -3100,13 +3508,15 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   		*/
       
       		// debug
-      		printf("\nEO inversion done in mixed precision.\n");
-      		if (rel_prec == 0) printf("Finished outer loop because of reached absolute outer solver precision.\n");
-      		if (rel_prec == 1) printf("Finished outer loop because of reached relative outer solver precision.\n");
-      		printf("Total number of inner iterations: %i\n", outercount);
-      		printf("Total number of outer iterations: %i\n", i+1);
-      		printf("Squared residue: %.10e\n", rr); 
-      		printf("Outer solver done in: %.4e sec\n", double(stopouter-startouter) / double(CLOCKS_PER_SEC));
+      		if (g_cart_id == 0) {
+      		  printf("\nEO inversion done in mixed precision.\n");
+      		  if (rel_prec == 0) printf("Finished outer loop because of reached absolute outer solver precision.\n");
+      		  if (rel_prec == 1) printf("Finished outer loop because of reached relative outer solver precision.\n");
+      		  printf("Total number of inner iterations: %i\n", outercount);
+      		  printf("Total number of outer iterations: %i\n", i+1);
+      		  printf("Squared residue: %.10e\n", rr); 
+      		  printf("Outer solver done in: %.4e sec\n", double(stopouter-startouter) / double(CLOCKS_PER_SEC));
+      		}
       		// benchmark
       		#ifdef EFFECTIVE_BENCHMARK
       		  // will now count the number of effective flops
@@ -3169,12 +3579,12 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
       */
       
       		// debug
-      		printf("finalize_mixedsolve_eo_nd():\n");
+      		if (g_cart_id == 0) printf("finalize_mixedsolve_eo_nd():\n");
       
       finalize_mixedsolve_eo_nd_mpi();
       
       		// debug
-      		printf("\n");
+      		if (g_cart_id == 0) printf("\n");
       
       return(outercount);
     }
@@ -3205,12 +3615,14 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
   		*/
   
   		// debug
-  		printf("\nEO inversion done in mixed precision.\n");
-  		printf("Finished outer loop, because of maximal number of outer iterations.\n");
-      		printf("Total number of inner iterations: %i\n", outercount);
-      		printf("Total number of outer iterations: %i\n", i+1);
-      		printf("Squared residue: %.10e\n", rr); 
-      		printf("Outer solver done in: %.4e sec\n", double(stopouter-startouter)/CLOCKS_PER_SEC);
+  		if (g_cart_id == 0) {
+  		  printf("\nEO inversion done in mixed precision.\n");
+  		  printf("Finished outer loop, because of maximal number of outer iterations.\n");
+      		  printf("Total number of inner iterations: %i\n", outercount);
+      		  printf("Total number of outer iterations: %i\n", i+1);
+      		  printf("Squared residue: %.10e\n", rr); 
+      		  printf("Outer solver done in: %.4e sec\n", double(stopouter-startouter)/CLOCKS_PER_SEC);
+      		}
       		// benchmark
       		#ifdef EFFECTIVE_BENCHMARK
       		  // will now count the number of effective flops
@@ -3273,12 +3685,12 @@ extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
       */
   
   		// debug
-  		printf("finalize_mixedsolve_eo_nd():\n");  
+  		if (g_cart_id == 0) printf("finalize_mixedsolve_eo_nd():\n");  
   
   finalize_mixedsolve_eo_nd_mpi();
   
   		// debug
-  		printf("\n");
+  		if (g_cart_id == 0) printf("\n");
   
   return(outercount);
   

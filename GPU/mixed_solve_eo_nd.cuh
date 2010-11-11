@@ -980,7 +980,7 @@ void flopcount(unsigned long long int& total, int add) {
 
 
 
-extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N) {
+extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
 
   
   
@@ -1005,16 +1005,33 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   
+  // timing
+  double timeElapsed;
+  double startBenchmark;
+  double stopBenchmark;
   
-  double timeelapsed;
-  clock_t start_benchmark, stop_benchmark;
+  // counter
   int i;
-  double flops;
-  double device_flops;
-  int flops_per_app = 34768;
+  
+  // flop counting
+  double realFlopsPerApp = 34768.0;
+  double effectiveFlopsPerApp = 23984.0;
+  
+  double realDeviceFlops;
+  double realFlops;
+  double effectiveDeviceFlops;
+  double effectiveFlops;
+  
+  // CUDA errors
   cudaError_t cudaerr;
   cublasStatus cublasstatus;
+  
+  // size of a spinor
   size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor);
+  
+  // formal parameters
+  int staticsource = 0;		// 1: applies matrix every time on the same source
+  				// 0: applies matrix consecutively ...
   
   
   // init_mixedsolve_eo_nd(g_gauge_field);		// only when externally called
@@ -1024,6 +1041,7 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
   dev_spinor * A_dn;
   dev_spinor * B_up;
   dev_spinor * B_dn;
+  
   dev_spinor * C_up;
   dev_spinor * C_dn;
   
@@ -1075,7 +1093,7 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
   
   int blocksize;		// auxiliary
   
-  blocksize = 128;
+  blocksize = BLOCKSIZE1;
   int blockdim1, griddim1;					// here:	dev_zero_spinor_field , dev_copy_spinor_field
   if ( (VOLUME/2) % blocksize == 0 ) {
     blockdim1 = blocksize;
@@ -1086,7 +1104,7 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
     griddim1  = (int) ((VOLUME/2/blocksize) + 1);
   }
   
-  blocksize = 128;
+  blocksize = BLOCKSIZE2;
   int blockdim2, griddim2;					// passed:	dev_Hopping_Matrix
   if ( (VOLUME/2) % blocksize == 0 ) {
     blockdim2 = blocksize;
@@ -1097,7 +1115,7 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
     griddim2  = (int) ((VOLUME/2/blocksize) + 1);
   }
   
-  blocksize = 128;
+  blocksize = BLOCKSIZE3;
   int blockdim3, griddim3;					// passed:	dev_mul_one_pm_imubar_gamma5
   if ( (VOLUME/2) % blocksize == 0 ) {
     blockdim3 = blocksize;
@@ -1108,7 +1126,7 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
     griddim3  = (int) ((VOLUME/2/blocksize) + 1);
   }
   
-  blocksize = 128;
+  blocksize = BLOCKSIZE4;
   int blockdim4, griddim4;					// passed:	dev_gamma5
   if ( (VOLUME/2) % blocksize == 0 ) {
     blockdim4 = blocksize;
@@ -1119,7 +1137,7 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
     griddim4  = (int) ((VOLUME/2/blocksize) + 1);
   }
   
-  blocksize = 128;
+  blocksize = BLOCKSIZE5;
   int blockdim5, griddim5;					// passed:	dev_copy_spinor_field
   if ( (VOLUME/2) % blocksize == 0 ) {
     blockdim5 = blocksize;
@@ -1132,7 +1150,7 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
   
   
   		//debug
-  		printf("Starting a little BENCHMARK. benchmark_eo_nd().\n");
+  		printf("\nStarting a little BENCHMARK. benchmark_eo_nd().\n");
   
   
   
@@ -1175,25 +1193,31 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
   
   
   // timer
-  start_benchmark = clock();		// assert((start_benchmark = clock())!=-1);
+  startBenchmark = double(clock()) / double(CLOCKS_PER_SEC);
   
   
   
   for (i = 0; i < N; i++) {
   
-    matrix_multiplication32(A_up, A_dn,
+    matrix_multiplication32(A_up, A_dn,				// A = (matrix)*B
                             B_up, B_dn,
                             griddim2, blockdim2,
                             griddim3, blockdim3,
                             griddim4, blockdim4,
                             griddim5, blockdim5);
-  
-    C_up = B_up;
-    C_dn = B_dn;
-    B_up = A_up;
-    B_dn = A_dn;
-    A_up = C_up;
-    A_dn = C_dn;
+    
+    if (staticsource = 0) {
+      // swaps A and B
+      C_up = B_up;
+      C_dn = B_dn;
+      B_up = A_up;
+      B_dn = A_dn;
+      A_up = C_up;
+      A_dn = C_dn;
+    }
+    else {
+      // do nothing
+    }
     
   }
   
@@ -1206,17 +1230,27 @@ extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N
   
   
   // timer
-  stop_benchmark = clock();		// assert((stop_benchmark = clock())!=-1);
+  stopBenchmark = double(clock()) / double(CLOCKS_PER_SEC);
   
   
-  timeelapsed = double(stop_benchmark - start_benchmark) / double(CLOCKS_PER_SEC);
-  device_flops = N * VOLUME/2 * flops_per_app;
-  flops = N * VOLUME/2 / timeelapsed / 1.0e9 * flops_per_app;
+  timeElapsed = stopBenchmark - startBenchmark;
+  
+  realDeviceFlops      = N * VOLUME/2 * realFlopsPerApp;
+  realFlops            = N * VOLUME/2 * realFlopsPerApp / timeElapsed / 1.0e9;
+  
+  effectiveDeviceFlops = N * VOLUME/2 * effectiveFlopsPerApp;
+  effectiveFlops       = N * VOLUME/2 * effectiveFlopsPerApp / timeElapsed / 1.0e9;
   
   
-  printf("\ttime:        %.2e sec\n", timeelapsed);
-  printf("\tflop's:      %.2e flops\n", device_flops);
-  printf("\tperformance: %.2e Gflop/s\n", flops);
+  printf("REAL:\n");
+  printf("\ttime:        %.2e sec\n", timeElapsed);
+  printf("\tflop's:      %.2e flops\n", realDeviceFlops);
+  printf("\tperformance: %.2e Gflop/s\n\n", realFlops);
+  
+  printf("EFFECTIVE:\n");
+  printf("\ttime:        %.2e sec\n", timeElapsed);
+  printf("\tflop's:      %.2e flops\n", effectiveDeviceFlops);
+  printf("\tperformance: %.2e Gflop/s\n\n", effectiveFlops);
   
   
   cudaFree(A_up);
@@ -1871,7 +1905,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   double flops;
   #ifdef EFFECTIVE_BENCHMARK
     double effectiveflops;			// will used to count the "effective" flop's (from the algorithmic perspective)
-    double hoppingflops = 1600.0;
+    double hoppingflops = 1488.0;
     double matrixflops  = 2  *  (  2 * ( (2*hoppingflops+12+3) + (2*hoppingflops+3) + (12+2) + 12 )  );
   #endif
   
@@ -2041,7 +2075,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   
   
   #ifdef OPERATOR_BENCHMARK
-    benchmark_eo_nd(Q_up, Q_dn, 1000);
+    benchmark_eo_nd(Q_up, Q_dn, OPERATOR_BENCHMARK);
   #endif
   
   

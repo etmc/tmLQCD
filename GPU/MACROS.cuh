@@ -18,7 +18,7 @@
 
 // benchmarks
 
-//#define OPERATOR_BENCHMARK
+#define OPERATOR_BENCHMARK 50
 //#define CPU_BENCHMARK
 //#define GPU_BENCHMARK
 #define EFFECTIVE_BENCHMARK	// counts the number of effective flops
@@ -35,6 +35,8 @@
 
 
 // CUDA parameters
+
+//#define DEVICE_EQUAL_RANK	// for MPI: cudaSetDevice(rank)
 
 #define BLOCKSIZE1 128
 #define BLOCKSIZE2 128
