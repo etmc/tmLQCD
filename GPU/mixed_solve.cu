@@ -106,6 +106,12 @@ dev_spinor * h2d_spin;
   // some additional fields for half prec.
   dev_spinor_half* dev_half_aux;
   float* dev_half_norm;
+  // a half precsion gauge field
+  #ifdef GF_8
+   dev_su3_8 * dev_gf_half;
+  #else
+   dev_su3_2v * dev_gf_half;
+  #endif
 #endif 
 
 //additional spinors for even-odd
@@ -1535,8 +1541,41 @@ cudaError_t cudaerr;
   h2d_gf = (dev_su3_2v *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
   su3to2vf4(gf,h2d_gf);
   #endif
+  //bring to device
   cudaMemcpy(dev_gf, h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
 
+  #ifdef HALF
+    #ifdef GF_8
+      /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
+      printf("Using half precision GF 8 reconstruction\n");
+      dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8_half); 
+    #else
+      /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
+      printf("Using half precision GF 12 reconstruction\n");
+      dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v_half); 
+    #endif  
+    
+    if((cudaerr=cudaMalloc((void **) &dev_gf_half, dev_gfsize)) != cudaSuccess){
+    printf("Error in init_mixedsolve(): Memory allocation of half precsion gauge field failed. Aborting...\n");
+    exit(200);
+    }   // Allocate array on device
+    else{
+      printf("Allocated half precision gauge field on device\n");
+    }      
+    
+    int gridsize;
+    // determine gridsize for conversion to half
+    if( VOLUME >= BLOCK2){
+       gridsize = (int) (VOLUME/BLOCK2) +1;
+    }
+    else{
+      gridsize=1;
+    }
+   
+   printf("Converting gauge to half precision... ");
+     float2half_gaugefield <<< gridsize, BLOCK2  >>>(dev_gf, dev_gf_half);
+   printf("Done\n");
+  #endif
 
 
 //grid 
@@ -1603,6 +1642,22 @@ cudaError_t cudaerr;
   }
   else{
     printf("Allocated spinor fields on device\n");
+  }
+  
+  #ifdef HALF
+    //allocate half spinor
+    dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor_half); /* short4 */
+    cudaMalloc((void **) &dev_half_aux, dev_spinsize); 
+    //allocate its norm
+    dev_spinsize = VOLUME/2 * sizeof(float); /* float */
+    cudaMalloc((void **) &dev_half_norm, dev_spinsize); 
+  #endif
+  if((cudaerr=cudaGetLastError())!=cudaSuccess){
+    printf("Error in init_mixedsolve(): Memory allocation of half precision spinor fields failed. Aborting...\n");
+    exit(200);
+  }
+  else{
+    printf("Allocated half precision spinor fields on device\n");
   }
   
   
@@ -1711,7 +1766,11 @@ void finalize_mixedsolve(){
     cudaFree(dev_nn_oe);
   }
   
-  
+  #ifdef HALF
+    cudaFree(dev_gf_half);
+    cudaFree(dev_half_aux);
+    cudaFree(dev_half_norm);
+  #endif
   
   free(h2d_spin);
   free(h2d_gf);

@@ -30,7 +30,10 @@ __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float
 
 
 
-
+// stores the float4 gauge field gf into the half gauge field gfh
+// for GF_8 we have to be careful, as we have two angles in -Pi .. Pi
+// so we have to divide them by (2 Pi) This is taken care of in the gauge
+// reconstruction routines
 __global__ float2half_gaugefield(dev_su3_2v* gf, dev_su3_2v_half* gfh){
 
   int pos=threadIdx.x + blockDim.x*blockIdx.x;
