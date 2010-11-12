@@ -34,6 +34,14 @@
 #define REAL float
 
 
+
+// optimization of the communication
+#include "ASYNC.cuh"
+
+
+
+
+
 // PRELIMINARY:
 // compile the MPI implementation of the EO, ND mixed solver:
 //	#include this file at the end of mixed_solve_eo_nd.cuh or after #including in mixed_solve.cu
@@ -963,14 +971,11 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
   #endif
   
   
-  
-  
   cudaMemcpy(dev_nn, nn, nnsize, cudaMemcpyHostToDevice);	// copies the previous initialized index-arrays from host to device memory
   cudaMemcpy(dev_nn_eo, nn_eo, nnsize/2, cudaMemcpyHostToDevice);
   cudaMemcpy(dev_nn_oe, nn_oe, nnsize/2, cudaMemcpyHostToDevice);
   cudaMemcpy(dev_eoidx_even, eoidx_even, idxsize, cudaMemcpyHostToDevice);
   cudaMemcpy(dev_eoidx_odd, eoidx_odd, idxsize, cudaMemcpyHostToDevice);
-  
   
   
   free(eoidx_odd);						// deallocates the host memory for the field
@@ -1093,7 +1098,6 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
   
   cudaMalloc((void **) &dev_grid, 5*sizeof(int));				// dev_grid
   cudaMemcpy(dev_grid, &(grid[0]), 5*sizeof(int), cudaMemcpyHostToDevice);
-  
   
   		// debug	// CUDA
   		#ifdef CUDA_DEBUG
@@ -2262,12 +2266,21 @@ extern "C" void benchmark_eo_nd_mpi (spinor * Q_up, spinor * Q_dn, int N) {
   
   for (i = 0; i < N; i++) {
   
-    matrix_multiplication32_mpi(A_up, A_dn,				// A = (matrix)*B
-                                B_up, B_dn,
-                                griddim2, blockdim2,
-                                griddim3, blockdim3,
-                                griddim4, blockdim4,
-                                griddim5, blockdim5);
+    #ifndef ASYNC
+      matrix_multiplication32_mpi(A_up, A_dn,				// A = (matrix)*B
+                                  B_up, B_dn,
+                                  griddim2, blockdim2,
+                                  griddim3, blockdim3,
+                                  griddim4, blockdim4,
+                                  griddim5, blockdim5);
+    #else
+      matrix_multiplication32_mpi_ASYNC(A_up, A_dn,				// A = (matrix)*B
+                                        B_up, B_dn,
+                                        griddim2, blockdim2,
+                                        griddim3, blockdim3,
+                                        griddim4, blockdim4,
+                                        griddim5, blockdim5);
+    #endif
     
     if (staticsource = 0) {
       // swaps A and B
@@ -2639,12 +2652,21 @@ int cg_eo_nd_mpi (dev_su3_2v * gf,
     #ifndef MATRIX_DEBUG
     
       // A*d(k)
-      matrix_multiplication32_mpi(Ad_up, Ad_dn,										// normally:  matrix_multiplication32_mpi()
-                                   d_up,  d_dn,										// debugging: matrix_mpi_debug1/2/3/4()
-                                  griddim2, blockdim2,
-                                  griddim3, blockdim3,
-                                  griddim4, blockdim4,
-                                  griddim5, blockdim5);
+      #ifndef ASYNC
+        matrix_multiplication32_mpi(Ad_up, Ad_dn,										// normally:  matrix_multiplication32_mpi()
+                                     d_up,  d_dn,										// debugging: matrix_mpi_debug1/2/3/4()
+                                    griddim2, blockdim2,
+                                    griddim3, blockdim3,
+                                    griddim4, blockdim4,
+                                    griddim5, blockdim5);
+      #else															// tries to overlap computation and communication
+        matrix_multiplication32_mpi_ASYNC(Ad_up, Ad_dn,
+                                           d_up,  d_dn,
+                                          griddim2, blockdim2,
+                                          griddim3, blockdim3,
+                                          griddim4, blockdim4,
+                                          griddim5, blockdim5);
+      #endif
     
   		// debug	// CUDA		// also other stuff ?!
   		#ifdef CUDA_DEBUG
@@ -2736,12 +2758,21 @@ int cg_eo_nd_mpi (dev_su3_2v * gf,
       
       #ifndef MATRIX_DEBUG
         // A*x(k+1)
-        matrix_multiplication32_mpi(Ax_up, Ax_dn,									// normally:  matrix_multiplication32_mpi()
-                                     x_up,  x_dn,									// debugging: matrix_mpi_debug1/2/3/4()
-                                    griddim2, blockdim2,
-                                    griddim3, blockdim3,
-                                    griddim4, blockdim4,
-                                    griddim5, blockdim5);
+        #ifndef ASYNC
+          matrix_multiplication32_mpi(Ax_up, Ax_dn,									// normally:  matrix_multiplication32_mpi()
+                                       x_up,  x_dn,									// debugging: matrix_mpi_debug1/2/3/4()
+                                      griddim2, blockdim2,
+                                      griddim3, blockdim3,
+                                      griddim4, blockdim4,
+                                      griddim5, blockdim5);
+        #else
+          matrix_multiplication32_mpi_ASYNC(Ax_up, Ax_dn,									// normally:  matrix_multiplication32_mpi()
+                                             x_up,  x_dn,									// debugging: matrix_mpi_debug1/2/3/4()
+                                            griddim2, blockdim2,
+                                            griddim3, blockdim3,
+                                            griddim4, blockdim4,
+                                            griddim5, blockdim5);
+        #endif
       #else
       		// debug	// apply the host matrix on trial
     		

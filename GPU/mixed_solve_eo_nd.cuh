@@ -1206,7 +1206,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
                             griddim4, blockdim4,
                             griddim5, blockdim5);
     
-    if (staticsource = 0) {
+    if (staticsource == 0) {
       // swaps A and B
       C_up = B_up;
       C_dn = B_dn;

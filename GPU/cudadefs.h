@@ -8,7 +8,7 @@
 #define GF_8
 #define TEMPORALGAUGE
 #define USETEXTURE
-#define HALF
+//#define HALF
 
 
 #define REAL float
