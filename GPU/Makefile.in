@@ -58,7 +58,7 @@ all: Makefile dummy
 include ${top_srcdir}/Makefile.global
 
 
-%.o: ${srcdir}/%.cu Makefile
+%.o: ${srcdir}/%.cu Makefile ${srcdir}/*.h ${srcdir}/*.cuh
 	@$(COMPILE) ${INCLUDES} $< > $@
 
 #%.o: ${srcdir}/%.c Makefile
