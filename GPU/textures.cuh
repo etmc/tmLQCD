@@ -36,12 +36,6 @@
  const textureReference* nn_texRefPtr = NULL;
  cudaChannelFormatDesc nn_channelDesc;
 
-#ifndef HALF
- /* texture for gauge field */
- texture<float4,1, cudaReadModeElementType> gf_tex;
- const textureReference* gf_texRefPtr = NULL;
- cudaChannelFormatDesc gf_channelDesc;
- 
  /* texture for spinor field */
  texture<float4,1, cudaReadModeElementType> spin_tex;
  const textureReference* spin_texRefPtr = NULL;
@@ -53,37 +47,12 @@
  cudaChannelFormatDesc spin_channelDesc2;
 
 
-#else 
-
+#ifndef HALF
  /* texture for gauge field */
- texture<short4,1, cudaReadModeNormalizedFloat> gf_tex;
+ texture<float4,1, cudaReadModeElementType> gf_tex;
  const textureReference* gf_texRefPtr = NULL;
  cudaChannelFormatDesc gf_channelDesc;
  
- /* texture for spinor field */
- texture<short4,1, cudaReadModeNormalizedFloat> spin_tex;
- const textureReference* spin_texRefPtr = NULL;
- cudaChannelFormatDesc spin_channelDesc;
- 
- /* texture for spinor field */
- texture<short4,1, cudaReadModeNormalizedFloat> spin_tex2;
- const textureReference* spin_texRefPtr2 = NULL;
- cudaChannelFormatDesc spin_channelDesc2; 
-
-
-/* texture for norm of spinor field 1*/
- texture<float,1, cudaReadModeElementType> spinnorm_tex;
- const textureReference* spinnorm_texRefPtr = NULL;
- cudaChannelFormatDesc spinnorm_channelDesc;
-
-#endif // NOT HALF
-
-
-
-
-
-
-
 
 extern "C" int bind_texture_spin(dev_spinor* s, int i){
   
@@ -145,6 +114,24 @@ extern "C" int unbind_texture_spin(int i){
   
 return(1);
 }
+
+
+
+
+
+#else 
+
+ /* texture for gauge field */
+ texture<short4,1, cudaReadModeNormalizedFloat> gf_tex;
+ const textureReference* gf_texRefPtr = NULL;
+ cudaChannelFormatDesc gf_channelDesc;
+ 
+
+  // the textures for the half spinors are defined in half.cuh
+#endif // NOT HALF
+
+
+
 
 
 
@@ -217,6 +204,11 @@ extern "C" int unbind_texture_nn(){
  //printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
  return(0);
 }
+
+
+
+
+
 
 
 

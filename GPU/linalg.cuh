@@ -573,18 +573,21 @@ __device__ void dev_su3MtV_spintex(dev_su3 M, int pos, dev_spinor * out){
 
 dev_spinor s1, s2;
 
-s1 = tex1Dfetch(spin_tex,6*pos);
-#ifdef HALF
- float norm = tex1Dfetch(spinnorm_tex,pos);
+#ifndef HALF
+ s1 = tex1Dfetch(spin_tex,6*pos);
+#else
+ s1 = tex1Dfetch(spinhalf_tex,6*pos);
+ float norm = tex1Dfetch(spinnormhalf_tex,pos);
  s1.x = s1.x*norm; 
  s1.y = s1.y*norm; 
  s1.z = s1.z*norm;
  s1.w = s1.w*norm;
 #endif
 
-s2 = tex1Dfetch(spin_tex,6*pos+1);
-#ifdef HALF
- norm = tex1Dfetch(spinnorm_tex,pos);
+#ifndef HALF
+ s2 = tex1Dfetch(spin_tex,6*pos+1);
+#else
+ s2 = tex1Dfetch(spinhalf_tex,6*pos+1);
  s2.x = s2.x*norm; 
  s2.y = s2.y*norm; 
  s2.z = s2.z*norm; 
@@ -604,10 +607,10 @@ s2 = tex1Dfetch(spin_tex,6*pos+1);
 (*(out+1)).y =  ( M[2][0].re*s1.y + M[2][0].im*s1.x ) + ( M[2][1].re*s1.w + M[2][1].im*s1.z ) + ( M[2][2].re*s2.y + M[2][2].im*s2.x );
 
 
-
-s1 = tex1Dfetch(spin_tex,6*pos+2);
-#ifdef HALF
- norm = tex1Dfetch(spinnorm_tex,pos);
+#ifndef HALF
+ s1 = tex1Dfetch(spin_tex,6*pos+2);
+#else
+ s1 = tex1Dfetch(spinhalf_tex,6*pos+2);
  s1.x = s1.x*norm; 
  s1.y = s1.y*norm; 
  s1.z = s1.z*norm;
@@ -626,18 +629,20 @@ s1 = tex1Dfetch(spin_tex,6*pos+2);
 (*(out+2)).w =  ( M[2][0].re*s2.w + M[2][0].im*s2.z ) + ( M[2][1].re*s1.y + M[2][1].im*s1.x ) + ( M[2][2].re*s1.w + M[2][2].im*s1.z );
 
 
-
-s1 = tex1Dfetch(spin_tex,6*pos+3);
-#ifdef HALF
- norm = tex1Dfetch(spinnorm_tex,pos);
+#ifndef HALF
+ s1 = tex1Dfetch(spin_tex,6*pos+3);
+#else
+ s1 = tex1Dfetch(spinhalf_tex,6*pos+3);
  s1.x = s1.x*norm; 
  s1.y = s1.y*norm; 
  s1.z = s1.z*norm;
  s1.w = s1.w*norm;
 #endif
-s2 = tex1Dfetch(spin_tex,6*pos+4);
-#ifdef HALF
- norm = tex1Dfetch(spinnorm_tex,pos);
+
+#ifndef HALF
+ s2 = tex1Dfetch(spin_tex,6*pos+4);
+#else
+ s2 = tex1Dfetch(spinhalf_tex,6*pos+4);
  s2.x = s2.x*norm; 
  s2.y = s2.y*norm; 
  s2.z = s2.z*norm; 
@@ -655,10 +660,10 @@ s2 = tex1Dfetch(spin_tex,6*pos+4);
 (*(out+4)).y =  ( M[2][0].re*s1.y + M[2][0].im*s1.x ) + ( M[2][1].re*s1.w + M[2][1].im*s1.z ) + ( M[2][2].re*s2.y + M[2][2].im*s2.x );
 
 
-
-s1 = tex1Dfetch(spin_tex,6*pos+5);
-#ifdef HALF
- norm = tex1Dfetch(spinnorm_tex,pos);
+#ifndef HALF
+ s1 = tex1Dfetch(spin_tex,6*pos+5);
+#else
+ s1 = tex1Dfetch(spinhalf_tex,6*pos+5);
  s1.x = s1.x*norm; 
  s1.y = s1.y*norm; 
  s1.z = s1.z*norm;

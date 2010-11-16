@@ -71,6 +71,7 @@ extern "C" {
 #include "../observables.h"
 #include "../measure_rectangles.h"
 #include "../polyakov_loop.h"
+#include "../su3spinor.h"
 }
 
 
@@ -186,6 +187,10 @@ __device__ int dev_nproc;
 // include files with other GPU code as all GPU code has to reside in one file 
 // the texture references and functions
 #include "textures.cuh"
+// if we want to use half precision
+#ifdef HALF 
+ #include "half.cuh"
+#endif
 // linear algebra functions and gamma-multiplications
 #include "linalg.cuh"
 // reconstruction of the gauge field
@@ -199,10 +204,6 @@ __device__ int dev_nproc;
 // the plaquette and rectangle routines
 #include "observables.cuh"
 
-// if we want to use half precision
-#ifdef HALF 
- #include "half.cuh"
-#endif
 
 
 
@@ -270,7 +271,7 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
    #ifndef HALF
     bind_texture_spin(spinin,1);
    #else
-    prepare_halfspinor_texture(spinin, dev_half_aux, dev_half_norm);
+    bind_halfspinor_texture(spinin, dev_half_aux, dev_half_norm);
    #endif
   #endif
   //bind_texture_nn(dev_nn_eo);
@@ -282,7 +283,7 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
    #ifndef HALF
     unbind_texture_spin(1);
    #else
-    release_halfspinor_texture();
+    unbind_halfspinor_texture();
    #endif
   #endif
   dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,dev_spin_eo2, -1.);
@@ -291,7 +292,7 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
    #ifndef HALF
     bind_texture_spin(dev_spin_eo2,1);
    #else
-    prepare_halfspinor_texture(dev_spin_eo2, dev_half_aux, dev_half_norm);
+    bind_halfspinor_texture(dev_spin_eo2, dev_half_aux, dev_half_norm);
    #endif
   #endif
   //bind_texture_nn(dev_nn_oe);
@@ -303,7 +304,7 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
    #ifndef HALF
     unbind_texture_spin(1);
    #else
-    release_halfspinor_texture();
+    unbind_halfspinor_texture();
    #endif
   #endif
   dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(spinin, dev_spin_eo1,  dev_spin_eo2, -1.);
@@ -313,7 +314,7 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
    #ifndef HALF
     bind_texture_spin(dev_spin_eo2,1);
    #else
-    prepare_halfspinor_texture(dev_spin_eo2, dev_half_aux, dev_half_norm);
+    bind_halfspinor_texture(dev_spin_eo2, dev_half_aux, dev_half_norm);
    #endif
   #endif
   //bind_texture_nn(dev_nn_eo);
@@ -325,7 +326,7 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
    #ifndef HALF
     unbind_texture_spin(1);
    #else
-    release_halfspinor_texture();
+    unbind_halfspinor_texture();
    #endif
   #endif
   dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,spinout, +1.);
@@ -334,7 +335,7 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
    #ifndef HALF
     bind_texture_spin(spinout,1);
    #else
-    prepare_halfspinor_texture(spinout, dev_half_aux, dev_half_norm);
+    bind_halfspinor_texture(spinout, dev_half_aux, dev_half_norm);
    #endif
   #endif
   //bind_texture_nn(dev_nn_oe);
@@ -346,7 +347,7 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
    #ifndef HALF
     unbind_texture_spin(1);
    #else
-    release_halfspinor_texture();
+    unbind_halfspinor_texture();
    #endif
   #endif
   dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo2, dev_spin_eo1,  spinout , +1.); 
@@ -598,7 +599,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  REAL * dotprod, * dotprod2, * rk, * alpha, *beta;
  
  
- 
+ cudaError_t cudaerr;
  int i, gridsize;
  int maxit = max_innersolver_it;
  REAL eps = (REAL) innersolver_precision;
@@ -733,7 +734,11 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  //x(k+1);
  cublasSaxpy (24*VOLUME, host_alpha, (const float *) spin2,  1, (float *) spin1, 1);
 
- printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+  if((cudaerr=cudaGetLastError()) != cudaSuccess){
+    printf("%s\n", cudaGetErrorString(cudaerr));
+    exit(200);
+  }
+  
 
   //Abbruch?
   host_dotprod = cublasSdot (24*VOLUME, (const float *) spin0, 1,(const float *) spin0, 1);
@@ -846,6 +851,8 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
 
 
 
+
+
 // this is the eo version of the device cg inner solver 
 // we invert the hermitean Q_{-} Q_{+}
 extern "C" int dev_cg_eo(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
@@ -899,10 +906,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  
  size_t size2 = sizeof(float4)*6*VOLUME/2;
  
- #ifdef USETEXTURE
-  //Bind texture gf
-  bind_texture_gf(gf);
- #endif
+ 
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
   dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
@@ -930,6 +934,20 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
   he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
  
+  #ifdef HALF
+   printf("Converting gauge to half precision... ");
+     float2half_gaugefield <<< gridsize, BLOCK2  >>>(dev_gf, dev_gf_half, VOLUME);
+   printf("Done\n"); 
+   
+   testhalf_gf(gf);
+  
+  #endif
+ 
+ 
+  #ifdef USETEXTURE
+    //Bind texture gf
+    bind_texture_gf(gf);
+  #endif
  
  
  // Init x,p,r for k=0
@@ -948,9 +966,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  printf("have initialized cublas\n");
  
  
- // go over to kappa (if wanted)
- REAL scaleparam = sqrt(1.0/(2.0 * (REAL)hostkappa));
- printf("1/2kappa = %.8f\n",scaleparam);
+
  //dev_skalarmult_spinor_field<<<griddim2, blockdim2 >>>(spinin,scaleparam, spin1);
  //dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spin1, spinin);
  
@@ -970,7 +986,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
  
-  printf("Entering cg-loop\n");
+ printf("Entering inner solver cg-loop\n");
  for(i=0;i<maxit;i++){ //MAIN LOOP
   
   // Q_{-}Q{+}
@@ -992,8 +1008,11 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
 
  //x(k+1);
  cublasSaxpy (24*VOLUME/2, host_alpha, (const float *) spin2,  1, (float *) spin1, 1);
-
- printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+ 
+ if((cudaerr=cudaGetLastError()) != cudaSuccess){
+    printf("%s\n", cudaGetErrorString(cudaerr));
+    exit(200);
+  }
 
   //Abbruch?
   host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin0, 1,(const float *) spin0, 1);
@@ -1021,7 +1040,10 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
       
     // Q_{-}Q{+}
     dev_Qtm_pm_psi(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4);
-      
+    if((cudaerr=cudaGetLastError()) != cudaSuccess){
+      printf("%s\n", cudaGetErrorString(cudaerr));
+      exit(200);
+    }  
         
     
     // r = b - Ax
@@ -1562,19 +1584,7 @@ cudaError_t cudaerr;
     else{
       printf("Allocated half precision gauge field on device\n");
     }      
-    
-    int gridsize;
-    // determine gridsize for conversion to half
-    if( VOLUME >= BLOCK2){
-       gridsize = (int) (VOLUME/BLOCK2) +1;
-    }
-    else{
-      gridsize=1;
-    }
-   
-   printf("Converting gauge to half precision... ");
-     float2half_gaugefield <<< gridsize, BLOCK2  >>>(dev_gf, dev_gf_half);
-   printf("Done\n");
+     
   #endif
 
 
@@ -1953,7 +1963,7 @@ void benchmark(spinor * const Q){
 	   #ifndef HALF
          bind_texture_spin(dev_spinin,1);
        #else
-          prepare_halfspinor_texture(dev_spinin, dev_half_aux, dev_half_norm);
+          bind_halfspinor_texture(dev_spinin, dev_half_aux, dev_half_norm);
 	   #endif
 	  #endif
        //bind_texture_nn(dev_nn_eo);
@@ -1965,7 +1975,7 @@ void benchmark(spinor * const Q){
 	 #ifndef HALF
       unbind_texture_spin(1);
      #else
-      release_halfspinor_texture();
+      unbind_halfspinor_texture();
 	 #endif
 	#endif
 
@@ -1973,7 +1983,7 @@ void benchmark(spinor * const Q){
 	 #ifndef HALF
        bind_texture_spin(dev_spin_eo1,1);
      #else
-      prepare_halfspinor_texture(dev_spin_eo1, dev_half_aux, dev_half_norm);
+      bind_halfspinor_texture(dev_spin_eo1, dev_half_aux, dev_half_norm);
 	 #endif
 	#endif
   //bind_texture_nn(dev_nn_oe);
@@ -1985,7 +1995,7 @@ void benchmark(spinor * const Q){
 	 #ifndef HALF
       unbind_texture_spin(1);
 	 #else
-      release_halfspinor_texture();
+      unbind_halfspinor_texture();
 	 #endif
    #endif
 
@@ -2025,7 +2035,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     
   init_mixedsolve_eo(g_gauge_field);
   
-  /*  
+ /*   
   // small benchmark
     assign(g_spinor_field[DUM_SOLVER],Q,N);
     benchmark(g_spinor_field[DUM_SOLVER]);
@@ -2053,7 +2063,13 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   zero_spinor_field(g_spinor_field[DUM_SOLVER+1],  N);//spin2 = x_k
   zero_spinor_field(g_spinor_field[DUM_SOLVER+2],  N);
   printf("The VOLUME/2 is: %d\n",N);
+
   
+  double norm = sqrt(_spinor_prod_re(Q[0],Q[0]));
+  printf("norm source(0): %f\n", norm);
+
+
+
 for(iter=0; iter<max_iter; iter++){
 
    printf("Applying double precision EO Dirac-Op Q_{-}Q{+}...\n");
