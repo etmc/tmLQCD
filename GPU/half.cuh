@@ -1,6 +1,10 @@
 
 #define twopi_float 6.283185307f
 
+
+
+
+//////// short <-> float conversion /////////////
 #define SHORT_LEN 65536
 #define SCALE ((SHORT_LEN-1) * 0.5)
 #define SHIFT (-1.0f/(SHORT_LEN-1))
@@ -29,8 +33,12 @@ float half2float_host(short in, float innorm){
   return(sh2fl_host(in)*innorm);
 }
 
+//////////////////////////////
 
-// these textures for the half spinor fields have to be defined here!!
+
+
+
+// these are textures for the half spinor fields - maybe move to textures.h if possible
 
  /* texture for spinor field */
  texture<short4,1, cudaReadModeNormalizedFloat> spinhalf_tex;
@@ -40,10 +48,17 @@ float half2float_host(short in, float innorm){
  
 
 
-
-
-
-
+  int blas_half_gridsize;
+  int blas_half_blocksize; // kernel parameters for the half_dot and axpy kernels
+  float * dev_blas_half_redfield;  //this is the reduction field for the
+                               //blas reduction kernels
+  float * dev_blas_half_sredfield; // this is the small reduction field after one sweep of reduction
+  float * blas_half_sredfield;                             
+  int blas_half_redblocks;  // the number of blocks of the reduction kernel
+                     // VOLUME/REDUCTION_N
+                     // also the size of the final sum (of reduction)
+                     // performed on host
+              
 
 // stores the float spinor field in s into the half spinor field sh and the norm into shnorm
 __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float* shnorm){
@@ -52,7 +67,8 @@ __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float
   int i;
   float norm = 0.0;
   if(pos < dev_VOLUME){
-   /*
+   
+   /*  BEWARE THIS IS NOT WORKING FOR SOME REASON dev_copy_spinor fails because slocal is shared???
    dev_copy_spinor(&(s[6*pos]), &(slocal[0]));
     // calculate norm
    
@@ -62,31 +78,6 @@ __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float
              + slocal[i].z*slocal[i].z + slocal[i].w*slocal[i].w; 
      }
    
-   
-    //store unit direction vector
-    if (norm != 0.0f){
-      norm = sqrtf(norm);
-      shnorm[pos] = norm;
-      //store norm
-      #pragma unroll 6
-      for(i=0; i<6; i++){
-         sh[6*pos+i].x = __float2half_rn(slocal[i].x/norm);
-         sh[6*pos+i].y = __float2half_rn(slocal[i].y/norm);
-         sh[6*pos+i].z = __float2half_rn(slocal[i].z/norm);
-         sh[6*pos+i].w = __float2half_rn(slocal[i].w/norm);
-	  } 
-	}
-      else{
-       //store norm
-       shnorm[pos] = norm;
-       #pragma unroll 6
-       for(i=0; i<6; i++){
-         sh[6*pos+i].x = __float2half_rn(0.0f);
-         sh[6*pos+i].y = __float2half_rn(0.0f);
-         sh[6*pos+i].z = __float2half_rn(0.0f);
-         sh[6*pos+i].w = __float2half_rn(0.0f);
-       }
-     }
     */ 
      
      for(i=0; i<6; i++){
@@ -115,10 +106,10 @@ __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float
        shnorm[pos] = norm;
        #pragma unroll 6
        for(i=0; i<6; i++){
-         sh[6*pos+i].x = __float2half_rn(0.0f);
-         sh[6*pos+i].y = __float2half_rn(0.0f);
-         sh[6*pos+i].z = __float2half_rn(0.0f);
-         sh[6*pos+i].w = __float2half_rn(0.0f);
+         sh[6*pos+i].x = fl2sh(0.0f);
+         sh[6*pos+i].y = fl2sh(0.0f);
+         sh[6*pos+i].z = fl2sh(0.0f);
+         sh[6*pos+i].w = fl2sh(0.0f);
        }
      }
      
@@ -186,11 +177,12 @@ __global__ void float2half_gaugefield(dev_su3_2v* gf, dev_su3_2v_half* gfh, int 
 
 extern "C" int bind_texture_spin(dev_spinor* s, int i){
  printf("Warning: DUMMY ROUTINE 'bind_texture_spin' called\n");
- return(0);
+ return(-1);
 }
 
 extern "C" int unbind_texture_spin(int i){
   printf("Warning: DUMMY ROUTINE 'unbind_texture_spin' called\n");
+  return(-1);
 }
 
 
@@ -344,29 +336,141 @@ return(0);
 
 
 /////    SOME BLAS KERNELs - work in progress //////////
-// optimize this with shared !!!
-__global__ void float2half ( dev_spinor_half* erg, float* erg_norm, dev_spinor* in){
-  int pos=threadIdx.x + blockDim.x*blockIdx.x;
-  if(pos < dev_VOLUME){
-     float norm=0.0;
-     float4 help;
-     int i;
-     //calculate norm over float4 spinor
-     for(i=0; i<6; i++){
-       help = in[6*pos+i];
-       norm += help.x*help.x +  help.y*help.y 
-             + help.z*help.z + help.w*help.w; 
+
+
+
+
+
+// y(half) = alpha*x(half) + y(half) 
+// x is not read from texture
+// y is not read from texture
+__global__ void axpy_half (float alpha, dev_spinor* erg, dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float* y_norm){
+   int pos= threadIdx.x + blockDim.x*blockIdx.x;
+   float4 xhelp,yhelp;
+   __shared__ float4 erghelp[6];
+   int i;
+   float xnhelp, ynhelp;
+   
+   
+   if(pos < dev_VOLUME){
+    // this is the loop over the 6 float4 forming one spinor
+    #pragma unroll 6
+    for(i=0; i<6; i++){
+       //xhelp = tex1Dfetch(spinhalf_tex, 6*pos+i);
+       //xnhelp = tex1Dfetch(spinnormhalf_tex, pos);
+       
+       xnhelp = x_norm[pos];
+       xhelp.x = sh2fl(x[6*pos+i].x)*xnhelp;
+       xhelp.y = sh2fl(x[6*pos+i].y)*xnhelp;
+       xhelp.z = sh2fl(x[6*pos+i].z)*xnhelp;
+       xhelp.w = sh2fl(x[6*pos+i].w)*xnhelp;
+      
+       ynhelp = y_norm[pos];
+       yhelp.x = sh2fl(y[6*pos+i].x)*ynhelp;
+       yhelp.y = sh2fl(y[6*pos+i].y)*ynhelp;
+       yhelp.z = sh2fl(y[6*pos+i].z)*ynhelp;
+       yhelp.w = sh2fl(y[6*pos+i].w)*ynhelp;
+        
+       erghelp[6*pos+i].x = alpha*xhelp.x + yhelp.x;
+       erghelp[6*pos+i].y = alpha*xhelp.y + yhelp.y;
+       erghelp[6*pos+i].z = alpha*xhelp.z + yhelp.z;
+       erghelp[6*pos+i].w = alpha*xhelp.w + yhelp.w;
+    }
+    
+	//calculate norm of resulting spinor
+	float ergnorm = 0.0f;
+
+	for(i=0; i<6; i++){
+                  ergnorm+= erghelp[6*pos+i].x*erghelp[6*pos+i].x
+	                  + erghelp[6*pos+i].y*erghelp[6*pos+i].y
+			  + erghelp[6*pos+i].z*erghelp[6*pos+i].z
+			  + erghelp[6*pos+i].w*erghelp[6*pos+i].w;
+	}
+	ergnorm = sqrt(ergnorm);
+	y_norm[pos] = ergnorm;
+
+	//write out normalized spinors in half
+    if (ergnorm != 0.0f){
+      #pragma unroll 6
+      for(i=0; i<6; i++){
+         y[6*pos+i].x = fl2sh(erghelp[6*pos+i].x/ergnorm);
+         y[6*pos+i].y = fl2sh(erghelp[6*pos+i].y/ergnorm);
+         y[6*pos+i].z = fl2sh(erghelp[6*pos+i].z/ergnorm);
+         y[6*pos+i].w = fl2sh(erghelp[6*pos+i].w/ergnorm);
+          } 
+        }
+      else{
+       #pragma unroll 6
+       for(i=0; i<6; i++){
+         y[6*pos+i].x = fl2sh(0.0f);
+         y[6*pos+i].y = fl2sh(0.0f);
+         y[6*pos+i].z = fl2sh(0.0f);
+         y[6*pos+i].w = fl2sh(0.0f);
+       }
      }
-     norm = sqrt(norm);
-     erg_norm[pos] = norm;
-     // normalize and save to erg
-     for(i=0; i<6; i++){
-       erg[6*pos+i].x = in[6*pos+i].x/norm;
-       erg[6*pos+i].y = in[6*pos+i].y/norm;
-       erg[6*pos+i].z = in[6*pos+i].z/norm;
-       erg[6*pos+i].w = in[6*pos+i].w/norm;
-     }
+
+
+   }//dev_VOLUME
+}
+
+
+
+
+void init_blas_half(int vol){
+  cudaError_t cudaerr;
+  
+  blas_half_blocksize=BLOCK2;
+  if( VOLUME >= BLOCK2){
+   blas_half_gridsize = (int)(VOLUME/BLOCK2) + 1;
   }
+  else{
+    blas_half_gridsize=1;
+  }
+  
+  size_t size = vol * sizeof(float);
+  
+  if((cudaerr=cudaMalloc((void **) &dev_blas_half_redfield, size)) != cudaSuccess){
+    printf("Error in init_blas_half(): Memory allocation of reduction field failed. Aborting...\n");
+    exit(200);
+  }   // Allocate array on device
+  else{
+    printf("Allocated blas reduction field on device\n");
+  }  
+
+
+  // IMPLEMENT THIS FOR ALL LATTICE SIZES !!!!!!!!!!!!!!!!!!!!
+  if((vol%REDUCTION_N) == 0){
+    blas_half_redblocks = vol/REDUCTION_N;
+  }
+  else{
+    fprintf(stderr,"Error: Volume is not a multiple of REDUCTION_N (%d). Aborting...\n", REDUCTION_N);
+    exit(100);
+  }
+  
+  // initialize small redfields
+  size = blas_half_redblocks * sizeof(float);
+  if((cudaerr=cudaMalloc((void **) &dev_blas_half_sredfield, size)) != cudaSuccess){
+    printf("Error in init_blas_half(): Memory allocation of small reduction field failed. Aborting...\n");
+    exit(200);
+  }   // Allocate array on device
+  else{
+    printf("Allocated blas small reduction field on device\n");
+  }  
+  
+  if((void*)(blas_half_sredfield = (float *)malloc(size)) == NULL){
+    printf("Could not allocate memory for blas small redfield on host. Aborting...\n");
+    exit(200);
+  } 
+  
+  
+  
+}
+
+
+void finalize_blas_half(){
+  cudaFree(dev_blas_half_redfield);
+  cudaFree(dev_blas_half_sredfield);
+  free(blas_half_sredfield);
 }
 
 
@@ -375,48 +479,191 @@ __global__ void float2half ( dev_spinor_half* erg, float* erg_norm, dev_spinor* 
 
 
 
-// erg(float) = alpha*x(half) + y(half) 
-__global__ void saxpy_half_kernel (float alpha, dev_spinor* erg, dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float* y_norm){
+// this is a reduction algorithm for float based on the CUDA SDK 
+__global__ void reduce_float(float *g_idata, float *g_odata, unsigned int n)
+{
+    extern __shared__ float sdata[];
+
+    // load shared mem
+    unsigned int tid = threadIdx.x;
+    unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
+    
+    sdata[tid] = (i < n) ? g_idata[i] : 0;
+    
+    __syncthreads();
+
+    // do reduction in shared mem
+    for(unsigned int s=blockDim.x/2; s>0; s>>=1) 
+    {
+        if (tid < s) 
+        {
+            sdata[tid] += sdata[tid + s];
+        }
+        __syncthreads();
+    }
+
+    // write result for this block to global mem
+    if (tid == 0) g_odata[blockIdx.x] = sdata[0];
+}
+
+
+
+
+// this is the version for float2 
+__global__ void reduce_float2(float2 *g_idata, float2 *g_odata, unsigned int n)
+{
+    extern __shared__ float2 sdata2[];
+
+    // load shared mem
+    unsigned int tid = threadIdx.x;
+    unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
+    
+    sdata2[tid].x = (i < n) ? g_idata[i].x : 0;
+    sdata2[tid].y = (i < n) ? g_idata[i].y : 0;
+    
+    __syncthreads();
+
+    // do reduction in shared mem
+    for(unsigned int s=blockDim.x/2; s>0; s>>=1) 
+    {
+        if (tid < s) 
+        {
+            sdata2[tid].x += sdata2[tid + s].x;
+            sdata2[tid].y += sdata2[tid + s].y;
+        }
+        __syncthreads();
+    }
+
+    // write result for this block to global mem
+    if (tid == 0) {
+      g_odata[blockIdx.x].x = sdata2[0].x;
+      g_odata[blockIdx.x].y = sdata2[0].y;
+    }
+}
+
+
+
+
+
+__global__ void dot_half ( float* redfield, dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float* y_norm){
    int pos= threadIdx.x + blockDim.x*blockIdx.x;
    float4 xhelp,yhelp;
    int i;
    float xnhelp, ynhelp;
+   float dotp = 0.0f;
+   
    if(pos < dev_VOLUME){
     // this is the loop over the 6 float4 forming one spinor
+    #pragma unroll 6
     for(i=0; i<6; i++){
-       xhelp = tex1Dfetch(spinhalf_tex, 6*pos+i);
+       //xhelp = tex1Dfetch(spinhalf_tex, 6*pos+i);
+       //xnhelp = tex1Dfetch(spinnormhalf_tex, pos);
+       
        xnhelp = x_norm[pos];
-       xhelp.x = xhelp.x*xnhelp;
-       xhelp.y = xhelp.y*xnhelp;
-       xhelp.z = xhelp.z*xnhelp;
-       xhelp.w = xhelp.w*xnhelp;
-
-       yhelp = tex1Dfetch(spinhalf_tex, 6*pos+i);
-       ynhelp = tex1Dfetch(spinnormhalf_tex, pos);;
-       yhelp.x = yhelp.x*ynhelp;
-       yhelp.y = yhelp.y*ynhelp;
-       yhelp.z = yhelp.z*ynhelp;
-       yhelp.w = yhelp.w*ynhelp;   
-   
-       erg[6*pos+i].x = alpha*xhelp.x + yhelp.x;
-       erg[6*pos+i].y = alpha*xhelp.y + yhelp.y;
-       erg[6*pos+i].z = alpha*xhelp.z + yhelp.z;
-       erg[6*pos+i].w = alpha*xhelp.w + yhelp.w;
+       xhelp.x = sh2fl(x[6*pos+i].x)*xnhelp;
+       xhelp.y = sh2fl(x[6*pos+i].y)*xnhelp;
+       xhelp.z = sh2fl(x[6*pos+i].z)*xnhelp;
+       xhelp.w = sh2fl(x[6*pos+i].w)*xnhelp;
+      
+       ynhelp = y_norm[pos];
+       yhelp.x = sh2fl(y[6*pos+i].x)*ynhelp;
+       yhelp.y = sh2fl(y[6*pos+i].y)*ynhelp;
+       yhelp.z = sh2fl(y[6*pos+i].z)*ynhelp;
+       yhelp.w = sh2fl(y[6*pos+i].w)*ynhelp;
+        
+       dotp += xhelp.x * yhelp.x;
+       dotp += xhelp.y * yhelp.y;
+       dotp += xhelp.z * yhelp.z;
+       dotp += xhelp.w * yhelp.w;
     }
+    // write sum_i (x_i y_i) to reduction field 
+    redfield[pos] = dotp;
+   }//dev_VOLUME
+}
+
+
+
+// kernel for the square of the norm of a half spinor
+// local squared norms are written to reduction field redfield
+__global__ void squarenorm_half (float* redfield, float* x_norm){
+   int pos= threadIdx.x + blockDim.x*blockIdx.x;
+   int i;
+   float xnhelp;
+   if(pos < dev_VOLUME){
+    xnhelp = x_norm[pos];
+    redfield[pos] = xnhelp*xnhelp;
+   }//dev_VOLUME
+}
+
+
+
+
+
+
+
+// calculates the dot product of x and y
+float dotprod_half(dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float* y_norm){
+   int i;
+   cudaError_t cudaerr;
+   
+   dot_half <<< blas_half_gridsize, blas_half_blocksize >>> 
+                      (dev_blas_half_redfield, x, x_norm, y, y_norm);
+   if((cudaerr=cudaGetLastError()) != cudaSuccess){
+      printf("%s\n", cudaGetErrorString(cudaerr));
+      exit(200);
+   } 
+   //reduce reductionfield on device 
+   reduce_float <<< blas_half_redblocks, REDUCTION_N, 
+                REDUCTION_N*sizeof(float) >>> 
+                ( dev_blas_half_redfield, dev_blas_half_sredfield,  VOLUME);
+   //this reduction always takes the VOLUME (also for mpi)     
+   
+   //copy back
+   cudaMemcpy(blas_half_sredfield, dev_blas_half_sredfield, (size_t)(blas_half_redblocks*sizeof(float)), cudaMemcpyDeviceToHost);
+           
+   //do final reduction on host
+   float finalsum=0.0f;
+   for(i=0; i<blas_half_redblocks; i++){
+     finalsum += blas_half_sredfield[i];
    }
+   return(finalsum);
 }
 
 
-/*
-// helperg = alpha*x + y 
-// y = normalize_half (helperg)
-void saxpy_half(int N, float alpha, dev_spinor* helperg, dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float* ynorm ){
-  // N is total number of floats Vol*6*4
-  // -> number of ushort4's = N/4
-  int Neff = N/4/6;
 
+// calculates the norm^2 of a half spinor with norm x 
+float squarenorm_half(float * xnorm){
+   int i;
+   cudaError_t cudaerr;
+   
+   squarenorm_half <<< blas_half_gridsize, blas_half_blocksize >>> 
+                      (dev_blas_half_redfield, xnorm);
+   if((cudaerr=cudaGetLastError()) != cudaSuccess){
+      printf("%s\n", cudaGetErrorString(cudaerr));
+      exit(200);
+   } 
+   //reduce reductionfield on device 
+   reduce_float <<< blas_half_redblocks, REDUCTION_N, 
+                REDUCTION_N*sizeof(float) >>> 
+                ( dev_blas_half_redfield, dev_blas_half_sredfield,  VOLUME);
+   //this reduction always takes the VOLUME (also for mpi)     
+   
+   //copy back
+   cudaMemcpy(blas_half_sredfield, dev_blas_half_sredfield, (size_t)(blas_half_redblocks*sizeof(float)), cudaMemcpyDeviceToHost);
+           
+   //do final reduction on host
+   float finalsum=0.0f;
+   for(i=0; i<blas_half_redblocks; i++){
+     finalsum += blas_half_sredfield[i];
+   }
+   
+   return(finalsum);
 }
-*/
+
+
+
+
+
 
 /////////////////////  BLAS KERNELs  ////////////////////////////
 

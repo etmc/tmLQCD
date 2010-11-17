@@ -134,7 +134,7 @@ void finalize_dev_observables(){
 
 
 
-
+#ifndef HALF
 // this is a reduction algorithm for float based on the CUDA SDK 
 __global__ void reduce_float(float *g_idata, float *g_odata, unsigned int n)
 {
@@ -197,7 +197,7 @@ __global__ void reduce_float2(float2 *g_idata, float2 *g_odata, unsigned int n)
     }
 }
 
-
+#endif
 
 
 
