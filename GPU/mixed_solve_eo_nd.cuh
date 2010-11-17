@@ -146,7 +146,7 @@ __device__ float mubar, epsbar;
     dev_spinor * RAND3;				// page-locked memory
     dev_spinor * RAND4;
     
-    cudaStream_t stream[2];
+    cudaStream_t stream[3];
     MPI_Status status1, status2;
   #endif
 #endif

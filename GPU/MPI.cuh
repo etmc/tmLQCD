@@ -1073,11 +1073,14 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
     int tSliceEO = LX*LY*LZ/2;
     cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(float4));
     RAND4 = RAND3 + 6*tSliceEO;
-    RAND1 = (dev_spinor *) malloc(2*tSliceEO*6*sizeof(float4));
+    // RAND1 = (dev_spinor *) malloc(2*tSliceEO*6*sizeof(float4));
+    // RAND2 = RAND1 + 6*tSliceEO;
+    cudaMallocHost(&RAND1, 2*tSliceEO*6*sizeof(float4));
     RAND2 = RAND1 + 6*tSliceEO;
     
     cudaStreamCreate(&stream[0]);
     cudaStreamCreate(&stream[1]);
+    cudaStreamCreate(&stream[2]);
   #endif
   
   
@@ -1194,9 +1197,12 @@ void finalize_mixedsolve_eo_nd_mpi(void) {
   
   #ifdef ASYNC_OPTIMIZED
     cudaFreeHost(RAND3);
-    free(RAND1);
+    // free(RAND1);
+    cudaFreeHost(RAND1);
+
     cudaStreamDestroy(stream[0]);
     cudaStreamDestroy(stream[1]);
+    cudaStreamDestroy(stream[3]);
   #endif
   
   

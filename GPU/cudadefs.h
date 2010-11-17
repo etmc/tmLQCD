@@ -12,7 +12,7 @@
 
 
 #define REAL float
-#define BLOCK 128 // Block Size
+#define BLOCK 192 // Block Size
 #define BLOCK2 320 // Block Size 2 for dev_mul_one_pm...
 #define REDUCTION_N 512 // Block size for reduction operations
 
