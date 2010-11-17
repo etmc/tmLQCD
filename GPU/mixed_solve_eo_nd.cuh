@@ -148,6 +148,8 @@ __device__ float mubar, epsbar;
     
     cudaStream_t stream[3];
     MPI_Status status1, status2;
+    MPI_Request send_request1, send_request2;
+    MPI_Request recv_request1, recv_request2;
   #endif
 #endif
 

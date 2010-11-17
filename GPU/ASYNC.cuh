@@ -477,8 +477,8 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   
   #else		// this will be the optimized version
 
-  		
-  		// blocking
+
+  		// copies the RAND region to host
   		cudaMemcpyAsync(RAND1, spinin                      , tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[1]);
   		cudaMemcpyAsync(RAND2, spinin+6*(VolumeEO-tSliceEO), tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[2]);
 		
@@ -493,58 +493,53 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		// xchange
 		
 		cudaStreamSynchronize(stream[1]);
-		cudaStreamSynchronize(stream[2]);
-
+		/*
   		MPI_Sendrecv(RAND1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
   		             RAND3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
   		             g_cart_grid, &status1);
+  		*/
+  		MPI_Isend(RAND1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
+  		         g_cart_grid, &send_request1);
+  		MPI_Recv(RAND3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
+  		         g_cart_grid, &status1);
+  		
+  		
+  		//MPI_Wait(&recv_request1, &status1);
+  		
+  		
+  		cudaMemcpyAsync(spinin+6*VolumeEO           , RAND3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[1]);
+  		
+  		dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, 0, stream[1]>>> ( gf,
+  		                                                                    spinin, spinout,
+  		                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
+  		                                                                    ieo,
+  		                                                                    VolumeEO-tSliceEO, tSliceEO );
+  		
+  		
+  		cudaStreamSynchronize(stream[2]);
+		/*
   		MPI_Sendrecv(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
   		             RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
   		             g_cart_grid, &status2);
-  		
-  		// can overlap from with kernel from other stream
-  		/*
-  		for (int i = 0; i < nStreams/2; i++) {
-  		  cudaMemcpyAsync(spinin+6*VolumeEO+6*i*offset           , RAND3+6*i*offset, offset*6*sizeof(float4), cudaMemcpyHostToDevice, stream[2*i]);
-  		  cudaMemcpyAsync(spinin+6*(VolumeEO+tSliceEO)+6*i*offset, RAND4+6*i*offset, offset*6*sizeof(float4), cudaMemcpyHostToDevice, stream[2*i+1]);
-  		}
   		*/
+  		MPI_Isend(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
+  		         g_cart_grid, &send_request2);
+  		MPI_Recv(RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
+  		         g_cart_grid, &status2);
   		
-  		cudaMemcpyAsync(spinin+6*VolumeEO           , RAND3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[1]);
+  		
+  		//MPI_Wait(&recv_request2, &status2);
+  		
+  		
   		cudaMemcpyAsync(spinin+6*(VolumeEO+tSliceEO), RAND4, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[2]);
-  		
-  		// kernels
-  		/*
-  		for (int i = 0; i < nStreams/2; i++) {
-  		
-  		  dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, BLOCK*sizeof(dev_su3_pad), stream[2*i+1]>>> ( gf,
-  		                                                                                                  spinin, spinout,
-  		                                                                                                  gfindex_site, gfindex_nextsite, nn_evenodd,
-  		                                                                                                  ieo,
-  		                                                                                                  0+i*offset, offset );
-  		                                                       
-  		  dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, BLOCK*sizeof(dev_su3_pad), stream[2*i]>>> ( gf,
-  		                                                                                                spinin, spinout,
-  		                                                                                                gfindex_site, gfindex_nextsite, nn_evenodd,
-  		                                                                                                ieo,
-  		                                                                                                VolumeEO-tSliceEO+i*offset, offset );
-  		
-  		}
-  		*/
-  		
+		
   		dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, 0, stream[2]>>> ( gf,
-  		                                                                                            spinin, spinout,
-  		                                                                                            gfindex_site, gfindex_nextsite, nn_evenodd,
-  		                                                                                            ieo,
-  		                                                                                            0, tSliceEO );
-  		                                                       
-  		dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, 0, stream[1]>>> ( gf,
-  		                                                                                            spinin, spinout,
-  		                                                                                            gfindex_site, gfindex_nextsite, nn_evenodd,
-  		                                                                                            ieo,
-  		                                                                                            VolumeEO-tSliceEO, tSliceEO );
+  		                                                                    spinin, spinout,
+  		                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
+  		                                                                    ieo,
+  		                                                                    0, tSliceEO );
   		
-  		cudaThreadSynchronize();
+  		// cudaThreadSynchronize();
   
   #endif
   
