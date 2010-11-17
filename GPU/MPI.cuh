@@ -29,7 +29,8 @@
  
 #undef MPI
 #undef REAL
-  #include "mpi.h"
+  #include <mpi.h>
+  //#include "../mpi_init.h"
 #define MPI
 #define REAL float
 
@@ -1068,6 +1069,18 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
   		#endif
   
   
+  #ifdef ASYNC_OPTIMIZED					// for exchanging the boundaries in the MPI code
+    int tSliceEO = LX*LY*LZ/2;
+    cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(float4));
+    RAND4 = RAND3 + 6*tSliceEO;
+    RAND1 = (dev_spinor *) malloc(2*tSliceEO*6*sizeof(float4));
+    RAND2 = RAND1 + 6*tSliceEO;
+    
+    cudaStreamCreate(&stream[0]);
+    cudaStreamCreate(&stream[1]);
+  #endif
+  
+  
   
   
   ////////////
@@ -1107,6 +1120,11 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
   
   
   // MPI_Barrier(g_cart_grid);
+  
+  
+  
+  
+  
   
   
 }//init_mixedsolve_eo_nd()
@@ -1172,6 +1190,13 @@ void finalize_mixedsolve_eo_nd_mpi(void) {
   
   #ifdef ALTERNATE_HOPPING_MATRIX
     free_gpu_indexfields();
+  #endif
+  
+  #ifdef ASYNC_OPTIMIZED
+    cudaFreeHost(RAND3);
+    free(RAND1);
+    cudaStreamDestroy(stream[0]);
+    cudaStreamDestroy(stream[1]);
   #endif
   
   

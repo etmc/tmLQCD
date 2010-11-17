@@ -72,7 +72,12 @@ extern "C" {
   //#include "mpi_init.h"
 #endif
 */
-
+#undef MPI
+#undef REAL
+  #include <mpi.h>
+  //#include "../mpi_init.h"
+#define MPI
+#define REAL float
 #include "MACROS.cuh"
 
 
@@ -120,7 +125,7 @@ __device__ float mubar, epsbar;
 #endif
 
 
-#ifdef MPI && PARALLELT				// collecting variables for the MPI implementation
+#ifdef MPI //&& PARALLELT				// collecting variables for the MPI implementation
   int * iseven;
   int * dev_g_iup;
   int * dev_g_idn;
@@ -135,6 +140,15 @@ __device__ float mubar, epsbar;
   __device__ int dev_VOLUMEPLUSRAND;		// is now used in dev_Hopping_Matrix_mpi()
   //__device__ int dev_rank;			// was for the moment put to mixed_solve.cu ...
   //__device__ int dev_nproc;
+  #ifdef ASYNC_OPTIMIZED
+    dev_spinor * RAND1;				// for exchanging the boundaries in ASYNC.cuh
+    dev_spinor * RAND2;
+    dev_spinor * RAND3;				// page-locked memory
+    dev_spinor * RAND4;
+    
+    cudaStream_t stream[2];
+    MPI_Status status1, status2;
+  #endif
 #endif
 
 /*

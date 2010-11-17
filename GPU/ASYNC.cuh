@@ -1,5 +1,21 @@
 
 
+#define EXTERN extern
+				// taken from global.h
+EXTERN MPI_Status status;
+EXTERN MPI_Request req1,req2,req3,req4;
+EXTERN MPI_Comm g_cart_grid;
+EXTERN MPI_Comm g_mpi_time_slices;
+EXTERN MPI_Comm g_mpi_SV_slices;
+EXTERN MPI_Comm g_mpi_z_slices;
+EXTERN MPI_Comm g_mpi_ST_slices;
+
+/* the next neighbours for MPI */
+EXTERN int g_nb_x_up, g_nb_x_dn;
+EXTERN int g_nb_y_up, g_nb_y_dn;
+EXTERN int g_nb_t_up, g_nb_t_dn;
+EXTERN int g_nb_z_up, g_nb_z_dn;
+
 
 
 
@@ -344,6 +360,7 @@ __global__ void dev_Hopping_Matrix_ASYNC (const dev_su3_2v * gf,
 
 
 
+
 void HOPPING_ASYNC (dev_su3_2v * gf, 
                     dev_spinor * spinin, dev_spinor * spinout,
                     int * gfindex_site, int * gfindex_nextsite, int * nn_evenodd,
@@ -360,6 +377,21 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   int gridsize1;
   int gridsize2;
   
+  if ( (VolumeEO-2*tSliceEO) % blocksize == 0 ) {
+    gridsize1  = (VolumeEO-2*tSliceEO) / blocksize;
+  }
+  else {
+    gridsize1  = (int) ( ((VolumeEO-2*tSliceEO)/blocksize) + 1);
+  }
+  
+  if ( (tSliceEO) % blocksize == 0 ) {
+    gridsize2  = (tSliceEO) / blocksize;
+  }
+  else {
+    gridsize2  = (int) ( ((tSliceEO)/blocksize) + 1);
+  }
+  
+  /*
   if ( (VolumeEO-4*tSliceEO) % blocksize == 0 ) {
     gridsize1  = (VolumeEO-4*tSliceEO) / blocksize;
   }
@@ -373,6 +405,37 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   else {
     gridsize2  = (int) ( ((2*tSliceEO)/blocksize) + 1);
   }
+  */
+  
+  		#ifdef ASYNC_OPTIMIZED
+  		  // size_t size_tSlice = LX*LY*LZ/2 * 6*sizeof(dev_spinor);
+  	          // size_t size_Rand   = RAND/2     * 6*sizeof(dev_spinor);
+  		  // int nStreams = ASYNC_OPTIMIZED;
+  		  //   if (nStreams%2 != 0 ) nStreams = nStreams + 1;
+  		  // int nStreams = 2;
+  		  /*
+  		  dev_spinor * RAND1;
+  		  dev_spinor * RAND2;
+  		  dev_spinor * RAND3;	// page-locked
+  		  dev_spinor * RAND4;
+  		  cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(float4));
+  		  RAND4 = RAND3 + 6*tSliceEO;
+  		  RAND1 = (dev_spinor *) malloc(2*tSliceEO*6*sizeof(float4));
+  		  RAND2 = RAND1 + 6*tSliceEO;
+  		  */
+  		  /*
+  		  cudaStream_t stream[2];
+  		  cudaStreamCreate(&stream[0]);
+  		  cudaStreamCreate(&stream[1]);
+  		  MPI_Status status1, status2;
+  		  */
+  		  // int offset = tSliceEO / (nStreams/2);
+  		#endif
+  
+  
+  #ifdef USETEXTURE
+    bind_texture_spin(spinin,1);
+  #endif
   
   
   // applies to the parts which don't need communication
@@ -380,25 +443,106 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
                                                         spinin, spinout,
                                                         gfindex_site, gfindex_nextsite, nn_evenodd,
                                                         ieo,
-                                                        2*tSliceEO, VolumeEO-4*tSliceEO );
+                                                        //2*tSliceEO, VolumeEO-4*tSliceEO );
+                                                        tSliceEO, VolumeEO-2*tSliceEO );
   
   
   // exchanges the boundaries
-  xchange_field_wrapper (spinin, ieo);			// to be further optimized !!
+  #ifndef ASYNC_OPTIMIZED
+  
+  	xchange_field_wrapper(spinin, ieo);			// to be further optimized !!
+  	
+  	// applies the hopping matrix to remaining parts
+  	dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize>>> ( gf,
+  	                                                      spinin, spinout,
+  	                                                      gfindex_site, gfindex_nextsite, nn_evenodd,
+  	                                                      ieo,
+  	                                                      //0, 2*tSliceEO );
+  	                                                      0, tSliceEO );
+  	                                                       
+  	dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize>>> ( gf,
+  	                                                      spinin, spinout,
+  	                                                      gfindex_site, gfindex_nextsite, nn_evenodd,
+  	                                                      ieo,
+  	                                                      //VolumeEO-2*tSliceEO, 2*tSliceEO );
+  	                                                      VolumeEO-tSliceEO, tSliceEO );	
+  
+  #else
+  
+  		// blocking
+  		cudaMemcpy(RAND1, spinin                      , tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost);
+  		cudaMemcpy(RAND2, spinin+6*(VolumeEO-tSliceEO), tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost);
+  		
+  		// xchange
+  		MPI_Sendrecv(RAND1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
+  		             RAND3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
+  		             g_cart_grid, &status1);
+  		MPI_Sendrecv(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
+  		             RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
+  		             g_cart_grid, &status2);
+  		
+  		// can overlap from with kernel from other stream
+  		/*
+  		for (int i = 0; i < nStreams/2; i++) {
+  		  cudaMemcpyAsync(spinin+6*VolumeEO+6*i*offset           , RAND3+6*i*offset, offset*6*sizeof(float4), cudaMemcpyHostToDevice, stream[2*i]);
+  		  cudaMemcpyAsync(spinin+6*(VolumeEO+tSliceEO)+6*i*offset, RAND4+6*i*offset, offset*6*sizeof(float4), cudaMemcpyHostToDevice, stream[2*i+1]);
+  		}
+  		*/
+  		
+  		cudaMemcpyAsync(spinin+6*VolumeEO           , RAND3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[0]);
+  		cudaMemcpyAsync(spinin+6*(VolumeEO+tSliceEO), RAND4, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[1]);
+  		
+  		// kernels
+  		/*
+  		for (int i = 0; i < nStreams/2; i++) {
+  		
+  		  dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, BLOCK*sizeof(dev_su3_pad), stream[2*i+1]>>> ( gf,
+  		                                                                                                  spinin, spinout,
+  		                                                                                                  gfindex_site, gfindex_nextsite, nn_evenodd,
+  		                                                                                                  ieo,
+  		                                                                                                  0+i*offset, offset );
+  		                                                       
+  		  dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, BLOCK*sizeof(dev_su3_pad), stream[2*i]>>> ( gf,
+  		                                                                                                spinin, spinout,
+  		                                                                                                gfindex_site, gfindex_nextsite, nn_evenodd,
+  		                                                                                                ieo,
+  		                                                                                                VolumeEO-tSliceEO+i*offset, offset );
+  		
+  		}
+  		*/
+  		
+  		dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, 0, stream[1]>>> ( gf,
+  		                                                                                            spinin, spinout,
+  		                                                                                            gfindex_site, gfindex_nextsite, nn_evenodd,
+  		                                                                                            ieo,
+  		                                                                                            0, tSliceEO );
+  		                                                       
+  		dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, 0, stream[0]>>> ( gf,
+  		                                                                                            spinin, spinout,
+  		                                                                                            gfindex_site, gfindex_nextsite, nn_evenodd,
+  		                                                                                            ieo,
+  		                                                                                            VolumeEO-tSliceEO, tSliceEO );
+  		
+  		cudaThreadSynchronize();
+  
+  #endif
   
   
-  // applies the hopping matrix to remaining parts
-  dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize>>> ( gf,
-                                                        spinin, spinout,
-                                                        gfindex_site, gfindex_nextsite, nn_evenodd,
-                                                        ieo,
-                                                        0, 2*tSliceEO );
-                                                         
-  dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize>>> ( gf,
-                                                        spinin, spinout,
-                                                        gfindex_site, gfindex_nextsite, nn_evenodd,
-                                                        ieo,
-                                                        VolumeEO-2*tSliceEO, 2*tSliceEO );
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  
+  
+  	#ifdef ASYNC_OPTIMIZED
+  	  /*
+  	  cudaStreamDestroy(stream[0]);
+  	  cudaStreamDestroy(stream[1]);
+  	  */
+  	  /*
+  	  cudaFreeHost(RAND3);
+  	  free(RAND1);
+  	  */
+  	#endif
   
 }
 

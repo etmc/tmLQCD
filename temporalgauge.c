@@ -597,7 +597,7 @@ void apply_gtrafo (su3 ** gfield, su3 * trafofield) {
                 /* U_mu(x) <- U_mu^{'}(x) = help g^{+}(x+mu)*/
                 _su3_times_su3d( gfield[pos][mu],temp1, trafofield[ g_iup[pos][mu]  ]);
               }
-              else {
+              else { // (it = T-1) && (mu = 0)
                 _su3_times_su3( temp1, trafofield[pos],  gfield[pos][mu]  );
                 _su3_times_su3d( gfield[pos][mu],temp1, trafofield[ g_ipt[0][ix][iy][iz]  ]);	// "rightest" transf. matrices are the first (periodic) and are initialized to ID
               }

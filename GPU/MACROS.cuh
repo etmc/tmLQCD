@@ -38,13 +38,14 @@
 
 //#define DEVICE_EQUAL_RANK	// for MPI: cudaSetDevice(rank)
 
-//#define ASYNC			// overlaps computation and communication	// atm for testing
+#define ASYNC			// overlaps computation and communication	// atm for testing
+#define ASYNC_OPTIMIZED		// better version thereof			// needs ASYNC
 
-#define BLOCKSIZE1 192
-#define BLOCKSIZE2 192
-#define BLOCKSIZE3 192
-#define BLOCKSIZE4 192
-#define BLOCKSIZE5 192
+#define BLOCKSIZE1 128
+#define BLOCKSIZE2 128
+#define BLOCKSIZE3 128
+#define BLOCKSIZE4 128
+#define BLOCKSIZE5 128
 
 
 
