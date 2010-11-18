@@ -208,6 +208,19 @@ The following input parameters are {\ttfamily invert} and {\ttfamily
 \item {\ttfamily EigenvaluePrecision}:\\
   precision for eigenvalues.
 
+\item {\ttfamily ComputeModeNumber}:\\
+  compute the average number of eigenmodes of the massive hermitian
+  operator $D_{tm}^{\dagger}D_{tm}+m^2$ with eigenvalues
+  $\alpha\leqM^2$. The value can be
+  yes and no.
+
+\item {\\ttfamily MStarSq}:\\
+  value of the parameter $M_*^2$ necessary in order to compute the
+  mode number.
+
+\item {\\ttfamily NoSourcesMN}:\\
+  number of stochastic sources to compute the mode number.
+
 \item {\ttfamily SourceLocation}:\\
   integer indicating the location of the source. The location is computed as
   {\ttfamily SourceLocation = z+L*y+L*L*x+L*L*L*t}.

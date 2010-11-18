@@ -346,6 +346,33 @@ int main(int argc, char *argv[])
       return(0);
     }
 
+    if(compute_modenumber != 0){
+      int i;
+      spinor **s, *s_;
+
+      s_ = calloc(100*VOLUMEPLUSRAND+1, sizeof(spinor));
+      s  = calloc(100, sizeof(spinor*));
+
+      for(i = 0; i < no_sources_mn; i++) {
+#if (defined SSE3 || defined SSE2 || defined SSE)
+        s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
+#else
+        s[i] = s_+i*VOLUMEPLUSRAND;
+#endif
+        random_spinor_field(s[i], VOLUME, 1);
+
+        mode_number(s[i], mstarsq);
+	
+	if(g_proc_id == 0) {
+	  printf("source %d \n", i+1);
+	}
+
+        /*Check_Approximation(Mstar);*/
+      }
+      free(s);
+      free(s_);
+    }
+
     /* move to operators as well */
     if (g_dflgcr_flag == 1) {
       /* set up deflation blocks */

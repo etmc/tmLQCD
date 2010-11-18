@@ -147,7 +147,9 @@ inline void rmQuotes(char *str){
   int reweighting_flag;
   int reweighting_samples;
   int no_samples;
-  
+  int compute_modenumber;
+  double mstarsq;
+  int no_sources_mn;  
   int usegpu_flag;
   int max_innersolver_it;
   int device_num;
@@ -238,7 +240,9 @@ inline void rmQuotes(char *str){
 %x BC
 %x WRPROPFLAG
 %x PROPTYPE
-
+%x COMPUTEMN
+%x MSTARSQ
+%x NOSOURCESMN
 %x INITMEASUREMENT
 %x ONLINEMEAS
 %x PIONNORMMEAS
@@ -362,7 +366,9 @@ inline void rmQuotes(char *str){
 ^UsePreconditioning{EQL}           BEGIN(PRECONDITIONING);
 
 ^BeginMeasurement{SPC}+            BEGIN(INITMEASUREMENT);
-
+^ComputeModeNumber{EQL}            BEGIN(COMPUTEMN);
+^MStarSq{EQL}                      BEGIN(MSTARSQ);
+^NoSourcesMN{EQL}                  BEGIN(NOSOURCESMN);
 ^BeginMonomial{SPC}+               BEGIN(INITMONOMIAL);
 ^BeginInt                          BEGIN(INITINTEGRATOR);
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
@@ -1657,6 +1663,22 @@ inline void rmQuotes(char *str){
   compute_evs=2;
   if(myverbose!=0) printf("Try to only read in eigenvalues and vectors in invert.");
 }
+<COMPUTEMN>yes {
+  compute_modenumber=1;
+  if(myverbose!=0) printf("Compute Mode Number in invert.\n");
+}
+<COMPUTEMN>no {
+  compute_modenumber=0;
+  if(myverbose!=0) printf("Do not compute Mode Number in invert.\n");
+}
+<MSTARSQ>{FLT} { 
+  mstarsq = atof(yytext);
+  if(myverbose!=0) printf("Mstar^2 = %f \n", mstarsq);
+}
+<NOSOURCESMN>{DIGIT}+ {
+  no_sources_mn = atoi(yytext);
+  if(myverbose!=0) printf("no of sources used computing the mode number = %d\n", no_sources_mn);
+}
 <SRCLOC>{DIGIT}+ {
   source_location=atoi(yytext);
   if(myverbose!=0) printf("source_location = %s\n",yytext);
@@ -1892,7 +1914,9 @@ int read_input(char * conf_file){
   bc_flag = _default_bc_flag;
   SourceInfo.type = _default_source_type_flag;
   no_samples = _default_no_samples;
-
+  compute_modenumber = _default_compute_modenumber;
+  mstarsq = _default_mstarsq;
+  no_sources_mn = _default_no_sources_mn;
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */
   PropInfo.format = -1;
