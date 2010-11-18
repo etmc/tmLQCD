@@ -932,3 +932,358 @@ __global__ void dev_Hopping_Matrix(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
 
 
 
+
+
+#ifdef HALF
+
+//applies the Hopping Part Even-Odd  HALF PRECISION !
+//else aequivalent to the above version 
+__global__ void dev_Hopping_Matrix_half(const dev_su3_2v * gf, const dev_spinor_half * sin, const float* sin_norm, dev_spinor_half * sout, float* sout_norm, const int * gfindex_site, const int* gfindex_nextsite, const int * nn_evenodd, const int eo){
+
+  int pos,hoppos,i;
+    dev_spinor shelp1[6], ssum[6];
+    __shared__ dev_su3_pad gfsmem[BLOCK];
+    float norm = 0.0;
+
+
+  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  int ix = threadIdx.x;
+  
+  
+  if(pos < dev_VOLUME){
+  
+
+  dev_zero_spinor(&(ssum[0])); // zero sum        
+ #ifdef TEMPORALGAUGE
+  int spatialvol = dev_LX*dev_LY*dev_LZ;
+ #endif
+
+
+//hopping term                
+//l==0,t
+            //positive direction
+            hoppos = nn_evenodd[8*pos];
+             //hoppos = tex1Dfetch(nn_tex,8*pos);
+            //color
+            
+            #ifdef TEMPORALGAUGE
+              // gf == ID for t != T-1 => just read the spinor
+              #ifdef MPI
+                if ( ((gfindex_site[pos]) < (dev_T-1)*spatialvol) || (dev_rank < dev_nproc-1) ) {
+                //if ((gfindex_site[pos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
+              #else
+                if ((gfindex_site[pos]/spatialvol) != (dev_T-1) ) {
+              #endif
+              
+              #ifdef USETEXTURE
+                norm = tex1Dfetch(spinnormhalf_tex, hoppos);
+                shelp1[0] = tex1Dfetch(spinhalf_tex,6*hoppos);
+                shelp1[1] = tex1Dfetch(spinhalf_tex,6*hoppos+1);
+                shelp1[2] = tex1Dfetch(spinhalf_tex,6*hoppos+2);
+                shelp1[3] = tex1Dfetch(spinhalf_tex,6*hoppos+3);
+                shelp1[4] = tex1Dfetch(spinhalf_tex,6*hoppos+4);
+                shelp1[5] = tex1Dfetch(spinhalf_tex,6*hoppos+5);
+                //normalize
+                #pragma unroll 6
+                for(i=0; i<6; i++){
+                  shelp1[i].x = norm*shelp1[i].x;
+                  shelp1[i].y = norm*shelp1[i].y;
+                  shelp1[i].z = norm*shelp1[i].z;
+                  shelp1[i].w = norm*shelp1[i].w;
+                }
+              #else
+                norm = sin_norm[hoppos];
+                //read and normalize
+                #pragma unroll 6
+                for(i=0; i<6; i++){
+                  shelp1[i].x = norm*sh2flo(sin[6*hoppos+i].x);
+                  shelp1[i].y = norm*sh2flo(sin[6*hoppos+i].y);
+                  shelp1[i].z = norm*sh2flo(sin[6*hoppos+i].z);
+                  shelp1[i].w = norm*sh2flo(sin[6*hoppos+i].w);
+                }
+              #endif
+              }
+              else{
+                // gf != ID for t == T-1 => mult spinor with gf
+                #ifdef GF_8
+                dev_reconstructgf_8texref(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
+                #else
+                dev_reconstructgf_2vtexref(gf,4*(gfindex_site[pos]),&(gfsmem[ix].m));
+                #endif
+                #ifdef USETEXTURE
+                  dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+                #else
+                  dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+                #endif
+              }
+            #else
+              #ifdef GF_8
+              dev_reconstructgf_8texref(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
+              #else
+              dev_reconstructgf_2vtexref(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
+              #endif
+              #ifdef USETEXTURE
+                dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+              #else
+                dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+              #endif
+            #endif
+            
+            //-kappa(r - gamma_mu)
+            #ifdef GF_8
+             dev_kappaP0_plus(&(ssum[0]), &(shelp1[0]), dev_cconj(dev_k0));
+            #else
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma0(&(shelp1[0]));
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_k0,&(shelp1[0]), &(ssum[0]));
+            #endif
+            
+//l==0,t
+            //negative direction
+            hoppos = nn_evenodd[8*pos+4]; 
+             //hoppos = tex1Dfetch(nn_tex,8*pos+4);
+            //color
+            #ifdef TEMPORALGAUGE
+              // gf == ID for t != T-1 => just read the spinor
+              #ifdef MPI
+                if ( ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) || (dev_rank > 0) ) {
+                //if ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
+              #else
+                if ((gfindex_nextsite[hoppos]/spatialvol) != (dev_T-1) ) {
+              #endif
+              
+              #ifdef USETEXTURE
+                norm = tex1Dfetch(spinnormhalf_tex, hoppos);
+                shelp1[0] = tex1Dfetch(spinhalf_tex,6*hoppos);
+                shelp1[1] = tex1Dfetch(spinhalf_tex,6*hoppos+1);
+                shelp1[2] = tex1Dfetch(spinhalf_tex,6*hoppos+2);
+                shelp1[3] = tex1Dfetch(spinhalf_tex,6*hoppos+3);
+                shelp1[4] = tex1Dfetch(spinhalf_tex,6*hoppos+4);
+                shelp1[5] = tex1Dfetch(spinhalf_tex,6*hoppos+5);
+                //normalize
+                #pragma unroll 6
+                for(i=0; i<6; i++){
+                  shelp1[i].x = norm*shelp1[i].x;
+                  shelp1[i].y = norm*shelp1[i].y;
+                  shelp1[i].z = norm*shelp1[i].z;
+                  shelp1[i].w = norm*shelp1[i].w;
+                }
+              #else
+                norm = sin_norm[hoppos];
+                //read and normalize
+                #pragma unroll 6
+                for(i=0; i<6; i++){
+                  shelp1[i].x = norm*sh2flo(sin[6*hoppos+i].x);
+                  shelp1[i].y = norm*sh2flo(sin[6*hoppos+i].y);
+                  shelp1[i].z = norm*sh2flo(sin[6*hoppos+i].z);
+                  shelp1[i].w = norm*sh2flo(sin[6*hoppos+i].w);
+                }
+              #endif
+              }
+              else{
+                // gf != ID for t == T-1 => mult spinor with gf
+                #ifdef GF_8
+                dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
+                #else
+                dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
+                #endif
+                #ifdef USETEXTURE
+                  dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+                #else
+                  dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+                #endif 
+              }
+            #else            
+              #ifdef GF_8
+              dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
+              #else
+              dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
+              #endif
+              #ifdef USETEXTURE
+                dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));  
+              #else
+                dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+              #endif 
+            #endif
+            
+            //-kappa(r + gamma_mu)
+            #ifdef GF_8
+              dev_kappaP0_minus(&(ssum[0]), &(shelp1[0]), dev_k0);
+            #else
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma0(&(shelp1[0]));
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
+            #endif
+
+
+
+
+//l==3,z 
+            //positive direction
+            hoppos = nn_evenodd[8*pos+3];
+             //hoppos = tex1Dfetch(nn_tex,8*pos+3);
+            //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(gf,4*(gfindex_site[pos])+(3),&(gfsmem[ix].m));
+            #else
+            dev_reconstructgf_2vtexref(gf, 4*(gfindex_site[pos])+(3),&(gfsmem[ix].m));
+            #endif
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
+            //-kappa(r - gamma_mu)    
+            #ifdef GF_8
+            dev_kappaP3_plus(&(ssum[0]), &(shelp1[0]), dev_k3.re);
+            #else
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma3(&(shelp1[0]));
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_k3,&(shelp1[0]), &(ssum[0]));
+            #endif
+//l==3,z               
+            
+            //negative direction
+            hoppos = nn_evenodd[8*pos+7];
+             //hoppos = tex1Dfetch(nn_tex,8*pos+7); 
+            //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos]+(3),&(gfsmem[ix].m));
+            #else
+            dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos]+(3),&(gfsmem[ix].m));
+            #endif
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
+            //-kappa(r + gamma_mu)
+            #ifdef GF_8
+              dev_kappaP3_minus(&(ssum[0]), &(shelp1[0]), dev_k3.re);
+            #else
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma3(&(shelp1[0]));
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
+            #endif
+
+
+
+
+//l==2,y 
+            //positive direction
+            hoppos = nn_evenodd[8*pos+2];
+             //hoppos = tex1Dfetch(nn_tex,8*pos+2);
+            //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(gf,4*(gfindex_site[pos])+(2),&(gfsmem[ix].m));
+            #else
+            dev_reconstructgf_2vtexref(gf,4*(gfindex_site[pos])+(2),&(gfsmem[ix].m));
+            #endif
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
+            //-kappa(r - gamma_mu)
+            #ifdef GF_8
+              dev_kappaP2_plus(&(ssum[0]), &(shelp1[0]), dev_k2.re);
+            #else
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma2(&(shelp1[0]));
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_k2,&(shelp1[0]), &(ssum[0]));
+            #endif
+
+//l==2,y        
+
+            
+            //negative direction
+            hoppos = nn_evenodd[8*pos+6]; 
+             //hoppos = tex1Dfetch(nn_tex,8*pos+6);
+            //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos]+(2),&(gfsmem[ix].m));
+            #else
+            dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos]+(2),&(gfsmem[ix].m));
+            #endif
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
+            //-kappa(r + gamma_mu)
+            #ifdef GF_8
+              dev_kappaP2_minus(&(ssum[0]), &(shelp1[0]), dev_k2.re);
+            #else
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma2(&(shelp1[0]));
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
+            #endif
+
+
+
+//l==1,x 
+            //positive direction
+            hoppos = nn_evenodd[8*pos+1];
+             //hoppos = tex1Dfetch(nn_tex,8*pos+1);
+            //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref(gf,4*(gfindex_site[pos])+(1),&(gfsmem[ix].m));
+            #else
+            dev_reconstructgf_2vtexref(gf,4*(gfindex_site[pos])+(1),&(gfsmem[ix].m));
+            #endif
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
+            //-kappa(r - gamma_mu)
+            #ifdef GF_8
+              dev_kappaP1_plus(&(ssum[0]), &(shelp1[0]), dev_k1.re);
+            #else
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma1(&(shelp1[0]));
+              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_k1,&(shelp1[0]), &(ssum[0]));
+            #endif
+
+
+//l==1,x 
+            
+            //negative direction
+            hoppos = nn_evenodd[8*pos+5]; 
+             //hoppos = tex1Dfetch(nn_tex,8*pos+5);
+            //color
+            #ifdef GF_8
+            dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos]+(1),&(gfsmem[ix].m));
+            #else
+            dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos]+(1),&(gfsmem[ix].m));
+            #endif
+            #ifdef USETEXTURE
+              dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
+            #else
+              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+            #endif
+            //-kappa(r + gamma_mu)
+            #ifdef GF_8
+              dev_kappaP1_minus(&(ssum[0]), &(shelp1[0]), dev_k1.re);
+            #else
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
+              dev_Gamma1(&(shelp1[0]));
+              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));      
+            #endif
+ 
+        //write to output spinor and write the norm
+        dev_write_spinor_half(&(ssum[0]),&(sout[6*pos]), &(sout_norm[pos])); 
+  }
+}
+
+
+#endif
+
+
+
+
+
+
+
+
+

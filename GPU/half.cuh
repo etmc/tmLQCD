@@ -33,6 +33,39 @@ float half2float_host(short in, float innorm){
   return(sh2fl_host(in)*innorm);
 }
 
+
+
+#define construct_spinor_fromhalf(sf, sh, shn, pos){  \
+   (sf)[0].x = shn*sh2fl(sh[6*(pos)].x);                        \
+   (sf)[0].y = shn*sh2fl(sh[6*(pos)].y);                        \
+   (sf)[0].z = shn*sh2fl(sh[6*(pos)].z);                        \
+   (sf)[0].w = shn*sh2fl(sh[6*(pos)].w);                        \
+   (sf)[1].x = shn*sh2fl(sh[6*(pos)+1].x);                        \
+   (sf)[1].y = shn*sh2fl(sh[6*(pos)+1].y);                        \
+   (sf)[1].z = shn*sh2fl(sh[6*(pos)+1].z);                        \
+   (sf)[1].w = shn*sh2fl(sh[6*(pos)+1].w);                        \
+   (sf)[2].x = shn*sh2fl(sh[6*(pos)+2].x);                        \
+   (sf)[2].y = shn*sh2fl(sh[6*(pos)+2].y);                        \
+   (sf)[2].z = shn*sh2fl(sh[6*(pos)+2].z);                        \
+   (sf)[2].w = shn*sh2fl(sh[6*(pos)+2].w);                        \
+   (sf)[3].x = shn*sh2fl(sh[6*(pos)+3].x);                        \
+   (sf)[3].y = shn*sh2fl(sh[6*(pos)+3].y);                        \
+   (sf)[3].z = shn*sh2fl(sh[6*(pos)+3].z);                        \
+   (sf)[3].w = shn*sh2fl(sh[6*(pos)+3].w);                        \
+   (sf)[4].x = shn*sh2fl(sh[6*(pos)+4].x);                        \
+   (sf)[4].y = shn*sh2fl(sh[6*(pos)+4].y);                        \
+   (sf)[4].z = shn*sh2fl(sh[6*(pos)+4].z);                        \
+   (sf)[4].w = shn*sh2fl(sh[6*(pos)+4].w);                        \
+   (sf)[5].x = shn*sh2fl(sh[6*(pos)+5].x);                        \
+   (sf)[5].y = shn*sh2fl(sh[6*(pos)+5].y);                        \
+   (sf)[5].z = shn*sh2fl(sh[6*(pos)+5].z);                        \
+   (sf)[5].w = shn*sh2fl(sh[6*(pos)+5].w);                       }\   
+   
+   
+   
+   
+   
+   
 //////////////////////////////
 
 
@@ -59,11 +92,57 @@ float half2float_host(short in, float innorm){
                      // also the size of the final sum (of reduction)
                      // performed on host
               
+              
+              
+              
+// write float spinor in to half spinor out and out_norm              
+__device__ void dev_write_spinor_half(dev_spinor* in, dev_spinor_half* out, float* out_norm){
+   float norm = 0.0f;
+   int i;
+     for(i=0; i<6; i++){
+       norm += in[i].x*in[i].x 
+             + in[i].y*in[i].y 
+             + in[i].z*in[i].z 
+             + in[i].w*in[i].w; 
+     }
+   
+   
+    //store unit direction vector
+    if (norm != 0.0f){
+      norm = sqrtf(norm);
+      *out_norm = norm;
+      //store norm
+      #pragma unroll 6
+      for(i=0; i<6; i++){
+         out[i].x = fl2sh(in[i].x/norm);
+         out[i].y = fl2sh(in[i].y/norm);
+         out[i].z = fl2sh(in[i].z/norm);
+         out[i].w = fl2sh(in[i].w/norm);
+         } 
+       }
+      else{
+       //store norm
+       *out_norm = norm;
+       #pragma unroll 6
+       for(i=0; i<6; i++){
+         out[i].x = fl2sh(0.0f);
+         out[i].y = fl2sh(0.0f);
+         out[i].z = fl2sh(0.0f);
+         out[i].w = fl2sh(0.0f);
+       }
+     }
+}              
+              
+              
+              
+              
+              
+              
 
 // stores the float spinor field in s into the half spinor field sh and the norm into shnorm
 __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float* shnorm){
   int pos=threadIdx.x + blockDim.x*blockIdx.x;
-  __shared__ float4 slocal[6];
+  //__shared__ float4 slocal[6];
   int i;
   float norm = 0.0;
   if(pos < dev_VOLUME){
@@ -148,7 +227,7 @@ int pos=threadIdx.x + blockDim.x*blockIdx.x;
 __global__ void float2half_gaugefield(dev_su3_2v* gf, dev_su3_2v_half* gfh, int vol){
 
   int pos=threadIdx.x + blockDim.x*blockIdx.x;
-  int nf4,i;
+  int nf4;
   if(pos < vol){
   #ifdef GF_8
     nf4 = 2;
@@ -162,6 +241,7 @@ __global__ void float2half_gaugefield(dev_su3_2v* gf, dev_su3_2v_half* gfh, int 
     gfh[nf4*pos+1].z = fl2sh(gf[nf4*pos+1].z);
     gfh[nf4*pos+1].w = fl2sh(gf[nf4*pos+1].w);
   #else
+    int i;
     nf4 = 3;
     for(i=0; i<nf4; i++){
        gfh[nf4*pos+i].x = fl2sh(gf[nf4*pos+i].x);
@@ -186,8 +266,9 @@ extern "C" int unbind_texture_spin(int i){
 }
 
 
-extern "C" int bind_halfspinor_texture(dev_spinor* s, dev_spinor_half* sh, float* shnorm){
+//extern "C" int bind_halfspinor_texture(dev_spinor* s, dev_spinor_half* sh, float* shnorm){
   
+extern "C" int bind_halfspinor_texture(dev_spinor_half* sh, float* shnorm){
   size_t size, sizenorm;
   int gridsize;
   
@@ -210,7 +291,7 @@ extern "C" int bind_halfspinor_texture(dev_spinor* s, dev_spinor_half* sh, float
       sizenorm = sizeof(float)*VOLUME;
     }
   #endif
-   
+   /*
    // determine gridsize for conversion to half
    if( VOLUME >= BLOCK2){
       gridsize = (int) (VOLUME/BLOCK2) +1;
@@ -219,7 +300,7 @@ extern "C" int bind_halfspinor_texture(dev_spinor* s, dev_spinor_half* sh, float
       gridsize=1;
     }
   
-   /*  
+     
    //DEBUG_FLO
    int i;
     
@@ -241,7 +322,7 @@ extern "C" int bind_halfspinor_texture(dev_spinor* s, dev_spinor_half* sh, float
    cudaMemcpy(s, &(blub[0]) , 6*sizeof(float4), cudaMemcpyHostToDevice);
    
    //END DEBUG_FLO
-   */
+
 
    //printf("Converting spinor to half precision... ");
      float2half_spinorfield <<< gridsize, BLOCK2  >>>(s, sh, shnorm);
@@ -252,7 +333,7 @@ extern "C" int bind_halfspinor_texture(dev_spinor* s, dev_spinor_half* sh, float
        exit(200);
      }
 
-   /*
+
    //DEBUG_FLO
    short4 testnorm_half[6];
    float thenorm;
@@ -587,7 +668,6 @@ __global__ void dot_half ( float* redfield, dev_spinor_half* x, float* x_norm, d
 // local squared norms are written to reduction field redfield
 __global__ void squarenorm_half (float* redfield, float* x_norm){
    int pos= threadIdx.x + blockDim.x*blockIdx.x;
-   int i;
    float xnhelp;
    if(pos < dev_VOLUME){
     xnhelp = x_norm[pos];

@@ -42,8 +42,6 @@
 // reconstruction of the link fields from two rows of the su3 matrix
 // numbers are fetched from texture cache
 __device__ void dev_reconstructgf_2vtexref (const dev_su3_2v* field, int pos, dev_su3* gf){
-  dev_complex help1;
-  dev_complex help2;
   float4 gfin;
   
   #ifdef USETEXTURE
