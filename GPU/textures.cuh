@@ -118,17 +118,17 @@ return(1);
 
 
 
-
 #else 
 
  /* texture for gauge field */
  texture<short4,1, cudaReadModeNormalizedFloat> gf_tex;
  const textureReference* gf_texRefPtr = NULL;
  cudaChannelFormatDesc gf_channelDesc;
- 
 
   // the textures for the half spinors are defined in half.cuh
+
 #endif // NOT HALF
+
 
 
 
@@ -166,6 +166,10 @@ extern "C" int unbind_texture_gf(){
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
  return(0);
 }
+
+
+
+
 
 
 

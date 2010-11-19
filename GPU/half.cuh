@@ -1,5 +1,5 @@
 
-#define twopi_float 6.283185307f
+#define pi_float 3.141592654f
 
 
 
@@ -59,11 +59,71 @@ float half2float_host(short in, float innorm){
    (sf)[5].x = shn*sh2fl(sh[6*(pos)+5].x);                        \
    (sf)[5].y = shn*sh2fl(sh[6*(pos)+5].y);                        \
    (sf)[5].z = shn*sh2fl(sh[6*(pos)+5].z);                        \
-   (sf)[5].w = shn*sh2fl(sh[6*(pos)+5].w);                       }\   
+   (sf)[5].w = shn*sh2fl(sh[6*(pos)+5].w);                       }\
+   
+   
+#define get_half_norm(n,s){ \
+  float c0 = fmaxf(fabsf((s[0]).x), fabsf((s[0]).y));                   \
+  float c1 = fmaxf(fabsf((s[0]).z), fabsf((s[0]).w));                   \
+  float c2 = fmaxf(fabsf((s[1]).x), fabsf((s[1]).y));                   \
+  float c3 = fmaxf(fabsf((s[1]).z), fabsf((s[1]).w));                   \
+  float c4 = fmaxf(fabsf((s[2]).x), fabsf((s[2]).y));                   \
+  float c5 = fmaxf(fabsf((s[2]).z), fabsf((s[2]).w));                   \
+  float c6 = fmaxf(fabsf((s[3]).x), fabsf((s[3]).y));                   \
+  float c7 = fmaxf(fabsf((s[3]).z), fabsf((s[3]).w));                   \
+  float c8 = fmaxf(fabsf((s[4]).x), fabsf((s[4]).y));                   \
+  float c9 = fmaxf(fabsf((s[4]).z), fabsf((s[4]).w));                   \
+  float c10 = fmaxf(fabsf((s[5]).x), fabsf((s[5]).y));                  \
+  float c11 = fmaxf(fabsf((s[5]).z), fabsf((s[5]).w));                  \
+  c0 = fmaxf(c0, c1); c1 = fmaxf(c2, c3); c2 = fmaxf(c4, c5);           \
+  c3 = fmaxf(c6, c7); c4 = fmaxf(c8, c9); c5 = fmaxf(c10, c11);         \
+  c0 = fmaxf(c0, c1); c1 = fmaxf(c2, c3); c2 = fmaxf(c4, c5);           \
+  c0 = fmaxf(c0, c1); c0 = fmaxf(c0, c2);                               \
+  n = c0;                        \
+}\
+   
+   
+#define get_half_norm_from_pos(n,s,pos){                                             \
+  float c0 = fmaxf(fabsf((s[6*pos+0]).x), fabsf((s[6*pos+0]).y));                   \
+  float c1 = fmaxf(fabsf((s[6*pos+0]).z), fabsf((s[6*pos+0]).w));                   \
+  float c2 = fmaxf(fabsf((s[6*pos+1]).x), fabsf((s[6*pos+1]).y));                   \
+  float c3 = fmaxf(fabsf((s[6*pos+1]).z), fabsf((s[6*pos+1]).w));                   \
+  float c4 = fmaxf(fabsf((s[6*pos+2]).x), fabsf((s[6*pos+2]).y));                   \
+  float c5 = fmaxf(fabsf((s[6*pos+2]).z), fabsf((s[6*pos+2]).w));                   \
+  float c6 = fmaxf(fabsf((s[6*pos+3]).x), fabsf((s[6*pos+3]).y));                   \
+  float c7 = fmaxf(fabsf((s[6*pos+3]).z), fabsf((s[6*pos+3]).w));                   \
+  float c8 = fmaxf(fabsf((s[6*pos+4]).x), fabsf((s[6*pos+4]).y));                   \
+  float c9 = fmaxf(fabsf((s[6*pos+4]).z), fabsf((s[6*pos+4]).w));                   \
+  float c10 = fmaxf(fabsf((s[6*pos+5]).x), fabsf((s[6*pos+5]).y));                  \
+  float c11 = fmaxf(fabsf((s[6*pos+5]).z), fabsf((s[6*pos+5]).w));                  \
+  c0 = fmaxf(c0, c1); c1 = fmaxf(c2, c3); c2 = fmaxf(c4, c5);           \
+  c3 = fmaxf(c6, c7); c4 = fmaxf(c8, c9); c5 = fmaxf(c10, c11);         \
+  c0 = fmaxf(c0, c1); c1 = fmaxf(c2, c3); c2 = fmaxf(c4, c5);           \
+  c0 = fmaxf(c0, c1); c0 = fmaxf(c0, c2);                               \
+  n = c0;                        \
+}\
    
    
    
-   
+#define get_half_norm_from_pos_host(n,s,pos){                                             \
+  float c0 = fmaxf(fabsf((s[pos].s0.c0.re)), fabsf((s[pos].s0.c0.im))); \
+  float c1 = fmaxf(fabsf((s[pos].s0.c1.re)), fabsf((s[pos].s0.c1.im))); \
+  float c2 = fmaxf(fabsf((s[pos].s0.c2.re)), fabsf((s[pos].s0.c2.im))); \
+  float c3 = fmaxf(fabsf((s[pos].s1.c0.re)), fabsf((s[pos].s1.c0.im))); \
+  float c4 = fmaxf(fabsf((s[pos].s1.c1.re)), fabsf((s[pos].s1.c1.im))); \
+  float c5 = fmaxf(fabsf((s[pos].s1.c2.re)), fabsf((s[pos].s1.c2.im))); \
+  float c6 = fmaxf(fabsf((s[pos].s2.c0.re)), fabsf((s[pos].s2.c0.im))); \
+  float c7 = fmaxf(fabsf((s[pos].s2.c1.re)), fabsf((s[pos].s2.c1.im))); \
+  float c8 = fmaxf(fabsf((s[pos].s2.c2.re)), fabsf((s[pos].s2.c2.im))); \
+  float c9 = fmaxf(fabsf((s[pos].s3.c0.re)), fabsf((s[pos].s3.c0.im))); \
+  float c10 = fmaxf(fabsf((s[pos].s3.c1.re)), fabsf((s[pos].s3.c1.im))); \
+  float c11 = fmaxf(fabsf((s[pos].s3.c2.re)), fabsf((s[pos].s3.c2.im))); \
+  c0 = fmaxf(c0, c1); c1 = fmaxf(c2, c3); c2 = fmaxf(c4, c5);           \
+  c3 = fmaxf(c6, c7); c4 = fmaxf(c8, c9); c5 = fmaxf(c10, c11);         \
+  c0 = fmaxf(c0, c1); c1 = fmaxf(c2, c3); c2 = fmaxf(c4, c5);           \
+  c0 = fmaxf(c0, c1); c0 = fmaxf(c0, c2);                               \
+  n = c0;                        \
+}\
    
    
 //////////////////////////////
@@ -99,18 +159,12 @@ float half2float_host(short in, float innorm){
 __device__ void dev_write_spinor_half(dev_spinor* in, dev_spinor_half* out, float* out_norm){
    float norm = 0.0f;
    int i;
-     for(i=0; i<6; i++){
-       norm += in[i].x*in[i].x 
-             + in[i].y*in[i].y 
-             + in[i].z*in[i].z 
-             + in[i].w*in[i].w; 
-     }
    
+    get_half_norm(norm, in);
    
     //store unit direction vector
+    *out_norm = norm;
     if (norm != 0.0f){
-      norm = sqrtf(norm);
-      *out_norm = norm;
       //store norm
       #pragma unroll 6
       for(i=0; i<6; i++){
@@ -122,7 +176,6 @@ __device__ void dev_write_spinor_half(dev_spinor* in, dev_spinor_half* out, floa
        }
       else{
        //store norm
-       *out_norm = norm;
        #pragma unroll 6
        for(i=0; i<6; i++){
          out[i].x = fl2sh(0.0f);
@@ -159,18 +212,11 @@ __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float
    
     */ 
      
-     for(i=0; i<6; i++){
-       norm += s[6*pos+i].x*s[6*pos+i].x 
-             + s[6*pos+i].y*s[6*pos+i].y 
-             + s[6*pos+i].z*s[6*pos+i].z 
-             + s[6*pos+i].w*s[6*pos+i].w; 
-     }
-   
-   
+     get_half_norm_from_pos(norm, s, pos);
+     
+    shnorm[pos] = norm;
     //store unit direction vector
     if (norm != 0.0f){
-      norm = sqrtf(norm);
-      shnorm[pos] = norm;
       //store norm
       #pragma unroll 6
       for(i=0; i<6; i++){
@@ -182,7 +228,6 @@ __global__ void float2half_spinorfield(dev_spinor* s, dev_spinor_half* sh, float
         }
       else{
        //store norm
-       shnorm[pos] = norm;
        #pragma unroll 6
        for(i=0; i<6; i++){
          sh[6*pos+i].x = fl2sh(0.0f);
@@ -220,7 +265,7 @@ int pos=threadIdx.x + blockDim.x*blockIdx.x;
 
 // stores the float4 gauge field gf into the half gauge field gfh
 // for GF_8 we have to be careful, as we have two angles in -Pi .. Pi
-// so we have to divide them by (2 Pi) This is taken care of in the gauge
+// so we have to divide them by (Pi) This is taken care of in the gauge
 // reconstruction routines
 // the volume is given explicitly (vol) here, to make sure alway the complete 
 // VOLUME is processed and not VOLUME/2 (eo)
@@ -236,8 +281,8 @@ __global__ void float2half_gaugefield(dev_su3_2v* gf, dev_su3_2v_half* gfh, int 
     gfh[nf4*pos].z = fl2sh(gf[nf4*pos].z);
     gfh[nf4*pos].w = fl2sh(gf[nf4*pos].w);
     
-    gfh[nf4*pos+1].x = fl2sh(gf[nf4*pos+1].x/twopi_float);
-    gfh[nf4*pos+1].y = fl2sh(gf[nf4*pos+1].y/twopi_float);
+    gfh[nf4*pos+1].x = fl2sh(gf[nf4*pos+1].x/pi_float);
+    gfh[nf4*pos+1].y = fl2sh(gf[nf4*pos+1].y/pi_float);
     gfh[nf4*pos+1].z = fl2sh(gf[nf4*pos+1].z);
     gfh[nf4*pos+1].w = fl2sh(gf[nf4*pos+1].w);
   #else
@@ -477,6 +522,40 @@ return(0);
 
 
 
+extern "C" int bind_texture_gf_half(dev_su3_2v_half * gf){
+ //printf("Binding texture to gaugefield\n");
+ 
+  #ifdef MPI
+    #ifdef GF_8
+     size_t size = sizeof(short4)*2*(VOLUME+RAND)*4;
+    #else
+     size_t size = sizeof(short4)*3*(VOLUME+RAND)*4;
+    #endif
+  #else
+    #ifdef GF_8
+     size_t size = sizeof(short4)*2*VOLUME*4;
+    #else
+     size_t size = sizeof(short4)*3*VOLUME*4;
+    #endif
+  #endif
+ 
+ cudaGetTextureReference(&gf_texRefPtr, "gf_tex");
+ gf_channelDesc =  cudaCreateChannelDesc<short4>();
+ cudaBindTexture(0, gf_texRefPtr, gf, &gf_channelDesc, size);
+ printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
+ return(0);
+}
+
+
+
+extern "C" int unbind_texture_gf_half(){
+ //printf("Unbinding texture to gaugefield\n");
+ cudaUnbindTexture(gf_texRefPtr);
+ printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
+ return(0);
+}
+
+
 
 // convert spinor to REAL4 (float4, double4) 
 void convert2REAL4_spin_half(spinor* spin, dev_spinor_half* h2d, float* h2d_norm){
@@ -489,7 +568,7 @@ void convert2REAL4_spin_half(spinor* spin, dev_spinor_half* h2d, float* h2d_norm
     Vol = VOLUME;
   }
   for (i=0;i<Vol;i++){
-    norm = (float) sqrt(_spinor_prod_re(spin[i], spin[i]));
+    get_half_norm_from_pos_host(norm, spin, i);
     h2d_norm[i] = norm;
         h2d[6*i+0].x = fl2sh_host( (float)spin[i].s0.c0.re/norm);
         h2d[6*i+0].y = fl2sh_host( (float)spin[i].s0.c0.im/norm);
@@ -615,22 +694,16 @@ __global__ void axpy_half (float alpha, dev_spinor_half* x, float* x_norm, dev_s
        yhelp.z = sh2fl(y[6*pos+i].z)*ynhelp;
        yhelp.w = sh2fl(y[6*pos+i].w)*ynhelp;
         
-       erghelp[6*pos+i].x = alpha*xhelp.x + yhelp.x;
-       erghelp[6*pos+i].y = alpha*xhelp.y + yhelp.y;
-       erghelp[6*pos+i].z = alpha*xhelp.z + yhelp.z;
-       erghelp[6*pos+i].w = alpha*xhelp.w + yhelp.w;
+       erghelp[i].x = alpha*xhelp.x + yhelp.x;
+       erghelp[i].y = alpha*xhelp.y + yhelp.y;
+       erghelp[i].z = alpha*xhelp.z + yhelp.z;
+       erghelp[i].w = alpha*xhelp.w + yhelp.w;
     }
     
 	//calculate norm of resulting spinor
 	float ergnorm = 0.0f;
 
-	for(i=0; i<6; i++){
-                  ergnorm+= erghelp[6*pos+i].x*erghelp[6*pos+i].x
-	                  + erghelp[6*pos+i].y*erghelp[6*pos+i].y
-			  + erghelp[6*pos+i].z*erghelp[6*pos+i].z
-			  + erghelp[6*pos+i].w*erghelp[6*pos+i].w;
-	}
-	ergnorm = sqrt(ergnorm);
+        get_half_norm(ergnorm, erghelp);
 	y_norm[pos] = ergnorm;
 
 	//write out normalized spinors in half
@@ -683,32 +756,26 @@ __global__ void scal_half (float alpha, dev_spinor_half* x, float* x_norm){
        xhelp.z = sh2fl(x[6*pos+i].z)*xnhelp;
        xhelp.w = sh2fl(x[6*pos+i].w)*xnhelp;
         
-       erghelp[6*pos+i].x = alpha*xhelp.x;
-       erghelp[6*pos+i].y = alpha*xhelp.y;
-       erghelp[6*pos+i].z = alpha*xhelp.z;
-       erghelp[6*pos+i].w = alpha*xhelp.w;
+       erghelp[i].x = alpha*xhelp.x;
+       erghelp[i].y = alpha*xhelp.y;
+       erghelp[i].z = alpha*xhelp.z;
+       erghelp[i].w = alpha*xhelp.w;
     }
     
         //calculate norm of resulting spinor
         float ergnorm = 0.0f;
-
-        for(i=0; i<6; i++){
-                  ergnorm+= erghelp[6*pos+i].x*erghelp[6*pos+i].x
-                          + erghelp[6*pos+i].y*erghelp[6*pos+i].y
-                          + erghelp[6*pos+i].z*erghelp[6*pos+i].z
-                          + erghelp[6*pos+i].w*erghelp[6*pos+i].w;
-        }
-        ergnorm = sqrt(ergnorm);
+        
+        get_half_norm(ergnorm, erghelp);
         x_norm[pos] = ergnorm;
 
         //write out normalized spinors in half
     if (ergnorm != 0.0f){
       #pragma unroll 6
       for(i=0; i<6; i++){
-         x[6*pos+i].x = fl2sh(erghelp[6*pos+i].x/ergnorm);
-         x[6*pos+i].y = fl2sh(erghelp[6*pos+i].y/ergnorm);
-         x[6*pos+i].z = fl2sh(erghelp[6*pos+i].z/ergnorm);
-         x[6*pos+i].w = fl2sh(erghelp[6*pos+i].w/ergnorm);
+         x[6*pos+i].x = fl2sh(erghelp[i].x/ergnorm);
+         x[6*pos+i].y = fl2sh(erghelp[i].y/ergnorm);
+         x[6*pos+i].z = fl2sh(erghelp[i].z/ergnorm);
+         x[6*pos+i].w = fl2sh(erghelp[i].w/ergnorm);
           } 
         }
       else{
@@ -905,12 +972,27 @@ __global__ void dot_half ( float* redfield, dev_spinor_half* x, float* x_norm, d
 
 // kernel for the square of the norm of a half spinor
 // local squared norms are written to reduction field redfield
-__global__ void squarenorm_half (float* redfield, float* x_norm){
+__global__ void squarenorm_half (float* redfield, dev_spinor_half* x, float* x_norm){
    int pos= threadIdx.x + blockDim.x*blockIdx.x;
    float xnhelp;
+   float dotp = 0.0;
+   int i;
+   float4 xhelp;
    if(pos < dev_VOLUME){
-    xnhelp = x_norm[pos];
-    redfield[pos] = xnhelp*xnhelp;
+    #pragma unroll 6
+    for(i=0; i<6; i++){
+       xnhelp = x_norm[pos];
+       xhelp.x = sh2fl(x[6*pos+i].x)*xnhelp;
+       xhelp.y = sh2fl(x[6*pos+i].y)*xnhelp;
+       xhelp.z = sh2fl(x[6*pos+i].z)*xnhelp;
+       xhelp.w = sh2fl(x[6*pos+i].w)*xnhelp;
+       
+       dotp += xhelp.x * xhelp.x;
+       dotp += xhelp.y * xhelp.y;
+       dotp += xhelp.z * xhelp.z;
+       dotp += xhelp.w * xhelp.w;
+    }
+    redfield[pos] = dotp;
    }//dev_VOLUME
 }
 
@@ -951,12 +1033,12 @@ float dotprod_half(dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float*
 
 
 // calculates the norm^2 of a half spinor with norm x 
-float squarenorm_half(float * xnorm){
+float squarenorm_half(dev_spinor_half* x, float * xnorm){
    int i;
    cudaError_t cudaerr;
    
    squarenorm_half <<< blas_half_gridsize, blas_half_blocksize >>> 
-                      (dev_blas_half_redfield, xnorm);
+                      (dev_blas_half_redfield, x, xnorm);
    if((cudaerr=cudaGetLastError()) != cudaSuccess){
       printf("%s\n", cudaGetErrorString(cudaerr));
       exit(200);
@@ -1000,12 +1082,16 @@ __global__ void testhalf (dev_su3_2v* gf, dev_su3 * to){
 
   int pos=threadIdx.x + blockDim.x*blockIdx.x;
   if (pos==0){
+   #ifdef GF_8
+    dev_reconstructgf_8texref(gf, 2 , to);
+   #else
     dev_reconstructgf_2vtexref(gf, 2 , to);
+   #endif
   }
 }
 
 
-void testhalf_gf(dev_su3_2v * gf){
+void testhalf_gf(dev_su3_2v_half * gf){
   dev_su3 * testfield;
   dev_su3 hosttestfield;
   size_t size =  sizeof(dev_su3);
@@ -1015,7 +1101,7 @@ void testhalf_gf(dev_su3_2v * gf){
   cudaMalloc((void **) &testfield, size);
   #ifdef USETEXTURE
     //Bind texture gf
-    bind_texture_gf(gf);
+    bind_texture_gf_half(dev_gf_half);
   #endif  
   testhalf <<< 1, 1 >>> (dev_gf, testfield);
   cudaMemcpy(&(hosttestfield), testfield, size, cudaMemcpyDeviceToHost);  
@@ -1023,7 +1109,7 @@ void testhalf_gf(dev_su3_2v * gf){
   
   
   #ifdef USETEXTURE
-   unbind_texture_gf();
+   unbind_texture_gf_half();
   #endif
 }
 

@@ -101,13 +101,13 @@ extern "C" int dev_cg_eo_half(
      float2half_gaugefield <<< gridsize, BLOCK2  >>>(dev_gf, dev_gf_half, VOLUME);
    printf("Done\n"); 
    
-   testhalf_gf(gf);
+   testhalf_gf(dev_gf_half);
   
  
  
   #ifdef USETEXTURE
     //Bind texture gf
-    bind_texture_gf(gf);
+    bind_texture_gf_half(dev_gf_half);
   #endif
  
  
@@ -141,7 +141,7 @@ extern "C" int dev_cg_eo_half(
  
 
  //relative precision -> get initial residue
- sourcesquarenorm = squarenorm_half(spinin_norm);
+ sourcesquarenorm = squarenorm_half(spinin, spinin_norm);
  host_rk = sourcesquarenorm; //for use in main loop
  printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
@@ -180,7 +180,7 @@ extern "C" int dev_cg_eo_half(
   }
 
   //Abbruch?
-  host_dotprod = squarenorm_half(spin0_norm);
+  host_dotprod = squarenorm_half(spin0, spin0_norm);
   
  if (((host_dotprod <= eps*sourcesquarenorm) && (i > maxit / 4) ) || ( host_dotprod <= epsfinal/2.)){//error-limit erreicht (epsfinal/2 sollte ausreichen um auch in double precision zu bestehen)
    break; 
@@ -240,7 +240,7 @@ extern "C" int dev_cg_eo_half(
   dev_copy_spinor_field_half<<<griddim2, blockdim2 >>>(spin1, spin1_norm,spinout, spinout_norm);
   
   #ifdef USETEXTURE
-   unbind_texture_gf();
+   unbind_texture_gf_half();
   #endif
   cudaFree(dotprod);
   cudaFree(dotprod2);

@@ -34,7 +34,7 @@
 
 
 #ifdef HALF
-  #define twopi_float 6.283185307f
+  #define pi_float 3.141592654f
 #endif 
 
 
@@ -235,8 +235,8 @@ __device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, de
   }
   #ifdef HALF
     // we have to multiply by two pi because normalization to -1..1
-    gfin.x = gfin.x*twopi_float;
-    gfin.y = gfin.y*twopi_float;
+    gfin.x = gfin.x*pi_float;
+    gfin.y = gfin.y*pi_float;
   #endif
   sincos(gfin.x, &(*gf)[0][0].im, &(*gf)[0][0].re);
   (*gf)[0][0].re = (*gf)[0][0].re * p1.re;
@@ -404,8 +404,8 @@ __device__ void dev_reconstructgf_8texref_dagger (const dev_su3_2v* field,int po
   
   #ifdef HALF
     // we have to multiply by two pi because normalization to -1..1
-    gfin.x = gfin.x*twopi_float;
-    gfin.y = gfin.y*twopi_float;
+    gfin.x = gfin.x*pi_float;
+    gfin.y = gfin.y*pi_float;
   #endif  
   
   sincos(gfin.x, &(*gf)[0][0].im, &(*gf)[0][0].re);
