@@ -468,6 +468,20 @@ extern "C" void dev_Qtm_pm_psi_half(dev_spinor_half* spinin, float* spinin_norm,
   dev_mul_one_pm_imu_sub_mul_gamma5_half<<<gridsize2, blocksize2>>>(dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm,  spinout, spinout_norm , +1.); 
 }
 
+
+
+
+extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, int blocksize, int gridsize2, int blocksize2){
+
+  printf("WARNING: dummy function 'dev_Qtm_pm_psi' was called\n");
+  
+}
+
+
+
+
+
+
 #endif //HALF
 
 
@@ -703,8 +717,16 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
 
 // this is the eo version of the device cg inner solver 
 // we invert the hermitean D_tm D_tm^{+}
-extern "C" int dev_cg(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
-dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, REAL* output,REAL* erg, int xsize, int ysize, int rescalekappa){
+extern "C" int dev_cg(
+       dev_su3_2v * gf,
+       dev_spinor* spinin, 
+       dev_spinor* spinout, 
+       dev_spinor* spin0, 
+       dev_spinor* spin1, 
+       dev_spinor* spin2, 
+       dev_spinor* spin3, 
+       dev_spinor* spin4, 
+       int *grid, int * nn_grid, int rescalekappa){
  
  
  REAL host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
@@ -715,7 +737,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  int i, gridsize;
  int maxit = max_innersolver_it;
  REAL eps = (REAL) innersolver_precision;
- int N_recalcres = 10; // after N_recalcres iterations calculate r = A x_k - b
+ int N_recalcres = 30; // after N_recalcres iterations calculate r = A x_k - b
  
  
  // initialize grid and block, make sure VOLUME is a multiple of blocksize 
@@ -967,8 +989,16 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
 
 // this is the eo version of the device cg inner solver 
 // we invert the hermitean Q_{-} Q_{+}
-extern "C" int dev_cg_eo(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
-dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, REAL* output,REAL* erg, int xsize, int ysize, int rescalekappa, REAL epsfinal){
+extern "C" int dev_cg_eo(
+      dev_su3_2v * gf,
+      dev_spinor* spinin, 
+      dev_spinor* spinout, 
+      dev_spinor* spin0, 
+      dev_spinor* spin1, 
+      dev_spinor* spin2, 
+      dev_spinor* spin3, 
+      dev_spinor* spin4, 
+      int *grid, int * nn_grid, REAL epsfinal){
  
  
  REAL host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
@@ -1046,14 +1076,6 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
   he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
  
-  #ifdef HALF
-   printf("Converting gauge to half precision... ");
-     float2half_gaugefield <<< gridsize, BLOCK2  >>>(dev_gf, dev_gf_half, VOLUME);
-   printf("Done\n"); 
-   
-   testhalf_gf(gf);
-  
-  #endif
  
  
   #ifdef USETEXTURE
@@ -1588,7 +1610,12 @@ cudaError_t cudaerr;
   if((void*)(h2d_spin = (dev_spinor_half *)malloc(dev_spinsize)) == NULL){
     printf("Could not allocate memory for h2d_spin. Aborting...\n");
     exit(200);
-  } // Allocate float conversion spinor on host  
+  } // Allocate float conversion spinor on host 
+  size_t dev_normsize = VOLUME/2 * sizeof(float);
+  if((void*)(h2d_spin_norm = (float*)malloc(dev_normsize)) == NULL){
+    printf("Could not allocate memory for h2d_spin_norm. Aborting...\n");
+    exit(200);
+  } // Allocate float conversion norm on host 
   #endif
   
   
@@ -1599,6 +1626,19 @@ cudaError_t cudaerr;
   cudaMalloc((void **) &dev_spin5, dev_spinsize);
   cudaMalloc((void **) &dev_spinin, dev_spinsize);
   cudaMalloc((void **) &dev_spinout, dev_spinsize);
+
+  #ifdef HALF
+   dev_spinsize = VOLUME/2*sizeof(float);
+   cudaMalloc((void **) &dev_spin1_norm, dev_spinsize);   // Allocate norm spin1 on device
+   cudaMalloc((void **) &dev_spin2_norm, dev_spinsize);   // Allocate norm spin2 on device
+   cudaMalloc((void **) &dev_spin3_norm, dev_spinsize);   // Allocate norm spin3 on device
+   cudaMalloc((void **) &dev_spin4_norm, dev_spinsize);
+   cudaMalloc((void **) &dev_spin5_norm, dev_spinsize);
+   cudaMalloc((void **) &dev_spinin_norm, dev_spinsize);
+   cudaMalloc((void **) &dev_spinout_norm, dev_spinsize);
+  #endif
+
+
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of spinor fields failed. Aborting...\n");
     exit(200);
@@ -1760,7 +1800,12 @@ cudaError_t cudaerr;
   if((void*)(h2d_spin = (dev_spinor_half *)malloc(dev_spinsize)) == NULL){
     printf("Could not allocate memory for h2d_spin. Aborting...\n");
     exit(200);
-  } // Allocate float conversion spinor on host  
+  } // Allocate float conversion spinor on host 
+  size_t dev_normsize = VOLUME/2 * sizeof(float);
+  if((void*)(h2d_spin_norm = (float *)malloc(dev_normsize)) == NULL){
+    printf("Could not allocate memory for h2d_spin_norm. Aborting...\n");
+    exit(200);
+  } // Allocate float conversion norm on host 
   #endif
   
   cudaMalloc((void **) &dev_spin1, dev_spinsize);   // Allocate array spin1 on device
@@ -1773,7 +1818,22 @@ cudaError_t cudaerr;
   
   cudaMalloc((void **) &dev_spin_eo1, dev_spinsize);
   cudaMalloc((void **) &dev_spin_eo2, dev_spinsize);
-  
+ 
+  #ifdef HALF
+  dev_spinsize = VOLUME/2*sizeof(float);
+  cudaMalloc((void **) &dev_spin1_norm, dev_spinsize);   // Allocate norm spin1 on device
+  cudaMalloc((void **) &dev_spin2_norm, dev_spinsize);   // Allocate norm spin2 on device
+  cudaMalloc((void **) &dev_spin3_norm, dev_spinsize);   // Allocate norm spin3 on device
+  cudaMalloc((void **) &dev_spin4_norm, dev_spinsize);
+  cudaMalloc((void **) &dev_spin5_norm, dev_spinsize);
+  cudaMalloc((void **) &dev_spinin_norm, dev_spinsize);
+  cudaMalloc((void **) &dev_spinout_norm, dev_spinsize);
+
+  cudaMalloc((void **) &dev_spin_eo1_norm, dev_spinsize);
+  cudaMalloc((void **) &dev_spin_eo2_norm, dev_spinsize);
+  #endif
+
+
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of spinor fields failed. Aborting...\n");
     exit(200);
@@ -1930,6 +1990,11 @@ void finalize_mixedsolve(){
 }
 
 
+// include half versions of dev_cg - solvers
+#ifdef HALF
+  #include "half_solvers.cuh"
+#endif
+
 
 
 
@@ -2007,7 +2072,7 @@ for(iter=0; iter<max_iter; iter++){
    // D p_k = r_k
    printf("Entering inner solver\n");
    assert((startinner = clock())!=-1);
-   totalcount += dev_cg(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, dev_output,NULL, T, LZ,0);
+   totalcount += dev_cg(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, 0);
    stopinner = clock();
    timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;
    printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
@@ -2157,6 +2222,16 @@ void benchmark(spinor * const Q){
   #endif
 }
 
+#else
+extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
+           double eps, const int rel_prec,const int N){
+   printf("WARNING dummy function mixed_solve called\n");
+   return(0);           
+}
+
+#endif
+// WORK TO DO:
+// Separate half and non-half inner solvers in a more transparent way!!
 
 
 
@@ -2173,9 +2248,13 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   double sourcesquarenorm;
   int iter, retval;
   
-
-  size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
-    
+  size_t dev_spinsize;
+  #ifndef HALF
+    dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
+  #else
+    dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor_half); //short4 eo !
+    size_t dev_normsize = VOLUME/2 * sizeof(float);
+  #endif
   init_mixedsolve_eo(g_gauge_field);
   
  /*   
@@ -2187,8 +2266,6 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   exit(100);
   */
  
- 
-
 
   // Start timer
   assert((start = clock())!=-1);
@@ -2249,25 +2326,54 @@ for(iter=0; iter<max_iter; iter++){
    }
    
   //initialize spin fields on device
-  convert2REAL4_spin(g_spinor_field[DUM_SOLVER],h2d_spin);
-  
+  #ifndef HALF
+    convert2REAL4_spin(g_spinor_field[DUM_SOLVER],h2d_spin);
+  #else
+    convert2REAL4_spin_half(g_spinor_field[DUM_SOLVER],h2d_spin, h2d_spin_norm);
+  #endif
   cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
+  
+  // also copy half spinor norm
+  #ifdef HALF
+  cudaMemcpy(dev_spinin_norm, h2d_spin_norm, dev_normsize, cudaMemcpyHostToDevice);
+  #endif
+  
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
 
    // solve in single prec on device
    // D p_k = r_k
    printf("Entering inner solver\n");
    assert((startinner = clock())!=-1);
-   totalcount += dev_cg_eo(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, dev_output,NULL, T, LZ,0,(REAL) finaleps);
+   #ifndef HALF
+      totalcount += dev_cg_eo(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, (REAL) finaleps);
+   #else
+     totalcount += dev_cg_eo_half(dev_gf, 
+                 dev_spinin, dev_spinin_norm,
+                 dev_spinout,dev_spinout_norm,
+                 dev_spin1, dev_spin1_norm,
+                 dev_spin2, dev_spin2_norm,
+                 dev_spin3, dev_spin3_norm,
+                 dev_spin4, dev_spin4_norm,
+                 dev_spin5, dev_spin5_norm,
+                 dev_grid,dev_nn, (REAL) finaleps); 
+   #endif
    stopinner = clock();
    timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;
    printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
  
    // copy back
    cudaMemcpy(h2d_spin, dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
+   #ifdef HALF
+    cudaMemcpy(h2d_spin_norm, dev_spinout_norm, dev_normsize, cudaMemcpyDeviceToHost);
+   #endif
    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
    
-   convert2double_spin(h2d_spin, g_spinor_field[DUM_SOLVER+2]);
+   #ifndef HALF
+     convert2double_spin(h2d_spin, g_spinor_field[DUM_SOLVER+2]);
+   #else
+     convert2double_spin_half(h2d_spin, h2d_spin_norm, g_spinor_field[DUM_SOLVER+2]);
+   #endif
+   
    // x_(k+1) = x_k + p_k
    add(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+2],N);
 
@@ -2287,7 +2393,7 @@ for(iter=0; iter<max_iter; iter++){
   finalize_mixedsolve();
   return(-1);
 }
-#endif 
+
 
 
 // mixed solver, even/odd, non-degenerate two flavour

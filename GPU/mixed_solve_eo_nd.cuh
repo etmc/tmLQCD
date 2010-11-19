@@ -72,12 +72,15 @@ extern "C" {
   //#include "mpi_init.h"
 #endif
 */
+/*
 #undef MPI
 #undef REAL
   #include <mpi.h>
   //#include "../mpi_init.h"
 #define MPI
 #define REAL float
+*/
+
 #include "MACROS.cuh"
 
 

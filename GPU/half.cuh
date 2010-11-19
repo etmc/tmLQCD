@@ -255,6 +255,70 @@ __global__ void float2half_gaugefield(dev_su3_2v* gf, dev_su3_2v_half* gfh, int 
 
 
 
+
+
+__device__ inline void dev_copy_spinor_half(dev_spinor_half *i1, float* i1_norm, dev_spinor_half *i2, float* i2_norm){
+  int i;
+  (*i2_norm) = (*i1_norm);
+  #pragma unroll 6
+  for(i=0;i<6;i++){ //color + spin
+    (*(i2+i)).x = (*(i1+i)).x;
+    (*(i2+i)).y = (*(i1+i)).y;
+    (*(i2+i)).z = (*(i1+i)).z;
+    (*(i2+i)).w = (*(i1+i)).w;
+  }
+}
+
+__device__ inline void dev_zero_spinor_half(dev_spinor_half *sin, float* sin_norm){
+  int i;
+  *sin_norm = 0.0f;
+  #pragma unroll 6
+  for(i=0;i<6;i++){ //color + spin
+    (*(sin+i)).x = fl2sh(0.0f);
+    (*(sin+i)).y = fl2sh(0.0f);
+    (*(sin+i)).z = fl2sh(0.0f);
+    (*(sin+i)).w = fl2sh(0.0f);
+  }
+}
+
+
+
+
+
+__global__ void dev_zero_spinor_field_half(
+        dev_spinor_half* s1, float* s1_norm){
+  int pos;
+  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  if(pos < dev_VOLUME){
+          dev_zero_spinor_half(&(s1[6*pos]), &(s1_norm[pos]));
+  }
+}
+
+
+
+
+__global__ void dev_copy_spinor_field_half(
+    dev_spinor_half* s1, float* s1_norm, 
+    dev_spinor_half* s2, float* s2_norm
+){
+    int pos;
+  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  if(pos < dev_VOLUME){
+      dev_copy_spinor_half( &(s1[6*pos]), &(s1_norm[pos]),
+                       &(s2[6*pos]), &(s2_norm[pos]));
+  } 
+}
+
+
+
+
+
+
+
+
+
+
+
 extern "C" int bind_texture_spin(dev_spinor* s, int i){
  printf("Warning: DUMMY ROUTINE 'bind_texture_spin' called\n");
  return(-1);
@@ -414,18 +478,117 @@ return(0);
 
 
 
+// convert spinor to REAL4 (float4, double4) 
+void convert2REAL4_spin_half(spinor* spin, dev_spinor_half* h2d, float* h2d_norm){
+  int i,Vol;
+  float norm;
+  if(even_odd_flag){
+    Vol = VOLUME/2;
+  }
+  else{
+    Vol = VOLUME;
+  }
+  for (i=0;i<Vol;i++){
+    norm = (float) sqrt(_spinor_prod_re(spin[i], spin[i]));
+    h2d_norm[i] = norm;
+        h2d[6*i+0].x = fl2sh_host( (float)spin[i].s0.c0.re/norm);
+        h2d[6*i+0].y = fl2sh_host( (float)spin[i].s0.c0.im/norm);
+        h2d[6*i+0].z = fl2sh_host( (float)spin[i].s0.c1.re/norm);
+        h2d[6*i+0].w = fl2sh_host( (float)spin[i].s0.c1.im/norm);
+        
+        h2d[6*i+1].x = fl2sh_host( (float)spin[i].s0.c2.re/norm);
+        h2d[6*i+1].y = fl2sh_host( (float)spin[i].s0.c2.im/norm);
+        h2d[6*i+1].z = fl2sh_host( (float)spin[i].s1.c0.re/norm);
+        h2d[6*i+1].w = fl2sh_host( (float)spin[i].s1.c0.im/norm);
+        
+        h2d[6*i+2].x = fl2sh_host( (float)spin[i].s1.c1.re/norm);
+        h2d[6*i+2].y = fl2sh_host( (float)spin[i].s1.c1.im/norm);
+        h2d[6*i+2].z = fl2sh_host( (float)spin[i].s1.c2.re/norm);
+        h2d[6*i+2].w = fl2sh_host( (float)spin[i].s1.c2.im/norm);
+        
+        h2d[6*i+3].x = fl2sh_host( (float)spin[i].s2.c0.re/norm);
+        h2d[6*i+3].y = fl2sh_host( (float)spin[i].s2.c0.im/norm);
+        h2d[6*i+3].z = fl2sh_host( (float)spin[i].s2.c1.re/norm);
+        h2d[6*i+3].w = fl2sh_host( (float)spin[i].s2.c1.im/norm);
+        
+        h2d[6*i+4].x = fl2sh_host( (float)spin[i].s2.c2.re/norm);
+        h2d[6*i+4].y = fl2sh_host( (float)spin[i].s2.c2.im/norm);
+        h2d[6*i+4].z = fl2sh_host( (float)spin[i].s3.c0.re/norm);
+        h2d[6*i+4].w = fl2sh_host( (float)spin[i].s3.c0.im/norm);
+        
+        h2d[6*i+5].x = fl2sh_host( (float)spin[i].s3.c1.re/norm);
+        h2d[6*i+5].y = fl2sh_host( (float)spin[i].s3.c1.im/norm);
+        h2d[6*i+5].z = fl2sh_host( (float)spin[i].s3.c2.re/norm);
+        h2d[6*i+5].w = fl2sh_host( (float)spin[i].s3.c2.im/norm);
+    
+  }
+}
+
+
+
+
+// convert spinor to double 
+void convert2double_spin_half(dev_spinor_half* spin, float* spin_norm, spinor* h2d){
+  int i,Vol;
+  double norm;
+  if(even_odd_flag){
+    Vol = VOLUME/2;
+  }
+  else{
+    Vol = VOLUME;
+  }
+  for (i=0;i<Vol;i++){
+     norm=(double) spin_norm[i];
+        h2d[i].s0.c0.re = (double) (sh2fl_host(spin[6*i+0].x))*norm;
+        h2d[i].s0.c0.im = (double) (sh2fl_host(spin[6*i+0].y))*norm;
+        h2d[i].s0.c1.re = (double) (sh2fl_host(spin[6*i+0].z))*norm;
+        h2d[i].s0.c1.im = (double) (sh2fl_host(spin[6*i+0].w))*norm;
+        
+        h2d[i].s0.c2.re = (double) (sh2fl_host(spin[6*i+1].x))*norm;
+        h2d[i].s0.c2.im = (double) (sh2fl_host(spin[6*i+1].y))*norm;
+        h2d[i].s1.c0.re = (double) (sh2fl_host(spin[6*i+1].z))*norm;
+        h2d[i].s1.c0.im = (double) (sh2fl_host(spin[6*i+1].w))*norm;   
+        
+        h2d[i].s1.c1.re = (double) (sh2fl_host(spin[6*i+2].x))*norm;
+        h2d[i].s1.c1.im = (double) (sh2fl_host(spin[6*i+2].y))*norm;
+        h2d[i].s1.c2.re = (double) (sh2fl_host(spin[6*i+2].z))*norm;
+        h2d[i].s1.c2.im = (double) (sh2fl_host(spin[6*i+2].w))*norm;  
+        
+        h2d[i].s2.c0.re = (double) (sh2fl_host(spin[6*i+3].x))*norm;
+        h2d[i].s2.c0.im = (double) (sh2fl_host(spin[6*i+3].y))*norm;
+        h2d[i].s2.c1.re = (double) (sh2fl_host(spin[6*i+3].z))*norm;
+        h2d[i].s2.c1.im = (double) (sh2fl_host(spin[6*i+3].w))*norm;  
+        
+        h2d[i].s2.c2.re = (double) (sh2fl_host(spin[6*i+4].x))*norm;
+        h2d[i].s2.c2.im = (double) (sh2fl_host(spin[6*i+4].y))*norm;
+        h2d[i].s3.c0.re = (double) (sh2fl_host(spin[6*i+4].z))*norm;
+        h2d[i].s3.c0.im = (double) (sh2fl_host(spin[6*i+4].w))*norm; 
+        
+        h2d[i].s3.c1.re = (double) (sh2fl_host(spin[6*i+5].x))*norm;
+        h2d[i].s3.c1.im = (double) (sh2fl_host(spin[6*i+5].y))*norm;
+        h2d[i].s3.c2.re = (double) (sh2fl_host(spin[6*i+5].z))*norm;
+        h2d[i].s3.c2.im = (double) (sh2fl_host(spin[6*i+5].w))*norm; 
+        
+  }
+}
+
+
+
+
+
+
+
+
 
 
 /////    SOME BLAS KERNELs - work in progress //////////
 
 
 
-
-
 // y(half) = alpha*x(half) + y(half) 
 // x is not read from texture
 // y is not read from texture
-__global__ void axpy_half (float alpha, dev_spinor* erg, dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float* y_norm){
+__global__ void axpy_half (float alpha, dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float* y_norm){
    int pos= threadIdx.x + blockDim.x*blockIdx.x;
    float4 xhelp,yhelp;
    __shared__ float4 erghelp[6];
@@ -497,12 +660,88 @@ __global__ void axpy_half (float alpha, dev_spinor* erg, dev_spinor_half* x, flo
 
 
 
+// x = alpha*x(half) 
+// x is not read from texture
+__global__ void scal_half (float alpha, dev_spinor_half* x, float* x_norm){
+   int pos= threadIdx.x + blockDim.x*blockIdx.x;
+   float4 xhelp;
+   __shared__ float4 erghelp[6];
+   int i;
+   float xnhelp;
+   
+   
+   if(pos < dev_VOLUME){
+    // this is the loop over the 6 float4 forming one spinor
+    #pragma unroll 6
+    for(i=0; i<6; i++){
+       //xhelp = tex1Dfetch(spinhalf_tex, 6*pos+i);
+       //xnhelp = tex1Dfetch(spinnormhalf_tex, pos);
+       
+       xnhelp = x_norm[pos];
+       xhelp.x = sh2fl(x[6*pos+i].x)*xnhelp;
+       xhelp.y = sh2fl(x[6*pos+i].y)*xnhelp;
+       xhelp.z = sh2fl(x[6*pos+i].z)*xnhelp;
+       xhelp.w = sh2fl(x[6*pos+i].w)*xnhelp;
+        
+       erghelp[6*pos+i].x = alpha*xhelp.x;
+       erghelp[6*pos+i].y = alpha*xhelp.y;
+       erghelp[6*pos+i].z = alpha*xhelp.z;
+       erghelp[6*pos+i].w = alpha*xhelp.w;
+    }
+    
+        //calculate norm of resulting spinor
+        float ergnorm = 0.0f;
+
+        for(i=0; i<6; i++){
+                  ergnorm+= erghelp[6*pos+i].x*erghelp[6*pos+i].x
+                          + erghelp[6*pos+i].y*erghelp[6*pos+i].y
+                          + erghelp[6*pos+i].z*erghelp[6*pos+i].z
+                          + erghelp[6*pos+i].w*erghelp[6*pos+i].w;
+        }
+        ergnorm = sqrt(ergnorm);
+        x_norm[pos] = ergnorm;
+
+        //write out normalized spinors in half
+    if (ergnorm != 0.0f){
+      #pragma unroll 6
+      for(i=0; i<6; i++){
+         x[6*pos+i].x = fl2sh(erghelp[6*pos+i].x/ergnorm);
+         x[6*pos+i].y = fl2sh(erghelp[6*pos+i].y/ergnorm);
+         x[6*pos+i].z = fl2sh(erghelp[6*pos+i].z/ergnorm);
+         x[6*pos+i].w = fl2sh(erghelp[6*pos+i].w/ergnorm);
+          } 
+        }
+      else{
+       #pragma unroll 6
+       for(i=0; i<6; i++){
+         x[6*pos+i].x = fl2sh(0.0f);
+         x[6*pos+i].y = fl2sh(0.0f);
+         x[6*pos+i].z = fl2sh(0.0f);
+         x[6*pos+i].w = fl2sh(0.0f);
+       }
+     }
+
+
+   }//dev_VOLUME
+}
+
+
+
+
+
+
+
+
+
+
+
+
 void init_blas_half(int vol){
   cudaError_t cudaerr;
   
   blas_half_blocksize=BLOCK2;
-  if( VOLUME >= BLOCK2){
-   blas_half_gridsize = (int)(VOLUME/BLOCK2) + 1;
+  if( vol >= BLOCK2){
+   blas_half_gridsize = (int)(vol/BLOCK2) + 1;
   }
   else{
     blas_half_gridsize=1;
