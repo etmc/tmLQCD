@@ -491,7 +491,7 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
 		
 		
         	
-        	
+        	/*
   		// copies first FACE to host
   		cudaMemcpyAsync(RAND1, spinin                      , tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[1]);
   		
@@ -516,22 +516,6 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   			             g_cart_grid, &stat[0]);
   		
   		
-  		// copies second FACE to host
-  		cudaMemcpyAsync(RAND2, spinin+6*(VolumeEO-tSliceEO), tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[2]);
-  		
-  		
-  		// exchanges second FACE
-  		cudaStreamSynchronize(stream[2]);												// synchronous
-  			//MPI_Irecv(RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
-  			//          g_cart_grid, &recv_req[1]);
-  			//MPI_Isend(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
-  			//          g_cart_grid, &send_req[1]);
-  		
-  			MPI_Sendrecv(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
-  			             RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
-  			             g_cart_grid, &stat[1]);
-  		
-  		
   		// copies first FACE back to device												// order may switched
   		//MPI_Wait(&recv_req[0], &stat[0]);												// synchronous
   			cudaMemcpyAsync(spinin+6*VolumeEO, RAND3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[1]);
@@ -549,6 +533,25 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		                                                                      VolumeEO-tSliceEO, tSliceEO );
   		
   		
+  		// copies second FACE to host
+  		cudaMemcpyAsync(RAND2, spinin+6*(VolumeEO-tSliceEO), tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[2]);
+  		
+  		
+  		// exchanges second FACE
+  		cudaStreamSynchronize(stream[2]);												// synchronous
+  			//MPI_Irecv(RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
+  			//          g_cart_grid, &recv_req[1]);
+  			//MPI_Isend(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
+  			//          g_cart_grid, &send_req[1]);
+  		
+  			MPI_Sendrecv(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
+  			             RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
+  			             g_cart_grid, &stat[1]);
+  		
+  		
+  		
+  		
+  		
   		// copies second FACE back to device
   		//MPI_Wait(&recv_req[1], &stat[1]);												// synchronous
   			cudaMemcpyAsync(spinin+6*(VolumeEO+tSliceEO), RAND4, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[2]);
@@ -560,24 +563,34 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
   		                                                                    ieo,
   		                                                                    0, tSliceEO );
+  		*/
+  		// copies first FACE to host
+  		cudaMemcpyAsync(RAND1, spinin                      , tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[1]);
+  		
+  		// copies second FACE to host
+  		cudaMemcpyAsync(RAND2, spinin+6*(VolumeEO-tSliceEO), tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[2]);
   		
   		
-  		/*
-  		// applies the remainder
+  		// INTERNAL kernel
+  		dev_Hopping_Matrix_ASYNC <<<gridsize1, blocksize, 0, stream[0]>>> ( gf,
+        	                                                                    spinin, spinout,
+        	                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
+        	                                                                    ieo,
+        	                                                                    tSliceEO, VolumeEO-2*tSliceEO );
+  		
+  		// first FACE
   		cudaStreamSynchronize(stream[1]);
-  		
-  				//cudaEventElapsedTime(&comm_time1, comm_start1, comm_stop1);
   		
   		for (int i = 0; i < nStreams; i++) {
   		
-  		  //MPI_Sendrecv(RAND1+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_dn, 0,		// NOT asynchronous
-  		  //             RAND3+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_up, 0,
-  		  //             g_cart_grid, &stat[i]);
+  		  MPI_Sendrecv(RAND1+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_dn, 0,		// NOT asynchronous
+  		               RAND3+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_up, 0,
+  		               g_cart_grid, &stat[i]);
   		  
-  		  MPI_Isend(RAND1+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_dn, i,
-  		            g_cart_grid, &send_req[i]);
-  		  MPI_Recv (RAND3+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_up, i,
-  		            g_cart_grid, &stat[i]);
+  		  //MPI_Isend(RAND1+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_dn, i,
+  		  //          g_cart_grid, &send_req[i]);
+  		  //MPI_Irecv (RAND3+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_up, i,
+  		  //          g_cart_grid, &recv_req[i]);
   		  
   		  //MPI_Wait(&recv_req[i], &stat[i]);
   		           
@@ -591,27 +604,19 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		}
   		
   		
-  		
-  		
-  				// cudaEventElapsedTime(&comp_time, comp_start, comp_stop);
-  		
-  		
-  		
-  		
+  		// second FACE
   		cudaStreamSynchronize(stream[nStreams+1]);
-  		
-  				//cudaEventElapsedTime(&comm_time2, comm_start2, comm_stop2);
   		
   		for (int i = 0; i < nStreams; i++) {
   		
-  		  //MPI_Sendrecv(RAND2+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_up, 1,
-  		  //             RAND4+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_dn, 1,
-  		  //             g_cart_grid, &stat[nStreams+i]);
+  		  MPI_Sendrecv(RAND2+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_up, 1,
+  		               RAND4+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_dn, 1,
+  		               g_cart_grid, &stat[nStreams+i]);
 		  
-  		  MPI_Isend(RAND2+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_up, nStreams+i,
-  		            g_cart_grid, &send_req[nStreams+i]);
-  		  MPI_Recv (RAND4+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_dn, nStreams+i,
-  		            g_cart_grid, &stat[nStreams+i]);
+  		  //MPI_Isend(RAND2+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_up, nStreams+i,
+  		  //          g_cart_grid, &send_req[nStreams+i]);
+  		  //MPI_Irecv (RAND4+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_dn, nStreams+i,
+  		  //          g_cart_grid, &recv_req[nStreams+i]);
   		  
   		  //MPI_Wait(&recv_req[nStreams+i], &stat[nStreams+i]);
   		  
@@ -623,25 +628,41 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		                                                                                 ieo,
   		                                                                                 0+i*offset, offset );
 		}
-  		*/
+  		
+  		
+  		
+  		
   		
   		/*
-  		// xchange
-		
+  		// copies first FACE to host
+  		cudaMemcpyAsync(RAND1, spinin                      , tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[1]);
+  		
+  		// copies second FACE to host
+  		cudaMemcpyAsync(RAND2, spinin+6*(VolumeEO-tSliceEO), tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[2]);
+  		
+  		
+  		// INTERNAL kernel
+  		dev_Hopping_Matrix_ASYNC <<<gridsize1, blocksize, 0, stream[0]>>> ( gf,
+        	                                                                    spinin, spinout,
+        	                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
+        	                                                                    ieo,
+        	                                                                    tSliceEO, VolumeEO-2*tSliceEO );
+  		
+  		// xchanges first FACE
 		cudaStreamSynchronize(stream[1]);
 		
-  		//MPI_Sendrecv(RAND1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
-  		//             RAND3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
-  		//             g_cart_grid, &stat[0]);
+  		MPI_Sendrecv(RAND1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
+  		             RAND3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
+  		             g_cart_grid, &stat[0]);
   		
-  		MPI_Isend(RAND1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
-  		          g_cart_grid, &send_req[0]);
-  		MPI_Recv(RAND3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
-  		         g_cart_grid, &stat[0]);
+  		//MPI_Isend(RAND1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
+  		//          g_cart_grid, &send_req[0]);
+  		//MPI_Recv(RAND3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
+  		//         g_cart_grid, &stat[0]);
   		
   		
+  		// applies first FACE
   		//MPI_Wait(&recv_request1, &stat[0]);
-  		
   		
   		cudaMemcpyAsync(spinin+6*VolumeEO           , RAND3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[1]);
   		
@@ -651,21 +672,21 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		                                                                    ieo,
   		                                                                    VolumeEO-tSliceEO, tSliceEO );
   		
-  		
+  		// xchanges second FACE
   		cudaStreamSynchronize(stream[2]);
 		
-  		//MPI_Sendrecv(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
-  		//             RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
-  		//             g_cart_grid, &stat[1]);
+  		MPI_Sendrecv(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
+  		             RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
+  		             g_cart_grid, &stat[1]);
   		
-  		MPI_Isend(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
-  		          g_cart_grid, &send_req[1]);
-  		MPI_Recv(RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
-  		         g_cart_grid, &stat[1]);
+  		//MPI_Isend(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
+  		//          g_cart_grid, &send_req[1]);
+  		//MPI_Recv(RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
+  		//         g_cart_grid, &stat[1]);
   		
   		
+  		// applies second FACE
   		//MPI_Wait(&recv_request2, &stat[1]);
-  		
   		
   		cudaMemcpyAsync(spinin+6*(VolumeEO+tSliceEO), RAND4, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[2]);
 		
@@ -675,7 +696,9 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		                                                                    ieo,
   		                                                                    0, tSliceEO );
   		*/
-  		// cudaThreadSynchronize();
+  		
+  		
+  		cudaThreadSynchronize();		// test if needed
   
   #endif
   

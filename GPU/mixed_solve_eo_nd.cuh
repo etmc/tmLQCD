@@ -1279,12 +1279,12 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   effectiveDeviceFlops = N * VOLUME/2 * effectiveFlopsPerApp;
   effectiveFlops       = N * VOLUME/2 * effectiveFlopsPerApp / timeElapsed / 1.0e9;
   
-  
+  /*
   printf("REAL:\n");
   printf("\ttime:        %.2e sec\n", timeElapsed);
   printf("\tflop's:      %.2e flops\n", realDeviceFlops);
   printf("\tperformance: %.2e Gflop/s\n\n", realFlops);
-  
+  */
   printf("EFFECTIVE:\n");
   printf("\ttime:        %.2e sec\n", timeElapsed);
   printf("\tflop's:      %.2e flops\n", effectiveDeviceFlops);
