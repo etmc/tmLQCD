@@ -27,7 +27,7 @@
 
 // alternative code
 
-//#define ALTERNATE_FIELD_XCHANGE	// to come ...
+//#define ALTERNATE_FIELD_XCHANGE		// provides a better communication, without overlapping
 //#define ALTERNATE_HOPPING_MATRIX	// at the moment: provides an alternative way of passing the (nn-)positions to dev_Hopping_Matrix()
 					//		  does not work properly yet
 
@@ -39,7 +39,7 @@
 #define DEVICE_EQUAL_RANK	// for MPI: cudaSetDevice(rank)
 
 #define ASYNC			// overlaps computation and communication	// atm for testing
-#define ASYNC_OPTIMIZED		// better version thereof			// needs ASYNC
+#define ASYNC_OPTIMIZED	1	// better version thereof			// needs ASYNC
 
 #define BLOCKSIZE1 192
 #define BLOCKSIZE2 192

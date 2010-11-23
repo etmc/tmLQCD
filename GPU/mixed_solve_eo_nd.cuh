@@ -72,16 +72,19 @@ extern "C" {
   //#include "mpi_init.h"
 #endif
 */
-/*
-#undef MPI
-#undef REAL
-  #include <mpi.h>
-  //#include "../mpi_init.h"
-#define MPI
-#define REAL float
-*/
+
+#ifdef MPI
+  #undef MPI
+  #undef REAL
+    #include <mpi.h>
+    //#include "../mpi_init.h"
+  #define MPI
+  #define REAL float
+#endif
 
 #include "MACROS.cuh"
+
+
 
 
 // spinor fields (pointing to device)
@@ -136,7 +139,14 @@ __device__ float mubar, epsbar;
   int * dev_g_lexic2eosub;
   int * dev_g_eo2lexic;
   int * dev_g_ipt;
-  spinor * spinor_xchange;			// for xchange_field_wrapper()
+  #ifndef ALTERNATE_FIELD_XCHANGE
+    spinor * spinor_xchange;			// for xchange_field_wrapper()
+  #else
+    dev_spinor * R1;
+    dev_spinor * R2;
+    dev_spinor * R3;
+    dev_spinor * R4;
+  #endif
   spinor * spinor_debug_in;			// for Hopping_Matrix_wrapper()
   spinor * spinor_debug_out;			// for Hopping_Matrix_wrapper()
   __device__ int dev_RAND;			// not used, maybe later ...
@@ -149,10 +159,19 @@ __device__ float mubar, epsbar;
     dev_spinor * RAND3;				// page-locked memory
     dev_spinor * RAND4;
     
-    cudaStream_t stream[3];
-    MPI_Status status1, status2;
-    MPI_Request send_request1, send_request2;
-    MPI_Request recv_request1, recv_request2;
+    int nStreams = ASYNC_OPTIMIZED;
+    cudaStream_t stream[2*ASYNC_OPTIMIZED+1];
+    cudaEvent_t comm_event[2*ASYNC_OPTIMIZED+1];
+    cudaEvent_t comp_event[2*ASYNC_OPTIMIZED+1];
+    cudaEvent_t comm_start1, comm_start2, comm_stop1, comm_stop2;
+    cudaEvent_t comp_start, comp_stop;
+    float comm_time1, comm_time2;
+    float comp_time;
+  #endif
+  #if defined(ASYNC_OPTIMIZED) || defined(ALTERNATE_FIELD_XCHANGE)
+    MPI_Status stat[2];
+    MPI_Request send_req[2];
+    MPI_Request recv_req[2];
   #endif
 #endif
 

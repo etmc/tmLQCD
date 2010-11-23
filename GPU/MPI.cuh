@@ -246,17 +246,38 @@ void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
 //		copies RAND back to device
 
 void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
-
   
-  size_t size_tSlice = LX*LY*LZ/2 * 6*sizeof(dev_spinor);
-  size_t size_Rand   = RAND/2     * 6*sizeof(dev_spinor);
-  
-  to_host_mpi(spinor_xchange, dev_spin, h2d_spin_up, size_tSlice, 0 , LX*LY*LZ/2);
-  to_host_mpi(spinor_xchange, dev_spin, h2d_spin_dn, size_tSlice, (T-1)*LX*LY*LZ/2, (VOLUME)/2);
-  
-  xchange_field(spinor_xchange, ieo);
-  
-  to_device_mpi(dev_spin, spinor_xchange, h2d_spin_up, size_Rand, VOLUME/2, (VOLUME+RAND)/2);
+  #ifndef ALTERNATE_FIELD_XCHANGE
+    
+    size_t size_tSlice = LX*LY*LZ/2 * 6*sizeof(dev_spinor);
+    size_t size_Rand   = RAND/2     * 6*sizeof(dev_spinor);
+    
+    to_host_mpi(spinor_xchange, dev_spin, h2d_spin_up, size_tSlice, 0 , LX*LY*LZ/2);
+    to_host_mpi(spinor_xchange, dev_spin, h2d_spin_dn, size_tSlice, (T-1)*LX*LY*LZ/2, (VOLUME)/2);
+    
+    xchange_field(spinor_xchange, ieo);
+    
+    to_device_mpi(dev_spin, spinor_xchange, h2d_spin_up, size_Rand, VOLUME/2, (VOLUME+RAND)/2);
+    
+  #else
+    
+    int tSliceEO = LX*LY*LZ/2;
+    int VolumeEO = VOLUME/2;
+    
+    cudaMemcpy(R1, dev_spin                      , tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost);
+    cudaMemcpy(R2, dev_spin+6*(VolumeEO-tSliceEO), tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost);
+    
+    MPI_Sendrecv(R1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
+                 R3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
+                 g_cart_grid, &stat[0]);
+    MPI_Sendrecv(R2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
+                 R4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
+                 g_cart_grid, &stat[1]);
+    
+    cudaMemcpy(dev_spin+6*VolumeEO           , R3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_spin+6*(VolumeEO+tSliceEO), R4, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice);
+    
+  #endif
   
 }
 
@@ -1032,12 +1053,24 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
   // h2d_spin_up = (dev_spinor *) malloc(dev_spinsize);		// for transferring the spin field in double precision on host to single precision on device
   // h2d_spin_dn = (dev_spinor *) malloc(dev_spinsize);		// on host pointing to host
   
+  #if defined(ALTERNATE_FIELD_XCHANGE) || defined(ASYNC_OPTIMIZED)
+    int tSliceEO = LX*LY*LZ/2;
+  #endif
   
-  		// debug	// host code
-  		if ( (void *) (spinor_xchange = (spinor *) malloc(2*dev_spinsize) ) == NULL) {						// MEMORY REQUIREMENTS: auxiliary fields for   xchange_field_wrapper()  and  Hopping_Matrix_wrapper()
-  		  printf("Process %d of %d: Could not allocate memory for spinor_xchange. Aborting...\n", g_proc_id, g_nproc);		//                      have to store doubles --> 2*dev_spinsize  !!
-  		  exit(200);
-  		}
+  		#ifndef ALTERNATE_FIELD_XCHANGE
+  		  // debug	// host code
+  		  if ( (void *) (spinor_xchange = (spinor *) malloc(2*dev_spinsize) ) == NULL) {						// MEMORY REQUIREMENTS: auxiliary fields for   xchange_field_wrapper()  and  Hopping_Matrix_wrapper()
+  		    printf("Process %d of %d: Could not allocate memory for spinor_xchange. Aborting...\n", g_proc_id, g_nproc);		//                      have to store doubles --> 2*dev_spinsize  !!
+  		    exit(200);
+  		  }
+  		#else
+  		  // int tSliceEO = LX*LY*LZ/2;
+  		  R1 = (dev_spinor *) malloc(2*tSliceEO*24*sizeof(float));
+  		  R2 = R1 + 6*tSliceEO;
+  		  R3 = (dev_spinor *) malloc(2*tSliceEO*24*sizeof(float));
+  		  R4 = R3 + 6*tSliceEO;
+  		#endif
+  		
   		#ifdef HOPPING_DEBUG
   		  // debug	// host code
   		  if ( (void *) (spinor_debug_in = (spinor *) malloc(2*dev_spinsize) ) == NULL) {
@@ -1070,7 +1103,7 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
   
   
   #ifdef ASYNC_OPTIMIZED					// for exchanging the boundaries in the MPI code
-    int tSliceEO = LX*LY*LZ/2;
+    // int tSliceEO = LX*LY*LZ/2;
     cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(float4));
     RAND4 = RAND3 + 6*tSliceEO;
     // RAND1 = (dev_spinor *) malloc(2*tSliceEO*6*sizeof(float4));
@@ -1078,9 +1111,21 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
     cudaMallocHost(&RAND1, 2*tSliceEO*6*sizeof(float4));
     RAND2 = RAND1 + 6*tSliceEO;
     
-    cudaStreamCreate(&stream[0]);
-    cudaStreamCreate(&stream[1]);
-    cudaStreamCreate(&stream[2]);
+    for (int i = 0; i < 2*nStreams+1; i++) {
+      cudaStreamCreate(&stream[i]);
+    }
+    
+    for (int i = 0; i < 2*nStreams+1; i++) {
+      cudaEventCreate(&comm_event[i]);
+      cudaEventCreate(&comp_event[i]);
+    }
+    
+    cudaEventCreate(&comm_start1);
+    cudaEventCreate(&comm_stop1);
+    cudaEventCreate(&comm_start2);
+    cudaEventCreate(&comm_stop2);
+    cudaEventCreate(&comp_start);
+    cudaEventCreate(&comp_stop);
   #endif
   
   
@@ -1161,7 +1206,12 @@ void finalize_mixedsolve_eo_nd_mpi(void) {
   
   free(h2d_spin_up);
   free(h2d_spin_dn);
-  free(spinor_xchange);
+  #ifndef ALTERNATE_FIELD_XCHANGE
+    free(spinor_xchange);
+  #else
+    free(R1);
+    free(R3);
+  #endif
   #ifdef HOPPING_DEBUG
     free(spinor_debug_in);
     free(spinor_debug_out);
@@ -1200,9 +1250,21 @@ void finalize_mixedsolve_eo_nd_mpi(void) {
     // free(RAND1);
     cudaFreeHost(RAND1);
 
-    cudaStreamDestroy(stream[0]);
-    cudaStreamDestroy(stream[1]);
-    cudaStreamDestroy(stream[3]);
+    for (int i = 0; i < 2*nStreams+1; i++) {
+      cudaStreamDestroy(stream[i]);
+    }
+    
+    for (int i = 0; i < 2*nStreams+1; i++) {
+      cudaEventDestroy(comm_event[i]);
+      cudaEventDestroy(comp_event[i]);
+    }
+    
+    cudaEventDestroy(comm_start1);
+    cudaEventDestroy(comm_stop2);
+    cudaEventDestroy(comm_start2);
+    cudaEventDestroy(comm_stop2);
+    cudaEventDestroy(comp_start);
+    cudaEventDestroy(comp_stop);
   #endif
   
   
@@ -2368,6 +2430,10 @@ extern "C" void benchmark_eo_nd_mpi (spinor * Q_up, spinor * Q_dn, int N) {
     printf("\ttime:        %.2e sec\n", maxTimeElapsed);
     printf("\tflop's:      %.2e flops\n", allEffectiveDeviceFlops);
     printf("\tperformance: %.2e Gflop/s\n\n", effectiveFlops);
+    //printf("\tADDITIONAL:\n");
+    //printf("\tcomm_time1 = %.2e sec\n", comm_time1/1000);
+    //printf("\tcomm_time2 = %.2e sec\n", comm_time2/1000);
+    //printf("\tcomp_time  = %.2e sec\n", comp_time/1000);
   }
   
   
