@@ -6,6 +6,7 @@
 
 
 
+
 // output & debug
 
 #define CUDA_DEBUG		// provides some tests and output specific to the used CUDA code
@@ -13,6 +14,13 @@
 //#define HOPPING_DEBUG		// enables the Hopping Matrix on the CPU (inside matrix_multiplication32_mpi())
 //#define MATRIX_DEBUG		// enables the matrix multiplication on the CPU (in the inner CG solver)
 //#define CG_DEBUG		// enables the CG on the CPU
+
+
+
+
+// conjugate gradient
+// ...
+
 
 
 
@@ -25,6 +33,7 @@
 
 
 
+
 // alternative code
 
 //#define ALTERNATE_FIELD_XCHANGE		// provides a better communication, without overlapping
@@ -33,19 +42,23 @@
 
 
 
-
-// CUDA parameters
+// CUDA + MPI
 
 #define DEVICE_EQUAL_RANK	// for MPI: cudaSetDevice(rank)
-
 #define ASYNC			// overlaps computation and communication	// atm for testing
 #define ASYNC_OPTIMIZED	1	// better version thereof			// needs ASYNC
+#define ASYNC_TIMING		// profiling the ASYNC_OPTIMIZED code
+
+
+
+
+// CUDA parameters
 
 #define BLOCKSIZE1 192
 #define BLOCKSIZE2 192
 #define BLOCKSIZE3 192
 #define BLOCKSIZE4 192
-#define BLOCKSIZE5 192
+#define BLOCKSIZE5 129
 
 
 

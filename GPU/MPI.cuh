@@ -1115,17 +1115,17 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
       cudaStreamCreate(&stream[i]);
     }
     
-    for (int i = 0; i < 2*nStreams+1; i++) {
-      cudaEventCreate(&comm_event[i]);
-      cudaEventCreate(&comp_event[i]);
-    }
-    
-    cudaEventCreate(&comm_start1);
-    cudaEventCreate(&comm_stop1);
-    cudaEventCreate(&comm_start2);
-    cudaEventCreate(&comm_stop2);
-    cudaEventCreate(&comp_start);
-    cudaEventCreate(&comp_stop);
+    #ifdef ASYNC_TIMING
+      cudaEventCreate(&start_ALL);
+      cudaEventCreate(&stop_ALL);
+      cudaEventCreate(&stop_D2H_1);
+      cudaEventCreate(&stop_D2H_2);
+      cudaEventCreate(&stop_INT_0);
+      cudaEventCreate(&stop_H2D_3);
+      cudaEventCreate(&stop_H2D_4);
+      cudaEventCreate(&stop_EXT_1);
+      cudaEventCreate(&stop_EXT_2);
+    #endif
   #endif
   
   
@@ -1254,17 +1254,17 @@ void finalize_mixedsolve_eo_nd_mpi(void) {
       cudaStreamDestroy(stream[i]);
     }
     
-    for (int i = 0; i < 2*nStreams+1; i++) {
-      cudaEventDestroy(comm_event[i]);
-      cudaEventDestroy(comp_event[i]);
-    }
-    
-    cudaEventDestroy(comm_start1);
-    cudaEventDestroy(comm_stop2);
-    cudaEventDestroy(comm_start2);
-    cudaEventDestroy(comm_stop2);
-    cudaEventDestroy(comp_start);
-    cudaEventDestroy(comp_stop);
+    #ifdef ASYNC_TIMING
+      cudaEventDestroy(start_ALL);
+      cudaEventDestroy(stop_ALL);
+      cudaEventDestroy(stop_D2H_1);
+      cudaEventDestroy(stop_D2H_2);
+      cudaEventDestroy(stop_INT_0);
+      cudaEventDestroy(stop_H2D_3);
+      cudaEventDestroy(stop_H2D_4);
+      cudaEventDestroy(stop_EXT_1);
+      cudaEventDestroy(stop_EXT_2);
+    #endif
   #endif
   
   
@@ -2430,10 +2430,28 @@ extern "C" void benchmark_eo_nd_mpi (spinor * Q_up, spinor * Q_dn, int N) {
     printf("\ttime:        %.2e sec\n", maxTimeElapsed);
     printf("\tflop's:      %.2e flops\n", allEffectiveDeviceFlops);
     printf("\tperformance: %.2e Gflop/s\n\n", effectiveFlops);
-    //printf("\tADDITIONAL:\n");
-    //printf("\tcomm_time1 = %.2e sec\n", comm_time1/1000);
-    //printf("\tcomm_time2 = %.2e sec\n", comm_time2/1000);
-    //printf("\tcomp_time  = %.2e sec\n", comp_time/1000);
+    
+    #ifdef ASYNC_TIMING
+      cudaEventElapsedTime(&time_D2H_1, start_ALL, stop_D2H_1);
+      cudaEventElapsedTime(&time_D2H_2, start_ALL, stop_D2H_2);
+      cudaEventElapsedTime(&time_INT_0, start_ALL, stop_INT_0);
+      cudaEventElapsedTime(&time_H2D_3, start_ALL, stop_H2D_3);
+      cudaEventElapsedTime(&time_H2D_4, start_ALL, stop_H2D_4);
+      cudaEventElapsedTime(&time_EXT_1, start_ALL, stop_EXT_1);
+      cudaEventElapsedTime(&time_EXT_2, start_ALL, stop_EXT_2);
+      cudaEventElapsedTime(&time_ALL, start_ALL, stop_ALL);
+      
+      printf("\tADDITIONAL:\n");
+      printf("\ttime_D2H_1 = %.4e sec\n", time_D2H_1/1000);
+      printf("\ttime_D2H_2 = %.4e sec\n", time_D2H_2/1000);
+      printf("\ttime_INT_0 = %.4e sec\n", time_INT_0/1000);
+      printf("\ttime_H2D_3 = %.4e sec\n", time_H2D_3/1000);
+      printf("\ttime_H2D_4 = %.4e sec\n", time_H2D_4/1000);
+      printf("\ttime_EXT_1 = %.4e sec\n", time_EXT_1/1000);
+      printf("\ttime_EXT_2 = %.4e sec\n", time_EXT_2/1000);
+      printf("\ttime_ALL   = %.4e sec\n", time_ALL/1000);
+    #endif
+  
   }
   
   

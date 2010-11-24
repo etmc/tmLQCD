@@ -401,61 +401,15 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
     gridsize2  = (int) ( ((tSliceEO)/blocksize) + 1);
   }
   
-  /*
-  if ( (VolumeEO-4*tSliceEO) % blocksize == 0 ) {
-    gridsize1  = (VolumeEO-4*tSliceEO) / blocksize;
-  }
-  else {
-    gridsize1  = (int) ( ((VolumeEO-4*tSliceEO)/blocksize) + 1);
-  }
   
-  if ( (2*tSliceEO) % blocksize == 0 ) {
-    gridsize2  = (2*tSliceEO) / blocksize;
-  }
-  else {
-    gridsize2  = (int) ( ((2*tSliceEO)/blocksize) + 1);
-  }
-  */
-  
-  		#ifdef ASYNC_OPTIMIZED
-  		  // size_t size_tSlice = LX*LY*LZ/2 * 6*sizeof(dev_spinor);
-  	          // size_t size_Rand   = RAND/2     * 6*sizeof(dev_spinor);
-  		  // int nStreams = ASYNC_OPTIMIZED;
-  		  //   if (nStreams%2 != 0 ) nStreams = nStreams + 1;
-  		  // int nStreams = 2;
-  		  /*
-  		  dev_spinor * RAND1;
-  		  dev_spinor * RAND2;
-  		  dev_spinor * RAND3;	// page-locked
-  		  dev_spinor * RAND4;
-  		  cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(float4));
-  		  RAND4 = RAND3 + 6*tSliceEO;
-  		  RAND1 = (dev_spinor *) malloc(2*tSliceEO*6*sizeof(float4));
-  		  RAND2 = RAND1 + 6*tSliceEO;
-  		  */
-  		  /*
-  		  cudaStream_t stream[2];
-  		  cudaStreamCreate(&stream[0]);
-  		  cudaStreamCreate(&stream[1]);
-  		  MPI_Status status1, status2;
-  		  */
-  		  // int offset = tSliceEO / (nStreams/2);
-  		#endif
   
   
   #ifdef USETEXTURE
     bind_texture_spin(spinin,1);
   #endif
   
-  /*
-  // applies to the parts which don't need communication
-  dev_Hopping_Matrix_ASYNC <<<gridsize1, blocksize>>> ( gf,
-                                                        spinin, spinout,
-                                                        gfindex_site, gfindex_nextsite, nn_evenodd,
-                                                        ieo,
-                                                        //2*tSliceEO, VolumeEO-4*tSliceEO );
-                                                        tSliceEO, VolumeEO-2*tSliceEO );
-  */
+  
+  
   
   // exchanges the boundaries
   #ifndef ASYNC_OPTIMIZED	// primitive version
@@ -485,15 +439,26 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   	                                                      //VolumeEO-2*tSliceEO, 2*tSliceEO );
   	                                                      VolumeEO-tSliceEO, tSliceEO );	
 
+
+
   
   #else				// optimized version
 
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-		
+		/*
+				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(start_ALL, 0);
+  				#endif
         	
-        	/*
+        	
   		// copies first FACE to host
   		cudaMemcpyAsync(RAND1, spinin                      , tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[1]);
+  		
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(stop_D2H_1, stream[1]);
+  				#endif
   		
   		
   		// INTERNAL kernel
@@ -502,6 +467,9 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
         	                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
         	                                                                    ieo,
         	                                                                    tSliceEO, VolumeEO-2*tSliceEO );
+        			#ifdef ASYNC_TIMING
+        			  cudaEventRecord(stop_INT_0, stream[0]);
+        			#endif
   		
   		
   		// exchanges first FACE
@@ -518,9 +486,11 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		
   		// copies first FACE back to device												// order may switched
   		//MPI_Wait(&recv_req[0], &stat[0]);												// synchronous
-  			cudaMemcpyAsync(spinin+6*VolumeEO, RAND3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[1]);
+  		cudaMemcpyAsync(spinin+6*VolumeEO, RAND3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[1]);
   		
-  		
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(stop_H2D_3, stream[1]);
+  				#endif
   		
   			
   		
@@ -531,10 +501,17 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		                                                                      gfindex_site, gfindex_nextsite, nn_evenodd,
   		                                                                      ieo,
   		                                                                      VolumeEO-tSliceEO, tSliceEO );
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(stop_EXT_1, stream[1]);
+  				#endif
   		
   		
   		// copies second FACE to host
   		cudaMemcpyAsync(RAND2, spinin+6*(VolumeEO-tSliceEO), tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[2]);
+  		
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(stop_D2H_2, stream[2]);
+  				#endif
   		
   		
   		// exchanges second FACE
@@ -554,8 +531,12 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		
   		// copies second FACE back to device
   		//MPI_Wait(&recv_req[1], &stat[1]);												// synchronous
-  			cudaMemcpyAsync(spinin+6*(VolumeEO+tSliceEO), RAND4, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[2]);
-  			
+  		cudaMemcpyAsync(spinin+6*(VolumeEO+tSliceEO), RAND4, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[2]);
+  		
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(stop_H2D_4, stream[2]);
+  				#endif
+  		
   		
   		// applies second FACE
   		dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, 0, stream[2]>>> ( gf,
@@ -563,12 +544,39 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
   		                                                                    ieo,
   		                                                                    0, tSliceEO );
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(stop_EXT_2, stream[2]);
+  				#endif
+  		
+  		
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(stop_ALL, 0);
+  				#endif
   		*/
+  		
+  		
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  		
+  		
+  		
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(start_ALL, 0);
+  				#endif
+  		
+  		
   		// copies first FACE to host
   		cudaMemcpyAsync(RAND1, spinin                      , tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[1]);
   		
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(stop_D2H_1, stream[1]);
+  				#endif
+  		
   		// copies second FACE to host
   		cudaMemcpyAsync(RAND2, spinin+6*(VolumeEO-tSliceEO), tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[2]);
+  		
+  				#ifdef ASYNC_TIMING
+        			  cudaEventRecord(stop_D2H_2, stream[2]);
+        			#endif
   		
   		
   		// INTERNAL kernel
@@ -577,6 +585,10 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
         	                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
         	                                                                    ieo,
         	                                                                    tSliceEO, VolumeEO-2*tSliceEO );
+        			#ifdef ASYNC_TIMING
+        			  cudaEventRecord(stop_INT_0, stream[0]);
+        			#endif
+        	
   		
   		// first FACE
   		cudaStreamSynchronize(stream[1]);
@@ -596,11 +608,19 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		           
   		  cudaMemcpyAsync(spinin+6*VolumeEO+6*i*offset, RAND3+6*i*offset, offset*6*sizeof(float4), cudaMemcpyHostToDevice, stream[1+i]);
   		  
+  		  		#ifdef ASYNC_TIMING
+  		  		  cudaEventRecord(stop_H2D_3, stream[1]);
+  		  		#endif
+  		  
   		  dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, 0, stream[1+i]>>> ( gf,
   		                                                                        spinin, spinout,
   		                                                                        gfindex_site, gfindex_nextsite, nn_evenodd,
   		                                                                        ieo,
   		                                                                        VolumeEO-tSliceEO+i*offset, offset );
+  		  		#ifdef ASYNC_TIMING
+  		  		  cudaEventRecord(stop_EXT_1, stream[1]);
+  		  		#endif
+  		  
   		}
   		
   		
@@ -622,23 +642,51 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		  
   		  cudaMemcpyAsync(spinin+6*(VolumeEO+tSliceEO)+6*i*offset, RAND4+6*i*offset, offset*6*sizeof(float4), cudaMemcpyHostToDevice, stream[nStreams+1+i]);
   		  
+  		  		#ifdef ASYNC_TIMING
+  		  		  cudaEventRecord(stop_H2D_4, stream[2]);
+  		  		#endif
+  		  
   		  dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, 0, stream[nStreams+1+i]>>> ( gf,
   		                                                                                 spinin, spinout,
   		                                                                                 gfindex_site, gfindex_nextsite, nn_evenodd,
   		                                                                                 ieo,
   		                                                                                 0+i*offset, offset );
+  		  		#ifdef ASYNC_TIMING
+  		  		  cudaEventRecord(stop_EXT_2, stream[2]);
+  		  		#endif
+  		  
 		}
   		
   		
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(stop_ALL, 0);
+  				#endif
   		
+  		
+  		
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   		
   		
   		/*
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(start_ALL, 0);
+  				#endif
+  		
+  		
   		// copies first FACE to host
   		cudaMemcpyAsync(RAND1, spinin                      , tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[1]);
   		
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(stop_D2H_1, stream[1]);
+  				#endif
+  		
+  		
   		// copies second FACE to host
   		cudaMemcpyAsync(RAND2, spinin+6*(VolumeEO-tSliceEO), tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[2]);
+  		
+  				#ifdef ASYNC_TIMING
+        			  cudaEventRecord(stop_D2H_2, stream[2]);
+        			#endif
   		
   		
   		// INTERNAL kernel
@@ -647,8 +695,12 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
         	                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
         	                                                                    ieo,
         	                                                                    tSliceEO, VolumeEO-2*tSliceEO );
+  				#ifdef ASYNC_TIMING
+        			  cudaEventRecord(stop_INT_0, stream[0]);
+        			#endif
   		
-  		// xchanges first FACE
+  		
+  		// first FACE
 		cudaStreamSynchronize(stream[1]);
 		
   		MPI_Sendrecv(RAND1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
@@ -660,19 +712,26 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		//MPI_Recv(RAND3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
   		//         g_cart_grid, &stat[0]);
   		
-  		
-  		// applies first FACE
   		//MPI_Wait(&recv_request1, &stat[0]);
   		
   		cudaMemcpyAsync(spinin+6*VolumeEO           , RAND3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[1]);
+  		
+  				#ifdef ASYNC_TIMING
+  		  		  cudaEventRecord(stop_H2D_3, stream[1]);
+  		  		#endif
+  		
   		
   		dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, 0, stream[1]>>> ( gf,
   		                                                                    spinin, spinout,
   		                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
   		                                                                    ieo,
   		                                                                    VolumeEO-tSliceEO, tSliceEO );
+  				#ifdef ASYNC_TIMING
+  		  		  cudaEventRecord(stop_EXT_1, stream[1]);
+  		  		#endif
   		
-  		// xchanges second FACE
+  		
+  		// second FACE
   		cudaStreamSynchronize(stream[2]);
 		
   		MPI_Sendrecv(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
@@ -684,21 +743,36 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		//MPI_Recv(RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
   		//         g_cart_grid, &stat[1]);
   		
-  		
-  		// applies second FACE
   		//MPI_Wait(&recv_request2, &stat[1]);
   		
   		cudaMemcpyAsync(spinin+6*(VolumeEO+tSliceEO), RAND4, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[2]);
+  		
+  				#ifdef ASYNC_TIMING
+  		  		  cudaEventRecord(stop_H2D_4, stream[2]);
+  		  		#endif
+		
 		
   		dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, 0, stream[2]>>> ( gf,
   		                                                                    spinin, spinout,
   		                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
   		                                                                    ieo,
   		                                                                    0, tSliceEO );
+  				#ifdef ASYNC_TIMING
+  		  		  cudaEventRecord(stop_EXT_2, stream[2]);
+  		  		#endif
+  		
+  		
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(stop_ALL, 0);
+  				#endif
   		*/
+  		
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   		
   		
   		cudaThreadSynchronize();		// test if needed
+  
+  
   
   #endif
   
@@ -707,17 +781,6 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
     unbind_texture_spin(1);
   #endif
   
-  
-  	#ifdef ASYNC_OPTIMIZED
-  	  /*
-  	  cudaStreamDestroy(stream[0]);
-  	  cudaStreamDestroy(stream[1]);
-  	  */
-  	  /*
-  	  cudaFreeHost(RAND3);
-  	  free(RAND1);
-  	  */
-  	#endif
   
 }
 

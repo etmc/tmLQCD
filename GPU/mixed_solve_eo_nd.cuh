@@ -158,15 +158,27 @@ __device__ float mubar, epsbar;
     dev_spinor * RAND2;
     dev_spinor * RAND3;				// page-locked memory
     dev_spinor * RAND4;
-    
     int nStreams = ASYNC_OPTIMIZED;
     cudaStream_t stream[2*ASYNC_OPTIMIZED+1];
-    cudaEvent_t comm_event[2*ASYNC_OPTIMIZED+1];
-    cudaEvent_t comp_event[2*ASYNC_OPTIMIZED+1];
-    cudaEvent_t comm_start1, comm_start2, comm_stop1, comm_stop2;
-    cudaEvent_t comp_start, comp_stop;
-    float comm_time1, comm_time2;
-    float comp_time;
+    #ifdef ASYNC_TIMING
+      cudaEvent_t start_ALL;			// overall asnychronous communication
+      cudaEvent_t stop_ALL;
+      cudaEvent_t stop_D2H_1;
+      cudaEvent_t stop_D2H_2;
+      cudaEvent_t stop_INT_0;
+      cudaEvent_t stop_H2D_3;
+      cudaEvent_t stop_H2D_4;
+      cudaEvent_t stop_EXT_1;
+      cudaEvent_t stop_EXT_2;
+      float time_D2H_1;
+      float time_D2H_2;
+      float time_INT_0;
+      float time_H2D_3;
+      float time_H2D_4;
+      float time_EXT_1;
+      float time_EXT_2;
+      float time_ALL;
+    #endif
   #endif
   #if defined(ASYNC_OPTIMIZED) || defined(ALTERNATE_FIELD_XCHANGE)
     MPI_Status stat[2];
