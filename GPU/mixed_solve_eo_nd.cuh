@@ -178,6 +178,13 @@ __device__ float mubar, epsbar;
       float time_EXT_1;
       float time_EXT_2;
       float time_ALL;
+      double mpiTime_start_ALL;
+      double mpiTime_start_sendrecv_1;
+      double mpiTime_stop_sendrecv_1;
+      double mpiTime_start_sendrecv_2;
+      double mpiTime_stop_sendrecv_2;
+      double mpiTime_sendrecv_1;
+      double mpiTime_sendrecv_2;
     #endif
   #endif
   #if defined(ASYNC_OPTIMIZED) || defined(ALTERNATE_FIELD_XCHANGE)

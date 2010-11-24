@@ -450,6 +450,7 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
 		/*
 				#ifdef ASYNC_TIMING
   				  cudaEventRecord(start_ALL, 0);
+  				  mpiTime_start_ALL = MPI_Wtime();
   				#endif
         	
         	
@@ -474,6 +475,11 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		
   		// exchanges first FACE
   		cudaStreamSynchronize(stream[1]);												// synchronous
+  		
+  				#ifdef ASYNC_TIMING
+  				  mpiTime_start_sendrecv_1 = MPI_Wtime();
+  				#endif
+  			
   			//MPI_Irecv(RAND3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
   			//          g_cart_grid, &recv_req[0]);
   			//MPI_Isend(RAND1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
@@ -482,6 +488,10 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   			MPI_Sendrecv(RAND1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
   			             RAND3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
   			             g_cart_grid, &stat[0]);
+  		
+  				#ifdef ASYNC_TIMING
+  				  mpiTime_stop_sendrecv_1 = MPI_Wtime();
+  				#endif
   		
   		
   		// copies first FACE back to device												// order may switched
@@ -516,6 +526,11 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		
   		// exchanges second FACE
   		cudaStreamSynchronize(stream[2]);												// synchronous
+  		
+  				#ifdef ASYNC_TIMING
+  				  mpiTime_start_sendrecv_2 = MPI_Wtime();
+  				#endif
+  			
   			//MPI_Irecv(RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
   			//          g_cart_grid, &recv_req[1]);
   			//MPI_Isend(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
@@ -525,6 +540,9 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   			             RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
   			             g_cart_grid, &stat[1]);
   		
+  				#ifdef ASYNC_TIMING
+  				  mpiTime_stop_sendrecv_2 = MPI_Wtime();
+  				#endif
   		
   		
   		
@@ -558,9 +576,10 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   		
   		
-  		
+  		/*
   				#ifdef ASYNC_TIMING
   				  cudaEventRecord(start_ALL, 0);
+  				  mpiTime_start_ALL = MPI_Wtime();
   				#endif
   		
   		
@@ -595,9 +614,17 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		
   		for (int i = 0; i < nStreams; i++) {
   		
+  		  		#ifdef ASYNC_TIMING
+  		  		  mpiTime_start_sendrecv_1 = MPI_Wtime();
+  		  		#endif
+  		  		
   		  MPI_Sendrecv(RAND1+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_dn, 0,		// NOT asynchronous
   		               RAND3+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_up, 0,
   		               g_cart_grid, &stat[i]);
+  		  
+  		  		#ifdef ASYNC_TIMING
+  		  		  mpiTime_stop_sendrecv_1 = MPI_Wtime();
+  		  		#endif
   		  
   		  //MPI_Isend(RAND1+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_dn, i,
   		  //          g_cart_grid, &send_req[i]);
@@ -628,10 +655,18 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		cudaStreamSynchronize(stream[nStreams+1]);
   		
   		for (int i = 0; i < nStreams; i++) {
-  		
+  		  
+  		  		#ifdef ASYNC_TIMING
+  		  		  mpiTime_start_sendrecv_2 = MPI_Wtime();
+  		  		#endif
+  		  
   		  MPI_Sendrecv(RAND2+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_up, 1,
   		               RAND4+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_dn, 1,
   		               g_cart_grid, &stat[nStreams+i]);
+		  
+		  		#ifdef ASYNC_TIMING
+		  		  mpiTime_stop_sendrecv_2 = MPI_Wtime();
+		  		#endif
 		  
   		  //MPI_Isend(RAND2+6*i*offset, 24*offset, MPI_FLOAT, g_nb_t_up, nStreams+i,
   		  //          g_cart_grid, &send_req[nStreams+i]);
@@ -661,15 +696,16 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   				#ifdef ASYNC_TIMING
   				  cudaEventRecord(stop_ALL, 0);
   				#endif
-  		
+  		*/
   		
   		
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   		
   		
-  		/*
+  		
   				#ifdef ASYNC_TIMING
   				  cudaEventRecord(start_ALL, 0);
+  				  mpiTime_start_ALL = MPI_Wtime();
   				#endif
   		
   		
@@ -703,6 +739,10 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		// first FACE
 		cudaStreamSynchronize(stream[1]);
 		
+				#ifdef ASYNC_TIMING
+  				  mpiTime_start_sendrecv_1 = MPI_Wtime();
+  				#endif
+		
   		MPI_Sendrecv(RAND1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
   		             RAND3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
   		             g_cart_grid, &stat[0]);
@@ -713,6 +753,10 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		//         g_cart_grid, &stat[0]);
   		
   		//MPI_Wait(&recv_request1, &stat[0]);
+  		
+  				#ifdef ASYNC_TIMING
+  				  mpiTime_stop_sendrecv_1 = MPI_Wtime();
+  				#endif
   		
   		cudaMemcpyAsync(spinin+6*VolumeEO           , RAND3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[1]);
   		
@@ -733,6 +777,10 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		
   		// second FACE
   		cudaStreamSynchronize(stream[2]);
+  		
+  				#ifdef ASYNC_TIMING
+  				  mpiTime_start_sendrecv_2 = MPI_Wtime();
+  				#endif
 		
   		MPI_Sendrecv(RAND2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
   		             RAND4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
@@ -744,6 +792,10 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		//         g_cart_grid, &stat[1]);
   		
   		//MPI_Wait(&recv_request2, &stat[1]);
+  		
+  				#ifdef ASYNC_TIMING
+  				  mpiTime_stop_sendrecv_2 = MPI_Wtime();
+  				#endif
   		
   		cudaMemcpyAsync(spinin+6*(VolumeEO+tSliceEO), RAND4, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice, stream[2]);
   		
@@ -765,7 +817,7 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   				#ifdef ASYNC_TIMING
   				  cudaEventRecord(stop_ALL, 0);
   				#endif
-  		*/
+  		
   		
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   		

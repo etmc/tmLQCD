@@ -2440,11 +2440,15 @@ extern "C" void benchmark_eo_nd_mpi (spinor * Q_up, spinor * Q_dn, int N) {
       cudaEventElapsedTime(&time_EXT_1, start_ALL, stop_EXT_1);
       cudaEventElapsedTime(&time_EXT_2, start_ALL, stop_EXT_2);
       cudaEventElapsedTime(&time_ALL, start_ALL, stop_ALL);
+      mpiTime_sendrecv_1 = mpiTime_stop_sendrecv_1 - mpiTime_start_sendrecv_1;
+      mpiTime_sendrecv_2 = mpiTime_stop_sendrecv_2 - mpiTime_start_sendrecv_2;
       
       printf("\tADDITIONAL:\n");
-      printf("\ttime_D2H_1 = %.4e sec\n", time_D2H_1/1000);
-      printf("\ttime_D2H_2 = %.4e sec\n", time_D2H_2/1000);
-      printf("\ttime_INT_0 = %.4e sec\n", time_INT_0/1000);
+      printf("\ttime_D2H_1         = %.4e sec\n", time_D2H_1/1000);
+      printf("\ttime_D2H_2         = %.4e sec\n", time_D2H_2/1000);
+      printf("\ttime_INT_0         = %.4e sec\n", time_INT_0/1000);
+      printf("\tmpiTime_sendrecv_1 = %.4e sec\n", mpiTime_sendrecv_1);
+      printf("\tmpiTime_sendrecv_2 = %.4e sec\n", mpiTime_sendrecv_2);
       printf("\ttime_H2D_3 = %.4e sec\n", time_H2D_3/1000);
       printf("\ttime_H2D_4 = %.4e sec\n", time_H2D_4/1000);
       printf("\ttime_EXT_1 = %.4e sec\n", time_EXT_1/1000);
