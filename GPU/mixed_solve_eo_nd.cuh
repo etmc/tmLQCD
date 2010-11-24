@@ -153,7 +153,7 @@ __device__ float mubar, epsbar;
   __device__ int dev_VOLUMEPLUSRAND;		// is now used in dev_Hopping_Matrix_mpi()
   //__device__ int dev_rank;			// was for the moment put to mixed_solve.cu ...
   //__device__ int dev_nproc;
-  #ifdef ASYNC_OPTIMIZED
+  #if ASYNC > 0
     dev_spinor * RAND1;				// for exchanging the boundaries in ASYNC.cuh
     dev_spinor * RAND2;
     dev_spinor * RAND3;				// page-locked memory
@@ -161,7 +161,7 @@ __device__ float mubar, epsbar;
     int nStreams = ASYNC_OPTIMIZED;
     cudaStream_t stream[2*ASYNC_OPTIMIZED+1];
     #ifdef ASYNC_TIMING
-      cudaEvent_t start_ALL;			// overall asnychronous communication
+      cudaEvent_t start_ALL;			// CUDA events for timing and profiling
       cudaEvent_t stop_ALL;
       cudaEvent_t stop_D2H_1;
       cudaEvent_t stop_D2H_2;
@@ -170,24 +170,26 @@ __device__ float mubar, epsbar;
       cudaEvent_t stop_H2D_4;
       cudaEvent_t stop_EXT_1;
       cudaEvent_t stop_EXT_2;
-      float time_D2H_1;
-      float time_D2H_2;
-      float time_INT_0;
-      float time_H2D_3;
-      float time_H2D_4;
-      float time_EXT_1;
-      float time_EXT_2;
-      float time_ALL;
-      double mpiTime_start_ALL;
-      double mpiTime_start_sendrecv_1;
+      float time_stop_D2H_1;			// CUDA times in milliseconds
+      float time_stop_D2H_2;
+      float time_stop_INT_0;
+      float time_stop_H2D_3;
+      float time_stop_H2D_4;
+      float time_stop_EXT_1;
+      float time_stop_EXT_2;
+      float time_stop_ALL;
+      double mpi_start_ALL;			// MPI times with arbitrary zero-point for timing and profiling
+      double mpi_start_sendrecv_1;
+      double mpi_stop_sendrecv_1;
+      double mpi_start_sendrecv_2;
+      double mpi_stop_sendrecv_2;
+      double mpiTime_start_sendrecv_1;		// MPI times in seconds
       double mpiTime_stop_sendrecv_1;
       double mpiTime_start_sendrecv_2;
       double mpiTime_stop_sendrecv_2;
-      double mpiTime_sendrecv_1;
-      double mpiTime_sendrecv_2;
     #endif
   #endif
-  #if defined(ASYNC_OPTIMIZED) || defined(ALTERNATE_FIELD_XCHANGE)
+  #if defined(ALTERNATE_FIELD_XCHANGE) || defined(ASYNC_OPTIMIZED)
     MPI_Status stat[2];
     MPI_Request send_req[2];
     MPI_Request recv_req[2];

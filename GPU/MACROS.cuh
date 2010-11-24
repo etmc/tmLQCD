@@ -19,7 +19,7 @@
 
 
 // conjugate gradient
-// ...
+// ...				// to come ...
 
 
 
@@ -45,9 +45,9 @@
 // CUDA + MPI
 
 #define DEVICE_EQUAL_RANK	// for MPI: cudaSetDevice(rank)
-#define ASYNC			// overlaps computation and communication	// atm for testing
-#define ASYNC_OPTIMIZED	1	// better version thereof			// needs ASYNC
-#define ASYNC_TIMING		// profiling the ASYNC_OPTIMIZED code
+#define ASYNC 1			// overlaps computation and communication	// 0, 1, 2
+#define ASYNC_OPTIMIZED	1	// CUDA streams					// needs ASYNC == 2
+#define ASYNC_TIMING		// profiling the ASYNC_OPTIMIZED code		// needs ASYNC == 1,2
 
 
 

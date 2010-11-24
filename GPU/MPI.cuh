@@ -1053,7 +1053,7 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
   // h2d_spin_up = (dev_spinor *) malloc(dev_spinsize);		// for transferring the spin field in double precision on host to single precision on device
   // h2d_spin_dn = (dev_spinor *) malloc(dev_spinsize);		// on host pointing to host
   
-  #if defined(ALTERNATE_FIELD_XCHANGE) || defined(ASYNC_OPTIMIZED)
+  #if defined(ALTERNATE_FIELD_XCHANGE) || ASYNC > 0
     int tSliceEO = LX*LY*LZ/2;
   #endif
   
@@ -1102,7 +1102,7 @@ void init_mixedsolve_eo_nd_mpi(su3** gf) {	// gf is the full gauge field
   		#endif
   
   
-  #ifdef ASYNC_OPTIMIZED					// for exchanging the boundaries in the MPI code
+  #if ASYNC > 0							// for exchanging the boundaries in the MPI code
     // int tSliceEO = LX*LY*LZ/2;
     cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(float4));
     RAND4 = RAND3 + 6*tSliceEO;
@@ -1245,7 +1245,7 @@ void finalize_mixedsolve_eo_nd_mpi(void) {
     free_gpu_indexfields();
   #endif
   
-  #ifdef ASYNC_OPTIMIZED
+  #if ASYNC > 0
     cudaFreeHost(RAND3);
     // free(RAND1);
     cudaFreeHost(RAND1);
@@ -2431,29 +2431,48 @@ extern "C" void benchmark_eo_nd_mpi (spinor * Q_up, spinor * Q_dn, int N) {
     printf("\tflop's:      %.2e flops\n", allEffectiveDeviceFlops);
     printf("\tperformance: %.2e Gflop/s\n\n", effectiveFlops);
     
-    #ifdef ASYNC_TIMING
-      cudaEventElapsedTime(&time_D2H_1, start_ALL, stop_D2H_1);
-      cudaEventElapsedTime(&time_D2H_2, start_ALL, stop_D2H_2);
-      cudaEventElapsedTime(&time_INT_0, start_ALL, stop_INT_0);
-      cudaEventElapsedTime(&time_H2D_3, start_ALL, stop_H2D_3);
-      cudaEventElapsedTime(&time_H2D_4, start_ALL, stop_H2D_4);
-      cudaEventElapsedTime(&time_EXT_1, start_ALL, stop_EXT_1);
-      cudaEventElapsedTime(&time_EXT_2, start_ALL, stop_EXT_2);
-      cudaEventElapsedTime(&time_ALL, start_ALL, stop_ALL);
-      mpiTime_sendrecv_1 = mpiTime_stop_sendrecv_1 - mpiTime_start_sendrecv_1;
-      mpiTime_sendrecv_2 = mpiTime_stop_sendrecv_2 - mpiTime_start_sendrecv_2;
-      
-      printf("\tADDITIONAL:\n");
-      printf("\ttime_D2H_1         = %.4e sec\n", time_D2H_1/1000);
-      printf("\ttime_D2H_2         = %.4e sec\n", time_D2H_2/1000);
-      printf("\ttime_INT_0         = %.4e sec\n", time_INT_0/1000);
-      printf("\tmpiTime_sendrecv_1 = %.4e sec\n", mpiTime_sendrecv_1);
-      printf("\tmpiTime_sendrecv_2 = %.4e sec\n", mpiTime_sendrecv_2);
-      printf("\ttime_H2D_3 = %.4e sec\n", time_H2D_3/1000);
-      printf("\ttime_H2D_4 = %.4e sec\n", time_H2D_4/1000);
-      printf("\ttime_EXT_1 = %.4e sec\n", time_EXT_1/1000);
-      printf("\ttime_EXT_2 = %.4e sec\n", time_EXT_2/1000);
-      printf("\ttime_ALL   = %.4e sec\n", time_ALL/1000);
+    #if ASYNC > 0 && defined(ASYNC_TIMING)
+      // calculate the times from the "beginning"
+      cudaEventElapsedTime(&time_stop_D2H_1, start_ALL, stop_D2H_1);
+      cudaEventElapsedTime(&time_stop_D2H_2, start_ALL, stop_D2H_2);
+      cudaEventElapsedTime(&time_stop_INT_0, start_ALL, stop_INT_0);
+      cudaEventElapsedTime(&time_stop_H2D_3, start_ALL, stop_H2D_3);
+      cudaEventElapsedTime(&time_stop_H2D_4, start_ALL, stop_H2D_4);
+      cudaEventElapsedTime(&time_stop_EXT_1, start_ALL, stop_EXT_1);
+      cudaEventElapsedTime(&time_stop_EXT_2, start_ALL, stop_EXT_2);
+      cudaEventElapsedTime(&time_stop_ALL  , start_ALL, stop_ALL);
+      mpiTime_start_sendrecv_1 = mpi_start_sendrecv_1 - mpi_start_ALL; 
+      mpiTime_stop_sendrecv_1  = mpi_stop_sendrecv_1  - mpi_start_ALL;
+      mpiTime_start_sendrecv_2 = mpi_start_sendrecv_2 - mpi_start_ALL;
+      mpiTime_stop_sendrecv_2  = mpi_stop_sendrecv_2  - mpi_start_ALL;
+      // outputting the times
+      #if ASYNC == 1
+        printf("\tTIMING[sec]:\n");
+        printf("\tSTART:        %.2e   -       \n", 0.0);
+        printf("\tD2H_1:                   -   %.2e\n", time_stop_D2H_1/1000);
+        printf("\tINT_0:                   -   %.2e\n", time_stop_INT_0/1000);
+        printf("\tSENDRECV_1:   %.2e   -   %.2e\n", mpiTime_start_sendrecv_1, mpiTime_stop_sendrecv_1);
+        printf("\tH2D_3:        %.2e   -   %.2e\n", mpiTime_stop_sendrecv_1, time_stop_H2D_3/1000);
+        printf("\tEXT_1:        %.2e   -   %.2e\n", time_stop_H2D_3/1000, time_stop_EXT_1/1000);
+        printf("\tD2H_2:        %.2e   -   %.2e\n", mpiTime_stop_sendrecv_1, time_stop_D2H_2/1000);
+        printf("\tSENDRECV_2:   %.2e   -   %.2e\n", mpiTime_start_sendrecv_2, mpiTime_stop_sendrecv_2);
+        printf("\tH2D_4:        %.2e   -   %.2e\n", mpiTime_stop_sendrecv_2, time_stop_H2D_4/1000);
+        printf("\tEXT_2:        %.2e   -   %.2e\n", time_stop_H2D_4/1000, time_stop_EXT_2/1000);
+        printf("\tSTOP:                    -   %.2e\n", time_stop_ALL/1000);
+      #elif ASYNC == 2
+        printf("\tTIMING[sec]:\n");
+        printf("\tSTART:        %.2e   -       \n", 0.0);
+        printf("\tD2H_1:                   -   %.2e\n", time_stop_D2H_1/1000);
+        printf("\tD2H_2:                   -   %.2e\n", time_stop_D2H_2/1000);
+        printf("\tINT_0:                   -   %.2e\n", time_stop_INT_0/1000);
+        printf("\tSENDRECV_1:   %.2e   -   %.2e\n", mpiTime_start_sendrecv_1, mpiTime_stop_sendrecv_1);
+        printf("\tH2D_3:        %.2e   -   %.2e\n", mpiTime_stop_sendrecv_1, time_stop_H2D_3/1000);
+        printf("\tEXT_1:        %.2e   -   %.2e\n", time_stop_H2D_3/1000, time_stop_EXT_1/1000);
+        printf("\tSENDRECV_2:   %.2e   -   %.2e\n", mpiTime_start_sendrecv_2, mpiTime_stop_sendrecv_2);
+        printf("\tH2D_4:        %.2e   -   %.2e\n", mpiTime_stop_sendrecv_2, time_stop_H2D_4/1000);
+        printf("\tEXT_2:        %.2e   -   %.2e\n", time_stop_H2D_4/1000, time_stop_EXT_2/1000);
+        printf("\tSTOP:                    -   %.2e\n", time_stop_ALL/1000);
+      #endif
     #endif
   
   }
