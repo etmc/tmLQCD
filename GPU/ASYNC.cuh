@@ -457,15 +457,15 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   				#endif
         	
         	
-  		// copies first FACE to host
+        	// copies first FACE to host
   		cudaMemcpyAsync(RAND1, spinin, tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[1]);
   		
   				#ifdef ASYNC_TIMING
   				  cudaEventRecord(stop_D2H_1, stream[1]);
   				#endif
-  		
-  		
-  		// INTERNAL kernel
+        	
+        	
+        	// INTERNAL kernel
   		dev_Hopping_Matrix_ASYNC <<<gridsize1, blocksize, 0, stream[0]>>> ( gf,
         	                                                                    spinin, spinout,
         	                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
@@ -557,6 +557,16 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   				#ifdef ASYNC_TIMING
   				  cudaEventRecord(stop_H2D_4, stream[2]);
   				#endif
+  				
+  		// applies first FACE
+  		dev_Hopping_Matrix_ASYNC <<<gridsize2, blocksize, 0, stream[1]>>> ( gf,
+  		                                                                      spinin, spinout,
+  		                                                                      gfindex_site, gfindex_nextsite, nn_evenodd,
+  		                                                                      ieo,
+  		                                                                      VolumeEO-tSliceEO, tSliceEO );
+  				#ifdef ASYNC_TIMING
+  				  cudaEventRecord(stop_EXT_1, stream[1]);
+  				#endif
   		
   		
   		// applies second FACE
@@ -590,17 +600,6 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   				#endif
   		
   		
-  		// INTERNAL kernel
-  		dev_Hopping_Matrix_ASYNC <<<gridsize1, blocksize, 0, stream[0]>>> ( gf,
-        	                                                                    spinin, spinout,
-        	                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
-        	                                                                    ieo,
-        	                                                                    tSliceEO, VolumeEO-2*tSliceEO );
-  				#ifdef ASYNC_TIMING
-        			  cudaEventRecord(stop_INT_0, stream[0]);
-        			#endif
-  		
-  		
   		// copies first FACE to host
   		cudaMemcpyAsync(RAND1, spinin, tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost, stream[1]);
   		
@@ -614,6 +613,17 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		
   				#ifdef ASYNC_TIMING
         			  cudaEventRecord(stop_D2H_2, stream[2]);
+        			#endif
+  		
+  		
+  		// INTERNAL kernel
+  		dev_Hopping_Matrix_ASYNC <<<gridsize1, blocksize, 0, stream[0]>>> ( gf,
+        	                                                                    spinin, spinout,
+        	                                                                    gfindex_site, gfindex_nextsite, nn_evenodd,
+        	                                                                    ieo,
+        	                                                                    tSliceEO, VolumeEO-2*tSliceEO );
+  				#ifdef ASYNC_TIMING
+        			  cudaEventRecord(stop_INT_0, stream[0]);
         			#endif
   		
   		
@@ -702,9 +712,11 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   		
   		
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  
+  #elif ASYNC == 3
+  
   		
-  		
-  		/*
   				#ifdef ASYNC_TIMING
   				  cudaEventRecord(start_ALL, 0);
   				  mpiTime_start_ALL = MPI_Wtime();
@@ -824,7 +836,7 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   				#ifdef ASYNC_TIMING
   				  cudaEventRecord(stop_ALL, 0);
   				#endif
-  		*/
+  		
   
   
   #endif		// different optimized and non-optimized version
@@ -833,7 +845,7 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   		
   		
-  		cudaThreadSynchronize();		// test if needed
+  		cudaThreadSynchronize();		// test if needed	// for timing ...
   
   
   #ifdef USETEXTURE
