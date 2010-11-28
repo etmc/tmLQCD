@@ -1,6 +1,23 @@
 
 
+void test_spinor_normalization(dev_spinor_half* s, float* sn){
+  dev_spinor_half s_host[6];
+  
+  size_t size = 6*sizeof(dev_spinor_half);
+  cudaMemcpy( &(s_host[0]),s , 6*sizeof(short4), cudaMemcpyDeviceToHost);
+  
+  int i;
 
+  for(i=0; i<6; i++){
+    float helpx = sh2fl_host(s_host[i].x);
+    float helpy = sh2fl_host(s_host[i].y);
+    float helpz = sh2fl_host(s_host[i].z);
+    float helpw = sh2fl_host(s_host[i].w);
+
+	printf("%f, %f, %f, %f\n", helpx, helpy, helpz, helpw);
+  }
+
+}
 
 
 
@@ -30,7 +47,7 @@ extern "C" int dev_cg_eo_half(
  int i, gridsize;
  int maxit = max_innersolver_it;
  REAL eps = (REAL) innersolver_precision;
- int N_recalcres = 20; // after N_recalcres iterations calculate r = A x_k - b
+ int N_recalcres = 1000; // after N_recalcres iterations calculate r = A x_k - b
  
  cudaError_t cudaerr;
  // this is the partitioning for the copying of fields
@@ -66,9 +83,7 @@ extern "C" int dev_cg_eo_half(
  }
  int griddim4=gridsize;  
  
- 
- size_t size2 = sizeof(float4)*6*VOLUME/2;
- 
+
  
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
@@ -96,12 +111,21 @@ extern "C" int dev_cg_eo_half(
   
   he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
- 
+
+
+  //use full volume here as we need the complete gauge field!!!
+  if( VOLUME >= BLOCK2){
+     gridsize = (int)(VOLUME/BLOCK2) + 1;
+  }
+  else{
+	 gridsize=1;
+  }
+
    printf("Converting gauge to half precision... ");
      float2half_gaugefield <<< gridsize, BLOCK2  >>>(dev_gf, dev_gf_half, VOLUME);
    printf("Done\n"); 
    
-   testhalf_gf(dev_gf_half);
+   //testhalf_gf(dev_gf_half);
   
  
  
@@ -138,10 +162,14 @@ extern "C" int dev_cg_eo_half(
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
  
  
- 
+ //test_spinor_normalization(spin2, spin2_norm);
 
  //relative precision -> get initial residue
  sourcesquarenorm = squarenorm_half(spinin, spinin_norm);
+ printf("with squarenorm: %f\n", sourcesquarenorm);
+ sourcesquarenorm = dotprod_half(spinin, spinin_norm,spinin, spinin_norm);
+ printf("with dotprod: %f\n", sourcesquarenorm);
+ 
  host_rk = sourcesquarenorm; //for use in main loop
  printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
@@ -155,24 +183,33 @@ extern "C" int dev_cg_eo_half(
     printf("%s\n", cudaGetErrorString(cudaerr));
     exit(200);
   }
-  
+  //printf("Q\n");
+  //test_spinor_normalization(spin2, spin2_norm);
+  //test_spinor_normalization(spin3, spin3_norm);
   
   
  //alpha
   //host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin2, 1, (const float *) spin3, 1);
   host_dotprod = dotprod_half( spin2, spin2_norm, spin3, spin3_norm);
   host_alpha = (host_rk / host_dotprod); // alpha = r*r/ p M p
-   
+  //printf("alpha = %f\n",host_alpha);
+
  //r(k+1)
  //cublasSaxpy (24*VOLUME/2,-1.0*host_alpha, (const float *) spin3, 1, (float *) spin0, 1);  
   axpy_half<<<griddim4, blockdim4>>> 
        (-1.0*host_alpha, spin3, spin3_norm, spin0, spin0_norm);
-
+  
+  //printf("r(k+1)\n");
+  //test_spinor_normalization(spin3, spin3_norm);
+  //test_spinor_normalization(spin0, spin0_norm);
  //x(k+1);
  //cublasSaxpy (24*VOLUME/2, host_alpha, (const float *) spin2,  1, (float *) spin1, 1);
  axpy_half<<<griddim4, blockdim4>>> 
-       (-1.0*host_alpha, spin2, spin2_norm, spin1, spin1_norm);
- 
+       (host_alpha, spin2, spin2_norm, spin1, spin1_norm);
+  
+  //printf("x(k+1)\n");
+  //test_spinor_normalization(spin1, spin1_norm); 
+  //test_spinor_normalization(spin2, spin2_norm);
  
  if((cudaerr=cudaGetLastError()) != cudaSuccess){
     printf("%s\n", cudaGetErrorString(cudaerr));
@@ -189,14 +226,20 @@ extern "C" int dev_cg_eo_half(
   
  //beta
  host_beta =host_dotprod/host_rk;
+ //printf("beta = %f\n",host_beta);
  //p(k+1)
  //cublasSscal (24*VOLUME/2, host_beta, (float *)spin2, 1);
  scal_half<<<griddim4, blockdim4>>>
         (host_beta, spin2, spin2_norm);
+ //printf("scal p\n");
+ //test_spinor_normalization(spin2, spin2_norm);
+
  //cublasSaxpy (24*VOLUME/2, 1.0, (const float *) spin0,  1, (float *) spin2, 1);
  axpy_half<<<griddim4, blockdim4>>>
         (1.0, spin0, spin0_norm, spin2, spin2_norm);
-
+ //printf("axpy p\n");
+ //test_spinor_normalization(spin2, spin2_norm);
+ 
  host_rk = host_dotprod;
  
  // recalculate residue frome r = b - Ax

@@ -272,29 +272,31 @@ int pos=threadIdx.x + blockDim.x*blockIdx.x;
 __global__ void float2half_gaugefield(dev_su3_2v* gf, dev_su3_2v_half* gfh, int vol){
 
   int pos=threadIdx.x + blockDim.x*blockIdx.x;
-  int nf4;
+  int nf4,mu;
   if(pos < vol){
-  #ifdef GF_8
-    nf4 = 2;
-    gfh[nf4*pos].x = fl2sh(gf[nf4*pos].x);
-    gfh[nf4*pos].y = fl2sh(gf[nf4*pos].y);
-    gfh[nf4*pos].z = fl2sh(gf[nf4*pos].z);
-    gfh[nf4*pos].w = fl2sh(gf[nf4*pos].w);
+  for(mu=0; mu<4; mu++){
+    #ifdef GF_8
+      nf4 = 2;
+      gfh[nf4*(4*pos+mu)].x = fl2sh(gf[nf4*(4*pos+mu)].x);
+      gfh[nf4*(4*pos+mu)].y = fl2sh(gf[nf4*(4*pos+mu)].y);
+      gfh[nf4*(4*pos+mu)].z = fl2sh(gf[nf4*(4*pos+mu)].z);
+      gfh[nf4*(4*pos+mu)].w = fl2sh(gf[nf4*(4*pos+mu)].w);
     
-    gfh[nf4*pos+1].x = fl2sh(gf[nf4*pos+1].x/pi_float);
-    gfh[nf4*pos+1].y = fl2sh(gf[nf4*pos+1].y/pi_float);
-    gfh[nf4*pos+1].z = fl2sh(gf[nf4*pos+1].z);
-    gfh[nf4*pos+1].w = fl2sh(gf[nf4*pos+1].w);
-  #else
-    int i;
-    nf4 = 3;
-    for(i=0; i<nf4; i++){
-       gfh[nf4*pos+i].x = fl2sh(gf[nf4*pos+i].x);
-       gfh[nf4*pos+i].y = fl2sh(gf[nf4*pos+i].y);
-       gfh[nf4*pos+i].z = fl2sh(gf[nf4*pos+i].z);
-       gfh[nf4*pos+i].w = fl2sh(gf[nf4*pos+i].w);
-    } 
-  #endif
+      gfh[nf4*(4*pos+mu)+1].x = fl2sh(gf[nf4*(4*pos+mu)+1].x/pi_float);
+      gfh[nf4*(4*pos+mu)+1].y = fl2sh(gf[nf4*(4*pos+mu)+1].y/pi_float);
+      gfh[nf4*(4*pos+mu)+1].z = fl2sh(gf[nf4*(4*pos+mu)+1].z);
+      gfh[nf4*(4*pos+mu)+1].w = fl2sh(gf[nf4*(4*pos+mu)+1].w);
+    #else
+      int i;
+      nf4 = 3;
+      for(i=0; i<nf4; i++){
+         gfh[nf4*(4*pos+mu)+i].x = fl2sh(gf[nf4*(4*pos+mu)+i].x);
+         gfh[nf4*(4*pos+mu)+i].y = fl2sh(gf[nf4*(4*pos+mu)+i].y);
+         gfh[nf4*(4*pos+mu)+i].z = fl2sh(gf[nf4*(4*pos+mu)+i].z);
+         gfh[nf4*(4*pos+mu)+i].w = fl2sh(gf[nf4*(4*pos+mu)+i].w);
+      } 
+    #endif
+    }
   }
 }
 
@@ -710,10 +712,10 @@ __global__ void axpy_half (float alpha, dev_spinor_half* x, float* x_norm, dev_s
     if (ergnorm != 0.0f){
       #pragma unroll 6
       for(i=0; i<6; i++){
-         y[6*pos+i].x = fl2sh(erghelp[6*pos+i].x/ergnorm);
-         y[6*pos+i].y = fl2sh(erghelp[6*pos+i].y/ergnorm);
-         y[6*pos+i].z = fl2sh(erghelp[6*pos+i].z/ergnorm);
-         y[6*pos+i].w = fl2sh(erghelp[6*pos+i].w/ergnorm);
+         y[6*pos+i].x = fl2sh(erghelp[i].x/ergnorm);
+         y[6*pos+i].y = fl2sh(erghelp[i].y/ergnorm);
+         y[6*pos+i].z = fl2sh(erghelp[i].z/ergnorm);
+         y[6*pos+i].w = fl2sh(erghelp[i].w/ergnorm);
           } 
         }
       else{
@@ -940,19 +942,20 @@ __global__ void dot_half ( float* redfield, dev_spinor_half* x, float* x_norm, d
    float dotp = 0.0f;
    
    if(pos < dev_VOLUME){
-    // this is the loop over the 6 float4 forming one spinor
+    xnhelp = x_norm[pos];
+    ynhelp = y_norm[pos];
+    
+	// this is the loop over the 6 float4 forming one spinor
     #pragma unroll 6
     for(i=0; i<6; i++){
        //xhelp = tex1Dfetch(spinhalf_tex, 6*pos+i);
        //xnhelp = tex1Dfetch(spinnormhalf_tex, pos);
        
-       xnhelp = x_norm[pos];
        xhelp.x = sh2fl(x[6*pos+i].x)*xnhelp;
        xhelp.y = sh2fl(x[6*pos+i].y)*xnhelp;
        xhelp.z = sh2fl(x[6*pos+i].z)*xnhelp;
        xhelp.w = sh2fl(x[6*pos+i].w)*xnhelp;
       
-       ynhelp = y_norm[pos];
        yhelp.x = sh2fl(y[6*pos+i].x)*ynhelp;
        yhelp.y = sh2fl(y[6*pos+i].y)*ynhelp;
        yhelp.z = sh2fl(y[6*pos+i].z)*ynhelp;
@@ -1078,14 +1081,14 @@ float squarenorm_half(dev_spinor_half* x, float * xnorm){
 //////////////////   TEST ROUTINES /////////////////////////////
 
 
-__global__ void testhalf (dev_su3_2v* gf, dev_su3 * to){
+__global__ void testhalf (dev_su3_2v* gf, dev_su3 * to,int ind){
 
   int pos=threadIdx.x + blockDim.x*blockIdx.x;
   if (pos==0){
    #ifdef GF_8
-    dev_reconstructgf_8texref(gf, 2 , to);
+    dev_reconstructgf_8texref(gf, ind , to);
    #else
-    dev_reconstructgf_2vtexref(gf, 2 , to);
+    dev_reconstructgf_2vtexref(gf, ind , to);
    #endif
   }
 }
@@ -1096,17 +1099,23 @@ void testhalf_gf(dev_su3_2v_half * gf){
   dev_su3 hosttestfield;
   size_t size =  sizeof(dev_su3);
   dev_su3 hostmatrix;
-
+  int i,mu;
   
   cudaMalloc((void **) &testfield, size);
   #ifdef USETEXTURE
     //Bind texture gf
     bind_texture_gf_half(dev_gf_half);
   #endif  
-  testhalf <<< 1, 1 >>> (dev_gf, testfield);
-  cudaMemcpy(&(hosttestfield), testfield, size, cudaMemcpyDeviceToHost);  
-  show_dev_su3(hosttestfield);
-  
+
+  for( i=0; i<VOLUME; i++){
+   for( mu=0; mu<4; mu++){
+    testhalf <<< 1, 1 >>> (dev_gf, testfield,4*i + mu);
+    cudaMemcpy(&(hosttestfield), testfield, size, cudaMemcpyDeviceToHost);  
+    show_dev_su3(hosttestfield);
+    show_su3(g_gauge_field[i][mu]); 
+	printf("\n");
+   }
+  }
   
   #ifdef USETEXTURE
    unbind_texture_gf_half();
