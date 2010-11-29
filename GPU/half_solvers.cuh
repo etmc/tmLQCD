@@ -21,6 +21,33 @@ void test_spinor_normalization(dev_spinor_half* s, float* sn){
 
 
 
+void showspinor_half(dev_spinor_half* s, float* snorm){
+  int i,j;
+  
+  dev_spinor_half help[6];
+  dev_spinor help2[6];
+  float norm;
+  
+  size_t size = 6*sizeof(dev_spinor_half);
+  
+  for(i=0; i<VOLUME/2; i++){
+    cudaMemcpy(&(help[0]), (s+6*i), size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(&(norm), (snorm+i), sizeof(float), cudaMemcpyDeviceToHost);
+    
+    for(j=0; j<6; j++){
+      help2[j].x = half2float_host(help[j].x, norm);
+      help2[j].y = half2float_host(help[j].y, norm);
+      help2[j].z = half2float_host(help[j].z, norm);
+      help2[j].w = half2float_host(help[j].w, norm);
+    }
+    
+    for(j=0;j<6; j++){
+      printf("(%.3f %.3f) (%.3f, %.3f) ", help2[j].x, help2[j].y, help2[j].z, help2[j].w);
+    }
+    printf("\n");
+  }
+  
+}
 
 
 
@@ -163,7 +190,9 @@ extern "C" int dev_cg_eo_half(
  
  
  //test_spinor_normalization(spin2, spin2_norm);
-
+ //showspinor_half(spinin, spinin_norm);
+ 
+ 
  //relative precision -> get initial residue
  sourcesquarenorm = squarenorm_half(spinin, spinin_norm);
  printf("with squarenorm: %f\n", sourcesquarenorm);
@@ -173,6 +202,8 @@ extern "C" int dev_cg_eo_half(
  host_rk = sourcesquarenorm; //for use in main loop
  printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+ 
+ 
  
  printf("Entering inner solver cg-loop\n");
  for(i=0;i<maxit;i++){ //MAIN LOOP
@@ -199,6 +230,9 @@ extern "C" int dev_cg_eo_half(
   axpy_half<<<griddim4, blockdim4>>> 
        (-1.0*host_alpha, spin3, spin3_norm, spin0, spin0_norm);
   
+  //showspinor_half(spin0, spin0_norm);
+  //exit(200);
+ 
   //printf("r(k+1)\n");
   //test_spinor_normalization(spin3, spin3_norm);
   //test_spinor_normalization(spin0, spin0_norm);

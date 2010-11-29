@@ -983,7 +983,20 @@ extern "C" int dev_cg(
 
 
 
-
+void showspinor(dev_spinor* s){
+  int i,j;
+  dev_spinor help[6];
+  size_t size = 6*sizeof(dev_spinor);
+  
+  for(i=0; i<VOLUME/2; i++){
+    cudaMemcpy(&(help[0]), (s+6*i), size, cudaMemcpyDeviceToHost);
+    for(j=0;j<6; j++){
+      printf("(%.3f %.3f) (%.3f, %.3f) ", help[j].x, help[j].y, help[j].z, help[j].w);
+    }
+    printf("\n");
+  }
+  
+}
 
 
 
@@ -1119,6 +1132,8 @@ extern "C" int dev_cg_eo(
  host_rk = sourcesquarenorm; //for use in main loop
  printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+  
+ 
  
  printf("Entering inner solver cg-loop\n");
  for(i=0;i<maxit;i++){ //MAIN LOOP
@@ -1131,7 +1146,6 @@ extern "C" int dev_cg_eo(
   }
   
   
-  
  //alpha
   host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin2, 1,
             (const float *) spin3, 1);
@@ -1139,6 +1153,7 @@ extern "C" int dev_cg_eo(
    
  //r(k+1)
  cublasSaxpy (24*VOLUME/2,-1.0*host_alpha, (const float *) spin3, 1, (float *) spin0, 1);  
+
 
  //x(k+1);
  cublasSaxpy (24*VOLUME/2, host_alpha, (const float *) spin2,  1, (float *) spin1, 1);
