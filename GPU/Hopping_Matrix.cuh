@@ -940,10 +940,9 @@ __global__ void dev_Hopping_Matrix(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
 //else aequivalent to the above version 
 __global__ void dev_Hopping_Matrix_half(const dev_su3_2v * gf, const dev_spinor_half * sin, const float* sin_norm, dev_spinor_half * sout, float* sout_norm, const int * gfindex_site, const int* gfindex_nextsite, const int * nn_evenodd, const int eo){
 
-  int pos,hoppos,i;
+  int pos,hoppos;
     dev_spinor shelp1[6], ssum[6];
     __shared__ dev_su3_pad gfsmem[BLOCK];
-    float norm = 0.0;
 
 
   pos= threadIdx.x + blockDim.x*blockIdx.x;  
