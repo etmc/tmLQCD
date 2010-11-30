@@ -497,7 +497,11 @@ __global__ void dev_check_gauge_reconstruction_8(dev_su3_2v* gf, int pos, dev_su
 //
 void su3to2vf4(su3** gf, dev_su3_2v* h2d_gf){
   int i,j;
-  for (i=0;i<VOLUME;i++){
+  #ifndef MPI
+    for (i = 0; i < VOLUME; i++) {
+  #else
+    for (i = 0; i < (VOLUME+RAND); i++) {
+  #endif
    for(j=0;j<4;j++){
    //first row
     h2d_gf[3*(4*i+j)].x = (REAL) gf[i][j].c00.re;
@@ -525,22 +529,26 @@ void su3to2vf4(su3** gf, dev_su3_2v* h2d_gf){
 // 
 void su3to8(su3** gf, dev_su3_8* h2d_gf){
   int i,j;
-  for (i=0;i<VOLUME;i++){
-   for(j=0;j<4;j++){
-   // a2, a3
-    h2d_gf[2*(4*i+j)].x = (REAL) gf[i][j].c01.re;
-    h2d_gf[2*(4*i+j)].y = (REAL) gf[i][j].c01.im;
-    h2d_gf[2*(4*i+j)].z = (REAL) gf[i][j].c02.re;
-    h2d_gf[2*(4*i+j)].w = (REAL) gf[i][j].c02.im;
-    
-   // theta_a1, theta_c1
-   // use atan2 for this: following the reference, atan2 should give an angle -pi < phi < +pi  
-   h2d_gf[2*(4*i+j)+1].x = (REAL)( atan2((REAL) gf[i][j].c00.im,(REAL) gf[i][j].c00.re ));
-   h2d_gf[2*(4*i+j)+1].y = (REAL) ( atan2((REAL) gf[i][j].c20.im,(REAL)gf[i][j].c20.re ));
-     
-   // b1
-    h2d_gf[2*(4*i+j)+1].z = (REAL) gf[i][j].c10.re ;
-    h2d_gf[2*(4*i+j)+1].w = (REAL) gf[i][j].c10.im ;
+  #ifndef MPI
+    for (i = 0; i < VOLUME; i++) {
+  #else
+    for (i = 0; i < (VOLUME+RAND); i++) {
+  #endif
+      for(j=0;j<4;j++){
+      // a2, a3
+      h2d_gf[2*(4*i+j)].x = (REAL) gf[i][j].c01.re;
+      h2d_gf[2*(4*i+j)].y = (REAL) gf[i][j].c01.im;
+      h2d_gf[2*(4*i+j)].z = (REAL) gf[i][j].c02.re;
+      h2d_gf[2*(4*i+j)].w = (REAL) gf[i][j].c02.im;
+      
+      // theta_a1, theta_c1
+      // use atan2 for this: following the reference, atan2 should give an angle -pi < phi < +pi  
+      h2d_gf[2*(4*i+j)+1].x = (REAL)( atan2((REAL) gf[i][j].c00.im,(REAL) gf[i][j].c00.re ));
+      h2d_gf[2*(4*i+j)+1].y = (REAL) ( atan2((REAL) gf[i][j].c20.im,(REAL)gf[i][j].c20.re ));
+      
+      // b1
+      h2d_gf[2*(4*i+j)+1].z = (REAL) gf[i][j].c10.re ;
+      h2d_gf[2*(4*i+j)+1].w = (REAL) gf[i][j].c10.im ;
      
   } 
  }

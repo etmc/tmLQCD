@@ -155,7 +155,7 @@ extern "C" int bind_texture_gf(dev_su3_2v * gf){
  cudaGetTextureReference(&gf_texRefPtr, "gf_tex");
  gf_channelDesc =  cudaCreateChannelDesc<float4>();
  cudaBindTexture(0, gf_texRefPtr, gf, &gf_channelDesc, size);
- printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
+ //printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
  return(0);
 }
 
@@ -163,7 +163,7 @@ extern "C" int bind_texture_gf(dev_su3_2v * gf){
 extern "C" int unbind_texture_gf(){
  //printf("Unbinding texture to gaugefield\n");
  cudaUnbindTexture(gf_texRefPtr);
- printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
+ //printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
  return(0);
 }
 

@@ -372,7 +372,7 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   int tSliceEO = LX*LY*LZ/2;
   int VolumeEO = VOLUME/2;
   
-  #ifdef ASYNC_OPTIMIZED
+  #if defined ASYNC_OPTIMIZED && ASYNC == 3
     int offset;
     if (tSliceEO % nStreams == 0) {
       offset = tSliceEO / nStreams;

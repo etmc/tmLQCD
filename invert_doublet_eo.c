@@ -164,7 +164,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   #ifdef HAVE_GPU
     if (usegpu_flag) {	// GPU, mixed precision solver
       #if defined(MPI) && defined(PARALLELT)
-        iter = mixedsolve_eo_nd_mpi(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+        iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
                                     max_iter, precision, rel_prec);
       #elif !defined(MPI) && !defined(PARALLELT)
         iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],

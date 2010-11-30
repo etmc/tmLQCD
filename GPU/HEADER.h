@@ -58,7 +58,7 @@ void init_nnspinor_eo_mpi();
 void init_idxgauge_mpi();
 void init_gpu_indexfields();
 void free_gpu_indexfields();
-__global__ void he_cg_init_nd_additional_mpi (int param_VOLUMEPLUSRAND, int param_RAND);
+__global__ void he_cg_init_nd_additional_mpi (int param_VOLUMEPLUSRAND, int param_RAND, int rank, int nproc);
 void init_mixedsolve_eo_nd_mpi(su3** gf);
 void finalize_mixedsolve_eo_nd_mpi(void);
 
@@ -81,6 +81,31 @@ int cg_eo_nd_mpi (dev_su3_2v * gf,
 extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
                                      spinor * Q_up, spinor * Q_dn,
                                      int max_iter, double eps_sq, int rel_prec);
+
+
+
+
+// ASYNC
+
+__global__ void dev_Hopping_Matrix_ASYNC (const dev_su3_2v * gf, 
+                                          const dev_spinor * sin, dev_spinor * sout,
+                                          const int * gfindex_site, const int* gfindex_nextsite, const int * nn_evenodd,
+                                          const int eo,
+                                          int start, int size);
+
+void HOPPING_ASYNC (dev_su3_2v * gf, 
+                    dev_spinor * spinin, dev_spinor * spinout,
+                    int * gfindex_site, int * gfindex_nextsite, int * nn_evenodd,
+                    int ieo,
+                    int gridsize, int blocksize);
+
+void matrix_multiplication32_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_dn,
+                                        dev_spinor * spinin_up , dev_spinor * spinin_dn ,
+                                        int gridsize1, int blocksize1, int gridsize2, int blocksize2,
+                                        int gridsize3, int blocksize3, int gridsize4, int blocksize4);
+
+
+
 
 
 

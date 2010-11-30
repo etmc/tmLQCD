@@ -592,9 +592,16 @@ __global__ void dev_init_grid (int* grid){
 
 // code to list available devices, not yet included in main code
 // this is copied from the CUDA sdk 
-extern "C" int find_devices(){
-int deviceCount, dev;
-    cudaGetDeviceCount(&deviceCount);
+extern "C" int find_devices() {
+
+  int deviceCount, dev;
+
+  cudaGetDeviceCount(&deviceCount);
+    
+  #ifdef MPI
+    if (g_cart_id == 0) {
+  #endif
+    
     if (deviceCount == 0)
         printf("There is no device supporting CUDA\n");
     for (dev = 0; dev < deviceCount; ++dev) {
@@ -650,6 +657,11 @@ int deviceCount, dev;
                deviceProp.deviceOverlap ? "Yes" : "No");
     #endif
     }
+    
+    #ifdef MPI 
+      }
+    #endif
+    
     return(deviceCount);
 }
 
@@ -1444,97 +1456,7 @@ void shownn(){
 
 
 
-// convert spinor to double 
-void convert2double_spin(dev_spinor* spin, spinor* h2d){
-  int i,Vol;
-  if(even_odd_flag){
-    Vol = VOLUME/2;
-  }
-  else{
-    Vol = VOLUME;
-  }
-  for (i=0;i<Vol;i++){
-  
-        h2d[i].s0.c0.re = (double) spin[6*i+0].x;
-        h2d[i].s0.c0.im = (double) spin[6*i+0].y;
-        h2d[i].s0.c1.re = (double) spin[6*i+0].z;
-        h2d[i].s0.c1.im = (double) spin[6*i+0].w;
-        
-        h2d[i].s0.c2.re = (double) spin[6*i+1].x;
-        h2d[i].s0.c2.im = (double) spin[6*i+1].y;
-        h2d[i].s1.c0.re = (double) spin[6*i+1].z;
-        h2d[i].s1.c0.im = (double) spin[6*i+1].w;   
-        
-        h2d[i].s1.c1.re = (double) spin[6*i+2].x;
-        h2d[i].s1.c1.im = (double) spin[6*i+2].y;
-        h2d[i].s1.c2.re = (double) spin[6*i+2].z;
-        h2d[i].s1.c2.im = (double) spin[6*i+2].w;  
-        
-        h2d[i].s2.c0.re = (double) spin[6*i+3].x;
-        h2d[i].s2.c0.im = (double) spin[6*i+3].y;
-        h2d[i].s2.c1.re = (double) spin[6*i+3].z;
-        h2d[i].s2.c1.im = (double) spin[6*i+3].w;  
-        
-        h2d[i].s2.c2.re = (double) spin[6*i+4].x;
-        h2d[i].s2.c2.im = (double) spin[6*i+4].y;
-        h2d[i].s3.c0.re = (double) spin[6*i+4].z;
-        h2d[i].s3.c0.im = (double) spin[6*i+4].w; 
-        
-        h2d[i].s3.c1.re = (double) spin[6*i+5].x;
-        h2d[i].s3.c1.im = (double) spin[6*i+5].y;
-        h2d[i].s3.c2.re = (double) spin[6*i+5].z;
-        h2d[i].s3.c2.im = (double) spin[6*i+5].w; 
-        
-  }
-}
 
-
-
-
-
-// convert spinor to REAL4 (float4, double4) 
-void convert2REAL4_spin(spinor* spin, dev_spinor* h2d){
-  int i,Vol;
-  if(even_odd_flag){
-    Vol = VOLUME/2;
-  }
-  else{
-    Vol = VOLUME;
-  }
-  for (i=0;i<Vol;i++){
-    
-        h2d[6*i+0].x = (REAL) spin[i].s0.c0.re;
-        h2d[6*i+0].y = (REAL) spin[i].s0.c0.im;
-        h2d[6*i+0].z = (REAL) spin[i].s0.c1.re;
-        h2d[6*i+0].w = (REAL) spin[i].s0.c1.im;
-        
-        h2d[6*i+1].x = (REAL) spin[i].s0.c2.re;
-        h2d[6*i+1].y = (REAL) spin[i].s0.c2.im;
-        h2d[6*i+1].z = (REAL) spin[i].s1.c0.re;
-        h2d[6*i+1].w = (REAL) spin[i].s1.c0.im;
-        
-        h2d[6*i+2].x = (REAL) spin[i].s1.c1.re;
-        h2d[6*i+2].y = (REAL) spin[i].s1.c1.im;
-        h2d[6*i+2].z = (REAL) spin[i].s1.c2.re;
-        h2d[6*i+2].w = (REAL) spin[i].s1.c2.im;
-        
-        h2d[6*i+3].x = (REAL) spin[i].s2.c0.re;
-        h2d[6*i+3].y = (REAL) spin[i].s2.c0.im;
-        h2d[6*i+3].z = (REAL) spin[i].s2.c1.re;
-        h2d[6*i+3].w = (REAL) spin[i].s2.c1.im;
-        
-        h2d[6*i+4].x = (REAL) spin[i].s2.c2.re;
-        h2d[6*i+4].y = (REAL) spin[i].s2.c2.im;
-        h2d[6*i+4].z = (REAL) spin[i].s3.c0.re;
-        h2d[6*i+4].w = (REAL) spin[i].s3.c0.im;
-        
-        h2d[6*i+5].x = (REAL) spin[i].s3.c1.re;
-        h2d[6*i+5].y = (REAL) spin[i].s3.c1.im;
-        h2d[6*i+5].z = (REAL) spin[i].s3.c2.re;
-        h2d[6*i+5].w = (REAL) spin[i].s3.c2.im;
-    
-  }
-}
 
 
 
@@ -2413,12 +2335,6 @@ for(iter=0; iter<max_iter; iter++){
 
 // mixed solver, even/odd, non-degenerate two flavour
 #include "mixed_solve_eo_nd.cuh"
-
-
-#if defined(MPI) && defined(PARALLELT)
-  //#include "./DEBUG/MATRIX_MPI_DEBUG.cuh"		// for debugging
-  #include "MPI.cuh"
-#endif
 
 
 
