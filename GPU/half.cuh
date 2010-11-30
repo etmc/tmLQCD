@@ -319,29 +319,31 @@ int pos=threadIdx.x + blockDim.x*blockIdx.x;
 __global__ void float2half_gaugefield(dev_su3_2v* gf, dev_su3_2v_half* gfh, int vol){
 
   int pos=threadIdx.x + blockDim.x*blockIdx.x;
-  int nf4;
+  int nf4,mu;
   if(pos < vol){
+  for(mu=0; mu<4; mu++){
   #ifdef GF_8
     nf4 = 2;
-    gfh[nf4*pos].x = fl2sh(gf[nf4*pos].x);
-    gfh[nf4*pos].y = fl2sh(gf[nf4*pos].y);
-    gfh[nf4*pos].z = fl2sh(gf[nf4*pos].z);
-    gfh[nf4*pos].w = fl2sh(gf[nf4*pos].w);
+    gfh[nf4*(4*pos+mu)].x = fl2sh(gf[nf4*(4*pos+mu)].x);
+    gfh[nf4*(4*pos+mu)].y = fl2sh(gf[nf4*(4*pos+mu)].y);
+    gfh[nf4*(4*pos+mu)].z = fl2sh(gf[nf4*(4*pos+mu)].z);
+    gfh[nf4*(4*pos+mu)].w = fl2sh(gf[nf4*(4*pos+mu)].w);
     
-    gfh[nf4*pos+1].x = fl2sh(gf[nf4*pos+1].x/pi_float);
-    gfh[nf4*pos+1].y = fl2sh(gf[nf4*pos+1].y/pi_float);
-    gfh[nf4*pos+1].z = fl2sh(gf[nf4*pos+1].z);
-    gfh[nf4*pos+1].w = fl2sh(gf[nf4*pos+1].w);
+    gfh[nf4*(4*pos+mu)+1].x = fl2sh(gf[nf4*(4*pos+mu)+1].x/pi_float);
+    gfh[nf4*(4*pos+mu)+1].y = fl2sh(gf[nf4*(4*pos+mu)+1].y/pi_float);
+    gfh[nf4*(4*pos+mu)+1].z = fl2sh(gf[nf4*(4*pos+mu)+1].z);
+    gfh[nf4*(4*pos+mu)+1].w = fl2sh(gf[nf4*(4*pos+mu)+1].w);
   #else
     int i;
     nf4 = 3;
     for(i=0; i<nf4; i++){
-       gfh[nf4*pos+i].x = fl2sh(gf[nf4*pos+i].x);
-       gfh[nf4*pos+i].y = fl2sh(gf[nf4*pos+i].y);
-       gfh[nf4*pos+i].z = fl2sh(gf[nf4*pos+i].z);
-       gfh[nf4*pos+i].w = fl2sh(gf[nf4*pos+i].w);
+       gfh[nf4*(4*pos+mu)+i].x = fl2sh(gf[nf4*(4*pos+mu)+i].x);
+       gfh[nf4*(4*pos+mu)+i].y = fl2sh(gf[nf4*(4*pos+mu)+i].y);
+       gfh[nf4*(4*pos+mu)+i].z = fl2sh(gf[nf4*(4*pos+mu)+i].z);
+       gfh[nf4*(4*pos+mu)+i].w = fl2sh(gf[nf4*(4*pos+mu)+i].w);
     } 
   #endif
+  }//mu
   }
 }
 
