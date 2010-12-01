@@ -429,7 +429,7 @@ extern "C" void dev_Qtm_pm_psi_half(dev_spinor_half* spinin, float* spinin_norm,
   #endif
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix_half, cudaFuncCachePreferL1);
     dev_Hopping_Matrix_half<<<gridsize, blocksize>>>
-             (dev_gf, spinin, spinin_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0  
+             (dev_gf_half, spinin, spinin_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0  
   #ifdef USETEXTURE
     unbind_halfspinor_texture();
   #endif
@@ -440,7 +440,7 @@ extern "C" void dev_Qtm_pm_psi_half(dev_spinor_half* spinin, float* spinin_norm,
   #endif
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix_half, cudaFuncCachePreferL1);
     dev_Hopping_Matrix_half<<<gridsize, blocksize>>>
-            (dev_gf, dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
+            (dev_gf_half, dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
   #ifdef USETEXTURE
     unbind_halfspinor_texture();
   #endif
@@ -452,7 +452,7 @@ extern "C" void dev_Qtm_pm_psi_half(dev_spinor_half* spinin, float* spinin_norm,
   #endif
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix_half, cudaFuncCachePreferL1);
     dev_Hopping_Matrix_half<<<gridsize, blocksize>>>
-          (dev_gf, dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0    
+          (dev_gf_half, dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0    
   #ifdef USETEXTURE  
     unbind_halfspinor_texture();
   #endif
@@ -463,7 +463,7 @@ extern "C" void dev_Qtm_pm_psi_half(dev_spinor_half* spinin, float* spinin_norm,
   #endif
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix_half, cudaFuncCachePreferL1);
     dev_Hopping_Matrix_half<<<gridsize, blocksize>>>
-             (dev_gf, spinout, spinout_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);  
+             (dev_gf_half, spinout, spinout_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);  
   #ifdef USETEXTURE
     unbind_halfspinor_texture();
   #endif

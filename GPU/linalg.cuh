@@ -578,20 +578,20 @@ dev_spinor s1, s2;
 #else
  s1 = tex1Dfetch(spinhalf_tex,6*pos);
  float norm = tex1Dfetch(spinnormhalf_tex,pos);
- s1.x = s1.x*norm; 
- s1.y = s1.y*norm; 
- s1.z = s1.z*norm;
- s1.w = s1.w*norm;
+ s1.x *= norm; 
+ s1.y *= norm; 
+ s1.z *= norm;
+ s1.w *= norm;
 #endif
 
 #ifndef HALF
  s2 = tex1Dfetch(spin_tex,6*pos+1);
 #else
  s2 = tex1Dfetch(spinhalf_tex,6*pos+1);
- s2.x = s2.x*norm; 
- s2.y = s2.y*norm; 
- s2.z = s2.z*norm; 
- s2.w = s2.w*norm;
+ s2.x *= norm; 
+ s2.y *= norm; 
+ s2.z *= norm; 
+ s2.w *= norm;
 #endif
 
 (*(out+0)).x =  ( M[0][0].re*s1.x - M[0][0].im*s1.y ) + ( M[0][1].re*s1.z - M[0][1].im*s1.w ) + ( M[0][2].re*s2.x - M[0][2].im*s2.y );
@@ -611,10 +611,10 @@ dev_spinor s1, s2;
  s1 = tex1Dfetch(spin_tex,6*pos+2);
 #else
  s1 = tex1Dfetch(spinhalf_tex,6*pos+2);
- s1.x = s1.x*norm; 
- s1.y = s1.y*norm; 
- s1.z = s1.z*norm;
- s1.w = s1.w*norm;
+ s1.x *= norm; 
+ s1.y *= norm; 
+ s1.z *= norm;
+ s1.w *= norm;
 #endif
 
 (*(out+1)).z =  ( M[0][0].re*s2.z - M[0][0].im*s2.w ) + ( M[0][1].re*s1.x - M[0][1].im*s1.y ) + ( M[0][2].re*s1.z - M[0][2].im*s1.w );
@@ -633,20 +633,20 @@ dev_spinor s1, s2;
  s1 = tex1Dfetch(spin_tex,6*pos+3);
 #else
  s1 = tex1Dfetch(spinhalf_tex,6*pos+3);
- s1.x = s1.x*norm; 
- s1.y = s1.y*norm; 
- s1.z = s1.z*norm;
- s1.w = s1.w*norm;
+ s1.x *= norm; 
+ s1.y *= norm; 
+ s1.z *= norm;
+ s1.w *= norm;
 #endif
 
 #ifndef HALF
  s2 = tex1Dfetch(spin_tex,6*pos+4);
 #else
  s2 = tex1Dfetch(spinhalf_tex,6*pos+4);
- s2.x = s2.x*norm; 
- s2.y = s2.y*norm; 
- s2.z = s2.z*norm; 
- s2.w = s2.w*norm;
+ s2.x *= norm; 
+ s2.y *= norm; 
+ s2.z *= norm; 
+ s2.w *= norm;
 #endif
 (*(out+3)).x =  ( M[0][0].re*s1.x - M[0][0].im*s1.y ) + ( M[0][1].re*s1.z - M[0][1].im*s1.w ) + ( M[0][2].re*s2.x - M[0][2].im*s2.y );
 (*(out+3)).y =   ( M[0][0].re*s1.y + M[0][0].im*s1.x ) + ( M[0][1].re*s1.w + M[0][1].im*s1.z ) + ( M[0][2].re*s2.y + M[0][2].im*s2.x );
@@ -664,10 +664,10 @@ dev_spinor s1, s2;
  s1 = tex1Dfetch(spin_tex,6*pos+5);
 #else
  s1 = tex1Dfetch(spinhalf_tex,6*pos+5);
- s1.x = s1.x*norm; 
- s1.y = s1.y*norm; 
- s1.z = s1.z*norm;
- s1.w = s1.w*norm;
+ s1.x *= norm; 
+ s1.y *= norm; 
+ s1.z *= norm;
+ s1.w *= norm;
 #endif
 (*(out+4)).z =  ( M[0][0].re*s2.z - M[0][0].im*s2.w ) + ( M[0][1].re*s1.x - M[0][1].im*s1.y ) + ( M[0][2].re*s1.z - M[0][2].im*s1.w );
 (*(out+4)).w =   ( M[0][0].re*s2.w + M[0][0].im*s2.z ) + ( M[0][1].re*s1.y + M[0][1].im*s1.x ) + ( M[0][2].re*s1.w + M[0][2].im*s1.z );
@@ -743,6 +743,188 @@ __device__ void dev_su3MtV(dev_su3 M, const dev_spinor * s, dev_spinor * out){
 (*(out+5)).z =  ( M[2][0].re*(*(s+4)).z - M[2][0].im*(*(s+4)).w ) + ( M[2][1].re*(*(s+5)).x - M[2][1].im*(*(s+5)).y ) + ( M[2][2].re*(*(s+5)).z - M[2][2].im*(*(s+5)).w );
 (*(out+5)).w =  ( M[2][0].re*(*(s+4)).w + M[2][0].im*(*(s+4)).z ) + ( M[2][1].re*(*(s+5)).y + M[2][1].im*(*(s+5)).x ) + ( M[2][2].re*(*(s+5)).w + M[2][2].im*(*(s+5)).z );
 }
+
+
+
+
+
+
+#ifdef HALF
+//multipliziert su3-Matrix mal Spinor im Dirac-Raum
+//code in su3_MtV.txt -- generated with codegen
+__device__ void dev_su3MtV_half(dev_su3 M, const dev_spinor_half * s, const float * s_norm, dev_spinor * out){
+float norm = * s_norm;
+
+(*(out+0)).x = ( M[0][0].re*half2fl((*(s+0)).x,norm) -
+                 M[0][0].im*half2fl((*(s+0)).y,norm) ) 
+             + ( M[0][1].re*half2fl((*(s+0)).z,norm) - 
+                 M[0][1].im*half2fl((*(s+0)).w,norm) ) 
+             + ( M[0][2].re*half2fl((*(s+1)).x,norm) -
+                 M[0][2].im*half2fl((*(s+1)).y,norm) );
+(*(out+0)).y = ( M[0][0].re*half2fl((*(s+0)).y,norm) +
+                 M[0][0].im*half2fl((*(s+0)).x,norm) ) 
+             + ( M[0][1].re*half2fl((*(s+0)).w,norm) +
+                 M[0][1].im*half2fl((*(s+0)).z,norm) ) 
+             + ( M[0][2].re*half2fl((*(s+1)).y,norm) +
+                 M[0][2].im*half2fl((*(s+1)).x,norm) );
+
+
+(*(out+0)).z =  ( M[1][0].re*half2fl((*(s+0)).x,norm) -
+                  M[1][0].im*half2fl((*(s+0)).y,norm) ) 
+             +  ( M[1][1].re*half2fl((*(s+0)).z,norm) - 
+                  M[1][1].im*half2fl((*(s+0)).w,norm) ) 
+             +  ( M[1][2].re*half2fl((*(s+1)).x,norm) -
+                  M[1][2].im*half2fl((*(s+1)).y,norm) );
+(*(out+0)).w =  ( M[1][0].re*half2fl((*(s+0)).y,norm) +
+                  M[1][0].im*half2fl((*(s+0)).x,norm) ) 
+             +  ( M[1][1].re*half2fl((*(s+0)).w,norm) +
+                  M[1][1].im*half2fl((*(s+0)).z,norm) ) 
+             +  ( M[1][2].re*half2fl((*(s+1)).y,norm) + 
+                  M[1][2].im*half2fl((*(s+1)).x,norm) );
+
+
+(*(out+1)).x = ( M[2][0].re*half2fl((*(s+0)).x, norm) -
+                 M[2][0].im*half2fl((*(s+0)).y, norm) ) 
+             + ( M[2][1].re*half2fl((*(s+0)).z, norm) -
+                 M[2][1].im*half2fl((*(s+0)).w, norm) ) 
+             + ( M[2][2].re*half2fl((*(s+1)).x, norm) -
+                 M[2][2].im*half2fl((*(s+1)).y, norm) );
+(*(out+1)).y = ( M[2][0].re*half2fl((*(s+0)).y, norm) +
+                 M[2][0].im*half2fl((*(s+0)).x, norm) ) 
+             + ( M[2][1].re*half2fl((*(s+0)).w, norm) +
+                 M[2][1].im*half2fl((*(s+0)).z, norm) ) 
+             + ( M[2][2].re*half2fl((*(s+1)).y, norm) +
+                 M[2][2].im*half2fl((*(s+1)).x, norm) );
+
+
+(*(out+1)).z = ( M[0][0].re*half2fl((*(s+1)).z, norm) -
+                 M[0][0].im*half2fl((*(s+1)).w, norm) ) 
+             + ( M[0][1].re*half2fl((*(s+2)).x, norm) -
+                 M[0][1].im*half2fl((*(s+2)).y, norm) ) 
+             + ( M[0][2].re*half2fl((*(s+2)).z, norm) -
+                 M[0][2].im*half2fl((*(s+2)).w, norm) );
+(*(out+1)).w = ( M[0][0].re*half2fl((*(s+1)).w, norm) +
+                 M[0][0].im*half2fl((*(s+1)).z, norm) ) 
+             + ( M[0][1].re*half2fl((*(s+2)).y, norm) +
+                 M[0][1].im*half2fl((*(s+2)).x, norm) ) 
+             + ( M[0][2].re*half2fl((*(s+2)).w, norm) +
+                 M[0][2].im*half2fl((*(s+2)).z, norm) );
+
+
+(*(out+2)).x = ( M[1][0].re*half2fl((*(s+1)).z, norm) -
+                 M[1][0].im*half2fl((*(s+1)).w, norm) ) 
+             + ( M[1][1].re*half2fl((*(s+2)).x, norm) -
+                 M[1][1].im*half2fl((*(s+2)).y, norm) ) 
+             + ( M[1][2].re*half2fl((*(s+2)).z, norm) -
+                 M[1][2].im*half2fl((*(s+2)).w, norm) );
+(*(out+2)).y = ( M[1][0].re*half2fl((*(s+1)).w, norm) +
+                 M[1][0].im*half2fl((*(s+1)).z, norm) ) 
+             + ( M[1][1].re*half2fl((*(s+2)).y, norm) +
+                 M[1][1].im*half2fl((*(s+2)).x, norm) ) 
+             + ( M[1][2].re*half2fl((*(s+2)).w, norm) +
+                 M[1][2].im*half2fl((*(s+2)).z, norm) );
+
+
+(*(out+2)).z = ( M[2][0].re*half2fl((*(s+1)).z, norm) -
+                 M[2][0].im*half2fl((*(s+1)).w, norm) ) 
+             + ( M[2][1].re*half2fl((*(s+2)).x, norm) -
+                 M[2][1].im*half2fl((*(s+2)).y, norm) ) 
+             + ( M[2][2].re*half2fl((*(s+2)).z, norm) -
+                 M[2][2].im*half2fl((*(s+2)).w, norm) );
+(*(out+2)).w = ( M[2][0].re*half2fl((*(s+1)).w, norm) +
+                 M[2][0].im*half2fl((*(s+1)).z, norm) ) 
+             + ( M[2][1].re*half2fl((*(s+2)).y, norm) +
+                 M[2][1].im*half2fl((*(s+2)).x, norm) ) 
+             + ( M[2][2].re*half2fl((*(s+2)).w, norm) +
+                 M[2][2].im*half2fl((*(s+2)).z, norm) );
+
+
+(*(out+3)).x = ( M[0][0].re*half2fl((*(s+3)).x, norm) -
+                 M[0][0].im*half2fl((*(s+3)).y, norm) ) 
+             + ( M[0][1].re*half2fl((*(s+3)).z, norm) -
+                 M[0][1].im*half2fl((*(s+3)).w, norm) ) 
+             + ( M[0][2].re*half2fl((*(s+4)).x, norm) -
+                 M[0][2].im*half2fl((*(s+4)).y, norm) );
+(*(out+3)).y = ( M[0][0].re*half2fl((*(s+3)).y, norm) +
+                 M[0][0].im*half2fl((*(s+3)).x, norm) ) 
+             + ( M[0][1].re*half2fl((*(s+3)).w, norm) +
+                 M[0][1].im*half2fl((*(s+3)).z, norm) ) 
+             + ( M[0][2].re*half2fl((*(s+4)).y, norm) +
+                 M[0][2].im*half2fl((*(s+4)).x, norm) );
+
+
+(*(out+3)).z = ( M[1][0].re*half2fl((*(s+3)).x, norm) -
+                 M[1][0].im*half2fl((*(s+3)).y, norm) ) 
+             + ( M[1][1].re*half2fl((*(s+3)).z, norm) -
+                 M[1][1].im*half2fl((*(s+3)).w, norm) ) 
+             + ( M[1][2].re*half2fl((*(s+4)).x, norm) -
+                 M[1][2].im*half2fl((*(s+4)).y, norm) );
+(*(out+3)).w = ( M[1][0].re*half2fl((*(s+3)).y, norm) +
+                 M[1][0].im*half2fl((*(s+3)).x, norm) ) 
+             + ( M[1][1].re*half2fl((*(s+3)).w, norm) +
+                 M[1][1].im*half2fl((*(s+3)).z, norm) ) 
+             + ( M[1][2].re*half2fl((*(s+4)).y, norm) +
+                 M[1][2].im*half2fl((*(s+4)).x, norm) );
+
+
+(*(out+4)).x = ( M[2][0].re*half2fl((*(s+3)).x, norm) -
+                 M[2][0].im*half2fl((*(s+3)).y, norm) ) 
+             + ( M[2][1].re*half2fl((*(s+3)).z, norm) -
+                 M[2][1].im*half2fl((*(s+3)).w, norm) ) 
+             + ( M[2][2].re*half2fl((*(s+4)).x, norm) -
+                 M[2][2].im*half2fl((*(s+4)).y, norm) );
+(*(out+4)).y = ( M[2][0].re*half2fl((*(s+3)).y, norm) +
+                 M[2][0].im*half2fl((*(s+3)).x, norm) ) 
+             + ( M[2][1].re*half2fl((*(s+3)).w, norm) +
+                 M[2][1].im*half2fl((*(s+3)).z, norm) ) 
+             + ( M[2][2].re*half2fl((*(s+4)).y, norm) +
+                 M[2][2].im*half2fl((*(s+4)).x, norm) );
+
+
+(*(out+4)).z = ( M[0][0].re*half2fl((*(s+4)).z, norm) -
+                 M[0][0].im*half2fl((*(s+4)).w, norm) ) 
+             + ( M[0][1].re*half2fl((*(s+5)).x, norm) - 
+                 M[0][1].im*half2fl((*(s+5)).y, norm) ) 
+             + ( M[0][2].re*half2fl((*(s+5)).z, norm) -
+                 M[0][2].im*half2fl((*(s+5)).w, norm) );
+(*(out+4)).w = ( M[0][0].re*half2fl((*(s+4)).w, norm) +
+                 M[0][0].im*half2fl((*(s+4)).z, norm) ) 
+             + ( M[0][1].re*half2fl((*(s+5)).y, norm) +
+                 M[0][1].im*half2fl((*(s+5)).x, norm) ) 
+             + ( M[0][2].re*half2fl((*(s+5)).w, norm) +
+                 M[0][2].im*half2fl((*(s+5)).z, norm) );
+
+
+(*(out+5)).x = ( M[1][0].re*half2fl((*(s+4)).z, norm) -
+                 M[1][0].im*half2fl((*(s+4)).w, norm) ) 
+             + ( M[1][1].re*half2fl((*(s+5)).x, norm) -
+                 M[1][1].im*half2fl((*(s+5)).y, norm) ) 
+             + ( M[1][2].re*half2fl((*(s+5)).z, norm) -
+                 M[1][2].im*half2fl((*(s+5)).w, norm) );
+(*(out+5)).y = ( M[1][0].re*half2fl((*(s+4)).w, norm) +
+                 M[1][0].im*half2fl((*(s+4)).z, norm) ) 
+             + ( M[1][1].re*half2fl((*(s+5)).y, norm) +
+                 M[1][1].im*half2fl((*(s+5)).x, norm) ) 
+             + ( M[1][2].re*half2fl((*(s+5)).w, norm) +
+                 M[1][2].im*half2fl((*(s+5)).z, norm) );
+
+
+(*(out+5)).z = ( M[2][0].re*half2fl((*(s+4)).z, norm) - 
+                 M[2][0].im*half2fl((*(s+4)).w, norm) ) 
+             + ( M[2][1].re*half2fl((*(s+5)).x, norm) -
+                 M[2][1].im*half2fl((*(s+5)).y, norm) ) 
+             + ( M[2][2].re*half2fl((*(s+5)).z, norm) -
+                 M[2][2].im*half2fl((*(s+5)).w, norm) );
+(*(out+5)).w = ( M[2][0].re*half2fl((*(s+4)).w, norm) +
+                 M[2][0].im*half2fl((*(s+4)).z, norm) ) 
+             + ( M[2][1].re*half2fl((*(s+5)).y, norm) +
+                 M[2][1].im*half2fl((*(s+5)).x, norm) ) 
+             + ( M[2][2].re*half2fl((*(s+5)).w, norm) +
+                 M[2][2].im*half2fl((*(s+5)).z, norm) );
+}
+#endif
+
+
 
 
 

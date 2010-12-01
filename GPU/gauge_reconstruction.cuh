@@ -35,7 +35,16 @@
 
 #ifdef HALF
   #define pi_float 3.141592654f
+  #define sh4tofl4(fl) make_float4(sh2fl(fl.x), sh2fl(fl.y), sh2fl(fl.z), sh2fl(fl.w))
+#else
+  #define sh4tofl4(fl) (fl)
 #endif 
+
+
+
+
+
+
 
 
 
@@ -476,6 +485,459 @@ __device__ void dev_reconstructgf_8texref_dagger (const dev_su3_2v* field,int po
   (*gf)[2][2] = dev_cconj(dev_crealmult((*gf)[2][2], -one_over_N));
 
 }
+
+
+
+
+#ifdef HALF // for half precision 
+
+// reconstruction of the link fields from two rows of the su3 matrix
+// numbers are fetched from texture cache
+__device__ void dev_reconstructgf_2vtexref_half (const dev_su3_2v_half* field, int pos, dev_su3* gf){
+  float4 gfin;
+  
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,3*pos);
+  #else
+    gfin = sh4tofl4(field[3*pos]);
+  #endif
+  //first row
+  (*gf)[0][0].re = gfin.x;
+  (*gf)[0][0].im = gfin.y;
+  (*gf)[0][1].re = gfin.z;
+  (*gf)[0][1].im = gfin.w;
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,3*pos+1);
+  #else
+    gfin = sh4tofl4(field[3*pos + 1]);
+  #endif
+  (*gf)[0][2].re = gfin.x;
+  (*gf)[0][2].im = gfin.y;
+  //second row
+  (*gf)[1][0].re = gfin.z;
+  (*gf)[1][0].im = gfin.w;
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,3*pos+2);
+  #else
+    gfin = sh4tofl4(field[3*pos + 2]);
+  #endif
+  (*gf)[1][1].re = gfin.x;
+  (*gf)[1][1].im = gfin.y;
+  (*gf)[1][2].re = gfin.z;
+  (*gf)[1][2].im = gfin.w;
+  
+  //third row from cconj(cross product of first and second row)
+
+  (*gf)[2][0].re = (*gf)[0][1].re * (*gf)[1][2].re;
+  (*gf)[2][0].re -= (*gf)[0][1].im * (*gf)[1][2].im;
+  (*gf)[2][0].re -= (*gf)[0][2].re * (*gf)[1][1].re;
+  (*gf)[2][0].re += (*gf)[0][2].im * (*gf)[1][1].im;
+  
+  (*gf)[2][0].im = -(*gf)[0][1].re * (*gf)[1][2].im;
+  (*gf)[2][0].im -= (*gf)[0][1].im * (*gf)[1][2].re;
+  (*gf)[2][0].im += (*gf)[0][2].re * (*gf)[1][1].im;
+  (*gf)[2][0].im += (*gf)[0][2].im * (*gf)[1][1].re;
+  
+
+
+  (*gf)[2][1].re = (*gf)[0][2].re * (*gf)[1][0].re;
+  (*gf)[2][1].re -= (*gf)[0][2].im * (*gf)[1][0].im;
+  (*gf)[2][1].re -= (*gf)[0][0].re * (*gf)[1][2].re;
+  (*gf)[2][1].re += (*gf)[0][0].im * (*gf)[1][2].im;
+  
+  (*gf)[2][1].im = -(*gf)[0][2].re * (*gf)[1][0].im;
+  (*gf)[2][1].im -= (*gf)[0][2].im * (*gf)[1][0].re;
+  (*gf)[2][1].im += (*gf)[0][0].re * (*gf)[1][2].im;
+  (*gf)[2][1].im += (*gf)[0][0].im * (*gf)[1][2].re;
+
+
+  
+  (*gf)[2][2].re = (*gf)[0][0].re * (*gf)[1][1].re;
+  (*gf)[2][2].re -= (*gf)[0][0].im * (*gf)[1][1].im;
+  (*gf)[2][2].re -= (*gf)[0][1].re * (*gf)[1][0].re;
+  (*gf)[2][2].re += (*gf)[0][1].im * (*gf)[1][0].im;
+  
+  (*gf)[2][2].im = -(*gf)[0][0].re * (*gf)[1][1].im;
+  (*gf)[2][2].im -= (*gf)[0][0].im * (*gf)[1][1].re;
+  (*gf)[2][2].im += (*gf)[0][1].re * (*gf)[1][0].im;
+  (*gf)[2][2].im += (*gf)[0][1].im * (*gf)[1][0].re;
+  
+
+  return;
+}
+
+
+
+
+// su3 - dagger reconstruction from two rows  
+__device__ void dev_reconstructgf_2vtexref_dagger_half (const dev_su3_2v_half* field, int pos, dev_su3* gf){
+  //dev_complex help1;
+  //dev_complex help2;
+  float4 gfin;
+  
+  
+  //first column (minus in im for complex conj.)
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,3*pos);
+  #else
+    gfin = sh4tofl4(field[3*pos]);
+  #endif
+  (*gf)[0][0].re = gfin.x;
+  (*gf)[0][0].im = -gfin.y;
+  (*gf)[1][0].re = gfin.z;
+  (*gf)[1][0].im = -gfin.w;
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,3*pos+1);
+  #else
+    gfin = sh4tofl4(field[3*pos +1]);
+  #endif
+  (*gf)[2][0].re = gfin.x;
+  (*gf)[2][0].im = -gfin.y;
+  
+  //second  column (minus in im for complex conj.)
+  (*gf)[0][1].re = gfin.z;
+  (*gf)[0][1].im = -gfin.w;
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,3*pos+2);
+  #else
+    gfin = sh4tofl4(field[3*pos +2]);
+  #endif
+  (*gf)[1][1].re = gfin.x;
+  (*gf)[1][1].im = -gfin.y;
+  (*gf)[2][1].re = gfin.z;
+  (*gf)[2][1].im = -gfin.w;
+  
+
+
+  (*gf)[0][2].re = (*gf)[1][0].re * (*gf)[2][1].re;
+  (*gf)[0][2].re -= (*gf)[1][0].im * (*gf)[2][1].im;
+  (*gf)[0][2].re -= (*gf)[2][0].re * (*gf)[1][1].re;
+  (*gf)[0][2].re += (*gf)[2][0].im * (*gf)[1][1].im;
+  
+  (*gf)[0][2].im = -(*gf)[1][0].re* (*gf)[2][1].im;
+  (*gf)[0][2].im -= (*gf)[1][0].im* (*gf)[2][1].re;
+  (*gf)[0][2].im += (*gf)[2][0].re*(*gf)[1][1].im;
+  (*gf)[0][2].im += (*gf)[2][0].im*(*gf)[1][1].re;
+  
+
+  (*gf)[1][2].re = (*gf)[2][0].re*(*gf)[0][1].re;
+  (*gf)[1][2].re -= (*gf)[2][0].im*(*gf)[0][1].im;
+  (*gf)[1][2].re -= (*gf)[0][0].re*(*gf)[2][1].re;
+  (*gf)[1][2].re += (*gf)[0][0].im*(*gf)[2][1].im;
+  
+  (*gf)[1][2].im = -(*gf)[2][0].re * (*gf)[0][1].im;
+  (*gf)[1][2].im -= (*gf)[2][0].im * (*gf)[0][1].re;
+  (*gf)[1][2].im += (*gf)[0][0].re * (*gf)[2][1].im;
+  (*gf)[1][2].im += (*gf)[0][0].im * (*gf)[2][1].re;
+  
+  (*gf)[2][2].re = (*gf)[0][0].re * (*gf)[1][1].re;
+  (*gf)[2][2].re -= (*gf)[0][0].im * (*gf)[1][1].im;
+  (*gf)[2][2].re -= (*gf)[1][0].re * (*gf)[0][1].re;
+  (*gf)[2][2].re += (*gf)[1][0].im * (*gf)[0][1].im;
+  
+  (*gf)[2][2].im = -(*gf)[0][0].re * (*gf)[1][1].im;
+  (*gf)[2][2].im -= (*gf)[0][0].im * (*gf)[1][1].re;
+  (*gf)[2][2].im += (*gf)[1][0].re * (*gf)[0][1].im;
+  (*gf)[2][2].im += (*gf)[1][0].im * (*gf)[0][1].re;
+  
+}
+
+
+
+
+
+
+// reconstruction of the gf using 8 real parameters as 
+// described in the appendix of hep-lat 0911.3191 (M.Clark et al.)
+// optimized once
+__device__ void dev_reconstructgf_8texref_half (const dev_su3_2v_half * field, int pos, dev_su3* gf){
+
+  float4 gfin;
+  REAL one_over_N, help;
+  dev_complex p1,p2;
+  
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,2*pos);
+  #else
+    gfin = sh4tofl4(field[2*pos]);
+  #endif
+  // read a2 a3
+  (*gf)[0][1].re = gfin.x;
+  (*gf)[0][1].im = gfin.y;
+  (*gf)[0][2].re = gfin.z;
+  (*gf)[0][2].im = gfin.w;  
+ 
+  p1.re = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
+  one_over_N = rsqrtf(p1.re); //reciprocal sqrt
+
+  // read theta_a1, theta_c1, b1
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,2*pos + 1);
+  #else
+    gfin = sh4tofl4(field[2*pos + 1]);
+  #endif
+  
+  // reconstruct a1 use sqrt instead of sin
+  help = 1.0f - p1.re;
+  if(help > 0.0f){
+     p1.re = sqrtf(help);
+  }
+  else{
+    p1.re = 0.0f;
+  }
+  #ifdef HALF
+    // we have to multiply by two pi because normalization to -1..1
+    gfin.x = gfin.x*pi_float;
+    gfin.y = gfin.y*pi_float;
+  #endif
+  sincos(gfin.x, &(*gf)[0][0].im, &(*gf)[0][0].re);
+  (*gf)[0][0].re = (*gf)[0][0].re * p1.re;
+  (*gf)[0][0].im = (*gf)[0][0].im * p1.re;
+  
+  
+  
+  // assign b1
+  (*gf)[1][0].re = gfin.z;
+  (*gf)[1][0].im = gfin.w;
+  
+  // p2 = 1/N b1
+  p2.re = one_over_N*(*gf)[1][0].re;
+  p2.im = one_over_N*(*gf)[1][0].im;  
+
+
+  // reconstruct c1 use sqrt instead of sin
+  help =1.0f - 
+              (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
+              (*gf)[1][0].re * (*gf)[1][0].re - (*gf)[1][0].im * (*gf)[1][0].im;
+  if(help > 0.0f){
+    p1.re = sqrtf(help);
+  }   
+  else{      
+    p1.re = 0.0f;  
+  }
+  sincos(gfin.y, &(*gf)[2][0].im, &(*gf)[2][0].re);
+  (*gf)[2][0].re = (*gf)[2][0].re * p1.re; 
+  (*gf)[2][0].im = (*gf)[2][0].im * p1.re;
+   
+  
+  
+  // p1 = 1/N*cconj(c1)
+  p1.re = one_over_N*(*gf)[2][0].re;
+  p1.im = - one_over_N*(*gf)[2][0].im;
+  
+  
+  
+  //use the last reconstructed gf component gf[2][2] (c3) as a help variable for b2,b3 and c2
+  //this is in order to save registers and to prevent extra loading and storing from global mem
+  // calculate b2
+  
+  (*gf)[1][1].re = p1.re*(*gf)[0][2].re;
+  (*gf)[1][1].re += p1.im*(*gf)[0][2].im;
+  (*gf)[1][1].im = p1.im*(*gf)[0][2].re;
+  (*gf)[1][1].im -= p1.re*(*gf)[0][2].im;
+  
+  (*gf)[2][2].re = (*gf)[0][0].re * (*gf)[0][1].re;
+  (*gf)[2][2].re += (*gf)[0][0].im * (*gf)[0][1].im;
+  
+  (*gf)[2][2].im = (*gf)[0][0].re * (*gf)[0][1].im;
+  (*gf)[2][2].im -= (*gf)[0][0].im * (*gf)[0][1].re;
+  (*gf)[2][2] = dev_cmult(p2, (*gf)[2][2]);
+  
+  (*gf)[1][1].re = -one_over_N*( (*gf)[1][1].re + (*gf)[2][2].re);
+  (*gf)[1][1].im = -one_over_N*((*gf)[1][1].im + (*gf)[2][2].im);
+  
+  
+  
+  
+  
+  // calculate b3
+  (*gf)[1][2].re = p1.re*(*gf)[0][1].re;
+  (*gf)[1][2].re += p1.im*(*gf)[0][1].im;
+  (*gf)[1][2].im = p1.im*(*gf)[0][1].re;
+  (*gf)[1][2].im -= p1.re*(*gf)[0][1].im;
+  
+  (*gf)[2][2].re = (*gf)[0][0].re*(*gf)[0][2].re;
+  (*gf)[2][2].re += (*gf)[0][0].im*(*gf)[0][2].im;
+  (*gf)[2][2].im = (*gf)[0][0].re*(*gf)[0][2].im;
+  (*gf)[2][2].im -= (*gf)[0][0].im*(*gf)[0][2].re;
+  (*gf)[2][2] = dev_cmult(p2,(*gf)[2][2]);
+  
+  (*gf)[1][2].re = one_over_N*( (*gf)[1][2].re - (*gf)[2][2].re);
+  (*gf)[1][2].im = one_over_N*( (*gf)[1][2].im - (*gf)[2][2].im);
+  
+  
+  // calculate c2
+  (*gf)[2][1].re = p2.re*(*gf)[0][2].re;
+  (*gf)[2][1].re -= p2.im*(*gf)[0][2].im;
+  (*gf)[2][1].im = -p2.re*(*gf)[0][2].im;
+  (*gf)[2][1].im -= p2.im*(*gf)[0][2].re;
+  
+  
+
+  (*gf)[2][2].re = (*gf)[0][0].re*(*gf)[0][1].re;
+  (*gf)[2][2].re += (*gf)[0][0].im*(*gf)[0][1].im;
+  (*gf)[2][2].im = (*gf)[0][0].re* (*gf)[0][1].im;
+  (*gf)[2][2].im -= (*gf)[0][0].im* (*gf)[0][1].re;
+  help = (*gf)[2][2].re;
+  (*gf)[2][2].re = p1.re*(*gf)[2][2].re;
+  (*gf)[2][2].re += p1.im*(*gf)[2][2].im;
+  (*gf)[2][2].im = p1.re*(*gf)[2][2].im - p1.im*help;
+  
+  
+  (*gf)[2][1].re = one_over_N*((*gf)[2][1].re - (*gf)[2][2].re);
+  (*gf)[2][1].im = one_over_N*((*gf)[2][1].im - (*gf)[2][2].im);
+  
+  // now we have to use p2 and p1 as a help variable, as this is not 
+  // needed any more after the first
+  // step
+  // calculate c3
+  (*gf)[2][2].re = p2.re * (*gf)[0][1].re;
+  (*gf)[2][2].re -= p2.im * (*gf)[0][1].im;
+  (*gf)[2][2].im = - p2.im*(*gf)[0][1].re;
+  (*gf)[2][2].im -= p2.re*(*gf)[0][1].im;
+  
+  p2.re = (*gf)[0][0].re * (*gf)[0][2].re;
+  p2.re += (*gf)[0][0].im * (*gf)[0][2].im;
+  p2.im = (*gf)[0][0].re * (*gf)[0][2].im;
+  p2.im -= (*gf)[0][0].im * (*gf)[0][2].re;
+  p2 = dev_cmult(  dev_cconj(p1) , p2);
+  
+  (*gf)[2][2] = dev_cadd((*gf)[2][2], p2);
+  (*gf)[2][2] = dev_crealmult((*gf)[2][2], -one_over_N);
+                      
+}
+
+
+
+
+
+
+
+
+__device__ void dev_reconstructgf_8texref_dagger_half (const dev_su3_2v_half* field,int pos, dev_su3* gf){
+
+
+  float4 gfin;
+  REAL one_over_N, help;
+  dev_complex p1,p2;
+  
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,2*pos);
+  #else
+    gfin = sh4tofl4(field[2*pos]);
+  #endif
+  // read a2 a3
+  (*gf)[1][0].re = gfin.x;
+  (*gf)[1][0].im = -gfin.y;
+  (*gf)[2][0].re = gfin.z;
+  (*gf)[2][0].im = -gfin.w;  
+ 
+  p1.re = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
+  one_over_N = rsqrtf(p1.re);  // reciprocal sqrt
+
+  
+  // read theta_a1, theta_c1, b1
+  #ifdef USETEXTURE
+    gfin = tex1Dfetch(gf_tex,2*pos + 1);
+  #else
+    gfin = sh4tofl4(field[2*pos + 1]);
+  #endif
+  
+  // reconstruct a1
+  help = 1.0f - p1.re;
+  if(help > 0.0f){
+     p1.re = sqrtf(help);   
+  }
+  else{
+    p1.re = 0.0f;
+  }
+  //(*gf)[0][0].re = p1.re*cosf(gfin.x);
+  //(*gf)[0][0].im = -p1.re*sinf(gfin.x);
+  
+  #ifdef HALF
+    // we have to multiply by two pi because normalization to -1..1
+    gfin.x = gfin.x*pi_float;
+    gfin.y = gfin.y*pi_float;
+  #endif  
+  
+  sincos(gfin.x, &(*gf)[0][0].im, &(*gf)[0][0].re);
+  (*gf)[0][0].re = (*gf)[0][0].re * p1.re;
+  (*gf)[0][0].im = -(*gf)[0][0].im * p1.re;
+    
+
+  // assign b1
+  (*gf)[0][1].re = gfin.z;
+  (*gf)[0][1].im = -gfin.w;
+  
+  // p2 = 1/N b1
+  p2.re = one_over_N*(*gf)[0][1].re;
+  p2.im = -one_over_N*(*gf)[0][1].im;  
+
+
+  // reconstruct c1
+  help = 1.0f - 
+              (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
+              (*gf)[0][1].re * (*gf)[0][1].re - (*gf)[0][1].im * (*gf)[0][1].im;
+  if(help > 0.0f){
+    p1.re = sqrtf(help);
+  }
+  else{
+    p1.re = 0.0f;
+  }
+  //(*gf)[0][2].re = p1.re*cosf(gfin.y);
+  //(*gf)[0][2].im = -p1.re*sinf(gfin.y);
+  
+  sincos(gfin.y, &(*gf)[0][2].im, &(*gf)[0][2].re);
+  (*gf)[0][2].re = (*gf)[0][2].re * p1.re;
+  (*gf)[0][2].im = -(*gf)[0][2].im * p1.re;
+     
+  
+  // p1 = 1/N*cconj(c1)
+  p1.re = one_over_N*(*gf)[0][2].re;
+  p1.im = one_over_N*(*gf)[0][2].im;
+  
+  //use the last reconstructed gf component gf[2][2] (c3) as a help variable for b2,b3 and c2
+  //this is in order to save registers and to prevent extra loading and storing from global mem
+  // calculate b2
+  (*gf)[1][1] = dev_cmult(p1,   (*gf)[2][0]    );
+  (*gf)[2][2] = dev_cmult(p2, dev_cmult( (*gf)[0][0] , dev_cconj((*gf)[1][0] ))  );
+  (*gf)[1][1] = dev_cadd((*gf)[1][1], (*gf)[2][2]);
+  (*gf)[1][1] = dev_cconj(dev_crealmult((*gf)[1][1], -one_over_N));
+  
+  // calculate b3
+  (*gf)[2][1] = dev_cmult(p1,   (*gf)[1][0]    );
+  (*gf)[2][2] = dev_cmult(p2, dev_cmult( (*gf)[0][0] , dev_cconj((*gf)[2][0] ))  );
+  (*gf)[2][1] = dev_csub((*gf)[2][1], (*gf)[2][2]);
+  (*gf)[2][1] = dev_cconj(dev_crealmult((*gf)[2][1], one_over_N));
+  
+  // calculate c2
+  (*gf)[1][2] = dev_cmult(  dev_cconj(p2) ,  (*gf)[2][0]    );
+  (*gf)[2][2] = dev_cmult(  dev_cconj(p1) , 
+                       dev_cmult(   (*gf)[0][0]  , dev_cconj( (*gf)[1][0]) )
+                     );
+  (*gf)[1][2] = dev_csub((*gf)[1][2], (*gf)[2][2]);
+  (*gf)[1][2] = dev_cconj(dev_crealmult((*gf)[1][2], one_over_N));
+  
+  // use p2 as help variable after the first step
+  // calculate c3
+  (*gf)[2][2] = dev_cmult(  dev_cconj(p2) ,   (*gf)[1][0]    );
+  p2 = dev_cmult(  dev_cconj(p1) , 
+                       dev_cmult(   (*gf)[0][0]  , dev_cconj((*gf)[2][0] ) )
+                     );
+  (*gf)[2][2] = dev_cadd((*gf)[2][2], p2);
+  (*gf)[2][2] = dev_cconj(dev_crealmult((*gf)[2][2], -one_over_N));
+
+}
+
+
+#endif // HALF
+
+
+
+
+
+
+
 
 
 

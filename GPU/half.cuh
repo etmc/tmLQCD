@@ -37,7 +37,7 @@
 #define SCALE ((SHORT_LEN-1) * 0.5)
 #define SHIFT (-1.0f/(SHORT_LEN-1))
 
-
+/*
 __device__ short fl2sh(float f) {
   short ret = (short)((f+SHIFT)*SCALE);
   return ret;
@@ -62,9 +62,12 @@ float half2float_host(short in, float innorm){
   return(sh2fl_host(in)*innorm);
 }
 
-/*
+*/
+
+
 #define fl2sh(f) ((short)(((f)+SHIFT)*SCALE))
 #define sh2fl(s) ((float)((s)/SCALE) - SHIFT)
+#define half2fl(s,norm) (norm*((float)((s)/SCALE) - SHIFT))
 
 short fl2sh_host(float f) {
   short ret = (short)((f+SHIFT)*SCALE);
@@ -79,7 +82,7 @@ float sh2fl_host(short s) {
 float half2float_host(short in, float innorm){
   return(sh2fl_host(in)*innorm);
 }
-*/
+
 
 
 #define construct_spinor_fromhalf(sf, sh, shn, pos){  \

@@ -938,7 +938,7 @@ __global__ void dev_Hopping_Matrix(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
 
 //applies the Hopping Part Even-Odd  HALF PRECISION !
 //else aequivalent to the above version 
-__global__ void dev_Hopping_Matrix_half(const dev_su3_2v * gf, const dev_spinor_half * sin, const float* sin_norm, dev_spinor_half * sout, float* sout_norm, const int * gfindex_site, const int* gfindex_nextsite, const int * nn_evenodd, const int eo){
+__global__ void dev_Hopping_Matrix_half(const dev_su3_2v_half * gf, const dev_spinor_half * sin, const float* sin_norm, dev_spinor_half * sout, float* sout_norm, const int * gfindex_site, const int* gfindex_nextsite, const int * nn_evenodd, const int eo){
 
   int pos,hoppos;
     dev_spinor shelp1[6], ssum[6];
@@ -995,36 +995,36 @@ __global__ void dev_Hopping_Matrix_half(const dev_su3_2v * gf, const dev_spinor_
                 //read and normalize
                 #pragma unroll 6
                 for(i=0; i<6; i++){
-                  shelp1[i].x = norm*sh2flo(sin[6*hoppos+i].x);
-                  shelp1[i].y = norm*sh2flo(sin[6*hoppos+i].y);
-                  shelp1[i].z = norm*sh2flo(sin[6*hoppos+i].z);
-                  shelp1[i].w = norm*sh2flo(sin[6*hoppos+i].w);
+                  shelp1[i].x = norm*sh2fl(sin[6*hoppos+i].x);
+                  shelp1[i].y = norm*sh2fl(sin[6*hoppos+i].y);
+                  shelp1[i].z = norm*sh2fl(sin[6*hoppos+i].z);
+                  shelp1[i].w = norm*sh2fl(sin[6*hoppos+i].w);
                 }
               #endif
               }
               else{
                 // gf != ID for t == T-1 => mult spinor with gf
                 #ifdef GF_8
-                dev_reconstructgf_8texref(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
+                dev_reconstructgf_8texref_half(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
                 #else
-                dev_reconstructgf_2vtexref(gf,4*(gfindex_site[pos]),&(gfsmem[ix].m));
+                dev_reconstructgf_2vtexref_half(gf,4*(gfindex_site[pos]),&(gfsmem[ix].m));
                 #endif
                 #ifdef USETEXTURE
                   dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
                 #else
-                  dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+                  dev_su3MtV_half(gfsmem[ix].m, &(sin[6*hoppos]), &(sin_norm[hoppos]), &(shelp1[0]));
                 #endif
               }
             #else
               #ifdef GF_8
-              dev_reconstructgf_8texref(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
+              dev_reconstructgf_8texref_half(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
               #else
-              dev_reconstructgf_2vtexref(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
+              dev_reconstructgf_2vtexref_half(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
               #endif
               #ifdef USETEXTURE
                 dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
               #else
-                dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+                dev_su3MtV_half(gfsmem[ix].m, &(sin[6*hoppos]), &(sin_norm[hoppos]), &(shelp1[0]));
               #endif
             #endif
             
@@ -1072,36 +1072,36 @@ __global__ void dev_Hopping_Matrix_half(const dev_su3_2v * gf, const dev_spinor_
                 //read and normalize
                 #pragma unroll 6
                 for(i=0; i<6; i++){
-                  shelp1[i].x = norm*sh2flo(sin[6*hoppos+i].x);
-                  shelp1[i].y = norm*sh2flo(sin[6*hoppos+i].y);
-                  shelp1[i].z = norm*sh2flo(sin[6*hoppos+i].z);
-                  shelp1[i].w = norm*sh2flo(sin[6*hoppos+i].w);
+                  shelp1[i].x = norm*sh2fl(sin[6*hoppos+i].x);
+                  shelp1[i].y = norm*sh2fl(sin[6*hoppos+i].y);
+                  shelp1[i].z = norm*sh2fl(sin[6*hoppos+i].z);
+                  shelp1[i].w = norm*sh2fl(sin[6*hoppos+i].w);
                 }
               #endif
               }
               else{
                 // gf != ID for t == T-1 => mult spinor with gf
                 #ifdef GF_8
-                dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
+                dev_reconstructgf_8texref_dagger_half(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
                 #else
-                dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
+                dev_reconstructgf_2vtexref_dagger_half(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
                 #endif
                 #ifdef USETEXTURE
                   dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
                 #else
-                  dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+                  dev_su3MtV_half(gfsmem[ix].m, &(sin[6*hoppos]),&(sin_norm[hoppos]), &(shelp1[0]));
                 #endif 
               }
             #else            
               #ifdef GF_8
-              dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
+              dev_reconstructgf_8texref_dagger_half(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
               #else
-              dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
+              dev_reconstructgf_2vtexref_dagger_half(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
               #endif
               #ifdef USETEXTURE
                 dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));  
               #else
-                dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+                dev_su3MtV_half(gfsmem[ix].m, &(sin[6*hoppos]),&(sin_norm[hoppos]), &(shelp1[0]));
               #endif 
             #endif
             
@@ -1123,14 +1123,14 @@ __global__ void dev_Hopping_Matrix_half(const dev_su3_2v * gf, const dev_spinor_
              //hoppos = tex1Dfetch(nn_tex,8*pos+3);
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref(gf,4*(gfindex_site[pos])+(3),&(gfsmem[ix].m));
+            dev_reconstructgf_8texref_half(gf,4*(gfindex_site[pos])+(3),&(gfsmem[ix].m));
             #else
-            dev_reconstructgf_2vtexref(gf, 4*(gfindex_site[pos])+(3),&(gfsmem[ix].m));
+            dev_reconstructgf_2vtexref_half(gf, 4*(gfindex_site[pos])+(3),&(gfsmem[ix].m));
             #endif
             #ifdef USETEXTURE
               dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV_half(gfsmem[ix].m, &(sin[6*hoppos]),&(sin_norm[hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r - gamma_mu)    
             #ifdef GF_8
@@ -1147,14 +1147,14 @@ __global__ void dev_Hopping_Matrix_half(const dev_su3_2v * gf, const dev_spinor_
              //hoppos = tex1Dfetch(nn_tex,8*pos+7); 
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos]+(3),&(gfsmem[ix].m));
+            dev_reconstructgf_8texref_dagger_half(gf,4*gfindex_nextsite[hoppos]+(3),&(gfsmem[ix].m));
             #else
-            dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos]+(3),&(gfsmem[ix].m));
+            dev_reconstructgf_2vtexref_dagger_half(gf,4*gfindex_nextsite[hoppos]+(3),&(gfsmem[ix].m));
             #endif
             #ifdef USETEXTURE
               dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV_half(gfsmem[ix].m, &(sin[6*hoppos]),&(sin_norm[hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r + gamma_mu)
             #ifdef GF_8
@@ -1174,14 +1174,14 @@ __global__ void dev_Hopping_Matrix_half(const dev_su3_2v * gf, const dev_spinor_
              //hoppos = tex1Dfetch(nn_tex,8*pos+2);
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref(gf,4*(gfindex_site[pos])+(2),&(gfsmem[ix].m));
+            dev_reconstructgf_8texref_half(gf,4*(gfindex_site[pos])+(2),&(gfsmem[ix].m));
             #else
-            dev_reconstructgf_2vtexref(gf,4*(gfindex_site[pos])+(2),&(gfsmem[ix].m));
+            dev_reconstructgf_2vtexref_half(gf,4*(gfindex_site[pos])+(2),&(gfsmem[ix].m));
             #endif
             #ifdef USETEXTURE
               dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV_half(gfsmem[ix].m, &(sin[6*hoppos]),&(sin_norm[hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r - gamma_mu)
             #ifdef GF_8
@@ -1200,14 +1200,14 @@ __global__ void dev_Hopping_Matrix_half(const dev_su3_2v * gf, const dev_spinor_
              //hoppos = tex1Dfetch(nn_tex,8*pos+6);
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos]+(2),&(gfsmem[ix].m));
+            dev_reconstructgf_8texref_dagger_half(gf,4*gfindex_nextsite[hoppos]+(2),&(gfsmem[ix].m));
             #else
-            dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos]+(2),&(gfsmem[ix].m));
+            dev_reconstructgf_2vtexref_dagger_half(gf,4*gfindex_nextsite[hoppos]+(2),&(gfsmem[ix].m));
             #endif
             #ifdef USETEXTURE
               dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV_half(gfsmem[ix].m, &(sin[6*hoppos]), &(sin_norm[hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r + gamma_mu)
             #ifdef GF_8
@@ -1226,14 +1226,14 @@ __global__ void dev_Hopping_Matrix_half(const dev_su3_2v * gf, const dev_spinor_
              //hoppos = tex1Dfetch(nn_tex,8*pos+1);
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref(gf,4*(gfindex_site[pos])+(1),&(gfsmem[ix].m));
+            dev_reconstructgf_8texref_half(gf,4*(gfindex_site[pos])+(1),&(gfsmem[ix].m));
             #else
-            dev_reconstructgf_2vtexref(gf,4*(gfindex_site[pos])+(1),&(gfsmem[ix].m));
+            dev_reconstructgf_2vtexref_half(gf,4*(gfindex_site[pos])+(1),&(gfsmem[ix].m));
             #endif
             #ifdef USETEXTURE
               dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV_half(gfsmem[ix].m, &(sin[6*hoppos]),&(sin_norm[hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r - gamma_mu)
             #ifdef GF_8
@@ -1252,14 +1252,14 @@ __global__ void dev_Hopping_Matrix_half(const dev_su3_2v * gf, const dev_spinor_
              //hoppos = tex1Dfetch(nn_tex,8*pos+5);
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos]+(1),&(gfsmem[ix].m));
+            dev_reconstructgf_8texref_dagger_half(gf,4*gfindex_nextsite[hoppos]+(1),&(gfsmem[ix].m));
             #else
-            dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos]+(1),&(gfsmem[ix].m));
+            dev_reconstructgf_2vtexref_dagger_half(gf,4*gfindex_nextsite[hoppos]+(1),&(gfsmem[ix].m));
             #endif
             #ifdef USETEXTURE
               dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV_half(gfsmem[ix].m, &(sin[6*hoppos]),&(sin_norm[hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r + gamma_mu)
             #ifdef GF_8

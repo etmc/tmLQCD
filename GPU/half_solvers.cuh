@@ -74,7 +74,7 @@ void benchmark_half(dev_spinor_half* spin1, float* spin1_norm, dev_spinor_half* 
   #endif
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix_half, cudaFuncCachePreferL1);
     dev_Hopping_Matrix_half<<<gridsize, blocksize>>>
-             (dev_gf, spin1, spin1_norm, spin2, spin2_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0  
+             (dev_gf_half, spin1, spin1_norm, spin2, spin2_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0  
   #ifdef USETEXTURE
     unbind_halfspinor_texture();
   #endif
@@ -84,7 +84,7 @@ void benchmark_half(dev_spinor_half* spin1, float* spin1_norm, dev_spinor_half* 
   #endif
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix_half, cudaFuncCachePreferL1);
     dev_Hopping_Matrix_half<<<gridsize, blocksize>>>
-            (dev_gf, spin2, spin2_norm, spin1, spin1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
+            (dev_gf_half, spin2, spin2_norm, spin1, spin1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
   #ifdef USETEXTURE
     unbind_halfspinor_texture();
   #endif
@@ -263,12 +263,12 @@ extern "C" int dev_cg_eo_half(
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
  
  
- /*
+ 
  // small benchmark for half /////////////
  benchmark_half(spin2, spin2_norm, spin3, spin3_norm, griddim3,blockdim3);
  exit(200);
  /////////////////////////////////////////
- */
+ 
  
  
  printf("Entering inner solver cg-loop\n");
