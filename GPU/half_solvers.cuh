@@ -263,12 +263,12 @@ extern "C" int dev_cg_eo_half(
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
  
  
- 
+ /*
  // small benchmark for half /////////////
  benchmark_half(spin2, spin2_norm, spin3, spin3_norm, griddim3,blockdim3);
  exit(200);
  /////////////////////////////////////////
- 
+ */
  
  
  printf("Entering inner solver cg-loop\n");
