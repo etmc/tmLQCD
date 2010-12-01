@@ -204,10 +204,12 @@ __constant__ __device__ dev_complex dev_mk3c;
 __device__  int  dev_LX,dev_LY,dev_LZ,dev_T,dev_VOLUME;
 
 
-#ifdef MPI
-__device__ int dev_rank;		// will be put to mixed_solve_eo_nd.cuh ...
+// from mixed_solve_eo_nd.cuh
+__device__ int dev_RAND;			// not used, maybe later ...
+__device__ int dev_VOLUMEPLUSRAND;		// is now used in dev_Hopping_Matrix_mpi()
+__device__ int dev_rank;
 __device__ int dev_nproc;
-#endif
+
 
 
 // include files with other GPU code as all GPU code has to reside in one file 
