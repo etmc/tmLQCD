@@ -222,8 +222,8 @@ __device__ float mubar, epsbar;
 
 
 
-#include "communication.cuh"
-#include "index_fields.cuh"
+//#include "communication.cuh"
+//#include "index_fields.cuh"
 
 
 
@@ -236,6 +236,20 @@ __device__ float mubar, epsbar;
 
 
 
+
+
+		///////////////////////////
+		//                       //
+		//    INITIALIZATIONS    //
+		//                       //
+		///////////////////////////
+
+
+
+
+////////////////////
+// GPU parameters //
+////////////////////
 
 
 // puts the additional nd parameters mubar and epsbar on the device
@@ -271,29 +285,37 @@ __global__ void he_cg_init_nd_additional_mpi (int param_VOLUMEPLUSRAND, int para
 
 
 
-// derived from Flo's function  dev_mul_one_pm_imu_inv
-//	order of the arguments also like Flo's convention: (spinin, spinout)
-
-// applies (1 +- imubar*gamma5)
-// uses shared local memory for manipulation	// really ??	where ??
-// one thread per lattice site
+/////////////////////////////////////////////
+// geometry- and nearest-neighbour indices //
+/////////////////////////////////////////////
 
 
-__global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin,
-                                              dev_spinor * sout,
-                                              float sign         ) {
-   
-  dev_spinor slocal[6];									// dev_spinor = float4		// 6*float4 = 24 floats		// auxiliary for each thread
+#ifdef MPI
+
+// builds an array  iseven[global position]  to check wether is even or odd
+
+void init_iseven() {
+
+  int x0, x1, x2, x3;
+  int ix;
   
-  dev_complex pm_imu = dev_initcomplex(0.0, sign * mubar);				// dev_complex = struct { REAL re; REAL im; }	// pm_imu.re = 0.0
-  																	// pm_imu.im = sign * mubar
-  int pos = threadIdx.x + blockDim.x*blockIdx.x;
-  
-  if (pos < dev_VOLUME) {
-    dev_skalarmult_gamma5_spinor(&(slocal[0]), pm_imu, &(sin[6*pos]) );			// slocal  =  pm_imu * (gamma5) * sin
-    dev_add_spinor_assign(&(slocal[0]), &(sin[6*pos]));					// slocal  =  slocal + sin  =  pm_imu * (gamma5) * sin + sin
-    dev_realmult_spinor_assign(&(sout[6*pos]), 1.0, &(slocal[0]) );			// sout    =  slocal
-  }
+  for (x0 = -1; x0 < T+1; x0++) {
+    for (x1 = 0; x1 < LX; x1++) {
+      for (x2 = 0; x2 < LY; x2++) {
+        for (x3 = 0; x3 < LZ; x3++) {
+          
+          ix = Index(x0, x1, x2, x3);
+          
+	  if ((x0 + x1 + x2 + x3 + g_proc_coords[0]*T  + g_proc_coords[1]*LX + 
+		                   g_proc_coords[2]*LY + g_proc_coords[3]*LZ) % 2 == 0) {
+	    iseven[ix] = 1;
+	  } 
+	  else {
+	    iseven[ix] = 0; 
+	  }
+        
+        }}}}
+     
 }
 
 
@@ -301,27 +323,9 @@ __global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin,
 
 
 
-/*
+// initialize nearest-neighbour table for gpu with even-odd enabled
 
-// will be used to count the floating point operations per (24 * (#lattice sites)) = (#floats)
-// i.e total has to be multiplied by N_floats
-
-void flopcount(unsigned long long int& total, int add) {
-
-  total = total + add;
-  
-}
-
-*/
-
-
-
-
-
-
-// TEST:
-/*
-void init_nnspinor_eo_test() {
+void init_nnspinor_eo_mpi() {
 									
   int x, y, z, t, ind, nnpos, j;					// mixed_solve_eo(...) allocates 8 integers per even or odd lattice site: size_t nnsize = 8*VOLUME*sizeof(int);
   									
@@ -333,9 +337,9 @@ void init_nnspinor_eo_test() {
           ind = g_ipt[t][x][y][z];					// g_ipt[t][x][y][z] 	returns the linearly projected position of (t,x,y,z) of the lattice
           								//	indexes computed in geometry_eo() from geometry_eo.c
           								//	memory for the index array allocated by init_geometry_indices() from init_geometry_indices.c
-          //if ((t+x+y+z)%2 == 0) { // EVEN
-          if ((t + x + y + z + g_proc_coords[0]*T  + g_proc_coords[1]*LX + 
-	  	               g_proc_coords[2]*LY + g_proc_coords[3]*LZ) % 2 == 0) {
+          if ((t+x+y+z)%2 == 0) { // EVEN
+          //if ((t + x + y + z + g_proc_coords[0]*T  + g_proc_coords[1]*LX + 
+	  //	               g_proc_coords[2]*LY + g_proc_coords[3]*LZ) % 2 == 0) {
           
             nnpos = g_lexic2eosub[ind];					// g_lexic2eosub[ind] 	returns the position of [ind] in the sub-eo-notation
             										      ////////////////
@@ -362,11 +366,47 @@ void init_nnspinor_eo_test() {
           }
   }}}} // for loops
 }
-*/
+
+
+
+
+
+
+// the following functions can all be used to properly initialize the fields  eoidx_even[]  and  eoidx_odd[]  for addressing the gauge fields:
+
+
+void init_idxgauge_mpi() {		// works!
+
+  int t, x, y, z;
+  int pos_eo, pos_global;
+  
+  for (t = -1; t < T+1; t++) {
+    for (x = 0; x < LX; x++) {
+      for (y = 0; y < LY; y++) {
+        for (z = 0; z < LZ; z++) {
+        
+        //pos_global = g_ipt[t][x][y][z];
+        pos_global = Index(t,x,y,z);
+        pos_eo     = g_lexic2eosub[pos_global];
+        
+        //if ((t+x+y+z)%2 == 0) { // EVEN
+        if ((t + x + y + z + g_proc_coords[0]*T  + g_proc_coords[1]*LX + 
+	  	             g_proc_coords[2]*LY + g_proc_coords[3]*LZ) % 2 == 0) {
+          eoidx_even[pos_eo] = g_eo2lexic[pos_eo];
+        }
+        else  {			// ODD
+          eoidx_odd[pos_eo] = g_eo2lexic[(VOLUME+RAND)/2+pos_eo];
+        }
+  }}}} // for loop over the INTERN lattice
+  
+  //printf("This was init_idxgauge_mpi().\n");
+  
+}
+
 
 
 /*
-void init_idxgauge_test() {		// works
+void init_idxgauge_mpi() {		// works!
 
   int t, x, y, z;
   int pos_eo, pos_global;
@@ -390,18 +430,18 @@ void init_idxgauge_test() {		// works
         }
   }}}} // for loop over the INTERN lattice
   
-  printf("This was init_idxgauge_mpi().\n");
+  //printf("This was init_idxgauge_mpi().\n");
   
 }
 */
 
 
 /*
-void init_idxgauge_test() {		// works
+void init_idxgauge_mpi() {		// works!
 
   int pos_eo, pos_global_even, pos_global_odd;
   
-  for (pos_eo = 0; pos_eo < VOLUME/2; pos_eo++) {
+  for (pos_eo = 0; pos_eo < (VOLUME+RAND)/2; pos_eo++) {
       // even
       pos_global_even = g_eo2lexic[pos_eo];
       eoidx_even[pos_eo] = pos_global_even;
@@ -410,17 +450,110 @@ void init_idxgauge_test() {		// works
       eoidx_odd[pos_eo] = pos_global_odd;
   }
   
-  printf("This was init_idxgauge_mpi().\n");
+  //printf("This was init_idxgauge_mpi().\n");
   
 }
 */
 
 
+/*
+void init_idxgauge_mpi() {		// works!
+
+  int pos_eo, pos_global;
+  
+  for (pos_global = 0; pos_global < (VOLUME+RAND); pos_global++) {
+  
+    pos_eo = g_lexic2eosub[pos_global];
+    
+    if (iseven[pos_global] == 1) {
+    //if (pos_global%2 == 0) {
+      eoidx_even[pos_eo] = pos_global;
+    }
+    else {
+      eoidx_odd[pos_eo]  = pos_global;
+    }
+      
+  }
+  
+  //printf("This was init_idxgauge_mpi().\n");
+  
+}
+*/
+
+
+/*
+void init_idxgauge_mpi() {		// works!
+
+  int x, y, z, t;
+  int ind;
+  int evenpos = 0;
+  int oddpos = 0;
+  
+  for (t = 0; t < T; t++) {
+    for (x = 0; x < LX; x++) {
+      for (y = 0; y < LY; y++) {
+        for (z = 0; z < LZ; z++) {
+          ind = g_ipt[t][x][y][z];
+          if ((t+x+y+z) % 2 == 0) {
+            eoidx_even[evenpos] = ind;
+            evenpos++;
+          }
+          else {
+            eoidx_odd[oddpos] = ind;
+            oddpos++;
+          }
+  }}}} // INTERN
+  
+  
+  		t = T;
+  		  for (x = 0; x < LX; x++) {
+  		    for (y = 0; y < LY; y++) {
+  		      for (z = 0; z < LZ; z++) {
+  		        ind = VOLUME + z + LZ*y + LZ*LY*x;
+  		        //if (iseven[ind] == 1) {
+  		        if ((t+x+y+z) % 2 == 0) {
+  		          eoidx_even[evenpos] = ind;
+  		          evenpos++;
+  		        }
+  		        else {
+  		          eoidx_odd[oddpos] = ind;
+  		          oddpos++;
+  		        }
+  		}}} // EXTERN
+  
+  
+  				t = -1;
+  				  for (x = 0; x < LX; x++) {
+  				    for (y = 0; y < LY; y++) {
+  				      for (z = 0; z < LZ; z++) {
+  				        ind = VOLUME + LX*LY*LZ + z + LZ*y + LZ*LY*x;
+  				        //if (iseven[ind] == 1) {
+  				        if ((t+x+y+z) % 2 == 0) {
+  				          eoidx_even[evenpos] = ind;
+  				          evenpos++;
+  				        }
+  				        else {
+  				          eoidx_odd[oddpos] = ind;
+  				          oddpos++;
+  				        }
+  				}}} // EXTERN
+  				
+  //printf("This was init_idxgauge_mpi().\n");
+  
+}
+*/
+
+
+#endif	// MPI
 
 
 
 
 
+
+////////////////
+// ALLOCATING //
+////////////////
 
 // initializes and allocates all quantities for the mixed solver
 // more precise:
@@ -922,6 +1055,15 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
 
 
 
+		////////////////////////
+		//                    //
+		//    FINALIZATION    //
+		//                    //
+		////////////////////////
+
+
+
+
 // deallocates the previous allocated memory
 
 void finalize_mixedsolve_eo_nd(void) {
@@ -1033,6 +1175,259 @@ void finalize_mixedsolve_eo_nd(void) {
 
 
 
+		/////////////////////////////////
+		//                             //
+		//    H <--> D interactions    //
+		//                             //
+		/////////////////////////////////
+
+
+
+
+/////////
+// MPI //
+/////////
+
+#ifdef MPI
+
+// convert spinor to double
+
+void convert2double_spin_mpi (dev_spinor * spin, spinor * h2d, int start, int end) {
+
+  int i;
+  
+  for (i = start; i < end; i++) {
+  
+        h2d[i].s0.c0.re = (double) spin[6*i+0].x;
+        h2d[i].s0.c0.im = (double) spin[6*i+0].y;
+        h2d[i].s0.c1.re = (double) spin[6*i+0].z;
+        h2d[i].s0.c1.im = (double) spin[6*i+0].w;
+        
+        h2d[i].s0.c2.re = (double) spin[6*i+1].x;
+        h2d[i].s0.c2.im = (double) spin[6*i+1].y;
+        h2d[i].s1.c0.re = (double) spin[6*i+1].z;
+        h2d[i].s1.c0.im = (double) spin[6*i+1].w;   
+        
+        h2d[i].s1.c1.re = (double) spin[6*i+2].x;
+        h2d[i].s1.c1.im = (double) spin[6*i+2].y;
+        h2d[i].s1.c2.re = (double) spin[6*i+2].z;
+        h2d[i].s1.c2.im = (double) spin[6*i+2].w;  
+        
+        h2d[i].s2.c0.re = (double) spin[6*i+3].x;
+        h2d[i].s2.c0.im = (double) spin[6*i+3].y;
+        h2d[i].s2.c1.re = (double) spin[6*i+3].z;
+        h2d[i].s2.c1.im = (double) spin[6*i+3].w;  
+        
+        h2d[i].s2.c2.re = (double) spin[6*i+4].x;
+        h2d[i].s2.c2.im = (double) spin[6*i+4].y;
+        h2d[i].s3.c0.re = (double) spin[6*i+4].z;
+        h2d[i].s3.c0.im = (double) spin[6*i+4].w; 
+        
+        h2d[i].s3.c1.re = (double) spin[6*i+5].x;
+        h2d[i].s3.c1.im = (double) spin[6*i+5].y;
+        h2d[i].s3.c2.re = (double) spin[6*i+5].z;
+        h2d[i].s3.c2.im = (double) spin[6*i+5].w; 
+        
+  }
+}
+
+
+
+// convert spinor to REAL4 (float4, double4)
+
+void convert2REAL4_spin_mpi (spinor * spin, dev_spinor * h2d, int start, int end) {
+
+  int i;
+  
+  for (i = start; i < end; i++) {
+    
+        h2d[6*i+0].x = (float) spin[i].s0.c0.re;
+        h2d[6*i+0].y = (float) spin[i].s0.c0.im;
+        h2d[6*i+0].z = (float) spin[i].s0.c1.re;
+        h2d[6*i+0].w = (float) spin[i].s0.c1.im;
+        
+        h2d[6*i+1].x = (float) spin[i].s0.c2.re;
+        h2d[6*i+1].y = (float) spin[i].s0.c2.im;
+        h2d[6*i+1].z = (float) spin[i].s1.c0.re;
+        h2d[6*i+1].w = (float) spin[i].s1.c0.im;
+        
+        h2d[6*i+2].x = (float) spin[i].s1.c1.re;
+        h2d[6*i+2].y = (float) spin[i].s1.c1.im;
+        h2d[6*i+2].z = (float) spin[i].s1.c2.re;
+        h2d[6*i+2].w = (float) spin[i].s1.c2.im;
+        
+        h2d[6*i+3].x = (float) spin[i].s2.c0.re;
+        h2d[6*i+3].y = (float) spin[i].s2.c0.im;
+        h2d[6*i+3].z = (float) spin[i].s2.c1.re;
+        h2d[6*i+3].w = (float) spin[i].s2.c1.im;
+        
+        h2d[6*i+4].x = (float) spin[i].s2.c2.re;
+        h2d[6*i+4].y = (float) spin[i].s2.c2.im;
+        h2d[6*i+4].z = (float) spin[i].s3.c0.re;
+        h2d[6*i+4].w = (float) spin[i].s3.c0.im;
+        
+        h2d[6*i+5].x = (float) spin[i].s3.c1.re;
+        h2d[6*i+5].y = (float) spin[i].s3.c1.im;
+        h2d[6*i+5].z = (float) spin[i].s3.c2.re;
+        h2d[6*i+5].w = (float) spin[i].s3.c2.im;
+    
+  }
+}
+
+
+
+
+
+
+// cudaMemcpy gets  "spinor+6*offset"  because of pointer to float4 and there are 24 floats per site
+
+void to_device_mpi (dev_spinor * device, spinor * host, dev_spinor * auxiliary, int size, int start, int end) {
+
+  convert2REAL4_spin_mpi(host, auxiliary, start, end);					// auxiliary = (float) host
+  cudaMemcpy(device+6*start, auxiliary+6*start, size, cudaMemcpyHostToDevice);		// device = auxiliary  (on device)
+
+}
+
+
+void to_host_mpi (spinor * host, dev_spinor * device, dev_spinor * auxiliary, int size, int start, int end) {
+
+  cudaMemcpy(auxiliary+6*start, device+6*start, size, cudaMemcpyDeviceToHost);		// auxiliary = device  (on device)
+  convert2double_spin_mpi(auxiliary, host, start, end);					// host = (double) auxiliary
+
+}
+
+#endif // MPI
+
+
+
+
+
+
+/////////////////////////////
+// host/device interaction //
+/////////////////////////////
+
+// remark: the host spinors are double precision and therefore need twice the memory !!
+//		dev_spinor * device:    dev_spinsize
+//		spinor * host:        2*dev_spinsize
+//		dev_spinor * auxiliary: dev_spinsize
+//         the parameter "size" specifies the memory needed for the spinor n the device !!
+//         
+
+void to_device (dev_spinor * device, spinor * host, dev_spinor * auxiliary, int size) {
+
+  convert2REAL4_spin(host, auxiliary);						// auxiliary = (float) host
+  cudaMemcpy(device, auxiliary, size, cudaMemcpyHostToDevice);			// device = auxiliary  (on device)
+
+}
+
+
+void to_host (spinor * host, dev_spinor * device, dev_spinor * auxiliary, int size) {
+
+  cudaMemcpy(auxiliary, device, size, cudaMemcpyDeviceToHost);			// auxiliary = device  (on device)
+  convert2double_spin(auxiliary, host);						// host = (double) auxiliary
+
+}
+
+
+
+
+
+
+///////////////////////
+// boundary exchange //
+///////////////////////
+
+#ifdef MPI
+
+// all three versions do work:
+
+/*
+// preliminarily exchanges the full spinor field instead of only the boundaries
+
+void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
+
+  size_t size = (VOLUME+RAND)/2 * 6*sizeof(dev_spinor);
+
+  to_host_mpi(spinor_xchange, dev_spin, h2d_spin_up, size, 0, (VOLUME+RAND)/2);
+  xchange_field(spinor_xchange, ieo);
+  to_device_mpi(dev_spin, spinor_xchange, h2d_spin_dn, size, 0, (VOLUME+RAND)/2);
+
+}
+*/
+
+
+
+
+/*
+// copies VOLUME to host, exchanges, copies RAND back to device
+
+void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
+
+  size_t size_Volume = VOLUME/2 * 6*sizeof(dev_spinor);
+  size_t size_Rand   = RAND/2   * 6*sizeof(dev_spinor);
+
+  to_host_mpi(spinor_xchange, dev_spin, h2d_spin_up, size_Volume, 0, VOLUME/2);
+  xchange_field(spinor_xchange, ieo);
+  to_device_mpi(dev_spin, spinor_xchange, h2d_spin_dn, size_Rand, VOLUME/2, (VOLUME+RAND)/2);
+
+}
+*/
+
+
+
+
+// copies the boundary t-slices t=0 and t=T-1 to host		// will be used in matrix_multiplication32_mpi(), not ASYNC
+//	exchanges						// provides a wrapped version of Carsten's xchange_field()
+//		copies RAND back to device			//	and not asynchronous version of ASYNC.cuh
+
+void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
+  
+  #ifndef ALTERNATE_FIELD_XCHANGE
+    
+    size_t size_tSlice = LX*LY*LZ/2 * 6*sizeof(dev_spinor);
+    size_t size_Rand   = RAND/2     * 6*sizeof(dev_spinor);
+    
+    to_host_mpi(spinor_xchange, dev_spin, h2d_spin_up, size_tSlice, 0 , LX*LY*LZ/2);
+    to_host_mpi(spinor_xchange, dev_spin, h2d_spin_dn, size_tSlice, (T-1)*LX*LY*LZ/2, (VOLUME)/2);
+    
+    xchange_field(spinor_xchange, ieo);
+    
+    to_device_mpi(dev_spin, spinor_xchange, h2d_spin_up, size_Rand, VOLUME/2, (VOLUME+RAND)/2);
+    
+  #else
+    
+    int tSliceEO = LX*LY*LZ/2;
+    int VolumeEO = VOLUME/2;
+    
+    cudaMemcpy(R1, dev_spin                      , tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost);
+    cudaMemcpy(R2, dev_spin+6*(VolumeEO-tSliceEO), tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost);
+    
+    MPI_Sendrecv(R1, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
+                 R3, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
+                 g_cart_grid, &stat[0]);
+    MPI_Sendrecv(R2, 24*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
+                 R4, 24*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
+                 g_cart_grid, &stat[1]);
+    
+    cudaMemcpy(dev_spin+6*VolumeEO           , R3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_spin+6*(VolumeEO+tSliceEO), R4, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice);
+    
+  #endif
+  
+}
+
+#endif // MPI
+
+
+
+
+
+
+////////////////////
+// hopping matrix //
+////////////////////
+
 #ifdef MPI	// implemented for checking the MPI implementation of the hopping matrix
   #ifdef HOPPING_DEBUG
 
@@ -1055,6 +1450,80 @@ void finalize_mixedsolve_eo_nd(void) {
 #endif
 
 
+
+
+
+
+////////////////////
+// linear algebra //
+////////////////////
+
+#ifdef MPI
+
+// have to rebuilt some linear algebra functions which contain global communication
+// can be done as wrappers to appropriate CUBLAS routines
+
+
+
+// a wrapper function for cublasSdot() (with the same interface)
+// provides the MPI communication via MPI_Allreduce()
+
+float cublasSdot_wrapper(int size, float * A, int incx, float * B, int incy) {
+
+  float result;
+  float buffer;
+  
+  buffer = cublasSdot(size, (float *) A, incx, (float *) B, incy);
+  MPI_Allreduce(&buffer, &result, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+  
+  return(result);
+  
+}
+
+#endif
+
+
+
+
+
+
+		//////////////////////////////////
+		//                              //
+		//    MATRIX MULTIPLICATIONS    //
+		//                              //
+		//////////////////////////////////
+
+
+
+
+/////////////
+// KERNELS //
+/////////////
+
+// derived from Flo's function  dev_mul_one_pm_imu_inv
+//	order of the arguments also like Flo's convention: (spinin, spinout)
+
+// applies (1 +- imubar*gamma5)
+// uses shared local memory for manipulation	// really ??	where ??
+// one thread per lattice site
+
+
+__global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin,
+                                              dev_spinor * sout,
+                                              float sign         ) {
+   
+  dev_spinor slocal[6];									// dev_spinor = float4		// 6*float4 = 24 floats		// auxiliary for each thread
+  
+  dev_complex pm_imu = dev_initcomplex(0.0, sign * mubar);				// dev_complex = struct { REAL re; REAL im; }	// pm_imu.re = 0.0
+  																	// pm_imu.im = sign * mubar
+  int pos = threadIdx.x + blockDim.x*blockIdx.x;
+  
+  if (pos < dev_VOLUME) {
+    dev_skalarmult_gamma5_spinor(&(slocal[0]), pm_imu, &(sin[6*pos]) );			// slocal  =  pm_imu * (gamma5) * sin
+    dev_add_spinor_assign(&(slocal[0]), &(sin[6*pos]));					// slocal  =  slocal + sin  =  pm_imu * (gamma5) * sin + sin
+    dev_realmult_spinor_assign(&(sout[6*pos]), 1.0, &(slocal[0]) );			// sout    =  slocal
+  }
+}
 
 
 
@@ -1364,426 +1833,6 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   return;
   
 }//matrix_multiplication32()
-
-
-
-
-
-
-
-
-/*
-#ifdef MPI
-
-////////////////////
-// hopping matrix //
-////////////////////
-
-
-// applies the Hopping Part Even-Odd !
-// the gauge field is the complete gaugefield!
-// the gauge field at the local point is reconstructed by 2*pos+eo where pos is the eo-position
-// from 0..VOLUME/2-1, eo = 0 or 1
-// the positions in the gauge fields are passed in "gfindex_site" for gf's that are attached at
-// the actual positions and in "gfindex_nextsite" for gf's that start at a position of the 
-// other eo-sublattice.
-// for the hopping positions of the eo-spinor field we use on of the two dedicated eo-nn fields
-// the boundary conditions are implemented as in Hopping_Matrix.c
-// mult with complex conjugate k0,k1,k2,k3 in positive direction because
-// psi(x+mu) != exp(i theta_mu) psi(x)
-
-__global__ void dev_Hopping_Matrix_alternate (const dev_su3_2v * gf, const dev_spinor * sin, dev_spinor * sout,
-                                              int * dev_iup, int * dev_idn, int * dev_eo2lexic, int * dev_lexic2eosub,
-                                              int ieo) {
-
-
-  // guess: ieo = 0  corresponds to even sites ?!
-  
-  // USETEXTURE is not likely to work ... not now ...
-  // same for TEMPORALGAUGE ...
-  
-
-  int pos_eo;
-  int pos_global;
-  int hoppos_eo;
-  int hoppos_global;
-  
-  dev_spinor shelp1[6], ssum[6];
-  __shared__ dev_su3_pad gfsmem[BLOCK];
-
-
-
-  pos_eo = threadIdx.x + blockDim.x*blockIdx.x;  
-  int ix = threadIdx.x;
-  
-  
-  
-  
-  //////////
-  // main //
-  //////////
-  
-  
-  if (pos_eo < dev_VOLUME) {
-  
-  
-    if (ieo == 0)
-      pos_global = dev_eo2lexic[pos_eo];
-    else
-      pos_global = dev_eo2lexic[dev_VOLUMEPLUSRAND/2 + pos_eo];
-    
-    
-    dev_zero_spinor(&(ssum[0])); // zero sum  
-    
-        
-    #ifdef TEMPORALGAUGE
-      int spatialvol = dev_LX*dev_LY*dev_LZ;
-    #endif
-    
-    
-    
-  
-    ///////////////
-    // l == 0, t //
-    ///////////////
-  
-            // positive direction
-            hoppos_global = dev_iup[4*pos_global + 0];
-            hoppos_eo     = dev_lexic2eosub[hoppos_global];
-            
-            #ifdef TEMPORALGAUGE
-              // gf == ID for t != T-1 => just read the spinor
-              
-              if((gfindex_site[pos]/spatialvol) != (dev_T-1) ){
-              #ifdef USETEXTURE
-                shelp1[0] = tex1Dfetch(spin_tex,6*hoppos);
-                shelp1[1] = tex1Dfetch(spin_tex,6*hoppos+1);
-                shelp1[2] = tex1Dfetch(spin_tex,6*hoppos+2);
-                shelp1[3] = tex1Dfetch(spin_tex,6*hoppos+3);
-                shelp1[4] = tex1Dfetch(spin_tex,6*hoppos+4);
-                shelp1[5] = tex1Dfetch(spin_tex,6*hoppos+5);
-              #else
-                shelp1[0] = sin[6*hoppos];
-                shelp1[1] = sin[6*hoppos+1];
-                shelp1[2] = sin[6*hoppos+2];
-                shelp1[3] = sin[6*hoppos+3];
-                shelp1[4] = sin[6*hoppos+4];
-                shelp1[5] = sin[6*hoppos+5];
-              #endif
-              }
-              else{
-                // gf != ID for t == T-1 => mult spinor with gf
-                #ifdef GF_8
-                  dev_reconstructgf_8texref(gf, 4*(gfindex_site[pos]),&(gfsmem[ix].m));
-                #else
-                  dev_reconstructgf_2vtexref(gf,4*(gfindex_site[pos]),&(gfsmem[ix].m));
-                #endif
-                #ifdef USETEXTURE
-                  dev_su3MtV_spintex(gfsmem[ix].m, hoppos_eo, &(shelp1[0]));
-                #else
-                  dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos_eo]), &(shelp1[0]));
-                #endif
-              }
-            #else
-              #ifdef GF_8
-                dev_reconstructgf_8texref(gf, 4*hoppos_global, &(gfsmem[ix].m));
-              #else
-                dev_reconstructgf_2vtexref(gf, 4*hoppos_global, &(gfsmem[ix].m));
-              #endif
-              #ifdef USETEXTURE
-                dev_su3MtV_spintex(gfsmem[ix].m, hoppos_eo, &(shelp1[0]));
-              #else
-                dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos_eo]), &(shelp1[0]));
-              #endif
-            #endif
-            
-            //-kappa(r - gamma_mu)
-            #ifdef GF_8
-              dev_kappaP0_plus(&(ssum[0]), &(shelp1[0]), dev_cconj(dev_k0));
-            #else
-              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
-              dev_Gamma0(&(shelp1[0]));
-              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_k0,&(shelp1[0]), &(ssum[0]));
-	    #endif
-	    
-	    
-	    
-	    
-    ///////////////
-    // l == 0, t //
-    ///////////////
-
-            // negative direction
-            hoppos_global = dev_idn[4*pos_global + 0];
-            hoppos_eo     = dev_lexic2eosub[hoppos_global];
-            
-             //hoppos = tex1Dfetch(nn_tex,8*pos+4);
-            //color
-            #ifdef TEMPORALGAUGE
-              // gf == ID for t != T-1 => just read the spinor
-              if((gfindex_nextsite[hoppos]/spatialvol) != (dev_T-1) ){
-               #ifdef USETEXTURE
-                shelp1[0] = tex1Dfetch(spin_tex,6*hoppos);
-                shelp1[1] = tex1Dfetch(spin_tex,6*hoppos+1);
-                shelp1[2] = tex1Dfetch(spin_tex,6*hoppos+2);
-                shelp1[3] = tex1Dfetch(spin_tex,6*hoppos+3);
-                shelp1[4] = tex1Dfetch(spin_tex,6*hoppos+4);
-                shelp1[5] = tex1Dfetch(spin_tex,6*hoppos+5);
-               #else
-                shelp1[0] = sin[6*hoppos];
-                shelp1[1] = sin[6*hoppos+1];
-                shelp1[2] = sin[6*hoppos+2];
-                shelp1[3] = sin[6*hoppos+3];
-                shelp1[4] = sin[6*hoppos+4];
-                shelp1[5] = sin[6*hoppos+5];
-               #endif
-              }
-              else{
-                // gf != ID for t == T-1 => mult spinor with gf
-                #ifdef GF_8
-                  dev_reconstructgf_8texref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
-                #else
-                  dev_reconstructgf_2vtexref_dagger(gf,4*gfindex_nextsite[hoppos],&(gfsmem[ix].m));
-                #endif
-                #ifdef USETEXTURE
-                  dev_su3MtV_spintex(gfsmem[ix].m, hoppos, &(shelp1[0]));
-                #else
-                  dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos]), &(shelp1[0]));
-                #endif 
-              }
-            #else            
-              #ifdef GF_8
-                dev_reconstructgf_8texref_dagger(gf, 4*hoppos_global, &(gfsmem[ix].m));
-              #else
-                dev_reconstructgf_2vtexref_dagger(gf, 4*hoppos_global, &(gfsmem[ix].m));
-              #endif
-              #ifdef USETEXTURE
-                dev_su3MtV_spintex(gfsmem[ix].m, hoppos_eo, &(shelp1[0]));  
-              #else
-                dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos_eo]), &(shelp1[0]));
-              #endif 
-            #endif
-            
-            //-kappa(r + gamma_mu)
-            #ifdef GF_8
-              dev_kappaP0_minus(&(ssum[0]), &(shelp1[0]), dev_k0);
-            #else
-              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
-              dev_Gamma0(&(shelp1[0]));
-              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
-            #endif
-
-
-
-
-    ///////////////
-    // l == 3, z //
-    ///////////////
-
-            // positive direction
-            hoppos_global = dev_iup[4*pos_global + 3];
-            hoppos_eo     = dev_lexic2eosub[hoppos_global];
-            
-             //hoppos = tex1Dfetch(nn_tex,8*pos+3);
-            //color
-            #ifdef GF_8
-              dev_reconstructgf_8texref(gf, 4*(hoppos_global)+(3), &(gfsmem[ix].m));
-            #else
-              dev_reconstructgf_2vtexref(gf, 4*(hoppos_global)+(3),&(gfsmem[ix].m));
-            #endif
-            #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix].m, hoppos_eo, &(shelp1[0]));
-            #else
-              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos_eo]), &(shelp1[0]));
-            #endif
-            //-kappa(r - gamma_mu)    
-            #ifdef GF_8
-              dev_kappaP3_plus(&(ssum[0]), &(shelp1[0]), dev_k3.re);
-            #else
-              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
-              dev_Gamma3(&(shelp1[0]));
-              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_k3,&(shelp1[0]), &(ssum[0]));
-	    #endif
-
-
-
-
-    ///////////////
-    // l == 3, z //
-    ///////////////
-            
-            // negative direction
-            hoppos_global = dev_idn[4*pos_global + 3];
-            hoppos_eo     = dev_lexic2eosub[hoppos_global];
-            
-             //hoppos = tex1Dfetch(nn_tex,8*pos+7); 
-            //color
-            #ifdef GF_8
-              dev_reconstructgf_8texref_dagger(gf, 4*hoppos_global+(3), &(gfsmem[ix].m));
-            #else
-              dev_reconstructgf_2vtexref_dagger(gf, 4*hoppos_global+(3), &(gfsmem[ix].m));
-            #endif
-            #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix].m, hoppos_eo, &(shelp1[0]));
-            #else
-              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos_eo]), &(shelp1[0]));
-            #endif
-            //-kappa(r + gamma_mu)
-            #ifdef GF_8
-              dev_kappaP3_minus(&(ssum[0]), &(shelp1[0]), dev_k3.re);
-            #else
-              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
-              dev_Gamma3(&(shelp1[0]));
-              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
-            #endif
-
-
-
-
-    ///////////////
-    // l == 2, y //
-    ///////////////
-
-            // positive direction
-            hoppos_global = dev_iup[4*pos_global + 2];
-            hoppos_eo     = dev_lexic2eosub[hoppos_global];
-            
-             //hoppos = tex1Dfetch(nn_tex,8*pos+2);
-            //color
-            #ifdef GF_8
-              dev_reconstructgf_8texref(gf, 4*(hoppos_global)+(2), &(gfsmem[ix].m));
-            #else
-              dev_reconstructgf_2vtexref(gf, 4*(hoppos_global)+(2), &(gfsmem[ix].m));
-            #endif
-            #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix].m, hoppos_eo, &(shelp1[0]));
-            #else
-              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos_eo]), &(shelp1[0]));
-            #endif
-            //-kappa(r - gamma_mu)
-            #ifdef GF_8
-              dev_kappaP2_plus(&(ssum[0]), &(shelp1[0]), dev_k2.re);
-            #else
-              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
-              dev_Gamma2(&(shelp1[0]));
-              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_k2,&(shelp1[0]), &(ssum[0]));
-            #endif
-
-
-
-
-    ///////////////
-    // l == 2, y //
-    ///////////////
-            
-            // negative direction
-            hoppos_global = dev_idn[4*pos_global + 2];
-            hoppos_eo     = dev_lexic2eosub[hoppos_global];
-            
-             //hoppos = tex1Dfetch(nn_tex,8*pos+6);
-            //color
-            #ifdef GF_8
-              dev_reconstructgf_8texref_dagger(gf, 4*(hoppos_global)+(2), &(gfsmem[ix].m));
-            #else
-              dev_reconstructgf_2vtexref_dagger(gf, 4*(hoppos_global)+(2), &(gfsmem[ix].m));
-            #endif
-            #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix].m, hoppos_eo, &(shelp1[0]));
-            #else
-              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos_eo]), &(shelp1[0]));
-            #endif
-            //-kappa(r + gamma_mu)
-            #ifdef GF_8
-              dev_kappaP2_minus(&(ssum[0]), &(shelp1[0]), dev_k2.re);
-            #else
-              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
-              dev_Gamma2(&(shelp1[0]));
-              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
-	    #endif
-
-
-
-
-    ///////////////
-    // l == 1, x //
-    ///////////////
-
-            // positive direction
-            hoppos_global = dev_iup[4*pos_global + 1];
-            hoppos_eo     = dev_lexic2eosub[hoppos_global];
-            
-             //hoppos = tex1Dfetch(nn_tex,8*pos+1);
-            //color
-            #ifdef GF_8
-              dev_reconstructgf_8texref(gf, 4*(hoppos_global)+(1), &(gfsmem[ix].m));
-            #else
-              dev_reconstructgf_2vtexref(gf, 4*(hoppos_global)+(1), &(gfsmem[ix].m));
-            #endif
-            #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix].m, hoppos_eo, &(shelp1[0]));
-            #else
-              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos_eo]), &(shelp1[0]));
-            #endif
-            //-kappa(r - gamma_mu)
-            #ifdef GF_8
-              dev_kappaP1_plus(&(ssum[0]), &(shelp1[0]), dev_k1.re);
-            #else
-              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
-              dev_Gamma1(&(shelp1[0]));
-              dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_k1,&(shelp1[0]), &(ssum[0]));
-	    #endif
-
-
-
-
-    ///////////////
-    // l == 1, x //
-    ///////////////
-            
-            // negative direction
-            hoppos_global = dev_idn[4*pos_global + 1];
-            hoppos_eo     = dev_lexic2eosub[hoppos_global];
-            
-             //hoppos = tex1Dfetch(nn_tex,8*pos+5);
-            //color
-            #ifdef GF_8
-              dev_reconstructgf_8texref_dagger(gf, 4*(hoppos_global)+(1), &(gfsmem[ix].m));
-            #else
-              dev_reconstructgf_2vtexref_dagger(gf, 4*(hoppos_global)+(1), &(gfsmem[ix].m));
-            #endif
-            #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix].m, hoppos_eo, &(shelp1[0]));
-            #else
-              dev_su3MtV(gfsmem[ix].m, &(sin[6*hoppos_eo]), &(shelp1[0]));
-            #endif
-            //-kappa(r + gamma_mu)
-            #ifdef GF_8
-              dev_kappaP1_minus(&(ssum[0]), &(shelp1[0]), dev_k1.re);
-            #else
-              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
-              dev_Gamma1(&(shelp1[0]));
-              dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));      
-            #endif
- 
- 
- 
- 
-    /////////////
-    // output //
-    ////////////
-  
-        //copy to output spinor
-        dev_copy_spinor(&(ssum[0]),&(sout[6*pos_eo])); 
-        
-  }
-  
-  
-}//dev_Hopping_Matrix_alternate<<<>>>()
-
-#endif	// MPI
-*/
-
-
 
 
 
@@ -2231,6 +2280,13 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
 
 
 
+
+
+		/////////////////////
+		//                 //
+		//    BENCHMARK    //
+		//                 //
+		/////////////////////
 
 
 
@@ -2689,6 +2745,11 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
 
 
 
+		////////////////////////
+		//                    //
+		//    MIXED SOLVER    //
+		//                    //
+		////////////////////////
 
 
 
@@ -3319,7 +3380,7 @@ int cg_eo_nd (dev_su3_2v * gf,
 
 
 //////////////////
-// MIXED SOLVER //
+// OUTER SOLVER //
 //////////////////
 
 // iterative refinement, defect correction
@@ -3388,7 +3449,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   int innercount;				// latest inner solver iterations
   int outercount = 0;				// total inner solver iterations
   double flops;
-  #ifdef EFFECTIVE_BENCHMARK
+  #ifdef ALGORITHM_BENCHMARK
     double effectiveflops;			// will used to count the "effective" flop's (from the algorithmic perspective)
     double hoppingflops = 1488.0;
     double matrixflops  = 2  *  (  2 * ( (2*hoppingflops+12+3) + (2*hoppingflops+3) + (12+2) + 12 )  );
@@ -3404,7 +3465,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   clock_t innerclocks;
   clock_t totalinnerclocks = 0;
   clock_t totalouterclocks = 0;
-  #ifdef EFFECTIVE_BENCHMARK
+  
+  #ifdef ALGORITHM_BENCHMARK
     #ifndef MPI
       clock_t starteffective;
       clock_t stopeffective;
@@ -3516,53 +3578,53 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   		//	dev_VOLUME  is necessary for many kernel functions as for instance  dev_gamma5()
   		// initializes  mu, kappa and twokappamu  on the device
   		// initializes the strange  dev_k{0-3}, dev_mk{0-3}  as derived from the  ka{0-3}  from boundary.c
-  
+  		
   		// debug	// kernel
   		#ifdef CUDA_DEBUG
   		  CUDA_KERNEL_CHECK("Kernel error in he_cg_init(). Couldn't initialize some stuff.", "he_cg_init() succeeded.");
   		#endif
-  
+  		
   		// debug	// check stuff on device
   		#ifdef STUFF_DEBUG
   		
-  		#ifdef MPI
-  		  if (g_proc_id == 0) {
-  		#endif
+  			#ifdef MPI
+  			  if (g_proc_id == 0) {
+  			#endif
+  			
+  			#ifdef MPI
+  			  printf("\tOn host:\n");
+  			  printf("\tVOLUME = %i\n", VOLUME);							// checking VOLUME and RAND in the parallel case 
+  			  printf("\tRAND   = %i\n", RAND);
+  			  printf("\tVOLUME + RAND = %i\n",  VOLUME+RAND);
+  			#endif
+  			
+  			int host_check_LX, host_check_LY, host_check_LZ, host_check_T, host_check_VOLUME;
+  			cudaMemcpyFromSymbol(&host_check_LX, dev_LX, sizeof(int));
+  			cudaMemcpyFromSymbol(&host_check_LY, dev_LY, sizeof(int));
+  			cudaMemcpyFromSymbol(&host_check_LZ, dev_LZ, sizeof(int));
+  			cudaMemcpyFromSymbol(&host_check_T, dev_T, sizeof(int));
+  			cudaMemcpyFromSymbol(&host_check_VOLUME, dev_VOLUME, sizeof(int));
+  			// printf("\teven_odd_flag = %i\n", even_odd_flag);
+  			printf("\tOn device:\n");
+  			printf("\tdev_LX = %i\n", host_check_LX);
+  			printf("\tdev_LY = %i\n", host_check_LY);
+  			printf("\tdev_LZ = %i\n", host_check_LZ);
+  			printf("\tdev_T = %i\n", host_check_T);
+  			printf("\tdev_VOLUME = %i/2 ?!= %i\n", host_check_LX*host_check_LY*host_check_LZ*host_check_T, host_check_VOLUME);
+  			
+  			float host_check_mu, host_check_kappa, host_check_twokappamu;
+  			cudaMemcpyFromSymbol(&host_check_mu, mu, sizeof(float));
+  			cudaMemcpyFromSymbol(&host_check_kappa, kappa, sizeof(float));
+  			cudaMemcpyFromSymbol(&host_check_twokappamu, twokappamu, sizeof(float));
+  			// printf("\tOn device:\n");
+  			// printf("\tmu = %f\n", host_check_mu);		// not needed for the nd case
+  			printf("\tkappa = %f\n", host_check_kappa);
+  			// printf("\ttwokappamu = %f\n", host_check_twokappamu);
+  			
+  			#ifdef MPI
+  			  }
+  			#endif
   		
-  		#ifdef MPI
-  		  printf("\tOn host:\n");
-  		  printf("\tVOLUME = %i\n", VOLUME);							// checking VOLUME and RAND in the parallel case 
-  		  printf("\tRAND   = %i\n", RAND);
-  		  printf("\tVOLUME + RAND = %i\n",  VOLUME+RAND);
-  		#endif
-  		
-  		  int host_check_LX, host_check_LY, host_check_LZ, host_check_T, host_check_VOLUME;
-  		  cudaMemcpyFromSymbol(&host_check_LX, dev_LX, sizeof(int));
-  		  cudaMemcpyFromSymbol(&host_check_LY, dev_LY, sizeof(int));
-  		  cudaMemcpyFromSymbol(&host_check_LZ, dev_LZ, sizeof(int));
-  		  cudaMemcpyFromSymbol(&host_check_T, dev_T, sizeof(int));
-  		  cudaMemcpyFromSymbol(&host_check_VOLUME, dev_VOLUME, sizeof(int));
-  		  // printf("\teven_odd_flag = %i\n", even_odd_flag);
-  		  printf("\tOn device:\n");
-  		  printf("\tdev_LX = %i\n", host_check_LX);
-  		  printf("\tdev_LY = %i\n", host_check_LY);
-  		  printf("\tdev_LZ = %i\n", host_check_LZ);
-  		  printf("\tdev_T = %i\n", host_check_T);
-  		  printf("\tdev_VOLUME = %i/2 ?!= %i\n", host_check_LX*host_check_LY*host_check_LZ*host_check_T, host_check_VOLUME);
-  		  
-  		  float host_check_mu, host_check_kappa, host_check_twokappamu;
-  		  cudaMemcpyFromSymbol(&host_check_mu, mu, sizeof(float));
-  		  cudaMemcpyFromSymbol(&host_check_kappa, kappa, sizeof(float));
-  		  cudaMemcpyFromSymbol(&host_check_twokappamu, twokappamu, sizeof(float));
-  		  // printf("\tOn device:\n");
-  		  // printf("\tmu = %f\n", host_check_mu);		// not needed for the nd case
-  		  printf("\tkappa = %f\n", host_check_kappa);
-  		  // printf("\ttwokappamu = %f\n", host_check_twokappamu);
-  		  
-  		  #ifdef MPI
-  		    }
-  		  #endif
-  		  
   		#endif
   
   
@@ -3576,24 +3638,24 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   		// debug	// check mubar and epsbar on host and device
   		#ifdef STUFF_DEBUG
   		
-  		#ifdef MPI
-  		  if (g_proc_id == 0) {
-  		#endif
-  		
-  		  // printf("\tOn host:\n");
-  		  // printf("\tg_mubar = %f\n", g_mubar);
-  		  // printf("\tg_epsbar = %f\n", g_epsbar);
-  		  
-  		  float host_check_mubar, host_check_epsbar;
-  		  cudaMemcpyFromSymbol(&host_check_mubar, mubar, sizeof(float));
-  		  cudaMemcpyFromSymbol(&host_check_epsbar, epsbar, sizeof(float));
-  		  printf("\tOn device:\n");
-  		  printf("\tmubar = %f\n", host_check_mubar);
-  		  printf("\tepsbar = %f\n", host_check_epsbar);
-  		
-  		#ifdef MPI
-  		  }
-  		#endif
+  			#ifdef MPI
+  			  if (g_proc_id == 0) {
+  			#endif
+  			
+  			// printf("\tOn host:\n");
+  			// printf("\tg_mubar = %f\n", g_mubar);
+  			// printf("\tg_epsbar = %f\n", g_epsbar);
+  			
+  			float host_check_mubar, host_check_epsbar;
+  			cudaMemcpyFromSymbol(&host_check_mubar, mubar, sizeof(float));
+  			cudaMemcpyFromSymbol(&host_check_epsbar, epsbar, sizeof(float));
+  			printf("\tOn device:\n");
+  			printf("\tmubar = %f\n", host_check_mubar);
+  			printf("\tepsbar = %f\n", host_check_epsbar);
+  			
+  			#ifdef MPI
+  			  }
+  			#endif
   		
   		#endif
   
@@ -3602,11 +3664,14 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   
   	he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND, RAND, g_cart_id, g_nproc);
   	
-  			// debug	// kernel
-  			#ifdef CUDA_DEBUG
-  			  CUDA_KERNEL_CHECK("Kernel error in he_cg_init_nd_additional_mpi(). Couldn't initialize some stuff.", "he_cg_init_nd_additional_mpi() succeeded.");
-  			#endif
-  	
+  		// debug	// kernel
+  		#ifdef CUDA_DEBUG
+  		  CUDA_KERNEL_CHECK("Kernel error in he_cg_init_nd_additional_mpi(). Couldn't initialize some stuff.", "he_cg_init_nd_additional_mpi() succeeded.");
+  		#endif
+  		
+  		// debug
+  		#ifdef STUFF_DEBUG
+  		
   			// debug	// check dev_VOLUMEPLUSRAND and dev_RAND on device
   			#ifdef STUFF_DEBUG
   			if (g_proc_id == 0) {
@@ -3618,7 +3683,9 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   			  printf("\tdev_RAND = %i\n", host_check_RAND);
   			}
   			#endif
-  
+  			
+  		#endif
+  		
   #endif
   
   
@@ -3699,7 +3766,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   // timer
   startouter = clock();
   
-  #ifdef EFFECTIVE_BENCHMARK
+  #ifdef ALGORITHM_BENCHMARK
     #ifndef MPI
       starteffective = ((double)clock()) / ((double)(CLOCKS_PER_SEC));
     #else
@@ -3962,7 +4029,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       stopouter = clock();
       totalouterclocks = stopouter-startouter - totalinnerclocks;
       
-      #ifdef EFFECTIVE_BENCHMARK
+      #ifdef ALGORITHM_BENCHMARK
         #ifndef MPI
           stopeffective = ((double)clock()) / ((double)(CLOCKS_PER_SEC));
         #else
@@ -3987,7 +4054,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		#endif
       		
       		// benchmark
-      		#ifdef EFFECTIVE_BENCHMARK
+      		#ifdef ALGORITHM_BENCHMARK
       		  // will now count the number of effective flops
       		  // effectiveflops  =  #(inner iterations)*(matrixflops+linalgflops)*VOLUME/2  +  #(outer iterations)*(matrixflops+linalgflops)*VOLUME/2
       		  // outer loop: linalg  =  flops for calculating  r(k+1) and x(k+1)
@@ -4054,7 +4121,10 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		#endif
       
       return(outercount);
+      
     }
+    
+    
     
     
   }//OUTER LOOP
@@ -4068,7 +4138,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   stopouter = clock();
   totalouterclocks = stopouter-startouter - totalinnerclocks;
   
-  #ifdef EFFECTIVE_BENCHMARK
+  #ifdef ALGORITHM_BENCHMARK
     #ifndef MPI
       stopeffective = ((double)clock()) / ((double)(CLOCKS_PER_SEC));
     #else
@@ -4092,7 +4162,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		#endif
       		
       		// benchmark
-      		#ifdef EFFECTIVE_BENCHMARK
+      		#ifdef ALGORITHM_BENCHMARK
       		  // will now count the number of effective flops
       		  // effectiveflops  =  #(inner iterations)*(matrixflops+linalgflops)*VOLUME/2  +  #(outer iterations)*(matrixflops+linalgflops)*VOLUME/2
       		  // outer loop: linalg  =  flops for calculating  r(k+1) and x(k+1)

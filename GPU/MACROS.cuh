@@ -27,8 +27,7 @@
 // benchmarks
 
 #define OPERATOR_BENCHMARK 100	// refers to only matrix applications
-#define EFFECTIVE_BENCHMARK	// counts the number of effective flops
-
+#define ALGORITHM_BENCHMARK	// counts the number of effective flops
 
 
 
@@ -36,17 +35,17 @@
 
 //#define ALTERNATE_FIELD_XCHANGE	// provides a better communication, without ASYNC
 //#define ALTERNATE_HOPPING_MATRIX	// at the moment: provides an alternative way of passing the (nn-)positions to dev_Hopping_Matrix()
-					//		  does not work properly yet
+					//		  does not work properly yet, ALTERNATE.cuh
 
 
 
 // CUDA + MPI
 
 //#define DEVICE_EQUAL_RANK	// for MPI: cudaSetDevice(mpi-rank)
-#define ASYNC 0			// overlaps computation and communication	// 0, 1, 2, 3
-#define ASYNC_TSLICES 1		// determines workload af kernels
-#define ASYNC_OPTIMIZED	1	// CUDA streams					// needs ASYNC == 3
-#define ASYNC_TIMING		// profiling the ASYNC_OPTIMIZED code		// needs ASYNC == 1,2
+//#define ASYNC 0			// overlaps computation and communication	// 0, 1, 2, 3
+//#define ASYNC_TSLICES 1		// determines workload af kernels
+//#define ASYNC_OPTIMIZED	1	// CUDA streams					// needs ASYNC == 3
+//#define ASYNC_TIMING		// profiling the ASYNC_OPTIMIZED code		// needs ASYNC == 1,2
 
 
 
