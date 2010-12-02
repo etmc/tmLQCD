@@ -40,7 +40,9 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
                                  spinor * Q_up, spinor * Q_dn,
                                  int max_iter, double eps_sq, int rel_prec);
 
+void set_global_sizes();
 
+float cublasSdot_wrapper(int size, float * A, int incx, float * B, int incy);
 
 
 // eo, nd, MPI

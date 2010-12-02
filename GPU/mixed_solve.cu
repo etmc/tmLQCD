@@ -81,6 +81,14 @@ extern "C" {
 #endif
 
 
+#ifdef MPI
+  #undef MPI
+  #undef REAL
+    #include <mpi.h>
+  #define MPI
+  #define REAL float
+#endif
+
 
 int g_numofgpu;
 
@@ -204,11 +212,20 @@ __constant__ __device__ dev_complex dev_mk3c;
 __device__  int  dev_LX,dev_LY,dev_LZ,dev_T,dev_VOLUME;
 
 
+#ifdef MPI
 // from mixed_solve_eo_nd.cuh
 __device__ int dev_RAND;			// not used, maybe later ...
 __device__ int dev_VOLUMEPLUSRAND;		// is now used in dev_Hopping_Matrix_mpi()
 __device__ int dev_rank;
 __device__ int dev_nproc;
+
+// extern
+extern dev_spinor * R1;
+extern dev_spinor * R2;
+extern dev_spinor * R3;
+extern dev_spinor * R4;
+#endif
+
 
 
 
@@ -296,6 +313,9 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
   //spinout == odd
   
   //Q_{-}
+  		#ifdef MPI
+  		  xchange_field_wrapper(spinin, 0);
+  		#endif
   #ifdef USETEXTURE
     bind_texture_spin(spinin,1);
   #endif
@@ -309,6 +329,9 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
   #endif
   dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,dev_spin_eo2, -1.);
   
+  		#ifdef MPI
+  		  xchange_field_wrapper(dev_spin_eo2, 1);
+  		#endif
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo2,1);
   #endif
@@ -322,7 +345,11 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
   #endif
   dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(spinin, dev_spin_eo1,  dev_spin_eo2, -1.);
   
+  
   //Q_{+}
+  		#ifdef MPI
+  		  xchange_field_wrapper(dev_spin_eo2, 0);
+  		#endif
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo2,1);
   #endif
@@ -336,6 +363,9 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
   #endif
   dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,spinout, +1.);
   
+  		#ifdef MPI
+  		  xchange_field_wrapper(spinout, 1);
+  		#endif
   #ifdef USETEXTURE
     bind_texture_spin(spinout,1);
   #endif
@@ -1102,9 +1132,26 @@ extern "C" int dev_cg_eo(
   
   he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
- 
- 
- 
+  
+  #ifdef MPI
+    he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND, RAND, g_cart_id, g_nproc);
+    // debug	// check dev_VOLUMEPLUSRAND and dev_RAND on device
+  	if (g_proc_id == 0) {
+  	  int host_check_VOLUMEPLUSRAND, host_check_RAND;
+  	  int host_check_rank, host_check_nproc;
+  	  cudaMemcpyFromSymbol(&host_check_VOLUMEPLUSRAND, dev_VOLUMEPLUSRAND, sizeof(int));
+  	  cudaMemcpyFromSymbol(&host_check_RAND, dev_RAND, sizeof(int));
+  	  printf("\tOn device:\n");
+  	  printf("\tdev_VOLUMEPLUSRAND = %i\n", host_check_VOLUMEPLUSRAND);
+  	  printf("\tdev_RAND = %i\n", host_check_RAND);
+  	  cudaMemcpyFromSymbol(&host_check_rank, dev_rank, sizeof(int));
+  	  cudaMemcpyFromSymbol(&host_check_nproc, dev_nproc, sizeof(int));
+  	  printf("\tdev_rank = %i\n", host_check_rank);
+  	  printf("\tdev_nproc = %i\n", host_check_nproc);
+  	}
+  #endif
+  
+  
   #ifdef USETEXTURE
     //Bind texture gf
     bind_texture_gf(gf);
@@ -1142,7 +1189,11 @@ extern "C" int dev_cg_eo(
  
 
  //relative precision -> get initial residue
- sourcesquarenorm = cublasSdot (24*VOLUME/2, (const float *)spinin, 1, (const float *)spinin, 1);
+ #ifndef MPI
+   sourcesquarenorm = cublasSdot (24*VOLUME/2, (const float *)spinin, 1, (const float *)spinin, 1);
+ #else
+   sourcesquarenorm = cublasSdot_wrapper (24*VOLUME/2, (float *)spinin, 1, (float *)spinin, 1);
+ #endif
  host_rk = sourcesquarenorm; //for use in main loop
  printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
@@ -1161,8 +1212,12 @@ extern "C" int dev_cg_eo(
   
   
  //alpha
-  host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin2, 1,
-            (const float *) spin3, 1);
+  #ifndef MPI
+    host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin2, 1, (const float *) spin3, 1);
+  #else
+    host_dotprod = cublasSdot_wrapper (24*VOLUME/2, (float *) spin2, 1, (float *) spin3, 1);
+  #endif
+  
   host_alpha = (host_rk / host_dotprod); // alpha = r*r/ p M p
    
  //r(k+1)
@@ -1178,7 +1233,11 @@ extern "C" int dev_cg_eo(
   }
 
   //Abbruch?
-  host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin0, 1,(const float *) spin0, 1);
+  #ifndef MPI
+    host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin0, 1,(const float *) spin0, 1);
+  #else
+    host_dotprod = cublasSdot_wrapper (24*VOLUME/2, (float *) spin0, 1,(float *) spin0, 1);
+  #endif
   
  if (((host_dotprod <= eps*sourcesquarenorm) && (i > maxit / 4) ) || ( host_dotprod <= epsfinal/2.)){//error-limit erreicht (epsfinal/2 sollte ausreichen um auch in double precision zu bestehen)
    break; 
@@ -1714,67 +1773,129 @@ cudaError_t cudaerr;
 
 
 void init_mixedsolve_eo(su3** gf){
-cudaError_t cudaerr;
+
+  cudaError_t cudaerr;
   dev_complex help;
 
-  if(havedevice == 0){
-   // get number of devices
-     int ndev = find_devices();
-	   if(ndev == 0){
-	       fprintf(stderr, "Error: no CUDA devices found. Aborting...\n");
-	       exit(300);
-	    }
-	 // try to set active device to device_num given in input file
-	    if(device_num < ndev){
-	     printf("Setting active device to: %d\n", device_num);
-	     cudaSetDevice(device_num);
-	    }
-	    else{
-	      fprintf(stderr, "Error: There is no CUDA device with No. %d. Aborting...\n",device_num);
-	      exit(301);
-	    }
-	    if((cudaerr=cudaGetLastError())!=cudaSuccess){
-	    printf("Error in init_mixedsolve_eo(): Could not set active device. Aborting...\n");
-	    exit(302);
-	    }  
-   havedevice=1;
+  if (havedevice == 0) {
+  
+    // get number of devices
+    int ndev = find_devices();
+    if(ndev == 0){
+      fprintf(stderr, "Error: no CUDA devices found. Aborting...\n");
+      exit(300);
+    }
+    
+    // try to set active device to device_num given in input file (or mpi rank)
+    #ifndef MPI
+    	if(device_num < ndev){
+    	  printf("Setting active device to: %d\n", device_num);
+    	  cudaSetDevice(device_num);
+    	}
+    	else{
+   	  fprintf(stderr, "Error: There is no CUDA device with No. %d. Aborting...\n",device_num);
+    	  exit(301);
+    	}
+    	if((cudaerr=cudaGetLastError())!=cudaSuccess){
+    	  printf("Error in init_mixedsolve_eo(): Could not set active device. Aborting...\n");
+    	  exit(302);
+    	}
+    #else
+    	#ifndef DEVICE_EQUAL_RANK
+    	  // try to set active device to device_num given in input file
+    	  // each process gets bounded to the same GPU
+    	  if (device_num < ndev) {
+    	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, device_num);
+    	    cudaSetDevice(device_num);
+    	  }
+    	  else {
+    	    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, device_num);
+    	    exit(301);
+    	  }
+  	#else
+    	  // device number = mpi rank
+    	  if (g_cart_id < ndev) {
+    	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, g_cart_id);
+    	    cudaSetDevice(g_cart_id);
+    	  }
+    	  else {
+    	    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, g_cart_id);
+    	    exit(301);
+    	  }
+  	#endif
+  	if ((cudaerr=cudaGetLastError()) != cudaSuccess) {
+  	  printf("Process %d of %d: Error in init_mixedsolve_eo_nd(): Could not set active device. Aborting...\n", g_proc_id, g_nproc);
+  	  exit(302);
+  	}
+    #endif
+    
+    havedevice=1;
+    
   }
-  #ifdef GF_8
-  /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
-  printf("Using GF 8 reconstruction\n");
-  size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8); 
-  #else
-  /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
-  printf("Using GF 12 reconstruction\n");
-  size_t dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v); 
+  
+  // output
+  #ifdef MPI
+    if (g_cart_id == 0) {
   #endif
   
-  #ifdef USETEXTURE
-    printf("Using texture references\n");
+  	#ifdef USETEXTURE
+  	  printf("Using texture references.\n");
+  	#else
+  	  printf("NOT using texture references.\n");
+  	#endif
+  
+  	#ifdef GF_8
+ 	  printf("Using GF 8 reconstruction.\n");
+  	#else
+  	  printf("Using GF 12 reconstruction.\n");
+  	#endif
+  
+  #ifdef MPI
+    }
+  #endif
+  
+  #ifndef MPI
+  	#ifdef GF_8
+  	  /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
+  	  size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8);
+  	#else
+  	  /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
+  	  size_t dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v);
+  	#endif
   #else
-    printf("NOT using texture references\n");
+  	#ifdef GF_8
+  	  /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
+  	  size_t dev_gfsize = 2*4*(VOLUME+RAND) * sizeof(dev_su3_8);
+  	#else
+  	  /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
+  	  size_t dev_gfsize = 3*4*(VOLUME+RAND) * sizeof(dev_su3_2v);
+  	#endif
+  
   #endif
   
   if((cudaerr=cudaMalloc((void **) &dev_gf, dev_gfsize)) != cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of gauge field failed. Aborting...\n");
     exit(200);
   }   // Allocate array on device
-  else{
-    printf("Allocated gauge field on device\n");
-  }  
-  
-  
+  else {
+    #ifndef MPI
+      printf("Allocated memory for gauge field on device.\n");
+    #else
+      if (g_cart_id == 0) printf("Allocated memory for gauge gauge field on devices.\n");
+    #endif
+  }
   
   #ifdef GF_8
-  h2d_gf = (dev_su3_8 *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
-  su3to8(gf,h2d_gf);
+    h2d_gf = (dev_su3_8 *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
+    su3to8(gf,h2d_gf);
   #else
-  h2d_gf = (dev_su3_2v *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
-  su3to2vf4(gf,h2d_gf);
+    h2d_gf = (dev_su3_2v *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
+    su3to2vf4(gf,h2d_gf);
   #endif
   //bring to device
   cudaMemcpy(dev_gf, h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
-
+  
+  
   #ifdef HALF
     #ifdef GF_8
       /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
@@ -1809,16 +1930,24 @@ cudaError_t cudaerr;
   cudaMalloc((void **) &dev_nn_eo, nnsize/2);
   cudaMalloc((void **) &dev_nn_oe, nnsize/2);
   
-  
-  size_t idxsize = VOLUME/2*sizeof(int);
+  #ifndef MPI
+    size_t idxsize = VOLUME/2*sizeof(int);
+  #else
+    size_t idxsize = (VOLUME+RAND)/2*sizeof(int);
+  #endif
   eoidx_even = (int *) malloc(idxsize);
   eoidx_odd = (int *) malloc(idxsize);
   cudaMalloc((void **) &dev_eoidx_even, idxsize);
   cudaMalloc((void **) &dev_eoidx_odd, idxsize);
   
-  initnn();
-  initnn_eo();
-  //shownn_eo();
+  #ifndef MPI
+    initnn();
+    initnn_eo();
+    //shownn_eo();
+  #else
+    init_nnspinor_eo_mpi();
+    init_idxgauge_mpi();
+  #endif
   
   //shownn();
   //showcompare_gf(T-1, LX-1, LY-1, LZ-1, 3);
@@ -1836,36 +1965,61 @@ cudaError_t cudaerr;
   free(nn_eo);
   free(nn);
   
+  
 // Spinors
   #ifndef HALF
-  size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); /* float4 */
-  if((void*)(h2d_spin = (dev_spinor *)malloc(dev_spinsize)) == NULL){
-    printf("Could not allocate memory for h2d_spin. Aborting...\n");
-    exit(200);
-  } // Allocate float conversion spinor on host
+  	size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); /* float4 */
+  	if((void*)(h2d_spin = (dev_spinor *)malloc(dev_spinsize)) == NULL){
+  	  printf("Could not allocate memory for h2d_spin. Aborting...\n");
+  	  exit(200);
+  	} // Allocate float conversion spinor on host
+  	#ifdef MPI
+  	  size_t dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinor);
+  	#endif
   #else
-  size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor_half);/*short4*/
-  if((void*)(h2d_spin = (dev_spinor_half *)malloc(dev_spinsize)) == NULL){
-    printf("Could not allocate memory for h2d_spin. Aborting...\n");
-    exit(200);
-  } // Allocate float conversion spinor on host 
-  size_t dev_normsize = VOLUME/2 * sizeof(float);
-  if((void*)(h2d_spin_norm = (float *)malloc(dev_normsize)) == NULL){
-    printf("Could not allocate memory for h2d_spin_norm. Aborting...\n");
-    exit(200);
-  } // Allocate float conversion norm on host 
+  	size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor_half);/*short4*/
+  	if((void*)(h2d_spin = (dev_spinor_half *)malloc(dev_spinsize)) == NULL){
+  	  printf("Could not allocate memory for h2d_spin. Aborting...\n");
+  	  exit(200);
+  	} // Allocate float conversion spinor on host 
+  	size_t dev_normsize = VOLUME/2 * sizeof(float);
+  	if((void*)(h2d_spin_norm = (float *)malloc(dev_normsize)) == NULL){
+  	  printf("Could not allocate memory for h2d_spin_norm. Aborting...\n");
+  	  exit(200);
+  	} // Allocate float conversion norm on host 
   #endif
   
-  cudaMalloc((void **) &dev_spin1, dev_spinsize);   // Allocate array spin1 on device
-  cudaMalloc((void **) &dev_spin2, dev_spinsize);   // Allocate array spin2 on device
-  cudaMalloc((void **) &dev_spin3, dev_spinsize);   // Allocate array spin3 on device
-  cudaMalloc((void **) &dev_spin4, dev_spinsize);
-  cudaMalloc((void **) &dev_spin5, dev_spinsize);
-  cudaMalloc((void **) &dev_spinin, dev_spinsize);
-  cudaMalloc((void **) &dev_spinout, dev_spinsize);
   
-  cudaMalloc((void **) &dev_spin_eo1, dev_spinsize);
-  cudaMalloc((void **) &dev_spin_eo2, dev_spinsize);
+  #ifndef MPI
+  	cudaMalloc((void **) &dev_spin1, dev_spinsize);   // Allocate array spin1 on device
+  	cudaMalloc((void **) &dev_spin2, dev_spinsize);   // Allocate array spin2 on device
+  	cudaMalloc((void **) &dev_spin3, dev_spinsize);   // Allocate array spin3 on device
+  	cudaMalloc((void **) &dev_spin4, dev_spinsize);
+  	cudaMalloc((void **) &dev_spin5, dev_spinsize);
+  	cudaMalloc((void **) &dev_spinin, dev_spinsize);
+  	cudaMalloc((void **) &dev_spinout, dev_spinsize);
+  	
+  	cudaMalloc((void **) &dev_spin_eo1, dev_spinsize);
+  	cudaMalloc((void **) &dev_spin_eo2, dev_spinsize);
+  #else
+  	cudaMalloc((void **) &dev_spin1, dev_spinsize_ext);
+  	cudaMalloc((void **) &dev_spin2, dev_spinsize_ext);
+  	cudaMalloc((void **) &dev_spin3, dev_spinsize_ext);
+  	cudaMalloc((void **) &dev_spin4, dev_spinsize_ext);
+  	cudaMalloc((void **) &dev_spin5, dev_spinsize_ext);
+  	cudaMalloc((void **) &dev_spinin, dev_spinsize_ext);
+  	cudaMalloc((void **) &dev_spinout, dev_spinsize_ext);
+  	
+  	cudaMalloc((void **) &dev_spin_eo1, dev_spinsize_ext);
+  	cudaMalloc((void **) &dev_spin_eo2, dev_spinsize_ext);
+  	
+  	int tSliceEO = LX*LY*LZ/2;
+  	R1 = (dev_spinor *) malloc(2*tSliceEO*24*sizeof(float));
+  	R2 = R1 + 6*tSliceEO;
+  	R3 = (dev_spinor *) malloc(2*tSliceEO*24*sizeof(float));
+  	R4 = R3 + 6*tSliceEO;
+  #endif
+ 
  
   #ifdef HALF
   dev_spinsize = VOLUME/2*sizeof(float);

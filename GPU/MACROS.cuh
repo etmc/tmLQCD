@@ -33,7 +33,7 @@
 
 // alternative code
 
-//#define ALTERNATE_FIELD_XCHANGE	// provides a better communication, without ASYNC
+#define ALTERNATE_FIELD_XCHANGE	// provides a better communication, without ASYNC
 //#define ALTERNATE_HOPPING_MATRIX	// at the moment: provides an alternative way of passing the (nn-)positions to dev_Hopping_Matrix()
 					//		  does not work properly yet, ALTERNATE.cuh
 

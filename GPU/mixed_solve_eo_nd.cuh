@@ -72,7 +72,6 @@ extern "C" {
 #include "../solver/cg_her_nd.h"
 #ifdef MPI
   #include "xchange.h"
-  //#include "communication.h"
 #endif
 }
 
@@ -81,10 +80,10 @@ extern "C" {
   #undef MPI
   #undef REAL
     #include <mpi.h>
-    //#include "../mpi_init.h"
   #define MPI
   #define REAL float
 #endif
+
 
 #include "MACROS.cuh"
 
@@ -93,13 +92,13 @@ extern "C" {
 
 // global formal parameters
 size_t dev_gfsize;
-size_t dev_spinsize_int   =  6*VOLUME/2*sizeof(dev_spinor);		// making the structure transparent:							
-int N_sites_int           =    VOLUME/2;				// _int: internal sites
-int N_floats_int          = 24*VOLUME/2;				// _ext: internal sites + additional boundaries
+size_t dev_spinsize_int;		// making the structure transparent:							
+int N_sites_int;			// _int: internal sites
+int N_floats_int;			// _ext: internal sites + additional boundaries
 #ifdef MPI
-  size_t dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinor);
-  int N_sites_ext         =    (VOLUME+RAND)/2;
-  int N_floats_ext        = 24*(VOLUME+RAND)/2;
+  size_t dev_spinsize_ext;
+  int N_sites_ext;
+  int N_floats_ext;
 #endif
 
 
@@ -551,24 +550,7 @@ void init_idxgauge_mpi() {		// works!
 
 
 
-////////////////
-// ALLOCATING //
-////////////////
-
-// initializes and allocates all quantities for the mixed solver
-// more precise:
-//	puts the gauge field on device as "2 rows" or "8 floats" per SU(3)-matrix
-//	allocates memory for all spinor fields
-//	puts the nn- and eoidx-fields on device memory
-
-void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
-  
-  
-  
-  
-  //////////////////////
-  // GLOBAL VARIABLES //
-  //////////////////////
+void set_global_sizes() {
   
   #ifndef MPI
   	#ifdef GF_8
@@ -595,6 +577,60 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
     N_floats_ext     = 24*(VOLUME+RAND)/2;
   #endif
   
+}
+
+
+
+
+
+
+////////////////
+// ALLOCATING //
+////////////////
+
+// initializes and allocates all quantities for the mixed solver
+// more precise:
+//	puts the gauge field on device as "2 rows" or "8 floats" per SU(3)-matrix
+//	allocates memory for all spinor fields
+//	puts the nn- and eoidx-fields on device memory
+
+void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
+  
+  
+  
+  
+  //////////////////////
+  // GLOBAL VARIABLES //
+  //////////////////////
+  
+  /*
+  #ifndef MPI
+  	#ifdef GF_8
+  	  // allocate 8 floats for gf = 2*4*VOLUME float4's			// dev_su3_8 = float4
+  	  dev_gfsize = 4*VOLUME * 2*sizeof(dev_su3_8);				// allocates for each lattice site and for 4 directions  2*float4 = 8 floats  = 8 real parameters
+  	#else
+  	  // allocate 2 rows of gf = 3*4*VOLUME float4's			// dev_su3_2v = float4
+  	  dev_gfsize = 4*VOLUME * 3*sizeof(dev_su3_2v); 			// allocates for each lattice site and for 4 directions  3*float4 = 12 floats = 2 rows of complex 3-vectors
+  	#endif
+  #else
+  	#ifdef GF_8								// dev_su3_8 = float4
+  	  dev_gfsize = 4*(VOLUME+RAND) * 2*sizeof(dev_su3_8);			// allocates for each lattice site and RAND for 4 directions  2*float4 = 8 floats  = 8 real parameters
+  	#else									// dev_su3_2v = float4
+  	  dev_gfsize = 4*(VOLUME+RAND) * 3*sizeof(dev_su3_2v); 			// allocates for each lattice site and RAND for 4 directions  3*float4 = 12 floats = 2 rows of complex 3-vectors
+  	#endif
+  #endif
+  
+  dev_spinsize_int   =  6*VOLUME/2*sizeof(dev_spinor);				// 24 floats per lattice site
+  N_sites_int        =    VOLUME/2;
+  N_floats_int       = 24*VOLUME/2;
+  #ifdef MPI
+    dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinor);
+    N_sites_ext      =    (VOLUME+RAND)/2;
+    N_floats_ext     = 24*(VOLUME+RAND)/2;
+  #endif
+  */
+  
+  set_global_sizes();
   
   
   
@@ -638,7 +674,7 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   #else
     	#ifndef DEVICE_EQUAL_RANK
     	  // try to set active device to device_num given in input file
-    	  // each process gets bounded to the same GPU , preliminary !!
+    	  // each process gets bounded to the same GPU
     	  if (device_num < ndev) {
     	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, device_num);
     	    cudaSetDevice(device_num);
@@ -725,7 +761,7 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
     #else
       if (g_cart_id == 0) printf("Allocated memory for gauge gauge field on devices.\n");
     #endif
-  }  
+  }
   
   
   #ifdef GF_8
@@ -3722,14 +3758,15 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   
   #ifndef CG_DEBUG
   
-  r_up  = g_chi_up_spinor_field[DUM_SOLVER];			// use the pre-allocated memory on host memory
-  r_dn  = g_chi_dn_spinor_field[DUM_SOLVER];			// allocated by  init_chi_spinor_field.c  and  invert_doublet.c  !?
-  d_up  = g_chi_up_spinor_field[DUM_SOLVER+1];			// the fields  g_chi_up/dn_spinor_field[DUM_SOLVER{ , +1, ... , +5}]  are used in  cg_her_nd()
-  d_dn  = g_chi_dn_spinor_field[DUM_SOLVER+1];
-  Ad_up = g_chi_up_spinor_field[DUM_SOLVER+2];
-  Ad_dn = g_chi_dn_spinor_field[DUM_SOLVER+2];
-  Ax_up = Ad_up;
-  Ax_dn = Ad_dn;
+    r_up  = g_chi_up_spinor_field[DUM_SOLVER];			// use the pre-allocated memory on host memory
+    r_dn  = g_chi_dn_spinor_field[DUM_SOLVER];			// allocated by  init_chi_spinor_field.c  and  invert_doublet.c  !?
+    d_up  = g_chi_up_spinor_field[DUM_SOLVER+1];		// the fields  g_chi_up/dn_spinor_field[DUM_SOLVER{ , +1, ... , +5}]  are used in  cg_her_nd()
+    d_dn  = g_chi_dn_spinor_field[DUM_SOLVER+1];
+    Ad_up = g_chi_up_spinor_field[DUM_SOLVER+2];
+    Ad_dn = g_chi_dn_spinor_field[DUM_SOLVER+2];
+    Ax_up = Ad_up;
+    Ax_dn = Ad_dn;
+    
   		// debug
   		#ifndef MPI
   		  printf("Now using the fields g_chi_up/dn_spinor_field[DUM_SOLVER{ , +1, +2}] in the mixedsolve_eo_nd().\n");
