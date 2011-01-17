@@ -211,14 +211,14 @@ The following input parameters are {\ttfamily invert} and {\ttfamily
 \item {\ttfamily ComputeModeNumber}:\\
   compute the average number of eigenmodes of the massive hermitian
   operator $D_{tm}^{\dagger}D_{tm}+m^2$ with eigenvalues
-  $\alpha\leqM^2$. The value can be
+  $\alpha\leq M^2$. The value can be
   yes and no.
 
-\item {\\ttfamily MStarSq}:\\
+\item {\ttfamily MStarSq}:\\
   value of the parameter $M_*^2$ necessary in order to compute the
   mode number.
 
-\item {\\ttfamily NoSourcesMN}:\\
+\item {\ttfamily NoSourcesMN}:\\
   number of stochastic sources to compute the mode number.
 
 \item {\ttfamily SourceLocation}:\\
@@ -595,8 +595,10 @@ ReversibilityCheck = no
 ReversibilityCheckIntervall = 1
 DebugLevel = 3
 
-PerformOnlineMeasurements = yes
-OnlineMeasurementsFreq = 1
+BeginMeasurement CORRELATORS
+  MaxSolverIterations = 1000
+  Frequency = 1
+EndMeasurement
 
 BeginMonomial GAUGE
   beta = 3.30
