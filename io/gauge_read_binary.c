@@ -27,7 +27,7 @@
 int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum)
 {
   int t, x, y, z, status = 0;
-  int latticeSize[] = {T_global, L, L, L};
+  int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
   int scidacMapping[] = {0, 3, 2, 1};
   int prec;
   DML_SiteRank rank;
@@ -85,13 +85,13 @@ int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum)
 
     if (g_cart_id == 0)
     {
-      engineering(measure, L * L * L * T_global * bytes, "b");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
       fprintf(stdout, "Time spent reading %s ", measure);
       engineering(measure, tock - tick, "s");
       fprintf(stdout, "was %s.\n", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (tock - tick), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
       fprintf(stdout, "Reading speed: %s", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock - tick)), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
       fflush(stdout);
     }
@@ -138,6 +138,7 @@ int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum)
 int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum) {
 
   int t, x, y , z, status=0;
+  int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
   n_uint64_t bytes;
   su3 tmp[4];
   float tmp2[72];
@@ -223,13 +224,13 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum) {
     tock = MPI_Wtime();
 
     if (g_cart_id == 0) {
-      engineering(measure, L * L * L * T_global * bytes, "b");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
       fprintf(stdout, "# Time spent reading %s ", measure);
       engineering(measure, tock-tick, "s");
       fprintf(stdout, "was %s.\n", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (tock-tick), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock-tick), "b/s");
       fprintf(stdout, "# Reading speed: %s", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock-tick)), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock-tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
     }
   }

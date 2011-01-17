@@ -27,7 +27,7 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
 {
   int x, xG, y, yG, z, zG, t, tG, status = 0;
   su3 tmp3[4];
-  int globaldims[] = {T_global, L, L, L};
+  int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
   int scidacMapping[] = {0, 3, 2, 1};
   unsigned long bufoffset;
   char * filebuffer = NULL;
@@ -77,7 +77,7 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
     }
   }
 
-  status = lemonWriteLatticeParallelMapped(lemonwriter, filebuffer, bytes, globaldims, scidacMapping);
+  status = lemonWriteLatticeParallelMapped(lemonwriter, filebuffer, bytes, latticeSize, scidacMapping);
 
   if (status != LEMON_SUCCESS)
   {
@@ -91,13 +91,13 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
     tock = MPI_Wtime();
 
     if (g_cart_id == 0) {
-      engineering(measure, L * L * L * T_global * bytes, "b");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
       fprintf(stdout, "Time spent writing %s ", measure);
       engineering(measure, tock - tick, "s");
       fprintf(stdout, "was %s.\n", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (tock - tick), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
       fprintf(stdout, "Writing speed: %s", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock - tick)), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
       fflush(stdout);
     }
@@ -117,6 +117,7 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
 int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksum * checksum)
 {
   int x, X, y, Y, z, Z, tt, t0, tag=0, id=0, status=0;
+  int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
   su3 tmp[4];
   su3 tmp3[4];
   float tmp2[72];
@@ -234,13 +235,13 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
     tock = MPI_Wtime();
 
     if (g_cart_id == 0) {
-      engineering(measure, L * L * L * T_global * bytes, "b");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
       fprintf(stdout, "Time spent writing %s ", measure);
       engineering(measure, tock-tick, "s");
       fprintf(stdout, "was %s.\n", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (tock-tick), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock-tick), "b/s");
       fprintf(stdout, "Writing speed: %s", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock-tick)), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock-tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
     }
   }
