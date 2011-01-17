@@ -20,10 +20,10 @@
 #include "spinor.ih"
 
 #ifdef HAVE_LIBLEMON
-int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * reader, DML_Checksum *checksum) {
+int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * lemonreader, DML_Checksum *checksum) {
 
   int t, x, y , z, i = 0, status = 0;
-  int latticeSize[] = {T_global, L, L, L};
+  int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
   int scidacMapping[] = {0, 3, 2, 1};
   int prec = 0;
   n_uint64_t bytes;
@@ -34,7 +34,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * re
   uint64_t fbspin;
   char measure[64];
 
-  bytes = lemonReaderBytes(reader);
+  bytes = lemonReaderBytes(lemonreader);
 
   if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor))
     prec = 64;
@@ -61,20 +61,20 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * re
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
   }
-  status = lemonReadLatticeParallelMapped(reader, filebuffer, bytes, latticeSize, scidacMapping);
+  status = lemonReadLatticeParallelMapped(lemonreader, filebuffer, bytes, latticeSize, scidacMapping);
 
   if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tock = MPI_Wtime();
 
     if (g_cart_id == 0) {
-      engineering(measure, L * L * L * T_global * bytes, "b");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
       fprintf(stdout, "Time spent reading %s ", measure);
       engineering(measure, tock - tick, "s");
       fprintf(stdout, "was %s.\n", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (tock - tick), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
       fprintf(stdout, "Reading speed: %s", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock - tick)), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
       fflush(stdout);
     }
@@ -118,7 +118,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * re
   return 0;
 }
 #else /* HAVE_LIBLEMON */
-int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * reader, DML_Checksum * checksum) {
+int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * limereader, DML_Checksum * checksum) {
   int t, x, y , z, i = 0, status=0;
   n_uint64_t bytes;
   spinor * p = NULL;
@@ -129,7 +129,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * rea
 
   DML_checksum_init(checksum);
 
-  bytes = limeReaderBytes(reader);
+  bytes = limeReaderBytes(limereader);
   if (bytes == g_nproc * VOLUME * sizeof(spinor))
     prec = 64;
   else {
@@ -146,7 +146,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * rea
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {
 #if (defined MPI)
-        limeReaderSeek(reader,(n_uint64_t)
+        limeReaderSeek(limereader,(n_uint64_t)
                        (g_proc_coords[1]*LX +
                         (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
                          + g_proc_coords[2]*LY+y)*LX*g_nproc_x)*bytes,
@@ -166,11 +166,11 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * rea
                                  (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
                                   + g_proc_coords[2]*LY+y)*((DML_SiteRank)LX*g_nproc_x) + x);
           if(prec == 32) {
-            status = limeReaderReadData(tmp2, &bytes, reader);
+            status = limeReaderReadData(tmp2, &bytes, limereader);
             DML_checksum_accum(checksum,rank,(char *) tmp2, bytes);
           }
           else {
-            status = limeReaderReadData(tmp, &bytes, reader);
+            status = limeReaderReadData(tmp, &bytes, limereader);
             DML_checksum_accum(checksum,rank,(char *) tmp, bytes);
           }
           if(prec == 32) {
@@ -180,7 +180,12 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * rea
             be_to_cpu_assign(p + i, tmp, sizeof(spinor)/8);
           }
           if(status < 0 && status != LIME_EOR) {
-	    return(-2);
+              fprintf(stderr, "LIME read error occurred with status = %d while reading in spinor_read_binary.c!\n", status);
+#ifdef MPI
+              MPI_Abort(MPI_COMM_WORLD, 1);
+              MPI_Finalize();
+#endif
+              return(-2);
           }
         }
       }
@@ -196,10 +201,10 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * rea
 
 
 #ifdef HAVE_LIBLEMON
-int read_binary_spinor_data_l(spinor * const s, LemonReader * reader, DML_Checksum *checksum) {
+int read_binary_spinor_data_l(spinor * const s, LemonReader * lemonreader, DML_Checksum *checksum) {
 
   int t, x, y , z, i = 0, status = 0;
-  int latticeSize[] = {T_global, L, L, L};
+  int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
   int scidacMapping[] = {0, 3, 2, 1};
   int prec = 0;
   n_uint64_t bytes;
@@ -209,7 +214,7 @@ int read_binary_spinor_data_l(spinor * const s, LemonReader * reader, DML_Checks
   uint64_t fbspin;
   char measure[64];
 
-  bytes = lemonReaderBytes(reader);
+  bytes = lemonReaderBytes(lemonreader);
 
   if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor))
     prec = 64;
@@ -236,20 +241,20 @@ int read_binary_spinor_data_l(spinor * const s, LemonReader * reader, DML_Checks
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
   }
-  status = lemonReadLatticeParallelMapped(reader, filebuffer, bytes, latticeSize, scidacMapping);
+  status = lemonReadLatticeParallelMapped(lemonreader, filebuffer, bytes, latticeSize, scidacMapping);
 
   if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tock = MPI_Wtime();
 
     if (g_cart_id == 0) {
-      engineering(measure, L * L * L * T_global * bytes, "b");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
       fprintf(stdout, "Time spent reading %s ", measure);
       engineering(measure, tock - tick, "s");
       fprintf(stdout, "was %s.\n", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (tock - tick), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
       fprintf(stdout, "Reading speed: %s", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock - tick)), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
       fflush(stdout);
     }
@@ -290,7 +295,7 @@ int read_binary_spinor_data_l(spinor * const s, LemonReader * reader, DML_Checks
   return 0;
 }
 #else /* HAVE_LIBLEMON */
-int read_binary_spinor_data_l(spinor * const s, LimeReader * reader, DML_Checksum * checksum) {
+int read_binary_spinor_data_l(spinor * const s, LimeReader * limereader, DML_Checksum * checksum) {
   int t, x, y , z, i = 0, status=0;
   n_uint64_t bytes;
   spinor tmp[1];
@@ -300,7 +305,7 @@ int read_binary_spinor_data_l(spinor * const s, LimeReader * reader, DML_Checksu
 
   DML_checksum_init(checksum);
 
-  bytes = limeReaderBytes(reader);
+  bytes = limeReaderBytes(limereader);
   if (bytes == g_nproc * VOLUME * sizeof(spinor))
     prec = 64;
   else {
@@ -317,7 +322,7 @@ int read_binary_spinor_data_l(spinor * const s, LimeReader * reader, DML_Checksu
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {
 #if (defined MPI)
-        limeReaderSeek(reader,(n_uint64_t)
+        limeReaderSeek(limereader,(n_uint64_t)
                        (g_proc_coords[1]*LX +
                         (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
                          + g_proc_coords[2]*LY+y)*LX*g_nproc_x)*bytes,
@@ -329,11 +334,11 @@ int read_binary_spinor_data_l(spinor * const s, LimeReader * reader, DML_Checksu
                                  (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
                                   + g_proc_coords[2]*LY+y)*((DML_SiteRank)LX*g_nproc_x) + x);
           if(prec == 32) {
-            status = limeReaderReadData(tmp2, &bytes, reader);
+            status = limeReaderReadData(tmp2, &bytes, limereader);
             DML_checksum_accum(checksum,rank,(char *) tmp2, bytes);
           }
           else {
-            status = limeReaderReadData(tmp, &bytes, reader);
+            status = limeReaderReadData(tmp, &bytes, limereader);
             DML_checksum_accum(checksum,rank,(char *) tmp, bytes);
           }
           if(prec == 32) {
@@ -343,7 +348,12 @@ int read_binary_spinor_data_l(spinor * const s, LimeReader * reader, DML_Checksu
             be_to_cpu_assign(s + i, tmp, sizeof(spinor)/8);
           }
           if(status < 0 && status != LIME_EOR) {
-	    return(-2);
+              fprintf(stderr, "LIME read error occurred with status = %d while reading in spinor_read_binary.c!\n", status);
+#ifdef MPI
+              MPI_Abort(MPI_COMM_WORLD, 1);
+              MPI_Finalize();
+#endif
+            return(-2);
           }
         }
       }

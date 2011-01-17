@@ -23,8 +23,8 @@
 int write_binary_spinor_data(spinor * const s, spinor * const r,
                              LemonWriter * lemonwriter, DML_Checksum *checksum, int const prec)
 {
-  int x, y, z, t, i = 0, xG, yG, zG, tG;
-  int globaldims[] = {T_global, L, L, L};
+  int x, y, z, t, i = 0, xG, yG, zG, tG, status = 0;
+  int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
   int scidacMapping[] = {0, 3, 2, 1};
   unsigned long bufoffset = 0;
   char *filebuffer = NULL;
@@ -79,20 +79,27 @@ int write_binary_spinor_data(spinor * const s, spinor * const r,
     tick = MPI_Wtime();
   }
 
-  lemonWriteLatticeParallelMapped(lemonwriter, filebuffer, bytes, globaldims, scidacMapping);
+  status = lemonWriteLatticeParallelMapped(lemonwriter, filebuffer, bytes, latticeSize, scidacMapping);
+
+  if (status != LEMON_SUCCESS)
+  {
+    free(filebuffer);
+    fprintf(stderr, "LEMON write error occurred with status = %d, while in write_binary_spinor_data (spinor_write_bionary.c)!\n", status);
+    return(-2);
+  }
 
   if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tock = MPI_Wtime();
 
     if (g_cart_id == 0) {
-      engineering(measure, L * L * L * T_global * bytes, "b");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
       fprintf(stdout, "Time spent writing %s ", measure);
       engineering(measure, tock - tick, "s");
       fprintf(stdout, "was %s.\n", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (tock - tick), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
       fprintf(stdout, "Writing speed: %s", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock - tick)), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
       fflush(stdout);
     }
@@ -106,13 +113,13 @@ int write_binary_spinor_data(spinor * const s, spinor * const r,
   free(filebuffer);
   return 0;
 
-  /* TODO Error handling */
 }
 
 #else /* HAVE_LIBLEMON */
-int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * writer, DML_Checksum * checksum, const int prec)
+int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * limewriter, DML_Checksum * checksum, const int prec)
 {
   int x, X, y, Y, z, Z, t, t0, tag=0, id=0, i=0, status=0;
+  int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
   spinor * p = NULL;
   spinor tmp[1];
   float tmp2[24];
@@ -168,12 +175,12 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
               if(prec == 32) {
                 be_to_cpu_assign_double2single((float*)tmp2, p + i, sizeof(spinor)/8);
                 DML_checksum_accum(checksum,rank,(char *) tmp2,sizeof(spinor)/2);
-                status = limeWriteRecordData((void*)tmp2, &bytes, writer);
+                status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
               }
               else {
                 be_to_cpu_assign(tmp, p + i , sizeof(spinor)/8);
                 DML_checksum_accum(checksum,rank,(char *) tmp,sizeof(spinor));
-                status = limeWriteRecordData((void*)tmp, &bytes, writer);
+                status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
               }
             }
 #ifdef MPI
@@ -181,12 +188,12 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
               if(prec == 32) {
                 MPI_Recv((void*)tmp2, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &mstatus);
                 DML_checksum_accum(checksum,rank,(char *) tmp2, sizeof(spinor)/2);
-                status = limeWriteRecordData((void*)tmp2, &bytes, writer);
+                status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
               }
               else {
                 MPI_Recv((void*)tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &mstatus);
                 DML_checksum_accum(checksum,rank,(char *) tmp, sizeof(spinor));
-                status = limeWriteRecordData((void*)tmp, &bytes, writer);
+                status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
               }
             }
 #endif
@@ -220,13 +227,13 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * wr
     tock = MPI_Wtime();
 
     if (g_cart_id == 0) {
-      engineering(measure, L * L * L * T_global * bytes, "b");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
       fprintf(stdout, "Time spent writing %s ", measure);
       engineering(measure, tock - tick, "s");
       fprintf(stdout, "was %s.\n", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (tock - tick), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
       fprintf(stdout, "Writing speed: %s", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock - tick)), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
       fflush(stdout);
     }
@@ -243,7 +250,7 @@ int write_binary_spinor_data_l(spinor * const s,
                              LemonWriter * lemonwriter, DML_Checksum *checksum, int const prec)
 {
   int x, y, z, t, i = 0, xG, yG, zG, tG;
-  int globaldims[] = {T_global, L, L, L};
+  int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
   int scidacMapping[] = {0, 3, 2, 1};
   unsigned long bufoffset = 0;
   char *filebuffer = NULL;
@@ -292,20 +299,27 @@ int write_binary_spinor_data_l(spinor * const s,
     tick = MPI_Wtime();
   }
 
-  lemonWriteLatticeParallelMapped(lemonwriter, filebuffer, bytes, globaldims, scidacMapping);
+  status = lemonWriteLatticeParallelMapped(lemonwriter, filebuffer, bytes, latticeSize, scidacMapping);
+
+  if (status != LEMON_SUCCESS)
+  {
+    free(filebuffer);
+    fprintf(stderr, "LEMON write error occurred with status = %d, while in write_binary_spinor_data_l (spinor_write_bionary.c)!\n", status);
+    return(-2);
+  }
 
   if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tock = MPI_Wtime();
 
     if (g_cart_id == 0) {
-      engineering(measure, L * L * L * T_global * bytes, "b");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
       fprintf(stdout, "Time spent writing %s ", measure);
       engineering(measure, tock - tick, "s");
       fprintf(stdout, "was %s.\n", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (tock - tick), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
       fprintf(stdout, "Writing speed: %s", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock - tick)), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
       fflush(stdout);
     }
@@ -319,13 +333,13 @@ int write_binary_spinor_data_l(spinor * const s,
   free(filebuffer);
   return 0;
 
-  /* TODO Error handling */
 }
 
 #else /* HAVE_LIBLEMON */
-int write_binary_spinor_data_l(spinor * const s, LimeWriter * writer, DML_Checksum * checksum, const int prec)
+int write_binary_spinor_data_l(spinor * const s, LimeWriter * limewriter, DML_Checksum * checksum, const int prec)
 {
   int x, X, y, Y, z, Z, t, t0, tag=0, id=0, i=0, status=0;
+  int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
   spinor tmp[1];
   float tmp2[24];
   int coords[4];
@@ -373,12 +387,12 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * writer, DML_Checks
               if(prec == 32) {
                 be_to_cpu_assign_double2single((float*)tmp2, s + i, sizeof(spinor)/8);
                 DML_checksum_accum(checksum,rank,(char *) tmp2,sizeof(spinor)/2);
-                status = limeWriteRecordData((void*)tmp2, &bytes, writer);
+                status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
               }
               else {
                 be_to_cpu_assign(tmp, s + i , sizeof(spinor)/8);
                 DML_checksum_accum(checksum,rank,(char *) tmp,sizeof(spinor));
-                status = limeWriteRecordData((void*)tmp, &bytes, writer);
+                status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
               }
             }
 #ifdef MPI
@@ -386,12 +400,12 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * writer, DML_Checks
               if(prec == 32) {
                 MPI_Recv((void*)tmp2, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &mstatus);
                 DML_checksum_accum(checksum,rank,(char *) tmp2, sizeof(spinor)/2);
-                status = limeWriteRecordData((void*)tmp2, &bytes, writer);
+                status = limeWriteRecordData((void*)tmp2, &bytes, limewriter);
               }
               else {
                 MPI_Recv((void*)tmp, sizeof(spinor)/8, MPI_DOUBLE, id, tag, g_cart_grid, &mstatus);
                 DML_checksum_accum(checksum,rank,(char *) tmp, sizeof(spinor));
-                status = limeWriteRecordData((void*)tmp, &bytes, writer);
+                status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
               }
             }
 #endif
@@ -425,13 +439,13 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * writer, DML_Checks
     tock = MPI_Wtime();
 
     if (g_cart_id == 0) {
-      engineering(measure, L * L * L * T_global * bytes, "b");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
       fprintf(stdout, "Time spent writing %s ", measure);
       engineering(measure, tock - tick, "s");
       fprintf(stdout, "was %s.\n", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (tock - tick), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
       fprintf(stdout, "Writing speed: %s", measure);
-      engineering(measure, (L * L * L * T_global) * bytes / (g_nproc * (tock - tick)), "b/s");
+      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
       fflush(stdout);
     }

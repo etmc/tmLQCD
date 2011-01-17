@@ -28,7 +28,9 @@ cannot read the source, probably. To be fixed!
 - dynamical overlap code
 - create simpler test suite
 
+- Add error reporting in spinor_write_binary for the lime functions
 - Organize error (exit) codes
   - Make a list of all existing error exits
   - Create a scheme for these error messages with enums
   - Implement scheme everywhere in the code
+
