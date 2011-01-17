@@ -77,7 +77,7 @@ int read_gauge_field(char * filename) {
     return(-1);
   }
 
-  if (g_debug_level > 0 && g_cart_id == 0)
+  if (g_debug_level >= 0 && g_cart_id == 0)
   {
     printf("# checksum for gaugefield %s\n", filename);
     printf("# calculated: %#x %#x.\n", checksum_calc.suma, checksum_calc.sumb);
