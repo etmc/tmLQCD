@@ -24,7 +24,7 @@
 
 
 #ifdef HAVE_LIBLEMON
-int read_binary_gauge_data(LemonReader * reader, DML_Checksum * checksum)
+int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum)
 {
   int t, x, y, z, status = 0;
   int latticeSize[] = {T_global, L, L, L};
@@ -37,7 +37,7 @@ int read_binary_gauge_data(LemonReader * reader, DML_Checksum * checksum)
   double tick = 0, tock = 0;
   char measure[64];
 
-  bytes = lemonReaderBytes(reader);
+  bytes = lemonReaderBytes(lemonreader);
 
   if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3)) {
     prec = 64;
@@ -75,7 +75,8 @@ int read_binary_gauge_data(LemonReader * reader, DML_Checksum * checksum)
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
   }
-  lemonReadLatticeParallelMapped(reader, filebuffer, bytes, latticeSize, scidacMapping);
+
+  status = lemonReadLatticeParallelMapped(lemonreader, filebuffer, bytes, latticeSize, scidacMapping);
 
   if (g_debug_level > 0)
   {
@@ -96,10 +97,10 @@ int read_binary_gauge_data(LemonReader * reader, DML_Checksum * checksum)
     }
   }
 
-  if (status < 0 && status != LEMON_EOR)
+  if (status != LEMON_SUCCESS)
   {
     free(filebuffer);
-    fprintf(stderr, "LEMON read error occured with status = %d while reading!\n", status);
+    fprintf(stderr, "LEMON read error occurred with status = %d, while reading in gauge_read_binary.c!\n", status);
     return(-2);
   }
 
@@ -134,7 +135,7 @@ int read_binary_gauge_data(LemonReader * reader, DML_Checksum * checksum)
   return(0);
 }
 #else /* HAVE_LIBLEMON */
-int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
+int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum) {
 
   int t, x, y , z, status=0;
   n_uint64_t bytes;
@@ -156,7 +157,7 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
   }
 #endif
 
-  bytes = limeReaderBytes(reader);
+  bytes = limeReaderBytes(limereader);
 
   if(bytes == ((n_uint64_t)LX*g_nproc_x)*((n_uint64_t)LY*g_nproc_y)*((n_uint64_t)LZ*g_nproc_z)*((n_uint64_t)T*g_nproc_t)*((n_uint64_t)4*sizeof(su3))) prec = 64;
   else if(bytes == ((n_uint64_t)LX*g_nproc_x)*((n_uint64_t)LY*g_nproc_y)*((n_uint64_t)LZ*g_nproc_z)*((n_uint64_t)T*g_nproc_t)*((n_uint64_t)4*sizeof(su3)/2)) prec = 32;
@@ -173,7 +174,7 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {
 #ifdef MPI
-        limeReaderSeek(reader,(n_uint64_t)
+        limeReaderSeek(limereader,(n_uint64_t)
                        (((n_uint64_t) g_proc_coords[1]*LX) +
                         ((n_uint64_t) (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
                          + g_proc_coords[2]*LY+y)*LX*g_nproc_x))*bytes,
@@ -184,16 +185,20 @@ int read_binary_gauge_data(LimeReader * reader, DML_Checksum * checksum) {
                                  (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
                                   + g_proc_coords[2]*LY+y)*((DML_SiteRank)LX*g_nproc_x) + x);
           if(prec == 32) {
-            status = limeReaderReadData(tmp2, &bytes, reader);
+            status = limeReaderReadData(tmp2, &bytes, limereader);
             DML_checksum_accum(checksum, rank, (char *) tmp2, bytes);
           }
           else {
-            status = limeReaderReadData(tmp, &bytes, reader);
+            status = limeReaderReadData(tmp, &bytes, limereader);
             DML_checksum_accum(checksum, rank, (char *) tmp, bytes);
           }
           if(status < 0 && status != LIME_EOR) {
-            fprintf(stderr, "LIME read error occured with status = %d while reading in gauge_read_binary.c!\n", status);
-	    return(-2);
+            fprintf(stderr, "LIME read error occurred with status = %d while reading in gauge_read_binary.c!\n", status);
+#ifdef MPI
+              MPI_Abort(MPI_COMM_WORLD, 1);
+              MPI_Finalize();
+#endif
+            return(-2);
           }
           if(prec == 32) {
             be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp2[3*18], sizeof(su3)/8);

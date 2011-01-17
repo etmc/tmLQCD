@@ -25,7 +25,7 @@
 #ifdef HAVE_LIBLEMON
 int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Checksum * checksum)
 {
-  int x, xG, y, yG, z, zG, t, tG;
+  int x, xG, y, yG, z, zG, t, tG, status = 0;
   su3 tmp3[4];
   int globaldims[] = {T_global, L, L, L};
   int scidacMapping[] = {0, 3, 2, 1};
@@ -77,7 +77,14 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
     }
   }
 
-  lemonWriteLatticeParallelMapped(lemonwriter, filebuffer, bytes, globaldims, scidacMapping);
+  status = lemonWriteLatticeParallelMapped(lemonwriter, filebuffer, bytes, globaldims, scidacMapping);
+
+  if (status != LEMON_SUCCESS)
+  {
+    free(filebuffer);
+    fprintf(stderr, "LEMON write error occurred with status = %d, while writing in gauge_write_binary.c!\n", status);
+    return(-2);
+  }
 
   if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
@@ -184,7 +191,7 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
             }
 #endif
             if(status < 0 ) {
-              fprintf(stderr, "LIME write error %d\n", status);
+              fprintf(stderr, "LIME write error occurred with status = %d, while writing in gauge_write_binary.c!\n", status);
               fprintf(stderr, "x %d, y %d, z %d, t %d (%d,%d,%d,%d)\n",x,y,z,tt,X,Y,Z,tt);
               fprintf(stderr, "id = %d, bytes = %lu, size = %d\n", g_cart_id, bytes,  (int)(4*sizeof(su3)/8));
 #ifdef MPI
