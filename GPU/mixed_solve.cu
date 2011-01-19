@@ -1074,7 +1074,7 @@ extern "C" int dev_cg_eo(
  dim3 blockdim(1,1);
  //dim3 blockdim2(128,1,1);
  
- int blockdim2 = 128;
+ int blockdim2 = BLOCK3;
  if( VOLUME/2 % blockdim2 == 0){
    gridsize = (int) VOLUME/2/blockdim2;
  }
@@ -2391,7 +2391,7 @@ void benchmark(spinor * const Q){
   he_cg_init<<< 1, 1 >>> (dev_grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   printf("Applying H 1000 times\n");
-  for(i=0; i<1000; i++){
+  for(i=0; i<100; i++){
       #ifdef USETEXTURE
 	   #ifndef HALF
          bind_texture_spin(dev_spinin,1);
@@ -2483,14 +2483,14 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   #endif
   init_mixedsolve_eo(g_gauge_field);
   
- /*   
+  
   // small benchmark
     assign(g_spinor_field[DUM_SOLVER],Q,N);
     benchmark(g_spinor_field[DUM_SOLVER]);
   // end small benchmark
   
-  exit(100);
-  */
+  // exit(100);
+  
  
 
   // Start timer
