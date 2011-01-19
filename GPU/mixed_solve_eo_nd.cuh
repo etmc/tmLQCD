@@ -2369,7 +2369,8 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   /*
   double realFlopsPerApp = 34768.0;
   */
-  double effectiveFlopsPerApp = 23984.0;
+  // double effectiveFlopsPerApp = 23984.0;	// hopping = 1488
+  double effectiveFlopsPerApp = 21296.0;	// per lattice site
   
   #ifndef MPI
     /*
@@ -2855,7 +2856,8 @@ int cg_eo_nd (dev_su3_2v * gf,
   */
   
   // algorithm control parameters
-  int N_recalc_res = 10;		// recalculate residue r(k+1) = b - A*x(k+1) each N_recalc_res iteration
+  // int N_recalc_res = 10;		// recalculate residue r(k+1) = b - A*x(k+1) each N_recalc_res iteration
+  int N_recalc_res = 1000;
   
   
   
@@ -3487,7 +3489,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   double flops;
   #ifdef ALGORITHM_BENCHMARK
     double effectiveflops;			// will used to count the "effective" flop's (from the algorithmic perspective)
-    double hoppingflops = 1488.0;
+    // double hoppingflops = 1488.0;
+    double hoppingflops = 1320.0;
     double matrixflops  = 2  *  (  2 * ( (2*hoppingflops+12+3) + (2*hoppingflops+3) + (12+2) + 12 )  );
     #ifdef MPI
       double allflops;				// flops added for all processes
@@ -3823,7 +3826,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     #endif
   }
   else {			// r(0) = b - A*x(0) = Q - A*P
-    bb = square_norm(P_up, N_sites_int, 0) + square_norm(P_dn, N_sites_int, 0);
+    bb = square_norm(P_up, N_sites_int, 1) + square_norm(P_dn, N_sites_int, 1);
     #ifndef MPI
       printf("bb = %.10e\n", bb);
     #else
@@ -3852,8 +3855,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   
   
   // rr = (r_up)^2 + (r_dn)^2
-  rr_up = square_norm(r_up, N_sites_int, 0);
-  rr_dn = square_norm(r_dn, N_sites_int, 0);
+  rr_up = square_norm(r_up, N_sites_int, 1);
+  rr_dn = square_norm(r_dn, N_sites_int, 1);
   rr = rr_up + rr_dn;
   
   
@@ -4039,8 +4042,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     
     
     // rr = (rr_up)^2 + (r_dn)^2
-    rr_up = square_norm(r_up, N_sites_int, 0);
-    rr_dn = square_norm(r_dn, N_sites_int, 0);
+    rr_up = square_norm(r_up, N_sites_int, 1);
+    rr_dn = square_norm(r_dn, N_sites_int, 1);
     rr    = rr_up + rr_dn;
     
     		// debug

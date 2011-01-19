@@ -502,13 +502,13 @@ extern "C" void dev_Qtm_pm_psi_half(dev_spinor_half* spinin, float* spinin_norm,
 
 
 
-
+/*
 extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, int blocksize, int gridsize2, int blocksize2){
 
   printf("WARNING: dummy function 'dev_Qtm_pm_psi' was called\n");
   
 }
-
+*/
 
 
 
@@ -1066,22 +1066,26 @@ extern "C" int dev_cg_eo(
  int i, gridsize;
  int maxit = max_innersolver_it;
  REAL eps = (REAL) innersolver_precision;
- int N_recalcres = 20; // after N_recalcres iterations calculate r = A x_k - b
+ int N_recalcres = 1000; // after N_recalcres iterations calculate r = A x_k - b
  
  cudaError_t cudaerr;
+ 
  // this is the partitioning for the copying of fields
  dim3 blockdim(1,1);
- dim3 blockdim2(128,1,1);
- if( VOLUME/2 >= 128){
-   gridsize = (int) VOLUME/2/128 + 1;
+ //dim3 blockdim2(128,1,1);
+ 
+ int blockdim2 = 128;
+ if( VOLUME/2 % blockdim2 == 0){
+   gridsize = (int) VOLUME/2/blockdim2;
  }
  else{
-   gridsize=1;
+   gridsize = (int) VOLUME/2/blockdim2 + 1;
  }
- dim3 griddim2(gridsize,1,1);
+ int griddim2 = gridsize;
 
  
  //this is the partitioning for the HoppingMatrix kernel
+ /*
  int blockdim3=BLOCK;
  if( VOLUME/2 >= BLOCK){
    gridsize = (int)(VOLUME/2/BLOCK) + 1;
@@ -1089,10 +1093,20 @@ extern "C" int dev_cg_eo(
  else{
    gridsize=1;
  }
- printf("gridsize = %d\n", gridsize);
  int griddim3=gridsize; 
+ */
+ int blockdim3 = BLOCK;
+ if( VOLUME/2 % blockdim3 == 0){
+   gridsize = (int) VOLUME/2/blockdim3;
+ }
+ else{
+   gridsize = (int) VOLUME/2/blockdim3 + 1;
+ }
+ int griddim3 = gridsize;
+ printf("gridsize = %d\n", gridsize);
  
  //this is the partitioning for dev_mul_one_pm...
+ /*
  int blockdim4=BLOCK2;
  if( VOLUME/2 >= BLOCK2){
    gridsize = (int)(VOLUME/2/BLOCK2) + 1;
@@ -1101,6 +1115,15 @@ extern "C" int dev_cg_eo(
    gridsize=1;
  }
  int griddim4=gridsize;  
+ */
+ int blockdim4 = BLOCK2;
+ if( VOLUME/2 % blockdim4 == 0){
+   gridsize = (int) VOLUME/2/blockdim4;
+ }
+ else{
+   gridsize = (int) VOLUME/2/blockdim4 + 1;
+ }
+ int griddim4 = gridsize;
  
  
  size_t size2 = sizeof(float4)*6*VOLUME/2;
@@ -2238,7 +2261,7 @@ for(iter=0; iter<max_iter; iter++){
    diff(g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER+3],N);
     // r_k = b - D x_k
    
-   rk = square_norm(g_spinor_field[DUM_SOLVER], N, 0);
+   rk = square_norm(g_spinor_field[DUM_SOLVER], N, 1);
   
    #ifdef GF_8
     if(isnan(rk)){
@@ -2416,7 +2439,8 @@ void benchmark(spinor * const Q){
   assert((stop = clock())!=-1);
   timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
   // x2 because 2x Hopping per iteration
-  double benchres = 1400.0*2*(VOLUME/2)* 1000 / timeelapsed / 1.0e9;
+  // double benchres = 1400.0*2*(VOLUME/2)* 1000 / timeelapsed / 1.0e9;		// 1400 why?
+  double benchres = 1320.0*2*(VOLUME/2)* 1000 / timeelapsed / 1.0e9;		// 1320 to compare
   printf("Benchmark: %f Gflops\n", benchres); 
    
   #ifdef USETEXTURE
@@ -2500,7 +2524,7 @@ for(iter=0; iter<max_iter; iter++){
    diff(g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER+3],N);
     // r_k = b - D x_k
    
-   rk = square_norm(g_spinor_field[DUM_SOLVER], N, 0);
+   rk = square_norm(g_spinor_field[DUM_SOLVER], N, 1);
    #ifdef GF_8
     if(isnan(rk)){
       fprintf(stderr, "Error in mixed_solve_eo: Residue is NaN.\n  May happen with GF 8 reconstruction. Aborting ...\n");

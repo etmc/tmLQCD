@@ -496,6 +496,11 @@ void finalize_temporalgauge() {
   free(g_trafo);
   free(tempgauge_field);
   free(g_tempgauge_field);
+  
+  #ifdef MPI
+    free(left);
+    free(right);
+  #endif
 
 }
 
