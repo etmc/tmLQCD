@@ -2074,14 +2074,15 @@ void init_mixedsolve_eo(su3** gf){
     //allocate its norm
     dev_spinsize = VOLUME/2 * sizeof(float); /* float */
     cudaMalloc((void **) &dev_half_norm, dev_spinsize); 
-  #endif
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of half precision spinor fields failed. Aborting...\n");
     exit(200);
   }
   else{
     printf("Allocated half precision spinor fields on device\n");
-  }
+  }  
+  #endif
+
   
   
   output_size = LZ*T*sizeof(float); // parallel in t and z direction
@@ -2344,7 +2345,15 @@ void benchmark(spinor * const Q){
   convert2REAL4_spin(Q,h2d_spin);
   cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-  assert((start = clock())!=-1);
+  
+  #ifndef MPI
+    assert((start = clock())!=-1);
+  #else
+    start = MPI_Wtime();
+  #endif  
+  
+  
+  
 
  #ifdef USETEXTURE
   //Bind texture gf
@@ -2391,57 +2400,61 @@ void benchmark(spinor * const Q){
   he_cg_init<<< 1, 1 >>> (dev_grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   printf("Applying H 1000 times\n");
-  for(i=0; i<100; i++){
+  for(i=0; i<1000; i++){
+  
+      #ifdef MPI
+           xchange_field_wrapper(dev_spinin, 0);
+      #endif
       #ifdef USETEXTURE
-	   #ifndef HALF
          bind_texture_spin(dev_spinin,1);
-       #else
-          bind_halfspinor_texture(dev_spinin, dev_half_aux, dev_half_norm);
-	   #endif
-	  #endif
+      #endif
        //bind_texture_nn(dev_nn_eo);
       //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
       dev_Hopping_Matrix<<<griddim3, blockdim3>>>
              (dev_gf, dev_spinin, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0
        //unbind_texture_nn();
     #ifdef USETEXTURE             
-	 #ifndef HALF
       unbind_texture_spin(1);
-     #else
-      unbind_halfspinor_texture();
-	 #endif
-	#endif
+    #endif
 
-    #ifdef USETEXTURE
-	 #ifndef HALF
+    #ifdef MPI
+        xchange_field_wrapper(dev_spin_eo1, 0);
+    #endif
        bind_texture_spin(dev_spin_eo1,1);
-     #else
-      bind_halfspinor_texture(dev_spin_eo1, dev_half_aux, dev_half_norm);
-	 #endif
-	#endif
   //bind_texture_nn(dev_nn_oe);
    // cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
     dev_Hopping_Matrix<<<griddim3, blockdim3>>>
             (dev_gf, dev_spin_eo1, dev_spinin, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
   //unbind_texture_nn();
     #ifdef USETEXTURE
-	 #ifndef HALF
       unbind_texture_spin(1);
-	 #else
-      unbind_halfspinor_texture();
-	 #endif
    #endif
 
   }  
   printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
   printf("Done\n"); 
   
-  assert((stop = clock())!=-1);
-  timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
-  // x2 because 2x Hopping per iteration
-  // double benchres = 1400.0*2*(VOLUME/2)* 1000 / timeelapsed / 1.0e9;		// 1400 why?
-  double benchres = 1320.0*2*(VOLUME/2)* 1000 / timeelapsed / 1.0e9;		// 1320 to compare
-  printf("Benchmark: %f Gflops\n", benchres); 
+  
+  
+  #ifndef MPI
+    assert((stop = clock())!=-1);
+    timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
+    // x2 because 2x Hopping per iteration
+    double benchres = 1400.0*2*(VOLUME/2)* 1000 / timeelapsed / 1.0e9;
+    printf("Benchmark: %f Gflops\n", benchres); 
+  #else
+    stop = MPI_Wtime();
+    timeelapsed = (double) (stop-start);
+    // x2 because 2x Hopping per iteration
+    double benchres = 1400.0*2*(g_nproc*VOLUME/2)* 1000 / timeelapsed / 1.0e9;
+    if (g_proc_id == 0) {
+      printf("Benchmark: %f Gflops\n", benchres); 
+    }
+  #endif  
+  
+  
+  
+  
    
   #ifdef USETEXTURE
     unbind_texture_gf();
