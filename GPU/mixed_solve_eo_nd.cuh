@@ -664,7 +664,7 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
     	// try to set active device to device_num given in input file
     	if (device_num < ndev) {
     	  printf("Setting active device to: %d\n", device_num);
-    	  cudaSetDevice(device_num);
+    	  //cudaSetDevice(device_num);
     	}
     	else {
     	  fprintf(stderr, "Error: There is no CUDA device with No. %d. Aborting...\n",device_num);
@@ -680,7 +680,7 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
     	  // each process gets bounded to the same GPU
     	  if (device_num < ndev) {
     	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, device_num);
-    	    cudaSetDevice(device_num);
+    	    //cudaSetDevice(device_num);
     	  }
     	  else {
     	    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, device_num);
@@ -690,7 +690,7 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
     	  // device number = mpi rank
     	  if (g_cart_id < ndev) {
     	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, g_cart_id);
-    	    cudaSetDevice(g_cart_id);
+    	    //cudaSetDevice(g_cart_id);
     	  }
     	  else {
     	    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, g_cart_id);

@@ -1668,7 +1668,7 @@ cudaError_t cudaerr;
 	 // try to set active device to device_num given in input file
 	    if(device_num < ndev){
 	     printf("Setting active device to: %d\n", device_num);
-	     cudaSetDevice(device_num);
+	     //cudaSetDevice(device_num);
 	    }
 	    else{
 	      fprintf(stderr, "Error: There is no CUDA device with No. %d. Aborting...\n",device_num);
@@ -1813,7 +1813,7 @@ void init_mixedsolve_eo(su3** gf){
     #ifndef MPI
     	if(device_num < ndev){
     	  printf("Setting active device to: %d\n", device_num);
-    	  cudaSetDevice(device_num);
+    	  //cudaSetDevice(device_num);
     	}
     	else{
    	  fprintf(stderr, "Error: There is no CUDA device with No. %d. Aborting...\n",device_num);
@@ -1829,7 +1829,7 @@ void init_mixedsolve_eo(su3** gf){
     	  // each process gets bounded to the same GPU
     	  if (device_num < ndev) {
     	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, device_num);
-    	    cudaSetDevice(device_num);
+    	    //cudaSetDevice(device_num);
     	  }
     	  else {
     	    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, device_num);
@@ -1839,7 +1839,7 @@ void init_mixedsolve_eo(su3** gf){
     	  // device number = mpi rank
     	  if (g_cart_id < ndev) {
     	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, g_cart_id);
-    	    cudaSetDevice(g_cart_id);
+    	    //cudaSetDevice(g_cart_id);
     	  }
     	  else {
     	    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, g_cart_id);
@@ -2440,13 +2440,13 @@ void benchmark(spinor * const Q){
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     // x2 because 2x Hopping per iteration
-    double benchres = 1400.0*2*(VOLUME/2)* 1000 / timeelapsed / 1.0e9;
+    double benchres = 1320.0*2*(VOLUME/2)* 1000 / timeelapsed / 1.0e9;
     printf("Benchmark: %f Gflops\n", benchres); 
   #else
     stop = MPI_Wtime();
     timeelapsed = (double) (stop-start);
     // x2 because 2x Hopping per iteration
-    double benchres = 1400.0*2*(g_nproc*VOLUME/2)* 1000 / timeelapsed / 1.0e9;
+    double benchres = 1320.0*2*(g_nproc*VOLUME/2)* 1000 / timeelapsed / 1.0e9;
     if (g_proc_id == 0) {
       printf("Benchmark: %f Gflops\n", benchres); 
     }
