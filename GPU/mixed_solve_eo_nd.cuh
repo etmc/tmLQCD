@@ -651,6 +651,9 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   
   
   // get number of devices
+  
+  if (havedevice == 0) {
+  
   ndev = find_devices();
   if (ndev == 0) {
     fprintf(stderr, "Error: no CUDA devices found. Aborting...\n");
@@ -699,6 +702,9 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   	  exit(302);
   	}
   #endif
+  
+  havedevice = 1;
+  }
   
   
   
@@ -2668,9 +2674,9 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   	printf("\tperformance: %.2e Gflop/s\n\n", realFlops);
   	*/
   	printf("EFFECTIVE:\n");
-  	printf("\ttime:        %.2e sec\n", timeElapsed);
-  	printf("\tflop's:      %.2e flops\n", effectiveDeviceFlops);
-  	printf("\tperformance: %.2e Gflop/s\n\n", effectiveFlops);
+  	printf("\ttime:        %.4e sec\n", timeElapsed);
+  	printf("\tflop's:      %.4e flops\n", effectiveDeviceFlops);
+  	printf("\tperformance: %.4e Gflop/s\n\n", effectiveFlops);
   	
   #else
   	
@@ -2699,9 +2705,9 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   	  printf("\tperformance: %.2e Gflop/s\n\n", realFlops);
   	  */
   	  printf("\tEFFECTIVE:\n");
-  	  printf("\ttime:        %.2e sec\n", maxTimeElapsed);
-  	  printf("\tflop's:      %.2e flops\n", allEffectiveDeviceFlops);
-  	  printf("\tperformance: %.2e Gflop/s\n\n", effectiveFlops);
+  	  printf("\ttime:        %.4e sec\n", maxTimeElapsed);
+  	  printf("\tflop's:      %.4e flops\n", allEffectiveDeviceFlops);
+  	  printf("\tperformance: %.4e Gflop/s\n\n", effectiveFlops);
   	  
   	  #if ASYNC > 0 && defined(ASYNC_TIMING)
   	    // calculate the times from the "beginning"
@@ -4102,18 +4108,18 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		  #ifndef MPI
       		  	effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/2;
       		  	printf("effective BENCHMARK:\n");
-      		  	printf("\ttotal mixed solver time:   %.2e sec\n", double(stopeffective-starteffective));
-      		  	printf("\tfloating point operations: %.2e flops\n", effectiveflops);
-      		  	printf("\tinner solver performance:  %.2e Gflop/s\n", double(effectiveflops) / double(stopeffective-starteffective) / 1.0e9);
+      		  	printf("\ttotal mixed solver time:   %.4e sec\n", double(stopeffective-starteffective));
+      		  	printf("\tfloating point operations: %.4e flops\n", effectiveflops);
+      		  	printf("\tinner solver performance:  %.4e Gflop/s\n", double(effectiveflops) / double(stopeffective-starteffective) / 1.0e9);
       		  #else
       		  	singletime = double(stopeffective-starteffective);
       		  	effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/2;
       		  	MPI_Allreduce(&singletime, &maxtime, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
       		  	MPI_Allreduce(&effectiveflops, &allflops, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
       		  	if (g_proc_id == 0) printf("effective BENCHMARK:\n");
-      		  	if (g_proc_id == 0) printf("\ttotal mixed solver time:   %.2e sec\n", double(maxtime));
-      		  	if (g_proc_id == 0) printf("\tfloating point operations: %.2e flops\n", double(allflops));
-      		  	if (g_proc_id == 0) printf("\tinner solver performance:  %.2e Gflop/s\n", double(allflops) / double(maxtime) / 1.0e9);
+      		  	if (g_proc_id == 0) printf("\ttotal mixed solver time:   %.4e sec\n", double(maxtime));
+      		  	if (g_proc_id == 0) printf("\tfloating point operations: %.4e flops\n", double(allflops));
+      		  	if (g_proc_id == 0) printf("\tinner solver performance:  %.4e Gflop/s\n", double(allflops) / double(maxtime) / 1.0e9);
       		  	/*
       		  	printf("this is for checking:\n");
       		  	printf("\ttotal mixed solver time:   %.2e sec\n", double(stopeffective-starteffective));
@@ -4210,18 +4216,18 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		  #ifndef MPI
       		  	effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/2;
       		  	printf("effective BENCHMARK:\n");
-      		  	printf("\ttotal mixed solver time:   %.2e sec\n", double(stopeffective-starteffective));
-      		  	printf("\tfloating point operations: %.2e flops\n", effectiveflops);
-      		  	printf("\tinner solver performance:  %.2e Gflop/s\n", double(effectiveflops) / double(stopeffective-starteffective) / 1.0e9);
+      		  	printf("\ttotal mixed solver time:   %.4e sec\n", double(stopeffective-starteffective));
+      		  	printf("\tfloating point operations: %.4e flops\n", effectiveflops);
+      		  	printf("\tinner solver performance:  %.4e Gflop/s\n", double(effectiveflops) / double(stopeffective-starteffective) / 1.0e9);
       		  #else
       		  	singletime = double(stopeffective-starteffective);
       		  	effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/2;
       		  	MPI_Allreduce(&singletime, &maxtime, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
       		  	MPI_Allreduce(&effectiveflops, &allflops, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
       		  	if (g_proc_id == 0) printf("effective BENCHMARK:\n");
-      		  	if (g_proc_id == 0) printf("\ttotal mixed solver time:   %.2e sec\n", double(maxtime));
-      		  	if (g_proc_id == 0) printf("\tfloating point operations: %.2e flops\n", double(allflops));
-      		  	if (g_proc_id == 0) printf("\tinner solver performance:  %.2e Gflop/s\n", double(allflops) / double(maxtime) / 1.0e9);
+      		  	if (g_proc_id == 0) printf("\ttotal mixed solver time:   %.4e sec\n", double(maxtime));
+      		  	if (g_proc_id == 0) printf("\tfloating point operations: %.4e flops\n", double(allflops));
+      		  	if (g_proc_id == 0) printf("\tinner solver performance:  %.4e Gflop/s\n", double(allflops) / double(maxtime) / 1.0e9);
       		  	/*
       		  	printf("this is for checking:\n");
       		  	printf("\ttotal mixed solver time:   %.2e sec\n", double(stopeffective-starteffective));

@@ -6,7 +6,7 @@
 #define DOTPROD_DIM 128
 
 #define GF_8
-#define TEMPORALGAUGE
+//#define TEMPORALGAUGE
 #define USETEXTURE
 //#define HALF
 

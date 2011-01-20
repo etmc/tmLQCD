@@ -2244,7 +2244,7 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
   // Start timer
   assert((start = clock())!=-1);
   
-  rk = square_norm(Q, N, 1);
+  rk = square_norm(Q, N, 0);
   sourcesquarenorm = rk; // for relative precision
   assign(g_spinor_field[DUM_SOLVER],Q,N);
   printf("Initial residue: %.16e\n",rk);
@@ -2262,7 +2262,7 @@ for(iter=0; iter<max_iter; iter++){
    diff(g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER+3],N);
     // r_k = b - D x_k
    
-   rk = square_norm(g_spinor_field[DUM_SOLVER], N, 1);
+   rk = square_norm(g_spinor_field[DUM_SOLVER], N, 0);
   
    #ifdef GF_8
     if(isnan(rk)){
