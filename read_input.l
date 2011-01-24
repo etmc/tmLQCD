@@ -1917,6 +1917,7 @@ int read_input(char * conf_file){
   compute_modenumber = _default_compute_modenumber;
   mstarsq = _default_mstarsq;
   no_sources_mn = _default_no_sources_mn;
+  device_num = _default_device_num;
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */
   PropInfo.format = -1;

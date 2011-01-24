@@ -153,6 +153,10 @@
 #define _default_MDPolyLocNormConst -1.0
 #define _default_MDPolyDetRatio 0
 
+/* default GPU values */
+#define _default_device_num -1
+
+
 #define _default_use_preconditioning 0
 
 #endif

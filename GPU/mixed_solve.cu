@@ -1841,19 +1841,25 @@ cudaError_t cudaerr;
 	       fprintf(stderr, "Error: no CUDA devices found. Aborting...\n");
 	       exit(300);
 	    }
-	 // try to set active device to device_num given in input file
-	    if(device_num < ndev){
-	     printf("Setting active device to: %d\n", device_num);
-	     //cudaSetDevice(device_num);
+            // only if device_num is not the default (-1)
+            if(device_num > -1){ 
+	    // try to set active device to device_num given in input file
+	      if(device_num < ndev){
+	       printf("Setting active device to: %d\n", device_num);
+	       cudaSetDevice(device_num);
+	      }
+	      else{
+	        fprintf(stderr, "Error: There is no CUDA device with No. %d. Aborting...\n",device_num);
+	        exit(301);
+	      }
+	      if((cudaerr=cudaGetLastError())!=cudaSuccess){
+	      printf("Error in init_mixedsolve_eo(): Could not set active device. Aborting...\n");
+	      exit(302);
 	    }
-	    else{
-	      fprintf(stderr, "Error: There is no CUDA device with No. %d. Aborting...\n",device_num);
-	      exit(301);
-	    }
-	    if((cudaerr=cudaGetLastError())!=cudaSuccess){
-	    printf("Error in init_mixedsolve_eo(): Could not set active device. Aborting...\n");
-	    exit(302);
-	    }
+           }
+           else{
+            printf("Not setting any active device. Let the driver choose.\n");
+           }        
     havedevice = 1;
     }
   #ifdef GF_8
@@ -2259,6 +2265,7 @@ void init_mixedsolve_eo(su3** gf){
   }  
   #endif
 
+  #ifdef MPI
   /*  for async communication */
   // page-locked memory
   cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(float4));
@@ -2271,6 +2278,7 @@ void init_mixedsolve_eo(su3** gf){
       cudaStreamCreate(&stream[i]);
   }    
   /* end for async communication */
+  #endif
   
   output_size = LZ*T*sizeof(float); // parallel in t and z direction
   cudaMalloc((void **) &dev_output, output_size);   // output array
@@ -2660,6 +2668,8 @@ void benchmark(spinor * const Q){
 }
 
 
+
+#ifdef MPI
 void benchmark2(spinor * const Q){
   
   double timeelapsed = 0.0;
@@ -2775,6 +2785,7 @@ void benchmark2(spinor * const Q){
   #endif
 }
 
+#endif
 
 
 
