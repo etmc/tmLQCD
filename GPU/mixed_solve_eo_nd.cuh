@@ -70,11 +70,8 @@ extern "C" {
 #include "../Nondegenerate_Matrix.h"
 #include "../Hopping_Matrix.h"
 #include "../solver/cg_her_nd.h"
-#ifdef MPI
-  #include "xchange.h"
-#endif
 }
-
+#include "../global.h"
 
 #ifdef MPI
   #undef MPI
@@ -85,7 +82,7 @@ extern "C" {
 #endif
 
 
-#include "MACROS.cuh"
+
 
 
 
@@ -158,22 +155,8 @@ __device__ float mubar, epsbar;
     spinor * spinor_debug_out;			// for Hopping_Matrix_wrapper()
   #endif
   
-  #ifndef ALTERNATE_FIELD_XCHANGE
-    spinor * spinor_xchange;			// for xchange_field_wrapper()
-  #else
-    dev_spinor * R1;
-    dev_spinor * R2;
-    dev_spinor * R3;
-    dev_spinor * R4;
-  #endif
   
   #if ASYNC > 0
-    dev_spinor * RAND1;				// for exchanging the boundaries in ASYNC.cuh
-    dev_spinor * RAND2;
-    dev_spinor * RAND3;				// page-locked memory
-    dev_spinor * RAND4;
-    int nStreams = ASYNC_OPTIMIZED;
-    cudaStream_t stream[2*ASYNC_OPTIMIZED+1];
     #ifdef ASYNC_TIMING
       cudaEvent_t start_ALL;			// CUDA events for timing and profiling
       cudaEvent_t stop_ALL;
@@ -203,21 +186,10 @@ __device__ float mubar, epsbar;
       double mpiTime_stop_sendrecv_2;
     #endif
   #endif
-  
-  #if defined(ALTERNATE_FIELD_XCHANGE) || defined(ASYNC_OPTIMIZED)
-    MPI_Status stat[2];
-    MPI_Request send_req[2];
-    MPI_Request recv_req[2];
-  #endif
-  
+   
 #endif
 
 
-
-#ifdef MPI
-  // optimization of the communication
-  #include "ASYNC.cuh"
-#endif
 
 
 

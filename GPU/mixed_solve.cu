@@ -72,6 +72,11 @@ extern "C" {
 #include "../measure_rectangles.h"
 #include "../polyakov_loop.h"
 #include "../su3spinor.h"
+
+#ifdef MPI
+  #include "../xchange.h"
+#endif 
+
 }
 
 
@@ -88,6 +93,10 @@ extern "C" {
   #define MPI
   #define REAL float
 #endif
+
+#include "MACROS.cuh"
+
+
 
 
 int g_numofgpu;
@@ -212,19 +221,13 @@ __constant__ __device__ dev_complex dev_mk3c;
 __device__  int  dev_LX,dev_LY,dev_LZ,dev_T,dev_VOLUME;
 
 
-#ifdef MPI
-// from mixed_solve_eo_nd.cuh
-__device__ int dev_RAND;			// not used, maybe later ...
-__device__ int dev_VOLUMEPLUSRAND;		// is now used in dev_Hopping_Matrix_mpi()
-__device__ int dev_rank;
-__device__ int dev_nproc;
 
-// extern
-extern dev_spinor * R1;
-extern dev_spinor * R2;
-extern dev_spinor * R3;
-extern dev_spinor * R4;
-#endif
+
+
+
+
+
+
 
 
 
@@ -240,14 +243,86 @@ extern dev_spinor * R4;
 #include "linalg.cuh"
 // reconstruction of the gauge field
 #include "gauge_reconstruction.cuh"
-// the device Hopping_Matrix
-#include "Hopping_Matrix.cuh"
-// the non-EO twisted mass dirac operator
-#include "tm_diracoperator.cuh"
 // the device su3 functions
 #include "su3.cuh"
 // the plaquette and rectangle routines
 #include "observables.cuh"
+
+
+
+
+#ifdef MPI
+
+
+// from mixed_solve_eo_nd.cuh
+__device__ int dev_RAND;                        // not used, maybe later ...
+__device__ int dev_VOLUMEPLUSRAND;              // is now used in dev_Hopping_Matrix_mpi()
+__device__ int dev_rank;
+__device__ int dev_nproc;
+
+
+  #ifndef ALTERNATE_FIELD_XCHANGE
+    spinor * spinor_xchange;                    // for xchange_field_wrapper()
+  #else
+    dev_spinor * R1;
+    dev_spinor * R2;
+    dev_spinor * R3;
+    dev_spinor * R4;
+  #endif
+
+
+#if ASYNC > 0
+    int nStreams = ASYNC_OPTIMIZED;
+    cudaStream_t stream[2*ASYNC_OPTIMIZED+1];
+
+
+    dev_spinor * RAND1;   // for exchanging the boundaries in ASYNC.cuh
+    dev_spinor * RAND2;
+    dev_spinor * RAND3; // page-locked memory
+    dev_spinor * RAND4;
+#endif
+
+
+
+#if defined(ALTERNATE_FIELD_XCHANGE) || defined(ASYNC_OPTIMIZED)
+  MPI_Status stat[2];
+  MPI_Request send_req[2];
+  MPI_Request recv_req[2]; 
+#endif
+
+
+#define EXTERN extern
+                                // taken from global.h
+EXTERN MPI_Status status;
+EXTERN MPI_Request req1,req2,req3,req4;
+EXTERN MPI_Comm g_cart_grid;
+EXTERN MPI_Comm g_mpi_time_slices;
+EXTERN MPI_Comm g_mpi_SV_slices;
+EXTERN MPI_Comm g_mpi_z_slices;
+EXTERN MPI_Comm g_mpi_ST_slices;
+
+/* the next neighbours for MPI */
+EXTERN int g_nb_x_up, g_nb_x_dn;
+EXTERN int g_nb_y_up, g_nb_y_dn;
+EXTERN int g_nb_t_up, g_nb_t_dn;
+EXTERN int g_nb_z_up, g_nb_z_dn;
+
+#endif //MPI
+
+
+
+// the device Hopping_Matrix
+#include "Hopping_Matrix.cuh"
+// the non-EO twisted mass dirac operator
+#include "tm_diracoperator.cuh"
+// mixed solver, even/odd, non-degenerate two flavour
+#include "mixed_solve_eo_nd.cuh"
+
+#ifdef MPI
+// optimization of the communication
+  #include "ASYNC.cuh"
+#endif 
+
 
 
 
@@ -300,6 +375,12 @@ __global__ void dev_mul_one_pm_imu_sub_mul_gamma5(dev_spinor* sin1, dev_spinor* 
      dev_Gamma5_assign(&(sout[6*pos]), &(slocal[0]));
    }   
 }
+
+
+
+
+
+
 
 
 
@@ -383,8 +464,56 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
 
 
 
+#ifdef MPI
+// aequivalent to Qtm_pm_psi in tm_operators.c
+// using HOPPING_ASYNC for mpi
+extern "C" void dev_Qtm_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, int blocksize, int gridsize2, int blocksize2){
+  //spinin == odd
+  //spinout == odd
+  
+  //Q_{-}
 
-#else
+  //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
+    HOPPING_ASYNC(dev_gf, spinin, dev_spin_eo1, dev_eoidx_even, 
+               dev_eoidx_odd, dev_nn_eo, 0,gridsize, blocksize); //dev_spin_eo1 == even -> 0           
+          
+
+
+  dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,dev_spin_eo2, -1.);
+  
+
+
+
+  //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
+    HOPPING_ASYNC(dev_gf, dev_spin_eo2, dev_spin_eo1, 
+          dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,gridsize, 
+          blocksize); 
+
+  dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(spinin, dev_spin_eo1,  dev_spin_eo2, -1.);
+  
+  
+  //Q_{+}
+
+  //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
+    HOPPING_ASYNC(dev_gf, dev_spin_eo2, dev_spin_eo1, 
+         dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize, 
+         blocksize); //dev_spin_eo1 == even -> 0
+
+  dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,spinout, +1.);
+  
+
+  //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
+    HOPPING_ASYNC(dev_gf, spinout, dev_spin_eo1, dev_eoidx_odd, 
+           dev_eoidx_even, dev_nn_oe, 1,gridsize, blocksize); 
+
+  dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo2, dev_spin_eo1,  spinout , +1.); 
+}
+#endif
+
+
+
+
+#else // HALF
 
 // computes sout = 1/(1 +- mutilde gamma5) sin = (1 -+ i mutilde gamma5)/(1+mutilde^2) sin
 // mutilde = 2 kappa mu
@@ -1044,6 +1173,9 @@ void showspinor(dev_spinor* s){
 
 
 
+
+
+
 // this is the eo version of the device cg inner solver 
 // we invert the hermitean Q_{-} Q_{+}
 extern "C" int dev_cg_eo(
@@ -1066,7 +1198,7 @@ extern "C" int dev_cg_eo(
  int i, gridsize;
  int maxit = max_innersolver_it;
  REAL eps = (REAL) innersolver_precision;
- int N_recalcres = 1000; // after N_recalcres iterations calculate r = A x_k - b
+ int N_recalcres = 40; // after N_recalcres iterations calculate r = A x_k - b
  
  cudaError_t cudaerr;
  
@@ -1103,7 +1235,11 @@ extern "C" int dev_cg_eo(
    gridsize = (int) VOLUME/2/blockdim3 + 1;
  }
  int griddim3 = gridsize;
- printf("gridsize = %d\n", gridsize);
+   
+
+    if (g_proc_id == 0) printf("gridsize = %d\n", gridsize);
+
+
  
  //this is the partitioning for dev_mul_one_pm...
  /*
@@ -1130,7 +1266,13 @@ extern "C" int dev_cg_eo(
  
  
  //Initialize some stuff
-  printf("mu = %f\n", g_mu);
+ 
+
+    if (g_proc_id == 0) printf("mu = %f\n", g_mu);
+
+  
+  
+  
   dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
   h0.re = (REAL)ka0.re;    h0.im = -(REAL)ka0.im;
   h1.re = (REAL)ka1.re;    h1.im = -(REAL)ka1.im;
@@ -1193,8 +1335,15 @@ extern "C" int dev_cg_eo(
  
  //init blas
  cublasInit();
- printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
- printf("have initialized cublas\n");
+  
+
+    if (g_proc_id == 0) {
+      printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+      printf("have initialized cublas\n"); 
+    }
+
+ 
+
  
  
 
@@ -1206,7 +1355,11 @@ extern "C" int dev_cg_eo(
  dev_zero_spinor_field<<<griddim2, blockdim2 >>>(spin1); // x_0 = 0
  dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spinin, spin2);
  dev_zero_spinor_field<<<griddim2, blockdim2 >>>(spin3);
- printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+  
+
+    if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+
+ 
  
  
  
@@ -1218,16 +1371,28 @@ extern "C" int dev_cg_eo(
    sourcesquarenorm = cublasSdot_wrapper (24*VOLUME/2, (float *)spinin, 1, (float *)spinin, 1);
  #endif
  host_rk = sourcesquarenorm; //for use in main loop
- printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
- printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-  
+ 
+
+    if (g_proc_id == 0) {
+      printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
+      printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+      printf("Entering inner solver cg-loop\n");
+    }
+
  
  
- printf("Entering inner solver cg-loop\n");
+ 
+ 
+ 
  for(i=0;i<maxit;i++){ //MAIN LOOP
   
   // Q_{-}Q{+}
-  dev_Qtm_pm_psi(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4);
+  #ifndef MPI
+    dev_Qtm_pm_psi(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4);
+  #else
+    dev_Qtm_pm_psi_mpi(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4);
+  #endif
+  
   if((cudaerr=cudaGetLastError()) != cudaSuccess){
     printf("%s\n", cudaGetErrorString(cudaerr));
     exit(200);
@@ -1250,7 +1415,7 @@ extern "C" int dev_cg_eo(
  //x(k+1);
  cublasSaxpy (24*VOLUME/2, host_alpha, (const float *) spin2,  1, (float *) spin1, 1);
  
- if((cudaerr=cudaGetLastError()) != cudaSuccess){
+  if((cudaerr=cudaGetLastError()) != cudaSuccess){
     printf("%s\n", cudaGetErrorString(cudaerr));
     exit(200);
   }
@@ -1265,7 +1430,11 @@ extern "C" int dev_cg_eo(
  if (((host_dotprod <= eps*sourcesquarenorm) && (i > maxit / 4) ) || ( host_dotprod <= epsfinal/2.)){//error-limit erreicht (epsfinal/2 sollte ausreichen um auch in double precision zu bestehen)
    break; 
  }
-  printf("iter %d: err = %.8e\n", i, host_dotprod);
+  
+  
+    if (g_proc_id == 0) printf("iter %d: err = %.8e\n", i, host_dotprod);
+
+  
   
  //beta
  host_beta =host_dotprod/host_rk;
@@ -1278,13 +1447,18 @@ extern "C" int dev_cg_eo(
  // recalculate residue frome r = b - Ax
  if(((i+1) % N_recalcres) == 0){
     // r_(k+1) = Ax -b 
-    printf("Recalculating residue\n");
-    
+  
+    if (g_proc_id == 0) printf("Recalculating residue\n");
+ 
     // D Ddagger   --   Ddagger = gamma5 D gamma5  for Wilson Dirac Operator
     // DO NOT USE tm_dirac_dagger_kappa here, otherwise spin2 will be overwritten!!!
       
     // Q_{-}Q{+}
-    dev_Qtm_pm_psi(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4);
+    #ifndef MPI
+        dev_Qtm_pm_psi(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4);
+    #else
+        dev_Qtm_pm_psi_mpi(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4);
+    #endif
     if((cudaerr=cudaGetLastError()) != cudaSuccess){
       printf("%s\n", cudaGetErrorString(cudaerr));
       exit(200);
@@ -1300,8 +1474,10 @@ extern "C" int dev_cg_eo(
 
  }//MAIN LOOP cg	
   
+    
+    if (g_proc_id == 0) printf("Final residue: %.6e\n",host_dotprod);
+ 
   
-  printf("Final residue: %.6e\n",host_dotprod);
   // x_result = spin1 !
   
   //no multiplication with D^{dagger} here and no return to non-kappa basis as in dev_cg!
@@ -2083,7 +2259,18 @@ void init_mixedsolve_eo(su3** gf){
   }  
   #endif
 
-  
+  /*  for async communication */
+  // page-locked memory
+  cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(float4));
+  RAND4 = RAND3 + 6*tSliceEO;
+  cudaMallocHost(&RAND1, 2*tSliceEO*6*sizeof(float4));
+  RAND2 = RAND1 + 6*tSliceEO;
+          
+  // CUDA streams and events
+  for (int i = 0; i < 3; i++) {
+      cudaStreamCreate(&stream[i]);
+  }    
+  /* end for async communication */
   
   output_size = LZ*T*sizeof(float); // parallel in t and z direction
   cudaMalloc((void **) &dev_output, output_size);   // output array
@@ -2210,6 +2397,17 @@ void finalize_mixedsolve(){
     
     
   #endif
+  
+#ifdef MPI
+  cudaFreeHost(RAND1);
+  cudaFreeHost(RAND3);
+             
+  for (int i = 0; i < 3; i++) {
+     cudaStreamDestroy(stream[i]);
+  } 
+#endif 
+  
+  
   
   free(h2d_spin);
   free(h2d_gf);
@@ -2461,6 +2659,131 @@ void benchmark(spinor * const Q){
   #endif
 }
 
+
+void benchmark2(spinor * const Q){
+  
+  double timeelapsed = 0.0;
+  clock_t start, stop;
+  int i;
+  
+  size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
+  convert2REAL4_spin(Q,h2d_spin);
+  cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
+  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+  
+  #ifndef MPI
+    assert((start = clock())!=-1);
+  #else
+    start = MPI_Wtime();
+  #endif  
+  
+  
+  
+
+ #ifdef USETEXTURE
+  //Bind texture gf
+  bind_texture_gf(dev_gf);
+ #endif
+
+ //Initialize some stuff
+  printf("mu = %f\n", g_mu);
+  dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
+  h0.re = (REAL)ka0.re;    h0.im = -(REAL)ka0.im;
+  h1.re = (REAL)ka1.re;    h1.im = -(REAL)ka1.im;
+  h2.re = (REAL)ka2.re;    h2.im = -(REAL)ka2.im;
+  h3.re = (REAL)ka3.re;    h3.im = -(REAL)ka3.im;
+  
+  mh0.re = -(REAL)ka0.re;    mh0.im = (REAL)ka0.im;
+  mh1.re = -(REAL)ka1.re;    mh1.im = (REAL)ka1.im;
+  mh2.re = -(REAL)ka2.re;    mh2.im = (REAL)ka2.im;
+  mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
+  
+  // try using constant mem for kappas
+  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(dev_complex)) ;
+  
+  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
+  
+  
+  int blockdim3=BLOCK;
+  int gridsize;
+  if( VOLUME/2 >= BLOCK){
+    gridsize = (int)(VOLUME/2/BLOCK) + 1;
+  }
+  else{
+    gridsize=1;
+  }
+ printf("gridsize = %d\n", gridsize);
+ int griddim3=gridsize;
+  
+  
+ int blockdim4 = BLOCK2;
+ if( VOLUME/2 % blockdim4 == 0){
+   gridsize = (int) VOLUME/2/blockdim4;
+ }
+ else{
+   gridsize = (int) VOLUME/2/blockdim4 + 1;
+ }
+ int griddim4 = gridsize;  
+  
+  
+  
+  he_cg_init<<< 1, 1 >>> (dev_grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
+  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+  printf("Applying dev_Qtm_pm_psi 100 times\n");
+  
+  for(i=0; i<100; i++){
+  
+      
+   dev_Qtm_pm_psi_mpi(dev_spinin, dev_spin_eo1, griddim3,blockdim3, griddim4, blockdim4);   
+   
+   dev_Qtm_pm_psi_mpi(dev_spin_eo1, dev_spinin, griddim3,blockdim3, griddim4, blockdim4); 
+
+  }  
+  printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+  printf("Done\n"); 
+  
+  
+  
+  #ifndef MPI
+    assert((stop = clock())!=-1);
+    timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
+    // x8 because 8x Hopping per iteration
+    double benchres = 1320.0*8*(VOLUME/2)* 100 / timeelapsed / 1.0e9;
+    printf("Benchmark: %f Gflops\n", benchres); 
+  #else
+    stop = MPI_Wtime();
+    timeelapsed = (double) (stop-start);
+    // 8 because 8x Hopping per iteration
+    double benchres = 1320.0*8*(g_nproc*VOLUME/2)* 100 / timeelapsed / 1.0e9;
+    if (g_proc_id == 0) {
+      printf("Benchmark: %f Gflops\n", benchres); 
+    }
+  #endif  
+  
+  
+  
+  
+   
+  #ifdef USETEXTURE
+    unbind_texture_gf();
+  #endif
+}
+
+
+
+
+
+
+
+
+
+
 #else
 extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
            double eps, const int rel_prec,const int N){
@@ -2497,12 +2820,18 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   init_mixedsolve_eo(g_gauge_field);
   
   
+  /* 
   // small benchmark
     assign(g_spinor_field[DUM_SOLVER],Q,N);
-    benchmark(g_spinor_field[DUM_SOLVER]);
+    #ifndef MPI
+      benchmark(g_spinor_field[DUM_SOLVER]);
+    #else
+      benchmark2(g_spinor_field[DUM_SOLVER]); 
+    #endif
   // end small benchmark
   
-  // exit(100);
+   exit(100);
+  */
   
  
 
@@ -2635,8 +2964,7 @@ for(iter=0; iter<max_iter; iter++){
 
 
 
-// mixed solver, even/odd, non-degenerate two flavour
-#include "mixed_solve_eo_nd.cuh"
+
 
 
 
