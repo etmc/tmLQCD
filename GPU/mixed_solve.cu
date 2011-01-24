@@ -1993,6 +1993,8 @@ void init_mixedsolve_eo(su3** gf){
     
     // try to set active device to device_num given in input file (or mpi rank)
     #ifndef MPI
+    // only if device_num is not the default (-1)
+     if(device_num > -1){ 
     	if(device_num < ndev){
     	  printf("Setting active device to: %d\n", device_num);
     	  //cudaSetDevice(device_num);
@@ -2005,6 +2007,10 @@ void init_mixedsolve_eo(su3** gf){
     	  printf("Error in init_mixedsolve_eo(): Could not set active device. Aborting...\n");
     	  exit(302);
     	}
+      }
+      else{
+        printf("Not setting any active device. Let the driver choose.\n");
+      }   
     #else
     	#ifndef DEVICE_EQUAL_RANK
     	  // try to set active device to device_num given in input file
