@@ -2015,14 +2015,19 @@ void init_mixedsolve_eo(su3** gf){
     	#ifndef DEVICE_EQUAL_RANK
     	  // try to set active device to device_num given in input file
     	  // each process gets bounded to the same GPU
-    	  if (device_num < ndev) {
-    	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, device_num);
-    	    //cudaSetDevice(device_num);
-    	  }
-    	  else {
-    	    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, device_num);
-    	    exit(301);
-    	  }
+    	  if(device_num > -1){ 
+            if (device_num < ndev) {
+    	      printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, device_num);
+    	      cudaSetDevice(device_num);
+    	    }
+    	    else {
+    	      fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, device_num);
+    	      exit(301);
+    	    }
+          }
+          else{
+            printf("Not setting any active device. Let the driver choose.\n");
+          } 
   	#else
     	  // device number = mpi rank
     	  if (g_cart_id < ndev) {
