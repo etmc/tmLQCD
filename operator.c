@@ -143,7 +143,7 @@ int init_operators() {
   operator * optr;
   for(i = 0; i < no_operators; i++) {
     optr = operator_list + i;
-    /* this is a hack, should be set on an operator basis */
+    /* This is a hack, it should be set on an operator basis. */
     optr->rel_prec = g_relative_precision_flag;
     if(optr->type == TMWILSON || optr->type == WILSON) {
       if(optr->even_odd_flag) {
