@@ -10,11 +10,11 @@ typedef struct  {
 /* Device Gauge Fields */
 typedef dev_complex dev_su3 [3][3];  /* su(3)-Matrix 3x3 komplexe Einträge DEVICE */
 
+
 typedef struct{
   dev_su3 m;
   float pad;
 } dev_su3_pad;
-
 
  
 typedef float4 su3_2v ;  /* 2 Zeilen der su(3)-Matrix, 6 komplexe Einträge HOST  

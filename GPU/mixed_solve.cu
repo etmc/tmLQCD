@@ -149,9 +149,7 @@ float* h2d_spin_norm;
 float* dev_spin_eo1_norm;
 float* dev_spin_eo2_norm;
 
-  // some additional fields for half prec.
-  dev_spinor_half* dev_half_aux;
-  float* dev_half_norm;
+
   // a half precsion gauge field
   #ifdef GF_8
    dev_su3_8_half * dev_gf_half;
@@ -275,11 +273,22 @@ __device__ int dev_nproc;
     int nStreams = ASYNC_OPTIMIZED;
     cudaStream_t stream[2*ASYNC_OPTIMIZED+1];
 
-
+   #ifndef HALF
     dev_spinor * RAND1;   // for exchanging the boundaries in ASYNC.cuh
     dev_spinor * RAND2;
     dev_spinor * RAND3; // page-locked memory
     dev_spinor * RAND4;
+   #else
+     dev_spinor_half * RAND1;   // for exchanging the boundaries in ASYNC.cuh
+     dev_spinor_half * RAND2;
+     dev_spinor_half * RAND3; // page-locked memory
+     dev_spinor_half * RAND4;
+     //we also need page-locked norms
+      float * RAND1_norm;  
+      float * RAND2_norm;
+      float * RAND3_norm; 
+      float * RAND4_norm;
+    #endif
 #endif
 
 
@@ -628,6 +637,37 @@ extern "C" void dev_Qtm_pm_psi_half(dev_spinor_half* spinin, float* spinin_norm,
   #endif
   dev_mul_one_pm_imu_sub_mul_gamma5_half<<<gridsize2, blocksize2>>>(dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm,  spinout, spinout_norm , +1.); 
 }
+
+
+#ifdef MPI
+
+// aequivalent to Qtm_pm_psi in tm_operators.c for half precision
+extern "C" void dev_Qtm_pm_psi_half_mpi(dev_spinor_half* spinin, float* spinin_norm, dev_spinor_half* spinout, float* spinout_norm, int gridsize, int blocksize, int gridsize2, int blocksize2){
+  //spinin == odd
+  //spinout == odd
+  
+  //Q_{-}
+  HOPPING_HALF_ASYNC(dev_gf_half, spinin, spinin_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,gridsize, blocksize); //dev_spin_eo1 == even -> 0  
+
+  dev_mul_one_pm_imu_inv_half<<<gridsize2, blocksize2>>>(dev_spin_eo1, dev_spin_eo1_norm ,dev_spin_eo2, dev_spin_eo2_norm, -1.);
+  
+
+    HOPPING_HALF_ASYNC(dev_gf_half, dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,gridsize, blocksize); 
+
+  dev_mul_one_pm_imu_sub_mul_gamma5_half<<<gridsize2, blocksize2>>>(spinin, spinin_norm, dev_spin_eo1, dev_spin_eo1_norm,  dev_spin_eo2, dev_spin_eo2_norm, -1.);
+  
+  //Q_{+}
+    HOPPING_HALF_ASYNC (dev_gf_half, dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,gridsize, blocksize); //dev_spin_eo1 == even -> 0    
+    
+  dev_mul_one_pm_imu_inv_half<<<gridsize2, blocksize2>>>(dev_spin_eo1, dev_spin_eo1_norm,spinout, spinout_norm, +1.);
+  
+    HOPPING_HALF_ASYNC (dev_gf_half, spinout, spinout_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,gridsize, blocksize);  
+
+  dev_mul_one_pm_imu_sub_mul_gamma5_half<<<gridsize2, blocksize2>>>(dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm,  spinout, spinout_norm , +1.); 
+}
+#endif // MPI
+
+
 
 
 
@@ -1174,7 +1214,7 @@ void showspinor(dev_spinor* s){
 
 
 
-
+#ifndef HALF
 
 // this is the eo version of the device cg inner solver 
 // we invert the hermitean Q_{-} Q_{+}
@@ -1495,7 +1535,7 @@ extern "C" int dev_cg_eo(
   return(i);
 }
 
-
+#endif
 
 
 
@@ -2032,7 +2072,7 @@ void init_mixedsolve_eo(su3** gf){
     	  // device number = mpi rank
     	  if (g_cart_id < ndev) {
     	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, g_cart_id);
-    	    //cudaSetDevice(g_cart_id);
+    	    cudaSetDevice(g_cart_id);
     	  }
     	  else {
     	    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, g_cart_id);
@@ -2097,7 +2137,7 @@ void init_mixedsolve_eo(su3** gf){
     #ifndef MPI
       printf("Allocated memory for gauge field on device.\n");
     #else
-      if (g_cart_id == 0) printf("Allocated memory for gauge gauge field on devices.\n");
+      if (g_cart_id == 0) printf("Allocated memory for gauge field on devices.\n");
     #endif
   }
   
@@ -2113,16 +2153,27 @@ void init_mixedsolve_eo(su3** gf){
   
   
   #ifdef HALF
-    #ifdef GF_8
-      /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
-      printf("Using half precision GF 8 reconstruction\n");
-      dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8_half); 
-    #else
-      /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
-      printf("Using half precision GF 12 reconstruction\n");
-      dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v_half); 
-    #endif  
-    
+    #ifndef MPI
+      #ifdef GF_8
+       /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
+        printf("Using half precision GF 8 reconstruction\n");
+       dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8_half); 
+      #else
+        /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
+        printf("Using half precision GF 12 reconstruction\n");
+        dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v_half); 
+      #endif  
+    #else // MPI
+      #ifdef GF_8
+       /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
+        printf("Using half precision GF 8 reconstruction\n");
+       dev_gfsize = 2*4*(VOLUME+RAND) * sizeof(dev_su3_8_half); 
+      #else
+        /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
+        printf("Using half precision GF 12 reconstruction\n");
+        dev_gfsize = 3*4*(VOLUME+RAND) * sizeof(dev_su3_2v_half); 
+      #endif      
+    #endif //MPI
     if((cudaerr=cudaMalloc((void **) &dev_gf_half, dev_gfsize)) != cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of half precsion gauge field failed. Aborting...\n");
     exit(200);
@@ -2131,7 +2182,7 @@ void init_mixedsolve_eo(su3** gf){
       printf("Allocated half precision gauge field on device\n");
     }      
      
-  #endif
+  #endif // HALF
 
 
 //grid 
@@ -2203,6 +2254,10 @@ void init_mixedsolve_eo(su3** gf){
   	  printf("Could not allocate memory for h2d_spin_norm. Aborting...\n");
   	  exit(200);
   	} // Allocate float conversion norm on host 
+  	#ifdef MPI
+  	  size_t dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinor_half);
+  	  size_t dev_normsize_ext =  (VOLUME+RAND)/2*sizeof(float);
+  	#endif
   #endif
   
   
@@ -2217,6 +2272,22 @@ void init_mixedsolve_eo(su3** gf){
   	
   	cudaMalloc((void **) &dev_spin_eo1, dev_spinsize);
   	cudaMalloc((void **) &dev_spin_eo2, dev_spinsize);
+ 
+ 
+       #ifdef HALF
+         cudaMalloc((void **) &dev_spin1_norm, dev_spinsize);   // Allocate norm spin1 on device
+         cudaMalloc((void **) &dev_spin2_norm, dev_spinsize);   // Allocate norm spin2 on device
+         cudaMalloc((void **) &dev_spin3_norm, dev_spinsize);   // Allocate norm spin3 on device
+         cudaMalloc((void **) &dev_spin4_norm, dev_spinsize);
+         cudaMalloc((void **) &dev_spin5_norm, dev_spinsize);
+         cudaMalloc((void **) &dev_spinin_norm, dev_spinsize);
+         cudaMalloc((void **) &dev_spinout_norm, dev_spinsize);
+
+        cudaMalloc((void **) &dev_spin_eo1_norm, dev_spinsize);
+        cudaMalloc((void **) &dev_spin_eo2_norm, dev_spinsize);
+      #endif  
+  
+  
   #else
   	cudaMalloc((void **) &dev_spin1, dev_spinsize_ext);
   	cudaMalloc((void **) &dev_spin2, dev_spinsize_ext);
@@ -2229,27 +2300,35 @@ void init_mixedsolve_eo(su3** gf){
   	cudaMalloc((void **) &dev_spin_eo1, dev_spinsize_ext);
   	cudaMalloc((void **) &dev_spin_eo2, dev_spinsize_ext);
   	
-  	int tSliceEO = LX*LY*LZ/2;
+        #ifdef HALF
+         cudaMalloc((void **) &dev_spin1_norm, dev_normsize_ext);   // Allocate norm spin1 on device
+         cudaMalloc((void **) &dev_spin2_norm, dev_normsize_ext);   // Allocate norm spin2 on device
+         cudaMalloc((void **) &dev_spin3_norm, dev_normsize_ext);   // Allocate norm spin3 on device
+         cudaMalloc((void **) &dev_spin4_norm, dev_normsize_ext);
+         cudaMalloc((void **) &dev_spin5_norm, dev_normsize_ext);
+         cudaMalloc((void **) &dev_spinin_norm, dev_normsize_ext);
+         cudaMalloc((void **) &dev_spinout_norm, dev_normsize_ext);
+
+        cudaMalloc((void **) &dev_spin_eo1_norm, dev_normsize_ext);
+        cudaMalloc((void **) &dev_spin_eo2_norm, dev_normsize_ext);
+      #endif   	
+      
+      int tSliceEO = LX*LY*LZ/2;
+      #ifndef HALF
   	R1 = (dev_spinor *) malloc(2*tSliceEO*24*sizeof(float));
   	R2 = R1 + 6*tSliceEO;
   	R3 = (dev_spinor *) malloc(2*tSliceEO*24*sizeof(float));
   	R4 = R3 + 6*tSliceEO;
+      #else
+      
+  	// implement this for half?
+  	// -> ALTERNATE_FIELD_EXCHANGE     
+      #endif
+  	
   #endif
  
  
-  #ifdef HALF
-  dev_spinsize = VOLUME/2*sizeof(float);
-  cudaMalloc((void **) &dev_spin1_norm, dev_spinsize);   // Allocate norm spin1 on device
-  cudaMalloc((void **) &dev_spin2_norm, dev_spinsize);   // Allocate norm spin2 on device
-  cudaMalloc((void **) &dev_spin3_norm, dev_spinsize);   // Allocate norm spin3 on device
-  cudaMalloc((void **) &dev_spin4_norm, dev_spinsize);
-  cudaMalloc((void **) &dev_spin5_norm, dev_spinsize);
-  cudaMalloc((void **) &dev_spinin_norm, dev_spinsize);
-  cudaMalloc((void **) &dev_spinout_norm, dev_spinsize);
 
-  cudaMalloc((void **) &dev_spin_eo1_norm, dev_spinsize);
-  cudaMalloc((void **) &dev_spin_eo2_norm, dev_spinsize);
-  #endif
 
 
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
@@ -2260,35 +2339,32 @@ void init_mixedsolve_eo(su3** gf){
     printf("Allocated spinor fields on device\n");
   }
   
-  #ifdef HALF
-    //allocate half spinor
-    dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor_half); /* short4 */
-    cudaMalloc((void **) &dev_half_aux, dev_spinsize); 
-    //allocate its norm
-    dev_spinsize = VOLUME/2 * sizeof(float); /* float */
-    cudaMalloc((void **) &dev_half_norm, dev_spinsize); 
-  if((cudaerr=cudaGetLastError())!=cudaSuccess){
-    printf("Error in init_mixedsolve(): Memory allocation of half precision spinor fields failed. Aborting...\n");
-    exit(200);
-  }
-  else{
-    printf("Allocated half precision spinor fields on device\n");
-  }  
-  #endif
 
   #ifdef MPI
-  /*  for async communication */
-  // page-locked memory
-  cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(float4));
-  RAND4 = RAND3 + 6*tSliceEO;
-  cudaMallocHost(&RAND1, 2*tSliceEO*6*sizeof(float4));
-  RAND2 = RAND1 + 6*tSliceEO;
+    /*  for async communication */
+    // page-locked memory
+   #ifndef HALF 
+    cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(float4));
+    RAND4 = RAND3 + 6*tSliceEO;
+    cudaMallocHost(&RAND1, 2*tSliceEO*6*sizeof(float4));
+    RAND2 = RAND1 + 6*tSliceEO;
+   #else
+    cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(short4));
+    RAND4 = RAND3 + 6*tSliceEO;
+    cudaMallocHost(&RAND1, 2*tSliceEO*6*sizeof(short4));
+    RAND2 = RAND1 + 6*tSliceEO;
+    //norm page-locked mem
+    cudaMallocHost(&RAND3_norm, 2*tSliceEO*sizeof(float));
+    RAND4_norm = RAND3_norm + tSliceEO;
+    cudaMallocHost(&RAND1_norm, 2*tSliceEO*sizeof(float));
+    RAND2_norm = RAND1_norm + tSliceEO;
+   #endif  
           
-  // CUDA streams and events
-  for (int i = 0; i < 3; i++) {
-      cudaStreamCreate(&stream[i]);
-  }    
-  /* end for async communication */
+    // CUDA streams and events
+    for (int i = 0; i < 3; i++) {
+        cudaStreamCreate(&stream[i]);
+    }    
+    /* end for async communication */
   #endif
   
   output_size = LZ*T*sizeof(float); // parallel in t and z direction
@@ -2398,9 +2474,7 @@ void finalize_mixedsolve(){
   
   #ifdef HALF
     cudaFree(dev_gf_half);
-    cudaFree(dev_half_aux);
-    cudaFree(dev_half_norm);
-    
+ 
     cudaFree(dev_spin1_norm);
     cudaFree(dev_spin2_norm);
     cudaFree(dev_spin3_norm);
@@ -2420,6 +2494,11 @@ void finalize_mixedsolve(){
 #ifdef MPI
   cudaFreeHost(RAND1);
   cudaFreeHost(RAND3);
+  
+  #ifdef HALF
+   cudaFreeHost(RAND1_norm);
+   cudaFreeHost(RAND3_norm);
+  #endif
              
   for (int i = 0; i < 3; i++) {
      cudaStreamDestroy(stream[i]);
@@ -2842,7 +2921,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   init_mixedsolve_eo(g_gauge_field);
   
   
-  /* 
+  #ifndef HALF
   // small benchmark
     assign(g_spinor_field[DUM_SOLVER],Q,N);
     #ifndef MPI
@@ -2852,8 +2931,9 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     #endif
   // end small benchmark
   
-   exit(100);
-  */
+   //exit(100);
+  
+  #endif //not HALF
   
  
 

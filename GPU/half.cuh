@@ -998,7 +998,7 @@ __global__ void dot_half ( float* redfield, dev_spinor_half* x, float* x_norm, d
 
 // kernel for the square of the norm of a half spinor
 // local squared norms are written to reduction field redfield
-__global__ void squarenorm_half (float* redfield, dev_spinor_half* x, float* x_norm){
+__global__ void sqnorm_half (float* redfield, dev_spinor_half* x, float* x_norm){
    int pos= threadIdx.x + blockDim.x*blockIdx.x;
    float xnhelp;
    float dotp = 0.0;
@@ -1031,6 +1031,7 @@ __global__ void squarenorm_half (float* redfield, dev_spinor_half* x, float* x_n
 // calculates the dot product of x and y
 float dotprod_half(dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float* y_norm){
    int i;
+   float result;
    cudaError_t cudaerr;
    
    dot_half <<< blas_half_gridsize, blas_half_blocksize >>> 
@@ -1053,6 +1054,10 @@ float dotprod_half(dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float*
    for(i=0; i<blas_half_redblocks; i++){
      finalsum += blas_half_sredfield[i];
    }
+   #ifdef MPI
+     MPI_Allreduce(&finalsum, &result, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+     finalsum=result;
+   #endif
    return(finalsum);
 }
 
@@ -1061,9 +1066,10 @@ float dotprod_half(dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float*
 // calculates the norm^2 of a half spinor with norm x 
 float squarenorm_half(dev_spinor_half* x, float * xnorm){
    int i;
+   float result;
    cudaError_t cudaerr;
    
-   squarenorm_half <<< blas_half_gridsize, blas_half_blocksize >>> 
+   sqnorm_half <<< blas_half_gridsize, blas_half_blocksize >>> 
                       (dev_blas_half_redfield, x, xnorm);
    if((cudaerr=cudaGetLastError()) != cudaSuccess){
       printf("%s\n", cudaGetErrorString(cudaerr));
@@ -1083,7 +1089,10 @@ float squarenorm_half(dev_spinor_half* x, float * xnorm){
    for(i=0; i<blas_half_redblocks; i++){
      finalsum += blas_half_sredfield[i];
    }
-   
+   #ifdef MPI
+     MPI_Allreduce(&finalsum, &result, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+     finalsum=result;
+   #endif
    return(finalsum);
 }
 

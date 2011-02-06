@@ -41,7 +41,7 @@
 
 // CUDA + MPI
 
-//#define DEVICE_EQUAL_RANK	// for MPI: cudaSetDevice(mpi-rank)
+#define DEVICE_EQUAL_RANK	// for MPI: cudaSetDevice(mpi-rank)
 #define ASYNC 1			// overlaps computation and communication	// 0, 1, 2, 3
 #define ASYNC_TSLICES 1		// determines workload af kernels
 #define ASYNC_OPTIMIZED	1	// CUDA streams					// needs ASYNC == 3

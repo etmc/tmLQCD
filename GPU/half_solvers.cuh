@@ -200,15 +200,24 @@ extern "C" int dev_cg_eo_half(
 
 
   //use full volume here as we need the complete gauge field!!!
-  if( VOLUME >= BLOCK2){
-     gridsize = (int)(VOLUME/BLOCK2) + 1;
-  }
-  else{
-	 gridsize=1;
-  }
+  int Vol;
+   #ifndef MPI
+     Vol = VOLUME;
+   #else
+     Vol = VOLUME+RAND;
+   #endif
+    
+    if( Vol >= BLOCK2){
+       gridsize = (int)(Vol/BLOCK2) + 1;
+    }
+    else{
+       gridsize=1;
+    }
 
    printf("Converting gauge to half precision... ");
-     float2half_gaugefield <<< gridsize, BLOCK2  >>>(dev_gf, dev_gf_half, VOLUME);
+   
+
+     float2half_gaugefield <<< gridsize, BLOCK2  >>>(dev_gf, dev_gf_half, Vol);
    printf("Done\n"); 
    
    //testhalf_gf(dev_gf_half);
@@ -266,7 +275,7 @@ extern "C" int dev_cg_eo_half(
  /*
  // small benchmark for half /////////////
  benchmark_half(spin2, spin2_norm, spin3, spin3_norm, griddim3,blockdim3);
- exit(200);
+ exit(0);
  /////////////////////////////////////////
  */
  
@@ -275,7 +284,11 @@ extern "C" int dev_cg_eo_half(
  for(i=0;i<maxit;i++){ //MAIN LOOP
   
   // Q_{-}Q{+}
-  dev_Qtm_pm_psi_half(spin2, spin2_norm, spin3, spin3_norm, griddim3, blockdim3, griddim4, blockdim4);
+  #ifndef MPI
+    dev_Qtm_pm_psi_half(spin2, spin2_norm, spin3, spin3_norm, griddim3, blockdim3, griddim4, blockdim4);
+  #else
+    dev_Qtm_pm_psi_half_mpi(spin2, spin2_norm, spin3, spin3_norm, griddim3, blockdim3, griddim4, blockdim4);
+  #endif
   if((cudaerr=cudaGetLastError()) != cudaSuccess){
     printf("%s\n", cudaGetErrorString(cudaerr));
     exit(200);
@@ -353,7 +366,11 @@ extern "C" int dev_cg_eo_half(
     // DO NOT USE tm_dirac_dagger_kappa here, otherwise spin2 will be overwritten!!!
       
     // Q_{-}Q{+}
-    dev_Qtm_pm_psi_half(spin1, spin1_norm, spin3, spin3_norm, griddim3, blockdim3, griddim4, blockdim4);
+    #ifndef MPI
+      dev_Qtm_pm_psi_half(spin1, spin1_norm, spin3, spin3_norm, griddim3, blockdim3, griddim4, blockdim4);
+    #else
+      dev_Qtm_pm_psi_half_mpi(spin1, spin1_norm, spin3, spin3_norm, griddim3, blockdim3, griddim4, blockdim4);
+    #endif
     if((cudaerr=cudaGetLastError()) != cudaSuccess){
       printf("%s\n", cudaGetErrorString(cudaerr));
       exit(200);
