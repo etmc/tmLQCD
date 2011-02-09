@@ -2920,7 +2920,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   #endif
   init_mixedsolve_eo(g_gauge_field);
   
-  
+ /* 
   #ifndef HALF
   // small benchmark
     assign(g_spinor_field[DUM_SOLVER],Q,N);
@@ -2934,7 +2934,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
    //exit(100);
   
   #endif //not HALF
-  
+  */
  
 
   // Start timer
