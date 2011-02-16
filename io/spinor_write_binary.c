@@ -249,7 +249,7 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 int write_binary_spinor_data_l(spinor * const s,
                              LemonWriter * lemonwriter, DML_Checksum *checksum, int const prec)
 {
-  int x, y, z, t, i = 0, xG, yG, zG, tG;
+  int x, y, z, t, i = 0, xG, yG, zG, tG, status = 0;
   int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
   int scidacMapping[] = {0, 3, 2, 1};
   unsigned long bufoffset = 0;

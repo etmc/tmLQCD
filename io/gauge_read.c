@@ -83,7 +83,13 @@ int read_gauge_field(char * filename) {
     printf("# calculated: %#x %#x.\n", checksum_calc.suma, checksum_calc.sumb);
     if (DML_read_flag) {
       printf("# read:       %#x %#x.\n", checksum_read.suma, checksum_read.sumb);
-    }
+      if (checksum_calc.suma != checksum_read.suma) {
+        printf("CHECKSUM A DOES NOT MATCH!\n");
+      }
+      if (checksum_calc.sumb != checksum_read.sumb) {
+        printf("CHECKSUM B DOES NOT MATCH!\n");
+      }
+    } 
     else {
       printf("# Scidac checksum record not found or malformed.\n");
     }
