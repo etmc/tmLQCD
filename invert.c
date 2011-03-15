@@ -84,10 +84,10 @@
 #include <io/spinor.h>
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
-
+#include "P_M_eta.h"
 #include "tm_operators.h"
 #include "Dov_psi.h"
-
+#include "solver/spectral_proj.h"
 void usage()
 {
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
@@ -346,32 +346,50 @@ int main(int argc, char *argv[])
       return(0);
     }
 
-    if(compute_modenumber != 0){
+    /* Compute the mode number or topological susceptibility using spectral projectors, if wanted*/
+
+    if(compute_modenumber != 0 || compute_topsus !=0){
+
       int i;
       spinor **s, *s_;
-
+      double modenumber;
       s_ = calloc(100*VOLUMEPLUSRAND+1, sizeof(spinor));
       s  = calloc(100, sizeof(spinor*));
 
-      for(i = 0; i < no_sources_mn; i++) {
+      for(i = 0; i < no_sources_z2; i++) {
 #if (defined SSE3 || defined SSE2 || defined SSE)
         s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
 #else
         s[i] = s_+i*VOLUMEPLUSRAND;
 #endif
-        random_spinor_field(s[i], VOLUME, 1);
 
-        mode_number(s[i], mstarsq);
-	
-	if(g_proc_id == 0) {
-	  printf("source %d \n", i+1);
+        z2_random_spinor_field(s[i], VOLUME);
+
+        spinor *aux_,*aux;
+#if ( defined SSE || defined SSE2 || defined SSE3 )
+        aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+        aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+        aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
+        aux = aux_;
+#endif
+
+        if(g_proc_id == 0) {
+	  printf("source %d \n", i);
+
 	}
 
-        /*Check_Approximation(Mstar);*/
+        if(compute_modenumber != 0){
+	  mode_number(s[i], mstarsq);
+        }
+        if(compute_topsus !=0){
+	  top_sus(s[i], mstarsq);
+        }
       }
       free(s);
       free(s_);
     }
+
 
     /* move to operators as well */
     if (g_dflgcr_flag == 1) {
