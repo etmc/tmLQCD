@@ -29,6 +29,7 @@ void unit_spinor_field(const int k);
 
 void random_spinor_field_lexic(spinor * const k);
 void random_spinor_field(spinor * const k, const int V, const int repro);
+void z2_random_spinor_field(spinor * const k, const int N);
 void zero_spinor_field(spinor * const k, const int N);
 void constant_spinor_field(spinor * const k, const int p, const int N);
 su3 random_su3(void);
