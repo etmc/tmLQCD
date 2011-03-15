@@ -132,8 +132,9 @@
 #define _default_online_measurement_flag 1
 #define _default_online_measurement_freq 5
 #define _default_compute_modenumber 0
+#define _default_compute_topsus 0
 #define _default_mstarsq 0.01
-#define _default_no_sources_mn 1
+#define _default_no_sources_z2 1
 
 /* sf default values */
 #define _default_g_eta 0.
