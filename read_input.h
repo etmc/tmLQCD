@@ -95,8 +95,9 @@ extern "C"
   extern int reweighting_samples; 
   extern int no_samples;
   extern int compute_modenumber;
+  extern int compute_topsus;
   extern double mstarsq;
-  extern int no_sources_mn;
+  extern int no_sources_z2;
   extern int usegpu_flag;
   extern int max_innersolver_it;
   extern double innersolver_precision;
