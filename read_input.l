@@ -148,8 +148,9 @@ inline void rmQuotes(char *str){
   int reweighting_samples;
   int no_samples;
   int compute_modenumber;
+  int compute_topsus;
   double mstarsq;
-  int no_sources_mn;  
+  int no_sources_z2;  
   int usegpu_flag;
   int max_innersolver_it;
   int device_num;
@@ -241,8 +242,9 @@ inline void rmQuotes(char *str){
 %x WRPROPFLAG
 %x PROPTYPE
 %x COMPUTEMN
+%x COMPUTETS
 %x MSTARSQ
-%x NOSOURCESMN
+%x NOSOURCESZ2
 %x INITMEASUREMENT
 %x ONLINEMEAS
 %x PIONNORMMEAS
@@ -367,8 +369,9 @@ inline void rmQuotes(char *str){
 
 ^BeginMeasurement{SPC}+            BEGIN(INITMEASUREMENT);
 ^ComputeModeNumber{EQL}            BEGIN(COMPUTEMN);
+^ComputeTopSus{EQL}                BEGIN(COMPUTETS);
 ^MStarSq{EQL}                      BEGIN(MSTARSQ);
-^NoSourcesMN{EQL}                  BEGIN(NOSOURCESMN);
+^NoSourcesZ2{EQL}                  BEGIN(NOSOURCESZ2);
 ^BeginMonomial{SPC}+               BEGIN(INITMONOMIAL);
 ^BeginInt                          BEGIN(INITINTEGRATOR);
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
@@ -1665,19 +1668,27 @@ inline void rmQuotes(char *str){
 }
 <COMPUTEMN>yes {
   compute_modenumber=1;
-  if(myverbose!=0) printf("Compute Mode Number in invert.\n");
+  if(myverbose!=0) printf("Compute Mode Number using Spectral Projectors in invert.\n");
 }
 <COMPUTEMN>no {
   compute_modenumber=0;
-  if(myverbose!=0) printf("Do not compute Mode Number in invert.\n");
+  if(myverbose!=0) printf("Do not compute Mode Number using Spectral Projectors in invert.\n");
+}
+<COMPUTETS>yes {
+  compute_topsus=1;
+  if(myverbose!=0) printf("Compute Topological Susceptibility using Spectral Projectors in invert.\n");
+}
+<COMPUTETS>no {
+  compute_topsus=0;
+  if(myverbose!=0) printf("Do not compute Topological Susceptibility using Spectral Projectors in invert.\n");
 }
 <MSTARSQ>{FLT} { 
   mstarsq = atof(yytext);
   if(myverbose!=0) printf("Mstar^2 = %f \n", mstarsq);
 }
-<NOSOURCESMN>{DIGIT}+ {
-  no_sources_mn = atoi(yytext);
-  if(myverbose!=0) printf("no of sources used computing the mode number = %d\n", no_sources_mn);
+<NOSOURCESZ2>{DIGIT}+ {
+  no_sources_z2 = atoi(yytext);
+  if(myverbose!=0) printf("no of Z2 random sources used for the spectral projectors method = %d\n", no_sources_z2);
 }
 <SRCLOC>{DIGIT}+ {
   source_location=atoi(yytext);
@@ -1915,8 +1926,9 @@ int read_input(char * conf_file){
   SourceInfo.type = _default_source_type_flag;
   no_samples = _default_no_samples;
   compute_modenumber = _default_compute_modenumber;
+  compute_topsus = _default_compute_topsus;
   mstarsq = _default_mstarsq;
-  no_sources_mn = _default_no_sources_mn;
+  no_sources_z2 = _default_no_sources_z2;
   device_num = _default_device_num;
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */
