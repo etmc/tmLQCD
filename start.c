@@ -487,6 +487,56 @@ void random_spinor_field(spinor * const k, const int V, const int repro) {
 }
 
 /* Function provides a zero spinor field of length N with */
+void z2_random_spinor_field(spinor * const k, const int N) {
+
+  int ix;
+  spinor *s;
+  double r[24];
+  double z2noise[24];
+  int rv=0;
+  double x1,x2;
+
+  s = k;
+  for (ix = 0;ix < N; ix++) {
+    ranlxd(r,24);
+
+    for (rv = 0  ; rv < 24; rv++){
+      if(r[rv] < 0.5)
+        z2noise[rv]=1/sqrt(2);
+      else
+        z2noise[rv]=-1/sqrt(2);
+    }
+    (*s).s0.c0.re=z2noise[0];
+    (*s).s0.c0.im=z2noise[1];
+    (*s).s0.c1.re=z2noise[2];
+    (*s).s0.c1.im=z2noise[3];
+    (*s).s0.c2.re=z2noise[4];
+    (*s).s0.c2.im=z2noise[5];
+    (*s).s1.c0.re=z2noise[6];
+    (*s).s1.c0.im=z2noise[7];
+    (*s).s1.c1.re=z2noise[8];
+    (*s).s1.c1.im=z2noise[9];
+    (*s).s1.c2.re=z2noise[10];
+    (*s).s1.c2.im=z2noise[11];
+    (*s).s2.c0.re=z2noise[12];
+    (*s).s2.c0.im=z2noise[13];
+    (*s).s2.c1.re=z2noise[14];
+    (*s).s2.c1.im=z2noise[15];
+    (*s).s2.c2.re=z2noise[16];
+    (*s).s2.c2.im=z2noise[17];
+    (*s).s3.c0.re=z2noise[18];
+    (*s).s3.c0.im=z2noise[19];
+    (*s).s3.c1.re=z2noise[20];
+    (*s).s3.c1.im=z2noise[21];
+    (*s).s3.c2.re=z2noise[22];
+    (*s).s3.c2.im=z2noise[23];
+    s++;
+  }
+  return;
+}
+
+
+/* Function provides a zero spinor field of length N with */
 void zero_spinor_field(spinor * const k, const int N) {
 
   int ix;
