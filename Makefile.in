@@ -65,7 +65,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	little_D block sf_gauge_monomial sf_utils sf_calc_action \
 	sf_get_staples sf_get_rectangle_staples sf_observables \
 	Dov_psi operator poly_monomial measurements pion_norm Dov_proj \
-	xchange_field_tslice temporalgauge spinor_fft X_psi
+	xchange_field_tslice temporalgauge spinor_fft X_psi P_M_eta
 
 
 ## the GPU modules (all .cu files in $GPUDIR)
