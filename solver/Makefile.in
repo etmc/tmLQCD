@@ -40,8 +40,7 @@ libsolver_TARGETS = bicgstab_complex gmres \
                     sub_low_ev cg_her_nd poly_precon \
                     generate_dfl_subspace dfl_projector \
                     cg_mms_tm solver_field sumr mixed_cg_her index_jd \
-                    dirac_operator_eigenvectors	mode_number
-
+                    dirac_operator_eigenvectors	spectral_proj
 
 libsolver_OBJECTS = $(addsuffix .o, ${libsolver_TARGETS})
 
