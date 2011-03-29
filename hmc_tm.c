@@ -343,12 +343,12 @@ int main(int argc,char *argv[]) {
   /* continue and restart */
   if(startoption==3 || startoption == 2) {
     if(g_proc_id == 0) {
-      printf("# Reading Gauge field from file %s in %d Bit\n",
-	     gauge_input_filename, gauge_precision_read_flag);
+      printf("# Trying to read gauge field from file %s in %s precision.\n",
+            gauge_input_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
     if( (j = read_gauge_field(gauge_input_filename)) !=0) {
-      fprintf(stderr, "error %d while reading gauge field from %s\n Aborting...\n", j, gauge_input_filename);
+      fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", j, gauge_input_filename);
       exit(-2);
     }
 

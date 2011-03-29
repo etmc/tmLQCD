@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2009, 2010 Siebren Reker, Albert Deuzeman, Carsten Urbach
+ * Copyright (C) 2009-2011 Albert Deuzeman, Siebren Reker, Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -31,6 +31,7 @@ int read_gauge_field(char * filename) {
   DML_Checksum checksum_calc;
   int DML_read_flag = 0;
   int gauge_read_flag = 0;
+  int gauge_binary_status = 0;
   char *checksum_string = NULL;
 
   construct_reader(&reader, filename);
@@ -47,20 +48,26 @@ int read_gauge_field(char * filename) {
     }
 
     if (strcmp("ildg-binary-data", header_type) == 0) {
-      read_binary_gauge_data(reader, &checksum_calc);
+      if (gauge_read_flag) { /* already read a gauge from this file */
+        fprintf(stderr, "In gauge file %s, multiple LIME records with name: \"ildg-binary-data\" found.\n", filename);
+        fprintf(stderr, "Unable to verify integrity of the gauge field data.\n");
+        return(-1);
+      }
+      gauge_binary_status = read_binary_gauge_data(reader, &checksum_calc);
       gauge_read_flag = 1;
       GaugeInfo.gaugeRead = 1;
       GaugeInfo.checksum = checksum_calc;
     }
     else if (strcmp("scidac-checksum", header_type) == 0) {
       if(checksum_string == (char*)NULL) {
-	read_message(reader, &checksum_string);
-	DML_read_flag = parse_checksum_xml(checksum_string, &checksum_read);
-	free(checksum_string);
+        read_message(reader, &checksum_string);
+        DML_read_flag = parse_checksum_xml(checksum_string, &checksum_read);
+        free(checksum_string);
       }
-      else {
-	fprintf(stderr, "Warning! possibly a second scidac-checksum record in %s\n", filename);
-	fprintf(stderr, "Check the configuration %s!\n", filename);
+      else { /* checksum_string is not NULL, so a record was already found */
+        fprintf(stderr, "In gauge file %s, multiple LIME records with name: \"scidac-checksum\" found.\n", filename);
+        fprintf(stderr, "Unable to verify integrity of the gauge field data.\n");
+        return(-1);
       }
     }
     else if (strcmp("xlf-info", header_type) == 0) {
@@ -73,27 +80,32 @@ int read_gauge_field(char * filename) {
   }
 
   if (!gauge_read_flag) {
-    fprintf(stderr, "Did not find gauge record!\n Aborting read!");
+    fprintf(stderr, "Unable to find LIME record with name: \"ildg-binary-data\", while looking in %s.\n", filename);
+    fprintf(stderr, "Possible causes: %s is not a LIME file, or not of the appropriate type.\n", filename);
+    fprintf(stderr, "No gauge field was read, unable to proceed.\n");
+    return(-1);
+  }
+
+  if (!DML_read_flag) {
+    fprintf(stderr, "LIME record with name: \"scidac-checksum\", in gauge file %s either missing or malformed.\n", filename);
+    fprintf(stderr, "Unable to verify integrity of gauge field data.\n");
     return(-1);
   }
 
   if (g_debug_level >= 0 && g_cart_id == 0)
   {
-    printf("# checksum for gaugefield %s\n", filename);
-    printf("# calculated: %#x %#x.\n", checksum_calc.suma, checksum_calc.sumb);
-    if (DML_read_flag) {
-      printf("# read:       %#x %#x.\n", checksum_read.suma, checksum_read.sumb);
-      if (checksum_calc.suma != checksum_read.suma) {
-        printf("CHECKSUM A DOES NOT MATCH!\n");
-      }
-      if (checksum_calc.sumb != checksum_read.sumb) {
-        printf("CHECKSUM B DOES NOT MATCH!\n");
-      }
-    } 
-    else {
-      printf("# Scidac checksum record not found or malformed.\n");
-    }
+    printf("# Scidac checksums for gaugefield %s\n", filename);
+    printf("# Calculated            : A = %#x B = %#x.\n", checksum_calc.suma, checksum_calc.sumb);
+    printf("# Read from LIME headers: A = %#x B = %#x.\n", checksum_read.suma, checksum_read.sumb);
     fflush(stdout);
+    if (checksum_calc.suma != checksum_read.suma) {
+      fprintf(stderr, "For gauge file %s, calculated and stored values for SciDAC checksum A do not match.\n", filename);
+      return(-1);
+    }
+    if (checksum_calc.sumb != checksum_read.sumb) {
+      fprintf(stderr, "For gauge file %s, calculated and stored values for SciDAC checksum B do not match.\n", filename);
+      return(-1);
+    }
   }
 
   destruct_reader(reader);
