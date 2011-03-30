@@ -93,12 +93,13 @@ paramsXlfInfo;
 
 typedef struct
 {
-  int    nx;
-  int    ny;
-  int    nz;
-  int    nt;
+  int    lx;
+  int    ly;
+  int    lz;
+  int    lt;
   int    prec;
-} paramsIldgFormat;
+}
+paramsIldgFormat;
 
 typedef struct {
   double plaquetteEnergy;

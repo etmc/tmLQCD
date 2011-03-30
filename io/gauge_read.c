@@ -20,6 +20,7 @@
 
 #include "gauge.ih"
 
+extern int gauge_precision_read_flag;
 paramsGaugeInfo GaugeInfo = { 0., 0, {0,0}, NULL, NULL};
 
 int read_gauge_field(char * filename) {
@@ -27,15 +28,21 @@ int read_gauge_field(char * filename) {
   char *header_type = NULL;
   READER *reader = NULL;
 
+  paramsIldgFormat ildgformat_read;
+  paramsIldgFormat *ildgformat_input;
   DML_Checksum checksum_read;
   DML_Checksum checksum_calc;
   int DML_read_flag = 0;
   int gauge_read_flag = 0;
   int gauge_binary_status = 0;
+  int ildgformat_read_flag = 0;
   char *checksum_string = NULL;
+  char *ildgformat_string = NULL;
 
   construct_reader(&reader, filename);
   GaugeInfo.gaugeRead = 0;
+  ildgformat_input = construct_paramsIldgFormat(gauge_precision_read_flag);
+
   while ((status = ReaderNextRecord(reader)) != LIME_EOF) {
     if (status != LIME_SUCCESS) {
       fprintf(stderr, "ReaderNextRecord returned status %d.\n", status);
@@ -48,12 +55,16 @@ int read_gauge_field(char * filename) {
     }
 
     if (strcmp("ildg-binary-data", header_type) == 0) {
-      if (gauge_read_flag) { /* already read a gauge from this file */
+      if (gauge_read_flag) { /* a previous ildg-binary-data record has already been read from this file */
         fprintf(stderr, "In gauge file %s, multiple LIME records with name: \"ildg-binary-data\" found.\n", filename);
         fprintf(stderr, "Unable to verify integrity of the gauge field data.\n");
         return(-1);
       }
-      gauge_binary_status = read_binary_gauge_data(reader, &checksum_calc);
+      gauge_binary_status = read_binary_gauge_data(reader, &checksum_calc, ildgformat_input);
+      if (gauge_binary_status) {
+        fprintf(stderr, "Gauge file reading failed at binary part, unable to proceed.\n");
+        return(-1);
+      }
       gauge_read_flag = 1;
       GaugeInfo.gaugeRead = 1;
       GaugeInfo.checksum = checksum_calc;
@@ -64,7 +75,7 @@ int read_gauge_field(char * filename) {
         DML_read_flag = parse_checksum_xml(checksum_string, &checksum_read);
         free(checksum_string);
       }
-      else { /* checksum_string is not NULL, so a record was already found */
+      else { /* checksum_string is not NULL, so a scidac-checksum record was already found */
         fprintf(stderr, "In gauge file %s, multiple LIME records with name: \"scidac-checksum\" found.\n", filename);
         fprintf(stderr, "Unable to verify integrity of the gauge field data.\n");
         return(-1);
@@ -76,12 +87,30 @@ int read_gauge_field(char * filename) {
     else if (strcmp("ildg-data-lfn", header_type) == 0) {
       read_message(reader, &GaugeInfo.ildg_data_lfn);
     }
+    else if (strcmp("ildg-format", header_type) == 0) {
+      if(ildgformat_string == (char*)NULL) {
+        read_message(reader, &ildgformat_string);
+        ildgformat_read_flag = parse_ildgformat_xml(ildgformat_string, &ildgformat_read);
+        free(ildgformat_string);
+      }
+      else { /* ildgformat_string is not NULL, so a ildg-format record was already found */
+        fprintf(stderr, "In gauge file %s, multiple LIME records with name: \"ildg-format\" found.\n", filename);
+        fprintf(stderr, "Unable to verify integrity of the gauge field data.\n");
+        return(-1);
+      }
+    }
+
     close_reader_record(reader);
   }
 
+  if (!ildgformat_read_flag) {
+    fprintf(stderr, "LIME record with name: \"ildg-format\", in gauge file %s either missing or malformed.\n", filename);
+    fprintf(stderr, "Unable to verify gauge field size or precision.\n");
+    return(-1);
+  }
+
   if (!gauge_read_flag) {
-    fprintf(stderr, "Unable to find LIME record with name: \"ildg-binary-data\", while looking in %s.\n", filename);
-    fprintf(stderr, "Possible causes: %s is not a LIME file, or not of the appropriate type.\n", filename);
+    fprintf(stderr, "LIME record with name: \"ildg-binary-data\", in gauge file %s either missing or malformed.\n", filename);
     fprintf(stderr, "No gauge field was read, unable to proceed.\n");
     return(-1);
   }
@@ -92,11 +121,12 @@ int read_gauge_field(char * filename) {
     return(-1);
   }
 
-  if (g_debug_level >= 0 && g_cart_id == 0)
+  if (g_cart_id == 0)
   {
-    printf("# Scidac checksums for gaugefield %s\n", filename);
-    printf("# Calculated            : A = %#x B = %#x.\n", checksum_calc.suma, checksum_calc.sumb);
-    printf("# Read from LIME headers: A = %#x B = %#x.\n", checksum_read.suma, checksum_read.sumb);
+    /* Verify the integrity of the checksum */
+    printf("# Scidac checksums for gaugefield %s:\n", filename);
+    printf("#   Calculated            : A = %#x B = %#x.\n", checksum_calc.suma, checksum_calc.sumb);
+    printf("#   Read from LIME headers: A = %#x B = %#x.\n", checksum_read.suma, checksum_read.sumb);
     fflush(stdout);
     if (checksum_calc.suma != checksum_read.suma) {
       fprintf(stderr, "For gauge file %s, calculated and stored values for SciDAC checksum A do not match.\n", filename);
@@ -106,8 +136,23 @@ int read_gauge_field(char * filename) {
       fprintf(stderr, "For gauge file %s, calculated and stored values for SciDAC checksum B do not match.\n", filename);
       return(-1);
     }
-  }
 
+    /* Verify the datafile vs the hmc.input parameters */
+    fprintf(stdout, "# Reading ildg-format record:\n");
+    fprintf(stdout, "#   Precision = %d bits (%s).\n",ildgformat_read.prec, (ildgformat_read.prec == 64 ? "double" : "single"));
+    fprintf(stdout, "#   Lattice size: LX = %d, LY = %d, LZ = %d, LT = %d.\n", ildgformat_read.lx, ildgformat_read.ly, ildgformat_read.lz, ildgformat_read.lt);
+    fprintf(stdout, "# Input parameters:\n");
+    fprintf(stdout, "#   Precision = %d bits (%s).\n",ildgformat_input->prec, (ildgformat_input->prec == 64 ? "double" : "single"));
+    fprintf(stdout, "#   Lattice size: LX = %d, LY = %d, LZ = %d, LT = %d.\n", ildgformat_input->lx, ildgformat_input->ly, ildgformat_input->lz, ildgformat_input->lt);
+    if (ildgformat_read.prec != ildgformat_input->prec || ildgformat_read.lx != ildgformat_input->lx ||
+        ildgformat_read.ly != ildgformat_input->ly || ildgformat_read.lz != ildgformat_input->lz || ildgformat_read.lt != ildgformat_input->lt) {
+      fprintf(stderr, "Metadata inside gauge file %s does not match input parameters.\n", filename);
+      fprintf(stderr, "Precision or lattice dimensions are not equal, unable to proceed.\n");
+      fprintf(stderr, "Check input parameters T, L (LX, LY, LZ) and GaugeConfigReadPrecision.\n");
+      return(-1);
+      /* This is a rather perverse case, in which the ildg-binary-data record does match the input parameters, but the ildg-format record does not. */
+    }
+  }
   destruct_reader(reader);
 
   g_update_gauge_copy = 1;

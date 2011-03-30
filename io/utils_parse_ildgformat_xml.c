@@ -1,5 +1,5 @@
 /***********************************************************************
-* Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+* Copyright (C) 2011 Siebren Reker
 *
 * This file is part of tmLQCD.
 *
@@ -19,28 +19,43 @@
 
 #include "utils.ih"
 
-int parse_checksum_xml(char *message, DML_Checksum *checksum)
+int parse_ildgformat_xml(char *message, paramsIldgFormat *ildgformat)
 {
-  int  read_suma = 0, read_sumb = 0;
+  int read_prec = 0, read_lx = 0, read_ly = 0, read_lz = 0, read_lt = 0;
   char *pos = strtok(message, "<> \n\t");
 
-  if (checksum == (DML_Checksum*)NULL) {
+  if (ildgformat == (paramsIldgFormat*)NULL) {
     return 0;
   }
 
   while (pos)
   {
-    if (!strncmp(pos, "suma", 4)) {
+    if (!strncmp(pos, "precision", 9)) {
       pos = strtok(0, "<> \n\t");
-      sscanf(pos, "%x", &checksum->suma);
-      read_suma = 1;
+      sscanf(pos, "%d", &ildgformat->prec);
+      read_prec = 1;
     }
-    if (!strncmp(pos, "sumb", 4)) {
+    if (!strncmp(pos, "lx", 2)) {
       pos = strtok(0, "<> \n\t");
-      sscanf(pos, "%x", &checksum->sumb);
-      read_sumb = 1;
+      sscanf(pos, "%d", &ildgformat->lx);
+      read_lx = 1;
+    }
+    if (!strncmp(pos, "ly", 2)) {
+      pos = strtok(0, "<> \n\t");
+      sscanf(pos, "%d", &ildgformat->ly);
+      read_ly = 1;
+    }
+    if (!strncmp(pos, "lz", 2)) {
+      pos = strtok(0, "<> \n\t");
+      sscanf(pos, "%d", &ildgformat->lz);
+      read_lz = 1;
+    }
+    if (!strncmp(pos, "lt", 2)) {
+      pos = strtok(0, "<> \n\t");
+      sscanf(pos, "%d", &ildgformat->lt);
+      read_lt = 1;
     }
     pos = strtok(0, "<> \n\t");
   }
-  return (read_suma && read_sumb);
+  return (read_prec && read_lx && read_ly && read_lz && read_lt);
 }

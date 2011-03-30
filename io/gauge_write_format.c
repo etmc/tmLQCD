@@ -40,7 +40,7 @@ void write_ildg_format(WRITER *writer, paramsIldgFormat const *format)
           "  <lz>%d</lz>\n"
           "  <lt>%d</lt>\n"
           "</ildgFormat>",
-          format->prec, format->nx, format->ny, format->nz, format->nt);
+          format->prec, format->lx, format->ly, format->lz, format->lt);
 
   bytes = strlen(buf);
   write_header(writer, 1, 1, "ildg-format", bytes);

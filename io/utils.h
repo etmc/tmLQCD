@@ -82,6 +82,8 @@ void zero_spinor(spinor * const R);
 int write_first_messages(FILE * parameterfile, const int inv);
 int parse_propagator_type(READER * reader);
 
+int parse_ildgformat_xml(char *message, paramsIldgFormat *ildgformat);
+
 inline static void byte_swap(void * ptr, int nmemb){
   int j;
   char char_in[8];

@@ -24,12 +24,11 @@
 
 
 #ifdef HAVE_LIBLEMON
-int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum)
+int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum, paramsIldgFormat * input)
 {
   int t, x, y, z, status = 0;
-  int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
+  int latticeSize[] = {input->lt, input->lx, input->ly, input->lz};
   int scidacMapping[] = {0, 3, 2, 1};
-  int prec;
   DML_SiteRank rank;
   MPI_Offset bytes;
   uint64_t fbsu3;
@@ -37,72 +36,66 @@ int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum)
   double tick = 0, tock = 0;
   char measure[64];
 
-  bytes = lemonReaderBytes(lemonreader);
+  bytes = lemonReaderBytes(lemonreader); /* datalength of ildg-binary-data record in bytes */
 
-  if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3)) {
-    prec = 64;
+  if (bytes != (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3) / (input->prec==64 ? 1 : 2)) {
+    fprintf(stderr, "Lattice size and precision found in data file do not match those requested at input.\n");
+    fprintf(stderr, "Expected LX = %d, LY = %d, LZ = %d, LT = %d, and %s precision.\n", input->lx, input->ly, input->lz, input->lt, (input->prec==64 ? "double" : "single"));
+    fprintf(stderr, "Expected %lu bytes, found %lu bytes in gauge file.\n", (unsigned long)(n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3) / (input->prec==64 ? 1 : 2), (unsigned long)bytes);
+    fprintf(stderr, "Check input parameters T, L (LX, LY, LZ) and GaugeConfigReadPrecision.\n");
+    return(-3);
   }
-  else {
-    if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3) / 2) {
-      prec = 32;
-    }
-    else {
-      fprintf(stderr, "Probably wrong lattice size or precision (bytes=%lu).\n", (unsigned long)bytes);
-      return(-3);
-    }
-  }
+
   if (g_cart_id == 0 && g_debug_level > 2) {
-    printf("# %d Bit precision read.\n", prec);
+    printf("# %d Bit precision read.\n", input->prec);
   }
 
   DML_checksum_init(checksum);
 
   fbsu3 = sizeof(su3);
-  if (prec == 32) {
+  if (input->prec == 32) {
     fbsu3 /= 2;
   }
   bytes = 4 * fbsu3;
 
+
   if((void*)(filebuffer = malloc(VOLUME * bytes)) == NULL) {
-    printf ("malloc errno in read_binary_gauge_data_parallel: %d\n", errno);
+    fprintf (stderr, "malloc errno in read_binary_gauge_data: %d\n", errno);
     errno = 0;
     /* do we need to abort here? */
     return(-1);
   }
 
-  if (g_debug_level > 0)
-  {
+  if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
   }
 
   status = lemonReadLatticeParallelMapped(lemonreader, filebuffer, bytes, latticeSize, scidacMapping);
 
-  if (g_debug_level > 0)
-  {
+  if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tock = MPI_Wtime();
-
-    if (g_cart_id == 0)
-    {
-      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
-      fprintf(stdout, "Time spent reading %s ", measure);
-      engineering(measure, tock - tick, "s");
-      fprintf(stdout, "was %s.\n", measure);
-      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
-      fprintf(stdout, "Reading speed: %s", measure);
-      engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
-      fprintf(stdout, " (%s per MPI process).\n", measure);
-      fflush(stdout);
-    }
   }
 
-  if (status != LEMON_SUCCESS)
-  {
+  if (status != LEMON_SUCCESS) {
     free(filebuffer);
-    fprintf(stderr, "LEMON read error occurred with status = %d, while reading in gauge_read_binary.c!\n", status);
+    fprintf(stderr, "Lemon read error occurred with status = %d, while reading in gauge_read_binary.c!\n", status);
     return(-2);
   }
+
+  if (g_debug_level > 0 && g_cart_id == 0) {
+    engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
+    fprintf(stdout, "# Time spent reading %s ", measure);
+    engineering(measure, tock - tick, "s");
+    fprintf(stdout, "was %s.\n", measure);
+    engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
+    fprintf(stdout, "# Reading speed: %s", measure);
+    engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
+    fprintf(stdout, " (%s per MPI process).\n", measure);
+    fflush(stdout);
+  }
+
 
   for (t = 0; t < T; t++) {
     for (z = 0; z < LZ; z++) {
@@ -113,7 +106,7 @@ int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum)
                                  + g_proc_coords[2] * LY + y) * ((DML_SiteRank)LX * g_nproc_x) + x);
           current = filebuffer + bytes * (x + (y + (t * LZ + z) * LY) * LX);
           DML_checksum_accum(checksum, rank, current, bytes);
-          if (prec == 32) {
+          if (input->prec == 32) {
             be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
             be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
             be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
@@ -135,10 +128,10 @@ int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum)
   return(0);
 }
 #else /* HAVE_LIBLEMON */
-int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum) {
+int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, paramsIldgFormat * input) {
 
   int t, x, y , z, status=0;
-  int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
+  int latticeSize[] = {input->lt, input->lx, input->ly, input->lz};
   n_uint64_t bytes;
   su3 tmp[4];
   float tmp2[72];
@@ -147,8 +140,6 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum) {
 #endif
   char measure[64];
   DML_SiteRank rank;
-  int prec;
-
   DML_checksum_init(checksum);
 
 #ifdef MPI
@@ -158,18 +149,16 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum) {
   }
 #endif
 
-  bytes = limeReaderBytes(limereader);
-
-  if(bytes == ((n_uint64_t)LX*g_nproc_x)*((n_uint64_t)LY*g_nproc_y)*((n_uint64_t)LZ*g_nproc_z)*((n_uint64_t)T*g_nproc_t)*((n_uint64_t)4*sizeof(su3))) prec = 64;
-  else if(bytes == ((n_uint64_t)LX*g_nproc_x)*((n_uint64_t)LY*g_nproc_y)*((n_uint64_t)LZ*g_nproc_z)*((n_uint64_t)T*g_nproc_t)*((n_uint64_t)4*sizeof(su3)/2)) prec = 32;
-  else {
-    fprintf(stderr, "Probably wrong lattice size or precision in gauge_read_binary.c (bytes=%lu)\n", bytes);
+  bytes = limeReaderBytes(limereader); /* datalength of ildg-binary-data record in bytes */
+  if (bytes != (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3) / (input->prec==64 ? 1 : 2)) {
+    fprintf(stderr, "Lattice size and precision found in data file do not match those requested at input.\n");
+    fprintf(stderr, "Expected LX = %d, LY = %d, LZ = %d, LT = %d, and %s precision.\n", input->lx, input->ly, input->lz, input->lt, (input->prec==64 ? "double" : "single"));
+    fprintf(stderr, "Expected %lu bytes, found %lu bytes.\n", (unsigned long)(n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3) / (input->prec==64 ? 1 : 2), (unsigned long)bytes);
+    fprintf(stderr, "Check input parameters T, L (LX, LY, LZ) and GaugeConfigReadPrecision.\n");
     return(-3);
   }
-  if(g_cart_id == 0 && g_debug_level > 2) {
-    printf("# %d bit precision read\n", prec);
-  }
-  if(prec == 32) bytes = (n_uint64_t)2*sizeof(su3);
+
+  if(input->prec == 32) bytes = (n_uint64_t)2*sizeof(su3);
   else bytes = (n_uint64_t)4*sizeof(su3);
   for(t = 0; t < T; t++) {
     for(z = 0; z < LZ; z++) {
@@ -185,7 +174,7 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum) {
           rank = (DML_SiteRank) (g_proc_coords[1]*LX +
                                  (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
                                   + g_proc_coords[2]*LY+y)*((DML_SiteRank)LX*g_nproc_x) + x);
-          if(prec == 32) {
+          if(input->prec == 32) {
             status = limeReaderReadData(tmp2, &bytes, limereader);
             DML_checksum_accum(checksum, rank, (char *) tmp2, bytes);
           }
@@ -201,7 +190,7 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum) {
 #endif
             return(-2);
           }
-          if(prec == 32) {
+          if(input->prec == 32) {
             be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp2[3*18], sizeof(su3)/8);
             be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &tmp2[0*18], sizeof(su3)/8);
             be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &tmp2[1*18], sizeof(su3)/8);

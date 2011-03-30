@@ -54,6 +54,7 @@ libio_TARGETS = utils_engineering \
 		utils_close_reader_record \
 		utils_write_first_message \
 		utils_parse_propagator_type \
+		utils_parse_ildgformat_xml \
 		params_construct_ildgFormat \
 		params_construct_propagatorFormat \
 		params_construct_sourceFormat \
