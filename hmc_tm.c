@@ -251,7 +251,7 @@ int main(int argc,char *argv[]) {
     j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
   }
   if (j != 0) {
-    fprintf(stderr, "Not enough memory for monomial pseudo fermion  fields! Aborting...\n");
+    fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
     exit(0);
   }
   if(even_odd_flag) {
@@ -283,7 +283,7 @@ int main(int argc,char *argv[]) {
   if(g_running_phmc) {
     j = init_bispinor_field(VOLUME/2, NO_OF_BISPINORFIELDS);
     if (j!= 0) {
-      fprintf(stderr, "Not enough memory for Bispinor fields! Aborting...\n");
+      fprintf(stderr, "Not enough memory for bi-spinor fields! Aborting...\n");
       exit(0);
     }
   }
@@ -347,13 +347,14 @@ int main(int argc,char *argv[]) {
             gauge_input_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
-    if( (j = read_gauge_field(gauge_input_filename)) !=0) {
+    if( (j = read_gauge_field(gauge_input_filename)) != 0) {
       fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", j, gauge_input_filename);
       exit(-2);
     }
 
     if (g_proc_id == 0){
-      printf("# done!\n"); fflush(stdout);
+      printf("# Finished reading gauge field.\n");
+      fflush(stdout);
     }
   }
   else if (startoption == 1) {
@@ -370,8 +371,9 @@ int main(int argc,char *argv[]) {
   xchange_gauge();
 #endif
 
-  if(g_running_phmc) init_phmc();
-
+  if(g_running_phmc) {
+    init_phmc();
+  }
 
   /*********************************************************/
   /* impose SF bc in case it was chosen in the input file */
@@ -385,28 +387,28 @@ int main(int argc,char *argv[]) {
 
     /* compute the energy of the gauge field for SF */
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-      /* NOTE: the factor (1./(2.*3.)) is due to the difference between	our normalisation and Carstens's normalisation
-	 when defining the plaquette and rectangle functions */
+      /* NOTE: the factor (1./(2.*3.)) is due to the difference between our normalisation and Carstens's normalisation
+      when defining the plaquette and rectangle functions */
       plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_iwasaki(g_Tbsf, g_Cs, g_Ct, g_rgi_C0);
       rectangle_energy = (1./(2.*3.))*measure_rectangle_sf_iwasaki(g_Tbsf, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
       eneg = plaquette_energy + rectangle_energy;
       /* print energy for SF */
       if(g_proc_id==0){
-	fprintf(parameterfile,"# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
-	fprintf(parameterfile,"# First rectangle value for SF: %14.12f \n", rectangle_energy/(12.*VOLUME*g_nproc));
-	printf("# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
-	printf("# First rectangle value for SF: %14.12f \n", rectangle_energy/(12.*VOLUME*g_nproc));
+        fprintf(parameterfile,"# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+        fprintf(parameterfile,"# First rectangle value for SF: %14.12f \n", rectangle_energy/(12.*VOLUME*g_nproc));
+        printf("# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+        printf("# First rectangle value for SF: %14.12f \n", rectangle_energy/(12.*VOLUME*g_nproc));
       }
     }
     else {
-      /* NOTE: the factor (1./(2.*3.)) is due to the difference between	our normalisation and Carstens's normalisation
-	 when defining the plaquette and rectangle functions */
+      /* NOTE: the factor (1./(2.*3.)) is due to the difference between our normalisation and Carstens's normalisation
+      when defining the plaquette and rectangle functions */
       plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_weights_improvement(g_Tbsf, g_Cs, g_Ct);
       eneg = plaquette_energy;
       /* print plaquette energy for SF */
       if(g_proc_id==0){
-	fprintf(parameterfile,"# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
-	printf("# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+        fprintf(parameterfile,"# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+        printf("# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
       }
     }
   }
@@ -415,14 +417,14 @@ int main(int argc,char *argv[]) {
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
       rectangle_energy = measure_rectangles();
       if(g_proc_id==0){
-	fprintf(parameterfile,"# First rectangle value: %14.12f \n",rectangle_energy/(12.*VOLUME*g_nproc));
+        fprintf(parameterfile,"# Computed rectangle value: %14.12f.\n",rectangle_energy/(12.*VOLUME*g_nproc));
       }
     }
     eneg = g_rgi_C0 * plaquette_energy + g_rgi_C1 * rectangle_energy;
 
     if(g_proc_id == 0) {
-      fprintf(parameterfile,"# First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
-      printf("# First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
+      fprintf(parameterfile,"# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
+      printf("# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
       fclose(parameterfile);
     }
   }
@@ -446,7 +448,7 @@ int main(int argc,char *argv[]) {
     gettimeofday(&t1,NULL);
     countfile = fopen("history_hmc_tm", "a");
     fprintf(countfile, "!!! Timestamp %ld, Nsave = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, ",
-	    t1.tv_sec, Nsave, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1);
+            t1.tv_sec, Nsave, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1);
     for(j = 0; j < Integrator.no_timescales; j++) {
       fprintf(countfile, "n_int[%d] = %d ", j, Integrator.no_mnls_per_ts[j]);
     }
@@ -471,10 +473,10 @@ int main(int argc,char *argv[]) {
       sprintf(gauge_filename,"conf.%.4d", nstore);
       if(g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
-	fprintf(countfile, "%.4d, measurement %d of %d, Nsave = %d, Plaquette = %e, trajectory nr = %d\n",
-		nstore, j, Nmeas, Nsave, plaquette_energy/(6.*VOLUME*g_nproc),
-		trajectory_counter);
-	fclose(countfile);
+        fprintf(countfile, "%.4d, measurement %d of %d, Nsave = %d, Plaquette = %e, trajectory nr = %d\n",
+            nstore, j, Nmeas, Nsave, plaquette_energy/(6.*VOLUME*g_nproc),
+            trajectory_counter);
+        fclose(countfile);
       }
       nstore ++;
     }
@@ -487,19 +489,28 @@ int main(int argc,char *argv[]) {
 /*       write_gauge_field_time_p( tmp_filename); */
 
       xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-      write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo);
-      free(xlfInfo);
+      if((j = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo) != 0 )) {
+        /* At this moment, more work could be done in a fallback mode, e.g. Lemon -> Lime, retry etc. */
+        fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", j, tmp_filename);
+        exit(-2);
+      }
 
+      free(xlfInfo);
 
       /* Now move it! */
       if(g_proc_id == 0) {
-  	rename(tmp_filename, gauge_filename);
+        fprintf(stdout, "# Moving %s to %s.\n", tmp_filename, gauge_filename);
+        if (rename(tmp_filename, gauge_filename) != 0) {
+          /* Errno can be inspected here for more descriptive error reporting */
+          fprintf(stderr, "Error while trying to rename temporary file %s to %s. Unable to proceed.\n",tmp_filename, gauge_filename);
+          exit(-2);
+        }
         countfile = fopen(nstore_filename, "w");
         fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
         fclose(countfile);
       }
     }
-    
+
     /* online measurements */
     for(imeas=0; imeas<no_measurements; imeas++){
       meas = &measurement_list[imeas];
@@ -526,19 +537,19 @@ int main(int argc,char *argv[]) {
 #endif
     if(ix == 0 && g_proc_id == 0) {
       countfile = fopen("history_hmc_tm", "a");
-      fprintf(countfile, "# Changed parameter according to hmc.reread: measurement %d of %d\n", j, Nmeas);
+      fprintf(countfile, "# Changed input parameters according to hmc.reread: measurement %d of %d\n", j, Nmeas);
       fclose(countfile);
-      printf("# Changed parameter according to hmc.reread (see stdout): measurement %d of %d\n", j, Nmeas);
+      printf("# Changed input parameters according to hmc.reread (see stdout): measurement %d of %d\n", j, Nmeas);
       remove("hmc.reread");
     }
     trajectory_counter++;
   } /* end of loop over trajectories */
 
   if(g_proc_id==0) {
-    printf("Acceptance rate was: %3.2f percent\n", 100.*(double)Rate/(double)Nmeas);
+    printf("# Acceptance rate was %3.2f percent, %d out of %d trajectories accepted.\n", 100.*(double)Rate/(double)Nmeas, Rate, Nmeas);
     fflush(stdout);
     parameterfile = fopen(parameterfilename, "a");
-    fprintf(parameterfile, "Acceptance Rate was: %3.2f Percent\n", 100.*(double)Rate/(double)Nmeas);
+    fprintf(parameterfile, "# Acceptance rate was %3.2f percent, %d out of %d trajectories accepted.\n", 100.*(double)Rate/(double)Nmeas, Rate, Nmeas);
     fclose(parameterfile);
   }
 

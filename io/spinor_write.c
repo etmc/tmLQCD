@@ -24,7 +24,7 @@ int write_spinor(WRITER * writer, spinor ** const s, spinor ** const r, const in
 {
   DML_Checksum checksum;
   uint64_t bytes;
-  int i = 0;
+  int i = 0, status = 0;
 
   bytes = (n_uint64_t)LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * (n_uint64_t)(sizeof(spinor) * prec / 64);
 

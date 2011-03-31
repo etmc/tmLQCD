@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
     }
   }
   if (input_filename == NULL) {
-    input_filename = "hmc.input";
+    input_filename = "invert.input";
   }
   if (filename == NULL) {
     filename = "output";
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
     }
     if (j != 0) {
       fprintf(stderr, "Not enough memory for monomial pseudo fermion  fields! Aborting...\n");
-      exit(0);
+      exit(-1);
     }
   }
   if (even_odd_flag) {
@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
     j = init_chi_spinor_field(VOLUMEPLUSRAND / 2, 20);
     if (j != 0) {
       fprintf(stderr, "Not enough memory for PHMC Chi fields! Aborting...\n");
-      exit(0);
+      exit(-1);
     }
   }
 
@@ -293,17 +293,18 @@ int main(int argc, char *argv[])
   for (j = 0; j < Nmeas; j++) {
     sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nstore);
     if (g_cart_id == 0) {
-      printf("Reading gauge field from file %s\n", conf_filename);
+      printf("# Trying to read gauge field from file %s in %s precision.\n",
+            conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
     if( (j = read_gauge_field(conf_filename)) !=0) {
-      fprintf(stderr, "error %d while reading gauge field from %s\n Aborting...\n", j, conf_filename);
+      fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", j, conf_filename);
       exit(-2);
     }
 
 
     if (g_cart_id == 0) {
-      printf("done!\n");
+      printf("# Finished reading gauge field.\n");
       fflush(stdout);
     }
 #ifdef MPI
@@ -314,7 +315,7 @@ int main(int argc, char *argv[])
     plaquette_energy = measure_gauge_action();
 
     if (g_cart_id == 0) {
-      printf("The plaquette value is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
+      printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
       fflush(stdout);
     }
 
@@ -325,7 +326,7 @@ int main(int argc, char *argv[])
       plaquette_energy = measure_gauge_action();
 
       if (g_cart_id == 0) {
-        printf("The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
+        printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
         fflush(stdout);
       }
     }
@@ -352,7 +353,6 @@ int main(int argc, char *argv[])
 
       int i;
       spinor **s, *s_;
-      double modenumber;
       s_ = calloc(100*VOLUMEPLUSRAND+1, sizeof(spinor));
       s  = calloc(100, sizeof(spinor*));
 
@@ -375,15 +375,15 @@ int main(int argc, char *argv[])
 #endif
 
         if(g_proc_id == 0) {
-	  printf("source %d \n", i);
-
-	}
+          printf("source %d \n", i);
+        }
 
         if(compute_modenumber != 0){
-	  mode_number(s[i], mstarsq);
+          mode_number(s[i], mstarsq);
         }
+
         if(compute_topsus !=0){
-	  top_sus(s[i], mstarsq);
+          top_sus(s[i], mstarsq);
         }
       }
       free(s);
@@ -410,7 +410,7 @@ int main(int argc, char *argv[])
       /*       alt_block_compute_little_D(); */
       if (g_debug_level > 0) {
         check_projectors();
-	check_local_D();
+        check_local_D();
       }
       if (g_debug_level > 1) {
         check_little_D_inversion();
@@ -442,60 +442,50 @@ int main(int argc, char *argv[])
       boundary(operator_list[op_id].kappa);
       g_kappa = operator_list[op_id].kappa; 
       g_mu = 0.;
-      
+
       if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
-	
-	printf(" Using preconditioning with treelevel preconditioning operator: %s \n",
-	       precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
-	/* initial preconditioning workspace */
-	operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
-	
-	
-	spinorPrecWS_Init(operator_list[op_id].precWS,
-			  operator_list[op_id].kappa,
-			  operator_list[op_id].mu/2./operator_list[op_id].kappa,
-			  -(0.5/operator_list[op_id].kappa-4.),
-			  PRECWSOPERATORSELECT[operator_list[op_id].solver]);
-	
-	g_precWS = operator_list[op_id].precWS;
+        printf(" Using preconditioning with treelevel preconditioning operator: %s \n",
+              precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
+        /* initial preconditioning workspace */
+        operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
+        spinorPrecWS_Init(operator_list[op_id].precWS,
+                  operator_list[op_id].kappa,
+                  operator_list[op_id].mu/2./operator_list[op_id].kappa,
+                  -(0.5/operator_list[op_id].kappa-4.),
+                  PRECWSOPERATORSELECT[operator_list[op_id].solver]);
+        g_precWS = operator_list[op_id].precWS;
 
-	if(PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D)
-	  fitPrecParams(op_id);
-
+        if(PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D) {
+          fitPrecParams(op_id);
+        }
       }
 
       for(isample = 0; isample < no_samples; isample++) {
-	for (ix = index_start; ix < index_end; ix++) {
+        for (ix = index_start; ix < index_end; ix++) {
 
-	  /* we use g_spinor_field[0-7] for sources and props for the moment */
-	  /* 0-3 in case of 1 flavour  */
-	  /* 0-7 in case of 2 flavours */
-	  prepare_source(nstore, isample, ix, op_id, 
-			 read_source_flag,
-			 source_location);
-	  operator_list[op_id].inverter(op_id, index_start);
-
-
-	}
+          /* we use g_spinor_field[0-7] for sources and props for the moment */
+          /* 0-3 in case of 1 flavour  */
+          /* 0-7 in case of 2 flavours */
+          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
+          operator_list[op_id].inverter(op_id, index_start);
+        }
       }
 
 
       if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
-	/* free preconditioning workspace */
-	spinorPrecWS_Free(operator_list[op_id].precWS);
-	free(operator_list[op_id].precWS);
-	
+        /* free preconditioning workspace */
+        spinorPrecWS_Free(operator_list[op_id].precWS);
+        free(operator_list[op_id].precWS);
       }
 
       if(operator_list[op_id].type == OVERLAP){
-	free_Dov_WS();
+        free_Dov_WS();
       }
-
 
     }
     nstore += Nsave;
   }
-  
+
 #ifdef MPI
   MPI_Finalize();
 #endif

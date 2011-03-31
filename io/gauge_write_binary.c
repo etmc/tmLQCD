@@ -51,7 +51,7 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
   }
-  
+
   tG = g_proc_coords[0]*T;
   zG = g_proc_coords[3]*LZ;
   yG = g_proc_coords[2]*LY;
@@ -59,20 +59,19 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
   for(t = 0; t < T; t++) {
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {
-	for(x = 0; x < LX; x++) {
-	  rank = (DML_SiteRank) ((((tG + t)*L + zG + z)*L + yG + y)*L + xG + x);
-	  memcpy(&tmp3[0], &g_gauge_field[ g_ipt[t][x][y][z] ][1], sizeof(su3));
-	  memcpy(&tmp3[1], &g_gauge_field[ g_ipt[t][x][y][z] ][2], sizeof(su3));
-	  memcpy(&tmp3[2], &g_gauge_field[ g_ipt[t][x][y][z] ][3], sizeof(su3));
-	  memcpy(&tmp3[3], &g_gauge_field[ g_ipt[t][x][y][z] ][0], sizeof(su3));
-	  if(prec == 32)
-	    be_to_cpu_assign_double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
-	  else
-	    be_to_cpu_assign(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
-	  DML_checksum_accum(checksum, rank, (char*) filebuffer + bufoffset, bytes);
-	  
-	  bufoffset += bytes;
-	}
+        for(x = 0; x < LX; x++) {
+          rank = (DML_SiteRank) ((((tG + t)*L + zG + z)*L + yG + y)*L + xG + x);
+          memcpy(&tmp3[0], &g_gauge_field[ g_ipt[t][x][y][z] ][1], sizeof(su3));
+          memcpy(&tmp3[1], &g_gauge_field[ g_ipt[t][x][y][z] ][2], sizeof(su3));
+          memcpy(&tmp3[2], &g_gauge_field[ g_ipt[t][x][y][z] ][3], sizeof(su3));
+          memcpy(&tmp3[3], &g_gauge_field[ g_ipt[t][x][y][z] ][0], sizeof(su3));
+          if(prec == 32)
+            be_to_cpu_assign_double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
+          else
+            be_to_cpu_assign(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
+          DML_checksum_accum(checksum, rank, (char*) filebuffer + bufoffset, bytes);
+          bufoffset += bytes;
+        }
       }
     }
   }
@@ -92,11 +91,11 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
 
     if (g_cart_id == 0) {
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
-      fprintf(stdout, "Time spent writing %s ", measure);
+      fprintf(stdout, "# Time spent writing %s ", measure);
       engineering(measure, tock - tick, "s");
       fprintf(stdout, "was %s.\n", measure);
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
-      fprintf(stdout, "Writing speed: %s", measure);
+      fprintf(stdout, "# Writing speed: %s", measure);
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
       fflush(stdout);
@@ -138,7 +137,6 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
     tick = MPI_Wtime();
   }
 #endif
-
   if(prec == 32) bytes = (n_uint64_t)2*sizeof(su3);
   else bytes = (n_uint64_t)4*sizeof(su3);
   for(t0 = 0; t0 < T*g_nproc_t; t0++) {
@@ -236,11 +234,11 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
 
     if (g_cart_id == 0) {
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
-      fprintf(stdout, "Time spent writing %s ", measure);
+      fprintf(stdout, "# Time spent writing %s ", measure);
       engineering(measure, tock-tick, "s");
       fprintf(stdout, "was %s.\n", measure);
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock-tick), "b/s");
-      fprintf(stdout, "Writing speed: %s", measure);
+      fprintf(stdout, "# Writing speed: %s", measure);
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock-tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
     }

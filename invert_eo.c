@@ -79,7 +79,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   int iter = 0;
   /* here comes the inversion using even/odd preconditioning */
   if(even_odd_flag) {
-    if(g_proc_id == 0) {printf("# Using Even/Odd preconditioning!\n"); fflush(stdout);}
+    if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}
     
 #ifdef HAVE_GPU
 #ifdef TEMPORALGAUGE
@@ -292,7 +292,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 
   else {
     /* here comes the inversion not using even/odd preconditioning */
-    if(g_proc_id == 0) {printf("# Not using Even/Odd preconditioning!\n"); fflush(stdout);}
+    if(g_proc_id == 0) {printf("# Not using even/odd preconditioning!\n"); fflush(stdout);}
     convert_eo_to_lexic(g_spinor_field[DUM_DERI], Even, Odd);
     convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_new, Odd_new);
     

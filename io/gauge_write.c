@@ -23,14 +23,14 @@ int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfI
 {
   WRITER * writer = NULL;
   uint64_t bytes;
-
+  int status = 0;
   DML_Checksum     checksum;
   paramsIldgFormat *ildg;
 
   bytes = (uint64_t)L * L * L * T_global * sizeof(su3) * prec / 16;
 
-  /* the 0 is for not appending */
-  construct_writer(&writer, filename, 0);
+  /* all these functions, except for write_binary_gauge_data do error handling */
+  construct_writer(&writer, filename, 0);/* the 0 is for not appending */
 
   write_xlf_info(writer, xlfInfo);
 
@@ -39,12 +39,13 @@ int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfI
   free(ildg);
 
   write_header(writer, 1, 1, "ildg-binary-data", bytes);
-  write_binary_gauge_data(writer, prec, &checksum);
+  status = write_binary_gauge_data(writer, prec, &checksum);
   write_checksum(writer, &checksum, NULL);
 
   if (g_cart_id == 0)
   {
-    fprintf(stdout, "Checksum A: %#x \nChecksum B: %#x\n", checksum.suma, checksum.sumb);
+    fprintf(stdout, "# Scidac checksums for gaugefield %s:\n", filename);
+    fprintf(stdout, "#   Calculated            : A = %#x B = %#x.\n", checksum.suma, checksum.sumb);
     fflush(stdout);
   }
 #ifdef MPI
@@ -52,5 +53,5 @@ int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfI
 #endif /* MPI */
 
   destruct_writer(writer);
-  return 0;
+  return status;
 }

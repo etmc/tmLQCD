@@ -40,8 +40,6 @@ void invert_overlap(const int op_id, const int index_start) {
   operator * optr;
   void (*op)(spinor*,spinor*);
   optr = &operator_list[op_id];
-  int solver=0;
-
 
   op=&Dov_psi;
 
@@ -49,7 +47,7 @@ void invert_overlap(const int op_id, const int index_start) {
   /* for new gauge fields                                */
 
 
-  if(g_proc_id == 0) {printf("# Not using Even/Odd preconditioning!\n"); fflush(stdout);}
+  if(g_proc_id == 0) {printf("# Not using even/odd preconditioning!\n"); fflush(stdout);}
   convert_eo_to_lexic(g_spinor_field[DUM_DERI], optr->sr0, optr->sr1);
   convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
   

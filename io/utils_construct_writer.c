@@ -7,9 +7,9 @@ void construct_writer(WRITER ** writer, char * filename, const int append)
   
   if(g_debug_level > 0 && g_cart_id == 0) {
 #ifdef HAVE_LIBLEMON
-    printf("Constructing LEMON writer for file %s for append = %d\n", filename, append);
+    printf("# Constructing LEMON writer for file %s for append = %d\n", filename, append);
 #else
-    printf("Constructing LIME writer for file %s for append = %d\n", filename, append);
+    printf("# Constructing LIME writer for file %s for append = %d\n", filename, append);
 #endif
   }
 

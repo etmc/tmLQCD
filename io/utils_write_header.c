@@ -31,9 +31,10 @@ void write_header(WRITER * writer, int MB, int ME, char const *type, uint64_t by
     header = CreateHeader(MB, ME, (char*)type, bytes);
     status = WriteRecordHeader(header, writer);
     DestroyHeader(header);
-    
-    if (status != LIME_SUCCESS)
+
+    if (status != LIME_SUCCESS) {
       kill_with_error(writer->fp, g_cart_id, "Header writing error. Aborting\n");
+    }
 #ifndef HAVE_LIBLEMON
   }
 #endif /* ! HAVE_LIBLEMON */

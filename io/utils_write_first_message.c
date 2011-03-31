@@ -33,96 +33,96 @@ int write_first_messages(FILE * parameterfile, const int inv) {
 	    "# This is the invert code for twisted Mass Wilson QCD\n\nVersion %s\n", PACKAGE_VERSION);
   }
 #ifdef SSE
-  printf("# The code was compiled with SSE instructions\n");
+  printf("# The code is compiled with SSE instructions\n");
   fprintf(parameterfile, 
-	  "# The code was compiled with SSE instructions\n");
+	  "# The code is compiled with SSE instructions\n");
 #endif
 #ifdef SSE2
-  printf("# The code was compiled with SSE2 instructions\n");
+  printf("# The code is compiled with SSE2 instructions\n");
   fprintf(parameterfile, 
-	  "# The code was compiled with SSE2 instructions\n");
+	  "# The code is compiled with SSE2 instructions\n");
 #endif
 #ifdef SSE3
-  printf("# The code was compiled with SSE3 instructions\n");
+  printf("# The code is compiled with SSE3 instructions\n");
   fprintf(parameterfile, 
-	  "# The code was compiled with SSE3 instructions\n");
+	  "# The code is compiled with SSE3 instructions\n");
 #endif
 #ifdef P4
-  printf("# The code was compiled for Pentium4\n");
+  printf("# The code is compiled for Pentium4\n");
   fprintf(parameterfile, 
-	  "# The code was compiled for Pentium4\n");
+	  "# The code is compiled for Pentium4\n");
 #endif
 #if (defined BGL && !defined BGP)
-  printf("# The code was compiled for Blue Gene/L\n");
+  printf("# The code is compiled for Blue Gene/L\n");
   fprintf(parameterfile, 
-	  "# The code was compiled for Blue Gene/L\n");
+	  "# The code is compiled for Blue Gene/L\n");
 #  if (defined _USE_BGLDRAM)
-  printf("# The code was compiled for Blue Gene/L dram window\n");
+  printf("# The code is compiled for Blue Gene/L dram window\n");
   fprintf(parameterfile, 
-	  "# The code was compiled for Blue Gene/L dram window\n");
+	  "# The code is compiled for Blue Gene/L dram window\n");
 #  endif
 #endif
 #ifdef BGP
-  printf("# The code was compiled for Blue Gene/P\n");
+  printf("# The code is compiled for Blue Gene/P\n");
   fprintf(parameterfile,
-          "# The code was compiled for Blue Gene/P\n");
+          "# The code is compiled for Blue Gene/P\n");
 #endif
 #ifdef OPTERON
-  printf("# The code was compiled for AMD Opteron\n");
+  printf("# The code is compiled for AMD Opteron\n");
   fprintf(parameterfile,
-	  "# The code was compiled for AMD Opteron\n");
+	  "# The code is compiled for AMD Opteron\n");
 #endif
 #ifdef _GAUGE_COPY
-  printf("# The code was compiled with -D_GAUGE_COPY\n");
+  printf("# The code is compiled with -D_GAUGE_COPY\n");
   fprintf(parameterfile,
-	  "# The code was compiled with -D_GAUGE_COPY\n");
+	  "# The code is compiled with -D_GAUGE_COPY\n");
 #endif
 #ifdef _USE_HALFSPINOR
-  printf("# The code was compiled with -D_USE_HALFSPINOR\n");
+  printf("# The code is compiled with -D_USE_HALFSPINOR\n");
   fprintf(parameterfile,
-	  "# The code was compiled with -D_USE_HALFSPINOR\n");
+	  "# The code is compiled with -D_USE_HALFSPINOR\n");
 #endif
 #ifdef _USE_SHMEM
-  printf("# the code was compiled with -D_USE_SHMEM\n");
+  printf("# the code is compiled with -D_USE_SHMEM\n");
   fprintf(parameterfile,
-         "# the code was compiled with -D_USE_SHMEM\n");
+         "# the code is compiled with -D_USE_SHMEM\n");
 #  ifdef _PERSISTENT
-  printf("# the code was compiled for persistent MPI calls (halfspinor only)\n");
+  printf("# the code is compiled for persistent MPI calls (halfspinor only)\n");
   fprintf(parameterfile,
-         "# the code was compiled for persistent MPI calls (halfspinor only)\n");
+         "# the code is compiled for persistent MPI calls (halfspinor only)\n");
 #  endif
 #endif
 #ifdef MPI
 #  ifdef _NON_BLOCKING
-  printf("# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
+  printf("# the code is compiled for non-blocking MPI calls (spinor and gauge)\n");
   fprintf(parameterfile,
-         "# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
+         "# the code is compiled for non-blocking MPI calls (spinor and gauge)\n");
 #  endif
 #  ifdef HAVE_LIBLEMON
-  printf("# the code was compiled with MPI IO / Lemon\n");
+  printf("# the code is compiled with MPI IO / Lemon\n");
   fprintf(parameterfile,
-	  "# the code was compiled with MPI IO / Lemon\n");
+	  "# the code is compiled with MPI IO / Lemon\n");
 #  endif
 #endif
   if( bc_flag == 0 ) {
-    printf("# Periodic boundary conditions\n");
-    fprintf(parameterfile, "# Periodic boundary conditions\n");
+    printf("# Periodic boundary conditions are used\n");
+    fprintf(parameterfile, "# Periodic boundary conditions are used\n");
   }
   if( bc_flag == 1 ) {
-    printf("# Schroedinger Functional boundary conditions\n");
-    fprintf(parameterfile, "# Schroedinger Functional boundary conditions\n");
+    printf("# Schroedinger Functional boundary conditions are used\n");
+    fprintf(parameterfile, "# Schroedinger Functional boundary conditions are used\n");
   }
   printf("# The lattice size is %d x %d x %d x %d\n",
 	 (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(LZ*g_nproc_z));
   printf("# The local lattice size is %d x %d x %d x %d\n", 
       (int)(T), (int)(LX), (int)(LY),(int) LZ);
   if(even_odd_flag) {
-    printf("# Even/odd preconditioning was used\n");
-    fprintf(parameterfile, "# Even/odd preconditioning was used\n");
+    printf("# Even/odd preconditioning is used\n");
+    fprintf(parameterfile, "# Even/odd preconditioning is used\n");
   }
   else {
-    printf("# Even/odd preconditioning was not used\n");
-    fprintf(parameterfile, "# Even/odd preconditioning was not used\n");
+    printf("# Even/odd preconditioning is not used\n");
+    fprintf(parameterfile, "# Even/odd preconditioning is not used\n");
   }
   printf("# beta = %f , kappa= %f\n", g_beta, g_kappa);
   printf("# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);

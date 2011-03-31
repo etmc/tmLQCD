@@ -137,7 +137,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 
 
   /* here comes the inversion using even/odd preconditioning */
-  if(g_proc_id == 0) {printf("# Using Even/Odd preconditioning!\n"); fflush(stdout);}
+  if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}
   M_ee_inv_ND(Even_new_s, Even_new_c, 
 	      Even_s, Even_c);
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new_s);
