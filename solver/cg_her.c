@@ -60,13 +60,13 @@
 #include "cg_her.h"
 
 int cg_her(spinor * const P, spinor * const Q, const int max_iter, 
-	   double eps_sq, const int rel_prec, const int N, matrix_mult f) {
+           double eps_sq, const int rel_prec, const int N, matrix_mult f) {
 
   static double normsq,pro,err,alpha_cg,beta_cg,squarenorm;
   int iteration;
   int save_sloppy = g_sloppy_precision;
   double atime, etime, flops;
-  
+
   /* initialize residue r and search vector p */
 #ifdef MPI
   atime = MPI_Wtime();
@@ -74,20 +74,20 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   atime = ((double)clock())/((double)(CLOCKS_PER_SEC));
 #endif
   squarenorm = square_norm(Q, N, 1);
-  
+
   f(g_spinor_field[DUM_SOLVER], P); 
-  
+
   diff(g_spinor_field[DUM_SOLVER+1], Q, g_spinor_field[DUM_SOLVER], N);
   assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], N);
   normsq=square_norm(g_spinor_field[DUM_SOLVER+1], N, 1);
-  
+
   /* main loop */
   for(iteration = 1; iteration <= max_iter; iteration++) {
     f(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2]);
     pro = scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], N, 1);
     alpha_cg = normsq / pro;
     assign_add_mul_r(P, g_spinor_field[DUM_SOLVER+2], alpha_cg, N);
-    
+
     assign_mul_add_r(g_spinor_field[DUM_SOLVER], -alpha_cg, g_spinor_field[DUM_SOLVER+1], N);
     err=square_norm(g_spinor_field[DUM_SOLVER], N, 1);
 
@@ -95,7 +95,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
       printf("CG: iterations: %d res^2 %e\n", iteration, err);
       fflush(stdout);
     }
-    
+
     if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) {
       break;
     }
@@ -103,7 +103,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     if(((err*err <= eps_sq) && (rel_prec == 0)) || ((err*err <= eps_sq*squarenorm) && (rel_prec == 1))) {
       g_sloppy_precision = 1;
       if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
-	printf("sloppy precision on\n"); fflush( stdout);
+        printf("sloppy precision on\n"); fflush( stdout);
       }
     }
 #endif
@@ -123,9 +123,9 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   /* 2*1320.0 because the linalg is over VOLUME/2 */
   flops = (2*(2*1320.0+2*3*4) + 2*3*4 + iteration*(2.*(2*1320.0+2*3*4) + 10*3*4))*N/1.0e6f;
   if(g_debug_level > 0 && g_proc_id == 0) {
-    printf("CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iteration, eps_sq, etime-atime); 
-    printf("CG: flopcount (for tmWilson with even/odd only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
-	   etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
+    printf("# CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iteration, eps_sq, etime-atime); 
+    printf("# CG: flopcount (for tmWilson with even/odd only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+           etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
   }
   if(iteration > max_iter) return(-1);
   return(iteration);

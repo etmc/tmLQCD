@@ -140,7 +140,7 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
     err1 =square_norm(g_chi_up_spinor_field[DUM_SOLVER+1], N, 1);
     err2 =square_norm(g_chi_dn_spinor_field[DUM_SOLVER+1], N, 1);
     err = err1 + err2;
-    if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
+    if(g_debug_level > 1 && g_proc_id == g_stdio_proc) {
       printf("cg_her_nd : i = %d  esqr  %e = %e + %e \n",iteration,err, err1, err2); fflush( stdout);
     }
 

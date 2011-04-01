@@ -105,7 +105,7 @@ int main(int argc,char *argv[]) {
   char nstore_filename[50];
   char tmp_filename[50];
   char *input_filename = NULL;
-
+  int status = 0;
   int j,ix,mu, trajectory_counter=1;
   struct timeval t1;
 
@@ -177,7 +177,7 @@ int main(int argc,char *argv[]) {
   }
 
   /* Read the input file */
-  if( (j = read_input(input_filename)) != 0) {
+  if( (status = read_input(input_filename)) != 0) {
     fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
     exit(-1);
   }
@@ -231,11 +231,11 @@ int main(int argc,char *argv[]) {
   g_mu = g_mu1;
 
 #ifdef _GAUGE_COPY
-  j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
+  status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
-  j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
+  status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
 #endif
-  if (j != 0) {
+  if (status != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(0);
   }
@@ -347,8 +347,8 @@ int main(int argc,char *argv[]) {
             gauge_input_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
-    if( (j = read_gauge_field(gauge_input_filename)) != 0) {
-      fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", j, gauge_input_filename);
+    if( (status = read_gauge_field(gauge_input_filename)) != 0) {
+      fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", status, gauge_input_filename);
       exit(-2);
     }
 
@@ -459,7 +459,7 @@ int main(int argc,char *argv[]) {
   /* Loop for measurements */
   for(j = 0; j < Nmeas; j++) {
     if(g_proc_id == 0) {
-      printf("# Starting trajectory no %d\n", trajectory_counter);
+      printf("#\n# Starting trajectory no %d\n", trajectory_counter);
     }
 
     if(return_check_flag == 1 && trajectory_counter%return_check_interval == 0) return_check = 1;
@@ -489,9 +489,9 @@ int main(int argc,char *argv[]) {
 /*       write_gauge_field_time_p( tmp_filename); */
 
       xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-      if((j = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo) != 0 )) {
+      if((status = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo) != 0 )) {
         /* At this moment, more work could be done in a fallback mode, e.g. Lemon -> Lime, retry etc. */
-        fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", j, tmp_filename);
+        fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status, tmp_filename);
         exit(-2);
       }
 
@@ -545,7 +545,7 @@ int main(int argc,char *argv[]) {
     trajectory_counter++;
   } /* end of loop over trajectories */
 
-  if(g_proc_id==0) {
+  if(g_proc_id == 0 && Nmeas != 0) {
     printf("# Acceptance rate was %3.2f percent, %d out of %d trajectories accepted.\n", 100.*(double)Rate/(double)Nmeas, Rate, Nmeas);
     fflush(stdout);
     parameterfile = fopen(parameterfilename, "a");

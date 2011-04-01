@@ -240,7 +240,7 @@ void op_invert(const int op_id, const int index_start) {
     for(i = 0; i < 2; i++) {
       g_mu = optr->mu;
       if (g_cart_id == 0) {
-        printf("# mu = %e\n", g_mu);
+        printf("#\n# mu = %e\n", g_mu);
       }
 
       if(use_preconditioning==1){
@@ -339,7 +339,7 @@ void op_invert(const int op_id, const int index_start) {
       /* mirror source, but not for volume sources */
       if(i == 0 && SourceInfo.no_flavours == 2 && SourceInfo.type != 1) {
         if (g_cart_id == 0) {
-          fprintf(stdout, "Inversion done in %d iterations, squared residue = %e!\n",
+          fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
                   optr->iterations, optr->reached_prec);
         }
         mul_one_pm_itau2(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], optr->sr0, optr->sr2, -1., VOLUME/2);
@@ -378,10 +378,10 @@ void op_invert(const int op_id, const int index_start) {
 #else
   etime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
-  if (g_cart_id == 0) {
-    fprintf(stdout, "Inversion done in %d iterations, squared residue = %e!\n",
+  if (g_cart_id == 0 && g_debug_level > 0) {
+    fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
             optr->iterations, optr->reached_prec);
-    fprintf(stdout, "Inversion done in %1.2e sec. \n", etime - atime);
+    fprintf(stdout, "# Inversion done in %1.2e sec. \n", etime - atime);
   }
   return;
 }

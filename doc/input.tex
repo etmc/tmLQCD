@@ -144,20 +144,18 @@ supported general input paramters:
 
 \item {\ttfamily UseEvenOdd}:\\
   Whether or not to use even/odd preconditioning in the invert
-  programme.
+  executable.
 
 \end{enumerate}
 
-The following input parameters are {\ttfamily invert} and {\ttfamily
-  invert\_doublet} specific:
+The following input parameters are {\ttfamily invert} specific:
 \begin{enumerate}
 \item {\ttfamily Indices=n-m}:\\
   Compute only components $n$ to $m$ of the quark propagator. $n,m$ must
   be in $[0,99]$. If the start index is not zero the data will be
   appended to the propagator file, unless {\ttfamily
-    SplittedPropagator} is chosen. The program takes not care of the
-  order, the data is just appended! This parameter has only
-  effect for executable {\ttfamily invert}.
+    SplittedPropagator} is chosen. The program does not take care of the
+  order, the data is just appended!
 
 \item {\ttfamily UseRelativePrecision}:\\
   Possible values {\ttfamily yes, no}. Indicates whether relative
@@ -173,8 +171,7 @@ The following input parameters are {\ttfamily invert} and {\ttfamily
   solver. Not yet working!
 
 \item {\ttfamily ReadSource}:\\
-  If set to yes, then the source vector is read from a file. This
-  parameter has only effect for executable {\ttfamily invert}.
+  If set to yes, then the source vector is read from a file.
 
 \item {\ttfamily SourceTimeSlice}:\\
   not used right now.
@@ -185,17 +182,14 @@ The following input parameters are {\ttfamily invert} and {\ttfamily
   {\ttfamily SourceTimeSlice} must be set to something
   smaller than 0 or larger than T in order to let the code not
   automatically construct the filenames. The filename will then
-  consist only of the base filename. This parameter has only
-  effect for executable {\ttfamily invert}.
+  consist only of the base filename.
 
 \item {\ttfamily NoSamples}:\\
-  in case of stochastic source the number of samples. This parameter
-  has only effect for executable {\ttfamily invert}.
+  in case of stochastic source the number of samples.
 
 \item {\ttfamily SourceType}:\\
   lets you chose the source type: {\ttfamily Volume, Point, TimeSlice}
-  are possible here. This parameter has only
-  effect for executable {\ttfamily invert}.
+  are possible here.
 
 \item {\ttfamily ComputeEVs}:\\
   compute eigenvalues and vectors before inversion in invert. Values
@@ -252,7 +246,7 @@ The following input parameters are {\ttfamily invert} and {\ttfamily
   If enabled reweighting factors will be computed corresponding to
   monomials that must be specified in the input file as well.
 
-\item {\ttfamily NoReweighringSamples}:\\
+\item {\ttfamily NoReweightingSamples}:\\
   Number of random samples used per gauge configuration to estimate
   the reweighting factor. The default is $10$.
 

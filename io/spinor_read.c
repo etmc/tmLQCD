@@ -31,28 +31,48 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
 
   construct_reader(&reader, filename);
   /* determine the propagator type */
-
   prop_type = parse_propagator_type(reader);
-  if ( prop_type == -1 ) {
+
+//  This code was replaced with the switch below by Siebren Reker, who doubts the accuracy of
+//  this part of the code.
+//   if ( prop_type == -1 ) {
+//     prop_type = 0;
+//   }
+// 
+//   if(prop_type == 4) prop_type = 0;
+//   /* strictly speeking the following depends on whether we read a source or a propagator */
+//   if(prop_type == 1) position = 2*position_ + 1;
+//   /* anything else needs implementation! */
+//   else if(prop_type == 2 || prop_type == 3) {
+//     return(-2);
+//   }
+//   else if(prop_type == 11 || prop_type == 12 || prop_type == 13) {
+//     return(-3);
+//   }
+//   else if(prop_type == -1) {
+//     return(-4);
+//   }
+
+  switch (prop_type) {
+  case 1:
+    /* strictly speaking the following depends on whether we read a source or a propagator */
+    position = 2 * position_ +1;
+    break;
+  case 2:
+  case 3:
+    return(-2);
+  case 11:
+  case 12:
+  case 13:
+    return(-3);
+  case -1:
+  case 4:
     prop_type = 0;
   }
 
-  if(prop_type == 4) prop_type = 0;
-  /* strictly speeking the following depends on whether we read a source or a propagator */
-  if(prop_type == 1) position = 2*position_ + 1;
-  /* anything else needs implementation! */
-  else if(prop_type == 2 || prop_type == 3) {
-    return(-2);
-  }
-  else if(prop_type == 11 || prop_type == 12 || prop_type == 13) {
-    return(-3);
-  }
-  else if(prop_type == -1) {
-    return(-4);
-  }
-  destruct_reader(reader);
 
   /* seek back to beginning of file*/
+  destruct_reader(reader);
   construct_reader(&reader, filename);
 
   /* Find the desired propagator (could be more than one in a file) */
@@ -62,18 +82,16 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
       break;
     }
     header_type = ReaderType(reader);
-    if(g_proc_id == 0) printf("%s\n", header_type);
     if (strcmp("scidac-binary-data", header_type) == 0) {
       if (getpos == position) {
         break;
       }
-      else {
-        ++getpos;
-      }
+      ++getpos;
     }
   }
 
   if (status == LIME_EOF) {
+    fprintf(stderr, "Unable to find requested LIME record scidac-binary-data in file %s.\nEnd of file reached before record was found.\n", filename);
     return(-5);
   }
 
@@ -86,36 +104,37 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
       prec = 32;
     }
     else {
-      if(g_debug_level > 0 && g_proc_id == 0) {
-	fprintf(stderr, "binary data has wrong lenght, should be %ld", bytes);
-      }
+      fprintf(stderr, "Length of scidac-binary-data record in %s does not match input parameters.\n", filename);
+      fprintf(stderr, "Found %d bytes.\n", bytes);
       return(-6);
     }
   }
 
-  if (g_cart_id == 0 && g_debug_level > 2) {
-    printf("# %d bit precision read.\n", prec);
+  if (g_cart_id == 0 && g_debug_level >= 0) {
+    printf("# %s precision read (%d bits).\n", (prec == 64 ? "Double" : "Single") ,prec);
   }
 
   if(r == NULL) {
     if( (rstat = read_binary_spinor_data_l(s, reader, &checksum)) != 0) {
-      if(g_debug_level > 0 && g_proc_id == 0) {
-	fprintf(stderr, "read_binary_spinor_data_l failed with return value %d", rstat);
+      if(g_proc_id == 0) {
+        fprintf(stderr, "read_binary_spinor_data_l failed with return value %d", rstat);
       }
       return(-7);
     }
   }
   else {
     if( (rstat = read_binary_spinor_data(s, r, reader, &checksum)) != 0) {
-      if(g_debug_level > 0 && g_proc_id == 0) {
-	fprintf(stderr, "read_binary_spinor_data failed with return value %d", rstat);
+      if(g_proc_id == 0) {
+        fprintf(stderr, "read_binary_spinor_data failed with return value %d", rstat);
       }
       return(-7);
     }
   }
 
-  if (g_cart_id == 0 && g_debug_level > 0) {
-    printf("# checksum for DiracFermion field in file %s position %d is %#x %#x\n", filename, position, checksum.suma, checksum.sumb);
+  if (g_cart_id == 0 && g_debug_level >= 0) {
+    printf("# Scidac checksums for DiracFermion field %s position %d:\n", filename, position);
+    printf("#   Calculated            : A = %#x B = %#x.\n", checksum.suma, checksum.sumb);
+    printf("# No Scidac checksum was read from headers, unable to check integrity of file.\n");
   }
 
   destruct_reader(reader);

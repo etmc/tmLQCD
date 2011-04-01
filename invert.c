@@ -293,7 +293,7 @@ int main(int argc, char *argv[])
   for (j = 0; j < Nmeas; j++) {
     sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nstore);
     if (g_cart_id == 0) {
-      printf("# Trying to read gauge field from file %s in %s precision.\n",
+      printf("#\n# Trying to read gauge field from file %s in %s precision.\n",
             conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
@@ -437,7 +437,9 @@ int main(int argc, char *argv[])
     }
 
 
-
+    if (g_cart_id == 0) {
+      fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
+    }
     for(op_id = 0; op_id < no_operators; op_id++) {
       boundary(operator_list[op_id].kappa);
       g_kappa = operator_list[op_id].kappa; 
@@ -462,7 +464,9 @@ int main(int argc, char *argv[])
 
       for(isample = 0; isample < no_samples; isample++) {
         for (ix = index_start; ix < index_end; ix++) {
-
+          if (g_cart_id == 0) {
+            fprintf(stdout, "#\n"); /*Indicate starting of new index*/
+          }
           /* we use g_spinor_field[0-7] for sources and props for the moment */
           /* 0-3 in case of 1 flavour  */
           /* 0-7 in case of 2 flavours */
