@@ -116,17 +116,13 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
 
   if(r == NULL) {
     if( (rstat = read_binary_spinor_data_l(s, reader, &checksum)) != 0) {
-      if(g_proc_id == 0) {
-        fprintf(stderr, "read_binary_spinor_data_l failed with return value %d", rstat);
-      }
+      fprintf(stderr, "read_binary_spinor_data_l failed with return value %d", rstat);
       return(-7);
     }
   }
   else {
     if( (rstat = read_binary_spinor_data(s, r, reader, &checksum)) != 0) {
-      if(g_proc_id == 0) {
-        fprintf(stderr, "read_binary_spinor_data failed with return value %d", rstat);
-      }
+      fprintf(stderr, "read_binary_spinor_data failed with return value %d", rstat);
       return(-7);
     }
   }
