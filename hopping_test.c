@@ -113,7 +113,7 @@ int main(int argc,char *argv[])
   int ix, n, *nn,*mm,i;
   double delta, deltamax;
   spinor rsp;
-
+  int status = 0;
 #ifdef MPI
   DUM_DERI = 6;
   DUM_SOLVER = DUM_DERI+2;
@@ -242,7 +242,12 @@ int main(int argc,char *argv[])
 #  endif
 #endif  
 
-  check_geometry();
+  status = check_geometry();
+  if (status != 0) {
+    fprintf(stderr, "Checking of geometry failed. Unable to proceed.\nAborting....\n");
+    exit(1);
+  }
+
 #if (defined MPI && !(defined _USE_SHMEM))
   check_xchange(); 
 #endif

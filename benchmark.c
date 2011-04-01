@@ -106,7 +106,7 @@ int main(int argc,char *argv[])
 #ifdef HAVE_LIBLEMON
   paramsXlfInfo *xlfInfo;
 #endif
-  
+  int status = 0;
   
   static double t1,t2,dt,sdt,dts,qdt,sqdt;
   double antioptaway=0.0;
@@ -235,11 +235,14 @@ int main(int argc,char *argv[])
 #  endif
 #endif  
 
-  check_geometry();
+  status = check_geometry();
+  if (status != 0) {
+    fprintf(stderr, "Checking of geometry failed. Unable to proceed.\nAborting....\n");
+    exit(1);
+  }
 #if (defined MPI && !(defined _USE_SHMEM))
   check_xchange(); 
 #endif
-  
 
   start_ranlux(1, 123456);
   random_gauge_field(reproduce_randomnumber_flag);

@@ -320,7 +320,13 @@ int main(int argc,char *argv[]) {
   /* define the boundary conditions for the fermion fields */
   boundary(g_kappa);
 
-  check_geometry();
+  status = check_geometry();
+
+  if (status != 0) {
+    fprintf(stderr, "Checking of geometry failed. Unable to proceed.\nAborting....\n");
+    exit(1);
+  }
+
 
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
