@@ -268,7 +268,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   MPI_Get_processor_name(processor_name, &namelen);
   MPI_Dims_create(g_nproc, nalldims, dims);
   if(g_proc_id == 0){
-    printf("Creating the following cartesian grid for a %d dimensional parallelisation:\n%d x %d x %d x %d\n"
+    printf("# Creating the following cartesian grid for a %d dimensional parallelisation:\n%d x %d x %d x %d\n"
 	   , ndims, dims[0], dims[1], dims[2], dims[3]);
   }
 
@@ -281,7 +281,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
       (LX%g_nproc_x != 0 || LY%g_nproc_y != 0 || LZ%g_nproc_z != 0 || T_global%g_nproc_t != 0) ) {
     if(g_proc_id == 0) {
       fprintf(stderr, "The lattice cannot be properly mapped on the processor grid\n");
-      fprintf(stderr, "Please check your number of processors and the NR?Procs input variables\n");
+      fprintf(stderr, "Please check your number of processors and the Nr?Procs input variables\n");
       fprintf(stderr, "Aborting...!\n");
     }
     MPI_Abort(MPI_COMM_WORLD, 1);
@@ -350,9 +350,9 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   MPI_Comm_rank(g_cart_grid, &g_cart_id);
   MPI_Cart_coords(g_cart_grid, g_cart_id, nalldims, g_proc_coords);
 
-  fprintf(stdout,"Process %d of %d on %s: cart_id %d, coordinates (%d %d %d %d)\n",
-	  g_proc_id, g_nproc, processor_name, g_cart_id, 
-	  g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
+  fprintf(stdout,"# Process %d of %d on %s: cart_id %d, coordinates (%d %d %d %d)\n",
+          g_proc_id, g_nproc, processor_name, g_cart_id, 
+          g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
   fflush(stdout);
 
   if(g_stdio_proc == -1){
@@ -699,7 +699,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   /* run into trouble later                      */
 #if (defined PARALLELXYZT || defined PARALLELXYZ )
   if((T*LX*LY)%2 != 0 && even_odd_flag == 1) {
-    fprintf(stderr, "T*LX*LY must be even!\n Aborting prgram...\n");
+    fprintf(stderr, "T*LX*LY must be even!\nAborting prgram...\n");
 #  ifdef MPI 
     MPI_Finalize();
 #  endif
@@ -708,7 +708,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 #endif
 
   if(LZ%2 != 0 && even_odd_flag == 1) {
-    fprintf(stderr, "LZ must be even!\n Aborting prgram...\n");
+    fprintf(stderr, "LZ must be even!\nAborting prgram...\n");
 #ifdef MPI
     MPI_Finalize();
 #endif

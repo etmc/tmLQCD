@@ -65,6 +65,7 @@ void write_header(WRITER * writer, int MB, int ME, char const *type, uint64_t by
 
 void write_checksum(WRITER *writer, DML_Checksum const *checksum, char const *name);
 void write_xlf_info(WRITER *writer, paramsXlfInfo const *info);
+void write_xlf_info_xml(WRITER *writer, paramsXlfInfo const *info);
 void write_inverter_info(WRITER * writer, paramsInverterInfo const *info);
 
 void close_reader_record(READER *reader);

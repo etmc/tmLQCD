@@ -31,27 +31,25 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * le
   char *filebuffer = NULL, *current = NULL;
   double tick = 0, tock = 0;
   DML_SiteRank rank;
-  uint64_t fbspin;
   char measure[64];
 
   bytes = lemonReaderBytes(lemonreader);
 
-  if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor))
+  if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor)) {
     prec = 64;
+    bytes = sizeof(spinor);
+  }
   else {
-    if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor) / 2)
+    if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor) / 2) {
       prec = 32;
+      bytes = sizeof(spinor)/2;
+    }
     else {
       return(-3);
     }
   }
 
   DML_checksum_init(checksum);
-
-  fbspin = sizeof(spinor);
-  if (prec == 32)
-    fbspin /= 2;
-  bytes = fbspin;
 
   if((void*)(filebuffer = malloc(VOLUME * bytes)) == NULL) {
     return(-1);
@@ -69,11 +67,11 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LemonReader * le
 
     if (g_cart_id == 0) {
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
-      fprintf(stdout, "Time spent reading %s ", measure);
+      fprintf(stdout, "# Time spent reading %s ", measure);
       engineering(measure, tock - tick, "s");
       fprintf(stdout, "was %s.\n", measure);
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
-      fprintf(stdout, "Reading speed: %s", measure);
+      fprintf(stdout, "# Reading speed: %s", measure);
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
       fflush(stdout);
@@ -130,18 +128,20 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
   DML_checksum_init(checksum);
 
   bytes = limeReaderBytes(limereader);
-  if (bytes == g_nproc * VOLUME * sizeof(spinor))
+  if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor)) {
     prec = 64;
+    bytes = sizeof(spinor);
+  }
   else {
-    if (bytes == g_nproc * VOLUME * sizeof(spinor) / 2)
+    if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor) / 2) {
       prec = 32;
+      bytes = sizeof(spinor)/2;
+    }
     else {
       return(-3);
     }
   }
 
-  if(prec == 32) bytes = (n_uint64_t)sizeof(spinor)/2;
-  else bytes = (n_uint64_t)sizeof(spinor);
   for(t = 0; t < T; t++) {
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {
@@ -168,24 +168,20 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
           if(prec == 32) {
             status = limeReaderReadData(tmp2, &bytes, limereader);
             DML_checksum_accum(checksum,rank,(char *) tmp2, bytes);
+            be_to_cpu_assign_single2double(p+i, (float*)tmp2, sizeof(spinor)/8);
           }
           else {
             status = limeReaderReadData(tmp, &bytes, limereader);
             DML_checksum_accum(checksum,rank,(char *) tmp, bytes);
-          }
-          if(prec == 32) {
-            be_to_cpu_assign_single2double(p+i, (float*)tmp2, sizeof(spinor)/8);
-          }
-          else {
             be_to_cpu_assign(p + i, tmp, sizeof(spinor)/8);
           }
           if(status < 0 && status != LIME_EOR) {
-              fprintf(stderr, "LIME read error occurred with status = %d while reading in spinor_read_binary.c!\n", status);
+            fprintf(stderr, "LIME read error occurred with status = %d while reading in spinor_read_binary.c!\n", status);
 #ifdef MPI
-              MPI_Abort(MPI_COMM_WORLD, 1);
-              MPI_Finalize();
+            MPI_Abort(MPI_COMM_WORLD, 1);
+            MPI_Finalize();
 #endif
-              return(-2);
+            return(-2);
           }
         }
       }
@@ -211,27 +207,25 @@ int read_binary_spinor_data_l(spinor * const s, LemonReader * lemonreader, DML_C
   char *filebuffer = NULL, *current = NULL;
   double tick = 0, tock = 0;
   DML_SiteRank rank;
-  uint64_t fbspin;
   char measure[64];
 
   bytes = lemonReaderBytes(lemonreader);
 
-  if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor))
+  if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor)) {
     prec = 64;
+    bytes = sizeof(spinor);
+  }
   else {
-    if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor) / 2)
+    if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor) / 2) {
       prec = 32;
+      bytes = sizeof(spinor)/2;
+    }
     else {
       return(-3);
     }
   }
 
   DML_checksum_init(checksum);
-
-  fbspin = sizeof(spinor);
-  if (prec == 32)
-    fbspin /= 2;
-  bytes = fbspin;
 
   if((void*)(filebuffer = malloc(VOLUME * bytes)) == NULL) {
     return(-1);
@@ -249,11 +243,11 @@ int read_binary_spinor_data_l(spinor * const s, LemonReader * lemonreader, DML_C
 
     if (g_cart_id == 0) {
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
-      fprintf(stdout, "Time spent reading %s ", measure);
+      fprintf(stdout, "# Time spent reading %s ", measure);
       engineering(measure, tock - tick, "s");
       fprintf(stdout, "was %s.\n", measure);
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (tock - tick), "b/s");
-      fprintf(stdout, "Reading speed: %s", measure);
+      fprintf(stdout, "# Reading speed: %s", measure);
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes / (g_nproc * (tock - tick)), "b/s");
       fprintf(stdout, " (%s per MPI process).\n", measure);
       fflush(stdout);
@@ -305,19 +299,20 @@ int read_binary_spinor_data_l(spinor * const s, LimeReader * limereader, DML_Che
 
   DML_checksum_init(checksum);
 
-  bytes = limeReaderBytes(limereader);
-  if (bytes == g_nproc * VOLUME * sizeof(spinor))
+  if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor)) {
     prec = 64;
+    bytes = sizeof(spinor);
+  }
   else {
-    if (bytes == g_nproc * VOLUME * sizeof(spinor) / 2)
+    if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor) / 2) {
       prec = 32;
+      bytes = sizeof(spinor)/2;
+    }
     else {
       return(-3);
     }
   }
 
-  if(prec == 32) bytes = (n_uint64_t)sizeof(spinor)/2;
-  else bytes = (n_uint64_t)sizeof(spinor);
   for(t = 0; t < T; t++) {
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {
@@ -336,22 +331,18 @@ int read_binary_spinor_data_l(spinor * const s, LimeReader * limereader, DML_Che
           if(prec == 32) {
             status = limeReaderReadData(tmp2, &bytes, limereader);
             DML_checksum_accum(checksum,rank,(char *) tmp2, bytes);
+            be_to_cpu_assign_single2double(s + i, (float*)tmp2, sizeof(spinor)/8);
           }
           else {
             status = limeReaderReadData(tmp, &bytes, limereader);
             DML_checksum_accum(checksum,rank,(char *) tmp, bytes);
-          }
-          if(prec == 32) {
-            be_to_cpu_assign_single2double(s + i, (float*)tmp2, sizeof(spinor)/8);
-          }
-          else {
             be_to_cpu_assign(s + i, tmp, sizeof(spinor)/8);
           }
           if(status < 0 && status != LIME_EOR) {
-              fprintf(stderr, "LIME read error occurred with status = %d while reading in spinor_read_binary.c!\n", status);
+            fprintf(stderr, "LIME read error occurred with status = %d while reading in spinor_read_binary.c!\n", status);
 #ifdef MPI
-              MPI_Abort(MPI_COMM_WORLD, 1);
-              MPI_Finalize();
+            MPI_Abort(MPI_COMM_WORLD, 1);
+            MPI_Finalize();
 #endif
             return(-2);
           }

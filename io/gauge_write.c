@@ -29,7 +29,7 @@ int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfI
 
   bytes = (uint64_t)L * L * L * T_global * sizeof(su3) * prec / 16;
 
-  /* all these functions, except for write_binary_gauge_data do error handling */
+  /* all these functions, except for write_binary_gauge_data do their own error handling */
   construct_writer(&writer, filename, 0);/* the 0 is for not appending */
 
   write_xlf_info(writer, xlfInfo);

@@ -28,30 +28,9 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
   char *header_type = NULL;
   READER *reader = NULL;
   DML_Checksum checksum;
-
   construct_reader(&reader, filename);
   /* determine the propagator type */
   prop_type = parse_propagator_type(reader);
-
-//  This code was replaced with the switch below by Siebren Reker, who doubts the accuracy of
-//  this part of the code.
-//   if ( prop_type == -1 ) {
-//     prop_type = 0;
-//   }
-// 
-//   if(prop_type == 4) prop_type = 0;
-//   /* strictly speeking the following depends on whether we read a source or a propagator */
-//   if(prop_type == 1) position = 2*position_ + 1;
-//   /* anything else needs implementation! */
-//   else if(prop_type == 2 || prop_type == 3) {
-//     return(-2);
-//   }
-//   else if(prop_type == 11 || prop_type == 12 || prop_type == 13) {
-//     return(-3);
-//   }
-//   else if(prop_type == -1) {
-//     return(-4);
-//   }
 
   switch (prop_type) {
   case 1:
@@ -69,7 +48,6 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
   case 4:
     prop_type = 0;
   }
-
 
   /* seek back to beginning of file*/
   destruct_reader(reader);
@@ -96,6 +74,7 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
   }
 
   bytes = ReaderBytes(reader);
+
   if ((int)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor)) {
     prec = 64;
   }

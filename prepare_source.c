@@ -107,8 +107,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
         if(g_proc_id == 0 && g_debug_level > 0) {
           printf("# Preparing 1 flavour volume source\n");
         }
-        gaussian_volume_source(g_spinor_field[0], g_spinor_field[1],
-                               isample, nstore, 0);
+        gaussian_volume_source(g_spinor_field[0], g_spinor_field[1], isample, nstore, 0);
       }
       else {
         sprintf(source_filename, "%s.%.4d.%.5d", SourceInfo.basename, nstore, isample);
@@ -141,16 +140,11 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
         }
         fclose(ifs);
         err = 0;
-        /*           iter = get_propagator_type(source_filename); */
-        if (PropInfo.splitted) {
-          rstat = read_spinor(optr->prop0, optr->prop1, source_filename, 0);
-        }
-        else {
-          rstat = read_spinor(optr->prop0, optr->prop1, source_filename, ix);
-        }
+        /* iter = get_propagator_type(source_filename); */
+        rstat = read_spinor(optr->prop0, optr->prop1, source_filename, (PropInfo.splitted ? 0 : ix));
         if(rstat) {
           fprintf(stderr, "Error reading file %s in prepare_source.c, rstat = %d\n", source_filename, rstat);
-          assert(rstat == 0);
+          exit(-1);
         }
         if (g_kappa != 0.) {
           mul_r(optr->prop1, 1. / (2*optr->kappa), optr->prop1, VOLUME / 2);
@@ -204,9 +198,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
           printf("# Trying to read source from %s\n", source_filename);
         }
         if(read_spinor(g_spinor_field[2], g_spinor_field[3], source_filename, 0) != 0) {
-          if(g_proc_id == 0) {
-            printf("Error reading source! Aborting...\n");
-          }
+          fprintf(stderr, "Error reading source! Aborting...\n");
 #ifdef MPI
           MPI_Abort(MPI_COMM_WORLD, 1);
           MPI_Finalize();

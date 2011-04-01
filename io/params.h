@@ -146,5 +146,5 @@ paramsPropagatorFormat * construct_paramsPropagatorFormat(int const prec, int co
 paramsSourceFormat     * construct_paramsSourceFormat(int const prec, int const flavours, int const spins, int const sources);
 paramsXlfInfo          * construct_paramsXlfInfo(double const plaq, int const counter);
 paramsInverterInfo     * construct_paramsInverterInfo(double const epssq, const int iter, 
-						      const int solver, const int noflavours);
+                                                      const int solver, const int noflavours);
 #endif
