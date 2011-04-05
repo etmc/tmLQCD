@@ -43,7 +43,6 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
     fprintf (stderr, "malloc errno in write_binary_gauge_data_parallel: %d\n",errno);
     fflush(stderr);
     errno = 0;
-    /* do we need to abort here? */
     return 1;
   }
 

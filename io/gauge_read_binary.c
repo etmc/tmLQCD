@@ -46,8 +46,8 @@ int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum, p
     return(-3);
   }
 
-  if (g_cart_id == 0 && g_debug_level > 2) {
-    printf("# %d Bit precision read.\n", input->prec);
+  if (g_cart_id == 0 && g_debug_level > 1) {
+    printf("%d Bit precision read.\n", input->prec);
   }
 
   DML_checksum_init(checksum);
@@ -60,9 +60,8 @@ int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum, p
 
 
   if((void*)(filebuffer = malloc(VOLUME * bytes)) == NULL) {
-    fprintf (stderr, "malloc errno in read_binary_gauge_data: %d\n", errno);
+    fprintf (stderr, "malloc errno %d in read_binary_gauge_data, returning without reading gauge file.\n", errno);
     errno = 0;
-    /* do we need to abort here? */
     return(-1);
   }
 

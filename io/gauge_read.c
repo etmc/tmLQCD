@@ -121,22 +121,25 @@ int read_gauge_field(char * filename) {
     return(-1);
   }
 
-  if (g_cart_id == 0)
+  if (g_cart_id == 0 && g_debug_level > 0)
   {
     /* Verify the integrity of the checksum */
     printf("# Scidac checksums for gaugefield %s:\n", filename);
-    printf("#   Calculated            : A = %#x B = %#x.\n", checksum_calc.suma, checksum_calc.sumb);
-    printf("#   Read from LIME headers: A = %#x B = %#x.\n", checksum_read.suma, checksum_read.sumb);
+    printf("#   Calculated            : A = %#010x B = %#010x.\n", checksum_calc.suma, checksum_calc.sumb);
+    printf("#   Read from LIME headers: A = %#010x B = %#010x.\n", checksum_read.suma, checksum_read.sumb);
     fflush(stdout);
-    if (checksum_calc.suma != checksum_read.suma) {
-      fprintf(stderr, "For gauge file %s, calculated and stored values for SciDAC checksum A do not match.\n", filename);
-      return(-1);
-    }
-    if (checksum_calc.sumb != checksum_read.sumb) {
-      fprintf(stderr, "For gauge file %s, calculated and stored values for SciDAC checksum B do not match.\n", filename);
-      return(-1);
-    }
+  }
+  if (checksum_calc.suma != checksum_read.suma) {
+    fprintf(stderr, "For gauge file %s, calculated and stored values for SciDAC checksum A do not match.\n", filename);
+    return(-1);
+  }
+  if (checksum_calc.sumb != checksum_read.sumb) {
+    fprintf(stderr, "For gauge file %s, calculated and stored values for SciDAC checksum B do not match.\n", filename);
+    return(-1);
+  }
 
+  if (g_cart_id == 0 && g_debug_level > 0)
+  {
     /* Verify the datafile vs the hmc.input parameters */
     fprintf(stdout, "# Reading ildg-format record:\n");
     fprintf(stdout, "#   Precision = %d bits (%s).\n",ildgformat_read.prec, (ildgformat_read.prec == 64 ? "double" : "single"));
@@ -144,14 +147,14 @@ int read_gauge_field(char * filename) {
     fprintf(stdout, "# Input parameters:\n");
     fprintf(stdout, "#   Precision = %d bits (%s).\n",ildgformat_input->prec, (ildgformat_input->prec == 64 ? "double" : "single"));
     fprintf(stdout, "#   Lattice size: LX = %d, LY = %d, LZ = %d, LT = %d.\n", ildgformat_input->lx, ildgformat_input->ly, ildgformat_input->lz, ildgformat_input->lt);
-    if (ildgformat_read.prec != ildgformat_input->prec || ildgformat_read.lx != ildgformat_input->lx ||
-        ildgformat_read.ly != ildgformat_input->ly || ildgformat_read.lz != ildgformat_input->lz || ildgformat_read.lt != ildgformat_input->lt) {
-      fprintf(stderr, "Metadata inside gauge file %s does not match input parameters.\n", filename);
-      fprintf(stderr, "Precision or lattice dimensions are not equal, unable to proceed.\n");
-      fprintf(stderr, "Check input parameters T, L (LX, LY, LZ) and GaugeConfigReadPrecision.\n");
-      return(-1);
+  }
+  if (ildgformat_read.prec != ildgformat_input->prec || ildgformat_read.lx != ildgformat_input->lx ||
+      ildgformat_read.ly != ildgformat_input->ly || ildgformat_read.lz != ildgformat_input->lz || ildgformat_read.lt != ildgformat_input->lt) {
       /* This is a rather perverse case, in which the ildg-binary-data record does match the input parameters, but the ildg-format record does not. */
-    }
+    fprintf(stderr, "Metadata inside gauge file %s does not match input parameters.\n", filename);
+    fprintf(stderr, "Precision or lattice dimensions are not equal, unable to proceed.\n");
+    fprintf(stderr, "Check input parameters T, L (LX, LY, LZ) and GaugeConfigReadPrecision.\n");
+    return(-1);
   }
   destruct_reader(reader);
 

@@ -491,24 +491,38 @@ int main(int argc,char *argv[]) {
     }
 
     if(((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
-      /* Write the gauge configuration first to a temporary file */
-/*       write_gauge_field_time_p( tmp_filename); */
-
       xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+      if (g_proc_id == 0) {
+        fprintf(stdout, "# Writing gauge field to %s.\n", tmp_filename);
+      }
       if((status = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo) != 0 )) {
-        /* At this moment, more work could be done in a fallback mode, e.g. Lemon -> Lime, retry etc. */
+        /* Writing the gauge field failed directly */
         fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status, tmp_filename);
         exit(-2);
       }
+#ifdef HAVE_LIBLEMON
+      /* Read gauge field back to verify the writeout */
+      if (g_proc_id == 0) {
+        fprintf(stdout, "# Write completed, verifying write...\n");
+      }
+      if( (status = read_gauge_field(tmp_filename)) != 0) {
+        fprintf(stderr, "WARNING, writeout of %s returned no error, but verification discovered errors.\n", tmp_filename);
+        fprintf(stderr, "Potential disk or MPI I/O error. Aborting...\n");
+        exit(-3);
+      }
+      if (g_proc_id == 0) {
+        fprintf(stdout, "# Write successfully verified.\n");
+      }
+#endif
 
       free(xlfInfo);
 
       /* Now move it! */
       if(g_proc_id == 0) {
-        fprintf(stdout, "# Moving %s to %s.\n", tmp_filename, gauge_filename);
+        fprintf(stdout, "# Renaming %s to %s.\n", tmp_filename, gauge_filename);
         if (rename(tmp_filename, gauge_filename) != 0) {
           /* Errno can be inspected here for more descriptive error reporting */
-          fprintf(stderr, "Error while trying to rename temporary file %s to %s. Unable to proceed.\n",tmp_filename, gauge_filename);
+          fprintf(stderr, "Error while trying to rename temporary file %s to %s. Unable to proceed.\n", tmp_filename, gauge_filename);
           exit(-2);
         }
         countfile = fopen(nstore_filename, "w");
@@ -521,6 +535,9 @@ int main(int argc,char *argv[]) {
     for(imeas=0; imeas<no_measurements; imeas++){
       meas = &measurement_list[imeas];
       if(trajectory_counter%meas->freq == 0){
+        if (g_proc_id == 0) {
+          fprintf(stdout, "#\n# Beginning online measurement.\n");
+        }
         meas->measurefunc(trajectory_counter, imeas);
       }
     }

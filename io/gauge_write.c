@@ -42,10 +42,10 @@ int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfI
   status = write_binary_gauge_data(writer, prec, &checksum);
   write_checksum(writer, &checksum, NULL);
 
-  if (g_cart_id == 0)
+  if (g_cart_id == 0 && g_debug_level > 0)
   {
     fprintf(stdout, "# Scidac checksums for gaugefield %s:\n", filename);
-    fprintf(stdout, "#   Calculated            : A = %#x B = %#x.\n", checksum.suma, checksum.sumb);
+    fprintf(stdout, "#   Calculated            : A = %#010x B = %#010x.\n", checksum.suma, checksum.sumb);
     fflush(stdout);
   }
 #ifdef MPI
