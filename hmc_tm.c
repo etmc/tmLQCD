@@ -105,7 +105,7 @@ int main(int argc,char *argv[]) {
   char nstore_filename[50];
   char tmp_filename[50];
   char *input_filename = NULL;
-  int status = 0;
+  int status = 0, accept = 0;
   int j,ix,mu, trajectory_counter=1;
   struct timeval t1;
 
@@ -468,11 +468,10 @@ int main(int argc,char *argv[]) {
       printf("#\n# Starting trajectory no %d\n", trajectory_counter);
     }
 
-    if(return_check_flag == 1 && trajectory_counter%return_check_interval == 0) return_check = 1;
-    else return_check = 0;
+    return_check = return_check_flag && (trajectory_counter%return_check_interval == 0);
 
-    Rate += update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check, Ntherm<trajectory_counter);
-
+    accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check, Ntherm<trajectory_counter);
+    Rate += accept;
 
     /* Save gauge configuration all Nsave times */
     if((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) {
@@ -489,39 +488,43 @@ int main(int argc,char *argv[]) {
     else {
       sprintf(gauge_filename,"conf.save");
     }
-
     if(((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
-      xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-      if (g_proc_id == 0) {
-        fprintf(stdout, "# Writing gauge field to %s.\n", tmp_filename);
-      }
-      if((status = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo) != 0 )) {
-        /* Writing the gauge field failed directly */
-        fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status, tmp_filename);
-        exit(-2);
-      }
-#ifdef HAVE_LIBLEMON
-      /* Read gauge field back to verify the writeout */
-      if (g_proc_id == 0) {
-        fprintf(stdout, "# Write completed, verifying write...\n");
-      }
-      if( (status = read_gauge_field(tmp_filename)) != 0) {
-        fprintf(stderr, "WARNING, writeout of %s returned no error, but verification discovered errors.\n", tmp_filename);
-        fprintf(stderr, "Potential disk or MPI I/O error. Aborting...\n");
-        exit(-3);
-      }
-      if (g_proc_id == 0) {
-        fprintf(stdout, "# Write successfully verified.\n");
-      }
-#else
-      if (g_proc_id == 0) {
-        fprintf(stdout, "# Write completed successfully.\n");
-      }
-#endif
+      /* If a reversibility check was performed this trajectory, and the trajectory was accepted,
+       * then the configuration is currently stored in .conf.tmp, written out by update_tm.
+       * In that case also a readback was performed, so need to test .conf.tmp either
+       * In all other cases the gauge configuration still needs to be written out here. */
+      if (!(return_check && accept)) {
+        xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+        if (g_proc_id == 0) {
+          fprintf(stdout, "# Writing gauge field to %s.\n", tmp_filename);
+        }
+        if((status = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo) != 0 )) {
+          /* Writing the gauge field failed directly */
+          fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status, tmp_filename);
+          exit(-2);
+        }
+  #ifdef HAVE_LIBLEMON
+        /* Read gauge field back to verify the writeout */
+        if (g_proc_id == 0) {
+          fprintf(stdout, "# Write completed, verifying write...\n");
+        }
+        if( (status = read_gauge_field(tmp_filename)) != 0) {
+          fprintf(stderr, "WARNING, writeout of %s returned no error, but verification discovered errors.\n", tmp_filename);
+          fprintf(stderr, "Potential disk or MPI I/O error. Aborting...\n");
+          exit(-3);
+        }
+        if (g_proc_id == 0) {
+          fprintf(stdout, "# Write successfully verified.\n");
+        }
+  #else
+        if (g_proc_id == 0) {
+          fprintf(stdout, "# Write completed successfully.\n");
+        }
+  #endif
 
-      free(xlfInfo);
-
-      /* Now move it! */
+        free(xlfInfo);
+      }
+      /* Now move .conf.tmp into place */
       if(g_proc_id == 0) {
         fprintf(stdout, "# Renaming %s to %s.\n", tmp_filename, gauge_filename);
         if (rename(tmp_filename, gauge_filename) != 0) {

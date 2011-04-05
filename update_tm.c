@@ -77,12 +77,14 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
   su3 *v, *w;
   static int ini_g_tmp = 0;
-  int ix, mu, accept, i=0, j=0;
+  int ix, mu, accept, i=0, j=0, iostatus=0;
 
   double yy[1];
   double dh, expmdh, ret_dh=0., ret_gauge_diff=0., tmp;
   double atime=0., etime=0.;
   double ks,kc,ds,tr,ts,tt;
+
+  char tmp_filename[50];
 
   /* Energy corresponding to the Gauge part */
   double new_plaquette_energy=0., new_rectangle_energy = 0.;
@@ -97,6 +99,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   double normalisation=0., partial_effective_action=0., coupling=0.; 
   paramsXlfInfo *xlfInfo;
 
+  strcpy(tmp_filename, ".conf.tmp");
+
   if(ini_g_tmp == 0) {
     ini_g_tmp = init_gauge_tmp(VOLUME);
     if(ini_g_tmp != 0) {
@@ -104,7 +108,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     ini_g_tmp = 1;
   }
-
 #ifdef MPI
   atime = MPI_Wtime();
 #else
@@ -216,22 +219,33 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 #endif
 
-  /* accept = (!acctest | expmdh > yy[0]);*/
-  if(expmdh > yy[0]) {
-    accept = 1;
-  }
-  else {
-    accept = 0;
-  }
-  if(!acctest) {
-    accept = 1;
+  accept = (!acctest | (expmdh > yy[0]));
+  if(g_proc_id == 0) {
+    fprintf(stdout, "# Trajectory is %saccepted.\n", (accept ? "" : "not "));
   }
   /* Here a reversibility test is performed */
   /* The trajectory is integrated back      */
   if(return_check == 1) {
+    if(g_proc_id == 0) {
+      fprintf(stdout, "# Performing reversibility check.\n");
+    }
     if(accept == 1) {
+      /* save gauge file to disk before performing reversibility check */
       xlfInfo = construct_paramsXlfInfo((*plaquette_energy)/(6.*VOLUME*g_nproc), -1);
-      write_gauge_field( "conf.save", 64, xlfInfo);
+      // Should write this to temporary file first, and then check
+      if(g_proc_id == 0 && g_debug_level > 0) {
+        fprintf(stdout, "# Writing gauge field to file %s.\n", tmp_filename);
+      }
+      if((iostatus = write_gauge_field( tmp_filename, 64, xlfInfo) != 0 )) {
+        /* Writing failed directly */
+        fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", iostatus, tmp_filename);
+        exit(-2);
+      }
+      /* There is double writing of the gauge field, also in hmc_tm.c in this case */
+      /* No reading back check needed here, as reading back is done further down */
+      if(g_proc_id == 0 && g_debug_level > 0) {
+        fprintf(stdout, "# Writing done.\n");
+      }
       free(xlfInfo);
     }
     g_sloppy_precision = 1;
@@ -323,10 +337,21 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
 
     if(accept == 1) {
-      if(read_gauge_field("conf.save") != 0) {
-        fprintf(stderr, "could not re-read gauge from conf.save (in update_tm.c)\nAborting...\n");
-        exit(-1);
+      /* Read back gauge field */
+      if(g_proc_id == 0 && g_debug_level > 0) {
+        fprintf(stdout, "# Trying to read gauge field from file %s.\n", tmp_filename);
       }
+
+      if((iostatus = read_gauge_field(tmp_filename) != 0)) {
+        fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", iostatus, tmp_filename);
+        exit(-2);
+      }
+      if(g_proc_id == 0 && g_debug_level > 0) {
+        fprintf(stdout, "# Reading done.\n");
+      }
+    }
+    if(g_proc_id == 0) {
+      fprintf(stdout, "# Reversibility check done.\n");
     }
   } /* end of reversibility check */
 
@@ -439,6 +464,7 @@ void stout_smear() {
 
   return;
 }
+
 void unstout() {
   int ix, mu;
   for(ix = 0; ix < VOLUME; ix++) {
@@ -449,6 +475,5 @@ void unstout() {
   g_update_gauge_copy = 1;
   return;
 }
-
 
 static char const rcsid[] = "$Id$";
