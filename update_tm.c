@@ -73,7 +73,7 @@ void stout_smear();
 void unstout();
 
 int update_tm(double *plaquette_energy, double *rectangle_energy, 
-	      char * filename, const int return_check, const int acctest) {
+              char * filename, const int return_check, const int acctest) {
 
   su3 *v, *w;
   static int ini_g_tmp = 0;
@@ -155,7 +155,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
   /*run the trajectory*/
   Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
-						   Integrator.no_timescales-1, 1);
+                       Integrator.no_timescales-1, 1);
 
   g_sloppy_precision = 0;
   /*   smear the gauge field */
@@ -172,7 +172,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j]);
     }
   }
-  
+
   /*   keep on going with the unsmeared gauge field */
   if(use_stout_flag == 1) {
     if (bc_flag == 0) {
@@ -216,6 +216,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 #endif
 
+  /* accept = (!acctest | expmdh > yy[0]);*/
   if(expmdh > yy[0]) {
     accept = 1;
   }
@@ -236,28 +237,28 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     g_sloppy_precision = 1;
     /* run the trajectory back */
     Integrator.integrate[Integrator.no_timescales-1](-Integrator.tau, 
-						     Integrator.no_timescales-1, 1);
+                         Integrator.no_timescales-1, 1);
 
     g_sloppy_precision = 0;
 
     /*   compute the energy contributions from the pseudo-fermions  */
     if(use_stout_flag == 1) {
       if (bc_flag == 0) {
-	stout_smear();
+        stout_smear();
       }
     }
-    
+
     ret_dh = 0.;
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-	ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j]);
+        ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j]);
       }
     }
 
     /*   keep on going with the unsmeared gauge field */
     if(use_stout_flag == 1) {
       if (bc_flag == 0) {
-	unstout();
+        unstout();
       }
     }
 
@@ -310,21 +311,21 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     tmp = enep;
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-	tmp += monomial_list[ Integrator.mnls_per_ts[i][j] ].energy0;
+        tmp += monomial_list[ Integrator.mnls_per_ts[i][j] ].energy0;
       }
-    }    
+    }
     /* Output */
     if(g_proc_id == 0) {
       ret_check_file = fopen("return_check.data","a");
       fprintf(ret_check_file,"ddh = %1.4e ddU= %1.4e ddh/H = %1.4e\n",
-	      ret_dh, ret_gauge_diff/4./((double)(VOLUME*g_nproc))/3., ret_dh/tmp);
+              ret_dh, ret_gauge_diff/4./((double)(VOLUME*g_nproc))/3., ret_dh/tmp);
       fclose(ret_check_file);
     }
 
     if(accept == 1) {
       if(read_gauge_field("conf.save") != 0) {
-	fprintf(stderr, "could not re-read gauge from conf.save (in update_tm.c)\nAborting...\n");
-	exit(-1);
+        fprintf(stderr, "could not re-read gauge from conf.save (in update_tm.c)\nAborting...\n");
+        exit(-1);
       }
     }
   } /* end of reversibility check */
@@ -336,31 +337,31 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     /* put the links back to SU(3) group */
     if (bc_flag == 0) { /* if PBC */
       for(ix=0;ix<VOLUME;ix++) { 
-	for(mu=0;mu<4;mu++) { 
-	  v=&g_gauge_field[ix][mu];
-	  *v=restoresu3(*v); 
-	}
-      }      
-    }    
+        for(mu=0;mu<4;mu++) { 
+          v=&g_gauge_field[ix][mu];
+          *v=restoresu3(*v); 
+        }
+      }
+    }
     else if (bc_flag == 1) { /* if SF bc */
       for(ix=0;ix<VOLUME;ix++) { 
-	for(mu=0;mu<4;mu++) {
-	  if (g_t[ix] == 0 && mu != 0) {
-	    v=&g_gauge_field[ix][mu];
-	    /* here we do not need to 'restoresu3' because these links are constant ==> we do not want to change them */
-	  }
-	  else if (g_t[ix]  == g_Tbsf) {
-	    v=&g_gauge_field[ix][mu];
-	    /* here we do not need to 'restoresu3' because of two reasons: these links are
-	       1) either zero ==> they keep updating to zero value all time
-	       2) or constant ==> we do not want to change them */
-	  }
-	  else {
-	    v=&g_gauge_field[ix][mu];
-	    /* the next line: keeps unitary the gauge field which has been updated */
-	    *v=restoresu3(*v);
-	  }
-	}
+        for(mu=0;mu<4;mu++) {
+          if (g_t[ix] == 0 && mu != 0) {
+            v=&g_gauge_field[ix][mu];
+            /* here we do not need to 'restoresu3' because these links are constant ==> we do not want to change them */
+          }
+          else if (g_t[ix]  == g_Tbsf) {
+            v=&g_gauge_field[ix][mu];
+            /* here we do not need to 'restoresu3' because of two reasons: these links are
+              1) either zero ==> they keep updating to zero value all time
+              2) or constant ==> we do not want to change them */
+          }
+          else {
+            v=&g_gauge_field[ix][mu];
+            /* the next line: keeps unitary the gauge field which has been updated */
+            *v=restoresu3(*v);
+          }
+        }
       }
     }
   }
@@ -389,35 +390,31 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     datafile = fopen(filename, "a");
     if (bc_flag == 0) { /* if PBC */
       fprintf(datafile, "%14.12f %14.12f %e ",
-	      (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
+              (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
     }
     else if (bc_flag == 1) { /* if SF */
       if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) { /* SF with rectangle working */
-	
-	normalisation = partial_lattice_lo_effective_iwasaki_action_sf_k(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta);
-	partial_effective_action = partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-	coupling = normalisation/partial_effective_action;
-	
+        normalisation = partial_lattice_lo_effective_iwasaki_action_sf_k(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta);
+        partial_effective_action = partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
+        coupling = normalisation/partial_effective_action;
         fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %e ", coupling, normalisation , partial_effective_action, (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
       }
       else { /* SF with only Wilson */
-
-	normalisation = partial_lattice_lo_effective_plaquette_action_sf_k(g_Tbsf, g_beta, g_Ct, g_eta);
-	partial_effective_action = partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct);
-	coupling = normalisation/partial_effective_action;
-	
-	fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %e ",
-		coupling, normalisation, partial_effective_action, (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
+        normalisation = partial_lattice_lo_effective_plaquette_action_sf_k(g_Tbsf, g_beta, g_Ct, g_eta);
+        partial_effective_action = partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct);
+        coupling = normalisation/partial_effective_action;
+        fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %e ",
+                coupling, normalisation, partial_effective_action, (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
       }
     }
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-	if(monomial_list[ Integrator.mnls_per_ts[i][j] ].type != GAUGE
-	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != SFGAUGE 
-	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY) {
-	  fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
-		  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);
-	}
+        if(monomial_list[ Integrator.mnls_per_ts[i][j] ].type != GAUGE
+          && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != SFGAUGE 
+          && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY) {
+          fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
+                  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);
+        }
       }
     }
     fprintf(datafile, "%d %e", accept, etime-atime);
@@ -435,7 +432,7 @@ void stout_smear() {
   int ix, mu;
     for(ix = 0; ix < VOLUME; ix++) {
       for(mu = 0; mu < 4; mu++) {
-	_su3_assign(g_gauge_field_saved[ix][mu], g_gauge_field[ix][mu]);
+        _su3_assign(g_gauge_field_saved[ix][mu], g_gauge_field[ix][mu]);
       }
       stout_smear_gauge_field(stout_rho , stout_no_iter);
     }

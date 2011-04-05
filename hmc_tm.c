@@ -513,6 +513,10 @@ int main(int argc,char *argv[]) {
       if (g_proc_id == 0) {
         fprintf(stdout, "# Write successfully verified.\n");
       }
+#else
+      if (g_proc_id == 0) {
+        fprintf(stdout, "# Write completed successfully.\n");
+      }
 #endif
 
       free(xlfInfo);

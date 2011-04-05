@@ -36,12 +36,12 @@ int init_gauge_tmp(const int V) {
   int i=0;
 
   if((void*)(gauge_tmp = (su3**)calloc(V, sizeof(su3*))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
+    fprintf(stderr, "malloc errno : %d\n", errno);
     errno = 0;
     return(1);
   }
   if((void*)(gauge_tmp_ = (su3*)calloc(4*V+1, sizeof(su3))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
+    fprintf(stderr, "malloc errno : %d\n", errno);
     errno = 0;
     return(1);
   }
