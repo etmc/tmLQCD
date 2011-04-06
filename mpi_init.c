@@ -268,8 +268,8 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   MPI_Get_processor_name(processor_name, &namelen);
   MPI_Dims_create(g_nproc, nalldims, dims);
   if(g_proc_id == 0){
-    printf("# Creating the following cartesian grid for a %d dimensional parallelisation:\n%d x %d x %d x %d\n"
-	   , ndims, dims[0], dims[1], dims[2], dims[3]);
+    printf("# Creating the following cartesian grid for a %d dimensional parallelisation:\n# %d x %d x %d x %d\n"
+            , ndims, dims[0], dims[1], dims[2], dims[3]);
   }
 
   g_nproc_t = dims[0];
@@ -349,12 +349,12 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   MPI_Cart_create(MPI_COMM_WORLD, nalldims, dims, periods, reorder, &g_cart_grid);
   MPI_Comm_rank(g_cart_grid, &g_cart_id);
   MPI_Cart_coords(g_cart_grid, g_cart_id, nalldims, g_proc_coords);
-
-  fprintf(stdout,"# Process %d of %d on %s: cart_id %d, coordinates (%d %d %d %d)\n",
-          g_proc_id, g_nproc, processor_name, g_cart_id, 
-          g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
-  fflush(stdout);
-
+  if (g_debug_level > 1) {
+    fprintf(stdout,"# Process %d of %d on %s: cart_id %d, coordinates (%d %d %d %d)\n",
+            g_proc_id, g_nproc, processor_name, g_cart_id, 
+            g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
+    fflush(stdout);
+  }
   if(g_stdio_proc == -1){
     g_stdio_proc = g_proc_id;
   }
