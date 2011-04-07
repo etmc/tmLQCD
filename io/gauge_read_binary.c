@@ -46,10 +46,6 @@ int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum, p
     return(-3);
   }
 
-  if (g_cart_id == 0 && g_debug_level > 1) {
-    printf("%d Bit precision read.\n", input->prec);
-  }
-
   DML_checksum_init(checksum);
 
   fbsu3 = sizeof(su3);

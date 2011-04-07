@@ -123,6 +123,7 @@ inline void rmQuotes(char *str){
   int return_check_flag, return_check_interval;
   int gauge_precision_read_flag;
   int gauge_precision_write_flag;
+  int g_disable_IO_checks;
   int gmres_m_parameter, gmresdr_nr_ev;
   int reproduce_randomnumber_flag;
   double stout_rho;
@@ -150,25 +151,25 @@ inline void rmQuotes(char *str){
   int compute_modenumber;
   int compute_topsus;
   double mstarsq;
-  int no_sources_z2;  
+  int no_sources_z2;
   int usegpu_flag;
   int max_innersolver_it;
   int device_num;
-  double innersolver_precision;  
-  
+  double innersolver_precision;
+
   double innersolver_precision_abs;
   double innersolver_precision_rel;
   int innersolver_precision_check_abs;
   int innersolver_precision_check_rel;
-  
+
   int propagator_comparison;
   int nb_cores;
-  
+
   int nblocks_t;
   int nblocks_x;
   int nblocks_y;
   int nblocks_z;
-  
+
   int dfl_field_iter;
   int dfl_poly_iter;
 
@@ -191,6 +192,7 @@ inline void rmQuotes(char *str){
 %x GAUGEINPUTFILE
 %x GAUGERPREC
 %x GAUGEWPREC
+%x DSBLIOCHECK
 %x DFLSP
 %x PRECON
 %x WRITECP
@@ -345,6 +347,7 @@ inline void rmQuotes(char *str){
 ^CGMMSNoExtraMasses{EQL}           BEGIN(CGMMSNMS);
 ^GaugeConfigReadPrecision{EQL}     BEGIN(GAUGERPREC);
 ^GaugeConfigWritePrecision{EQL}    BEGIN(GAUGEWPREC);
+^DisableIOChecks{EQL}              BEGIN(DSBLIOCHECK);
 ^ReproduceRandomNumbers{EQL}       BEGIN(REPRORND);
 ^UseSloppyPrecision{EQL}           BEGIN(SLOPPYPREC);
 ^UseStoutSmearing{EQL}             BEGIN(USESTOUT);
@@ -377,7 +380,7 @@ inline void rmQuotes(char *str){
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
 
 ^PropagatorComparison{EQL}         BEGIN(PCOMP);
-^NbCoresPerNode{EQL}		   BEGIN(NBCORES);
+^NbCoresPerNode{EQL}               BEGIN(NBCORES);
 
 ^NoBlocksT{EQL}                    BEGIN(DFLNBLOCKT);
 ^NoBlocksX{EQL}                    BEGIN(DFLNBLOCKX);
@@ -1465,6 +1468,14 @@ inline void rmQuotes(char *str){
   write_cp_flag=0;
   if(myverbose!=0) printf("Don't write Checkpoints\n");
 }
+<DSBLIOCHECK>yes {
+  g_disable_IO_checks = 1;
+  if(myverbose!=0) printf("Disable IO checks (and readback in case of Lemon IO)\n");
+}
+<DSBLIOCHECK>no {
+  g_disable_IO_checks = 0;
+  if(myverbose!=0) printf("Enable IO checks (and readback in case of Lemon IO)\n");
+}
 <CPINT>{DIGIT}+   {
   cp_interval=atoi(yytext);
   if(myverbose!=0) printf("Write Checkpoint all %s measurements\n",yytext);
@@ -1636,7 +1647,6 @@ inline void rmQuotes(char *str){
   use_stout_flag = 0;
   if(myverbose!=0) printf("Don't use stout smearing for invert!\n");
 }
-
 <PRECONDITIONING>yes {
   use_preconditioning = 1;
   if(myverbose) printf("Using project \"QCD-Preconditioning\"\n");
@@ -1645,7 +1655,6 @@ inline void rmQuotes(char *str){
   use_preconditioning = 0;
   if(myverbose) printf("not using project \"QCD-Preconditioning\"\n");
 }
-
 <STOUTRHO>{FLT} {
   stout_rho=atof(yytext);
   if(myverbose!=0) printf("use stout rho=%e!\n", stout_rho);
@@ -1764,7 +1773,7 @@ inline void rmQuotes(char *str){
 }
 
 <*>^#   {
-   comment_caller = YY_START;   
+   comment_caller = YY_START;
    BEGIN(COMMENT);
 }
 <*>{SPC}*#    {
@@ -1805,7 +1814,7 @@ int yywrap()
   return(1);
 }
 
-/* 
+/*
  * This is the function to parse the input file.
  * default values for all paramters will be set
  * correspondig to settings in
@@ -1836,15 +1845,15 @@ int read_input(char * conf_file){
 #endif
   propagator_comparison = 0;
   nb_cores = 1;
-  
+
   nblocks_t = 1;
   nblocks_x = 1;
   nblocks_y = 1;
   nblocks_z = 1;
-  
+
   dfl_field_iter = 80;
   dfl_poly_iter = 20;
-  
+
   g_kappa = _default_g_kappa;
   g_acc_Ptilde = _default_g_acc_Ptilde;
   g_acc_Hfin = _default_g_acc_Hfin;
@@ -1904,6 +1913,7 @@ int read_input(char * conf_file){
   g_no_extra_masses = _default_g_no_extra_masses;
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
+  g_disable_IO_checks = _default_g_disable_IO_checks;
   reproduce_randomnumber_flag = _default_reproduce_randomnumber_flag;
   g_sloppy_precision_flag = _default_g_sloppy_precision_flag;
   use_stout_flag = _default_use_stout_flag;
@@ -1955,7 +1965,7 @@ int read_input(char * conf_file){
     LZ = L;
   }
 #endif
-  
+
   if(PropInfo.format == -1) PropInfo.format = SourceInfo.format;
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
 
@@ -1966,7 +1976,7 @@ int read_input(char * conf_file){
 }
 
 
-/* 
+/*
  * This is the function to parse the input file 
  * again. Only parameters are changed, that
  * are specified in the input file.
@@ -2021,7 +2031,6 @@ int reread_input(char * conf_file){
   nstore = nst;
 
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
- 
   g_mu = g_mu1;
 
   fclose(yyout);

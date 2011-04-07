@@ -71,6 +71,7 @@ EXTERN int g_update_gauge_energy;
 EXTERN int g_update_rectangle_energy;
 EXTERN int g_relative_precision_flag;
 EXTERN int g_debug_level;
+EXTERN int g_disable_IO_checks;
 
 EXTERN int T_global;
 #ifndef FIXEDVOLUME

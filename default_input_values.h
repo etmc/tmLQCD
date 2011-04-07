@@ -101,6 +101,7 @@
 #define _default_gmresdr_nr_ev 0
 #define _default_gauge_precision_read_flag 64
 #define _default_gauge_precision_write_flag 64
+#define _default_g_disable_IO_checks 0
 #define _default_prop_precision_flag 32
 #define _default_reproduce_randomnumber_flag 0
 #define _default_g_sloppy_precision_flag 0

@@ -287,9 +287,8 @@ int main(int argc,char *argv[]) {
       exit(0);
     }
   }
-  
-  
-     /* list and initialize measurements*/
+
+   /* list and initialize measurements*/
    if(g_proc_id == 0) {
     printf("\n");
     for(j = 0; j < no_measurements; j++) {
@@ -330,7 +329,7 @@ int main(int argc,char *argv[]) {
 
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
-  if ( j!= 0) {
+  if (j!= 0) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(-1);
   }
@@ -503,25 +502,26 @@ int main(int argc,char *argv[]) {
           fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status, tmp_filename);
           exit(-2);
         }
-  #ifdef HAVE_LIBLEMON
-        /* Read gauge field back to verify the writeout */
-        if (g_proc_id == 0) {
-          fprintf(stdout, "# Write completed, verifying write...\n");
+        if (!g_disable_IO_checks) {
+#ifdef HAVE_LIBLEMON
+          /* Read gauge field back to verify the writeout */
+          if (g_proc_id == 0) {
+            fprintf(stdout, "# Write completed, verifying write...\n");
+          }
+          if( (status = read_gauge_field(tmp_filename)) != 0) {
+            fprintf(stderr, "WARNING, writeout of %s returned no error, but verification discovered errors.\n", tmp_filename);
+            fprintf(stderr, "Potential disk or MPI I/O error. Aborting...\n");
+            exit(-3);
+          }
+          if (g_proc_id == 0) {
+            fprintf(stdout, "# Write successfully verified.\n");
+          }
+#else
+          if (g_proc_id == 0) {
+            fprintf(stdout, "# Write completed successfully.\n");
+          }
+#endif
         }
-        if( (status = read_gauge_field(tmp_filename)) != 0) {
-          fprintf(stderr, "WARNING, writeout of %s returned no error, but verification discovered errors.\n", tmp_filename);
-          fprintf(stderr, "Potential disk or MPI I/O error. Aborting...\n");
-          exit(-3);
-        }
-        if (g_proc_id == 0) {
-          fprintf(stdout, "# Write successfully verified.\n");
-        }
-  #else
-        if (g_proc_id == 0) {
-          fprintf(stdout, "# Write completed successfully.\n");
-        }
-  #endif
-
         free(xlfInfo);
       }
       /* Now move .conf.tmp into place */

@@ -138,6 +138,12 @@ supported general input paramters:
   default. This could be possibly used in the invert code along the 
   lines of {\ttfamily hep-lat/0609023} in the future.
 
+\item {\ttfamily DisableIOChecks}:\\
+  Defaults to no, if set to yes, this will disable several checks
+  performed on gauge configuration input files, such size verification or
+  SciDAC checksum matching. It will also disable the readback performed with
+  Lemon IO.
+
 \item {\ttfamily GaugeConfigRead|WritePrecision}:\\
   Read/Write gauge configurations in single (32) or double (64)
   precision. Default is 64.
