@@ -66,7 +66,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
   if(optr->type != DBTMWILSON) {
     SourceInfo.no_flavours = 1;
     if(source_type != 1) {
-      if (read_source_flag == 0) {
+      if (read_source_flag == 0 || read_source_flag == 2) {
         if (source_location == 0) {
           source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
         }
@@ -103,7 +103,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     }
     else if(source_type == 1) {
       /* Volume sources */
-      if(read_source_flag == 0) {
+      if(read_source_flag == 0 || read_source_flag == 2) {
         if(g_proc_id == 0 && g_debug_level > 0) {
           printf("# Preparing 1 flavour volume source\n");
         }
@@ -178,7 +178,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     zero_spinor_field(g_spinor_field[0], VOLUME/2);
     zero_spinor_field(g_spinor_field[1], VOLUME/2);
     if(source_type != 1) {
-      if(read_source_flag == 0) {
+      if(read_source_flag == 0 || read_source_flag == 2) {
         if(source_location == 0) {
           source_spinor_field(g_spinor_field[2], g_spinor_field[3], is, ic);
         }

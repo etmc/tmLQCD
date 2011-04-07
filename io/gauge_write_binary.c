@@ -103,10 +103,19 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
 
   lemonWriterCloseRecord(lemonwriter);
 
-  DML_global_xor(&checksum->suma);
-  DML_global_xor(&checksum->sumb);
-
   free(filebuffer);
+
+  status = DML_global_xor(&checksum->suma);
+  if (status != MPI_SUCCESS) {
+    fprintf(stderr, "DML Checksum accumulation error occurred with status = %d, while writing in gauge_write_binary.c!\n", status);
+    return(-2);
+  }
+  status = DML_global_xor(&checksum->sumb);
+  if (status != MPI_SUCCESS) {
+    fprintf(stderr, "DML Checksum accumulation error occurred with status = %d, while writing in gauge_write_binary.c!\n", status);
+    return(-2);
+  }
+
   return 0;
 }
 
