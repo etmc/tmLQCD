@@ -36,13 +36,13 @@ libio_TARGETS = utils_engineering \
 		utils_parse_checksum_xml \
 		utils_write_message \
 		utils_read_message \
-		gauge_write_format \
 		gauge_write_binary \
 		gauge_read_binary \
 		gauge_read \
 		gauge_write \
 		utils_write_xlf \
 		utils_write_xlf_xml \
+        utils_write_ildg_format \
 		utils_write_header \
 		utils_write_checksum \
 		utils_write_inverter_info \

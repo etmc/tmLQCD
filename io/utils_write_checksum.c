@@ -33,10 +33,12 @@ void write_checksum(WRITER * writer, DML_Checksum const *checksum, char const *n
         "  <sumb>%08x</sumb>\n"
         "</scidacChecksum>", checksum->suma, checksum->sumb);
   bytes = strlen(message);
+  /* The message begin bit is 0, because this is written as part of a data message
+   * the end bit is 1, since this should be the last record of a message */
   if (name == NULL)
-      write_header(writer, 1, 1, "scidac-checksum", bytes);
+      write_header(writer, 0, 1, "scidac-checksum", bytes);
   else
-      write_header(writer, 1, 1, name, bytes);
+      write_header(writer, 0, 1, name, bytes);
 
   write_message(writer, message, bytes);
 

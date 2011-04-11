@@ -38,7 +38,8 @@ int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfI
   write_ildg_format(writer, ildg);
   free(ildg);
 
-  write_header(writer, 1, 1, "ildg-binary-data", bytes);
+  /* Both begin and end bit are 0, the message is begun with the format, and will end with the checksum */
+  write_header(writer, 0, 0, "ildg-binary-data", bytes);
   status = write_binary_gauge_data(writer, prec, &checksum);
   write_checksum(writer, &checksum, NULL);
 

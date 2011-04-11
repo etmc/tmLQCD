@@ -43,7 +43,7 @@ void write_ildg_format(WRITER *writer, paramsIldgFormat const *format)
           format->prec, format->lx, format->ly, format->lz, format->lt);
 
   bytes = strlen(buf);
-  write_header(writer, 1, 1, "ildg-format", bytes);
+  write_header(writer, 1, 0, "ildg-format", bytes); /* ME is 0 because a ildg-binary-data record MUST follow */
   write_message(writer, buf, bytes);
   close_writer_record(writer);
   free(buf);

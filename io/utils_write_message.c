@@ -23,13 +23,13 @@ int write_message(WRITER * writer, char const *buffer, uint64_t bytes)
 {
   int status;
   n_uint64_t bytesWritten = bytes;
-  
+
 #ifndef HAVE_LIBLEMON
   if(g_cart_id == 0){
 #endif /* ! HAVE_LIBLEMON */
     if (buffer == (char*)NULL)
       return(0);
-    
+
     status = WriteRecordData((void*)buffer, &bytes, writer);
     if (status != LIME_SUCCESS || bytes != bytesWritten)
       kill_with_error(writer->fp, g_cart_id, "I/O error on writing message. Aborting...\n");
