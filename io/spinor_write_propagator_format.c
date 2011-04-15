@@ -35,10 +35,11 @@ void write_propagator_format(WRITER *writer, paramsPropagatorFormat const *forma
    "  <lt>%d</lt>\n"
    "</etmcFormat>",
    format->prec, format->flavours,
-   format->nx, format->ny, format->nx, format->nt);
-    
+   format->lx, format->ly, format->lx, format->lt);
+
   bytes = strlen(message);
-  write_header(writer, 1, 1, "etmc-propagator-format", bytes);
+  /* The propagator format is the last part of metadata, therefore MB=0, ME=1 */
+  write_header(writer, 0, 1, "etmc-propagator-format", bytes);
   write_message(writer, message, bytes);
   close_writer_record(writer);
   free(message);

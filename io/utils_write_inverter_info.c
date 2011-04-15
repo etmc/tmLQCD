@@ -25,55 +25,53 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
   n_uint64_t bytes;
 
   message = (char*)malloc(1024);
-  
+
   if (info->mms > -1) {
     sprintf(message, "solver = %s\n"
-	    " result is for Q^dagger Q!\n"
-	    " multiple mass solver\n"
-	    " epssq = %e\n"
-	    " noiter = %d\n"
-	    " kappa = %f, inverted mu = %f, lowest mu = %f\n"
-	    " time = %ld\n hmcversion = %s\n"
-	    " date = %s",
- 	    info->inverter,
-	    info->epssq, info->iter, info->kappa,
-	    info->extra_masses[0],
-	    info->mu, info->time, info->package_version,
-	    info->date);
+                     "result is for Q^dagger Q!\n"
+                     "multiple mass solver\n"
+                     "epssq = %e\n"
+                     "noiter = %d\n"
+                     "kappa = %f, inverted mu = %f, lowest mu = %f\n"
+                     "time = %ld\n inverter version = %s\n"
+                     "date = %s",
+                     info->inverter,
+                     info->epssq, info->iter, info->kappa,
+                     info->extra_masses[0],
+                     info->mu, info->time, info->package_version,
+                     info->date);
   }
-  else
+  else {
     if (!info->heavy) {
       sprintf(message, "solver = %s\n"
-	      " epssq = %e\n"
-	      " noiter = %d\n"
-	      " kappa = %f, mu = %f\n"
-	      " time = %ld\n"
-	      " hmcversion = %s\n"
-	      " date = %s",
-	      info->inverter,
-	      info->epssq, info->iter, info->kappa, info->mu,
-	      info->time, info->package_version, info->date);
+                       "epssq = %e\n"
+                       "noiter = %d\n"
+                       "kappa = %f, mu = %f\n"
+                       "time = %ld\n"
+                       "inverter version = %s\n"
+                       "date = %s",
+                       info->inverter,
+                       info->epssq, info->iter, info->kappa, info->mu,
+                       info->time, info->package_version, info->date);
     }
     else {
       sprintf(message, "solver = %s\n"
-	      " epssq = %e\n"
-	      " noiter = %d\n"
-	      " kappa = %f, mubar = %f, epsbar=%f\n"
-	      " time = %ld\n"
-	      " hmcversion = %s\n"
-	      " date = %s",
-	      info->inverter,
-	      info->epssq, info->iter, info->kappa, info->mubar,
-	      info->epsbar , info->time,
-	      info->package_version, info->date);
+                       "epssq = %e\n"
+                       "noiter = %d\n"
+                       "kappa = %f, mubar = %f, epsbar=%f\n"
+                       "time = %ld\n"
+                       "inverter version = %s\n"
+                       "date = %s",
+                       info->inverter,
+                       info->epssq, info->iter, info->kappa, info->mubar,
+                       info->epsbar, info->time,
+                       info->package_version, info->date);
     }
-  
+  }
   bytes = strlen(message);
-  write_header(writer, 1, 1, "inverter-info", bytes);
+  write_header(writer, 1, 0, "inverter-info", bytes);
   write_message(writer, message, bytes);
-
   close_writer_record(writer);
-  
   free(message);
   return;
 }

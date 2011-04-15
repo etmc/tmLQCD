@@ -28,22 +28,24 @@ void write_source_format(WRITER *writer, paramsSourceFormat const *format)
 #endif /* ! HAVE_LIBLEMON */
   buf = (char*)malloc(512);
   sprintf(buf, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-	  "<etmcFormat>\n"
-	  "  <field>diracFermion</field>\n"
-	  "  <precision>%d</precision>\n"
-	  "  <flavours>%d</flavours>\n"
-	  "  <lx>%d</lx>\n"
-	  "  <ly>%d</ly>\n"
-	  "  <lz>%d</lz>\n"
-	  "  <lt>%d</lt>\n"
-	  "  <spin>%d</spin>\n"
-	  "  <colour>%d</colour>\n"
-	  "</etmcFormat>",
+        "<etmcFormat>\n"
+        "  <field>diracFermion</field>\n"
+        "  <precision>%d</precision>\n"
+        "  <flavours>%d</flavours>\n"
+        "  <lx>%d</lx>\n"
+        "  <ly>%d</ly>\n"
+        "  <lz>%d</lz>\n"
+        "  <lt>%d</lt>\n"
+        "  <spin>%d</spin>\n"
+        "  <colour>%d</colour>\n"
+        "</etmcFormat>",
           format->prec, format->flavours,
-          format->nx, format->ny, format->nz, format->nt,
+          format->lx, format->ly, format->lz, format->lt,
           format->spins, format->colours);
   bytes = strlen(buf);
-  write_header(writer, 1, 1, "etmc-source-format", bytes);
+  /* This message should be preceded by inverter info
+   * and followed by propagator format, so MB=ME=0 */
+  write_header(writer, 0, 0, "etmc-source-format", bytes);
   write_message(writer, buf, bytes);
   close_writer_record(writer);
 

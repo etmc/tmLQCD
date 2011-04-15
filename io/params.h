@@ -43,7 +43,7 @@ typedef struct
   int    iter;
   int    heavy;
   int    noflavours;
-  
+
   long int time;
 }
 paramsInverterInfo;
@@ -52,10 +52,10 @@ typedef struct
 {
   int    flavours;
   int    prec;
-  int    nx;
-  int    ny;
-  int    nz;
-  int    nt;
+  int    lx;
+  int    ly;
+  int    lz;
+  int    lt;
 }
 paramsPropagatorFormat;
 
@@ -64,10 +64,10 @@ typedef struct
   int    colours;
   int    flavours;
   int    prec;
-  int    nx;
-  int    ny;
-  int    nz;
-  int    nt;
+  int    lx;
+  int    ly;
+  int    lz;
+  int    lt;
   int    spins;
 }
 paramsSourceFormat;

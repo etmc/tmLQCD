@@ -30,14 +30,15 @@ int write_spinor(WRITER * writer, spinor ** const s, spinor ** const r, const in
 
   if(r == NULL) {
     for (i = 0; i < flavours; ++i) {
-      write_header(writer, 1, 1, "scidac-binary-data", bytes);
+      //DEBUG following line
+      write_header(writer, 1, 0, "scidac-binary-data", bytes);
       status  = write_binary_spinor_data_l(s[i], writer, &checksum, prec);
       write_checksum(writer, &checksum, NULL);
     }
   }
   else {
     for (i = 0; i < flavours; ++i) {
-      write_header(writer, 1, 1, "scidac-binary-data", bytes);
+      write_header(writer, 1, 0, "scidac-binary-data", bytes);
       status = write_binary_spinor_data(s[i], r[i], writer, &checksum, prec);
       write_checksum(writer, &checksum, NULL);
     }

@@ -34,7 +34,7 @@ int write_spinor(WRITER * writer, spinor ** const s, spinor ** const r, const in
 int write_binary_spinor_data(spinor * const s, spinor * const r, WRITER * writer, DML_Checksum *checksum, int const prec);
 int write_binary_spinor_data_l(spinor * const s, WRITER * writer, DML_Checksum * checksum, const int prec);
 
-void write_spinor_info(WRITER * writer, const int write_prop_format_flag, paramsInverterInfo * InverterInfo);
+void write_spinor_info(WRITER * writer, const int write_prop_format_flag, paramsInverterInfo * InverterInfo, int append);
 void write_source_format(WRITER *writer, paramsSourceFormat const *format);
 void write_propagator_format(WRITER *writer, paramsPropagatorFormat const *format);
 void write_propagator_type(WRITER *writer, const int type);

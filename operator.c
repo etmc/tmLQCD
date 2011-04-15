@@ -98,7 +98,7 @@ int add_operator(const int type) {
   optr->no_flavours = 1;
   optr->DownProp = 0;
   optr->conf_input = _default_gauge_input_filename;
-  
+
   optr->applyM = &dummy_D;
   optr->applyQ = &dummy_D;
   optr->applyQp = &dummy_D;
@@ -147,46 +147,46 @@ int init_operators() {
     optr->rel_prec = g_relative_precision_flag;
     if(optr->type == TMWILSON || optr->type == WILSON) {
       if(optr->even_odd_flag) {
-	optr->applyQp = &Qtm_plus_psi;
-	optr->applyQm = &Qtm_minus_psi;
-	optr->applyQsq = &Qtm_pm_psi;
-	optr->applyMp = &Mtm_plus_psi;
-	optr->applyMm = &Mtm_minus_psi;
+        optr->applyQp = &Qtm_plus_psi;
+        optr->applyQm = &Qtm_minus_psi;
+        optr->applyQsq = &Qtm_pm_psi;
+        optr->applyMp = &Mtm_plus_psi;
+        optr->applyMm = &Mtm_minus_psi;
       }
       else {
-	optr->applyQp = &Q_plus_psi;
-	optr->applyQm = &Q_minus_psi;
-	optr->applyQsq = &Q_pm_psi;
-	optr->applyMp = &D_psi;
-	optr->applyMm = &D_psi;
+        optr->applyQp = &Q_plus_psi;
+        optr->applyQm = &Q_minus_psi;
+        optr->applyQsq = &Q_pm_psi;
+        optr->applyMp = &D_psi;
+        optr->applyMm = &D_psi;
       }
       if(optr->solver == 12) {
-	if (g_cart_id == 0 && optr->even_odd_flag == 1)
-	  fprintf(stderr, "CGMMS works only without even/odd! Forcing!\n");
-	optr->even_odd_flag = 0;
+        if (g_cart_id == 0 && optr->even_odd_flag == 1)
+          fprintf(stderr, "CGMMS works only without even/odd! Forcing!\n");
+        optr->even_odd_flag = 0;
 
-	/* this is for the extra masses of the CGMMS */
-	if (g_no_extra_masses > 0) {
-	  if ((ifs = fopen("extra_masses.input", "r")) != NULL) {
-	    for (i = 0; i < g_no_extra_masses; i++) {
-	      /* Code added below mainly to stop the compiler from whining! */
-	      if (fscanf(ifs, "%lf", &g_extra_masses[i]) == EOF) {
-		g_no_extra_masses = i;
-		if (g_cart_id == 0 )
-		  fprintf(stderr, "Reduced the number of extra masses to %d for lack of input values.\n", g_no_extra_masses);
-		break;
-	      }
-	      if (g_cart_id == 0 && g_debug_level > 0) {
-		printf("# g_extra_masses[%d] = %lf\n", i, g_extra_masses[i]);
-	      }
-	    }
-	    fclose(ifs);
-	  }
-	  else {
-	    fprintf(stderr, "Could not open file extra_masses.input!\n");
-	    g_no_extra_masses = 0;
-	  }
-	}
+        /* this is for the extra masses of the CGMMS */
+        if (g_no_extra_masses > 0) {
+          if ((ifs = fopen("extra_masses.input", "r")) != NULL) {
+            for (i = 0; i < g_no_extra_masses; i++) {
+              /* Code added below mainly to stop the compiler from whining! */
+              if (fscanf(ifs, "%lf", &g_extra_masses[i]) == EOF) {
+            g_no_extra_masses = i;
+            if (g_cart_id == 0 )
+              fprintf(stderr, "Reduced the number of extra masses to %d for lack of input values.\n", g_no_extra_masses);
+            break;
+              }
+              if (g_cart_id == 0 && g_debug_level > 0) {
+            printf("# g_extra_masses[%d] = %lf\n", i, g_extra_masses[i]);
+              }
+            }
+            fclose(ifs);
+          }
+          else {
+            fprintf(stderr, "Could not open file extra_masses.input!\n");
+            g_no_extra_masses = 0;
+          }
+        }
       }
     }
     else if(optr->type == OVERLAP) {
@@ -328,7 +328,6 @@ void op_invert(const int op_id, const int index_start) {
       mul_one_pm_itau2(optr->prop1, optr->prop3, g_spinor_field[DUM_DERI+1], 
                        g_spinor_field[DUM_DERI+3], -1., VOLUME/2);
       /* write propagator */
-
       optr->write_prop(op_id, index_start, i);
 
       mul_r(optr->prop0, 1./(2*optr->kappa), g_spinor_field[DUM_DERI], VOLUME/2);
@@ -393,6 +392,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   char ending[15];
   WRITER *writer = NULL;
   int append = 0;
+  int status = 0;
 
   paramsSourceFormat *sourceFormat = NULL;
   paramsPropagatorFormat *propagatorFormat = NULL;
@@ -419,40 +419,37 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
     sprintf(filename, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
   }
 
-  if(!PropInfo.splitted) append = 1;
-  if(append_) append=1;
+  if(!PropInfo.splitted)
+    append = 1;
+  if(append_)
+    append = 1;
   /* the 1 is for appending */
   construct_writer(&writer, filename, append);
   if (PropInfo.splitted || SourceInfo.ix == index_start) {
     inverterInfo = construct_paramsInverterInfo(optr->reached_prec, optr->iterations, optr->solver, optr->no_flavours);
-    write_spinor_info(writer, PropInfo.format, inverterInfo);
+    write_spinor_info(writer, PropInfo.format, inverterInfo, append);
     free(inverterInfo);
   }
   /* write the source depending on format */
   /* to be fixed for 2 fl tmwilson        */
   if (PropInfo.format == 1) {
     sourceFormat = construct_paramsSourceFormat(SourceInfo.precision, optr->no_flavours, 4, 3);
-
     write_source_format(writer, sourceFormat);
-    write_spinor(writer, &operator_list[op_id].sr0, &operator_list[op_id].sr1, 1, SourceInfo.precision);
+    status = write_spinor(writer, &operator_list[op_id].sr0, &operator_list[op_id].sr1, 1, SourceInfo.precision);
     if(optr->no_flavours == 2) {
-      write_spinor(writer, &operator_list[op_id].sr2, &operator_list[op_id].sr3, 1, SourceInfo.precision);
+      status = write_spinor(writer, &operator_list[op_id].sr2, &operator_list[op_id].sr3, 1, SourceInfo.precision);
     }
     free(sourceFormat);
   }
-
   propagatorFormat = construct_paramsPropagatorFormat(optr->prop_precision, optr->no_flavours);
-
   write_propagator_format(writer, propagatorFormat);
   free(propagatorFormat);
 
   if(optr->no_flavours == 2) {
-    write_spinor(writer, &operator_list[op_id].prop2, &operator_list[op_id].prop3, 1, optr->prop_precision);
+    status = write_spinor(writer, &operator_list[op_id].prop2, &operator_list[op_id].prop3, 1, optr->prop_precision);
   }
-  write_spinor(writer, &operator_list[op_id].prop0, &operator_list[op_id].prop1, 1, optr->prop_precision);
-
+  status = write_spinor(writer, &operator_list[op_id].prop0, &operator_list[op_id].prop1, 1, optr->prop_precision);
   destruct_writer(writer);
-
   return;
 }
 

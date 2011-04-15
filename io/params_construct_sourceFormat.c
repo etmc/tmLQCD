@@ -10,10 +10,10 @@ paramsSourceFormat *construct_paramsSourceFormat(int const prec, int const flavo
   format->prec = prec;
   format->flavours = flavours;
 
-  format->nx = LX * g_nproc_x;
-  format->ny = LY * g_nproc_y;
-  format->nz = LZ * g_nproc_z;
-  format->nt =  T * g_nproc_t;
+  format->lx = LX * g_nproc_x;
+  format->ly = LY * g_nproc_y;
+  format->lz = LZ * g_nproc_z;
+  format->lt =  T * g_nproc_t;
 
   format->spins = spins;
   format->colours = colours;

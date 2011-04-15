@@ -10,10 +10,10 @@ paramsPropagatorFormat *construct_paramsPropagatorFormat(int const prec, int con
   format->flavours = flavours;
   format->prec = prec;
 
-  format->nx = LX * g_nproc_x;
-  format->ny = LY * g_nproc_y;
-  format->nz = LZ * g_nproc_z;
-  format->nt =  T * g_nproc_t;
+  format->lx = LX * g_nproc_x;
+  format->ly = LY * g_nproc_y;
+  format->lz = LZ * g_nproc_z;
+  format->lt =  T * g_nproc_t;
 
   return format;
 }

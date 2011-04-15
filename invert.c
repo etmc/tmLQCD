@@ -446,7 +446,7 @@ int main(int argc, char *argv[])
       g_mu = 0.;
 
       if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
-        printf(" Using preconditioning with treelevel preconditioning operator: %s \n",
+        printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
               precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
         /* initial preconditioning workspace */
         operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));

@@ -20,20 +20,23 @@
 #include "spinor.ih"
 
 void write_spinor_info(WRITER * writer, const int write_prop_format_flag,
-                       paramsInverterInfo * InverterInfo)
+                       paramsInverterInfo * InverterInfo, int append)
 {
-  write_propagator_type(writer, write_prop_format_flag);
-  if(GaugeInfo.xlfInfo != NULL) {
-    write_header(writer, 1, 1, "xlf-info", strlen(GaugeInfo.xlfInfo));
-    write_message(writer, GaugeInfo.xlfInfo, strlen(GaugeInfo.xlfInfo));
-    close_writer_record(writer);
+  if (!append) {
+    if(GaugeInfo.xlfInfo != NULL) {
+      /* This message starts the gauge info, so it should be MB=1 ME=0 */
+      write_header(writer, 1, 0, "xlf-info", strlen(GaugeInfo.xlfInfo));
+      write_message(writer, GaugeInfo.xlfInfo, strlen(GaugeInfo.xlfInfo));
+      close_writer_record(writer);
+    }
+    write_checksum(writer, &GaugeInfo.checksum, "gauge-scidac-checksum-copy");
+    if(GaugeInfo.ildg_data_lfn != NULL)
+    {
+      /* This message always stands on its own: MB=1 ME=1 */
+      write_header(writer, 1, 1, "gauge-ildg-data-lfn-copy", strlen(GaugeInfo.ildg_data_lfn));
+      write_message(writer, GaugeInfo.ildg_data_lfn, strlen(GaugeInfo.ildg_data_lfn));
+      close_writer_record(writer);
+    }
   }
   write_inverter_info(writer, InverterInfo);
-  if (GaugeInfo.ildg_data_lfn != NULL)
-  {
-    write_header(writer, 1, 1, "gauge-ildg-data-lfn-copy", strlen(GaugeInfo.ildg_data_lfn));
-    write_message(writer, GaugeInfo.ildg_data_lfn, strlen(GaugeInfo.ildg_data_lfn));
-    close_writer_record(writer);
-  }
-  write_checksum(writer, &GaugeInfo.checksum, "gauge-scidac-checksum-copy");
 }

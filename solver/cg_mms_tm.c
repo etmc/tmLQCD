@@ -142,12 +142,12 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
     assign_add_mul_r(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+4], -alpha_cg, N);
 
     /* Check whether the precision eps_sq is reached */
-    
+
     err = square_norm(g_spinor_field[DUM_SOLVER+1], N, 1);
     if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
       printf("CG MMS %d\t%g\n", iteration, err); fflush( stdout );
     }
-    
+
     if( ((err <= eps_sq) && (rel_prec == 0)) ||
 	((err <= eps_sq*squarenorm) && (rel_prec == 1)) ) {
 
@@ -176,7 +176,6 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
       	else sprintf(filename, "%s.%.4d.%.5d.cgmms.%.2d.0", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, im+1);
 	
 	if(g_kappa != 0) mul_r(temp_save, (2*g_kappa)*(2*g_kappa), temp_save, N);
-      
         // Always append, because the header is created in "operator.c"
         append=1;
         construct_writer(&writer, filename, append);
@@ -184,7 +183,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 	//Write the header /NOTE: always writes TWILSON and 1 flavour (to be adjusted)
 	if (PropInfo.splitted || SourceInfo.ix == index_start) {
 	  inverterInfo = construct_paramsInverterInfo(err, iteration+1, 12, 1);
-    	  write_spinor_info(writer, PropInfo.format, inverterInfo);
+    	  write_spinor_info(writer, PropInfo.format, inverterInfo, append);
     	  free(inverterInfo);
 	}
 	
@@ -195,7 +194,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
       }
       return(iteration+1);
     }
-    
+
     /* Compute beta_cg(i+1) = (r(i+1),r(i+1))/(r(i),r(i))
        Compute p(i+1) = r(i+1) + beta(i+1)*p(i)  */
     beta_cg = err/normsq;
