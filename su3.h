@@ -1076,6 +1076,44 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (u).c22.im= (a)*(v).c22.im;
 #endif
 
+/* A. Deuzeman
+* u=a*v + b*w 
+* c real
+*/
+
+#ifdef _STD_C99_COMPLEX
+#define _real_times_su3_plus_real_times_su3(u,a,v,b,w) \
+  (u).c00 = (a)*(v).c00 + (b)*(w).c00; \
+  (u).c01 = (a)*(v).c01 + (b)*(w).c01; \
+  (u).c02 = (a)*(v).c02 + (b)*(w).c02; \
+  (u).c10 = (a)*(v).c10 + (b)*(w).c10; \
+  (u).c11 = (a)*(v).c11 + (b)*(w).c11; \
+  (u).c12 = (a)*(v).c12 + (b)*(w).c12; \
+  (u).c20 = (a)*(v).c20 + (b)*(w).c20; \
+  (u).c21 = (a)*(v).c21 + (b)*(w).c21; \
+  (u).c22 = (a)*(v).c22 + (b)*(w).c22;
+#else
+#define _real_times_su3_plus_real_times_su3(u,a,v,b,w) \
+   (u).c00.re= (a)*(v).c00.re + (b)*(w).c00.re; \
+   (u).c00.im= (a)*(v).c00.im + (b)*(w).c00.im; \
+   (u).c01.re= (a)*(v).c01.re + (b)*(w).c01.re; \
+   (u).c01.im= (a)*(v).c01.im + (b)*(w).c01.im; \
+   (u).c02.re= (a)*(v).c02.re + (b)*(w).c02.re; \
+   (u).c02.im= (a)*(v).c02.im + (b)*(w).c02.im; \
+   (u).c10.re= (a)*(v).c10.re + (b)*(w).c10.re; \
+   (u).c10.im= (a)*(v).c10.im + (b)*(w).c10.im; \
+   (u).c11.re= (a)*(v).c11.re + (b)*(w).c11.re; \
+   (u).c11.im= (a)*(v).c11.im + (b)*(w).c11.im; \
+   (u).c12.re= (a)*(v).c12.re + (b)*(w).c12.re; \
+   (u).c12.im= (a)*(v).c12.im + (b)*(w).c12.im; \
+   (u).c20.re= (a)*(v).c20.re + (b)*(w).c20.re; \
+   (u).c20.im= (a)*(v).c20.im + (b)*(w).c20.im; \
+   (u).c21.re= (a)*(v).c21.re + (b)*(w).c21.re; \
+   (u).c21.im= (a)*(v).c21.im + (b)*(w).c21.im; \
+   (u).c22.re= (a)*(v).c22.re + (b)*(w).c22.re; \
+   (u).c22.im= (a)*(v).c22.im + (b)*(w).c22.im;
+#endif
+
 /* M. Hasenbusch
 * u=v-w
 */
@@ -1340,6 +1378,7 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
 
 
 #if ((defined SSE2) || (defined SSE3))
+
 #define _su3_times_su3(u,v,w) _sse_su3_times_su3(u,v,w)
 #define _su3_times_su3_acc(u,v,w) _sse_su3_times_su3_acc(u,v,w)
 #define _su3d_times_su3(u,v,w) _sse_su3d_times_su3(u,v,w)
@@ -1348,7 +1387,9 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
 #define _su3_times_su3d_acc(u,v,w) _sse_su3_times_su3d_acc(u,v,w)  
 
 #elif defined _STD_C99_COMPLEX_CHECKED
+
 #define _su3_times_su3(u,v,w)					\
+{ \
   (u).c00 = (v).c00*(w).c00 + (v).c01*(w).c10  + (v).c02*(w).c20;	\
   (u).c01 = (v).c00*(w).c01 + (v).c01*(w).c11  + (v).c02*(w).c21;	\
   (u).c02 = (v).c00*(w).c02 + (v).c01*(w).c12  + (v).c02*(w).c22;	\
@@ -1357,7 +1398,8 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
   (u).c12 = (v).c10*(w).c02 + (v).c11*(w).c12	+ (v).c12*(w).c22;	\
   (u).c20 = (v).c20*(w).c00 + (v).c21*(w).c10	+ (v).c22*(w).c20;	\
   (u).c21 = (v).c20*(w).c01 + (v).c21*(w).c11	+ (v).c22*(w).c21;	\
-  (u).c22 = (v).c20*(w).c02 + (v).c21*(w).c12	+ (v).c22*(w).c22;
+  (u).c22 = (v).c20*(w).c02 + (v).c21*(w).c12	+ (v).c22*(w).c22;	\
+}
 
 /* C.Urbach u=u + v * w */
 #define _su3_times_su3_acc(u,v,w)					\

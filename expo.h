@@ -22,5 +22,6 @@
 extern su3 exposu3(su3adj p);
 extern su3 exposu3_check(su3adj p,int im);
 extern su3 restoresu3(su3 u);
+extern void exposu3_in_place(su3 *u);
 
 #endif

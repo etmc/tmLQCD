@@ -1,6 +1,6 @@
 CC=gcc
 CXX=g++
-CFLAGS=-O3 -fexpensive-optimizations -fomit-frame-pointer # -mfpmath=sse -msse2 
+CFLAGS=-O2 -fexpensive-optimizations -fomit-frame-pointer # -mfpmath=sse -msse2 
 LIBS=-lm
 OBJECTS_OOX=oox.o
 INCLUDE=-I./

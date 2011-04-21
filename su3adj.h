@@ -23,7 +23,7 @@
 
 typedef struct
 {
-   double d1,d2,d3,d4,d5,d6,d7,d8;
+  double d1, d2, d3, d4, d5, d6, d7, d8;
 } su3adj;
 
 /*******************************************************************************
@@ -74,7 +74,6 @@ typedef struct
  *
  */
 
-
 #define _trace_lambda(r,a) \
 (r).d1=-(a).c10.im-(a).c01.im; \
 (r).d2=+(a).c10.re-(a).c01.re; \
@@ -83,7 +82,7 @@ typedef struct
 (r).d5=+(a).c20.re-(a).c02.re; \
 (r).d6=-(a).c21.im-(a).c12.im; \
 (r).d7=+(a).c21.re-(a).c12.re; \
-(r).d8=(-(a).c00.im-(a).c11.im + 2.0*a.c22.im)*0.577350269189625;
+(r).d8=(-(a).c00.im-(a).c11.im + 2.0*(a).c22.im)*0.577350269189625;
 
 #define _add_trace_lambda(r,a) \
 (r).d1+=-(a).c10.im-(a).c01.im; \

@@ -64,7 +64,7 @@
 #include "init_bispinor_field.h"
 #include "init_chi_spinor_field.h"
 #include "xchange_halffield.h"
-#include "stout_smear.h"
+#include "smearing/stout.h"
 #include "invert_eo.h"
 #include "monomial.h"
 #include "ranlxd.h"
@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
   char conf_filename[50];
   char * input_filename = NULL;
   double plaquette_energy;
+  struct stout_parameters params_smear;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -319,10 +320,14 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
 
-    if (use_stout_flag == 1) {
-      if (stout_smear_gauge_field(stout_rho , stout_no_iter) != 0)
+    if (use_stout_flag == 1){
+      params_smear.rho = stout_rho;
+      params_smear.iterations = stout_no_iter;
+      if (stout_smear((su3_tuple*)(g_gauge_field[0]), &params_smear, (su3_tuple*)(g_gauge_field[0])) != 0)
         exit(1) ;
-
+      g_update_gauge_copy = 1;
+      g_update_gauge_energy = 1;
+      g_update_rectangle_energy = 1;
       plaquette_energy = measure_gauge_action();
 
       if (g_cart_id == 0) {
@@ -493,7 +498,6 @@ int main(int argc, char *argv[])
 #ifdef MPI
   MPI_Finalize();
 #endif
-
   free_blocks();
   free_dfl_subspace();
   free_gauge_field();

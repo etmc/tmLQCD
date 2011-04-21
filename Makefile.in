@@ -35,7 +35,9 @@ GPUMPICOMPILER = @GPUMPICOMPILER@
 INCLUDES = @INCLUDES@
 LINK = $(CCLD) -o $@ ${LDFLAGS}
 LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
-	${top_builddir}/solver/libsolver.a ${top_builddir}/io/libio.a
+	${top_builddir}/solver/libsolver.a ${top_builddir}/io/libio.a \
+	${top_builddir}/smearing/libsmear.a
+
 COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
 SMODULES = Hopping_Matrix_nocom Hopping_Matrix tm_operators
@@ -53,8 +55,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	init_moment_field init_gauge_tmp \
 	xchange_field xchange_gauge prepare_source \
 	init_gauge_field init_geometry_indices init_spinor_field \
-	init_dirac_halfspinor xchange_halffield stout_smear \
-	init_stout_smear_vars stout_smear_force \
+	init_dirac_halfspinor xchange_halffield \
 	Nondegenerate_Matrix nddetratio_monomial \
 	chebyshev_polynomial_nd Ptilde_nd  \
 	init_chi_spinor_field reweighting_factor_nd \

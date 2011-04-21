@@ -62,7 +62,7 @@
 #include "init_dirac_halfspinor.h"
 #include "xchange_halffield.h"
 #include "update_backward_gauge.h"
-#include "stout_smear.h"
+#include "smearing/stout.h"
 #include "su3spinor.h"
 #include "invert_eo.h"
 #include "D_psi.h"
@@ -97,7 +97,8 @@ int main(int argc,char *argv[]) {
   char * input_filename = NULL;
   double plaquette_energy, nrm;
   double * norm;
-
+  struct stout_parameters params_smear;
+  
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
@@ -252,14 +253,19 @@ int main(int argc,char *argv[]) {
     if(g_proc_id == 0) {
       printf("The plaquette value is %e\n", plaquette_energy/(6.*VOLUME*g_nproc)); fflush(stdout);
     }
-
-    if(use_stout_flag == 1) {
-      if( stout_smear_gauge_field(stout_rho , stout_no_iter) != 0 ) exit(1) ;
-
+    if (use_stout_flag == 1){
+      params_smear.rho = stout_rho;
+      params_smear.iterations = stout_no_iter;
+      if (stout_smear((su3_tuple*)(g_gauge_field[0]), &params_smear, (su3_tuple*)(g_gauge_field[0])) != 0)
+        exit(1) ;
+      g_update_gauge_copy = 1;
+      g_update_gauge_energy = 1;
+      g_update_rectangle_energy = 1;
       plaquette_energy = measure_gauge_action();
 
-      if(g_proc_id == 0) {
-	printf("The plaquette value after stouting is %e\n", plaquette_energy/(6.*VOLUME*g_nproc)); fflush(stdout);
+      if (g_proc_id == 0) {
+        printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
+        fflush(stdout);
       }
     }
 

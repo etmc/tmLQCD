@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-g -O3
+CXXFLAGS=-g -O2
 CLNDIR=${HOME}/daten/workdir/cln/
 
 chebyRoot: chebyRoot.C Makefile chebyRoot.H

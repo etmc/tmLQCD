@@ -41,8 +41,8 @@
 #include "gamma.h"
 #include "get_staples.h"
 #include "read_input.h"
-#include "stout_smear.h"
-#include "stout_smear_force.h"
+#include "smearing/stout.h"
+
 #include "ranlxd.h"
 #include "start.h"
 #include "phmc.h"

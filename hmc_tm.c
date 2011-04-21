@@ -64,7 +64,6 @@
 #include "init_moment_field.h"
 #include "init_gauge_tmp.h"
 #include "init_dirac_halfspinor.h"
-#include "init_stout_smear_vars.h"
 #include "init_bispinor_field.h"
 #include "init_chi_spinor_field.h"
 #include "xchange_halffield.h"
@@ -300,9 +299,6 @@ int main(int argc,char *argv[]) {
   zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME);
   zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME);
   zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME);
-
-  if(use_stout_flag == 1)
-    init_stout_smear_vars(VOLUMEPLUSRAND, stout_no_iter);
 
   /*construct the filenames for the observables and the parameters*/
   strcpy(datafilename,filename);  strcat(datafilename,".data");
@@ -597,8 +593,6 @@ int main(int argc,char *argv[]) {
     free_chi_spinor_field();
   }
   /* End IF PHMC */
-/*   if(use_stout_flag == 1) */
-/*     free_stout_smear_vars(); */
 
   return(0);
 #ifdef _KOJAK_INST

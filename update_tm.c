@@ -59,9 +59,7 @@
 #include "solver/bicgstab_complex.h"
 #include "update_backward_gauge.h"
 #include "update_tm.h"
-#include "stout_smear.h"
 #include "solver/solver.h"
-#include "init_stout_smear_vars.h"
 #include "monomial.h"
 #include "integrator.h"
 /* for the SF: */
@@ -69,8 +67,6 @@
 
 
 extern su3 ** g_gauge_field_saved;
-void stout_smear();
-void unstout();
 
 int update_tm(double *plaquette_energy, double *rectangle_energy, 
               char * filename, const int return_check, const int acctest) {
@@ -130,26 +126,12 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
 
-  /* smear the gauge field */
-  if(use_stout_flag == 1) {
-    if (bc_flag == 0) {
-      stout_smear();
-    }
-  }
   /* heatbath for all monomials */
   for(i = 0; i < Integrator.no_timescales; i++) {
     for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
       monomial_list[ Integrator.mnls_per_ts[i][j] ].hbfunction(Integrator.mnls_per_ts[i][j]);
     }
   }
-
-  /* keep on going with the unsmeared gauge field */
-  if(use_stout_flag == 1) {
-    if (bc_flag == 0) {
-      unstout();
-    }
-  }
-
 
   /* initialize the momenta  */
   enep = ini_momenta(reproduce_randomnumber_flag);
@@ -161,25 +143,12 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
                        Integrator.no_timescales-1, 1);
 
   g_sloppy_precision = 0;
-  /*   smear the gauge field */
-  if(use_stout_flag == 1) {
-    if (bc_flag == 0) {
-      stout_smear();
-    }
-  }
 
   /* compute the final energy contributions for all monomials */
   dh = 0.;
   for(i = 0; i < Integrator.no_timescales; i++) {
     for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
       dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j]);
-    }
-  }
-
-  /*   keep on going with the unsmeared gauge field */
-  if(use_stout_flag == 1) {
-    if (bc_flag == 0) {
-      unstout();
     }
   }
 
@@ -256,23 +225,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     g_sloppy_precision = 0;
 
     /*   compute the energy contributions from the pseudo-fermions  */
-    if(use_stout_flag == 1) {
-      if (bc_flag == 0) {
-        stout_smear();
-      }
-    }
-
     ret_dh = 0.;
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
         ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j]);
-      }
-    }
-
-    /*   keep on going with the unsmeared gauge field */
-    if(use_stout_flag == 1) {
-      if (bc_flag == 0) {
-        unstout();
       }
     }
 
@@ -451,29 +407,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     fclose(datafile);
   }
   return(accept);
-}
-
-void stout_smear() {
-  int ix, mu;
-    for(ix = 0; ix < VOLUME; ix++) {
-      for(mu = 0; mu < 4; mu++) {
-        _su3_assign(g_gauge_field_saved[ix][mu], g_gauge_field[ix][mu]);
-      }
-      stout_smear_gauge_field(stout_rho , stout_no_iter);
-    }
-
-  return;
-}
-
-void unstout() {
-  int ix, mu;
-  for(ix = 0; ix < VOLUME; ix++) {
-    for(mu = 0; mu < 4; mu++) {
-      _su3_assign(g_gauge_field[ix][mu], g_gauge_field_saved[ix][mu]);
-    }
-  }
-  g_update_gauge_copy = 1;
-  return;
 }
 
 static char const rcsid[] = "$Id$";

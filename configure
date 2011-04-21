@@ -1321,7 +1321,7 @@ Optional Packages:
   --with-gprof            use of gprof profiler default=yes
   --with-bgldram          use BGL dram window (BGL only!) default=yes
   --with-cuda=dir      use CUDA GPU with lib dir default=/usr/local/cuda/lib
-  --with-cudacompileargs=string      use CUDA compile args default=--gpu-architecture sm_13 --use_fast_math -O3
+  --with-cudacompileargs=string      use CUDA compile args default=--gpu-architecture sm_13 --use_fast_math -O2
 
 Some influential environment variables:
   CC          C compiler command
@@ -10233,8 +10233,8 @@ _ACEOF
     elif test "$ICC" != ""; then
       echo "We are using the Intel C compiler!"
       DEPFLAGS="-M"
-      OPTARGS="-O3"
-      SOPTARGS="-O3"
+      OPTARGS="-O2"
+      SOPTARGS="-O2"
       DEBUG_FLAG="-g"
       PROFILE_FLAG="-p -g"
       CCDEP="$CC"
@@ -10256,8 +10256,8 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
   fi
 
-  OPTARGS="-O3"
-  SOPTARGS="-O3"
+  OPTARGS="-O2"
+  SOPTARGS="-O2"
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
   else
@@ -10284,8 +10284,8 @@ echo "$as_me: error: Sorry, elf32ppcblrts.x is missing, see README.bgl!" >&2;}
     fi
   fi
   DEBUGFLAG="-g"
-  OPTARGS="-O3"
-  SOPTARGS="-O3"
+  OPTARGS="-O2"
+  SOPTARGS="-O2"
 
 cat >>confdefs.h <<\_ACEOF
 #define BGL 1
@@ -10318,8 +10318,8 @@ _ACEOF
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "bprts"; then
   CFLAGS="$CFLAGS"
   DEBUGFLAG="-g"
-  OPTARGS="-O3"
-  SOPTARGS="-O3"
+  OPTARGS="-O2"
+  SOPTARGS="-O2"
 
 cat >>confdefs.h <<\_ACEOF
 #define BGL 1
@@ -10359,8 +10359,8 @@ _ACEOF
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   CFLAGS="$CFLAGS -q64 -qsrcmsg"
   LDFLAGS="$LDFLAGS -q64"
-  OPTARGS="-O3 -qhot"
-  SOPTARGS="-O3 -qhot"
+  OPTARGS="-O2 -qhot"
+  SOPTARGS="-O2 -qhot"
   DEBUG_FLAG="-qfullpath -g"
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
@@ -10380,8 +10380,8 @@ cat >>confdefs.h <<\_ACEOF
 #define CRAY 1
 _ACEOF
 
-  OPTARGS="-O3"
-  SOPTARGS="-O3"
+  OPTARGS="-O2"
+  SOPTARGS="-O2"
   DEBUG_FLAG="-g"
   CCDEP="$CC"
   DEPFLAGS="-M"
@@ -10571,7 +10571,7 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
   NVCC="nvcc"
-  USESUBDIRS="io linalg solver GPU"
+  USESUBDIRS="io linalg solver GPU smearing"
   GPUDIR="GPU"
   LIBS="$LIBS -lcuda -lcudart -lcublas"
 
@@ -10599,7 +10599,7 @@ echo $ECHO_N "checking CUDA compile args... $ECHO_C" >&6; }
 if test "${with_cudacompileargs+set}" = set; then
   withval=$with_cudacompileargs; cuda_compileargs=$withval
 else
-  cuda_compileargs="--gpu-architecture sm_13 --use_fast_math -O3"
+  cuda_compileargs="--gpu-architecture sm_13 --use_fast_math -O2"
 fi
 
   { echo "$as_me:$LINENO: result: $cuda_compileargs" >&5
@@ -10620,7 +10620,7 @@ echo "$as_me: error: ERROR! The GPU Code is only parallelized in t-direction so 
 else
   { echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6; }
-  USESUBDIRS="io linalg solver"
+  USESUBDIRS="io linalg solver smearing"
   NVCC=""
 fi
 
@@ -10669,10 +10669,10 @@ if test ! -e test; then
 fi
 
 
-LIBS="-lhmc -lsolver -llinalg -lhmc -lio $LIBS"
+LIBS="-lhmc -lsolver -llinalg -lhmc -lio -lsmear $LIBS"
 AUTOCONF=autoconf
 
-ac_config_files="$ac_config_files Makefile linalg/Makefile solver/Makefile io/Makefile GPU/Makefile"
+ac_config_files="$ac_config_files Makefile linalg/Makefile solver/Makefile io/Makefile GPU/Makefile smearing/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -11232,6 +11232,7 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "linalg/Makefile") CONFIG_FILES="$CONFIG_FILES linalg/Makefile" ;;
     "solver/Makefile") CONFIG_FILES="$CONFIG_FILES solver/Makefile" ;;
+    "smearing/Makefile") CONFIG_FILES="$CONFIG_FILES smearing/Makefile" ;;
     "io/Makefile") CONFIG_FILES="$CONFIG_FILES io/Makefile" ;;
     "GPU/Makefile") CONFIG_FILES="$CONFIG_FILES GPU/Makefile" ;;
 

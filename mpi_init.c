@@ -423,7 +423,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 
   /* Continuous x-slice as it is found in the external memory.*/
   MPI_Type_contiguous(T*LY*LZ, gauge_point, &gauge_x_slice_cont);
-  /* this is a continuoues gauge xt-slice */
+  /* this is a continuous gauge xt-slice */
   MPI_Type_contiguous(LY*LZ, gauge_point, &gauge_x_subslice);
   /* Put T of the latter together, each of which has length 1 (in units */
   /* of gauge_yy_subslice). They are separated by LX of those.          */
@@ -434,7 +434,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 
   /* Continuous y-slice as it is found in the external memory.*/
   MPI_Type_contiguous(T*LX*LZ, gauge_point, &gauge_y_slice_cont);
-  /* this is a continuoues gauge xyt-slice */
+  /* this is a continuous gauge xyt-slice */
   MPI_Type_contiguous(LZ, gauge_point, &gauge_y_subslice);
   /* Put T*LX together, separated by LY of those */
   MPI_Type_vector(T*LX, 1, LY, gauge_y_subslice, &gauge_y_slice_gath);
@@ -511,7 +511,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   /* This is an even or odd continuous spinor field x-slice */
   MPI_Type_contiguous(T*LY*LZ/2, field_point, &field_x_slice_cont); 
 /*   MPI_Type_contiguous(12*T*LY*LZ, MPI_DOUBLE, &field_x_slice_cont); */
-  /* this is an even or odd continuoues spinor field xt-slice */
+  /* this is an even or odd continuous spinor field xt-slice */
   MPI_Type_contiguous(LY*LZ/2, field_point, &field_x_subslice);
   /* this type puts T xt-slices together being the internal x-boundary in */
   /* even/odd ordered spinor fields */
@@ -530,7 +530,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   /* This is an even or odd continuous spinor field y-slice */
   MPI_Type_contiguous(T*LX*LZ/2, field_point, &field_y_slice_cont); 
 /*   MPI_Type_contiguous(12*T*LX*LZ, MPI_DOUBLE, &field_y_slice_cont); */
-  /* this is an even or odd continuoues spinor field txy-slice */
+  /* this is an even or odd continuous spinor field txy-slice */
   MPI_Type_contiguous(LZ/2, field_point, &field_y_subslice);
   /* this type puts T*LX xt-slices together being the internal y-boundary in */
   /* even/odd ordered spinor fields */

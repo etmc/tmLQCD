@@ -51,8 +51,8 @@
 #include "su3adj.h"
 #include "expo.h"
 
-su3 exposu3(su3adj p) {
-
+su3 exposu3(su3adj p)
+{
   int i;
   static su3 v,v2,vr;
   static double fac,r;
@@ -179,4 +179,16 @@ su3 restoresu3(su3 u) {
   vr.c22.im=-vr.c00.re*vr.c11.im+vr.c01.re*vr.c10.im
     -vr.c00.im*vr.c11.re+vr.c01.im*vr.c10.re;
   return vr;
+}
+
+/* Exponentiates a hermitian 3x3 matrix Q */
+/* Convenience function -- wrapper around Hasenbusch's implementation */
+void exposu3_in_place(su3 *u)
+{
+  static su3adj p;
+  _trace_lambda(p, *u); /* Projects onto the Gell-Mann matrices */
+  /* -2.0 to get su3 to su3adjoint consistency ****/
+  p.d1 *= -0.5; p.d2 *= -0.5; p.d3 *= -0.5; p.d4 *= -0.5;
+  p.d5 *= -0.5; p.d6 *= -0.5; p.d7 *= -0.5; p.d8 *= -0.5;
+  *u = exposu3(p);
 }

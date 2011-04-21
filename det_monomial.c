@@ -44,8 +44,7 @@
 #include "solver/bicgstab_complex.h"
 #include "solver/solver.h"
 #include "read_input.h"
-#include "stout_smear.h"
-#include "stout_smear_force.h"
+
 #include "boundary.h"
 #include "monomial.h"
 #include "det_monomial.h"
@@ -57,21 +56,11 @@ extern int ITER_MAX_CG;
 
 void det_derivative(const int id) {
   int mu, x;
-  extern su3 ** g_stout_force_field;
   extern su3 ** g_gauge_field_saved;
   monomial * mnl = &monomial_list[id];
 
   /* This factor 2 a missing factor 2 in trace_lambda */
   (*mnl).forcefactor = 2.;
-  if(use_stout_flag == 1) {
-    /*  save unsmeared gauge field */
-    for(x = 0; x < VOLUME; x++) {
-      for(mu = 0; mu < 4; mu++) {
-        _su3_assign(g_gauge_field_saved[x][mu], g_gauge_field[x][mu]);
-      }
-    }
-    stout_smear_gauge_field(stout_rho , stout_no_iter);
-  }
 
   if(mnl->even_odd_flag) {
     /*********************************************************************
@@ -196,43 +185,6 @@ void det_derivative(const int id) {
   g_mu = g_mu1;
   boundary(g_kappa);
 
-  if(use_stout_flag == 1) {
-    /*
-     *  now we iterate the force field (\Sigma in hep-lat/0311018) 
-     *  according to eqtn(75) in hep-lat/0311018
-     *  for this we need the force terms as explicit matrices
-     */
-    for(x = 0; x < VOLUME; x++) {
-      for(mu = 0; mu < 4; mu++) {
-        _make_su3(g_stout_force_field[x][mu], df0[x][mu]);
-      }
-    }
-    stout_smear_force();
-    
-    for(x = 0; x < VOLUME; x++) {
-      for(mu = 0; mu < 4; mu++) {
-        _trace_lambda(df0[x][mu],g_stout_force_field[x][mu]);
-        df0[x][mu].d1 /= -2.0;
-        df0[x][mu].d2 /= -2.0;
-        df0[x][mu].d3 /= -2.0;
-        df0[x][mu].d4 /= -2.0;
-        df0[x][mu].d5 /= -2.0;
-        df0[x][mu].d6 /= -2.0;
-        df0[x][mu].d7 /= -2.0;
-        df0[x][mu].d8 /= -2.0;
-      }
-    }
-    printf("df0 after = %f %f %f %f %f %f %f %f\n", df0[0][0].d1, df0[0][0].d2, 
-	   df0[0][0].d3, df0[0][0].d4, df0[0][0].d5, df0[0][0].d6, df0[0][0].d7, df0[0][0].d8);
-    /*
-     *  restore unsmeared gauge field
-     */
-    for(x = 0; x < VOLUME; x++) {
-      for(mu = 0; mu < 4; mu++) {
-        _su3_assign(g_gauge_field[x][mu], g_gauge_field_saved[x][mu]);
-      }
-    }
-  }
   return;
 }
 

@@ -64,10 +64,31 @@ typedef struct
    (x).re = (z).re*(w).re+(z).im*(w).im; \
    (x).im = -(w).re*(z).im+(w).im*(z).re
 
+
+/* x = conj(z)*w  */
+#define _minus_mult_assign_complex_conj(x,z,w) \
+   (x).re = -(z).re*(w).re-(z).im*(w).im; \
+   (x).im =  (w).re*(z).im-(w).im*(z).re
+
 /* x = z*w */
 #define _mult_assign_complex(x,z,w) \
    (x).re = (z).re*(w).re-(z).im*(w).im; \
    (x).im = (w).re*(z).im+(w).im*(z).re
+
+/* x += conj(z)*w  */
+#define _add_mult_complex_conj(x,z,w) \
+   (x).re += (z).re*(w).re+(z).im*(w).im; \
+   (x).im += -(w).re*(z).im+(w).im*(z).re
+
+/* x += conj(z)*w  */
+#define _diff_mult_complex_conj(x,z,w) \
+   (x).re -= (z).re*(w).re+(z).im*(w).im; \
+   (x).im -= -(w).re*(z).im+(w).im*(z).re
+
+/* x += z*w */
+#define _add_mult_complex(x,z,w) \
+   (x).re += (z).re*(w).re-(z).im*(w).im; \
+   (x).im += (w).re*(z).im+(w).im*(z).re
 
 /*  z = z - w */
 #define _diff_complex(z,w) \
@@ -82,6 +103,11 @@ typedef struct
 #define _mult_real(z,w,r) \
    (z).re = r * (w).re; \
    (z).im = r * (w).im 
+
+/* z = r * z */
+#define _mult_assign_real(z,r) \
+   (z).re *= r; \
+   (z).im *= r;
 
 /* ||z||^2 */
 #define _complex_square_norm(z) \
@@ -126,6 +152,26 @@ typedef struct
 #define _complex_chgsig(z,w) \
    (z).re = -(w).re ; \
    (z).im = -(w).im
+
+/* z = w */
+#define _assign(z,w) \
+   (z).re = (w).re ; \
+   (z).im = (w).im
+
+/* z = -conj(w) */
+#define _complex_conj_chgsig(z,w) \
+   (z).re = -(w).re ; \
+   (z).im = (w).im
+
+/* z = v + conj(w) */
+#define _assign_add_conj(z,v,w) \
+   (z).re = (v).re + (w).re; \
+   (z).im = (v).im - (w).im;
+
+/* z = v - conj(w) */
+#define _assign_diff_conj(z,v,w) \
+   (z).re = (v).re - (w).re; \
+   (z).im = (v).im + (w).im;
 
 #endif
 
