@@ -59,16 +59,16 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 	      double eps_sq, const int rel_prec, const int N, matrix_mult f) {
 
   static double normsq, pro, err, alpha_cg = 1., beta_cg = 0., normsp, squarenorm;
-  int iteration, im,append;
+  int iteration, im, append = 0;
   char filename[100];
   static double gamma,alpham1;
-  
+  int const cg_mms_default_precision = 32;
   double tmp_mu = g_mu;
-  WRITER * writer;
+  WRITER * writer = NULL;
   paramsInverterInfo *inverterInfo = NULL;
   paramsPropagatorFormat *propagatorFormat = NULL;
   spinor * temp_save; //used to save all the masses
-  
+
   init_mms_tm(g_no_extra_masses);
 
   /* currently only implemented for P=0 */
@@ -83,7 +83,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
     alphas[im] = 1.0;
     betas[im] = 0.0;
   }
- 
+
   squarenorm = square_norm(Q, N, 1);
   assign(g_spinor_field[DUM_SOLVER], P, N);
   normsp = square_norm(P, N, 1);
@@ -101,7 +101,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
   else{
     /* if a starting solution vector different from zero is chosen */
     f(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]);
-   
+
     diff(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+5], g_spinor_field[DUM_SOLVER+3], N);
     assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], N);
     normsq = square_norm(g_spinor_field[DUM_SOLVER+2], N, 1);
@@ -109,11 +109,11 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
   /* main loop */
   for(iteration = 0; iteration < max_iter; iteration++) {
-    
+
     /*   Q^2*p and then (p,Q^2*p)  */
     f(g_spinor_field[DUM_SOLVER+4], g_spinor_field[DUM_SOLVER+2]);
     pro = scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+4], N, 1);
-    
+
     /* For the update of the coeff. of the shifted pol. we need alpha_cg(i-1) and alpha_cg(i).
        This is the reason why we need this double definition of alpha */
     alpham1 = alpha_cg;
@@ -121,11 +121,11 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
     /* Compute alpha_cg(i+1) */
     alpha_cg = normsq/pro;
     for(im = 0; im < g_no_extra_masses; im++) {
-      
+
       /* Now gamma is a temp variable that corresponds to zita(i+1) */ 
       gamma = zita[im]*alpham1/(alpha_cg*beta_cg*(1.-zita[im]/zitam1[im]) 
 				+ alpham1*(1.+sigma[im]*alpha_cg));
-      
+
       /* Now zita(i-1) is put equal to the old zita(i) */
       zitam1[im] = zita[im];
       /* Now zita(i+1) is updated */
@@ -134,8 +134,8 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
       alphas[im] = alpha_cg*zita[im]/zitam1[im];
       /* Compute xs(i+1) = xs(i) + alphas(i)*ps(i) */
       assign_add_mul_r(xs_mms_solver[im], ps_mms_solver[im], alphas[im], N); 
-    } 
-    
+    }
+
     /*  Compute x_(i+1) = x_i + alpha_cg(i+1) p_i    */
     assign_add_mul_r(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2],  alpha_cg, N);
     /*  Compute r_(i+1) = r_i - alpha_cg(i+1) Qp_i   */
@@ -149,15 +149,15 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
     }
 
     if( ((err <= eps_sq) && (rel_prec == 0)) ||
-	((err <= eps_sq*squarenorm) && (rel_prec == 1)) ) {
+      ((err <= eps_sq*squarenorm) && (rel_prec == 1)) ) {
 
       assign(P, g_spinor_field[DUM_SOLVER], N);
       f(g_spinor_field[DUM_SOLVER+2], P);
       diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], Q, N);
       err = square_norm(g_spinor_field[DUM_SOLVER+3], N, 1);
       if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
-	printf("true residue %d\t%g\t\n",iteration, err); 
-	fflush( stdout);
+        printf("true residue %d\t%g\t\n",iteration, err); 
+        fflush( stdout);
       }
       g_sloppy_precision = 0;
       g_mu = tmp_mu;
@@ -166,31 +166,43 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
       /* here ... */
       /* when im == -1 save the base mass*/
       for(im = -1; im < g_no_extra_masses; im++) {
-	
-	if(im==-1) temp_save=g_spinor_field[DUM_SOLVER];
-        else temp_save=xs_mms_solver[im];
-	
-	if(SourceInfo.type != 1)
-	  if (PropInfo.splitted) sprintf(filename, "%s.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im+1);
-	  else sprintf(filename, "%s.%.4d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, im+1);
-      	else sprintf(filename, "%s.%.4d.%.5d.cgmms.%.2d.0", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, im+1);
-	
-	if(g_kappa != 0) mul_r(temp_save, (2*g_kappa)*(2*g_kappa), temp_save, N);
-        // Always append, because the header is created in "operator.c"
-        append=1;
+        if(im==-1) {
+          temp_save=g_spinor_field[DUM_SOLVER];
+        } else {
+          temp_save=xs_mms_solver[im];
+        }
+
+        if(SourceInfo.type != 1) {
+          if (PropInfo.splitted) {
+            sprintf(filename, "%s.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im+1);
+          } else {
+            sprintf(filename, "%s.%.4d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, im+1);
+          }
+        }
+        else {
+          sprintf(filename, "%s.%.4d.%.5d.cgmms.%.2d.0", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, im+1);
+        }
+        if(g_kappa != 0) {
+          mul_r(temp_save, (2*g_kappa)*(2*g_kappa), temp_save, N);
+        }
+
+        append = !PropInfo.splitted;
+
         construct_writer(&writer, filename, append);
 
-	//Write the header /NOTE: always writes TWILSON and 1 flavour (to be adjusted)
-	if (PropInfo.splitted || SourceInfo.ix == index_start) {
-	  inverterInfo = construct_paramsInverterInfo(err, iteration+1, 12, 1);
-    	  write_spinor_info(writer, PropInfo.format, inverterInfo, append);
-    	  free(inverterInfo);
-	}
-	
-	convert_lexic_to_eo(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], 
-			    temp_save);
-	write_spinor(writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
-	destruct_writer(writer);
+        if (PropInfo.splitted || SourceInfo.ix == index_start) {
+          //Create the inverter info NOTE: always set to TWILSON=12 and 1 flavour (to be adjusted)
+          inverterInfo = construct_paramsInverterInfo(err, iteration+1, 12, 1);
+          write_spinor_info(writer, PropInfo.format, inverterInfo, append);
+          //Create the propagatorFormat NOTE: always set to 1 flavour (to be adjusted)
+          propagatorFormat = construct_paramsPropagatorFormat(cg_mms_default_precision, 1);
+          write_propagator_format(writer, propagatorFormat);
+          free(inverterInfo);
+          free(propagatorFormat);
+        }
+        convert_lexic_to_eo(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], temp_save);
+        write_spinor(writer, &g_spinor_field[DUM_SOLVER+2], &g_spinor_field[DUM_SOLVER+1], 1, 32);
+        destruct_writer(writer);
       }
       return(iteration+1);
     }
@@ -200,7 +212,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
     beta_cg = err/normsq;
     assign_mul_add_r(g_spinor_field[DUM_SOLVER+2], beta_cg, g_spinor_field[DUM_SOLVER+1], N);
     normsq = err;
-    
+
     /* Compute betas(i+1) = beta_cg(i)*(zita(i+1)*alphas(i))/(zita(i)*alpha_cg(i))
        Compute ps(i+1) = zita(i+1)*r(i+1) + betas(i+1)*ps(i)  */
     for(im = 0; im < g_no_extra_masses; im++) {

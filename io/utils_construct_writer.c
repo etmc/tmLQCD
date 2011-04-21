@@ -4,7 +4,6 @@ void construct_writer(WRITER ** writer, char * filename, const int append)
 {
   LIME_FILE *fh = NULL;
   int status = 0;
-  
   if(g_debug_level > 0 && g_cart_id == 0) {
 #ifdef HAVE_LIBLEMON
     printf("# Constructing LEMON writer for file %s for append = %d\n", filename, append);

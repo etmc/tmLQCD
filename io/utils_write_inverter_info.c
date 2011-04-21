@@ -23,7 +23,6 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
 {
   char *message;
   n_uint64_t bytes;
-
   message = (char*)malloc(1024);
 
   if (info->mms > -1) {
@@ -33,7 +32,7 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
                      "epssq = %e\n"
                      "noiter = %d\n"
                      "kappa = %f, inverted mu = %f, lowest mu = %f\n"
-                     "time = %ld\n inverter version = %s\n"
+                     "time = %ld\ninverter version = %s\n"
                      "date = %s",
                      info->inverter,
                      info->epssq, info->iter, info->kappa,
@@ -72,6 +71,7 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
   write_header(writer, 1, 0, "inverter-info", bytes);
   write_message(writer, message, bytes);
   close_writer_record(writer);
+
   free(message);
   return;
 }
