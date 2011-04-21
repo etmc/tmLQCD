@@ -1,0 +1,21 @@
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#include <stdio.h>
+#include <math.h>
+#include <time.h>
+#include <errno.h>
+
+#include <global.h>
+#include <su3adj.h>
+#include <expo.h>
+#include <ranlxd.h>
+#include <sse.h>
+#include <get_staples.h>
+#include <xchange_gauge.h>
+#include <xchange.h>
+#include <io/gauge.h>
+#include <update_backward_gauge.h>
+
+#include <smearing/ape.h>
