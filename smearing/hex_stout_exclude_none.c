@@ -3,12 +3,13 @@
 void stout_exclude_none(su3_tuple *buff_out, double const coeff, su3_tuple **staples, su3_tuple *buff_in)
 {
   static su3 tmp;
+  static int debug = 1;
 
-  #define _MULTIPLY_AND_EXPONENTIATE(x, principal) \
+#define _MULTIPLY_AND_EXPONENTIATE(x, principal) \
   { \
-    _real_times_su3(tmp, coeff, (*staples)[x][principal]); \
-    _su3_times_su3d(buff_out[x][principal], tmp, buff_in[x][principal]); \
-    project_antiherm(&buff_out[x][principal]); \
+    _su3_times_su3d(tmp, (*staples)[x][principal], buff_in[x][principal]); \
+    project_antiherm(&tmp); \
+    _real_times_su3(buff_out[x][principal], coeff, tmp); \
     exposu3_in_place(&buff_out[x][principal]); \
   }
 

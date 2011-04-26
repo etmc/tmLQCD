@@ -6,9 +6,9 @@ void stout_exclude_two(su3_tuple **buff_out, double const coeff, su3_tuple **sta
 
 #define _MULTIPLY_AND_EXPONENTIATE(x, principal, component) \
   { \
-    _real_times_su3(tmp, coeff, staples[component / 4][x][component % 4]); \
-    _su3_times_su3d(buff_out[component / 4][x][component % 4], tmp, buff_in[x][principal]); \
-    project_antiherm(&buff_out[component / 4][x][component % 4]); \
+    _su3_times_su3d(tmp, staples[component / 4][x][component % 4], buff_in[x][principal]); \
+    project_antiherm(&tmp); \
+    _real_times_su3(buff_out[component / 4][x][component % 4], coeff, tmp); \
     exposu3_in_place(&buff_out[component / 4][x][component % 4]); \
   }
 
