@@ -7,6 +7,8 @@ int ape_smear(su3_tuple *m_field_out, struct ape_parameters const *params, su3_t
   static su3 tmp;
   double const rho_p = 1 - params->rho;
   double const rho_s = params->rho / 6.0;
+
+  fprintf(stderr, "[DEBUG] %8.6f, %8.6f\n", rho_p, rho_s);
   
   if (!initialized)
   {

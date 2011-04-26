@@ -7,7 +7,7 @@ void APE_project_exclude_two(su3_tuple **buff_out, double const coeff, su3_tuple
 
 #define _ADD_AND_REUNITARIZE(x, principal, component) \
   { \
-    _real_times_su3_plus_real_times_su3(buff_out[component / 4][x][component % 4], coeff_principal, buff_in[x][principal % 4], coeff_staples, staples[component / 4][x][component % 4]) \
+    _real_times_su3_plus_real_times_su3(buff_out[component / 4][x][component % 4], coeff_principal, buff_in[x][principal], coeff_staples, staples[component / 4][x][component % 4]) \
     reunitarize(buff_out[component / 4][x] + (component % 4)); \
   }
 
