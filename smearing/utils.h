@@ -34,6 +34,7 @@ enum I2
 void generic_staples(su3 *buff_out, int x, int mu, su3_tuple *buff_in);
 void generic_exchange(void *field_in, int bytes_per_site);
 void project_antiherm(su3 *omega);
+void project_herm(su3 *omega);
 void reunitarize(su3 *omega);
 
 void print_su3(su3 *in);
