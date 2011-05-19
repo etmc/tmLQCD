@@ -29,7 +29,7 @@ void write_xlf_info(WRITER * writer, paramsXlfInfo const *info)
     kill_with_error(writer->fp, g_cart_id, "Memory allocation error in write_xlf_info. Aborting\n");
 
   if (info->kappa != 0.0) {
-    sprintf(message, "plaquette = %e\n"
+    sprintf(message, "plaquette = %14.12f\n"
                      " trajectory nr = %d\n"
                      " beta = %f, kappa = %f, mu = %f, c2_rec = %f\n"
                      " time = %ld\n"

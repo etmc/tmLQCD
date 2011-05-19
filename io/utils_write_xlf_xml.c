@@ -31,7 +31,7 @@ void write_xlf_info_xml(WRITER * writer, paramsXlfInfo const *info)
   if (info->kappa != 0.0) {
     sprintf(message, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
         "<xlf-info>\n"
-        "  <plaquette>%e</plaquette>\n"
+        "  <plaquette>%14.12f</plaquette>\n"
         "  <trajectory>%d</trajectory>\n"
         "  <beta>%f</beta>\n"
         "  <kappa>%f</kappa>\n"
