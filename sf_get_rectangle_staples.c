@@ -1868,6 +1868,3 @@ void sf_get_rectangle_staples(su3 * const v, const int x, const int mu) {
 #pragma pomp inst end(rectstaples)
 #endif
 }
-
-
-
