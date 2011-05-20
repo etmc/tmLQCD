@@ -44,10 +44,9 @@ double mode_number(spinor * const S, double const mstarsq){
   printf("The Value of the Mode Number is %f \n", mode_n);
   }
 
-  return mode_n;
-
   free(s);
   free(s_);
+  return(mode_n);
 }
 
 
