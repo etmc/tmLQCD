@@ -60,7 +60,7 @@ void X_psi(spinor * const R, spinor * const S, double const mstarsq){
   double b = 1.;
 
   /*cg_her(out spinor, in spinor, max iter, solver precision, flag relative precision default 0, volume, operator to invert)*/
-  cg_her( R, S, 500, 1.e-12, 0, VOLUME, &DdaggerD_plus_M);
+  cg_her( R, S, 5000, 1.e-12, 0, VOLUME, &DdaggerD_plus_M);
   
   assign_mul_add_mul_r( R, S, a, b, VOLUME);
   
