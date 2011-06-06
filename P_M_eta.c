@@ -359,6 +359,7 @@ void Check_Approximation(double const mstar) {
   double res = 0;
   spinor **s, *s_;
   spinor *Sin = NULL;
+  spinor *Sin_ = NULL;
   static int n_cheby = 0;
   static int rec_coefs = 1;
 
@@ -410,6 +411,11 @@ void Check_Approximation(double const mstar) {
   printf("\n");
   }
   
+#if (defined SSE3 || defined SSE2 || defined SSE)
+  free(Sin_);
+#else
+  free(Sin);
+#endif
   free(s);
   free(s_);
   return;
