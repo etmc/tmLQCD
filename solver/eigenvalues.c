@@ -330,9 +330,9 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   ev_minev*=ev_qnorm*ev_qnorm;
   /* ov_n_cheby is initialized in Dov_psi.c */
   returnvalue=eigenvls[0];
+  free(max_eigenvector_);
 #else
   fprintf(stderr, "lapack not available, so JD method for EV computation not available \n");
 #endif
-  free(max_eigenvector_);
   return(returnvalue);
 }
