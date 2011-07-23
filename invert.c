@@ -356,10 +356,17 @@ int main(int argc, char *argv[])
 
     if(compute_modenumber != 0 || compute_topsus !=0){
 
+     printf("T1\n");fflush(stdout);
+
       int i;
       spinor **s, *s_;
-      s_ = calloc(100*VOLUMEPLUSRAND+1, sizeof(spinor));
-      s  = calloc(100, sizeof(spinor*));
+      s_ = calloc(no_sources_z2*VOLUMEPLUSRAND+1, sizeof(spinor));
+      s  = calloc(no_sources_z2, sizeof(spinor*));
+     printf("T2\n");fflush(stdout);
+     if(s_==NULL){ printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); }
+     if(s==NULL) { printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); }
+
+     printf("T1\n");fflush(stdout);
 
       for(i = 0; i < no_sources_z2; i++) {
 #if (defined SSE3 || defined SSE2 || defined SSE)
@@ -367,8 +374,10 @@ int main(int argc, char *argv[])
 #else
         s[i] = s_+i*VOLUMEPLUSRAND;
 #endif
+     printf("T3\n");fflush(stdout);
 
         z2_random_spinor_field(s[i], VOLUME);
+     printf("T4\n");fflush(stdout);
 
         spinor *aux_,*aux;
 #if ( defined SSE || defined SSE2 || defined SSE3 )
@@ -379,10 +388,12 @@ int main(int argc, char *argv[])
         aux = aux_;
 #endif
 
+     printf("T5\n");fflush(stdout);
         if(g_proc_id == 0) {
           printf("source %d \n", i);
         }
 
+     printf("T6\n");fflush(stdout);
         if(compute_modenumber != 0){
           mode_number(s[i], mstarsq);
         }

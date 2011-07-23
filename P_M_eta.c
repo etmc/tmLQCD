@@ -77,7 +77,7 @@ void h_X_sqr_eta(spinor * const R1,spinor * const R2,spinor * const S, double co
   if(n_cheby != x_n_cheby || rec_coefs) {
     if(x_cheby_coef != NULL) free(x_cheby_coef);
     x_cheby_coef = (double*)malloc(x_n_cheby*sizeof(double));
-    chebyshev_coefs(epsilon, 1., x_cheby_coef, x_n_cheby, -0.5);
+    chebyshev_coefs(epsilon, 1., x_cheby_coef, x_n_cheby, -0.5);//coefs for f(x)=x^(-0.5) // represents P(y)=1/sqrt(y) in paper "Chiral symmetry breaking an the Banks-Casher relation in lattice QCD with Wilson quarks" page 12.
     rec_coefs = 0;
     n_cheby = x_n_cheby;
   }
@@ -205,9 +205,18 @@ void norm_X_sqr_psi(spinor * const R, spinor * const S, double const mstar) {
   /* Here is where we have to include our operator which in this case is
      X = 1 - (2M^2)/(D_m^dagger*D_m + mu^2 + M^2)  */
   
-  X_psi(aux, S, mstar);
-  X_psi(R, aux, mstar);
+  if(1)
+  {
+    X_psi(aux, S, mstar);
+    X_psi(R, aux, mstar);
+  }
+  else
+  {
+    printf("using X_psiSquare.\n");
+    X_psiSquare(R, S, mstar);
+  }
   mul_r(R, rnorm*rnorm, R, VOLUME);
+
 
   free(aux_);
   return;
@@ -243,10 +252,11 @@ void norm_X_n_psi(spinor * const R, spinor * const S,
 
 void X_over_sqrt_X_sqr(spinor * const R, double * const c, 
 		       const int n, spinor * const S, const double minev, double const mstar) {
-  
+//x/sqrt(x*x) <=> normalisation <= reasoned by Clenshaw recurrence: maps X to [-1,1] 
+ 
   int j;
   double fact1, fact2, temp1, temp2, temp3, temp4, maxev;
-  spinor *sv_, *sv, *d_, *d, *dd_, *dd, *aux_, *aux, *aux3_, *aux3;
+  spinor *sv_, *sv, *d_, *d, *dd_, *dd, *aux_, *aux, *aux3_, *aux3;// *_ holds the adress of the sse-unaligned memory block
   
 #if ( defined SSE || defined SSE2 || defined SSE3)
   sv_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
@@ -293,30 +303,31 @@ void X_over_sqrt_X_sqr(spinor * const R, double * const c,
   if(1) {
     for (j = n-1; j >= 1; j--) {
 
-      /*sv=d*/
+      /*sv=d  = d_j+1*/
       assign(sv, d, VOLUME); 
 
-      /*aux= our random field S*/
+      /*aux= our random field S =0(j=n-1)*/
       assign(aux, d, VOLUME);
 
       if(j == n-1){
-	assign(R, aux, VOLUME);
+	assign(R, aux, VOLUME);//=0
       }
       else{
       /*|R>=rnorm^2 X^2|aux> -> since aux=d -> |R>=rnorm^2 Q^2|d>*/
-      norm_X_sqr_psi(R, aux, mstar);
+        norm_X_sqr_psi(R, aux, mstar);//WARNING: - maybe we have to pass this point only when j=n-2, because R is not manipulated  in the loop body.
+                                      //         - seems to setup d_n-1=0
       }
       temp1=-1.0;
       temp2=c[j]; /*Chebyshev coefficients*/
 
-      /* d = d*fact2 + R*fact1 + dd*temp1 + aux*temp2 
+      /* d = d*fact2 + R*fact1 + dd*temp1 + aux3*temp2 
          d = -2*(maxev+minev)/(maxev-minev)*d + 4/(maxev-minev)*R 
 	      -1*dd + c[j]*aux3                                           */
       /* y = (2*x-a-b)/(b-a)   ,   y2=2*y 
          d = y2*d - dd + c[j] = -2*(a+b)*d/(b-a) + 4*x*d/(b-a) -dd + c[j] */
-      assign_mul_add_mul_add_mul_add_mul_r(d, R, dd, aux3, fact2, fact1, temp1, temp2, VOLUME);
+      assign_mul_add_mul_add_mul_add_mul_r(d, R, dd, aux3, fact2, fact1, temp1, temp2, VOLUME);// =d_j+1
       /* dd = sv */
-      assign(dd, sv, VOLUME);
+      assign(dd, sv, VOLUME);// = d_j+2
     } 
     
     /* R = d */

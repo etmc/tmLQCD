@@ -1,4 +1,4 @@
-/***********************************************************************
+:q/***********************************************************************
  * $Id: det_monomial.c 1764 2011-04-21 14:16:16Z deuzeman $
  *
  * Copyright (C) 2011 Elena Garcia-Ramos
@@ -43,6 +43,7 @@ double mode_n;
 
 double mode_number(spinor * const S, double const mstarsq){
 
+  printf("Starting mode_number calculation...\n");fflush(stdout);
   spinor **s,*s_;
 
   s_ = calloc(2*VOLUMEPLUSRAND+1, sizeof(spinor));
@@ -102,7 +103,6 @@ void top_sus(spinor * const S, double const mstarsq){
 
 
   /* A = (h(X)^2|eta>,h(X)^2|eta>) */
-
   A=scalar_prod_r(s[2],s[2], VOLUME, 1); 
 
   /* B = ([h(X) gamma5 h(X)]|eta>,[h(X) gamma5 h(X)]|eta>)*/

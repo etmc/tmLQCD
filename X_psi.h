@@ -28,5 +28,6 @@ extern double mstar;
 
 void DdaggerD_plus_M(spinor * const R, spinor * const S);
 void X_psi(spinor * const R, spinor * const S, double const mstar);
+void X_psiSquare(spinor * const R, spinor * const S, double const mstar);
 
 #endif
