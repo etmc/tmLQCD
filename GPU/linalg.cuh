@@ -28,69 +28,78 @@
  
  
  
- 
-__device__ inline dev_complex dev_cconj (dev_complex c){ /*konjugiert komplexe Zahl*/
- dev_complex erg;
+template<class RealT> 
+__device__ inline dev_complexT<RealT> dev_cconj (dev_complexT<RealT> c){ /*konjugiert komplexe Zahl*/
+ dev_complexT<RealT> erg;
  erg.re = c.re;
  erg.im = -1.0*c.im;
 return erg;
 }
 
-__device__ inline void dev_ccopy(dev_complex* von, dev_complex* nach){/*kopiert complex von nach complex nach*/
-  nach->re = von->re;
-  nach->im = von->im;
+template<class RealTVon,class RealTNach>
+__device__ inline void dev_ccopy(dev_complexT<RealTVon>* von, dev_complexT<RealTNach>* nach){/*kopiert complex von nach complex nach*/
+  nach->re = RealTNach(von->re);
+  nach->im = RealTNach(von->im);
 }
 
-__device__ inline REAL dev_cabssquare (dev_complex c){ /*gibt abs^2 einer komplexen Zahl zurück*/
+template<class RealT>
+__device__ inline RealT dev_cabssquare (dev_complexT<RealT> c){ /*gibt abs^2 einer komplexen Zahl zurück*/
  return c.re*c.re + c.im*c.im;
 }
 
-__device__ inline REAL dev_cabsolute (dev_complex c){/*gibt Betrag einer kompl. zahl zurück*/
+template<class RealT>
+__device__ inline RealT dev_cabsolute (dev_complexT<RealT> c){/*gibt Betrag einer kompl. zahl zurück*/
  return sqrt(c.re*c.re + c.im*c.im);
 }
 
 
-__device__ inline  dev_complex dev_crealmult(dev_complex c1, REAL real){ /*multipliziert c1 mit reeller zahl re*/
-  dev_complex erg;
+template<class RealT>
+__device__ inline  dev_complexT<RealT> dev_crealmult(dev_complexT<RealT> c1, RealT real){ /*multipliziert c1 mit reeller zahl re*/
+  dev_complexT<RealT> erg;
   erg.re = real*c1.re;
   erg.im = real*c1.im;
 return erg;
 }
 
-__device__ inline dev_complex dev_cmult (dev_complex c1, dev_complex c2){ /*multiplizier zwei komplexe Zahlen*/
-  dev_complex erg;
+template<class RealT>
+__device__ inline dev_complexT<RealT> dev_cmult (dev_complexT<RealT> c1, dev_complexT<RealT> c2){ /*multiplizier zwei komplexe Zahlen*/
+  dev_complexT<RealT> erg;
   erg.re = c1.re * c2.re - c1.im * c2.im;
   erg.im = c1.re * c2.im + c1.im * c2.re;
 return erg;
 }
 
-__device__ inline dev_complex dev_cadd (dev_complex c1, dev_complex c2){ /*addiert zwei komplexe Zahlen */
-  dev_complex erg;
+template<class RealT>
+__device__ inline dev_complexT<RealT> dev_cadd (dev_complexT<RealT> c1, dev_complexT<RealT> c2){ /*addiert zwei komplexe Zahlen */
+  dev_complexT<RealT> erg;
   erg.re = c1.re + c2.re;
   erg.im = c1.im + c2.im;
 return erg;
 }
 
 
-__device__ inline dev_complex dev_cdiv(dev_complex c1, dev_complex c2) { /* dividiert c1 durch c2 */
-  dev_complex erg;
-  REAL oneovernenner = 1.0/(c2.re*c2.re + c2.im*c2.im);
+template<class RealT>
+__device__ inline dev_complexT<RealT> dev_cdiv(dev_complexT<RealT> c1, dev_complexT<RealT> c2) { /* dividiert c1 durch c2 */
+  dev_complexT<RealT> erg;
+  RealT oneovernenner = 1.0/(c2.re*c2.re + c2.im*c2.im);
   erg.re = oneovernenner*(c1.re*c2.re + c1.im*c2.im);
   erg.im = oneovernenner*(c1.im*c2.re - c1.re*c2.im);
 return erg;
 }
 
 
-__device__ inline dev_complex dev_csub(dev_complex c1, dev_complex c2){
-   dev_complex erg;
+template<class RealT>
+__device__ inline dev_complexT<RealT> dev_csub(dev_complexT<RealT> c1, dev_complexT<RealT> c2){
+   dev_complexT<RealT> erg;
    erg.re = c1.re - c2.re;
    erg.im = c1.im - c2.im;
 return erg;
 }
 
 
-__device__ inline dev_complex dev_initcomplex(REAL re, REAL im){/* gibt komplexe Zahl mit Realt re und Imt im zurück*/
-    dev_complex erg;
+template<class RealT>
+__device__ inline dev_complexT<RealT> dev_initcomplex(RealT re, RealT im){/* gibt komplexe Zahl mit Realt re und Imt im zurück*/
+    dev_complexT<RealT> erg;
     erg.re = re;
     erg.im = im;
 return (erg);
@@ -100,18 +109,20 @@ return (erg);
 
 
 
-__device__ inline void dev_copy_spinor(dev_spinor *i1, dev_spinor *i2){
+template<class RealT1,class RealT2>
+__device__ inline void dev_copy_spinor(typename dev_spinorT<RealT1>::type *i1, typename dev_spinorT<RealT2>::type *i2){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
-    (*(i2+i)).x = (*(i1+i)).x;
-    (*(i2+i)).y = (*(i1+i)).y;
-    (*(i2+i)).z = (*(i1+i)).z;
-    (*(i2+i)).w = (*(i1+i)).w;
+    (*(i2+i)).x = RealT2((*(i1+i)).x);
+    (*(i2+i)).y = RealT2((*(i1+i)).y);
+    (*(i2+i)).z = RealT2((*(i1+i)).z);
+    (*(i2+i)).w = RealT2((*(i1+i)).w);
   }
 }
 
-__device__ inline void dev_zero_spinor(dev_spinor *sin){
+template<class RealT>
+__device__ inline void dev_zero_spinor(typename dev_spinorT<RealT>::type *sin){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -128,7 +139,14 @@ __device__ inline void dev_zero_spinor(dev_spinor *sin){
 
 
 //out = in + lambda in2
-__device__ inline void dev_skalarmult_add_assign_spinor(dev_spinor *in, REAL lambda,dev_spinor * in2, dev_spinor * out){
+template<class RealT>
+__device__ inline void dev_skalarmult_add_assign_spinor
+(
+  typename dev_spinorT<RealT>::type *in, 
+  RealT lambda,
+  typename dev_spinorT<RealT>::type * in2,
+  typename dev_spinorT<RealT>::type * out
+){
   int i; 
   #pragma unroll 6
 for(i=0;i<6;i++){ //color + spin
@@ -143,7 +161,14 @@ for(i=0;i<6;i++){ //color + spin
 
 
 //out = in + lambda in2
-__device__ inline void dev_complexmult_add_assign_spinor(dev_spinor * in, dev_complex lambda,dev_spinor * in2, dev_spinor * out){
+template<class RealT>
+__device__ inline void dev_complexmult_add_assign_spinor
+(
+  typename dev_spinorT<RealT>::type* in,
+  dev_complexT<RealT> lambda,
+  typename dev_spinorT<RealT>::type* in2,
+  typename dev_spinorT<RealT>::type* out
+){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -158,7 +183,14 @@ __device__ inline void dev_complexmult_add_assign_spinor(dev_spinor * in, dev_co
 
 
 //out = in + (lambda)* in2
-__device__ inline void dev_complexcgmult_add_assign_spinor(dev_spinor * in, dev_complex lambda,dev_spinor * in2, dev_spinor * out){
+template<class RealT>
+__device__ inline void dev_complexcgmult_add_assign_spinor
+(
+  typename dev_spinorT<RealT>::type * in,
+  dev_complexT<RealT> lambda,
+  typename dev_spinorT<RealT>::type* in2,
+  typename dev_spinorT<RealT>::type* out
+){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -171,7 +203,13 @@ __device__ inline void dev_complexcgmult_add_assign_spinor(dev_spinor * in, dev_
 
 
 
-__device__ void inline dev_skalarmult_spinor(dev_spinor * in, dev_complex lambda, dev_spinor * out){
+template<class RealT>
+__device__ void inline dev_skalarmult_spinor
+(
+  typename dev_spinorT<RealT>::type* in,
+  dev_complexT<RealT> lambda,
+  typename dev_spinorT<RealT>::type* out
+){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -272,9 +310,10 @@ __device__ void inline dev_skalarmult_gamma5_spinor(dev_spinor * out, const dev_
 */
 
 
-__device__ void inline dev_skalarmult_gamma5_spinor(dev_spinor * out, dev_complex lambda, dev_spinor * in){
+template<class RealT>
+__device__ void inline dev_skalarmult_gamma5_spinor(typename dev_spinorT<RealT>::type* out, dev_complexT<RealT> lambda, typename dev_spinorT<RealT>::type* in){
 int i;
- dev_spinor shelp, tempout;
+ typename dev_spinorT<RealT>::type shelp, tempout;
 
 shelp = *(in);
  tempout.x = shelp.x*lambda.re;
@@ -366,7 +405,8 @@ shelp = *(in+5);
 
 
 
-__device__ void inline dev_realmult_spinor(dev_spinor * in, REAL lambda){
+template<class RealT>
+__device__ void inline dev_realmult_spinor(typename dev_spinorT<RealT>::type* in, RealT lambda){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -380,7 +420,8 @@ __device__ void inline dev_realmult_spinor(dev_spinor * in, REAL lambda){
 }
 
 
-__device__ void inline dev_realmult_spinor_assign(dev_spinor* out, REAL lambda, dev_spinor* in){
+template<class RealT>
+__device__ void inline dev_realmult_spinor_assign(typename dev_spinorT<RealT>::type* out, RealT lambda, typename dev_spinorT<RealT>::type* in){
 int i;
 #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -396,9 +437,16 @@ int i;
 
 
 
-__device__ void dev_assign_realmult_add_spinor(dev_spinor* out, REAL lambda, dev_spinor* in1,  dev_spinor* in2){
+template<class RealT>
+__device__ void dev_assign_realmult_add_spinor
+(
+  typename dev_spinorT<RealT>::type* out,
+  RealT lambda,
+  typename dev_spinorT<RealT>::type* in1,
+  typename dev_spinorT<RealT>::type* in2
+){
 int i;
-REAL help;
+RealT help;
 //out = lambda*(in1 + in2)
 #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -422,7 +470,8 @@ REAL help;
 }
 
 
-__device__ inline void dev_add_spinor_assign(dev_spinor * i1, dev_spinor * i2){
+template<class RealT>
+__device__ inline void dev_add_spinor_assign(typename dev_spinorT<RealT>::type * i1, typename dev_spinorT<RealT>::type * i2){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -435,7 +484,8 @@ __device__ inline void dev_add_spinor_assign(dev_spinor * i1, dev_spinor * i2){
 
 
 
-__device__ inline void dev_sub_spinor_assign(dev_spinor * i1, dev_spinor * i2){
+template<class RealT>
+__device__ inline void dev_sub_spinor_assign(typename dev_spinorT<RealT>::type * i1, typename dev_spinorT<RealT>::type * i2){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -569,9 +619,10 @@ s1 = tex1Dfetch(spin_tex,6*pos+5);
 
 //multipliziert su3-Matrix mal Spinor im Dirac-Raum
 //code in su3_MtV.txt -- generated with codegen
-__device__ void dev_su3MtV_spintex(dev_su3 M, int pos, dev_spinor * out){
+template<class RealT>
+__device__ void dev_su3MtV_spintex(dev_su3M(RealT) M, int pos, dev_spinorM(RealT) * out){
 
-dev_spinor s1, s2;
+dev_spinorM(RealT) s1, s2;
 
 #ifndef HALF
  s1 = tex1Dfetch(spin_tex,6*pos);
@@ -694,7 +745,8 @@ dev_spinor s1, s2;
 
 //multipliziert su3-Matrix mal Spinor im Dirac-Raum
 //code in su3_MtV.txt -- generated with codegen
-__device__ void dev_su3MtV(dev_su3 M, const dev_spinor * s, dev_spinor * out){
+template<class RealT>
+__device__ void dev_su3MtV(typename dev_su3T<RealT>::type M, const typename dev_spinorT<RealT>::type * s, typename dev_spinorT<RealT>::type * out){
 
 (*(out+0)).x =  ( M[0][0].re*(*(s+0)).x - M[0][0].im*(*(s+0)).y ) + ( M[0][1].re*(*(s+0)).z - M[0][1].im*(*(s+0)).w ) + ( M[0][2].re*(*(s+1)).x - M[0][2].im*(*(s+1)).y );
 (*(out+0)).y = ( M[0][0].re*(*(s+0)).y + M[0][0].im*(*(s+0)).x ) + ( M[0][1].re*(*(s+0)).w + M[0][1].im*(*(s+0)).z ) + ( M[0][2].re*(*(s+1)).y + M[0][2].im*(*(s+1)).x );
@@ -931,8 +983,9 @@ float norm = * s_norm;
 
 
 //multipliziert gedaggerte su3-Matrix mal Spinor im Dirac-Raum  -- generated with codegen
-__device__ void dev_su3MdaggertV(dev_su3 M, dev_spinor * s, dev_spinor * out){
-  dev_complex help1;
+template<class RealT>
+__device__ void dev_su3MdaggertV(typename dev_su3T<RealT>::type M, typename dev_spinorT<RealT>::type * s, typename dev_spinorT<RealT>::type * out){
+  dev_complexT<RealT> help1;
 help1.re = M[0][0].re*(*(s+0)).x + M[0][0].im*(*(s+0)).y + M[1][0].re*(*(s+0)).z + M[1][0].im*(*(s+0)).w + M[2][0].re*(*(s+1)).x + M[2][0].im*(*(s+1)).y;
 (*(out+0)).x = help1.re;
 help1.im = M[0][0].re*(*(s+0)).y - M[0][0].im*(*(s+0)).x + M[1][0].re*(*(s+0)).w - M[1][0].im*(*(s+0)).z + M[2][0].re*(*(s+1)).y - M[2][0].im*(*(s+1)).x;
@@ -998,8 +1051,9 @@ help1.im = M[0][2].re*(*(s+4)).w - M[0][2].im*(*(s+4)).z + M[1][2].re*(*(s+5)).y
 
 
 // Gamma t
-__device__ void dev_Gamma0(dev_spinor * in){
-  REAL tempre,tempim;
+template<class RealT>
+__device__ void dev_Gamma0(typename dev_spinorT<RealT>::type * in){
+  RealT tempre,tempim;
      tempre = (*(in+0)).x;
      tempim = (*(in+0)).y;
      (*(in+0)).x = -1.0*(*(in+3)).x;
@@ -1049,8 +1103,9 @@ __device__ void dev_Gamma0(dev_spinor * in){
 
 
 //Gamma z
-__device__ void dev_Gamma3(dev_spinor * in){
-  REAL tempre,tempim;
+template<class RealT>
+__device__ void dev_Gamma3(typename dev_spinorT<RealT>::type * in){
+  RealT tempre,tempim;
      tempre = (*(in+0)).x;
      tempim = (*(in+0)).y;
      (*(in+0)).x = (*(in+3)).y;
@@ -1103,8 +1158,9 @@ __device__ void dev_Gamma3(dev_spinor * in){
 
 
 //Gamma y
-__device__ void dev_Gamma2(dev_spinor * in){
-  REAL tempre,tempim;
+template<class RealT>
+__device__ void dev_Gamma2(typename dev_spinorT<RealT>::type * in){
+  RealT tempre,tempim;
      tempre = (*(in+0)).x;
      tempim = (*(in+0)).y;
      (*(in+0)).x = -1.0*(*(in+4)).z;
@@ -1153,8 +1209,9 @@ __device__ void dev_Gamma2(dev_spinor * in){
 
 
 //Gamma x
-__device__ void dev_Gamma1(dev_spinor * in){
-  REAL tempre,tempim;
+template<class RealT>
+__device__ void dev_Gamma1(typename dev_spinorT<RealT>::type * in){
+  RealT tempre,tempim;
      tempre = (*(in+0)).x;
      tempim = (*(in+0)).y;
      (*(in+0)).x = (*(in+4)).w;
@@ -1202,7 +1259,8 @@ __device__ void dev_Gamma1(dev_spinor * in){
 
 
 
-__device__ void dev_Gamma5(dev_spinor * in){
+template<class RealT>
+__device__ void dev_Gamma5(typename dev_spinorT<RealT>::type * in){
           (*(in+3)).x = -1.0*(*(in+3)).x;
           (*(in+3)).y = -1.0*(*(in+3)).y;
           (*(in+3)).z = -1.0*(*(in+3)).z;
@@ -1219,7 +1277,8 @@ __device__ void dev_Gamma5(dev_spinor * in){
 }
 
 
-__device__ void dev_Gamma5_assign(dev_spinor* out, dev_spinor* in){
+template<class RealT>
+__device__ void dev_Gamma5_assign(typename dev_spinorT<RealT>::type* out, typename dev_spinorT<RealT>::type* in){
   (*(out)).x = (*(in)).x;
   (*(out)).y = (*(in)).y;
   (*(out)).z = (*(in)).z;
@@ -1247,15 +1306,15 @@ __device__ void dev_Gamma5_assign(dev_spinor* out, dev_spinor* in){
   (*(out+5)).y = -1.0*(*(in+5)).y;
   (*(out+5)).z = -1.0*(*(in+5)).z;
   (*(out+5)).w = -1.0*(*(in+5)).w;
-
 }
 
 
 
 
 // older version, all in one function
-__device__ void dev_GammatV(int mu, dev_spinor * in){//multipliziert Gamma(mu)*V effizientes ausnutzen der Nullen 
- REAL tempre,tempim;
+template<class RealT>
+__device__ void dev_GammatV(int mu, typename dev_spinorT<RealT>::type * in){//multipliziert Gamma(mu)*V effizientes ausnutzen der Nullen 
+ RealT tempre,tempim;
  /* ORDER: t, z, y, x*/
  switch (mu){
  

@@ -50,8 +50,9 @@
 
 // reconstruction of the link fields from two rows of the su3 matrix
 // numbers are fetched from texture cache
-__device__ void dev_reconstructgf_2vtexref (const dev_su3_2v* field, int pos, dev_su3* gf){
-  float4 gfin;
+template<class RealT>
+__device__ void dev_reconstructgf_2vtexref (const typename dev_su3_2vT<RealT>::type* field, int pos, typename dev_su3T<RealT>::type* gf){
+  typename REAL4T<RealT>::type gfin;
   
   #ifdef USETEXTURE
     gfin = tex1Dfetch(gf_tex,3*pos);
@@ -126,11 +127,12 @@ __device__ void dev_reconstructgf_2vtexref (const dev_su3_2v* field, int pos, de
 
 
 
-// su3 - dagger reconstruction from two rows  
-__device__ void dev_reconstructgf_2vtexref_dagger (const dev_su3_2v* field, int pos, dev_su3* gf){
+// su3 - dagger reconstruction from two rows
+template<class RealT>
+__device__ void dev_reconstructgf_2vtexref_dagger (const typename dev_su3_2vT<RealT>::type* field, int pos, typename dev_su3T<RealT>::type* gf){
   //dev_complex help1;
   //dev_complex help2;
-  float4 gfin;
+  typename REAL4T<RealT>::type gfin;
   
   
   //first column (minus in im for complex conj.)
@@ -207,11 +209,12 @@ __device__ void dev_reconstructgf_2vtexref_dagger (const dev_su3_2v* field, int 
 // reconstruction of the gf using 8 real parameters as 
 // described in the appendix of hep-lat 0911.3191 (M.Clark et al.)
 // optimized once
-__device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, dev_su3* gf){
+template<class RealT>
+__device__ void dev_reconstructgf_8texref (const typename dev_su3_2vT<RealT>::type* field, int pos, typename dev_su3T<RealT>::type* gf){
 
-  float4 gfin;
-  REAL one_over_N, help;
-  dev_complex p1,p2;
+  typename REAL4T<RealT>::type gfin;
+  RealT one_over_N, help;
+  dev_complexT<RealT> p1,p2;
   
   #ifdef USETEXTURE
     gfin = tex1Dfetch(gf_tex,2*pos);
@@ -225,7 +228,7 @@ __device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, de
   (*gf)[0][2].im = gfin.w;  
  
   p1.re = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
-  one_over_N = rsqrtf(p1.re); //reciprocal sqrt
+  one_over_N = rsqrt(p1.re); //reciprocal sqrt
 
   // read theta_a1, theta_c1, b1
   #ifdef USETEXTURE
@@ -237,7 +240,7 @@ __device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, de
   // reconstruct a1 use sqrt instead of sin
   help = 1.0f - p1.re;
   if(help > 0.0f){
-     p1.re = sqrtf(help);
+     p1.re = sqrt(help);
   }
   else{
     p1.re = 0.0f;
@@ -267,7 +270,7 @@ __device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, de
               (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
               (*gf)[1][0].re * (*gf)[1][0].re - (*gf)[1][0].im * (*gf)[1][0].im;
   if(help > 0.0f){
-    p1.re = sqrtf(help);
+    p1.re = sqrt(help);
   }   
   else{      
     p1.re = 0.0f;  
@@ -370,13 +373,13 @@ __device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, de
 
 
 
+template<class RealT>
+__device__ void dev_reconstructgf_8texref_dagger (const typename dev_su3_2vT<RealT>::type* field,int pos, typename dev_su3T<RealT>::type* gf){
 
-__device__ void dev_reconstructgf_8texref_dagger (const dev_su3_2v* field,int pos, dev_su3* gf){
 
-
-  float4 gfin;
-  REAL one_over_N, help;
-  dev_complex p1,p2;
+  typename REAL4T<RealT>::type gfin;
+  RealT one_over_N, help;
+  dev_complexT<RealT> p1,p2;
   
   #ifdef USETEXTURE
     gfin = tex1Dfetch(gf_tex,2*pos);
@@ -390,7 +393,7 @@ __device__ void dev_reconstructgf_8texref_dagger (const dev_su3_2v* field,int po
   (*gf)[2][0].im = -gfin.w;  
  
   p1.re = gfin.x*gfin.x + gfin.y*gfin.y + gfin.z*gfin.z + gfin.w*gfin.w; // use later on
-  one_over_N = rsqrtf(p1.re);  // reciprocal sqrt
+  one_over_N = rsqrt(p1.re);  // reciprocal sqrt
 
   
   // read theta_a1, theta_c1, b1
@@ -403,7 +406,7 @@ __device__ void dev_reconstructgf_8texref_dagger (const dev_su3_2v* field,int po
   // reconstruct a1
   help = 1.0f - p1.re;
   if(help > 0.0f){
-     p1.re = sqrtf(help);   
+     p1.re = sqrt(help);   
   }
   else{
     p1.re = 0.0f;
@@ -436,7 +439,7 @@ __device__ void dev_reconstructgf_8texref_dagger (const dev_su3_2v* field,int po
               (*gf)[0][0].re * (*gf)[0][0].re - (*gf)[0][0].im * (*gf)[0][0].im - 
               (*gf)[0][1].re * (*gf)[0][1].re - (*gf)[0][1].im * (*gf)[0][1].im;
   if(help > 0.0f){
-    p1.re = sqrtf(help);
+    p1.re = sqrt(help);
   }
   else{
     p1.re = 0.0f;
@@ -940,10 +943,10 @@ __device__ void dev_reconstructgf_8texref_dagger_half (const dev_su3_2v_half* fi
 
 
 
-
-__global__ void dev_check_gauge_reconstruction_8(dev_su3_2v* gf, int pos, dev_su3 * outgf1, dev_su3* outgf2){
-  dev_reconstructgf_8texref (gf,pos, outgf1);
-  dev_reconstructgf_8texref_dagger (gf,pos, outgf2);
+template<class RealT>
+__global__ void dev_check_gauge_reconstruction_8(typename dev_su3_2vT<RealT>::type* gf, int pos, typename dev_su3T<RealT>::type * outgf1, typename dev_su3T<RealT>::type* outgf2){
+  dev_reconstructgf_8texref        <RealT>(gf,pos, outgf1);
+  dev_reconstructgf_8texref_dagger <RealT>(gf,pos, outgf2);
 }
 
 
@@ -957,7 +960,8 @@ __global__ void dev_check_gauge_reconstruction_8(dev_su3_2v* gf, int pos, dev_su
 // get 2 first rows of gf float4 type
 //  
 //
-void su3to2vf4(su3** gf, dev_su3_2v* h2d_gf){
+template<class RealT>
+void su3to2vf4(su3** gf, typename dev_su3_2vT<RealT>::type* h2d_gf){
   int i,j;
   #ifndef MPI
     for (i = 0; i < VOLUME; i++) {
@@ -966,19 +970,19 @@ void su3to2vf4(su3** gf, dev_su3_2v* h2d_gf){
   #endif
    for(j=0;j<4;j++){
    //first row
-    h2d_gf[3*(4*i+j)].x = (REAL) gf[i][j].c00.re;
-    h2d_gf[3*(4*i+j)].y = (REAL) gf[i][j].c00.im;
-    h2d_gf[3*(4*i+j)].z = (REAL) gf[i][j].c01.re;
-    h2d_gf[3*(4*i+j)].w = (REAL) gf[i][j].c01.im;
-    h2d_gf[3*(4*i+j)+1].x = (REAL) gf[i][j].c02.re;
-    h2d_gf[3*(4*i+j)+1].y = (REAL) gf[i][j].c02.im;      
+    h2d_gf[3*(4*i+j)].x = (RealT) gf[i][j].c00.re;
+    h2d_gf[3*(4*i+j)].y = (RealT) gf[i][j].c00.im;
+    h2d_gf[3*(4*i+j)].z = (RealT) gf[i][j].c01.re;
+    h2d_gf[3*(4*i+j)].w = (RealT) gf[i][j].c01.im;
+    h2d_gf[3*(4*i+j)+1].x = (RealT) gf[i][j].c02.re;
+    h2d_gf[3*(4*i+j)+1].y = (RealT) gf[i][j].c02.im;      
    //second row
-    h2d_gf[3*(4*i+j)+1].z = (REAL) gf[i][j].c10.re;
-    h2d_gf[3*(4*i+j)+1].w = (REAL) gf[i][j].c10.im;
-    h2d_gf[3*(4*i+j)+2].x = (REAL) gf[i][j].c11.re;
-    h2d_gf[3*(4*i+j)+2].y = (REAL) gf[i][j].c11.im;
-    h2d_gf[3*(4*i+j)+2].z = (REAL) gf[i][j].c12.re;
-    h2d_gf[3*(4*i+j)+2].w = (REAL) gf[i][j].c12.im;      
+    h2d_gf[3*(4*i+j)+1].z = (RealT) gf[i][j].c10.re;
+    h2d_gf[3*(4*i+j)+1].w = (RealT) gf[i][j].c10.im;
+    h2d_gf[3*(4*i+j)+2].x = (RealT) gf[i][j].c11.re;
+    h2d_gf[3*(4*i+j)+2].y = (RealT) gf[i][j].c11.im;
+    h2d_gf[3*(4*i+j)+2].z = (RealT) gf[i][j].c12.re;
+    h2d_gf[3*(4*i+j)+2].w = (RealT) gf[i][j].c12.im;      
   } 
  }
 }
@@ -989,7 +993,8 @@ void su3to2vf4(su3** gf, dev_su3_2v* h2d_gf){
 // bring gf into the form
 // a2 a3, theta_a1, theta_c1, b1
 // 
-void su3to8(su3** gf, dev_su3_8* h2d_gf){
+template<class RealT>
+void su3to8(su3** gf, typename dev_su3_8T<RealT>::type* h2d_gf){
   int i,j;
   #ifndef MPI
     for (i = 0; i < VOLUME; i++) {
@@ -998,20 +1003,19 @@ void su3to8(su3** gf, dev_su3_8* h2d_gf){
   #endif
       for(j=0;j<4;j++){
       // a2, a3
-      h2d_gf[2*(4*i+j)].x = (REAL) gf[i][j].c01.re;
-      h2d_gf[2*(4*i+j)].y = (REAL) gf[i][j].c01.im;
-      h2d_gf[2*(4*i+j)].z = (REAL) gf[i][j].c02.re;
-      h2d_gf[2*(4*i+j)].w = (REAL) gf[i][j].c02.im;
+      h2d_gf[2*(4*i+j)].x = (RealT) gf[i][j].c01.re;
+      h2d_gf[2*(4*i+j)].y = (RealT) gf[i][j].c01.im;
+      h2d_gf[2*(4*i+j)].z = (RealT) gf[i][j].c02.re;
+      h2d_gf[2*(4*i+j)].w = (RealT) gf[i][j].c02.im;
       
       // theta_a1, theta_c1
       // use atan2 for this: following the reference, atan2 should give an angle -pi < phi < +pi  
-      h2d_gf[2*(4*i+j)+1].x = (REAL)( atan2((REAL) gf[i][j].c00.im,(REAL) gf[i][j].c00.re ));
-      h2d_gf[2*(4*i+j)+1].y = (REAL) ( atan2((REAL) gf[i][j].c20.im,(REAL)gf[i][j].c20.re ));
+      h2d_gf[2*(4*i+j)+1].x = (RealT)( atan2((RealT) gf[i][j].c00.im,(RealT) gf[i][j].c00.re ));
+      h2d_gf[2*(4*i+j)+1].y = (RealT) ( atan2((RealT) gf[i][j].c20.im,(RealT)gf[i][j].c20.re ));
       
       // b1
-      h2d_gf[2*(4*i+j)+1].z = (REAL) gf[i][j].c10.re ;
-      h2d_gf[2*(4*i+j)+1].w = (REAL) gf[i][j].c10.im ;
-     
+      h2d_gf[2*(4*i+j)+1].z = (RealT) gf[i][j].c10.re ;
+      h2d_gf[2*(4*i+j)+1].w = (RealT) gf[i][j].c10.im ;
   } 
  }
 }
@@ -1211,23 +1215,24 @@ void show_dev_su3(dev_su3 gf1){
 
 
 
-void check_gauge_reconstruction_8(su3 ** gf1, dev_su3_2v * gf2, int ind1, int mu){
-  dev_su3 * reconst_g , * reconst_g_dagger;
-  dev_su3  result, result_dagger;
+template<class RealT>
+void check_gauge_reconstruction_8(su3 ** gf1, dev_su3_2vM(RealT) * gf2, int ind1, int mu, MixedsolveParameter<RealT>& mixedsolveParameter){
+  dev_su3M(RealT) * reconst_g , * reconst_g_dagger;
+  dev_su3M(RealT)  result, result_dagger;
    printf("Checking 8 paramater reconstruction of gauge field:\n");  
   su3 gfdagger;
   #ifdef USETEXTURE
     bind_texture_gf(gf2);
   #endif
   printf("\n");
-  size_t cpsize = sizeof(dev_su3); // parallel in t and z direction
+  size_t cpsize = sizeof(dev_su3M(RealT)); // parallel in t and z direction
   cudaMalloc((void **) &reconst_g, cpsize); 
   cudaMalloc((void **) &reconst_g_dagger, cpsize); 
   
   show_su3(gf1[ind1][mu]);
   printf("\n");
   
-  dev_check_gauge_reconstruction_8  <<< 1 , 1 >>> (dev_gf,4*ind1 + mu, reconst_g, reconst_g_dagger);
+  dev_check_gauge_reconstruction_8<REAL>  <<< 1 , 1 >>> (mixedsolveParameter.dev_gf,4*ind1 + mu, reconst_g, reconst_g_dagger);
   cudaMemcpy(&result, reconst_g, cpsize, cudaMemcpyDeviceToHost);
   cudaMemcpy(&result_dagger, reconst_g_dagger, cpsize, cudaMemcpyDeviceToHost);
 
@@ -1258,7 +1263,8 @@ void check_gauge_reconstruction_8(su3 ** gf1, dev_su3_2v * gf2, int ind1, int mu
 
 
 // compare host gauge-field with gauge-field that is reconstructed (on host)
-void showcompare_gf(int t, int x, int y, int z, int mu){
+template<class RealT>
+void showcompare_gf(int t, int x, int y, int z, int mu, MixedsolveParameter<RealT>& mixedsolveParameter){
    int ind1 = g_ipt[t][x][y][z];
    su3 ** gf1 = g_gauge_field;
    
@@ -1288,17 +1294,17 @@ void showcompare_gf(int t, int x, int y, int z, int mu){
    int ind2 =  z + LZ*(y + LY*(x + LX*t));
 #ifdef GF_8
    printf("8-field:\t(%f,%f,%f,%f) (%f,%f,%f,%f)\n",
-     h2d_gf[2*(4*ind2+mu)].x,
-     h2d_gf[2*(4*ind2+mu)].y,
-     h2d_gf[2*(4*ind2+mu)].z,
-     h2d_gf[2*(4*ind2+mu)].w,
-     h2d_gf[2*(4*ind2+mu)+1].x,
-     h2d_gf[2*(4*ind2+mu)+1].y,
-     h2d_gf[2*(4*ind2+mu)+1].z,
-     h2d_gf[2*(4*ind2+mu)+1].w
+     mixedsolveParameter.h2d_gf[2*(4*ind2+mu)].x,
+     mixedsolveParameter.h2d_gf[2*(4*ind2+mu)].y,
+     mixedsolveParameter.h2d_gf[2*(4*ind2+mu)].z,
+     mixedsolveParameter.h2d_gf[2*(4*ind2+mu)].w,
+     mixedsolveParameter.h2d_gf[2*(4*ind2+mu)+1].x,
+     mixedsolveParameter.h2d_gf[2*(4*ind2+mu)+1].y,
+     mixedsolveParameter.h2d_gf[2*(4*ind2+mu)+1].z,
+     mixedsolveParameter.h2d_gf[2*(4*ind2+mu)+1].w
    );
-   dev_su3 help; 
-   reconstructgf_8( &(h2d_gf[2*(4*ind2+mu)]) , &help );
+   dev_su3M(RealT) help; 
+   reconstructgf_8( &(mixedsolveParameter.h2d_gf[2*(4*ind2+mu)]) , &help );
    printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",help[0][0].re,
    					help[0][0].im,
    					help[0][1].re,
@@ -1322,37 +1328,37 @@ void showcompare_gf(int t, int x, int y, int z, int mu){
    );   
    
 #else
-   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",h2d_gf[3*(4*ind2+mu)].x,
-   					h2d_gf[3*(4*ind2+mu)].y,
-   					h2d_gf[3*(4*ind2+mu)].z,
-   					h2d_gf[3*(4*ind2+mu)].w,
-   					h2d_gf[3*(4*ind2+mu)+1].x,
-   					h2d_gf[3*(4*ind2+mu)+1].y
+   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",mixedsolveParameter.h2d_gf[3*(4*ind2+mu)].x,
+   					mixedsolveParameter.h2d_gf[3*(4*ind2+mu)].y,
+   					mixedsolveParameter.h2d_gf[3*(4*ind2+mu)].z,
+   					mixedsolveParameter.h2d_gf[3*(4*ind2+mu)].w,
+   					mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+1].x,
+   					mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+1].y
    );
-   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",h2d_gf[3*(4*ind2+mu)+1].z,
-   					h2d_gf[3*(4*ind2+mu)+1].w,
-   					h2d_gf[3*(4*ind2+mu)+2].x,
-   					h2d_gf[3*(4*ind2+mu)+2].y,
-   					h2d_gf[3*(4*ind2+mu)+2].z,
-   					h2d_gf[3*(4*ind2+mu)+2].w
+   printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+1].z,
+   					mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+1].w,
+   					mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+2].x,
+   					mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+2].y,
+   					mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+2].z,
+   					mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+2].w
    );   
    
-   dev_su3 help;
+   dev_su3M(RealT) help;
    
-   help[0][0].re = h2d_gf[3*(4*ind2+mu)].x;
-   help[0][0].im = h2d_gf[3*(4*ind2+mu)].y;
-   help[0][1].re = h2d_gf[3*(4*ind2+mu)].z;
-   help[0][1].im = h2d_gf[3*(4*ind2+mu)].w;
+   help[0][0].re = mixedsolveParameter.h2d_gf[3*(4*ind2+mu)].x;
+   help[0][0].im = mixedsolveParameter.h2d_gf[3*(4*ind2+mu)].y;
+   help[0][1].re = mixedsolveParameter.h2d_gf[3*(4*ind2+mu)].z;
+   help[0][1].im = mixedsolveParameter.h2d_gf[3*(4*ind2+mu)].w;
 
-   help[0][2].re = h2d_gf[3*(4*ind2+mu)+1].x;
-   help[0][2].im = h2d_gf[3*(4*ind2+mu)+1].y;
-   help[1][0].re = h2d_gf[3*(4*ind2+mu)+1].z;
-   help[1][0].im = h2d_gf[3*(4*ind2+mu)+1].w;
+   help[0][2].re = mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+1].x;
+   help[0][2].im = mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+1].y;
+   help[1][0].re = mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+1].z;
+   help[1][0].im = mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+1].w;
    
-   help[1][1].re = h2d_gf[3*(4*ind2+mu)+2].x;
-   help[1][1].im = h2d_gf[3*(4*ind2+mu)+2].y;
-   help[1][2].re = h2d_gf[3*(4*ind2+mu)+2].z;
-   help[1][2].im = h2d_gf[3*(4*ind2+mu)+2].w;   
+   help[1][1].re = mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+2].x;
+   help[1][1].im = mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+2].y;
+   help[1][2].re = mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+2].z;
+   help[1][2].im = mixedsolveParameter.h2d_gf[3*(4*ind2+mu)+2].w;   
    
    reconstructgf_2v (&help); 
 

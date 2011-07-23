@@ -95,102 +95,120 @@ extern "C" {
 #endif
 
 #include "MACROS.cuh"
-
+#include "cublasWrapper.cuh"
 
 
 
 int g_numofgpu;
 
-#ifdef GF_8
-dev_su3_8 * dev_gf;
-dev_su3_8 * h2d_gf;
-#else
-dev_su3_2v * dev_gf;
-dev_su3_2v * h2d_gf;
-#endif
-
-#ifndef HALF
-dev_spinor* dev_spin1;
-dev_spinor* dev_spin2;
-dev_spinor* dev_spin3;
-dev_spinor* dev_spin4;
-dev_spinor* dev_spin5;
-dev_spinor* dev_spinin;
-dev_spinor* dev_spinout;
-dev_spinor * h2d_spin;
-
-//additional spinors for even-odd
-dev_spinor* dev_spin_eo1;
-dev_spinor* dev_spin_eo2;
-#else
-
-dev_spinor_half* dev_spin1;
-dev_spinor_half* dev_spin2;
-dev_spinor_half* dev_spin3;
-dev_spinor_half* dev_spin4;
-dev_spinor_half* dev_spin5;
-dev_spinor_half* dev_spinin;
-dev_spinor_half* dev_spinout;
-dev_spinor_half* h2d_spin;
-//additional spinors for even-odd
-dev_spinor_half* dev_spin_eo1;
-dev_spinor_half* dev_spin_eo2;
-
-
-float* dev_spin1_norm;
-float* dev_spin2_norm;
-float* dev_spin3_norm;
-float* dev_spin4_norm;
-float* dev_spin5_norm;
-float* dev_spinin_norm;
-float* dev_spinout_norm;
-float* h2d_spin_norm;
-
-float* dev_spin_eo1_norm;
-float* dev_spin_eo2_norm;
-
-
-  // a half precsion gauge field
+template<class RealT=REAL>
+struct MixedsolveParameter
+{//internal variables of mixed solver routine corresponding to fields on the device
   #ifdef GF_8
-   dev_su3_8_half * dev_gf_half;
+    dev_su3_8M(RealT)* dev_gf;
+    dev_su3_8M(RealT)* h2d_gf;
   #else
-   dev_su3_2v_half * dev_gf_half;
+    dev_su3_2vM(RealT)* dev_gf;
+    dev_su3_2vM(RealT)* h2d_gf;
   #endif
-#endif 
+
+  #ifndef HALF
+    dev_spinorM(RealT)* dev_spin1;
+    dev_spinorM(RealT)* dev_spin2;
+    dev_spinorM(RealT)* dev_spin3;
+    dev_spinorM(RealT)* dev_spin4;
+    dev_spinorM(RealT)* dev_spin5;
+    dev_spinorM(RealT)* dev_spinin;
+    dev_spinorM(RealT)* dev_spinout;
+    dev_spinorM(RealT)* h2d_spin;
+
+    //additional spinors for even-odd
+    dev_spinorM(RealT)* dev_spin_eo1;
+    dev_spinorM(RealT)* dev_spin_eo2;
+  #else
+
+    dev_spinor_half* dev_spin1;
+    dev_spinor_half* dev_spin2;
+    dev_spinor_half* dev_spin3;
+    dev_spinor_half* dev_spin4;
+    dev_spinor_half* dev_spin5;
+    dev_spinor_half* dev_spinin;
+    dev_spinor_half* dev_spinout;
+    dev_spinor_half* h2d_spin;
+    //additional spinors for even-odd
+    dev_spinor_half* dev_spin_eo1;
+    dev_spinor_half* dev_spin_eo2;
+
+
+    RealT* dev_spin1_norm;
+    RealT* dev_spin2_norm;
+    RealT* dev_spin3_norm;
+    RealT* dev_spin4_norm;
+    RealT* dev_spin5_norm;
+    RealT* dev_spinin_norm;
+    RealT* dev_spinout_norm;
+    RealT* h2d_spin_norm;
+
+    RealT* dev_spin_eo1_norm;
+    RealT* dev_spin_eo2_norm;
+
+
+    // a half precsion gauge field
+    #ifdef GF_8
+       dev_su3_8_half* dev_gf_half;
+    #else
+       dev_su3_2v_half* dev_gf_half;
+    #endif
+  #endif 
 
 
 
-int * nn;
-int * nn_eo;
-int * nn_oe;
-int * eoidx_even;
-int * eoidx_odd;
+  // selects global instance of this structure depending on template parameter RealT to determine precision
+  static MixedsolveParameter<RealT>* getGlobalP();
+};
+MixedsolveParameter<REAL > mixedsolveParameter ;
+MixedsolveParameter<REALD> mixedsolveParameterD;
 
-int * dev_nn;
-int * dev_nn_eo;
-int * dev_nn_oe;
-
-int * dev_eoidx_even;
-int * dev_eoidx_odd;
+template<class RealT> inline MixedsolveParameter<RealT>* MixedsolveParameter<RealT>::getGlobalP() { printf("WARNING: MixedsolveParameter::getGlobal() called with invalid template argument.\n"); return NULL; }
+template<           > inline MixedsolveParameter<REAL >* MixedsolveParameter<REAL >::getGlobalP() { return &mixedsolveParameter ; }
+template<           > inline MixedsolveParameter<REALD>* MixedsolveParameter<REALD>::getGlobalP() { return &mixedsolveParameterD; }
 
 
-size_t output_size;
-int* dev_grid;
-float * dev_output;
+//{
+  int * nn;
+  int * nn_eo;
+  int * nn_oe;
+  int * eoidx_even;
+  int * eoidx_odd;
+
+  int * dev_nn;
+  int * dev_nn_eo;
+  int * dev_nn_oe;
+
+  int * dev_eoidx_even;
+  int * dev_eoidx_odd;
+
+
+  size_t output_size;
+  int* dev_grid;
+  float* dev_output;
+
+
+  REALD hostr;
+  REALD hostkappa;
+  REALD hostm;
+  REALD hostmu;
+//}
+
+
 int havedevice = 0;
-
-
-REAL hostr;
-REAL hostkappa;
-REAL hostm;
-REAL hostmu;
 
 
 __device__  REAL m;
 __device__  REAL mu;
 __device__  REAL r=1.0; // this is implicitly assumed to be 1.0 in the host code!!!
 __device__  REAL kappa;
-__device__ REAL twokappamu;
+__device__  REAL twokappamu;
 
 __device__ dev_complex dev_k0;
 __device__ dev_complex dev_k1;
@@ -340,21 +358,21 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 // computes sout = 1/(1 +- mutilde gamma5) sin = (1 -+ i mutilde gamma5)/(1+mutilde^2) sin
 // mutilde = 2 kappa mu
 // uses shared local memory for manipulation
-__global__ void dev_mul_one_pm_imu_inv(dev_spinor* sin, dev_spinor* sout, const REAL sign){
-   
-   dev_spinor slocal[6];
+template<class RealT>
+__global__ void dev_mul_one_pm_imu_inv(dev_spinorM(RealT)* sin, dev_spinorM(RealT)* sout, const RealT sign){
+   dev_spinorM(RealT) slocal[6];
    //need the inverse sign in the numerator because of inverse
-   dev_complex pm_imu = dev_initcomplex(0.0,-1.0*sign*twokappamu);
+   dev_complexM(RealT) pm_imu = dev_initcomplex<RealT>(0.0,-1.0*sign*twokappamu);
    
-   REAL one_plus_musquare_inv = 1.0/(1.0 + twokappamu*twokappamu);
+   RealT one_plus_musquare_inv = 1.0/(1.0 + twokappamu*twokappamu);
    int pos;
-   pos= threadIdx.x + blockDim.x*blockIdx.x;  
-   int ix = threadIdx.x;
+   pos= threadIdx.x + blockDim.x*blockIdx.x;
+   //not referenced: int ix = threadIdx.x;
    if(pos < dev_VOLUME){
      //dev_skalarmult_spinor(&(sin[6*pos]), pm_imu, &(slocal[0]));
      //dev_Gamma5(&(slocal[0]));
      dev_skalarmult_gamma5_spinor(&(slocal[0]), pm_imu, &(sin[6*pos]) );
-	 dev_add_spinor_assign(&(slocal[0]), &(sin[6*pos]));
+	 dev_add_spinor_assign<RealT>(&(slocal[0]), &(sin[6*pos]));
      //dev_realmult_spinor(&(slocal[0]), one_plus_musquare_inv);
      //dev_copy_spinor(&(slocal[0]), &(sout[6*pos])); 
      dev_realmult_spinor_assign(&(sout[6*pos]), one_plus_musquare_inv, &(slocal[0]) );
@@ -367,22 +385,23 @@ __global__ void dev_mul_one_pm_imu_inv(dev_spinor* sin, dev_spinor* sout, const 
 
 // sout = gamma_5*((1\pm i\mutilde \gamma_5)*sin1 - sin2)
 // uses shared local memory for manipulation
-__global__ void dev_mul_one_pm_imu_sub_mul_gamma5(dev_spinor* sin1, dev_spinor* sin2, dev_spinor* sout, const REAL sign){
-   dev_spinor slocal[6];
-   dev_complex pm_imu = dev_initcomplex(0.0, sign*twokappamu); // i mutilde
+template<class RealT>
+__global__ void dev_mul_one_pm_imu_sub_mul_gamma5(dev_spinorM(RealT)* sin1, dev_spinorM(RealT)* sin2, dev_spinorM(RealT)* sout, const RealT sign){
+   dev_spinorM(RealT) slocal[6];
+   dev_complexM(RealT) pm_imu = dev_initcomplex<RealT>(0.0, sign*twokappamu); // i mutilde
    int pos;
    pos= threadIdx.x + blockDim.x*blockIdx.x; 
-   int ix = threadIdx.x;
+   //not referenced: int ix = threadIdx.x;
    if(pos < dev_VOLUME){
      //dev_skalarmult_spinor(&(sin1[6*pos]), pm_imu, &(slocal[0]));
      //dev_Gamma5(&(slocal[0]));
      dev_skalarmult_gamma5_spinor(&(slocal[0]),pm_imu,&(sin1[6*pos]));
-	 dev_add_spinor_assign(&(slocal[0]), &(sin1[6*pos]));
-     dev_sub_spinor_assign(&(slocal[0]), &(sin2[6*pos]));
+	 dev_add_spinor_assign<RealT>(&(slocal[0]), &(sin1[6*pos]));
+     dev_sub_spinor_assign<RealT>(&(slocal[0]), &(sin2[6*pos]));
      //dev_Gamma5(&(slocal[0]));
      //dev_copy_spinor(&(slocal[0]), &(sout[6*pos]));
-     dev_Gamma5_assign(&(sout[6*pos]), &(slocal[0]));
-   }   
+     dev_Gamma5_assign<RealT>(&(sout[6*pos]), &(slocal[0]));
+   }
 }
 
 
@@ -398,7 +417,8 @@ __global__ void dev_mul_one_pm_imu_sub_mul_gamma5(dev_spinor* sin1, dev_spinor* 
 
 
 // aequivalent to Qtm_pm_psi in tm_operators.c
-extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, int blocksize, int gridsize2, int blocksize2){
+template<class RealT>
+void dev_Qtm_pm_psi(dev_spinorM(RealT)* spinin, dev_spinorM(RealT)* spinout, int gridsize, int blocksize, int gridsize2, int blocksize2, MixedsolveParameter<RealT>& mixedsolveParameter){
   //spinin == odd
   //spinout == odd
   
@@ -411,47 +431,47 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
   #endif
   //bind_texture_nn(dev_nn_eo);
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
-    dev_Hopping_Matrix<<<gridsize, blocksize>>>
-             (dev_gf, spinin, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0           
+    dev_Hopping_Matrix<RealT> <<<gridsize, blocksize>>>
+             (mixedsolveParameter.dev_gf, spinin, mixedsolveParameter.dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //mixedsolveParameter.dev_spin_eo1 == even -> 0           
   //unbind_texture_nn();           
   #ifdef USETEXTURE
     unbind_texture_spin(1);
   #endif
-  dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,dev_spin_eo2, -1.);
+  dev_mul_one_pm_imu_inv<RealT> <<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo1,mixedsolveParameter.dev_spin_eo2, -1.);
   
   		#ifdef MPI
-  		  xchange_field_wrapper(dev_spin_eo2, 1);
+  		  xchange_field_wrapper(mixedsolveParameter.dev_spin_eo2, 1);
   		#endif
   #ifdef USETEXTURE
-    bind_texture_spin(dev_spin_eo2,1);
+    bind_texture_spin(mixedsolveParameter.dev_spin_eo2,1);
   #endif
   //bind_texture_nn(dev_nn_oe);
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
-    dev_Hopping_Matrix<<<gridsize, blocksize>>>
-            (dev_gf, dev_spin_eo2, dev_spin_eo1, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
+    dev_Hopping_Matrix<RealT> <<<gridsize, blocksize>>>
+            (mixedsolveParameter.dev_gf, mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo1, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
   //unbind_texture_nn();
   #ifdef USETEXTURE
     unbind_texture_spin(1);
   #endif
-  dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(spinin, dev_spin_eo1,  dev_spin_eo2, -1.);
+  dev_mul_one_pm_imu_sub_mul_gamma5<RealT> <<<gridsize2, blocksize2>>>(spinin, mixedsolveParameter.dev_spin_eo1,  mixedsolveParameter.dev_spin_eo2, -1.);
   
   
   //Q_{+}
   		#ifdef MPI
-  		  xchange_field_wrapper(dev_spin_eo2, 0);
+  		  xchange_field_wrapper(mixedsolveParameter.dev_spin_eo2, 0);
   		#endif
   #ifdef USETEXTURE
-    bind_texture_spin(dev_spin_eo2,1);
+    bind_texture_spin(mixedsolveParameter.dev_spin_eo2,1);
   #endif
   //bind_texture_nn(dev_nn_eo);
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
-    dev_Hopping_Matrix<<<gridsize, blocksize>>>
-          (dev_gf, dev_spin_eo2, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0
+    dev_Hopping_Matrix<RealT> <<<gridsize, blocksize>>>
+          (mixedsolveParameter.dev_gf, mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //mixedsolveParameter.dev_spin_eo1 == even -> 0
   //unbind_texture_nn();      
   #ifdef USETEXTURE  
     unbind_texture_spin(1);
   #endif
-  dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,spinout, +1.);
+  dev_mul_one_pm_imu_inv<RealT> <<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo1,spinout, +1.);
   
   		#ifdef MPI
   		  xchange_field_wrapper(spinout, 1);
@@ -461,13 +481,13 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
   #endif
   //bind_texture_nn(dev_nn_oe);
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
-    dev_Hopping_Matrix<<<gridsize, blocksize>>>
-             (dev_gf, spinout, dev_spin_eo1, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
+    dev_Hopping_Matrix<RealT> <<<gridsize, blocksize>>>
+             (mixedsolveParameter.dev_gf, spinout, mixedsolveParameter.dev_spin_eo1, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
   //unbind_texture_nn();  
   #ifdef USETEXTURE
     unbind_texture_spin(1);
   #endif
-  dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo2, dev_spin_eo1,  spinout , +1.); 
+  dev_mul_one_pm_imu_sub_mul_gamma5<RealT> <<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo1,  spinout , +1.); 
 }
 
 
@@ -476,46 +496,47 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
 #ifdef MPI
 // aequivalent to Qtm_pm_psi in tm_operators.c
 // using HOPPING_ASYNC for mpi
-extern "C" void dev_Qtm_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, int blocksize, int gridsize2, int blocksize2){
+template<class RealT>
+void dev_Qtm_pm_psi_mpi(dev_spinorM(RealT)* spinin, dev_spinorM(RealT)* spinout, int gridsize, int blocksize, int gridsize2, int blocksize2,MixedsolveParameter<RealT>& mixedsolveParameter){
   //spinin == odd
   //spinout == odd
   
   //Q_{-}
 
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
-    HOPPING_ASYNC(dev_gf, spinin, dev_spin_eo1, dev_eoidx_even, 
-               dev_eoidx_odd, dev_nn_eo, 0,gridsize, blocksize); //dev_spin_eo1 == even -> 0           
+    HOPPING_ASYNC(mixedsolveParameter.dev_gf, spinin, mixedsolveParameter.dev_spin_eo1, dev_eoidx_even, 
+               dev_eoidx_odd, dev_nn_eo, 0,gridsize, blocksize); //mixedsolveParameter.dev_spin_eo1 == even -> 0           
           
 
 
-  dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,dev_spin_eo2, -1.);
+  dev_mul_one_pm_imu_inv<RealT> <<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo1,mixedsolveParameter.dev_spin_eo2, -1.);
   
 
 
 
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
-    HOPPING_ASYNC(dev_gf, dev_spin_eo2, dev_spin_eo1, 
+    HOPPING_ASYNC(mixedsolveParameter.dev_gf, mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo1, 
           dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,gridsize, 
           blocksize); 
 
-  dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(spinin, dev_spin_eo1,  dev_spin_eo2, -1.);
+  dev_mul_one_pm_imu_sub_mul_gamma5<RealT> <<<gridsize2, blocksize2>>>(spinin, mixedsolveParameter.dev_spin_eo1,  mixedsolveParameter.dev_spin_eo2, -1.);
   
   
   //Q_{+}
 
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
-    HOPPING_ASYNC(dev_gf, dev_spin_eo2, dev_spin_eo1, 
+    HOPPING_ASYNC(mixedsolveParameter.dev_gf, mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo1, 
          dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize, 
-         blocksize); //dev_spin_eo1 == even -> 0
+         blocksize); //mixedsolveParameter.dev_spin_eo1 == even -> 0
 
-  dev_mul_one_pm_imu_inv<<<gridsize2, blocksize2>>>(dev_spin_eo1,spinout, +1.);
+  dev_mul_one_pm_imu_inv<RealT> <<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo1,spinout, +1.);
   
 
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
-    HOPPING_ASYNC(dev_gf, spinout, dev_spin_eo1, dev_eoidx_odd, 
+    HOPPING_ASYNC(mixedsolveParameter.dev_gf, spinout, mixedsolveParameter.dev_spin_eo1, dev_eoidx_odd, 
            dev_eoidx_even, dev_nn_oe, 1,gridsize, blocksize); 
 
-  dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo2, dev_spin_eo1,  spinout , +1.); 
+  dev_mul_one_pm_imu_sub_mul_gamma5<RealT> <<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo1,  spinout , +1.); 
 }
 #endif
 
@@ -529,12 +550,13 @@ extern "C" void dev_Qtm_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int 
 // uses shared local memory for manipulation
 __global__ void dev_mul_one_pm_imu_inv_half(dev_spinor_half* sin, float* sin_norm, dev_spinor_half* sout, float* sout_norm, const REAL sign){
    
+   typedef REAL RealT;
    dev_spinor slocal[6];
    dev_spinor s[6];
    float norm;
    
    //need the inverse sign in the numerator because of inverse
-   dev_complex pm_imu = dev_initcomplex(0.0,-1.0*sign*twokappamu);
+   dev_complex pm_imu = dev_initcomplex<RealT>(0.0,-1.0*sign*twokappamu);
    
    REAL one_plus_musquare_inv = 1.0/(1.0 + twokappamu*twokappamu);
    int pos;
@@ -545,7 +567,7 @@ __global__ void dev_mul_one_pm_imu_inv_half(dev_spinor_half* sin, float* sin_nor
      construct_spinor_fromhalf(s, sin, norm, pos);
 
      dev_skalarmult_gamma5_spinor(&(slocal[0]), pm_imu, &(s[0]) );
-         dev_add_spinor_assign(&(slocal[0]), &(s[0]));
+         dev_add_spinor_assign<RealT>(&(slocal[0]), &(s[0]));
      
      dev_realmult_spinor_assign(&(s[0]), one_plus_musquare_inv, &(slocal[0]) );
      
@@ -560,11 +582,12 @@ __global__ void dev_mul_one_pm_imu_inv_half(dev_spinor_half* sin, float* sin_nor
 // sout = gamma_5*((1\pm i\mutilde \gamma_5)*sin1 - sin2)
 // uses shared local memory for manipulation
 __global__ void dev_mul_one_pm_imu_sub_mul_gamma5_half(dev_spinor_half* sin1, float* sin1_norm, dev_spinor_half* sin2, float* sin2_norm, dev_spinor_half* sout, float* sout_norm, const REAL sign){
+   typedef REAL RealT;
    dev_spinor slocal[6];
    dev_spinor s1[6];
    dev_spinor s2[6];
    float norm;
-   dev_complex pm_imu = dev_initcomplex(0.0, sign*twokappamu); // i mutilde
+   dev_complex pm_imu = dev_initcomplex<RealT>(0.0, sign*twokappamu); // i mutilde
    int pos;
    pos= threadIdx.x + blockDim.x*blockIdx.x; 
    int ix = threadIdx.x;
@@ -575,9 +598,9 @@ __global__ void dev_mul_one_pm_imu_sub_mul_gamma5_half(dev_spinor_half* sin1, fl
      construct_spinor_fromhalf(s2, sin2, norm, pos);
 
      dev_skalarmult_gamma5_spinor(&(slocal[0]),pm_imu,&(s1[0]));
-         dev_add_spinor_assign(&(slocal[0]), &(s1[0]));
-     dev_sub_spinor_assign(&(slocal[0]), &(s2[0]));
-     dev_Gamma5_assign(&(s1[0]), &(slocal[0]));
+         dev_add_spinor_assign<RealT>(&(slocal[0]), &(s1[0]));
+     dev_sub_spinor_assign<RealT>(&(slocal[0]), &(s2[0]));
+     dev_Gamma5_assign<RealT>(&(s1[0]), &(slocal[0]));
      dev_write_spinor_half(&(s1[0]),&(sout[6*pos]), &(sout_norm[pos]));
    }   
 }
@@ -597,45 +620,45 @@ extern "C" void dev_Qtm_pm_psi_half(dev_spinor_half* spinin, float* spinin_norm,
   #endif
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix_half, cudaFuncCachePreferL1);
     dev_Hopping_Matrix_half<<<gridsize, blocksize>>>
-             (dev_gf_half, spinin, spinin_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0  
+             (mixedsolveParameter.dev_gf_half, spinin, spinin_norm, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //mixedsolveParameter.dev_spin_eo1 == even -> 0  
   #ifdef USETEXTURE
     unbind_halfspinor_texture();
   #endif
-  dev_mul_one_pm_imu_inv_half<<<gridsize2, blocksize2>>>(dev_spin_eo1, dev_spin_eo1_norm ,dev_spin_eo2, dev_spin_eo2_norm, -1.);
+  dev_mul_one_pm_imu_inv_half<<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm ,mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo2_norm, -1.);
   
   #ifdef USETEXTURE
-    bind_halfspinor_texture(dev_spin_eo2, dev_spin_eo2_norm);
+    bind_halfspinor_texture(mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo2_norm);
   #endif
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix_half, cudaFuncCachePreferL1);
     dev_Hopping_Matrix_half<<<gridsize, blocksize>>>
-            (dev_gf_half, dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
+            (mixedsolveParameter.dev_gf_half, mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo2_norm, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
   #ifdef USETEXTURE
     unbind_halfspinor_texture();
   #endif
-  dev_mul_one_pm_imu_sub_mul_gamma5_half<<<gridsize2, blocksize2>>>(spinin, spinin_norm, dev_spin_eo1, dev_spin_eo1_norm,  dev_spin_eo2, dev_spin_eo2_norm, -1.);
+  dev_mul_one_pm_imu_sub_mul_gamma5_half<<<gridsize2, blocksize2>>>(spinin, spinin_norm, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm,  mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo2_norm, -1.);
   
   //Q_{+}
   #ifdef USETEXTURE
-    bind_halfspinor_texture(dev_spin_eo2, dev_spin_eo2_norm);
+    bind_halfspinor_texture(mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo2_norm);
   #endif
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix_half, cudaFuncCachePreferL1);
     dev_Hopping_Matrix_half<<<gridsize, blocksize>>>
-          (dev_gf_half, dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0    
+          (mixedsolveParameter.dev_gf_half, mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo2_norm, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //mixedsolveParameter.dev_spin_eo1 == even -> 0    
   #ifdef USETEXTURE  
     unbind_halfspinor_texture();
   #endif
-  dev_mul_one_pm_imu_inv_half<<<gridsize2, blocksize2>>>(dev_spin_eo1, dev_spin_eo1_norm,spinout, spinout_norm, +1.);
+  dev_mul_one_pm_imu_inv_half<<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm,spinout, spinout_norm, +1.);
   
   #ifdef USETEXTURE
     bind_halfspinor_texture(spinout, spinout_norm);
   #endif
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix_half, cudaFuncCachePreferL1);
     dev_Hopping_Matrix_half<<<gridsize, blocksize>>>
-             (dev_gf_half, spinout, spinout_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);  
+             (mixedsolveParameter.dev_gf_half, spinout, spinout_norm, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);  
   #ifdef USETEXTURE
     unbind_halfspinor_texture();
   #endif
-  dev_mul_one_pm_imu_sub_mul_gamma5_half<<<gridsize2, blocksize2>>>(dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm,  spinout, spinout_norm , +1.); 
+  dev_mul_one_pm_imu_sub_mul_gamma5_half<<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo2_norm, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm,  spinout, spinout_norm , +1.); 
 }
 
 
@@ -647,23 +670,23 @@ extern "C" void dev_Qtm_pm_psi_half_mpi(dev_spinor_half* spinin, float* spinin_n
   //spinout == odd
   
   //Q_{-}
-  HOPPING_HALF_ASYNC(dev_gf_half, spinin, spinin_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,gridsize, blocksize); //dev_spin_eo1 == even -> 0  
+  HOPPING_HALF_ASYNC(mixedsolveParameter.dev_gf_half, spinin, spinin_norm, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,gridsize, blocksize); //mixedsolveParameter.dev_spin_eo1 == even -> 0  
 
-  dev_mul_one_pm_imu_inv_half<<<gridsize2, blocksize2>>>(dev_spin_eo1, dev_spin_eo1_norm ,dev_spin_eo2, dev_spin_eo2_norm, -1.);
+  dev_mul_one_pm_imu_inv_half<<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm ,mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo2_norm, -1.);
   
 
-    HOPPING_HALF_ASYNC(dev_gf_half, dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,gridsize, blocksize); 
+    HOPPING_HALF_ASYNC(mixedsolveParameter.dev_gf_half, mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo2_norm, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,gridsize, blocksize); 
 
-  dev_mul_one_pm_imu_sub_mul_gamma5_half<<<gridsize2, blocksize2>>>(spinin, spinin_norm, dev_spin_eo1, dev_spin_eo1_norm,  dev_spin_eo2, dev_spin_eo2_norm, -1.);
+  dev_mul_one_pm_imu_sub_mul_gamma5_half<<<gridsize2, blocksize2>>>(spinin, spinin_norm, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm,  mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo2_norm, -1.);
   
   //Q_{+}
-    HOPPING_HALF_ASYNC (dev_gf_half, dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,gridsize, blocksize); //dev_spin_eo1 == even -> 0    
+    HOPPING_HALF_ASYNC (mixedsolveParameter.dev_gf_half, mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo2_norm, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,gridsize, blocksize); //mixedsolveParameter.dev_spin_eo1 == even -> 0    
     
-  dev_mul_one_pm_imu_inv_half<<<gridsize2, blocksize2>>>(dev_spin_eo1, dev_spin_eo1_norm,spinout, spinout_norm, +1.);
+  dev_mul_one_pm_imu_inv_half<<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm,spinout, spinout_norm, +1.);
   
-    HOPPING_HALF_ASYNC (dev_gf_half, spinout, spinout_norm, dev_spin_eo1, dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,gridsize, blocksize);  
+    HOPPING_HALF_ASYNC (mixedsolveParameter.dev_gf_half, spinout, spinout_norm, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,gridsize, blocksize);  
 
-  dev_mul_one_pm_imu_sub_mul_gamma5_half<<<gridsize2, blocksize2>>>(dev_spin_eo2, dev_spin_eo2_norm, dev_spin_eo1, dev_spin_eo1_norm,  spinout, spinout_norm , +1.); 
+  dev_mul_one_pm_imu_sub_mul_gamma5_half<<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo2, mixedsolveParameter.dev_spin_eo2_norm, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spin_eo1_norm,  spinout, spinout_norm , +1.); 
 }
 #endif // MPI
 
@@ -687,28 +710,31 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
 
 
 
-__global__ void dev_zero_spinor_field(dev_spinor* s1){
+template<class RealT>
+__global__ void dev_zero_spinor_field(typename dev_spinorT<RealT>::type* s1){
   int pos;
   pos= threadIdx.x + blockDim.x*blockIdx.x;  
   if(pos < dev_VOLUME){
-          dev_zero_spinor(&(s1[6*pos]));
+          dev_zero_spinor<RealT>(&(s1[6*pos]));
   }
 }
 
 
 
 
-__global__ void dev_copy_spinor_field(dev_spinor* s1, dev_spinor* s2){
-    int pos;
+template<class RealT1,class RealT2>
+__global__ void dev_copy_spinor_field(dev_spinorM(RealT1)* s1, dev_spinorM(RealT2)* s2){
+  int pos;
   pos= threadIdx.x + blockDim.x*blockIdx.x;  
   if(pos < dev_VOLUME){
-      dev_copy_spinor(&(s1[6*pos]),&(s2[6*pos]));
+      dev_copy_spinor<RealT1,RealT2>(&(s1[6*pos]),&(s2[6*pos]));
   } 
 }
 
 
 
-__global__ void dev_skalarmult_add_assign_spinor_field(dev_spinor* s1, REAL lambda, dev_spinor* s2, dev_spinor* so){
+template<class RealT>
+__global__ void dev_skalarmult_add_assign_spinor_field(dev_spinorM(RealT)* s1, RealT lambda, dev_spinorM(RealT)* s2, dev_spinorM(RealT)* so){
   int pos;
   pos= threadIdx.x + blockDim.x*blockIdx.x;  
   if(pos < dev_VOLUME){
@@ -718,17 +744,19 @@ __global__ void dev_skalarmult_add_assign_spinor_field(dev_spinor* s1, REAL lamb
 
 
 
-__global__ void dev_skalarmult_spinor_field(dev_spinor* s1, REAL lambda, dev_spinor* so){
+template<class RealT>
+__global__ void dev_skalarmult_spinor_field(dev_spinorM(RealT)* s1, RealT lambda, dev_spinorM(RealT)* so){
   int pos;
   pos= threadIdx.x + blockDim.x*blockIdx.x;  
   if(pos < dev_VOLUME){
-    dev_skalarmult_spinor(&(s1[6*pos]), dev_initcomplex(lambda,0.0) , &(so[6*pos]) );
+    dev_skalarmult_spinor(&(s1[6*pos]), dev_initcomplex<RealT>(lambda,0.0) , &(so[6*pos]) );
   }
 }  
 
 
 
-__global__ void dev_complexmult_spinor_field(dev_spinor* s1, dev_complex lambda, dev_spinor* so){
+template<class RealT>
+__global__ void dev_complexmult_spinor_field(dev_spinorM(RealT)* s1, dev_complexM(RealT) lambda, dev_spinorM(RealT)* so){
   int pos;
   pos= threadIdx.x + blockDim.x*blockIdx.x;  
   if(pos < dev_VOLUME){
@@ -876,7 +904,8 @@ extern "C" int find_devices() {
 
 extern "C" void test_operator(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
 dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, REAL* output,REAL* erg, int xsize, int ysize){
- 
+
+ typedef REAL RealT;
  int  gridsize;
 
  dim3 blockdim(1,1);
@@ -916,7 +945,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
    bind_texture_spin(spin4,1);
  #endif 
   // apply D_tm
-  dev_tm_dirac_kappa <<<griddim3, blockdim3 >>>(gf, spin4, spinout, nn_grid);
+  dev_tm_dirac_kappa<RealT> <<<griddim3, blockdim3 >>>(gf, spin4, spinout, nn_grid);
 
  #ifdef USETEXTURE
   unbind_texture_gf();
@@ -930,26 +959,57 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
 
 // this is the eo version of the device cg inner solver 
 // we invert the hermitean D_tm D_tm^{+}
-extern "C" int dev_cg(
-       dev_su3_2v * gf,
-       dev_spinor* spinin, 
-       dev_spinor* spinout, 
-       dev_spinor* spin0, 
-       dev_spinor* spin1, 
-       dev_spinor* spin2, 
-       dev_spinor* spin3, 
-       dev_spinor* spin4, 
-       int *grid, int * nn_grid, int rescalekappa){
+
+
+/*
+///  member definition of CG-interface class ///
+
+template<class RealT>class MixedsolveOperator // interface class
+{
+public:
+  virtual ~MixedsolveOperator() { }
+
+  virtual void gpuInit  (dev_spinorM(RealT)* spinin,dev_spinorM(RealT)* spinTmp,dev_spinorM(RealT)* spinout,dev_su3_2vM(RealT)* gf,int* dev_nn,const dim3& linAlgGriddim,const dim3& linAlgBlockdim) { }
+  virtual void gpu      (dev_spinorM(RealT)* spinin,dev_spinorM(RealT)* spinTmp,dev_spinorM(RealT)* spinout,dev_su3_2vM(RealT)* gf,int* dev_nn,const dim3& linAlgGriddim,const dim3& linAlgBlockdim) =0;
+  virtual void gpuDeinit(dev_spinorM(RealT)* spininout,dev_spinorM(RealT)* spinTmp,dev_su3_2vM(RealT)* gf,int* dev_nn,const dim3& linAlgGriddim,const dim3& linAlgBlockdim,const RealT scaleparam)   { }
+
+  virtual void checkInit  (spinor* const spinin,spinor* const spinTmp,spinor* const spinout,int Volume)                                 { }
+  virtual void check      (spinor* const conjungateBasisPSpinin,spinor* const spinout,const int Volume) =0; 
+  virtual void checkDeinit(spinor* const spinin,spinor* const spinTmp,spinor* const spinout,int Volume)                                 { }
+};
+*/
+template<class RealT>MixedsolveOperator<RealT>::~MixedsolveOperator() { }
+
+template<class RealT>void MixedsolveOperator<RealT>::gpuInit  (dev_spinorM(RealT)* spinin,dev_spinorM(RealT)* spinTmp,dev_spinorM(RealT)* spinout,dev_su3_2vM(RealT)* gf,int* dev_nn,const dim3& linAlgGriddim,const dim3& linAlgBlockdim) { }
+template<class RealT>void MixedsolveOperator<RealT>::gpuDeinit(dev_spinorM(RealT)* spininout,dev_spinorM(RealT)* spinTmp,dev_su3_2vM(RealT)* gf,int* dev_nn,const dim3& linAlgGriddim,const dim3& linAlgBlockdim,const RealT scaleparam)   { }
+
+template<class RealT>void MixedsolveOperator<RealT>::checkInit  (spinor* const spinin,spinor* const spinTmp,spinor* const spinout,int Volume) { }
+template<class RealT>void MixedsolveOperator<RealT>::checkDeinit(spinor* const spinin,spinor* const spinTmp,spinor* const spinout,int Volume) { }
+
+
+
+template<class RealT,template<class MixedsolveOperatorSRealT>class MixedsolveOperatorT>
+int dev_cg(
+       dev_su3_2vM(RealT)* gf,
+       dev_spinorM(RealT)* spinin, 
+       dev_spinorM(RealT)* spinout, 
+       dev_spinorM(RealT)* spin0, 
+       dev_spinorM(RealT)* spin1, 
+       dev_spinorM(RealT)* spin2, 
+       dev_spinorM(RealT)* spin3, 
+       dev_spinorM(RealT)* spin4, 
+       int* grid, int* nn_grid, MixedsolveOperatorT<RealT>& mixedsolveOperator,
+       REALD initial_sourcesquarenorm,bool rel_prec,double finalEps/*,bool& reachedFinalPrecision*/){
  
- 
- REAL host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
- REAL * dotprod, * dotprod2, * rk, * alpha, *beta;
+
+ RealT host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
+ RealT * dotprod, * dotprod2, * rk, * alpha, *beta;
  
  
  cudaError_t cudaerr;
  int i, gridsize;
  int maxit = max_innersolver_it;
- REAL eps = (REAL) innersolver_precision;
+ RealT eps = (RealT) innersolver_precision;
  int N_recalcres = 30; // after N_recalcres iterations calculate r = A x_k - b
  
  
@@ -969,43 +1029,27 @@ extern "C" int dev_cg(
    gridsize=1;
  }
  dim3 griddim2(gridsize,1,1);
+
+ mixedsolveOperator.gpuInit(spin2,spin4,spin3,gf,dev_nn,griddim2,blockdim2);
  
- // this is the partitioning for the Dirac-Kernel
- dim3 blockdim3(BLOCK,1,1);
- if( VOLUME >= BLOCK){
-   gridsize = (int) (VOLUME/BLOCK) +1;
- }
- else{
-   gridsize=1;
- }
- dim3 griddim3(gridsize,1,1); 
- 
- size_t size2 = sizeof(float4)*6*VOLUME;
- 
- #ifdef USETEXTURE
-   //Bind texture gf
-   bind_texture_gf(gf);
-  //Bind texture spinor to spin4 (D_tm is always applied to spin4)
-  bind_texture_spin(spin4,1);
- #endif
  
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
-  dev_complex h0,h1,h2,h3;
-  h0.re = (REAL)ka0.re;    h0.im = (REAL)ka0.im;
-  h1.re = (REAL)ka1.re;    h1.im = (REAL)ka1.im;
-  h2.re = (REAL)ka2.re;    h2.im = (REAL)ka2.im;
-  h3.re = (REAL)ka3.re;    h3.im = (REAL)ka3.im;
-  he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
+  dev_complexM(RealT) h0,h1,h2,h3;
+  h0.re = (RealT)ka0.re;    h0.im = (RealT)ka0.im;
+  h1.re = (RealT)ka1.re;    h1.im = (RealT)ka1.im;
+  h2.re = (RealT)ka2.re;    h2.im = (RealT)ka2.im;
+  h3.re = (RealT)ka3.re;    h3.im = (RealT)ka3.im;
+  he_cg_init<<< 1, 1 >>> (grid, (RealT) g_kappa, (RealT)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
  
  // Init x,p,r for k=0
  // Allocate some numbers for host <-> device interaction
- cudaMalloc((void **) &dotprod, sizeof(REAL));
- cudaMalloc((void **) &dotprod2, sizeof(REAL));
- cudaMalloc((void **) &rk, sizeof(REAL));
- cudaMalloc((void **) &alpha, sizeof(REAL));
- cudaMalloc((void **) &beta, sizeof(REAL));
+ cudaMalloc((void **) &dotprod, sizeof(RealT));
+ cudaMalloc((void **) &dotprod2, sizeof(RealT));
+ cudaMalloc((void **) &rk, sizeof(RealT));
+ cudaMalloc((void **) &alpha, sizeof(RealT));
+ cudaMalloc((void **) &beta, sizeof(RealT));
  printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
  
  
@@ -1016,171 +1060,90 @@ extern "C" int dev_cg(
  
  
  // go over to kappa (if wanted)
- REAL scaleparam = sqrt(1.0/(2.0 * (REAL)hostkappa));
- printf("1/2kappa = %.8f\n",scaleparam);
+ RealT scaleparam = sqrt(1.0/(2.0 * (RealT)hostkappa));
+ printf("1/2kappa = %.16f\n",scaleparam);
  //dev_skalarmult_spinor_field<<<griddim2, blockdim2 >>>(spinin,scaleparam, spin1);
  //dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spin1, spinin);
  
  
- dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spinin, spin0);
- dev_zero_spinor_field<<<griddim2, blockdim2 >>>(spin1); // x_0 = 0
- dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spinin, spin2);
- dev_zero_spinor_field<<<griddim2, blockdim2 >>>(spin3);
+ dev_copy_spinor_field<RealT,RealT> <<<griddim2, blockdim2 >>>(spinin, spin0);
+ dev_zero_spinor_field<RealT>       <<<griddim2, blockdim2 >>>(spin1); // x_0 = 0
+ dev_copy_spinor_field<RealT,RealT> <<<griddim2, blockdim2 >>>(spinin, spin2);
+ dev_zero_spinor_field<RealT>       <<<griddim2, blockdim2 >>>(spin3);
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
  
  
  
  
  //relative precision -> get initial residue
- sourcesquarenorm = cublasSdot (24*VOLUME, (const float *)spinin, 1, (const float *)spinin, 1);
+ sourcesquarenorm = cublasDot (24*VOLUME, (const RealT*)spinin, 1, (const RealT*)spinin, 1);
  host_rk = sourcesquarenorm; //for use in main loop
- printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
+ printf("Squarenorm Source:\t%.16e\n", sourcesquarenorm);
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
  
-  printf("Entering cg-loop\n");
- for(i=0;i<maxit;i++){ //MAIN LOOP
+ printf("Entering cg-loop\n");
+ for(i=0;i<maxit;i++)
+ { //MAIN LOOP
+   mixedsolveOperator.gpu(spin2,spin4,spin3,gf,dev_nn,griddim2,blockdim2);// call func
   
-  // D Ddagger    --   Ddagger = gamma5 D gamma5  for Wilson Dirac Operator
-  // mu -> -mu for twisted term
-  // DO NOT USE tm_dirac_dagger_kappa here, otherwise spin2 will be overwritten!!!
-  #ifdef USETEXTURE
-    unbind_texture_spin(1);
-  #endif
-     // GAMMA5, mu -> -mu
-     dev_gamma5 <<<griddim2, blockdim2 >>> (spin2,spin4);
-     dev_swapmu <<<1,1>>> ();
-  #ifdef USETEXTURE
-   bind_texture_spin(spin4,1);
-  #endif
-     //D_tm 
-     dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
-  #ifdef USETEXTURE
-   unbind_texture_spin(1);
-  #endif
-     //GAMMA5 mu -> -mu
-     dev_gamma5 <<<griddim2, blockdim2 >>>(spin3,spin4);
-     dev_swapmu <<<1,1>>> ();
-  #ifdef USETEXTURE
-   bind_texture_spin(spin4,1);
-  #endif
-     //D_tm
-     dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
-  
-  //Here we have used the output spinor (spinout) to temporarly take the field and to 
-  //copy it to the texture field (spin4)!!
-
-  
- //alpha
-  host_dotprod = cublasSdot (24*VOLUME, (const float *) spin2, 1,
-            (const float *) spin3, 1);
-  host_alpha = (host_rk / host_dotprod); // alpha = r*r/ p M p
+  //alpha  /// (spin2=spinin) * (spin3=D_dagger D)
+   host_dotprod = cublasDot (24*VOLUME, (const RealT*) spin2, 1, (const RealT*) spin3, 1);
+   host_alpha = (host_rk / host_dotprod);
    
- //r(k+1)
- cublasSaxpy (24*VOLUME,-1.0*host_alpha, (const float *) spin3, 1, (float *) spin0, 1);  
+  //r(k+1)  /// spin0:=-alpha*(spin3=D_dagger D) + (spin0=spinin(if i==1))
+   cublasAxpy (24*VOLUME,-1.0*host_alpha, (const RealT*)spin3, 1, (RealT*)spin0, 1);
 
- //x(k+1);
- cublasSaxpy (24*VOLUME, host_alpha, (const float *) spin2,  1, (float *) spin1, 1);
+  //x(k+1);
+   cublasAxpy (24*VOLUME, host_alpha, (const RealT*)spin2,  1, (RealT*)spin1, 1);
 
-  if((cudaerr=cudaGetLastError()) != cudaSuccess){
-    printf("%s\n", cudaGetErrorString(cudaerr));
-    exit(200);
-  }
-  
+   if((cudaerr=cudaGetLastError()) != cudaSuccess)
+   {
+     printf("%s\n", cudaGetErrorString(cudaerr));
+     exit(200);
+   }
+
 
   //Abbruch?
-  host_dotprod = cublasSdot (24*VOLUME, (const float *) spin0, 1,(const float *) spin0, 1);
+   host_dotprod = cublasDot (24*VOLUME, (const RealT*)spin0, 1,(const RealT*)spin0, 1);
   
- if ((host_dotprod <= eps*sourcesquarenorm)){//error-limit erreicht
-   break; 
- }
-  printf("iter %d: err = %.8e\n", i, host_dotprod);
+   if ((host_dotprod <= eps*sourcesquarenorm))//error-limit erreicht
+     break; 
+   printf("iter %d: err = %.16e\n", i, host_dotprod);
   
- //beta
- host_beta =host_dotprod/host_rk;
- //p(k+1)
- cublasSscal (24*VOLUME, host_beta, (float *)spin2, 1);
- cublasSaxpy (24*VOLUME, 1.0, (const float *) spin0,  1, (float *) spin2, 1);
+  //beta
+   host_beta =host_dotprod/host_rk;
+  //p(k+1)
+   cublasScal (24*VOLUME, host_beta, (RealT*)spin2, 1);
+   cublasAxpy (24*VOLUME, 1.0, (const RealT*)spin0, 1, (RealT*)spin2, 1);
 
- host_rk = host_dotprod;
+   host_rk = host_dotprod;
  
- // recalculate residue frome r = b - Ax
- if(((i+1) % N_recalcres) == 0){
+  // recalculate residue frome r = b - Ax
+   if(((i+0) % N_recalcres) == 0)
+   {
     // r_(k+1) = Ax -b 
-    printf("Recalculating residue\n");
+     printf("Recalculating residue\n");
     
-    // D Ddagger   --   Ddagger = gamma5 D gamma5  for Wilson Dirac Operator
-    // DO NOT USE tm_dirac_dagger_kappa here, otherwise spin2 will be overwritten!!!
-      
-      //GAMMA5
-    #ifdef USETEXTURE
-     unbind_texture_spin(1);
-    #endif
-      dev_gamma5 <<<griddim2, blockdim2 >>> (spin1,spin4);
-      dev_swapmu <<<1,1>>> ();
-    #ifdef USETEXTURE
-     bind_texture_spin(spin4,1);
-    #endif
-   
-      //D_tm GAMMA5, mu -> -mu
-      dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
-      dev_gamma5 <<<griddim2, blockdim2 >>>(spin3,spinout);
-      dev_swapmu <<<1,1>>> ();
-  
-    //printf("Unbinding texture of spinorfield\n");
-    #ifdef USETEXTURE
-     unbind_texture_spin(1);
-    #endif
-    cudaMemcpy(spin4, spinout,size2, cudaMemcpyDeviceToDevice);
-    //printf("Rebinding texture to spinorfield\n");
-    #ifdef USETEXTURE
-     bind_texture_spin(spin4,1);
-    #endif
-      
-      //D_tm
-      dev_tm_dirac_kappa<<<griddim3, blockdim3 >>>(gf, spin4, spin3, dev_nn);
-    
+     mixedsolveOperator.gpu(spin1,spin4,spin3,gf,dev_nn,griddim2,blockdim2);// call func
     // r = b - Ax
-    cublasSscal (24*VOLUME, -1.0, (float *)spin3, 1);
-    cublasSaxpy (24*VOLUME, 1.0, (const float *) spinin,  1, (float *) spin3, 1);
-    cublasScopy (24*VOLUME, (const float *)spin3, 1, (float *)spin0, 1);
-    
-    //dev_skalarmult_add_assign_spinor_field<<<griddim2, blockdim2 >>>(spinin, -1.0, spin3, spin0);
-   }//recalculate residue
+     cublasScal (24*VOLUME, -1.0, (RealT*)spin3, 1);
+     cublasAxpy (24*VOLUME, 1.0, (const RealT*)spinin,  1, (RealT*)spin3, 1);
+     cublasCopy (24*VOLUME, (const RealT*)spin3, 1, (RealT*)spin0, 1);
 
- }//MAIN LOOP cg	
+     if( sizeof(RealT)>=sizeof(REALD) && ((host_rk<=eps&&rel_prec==0) || (host_rk<=finalEps*initial_sourcesquarenorm&&rel_prec==1)) )//different from abort criterium some lines above: here we check wether we reached the final desired precision, which only works in double precision 
+     {//the final precision is reached
+       printf("inner solver: Reached precision of eps=%.2e\n",( rel_prec==0 ? eps : finalEps ));
+       break;//escape innner solver if desired prec. is reached: should not happen with singele precision - here only the double prec. outer solver is reliable
+     }
+   }//recalculate residue
+ }//MAIN LOOP cg
   
   
   printf("Final residue: %.6e\n",host_dotprod);
   // x_result = spin1 !
   
- if(rescalekappa == 1){  //want D^-1 rescaled by 2*kappa
-  
-//multiply with D^dagger
-    #ifdef USETEXTURE
-     unbind_texture_spin(1);
-    #endif
-      dev_gamma5 <<<griddim2, blockdim2 >>> (spin1,spin4);
-      dev_swapmu <<<1,1>>> ();
-    #ifdef USETEXTURE
-     bind_texture_spin(spin4,1);
-    #endif
-      dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
-      dev_gamma5 <<<griddim2, blockdim2 >>>(spin3,spin1);
-      dev_swapmu <<<1,1>>> ();
-    #ifdef USETEXTURE
-     unbind_texture_spin(1);
-    #endif
-
-
- //go over to non-kappa, Ddagger = g5 D g5
- dev_skalarmult_spinor_field<<<griddim2, blockdim2 >>>(spin1,1.0/(scaleparam*scaleparam), spinout);  
- 
-  // times operator == source ?? 
-  //dev_tm_dirac_kappa<<<griddim3, blockdim3 >>>(gf, spin3, spinout, nn_grid);
-  }
-  else{
-   dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spin1,spinout);
-  }
+  mixedsolveOperator.gpuDeinit(spin1,spin4,gf,dev_nn,griddim2,blockdim2,scaleparam);
+  dev_copy_spinor_field<RealT,RealT> <<<griddim2, blockdim2 >>>(spin1,spinout);
   
   #ifdef USETEXTURE
    unbind_texture_gf();
@@ -1196,11 +1159,12 @@ extern "C" int dev_cg(
 
 
 
-void showspinor(dev_spinor* s){
+template<class RealT>
+void showspinor(dev_spinorM(RealT)* s){
   int i,j;
   dev_spinor help[6];
-  size_t size = 6*sizeof(dev_spinor);
-  
+  size_t size = 6*sizeof(dev_spinorM(RealT));
+
   for(i=0; i<VOLUME/2; i++){
     cudaMemcpy(&(help[0]), (s+6*i), size, cudaMemcpyDeviceToHost);
     for(j=0;j<6; j++){
@@ -1208,7 +1172,6 @@ void showspinor(dev_spinor* s){
     }
     printf("\n");
   }
-  
 }
 
 
@@ -1218,26 +1181,27 @@ void showspinor(dev_spinor* s){
 
 // this is the eo version of the device cg inner solver 
 // we invert the hermitean Q_{-} Q_{+}
-extern "C" int dev_cg_eo(
-      dev_su3_2v * gf,
-      dev_spinor* spinin, 
-      dev_spinor* spinout, 
-      dev_spinor* spin0, 
-      dev_spinor* spin1, 
-      dev_spinor* spin2, 
-      dev_spinor* spin3, 
-      dev_spinor* spin4, 
-      int *grid, int * nn_grid, REAL epsfinal){
- 
- 
- REAL host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
- REAL * dotprod, * dotprod2, * rk, * alpha, *beta;
+template<class RealT>
+int dev_cg_eo(
+      dev_su3_2vM(RealT)* gf,
+      dev_spinorM(RealT)* spinin, 
+      dev_spinorM(RealT)* spinout, 
+      dev_spinorM(RealT)* spin0, 
+      dev_spinorM(RealT)* spin1, 
+      dev_spinorM(RealT)* spin2, 
+      dev_spinorM(RealT)* spin3, 
+      dev_spinorM(RealT)* spin4, 
+      int* grid, int* nn_grid, RealT epsfinal, MixedsolveParameter<RealT>& mixedsolveParameter){
+
+
+ RealT host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
+ RealT * dotprod, * dotprod2, * rk, * alpha, *beta;
  
  
  
  int i, gridsize;
  int maxit = max_innersolver_it;
- REAL eps = (REAL) innersolver_precision;
+ RealT eps = (RealT) innersolver_precision;
  int N_recalcres = 40; // after N_recalcres iterations calculate r = A x_k - b
  
  cudaError_t cudaerr;
@@ -1277,7 +1241,7 @@ extern "C" int dev_cg_eo(
  int griddim3 = gridsize;
    
 
-    if (g_proc_id == 0) printf("gridsize = %d\n", gridsize);
+    if (g_proc_id == 0) { printf("gridsize = %d\nsizeof(Real) = %hi\n", gridsize, sizeof(RealT)); }
 
 
  
@@ -1302,7 +1266,7 @@ extern "C" int dev_cg_eo(
  int griddim4 = gridsize;
  
  
- size_t size2 = sizeof(float4)*6*VOLUME/2;
+ //never referenced: size_t size2 = sizeof(dev_spinorM(RealT))*6*VOLUME/2;
  
  
  //Initialize some stuff
@@ -1314,26 +1278,26 @@ extern "C" int dev_cg_eo(
   
   
   dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
-  h0.re = (REAL)ka0.re;    h0.im = -(REAL)ka0.im;
-  h1.re = (REAL)ka1.re;    h1.im = -(REAL)ka1.im;
-  h2.re = (REAL)ka2.re;    h2.im = -(REAL)ka2.im;
-  h3.re = (REAL)ka3.re;    h3.im = -(REAL)ka3.im;
+  h0.re = (RealT)ka0.re;    h0.im = -(RealT)ka0.im;
+  h1.re = (RealT)ka1.re;    h1.im = -(RealT)ka1.im;
+  h2.re = (RealT)ka2.re;    h2.im = -(RealT)ka2.im;
+  h3.re = (RealT)ka3.re;    h3.im = -(RealT)ka3.im;
   
-  mh0.re = -(REAL)ka0.re;    mh0.im = (REAL)ka0.im;
-  mh1.re = -(REAL)ka1.re;    mh1.im = (REAL)ka1.im;
-  mh2.re = -(REAL)ka2.re;    mh2.im = (REAL)ka2.im;
-  mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
+  mh0.re = -(RealT)ka0.re;    mh0.im = (RealT)ka0.im;
+  mh1.re = -(RealT)ka1.re;    mh1.im = (RealT)ka1.im;
+  mh2.re = -(RealT)ka2.re;    mh2.im = (RealT)ka2.im;
+  mh3.re = -(RealT)ka3.re;    mh3.im = (RealT)ka3.im;
   
   // try using constant mem for kappas
-  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(dev_complex)) ;
+  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(h0)) ; 
+  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(h1)) ; 
+  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(h2)) ; 
+  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(h3)) ;
   
-  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
+  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(mh0)) ; 
+  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(mh1)) ; 
+  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(mh2)) ; 
+  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(mh3)) ;  
   
   he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
@@ -1365,11 +1329,11 @@ extern "C" int dev_cg_eo(
  
  // Init x,p,r for k=0
  // Allocate some numbers for host <-> device interaction
- cudaMalloc((void **) &dotprod, sizeof(REAL));
- cudaMalloc((void **) &dotprod2, sizeof(REAL));
- cudaMalloc((void **) &rk, sizeof(REAL));
- cudaMalloc((void **) &alpha, sizeof(REAL));
- cudaMalloc((void **) &beta, sizeof(REAL));
+ cudaMalloc((void **) &dotprod, sizeof(RealT));
+ cudaMalloc((void **) &dotprod2, sizeof(RealT));
+ cudaMalloc((void **) &rk, sizeof(RealT));
+ cudaMalloc((void **) &alpha, sizeof(RealT));
+ cudaMalloc((void **) &beta, sizeof(RealT));
  printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
  
  
@@ -1391,10 +1355,10 @@ extern "C" int dev_cg_eo(
  //dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spin1, spinin);
  
  
- dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spinin, spin0);
- dev_zero_spinor_field<<<griddim2, blockdim2 >>>(spin1); // x_0 = 0
- dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spinin, spin2);
- dev_zero_spinor_field<<<griddim2, blockdim2 >>>(spin3);
+ dev_copy_spinor_field<RealT,RealT> <<<griddim2, blockdim2 >>>(spinin, spin0);
+ dev_zero_spinor_field<RealT> <<<griddim2, blockdim2 >>>(spin1); // x_0 = 0
+ dev_copy_spinor_field<RealT,RealT> <<<griddim2, blockdim2 >>>(spinin, spin2);
+ dev_zero_spinor_field<RealT> <<<griddim2, blockdim2 >>>(spin3);
   
 
     if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
@@ -1402,19 +1366,18 @@ extern "C" int dev_cg_eo(
  
  
  
- 
 
  //relative precision -> get initial residue
  #ifndef MPI
-   sourcesquarenorm = cublasSdot (24*VOLUME/2, (const float *)spinin, 1, (const float *)spinin, 1);
+   sourcesquarenorm = cublasDot (24*VOLUME/2, (const RealT*)spinin, 1, (const RealT*)spinin, 1);
  #else
-   sourcesquarenorm = cublasSdot_wrapper (24*VOLUME/2, (float *)spinin, 1, (float *)spinin, 1);
+   sourcesquarenorm = cublasDot_wrapper (24*VOLUME/2, (RealT*)spinin, 1, (RealT*)spinin, 1);
  #endif
  host_rk = sourcesquarenorm; //for use in main loop
  
 
     if (g_proc_id == 0) {
-      printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
+      printf("Squarenorm Source:\t%.16e\n", sourcesquarenorm);
       printf("%s\n", cudaGetErrorString(cudaGetLastError()));
       printf("Entering inner solver cg-loop\n");
     }
@@ -1428,9 +1391,9 @@ extern "C" int dev_cg_eo(
   
   // Q_{-}Q{+}
   #ifndef MPI
-    dev_Qtm_pm_psi(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4);
+    dev_Qtm_pm_psi    <RealT>(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4, mixedsolveParameter);
   #else
-    dev_Qtm_pm_psi_mpi(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4);
+    dev_Qtm_pm_psi_mpi<RealT>(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4, mixedsolveParameter);
   #endif
   
   if((cudaerr=cudaGetLastError()) != cudaSuccess){
@@ -1441,19 +1404,19 @@ extern "C" int dev_cg_eo(
   
  //alpha
   #ifndef MPI
-    host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin2, 1, (const float *) spin3, 1);
+    host_dotprod = cublasDot (24*VOLUME/2, (const RealT*) spin2, 1, (const RealT*) spin3, 1);
   #else
-    host_dotprod = cublasSdot_wrapper (24*VOLUME/2, (float *) spin2, 1, (float *) spin3, 1);
+    host_dotprod = cublasDot_wrapper (24*VOLUME/2, (RealT*) spin2, 1, (RealT*) spin3, 1);
   #endif
   
   host_alpha = (host_rk / host_dotprod); // alpha = r*r/ p M p
    
  //r(k+1)
- cublasSaxpy (24*VOLUME/2,-1.0*host_alpha, (const float *) spin3, 1, (float *) spin0, 1);  
+ cublasAxpy (24*VOLUME/2,-1.0*host_alpha, (const RealT*)spin3, 1, (RealT*)spin0, 1);  
 
 
  //x(k+1);
- cublasSaxpy (24*VOLUME/2, host_alpha, (const float *) spin2,  1, (float *) spin1, 1);
+ cublasAxpy (24*VOLUME/2, host_alpha, (const RealT*)spin2,  1, (RealT*)spin1, 1);
  
   if((cudaerr=cudaGetLastError()) != cudaSuccess){
     printf("%s\n", cudaGetErrorString(cudaerr));
@@ -1462,9 +1425,9 @@ extern "C" int dev_cg_eo(
 
   //Abbruch?
   #ifndef MPI
-    host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin0, 1,(const float *) spin0, 1);
+    host_dotprod = cublasDot (24*VOLUME/2, (const RealT*) spin0, 1,(const RealT*) spin0, 1);
   #else
-    host_dotprod = cublasSdot_wrapper (24*VOLUME/2, (float *) spin0, 1,(float *) spin0, 1);
+    host_dotprod = cublasDot_wrapper (24*VOLUME/2, (RealT*) spin0, 1,(RealT*) spin0, 1);
   #endif
   
  if (((host_dotprod <= eps*sourcesquarenorm) && (i > maxit / 4) ) || ( host_dotprod <= epsfinal/2.)){//error-limit erreicht (epsfinal/2 sollte ausreichen um auch in double precision zu bestehen)
@@ -1472,32 +1435,32 @@ extern "C" int dev_cg_eo(
  }
   
   
-    if (g_proc_id == 0) printf("iter %d: err = %.8e\n", i, host_dotprod);
+    if (g_proc_id == 0) printf("iter %d: err = %.16e\n", i, host_dotprod);
 
   
   
  //beta
  host_beta =host_dotprod/host_rk;
  //p(k+1)
- cublasSscal (24*VOLUME/2, host_beta, (float *)spin2, 1);
- cublasSaxpy (24*VOLUME/2, 1.0, (const float *) spin0,  1, (float *) spin2, 1);
+ cublasScal (24*VOLUME/2, host_beta, (RealT*)spin2, 1);
+ cublasAxpy (24*VOLUME/2, 1.0, (const RealT*)spin0,  1, (RealT*)spin2, 1);
 
  host_rk = host_dotprod;
  
  // recalculate residue frome r = b - Ax
  if(((i+1) % N_recalcres) == 0){
     // r_(k+1) = Ax -b 
-  
+
     if (g_proc_id == 0) printf("Recalculating residue\n");
- 
+
     // D Ddagger   --   Ddagger = gamma5 D gamma5  for Wilson Dirac Operator
     // DO NOT USE tm_dirac_dagger_kappa here, otherwise spin2 will be overwritten!!!
-      
+
     // Q_{-}Q{+}
     #ifndef MPI
-        dev_Qtm_pm_psi(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4);
+        dev_Qtm_pm_psi    <RealT>(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4, mixedsolveParameter);
     #else
-        dev_Qtm_pm_psi_mpi(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4);
+        dev_Qtm_pm_psi_mpi<RealT>(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4, mixedsolveParameter);
     #endif
     if((cudaerr=cudaGetLastError()) != cudaSuccess){
       printf("%s\n", cudaGetErrorString(cudaerr));
@@ -1506,23 +1469,23 @@ extern "C" int dev_cg_eo(
         
     
     // r = b - Ax
-    cublasSscal (24*VOLUME/2, -1.0, (float *)spin3, 1);
-    cublasSaxpy (24*VOLUME/2, 1.0, (const float *) spinin,  1, (float *) spin3, 1);
-    cublasScopy (24*VOLUME/2, (const float *)spin3, 1, (float *)spin0, 1);
+    cublasScal (24*VOLUME/2, -1.0, (RealT*)spin3, 1);
+    cublasAxpy (24*VOLUME/2, 1.0, (const RealT*)spinin,  1, (RealT*)spin3, 1);
+    cublasCopy (24*VOLUME/2, (const RealT*)spin3, 1, (RealT*)spin0, 1);
     //dev_skalarmult_add_assign_spinor_field<<<griddim2, blockdim2 >>>(spinin, -1.0, spin3, spin0);
    }//recalculate residue
 
  }//MAIN LOOP cg	
-  
-    
-    if (g_proc_id == 0) printf("Final residue: %.6e\n",host_dotprod);
- 
-  
+
+
+    if (g_proc_id == 0) printf("Final residue: %.16e\n",host_dotprod);
+
+
   // x_result = spin1 !
-  
+
   //no multiplication with D^{dagger} here and no return to non-kappa basis as in dev_cg!
-  dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spin1,spinout);
-  
+  dev_copy_spinor_field<RealT,RealT> <<<griddim2, blockdim2 >>>(spin1,spinout);
+
   #ifdef USETEXTURE
    unbind_texture_gf();
   #endif
@@ -1755,8 +1718,9 @@ void shownn(){
 
 
 
-// convert spinor to double 
-void convert2double_spin (dev_spinor* spin, spinor* h2d) {
+// convert spinor to double
+template<class RealT>
+void convert2double_spin (typename dev_spinorT<RealT>::type* spin, spinor* h2d) {
 
   int i, Vol;
   
@@ -1773,37 +1737,37 @@ void convert2double_spin (dev_spinor* spin, spinor* h2d) {
   
   
   for (i = 0; i < Vol; i++) {
-  
+
         h2d[i].s0.c0.re = (double) spin[6*i+0].x;
         h2d[i].s0.c0.im = (double) spin[6*i+0].y;
         h2d[i].s0.c1.re = (double) spin[6*i+0].z;
         h2d[i].s0.c1.im = (double) spin[6*i+0].w;
-        
+
         h2d[i].s0.c2.re = (double) spin[6*i+1].x;
         h2d[i].s0.c2.im = (double) spin[6*i+1].y;
         h2d[i].s1.c0.re = (double) spin[6*i+1].z;
         h2d[i].s1.c0.im = (double) spin[6*i+1].w;   
-        
+
         h2d[i].s1.c1.re = (double) spin[6*i+2].x;
         h2d[i].s1.c1.im = (double) spin[6*i+2].y;
         h2d[i].s1.c2.re = (double) spin[6*i+2].z;
         h2d[i].s1.c2.im = (double) spin[6*i+2].w;  
-        
+
         h2d[i].s2.c0.re = (double) spin[6*i+3].x;
         h2d[i].s2.c0.im = (double) spin[6*i+3].y;
         h2d[i].s2.c1.re = (double) spin[6*i+3].z;
         h2d[i].s2.c1.im = (double) spin[6*i+3].w;  
-        
+
         h2d[i].s2.c2.re = (double) spin[6*i+4].x;
         h2d[i].s2.c2.im = (double) spin[6*i+4].y;
         h2d[i].s3.c0.re = (double) spin[6*i+4].z;
         h2d[i].s3.c0.im = (double) spin[6*i+4].w; 
-        
+
         h2d[i].s3.c1.re = (double) spin[6*i+5].x;
         h2d[i].s3.c1.im = (double) spin[6*i+5].y;
         h2d[i].s3.c2.re = (double) spin[6*i+5].z;
         h2d[i].s3.c2.im = (double) spin[6*i+5].w; 
-        
+
   }
 }
 
@@ -1812,10 +1776,11 @@ void convert2double_spin (dev_spinor* spin, spinor* h2d) {
 
 
 // convert spinor to REAL4 (float4, double4) 
-void convert2REAL4_spin(spinor* spin, dev_spinor* h2d){
+template<class RealT>
+void convert2REAL4_spin(spinor* spin, typename dev_spinorT<RealT>::type* h2d){
 
   int i, Vol;
-  
+ 
   //#ifndef MPI
     if (even_odd_flag) {
       Vol = VOLUME/2;
@@ -1826,39 +1791,39 @@ void convert2REAL4_spin(spinor* spin, dev_spinor* h2d){
   //#else
   //  Vol = (VOLUME+RAND)/2;
   //#endif
-  
+
   for (i = 0; i < Vol; i++) {
-    
-        h2d[6*i+0].x = (REAL) spin[i].s0.c0.re;
-        h2d[6*i+0].y = (REAL) spin[i].s0.c0.im;
-        h2d[6*i+0].z = (REAL) spin[i].s0.c1.re;
-        h2d[6*i+0].w = (REAL) spin[i].s0.c1.im;
-        
-        h2d[6*i+1].x = (REAL) spin[i].s0.c2.re;
-        h2d[6*i+1].y = (REAL) spin[i].s0.c2.im;
-        h2d[6*i+1].z = (REAL) spin[i].s1.c0.re;
-        h2d[6*i+1].w = (REAL) spin[i].s1.c0.im;
-        
-        h2d[6*i+2].x = (REAL) spin[i].s1.c1.re;
-        h2d[6*i+2].y = (REAL) spin[i].s1.c1.im;
-        h2d[6*i+2].z = (REAL) spin[i].s1.c2.re;
-        h2d[6*i+2].w = (REAL) spin[i].s1.c2.im;
-        
-        h2d[6*i+3].x = (REAL) spin[i].s2.c0.re;
-        h2d[6*i+3].y = (REAL) spin[i].s2.c0.im;
-        h2d[6*i+3].z = (REAL) spin[i].s2.c1.re;
-        h2d[6*i+3].w = (REAL) spin[i].s2.c1.im;
-        
-        h2d[6*i+4].x = (REAL) spin[i].s2.c2.re;
-        h2d[6*i+4].y = (REAL) spin[i].s2.c2.im;
-        h2d[6*i+4].z = (REAL) spin[i].s3.c0.re;
-        h2d[6*i+4].w = (REAL) spin[i].s3.c0.im;
-        
-        h2d[6*i+5].x = (REAL) spin[i].s3.c1.re;
-        h2d[6*i+5].y = (REAL) spin[i].s3.c1.im;
-        h2d[6*i+5].z = (REAL) spin[i].s3.c2.re;
-        h2d[6*i+5].w = (REAL) spin[i].s3.c2.im;
-    
+
+        h2d[6*i+0].x = (RealT) spin[i].s0.c0.re;
+        h2d[6*i+0].y = (RealT) spin[i].s0.c0.im;
+        h2d[6*i+0].z = (RealT) spin[i].s0.c1.re;
+        h2d[6*i+0].w = (RealT) spin[i].s0.c1.im;
+
+        h2d[6*i+1].x = (RealT) spin[i].s0.c2.re;
+        h2d[6*i+1].y = (RealT) spin[i].s0.c2.im;
+        h2d[6*i+1].z = (RealT) spin[i].s1.c0.re;
+        h2d[6*i+1].w = (RealT) spin[i].s1.c0.im;
+
+        h2d[6*i+2].x = (RealT) spin[i].s1.c1.re;
+        h2d[6*i+2].y = (RealT) spin[i].s1.c1.im;
+        h2d[6*i+2].z = (RealT) spin[i].s1.c2.re;
+        h2d[6*i+2].w = (RealT) spin[i].s1.c2.im;
+
+        h2d[6*i+3].x = (RealT) spin[i].s2.c0.re;
+        h2d[6*i+3].y = (RealT) spin[i].s2.c0.im;
+        h2d[6*i+3].z = (RealT) spin[i].s2.c1.re;
+        h2d[6*i+3].w = (RealT) spin[i].s2.c1.im;
+
+        h2d[6*i+4].x = (RealT) spin[i].s2.c2.re;
+        h2d[6*i+4].y = (RealT) spin[i].s2.c2.im;
+        h2d[6*i+4].z = (RealT) spin[i].s3.c0.re;
+        h2d[6*i+4].w = (RealT) spin[i].s3.c0.im;
+
+        h2d[6*i+5].x = (RealT) spin[i].s3.c1.re;
+        h2d[6*i+5].y = (RealT) spin[i].s3.c1.im;
+        h2d[6*i+5].z = (RealT) spin[i].s3.c2.re;
+        h2d[6*i+5].w = (RealT) spin[i].s3.c2.im;
+
   }
 }
 
@@ -1871,8 +1836,11 @@ void convert2REAL4_spin(spinor* spin, dev_spinor* h2d){
 
 
 
-void init_mixedsolve(su3** gf){
-cudaError_t cudaerr;
+template<class RealT>
+MixedsolveParameter<RealT>* init_mixedsolve(su3** gf){
+  
+   cudaError_t cudaerr;
+   MixedsolveParameter<RealT>& mixedsolveParameter=*MixedsolveParameter<RealT>::getGlobalP();
 
    // get number of devices
    if(havedevice == 0){
@@ -1899,17 +1867,18 @@ cudaError_t cudaerr;
            }
            else{
             printf("Not setting any active device. Let the driver choose.\n");
+            int device=-1;cudaGetDevice(&device);printf("device=%i",device);
            }        
     havedevice = 1;
     }
   #ifdef GF_8
   /* allocate 8 floats of gf = 2*4*VOLUME float4's*/
   printf("Using GF 8 reconstruction\n");
-  size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8);
+  size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8M(RealT));
   #else
   /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
   printf("Using GF 12 reconstruction\n");
-  size_t dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v); 
+  size_t dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2vM(RealT)); 
   #endif
   
   #ifdef USETEXTURE
@@ -1917,7 +1886,7 @@ cudaError_t cudaerr;
   #else
     printf("NOT using texture references\n");
   #endif
-  if((cudaerr=cudaMalloc((void **) &dev_gf, dev_gfsize)) != cudaSuccess){
+  if((cudaerr=cudaMalloc((void **) &mixedsolveParameter.dev_gf, dev_gfsize)) != cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of gauge field failed. Aborting...\n");
     exit(200);
   }   // Allocate array on device
@@ -1926,13 +1895,13 @@ cudaError_t cudaerr;
   }  
   
   #ifdef GF_8
-  h2d_gf = (dev_su3_8 *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
-  su3to8(gf,h2d_gf);  
+  mixedsolveParameter.h2d_gf = (dev_su3_8M(RealT)*)malloc(dev_gfsize); // Allocate REAL conversion gf on host
+  su3to8<RealT>(gf,mixedsolveParameter.h2d_gf);  
   #else
-  h2d_gf = (dev_su3_2v *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
-  su3to2vf4(gf,h2d_gf);
+  mixedsolveParameter.h2d_gf = (dev_su3_2vM(RealT)*)malloc(dev_gfsize); // Allocate REAL conversion gf on host
+  su3to2vf4<RealT>(gf,mixedsolveParameter.h2d_gf);
   #endif
-  cudaMemcpy(dev_gf, h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
+  cudaMemcpy(mixedsolveParameter.dev_gf, mixedsolveParameter.h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
 
 
 //grid 
@@ -1952,42 +1921,42 @@ cudaError_t cudaerr;
 
 // Spinors
   #ifndef HALF
-  size_t dev_spinsize = 6*VOLUME * sizeof(dev_spinor); /* float4 */  
-  if((void*)(h2d_spin = (dev_spinor *)malloc(dev_spinsize)) == NULL){
-    printf("Could not allocate memory for h2d_spin. Aborting...\n");
+  size_t dev_spinsize = 6*VOLUME * sizeof(dev_spinorM(RealT)); /* float4 */  
+  if((void*)(mixedsolveParameter.h2d_spin = (dev_spinorM(RealT)*)malloc(dev_spinsize)) == NULL){
+    printf("Could not allocate memory for mixedsolveParameter.h2d_spin. Aborting...\n");
     exit(200);
   } // Allocate float conversion spinor on host
   #else
   size_t dev_spinsize = 6*VOLUME * sizeof(dev_spinor_half); /*short4*/  
-  if((void*)(h2d_spin = (dev_spinor_half *)malloc(dev_spinsize)) == NULL){
-    printf("Could not allocate memory for h2d_spin. Aborting...\n");
+  if((void*)(mixedsolveParameter.h2d_spin = (dev_spinor_half *)malloc(dev_spinsize)) == NULL){
+    printf("Could not allocate memory for mixedsolveParameter.h2d_spin. Aborting...\n");
     exit(200);
   } // Allocate float conversion spinor on host 
   size_t dev_normsize = VOLUME/2 * sizeof(float);
-  if((void*)(h2d_spin_norm = (float*)malloc(dev_normsize)) == NULL){
-    printf("Could not allocate memory for h2d_spin_norm. Aborting...\n");
+  if((void*)(mixedsolveParameter.h2d_spin_norm = (float*)malloc(dev_normsize)) == NULL){
+    printf("Could not allocate memory for mixedsolveParameter.h2d_spin_norm. Aborting...\n");
     exit(200);
   } // Allocate float conversion norm on host 
   #endif
   
   
-  cudaMalloc((void **) &dev_spin1, dev_spinsize);   // Allocate array spin1 on device
-  cudaMalloc((void **) &dev_spin2, dev_spinsize);   // Allocate array spin2 on device
-  cudaMalloc((void **) &dev_spin3, dev_spinsize);   // Allocate array spin3 on device
-  cudaMalloc((void **) &dev_spin4, dev_spinsize);
-  cudaMalloc((void **) &dev_spin5, dev_spinsize);
-  cudaMalloc((void **) &dev_spinin, dev_spinsize);
-  cudaMalloc((void **) &dev_spinout, dev_spinsize);
+  cudaMalloc((void **) &mixedsolveParameter.dev_spin1, dev_spinsize);   // Allocate array spin1 on device
+  cudaMalloc((void **) &mixedsolveParameter.dev_spin2, dev_spinsize);   // Allocate array spin2 on device
+  cudaMalloc((void **) &mixedsolveParameter.dev_spin3, dev_spinsize);   // Allocate array spin3 on device
+  cudaMalloc((void **) &mixedsolveParameter.dev_spin4, dev_spinsize);
+  cudaMalloc((void **) &mixedsolveParameter.dev_spin5, dev_spinsize);
+  cudaMalloc((void **) &mixedsolveParameter.dev_spinin, dev_spinsize);
+  cudaMalloc((void **) &mixedsolveParameter.dev_spinout, dev_spinsize);
 
   #ifdef HALF
    dev_spinsize = VOLUME/2*sizeof(float);
-   cudaMalloc((void **) &dev_spin1_norm, dev_spinsize);   // Allocate norm spin1 on device
-   cudaMalloc((void **) &dev_spin2_norm, dev_spinsize);   // Allocate norm spin2 on device
-   cudaMalloc((void **) &dev_spin3_norm, dev_spinsize);   // Allocate norm spin3 on device
-   cudaMalloc((void **) &dev_spin4_norm, dev_spinsize);
-   cudaMalloc((void **) &dev_spin5_norm, dev_spinsize);
-   cudaMalloc((void **) &dev_spinin_norm, dev_spinsize);
-   cudaMalloc((void **) &dev_spinout_norm, dev_spinsize);
+   cudaMalloc((void **) &mixedsolveParameter.dev_spin1_norm, dev_spinsize);   // Allocate norm spin1 on device
+   cudaMalloc((void **) &mixedsolveParameter.dev_spin2_norm, dev_spinsize);   // Allocate norm spin2 on device
+   cudaMalloc((void **) &mixedsolveParameter.dev_spin3_norm, dev_spinsize);   // Allocate norm spin3 on device
+   cudaMalloc((void **) &mixedsolveParameter.dev_spin4_norm, dev_spinsize);
+   cudaMalloc((void **) &mixedsolveParameter.dev_spin5_norm, dev_spinsize);
+   cudaMalloc((void **) &mixedsolveParameter.dev_spinin_norm, dev_spinsize);
+   cudaMalloc((void **) &mixedsolveParameter.dev_spinout_norm, dev_spinsize);
   #endif
 
 
@@ -2009,18 +1978,20 @@ cudaError_t cudaerr;
  
   cudaMalloc((void **) &dev_grid, 5*sizeof(int));
   cudaMemcpy(dev_grid, &(grid[0]), 5*sizeof(int), cudaMemcpyHostToDevice);
-  
+
+
+  return &mixedsolveParameter;  
 }
 
 
 
 
 
+template<class RealT>
+MixedsolveParameter<RealT>* init_mixedsolve_eo(su3** gf){
 
-void init_mixedsolve_eo(su3** gf){
-
-  cudaError_t cudaerr;
-  dev_complex help;
+  cudaError_t                 cudaerr;
+  MixedsolveParameter<RealT>& mixedsolveParameter=*MixedsolveParameter<RealT>::getGlobalP();
 
   if (havedevice == 0) {
   
@@ -2113,23 +2084,23 @@ void init_mixedsolve_eo(su3** gf){
   #ifndef MPI
   	#ifdef GF_8
   	  /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
-  	  size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8);
+  	  size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8M(RealT));
   	#else
   	  /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
-  	  size_t dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v);
+  	  size_t dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2vM(RealT));
   	#endif
   #else
   	#ifdef GF_8
   	  /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
-  	  size_t dev_gfsize = 2*4*(VOLUME+RAND) * sizeof(dev_su3_8);
+  	  size_t dev_gfsize = 2*4*(VOLUME+RAND) * sizeof(dev_su3_8M(RealT));
   	#else
   	  /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
-  	  size_t dev_gfsize = 3*4*(VOLUME+RAND) * sizeof(dev_su3_2v);
+  	  size_t dev_gfsize = 3*4*(VOLUME+RAND) * sizeof(dev_su3_2vM(RealT));
   	#endif
   
   #endif
   
-  if((cudaerr=cudaMalloc((void **) &dev_gf, dev_gfsize)) != cudaSuccess){
+  if((cudaerr=cudaMalloc((void **) &mixedsolveParameter.dev_gf, dev_gfsize)) != cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of gauge field failed. Aborting...\n");
     exit(200);
   }   // Allocate array on device
@@ -2142,22 +2113,22 @@ void init_mixedsolve_eo(su3** gf){
   }
   
   #ifdef GF_8
-    h2d_gf = (dev_su3_8 *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
-    su3to8(gf,h2d_gf);
+    mixedsolveParameter.h2d_gf = (dev_su3_8M(RealT)*)malloc(dev_gfsize); // Allocate REAL conversion gf on host
+    su3to8<RealT>(gf,mixedsolveParameter.h2d_gf);
   #else
-    h2d_gf = (dev_su3_2v *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
-    su3to2vf4(gf,h2d_gf);
+    mixedsolveParameter.h2d_gf = (dev_su3_2vM(RealT)*)malloc(dev_gfsize); // Allocate REAL conversion gf on host
+    su3to2vf4<RealT>(gf,mixedsolveParameter.h2d_gf);
   #endif
   //bring to device
-  cudaMemcpy(dev_gf, h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
+  cudaMemcpy(mixedsolveParameter.dev_gf, mixedsolveParameter.h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
   
   
   #ifdef HALF
     #ifndef MPI
       #ifdef GF_8
-       /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
+        /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
         printf("Using half precision GF 8 reconstruction\n");
-       dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8_half); 
+        dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8_half); 
       #else
         /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
         printf("Using half precision GF 12 reconstruction\n");
@@ -2165,16 +2136,16 @@ void init_mixedsolve_eo(su3** gf){
       #endif  
     #else // MPI
       #ifdef GF_8
-       /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
+        /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
         printf("Using half precision GF 8 reconstruction\n");
-       dev_gfsize = 2*4*(VOLUME+RAND) * sizeof(dev_su3_8_half); 
+        dev_gfsize = 2*4*(VOLUME+RAND) * sizeof(dev_su3_8_half); 
       #else
         /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
         printf("Using half precision GF 12 reconstruction\n");
         dev_gfsize = 3*4*(VOLUME+RAND) * sizeof(dev_su3_2v_half); 
       #endif      
     #endif //MPI
-    if((cudaerr=cudaMalloc((void **) &dev_gf_half, dev_gfsize)) != cudaSuccess){
+    if((cudaerr=cudaMalloc((void **) &mixedsolveParameter.dev_gf_half, dev_gfsize)) != cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of half precsion gauge field failed. Aborting...\n");
     exit(200);
     }   // Allocate array on device
@@ -2218,7 +2189,7 @@ void init_mixedsolve_eo(su3** gf){
   
   //shownn();
   //showcompare_gf(T-1, LX-1, LY-1, LZ-1, 3);
-  //check_gauge_reconstruction_8(gf, dev_gf, 0, 0);
+  //check_gauge_reconstruction_8(gf, mixedsolveParameter.dev_gf, 0, 0);
   cudaMemcpy(dev_nn, nn, nnsize, cudaMemcpyHostToDevice);
   cudaMemcpy(dev_nn_eo, nn_eo, nnsize/2, cudaMemcpyHostToDevice);
   cudaMemcpy(dev_nn_oe, nn_oe, nnsize/2, cudaMemcpyHostToDevice);
@@ -2235,23 +2206,23 @@ void init_mixedsolve_eo(su3** gf){
   
 // Spinors
   #ifndef HALF
-  	size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); /* float4 */
-  	if((void*)(h2d_spin = (dev_spinor *)malloc(dev_spinsize)) == NULL){
-  	  printf("Could not allocate memory for h2d_spin. Aborting...\n");
+  	size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinorM(RealT)); /* float4 */
+  	if((void*)(mixedsolveParameter.h2d_spin = (dev_spinorM(RealT)*)malloc(dev_spinsize)) == NULL){
+  	  printf("Could not allocate memory for mixedsolveParameter.h2d_spin. Aborting...\n");
   	  exit(200);
   	} // Allocate float conversion spinor on host
   	#ifdef MPI
-  	  size_t dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinor);
+  	  size_t dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinorM(RealT));
   	#endif
   #else
   	size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor_half);/*short4*/
-  	if((void*)(h2d_spin = (dev_spinor_half *)malloc(dev_spinsize)) == NULL){
-  	  printf("Could not allocate memory for h2d_spin. Aborting...\n");
+  	if((void*)(mixedsolveParameter.h2d_spin = (dev_spinor_half *)malloc(dev_spinsize)) == NULL){
+  	  printf("Could not allocate memory for mixedsolveParameter.h2d_spin. Aborting...\n");
   	  exit(200);
   	} // Allocate float conversion spinor on host 
-  	size_t dev_normsize = VOLUME/2 * sizeof(float);
-  	if((void*)(h2d_spin_norm = (float *)malloc(dev_normsize)) == NULL){
-  	  printf("Could not allocate memory for h2d_spin_norm. Aborting...\n");
+  	size_t dev_normsize = VOLUME/2 * sizeof(RealT);
+  	if((void*)(mixedsolveParameter.h2d_spin_norm = (RealT *)malloc(dev_normsize)) == NULL){
+  	  printf("Could not allocate memory for mixedsolveParameter.h2d_spin_norm. Aborting...\n");
   	  exit(200);
   	} // Allocate float conversion norm on host 
   	#ifdef MPI
@@ -2262,55 +2233,55 @@ void init_mixedsolve_eo(su3** gf){
   
   
   #ifndef MPI
-  	cudaMalloc((void **) &dev_spin1, dev_spinsize);   // Allocate array spin1 on device
-  	cudaMalloc((void **) &dev_spin2, dev_spinsize);   // Allocate array spin2 on device
-  	cudaMalloc((void **) &dev_spin3, dev_spinsize);   // Allocate array spin3 on device
-  	cudaMalloc((void **) &dev_spin4, dev_spinsize);
-  	cudaMalloc((void **) &dev_spin5, dev_spinsize);
-  	cudaMalloc((void **) &dev_spinin, dev_spinsize);
-  	cudaMalloc((void **) &dev_spinout, dev_spinsize);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin1, dev_spinsize);   // Allocate array spin1 on device
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin2, dev_spinsize);   // Allocate array spin2 on device
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin3, dev_spinsize);   // Allocate array spin3 on device
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin4, dev_spinsize);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin5, dev_spinsize);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spinin, dev_spinsize);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spinout, dev_spinsize);
   	
-  	cudaMalloc((void **) &dev_spin_eo1, dev_spinsize);
-  	cudaMalloc((void **) &dev_spin_eo2, dev_spinsize);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin_eo1, dev_spinsize);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin_eo2, dev_spinsize);
  
  
        #ifdef HALF
-         cudaMalloc((void **) &dev_spin1_norm, dev_spinsize);   // Allocate norm spin1 on device
-         cudaMalloc((void **) &dev_spin2_norm, dev_spinsize);   // Allocate norm spin2 on device
-         cudaMalloc((void **) &dev_spin3_norm, dev_spinsize);   // Allocate norm spin3 on device
-         cudaMalloc((void **) &dev_spin4_norm, dev_spinsize);
-         cudaMalloc((void **) &dev_spin5_norm, dev_spinsize);
-         cudaMalloc((void **) &dev_spinin_norm, dev_spinsize);
-         cudaMalloc((void **) &dev_spinout_norm, dev_spinsize);
+         cudaMalloc((void **) &mixedsolveParameter.dev_spin1_norm, dev_spinsize);   // Allocate norm spin1 on device
+         cudaMalloc((void **) &mixedsolveParameter.dev_spin2_norm, dev_spinsize);   // Allocate norm spin2 on device
+         cudaMalloc((void **) &mixedsolveParameter.dev_spin3_norm, dev_spinsize);   // Allocate norm spin3 on device
+         cudaMalloc((void **) &mixedsolveParameter.dev_spin4_norm, dev_spinsize);
+         cudaMalloc((void **) &mixedsolveParameter.dev_spin5_norm, dev_spinsize);
+         cudaMalloc((void **) &mixedsolveParameter.dev_spinin_norm, dev_spinsize);
+         cudaMalloc((void **) &mixedsolveParameter.dev_spinout_norm, dev_spinsize);
 
-        cudaMalloc((void **) &dev_spin_eo1_norm, dev_spinsize);
-        cudaMalloc((void **) &dev_spin_eo2_norm, dev_spinsize);
+        cudaMalloc((void **) &mixedsolveParameter.dev_spin_eo1_norm, dev_spinsize);
+        cudaMalloc((void **) &mixedsolveParameter.dev_spin_eo2_norm, dev_spinsize);
       #endif  
   
   
   #else
-  	cudaMalloc((void **) &dev_spin1, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spin2, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spin3, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spin4, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spin5, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spinin, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spinout, dev_spinsize_ext);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin1, dev_spinsize_ext);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin2, dev_spinsize_ext);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin3, dev_spinsize_ext);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin4, dev_spinsize_ext);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin5, dev_spinsize_ext);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spinin, dev_spinsize_ext);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spinout, dev_spinsize_ext);
   	
-  	cudaMalloc((void **) &dev_spin_eo1, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spin_eo2, dev_spinsize_ext);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin_eo1, dev_spinsize_ext);
+  	cudaMalloc((void **) &mixedsolveParameter.dev_spin_eo2, dev_spinsize_ext);
   	
         #ifdef HALF
-         cudaMalloc((void **) &dev_spin1_norm, dev_normsize_ext);   // Allocate norm spin1 on device
-         cudaMalloc((void **) &dev_spin2_norm, dev_normsize_ext);   // Allocate norm spin2 on device
-         cudaMalloc((void **) &dev_spin3_norm, dev_normsize_ext);   // Allocate norm spin3 on device
-         cudaMalloc((void **) &dev_spin4_norm, dev_normsize_ext);
-         cudaMalloc((void **) &dev_spin5_norm, dev_normsize_ext);
-         cudaMalloc((void **) &dev_spinin_norm, dev_normsize_ext);
-         cudaMalloc((void **) &dev_spinout_norm, dev_normsize_ext);
+         cudaMalloc((void **) &mixedsolveParameter.dev_spin1_norm, dev_normsize_ext);   // Allocate norm spin1 on device
+         cudaMalloc((void **) &mixedsolveParameter.dev_spin2_norm, dev_normsize_ext);   // Allocate norm spin2 on device
+         cudaMalloc((void **) &mixedsolveParameter.dev_spin3_norm, dev_normsize_ext);   // Allocate norm spin3 on device
+         cudaMalloc((void **) &mixedsolveParameter.dev_spin4_norm, dev_normsize_ext);
+         cudaMalloc((void **) &mixedsolveParameter.dev_spin5_norm, dev_normsize_ext);
+         cudaMalloc((void **) &mixedsolveParameter.dev_spinin_norm, dev_normsize_ext);
+         cudaMalloc((void **) &mixedsolveParameter.dev_spinout_norm, dev_normsize_ext);
 
-        cudaMalloc((void **) &dev_spin_eo1_norm, dev_normsize_ext);
-        cudaMalloc((void **) &dev_spin_eo2_norm, dev_normsize_ext);
+        cudaMalloc((void **) &mixedsolveParameter.dev_spin_eo1_norm, dev_normsize_ext);
+        cudaMalloc((void **) &mixedsolveParameter.dev_spin_eo2_norm, dev_normsize_ext);
       #endif   	
       
       int tSliceEO = LX*LY*LZ/2;
@@ -2344,9 +2315,9 @@ void init_mixedsolve_eo(su3** gf){
     /*  for async communication */
     // page-locked memory
    #ifndef HALF 
-    cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(float4));
+    cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(REAL4M(RealT)));
     RAND4 = RAND3 + 6*tSliceEO;
-    cudaMallocHost(&RAND1, 2*tSliceEO*6*sizeof(float4));
+    cudaMallocHost(&RAND1, 2*tSliceEO*6*sizeof(REAL4M(RealT)));
     RAND2 = RAND1 + 6*tSliceEO;
    #else
     cudaMallocHost(&RAND3, 2*tSliceEO*6*sizeof(short4));
@@ -2389,7 +2360,7 @@ void init_mixedsolve_eo(su3** gf){
   assert((start = clock())!=-1);
   float devplaq;
   //for(count=0; count<1; count++){
-    devplaq = calc_plaquette(dev_gf, dev_nn);
+    devplaq = calc_plaquette(mixedsolveParameter.dev_gf, dev_nn);
   //}
   assert((stop = clock())!=-1);
   timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
@@ -2411,7 +2382,7 @@ void init_mixedsolve_eo(su3** gf){
   float devrect;
   assert((start = clock())!=-1);
   //for(count=0; count<100; count++){
-    devrect = calc_rectangle(dev_gf, dev_nn);
+    devrect = calc_rectangle(mixedsolveParameter.dev_gf, dev_nn);
   //}
   assert((stop = clock())!=-1);
   timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
@@ -2432,7 +2403,7 @@ void init_mixedsolve_eo(su3** gf){
  
   float2 ret;
 
-  calc_polyakov_0(&ret, dev_gf, dev_nn);
+  calc_polyakov_0(&ret, mixedsolveParameter.dev_gf, dev_nn);
   printf("Calculating Polyakov loop on device:\n");  
   printf("pl_0 (Re) = %.8e\n",ret.x);
   printf("pl_0 (Im) = %.8e\n",ret.y);
@@ -2445,27 +2416,32 @@ void init_mixedsolve_eo(su3** gf){
   exit(100);
   */
 
+
+  return &mixedsolveParameter;  
 }
 
 
 
-void finalize_mixedsolve(){
+template<class RealT>
+void finalize_mixedsolve(MixedsolveParameter<RealT>* mixedsolveParameterP){
 
-  cudaFree(dev_spin1);
-  cudaFree(dev_spin2);
-  cudaFree(dev_spin3);
-  cudaFree(dev_spin4);
-  cudaFree(dev_spin5);
-  cudaFree(dev_spinin);
-  cudaFree(dev_spinout);
-  cudaFree(dev_gf);
+  MixedsolveParameter<RealT>& mixedsolveParameter=*mixedsolveParameterP;//use pointer in interface so we can delete mix\.solv\.Param later here
+
+  cudaFree(mixedsolveParameter.dev_spin1);
+  cudaFree(mixedsolveParameter.dev_spin2);
+  cudaFree(mixedsolveParameter.dev_spin3);
+  cudaFree(mixedsolveParameter.dev_spin4);
+  cudaFree(mixedsolveParameter.dev_spin5);
+  cudaFree(mixedsolveParameter.dev_spinin);
+  cudaFree(mixedsolveParameter.dev_spinout);
+  cudaFree(mixedsolveParameter.dev_gf);
   cudaFree(dev_grid);
   cudaFree(dev_output);
   cudaFree(dev_nn);
   
   if(even_odd_flag){
-    cudaFree(dev_spin_eo1);
-    cudaFree(dev_spin_eo2);
+    cudaFree(mixedsolveParameter.dev_spin_eo1);
+    cudaFree(mixedsolveParameter.dev_spin_eo2);
     cudaFree(dev_eoidx_even);
     cudaFree(dev_eoidx_odd);
     cudaFree(dev_nn_eo);
@@ -2473,19 +2449,19 @@ void finalize_mixedsolve(){
   }
   
   #ifdef HALF
-    cudaFree(dev_gf_half);
+    cudaFree(mixedsolveParameter.dev_gf_half);
  
-    cudaFree(dev_spin1_norm);
-    cudaFree(dev_spin2_norm);
-    cudaFree(dev_spin3_norm);
-    cudaFree(dev_spin4_norm);
-    cudaFree(dev_spin5_norm);
-    cudaFree(dev_spinin_norm);
-    cudaFree(dev_spinout_norm);
+    cudaFree(mixedsolveParameter.dev_spin1_norm);
+    cudaFree(mixedsolveParameter.dev_spin2_norm);
+    cudaFree(mixedsolveParameter.dev_spin3_norm);
+    cudaFree(mixedsolveParameter.dev_spin4_norm);
+    cudaFree(mixedsolveParameter.dev_spin5_norm);
+    cudaFree(mixedsolveParameter.dev_spinin_norm);
+    cudaFree(mixedsolveParameter.dev_spinout_norm);
     
     if(even_odd_flag){
-     cudaFree(dev_spin_eo1_norm);
-     cudaFree(dev_spin_eo2_norm);
+     cudaFree(mixedsolveParameter.dev_spin_eo1_norm);
+     cudaFree(mixedsolveParameter.dev_spin_eo2_norm);
     }
     
     
@@ -2507,8 +2483,8 @@ void finalize_mixedsolve(){
   
   
   
-  free(h2d_spin);
-  free(h2d_gf);
+  free(mixedsolveParameter.h2d_spin);
+  free(mixedsolveParameter.h2d_gf);
 }
 
 
@@ -2522,9 +2498,10 @@ void finalize_mixedsolve(){
 
 
 #ifndef HALF
-extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
-	   double eps, const int rel_prec,const int N){
-  
+template<class RealT,template<class MixedsolveOperatorRealT>class MixedsolveOperatorT>
+int mixed_solveT(spinor * const P, spinor * const Q, const int max_iter, 
+	        double eps, const int rel_prec,const int N, MixedsolveOperatorT<RealT>& mixedsolveOperator){
+ 
   // source in Q, initial solution in P (not yet implemented)
   double rk;
   int outercount=0;
@@ -2534,12 +2511,12 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
   double sourcesquarenorm;
   int iter;
   
-  size_t dev_spinsize = 6*VOLUME * sizeof(dev_spinor); // float4 
-  init_mixedsolve(g_gauge_field);
+  size_t dev_spinsize = 6*VOLUME * sizeof(dev_spinorM(RealT)); // float4 
+  MixedsolveParameter<RealT>& mixedsolveParameter=*init_mixedsolve<RealT>(g_gauge_field);
   
   // Start timer
   assert((start = clock())!=-1);
-  
+
   rk = square_norm(Q, N, 0);
   sourcesquarenorm = rk; // for relative precision
   assign(g_spinor_field[DUM_SOLVER],Q,N);
@@ -2547,64 +2524,63 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
   zero_spinor_field(g_spinor_field[DUM_SOLVER+1],  N);//spin2 = x_k
   zero_spinor_field(g_spinor_field[DUM_SOLVER+2],  N);
   printf("The VOLUME is: %d\n",N);
-  
-  
-  
-for(iter=0; iter<max_iter; iter++){
 
-   printf("Applying double precision Dirac-Op...\n");
-   
-   Q_pm_psi_gpu(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2]);
-   diff(g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER+3],N);
-    // r_k = b - D x_k
-   
-   rk = square_norm(g_spinor_field[DUM_SOLVER], N, 0);
+  mixedsolveOperator.checkInit(g_spinor_field[DUM_SOLVER+2],g_spinor_field[DUM_SOLVER+3],g_spinor_field[DUM_SOLVER],N);
   
+  
+  for(iter=0; iter<max_iter; iter++){
+
+   //"Applying double precision Dirac-Op...\n"
+   mixedsolveOperator.check(g_spinor_field[DUM_SOLVER+2],g_spinor_field[DUM_SOLVER+3],N);//spinTmp ^= g_spinor_field[DUM_SOLVER+3], N=volume
+    // r_k = b - D x_k
+   diff(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+3] ,N);//residueRSpininout ^= g_spinor_field[DUM_SOLVER]
+
+   rk = square_norm(g_spinor_field[DUM_SOLVER], N, 0);
+
    #ifdef GF_8
     if(isnan(rk)){
-      fprintf(stderr, "Error in mixed_solve_eo: Residue is NaN.\n  May happen with GF 8 reconstruction. Aborting ...\n");
+      fprintf(stderr, "Error in mixed_solveT: Residue is NaN.\n  May happen with GF 8 reconstruction. Aborting ...\n");
       exit(200);
     }
    #endif
-   
+
    printf("Residue after %d inner solver iterations: %.18e\n",outercount,rk);
-   if(((rk <= eps) && (rel_prec == 0)) || ((rk <= eps*sourcesquarenorm) && (rel_prec == 1)))
+   if((rk<=eps && rel_prec==0) || (rk<=eps*sourcesquarenorm && rel_prec==1))
    {
      printf("Reached solver precision of eps=%.2e\n",eps);
      //multiply with D^dagger
-     Q_minus_psi_gpu(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
-     assign(P, g_spinor_field[DUM_SOLVER+3], N);
-  
+     mixedsolveOperator.checkDeinit(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+3],P,N);
 
-    stop = clock();
-    timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
-    printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
-    finalize_mixedsolve();
-    return(totalcount);  
+
+     stop = clock();
+     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
+     printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.16e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
+     finalize_mixedsolve(&mixedsolveParameter);
+     return(totalcount);  
    }
-   
+
 
   //initialize spin fields on device
-  convert2REAL4_spin(g_spinor_field[DUM_SOLVER],h2d_spin);
-  
-  cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
+  convert2REAL4_spin<RealT>(g_spinor_field[DUM_SOLVER],mixedsolveParameter.h2d_spin);
+
+  cudaMemcpy(mixedsolveParameter.dev_spinin, mixedsolveParameter.h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
 
    // solve in single prec on device
    // D p_k = r_k
    printf("Entering inner solver\n");
    assert((startinner = clock())!=-1);
-   totalcount += dev_cg(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, 0);
+   totalcount += dev_cg<RealT,MixedsolveOperatorT>(mixedsolveParameter.dev_gf, mixedsolveParameter.dev_spinin, mixedsolveParameter.dev_spinout, mixedsolveParameter.dev_spin1, mixedsolveParameter.dev_spin2, mixedsolveParameter.dev_spin3, mixedsolveParameter.dev_spin4, mixedsolveParameter.dev_spin5, dev_grid,dev_nn, mixedsolveOperator, sourcesquarenorm, rel_prec, eps);
    stopinner = clock();
    timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;
    printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
-   
-  
+
+
    // copy back
-   cudaMemcpy(h2d_spin, dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
+   cudaMemcpy(mixedsolveParameter.h2d_spin, mixedsolveParameter.dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
    
-   convert2double_spin(h2d_spin, g_spinor_field[DUM_SOLVER+2]);
+   convert2double_spin<RealT>(mixedsolveParameter.h2d_spin, g_spinor_field[DUM_SOLVER+2]);
    
    add(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+2],N);
    // x_(k+1) = x_k + p_k
@@ -2615,15 +2591,67 @@ for(iter=0; iter<max_iter; iter++){
 
      printf("Did NOT reach solver precision of eps=%.2e\n",eps);
      //multiply with D^dagger
-     Q_minus_psi_gpu(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
-     assign(P, g_spinor_field[DUM_SOLVER+3], N);
-  
+     mixedsolveOperator.checkDeinit(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+3],P,N);
+     finalize_mixedsolve(&mixedsolveParameter);
+       
 
     stop = clock();
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
-    printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
+    printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.16e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
 
   return(-1);
+}
+
+
+#include "mixedsolveOperator.cuh"
+
+
+extern "C" int mixed_solve (spinor* const P, spinor* const Q, const int max_iter, double eps, const int rel_prec,const int N)
+{ 
+  MixedsolveOperatorDirac<REAL> mixedsolveOperator(0);
+  return mixed_solveT<REAL ,MixedsolveOperatorDirac>(P,Q,max_iter,eps,rel_prec,N,mixedsolveOperator); 
+}
+extern "C" int mixed_solveD(spinor* const P, spinor* const Q, const int max_iter, double eps, const int rel_prec,const int N)
+{ 
+  #ifndef USETEXTURE
+    MixedsolveOperatorDirac<REALD> mixedsolveOperator(0);
+    return mixed_solveT<REALD,MixedsolveOperatorDirac>(P,Q,max_iter,eps,rel_prec,N,mixedsolveOperator);
+  #else
+    printf("WARNING: Using GPU/mixed_solve instead of double precision version.");
+    return mixed_solve(P,Q,max_iter,eps,rel_prec,N);
+  #endif
+}
+
+extern "C" int mixed_solve_DiracDaggerDirac (spinor* const P, spinor* const Q, const int max_iter, double eps, const int rel_prec,const int N)
+{ 
+  MixedsolveOperatorDiracDaggerDirac<REAL> mixedsolveOperator;
+  return mixed_solveT<REAL ,MixedsolveOperatorDiracDaggerDirac>(P,Q,max_iter,eps,rel_prec,N,mixedsolveOperator); 
+}
+extern "C" int mixed_solve_DiracDaggerDiracD(spinor* const P, spinor* const Q, const int max_iter, double eps, const int rel_prec,const int N)
+{ 
+  #ifndef USETEXTURE
+    MixedsolveOperatorDiracDaggerDirac<REALD> mixedsolveOperator;
+    return mixed_solveT<REALD,MixedsolveOperatorDiracDaggerDirac>(P,Q,max_iter,eps,rel_prec,N,mixedsolveOperator);
+  #else
+    printf("WARNING: Using GPU/mixed_solve_DiracDaggerDirac instead of double precision version.");
+    return mixed_solve_DiracDaggerDirac(P,Q,max_iter,eps,rel_prec,N);
+  #endif
+}
+
+extern "C" int mixed_solve_DiracDaggerDiracDiracDaggerDirac (spinor* const P, spinor* const Q, const int max_iter, double eps, const int rel_prec,const int N)
+{ 
+  MixedsolveOperatorDiracDaggerDiracDiracDaggerDirac<REAL> mixedsolveOperator;
+  return mixed_solveT<REAL ,MixedsolveOperatorDiracDaggerDiracDiracDaggerDirac>(P,Q,max_iter,eps,rel_prec,N,mixedsolveOperator); 
+}
+extern "C" int mixed_solve_DiracDaggerDiracDiracDaggerDiracD(spinor* const P, spinor* const Q, const int max_iter, double eps, const int rel_prec,const int N)
+{ 
+  #ifndef USETEXTURE
+    MixedsolveOperatorDiracDaggerDiracDiracDaggerDirac<REALD> mixedsolveOperator;
+    return mixed_solveT<REALD,MixedsolveOperatorDiracDaggerDiracDiracDaggerDirac>(P,Q,max_iter,eps,rel_prec,N,mixedsolveOperator);
+  #else
+    printf("WARNING: Using GPU/mixed_solve_DiracDaggerDiracDiracDaggerDirac instead of double precision version.");
+    return mixed_solve_DiracDaggerDiracDiracDaggerDirac(P,Q,max_iter,eps,rel_prec,N);
+  #endif
 }
 
 
@@ -2631,15 +2659,19 @@ for(iter=0; iter<max_iter; iter++){
 
 
 
-void benchmark(spinor * const Q){
+
+
+
+template<class RealT>
+void benchmark(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter){
   
   double timeelapsed = 0.0;
   clock_t start, stop;
   int i;
   
-  size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
-  convert2REAL4_spin(Q,h2d_spin);
-  cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
+  size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinorM(RealT)); // float4 even-odd !
+  convert2REAL4_spin<RealT>(Q,mixedsolveParameter.h2d_spin);
+  cudaMemcpy(mixedsolveParameter.dev_spinin, mixedsolveParameter.h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   
   #ifndef MPI
@@ -2653,7 +2685,7 @@ void benchmark(spinor * const Q){
 
  #ifdef USETEXTURE
   //Bind texture gf
-  bind_texture_gf(dev_gf);
+  bind_texture_gf(mixedsolveParameter.dev_gf);
  #endif
 
  //Initialize some stuff
@@ -2670,15 +2702,15 @@ void benchmark(spinor * const Q){
   mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
   
   // try using constant mem for kappas
-  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(dev_complex)) ;
+  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(h0)) ; 
+  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(h1)) ; 
+  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(h2)) ; 
+  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(h3)) ;
   
-  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
+  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(mh0)) ; 
+  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(mh1)) ; 
+  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(mh2)) ; 
+  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(mh3)) ;  
   
   
   int blockdim3=BLOCK;
@@ -2699,28 +2731,28 @@ void benchmark(spinor * const Q){
   for(i=0; i<1000; i++){
   
       #ifdef MPI
-           xchange_field_wrapper(dev_spinin, 0);
+           xchange_field_wrapper(mixedsolveParameter.dev_spinin, 0);
       #endif
       #ifdef USETEXTURE
-         bind_texture_spin(dev_spinin,1);
+         bind_texture_spin(mixedsolveParameter.dev_spinin,1);
       #endif
        //bind_texture_nn(dev_nn_eo);
       //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
-      dev_Hopping_Matrix<<<griddim3, blockdim3>>>
-             (dev_gf, dev_spinin, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0
+      dev_Hopping_Matrix<RealT> <<<griddim3, blockdim3>>>
+             (mixedsolveParameter.dev_gf, mixedsolveParameter.dev_spinin, mixedsolveParameter.dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //mixedsolveParameter.dev_spin_eo1 == even -> 0
        //unbind_texture_nn();
     #ifdef USETEXTURE             
       unbind_texture_spin(1);
     #endif
 
     #ifdef MPI
-        xchange_field_wrapper(dev_spin_eo1, 0);
+        xchange_field_wrapper(mixedsolveParameter.dev_spin_eo1, 0);
     #endif
-       bind_texture_spin(dev_spin_eo1,1);
+       bind_texture_spin(mixedsolveParameter.dev_spin_eo1,1);
   //bind_texture_nn(dev_nn_oe);
    // cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
-    dev_Hopping_Matrix<<<griddim3, blockdim3>>>
-            (dev_gf, dev_spin_eo1, dev_spinin, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
+    dev_Hopping_Matrix<RealT> <<<griddim3, blockdim3>>>
+            (mixedsolveParameter.dev_gf, mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spinin, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
   //unbind_texture_nn();
     #ifdef USETEXTURE
       unbind_texture_spin(1);
@@ -2760,15 +2792,16 @@ void benchmark(spinor * const Q){
 
 
 #ifdef MPI
-void benchmark2(spinor * const Q){
+template<class RealT>
+void benchmark2(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter){
   
   double timeelapsed = 0.0;
   clock_t start, stop;
   int i;
   
-  size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
-  convert2REAL4_spin(Q,h2d_spin);
-  cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
+  size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinorM(RealT)); // float4 even-odd !
+  convert2REAL4_spin(Q,mixedsolveParameter.h2d_spin);
+  cudaMemcpy(mixedsolveParameter.dev_spinin, mixedsolveParameter.h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   
   #ifndef MPI
@@ -2782,7 +2815,7 @@ void benchmark2(spinor * const Q){
 
  #ifdef USETEXTURE
   //Bind texture gf
-  bind_texture_gf(dev_gf);
+  bind_texture_gf(mixedsolveParameter.dev_gf);
  #endif
 
  //Initialize some stuff
@@ -2799,15 +2832,15 @@ void benchmark2(spinor * const Q){
   mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
   
   // try using constant mem for kappas
-  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(dev_complex)) ;
+  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(h0)) ; 
+  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(h1)) ; 
+  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(h2)) ; 
+  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(h3)) ;
   
-  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
+  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(mh0)) ; 
+  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(mh1)) ; 
+  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(mh2)) ; 
+  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(mh3)) ;  
   
   
   int blockdim3=BLOCK;
@@ -2840,9 +2873,9 @@ void benchmark2(spinor * const Q){
   for(i=0; i<100; i++){
   
       
-   dev_Qtm_pm_psi_mpi(dev_spinin, dev_spin_eo1, griddim3,blockdim3, griddim4, blockdim4);   
+   dev_Qtm_pm_psi_mpi(mixedsolveParameter.dev_spinin, mixedsolveParameter.dev_spin_eo1, griddim3,blockdim3, griddim4, blockdim4);   
    
-   dev_Qtm_pm_psi_mpi(dev_spin_eo1, dev_spinin, griddim3,blockdim3, griddim4, blockdim4); 
+   dev_Qtm_pm_psi_mpi(mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spinin, griddim3,blockdim3, griddim4, blockdim4); 
 
   }  
   printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
@@ -2899,8 +2932,9 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
 
 
 
-extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max_iter, 
-	   double eps, const int rel_prec, const int N){
+template<class RealT>
+int mixed_solve_eoT (spinor * const P, spinor * const Q, const int max_iter, 
+       	            double eps, const int rel_prec, const int N){
 
   // source in Q, initial solution in P (not yet implemented)
   double rk;
@@ -2909,16 +2943,17 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   clock_t start, stop, startinner, stopinner; 
   double timeelapsed = 0.0;
   double sourcesquarenorm;
-  int iter, retval;
+  int iter;//never referenced: , retval;
   
   size_t dev_spinsize;
   #ifndef HALF
-    dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
+    dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinorM(RealT)); // float4 even-odd !
   #else
     dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor_half); //short4 eo !
     size_t dev_normsize = VOLUME/2 * sizeof(float);
   #endif
-  init_mixedsolve_eo(g_gauge_field);
+  MixedsolveParameter<RealT>& mixedsolveParameter=*init_mixedsolve_eo<RealT>(g_gauge_field);
+
   
  /* 
   #ifndef HALF
@@ -2959,6 +2994,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   printf("norm source(0): %f\n", norm);
 
 
+  //#include "test.sqz"
 
 for(iter=0; iter<max_iter; iter++){
 
@@ -2985,29 +3021,29 @@ for(iter=0; iter<max_iter; iter++){
      Qtm_minus_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
      assign(P, g_spinor_field[DUM_SOLVER+3], N);
 
-     printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
+     printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.16e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
    
   
      stop = clock();
      timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
         
-     finalize_mixedsolve();
+     finalize_mixedsolve(&mixedsolveParameter);
      return(totalcount);  
    }
    
   //initialize spin fields on device
   #ifndef HALF
-    convert2REAL4_spin(g_spinor_field[DUM_SOLVER],h2d_spin);
+    convert2REAL4_spin<RealT>(g_spinor_field[DUM_SOLVER],mixedsolveParameter.h2d_spin);
   #else
-    convert2REAL4_spin_half(g_spinor_field[DUM_SOLVER],h2d_spin, h2d_spin_norm);
+    convert2REAL4_spin_half(g_spinor_field[DUM_SOLVER],mixedsolveParameter.h2d_spin, mixedsolveParameter.h2d_spin_norm);
   #endif
-  cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
-  
+  cudaMemcpy(mixedsolveParameter.dev_spinin, mixedsolveParameter.h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
+
   // also copy half spinor norm
   #ifdef HALF
-  cudaMemcpy(dev_spinin_norm, h2d_spin_norm, dev_normsize, cudaMemcpyHostToDevice);
+  cudaMemcpy(mixedsolveParameter.dev_spinin_norm, mixedsolveParameter.h2d_spin_norm, dev_normsize, cudaMemcpyHostToDevice);
   #endif
-  
+
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
 
    // solve in single prec on device
@@ -3015,39 +3051,40 @@ for(iter=0; iter<max_iter; iter++){
    printf("Entering inner solver\n");
    assert((startinner = clock())!=-1);
    #ifndef HALF
-      totalcount += dev_cg_eo(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, (REAL) finaleps);
+      totalcount += dev_cg_eo(mixedsolveParameter.dev_gf, mixedsolveParameter.dev_spinin, mixedsolveParameter.dev_spinout, mixedsolveParameter.dev_spin1, mixedsolveParameter.dev_spin2, mixedsolveParameter.dev_spin3, mixedsolveParameter.dev_spin4, mixedsolveParameter.dev_spin5, dev_grid,dev_nn, (RealT) finaleps, mixedsolveParameter);
    #else
-     totalcount += dev_cg_eo_half(dev_gf, 
-                 dev_spinin, dev_spinin_norm,
-                 dev_spinout,dev_spinout_norm,
-                 dev_spin1, dev_spin1_norm,
-                 dev_spin2, dev_spin2_norm,
-                 dev_spin3, dev_spin3_norm,
-                 dev_spin4, dev_spin4_norm,
-                 dev_spin5, dev_spin5_norm,
-                 dev_grid,dev_nn, (REAL) finaleps); 
+      totalcount += dev_cg_eo_half(mixedsolveParameter.dev_gf, 
+                 mixedsolveParameter.dev_spinin, mixedsolveParameter.dev_spinin_norm,
+                 mixedsolveParameter.dev_spinout,mixedsolveParameter.dev_spinout_norm,
+                 mixedsolveParameter.dev_spin1, mixedsolveParameter.dev_spin1_norm,
+                 mixedsolveParameter.dev_spin2, mixedsolveParameter.dev_spin2_norm,
+                 mixedsolveParameter.dev_spin3, mixedsolveParameter.dev_spin3_norm,
+                 mixedsolveParameter.dev_spin4, mixedsolveParameter.dev_spin4_norm,
+                 mixedsolveParameter.dev_spin5, mixedsolveParameter.dev_spin5_norm,
+                 dev_grid,dev_nn, (RealT) finaleps,
+                 mixedsolveParameter); 
    #endif
    stopinner = clock();
    timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;
    printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
  
    // copy back
-   cudaMemcpy(h2d_spin, dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
+   cudaMemcpy(mixedsolveParameter.h2d_spin, mixedsolveParameter.dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
    #ifdef HALF
-    cudaMemcpy(h2d_spin_norm, dev_spinout_norm, dev_normsize, cudaMemcpyDeviceToHost);
+     cudaMemcpy(mixedsolveParameter.h2d_spin_norm, mixedsolveParameter.dev_spinout_norm, dev_normsize, cudaMemcpyDeviceToHost);
    #endif
    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-   
+
    #ifndef HALF
-     convert2double_spin(h2d_spin, g_spinor_field[DUM_SOLVER+2]);
+     convert2double_spin<RealT>(mixedsolveParameter.h2d_spin, g_spinor_field[DUM_SOLVER+2]);
    #else
-     convert2double_spin_half(h2d_spin, h2d_spin_norm, g_spinor_field[DUM_SOLVER+2]);
+     convert2double_spin_half(mixedsolveParameter.h2d_spin, mixedsolveParameter.h2d_spin_norm, g_spinor_field[DUM_SOLVER+2]);
    #endif
-   
+
    // x_(k+1) = x_k + p_k
    add(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+2],N);
 
-   outercount ++;   
+   outercount ++;
 }// outer loop 
     
      printf("Did NOT reach solver precision of eps=%.2e\n",eps);
@@ -3058,11 +3095,22 @@ for(iter=0; iter<max_iter; iter++){
 
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
-    printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
+    printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.16e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
 
-  finalize_mixedsolve();
+  finalize_mixedsolve(&mixedsolveParameter);
   return(-1);
 }
+
+extern "C" int mixed_solve_eo  (spinor * const P, spinor * const Q, const int max_iter, double eps, const int rel_prec, const int N)
+{ return mixed_solve_eoT<REAL >(P,Q,max_iter,eps,rel_prec,N); };
+#ifndef HALF
+  #ifndef USETEXTURE
+    extern "C" int mixed_solve_eoD (spinor * const P, spinor * const Q, const int max_iter, double eps, const int rel_prec, const int N)
+    { return mixed_solve_eoT<REALD>(P,Q,max_iter,eps,rel_prec,N); }
+  #endif
+#endif
+
+
 
 
 

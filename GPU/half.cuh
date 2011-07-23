@@ -1115,18 +1115,19 @@ float squarenorm_half(dev_spinor_half* x, float * xnorm){
 
 __global__ void testhalf (dev_su3_2v* gf, dev_su3 * to){
 
+  typedef REAL RealT;
   int pos=threadIdx.x + blockDim.x*blockIdx.x;
   if (pos==0){
    #ifdef GF_8
-    dev_reconstructgf_8texref(gf, 2 , to);
+    dev_reconstructgf_8texref <RealT>(gf, 2 , to);
    #else
-    dev_reconstructgf_2vtexref(gf, 2 , to);
+    dev_reconstructgf_2vtexref<RealT>(gf, 2 , to);
    #endif
   }
 }
 
 
-void testhalf_gf(dev_su3_2v_half * gf){
+void testhalf_gf(dev_su3_2v_half * gf,MixedsolveParameter<REAL>& mixedsolveParameter){
   dev_su3 * testfield;
   dev_su3 hosttestfield;
   size_t size =  sizeof(dev_su3);
@@ -1136,9 +1137,9 @@ void testhalf_gf(dev_su3_2v_half * gf){
   cudaMalloc((void **) &testfield, size);
   #ifdef USETEXTURE
     //Bind texture gf
-    bind_texture_gf_half(dev_gf_half);
+    bind_texture_gf_half(mixedsolveParameter.dev_gf_half);
   #endif  
-  testhalf <<< 1, 1 >>> (dev_gf, testfield);
+  testhalf <<< 1, 1 >>> (mixedsolveParameter.dev_gf, testfield);
   cudaMemcpy(&(hosttestfield), testfield, size, cudaMemcpyDeviceToHost);  
   show_dev_su3(hosttestfield);
   

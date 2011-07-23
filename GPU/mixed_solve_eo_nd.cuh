@@ -571,6 +571,8 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   
   
   
+  typedef REAL RealT;
+
   //////////////////////
   // GLOBAL VARIABLES //
   //////////////////////
@@ -734,7 +736,7 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   */
   
   
-  if ( (cudaerr = cudaMalloc((void **) &dev_gf, dev_gfsize)) != cudaSuccess ) {	// allocates memory for the gauge field dev_gf on device
+  if ( (cudaerr = cudaMalloc((void **) &MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_gfsize)) != cudaSuccess ) {	// allocates memory for the gauge field MixedsolveParameter<RealT>::getGlobalP()->dev_gf on device
     printf("Error in init_mixedsolve_eo_nd(): Memory allocation of gauge field failed. Aborting...\n");
     printf("%s\n", cudaGetErrorString(cudaGetLastError()));
     exit(200);
@@ -749,22 +751,22 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   
   
   #ifdef GF_8
-    h2d_gf = (dev_su3_8 *) malloc(dev_gfsize); 			// allocates on host
-    su3to8(gf, h2d_gf);						// h2d_gf  is the gauge field  gf  with the 8-real-parameter-representation (according to M. Clark, p. 28)
+    MixedsolveParameter<RealT>::getGlobalP()->h2d_gf = (dev_su3_8 *) malloc(dev_gfsize); 			// allocates on host
+    su3to8<RealT>(gf, MixedsolveParameter<RealT>::getGlobalP()->h2d_gf);						// MixedsolveParameter<RealT>::getGlobalP()->h2d_gf  is the gauge field  gf  with the 8-real-parameter-representation (according to M. Clark, p. 28)
   #else
-    h2d_gf = (dev_su3_2v *) malloc(dev_gfsize);			// allocates on host
-    su3to2vf4(gf, h2d_gf);					// h2d_gf  is the gauge field  gf  with the first two rows stored
+    MixedsolveParameter<RealT>::getGlobalP()->h2d_gf = (dev_su3_2v *) malloc(dev_gfsize);			// allocates on host
+    su3to2vf4<RealT>(gf, MixedsolveParameter<RealT>::getGlobalP()->h2d_gf);					// MixedsolveParameter<RealT>::getGlobalP()->h2d_gf  is the gauge field  gf  with the first two rows stored
   #endif
   
-  cudaMemcpy(dev_gf, h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
-  								// dev_gf = h2d_gf  on device memory
+  cudaMemcpy(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, MixedsolveParameter<RealT>::getGlobalP()->h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
+  								// MixedsolveParameter<RealT>::getGlobalP()->dev_gf = MixedsolveParameter<RealT>::getGlobalP()->h2d_gf  on device memory
   
   		// debug	// CUDA
   		#ifdef CUDA_DEBUG
   		  #ifndef MPI
-  		    CUDA_CHECK("CUDA error in init_mixedsolve_eo_nd(). Copying dev_gf to device failed.", "Copied dev_gf to device.");
+  		    CUDA_CHECK("CUDA error in init_mixedsolve_eo_nd(). Copying MixedsolveParameter<RealT>::getGlobalP()->dev_gf to device failed.", "Copied MixedsolveParameter<RealT>::getGlobalP()->dev_gf to device.");
   		  #else
-  		    CUDA_CHECK("CUDA error in init_mixedsolve_eo_nd(). Copying dev_gf to device failed.", "Copied dev_gf to devices.");
+  		    CUDA_CHECK("CUDA error in init_mixedsolve_eo_nd(). Copying MixedsolveParameter<RealT>::getGlobalP()->dev_gf to device failed.", "Copied MixedsolveParameter<RealT>::getGlobalP()->dev_gf to devices.");
   		  #endif
   		#endif
   
@@ -1087,7 +1089,8 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
 // deallocates the previous allocated memory
 
 void finalize_mixedsolve_eo_nd(void) {
-  
+
+  typedef REAL RealT; 
   cudaError_t cudaerr;
   
   cudaFree(dev_spin1_up);
@@ -1142,12 +1145,12 @@ void finalize_mixedsolve_eo_nd(void) {
   cudaFree(dev_eoidx_odd);
   
 
-  cudaFree(dev_gf);
+  cudaFree(MixedsolveParameter<RealT>::getGlobalP()->dev_gf);
   //cudaFree(dev_output);
   cudaFree(dev_grid);
   
   
-  free(h2d_gf);
+  free(MixedsolveParameter<RealT>::getGlobalP()->h2d_gf);
   
   
   #ifdef MPI
@@ -1336,7 +1339,8 @@ void to_host_mpi (spinor * host, dev_spinor * device, dev_spinor * auxiliary, in
 
 void to_device (dev_spinor * device, spinor * host, dev_spinor * auxiliary, int size) {
 
-  convert2REAL4_spin(host, auxiliary);						// auxiliary = (float) host
+  typedef REAL RealT;
+  convert2REAL4_spin<RealT>(host, auxiliary);						// auxiliary = (float) host
   cudaMemcpy(device, auxiliary, size, cudaMemcpyHostToDevice);			// device = auxiliary  (on device)
 
 }
@@ -1344,8 +1348,9 @@ void to_device (dev_spinor * device, spinor * host, dev_spinor * auxiliary, int 
 
 void to_host (spinor * host, dev_spinor * device, dev_spinor * auxiliary, int size) {
 
+  typedef REAL RealT;
   cudaMemcpy(auxiliary, device, size, cudaMemcpyDeviceToHost);			// auxiliary = device  (on device)
-  convert2double_spin(auxiliary, host);						// host = (double) auxiliary
+  convert2double_spin<RealT>(auxiliary, host);						// host = (double) auxiliary
 
 }
 
@@ -1485,15 +1490,15 @@ void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
 
 
 
-// a wrapper function for cublasSdot() (with the same interface)
+// a wrapper function for cublasDot() (with the same interface)
 // provides the MPI communication via MPI_Allreduce()
 
-float cublasSdot_wrapper(int size, float * A, int incx, float * B, int incy) {
+float cublasDot_wrapper(int size, float * A, int incx, float * B, int incy) {
 
   float result;
   float buffer;
   
-  buffer = cublasSdot(size, (float *) A, incx, (float *) B, incy);
+  buffer = cublasDot(size, (float *) A, incx, (float *) B, incy);
   MPI_Allreduce(&buffer, &result, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
   
   return(result);
@@ -1534,14 +1539,14 @@ __global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin,
    
   dev_spinor slocal[6];									// dev_spinor = float4		// 6*float4 = 24 floats		// auxiliary for each thread
   
-  dev_complex pm_imu = dev_initcomplex(0.0, sign * mubar);				// dev_complex = struct { REAL re; REAL im; }	// pm_imu.re = 0.0
+  dev_complex pm_imu = dev_initcomplex<REAL>(0.0, sign * mubar);				// dev_complex = struct { REAL re; REAL im; }	// pm_imu.re = 0.0
   																	// pm_imu.im = sign * mubar
   int pos = threadIdx.x + blockDim.x*blockIdx.x;
   
   if (pos < dev_VOLUME) {
     dev_skalarmult_gamma5_spinor(&(slocal[0]), pm_imu, &(sin[6*pos]) );			// slocal  =  pm_imu * (gamma5) * sin
-    dev_add_spinor_assign(&(slocal[0]), &(sin[6*pos]));					// slocal  =  slocal + sin  =  pm_imu * (gamma5) * sin + sin
-    dev_realmult_spinor_assign(&(sout[6*pos]), 1.0, &(slocal[0]) );			// sout    =  slocal
+    dev_add_spinor_assign<REAL>(&(slocal[0]), &(sin[6*pos]));					// slocal  =  slocal + sin  =  pm_imu * (gamma5) * sin + sin
+    dev_realmult_spinor_assign<REAL>(&(sout[6*pos]), 1.0, &(slocal[0]) );			// sout    =  slocal
   }
 }
 
@@ -1561,6 +1566,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                               dev_spinor * spinin_up , dev_spinor * spinin_dn ,
                               int gridsize1, int blocksize1, int gridsize2, int blocksize2,
                               int gridsize3, int blocksize3, int gridsize4, int blocksize4) {
+  typedef REAL RealT;
   
   
   // we will use the auxiliary fields  dev_spin_eo{1,2}_up/dn  for working on and buffering
@@ -1630,7 +1636,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   #ifdef USETEXTURE
     bind_texture_spin(spinin_dn,1);
   #endif
-    dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, spinin_dn, dev_spin_eo1_up, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_up = (M_eo) * spinin_dn
+    dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, spinin_dn, dev_spin_eo1_up, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_up = (M_eo) * spinin_dn
   #ifdef USETEXTURE
     unbind_texture_spin(1);
   #endif
@@ -1638,7 +1644,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   #ifdef USETEXTURE
     bind_texture_spin(spinin_up,1);
   #endif
-    dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, spinin_up, dev_spin_eo1_dn, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_dn = (M_eo) * spinin_up
+    dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, spinin_up, dev_spin_eo1_dn, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_dn = (M_eo) * spinin_up
   #ifdef USETEXTURE
     unbind_texture_spin(1);
   #endif
@@ -1650,22 +1656,22 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   
   
   // CUBLAS:
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, g_epsbar, (RealT*)dev_spin_eo1_dn, 1, (RealT*)dev_spin_eo2_up, 1);
   										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * spinin_dn  +  epsbar * (M_eo) * spinin_up
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, g_epsbar, (RealT*)dev_spin_eo1_up, 1, (RealT*)dev_spin_eo2_dn, 1);
   										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * spinin_up  +  epsbar * (M_eo) * spinin_dn
   
   // CUBLAS:
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * spinin_dn  +  nrm*epsbar*(M_eo) * spinin_up
+  cublasScal (N_floats, nrm, (RealT*)dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * spinin_dn  +  nrm*epsbar*(M_eo) * spinin_up
   
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * spinin_up  +  nrm*epsbar*(M_eo) * spinin_dn
+  cublasScal (N_floats, nrm, (RealT*)dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * spinin_up  +  nrm*epsbar*(M_eo) * spinin_dn
   
   
   // Flo:
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo2_up,1);									// remember: this is ((M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
   #endif
-    dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
+    dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
   #ifdef USETEXTURE
     unbind_texture_spin(1);							// dev_spin_eo1_up  =  (M_oe) * dev_spin_eo2_up  =  (M_oe)*nrm*(1-imubar)*(M_eo) * spinin_dn  +  (M_oe)*nrm*epsbar*(M_eo) * spinin_up
   #endif									
@@ -1673,7 +1679,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo2_dn,1);
   #endif
-    dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
+    dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
   #ifdef USETEXTURE
     unbind_texture_spin(1);							// dev_spin_eo1_dn  =  (M_oe) * dev_spin_eo2_dn  =  (M_oe)*nrm*(1+imubar)*(M_eo) * spinin_up  +  (M_oe)*nrm*epsbar*(M_eo) * spinin_dn
   #endif
@@ -1692,9 +1698,9 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   
   
   // CUBLAS:													// remember: this is (M_oo) * (spinin_dn, spinin_up):
-  cublasSaxpy (N_floats, -g_epsbar, (float *) spinin_up, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, -g_epsbar, (RealT*)spinin_up, 1, (RealT*)dev_spin_eo2_up, 1);
   												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*spinin_up  =  (1+imubar)*spinin_dn - epsbar*spinin_up
-  cublasSaxpy (N_floats, -g_epsbar, (float *) spinin_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, -g_epsbar, (RealT*)spinin_dn, 1, (RealT*)dev_spin_eo2_dn, 1);
   												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*spinin_dn  =  (1-imubar)*spinin_up - epsbar*spinin_dn
   
   
@@ -1704,10 +1710,10 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   ///////////////////////////////////////
   
   // CUBLAS:													// this is ((M_oo) - (M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, -1.0, (RealT*)dev_spin_eo1_up, 1, (RealT*)dev_spin_eo2_up, 1);
   							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * spinin_dn  -                    epsbar * spinin_up
   							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * spinin_dn  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_up
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, -1.0, (RealT*)dev_spin_eo1_dn, 1, (RealT*)dev_spin_eo2_dn, 1);
   							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * spinin_up  -                    epsbar * spinin_dn
   							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * spinin_up  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_dn
   
@@ -1717,8 +1723,8 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   ////////////
   
   // Flo:
-  dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
-  dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
+  dev_gamma5<RealT> <<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
+  dev_gamma5<RealT> <<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
   	
   
   
@@ -1728,8 +1734,8 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   ////////////////////
   // (a,b) -> (b,a) //
   ////////////////////
-  dev_copy_spinor_field<<<gridsize4, blocksize4>>>(dev_spin_eo2_dn, dev_spin_eo3_up);			// dev_spin_eo3_up = dev_spin_eo2_dn
-  dev_copy_spinor_field<<<gridsize4, blocksize4>>>(dev_spin_eo2_up, dev_spin_eo3_dn);			// dev_spin_eo3_dn = dev_spin_eo2_up
+  dev_copy_spinor_field<RealT,RealT> <<<gridsize4, blocksize4>>>(dev_spin_eo2_dn, dev_spin_eo3_up);			// dev_spin_eo3_up = dev_spin_eo2_dn
+  dev_copy_spinor_field<RealT,RealT> <<<gridsize4, blocksize4>>>(dev_spin_eo2_up, dev_spin_eo3_dn);			// dev_spin_eo3_dn = dev_spin_eo2_up
   
   
   
@@ -1749,7 +1755,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo3_up,1);
   #endif
-    dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo3_up, dev_spin_eo1_up, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up
+    dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo3_up, dev_spin_eo1_up, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up
   #ifdef USETEXTURE
     unbind_texture_spin(1);
   #endif
@@ -1757,7 +1763,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo3_dn,1);
   #endif
-    dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo3_dn, dev_spin_eo1_dn, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_dn = (M_eo) * dev_spin_eo3_dn
+    dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo3_dn, dev_spin_eo1_dn, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_dn = (M_eo) * dev_spin_eo3_dn
   #ifdef USETEXTURE
     unbind_texture_spin(1);
   #endif
@@ -1769,22 +1775,22 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   
   
   // CUBLAS:
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, g_epsbar, (RealT*)dev_spin_eo1_dn, 1, (RealT*)dev_spin_eo2_up, 1);
   										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up  +  epsbar * (M_eo) * dev_spin_eo3_dn
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, g_epsbar, (RealT*)dev_spin_eo1_up, 1, (RealT*)dev_spin_eo2_dn, 1);
   										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn  +  epsbar * (M_eo) * dev_spin_eo3_up
   
   // CUBLAS:
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
+  cublasScal (N_floats, nrm, (RealT*)dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
   
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
+  cublasScal (N_floats, nrm, (RealT*)dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
   
   
   // Flo:
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo2_up,1);									// remember: this is ((M_oe) (Mee^-1) (M_eo)) * (dev_spin_eo3_up, dev_spin_eo3_dn):
   #endif
-    dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
+    dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
   #ifdef USETEXTURE
     unbind_texture_spin(1);							// dev_spin_eo1_up  =  (M_oe) * dev_spin_eo2_up  =  (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
   #endif
@@ -1792,7 +1798,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo2_dn,1);
   #endif
-    dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
+    dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
   #ifdef USETEXTURE
     unbind_texture_spin(1);							// dev_spin_eo1_dn  =  (M_oe) * dev_spin_eo2_dn  =  (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
   #endif
@@ -1809,9 +1815,9 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   
   
   // CUBLAS:											// remember: this is (M_oo) * (dev_spin_eo3_up, dev_spin_eo3_dn):
-  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_dn, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, -g_epsbar, (RealT*)dev_spin_eo3_dn, 1, (RealT*)dev_spin_eo2_up, 1);
   												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*dev_spin_eo3_dn  =  (1+imubar)*dev_spin_eo3_up - epsbar*dev_spin_eo3_dn
-  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_up, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, -g_epsbar, (RealT*)dev_spin_eo3_up, 1, (RealT*)dev_spin_eo2_dn, 1);
   												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*dev_spin_eo3_up  =  (1-imubar)*dev_spin_eo3_dn - epsbar*dev_spin_eo3_up
   
   
@@ -1821,10 +1827,10 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   ///////////////////////////////////////
   
   // CUBLAS:											// this is ( (M_oo) - (M_oe) (Mee^-1) (M_eo) ) * (dev_spin_eo3_up, dev_spin_eo3_dn)
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, -1.0, (RealT*)dev_spin_eo1_up, 1, (RealT*)dev_spin_eo2_up, 1);
   							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * dev_spin_eo3_up  -                    epsbar * dev_spin_eo3_dn
   							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, -1.0, (RealT*)dev_spin_eo1_dn, 1, (RealT*)dev_spin_eo2_dn, 1);
   							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * dev_spin_eo3_dn  -                    epsbar * dev_spin_eo3_up
   							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
   
@@ -1834,8 +1840,8 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   ////////////
   
   // Flo:
-  dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
-  dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
+  dev_gamma5<RealT> <<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
+  dev_gamma5<RealT> <<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
   
   
   
@@ -1950,9 +1956,9 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
     #ifndef HOPPING_DEBUG
     	#ifndef ALTERNATE_HOPPING_MATRIX
-    	  dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, spinin_dn, dev_spin_eo1_up, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_up = (M_eo) * spinin_dn
+    	  dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, spinin_dn, dev_spin_eo1_up, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_up = (M_eo) * spinin_dn
     	#else
-    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(dev_gf, spinin_dn, dev_spin_eo1_up, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 0);
+    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, spinin_dn, dev_spin_eo1_up, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 0);
     	#endif
     #else
       Hopping_Matrix_wrapper(0, dev_spin_eo1_up, spinin_dn);
@@ -1975,9 +1981,9 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
     #ifndef HOPPING_DEBUG
     	#ifndef ALTERNATE_HOPPING_MATRIX
-    	  dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, spinin_up, dev_spin_eo1_dn, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_dn = (M_eo) * spinin_up
+    	  dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, spinin_up, dev_spin_eo1_dn, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_dn = (M_eo) * spinin_up
     	#else
-    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(dev_gf, spinin_up, dev_spin_eo1_dn, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 0);
+    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, spinin_up, dev_spin_eo1_dn, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 0);
     	#endif
     #else
       Hopping_Matrix_wrapper(0, dev_spin_eo1_dn, spinin_up);
@@ -1994,15 +2000,15 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
   
   // linear algebra
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, g_epsbar, (RealT*)dev_spin_eo1_dn, 1, (RealT*)dev_spin_eo2_up, 1);
   										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * spinin_dn  +  epsbar * (M_eo) * spinin_up
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, g_epsbar, (RealT*)dev_spin_eo1_up, 1, (RealT*)dev_spin_eo2_dn, 1);
   										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * spinin_up  +  epsbar * (M_eo) * spinin_dn
   
   // linear algebra
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * spinin_dn  +  nrm*epsbar*(M_eo) * spinin_up
+  cublasScal (N_floats, nrm, (RealT*)dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * spinin_dn  +  nrm*epsbar*(M_eo) * spinin_up
   
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * spinin_up  +  nrm*epsbar*(M_eo) * spinin_dn
+  cublasScal (N_floats, nrm, (RealT*)dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * spinin_up  +  nrm*epsbar*(M_eo) * spinin_dn
   
   
   		// xchange
@@ -2017,9 +2023,9 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
     #ifndef HOPPING_DEBUG
     	#ifndef ALTERNATE_HOPPING_MATRIX
-    	  dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
+    	  dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
     	#else
-    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 1);
+    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 1);
     	#endif
     #else
       Hopping_Matrix_wrapper(1, dev_spin_eo1_up, dev_spin_eo2_up);
@@ -2042,9 +2048,9 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
     #ifndef HOPPING_DEBUG
     	#ifndef ALTERNATE_HOPPING_MATRIX
-    	  dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
+    	  dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
     	#else
-    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 1);
+    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 1);
     	#endif
     #else
       Hopping_Matrix_wrapper(1, dev_spin_eo1_dn, dev_spin_eo2_dn);
@@ -2068,9 +2074,9 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
   
   // linear algebra													// remember: this is (M_oo) * (spinin_dn, spinin_up):
-  cublasSaxpy (N_floats, -g_epsbar, (float *) spinin_up, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, -g_epsbar, (RealT*)spinin_up, 1, (RealT*)dev_spin_eo2_up, 1);
   												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*spinin_up  =  (1+imubar)*spinin_dn - epsbar*spinin_up
-  cublasSaxpy (N_floats, -g_epsbar, (float *) spinin_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, -g_epsbar, (RealT*)spinin_dn, 1, (RealT*)dev_spin_eo2_dn, 1);
   												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*spinin_dn  =  (1-imubar)*spinin_up - epsbar*spinin_dn
   
   
@@ -2080,10 +2086,10 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   ///////////////////////////////////////
   
   // linear algebra													// this is ((M_oo) - (M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, -1.0, (RealT*)dev_spin_eo1_up, 1, (RealT*)dev_spin_eo2_up, 1);
   							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * spinin_dn  -                    epsbar * spinin_up
   							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * spinin_dn  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_up
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, -1.0, (RealT*)dev_spin_eo1_dn, 1, (RealT*)dev_spin_eo2_dn, 1);
   							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * spinin_up  -                    epsbar * spinin_dn
   							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * spinin_up  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_dn
   
@@ -2133,9 +2139,9 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
     #ifndef HOPPING_DEBUG
     	#ifndef ALTERNATE_HOPPING_MATRIX
-    	  dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo3_up, dev_spin_eo1_up, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up
+    	  dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo3_up, dev_spin_eo1_up, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up
     	#else
-    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo3_up, dev_spin_eo1_up, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 0);
+    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo3_up, dev_spin_eo1_up, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 0);
     	#endif
     #else
       Hopping_Matrix_wrapper(0, dev_spin_eo1_up, dev_spin_eo3_up);
@@ -2158,9 +2164,9 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
     #ifndef HOPPING_DEBUG
     	#ifndef ALTERNATE_HOPPING_MATRIX
-    	  dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo3_dn, dev_spin_eo1_dn, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_dn = (M_eo) * dev_spin_eo3_dn
+    	  dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo3_dn, dev_spin_eo1_dn, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0);	// dev_spin_eo1_dn = (M_eo) * dev_spin_eo3_dn
     	#else
-    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo3_dn, dev_spin_eo1_dn, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 0);
+    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo3_dn, dev_spin_eo1_dn, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 0);
     	#endif
     #else
       Hopping_Matrix_wrapper(0, dev_spin_eo1_dn, dev_spin_eo3_dn);
@@ -2177,15 +2183,15 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
   
   // linear algebra
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, g_epsbar, (RealT*)dev_spin_eo1_dn, 1, (RealT*)dev_spin_eo2_up, 1);
   										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up  +  epsbar * (M_eo) * dev_spin_eo3_dn
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, g_epsbar, (RealT*)dev_spin_eo1_up, 1, (RealT*)dev_spin_eo2_dn, 1);
   										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn  +  epsbar * (M_eo) * dev_spin_eo3_up
   
   // lineare algebra
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
+  cublasScal (N_floats, nrm, (RealT*)dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
   
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
+  cublasScal (N_floats, nrm, (RealT*)dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
   
   
   		// xchange
@@ -2200,9 +2206,9 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
     #ifndef HOPPING_DEBUG
     	#ifndef ALTERNATE_HOPPING_MATRIX
-    	  dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
+    	  dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
     	#else
-    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 1);
+    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 1);
     	#endif
     #else
       Hopping_Matrix_wrapper(1, dev_spin_eo1_up, dev_spin_eo2_up);
@@ -2225,9 +2231,9 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
     #ifndef HOPPING_DEBUG
     	#ifndef ALTERNATE_HOPPING_MATRIX
-    	  dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
+    	  dev_Hopping_Matrix<RealT> <<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1);
     	#else
-    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 1);
+    	  dev_Hopping_Matrix_alternate<<<gridsize1, blocksize1>>>(MixedsolveParameter<RealT>::getGlobalP()->dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_g_iup, dev_g_idn, dev_g_eo2lexic, dev_g_lexic2eosub, 1);
     	#endif
     #else
       Hopping_Matrix_wrapper(1, dev_spin_eo1_dn, dev_spin_eo2_dn);
@@ -2249,9 +2255,9 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
   
   // lineare algebra										// remember: this is (M_oo) * (dev_spin_eo3_up, dev_spin_eo3_dn):
-  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_dn, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, -g_epsbar, (RealT*)dev_spin_eo3_dn, 1, (RealT*)dev_spin_eo2_up, 1);
   												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*dev_spin_eo3_dn  =  (1+imubar)*dev_spin_eo3_up - epsbar*dev_spin_eo3_dn
-  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_up, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, -g_epsbar, (RealT*)dev_spin_eo3_up, 1, (RealT*)dev_spin_eo2_dn, 1);
   												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*dev_spin_eo3_up  =  (1-imubar)*dev_spin_eo3_dn - epsbar*dev_spin_eo3_up
   
   
@@ -2261,10 +2267,10 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   ///////////////////////////////////////
   
   // lineare algebra										// this is ( (M_oo) - (M_oe) (Mee^-1) (M_eo) ) * (dev_spin_eo3_up, dev_spin_eo3_dn)
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, -1.0, (RealT*)dev_spin_eo1_up, 1, (RealT*)dev_spin_eo2_up, 1);
   							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * dev_spin_eo3_up  -                    epsbar * dev_spin_eo3_dn
   							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, -1.0, (RealT*)dev_spin_eo1_dn, 1, (RealT*)dev_spin_eo2_dn, 1);
   							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * dev_spin_eo3_dn  -                    epsbar * dev_spin_eo3_up
   							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
   
@@ -2422,7 +2428,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   
   /*
   #ifdef USETEXTURE
-    bind_texture_gf(dev_gf);
+    bind_texture_gf(MixedsolveParameter<RealT>::getGlobalP()->dev_gf);
   #endif
   */
   
@@ -2793,7 +2799,8 @@ int cg_eo_nd (dev_su3_2v * gf,
   // Q_up/dn  can be used as feedback, or if not, also as auxiliary field
   
   
-  
+
+  typedef REAL RealT;
   
   /////////////////////
   // LOCAL VARIABLES //
@@ -3000,18 +3007,18 @@ int cg_eo_nd (dev_su3_2v * gf,
   
   
   // initialize x(0) = 0	// will be added up
-  dev_zero_spinor_field<<<griddim1, blockdim1>>>(x_up);
-  dev_zero_spinor_field<<<griddim1, blockdim1>>>(x_dn);
+  dev_zero_spinor_field<RealT> <<<griddim1, blockdim1>>>(x_up);
+  dev_zero_spinor_field<RealT> <<<griddim1, blockdim1>>>(x_dn);
   
   
   // r(0) = b - A*x(0) = b
-  dev_copy_spinor_field<<<griddim1, blockdim1>>>(Q_up, r_up);
-  dev_copy_spinor_field<<<griddim1, blockdim1>>>(Q_dn, r_dn);
+  dev_copy_spinor_field<RealT,RealT> <<<griddim1, blockdim1>>>(Q_up, r_up);
+  dev_copy_spinor_field<RealT,RealT> <<<griddim1, blockdim1>>>(Q_dn, r_dn);
   
   
   // d(0) = r(0)
-  dev_copy_spinor_field<<<griddim1, blockdim1>>>(r_up, d_up);
-  dev_copy_spinor_field<<<griddim1, blockdim1>>>(r_dn, d_dn);
+  dev_copy_spinor_field<RealT,RealT> <<<griddim1, blockdim1>>>(r_up, d_up);
+  dev_copy_spinor_field<RealT,RealT> <<<griddim1, blockdim1>>>(r_dn, d_dn);
   
   
   		// debug	// kernel
@@ -3024,11 +3031,11 @@ int cg_eo_nd (dev_su3_2v * gf,
   
   // rr = (r_up)^2 + (r_dn)^2
   #ifndef MPI
-    rr_up = cublasSdot(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
-    rr_dn = cublasSdot(N_floats_int, (float *) r_dn, 1, (float *) r_dn, 1);
+    rr_up = cublasDot(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
+    rr_dn = cublasDot(N_floats_int, (float *) r_dn, 1, (float *) r_dn, 1);
   #else
-    rr_up = cublasSdot_wrapper(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
-    rr_dn = cublasSdot_wrapper(N_floats_int, (float *) r_dn, 1, (float *) r_dn, 1);
+    rr_up = cublasDot_wrapper(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
+    rr_dn = cublasDot_wrapper(N_floats_int, (float *) r_dn, 1, (float *) r_dn, 1);
   #endif
   rr    = rr_up + rr_dn;
   
@@ -3141,11 +3148,11 @@ int cg_eo_nd (dev_su3_2v * gf,
     
     // alpha = r(k)*r(k) / d(k)*A*d(k)
     #ifndef MPI
-      dAd_up = cublasSdot(N_floats_int, (float *) d_up, 1, (float *) Ad_up, 1);
-      dAd_dn = cublasSdot(N_floats_int, (float *) d_dn, 1, (float *) Ad_dn, 1);
+      dAd_up = cublasDot(N_floats_int, (float *) d_up, 1, (float *) Ad_up, 1);
+      dAd_dn = cublasDot(N_floats_int, (float *) d_dn, 1, (float *) Ad_dn, 1);
     #else
-      dAd_up = cublasSdot_wrapper(N_floats_int, (float *) d_up, 1, (float *) Ad_up, 1);
-      dAd_dn = cublasSdot_wrapper(N_floats_int, (float *) d_dn, 1, (float *) Ad_dn, 1);
+      dAd_up = cublasDot_wrapper(N_floats_int, (float *) d_up, 1, (float *) Ad_up, 1);
+      dAd_dn = cublasDot_wrapper(N_floats_int, (float *) d_dn, 1, (float *) Ad_dn, 1);
     #endif
     dAd    = dAd_up + dAd_dn;
     
@@ -3161,16 +3168,16 @@ int cg_eo_nd (dev_su3_2v * gf,
     
     
     // x(k+1) = x(k) + alpha*d(k)
-    cublasSaxpy(N_floats_int, alpha, (float *) d_up, 1, (float *) x_up, 1);
-    cublasSaxpy(N_floats_int, alpha, (float *) d_dn, 1, (float *) x_dn, 1);
+    cublasAxpy(N_floats_int, alpha, (RealT*)d_up, 1, (RealT*)x_up, 1);
+    cublasAxpy(N_floats_int, alpha, (RealT*)d_dn, 1, (RealT*)x_dn, 1);
     
 
     
     
     // r(k+1)
     if ( (j+1) % N_recalc_res != 0 ) {	// r(k+1) = r(k) - alpha*A*d(k)
-      cublasSaxpy(N_floats_int, -1.0*alpha, (float *) Ad_up, 1, (float *) r_up, 1);
-      cublasSaxpy(N_floats_int, -1.0*alpha, (float *) Ad_dn, 1, (float *) r_dn, 1);
+      cublasAxpy(N_floats_int, -1.0*alpha, (RealT*)Ad_up, 1, (RealT*)r_up, 1);
+      cublasAxpy(N_floats_int, -1.0*alpha, (RealT*)Ad_dn, 1, (RealT*)r_dn, 1);
     }
     
     else {				// recalculate residue r(k+1) = b - A*x(k+1)
@@ -3246,10 +3253,10 @@ int cg_eo_nd (dev_su3_2v * gf,
       
       
       // r(k+1) = b - A*x(k+1)
-      cublasScopy(N_floats_int, (float *) Q_up, 1, (float *) r_up, 1);		// r_up = Q_up
-      cublasScopy(N_floats_int, (float *) Q_dn, 1, (float *) r_dn, 1);		// r_dn = Q_dn
-      cublasSaxpy(N_floats_int, -1.0, (float *) Ax_up, 1, (float *) r_up, 1);	// r_up = Q_up - Ax_up
-      cublasSaxpy(N_floats_int, -1.0, (float *) Ax_dn, 1, (float *) r_dn, 1);	// r_dn = Q_dn - Ax_dn
+      cublasCopy(N_floats_int, (RealT*)Q_up, 1, (RealT*)r_up, 1);		// r_up = Q_up
+      cublasCopy(N_floats_int, (RealT*)Q_dn, 1, (RealT*)r_dn, 1);		// r_dn = Q_dn
+      cublasAxpy(N_floats_int, -1.0, (RealT*)Ax_up, 1, (RealT*)r_up, 1);	// r_up = Q_up - Ax_up
+      cublasAxpy(N_floats_int, -1.0, (RealT*)Ax_dn, 1, (RealT*)r_dn, 1);	// r_dn = Q_dn - Ax_dn
     
     
     } // recalculate residue
@@ -3259,11 +3266,11 @@ int cg_eo_nd (dev_su3_2v * gf,
     
     // r(k+1)*r(k+1)
     #ifndef MPI
-      rr_up  = cublasSdot(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
-      rr_dn  = cublasSdot(N_floats_int, (float *) r_dn, 1, (float *) r_dn, 1);
+      rr_up  = cublasDot(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
+      rr_dn  = cublasDot(N_floats_int, (float *) r_dn, 1, (float *) r_dn, 1);
     #else
-      rr_up  = cublasSdot_wrapper(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
-      rr_dn  = cublasSdot_wrapper(N_floats_int, (float *) r_dn, 1, (float *) r_dn, 1);
+      rr_up  = cublasDot_wrapper(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
+      rr_dn  = cublasDot_wrapper(N_floats_int, (float *) r_dn, 1, (float *) r_dn, 1);
     #endif
     rr     = rr_up + rr_dn;
     
@@ -3347,11 +3354,11 @@ int cg_eo_nd (dev_su3_2v * gf,
     
     
     // d(k+1) = r(k+1) + beta*d(k)
-    cublasSscal (N_floats_int, beta, (float *) d_up, 1);
-    cublasSaxpy (N_floats_int, 1.0 , (float *) r_up, 1, (float *) d_up, 1);
+    cublasScal (N_floats_int, beta, (RealT*)d_up, 1);
+    cublasAxpy (N_floats_int, 1.0 , (RealT*)r_up, 1, (RealT*)d_up, 1);
     
-    cublasSscal (N_floats_int, beta, (float *) d_dn, 1);
-    cublasSaxpy (N_floats_int, 1.0 , (float *) r_dn, 1, (float *) d_dn, 1);
+    cublasScal (N_floats_int, beta, (RealT*)d_dn, 1);
+    cublasAxpy (N_floats_int, 1.0 , (RealT*)r_dn, 1, (RealT*)d_dn, 1);
     
     		// debug	// CUBLAS core function
     		#ifdef CUDA_DEBUG
@@ -3415,6 +3422,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
                                  spinor * Q_up, spinor * Q_dn,
                                  int max_iter, double eps_sq, int rel_prec) {
   
+  typedef REAL RealT;
   
   // basically  P_up/dn  and  Q_up/dn  could be used as auxiliary fields
   //	P_up/dn  is the output field (and can be used as initial guess)
@@ -3584,7 +3592,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   
   // bind texture gf
   #ifdef USETEXTURE						// needed for subfunctions of dev_Hopping_Matrix(...)
-    bind_texture_gf(dev_gf);					//	e.g. dev_reconstructgf_2vtexref(...), dev_reconstructgf_8texref(...), 
+    bind_texture_gf(MixedsolveParameter<RealT>::getGlobalP()->dev_gf);					//	e.g. dev_reconstructgf_2vtexref(...), dev_reconstructgf_8texref(...), 
   #endif							//	in general in functions  dev_reconstructgf[...]  with  "tex1Dfetch(gf_tex[...]"
   
   		// debug	// CUDA
@@ -3920,7 +3928,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     
     // solves A*p(k+1) = r(k)
     //        A*p(0)   = r(0) = b
-    innercount = cg_eo_nd(dev_gf,
+    innercount = cg_eo_nd(MixedsolveParameter<RealT>::getGlobalP()->dev_gf,
                           dev_spinout_up, dev_spinout_dn,
                           dev_spinin_up , dev_spinin_dn,
                           max_innersolver_it,

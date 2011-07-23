@@ -52,11 +52,11 @@
 
 // CUDA parameters
 
-#define BLOCKSIZE1 192		// here:	dev_zero_spinor_field , dev_copy_spinor_field
-#define BLOCKSIZE2 192		// passed:	dev_Hopping_Matrix
-#define BLOCKSIZE3 192		// passed:	dev_mul_one_pm_imubar_gamma5
-#define BLOCKSIZE4 192		// passed:	dev_gamma5
-#define BLOCKSIZE5 192		// passed:	dev_copy_spinor_field
+#define BLOCKSIZE1 64		// here:	dev_zero_spinor_field , dev_copy_spinor_field
+#define BLOCKSIZE2 64		// passed:	dev_Hopping_Matrix
+#define BLOCKSIZE3 64		// passed:	dev_mul_one_pm_imubar_gamma5
+#define BLOCKSIZE4 64		// passed:	dev_gamma5
+#define BLOCKSIZE5 64		// passed:	dev_copy_spinor_field
 
 
 

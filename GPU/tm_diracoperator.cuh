@@ -37,13 +37,23 @@
 // D_psi uses phase_mu and not ka_mu for the boundary conds (vice versa in HoppingMatrix) 
 // -> thats why complexmult and complexcgmult are interchanged in dev_HoppingMatrix and in 
 // dev_tm_dirac_kappa
-__global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor * sout, int * dev_nn){
+
+
+
+template<class RealT>
+__global__ void dev_tm_dirac_kappa
+(
+  typename dev_su3_2vT<RealT>::type * gf,
+  typename dev_spinorT<RealT>::type * sin,
+  typename dev_spinorT<RealT>::type * sout,
+  int * dev_nn
+){
     int pos,hoppos;
-    dev_spinor shelp1[6], ssum[6];
-    __shared__ dev_su3 gfsmem[BLOCK];
+    typename dev_spinorT<RealT>::type shelp1[6], ssum[6];
+    __shared__ typename dev_su3T<RealT>::type gfsmem[BLOCK];
     
 
-  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  pos= threadIdx.x + blockDim.x*blockIdx.x;
   int ix = threadIdx.x;
   if(pos < dev_VOLUME){
         
@@ -71,39 +81,39 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             hoppos = dev_nn[8*pos];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref(gf,4*pos,&(gfsmem[ix]));
+            dev_reconstructgf_8texref <RealT>(gf,4*pos,&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref(gf,4*pos,&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref<RealT>(gf,4*pos,&(gfsmem[ix]));
             #endif
             #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+              dev_su3MtV_spintex<RealT>(gfsmem[ix], hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV        <RealT>(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r - gamma_mu)
-            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
+            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_mk0),&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(0,&(shelp1[0]));
-            dev_Gamma0(&(shelp1[0]));
-            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_k0,&(shelp1[0]), &(ssum[0]));
+            dev_Gamma0<RealT>(&(shelp1[0]));
+            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_k0),&(shelp1[0]), &(ssum[0]));
 
             //negative direction
             hoppos = dev_nn[8*pos+4];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref_dagger(gf,4*hoppos,&(gfsmem[ix]));
+            dev_reconstructgf_8texref_dagger <RealT>(gf,4*hoppos,&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref_dagger(gf,4*hoppos,&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref_dagger<RealT>(gf,4*hoppos,&(gfsmem[ix]));
             #endif
             #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));  
+              dev_su3MtV_spintex<RealT>(gfsmem[ix], hoppos, &(shelp1[0]));  
             #else
-              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV        <RealT>(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
             #endif    
             //-kappa(r + gamma_mu)
-            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
+            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_mk0),&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(0,&(shelp1[0]));
-            dev_Gamma0(&(shelp1[0]));
-            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk0,&(shelp1[0]), &(ssum[0]));
+            dev_Gamma0<RealT>(&(shelp1[0]));
+            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_mk0),&(shelp1[0]), &(ssum[0]));
 
 
 //l==3,z               
@@ -111,39 +121,39 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             hoppos = dev_nn[8*pos+3];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref(gf,4*pos+(3),&(gfsmem[ix]));
+            dev_reconstructgf_8texref <RealT>(gf,4*pos+(3),&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref(gf,4*pos+(3),&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref<RealT>(gf,4*pos+(3),&(gfsmem[ix]));
             #endif
             #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+              dev_su3MtV_spintex<RealT>(gfsmem[ix], hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV        <RealT>(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r - gamma_mu)
-            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
+            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_mk3),&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(3,&(shelp1[0]));
-            dev_Gamma3(&(shelp1[0]));
-            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_k3,&(shelp1[0]), &(ssum[0]));
+            dev_Gamma3<RealT>(&(shelp1[0]));
+            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_k3),&(shelp1[0]), &(ssum[0]));
 
             //negative direction
             hoppos = dev_nn[8*pos+7];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref_dagger(gf,4*hoppos+(3),&(gfsmem[ix]));
+            dev_reconstructgf_8texref_dagger <RealT>(gf,4*hoppos+(3),&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref_dagger(gf,4*hoppos+(3),&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref_dagger<RealT>(gf,4*hoppos+(3),&(gfsmem[ix]));
             #endif
             #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+              dev_su3MtV_spintex<RealT>(gfsmem[ix], hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV        <RealT>(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r + gamma_mu)
-            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
+            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_mk3),&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(3,&(shelp1[0]));
-            dev_Gamma3(&(shelp1[0]));
-            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk3,&(shelp1[0]), &(ssum[0]));
+            dev_Gamma3<RealT>(&(shelp1[0]));
+            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_mk3),&(shelp1[0]), &(ssum[0]));
          
          
 //l==2,y        
@@ -151,39 +161,39 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             hoppos = dev_nn[8*pos+2];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref(gf,4*pos+(2),&(gfsmem[ix]));
+            dev_reconstructgf_8texref <RealT>(gf,4*pos+(2),&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref(gf,4*pos+(2),&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref<RealT>(gf,4*pos+(2),&(gfsmem[ix]));
             #endif
             #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+              dev_su3MtV_spintex<RealT>(gfsmem[ix], hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV        <RealT>(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r - gamma_mu)
-            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
+            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_mk2),&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(2,&(shelp1[0]));
-            dev_Gamma2(&(shelp1[0]));
-            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_k2,&(shelp1[0]), &(ssum[0]));
+            dev_Gamma2<RealT>(&(shelp1[0]));
+            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_k2),&(shelp1[0]), &(ssum[0]));
             
             //negative direction
             hoppos = dev_nn[8*pos+6];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref_dagger(gf,4*hoppos+(2),&(gfsmem[ix]));
+            dev_reconstructgf_8texref_dagger <RealT>(gf,4*hoppos+(2),&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref_dagger(gf,4*hoppos+(2),&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref_dagger<RealT>(gf,4*hoppos+(2),&(gfsmem[ix]));
             #endif
             #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+              dev_su3MtV_spintex<RealT>(gfsmem[ix], hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV        <RealT>(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r + gamma_mu)
-            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
+            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_mk2),&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(2,&(shelp1[0]));
-            dev_Gamma2(&(shelp1[0]));
-            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk2,&(shelp1[0]), &(ssum[0]));
+            dev_Gamma2<RealT>(&(shelp1[0]));
+            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_mk2),&(shelp1[0]), &(ssum[0]));
 
 
 //l==1,x 
@@ -191,39 +201,39 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             hoppos = dev_nn[8*pos+1];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref(gf,4*pos+(1),&(gfsmem[ix]));
+            dev_reconstructgf_8texref <RealT>(gf,4*pos+(1),&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref(gf,4*pos+(1),&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref<RealT>(gf,4*pos+(1),&(gfsmem[ix]));
             #endif
             #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+              dev_su3MtV_spintex<RealT>(gfsmem[ix], hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV        <RealT>(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r - gamma_mu)
-            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
+            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_mk1),&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(1,&(shelp1[0]));
-            dev_Gamma1(&(shelp1[0]));
-            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_k1,&(shelp1[0]), &(ssum[0]));
+            dev_Gamma1<RealT>(&(shelp1[0]));
+            dev_complexmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_k1),&(shelp1[0]), &(ssum[0]));
 
             //negative direction
             hoppos = dev_nn[8*pos+5];
             //color
             #ifdef GF_8
-            dev_reconstructgf_8texref_dagger(gf,4*hoppos+(1),&(gfsmem[ix]));
+            dev_reconstructgf_8texref_dagger <RealT>(gf,4*hoppos+(1),&(gfsmem[ix]));
             #else
-            dev_reconstructgf_2vtexref_dagger(gf,4*hoppos+(1),&(gfsmem[ix]));
+            dev_reconstructgf_2vtexref_dagger<RealT>(gf,4*hoppos+(1),&(gfsmem[ix]));
             #endif
             #ifdef USETEXTURE
-              dev_su3MtV_spintex(gfsmem[ix], hoppos, &(shelp1[0]));
+              dev_su3MtV_spintex<RealT>(gfsmem[ix], hoppos, &(shelp1[0]));
             #else
-              dev_su3MtV(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
+              dev_su3MtV        <RealT>(gfsmem[ix], &(sin[6*hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r + gamma_mu)
-            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));
+            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_mk1),&(shelp1[0]), &(ssum[0]));
             //dev_GammatV(1,&(shelp1[0]));
-            dev_Gamma1(&(shelp1[0]));
-            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_mk1,&(shelp1[0]), &(ssum[0]));  
+            dev_Gamma1<RealT>(&(shelp1[0]));
+            dev_complexcgmult_add_assign_spinor(&(ssum[0]),dev_complexT<RealT>(dev_mk1),&(shelp1[0]), &(ssum[0]));  
           
           
           
@@ -246,8 +256,8 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
           
           
           //dev_GammatV(4,&(shelp1[0]));
-          dev_Gamma5(&(shelp1[0]));
-          dev_complexmult_add_assign_spinor(&(ssum[0]),dev_initcomplex(0.0,2.0*kappa*mu),&(shelp1[0]), &(sout[6*pos]));
+          dev_Gamma5<RealT>(&(shelp1[0]));
+          dev_complexmult_add_assign_spinor<RealT>(&(ssum[0]),dev_initcomplex<RealT>(0.0,2.0*kappa*mu),&(shelp1[0]), &(sout[6*pos]));
   }
 }
 
@@ -255,8 +265,8 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
 
 
 
-
-__global__ void dev_gamma5(dev_spinor * sin, dev_spinor * sout){
+template<class RealT>
+__global__ void dev_gamma5(typename dev_spinorT<RealT>::type * sin,typename dev_spinorT<RealT>::type * sout){
   int pos;
   pos= threadIdx.x + blockDim.x*blockIdx.x;  
   if(pos < dev_VOLUME){
@@ -294,11 +304,14 @@ __global__ void dev_gamma5(dev_spinor * sin, dev_spinor * sout){
 
 
 
-
-
-
-extern "C" void dev_tm_dirac_dagger_kappa(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
- int *grid, int * nn_grid, REAL* output,REAL* erg, int xsize, int ysize){
+template<class RealT>
+void dev_tm_dirac_dagger_kappa
+(
+  typename dev_su3_2vT<RealT>::type * gf,
+  typename dev_spinorT<RealT>::type* spinin,
+  typename dev_spinorT<RealT>::type* spinout,
+  int *grid, int * nn_grid, RealT* output,RealT* erg, int xsize, int ysize
+){
  int gridsize;
  if( VOLUME >= 128){
    gridsize =VOLUME/128;
@@ -331,8 +344,4 @@ __global__ void dev_swapmu(){
     mu = - mu;
   }
 }
-
-
-
-
 

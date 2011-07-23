@@ -886,7 +886,8 @@ void matrix_multiplication32_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * sp
                                         int gridsize1, int blocksize1, int gridsize2, int blocksize2,
                                         int gridsize3, int blocksize3, int gridsize4, int blocksize4) {
   
-  
+ 
+  typedef REAL RealT; 
   // we will use the auxiliary fields  dev_spin_eo{1,2}_up/dn  for working on and buffering
   // and set  dev_spin_eo2_up/dn  equal  spinout_up/dn
   // spinin_up/dn  have to remain unchanged !!
@@ -964,15 +965,15 @@ void matrix_multiplication32_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * sp
   
   
   // linear algebra
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, g_epsbar, (RealT*)dev_spin_eo1_dn, 1, (RealT*)dev_spin_eo2_up, 1);
   										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * spinin_dn  +  epsbar * (M_eo) * spinin_up
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, g_epsbar, (RealT*)dev_spin_eo1_up, 1, (RealT*)dev_spin_eo2_dn, 1);
   										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * spinin_up  +  epsbar * (M_eo) * spinin_dn
   
   // linear algebra
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * spinin_dn  +  nrm*epsbar*(M_eo) * spinin_up
+  cublasScal (N_floats, nrm, (RealT*)dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * spinin_dn  +  nrm*epsbar*(M_eo) * spinin_up
   
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * spinin_up  +  nrm*epsbar*(M_eo) * spinin_dn
+  cublasScal (N_floats, nrm, (RealT*)dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * spinin_up  +  nrm*epsbar*(M_eo) * spinin_dn
   
   
   
@@ -995,9 +996,9 @@ void matrix_multiplication32_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * sp
   
   
   // linear algebra													// remember: this is (M_oo) * (spinin_dn, spinin_up):
-  cublasSaxpy (N_floats, -g_epsbar, (float *) spinin_up, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, -g_epsbar, (RealT*)spinin_up, 1, (RealT*)dev_spin_eo2_up, 1);
   												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*spinin_up  =  (1+imubar)*spinin_dn - epsbar*spinin_up
-  cublasSaxpy (N_floats, -g_epsbar, (float *) spinin_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, -g_epsbar, (RealT*)spinin_dn, 1, (RealT*)dev_spin_eo2_dn, 1);
   												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*spinin_dn  =  (1-imubar)*spinin_up - epsbar*spinin_dn
   
   
@@ -1007,10 +1008,10 @@ void matrix_multiplication32_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * sp
   ///////////////////////////////////////
   
   // linear algebra													// this is ((M_oo) - (M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, -1.0, (RealT*)dev_spin_eo1_up, 1, (RealT*)dev_spin_eo2_up, 1);
   							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * spinin_dn  -                    epsbar * spinin_up
   							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * spinin_dn  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_up
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, -1.0, (RealT*)dev_spin_eo1_dn, 1, (RealT*)dev_spin_eo2_dn, 1);
   							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * spinin_up  -                    epsbar * spinin_dn
   							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * spinin_up  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_dn
   
@@ -1061,15 +1062,15 @@ void matrix_multiplication32_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * sp
   
   
   // linear algebra
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, g_epsbar, (RealT*)dev_spin_eo1_dn, 1, (RealT*)dev_spin_eo2_up, 1);
   										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up  +  epsbar * (M_eo) * dev_spin_eo3_dn
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, g_epsbar, (RealT*)dev_spin_eo1_up, 1, (RealT*)dev_spin_eo2_dn, 1);
   										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn  +  epsbar * (M_eo) * dev_spin_eo3_up
   
   // lineare algebra
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
+  cublasScal (N_floats, nrm, (RealT*)dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
   
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
+  cublasScal (N_floats, nrm, (RealT*)dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
   
     
     	  
@@ -1090,9 +1091,9 @@ void matrix_multiplication32_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * sp
   
   
   // lineare algebra										// remember: this is (M_oo) * (dev_spin_eo3_up, dev_spin_eo3_dn):
-  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_dn, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, -g_epsbar, (RealT*)dev_spin_eo3_dn, 1, (RealT*)dev_spin_eo2_up, 1);
   												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*dev_spin_eo3_dn  =  (1+imubar)*dev_spin_eo3_up - epsbar*dev_spin_eo3_dn
-  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_up, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, -g_epsbar, (RealT*)dev_spin_eo3_up, 1, (RealT*)dev_spin_eo2_dn, 1);
   												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*dev_spin_eo3_up  =  (1-imubar)*dev_spin_eo3_dn - epsbar*dev_spin_eo3_up
   
   
@@ -1102,10 +1103,10 @@ void matrix_multiplication32_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * sp
   ///////////////////////////////////////
   
   // lineare algebra										// this is ( (M_oo) - (M_oe) (Mee^-1) (M_eo) ) * (dev_spin_eo3_up, dev_spin_eo3_dn)
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_up, 1);
+  cublasAxpy (N_floats, -1.0, (RealT*)dev_spin_eo1_up, 1, (RealT*)dev_spin_eo2_up, 1);
   							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * dev_spin_eo3_up  -                    epsbar * dev_spin_eo3_dn
   							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasAxpy (N_floats, -1.0, (RealT*)dev_spin_eo1_dn, 1, (RealT*)dev_spin_eo2_dn, 1);
   							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * dev_spin_eo3_dn  -                    epsbar * dev_spin_eo3_up
   							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
   

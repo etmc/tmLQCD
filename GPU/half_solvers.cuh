@@ -58,7 +58,7 @@ void showspinor_half(dev_spinor_half* s, float* snorm){
 
 
 
-void benchmark_half(dev_spinor_half* spin1, float* spin1_norm, dev_spinor_half* spin2, float* spin2_norm, int gridsize, int blocksize){
+void benchmark_half(dev_spinor_half* spin1, float* spin1_norm, dev_spinor_half* spin2, float* spin2_norm, int gridsize, int blocksize,MixedsolveParameter<REAL>& mixedsolveParameter){
   
   double timeelapsed = 0.0;
   clock_t start, stop;
@@ -74,7 +74,7 @@ void benchmark_half(dev_spinor_half* spin1, float* spin1_norm, dev_spinor_half* 
   #endif
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix_half, cudaFuncCachePreferL1);
     dev_Hopping_Matrix_half<<<gridsize, blocksize>>>
-             (dev_gf_half, spin1, spin1_norm, spin2, spin2_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0  
+             (mixedsolveParameter.dev_gf_half, spin1, spin1_norm, spin2, spin2_norm, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0); //dev_spin_eo1 == even -> 0  
   #ifdef USETEXTURE
     unbind_halfspinor_texture();
   #endif
@@ -84,7 +84,7 @@ void benchmark_half(dev_spinor_half* spin1, float* spin1_norm, dev_spinor_half* 
   #endif
   //cudaFuncSetCacheConfig(dev_Hopping_Matrix_half, cudaFuncCachePreferL1);
     dev_Hopping_Matrix_half<<<gridsize, blocksize>>>
-            (dev_gf_half, spin2, spin2_norm, spin1, spin1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
+            (mixedsolveParameter.dev_gf_half, spin2, spin2_norm, spin1, spin1_norm, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1); 
   #ifdef USETEXTURE
     unbind_halfspinor_texture();
   #endif
@@ -122,7 +122,8 @@ extern "C" int dev_cg_eo_half(
      dev_spinor_half* spin3, float* spin3_norm,
      dev_spinor_half* spin4, float* spin4_norm,
      int *grid, int * nn_grid,
-     REAL epsfinal){
+     REAL epsfinal,
+     MixedsolveParameter<REAL>& mixedsolveParameter){
  
  
  REAL host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
@@ -217,7 +218,7 @@ extern "C" int dev_cg_eo_half(
    printf("Converting gauge to half precision... ");
    
 
-     float2half_gaugefield <<< gridsize, BLOCK2  >>>(dev_gf, dev_gf_half, Vol);
+     float2half_gaugefield <<< gridsize, BLOCK2  >>>(mixedsolveParameter.dev_gf, mixedsolveParameter.dev_gf_half, Vol);
    printf("Done\n"); 
    
    //testhalf_gf(dev_gf_half);
@@ -226,7 +227,7 @@ extern "C" int dev_cg_eo_half(
  
   #ifdef USETEXTURE
     //Bind texture gf
-    bind_texture_gf_half(dev_gf_half);
+    bind_texture_gf_half(mixedsolveParameter.dev_gf_half);
   #endif
  
  
@@ -437,7 +438,8 @@ extern "C" int dev_cg_half_reliable_update(
      dev_spinor_half* spin3, float* spin3_norm,
      dev_spinor_half* spin4, float* spin4_norm,
      int *grid, int * nn_grid,
-     REAL epsfinal){
+     REAL epsfinal,
+     MixedsolveParameter<REAL>& mixedsolveParameter){
  
  
  REAL host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
@@ -523,7 +525,7 @@ extern "C" int dev_cg_half_reliable_update(
   }
 
    printf("Converting gauge to half precision... ");
-     float2half_gaugefield <<< gridsize, BLOCK2  >>>(dev_gf, dev_gf_half, VOLUME);
+     float2half_gaugefield <<< gridsize, BLOCK2  >>>(mixedsolveParameter.dev_gf, mixedsolveParameter.dev_gf_half, VOLUME);
    printf("Done\n"); 
    
    //testhalf_gf(dev_gf_half);
@@ -532,7 +534,7 @@ extern "C" int dev_cg_half_reliable_update(
  
   #ifdef USETEXTURE
     //Bind texture gf
-    bind_texture_gf_half(dev_gf_half);
+    bind_texture_gf_half(mixedsolveParameter.dev_gf_half);
   #endif
  
  
