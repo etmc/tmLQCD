@@ -16,18 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _GRAM_SCHMIDT_H
-#define _GRAM_SCHMIDT_H
-#include "complex.h"
+/* 
+ *  Routine for the computation of the Jacobi operator (for use into LapH_ev)
+ *  Authors Luigi Scorzato, Marco Cristoforetti
+ *
+ *
+ *******************************************************************************/
+#ifndef _JACOBI_H
+#define _JACOBI_H
 
-void IteratedClassicalGS_old(complex v[], double *vnrm, int n, int m, complex A[], complex work1[]);
-void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[], 
-			 complex work1[], int lda) ;
-void IteratedClassicalGS_su3vect(complex v[], double *vnrm, int n, int m, complex A[],
-				 complex work1[], int lda);
+#include "su3.h"
 
-void ModifiedGS_old(complex v[], int n, int m, complex A[]);
-void ModifiedGS(complex v[], int n, int m, complex A[], int lda);
-void ModifiedGS_su3vect(complex v[], int n, int m, complex A[], int lda);
+void Jacobi(su3_vector * const l, su3_vector * const k,int t);
 
 #endif

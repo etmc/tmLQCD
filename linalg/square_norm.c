@@ -350,3 +350,38 @@ double square_norm(spinor * const P, const int N, const int parallel) {
   return kc;
 }
 #endif
+
+#ifdef WITHLAPH
+double square_norm_su3vect(su3_vector * const P, const int N, const int parallel) 
+{
+  int ix;
+  static double ks,kc,ds,tr,ts,tt;
+  su3_vector *s;
+
+  ks = 0.0;
+  kc = 0.0;
+  
+  for (ix  =  0; ix < N; ix++) 
+    {
+      s = P  + ix;
+    
+      ds = (*s).c0.re*(*s).c0.re + (*s).c0.im*(*s).c0.im + 
+	(*s).c1.re*(*s).c1.re + (*s).c1.im*(*s).c1.im + 
+	(*s).c2.re*(*s).c2.re + (*s).c2.im*(*s).c2.im; 
+   
+      tr = ds + kc;
+      ts = tr + ks;
+      tt = ts-ks;
+      ks = ts;
+      kc = tr-tt;
+    }
+  kc = ks + kc;
+#  ifdef MPI
+  if(parallel) {
+    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return ks;
+  }
+#endif
+  return kc;
+}
+#endif

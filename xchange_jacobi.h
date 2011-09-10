@@ -16,18 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _GRAM_SCHMIDT_H
-#define _GRAM_SCHMIDT_H
-#include "complex.h"
 
-void IteratedClassicalGS_old(complex v[], double *vnrm, int n, int m, complex A[], complex work1[]);
-void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[], 
-			 complex work1[], int lda) ;
-void IteratedClassicalGS_su3vect(complex v[], double *vnrm, int n, int m, complex A[],
-				 complex work1[], int lda);
+#ifndef _XCHANGE_JACOBI_H
+#define _XCHANGE_JACOBI_H
 
-void ModifiedGS_old(complex v[], int n, int m, complex A[]);
-void ModifiedGS(complex v[], int n, int m, complex A[], int lda);
-void ModifiedGS_su3vect(complex v[], int n, int m, complex A[], int lda);
+void xchange_jacobi(su3_vector * const s);
 
 #endif

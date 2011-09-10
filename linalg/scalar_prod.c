@@ -127,3 +127,84 @@ complex scalar_prod(spinor * const S, spinor * const R, const int N, const int p
 #endif
   return(c);
 }
+
+#ifdef WITHLAPH
+complex scalar_prod_su3vect(su3_vector * const S, su3_vector * const R, const int N, const int parallel){
+  int ix;
+  static double ks,kc,ds,tr,ts,tt;
+  su3_vector *s,*r;
+  complex c;
+#ifdef MPI
+  complex d;
+#endif
+
+  /* Real Part */
+
+  ks=0.0;
+  kc=0.0;
+  for (ix = 0; ix < N; ix++)
+    {
+      s=(su3_vector *) S + ix;
+      r=(su3_vector *) R + ix;
+    
+      ds=(*r).c0.re*(*s).c0.re+(*r).c0.im*(*s).c0.im+
+	(*r).c1.re*(*s).c1.re+(*r).c1.im*(*s).c1.im+
+	(*r).c2.re*(*s).c2.re+(*r).c2.im*(*s).c2.im;
+
+      /* Kahan Summation */    
+      tr=ds+kc;
+      ts=tr+ks;
+      tt=ts-ks;
+      ks=ts;
+      kc=tr-tt;
+    }
+  kc=ks+kc;
+
+#if defined MPI0
+  if(parallel == 1) {
+    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    kc = ks;
+  }
+#endif
+
+  c.re = kc;
+
+  /* Imaginary Part */
+
+  ks=0.0;
+  kc=0.0;
+  
+  for (ix=0;ix<N;ix++)
+    {
+      s=(su3_vector *) S + ix;
+      r=(su3_vector *) R + ix;
+    
+      ds=-(*r).c0.re*(*s).c0.im+(*r).c0.im*(*s).c0.re-
+	(*r).c1.re*(*s).c1.im+(*r).c1.im*(*s).c1.re-
+	(*r).c2.re*(*s).c2.im+(*r).c2.im*(*s).c2.re;
+    
+      tr=ds+kc;
+      ts=tr+ks;
+      tt=ts-ks;
+      ks=ts;
+      kc=tr-tt;
+    }
+  kc=ks+kc;
+
+#if defined MPI0
+  if(parallel == 1) {
+    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    kc = ks;
+  }
+#endif
+
+  c.im = kc;
+#ifdef MPI
+  if(parallel == 1) {
+    d = c;
+    MPI_Allreduce(&d, &c, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+  }
+#endif
+  return(c);
+}
+#endif

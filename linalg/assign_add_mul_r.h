@@ -24,5 +24,6 @@
 #include "su3.h"
 
 void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N);
+void assign_add_mul_r_su3vect(su3_vector * const P, su3_vector * const Q, const double c, const int N);
 
 #endif

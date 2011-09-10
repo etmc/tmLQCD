@@ -622,6 +622,17 @@ else
  AC_MSG_RESULT(no)
 fi
 
+AC_MSG_CHECKING(whether we want to compute the LapH eigenvalues)
+AC_ARG_ENABLE(laph,
+  [  --enable-laph   enable computation of LapH eigensystem [default=no]],
+  enable_laph=$enableval, enable_laph=no)
+if test $enable_laph = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(WITHLAPH,1,LapH eigensystem)
+else
+ AC_MSG_RESULT(no)
+fi
+
 
 AC_MSG_CHECKING(whether we want to use CUDA GPU)
 AC_ARG_ENABLE(gpu,
@@ -676,20 +687,25 @@ AC_SUBST(GPUMPICOMPILER)
 
 
 AC_MSG_CHECKING(checking consistency)
-if test $enable_iig = yes && test $withpersistent = yes ; then
- AC_MSG_ERROR(ERROR! indexindepgeom is not compatible with persistent communications )
-fi
-if test $enable_iig = yes && test $enable_shmem = yes ; then
-  AC_MSG_ERROR(ERROR! indexindepgeom is not compatible with shmem API )
-fi
-if test $enable_tsp = yes && test $enable_iig = no; then
-  AC_MSG_ERROR(ERROR! tsplitpar needs indexindepgeom)
-fi
-if test $enable_tsp = yes && test $enable_sse2 != yes ; then
-  AC_MSG_ERROR(ERROR! tsplitpar needs at least SSE2 )
-fi
-if test $enable_tsp = yes && test $enable_gaugecopy != yes ; then
-  AC_MSG_ERROR(ERROR! tsplitpar needs gaugecopy)
+if test $enable_mpi = yes ; then
+ if test $enable_iig = yes && test $withpersistent = yes ; then
+  AC_MSG_ERROR(ERROR! indexindepgeom is not compatible with persistent communications )
+ fi
+ if test $enable_iig = yes && test $enable_shmem = yes ; then
+   AC_MSG_ERROR(ERROR! indexindepgeom is not compatible with shmem API )
+ fi
+ if test $enable_tsp = yes && test $enable_iig = no; then
+   AC_MSG_ERROR(ERROR! tsplitpar needs indexindepgeom)
+ fi
+ if test $enable_tsp = yes && test $enable_sse2 != yes ; then
+   AC_MSG_ERROR(ERROR! tsplitpar needs at least SSE2 )
+ fi
+ if test $enable_tsp = yes && test $enable_gaugecopy != yes ; then
+   AC_MSG_ERROR(ERROR! tsplitpar needs gaugecopy)
+ fi
+ if test $enable_laph = yes && test $enable_tsp != yes ; then
+   AC_MSG_ERROR(ERROR! laph needs tsplitpar)
+ fi
 fi
 
 if test ! -e lib; then

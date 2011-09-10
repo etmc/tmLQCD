@@ -16,18 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _GRAM_SCHMIDT_H
-#define _GRAM_SCHMIDT_H
-#include "complex.h"
+/* 
+ *  routine for the initialization of the jocobi field (for use in LapH_ev)
+ *  Authors Luigi Scorzato, Marco Cristoforetti
+ *
+ *
+ *******************************************************************************/
+#ifndef _INIT_JACOBI_FIELD_H
+#define _INIT_JACOBI_FIELD_H
 
-void IteratedClassicalGS_old(complex v[], double *vnrm, int n, int m, complex A[], complex work1[]);
-void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[], 
-			 complex work1[], int lda) ;
-void IteratedClassicalGS_su3vect(complex v[], double *vnrm, int n, int m, complex A[],
-				 complex work1[], int lda);
-
-void ModifiedGS_old(complex v[], int n, int m, complex A[]);
-void ModifiedGS(complex v[], int n, int m, complex A[], int lda);
-void ModifiedGS_su3vect(complex v[], int n, int m, complex A[], int lda);
-
+# ifdef WITHLAPH
+int init_jacobi_field(const int V, const int nr);
+void free_jacobi_field();
+void random_gauss_jacobi_field(su3_vector * const k, const int V);
+void random_jacobi_field(su3_vector * const k, const int V);
+# endif
 #endif

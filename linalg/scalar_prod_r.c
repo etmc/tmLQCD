@@ -91,7 +91,6 @@ double scalar_prod_r(spinor * const S,spinor * const R, const int N, const int p
     MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     return ks;
   }
-
 #endif
 
   return kc;
@@ -238,4 +237,42 @@ double scalar_prod_r(spinor * const S,spinor * const R, const int N, const int p
   return kc;
 
 }
+#endif // apenext
+
+#ifdef WITHLAPH
+double scalar_prod_r_su3vect(su3_vector * const S,su3_vector * const R, const int N, const int parallel)
+{
+  int ix;
+  static double ks,kc,ds,tr,ts,tt;
+  su3_vector *s,*r;
+
+  ks=0.0;
+  kc=0.0;
+  for (ix=0;ix<N;ix++)
+    {
+      s = (su3_vector *) S + ix;
+      r = (su3_vector *) R + ix;
+    
+      ds=(*r).c0.re*(*s).c0.re + (*r).c0.im*(*s).c0.im + 
+	(*r).c1.re*(*s).c1.re + (*r).c1.im*(*s).c1.im + 
+	(*r).c2.re*(*s).c2.re + (*r).c2.im*(*s).c2.im;
+    
+      tr = ds + kc;
+      ts = tr + ks;
+      tt = ts-ks;
+      ks = ts;
+      kc = tr-tt;
+    }
+  kc = ks + kc;
+#if defined MPI
+  if(parallel) {
+    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return ks;
+  }
 #endif
+
+  return kc;
+}
+
+#endif // WITHLAPH
+

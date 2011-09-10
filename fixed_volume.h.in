@@ -43,6 +43,7 @@
 #    define LZ (Zdef/N_PROC_Z)
 #    define L  LX
 #    define VOLUME (T*LX*LY*LZ)
+#    define SPACEVOLUME (LX*LY*LZ)
 #    define TEOSLICE ((LX*LY*LZ)/2)
 
 #    ifdef PARALLELT  
@@ -64,7 +65,7 @@
   /* Note that VOLUMEPLUSRAND is in general not equal to VOLUME+RAND */
   /* VOLUMEPLUSRAND rather includes the edges */
 #    define VOLUMEPLUSRAND (VOLUME + RAND + EDGES)
-
+#    define SPACERAND (RAND/T)
 #  endif
 
 #endif

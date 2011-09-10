@@ -25,5 +25,6 @@
 
 /* Assign (*R) = (*S) */
 void assign(spinor * const R, spinor * const S, const int N);
+void assign_su3vect(su3_vector * const R, su3_vector * const S, const int N);
 
 #endif

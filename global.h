@@ -31,6 +31,9 @@
  *
  *
  ***************************************************************/
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef MPI
@@ -79,6 +82,7 @@ EXTERN int T, L, LX, LY, LZ, VOLUME;
 EXTERN int N_PROC_T, N_PROC_X, N_PROC_Y, N_PROC_Z;
 EXTERN int RAND, EDGES, VOLUMEPLUSRAND;
 EXTERN int TEOSLICE;
+EXTERN int SPACEVOLUME, SPACERAND;
 #endif
 
 /* translates from lexicographic order to even/odd order */
@@ -256,6 +260,15 @@ EXTERN int ITER_MAX_BCG;
 EXTERN int ITER_MAX_CG;
 
 EXTERN void* g_precWS;
+
+#ifdef WITHLAPH
+/* Jacobi operator per Laplacian Heaviside (LapH) */
+EXTERN su3_vector ** g_jacobi_field;
+EXTERN int gI_0_0_0, gI_L_0_0, gI_Lm1_0_0, gI_m1_0_0, gI_0_L_0, gI_0_Lm1_0, gI_0_m1_0, gI_0_0_L, gI_0_0_Lm1, gI_0_0_m1;
+EXTERN int tempT,tempV,tempR;
+EXTERN int ** g_iup3d;
+EXTERN int ** g_idn3d;
+#endif
 
 #undef EXTERN
 /* #undef ALIGN */

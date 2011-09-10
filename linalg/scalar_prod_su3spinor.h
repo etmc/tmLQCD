@@ -16,18 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _GRAM_SCHMIDT_H
-#define _GRAM_SCHMIDT_H
-#include "complex.h"
+/* $Id: scalar_prod.h 1150 2009-02-16 16:52:09Z urbach $  */
 
-void IteratedClassicalGS_old(complex v[], double *vnrm, int n, int m, complex A[], complex work1[]);
-void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[], 
-			 complex work1[], int lda) ;
-void IteratedClassicalGS_su3vect(complex v[], double *vnrm, int n, int m, complex A[],
-				 complex work1[], int lda);
+#ifndef _SCALAR_PRODSU3S_H
+#define _SCALAR_PRODSU3S_H
 
-void ModifiedGS_old(complex v[], int n, int m, complex A[]);
-void ModifiedGS(complex v[], int n, int m, complex A[], int lda);
-void ModifiedGS_su3vect(complex v[], int n, int m, complex A[], int lda);
+#include "su3.h"
+/*  T_alpha=S_a x R_alpha,a^* */
+complex_spinor scalar_prod_su3spinor(su3_vector * const S,spinor * const R, const int N, const int parallel);
 
 #endif

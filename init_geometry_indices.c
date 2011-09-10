@@ -152,6 +152,17 @@ int init_geometry_indices(const int V) {
     g_ipt[i] = g_ipt[i-1]+(LX+4);
   }
 
+#ifdef WITHLAPH
+  g_idn3d = (int**)calloc(SPACEVOLUME, sizeof(int*));
+  if((void*)g_idn == NULL) return(31);
+  g_iup3d = (int**)calloc(SPACEVOLUME, sizeof(int*));
+  if((void*)g_iup == NULL) return(32);
+  for (i=0;i<SPACEVOLUME;i++){
+    g_idn3d[i] = (int*)calloc(4, sizeof(int));
+    g_iup3d[i] = (int*)calloc(4, sizeof(int));
+  }
+#endif
+
   return(0);
 }
 

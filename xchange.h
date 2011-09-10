@@ -23,6 +23,7 @@
 #include "xchange_gauge.h"
 #include "xchange_deri.h"
 #include "xchange_halffield.h"
+#include "xchange_jacobi.h"
 #  ifdef _USE_TSPLITPAR
 #    include "xchange_field_tslice.h"
 #  endif

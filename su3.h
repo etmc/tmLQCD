@@ -79,6 +79,17 @@ typedef struct
    spinor sp_up,sp_dn;
 } bispinor;
 
+typedef struct
+{
+  complex s00,s01,s02,s03,s10,s11,s12,s13,s20,s21,s22,s23,s30,s31,s32,s33;
+} spinor_matrix;
+
+typedef struct
+{
+  complex sc0,sc1,sc2,sc3;
+} complex_spinor;
+
+
 /*******************************************************************************
 *
 * Macros for SU(3) vectors

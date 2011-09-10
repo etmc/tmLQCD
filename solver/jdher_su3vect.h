@@ -16,18 +16,34 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _GRAM_SCHMIDT_H
-#define _GRAM_SCHMIDT_H
-#include "complex.h"
 
-void IteratedClassicalGS_old(complex v[], double *vnrm, int n, int m, complex A[], complex work1[]);
-void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[], 
-			 complex work1[], int lda) ;
-void IteratedClassicalGS_su3vect(complex v[], double *vnrm, int n, int m, complex A[],
-				 complex work1[], int lda);
+#ifndef _JDHERSU3VJACOBI_H
+#define _JDHERSU3VJACOBI_H
 
-void ModifiedGS_old(complex v[], int n, int m, complex A[]);
-void ModifiedGS(complex v[], int n, int m, complex A[], int lda);
-void ModifiedGS_su3vect(complex v[], int n, int m, complex A[], int lda);
+#ifndef JD_MAXIMAL
+#define JD_MAXIMAL 1
+#endif
+#ifndef JD_MINIMAL
+#define JD_MINIMAL 0
+#endif
+
+#include <stdlib.h>
+#include <stdio.h>
+#include "su3.h"
+#include "solver/solver.h"
+
+void jderrorhandler(const int i, char * message);
+
+extern void jdher_su3vect(int n, int lda, double tau, double tol, 
+		  int kmax, int jmax, int jmin, int itmax,
+		  int blksize, int blkwise, 
+		  int V0dim, complex *V0, 
+		  int solver_flag, 
+		  int linitmax, double eps_tr, double toldecay,
+		  int verbosity,
+		  int *k_conv, complex *Q, double *lambda, int *it,
+		  int maxmin, int shift_mode,int tslice,
+		  matrix_mult_su3vect A_psi);
 
 #endif
+

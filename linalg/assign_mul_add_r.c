@@ -430,4 +430,26 @@ void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const 
 }
 #endif
 
-
+#ifdef WITHLAPH
+void assign_mul_add_r_su3vect(su3_vector * const R, const double c, su3_vector * const S, const int N)
+{
+  int ix;
+  static double fact;
+  su3_vector *r,*s;
+  
+  fact=c;
+  
+  for (ix = 0; ix < N; ix++) 
+	{
+    r = R + ix;
+    s = S + ix;
+    
+    (*r).c0.re = fact*(*r).c0.re + (*s).c0.re;
+    (*r).c0.im = fact*(*r).c0.im + (*s).c0.im;
+    (*r).c1.re = fact*(*r).c1.re + (*s).c1.re;
+    (*r).c1.im = fact*(*r).c1.im + (*s).c1.im;
+    (*r).c2.re = fact*(*r).c2.re + (*s).c2.re;
+    (*r).c2.im = fact*(*r).c2.im + (*s).c2.im;
+	}
+}
+#endif

@@ -16,18 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _GRAM_SCHMIDT_H
-#define _GRAM_SCHMIDT_H
-#include "complex.h"
+#ifndef _CG_HERSU3V_H
+#define _CG_HERSU3V_H
 
-void IteratedClassicalGS_old(complex v[], double *vnrm, int n, int m, complex A[], complex work1[]);
-void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[], 
-			 complex work1[], int lda) ;
-void IteratedClassicalGS_su3vect(complex v[], double *vnrm, int n, int m, complex A[],
-				 complex work1[], int lda);
+#include"solver/matrix_mult_typedef.h"
+#include"su3.h"
 
-void ModifiedGS_old(complex v[], int n, int m, complex A[]);
-void ModifiedGS(complex v[], int n, int m, complex A[], int lda);
-void ModifiedGS_su3vect(complex v[], int n, int m, complex A[], int lda);
+int cg_her_su3vect(su3_vector * const P, su3_vector * const Q, const int max_iter, double eps_sq, const int rel_prec, 
+		   const int N, const int tslice, matrix_mult_su3vect f);
 
 #endif

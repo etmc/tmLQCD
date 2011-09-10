@@ -277,7 +277,11 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 int Index(const int x0, const int x1, const int x2, const int x3) {
   int y0, y1, y2, y3, ix;
 
+#ifdef  WITHLAPH
+  y0 = x0;
+#else
   y0 = (x0 + T ) % T; 
+#endif
   y1 = (x1 + LX) % LX; 
   y2 = (x2 + LY) % LY; 
   y3 = (x3 + LZ) % LZ;
@@ -890,6 +894,35 @@ void geometry(){
     }
   }
 
+
+#ifdef WITHLAPH
+  tempT=T;
+  T=1;
+  tempV=VOLUME;
+  VOLUME=SPACEVOLUME;
+  tempR=RAND;
+  RAND=SPACERAND;
+  x0=0;
+  for (x1 = 0; x1 < (LX); x1++){
+    for (x2 = 0; x2 < (LY); x2++){
+      for (x3 = 0; x3 < (LZ); x3++){
+	ix=Index(x0, x1, x2, x3);
+	g_iup3d[ix][0] = -1;
+	g_idn3d[ix][0] = -1;
+	g_iup3d[ix][1] = Index(x0, x1+1, x2, x3);
+	g_idn3d[ix][1] = Index(x0, x1-1, x2, x3);
+	g_iup3d[ix][2] = Index(x0, x1, x2+1, x3);
+	g_idn3d[ix][2] = Index(x0, x1, x2-1, x3);
+	g_iup3d[ix][3] = Index(x0, x1, x2, x3+1);
+	g_idn3d[ix][3] = Index(x0, x1, x2, x3-1);
+      }
+    }
+  }
+  T=tempT;
+  VOLUME=tempV;
+  RAND=tempR;
+#endif
+
   i_even=0;
   i_odd=0;
   /*For the spinor fields we need only till VOLUME+RAND */
@@ -1098,6 +1131,28 @@ void geometry(){
   gI_0_0_m2_m1=Index(0,0,-2,-1);
   gI_m1_0_0_m2=Index(-1,0,0,-2);
 #endif /* _INDEX_INDEP_GEOM */
+
+#ifdef WITHLAPH
+  tempT=T;
+  T=1;
+  tempV=VOLUME;
+  VOLUME=SPACEVOLUME;
+  tempR=RAND;
+  RAND=SPACERAND;
+  gI_0_0_0=Index(0,0,0,0);
+  gI_L_0_0=Index(0,LX,0,0);
+  gI_Lm1_0_0=Index(0,LX-1,0,0);
+  gI_m1_0_0=Index(0,-1,0,0);
+  gI_0_L_0=Index(0,0,LY,0);
+  gI_0_Lm1_0=Index(0,0,LY-1,0);
+  gI_0_m1_0=Index(0,0,-1,0);
+  gI_0_0_L=Index(0,0,0,LZ);
+  gI_0_0_Lm1=Index(0,0,0,LZ-1);
+  gI_0_0_m1=Index(0,0,0,-1);
+  T=tempT;
+  VOLUME=tempV;
+  RAND=tempR;
+#endif
 
 #if ( defined PARALLELXYZT || defined PARALLELXYZ )
   check_struct_zt=0;

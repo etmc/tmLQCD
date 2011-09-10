@@ -123,6 +123,51 @@ void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[],
   }
 }
 
+#ifdef WITHLAPH
+
+void IteratedClassicalGS_su3vect(complex v[], double *vnrm, int n, int m, complex A[],
+				 complex work1[], int lda) {
+  const double alpha = 0.5;
+
+  double vnrm_old;
+  int i, n2, isorth = 0;
+  int j;
+  complex CMONE, CONE, CZERO;
+
+#ifdef CRAY
+  char *cupl_n = "N";
+  _fcd fupl_n;
+  fupl_n = _cptofcd(cupl_n, strlen(cupl_n));
+#else
+  char *fupl_n = "N";
+#endif
+
+  n2 = 2*n;
+  CMONE.re = -1.; CMONE.im=0.;
+  CONE.re = 1.; CONE.im=0.;
+  CZERO.re = 0.; CZERO.im=0.;
+
+  vnrm_old = sqrt(square_norm_su3vect((su3_vector*) v, n*sizeof(complex)/sizeof(su3_vector),1));
+
+  for(i = 0; !isorth && i < max_cgs_it; i ++) {
+
+    for(j = 0; j < m; j++){
+      work1[j] = scalar_prod_su3vect((su3_vector*) (A+j*lda), (su3_vector*) v, n*sizeof(complex)/sizeof(su3_vector),1);
+    }
+#ifdef HAVE_LAPACK
+    _FT(zgemv)(fupl_n, &n, &m, &CMONE, A, &lda, work1, &ONE, &CONE, v, &ONE, 1);
+#endif
+    (*vnrm) = sqrt(square_norm_su3vect((su3_vector*) v, n*sizeof(complex)/sizeof(su3_vector),1));
+
+    isorth=((*vnrm) > alpha*vnrm_old);
+    vnrm_old = (*vnrm);
+  }
+  if (i >= max_cgs_it) {
+    /*     errorhandler(400,""); */
+  }
+}
+
+#endif // WITHLAPH
 
 /*
  *  ModifiedGramSchmidt 
@@ -159,3 +204,20 @@ void ModifiedGS(complex v[], int n, int m, complex A[], int lda) {
   }
 }
 
+#ifdef WITHLAPH
+
+void ModifiedGS_su3vect(complex v[], int n, int m, complex A[], int lda) {
+
+  int i;
+  complex s;
+
+  for (i = 0; i < m; i ++) {
+    s = scalar_prod_su3vect((su3_vector*) (A+i*lda), (su3_vector*) v, n*sizeof(complex)/sizeof(su3_vector),1);
+    s.re = -s.re; s.im = -s.im;
+#ifdef HAVE_LAPACK
+    _FT(zaxpy)(&n, &s, A+i*lda, &ONE, v, &ONE);
+#endif
+  }
+}
+
+#endif // WITHLAPH

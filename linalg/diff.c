@@ -346,3 +346,25 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N){
 }
 
 #endif
+
+#ifdef WITHLAPH
+void diff_su3vect(su3_vector * const Q,su3_vector * const R,su3_vector * const S, const int N)
+{
+int ix;
+su3_vector *q,*r,*s;
+
+	for (ix = 0; ix < N; ix++) 
+	{
+  	q=(su3_vector *) Q + ix;
+		r=(su3_vector *) R + ix;
+    s=(su3_vector *) S + ix;
+     
+    (*q).c0.re=(*r).c0.re-(*s).c0.re;
+    (*q).c0.im=(*r).c0.im-(*s).c0.im;
+    (*q).c1.re=(*r).c1.re-(*s).c1.re;
+    (*q).c1.im=(*r).c1.im-(*s).c1.im;
+    (*q).c2.re=(*r).c2.re-(*s).c2.re;
+    (*q).c2.im=(*r).c2.im-(*s).c2.im;
+	} 
+}
+#endif

@@ -106,6 +106,16 @@ extern MPI_Datatype field_zt_slice_odd_dn_ot;
 extern MPI_Datatype field_zt_slice_odd_up_ot;
 # endif
 #endif
+#ifdef WITHLAPH
+extern MPI_Datatype su3vect_point;
+extern MPI_Datatype jfield_x_slice_cont;
+extern MPI_Datatype jfield_y_slice_cont;
+extern MPI_Datatype jfield_z_slice_cont;
+extern MPI_Datatype jfield_x_slice_gath;
+extern MPI_Datatype jfield_y_slice_gath;
+extern MPI_Datatype jfield_z_slice_gath;
+extern MPI_Datatype jfield_y_subslice;
+#endif
 
 #if ( defined PARALLELXYZT || defined PARALLELXYZ )
 extern MPI_Datatype field_z_slice_even_dn;
