@@ -38,6 +38,8 @@
 #include "su3.h"
 #include "xchange_jacobi.h"
 
+#ifdef WITHLAPH
+
 void Jacobi(su3_vector * const l, su3_vector * const k,int t)
 {
   int ix,mu,tcoord,coord;
@@ -75,3 +77,4 @@ void Jacobi(su3_vector * const l, su3_vector * const k,int t)
 #endif
 }
 
+#endif // WITHLAPAH
