@@ -1,9 +1,5 @@
 /***********************************************************************
  *
- * Copyright (C) 2001 Martin Hasenbusch
- *               2003 Thomas Chiarappa
- *               2002,2003,2004,2005,2010 Carsten Urbach
- *
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
@@ -24,6 +20,7 @@
 /* ************************************************************************
  * Conjugate Gradient for su3 vectors
  * Authors: Luigi Scorzato, Marco Cristoforetti
+ * based on cg_her.c
  *
  **************************************************************************/
 
