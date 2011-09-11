@@ -1,3 +1,10 @@
+08.09.2011: added code LapH_ev for the computation of the eigensystem
+	    for the Laplacian Heaviside method (0905.2160 [hep-lat]).
+	    In order to use it configure with --disable-halfspinor  --enable-laph (serial),
+	    and also with --enable-indexindepgeom --enable-tsplitpar --with-mpidimension=XYZ 
+	    --with-lemondir=${lemondir} (parallel).
+	    Compile with make LapH_ev.
+
 23.08.2010: indexindependentgeom (see below) extended to naive
             communications (implemented with MPI_Sendrecv) and halfspinor.
 
