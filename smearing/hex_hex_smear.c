@@ -12,8 +12,8 @@ int hex_smear(su3_tuple *m_field_out, hex_parameters const *params, su3_tuple *m
     /* Three times 4 buffers needed for compatibility purposes (similar signature to gauge_field...) */
     for (int idx = 0; idx < 3; ++idx)
     {
-      gamma_buffer[idx] = (su3_tuple*)malloc(sizeof(su3_tuple) * VOLUMEPLUSRAND + ALIGN_BASE - 1);
-      v_buffer[idx] = (su3_tuple*)malloc(sizeof(su3_tuple) * VOLUMEPLUSRAND + ALIGN_BASE - 1);
+      gamma_buffer[idx] = (su3_tuple*)malloc(sizeof(su3_tuple) * VOLUMEPLUSRAND + 1);
+      v_buffer[idx] = (su3_tuple*)malloc(sizeof(su3_tuple) * VOLUMEPLUSRAND + 1);
       if ((gamma_buffer[idx] == (su3_tuple*)NULL) || (v_buffer[idx] == (su3_tuple*)NULL))
         return -1;
 #if (defined SSE || defined SSE2 || defined SSE3)

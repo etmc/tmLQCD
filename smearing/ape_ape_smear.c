@@ -11,7 +11,7 @@ int ape_smear(su3_tuple *m_field_out, struct ape_parameters const *params, su3_t
   if (!initialized)
   {
     /* Allocate consecutive memory for both of the buffers upon first instantiation */
-    buffer = (su3_tuple*)malloc(sizeof(su3_tuple) * VOLUMEPLUSRAND + ALIGN_BASE - 1);
+    buffer = (su3_tuple*)malloc(sizeof(su3_tuple) * VOLUMEPLUSRAND + 1);
 #if (defined SSE || defined SSE2 || defined SSE3)
     buffer = (su3_tuple*)(((unsigned long int)(buffer) + ALIGN_BASE) & ~ALIGN_BASE);
 #endif
