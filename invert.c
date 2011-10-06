@@ -106,7 +106,7 @@ int check_geometry();
 int main(int argc, char *argv[])
 {
   FILE *parameterfile = NULL;
-  int c, j, ix = 0, isample = 0, op_id = 0;
+  int c, j, i, ix = 0, isample = 0, op_id = 0;
   char * filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
@@ -114,6 +114,7 @@ int main(int argc, char *argv[])
   char * input_filename = NULL;
   double plaquette_energy;
   struct stout_parameters params_smear;
+  spinor **s, *s_;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -298,8 +299,8 @@ int main(int argc, char *argv[])
             conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
-    if( (j = read_gauge_field(conf_filename)) !=0) {
-      fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", j, conf_filename);
+    if( (i = read_gauge_field(conf_filename)) !=0) {
+      fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
       exit(-2);
     }
 
@@ -355,50 +356,45 @@ int main(int argc, char *argv[])
     /* Compute the mode number or topological susceptibility using spectral projectors, if wanted*/
 
     if(compute_modenumber != 0 || compute_topsus !=0){
-
-     printf("T1\n");fflush(stdout);
-
-      int i;
-      spinor **s, *s_;
+      
       s_ = calloc(no_sources_z2*VOLUMEPLUSRAND+1, sizeof(spinor));
       s  = calloc(no_sources_z2, sizeof(spinor*));
-     printf("T2\n");fflush(stdout);
-     if(s_==NULL){ printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); }
-     if(s==NULL) { printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); }
-
-     printf("T1\n");fflush(stdout);
-
+      if(s_ == NULL) { 
+	printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+      }
+      if(s == NULL) { 
+	printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+      }
+      
+      
       for(i = 0; i < no_sources_z2; i++) {
 #if (defined SSE3 || defined SSE2 || defined SSE)
         s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
 #else
         s[i] = s_+i*VOLUMEPLUSRAND;
 #endif
-     printf("T3\n");fflush(stdout);
-
+	
         z2_random_spinor_field(s[i], VOLUME);
-     printf("T4\n");fflush(stdout);
-
-        spinor *aux_,*aux;
-#if ( defined SSE || defined SSE2 || defined SSE3 )
-        aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-        aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-        aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-        aux = aux_;
-#endif
-
-     printf("T5\n");fflush(stdout);
+	
+/* 	what is this here needed for?? */
+/*         spinor *aux_,*aux; */
+/* #if ( defined SSE || defined SSE2 || defined SSE3 ) */
+/*         aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
+/*         aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
+/* #else */
+/*         aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
+/*         aux = aux_; */
+/* #endif */
+	
         if(g_proc_id == 0) {
           printf("source %d \n", i);
         }
-
-     printf("T6\n");fflush(stdout);
+	
         if(compute_modenumber != 0){
           mode_number(s[i], mstarsq);
         }
-
-        if(compute_topsus !=0){
+	
+        if(compute_topsus !=0) {
           top_sus(s[i], mstarsq);
         }
       }
@@ -438,9 +434,6 @@ int main(int argc, char *argv[])
       index_end = 1;
     }
 
-
-
-
     g_precWS=NULL;
     if(use_preconditioning == 1){
       /* todo load fftw wisdom */
@@ -449,9 +442,7 @@ int main(int argc, char *argv[])
 #else
       use_preconditioning=0;
 #endif
-
     }
-
 
     if (g_cart_id == 0) {
       fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
