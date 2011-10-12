@@ -486,7 +486,7 @@ int main(int argc,char *argv[]) {
     if(((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
       /* If a reversibility check was performed this trajectory, and the trajectory was accepted,
        * then the configuration is currently stored in .conf.tmp, written out by update_tm.
-       * In that case also a readback was performed, so need to test .conf.tmp either
+       * In that case also a readback was performed, so no need to test .conf.tmp
        * In all other cases the gauge configuration still needs to be written out here. */
       if (!(return_check && accept)) {
         xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);

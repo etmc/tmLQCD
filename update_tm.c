@@ -154,13 +154,13 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
   enepx = moment_energy();
 
-  if (bc_flag == 0) { /* if PBC */
+  if (!bc_flag) { /* if PBC */
     new_plaquette_energy = measure_gauge_action();
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
       new_rectangle_energy = measure_rectangles();
     }
   }
-  else if (bc_flag == 1) { /* if SF bc */
+  else { /* if SF bc */
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
       new_plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_iwasaki(g_Tbsf, g_Cs, g_Ct, g_rgi_C0);
       new_rectangle_energy = (1./(2.*3.))*measure_rectangle_sf_iwasaki(g_Tbsf, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
@@ -194,11 +194,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
   /* Here a reversibility test is performed */
   /* The trajectory is integrated back      */
-  if(return_check == 1) {
+  if(return_check) {
     if(g_proc_id == 0) {
       fprintf(stdout, "# Performing reversibility check.\n");
     }
-    if(accept == 1) {
+    if(accept) {
       /* save gauge file to disk before performing reversibility check */
       xlfInfo = construct_paramsXlfInfo((*plaquette_energy)/(6.*VOLUME*g_nproc), -1);
       // Should write this to temporary file first, and then check
@@ -292,7 +292,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       fclose(ret_check_file);
     }
 
-    if(accept == 1) {
+    if(accept) {
       /* Read back gauge field */
       if(g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Trying to read gauge field from file %s.\n", tmp_filename);
@@ -311,12 +311,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   } /* end of reversibility check */
 
-  if(accept == 1) {
-    /* accept */
+  if(accept) {
     (*plaquette_energy)=new_plaquette_energy;
     (*rectangle_energy)=new_rectangle_energy;
     /* put the links back to SU(3) group */
-    if (bc_flag == 0) { /* if PBC */
+    if (!bc_flag) { /* periodic boundary conditions */
       for(ix=0;ix<VOLUME;ix++) { 
         for(mu=0;mu<4;mu++) { 
           v=&g_gauge_field[ix][mu];
@@ -324,30 +323,19 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         }
       }
     }
-    else if (bc_flag == 1) { /* if SF bc */
+    else if (bc_flag) { /* if Schroedinger functional boundary conditions */
       for(ix=0;ix<VOLUME;ix++) { 
         for(mu=0;mu<4;mu++) {
-          if (g_t[ix] == 0 && mu != 0) {
-            v=&g_gauge_field[ix][mu];
-            /* here we do not need to 'restoresu3' because these links are constant ==> we do not want to change them */
-          }
-          else if (g_t[ix]  == g_Tbsf) {
-            v=&g_gauge_field[ix][mu];
-            /* here we do not need to 'restoresu3' because of two reasons: these links are
-              1) either zero ==> they keep updating to zero value all time
-              2) or constant ==> we do not want to change them */
-          }
-          else {
-            v=&g_gauge_field[ix][mu];
-            /* the next line: keeps unitary the gauge field which has been updated */
+          v=&g_gauge_field[ix][mu];
+	      if ((g_t[ix] == 0 && mu != 0 ) || (g_t[ix]  == g_Tbsf)) {}
+    	  else {
             *v=restoresu3(*v);
           }
         }
       }
     }
   }
-  else {
-    /* reject: copy gauge_tmp to g_gauge_field */
+  else { /* reject: copy gauge_tmp to g_gauge_field */
     for(ix=0;ix<VOLUME;ix++) {
       for(mu=0;mu<4;mu++){
         v=&g_gauge_field[ix][mu];
@@ -366,27 +354,24 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   etime = (double)clock()/((double)(CLOCKS_PER_SEC));
 #endif
 
-  /* printining data in the .data file */
+  /* printing data in the .data file */
   if(g_proc_id==0) {
     datafile = fopen(filename, "a");
-    if (bc_flag == 0) { /* if PBC */
+    if (!bc_flag) { /* if Periodic Boundary Conditions */
       fprintf(datafile, "%14.12f %14.12f %e ",
               (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
     }
-    else if (bc_flag == 1) { /* if SF */
+    else if (bc_flag) { 
       if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) { /* SF with rectangle working */
         normalisation = partial_lattice_lo_effective_iwasaki_action_sf_k(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta);
         partial_effective_action = partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-        coupling = normalisation/partial_effective_action;
-        fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %e ", coupling, normalisation , partial_effective_action, (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
       }
       else { /* SF with only Wilson */
         normalisation = partial_lattice_lo_effective_plaquette_action_sf_k(g_Tbsf, g_beta, g_Ct, g_eta);
         partial_effective_action = partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct);
-        coupling = normalisation/partial_effective_action;
-        fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %e ",
-                coupling, normalisation, partial_effective_action, (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
       }
+      coupling = normalisation/partial_effective_action;
+      fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %e ", coupling, normalisation, partial_effective_action, (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
     }
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
