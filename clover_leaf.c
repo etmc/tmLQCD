@@ -37,8 +37,11 @@
 #include "su3.h"
 #include "sse.h"
 #include "su3adj.h"
+#include "clover.h"
 #include "clover_leaf.h"
 
+const double tiny_t = 1.0e-20;
+double ka_csw_8 = 1.;
 
 void sw_term() {
   int k,l;
@@ -172,7 +175,7 @@ int six_invert(complex a[6][6]) {
   ifail=0;
   for(k = 0; k < nm1; k++) {
     s=0.0;
-    for(j=k+1;j<=nm1;j++) {
+    for(j = k+1; j <= nm1; j++) {
       s+=a[j][k].re*a[j][k].re+a[j][k].im*a[j][k].im; 
     }
     s=1.+s/(a[k][k].re*a[k][k].re+a[k][k].im*a[k][k].im);
@@ -367,7 +370,7 @@ double sw_trace(const int ieo) {
     ioff=(VOLUME+RAND)/2;
   }
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
-    x=trans2[icx];
+    x = g_eo2lexic[icx];
     for(i=0;i<2;i++) {
       w=&sw[x][0][i];     
       _a_C(0,0,*w);
@@ -406,7 +409,7 @@ void sw_invert(const int ieo) {
     ioff=(VOLUME+RAND)/2;
   }
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
-    x=trans2[icx];
+    x = g_eo2lexic[icx];
     for(i = 0; i < 2; i++) {
       w=&sw[x][0][i];     
       _a_C(0,0,*w);
@@ -524,17 +527,17 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
       s4=(sw(2,2,l,t).hdot.phi(3,l,t))+sw(3,2,l,t)*phi(4,l,t)
     */
     
-    _vector_tensor_vector(v1,(*r).c0,(*s).c0);
-    _vector_tensor_vector(v2,(*r).c0,(*s).c1);
-    _vector_tensor_vector(v3,(*s).c0,(*r).c1);
+    _vector_tensor_vector(v1,(*r).s0,(*s).s0);
+    _vector_tensor_vector(v2,(*r).s0,(*s).s1);
+    _vector_tensor_vector(v3,(*s).s0,(*r).s1);
     _su3_acc(v2,v3);
-    _vector_tensor_vector(v3,(*r).c1,(*s).c1);
+    _vector_tensor_vector(v3,(*r).s1,(*s).s1);
     
-    _vector_tensor_vector(u1,(*r).c2,(*s).c2);
-    _vector_tensor_vector(u2,(*r).c2,(*s).c3);
-    _vector_tensor_vector(u3,(*s).c2,(*r).c3);
+    _vector_tensor_vector(u1,(*r).s2,(*s).s2);
+    _vector_tensor_vector(u2,(*r).s2,(*s).s3);
+    _vector_tensor_vector(u3,(*s).s2,(*r).s3);
     _su3_acc(u2,u3);
-    _vector_tensor_vector(u3,(*r).c3,(*s).c3);
+    _vector_tensor_vector(u3,(*r).s3,(*s).s3);
     
     /* compute the insertion matrix */
     _su3_plus_su3(lswp[0],u1,v1);
