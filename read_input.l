@@ -266,6 +266,7 @@ inline void rmQuotes(char *str){
 %x DBTMOP
 %x WILSONOP
 %x OVERLAPOP
+%x CLOVEROP
 %x TMSOLVER
 %x DBTMSOLVER
 %x OVSOLVER
@@ -454,6 +455,9 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "TMWILSON")==0) {
     optr->type = TMWILSON;
   }
+  else if(strcmp(yytext, "CLOVER")==0) {
+    optr->type = CLOVER;
+  }
   else if(strcmp(yytext, "DBTMWILSON")==0) {
     optr->type = DBTMWILSON;
   }
@@ -474,12 +478,13 @@ inline void rmQuotes(char *str){
   if(myverbose) printf("operator has id %d\n", current_operator);
 
   if(optr->type == WILSON) BEGIN(WILSONOP);
+  else if(optr->type == CLOVER) BEGIN(CLOVEROP);
   else if(optr->type == TMWILSON) BEGIN(TMOP);
   else if(optr->type == DBTMWILSON) BEGIN(DBTMOP);
   else BEGIN(OVERLAPOP);
 }
 
-<WILSONOP,TMOP,OVERLAPOP,DBTMOP>{
+<WILSONOP,TMOP,OVERLAPOP,DBTMOP,CLOVEROP>{
   {SPC}*kappa{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->kappa = c;
@@ -519,7 +524,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<WILSONOP,TMOP>{
+<WILSONOP,TMOP,CLOVEROP>{
   {SPC}*Solver{EQL} {
     name_caller = YY_START; 
     BEGIN(TMSOLVER);
@@ -563,7 +568,15 @@ inline void rmQuotes(char *str){
   }
   {SPC}*AddDownPropagator{EQL}no {
     optr->DownProp = 0;
-    if(myverbose) printf("  Don't nvert for + and - mu set in line %d operator %d\n", line_of_file, current_operator);
+    if(myverbose) printf("  Don't invert for + and - mu set in line %d operator %d\n", line_of_file, current_operator);
+  }
+}
+
+<CLOVEROP>{
+  {SPC}*csw{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    optr->c_sw = c;
+    if(myverbose) printf("  Set c_sw set to %lf in line %d for operator %d\n", optr->c_sw, line_of_file, current_operator);
   }
 }
 
@@ -1785,7 +1798,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
   line_of_file++;
 }
 <*>\n                       {

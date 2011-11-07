@@ -75,6 +75,7 @@ int add_operator(const int type) {
   optr->type = type;
   optr->kappa = _default_g_kappa;
   optr->mu = _default_g_mu;
+  optr->c_sw = _default_c_sw;
   optr->sloppy_precision = _default_g_sloppy_precision_flag;
   optr->coefs = NULL;
   optr->rel_prec = _default_g_relative_precision_flag;
@@ -127,7 +128,7 @@ int add_operator(const int type) {
     optr->no_flavours = 2;
     g_running_phmc = 1;
   }
-
+  
   optr->precWS=NULL;
 
   optr->initialised = 1;
@@ -423,7 +424,8 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   /* the 1 is for appending */
   construct_writer(&writer, filename, append);
   if (PropInfo.splitted || SourceInfo.ix == index_start) {
-    inverterInfo = construct_paramsInverterInfo(optr->reached_prec, optr->iterations, optr->solver, optr->no_flavours);
+    inverterInfo = construct_paramsInverterInfo(optr->reached_prec, optr->iterations, 
+						optr->solver, optr->no_flavours);
     write_spinor_info(writer, PropInfo.format, inverterInfo, append);
     free(inverterInfo);
   }
@@ -432,9 +434,11 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   if (PropInfo.format == 1) {
     sourceFormat = construct_paramsSourceFormat(SourceInfo.precision, optr->no_flavours, 4, 3);
     write_source_format(writer, sourceFormat);
-    status = write_spinor(writer, &operator_list[op_id].sr0, &operator_list[op_id].sr1, 1, SourceInfo.precision);
+    status = write_spinor(writer, &operator_list[op_id].sr0, &operator_list[op_id].sr1, 
+			  1, SourceInfo.precision);
     if(optr->no_flavours == 2) {
-      status = write_spinor(writer, &operator_list[op_id].sr2, &operator_list[op_id].sr3, 1, SourceInfo.precision);
+      status = write_spinor(writer, &operator_list[op_id].sr2, &operator_list[op_id].sr3, 
+			    1, SourceInfo.precision);
     }
     free(sourceFormat);
   }

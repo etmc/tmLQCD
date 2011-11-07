@@ -30,6 +30,7 @@
 #define OVERLAP 1
 #define WILSON 2
 #define DBTMWILSON 3
+#define CLOVER 4
 
 #define max_no_operators 10
 
@@ -65,6 +66,8 @@ typedef struct {
   double epsbar;
   /* solver residue */
   double eps_sq;
+  /* clover coefficient */
+  double c_sw;
   /* precision reached during inversion */
   double reached_prec;
   /* for the overlap */
