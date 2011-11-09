@@ -224,9 +224,9 @@ static void init_gmres(const int _M, const int _V){
     V = calloc(M, sizeof(spinor *));
 #if (defined SSE || defined SSE2)
     _h = calloc((M+2)*M+8, sizeof(complex));
-    H[0] = (complex *)(((unsigned int)(_h)+ALIGN_BASE)&~ALIGN_BASE); 
+    H[0] = (complex *)(((unsigned long int)(_h)+ALIGN_BASE)&~ALIGN_BASE); 
     _v = calloc(M*Vo+1, sizeof(spinor));
-    V[0] = (spinor *)(((unsigned int)(_v)+ALIGN_BASE)&~ALIGN_BASE);
+    V[0] = (spinor *)(((unsigned long int)(_v)+ALIGN_BASE)&~ALIGN_BASE);
 #else
     _h = calloc((M+1)*M, sizeof(complex));
     H[0] = _h;

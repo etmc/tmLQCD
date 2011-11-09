@@ -524,17 +524,17 @@ static void init_gmres_dr(const int _M, const int _V){
     work2 = calloc(M+1, sizeof(complex *));
 #if (defined SSE || defined SSE2)
     _h = calloc((M+2)*(M+1), sizeof(complex));
-    H[0] = (complex *)(((unsigned int)(_h)+ALIGN_BASE)&~ALIGN_BASE); 
+    H[0] = (complex *)(((unsigned long int)(_h)+ALIGN_BASE)&~ALIGN_BASE); 
     _work = calloc((M+2)*(M+1), sizeof(complex));
-    work[0] = (complex *)(((unsigned int)(_work)+ALIGN_BASE)&~ALIGN_BASE); 
+    work[0] = (complex *)(((unsigned long int)(_work)+ALIGN_BASE)&~ALIGN_BASE); 
     _work2 = calloc((M+2)*(M+1), sizeof(complex));
-    work2[0] = (complex *)(((unsigned int)(_work2)+ALIGN_BASE)&~ALIGN_BASE); 
+    work2[0] = (complex *)(((unsigned long int)(_work2)+ALIGN_BASE)&~ALIGN_BASE); 
     _g = calloc((M+2)*(M+1), sizeof(complex));
-    G[0] = (complex *)(((unsigned int)(_g)+ALIGN_BASE)&~ALIGN_BASE); 
+    G[0] = (complex *)(((unsigned long int)(_g)+ALIGN_BASE)&~ALIGN_BASE); 
     _v = calloc((M+1)*Vo+1, sizeof(spinor));
-    V[0] = (spinor *)(((unsigned int)(_v)+ALIGN_BASE)&~ALIGN_BASE);
+    V[0] = (spinor *)(((unsigned long int)(_v)+ALIGN_BASE)&~ALIGN_BASE);
     _z = calloc((M+1)*Vo+1, sizeof(spinor));
-    Z[0] = (spinor *)(((unsigned int)(_z)+ALIGN_BASE)&~ALIGN_BASE);
+    Z[0] = (spinor *)(((unsigned long int)(_z)+ALIGN_BASE)&~ALIGN_BASE);
 #else
     _h = calloc((M+1)*(M+1), sizeof(complex));
     H[0] = _h;

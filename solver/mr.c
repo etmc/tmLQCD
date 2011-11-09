@@ -135,7 +135,7 @@ int mrblk(spinor * const P, spinor * const Q,
     mr_init = 1;
   }
 #if (defined SSE || defined SSE2 || defined SSE3)
-  s[0] = (complex *)(((unsigned int)(s_)+ALIGN_BASE)&~ALIGN_BASE); 
+  s[0] = (complex *)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE); 
 #else
   s[0] = s_;
 #endif
