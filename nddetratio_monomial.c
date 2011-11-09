@@ -61,7 +61,7 @@ double nddetratio_acc(const int id) {
 
   iter = cg_her_nd(g_spinor_field[2], g_spinor_field[3], mnl->pf, mnl->pf2,
 		   mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
-		   VOLUME/2, &Q_Qdagger_ND, 0, 1000);
+		   VOLUME/2, &Q_Qdagger_ND);
   QdaggerNon_degenerate(g_spinor_field[0], g_spinor_field[1],
 			g_spinor_field[2], g_spinor_field[3]);
 

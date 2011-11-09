@@ -57,9 +57,8 @@ extern int ITER_MAX_CG;
 /* think about chronological solver ! */
 
 void detratio_derivative(const int no) {
-  int mu, x, saveiter = ITER_MAX_BCG;
+  int saveiter = ITER_MAX_BCG;
 
-  extern su3 ** g_gauge_field_saved;
   monomial * mnl = &monomial_list[no];
 
   /* This factor 2* a missing factor 2 in trace_lambda */
