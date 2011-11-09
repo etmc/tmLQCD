@@ -310,7 +310,7 @@ int main(int argc,char *argv[])
     
     if(g_proc_id==0) {
       printf("Print 1 result, to make sure that the calculation is not optimized away: %e  \n",antioptaway);
-      printf("total time %e sec, Variance of the time %e sec. (itarations=%d). \n",sdt,sqdt,j_max);
+      printf("total time %e sec, Variance of the time %e sec. (iterations=%d). \n",sdt,sqdt,j_max);
       printf("\n");
       printf(" (%d Mflops [%d bit arithmetic])\n",
 	     (int)(1320.0f/sdt),(int)sizeof(spinor)/3);

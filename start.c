@@ -925,7 +925,7 @@ void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int
   source_coord[0]=tmp;
 
   if(3*is+ic == index_start && g_proc_id == g_stdio_proc)
-    printf("The source site number is %i which corresponds to (t,x,y,z)=(%i,%i,%i,%i)\n",source_indx,source_coord[0],source_coord[1],source_coord[2],source_coord[3]);
+    printf("# The source site number is %i which corresponds to (t,x,y,z) = (%i,%i,%i,%i)\n",source_indx,source_coord[0],source_coord[1],source_coord[2],source_coord[3]);
 
   /* compute the coordinates and the index of the node*/
   /* be careful!!! nodes indices have different convention (see io.c)*/
