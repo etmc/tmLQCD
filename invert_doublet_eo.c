@@ -177,12 +177,12 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     else {		// CPU, conjugate gradient
       iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
 		       max_iter, precision, rel_prec, 
-		       VOLUME/2, &Q_Qdagger_ND, 0, 1000);
+		       VOLUME/2, &Q_Qdagger_ND);
     }
   #else			// CPU, conjugate gradient
     iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
 		     max_iter, precision, rel_prec, 
-		     VOLUME/2, &Q_Qdagger_ND, 0, 1000);
+		     VOLUME/2, &Q_Qdagger_ND);
   #endif
   
   
