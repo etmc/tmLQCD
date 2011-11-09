@@ -1,4 +1,6 @@
 /***********************************************************************
+ * $Id$
+ *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -15,10 +17,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/**************************************************************************
- *
- * $Id$
  *
  * The externally accessible functions are
  *
@@ -43,6 +41,7 @@
 #include "global.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "solver_field.h"
 #include "bicgstab_complex_bi.h"
 
 /* P inout (guess for the solving bispinor)
@@ -54,16 +53,22 @@ int bicgstab_complex_bi(bispinor * const P, bispinor * const Q, const int max_it
   complex rho0, rho1, omega, alpha, beta, nom, denom;
   int i;
   bispinor * r, * p, * v, *hatr, * s, * t;
+  bispinor ** bisolver_field = NULL;
+  const int nr_sf = 6;
 
-/*   init_solver_field(6); */
+  if(N == VOLUME) {
+    init_bisolver_field(&bisolver_field, VOLUMEPLUSRAND, nr_sf);
+  }
+  else {
+    init_bisolver_field(&bisolver_field, VOLUMEPLUSRAND/2, nr_sf);
+  }
 
-
-  hatr = g_bispinor_field[DUM_SOLVER];
-  r = g_bispinor_field[DUM_SOLVER+1];
-  v = g_bispinor_field[DUM_SOLVER+2];
-  p = g_bispinor_field[DUM_SOLVER+3];
-  s = g_bispinor_field[DUM_SOLVER+4];
-  t = g_bispinor_field[DUM_SOLVER+5];
+  hatr = bisolver_field[0];
+  r = bisolver_field[1];
+  v = bisolver_field[2];
+  p = bisolver_field[3];
+  s = bisolver_field[4];
+  t = bisolver_field[5];
 
   f(r, P);
   diff_bi(p, Q, r, N);
@@ -80,6 +85,7 @@ int bicgstab_complex_bi(bispinor * const P, bispinor * const Q, const int max_it
     }
   
     if((((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) && i>0) {
+      finalize_bisolver(bisolver_field, nr_sf);
       return(i);
     }
     f(v, p);
@@ -102,5 +108,6 @@ int bicgstab_complex_bi(bispinor * const P, bispinor * const Q, const int max_it
     assign_mul_bra_add_mul_ket_add_bi(p, v, r, omega, beta, N);
     rho0.re = rho1.re; rho0.im = rho1.im;
   }
+  finalize_bisolver(bisolver_field, nr_sf);
   return -1;
 }

@@ -505,7 +505,7 @@ int check_projectors() {
   spinor ** work_fields = NULL;
   const int nr_wf = 4;
 
-  init_solver_field(work_fields, VOLUMEPLUSRAND, nr_wf);
+  init_solver_field(&work_fields, VOLUMEPLUSRAND, nr_wf);
   phi = malloc(nb_blocks*sizeof(spinor *));
   wphi = malloc(nb_blocks*sizeof(spinor *));
 
@@ -826,7 +826,7 @@ void check_little_D_inversion() {
   spinor ** work_fields = NULL;
   const int nr_wf = 1;
 
-  init_solver_field(work_fields, VOLUMEPLUSRAND, nr_wf);
+  init_solver_field(&work_fields, VOLUMEPLUSRAND, nr_wf);
   random_spinor_field(work_fields[0], VOLUME, 1);
   if(init_dfl_projector == 0) {
     alloc_dfl_projector();
@@ -916,7 +916,7 @@ void check_local_D()
   spinor ** work_fields = NULL;
   const int nr_wf = 7;
 
-  init_solver_field(work_fields, VOLUMEPLUSRAND, nr_wf);
+  init_solver_field(&work_fields, VOLUMEPLUSRAND, nr_wf);
   block_convert_lexic_to_eo(work_fields[0], work_fields[1], block_list[0].basis[0]);
   block_convert_eo_to_lexic(work_fields[2], work_fields[0], work_fields[1]);
   diff(work_fields[0], work_fields[2], block_list[0].basis[0], block_list[0].volume);

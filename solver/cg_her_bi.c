@@ -1,4 +1,6 @@
 /***********************************************************************
+ * $Id$
+ *
  * Copyright (C) 2005 Thomas Chiarappa
  *
  * This file is part of tmLQCD.
@@ -15,11 +17,7 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-
-/**************************************************************************
  *
- * $Id$
  *  
  * File: cg_her_bi.c
  *
@@ -61,14 +59,9 @@
 #include "solver/matrix_mult_typedef.h"
 #include "sub_low_ev.h"
 #include "cg_her_bi.h"
-
+#include "solver_field.h"
 #include"solver/matrix_mult_typedef_bi.h"
 
-#ifdef _SOLVER_OUTPUT
-#define _SO(x) x
-#else
-#define _SO(x)
-#endif
 
 /* P output = solution , Q input = source */
 int cg_her_bi(bispinor * const P, bispinor * const Q, const int max_iter, 
@@ -76,64 +69,73 @@ int cg_her_bi(bispinor * const P, bispinor * const Q, const int max_iter,
   
   double normsp, normsq, pro, err, alpha_cg, beta_cg, squarenorm;
   int iteration;
+  bispinor ** bisolver_field = NULL;
+  const int nr_sf = 6;
   
+  if(N == VOLUME) {
+    init_bisolver_field(&bisolver_field, VOLUMEPLUSRAND, nr_sf);
+  }
+  else {
+    init_bisolver_field(&bisolver_field, VOLUMEPLUSRAND/2, nr_sf);
+  }
   squarenorm = square_norm_bi(Q, N);  
   /*        !!!!   INITIALIZATION    !!!! */
-  assign_bi(g_bispinor_field[DUM_SOLVER], P, N);
+  assign_bi(bisolver_field[0], P, N);
   /*        (r_0,r_0)  =  normsq         */
   normsp=square_norm_bi(P, N);
-  assign_bi(g_bispinor_field[DUM_SOLVER+5], Q, N);
+  assign_bi(bisolver_field[5], Q, N);
   
   /* initialize residue r and search vector p */
   if(normsp == 0) {
     /* if a starting solution vector equal to zero is chosen */
-    assign_bi(g_bispinor_field[DUM_SOLVER+1], g_bispinor_field[DUM_SOLVER+5], N);
-    assign_bi(g_bispinor_field[DUM_SOLVER+2], g_bispinor_field[DUM_SOLVER+5], N);
+    assign_bi(bisolver_field[1], bisolver_field[5], N);
+    assign_bi(bisolver_field[2], bisolver_field[5], N);
     normsq=square_norm_bi(Q, N);
   }
   else {
     /* if a starting solution vector different from zero is chosen */
-    f(g_bispinor_field[DUM_SOLVER+3], g_bispinor_field[DUM_SOLVER]);
-    diff_bi(g_bispinor_field[DUM_SOLVER+1], g_bispinor_field[DUM_SOLVER+5], 
-	    g_bispinor_field[DUM_SOLVER+3], N);
-    assign_bi(g_bispinor_field[DUM_SOLVER+2], g_bispinor_field[DUM_SOLVER+1], N);
-    normsq=square_norm_bi(g_bispinor_field[DUM_SOLVER+2], N);
+    f(bisolver_field[3], bisolver_field[0]);
+    diff_bi(bisolver_field[1], bisolver_field[5], 
+	    bisolver_field[3], N);
+    assign_bi(bisolver_field[2], bisolver_field[1], N);
+    normsq=square_norm_bi(bisolver_field[2], N);
   }
   
   /* main loop */
   for(iteration = 0; iteration < max_iter; iteration++) {
-    f(g_bispinor_field[DUM_SOLVER+4], g_bispinor_field[DUM_SOLVER+2]);
-    pro=scalar_prod_r_bi(g_bispinor_field[DUM_SOLVER+2], g_bispinor_field[DUM_SOLVER+4], N);
+    f(bisolver_field[4], bisolver_field[2]);
+    pro=scalar_prod_r_bi(bisolver_field[2], bisolver_field[4], N);
      
     /*  Compute alpha_cg(i+1)   */
     alpha_cg=normsq/pro;
      
     /*  Compute x_(i+1) = x_i + alpha_cg(i+1) p_i    */
-    assign_add_mul_r_bi(g_bispinor_field[DUM_SOLVER], g_bispinor_field[DUM_SOLVER+2],  alpha_cg, N);
+    assign_add_mul_r_bi(bisolver_field[0], bisolver_field[2],  alpha_cg, N);
     /*  Compute r_(i+1) = r_i - alpha_cg(i+1) Qp_i   */
-    assign_add_mul_r_bi(g_bispinor_field[DUM_SOLVER+1], g_bispinor_field[DUM_SOLVER+4], -alpha_cg, N);
+    assign_add_mul_r_bi(bisolver_field[1], bisolver_field[4], -alpha_cg, N);
 
     /* Check whether the precision is reached ... */
-    err=square_norm_bi(g_bispinor_field[DUM_SOLVER+1], N);
+    err=square_norm_bi(bisolver_field[1], N);
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 1)) {
       printf("%d\t%g\n",iteration,err); fflush( stdout);
     }
     
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) {
-      assign_bi(P, g_bispinor_field[DUM_SOLVER], N);
+      assign_bi(P, bisolver_field[0], N);
+      finalize_bisolver(bisolver_field, nr_sf);
       return(iteration+1);
     }
      
     /* Compute beta_cg(i+1)
        Compute p_(i+1) = r_i+1 + beta_(i+1) p_i     */
     beta_cg=err/normsq;
-    assign_mul_add_r_bi(g_bispinor_field[DUM_SOLVER+2], beta_cg, g_bispinor_field[DUM_SOLVER+1], N);
+    assign_mul_add_r_bi(bisolver_field[2], beta_cg, bisolver_field[1], N);
     normsq=err;
   }
   
-  assign_bi(P, g_bispinor_field[DUM_SOLVER], N);  
-
+  assign_bi(P, bisolver_field[0], N);  
+  finalize_bisolver(bisolver_field, nr_sf);
   return(-1);
 }
 

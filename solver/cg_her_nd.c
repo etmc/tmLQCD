@@ -65,8 +65,8 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
   spinor ** dn_field = NULL;  
   const int nr_sf = 5;
   /* do we really need so many fields??? */
-  init_solver_field(up_field, VOLUMEPLUSRAND, nr_sf);
-  init_solver_field(dn_field, VOLUMEPLUSRAND, nr_sf);
+  init_solver_field(&up_field, VOLUMEPLUSRAND, nr_sf);
+  init_solver_field(&dn_field, VOLUMEPLUSRAND, nr_sf);
 
   squarenorm = square_norm(Q_up, N, 1);
   squarenorm+= square_norm(Q_dn, N, 1);

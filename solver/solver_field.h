@@ -27,5 +27,6 @@
 
 int init_solver_field(spinor *** const solver_field, const int V, const int nr);
 void finalize_solver(spinor ** solver_field, const int nr);
-
+int init_bisolver_field(bispinor *** const solver_field, const int V, const int nr);
+void finalize_bisolver(bispinor ** solver_field, const int nr);
 #endif

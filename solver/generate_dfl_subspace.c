@@ -105,7 +105,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
 #else
   atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-  init_solver_field(work_fields, VOLUMEPLUSRAND, nr_wf);
+  init_solver_field(&work_fields, VOLUMEPLUSRAND, nr_wf);
   work = (complex*)malloc(nb_blocks*9*Ns*sizeof(complex));
   psi = (spinor **)calloc(nb_blocks, sizeof(spinor *));
   psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
@@ -415,7 +415,7 @@ int generate_dfl_subspace_free(const int Ns, const int N) {
   complex s;
   spinor ** work_fields = NULL;
   const int nr_wf = 1;
-  init_solver_field(work_fields, VOLUMEPLUSRAND, nr_wf);
+  init_solver_field(&work_fields, VOLUMEPLUSRAND, nr_wf);
 
   if(init_subspace == 0) init_dfl_subspace(Ns);
 
