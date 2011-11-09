@@ -2514,7 +2514,7 @@ int mixed_solveT(spinor * const P, spinor * const Q, const int max_iter,
   spinor ** solver_field = NULL;
   const int nr_sf = 4;
 
-  init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
 
   size_t dev_spinsize = 6*VOLUME * sizeof(dev_spinorM(RealT)); // float4 
   MixedsolveParameter<RealT>& mixedsolveParameter=*init_mixedsolve<RealT>(g_gauge_field);
@@ -2954,7 +2954,7 @@ int mixed_solve_eoT (spinor * const P, spinor * const Q, const int max_iter,
   spinor ** solver_field = NULL;
   const int nr_sf = 4;
   
-  init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
+  init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
   size_t dev_spinsize;
   #ifndef HALF
     dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinorM(RealT)); // float4 even-odd !

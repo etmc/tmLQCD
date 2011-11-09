@@ -2854,8 +2854,8 @@ int cg_eo_nd (dev_su3_2v * gf,
   spinor ** dn_field = NULL;
   const int nr_sf = 5;
   
-  init_solver_field(up_field, VOLUMEPLUSRAND/2, nr_sf);
-  init_solver_field(dn_field, VOLUMEPLUSRAND/2, nr_sf);
+  init_solver_field(&up_field, VOLUMEPLUSRAND/2, nr_sf);
+  init_solver_field(&dn_field, VOLUMEPLUSRAND/2, nr_sf);
   
   /////////////////////////////////////////////
   // CUDA block- and gridsize specifications //
@@ -3520,6 +3520,13 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
          *  d_up, *  d_dn,
          * Ax_up, * Ax_dn;
   
+  spinor ** up_field = NULL;
+  spinor ** dn_field = NULL;
+  const int nr_sf = 5;
+
+  init_solver_field(&up_field, VOLUMEPLUSRAND/2, nr_sf);
+  init_solver_field(&dn_field, VOLUMEPLUSRAND/2, nr_sf);
+
   // formal parameters
   /*
   size_t dev_spinsize_int   =  6*VOLUME/2*sizeof(dev_spinor);		// 24 floats per spinor per even lattice site
@@ -4155,7 +4162,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		#else
       		  if (g_cart_id == 0) printf("\n");
       		#endif
-      
+      finalize_solver(up_field, nr_sf);
+      finalize_solver(dn_field, nr_sf); 
       return(outercount);
       
     }
@@ -4264,6 +4272,9 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   		  if (g_cart_id == 0) printf("\n");
   		#endif
   
+  finalize_solver(up_field, nr_sf);
+  finalize_solver(dn_field, nr_sf);
+
   return(outercount);
   
   
