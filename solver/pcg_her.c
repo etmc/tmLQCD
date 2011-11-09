@@ -42,10 +42,10 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
   const int nr_sf = 5;
 
   if(N == VOLUME) {
-    init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+    init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
   }
   else {
-    init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
+    init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
   }
   squarenorm = square_norm(Q, N, 1);
   /*        !!!!   INITIALIZATION    !!!! */

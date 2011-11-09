@@ -64,18 +64,18 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
            double eps_sq, const int rel_prec, const int N, matrix_mult f) {
 
   static double normsq,pro,err,alpha_cg,beta_cg,squarenorm;
-  int iteration;
+  int iteration, i;
   int save_sloppy = g_sloppy_precision;
   double atime, etime, flops;
   spinor ** solver_field = NULL;
   const int nr_sf = 3;
 
   if(N == VOLUME) {
-    init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
-  }
+    init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
+  } 
   else {
-    init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
-  }
+    init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf); 
+  } 
   /* initialize residue r and search vector p */
 #ifdef MPI
   atime = MPI_Wtime();
@@ -84,7 +84,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
 #endif
   squarenorm = square_norm(Q, N, 1);
 
-  f(solver_field[0], P); 
+  f(solver_field[0], P);  
 
   diff(solver_field[1], Q, solver_field[0], N);
   assign(solver_field[2], solver_field[1], N);

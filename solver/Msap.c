@@ -87,7 +87,7 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
    * here it would be probably better to get the working fields as a parameter 
    * from the calling function
    */
-  init_solver_field(solver_field, VOLUME, nr_sf);
+  init_solver_field(&solver_field, VOLUME, nr_sf);
   r = solver_field[0];
   a = solver_field[1];
   b = solver_field[2];
@@ -139,7 +139,7 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
    * here it would be probably better to get the working fields as a parameter 
    * from the calling function
    */
-  init_solver_field(solver_field, VOLUME, nr_sf);
+  init_solver_field(&solver_field, VOLUME, nr_sf);
   r = solver_field[0];
   a = solver_field[1];
   b = solver_field[2];

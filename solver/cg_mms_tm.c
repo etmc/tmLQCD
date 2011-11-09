@@ -72,7 +72,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
   spinor ** solver_field = NULL;
   const int nr_sf = 5;
 
-  init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
   init_mms_tm(g_no_extra_masses);
 
   /* currently only implemented for P=0 */

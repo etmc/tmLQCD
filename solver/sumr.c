@@ -67,7 +67,7 @@
 int sumr(spinor * const P, spinor * const Q, const int max_iter,
 	 double eps_sq){
   double sigma, delta, s, rho, zeta, z_r, tmpr, normsp, err, tau_hat;
-  double ov_s, m_ov, ap_eps_sq, shift;
+  double ov_s, m_ov=0., ap_eps_sq, shift;
   complex phi, phi_hat, tau, lambda, c, gamm, alpha, eta, kappa;
   complex r_hat, r_off, r_off_old, r_diag, r_diag_old, tmpc, tmpc1, tmpc2;
   int iteration;
@@ -78,7 +78,7 @@ int sumr(spinor * const P, spinor * const Q, const int max_iter,
   spinor ** solver_field = NULL;
   printf("Starting SUMR!\n");
   /*        !!!!   INITIALIZATION    !!!! */
-  init_solver_field(solver_field, VOLUMEPLUSRAND, 10);
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, 10);
   x = solver_field[0];
   r = solver_field[1];
   p = solver_field[2];

@@ -58,10 +58,10 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
   k = -l;
 
   if(N == VOLUME) {
-    init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+    init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
   }
   else {
-    init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
+    init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
   }
   r0_tilde = solver_field[0];
   u0 = solver_field[1];

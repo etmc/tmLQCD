@@ -29,35 +29,39 @@
 #include"su3.h"
 #include"solver_field.h"
 
-int init_solver_field(spinor ** solver_field, const int V, const int nr) {
+int init_solver_field(spinor *** const solver_field, const int V, const int nr) {
   int i=0;
 
-  if((void*)(solver_field = (spinor**)malloc((nr+1)*sizeof(spinor*))) == NULL) {
+  /* allocate nr+1 to save the linear field in solver_field[nr] */
+  if((void*)((*solver_field) = (spinor**)malloc((nr+1)*sizeof(spinor*))) == NULL) {
     printf ("malloc errno in init_solver_field: %d\n",errno); 
     errno = 0;
     return(2);
   }
   
+  /* allocate the full chunk of memory to solver_field[nr] */
 #if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
-  if((void*)(solver_field[nr] = (spinor*)shmalloc((nr*V+1)*sizeof(spinor))) == NULL) {
+  if((void*)((*solver_field)[nr] = (spinor*)shmalloc((nr*V+1)*sizeof(spinor))) == NULL) {
     fprintf (stderr, "malloc errno in init_solver_field: %d\n",errno); 
     errno = 0;
     return(1);
   }
 #else
-  if((void*)(solver_field[nr] = (spinor*)calloc(nr*V+1, sizeof(spinor))) == NULL) {
+  if((void*)((*solver_field)[nr] = (spinor*)calloc(nr*V+1, sizeof(spinor))) == NULL) {
     printf ("malloc errno in init_solver_field: %d\n",errno); 
     errno = 0;
     return(1);
   }
 #endif
+
+  /* now cut in pieces and distribute to solver_field[0]-solver_field[nr-1] */
 #if ( defined SSE || defined SSE2 || defined SSE3)
-  solver_field[0] = (spinor*)(((unsigned long int)(solver_field[nr])+ALIGN_BASE)&~ALIGN_BASE);
+  (*solver_field)[0] = (spinor*)(((unsigned long int)((*solver_field)[nr])+ALIGN_BASE)&~ALIGN_BASE);
 #else
-  solver_field[0] = solver_field[nr];
+  (*solver_field)[0] = (*solver_field)[nr];
 #endif
   for(i = 1; i < nr; i++){
-    solver_field[i] = solver_field[i-1]+V;
+    (*solver_field)[i] = (*solver_field)[i-1]+V;
   }
   return(0);
 }
