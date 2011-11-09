@@ -205,7 +205,7 @@ void ndpoly_heatbath(const int id) {
     /* solve Q*tau1*P(Q^2) *x=y */
     cg_her_nd(g_chi_up_spinor_field[1],g_chi_dn_spinor_field[1],
 	      g_chi_up_spinor_field[0],g_chi_dn_spinor_field[0],
-	      1000,1.e-16,0,VOLUME/2, Qtau1_P_ND  ,0,1);
+	      1000,1.e-16,0,VOLUME/2, Qtau1_P_ND);
 
     /*  phi= Bdagger phi  */
     for(j = 1; j < (phmc_dop_n_cheby); j++){
