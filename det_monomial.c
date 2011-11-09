@@ -55,8 +55,6 @@ extern int ITER_MAX_CG;
 /* think about chronological solver ! */
 
 void det_derivative(const int id) {
-  int mu, x;
-  extern su3 ** g_gauge_field_saved;
   monomial * mnl = &monomial_list[id];
 
   /* This factor 2 a missing factor 2 in trace_lambda */
