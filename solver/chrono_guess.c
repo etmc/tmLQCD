@@ -32,10 +32,6 @@
 #include "solver/lu_solve.h"
 #include "solver/chrono_guess.h"
 
-#ifdef HAVE_LAPACK
-static int ONE = 1;
-static int MONE = -1;
-#endif
 
 /* N is the number of vectors to be stored maximally */
 /* _n is the last added vector                       */

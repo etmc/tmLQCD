@@ -87,9 +87,9 @@ void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[],
   const double alpha = 0.5;
 
   double vnrm_old;
-  int i, n2, isorth = 0;
+  int i, isorth = 0;
   int j;
-  complex CMONE, CONE, CZERO;
+  complex CMONE, CONE;
 #ifdef CRAY
   char *cupl_n = "N";
   _fcd fupl_n;
@@ -98,10 +98,8 @@ void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[],
   char *fupl_n = "N";
 #endif
 
-  n2 = 2*n;
   CMONE.re = -1.; CMONE.im=0.;
   CONE.re = 1.; CONE.im=0.;
-  CZERO.re = 0.; CZERO.im=0.;
 
   vnrm_old = sqrt(square_norm((spinor*) v, n*sizeof(complex)/sizeof(spinor), 1));
 
@@ -130,9 +128,9 @@ void IteratedClassicalGS_su3vect(complex v[], double *vnrm, int n, int m, comple
   const double alpha = 0.5;
 
   double vnrm_old;
-  int i, n2, isorth = 0;
+  int i, isorth = 0;
   int j;
-  complex CMONE, CONE, CZERO;
+  complex CMONE, CONE;
 
 #ifdef CRAY
   char *cupl_n = "N";
@@ -142,10 +140,8 @@ void IteratedClassicalGS_su3vect(complex v[], double *vnrm, int n, int m, comple
   char *fupl_n = "N";
 #endif
 
-  n2 = 2*n;
   CMONE.re = -1.; CMONE.im=0.;
   CONE.re = 1.; CONE.im=0.;
-  CZERO.re = 0.; CZERO.im=0.;
 
   vnrm_old = sqrt(square_norm_su3vect((su3_vector*) v, n*sizeof(complex)/sizeof(su3_vector),1));
 

@@ -59,7 +59,7 @@ void init_mms_tm(const int nr);
 int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter, 
 	      double eps_sq, const int rel_prec, const int N, matrix_mult f) {
 
-  static double normsq, pro, err, alpha_cg = 1., beta_cg = 0., normsp, squarenorm;
+  static double normsq, pro, err, alpha_cg = 1., beta_cg = 0., squarenorm;
   int iteration, im, append = 0;
   char filename[100];
   static double gamma,alpham1;
@@ -90,7 +90,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
   squarenorm = square_norm(Q, N, 1);
   assign(solver_field[0], P, N);
-  normsp = square_norm(P, N, 1);
+/*   normsp = square_norm(P, N, 1); */
 
   /* initialize residue r and search vector p */
 /*   if(normsp == 0){ */

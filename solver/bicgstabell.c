@@ -49,7 +49,7 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
   double err;
   int i, j, k, l;
   double rho0, rho1, beta, alpha, omega, gamma0 = 0., squarenorm;
-  spinor * r[5], * u[5], * r0_tilde, * u0, * x;
+  spinor * r[5], * u[5], * r0_tilde, * x;
   double tau[5][5], gamma[25], gammap[25], gammapp[25], sigma[25];
   spinor ** solver_field = NULL;
   const int nr_sf = 2*(_l+1)+2;
@@ -64,7 +64,6 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
     init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
   }
   r0_tilde = solver_field[0];
-  u0 = solver_field[1];
   for(i = 0; i <= l; i++){
     r[i] = solver_field[2+2*i];
     u[i] = solver_field[3+2*i];
