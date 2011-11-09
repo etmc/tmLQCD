@@ -299,10 +299,10 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     if(solver_flag == BICGSTAB) {
       if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}
       if(use_preconditioning==1 && g_precWS!=NULL){
-	if(g_proc_id == 0) {printf("Using preconditioning!!!\n");}
+	if(g_proc_id == 0) {printf("# Using preconditioning (which one?)!\n");}
 	iter = bicgstab_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi_prec);
       } else {
-	if(g_proc_id == 0) {printf("Not using preconditioning!!!\n");}
+	if(g_proc_id == 0) {printf("# Not using preconditioning (which one?)!\n");}
 	iter = bicgstab_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi);
       }
     }
@@ -310,10 +310,10 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(g_proc_id == 0) {printf("# Using CGS!\n"); fflush(stdout);}
 
       if(use_preconditioning==1 && g_precWS!=NULL){
-	if(g_proc_id == 0) {printf("Using preconditioning!!!\n");}
+	if(g_proc_id == 0) {printf("# Using preconditioning (which one?)!\n");}
 	iter = cgs_real(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi_prec);
       } else {
-	if(g_proc_id == 0) {printf("Not using preconditioning!!!\n");}
+	if(g_proc_id == 0) {printf("# Not using preconditioning (which one?)!\n");}
 	iter = cgs_real(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi);
       }
 
@@ -323,10 +323,10 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(g_proc_id == 0) {printf("# Using GMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
 
       if(use_preconditioning==1 && g_precWS!=NULL){
-	if(g_proc_id == 0) {printf("Using preconditioning!!!\n");}
+	if(g_proc_id == 0) {printf("# Using preconditioning (which one?)!\n");}
 	iter = gmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi_prec);
       } else {
-	if(g_proc_id == 0) {printf("not using preconditioning!!!\n");}
+	if(g_proc_id == 0) {printf("# not using preconditioning (which one?)!\n");}
 	iter = gmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi);
       }
     }
@@ -348,7 +348,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(g_proc_id == 0) {printf("# Using deflated solver! m = %d\n", gmres_m_parameter); fflush(stdout);}
       /* apply P_L to source           */
       project_left(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI]);
-      if(g_proc_id == 0) printf("Applied P_L to source\n");
+      if(g_proc_id == 0) printf("# Applied P_L to source\n");
       /* invert P_L D on source -> chi */
       if(solver_flag == DFLGCR) {
 	iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], gmres_m_parameter, 
@@ -360,7 +360,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       }
       /* apply P_R to chi              */
       project_right(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1]);
-      if(g_proc_id == 0) printf("Applied P_R to solution\n");
+      if(g_proc_id == 0) printf("# Applied P_R to solution\n");
       /* reconstruct solution          */
       project(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
       add(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME);
@@ -376,7 +376,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
 #ifdef HAVE_GPU 
       if(usegpu_flag){
-	if(g_proc_id == 0) printf("Using GPU for inversion\n");
+	if(g_proc_id == 0) printf("# Using GPU for inversion\n");
 	iter = mixed_solve(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME);
       }
       else{
@@ -391,7 +391,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(use_preconditioning==1 && g_precWS!=NULL){
 	spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
 	static complex alpha={0,0};
-	if(g_proc_id==0) {printf("Using preconditioning!!!\n");}
+	if(g_proc_id==0) {printf("# Using preconditioning (which one?)!\n");}
 
 	if(g_prec_sequence_d_dagger_d[2] != 0.0){
 	  alpha.re=g_prec_sequence_d_dagger_d[2];
@@ -407,7 +407,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	}
 
       } else {
-	if(g_proc_id==0) {printf("Not using preconditioning!!!\n");}
+	if(g_proc_id==0) {printf("# Not using preconditioning!\n");}
 	iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
 		      rel_prec, VOLUME, &Q_pm_psi);
       }
