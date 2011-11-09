@@ -72,6 +72,7 @@ extern "C" {
 #include "../measure_rectangles.h"
 #include "../polyakov_loop.h"
 #include "../su3spinor.h"
+#include "../solver/solver_field.h"
 
 #ifdef MPI
   #include "../xchange.h"
@@ -2500,7 +2501,7 @@ void finalize_mixedsolve(MixedsolveParameter<RealT>* mixedsolveParameterP){
 #ifndef HALF
 template<class RealT,template<class MixedsolveOperatorRealT>class MixedsolveOperatorT>
 int mixed_solveT(spinor * const P, spinor * const Q, const int max_iter, 
-	        double eps, const int rel_prec,const int N, MixedsolveOperatorT<RealT>& mixedsolveOperator){
+		 double eps, const int rel_prec,const int N, MixedsolveOperatorT<RealT>& mixedsolveOperator){
  
   // source in Q, initial solution in P (not yet implemented)
   double rk;
@@ -2510,7 +2511,11 @@ int mixed_solveT(spinor * const P, spinor * const Q, const int max_iter,
   double timeelapsed = 0.0;
   double sourcesquarenorm;
   int iter;
-  
+  spinor ** solver_field = NULL;
+  const int nr_sf = 4;
+
+  init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+
   size_t dev_spinsize = 6*VOLUME * sizeof(dev_spinorM(RealT)); // float4 
   MixedsolveParameter<RealT>& mixedsolveParameter=*init_mixedsolve<RealT>(g_gauge_field);
   
@@ -2519,86 +2524,88 @@ int mixed_solveT(spinor * const P, spinor * const Q, const int max_iter,
 
   rk = square_norm(Q, N, 0);
   sourcesquarenorm = rk; // for relative precision
-  assign(g_spinor_field[DUM_SOLVER],Q,N);
+  assign(solver_field[0],Q,N);
   printf("Initial residue: %.16e\n",rk);
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+1],  N);//spin2 = x_k
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+2],  N);
+  zero_spinor_field(solver_field[1],  N);//spin2 = x_k
+  zero_spinor_field(solver_field[2],  N);
   printf("The VOLUME is: %d\n",N);
 
-  mixedsolveOperator.checkInit(g_spinor_field[DUM_SOLVER+2],g_spinor_field[DUM_SOLVER+3],g_spinor_field[DUM_SOLVER],N);
+  mixedsolveOperator.checkInit(solver_field[2],solver_field[3],solver_field[0],N);
   
   
   for(iter=0; iter<max_iter; iter++){
 
-   //"Applying double precision Dirac-Op...\n"
-   mixedsolveOperator.check(g_spinor_field[DUM_SOLVER+2],g_spinor_field[DUM_SOLVER+3],N);//spinTmp ^= g_spinor_field[DUM_SOLVER+3], N=volume
+    //"Applying double precision Dirac-Op...\n"
+    mixedsolveOperator.check(solver_field[2],solver_field[3],N);//spinTmp ^= solver_field[3], N=volume
     // r_k = b - D x_k
-   diff(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+3] ,N);//residueRSpininout ^= g_spinor_field[DUM_SOLVER]
+    diff(solver_field[0], solver_field[0], solver_field[3] ,N);//residueRSpininout ^= solver_field[0]
 
-   rk = square_norm(g_spinor_field[DUM_SOLVER], N, 0);
+    rk = square_norm(solver_field[0], N, 0);
 
-   #ifdef GF_8
+#ifdef GF_8
     if(isnan(rk)){
       fprintf(stderr, "Error in mixed_solveT: Residue is NaN.\n  May happen with GF 8 reconstruction. Aborting ...\n");
       exit(200);
     }
-   #endif
+#endif
 
-   printf("Residue after %d inner solver iterations: %.18e\n",outercount,rk);
-   if((rk<=eps && rel_prec==0) || (rk<=eps*sourcesquarenorm && rel_prec==1))
-   {
-     printf("Reached solver precision of eps=%.2e\n",eps);
-     //multiply with D^dagger
-     mixedsolveOperator.checkDeinit(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+3],P,N);
-
-
-     stop = clock();
-     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
-     printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.16e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
-     finalize_mixedsolve(&mixedsolveParameter);
-     return(totalcount);  
-   }
+    printf("Residue after %d inner solver iterations: %.18e\n",outercount,rk);
+    if((rk<=eps && rel_prec==0) || (rk<=eps*sourcesquarenorm && rel_prec==1))
+      {
+	printf("Reached solver precision of eps=%.2e\n",eps);
+	//multiply with D^dagger
+	mixedsolveOperator.checkDeinit(solver_field[1],solver_field[3],P,N);
 
 
-  //initialize spin fields on device
-  convert2REAL4_spin<RealT>(g_spinor_field[DUM_SOLVER],mixedsolveParameter.h2d_spin);
-
-  cudaMemcpy(mixedsolveParameter.dev_spinin, mixedsolveParameter.h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
-  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-
-   // solve in single prec on device
-   // D p_k = r_k
-   printf("Entering inner solver\n");
-   assert((startinner = clock())!=-1);
-   totalcount += dev_cg<RealT,MixedsolveOperatorT>(mixedsolveParameter.dev_gf, mixedsolveParameter.dev_spinin, mixedsolveParameter.dev_spinout, mixedsolveParameter.dev_spin1, mixedsolveParameter.dev_spin2, mixedsolveParameter.dev_spin3, mixedsolveParameter.dev_spin4, mixedsolveParameter.dev_spin5, dev_grid,dev_nn, mixedsolveOperator, sourcesquarenorm, rel_prec, eps);
-   stopinner = clock();
-   timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;
-   printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
+	stop = clock();
+	timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
+	printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.16e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
+	finalize_mixedsolve(&mixedsolveParameter);
+	finalize_solver(solver_field, nr_sf);
+	return(totalcount);  
+      }
 
 
-   // copy back
-   cudaMemcpy(mixedsolveParameter.h2d_spin, mixedsolveParameter.dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
-   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+    //initialize spin fields on device
+    convert2REAL4_spin<RealT>(solver_field[0],mixedsolveParameter.h2d_spin);
+
+    cudaMemcpy(mixedsolveParameter.dev_spinin, mixedsolveParameter.h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
+    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+
+    // solve in single prec on device
+    // D p_k = r_k
+    printf("Entering inner solver\n");
+    assert((startinner = clock())!=-1);
+    totalcount += dev_cg<RealT,MixedsolveOperatorT>(mixedsolveParameter.dev_gf, mixedsolveParameter.dev_spinin, mixedsolveParameter.dev_spinout, mixedsolveParameter.dev_spin1, mixedsolveParameter.dev_spin2, mixedsolveParameter.dev_spin3, mixedsolveParameter.dev_spin4, mixedsolveParameter.dev_spin5, dev_grid,dev_nn, mixedsolveOperator, sourcesquarenorm, rel_prec, eps);
+    stopinner = clock();
+    timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;
+    printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
+
+
+    // copy back
+    cudaMemcpy(mixedsolveParameter.h2d_spin, mixedsolveParameter.dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
+    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
    
-   convert2double_spin<RealT>(mixedsolveParameter.h2d_spin, g_spinor_field[DUM_SOLVER+2]);
+    convert2double_spin<RealT>(mixedsolveParameter.h2d_spin, solver_field[2]);
    
-   add(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+2],N);
-   // x_(k+1) = x_k + p_k
+    add(solver_field[1],solver_field[1],solver_field[2],N);
+    // x_(k+1) = x_k + p_k
    
-   outercount ++;
+    outercount ++;
     
-}// outer loop 
+  }// outer loop 
 
-     printf("Did NOT reach solver precision of eps=%.2e\n",eps);
-     //multiply with D^dagger
-     mixedsolveOperator.checkDeinit(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+3],P,N);
-     finalize_mixedsolve(&mixedsolveParameter);
+  printf("Did NOT reach solver precision of eps=%.2e\n",eps);
+  //multiply with D^dagger
+  mixedsolveOperator.checkDeinit(solver_field[1],solver_field[3],P,N);
+  finalize_mixedsolve(&mixedsolveParameter);
        
 
-    stop = clock();
-    timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
-    printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.16e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
+  stop = clock();
+  timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
+  printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.16e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
 
+  finalize_solver(solver_field, nr_sf);
   return(-1);
 }
 
@@ -2944,7 +2951,10 @@ int mixed_solve_eoT (spinor * const P, spinor * const Q, const int max_iter,
   double timeelapsed = 0.0;
   double sourcesquarenorm;
   int iter;//never referenced: , retval;
+  spinor ** solver_field = NULL;
+  const int nr_sf = 4;
   
+  init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
   size_t dev_spinsize;
   #ifndef HALF
     dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinorM(RealT)); // float4 even-odd !
@@ -2958,11 +2968,11 @@ int mixed_solve_eoT (spinor * const P, spinor * const Q, const int max_iter,
  /* 
   #ifndef HALF
   // small benchmark
-    assign(g_spinor_field[DUM_SOLVER],Q,N);
+    assign(solver_field[0],Q,N);
     #ifndef MPI
-      benchmark(g_spinor_field[DUM_SOLVER]);
+      benchmark(solver_field[0]);
     #else
-      benchmark2(g_spinor_field[DUM_SOLVER]); 
+      benchmark2(solver_field[0]); 
     #endif
   // end small benchmark
   
@@ -2983,10 +2993,10 @@ int mixed_solve_eoT (spinor * const P, spinor * const Q, const int max_iter,
   else{
     finaleps = eps;
   }
-  assign(g_spinor_field[DUM_SOLVER],Q,N);
+  assign(solver_field[0],Q,N);
   printf("Initial residue: %.16e\n",rk);
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+1],  N);//spin2 = x_k
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+2],  N);
+  zero_spinor_field(solver_field[1],  N);//spin2 = x_k
+  zero_spinor_field(solver_field[2],  N);
   printf("The VOLUME/2 is: %d\n",N);
 
   
@@ -3000,11 +3010,11 @@ for(iter=0; iter<max_iter; iter++){
 
    printf("Applying double precision EO Dirac-Op Q_{-}Q{+}...\n");
    
-   Qtm_pm_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2]);
-   diff(g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER+3],N);
+   Qtm_pm_psi(solver_field[3], solver_field[2]);
+   diff(solver_field[0],solver_field[0],solver_field[3],N);
     // r_k = b - D x_k
    
-   rk = square_norm(g_spinor_field[DUM_SOLVER], N, 1);
+   rk = square_norm(solver_field[0], N, 1);
    #ifdef GF_8
     if(isnan(rk)){
       fprintf(stderr, "Error in mixed_solve_eo: Residue is NaN.\n  May happen with GF 8 reconstruction. Aborting ...\n");
@@ -3018,8 +3028,8 @@ for(iter=0; iter<max_iter; iter++){
    {
      printf("Reached solver precision of eps=%.2e\n",eps);
      //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
-     Qtm_minus_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
-     assign(P, g_spinor_field[DUM_SOLVER+3], N);
+     Qtm_minus_psi(solver_field[3], solver_field[1]);
+     assign(P, solver_field[3], N);
 
      printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.16e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
    
@@ -3028,14 +3038,15 @@ for(iter=0; iter<max_iter; iter++){
      timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
         
      finalize_mixedsolve(&mixedsolveParameter);
+     finalize_solver(solver_field, nr_sf);
      return(totalcount);  
    }
    
   //initialize spin fields on device
   #ifndef HALF
-    convert2REAL4_spin<RealT>(g_spinor_field[DUM_SOLVER],mixedsolveParameter.h2d_spin);
+    convert2REAL4_spin<RealT>(solver_field[0],mixedsolveParameter.h2d_spin);
   #else
-    convert2REAL4_spin_half(g_spinor_field[DUM_SOLVER],mixedsolveParameter.h2d_spin, mixedsolveParameter.h2d_spin_norm);
+    convert2REAL4_spin_half(solver_field[0],mixedsolveParameter.h2d_spin, mixedsolveParameter.h2d_spin_norm);
   #endif
   cudaMemcpy(mixedsolveParameter.dev_spinin, mixedsolveParameter.h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
 
@@ -3076,21 +3087,21 @@ for(iter=0; iter<max_iter; iter++){
    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
 
    #ifndef HALF
-     convert2double_spin<RealT>(mixedsolveParameter.h2d_spin, g_spinor_field[DUM_SOLVER+2]);
+     convert2double_spin<RealT>(mixedsolveParameter.h2d_spin, solver_field[2]);
    #else
-     convert2double_spin_half(mixedsolveParameter.h2d_spin, mixedsolveParameter.h2d_spin_norm, g_spinor_field[DUM_SOLVER+2]);
+     convert2double_spin_half(mixedsolveParameter.h2d_spin, mixedsolveParameter.h2d_spin_norm, solver_field[2]);
    #endif
 
    // x_(k+1) = x_k + p_k
-   add(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+2],N);
+   add(solver_field[1],solver_field[1],solver_field[2],N);
 
    outercount ++;
 }// outer loop 
     
      printf("Did NOT reach solver precision of eps=%.2e\n",eps);
      //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
-     Qtm_minus_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
-     assign(P, g_spinor_field[DUM_SOLVER+3], N);
+     Qtm_minus_psi(solver_field[3], solver_field[1]);
+     assign(P, solver_field[3], N);
     
 
     assert((stop = clock())!=-1);
@@ -3098,6 +3109,7 @@ for(iter=0; iter<max_iter; iter++){
     printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.16e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
 
   finalize_mixedsolve(&mixedsolveParameter);
+  finalize_solver(solver_field, nr_sf);
   return(-1);
 }
 

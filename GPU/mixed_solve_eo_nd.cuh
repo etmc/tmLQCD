@@ -70,6 +70,7 @@ extern "C" {
 #include "../Nondegenerate_Matrix.h"
 #include "../Hopping_Matrix.h"
 #include "../solver/cg_her_nd.h"
+#include "../solver/solver_field.h"
 }
 #include "../global.h"
 
@@ -1461,9 +1462,9 @@ void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
   void Hopping_Matrix_wrapper (int ieo, dev_spinor * out, dev_spinor * in) {
   
       //size_t size = (VOLUME+RAND)/2 * 6*sizeof(dev_spinor);
-      //to_host(g_chi_up_spinor_field[DUM_SOLVER+3], in, h2d_spin_up, size);
-      //Hopping_Matrix(ieo, g_chi_dn_spinor_field[DUM_SOLVER+3], g_chi_up_spinor_field[DUM_SOLVER+3]);
-      //to_device(out, g_chi_dn_spinor_field[DUM_SOLVER+3], h2d_spin_up, size);
+      //to_host(g_chi_up_spinor_field[DUM_OLVER+3], in, h2d_spin_up, size);
+      //Hopping_Matrix(ieo, g_chi_dn_spinor_field[DUM_OLVER+3], g_chi_up_spinor_field[DUM_OLVER+3]);
+      //to_device(out, g_chi_dn_spinor_field[DUM_OLVER+3], h2d_spin_up, size);
       
       to_host(spinor_debug_in, in, h2d_spin_up, dev_spinsize_int);
       Hopping_Matrix(ieo, spinor_debug_out, spinor_debug_in);
@@ -2849,9 +2850,12 @@ int cg_eo_nd (dev_su3_2v * gf,
   // algorithm control parameters
   // int N_recalc_res = 10;		// recalculate residue r(k+1) = b - A*x(k+1) each N_recalc_res iteration
   int N_recalc_res = 1000;
+  spinor ** up_field = NULL;
+  spinor ** dn_field = NULL;
+  const int nr_sf = 5;
   
-  
-  
+  init_solver_field(up_field, VOLUMEPLUSRAND/2, nr_sf);
+  init_solver_field(dn_field, VOLUMEPLUSRAND/2, nr_sf);
   
   /////////////////////////////////////////////
   // CUDA block- and gridsize specifications //
@@ -3120,8 +3124,8 @@ int cg_eo_nd (dev_su3_2v * gf,
     		// debug	// apply the host matrix on trial
     		
     		// host/device interaction
-    		to_host(g_chi_up_spinor_field[DUM_SOLVER+3], d_up, h2d_spin_up, dev_spinsize_int);
-    		to_host(g_chi_dn_spinor_field[DUM_SOLVER+3], d_dn, h2d_spin_dn, dev_spinsize_int);
+    		to_host(up_field[3], d_up, h2d_spin_up, dev_spinsize_int);
+    		to_host(dn_field[3], d_dn, h2d_spin_dn, dev_spinsize_int);
     		
     		// matrix multiplication
     		#ifndef MPI
@@ -3129,12 +3133,12 @@ int cg_eo_nd (dev_su3_2v * gf,
     		#else
     		  if (g_proc_id == 0) printf("This is Q_Qdagger_ND(). ");
     		#endif
-    		Q_Qdagger_ND(g_chi_up_spinor_field[DUM_SOLVER+4], g_chi_dn_spinor_field[DUM_SOLVER+4],			// normally:  Q_Qdagger_ND()
-    		             g_chi_up_spinor_field[DUM_SOLVER+3], g_chi_dn_spinor_field[DUM_SOLVER+3] );		// debugging: matrix_debug2(), Zwitter1(), Zwitter2(), Zwitter3()
+    		Q_Qdagger_ND(up_field[4], dn_field[4],			// normally:  Q_Qdagger_ND()
+    		             up_field[3], dn_field[3] );		// debugging: matrix_debug2(), Zwitter1(), Zwitter2(), Zwitter3()
     															//       mpi: matrix_mpi_debug10()
     		// host/device interaction
-    		to_device(Ad_up, g_chi_up_spinor_field[DUM_SOLVER+4], h2d_spin_up, dev_spinsize_int);
-    		to_device(Ad_dn, g_chi_dn_spinor_field[DUM_SOLVER+4], h2d_spin_dn, dev_spinsize_int);
+    		to_device(Ad_up, up_field[4], h2d_spin_up, dev_spinsize_int);
+    		to_device(Ad_dn, dn_field[4], h2d_spin_dn, dev_spinsize_int);
     		
     		
     				// debug	// CUDA
@@ -3224,8 +3228,8 @@ int cg_eo_nd (dev_su3_2v * gf,
       		// debug	// apply the host matrix on trial
     		
     		// host/device interaction
-    		to_host(g_chi_up_spinor_field[DUM_SOLVER+3], x_up, h2d_spin_up, dev_spinsize_int);
-    		to_host(g_chi_dn_spinor_field[DUM_SOLVER+3], x_dn, h2d_spin_dn, dev_spinsize_int);
+    		to_host(up_field[3], x_up, h2d_spin_up, dev_spinsize_int);
+    		to_host(dn_field[3], x_dn, h2d_spin_dn, dev_spinsize_int);
     		
     		// matrix multiplication
     		#ifndef MPI
@@ -3233,12 +3237,12 @@ int cg_eo_nd (dev_su3_2v * gf,
     		#else
     		  if (g_proc_id == 0) printf("This is Q_Qdagger_ND(). ");
     		#endif
-    		Q_Qdagger_ND(g_chi_up_spinor_field[DUM_SOLVER+4], g_chi_dn_spinor_field[DUM_SOLVER+4],			// normally:       Q_Qdagger_ND()
-    		             g_chi_up_spinor_field[DUM_SOLVER+3], g_chi_dn_spinor_field[DUM_SOLVER+3] );		// debugging, mpi: matrix_mpi_debug10()
+    		Q_Qdagger_ND(up_field[4], dn_field[4],			// normally:       Q_Qdagger_ND()
+    		             up_field[3], dn_field[3] );		// debugging, mpi: matrix_mpi_debug10()
     		
     		// host/device interaction
-    		to_device(Ax_up, g_chi_up_spinor_field[DUM_SOLVER+4], h2d_spin_up, dev_spinsize_int);
-    		to_device(Ax_dn, g_chi_dn_spinor_field[DUM_SOLVER+4], h2d_spin_dn, dev_spinsize_int);
+    		to_device(Ax_up, up_field[4], h2d_spin_up, dev_spinsize_int);
+    		to_device(Ax_dn, dn_field[4], h2d_spin_dn, dev_spinsize_int);
     		
     		
     				// debug	// CUDA
@@ -3753,12 +3757,12 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   
   #ifndef CG_DEBUG
   
-    r_up  = g_chi_up_spinor_field[DUM_SOLVER];			// use the pre-allocated memory on host memory
-    r_dn  = g_chi_dn_spinor_field[DUM_SOLVER];			// allocated by  init_chi_spinor_field.c  and  invert_doublet.c  !?
-    d_up  = g_chi_up_spinor_field[DUM_SOLVER+1];		// the fields  g_chi_up/dn_spinor_field[DUM_SOLVER{ , +1, ... , +5}]  are used in  cg_her_nd()
-    d_dn  = g_chi_dn_spinor_field[DUM_SOLVER+1];
-    Ad_up = g_chi_up_spinor_field[DUM_SOLVER+2];
-    Ad_dn = g_chi_dn_spinor_field[DUM_SOLVER+2];
+    r_up  = up_field[0];			// use the pre-allocated memory on host memory
+    r_dn  = dn_field[0];			// allocated by  init_chi_spinor_field.c  and  invert_doublet.c  !?
+    d_up  = up_field[1];		// the fields  g_chi_up/dn_spinor_field[DUM_SOLVER{ , +1, ... , +5}]  are used in  cg_her_nd()
+    d_dn  = dn_field[1];
+    Ad_up = up_field[2];
+    Ad_dn = dn_field[2];
     Ax_up = Ad_up;
     Ax_dn = Ad_dn;
     
