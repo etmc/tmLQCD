@@ -55,7 +55,7 @@ void rnormal(double * r, const int n)
 /*   return; */
   /* polar form, no trig. functions, but more random numbers */
   /* which one is faster? */
-  for(i = 0; i < n; i+=2) {
+  for(i = 0; i < n; i += 2) {
     ranlxd(u, 2);
     u[0] = 2.*u[0] - 1.;
     u[1] = 2.*u[1] - 1.;
@@ -75,7 +75,11 @@ void rnormal(double * r, const int n)
 
 /* Generates a volume source with gaussian noise */
 /* in all real and imaginary elements            */
-
+/*                                               */
+/* i.e. xi*.xi = 2                               */
+/* is the normalisation                          */
+/* this is corrected for in the contraction      */
+/* codes                                         */
 void gaussian_volume_source(spinor * const P, spinor * const Q,
 			    const int sample, const int nstore, const int f) 
 {
