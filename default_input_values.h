@@ -51,6 +51,7 @@
 #define _default_g_mu1 0.0
 #define _default_g_mu2 0.0
 #define _default_g_mu3 0.0
+#define _default_c_sw 1.0
 #define _default_g_beta 6.0
 #define _default_g_N_s 20
 #define _default_g_dflgcr_flag 0
