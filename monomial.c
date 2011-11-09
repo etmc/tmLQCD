@@ -121,7 +121,6 @@ int init_monomials(const int V, const int even_odd_flag) {
   int i, no=0;
   int retval;
   spinor * __pf = NULL;
-  char filename[257];
   for(i = 0; i < no_monomials; i++) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
     /* non-degenerate monomials need two pseudo fermion fields */
@@ -308,10 +307,11 @@ int init_poly_monomial(const int V,const int id){
 	    );
     fprintf(stderr,"Warning you didnt specify a local normalization: trying to read it from\n%s\n",filename);
     if((constFile=fopen(filename,"r"))!=NULL) {
-      fscanf(constFile,"%lf\n",&(mnl->MDPolyLocNormConst));
+      errcode = fscanf(constFile,"%lf\n",&(mnl->MDPolyLocNormConst));
       fclose(constFile);
       fprintf(stderr, "normierung local succesfully read -> lnc =  %e \n", mnl->MDPolyLocNormConst);
-    } else {
+    } 
+    else {
       fprintf(stderr,"Reading local normalization from file FAILED\n Borting Ab\n");
       #ifdef MPI
          MPI_Finalize();
