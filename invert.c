@@ -127,10 +127,7 @@ int main(int argc, char *argv[])
 #endif
 
   DUM_DERI = 8;
-  /* DUM_DERI + 2 is enough (not 7) */
-  DUM_SOLVER = DUM_DERI + 5;
-  DUM_MATRIX = DUM_SOLVER + 8;
-  /* DUM_MATRIX + 2 is enough (not 6) */
+  DUM_MATRIX = DUM_DERI + 5;
   NO_OF_SPINORFIELDS = DUM_MATRIX + 2;
 
   verbose = 0;
