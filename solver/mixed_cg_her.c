@@ -54,6 +54,7 @@
 #include "linalg_eo.h"
 #include "start.h"
 #include "solver/matrix_mult_typedef.h"
+#include "solver_field.h"
 #include "solver/mixed_cg_her.h"
 
 /* P output = solution , Q input = source */
@@ -61,48 +62,53 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 		 double eps_sq, const int rel_prec, const int N, matrix_mult f) {
 
   int i = 0, iter = 0, j = 0;
-  double sqnrm, sqnrm2, squarenorm;
+  double sqnrm = 0., sqnrm2, squarenorm;
   double pro, err, alpha_cg, beta_cg;
   spinor *x, *delta, *y;
+  spinor ** solver_field = NULL;
+  const int nr_sf = 6;
 
-  squarenorm = square_norm(Q, N, 1);
-
-  delta = g_spinor_field[DUM_SOLVER+3];
-  x = g_spinor_field[DUM_SOLVER+4];
-  y = g_spinor_field[DUM_SOLVER+5];
-  assign(delta, Q, N);
-    
-  if(sqnrm == 0) { 
-    /* if a starting solution vector equal to zero is chosen */
-    sqnrm = square_norm(delta, N, 1);
+  if(N == VOLUME) {
+    init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
   }
   else {
+    init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
+  }
+  squarenorm = square_norm(Q, N, 1);
+  sqnrm = squarenorm;
+
+  delta = solver_field[3];
+  x = solver_field[4];
+  y = solver_field[5];
+  assign(delta, Q, N);
+    
+  if(squarenorm > 1.e-7) { 
     /* if a starting solution vector different from zero is chosen */
     f(y, P);
     diff(delta, Q, y, N);
     sqnrm = square_norm(delta, N, 1);
     if(((sqnrm <= eps_sq) && (rel_prec == 0)) || ((sqnrm <= eps_sq*squarenorm) && (rel_prec == 1))) {
+      finalize_solver(solver_field, nr_sf);
       return(0);
     }
   }
-
 
   for(i = 0; i < 20; i++) {
 
     g_sloppy_precision = 1;
     /* main CG loop in lower precision */
     zero_spinor_field(x, N);
-    assign(g_spinor_field[DUM_SOLVER+1], delta, N);
-    assign(g_spinor_field[DUM_SOLVER+2], delta, N);
+    assign(solver_field[1], delta, N);
+    assign(solver_field[2], delta, N);
     sqnrm2 = sqnrm;
     for(j = 0; j <= max_iter; j++) {
-      f(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2]);
-      pro = scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], N, 1);
+      f(solver_field[0], solver_field[2]);
+      pro = scalar_prod_r(solver_field[2], solver_field[0], N, 1);
       alpha_cg = sqnrm2 / pro;
-      assign_add_mul_r(x, g_spinor_field[DUM_SOLVER+2], alpha_cg, N);
+      assign_add_mul_r(x, solver_field[2], alpha_cg, N);
     
-      assign_mul_add_r(g_spinor_field[DUM_SOLVER], -alpha_cg, g_spinor_field[DUM_SOLVER+1], N);
-      err = square_norm(g_spinor_field[DUM_SOLVER], N, 1);
+      assign_mul_add_r(solver_field[0], -alpha_cg, solver_field[1], N);
+      err = square_norm(solver_field[0], N, 1);
 
       if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
 	printf("inner CG: %d res^2 %g\n", iter+j, err);
@@ -113,8 +119,8 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 	break;
       }
       beta_cg = err / sqnrm2;
-      assign_mul_add_r(g_spinor_field[DUM_SOLVER+2], beta_cg, g_spinor_field[DUM_SOLVER], N);
-      assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], N);
+      assign_mul_add_r(solver_field[2], beta_cg, solver_field[0], N);
+      assign(solver_field[1], solver_field[0], N);
       sqnrm2 = err;
     }
     /* end main CG loop */
@@ -130,12 +136,12 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     }
 
     if(((sqnrm <= eps_sq) && (rel_prec == 0)) || ((sqnrm <= eps_sq*squarenorm) && (rel_prec == 1))) {
+      finalize_solver(solver_field, nr_sf);
       return(iter+i);
     }
     iter++;
-
-
   }
+  finalize_solver(solver_field, nr_sf);
   return(-1);
 }
 

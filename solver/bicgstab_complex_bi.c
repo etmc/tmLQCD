@@ -45,14 +45,6 @@
 #include "start.h"
 #include "bicgstab_complex_bi.h"
 
-#ifdef _SOLVER_OUTPUT
-#define _SO(x) x
-#else
-#define _SO(x) x
-#endif
- 
-
-
 /* P inout (guess for the solving bispinor)
    Q input
 */

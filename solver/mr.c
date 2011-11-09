@@ -1,4 +1,6 @@
 /***********************************************************************
+ * $Id$ 
+ *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -15,10 +17,7 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/* $Id$ */
-
-/****************************************************
+ *
  * Minimal residual solver
  * int mr(spinor * const P, spinor * const Q,
  *	const int max_iter, const double eps_sq,
@@ -43,13 +42,6 @@
  *
  ****************************************************/
 
-#ifdef _SOLVER_OUTPUT
-#define _SO(x) x
-#else
-#define _SO(x)
-#endif 
-
-
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -61,6 +53,7 @@
 #include "su3.h"
 #include "linalg_eo.h"
 #include "solver/solver.h"
+#include "solver_field.h"
 #include "mr.h"
 
 int mr(spinor * const P, spinor * const Q,
@@ -70,40 +63,48 @@ int mr(spinor * const P, spinor * const Q,
   int i=0;
   double norm_r,beta;
   complex alpha;
-  spinor * r, * x;
-
-  r = g_spinor_field[DUM_SOLVER];
+  spinor * r;
+  spinor ** solver_field = NULL;
+  const int nr_sf = 3;
+  
+  if(N == VOLUME) {
+    init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+  }
+  else {
+    init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
+  }
+  r = solver_field[0];
   
   zero_spinor_field(P, N);
-  f(g_spinor_field[DUM_SOLVER+2], P);
-  diff(r, Q, g_spinor_field[DUM_SOLVER+2], N);
-  norm_r=square_norm(g_spinor_field[DUM_SOLVER], N, parallel);
+  f(solver_field[2], P);
+  diff(r, Q, solver_field[2], N);
+  norm_r=square_norm(solver_field[0], N, parallel);
   if(g_proc_id == g_stdio_proc) {
     printf("MR iteration= %d  |res|^2= %e\n", i, norm_r); 
     fflush( stdout );
   }
   while((norm_r > eps_sq) && (i < max_iter)){
     i++;
-    f(g_spinor_field[DUM_SOLVER+1], r);
-    alpha=scalar_prod(g_spinor_field[DUM_SOLVER+1], r, N, parallel);
-    beta=square_norm(g_spinor_field[DUM_SOLVER+1], N, parallel);
+    f(solver_field[1], r);
+    alpha=scalar_prod(solver_field[1], r, N, parallel);
+    beta=square_norm(solver_field[1], N, parallel);
     _mult_real(alpha, alpha, 1./beta);
     assign_add_mul(P, r, alpha, N);
     if(i%50 == 0){
-      f(g_spinor_field[DUM_SOLVER+2], P);
+      f(solver_field[2], P);
     }
     else{
-      assign_add_mul(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], alpha, N);
+      assign_add_mul(solver_field[2], solver_field[1], alpha, N);
     }
 
-    diff(r, Q, g_spinor_field[DUM_SOLVER+2], N);
-    norm_r=square_norm(g_spinor_field[DUM_SOLVER], N, parallel);
+    diff(r, Q, solver_field[2], N);
+    norm_r=square_norm(solver_field[0], N, parallel);
     if(g_proc_id == g_stdio_proc) {
       printf("MR iteration= %d  |res|^2= %g\n", i, norm_r); 
       fflush(stdout);
     }
- }
-  
+  }
+  finalize_solver(solver_field, nr_sf);
   if(norm_r > eps_sq){
     return(-1);
   }
@@ -116,10 +117,10 @@ int mrblk(spinor * const P, spinor * const Q,
 	  const int rel_prec, const int N, 
 	  matrix_mult_blk f, const int blk) {
   static int mr_init=0;
-  int i = 0, ix;
+  int i = 0;
   double norm_r,beta;
   complex alpha;
-  spinor * r, * x;
+  spinor * r;
   const int parallel = 0;
   spinor * s[3];
   static spinor *s_=NULL;

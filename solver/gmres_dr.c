@@ -1,4 +1,6 @@
 /***********************************************************************
+ * $Id$ 
+ *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -15,10 +17,7 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/* $Id$ */
-
-/*******************************************************************************
+ *
  * Generalized minimal residual (GMRES) with deflated restarting (Morgan)
  *
  * This requires LAPACK to run...
@@ -53,6 +52,7 @@
 #include"linalg/blas.h"
 #include"solver/gram-schmidt.h"
 #include"solver/gmres.h"
+#include "solver/solver_field.h"
 #include"gmres_dr.h"
 
 #ifndef HAVE_LAPACK
@@ -92,8 +92,6 @@ static complex * evalues;
 static double * sortarray;
 static int * idx;
 static int one = 1;
-static double mone = -1.;
-static double pone = 1.;
 static complex cmone;
 static complex cpone;
 static complex czero;
@@ -104,13 +102,21 @@ int gmres_dr(spinor * const P,spinor * const Q,
 	  const int N, matrix_mult f){
 
   int restart=0, i, j, k, l;
-  double beta, eps, norm, beta2;
+  double beta, eps, norm, beta2=0.;
   complex *lswork = NULL;
   int lwork;
   complex tmp1, tmp2;
   int info=0;
   int _m = m, mp1 = m+1, np1 = nr_ev+1, ne = nr_ev, V2 = 12*(VOLUMEPLUSRAND)/2, _N = 12*N;
-/*   init_solver_field(3); */
+  spinor ** solver_field = NULL;
+  const int nr_sf = 3;
+
+  if(N == VOLUME) {
+    init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+  }
+  else {
+    init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
+  }
   double err=0.;
   spinor * r0, * x0;
 
@@ -118,8 +124,8 @@ int gmres_dr(spinor * const P,spinor * const Q,
   cpone.re = 1.; cpone.im=0.;
   czero.re = 0.; czero.im = 0.;
   
-  r0 = g_spinor_field[DUM_SOLVER];
-  x0 = g_spinor_field[DUM_SOLVER+2];
+  r0 = solver_field[0];
+  x0 = solver_field[2];
   eps=sqrt(eps_sq);  
   init_gmres_dr(m, (VOLUMEPLUSRAND));
   norm = sqrt(square_norm(Q, N, 1));
@@ -142,29 +148,30 @@ int gmres_dr(spinor * const P,spinor * const Q,
   
   if(alpha[0].re==0.){
     assign(P, x0, N);
+    finalize_solver(solver_field, nr_sf);
     return(restart*m);
   }
   
   mul_r(V[0], 1./alpha[0].re, r0, N);
   
   for(j = 0; j < m; j++){
-    /* g_spinor_field[DUM_SOLVER]=A*v_j */
+    /* solver_field[0]=A*v_j */
 
     /* Set h_ij and omega_j */
-    /* g_spinor_field[DUM_SOLVER+1] <- omega_j */    
-    f(g_spinor_field[DUM_SOLVER+1], V[j]);
-/*     assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], N); */
+    /* solver_field[1] <- omega_j */    
+    f(solver_field[1], V[j]);
+/*     assign(solver_field[1], solver_field[0], N); */
     for(i = 0; i <= j; i++){
-      H[i][j] = scalar_prod(V[i], g_spinor_field[DUM_SOLVER+1], N, 1);
+      H[i][j] = scalar_prod(V[i], solver_field[1], N, 1);
       /* G, work and work2 are in Fortran storage: columns first */
       G[j][i] = H[i][j];
       work2[j][i] = H[i][j];
       work[i][j].re = H[i][j].re;
       work[i][j].im = -H[i][j].im;
-      assign_diff_mul(g_spinor_field[DUM_SOLVER+1], V[i], H[i][j], N);
+      assign_diff_mul(solver_field[1], V[i], H[i][j], N);
     }
     
-    _complex_set(H[j+1][j], sqrt(square_norm(g_spinor_field[DUM_SOLVER+1], N, 1)), 0.);
+    _complex_set(H[j+1][j], sqrt(square_norm(solver_field[1], N, 1)), 0.);
     G[j][j+1] = H[j+1][j];
     work2[j][j+1] = H[j+1][j];
     work[j+1][j].re =  H[j+1][j].re;
@@ -209,11 +216,12 @@ int gmres_dr(spinor * const P,spinor * const Q,
 	alpha[i].im = 0.;
       }
       assign(P, x0, N);
+      finalize_solver(solver_field, nr_sf);
       return(restart*m+j);
     }
     /* if not */
     else {
-      mul_r(V[(j+1)], 1./H[j+1][j].re, g_spinor_field[DUM_SOLVER+1], N); 
+      mul_r(V[(j+1)], 1./H[j+1][j].re, solver_field[1], N); 
     }
     
   }
@@ -278,6 +286,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
     /* Stop if satisfied */
     if(err < eps){
       assign(P, x0, N);
+      finalize_solver(solver_field, nr_sf);
       return(restart*m);
     }
 
@@ -389,28 +398,28 @@ int gmres_dr(spinor * const P,spinor * const Q,
     }
 
     for(j = ne; j < m; j++) {
-      /* g_spinor_field[DUM_SOLVER]=A*v_j */
-      f(g_spinor_field[DUM_SOLVER+1], V[j]);
+      /* solver_field[0]=A*v_j */
+      f(solver_field[1], V[j]);
       
       /* Set h_ij and omega_j */
-      /* g_spinor_field[DUM_SOLVER+1] <- omega_j */
-/*       assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], N); */
+      /* solver_field[1] <- omega_j */
+/*       assign(solver_field[1], solver_field[0], N); */
       for(i = 0; i <= j; i++){
-	H[j][i] = scalar_prod(V[i], g_spinor_field[DUM_SOLVER+1], N, 1);  
+	H[j][i] = scalar_prod(V[i], solver_field[1], N, 1);  
 	/* H, G, work and work2 are now all in Fortran storage: columns first */
 	G[j][i] = H[j][i];
 	work2[j][i] = H[j][i];
 	work[i][j].re = H[j][i].re;
 	work[i][j].im = -H[j][i].im;
-	assign_diff_mul(g_spinor_field[DUM_SOLVER+1], V[i], H[j][i], N);
+	assign_diff_mul(solver_field[1], V[i], H[j][i], N);
       }
-      beta2 = square_norm(g_spinor_field[DUM_SOLVER+1], N, 1);
+      beta2 = square_norm(solver_field[1], N, 1);
       _complex_set(H[j][j+1], sqrt(beta2), 0.);
       G[j][j+1] = H[j][j+1];
       work2[j][j+1] = H[j][j+1];
       work[j+1][j].re =  H[j][j+1].re;
       work[j+1][j].im =  -H[j][j+1].im;
-      mul_r(V[(j+1)], 1./H[j][j+1].re, g_spinor_field[DUM_SOLVER+1], N);
+      mul_r(V[(j+1)], 1./H[j][j+1].re, solver_field[1], N);
     }
 
     /* Solve the least square problem for alpha*/
@@ -445,7 +454,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
 
   /* If maximal number of restart is reached */
   assign(P, x0, N);
-
+  finalize_solver(solver_field, nr_sf);
   return(-1);
 }
 

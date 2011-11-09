@@ -57,6 +57,7 @@
 #include "solver/matrix_mult_typedef.h"
 #include "sub_low_ev.h"
 #include "poly_precon.h"
+#include "solver_field.h"
 #include "cg_her.h"
 
 int cg_her(spinor * const P, spinor * const Q, const int max_iter, 
@@ -66,7 +67,15 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   int iteration;
   int save_sloppy = g_sloppy_precision;
   double atime, etime, flops;
+  spinor ** solver_field = NULL;
+  const int nr_sf = 3;
 
+  if(N == VOLUME) {
+    init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+  }
+  else {
+    init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
+  }
   /* initialize residue r and search vector p */
 #ifdef MPI
   atime = MPI_Wtime();
@@ -75,21 +84,21 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
 #endif
   squarenorm = square_norm(Q, N, 1);
 
-  f(g_spinor_field[DUM_SOLVER], P); 
+  f(solver_field[0], P); 
 
-  diff(g_spinor_field[DUM_SOLVER+1], Q, g_spinor_field[DUM_SOLVER], N);
-  assign(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], N);
-  normsq=square_norm(g_spinor_field[DUM_SOLVER+1], N, 1);
+  diff(solver_field[1], Q, solver_field[0], N);
+  assign(solver_field[2], solver_field[1], N);
+  normsq=square_norm(solver_field[1], N, 1);
 
   /* main loop */
   for(iteration = 1; iteration <= max_iter; iteration++) {
-    f(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2]);
-    pro = scalar_prod_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], N, 1);
+    f(solver_field[0], solver_field[2]);
+    pro = scalar_prod_r(solver_field[2], solver_field[0], N, 1);
     alpha_cg = normsq / pro;
-    assign_add_mul_r(P, g_spinor_field[DUM_SOLVER+2], alpha_cg, N);
+    assign_add_mul_r(P, solver_field[2], alpha_cg, N);
 
-    assign_mul_add_r(g_spinor_field[DUM_SOLVER], -alpha_cg, g_spinor_field[DUM_SOLVER+1], N);
-    err=square_norm(g_spinor_field[DUM_SOLVER], N, 1);
+    assign_mul_add_r(solver_field[0], -alpha_cg, solver_field[1], N);
+    err=square_norm(solver_field[0], N, 1);
 
     if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
       printf("CG: iterations: %d res^2 %e\n", iteration, err);
@@ -109,8 +118,8 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
 #endif
 
     beta_cg = err / normsq;
-    assign_mul_add_r(g_spinor_field[DUM_SOLVER+2], beta_cg, g_spinor_field[DUM_SOLVER], N);
-    assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], N);
+    assign_mul_add_r(solver_field[2], beta_cg, solver_field[0], N);
+    assign(solver_field[1], solver_field[0], N);
     normsq = err;
   }
 #ifdef MPI
@@ -127,6 +136,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     printf("# CG: flopcount (for tmWilson with even/odd only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
            etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
   }
+  finalize_solver(solver_field, nr_sf);
   if(iteration > max_iter) return(-1);
   return(iteration);
 }

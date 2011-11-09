@@ -1,4 +1,6 @@
 /***********************************************************************
+ * $Id$
+ *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -15,10 +17,7 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/* $Id$ */
-
-/*******************************************************************************
+ *
  * Generalized minimal residual (GMRES) with a maximal number of restarts.    
  * Solves Q=AP for complex regular matrices A. This is a special version for 
  * precondition.
@@ -54,6 +53,7 @@
 #include"linalg_eo.h"
 #include"start.h"
 #include"xchange_field.h"
+#include "solver_field.h"
 #include"gmres_precon.h"
 
 #ifdef _SOLVER_OUTPUT
@@ -84,43 +84,51 @@ int gmres_precon(spinor * const P,spinor * const Q,
   int restart, i, j, k;
   double beta, eps, norm;
   complex tmp1, tmp2;
-
+  spinor ** solver_field = NULL;
+  const int nr_sf = 2;
+  
+  if(N == VOLUME) {
+    init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+  }
+  else {
+    init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
+  }
   eps=sqrt(eps_sq);
   init_pgmres(m, VOLUMEPLUSRAND);
 
   norm = sqrt(square_norm(Q, N, 1));
 
-/*   assign(g_spinor_field[DUM_SOLVER+2], P, N); */
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+2], N);
+/*   assign(solver_field[1], P, N); */
+  zero_spinor_field(solver_field[1], N);
   for(restart = 0; restart < max_restarts; restart++){
     /* r_0=Q-AP  (b=Q, x+0=P) */
-    f(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+2]);
-    diff(g_spinor_field[DUM_SOLVER+2], Q, g_spinor_field[DUM_SOLVER+2], N);
+    f(solver_field[1], solver_field[1]);
+    diff(solver_field[1], Q, solver_field[1], N);
     /* v_0=r_0/||r_0|| */
-    alpha[0].re=sqrt(square_norm(g_spinor_field[DUM_SOLVER+2], N, 1));
+    alpha[0].re=sqrt(square_norm(solver_field[1], N, 1));
 
 /*     if(alpha[0].re == 0.){  */
-/*        assign(P, g_spinor_field[DUM_SOLVER+2], N);  */
+/*        assign(P, solver_field[1], N);  */
 /*        return(restart*m);  */
 /*     }  */
 
     if(alpha[0].re != 0.) {
-      mul_r(V[0], 1./alpha[0].re, g_spinor_field[DUM_SOLVER+2], N);
+      mul_r(V[0], 1./alpha[0].re, solver_field[1], N);
 
       for(j = 0; j < m; j++){
-	/* g_spinor_field[DUM_SOLVER+2]=A*v_j */
+	/* solver_field[1]=A*v_j */
 	
-	f(g_spinor_field[DUM_SOLVER+2], V[j]);
+	f(solver_field[1], V[j]);
 	
 	/* Set h_ij and omega_j */
-	/* g_spinor_field[DUM_SOLVER+1] <- omega_j */
-	assign(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2], N);
+	/* solver_field[0] <- omega_j */
+	assign(solver_field[0], solver_field[1], N);
 	for(i = 0; i <= j; i++){
-	  H[i][j] = scalar_prod(V[i], g_spinor_field[DUM_SOLVER+1], N, 1);
-	  assign_diff_mul(g_spinor_field[DUM_SOLVER+1], V[i], H[i][j], N);
+	  H[i][j] = scalar_prod(V[i], solver_field[0], N, 1);
+	  assign_diff_mul(solver_field[0], V[i], H[i][j], N);
 	}
 	
-	_complex_set(H[j+1][j], sqrt(square_norm(g_spinor_field[DUM_SOLVER+1], N, 1)), 0.);
+	_complex_set(H[j+1][j], sqrt(square_norm(solver_field[0], N, 1)), 0.);
 	for(i = 0; i < j; i++){
 	  tmp1 = H[i][j];
 	  tmp2 = H[i+1][j];
@@ -146,25 +154,26 @@ int gmres_precon(spinor * const P,spinor * const Q,
 	}
 	if(((alpha[j+1].re <= eps) && (rel_prec == 0)) || ((alpha[j+1].re <= eps*norm) && (rel_prec == 1))){
 	  _mult_real(alpha[j], alpha[j], 1./H[j][j].re);
-	  assign_add_mul(g_spinor_field[DUM_SOLVER+2], V[j], alpha[j], N);
+	  assign_add_mul(solver_field[1], V[j], alpha[j], N);
 	  for(i = j-1; i >= 0; i--){
 	    for(k = i+1; k <= j; k++){
 	      _mult_assign_complex(tmp1, H[i][k], alpha[k]); 
 	      _diff_complex(alpha[i], tmp1);
 	    }
 	    _mult_real(alpha[i], alpha[i], 1./H[i][i].re);
-	    assign_add_mul(g_spinor_field[DUM_SOLVER+2], V[i], alpha[i], N);
+	    assign_add_mul(solver_field[1], V[i], alpha[i], N);
 	  }
 	  for(i = 0; i < m; i++){
 	    alpha[i].im = 0.;
 	  }
-	  assign(P, g_spinor_field[DUM_SOLVER+2], N);
+	  assign(P, solver_field[1], N);
+	  finalize_solver(solver_field, nr_sf);
 	  return(restart*m+j);
 	}
 	/* if not */
 	else{
 	  if(j != m-1){
-	    mul_r(V[(j+1)], 1./H[j+1][j].re, g_spinor_field[DUM_SOLVER+1], N);
+	    mul_r(V[(j+1)], 1./H[j+1][j].re, solver_field[0], N);
 	  }
 	}
       }
@@ -172,14 +181,14 @@ int gmres_precon(spinor * const P,spinor * const Q,
       j=m-1;
       /* prepare for restart */
       _mult_real(alpha[j], alpha[j], 1./H[j][j].re);
-      assign_add_mul(g_spinor_field[DUM_SOLVER+2], V[j], alpha[j], N);
+      assign_add_mul(solver_field[1], V[j], alpha[j], N);
       for(i = j-1; i >= 0; i--){
 	for(k = i+1; k <= j; k++){
 	  _mult_assign_complex(tmp1, H[i][k], alpha[k]);
 	  _diff_complex(alpha[i], tmp1);
 	}
 	_mult_real(alpha[i], alpha[i], 1./H[i][i].re);
-	assign_add_mul(g_spinor_field[DUM_SOLVER+2], V[i], alpha[i], N);
+	assign_add_mul(solver_field[1], V[i], alpha[i], N);
       }
       for(i = 0; i < m; i++){
 	alpha[i].im = 0.;
@@ -188,8 +197,9 @@ int gmres_precon(spinor * const P,spinor * const Q,
   }
 
   /* If maximal number of restarts is reached */
-  assign(P, g_spinor_field[DUM_SOLVER+2], N);
-
+  assign(P, solver_field[1], N);
+  
+  finalize_solver(solver_field, nr_sf);
   return(-1);
 }
 

@@ -1,4 +1,6 @@
 /***********************************************************************
+ * $Id$
+ *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -15,9 +17,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/* $Id$ */
-/*************************************************************
  *
  * This is an implementation of bicgstab(l)
  * corresponding to the paper of G. L.G. Sleijpen and
@@ -41,40 +40,41 @@
 #include "linalg_eo.h"
 #include "start.h"
 #include "solver/matrix_mult_typedef.h"
+#include "solver_field.h"
 #include "bicgstabell.h"
-
-#ifdef _SOLVER_OUTPUT
-#define _SO(x) x
-#else
-#define _SO(x)
-#endif
 
 int bicgstabell(spinor * const x0, spinor * const b, const int max_iter, 
 		double eps_sq, const int rel_prec, const int _l, const int N, matrix_mult f) {
 
   double err;
   int i, j, k, l;
-  double rho0, rho1, beta, alpha, omega, gamma0, squarenorm;
+  double rho0, rho1, beta, alpha, omega, gamma0 = 0., squarenorm;
   spinor * r[5], * u[5], * r0_tilde, * u0, * x;
   double tau[5][5], gamma[25], gammap[25], gammapp[25], sigma[25];
-
+  spinor ** solver_field = NULL;
+  const int nr_sf = 2*(_l+1)+2;
 
   l = _l;
   k = -l;
 
-/*   init_solver_field(2*(l+1)+2); */
-  r0_tilde = g_spinor_field[DUM_SOLVER];
-  u0 = g_spinor_field[DUM_SOLVER+1];
+  if(N == VOLUME) {
+    init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+  }
+  else {
+    init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
+  }
+  r0_tilde = solver_field[0];
+  u0 = solver_field[1];
   for(i = 0; i <= l; i++){
-    r[i] = g_spinor_field[DUM_SOLVER+2+2*i];
-    u[i] = g_spinor_field[DUM_SOLVER+3+2*i];
+    r[i] = solver_field[2+2*i];
+    u[i] = solver_field[3+2*i];
   }
 
   x = x0; 
   assign(u[0], b, N);
   f(r0_tilde, x);
   diff(r[0], u[0], r0_tilde, N);
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+1], N);
+  zero_spinor_field(solver_field[1], N);
   assign(r0_tilde, r[0], N);
   squarenorm = square_norm(b, N, 1);
 
@@ -153,6 +153,7 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
       fflush( stdout );
     }
   }
+  finalize_solver(solver_field, nr_sf);
   if(k == max_iter) return(-1);
   return(k);
 }

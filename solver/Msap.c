@@ -35,6 +35,7 @@
 #include "solver.h"
 #include "block.h"
 #include "Hopping_Matrix.h"
+#include "solver_field.h"
 #include "D_psi.h"
 
 void dummy_Di(spinor * const P, spinor * const Q, const int i) {
@@ -79,18 +80,19 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
   int blk, ncy = 0, eo, vol;
   spinor * r, * a, * b;
   double nrm;
+  spinor ** solver_field = NULL;
+  const int nr_sf = 3;
 
-  r = g_spinor_field[DUM_SOLVER+5];
-  a = g_spinor_field[DUM_SOLVER+6];
-  b = g_spinor_field[DUM_SOLVER+7];
-
-  if(blk_gauge_eo) {
-    init_blocks_gaugefield();
-  }
+  /* 
+   * here it would be probably better to get the working fields as a parameter 
+   * from the calling function
+   */
+  init_solver_field(solver_field, VOLUME, nr_sf);
+  r = solver_field[0];
+  a = solver_field[1];
+  b = solver_field[2];
 
   for(ncy = 0; ncy < Ncy; ncy++) {
-    /* even sides first */
-    /*   for(eo = 0; eo < 2; eo++) { */
     /* compute the global residue        */
     /* this can be done more efficiently */
     /* here only a naive implementation  */
@@ -98,7 +100,7 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
       D_psi(r, P);
       diff(r, Q, r, VOLUME);
       nrm = square_norm(r, VOLUME, 1);
-      if(g_proc_id == 0 && g_debug_level > 1) {
+      if(g_proc_id == 0 && g_debug_level > 1 && eo == 1) {
 	printf("Msap: %d %1.3e\n", ncy, nrm);
       }
       /* choose the even (odd) block */
@@ -120,6 +122,7 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
       }
     }
   }
+  finalize_solver(solver_field, nr_sf);
   return;
 }
 
@@ -129,18 +132,23 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
   spinor * r, * a, * b;
   double nrm;
   spinor * b_even, * b_odd, * a_even, * a_odd;
-  r = g_spinor_field[DUM_SOLVER+5];
-  a = g_spinor_field[DUM_SOLVER+6];
-  b = g_spinor_field[DUM_SOLVER+7];
+  spinor ** solver_field = NULL;
+  const int nr_sf = 3;
+
+  /* 
+   * here it would be probably better to get the working fields as a parameter 
+   * from the calling function
+   */
+  init_solver_field(solver_field, VOLUME, nr_sf);
+  r = solver_field[0];
+  a = solver_field[1];
+  b = solver_field[2];
 
   vol = block_list[0].volume/2;
   b_even = b;
   b_odd = b + vol + 1;
   a_even = a;
   a_odd = a + vol + 1;
-  if(!blk_gauge_eo) {
-    init_blocks_eo_gaugefield();
-  }
 
   for(ncy = 0; ncy < Ncy; ncy++) {
     /* compute the global residue        */
@@ -150,7 +158,7 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
       D_psi(r, P);
       diff(r, Q, r, VOLUME);
       nrm = square_norm(r, VOLUME, 1);
-      if(g_proc_id == 0 && g_debug_level > 1) {
+      if(g_proc_id == 0 && g_debug_level > 1 && eo == 1) {
 	printf("Msap: %d %1.3e\n", ncy, nrm);
       }
       /* choose the even (odd) block */
@@ -162,14 +170,14 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
 	  
 	  assign_mul_one_pm_imu_inv(a_even, b_even, +1., vol);
 	  Block_H_psi(&block_list[blk], a_odd, a_even, OE);
-	  /* a_odd = a_odd + b_odd */
+	  /* a_odd = a_odd - b_odd */
 	  assign_mul_add_r(a_odd, -1., b_odd, vol);
 	  
 	  mrblk(b_odd, a_odd, 3, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
 
 	  Block_H_psi(&block_list[blk], b_even, b_odd, EO);
 	  mul_one_pm_imu_inv(b_even, +1., vol);
-	  /* a_even = a_even + b_even */
+	  /* a_even = a_even - b_even */
 	  assign_add_mul_r(a_even, b_even, -1., vol);
 
 	  /* add even and odd part up to full spinor P */
@@ -178,5 +186,6 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
       }
     }
   }
+  finalize_solver(solver_field, nr_sf);
   return;
 }

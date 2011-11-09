@@ -50,6 +50,7 @@
 #include <io/gauge.h>
 #include <io/spinor.h>
 #include <io/utils.h>
+#include "solver_field.h"
 #include "generate_dfl_subspace.h"
 
 int init_little_dfl_subspace(const int N_s);
@@ -96,12 +97,15 @@ int generate_dfl_subspace(const int Ns, const int N) {
   FILE *fp_dfl_fields; 
   char file_name[500]; // CT
   double musave = g_mu;
+  spinor ** work_fields = NULL;
+  const int nr_wf = 2;
 
 #ifdef MPI
   atime = MPI_Wtime();
 #else
   atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
+  init_solver_field(work_fields, VOLUMEPLUSRAND, nr_wf);
   work = (complex*)malloc(nb_blocks*9*Ns*sizeof(complex));
   psi = (spinor **)calloc(nb_blocks, sizeof(spinor *));
   psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
@@ -118,11 +122,11 @@ int generate_dfl_subspace(const int Ns, const int N) {
       nrm = sqrt(square_norm(dfl_fields[0], N, 1));
       mul_r(dfl_fields[0], 1./nrm, dfl_fields[0], N);
       d = 1.1;
-      /*       gmres_precon(g_spinor_field[DUM_SOLVER], dfl_fields[0], 20, 1, 1.e-20, 0, N, &D_psi); */
-      poly_nonherm_precon(g_spinor_field[DUM_SOLVER], dfl_fields[0], e, d, 30, N);
-      D_psi(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-      diff(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], dfl_fields[0], N);
-      nrm = square_norm(g_spinor_field[DUM_SOLVER], N, 1);
+      /*       gmres_precon(work_fields[0], dfl_fields[0], 20, 1, 1.e-20, 0, N, &D_psi); */
+      poly_nonherm_precon(work_fields[0], dfl_fields[0], e, d, 30, N);
+      D_psi(work_fields[1], work_fields[0]);
+      diff(work_fields[0], work_fields[1], dfl_fields[0], N);
+      nrm = square_norm(work_fields[0], N, 1);
       if(g_proc_id == 0) {
 	printf(" e= %f d= %f nrm = %1.5e\n", e, d, nrm);
       }
@@ -171,7 +175,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
 	  g_sloppy_precision = 1;
 	  Msap_eo(g_spinor_field[0], dfl_fields[i], j+1); 
 	  /*      poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 2, N);*/
-	  /*       gmres_precon(g_spinor_field[DUM_SOLVER], dfl_fields[i], 20, 1, 1.e-20, 0, N, &D_psi); */
+	  /*       gmres_precon(work_fields[0], dfl_fields[i], 20, 1, 1.e-20, 0, N, &D_psi); */
 	  
 	  for (ix=0;ix<VOLUME;ix++) {
 	    _spinor_assign((*(dfl_fields[i] + ix)),(*(g_spinor_field[0]+ix)));
@@ -188,8 +192,8 @@ int generate_dfl_subspace(const int Ns, const int N) {
       for (i=0; i<Ns; i++) {
 	/* test quality */
 	if(g_debug_level > -1) {
-	  D_psi(g_spinor_field[DUM_SOLVER], dfl_fields[i]);
-	  nrm = sqrt(square_norm(g_spinor_field[DUM_SOLVER], N, 1));
+	  D_psi(work_fields[0], dfl_fields[i]);
+	  nrm = sqrt(square_norm(work_fields[0], N, 1));
 	  if(g_proc_id == 0) {
 	    printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm*nrm);
 	  }
@@ -217,8 +221,8 @@ int generate_dfl_subspace(const int Ns, const int N) {
 	  
 	  /* test quality */
 	  if(g_debug_level > -1) {
-	    D_psi(g_spinor_field[DUM_SOLVER], dfl_fields[i]);
-	    nrm = sqrt(square_norm(g_spinor_field[DUM_SOLVER], N, 1));
+	    D_psi(work_fields[0], dfl_fields[i]);
+	    nrm = sqrt(square_norm(work_fields[0], N, 1));
 	    if(g_proc_id == 0) {
 	      printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm);
 	    }
@@ -271,8 +275,8 @@ int generate_dfl_subspace(const int Ns, const int N) {
   }
   
   /* compute the little little basis */
-  /* r = g_spinor_field[DUM_SOLVER]; */
-  /* q = g_spinor_field[DUM_SOLVER+1]; */
+  /* r = work_fields[0]; */
+  /* q = g_spinor_field[DUM__SOLVER+1]; */
   
   for(i = 0; i < Ns; i++) {
     /* split_global_field(r, q,  dfl_fields[i]); */
@@ -331,8 +335,8 @@ int generate_dfl_subspace(const int Ns, const int N) {
   }
 
   /* compute the eo little little basis */
-  /* r = g_spinor_field[DUM_SOLVER]; */
-  /* q = g_spinor_field[DUM_SOLVER+1]; */
+  /* r = work_fields[0]; */
+  /* q = g_spinor_field[DUM__SOLVER+1]; */
       
   for(i = 0; i < Ns; i++) {
     /* split_global_field(r, q,  dfl_fields[i]); */
@@ -395,7 +399,8 @@ int generate_dfl_subspace(const int Ns, const int N) {
     printf("time for subspace generation %1.3e s\n", etime-atime);
     fflush(stdout);
   }
-  
+
+  finalize_solver(work_fields, nr_wf);
   free_dfl_subspace();
   free(work);
   free(psi[0]);
@@ -408,6 +413,9 @@ int generate_dfl_subspace_free(const int Ns, const int N) {
     vol = VOLUME*sizeof(spinor)/sizeof(complex);
   double nrm;
   complex s;
+  spinor ** work_fields = NULL;
+  const int nr_wf = 1;
+  init_solver_field(work_fields, VOLUMEPLUSRAND, nr_wf);
 
   if(init_subspace == 0) init_dfl_subspace(Ns);
 
@@ -419,8 +427,8 @@ int generate_dfl_subspace_free(const int Ns, const int N) {
 
     /* test quality */
     if(g_debug_level > -1) {
-      D_psi(g_spinor_field[DUM_SOLVER], dfl_fields[i]);
-      nrm = sqrt(square_norm(g_spinor_field[DUM_SOLVER], N, 1));
+      D_psi(work_fields[0], dfl_fields[i]);
+      nrm = sqrt(square_norm(work_fields[0], N, 1));
       if(g_proc_id == 0) {
 	printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm); 
       }
@@ -437,7 +445,7 @@ int generate_dfl_subspace_free(const int Ns, const int N) {
       }
     }
   }
-
+  finalize_solver(work_fields, nr_wf);
   return(0);
 }
 

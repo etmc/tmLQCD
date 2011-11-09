@@ -35,6 +35,7 @@
 #include"D_psi.h"
 #include"Msap.h"
 #include"dfl_projector.h"
+#include "solver_field.h"
 #include"gcr.h"
 
 static void init_gcr(const int _M, const int _V);
@@ -59,9 +60,18 @@ int gcr(spinor * const P, spinor * const Q,
   double norm_sq, err;
   spinor * rho, * tmp;
   complex ctmp;
+  spinor ** solver_field = NULL;
+  const int nr_sf = 2;
 
-  rho = g_spinor_field[DUM_SOLVER+3];
-  tmp = g_spinor_field[DUM_SOLVER+4];
+  if(N == VOLUME) {
+    init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+  }
+  else {
+    init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
+  }
+
+  rho = solver_field[0];
+  tmp = solver_field[1];
 
   init_gcr(m, N+RAND);
 
@@ -80,6 +90,7 @@ int gcr(spinor * const P, spinor * const Q,
       fflush(stdout);
     }
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
+      finalize_solver(solver_field, nr_sf);
       return(iter);
     }
     for(k = 0; k < m; k++) {
@@ -132,6 +143,7 @@ int gcr(spinor * const P, spinor * const Q,
       assign_add_mul(P, xi[l], c[l], N);
     }
   }
+  finalize_solver(solver_field, nr_sf);
   return(-1);
 }
 

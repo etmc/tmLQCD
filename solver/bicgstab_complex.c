@@ -1,4 +1,6 @@
 /***********************************************************************
+ * $Id$
+ *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -15,10 +17,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/**************************************************************************
- *
- * $Id$
  *
  * The externally accessible functions are
  *
@@ -43,6 +41,7 @@
 #include "su3.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "solver_field.h"
 #include "bicgstab_complex.h"
 
 /* P inout (guess for the solving spinor)
@@ -55,14 +54,21 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
   complex rho0, rho1, omega, alpha, beta, nom, denom;
   int i;
   spinor * r, * p, * v, *hatr, * s, * t;
+  spinor ** solver_field = NULL;
+  const int nr_sf = 6;
 
-/*   init_solver_field(6); */
-  hatr = g_spinor_field[DUM_SOLVER];
-  r = g_spinor_field[DUM_SOLVER+1];
-  v = g_spinor_field[DUM_SOLVER+2];
-  p = g_spinor_field[DUM_SOLVER+3];
-  s = g_spinor_field[DUM_SOLVER+4];
-  t = g_spinor_field[DUM_SOLVER+5];
+  if(N == VOLUME) {
+    init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+  }
+  else {
+    init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
+  }
+  hatr = solver_field[0];
+  r = solver_field[1];
+  v = solver_field[2];
+  p = solver_field[3];
+  s = solver_field[4];
+  t = solver_field[5];
 
   f(r, P);
   diff(p, Q, r, N);
@@ -79,6 +85,7 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
     }
   
     if((((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) && i>0) {
+      finalize_solver(solver_field, nr_sf);
       return(i);
     }
     f(v, p);
@@ -95,6 +102,7 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
     assign_diff_mul(r, t, omega, N);
     rho1 = scalar_prod(hatr, r, N, 1);
     if(fabs(rho1.re) < 1.e-25 && fabs(rho1.im) < 1.e-25) {
+      finalize_solver(solver_field, nr_sf);
       return(-1);
     }
     _mult_assign_complex(nom, alpha, rho1);
@@ -104,5 +112,6 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
     assign_mul_bra_add_mul_ket_add(p, v, r, omega, beta, N);
     rho0.re = rho1.re; rho0.im = rho1.im;
   }
+  finalize_solver(solver_field, nr_sf);
   return -1;
 }

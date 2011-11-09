@@ -75,10 +75,10 @@ int sumr(spinor * const P, spinor * const Q, const int max_iter,
   int switch_on_adaptive_precision=0;
   const int N=VOLUME;
   spinor *x, *r, *p, *v, *v_til, *w, *u, *b, *tmp, *tmp2;
-
+  spinor ** solver_field = NULL;
   printf("Starting SUMR!\n");
   /*        !!!!   INITIALIZATION    !!!! */
-  init_solver_field(VOLUMEPLUSRAND, 10);
+  init_solver_field(solver_field, VOLUMEPLUSRAND, 10);
   x = solver_field[0];
   r = solver_field[1];
   p = solver_field[2];
@@ -220,6 +220,7 @@ int sumr(spinor * const P, spinor * const Q, const int max_iter,
     
     if(sigma==0) {
       printf("Exit because Sigma = %g\n",sigma);
+      finalize_solver(solver_field, 10);
       return(iteration);
     }
     /* Check whether the precision is reached ... */
@@ -242,6 +243,7 @@ int sumr(spinor * const P, spinor * const Q, const int max_iter,
 
     if (err <= eps_sq) {
       assign(P, x, N);
+      finalize_solver(solver_field, 10);
       return(iteration);
     }
 
@@ -286,6 +288,7 @@ int sumr(spinor * const P, spinor * const Q, const int max_iter,
 
     r_diag_old = r_diag;
   }
+  finalize_solver(solver_field, 10);
   return(-1);
 }
 

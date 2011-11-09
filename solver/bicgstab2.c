@@ -1,4 +1,6 @@
 /***********************************************************************
+ * $Id$
+ *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -15,9 +17,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/* $Id$ */
-/*************************************************************
  *
  * This is an implementation of bicgstab(l)
  * corresponding to the paper of G. L.G. Sleijpen and
@@ -42,6 +41,7 @@
 #include "linalg_eo.h"
 #include "start.h"
 #include "solver/matrix_mult_typedef.h"
+#include "solver_field.h"
 #include "bicgstab2.h"
 
 int bicgstab2(spinor * const x0, spinor * const b, const int max_iter, 
@@ -52,25 +52,31 @@ int bicgstab2(spinor * const x0, spinor * const b, const int max_iter,
   int i, j, k;
   int update_app = 0, update_res = 0;
   double rho0, rho1, beta, alpha, omega, gamma_hat,
-    sigma, kappa0, kappal, rho, zeta, zeta0;
+    sigma, kappa0, kappal, rho, zeta0;
   double squarenorm, Mx=0., Mr=0.;
   spinor * r[5], * u[5], * r0_tilde, * u0, * x, * xp, * bp;
   double Z[3][3], y0[3], yl[3], yp[3], ypp[3];
-
+  spinor ** solver_field = NULL;
+  const int nr_sf = 10;
 
   k = -l;
-/*   init_solver_field(2*(l+1)+2); */
-  r0_tilde = g_spinor_field[DUM_SOLVER];
-  u0 = g_spinor_field[DUM_SOLVER+1];
-  r[0] = g_spinor_field[DUM_SOLVER+2];
-  u[0] = g_spinor_field[DUM_SOLVER+3];
-  r[1] = g_spinor_field[DUM_SOLVER+4];
-  u[1] = g_spinor_field[DUM_SOLVER+5];
-  r[2] = g_spinor_field[DUM_SOLVER+6];
-  u[2] = g_spinor_field[DUM_SOLVER+7];
-  bp = g_spinor_field[DUM_SOLVER+8];
+  if(N == VOLUME) {
+    init_solver_field(solver_field, VOLUMEPLUSRAND, nr_sf);
+  }
+  else {
+    init_solver_field(solver_field, VOLUMEPLUSRAND/2, nr_sf);
+  }
+  r0_tilde = solver_field[0];
+  u0 = solver_field[1];
+  r[0] = solver_field[2];
+  u[0] = solver_field[3];
+  r[1] = solver_field[4];
+  u[1] = solver_field[5];
+  r[2] = solver_field[6];
+  u[2] = solver_field[7];
+  bp = solver_field[8];
   xp = x0;
-  x = g_spinor_field[DUM_SOLVER+9];
+  x = solver_field[9];
 
   zero_spinor_field(x, N);
   assign(u[0], b, N);

@@ -45,6 +45,7 @@
 #include "boundary.h"
 #include "Msap.h"
 #include "mr.h"
+#include "solver_field.h"
 #include "dfl_projector.h"
 
 double dfl_little_D_prec = 1.e-24;
@@ -75,8 +76,8 @@ static void alloc_dfl_projector();
 /* this is phi_k A^{-1}_{kl} (phi_k, in) */
 void project(spinor * const out, spinor * const in) {
   int i,j, i_e, i_o, iter;
-  int evenodd = 1;
-  int usePL = 1;
+  int evenodd = 0;
+  int usePL = 0;
   int vol = block_list[0].volume;
   complex * v, * w;
   double prec;
@@ -412,8 +413,7 @@ void little_project_eo(complex * const out, complex * const in, const int  N) {
 }
 
 
-void little_project2(complex * const out, complex * const 
-in, const int  N) {
+void little_project2(complex * const out, complex * const in, const int  N) {
   int i;
   static complex *phi;
   static complex *psi;
@@ -502,11 +502,15 @@ int check_projectors() {
   spinor **phi;
   spinor **wphi;
   complex *v;
+  spinor ** work_fields = NULL;
+  const int nr_wf = 4;
+
+  init_solver_field(work_fields, VOLUMEPLUSRAND, nr_wf);
   phi = malloc(nb_blocks*sizeof(spinor *));
   wphi = malloc(nb_blocks*sizeof(spinor *));
 
-  random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER], VOLUME, 1);
+  random_spinor_field(work_fields[0], VOLUME, 1);
+  nrm = square_norm(work_fields[0], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("\nNow we check the DFL projection routines!\n\n");
     printf("||psi|| = %1.5e\n", sqrt(nrm));
@@ -519,138 +523,138 @@ int check_projectors() {
   for(j = 1; j < nb_blocks; j++) {
     phi[j] = phi[j-1] + (VOLUME/nb_blocks + 1);
   }
-  split_global_field_GEN(phi, g_spinor_field[DUM_SOLVER],nb_blocks);
-  reconstruct_global_field_GEN(g_spinor_field[DUM_SOLVER+1],phi,nb_blocks);
-  diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME, 1);
+  split_global_field_GEN(phi, work_fields[0],nb_blocks);
+  reconstruct_global_field_GEN(work_fields[1],phi,nb_blocks);
+  diff(work_fields[2], work_fields[0], work_fields[1], VOLUME);
+  nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||psi_orig - psi_recon|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
   /* Check even/odd split reconstruct   */
-  assign(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER], VOLUME);
-  copy_global_to_block_eo(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], 0);
-  copy_block_eo_to_global(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2], 0);
-  diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+3], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME, 1);
+  assign(work_fields[3], work_fields[0], VOLUME);
+  copy_global_to_block_eo(work_fields[1], work_fields[2], work_fields[0], 0);
+  copy_block_eo_to_global(work_fields[3], work_fields[1], work_fields[2], 0);
+  diff(work_fields[2], work_fields[0], work_fields[3], VOLUME);
+  nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("even/odd split: ||psi_orig - psi_recon|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
-  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  project2(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  project2(work_fields[1], work_fields[0]);
+  project2(work_fields[2], work_fields[1]);
+  diff(work_fields[3], work_fields[1], work_fields[2], VOLUME);
+  nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||P2 psi - P2 P2 psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
-  project_left_D(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  D_project_right(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER]);
-  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  project_left_D(work_fields[1], work_fields[0]);
+  D_project_right(work_fields[2], work_fields[0]);
+  diff(work_fields[3], work_fields[2], work_fields[1], VOLUME);
+  nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||P_L D psi - D P_R psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
-  project_left(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  project_left(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  project_left(work_fields[1], work_fields[0]);
+  project_left(work_fields[2], work_fields[1]);
+  diff(work_fields[3], work_fields[2], work_fields[1], VOLUME);
+  nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||P_L^2 psi - P_L psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
-  project_right(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  project_right(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  project_right(work_fields[1], work_fields[0]);
+  project_right(work_fields[2], work_fields[1]);
+  diff(work_fields[3], work_fields[2], work_fields[1], VOLUME);
+  nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||P_R^2 psi - P_R psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
-  project_left(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  project2(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME, 1);
+  project_left(work_fields[1], work_fields[0]);
+  project2(work_fields[2], work_fields[1]);
+  nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||P P_L psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
-  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  project_right(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME, 1);
+  project2(work_fields[1], work_fields[0]);
+  project_right(work_fields[2], work_fields[1]);
+  nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||P_R P psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
-  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  project(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  D_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2]);
-  project2(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3]);
-  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  project2(work_fields[1], work_fields[0]);
+  project(work_fields[2], work_fields[1]);
+  D_psi(work_fields[3], work_fields[2]);
+  project2(work_fields[2], work_fields[3]);
+  diff(work_fields[3], work_fields[2], work_fields[1], VOLUME);
+  nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||P D A^-1 P psi - P psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
-  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  project(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2]);
-  project2(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3]);
-  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  project2(work_fields[1], work_fields[0]);
+  D_psi(work_fields[2], work_fields[1]);
+  project(work_fields[3], work_fields[2]);
+  project2(work_fields[2], work_fields[3]);
+  diff(work_fields[3], work_fields[2], work_fields[1], VOLUME);
+  nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||P A^-1 D P psi - P psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
-  invert_little_D_spinor(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  project2(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  D_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2]);
-  project2(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3]);
-  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  invert_little_D_spinor(work_fields[1], work_fields[0]);
+  project2(work_fields[2], work_fields[1]);
+  D_psi(work_fields[3], work_fields[2]);
+  project2(work_fields[2], work_fields[3]);
+  project2(work_fields[1], work_fields[0]);
+  diff(work_fields[3], work_fields[2], work_fields[1], VOLUME);
+  nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||P D P (P D P)^-1 psi - P psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
   
-  invert_little_D_spinor(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  invert_little_D_eo_spinor(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER]);
-  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  invert_little_D_spinor(work_fields[1], work_fields[0]);
+  invert_little_D_eo_spinor(work_fields[2], work_fields[0]);
+  diff(work_fields[3], work_fields[1], work_fields[2], VOLUME);
+  nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||A^-1 psi - A^-1_eo psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
 
-  invert_little_D_spinor(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  apply_little_D_spinor(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  project2(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]);
-  diff(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+1], VOLUME, 1);
+  invert_little_D_spinor(work_fields[1], work_fields[0]);
+  apply_little_D_spinor(work_fields[2], work_fields[1]);
+  project2(work_fields[3], work_fields[0]);
+  diff(work_fields[1], work_fields[3], work_fields[2], VOLUME);
+  nrm = square_norm(work_fields[1], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||A A^-1 psi - P psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
-  invert_little_D_spinor(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  apply_little_D_spinor(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  project2(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]);
-  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
-  diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME, 1);
+  invert_little_D_spinor(work_fields[1], work_fields[0]);
+  apply_little_D_spinor(work_fields[2], work_fields[1]);
+  project2(work_fields[3], work_fields[0]);
+  project2(work_fields[1], work_fields[2]);
+  diff(work_fields[2], work_fields[3], work_fields[1], VOLUME);
+  nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("||P A A^-1 psi - P psi|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
@@ -659,23 +663,23 @@ int check_projectors() {
 
   /* Different flavours for kappa != 0. First project to only a single block */
   for (j = 0; j < (VOLUME * sizeof(spinor) / sizeof(complex)); ++j){
-    _complex_zero(((complex*)g_spinor_field[DUM_SOLVER+1])[j]);
-    _complex_zero(((complex*)g_spinor_field[DUM_SOLVER+2])[j]);
+    _complex_zero(((complex*)work_fields[1])[j]);
+    _complex_zero(((complex*)work_fields[2])[j]);
   }
 
   if (!g_cart_id){
     wphi[0] = block_list[0].basis[0];
     for(i = 1; i< nb_blocks; i++) {
-      wphi[i] = g_spinor_field[DUM_SOLVER+2];
+      wphi[i] = work_fields[2];
     }
-    reconstruct_global_field_GEN(g_spinor_field[DUM_SOLVER+1], wphi, nb_blocks);
+    reconstruct_global_field_GEN(work_fields[1], wphi, nb_blocks);
   }
-  apply_little_D_spinor(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
-  D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  apply_little_D_spinor(work_fields[3], work_fields[1]);
+  D_psi(work_fields[2], work_fields[1]);
   
   if (g_cart_id == 0 && g_debug_level > 4){
     v = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
-    split_global_field_GEN(phi, g_spinor_field[DUM_SOLVER+2], nb_blocks);
+    split_global_field_GEN(phi, work_fields[2], nb_blocks);
 
     for (j = 0; j < g_N_s; ++j) {
       for(i = 0; i < nb_blocks; i++) {
@@ -689,22 +693,22 @@ int check_projectors() {
     free(v);
   }
 
-  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
+  project2(work_fields[1], work_fields[2]);
   
 
-  diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME, 1);
+  diff(work_fields[2], work_fields[3], work_fields[1], VOLUME);
+  nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_proc_id == 0) {
     printf("||(P D - A) phi_i || = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
-  reconstruct_global_field_GEN_ID(g_spinor_field[DUM_SOLVER+1], block_list, 0, nb_blocks);
-  apply_little_D_spinor(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
-  D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
+  reconstruct_global_field_GEN_ID(work_fields[1], block_list, 0, nb_blocks);
+  apply_little_D_spinor(work_fields[3], work_fields[1]);
+  D_psi(work_fields[2], work_fields[1]);
   if (!g_proc_id && g_debug_level > 4){
     v = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
-    split_global_field_GEN(phi, g_spinor_field[DUM_SOLVER+2],nb_blocks);
+    split_global_field_GEN(phi, work_fields[2],nb_blocks);
     for (j = 0; j < g_N_s; ++j) 
       for(i = 0; i < nb_blocks; i++)
 	v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], phi[i], VOLUME/nb_blocks, 0);
@@ -713,41 +717,41 @@ int check_projectors() {
     }
     free(v);
   }
-  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
-  diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME, 1);
+  project2(work_fields[1], work_fields[2]);
+  diff(work_fields[2], work_fields[3], work_fields[1], VOLUME);
+  nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_proc_id == 0) {
     printf("||(P D - A) phi || = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
-  apply_little_D_spinor(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER]);
-  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER]);
-  D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  project2(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER+2]);
-  diff(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+2], VOLUME, 1);
+  apply_little_D_spinor(work_fields[3], work_fields[0]);
+  project2(work_fields[1], work_fields[0]);
+  D_psi(work_fields[2], work_fields[1]);
+  project2(work_fields[1], work_fields[2]);
+  diff(work_fields[2], work_fields[3], work_fields[1], VOLUME);
+  nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_proc_id == 0 && g_debug_level > 4) {
     printf("||P D P psi - A psi|| = %1.5e\n", sqrt(nrm));
     printf("\n*** Comparison of the leading spinor components ***\n");
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s0.c0.re, g_spinor_field[DUM_SOLVER+3]->s0.c0.re);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s0.c0.im, g_spinor_field[DUM_SOLVER+3]->s0.c0.im);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s0.c1.re, g_spinor_field[DUM_SOLVER+3]->s0.c1.re);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s0.c1.im, g_spinor_field[DUM_SOLVER+3]->s0.c1.im);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s0.c2.re, g_spinor_field[DUM_SOLVER+3]->s0.c2.re);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s0.c2.im, g_spinor_field[DUM_SOLVER+3]->s0.c2.im);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s1.c0.re, g_spinor_field[DUM_SOLVER+3]->s1.c0.re);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s1.c0.im, g_spinor_field[DUM_SOLVER+3]->s1.c0.im);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s1.c1.re, g_spinor_field[DUM_SOLVER+3]->s1.c1.re);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s1.c1.im, g_spinor_field[DUM_SOLVER+3]->s1.c1.im);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s1.c2.re, g_spinor_field[DUM_SOLVER+3]->s1.c2.re);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s1.c2.im, g_spinor_field[DUM_SOLVER+3]->s1.c2.im);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s2.c0.re, g_spinor_field[DUM_SOLVER+3]->s2.c0.re);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s2.c0.im, g_spinor_field[DUM_SOLVER+3]->s2.c0.im);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s2.c1.re, g_spinor_field[DUM_SOLVER+3]->s2.c1.re);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s2.c1.im, g_spinor_field[DUM_SOLVER+3]->s2.c1.im);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s2.c2.re, g_spinor_field[DUM_SOLVER+3]->s2.c2.re);
-    printf("%1.5e\t%1.5e\n", g_spinor_field[DUM_SOLVER+1]->s2.c2.im, g_spinor_field[DUM_SOLVER+3]->s2.c2.im);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s0.c0.re, work_fields[3]->s0.c0.re);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s0.c0.im, work_fields[3]->s0.c0.im);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s0.c1.re, work_fields[3]->s0.c1.re);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s0.c1.im, work_fields[3]->s0.c1.im);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s0.c2.re, work_fields[3]->s0.c2.re);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s0.c2.im, work_fields[3]->s0.c2.im);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s1.c0.re, work_fields[3]->s1.c0.re);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s1.c0.im, work_fields[3]->s1.c0.im);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s1.c1.re, work_fields[3]->s1.c1.re);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s1.c1.im, work_fields[3]->s1.c1.im);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s1.c2.re, work_fields[3]->s1.c2.re);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s1.c2.im, work_fields[3]->s1.c2.im);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s2.c0.re, work_fields[3]->s2.c0.re);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s2.c0.im, work_fields[3]->s2.c0.im);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s2.c1.re, work_fields[3]->s2.c1.re);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s2.c1.im, work_fields[3]->s2.c1.im);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s2.c2.re, work_fields[3]->s2.c2.re);
+    printf("%1.5e\t%1.5e\n", work_fields[1]->s2.c2.im, work_fields[3]->s2.c2.im);
     printf("*** End of dump ***\n\n");
     fflush(stdout);
   }
@@ -760,7 +764,7 @@ int check_projectors() {
     alloc_dfl_projector();
   }
   
-  memcpy(work[10], g_spinor_field[DUM_SOLVER], nb_blocks*g_N_s*sizeof(complex));
+  memcpy(work[10], work_fields[0], nb_blocks*g_N_s*sizeof(complex));
   little_project2(work[11], work[10], g_N_s);
   little_project2(work[12], work[11], g_N_s);
   ldiff(work[12], work[12], work[11], nb_blocks*g_N_s);
@@ -809,7 +813,7 @@ int check_projectors() {
   free(phi[0]);
   free(phi);
   free(wphi);
-
+  finalize_solver(work_fields, nr_wf);
   return(0);
 }
 
@@ -819,8 +823,11 @@ void check_little_D_inversion() {
   int vol = block_list[0].volume;
   complex *result, *v, *w;
   double dif;
+  spinor ** work_fields = NULL;
+  const int nr_wf = 1;
 
-  random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
+  init_solver_field(work_fields, VOLUMEPLUSRAND, nr_wf);
+  random_spinor_field(work_fields[0], VOLUME, 1);
   if(init_dfl_projector == 0) {
     alloc_dfl_projector();
   }
@@ -834,7 +841,7 @@ void check_little_D_inversion() {
   /*initialize the local (block) parts of the spinor*/
   for (ctr_t = 0; ctr_t < (VOLUME / LZ); ++ctr_t) {
     for(i=0; i< nb_blocks; i++) {
-      memcpy(psi[i] + ctr_t * contig_block, g_spinor_field[DUM_SOLVER] + (nb_blocks * ctr_t + i) * contig_block, contig_block * sizeof(spinor));
+      memcpy(psi[i] + ctr_t * contig_block, work_fields[0] + (nb_blocks * ctr_t + i) * contig_block, contig_block * sizeof(spinor));
     }
   }
   for (i = 0; i < nb_blocks; ++i) {/* loop over blocks */
@@ -896,7 +903,7 @@ void check_little_D_inversion() {
     printf("\n");
   }
 
-
+  finalize_solver(work_fields, nr_wf);
   free(result);
   return;
 }
@@ -906,73 +913,77 @@ void check_local_D()
   spinor * r[8];
   int j, vol = block_list[0].volume/2, i;
   double nrm;
-  block_convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], block_list[0].basis[0]);
-  block_convert_eo_to_lexic(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1]);
-  diff(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+2], block_list[0].basis[0], block_list[0].volume);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER], block_list[0].volume, 0);
+  spinor ** work_fields = NULL;
+  const int nr_wf = 7;
+
+  init_solver_field(work_fields, VOLUMEPLUSRAND, nr_wf);
+  block_convert_lexic_to_eo(work_fields[0], work_fields[1], block_list[0].basis[0]);
+  block_convert_eo_to_lexic(work_fields[2], work_fields[0], work_fields[1]);
+  diff(work_fields[0], work_fields[2], block_list[0].basis[0], block_list[0].volume);
+  nrm = square_norm(work_fields[0], block_list[0].volume, 0);
   if(g_proc_id == 0) {
     printf("\nblock even/odd: ||psi - psi_recon|| = %1.5e\n", sqrt(nrm));
     fflush(stdout);
   }
 
   for(j = 0; j < nb_blocks; j++) {
-    zero_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME);
-    Block_D_psi(&block_list[j], g_spinor_field[DUM_SOLVER+6], block_list[j].basis[0]);
+    zero_spinor_field(work_fields[0], VOLUME);
+    Block_D_psi(&block_list[j], work_fields[6], block_list[j].basis[0]);
 
     /* Now test the block hopping matrix */
     /* split into even/odd sites         */
-    block_convert_lexic_to_eo(g_spinor_field[DUM_SOLVER], g_spinor_field[DUM_SOLVER+1], block_list[j].basis[0]);
+    block_convert_lexic_to_eo(work_fields[0], work_fields[1], block_list[j].basis[0]);
   
     /* Even sites */
-    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], g_spinor_field[DUM_SOLVER+1], EO);
-    assign_mul_one_pm_imu(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], 1., vol); 
-    assign_add_mul_r(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_DERI], 1., vol);
+    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], work_fields[1], EO);
+    assign_mul_one_pm_imu(work_fields[2], work_fields[0], 1., vol); 
+    assign_add_mul_r(work_fields[2], g_spinor_field[DUM_DERI], 1., vol);
 
     /* Odd sites */
-    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], g_spinor_field[DUM_SOLVER], OE);
-    assign_mul_one_pm_imu(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1], 1., vol); 
-    assign_add_mul_r(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_DERI], 1., vol);
+    Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], work_fields[0], OE);
+    assign_mul_one_pm_imu(work_fields[3], work_fields[1], 1., vol); 
+    assign_add_mul_r(work_fields[3], g_spinor_field[DUM_DERI], 1., vol);
 
     /* convert back to block spinor */
-    block_convert_eo_to_lexic(g_spinor_field[DUM_SOLVER+5], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+3]);
+    block_convert_eo_to_lexic(work_fields[5], work_fields[2], work_fields[3]);
 
     if(g_proc_id == 0 && g_debug_level > 5) {
       for(i = 0; i < block_list[0].volume; i++) {
-	if(fabs(g_spinor_field[DUM_SOLVER+6][i].s0.c0.re) > 1.e-15 || fabs(g_spinor_field[DUM_SOLVER+5][i].s0.c0.re) > 1.e-15) {
-	  printf("%d %e %d\n", i, g_spinor_field[DUM_SOLVER+6][i].s0.c0.re, block_list[0].volume);
-	  printf("%d %e\n", i, g_spinor_field[DUM_SOLVER+5][i].s0.c0.re);
+	if(fabs(work_fields[6][i].s0.c0.re) > 1.e-15 || fabs(work_fields[5][i].s0.c0.re) > 1.e-15) {
+	  printf("%d %e %d\n", i, work_fields[6][i].s0.c0.re, block_list[0].volume);
+	  printf("%d %e\n", i, work_fields[5][i].s0.c0.re);
 	}
       }
     }
 
-    diff(g_spinor_field[DUM_SOLVER + 4], g_spinor_field[DUM_SOLVER + 5], g_spinor_field[DUM_SOLVER+6], block_list[0].volume);
-    nrm = square_norm(g_spinor_field[DUM_SOLVER + 4], block_list[0].volume, 0);
+    diff(work_fields[4], work_fields[5], work_fields[6], block_list[0].volume);
+    nrm = square_norm(work_fields[4], block_list[0].volume, 0);
     if(sqrt(nrm) > 1.e-12) {
       printf("Check failed for local D against Hopping Matrix: ||delta|| = %1.5e block %d process %d\n", sqrt(nrm), j, g_proc_id);
     }
   }
   /* check Msap and Msap_eo on a radom vector */
-  random_spinor_field(g_spinor_field[DUM_SOLVER], VOLUME, 1);
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+1], VOLUME);
-  Msap(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], 2);
-  D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  random_spinor_field(work_fields[0], VOLUME, 1);
+  zero_spinor_field(work_fields[1], VOLUME);
+  Msap(work_fields[1], work_fields[0], 2);
+  D_psi(work_fields[2], work_fields[1]);
+  diff(work_fields[3], work_fields[2], work_fields[0], VOLUME);
+  nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_proc_id == 0) {
     printf("Msap relaxed the residue to ||r||^2 = %1.5e\n", nrm);
   }
 
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+1], VOLUME);
-  Msap_eo(g_spinor_field[DUM_SOLVER+1], g_spinor_field[DUM_SOLVER], 2);
-  D_psi(g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER+1]);
-  diff(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2], g_spinor_field[DUM_SOLVER], VOLUME);
-  nrm = square_norm(g_spinor_field[DUM_SOLVER+3], VOLUME, 1);
+  zero_spinor_field(work_fields[1], VOLUME);
+  Msap_eo(work_fields[1], work_fields[0], 2);
+  D_psi(work_fields[2], work_fields[1]);
+  diff(work_fields[3], work_fields[2], work_fields[0], VOLUME);
+  nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_proc_id == 0) {
     printf("Msap_eo relaxed the residue to ||r||^2 = %1.5e\n", nrm);
   }
 
   for(j = 0; j < 6; j++) {
-    r[j] = g_spinor_field[DUM_SOLVER+j];
+    r[j] = work_fields[j];
   }
   for(j = 0; j < nb_blocks; j++) {
     
@@ -1030,6 +1041,7 @@ void check_local_D()
       printf("mr_eo (symmetric eo), block=%d: ||r||^2 = %1.5e\n", j, nrm);
     }
   }
+  finalize_solver(work_fields, nr_wf);
   return;
 }
 
