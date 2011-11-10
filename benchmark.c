@@ -157,14 +157,14 @@ int main(int argc,char *argv[])
     printf("# The code was compiled with -D_USE_HALFSPINOR\n");
 #endif    
 #ifdef _USE_SHMEM
-    printf("# the code was compiled with -D_USE_SHMEM\n");
+    printf("# The code was compiled with -D_USE_SHMEM\n");
 #  ifdef _PERSISTENT
-    printf("# the code was compiled for persistent MPI calls (halfspinor only)\n");
+    printf("# The code was compiled for persistent MPI calls (halfspinor only)\n");
 #  endif
 #endif
 #ifdef MPI
 #  ifdef _NON_BLOCKING
-    printf("# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
+    printf("# The code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #  endif
 #endif
     printf("\n");
@@ -197,7 +197,7 @@ int main(int argc,char *argv[])
   }
   
   if(g_proc_id == 0) {
-    fprintf(stdout,"The number of processes is %d \n",g_nproc);
+    fprintf(stdout,"# The number of processes is %d \n",g_nproc);
     printf("# The lattice size is %d x %d x %d x %d\n",
 	   (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(g_nproc_z*LZ));
     printf("# The local lattice size is %d x %d x %d x %d\n", 
@@ -275,11 +275,11 @@ int main(int argc,char *argv[])
 #endif
       antioptaway=0.0;
       for (j=0;j<j_max;j++) {
-	for (k=0;k<k_max;k++) {
-	  Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
-	  Hopping_Matrix(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
+        for (k=0;k<k_max;k++) {
+          Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
+          Hopping_Matrix(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
           antioptaway+=g_spinor_field[2*k_max][0].s0.c0.re;
-	}
+        }
       }
 #if defined BGL
       t2 = bgl_wtime();
@@ -309,12 +309,9 @@ int main(int argc,char *argv[])
     sqdt=1.0e6f*sqdt/((double)(k_max*j_max*(VOLUME)));
     
     if(g_proc_id==0) {
-      printf("Print 1 result, to make sure that the calculation is not optimized away: %e  \n",antioptaway);
-      printf("total time %e sec, Variance of the time %e sec. (iterations=%d). \n",sdt,sqdt,j_max);
-      printf("\n");
-      printf(" (%d Mflops [%d bit arithmetic])\n",
-	     (int)(1320.0f/sdt),(int)sizeof(spinor)/3);
-      printf("\n");
+      printf("# The following result is just to make sure that the calculation is not optimized away: %e\n", antioptaway);
+      printf("# Total compute time %e sec, variance of the time %e sec. (%d iterations).\n", sdt, sqdt, j_max);
+      printf("# Communication switched on:\n# (%d Mflops [%d bit arithmetic])\n\n", (int)(1320.0f/sdt),(int)sizeof(spinor)/3);
       fflush(stdout);
     }
     
@@ -328,9 +325,9 @@ int main(int argc,char *argv[])
     antioptaway=0.0;
     for (j=0;j<j_max;j++) {
       for (k=0;k<k_max;k++) {
-	Hopping_Matrix_nocom(0, g_spinor_field[k+k_max], g_spinor_field[k]);
-	Hopping_Matrix_nocom(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
-	antioptaway+=g_spinor_field[2*k_max][0].s0.c0.re;
+        Hopping_Matrix_nocom(0, g_spinor_field[k+k_max], g_spinor_field[k]);
+        Hopping_Matrix_nocom(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
+        antioptaway+=g_spinor_field[2*k_max][0].s0.c0.re;
       }
     }
 #if defined BGL
@@ -348,26 +345,20 @@ int main(int argc,char *argv[])
     dt=dt/((double)g_nproc);
     dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
     if(g_proc_id==0) {
-      printf("Print 1 result, to make sure that the calculation is not optimized away: %e  \n",antioptaway);
-      printf("communication switched off \n");
-      printf(" (%d Mflops [%d bit arithmetic])\n",
-	     (int)(1320.0f/dt),(int)sizeof(spinor)/3);
-      printf("\n");
+      printf("# The following result is printed just to make sure that the calculation is not optimized away: %e\n",antioptaway);
+      printf("# Communication switched off: \n# (%d Mflops [%d bit arithmetic])\n\n", (int)(1320.0f/dt),(int)sizeof(spinor)/3);
       fflush(stdout);
     }
     sdt=sdt/((double)k_max);
     sdt=sdt/((double)j_max);
     sdt=sdt/((double)(2*SLICE));
     if(g_proc_id==0) {
-      printf("The size of the package is %d Byte \n",(SLICE)*192);
+      printf("# The size of the package is %d bytes.\n",(SLICE)*192);
 #ifdef _USE_HALFSPINOR
-      printf("The bandwidth is %5.2f + %5.2f   MB/sec\n",
-	     192./sdt/1024/1024, 192./sdt/1024./1024);
+      printf("# The bandwidth is %5.2f + %5.2f MB/sec\n", 192./sdt/1024/1024, 192./sdt/1024./1024);
 #else
-      printf("The bandwidth is %5.2f + %5.2f   MB/sec\n",
-	     2.*192./sdt/1024/1024, 2.*192./sdt/1024./1024);
+      printf("# The bandwidth is %5.2f + %5.2f MB/sec\n", 2.*192./sdt/1024/1024, 2.*192./sdt/1024./1024);
 #endif
-      fflush(stdout);
     }
 #endif
     fflush(stdout);
@@ -391,10 +382,10 @@ int main(int argc,char *argv[])
       t1=(double)clock();
 #endif
       for (j=0;j<j_max;j++) {
-	for (k=0;k<k_max;k++) {
-	  D_psi(g_spinor_field[k+k_max], g_spinor_field[k]);
-	  antioptaway+=g_spinor_field[k+k_max][0].s0.c0.re;
-	}
+        for (k=0;k<k_max;k++) {
+          D_psi(g_spinor_field[k+k_max], g_spinor_field[k]);
+          antioptaway+=g_spinor_field[k+k_max][0].s0.c0.re;
+        }
       }
 #if defined BGL
       t2 = bgl_wtime();
@@ -422,26 +413,23 @@ int main(int argc,char *argv[])
     dts=dt;
     sdt=1.0e6f*sdt/((double)(k_max*j_max*(VOLUME)));
     sqdt=1.0e6f*sqdt/((double)(k_max*j_max*(VOLUME)));
-    
+
     if(g_proc_id==0) {
-      printf("Print 1 result, to make sure that the calculation is not optimized away: %e  \n",antioptaway);
-      printf("total time %e sec, Variance of the time %e sec. (iterations=%d). \n",sdt,sqdt,j_max);
-      printf("\n");
-      printf(" (%d Mflops [%d bit arithmetic])\n",
-	     (int)(1392.0f/sdt),(int)sizeof(spinor)/3);
-      printf("\n");
+      printf("# The following result is just to make sure that the calculation is not optimized away: %e\n", antioptaway);
+      printf("# Total compute time %e sec, variance of the time %e sec. (%d iterations).\n", sdt, sqdt, j_max);
+      printf("\n# (%d Mflops [%d bit arithmetic])\n\n", (int)(1392.0f/sdt),(int)sizeof(spinor)/3);
       fflush(stdout);
     }
   }
 #ifdef HAVE_LIBLEMON
   if(g_proc_id==0) {
-    printf("doing parallel IO test ...\n");
+    printf("# Performing parallel IO test ...\n");
   }
   xlfInfo = construct_paramsXlfInfo(0.5, 0);
-  write_lemon_gauge_field_parallel( "conf.test", 64, xlfInfo);
+  write_gauge_field( "conf.test", 64, xlfInfo);
   free(xlfInfo);
   if(g_proc_id==0) {
-    printf("done ...\n");
+    printf("# done ...\n");
   }
 #endif
 

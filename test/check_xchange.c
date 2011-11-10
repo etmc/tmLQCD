@@ -311,9 +311,10 @@ int check_xchange()
 #  endif
     
     if(g_proc_id == 0) {
-      printf("exchange of spinor fields checked successfully!\n");
+      printf("# Exchange of spinor fields checked successfully!\n");
     }
-    fflush(stdout);fflush(stderr);
+    fflush(stdout);
+    fflush(stderr);
 
     /* Check the gauge exchange */
 
@@ -2025,17 +2026,19 @@ int check_xchange()
 
 #  endif
       if(g_proc_id == 0) {
-	printf("exchange of rectangular gauge action boundaries checked successfully!\n");
+        printf("# Exchange of rectangular gauge action boundaries checked successfully!\n");
       }
-      fflush(stdout);fflush(stderr);
+      fflush(stdout);
+      fflush(stderr);
  
     } /* dbw2 */
 
     if(g_proc_id == 0) {
-      printf("exchange of gauge fields checked successfully!\n");
-      fprintf(stderr,"starting check of deri\n");
+      printf("# Exchange of gauge fields checked successfully!\n");
+      printf("# Starting check of deri...\n");
     }
-    fflush(stdout);fflush(stderr);
+    fflush(stdout);
+    fflush(stderr);
 
     /* Check the deri exchange */
 
@@ -2964,17 +2967,13 @@ int check_xchange()
 #  endif
 
     if(g_proc_id == 0) {
-      printf("The exchange routines are working correctly %d\n", k);
-      printf("\n");
+      printf("# The exchange routines are working correctly.\n");
     }
-    fflush(stdout);fflush(stderr);
-
-
-
+    fflush(stdout);
+    fflush(stderr);
 
 #endif /* MPI */
     return(0);
-
 }
 
 #else /* _INDEX_INDEP_GEOM */
@@ -3183,7 +3182,7 @@ int check_xchange()
 
 
     if(g_proc_id == 0) {
-      printf("exchange of spinor fields checked successfully!\n");
+      printf("# Exchange of spinor fields checked successfully!\n");
     }
 
     /* Check the gauge exchange */
@@ -3428,7 +3427,8 @@ int check_xchange()
 
     /* The edges */
 #  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
-    fprintf(stdout, "rank:%d; (c0,c1,c2,c3)=(%d,%d,%d,%d)\n",g_proc_id,g_proc_coords[0],g_proc_coords[1],g_proc_coords[2],g_proc_coords[3]); fflush(stdout);
+    fprintf(stdout, "# Rank: %d, (c0, c1, c2, c3) = (%d, %d, %d, %d)\n",g_proc_id,g_proc_coords[0],g_proc_coords[1],g_proc_coords[2],g_proc_coords[3]);
+    fflush(stdout);
 
     di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
     di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
@@ -4882,13 +4882,13 @@ int check_xchange()
 
 #  endif
       if(g_proc_id == 0) {
-	printf("exchange of rectangular gauge action boundaries checked successfully!\n");
+        printf("# Exchange of rectangular gauge action boundaries checked successfully!\n");
       }
  
     } /* dbw2 */
 
     if(g_proc_id == 0) {
-      printf("exchange of gauge fields checked successfully!\n");
+      printf("# Exchange of gauge fields checked successfully!\n");
     }
 
     /* Check the deri exchange */
@@ -5540,8 +5540,7 @@ int check_xchange()
 
 #  endif
     if(g_proc_id == 0) {
-      printf("The exchange routines are working correctly %d\n", k);
-      printf("\n");
+      printf("# The exchange routines are working correctly.\n");
     }
   } /* for k=0, k<1 */
 #endif /* MPI */

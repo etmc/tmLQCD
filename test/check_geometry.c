@@ -1389,9 +1389,7 @@ return(-1);
   }
 
   if(g_proc_id == 0 ) {
-    printf("# The lattice is correctly mapped by the index arrays\n");
-    printf("\n"); 
-    fflush(stdout);
+    printf("# The lattice is correctly mapped by the index arrays\n\n");
   }
   fflush(stdout);
 
@@ -2737,8 +2735,7 @@ return(-1);
   }
 
   if(g_proc_id == 0 ) {
-    printf("# The lattice is correctly mapped by the index arrays\n");
-    printf("#\n");
+    printf("# The lattice is correctly mapped by the index arrays\n\n");
   }
   fflush(stdout);
 
