@@ -24,11 +24,15 @@
 #define _CLOVER_LEAF_H
 #include "su3.h"
 
-extern void sw_term();
-extern double sw_trace(const int ieo);
-extern void sw_invert(const int ieo);
-extern void sw_deriv(const int ieo);
-extern void sw_spinor(const int ieo, spinor * const kk, spinor * const ll);
-extern void sw_all();
+extern su3 ** swm, ** swp;
+/* extern su3adj ** dclover; */
+
+
+void sw_term();
+double sw_trace(const int ieo);
+void sw_invert(const int ieo);
+void sw_deriv(const int ieo);
+void sw_spinor(const int ieo, spinor * const kk, spinor * const ll);
+void sw_all();
 
 #endif

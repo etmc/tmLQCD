@@ -52,6 +52,8 @@ typedef struct {
   int * csg_index_array, *csg_index_array2;
   /* det or detratio related */
   double mu, mu2, kappa, kappa2;
+  /* clover coefficient */
+  double c_sw;
   /* polynomial related, not yet in use */
   double mubar, epsbar, mubar2, epsbar2;
   /* energies at beginning and end of trajectory */

@@ -46,6 +46,7 @@
 #include "solver/solver.h"
 #include "read_input.h"
 #include "smearing/stout.h"
+#include "clover_leaf.h"
 
 #include "monomial.h"
 #include "boundary.h"
@@ -78,6 +79,11 @@ void detratio_derivative(const int no) {
     /* Multiply with W_+ */
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
+    if(mnl->c_sw > 0) {
+      sw_term(); 
+      sw_invert(OE);
+    }
+
     Qtm_plus_psi(g_spinor_field[DUM_DERI+2], mnl->pf);
     g_mu = mnl->mu;
     boundary(mnl->kappa);
@@ -133,6 +139,17 @@ void detratio_derivative(const int no) {
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
     deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]); 
+
+    if(mnl->c_sw > 0) {
+      /* here comes the clover term... */
+      gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
+      sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
+      
+      /* compute the contribution for the det-part */
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+      sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+    }
+
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
     
@@ -150,6 +167,19 @@ void detratio_derivative(const int no) {
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
     deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]);
+
+    if(mnl->c_sw > 0) {
+      /* here comes the clover term... */
+      gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
+      sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
+      
+      /* compute the contribution for the det-part */
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+      sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+
+      sw_deriv(OE);
+      sw_all();
+    }
   } 
   else { /* no even/odd preconditioning */
     /*********************************************************************

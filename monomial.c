@@ -73,6 +73,7 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].kappa2 = _default_g_kappa;
   monomial_list[no_monomials].mu = _default_g_mu;
   monomial_list[no_monomials].mu2 = _default_g_mu;
+  monomial_list[no_monomials].c_sw = _default_c_sw;
   monomial_list[no_monomials].mubar = _default_g_mubar;
   monomial_list[no_monomials].mubar2 = _default_g_mubar;
   monomial_list[no_monomials].epsbar = _default_g_epsbar;

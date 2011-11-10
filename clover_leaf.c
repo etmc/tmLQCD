@@ -43,6 +43,8 @@
 const double tiny_t = 1.0e-20;
 double ka_csw_8 = 1.;
 
+su3 ** swm, ** swp;
+
 void sw_term() {
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
@@ -570,8 +572,8 @@ void sw_all() {
   su3 *w1,*w2,*w3,*w4;
   static su3 v1,v2,vv1,vv2,plaq;
   static su3 vis[4][4];
-  static su3adj resu;
-  su3adj *der;
+/*   static su3adj resu; */
+/*   su3adj *der; */
   
   for(x = 0; x < VOLUME; x++) {
     _minus_itimes_su3_plus_su3(vis[0][1],swm[x][1],swm[x][3]);
@@ -611,25 +613,29 @@ void sw_all() {
 	_su3_times_su3d(plaq,v1,v2);
 	
 	_su3_times_su3(vv1,plaq,vis[k][l]);
-	_trace_lambda(resu,vv1); 
-	der=&dclover[x][k]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[x][k], -ka_csw_8, vv1);
+/* 	_trace_lambda(resu,vv1);  */
+/* 	der=&dclover[x][k];  */
+/* 	_add_su3adj(*der,resu); */
 	_su3d_times_su3(vv2,*w1,vv1); 
 	_su3_times_su3(vv1,vv2,*w1);
-	_trace_lambda(resu,vv1); 
-	der=&dclover[xpk][l]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[xpk][l], -ka_csw_8, vv1);
+/* 	_trace_lambda(resu,vv1);  */
+/* 	der=&dclover[xpk][l];  */
+/* 	_add_su3adj(*der,resu); */
 	
 	_su3_times_su3(vv2,vis[k][l],plaq); 
 	_su3_dagger(vv1,vv2);
-	_trace_lambda(resu,vv1); 
-	der=&dclover[x][l]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[x][l], -ka_csw_8, vv1);
+/* 	_trace_lambda(resu,vv1);  */
+/* 	der=&dclover[x][l];  */
+/* 	_add_su3adj(*der,resu); */
 	_su3d_times_su3(vv2,*w4,vv1); 
 	_su3_times_su3(vv1,vv2,*w4);
-	_trace_lambda(resu,vv1); 
-	der=&dclover[xpl][k]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[xpl][k], -ka_csw_8, vv1);
+/* 	_trace_lambda(resu,vv1);  */
+/* 	der=&dclover[xpl][k];  */
+/* 	_add_su3adj(*der,resu); */
 	
 	w1=&g_gauge_field[x][l];
 	w2=&g_gauge_field[xplmk][k];   /*dag*/
@@ -640,26 +646,31 @@ void sw_all() {
 	_su3_times_su3(plaq,v1,v2);
 	
 	_su3_times_su3(vv1,plaq,vis[k][l]);
-	_trace_lambda(resu,vv1); der=&dclover[x][l]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[x][l], -ka_csw_8, vv1);
+/* 	_trace_lambda(resu,vv1);  */
+/* 	der=&dclover[x][l];  */
+/* 	_add_su3adj(*der,resu); */
 	
 	_su3_dagger(vv1,v1); 
 	_su3_times_su3d(vv2,vv1,vis[k][l]);
 	_su3_times_su3d(vv1,vv2,v2);
-	_trace_lambda(resu,vv1); 
-	der=&dclover[xplmk][k]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[xplmk][k], -ka_csw_8, vv1);
+/* 	_trace_lambda(resu,vv1);  */
+/* 	der=&dclover[xplmk][k];  */
+/* 	_add_su3adj(*der,resu); */
 
 	_su3_times_su3(vv2,*w3,vv1); 
 	_su3_times_su3d(vv1,vv2,*w3);
-	_trace_lambda(resu,vv1); 
-	der=&dclover[xmk][l]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[xmk][l], -ka_csw_8, vv1);
+/* 	_trace_lambda(resu,vv1);  */
+/* 	der=&dclover[xmk][l];  */
+/* 	_add_su3adj(*der,resu); */
 
 	_su3_dagger(vv2,vv1);
-	_trace_lambda(resu,vv2); 
-	der=&dclover[xmk][k]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[xmk][k], -ka_csw_8, vv2);
+/* 	_trace_lambda(resu,vv2);  */
+/* 	der=&dclover[xmk][k];  */
+/* 	_add_su3adj(*der,resu); */
 	
 	w1=&g_gauge_field[xmk][k];   /*dag*/
 	w2=&g_gauge_field[xmkml][l]; /*dag*/
@@ -671,26 +682,30 @@ void sw_all() {
 	_su3_times_su3d(vv1,*w1,vis[k][l]);
 	_su3_times_su3d(vv2,vv1,v2);
 	_su3_times_su3(vv1,vv2,*w2);
-	_trace_lambda(resu,vv1); 
-	der=&dclover[xmk][k]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[xmk][k], -ka_csw_8, vv1);
+/* 	_trace_lambda(resu,vv1);  */
+/* 	der=&dclover[xmk][k];  */
+/* 	_add_su3adj(*der,resu); */
 
 	_su3_times_su3(vv2,*w2,vv1); 
 	_su3_times_su3d(vv1,vv2,*w2);
-	_trace_lambda(resu,vv1); 
-	der=&dclover[xmkml][l]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[xmkml][l], -ka_csw_8, vv1);
+/* 	_trace_lambda(resu,vv1);  */
+/* 	der=&dclover[xmkml][l];  */
+/* 	_add_su3adj(*der,resu); */
 
 	_su3_dagger(vv2,vv1);
-	_trace_lambda(resu,vv2); 
-	der=&dclover[xmkml][k]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[xmkml][k], -ka_csw_8, vv2);
+/* 	_trace_lambda(resu,vv2);  */
+/* 	der=&dclover[xmkml][k];  */
+/* 	_add_su3adj(*der,resu); */
 
 	_su3d_times_su3(vv1,*w3,vv2); 
 	_su3_times_su3(vv2,vv1,*w3);
-	_trace_lambda(resu,vv2); 
-	der=&dclover[xml][l]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[xml][l], -ka_csw_8, vv2);
+/* 	_trace_lambda(resu,vv2);  */
+/* 	der=&dclover[xml][l];  */
+/* 	_add_su3adj(*der,resu); */
 	
 	w1=&g_gauge_field[xml][l];   /*dag*/
 	w2=&g_gauge_field[xml][k];
@@ -702,27 +717,31 @@ void sw_all() {
 	_su3_times_su3d(vv1,*w1,vis[k][l]);
 	_su3_times_su3d(vv2,vv1,v2);
 	_su3_times_su3d(vv1,vv2,*w2);
-	_trace_lambda(resu,vv1); 
-	der=&dclover[xml][l]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[xml][l], -ka_csw_8, vv1);
+/* 	_trace_lambda(resu,vv1);  */
+/* 	der=&dclover[xml][l];  */
+/* 	_add_su3adj(*der,resu); */
 	
 	_su3_dagger(vv2,vv1);
-	_trace_lambda(resu,vv2); 
-	der=&dclover[xml][k]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[xml][k], -ka_csw_8, vv2);
+/* 	_trace_lambda(resu,vv2);  */
+/* 	der=&dclover[xml][k];  */
+/* 	_add_su3adj(*der,resu); */
 
 	_su3d_times_su3(vv1,*w2,vv2); 
 	_su3_times_su3(vv2,vv1,*w2);
-	_trace_lambda(resu,vv2); 
-	der=&dclover[xpkml][l]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[xpkml][l], -ka_csw_8, vv2);
+/* 	_trace_lambda(resu,vv2);  */
+/* 	der=&dclover[xpkml][l];  */
+/* 	_add_su3adj(*der,resu); */
 
 	_su3_dagger(vv2,v2);  
 	_su3_times_su3d(vv1,vv2,v1);
 	_su3_times_su3d(vv2,vv1,vis[k][l]);
-	_trace_lambda(resu,vv2); 
-	der=&dclover[x][k]; 
-	_add_su3adj(*der,resu);
+	_trace_lambda_mul_add_assign(df0[x][k], -ka_csw_8, vv2);
+/* 	_trace_lambda(resu,vv2);  */
+/* 	der=&dclover[x][k];  */
+/* 	_add_su3adj(*der,resu); */
       }
     }
   }

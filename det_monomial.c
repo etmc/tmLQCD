@@ -43,6 +43,7 @@
 #include "solver/chrono_guess.h"
 #include "solver/bicgstab_complex.h"
 #include "solver/solver.h"
+#include "clover_leaf.h"
 #include "read_input.h"
 
 #include "boundary.h"
@@ -70,6 +71,10 @@ void det_derivative(const int id) {
     
     g_mu = mnl->mu;
     boundary(mnl->kappa);
+    if(mnl->c_sw > 0) {
+      sw_term(); 
+      sw_invert(OE);
+    }
     if(mnl->solver == CG) {/*  || (g_nr_of_psf != nr+1)) { */
       ITER_MAX_CG = mnl->maxiter;
       /* If CG is used anyhow */
@@ -121,6 +126,19 @@ void det_derivative(const int id) {
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
     deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]);
+
+    if(mnl->c_sw > 0) {
+      /* here comes the clover term... */
+      gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
+      sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
+      
+      /* compute the contribution for the det-part */
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+      sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+
+      sw_deriv(OE);
+      sw_all();
+    }
   } 
   else {
     /*********************************************************************

@@ -34,6 +34,7 @@
 #include "monomial.h"
 #include "xchange_deri.h"
 #include "update_momenta.h"
+#include "clover_leaf.h"
 #include "read_input.h"
 
 /* Updates the momenta: equation 16 of Gottlieb */
@@ -58,6 +59,16 @@ void update_momenta(int * mnllist, double step, const int no) {
   }
 
   for(k = 0; k < no; k++) {
+    /* these are needed for the clover term */
+    if(monomial_list[ mnllist[k] ].c_sw > 0) {
+      for(i = 0; i < VOLUME; i++) { 
+	for(mu = 0; mu < 4; mu++) { 
+	  _su3_zero(swm[i][mu]); 
+	  _su3_zero(swp[i][mu]); 
+	}
+      }
+    }
+
     sum = 0.;
     max = 0.;
     for(i = (VOLUME); i < (VOLUME+RAND); i++) { 
@@ -65,9 +76,7 @@ void update_momenta(int * mnllist, double step, const int no) {
 	_zero_su3adj(df0[i][mu]);
       }
     }
-    /* the next line is the only part which will change between PBC and SF:
-     when the "GAUGE MONOMIAL / SFGAUGE MONOMIAL" is chosen
-     the correct derivative function for each case is used "gauge_derivative / sf_gauge_derivative" */
+
     monomial_list[ mnllist[k] ].derivativefunction(mnllist[k]);
 #ifdef MPI
     xchange_deri();
