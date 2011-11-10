@@ -123,9 +123,12 @@ int main(int argc,char *argv[])
 #endif
   g_rgi_C1 = 1.; 
   
-  /* Read the input file */
-  read_input("benchmark.input");
-  
+    /* Read the input file */
+  if( (status = read_input("benchmark.input")) != 0) {
+    fprintf(stderr, "Could not find input file: benchmark.input\nAborting...\n");
+    exit(-1);
+  }
+
   tmlqcd_mpi_init(argc, argv);
   
   if(g_proc_id==0) {
