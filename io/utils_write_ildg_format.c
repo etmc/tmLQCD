@@ -31,7 +31,7 @@ void write_ildg_format(WRITER *writer, paramsIldgFormat const *format)
   sprintf(buf, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
           "<ildgFormat xmlns=\"http://www.lqcd.org/ildg\"\n"
           "            xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-          "            xsi:schemaLocation=\"http://www.lqcd.org/ildg filefmt.xsd\">\n"
+          "            xsi:schemaLocation=\"http://www.lqcd.org/ildg/filefmt.xsd\">\n"
           "  <version>1.0</version>\n"
           "  <field>su3gauge</field>\n"
           "  <precision>%d</precision>\n"
