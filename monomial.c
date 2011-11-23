@@ -217,26 +217,6 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
 	g_rgi_C0 = monomial_list[i].c0;
       }
-      else if(monomial_list[i].type == SFGAUGE) {
-	monomial_list[i].hbfunction = &sf_gauge_heatbath;
-	monomial_list[i].accfunction = &sf_gauge_acc;
-	monomial_list[i].derivativefunction = &sf_gauge_derivative;
-	no_gauge_monomials++;	
-	
-	if(!monomial_list[i].use_rectangles) {
-	  monomial_list[i].c1 = 0.;
-	  monomial_list[i].c0 = 1.;
-	  monomial_list[i].c1ss = 0.;
-	  monomial_list[i].c1tss = 0.;
-	  monomial_list[i].c1tts = 0.;
-	}
-	g_rgi_C1 = monomial_list[i].c1;
-	monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
-	g_rgi_C0 = monomial_list[i].c0;
-	g_C1ss = monomial_list[i].c1ss;
-	g_C1tss = monomial_list[i].c1tss;
-	g_C1tts = monomial_list[i].c1tts;
-      }
     }
     monomial_list[i].id = i;
     monomial_list[i].even_odd_flag = even_odd_flag;

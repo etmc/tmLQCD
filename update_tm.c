@@ -62,9 +62,6 @@
 #include "solver/solver.h"
 #include "monomial.h"
 #include "integrator.h"
-/* for the SF: */
-#include "sf_calc_action.h"
-
 
 extern su3 ** g_gauge_field_saved;
 
@@ -91,8 +88,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* Energy corresponding to the pseudo fermion part(s) */
   FILE * datafile=NULL, * ret_check_file=NULL;
 
-  /* SF variables: corresponding to the coupling constant */
-  double normalisation=0., partial_effective_action=0., coupling=0.; 
   paramsXlfInfo *xlfInfo;
 
   strcpy(tmp_filename, ".conf.tmp");
@@ -158,15 +153,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     new_plaquette_energy = measure_gauge_action();
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
       new_rectangle_energy = measure_rectangles();
-    }
-  }
-  else { /* if SF bc */
-    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-      new_plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_iwasaki(g_Tbsf, g_Cs, g_Ct, g_rgi_C0);
-      new_rectangle_energy = (1./(2.*3.))*measure_rectangle_sf_iwasaki(g_Tbsf, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-    }
-    else {
-      new_plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_weights_improvement(g_Tbsf, g_Cs, g_Ct);
     }
   }
   /* Compute the energy difference */
@@ -323,17 +309,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         }
       }
     }
-    else if (bc_flag) { /* if Schroedinger functional boundary conditions */
-      for(ix=0;ix<VOLUME;ix++) { 
-        for(mu=0;mu<4;mu++) {
-          v=&g_gauge_field[ix][mu];
-	      if ((g_t[ix] == 0 && mu != 0 ) || (g_t[ix]  == g_Tbsf)) {}
-    	  else {
-            *v=restoresu3(*v);
-          }
-        }
-      }
-    }
   }
   else { /* reject: copy gauge_tmp to g_gauge_field */
     for(ix=0;ix<VOLUME;ix++) {
@@ -360,18 +335,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     if (!bc_flag) { /* if Periodic Boundary Conditions */
       fprintf(datafile, "%14.12f %14.12f %e ",
               (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
-    }
-    else if (bc_flag) { 
-      if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) { /* SF with rectangle working */
-        normalisation = partial_lattice_lo_effective_iwasaki_action_sf_k(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta);
-        partial_effective_action = partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-      }
-      else { /* SF with only Wilson */
-        normalisation = partial_lattice_lo_effective_plaquette_action_sf_k(g_Tbsf, g_beta, g_Ct, g_eta);
-        partial_effective_action = partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct);
-      }
-      coupling = normalisation/partial_effective_action;
-      fprintf(datafile,"%14.12f %14.12f %14.12f %14.12f %14.12f %e ", coupling, normalisation, partial_effective_action, (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
     }
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {

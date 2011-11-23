@@ -75,8 +75,6 @@
 #include "integrator.h"
 #include "sighandler.h"
 #include "measurements.h"
-#include "sf_calc_action.h"
-#include "sf_observables.h"
 
 void usage(){
   fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
@@ -109,7 +107,7 @@ int main(int argc,char *argv[]) {
   struct timeval t1;
 
   /* Energy corresponding to the Gauge part */
-  double eneg = 0., plaquette_energy = 0., rectangle_energy = 0.;
+  double plaquette_energy = 0., rectangle_energy = 0.;
   /* Acceptance rate */
   int Rate=0;
   /* Do we want to perform reversibility checks */
@@ -376,60 +374,21 @@ int main(int argc,char *argv[]) {
     init_phmc();
   }
 
-  /*********************************************************/
-  /* impose SF bc in case it was chosen in the input file */
-  /*******************************************************/
-
-  if (bc_flag == 1) { /* if SF */
-    dirichlet_boundary_conditions(g_Tbsf);
-    dirichlet_boundary_conditions_spatial_links_to_one(g_Tbsf);
-    /* sf_boundary_conditions_spatially_constant_abelian_field(g_Tbsf, g_eta); */
-    fprintf(parameterfile,"# SF put boundary at time slice: g_Tbsf = %d \n",g_Tbsf);
-
-    /* compute the energy of the gauge field for SF */
-    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-      /* NOTE: the factor (1./(2.*3.)) is due to the difference between our normalisation and Carstens's normalisation
-      when defining the plaquette and rectangle functions */
-      plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_iwasaki(g_Tbsf, g_Cs, g_Ct, g_rgi_C0);
-      rectangle_energy = (1./(2.*3.))*measure_rectangle_sf_iwasaki(g_Tbsf, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-      eneg = plaquette_energy + rectangle_energy;
-      /* print energy for SF */
-      if(g_proc_id==0){
-        fprintf(parameterfile,"# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
-        fprintf(parameterfile,"# First rectangle value for SF: %14.12f \n", rectangle_energy/(12.*VOLUME*g_nproc));
-        printf("# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
-        printf("# First rectangle value for SF: %14.12f \n", rectangle_energy/(12.*VOLUME*g_nproc));
-      }
-    }
-    else {
-      /* NOTE: the factor (1./(2.*3.)) is due to the difference between our normalisation and Carstens's normalisation
-      when defining the plaquette and rectangle functions */
-      plaquette_energy = (1./(2.*3.))*measure_plaquette_sf_weights_improvement(g_Tbsf, g_Cs, g_Ct);
-      eneg = plaquette_energy;
-      /* print plaquette energy for SF */
-      if(g_proc_id==0){
-        fprintf(parameterfile,"# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
-        printf("# First plaquette value for SF: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
-      }
+  plaquette_energy = measure_gauge_action();
+  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+    rectangle_energy = measure_rectangles();
+    if(g_proc_id == 0){
+      fprintf(parameterfile,"# Computed rectangle value: %14.12f.\n",rectangle_energy/(12.*VOLUME*g_nproc));
     }
   }
-  else if (bc_flag == 0) { /*if PBC */
-    plaquette_energy=measure_gauge_action();
-    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-      rectangle_energy = measure_rectangles();
-      if(g_proc_id==0){
-        fprintf(parameterfile,"# Computed rectangle value: %14.12f.\n",rectangle_energy/(12.*VOLUME*g_nproc));
-      }
-    }
-    eneg = g_rgi_C0 * plaquette_energy + g_rgi_C1 * rectangle_energy;
+  //eneg = g_rgi_C0 * plaquette_energy + g_rgi_C1 * rectangle_energy;
 
-    if(g_proc_id == 0) {
-      fprintf(parameterfile,"# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
-      printf("# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
-      fclose(parameterfile);
-    }
+  if(g_proc_id == 0) {
+    fprintf(parameterfile,"# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
+    printf("# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
+    fclose(parameterfile);
   }
-
+ 
 
   /* set ddummy to zero */
   for(ix = 0; ix < VOLUME+RAND; ix++){
@@ -535,7 +494,7 @@ int main(int argc,char *argv[]) {
     }
 
     /* online measurements */
-    for(imeas=0; imeas<no_measurements; imeas++){
+    for(imeas = 0; imeas < no_measurements; imeas++){
       meas = &measurement_list[imeas];
       if(trajectory_counter%meas->freq == 0){
         if (g_proc_id == 0) {
@@ -592,7 +551,6 @@ int main(int argc,char *argv[]) {
     free_bispinor_field();
     free_chi_spinor_field();
   }
-  /* End IF PHMC */
 
   return(0);
 #ifdef _KOJAK_INST
