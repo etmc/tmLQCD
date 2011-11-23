@@ -34,205 +34,66 @@
 #include "start.h"
 #include "sf_get_staples.h"
 
-
 su3 sf_get_staples(int x, int mu, su3 ** in_gauge_field) {
   
-  int k,iy;
-  static su3 v,st,cst;
-  su3 *w1,*w2,*w3;
+  int k, iy, flag1, flag2;
+  static su3 v, st, cst;
+  su3 *w1, *w2, *w3;
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(staples)
 #endif
-  
+  flag1 = -1;
+  flag2 = -1;
   _su3_zero(v);
-  
-  for(k=0;k<4;k++) {
-    if(k!=mu){
+  for (k = 0; k < 4; k++) {
+    if (k != mu) {
       if (g_t[x] > 1 && g_t[x] < (g_Tbsf - 1)) {
-	w1=&in_gauge_field[x][k];
-	w2=&in_gauge_field[g_iup[x][k]][mu];
-	w3=&in_gauge_field[g_iup[x][mu]][k];	
-	/* st = w2 * w3^d */
-	_su3_times_su3d(st,*w2,*w3);
-	/* cst = c0 * st */
-	_real_times_su3(cst,g_rgi_C0,st); /* that is the new thing specific of SF */
-	/* v = v + w1 * cst */
-	_su3_times_su3_acc(v,*w1,cst); 
-	
-	iy=g_idn[x][k];
-	w1=&in_gauge_field[iy][k];
-	w2=&in_gauge_field[iy][mu];
-	w3=&in_gauge_field[g_iup[iy][mu]][k];
-	/* st = w2 * w3 */
-	_su3_times_su3(st,*w2,*w3);
-	/* cst = c0 * st */
-	_real_times_su3(cst,g_rgi_C0,st); /* that is the new thing specific of SF */
-	/* v = v + w1^d * cst */
-	_su3d_times_su3_acc(v,*w1,cst);
+        flag1 = 0;
+        flag2 = 0;
+      } else if (g_t[x] == 0 && mu == 0) {
+        flag1 = 1;  
+        flag2 = 1;
+      } else if (g_t[x] == 1 && mu == 0) {
+        flag1 = 0;
+        flag2 = 0;
+      } else if (g_t[x] == 1 && mu != 0) {
+        if (k != 0) {
+          flag1 = 0;
+          flag2 = 0;
+        } else if (k == 0) {
+          flag1 = 0;  
+          flag2 = 1;
+        }
+      } else if (g_t[x] == (g_Tbsf - 1) && mu == 0) {
+        flag1 = 1;  
+        flag2 = 1;
+      } else if (g_t[x] == (g_Tbsf - 1) && mu != 0) {
+        if (k != 0) {
+          flag1 = 0;
+          flag2 = 0;
+        } else if (k == 0) {
+          flag1 = 1;  
+          flag2 = 0;
+        }
       }
-      else if (g_t[x] == 0 && mu == 0) {
-	w1=&in_gauge_field[x][k];
-	w2=&in_gauge_field[g_iup[x][k]][mu];
-	w3=&in_gauge_field[g_iup[x][mu]][k];
-	/* st = w2 * w3^d */
-	_su3_times_su3d(st,*w2,*w3);
-	/* cst = ct * st */
-	_real_times_su3(cst,g_Ct,st); /* that is the new thing specific of SF */
-	/* v = v + w1 * cst */
-	_su3_times_su3_acc(v,*w1,cst);
-
-	iy=g_idn[x][k];
-	w1=&in_gauge_field[iy][k];
-	w2=&in_gauge_field[iy][mu];
-	w3=&in_gauge_field[g_iup[iy][mu]][k];
-	/* st = w2 * w3 */
-	_su3_times_su3(st,*w2,*w3);
-	/* cst = ct * st */
-	_real_times_su3(cst,g_Ct,st); /* that is the new thing specific of SF */
-	/* v = v + w1^d * cst */
-	_su3d_times_su3_acc(v,*w1,cst);
-      }
-      else if (g_t[x] == 1 && mu == 0) {
-	w1=&in_gauge_field[x][k];
-	w2=&in_gauge_field[g_iup[x][k]][mu];
-	w3=&in_gauge_field[g_iup[x][mu]][k];
-	/* st = w2 * w3^d */
-	_su3_times_su3d(st,*w2,*w3);
-	/* cst = c0 * st */
-	_real_times_su3(cst,g_rgi_C0,st); /* that is the new thing specific of SF */
-	/* v = v + w1 * cst */
-	_su3_times_su3_acc(v,*w1,cst);
-
-	iy=g_idn[x][k];
-	w1=&in_gauge_field[iy][k];
-	w2=&in_gauge_field[iy][mu];
-	w3=&in_gauge_field[g_iup[iy][mu]][k];
-	/* st = w2 * w3 */
-	_su3_times_su3(st,*w2,*w3);
-	/* cst = c0 * st */
-	_real_times_su3(cst,g_rgi_C0,st); /* that is the new thing specific of SF */
-	/* v = v + w1^d * cst */
-	_su3d_times_su3_acc(v,*w1,cst);
-      }
-      else if (g_t[x] == 1 && mu != 0) {
-	if (k!=0) {
-	  w1=&in_gauge_field[x][k];
-	  w2=&in_gauge_field[g_iup[x][k]][mu];
-	  w3=&in_gauge_field[g_iup[x][mu]][k];
-	  /* st = w2 * w3^d */
-	  _su3_times_su3d(st,*w2,*w3);
-	  /* cst = c0 * st */
-	  _real_times_su3(cst,g_rgi_C0,st); /* that is the new thing specific of SF */
-	  /* v = v + w1 * cst */
-	  _su3_times_su3_acc(v,*w1,cst); 
-	  
-	  iy=g_idn[x][k];
-	  w1=&in_gauge_field[iy][k];
-	  w2=&in_gauge_field[iy][mu];
-	  w3=&in_gauge_field[g_iup[iy][mu]][k];
-	  /* st = w2 * w3 */
-	  _su3_times_su3(st,*w2,*w3);
-	  /* cst = c0 * st */
-	  _real_times_su3(cst,g_rgi_C0,st); /* that is the new thing specific of SF */
-	  /* v = v + w1^d * cst */
-	  _su3d_times_su3_acc(v,*w1,cst);	  
-	}
-	else if (k==0) {
-	  w1=&in_gauge_field[x][k];
-	  w2=&in_gauge_field[g_iup[x][k]][mu];
-	  w3=&in_gauge_field[g_iup[x][mu]][k];
-	  /* st = w2 * w3^d */
-	  _su3_times_su3d(st,*w2,*w3);
-	  /* cst = c0 * st */
-	  _real_times_su3(cst,g_rgi_C0,st); /* that is the new thing specific of SF */
-	  /* v = v + w1 * cst */
-	  _su3_times_su3_acc(v,*w1,cst);
-	  
-	  iy=g_idn[x][k];
-	  w1=&in_gauge_field[iy][k];
-	  w2=&in_gauge_field[iy][mu];
-	  w3=&in_gauge_field[g_iup[iy][mu]][k];
-	  /* st = w2 * w3 */
-	  _su3_times_su3(st,*w2,*w3);
-	  /* cst = ct * st */
-	  _real_times_su3(cst,g_Ct,st); /* that is the new thing specific of SF */
-	  /* v = v + w1^d * cst */
-	  _su3d_times_su3_acc(v,*w1,cst);	  
-	}
-      }
-      else if (g_t[x] == (g_Tbsf - 1) && mu == 0) {
-	w1=&in_gauge_field[x][k];
-	w2=&in_gauge_field[g_iup[x][k]][mu];
-	w3=&in_gauge_field[g_iup[x][mu]][k];
-	/* st = w2 * w3^d */
-	_su3_times_su3d(st,*w2,*w3);
-	/* cst = ct * st */
-	_real_times_su3(cst,g_Ct,st); /* that is the new thing specific of SF */
-	/* v = v + w1 * cst */
-	_su3_times_su3_acc(v,*w1,cst);
-
-	iy=g_idn[x][k];
-	w1=&in_gauge_field[iy][k];
-	w2=&in_gauge_field[iy][mu];
-	w3=&in_gauge_field[g_iup[iy][mu]][k];
-	/* st = w2 * w3 */
-	_su3_times_su3(st,*w2,*w3);
-	/* cst = ct * st */
-	_real_times_su3(cst,g_Ct,st); /* that is the new thing specific of SF */
-	/* v = v + w1^d * cst */
-	_su3d_times_su3_acc(v,*w1,cst);
-      }
-      else if (g_t[x] == (g_Tbsf - 1) && mu != 0) {
-	if (k!=0) {
-	  w1=&in_gauge_field[x][k];
-	  w2=&in_gauge_field[g_iup[x][k]][mu];
-	  w3=&in_gauge_field[g_iup[x][mu]][k];
-	  /* st = w2 * w3^d */
-	  _su3_times_su3d(st,*w2,*w3);
-	  /* cst = c0 * st */
-	  _real_times_su3(cst,g_rgi_C0,st); /* that is the new thing specific of SF */
-	  /* v = v + w1 * cst */
-	  _su3_times_su3_acc(v,*w1,cst); 
-	  
-	  iy=g_idn[x][k];
-	  w1=&in_gauge_field[iy][k];
-	  w2=&in_gauge_field[iy][mu];
-	  w3=&in_gauge_field[g_iup[iy][mu]][k];
-	  /* st = w2 * w3 */
-	  _su3_times_su3(st,*w2,*w3);
-	  /* cst = c0 * st */
-	  _real_times_su3(cst,g_rgi_C0,st); /* that is the new thing specific of SF */
-	  /* v = v + w1^d * cst */
-	  _su3d_times_su3_acc(v,*w1,cst);	  
-	}
-	else if (k==0) {
-	  w1=&in_gauge_field[x][k];
-	  w2=&in_gauge_field[g_iup[x][k]][mu];
-	  w3=&in_gauge_field[g_iup[x][mu]][k];
-	  /* st = w2 * w3^d */
-	  _su3_times_su3d(st,*w2,*w3);
-	  /* cst = ct * st */
-	  _real_times_su3(cst,g_Ct,st); /* that is the new thing specific of SF */
-	  /* v = v + w1 * cst */
-	  _su3_times_su3_acc(v,*w1,cst);
-	  
-	  iy=g_idn[x][k];
-	  w1=&in_gauge_field[iy][k];
-	  w2=&in_gauge_field[iy][mu];
-	  w3=&in_gauge_field[g_iup[iy][mu]][k];
-	  /* st = w2 * w3 */
-	  _su3_times_su3(st,*w2,*w3);
-	  /* cst = c0 * st */
-	  _real_times_su3(cst,g_rgi_C0,st); /* that is the new thing specific of SF */
-	  /* v = v + w1^d * cst */
-	  _su3d_times_su3_acc(v,*w1,cst);	  
-	}
-      }
-      else {
-
-      }
+      if (flag1 < 0 || flag2 < 0)
+        exit(0);
+      w1 = &in_gauge_field[x][k];
+      w2 = &in_gauge_field[g_iup[x][k]][mu];
+      w3 = &in_gauge_field[g_iup[x][mu]][k]; 
+      _su3_times_su3d(st, *w2, *w3);
+      _real_times_su3(cst, (flag1 == 0 ? g_rgi_C0 : g_Ct) ,st); /* specific to SF */
+      _su3_times_su3_acc(v, *w1, cst); 
+      iy = g_idn[x][k];
+      w1 = &in_gauge_field[iy][k];
+      w2 = &in_gauge_field[iy][mu];
+      w3 = &in_gauge_field[g_iup[iy][mu]][k];
+      _su3_times_su3(st, *w2, *w3);
+      _real_times_su3(cst, (flag2 == 0 ? g_rgi_C0 : g_Ct) ,st); /* specific to SF */
+      _su3d_times_su3_acc(v, *w1, cst);
     }
   }
+
   return v;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(staples)

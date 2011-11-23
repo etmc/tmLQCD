@@ -198,7 +198,7 @@ EXTERN double g_eta;                          /* background field parameter */
 EXTERN double g_Ct, g_Cs;                     /* plaquette part */
 EXTERN double g_C1ss, g_C1tss, g_C1tts;       /* rectangle part */
 EXTERN int g_Tbsf;                            /* it sets at which time slice I want to put the SF b.c. (end point)
-                                                 T = lattice time extent set by Carsten */
+                                                 T = lattice time extent */
 /* variables specifying the value of t,x,y,z for each lattice site ix */
 EXTERN int* g_t;
 EXTERN int* g_x;
