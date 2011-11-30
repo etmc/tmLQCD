@@ -22,7 +22,7 @@ representation in the $\chi$-basis written as
     \equiv &\sum_{x,y}\bar\chi(x) M_{xy}\chi(y)\ .
   \end{split}
 \end{equation}
-similar to Eq.~(\ref{eq:Dtm}). For convenience we define
+For convenience we define
 $\tilde\mu=2\kappa\mu$. Using the matrix $M$ one can define the
 hermitian (two flavor) operator:
 \begin{equation}
@@ -224,6 +224,156 @@ where $Q^h_{oo}$ is given in flavour space by
 \end{equation*}
 with the previous definitions of $M_{eo}$ etc. The inplementation for
 the HMC is very similar to the mass degenerate case.
+
+\subsubsection{Clover term and Twisted mass term}
+
+We start again with the lattice fermion action in the hopping
+parameter representation in the $\chi$-basis now including the clover
+term written as
+\begin{equation}
+  \label{eq:eosw0}
+    \begin{split}
+    S[\chi,\bar\chi,U] = \sum_x & \Biggl\{ \bar\chi(x)[1+2\kappa
+    c_{SW}T + 2i \kappa\mu\gamma_5\tau^3]\chi(x)  \Bigr. \\
+    & -\kappa\bar\chi(x)\sum_{\mu = 1}^4\Bigl[ U(x,\mu)(r+\gamma_\mu)\chi(x+a\hat\mu)\bigr. \\
+    & +\Bigl. \bigl. U^\dagger(x-a\hat\mu,\mu)(r-\gamma_\mu)\chi(x-a\hat\mu)\Bigr]
+    \Biggr\} \\
+    \equiv &\sum_{x,y}\bar\chi(x) M_{xy}\chi(y)\, ,
+  \end{split}
+\end{equation}
+with the clover term $T$. For convenience we define
+$\tilde\mu\equiv2\kappa\mu$ and $\tilde c_{SW} = 2\kappa
+c_{SW}$. Using the matrix $M$ one can define the 
+(two flavor) operator:
+\begin{equation}
+  \label{eq:eosw1}
+  Q\equiv \gamma_5 M = \begin{pmatrix}
+    \Qp & \\\
+    & \Qm \\
+  \end{pmatrix}
+\end{equation}
+where the sub-matrices $\Qpm$ can be factorised as follows (Schur
+decomposition): 
+\begin{equation}
+  \label{eq:eosw2}
+  \begin{split}
+    Q^\pm &= \gamma_5\begin{pmatrix}
+      1 + T_{ee} \pm i\tilde\mu\gamma_5 & M_{eo} \\
+      M_{oe}    & 1 + T_{oo} \pm i\tilde\mu\gamma_5 \\
+    \end{pmatrix} =
+    \gamma_5\begin{pmatrix}
+      M_{ee}^\pm & M_{eo} \\
+      M_{oe}    & M_{oo}^\pm \\
+    \end{pmatrix} \\
+    & =
+    \begin{pmatrix}
+      \gamma_5M_{ee}^\pm & 0 \\
+      \gamma_5M_{oe}  & 1 \\
+    \end{pmatrix}
+    \begin{pmatrix}
+      1       & (M_{ee}^\pm)^{-1}M_{eo}\\
+      0       & \gamma_5(M_{oo}^\pm-M_{oe}(M_{ee}^\pm)^{-1}M_{eo})\\
+    \end{pmatrix}\, .
+\end{split}
+\end{equation}
+Note that $(M_{ee}^\pm)^{-1}$ cannot be computed as easily as in the
+case of Twisted mass fermions without clover term.
+Using $\det(Q)=\det(\Qp)\det(\Qm)$ the following relation can be derived
+\begin{equation}
+  \label{eq:eosw4}
+  \begin{split}
+    \det(\Qpm) &\propto \det(1+T_{ee} \pm i\tilde\mu\gamma_5)\det(\hQpm) \\
+    \hQpm &= \gamma_5(M_{oo}^\pm - M_{oe}(M_{ee}^\pm )^{-1}M_{eo})\, ,
+  \end{split}
+\end{equation}
+where $\hQpm$ is only defined on the odd sites of the lattice. In the
+HMC algorithm the second determinant is stochastically estimated using
+pseudo fermion fields $\phi_o$: now we write the determinant with
+pseudo fermion fields:
+\begin{equation}
+  \begin{split}
+    \det(\hQp \hQm) &= \int \mathcal{D}\phi_o\,\mathcal{D}\phi^\dagger_o\
+    \exp(-S_\mathrm{PF})\\
+    S_\mathrm{PF} &\equiv\ \phi_o^\dagger\ \left(\hQp\hQm\right)^{-1}\phi_o\, ,
+  \end{split}
+\end{equation}
+where the fields $\phi_o$ are defined only on the odd sites of the
+lattice. A second term needs to be taken into account, which reads
+\begin{equation}
+  \label{eq:swdet}
+  S_{\det} =  - \tr[\log(1+T_{ee} + i\tilde\mu\gamma_5) -
+  \log(1+T_{ee} - i\tilde\mu\gamma_5)]\, .
+\end{equation}
+In order to compute the force corresponding to the effective
+action $S_\mathrm{PF}$ we need the variation of $S_\mathrm{PF}$ with
+respect to the gauge fields 
+(using $\delta (A^{-1})=-A^{-1}\delta A A^{-1}$):
+\begin{equation}
+  \label{eq:eosw5}
+  \begin{split}
+    \delta S_\mathrm{PF} &= -[\phi_o^\dagger (\hQp \hQm)^{-1}\delta \hQp(\hQp)^{-1}\phi_o +
+    \phi_o^\dagger(\hQm)^{-1}\delta \hQm (\hQp \hQm)^{-1} \phi_o ] \\
+     &= -[X_o^\dagger \delta \hQp Y_o + Y_o^\dagger \delta\hQm X_o]
+  \end{split}
+\end{equation}
+with $X_o$ and $Y_o$ defined on the odd sides as 
+\begin{equation}
+  \label{eq:eosw6}
+  X_o = (\hQp \hQm)^{-1} \phi_o,\quad Y_o = (\hQp)^{-1}\phi_o=\hat
+  \Qm X_o\ ,
+\end{equation}
+where $(\hQpm)^\dagger = \hat Q^\mp$ has been used. The variation of
+$\hQpm$ reads
+\begin{equation}
+  \label{eq:eosw7}
+  \begin{split}
+    \delta \hQpm = \gamma_5 & \left( \delta T_{oo}-\delta M_{oe}(M_{ee}^\pm )^{-1}M_{eo} -
+      M_{oe}(M_{ee}^\pm )^{-1}\delta M_{eo}\right. \\
+  &\left. M_{oe}(M_{ee}^\pm )^{-1} \delta T_{ee} (M_{ee}^\pm )^{-1} M_{eo}\right),
+  \end{split}
+\end{equation}
+and one finds
+\begin{equation}
+  \label{eq:eosw8}
+  \begin{split}
+    \delta S_\mathrm{PF} &= -(X^\dagger\delta \Qp Y + Y^\dagger\delta \Qm X) \\
+    &= -(X^\dagger\delta \Qp Y +(X^\dagger\delta \Qp Y)^\dagger)
+  \end{split}
+\end{equation}
+where $X$ and $Y$ are now defined over the full lattice as
+\begin{equation}
+  \label{eq:eosw9}
+  X = 
+  \begin{pmatrix}
+    -(M_{ee}^-)^{-1}M_{eo}X_o \\ X_o\\
+  \end{pmatrix},\quad
+  Y = 
+  \begin{pmatrix}
+    -(M_{ee}^+)^{-1}M_{eo}Y_o \\ Y_o\\
+  \end{pmatrix}.
+\end{equation}
+In addition $\delta\Qp = \delta\Qm, M_{eo}^\dagger = \gamma_5 M_{oe}\gamma_5$ and
+$M_{oe}^\dagger = \gamma_5 M_{eo}\gamma_5$ has been used. Since the bosonic part
+is quadratic in the $\phi_o$ fields, the $\phi_o$ are generated at the
+beginning of each molecular dynamics trajectory with
+\begin{equation}
+  \label{eq:eosw10}
+  \phi_o = \hQp R,
+\end{equation}
+where $R$ is a random spinor field taken from a Gaussian distribution
+with norm one.
+
+The additional bit in the action $S_{\det}$ needs to be treated
+seperately. The variation of this part is
+\begin{equation}
+  \label{eq:eosw11}
+  \delta S_{\det} = -\tr \left[(1+i\tilde\mu\gamma_5 + T_{ee})^{-1}  +
+    (1-i\tilde\mu\gamma_5 + T_{ee})^{-1}\right] \delta T_{ee}\ . 
+\end{equation}
+The main difference in between pure Twisted mass fermions and Twisted
+mass fermions plus clover term is that the matrices $M_{ee}$ and
+$M_{oo}$ need to be inverted numerically. A stable numerical method
+for this task needs to be devised.
 
 \subsection{Inversion}
 
