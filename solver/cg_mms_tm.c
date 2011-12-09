@@ -147,8 +147,8 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
     /* Check whether the precision eps_sq is reached */
 
     err = square_norm(solver_field[1], N, 1);
-    if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
-      printf("CG MMS %d\t%g\n", iteration, err); fflush( stdout );
+    if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
+      printf("CGMMS iteration: %d residue: %g\n", iteration, err); fflush( stdout );
     }
 
     if( ((err <= eps_sq) && (rel_prec == 0)) ||
@@ -159,7 +159,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
       diff(solver_field[3], solver_field[2], Q, N);
       err = square_norm(solver_field[3], N, 1);
       if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
-        printf("true residue %d\t%g\t\n",iteration, err); 
+        printf("# CG MMS true residue at final iteration (%d) was %g.\n", iteration, err); 
         fflush( stdout);
       }
       g_sloppy_precision = 0;

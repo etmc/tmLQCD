@@ -162,7 +162,7 @@ int init_operators() {
       }
       if(optr->solver == 12) {
         if (g_cart_id == 0 && optr->even_odd_flag == 1)
-          fprintf(stderr, "CGMMS works only without even/odd! Forcing!\n");
+          fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
         optr->even_odd_flag = 0;
 
         /* this is for the extra masses of the CGMMS */
@@ -171,13 +171,15 @@ int init_operators() {
             for (i = 0; i < g_no_extra_masses; i++) {
               /* Code added below mainly to stop the compiler from whining! */
               if (fscanf(ifs, "%lf", &g_extra_masses[i]) == EOF) {
-            g_no_extra_masses = i;
-            if (g_cart_id == 0 )
-              fprintf(stderr, "Reduced the number of extra masses to %d for lack of input values.\n", g_no_extra_masses);
-            break;
+                if (g_cart_id == 0) {
+                  fprintf(stderr, "Expected %d extra masses for multiple mass solver, found only %d in extra_masses.input.\n", g_no_extra_masses, i);
+                  fprintf(stderr, "Reducing the number of extra masses to %d for lack of input values.\n", i);
+                }
+                g_no_extra_masses = i;
+                break;
               }
               if (g_cart_id == 0 && g_debug_level > 0) {
-            printf("# g_extra_masses[%d] = %lf\n", i, g_extra_masses[i]);
+                printf("# Extra mass %d = %lf\n", i, g_extra_masses[i]);
               }
             }
             fclose(ifs);
