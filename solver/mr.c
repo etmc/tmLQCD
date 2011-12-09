@@ -79,8 +79,8 @@ int mr(spinor * const P, spinor * const Q,
   f(solver_field[2], P);
   diff(r, Q, solver_field[2], N);
   norm_r=square_norm(solver_field[0], N, parallel);
-  if(g_proc_id == g_stdio_proc) {
-    printf("MR iteration= %d  |res|^2= %e\n", i, norm_r); 
+  if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
+    printf("MR iteration number: %d, |res|^2 = %e\n", i, norm_r); 
     fflush( stdout );
   }
   while((norm_r > eps_sq) && (i < max_iter)){
@@ -99,8 +99,8 @@ int mr(spinor * const P, spinor * const Q,
 
     diff(r, Q, solver_field[2], N);
     norm_r=square_norm(solver_field[0], N, parallel);
-    if(g_proc_id == g_stdio_proc) {
-      printf("MR iteration= %d  |res|^2= %g\n", i, norm_r); 
+    if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
+      printf("# MR iteration= %d  |res|^2= %g\n", i, norm_r); 
       fflush(stdout);
     }
   }
@@ -149,7 +149,7 @@ int mrblk(spinor * const P, spinor * const Q,
   f(s[2], P, blk);
   diff(r, Q, s[2], N);
   norm_r = square_norm(r, N, parallel);
-  if(g_proc_id == g_stdio_proc && g_debug_level > 1 && blk == 0) {
+  if(g_proc_id == g_stdio_proc && g_debug_level > 2 && blk == 0) {
     printf("MRblk iteration= %d  |res|^2= %e\n", i, norm_r);
     fflush( stdout );
   }
@@ -170,7 +170,7 @@ int mrblk(spinor * const P, spinor * const Q,
     
     diff(r, Q, s[2], N);
     norm_r = square_norm(r, N, parallel);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 1 && blk == 0) {
+    if(g_proc_id == g_stdio_proc && g_debug_level > 2 && blk == 0) {
       printf("MRblk iteration= %d  |res|^2= %g\n", i, norm_r);
       fflush(stdout);
     }

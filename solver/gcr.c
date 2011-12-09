@@ -85,8 +85,8 @@ int gcr(spinor * const P, spinor * const Q,
     f(tmp, P);
     diff(rho, Q, tmp, N);
     err = square_norm(rho, N, 1);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-      printf("GCR: %d\t%g true residue\n", iter, err); 
+    if(g_proc_id == g_stdio_proc && g_debug_level > 2){
+      printf("GCR: iteration number: %d, true residue: %g\n", iter, err); 
       fflush(stdout);
     }
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
@@ -99,8 +99,8 @@ int gcr(spinor * const P, spinor * const Q,
 	assign(xi[k], rho, N);
       }
       else {
-	zero_spinor_field(xi[k], N);  
-	Msap_eo(xi[k], rho, 6);   
+        zero_spinor_field(xi[k], N);  
+        Msap_eo(xi[k], rho, 6);   
  	/* Msap(xi[k], rho, 8); */
       }
 	  
@@ -110,8 +110,8 @@ int gcr(spinor * const P, spinor * const Q,
 	  
       /* tmp will become chi[k] */
       for(l = 0; l < k; l++) {
-  	a[l][k] = scalar_prod(chi[l], tmp, N, 1);
-	assign_diff_mul(tmp, chi[l], a[l][k], N);
+        a[l][k] = scalar_prod(chi[l], tmp, N, 1);
+        assign_diff_mul(tmp, chi[l], a[l][k], N);
       }
       b[k] = sqrt(square_norm(tmp, N, 1));
       mul_r(chi[k], 1./b[k], tmp, N);
@@ -120,13 +120,13 @@ int gcr(spinor * const P, spinor * const Q,
       err = square_norm(rho, N, 1);
       iter ++;
       if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-	if(rel_prec == 1) printf("GCR: %d\t%g >= %g iterated residue\n", iter, err, eps_sq*norm_sq); 
-	else printf("GCR: %d\t%g >= %giterated residue\n", iter, err, eps_sq);
-	fflush(stdout);
+        if(rel_prec == 1) printf("# GCR: %d\t%g >= %g iterated residue\n", iter, err, eps_sq*norm_sq); 
+        else printf("# GCR: %d\t%g >= %giterated residue\n", iter, err, eps_sq);
+        fflush(stdout);
       }
       /* Precision reached? */
       if((k == m-1) || ((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
-	break;
+        break;
       }
     }
 
@@ -135,9 +135,9 @@ int gcr(spinor * const P, spinor * const Q,
     assign_add_mul(P, xi[k], c[k], N);
     for(l = k-1; l >= 0; l--) {
       for(i = l+1; i <= k; i++) {
-	_mult_assign_complex(ctmp, a[l][i], c[i]);
-	/* c[l] -= ctmp */
-	_diff_complex(c[l], ctmp);
+        _mult_assign_complex(ctmp, a[l][i], c[i]);
+        /* c[l] -= ctmp */
+        _diff_complex(c[l], ctmp);
       }
       _mult_real(c[l], c[l], 1./b[l]);
       assign_add_mul(P, xi[l], c[l], N);
