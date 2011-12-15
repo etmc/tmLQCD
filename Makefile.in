@@ -140,6 +140,7 @@ ${PROGRAMS}: %: %.o libhmc.a all-recursive
 
 
 dep: $(addsuffix .d,$(ALLOBJ))
+	@ echo "...dependency files build"
 
 install: Makefile
 	@mkdir -p $(bindir); \
@@ -162,7 +163,7 @@ compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d
 
 clean: clean-recursive Makefile
-	rm -f hmc_tm invert *.o *.d
+	rm -f hmc_tm invert *.o *.d test/*.o test/*.d
 
 distclean: distclean-recursive Makefile
 	rm -f hmc_tm hybrid *.o *.d *~ Makefile config.log config.status fixed_volume.h
