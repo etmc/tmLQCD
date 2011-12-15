@@ -164,6 +164,9 @@ int init_operators() {
         if (g_cart_id == 0 && optr->even_odd_flag == 1)
           fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
         optr->even_odd_flag = 0;
+	if (g_cart_id == 0 && optr->DownProp)
+	  fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
+	optr->DownProp = 0;
 
         /* this is for the extra masses of the CGMMS */
         if (g_no_extra_masses > 0) {
