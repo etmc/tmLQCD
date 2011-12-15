@@ -117,24 +117,20 @@ int main(int argc,char *argv[])
 #ifndef WITHLAPH
   printf(" Error: WITHLAPH not defined");
   exit(0);
-  #error " Error: WITHLAPH not defined"
 #endif
 #ifdef MPI
 #ifndef _INDEX_INDEP_GEOM
   printf(" Error: _INDEX_INDEP_GEOM not defined");
   exit(0);
-  #error " Error: _INDEX_INDEP_GEOM not defined"
 #endif
 #ifndef _USE_TSPLITPAR
   printf(" Error: _USE_TSPLITPAR not defined");
   exit(0);
-  #error " Error: _USE_TSPLITPAR not defined"
 #endif
 #endif
 #ifdef FIXEDVOLUME
   printf(" Error: FIXEDVOLUME not allowed");
   exit(0);
-  #error " Error: FIXEDVOLUME not defined"
 #endif
 
   
