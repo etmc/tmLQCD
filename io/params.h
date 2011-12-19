@@ -37,7 +37,7 @@ typedef struct
   double mu_inverted;
   double mu_lowest;
 
-  double *extra_masses;
+  double cgmms_mass;
 
   int    mms;
   int    iter;

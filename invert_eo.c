@@ -20,14 +20,14 @@
 
 /****************************************************************
  *
- * invert_eo makes an inversion with EO precoditioned
+ * invert_eo makes an inversion with EO preconditioned
  * tm Operator
  *
  * Even and Odd are the numbers of spinor_field that contain
  * the even and the odd sites of the source. The result is stored
  * int Even_new and Odd_new.
  *
- * invert_eo returns the number of iterations neede or -1 if the 
+ * invert_eo returns the number of iterations needed or -1 if the 
  * solver did not converge.
  *
  * Author: Carsten Urbach

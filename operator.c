@@ -176,13 +176,13 @@ int init_operators() {
               if (fscanf(ifs, "%lf", &g_extra_masses[i]) == EOF) {
                 if (g_cart_id == 0) {
                   fprintf(stderr, "Expected %d extra masses for multiple mass solver, found only %d in extra_masses.input.\n", g_no_extra_masses, i);
-                  fprintf(stderr, "Reducing the number of extra masses to %d for lack of input values.\n", i);
+                  fprintf(stderr, "Reducing the number of extra masses to %d due to lack of input values.\n", i);
                 }
                 g_no_extra_masses = i;
                 break;
               }
               if (g_cart_id == 0 && g_debug_level > 0) {
-                printf("# Extra mass %d = %lf\n", i, g_extra_masses[i]);
+                printf("# Extra mass %d = %lf\n", i, g_extra_masses[i]/(2 * g_kappa));
               }
             }
             fclose(ifs);

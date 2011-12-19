@@ -52,8 +52,9 @@ paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int i
     info->epsbar = 0.;
   }
   strcpy(info->date, ctime(&t1.tv_sec));
-  info->mms = -1;
+  info->mms = 0;
   info->heavy = 0;
+  info->cgmms_mass = 0;
   switch (solver) {
   case CG:
     strcpy(info->inverter, "CG");
@@ -66,11 +67,7 @@ paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int i
     break;
   case CGMMS:
     strcpy(info->inverter, "CGMMS");
-    info->extra_masses = (double*)malloc(g_no_extra_masses*sizeof(double));
-    for(i=0; i < g_no_extra_masses; i++) {
-      info->extra_masses[i] = g_extra_masses[i];
-    }
-    info->mms = 0;
+    info->mms = 1;
     break;
   case CGS:
     strcpy(info->inverter, "CGS");

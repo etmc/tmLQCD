@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
       j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
     }
     if (j != 0) {
-      fprintf(stderr, "Not enough memory for monomial pseudo fermion  fields! Aborting...\n");
+      fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
       exit(-1);
     }
   }
@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
     j = init_dirac_halfspinor32();
     if (j != 0)
     {
-      fprintf(stderr, "Not enough memory for 32-Bit halffield! Aborting...\n");
+      fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
       exit(-1);
     }
   }

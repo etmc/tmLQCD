@@ -196,6 +196,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
         if (PropInfo.splitted || SourceInfo.ix == index_start) {
           //Create the inverter info NOTE: always set to TWILSON=12 and 1 flavour (to be adjusted)
           inverterInfo = construct_paramsInverterInfo(err, iteration+1, 12, 1);
+          inverterInfo->cgmms_mass = g_extra_masses[im]/(2 * inverterInfo->kappa);
           write_spinor_info(writer, PropInfo.format, inverterInfo, append);
           //Create the propagatorFormat NOTE: always set to 1 flavour (to be adjusted)
           propagatorFormat = construct_paramsPropagatorFormat(cg_mms_default_precision, 1);
