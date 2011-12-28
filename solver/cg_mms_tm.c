@@ -62,7 +62,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
   static double normsq, pro, err, alpha_cg = 1., beta_cg = 0., squarenorm;
   int iteration, im, append = 0;
   char filename[100];
-  static double gamma,alpham1;
+  static double gamma, alpham1;
   int const cg_mms_default_precision = 32;
   double tmp_mu = g_mu;
   WRITER * writer = NULL;

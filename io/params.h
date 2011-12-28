@@ -43,8 +43,6 @@ typedef struct
   int    iter;
   int    heavy;
   int    noflavours;
-
-  long int time;
 }
 paramsInverterInfo;
 

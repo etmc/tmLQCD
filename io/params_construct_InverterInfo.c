@@ -39,7 +39,6 @@ paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int i
 
   info->kappa = g_kappa;
   info->mu = g_mu / 2. / g_kappa;
-  info->time = t1.tv_sec;
 
   strcpy(info->package_version, PACKAGE_VERSION);
 

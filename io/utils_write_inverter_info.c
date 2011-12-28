@@ -32,12 +32,12 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
                      "epssq = %e\n"
                      "noiter = %d\n"
                      "kappa = %f, inverted mu = %f, lowest mu = %f\n"
-                     "time = %ld\ninverter version = %s\n"
+                     "inverter version = %s\n"
                      "date = %s",
                      info->inverter,
                      info->epssq, info->iter, info->kappa,
                      info->cgmms_mass,
-                     info->mu, info->time, info->package_version,
+                     info->mu, info->package_version,
                      info->date);
   }
   else {
@@ -46,24 +46,22 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
                        "epssq = %e\n"
                        "noiter = %d\n"
                        "kappa = %f, mu = %f\n"
-                       "time = %ld\n"
                        "inverter version = %s\n"
                        "date = %s",
                        info->inverter,
                        info->epssq, info->iter, info->kappa, info->mu,
-                       info->time, info->package_version, info->date);
+                       info->package_version, info->date);
     }
     else {
       sprintf(message, "solver = %s\n"
                        "epssq = %e\n"
                        "noiter = %d\n"
                        "kappa = %f, mubar = %f, epsbar=%f\n"
-                       "time = %ld\n"
                        "inverter version = %s\n"
                        "date = %s",
                        info->inverter,
                        info->epssq, info->iter, info->kappa, info->mubar,
-                       info->epsbar, info->time,
+                       info->epsbar,
                        info->package_version, info->date);
     }
   }
