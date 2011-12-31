@@ -33,7 +33,6 @@
 #include "global.h"
 #include "su3.h"
 #include <io/spinor.h>
-#include <io/params.h>
 #include "gamma.h"
 #include "linalg_eo.h"
 #include "start.h"

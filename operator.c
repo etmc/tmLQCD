@@ -48,6 +48,7 @@
 #include "init_chi_spinor_field.h"
 #include "start.h"
 #include "solver/eigenvalues.h"
+#include "solver/solver.h"
 #include <io/params.h>
 #include <io/gauge.h>
 #include <io/spinor.h>
@@ -280,11 +281,12 @@ void op_invert(const int op_id, const int index_start) {
         mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
         mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);
       }
-      optr->write_prop(op_id, index_start, i);
+      if (optr->solver != CGMMS) /* CGMMS handles its own I/O */
+        optr->write_prop(op_id, index_start, i);
       if(optr->DownProp) {
         optr->mu = -optr->mu;
-      }
-      else break;
+      } else 
+        break;
     }
   }
   else if(optr->type == DBTMWILSON) {
