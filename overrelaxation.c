@@ -178,7 +178,7 @@ void overrel_sweep(){
   static su3 v;
   if(LX<2) {printf("LX is smaller than 2 \n"); exit(0);}
 /* xchange the gauge-field */
-  xchange_gaugefield();
+  xchange_gaugefield(g_gauge_field);
 /* update the left half of the sublattice */
   for(x1=0;x1<LX/2;x1++)
     {
@@ -200,7 +200,7 @@ void overrel_sweep(){
       }
     }
 /* xchange the gauge-field */
-  xchange_gaugefield();
+  xchange_gaugefield(g_gauge_field);
 /* update the right half of the sub lattice */
   for(x1=LX/2;x1<LX;x1++)
     {

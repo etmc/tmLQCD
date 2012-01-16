@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -15,10 +15,8 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/* $Id$ */
-
-/**********************************************************
+ *
+ * $Id$ 
  * 
  * exchange routines for gauge fields
  *
@@ -30,6 +28,8 @@
 #ifndef _XCHANGE_GAUGE_H
 #define _XCHANGE_GAUGE_H
 
-void xchange_gauge();
+#include "su3.h"
+
+void xchange_gauge(su3 ** const gf);
 
 #endif

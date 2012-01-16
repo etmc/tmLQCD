@@ -237,7 +237,7 @@ int main(int argc,char *argv[]) {
       printf("done!\n"); fflush(stdout);
     }
 #ifdef MPI
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
 #endif
 #ifdef _GAUGE_COPY
     update_backward_gauge();

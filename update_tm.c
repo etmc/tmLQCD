@@ -133,7 +133,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
   g_sloppy_precision = 1;
 
-  /*run the trajectory*/
+  /* run the trajectory */
   Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
                        Integrator.no_timescales-1, 1);
 
@@ -323,7 +323,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   g_update_gauge_energy = 1;
   g_update_rectangle_energy = 1;
 #ifdef MPI
-  xchange_gauge();
+  xchange_gauge(g_gauge_field);
   etime = MPI_Wtime();
 #else
   etime = (double)clock()/((double)(CLOCKS_PER_SEC));

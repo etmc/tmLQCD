@@ -105,7 +105,7 @@ int main(int argc,char *argv[]) {
 
 #ifdef MPI
   /*For parallelization: exchange the gaugefield */
-  xchange_gauge();
+  xchange_gauge(g_gauge_field);
 #endif
 
   plaquette_energy = measure_gauge_action() / (6.*VOLUME*g_nproc);

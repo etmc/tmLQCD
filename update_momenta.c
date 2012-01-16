@@ -2,7 +2,7 @@
  * $Id$ 
  *
  * Copyright (C) 2001 Martin Hasebusch
- *               2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ *               2002,2003,2004,2005,2006,2007,2008,2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *

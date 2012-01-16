@@ -71,7 +71,7 @@ void update_gauge(const double step, su3 ** const gaugefield, su3adj ** const mo
   
 #ifdef MPI
   /* for parallelization */
-  xchange_gauge();
+  xchange_gauge(gaugefield);
 #endif
   /*
    * The backward copy of the gauge field
