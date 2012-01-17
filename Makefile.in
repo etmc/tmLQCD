@@ -86,7 +86,8 @@ SUBDIRS = ${USESUBDIRS}
 
 .SUFFIXES:
 
-all: Makefile all-recursive dep hmc_tm invert
+
+all: Makefile git-version-gen all-recursive dep hmc_tm invert
 
 #ifneq (,$(findstring lapack,${LIBS}))
 #all: Makefile all-recursive dep hmc_tm invert
