@@ -21,6 +21,7 @@
 
 #include <su3.h>
 #include <su3adj.h>
+#include <hamiltonian_field.h>
 
 #define LEAPFROG 1
 #define SEXTON 2
@@ -33,10 +34,8 @@
 typedef void (*integratefk)(const double, const int, const int);
 
 typedef struct {
-  /* gauge field to be used during integration */
-  su3 ** gaugefield;
-  /* momenta to be used during integration */
-  su3adj ** momenta;
+  /* gauge, momenta and derivative fields to be used during integration */
+  hamiltonian_field_t hf;
   /* list of types of integrators */
   int type[10];
   /* number of timescales */
@@ -61,7 +60,7 @@ extern integrator Integrator;
 /* function to initialise the integrator, to be called once at the beginning */
 int init_integrator();
 /* function to set the gauge and momenta fields for the integration */
-void integrator_set_fields(su3 **, su3adj **);
+void integrator_set_fields(hamiltonian_field_t * hf);
 /* and unsets again (to NULL pointer ) */
 void integrator_unset_fields();
 

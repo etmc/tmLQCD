@@ -19,6 +19,8 @@
 #ifndef _UPDATE_GAUGE_H
 #define _UPDATE_GAUGE_H
 
-void update_gauge(const double step, su3 ** const gaugefield, su3adj ** const momenta);
+#include "hamiltonian_field.h"
+
+void update_gauge(const double step, hamiltonian_field_t * const hf);
 
 #endif

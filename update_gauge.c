@@ -36,6 +36,7 @@
 #include "expo.h"
 #include "sse.h"
 #include "xchange.h"
+#include "hamiltonian_field.h"
 #include "update_gauge.h"
 
 
@@ -46,7 +47,7 @@
  *******************************************************/
 
 
-void update_gauge(const double step, su3 ** const gaugefield, su3adj ** const momenta) {
+void update_gauge(const double step, hamiltonian_field_t * const hf) {
 
   int i,mu;
   static su3 v,w;
@@ -60,8 +61,8 @@ void update_gauge(const double step, su3 ** const gaugefield, su3adj ** const mo
   for(i = 0; i < VOLUME; i++) { 
     for(mu = 0; mu < 4; mu++){
       /* moment[i][mu] = h_{i,mu}^{alpha} */
-      xm = &momenta[i][mu];
-      z = &gaugefield[i][mu];
+      xm = &hf->momenta[i][mu];
+      z = &hf->gaugefield[i][mu];
       _assign_const_times_mom(deriv, step, *xm);
       v = restoresu3( exposu3(deriv) );
       _su3_times_su3(w, v, *z);
@@ -71,14 +72,17 @@ void update_gauge(const double step, su3 ** const gaugefield, su3adj ** const mo
   
 #ifdef MPI
   /* for parallelization */
-  xchange_gauge(gaugefield);
+  xchange_gauge(hf->gaugefield);
 #endif
   /*
    * The backward copy of the gauge field
    * is not updated here!
    */
+  hf->update_gauge_copy = 1;
   g_update_gauge_copy = 1;
+  hf->update_gauge_energy = 1;
   g_update_gauge_energy = 1;
+  hf->update_rectangle_energy = 1;
   g_update_rectangle_energy = 1;
   return;
 #ifdef _KOJAK_INST
