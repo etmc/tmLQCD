@@ -43,6 +43,7 @@
 # include <mpi.h>
 #endif
 #include "global.h"
+#include "git_hash.h"
 #include <io/params.h>
 #include <io/gauge.h>
 #include "getopt.h"
@@ -84,6 +85,7 @@ void usage(){
   fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
   fprintf(stdout, "         [-o output-filename] default: output\n");
   fprintf(stdout, "         [-v] more verbosity\n");
+  fprintf(stdout, "         [-V] print version information and exit\n");
   fprintf(stdout, "         [-h|-? this help]\n");
   exit(0);
 }
@@ -146,7 +148,7 @@ int main(int argc,char *argv[]) {
 #endif
 
 
-  while ((c = getopt(argc, argv, "h?vf:o:")) != -1) {
+  while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
     switch (c) {
     case 'f':
       input_filename = calloc(200, sizeof(char));
@@ -158,6 +160,10 @@ int main(int argc,char *argv[]) {
       break;
     case 'v':
       verbose = 1;
+      break;
+    case 'V':
+      fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+      exit(0);
       break;
     case 'h':
     case '?':
