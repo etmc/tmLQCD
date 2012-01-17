@@ -28,63 +28,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef _STD_C99_COMPLEX_CHECKED
-# include <complex.h>
-#endif
-#ifdef apenext
-# include <topology.h>
-# include <queue.h>
-#endif
+#include <complex.h>
 #include "su3.h"
 #include "diff.h"
 
-
-
-#if ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext) && (!defined BGL))
-
-void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
-{
-   int ix;
-   spinor *q,*r,*s;
-
-
-/* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-   for (ix = 0; ix < N; ix++) {
-     q=(spinor *) Q + ix;
-     r=(spinor *) R + ix;
-     s=(spinor *) S + ix;
-     
-     (*q).s0.c0.re=(*r).s0.c0.re-(*s).s0.c0.re;
-     (*q).s0.c0.im=(*r).s0.c0.im-(*s).s0.c0.im;
-     (*q).s0.c1.re=(*r).s0.c1.re-(*s).s0.c1.re;
-     (*q).s0.c1.im=(*r).s0.c1.im-(*s).s0.c1.im;
-     (*q).s0.c2.re=(*r).s0.c2.re-(*s).s0.c2.re;
-     (*q).s0.c2.im=(*r).s0.c2.im-(*s).s0.c2.im;
-     
-     (*q).s1.c0.re=(*r).s1.c0.re-(*s).s1.c0.re;
-     (*q).s1.c0.im=(*r).s1.c0.im-(*s).s1.c0.im;
-     (*q).s1.c1.re=(*r).s1.c1.re-(*s).s1.c1.re;
-     (*q).s1.c1.im=(*r).s1.c1.im-(*s).s1.c1.im;
-     (*q).s1.c2.re=(*r).s1.c2.re-(*s).s1.c2.re;
-     (*q).s1.c2.im=(*r).s1.c2.im-(*s).s1.c2.im;         
-     
-     (*q).s2.c0.re=(*r).s2.c0.re-(*s).s2.c0.re;
-     (*q).s2.c0.im=(*r).s2.c0.im-(*s).s2.c0.im;
-     (*q).s2.c1.re=(*r).s2.c1.re-(*s).s2.c1.re;
-     (*q).s2.c1.im=(*r).s2.c1.im-(*s).s2.c1.im;
-     (*q).s2.c2.re=(*r).s2.c2.re-(*s).s2.c2.re;
-     (*q).s2.c2.im=(*r).s2.c2.im-(*s).s2.c2.im;         
-     
-     (*q).s3.c0.re=(*r).s3.c0.re-(*s).s3.c0.re;
-     (*q).s3.c0.im=(*r).s3.c0.im-(*s).s3.c0.im;
-     (*q).s3.c1.re=(*r).s3.c1.re-(*s).s3.c1.re;
-     (*q).s3.c1.im=(*r).s3.c1.im-(*s).s3.c1.im;
-     (*q).s3.c2.re=(*r).s3.c2.re-(*s).s3.c2.re;
-     (*q).s3.c2.im=(*r).s3.c2.im-(*s).s3.c2.im;
-   }
-}
-
-#elif ((defined BGL) && (defined XLC))
+#if ((defined BGL) && (defined XLC))
 
 /***************************************
  *
@@ -96,7 +44,8 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
 
 #  include"bgl.h"
 
-void diff(spinor * const Q,spinor * const R,spinor * const S, const int N) {
+void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
+{
   int ix = 1;
   double *s ALIGN;
   double *sp ALIGN;
@@ -247,101 +196,35 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N) {
   return;
 }
 
-#elif ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+#else
 
-void diff(spinor * const Q,spinor * const R,spinor * const S, const int N){
-  register int ix=0;
-  register spinor *qPointer,*rPointer,*sPointer;
+void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
+{
+   spinor *q,*r,*s;
 
-  qPointer = Q;
-  rPointer = R;
-  sPointer = S;
-
-  do {
-    register spinor q,r,s;
-    ix+=1;
 /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
+   for (int ix = 0; ix < N; ix++)
+   {
+     q=(spinor *) Q + ix;
+     r=(spinor *) R + ix;
+     s=(spinor *) S + ix;
+     
+     q->s0.c0 = r->s0.c0 - s->s0.c0;
+     q->s0.c1 = r->s0.c1 - s->s0.c1;
+     q->s0.c2 = r->s0.c2 - s->s0.c2;
 
-    q = *(qPointer);
-    r = *(rPointer);
-    s = *(sPointer);
+     q->s0.c0 = r->s0.c0 - s->s0.c0;
+     q->s0.c1 = r->s0.c1 - s->s0.c1;
+     q->s0.c2 = r->s0.c2 - s->s0.c2;
 
-    q.s0.c0 = r.s0.c0 - s.s0.c0;
-    q.s0.c1 = r.s0.c1 - s.s0.c1;
-    q.s0.c2 = r.s0.c2 - s.s0.c2;
+     q->s0.c0 = r->s0.c0 - s->s0.c0;
+     q->s0.c1 = r->s0.c1 - s->s0.c1;
+     q->s0.c2 = r->s0.c2 - s->s0.c2;
 
-    q.s1.c0 = r.s1.c0 - s.s1.c0;
-    q.s1.c1 = r.s1.c1 - s.s1.c1;
-    q.s1.c2 = r.s1.c2 - s.s1.c2;
-
-    q.s2.c0 = r.s2.c0 - s.s2.c0;
-    q.s2.c1 = r.s2.c1 - s.s2.c1;
-    q.s2.c2 = r.s2.c2 - s.s2.c2;
-
-    q.s3.c0 = r.s3.c0 - s.s3.c0;
-    q.s3.c1 = r.s3.c1 - s.s3.c1;
-    q.s3.c2 = r.s3.c2 - s.s3.c2;
-
-    qPointer+=1;
-    rPointer+=1;
-    sPointer+=1;
-    
-  } while (ix<N);
-}
-
-#elif defined apenext
-
-#define NOWHERE_COND(condition) ((condition) ? 0x0 : NOWHERE )
-
-void diff(spinor * const Q,spinor * const R,spinor * const S, const int N){
-  register int ix=N;
-  register spinor *qPointer,*rPointer,*sPointer;
-
-  qPointer = Q;
-  rPointer = R;
-  sPointer = S;
-
-  prefetch (*(rPointer));
-  prefetch (*(sPointer));
-  
-  {
-#pragma cache
-
-    do {
-      register spinor q,r,s;
-      ix-=1;
-
-      rPointer+=1;
-      sPointer+=1;
-
-      fetch(r);
-      fetch(s);
-
-      prefetch (*(rPointer+NOWHERE_COND(ix)));
-      prefetch (*(sPointer+NOWHERE_COND(ix)));
-
-      q.s0.c0 = r.s0.c0 - s.s0.c0;
-      q.s0.c1 = r.s0.c1 - s.s0.c1;
-      q.s0.c2 = r.s0.c2 - s.s0.c2;
-
-      q.s1.c0 = r.s1.c0 - s.s1.c0;
-      q.s1.c1 = r.s1.c1 - s.s1.c1;
-      q.s1.c2 = r.s1.c2 - s.s1.c2;
-
-      q.s2.c0 = r.s2.c0 - s.s2.c0;
-      q.s2.c1 = r.s2.c1 - s.s2.c1;
-      q.s2.c2 = r.s2.c2 - s.s2.c2;
-
-      q.s3.c0 = r.s3.c0 - s.s3.c0;
-      q.s3.c1 = r.s3.c1 - s.s3.c1;
-      q.s3.c2 = r.s3.c2 - s.s3.c2;
-
-      *(qPointer) = q;
-
-      qPointer+=1;
-    
-    } while (ix>0);
-  }
+     q->s0.c0 = r->s0.c0 - s->s0.c0;
+     q->s0.c1 = r->s0.c1 - s->s0.c1;
+     q->s0.c2 = r->s0.c2 - s->s0.c2;
+   }
 }
 
 #endif
@@ -349,21 +232,17 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N){
 #ifdef WITHLAPH
 void diff_su3vect(su3_vector * const Q,su3_vector * const R,su3_vector * const S, const int N)
 {
-int ix;
-su3_vector *q,*r,*s;
+  su3_vector *q,*r,*s;
 
-	for (ix = 0; ix < N; ix++) 
-	{
-  	q=(su3_vector *) Q + ix;
-		r=(su3_vector *) R + ix;
+  for (int ix = 0; ix < N; ++ix) 
+  {
+    q=(su3_vector *) Q + ix;
+    r=(su3_vector *) R + ix;
     s=(su3_vector *) S + ix;
      
-    (*q).c0.re=(*r).c0.re-(*s).c0.re;
-    (*q).c0.im=(*r).c0.im-(*s).c0.im;
-    (*q).c1.re=(*r).c1.re-(*s).c1.re;
-    (*q).c1.im=(*r).c1.im-(*s).c1.im;
-    (*q).c2.re=(*r).c2.re-(*s).c2.re;
-    (*q).c2.im=(*r).c2.im-(*s).c2.im;
-	} 
+    q->c0 = r->c0 - s->c0;
+    q->c1 = r->c1 - s->c1;
+    q->c2 = r->c2 - s->c2;
+  } 
 }
 #endif

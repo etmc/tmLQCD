@@ -60,68 +60,41 @@ void compact(bispinor * const R, spinor * const S, spinor * const P){
     
     /*    (*r) = (*s);    */
 
-    (*r).s0.c0.re = (*s).s0.c0.re;
-    (*r).s0.c0.im = (*s).s0.c0.im;
-    (*r).s0.c1.re = (*s).s0.c1.re;
-    (*r).s0.c1.im = (*s).s0.c1.im;
-    (*r).s0.c2.re = (*s).s0.c2.re;
-    (*r).s0.c2.im = (*s).s0.c2.im;
+    (*r).s0.c0 = (*s).s0.c0;
+    (*r).s0.c1 = (*s).s0.c1;
+    (*r).s0.c2 = (*s).s0.c2;
     
-    (*r).s1.c0.re = (*s).s1.c0.re;
-    (*r).s1.c0.im = (*s).s1.c0.im;
-    (*r).s1.c1.re = (*s).s1.c1.re;
-    (*r).s1.c1.im = (*s).s1.c1.im;
-    (*r).s1.c2.re = (*s).s1.c2.re;
-    (*r).s1.c2.im = (*s).s1.c2.im;         
+    (*r).s1.c0 = (*s).s1.c0;
+    (*r).s1.c1 = (*s).s1.c1;
+    (*r).s1.c2 = (*s).s1.c2;
     
-    (*r).s2.c0.re = (*s).s2.c0.re;
-    (*r).s2.c0.im = (*s).s2.c0.im;
-    (*r).s2.c1.re = (*s).s2.c1.re;
-    (*r).s2.c1.im = (*s).s2.c1.im;
-    (*r).s2.c2.re = (*s).s2.c2.re;
-    (*r).s2.c2.im = (*s).s2.c2.im;         
+    (*r).s2.c0 = (*s).s2.c0;
+    (*r).s2.c1 = (*s).s2.c1;
+    (*r).s2.c2 = (*s).s2.c2;
     
-    (*r).s3.c0.re = (*s).s3.c0.re;
-    (*r).s3.c0.im = (*s).s3.c0.im;
-    (*r).s3.c1.re = (*s).s3.c1.re;
-    (*r).s3.c1.im = (*s).s3.c1.im;
-    (*r).s3.c2.re = (*s).s3.c2.re;
-    (*r).s3.c2.im = (*s).s3.c2.im;
-
+    (*r).s3.c0 = (*s).s3.c0;
+    (*r).s3.c1 = (*s).s3.c1;
+    (*r).s3.c2 = (*s).s3.c2;
 
     u=(spinor *) &R[ix].sp_dn;
     t=(spinor *) P + ix;
     
-    (*u).s0.c0.re = (*t).s0.c0.re;
-    (*u).s0.c0.im = (*t).s0.c0.im;
-    (*u).s0.c1.re = (*t).s0.c1.re;
-    (*u).s0.c1.im = (*t).s0.c1.im;
-    (*u).s0.c2.re = (*t).s0.c2.re;
-    (*u).s0.c2.im = (*t).s0.c2.im;
+    (*u).s0.c0 = (*t).s0.c0;
+    (*u).s0.c1 = (*t).s0.c1;
+    (*u).s0.c2 = (*t).s0.c2;
     
-    (*u).s1.c0.re = (*t).s1.c0.re;
-    (*u).s1.c0.im = (*t).s1.c0.im;
-    (*u).s1.c1.re = (*t).s1.c1.re;
-    (*u).s1.c1.im = (*t).s1.c1.im;
-    (*u).s1.c2.re = (*t).s1.c2.re;
-    (*u).s1.c2.im = (*t).s1.c2.im;         
+    (*u).s1.c0 = (*t).s1.c0;
+    (*u).s1.c1 = (*t).s1.c1;
+    (*u).s1.c2 = (*t).s1.c2;
     
-    (*u).s2.c0.re = (*t).s2.c0.re;
-    (*u).s2.c0.im = (*t).s2.c0.im;
-    (*u).s2.c1.re = (*t).s2.c1.re;
-    (*u).s2.c1.im = (*t).s2.c1.im;
-    (*u).s2.c2.re = (*t).s2.c2.re;
-    (*u).s2.c2.im = (*t).s2.c2.im;         
+    (*u).s2.c0 = (*t).s2.c0;
+    (*u).s2.c1 = (*t).s2.c1;
+    (*u).s2.c2 = (*t).s2.c2;
     
-    (*u).s3.c0.re = (*t).s3.c0.re;
-    (*u).s3.c0.im = (*t).s3.c0.im;
-    (*u).s3.c1.re = (*t).s3.c1.re;
-    (*u).s3.c1.im = (*t).s3.c1.im;
-    (*u).s3.c2.re = (*t).s3.c2.re;
-    (*u).s3.c2.im = (*t).s3.c2.im;
-
+    (*u).s3.c0 = (*t).s3.c0;
+    (*u).s3.c1 = (*t).s3.c1;
+    (*u).s3.c2 = (*t).s3.c2;
   }
-
   
   /* 
       The following IS NOT enough, since it copies the values 
@@ -159,67 +132,42 @@ void decompact(spinor * const S, spinor * const P, bispinor * const R){
     s=(spinor *) &R[ix].sp_up;
     r=(spinor *) S + ix;
     
-    (*r).s0.c0.re = (*s).s0.c0.re;
-    (*r).s0.c0.im = (*s).s0.c0.im;
-    (*r).s0.c1.re = (*s).s0.c1.re;
-    (*r).s0.c1.im = (*s).s0.c1.im;
-    (*r).s0.c2.re = (*s).s0.c2.re;
-    (*r).s0.c2.im = (*s).s0.c2.im;
+    (*r).s0.c0 = (*s).s0.c0;
+    (*r).s0.c1 = (*s).s0.c1;
+    (*r).s0.c2 = (*s).s0.c2;
     
-    (*r).s1.c0.re = (*s).s1.c0.re;
-    (*r).s1.c0.im = (*s).s1.c0.im;
-    (*r).s1.c1.re = (*s).s1.c1.re;
-    (*r).s1.c1.im = (*s).s1.c1.im;
-    (*r).s1.c2.re = (*s).s1.c2.re;
-    (*r).s1.c2.im = (*s).s1.c2.im;         
+    (*r).s1.c0 = (*s).s1.c0;
+    (*r).s1.c1 = (*s).s1.c1;
+    (*r).s1.c2 = (*s).s1.c2;
     
-    (*r).s2.c0.re = (*s).s2.c0.re;
-    (*r).s2.c0.im = (*s).s2.c0.im;
-    (*r).s2.c1.re = (*s).s2.c1.re;
-    (*r).s2.c1.im = (*s).s2.c1.im;
-    (*r).s2.c2.re = (*s).s2.c2.re;
-    (*r).s2.c2.im = (*s).s2.c2.im;         
+    (*r).s2.c0 = (*s).s2.c0;
+    (*r).s2.c1 = (*s).s2.c1;
+    (*r).s2.c2 = (*s).s2.c2;
     
-    (*r).s3.c0.re = (*s).s3.c0.re;
-    (*r).s3.c0.im = (*s).s3.c0.im;
-    (*r).s3.c1.re = (*s).s3.c1.re;
-    (*r).s3.c1.im = (*s).s3.c1.im;
-    (*r).s3.c2.re = (*s).s3.c2.re;
-    (*r).s3.c2.im = (*s).s3.c2.im;
+    (*r).s3.c0 = (*s).s3.c0;
+    (*r).s3.c1 = (*s).s3.c1;
+    (*r).s3.c2 = (*s).s3.c2;
 
 
     t=(spinor *) &R[ix].sp_dn;
     u=(spinor *) P + ix;
     
-    (*u).s0.c0.re = (*t).s0.c0.re;
-    (*u).s0.c0.im = (*t).s0.c0.im;
-    (*u).s0.c1.re = (*t).s0.c1.re;
-    (*u).s0.c1.im = (*t).s0.c1.im;
-    (*u).s0.c2.re = (*t).s0.c2.re;
-    (*u).s0.c2.im = (*t).s0.c2.im;
+    (*u).s0.c0 = (*t).s0.c0;
+    (*u).s0.c1 = (*t).s0.c1;
+    (*u).s0.c2 = (*t).s0.c2;
     
-    (*u).s1.c0.re = (*t).s1.c0.re;
-    (*u).s1.c0.im = (*t).s1.c0.im;
-    (*u).s1.c1.re = (*t).s1.c1.re;
-    (*u).s1.c1.im = (*t).s1.c1.im;
-    (*u).s1.c2.re = (*t).s1.c2.re;
-    (*u).s1.c2.im = (*t).s1.c2.im;         
+    (*u).s1.c0 = (*t).s1.c0;
+    (*u).s1.c1 = (*t).s1.c1;
+    (*u).s1.c2 = (*t).s1.c2;
     
-    (*u).s2.c0.re = (*t).s2.c0.re;
-    (*u).s2.c0.im = (*t).s2.c0.im;
-    (*u).s2.c1.re = (*t).s2.c1.re;
-    (*u).s2.c1.im = (*t).s2.c1.im;
-    (*u).s2.c2.re = (*t).s2.c2.re;
-    (*u).s2.c2.im = (*t).s2.c2.im;         
+    (*u).s2.c0 = (*t).s2.c0;
+    (*u).s2.c1 = (*t).s2.c1;
+    (*u).s2.c2 = (*t).s2.c2;
     
-    (*u).s3.c0.re = (*t).s3.c0.re;
-    (*u).s3.c0.im = (*t).s3.c0.im;
-    (*u).s3.c1.re = (*t).s3.c1.re;
-    (*u).s3.c1.im = (*t).s3.c1.im;
-    (*u).s3.c2.re = (*t).s3.c2.re;
-    (*u).s3.c2.im = (*t).s3.c2.im;
+    (*u).s3.c0 = (*t).s3.c0;
+    (*u).s3.c1 = (*t).s3.c1;
+    (*u).s3.c2 = (*t).s3.c2;
   }
-
 
   /* !!! The following should be enough !!! */
 

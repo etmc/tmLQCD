@@ -22,6 +22,6 @@
 
 #include "su3.h"
 
-void assign_diff_mul_bi(bispinor * const S, bispinor * const R, const complex c, const int N);
+void assign_diff_mul_bi(bispinor * const S, bispinor * const R, const _Complex double c, const int N);
 
 #endif

@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
+/* $Id: mattimesvec.c 1150 2009-02-16 16:52:09Z urbach $ */
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -34,15 +35,14 @@
 /* we should provide special SSE2  */
 /* and BG/P versions               */
 
-void mattimesvec(complex * const v, complex * const M, complex * const w, 
-		 const int N, const int ldM) {
-  int i, j;
-
-  for(i = 0; i < N; i++) {
-    _mult_assign_complex(v[i], M[i*ldM], w[0]);
-    for(j = 1; j < N; j++) {
-      _add_assign_complex(v[i], M[i*ldM + j], w[j]);
-    }
+void mattimesvec(_Complex double * const v, _Complex double * const M, _Complex double * const w, 
+		 const int N, const int ldM) 
+{
+  for(int i = 0; i < N; ++i)
+  {
+    v[i] = M[i*ldM] * w[0];
+    for(int j = 1; j < N; ++j)
+      v[i] += M[i*ldM + j] * w[j];
   }
   return;
 }
