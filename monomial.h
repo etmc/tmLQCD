@@ -94,6 +94,7 @@ typedef struct {
   /* chronological solver fields */
   spinor ** csg_field;
   spinor ** csg_field2;
+
   /* functions for the HMC update */
   void (*hbfunction) (const int no, hamiltonian_field_t * const hf);
   double (*accfunction) (const int no, hamiltonian_field_t * const hf);
