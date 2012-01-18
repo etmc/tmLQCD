@@ -80,12 +80,11 @@
 /* Q=Q-sum_i lambda_i |eigen_i><eigen_i|P> */
 void sub_lowest_eigenvalues(spinor * const Q, spinor * const P, const int n, const int N) {
   int i;
-  complex c;
+  _Complex double c;
   
   for(i = 0; i < n; i++){
     c = scalar_prod(&(eigenvectors[i*evlength]), P, N, 1);
-    c.re *= -eigenvls[i];
-    c.im *= -eigenvls[i];
+    c *= (-eigenvls[i]) + (-eigenvls[i]) * I;
     assign_add_mul(Q, &eigenvectors[i*evlength], c, N);
   }
 }
@@ -93,14 +92,13 @@ void sub_lowest_eigenvalues(spinor * const Q, spinor * const P, const int n, con
 /* Q=P-sum_i |eigen_i><eigen_i|P> */
 void assign_sub_lowest_eigenvalues(spinor * const Q, spinor * const P, const int n, const int N) {
   int i;
-  complex c;
+  _Complex double c;
 
   assign(Q, P, N);
   
   for(i = 0; i < n; i++){
     c = scalar_prod(&(eigenvectors[i*evlength]), P, N, 1);
-    c.re = -c.re;
-    c.im = -c.im;
+    c = -c;
     assign_add_mul(Q, &eigenvectors[i*evlength], c, N);
 
   }
@@ -109,33 +107,31 @@ void assign_sub_lowest_eigenvalues(spinor * const Q, spinor * const P, const int
 /* Q = Q + sum_i 1/lambda_i |eigen_i><eigen_i|P> */
 void assign_add_invert_subtracted_part(spinor * const Q, spinor * const P, const int n, const int N) {
   int i=0;
-  complex c;
+  _Complex double c;
   double rev=0;
 
   for(i = 0; i < n; i++){
     c = scalar_prod(&eigenvectors[i*evlength], P, N, 1);
     rev = 1./eigenvls[i];
-    c.re *= rev;
-    c.im *= rev;
+    c *= (rev) + (rev) * I;
     assign_add_mul(Q, &eigenvectors[i*evlength], c, N);
   }
 }
 
 void invert_eigenvalue_part(spinor * const Q, spinor * const P, const int n, const int N) {
   int i=0;
-  complex c;
+  _Complex double c;
   double rev=0;
 
 /*   c = scalar_prod(&eigenvectors[0], P, N, 1); */
 /*   rev = 1./eigenvls[0]; */
-/*   c.re *= rev; */
-/*   c.im *= rev; */
+/*   c *= (rev) + cimag(c) * I; */
+/*   c *= creal(c) + (rev) * I; */
 /*   mul(Q, c, &eigenvectors[0], N); */
   assign(Q, P, N);
   for(i = 0; i < n; i++){
     c = scalar_prod(&eigenvectors[i*evlength], P, N, 1);
-    c.re *= -inv_eigenvls[i];
-    c.im *= -inv_eigenvls[i];
+    c *= (-inv_eigenvls[i]) + (-inv_eigenvls[i]) * I;
     assign_add_mul(Q, &eigenvectors[i*evlength], c, N);
   }
 }

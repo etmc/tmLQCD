@@ -26,10 +26,10 @@
 #include "su3.h"
 #include "su3spinor.h"
 
-complex * little_A;
-complex32 * little_A32;
-complex * little_A_eo;
-complex32 * little_A32_eo;
+_Complex double * little_A;
+_Complex float * little_A32;
+_Complex double * little_A_eo;
+_Complex float * little_A32_eo;
 
 
 typedef struct {
@@ -52,9 +52,9 @@ typedef struct {
   /* storage will be g_Ns x (9 * g_Ns)                 */
   /* build_little_diraclocal g_Ns x g_Ns block first (the diagonal part) */
   /* then +t, -t, +x, -x, +y, -y, +z, -z               */
-  complex    *little_dirac_operator;  /* full dense representation of the little D */
-  complex32  *little_dirac_operator32;
-  complex    *little_dirac_operator_eo;  /* full dense representation of the little D in e/o order */
+  _Complex double    *little_dirac_operator;  /* full dense representation of the little D */
+  _Complex float  *little_dirac_operator32;
+  _Complex double    *little_dirac_operator_eo;  /* full dense representation of the little D in e/o order */
 } block;
 
 int init_blocks(const int nt, const int nx, const int ny, const int nz);

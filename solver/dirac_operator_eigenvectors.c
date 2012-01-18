@@ -23,7 +23,7 @@
 #include "su3.h"
 #include "sse.h"
 #include "monomial.h"
-#include "complex.h"
+#include <complex.h>
 #include "dirac_operator_eigenvectors.h"
 #include "geometry_eo.h"
 #include "linalg_eo.h"
@@ -89,7 +89,7 @@ const char* precWSOpToString(tm_operator op){
  *        ( 0 1 )
  *        ( 1 0 ) otherwise
  */
-inline void makeQuaternionAsSu2(double *q,const double *p,unsigned int dagger,unsigned int gamma0_conv){
+void makeQuaternionAsSu2(double *q,const double *p,unsigned int dagger,unsigned int gamma0_conv){
   if(gamma0_conv)
     q[0]=q[6]=-p[0];
   else 
@@ -107,7 +107,7 @@ inline void makeQuaternionAsSu2(double *q,const double *p,unsigned int dagger,un
 }
 
 
-inline void M_ti_M_2d(double *result,const double *A,const double *B){
+void M_ti_M_2d(double *result,const double *A,const double *B){
   result[0]=A[0]*B[0]-A[1]*B[1]+A[2]*B[4]-A[3]*B[5];
   result[1]=A[0]*B[1]+A[1]*B[0]+A[2]*B[5]+A[3]*B[4];
 
@@ -130,7 +130,7 @@ int cyclicDiff(int a,int b, int period){
   }
 }
 
-inline void calcPmuLattice(const int *praw,double *p_mu,int tt,int ll){
+void calcPmuLattice(const int *praw,double *p_mu,int tt,int ll){
   p_mu[0]=M_PI/(double)tt*(2.*(double)praw[0]+1.);
   p_mu[1]=p_mu[2]=p_mu[3]=2*M_PI/(double)ll;
   p_mu[1]*=(double)praw[1];
@@ -143,7 +143,7 @@ inline void calcPmuLattice(const int *praw,double *p_mu,int tt,int ll){
   p_mu[3]=sin(p_mu[3]);
 }
 
-inline double calcPmuLatticeSq(const int *praw,int tt,int ll){
+double calcPmuLatticeSq(const int *praw,int tt,int ll){
   return sin(M_PI/(double)tt*(2.*(double)praw[0]+1.))*
          sin(M_PI/(double)tt*(2.*(double)praw[0]+1.))+
 
@@ -159,7 +159,7 @@ inline double calcPmuLatticeSq(const int *praw,int tt,int ll){
 
 
 
-inline void calcPmuLatticeTilde(const int *praw,double *p_mu_t,int tt,int ll/* ,unsigned int aperiodic */){
+void calcPmuLatticeTilde(const int *praw,double *p_mu_t,int tt,int ll/* ,unsigned int aperiodic */){
   int i;
 /*   if(aperiodic) */
     p_mu_t[0]=M_PI/(double)(2*tt)*(2.*(double)praw[0]+1.);
@@ -177,7 +177,7 @@ inline void calcPmuLatticeTilde(const int *praw,double *p_mu_t,int tt,int ll/* ,
   }
 }
 
-inline double calcPmuLatticeTildeSq(const int *praw,int tt,int ll){
+double calcPmuLatticeTildeSq(const int *praw,int tt,int ll){
   return 4*(
 	    sin(M_PI/(double)(2*tt)*(2.*(double)praw[0]+1.))*
 	    sin(M_PI/(double)(2*tt)*(2.*(double)praw[0]+1.))+
@@ -189,16 +189,16 @@ inline double calcPmuLatticeTildeSq(const int *praw,int tt,int ll){
 	    sin(M_PI*(double)praw[2]/(double)LY)+
 
 	    sin(M_PI*(double)praw[3]/(double)LZ)*
-	    sin(M_PI*(double)praw[3]/(double)LZ) );
+	    sin(M_PI*(double)praw[3]/(double)LZ));
 }
 
 
-inline complex calcDtmEvalue(const int *praw,double kappa,double mu,int tt,int ll,double sign){
+_Complex double calcDtmEvalue(const int *praw,double kappa,double mu,int tt,int ll,double sign){
 
   static double p_mu[4];
   static double p_mu_t[4];
   double psq,psq_tilde;
-  complex lambda;
+  _Complex double lambda;
 
 
   calcPmuLattice(praw,p_mu,tt,ll);
@@ -207,18 +207,17 @@ inline complex calcDtmEvalue(const int *praw,double kappa,double mu,int tt,int l
   calcPmuLatticeTilde(praw,p_mu_t,tt,ll);
   psq_tilde=p_mu_t[0]*p_mu_t[0]+p_mu_t[1]*p_mu_t[1]+p_mu_t[2]*p_mu_t[2]+p_mu_t[3]*p_mu_t[3];
 
-  (lambda).re=0.5/kappa-4+0.5*psq_tilde;
-  (lambda).im=sign*sqrt(mu*mu+psq);
+  lambda = (0.5/kappa-4+0.5*psq_tilde) + (sign*sqrt(mu*mu+psq)) * I;
   return lambda;
 
 }
 
-inline complex calcDovEvalue(const int *praw,double kappa,double rho,int tt,int ll,double sign){
+_Complex double calcDovEvalue(const int *praw,double kappa,double rho,int tt,int ll,double sign){
 
   static double p_mu[4];
   static double p_mu_t[4];
   double psq,psq_tilde;
-  complex lambda;
+  _Complex double lambda;
   double denominator;
 
   calcPmuLattice(praw,p_mu,tt,ll);
@@ -229,24 +228,23 @@ inline complex calcDovEvalue(const int *praw,double kappa,double rho,int tt,int 
 
 
 
-  (lambda).re=0.5*psq_tilde-rho;
-  (lambda).im=sign*sqrt(psq);
+  lambda = (0.5*psq_tilde-rho) + (sign*sqrt(psq)) * I;
 
-  denominator=_complex_norm(lambda);
-  lambda.re*=rho/denominator;
-  lambda.im*=rho/denominator;
-  lambda.re+=rho;
+  denominator=cabs(lambda);
+  lambda *= (rho/denominator) + cimag(lambda) * I;
+  lambda *= creal(lambda) + (rho/denominator) * I;
+  lambda += (rho) + cimag(lambda) * I;
 
   return lambda;
 
 }
 
 
-inline complex calcQtmEvalue(const int *praw,double kappa,double mu,int tt,int ll,double sign/* =1.0 */){
+_Complex double calcQtmEvalue(const int *praw,double kappa,double mu,int tt,int ll,double sign/* =1.0 */){
   static double p_mu[4];
   static double p_mu_t[4];
   double psq,psq_tilde,M_wilson;
-  complex lambda;
+  _Complex double lambda;
 
   calcPmuLattice(praw,p_mu,tt,ll);
   psq=p_mu[0]*p_mu[0]+p_mu[1]*p_mu[1]+p_mu[2]*p_mu[2]+p_mu[3]*p_mu[3];
@@ -256,17 +254,16 @@ inline complex calcQtmEvalue(const int *praw,double kappa,double mu,int tt,int l
 
   M_wilson=((0.5/kappa-4.)+0.5*psq_tilde);
          
-  (lambda).re=sign*sqrt( M_wilson*M_wilson + psq ); 
-  (lambda).im=mu;
+  lambda = (sign*sqrt( M_wilson*M_wilson + psq )) + (mu) * I;
   return lambda;
 
 }
 
-inline complex calcDDaggerDtmEvalue(const int *praw,double kappa,double mu,int tt,int ll){
+_Complex double calcDDaggerDtmEvalue(const int *praw,double kappa,double mu,int tt,int ll){
   static double p_mu[4];
   static double p_mu_t[4];
   double M_wilson;
-  complex lambda;
+  _Complex double lambda;
   double psq_tilde,psq;
 
   calcPmuLattice(praw,p_mu,tt,ll);
@@ -277,19 +274,18 @@ inline complex calcDDaggerDtmEvalue(const int *praw,double kappa,double mu,int t
 
   M_wilson=((0.5/kappa-4.)+0.5*psq_tilde);
          
-  (lambda).re=psq+M_wilson*M_wilson+mu*mu;
-  (lambda).im=0;
-/*   printf(" for D_Dagger_Dtm lambda.re = %lf \n",lambda.re*4.*kappa*kappa); */
+  lambda = (psq+M_wilson*M_wilson+mu*mu);
+/*   printf(" for D_Dagger_Dtm creal(lambda) = %lf \n",creal(lambda)*4.*kappa*kappa); */
 
   return lambda;
 
 }
 
 
-inline complex calcDDaggerDovEvalue(const int *praw,double kappa,double rho,int tt,int ll){
+_Complex double calcDDaggerDovEvalue(const int *praw,double kappa,double rho,int tt,int ll){
   static double p_mu[4];
   static double p_mu_t[4];
-  complex lambda;
+  _Complex double lambda;
   double abslam,diff;
   double u,v;
 
@@ -301,16 +297,16 @@ inline complex calcDDaggerDovEvalue(const int *praw,double kappa,double rho,int 
   u=u*0.5-rho;
 
   lambda=calcDovEvalue(praw,kappa,rho,tt,ll,1.);
-  abslam=_complex_square_norm(lambda);
+  abslam=creal(lambda * conj(lambda));
 /*   printf(" for Dov |lambda| = %lf \n",abslam); */
 
-  lambda.im=0;
-  lambda.re=2.*(u/sqrt(u*u+v)+1.)*rho*rho;
+  lambda = creal(lambda);
+  lambda = (2.*(u/sqrt(u*u+v)+1.)*rho*rho) + cimag(lambda) * I;
 
-/*   printf(" for Dov_Dagger_dov lambda.re = %lf \n",lambda.re); */
-  diff=abslam-fabs(lambda.re);
+/*   printf(" for Dov_Dagger_dov creal(lambda) = %lf \n",creal(lambda)); */
+  diff=abslam-fabs(creal(lambda));
   if(diff>1.e-12)
-    printf("Error in Eigenvalue computation for Dov ^ dagger Dov: at praw = (%d,%d,%d,%d) (difference  = %lf)!!! \n",praw[0],praw[1],praw[2],praw[3],diff);
+    printf("Error in Eigenvalue computation for Dov ^ dagger Dov: at praw = (%d,%d,%d,%d)(difference  = %lf)!!! \n",praw[0],praw[1],praw[2],praw[3],diff);
 
   return lambda;
 
@@ -318,7 +314,7 @@ inline complex calcDDaggerDovEvalue(const int *praw,double kappa,double rho,int 
 }
 
 
-inline void  spinor_fft(spinor * spinor_in,spinor *spinor_out,int tt,int ll,unsigned int  forward){
+void  spinor_fft(spinor * spinor_in,spinor *spinor_out,int tt,int ll,unsigned int  forward){
 #ifdef HAVE_FFTW
   fftw_plan plan=spinor_fftw_plan(spinor_in,spinor_out,tt,ll,forward,FFTW_WISDOM_ONLY);
   fftw_execute(plan);
@@ -367,7 +363,7 @@ double spinorPrecWS_evalCorrectionFunctionDk(double pmuSq,double pmuTildeSq,int 
 void spinorPrecWS_RecalcDDaggerDEvs(spinorPrecWS *ws,double kappa,double mu){
   int index,rawp[4];
   double pmuSq,pmuTildeSq;
-  complex lambda;
+  _Complex double lambda;
   double twokappa=2.*kappa;
 
 
@@ -380,17 +376,17 @@ void spinorPrecWS_RecalcDDaggerDEvs(spinorPrecWS *ws,double kappa,double mu){
     if(ws->useCorrectionFunc==1){
       pmuSq=calcPmuLatticeSq(rawp,T,LX);
       pmuTildeSq=calcPmuLatticeTildeSq(rawp,T,LX);
-      lambda.re=spinorPrecWS_evalCorrectionFunction(ws,pmuSq,pmuTildeSq);
+      lambda = (spinorPrecWS_evalCorrectionFunction(ws,pmuSq,pmuTildeSq)) + cimag(lambda) * I;
     } else {
       lambda=calcDDaggerDtmEvalue(rawp,kappa,mu,T,L);
     }
 
-    lambda.re*=twokappa;lambda.im*=twokappa;
-    lambda.re*=twokappa;lambda.im*=twokappa;
+    lambda *= twokappa;
+    lambda *= twokappa;
 
 
 
-    memcpy(ws->evs+index,&lambda,sizeof(complex));
+    memcpy(ws->evs+index,&lambda,sizeof(_Complex double));
 
 
 
@@ -405,7 +401,7 @@ void spinorPrecWS_Init(spinorPrecWS *ws, double kappa,double mu,double rho,tm_op
 
   /*     spinor fv_dum; */
   int index,rawp[4];
-  complex lambda,averageLambda;
+  _Complex double lambda,averageLambda;
   spinor *up_plus;
 
 
@@ -416,7 +412,7 @@ void spinorPrecWS_Init(spinorPrecWS *ws, double kappa,double mu,double rho,tm_op
 
   double twokappa=2.*kappa;
   double pmuSq,pmuTildeSq;
-  double absLamMax,absLamMin,absLam;
+  double absLamMax=0.0,absLamMin=1.0,absLam;
 
   FILE *precSeqFileDD=NULL;
   const char *precSeqFileNameDD="prec_seq_dd.in";
@@ -452,9 +448,9 @@ void spinorPrecWS_Init(spinorPrecWS *ws, double kappa,double mu,double rho,tm_op
     ws->useCorrectionFunc=0;
   }
 
-  ws->evs=(complex*)malloc(sizeof(complex)*T*LX*LY*LZ);
-  ws->c_table=(double*)malloc(sizeof(complex)*T);
-  ws->s_table=(double*)malloc(sizeof(complex)*T);
+  ws->evs=(_Complex double*)malloc(sizeof(_Complex double)*T*LX*LY*LZ);
+  ws->c_table=(double*)malloc(sizeof(_Complex double)*T);
+  ws->s_table=(double*)malloc(sizeof(_Complex double)*T);
 
   if(ws->m_op==PRECWS_D_DAGGER_D){
     ws->precExpo[0]=-0.25;
@@ -467,7 +463,7 @@ void spinorPrecWS_Init(spinorPrecWS *ws, double kappa,double mu,double rho,tm_op
   }
 
 
-  _complex_zero(averageLambda);
+  averageLambda = 0.0;
 
 
   FORXYZT(rawp[0],rawp[1],rawp[2],rawp[3],T,L);
@@ -489,32 +485,32 @@ void spinorPrecWS_Init(spinorPrecWS *ws, double kappa,double mu,double rho,tm_op
     if(ws->useCorrectionFunc==1){
       pmuSq=calcPmuLatticeSq(rawp,T,LX);
       pmuTildeSq=calcPmuLatticeTildeSq(rawp,T,LX);
-      lambda.re=spinorPrecWS_evalCorrectionFunction(ws,pmuSq,pmuTildeSq);
+      lambda = (spinorPrecWS_evalCorrectionFunction(ws,pmuSq,pmuTildeSq)) + cimag(lambda) * I;
     } else {
       lambda=calcDDaggerDtmEvalue(rawp,kappa,mu,T,L);
     }
 
     /* in this case an extra factor of 2kappa is needed as we apply the dirac operator two times */
-    lambda.re*=twokappa;lambda.im*=twokappa;
+    lambda *= twokappa;
 
   } else  if(ws->m_op==PRECWS_DOV_DAGGER_DOV){
     lambda=calcDDaggerDovEvalue(rawp,kappa,rho,T,L);
   }
 
   if(op!=PRECWS_DOV && op!=PRECWS_DOV_DAGGER_DOV){ /* overlap operator eigevalue routine does it itself */
-    lambda.re*=twokappa;lambda.im*=twokappa;
+    lambda *= twokappa;
   }
 
 
   /*       if(rawp[0]==1 && rawp[1]==1 && rawp[2]==1 && rawp[3]==1 ) */
   /* 	cerr << lambda << endl; */
 
-  memcpy(ws->evs+index,&lambda,sizeof(complex));
+  memcpy(ws->evs+index,&lambda,sizeof(_Complex double));
 
   /* calculate maximal and minimal modulus of all eigenvalues
    */
 
-  absLam=_complex_norm(lambda);
+  absLam=cabs(lambda);
 
   if(rawp[0]==0 && rawp[1]==0 && rawp[2]==0 && rawp[3]==0)
     {
@@ -529,7 +525,7 @@ void spinorPrecWS_Init(spinorPrecWS *ws, double kappa,double mu,double rho,tm_op
 
 
 
-  _add_complex(averageLambda,lambda);
+  averageLambda += lambda;
 
   if(ws->m_op!=PRECWS_D_DAGGER_D && ws->m_op!=PRECWS_DOV_DAGGER_DOV){
     up_plus=(ws->spinor_up)[0]+index;
@@ -550,7 +546,7 @@ void spinorPrecWS_Init(spinorPrecWS *ws, double kappa,double mu,double rho,tm_op
 
   if(g_proc_id==0) printf("theoretical condition number improvement: %lf\n" ,absLamMax/absLamMin);
 
-  _mult_real(averageLambda,averageLambda,1./(double)(VOLUME));
+  averageLambda = (averageLambda) * (1./(double)(VOLUME));
 
   /* create a sinus/cosinus lookup table */
   for( rawp[0] = 0;rawp[0]<T;rawp[0]++){
@@ -612,53 +608,52 @@ void eigenvector_Dtm(spinor *spin,double mu,int epsilon,int k,int color,int rawp
   switch(color){
   case 0:
     if(k==0){
-      (phi)->s0.c0=up_plus->s0.c0;
-      (phi)->s1.c0=up_plus->s1.c0;
-      (phi)->s2.c0=up_plus->s2.c0;
-      (phi)->s3.c0=up_plus->s3.c0;
+      phi->s0.c0=up_plus->s0.c0;
+      phi->s1.c0=up_plus->s1.c0;
+      phi->s2.c0=up_plus->s2.c0;
+      phi->s3.c0=up_plus->s3.c0;
     } else {
-      (phi)->s0.c0=up_plus->s0.c1;
-      (phi)->s1.c0=up_plus->s1.c1;
-      (phi)->s2.c0=up_plus->s2.c1;
-      (phi)->s3.c0=up_plus->s3.c1;
+      phi->s0.c0=up_plus->s0.c1;
+      phi->s1.c0=up_plus->s1.c1;
+      phi->s2.c0=up_plus->s2.c1;
+      phi->s3.c0=up_plus->s3.c1;
     }
-    _mult_real((phi)->s2.c0,(phi)->s2.c0,(double)epsilon);
-    _mult_real((phi)->s3.c0,(phi)->s3.c0,(double)epsilon);
+    phi->s2.c0 = phi->s2.c0 * (double)epsilon;
+    phi->s3.c0 = phi->s3.c0 * (double)epsilon;
 
     break;
   case 1:
     if(k==0){
-      (phi)->s0.c1=up_plus->s0.c0;
-      (phi)->s1.c1=up_plus->s1.c0;
-      (phi)->s2.c1=up_plus->s2.c0;
-      (phi)->s3.c1=up_plus->s3.c0;
+      phi->s0.c1=up_plus->s0.c0;
+      phi->s1.c1=up_plus->s1.c0;
+      phi->s2.c1=up_plus->s2.c0;
+      phi->s3.c1=up_plus->s3.c0;
     } else {
-      (phi)->s0.c1=up_plus->s0.c1;
-      (phi)->s1.c1=up_plus->s1.c1;
-      (phi)->s2.c1=up_plus->s2.c1;
-      (phi)->s3.c1=up_plus->s3.c1;
+      phi->s0.c1=up_plus->s0.c1;
+      phi->s1.c1=up_plus->s1.c1;
+      phi->s2.c1=up_plus->s2.c1;
+      phi->s3.c1=up_plus->s3.c1;
     }
-    _mult_real((phi)->s2.c1,(phi)->s2.c1,(double)epsilon);
-    _mult_real((phi)->s3.c1,(phi)->s3.c1,(double)epsilon);
+    phi->s2.c1 = phi->s2.c1 * (double)epsilon;
+    phi->s3.c1 = phi->s3.c1 * (double)epsilon;
     break;
   case 2:
     if(k==0){
-      (phi)->s0.c2=up_plus->s0.c0;
-      (phi)->s1.c2=up_plus->s1.c0;
-      (phi)->s2.c2=up_plus->s2.c0;
-      (phi)->s3.c2=up_plus->s3.c0;
+      phi->s0.c2=up_plus->s0.c0;
+      phi->s1.c2=up_plus->s1.c0;
+      phi->s2.c2=up_plus->s2.c0;
+      phi->s3.c2=up_plus->s3.c0;
     } else {
-      (phi)->s0.c2=up_plus->s0.c1;
-      (phi)->s1.c2=up_plus->s1.c1;
-      (phi)->s2.c2=up_plus->s2.c1;
-      (phi)->s3.c2=up_plus->s3.c1;
+      phi->s0.c2=up_plus->s0.c1;
+      phi->s1.c2=up_plus->s1.c1;
+      phi->s2.c2=up_plus->s2.c1;
+      phi->s3.c2=up_plus->s3.c1;
     }
-    _mult_real((phi)->s2.c2,(phi)->s2.c2,(double)epsilon);
-    _mult_real((phi)->s3.c2,(phi)->s3.c2,(double)epsilon);
+    phi->s2.c2 = phi->s2.c2 * (double)epsilon;
+    phi->s3.c2 = phi->s3.c2 * (double)epsilon;
     break;
   default:break;
   }
-  
 
 /*   spinorStructEigenvecDtm(spinor+u_index,mu,epsilon,k,color,rawp,T,L); */
 
@@ -735,20 +730,48 @@ void planeWave(spinor *spinor,int k,int rawp[4],int tt,int ll,unsigned int momsp
   u_index=Index(rawp[0],rawp[1],rawp[2],rawp[3]);
 
 
-    switch(k){
-    case 0: spinor[u_index].s0.c0.re=1.; break;
-    case 1: spinor[u_index].s0.c1.re=1.; break;
-    case 2: spinor[u_index].s0.c2.re=1.; break;
-    case 3: spinor[u_index].s1.c0.re=1.; break;
-    case 4: spinor[u_index].s1.c1.re=1.; break;
-    case 5: spinor[u_index].s1.c2.re=1.; break;
-    case 6: spinor[u_index].s2.c0.re=1.; break;
-    case 7: spinor[u_index].s2.c1.re=1.; break;
-    case 8: spinor[u_index].s2.c2.re=1.; break;
-    case 9: spinor[u_index].s3.c0.re=1.; break;
-    case 10: spinor[u_index].s3.c1.re=1.; break;
-    case 11: spinor[u_index].s3.c2.re=1.; break;
-    default: if(g_proc_id==0) fprintf(stderr,"Error: spinor component %d does not exist" ,k); break;
+    switch(k)
+    {
+      case 0: 
+	spinor[u_index].s0.c0 = 1.;
+	break;
+      case 1: 
+	spinor[u_index].s0.c1 = 1.; 
+	break;
+      case 2: 
+	spinor[u_index].s0.c2 = 1.; 
+	break;
+      case 3: 
+	spinor[u_index].s1.c0 = 1.; 
+	break;
+      case 4: 
+	spinor[u_index].s1.c1 = 1.; 
+	break;
+      case 5: 
+	spinor[u_index].s1.c2 = 1.; 
+	break;
+      case 6: 
+	spinor[u_index].s2.c0 = 1.; 
+	break;
+      case 7: 
+	spinor[u_index].s2.c1 = 1.; 
+	break;
+      case 8: 
+	spinor[u_index].s2.c2 = 1.; 
+	break;
+      case 9: 
+	spinor[u_index].s3.c0 = 1.; 
+	break;
+      case 10: 
+	spinor[u_index].s3.c1 = 1.; 
+	break;
+      case 11: 
+	spinor[u_index].s3.c2 = 1.; 
+	break;
+      default: 
+	if (g_proc_id==0) 
+	  fprintf(stderr,"Error: spinor component %d does not exist" ,k); 
+	break;
     }
 
   if(momspace==0) {
@@ -761,7 +784,7 @@ void planeWave(spinor *spinor,int k,int rawp[4],int tt,int ll,unsigned int momsp
 
 
 
-void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS* ws,int tt,int ll,const complex alpha,unsigned int dagger,unsigned int autofft){
+void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS* ws,int tt,int ll,const _Complex double alpha,unsigned int dagger,unsigned int autofft){
 
   /*   static int epsilon[12]={1,1,1,1,1,1,-1,-1,-1,-1,-1,-1}; */
   /*   static int k[12]      ={0,0,0,1,1,1,0,0,0,1,1,1}; */
@@ -770,11 +793,9 @@ void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS*
   int index;
   unsigned int projectionInplace=1;
   int rawp[4];
-  complex lambda_plus;
-  complex lambda_minus;
-  complex p_plus;
-  complex dummy;
-  double muleqdum;
+  _Complex double lambda_plus = 0.;
+  _Complex double lambda_minus = 0.;
+  _Complex double p_plus;
   spinor *up_plus;
   const spinor *phi_i;
   spinor *phi_o;
@@ -813,19 +834,16 @@ void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS*
     lambda_plus=ws->evs[index];
       
     if(ws->m_op == PRECWS_DTM || ws->m_op == PRECWS_DOV){
-      _complex_conj(lambda_minus,lambda_plus);
+      lambda_minus = conj(lambda_plus);
     }
     else if( ws->m_op == PRECWS_QTM){
-      (lambda_minus).re=-(lambda_plus).re;
-      (lambda_minus).im=(lambda_plus).im;
+      lambda_minus = -conj(lambda_plus);
     }
       
     /* conjugate eigenvalue if conjugation of operator was requested */
     if(dagger){
-      /* 	lambda_plus=conj(lambda_plus); */
-      /* 	lambda_minus=conj(lambda_minus); */
-      (lambda_plus).im=-(lambda_plus).im;
-      (lambda_minus).im=-(lambda_minus).im;
+      lambda_plus=conj(lambda_plus);
+      lambda_minus=conj(lambda_minus);
     }
       
     _pow_complex(lambda_plus,lambda_plus,alpha,dummy);
@@ -863,7 +881,7 @@ void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS*
 
 
     } else /* is the case if we want to precondition D^dagger x D */ {
-      _spinor_muleq_real(*phi_o,(lambda_plus).re);
+      _spinor_muleq_real(*phi_o,creal(lambda_plus));
     }
     ENDFORXYZT;
   } else if(projectionInplace==0) {
@@ -879,19 +897,17 @@ void spinorPrecondition(spinor *spinor_out,const spinor *spinor_in,spinorPrecWS*
     lambda_plus=ws->evs[index];
       
     if(ws->m_op == PRECWS_DTM || ws->m_op == PRECWS_DOV){
-      _complex_conj(lambda_minus,lambda_plus);
+      lambda_minus = conj(lambda_plus);
     }
     else if( ws->m_op == PRECWS_QTM){
-      (lambda_minus).re=-(lambda_plus).re;
-      (lambda_minus).im=(lambda_plus).im;
+      lambda_minus = -conj(lambda_plus);
     }
       
     /* conjugate eigenvalue if conjugation of operator was requested */
-    if(dagger){
-      /* 	lambda_plus=conj(lambda_plus); */
-      /* 	lambda_minus=conj(lambda_minus); */
-      (lambda_plus).im=-(lambda_plus).im;
-      (lambda_minus).im=-(lambda_minus).im;
+    if(dagger)
+    {
+      lambda_plus = conj(lambda_plus);
+      lambda_minus = conj(lambda_minus);
     }
       
     _pow_complex(lambda_plus,lambda_plus,alpha,dummy);
@@ -1062,41 +1078,41 @@ void spinorStructEigenvecDtmSu3Vector(spinor *fv,double mu,int epsilon,int k,int
   switch(store_color){
   case 0:
     if(k==0){
-      fv->s0.c0.re=1.0*norm_factor; fv->s0.c0.im=0;
-      fv->s1.c0.re=0.; fv->s1.c0.im=0;
-      fv->s2.c0.re=q[0]; fv->s2.c0.im=q[1];
-      fv->s3.c0.re=q[4]; fv->s3.c0.im=q[5];
+      fv->s0.c0 = (1.0*norm_factor) + cimag(fv->s0.c0) * I; fv->s0.c0 = creal(fv->s0.c0);
+      fv->s1.c0 = (0.) + cimag(fv->s1.c0) * I; fv->s1.c0 = creal(fv->s1.c0);
+      fv->s2.c0 = (q[0]) + cimag(fv->s2.c0) * I; fv->s2.c0 = creal(fv->s2.c0) + (q[1]) * I;
+      fv->s3.c0 = (q[4]) + cimag(fv->s3.c0) * I; fv->s3.c0 = creal(fv->s3.c0) + (q[5]) * I;
     } else /* if(k==1) */ {
-      fv->s0.c0.re=0.; fv->s0.c0.im=0;
-      fv->s1.c0.re=1.0*norm_factor; fv->s1.c0.im=0.;
-      fv->s2.c0.re=q[2]; fv->s2.c0.im=q[3];
-      fv->s3.c0.re=q[6]; fv->s3.c0.im=q[7];
+      fv->s0.c0 = (0.) + cimag(fv->s0.c0) * I; fv->s0.c0 = creal(fv->s0.c0);
+      fv->s1.c0 = (1.0*norm_factor) + cimag(fv->s1.c0) * I; fv->s1.c0 = creal(fv->s1.c0);
+      fv->s2.c0 = (q[2]) + cimag(fv->s2.c0) * I; fv->s2.c0 = creal(fv->s2.c0) + (q[3]) * I;
+      fv->s3.c0 = (q[6]) + cimag(fv->s3.c0) * I; fv->s3.c0 = creal(fv->s3.c0) + (q[7]) * I;
     }
     break;
   case 1:
     if(k==0){
-      fv->s0.c1.re=1.0*norm_factor; fv->s0.c1.im=0;
-      fv->s1.c1.re=0.; fv->s1.c1.im=0;
-      fv->s2.c1.re=q[0]; fv->s2.c1.im=q[1];
-      fv->s3.c1.re=q[4]; fv->s3.c1.im=q[5];
+      fv->s0.c1 = (1.0*norm_factor) + cimag(fv->s0.c1) * I; fv->s0.c1 = creal(fv->s0.c1);
+      fv->s1.c1 = (0.) + cimag(fv->s1.c1) * I; fv->s1.c1 = creal(fv->s1.c1);
+      fv->s2.c1 = (q[0]) + cimag(fv->s2.c1) * I; fv->s2.c1 = creal(fv->s2.c1) + (q[1]) * I;
+      fv->s3.c1 = (q[4]) + cimag(fv->s3.c1) * I; fv->s3.c1 = creal(fv->s3.c1) + (q[5]) * I;
     } else /* if(k==1) */ {
-      fv->s0.c1.re=0.; fv->s0.c1.im=0;
-      fv->s1.c1.re=1.0*norm_factor; fv->s1.c1.im=0.;
-      fv->s2.c1.re=q[2]; fv->s2.c1.im=q[3];
-      fv->s3.c1.re=q[6]; fv->s3.c1.im=q[7];
+      fv->s0.c1 = (0.) + cimag(fv->s0.c1) * I; fv->s0.c1 = creal(fv->s0.c1);
+      fv->s1.c1 = (1.0*norm_factor) + cimag(fv->s1.c1) * I; fv->s1.c1 = creal(fv->s1.c1);
+      fv->s2.c1 = (q[2]) + cimag(fv->s2.c1) * I; fv->s2.c1 = creal(fv->s2.c1) + (q[3]) * I;
+      fv->s3.c1 = (q[6]) + cimag(fv->s3.c1) * I; fv->s3.c1 = creal(fv->s3.c1) + (q[7]) * I;
     }
     break;
   case 2:
     if(k==0){
-      fv->s0.c2.re=1.0*norm_factor; fv->s0.c2.im=0;
-      fv->s1.c2.re=0.; fv->s1.c2.im=0;
-      fv->s2.c2.re=q[0]; fv->s2.c2.im=q[1];
-      fv->s3.c2.re=q[4]; fv->s3.c2.im=q[5];
+      fv->s0.c2 = (1.0*norm_factor) + cimag(fv->s0.c2) * I; fv->s0.c2 = creal(fv->s0.c2);
+      fv->s1.c2 = (0.) + cimag(fv->s1.c2) * I; fv->s1.c2 = creal(fv->s1.c2);
+      fv->s2.c2 = (q[0]) + cimag(fv->s2.c2) * I; fv->s2.c2 = creal(fv->s2.c2) + (q[1]) * I;
+      fv->s3.c2 = (q[4]) + cimag(fv->s3.c2) * I; fv->s3.c2 = creal(fv->s3.c2) + (q[5]) * I;
     } else /* if(k==1) */ {
-      fv->s0.c2.re=0.; fv->s0.c2.im=0;
-      fv->s1.c2.re=1.0*norm_factor; fv->s1.c2.im=0.;
-      fv->s2.c2.re=q[2]; fv->s2.c2.im=q[3];
-      fv->s3.c2.re=q[6]; fv->s3.c2.im=q[7];
+      fv->s0.c2 = (0.) + cimag(fv->s0.c2) * I; fv->s0.c2 = creal(fv->s0.c2);
+      fv->s1.c2 = (1.0*norm_factor) + cimag(fv->s1.c2) * I; fv->s1.c2 = creal(fv->s1.c2);
+      fv->s2.c2 = (q[2]) + cimag(fv->s2.c2) * I; fv->s2.c2 = creal(fv->s2.c2) + (q[3]) * I;
+      fv->s3.c2 = (q[6]) + cimag(fv->s3.c2) * I; fv->s3.c2 = creal(fv->s3.c2) + (q[7]) * I;
     }
     break;
   }
@@ -1222,41 +1238,41 @@ void spinorStructEigenvecQtmSu3Vector(spinor *fv,double kappa,double mu,int epsi
   switch(store_color){
   case 0:
     if(k==0){
-      fv->s0.c0.re=1.0*norm_factor; fv->s0.c0.im=0;
-      fv->s1.c0.re=0.; fv->s1.c0.im=0;
-      fv->s2.c0.re=q[0]; fv->s2.c0.im=q[1];
-      fv->s3.c0.re=q[4]; fv->s3.c0.im=q[5];
+      fv->s0.c0 = (1.0*norm_factor) + cimag(fv->s0.c0) * I; fv->s0.c0 = creal(fv->s0.c0);
+      fv->s1.c0 = (0.) + cimag(fv->s1.c0) * I; fv->s1.c0 = creal(fv->s1.c0);
+      fv->s2.c0 = (q[0]) + cimag(fv->s2.c0) * I; fv->s2.c0 = creal(fv->s2.c0) + (q[1]) * I;
+      fv->s3.c0 = (q[4]) + cimag(fv->s3.c0) * I; fv->s3.c0 = creal(fv->s3.c0) + (q[5]) * I;
     } else /* if(k==1) */ {
-      fv->s0.c0.re=0.; fv->s0.c0.im=0;
-      fv->s1.c0.re=1.0*norm_factor; fv->s1.c0.im=0.;
-      fv->s2.c0.re=q[2]; fv->s2.c0.im=q[3];
-      fv->s3.c0.re=q[6]; fv->s3.c0.im=q[7];
+      fv->s0.c0 = (0.) + cimag(fv->s0.c0) * I; fv->s0.c0 = creal(fv->s0.c0);
+      fv->s1.c0 = (1.0*norm_factor) + cimag(fv->s1.c0) * I; fv->s1.c0 = creal(fv->s1.c0);
+      fv->s2.c0 = (q[2]) + cimag(fv->s2.c0) * I; fv->s2.c0 = creal(fv->s2.c0) + (q[3]) * I;
+      fv->s3.c0 = (q[6]) + cimag(fv->s3.c0) * I; fv->s3.c0 = creal(fv->s3.c0) + (q[7]) * I;
     }
     break;
   case 1:
     if(k==0){
-      fv->s0.c1.re=1.0*norm_factor; fv->s0.c1.im=0;
-      fv->s1.c1.re=0.; fv->s1.c1.im=0;
-      fv->s2.c1.re=q[0]; fv->s2.c1.im=q[1];
-      fv->s3.c1.re=q[4]; fv->s3.c1.im=q[5];
+      fv->s0.c1 = (1.0*norm_factor) + cimag(fv->s0.c1) * I; fv->s0.c1 = creal(fv->s0.c1);
+      fv->s1.c1 = (0.) + cimag(fv->s1.c1) * I; fv->s1.c1 = creal(fv->s1.c1);
+      fv->s2.c1 = (q[0]) + cimag(fv->s2.c1) * I; fv->s2.c1 = creal(fv->s2.c1) + (q[1]) * I;
+      fv->s3.c1 = (q[4]) + cimag(fv->s3.c1) * I; fv->s3.c1 = creal(fv->s3.c1) + (q[5]) * I;
     } else /* if(k==1) */ {
-      fv->s0.c1.re=0.; fv->s0.c1.im=0;
-      fv->s1.c1.re=1.0*norm_factor; fv->s1.c1.im=0.;
-      fv->s2.c1.re=q[2]; fv->s2.c1.im=q[3];
-      fv->s3.c1.re=q[6]; fv->s3.c1.im=q[7];
+      fv->s0.c1 = (0.) + cimag(fv->s0.c1) * I; fv->s0.c1 = creal(fv->s0.c1);
+      fv->s1.c1 = (1.0*norm_factor) + cimag(fv->s1.c1) * I; fv->s1.c1 = creal(fv->s1.c1);
+      fv->s2.c1 = (q[2]) + cimag(fv->s2.c1) * I; fv->s2.c1 = creal(fv->s2.c1) + (q[3]) * I;
+      fv->s3.c1 = (q[6]) + cimag(fv->s3.c1) * I; fv->s3.c1 = creal(fv->s3.c1) + (q[7]) * I;
     }
     break;
   case 2:
     if(k==0){
-      fv->s0.c2.re=1.0*norm_factor; fv->s0.c2.im=0;
-      fv->s1.c2.re=0.; fv->s1.c2.im=0;
-      fv->s2.c2.re=q[0]; fv->s2.c2.im=q[1];
-      fv->s3.c2.re=q[4]; fv->s3.c2.im=q[5];
+      fv->s0.c2 = (1.0*norm_factor) + cimag(fv->s0.c2) * I; fv->s0.c2 = creal(fv->s0.c2);
+      fv->s1.c2 = (0.) + cimag(fv->s1.c2) * I; fv->s1.c2 = creal(fv->s1.c2);
+      fv->s2.c2 = (q[0]) + cimag(fv->s2.c2) * I; fv->s2.c2 = creal(fv->s2.c2) + (q[1]) * I;
+      fv->s3.c2 = (q[4]) + cimag(fv->s3.c2) * I; fv->s3.c2 = creal(fv->s3.c2) + (q[5]) * I;
     } else /* if(k==1) */ {
-      fv->s0.c2.re=0.; fv->s0.c2.im=0;
-      fv->s1.c2.re=1.0*norm_factor; fv->s1.c2.im=0.;
-      fv->s2.c2.re=q[2]; fv->s2.c2.im=q[3];
-      fv->s3.c2.re=q[6]; fv->s3.c2.im=q[7];
+      fv->s0.c2 = (0.) + cimag(fv->s0.c2) * I; fv->s0.c2 = creal(fv->s0.c2);
+      fv->s1.c2 = (1.0*norm_factor) + cimag(fv->s1.c2) * I; fv->s1.c2 = creal(fv->s1.c2);
+      fv->s2.c2 = (q[2]) + cimag(fv->s2.c2) * I; fv->s2.c2 = creal(fv->s2.c2) + (q[3]) * I;
+      fv->s3.c2 = (q[6]) + cimag(fv->s3.c2) * I; fv->s3.c2 = creal(fv->s3.c2) + (q[7]) * I;
     }
     break;
   }
@@ -1267,12 +1283,11 @@ void spinorStructEigenvecQtmSu3Vector(spinor *fv,double kappa,double mu,int epsi
 void spinor_mulp_half_phase(spinor *spinor_out,const spinor *spinor_in,
 			    double *c_table,double *s_table,
 			    unsigned forward,double mulp){
-  double dummy;
   int t,x,z,y;
   int myindex;
   unsigned int useDummy=0;
   unsigned int deleteArrays=0;
-  complex phase;
+  _Complex double phase;
   int i;
 
   if(spinor_in==spinor_out) useDummy=1;
@@ -1289,14 +1304,13 @@ void spinor_mulp_half_phase(spinor *spinor_out,const spinor *spinor_in,
 
 
   for(t=0;t<T;t++){
-    (phase).re=c_table[t];
     if(forward)
-      (phase).im=-s_table[t];
+      phase = c_table[t] - s_table[t] * I;
     else 
-      (phase).im=s_table[t];
+      phase = c_table[t] + s_table[t] * I;
     /* multiply with an overall constant */
-    (phase).re*=mulp;
-    (phase).im*=mulp;
+    phase *= (mulp) + cimag(phase) * I;
+    phase *= creal(phase) + (mulp) * I;
 
     if(useDummy==1){
       for(x=0;x<LX;x++){
@@ -1407,11 +1421,11 @@ void writeFFTWWisdom(int tt,int ll){
 }
 #endif
 
-complex calcMatrixElement(spinor *field1,spinor *field2,complex mat[144],int praw1[4],int praw2[4], void (*op)(spinor*,spinor*),int diag,int jTo){
+_Complex double calcMatrixElement(spinor *field1,spinor *field2,_Complex double mat[144],int praw1[4],int praw2[4], void (*op)(spinor*,spinor*),int diag,int jTo){
 
   int j,i;
-  complex sprod;
-  complex avg={0.,0.};
+  _Complex double sprod;
+  _Complex double avg=0.0;
   int avgcount=0;
 
 
@@ -1425,12 +1439,11 @@ complex calcMatrixElement(spinor *field1,spinor *field2,complex mat[144],int pra
       planeWave(field1,i,praw2,T,LX,0);
       sprod=scalar_prod(field1,field2,VOLUME,0);
       mat[i+j*12]=sprod;
-      avg.re+=sprod.re;
-      avg.im+=sprod.im;
+      avg += sprod;
       avgcount+=1;
 
-/*       if(fabs(sprod.re)+fabs(sprod.im) > 1e-2) */
-/* 	printf(" (%5.2f,%5.2f)",sprod.re,sprod.im); */
+/*       if(fabs(creal(sprod))+fabs(cimag(sprod)) > 1e-2) */
+/* 	printf(" (%5.2f,%5.2f)",creal(sprod),cimag(sprod)); */
 /*       else */
 /* 	printf("              "); */
 /*       if(i==11) printf("\n"); */
@@ -1443,13 +1456,12 @@ complex calcMatrixElement(spinor *field1,spinor *field2,complex mat[144],int pra
       mat[i+j*12]=sprod;
 
       if(i==j){
-	avg.re+=sprod.re;
-	avg.im+=sprod.im;
+	avg += sprod;
 	avgcount+=1;
       }
 
-      if(fabs(sprod.re)+fabs(sprod.im) > 1.e-3)
-	printf(" (%5.2f,%5.2f)",sprod.re,sprod.im);
+      if(fabs(creal(sprod))+fabs(cimag(sprod)) > 1.e-3)
+	printf(" (%5.2f,%5.2f)",creal(sprod),cimag(sprod));
       else
 	printf("              ");
       fflush(stdout);
@@ -1460,52 +1472,52 @@ complex calcMatrixElement(spinor *field1,spinor *field2,complex mat[144],int pra
 
 	
   }
-  avg.re/=(double)avgcount;
-  avg.im/=(double)avgcount;
+  avg /= ((double)avgcount) + cimag(avg) * I;
+  avg /= creal(avg) + ((double)avgcount) * I;
   return avg;
 
 }
 
 
-void diagMatrixElement(complex mat[144]){
+void diagMatrixElement(_Complex double mat[144]){
 
   const int const N=12;
 
   char  JOBVL[]="N";
   char  JOBVR[]="N";
 
-  complex *EVS;
-  complex *EVECS;
+  _Complex double *EVS;
+  _Complex double *EVECS;
 
-  complex *WORK;
+  _Complex double *WORK;
   double *RWORK;
 
   int LWORK=396;
-  complex DUMMY[1];
+  _Complex double DUMMY[1];
   
   int ONE=1;
   int INFO;
 
   int i;
 
-  EVS=(complex*)malloc(N*sizeof(complex));
-  EVECS=(complex*)malloc(N*N*sizeof(complex));
+  EVS=(_Complex double*)malloc(N*sizeof(_Complex double));
+  EVECS=(_Complex double*)malloc(N*N*sizeof(_Complex double));
 
-  WORK=(complex*)malloc(2*N*sizeof(complex));
+  WORK=(_Complex double*)malloc(2*N*sizeof(_Complex double));
   RWORK=(double*)malloc(2*N*sizeof(double));
 
   _FT(zgeev)(JOBVL, JOBVR,&N,mat,&N,EVS,DUMMY,&ONE,DUMMY,&ONE,WORK,&LWORK,RWORK,&INFO);
 
   for( i = 0;i<12;i++)
-    printf(" ev i : %9.2e + %9.2e i \n", EVS[i].re, EVS[i].im);
+    printf(" ev i : %9.2e + %9.2e i \n", creal(EVS[i]), cimag(EVS[i]));
 
-/*   printf(" LWORK[0] = %e \n" , WORK[0].re ); */
+/*   printf(" LWORK[0] = %e \n" , creal(WORK[0])); */
 
 
 
 /*   for( i = 0;i<12;i++){ */
 /*     for( j =0;j<6;j++){ */
-/*       printf("  %9.2e + %9.2e i ", EVECS[j*12+i].re, EVECS[j*12+i].im); */
+/*       printf("  %9.2e + %9.2e i ", creal(EVECS[j*12+i]), cimag(EVECS[j*12+i])); */
 /*     } */
 /*     printf("\n"); */
 /*   } */
@@ -1644,7 +1656,7 @@ int * makeEqualPmuMap(int n){
       printf(" 0");
     else 
       printf(" -");
-    if( (i +1)% divPmu == 0)
+    if((i +1)% divPmu == 0)
       printf("\n");
   }
 
@@ -1716,7 +1728,7 @@ int * makeEqualPmuMap(int n){
 /* 	  for(i=0;i<divPmu*divPmuT;i++){ */
 /* 	    printf(" %d ", counts[i]); */
 /* 	    sum+=counts[i]; */
-/* 	    if( (i +1)% divPmu == 0) */
+/* 	    if((i +1)% divPmu == 0) */
 /* 	      printf("\n"); */
 /* 	  } */
 
@@ -1776,7 +1788,7 @@ void printRawPMap(int *rawps,int n){
       printf(" x");
     else 
       printf("  ");
-    if( (i +1)% divPmu == 0)
+    if((i +1)% divPmu == 0)
       printf("\n");
   }
   free(possMap);
@@ -1835,9 +1847,8 @@ void fitPrecParams(const int op_id){
   int rawp[4],rawp2[4];
   int *pmumap;
   int i,j,l;
-  void (*op)(spinor*,spinor*);
   void (*op_noprec)(spinor*,spinor*);
-  complex matrix[144];
+  _Complex double matrix[144];
   static int numMatrixElements=50;
   int replaceTheFirst[]={
     0,0,0,0,
@@ -1847,7 +1858,7 @@ void fitPrecParams(const int op_id){
   };
   int numReplaceTheFirst=sizeof(replaceTheFirst)/(4*sizeof(int));
   double *fitData=NULL;
-  complex avg;
+  _Complex double avg;
   double corrMat[16];
   double corrRHS[4];
   int LDA=4;
@@ -1856,31 +1867,25 @@ void fitPrecParams(const int op_id){
 
   g_mu = optr->mu;
   g_kappa=optr->kappa;
-
-  
   g_precWS=optr->precWS;
-  
   
   switch(PRECWSOPERATORSELECT[optr->solver]){
   case PRECWS_D_DAGGER_D:
-    op=&Q_pm_psi_prec;
     op_noprec=&Q_pm_psi;
     break;
   case PRECWS_DOV_DAGGER_DOV:
-    op=&Qov_sq_psi_prec;
     op_noprec=&Qov_sq_psi;
     break;
   case PRECWS_DTM:
-    op=&D_psi_prec;
     op_noprec=&D_psi;
     break;
   case PRECWS_DOV:
-    op=&Dov_psi_prec;
     op_noprec=&Dov_psi;
     break;
-  default:break;
+  default:
+    op_noprec=NULL;
+    break;
   }
-  
   
   pmumap=makeEqualPmuMap(numMatrixElements);
   /* 	    pmumap=makeRandomPmuMap(50); */
@@ -1905,28 +1910,16 @@ void fitPrecParams(const int op_id){
     rawp2[0]=rawp[0];rawp2[1]=rawp[1];rawp2[2]=rawp[2];rawp2[3]=rawp[3];
 
 
-    printf("here comes the matrix element for p = (%d,%d,%d,%d) (kappa = %e) :\n" ,rawp[0],rawp[1],rawp[2],rawp[3],g_kappa);
-
-/*     if(PRECWSOPERATORSELECT[optr->solver] == PRECWS_D_DAGGER_D || PRECWSOPERATORSELECT[optr->solver] == PRECWS_DOV_DAGGER_DOV){ */
-/*       for(j = 0 ;j<12;j++) */
-/* 	computeEigenvectorMatrixElementDDaggerD(rawp,op_noprec,j); */
-/*     } else { */
-/*       for(j = 0 ;j<6;j++) */
-/* 	computeEigenvectorMatrixElementDtm(rawp,op_noprec,epsilon[j],k[j],color[j]); */
-/*     } */
-
-/*     printf("printing preconditioned matrix element\n"); */
-/*     calcMatrixElement(g_spinor_field[0],g_spinor_field[1],matrix,rawp,rawp2,op,0,3); */
-/*     		diagMatrixElement(matrix); */
+    printf("here comes the matrix element for p = (%d,%d,%d,%d)(kappa = %e) :\n" ,rawp[0],rawp[1],rawp[2],rawp[3],g_kappa);
 
     printf("printing NOT preconditioned matrix element\n");
     avg=calcMatrixElement(g_spinor_field[0],g_spinor_field[1],matrix,rawp,rawp2,op_noprec,1,3);
 
     fitData[i*3+0]=calcPmuLatticeSq(rawp,T,L);
     fitData[i*3+1]=calcPmuLatticeTildeSq(rawp,T,L);
-    fitData[i*3+2]=avg.re;
+    fitData[i*3+2]=creal(avg);
 
-    printf( "avg = %e + i %e \n" , avg.re,avg.im);
+    printf( "avg = %e + i %e \n" , creal(avg),cimag(avg));
 
     
   }
@@ -1977,10 +1970,10 @@ void fitPrecParams(const int op_id){
 
 void computeEigenvectorMatrixElementDtm(int rawp[4],void (*op)(spinor*,spinor*),int eps,int k,int color){
 
-  complex ev;
+  _Complex double ev;
   double sqnorm;
 
-  complex ev_calc;
+  _Complex double ev_calc;
 
 /* void eigenvector_Dtm(spinor *spinor,double mu,int epsilon,int k,int color,int rawp[4]){ */
 
@@ -1994,22 +1987,22 @@ void computeEigenvectorMatrixElementDtm(int rawp[4],void (*op)(spinor*,spinor*),
   sqnorm=diff_and_square_norm(g_spinor_field[2],g_spinor_field[1],VOLUME);
 
 
-/* inline complex calcDovEvalue(const int *praw,double kappa,double rho,int T,int L,double sign){ */
+/* _Complex double calcDovEvalue(const int *praw,double kappa,double rho,int T,int L,double sign){ */
 /*   ev_calc=calcDovEvalue(rawp,g_kappa,1.,T,L,eps); */
 
-  memcpy(&ev_calc,((spinorPrecWS*)g_precWS)->evs+Index(rawp[0],rawp[1],rawp[2],rawp[3]),sizeof(complex));
+  memcpy(&ev_calc,((spinorPrecWS*)g_precWS)->evs+Index(rawp[0],rawp[1],rawp[2],rawp[3]),sizeof(_Complex double));
 
-  printf("eigenvalue is %e + %e i (theoretical ev %e + %e i) |(Ax - lambda y)|=  %e \n" , ev.re,ev.im,ev_calc.re,ev_calc.im,sqnorm);
+  printf("eigenvalue is %e + %e i (theoretical ev %e + %e i) |(Ax - lambda y)|=  %e \n" , creal(ev),cimag(ev),creal(ev_calc),cimag(ev_calc),sqnorm);
 
 
 }
 
 void computeEigenvectorMatrixElementDDaggerD(int rawp[4],void (*op)(spinor*,spinor*),int k){
 
-  complex ev;
+  _Complex double ev;
   double sqnorm;
 
-  complex ev_calc;
+  _Complex double ev_calc;
 
   planeWave(g_spinor_field[0],k,rawp,T,LX,0);
 
@@ -2021,13 +2014,13 @@ void computeEigenvectorMatrixElementDDaggerD(int rawp[4],void (*op)(spinor*,spin
   sqnorm=diff_and_square_norm(g_spinor_field[2],g_spinor_field[1],VOLUME);
 
 
-/* inline complex calcDovEvalue(const int *praw,double kappa,double rho,int T,int L,double sign){ */
+/* _Complex double calcDovEvalue(const int *praw,double kappa,double rho,int T,int L,double sign){ */
 /*   ev_calc=calcDovEvalue(rawp,g_kappa,1.,T,L,eps); */
 
   if(g_precWS!=NULL)
-    memcpy(&ev_calc,((spinorPrecWS*)g_precWS)->evs+Index(rawp[0],rawp[1],rawp[2],rawp[3]),sizeof(complex));
+    memcpy(&ev_calc,((spinorPrecWS*)g_precWS)->evs+Index(rawp[0],rawp[1],rawp[2],rawp[3]),sizeof(_Complex double));
 
-  printf("eigenvalue is %e + %e i (theoretical ev %e + %e i) |(Ax - lambda y)|=  %e (in DdaggerD) \n" , ev.re,ev.im,ev_calc.re,ev_calc.im,sqnorm);
+  printf("eigenvalue is %e + %e i (theoretical ev %e + %e i) |(Ax - lambda y)|=  %e (in DdaggerD)\n" , creal(ev),cimag(ev),creal(ev_calc),cimag(ev_calc),sqnorm);
 
 
 }
@@ -2046,7 +2039,6 @@ int * makeDiagFalloffPmuMap(int n,int maxdmanhat){
   int numRawPs=0;
   int *pmuMap;
   int dmanhat;
-  int sumdrawp;
 /*  const int maxdmanhat=10; */
 
   FILE *drawpStatFile;
@@ -2080,17 +2072,7 @@ int * makeDiagFalloffPmuMap(int n,int maxdmanhat){
       SWAP(drawp[(int)(r[0]*4.)],drawp[(int)(r[1]*4.)],r[2]);
 
   }
-
-    sumdrawp=abs(drawp[0])+abs(drawp[1])+abs(drawp[2])+abs(drawp[3]);
-
-
-/*     printf("dmanhat %d , drawp: (%d,%d,%d,%d) , sum(drawp) = %d  \n",dmanhat,drawp[0],drawp[1],drawp[2],drawp[3],sumdrawp); */
     fprintf(drawpStatFile," %d %d %d %d\n",drawp[0],drawp[1],drawp[2],drawp[3]);
-
-/*     rawp2[0]=(int)(r[0]*(double)T); */
-/*     rawp2[1]=(int)(r[1]*(double)LX); */
-/*     rawp2[2]=(int)(r[2]*(double)LY); */
-/*     rawp2[3]=(int)(r[3]*(double)LZ); */
 
     if(numRawPs<n){
       pmuMap[numRawPs*8+0]=rawp[0];
@@ -2134,7 +2116,7 @@ void calculateDiagFalloffElements(const int op_id){
   void (*op)(spinor*,spinor*);
   void (*op_noprec)(spinor*,spinor*);
   double frbnorm,diag;
-  complex matrix[144];
+  _Complex double matrix[144];
 /*   static int epsilon[12]={1,1,1,1,1,1,-1,-1,-1,-1,-1,-1}; */
 /*   static int k[12]      ={0,0,0,1,1,1,0,0,0,1,1,1}; */
 /*   static int color[12]  ={0,1,2,0,1,2,0,1,2,0,1,2}; */
@@ -2217,7 +2199,10 @@ void calculateDiagFalloffElements(const int op_id){
     op=&Dov_psi_prec;
     op_noprec=&Dov_psi;
     break;
-  default:break;
+  default:
+    op=NULL;
+    op_noprec=NULL;
+    break;
   }
   
   printf("num_matrix_elements = %d\n",numMatrixElements);
@@ -2246,7 +2231,7 @@ void calculateDiagFalloffElements(const int op_id){
     rawp2[3]=pmumap[i*8+7];
     
 
-    printf("here comes the matrix element for p = (%d,%d,%d,%d) p2 = (%d,%d,%d,%d) (kappa = %e) :\n" ,rawp[0],rawp[1],rawp[2],rawp[3],rawp2[0],rawp2[1],rawp2[2],rawp2[3],g_kappa);
+    printf("here comes the matrix element for p = (%d,%d,%d,%d) p2 = (%d,%d,%d,%d)(kappa = %e) :\n" ,rawp[0],rawp[1],rawp[2],rawp[3],rawp2[0],rawp2[1],rawp2[2],rawp2[3],g_kappa);
     if(g_precWS!=NULL){
       printf("printing preconditioned matrix element\n");
       calcMatrixElement(g_spinor_field[0],g_spinor_field[1],matrix,rawp,rawp2,op,0,12);
@@ -2271,12 +2256,12 @@ void calculateDiagFalloffElements(const int op_id){
       
       if(j/12 == j%12 ) {
 	frbnorm+=
-	  (matrix[j].re-diag)*(matrix[j].re-diag)+
-	  matrix[j].im*matrix[j].im;
+	  (creal(matrix[j])-diag)*(creal(matrix[j])-diag)+
+	  cimag(matrix[j])*cimag(matrix[j]);
       } else {
 	frbnorm+=
-	  matrix[j].re*matrix[j].re+
-	  matrix[j].im*matrix[j].im;
+	  creal(matrix[j])*creal(matrix[j])+
+	  cimag(matrix[j])*cimag(matrix[j]);
       }
     }
 
@@ -2292,7 +2277,7 @@ void calculateDiagFalloffElements(const int op_id){
 
     for(j=0;j<144;j++){
 
-      fprintf(elementsFile,"(%e;%e) ", matrix[j].re,matrix[j].im);
+      fprintf(elementsFile,"(%e;%e) ", creal(matrix[j]),cimag(matrix[j]));
       if((j+1)%12==0) fprintf(elementsFile,"\n");
       
     }

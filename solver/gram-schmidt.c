@@ -23,7 +23,7 @@
 #include <math.h>
 #include <stdio.h>
 #include "su3spinor.h"
-#include "complex.h"
+#include <complex.h>
 #include "linalg_eo.h"
 #include "linalg/blas.h"
 #ifdef CRAY
@@ -42,13 +42,13 @@ static int ONE = 1;
  *
  */
 
-void IteratedClassicalGS_old(complex v[], double *vnrm, int n, int m, complex A[], 
-			 complex work1[]) {
+void IteratedClassicalGS_old(_Complex double v[], double *vnrm, int n, int m, _Complex double A[], 
+			 _Complex double work1[]) {
   const double alpha = 0.5;
 
   double vnrm_old;
   int i, n2, isorth = 0;
-  complex CMONE, CONE, CZERO;
+  _Complex double CMONE, CONE, CZERO;
 #ifdef CRAY
   char * cupl_c = "C", *cupl_n = "N";
   _fcd fupl_c, fupl_n;
@@ -59,9 +59,9 @@ void IteratedClassicalGS_old(complex v[], double *vnrm, int n, int m, complex A[
 #endif
 
   n2 = 2*n;
-  CMONE.re = -1.; CMONE.im=0.;
-  CONE.re = 1.; CONE.im=0.;
-  CZERO.re = 0.; CZERO.im=0.;
+  CMONE = -1.;
+  CONE = 1.;
+  CZERO = 0.;
 
 #ifdef HAVE_LAPACK
   vnrm_old = _FT(dnrm2)(&n2, (double*) v, &ONE);
@@ -72,7 +72,7 @@ void IteratedClassicalGS_old(complex v[], double *vnrm, int n, int m, complex A[
     (*vnrm) = _FT(dnrm2)(&n2, (double*) v, &ONE);
 
     isorth=((*vnrm) > alpha*vnrm_old);
-    vnrm_old = (*vnrm);
+    vnrm_old = *vnrm;
   }
 #endif
   if (i >= max_cgs_it) {
@@ -81,14 +81,14 @@ void IteratedClassicalGS_old(complex v[], double *vnrm, int n, int m, complex A[
 }
 
 
-void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[], 
-			 complex work1[], int lda) {
+void IteratedClassicalGS(_Complex double v[], double *vnrm, int n, int m, _Complex double A[], 
+			 _Complex double work1[], int lda) {
   const double alpha = 0.5;
 
   double vnrm_old;
   int i, isorth = 0;
   int j;
-  complex CMONE, CONE;
+  _Complex double CMONE, CONE;
 #ifdef CRAY
   char *cupl_n = "N";
   _fcd fupl_n;
@@ -97,23 +97,23 @@ void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[],
   char *fupl_n = "N";
 #endif
 
-  CMONE.re = -1.; CMONE.im=0.;
-  CONE.re = 1.; CONE.im=0.;
+  CMONE = -1.;
+  CONE = 1.;
 
-  vnrm_old = sqrt(square_norm((spinor*) v, n*sizeof(complex)/sizeof(spinor), 1));
+  vnrm_old = sqrt(square_norm((spinor*) v, n*sizeof(_Complex double)/sizeof(spinor), 1));
 
   for(i = 0; !isorth && i < max_cgs_it; i ++) {
 
     for(j = 0; j < m; j++){
-      work1[j] = scalar_prod((spinor*) (A+j*lda), (spinor*) v, n*sizeof(complex)/sizeof(spinor), 1);
+      work1[j] = scalar_prod((spinor*)(A+j*lda), (spinor*) v, n*sizeof(_Complex double)/sizeof(spinor), 1);
     }
 #ifdef HAVE_LAPACK
     _FT(zgemv)(fupl_n, &n, &m, &CMONE, A, &lda, work1, &ONE, &CONE, v, &ONE, 1);
 #endif
-    (*vnrm) = sqrt(square_norm((spinor*) v, n*sizeof(complex)/sizeof(spinor), 1));
+    (*vnrm) = sqrt(square_norm((spinor*) v, n*sizeof(_Complex double)/sizeof(spinor), 1));
 
     isorth=((*vnrm) > alpha*vnrm_old);
-    vnrm_old = (*vnrm);
+    vnrm_old = *vnrm;
   }
   if (i >= max_cgs_it) {
 /*     errorhandler(400,""); */
@@ -122,14 +122,14 @@ void IteratedClassicalGS(complex v[], double *vnrm, int n, int m, complex A[],
 
 #ifdef WITHLAPH
 
-void IteratedClassicalGS_su3vect(complex v[], double *vnrm, int n, int m, complex A[],
-				 complex work1[], int lda) {
+void IteratedClassicalGS_su3vect(_Complex double v[], double *vnrm, int n, int m, _Complex double A[],
+				 _Complex double work1[], int lda) {
   const double alpha = 0.5;
 
   double vnrm_old;
   int i, isorth = 0;
   int j;
-  complex CMONE, CONE;
+  _Complex double CMONE, CONE;
 
 #ifdef CRAY
   char *cupl_n = "N";
@@ -139,23 +139,23 @@ void IteratedClassicalGS_su3vect(complex v[], double *vnrm, int n, int m, comple
   char *fupl_n = "N";
 #endif
 
-  CMONE.re = -1.; CMONE.im=0.;
-  CONE.re = 1.; CONE.im=0.;
+  CMONE = -1.;
+  CONE = 1.;
 
-  vnrm_old = sqrt(square_norm_su3vect((su3_vector*) v, n*sizeof(complex)/sizeof(su3_vector),1));
+  vnrm_old = sqrt(square_norm_su3vect((su3_vector*) v, n*sizeof(_Complex double)/sizeof(su3_vector),1));
 
   for(i = 0; !isorth && i < max_cgs_it; i ++) {
 
     for(j = 0; j < m; j++){
-      work1[j] = scalar_prod_su3vect((su3_vector*) (A+j*lda), (su3_vector*) v, n*sizeof(complex)/sizeof(su3_vector),1);
+      work1[j] = scalar_prod_su3vect((su3_vector*)(A+j*lda), (su3_vector*) v, n*sizeof(_Complex double)/sizeof(su3_vector),1);
     }
 #ifdef HAVE_LAPACK
     _FT(zgemv)(fupl_n, &n, &m, &CMONE, A, &lda, work1, &ONE, &CONE, v, &ONE, 1);
 #endif
-    (*vnrm) = sqrt(square_norm_su3vect((su3_vector*) v, n*sizeof(complex)/sizeof(su3_vector),1));
+    (*vnrm) = sqrt(square_norm_su3vect((su3_vector*) v, n*sizeof(_Complex double)/sizeof(su3_vector),1));
 
     isorth=((*vnrm) > alpha*vnrm_old);
-    vnrm_old = (*vnrm);
+    vnrm_old = *vnrm;
   }
   if (i >= max_cgs_it) {
     /*     errorhandler(400,""); */
@@ -170,14 +170,14 @@ void IteratedClassicalGS_su3vect(complex v[], double *vnrm, int n, int m, comple
  *  Orthogonlaizes v with respect to span{A[:,1:m]}
  */
 
-void ModifiedGS_old(complex v[], int n, int m, complex A[]){
+void ModifiedGS_old(_Complex double v[], int n, int m, _Complex double A[]){
 
   int i;
-  complex s;
+  _Complex double s;
 
   for (i = 0; i < m; i ++) {
-    s = scalar_prod((spinor*) (A+i*n), (spinor*) v, n*sizeof(complex)/sizeof(spinor), 1);
-    s.re = -s.re; s.im = -s.im;
+    s = scalar_prod((spinor*)(A+i*n), (spinor*) v, n*sizeof(_Complex double)/sizeof(spinor), 1);
+    s = -s;
 #ifdef HAVE_LAPACK
     _FT(zaxpy)(&n, &s, A+i*n, &ONE, v, &ONE); 
 #endif
@@ -185,14 +185,14 @@ void ModifiedGS_old(complex v[], int n, int m, complex A[]){
 }
 
 
-void ModifiedGS(complex v[], int n, int m, complex A[], int lda) {
+void ModifiedGS(_Complex double v[], int n, int m, _Complex double A[], int lda) {
 
   int i;
-  complex s;
+  _Complex double s;
 
   for (i = 0; i < m; i ++) {
-    s = scalar_prod((spinor*) (A+i*lda), (spinor*) v, n*sizeof(complex)/sizeof(spinor), 1);
-    s.re = -s.re; s.im = -s.im;
+    s = scalar_prod((spinor*)(A+i*lda), (spinor*) v, n*sizeof(_Complex double)/sizeof(spinor), 1);
+    s = -s;
 #ifdef HAVE_LAPACK
     _FT(zaxpy)(&n, &s, A+i*lda, &ONE, v, &ONE); 
 #endif
@@ -201,14 +201,14 @@ void ModifiedGS(complex v[], int n, int m, complex A[], int lda) {
 
 #ifdef WITHLAPH
 
-void ModifiedGS_su3vect(complex v[], int n, int m, complex A[], int lda) {
+void ModifiedGS_su3vect(_Complex double v[], int n, int m, _Complex double A[], int lda) {
 
   int i;
-  complex s;
+  _Complex double s;
 
   for (i = 0; i < m; i ++) {
-    s = scalar_prod_su3vect((su3_vector*) (A+i*lda), (su3_vector*) v, n*sizeof(complex)/sizeof(su3_vector),1);
-    s.re = -s.re; s.im = -s.im;
+    s = scalar_prod_su3vect((su3_vector*)(A+i*lda), (su3_vector*) v, n*sizeof(_Complex double)/sizeof(su3_vector),1);
+    s = -s;
 #ifdef HAVE_LAPACK
     _FT(zaxpy)(&n, &s, A+i*lda, &ONE, v, &ONE);
 #endif

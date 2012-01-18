@@ -61,7 +61,7 @@ int mr(spinor * const P, spinor * const Q,
        matrix_mult f){
   int i=0;
   double norm_r,beta;
-  complex alpha;
+  _Complex double alpha;
   spinor * r;
   spinor ** solver_field = NULL;
   const int nr_sf = 3;
@@ -87,7 +87,7 @@ int mr(spinor * const P, spinor * const Q,
     f(solver_field[1], r);
     alpha=scalar_prod(solver_field[1], r, N, parallel);
     beta=square_norm(solver_field[1], N, parallel);
-    _mult_real(alpha, alpha, 1./beta);
+    alpha /= beta;
     assign_add_mul(P, r, alpha, N);
     if(i%50 == 0){
       f(solver_field[2], P);
@@ -118,7 +118,7 @@ int mrblk(spinor * const P, spinor * const Q,
   static int mr_init=0;
   int i = 0;
   double norm_r,beta;
-  complex alpha;
+  _Complex double alpha;
   spinor * r;
   const int parallel = 0;
   spinor * s[3];
@@ -158,7 +158,7 @@ int mrblk(spinor * const P, spinor * const Q,
     f(s[1], r, blk);
     alpha = scalar_prod(s[1], r, N, parallel);
     beta = square_norm(s[1], N, parallel);
-    _mult_real(alpha, alpha, 1./beta);
+    alpha /= beta;
     assign_add_mul(P, r, alpha, N);
     if(i%50 == 0) {
       f(s[2], P,blk);

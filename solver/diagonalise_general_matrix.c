@@ -19,8 +19,8 @@
 
 /******************************************************
  *
- * subroutine to diagonalise a complex n times n
- * matrix. Input is a complex matrix in _C_ like
+ * subroutine to diagonalise a _Complex double n times n
+ * matrix. Input is a _Complex double matrix in _C_ like
  * order. Output is again _C_ like.
  *
  * The lapack routine zgeevx is used instead of
@@ -44,20 +44,20 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#include "complex.h"
+#include <complex.h>
 #include "linalg/lapack.h"
 #include "diagonalise_general_matrix.h"
 
-void diagonalise_general_matrix(int n, complex * A, int lda, complex * vl,  
-				complex * evalues ) {
+void diagonalise_general_matrix(int n, _Complex double * A, int lda, _Complex double * vl,  
+				_Complex double * evalues ) {
 
-  complex *vr = NULL, *temp = NULL, *work = NULL, dummy;
+  _Complex double *vr = NULL, *temp = NULL, *work = NULL, dummy;
   double * rwork = NULL, * scale = NULL, abnrm, * rcone = NULL, * rconv = NULL;
   int lwork, info, i, j, ilo, ihi;
   
   rwork = malloc(2*n*sizeof(double));
-  vr = malloc(n*n*sizeof(complex));
-/*   temp = malloc(n*n*sizeof(complex)); */
+  vr = malloc(n*n*sizeof(_Complex double));
+/*   temp = malloc(n*n*sizeof(_Complex double)); */
   scale = malloc(n*sizeof(double));
   rcone = malloc(n*sizeof(double));
   rconv = malloc(n*sizeof(double));
@@ -75,8 +75,8 @@ void diagonalise_general_matrix(int n, complex * A, int lda, complex * vl,
   _FT(zgeevx)("N", "N", "V", "N", &n, A, &lda, evalues, vl, &n, vr, &n, 
 	      &ilo, &ihi, scale, &abnrm, rcone, rconv, 
 	      &dummy, &lwork, rwork, &info, 1, 1, 1, 1);
-  lwork = (int)(dummy.re);
-  work = malloc(lwork * sizeof(complex));
+  lwork = (int)(creal(dummy));
+  work = malloc(lwork * sizeof(_Complex double));
   _FT(zgeevx)("N", "N", "V", "N", &n, A, &lda, evalues, vl, &n, vr, &n, 
 	      &ilo, &ihi, scale, &abnrm, rcone, rconv, 
 	      work, &lwork, rwork, &info, 1, 1, 1, 1);

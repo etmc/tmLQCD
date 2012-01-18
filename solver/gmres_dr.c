@@ -42,7 +42,7 @@
 #include<stdio.h>
 #include<math.h>
 #include"global.h"
-#include"complex.h"
+#include <complex.h>
 #include"su3.h"
 #include"linalg_eo.h"
 #include"diagonalise_general_matrix.h"
@@ -66,34 +66,34 @@ int gmres_dr(spinor * const P,spinor * const Q,
 #else
 
 static void init_gmres_dr(const int _M, const int _V);
-complex short_scalar_prod(complex * const x, complex * const y, const int N);
-void short_ModifiedGS(complex v[], int n, int m, complex A[], int lda);
+_Complex double short_scalar_prod(_Complex double * const x, _Complex double * const y, const int N);
+void short_ModifiedGS(_Complex double v[], int n, int m, _Complex double A[], int lda);
 
-static complex ** work;
-static complex * _work;
-static complex ** work2;
-static complex * _work2;
-static complex ** H;
-static complex ** G;
-static complex * alpha;
-static complex * c;
+static _Complex double ** work;
+static _Complex double * _work;
+static _Complex double ** work2;
+static _Complex double * _work2;
+static _Complex double ** H;
+static _Complex double ** G;
+static _Complex double * alpha;
+static _Complex double * c;
 static double * s;
 static spinor ** V;
 static spinor * _v;
 static spinor ** Z;
 static spinor * _z;
-static complex * _h;
-static complex * _g;
-static complex * alpha;
-static complex * c;
+static _Complex double * _h;
+static _Complex double * _g;
+static _Complex double * alpha;
+static _Complex double * c;
 static double * s;
-static complex * evalues;
+static _Complex double * evalues;
 static double * sortarray;
 static int * idx;
 static int one = 1;
-static complex cmone;
-static complex cpone;
-static complex czero;
+static _Complex double cmone;
+static _Complex double cpone;
+static _Complex double czero;
 
 int gmres_dr(spinor * const P,spinor * const Q, 
 	  const int m, const int nr_ev, const int max_restarts,
@@ -102,9 +102,9 @@ int gmres_dr(spinor * const P,spinor * const Q,
 
   int restart=0, i, j, k, l;
   double beta, eps, norm, beta2=0.;
-  complex *lswork = NULL;
+  _Complex double *lswork = NULL;
   int lwork;
-  complex tmp1, tmp2;
+  _Complex double tmp1, tmp2;
   int info=0;
   int _m = m, mp1 = m+1, np1 = nr_ev+1, ne = nr_ev, V2 = 12*(VOLUMEPLUSRAND)/2, _N = 12*N;
   spinor ** solver_field = NULL;
@@ -119,9 +119,9 @@ int gmres_dr(spinor * const P,spinor * const Q,
   double err=0.;
   spinor * r0, * x0;
 
-  cmone.re = -1.; cmone.im=0.;
-  cpone.re = 1.; cpone.im=0.;
-  czero.re = 0.; czero.im = 0.;
+  cmone = -1.;
+  cpone = 1.;
+  czero = 0.;
   
   r0 = solver_field[0];
   x0 = solver_field[2];
@@ -137,21 +137,21 @@ int gmres_dr(spinor * const P,spinor * const Q,
   diff(r0, Q, r0, N);
   
   /* v_0=r_0/||r_0|| */
-  alpha[0].re=sqrt(square_norm(r0, N, 1));
-  err = alpha[0].re;
+  alpha[0] = (sqrt(square_norm(r0, N, 1))) + cimag(alpha[0]) * I;
+  err = creal(alpha[0]);
   
   if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-    printf("%d\t%e true residue\n", restart*m, alpha[0].re*alpha[0].re); 
+    printf("%d\t%e true residue\n", restart*m, creal(alpha[0])*creal(alpha[0])); 
     fflush(stdout);
   }
   
-  if(alpha[0].re==0.){
+  if(creal(alpha[0])==0.){
     assign(P, x0, N);
     finalize_solver(solver_field, nr_sf);
     return(restart*m);
   }
   
-  mul_r(V[0], 1./alpha[0].re, r0, N);
+  mul_r(V[0], 1./creal(alpha[0]), r0, N);
   
   for(j = 0; j < m; j++){
     /* solver_field[0]=A*v_j */
@@ -165,54 +165,52 @@ int gmres_dr(spinor * const P,spinor * const Q,
       /* G, work and work2 are in Fortran storage: columns first */
       G[j][i] = H[i][j];
       work2[j][i] = H[i][j];
-      work[i][j].re = H[i][j].re;
-      work[i][j].im = -H[i][j].im;
+      work[i][j] = (creal(H[i][j])) + (-cimag(H[i][j])) * I;
       assign_diff_mul(solver_field[1], V[i], H[i][j], N);
     }
     
-    _complex_set(H[j+1][j], sqrt(square_norm(solver_field[1], N, 1)), 0.);
+    H[j+1][j] = sqrt(square_norm(solver_field[1], N, 1));
     G[j][j+1] = H[j+1][j];
     work2[j][j+1] = H[j+1][j];
-    work[j+1][j].re =  H[j+1][j].re;
-    work[j+1][j].im =  -H[j+1][j].im;
-    beta2 = H[j+1][j].re*H[j+1][j].re; 
+    work[j+1][j] = conj(H[j+1][j]);
+    beta2 = creal(H[j+1][j])*creal(H[j+1][j]); 
     for(i = 0; i < j; i++){
       tmp1 = H[i][j];
       tmp2 = H[i+1][j];
-      _mult_real(H[i][j], tmp2, s[i]);
-      _add_assign_complex_conj(H[i][j], c[i], tmp1);
-      _mult_real(H[i+1][j], tmp1, s[i]);
-      _diff_assign_complex(H[i+1][j], c[i], tmp2);
+      H[i][j] = (tmp2) * (s[i]);
+      H[i][j] += conj(c[i]) * (tmp1);
+      H[i+1][j] = (tmp1) * (s[i]);
+      H[i+1][j] -= (c[i]) * (tmp2);
     }
     
     /* Set beta, s, c, alpha[j],[j+1] */
-    beta = sqrt(_complex_square_norm(H[j][j]) + _complex_square_norm(H[j+1][j]));
-    s[j] = H[j+1][j].re / beta;
-    _mult_real(c[j], H[j][j], 1./beta);
-    _complex_set(H[j][j], beta, 0.);
-    _mult_real(alpha[j+1], alpha[j], s[j]);
+    beta = sqrt(creal(H[j][j] * conj(H[j][j])) + creal(H[j+1][j] * conj(H[j+1][j])));
+    s[j] = creal(H[j+1][j]) / beta;
+    c[j] = (H[j][j]) / beta;
+    H[j][j] = beta;
+    alpha[j+1] = (alpha[j]) * (s[j]);
     tmp1 = alpha[j];
-    _mult_assign_complex_conj(alpha[j], c[j], tmp1);
+    alpha[j] = conj(c[j]) * (tmp1);
     
     /* precision reached? */
     if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-      printf("%d\t%e residue\n", restart*m+j, alpha[j+1].re*alpha[j+1].re); 
+      printf("%d\t%e residue\n", restart*m+j, creal(alpha[j+1])*creal(alpha[j+1])); 
       fflush(stdout);
     }
-    if(((alpha[j+1].re <= eps) && (rel_prec == 0)) || ((alpha[j+1].re <= eps*norm) && (rel_prec == 1))){
-      _mult_real(alpha[j], alpha[j], 1./H[j][j].re);
+    if(((creal(alpha[j+1]) <= eps) && (rel_prec == 0)) || ((creal(alpha[j+1]) <= eps*norm) && (rel_prec == 1))){
+      alpha[j] = (alpha[j]) * (1./creal(H[j][j]));
       assign_add_mul(x0, V[j], alpha[j], N);
       for(i = j-1; i >= 0; i--){
 	for(k = i+1; k <= j; k++){
-	  _mult_assign_complex(tmp1, H[i][k], alpha[k]); 
+	  tmp1 = (H[i][k]) * (alpha[k]); 
 	  /* alpha[i] -= tmp1 */
-	  _diff_complex(alpha[i], tmp1);
+	  alpha[i] -= tmp1;
 	}
-	_mult_real(alpha[i], alpha[i], 1./H[i][i].re);
+	alpha[i] = (alpha[i]) * (1./creal(H[i][i]));
 	assign_add_mul(x0, V[i], alpha[i], N);
       }
       for(i = 0; i < m; i++){
-	alpha[i].im = 0.;
+	alpha[i] = creal(alpha[i]);
       }
       assign(P, x0, N);
       finalize_solver(solver_field, nr_sf);
@@ -220,25 +218,25 @@ int gmres_dr(spinor * const P,spinor * const Q,
     }
     /* if not */
     else {
-      mul_r(V[(j+1)], 1./H[j+1][j].re, solver_field[1], N); 
+      mul_r(V[(j+1)], 1./creal(H[j+1][j]), solver_field[1], N); 
     }
     
   }
   j=m-1;
   /* prepare for restart */
-  _mult_real(alpha[j], alpha[j], 1./H[j][j].re);
+  alpha[j] = (alpha[j]) * (1./creal(H[j][j]));
   assign_add_mul(x0, V[j], alpha[j], N);
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("alpha: %e %e\n", alpha[j].re, alpha[j].im);
+    printf("alpha: %e %e\n", creal(alpha[j]), cimag(alpha[j]));
   }
   for(i = j-1; i >= 0; i--){
     for(k = i+1; k <= j; k++){
-      _mult_assign_complex(tmp1, H[i][k], alpha[k]);
-      _diff_complex(alpha[i], tmp1);
+      tmp1 = (H[i][k]) * (alpha[k]);
+      alpha[i] -= tmp1;
     }
-    _mult_real(alpha[i], alpha[i], 1./H[i][i].re);
+    alpha[i] = (alpha[i]) * (1./creal(H[i][i]));
     if(g_proc_id == 0 && g_debug_level > 3) {
-      printf("alpha: %e %e\n", alpha[i].re, alpha[i].im);
+      printf("alpha: %e %e\n", creal(alpha[i]), cimag(alpha[i]));
     }
     assign_add_mul(x0, V[i], alpha[i], N);
   }
@@ -247,15 +245,15 @@ int gmres_dr(spinor * const P,spinor * const Q,
   for(i = 0; i < mp1; i++) {
     c[i] = scalar_prod(V[i], r0, N, 1); 
     if(g_proc_id == 0 && g_debug_level > 3) {
-      printf("c: %e %e err = %e\n", c[i].re, c[i].im, err);
+      printf("c: %e %e err = %e\n", creal(c[i]), cimag(c[i]), err);
     }
   }
 
   for(restart = 1; restart < max_restarts; restart++) {  
 
     /* compute c-\bar H \alpha */
-    _FT(zgemv) ("N", &mp1, &_m, &cmone, G[0], &mp1, alpha, &one, &cpone, c, &one, 1);
-    err = sqrt(short_scalar_prod(c, c, mp1).re);
+    _FT(zgemv)("N", &mp1, &_m, &cmone, G[0], &mp1, alpha, &one, &cpone, c, &one, 1);
+    err = creal(sqrt(short_scalar_prod(c, c, mp1)));
     if(g_proc_id == 0 && g_debug_level > 0) {
       printf("%d\t %e short residue\n", m*restart, err*err);
     } 
@@ -265,9 +263,9 @@ int gmres_dr(spinor * const P,spinor * const Q,
     if(g_debug_level > 0) {
       f(r0, x0);
       diff(r0, Q, r0, N);
-      tmp1.im=sqrt(square_norm(r0, N, 1));
+      tmp1 = creal(tmp1) + (sqrt(square_norm(r0, N, 1))) * I;
       if(g_proc_id == g_stdio_proc){
-	printf("%d\t%e true residue\n", m*restart, tmp1.im*tmp1.im); 
+	printf("%d\t%e true residue\n", m*restart, cimag(tmp1)*cimag(tmp1)); 
 	fflush(stdout);
       }
     }
@@ -276,9 +274,9 @@ int gmres_dr(spinor * const P,spinor * const Q,
       assign_add_mul(r0, V[i], c[i], N);
     } 
     if(g_debug_level > 3) {
-      tmp1.im=sqrt(square_norm(r0, N, 1));
+      tmp1 = creal(tmp1) + (sqrt(square_norm(r0, N, 1))) * I;
       if(g_proc_id == g_stdio_proc){
-	printf("%d\t%e residue\n", m*restart, tmp1.im*tmp1.im); 
+	printf("%d\t%e residue\n", m*restart, cimag(tmp1)*cimag(tmp1)); 
 	fflush(stdout);
       }
     }
@@ -291,19 +289,16 @@ int gmres_dr(spinor * const P,spinor * const Q,
 
     /* Prepare to compute harmonic Ritz pairs */
     for(i = 0; i < m-1; i++){
-      alpha[i].re = 0.;
-      alpha[i].im = 0.;
+      alpha[i] = 0.;
     }
-    alpha[m-1].re = 1.;
-    alpha[m-1].im = 0.;
-    _FT(zgesv) (&_m, &one, work[0], &mp1, idx, alpha, &_m, &info); 
+    alpha[m-1] = 1.;
+    _FT(zgesv)(&_m, &one, work[0], &mp1, idx, alpha, &_m, &info); 
     for(i = 0; i < m; i++) {
-      G[m-1][i].re += (beta2*alpha[idx[i]-1].re);
-      G[m-1][i].im += (beta2*alpha[idx[i]-1].im);
+      G[m-1][i] += beta2*alpha[idx[i]-1];
     }
     if(g_proc_id == 0 && g_debug_level > 3){
       printf("zgesv returned info = %d, c[m-1]= %e, %e , idx[m-1]=%d\n", 
-	     info, alpha[idx[m-1]-1].re, alpha[idx[m-1]-1].im, idx[m-1]);
+	     info, creal(alpha[idx[m-1]-1]), cimag(alpha[idx[m-1]-1]), idx[m-1]);
     }
     /* c - \bar H * d -> c */
     /* G contains H + \beta^2 H^-He_n e_n^H */
@@ -311,14 +306,13 @@ int gmres_dr(spinor * const P,spinor * const Q,
     /* Compute harmonic Ritz pairs */
     diagonalise_general_matrix(m, G[0], mp1, alpha, evalues);
     for(i = 0; i < m; i++) {
-      sortarray[i] = _complex_square_norm(evalues[i]);
+      sortarray[i] = creal(evalues[i] * conj(evalues[i]));
       idx[i] = i;
     }
     quicksort(m, sortarray, idx);
     if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
-      for(i = 0; i < m; i++) {
-	printf("# Evalues %d %e  %e \n", i, evalues[idx[i]].re, evalues[idx[i]].im);
-      }
+      for(i = 0; i < m; i++)
+	printf("# Evalues %d %e  %e \n", i, creal(evalues[idx[i]]), cimag(evalues[idx[i]]));
       fflush(stdout);
     }
     
@@ -330,8 +324,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
     }
     /* Orthonormalize them */
     for(i = 0; i < ne; i++) {
-      work[i][m].re = 0.;
-      work[i][m].im = 0.;
+      work[i][m] = 0.;
       short_ModifiedGS(work[i], m, i, work[0], mp1); 
     }
     /* Orthonormalize c - \bar H d to work */
@@ -342,28 +335,27 @@ int gmres_dr(spinor * const P,spinor * const Q,
     /* Now compute \bar H = P^T_k+1 \bar H_m P_k */
     for(i = 0; i < mp1; i++) {
       for(l = 0; l < mp1; l++) {
-	H[i][l].re = 0.;
-	H[i][l].im = 0.;
+	H[i][l] = 0.;
       }
     }    
 
-    _FT(zgemm) ("N", "N", &mp1, &ne, &_m, &cpone, work2[0], &mp1, work[0], &mp1, &czero, G[0], &mp1, 1, 1); 
-    _FT(zgemm) ("C", "N", &np1, &ne , &mp1, &cpone, work[0], &mp1, G[0], &mp1, &czero, H[0], &mp1, 1, 1);
+    _FT(zgemm)("N", "N", &mp1, &ne, &_m, &cpone, work2[0], &mp1, work[0], &mp1, &czero, G[0], &mp1, 1, 1); 
+    _FT(zgemm)("C", "N", &np1, &ne , &mp1, &cpone, work[0], &mp1, G[0], &mp1, &czero, H[0], &mp1, 1, 1);
 
     if(g_debug_level > 3) {
       for(i = 0; i < ne+1; i++) {
 	for(l = 0; l < ne+1; l++) {
 	  if(g_proc_id == 0) {
-	    printf("(g[%d], g[%d]) = %e, %e\n", i, l, short_scalar_prod(work[i], work[l], m+1).re, 
-		   short_scalar_prod(work[i], work[l], m+1).im);
-	    printf("(g[%d], g[%d]) = %e, %e\n", l, i, short_scalar_prod(work[l], work[i], m+1).re, 
-		   short_scalar_prod(work[l], work[i], m+1).im);
+	    printf("(g[%d], g[%d]) = %e, %e\n", i, l, creal(short_scalar_prod(work[i], work[l], m+1)), 
+		   creal(short_scalar_prod(work[i], work[l], m+1)));
+	    printf("(g[%d], g[%d]) = %e, %e\n", l, i, creal(short_scalar_prod(work[l], work[i], m+1)), 
+		   creal(short_scalar_prod(work[l], work[i], m+1)));
 	  }
 	}
       }
     }
     /* V_k+1 = V_m+1 P_k+1 */
-/*     _FT(zgemm) ("N", "N", &_N, &np1, &mp1, &cpone, (complex*)V[0], &V2, work[0], &mp1, &czero, (complex*)Z[0], &V2, 1, 1);  */
+/*     _FT(zgemm)("N", "N", &_N, &np1, &mp1, &cpone, (_Complex double*)V[0], &V2, work[0], &mp1, &czero, (_Complex double*)Z[0], &V2, 1, 1);  */
     for(l = 0; l < np1; l++) {
       mul(Z[l], work[l][0], V[0], N);
       for(i = 1; i < mp1; i++) {
@@ -375,13 +367,13 @@ int gmres_dr(spinor * const P,spinor * const Q,
       assign(V[i], Z[i], N); 
     }
     /* Reorthogonalise v_nr_ev */
-    ModifiedGS((complex*)V[nr_ev], _N, nr_ev, (complex*)V[0], V2);  
+    ModifiedGS((_Complex double*)V[nr_ev], _N, nr_ev, (_Complex double*)V[0], V2);  
     if(g_debug_level > 3) {
       for(i = 0; i < np1; i++) {
 	for(l = 0; l < np1; l++) {
 	  tmp1 = scalar_prod(V[l], V[i], N, 1);
 	  if(g_proc_id == 0) {
-	    printf("(V[%d], V[%d]) = %e %e %d %d %d %d %d %d %e %e\n", l, i, tmp1.re, tmp1.im, np1, mp1, ne, _m, _N, V2, H[l][i].re, H[l][i].im);
+	    printf("(V[%d], V[%d]) = %e %e %d %d %d %d %d %d %e %e\n", l, i, creal(tmp1), cimag(tmp1), np1, mp1, ne, _m, _N, V2, creal(H[l][i]), cimag(H[l][i]));
 	  }
 	}
       }
@@ -391,8 +383,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
       for(l = 0; l < mp1; l++) { 
  	G[i][l] = H[i][l];
 	work2[i][l] = H[i][l];
-	work[l][i].re = H[i][l].re;
-	work[l][i].im = -H[i][l].im;
+	work[l][i] = (creal(H[i][l])) + (-cimag(H[i][l])) * I;
       }
     }
 
@@ -408,17 +399,15 @@ int gmres_dr(spinor * const P,spinor * const Q,
 	/* H, G, work and work2 are now all in Fortran storage: columns first */
 	G[j][i] = H[j][i];
 	work2[j][i] = H[j][i];
-	work[i][j].re = H[j][i].re;
-	work[i][j].im = -H[j][i].im;
+	work[i][j] = (creal(H[j][i])) + (-cimag(H[j][i])) * I;
 	assign_diff_mul(solver_field[1], V[i], H[j][i], N);
       }
       beta2 = square_norm(solver_field[1], N, 1);
-      _complex_set(H[j][j+1], sqrt(beta2), 0.);
+      H[j][j+1] = sqrt(beta2);
       G[j][j+1] = H[j][j+1];
       work2[j][j+1] = H[j][j+1];
-      work[j+1][j].re =  H[j][j+1].re;
-      work[j+1][j].im =  -H[j][j+1].im;
-      mul_r(V[(j+1)], 1./H[j][j+1].re, solver_field[1], N);
+      work[j+1][j] = (creal(H[j][j+1])) + (-cimag(H[j][j+1])) * I;
+      mul_r(V[(j+1)], 1./creal(H[j][j+1]), solver_field[1], N);
     }
 
     /* Solve the least square problem for alpha*/
@@ -427,16 +416,16 @@ int gmres_dr(spinor * const P,spinor * const Q,
       c[i] = scalar_prod(V[i], r0, N, 1);  
       alpha[i] = c[i];
       if(g_proc_id == 0 && g_debug_level > 3) {
-	printf("c: %e %e err = %e\n", c[i].re, c[i].im, err);
+	printf("c: %e %e err = %e\n", creal(c[i]), cimag(c[i]), err);
       }
     }
     if(lswork == NULL) {
       lwork = -1;
-      _FT(zgels) ("N", &mp1, &_m, &one, H[0], &mp1, alpha, &mp1, &tmp1, &lwork, &info, 1);
-      lwork = (int)tmp1.re;
-      lswork = (complex*)malloc(lwork*sizeof(complex));
+      _FT(zgels)("N", &mp1, &_m, &one, H[0], &mp1, alpha, &mp1, &tmp1, &lwork, &info, 1);
+      lwork = (int)creal(tmp1);
+      lswork = (_Complex double*)malloc(lwork*sizeof(_Complex double));
     }
-    _FT(zgels) ("N", &mp1, &_m, &one, H[0], &mp1, alpha, &mp1, lswork, &lwork, &info, 1);
+    _FT(zgels)("N", &mp1, &_m, &one, H[0], &mp1, alpha, &mp1, lswork, &lwork, &info, 1);
     if(g_proc_id == 0 && g_debug_level > 3) {
       printf("zgels returned info = %d\n", info);
       fflush(stdout);
@@ -444,7 +433,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
     /* Compute the new solution vector */
     for(i = 0; i < m; i++){
       if(g_proc_id == 0 && g_debug_level > 3) {
-	printf("alpha: %e %e\n", alpha[i].re, alpha[i].im);
+	printf("alpha: %e %e\n", creal(alpha[i]), cimag(alpha[i]));
       }
       assign_add_mul(x0, V[i], alpha[i], N);
     }
@@ -457,34 +446,31 @@ int gmres_dr(spinor * const P,spinor * const Q,
   return(-1);
 }
 
-complex short_scalar_prod(complex * const y, complex * const x, const int N) {
-  complex res;
+_Complex double short_scalar_prod(_Complex double * const y, _Complex double * const x, const int N) {
+  _Complex double res;
   int ix;
 
-  res.re = 0.;
-  res.im = 0.;
+  res = 0.;
   for (ix = 0; ix < N; ix++){
-    res.re += +x[ix].re*y[ix].re + x[ix].im*y[ix].im;
-    res.im += -x[ix].re*y[ix].im + x[ix].im*y[ix].re;
+    res += (+creal(x[ix])*creal(y[ix]) + cimag(x[ix])*cimag(y[ix])) + (-creal(x[ix])*cimag(y[ix]) + cimag(x[ix])*creal(y[ix])) * I;
   }
   return(res);
 
 }
 
-void short_ModifiedGS(complex v[], int n, int m, complex A[], int lda) {
+void short_ModifiedGS(_Complex double v[], int n, int m, _Complex double A[], int lda) {
 
   int i;
-  complex s;
+  _Complex double s;
 
   for (i = 0; i < m; i++) {
     s = short_scalar_prod(A+i*lda, v, n); 
-    s.re = -s.re; s.im = -s.im;
+    s = -s;
     _FT(zaxpy)(&n, &s, A+i*lda, &one, v, &one); 
   }
-  s.re = sqrt(short_scalar_prod(v, v, n).re);
+  s = (creal(sqrt(short_scalar_prod(v, v, n)))) + cimag(s) * I;
   for(i = 0; i < n; i++) {
-    v[i].re /= s.re;
-    v[i].im /= s.re;
+    v[i] /= (creal(s)) + (creal(s)) * I;
   }
 }
 
@@ -515,33 +501,33 @@ static void init_gmres_dr(const int _M, const int _V){
     }
     Vo = _V;
     M = _M;
-    H = calloc(M+1, sizeof(complex *));
+    H = calloc(M+1, sizeof(_Complex double *));
     Z = calloc(M+1, sizeof(spinor *));
-    G = calloc(M+1, sizeof(complex *));
+    G = calloc(M+1, sizeof(_Complex double *));
     V = calloc(M+1, sizeof(spinor *));
-    work = calloc(M+1, sizeof(complex *));
-    work2 = calloc(M+1, sizeof(complex *));
+    work = calloc(M+1, sizeof(_Complex double *));
+    work2 = calloc(M+1, sizeof(_Complex double *));
 #if (defined SSE || defined SSE2)
-    _h = calloc((M+2)*(M+1), sizeof(complex));
-    H[0] = (complex *)(((unsigned long int)(_h)+ALIGN_BASE)&~ALIGN_BASE); 
-    _work = calloc((M+2)*(M+1), sizeof(complex));
-    work[0] = (complex *)(((unsigned long int)(_work)+ALIGN_BASE)&~ALIGN_BASE); 
-    _work2 = calloc((M+2)*(M+1), sizeof(complex));
-    work2[0] = (complex *)(((unsigned long int)(_work2)+ALIGN_BASE)&~ALIGN_BASE); 
-    _g = calloc((M+2)*(M+1), sizeof(complex));
-    G[0] = (complex *)(((unsigned long int)(_g)+ALIGN_BASE)&~ALIGN_BASE); 
+    _h = calloc((M+2)*(M+1), sizeof(_Complex double));
+    H[0] = (_Complex double *)(((unsigned long int)(_h)+ALIGN_BASE)&~ALIGN_BASE); 
+    _work = calloc((M+2)*(M+1), sizeof(_Complex double));
+    work[0] = (_Complex double *)(((unsigned long int)(_work)+ALIGN_BASE)&~ALIGN_BASE); 
+    _work2 = calloc((M+2)*(M+1), sizeof(_Complex double));
+    work2[0] = (_Complex double *)(((unsigned long int)(_work2)+ALIGN_BASE)&~ALIGN_BASE); 
+    _g = calloc((M+2)*(M+1), sizeof(_Complex double));
+    G[0] = (_Complex double *)(((unsigned long int)(_g)+ALIGN_BASE)&~ALIGN_BASE); 
     _v = calloc((M+1)*Vo+1, sizeof(spinor));
     V[0] = (spinor *)(((unsigned long int)(_v)+ALIGN_BASE)&~ALIGN_BASE);
     _z = calloc((M+1)*Vo+1, sizeof(spinor));
     Z[0] = (spinor *)(((unsigned long int)(_z)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-    _h = calloc((M+1)*(M+1), sizeof(complex));
+    _h = calloc((M+1)*(M+1), sizeof(_Complex double));
     H[0] = _h;
-    _work = calloc((M+1)*(M+1), sizeof(complex));
+    _work = calloc((M+1)*(M+1), sizeof(_Complex double));
     work[0] = _work;
-    _work2 = calloc((M+1)*(M+1), sizeof(complex));
+    _work2 = calloc((M+1)*(M+1), sizeof(_Complex double));
     work2[0] = _work2;
-    _g = calloc((M+1)*(M+1), sizeof(complex));
+    _g = calloc((M+1)*(M+1), sizeof(_Complex double));
     G[0] = _g;
     _v = calloc((M+1)*Vo, sizeof(spinor));
     V[0] = _v;
@@ -549,9 +535,9 @@ static void init_gmres_dr(const int _M, const int _V){
     Z[0] = _z;
 #endif
     s = calloc(M, sizeof(double));
-    c = calloc(M+1, sizeof(complex));
-    alpha = calloc(M+1, sizeof(complex));
-    evalues = calloc(M+1, sizeof(complex));
+    c = calloc(M+1, sizeof(_Complex double));
+    alpha = calloc(M+1, sizeof(_Complex double));
+    evalues = calloc(M+1, sizeof(_Complex double));
     sortarray = calloc(M+1, sizeof(double));
     idx = calloc(M+1, sizeof(int));
     for(i = 1; i < M; i++){

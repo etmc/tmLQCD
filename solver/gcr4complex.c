@@ -32,20 +32,20 @@
 
 static void init_lgcr(const int _M, const int _V);
 static void free_lgcr();
-static complex ** a = NULL; 
-static complex * _a = NULL;
+static _Complex double ** a = NULL; 
+static _Complex double * _a = NULL;
 static double * b = NULL;
-static complex * c = NULL;
-static complex ** chi = NULL;
-static complex * _chi = NULL;
-static complex ** xi = NULL;
-static complex * _xi = NULL;
-static complex * alpha = NULL;
-static complex * tmp = NULL;
-static complex * rho = NULL;
+static _Complex double * c = NULL;
+static _Complex double ** chi = NULL;
+static _Complex double * _chi = NULL;
+static _Complex double ** xi = NULL;
+static _Complex double * _xi = NULL;
+static _Complex double * alpha = NULL;
+static _Complex double * tmp = NULL;
+static _Complex double * rho = NULL;
 static int lgcr_init = 0;
 
-int gcr4complex(complex * const P, complex * const Q, 
+int gcr4complex(_Complex double * const P, _Complex double * const Q, 
 		const int m, const int max_restarts,
 		const double eps_sq, const int rel_prec,
 		const int N, const int parallel, 
@@ -53,7 +53,7 @@ int gcr4complex(complex * const P, complex * const Q,
   
   int k, l, restart, i, p=0;
   double norm_sq, err;
-  complex ctmp;
+  _Complex double ctmp;
 
   init_lgcr(m, lda);
 
@@ -74,7 +74,7 @@ int gcr4complex(complex * const P, complex * const Q,
       return (p);
     }
     for(k = 0; ; k++) {
-      memcpy(xi[k], rho, N*sizeof(complex));
+      memcpy(xi[k], rho, N*sizeof(_Complex double));
       /* here we could put in a preconditioner */
       f(tmp, xi[k]); 
       /* tmp will become chi[k] */
@@ -98,15 +98,15 @@ int gcr4complex(complex * const P, complex * const Q,
       }
     }
     /* prepare for restart */
-    _mult_real(c[k], c[k], 1./b[k]);
+    (c[k]) = (c[k]) / b[k];
     lassign_add_mul(P, xi[k], c[k], N);
     for(l = k-1; l >= 0; l--) {
       for(i = l+1; i <= k; i++) {
-        _mult_assign_complex(ctmp, a[l][i], c[i]);
+        (ctmp) = (a[l][i]) * (c[i]);
         /* c[l] -= ctmp */
-        _diff_complex(c[l], ctmp);
+        (c[l]) -= ctmp;
       }
-      _mult_real(c[l], c[l], 1./b[l]);
+      (c[l]) = (c[l]) / b[l];
       lassign_add_mul(P, xi[l], c[l], N);
     }
   }
@@ -123,21 +123,21 @@ static void init_lgcr(const int _M, const int _V){
     if(lgcr_init == 1) free_lgcr();
     Vo = _V;
     M = _M;
-    a = calloc(M+1, sizeof(complex *));
-    chi = calloc(M, sizeof(complex *));
-    xi = calloc(M, sizeof(complex *));
-    tmp = calloc(Vo, sizeof(complex));
-    rho = calloc(Vo, sizeof(complex));
-    _a = calloc((M+1)*M, sizeof(complex));
+    a = calloc(M+1, sizeof(_Complex double *));
+    chi = calloc(M, sizeof(_Complex double *));
+    xi = calloc(M, sizeof(_Complex double *));
+    tmp = calloc(Vo, sizeof(_Complex double));
+    rho = calloc(Vo, sizeof(_Complex double));
+    _a = calloc((M+1)*M, sizeof(_Complex double));
     a[0] = _a;
-    _chi = calloc(M*Vo, sizeof(complex));
+    _chi = calloc(M*Vo, sizeof(_Complex double));
     chi[0] = _chi;
-    _xi = calloc(M*Vo, sizeof(complex));
+    _xi = calloc(M*Vo, sizeof(_Complex double));
     xi[0] = _xi;
 
     b = calloc(M, sizeof(double));
-    c = calloc(M, sizeof(complex));
-    alpha = calloc(M+1, sizeof(complex));
+    c = calloc(M, sizeof(_Complex double));
+    alpha = calloc(M+1, sizeof(_Complex double));
     for(i = 1; i < M; i++) { 
       chi[i] = chi[i-1] + Vo;
       xi[i] = xi[i-1] + Vo;
@@ -165,61 +165,48 @@ static void free_lgcr()
 }
 
 
-void ldiff(complex * const Q, complex * const R, complex * const S, 
+void ldiff(_Complex double * const Q, _Complex double * const R, _Complex double * const S, 
 	   const int N) 
 {
-  int i;
-  for(i = 0; i < N; i++) {
-    Q[i].re = R[i].re - S[i].re;
-    Q[i].im = R[i].im - S[i].im;
-  }
+  for(int i = 0; i < N; ++i)
+    Q[i] = R[i] - S[i];
   return;
 }
 
-void ldiff_assign(complex * const Q, complex * const S, 
+void ldiff_assign(_Complex double * const Q, _Complex double * const S, 
 		  const int N) 
 {
-  int i;
-  for(i = 0; i < N; i++) {
-    Q[i].re -= S[i].re;
-    Q[i].im -= S[i].im;
-  }
+  for(int i = 0; i < N; ++i)
+    Q[i] -= S[i];
   return;
 }
 
-void ladd(complex * const Q, complex * const R, complex * const S, 
+void ladd(_Complex double * const Q, _Complex double * const R, _Complex double * const S, 
 	  const int N) 
 {
-  int i;
-  for(i = 0; i < N; i++) {
-    Q[i].re = R[i].re + S[i].re;
-    Q[i].im = R[i].im + S[i].im;
-  }
+  for(int i = 0; i < N; ++i)
+    Q[i] = R[i] + S[i];
   return;
 }
 
-void ladd_assign(complex * const Q, complex * const S, 
+void ladd_assign(_Complex double * const Q, _Complex double * const S, 
 		 const int N) 
 {
-  int i;
-  for(i = 0; i < N; i++) {
-    Q[i].re += S[i].re;
-    Q[i].im += S[i].im;
-  }
+  for(int i = 0; i < N; ++i)
+    Q[i] += S[i];
   return;
 }
 
-double lsquare_norm(complex * const Q, const int N,
+double lsquare_norm(_Complex double * const Q, const int N,
 		    const int parallel) 
 {
-  int i;
   double nrm=0., nrm2=0.;
   
-  for(i = 0; i < N; i++) {
-    nrm += _complex_square_norm(Q[i]);
-  }
+  for(int i = 0; i < N; ++i)
+    nrm += creal(Q[i] * conj(Q[i]));
 #ifdef MPI
-  if(parallel) {
+  if(parallel)
+  {
     nrm2 = nrm;
     MPI_Allreduce(&nrm2, &nrm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   }
@@ -227,16 +214,15 @@ double lsquare_norm(complex * const Q, const int N,
   return(nrm);
 }
 
-complex lscalar_prod(complex * const R, complex * const S, 
+_Complex double lscalar_prod(_Complex double * const R, _Complex double * const S, 
 		     const int N, const int parallel) 
 {
-  complex res, res2;
-  int i;
-  res.re = 0.;
-  res.im = 0.;
+  _Complex double res, res2;
+  res = 0.;
   res2 = res;
-  for(i = 0; i < N; i++) {
-    _add_assign_complex_conj(res, R[i], S[i]);
+  for(int i = 0; i < N; ++i)
+  {
+    res += conj(R[i]) * S[i];
   }
 #ifdef MPI
   if(parallel) {
@@ -247,43 +233,32 @@ complex lscalar_prod(complex * const R, complex * const S,
   return(res);
 }
 
-void lmul_r(complex * const R, const double c, complex * const S, const int N) 
+void lmul_r(_Complex double * const R, const double c, _Complex double * const S, const int N) 
 {
-  int i;
-  for(i = 0; i < N; i++) {
-    _mult_real(R[i], S[i], c);
-  }
+  for(int i = 0; i < N; ++i)
+    R[i] = c * S[i];
   return;
 }
 
-void lmul(complex * const R, const complex c, complex * const S, const int N) 
+void lmul(_Complex double * const R, const _Complex double c, _Complex double * const S, const int N) 
 {
-  int i;
-  for(i = 0; i < N; i++) {
-    _mult_assign_complex(R[i], c, S[i]);
-  }
+  for(int i = 0; i < N; ++i)
+    R[i] = c * S[i];
   return;
 }
 
 
-void lassign_add_mul(complex * const R, complex * const S, const complex c, const int N)
+void lassign_add_mul(_Complex double * const R, _Complex double * const S, const _Complex double c, const int N)
 {
-  int i;
-  for(i = 0; i < N; i++) {
-    _add_assign_complex(R[i], c, S[i]);
-  }
+  for(int i = 0; i < N; ++i)
+    R[i] += c * S[i];
   return;
 }
 
-void lassign_diff_mul(complex * const R, complex * const S, const complex c, const int N) 
+void lassign_diff_mul(_Complex double * const R, _Complex double * const S, const _Complex double c, const int N) 
 {
-  int i;
-  complex d;
-  d.re = -c.re;
-  d.im = -c.im;
-  for(i = 0; i < N; i++) {
-    _add_assign_complex(R[i], d, S[i]);
-  }
+  for(int i = 0; i < N; i++)
+    R[i] -= c * S[i];
   return;
 }
 
