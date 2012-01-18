@@ -36,92 +36,68 @@ int big_endian(){
 
 void write_su3(su3 * up, FILE * f) {
   fprintf(f,"%f %f %f %f %f %f \n%f %f %f %f %f %f \n%f %f %f %f %f %f %d\n\n",
-	     (*up).c00.re, (*up).c00.im, (*up).c01.re, (*up).c01.im,
-	     (*up).c02.re, (*up).c02.im, (*up).c10.re, (*up).c10.im,
-	     (*up).c11.re, (*up).c11.im, (*up).c12.re, (*up).c12.im,
-	     (*up).c20.re, (*up).c20.im, (*up).c21.re, (*up).c21.im,
-	     (*up).c22.re, (*up).c22.im, g_cart_id);
+	     creal(up->c00), cimag(up->c00), creal(up->c01), cimag(up->c01),
+	     creal(up->c02), cimag(up->c02), creal(up->c10), cimag(up->c10),
+	     creal(up->c11), cimag(up->c11), creal(up->c12), cimag(up->c12),
+	     creal(up->c20), cimag(up->c20), creal(up->c21), cimag(up->c21),
+	     creal(up->c22), cimag(up->c22), g_cart_id);
 }
 
 
 
 void single2double_cm(spinor * const R, float * const S) {
-  (*R).s0.c0.re = (double) S[0];
-  (*R).s0.c0.im = (double) S[1];
-  (*R).s0.c1.re = (double) S[2];
-  (*R).s0.c1.im = (double) S[3];
-  (*R).s0.c2.re = (double) S[4];
-  (*R).s0.c2.im = (double) S[5];
-  (*R).s1.c0.re = (double) S[6];
-  (*R).s1.c0.im = (double) S[7];
-  (*R).s1.c1.re = (double) S[8];
-  (*R).s1.c1.im = (double) S[9];
-  (*R).s1.c2.re = (double) S[10];
-  (*R).s1.c2.im = (double) S[11];
-  (*R).s2.c0.re = (double) S[12];
-  (*R).s2.c0.im = (double) S[13];
-  (*R).s2.c1.re = (double) S[14];
-  (*R).s2.c1.im = (double) S[15];
-  (*R).s2.c2.re = (double) S[16];
-  (*R).s2.c2.im = (double) S[17];
-  (*R).s3.c0.re = (double) S[18];
-  (*R).s3.c0.im = (double) S[19];
-  (*R).s3.c1.re = (double) S[20];
-  (*R).s3.c1.im = (double) S[21];
-  (*R).s3.c2.re = (double) S[22];
-  (*R).s3.c2.im = (double) S[23];
+  R->s0.c0 = ((double) S[0]) + ((double) S[1]) * I;
+  R->s0.c1 = ((double) S[2]) + ((double) S[3]) * I;
+  R->s0.c2 = ((double) S[4]) + ((double) S[5]) * I;
+  R->s1.c0 = ((double) S[6]) + ((double) S[7]) * I;
+  R->s1.c1 = ((double) S[8]) + ((double) S[9]) * I;
+  R->s1.c2 = ((double) S[10]) + ((double) S[11]) * I;
+  R->s2.c0 = ((double) S[12]) + ((double) S[13]) * I;
+  R->s2.c1 = ((double) S[14]) + ((double) S[15]) * I;
+  R->s2.c2 = ((double) S[16]) + ((double) S[17]) * I;
+  R->s3.c0 = ((double) S[18]) + ((double) S[19]) * I;
+  R->s3.c1 = ((double) S[20]) + ((double) S[21]) * I;
+  R->s3.c2 = ((double) S[22]) + ((double) S[23]) * I;
 }
 
 void double2single_cm(float * const S, spinor * const R) {
-  S[0]  = (float) (*R).s0.c0.re ;
-  S[1]  = (float) (*R).s0.c0.im ;
-  S[2]  = (float) (*R).s0.c1.re ;
-  S[3]  = (float) (*R).s0.c1.im ;
-  S[4]  = (float) (*R).s0.c2.re ;
-  S[5]  = (float) (*R).s0.c2.im ;
-  S[6]  = (float) (*R).s1.c0.re ;
-  S[7]  = (float) (*R).s1.c0.im ;
-  S[8]  = (float) (*R).s1.c1.re ;
-  S[9]  = (float) (*R).s1.c1.im ;
-  S[10] = (float) (*R).s1.c2.re ;
-  S[11] = (float) (*R).s1.c2.im ;
-  S[12] = (float) (*R).s2.c0.re ;
-  S[13] = (float) (*R).s2.c0.im ;
-  S[14] = (float) (*R).s2.c1.re ;
-  S[15] = (float) (*R).s2.c1.im ;
-  S[16] = (float) (*R).s2.c2.re ;
-  S[17] = (float) (*R).s2.c2.im ;
-  S[18] = (float) (*R).s3.c0.re ;
-  S[19] = (float) (*R).s3.c0.im ;
-  S[20] = (float) (*R).s3.c1.re ;
-  S[21] = (float) (*R).s3.c1.im ;
-  S[22] = (float) (*R).s3.c2.re ;
-  S[23] = (float) (*R).s3.c2.im ;
+  S[0]  = (float) creal(R->s0.c0) ;
+  S[1]  = (float) cimag(R->s0.c0) ;
+  S[2]  = (float) creal(R->s0.c1) ;
+  S[3]  = (float) cimag(R->s0.c1) ;
+  S[4]  = (float) creal(R->s0.c2) ;
+  S[5]  = (float) cimag(R->s0.c2) ;
+  S[6]  = (float) creal(R->s1.c0) ;
+  S[7]  = (float) cimag(R->s1.c0) ;
+  S[8]  = (float) creal(R->s1.c1) ;
+  S[9]  = (float) cimag(R->s1.c1) ;
+  S[10] = (float) creal(R->s1.c2) ;
+  S[11] = (float) cimag(R->s1.c2) ;
+  S[12] = (float) creal(R->s2.c0) ;
+  S[13] = (float) cimag(R->s2.c0) ;
+  S[14] = (float) creal(R->s2.c1) ;
+  S[15] = (float) cimag(R->s2.c1) ;
+  S[16] = (float) creal(R->s2.c2) ;
+  S[17] = (float) cimag(R->s2.c2) ;
+  S[18] = (float) creal(R->s3.c0) ;
+  S[19] = (float) cimag(R->s3.c0) ;
+  S[20] = (float) creal(R->s3.c1) ;
+  S[21] = (float) cimag(R->s3.c1) ;
+  S[22] = (float) creal(R->s3.c2) ;
+  S[23] = (float) cimag(R->s3.c2) ;
 }
 
 void zero_spinor(spinor * const R) {
-  (*R).s0.c0.re = 0.;
-  (*R).s0.c0.im = 0.;
-  (*R).s0.c1.re = 0.;
-  (*R).s0.c1.im = 0.;
-  (*R).s0.c2.re = 0.;
-  (*R).s0.c2.im = 0.;
-  (*R).s1.c0.re = 0.;
-  (*R).s1.c0.im = 0.;
-  (*R).s1.c1.re = 0.;
-  (*R).s1.c1.im = 0.;
-  (*R).s1.c2.re = 0.;
-  (*R).s1.c2.im = 0.;
-  (*R).s2.c0.re = 0.;
-  (*R).s2.c0.im = 0.;
-  (*R).s2.c1.re = 0.;
-  (*R).s2.c1.im = 0.;
-  (*R).s2.c2.re = 0.;
-  (*R).s2.c2.im = 0.;
-  (*R).s3.c0.re = 0.;
-  (*R).s3.c0.im = 0.;
-  (*R).s3.c1.re = 0.;
-  (*R).s3.c1.im = 0.;
-  (*R).s3.c2.re = 0.;
-  (*R).s3.c2.im = 0.;
+  R->s0.c0 = 0.;
+  R->s0.c1 = 0.;
+  R->s0.c2 = 0.;
+  R->s1.c0 = 0.;
+  R->s1.c1 = 0.;
+  R->s1.c2 = 0.;
+  R->s2.c0 = 0.;
+  R->s2.c1 = 0.;
+  R->s2.c2 = 0.;
+  R->s3.c0 = 0.;
+  R->s3.c1 = 0.;
+  R->s3.c2 = 0.;
 }
