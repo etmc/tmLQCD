@@ -31,7 +31,7 @@ if test -r configure.in
 then
   DEF_VER=$(grep "AC_INIT" configure.in | awk '{print $2}' | sed 's/,//')
 else
-  DEF_VER="5.1.7_no_version_information"
+  DEF_VER="no_version_information"
 fi
 
 # find git
@@ -49,12 +49,12 @@ then
   then
     GIT_REV=$(git rev-parse HEAD)
     # does the version correspond to the HEAD commit?
-    if [ "${GIT_HASH}" == "$GIT_REV}" ]
+    if [ ${GIT_HASH} = ${GIT_REV} ]
     then
       # the versions match, let's exit to avoid changing the timestamp of git_hash.h
       exit 0  
     else
-      GIT_HASH="${GIT_REV}"
+      GIT_HASH=${GIT_REV}
     fi
 fi
 elif test -d .git -o -f .git && test -x ${GIT_BIN}
@@ -62,14 +62,15 @@ then
   # .git exists and we are in a git repo
   GIT_HASH=$(git rev-parse HEAD)
 else
-  GIT_HASH="$DEF_VER"
+  GIT_HASH=${DEF_VER}
 fi
 
-# write the hash to git_hash.h
 
+# write the hash to git_hash.h
 echo "#ifndef _GIT_HASH_H" > git_hash.h
 echo "#define _GIT_HASH_H" >> git_hash.h
 
 echo "const char git_hash[] = {\"${GIT_HASH}\"};" >> git_hash.h
 
 echo "#endif /* _GIT_HASH_H */" >> git_hash.h
+
