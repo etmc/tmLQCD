@@ -13,58 +13,62 @@ do
     egrep -n --color '([^<]|^)\<complex\>' < "$var"
     sed -i"" -r 's/([^<]|^)\<complex\>/\1_Complex double/g' "$var"
 
+    echo "Replace all occurences of the type 'complex32"
+    egrep -n --color '([^<]|^)\<complex32\>' < "$var"
+    sed -i"" -r 's/([^<]|^)\<complex32\>/\1_Complex float/g' "$var"
+
   # Taking care of all the '.re' and '.im' mess
     echo "Replace \"(*x).\" by \"x->\""
-    egrep -n --color '\(\*(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\)\.' < "$var"
-    sed -i"" -r 's/\(\*(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\)\./\1->/g' "$var"
+    egrep -n --color '\(\*(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\)\.' < "$var"
+    sed -i"" -r 's/\(\*(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\)\./\1->/g' "$var"
 
     echo "Replace all complex equivalencies"
     # NB We need to use multiline searching here, so this one's a b*tch -- the arcance stuff is building this multiline buffer
-    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re *([\*\+\-\\]?=) *(.*)(\<[A-Za-z_][A-Za-z0-9_]*\>(\[[^]]+\])?)\.re\;[ 	\r\n]*\1\.im *\4 *\5\6\.im\;' < "$var"
-    sed -i"" -r -n '1h;1!H;${;g;s/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re *([\*\+\-\\]?=) *(.*)(\<[A-Za-z_][A-Za-z0-9_]*\>(\[[^]]+\])?)\.re\;[ 	\r\n]*\1\.im *\4 *\5\6\.im\;/\1 \4 \5\6;/g;p;}' "$var"
+    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re *([-\*\+\\]?=) *(.*)(\<[A-Za-z_][A-Za-z0-9_]*\>(\[[^]]+\])?)\.re\;[ 	\r\n]*\1\.im *\4 *\5\6\.im\;' < "$var"
+    sed -i"" -r -n '1h;1!H;${;g;s/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re *([-\*\+\\]?=) *(.*)(\<[A-Za-z_][A-Za-z0-9_]*\>(\[[^]]+\])?)\.re\;[ 	\r\n]*\1\.im *\5 *\6\7\.im\;/\1 \5 \6\7;/g;p;}' "$var"
 
     echo "Replace all complex equivalencies with conjugation"
     # NB We need to use multiline searching here, so this one's a b*tch -- the arcance stuff is building this multiline buffer
-    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re *([-\+\*\/]?=) *(.*)(\<[A-Za-z_][A-Za-z0-9_]*\>(\[[^]]+\])?)\.re\;[ 	\r\n]*\1\.im *\4 *\5\6\.im\;' < "$var"
-    sed -i"" -r -n '1h;1!H;${;g;s/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re *([-\+\*\/]?=) *(.*)(\<[A-Za-z_][A-Za-z0-9_]*\>(\[[^]]+\])?)\.re\;[ 	\r\n]*\1\.im *\4 *\5\6\.im\;/\1 \4 \5 (\6);/g;p;}' "$var"
-    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re *([-\+\*\/]?=) *(.*)(\<[A-Za-z_][A-Za-z0-9_]*\>(\[[^]]+\])?)\.re\;[ 	\r\n]*\1\.im *\4 *-\5\6\.im\;' < "$var"
-    sed -i"" -r -n '1h;1!H;${;g;s/([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*([A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re *([-\+\*\/]?=) *-(.*)(\<[A-Za-z_][A-Za-z0-9_]*\>(\[[^]]+\])?)\.re\;[ 	\r\n]*\1\.im *\4 *-\5\6\.im\;/\1 \4 -\5conj(\6);/g;p;}' "$var"
+    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re *([-\+\*\/]?=) *(.*)(\<[A-Za-z_][A-Za-z0-9_]*\>(\[[^]]+\])?)\.re\;[ 	\r\n]*\1\.im *\5 *\6\7\.im\;' < "$var"
+    sed -i"" -r -n '1h;1!H;${;g;s/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re *([-\+\*\/]?=) *(.*)(\<[A-Za-z_][A-Za-z0-9_]*\>(\[[^]]+\])?)\.re\;[ 	\r\n]*\1\.im *\5 *\6\7\.im\;/\1 \5 \6 (\7);/g;p;}' "$var"
+    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re *([-\+\*\/]?=) *(.*)(\<[A-Za-z_][A-Za-z0-9_]*\>(\[[^]]+\])?)\.re\;[ 	\r\n]*\1\.im *\6 *-\7\7\.im\;' < "$var"
+    sed -i"" -r -n '1h;1!H;${;g;s/([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*([A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re *([-\+\*\/]?=) *-(.*)(\<[A-Za-z_][A-Za-z0-9_]*\>(\[[^]]+\])?)\.re\;[ 	\r\n]*\1\.im *\5 *-\6\7\.im\;/\1 \5 -\6conj(\7);/g;p;}' "$var"
 
     echo "Replace all '.re' expressions with self-reference"
-    egrep -n --color '((([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^\]]+\])?)\.re) *([\*\+\-\\]?=)[^\;]*\1[^\;]*\;' < "$var"
-    sed -i"" -r 's/((([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^\]]+\])?)\.re) *([\*\+\-\\]?=)([^\;])*\1([^\;]*)\;/\2 \5 (\6creal(\2)\7) + cimag(\2) * I\;/g' "$var"
+    egrep -n --color '((([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re) *([-\*\+\\]?=)[^\;]*\1[^\;]*\;' < "$var"
+    sed -i"" -r 's/((([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re) *([-\*\+\\]?=)([^\;])*\1([^\;]*)\;/\2 \6 (\7creal(\2)\7) + cimag(\2) * I\;/g' "$var"
 
     echo "Replace all '.im' expressions with self-reference"
-    egrep -n --color '((([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^\]]+\])?)\.im) *([\*\+\-\\]?=)([^\;])*\1([^\;])*\;' < "$var"
-    sed -i"" -r 's/((([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^\]]+\])?)\.im) *([\*\+\-\\]?=)([^\;])*\1([^\;]*)\;/\2 \5 creal(\2) + (\6cimag(\2)\7) * I\;/g' "$var"
+    egrep -n --color '((([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.im) *([\*\+\-\\]?=)([^\;])*\1([^\;])*\;' < "$var"
+    sed -i"" -r 's/((([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.im) *([\*\+\-\\]?=)([^\;])*\1([^\;]*)\;/\2 \6 creal(\2) + (\7cimag(\2)\7) * I\;/g' "$var"
 
     echo "Replace all complex expressions with double assignment"
-    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re *([-\+\*\/]?=) *([^\;]+)\;[ 	\r\n]*\1\.im *\4 *([^\;]+)\;' < "$var"
-    sed -i"" -r -n '1h;1!H;${;g;s/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re *([-\+\*\/]?=) *([^\;]+)\;[	 \r\n]*\1\.im *\4 *([^\;]+)\;/\1 \4 (\5) + (\6) * I;/g;p;}' "$var"
+    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re *([-\+\*\/]?=) *([^\;]+)\;[ 	\r\n]*\1\.im *\6 *([^\;]+)\;' < "$var"
+    sed -i"" -r -n '1h;1!H;${;g;s/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re *([-\+\*\/]?=) *([^\;]+)\;[	 \r\n]*\1\.im *\6 *([^\;]+)\;/\1 \6 (\7) + (\7) * I;/g;p;}' "$var"
 
     echo "Replace all '.re' expressions with assignment"
-    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re *([-\+\*\/]?=) *([^\;]+)\;' < "$var"
-    sed -i"" -r 's/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re *([-\+\*\/]?=) *([^\;]+)\;/\1 \4 (\5) + cimag(\1) * I;/g' "$var"
+    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re *([-\+\*\/]?=) *([^\;]+)\;' < "$var"
+    sed -i"" -r 's/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re *([-\+\*\/]?=) *([^\;]+)\;/\1 \5 (\6) + cimag(\1) * I;/g' "$var"
    
     echo "Replace all '.im' expressions with assignment"
-    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.im *([-\+\*\/]?=) *([^\;]+)\;' < "$var"
-    sed -i"" -r 's/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.im *([-\+\*\/]?=) *([^\;]+)\;/\1 \4 creal(\1) + (\5) * I;/g' "$var"
+    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.im *([-\+\*\/]?=) *([^\;]+)\;' < "$var"
+    sed -i"" -r 's/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.im *([-\+\*\/]?=) *([^\;]+)\;/\1 \5 creal(\1) + (\6) * I;/g' "$var"
 
     echo "Replace all '.re' expressions without assignments"
-    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re( *[^=]|==)' < "$var"
-    sed -i"" -r 's/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.re( *[^=]|==)/creal(\1)\4/g' "$var"
+    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re( *[^=]|==)' < "$var"
+    sed -i"" -r 's/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.re( *[^=]|==)/creal(\1)\5/g' "$var"
 
     # Specific case for call of component on a function / macro output
-    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*\([^\)]*\))\.re( *[^=]|==)' < "$var"
-    sed -i"" -r 's/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*\([^\)]*\))\.re( *[^=]|==)/creal(\1)\3/g' "$var"
+    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*\([^\)]*\))\.re( *[^=]|==)' < "$var"
+    sed -i"" -r 's/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*\([^\)]*\))\.re( *[^=]|==)/creal(\1)\4/g' "$var"
 
     echo "Replace all '.im' expressions without assignments"
-    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.im( *[^=]|==)' < "$var"
-    sed -i"" -r 's/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)\.im( *[^=]|==)/cimag(\1)\4/g' "$var"
+    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.im( *[^=]|==)' < "$var"
+    sed -i"" -r 's/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*)\.im( *[^=]|==)/cimag(\1)\5/g' "$var"
 
     # Specific case for call of component on a function / macro output
-    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*\([^\)]*\))\.im( *[^=]|==)' < "$var"
-    sed -i"" -r 's/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*\([^\)]*\))\.im( *[^=]|==)/creal(\1)\3/g' "$var"
+    egrep -n --color '(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*\([^\)]*\))\.im( *[^=]|==)' < "$var"
+    sed -i"" -r 's/(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*\([^\)]*\))\.im( *[^=]|==)/creal(\1)\4/g' "$var"
   # Replacing the macros
     echo "Replace calls to _add_assign_complex_conj(x,z,w)"
     egrep -n --color '_add_assign_complex_conj[ 	]*\([ 	]*([^,\)]+),[ 	]*([^,\)]+),[ 	]*([^,\)]+)[ 	]*\)' < "$var"
@@ -120,7 +124,7 @@ do
 
     echo "Replace calls to _complex_norm(z)"
     egrep -n --color '_complex_norm[ 	]*\([ 	]*([^,\)]+)[ 	]*\)' < "$var"
-    sed -i"" -r 's/_complex_square_norm[ 	]*\([ 	]*([^,\)]+)[ 	]*\)/cabs(\1)/g' "$var"
+    sed -i"" -r 's/_complex_norm[ 	]*\([ 	]*([^,\)]+)[ 	]*\)/cabs(\1)/g' "$var"
 
     echo "Replace calls to _complex_zero(z)"
     egrep -n --color '_complex_zero[ 	]*\([ 	]*([^,\)]+)[ 	]*\)' < "$var"
@@ -147,7 +151,7 @@ do
     sed -i"" -r 's#_div_real[ 	]*\([ 	]*([^,\)]+),[ 	]*([^,\)]+),[ 	]*([^,\)]+)[ 	]*\)#(\1) = (\2) / (\3)#g' "$var"
 
     echo "Replace calls to _complex_conj(z,w)"
-    egrep -n --color '_complex_conj[ 	]*\(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?)([ 	]*([^,\)]+),[ 	]*([^,\)]+)[ 	]*\)' < "$var"
+    egrep -n --color '_complex_conj[ 	]*\([ 	]*([^,\)]+),[ 	]*([^,\)]+)[ 	]*\)' < "$var"
     sed -i"" -r 's/_complex_conj[ 	]*\([ 	]*([^,\)]+),[ 	]*([^,\)]+)[ 	]*\)/(\1) = conj(\2)/g' "$var"
 
     echo "Replace calls to _complex_chgsig(z,w)"
@@ -179,12 +183,14 @@ do
     sed -i"" -r 's/[ 	]*[\+\-][ 	]*\(?0(\.0*)?\)?[ 	]*\*[ 	]*I//g' "$var"
 
     echo "Remove multiplication by inverse"
-    egrep -n --color '\*[ 	]*\(1\./(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*(\.re|\.im)?)\)' < "$var"
-    sed -i"" -r 's#\*[ 	]*\(1\./(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*(\.re|\.im)?)\)#/ \1#g' "$var"
+    egrep -n --color '\*[ 	]*\(1\./(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*(\.re|\.im)?)\)' < "$var"
+    sed -i"" -r 's#\*[ 	]*\(1\./(([A-Za-z_][A-Za-z0-9_]*\.|[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*\->)*[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])*(\.re|\.im)?)\)#/ \1#g' "$var"
 
     echo "Clean up parentheses in assignment"
-    egrep -n --color '([^=])=[ 	]*\(([^\(\)]+)\)[ 	]*\;' < "$var"
-    sed -i"" -r 's/([^=])=[ 	]*\(([^\(\)]+)\)[ 	]*\;/\1= \2;/g' "$var"
+    egrep -n --color '([^=])([-\+\*\/]?=)[ 	]*\(([^\(\)]+)\)[ 	]*\;' < "$var"
+    sed -i"" -r 's/([^=])([-\+\*\/]?=)[ 	]*\(([^\(\)]+)\)[ 	]*\;/\1\2 \3;/g' "$var"
+    egrep -n --color '^[ 	]*\(([^\)]+)\)[ 	]*([-\+\*\/]?=)[ 	]*([^\;]+)[ 	]*\;' < "$var"
+    sed -i"" -r 's/^([ 	]*)\(([^\)]+)\)[ 	]*([-\+\*\/]?=)[ 	]*([^\;]+)[ 	]*\;/\1\2 \3 \4;/g' "$var"
 
     echo "Clean up awkward spacing in parentheses"
     egrep -n --color '([\(\)])[ 	]+([\(\)])' < "$var"
