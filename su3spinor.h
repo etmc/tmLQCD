@@ -53,66 +53,55 @@
 */
 
 #define _spinor_null(r) \
-   (r).s0.c0.re=0.0; \
-   (r).s0.c0.im=0.0; \
-   (r).s0.c1.re=0.0; \
-   (r).s0.c1.im=0.0; \
-   (r).s0.c2.re=0.0; \
-   (r).s0.c2.im=0.0; \
-   (r).s1.c0.re=0.0; \
-   (r).s1.c0.im=0.0; \
-   (r).s1.c1.re=0.0; \
-   (r).s1.c1.im=0.0; \
-   (r).s1.c2.re=0.0; \
-   (r).s1.c2.im=0.0; \
-   (r).s2.c0.re=0.0; \
-   (r).s2.c0.im=0.0; \
-   (r).s2.c1.re=0.0; \
-   (r).s2.c1.im=0.0; \
-   (r).s2.c2.re=0.0; \
-   (r).s2.c2.im=0.0; \
-   (r).s3.c0.re=0.0; \
-   (r).s3.c0.im=0.0; \
-   (r).s3.c1.re=0.0; \
-   (r).s3.c1.im=0.0; \
-   (r).s3.c2.re=0.0; \
-   (r).s3.c2.im=0.0
+   (r).s0.c0=0.0; \
+   (r).s0.c1=0.0; \
+   (r).s0.c2=0.0; \
+   (r).s1.c0=0.0; \
+   (r).s1.c1=0.0; \
+   (r).s1.c2=0.0; \
+   (r).s2.c0=0.0; \
+   (r).s2.c1=0.0; \
+   (r).s2.c2=0.0; \
+   (r).s3.c0=0.0; \
+   (r).s3.c1=0.0; \
+   (r).s3.c2=0.0;
+
 
 /*
 * Real part of the scalar product (r,s)
 */
 
 #define _spinor_prod_re(r,s)				\
-  (r).s0.c0.re*(s).s0.c0.re+(r).s0.c0.im*(s).s0.c0.im+	\
-  (r).s0.c1.re*(s).s0.c1.re+(r).s0.c1.im*(s).s0.c1.im+	\
-  (r).s0.c2.re*(s).s0.c2.re+(r).s0.c2.im*(s).s0.c2.im+	\
-  (r).s1.c0.re*(s).s1.c0.re+(r).s1.c0.im*(s).s1.c0.im+	\
-  (r).s1.c1.re*(s).s1.c1.re+(r).s1.c1.im*(s).s1.c1.im+	\
-  (r).s1.c2.re*(s).s1.c2.re+(r).s1.c2.im*(s).s1.c2.im+	\
-  (r).s2.c0.re*(s).s2.c0.re+(r).s2.c0.im*(s).s2.c0.im+	\
-  (r).s2.c1.re*(s).s2.c1.re+(r).s2.c1.im*(s).s2.c1.im+	\
-  (r).s2.c2.re*(s).s2.c2.re+(r).s2.c2.im*(s).s2.c2.im+	\
-  (r).s3.c0.re*(s).s3.c0.re+(r).s3.c0.im*(s).s3.c0.im+	\
-  (r).s3.c1.re*(s).s3.c1.re+(r).s3.c1.im*(s).s3.c1.im+	\
-  (r).s3.c2.re*(s).s3.c2.re+(r).s3.c2.im*(s).s3.c2.im
+  creal((r).s0.c0)*creal((s).s0.c0)+cimag((r).s0.c0)*cimag((s).s0.c0)+	\
+  creal((r).s0.c1)*creal((s).s0.c1)+cimag((r).s0.c1)*cimag((s).s0.c1)+	\
+  creal((r).s0.c2)*creal((s).s0.c2)+cimag((r).s0.c2)*cimag((s).s0.c2)+	\
+  creal((r).s1.c0)*creal((s).s1.c0)+cimag((r).s1.c0)*cimag((s).s1.c0)+	\
+  creal((r).s1.c1)*creal((s).s1.c1)+cimag((r).s1.c1)*cimag((s).s1.c1)+	\
+  creal((r).s1.c2)*creal((s).s1.c2)+cimag((r).s1.c2)*cimag((s).s1.c2)+	\
+  creal((r).s2.c0)*creal((s).s2.c0)+cimag((r).s2.c0)*cimag((s).s2.c0)+	\
+  creal((r).s2.c1)*creal((s).s2.c1)+cimag((r).s2.c1)*cimag((s).s2.c1)+	\
+  creal((r).s2.c2)*creal((s).s2.c2)+cimag((r).s2.c2)*cimag((s).s2.c2)+	\
+  creal((r).s3.c0)*creal((s).s3.c0)+cimag((r).s3.c0)*cimag((s).s3.c0)+	\
+  creal((r).s3.c1)*creal((s).s3.c1)+cimag((r).s3.c1)*cimag((s).s3.c1)+	\
+  creal((r).s3.c2)*creal((s).s3.c2)+cimag((r).s3.c2)*cimag((s).s3.c2)
 
 /*
 * Imaginary part of the scalar product (r,s)
 */
 
 #define _spinor_prod_im(r,s)				\
-  -(r).s0.c0.re*(s).s0.c0.im+(r).s0.c0.im*(s).s0.c0.re- \
-  (r).s0.c1.re*(s).s0.c1.im+(r).s0.c1.im*(s).s0.c1.re-  \
-  (r).s0.c2.re*(s).s0.c2.im+(r).s0.c2.im*(s).s0.c2.re-  \
-  (r).s1.c0.re*(s).s1.c0.im+(r).s1.c0.im*(s).s1.c0.re-  \
-  (r).s1.c1.re*(s).s1.c1.im+(r).s1.c1.im*(s).s1.c1.re-  \
-  (r).s1.c2.re*(s).s1.c2.im+(r).s1.c2.im*(s).s1.c2.re-	\
-  (r).s2.c0.re*(s).s2.c0.im+(r).s2.c0.im*(s).s2.c0.re-	\
-  (r).s2.c1.re*(s).s2.c1.im+(r).s2.c1.im*(s).s2.c1.re-	\
-  (r).s2.c2.re*(s).s2.c2.im+(r).s2.c2.im*(s).s2.c2.re-	\
-  (r).s3.c0.re*(s).s3.c0.im+(r).s3.c0.im*(s).s3.c0.re-	\
-  (r).s3.c1.re*(s).s3.c1.im+(r).s3.c1.im*(s).s3.c1.re-  \
-  (r).s3.c2.re*(s).s3.c2.im+(r).s3.c2.im*(s).s3.c2.re
+  -creal((r).s0.c0)*cimag((s).s0.c0)+cimag((r).s0.c0)*creal((s).s0.c0)- \
+  creal((r).s0.c1)*cimag((s).s0.c1)+cimag((r).s0.c1)*creal((s).s0.c1)-  \
+  creal((r).s0.c2)*cimag((s).s0.c2)+cimag((r).s0.c2)*creal((s).s0.c2)-  \
+  creal((r).s1.c0)*cimag((s).s1.c0)+cimag((r).s1.c0)*creal((s).s1.c0)-  \
+  creal((r).s1.c1)*cimag((s).s1.c1)+cimag((r).s1.c1)*creal((s).s1.c1)-  \
+  creal((r).s1.c2)*cimag((s).s1.c2)+cimag((r).s1.c2)*creal((s).s1.c2)-	\
+  creal((r).s2.c0)*cimag((s).s2.c0)+cimag((r).s2.c0)*creal((s).s2.c0)-	\
+  creal((r).s2.c1)*cimag((s).s2.c1)+cimag((r).s2.c1)*creal((s).s2.c1)-	\
+  creal((r).s2.c2)*cimag((s).s2.c2)+cimag((r).s2.c2)*creal((s).s2.c2)-	\
+  creal((r).s3.c0)*cimag((s).s3.c0)+cimag((r).s3.c0)*creal((s).s3.c0)-	\
+  creal((r).s3.c1)*cimag((s).s3.c1)+cimag((r).s3.c1)*creal((s).s3.c1)-  \
+  creal((r).s3.c2)*cimag((s).s3.c2)+cimag((r).s3.c2)*creal((s).s3.c2)
 
 
 /*
@@ -122,41 +111,29 @@
 */
 
 #define _spinor_mul_complex(r,c,s) \
-   (r).s0.c0.re=c.re*(s).s0.c0.re-c.im*(s).s0.c0.im; \
-   (r).s0.c0.im=c.re*(s).s0.c0.im+c.im*(s).s0.c0.re; \
-   (r).s0.c1.re=c.re*(s).s0.c1.re-c.im*(s).s0.c1.im; \
-   (r).s0.c1.im=c.re*(s).s0.c1.im+c.im*(s).s0.c1.re; \
-   (r).s0.c2.re=c.re*(s).s0.c2.re-c.im*(s).s0.c2.im; \
-   (r).s0.c2.im=c.re*(s).s0.c2.im+c.im*(s).s0.c2.re; \
-   (r).s1.c0.re=c.re*(s).s1.c0.re-c.im*(s).s1.c0.im; \
-   (r).s1.c0.im=c.re*(s).s1.c0.im+c.im*(s).s1.c0.re; \
-   (r).s1.c1.re=c.re*(s).s1.c1.re-c.im*(s).s1.c1.im; \
-   (r).s1.c1.im=c.re*(s).s1.c1.im+c.im*(s).s1.c1.re; \
-   (r).s1.c2.re=c.re*(s).s1.c2.re-c.im*(s).s1.c2.im; \
-   (r).s1.c2.im=c.re*(s).s1.c2.im+c.im*(s).s1.c2.re; \
-   (r).s2.c0.re=c.re*(s).s2.c0.re-c.im*(s).s2.c0.im; \
-   (r).s2.c0.im=c.re*(s).s2.c0.im+c.im*(s).s2.c0.re; \
-   (r).s2.c1.re=c.re*(s).s2.c1.re-c.im*(s).s2.c1.im; \
-   (r).s2.c1.im=c.re*(s).s2.c1.im+c.im*(s).s2.c1.re; \
-   (r).s2.c2.re=c.re*(s).s2.c2.re-c.im*(s).s2.c2.im; \
-   (r).s2.c2.im=c.re*(s).s2.c2.im+c.im*(s).s2.c2.re; \
-   (r).s3.c0.re=c.re*(s).s3.c0.re-c.im*(s).s3.c0.im; \
-   (r).s3.c0.im=c.re*(s).s3.c0.im+c.im*(s).s3.c0.re; \
-   (r).s3.c1.re=c.re*(s).s3.c1.re-c.im*(s).s3.c1.im; \
-   (r).s3.c1.im=c.re*(s).s3.c1.im+c.im*(s).s3.c1.re; \
-   (r).s3.c2.re=c.re*(s).s3.c2.re-c.im*(s).s3.c2.im; \
-   (r).s3.c2.im=c.re*(s).s3.c2.im+c.im*(s).s3.c2.re
+   (r).s0.c0=c*(s).s0.c0; \
+   (r).s0.c1=c*(s).s0.c1; \
+   (r).s0.c2=c*(s).s0.c2; \
+   (r).s1.c0=c*(s).s1.c0; \
+   (r).s1.c1=c*(s).s1.c1; \
+   (r).s1.c2=c*(s).s1.c2; \
+   (r).s2.c0=c*(s).s2.c0; \
+   (r).s2.c1=c*(s).s2.c1; \
+   (r).s2.c2=c*(s).s2.c2; \
+   (r).s3.c0=c*(s).s3.c0; \
+   (r).s3.c1=c*(s).s3.c1; \
+   (r).s3.c2=c*(s).s3.c2;
 
 /* square norm of spinor s */
 
 #define _spinor_norm_sq(d,s) \
    d = 0.; \
-   d = _complex_square_norm((s).s0.c0) + _complex_square_norm((s).s0.c1) + \
-       _complex_square_norm((s).s0.c2) + _complex_square_norm((s).s1.c0) + \
-       _complex_square_norm((s).s1.c1) + _complex_square_norm((s).s1.c2) + \
-       _complex_square_norm((s).s2.c0) + _complex_square_norm((s).s2.c1) + \
-       _complex_square_norm((s).s2.c2) + _complex_square_norm((s).s3.c0) + \
-       _complex_square_norm((s).s3.c1) + _complex_square_norm((s).s3.c2)
+   d = creal((s).s0.c0 * conj((s).s0.c0)) + creal((s).s0.c1 * conj((s).s0.c1)) + \
+       creal((s).s0.c2 * conj((s).s0.c2)) + creal((s).s1.c0 * conj((s).s1.c0)) + \
+       creal((s).s1.c1 * conj((s).s1.c1)) + creal((s).s1.c2 * conj((s).s1.c2)) + \
+       creal((s).s2.c0 * conj((s).s2.c0)) + creal((s).s2.c1 * conj((s).s2.c1)) + \
+       creal((s).s2.c2 * conj((s).s2.c2)) + creal((s).s3.c0 * conj((s).s3.c0)) + \
+       creal((s).s3.c1 * conj((s).s3.c1)) + creal((s).s3.c2 * conj((s).s3.c2))
 
 
 /*             gamma 0
@@ -167,30 +144,18 @@
 */
 
 #define _gamma0(r,s) \
-   (r).s0.c0.re= (s).s2.c0.re; \
-   (r).s0.c0.im= (s).s2.c0.im; \
-   (r).s0.c1.re= (s).s2.c1.re; \
-   (r).s0.c1.im= (s).s2.c1.im; \
-   (r).s0.c2.re= (s).s2.c2.re; \
-   (r).s0.c2.im= (s).s2.c2.im; \
-   (r).s1.c0.re= (s).s3.c0.re; \
-   (r).s1.c0.im= (s).s3.c0.im; \
-   (r).s1.c1.re= (s).s3.c1.re; \
-   (r).s1.c1.im= (s).s3.c1.im; \
-   (r).s1.c2.re= (s).s3.c2.re; \
-   (r).s1.c2.im= (s).s3.c2.im; \
-   (r).s2.c0.re= (s).s0.c0.re; \
-   (r).s2.c0.im= (s).s0.c0.im; \
-   (r).s2.c1.re= (s).s0.c1.re; \
-   (r).s2.c1.im= (s).s0.c1.im; \
-   (r).s2.c2.re= (s).s0.c2.re; \
-   (r).s2.c2.im= (s).s0.c2.im; \
-   (r).s3.c0.re= (s).s1.c0.re; \
-   (r).s3.c0.im= (s).s1.c0.im; \
-   (r).s3.c1.re= (s).s1.c1.re; \
-   (r).s3.c1.im= (s).s1.c1.im; \
-   (r).s3.c2.re= (s).s1.c2.re; \
-   (r).s3.c2.im= (s).s1.c2.im
+   (r).s0.c0= (s).s2.c0; \
+   (r).s0.c1= (s).s2.c1; \
+   (r).s0.c2= (s).s2.c2; \
+   (r).s1.c0= (s).s3.c0; \
+   (r).s1.c1= (s).s3.c1; \
+   (r).s1.c2= (s).s3.c2; \
+   (r).s2.c0= (s).s0.c0; \
+   (r).s2.c1= (s).s0.c1; \
+   (r).s2.c2= (s).s0.c2; \
+   (r).s3.c0= (s).s1.c0; \
+   (r).s3.c1= (s).s1.c1; \
+   (r).s3.c2= (s).s1.c2;
 
 /*             gamma 1
 * (r.c1)   (  0  0  0  +i )   (s.c1)
@@ -200,30 +165,19 @@
 */
 
 #define _gamma1(r,s) \
-   (r).s0.c0.re=-(s).s3.c0.im; \
-   (r).s0.c0.im= (s).s3.c0.re; \
-   (r).s0.c1.re=-(s).s3.c1.im; \
-   (r).s0.c1.im= (s).s3.c1.re; \
-   (r).s0.c2.re=-(s).s3.c2.im; \
-   (r).s0.c2.im= (s).s3.c2.re; \
-   (r).s1.c0.re=-(s).s2.c0.im; \
-   (r).s1.c0.im= (s).s2.c0.re; \
-   (r).s1.c1.re=-(s).s2.c1.im; \
-   (r).s1.c1.im= (s).s2.c1.re; \
-   (r).s1.c2.re=-(s).s2.c2.im; \
-   (r).s1.c2.im= (s).s2.c2.re; \
-   (r).s2.c0.re= (s).s1.c0.im; \
-   (r).s2.c0.im=-(s).s1.c0.re; \
-   (r).s2.c1.re= (s).s1.c1.im; \
-   (r).s2.c1.im=-(s).s1.c1.re; \
-   (r).s2.c2.re= (s).s1.c2.im; \
-   (r).s2.c2.im=-(s).s1.c2.re; \
-   (r).s3.c0.re= (s).s0.c0.im; \
-   (r).s3.c0.im=-(s).s0.c0.re; \
-   (r).s3.c1.re= (s).s0.c1.im; \
-   (r).s3.c1.im=-(s).s0.c1.re; \
-   (r).s3.c2.re= (s).s0.c2.im; \
-   (r).s3.c2.im=-(s).s0.c2.re
+   (r).s0.c0=  I * (s).s3.c0; \
+   (r).s0.c1=  I * (s).s3.c1; \
+   (r).s0.c2=  I * (s).s3.c2; \
+   (r).s1.c0=  I * (s).s2.c0; \
+   (r).s1.c1=  I * (s).s2.c1; \
+   (r).s1.c2=  I * (s).s2.c2; \
+   (r).s2.c0= -I * (s).s1.c0; \
+   (r).s2.c1= -I * (s).s1.c1; \
+   (r).s2.c2= -I * (s).s1.c2; \
+   (r).s3.c0= -I * (s).s0.c0; \
+   (r).s3.c1= -I * (s).s0.c1; \
+   (r).s3.c2= -I * (s).s0.c2;
+
 
 /*             gamma 2
 * (r.c1)   (  0  0  0 +1 )   (s.c1)
@@ -233,30 +187,19 @@
 */
 
 #define _gamma2(r,s) \
-   (r).s0.c0.re= (s).s3.c0.re; \
-   (r).s0.c0.im= (s).s3.c0.im; \
-   (r).s0.c1.re= (s).s3.c1.re; \
-   (r).s0.c1.im= (s).s3.c1.im; \
-   (r).s0.c2.re= (s).s3.c2.re; \
-   (r).s0.c2.im= (s).s3.c2.im; \
-   (r).s1.c0.re=-(s).s2.c0.re; \
-   (r).s1.c0.im=-(s).s2.c0.im; \
-   (r).s1.c1.re=-(s).s2.c1.re; \
-   (r).s1.c1.im=-(s).s2.c1.im; \
-   (r).s1.c2.re=-(s).s2.c2.re; \
-   (r).s1.c2.im=-(s).s2.c2.im; \
-   (r).s2.c0.re=-(s).s1.c0.re; \
-   (r).s2.c0.im=-(s).s1.c0.im; \
-   (r).s2.c1.re=-(s).s1.c1.re; \
-   (r).s2.c1.im=-(s).s1.c1.im; \
-   (r).s2.c2.re=-(s).s1.c2.re; \
-   (r).s2.c2.im=-(s).s1.c2.im; \
-   (r).s3.c0.re= (s).s0.c0.re; \
-   (r).s3.c0.im= (s).s0.c0.im; \
-   (r).s3.c1.re= (s).s0.c1.re; \
-   (r).s3.c1.im= (s).s0.c1.im; \
-   (r).s3.c2.re= (s).s0.c2.re; \
-   (r).s3.c2.im= (s).s0.c2.im
+   (r).s0.c0=  (s).s3.c0; \
+   (r).s0.c1=  (s).s3.c1; \
+   (r).s0.c2=  (s).s3.c2; \
+   (r).s1.c0= -(s).s2.c0; \
+   (r).s1.c1= -(s).s2.c1; \
+   (r).s1.c2= -(s).s2.c2; \
+   (r).s2.c0= -(s).s1.c0; \
+   (r).s2.c1= -(s).s1.c1; \
+   (r).s2.c2= -(s).s1.c2; \
+   (r).s3.c0=  (s).s0.c0; \
+   (r).s3.c1=  (s).s0.c1; \
+   (r).s3.c2=  (s).s0.c2;
+
 
 /*             gamma 3
 * (r.c1)   (  0  0 +i  0 )   (s.c1)
@@ -266,30 +209,19 @@
 */
 
 #define _gamma3(r,s) \
-   (r).s0.c0.re=-(s).s2.c0.im; \
-   (r).s0.c0.im= (s).s2.c0.re; \
-   (r).s0.c1.re=-(s).s2.c1.im; \
-   (r).s0.c1.im= (s).s2.c1.re; \
-   (r).s0.c2.re=-(s).s2.c2.im; \
-   (r).s0.c2.im= (s).s2.c2.re; \
-   (r).s1.c0.re= (s).s3.c0.im; \
-   (r).s1.c0.im=-(s).s3.c0.re; \
-   (r).s1.c1.re= (s).s3.c1.im; \
-   (r).s1.c1.im=-(s).s3.c1.re; \
-   (r).s1.c2.re= (s).s3.c2.im; \
-   (r).s1.c2.im=-(s).s3.c2.re; \
-   (r).s2.c0.re= (s).s0.c0.im; \
-   (r).s2.c0.im=-(s).s0.c0.re; \
-   (r).s2.c1.re= (s).s0.c1.im; \
-   (r).s2.c1.im=-(s).s0.c1.re; \
-   (r).s2.c2.re= (s).s0.c2.im; \
-   (r).s2.c2.im=-(s).s0.c2.re; \
-   (r).s3.c0.re=-(s).s1.c0.im; \
-   (r).s3.c0.im= (s).s1.c0.re; \
-   (r).s3.c1.re=-(s).s1.c1.im; \
-   (r).s3.c1.im= (s).s1.c1.re; \
-   (r).s3.c2.re=-(s).s1.c2.im; \
-   (r).s3.c2.im= (s).s1.c2.re
+   (r).s0.c0=  I * (s).s2.c0; \
+   (r).s0.c1=  I * (s).s2.c1; \
+   (r).s0.c2=  I * (s).s2.c2; \
+   (r).s1.c0= -I * (s).s3.c0; \
+   (r).s1.c1= -I * (s).s3.c1; \
+   (r).s1.c2= -I * (s).s3.c2; \
+   (r).s2.c0= -I * (s).s0.c0; \
+   (r).s2.c1= -I * (s).s0.c1; \
+   (r).s2.c2= -I * (s).s0.c2; \
+   (r).s3.c0=  I * (s).s1.c0; \
+   (r).s3.c1=  I * (s).s1.c1; \
+   (r).s3.c2=  I * (s).s1.c2;
+
 
 /*             gamma 5
 * (r.c1)   ( +1  0  0  0 )   (s.c1)
@@ -299,30 +231,19 @@
 */
 
 #define _gamma5(r,s) \
-   (r).s0.c0.re= (s).s0.c0.re; \
-   (r).s0.c0.im= (s).s0.c0.im; \
-   (r).s0.c1.re= (s).s0.c1.re; \
-   (r).s0.c1.im= (s).s0.c1.im; \
-   (r).s0.c2.re= (s).s0.c2.re; \
-   (r).s0.c2.im= (s).s0.c2.im; \
-   (r).s1.c0.re= (s).s1.c0.re; \
-   (r).s1.c0.im= (s).s1.c0.im; \
-   (r).s1.c1.re= (s).s1.c1.re; \
-   (r).s1.c1.im= (s).s1.c1.im; \
-   (r).s1.c2.re= (s).s1.c2.re; \
-   (r).s1.c2.im= (s).s1.c2.im; \
-   (r).s2.c0.re=-(s).s2.c0.re; \
-   (r).s2.c0.im=-(s).s2.c0.im; \
-   (r).s2.c1.re=-(s).s2.c1.re; \
-   (r).s2.c1.im=-(s).s2.c1.im; \
-   (r).s2.c2.re=-(s).s2.c2.re; \
-   (r).s2.c2.im=-(s).s2.c2.im; \
-   (r).s3.c0.re=-(s).s3.c0.re; \
-   (r).s3.c0.im=-(s).s3.c0.im; \
-   (r).s3.c1.re=-(s).s3.c1.re; \
-   (r).s3.c1.im=-(s).s3.c1.im; \
-   (r).s3.c2.re=-(s).s3.c2.re; \
-   (r).s3.c2.im=-(s).s3.c2.im
+   (r).s0.c0= (s).s0.c0; \
+   (r).s0.c1= (s).s0.c1; \
+   (r).s0.c2= (s).s0.c2; \
+   (r).s1.c0= (s).s1.c0; \
+   (r).s1.c1= (s).s1.c1; \
+   (r).s1.c2= (s).s1.c2; \
+   (r).s2.c0=-(s).s2.c0; \
+   (r).s2.c1=-(s).s2.c1; \
+   (r).s2.c2=-(s).s2.c2; \
+   (r).s3.c0=-(s).s3.c0; \
+   (r).s3.c1=-(s).s3.c1; \
+   (r).s3.c2=-(s).s3.c2;
+
 
 /*             P_plus
 * (r.c1)   ( +1  0  0  0 )   (s.c1)
@@ -332,30 +253,19 @@
 */
 
 #define _P_plus(r,s) \
-   (r).s0.c0.re= 1.*(s).s0.c0.re; \
-   (r).s0.c0.im= 1.*(s).s0.c0.im; \
-   (r).s0.c1.re= 1.*(s).s0.c1.re; \
-   (r).s0.c1.im= 1.*(s).s0.c1.im; \
-   (r).s0.c2.re= 1.*(s).s0.c2.re; \
-   (r).s0.c2.im= 1.*(s).s0.c2.im; \
-   (r).s1.c0.re= 1.*(s).s1.c0.re; \
-   (r).s1.c0.im= 1.*(s).s1.c0.im; \
-   (r).s1.c1.re= 1.*(s).s1.c1.re; \
-   (r).s1.c1.im= 1.*(s).s1.c1.im; \
-   (r).s1.c2.re= 1.*(s).s1.c2.re; \
-   (r).s1.c2.im= 1.*(s).s1.c2.im; \
-   (r).s2.c0.re= 0.; \
-   (r).s2.c0.im= 0.; \
-   (r).s2.c1.re= 0.; \
-   (r).s2.c1.im= 0.; \
-   (r).s2.c2.re= 0.; \
-   (r).s2.c2.im= 0.; \
-   (r).s3.c0.re= 0.; \
-   (r).s3.c0.im= 0.; \
-   (r).s3.c1.re= 0.; \
-   (r).s3.c1.im= 0.; \
-   (r).s3.c2.re= 0.; \
-   (r).s3.c2.im= 0.;
+   (r).s0.c0= (s).s0.c0; \
+   (r).s0.c1= (s).s0.c1; \
+   (r).s0.c2= (s).s0.c2; \
+   (r).s1.c0= (s).s1.c0; \
+   (r).s1.c1= (s).s1.c1; \
+   (r).s1.c2= (s).s1.c2; \
+   (r).s2.c0= 0.; \
+   (r).s2.c1= 0.; \
+   (r).s2.c2= 0.; \
+   (r).s3.c0= 0.; \
+   (r).s3.c1= 0.; \
+   (r).s3.c2= 0.;
+
 
 /*             gamma 5 + ID
 * (r.c1)   ( +2  0  0  0 )   (s.c1)
@@ -365,30 +275,18 @@
 */
 
 #define _gamma5_plus_id(r,s) \
-   (r).s0.c0.re= 2.*(s).s0.c0.re; \
-   (r).s0.c0.im= 2.*(s).s0.c0.im; \
-   (r).s0.c1.re= 2.*(s).s0.c1.re; \
-   (r).s0.c1.im= 2.*(s).s0.c1.im; \
-   (r).s0.c2.re= 2.*(s).s0.c2.re; \
-   (r).s0.c2.im= 2.*(s).s0.c2.im; \
-   (r).s1.c0.re= 2.*(s).s1.c0.re; \
-   (r).s1.c0.im= 2.*(s).s1.c0.im; \
-   (r).s1.c1.re= 2.*(s).s1.c1.re; \
-   (r).s1.c1.im= 2.*(s).s1.c1.im; \
-   (r).s1.c2.re= 2.*(s).s1.c2.re; \
-   (r).s1.c2.im= 2.*(s).s1.c2.im; \
-   (r).s2.c0.re= 0.; \
-   (r).s2.c0.im= 0.; \
-   (r).s2.c1.re= 0.; \
-   (r).s2.c1.im= 0.; \
-   (r).s2.c2.re= 0.; \
-   (r).s2.c2.im= 0.; \
-   (r).s3.c0.re= 0.; \
-   (r).s3.c0.im= 0.; \
-   (r).s3.c1.re= 0.; \
-   (r).s3.c1.im= 0.; \
-   (r).s3.c2.re= 0.; \
-   (r).s3.c2.im= 0.;
+   (r).s0.c0= 2.*(s).s0.c0; \
+   (r).s0.c1= 2.*(s).s0.c1; \
+   (r).s0.c2= 2.*(s).s0.c2; \
+   (r).s1.c0= 2.*(s).s1.c0; \
+   (r).s1.c1= 2.*(s).s1.c1; \
+   (r).s1.c2= 2.*(s).s1.c2; \
+   (r).s2.c0= 0.; \
+   (r).s2.c1= 0.; \
+   (r).s2.c2= 0.; \
+   (r).s3.c0= 0.; \
+   (r).s3.c1= 0.; \
+   (r).s3.c2= 0.;
 
 /*             P_minus
 * (r.c1)   (  0  0  0  0 )   (s.c1)
@@ -398,30 +296,19 @@
 */
 
 #define _P_minus(r,s) \
-   (r).s0.c0.re= 0.; \
-   (r).s0.c0.im= 0.; \
-   (r).s0.c1.re= 0.; \
-   (r).s0.c1.im= 0.; \
-   (r).s0.c2.re= 0.; \
-   (r).s0.c2.im= 0.; \
-   (r).s1.c0.re= 0.; \
-   (r).s1.c0.im= 0.; \
-   (r).s1.c1.re= 0.; \
-   (r).s1.c1.im= 0.; \
-   (r).s1.c2.re= 0.; \
-   (r).s1.c2.im= 0.; \
-   (r).s2.c0.re= 1.*(s).s2.c0.re; \
-   (r).s2.c0.im= 1.*(s).s2.c0.im; \
-   (r).s2.c1.re= 1.*(s).s2.c1.re; \
-   (r).s2.c1.im= 1.*(s).s2.c1.im; \
-   (r).s2.c2.re= 1.*(s).s2.c2.re; \
-   (r).s2.c2.im= 1.*(s).s2.c2.im; \
-   (r).s3.c0.re= 1.*(s).s3.c0.re; \
-   (r).s3.c0.im= 1.*(s).s3.c0.im; \
-   (r).s3.c1.re= 1.*(s).s3.c1.re; \
-   (r).s3.c1.im= 1.*(s).s3.c1.im; \
-   (r).s3.c2.re= 1.*(s).s3.c2.re; \
-   (r).s3.c2.im= 1.*(s).s3.c2.im
+   (r).s0.c0= 0.; \
+   (r).s0.c1= 0.; \
+   (r).s0.c2= 0.; \
+   (r).s1.c0= 0.; \
+   (r).s1.c1= 0.; \
+   (r).s1.c2= 0.; \
+   (r).s2.c0= (s).s2.c0; \
+   (r).s2.c1= (s).s2.c1; \
+   (r).s2.c2= (s).s2.c2; \
+   (r).s3.c0= (s).s3.c0; \
+   (r).s3.c1= (s).s3.c1; \
+   (r).s3.c2= (s).s3.c2;
+
 
 /*             gamma 5 - ID
 * (r.c1)   (  0  0  0  0 )   (s.c1)
@@ -431,30 +318,19 @@
 */
 
 #define _gamma5_minus_id(r,s) \
-   (r).s0.c0.re= 0.; \
-   (r).s0.c0.im= 0.; \
-   (r).s0.c1.re= 0.; \
-   (r).s0.c1.im= 0.; \
-   (r).s0.c2.re= 0.; \
-   (r).s0.c2.im= 0.; \
-   (r).s1.c0.re= 0.; \
-   (r).s1.c0.im= 0.; \
-   (r).s1.c1.re= 0.; \
-   (r).s1.c1.im= 0.; \
-   (r).s1.c2.re= 0.; \
-   (r).s1.c2.im= 0.; \
-   (r).s2.c0.re=-2.*(s).s2.c0.re; \
-   (r).s2.c0.im=-2.*(s).s2.c0.im; \
-   (r).s2.c1.re=-2.*(s).s2.c1.re; \
-   (r).s2.c1.im=-2.*(s).s2.c1.im; \
-   (r).s2.c2.re=-2.*(s).s2.c2.re; \
-   (r).s2.c2.im=-2.*(s).s2.c2.im; \
-   (r).s3.c0.re=-2.*(s).s3.c0.re; \
-   (r).s3.c0.im=-2.*(s).s3.c0.im; \
-   (r).s3.c1.re=-2.*(s).s3.c1.re; \
-   (r).s3.c1.im=-2.*(s).s3.c1.im; \
-   (r).s3.c2.re=-2.*(s).s3.c2.re; \
-   (r).s3.c2.im=-2.*(s).s3.c2.im
+   (r).s0.c0= 0.; \
+   (r).s0.c1= 0.; \
+   (r).s0.c2= 0.; \
+   (r).s1.c0= 0.; \
+   (r).s1.c1= 0.; \
+   (r).s1.c2= 0.; \
+   (r).s2.c0=-2.*(s).s2.c0; \
+   (r).s2.c1=-2.*(s).s2.c1; \
+   (r).s2.c2=-2.*(s).s2.c2; \
+   (r).s3.c0=-2.*(s).s3.c0; \
+   (r).s3.c1=-2.*(s).s3.c1; \
+   (r).s3.c2=-2.*(s).s3.c2;
+
 
 
 /*             gamma 50
@@ -465,30 +341,19 @@
 */
 
 #define _gamma50(r,s) \
-   (r).s0.c0.re=-(s).s2.c0.re; \
-   (r).s0.c0.im=-(s).s2.c0.im; \
-   (r).s0.c1.re=-(s).s2.c1.re; \
-   (r).s0.c1.im=-(s).s2.c1.im; \
-   (r).s0.c2.re=-(s).s2.c2.re; \
-   (r).s0.c2.im=-(s).s2.c2.im; \
-   (r).s1.c0.re=-(s).s3.c0.re; \
-   (r).s1.c0.im=-(s).s3.c0.im; \
-   (r).s1.c1.re=-(s).s3.c1.re; \
-   (r).s1.c1.im=-(s).s3.c1.im; \
-   (r).s1.c2.re=-(s).s3.c2.re; \
-   (r).s1.c2.im=-(s).s3.c2.im; \
-   (r).s2.c0.re= (s).s0.c0.re; \
-   (r).s2.c0.im= (s).s0.c0.im; \
-   (r).s2.c1.re= (s).s0.c1.re; \
-   (r).s2.c1.im= (s).s0.c1.im; \
-   (r).s2.c2.re= (s).s0.c2.re; \
-   (r).s2.c2.im= (s).s0.c2.im; \
-   (r).s3.c0.re= (s).s1.c0.re; \
-   (r).s3.c0.im= (s).s1.c0.im; \
-   (r).s3.c1.re= (s).s1.c1.re; \
-   (r).s3.c1.im= (s).s1.c1.im; \
-   (r).s3.c2.re= (s).s1.c2.re; \
-   (r).s3.c2.im= (s).s1.c2.im
+   (r).s0.c0=-(s).s2.c0; \
+   (r).s0.c1=-(s).s2.c1; \
+   (r).s0.c2=-(s).s2.c2; \
+   (r).s1.c0=-(s).s3.c0; \
+   (r).s1.c1=-(s).s3.c1; \
+   (r).s1.c2=-(s).s3.c2; \
+   (r).s2.c0= (s).s0.c0; \
+   (r).s2.c1= (s).s0.c1; \
+   (r).s2.c2= (s).s0.c2; \
+   (r).s3.c0= (s).s1.c0; \
+   (r).s3.c1= (s).s1.c1; \
+   (r).s3.c2= (s).s1.c2;
+
 
 /*             gamma 51
 * (r.c1)   (  0  0  0 -i )   (s.c1)
@@ -498,30 +363,18 @@
 */
 
 #define _gamma51(r,s) \
-   (r).s0.c0.re= (s).s3.c0.im; \
-   (r).s0.c0.im=-(s).s3.c0.re; \
-   (r).s0.c1.re= (s).s3.c1.im; \
-   (r).s0.c1.im=-(s).s3.c1.re; \
-   (r).s0.c2.re= (s).s3.c2.im; \
-   (r).s0.c2.im=-(s).s3.c2.re; \
-   (r).s1.c0.re= (s).s2.c0.im; \
-   (r).s1.c0.im=-(s).s2.c0.re; \
-   (r).s1.c1.re= (s).s2.c1.im; \
-   (r).s1.c1.im=-(s).s2.c1.re; \
-   (r).s1.c2.re= (s).s2.c2.im; \
-   (r).s1.c2.im=-(s).s2.c2.re; \
-   (r).s2.c0.re= (s).s1.c0.im; \
-   (r).s2.c0.im=-(s).s1.c0.re; \
-   (r).s2.c1.re= (s).s1.c1.im; \
-   (r).s2.c1.im=-(s).s1.c1.re; \
-   (r).s2.c2.re= (s).s1.c2.im; \
-   (r).s2.c2.im=-(s).s1.c2.re; \
-   (r).s3.c0.re= (s).s0.c0.im; \
-   (r).s3.c0.im=-(s).s0.c0.re; \
-   (r).s3.c1.re= (s).s0.c1.im; \
-   (r).s3.c1.im=-(s).s0.c1.re; \
-   (r).s3.c2.re= (s).s0.c2.im; \
-   (r).s3.c2.im=-(s).s0.c2.re
+   (r).s0.c0=-I * (s).s3.c0; \
+   (r).s0.c1=-I * (s).s3.c1; \
+   (r).s0.c2=-I * (s).s3.c2; \
+   (r).s1.c0=-I * (s).s2.c0; \
+   (r).s1.c1=-I * (s).s2.c1; \
+   (r).s1.c2=-I * (s).s2.c2; \
+   (r).s2.c0=-I * (s).s1.c0; \
+   (r).s2.c1=-I * (s).s1.c1; \
+   (r).s2.c2=-I * (s).s1.c2; \
+   (r).s3.c0=-I * (s).s0.c0; \
+   (r).s3.c1=-I * (s).s0.c1; \
+   (r).s3.c2=-I * (s).s0.c2
 
 /*             gamma 52
 * (r.c1)   (  0  0  0 -1 )   (s.c1)
@@ -531,30 +384,18 @@
 */
 
 #define _gamma52(r,s) \
-   (r).s0.c0.re=-(s).s3.c0.re; \
-   (r).s0.c0.im=-(s).s3.c0.im; \
-   (r).s0.c1.re=-(s).s3.c1.re; \
-   (r).s0.c1.im=-(s).s3.c1.im; \
-   (r).s0.c2.re=-(s).s3.c2.re; \
-   (r).s0.c2.im=-(s).s3.c2.im; \
-   (r).s1.c0.re= (s).s2.c0.re; \
-   (r).s1.c0.im= (s).s2.c0.im; \
-   (r).s1.c1.re= (s).s2.c1.re; \
-   (r).s1.c1.im= (s).s2.c1.im; \
-   (r).s1.c2.re= (s).s2.c2.re; \
-   (r).s1.c2.im= (s).s2.c2.im; \
-   (r).s2.c0.re=-(s).s1.c0.re; \
-   (r).s2.c0.im=-(s).s1.c0.im; \
-   (r).s2.c1.re=-(s).s1.c1.re; \
-   (r).s2.c1.im=-(s).s1.c1.im; \
-   (r).s2.c2.re=-(s).s1.c2.re; \
-   (r).s2.c2.im=-(s).s1.c2.im; \
-   (r).s3.c0.re= (s).s0.c0.re; \
-   (r).s3.c0.im= (s).s0.c0.im; \
-   (r).s3.c1.re= (s).s0.c1.re; \
-   (r).s3.c1.im= (s).s0.c1.im; \
-   (r).s3.c2.re= (s).s0.c2.re; \
-   (r).s3.c2.im= (s).s0.c2.im
+   (r).s0.c0=-(s).s3.c0; \
+   (r).s0.c1=-(s).s3.c1; \
+   (r).s0.c2=-(s).s3.c2; \
+   (r).s1.c0= (s).s2.c0; \
+   (r).s1.c1= (s).s2.c1; \
+   (r).s1.c2= (s).s2.c2; \
+   (r).s2.c0=-(s).s1.c0; \
+   (r).s2.c1=-(s).s1.c1; \
+   (r).s2.c2=-(s).s1.c2; \
+   (r).s3.c0= (s).s0.c0; \
+   (r).s3.c1= (s).s0.c1; \
+   (r).s3.c2= (s).s0.c2
 
 /*             gamma 53
 * (r.c1)   (  0  0 -i  0 )   (s.c1)
@@ -564,29 +405,16 @@
 */
 
 #define _gamma53(r,s) \
-   (r).s0.c0.re= (s).s2.c0.im; \
-   (r).s0.c0.im=-(s).s2.c0.re; \
-   (r).s0.c1.re= (s).s2.c1.im; \
-   (r).s0.c1.im=-(s).s2.c1.re; \
-   (r).s0.c2.re= (s).s2.c2.im; \
-   (r).s0.c2.im=-(s).s2.c2.re; \
-   (r).s1.c0.re=-(s).s3.c0.im; \
-   (r).s1.c0.im= (s).s3.c0.re; \
-   (r).s1.c1.re=-(s).s3.c1.im; \
-   (r).s1.c1.im= (s).s3.c1.re; \
-   (r).s1.c2.re=-(s).s3.c2.im; \
-   (r).s1.c2.im= (s).s3.c2.re; \
-   (r).s2.c0.re= (s).s0.c0.im; \
-   (r).s2.c0.im=-(s).s0.c0.re; \
-   (r).s2.c1.re= (s).s0.c1.im; \
-   (r).s2.c1.im=-(s).s0.c1.re; \
-   (r).s2.c2.re= (s).s0.c2.im; \
-   (r).s2.c2.im=-(s).s0.c2.re; \
-   (r).s3.c0.re=-(s).s1.c0.im; \
-   (r).s3.c0.im= (s).s1.c0.re; \
-   (r).s3.c1.re=-(s).s1.c1.im; \
-   (r).s3.c1.im= (s).s1.c1.re; \
-   (r).s3.c2.re=-(s).s1.c2.im; \
-   (r).s3.c2.im= (s).s1.c2.re
-
+   (r).s0.c0=-I * (s).s2.c0; \
+   (r).s0.c1=-I * (s).s2.c1; \
+   (r).s0.c2=-I * (s).s2.c2; \
+   (r).s1.c0= I * (s).s3.c0; \
+   (r).s1.c1= I * (s).s3.c1; \
+   (r).s1.c2= I * (s).s3.c2; \
+   (r).s2.c0=-I * (s).s0.c0; \
+   (r).s2.c1=-I * (s).s0.c1; \
+   (r).s2.c2=-I * (s).s0.c2; \
+   (r).s3.c0= I * (s).s1.c0; \
+   (r).s3.c1= I * (s).s1.c1; \
+   (r).s3.c2= I * (s).s1.c2
 #endif

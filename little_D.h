@@ -21,16 +21,16 @@
 #ifndef _LITTLE_D_H
 #define _LITTLE_D_H
 
-#include "complex.h"
+#include <complex.h>
 
 extern int dfl_subspace_updated;
-void little_D(complex * v, complex *w);
-void little_D_sym(complex * v, complex *w);
-void little_D_ee_inv(complex * v, complex *w);
-void little_D_hop(int eo,complex * v, complex *w);
-void little_Dhat_lhs(complex * v, complex *w, complex *u);
-void little_Dhat_rhs(int eo, complex * v, double r, complex *w);
-void unit_little_D(complex *v, complex *w);
+void little_D(_Complex double * v, _Complex double *w);
+void little_D_sym(_Complex double * v, _Complex double *w);
+void little_D_ee_inv(_Complex double * v, _Complex double *w);
+void little_D_hop(int eo,_Complex double * v, _Complex double *w);
+void little_Dhat_lhs(_Complex double * v, _Complex double *w, _Complex double *u);
+void little_Dhat_rhs(int eo, _Complex double * v, double r, _Complex double *w);
+void unit_little_D(_Complex double *v, _Complex double *w);
 void invert_little_D_spinor(spinor *r, spinor *s);
 void invert_little_D_eo_spinor(spinor *r, spinor *s);
 void apply_little_D_spinor(spinor *r, spinor *s);
