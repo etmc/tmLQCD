@@ -4603,7 +4603,6 @@ int tmlqcd_flex_debug = 0;
 char *tmlqcdtext;
 #line 1 "read_input.l"
 /***********************************************************************
- * $Id$ 
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *

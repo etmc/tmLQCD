@@ -1,4 +1,3 @@
-// $Id$
 //
 // Copyright (C) 2007 Istvan Montvay
 // Copyright (C) 2007 Carsten Urbach

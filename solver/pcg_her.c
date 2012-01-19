@@ -126,7 +126,6 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
   return(1);
 }
 
-static char const rcsid[] = "$Id$";
 
 
 

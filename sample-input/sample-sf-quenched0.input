@@ -1,4 +1,3 @@
-# $Id$
 # this sample corresponds to the first case in README
 # like sample-hmc0.input, but with preconditioning
 # the expected plaquette value is 0.62450(5)

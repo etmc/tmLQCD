@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
@@ -274,7 +273,6 @@ EXTERN int ** g_idn3d;
 /* #undef ALIGN */
 
 #ifdef MAIN_PROGRAM
-static char const g_rcsid[] = "$Id$";
 #endif
 
 #endif
