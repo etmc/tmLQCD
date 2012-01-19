@@ -84,9 +84,6 @@ PROGRAMS = hmc_tm benchmark invert gen_sources  \
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = ${USESUBDIRS}
 
-
-
-
 .SUFFIXES:
 
 all: Makefile all-recursive dep hmc_tm invert
@@ -97,7 +94,10 @@ all: Makefile all-recursive dep hmc_tm invert
 #all: Makefile all-recursive dep hmc_tm invert
 #endif
 
-
+# run the GIT-VERSION-GEN script to generate version information in git_hash.h
+# making sure that we run in the correct directory
+${top_srcdir}/git_hash.h:
+	@cd @srcdir@ && sh GIT-VERSION-GEN
 
 .NOTPARALLEL:
 
@@ -129,14 +129,11 @@ $(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefil
 ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
 	${COMPILE} ${SOPTARGS} -c $<
 
-${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
+${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
-
-
 
 ${PROGRAMS}: %: %.o libhmc.a all-recursive
 	 ${LINK}  $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
-
 
 dep: $(addsuffix .d,$(ALLOBJ))
 	@ echo "...dependency files build"
@@ -168,7 +165,7 @@ distclean: distclean-recursive Makefile
 	rm -f hmc_tm hybrid *.o *.d *~ Makefile config.log config.status fixed_volume.h
 	rm -f config.h
 
-.PHONY: all clean compile-clean distclean dep install \
+.PHONY: all ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
 	flex_read_input $(PROGRAMS) all-recursive \
 	all-debug-recursive all-profile-recursive \
 	clean-recursive distclean-recursive \
