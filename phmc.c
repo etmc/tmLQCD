@@ -40,7 +40,7 @@
 double phmc_Cpol;
 double phmc_cheb_evmin, phmc_cheb_evmax;
 double phmc_invmaxev;
-complex * phmc_root;
+_Complex double * phmc_root;
 int phmc_dop_n_cheby;
 double * phmc_dop_cheby_coef;
 int phmc_ptilde_n_cheby;
@@ -164,7 +164,7 @@ void init_phmc() {
 
   if(g_epsbar!=0.0 || phmc_exact_poly==0) phmc_Cpol = sqrt(phmc_Cpol);
 
-  phmc_root = calloc((2*phmc_dop_n_cheby-2),sizeof(complex));
+  phmc_root = calloc((2*phmc_dop_n_cheby-2),sizeof(_Complex double));
 
 
   if(g_epsbar==0.0 && phmc_exact_poly == 1) 
@@ -185,7 +185,7 @@ void init_phmc() {
     
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
     for(j=0; j<(2*phmc_dop_n_cheby-2); j++){
-      errcode = fscanf(roots," %d %lf %lf \n", &k, &phmc_root[j].re, &phmc_root[j].im);
+      errcode = fscanf(roots," %d %lf %lf \n", &k, &creal(phmc_root[j]), &cimag(phmc_root[j]));
     }
     fclose(roots);
   }

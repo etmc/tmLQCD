@@ -57,64 +57,53 @@ su3 exposu3(su3adj p)
   static su3 v,v2,vr;
   static double fac,r;
   static double a,b;
-  static complex a0,a1,a2,a1p;
+  static _Complex double a0,a1,a2,a1p;
 
   /* it writes 'p=vec(h_{j,mu})' in matrix form 'v' */  
   _make_su3(v,p);
   /* calculates v^2 */
   _su3_times_su3(v2,v,v);
   /* */
-  a=0.5*(v2.c00.re+v2.c11.re+v2.c22.re);
+  a=0.5*(creal(v2.c00)+creal(v2.c11)+creal(v2.c22));
   /* 1/3 imaginary part of tr v*v2 */
   b = 0.33333333333333333*
-    (v.c00.re*v2.c00.im+v.c00.im*v2.c00.re
-     +v.c01.re*v2.c10.im+v.c01.im*v2.c10.re
-     +v.c02.re*v2.c20.im+v.c02.im*v2.c20.re
-     +v.c10.re*v2.c01.im+v.c10.im*v2.c01.re
-     +v.c11.re*v2.c11.im+v.c11.im*v2.c11.re
-     +v.c12.re*v2.c21.im+v.c12.im*v2.c21.re
-     +v.c20.re*v2.c02.im+v.c20.im*v2.c02.re
-     +v.c21.re*v2.c12.im+v.c21.im*v2.c12.re
-     +v.c22.re*v2.c22.im+v.c22.im*v2.c22.re  );
-  a0.re=0.16059043836821615e-9;    /*  1/13! */
-  a0.im=0.0;
-  a1.re=0.11470745597729725e-10;   /*  1/14! */
-  a1.im=0.0;
-  a2.re=0.76471637318198165e-12;   /*  1/15! */
-  a2.im=0.0;
+    ( creal(v.c00)*cimag(v2.c00)+cimag(v.c00)*creal(v2.c00)
+     +creal(v.c01)*cimag(v2.c10)+cimag(v.c01)*creal(v2.c10)
+     +creal(v.c02)*cimag(v2.c20)+cimag(v.c02)*creal(v2.c20)
+     +creal(v.c10)*cimag(v2.c01)+cimag(v.c10)*creal(v2.c01)
+     +creal(v.c11)*cimag(v2.c11)+cimag(v.c11)*creal(v2.c11)
+     +creal(v.c12)*cimag(v2.c21)+cimag(v.c12)*creal(v2.c21)
+     +creal(v.c20)*cimag(v2.c02)+cimag(v.c20)*creal(v2.c02)
+     +creal(v.c21)*cimag(v2.c12)+cimag(v.c21)*creal(v2.c12)
+     +creal(v.c22)*cimag(v2.c22)+cimag(v.c22)*creal(v2.c22));
+  a0 = (0.16059043836821615e-9) + cimag(a0) * I;    /*  1/13! */
+  a0 = creal(a0);
+  a1 = (0.11470745597729725e-10) + cimag(a1) * I;   /*  1/14! */
+  a1 = creal(a1);
+  a2 = (0.76471637318198165e-12) + cimag(a2) * I;   /*  1/15! */
+  a2 = creal(a2);
   fac=0.20876756987868099e-8;      /*  1/12! */
   r=12.0;
   for(i = 3; i <= 15; i++) {
-    a1p.re = a0.re + a * a2.re;
-    a1p.im = a0.im + a * a2.im;
-    a0.re = fac - b * a2.im;
-    a0.im =     + b * a2.re;
-    a2.re = a1.re; 
-    a2.im = a1.im;
-    a1.re = a1p.re; 
-    a1.im = a1p.im;
+    a1p = (creal(a0) + a * creal(a2)) + cimag(a1p) * I;
+    a1p = creal(a1p) + (cimag(a0) + a * cimag(a2)) * I;
+    a0 = (fac - b * cimag(a2)) + cimag(a0) * I;
+    a0 = creal(a0) + (+ b * creal(a2)) * I;
+    a2 = a1;
+    a1 = a1p;
     fac *= r;  
     r -= 1.0;
   }
   /* vr = a0 + a1*v + a2*v2 */
-  vr.c00.re = a0.re + a1.re*v.c00.re - a1.im*v.c00.im + a2.re*v2.c00.re - a2.im*v2.c00.im;
-  vr.c00.im = a0.im + a1.re*v.c00.im + a1.im*v.c00.re + a2.re*v2.c00.im + a2.im*v2.c00.re;
-  vr.c01.re =         a1.re*v.c01.re - a1.im*v.c01.im + a2.re*v2.c01.re - a2.im*v2.c01.im;
-  vr.c01.im =         a1.re*v.c01.im + a1.im*v.c01.re + a2.re*v2.c01.im + a2.im*v2.c01.re;
-  vr.c02.re =         a1.re*v.c02.re - a1.im*v.c02.im + a2.re*v2.c02.re - a2.im*v2.c02.im;
-  vr.c02.im =         a1.re*v.c02.im + a1.im*v.c02.re + a2.re*v2.c02.im + a2.im*v2.c02.re;
-  vr.c10.re =         a1.re*v.c10.re - a1.im*v.c10.im + a2.re*v2.c10.re - a2.im*v2.c10.im;
-  vr.c10.im =         a1.re*v.c10.im + a1.im*v.c10.re + a2.re*v2.c10.im + a2.im*v2.c10.re;
-  vr.c11.re = a0.re + a1.re*v.c11.re - a1.im*v.c11.im + a2.re*v2.c11.re - a2.im*v2.c11.im;
-  vr.c11.im = a0.im + a1.re*v.c11.im + a1.im*v.c11.re + a2.re*v2.c11.im + a2.im*v2.c11.re;
-  vr.c12.re =         a1.re*v.c12.re - a1.im*v.c12.im + a2.re*v2.c12.re - a2.im*v2.c12.im;
-  vr.c12.im =         a1.re*v.c12.im + a1.im*v.c12.re + a2.re*v2.c12.im + a2.im*v2.c12.re;
-  vr.c20.re =         a1.re*v.c20.re - a1.im*v.c20.im + a2.re*v2.c20.re - a2.im*v2.c20.im;
-  vr.c20.im =         a1.re*v.c20.im + a1.im*v.c20.re + a2.re*v2.c20.im + a2.im*v2.c20.re;
-  vr.c21.re =         a1.re*v.c21.re - a1.im*v.c21.im + a2.re*v2.c21.re - a2.im*v2.c21.im;
-  vr.c21.im =         a1.re*v.c21.im + a1.im*v.c21.re + a2.re*v2.c21.im + a2.im*v2.c21.re;
-  vr.c22.re = a0.re + a1.re*v.c22.re - a1.im*v.c22.im + a2.re*v2.c22.re - a2.im*v2.c22.im;
-  vr.c22.im = a0.im + a1.re*v.c22.im + a1.im*v.c22.re + a2.re*v2.c22.im + a2.im*v2.c22.re;
+  vr.c00 = a0 + a1 * v.c00 + a2 * v2.c00;
+  vr.c01 =      a1 * v.c01 + a2 * v2.c01;
+  vr.c02 =      a1 * v.c02 + a2 * v2.c02;
+  vr.c10 =      a1 * v.c10 + a2 * v2.c10;
+  vr.c11 = a0 + a1 * v.c11 + a2 * v2.c11;
+  vr.c12 =      a1 * v.c12 + a2 * v2.c12;
+  vr.c20 =      a1 * v.c20 + a2 * v2.c20;
+  vr.c21 =      a1 * v.c21 + a2 * v2.c21;
+  vr.c22 = a0 + a1 * v.c22 + a2 * v2.c22;
   return vr;
 }
 
@@ -133,51 +122,40 @@ su3 exposu3_check(su3adj p, int im) {
     fac = fac/i;
     _su3_times_su3(v3, v2, v);
     _su3_refac_acc(vr, fac, v3); 
-    _su3_assign(v2, v3); 
+    v2 = v3; 
   }
   return vr;
 }
 
 
-su3 restoresu3(su3 u) {
+su3 restoresu3(su3 u)
+{
   static su3 vr;
   static double n1,n2;
   
   /* normalize rows 1 and 2 */
-  n1= u.c00.re * u.c00.re + u.c00.im * u.c00.im
-    + u.c01.re * u.c01.re + u.c01.im * u.c01.im
-    + u.c02.re * u.c02.re + u.c02.im * u.c02.im;
+  n1= creal(u.c00) * creal(u.c00) + cimag(u.c00) * cimag(u.c00)
+    + creal(u.c01) * creal(u.c01) + cimag(u.c01) * cimag(u.c01)
+    + creal(u.c02) * creal(u.c02) + cimag(u.c02) * cimag(u.c02);
   n1 = 1.0/sqrt(n1);
-  n2= u.c10.re * u.c10.re + u.c10.im * u.c10.im
-    + u.c11.re * u.c11.re + u.c11.im * u.c11.im
-    + u.c12.re * u.c12.re + u.c12.im * u.c12.im;
+  n2= creal(u.c10) * creal(u.c10) + cimag(u.c10) * cimag(u.c10)
+    + creal(u.c11) * creal(u.c11) + cimag(u.c11) * cimag(u.c11)
+    + creal(u.c12) * creal(u.c12) + cimag(u.c12) * cimag(u.c12);
   n2= 1.0/sqrt(n2);
   
-  vr.c00.re=n1*u.c00.re;  vr.c00.im=n1*u.c00.im;
-  vr.c01.re=n1*u.c01.re;  vr.c01.im=n1*u.c01.im;
-  vr.c02.re=n1*u.c02.re;  vr.c02.im=n1*u.c02.im;
+  vr.c00 = n1*u.c00;
+  vr.c01 = n1*u.c01;
+  vr.c02 = n1*u.c02;
   
-  vr.c10.re=n1*u.c10.re;  vr.c10.im=n1*u.c10.im;
-  vr.c11.re=n1*u.c11.re;  vr.c11.im=n1*u.c11.im;
-  vr.c12.re=n1*u.c12.re;  vr.c12.im=n1*u.c12.im;
+  vr.c10 = n1*u.c10;
+  vr.c11 = n1*u.c11;
+  vr.c12 = n1*u.c12;
   
   /* compute  row 3 as the conjugate of the cross-product of 1 and 2 */ 
-  
-  /*1 = 2 3  - 3 2*/
-  vr.c20.re= vr.c01.re*vr.c12.re-vr.c02.re*vr.c11.re
-    -vr.c01.im*vr.c12.im+vr.c02.im*vr.c11.im;
-  vr.c20.im=-vr.c01.re*vr.c12.im+vr.c02.re*vr.c11.im
-    -vr.c01.im*vr.c12.re+vr.c02.im*vr.c11.re;
-  /*2 = 3 1  - 1 3*/
-  vr.c21.re= vr.c02.re*vr.c10.re-vr.c00.re*vr.c12.re
-    -vr.c02.im*vr.c10.im+vr.c00.im*vr.c12.im;
-  vr.c21.im=-vr.c02.re*vr.c10.im+vr.c00.re*vr.c12.im
-    -vr.c02.im*vr.c10.re+vr.c00.im*vr.c12.re;
-  /*3 = 1 2  - 2 1*/
-  vr.c22.re= vr.c00.re*vr.c11.re-vr.c01.re*vr.c10.re
-    -vr.c00.im*vr.c11.im+vr.c01.im*vr.c10.im;
-  vr.c22.im=-vr.c00.re*vr.c11.im+vr.c01.re*vr.c10.im
-    -vr.c00.im*vr.c11.re+vr.c01.im*vr.c10.re;
+  vr.c20 = conj(vr.c01 * vr.c12 - vr.c02 * vr.c11);
+  vr.c21 = conj(vr.c02 * vr.c10 - vr.c00 * vr.c11);
+  vr.c22 = conj(vr.c00 * vr.c11 - vr.c01 * vr.c10);
+
   return vr;
 }
 

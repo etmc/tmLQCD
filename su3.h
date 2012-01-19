@@ -40,7 +40,7 @@
 
 typedef struct 
 {
-   _Complex double c00,c01,c02,c10,c11,c12,c20,c21,c22;
+   _Complex double c00, c01, c02, c10, c11, c12, c20, c21, c22;
 } su3;
 
 typedef struct
@@ -123,7 +123,9 @@ typedef struct
    _vector_assign((r).s2,(s).s2);\
    _vector_assign((r).s3,(s).s3);
 
-
+#define _vector_norm_square(r) \
+   creal(conj((r).c0) * (r).c0 + conj((r).c1) * (r).c1 + conj((r).c2) * (r).c2)
+   
 /* M. Hasenbusch Mon Sep 24
 * r.c1=-s.c1
 * r.c2=-s.c2
@@ -230,6 +232,7 @@ _sse_store(r);
 * r.c3+=s.c3
 */
 #if ((defined SSE2) || (defined SSE3))
+
 #define _vector_add_assign(r,s) \
 _sse_load(r); \
 _sse_load_up(s); \
@@ -241,7 +244,9 @@ _sse_load(r); \
 _sse_load_up(s); \
 _sse_vector_sub(); \
 _sse_store(r);
+
 #else
+
 #define _vector_add_assign(r,s)			\
   (r).c0 += (s).c0;				\
   (r).c1 += (s).c1;				\
@@ -251,6 +256,7 @@ _sse_store(r);
   (r).c0 -= (s).c0;				\
   (r).c1 -= (s).c1;				\
   (r).c2 -= (s).c2;
+
 #endif 
 
 #define _vector_i_add_assign(r,s)		\
@@ -288,18 +294,6 @@ _sse_store(r);
   (r).c0 = conj(c)*(s).c0;			\
   (r).c1 = conj(c)*(s).c1;			\
   (r).c2 = conj(c)*(s).c2;
-
-/*
-* Real part of the scalar product (r,s)
-*/
-
-#define _vector_prod_re(r,s)						\
-  creal(conj((r).c0)*(s).c0 + conj((r).c1)*(s).c1 + conj((r).c2)*(s).c2);
-/*
- * Imaginary part of the scalar product (r,s)
- */
-#define _vector_prod_im(r,s)			\
-  cimag(conj((r).c0)*(s).c0 + conj((r).c1)*(s).c1 + conj((r).c2)*(s).c2);
 
 /*
 * r.c1-=z*s.c1 (z of type _Complex double)
@@ -353,6 +347,7 @@ _sse_store_up(r);
 (r).c0 = conj((u).c00)*(s).c0 + conj((u).c10)*(s).c1 + conj((u).c20)*(s).c2;	\
 (r).c1 = conj((u).c01)*(s).c0 + conj((u).c11)*(s).c1 + conj((u).c21)*(s).c2;	\
 (r).c2 = conj((u).c02)*(s).c0 + conj((u).c12)*(s).c1 + conj((u).c22)*(s).c2;   
+
 #endif
 
 /*******************************************************************************
