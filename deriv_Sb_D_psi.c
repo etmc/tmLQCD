@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  * 
  * Copyright (C) 2007,2008 Jan Volkholz, Carsten Urbach
  *
@@ -629,4 +628,3 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k) {
 
 #endif
 
-static char const rcsid[] = "$Id$";

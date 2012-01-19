@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  *
  * Copyright (C) 2001 Martin Hasenbusch
  *
@@ -291,7 +290,6 @@ __asm__ __volatile__ ("movapd %%xmm4, %0 \n\t" \
 #endif
 
 #ifdef MAIN_PROGRAM
-static char const su3adjrcsid[] = "$Id$";
 #endif
 
 #endif

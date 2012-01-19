@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$ 
  *
  * Copyright (C) 2006,2007,2008 Karl Jansen, Thomas Chiarappa, 
  *                              Carsten Urbach
@@ -917,7 +916,6 @@ void red_noise_nd(spinor * const lse, spinor * const lso,
   return;
 }
 
-static char const rcsid[] = "$Id$";
 
 
 

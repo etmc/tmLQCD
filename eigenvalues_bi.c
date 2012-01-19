@@ -17,7 +17,6 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
  /*******************************************************************************
- * $Id$
  *
  * Here we compute the nr_of_eigenvalues lowest eigenvalues
  * of (gamma5*D)^2. Therefore we use the arnoldi routines.

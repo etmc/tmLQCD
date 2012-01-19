@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  * Copyright (C) 2009 Carsten Urbach
  *
  * This file is part of tmLQCD.

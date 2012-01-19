@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  *
  * Copyright (C) 2001 Martin Hasenbusch
  *               2003 Thomas Chiarappa
@@ -20,7 +19,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id$
  *  
  * File: cg_her.c
  *
@@ -141,7 +139,6 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   return(iteration);
 }
 
-static char const rcsid[] = "$Id$";
 
 
 

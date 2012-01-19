@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  *
  * Copyright (C) 2001 Martin Hasebusch
  *
@@ -311,4 +310,3 @@ double ini_momenta(const int repro) {
   return kc;
 }
 
-static char const rcsid[] = "$Id$";

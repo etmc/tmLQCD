@@ -1532,6 +1532,5 @@ void geometry(){
   free(xeven);
 }
 
-static char const rcsid[] = "$Id$";
 
 

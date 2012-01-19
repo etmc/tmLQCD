@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id: operator.c 1763 2011-04-21 11:51:47Z reker $ 
  *
  * Copyright (C) 1995 Ulli Wolff, Stefan Sint
  *               2001,2005 Martin Hasenbusch

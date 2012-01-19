@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id$ */
 
 /**********************************************************
  * 
@@ -789,7 +788,6 @@ void xchange_field(spinor * const l, const int ieo) {
 
 #endif /* _NON_BLOCKING */
 
-static char const rcsid[] = "$Id$";
 
 
 

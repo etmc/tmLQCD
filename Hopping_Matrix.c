@@ -1,6 +1,5 @@
 /**********************************************************************
  *
- * $Id$
  *
  * Copyright (C) 2001 Martin Luescher
  *               2002 Martin Hasenbusch
@@ -3190,4 +3189,3 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 
 #endif /* thats _USE_HALFSPINOR */
 
-static char const rcsid[] = "$Id$";

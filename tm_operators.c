@@ -17,7 +17,6 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 /**************************************************************
- * $Id$ *
  *                                                            *
  * This file contains operators for twisted mass Wilson QCD   *
  * prepared for even odd preconditioning                      *
@@ -990,4 +989,3 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
   }
 }
 
-static char const rcsid[] = "$Id$";

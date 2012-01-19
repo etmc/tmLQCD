@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$ 
  *
  * Copyright (C) 2008 Albert Deuzeman, Siebren Reker, Carsten Urbach
  *               2010 Claude Tadonki, Carsten Urbach

@@ -1,6 +1,5 @@
 /*******************************************************************************
 
- * $Id$
  *
  * This routine computes the index with the Jacobi-Davidson method
  *
