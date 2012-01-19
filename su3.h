@@ -733,6 +733,7 @@ _sse_store_up(r);
   (u).c21 += conj((v).c02)*(w).c01 + conj((v).c12)*(w).c11 + conj((v).c22)*(w).c21; \
   (u).c22 += conj((v).c02)*(w).c02 + conj((v).c12)*(w).c12 + conj((v).c22)*(w).c22;
 
+#endif
 
 /* M. Hasenbusch x=Re Tr (v * w^{\dag}) */
 #define _trace_su3_times_su3d(x,v,w)		    \
