@@ -84,14 +84,13 @@ su3 exposu3(su3adj p)
   a2 = creal(a2);
   fac=0.20876756987868099e-8;      /*  1/12! */
   r=12.0;
-  for(i = 3; i <= 15; i++) {
-    a1p = (creal(a0) + a * creal(a2)) + cimag(a1p) * I;
-    a1p = creal(a1p) + (cimag(a0) + a * cimag(a2)) * I;
-    a0 = (fac - b * cimag(a2)) + cimag(a0) * I;
-    a0 = creal(a0) + (+ b * creal(a2)) * I;
+  for(i = 3; i <= 15; i++)
+  {
+    a1p = a0 + a * a2;
+    a0 = fac + b * I * a2;
     a2 = a1;
     a1 = a1p;
-    fac *= r;  
+    fac *= r;
     r -= 1.0;
   }
   /* vr = a0 + a1*v + a2*v2 */
