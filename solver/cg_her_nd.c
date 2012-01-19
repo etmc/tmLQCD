@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$ 
  *
  * Copyright (C) 2005 Thomas Chiarappa
  *
@@ -163,7 +162,6 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
   return(-1);
 }
 
-static char const rcsid[] = "$Id$";
 
 
 

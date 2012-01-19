@@ -17,7 +17,6 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 /*******************************************************************************
- * $Id$
  *
  *   void add(spinor * const Q,spinor * const R,spinor * const S)
  *     Makes the sum (*Q) = (*R) + (*S)

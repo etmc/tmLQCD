@@ -1,4 +1,3 @@
-/* $Id$ */
 
 #ifndef _DOV_PROJ_H
 #define _DOV_PROJ_H

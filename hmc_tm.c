@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
@@ -558,4 +557,3 @@ int main(int argc,char *argv[]) {
 #endif
 }
 
-static char const rcsid[] = "$Id$";

@@ -1,4 +1,3 @@
-# $Id: Makefile.in 1793 2011-10-12 21:55:13Z reker $
 
 srcdir = @srcdir@
 top_builddir =  @top_builddir@

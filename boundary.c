@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  * Copyright (C) 2001 Martin Hasenbusch
  * Copyright (C) 2006,2007,2008 Carsten Urbach
  *

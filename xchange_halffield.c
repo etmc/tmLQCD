@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id$ */
 
 /**********************************************************
  * 
@@ -583,7 +582,6 @@ void xchange_halffield32() {
 #endif /* defined _USE_SHMEM */
 #endif /* defined _USE_HALFSPINOR */
 
-static char const rcsid[] = "$Id$";
 
 
 

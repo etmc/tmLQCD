@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$ 
  * 
  * Copyright (C) 2003,2005,2006,2007,2008 Mauro Papinutto, Ines Wetzorke,
  *                                        Karl Jansen, Carsten Urbach
