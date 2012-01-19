@@ -46,19 +46,14 @@
 #include "linalg_eo.h"
 #include "io/gauge.h"
 #include "io/params.h"
-#include "observables.h"
+#include "measure_gauge_action.h"
 #include "hybrid_update.h"
 #include "ranlxd.h"
 #include "read_input.h"
-#include "linsolve.h"
 #include "expo.h"
 #include "xchange.h"
 #include "measure_rectangles.h"
 #include "init_gauge_tmp.h"
-#include "solver/chrono_guess.h"
-#include "solver/bicgstab_complex.h"
-#include "update_backward_gauge.h"
-#include "solver/solver.h"
 #include "monomial.h"
 #include "integrator.h"
 #include "hamiltonian_field.h"
@@ -132,7 +127,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* heatbath for all monomials */
   for(i = 0; i < Integrator.no_timescales; i++) {
     for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-      monomial_list[ Integrator.mnls_per_ts[i][j] ].hbfunction(Integrator.mnls_per_ts[i][j]);
+      monomial_list[ Integrator.mnls_per_ts[i][j] ].hbfunction(Integrator.mnls_per_ts[i][j], &hf);
     }
   }
 
@@ -151,7 +146,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   dh = 0.;
   for(i = 0; i < Integrator.no_timescales; i++) {
     for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-      dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j]);
+      dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
     }
   }
 
@@ -222,7 +217,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ret_dh = 0.;
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-        ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j]);
+        ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
       }
     }
 

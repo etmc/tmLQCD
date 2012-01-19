@@ -29,6 +29,7 @@
 #include "linalg_eo.h"
 #include "start.h"
 #include "monomial.h"
+#include "hamiltonian_field.h"
 #include "reweighting_factor.h"
 
 void reweighting_factor(const int N, const int nstore) {
@@ -37,6 +38,14 @@ void reweighting_factor(const int N, const int nstore) {
   double * sum, * sum_sq;
   monomial * mnl;
   FILE * ofs;
+  hamiltonian_field_t hf;
+
+  hf.gaugefield = g_gauge_field;
+  hf.momenta = NULL;
+  hf.derivative = NULL;
+  hf.update_gauge_copy = g_update_gauge_copy;
+  hf.update_gauge_energy = g_update_gauge_energy;
+  hf.update_rectangle_energy = g_update_rectangle_energy;
 
   sum = (double*)calloc(no_monomials, sizeof(double));
   sum_sq = (double*)calloc(no_monomials, sizeof(double));
@@ -61,7 +70,7 @@ void reweighting_factor(const int N, const int nstore) {
     for(j = 0; j < no_monomials; j++) {
       mnl = &monomial_list[j];
       if(mnl->type != GAUGE) {
-	y = mnl->accfunction(j);
+	y = mnl->accfunction(j, &hf);
 	sq_norm -= y;
 	x = exp(sq_norm);
 	sum[j] += x;

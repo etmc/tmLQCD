@@ -57,7 +57,7 @@
 #ifdef HAVE_GPU
 #include"GPU/cudadefs.h"
 #include"temporalgauge.h"
-#include"observables.h"
+#include"measure_gauge_action.h"
 
 extern int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
 			double eps, const int rel_prec,const int N);

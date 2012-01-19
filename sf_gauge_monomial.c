@@ -36,13 +36,14 @@
 #include "gamma.h"
 #include "get_staples.h"
 #include "read_input.h"
-#include "observables.h"
+#include "measure_gauge_action.h"
 #include "measure_rectangles.h"
 #include "monomial.h"
 #include "sf_gauge_monomial.h"
+#include "hamiltonian_field.h"
 #include "sf_utils.h"
 
-void sf_gauge_derivative(const int id) {
+void sf_gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 
   int i, mu;
   static su3 v, w;
@@ -77,7 +78,7 @@ void sf_gauge_derivative(const int id) {
   return;
 }
 
-void sf_gauge_heatbath( const int id )
+void sf_gauge_heatbath( const int id, hamiltonian_field_t * const hf)
 {
   monomial* mnl = &(monomial_list[id]);
 
@@ -93,7 +94,7 @@ void sf_gauge_heatbath( const int id )
   }
 }
 
-double sf_gauge_acc( const int id )
+double sf_gauge_acc( const int id, hamiltonian_field_t * const hf)
 {
   monomial* mnl = &(monomial_list[id]);
   double sq_plaq = 0;

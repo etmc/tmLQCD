@@ -21,6 +21,8 @@
 #ifndef _NDDETRATIO_MONOMIAL_H
 #define _NDDETRATIO_MONOMIAL_H
 
-double nddetratio_acc(const int id);
+#include "hamiltonian_field.h"
+
+double nddetratio_acc(const int id, hamiltonian_field_t * const hf);
 
 #endif

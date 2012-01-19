@@ -56,7 +56,7 @@
 #ifdef HAVE_GPU
   #include"GPU/cudadefs.h"
   #include"temporalgauge.h"
-  #include"observables.h"
+  #include"measure_gauge_action.h"
   int mixedsolve_eo_nd (spinor *, spinor *, spinor *, spinor *, int, double, int);
   int mixedsolve_eo_nd_mpi(spinor *, spinor *, spinor *, spinor *, int, double, int);
   #ifdef TEMPORALGAUGE

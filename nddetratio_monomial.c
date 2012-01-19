@@ -46,11 +46,12 @@
 #include "Ptilde_nd.h"
 #include "reweighting_factor_nd.h"
 #include "monomial.h"
+#include "hamiltonian_field.h"
 #include "nddetratio_monomial.h"
 
 
 
-double nddetratio_acc(const int id) {
+double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
   int iter;
   monomial * mnl = &monomial_list[id];
 

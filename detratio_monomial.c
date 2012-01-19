@@ -57,7 +57,7 @@ extern int ITER_MAX_CG;
 
 /* think about chronological solver ! */
 
-void detratio_derivative(const int no) {
+void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
   int saveiter = ITER_MAX_BCG;
 
   monomial * mnl = &monomial_list[no];
@@ -259,7 +259,7 @@ void detratio_derivative(const int no) {
 }
 
 
-void detratio_heatbath(const int id) {
+void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   int saveiter = ITER_MAX_BCG;
   monomial * mnl = &monomial_list[id];
 
@@ -314,7 +314,7 @@ void detratio_heatbath(const int id) {
   return;
 }
 
-double detratio_acc(const int id) {
+double detratio_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   int saveiter = ITER_MAX_BCG;
   int save_sloppy = g_sloppy_precision_flag;

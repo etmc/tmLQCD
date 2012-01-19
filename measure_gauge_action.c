@@ -39,7 +39,7 @@
 #include "geometry_eo.h"
 #include "global.h"
 #include <io/params.h>
-#include "observables.h"
+#include "measure_gauge_action.h"
 
 double measure_gauge_action() {
   int ix,ix1,ix2,mu1,mu2;

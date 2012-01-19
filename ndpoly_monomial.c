@@ -44,6 +44,7 @@
 #include "Ptilde_nd.h"
 #include "reweighting_factor_nd.h"
 #include "monomial.h"
+#include "hamiltonian_field.h"
 #include "ndpoly_monomial.h"
 
 extern int phmc_exact_poly;
@@ -54,7 +55,7 @@ extern int phmc_exact_poly;
  *
  ********************************************/
 
-void ndpoly_derivative(const int id) {
+void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   int j, k;
   monomial * mnl = &monomial_list[id];
 
@@ -154,7 +155,7 @@ void ndpoly_derivative(const int id) {
 }
 
 
-void ndpoly_heatbath(const int id) {
+void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   int j;
   double temp;
   monomial * mnl = &monomial_list[id];
@@ -260,7 +261,7 @@ void ndpoly_heatbath(const int id) {
 }
 
 
-double ndpoly_acc(const int id) {
+double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   int j, ij=0;
   double temp, sgn, fact, Diff;
   double Ener[8];

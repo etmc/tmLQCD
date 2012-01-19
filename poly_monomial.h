@@ -20,9 +20,11 @@
 #ifndef _POLY_MONOMIAL_H
 #define _POLY_MONOMIAL_H
 
-void poly_derivative(const int id);
-double poly_acc(const int id);
-void poly_heatbath(const int id);
+#include "hamiltonian_field.h"
+
+void poly_derivative(const int id, hamiltonian_field_t * const hf);
+double poly_acc(const int id, hamiltonian_field_t * const hf);
+void poly_heatbath(const int id, hamiltonian_field_t * const hf);
 
 
 #endif

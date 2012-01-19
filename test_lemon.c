@@ -55,7 +55,7 @@
 #include "xchange.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
-#include "observables.h"
+#include "measure_gauge_action.h"
 #include "mpi_init.h"
 
 

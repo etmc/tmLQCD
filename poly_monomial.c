@@ -49,6 +49,7 @@
 #include "solver/eigenvalues.h"
 #include "Nondegenerate_Matrix.h"
 #include "Hopping_Matrix.h"
+#include "hamiltonian_field.h"
 #include "phmc.h"
 
 
@@ -60,7 +61,7 @@ inline void setPhmcVars(monomial *mnl){
   phmc_root=mnl->MDPolyRoots;
 }
 
-void poly_derivative(const int id){
+void poly_derivative(const int id, hamiltonian_field_t * const hf){
 
   monomial * mnl = &monomial_list[id];
   int k,j;
@@ -190,7 +191,7 @@ void poly_derivative(const int id){
 
 }
 
-double poly_acc(const int id){
+double poly_acc(const int id, hamiltonian_field_t * const hf){
 
   monomial * mnl = &monomial_list[id];
   int j;
@@ -275,7 +276,7 @@ double poly_acc(const int id){
 
 }
 
-void poly_heatbath(const int id){
+void poly_heatbath(const int id, hamiltonian_field_t * const hf){
   monomial * mnl = &monomial_list[id];
   int j;
   spinor* spinor1=g_spinor_field[2];

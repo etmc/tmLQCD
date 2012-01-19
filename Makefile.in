@@ -42,7 +42,7 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
 SMODULES = Hopping_Matrix_nocom Hopping_Matrix tm_operators
 
-MODULES = read_input gamma hybrid_update observables start \
+MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	expo get_staples update_backward_gauge \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \

@@ -79,7 +79,7 @@ void update_momenta(int * mnllist, double step, const int no,
       }
     }
 
-    monomial_list[ mnllist[k] ].derivativefunction(mnllist[k]);
+    monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
 #ifdef MPI
     xchange_deri(hf->derivative);
 #endif

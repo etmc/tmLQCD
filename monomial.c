@@ -38,7 +38,6 @@
 #include "linalg_eo.h"
 #include "default_input_values.h"
 #include "read_input.h"
-#include "poly_monomial.h"
 #include "monomial.h"
 
 
@@ -347,7 +346,7 @@ int init_poly_monomial(const int V,const int id){
 
 }
 
-void dummy_derivative(const int id) {
+void dummy_derivative(const int id, hamiltonian_field_t * const hf) {
   if(g_proc_id == 0) {
     fprintf(stderr, "dummy_derivative was called. Was that really intended?\n");
     fprintf(stderr, "callers monomial ID was %d\n", id);
@@ -355,7 +354,7 @@ void dummy_derivative(const int id) {
   return;
 }
 
-void dummy_heatbath(const int id) {
+void dummy_heatbath(const int id, hamiltonian_field_t * const hf) {
   if(g_proc_id == 0) {
     fprintf(stderr, "dummy_heatbath was called. Was that really intended?\n");
     fprintf(stderr, "callers monomial ID was %d\n", id);
@@ -363,7 +362,7 @@ void dummy_heatbath(const int id) {
   return;
 }
 
-double dummy_acc(const int id) {
+double dummy_acc(const int id, hamiltonian_field_t * const hf) {
   if(g_proc_id == 0) {
     fprintf(stderr, "dummy_acc was called. Was that really intended?\n");
     fprintf(stderr, "callers monomial ID was %d\n", id);

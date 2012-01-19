@@ -49,7 +49,7 @@
 #include "ranlxd.h"
 #include "geometry_eo.h"
 #include "start.h"
-#include "observables.h"
+#include "measure_gauge_action.h"
 #include "measure_rectangles.h"
 #ifdef MPI
 # include "xchange.h"

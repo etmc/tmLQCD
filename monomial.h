@@ -23,6 +23,10 @@
 #ifndef _MONOMIAL_H
 #define _MONOMIAL_H
 
+#include "su3.h"
+#include "su3spinor.h"
+#include "hamiltonian_field.h"
+
 
 #define DET 0
 #define DETRATIO 1
@@ -90,15 +94,14 @@ typedef struct {
   spinor ** csg_field;
   spinor ** csg_field2;
   /* functions for the HMC update */
-  void (*hbfunction) (const int no);
-  double (*accfunction) (const int no);
-  void (*derivativefunction) (const int no);
+  void (*hbfunction) (const int no, hamiltonian_field_t * const hf);
+  double (*accfunction) (const int no, hamiltonian_field_t * const hf);
+  void (*derivativefunction) (const int no, hamiltonian_field_t * const hf);
 } monomial;
 
-#include "su3.h"
-#include "su3spinor.h"
 #include "det_monomial.h"
 #include "detratio_monomial.h"
+#include "poly_monomial.h"
 #include "ndpoly_monomial.h"
 #include "nddetratio_monomial.h"
 #include "gauge_monomial.h"
@@ -125,8 +128,8 @@ int init_poly_monomial(const int V,const int id);
 
 
 /* some dummy functions */
-void dummy_derivative(const int id);
-void dummy_heatbath(const int id);
-double dummy_acc(const int id);
+void dummy_derivative(const int id, hamiltonian_field_t * const hf);
+void dummy_heatbath(const int id, hamiltonian_field_t * const hf);
+double dummy_acc(const int id, hamiltonian_field_t * const hf);
 
 #endif
