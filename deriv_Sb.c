@@ -122,16 +122,17 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     /*********************** direction +0 ********************/
 
     ddd = &hf->derivative[ix][0];
-    _bgl_load_r0((*r).s0);
-    _bgl_load_r1((*r).s1);
-    _bgl_load_minus_r2((*r).s2);
-    _bgl_load_minus_r3((*r).s3);
+    ddd = &df0[ix][0];
+    _bgl_load_r0(r->s0);
+    _bgl_load_r1(r->s1);
+    _bgl_load_minus_r2(r->s2);
+    _bgl_load_minus_r3(r->s3);
 
-    _bgl_load_reg0((*sp).s0);
-    _bgl_load_reg0_up((*sp).s1);
-    _bgl_load_reg1((*sp).s2);
-    _bgl_load_reg1_up((*sp).s3);
-
+    _bgl_load_reg0(sp->s0);
+    _bgl_load_reg0_up(sp->s1);
+    _bgl_load_reg1(sp->s2);
+    _bgl_load_reg1_up(sp->s3);
+    
     _bgl_add_to_reg0_reg1();
     _bgl_add_to_reg0_up_reg1_up();
 

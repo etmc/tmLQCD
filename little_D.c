@@ -717,7 +717,6 @@ void little_D_hop(int eo,_Complex double * v, _Complex double *w) {
   CONE = 1.0;
   CMONE = -1.0;
   CZERO = 0.0;
-
   i_eo=(eo+1)%2;
   
 #ifdef MPI
@@ -739,7 +738,6 @@ void little_Dhat_lhs(_Complex double * v, _Complex double *w, _Complex double *u
   CONE = 1.0;
   CMONE = -1.0;
   CZERO = 0.0;
-
 
   for(i = nb_blocks/2; i < nb_blocks; i++) {
     _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator_eo,

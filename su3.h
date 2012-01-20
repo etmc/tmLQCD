@@ -483,7 +483,6 @@ _sse_store_up(r);
    (r).c21 = conj(c) * (s).c21; \
    (r).c22 = conj(c) * (s).c22;
 
-
 /* M. Hasenbusch
 * su3_acc
 */

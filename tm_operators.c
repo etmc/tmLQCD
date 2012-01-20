@@ -659,7 +659,8 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
 
   z = 1. + (sign * g_mu) * I;
   w = conj(z);
-#if (defined BGL3 && defined XLC)
+
+  #if (defined BGL3 && defined XLC)
   __alignx(16,l);
   __alignx(16,k);
 #endif
@@ -864,6 +865,7 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
 
   z = 1. + (sign * g_mu) * I;
   w = conj(z);
+
 #if (defined BGL3 && defined XLC)
   __alignx(16,l);
   __alignx(16,k);
