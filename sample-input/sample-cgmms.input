@@ -1,0 +1,39 @@
+# example input file for CGMMS solver
+# requires a 4^4 gauge configuration conf.0000
+#
+# requires an extra file extra_masses.input
+# with one extra mass per line in the format
+# 2*kappa*mu
+# with at least as many extra masses as specified
+# with CGMMSNoExtraMasses input parameter
+
+L=4
+T=4
+
+DebugLevel = 5
+InitialStoreCounter = 0
+Measurements = 1
+2kappamu = 0.05
+kappa = 0.177
+BCAngleT = 1.
+GaugeConfigInputFile = conf
+UseEvenOdd = no
+CGMMSNoExtraMasses = 8
+
+SourceType = Volume
+ReadSource = no
+NoSamples = 12
+
+BeginOperator TMWILSON
+  2kappaMu = 0.05
+  kappa = 0.177
+# this is mandatory
+  UseEvenOdd = no
+  Solver = CGMMS
+  SolverPrecision = 1.e-14
+  MaxSolverIterations = 1000
+# this is automatic
+  AddDownPropagator = no
+EndOperator
+
+
