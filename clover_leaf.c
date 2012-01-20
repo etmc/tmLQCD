@@ -187,7 +187,8 @@ int six_invert(_Complex double a[6][6]) {
   int i,j,k;
   int ifail;
   ifail=0;
-  for(k = 0; k < nm1; k++) {
+  for(k = 0; k < nm1; k++)
+  {
     s=0.0;
     for(j = k+1; j <= nm1; j++) {
       s += conj(a[j][k]) * a[j][k];
@@ -206,23 +207,18 @@ int six_invert(_Complex double a[6][6]) {
     d[k] = (-q*creal(sigma)) + cimag(d[k]) * I; 
     d[k] = creal(d[k]) + (q*cimag(sigma)) * I; 
     /* reflect all columns to the right */
-    for(j = k+1; j <= nm1; j++) {
-      z = (0.) + cimag(z) * I; z = creal(z); 
-      for(i = k; i <= nm1; i++) {
-	z += (creal(a[i][k])*creal(a[i][j])+cimag(a[i][k])*cimag(a[i][j])) + cimag(z) * I;
-	z += creal(z) + (creal(a[i][k])*cimag(a[i][j])-cimag(a[i][k])*creal(a[i][j])) * I;
-      }
-      q=1./p[k];
-      z = q*z; 
-      for(i = k; i <= nm1; i++) {
-	a[i][j] -= (creal(z)*creal(a[i][k])-cimag(z)*cimag(a[i][k])) + cimag(a[i][j]) * I;
-	a[i][j] -= creal(a[i][j]) + (creal(z)*cimag(a[i][k])+cimag(z)*creal(a[i][k])) * I;
-      }
+    for(j = k+1; j <= nm1; j++)
+    {
+      z = 0.0;
+      for(i = k; i <= nm1; i++)
+	z += conj(a[i][k]) * a[i][j];
+      z /= p[k]; 
+      for(i = k; i <= nm1; i++)
+	a[i][j] -= z * a[i][k];
     }
   }
-  sigma = (creal(a[nm1][nm1])) + cimag(sigma) * I;
-  sigma = creal(sigma) + (cimag(a[nm1][nm1])) * I;
-  q=creal(sigma)*creal(sigma)+cimag(sigma)*cimag(sigma);
+  sigma = a[nm1][nm1];
+  q = conj(sigma) * sigma;
   if(q < tiny_t) {
     ifail++;
   }
@@ -235,42 +231,31 @@ int six_invert(_Complex double a[6][6]) {
   for(k = nm1; k >= 0; k--) {
     for(i = k-1; i >= 0;i--) {
       z = (0.) + cimag(z) * I; z = creal(z);
-      for(j = i+1; j < k; j++) {
-	z += (creal(a[i][j])*creal(a[j][k])-cimag(a[i][j])*cimag(a[j][k])) + cimag(z) * I;
-	z += creal(z) + (creal(a[i][j])*cimag(a[j][k])+cimag(a[i][j])*creal(a[j][k])) * I;
-      }
-      z += (creal(a[i][k])*creal(d[k])-cimag(a[i][k])*cimag(d[k])) + cimag(z) * I;
-      z += creal(z) + (creal(a[i][k])*cimag(d[k])+cimag(a[i][k])*creal(d[k])) * I;
-      a[i][k] = (-creal(z)*creal(d[i])+cimag(z)*cimag(d[i])) + cimag(a[i][k]) * I;
-      a[i][k] = creal(a[i][k]) + (-creal(z)*cimag(d[i])-cimag(z)*creal(d[i])) * I;
+      for(j = i+1; j < k; j++)
+	z += a[i][j] * a[j][k];
+      z += a[i][k] * d[k];
+      a[i][k] = -z * d[i];
     }
   }     
   /* execute reflexions in reverse order from the right: */
   
   a[nm1][nm1] = d[nm1];
-  for(k = nm1-1; k >= 0; k--) {
-    for(j=k;j<=nm1;j++) {
-      u[j] = (creal(a[j][k])) + cimag(u[j]) * I;
-      u[j] = creal(u[j]) + (cimag(a[j][k])) * I;
-    }
+  for(k = nm1-1; k >= 0; k--)
+  {
+    for(j=k;j<=nm1;j++)
+      u[j] = a[j][k];
     a[k][k] = d[k];
-    for(j = k+1; j <= nm1; j++) {
-      a[j][k] = (0.0) + cimag(a[j][k]) * I;
-      a[j][k] = creal(a[j][k]);
-    }
-    for(i = 0; i <= nm1; i++) {
-      z = (0.0) + cimag(z) * I;
-      z = creal(z);
-      for(j = k; j <= nm1; j++) {
-        z += (creal(a[i][j])*creal(u[j])-cimag(a[i][j])*cimag(u[j])) + cimag(z) * I;
-        z += creal(z) + (creal(a[i][j])*cimag(u[j])+cimag(a[i][j])*creal(u[j])) * I;
-      }
-      z = (creal(z)) + cimag(z) * I;         /* normalization */
-      z = creal(z) + (cimag(z)) * I;         /* normalization */
-      for(j = k; j <= nm1; j++) {
-        a[i][j] -= (creal(z)*creal(u[j])+cimag(z)*cimag(u[j])) + cimag(a[i][j]) * I; /* reflexion */
-        a[i][j] -= creal(a[i][j]) + (-creal(z)*cimag(u[j])+cimag(z)*creal(u[j])) * I; /* reflexion */
-      }
+    for(j = k+1; j <= nm1; j++)
+      a[j][k] = 0.0;
+    for(i = 0; i <= nm1; i++)
+    {
+      z = 0.0;
+      for(j = k; j <= nm1; j++)
+        z += a[i][j] * u[j];
+      z /= p[k];         /* normalization */
+      
+      for(j = k; j <= nm1; j++)
+        a[i][j] -= conj(u[j]) * z; /* reflexion */
     }
   }
   return ifail;

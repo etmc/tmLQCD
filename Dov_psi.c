@@ -280,8 +280,7 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
   for(j = 0; j < n; j++) {
     cnorm = scalar_prod(&(eigenvectors[j*evlength]), P, N, 1);
     
-    cnorm *= ((double)ev_sign[j]) + cimag(cnorm) * I;
-    cnorm *= creal(cnorm) + ((double)ev_sign[j]) * I;
+    cnorm *= ev_sign[j];
     
     assign_add_mul(Q, &(eigenvectors[j*evlength]), cnorm, N);
   }

@@ -215,7 +215,7 @@ int bicg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) 
       Mtm_plus_psi(t, s);
       omega = scalar_prod(t,s, N, 1);
       d1 = square_norm(t, N, 1);
-      omega /= (d1) + cimag(omega) * I; omega /= creal(omega) + (d1) * I;
+      omega /= d1;
       assign_add_mul_add_mul(P, p, s, alpha, omega, N);
       assign(r, s, N);
       assign_diff_mul(r, t, omega, N);
