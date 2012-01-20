@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
 
-    if (use_stout_flag == 1){
+/*  if (use_stout_flag == 1){
       params_smear.rho = stout_rho;
       params_smear.iterations = stout_no_iter;
       if (stout_smear((su3_tuple*)(g_gauge_field[0]), &params_smear, (su3_tuple*)(g_gauge_field[0])) != 0)
@@ -337,8 +337,7 @@ int main(int argc, char *argv[])
       if (g_cart_id == 0) {
         printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
         fflush(stdout);
-      }
-    }
+      }*/
 
     if (reweighting_flag == 1) {
       reweighting_factor(reweighting_samples, nstore);
