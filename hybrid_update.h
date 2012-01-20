@@ -25,7 +25,6 @@
 
 double moment_energy();
 double ini_momenta(const int repro);
-void update_gauge(double step);
 void gauge_momenta(double step);
 
 #endif

@@ -47,7 +47,7 @@ MODULES = read_input gamma hybrid_update observables start \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
 	test/overlaptests clover clover_leaf \
-	invert_eo invert_doublet_eo \
+	invert_eo invert_doublet_eo update_gauge \
 	polyakov_loop getopt sighandler reweighting_factor \
 	source_generation boundary update_tm ranlxd  \
 	mpi_init linsolve deriv_Sb deriv_Sb_D_psi ranlxs \

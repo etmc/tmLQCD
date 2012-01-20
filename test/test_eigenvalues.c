@@ -460,7 +460,7 @@ int main(int argc,char *argv[]) {
 
   /*For parallelization: exchange the gaugefield */
 #ifdef MPI
-  xchange_gauge();
+  xchange_gauge(g_gauge_field);
 #endif
 #ifdef _GAUGE_COPY
   update_backward_gauge();

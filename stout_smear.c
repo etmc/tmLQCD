@@ -159,7 +159,7 @@ int stout_smear_gauge_field(const double rho , const int no_iters) {
     
 #ifdef MPI
     /** update boundaries for parallel stuff **/
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
 #endif
     g_update_gauge_copy = 1;
     g_update_gauge_energy = 1;

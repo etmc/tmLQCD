@@ -19,6 +19,8 @@
 #ifndef _UPDATE_MOMENTA_H
 #define _UPDATE_MOMENTA_H
 
-void update_momenta(int * mnllist, double step, const int no);
+#include "hamiltonian_field.h"
+
+void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_t * const hf);
 
 #endif

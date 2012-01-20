@@ -19,6 +19,10 @@
 #ifndef _INTEGRATOR_H
 #define _INTEGRATOR_H
 
+#include <su3.h>
+#include <su3adj.h>
+#include <hamiltonian_field.h>
+
 #define LEAPFROG 1
 #define SEXTON 2
 #define EXTLEAPFROG 3
@@ -29,24 +33,35 @@
 
 typedef void (*integratefk)(const double, const int, const int);
 
-typedef struct{
+typedef struct {
+  /* gauge, momenta and derivative fields to be used during integration */
+  hamiltonian_field_t hf;
+  /* list of types of integrators */
   int type[10];
+  /* number of timescales */
   int no_timescales;
+  /* steps per timescale */
   int n_int[10];
+  /* trajectory length */
   double tau;
+  /* lambda parameter for 2MN integration scheme */
   double lambda[10];
+  /* monomials per timescale */
   int mnls_per_ts[10][10];
+  /* number of monomials per timescale */
   int no_mnls_per_ts[10];
+  /* function pointers to integration scheme functions */
   integratefk integrate[10];
 } integrator;
 
 extern integrator Integrator;
 
-
+/* all following functions are currently defined in integrator.c */
+/* function to initialise the integrator, to be called once at the beginning */
 int init_integrator();
-void integrate_2mn(const double tau, const int S, const int halfstep);
-void integrate_2mnp(const double tau, const int S, const int halfstep);
-void integrate_leap_frog(const double tau, const int S, const int halfstep);
-
+/* function to set the gauge and momenta fields for the integration */
+void integrator_set_fields(hamiltonian_field_t * hf);
+/* and unsets again (to NULL pointer ) */
+void integrator_unset_fields();
 
 #endif
