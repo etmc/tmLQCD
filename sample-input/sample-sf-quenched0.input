@@ -23,7 +23,7 @@ DebugLevel = 1
 ######################
 # hmc_tm parameters: #
 ######################
-Startcondition = hot
+StartCondition = hot
 BCGstabMaxIter = 0
 CGMaxIter = 1000
 ReversibilityCheck = no
@@ -57,7 +57,7 @@ EndMonomial
 
 BeginIntegrator 
   Type0 = LEAPFROG
-  tau = 1.
+  Tau = 1.
   NumberOfTimescales = 1
   IntegrationSteps0 = 50
   Lambda0 = 0.19

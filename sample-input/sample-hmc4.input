@@ -6,7 +6,7 @@
 L=4
 T=4
 Measurements = 100000
-Startcondition = cold
+StartCondition = cold
 ThermalisationSweeps=100
 2KappaMu = 0.083333
 kappa = 0.208333
@@ -38,7 +38,7 @@ BeginMonomial DETRATIO
   AcceptancePrecision =  1.e-20
   ForcePrecision = 1.e-12
   Name = detrat
-  solver = CG
+  Solver = CG
   CSGHistory = 0
 EndMonomial
 
@@ -47,7 +47,7 @@ BeginIntegrator
   Type1 = 2MN
   IntegrationSteps0 = 2
   IntegrationSteps1 = 4
-  tau = 0.5
+  Tau = 0.5
   Lambda0 = 0.19
   Lambda1 = 0.21
   NumberOfTimescales = 2

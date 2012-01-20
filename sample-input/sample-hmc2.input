@@ -8,7 +8,7 @@
 L=4
 T=4
 Measurements = 35000
-Startcondition = hot
+StartCondition = hot
 2KappaMu = 0.01
 2Kappamubar = 0.1105
 2Kappaepsbar = 0.0935
@@ -40,7 +40,7 @@ BeginMonomial DET
   AcceptancePrecision =  1.e-20
   ForcePrecision = 1.e-12
   Name = det
-  solver = CG
+  Solver = CG
 EndMonomial
 
 BeginMonomial NDPOLY
@@ -58,7 +58,7 @@ BeginIntegrator
   Type1 = 2MN
   IntegrationSteps0 = 2
   IntegrationSteps1 = 6
-  tau = 1.
+  Tau = 1.
   Lambda0 = 0.19
   NumberOfTimescales = 2
 EndIntegrator
