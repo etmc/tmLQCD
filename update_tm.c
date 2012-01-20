@@ -226,7 +226,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ret_enep = moment_energy(hf.momenta);
 
     /* Compute the energy difference */
-    ret_dh += (ret_enep - enep );
+    ret_dh += ret_enep - enep ;
 
     /* Compute Differences in the fields */
     ks = 0.;
@@ -237,24 +237,24 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         tmp = 0.;
         v=&hf.gaugefield[ix][mu];
         w=&gauge_tmp[ix][mu];
-        ds = ((*v).c00.re-(*w).c00.re)*((*v).c00.re-(*w).c00.re)
-          + ((*v).c00.im-(*w).c00.im)*((*v).c00.im-(*w).c00.im)
-          + ((*v).c01.re-(*w).c01.re)*((*v).c01.re-(*w).c01.re)
-          + ((*v).c01.im-(*w).c01.im)*((*v).c01.im-(*w).c01.im)
-          + ((*v).c02.re-(*w).c02.re)*((*v).c02.re-(*w).c02.re)
-          + ((*v).c02.im-(*w).c02.im)*((*v).c02.im-(*w).c02.im)
-          + ((*v).c10.re-(*w).c10.re)*((*v).c10.re-(*w).c10.re)
-          + ((*v).c10.im-(*w).c10.im)*((*v).c10.im-(*w).c10.im)
-          + ((*v).c11.re-(*w).c11.re)*((*v).c11.re-(*w).c11.re)
-          + ((*v).c11.im-(*w).c11.im)*((*v).c11.im-(*w).c11.im)
-          + ((*v).c12.re-(*w).c12.re)*((*v).c12.re-(*w).c12.re)
-          + ((*v).c12.im-(*w).c12.im)*((*v).c12.im-(*w).c12.im)
-          + ((*v).c20.re-(*w).c20.re)*((*v).c20.re-(*w).c20.re)
-          + ((*v).c20.im-(*w).c20.im)*((*v).c20.im-(*w).c20.im)
-          + ((*v).c21.re-(*w).c21.re)*((*v).c21.re-(*w).c21.re)
-          + ((*v).c21.im-(*w).c21.im)*((*v).c21.im-(*w).c21.im)
-          + ((*v).c22.re-(*w).c22.re)*((*v).c22.re-(*w).c22.re)
-          + ((*v).c22.im-(*w).c22.im)*((*v).c22.im-(*w).c22.im);
+        ds = (creal(v->c00)-creal(w->c00))*(creal(v->c00)-creal(w->c00))
+          + (cimag(v->c00)-cimag(w->c00))*(cimag(v->c00)-cimag(w->c00))
+          + (creal(v->c01)-creal(w->c01))*(creal(v->c01)-creal(w->c01))
+          + (cimag(v->c01)-cimag(w->c01))*(cimag(v->c01)-cimag(w->c01))
+          + (creal(v->c02)-creal(w->c02))*(creal(v->c02)-creal(w->c02))
+          + (cimag(v->c02)-cimag(w->c02))*(cimag(v->c02)-cimag(w->c02))
+          + (creal(v->c10)-creal(w->c10))*(creal(v->c10)-creal(w->c10))
+          + (cimag(v->c10)-cimag(w->c10))*(cimag(v->c10)-cimag(w->c10))
+          + (creal(v->c11)-creal(w->c11))*(creal(v->c11)-creal(w->c11))
+          + (cimag(v->c11)-cimag(w->c11))*(cimag(v->c11)-cimag(w->c11))
+          + (creal(v->c12)-creal(w->c12))*(creal(v->c12)-creal(w->c12))
+          + (cimag(v->c12)-cimag(w->c12))*(cimag(v->c12)-cimag(w->c12))
+          + (creal(v->c20)-creal(w->c20))*(creal(v->c20)-creal(w->c20))
+          + (cimag(v->c20)-cimag(w->c20))*(cimag(v->c20)-cimag(w->c20))
+          + (creal(v->c21)-creal(w->c21))*(creal(v->c21)-creal(w->c21))
+          + (cimag(v->c21)-cimag(w->c21))*(cimag(v->c21)-cimag(w->c21))
+          + (creal(v->c22)-creal(w->c22))*(creal(v->c22)-creal(w->c22))
+          + (cimag(v->c22)-cimag(w->c22))*(cimag(v->c22)-cimag(w->c22));
         ds = sqrt(ds);
         tr = ds + kc;
         ts = tr + ks;
@@ -303,8 +303,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   } /* end of reversibility check */
 
   if(accept) {
-    (*plaquette_energy)=new_plaquette_energy;
-    (*rectangle_energy)=new_rectangle_energy;
+    *plaquette_energy = new_plaquette_energy;
+    *rectangle_energy = new_rectangle_energy;
     /* put the links back to SU(3) group */
     if (!bc_flag) { /* periodic boundary conditions */
       for(ix=0;ix<VOLUME;ix++) { 

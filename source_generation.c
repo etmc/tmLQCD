@@ -104,10 +104,10 @@ void gaussian_volume_source(spinor * const P, spinor * const Q,
 	  i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
 	  if((t+x+y+z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
 	      + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
-	    p = (P + i);
+	    p = P + i;
 	  }
 	  else {
-	    p = (Q + i);
+	    p = Q + i;
 	  }
 	  rnormal((double*)p, 24);
 	}
@@ -129,7 +129,7 @@ void extended_pion_source(spinor * const P, spinor * const Q,
   int lt, lx, ly, lz, i, x, y, z, id=0, t;
   int coords[4];
   spinor * p, * q, r;
-  complex efac;
+  _Complex double efac;
 
   zero_spinor_field(P,VOLUME/2);
   zero_spinor_field(Q,VOLUME/2);
@@ -150,18 +150,18 @@ void extended_pion_source(spinor * const P, spinor * const Q,
 	MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	if(g_cart_id == id) {
-	  efac.re= cos(px*x + py*y + pz*z);
-	  efac.im=-sin(px*x + py*y + pz*z);
+	  efac = (cos(px*x + py*y + pz*z)) + cimag(efac) * I;
+	  efac = creal(efac) + (-sin(px*x + py*y + pz*z)) * I;
 
 	  i = g_lexic2eosub[ g_ipt[lt][lx][ly][lz] ];
 	  if((lt+lx+ly+lz+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
 	      + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
-	    p = (P + i);
-	    q = (R + i);
+	    p = P + i;
+	    q = R + i;
 	  }
 	  else {
-	    p = (Q + i);
-	    q = (S + i);
+	    p = Q + i;
+	    q = S + i;
 	  }
 	  _gamma5(r, (*q));
 	  _spinor_mul_complex((*p),efac,r);
@@ -181,7 +181,7 @@ void source_generation_pion_only(spinor * const P, spinor * const Q,
   double rnumber, si=0., co=0.;
   int rlxd_state[105];
   const double sqr2 = 1./sqrt(2.);
-  complex * p = NULL;
+  _Complex double * p = NULL;
   
   zero_spinor_field(P,VOLUME/2);
   zero_spinor_field(Q,VOLUME/2);
@@ -216,7 +216,8 @@ void source_generation_pion_only(spinor * const P, spinor * const Q,
 	    ranlxd(&rnumber, 1);
 	    if(g_cart_id  == id) {
 	      r = (int)floor(4.*rnumber);
-	      if(r == 0) {
+	      if(r == 0)
+	      {
 		si = sqr2;
 		co = sqr2;
 	      }
@@ -236,14 +237,13 @@ void source_generation_pion_only(spinor * const P, spinor * const Q,
 	      i = g_lexic2eosub[ g_ipt[lt][lx][ly][lz] ];
 	      if((lt+lx+ly+lz+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
 		  + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
-		p = (complex*)(P + i);
+		p = (_Complex double*)(P + i);
 	      }
 	      else {
-		p = (complex*)(Q + i);
+		p = (_Complex double*)(Q + i);
 	      }
 	      
-	      (*(p+3*is+ic)).re = co;
-	      (*(p+3*is+ic)).im = si;
+	      (*(p+3*is+ic)) = co + si * I;
 	    }
 	  }
 	}
@@ -268,7 +268,7 @@ void source_generation_pion_zdir(spinor * const P, spinor * const Q,
   double rnumber, si=0., co=0.;
   int rlxd_state[105];
   const double sqr2 = 1./sqrt(2.);
-  complex * p = NULL;
+  _Complex double * p = NULL;
   
   zero_spinor_field(P,VOLUME/2);
   zero_spinor_field(Q,VOLUME/2);
@@ -323,14 +323,13 @@ void source_generation_pion_zdir(spinor * const P, spinor * const Q,
               i = g_lexic2eosub[ g_ipt[lt][lx][ly][lz] ];
               if((lt+lx+ly+lz+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
                   + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
-                p = (complex*)(P + i);
+                p = (_Complex double*)(P + i);
               }
               else {
-                p = (complex*)(Q + i);
+                p = (_Complex double*)(Q + i);
               }
               
-              (*(p+3*is+ic)).re = co;
-              (*(p+3*is+ic)).im = si;
+	      (*(p+3*is+ic)) = co + si * I;
             }
           }
         }
@@ -361,7 +360,7 @@ void source_generation_nucleon(spinor * const P, spinor * const Q,
   int rlxd_state[105];
   int reset = 0, seed, r, tt, lt, xx, lx, yy, ly, zz, lz;
   int coords[4], id=0, i;
-  complex * p = NULL;
+  _Complex double * p = NULL;
   const double s0=0.;
   const double c0=1.;
   const double s1=sin(2.*M_PI/3.);
@@ -439,14 +438,13 @@ void source_generation_nucleon(spinor * const P, spinor * const Q,
 	    i = g_lexic2eosub[ g_ipt[lt][lx][ly][lz] ];
 	    if((lt+lx+ly+lz+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
 		+ g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
-	      p = (complex*)(P + i);
+	      p = (_Complex double*)(P + i);
 	    }
 	    else {
-	      p = (complex*)(Q + i);
+	      p = (_Complex double*)(Q + i);
 	    }
 
-	    (*(p+3*is+ic)).re = co;
-	    (*(p+3*is+ic)).im = si;
+	    (*(p+3*is+ic)) = co + si * I;
 	  }
 	}
       }

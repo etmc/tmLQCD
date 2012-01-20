@@ -39,7 +39,7 @@
 # include <mpi.h>
 #endif
 #include "global.h"
-#include "complex.h"
+#include <complex.h>
 #include "sse.h"
 #include "su3.h"
 #include "read_input.h"
@@ -47,21 +47,18 @@
 #include "mpi_init.h"
 #include "polyakov_loop.h"
 
-void polyakov_loop(complex * pl_, const int mu) {
+void polyakov_loop(_Complex double * pl_, const int mu) {
 
   static int i0, i1, i2, i3, L0, L1, L2, L3, ixyzt, ixyzt_up;
   static double vol;
   static su3 tmp, tmp2; 
   su3 *v = NULL , *w = NULL;
-  static complex pl; 
+  static _Complex double pl; 
   /* For the Kahan summation:*/
 #ifdef MPI
-  static complex pls; 
+  static _Complex double pls; 
 #endif
-  static complex ks, kc, tr, ts, tt;
-  kc.re=0.0; ks.re=0.0;
-  kc.im=0.0; ks.im=0.0;
-  
+  static _Complex double ks = 0.0, kc = 0.0, tr, ts, tt;
   
   /* For the moment only the Polyakov loop in y- and z-direction 
      are implemented, since they are not affected by parallelisation: */
@@ -121,32 +118,26 @@ void polyakov_loop(complex * pl_, const int mu) {
 	  _su3_times_su3(tmp, tmp2, *w);
 	}
 	
-	/* for the last link we directly take the complex trace: */
+	/* for the last link we directly take the _Complex double trace: */
 	ixyzt_up = g_iup[ixyzt_up][mu];
 	w = &g_gauge_field[ixyzt_up][mu];
 	_trace_su3_times_su3(pl,tmp,*w);
 	
-	/* printf("i0=%d, i1=%d, i2=%d, pl=(%e,%e)\n",i0,i1,i2,pl.re,pl.im);*/
+	/* printf("i0=%d, i1=%d, i2=%d, pl=(%e,%e)\n",i0,i1,i2,creal(pl),cimag(pl));*/
 	
 	/* Kahan summation for real and imaginary part: */
-	tr.re=pl.re+kc.re;
-	ts.re=tr.re+ks.re;
-	tt.re=ts.re-ks.re;
-	ks.re=ts.re;
-	kc.im=tr.im-tt.im;
-	tr.im=pl.im+kc.im;
-	ts.im=tr.im+ks.im;
-	tt.im=ts.im-ks.im;
-	ks.im=ts.im;
-	kc.im=tr.im-tt.im;
+	tr = pl + kc;
+	ts = tr + ks;
+	tt = ts - ks;
+	ks = ts;
+	kc = tr - tt;
       }
     }
   }
   /* Finish Kahan summation: */
   /* (Division by 3 is for normalising the colour trace.) */
-  pl.re=(kc.re+ks.re)/3.0;
-  pl.im=(kc.im+ks.im)/3.0;
-  /*  printf("Polyakov loop before normalisation, pl.re=%e, pl.im=%e\n",pl.re,pl.im);*/
+  pl = (kc + ks) / 3.0;
+  /*  printf("Polyakov loop before normalisation, pl.re=%e, pl.im=%e\n",creal(pl),cimag(pl));*/
   
   
   /* Collect the results and return:*/
@@ -158,22 +149,21 @@ void polyakov_loop(complex * pl_, const int mu) {
   /* Normalise, i.e. divide by the number of loops: */
   vol = (double) L0*L1*L2*g_nproc_t*g_nproc_x;
   /*    printf("L0*L1*L2=%d, vol=%e\n",L0*L1*L2,vol);  */
-  _div_real(pl,pl,vol);
-  /*    printf("Polyakov loop after normalisation, pl.re=%e, pl.im=%e\n",pl.re,pl.im) */; 
+  pl /= vol;
+  /*    printf("Polyakov loop after normalisation, pl.re=%e, pl.im=%e\n",creal(pl),cimag(pl)) */; 
   /*   return pl; */
-  (*pl_).re = pl.re;
-  (*pl_).im = pl.im;
+  *pl_ = pl;
 }
 
 
 /* here comes the one in time direction */
 
-int polyakov_loop_0(const int nstore, complex *pl) {
+int polyakov_loop_0(const int nstore, _Complex double *pl) {
 
   int i0, i1, i2, i3, ixyz, ixyzt, ixyzt_up, VOL3, VOLUME3;
   int L0, L1, L2, L3;
   double retime, ratime;
-  complex pl_tmp, tr, ts, tt, kc, ks;
+  _Complex double pl_tmp, tr, ts, tt, kc, ks;
   su3 *tmp_loc = NULL, tmp, tmp2;
   su3 *v = NULL, *w = NULL;
   
@@ -275,47 +265,39 @@ int polyakov_loop_0(const int nstore, complex *pl) {
  
   /* (2) nodes with time coordinate 0 sum traces over local spatial points */
 #endif
-  _complex_zero(pl_tmp);
-  /*   pl_tmp.re = 0.0; pl_tmp.im = 0.0; */
+  pl_tmp = 0.0;
   if(g_proc_coords[0] == 0) {
     
-    kc.re = 0.0; kc.im = 0.0; ks.re = 0.0; ks.im = 0.0;
-    for(ixyz = 0; ixyz < VOL3; ixyz++) /* Kahan-summation of traces */ {
-      pl_tmp.re = (tmp_loc[ixyz]).c00.re + (tmp_loc[ixyz]).c11.re + (tmp_loc[ixyz]).c22.re;
-      pl_tmp.im = (tmp_loc[ixyz]).c00.im + (tmp_loc[ixyz]).c11.im + (tmp_loc[ixyz]).c22.im;
-      tr.re=pl_tmp.re+kc.re;
-      ts.re=tr.re+ks.re;
-      tt.re=ts.re-ks.re;
-      ks.re=ts.re;
-      kc.re=tr.re-tt.re;
-      tr.im=pl_tmp.im+kc.im;
-      ts.im=tr.im+ks.im;
-      tt.im=ts.im-ks.im;
-      ks.im=ts.im;
-      kc.im=tr.im-tt.im;
+    kc = 0.0; ks = 0.0;
+    for(ixyz = 0; ixyz < VOL3; ixyz++) /* Kahan-summation of traces */
+    {
+      pl_tmp = tmp_loc[ixyz].c00 + tmp_loc[ixyz].c11 + tmp_loc[ixyz].c22;
+      tr = pl_tmp + kc;
+      ts = tr + ks;
+      tt = ts - ks;
+      ks = ts;
+      kc = tr - tt;
     }
-    pl_tmp.re = ks.re + kc.re;
-    pl_tmp.im = ks.im + kc.im;
+    pl_tmp = ks + kc;
   }
   
 #ifdef MPI
   /* (3) sum over all contributions from all nodes (also nodes with pl_tmp=0;
      apparently the easiest way) */
   MPI_Reduce(&pl_tmp, pl, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, g_cart_grid);
-  /*   MPI_Reduce(&(pl_tmp.re), &((*pl).re), 1, MPI_DOUBLE, MPI_SUM, 0, g_cart_grid);  */
-  /*   MPI_Reduce(&(pl_tmp.im), &((*pl).im), 1, MPI_DOUBLE, MPI_SUM, 0, g_cart_grid);  */
+  /*   MPI_Reduce(&(creal(pl_tmp)), &(pl->re), 1, MPI_DOUBLE, MPI_SUM, 0, g_cart_grid);  */
+  /*   MPI_Reduce(&(cimag(pl_tmp)), &(pl->im), 1, MPI_DOUBLE, MPI_SUM, 0, g_cart_grid);  */
 #else
-  (*pl).re = pl_tmp.re;
-  (*pl).im = pl_tmp.im;
+  *pl = pl_tmp;
 #endif
   
   /* normalization */
   VOLUME3 = VOL3;
 
-  if(g_proc_id == 0) {
+  if(g_proc_id == 0)
+  {
     VOLUME3 = VOLUME3 * g_nproc_x*g_nproc_y*g_nproc_z;
-    (*pl).re /= 3*VOLUME3;
-    (*pl).im /= 3*VOLUME3;
+    *pl /= 3 * VOLUME3;
   }
   
   /* write result to file */
@@ -326,7 +308,7 @@ int polyakov_loop_0(const int nstore, complex *pl) {
     else {
       ofs = fopen("polyakov_loop_0.dat","a");
     }
-    fprintf(ofs, "%25.16e\t%25.16e\n", (*pl).re, (*pl).im); 
+    fprintf(ofs, "%25.16e\t%25.16e\n", creal(*pl), cimag(*pl)); 
     fclose(ofs);
   }
 #ifdef MPI
@@ -353,7 +335,7 @@ int polyakov_loop_dir(
 		      const int dir    /* in  */) {
 
   int ixyz, ixyzt, ixyzt_up, VOL3, VOLUME3, ix, iy, iz, it;
-  complex pl_tmp, tr, ts, tt, kc, ks, pl;
+  _Complex double pl_tmp, tr, ts, tt, kc, ks, pl;
   su3 *tmp_loc, tmp, tmp2;
   su3 *u, *v, *w;
   double ratime, retime;
@@ -372,8 +354,8 @@ int polyakov_loop_dir(
     return(-1);
   }
 
-  pl.re = 0.;
-  pl.im = 0.;
+  pl = (0.) + cimag(pl) * I;
+  pl = creal(pl);
 
   /********************************************************************************/
 
@@ -515,9 +497,9 @@ int polyakov_loop_dir(
   if(rank_ray == 0) {
 
 #endif
-    _complex_zero(pl_tmp);
-    _complex_zero(kc);
-    _complex_zero(ks);
+    pl_tmp = 0.0;
+    kc = 0.0;
+    ks = 0.0;
 
 #ifdef MPI
 #  ifdef PARALLELXYZT
@@ -530,22 +512,16 @@ int polyakov_loop_dir(
     u = tmp_loc;
 #endif
 
-    for(ixyz=0; ixyz<VOL3; ixyz++) /* Kahan-summation of traces */ {
-      pl_tmp.re = (u[ixyz]).c00.re + (u[ixyz]).c11.re + (u[ixyz]).c22.re;
-      pl_tmp.im = (u[ixyz]).c00.im + (u[ixyz]).c11.im + (u[ixyz]).c22.im;
-      tr.re=pl_tmp.re+kc.re;
-      ts.re=tr.re+ks.re;
-      tt.re=ts.re-ks.re;
-      ks.re=ts.re;
-      kc.re=tr.re-tt.re;
-      tr.im=pl_tmp.im+kc.im;
-      ts.im=tr.im+ks.im;
-      tt.im=ts.im-ks.im;
-      ks.im=ts.im;
-      kc.im=tr.im-tt.im;
+    for(ixyz=0; ixyz<VOL3; ixyz++) /* Kahan-summation of traces */
+    {
+      pl_tmp = u[ixyz].c00 + u[ixyz].c11 + u[ixyz].c22;
+      tr = pl_tmp + kc;
+      ts = tr + ks;
+      tt = ts - ks;
+      ks = ts;
+      kc = tr - tt;
     }
-    pl_tmp.re = ks.re + kc.re;
-    pl_tmp.im = ks.im + kc.im;
+    pl_tmp = ks + kc;
 
 #ifdef MPI
     MPI_Reduce(&pl_tmp, &pl, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, slice);
@@ -559,8 +535,7 @@ int polyakov_loop_dir(
 #  endif
     
 #else
-  pl.re = pl_tmp.re;
-  pl.im = pl_tmp.im;
+  pl = pl_tmp;
 #endif
 
   /* normalization pl |-> pl / ( 3 * 3-dim. volume)*/
@@ -576,8 +551,7 @@ int polyakov_loop_dir(
       VOLUME3 = VOLUME3 * g_nproc_t*g_nproc_x*g_nproc_y;
     }
 #endif
-    pl.re /= 3. * (double)VOLUME3;
-    pl.im /= 3. * (double)VOLUME3;
+    pl /= 3. * VOLUME3;
 
     /* write result to file */
     sprintf(filename, "polyakovloop_dir%1d", dir);
@@ -591,7 +565,7 @@ int polyakov_loop_dir(
       fprintf(stderr, "Could not open file %s for writing\n", filename);
       return(-1);
     }
-    fprintf(ofs, "%4d\t%2d\t%25.16e\t%25.16e\n", nstore, dir, pl.re, pl.im);
+    fprintf(ofs, "%4d\t%2d\t%25.16e\t%25.16e\n", nstore, dir, creal(pl), cimag(pl));
     fclose(ofs);
 #if defined MPI
   }

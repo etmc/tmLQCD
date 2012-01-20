@@ -30,6 +30,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include "global.h"
 #include "su3.h"
 #include "Hopping_Matrix.h"
@@ -302,7 +303,7 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
  * on a half spinor
  ******************************************/
 void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
-                     spinor * const k_strange, spinor * const k_charm, const complex z){
+                     spinor * const k_strange, spinor * const k_charm, const _Complex double z){
 
 
   int ix;
@@ -360,8 +361,8 @@ void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
   mul_r(l_charm, phmc_invmaxev, l_charm, VOLUME/2);
 
   /*     
-  printf(" IN UP: %f %f \n", l_strange[0].s2.c1.re, l_strange[0].s2.c1.im);
-  printf(" IN DN: %f %f \n", l_charm[0].s2.c1.re, l_charm[0].s2.c1.im);
+  printf(" IN UP: %f %f \n", l_strange[0].creal(s2.c1), l_strange[0].cimag(s2.c1));
+  printf(" IN DN: %f %f \n", l_charm[0].creal(s2.c1), l_charm[0].cimag(s2.c1));
   */
 
   /*  AND FINALLY WE SUBSTRACT THE C-CONSTANT  */
@@ -373,31 +374,31 @@ void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
     r=l_strange + ix;
     s=k_strange + ix;
 
-    _complex_times_vector(phi1, z, (*s).s0);
-    _vector_sub_assign((*r).s0, phi1);
-    _complex_times_vector(phi1, z, (*s).s1);
-    _vector_sub_assign((*r).s1, phi1);
-    _complex_times_vector(phi1, z, (*s).s2);
-    _vector_sub_assign((*r).s2, phi1);
-    _complex_times_vector(phi1, z, (*s).s3);
-    _vector_sub_assign((*r).s3, phi1);
+    _complex_times_vector(phi1, z, s->s0);
+    _vector_sub_assign(r->s0, phi1);
+    _complex_times_vector(phi1, z, s->s1);
+    _vector_sub_assign(r->s1, phi1);
+    _complex_times_vector(phi1, z, s->s2);
+    _vector_sub_assign(r->s2, phi1);
+    _complex_times_vector(phi1, z, s->s3);
+    _vector_sub_assign(r->s3, phi1);
     
     r=l_charm + ix;
     s=k_charm + ix;
 
-    _complex_times_vector(phi1, z, (*s).s0);
-    _vector_sub_assign((*r).s0, phi1);
-    _complex_times_vector(phi1, z, (*s).s1);
-    _vector_sub_assign((*r).s1, phi1);
-    _complex_times_vector(phi1, z, (*s).s2);
-    _vector_sub_assign((*r).s2, phi1);
-    _complex_times_vector(phi1, z, (*s).s3);
-    _vector_sub_assign((*r).s3, phi1);    
+    _complex_times_vector(phi1, z, s->s0);
+    _vector_sub_assign(r->s0, phi1);
+    _complex_times_vector(phi1, z, s->s1);
+    _vector_sub_assign(r->s1, phi1);
+    _complex_times_vector(phi1, z, s->s2);
+    _vector_sub_assign(r->s2, phi1);
+    _complex_times_vector(phi1, z, s->s3);
+    _vector_sub_assign(r->s3, phi1);    
   }
 
   /*     
-  printf(" IN 2 UP: %f %f \n", l_strange[0].s2.c1.re, l_strange[0].s2.c1.im);
-  printf(" IN 2 DN: %f %f \n", l_charm[0].s2.c1.re, l_charm[0].s2.c1.im);
+  printf(" IN 2 UP: %f %f \n", l_strange[0].creal(s2.c1), l_strange[0].cimag(s2.c1));
+  printf(" IN 2 DN: %f %f \n", l_charm[0].creal(s2.c1), l_charm[0].cimag(s2.c1));
   */
 
   /* Finally, we multiply by the constant  phmc_Cpol  */
@@ -660,58 +661,45 @@ void mul_one_pm_itau2(spinor * const p, spinor * const q,
 }
 
 
-void mul_one_minus_imubar(spinor * const l, spinor * const k){
-  complex z,w;
-  int ix;
+void mul_one_minus_imubar(spinor * const l, spinor * const k)
+{
   spinor *r, *s;
   static su3_vector phi1;
 
-  z.re = 1.;
-  z.im = - g_mubar;
-  w.re = 1.;
-  w.im = - z.im; 
-
   /************ loop over all lattice sites ************/
-  for(ix = 0; ix < (VOLUME/2); ix++){
+  for(int ix = 0; ix < (VOLUME/2); ++ix){
     r=l + ix;
     s=k + ix;
     /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
-    _complex_times_vector(phi1, z, (*s).s0);
-    _vector_assign((*r).s0, phi1);
-    _complex_times_vector(phi1, z, (*s).s1);
-    _vector_assign((*r).s1, phi1);
-    _complex_times_vector(phi1, w, (*s).s2);
-    _vector_assign((*r).s2, phi1);
-    _complex_times_vector(phi1, w, (*s).s3);
-    _vector_assign((*r).s3, phi1);
+    _complex_times_vector(phi1, (1. - g_mubar * I), s->s0);
+    _vector_assign(r->s0, phi1);
+    _complex_times_vector(phi1, (1. - g_mubar * I), s->s1);
+    _vector_assign(r->s1, phi1);
+    _complex_times_vector(phi1, (1. + g_mubar * I), s->s2);
+    _vector_assign(r->s2, phi1);
+    _complex_times_vector(phi1, (1. + g_mubar * I), s->s3);
+    _vector_assign(r->s3, phi1);
   }
 }
 
 
 void mul_one_plus_imubar(spinor * const l, spinor * const k){
-  complex z,w;
-  int ix;
   spinor *r, *s;
   static su3_vector phi1;
 
-  z.re = 1.;
-  z.im = g_mubar;
-  w.re = 1.;
-  w.im =  -z.im; 
-
   /************ loop over all lattice sites ************/
-  for(ix = 0; ix < (VOLUME/2); ix++){
+  for(int ix = 0; ix < (VOLUME/2); ++ix){
     r=l + ix;
     s=k + ix;
     /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
-    _complex_times_vector(phi1, z, (*s).s0);
-    _vector_assign((*r).s0, phi1);
-    _complex_times_vector(phi1, z, (*s).s1);
-    _vector_assign((*r).s1, phi1);
-    _complex_times_vector(phi1, w, (*s).s2);
-    _vector_assign((*r).s2, phi1);
-    _complex_times_vector(phi1, w, (*s).s3);
-    _vector_assign((*r).s3, phi1);
+    _complex_times_vector(phi1, (1. + g_mubar * I), s->s0);
+    _vector_assign(r->s0, phi1);
+    _complex_times_vector(phi1, (1. + g_mubar * I), s->s1);
+    _vector_assign(r->s1, phi1);
+    _complex_times_vector(phi1, (1. - g_mubar * I), s->s2);
+    _vector_assign(r->s2, phi1);
+    _complex_times_vector(phi1, (1. - g_mubar * I), s->s3);
+    _vector_assign(r->s3, phi1);
   }
   return;
 }
@@ -770,7 +758,7 @@ void Qtau1_P_ND(spinor * const l_strange, spinor * const l_charm,
 /* this is neccessary for the calculation of the polynomial */
 
 void Qtm_pm_min_cconst_nrm(spinor * const l, spinor * const k,
-			   const complex z){
+			   const _Complex double z){
   static su3_vector phi1;
   spinor *r,*s;
   int ix;
@@ -786,14 +774,14 @@ void Qtm_pm_min_cconst_nrm(spinor * const l, spinor * const k,
     r=l + ix;
     s=k + ix;
 
-    _complex_times_vector(phi1, z, (*s).s0);
-    _vector_sub_assign((*r).s0, phi1);
-    _complex_times_vector(phi1, z, (*s).s1);
-    _vector_sub_assign((*r).s1, phi1);
-    _complex_times_vector(phi1, z, (*s).s2);
-    _vector_sub_assign((*r).s2, phi1);
-    _complex_times_vector(phi1, z, (*s).s3);
-    _vector_sub_assign((*r).s3, phi1);
+    _complex_times_vector(phi1, z, s->s0);
+    _vector_sub_assign(r->s0, phi1);
+    _complex_times_vector(phi1, z, s->s1);
+    _vector_sub_assign(r->s1, phi1);
+    _complex_times_vector(phi1, z, s->s2);
+    _vector_sub_assign(r->s2, phi1);
+    _complex_times_vector(phi1, z, s->s3);
+    _vector_sub_assign(r->s3, phi1);
     
   }
 
@@ -860,16 +848,13 @@ void red_noise_nd(spinor * const lse, spinor * const lso,
 {
   double nrm0 = (1.-g_epsbar)/(1+g_mubar*g_mubar-g_epsbar*g_epsbar);
   double nrm1 = (1.+g_epsbar)/(1+g_mubar*g_mubar-g_epsbar*g_epsbar);
-  complex z,w;
+  _Complex double z;
   int ix, i;
   static su3_vector phi;
   spinor * r, * s;
 
   /* need B^\dagger, so change sign of g_mubar */
-  z.re = 0.;
-  z.im = g_mubar/(1+g_mubar*g_mubar-g_epsbar*g_epsbar);
-  w.re = 0;
-  w.im =  -z.im; 
+  z = (g_mubar / (1 + g_mubar * g_mubar - g_epsbar * g_epsbar)) * I;
 
   /* first multiply with Hopping matrix */
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], lso);
@@ -902,14 +887,14 @@ void red_noise_nd(spinor * const lse, spinor * const lso,
     for(ix = 0; ix < (VOLUME/2); ix++){
       /* Multiply the spinorfield with (i epsbar \gamma_5)/c */
       /* and add it to */
-      _complex_times_vector(phi, z, (*s).s0);
-      _vector_add_assign((*r).s0, phi);
-      _complex_times_vector(phi, z, (*s).s1);
-      _vector_add_assign((*r).s1, phi);
-      _complex_times_vector(phi, w, (*s).s2);
-      _vector_add_assign((*r).s2, phi);
-      _complex_times_vector(phi, w, (*s).s3);
-      _vector_add_assign((*r).s3, phi);
+      _complex_times_vector(phi, z, s->s0);
+      _vector_add_assign(r->s0, phi);
+      _complex_times_vector(phi, z, s->s1);
+      _vector_add_assign(r->s1, phi);
+      _complex_times_vector(phi, -z, s->s2);
+      _vector_add_assign(r->s2, phi);
+      _complex_times_vector(phi, -z, s->s3);
+      _vector_add_assign(r->s3, phi);
       r++; s++;
     }  
   }

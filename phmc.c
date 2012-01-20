@@ -185,7 +185,7 @@ void init_phmc() {
     
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
     for(j=0; j<(2*phmc_dop_n_cheby-2); j++){
-      errcode = fscanf(roots," %d %lf %lf \n", &k, &creal(phmc_root[j]), &cimag(phmc_root[j]));
+      errcode = fscanf(roots," %d %lf %lf \n", &k, (double*)&phmc_root[j], (double*)&phmc_root[j] + 1);
     }
     fclose(roots);
   }

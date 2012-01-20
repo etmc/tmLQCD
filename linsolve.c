@@ -170,7 +170,7 @@ int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_pr
 int bicg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) {
 
   double err, d1, squarenorm=0.;
-  complex rho0, rho1, omega, alpha, beta, nom, denom;
+  _Complex double rho0, rho1, omega, alpha, beta, nom, denom;
   int iteration, N=VOLUME/2;
   spinor * r, * p, * v, *hatr, * s, * t, * P, * Q;
   
@@ -209,23 +209,23 @@ int bicg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) 
       }
       Mtm_plus_psi(v, p);
       denom = scalar_prod(hatr, v, N, 1);
-      _div_complex(alpha, rho0, denom);
+      alpha = (rho0) / (denom);
       assign(s, r, N);
       assign_diff_mul(s, v, alpha, N);
       Mtm_plus_psi(t, s);
       omega = scalar_prod(t,s, N, 1);
       d1 = square_norm(t, N, 1);
-      omega.re/=d1; omega.im/=d1;
+      omega /= (d1) + cimag(omega) * I; omega /= creal(omega) + (d1) * I;
       assign_add_mul_add_mul(P, p, s, alpha, omega, N);
       assign(r, s, N);
       assign_diff_mul(r, t, omega, N);
       rho1 = scalar_prod(hatr, r, N, 1);
-      _mult_assign_complex(nom, alpha, rho1);
-      _mult_assign_complex(denom, omega, rho0);
-      _div_complex(beta, nom, denom);
-      omega.re=-omega.re; omega.im=-omega.im;
+      nom = (alpha) * (rho1);
+      denom = (omega) * (rho0);
+      beta = (nom) / (denom);
+      omega = -omega;
       assign_mul_bra_add_mul_ket_add(p, v, r, omega, beta, N);
-      rho0.re = rho1.re; rho0.im = rho1.im;
+      rho0 = rho1;
     }
     
     if(g_proc_id==0 && g_debug_level > 0) {

@@ -8,9 +8,6 @@
 #include <math.h>
 #ifdef FFTW
   #include <fftw3.h>
-/* #ifdef FFTW_DEFINE_API */
-/*  FFTW_DEFINE_API( FFTW_MANGLE_DOUBLE , R , double); */
-/* #endif */
 #endif
 #ifdef _USE_SHMEM
 # include <mpp/shmem.h>

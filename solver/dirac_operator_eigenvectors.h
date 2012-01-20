@@ -1,11 +1,5 @@
+#pragma once
 
-
-#ifndef _DIRAC_OPERATOR_EIGENVECTORS_
-#define _DIRAC_OPERATOR_EIGENVECTORS_
-
-/* #include "utils.hh" */
-
-#include <math.h>
 #include "config.h"
 #ifdef HAVE_FFTW
   #include <fftw3.h>
@@ -269,7 +263,3 @@ int cyclicDiff(int a,int b, int period);
 	phi_plus.s1.col_phi -= (p_plus) * (up_plus->s1.col_proj); \
 	phi_plus.s2.col_phi -= (p_plus) * (up_plus->s2.col_proj);\
 	phi_plus.s3.col_phi -= (p_plus) * (up_plus->s3.col_proj);
-
-
-
-#endif /* _DIRAC_OPERATOR_EIGENVECTORS_ */

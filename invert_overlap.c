@@ -38,7 +38,7 @@
 void invert_overlap(const int op_id, const int index_start) {
   operator * optr;
   void (*op)(spinor*,spinor*);
-  static complex alpha={0,0};
+  static _Complex double alpha = 0.;
   spinorPrecWS *ws;
   optr = &operator_list[op_id];
   op=&Dov_psi;
@@ -61,7 +61,7 @@ void invert_overlap(const int op_id, const int index_start) {
       ws=(spinorPrecWS*)g_precWS;
       printf("# Using preconditioning (which one?)!\n");
     
-      alpha.re=ws->precExpo[2];
+      alpha = (ws->precExpo[2]) + cimag(alpha) * I;
       spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
 
       /* 	iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision,  */
@@ -69,7 +69,7 @@ void invert_overlap(const int op_id, const int index_start) {
       optr->iterations = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->maxiter, optr->eps_sq,
 				optr->rel_prec, VOLUME, &Qov_sq_psi_prec);
     
-      alpha.re=ws->precExpo[0];
+      alpha = (ws->precExpo[0]) + cimag(alpha) * I;
       spinorPrecondition(g_spinor_field[DUM_DERI],g_spinor_field[DUM_DERI],ws,T,L,alpha,0,1);
     
     } 
@@ -86,7 +86,7 @@ void invert_overlap(const int op_id, const int index_start) {
   
     if(use_preconditioning == 1 && g_precWS!=NULL){
       ws=(spinorPrecWS*)g_precWS;
-      alpha.re=ws->precExpo[1];
+      alpha = (ws->precExpo[1]) + cimag(alpha) * I;
       spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
     }
   

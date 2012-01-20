@@ -506,8 +506,8 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "addpd %%xmm2, %%xmm5" \
                       : \
                       : \
-                      "m" ((c).re), \
-                      "m" ((c).im), \
+                      "m" (creal(c)), \
+                      "m" (cimag(c)), \
                       "m" (_sse_sgn)) ;
 
 
@@ -540,8 +540,8 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "subpd %%xmm2, %%xmm5" \
                       : \
                       : \
-                      "m" ((c).re), \
-                      "m" ((c).im), \
+                      "m" (creal(c)), \
+                      "m" (cimag(c)), \
                       "m" (_sse_sgn)) ;
 
 

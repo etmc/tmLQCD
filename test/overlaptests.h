@@ -9,17 +9,17 @@ void ov_compare_4x4(const char * pFileName);
 void ov_compare_12x12(const char * pFileName);
 void ov_save_12x12(const char * pFileName);
 
-typedef complex matrix4x4[4][4];
-typedef complex matrix12x12[12][12];
+typedef _Complex double matrix4x4[4][4];
+typedef _Complex double matrix12x12[12][12];
 
-#define _spinor_norm_l1(d,s) \
+#define _spinor_norm_l1(d,s)\
    d = 0.; \
-   d = _complex_norm((s).s0.c0) + _complex_norm((s).s0.c1) + \
-       _complex_norm((s).s0.c2) + _complex_norm((s).s1.c0) + \
-       _complex_norm((s).s1.c1) + _complex_norm((s).s1.c2) + \
-       _complex_norm((s).s2.c0) + _complex_norm((s).s2.c1) + \
-       _complex_norm((s).s2.c2) + _complex_norm((s).s3.c0) + \
-       _complex_norm((s).s3.c1) + _complex_norm((s).s3.c2)
+   d = cabs((s).s0.c0) + cabs((s).s0.c1) + \
+       cabs((s).s0.c2) + cabs((s).s1.c0) + \
+       cabs((s).s1.c1) + cabs((s).s1.c2) + \
+       cabs((s).s2.c0) + cabs((s).s2.c1) + \
+       cabs((s).s2.c2) + cabs((s).s3.c0) + \
+       cabs((s).s3.c1) + cabs((s).s3.c2)
 
 
 #endif

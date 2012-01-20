@@ -37,7 +37,7 @@ double reweighting_factor_nd(const int N) {
   double sq_norm, corr, sum=0., sq_sum = 0., temp1;
   double mu1, mu2;
 
-  complex temp2;
+  _Complex double temp2;
 
   mu1 = g_mu1;
   mu2 = g_mu1;
@@ -59,19 +59,19 @@ double reweighting_factor_nd(const int N) {
     phmc_ptilde_cheby_coef[0] = temp1;
 
     temp2 = scalar_prod(g_chi_up_spinor_field[2], g_chi_up_spinor_field[3], VOLUME/2, 1);
-    if(temp2.im > 1.0e-8) {
+    if(cimag(temp2) > 1.0e-8) {
       printf("!!! WARNING  Immaginary part of CORR-UP  LARGER than 10^-8 !!! \n");
-      printf(" CORR-UP:  Re=%12.10e  Im=%12.10e \n", temp2.re, temp2.im);
+      printf(" CORR-UP:  Re=%12.10e  Im=%12.10e \n", creal(temp2), cimag(temp2));
     }
-    corr = temp2.re;
+    corr = creal(temp2);
     printf(" CORR-UP:  Re=%12.10e \n", corr);
     temp2 = scalar_prod(g_chi_dn_spinor_field[2], g_chi_dn_spinor_field[3], VOLUME/2, 1);
-    if(temp2.im > 1.0e-8) {
+    if(cimag(temp2) > 1.0e-8) {
       printf("!!! WARNING  Immaginary part of CORR_DN  LARGER than 10^-8 !!! \n");
-      printf(" CORR-DN:  Re=%12.10e  Im=%12.10e \n", temp2.re, temp2.im);
+      printf(" CORR-DN:  Re=%12.10e  Im=%12.10e \n", creal(temp2), cimag(temp2));
     }
-    corr += temp2.re;
-    printf(" CORR-DN:  Re=%12.10e \n", temp2.im);
+    corr += creal(temp2);
+    printf(" CORR-DN:  Re=%12.10e \n", cimag(temp2));
 
     temp1 = -corr;
     sum += temp1;

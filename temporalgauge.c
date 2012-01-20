@@ -28,26 +28,26 @@ static su3 unit_su3 (void) {
 
    su3 u;
 
-   u.c00.re = 1.0;
-   u.c00.im = 0.0;
-   u.c01.re = 0.0;
-   u.c01.im = 0.0;
-   u.c02.re = 0.0;
-   u.c02.im = 0.0;
+   u.c00 = (1.0) + cimag(u.c00) * I;
+   u.c00 = creal(u.c00);
+   u.c01 = (0.0) + cimag(u.c01) * I;
+   u.c01 = creal(u.c01);
+   u.c02 = (0.0) + cimag(u.c02) * I;
+   u.c02 = creal(u.c02);
 
-   u.c10.re = 0.0;
-   u.c10.im = 0.0;
-   u.c11.re = 1.0;
-   u.c11.im = 0.0;
-   u.c12.re = 0.0;
-   u.c12.im = 0.0;
+   u.c10 = (0.0) + cimag(u.c10) * I;
+   u.c10 = creal(u.c10);
+   u.c11 = (1.0) + cimag(u.c11) * I;
+   u.c11 = creal(u.c11);
+   u.c12 = (0.0) + cimag(u.c12) * I;
+   u.c12 = creal(u.c12);
 
-   u.c20.re = 0.0;
-   u.c20.im = 0.0;
-   u.c21.re = 0.0;
-   u.c21.im = 0.0;
-   u.c22.re = 1.0;
-   u.c22.im = 0.0;
+   u.c20 = (0.0) + cimag(u.c20) * I;
+   u.c20 = creal(u.c20);
+   u.c21 = (0.0) + cimag(u.c21) * I;
+   u.c21 = creal(u.c21);
+   u.c22 = (1.0) + cimag(u.c22) * I;
+   u.c22 = creal(u.c22);
 
    return(u);
    
@@ -89,7 +89,7 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
    
    int pos;
    
-   if ( (void *) (g_trafo = (su3 *) calloc(V, sizeof(su3))) == NULL ) {
+   if ((void *)(g_trafo = (su3 *) calloc(V, sizeof(su3))) == NULL ) {
     printf("malloc error in 'init_temporalgauge_trafo'\n"); 
     return(2);
   }
@@ -128,12 +128,12 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
   
   
   
-  if ( (void *) (left = (su3 *) calloc(LX*LY*LZ, sizeof(su3))) == NULL ) {		// allocates memory for a time-slice of su3-matrices
+  if ((void *)(left = (su3 *) calloc(LX*LY*LZ, sizeof(su3))) == NULL ) {		// allocates memory for a time-slice of su3-matrices
     printf("malloc error in 'init_temporalgauge_trafo_mpi'\n"); 
     return(-1);
   }
   
-  if ( (void *) (right = (su3 *) calloc(LX*LY*LZ, sizeof(su3))) == NULL ) {		// allocates memory for a time-slice of su3-matrices
+  if ((void *)(right = (su3 *) calloc(LX*LY*LZ, sizeof(su3))) == NULL ) {		// allocates memory for a time-slice of su3-matrices
     printf("malloc error in 'init_temporalgauge_trafo_mpi'\n"); 
     return(-1);
   }
@@ -141,7 +141,7 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
   
   
   
-  if ( (void *) (g_trafo = (su3 *) calloc(V, sizeof(su3))) == NULL ) {			// allocates memory for V su3-matrices
+  if ((void *)(g_trafo = (su3 *) calloc(V, sizeof(su3))) == NULL ) {			// allocates memory for V su3-matrices
     printf("malloc error in 'init_temporalgauge_trafo'\n"); 
     return(2);
   } 
@@ -270,11 +270,11 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
   
   int i = 0;
   
-  if ( (void *) (g_tempgauge_field = (su3 **) calloc(V, sizeof(su3*))) == NULL ) {
+  if ((void *)(g_tempgauge_field = (su3 **) calloc(V, sizeof(su3*))) == NULL ) {
     printf ("malloc error in 'init_temporalgauge_trafo'\n"); 
     return(1);
   }
-  if ( (void *) (tempgauge_field = (su3 *) calloc(4*V+1, sizeof(su3))) == NULL ) {
+  if ((void *)(tempgauge_field = (su3 *) calloc(4*V+1, sizeof(su3))) == NULL ) {
     printf ("malloc error in 'init_temporalgauge_trafo'\n"); 
     return(2);
   }
@@ -315,12 +315,12 @@ int init_temporalgauge_trafo_mpi (const int V, su3 ** gfield) {				// will initi
   
   
   
-  if ( (void *) (left = (su3 *) calloc(LX*LY*LZ, sizeof(su3))) == NULL ) {		// allocates memory for a time-slice of su3-matrices
+  if ((void *)(left = (su3 *) calloc(LX*LY*LZ, sizeof(su3))) == NULL ) {		// allocates memory for a time-slice of su3-matrices
     printf("malloc error in 'init_temporalgauge_trafo_mpi'\n"); 
     return(-1);
   }
   
-  if ( (void *) (right = (su3 *) calloc(LX*LY*LZ, sizeof(su3))) == NULL ) {		// allocates memory for a time-slice of su3-matrices
+  if ((void *)(right = (su3 *) calloc(LX*LY*LZ, sizeof(su3))) == NULL ) {		// allocates memory for a time-slice of su3-matrices
     printf("malloc error in 'init_temporalgauge_trafo_mpi'\n"); 
     return(-1);
   }
@@ -328,7 +328,7 @@ int init_temporalgauge_trafo_mpi (const int V, su3 ** gfield) {				// will initi
   
   
   
-  if ( (void *) (g_trafo = (su3 *) calloc(V, sizeof(su3))) == NULL ) {			// allocates memory for V su3-matrices
+  if ((void *)(g_trafo = (su3 *) calloc(V, sizeof(su3))) == NULL ) {			// allocates memory for V su3-matrices
     printf("malloc error in 'init_temporalgauge_trafo'\n"); 
     return(2);
   } 
@@ -453,11 +453,11 @@ int init_temporalgauge_trafo_mpi (const int V, su3 ** gfield) {				// will initi
   
   // copying the gaugefield (for later undoing the transformation)
   
-  if ( (void *) (g_tempgauge_field = (su3 **) calloc(V, sizeof(su3*))) == NULL ) {	// allocates  V  su3 *
+  if ((void *)(g_tempgauge_field = (su3 **) calloc(V, sizeof(su3*))) == NULL ) {	// allocates  V  su3 *
     printf ("malloc error in 'init_temporalgauge_trafo'\n"); 
   return(1);
   }
-  if ( (void *) (tempgauge_field = (su3 *) calloc(4*V+1, sizeof(su3))) == NULL ) {	// allocates  4*V+1  su3-matrices
+  if ((void *)(tempgauge_field = (su3 *) calloc(4*V+1, sizeof(su3))) == NULL ) {	// allocates  4*V+1  su3-matrices
     printf ("malloc error in 'init_temporalgauge_trafo'\n"); 
     return(2);
   }
@@ -579,7 +579,7 @@ void apply_gtrafo (su3 ** gfield, su3 * trafofield) {
             pos = g_ipt[it][ix][iy][iz];
             
             for (mu = 0; mu < 4; mu++) {
-              if ( (it != T-1) || (mu != 0) ) {
+              if ((it != T-1) || (mu != 0)) {
                 /* help = g(x) U_mu(x) */
                 _su3_times_su3( temp1, trafofield[pos],  gfield[pos][mu]  );			// temp1  =  trafofield[pos]  *  gfield[pos][mu]
                 /* U_mu(x) <- U_mu^{'}(x) = help g^{+}(x+mu)*/
@@ -596,7 +596,7 @@ void apply_gtrafo (su3 ** gfield, su3 * trafofield) {
             pos = g_ipt[it][ix][iy][iz];
             
             for (mu = 0; mu < 4; mu++) {
-              if ( (it != T-1) || (mu != 0) ) {
+              if ((it != T-1) || (mu != 0)) {
                 /* help = g(x) U_mu(x) */
                 _su3_times_su3( temp1, trafofield[pos],  gfield[pos][mu]  );
                 /* U_mu(x) <- U_mu^{'}(x) = help g^{+}(x+mu)*/

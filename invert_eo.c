@@ -389,11 +389,11 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 
       if(use_preconditioning==1 && g_precWS!=NULL){
 	spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
-	static complex alpha={0,0};
+	static _Complex double alpha = 0.0;
 	if(g_proc_id==0) {printf("# Using preconditioning (which one?)!\n");}
 
 	if(g_prec_sequence_d_dagger_d[2] != 0.0){
-	  alpha.re=g_prec_sequence_d_dagger_d[2];
+	  alpha = (g_prec_sequence_d_dagger_d[2]) + cimag(alpha) * I;
 	  spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
 	}
 
@@ -401,7 +401,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 		    rel_prec, VOLUME, &Q_pm_psi_prec);
 
 	if(g_prec_sequence_d_dagger_d[0] != 0.0){
-	  alpha.re=g_prec_sequence_d_dagger_d[0];
+	  alpha = (g_prec_sequence_d_dagger_d[0]) + cimag(alpha) * I;
 	  spinorPrecondition(g_spinor_field[DUM_DERI],g_spinor_field[DUM_DERI],ws,T,L,alpha,0,1);
 	}
 
@@ -416,9 +416,9 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 
       if(use_preconditioning==1 && g_precWS!=NULL){
 	spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
-	static complex alpha={0,0};
+	static _Complex double alpha = 0.0;
 	if(g_prec_sequence_d_dagger_d[1] != 0.0){
-	  alpha.re=g_prec_sequence_d_dagger_d[1];
+	  alpha = (g_prec_sequence_d_dagger_d[1]) + cimag(alpha) * I;
 	  spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
 	}
       }

@@ -83,10 +83,10 @@ Dov_WS *dov_ws=NULL;
 void Dov_psi_prec(spinor * const P, spinor * const S) {
   /* todo: do preconditioning */
   spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
-  static complex alpha;
+  static _Complex double alpha;
   Dov_psi(P,S);
-  alpha.re=-1.;
-  alpha.im=0.0;
+  alpha = (-1.) + cimag(alpha) * I;
+  alpha = creal(alpha);
   spinorPrecondition(P,P,ws,T,L,alpha,0,1);
 
 }
@@ -184,7 +184,7 @@ void Dov_psi(spinor * const P, spinor * const S) {
   s=lock_Dov_WS_spinor(0);
 
   /* here we do with M = 1 + s */
-  /* M + m_ov/2 + (M - m_ov/2) \gamma_5 sign(Q(-M)) */
+  /* M + m_ov/2 + (M - m_ov/2)\gamma_5 sign(Q(-M)) */
   c0 = -(1.0 + ov_s - 0.5*m_ov);
   c1 = -(1.0 + ov_s + 0.5*m_ov);
 
@@ -217,22 +217,22 @@ void Qov_sq_psi_prec(spinor * const P, spinor * const S) {
 
 
   spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
-  static complex alpha={0,0};
+  static _Complex double alpha={0,0};
 
-  alpha.re=ws->precExpo[0];
+  alpha = (ws->precExpo[0]) + cimag(alpha) * I;
   spinorPrecondition(P,S,ws,T,L,alpha,0,1);
 
 
   Dov_psi(g_spinor_field[DUM_MATRIX], P);
   gamma5(P, g_spinor_field[DUM_MATRIX], VOLUME);
 
-  alpha.re=ws->precExpo[1];
+  alpha = (ws->precExpo[1]) + cimag(alpha) * I;
   spinorPrecondition(P,P,ws,T,L,alpha,0,1);
 
   Dov_psi(g_spinor_field[DUM_MATRIX], P);
   gamma5(P, g_spinor_field[DUM_MATRIX], VOLUME);
 
-  alpha.re=ws->precExpo[2];
+  alpha = (ws->precExpo[2]) + cimag(alpha) * I;
   spinorPrecondition(P,P,ws,T,L,alpha,0,1);
 
   return;
@@ -243,7 +243,7 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
   
   int j;
   spinor  *aux;
-  complex cnorm, lambda;
+  _Complex double cnorm, lambda;
   static double save_ev[2]={-1.,-1.};
   static int * ev_sign = NULL;
   
@@ -265,7 +265,7 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
       gamma5(aux, aux, N);
       
       lambda = scalar_prod(&(eigenvectors[j*evlength]), aux, N, 1);
-      if (lambda.re < 0) {
+      if (creal(lambda) < 0) {
 	ev_sign[j] = -1;
       }
       else {
@@ -280,8 +280,8 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
   for(j = 0; j < n; j++) {
     cnorm = scalar_prod(&(eigenvectors[j*evlength]), P, N, 1);
     
-    cnorm.re *= (double)ev_sign[j];
-    cnorm.im *= (double)ev_sign[j];
+    cnorm *= ((double)ev_sign[j]) + cimag(cnorm) * I;
+    cnorm *= creal(cnorm) + ((double)ev_sign[j]) * I;
     
     assign_add_mul(Q, &(eigenvectors[j*evlength]), cnorm, N);
   }
@@ -375,7 +375,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
     for (j = n-1; j >= 1; j--) {
       assign(sv, d, VOLUME); 
       
-      if ( (j%10) == 0 ) {
+      if ((j%10) == 0 ) {
 	assign_sub_lowest_eigenvalues(aux, d, no_eigenvalues-1, VOLUME);
       }
       else {
@@ -383,8 +383,8 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
       }
       
       norm_Q_sqr_psi(R, aux, rnorm);
-/*       printf("%d %e %e\n", j, R[0].s0.c0.re, R[0].s0.c0.im); */
-/*       printf("%e %e\n", R[0].s1.c0.re, R[0].s1.c0.im); */
+/*       printf("%d %e %e\n", j, R[0].creal(s0.c0), R[0].cimag(s0.c0)); */
+/*       printf("%e %e\n", R[0].creal(s1.c0), R[0].cimag(s1.c0)); */
       temp1=-1.0;
       temp2=c[j];
       assign_mul_add_mul_add_mul_add_mul_r(d, R, dd, aux3, fact2, fact1, temp1, temp2, VOLUME);
@@ -429,7 +429,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
       assign_add_mul_r(R, aux, temp2, VOLUME);
       /* The stoppping criterio tnorm = |T_j(Q^2)| */
       tnorm=square_norm(aux, VOLUME, 1);
-      tnorm*=(temp2*temp2);
+      tnorm*= temp2*temp2;
       
       /*
 	auxnorm=square_norm(R);

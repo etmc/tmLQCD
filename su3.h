@@ -575,27 +575,27 @@ _sse_store_up(r);
 
 /* M.Hasenbusch */
 #define _complex_times_su3(r,c,s) \
-   (r).c00 *= c \
-   (r).c01 *= c \
-   (r).c02 *= c \
-   (r).c10 *= c \
-   (r).c11 *= c \
-   (r).c12 *= c \
-   (r).c20 *= c \
-   (r).c21 *= c \
-   (r).c22 *= c
+   (r).c00 *= (c); \
+   (r).c01 *= (c); \
+   (r).c02 *= (c); \
+   (r).c10 *= (c); \
+   (r).c11 *= (c); \
+   (r).c12 *= (c); \
+   (r).c20 *= (c); \
+   (r).c21 *= (c); \
+   (r).c22 *= (c);
 
 /* M.Hasenbusch */
 #define _complexcjg_times_su3(r,c,s) \
-   (r).c00 *= conj(c) \
-   (r).c01 *= conj(c) \
-   (r).c02 *= conj(c) \
-   (r).c10 *= conj(c) \
-   (r).c11 *= conj(c) \
-   (r).c12 *= conj(c) \
-   (r).c20 *= conj(c) \
-   (r).c21 *= conj(c) \
-   (r).c22 *= conj(c)
+   (r).c00 *= conj(c); \
+   (r).c01 *= conj(c); \
+   (r).c02 *= conj(c); \
+   (r).c10 *= conj(c); \
+   (r).c11 *= conj(c); \
+   (r).c12 *= conj(c); \
+   (r).c20 *= conj(c); \
+   (r).c21 *= conj(c); \
+   (r).c22 *= conj(c);
 
 
 /* M. Hasenbusch
@@ -754,6 +754,11 @@ _sse_store_up(r);
     + (v).c21*(w).c12				\
     + (v).c22*(w).c22;
 
+#define _complex_times_vector(x, c, y)	\
+   x.c0 = (c) * (y).c0;			\
+   x.c1 = (c) * (y).c1;			\
+   x.c2 = (c) * (y).c2;
+    
 /* M. Hasenbusch t =u tensor v^dag */
 #define _vector_tensor_vector(t,u,v)	\
   (t).c00 = (u).c0*conj((v).c0);	\
