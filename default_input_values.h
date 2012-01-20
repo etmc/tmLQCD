@@ -97,6 +97,7 @@
 #define _default_2mn_lambda 0.1938
 #define _default_source_format_flag 0
 #define _default_source_time_slice 0
+#define _default_automaticTS 0
 #define _default_gmres_m_parameter 10
 #define _default_g_no_extra_masses 0
 #define _default_gmresdr_nr_ev 0

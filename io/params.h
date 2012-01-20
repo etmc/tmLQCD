@@ -125,6 +125,8 @@ typedef struct {
   int precision;
   /* the source location, where it applies*/
   int t, x, y, z;
+  /* automatic TS detection */
+  int automaticTS;
   /* sample, gauge no and index of source */
   int sample, nstore, ix;
   /* is this a 2 flavour source */
