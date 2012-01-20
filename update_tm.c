@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$ 
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
@@ -368,4 +367,3 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   return(accept);
 }
 
-static char const rcsid[] = "$Id$";

@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id$ */
 #ifndef _SU3_H
 #define _SU3_H
 
@@ -1941,7 +1940,6 @@ x = (u).c00.re*(u).c00.re + (u).c00.im*(u).c00.im \
    (t).c22.im=(u).c2.im*(v).c2.re-(u).c2.re*(v).c2.im + (w).c2.im*(z).c2.re-(w).c2.re*(z).c2.im; 
 
 #ifdef MAIN_PROGRAM
-static char const su3rcsid[] = "$Id$";
 #endif
 
 #endif

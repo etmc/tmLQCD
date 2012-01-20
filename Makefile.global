@@ -1,4 +1,3 @@
-# $Id$
 # This Makefile is included from the other Makefiles
 # It contains some overall targets...
 

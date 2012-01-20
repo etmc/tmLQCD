@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id$ */
 
 /**********************************************************
  * 
@@ -403,5 +402,4 @@ void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
 # endif  /*  _INDEX_INDEP_GEOM */
 #endif  /*  _NON_BLOCKING */
 
-static char const rcsid[] = "$Id$";
 

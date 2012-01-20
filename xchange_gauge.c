@@ -16,8 +16,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- *
- * $Id$ 
  * 
  * exchange routines for gauge fields
  *
@@ -2092,5 +2090,4 @@ void xchange_gauge(su3 ** const gf) {
 # endif /* _INDEX_INDEP_GEOM */
 
 #endif /* _NON_BLOCKING */
-static char const rcsid[] = "$Id$";
 

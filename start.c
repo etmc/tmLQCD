@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$ 
  *
  * Copyright (C) 2000 Martin Luescher
  *               2002 Martin Hasenbusch, Ines Wetzorke

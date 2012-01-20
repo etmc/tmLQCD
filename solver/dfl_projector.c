@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$ 
  *
  * Copyright (C) 2008 Alber Deuzeman, Siebren Reker, Carsten Urbach
  *

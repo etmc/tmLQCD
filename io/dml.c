@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
   A subset of the dml library for checksums
   taken from QIO and adapted for tmLQCD by Carsten Urbach

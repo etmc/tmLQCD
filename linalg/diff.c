@@ -17,7 +17,6 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 /*******************************************************************************
- * $Id$
  *
  *   void diff(spinor * const Q,spinor * const R,spinor * const S)
  *     Makes the difference (*Q) = (*R) - (*S)
