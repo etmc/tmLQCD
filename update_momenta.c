@@ -1,7 +1,7 @@
 /***********************************************************************
  *
  * Copyright (C) 2001 Martin Hasebusch
- *               2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ *               2002,2003,2004,2005,2006,2007,2008,2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -32,12 +32,14 @@
 #include "su3spinor.h"
 #include "monomial.h"
 #include "xchange_deri.h"
-#include "update_momenta.h"
 #include "clover_leaf.h"
 #include "read_input.h"
+#include "hamiltonian_field.h"
+#include "update_momenta.h"
 
 /* Updates the momenta: equation 16 of Gottlieb */
-void update_momenta(int * mnllist, double step, const int no) {
+void update_momenta(int * mnllist, double step, const int no, 
+		    hamiltonian_field_t * const hf) {
   int i,mu, k;
   double tmp;
   su3adj *xm,*deriv;
@@ -53,7 +55,7 @@ void update_momenta(int * mnllist, double step, const int no) {
 
   for(i=0;i<(VOLUME);i++) { 
     for(mu=0;mu<4;mu++) { 
-      _zero_su3adj(df0[i][mu]);
+      _zero_su3adj(hf->derivative[i][mu]);
     }
   }
 
@@ -72,18 +74,18 @@ void update_momenta(int * mnllist, double step, const int no) {
     max = 0.;
     for(i = (VOLUME); i < (VOLUME+RAND); i++) { 
       for(mu = 0; mu < 4; mu++) { 
-	_zero_su3adj(df0[i][mu]);
+	_zero_su3adj(hf->derivative[i][mu]);
       }
     }
 
     monomial_list[ mnllist[k] ].derivativefunction(mnllist[k]);
 #ifdef MPI
-    xchange_deri();
+    xchange_deri(hf->derivative);
 #endif
     for(i = 0; i < VOLUME; i++) {
       for(mu = 0; mu < 4; mu++) {
-	xm=&moment[i][mu];
-	deriv=&df0[i][mu];
+	xm=&hf->momenta[i][mu];
+	deriv=&hf->derivative[i][mu];
 	/* force monitoring */
 	if(g_debug_level > 0) {
 	  sum2 = _su3adj_square_norm(*deriv); 
@@ -94,11 +96,11 @@ void update_momenta(int * mnllist, double step, const int no) {
 	/* the minus comes from an extra minus in trace_lambda */
 	_minus_const_times_mom(*xm,tmp,*deriv); 
 	/* set to zero immediately */
-	_zero_su3adj(df0[i][mu]);
+	_zero_su3adj(hf->derivative[i][mu]);
       }
     }
 #ifdef MPI
-    etime = MPI_Wtime();
+    etime = MPI_Wtime(hf->derivative);
 #else
     etime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif

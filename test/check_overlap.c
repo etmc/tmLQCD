@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
     }
     /*     unit_g_gauge_field(); */
 #ifdef MPI
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
 #endif
 
     /*compute the energy of the gauge field*/

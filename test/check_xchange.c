@@ -375,7 +375,7 @@ int check_xchange()
 #  endif
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
     MPI_Barrier(MPI_COMM_WORLD);
 
 #  if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT )
@@ -562,7 +562,7 @@ int check_xchange()
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* DEBUG */
@@ -1078,7 +1078,7 @@ int check_xchange()
       }
 
       MPI_Barrier(MPI_COMM_WORLD);
-      xchange_gauge();
+      xchange_gauge(g_gauge_field);
       MPI_Barrier(MPI_COMM_WORLD);
 
 #  if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT )
@@ -1294,7 +1294,7 @@ int check_xchange()
       }
 #  endif
       MPI_Barrier(MPI_COMM_WORLD);
-      xchange_gauge();
+      xchange_gauge(g_gauge_field);
       MPI_Barrier(MPI_COMM_WORLD);
 #  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
       di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
@@ -3243,7 +3243,7 @@ int check_xchange()
 #  endif
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
     MPI_Barrier(MPI_COMM_WORLD);
 
     x = (double*) &g_gauge_field[T*LX*LY*LZ][0];
@@ -3421,7 +3421,7 @@ int check_xchange()
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* The edges */
@@ -3864,7 +3864,7 @@ int check_xchange()
       }
 
       MPI_Barrier(MPI_COMM_WORLD);
-      xchange_gauge();
+      xchange_gauge(g_gauge_field);
       MPI_Barrier(MPI_COMM_WORLD);
 
       x = (double*) &g_gauge_field[VOLUMEPLUSRAND][0];
@@ -3990,7 +3990,7 @@ int check_xchange()
       }
       
       MPI_Barrier(MPI_COMM_WORLD);
-      xchange_gauge();
+      xchange_gauge(g_gauge_field);
       MPI_Barrier(MPI_COMM_WORLD);
 
       /* Now there should be in the t and t2 Rand certain values set */
@@ -4202,7 +4202,7 @@ int check_xchange()
       }
 #  endif
       MPI_Barrier(MPI_COMM_WORLD);
-      xchange_gauge();
+      xchange_gauge(g_gauge_field);
       MPI_Barrier(MPI_COMM_WORLD);
 
 #  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
