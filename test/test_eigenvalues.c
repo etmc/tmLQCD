@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id$ */
 /*******************************************************************************
 *
 * File hybrid.c
@@ -599,4 +598,3 @@ int main(int argc,char *argv[]) {
   return(0);
 }
 
-static char const rcsid[] = "$Id$";

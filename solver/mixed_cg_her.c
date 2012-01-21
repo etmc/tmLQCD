@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  *
  * Copyright (C) 2001 Martin Hasenbusch
  *               2003 Thomas Chiarappa
@@ -145,7 +144,6 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   return(-1);
 }
 
-static char const rcsid[] = "$Id$";
 
 
 

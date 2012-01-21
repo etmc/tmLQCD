@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id$*/
 
 #ifndef _MUL_DIFF_MUL_R_H
 #define _MUL_DIFF_MUL_R_H

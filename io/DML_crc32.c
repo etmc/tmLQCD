@@ -1,4 +1,3 @@
-/* $Id$ */
 /* DML_crc32.c */
 /* Taken from QIO library by mcneile */
 

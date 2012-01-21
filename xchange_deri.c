@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id$ */
 
 /**********************************************************
  * 
@@ -603,4 +602,3 @@ void xchange_deri()
 
 #endif /* _INDEX_INDEP_GEOM */
 
-static char const rcsid[] = "$Id$";

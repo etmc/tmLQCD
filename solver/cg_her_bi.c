@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  *
  * Copyright (C) 2005 Thomas Chiarappa
  *
@@ -139,7 +138,6 @@ int cg_her_bi(bispinor * const P, bispinor * const Q, const int max_iter,
   return(-1);
 }
 
-static char const rcsid[] = "$Id$";
 
 
 

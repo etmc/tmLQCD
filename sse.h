@@ -1538,6 +1538,5 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
 #endif
 
 #ifdef MAIN_PROGRAM
-static char const ssercsid[] = "$Id$";
 #endif
 #endif

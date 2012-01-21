@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  *
  * Copyright (C) 2003 Ines Wetzorke
  *               2006 Urs Wenger
@@ -497,4 +496,3 @@ void CheckApproximation(spinor * const P, spinor * const S) {
 }
 
 
-static char const rcsid[] = "$Id$";
