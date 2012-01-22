@@ -89,7 +89,6 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
 		  fclose(ifs);
 		  break;
 		}
-		else fclose(ifs);
 	      }
 	    }
 #ifdef MPI
