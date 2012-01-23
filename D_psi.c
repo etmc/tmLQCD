@@ -1159,14 +1159,13 @@ void D_psi(spinor * const P, spinor * const Q){
   xchange_lexicfield(Q);
 # endif
 
-  rho1 = (1.) + cimag(rho1) * I;
-  rho1 = creal(rho1) + (g_mu) * I;
-  rho2 = (1.) + cimag(rho2) * I;
-  rho2 = creal(rho2) + (-g_mu) * I;
+  rho1 = 1. + g_mu * I;
+  rho2 = conj(rho1);
 
   /************************ loop over all lattice sites *************************/
 
-  for (ix=0;ix<VOLUME;ix++){
+  for (ix=0;ix<VOLUME;ix++)
+  {
     rr  = (spinor *) P +ix;
     s  = (spinor *) Q +ix;
 

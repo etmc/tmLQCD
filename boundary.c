@@ -36,26 +36,19 @@ _Complex double phase_0, phase_1, phase_2, phase_3;
 const double PI_ = 3.14159265358979;
 double X0, X1, X2, X3;
 
-void boundary(const double kappa) {
+void boundary(const double kappa)
+{
   double x0,x1,x2,x3;
   x0 = X0 * PI_/((T)*g_nproc_t);
   x1 = X1 * PI_/((LX)*g_nproc_x);
   x2 = X2 * PI_/((LY)*g_nproc_y);
   x3 = X3 * PI_/((LZ)*g_nproc_z);
-  ka0 = (kappa * cos(x0)) + cimag(ka0) * I; 
-  ka0 = creal(ka0) + (kappa * sin(x0)) * I;
-  ka1 = (kappa * cos(x1)) + cimag(ka1) * I; 
-  ka1 = creal(ka1) + (kappa * sin(x1)) * I;
-  ka2 = (kappa * cos(x2)) + cimag(ka2) * I; 
-  ka2 = creal(ka2) + (kappa * sin(x2)) * I;
-  ka3 = (kappa * cos(x3)) + cimag(ka3) * I; 
-  ka3 = creal(ka3) + (kappa * sin(x3)) * I;
-  phase_0 = (-creal(ka0)) + cimag(phase_0) * I;
-  phase_1 = (-creal(ka1)) + cimag(phase_1) * I;
-  phase_2 = (-creal(ka2)) + cimag(phase_2) * I;
-  phase_3 = (-creal(ka3)) + cimag(phase_3) * I;
-  phase_0 = creal(phase_0) + (-cimag(ka0)) * I;
-  phase_1 = creal(phase_1) + (-cimag(ka1)) * I;
-  phase_2 = creal(phase_2) + (-cimag(ka2)) * I;
-  phase_3 = creal(phase_3) + (-cimag(ka3)) * I;
+  ka0 = kappa * cexp(x0 * I);
+  ka1 = kappa * cexp(x1 * I);
+  ka2 = kappa * cexp(x2 * I);
+  ka3 = kappa * cexp(x3 * I);
+  phase_0 = -ka0;
+  phase_1 = -ka1;
+  phase_2 = -ka2;
+  phase_3 = -ka3;
 }

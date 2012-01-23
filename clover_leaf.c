@@ -187,44 +187,38 @@ int six_invert(_Complex double a[6][6]) {
   int i,j,k;
   int ifail;
   ifail=0;
-  for(k = 0; k < nm1; k++)
+  for(k = 0; k < nm1; ++k)
   {
     s=0.0;
-    for(j = k+1; j <= nm1; j++) {
+    for(j = k+1; j <= nm1; ++j)
       s += conj(a[j][k]) * a[j][k];
-    }
-    s=1.+s/(creal(a[k][k])*creal(a[k][k])+cimag(a[k][k])*cimag(a[k][k]));
-    s=sqrt(s);
-    sigma = (s*creal(a[k][k])) + cimag(sigma) * I; sigma = creal(sigma) + (s*cimag(a[k][k])) * I;
+    s = sqrt(1. + s / (conj(a[k][k]) * a[k][k]));
+    sigma = s * a[k][k];
+
     a[k][k] += sigma;
-    p[k]=creal(sigma)*creal(a[k][k])+cimag(sigma)*cimag(a[k][k]);
-    /* d[k]=-1./sigma */
-    q=creal(sigma)*creal(sigma)+cimag(sigma)*cimag(sigma);
-    if(q < tiny_t) {
+    p[k] = creal(conj(sigma) * a[k][k]);
+    q = conj(sigma) * sigma;
+    if (q < tiny_t)
       ifail++;
-    }
-    q=1./q;
-    d[k] = (-q*creal(sigma)) + cimag(d[k]) * I; 
-    d[k] = creal(d[k]) + (q*cimag(sigma)) * I; 
+    d[k] = -conj(sigma) / q;
+
     /* reflect all columns to the right */
     for(j = k+1; j <= nm1; j++)
     {
       z = 0.0;
       for(i = k; i <= nm1; i++)
 	z += conj(a[i][k]) * a[i][j];
-      z /= p[k]; 
+      z /= p[k];
       for(i = k; i <= nm1; i++)
 	a[i][j] -= z * a[i][k];
     }
   }
   sigma = a[nm1][nm1];
   q = conj(sigma) * sigma;
-  if(q < tiny_t) {
+  if (q < tiny_t)
     ifail++;
-  }
-  q=1./q;
-  d[nm1] = (q*creal(sigma)) + cimag(d[nm1]) * I; 
-  d[nm1] = creal(d[nm1]) + (-q*cimag(sigma)) * I; 
+  d[nm1] = -conj(sigma) / q;
+
   /*  inversion of upper triangular matrix in place
       (diagonal elements done already): */
   

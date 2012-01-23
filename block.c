@@ -944,7 +944,7 @@ void compute_little_D_diagonal() {
       Block_D_psi(&block_list[blk], tmp, block_list[blk].basis[i]);
       for(j = 0; j < g_N_s; j++) {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
-	block_list[blk].little_dirac_operator32[i*g_N_s + j] = creal(M[i * g_N_s + j]);
+	block_list[blk].little_dirac_operator32[i*g_N_s + j] = M[i * g_N_s + j];
       }
     }
   }
@@ -998,10 +998,10 @@ void compute_little_D() {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
 	
 	if (block_list[blk].evenodd==0) {
-	  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j] = creal(M[i * g_N_s + j]);
+	  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
 	}
 	if (block_list[blk].evenodd==1) {
-	  block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j] = creal(M[i * g_N_s + j]);
+	  block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
 	}
       }
     }
