@@ -42,7 +42,7 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
 SMODULES = Hopping_Matrix_nocom Hopping_Matrix tm_operators
 
-MODULES = read_input gamma hybrid_update observables start \
+MODULES = gamma hybrid_update observables start \
 	expo get_staples update_backward_gauge \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
@@ -106,11 +106,11 @@ ${top_srcdir}/git_hash.h:
 include ${top_srcdir}/Makefile.global
 
 ifneq (,$(findstring lex,${LEX}))
-read_input.c: ${srcdir}/read_input.l
-	${LEX} -Ptmlqcd -i -t $< > ${srcdir}/read_input.c
+${srcdir}/read_input.c: ${srcdir}/read_input.l
+	@${LEX} -i -t ${srcdir}/read_input.l > ${srcdir}/read_input.c
 endif
 
-libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
+libhmc.a: read_input.o ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
 	@rm -f libhmc.a
 	@${AR} cru libhmc.a ${addsuffix .o, ${MODULES} ${SMODULES}}
 	@$(RANLIB) libhmc.a
@@ -132,11 +132,15 @@ ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
 
-${PROGRAMS}: %: %.o libhmc.a all-recursive
-	 ${LINK}  $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
+${PROGRAMS}: %: read_input.o %.o libhmc.a all-recursive
+	 ${LINK} ${top_builddir}/read_input.o $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
+
+# read_input treated separately to ensure that a change in .l results in a new .c
+read_input.o: ${srcdir}/read_input.l ${srcdir}/read_input.c Makefile $(abs_top_builddir)/config.h
+	${COMPILE} ${OPTARGS} -c ${srcdir}/read_input.c
 
 dep: $(addsuffix .d,$(ALLOBJ))
-	@ echo "...dependency files build"
+	@echo "...dependency files built"
 
 install: Makefile
 	@mkdir -p $(bindir); \
@@ -166,7 +170,7 @@ distclean: distclean-recursive Makefile
 	rm -f config.h
 
 .PHONY: all ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
-	flex_read_input $(PROGRAMS) all-recursive \
+	$(PROGRAMS) all-recursive \
 	all-debug-recursive all-profile-recursive \
 	clean-recursive distclean-recursive \
 	compile-clean-recursive $(LINKLIBS) \
