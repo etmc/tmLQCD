@@ -1,0 +1,33 @@
+# example input file for invert
+# for CG solver doing two gauges in one go
+# requires two 4^4 gauge configuration conf.0000 and conf.0010
+
+L=4
+T=4
+
+DebugLevel = 5
+InitialStoreCounter = 0
+# loop over two gauges
+Measurements = 2
+# use InitialStoreCounter, InitialStoreCounter + 10, ...
+Nsave = 10
+2kappamu = 0.05
+kappa = 0.177
+BCAngleT = 1.
+GaugeConfigInputFile = conf
+UseEvenOdd = yes
+
+SourceType = Volume
+ReadSource = no
+NoSamples = 12
+
+BeginOperator TMWILSON
+  2kappaMu = 0.05
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1.e-14
+  MaxSolverIterations = 1000
+  AddDownPropagator = yes
+EndOperator
+
