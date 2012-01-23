@@ -174,11 +174,12 @@ int init_operators() {
           fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
         optr->DownProp = 0;
 
-        /* this is for the extra masses of the CGMMS */
+        /* READING EXTRA MASSES INTEGRATED INTO READ_INPUT.L
+          this is for the extra masses of the CGMMS 
         if (g_no_extra_masses > 0) {
           if ((ifs = fopen("extra_masses.input", "r")) != NULL) {
             for (i = 0; i < g_no_extra_masses; i++) {
-              /* Code added below mainly to stop the compiler from whining! */
+              /* Code added below mainly to stop the compiler from whining! 
               if (fscanf(ifs, "%lf", &g_extra_masses[i]) == EOF) {
                 if (g_cart_id == 0) {
                   fprintf(stderr, "Expected %d extra masses for multiple mass solver, found only %d in extra_masses.input.\n", g_no_extra_masses, i);
@@ -197,7 +198,7 @@ int init_operators() {
             fprintf(stderr, "Could not open file extra_masses.input!\n");
             g_no_extra_masses = 0;
           }
-        }
+        } */
       }
     }
     else if(optr->type == OVERLAP) {

@@ -42,6 +42,7 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 NAME [a-zA-Z0-9_]+
 CSTR \"[a-zA-Z0-9\-\._]+\"
 TYPE [0-9A-Z]+
+FLTLIST [0-9"."","" "]*
 EQL {SPC}*={SPC}*
 
 %{
@@ -228,6 +229,7 @@ inline void rmQuotes(char *str){
 %x GMRESM
 %x GMRESDRNEV
 %x CGMMSNMS
+%x CGMMS
 %x REPRORND
 %x SLOPPYPREC
 %x USESTOUT
@@ -404,37 +406,37 @@ inline void rmQuotes(char *str){
  BEGIN(GPU);
  }
 <GPU>{
-  {SPC}*InnersolverPrecision{SPC}*={SPC}*{FLT} {
+  {SPC}*InnersolverPrecision{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     innersolver_precision = c;
     if(myverbose) printf("  Inner solver precision set to %lf line %d\n", c, line_of_file);
   }
-  {SPC}*MaxInnersolverIteration{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*MaxInnersolverIteration{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     max_innersolver_it = a;
     if(myverbose) printf("  Inner solver iterations set to %d line %d\n", a, line_of_file);
   }
-  {SPC}*DeviceNum{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*DeviceNum{EQL}{DIGIT}+ {
       sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
       device_num = a;
       if(myverbose) printf("  Device Number set to %d line %d\n", a, line_of_file);
   }
-  {SPC}*InnersolverPrecisionAbs{SPC}*={SPC}*{FLT} {
+  {SPC}*InnersolverPrecisionAbs{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     innersolver_precision_abs = c;
     if(myverbose) printf("  innersolver_precision_abs set to %lf line %d\n", c, line_of_file);
   }
-  {SPC}*InnersolverPrecisionRel{SPC}*={SPC}*{FLT} {
+  {SPC}*InnersolverPrecisionRel{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     innersolver_precision_rel = c;
     if(myverbose) printf("  innersolver_precision_rel set to %lf line %d\n", c, line_of_file);
   }
-  {SPC}*InnersolverPrecisionCheckAbs{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*InnersolverPrecisionCheckAbs{EQL}{DIGIT}+ {
       sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
       innersolver_precision_check_abs = a;
       if(myverbose) printf("  innersolver_precision_check_abs set to %d line %d\n", a, line_of_file);
   }
-  {SPC}*InnersolverPrecisionCheckRel{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*InnersolverPrecisionCheckRel{EQL}{DIGIT}+ {
       sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
       innersolver_precision_check_rel = a;
       if(myverbose) printf("  innersolver_precision_check_rel set to %d line %d\n", a, line_of_file);
@@ -521,6 +523,25 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
+  }
+  /* This needs to check for a MAX when adding masses to prevent out of bounds errors */
+  {SPC}*ExtraMasses{EQL}{FLTLIST} {
+    char * token;
+    int no_extra_masses = 0;
+    double mass;
+    if( strtok(yytext,"\n\t =,\\") != NULL ) {
+       /* Implicitly drop the first token, it is "ExtraMasses" */
+      token = strtok(NULL," =,");
+      while( token != NULL ) {
+        sscanf(token,"%lf",&mass);
+        g_extra_masses[no_extra_masses] = mass;
+        if(myverbose) printf("  CGMMS extra mass %d = 2 * kappa * %lf added line %d operator %d\n",no_extra_masses,mass,line_of_file,current_operator);
+        ++no_extra_masses;
+        token = strtok(NULL," =,");
+      }
+    }
+    g_no_extra_masses = no_extra_masses;
+    if(myverbose) printf("  CGMMS %d extra masses added line %d operator %d\n",g_no_extra_masses,line_of_file,current_operator);
   }
   ^EndOperator{SPC}*  {
     if(myverbose) printf("operator %d parsed line %d\n\n", current_operator, line_of_file);
@@ -711,7 +732,6 @@ inline void rmQuotes(char *str){
     BEGIN(OVERLAPOP);
   }
 }
-
 
 <INITMONOMIAL>{TYPE} {
   current_monomial++;
@@ -1335,7 +1355,7 @@ inline void rmQuotes(char *str){
     if(myverbose) printf("Measurement with id %d parsed in line %d\n\n", meas->id, line_of_file);
     BEGIN(0);
   }
-  {SPC}*Frequency{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*Frequency{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     meas->freq = a;
     if(myverbose!=0) printf("  Frequency for measurement with id %d set to %d\n", meas->id, meas->freq);
@@ -1508,10 +1528,12 @@ inline void rmQuotes(char *str){
   gmresdr_nr_ev = atoi(yytext);
   if(myverbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
 }
+ /*
 <CGMMSNMS>{DIGIT}+ {
   g_no_extra_masses = atoi(yytext);
   if(myverbose!=0) printf("Number of extra MMS masses set to %d\n", g_no_extra_masses);
 }
+ */
 <DFLSP>{DIGIT}+ {
   g_N_s = atoi(yytext);
   if(myverbose!=0) printf("Deflation subspace dimension set to %d \n", g_N_s);
