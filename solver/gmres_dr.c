@@ -446,32 +446,28 @@ int gmres_dr(spinor * const P,spinor * const Q,
   return(-1);
 }
 
-_Complex double short_scalar_prod(_Complex double * const y, _Complex double * const x, const int N) {
-  _Complex double res;
-  int ix;
+_Complex double short_scalar_prod(_Complex double * const y, _Complex double * const x, const int N)
+{
+  _Complex double res = 0.0;
 
-  res = 0.;
-  for (ix = 0; ix < N; ix++){
-    res += (+creal(x[ix])*creal(y[ix]) + cimag(x[ix])*cimag(y[ix])) + (-creal(x[ix])*cimag(y[ix]) + cimag(x[ix])*creal(y[ix])) * I;
-  }
+  for (int ix = 0; ix < N; ++ix)
+    res += conj(y[ix]) * x[ix];
   return(res);
 
 }
 
-void short_ModifiedGS(_Complex double v[], int n, int m, _Complex double A[], int lda) {
-
-  int i;
-  _Complex double s;
-
-  for (i = 0; i < m; i++) {
-    s = short_scalar_prod(A+i*lda, v, n); 
-    s = -s;
+void short_ModifiedGS(_Complex double v[], int n, int m, _Complex double A[], int lda)
+{
+  double r;
+  for (int i = 0; i < m; ++i)
+  {
+     _Complex double s = -short_scalar_prod(A + i * lda, v, n); 
     _FT(zaxpy)(&n, &s, A+i*lda, &one, v, &one); 
   }
-  s = (creal(sqrt(short_scalar_prod(v, v, n)))) + cimag(s) * I;
-  for(i = 0; i < n; i++) {
-    v[i] /= (creal(s)) + (creal(s)) * I;
-  }
+  
+  r = creal(sqrt(short_scalar_prod(v, v, n)));
+  for(int i = 0; i < n; ++i)
+    v[i] /= r;
 }
 
 static void init_gmres_dr(const int _M, const int _V){

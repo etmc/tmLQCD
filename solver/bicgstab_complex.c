@@ -49,7 +49,7 @@
 int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter, 
 		     double eps_sq, const int rel_prec, 
 		     const int N, matrix_mult f){
-  double err, d1, squarenorm;
+  double err, squarenorm;
   _Complex double rho0, rho1, omega, alpha, beta, nom, denom;
   int i;
   spinor * r, * p, * v, *hatr, * s, * t;
@@ -89,18 +89,18 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
     }
     f(v, p);
     denom = scalar_prod(hatr, v, N, 1);
-    (alpha) = (rho0) / (denom);
+    alpha = rho0 / denom;
     assign(s, r, N);
     assign_diff_mul(s, v, alpha, N);
     f(t, s);
     omega = scalar_prod(t,s, N, 1);
-    d1 = square_norm(t, N, 1);
-    omega /= (d1) + (d1) * I;
+    omega /= square_norm(t, N, 1);
     assign_add_mul_add_mul(P, p, s, alpha, omega, N);
     assign(r, s, N);
     assign_diff_mul(r, t, omega, N);
     rho1 = scalar_prod(hatr, r, N, 1);
-    if(fabs(creal(rho1)) < 1.e-25 && fabs(cimag(rho1)) < 1.e-25) {
+    if(fabs(creal(rho1)) < 1.e-25 && fabs(cimag(rho1)) < 1.e-25)
+    {
       finalize_solver(solver_field, nr_sf);
       return(-1);
     }

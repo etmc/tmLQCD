@@ -48,7 +48,7 @@
 */
 int bicgstab_complex_bi(bispinor * const P, bispinor * const Q, const int max_iter, double eps_sq, const int rel_prec, const int N, matrix_mult_bi f){
 
-  double err, d1, squarenorm;
+  double err, squarenorm;
   _Complex double rho0, rho1, omega, alpha, beta, nom, denom;
   int i;
   bispinor * r, * p, * v, *hatr, * s, * t;
@@ -89,20 +89,19 @@ int bicgstab_complex_bi(bispinor * const P, bispinor * const Q, const int max_it
     }
     f(v, p);
     denom = scalar_prod_bi(hatr, v, N);
-    (alpha) = (rho0) / (denom);
+    alpha = rho0 / denom;
     assign_bi(s, r, N);
     assign_diff_mul_bi(s, v, alpha, N);
     f(t, s);
     omega = scalar_prod_bi(t,s, N);
-    d1 = square_norm_bi(t, N);
-    omega /= (d1) + (d1) * I;
+    omega /= square_norm_bi(t, N);
     assign_add_mul_add_mul_bi(P, p, s, alpha, omega, N);
     assign_bi(r, s, N);
     assign_diff_mul_bi(r, t, omega, N);
     rho1 = scalar_prod_bi(hatr, r, N);
-    (nom) = (alpha) * (rho1);
-    (denom) = (omega) * (rho0);
-    (beta) = (nom) / (denom);
+    nom = alpha * rho1;
+    denom = omega * rho0;
+    beta = nom / denom;
     omega = -omega;
     assign_mul_bra_add_mul_ket_add_bi(p, v, r, omega, beta, N);
     rho0 = rho1;

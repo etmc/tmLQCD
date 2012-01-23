@@ -228,9 +228,8 @@ _Complex double calcDovEvalue(const int *praw,double kappa,double rho,int tt,int
   lambda = (0.5*psq_tilde-rho) + (sign*sqrt(psq)) * I;
 
   denominator=cabs(lambda);
-  lambda *= (rho/denominator) + cimag(lambda) * I;
-  lambda *= creal(lambda) + (rho/denominator) * I;
-  lambda += (rho) + cimag(lambda) * I;
+  lambda *= rho/denominator;
+  lambda += rho;
 
   return lambda;
 
@@ -1306,8 +1305,7 @@ void spinor_mulp_half_phase(spinor *spinor_out,const spinor *spinor_in,
     else 
       phase = c_table[t] + s_table[t] * I;
     /* multiply with an overall constant */
-    phase *= (mulp) + cimag(phase) * I;
-    phase *= creal(phase) + (mulp) * I;
+    phase *= mulp;
 
     if(useDummy==1){
       for(x=0;x<LX;x++){
@@ -1469,8 +1467,7 @@ _Complex double calcMatrixElement(spinor *field1,spinor *field2,_Complex double 
 
 	
   }
-  avg /= ((double)avgcount) + cimag(avg) * I;
-  avg /= creal(avg) + ((double)avgcount) * I;
+  avg /= (double)avgcount;
   return avg;
 
 }

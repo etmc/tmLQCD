@@ -84,7 +84,7 @@ void sub_lowest_eigenvalues(spinor * const Q, spinor * const P, const int n, con
   
   for(i = 0; i < n; i++){
     c = scalar_prod(&(eigenvectors[i*evlength]), P, N, 1);
-    c *= (-eigenvls[i]) + (-eigenvls[i]) * I;
+    c *= -eigenvls[i];
     assign_add_mul(Q, &eigenvectors[i*evlength], c, N);
   }
 }
@@ -113,25 +113,20 @@ void assign_add_invert_subtracted_part(spinor * const Q, spinor * const P, const
   for(i = 0; i < n; i++){
     c = scalar_prod(&eigenvectors[i*evlength], P, N, 1);
     rev = 1./eigenvls[i];
-    c *= (rev) + (rev) * I;
+    c *= rev;
     assign_add_mul(Q, &eigenvectors[i*evlength], c, N);
   }
 }
 
 void invert_eigenvalue_part(spinor * const Q, spinor * const P, const int n, const int N) {
-  int i=0;
   _Complex double c;
   double rev=0;
 
-/*   c = scalar_prod(&eigenvectors[0], P, N, 1); */
-/*   rev = 1./eigenvls[0]; */
-/*   c *= (rev) + cimag(c) * I; */
-/*   c *= creal(c) + (rev) * I; */
-/*   mul(Q, c, &eigenvectors[0], N); */
   assign(Q, P, N);
-  for(i = 0; i < n; i++){
+  for(int i = 0; i < n; ++i)
+  {
     c = scalar_prod(&eigenvectors[i*evlength], P, N, 1);
-    c *= (-inv_eigenvls[i]) + (-inv_eigenvls[i]) * I;
+    c *= -inv_eigenvls[i];
     assign_add_mul(Q, &eigenvectors[i*evlength], c, N);
   }
 }

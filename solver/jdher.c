@@ -639,11 +639,6 @@ void jdher(int n, int lda, double tau, double tol,
       /* equation and project if necessary */
       ModifiedGS(r, n, k + actblksize, Q, lda);
 
-/*       for(i=0;i<n;i++){ */
-/* 	r[i] *= (-1.) + cimag(r[i]) * I; */
-/* 	r[i] *= creal(r[i]) + (-1.) * I; */
-/*       } */
-
       /* Solve the correction equation ...  */
       g_sloppy_precision = 1;
       if(solver_flag == GMRES){

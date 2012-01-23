@@ -633,10 +633,6 @@ void jdher_bi(int n, int lda, double tau, double tol,
       /* equation and project if necessary */
       ModifiedGS_bi(r, n, k + actblksize, Q, lda);
 
-      /*       for(i=0;i<n;i++){ */
-      /* 	r[i] *= (-1.) + cimag(r[i]) * I; */
-      /* 	r[i] *= creal(r[i]) + (-1.) * I; */
-      /*       } */
       g_sloppy_precision = 1;
       /* Solve the correction equation ...  */
       if (solver_flag == BICGSTAB){
