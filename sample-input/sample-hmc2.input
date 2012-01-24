@@ -14,7 +14,7 @@ StartCondition = hot
 2Kappaepsbar = 0.0935
 kappa = 0.170
 NSave = 500000
-ThetaT = 1.
+ThetaT = 1
 BCGstabMaxIter = 0
 CGMaxIter = 1000
 GaugeConfigInputFile = conf.save
@@ -47,9 +47,9 @@ BeginMonomial NDPOLY
   Timescale = 1
   StildeMin = 0.013577
   StildeMax = 3.096935
-  PrecisionPtilde = 1.e-05
+  PrecisionPtilde = 1e-05
   DegreeOfMDPolynomial = 48
-  PrecisionHfinal = 1.e-10
+  PrecisionHfinal = 1e-10
   ComputeEVFreq = 2
 EndMonomial
 
@@ -58,7 +58,7 @@ BeginIntegrator
   Type1 = 2MN
   IntegrationSteps0 = 2
   IntegrationSteps1 = 6
-  Tau = 1.
+  Tau = 1
   Lambda0 = 0.19
   NumberOfTimescales = 2
 EndIntegrator

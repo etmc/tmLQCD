@@ -16,7 +16,7 @@ StartCondition = hot
 2KappaMu = 0.177
 kappa = 0.177
 NSave = 500000
-ThetaT = 1.
+ThetaT = 1
 BCGstabMaxIter = 0
 CGMaxIter = 1000
 UseEvenOdd = yes
@@ -38,8 +38,8 @@ BeginMonomial DET
   Timescale = 1
   2KappaMu = 0.5
   kappa = 0.177
-  AcceptancePrecision =  1.e-20
-  ForcePrecision = 1.e-12
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
   Name = det
   Solver = CG
 EndMonomial
@@ -50,8 +50,8 @@ BeginMonomial DETRATIO
   2KappaMu2 = 0.5
   kappa = 0.177
   kappa2 = 0.177
-  AcceptancePrecision =  1.e-20
-  ForcePrecision = 1.e-12
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
   Name = detrat
   Solver = CG
 EndMonomial
@@ -63,7 +63,7 @@ BeginIntegrator
   IntegrationSteps0 = 1
   IntegrationSteps1 = 2
   IntegrationSteps2 = 4
-  Tau = 1.
+  Tau = 1
   Lambda0 = 0.19
   NumberOfTimescales = 3
 EndIntegrator
