@@ -150,8 +150,7 @@ void extended_pion_source(spinor * const P, spinor * const Q,
 	MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	if(g_cart_id == id) {
-	  efac = (cos(px*x + py*y + pz*z)) + cimag(efac) * I;
-	  efac = creal(efac) + (-sin(px*x + py*y + pz*z)) * I;
+	  efac = cexp(-(px * x + py * y + pz * z) * I);
 
 	  i = g_lexic2eosub[ g_ipt[lt][lx][ly][lz] ];
 	  if((lt+lx+ly+lz+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 

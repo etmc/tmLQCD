@@ -179,7 +179,8 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
   !______________________________________________________________!
 */
 #define nm1 5
-int six_invert(_Complex double a[6][6]) {
+int six_invert(_Complex double a[6][6])
+{
   static _Complex double d[nm1+1],u[nm1+1];
   static _Complex double sigma,z;
   static double p[nm1+1];
@@ -221,10 +222,10 @@ int six_invert(_Complex double a[6][6]) {
 
   /*  inversion of upper triangular matrix in place
       (diagonal elements done already): */
-  
+
   for(k = nm1; k >= 0; k--) {
     for(i = k-1; i >= 0;i--) {
-      z = (0.) + cimag(z) * I; z = creal(z);
+      z = 0.0;
       for(j = i+1; j < k; j++)
 	z += a[i][j] * a[j][k];
       z += a[i][k] * d[k];

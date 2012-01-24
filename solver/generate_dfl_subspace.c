@@ -296,7 +296,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
       s = lscalar_prod(little_dfl_fields[j], little_dfl_fields[i], nb_blocks*Ns, 1);
       lassign_diff_mul(little_dfl_fields[i], little_dfl_fields[j], s, nb_blocks*Ns);
     }
-    s = (lsquare_norm(little_dfl_fields[i], nb_blocks*Ns, 1)) + cimag(s) * I;
+    s = lsquare_norm(little_dfl_fields[i], nb_blocks*Ns, 1);
     lmul_r(little_dfl_fields[i], 1./sqrt(creal(s)), little_dfl_fields[i], nb_blocks*Ns);
   }
   if(g_debug_level > 0) {
@@ -358,7 +358,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
       s = lscalar_prod(little_dfl_fields_eo[j], little_dfl_fields_eo[i], nb_blocks*Ns, 1);
       lassign_diff_mul(little_dfl_fields_eo[i], little_dfl_fields_eo[j], s, nb_blocks*Ns);
     }
-    s = (lsquare_norm(little_dfl_fields_eo[i], nb_blocks*Ns, 1)) + cimag(s) * I;
+    s = lsquare_norm(little_dfl_fields_eo[i], nb_blocks*Ns, 1);
     lmul_r(little_dfl_fields_eo[i], 1./sqrt(creal(s)), little_dfl_fields_eo[i], nb_blocks*Ns);
   }
   if(g_debug_level > 0) {

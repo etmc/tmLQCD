@@ -346,29 +346,31 @@ void Q_pm_psi_prec(spinor * const l, spinor * const k) {
   spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
   static _Complex double alpha= -1.0;
 
-  if(g_prec_sequence_d_dagger_d[0]!=0.0){
-    alpha = (g_prec_sequence_d_dagger_d[0]) + cimag(alpha) * I;
+  if(g_prec_sequence_d_dagger_d[0]!=0.0)
+  {
+    alpha = g_prec_sequence_d_dagger_d[0];
     spinorPrecondition(l,k,ws,T,L,alpha,0,1);
   } 
-  else {
+  else
     assign(l,k,VOLUME);
-  }
 
   g_mu = -g_mu;
   D_psi(g_spinor_field[DUM_MATRIX], l);
   gamma5(l, g_spinor_field[DUM_MATRIX], VOLUME);
   g_mu = -g_mu;
 
-  if(g_prec_sequence_d_dagger_d[1]!=0.0){
-    alpha = (g_prec_sequence_d_dagger_d[1]) + cimag(alpha) * I;
+  if(g_prec_sequence_d_dagger_d[1]!=0.0)
+  {
+    alpha = g_prec_sequence_d_dagger_d[1];
     spinorPrecondition(l,l,ws,T,L,alpha,0,1);
   }
 
   D_psi(g_spinor_field[DUM_MATRIX], l);
   gamma5(l, g_spinor_field[DUM_MATRIX], VOLUME);
 
-  if(g_prec_sequence_d_dagger_d[2]!=0.0){
-    alpha = (g_prec_sequence_d_dagger_d[2]) + cimag(alpha) * I; 
+  if(g_prec_sequence_d_dagger_d[2]!=0.0)
+  {
+    alpha = g_prec_sequence_d_dagger_d[2]; 
     spinorPrecondition(l,l,ws,T,L,alpha,0,1);
   }
 
@@ -507,10 +509,8 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
     sign = 1.; 
   }
 
-  z = (nrm) + cimag(z) * I;
-  z = creal(z) + (sign * nrm * g_mu) * I;
-  w = (nrm) + cimag(w) * I;
-  w = creal(w) + (-cimag(z)) * I; /*-sign * nrm * g_mu;*/
+  z = nrm + (sign * nrm * g_mu) * I;
+  w = conj(z);
 #if (defined BGL3 && defined XLC)
   __alignx(16,l);
 #endif
@@ -701,10 +701,8 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
     sign = -1.; 
   }
 
-  z = (1.) + cimag(z) * I;
-  z = creal(z) + (sign * g_mu) * I;
-  w = (1.) + cimag(w) * I;
-  w = creal(w) + (-cimag(z)) * I; /*-sign * nrm * g_mu;*/
+  z = 1. + (sign * g_mu) * I;
+  w = conj(z);
 #if (defined BGL3 && defined XLC)
   __alignx(16,l);
   __alignx(16,k);
@@ -754,23 +752,20 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
 
 void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k, 
 				   spinor * const j){
-  _Complex double ione;
-  int ix;
   spinor *r, *s, *t;
 #if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
 #endif
 
-  ione = (0.) + cimag(ione) * I;
-  ione = creal(ione) + (-1.) * I;
 #if (defined BGL3 && defined XLC)
   __alignx(16,l);
   __alignx(16,k);
   __alignx(16,j);
 #endif
   /************ loop over all lattice sites ************/
-  for(ix = 0; ix < (VOLUME/2); ix++){
+  for(int ix = 0; ix < (VOLUME/2); ++ix)
+  {
     r = k+ix;
     s = j+ix;
     t = l+ix;
@@ -911,10 +906,8 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
     sign = -1.;
   }
 
-  z = (1.) + cimag(z) * I;
-  z = creal(z) + (sign * g_mu) * I;
-  w = (1.) + cimag(w) * I;
-  w = creal(w) + (-sign * g_mu) * I;
+  z = 1. + (sign * g_mu) * I;
+  w = conj(z);
 #if (defined BGL3 && defined XLC)
   __alignx(16,l);
   __alignx(16,k);

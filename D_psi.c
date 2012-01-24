@@ -509,10 +509,8 @@ void D_psi(spinor * const P, spinor * const Q){
   xchange_lexicfield(Q);
 # endif
 
-  fact1 = (1.) + cimag(fact1) * I;
-  fact1 = creal(fact1) + (g_mu) * I;
-  fact2 = (1.) + cimag(fact2) * I;
-  fact2 = creal(fact2) + (-g_mu) * I;
+  fact1 = 1. + g_mu * I;
+  fact2 = conj(fact1);
 
   iy=g_iup[0][0];
   sp=(spinor *) Q + iy;
@@ -909,8 +907,7 @@ void D_psi(spinor * const P, spinor * const Q){
   xchange_lexicfield(Q);
 #    endif
 
-  fact1 = (1.) + cimag(fact1) * I;
-  fact1 = creal(fact1) + (g_mu) * I;
+  fact1 = 1.0 + g_mu * I;
 
   iy=g_iup[0][0];
   sp=(spinor *) Q + iy;
@@ -1232,18 +1229,11 @@ void D_psi_prec(spinor * const P, spinor * const Q){
   spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
   static _Complex double alpha = -1.0;
 
-  alpha = (-.5) + cimag(alpha) * I;
+  alpha = -0.5;
   spinorPrecondition(P,Q,ws,T,L,alpha,0,1);
   D_psi(g_spinor_field[DUM_MATRIX],P);
-  alpha = (-.5) + cimag(alpha) * I;
+  alpha = -0.5;
   spinorPrecondition(P,g_spinor_field[DUM_MATRIX],ws,T,L,alpha,0,1);
-
-/*   D_psi(P,Q); */
-/*   alpha = (-1.) + cimag(alpha) * I; */
-/*   alpha = creal(alpha); */
-/*   spinorPrecondition(P,P,ws,T,L,alpha,0,1); */
-
-
 }
 
 /* apply the Dirac operator to the block local spinor field s */
@@ -1266,10 +1256,8 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
   if(blk_gauge_eo) {
     init_blocks_gaugefield();
   }
-  rhoa = (1.) + cimag(rhoa) * I;
-  rhoa = creal(rhoa) + (g_mu) * I;
-  rhob = (1.) + cimag(rhob) * I;
-  rhob = creal(rhob) + (-g_mu) * I;
+  rhoa = 1.0 + g_mu * I;
+  rhob = conj(rhoa);
 
   /* set the boundary term to zero */
   _spinor_null(rr[blk->volume]);

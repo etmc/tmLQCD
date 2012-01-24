@@ -116,7 +116,7 @@ int fgmres(spinor * const P,spinor * const Q,
     diff(r0, Q, r0, N); 
 
     /* v_0=r_0/||r_0|| */
-    alpha[0] = (sqrt(square_norm(r0, N, 1))) + cimag(alpha[0]) * I;
+    alpha[0] = sqrt(square_norm(r0, N, 1));
 
     if(g_proc_id == g_stdio_proc && g_debug_level > 0){
       printf("FGMRES %d\t%g true residue\n", restart*m, creal(alpha[0])*creal(alpha[0])); 

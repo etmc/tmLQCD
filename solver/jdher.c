@@ -512,9 +512,8 @@ void jdher(int n, int lda, double tau, double tol,
 
 	/* Let M become a diagonalmatrix with the Ritzvalues as entries ... */ 
 	_FT(zlaset)(fupl_u, &j, &j, &CZERO, &CZERO, M, &jmax, 1);
-	for (act = 0; act < j; act++){
-	  M[act*jmax + act] = (s[act]) + cimag(M[act*jmax + act]) * I;
-	}
+	for (act = 0; act < j; act++)
+	  M[act*jmax + act] = s[act];
 	
 	/* ... and U the Identity(jnew,jnew) */
 	_FT(zlaset)(fupl_a, &j, &j, &CZERO, &CONE, U, &jmax, 1);
@@ -584,7 +583,7 @@ void jdher(int n, int lda, double tau, double tol,
 	_FT(zlaset)(fupl_a, &j, &j, &CZERO, &CONE, U, &jmax, 1);
 	_FT(zlaset)(fupl_u, &j, &j, &CZERO, &CZERO, M, &jmax, 1);
 	for (act = 0; act < j; act++)
-	  M[act*jmax + act] = (s[act]) + cimag(M[act*jmax + act]) * I;
+	  M[act*jmax + act] = s[act];
       }
 
     } /* while(found) */    

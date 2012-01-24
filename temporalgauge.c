@@ -24,56 +24,27 @@ su3 * right;
 
 
 
-static su3 unit_su3 (void) {
-
+static su3 unit_su3 (void)
+{
    su3 u;
-
-   u.c00 = (1.0) + cimag(u.c00) * I;
-   u.c00 = creal(u.c00);
-   u.c01 = (0.0) + cimag(u.c01) * I;
-   u.c01 = creal(u.c01);
-   u.c02 = (0.0) + cimag(u.c02) * I;
-   u.c02 = creal(u.c02);
-
-   u.c10 = (0.0) + cimag(u.c10) * I;
-   u.c10 = creal(u.c10);
-   u.c11 = (1.0) + cimag(u.c11) * I;
-   u.c11 = creal(u.c11);
-   u.c12 = (0.0) + cimag(u.c12) * I;
-   u.c12 = creal(u.c12);
-
-   u.c20 = (0.0) + cimag(u.c20) * I;
-   u.c20 = creal(u.c20);
-   u.c21 = (0.0) + cimag(u.c21) * I;
-   u.c21 = creal(u.c21);
-   u.c22 = (1.0) + cimag(u.c22) * I;
-   u.c22 = creal(u.c22);
-
+   _su3_one(u);
    return(u);
-   
 }
 
 
 
 /*copy a complete gauge field*/
 /* THINK OF PARALLELIZATION (RAND!!!)*/
-void copy_gauge_field (su3 ** to, su3 ** from) {
-
-  int ix;
-  
-  for (ix = 0; ix < VOLUME; ix++) {				// for TEMPORALGAUGE we will only consider the INTERN lattice
-  								//	after the tansformations we will xchange the fields
+void copy_gauge_field (su3 ** to, su3 ** from)
+{
+  for (int ix = 0; ix < VOLUME; ix++)
+  {
     _su3_assign(to[ix][0], from[ix][0]);
     _su3_assign(to[ix][1], from[ix][1]);
     _su3_assign(to[ix][2], from[ix][2]);
     _su3_assign(to[ix][3], from[ix][3]);
-    
   }
 }
-
-
-
-
 
 /*
   Set the trafo field for a temporal gauge 

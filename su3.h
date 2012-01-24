@@ -107,15 +107,15 @@ typedef struct
 * r.c2=s.c2
 * r.c3=s.c3
 */
+
+/* The following should be taken care of by the compiler, actually... Just redefine as _vector_assign */
+#define _vector_assign32(r,s) _vector_assign(r,s)
+
 #define _vector_assign(r,s)			\
   (r).c0 = (s).c0;				\
   (r).c1 = (s).c1;				\
   (r).c2 = (s).c2;
 
-#define _vector_assign32(r,s) \
-   (r).c0 = (double)creal((s).c0) + (double)cimag((s).c0) * I; \
-   (r).c1 = (double)creal((s).c1) + (double)cimag((s).c1) * I; \
-   (r).c2 = (double)creal((s).c2) + (double)cimag((s).c2) * I;
    
 #define _spinor_assign(r,s) \
    _vector_assign((r).s0,(s).s0);\

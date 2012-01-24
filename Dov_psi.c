@@ -85,8 +85,7 @@ void Dov_psi_prec(spinor * const P, spinor * const S) {
   spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
   static _Complex double alpha;
   Dov_psi(P,S);
-  alpha = (-1.) + cimag(alpha) * I;
-  alpha = creal(alpha);
+  alpha = -1.0;
   spinorPrecondition(P,P,ws,T,L,alpha,0,1);
 
 }
@@ -217,22 +216,22 @@ void Qov_sq_psi_prec(spinor * const P, spinor * const S) {
 
 
   spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
-  static _Complex double alpha={0,0};
+  static _Complex double alpha = 0.0;
 
-  alpha = (ws->precExpo[0]) + cimag(alpha) * I;
+  alpha = ws->precExpo[0];
   spinorPrecondition(P,S,ws,T,L,alpha,0,1);
 
 
   Dov_psi(g_spinor_field[DUM_MATRIX], P);
   gamma5(P, g_spinor_field[DUM_MATRIX], VOLUME);
 
-  alpha = (ws->precExpo[1]) + cimag(alpha) * I;
+  alpha = ws->precExpo[1];
   spinorPrecondition(P,P,ws,T,L,alpha,0,1);
 
   Dov_psi(g_spinor_field[DUM_MATRIX], P);
   gamma5(P, g_spinor_field[DUM_MATRIX], VOLUME);
 
-  alpha = (ws->precExpo[2]) + cimag(alpha) * I;
+  alpha = ws->precExpo[2];
   spinorPrecondition(P,P,ws,T,L,alpha,0,1);
 
   return;

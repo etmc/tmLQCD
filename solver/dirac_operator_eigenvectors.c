@@ -204,7 +204,7 @@ _Complex double calcDtmEvalue(const int *praw,double kappa,double mu,int tt,int 
   calcPmuLatticeTilde(praw,p_mu_t,tt,ll);
   psq_tilde=p_mu_t[0]*p_mu_t[0]+p_mu_t[1]*p_mu_t[1]+p_mu_t[2]*p_mu_t[2]+p_mu_t[3]*p_mu_t[3];
 
-  lambda = (0.5/kappa-4+0.5*psq_tilde) + (sign*sqrt(mu*mu+psq)) * I;
+  lambda = (0.5 / kappa - 4 + 0.5 * psq_tilde) + (sign * sqrt(mu * mu + psq)) * I;
   return lambda;
 
 }
@@ -225,7 +225,7 @@ _Complex double calcDovEvalue(const int *praw,double kappa,double rho,int tt,int
 
 
 
-  lambda = (0.5*psq_tilde-rho) + (sign*sqrt(psq)) * I;
+  lambda = (0.5 * psq_tilde - rho) + (sign * sqrt(psq)) * I;
 
   denominator=cabs(lambda);
   lambda *= rho/denominator;
@@ -250,12 +250,13 @@ _Complex double calcQtmEvalue(const int *praw,double kappa,double mu,int tt,int 
 
   M_wilson=((0.5/kappa-4.)+0.5*psq_tilde);
          
-  lambda = (sign*sqrt( M_wilson*M_wilson + psq )) + (mu) * I;
+  lambda = sign * sqrt(M_wilson * M_wilson + psq) + mu * I;
   return lambda;
 
 }
 
-_Complex double calcDDaggerDtmEvalue(const int *praw,double kappa,double mu,int tt,int ll){
+_Complex double calcDDaggerDtmEvalue(const int *praw,double kappa,double mu,int tt,int ll)
+{
   static double p_mu[4];
   static double p_mu_t[4];
   double M_wilson;
@@ -270,11 +271,9 @@ _Complex double calcDDaggerDtmEvalue(const int *praw,double kappa,double mu,int 
 
   M_wilson=((0.5/kappa-4.)+0.5*psq_tilde);
          
-  lambda = (psq+M_wilson*M_wilson+mu*mu);
-/*   printf(" for D_Dagger_Dtm creal(lambda) = %lf \n",creal(lambda)*4.*kappa*kappa); */
+  lambda = (psq + M_wilson * M_wilson + mu * mu);
 
   return lambda;
-
 }
 
 
@@ -292,15 +291,12 @@ _Complex double calcDDaggerDovEvalue(const int *praw,double kappa,double rho,int
   u=p_mu_t[0]*p_mu_t[0]+p_mu_t[1]*p_mu_t[1]+p_mu_t[2]*p_mu_t[2]+p_mu_t[3]*p_mu_t[3];
   u=u*0.5-rho;
 
-  lambda=calcDovEvalue(praw,kappa,rho,tt,ll,1.);
-  abslam=creal(lambda * conj(lambda));
-/*   printf(" for Dov |lambda| = %lf \n",abslam); */
+  lambda = calcDovEvalue(praw, kappa, rho, tt, ll, 1.);
+  abslam = lambda * conj(lambda);
 
-  lambda = creal(lambda);
-  lambda = (2.*(u/sqrt(u*u+v)+1.)*rho*rho) + cimag(lambda) * I;
+  lambda = (2. * (u / sqrt(u * u + v) + 1.) * rho * rho);
 
-/*   printf(" for Dov_Dagger_dov creal(lambda) = %lf \n",creal(lambda)); */
-  diff=abslam-fabs(creal(lambda));
+  diff=abslam - cabs(lambda);
   if(diff>1.e-12)
     printf("Error in Eigenvalue computation for Dov ^ dagger Dov: at praw = (%d,%d,%d,%d)(difference  = %lf)!!! \n",praw[0],praw[1],praw[2],praw[3],diff);
 
@@ -372,7 +368,7 @@ void spinorPrecWS_RecalcDDaggerDEvs(spinorPrecWS *ws,double kappa,double mu){
     if(ws->useCorrectionFunc==1){
       pmuSq=calcPmuLatticeSq(rawp,T,LX);
       pmuTildeSq=calcPmuLatticeTildeSq(rawp,T,LX);
-      lambda = (spinorPrecWS_evalCorrectionFunction(ws,pmuSq,pmuTildeSq)) + cimag(lambda) * I;
+      lambda = (spinorPrecWS_evalCorrectionFunction(ws,pmuSq,pmuTildeSq));
     } else {
       lambda=calcDDaggerDtmEvalue(rawp,kappa,mu,T,L);
     }
@@ -481,7 +477,7 @@ void spinorPrecWS_Init(spinorPrecWS *ws, double kappa,double mu,double rho,tm_op
     if(ws->useCorrectionFunc==1){
       pmuSq=calcPmuLatticeSq(rawp,T,LX);
       pmuTildeSq=calcPmuLatticeTildeSq(rawp,T,LX);
-      lambda = (spinorPrecWS_evalCorrectionFunction(ws,pmuSq,pmuTildeSq)) + cimag(lambda) * I;
+      lambda = (spinorPrecWS_evalCorrectionFunction(ws,pmuSq,pmuTildeSq));
     } else {
       lambda=calcDDaggerDtmEvalue(rawp,kappa,mu,T,L);
     }
@@ -1037,7 +1033,8 @@ void spinorStructEigenvecDtm(spinor *fv,double mu,int epsilon,int k,int color,in
 }
 
 
-void spinorStructEigenvecDtmSu3Vector(spinor *fv,double mu,int epsilon,int k,int store_color,int rawp[4],int tt,int ll){
+void spinorStructEigenvecDtmSu3Vector(spinor *fv, double mu, int epsilon, int k, int store_color, int rawp[4], int tt, int ll)
+{
   double q[8];
   double p_mu[4];
   double prefactor;
@@ -1046,71 +1043,74 @@ void spinorStructEigenvecDtmSu3Vector(spinor *fv,double mu,int epsilon,int k,int
 
   calcPmuLattice(rawp,p_mu,tt,LX);
 
-  psq=p_mu[0]*p_mu[0]+
-    p_mu[1]*p_mu[1]+
-    p_mu[2]*p_mu[2]+
-    p_mu[3]*p_mu[3];
+  psq=p_mu[0] * p_mu[0]+ p_mu[1] * p_mu[1] + p_mu[2] * p_mu[2] + p_mu[3] * p_mu[3];
 
 /*   p_mu[3]*=-1.; */
   makeQuaternionAsSu2(q,p_mu,1/* dagger ? */,1);
 
   /* this comes just from the calculation of q itself */
-  prefactor=sqrt(mu*mu+psq);
-  prefactor*=(double)epsilon;
-  prefactor=(prefactor-mu)/psq;
+  prefactor = (epsilon * sqrt(mu * mu + psq) - mu) / psq;
 
   /* this comes from the overall normalization of the spinor */
-  beta=mu/sqrt(psq);
-  norm_factor=1./sqrt(2.*(1+beta*(beta-epsilon*sqrt(beta*beta+1))));
-  prefactor*=norm_factor;
-
+  beta = mu/sqrt(psq);
+  norm_factor = 1./sqrt(2. * (1 + beta * (beta - epsilon * sqrt(beta * beta + 1))));
+  prefactor *= norm_factor;
 
   q[0]*=prefactor; q[1]*=prefactor; q[2]*=prefactor; q[3]*=prefactor;
   q[4]*=prefactor; q[5]*=prefactor; q[6]*=prefactor; q[7]*=prefactor;
 
-
 /*   _vector_null(*fv); */
 
-  switch(store_color){
-  case 0:
-    if(k==0){
-      fv->s0.c0 = (1.0*norm_factor) + cimag(fv->s0.c0) * I; fv->s0.c0 = creal(fv->s0.c0);
-      fv->s1.c0 = (0.) + cimag(fv->s1.c0) * I; fv->s1.c0 = creal(fv->s1.c0);
-      fv->s2.c0 = (q[0]) + cimag(fv->s2.c0) * I; fv->s2.c0 = creal(fv->s2.c0) + (q[1]) * I;
-      fv->s3.c0 = (q[4]) + cimag(fv->s3.c0) * I; fv->s3.c0 = creal(fv->s3.c0) + (q[5]) * I;
-    } else /* if(k==1) */ {
-      fv->s0.c0 = (0.) + cimag(fv->s0.c0) * I; fv->s0.c0 = creal(fv->s0.c0);
-      fv->s1.c0 = (1.0*norm_factor) + cimag(fv->s1.c0) * I; fv->s1.c0 = creal(fv->s1.c0);
-      fv->s2.c0 = (q[2]) + cimag(fv->s2.c0) * I; fv->s2.c0 = creal(fv->s2.c0) + (q[3]) * I;
-      fv->s3.c0 = (q[6]) + cimag(fv->s3.c0) * I; fv->s3.c0 = creal(fv->s3.c0) + (q[7]) * I;
-    }
-    break;
-  case 1:
-    if(k==0){
-      fv->s0.c1 = (1.0*norm_factor) + cimag(fv->s0.c1) * I; fv->s0.c1 = creal(fv->s0.c1);
-      fv->s1.c1 = (0.) + cimag(fv->s1.c1) * I; fv->s1.c1 = creal(fv->s1.c1);
-      fv->s2.c1 = (q[0]) + cimag(fv->s2.c1) * I; fv->s2.c1 = creal(fv->s2.c1) + (q[1]) * I;
-      fv->s3.c1 = (q[4]) + cimag(fv->s3.c1) * I; fv->s3.c1 = creal(fv->s3.c1) + (q[5]) * I;
-    } else /* if(k==1) */ {
-      fv->s0.c1 = (0.) + cimag(fv->s0.c1) * I; fv->s0.c1 = creal(fv->s0.c1);
-      fv->s1.c1 = (1.0*norm_factor) + cimag(fv->s1.c1) * I; fv->s1.c1 = creal(fv->s1.c1);
-      fv->s2.c1 = (q[2]) + cimag(fv->s2.c1) * I; fv->s2.c1 = creal(fv->s2.c1) + (q[3]) * I;
-      fv->s3.c1 = (q[6]) + cimag(fv->s3.c1) * I; fv->s3.c1 = creal(fv->s3.c1) + (q[7]) * I;
-    }
-    break;
-  case 2:
-    if(k==0){
-      fv->s0.c2 = (1.0*norm_factor) + cimag(fv->s0.c2) * I; fv->s0.c2 = creal(fv->s0.c2);
-      fv->s1.c2 = (0.) + cimag(fv->s1.c2) * I; fv->s1.c2 = creal(fv->s1.c2);
-      fv->s2.c2 = (q[0]) + cimag(fv->s2.c2) * I; fv->s2.c2 = creal(fv->s2.c2) + (q[1]) * I;
-      fv->s3.c2 = (q[4]) + cimag(fv->s3.c2) * I; fv->s3.c2 = creal(fv->s3.c2) + (q[5]) * I;
-    } else /* if(k==1) */ {
-      fv->s0.c2 = (0.) + cimag(fv->s0.c2) * I; fv->s0.c2 = creal(fv->s0.c2);
-      fv->s1.c2 = (1.0*norm_factor) + cimag(fv->s1.c2) * I; fv->s1.c2 = creal(fv->s1.c2);
-      fv->s2.c2 = (q[2]) + cimag(fv->s2.c2) * I; fv->s2.c2 = creal(fv->s2.c2) + (q[3]) * I;
-      fv->s3.c2 = (q[6]) + cimag(fv->s3.c2) * I; fv->s3.c2 = creal(fv->s3.c2) + (q[7]) * I;
-    }
-    break;
+  switch(store_color)
+  {
+    case 0:
+      if(k==0)
+      {
+	fv->s0.c0 = norm_factor;
+	fv->s1.c0 = 0.0;
+	fv->s2.c0 = q[0] + q[1] * I;
+	fv->s3.c0 = q[4] + q[5] * I;
+      } 
+      else /* if(k==1) */
+      {
+	fv->s0.c0 = 0.0;
+	fv->s1.c0 = norm_factor;
+	fv->s2.c0 = q[2] + q[3] * I;
+	fv->s3.c0 = q[6] + q[7] * I;
+      }
+      break;
+    case 1:
+      if(k==0)
+      {
+	fv->s0.c1 = norm_factor;
+	fv->s1.c1 = 0.0;
+	fv->s2.c1 = q[0] + q[1] * I;
+	fv->s3.c1 = q[4] + q[5] * I;
+      } 
+      else /* if(k==1) */ 
+      {
+	fv->s0.c1 = 0.0;
+	fv->s1.c1 = norm_factor;
+	fv->s2.c1 = q[2] + q[3] * I;
+	fv->s3.c1 = q[6] + q[7] * I;
+      }
+      break;
+    case 2:
+      if(k==0)
+      {
+	fv->s0.c2 = norm_factor;
+	fv->s1.c2 = 0.0;
+	fv->s2.c2 = q[0] + q[1] * I;
+	fv->s3.c2 = q[4] + q[5] * I;
+      } 
+      else /* if(k==1) */ 
+      {
+	fv->s0.c2 = 0.0;
+	fv->s1.c2 = norm_factor;
+	fv->s2.c2 = q[2] + q[3] * I;
+	fv->s3.c2 = q[6] + q[7] * I;
+      }
+      break;
   }
 
 }
@@ -1162,7 +1162,8 @@ void spinorStructEigenvecQtm(spinor *fv,double kappa,double mu,int epsilon,int k
 
   index=color*2;
 
-  if(k==0){
+  if(k==0)
+  {
     /* set unit vector */
     fv_[index]=1.0*norm_factor;
 
@@ -1174,7 +1175,9 @@ void spinorStructEigenvecQtm(spinor *fv,double kappa,double mu,int epsilon,int k
     index+=6;
     fv_[index]=q[4];
     fv_[index+1]=q[5];
-  } else /* if(k==1) */ {
+  } 
+  else /* if(k==1) */ 
+  {
     /* set second unit vector */
     index+=6;
     fv_[index]=1.0*norm_factor;
@@ -1188,7 +1191,6 @@ void spinorStructEigenvecQtm(spinor *fv,double kappa,double mu,int epsilon,int k
     fv_[index]=q[6];
     fv_[index+1]=q[7];
   }
-
 }
 
 
@@ -1231,48 +1233,57 @@ void spinorStructEigenvecQtmSu3Vector(spinor *fv,double kappa,double mu,int epsi
   q[0]*=-prefactor; q[1]*=prefactor; q[2]*=-prefactor; q[3]*=prefactor;
   q[4]*=-prefactor; q[5]*=prefactor; q[6]*=-prefactor; q[7]*=prefactor;
 
-  switch(store_color){
-  case 0:
-    if(k==0){
-      fv->s0.c0 = (1.0*norm_factor) + cimag(fv->s0.c0) * I; fv->s0.c0 = creal(fv->s0.c0);
-      fv->s1.c0 = (0.) + cimag(fv->s1.c0) * I; fv->s1.c0 = creal(fv->s1.c0);
-      fv->s2.c0 = (q[0]) + cimag(fv->s2.c0) * I; fv->s2.c0 = creal(fv->s2.c0) + (q[1]) * I;
-      fv->s3.c0 = (q[4]) + cimag(fv->s3.c0) * I; fv->s3.c0 = creal(fv->s3.c0) + (q[5]) * I;
-    } else /* if(k==1) */ {
-      fv->s0.c0 = (0.) + cimag(fv->s0.c0) * I; fv->s0.c0 = creal(fv->s0.c0);
-      fv->s1.c0 = (1.0*norm_factor) + cimag(fv->s1.c0) * I; fv->s1.c0 = creal(fv->s1.c0);
-      fv->s2.c0 = (q[2]) + cimag(fv->s2.c0) * I; fv->s2.c0 = creal(fv->s2.c0) + (q[3]) * I;
-      fv->s3.c0 = (q[6]) + cimag(fv->s3.c0) * I; fv->s3.c0 = creal(fv->s3.c0) + (q[7]) * I;
-    }
-    break;
-  case 1:
-    if(k==0){
-      fv->s0.c1 = (1.0*norm_factor) + cimag(fv->s0.c1) * I; fv->s0.c1 = creal(fv->s0.c1);
-      fv->s1.c1 = (0.) + cimag(fv->s1.c1) * I; fv->s1.c1 = creal(fv->s1.c1);
-      fv->s2.c1 = (q[0]) + cimag(fv->s2.c1) * I; fv->s2.c1 = creal(fv->s2.c1) + (q[1]) * I;
-      fv->s3.c1 = (q[4]) + cimag(fv->s3.c1) * I; fv->s3.c1 = creal(fv->s3.c1) + (q[5]) * I;
-    } else /* if(k==1) */ {
-      fv->s0.c1 = (0.) + cimag(fv->s0.c1) * I; fv->s0.c1 = creal(fv->s0.c1);
-      fv->s1.c1 = (1.0*norm_factor) + cimag(fv->s1.c1) * I; fv->s1.c1 = creal(fv->s1.c1);
-      fv->s2.c1 = (q[2]) + cimag(fv->s2.c1) * I; fv->s2.c1 = creal(fv->s2.c1) + (q[3]) * I;
-      fv->s3.c1 = (q[6]) + cimag(fv->s3.c1) * I; fv->s3.c1 = creal(fv->s3.c1) + (q[7]) * I;
-    }
-    break;
-  case 2:
-    if(k==0){
-      fv->s0.c2 = (1.0*norm_factor) + cimag(fv->s0.c2) * I; fv->s0.c2 = creal(fv->s0.c2);
-      fv->s1.c2 = (0.) + cimag(fv->s1.c2) * I; fv->s1.c2 = creal(fv->s1.c2);
-      fv->s2.c2 = (q[0]) + cimag(fv->s2.c2) * I; fv->s2.c2 = creal(fv->s2.c2) + (q[1]) * I;
-      fv->s3.c2 = (q[4]) + cimag(fv->s3.c2) * I; fv->s3.c2 = creal(fv->s3.c2) + (q[5]) * I;
-    } else /* if(k==1) */ {
-      fv->s0.c2 = (0.) + cimag(fv->s0.c2) * I; fv->s0.c2 = creal(fv->s0.c2);
-      fv->s1.c2 = (1.0*norm_factor) + cimag(fv->s1.c2) * I; fv->s1.c2 = creal(fv->s1.c2);
-      fv->s2.c2 = (q[2]) + cimag(fv->s2.c2) * I; fv->s2.c2 = creal(fv->s2.c2) + (q[3]) * I;
-      fv->s3.c2 = (q[6]) + cimag(fv->s3.c2) * I; fv->s3.c2 = creal(fv->s3.c2) + (q[7]) * I;
-    }
-    break;
+  switch(store_color)
+  {
+    case 0:
+      if(k==0)
+      {
+	fv->s0.c0 = norm_factor;
+	fv->s1.c0 = 0.0;
+	fv->s2.c0 = q[0] + q[1] * I;
+	fv->s3.c0 = q[4] + q[5] * I;
+      } 
+      else /* if(k==1) */
+      {
+	fv->s0.c0 = 0.0;
+	fv->s1.c0 = norm_factor;
+	fv->s2.c0 = q[2] + q[3] * I;
+	fv->s3.c0 = q[6] + q[7] * I;
+      }
+      break;
+    case 1:
+      if(k==0)
+      {
+	fv->s0.c1 = norm_factor;
+	fv->s1.c1 = 0.0;
+	fv->s2.c1 = q[0] + q[1] * I;
+	fv->s3.c1 = q[4] + q[5] * I;
+      } 
+      else /* if(k==1) */ 
+      {
+	fv->s0.c1 = 0.0;
+	fv->s1.c1 = norm_factor;
+	fv->s2.c1 = q[2] + q[3] * I;
+	fv->s3.c1 = q[6] + q[7] * I;
+      }
+      break;
+    case 2:
+      if(k==0)
+      {
+	fv->s0.c2 = norm_factor;
+	fv->s1.c2 = 0.0;
+	fv->s2.c2 = q[0] + q[1] * I;
+	fv->s3.c2 = q[4] + q[5] * I;
+      } 
+      else /* if(k==1) */ 
+      {
+	fv->s0.c2 = 0.0;
+	fv->s1.c2 = norm_factor;
+	fv->s2.c2 = q[2] + q[3] * I;
+	fv->s3.c2 = q[6] + q[7] * I;
+      }
+      break;
   }
-
 }
 
 

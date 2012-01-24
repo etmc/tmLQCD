@@ -644,12 +644,9 @@ void little_field_gather_eo(int eo, _Complex double * w) {
 
 void little_D(_Complex double * v, _Complex double *w) {
   int i, j, sq = g_N_s*g_N_s;
-  CONE = (1.) + cimag(CONE) * I;
-  CONE = creal(CONE);
-  CMONE = (-1.) + cimag(CMONE) * I;
-  CMONE = creal(CMONE);
-  CZERO = (0.) + cimag(CZERO) * I;
-  CZERO = creal(CZERO);
+  CONE = 1.0;
+  CMONE = -1.0;
+  CZERO = 0.0;
 
   if(dfl_subspace_updated) {
     compute_little_D();
@@ -703,12 +700,9 @@ void little_D_sym(_Complex double * v, _Complex double *w) {
 
 void little_D_ee_inv(_Complex double * v, _Complex double *w) {
   int i;
-  CONE = (1.) + cimag(CONE) * I;
-  CONE = creal(CONE);
-  CMONE = (-1.) + cimag(CMONE) * I;
-  CMONE = creal(CMONE);
-  CZERO = (0.) + cimag(CZERO) * I;
-  CZERO = creal(CZERO);
+  CONE = 1.0;
+  CMONE = -1.0;
+  CZERO = 0.0;
   
   for(i = 0; i < nb_blocks/2; i++) {
     _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator_eo,
@@ -720,12 +714,10 @@ void little_D_ee_inv(_Complex double * v, _Complex double *w) {
 
 void little_D_hop(int eo,_Complex double * v, _Complex double *w) {
   int i, j, i_eo,sq = g_N_s*g_N_s;
-  CONE = (1.) + cimag(CONE) * I;
-  CONE = creal(CONE);
-  CMONE = (-1.) + cimag(CMONE) * I;
-  CMONE = creal(CMONE);
-  CZERO = (0.) + cimag(CZERO) * I;
-  CZERO = creal(CZERO);
+  CONE = 1.0;
+  CMONE = -1.0;
+  CZERO = 0.0;
+
   i_eo=(eo+1)%2;
   
 #ifdef MPI
@@ -744,12 +736,10 @@ void little_D_hop(int eo,_Complex double * v, _Complex double *w) {
 
 void little_Dhat_lhs(_Complex double * v, _Complex double *w, _Complex double *u) {
   int i,j;
-  CONE = (1.) + cimag(CONE) * I;
-  CONE = creal(CONE);
-  CMONE = (-1.) + cimag(CMONE) * I;
-  CMONE = creal(CMONE);
-  CZERO = (0.) + cimag(CZERO) * I;
-  CZERO = creal(CZERO);
+  CONE = 1.0;
+  CMONE = -1.0;
+  CZERO = 0.0;
+
 
   for(i = nb_blocks/2; i < nb_blocks; i++) {
     _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator_eo,

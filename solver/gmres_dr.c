@@ -137,11 +137,11 @@ int gmres_dr(spinor * const P,spinor * const Q,
   diff(r0, Q, r0, N);
   
   /* v_0=r_0/||r_0|| */
-  alpha[0] = (sqrt(square_norm(r0, N, 1))) + cimag(alpha[0]) * I;
-  err = creal(alpha[0]);
+  alpha[0] = sqrt(square_norm(r0, N, 1));
+  err = alpha[0];
   
   if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-    printf("%d\t%e true residue\n", restart*m, creal(alpha[0])*creal(alpha[0])); 
+    printf("%d\t%e true residue\n", restart * m, creal(alpha[0])*creal(alpha[0])); 
     fflush(stdout);
   }
   
@@ -165,7 +165,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
       /* G, work and work2 are in Fortran storage: columns first */
       G[j][i] = H[i][j];
       work2[j][i] = H[i][j];
-      work[i][j] = (creal(H[i][j])) + (-cimag(H[i][j])) * I;
+      work[i][j] = conj(H[i][j]);
       assign_diff_mul(solver_field[1], V[i], H[i][j], N);
     }
     
@@ -263,8 +263,9 @@ int gmres_dr(spinor * const P,spinor * const Q,
     if(g_debug_level > 0) {
       f(r0, x0);
       diff(r0, Q, r0, N);
-      tmp1 = creal(tmp1) + (sqrt(square_norm(r0, N, 1))) * I;
-      if(g_proc_id == g_stdio_proc){
+      tmp1 = sqrt(square_norm(r0, N, 1)) * I;
+      if(g_proc_id == g_stdio_proc)
+      {
 	printf("%d\t%e true residue\n", m*restart, cimag(tmp1)*cimag(tmp1)); 
 	fflush(stdout);
       }
@@ -274,7 +275,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
       assign_add_mul(r0, V[i], c[i], N);
     } 
     if(g_debug_level > 3) {
-      tmp1 = creal(tmp1) + (sqrt(square_norm(r0, N, 1))) * I;
+      tmp1 = sqrt(square_norm(r0, N, 1)) * I;
       if(g_proc_id == g_stdio_proc){
 	printf("%d\t%e residue\n", m*restart, cimag(tmp1)*cimag(tmp1)); 
 	fflush(stdout);
@@ -383,7 +384,7 @@ int gmres_dr(spinor * const P,spinor * const Q,
       for(l = 0; l < mp1; l++) { 
  	G[i][l] = H[i][l];
 	work2[i][l] = H[i][l];
-	work[l][i] = (creal(H[i][l])) + (-cimag(H[i][l])) * I;
+	work[l][i] = conj(H[i][l]);
       }
     }
 
@@ -399,14 +400,14 @@ int gmres_dr(spinor * const P,spinor * const Q,
 	/* H, G, work and work2 are now all in Fortran storage: columns first */
 	G[j][i] = H[j][i];
 	work2[j][i] = H[j][i];
-	work[i][j] = (creal(H[j][i])) + (-cimag(H[j][i])) * I;
+	work[i][j] = conj(H[j][i]);
 	assign_diff_mul(solver_field[1], V[i], H[j][i], N);
       }
       beta2 = square_norm(solver_field[1], N, 1);
       H[j][j+1] = sqrt(beta2);
       G[j][j+1] = H[j][j+1];
       work2[j][j+1] = H[j][j+1];
-      work[j+1][j] = (creal(H[j][j+1])) + (-cimag(H[j][j+1])) * I;
+      work[j+1][j] = conj(H[j][j+1]);
       mul_r(V[(j+1)], 1./creal(H[j][j+1]), solver_field[1], N);
     }
 

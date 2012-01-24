@@ -101,7 +101,7 @@ int gmres(spinor * const P,spinor * const Q,
     diff(solver_field[0], Q, solver_field[0], N);
 
     /* v_0=r_0/||r_0|| */
-    alpha[0] = (sqrt(square_norm(solver_field[0], N, parallel))) + cimag(alpha[0]) * I;
+    alpha[0] = sqrt(square_norm(solver_field[0], N, parallel));
 
     if(g_proc_id == g_stdio_proc && g_debug_level > 1){
       printf("%d\t%g true residue\n", restart*m, creal(alpha[0])*creal(alpha[0])); 

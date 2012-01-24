@@ -46,45 +46,45 @@ void write_su3(su3 * up, FILE * f) {
 
 
 void single2double_cm(spinor * const R, float * const S) {
-  R->s0.c0 = ((double) S[0]) + ((double) S[1]) * I;
-  R->s0.c1 = ((double) S[2]) + ((double) S[3]) * I;
-  R->s0.c2 = ((double) S[4]) + ((double) S[5]) * I;
-  R->s1.c0 = ((double) S[6]) + ((double) S[7]) * I;
-  R->s1.c1 = ((double) S[8]) + ((double) S[9]) * I;
-  R->s1.c2 = ((double) S[10]) + ((double) S[11]) * I;
-  R->s2.c0 = ((double) S[12]) + ((double) S[13]) * I;
-  R->s2.c1 = ((double) S[14]) + ((double) S[15]) * I;
-  R->s2.c2 = ((double) S[16]) + ((double) S[17]) * I;
-  R->s3.c0 = ((double) S[18]) + ((double) S[19]) * I;
-  R->s3.c1 = ((double) S[20]) + ((double) S[21]) * I;
-  R->s3.c2 = ((double) S[22]) + ((double) S[23]) * I;
+  R->s0.c0 = S[ 0] + S[ 1] * I;
+  R->s0.c1 = S[ 2] + S[ 3] * I;
+  R->s0.c2 = S[ 4] + S[ 5] * I;
+  R->s1.c0 = S[ 6] + S[ 7] * I;
+  R->s1.c1 = S[ 8] + S[ 9] * I;
+  R->s1.c2 = S[10] + S[11] * I;
+  R->s2.c0 = S[12] + S[13] * I;
+  R->s2.c1 = S[14] + S[15] * I;
+  R->s2.c2 = S[16] + S[17] * I;
+  R->s3.c0 = S[18] + S[19] * I;
+  R->s3.c1 = S[20] + S[21] * I;
+  R->s3.c2 = S[22] + S[23] * I;
 }
 
 void double2single_cm(float * const S, spinor * const R) {
-  S[0]  = (float) creal(R->s0.c0) ;
-  S[1]  = (float) cimag(R->s0.c0) ;
-  S[2]  = (float) creal(R->s0.c1) ;
-  S[3]  = (float) cimag(R->s0.c1) ;
-  S[4]  = (float) creal(R->s0.c2) ;
-  S[5]  = (float) cimag(R->s0.c2) ;
-  S[6]  = (float) creal(R->s1.c0) ;
-  S[7]  = (float) cimag(R->s1.c0) ;
-  S[8]  = (float) creal(R->s1.c1) ;
-  S[9]  = (float) cimag(R->s1.c1) ;
-  S[10] = (float) creal(R->s1.c2) ;
-  S[11] = (float) cimag(R->s1.c2) ;
-  S[12] = (float) creal(R->s2.c0) ;
-  S[13] = (float) cimag(R->s2.c0) ;
-  S[14] = (float) creal(R->s2.c1) ;
-  S[15] = (float) cimag(R->s2.c1) ;
-  S[16] = (float) creal(R->s2.c2) ;
-  S[17] = (float) cimag(R->s2.c2) ;
-  S[18] = (float) creal(R->s3.c0) ;
-  S[19] = (float) cimag(R->s3.c0) ;
-  S[20] = (float) creal(R->s3.c1) ;
-  S[21] = (float) cimag(R->s3.c1) ;
-  S[22] = (float) creal(R->s3.c2) ;
-  S[23] = (float) cimag(R->s3.c2) ;
+  S[ 0] = creal(R->s0.c0);
+  S[ 1] = cimag(R->s0.c0);
+  S[ 2] = creal(R->s0.c1);
+  S[ 3] = cimag(R->s0.c1);
+  S[ 4] = creal(R->s0.c2);
+  S[ 5] = cimag(R->s0.c2);
+  S[ 6] = creal(R->s1.c0);
+  S[ 7] = cimag(R->s1.c0);
+  S[ 8] = creal(R->s1.c1);
+  S[ 9] = cimag(R->s1.c1);
+  S[10] = creal(R->s1.c2);
+  S[11] = cimag(R->s1.c2);
+  S[12] = creal(R->s2.c0);
+  S[13] = cimag(R->s2.c0);
+  S[14] = creal(R->s2.c1);
+  S[15] = cimag(R->s2.c1);
+  S[16] = creal(R->s2.c2);
+  S[17] = cimag(R->s2.c2);
+  S[18] = creal(R->s3.c0);
+  S[19] = cimag(R->s3.c0);
+  S[20] = creal(R->s3.c1);
+  S[21] = cimag(R->s3.c1);
+  S[22] = creal(R->s3.c2);
+  S[23] = cimag(R->s3.c2);
 }
 
 void zero_spinor(spinor * const R) {

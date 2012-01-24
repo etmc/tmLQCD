@@ -76,12 +76,9 @@ su3 exposu3(su3adj p)
      +creal(v.c20)*cimag(v2.c02)+cimag(v.c20)*creal(v2.c02)
      +creal(v.c21)*cimag(v2.c12)+cimag(v.c21)*creal(v2.c12)
      +creal(v.c22)*cimag(v2.c22)+cimag(v.c22)*creal(v2.c22));
-  a0 = (0.16059043836821615e-9) + cimag(a0) * I;    /*  1/13! */
-  a0 = creal(a0);
-  a1 = (0.11470745597729725e-10) + cimag(a1) * I;   /*  1/14! */
-  a1 = creal(a1);
-  a2 = (0.76471637318198165e-12) + cimag(a2) * I;   /*  1/15! */
-  a2 = creal(a2);
+  a0 = (0.16059043836821615e-9);
+  a1 = (0.11470745597729725e-10);
+  a2 = (0.76471637318198165e-12);
   fac=0.20876756987868099e-8;      /*  1/12! */
   r=12.0;
   for(i = 3; i <= 15; i++)
