@@ -107,7 +107,7 @@ include ${top_srcdir}/Makefile.global
 
 ifneq (,$(findstring lex,${LEX}))
 ${srcdir}/read_input.c: ${srcdir}/read_input.l
-	@${LEX} -i -t ${srcdir}/read_input.l > ${srcdir}/read_input.c
+	@${LEX} -Ptmlqcd -i -t ${srcdir}/read_input.l > ${srcdir}/read_input.c
 endif
 
 libhmc.a: read_input.o ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
