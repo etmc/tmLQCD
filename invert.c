@@ -96,6 +96,7 @@ void usage()
   fprintf(stdout, "Usage:   invert [options]\n");
   fprintf(stdout, "Options: [-f input-filename]\n");
   fprintf(stdout, "         [-o output-filename]\n");
+  fprintf(stdout, "         [-v] more verbosity\n");
   fprintf(stdout, "         [-h|-? this help]\n");
   fprintf(stdout, "         [-V] print version information and exit\n");
   exit(0);
