@@ -296,30 +296,18 @@ int main(int argc,char *argv[])
 	n=0;
 	deltamax=0.0;
 	for(ix=0;ix<VOLUME/2;ix++){
-	  (rsp.s0).c0.re = (g_spinor_field[2][ix].s0).c0.re - (g_spinor_field[0][ix].s0).c0.re;
-	  (rsp.s0).c0.im = (g_spinor_field[2][ix].s0).c0.im - (g_spinor_field[0][ix].s0).c0.im;
-	  (rsp.s0).c1.re = (g_spinor_field[2][ix].s0).c1.re - (g_spinor_field[0][ix].s0).c1.re;
-	  (rsp.s0).c1.im = (g_spinor_field[2][ix].s0).c1.im - (g_spinor_field[0][ix].s0).c1.im;
-	  (rsp.s0).c2.re = (g_spinor_field[2][ix].s0).c2.re - (g_spinor_field[0][ix].s0).c2.re;
-	  (rsp.s0).c2.im = (g_spinor_field[2][ix].s0).c2.im - (g_spinor_field[0][ix].s0).c2.im;
-	  (rsp.s1).c0.re = (g_spinor_field[2][ix].s1).c0.re - (g_spinor_field[0][ix].s1).c0.re;
-	  (rsp.s1).c0.im = (g_spinor_field[2][ix].s1).c0.im - (g_spinor_field[0][ix].s1).c0.im;
-	  (rsp.s1).c1.re = (g_spinor_field[2][ix].s1).c1.re - (g_spinor_field[0][ix].s1).c1.re;
-	  (rsp.s1).c1.im = (g_spinor_field[2][ix].s1).c1.im - (g_spinor_field[0][ix].s1).c1.im;
-	  (rsp.s1).c2.re = (g_spinor_field[2][ix].s1).c2.re - (g_spinor_field[0][ix].s1).c2.re;
-	  (rsp.s1).c2.im = (g_spinor_field[2][ix].s1).c2.im - (g_spinor_field[0][ix].s1).c2.im;
-	  (rsp.s2).c0.re = (g_spinor_field[2][ix].s2).c0.re - (g_spinor_field[0][ix].s2).c0.re;
-	  (rsp.s2).c0.im = (g_spinor_field[2][ix].s2).c0.im - (g_spinor_field[0][ix].s2).c0.im;
-	  (rsp.s2).c1.re = (g_spinor_field[2][ix].s2).c1.re - (g_spinor_field[0][ix].s2).c1.re;
-	  (rsp.s2).c1.im = (g_spinor_field[2][ix].s2).c1.im - (g_spinor_field[0][ix].s2).c1.im;
-	  (rsp.s2).c2.re = (g_spinor_field[2][ix].s2).c2.re - (g_spinor_field[0][ix].s2).c2.re;
-	  (rsp.s2).c2.im = (g_spinor_field[2][ix].s2).c2.im - (g_spinor_field[0][ix].s2).c2.im;
-	  (rsp.s3).c0.re = (g_spinor_field[2][ix].s3).c0.re - (g_spinor_field[0][ix].s3).c0.re;
-	  (rsp.s3).c0.im = (g_spinor_field[2][ix].s3).c0.im - (g_spinor_field[0][ix].s3).c0.im;
-	  (rsp.s3).c1.re = (g_spinor_field[2][ix].s3).c1.re - (g_spinor_field[0][ix].s3).c1.re;
-	  (rsp.s3).c1.im = (g_spinor_field[2][ix].s3).c1.im - (g_spinor_field[0][ix].s3).c1.im;
-	  (rsp.s3).c2.re = (g_spinor_field[2][ix].s3).c2.re - (g_spinor_field[0][ix].s3).c2.re;
-	  (rsp.s3).c2.im = (g_spinor_field[2][ix].s3).c2.im - (g_spinor_field[0][ix].s3).c2.im;
+	  (rsp.s0).c0 = (g_spinor_field[2][ix].s0).c0 - (g_spinor_field[0][ix].s0).c0;
+	  (rsp.s0).c1 = (g_spinor_field[2][ix].s0).c1 - (g_spinor_field[0][ix].s0).c1;
+	  (rsp.s0).c2 = (g_spinor_field[2][ix].s0).c2 - (g_spinor_field[0][ix].s0).c2;
+	  (rsp.s1).c0 = (g_spinor_field[2][ix].s1).c0 - (g_spinor_field[0][ix].s1).c0;
+	  (rsp.s1).c1 = (g_spinor_field[2][ix].s1).c1 - (g_spinor_field[0][ix].s1).c1;
+	  (rsp.s1).c2 = (g_spinor_field[2][ix].s1).c2 - (g_spinor_field[0][ix].s1).c2;
+	  (rsp.s2).c0 = (g_spinor_field[2][ix].s2).c0 - (g_spinor_field[0][ix].s2).c0;
+	  (rsp.s2).c1 = (g_spinor_field[2][ix].s2).c1 - (g_spinor_field[0][ix].s2).c1;
+	  (rsp.s2).c2 = (g_spinor_field[2][ix].s2).c2 - (g_spinor_field[0][ix].s2).c2;
+	  (rsp.s3).c0 = (g_spinor_field[2][ix].s3).c0 - (g_spinor_field[0][ix].s3).c0;
+	  (rsp.s3).c1 = (g_spinor_field[2][ix].s3).c1 - (g_spinor_field[0][ix].s3).c1;
+	  (rsp.s3).c2 = (g_spinor_field[2][ix].s3).c2 - (g_spinor_field[0][ix].s3).c2;
 	  _spinor_norm_sq(delta,rsp);
 	  if (delta > 1.0e-12) {
 	    nn[n] = g_eo2lexic[ix];
@@ -336,30 +324,18 @@ int main(int argc,char *argv[])
 	}
 	n = 0;
 	for(ix=0;ix<VOLUME/2;ix++){
-	  (rsp.s0).c0.re = (g_spinor_field[3][ix].s0).c0.re - (g_spinor_field[1][ix].s0).c0.re;
-	  (rsp.s0).c0.im = (g_spinor_field[3][ix].s0).c0.im - (g_spinor_field[1][ix].s0).c0.im;
-	  (rsp.s0).c1.re = (g_spinor_field[3][ix].s0).c1.re - (g_spinor_field[1][ix].s0).c1.re;
-	  (rsp.s0).c1.im = (g_spinor_field[3][ix].s0).c1.im - (g_spinor_field[1][ix].s0).c1.im;
-	  (rsp.s0).c2.re = (g_spinor_field[3][ix].s0).c2.re - (g_spinor_field[1][ix].s0).c2.re;
-	  (rsp.s0).c2.im = (g_spinor_field[3][ix].s0).c2.im - (g_spinor_field[1][ix].s0).c2.im;
-	  (rsp.s1).c0.re = (g_spinor_field[3][ix].s1).c0.re - (g_spinor_field[1][ix].s1).c0.re;
-	  (rsp.s1).c0.im = (g_spinor_field[3][ix].s1).c0.im - (g_spinor_field[1][ix].s1).c0.im;
-	  (rsp.s1).c1.re = (g_spinor_field[3][ix].s1).c1.re - (g_spinor_field[1][ix].s1).c1.re;
-	  (rsp.s1).c1.im = (g_spinor_field[3][ix].s1).c1.im - (g_spinor_field[1][ix].s1).c1.im;
-	  (rsp.s1).c2.re = (g_spinor_field[3][ix].s1).c2.re - (g_spinor_field[1][ix].s1).c2.re;
-	  (rsp.s1).c2.im = (g_spinor_field[3][ix].s1).c2.im - (g_spinor_field[1][ix].s1).c2.im;
-	  (rsp.s2).c0.re = (g_spinor_field[3][ix].s2).c0.re - (g_spinor_field[1][ix].s2).c0.re;
-	  (rsp.s2).c0.im = (g_spinor_field[3][ix].s2).c0.im - (g_spinor_field[1][ix].s2).c0.im;
-	  (rsp.s2).c1.re = (g_spinor_field[3][ix].s2).c1.re - (g_spinor_field[1][ix].s2).c1.re;
-	  (rsp.s2).c1.im = (g_spinor_field[3][ix].s2).c1.im - (g_spinor_field[1][ix].s2).c1.im;
-	  (rsp.s2).c2.re = (g_spinor_field[3][ix].s2).c2.re - (g_spinor_field[1][ix].s2).c2.re;
-	  (rsp.s2).c2.im = (g_spinor_field[3][ix].s2).c2.im - (g_spinor_field[1][ix].s2).c2.im;
-	  (rsp.s3).c0.re = (g_spinor_field[3][ix].s3).c0.re - (g_spinor_field[1][ix].s3).c0.re;
-	  (rsp.s3).c0.im = (g_spinor_field[3][ix].s3).c0.im - (g_spinor_field[1][ix].s3).c0.im;
-	  (rsp.s3).c1.re = (g_spinor_field[3][ix].s3).c1.re - (g_spinor_field[1][ix].s3).c1.re;
-	  (rsp.s3).c1.im = (g_spinor_field[3][ix].s3).c1.im - (g_spinor_field[1][ix].s3).c1.im;
-	  (rsp.s3).c2.re = (g_spinor_field[3][ix].s3).c2.re - (g_spinor_field[1][ix].s3).c2.re;
-	  (rsp.s3).c2.im = (g_spinor_field[3][ix].s3).c2.im - (g_spinor_field[1][ix].s3).c2.im;
+	  (rsp.s0).c0 = (g_spinor_field[3][ix].s0).c0 - (g_spinor_field[1][ix].s0).c0;
+	  (rsp.s0).c1 = (g_spinor_field[3][ix].s0).c1 - (g_spinor_field[1][ix].s0).c1;
+	  (rsp.s0).c2 = (g_spinor_field[3][ix].s0).c2 - (g_spinor_field[1][ix].s0).c2;
+	  (rsp.s1).c0 = (g_spinor_field[3][ix].s1).c0 - (g_spinor_field[1][ix].s1).c0;
+	  (rsp.s1).c1 = (g_spinor_field[3][ix].s1).c1 - (g_spinor_field[1][ix].s1).c1;
+	  (rsp.s1).c2 = (g_spinor_field[3][ix].s1).c2 - (g_spinor_field[1][ix].s1).c2;
+	  (rsp.s2).c0 = (g_spinor_field[3][ix].s2).c0 - (g_spinor_field[1][ix].s2).c0;
+	  (rsp.s2).c1 = (g_spinor_field[3][ix].s2).c1 - (g_spinor_field[1][ix].s2).c1;
+	  (rsp.s2).c2 = (g_spinor_field[3][ix].s2).c2 - (g_spinor_field[1][ix].s2).c2;
+	  (rsp.s3).c0 = (g_spinor_field[3][ix].s3).c0 - (g_spinor_field[1][ix].s3).c0;
+	  (rsp.s3).c1 = (g_spinor_field[3][ix].s3).c1 - (g_spinor_field[1][ix].s3).c1;
+	  (rsp.s3).c2 = (g_spinor_field[3][ix].s3).c2 - (g_spinor_field[1][ix].s3).c2;
 	  _spinor_norm_sq(delta,rsp);
 	  if (delta > 1.0e-12) {
 	    nn[n]=g_eo2lexic[ix+(VOLUME+RAND)/2];
@@ -371,7 +347,7 @@ int main(int argc,char *argv[])
 	if (n>0){
 	  printf("mismatch in odd spincolorfield in %d points:\n",n);
 	  for(i=0; i< MIN(n,1000); i++){
-	    printf("%d,(%d,%d,%d,%d):%f vs. %f\n",nn[i],g_coord[nn[i]][0],g_coord[nn[i]][1],g_coord[nn[i]][2],g_coord[nn[i]][3],(g_spinor_field[3][mm[i]].s0).c0.re, (g_spinor_field[1][mm[i]].s0).c0.re);fflush(stdout);
+	    printf("%d,(%d,%d,%d,%d):%f vs. %f\n",nn[i],g_coord[nn[i]][0],g_coord[nn[i]][1],g_coord[nn[i]][2],g_coord[nn[i]][3],creal(g_spinor_field[3][mm[i]].s0.c0), creal(g_spinor_field[1][mm[i]].s0.c0));fflush(stdout);
 	  }
 	}
 	printf("max delta=%e",deltamax);fflush(stdout);

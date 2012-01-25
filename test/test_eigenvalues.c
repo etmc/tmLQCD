@@ -116,7 +116,7 @@ int main(int argc,char *argv[]) {
 
   /* For the Polyakov loop: */
   int dir = 2;
-  complex pl, pl4;
+  _Complex double pl, pl4;
 
   verbose = 0;
   g_use_clover_flag = 0;
@@ -482,29 +482,16 @@ int main(int argc,char *argv[]) {
   if(g_proc_id==0){
     fprintf(parameterfile,"#First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
     fprintf(parameterfile,"#First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
-	    dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
+	    dir, dir, sqrt(conj(pl) * pl));
   }
 
   dir=3;
   polyakov_loop(&pl, dir);
   if(g_proc_id==0){
     fprintf(parameterfile,"#First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
-	    dir, dir, sqrt(pl.re*pl.re+pl.im*pl.im));
+	    dir, dir, sqrt(conj(pl) * pl));
     fclose(parameterfile);
   }
-
-  /* compute the energy of the determinant term */
-  /* needed for exact continuation of the run, since evamax and eva use
-     random numbers */ 
-
-
-  /*
-  if(startoption == 2 && g_proc_id == 0){
-    rlxd_reset(rlxd_state);
-  }
-  */
-
-
 
   /* set ddummy to zero */
   for(ix = 0; ix < VOLUME+RAND; ix++){
