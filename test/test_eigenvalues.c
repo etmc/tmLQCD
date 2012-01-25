@@ -482,14 +482,14 @@ int main(int argc,char *argv[]) {
   if(g_proc_id==0){
     fprintf(parameterfile,"#First plaquette value: %14.12f \n", plaquette_energy/(6.*VOLUME*g_nproc));
     fprintf(parameterfile,"#First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
-	    dir, dir, sqrt(conj(pl) * pl));
+	    dir, dir, cabs(pl));
   }
 
   dir=3;
   polyakov_loop(&pl, dir);
   if(g_proc_id==0){
     fprintf(parameterfile,"#First Polyakov loop value in %d-direction |L(%d)|= %14.12f \n",
-	    dir, dir, sqrt(conj(pl) * pl));
+	    dir, dir, cabs(pl));
     fclose(parameterfile);
   }
 
