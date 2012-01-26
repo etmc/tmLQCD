@@ -68,7 +68,6 @@ MODULES = read_input gamma hybrid_update observables start \
 	xchange_jacobi jacobi init_jacobi_field \
 	fatal_error
 
-
 ## the GPU modules (all .cu files in $GPUDIR)
 GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)
 GPUOBJECTS := $(patsubst $(srcdir)/$(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
@@ -81,6 +80,8 @@ NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert gen_sources  \
 	check_locallity test_lemon hopping_test LapH_ev
+
+TESTS = test_sample
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = ${USESUBDIRS}
@@ -119,6 +120,9 @@ libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
 	@$(RANLIB) libhmc.a
 	@cp libhmc.a ${top_builddir}/lib/libhmc.a
 
+#${abs_top_builddir}/cu/libcu.a: ${top_srcdir}/cu/Makefile ${top_srcdir}/cu/cu.h ${top_srcdir}/cu/cu.c
+#	${COMPILE} -c $<
+
 #${addsuffix .o, ${ALLOBJ}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
 #	${COMPILE} ${OPTARGS} -c $<
 
@@ -137,6 +141,19 @@ ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 
 ${PROGRAMS}: %: %.o libhmc.a all-recursive
 	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
+
+tests/${TESTS}: ${top_srcdir}/tests/${TESTS}.c ${top_srcdir}/tests/${TESTS}_ts*.c ${top_srcdir}/tests/${TESTS}_ts*.h ${top_builddir}/cu/libcu.a
+	${COMPILE} ${OPTARGS} -L${top_builddir}/cu/ -lcu $+ -o $@
+
+# make sure that the regressions directory exists in the tests directory
+
+tests: tests/${TESTS}
+	@ cd ${top_builddir}/tests && \
+	mkdir -p regressions
+
+cu/libcu.a: cu/Makefile
+	@ cd cu && \
+	make
 
 dep: $(addsuffix .d,$(ALLOBJ)) 
 	@ echo "...dependency files built"
@@ -173,4 +190,4 @@ distclean: distclean-recursive Makefile
 	all-debug-recursive all-profile-recursive \
 	clean-recursive distclean-recursive \
 	compile-clean-recursive $(LINKLIBS) \
-	libhmc.a
+	tests libhmc.a

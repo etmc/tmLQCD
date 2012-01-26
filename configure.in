@@ -33,6 +33,8 @@ AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
 LDFLAGS="$LDFLAGS -L\${HOME}/lib -L\${top_builddir}/lib"
 CCLD=${CC}
 
+USESUBDIRS="buffers cu io solver smearing linalg"
+
 AC_CHECK_HEADERS([stdint.h],
 [ dnl for inttypes.h and stdint.h for uint_xxx types
   dnl if successful check for the actual types too
@@ -641,7 +643,7 @@ if test $usegpu = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(HAVE_GPU,1,Using CUDA GPU)
   NVCC="nvcc"
-  USESUBDIRS="buffers io linalg solver GPU smearing"
+  USESUBDIRS="$USESUBDIRS GPU"
   GPUDIR="GPU"
   LIBS="$LIBS -lcuda -lcudart -lcublas"
   
@@ -673,7 +675,6 @@ if test $usegpu = yes; then
   fi
 else
   AC_MSG_RESULT(no)
-  USESUBDIRS="buffers io linalg solver smearing"
   NVCC=""
 fi
 
@@ -720,12 +721,11 @@ fi
 LIBS="-lhmc -lsolver -llinalg -lhmc -lio -lsmear $LIBS"
 AUTOCONF=autoconf
 
-AC_CONFIG_FILES([Makefile
-                 buffers/Makefile	
-                 linalg/Makefile
-	         solver/Makefile
-		 io/Makefile
-                 GPU/Makefile
-                 smearing/Makefile])
+for i in $USESUBDIRS
+do
+  make_files="$make_files $i/Makefile"
+done
+
+AC_CONFIG_FILES([Makefile $make_files])
 
 AC_OUTPUT
