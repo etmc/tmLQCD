@@ -21,6 +21,8 @@
 #ifndef _UPDATE_BACKWARD_GAUGE_H
 #define _UPDATE_BACKWARD_GAUGE_H
 
-void update_backward_gauge();
+#include "su3.h"
+
+void update_backward_gauge(su3 ** const gf);
 
 #endif

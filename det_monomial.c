@@ -79,7 +79,6 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     if(mnl->solver != CG) {
       fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (det_monomial.c)\n");
     }
-    ITER_MAX_CG = mnl->maxiter;
     
     /* Invert Q_{+} Q_{-} */
     /* X_o -> DUM_DERI+1 */
@@ -97,12 +96,12 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     /* to get the even sites of X_e */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2]); 
+    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
     
     /* to get the even sites of Y_e */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]);
+    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf);
 
     if(mnl->c_sw > 0) {
       /* here comes the clover term... */
@@ -166,7 +165,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     }
     
     /* \delta Q sandwitched by Y^\dagger and X */
-    deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+    deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], hf);
   }
   g_mu = g_mu1;
   boundary(g_kappa);

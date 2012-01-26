@@ -30,15 +30,14 @@
  * Author: Martin Hasenbusch <Martin.Hasenbusch@desy.de>
  * Date: Fri Oct 26 15:06:27 MEST 2001
  *
- ***********************************************************************/
-/*
-  both l and k are input
-  for ieo = 0 
-  l resides on even lattice points and k on odd lattice points
-  for ieo = 1 
-  l resides on odd lattice points and k on even lattice points
-  the output is a su3adj field that is written to df0[][]
-*/
+ *  both l and k are input
+ *  for ieo = 0 
+ *  l resides on even lattice points and k on odd lattice points
+ *  for ieo = 1 
+ *  l resides on odd lattice points and k on even lattice points
+ *  the output is a su3adj field that is written to df0[][]
+ *
+ ************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -52,12 +51,13 @@
 #include "xchange_2fields.h"
 #include "sse.h"
 #include "update_backward_gauge.h"
+#include "hamiltonian_field.h"
 #include "deriv_Sb.h"
 
 
 #if (defined BGL && defined XLC)
 
-void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
+void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_field_t * const hf) {
 
   int ix,iy, iz;
   int ioff,ioff2,icx,icy, icz;
@@ -108,7 +108,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
   iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
   sp = k + icy;
   _prefetch_spinor(sp);
-  up=&g_gauge_field[ix][0];
+  up=&hf->gaugefield[ix][0];
   _prefetch_su3(up);
 
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
@@ -143,7 +143,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
     sm = k + icy;
     _prefetch_spinor(sm);
-    um=&g_gauge_field[iy][0];
+    um=&hf->gaugefield[iy][0];
     _prefetch_su3(um);
 
     _bgl_tensor_product_and_add();
@@ -178,7 +178,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     sp = k + icy;
     _prefetch_spinor(sp);
-    up=&g_gauge_field[ix][1];      
+    up=&hf->gaugefield[ix][1];      
     _prefetch_su3(up);
 
     _bgl_tensor_product_and_add_d();
@@ -212,7 +212,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     sm = k + icy;
     _prefetch_spinor(sm);
-    um=&g_gauge_field[iy][1];
+    um=&hf->gaugefield[iy][1];
     _prefetch_su3(um);
 
     _bgl_tensor_product_and_add();
@@ -245,7 +245,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     sp = k + icy;
     _prefetch_spinor(sp);
-    up=&g_gauge_field[ix][2];
+    up=&hf->gaugefield[ix][2];
     _prefetch_su3(up);
 
     _bgl_tensor_product_and_add_d();
@@ -278,7 +278,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     sm = k + icy;
     _prefetch_spinor(sm);
-    um=&g_gauge_field[iy][2];
+    um=&hf->gaugefield[iy][2];
     _prefetch_su3(um);
 
     _bgl_tensor_product_and_add();
@@ -311,7 +311,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     sp = k + icy;
     _prefetch_spinor(sp);
-    up=&g_gauge_field[ix][3];
+    up=&hf->gaugefield[ix][3];
     _prefetch_su3(up);
 
     _bgl_tensor_product_and_add_d();
@@ -344,7 +344,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     sm = k + icy;
     _prefetch_spinor(sm);
-    um=&g_gauge_field[iy][3];
+    um=&hf->gaugefield[iy][3];
     _prefetch_su3(um);
 
     _bgl_tensor_product_and_add();
@@ -381,7 +381,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
     sp = k + icy;
     _prefetch_spinor(sp);
-    up=&g_gauge_field[iz][0];
+    up=&hf->gaugefield[iz][0];
     _prefetch_su3(up);
 
     _bgl_tensor_product_and_add_d();
@@ -402,7 +402,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
 
 
-void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
+void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_field_t * const hf) {
 /* const int l, const int k){ */
   int ix,iy;
   int ioff,ioff2,icx,icy;
@@ -439,7 +439,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(hf->gaugefield);
   }
 #endif
   /* for parallelization */
@@ -465,7 +465,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 #if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
     up=&g_gauge_field_copy[icx][0];
 #else
-    up=&g_gauge_field[ix][0];
+    up=&hf->gaugefield[ix][0];
 #endif      
     _vector_add(psia,(*sp).s0,(*sp).s2);
     _vector_add(psib,(*sp).s1,(*sp).s3);
@@ -486,7 +486,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 #if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
     um = up+1;
 #else
-    um=&g_gauge_field[iy][0];
+    um=&hf->gaugefield[iy][0];
 #endif
       
     _vector_sub(psia,(*sm).s0,(*sm).s2);
@@ -509,7 +509,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 #if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
     up=um+1;
 #else
-    up=&g_gauge_field[ix][1];      
+    up=&hf->gaugefield[ix][1];      
 #endif
     _vector_i_add(psia,(*sp).s0,(*sp).s3);
     _vector_i_add(psib,(*sp).s1,(*sp).s2);
@@ -530,7 +530,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 #if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
       um=up+1;
 #else
-    um=&g_gauge_field[iy][1];
+    um=&hf->gaugefield[iy][1];
 #endif
     _vector_i_sub(psia,(*sm).s0,(*sm).s3);
     _vector_i_sub(psib,(*sm).s1,(*sm).s2);
@@ -551,7 +551,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 #if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
     up=um+1;
 #else
-    up=&g_gauge_field[ix][2];
+    up=&hf->gaugefield[ix][2];
 #endif      
     _vector_add(psia,(*sp).s0,(*sp).s3);
     _vector_sub(psib,(*sp).s1,(*sp).s2);
@@ -572,7 +572,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 #if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
       um = up +1;
 #else
-    um=&g_gauge_field[iy][2];
+    um=&hf->gaugefield[iy][2];
 #endif
     _vector_sub(psia,(*sm).s0,(*sm).s3);
     _vector_add(psib,(*sm).s1,(*sm).s2);
@@ -593,7 +593,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 #if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
     up=um+1;
 #else
-    up=&g_gauge_field[ix][3];
+    up=&hf->gaugefield[ix][3];
 #endif      
     _vector_i_add(psia,(*sp).s0,(*sp).s2);
     _vector_i_sub(psib,(*sp).s1,(*sp).s3);
@@ -614,7 +614,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k) {
 #if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR && !defined  _USE_TSPLITPAR)
     um = up+1;
 #else
-    um=&g_gauge_field[iy][3];
+    um=&hf->gaugefield[iy][3];
 #endif
     _vector_i_sub(psia,(*sm).s0,(*sm).s2);
     _vector_i_add(psib,(*sm).s1,(*sm).s3);

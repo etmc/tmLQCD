@@ -62,7 +62,6 @@
 #include "solver/solver.h"
 #include "solver/gram-schmidt.h"
 #include "solver/quicksort.h"
-#include "update_backward_gauge.h"
 #include "jdher.h"
 #ifdef CRAY
 #include <fortran.h>
@@ -202,9 +201,6 @@ void jdher(int n, int lda, double tau, double tol,
    *                                                                          *
    ****************************************************************************/
 
-#ifdef _GAUGE_COPY
-  update_backward_gauge();
-#endif
 
   /* print info header */
   if ((verbosity >= 2) && (g_proc_id == 0)){

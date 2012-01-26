@@ -61,7 +61,6 @@
 #include "init_moment_field.h"
 #include "init_dirac_halfspinor.h"
 #include "xchange_halffield.h"
-#include "update_backward_gauge.h"
 #include "smearing/stout.h"
 #include "su3spinor.h"
 #include "invert_eo.h"
@@ -238,9 +237,6 @@ int main(int argc,char *argv[]) {
     }
 #ifdef MPI
     xchange_gauge(g_gauge_field);
-#endif
-#ifdef _GAUGE_COPY
-    update_backward_gauge();
 #endif
 
     /* Compute minimal eigenvalues, if wanted */

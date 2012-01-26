@@ -133,12 +133,12 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     /* to get the even sites of X */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2]); 
+    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
     
     /* to get the even sites of Y */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]); 
+    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf); 
 
     if(mnl->c_sw > 0) {
       /* here comes the clover term... */
@@ -161,12 +161,12 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     /* to get the even sites of X */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2]); 
+    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
     
     /* to get the even sites of Y */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]);
+    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf);
 
     if(mnl->c_sw > 0) {
       /* here comes the clover term... */
@@ -239,7 +239,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     }
 
     /* \delta Q sandwitched by Y^\dagger and X */
-    deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]); 
+    deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], hf); 
     
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
@@ -249,7 +249,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     mul_r(g_spinor_field[DUM_DERI], -1., mnl->pf, VOLUME);
     
     /* \delta Q sandwitched by Y^\dagger and X */
-    deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+    deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], hf);
   }
   g_mu = g_mu1;
   boundary(g_kappa);

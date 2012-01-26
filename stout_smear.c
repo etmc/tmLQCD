@@ -66,7 +66,6 @@
 #include "xchange_gauge.h"
 #include "xchange.h"
 #include "io/gauge.h"
-#include "update_backward_gauge.h"
 #include "stout_smear.h"
 
 /*#include "stout_smear_aux_vars.h"*/
