@@ -1,17 +1,16 @@
 #include "hyp.ih"
 
-void hyp_staples_exclude_none(su3_tuple **buff_out, su3_tuple **buff_in)
+void hyp_staples_exclude_none(gauge_field_t buff_out, gauge_field_array_t buff_in)
 {
   static su3 tmp;
-  for (int idx = 0; idx < 3; ++idx)
-    memset(buff_out[idx], 0, sizeof(su3_tuple) * VOLUMEPLUSRAND); /* Brutal but fast zeroing of buffer... */
+  memset(buff_out.field, 0, sizeof(su3_tuple) * VOLUMEPLUSRAND); /* Brutal but fast zeroing of buffer... */
 
 #define _ADD_STAPLES_TO_COMPONENT(component, to, via, x) \
   { \
-    _su3_times_su3d(tmp, buff_in[I1_ ## to ## _ ## via / 4][g_iup[x][via]][I1_ ## to ## _ ## via % 4], buff_in[I1_ ## via ## _ ## to / 4][g_iup[x][to]][I1_ ## via ## _ ## to % 4]); \
-    _su3_times_su3_acc(buff_out[component / 4][x][component % 4], buff_in[I1_ ## via ## _ ## to / 4][x][I1_ ## via ## _ ## to % 4], tmp); \
-    _su3_times_su3(tmp, buff_in[I1_ ## to ## _ ## via / 4][g_idn[x][via]][I1_ ## to ## _ ## via % 4], buff_in[I1_ ## via ## _ ## to / 4][g_iup[g_idn[x][via]][to]][I1_ ## via ## _ ## to % 4]); \
-    _su3d_times_su3_acc(buff_out[component / 4][x][component % 4], buff_in[I1_ ## via ## _ ## to / 4][g_idn[x][via]][I1_ ## via ## _ ## to % 4], tmp); \
+    _su3_times_su3d(tmp, buff_in.field_array[I1_ ## to ## _ ## via / 4].field[g_iup[x][via]][I1_ ## to ## _ ## via % 4], buff_in.field_array[I1_ ## via ## _ ## to / 4].field[g_iup[x][to]][I1_ ## via ## _ ## to % 4]); \
+    _su3_times_su3_acc(buff_out.field[x][component], buff_in.field_array[I1_ ## via ## _ ## to / 4].field[x][I1_ ## via ## _ ## to % 4], tmp); \
+    _su3_times_su3(tmp, buff_in.field_array[I1_ ## to ## _ ## via / 4].field[g_idn[x][via]][I1_ ## to ## _ ## via % 4], buff_in.field_array[I1_ ## via ## _ ## to / 4].field[g_iup[g_idn[x][via]][to]][I1_ ## via ## _ ## to % 4]); \
+    _su3d_times_su3_acc(buff_out.field[x][component], buff_in.field_array[I1_ ## via ## _ ## to / 4].field[g_idn[x][via]][I1_ ## via ## _ ## to % 4], tmp); \
   }
 
   for (int x = 0; x < VOLUME; ++x)

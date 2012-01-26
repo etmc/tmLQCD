@@ -1,15 +1,15 @@
 #include "hex.ih"
 
-void stout_exclude_two(su3_tuple **buff_out, double const coeff, su3_tuple **staples, su3_tuple *buff_in)
+void stout_exclude_two(gauge_field_array_t buff_out, double const coeff, gauge_field_array_t staples, gauge_field_t buff_in)
 {
   static su3 tmp;
 
 #define _MULTIPLY_AND_EXPONENTIATE(x, principal, component) \
   { \
-    _su3_times_su3d(tmp, staples[component / 4][x][component % 4], buff_in[x][principal]); \
+    _su3_times_su3d(tmp, staples.field_array[component / 4].field[x][component % 4], buff_in.field[x][principal]); \
     project_antiherm(&tmp); \
-    _real_times_su3(buff_out[component / 4][x][component % 4], coeff, tmp); \
-    exposu3_in_place(&buff_out[component / 4][x][component % 4]); \
+    _real_times_su3(buff_out.field_array[component / 4].field[x][component % 4], coeff, tmp); \
+    exposu3_in_place(&buff_out.field_array[component / 4].field[x][component % 4]); \
   }
 
   for (int x = 0; x < VOLUME; ++x)
