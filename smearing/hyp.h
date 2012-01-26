@@ -14,7 +14,7 @@ void hyp_staples_exclude_none(gauge_field_t buff_out, gauge_field_array_t buff_i
 void hyp_staples_exclude_one (gauge_field_array_t buff_out, gauge_field_array_t buff_in);  /* 12 components in, 12 components out */
 void hyp_staples_exclude_two (gauge_field_array_t buff_out, gauge_field_t buff_in);  /*  4 components in, 12 components out */
 
-void APE_project_exclude_none(gauge_field_t buff_out, double const coeff, gauge_field_array_t staples, gauge_field_t buff_in);
+void APE_project_exclude_none(gauge_field_t buff_out, double const coeff, gauge_field_t staples, gauge_field_t buff_in);
 void APE_project_exclude_one (gauge_field_array_t buff_out, double const coeff, gauge_field_array_t staples, gauge_field_t buff_in);
 void APE_project_exclude_two (gauge_field_array_t buff_out, double const coeff, gauge_field_array_t staples, gauge_field_t buff_in);
 

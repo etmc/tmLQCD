@@ -27,7 +27,7 @@ int ape_smear(su3_tuple *m_field_out, struct ape_parameters const *params, su3_t
     for (int x = 0; x < VOLUME; ++x)
       for (int mu = 0; mu < 4; ++mu)
       {
-        generic_staples(&tmp, x, mu, m_field_in);
+        generic_staples(tmp, x, mu, m_field_in);
         _real_times_su3_plus_real_times_su3(buffer[x][mu], rho_p, m_field_in[x][mu], rho_s, tmp)
         reunitarize(&buffer[x][mu]);
       }

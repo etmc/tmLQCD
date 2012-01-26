@@ -8,4 +8,4 @@ struct stout_parameters
   int    iterations;
 };
 
-int stout_smear(su3_tuple *m_field_out, struct stout_parameters const *params, su3_tuple *m_field_in);
+int stout_smear(gauge_field_t m_field_out, struct stout_parameters const *params, gauge_field_t m_field_in);

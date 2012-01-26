@@ -1,51 +1,35 @@
 #include "hyp.ih"
 
-int hyp_smear(su3_tuple *m_field_out, struct hyp_parameters const *params, su3_tuple *m_field_in)
+int hyp_smear(gauge_field_t m_field_out, struct hyp_parameters const *params, gauge_field_t m_field_in)
 {
-  static int initialized = 0;
-  static su3_tuple *gamma_buffer[3];
-  static su3_tuple *v_buffer[3];
-
-  if (!initialized)
-  {
-    /* Allocate consecutive memory for both of the buffers upon first instantiation */
-    /* Three times 4 buffers needed for compatibility purposes (similar signature to gauge_field...) */
-    for (int idx = 0; idx < 3; ++idx)
-    {
-      gamma_buffer[idx] = (su3_tuple*)malloc(sizeof(su3_tuple) * VOLUMEPLUSRAND + 1);
-      v_buffer[idx] = (su3_tuple*)malloc(sizeof(su3_tuple) * VOLUMEPLUSRAND + 1);
-      if ((gamma_buffer[idx] == (su3_tuple*)NULL) || (v_buffer[idx] == (su3_tuple*)NULL))
-        return -1;
-#if (defined SSE || defined SSE2 || defined SSE3)
-      gamma_buffer[idx] = (su3_tuple*)(((unsigned long int)(gamma_buffer[idx]) + ALIGN_BASE) & ~ALIGN_BASE);
-      v_buffer[idx] = (su3_tuple*)(((unsigned long int)(v_buffer[idx]) + ALIGN_BASE) & ~ALIGN_BASE);
-#endif
-    }
-    initialized = 1;
-  }
+  gauge_field_array_t gamma = get_gauge_field_array(3);
+  gauge_field_array_t v = get_gauge_field_array(3);
 
   for (int iter = 0; iter < params->iterations; ++iter)
   {
     /* First level of contractions */
-    hyp_staples_exclude_two(gamma_buffer, m_field_in);
-    APE_project_exclude_two(v_buffer, params->alpha[2], gamma_buffer, m_field_in);
+    hyp_staples_exclude_two(gamma, m_field_in);
+    APE_project_exclude_two(v, params->alpha[2], gamma, m_field_in);
     for (int idx = 0; idx < 3; ++idx)
-      generic_exchange(v_buffer[idx], sizeof(su3_tuple));
+      generic_exchange(v.field_array[idx].field, sizeof(su3_tuple));
 
     /* Second level of contractions */
-    hyp_staples_exclude_one(gamma_buffer, v_buffer);
-    APE_project_exclude_one(v_buffer, params->alpha[1], gamma_buffer, m_field_in);
+    hyp_staples_exclude_one(gamma, v);
+    APE_project_exclude_one(v, params->alpha[1], gamma, m_field_in);
     for (int idx = 0; idx < 3; ++idx)
-      generic_exchange(v_buffer[idx], sizeof(su3_tuple));
+      generic_exchange(v.field_array[idx].field, sizeof(su3_tuple));
 
     /* Final level of contractions  */
-    hyp_staples_exclude_none(gamma_buffer, v_buffer);
-    APE_project_exclude_none(m_field_out, params->alpha[0], gamma_buffer, m_field_in);
-    generic_exchange(m_field_out, sizeof(su3_tuple));
+    hyp_staples_exclude_none(gamma.field_array[0], v);
+    APE_project_exclude_none(m_field_out, params->alpha[0], gamma.field_array[0], m_field_in);
+    generic_exchange(m_field_out.field, sizeof(su3_tuple));
     
     m_field_in = m_field_out; /* Prepare for next iteration */
   }
 
+  return_gauge_field_array(&v);
+  return_gauge_field_array(&gamma);
+  
   return 0;
 }
 
