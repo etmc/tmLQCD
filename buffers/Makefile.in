@@ -29,8 +29,10 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS} ${OPTARGS}
 
 LIBRARIES = libbuffers
 
-libbuffers_TARGETS = gauge \
+libbuffers_TARGETS = 	gauge \
+			gauge_allocate_gauge_buffer \
 			gauge_finalize_gauge_buffers \
+			gauge_free_unused_gauge_buffers \
 			gauge_get_gauge_field \
 			gauge_get_gauge_field_array \
 			gauge_initialize_gauge_buffers \
