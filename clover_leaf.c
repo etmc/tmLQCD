@@ -55,7 +55,7 @@ double ka_csw_8 = 1.;
 
 su3 ** swm, ** swp;
 
-void sw_term() {
+void sw_term(su3 ** const gf) {
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
   su3 *w1,*w2,*w3,*w4;
@@ -82,31 +82,31 @@ void sw_term() {
 	xpkml=g_idn[xpk][l];
 	xplmk=g_idn[xpl][k];
 	xmkml=g_idn[xml][k];
-	w1=&g_gauge_field[x][k];
-	w2=&g_gauge_field[xpk][l];
-	w3=&g_gauge_field[xpl][k];
-	w4=&g_gauge_field[x][l];
+	w1=&gf[x][k];
+	w2=&gf[xpk][l];
+	w3=&gf[xpl][k];
+	w4=&gf[x][l];
 	_su3_times_su3(v1,*w1,*w2);
 	_su3_times_su3(v2,*w4,*w3);
 	_su3_times_su3d(plaq,v1,v2);
-	w1=&g_gauge_field[x][l];
-	w2=&g_gauge_field[xplmk][k];
-	w3=&g_gauge_field[xmk][l];
-	w4=&g_gauge_field[xmk][k];
+	w1=&gf[x][l];
+	w2=&gf[xplmk][k];
+	w3=&gf[xmk][l];
+	w4=&gf[xmk][k];
 	_su3_times_su3d(v1,*w1,*w2);
 	_su3d_times_su3(v2,*w3,*w4);
 	_su3_times_su3_acc(plaq,v1,v2);
-	w1=&g_gauge_field[xmk][k];
-	w2=&g_gauge_field[xmkml][l];
-	w3=&g_gauge_field[xmkml][k];
-	w4=&g_gauge_field[xml][l];
+	w1=&gf[xmk][k];
+	w2=&gf[xmkml][l];
+	w3=&gf[xmkml][k];
+	w4=&gf[xml][l];
 	_su3_times_su3(v1,*w2,*w1);
 	_su3_times_su3(v2,*w3,*w4);
 	_su3d_times_su3_acc(plaq,v1,v2);
-	w1=&g_gauge_field[xml][l];
-	w2=&g_gauge_field[xml][k];
-	w3=&g_gauge_field[xpkml][l];
-	w4=&g_gauge_field[x][k];
+	w1=&gf[xml][l];
+	w2=&gf[xml][k];
+	w3=&gf[xpkml][l];
+	w4=&gf[x][k];
 	_su3d_times_su3(v1,*w1,*w2);
 	_su3_times_su3d(v2,*w3,*w4);
 	_su3_times_su3_acc(plaq,v1,v2);
@@ -576,7 +576,7 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
   return;
 }
 
-void sw_all() {
+void sw_all(hamiltonian_field_t * const hf) {
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
   su3 *w1,*w2,*w3,*w4;
@@ -613,50 +613,50 @@ void sw_all() {
 	xpkml=g_idn[xpk][l];
 	xplmk=g_idn[xpl][k];
 	xmkml=g_idn[xml][k];
-	w1=&g_gauge_field[x][k];
-	w2=&g_gauge_field[xpk][l];
-	w3=&g_gauge_field[xpl][k];   /*dag*/
-	w4=&g_gauge_field[x][l];     /*dag*/
+	w1=&hf->gaugefield[x][k];
+	w2=&hf->gaugefield[xpk][l];
+	w3=&hf->gaugefield[xpl][k];   /*dag*/
+	w4=&hf->gaugefield[x][l];     /*dag*/
 	
 	_su3_times_su3(v1,*w1,*w2);
 	_su3_times_su3(v2,*w4,*w3);
 	_su3_times_su3d(plaq,v1,v2);
 	
 	_su3_times_su3(vv1,plaq,vis[k][l]);
-	_trace_lambda_mul_add_assign(df0[x][k], -ka_csw_8, vv1);
+	_trace_lambda_mul_add_assign(hf->derivative[x][k], -ka_csw_8, vv1);
 /* 	_trace_lambda(resu,vv1);  */
 /* 	der=&dclover[x][k];  */
 /* 	_add_su3adj(*der,resu); */
 	_su3d_times_su3(vv2,*w1,vv1); 
 	_su3_times_su3(vv1,vv2,*w1);
-	_trace_lambda_mul_add_assign(df0[xpk][l], -ka_csw_8, vv1);
+	_trace_lambda_mul_add_assign(hf->derivative[xpk][l], -ka_csw_8, vv1);
 /* 	_trace_lambda(resu,vv1);  */
 /* 	der=&dclover[xpk][l];  */
 /* 	_add_su3adj(*der,resu); */
 	
 	_su3_times_su3(vv2,vis[k][l],plaq); 
 	_su3_dagger(vv1,vv2);
-	_trace_lambda_mul_add_assign(df0[x][l], -ka_csw_8, vv1);
+	_trace_lambda_mul_add_assign(hf->derivative[x][l], -ka_csw_8, vv1);
 /* 	_trace_lambda(resu,vv1);  */
 /* 	der=&dclover[x][l];  */
 /* 	_add_su3adj(*der,resu); */
 	_su3d_times_su3(vv2,*w4,vv1); 
 	_su3_times_su3(vv1,vv2,*w4);
-	_trace_lambda_mul_add_assign(df0[xpl][k], -ka_csw_8, vv1);
+	_trace_lambda_mul_add_assign(hf->derivative[xpl][k], -ka_csw_8, vv1);
 /* 	_trace_lambda(resu,vv1);  */
 /* 	der=&dclover[xpl][k];  */
 /* 	_add_su3adj(*der,resu); */
 	
-	w1=&g_gauge_field[x][l];
-	w2=&g_gauge_field[xplmk][k];   /*dag*/
-	w3=&g_gauge_field[xmk][l];     /*dag*/
-	w4=&g_gauge_field[xmk][k];
+	w1=&hf->gaugefield[x][l];
+	w2=&hf->gaugefield[xplmk][k];   /*dag*/
+	w3=&hf->gaugefield[xmk][l];     /*dag*/
+	w4=&hf->gaugefield[xmk][k];
 	_su3_times_su3d(v1,*w1,*w2);
 	_su3d_times_su3(v2,*w3,*w4);
 	_su3_times_su3(plaq,v1,v2);
 	
 	_su3_times_su3(vv1,plaq,vis[k][l]);
-	_trace_lambda_mul_add_assign(df0[x][l], -ka_csw_8, vv1);
+	_trace_lambda_mul_add_assign(hf->derivative[x][l], -ka_csw_8, vv1);
 /* 	_trace_lambda(resu,vv1);  */
 /* 	der=&dclover[x][l];  */
 /* 	_add_su3adj(*der,resu); */
@@ -664,83 +664,83 @@ void sw_all() {
 	_su3_dagger(vv1,v1); 
 	_su3_times_su3d(vv2,vv1,vis[k][l]);
 	_su3_times_su3d(vv1,vv2,v2);
-	_trace_lambda_mul_add_assign(df0[xplmk][k], -ka_csw_8, vv1);
+	_trace_lambda_mul_add_assign(hf->derivative[xplmk][k], -ka_csw_8, vv1);
 /* 	_trace_lambda(resu,vv1);  */
 /* 	der=&dclover[xplmk][k];  */
 /* 	_add_su3adj(*der,resu); */
 
 	_su3_times_su3(vv2,*w3,vv1); 
 	_su3_times_su3d(vv1,vv2,*w3);
-	_trace_lambda_mul_add_assign(df0[xmk][l], -ka_csw_8, vv1);
+	_trace_lambda_mul_add_assign(hf->derivative[xmk][l], -ka_csw_8, vv1);
 /* 	_trace_lambda(resu,vv1);  */
 /* 	der=&dclover[xmk][l];  */
 /* 	_add_su3adj(*der,resu); */
 
 	_su3_dagger(vv2,vv1);
-	_trace_lambda_mul_add_assign(df0[xmk][k], -ka_csw_8, vv2);
+	_trace_lambda_mul_add_assign(hf->derivative[xmk][k], -ka_csw_8, vv2);
 /* 	_trace_lambda(resu,vv2);  */
 /* 	der=&dclover[xmk][k];  */
 /* 	_add_su3adj(*der,resu); */
 	
-	w1=&g_gauge_field[xmk][k];   /*dag*/
-	w2=&g_gauge_field[xmkml][l]; /*dag*/
-	w3=&g_gauge_field[xmkml][k];
-	w4=&g_gauge_field[xml][l];
+	w1=&hf->gaugefield[xmk][k];   /*dag*/
+	w2=&hf->gaugefield[xmkml][l]; /*dag*/
+	w3=&hf->gaugefield[xmkml][k];
+	w4=&hf->gaugefield[xml][l];
 	_su3_times_su3(v1,*w2,*w1);
 	_su3_times_su3(v2,*w3,*w4);
 	
 	_su3_times_su3d(vv1,*w1,vis[k][l]);
 	_su3_times_su3d(vv2,vv1,v2);
 	_su3_times_su3(vv1,vv2,*w2);
-	_trace_lambda_mul_add_assign(df0[xmk][k], -ka_csw_8, vv1);
+	_trace_lambda_mul_add_assign(hf->derivative[xmk][k], -ka_csw_8, vv1);
 /* 	_trace_lambda(resu,vv1);  */
 /* 	der=&dclover[xmk][k];  */
 /* 	_add_su3adj(*der,resu); */
 
 	_su3_times_su3(vv2,*w2,vv1); 
 	_su3_times_su3d(vv1,vv2,*w2);
-	_trace_lambda_mul_add_assign(df0[xmkml][l], -ka_csw_8, vv1);
+	_trace_lambda_mul_add_assign(hf->derivative[xmkml][l], -ka_csw_8, vv1);
 /* 	_trace_lambda(resu,vv1);  */
 /* 	der=&dclover[xmkml][l];  */
 /* 	_add_su3adj(*der,resu); */
 
 	_su3_dagger(vv2,vv1);
-	_trace_lambda_mul_add_assign(df0[xmkml][k], -ka_csw_8, vv2);
+	_trace_lambda_mul_add_assign(hf->derivative[xmkml][k], -ka_csw_8, vv2);
 /* 	_trace_lambda(resu,vv2);  */
 /* 	der=&dclover[xmkml][k];  */
 /* 	_add_su3adj(*der,resu); */
 
 	_su3d_times_su3(vv1,*w3,vv2); 
 	_su3_times_su3(vv2,vv1,*w3);
-	_trace_lambda_mul_add_assign(df0[xml][l], -ka_csw_8, vv2);
+	_trace_lambda_mul_add_assign(hf->derivative[xml][l], -ka_csw_8, vv2);
 /* 	_trace_lambda(resu,vv2);  */
 /* 	der=&dclover[xml][l];  */
 /* 	_add_su3adj(*der,resu); */
 	
-	w1=&g_gauge_field[xml][l];   /*dag*/
-	w2=&g_gauge_field[xml][k];
-	w3=&g_gauge_field[xpkml][l];
-	w4=&g_gauge_field[x][k];     /*dag*/
+	w1=&hf->gaugefield[xml][l];   /*dag*/
+	w2=&hf->gaugefield[xml][k];
+	w3=&hf->gaugefield[xpkml][l];
+	w4=&hf->gaugefield[x][k];     /*dag*/
 	_su3d_times_su3(v1,*w1,*w2);
 	_su3_times_su3d(v2,*w3,*w4);
 	
 	_su3_times_su3d(vv1,*w1,vis[k][l]);
 	_su3_times_su3d(vv2,vv1,v2);
 	_su3_times_su3d(vv1,vv2,*w2);
-	_trace_lambda_mul_add_assign(df0[xml][l], -ka_csw_8, vv1);
+	_trace_lambda_mul_add_assign(hf->derivative[xml][l], -ka_csw_8, vv1);
 /* 	_trace_lambda(resu,vv1);  */
 /* 	der=&dclover[xml][l];  */
 /* 	_add_su3adj(*der,resu); */
 	
 	_su3_dagger(vv2,vv1);
-	_trace_lambda_mul_add_assign(df0[xml][k], -ka_csw_8, vv2);
+	_trace_lambda_mul_add_assign(hf->derivative[xml][k], -ka_csw_8, vv2);
 /* 	_trace_lambda(resu,vv2);  */
 /* 	der=&dclover[xml][k];  */
 /* 	_add_su3adj(*der,resu); */
 
 	_su3d_times_su3(vv1,*w2,vv2); 
 	_su3_times_su3(vv2,vv1,*w2);
-	_trace_lambda_mul_add_assign(df0[xpkml][l], -ka_csw_8, vv2);
+	_trace_lambda_mul_add_assign(hf->derivative[xpkml][l], -ka_csw_8, vv2);
 /* 	_trace_lambda(resu,vv2);  */
 /* 	der=&dclover[xpkml][l];  */
 /* 	_add_su3adj(*der,resu); */
@@ -748,7 +748,7 @@ void sw_all() {
 	_su3_dagger(vv2,v2);  
 	_su3_times_su3d(vv1,vv2,v1);
 	_su3_times_su3d(vv2,vv1,vis[k][l]);
-	_trace_lambda_mul_add_assign(df0[x][k], -ka_csw_8, vv2);
+	_trace_lambda_mul_add_assign(hf->derivative[x][k], -ka_csw_8, vv2);
 /* 	_trace_lambda(resu,vv2);  */
 /* 	der=&dclover[x][k];  */
 /* 	_add_su3adj(*der,resu); */

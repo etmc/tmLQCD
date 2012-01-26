@@ -59,7 +59,7 @@
  * the Hamiltonian coming from the momenta
  *
  *******************************************/
-double moment_energy() {
+double moment_energy(su3adj ** const momenta) {
 
   su3adj *xm;
   int i,mu;
@@ -68,7 +68,7 @@ double moment_energy() {
   
   for(i=0;i<VOLUME;i++){
     for(mu=0;mu<4;mu++){
-      xm=&moment[i][mu];
+      xm=&momenta[i][mu];
       sum=(*xm).d1*(*xm).d1
 	+(*xm).d2*(*xm).d2
 	+(*xm).d3*(*xm).d3
@@ -103,7 +103,7 @@ double moment_energy() {
  * with the gaussian distribution
  *
  **************************************/
-double ini_momenta(const int repro) {
+double ini_momenta(const int repro, su3adj ** const momenta) {
   
   su3adj *xm;
   int i, mu;
@@ -121,7 +121,7 @@ double ini_momenta(const int repro) {
       for(i=0;i<VOLUME;i++){ 
 	for(mu=0;mu<4;mu++){
 	  sum=0.;
-	  xm=&moment[i][mu];
+	  xm=&momenta[i][mu];
 	  gauss_vector(y,8);
 	  /* from the previous line we get exp(-y^2) distribution */
 	  /* this means that <y^2> = sigma^2 = 1/2 */
@@ -160,7 +160,7 @@ double ini_momenta(const int repro) {
       for(i=0;i<VOLUME;i++){ 
 	for(mu=0;mu<4;mu++){
 	  sum=0.;
-	  xm=&moment[i][mu];
+	  xm=&momenta[i][mu];
 	  gauss_vector(y,8);
 	  (*xm).d1=1.4142135623731*y[0];
 	  (*xm).d2=1.4142135623731*y[1];
@@ -207,7 +207,7 @@ double ini_momenta(const int repro) {
     for(i=0;i<VOLUME;i++){ 
       for(mu=0;mu<4;mu++){
 	sum=0.;
-	xm=&moment[i][mu];
+	xm=&momenta[i][mu];
 	gauss_vector(y,8);
 	(*xm).d1=1.4142135623731*y[0];
 	(*xm).d2=1.4142135623731*y[1];

@@ -132,7 +132,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 
   /* initialize the momenta  */
-  enep = ini_momenta(reproduce_randomnumber_flag);
+  enep = ini_momenta(reproduce_randomnumber_flag, hf.momenta);
 
   g_sloppy_precision = 1;
 
@@ -150,12 +150,12 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
 
-  enepx = moment_energy();
+  enepx = moment_energy(hf.momenta);
 
   if (!bc_flag) { /* if PBC */
-    new_plaquette_energy = measure_gauge_action();
+    new_plaquette_energy = measure_gauge_action(hf.gaugefield);
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-      new_rectangle_energy = measure_rectangles();
+      new_rectangle_energy = measure_rectangles(hf.gaugefield);
     }
   }
   /* Compute the energy difference */
@@ -221,7 +221,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       }
     }
 
-    ret_enep = moment_energy();
+    ret_enep = moment_energy(hf.momenta);
 
     /* Compute the energy difference */
     ret_dh += (ret_enep - enep );

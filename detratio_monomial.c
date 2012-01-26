@@ -80,7 +80,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
     if(mnl->c_sw > 0) {
-      sw_term(); 
+      sw_term(hf->gaugefield); 
       sw_invert(OE);
     }
 
@@ -178,7 +178,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
       sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
 
       sw_deriv(OE);
-      sw_all();
+      sw_all(hf);
     }
   } 
   else { /* no even/odd preconditioning */

@@ -62,9 +62,9 @@ void sf_gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 
   for(i = 0; i < VOLUME; i++) { 
     for(mu=0;mu<4;mu++) {
-      z=&g_gauge_field[i][mu];
-      xm=&df0[i][mu];
-      v=get_staples(i,mu, g_gauge_field); 
+      z=&hf->gaugefield[i][mu];
+      xm=&hf->derivative[i][mu];
+      v=get_staples(i,mu, hf->gaugefield); 
       _su3_times_su3d(w,*z,v);
       _add_trace_lambda((*xm),w);
 
@@ -84,10 +84,10 @@ void sf_gauge_heatbath( const int id, hamiltonian_field_t * const hf)
 
   if( mnl->use_rectangles ){ mnl->c0 = 1. - 8.*mnl->c1; }
 
-  mnl->energy0 = g_beta * ( mnl->c0 * measure_gauge_action() );
+  mnl->energy0 = g_beta * ( mnl->c0 * measure_gauge_action(hf->gaugefield) );
 
   if(mnl->use_rectangles) {
-    mnl->energy0 += g_beta*(mnl->c1 * measure_rectangles());
+    mnl->energy0 += g_beta*(mnl->c1 * measure_rectangles(hf->gaugefield));
   }
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called gauge_heatbath for id %d %d\n", id, mnl->even_odd_flag);
@@ -153,7 +153,7 @@ double sf_gauge_acc( const int id, hamiltonian_field_t * const hf)
 
   if( mnl->use_rectangles )
   {
-    mnl->energy1 += g_beta*( mnl->c1 * measure_rectangles() );
+    mnl->energy1 += g_beta*( mnl->c1 * measure_rectangles(hf->gaugefield) );
   }
   fprintf( stderr, "mnl->energy1 = %e\n", mnl->energy1 );
 

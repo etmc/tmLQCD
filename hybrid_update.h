@@ -23,8 +23,7 @@
 #define second_psf 1
 #define third_psf 4
 
-double moment_energy();
-double ini_momenta(const int repro);
-void gauge_momenta(double step);
+double moment_energy(su3adj ** const momenta);
+double ini_momenta(const int repro, su3adj ** const momenta);
 
 #endif

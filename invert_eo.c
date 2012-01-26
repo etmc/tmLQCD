@@ -95,11 +95,11 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	if(g_proc_id == 0) printf("Error while gauge fixing to temporal gauge. Aborting...\n");   
 	exit(200);
       }
-      plaquette = measure_gauge_action();
+      plaquette = measure_gauge_action(g_gauge_field);
       if(g_proc_id == 0) printf("Plaquette before gauge fixing: %.16e\n", plaquette/6./VOLUME);
       /* do trafo */
       apply_gtrafo(g_gauge_field, g_trafo);
-      plaquette = measure_gauge_action();
+      plaquette = measure_gauge_action(g_gauge_field);
       if(g_proc_id == 0) printf("Plaquette after gauge fixing: %.16e\n", plaquette/6./VOLUME);
     
       /* do trafo to odd part of source */
@@ -242,7 +242,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     /* return from temporal gauge again */
 #ifdef TEMPORALGAUGE
     if(usegpu_flag){ 
-      plaquette = measure_gauge_action();
+      plaquette = measure_gauge_action(g_gauge_field);
       if(g_proc_id == 0) printf("Plaquette before inverse gauge fixing: %.16e\n", plaquette/6./VOLUME);
     
       /* undo trafo */
@@ -253,7 +253,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       g_update_gauge_copy = 1;
     
     
-      plaquette = measure_gauge_action();
+      plaquette = measure_gauge_action(g_gauge_field);
       if(g_proc_id == 0) printf("Plaquette after inverse gauge fixing: %.16e\n", plaquette/6./VOLUME);
    
       /* undo trafo to source (Even, Odd) */

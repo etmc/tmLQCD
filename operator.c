@@ -43,7 +43,6 @@
 #include "invert_eo.h"
 #include "invert_doublet_eo.h"
 #include "invert_overlap.h"
-#include "measure_gauge_action.h"
 #include "boundary.h"
 #include "init_chi_spinor_field.h"
 #include "start.h"

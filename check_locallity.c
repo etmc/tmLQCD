@@ -244,7 +244,7 @@ int main(int argc,char *argv[]) {
       eigenvalues(&no_eigenvalues, 1000, eigenvalue_precision, 0, compute_evs, nstore, even_odd_flag);
     }
     /*compute the energy of the gauge field*/
-    plaquette_energy = measure_gauge_action();
+    plaquette_energy = measure_gauge_action(g_gauge_field);
 
     if(g_proc_id == 0) {
       printf("The plaquette value is %e\n", plaquette_energy/(6.*VOLUME*g_nproc)); fflush(stdout);
@@ -257,7 +257,7 @@ int main(int argc,char *argv[]) {
       g_update_gauge_copy = 1;
       g_update_gauge_energy = 1;
       g_update_rectangle_energy = 1;
-      plaquette_energy = measure_gauge_action();
+      plaquette_energy = measure_gauge_action(g_gauge_field);
 
       if (g_proc_id == 0) {
         printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
