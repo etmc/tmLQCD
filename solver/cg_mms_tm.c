@@ -61,7 +61,6 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
   int iteration, im, append = 0;
   char filename[100];
   static double gamma, alpham1;
-  int const cg_mms_default_precision = 32;
   double tmp_mu = g_mu;
   WRITER * writer = NULL;
   paramsInverterInfo *inverterInfo = NULL;
@@ -201,13 +200,13 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
           }
           write_spinor_info(writer, PropInfo.format, inverterInfo, append);
           //Create the propagatorFormat NOTE: always set to 1 flavour (to be adjusted)
-          propagatorFormat = construct_paramsPropagatorFormat(cg_mms_default_precision, 1);
+          propagatorFormat = construct_paramsPropagatorFormat(PropInfo.precision, 1);
           write_propagator_format(writer, propagatorFormat);
           free(inverterInfo);
           free(propagatorFormat);
         }
         convert_lexic_to_eo(solver_field[2], solver_field[1], temp_save);
-        write_spinor(writer, &solver_field[2], &solver_field[1], 1, cg_mms_default_precision);
+        write_spinor(writer, &solver_field[2], &solver_field[1], 1, PropInfo.precision);
         destruct_writer(writer);
       }
       finalize_solver(solver_field, nr_sf);
