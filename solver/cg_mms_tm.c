@@ -207,7 +207,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
           free(propagatorFormat);
         }
         convert_lexic_to_eo(solver_field[2], solver_field[1], temp_save);
-        write_spinor(writer, &solver_field[2], &solver_field[1], 1, 32);
+        write_spinor(writer, &solver_field[2], &solver_field[1], 1, cg_mms_default_precision);
         destruct_writer(writer);
       }
       finalize_solver(solver_field, nr_sf);
