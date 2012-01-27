@@ -84,6 +84,7 @@ PROGRAMS = hmc_tm benchmark invert gen_sources  \
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = ${USESUBDIRS}
 
+# delete the default suffix rules
 .SUFFIXES:
 
 all: Makefile all-recursive dep hmc_tm invert
@@ -99,6 +100,7 @@ all: Makefile all-recursive dep hmc_tm invert
 ${top_srcdir}/git_hash.h:
 	@cd @srcdir@ && sh GIT-VERSION-GEN
 
+# no targets to be built serially
 .NOTPARALLEL:
 
 -include $(addsuffix .d,$(ALLOBJ))
@@ -135,8 +137,8 @@ ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 ${PROGRAMS}: %: %.o libhmc.a all-recursive
 	 ${LINK}  $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
 
-dep: $(addsuffix .d,$(ALLOBJ))
-	@ echo "...dependency files build"
+dep: $(addsuffix .d,$(ALLOBJ)) 
+	@ echo "...dependency files built"
 
 install: Makefile
 	@mkdir -p $(bindir); \
