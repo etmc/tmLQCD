@@ -2,18 +2,14 @@
 
 int ape_smear(gauge_field_t m_field_out, struct ape_parameters const *params, gauge_field_t m_field_in)
 {
-  static su3_tuple tmp;
-  double const rho_p = 1 - params->rho;
-  double const rho_s = params->rho / 6.0;
-
-  /* We may alias the data, so we need something to store intermediate results */
+  /* We may alias the data, so we need something to store intermediate results somewhere else then m_field_out */
   gauge_field_t buffer = get_gauge_field();
 
   /* start of the the stout smearing **/
   for(int iter = 0; iter < params->iterations; ++iter)
   {
     generic_staples(buffer, m_field_in);
-    recombine_ape_smeared_staples(buffer, m_field_in);
+    APE_project_exclude_none(buffer, params->rho, buffer,  m_field_in);
 
     copy_gauge_field(m_field_out, buffer);
     exchange_gauge_field(m_field_out);
@@ -25,6 +21,3 @@ int ape_smear(gauge_field_t m_field_out, struct ape_parameters const *params, ga
 
   return(0);
 }
-
-
-

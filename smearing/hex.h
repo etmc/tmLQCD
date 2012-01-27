@@ -2,12 +2,12 @@
 
 #include <buffers/gauge.h>
 #include <smearing/hyp.h>
+#include <smearing/stout.h>
 
 /* Just to have a consistent look to the interface  */
 typedef struct hyp_parameters hex_parameters;
 
 /* Now all defined in terms of buffers */
-void stout_exclude_none(gauge_field_t buff_out, double const coeff, gauge_field_t staples, gauge_field_t buff_in);
 void stout_exclude_one (gauge_field_array_t buff_out, double const coeff, gauge_field_array_t staples, gauge_field_t buff_in);
 void stout_exclude_two (gauge_field_array_t buff_out, double const coeff, gauge_field_array_t staples, gauge_field_t buff_in);
 

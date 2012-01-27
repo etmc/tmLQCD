@@ -3,8 +3,7 @@
 void project_antiherm(su3 *omega)
 {
   static const double fac_3 = 1.00 / 3.00;
-  double tr_omega = creal(-I * fac_3 * (omega->c00 + omega->c11 + omega->c22);
-
+  double tr_omega = creal(-I * fac_3 * (omega->c00 + omega->c11 + omega->c22));
   
   omega->c00 = (cimag(omega->c00) - tr_omega) * I;
   omega->c11 = (cimag(omega->c11) - tr_omega) * I;

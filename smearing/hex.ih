@@ -18,4 +18,5 @@
 #include <io/gauge.h>
 #include <update_backward_gauge.h>
 
+#include <buffers/utils.h>
 #include <smearing/hex.h>
