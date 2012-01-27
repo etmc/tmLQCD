@@ -68,12 +68,12 @@ void clover(const int ieo,
 
 
 void Qsw_psi(spinor * const l, spinor * const k) {
-  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(OE, g_spinor_field[DUM_MATRIX+1]);
-  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   /* temporarily set to 0 -> needs to be fixed */
   mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], +1.);
-  clover_gamma5(EO, l, k, g_spinor_field[DUM_MATRIX], 0.);
+  clover_gamma5(OE, l, k, g_spinor_field[DUM_MATRIX], 0.);
 }
 
 void Qsw_sq_psi(spinor * const l, spinor * const k) {
@@ -90,11 +90,11 @@ void Qsw_sq_psi(spinor * const l, spinor * const k) {
 }
 
 void Msw_psi(spinor * const l, spinor * const k) {
-  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(OE, g_spinor_field[DUM_MATRIX+1]);
-  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   /* temporarily set to zero -> needs to be fixed */
-  clover(EO, l, k, g_spinor_field[DUM_MATRIX], 0.);
+  clover(OE, l, k, g_spinor_field[DUM_MATRIX], 0.);
 }
 
 /**********************************************************
