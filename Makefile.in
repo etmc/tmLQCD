@@ -36,7 +36,7 @@ INCLUDES = @INCLUDES@
 LINK = $(CCLD) -o $@ ${LDFLAGS}
 LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
 	${top_builddir}/solver/libsolver.a ${top_builddir}/io/libio.a \
-	${top_builddir}/smearing/libsmear.a
+	${top_builddir}/smearing/libsmear.a ${top_builddir}/buffers/libbuffers.a
 
 COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
