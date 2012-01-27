@@ -81,7 +81,7 @@ NOOPTMOD = test/check_xchange test/check_geometry
 PROGRAMS = hmc_tm benchmark invert gen_sources  \
 	check_locallity test_lemon hopping_test LapH_ev
 
-TESTS = test_sample
+TESTS = tests/test_sample tests/test_su3
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = ${USESUBDIRS}
@@ -142,12 +142,13 @@ ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 ${PROGRAMS}: %: %.o libhmc.a all-recursive
 	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
 
-tests/${TESTS}: ${top_srcdir}/tests/${TESTS}.c ${top_srcdir}/tests/${TESTS}_ts*.c ${top_srcdir}/tests/${TESTS}_ts*.h ${top_builddir}/cu/libcu.a
-	${COMPILE} ${OPTARGS} -L${top_builddir}/cu/ -lcu $+ -o $@
+
+# the tests have variable numbers of filenames, the use of wildcards is required
+${TESTS}:  $(wildcard ${srcdir}/$@*.c) $(wildcard ${srcdir}/$@*.h) ${top_builddir}/cu/libcu.a
+	${COMPILE} $(wildcard ${srcdir}/$@*.c) ${OPTARGS} -L${top_builddir}/cu/ -lcu -o $@
 
 # make sure that the regressions directory exists in the tests directory
-
-tests: tests/${TESTS}
+tests: ${TESTS}
 	@ cd ${top_builddir}/tests && \
 	mkdir -p regressions
 

@@ -712,9 +712,13 @@ if test ! -e lib; then
   mkdir lib
 fi
 
-dnl create the test directory here
+dnl create the test and tests directory here
 if test ! -e test; then
   mkdir test
+fi
+
+if test ! -e tests; then
+  mkdir tests
 fi
 
 

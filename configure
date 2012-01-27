@@ -10139,6 +10139,10 @@ if test ! -e test; then
   mkdir test
 fi
 
+if test ! -e tests; then
+  mkdir tests
+fi
+
 
 LIBS="-lhmc -lsolver -llinalg -lhmc -lio -lsmear $LIBS"
 AUTOCONF=autoconf
