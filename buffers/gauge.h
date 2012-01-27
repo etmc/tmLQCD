@@ -28,7 +28,7 @@ extern gauge_buffers_t g_gauge_buffers;
 void initialize_gauge_buffers(unsigned int max);
 void finalize_gauge_buffers();
 
-void allocate_gauge_buffer(unsigned int count);
+void allocate_gauge_buffers(unsigned int count);
 void free_unused_gauge_buffers();
 
 gauge_field_t get_gauge_field();

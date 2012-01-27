@@ -7,8 +7,6 @@
 
 gauge_field_t get_gauge_field()
 {
-  void *raw = NULL;
-  size_t p = 0;
   gauge_field_t gauge_field;
 
   if (g_gauge_buffers.stack < 0) /* Need to allocate a new buffer */
