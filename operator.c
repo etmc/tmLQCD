@@ -255,7 +255,8 @@ void op_invert(const int op_id, const int index_start) {
 	  printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
 	}
 	sw_term(g_gauge_field, optr->kappa, optr->c_sw); 
-	sw_invert(1);
+	/* this must be EO (so 0) here! */
+	sw_invert(0);
       }
       if (g_cart_id == 0) {
         printf("#\n# mu = %e\n", g_mu);

@@ -26,8 +26,6 @@
 #include "hamiltonian_field.h"
 
 extern su3 ** swm, ** swp;
-/* extern su3adj ** dclover; */
-
 
 void sw_term(su3 ** const gf, const double kappa, const double c_sw);
 double sw_trace(const int ieo);

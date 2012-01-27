@@ -68,12 +68,12 @@ void clover(const int ieo,
 
 
 void Qsw_psi(spinor * const l, spinor * const k) {
-  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
-  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], k);
+  clover_inv(OE, g_spinor_field[DUM_MATRIX+1]);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   /* temporarily set to 0 -> needs to be fixed */
   mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], +1.);
-  clover_gamma5(OE, l, k, g_spinor_field[DUM_MATRIX], 0.);
+  clover_gamma5(EO, l, k, g_spinor_field[DUM_MATRIX], 0.);
 }
 
 void Qsw_sq_psi(spinor * const l, spinor * const k) {
@@ -90,11 +90,11 @@ void Qsw_sq_psi(spinor * const l, spinor * const k) {
 }
 
 void Msw_psi(spinor * const l, spinor * const k) {
-  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
-  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], k);
+  clover_inv(OE, g_spinor_field[DUM_MATRIX+1]);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   /* temporarily set to zero -> needs to be fixed */
-  clover(OE, l, k, g_spinor_field[DUM_MATRIX], 0.);
+  clover(EO, l, k, g_spinor_field[DUM_MATRIX], 0.);
 }
 
 /**********************************************************
@@ -130,8 +130,9 @@ void clover_inv(const int ieo, spinor * const l) {
     /* noch schlimmer murks fuer den clover-term*/
     _vector_assign(phi1,(*rn).s0);
     _vector_assign(phi3,(*rn).s2);
-    
+
     w1=&sw_inv[ix][0][0];
+/*     printf("w1 %d %e %e\n", icx-ioff, (*w1).c00.re, (*w1).c00.im); */
     w2=w1+2;  /* &sw_inv[ix][1][0]; */
     w3=w1+4;  /* &sw_inv[ix][2][0]; */
     _su3_multiply(psi,*w1,phi1); 
@@ -140,7 +141,8 @@ void clover_inv(const int ieo, spinor * const l) {
     _su3_inverse_multiply(psi,*w2,phi1); 
     _su3_multiply(chi,*w3,(*rn).s1);
     _vector_add((*rn).s1,psi,chi);
-    
+/*     printf("s1 %d %e %e\n", icx-ioff, (*rn).s1.c0.re, (*rn).s1.c0.im); */
+
     w1++; /* &sw_inv[ix][0][1]; */
     w2++; /* &sw_inv[ix][1][1]; */
     w3++; /* &sw_inv[ix][2][1]; */
@@ -150,6 +152,8 @@ void clover_inv(const int ieo, spinor * const l) {
     _su3_inverse_multiply(psi,*w2,phi3); 
     _su3_multiply(chi,*w3,(*rn).s3);
     _vector_add((*rn).s3,psi,chi);
+/*     printf("s3 %d %e %e\n", icx-ioff, (*rn).s3.c0.re, (*rn).s3.c0.im); */
+
     /******************************** end of loop *********************************/
   }
   return;
@@ -329,8 +333,8 @@ void init_sw_fields(const int V) {
     sw[0] = sw1;
     sw_inv[0] = sw_inv1;
     for(int i = 1; i < VOLUME; i++) {
-      sw[i] = sw[i-1]+1;
-      sw_inv[i] = sw_inv[i-1]+1;
+      sw[i] = sw[i-1]+3;
+      sw_inv[i] = sw_inv[i-1]+3;
     }
 #    if (defined SSE || defined SSE2 || defined SSE3)
     sw[0][0] = (su3**)(((unsigned long int)(_sw)+ALIGN_BASE)&~ALIGN_BASE);

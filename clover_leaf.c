@@ -54,6 +54,25 @@ const double tiny_t = 1.0e-20;
 
 su3 ** swm, ** swp;
 
+void  mprint_su3(su3 *in) {
+
+  printf("[ %12.14f %12.14f , %12.14f %12.14f , %12.14f %12.14f  ] \n",
+      in->c00.re,in->c00.im, 
+      in->c01.re,in->c01.im, 
+      in->c02.re,in->c02.im ) ; 
+  printf("[ %12.14f %12.14f , %12.14f %12.14f , %12.14f %12.14f  ] \n",
+      in->c10.re,in->c10.im, 
+      in->c11.re,in->c11.im, 
+      in->c12.re,in->c12.im ) ; 
+  printf("[ %12.14f %12.14f , %12.14f %12.14f , %12.14f %12.14f  ] \n",
+      in->c20.re,in->c20.im, 
+      in->c21.re,in->c21.im, 
+      in->c22.re,in->c22.im ) ; 
+
+
+}
+
+
 void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
@@ -150,7 +169,6 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
     
     _itimes_su3_plus_su3(aux,magnetic[3],electric[3]);
     _su3_refac_acc(sw[x][2][1],ka_csw_8,aux);
-
   }
   return;
 }
@@ -189,7 +207,8 @@ int six_invert(complex a[6][6]) {
   for(k = 0; k < nm1; k++) {
     s=0.0;
     for(j = k+1; j <= nm1; j++) {
-      s+=a[j][k].re*a[j][k].re+a[j][k].im*a[j][k].im; 
+      s += a[j][k].re*a[j][k].re 
+	+ a[j][k].im*a[j][k].im; 
     }
     s=1.+s/(a[k][k].re*a[k][k].re+a[k][k].im*a[k][k].im);
     s=sqrt(s);
@@ -412,6 +431,8 @@ double sw_trace(const int ieo) {
 
 }
 
+
+
 void sw_invert(const int ieo) {
   int icx,ioff, err=0;
   int i,x;
@@ -424,19 +445,22 @@ void sw_invert(const int ieo) {
   else {
     ioff=(VOLUME+RAND)/2;
   }
+
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
+
     for(i = 0; i < 2; i++) {
       w=&sw[x][0][i];     
       _a_C(0,0,*w);
-      w=&sw[x][1][i];     
+      w=&sw[x][1][i];
       _a_C(0,3,*w);
       _su3_dagger(v2,*w); 
       _a_C(3,0,v2);
-      w=&sw[x][2][i];     
+      w=&sw[x][2][i];
       _a_C(3,3,*w);
-      
-      err = six_invert(a);
+
+      err = six_invert(a); 
+      /* here we need to catch the error! */
       if(err > 0 && g_proc_id == 0) {
 	printf("# %d\n", err);
 	err = 0;
