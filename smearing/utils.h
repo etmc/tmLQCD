@@ -31,7 +31,6 @@ enum I2
 };
 
 void generic_staples(gauge_field_t out, gauge_field_t buff_in);
-void generic_exchange(void *field_in, int bytes_per_site);
 void project_antiherm(su3 *omega);
 void project_herm(su3 *omega);
 void reunitarize(su3 *omega);
