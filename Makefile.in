@@ -36,7 +36,8 @@ INCLUDES = @INCLUDES@
 LINK = $(CCLD) -o $@ ${LDFLAGS}
 LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
 	${top_builddir}/solver/libsolver.a ${top_builddir}/io/libio.a \
-	${top_builddir}/smearing/libsmear.a ${top_builddir}/buffers/libbuffers.a
+	${top_builddir}/smearing/libsmear.a ${top_builddir}/buffers/libbuffers.a \
+	$(top_builddir)/cu/libcu.a
 
 COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
@@ -120,9 +121,6 @@ libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
 	@$(RANLIB) libhmc.a
 	@cp libhmc.a ${top_builddir}/lib/libhmc.a
 
-#${abs_top_builddir}/cu/libcu.a: ${top_srcdir}/cu/Makefile ${top_srcdir}/cu/cu.h ${top_srcdir}/cu/cu.c
-#	${COMPILE} -c $<
-
 #${addsuffix .o, ${ALLOBJ}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
 #	${COMPILE} ${OPTARGS} -c $<
 
@@ -142,7 +140,6 @@ ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 ${PROGRAMS}: %: %.o libhmc.a all-recursive
 	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
 
-
 # the tests have variable numbers of filenames, the use of wildcards is required
 ${TESTS}:  $(wildcard ${srcdir}/$@*.c) $(wildcard ${srcdir}/$@*.h) ${top_builddir}/cu/libcu.a
 	${COMPILE} $(wildcard ${srcdir}/$@*.c) ${OPTARGS} -L${top_builddir}/cu/ -lcu -o $@
@@ -152,12 +149,8 @@ tests: ${TESTS}
 	@ cd ${top_builddir}/tests && \
 	mkdir -p regressions
 
-cu/libcu.a: cu/Makefile
-	@ cd cu && \
-	make
-
-dep: $(addsuffix .d,$(ALLOBJ)) 
-	@ echo "...dependency files built"
+dep: $(addsuffix .d,$(ALLOBJ))
+	@ echo "...dependency files build"
 
 install: Makefile
 	@mkdir -p $(bindir); \
