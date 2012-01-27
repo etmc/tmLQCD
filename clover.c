@@ -36,6 +36,7 @@
 #include "su3.h"
 #include "sse.h"
 #include "Hopping_Matrix.h"
+#include "tm_operators.h"
 #include "clover.h"
 
 
@@ -70,16 +71,30 @@ void Qsw_psi(spinor * const l, spinor * const k) {
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
   clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
-  /* temporarily set to g_mu -> needs to be fixed */
-  clover_gamma5(OE, l, k, g_spinor_field[DUM_MATRIX], g_mu);
+  /* temporarily set to 0 -> needs to be fixed */
+  mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], +1.);
+  clover_gamma5(OE, l, k, g_spinor_field[DUM_MATRIX], 0.);
+}
+
+void Qsw_sq_psi(spinor * const l, spinor * const k) {
+  /* \hat Q_{-} */
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  clover_gamma5(OE, g_spinor_field[DUM_MATRIX], k, g_spinor_field[DUM_MATRIX], 0.);
+  /* \hat Q_{+} */
+  Hopping_Matrix(EO, l, g_spinor_field[DUM_MATRIX]);
+  clover_inv(EO, l); 
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], l);
+  clover_gamma5(OE, l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], 0.);
 }
 
 void Msw_psi(spinor * const l, spinor * const k) {
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
   clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
-  /* temporarily set to g_mu -> needs to be fixed */
-  clover(OE, l, k, g_spinor_field[DUM_MATRIX], g_mu);
+  /* temporarily set to zero -> needs to be fixed */
+  clover(OE, l, k, g_spinor_field[DUM_MATRIX], 0.);
 }
 
 /**********************************************************
@@ -275,6 +290,71 @@ void clover(const int ieo,
     _vector_sub((*r).s2,psi1,(*t).s2);
     _vector_sub((*r).s3,psi2,(*t).s3);
     /******************************** end of loop *********************************/
+  }
+  return;
+}
+
+/********
+ *
+ * temporary initialisation function
+ *
+ ********/
+
+su3 ** sw1, ** sw_inv1;
+su3 * _sw, *_sw_inv;
+static int sw_init = 0;
+
+void init_sw_fields(const int V) {
+  su3 * tmp;
+
+  if(!sw_init) {
+    if((void*)(sw = (su3***)calloc(V, sizeof(su3**))) == NULL) {
+      fprintf (stderr, "sw malloc err\n"); 
+    }
+    if((void*)(sw_inv = (su3***)calloc(V, sizeof(su3**))) == NULL) {
+      fprintf (stderr, "sw_inv malloc err\n"); 
+    }
+    if((void*)(sw1 = (su3**)calloc(3*V, sizeof(su3*))) == NULL) {
+      fprintf (stderr, "sw1 malloc err\n"); 
+    }
+    if((void*)(sw_inv1 = (su3**)calloc(3*V, sizeof(su3*))) == NULL) {
+      fprintf (stderr, "sw_inv1 malloc err\n"); 
+    }
+    if((void*)(_sw = (su3*)calloc(3*2*V+1, sizeof(su3))) == NULL) {
+      fprintf (stderr, "_sw malloc err\n"); 
+    }
+    if((void*)(_sw_inv = (su3*)calloc(3*2*V+1, sizeof(su3))) == NULL) {
+      fprintf (stderr, "_sw_inv malloc err\n"); 
+    }
+    sw[0] = sw1;
+    sw_inv[0] = sw_inv1;
+    for(int i = 1; i < VOLUME; i++) {
+      sw[i] = sw[i-1]+1;
+      sw_inv[i] = sw_inv[i-1]+1;
+    }
+#    if (defined SSE || defined SSE2 || defined SSE3)
+    sw[0][0] = (su3**)(((unsigned long int)(_sw)+ALIGN_BASE)&~ALIGN_BASE);
+    sw_inv[0][0] = (su3**)(((unsigned long int)(_sw_inv)+ALIGN_BASE)&~ALIGN_BASE);
+#    else
+    sw[0][0] = _sw;
+    sw_inv[0][0] = _sw_inv;
+#    endif
+    tmp = sw[0][0];
+    for(int i = 0; i < VOLUME; i++) {
+      for(int j = 0; j < 3; j++) {
+	sw[i][j] = tmp;
+	tmp = tmp+2;
+      }
+    }
+    
+    tmp = sw_inv[0][0];
+    for(int i = 0; i < VOLUME; i++) {
+      for(int j = 0; j < 3; j++) {
+	sw_inv[i][j] = tmp;
+	tmp = tmp+2;
+      }
+    }
+    sw_init = 1;
   }
   return;
 }

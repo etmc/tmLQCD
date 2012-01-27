@@ -72,9 +72,9 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
         |  | |  |
         |__| |__| k  */
   
-  for(x=0; x<VOLUME; x++) {
-    for(k=0;k<4;k++) {
-      for(l=k+1;l<4;l++) {
+  for(x = 0; x < VOLUME; x++) {
+    for(k = 0; k < 4; k++) {
+      for(l = k+1; l < 4; l++) {
 	xpk=g_iup[x][k];
 	xpl=g_iup[x][l];
 	xmk=g_idn[x][k];
@@ -150,7 +150,7 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
     
     _itimes_su3_plus_su3(aux,magnetic[3],electric[3]);
     _su3_refac_acc(sw[x][2][1],ka_csw_8,aux);
-    
+
   }
   return;
 }
@@ -405,12 +405,15 @@ double sw_trace(const int ieo) {
   kc=ks+kc;
 #ifdef MPI
   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  return(ks);
+#else
+  return(kc);
 #endif
-  return ks;
+
 }
 
 void sw_invert(const int ieo) {
-  int icx,ioff;
+  int icx,ioff, err=0;
   int i,x;
   su3 *w;
   static su3 v2;
@@ -433,7 +436,11 @@ void sw_invert(const int ieo) {
       w=&sw[x][2][i];     
       _a_C(3,3,*w);
       
-      six_invert(a);
+      err = six_invert(a);
+      if(err > 0 && g_proc_id == 0) {
+	printf("# %d\n", err);
+	err = 0;
+      }
 
       /*  copy "a" back to sw_inv */
       w=&sw_inv[x][0][i]; 

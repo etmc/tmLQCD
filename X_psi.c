@@ -33,6 +33,7 @@
 #include "gamma.h"
 #include "X_psi.h"
 #include "tm_operators.h"
+#include "solver/solver.h"
 #include "read_input.h"
 
 void DdaggerD_plus_M(spinor * const R, spinor * const S)

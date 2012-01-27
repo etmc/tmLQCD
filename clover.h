@@ -28,10 +28,10 @@
 extern su3 *** sw;
 extern su3 *** sw_inv;
 extern su3 ** swm, ** swp;
-extern su3adj ** dclover;
 
 void Qsw_psi(spinor * const l, spinor * const k);
+void Qsw_sq_psi(spinor * const l, spinor * const k);
 void Msw_psi(spinor * const l, spinor * const k);
-
+void init_sw_fields(const int V);
 
 #endif

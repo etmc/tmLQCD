@@ -54,6 +54,8 @@
 #include <io/utils.h>
 #include "test/overlaptests.h"
 #include "solver/index_jd.h"
+#include "clover.h"
+#include "clover_leaf.h"
 #include "operator.h"
 
 void dummy_D(spinor * const, spinor * const);
@@ -146,6 +148,9 @@ int init_operators() {
     /* This is a hack, it should be set on an operator basis. */
     optr->rel_prec = g_relative_precision_flag;
     if(optr->type == TMWILSON || optr->type == WILSON) {
+      if(optr->c_sw > 0) {
+	init_sw_fields(VOLUME);
+      }
       if(optr->even_odd_flag) {
         optr->applyQp = &Qtm_plus_psi;
         optr->applyQm = &Qtm_minus_psi;
@@ -244,20 +249,24 @@ void op_invert(const int op_id, const int index_start) {
   if(optr->type == TMWILSON || optr->type == WILSON) {
     for(i = 0; i < 2; i++) {
       g_mu = optr->mu;
+      g_c_sw = optr->c_sw;
+      if(optr->c_sw > 0 && optr->even_odd_flag) {
+	if (g_cart_id == 0) {
+	  printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+	}
+	sw_term(g_gauge_field, optr->kappa, optr->c_sw); 
+	sw_invert(1);
+      }
       if (g_cart_id == 0) {
         printf("#\n# mu = %e\n", g_mu);
       }
 
-      if(use_preconditioning==1){
+      if(use_preconditioning){
         g_precWS=(void*)optr->precWS;
       }
       else {
         g_precWS=NULL;
       }
-      // This is for the CGMMS: it header here because binary data will be wrote inside cg_mms
-      //if(optr->solver == 12) {
-      //  write_cgmms_headers(op_id,index_start,i);
-      //}
 
       optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
                                     optr->eps_sq, optr->maxiter,
