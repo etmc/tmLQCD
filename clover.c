@@ -35,7 +35,52 @@
 #include "global.h"
 #include "su3.h"
 #include "sse.h"
+#include "Hopping_Matrix.h"
 #include "clover.h"
+
+
+su3 *** sw;
+su3 *** sw_inv;
+
+void clover_inv(const int ieo, spinor * const l);
+void clover_gamma5(const int ieo, 
+		   spinor * const l, spinor * const k, spinor * const j,
+		   const double q_off);
+void clover(const int ieo, 
+	    spinor * const l, spinor * const k, spinor * const j,
+	    const double q_off);
+
+/*******************************************************************
+ *
+ *
+ * \hat Q_{+} =
+ * \gamma_5(M_{oo}^+ - M_{oe}(M_{ee}^+ )^{-1}M_{eo})
+ *
+ * with clover term!
+ * see documentation for details
+ * k is the input field
+ * l is the output field
+ *
+ * it acts only on the odd part or only 
+ * on a half spinor
+ *******************************************************************/
+
+
+void Qsw_psi(spinor * const l, spinor * const k) {
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  /* temporarily set to g_mu -> needs to be fixed */
+  clover_gamma5(OE, l, k, g_spinor_field[DUM_MATRIX], g_mu);
+}
+
+void Msw_psi(spinor * const l, spinor * const k) {
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  /* temporarily set to g_mu -> needs to be fixed */
+  clover(OE, l, k, g_spinor_field[DUM_MATRIX], g_mu);
+}
 
 /**********************************************************
  *
@@ -47,9 +92,6 @@
  * this is needed for even/odd preconditioning
  *
  **********************************************************/
-
-su3 *** sw;
-su3 *** sw_inv;
 
 void clover_inv(const int ieo, spinor * const l) {
   int ix;
@@ -168,7 +210,7 @@ void clover_gamma5(const int ieo,
 
 /**************************************************************
  *
- * clover_gamma5 applies the clover term to spinor k, adds k 
+ * clover applies the clover term to spinor k, adds k 
  * to j then and stores it in l
  *
  * it is assumed that the clover leaf is computed and stored

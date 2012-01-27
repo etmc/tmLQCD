@@ -51,14 +51,14 @@
 #include "clover_leaf.h"
 
 const double tiny_t = 1.0e-20;
-double ka_csw_8 = 1.;
 
 su3 ** swm, ** swp;
 
-void sw_term(su3 ** const gf) {
+void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
   su3 *w1,*w2,*w3,*w4;
+  double ka_csw_8 = kappa*c_sw/8.;
   static su3 v1,v2,plaq;
   static su3 fkl[4][4];
   static su3 magnetic[4],electric[4];
@@ -152,6 +152,7 @@ void sw_term(su3 ** const gf) {
     _su3_refac_acc(sw[x][2][1],ka_csw_8,aux);
     
   }
+  return;
 }
 
 /*
@@ -576,10 +577,11 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
   return;
 }
 
-void sw_all(hamiltonian_field_t * const hf) {
+void sw_all(hamiltonian_field_t * const hf, const double kappa, const double c_sw) {
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
   su3 *w1,*w2,*w3,*w4;
+  double ka_csw_8 = kappa*c_sw/8.;
   static su3 v1,v2,vv1,vv2,plaq;
   static su3 vis[4][4];
 /*   static su3adj resu; */

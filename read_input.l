@@ -24,9 +24,8 @@
  * Please edit read_input.l instead of read_input.c!
  * flex should be said to be case insensitive!
  *
- * After modifiing read_input.l please call once
- * make flex_read_input
- * to update read_input.c
+ * After modifiing read_input.l please update read_input.c with
+ * flex -Ptmlqcd -i -t read_input.l > read_input.c
  *
  * Autor: Carsten Urbach
  *        urbach@physik.fu-berlin.de
@@ -185,6 +184,7 @@ inline void rmQuotes(char *str){
 %x MUBAR
 %x EPSBAR
 %x MU
+%x CSW
 %x SEED
 %x RLXDLEVEL
 %x NSAVE
@@ -311,6 +311,7 @@ inline void rmQuotes(char *str){
 ^NRYProcs{EQL}                     BEGIN(NPROCY);
 ^NRZProcs{EQL}                     BEGIN(NPROCZ);
 ^kappa{EQL}                        BEGIN(KAPPA);
+^csw{EQL}                          BEGIN(CSW);
 ^2KappaMu{EQL}                     BEGIN(MU);
 ^2KappaMubar{EQL}                  BEGIN(MUBAR);
 ^2KappaEpsBar{EQL}                 BEGIN(EPSBAR);
@@ -1416,6 +1417,10 @@ inline void rmQuotes(char *str){
   g_mu1=atof(yytext);
   if(myverbose!=0) printf("2 kappa mu=%s \n", yytext);
 }
+<CSW>{FLT}  {
+  g_c_sw=atof(yytext);
+  if(myverbose!=0) printf("c_sw=%s \n", yytext);
+}
 <STARTCOND>cold {
   startoption=0; 
   if(myverbose!=0) printf("Start Condition is %s \n",yytext);
@@ -1798,7 +1803,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,CSW>\n   {
   line_of_file++;
 }
 <*>\n                       {
@@ -1874,6 +1879,7 @@ int read_input(char * conf_file){
   g_mubar = _default_g_mubar;
   g_epsbar = _default_g_epsbar;
   g_mu = _default_g_mu;
+  g_c_sw = _default_c_sw;
   g_mu1 = _default_g_mu1;
   g_mu2 = _default_g_mu2;
   g_mu3 = _default_g_mu3;

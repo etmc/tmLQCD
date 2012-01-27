@@ -80,7 +80,7 @@ int init_integrator() {
 
   for(i = 0; i < no_monomials; i++) {
     ts = monomial_list[i].timescale;
-    if(ts < Integrator.no_timescales && ts > -1) {
+    if(ts < Integrator.no_timescales && ts > -1 && monomial_list[i].type != CLOVERTRLOG) {
       Integrator.mnls_per_ts[ ts ][ Integrator.no_mnls_per_ts[ts] ] = monomial_list[i].id;
       Integrator.no_mnls_per_ts[ ts ]++;
     }

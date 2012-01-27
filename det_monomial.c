@@ -73,7 +73,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu;
     boundary(mnl->kappa);
     if(mnl->c_sw > 0) {
-      sw_term(hf->gaugefield); 
+      sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
       sw_invert(OE);
     }
     if(mnl->solver != CG) {
@@ -113,7 +113,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
       sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
 
       sw_deriv(OE);
-      sw_all(hf);
+      sw_all(hf, mnl->kappa, mnl->c_sw);
     }
   } 
   else {

@@ -36,6 +36,7 @@
 #define SFGAUGE 5
 #define NDDETRATIO 6
 #define POLYDETRATIO 7
+#define CLOVERTRLOG 8
 
 #define max_no_monomials 20
 
@@ -106,6 +107,7 @@ typedef struct {
 #include "nddetratio_monomial.h"
 #include "gauge_monomial.h"
 #include "sf_gauge_monomial.h"
+#include "clover_trlog_monomial.h"
 
 /* list of all monomials */
 extern monomial monomial_list[max_no_monomials];

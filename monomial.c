@@ -46,6 +46,7 @@ monomial monomial_list[max_no_monomials];
 int no_monomials = 0;
 int no_gauge_monomials = 0;
 int no_ndpoly_monomials = 0;
+int clover_trlog_monomial = 0;
 static spinor * _pf;
 
 int add_monomial(const int type) {
@@ -143,7 +144,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 
   no = 0;
   for(i = 0; i < no_monomials; i++) {
-    
+    if(monomial_list[i].c_sw > 0) {
+      clover_trlog_monomial = 1;
+    }
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) {
           
       monomial_list[i].pf = __pf+no*V;
@@ -219,6 +222,18 @@ int init_monomials(const int V, const int even_odd_flag) {
     }
     monomial_list[i].id = i;
     monomial_list[i].even_odd_flag = even_odd_flag;
+  }
+  if(clover_trlog_monomial && even_odd_flag) {
+    add_monomial(CLOVERTRLOG);
+    monomial_list[no_monomials-1].pf = NULL;
+    monomial_list[no_monomials-1].id = no_monomials-1;
+    monomial_list[no_monomials-1].c_sw = g_c_sw;
+    monomial_list[no_monomials-1].mu = g_mu;
+    monomial_list[no_monomials-1].mu = g_kappa;
+    monomial_list[no_monomials-1].hbfunction = &clover_trlog_heatbath;
+    monomial_list[no_monomials-1].accfunction = &clover_trlog_acc;
+    monomial_list[no_monomials-1].derivativefunction = &dummy_derivative;
+    monomial_list[no_monomials-1].timescale = 0;
   }
   return(0);
 }
