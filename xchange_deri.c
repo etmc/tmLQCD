@@ -599,4 +599,3 @@ void xchange_deri(su3adj ** const df)
 
 #endif /* _INDEX_INDEP_GEOM */
 
-static char const rcsid[] = "$Id$";

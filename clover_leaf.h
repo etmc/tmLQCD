@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id: operator.c 1763 2011-04-21 11:51:47Z reker $ 
  *
  * Copyright (C) 2005 Martin Hasenbusch
  *               2011 Carsten Urbach

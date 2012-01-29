@@ -1,0 +1,86 @@
+#######################################################################
+# Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+# Copyright (C) GIT-VERSION-GEN 2012 Bartosz Kostrzewa
+#
+# This file is part of tmLQCD.
+#
+# tmLQCD is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# tmLQCD is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with tmLQCD. If not, see <http://www.gnu.org/licenses/>.
+#######################################################################
+
+# This file has been adapted from GIT-VERSION-GEN from the git distribution.
+# The original is available from http://git-scm.com/
+
+# It is run by make during the build process and generates git_hash.h with the current
+# head commit as an identifier. (after checking that .git exists)
+
+#!/bin/sh
+
+# write the hash to git_hash.h
+write_git_hash() {
+  echo "#ifndef _GIT_HASH_H" > git_hash.h
+  echo "#define _GIT_HASH_H" >> git_hash.h
+  echo "const char git_hash[] = {\"${GIT_HASH}\"};" >> git_hash.h
+  echo "#endif /* _GIT_HASH_H */" >> git_hash.h
+}
+
+# extract default version from configure.in if it exists
+if test -r configure.in
+then
+  DEF_VER=$(grep "AC_INIT" configure.in | awk '{print $2}' | sed 's/,//')
+else
+  DEF_VER="no_version_information"
+fi
+
+# find git
+GIT_BIN=`command -v git`
+
+# First see if there is a version file (included in release tarballs),
+# compare whether it matches the current HEAD commit,
+# then try git rev-parse HEAD, then default.
+# We also check whether we should leave it alone and just exit.
+if test -f git_hash.h
+then
+  # remove all unneccessary fields and characters
+  GIT_HASH=$( grep "const" git_hash.h | awk '{print $5}' | sed 's/[\",\{,\},;]//g' )
+  # are we in a git repo and does git exist?
+  if test -d .git -o -f .git && test -x ${GIT_BIN}
+  then
+    GIT_REV=$(git rev-parse HEAD)
+    # does the version correspond to the HEAD commit?
+    if [ ${GIT_HASH} = ${GIT_REV} ]
+    then
+      # the versions match, let's exit to avoid changing the timestamp of git_hash.h
+      exit 0  
+    else
+      GIT_HASH=${GIT_REV}
+      write_git_hash
+    fi
+  # we are not in a git repository but git_hash.h exists. We must be building from
+  # a tarball! Let's assume git_hash.h is correct and exit before we do any damage
+  # (this branch will also be followed if .git exists but there is no git available
+  # to extract version information)
+  else
+    exit 0
+  fi
+# git_hash.h does not exist, let's try to generate it  
+elif test -d .git -o -f .git && test -x ${GIT_BIN}
+then
+  # .git exists and we are in a git repo
+  GIT_HASH=$(git rev-parse HEAD)
+  write_git_hash
+else
+  GIT_HASH=${DEF_VER}
+  write_git_hash
+fi
+

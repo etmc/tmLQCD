@@ -118,13 +118,20 @@ supported general input paramters:
 \item {\ttfamily Measurements}:\\
   Number of measurements in units of trajectories to be done. Default
   value is $3$. For the {\ttfamily invert} programme this counts the
-  number of gauge configurations to invert on.
+  number of gauge configurations to invert on. (See {\ttfamily Nsave}
+  for the increment in the gauge index!)
 
 \item {\ttfamily Nsave}:\\
-  Save every n-th trajectory the configuration to disk.
+  For {\ttfamily hmc\_tm}: save every n-th trajectory the
+  configuration to disk. 
   For the {\ttfamily invert} programme it means that every n-th
   configuration is measured. This was formerly called {\ttfamily
     Nskip}.
+  
+  For {\ttfamily invert}: if more than one measurement is performed
+  (see {\ttfamily Measurements} parameter),
+  the gauge index is incremented by {\ttfamily Nsave} for each new
+  measurement. 
 
 \item {\ttfamily InitialStoreCounter}:\\
   Start with value to label measurements. Default is $0$. Can be also
@@ -201,15 +208,18 @@ The following input parameters are {\ttfamily invert} specific:
   If set to yes, then the source vector is read from a file.
 
 \item {\ttfamily SourceTimeSlice}:\\
-  not used right now.
-  The time slice of the source to be read (in case of cmi format). At
+  The time slice of the source to be read. At
   the moment used only for
   the automatic construction of filenames. The filename will then be
   constructed as {\ttfamily basefilename.nstore.ts.index}.
-  {\ttfamily SourceTimeSlice} must be set to something
-  smaller than 0 or larger than T in order to let the code not
-  automatically construct the filenames. The filename will then
-  consist only of the base filename.
+  {\ttfamily SourceTimeSlice} can be also set to {\ttfamily detect} in
+  order to let the code determine the appropriate timeslice
+  value. (this might be slow, though, but it is unavoidable if
+  {\ttfamily invert} should run more than one gauge in a single run
+  and the timeslice value changes on a gauge basis.)
+
+  It has only effect, if every source is in a separate file
+  (i.e. SourceInfo.splitted is set, which is the default).
 
 \item {\ttfamily NoSamples}:\\
   in case of stochastic source the number of samples.

@@ -143,5 +143,4 @@ void generic_exchange(void *field_in, int bytes_per_site)
 }
 
 #endif /* MPI */
-static char const rcsid[] = "$Id: xchange_gauge.c 1661 2010-10-19 19:18:01Z scorzato $";
 

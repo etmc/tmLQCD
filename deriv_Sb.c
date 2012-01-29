@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$ 
  *
  * Copyright (C) 2001 Martin Hasenbusch
  *
@@ -636,4 +635,3 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 
 #endif
 
-static char const rcsid[] = "$Id$";

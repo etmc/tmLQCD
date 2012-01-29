@@ -1,4 +1,3 @@
-// $Id$
 //
 //  Defining input parameters for quadroptRoot.C
 

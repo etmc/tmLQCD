@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$ 
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
@@ -1599,7 +1598,12 @@ inline void rmQuotes(char *str){
 }
 <SOURCETS>{DIGIT}+   {
   SourceInfo.t = atoi(yytext);
+  SourceInfo.automaticTS = 0;
   if(myverbose!=0) printf("Using only timeslice %s of the source, padding the rest with zeros\n", yytext);
+}
+<SOURCETS>detect {
+  SourceInfo.automaticTS = 1;
+  if(myverbose!=0) printf("Try to detect source timeslice automatically\n");
 }
 <RELPREC>yes  {
   g_relative_precision_flag = 1;
@@ -1927,6 +1931,7 @@ int read_input(char * conf_file){
   return_check_interval = _default_return_check_interval;
   g_debug_level = _default_g_debug_level;
   SourceInfo.t = _default_source_time_slice;
+  SourceInfo.automaticTS = _default_automaticTS;
   gmres_m_parameter = _default_gmres_m_parameter;
   gmresdr_nr_ev = _default_gmresdr_nr_ev;
   g_no_extra_masses = _default_g_no_extra_masses;

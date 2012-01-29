@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id$ */
 
 #ifndef _UPDATE_BACKWARD_GAUGE_H
 #define _UPDATE_BACKWARD_GAUGE_H

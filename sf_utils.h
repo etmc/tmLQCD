@@ -1,4 +1,3 @@
-/* $Id$  */
 
 #ifndef _SF_UTILS_H
 #define _SF_UTILS_H

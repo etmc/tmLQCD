@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
@@ -50,7 +49,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
                     const int source_location) {
 
   FILE * ifs = NULL;
-  int is = ix / 3, ic = ix %3, err = 0, rstat=0;
+  int is = ix / 3, ic = ix %3, err = 0, rstat=0, t = 0;
   operator * optr = &operator_list[op_id];
   char source_filename[100];
   int source_type = SourceInfo.type;
@@ -65,7 +64,10 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
 
   if(optr->type != DBTMWILSON) {
     SourceInfo.no_flavours = 1;
+    /* no volume sources */
     if(source_type != 1) {
+      /* either "Don't read inversion source from file" or                    */
+      /* "Don't read inversion source from file, but save the one generated" */
       if (read_source_flag == 0 || read_source_flag == 2) {
         if (source_location == 0) {
           source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
@@ -74,8 +76,26 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
           source_spinor_field_point_from_file(g_spinor_field[0], g_spinor_field[1], is, ic, source_location);
         }
       }
+      /* "Read inversion source from file" */
       else {
         if (SourceInfo.splitted) {
+	  /* timeslice needs to be put into filename */
+	  if(SourceInfo.automaticTS) {
+	    /* automatic timeslice detection */
+	    if(g_proc_id == 0) {
+	      for(t = 0; t < g_nproc_t*T; t++) {
+		sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, t, ix);
+		if( (ifs = fopen(source_filename, "r")) != NULL) {
+		  fclose(ifs);
+		  break;
+		}
+	      }
+	    }
+#ifdef MPI
+	    MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
+	    SourceInfo.t = t;
+	  }
           sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
           if (g_cart_id == 0) {
             printf("# Trying to read source from %s\n", source_filename);

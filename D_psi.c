@@ -1,5 +1,4 @@
 /***********************************************************************
- * $Id$
  *
  * Copyright (C) 2001 Martin Luescher
  * original code 
@@ -1527,4 +1526,3 @@ void boundary_D_7(spinor * const r, spinor * const s, su3 * restrict u) {
   return;
 }
 
-static char const rcsid[] = "$Id$";

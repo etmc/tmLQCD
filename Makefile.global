@@ -1,12 +1,13 @@
-# $Id$
 # This Makefile is included from the other Makefiles
 # It contains some overall targets...
 
 # refresh Makefile and other stuff
 
+PROGRAMS_WITH_GIT_HASH := hmc_tm invert
+
 .SUFFIXES:
 
-Makefile: $(srcdir)/Makefile.in  $(abs_top_builddir)/config.status 
+Makefile: ${top_srcdir}/Makefile.global $(srcdir)/Makefile.in $(abs_top_builddir)/config.status 
 	cd $(abs_top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
@@ -30,10 +31,16 @@ $(addsuffix .o,$(EXTERNMODULES)): %.o:
 $(LINKLIBS): %.a: Makefile $(abs_top_builddir)/config.status $(top_srcdir)/configure
 	@( cd $(dir $@) && ${MAKE} $(notdir $@) )
 
-#dep rule
+#dep rules
 
-$(addsuffix .d,$(ALLOBJ)): %.d: ${srcdir}/%.c Makefile
-	 @ $(CCDEP) ${DEPFLAGS} ${CPPFLAGS} ${INCLUDES} ${DEFS} $< > $@ 
+# PROGRAMS_WITH_GIT_HASH require git_hash.h which is dynamically built by a phony make target
+# to prevent too frequent building of git_hash (slowing down the build)
+# we filter the list of all objects and treat these separately
+$(addsuffix .d, $(filter-out ${PROGRAMS_WITH_GIT_HASH},${ALLOBJ})): %.d: ${srcdir}/%.c Makefile
+	@ $(CCDEP) ${DEPFLAGS} ${CPPFLAGS} ${INCLUDES} ${DEFS} $< > $@
+
+$(addsuffix .d, $(filter ${PROGRAMS_WITH_GIT_HASH},${ALLOBJ})): %.d: ${srcdir}/%.c ${top_srcdir}/git_hash.h Makefile
+	@ $(CCDEP) ${DEPFLAGS} ${CPPFLAGS} ${INCLUDES} ${DEFS} $< > $@
 
 ${top_builddir}/fixed_volume.h: ${top_srcdir}/fixed_volume.h.in ${top_builddir}/config.status
 	cd ${abs_top_builddir} && CONFIG_FILES=fixed_volume.h CONFIG_HEADERS= $(SHELL) ${top_builddir}/config.status
