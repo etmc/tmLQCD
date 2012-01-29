@@ -63,7 +63,7 @@ MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	xchange_lexicfield xchange_2fields online_measurement \
 	monomial det_monomial detratio_monomial update_momenta \
 	integrator gauge_monomial ndpoly_monomial phmc \
-	clover_trlog_monomial \
+	clover_trlog_monomial cloverdet_monomial \
 	little_D block Dov_psi operator poly_monomial measurements pion_norm Dov_proj \
 	xchange_field_tslice temporalgauge spinor_fft X_psi P_M_eta \
 	xchange_jacobi jacobi init_jacobi_field

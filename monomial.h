@@ -36,6 +36,7 @@
 #define NDDETRATIO 6
 #define POLYDETRATIO 7
 #define CLOVERTRLOG 8
+#define CLOVERDET 9
 
 #define max_no_monomials 20
 
@@ -97,6 +98,10 @@ typedef struct {
   void (*hbfunction) (const int no, hamiltonian_field_t * const hf);
   double (*accfunction) (const int no, hamiltonian_field_t * const hf);
   void (*derivativefunction) (const int no, hamiltonian_field_t * const hf);
+  /* the operator definitions */
+  void (*Qsq) (spinor * const, spinor * const);
+  void (*Qp) (spinor * const, spinor * const);
+  void (*Qm) (spinor * const, spinor * const);
 } monomial;
 
 #include "det_monomial.h"
@@ -107,6 +112,7 @@ typedef struct {
 #include "gauge_monomial.h"
 #include "sf_gauge_monomial.h"
 #include "clover_trlog_monomial.h"
+#include "cloverdet_monomial.h"
 
 /* list of all monomials */
 extern monomial monomial_list[max_no_monomials];

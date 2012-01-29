@@ -201,7 +201,24 @@ int main(int argc,char *argv[]) {
 
   tmlqcd_mpi_init(argc, argv);
 
+  if(even_odd_flag) {
+    j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
+  }
+  else {
+    j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
+  }
+  if (j != 0) {
+    fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
+    exit(0);
+  }
+
   init_integrator();
+
+  if(g_proc_id == 0) {
+    for(j = 0; j < no_monomials; j++) {
+      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type, monomial_list[j].timescale);
+    }
+  }
 
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
@@ -224,11 +241,6 @@ int main(int argc,char *argv[]) {
   g_dbw2rand = 0;
 #endif
 
-  if(g_proc_id == 0) {
-    for(j = 0; j < no_monomials; j++) {
-      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type, monomial_list[j].timescale);
-    }
-  }
 
   g_mu = g_mu1;
 
@@ -244,16 +256,6 @@ int main(int argc,char *argv[]) {
   j = init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
   if (j != 0) {
     fprintf(stderr, "Not enough memory for geometry_indices! Aborting...\n");
-    exit(0);
-  }
-  if(even_odd_flag) {
-    j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
-  }
-  else {
-    j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
-  }
-  if (j != 0) {
-    fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
     exit(0);
   }
   if(even_odd_flag) {

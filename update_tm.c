@@ -344,8 +344,9 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
         if(monomial_list[ Integrator.mnls_per_ts[i][j] ].type != GAUGE
-          && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != SFGAUGE 
-          && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY) {
+	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != SFGAUGE 
+	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY
+	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERDET) {
           fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
                   monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);
         }

@@ -272,6 +272,7 @@ inline void rmQuotes(char *str){
 
 %x INITMONOMIAL
 %x DETMONOMIAL
+%x CLDETMONOMIAL
 %x GAUGEMONOMIAL
 %x SFGAUGEMONOMIAL
 %x NDPOLYMONOMIAL
@@ -714,6 +715,10 @@ inline void rmQuotes(char *str){
     mnl->type = DET;
     strcpy((*mnl).name, "DET");
   }
+  else if(strcmp(yytext, "CLOVERDET")==0) {
+    mnl->type = CLOVERDET;
+    strcpy((*mnl).name, "CLOVERDET");
+  }
   else if(strcmp(yytext, "DETRATIO")==0) {
     mnl->type = DETRATIO;
     strcpy((*mnl).name, "DETRATIO");
@@ -766,12 +771,13 @@ inline void rmQuotes(char *str){
           fprintf(stderr,"starting to parse poly(detratio) monomial\n");
           BEGIN(POLYMONOMIAL); 
   }
+  else if(mnl->type == CLOVERDET) BEGIN(CLDETMONOMIAL);
   else BEGIN(DETMONOMIAL);
 }
 
 
 
-<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
     if(mnl->type == NDDETRATIO) {
       mnl->timescale = -5;
@@ -793,7 +799,13 @@ inline void rmQuotes(char *str){
   }
 }
 
-
+<CLDETMONOMIAL>{
+  {SPC}*CSW{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->c_sw = c;
+    if(myverbose) printf("  CSW set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+}
 
 <DETMONOMIAL,POLYMONOMIAL>{
   {SPC}*2KappaMu{EQL}{FLT} {
@@ -805,11 +817,6 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu2 = c;
     if(myverbose) printf("  2kappamu2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*Kappa{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    mnl->kappa = c;
-    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*Kappa2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
@@ -835,6 +842,14 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->epsbar2 = c;
     if(myverbose) printf("  2kappaepsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+}
+
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL>{
+  {SPC}*Kappa{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->kappa = c;
+    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*CSGHistory{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -1807,7 +1822,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
   line_of_file++;
 }
 <*>\n                       {

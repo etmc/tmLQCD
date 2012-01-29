@@ -71,7 +71,7 @@ void Qsw_psi(spinor * const l, spinor * const k) {
   clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   /* temporarily set to 0 -> needs to be fixed */
-  mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], +1.);
+  /*   mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], +1.); */
   clover_gamma5(OE, l, k, g_spinor_field[DUM_MATRIX], 0.);
 }
 
@@ -95,6 +95,13 @@ void Msw_psi(spinor * const l, spinor * const k) {
   /* temporarily set to zero -> needs to be fixed */
   clover(OE, l, k, g_spinor_field[DUM_MATRIX], 0.);
 }
+
+void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo) {
+  Hopping_Matrix(ieo, l, k);
+  clover_inv(ieo, l);
+  return;
+}
+
 
 /**********************************************************
  *
@@ -305,10 +312,10 @@ void clover(const int ieo,
 
 su3 ** sw1, ** sw_inv1;
 su3 * _sw, *_sw_inv;
-static int sw_init = 0;
 
 void init_sw_fields(const int V) {
   su3 * tmp;
+  static int sw_init = 0;
 
   if(!sw_init) {
     if((void*)(sw = (su3***)calloc(V, sizeof(su3**))) == NULL) {
@@ -336,8 +343,8 @@ void init_sw_fields(const int V) {
       sw_inv[i] = sw_inv[i-1]+3;
     }
 #    if (defined SSE || defined SSE2 || defined SSE3)
-    sw[0][0] = (su3**)(((unsigned long int)(_sw)+ALIGN_BASE)&~ALIGN_BASE);
-    sw_inv[0][0] = (su3**)(((unsigned long int)(_sw_inv)+ALIGN_BASE)&~ALIGN_BASE);
+    sw[0][0] = (su3*)(((unsigned long int)(_sw)+ALIGN_BASE)&~ALIGN_BASE);
+    sw_inv[0][0] = (su3*)(((unsigned long int)(_sw_inv)+ALIGN_BASE)&~ALIGN_BASE);
 #    else
     sw[0][0] = _sw;
     sw_inv[0][0] = _sw_inv;

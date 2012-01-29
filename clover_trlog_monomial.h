@@ -23,6 +23,7 @@
 
 #include "hamiltonian_field.h"
 
+void clover_trlog_derivative(const int id, hamiltonian_field_t * const hf);
 void clover_trlog_heatbath(const int id, hamiltonian_field_t * const hf);
 double clover_trlog_acc(const int id, hamiltonian_field_t * const hf);
 

@@ -789,3 +789,40 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa, const double c_s
   }
   return;
 }
+
+su3 * _swp;
+
+int init_swpm(const int V) {
+  int i=0;
+  static int swpm_init=0;
+
+  if(!swpm_init) {
+    if((void*)(swp = (su3**)calloc(V, sizeof(su3*))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(1);
+    }
+    if((void*)(swm = (su3**)calloc(V, sizeof(su3*))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(1);
+    }
+    if((void*)(_swp = (su3*)calloc(2*4*V+1, sizeof(su3))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(2);
+    }
+#if (defined SSE || defined SSE2 || defined SSE3)
+    swp[0] = (su3*)(((unsigned long int)(_swp)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+    swp[0] = _swp;
+#endif
+    swm[0] = swp[0] + V;
+    for(i = 1; i < V; i++){
+      swp[i] = swp[i-1]+4;
+      swm[i] = swm[i-1]+4;
+    }
+    swpm_init = 1;
+  }
+  return(0);
+}
