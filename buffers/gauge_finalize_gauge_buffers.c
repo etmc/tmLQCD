@@ -3,7 +3,7 @@
 void finalize_gauge_buffers()
 {
   if (g_gauge_buffers.stack != g_gauge_buffers.allocated - 1)
-    fprintf(stderr, "WARNING: g_gauge_buffers finalized with unreturned fields!"); /* Make error? */
+    fatal_error("Finalized g_gauge_buffers with unreturned fields!", finalize_gauge_buffers); /* Make error? */
   for (unsigned int ctr = 0; ctr < (g_gauge_buffers.stack); ++ctr)
   {
     /* We need to retrieve the unaligned pointers, stored _before_ the actual fields. */
