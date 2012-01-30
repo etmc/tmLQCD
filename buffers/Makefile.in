@@ -38,6 +38,15 @@ libbuffers_TARGETS = 	gauge \
 			gauge_initialize_gauge_buffers \
 			gauge_return_gauge_field \
 			gauge_return_gauge_field_array \
+			adjoint \
+			adjoint_allocate_adjoint_buffers \
+			adjoint_finalize_adjoint_buffers \
+			adjoint_free_unused_adjoint_buffers \
+			adjoint_get_adjoint_field \
+			adjoint_get_adjoint_field_array \
+			adjoint_initialize_adjoint_buffers \
+			adjoint_return_adjoint_field \
+			adjoint_return_adjoint_field_array \
 			utils_generic_exchange
 
 libbuffers_OBJECTS = $(addsuffix .o, ${libbuffers_TARGETS})
