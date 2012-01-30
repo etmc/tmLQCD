@@ -10,11 +10,11 @@
 L=4
 T=4
 Measurements = 1000
-Startcondition = hot
+StartCondition = hot
 2KappaMu = 0.177
 kappa = 0.177
 NSave = 500000
-ThetaT = 1.
+ThetaT = 1
 BCGstabMaxIter = 0
 CGMaxIter = 1000
 UseEvenOdd = yes
@@ -37,10 +37,10 @@ BeginMonomial DET
   Timescale = 1
   2KappaMu = 0.177
   kappa = 0.177
-  AcceptancePrecision =  1.e-20
-  ForcePrecision = 1.e-12
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
   Name = det
-  solver = CG
+  Solver = CG
 EndMonomial
 
 BeginIntegrator 
@@ -48,7 +48,7 @@ BeginIntegrator
   Type1 = 2MN
   IntegrationSteps0 = 2
   IntegrationSteps1 = 6
-  tau = 1.
+  Tau = 1
   Lambda0 = 0.19
   Lambda1 = 0.20
   NumberOfTimescales = 2

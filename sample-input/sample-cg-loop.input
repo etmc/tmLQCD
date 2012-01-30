@@ -13,7 +13,7 @@ Measurements = 2
 Nsave = 10
 2kappamu = 0.05
 kappa = 0.177
-BCAngleT = 1.
+BCAngleT = 1
 GaugeConfigInputFile = conf
 UseEvenOdd = yes
 
@@ -26,7 +26,7 @@ BeginOperator TMWILSON
   kappa = 0.177
   UseEvenOdd = yes
   Solver = CG
-  SolverPrecision = 1.e-14
+  SolverPrecision = 1e-14
   MaxSolverIterations = 1000
   AddDownPropagator = yes
 EndOperator

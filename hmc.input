@@ -1,12 +1,11 @@
 L=8
 T=16
 Measurements = 1
-#startCondition = continue
-Startcondition = hot
+StartCondition = hot
 2KappaMu = 0.03
 kappa = 0.090
 NSave = 50
-BCAngleT = 1.
+BCAngleT = 1 
 BCGstabMaxIter = 0
 CGMaxIter = 1000
 GaugeConfigInputFile = conf.save
@@ -15,13 +14,6 @@ UseEvenOdd = yes
 ReversibilityCheck = no
 ReversibilityCheckIntervall = 1
 DebugLevel = 1
-
-BeginMeasurement ONLINE
-EndMeasurement
-
-BeginMeasurement PIONNORM
- Frequency = 1 
-EndMeasurement
 
 BeginMonomial GAUGE
   UseRectangleStaples = yes
@@ -34,10 +26,10 @@ BeginMonomial DET
   Timescale = 1
   2KappaMu = 0.1
   kappa = 0.125
-  AcceptancePrecision =  1.e-20
-  ForcePrecision = 1.e-12
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
   Name = det
-  solver   =    CG
+  Solver   =    CG
 #  CSGHistory = 7
 #  CSGHistory2 = 3
 EndMonomial
@@ -49,10 +41,10 @@ BeginMonomial DETRATIO
   2KappaMu2 = 0.1
   kappa = 0.125
   kappa2 = 0.125
-  AcceptancePrecision =  1.e-20
-  ForcePrecision = 1.e-12
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
   Name = detrat
-  solver = CG
+  Solver = CG
   CSGHistory = 0
 EndMonomial
 
@@ -67,7 +59,7 @@ BeginIntegrator
   IntegrationSteps0 = 1
   IntegrationSteps1 = 2
   IntegrationSteps2 = 3
-  tau = 1.
+  Tau = 1
   Lambda0 = 0.19
   NumberOfTimescales = 3
 EndIntegrator

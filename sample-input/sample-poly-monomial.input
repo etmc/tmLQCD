@@ -14,7 +14,7 @@ Measurements = 10000
 2KappaMu = 0.177
 kappa = 0.177
 NSave = 10000
-ThetaT = 1.
+ThetaT = 1
 BCGstabMaxIter = 0
 CGMaxIter = 1000
 UseEvenOdd = yes
@@ -45,8 +45,8 @@ BeginMonomial POLY
  2KappaMu = 0.177
  Kappa = 0.177
  RootsFile = "Square_root_BR_roots.dat.oox.70.3.3333333333333333e-02"
- AcceptancePrecision =  1.e-20
- ForcePrecision = 1.e-12
+ AcceptancePrecision =  1e-20
+ ForcePrecision = 1e-12
 EndMonomial
 
 BeginIntegrator 
