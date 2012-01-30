@@ -40,7 +40,7 @@ int stout_smear(su3_tuple *m_field_out, struct stout_parameters const *params, s
         _su3_assign(m_field_out[x][mu], tmp);
       }
 
-    generic_exchange(m_field_out, sizeof(su3_tuple));
+//    generic_exchange(m_field_out, sizeof(su3_tuple));
     m_field_in = m_field_out; /* Prepare for next iteration */
   }
 
