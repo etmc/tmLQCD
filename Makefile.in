@@ -137,7 +137,7 @@ ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 ${PROGRAMS}: %: %.o libhmc.a all-recursive
 	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
 
-dep: $(addsuffix .d,$(ALLOBJ)) ${top_srcdir}/git_hash.h
+dep: $(addsuffix .d,$(ALLOBJ)) 
 	@ echo "...dependency files built"
 
 install: Makefile
