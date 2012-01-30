@@ -5,11 +5,11 @@
 L=4
 T=4
 Measurements = 4000
-Startcondition = hot
+StartCondition = hot
 2KappaMu = 0.002740961
 kappa = 0.163260
 NSave = 100
-ThetaT = 1.
+ThetaT = 1
 BCGstabMaxIter = 1000
 CGMaxIter = 10000
 GaugeConfigInputFile = conf.save
@@ -33,10 +33,10 @@ BeginMonomial DET
   Timescale = 1
   2KappaMu = 0.01
   kappa = 0.163260
-  AcceptancePrecision =  1.e-22
-  ForcePrecision = 1.e-14
+  AcceptancePrecision =  1e-22
+  ForcePrecision = 1e-14
   Name = det1
-  solver = CG
+  Solver = CG
 EndMonomial
 
 BeginMonomial DETRATIO
@@ -45,20 +45,20 @@ BeginMonomial DETRATIO
   2KappaMu2 = 0.01
   kappa = 0.163260
   kappa2 = 0.163260
-  AcceptancePrecision =  1.e-22
-  ForcePrecision = 1.e-14
+  AcceptancePrecision =  1e-22
+  ForcePrecision = 1e-14
   Name = detratio1
-  solver = CG
+  Solver = CG
 EndMonomial
 
 BeginMonomial DET
   Timescale = 1
   2KappaMu = 0.01
   kappa = 0.163260
-  AcceptancePrecision =  1.e-22
-  ForcePrecision = 1.e-14
+  AcceptancePrecision =  1e-22
+  ForcePrecision = 1e-14
   Name = det2
-  solver = CG
+  Solver = CG
 EndMonomial
 
 BeginMonomial DETRATIO
@@ -67,10 +67,10 @@ BeginMonomial DETRATIO
   2KappaMu2 = 0.01
   kappa = 0.163260
   kappa2 = 0.163260
-  AcceptancePrecision =  1.e-22
-  ForcePrecision = 1.e-14
+  AcceptancePrecision =  1e-22
+  ForcePrecision = 1e-14
   Name = detratio2
-  solver = CG
+  Solver = CG
 EndMonomial
 
 BeginIntegrator 
@@ -80,7 +80,7 @@ BeginIntegrator
   IntegrationSteps0 = 1
   IntegrationSteps1 = 4
   IntegrationSteps2 = 2
-  tau = 1.
+  Tau = 1
   Lambda0 = 0.19
   Lambda1 = 0.21
   Lambda2 = 0.2
