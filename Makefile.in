@@ -42,7 +42,7 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
 SMODULES = Hopping_Matrix_nocom Hopping_Matrix tm_operators
 
-MODULES = gamma hybrid_update observables start \
+MODULES = read_input gamma hybrid_update observables start \
 	expo get_staples update_backward_gauge \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
@@ -108,11 +108,11 @@ ${top_srcdir}/git_hash.h:
 include ${top_srcdir}/Makefile.global
 
 ifneq (,$(findstring lex,${LEX}))
-${srcdir}/read_input.c: ${srcdir}/read_input.l
-	@${LEX} -Ptmlqcd -i -t ${srcdir}/read_input.l > ${srcdir}/read_input.c
+${top_srcdir}/read_input.c: ${top_srcdir}/read_input.l
+	@${LEX} -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
 endif
 
-libhmc.a: read_input.o ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
+libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
 	@rm -f libhmc.a
 	@${AR} cru libhmc.a ${addsuffix .o, ${MODULES} ${SMODULES}}
 	@$(RANLIB) libhmc.a
@@ -134,12 +134,8 @@ ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
 
-${PROGRAMS}: %: read_input.o %.o libhmc.a all-recursive
-	 ${LINK} ${top_builddir}/read_input.o $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
-
-# read_input treated separately to ensure that a change in .l results in a new .c
-read_input.o: ${srcdir}/read_input.l ${srcdir}/read_input.c Makefile $(abs_top_builddir)/config.h
-	${COMPILE} ${OPTARGS} -c ${srcdir}/read_input.c
+${PROGRAMS}: %: %.o libhmc.a all-recursive
+	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
 
 dep: $(addsuffix .d,$(ALLOBJ)) ${top_srcdir}/git_hash.h
 	@ echo "...dependency files built"
