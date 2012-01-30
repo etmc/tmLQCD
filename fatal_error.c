@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <global.h>
 
+#ifdef MPI
+#include <mpi.h>
+#endif
+
 void fatal_error(char const *error, char const *function)
 {
   int rank;
