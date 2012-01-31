@@ -109,8 +109,8 @@ ${top_srcdir}/git_hash.h:
 include ${top_srcdir}/Makefile.global
 
 ifneq (,$(findstring lex,${LEX}))
-read_input.c: ${srcdir}/read_input.l
-	${LEX} -Ptmlqcd -i -t $< > ${srcdir}/read_input.c
+${top_srcdir}/read_input.c: ${top_srcdir}/read_input.l
+	@${LEX} -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
 endif
 
 libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
@@ -136,7 +136,7 @@ ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 	${COMPILE} ${OPTARGS} -c $<
 
 ${PROGRAMS}: %: %.o libhmc.a all-recursive
-	 ${LINK}  $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
+	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
 
 dep: $(addsuffix .d,$(ALLOBJ)) 
 	@ echo "...dependency files built"
@@ -169,7 +169,7 @@ distclean: distclean-recursive Makefile
 	rm -f config.h
 
 .PHONY: all ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
-	flex_read_input $(PROGRAMS) all-recursive \
+	$(PROGRAMS) all-recursive \
 	all-debug-recursive all-profile-recursive \
 	clean-recursive distclean-recursive \
 	compile-clean-recursive $(LINKLIBS) \

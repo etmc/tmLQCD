@@ -15,7 +15,7 @@ InitialStoreCounter = 0
 Measurements = 1
 2kappamu = 0.05
 kappa = 0.177
-BCAngleT = 1.
+BCAngleT = 1
 GaugeConfigInputFile = conf
 UseEvenOdd = no
 CGMMSNoExtraMasses = 8
@@ -30,7 +30,7 @@ BeginOperator TMWILSON
 # this is mandatory
   UseEvenOdd = no
   Solver = CGMMS
-  SolverPrecision = 1.e-14
+  SolverPrecision = 1e-14
   MaxSolverIterations = 1000
 # this is automatic
   AddDownPropagator = no

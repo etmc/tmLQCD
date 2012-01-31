@@ -37,7 +37,7 @@ DIGIT [[:digit:]]
 ZT [0-9(10)(11)]
 IDXEX ("-"{DIGIT}+)
 SIGN ("+"|"-")
-FLT {SIGN}?{DIGIT}*+"."{DIGIT}*(e("-"|"+")?{DIGIT}+)?
+FLT {SIGN}?{DIGIT}+(".")?{DIGIT}*(e("-"|"+")?{DIGIT}+)?
 FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 NAME [a-zA-Z0-9_]+
 CSTR \"[a-zA-Z0-9\-\._]+\"
@@ -811,37 +811,37 @@ inline void rmQuotes(char *str){
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu = c;
-    if(myverbose) printf("  2kappamu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2KappaMu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*2KappaMu2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu2 = c;
-    if(myverbose) printf("  2kappamu2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2KappaMu2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*Kappa2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->kappa2 = c;
-    if(myverbose) printf("  Kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*2KappaMubar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mubar = c;
-    if(myverbose) printf("  2kappamubar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2KappaMubar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*2KappaMubar2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mubar2 = c;
-    if(myverbose) printf("  2kappamubar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2KappaMubar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*2KappaEpsbar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->epsbar = c;
-    if(myverbose) printf("  2kappaepsbar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2KappaEpsbar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*2KappaEpsbar2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->epsbar2 = c;
-    if(myverbose) printf("  2kappaepsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2KappaEpsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
 }
 
@@ -1093,12 +1093,12 @@ inline void rmQuotes(char *str){
 
 <MSOLVER>{
   CG {
-    if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 1;
     BEGIN(solver_caller);
   }
   bicgstab {
-    if(myverbose) printf("  solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 0;
     BEGIN(solver_caller);
   }
@@ -1435,11 +1435,11 @@ inline void rmQuotes(char *str){
   g_c_sw=atof(yytext);
   if(myverbose!=0) printf("c_sw=%lf \n", g_c_sw);
 }
-<STARTCOND>cold {
-  startoption=0; 
-  if(myverbose!=0) printf("Start Condition is %s \n",yytext);
-}
 <STARTCOND>{
+  cold {
+    startoption=0;
+    if(myverbose!=0) printf("Start Condition is %s \n",yytext);
+  }
   hot {
     startoption=1;
     if(myverbose!=0) printf("Start Condition is %s \n",yytext);

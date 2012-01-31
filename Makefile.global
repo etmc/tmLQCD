@@ -39,8 +39,20 @@ $(LINKLIBS): %.a: Makefile $(abs_top_builddir)/config.status $(top_srcdir)/confi
 $(addsuffix .d, $(filter-out ${PROGRAMS_WITH_GIT_HASH},${ALLOBJ})): %.d: ${srcdir}/%.c Makefile
 	@ $(CCDEP) ${DEPFLAGS} ${CPPFLAGS} ${INCLUDES} ${DEFS} $< > $@
 
+# dirty hack to prevent make from entering an infinite loop because a phony target is given as a real
+# dependency (make will build invert.d and hmc_tm.d indefinitely)
+# when git_hash.h does not exist (as checked using wildcard) it is given as a dependency of invert.d and hmc_tm.d
+# once it exists, this is no longer the case
+# while this does break updating of git_hash.h while the dependencies are built, this is quite
+# irrelevant because it will be rebuilt during the compilation of either invert or hmc_tm
+ifneq (git_hash.h, $(findstring git_hash.h,$(wildcard $(top_srcdir)/git_has*.h)))
 $(addsuffix .d, $(filter ${PROGRAMS_WITH_GIT_HASH},${ALLOBJ})): %.d: ${srcdir}/%.c ${top_srcdir}/git_hash.h Makefile
 	@ $(CCDEP) ${DEPFLAGS} ${CPPFLAGS} ${INCLUDES} ${DEFS} $< > $@
+else
+$(addsuffix .d, $(filter ${PROGRAMS_WITH_GIT_HASH},${ALLOBJ})): %.d: ${srcdir}/%.c Makefile
+	@ $(CCDEP) ${DEPFLAGS} ${CPPFLAGS} ${INCLUDES} ${DEFS} $< > $@
+endif
+
 
 ${top_builddir}/fixed_volume.h: ${top_srcdir}/fixed_volume.h.in ${top_builddir}/config.status
 	cd ${abs_top_builddir} && CONFIG_FILES=fixed_volume.h CONFIG_HEADERS= $(SHELL) ${top_builddir}/config.status
