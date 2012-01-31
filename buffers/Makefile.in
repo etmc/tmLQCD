@@ -29,16 +29,7 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS} ${OPTARGS}
 
 LIBRARIES = libbuffers
 
-libbuffers_TARGETS = 	gauge \
-			gauge_allocate_gauge_buffers \
-			gauge_finalize_gauge_buffers \
-			gauge_free_unused_gauge_buffers \
-			gauge_get_gauge_field \
-			gauge_get_gauge_field_array \
-			gauge_initialize_gauge_buffers \
-			gauge_return_gauge_field \
-			gauge_return_gauge_field_array \
-			adjoint \
+libbuffers_TARGETS = 	adjoint \
 			adjoint_allocate_adjoint_buffers \
 			adjoint_finalize_adjoint_buffers \
 			adjoint_free_unused_adjoint_buffers \
@@ -47,6 +38,33 @@ libbuffers_TARGETS = 	gauge \
 			adjoint_initialize_adjoint_buffers \
 			adjoint_return_adjoint_field \
 			adjoint_return_adjoint_field_array \
+			gauge \
+			gauge_allocate_gauge_buffers \
+			gauge_finalize_gauge_buffers \
+			gauge_free_unused_gauge_buffers \
+			gauge_get_gauge_field \
+			gauge_get_gauge_field_array \
+			gauge_initialize_gauge_buffers \
+			gauge_return_gauge_field \
+			gauge_return_gauge_field_array \
+			real \
+			real_allocate_real_buffers \
+			real_finalize_real_buffers \
+			real_free_unused_real_buffers \
+			real_get_real_field \
+			real_get_real_field_array \
+			real_initialize_real_buffers \
+			real_return_real_field \
+			real_return_real_field_array \
+			spinor \
+			spinor_allocate_spinor_buffers \
+			spinor_finalize_spinor_buffers \
+			spinor_free_unused_spinor_buffers \
+			spinor_get_spinor_field \
+			spinor_get_spinor_field_array \
+			spinor_initialize_spinor_buffers \
+			spinor_return_spinor_field \
+			spinor_return_spinor_field_array \
 			utils_generic_exchange
 
 libbuffers_OBJECTS = $(addsuffix .o, ${libbuffers_TARGETS})
