@@ -1,0 +1,51 @@
+# this is a sample input file for a single cloverdet
+# monomial
+#
+# reference results to come
+
+L=4
+T=4
+Measurements = 1000
+Startcondition = hot
+2KappaMu = 0.177
+kappa = 0.177
+NSave = 500000
+ThetaT = 1.
+BCGstabMaxIter = 0
+CGMaxIter = 1000
+UseEvenOdd = yes
+ReversibilityCheck = yes
+ReversibilityCheckIntervall = 100
+InitialStoreCounter = 0
+DebugLevel = 1
+
+BeginMeasurement CORRELATORS
+  Frequency = 2
+EndMeasurement
+
+BeginMonomial GAUGE
+  Type = Wilson
+  beta = 6.00
+  Timescale = 0
+EndMonomial
+
+BeginMonomial CLOVERDET
+  Timescale = 1
+  CSW = 1.0
+  kappa = 0.177
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = cloverdet
+  solver = CG
+EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  IntegrationSteps0 = 2
+  IntegrationSteps1 = 6
+  tau = 1.
+  Lambda0 = 0.19
+  Lambda1 = 0.20
+  NumberOfTimescales = 2
+EndIntegrator

@@ -166,7 +166,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].accfunction = &cloverdet_acc;
 	monomial_list[i].derivativefunction = &cloverdet_derivative;
 	monomial_list[i].mu = 0.;
-	monomial_list[i].even_odd_flag = 0;
+	monomial_list[i].even_odd_flag = 1;
 	monomial_list[i].Qsq = &Qsw_sq_psi;
 	monomial_list[i].Qp = &Qsw_psi;
 	monomial_list[i].Qm = &Qsw_psi;
@@ -208,7 +208,7 @@ int init_monomials(const int V, const int even_odd_flag) {
       else if(monomial_list[i].type == NDDETRATIO) {
 	monomial_list[i].hbfunction = &dummy_heatbath;
 	monomial_list[i].accfunction = &nddetratio_acc;
-	monomial_list[i].derivativefunction = &dummy_derivative;
+	monomial_list[i].derivativefunction = NULL;
 	monomial_list[i].pf2 = __pf+no*V;
 	monomial_list[i].timescale = -5;
 	no++;
@@ -249,7 +249,7 @@ int init_monomials(const int V, const int even_odd_flag) {
     monomial_list[no_monomials-1].mu = g_kappa;
     monomial_list[no_monomials-1].hbfunction = &clover_trlog_heatbath;
     monomial_list[no_monomials-1].accfunction = &clover_trlog_acc;
-    monomial_list[no_monomials-1].derivativefunction = &clover_trlog_derivative;
+    monomial_list[no_monomials-1].derivativefunction = NULL;
     monomial_list[no_monomials-1].timescale = 0;
     monomial_list[no_monomials-1].even_odd_flag = even_odd_flag;
     if(g_proc_id == 0) {
