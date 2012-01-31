@@ -38,6 +38,15 @@ libbuffers_TARGETS = 	adjoint \
 			adjoint_initialize_adjoint_buffers \
 			adjoint_return_adjoint_field \
 			adjoint_return_adjoint_field_array \
+			complex \
+			complex_allocate_complex_buffers \
+			complex_finalize_complex_buffers \
+			complex_free_unused_complex_buffers \
+			complex_get_complex_field \
+			complex_get_complex_field_array \
+			complex_initialize_complex_buffers \
+			complex_return_complex_field \
+			complex_return_complex_field_array \
 			gauge \
 			gauge_allocate_gauge_buffers \
 			gauge_finalize_gauge_buffers \
