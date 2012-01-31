@@ -7,15 +7,13 @@
 
 void fatal_error(char const *error, char const *function)
 {
-  int rank;
   if (error != NULL)
   {
     fprintf(stderr, "FATAL ERROR\n");
     if (function != NULL)
     {
 #ifdef MPI
-      MPI_Get_rank(&rank);
-      fprintf(stderr, "  Within %s (reported by node %d):\n", function, rank);
+      fprintf(stderr, "  Within %s (reported by node %d):\n", function, g_proc_id);
 #else
       fprintf(stderr, "  Within %s:\n", function);
 #endif
