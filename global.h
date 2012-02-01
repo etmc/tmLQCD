@@ -272,6 +272,8 @@ EXTERN int ** g_idn3d;
 #undef EXTERN
 /* #undef ALIGN */
 
+void fatal_error(char const *error, char const *function);
+
 #ifdef MAIN_PROGRAM
 #endif
 
