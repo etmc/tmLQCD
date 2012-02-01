@@ -29,13 +29,16 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS} ${OPTARGS}
 
 LIBRARIES = libbuffers
 
-libbuffers_TARGETS = gauge \
+libbuffers_TARGETS = 	gauge \
+			gauge_allocate_gauge_buffers \
 			gauge_finalize_gauge_buffers \
+			gauge_free_unused_gauge_buffers \
 			gauge_get_gauge_field \
 			gauge_get_gauge_field_array \
 			gauge_initialize_gauge_buffers \
 			gauge_return_gauge_field \
-			gauge_return_gauge_field_array
+			gauge_return_gauge_field_array \
+			utils_generic_exchange
 
 libbuffers_OBJECTS = $(addsuffix .o, ${libbuffers_TARGETS})
 

@@ -34,8 +34,8 @@ LIBRARIES = libsmear
 libsmear_TARGETS = hex_hex_smear hex_stout_exclude_none  hex_stout_exclude_one  hex_stout_exclude_two \
 		hyp_APE_project_exclude_one  hyp_APE_project_exclude_two  hyp_APE_project_exclude_none \
 		hyp_hyp_staples_exclude_none hyp_hyp_staples_exclude_one  hyp_hyp_staples_exclude_two \
-		hyp_hyp_smear stout_stout_smear ape_ape_smear utils_generic_exchange utils_reunitarize \
-		utils_generic_staples utils_project_antiherm utils_print_su3 utils_print_config_to_screen
+		hyp_hyp_smear stout_stout_smear ape_ape_smear utils_reunitarize utils_generic_staples \
+		utils_project_antiherm utils_print_su3 utils_print_config_to_screen
 
 libsmear_OBJECTS = $(addsuffix .o, ${libsmear_TARGETS})
 

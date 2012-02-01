@@ -641,7 +641,7 @@ if test $usegpu = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(HAVE_GPU,1,Using CUDA GPU)
   NVCC="nvcc"
-  USESUBDIRS="io linalg solver GPU smearing"
+  USESUBDIRS="buffers io linalg solver GPU smearing"
   GPUDIR="GPU"
   LIBS="$LIBS -lcuda -lcudart -lcublas"
   
@@ -673,7 +673,7 @@ if test $usegpu = yes; then
   fi
 else
   AC_MSG_RESULT(no)
-  USESUBDIRS="io linalg solver smearing"
+  USESUBDIRS="buffers io linalg solver smearing"
   NVCC=""
 fi
 
@@ -721,6 +721,7 @@ LIBS="-lhmc -lsolver -llinalg -lhmc -lio -lsmear $LIBS"
 AUTOCONF=autoconf
 
 AC_CONFIG_FILES([Makefile
+                 buffers/Makefile	
                  linalg/Makefile
 	         solver/Makefile
 		 io/Makefile
