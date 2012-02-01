@@ -266,8 +266,10 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
   register spinor *s;
 
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-  for (int ix = 0, r = P, s = Q; ix < N; ++ix, ++r, ++s)
+  for (int ix = 0; ix < N; ++ix)
   {
+    r = P + ix;
+    s = Q + ix;
     r->s0.c0 += c * s->s0.c0;
     r->s0.c1 += c * s->s0.c1;
     r->s0.c2 += c * s->s0.c2;

@@ -82,7 +82,7 @@ void assign_add_mul_r_bi(bispinor * const P, bispinor * const Q, const double c,
   spinor *r,*s;
 
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-  for (INT ix = 0; ix < N; ix++)
+  for (int ix = 0; ix < N; ix++)
   {
     r=(spinor *) &P[ix].sp_up;
     s=(spinor *) &Q[ix].sp_up;
