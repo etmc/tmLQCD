@@ -49,11 +49,11 @@ void convert_adjoint_to_gauge_field_array(gauge_field_array_t dest, adjoint_fiel
 
 /* Inline functions need to be declared inside the header -- hence the following nastiness here... */
 
-#define __DEFINE_BUFFER_INLINES(DATATYPE, NAME)							\
+#define __DEFINE_BUFFER_INLINES(DATATYPE, NAME)                                                 \
 inline void copy_ ## NAME ## _field(NAME ## _field_t dest,  NAME ## _field_t orig)              \
 {                                                                                               \
   memmove((void*)dest.field, (void*)orig.field, sizeof(DATATYPE) * VOLUMEPLUSRAND + 1);         \
-}												\
+}                                                                                               \
                                                                                                 \
 inline void zero_ ## NAME ##_field(NAME ## _field_t target)                                     \
 {                                                                                               \
@@ -65,7 +65,7 @@ inline void zero_ ## NAME ## _field_array(NAME ## _field_array_t target)        
   for (unsigned int idx = 0; idx < target.length; ++idx)                                        \
     zero_ ## NAME ##_field(target.field_array[idx]);	                                        \
 }                                                                                               \
-												\
+                                                                                                \
 inline void exchange_ ## NAME ## _field(NAME ## _field_t target)                                \
 {                                                                                               \
   generic_exchange((void*)target.field, sizeof(DATATYPE));                                      \
