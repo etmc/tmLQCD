@@ -498,10 +498,12 @@ inline void rmQuotes(char *str){
   }
   {SPC}*PropagatorPrecision{EQL}32 {
     optr->prop_precision = 32;
+    PropInfo.precision = 32;
     if(myverbose) printf("  PropagatorPrecision set to 32 line %d operator %d\n", line_of_file, current_operator);
   }
   {SPC}*PropagatorPrecision{EQL}64 {
     optr->prop_precision = 64;
+    PropInfo.precision = 64;
     if(myverbose) printf("  PropagatorPrecision set to 64 line %d operator %d\n", line_of_file, current_operator);
   }
   {SPC}*SolverPrecision{EQL}{FLT} {
