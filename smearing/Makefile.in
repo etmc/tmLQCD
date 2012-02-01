@@ -31,7 +31,7 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS} ${OPTARGS}
 
 LIBRARIES = libsmear
 
-libsmear_TARGETS = hex_hex_smear stout_stout_exclude_none  hex_stout_exclude_one  hex_stout_exclude_two \
+libsmear_TARGETS = hex_hex_smear stout_stout_links  hex_stout_exclude_one  hex_stout_exclude_two \
 		hyp_APE_project_exclude_one  hyp_APE_project_exclude_two ape_APE_project_exclude_none \
 		hyp_hyp_staples_exclude_none hyp_hyp_staples_exclude_one hyp_hyp_staples_exclude_two \
 		hyp_hyp_smear stout_stout_smear ape_ape_smear utils_reunitarize \

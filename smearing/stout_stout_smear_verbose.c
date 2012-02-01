@@ -1,9 +1,10 @@
 #include "stout.ih"
 
-void stout_smear(gauge_field_t m_field_out, struct stout_parameters const *params, gauge_field_t m_field_in)
+void stout_smear_verbose(gauge_field_t m_field_out, struct stout_parameters const *params, gauge_field_t m_field_in)
 {
   gauge_field_t buffer = get_gauge_field();
   
+  /* start of the the stout smearing */
   for(int iter = 0; iter < params->iterations; ++iter)
   {
     generic_staples(buffer, m_field_in);

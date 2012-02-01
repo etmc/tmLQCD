@@ -20,7 +20,7 @@ int hex_smear(gauge_field_t m_field_out, hex_parameters const *params, gauge_fie
 
     /* Final level of contractions  */
     hyp_staples_exclude_none(gamma.field_array[0], v);
-    stout_exclude_none(m_field_out, params->alpha[0], gamma.field_array[0], m_field_in);
+    stout_links(m_field_out, params->alpha[0], gamma.field_array[0], m_field_in);
     exchange_gauge_field(m_field_out);
     
     m_field_in = m_field_out; /* Prepare for next iteration */
