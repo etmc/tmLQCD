@@ -1,4 +1,3 @@
-#include "utils.ih"
 #include "ape.ih"
 
 void APE_project_exclude_none(gauge_field_t buff_out, double const coeff, gauge_field_t staples, gauge_field_t buff_in)

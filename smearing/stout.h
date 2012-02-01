@@ -1,5 +1,6 @@
 #pragma once
 
+#include <buffers/gauge.h>
 #include <smearing/utils.h>
 
 struct stout_parameters

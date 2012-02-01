@@ -19,4 +19,7 @@
 #include <update_backward_gauge.h>
 
 #include <smearing/ape.h>
+#include <smearing/utils.h>
+#include <buffers/gauge.h>
 #include <buffers/utils.h>
+

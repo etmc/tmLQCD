@@ -1,6 +1,6 @@
 #pragma once
 
-#include <smearing/utils.h>
+#include <buffers/gauge.h>
 
 struct ape_parameters
 {
