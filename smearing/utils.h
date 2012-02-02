@@ -34,7 +34,9 @@ void generic_staples(gauge_field_t out, gauge_field_t buff_in);
 void project_antiherm(su3 *omega);
 void project_herm(su3 *omega);
 void reunitarize(su3 *omega);
-void cayley_hamilton_exponent(su3 *U, _Complex double *f0, _Complex double *f1, _Complex double *f2, su3 *Q);
+
+void cayley_hamilton_exponent(su3 *U, su3 *Q);
+void cayley_hamilton_exponent_verbose(su3 *U, su3_vector *f, double *u, double *w, su3 *Q);
 
 void print_su3(su3 *in);
 void print_config_to_screen(su3 **in);

@@ -45,6 +45,7 @@ libsmear_TARGETS = 	ape_ape_smear \
 			stout_stout_links \
 			stout_stout_smear \
 			utils_cayley_hamilton_exponent \
+			utils_cayley_hamilton_exponent_verbose \
 			utils_generic_staples \
 			utils_print_config_to_screen \
 			utils_print_su3 \

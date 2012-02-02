@@ -9,7 +9,8 @@ int main()
 {
   su3 Q, U;
   su3adj T;
-  _Complex double f0, f1, f2;
+  su3_vector f;
+  double u[2];
   
   /* Positive determinant */
   Q.c00 = -0.2994;
@@ -37,11 +38,11 @@ int main()
   print_su3(&Q);
   fprintf(stdout, "Known result:\n");
   print_su3(&U);
-  cayley_hamilton_exponent(&U, &f0, &f1, &f2, &Q);
+  cayley_hamilton_exponent_verbose(&U, &f, u, u + 1, &Q);
   fprintf(stdout, "Calculated result:\n");
   print_su3(&U);
   fprintf(stdout, "Produced coefficients:\n");
-  fprintf(stdout, "f0: %6.4f + %6.4f * I,   f1: %6.4f + %6.4f * I,   f2: %6.4f + %6.4f * I\n\n", creal(f0), cimag(f0), creal(f1), cimag(f1), creal(f2), cimag(f2));
+  fprintf(stdout, "f0: %6.4f + %6.4f * I,   f1: %6.4f + %6.4f * I,   f2: %6.4f + %6.4f * I\n\n", creal(f.c0), cimag(f.c0), creal(f.c1), cimag(f.c1), creal(f.c2), cimag(f.c2));
   
   /* Negative determinant */
   Q.c00 = -0.0186;
@@ -69,15 +70,11 @@ int main()
   print_su3(&Q);
   fprintf(stdout, "Known result:\n");
   print_su3(&U);
-  cayley_hamilton_exponent(&U, &f0, &f1, &f2, &Q);
+  cayley_hamilton_exponent_verbose(&U, &f, u, u + 1, &Q);
   fprintf(stdout, "Calculated result:\n");
   print_su3(&U);
   fprintf(stdout, "Produced coefficients:\n");
-  fprintf(stdout, "f0: %6.4f + %6.4f * I,   f1: %6.4f + %6.4f * I,   f2: %6.4f + %6.4f * I\n\n", creal(f0), cimag(f0), creal(f1), cimag(f1), creal(f2), cimag(f2));
-  _trace_lambda(T, Q);
-  Q = exposu3(T);
-  fprintf(stdout, "With old routine:\n");
-  print_su3(&Q);
+  fprintf(stdout, "f0: %6.4f + %6.4f * I,   f1: %6.4f + %6.4f * I,   f2: %6.4f + %6.4f * I\n\n", creal(f.c0), cimag(f.c0), creal(f.c1), cimag(f.c1), creal(f.c2), cimag(f.c2));
 
   /* Almost singular */
   Q.c00 =  0.0000;
@@ -105,11 +102,11 @@ int main()
   print_su3(&Q);
   fprintf(stdout, "Known result:\n");
   print_su3(&U);
-  cayley_hamilton_exponent(&U, &f0, &f1, &f2, &Q);
+  cayley_hamilton_exponent_verbose(&U, &f, u, u + 1, &Q);
   fprintf(stdout, "Calculated result:\n");
   print_su3(&U);
   fprintf(stdout, "Produced coefficients:\n");
-  fprintf(stdout, "f0: %6.4f + %6.4f * I,   f1: %6.4f + %6.4f * I,   f2: %6.4f + %6.4f * I\n\n", creal(f0), cimag(f0), creal(f1), cimag(f1), creal(f2), cimag(f2));
+  fprintf(stdout, "f0: %6.4f + %6.4f * I,   f1: %6.4f + %6.4f * I,   f2: %6.4f + %6.4f * I\n\n", creal(f.c0), cimag(f.c0), creal(f.c1), cimag(f.c1), creal(f.c2), cimag(f.c2));
 
   return 0;
 }
