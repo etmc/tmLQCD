@@ -14,17 +14,17 @@ TEST(su3_assign) {
   int test = 0;
 
   m1.c00.re = 1; m1.c00.im = 1;  m1.c01.re = 0; m1.c01.im = 0;  m1.c02.re=0; m1.c02.im=0;
-  m1.c10.re = 0; m1.c10.im = 1;  m1.c11.re = 1; m1.c11.im = 1;  m1.c12.re=0; m1.c12.im=0;
+  m1.c10.re = 0; m1.c10.im = 0;  m1.c11.re = 1; m1.c11.im = 1;  m1.c12.re=0; m1.c12.im=0;
   m1.c20.re = 0; m1.c20.im = 0;  m1.c21.re = 0; m1.c21.im = 0;  m1.c22.re=1; m1.c22.im=1;
 
   _su3_assign(m2,m1);
 
   if( m2.c00.re == 1 && m2.c00.im == 1 && m2.c01.re == 0 && m2.c01.im == 0 && m2.c02.re == 0 && m2.c02.im == 0 &&
- m2.c10.re == 1 && m2.c10.im == 1 && m2.c11.re == 0 && m2.c11.im == 0 && m2.c12.re == 0 && m2.c12.im == 0 &&
- m2.c20.re == 1 && m2.c20.im == 1 && m2.c21.re == 0 && m2.c21.im == 0 && m2.c22.re == 0 && m2.c22.im == 0 )
+ m2.c10.re == 0 && m2.c10.im == 0 && m2.c11.re == 1 && m2.c11.im == 1 && m2.c12.re == 0 && m2.c12.im == 0 &&
+ m2.c20.re == 0 && m2.c20.im == 0 && m2.c21.re == 0 && m2.c21.im == 0 && m2.c22.re == 1 && m2.c22.im == 1 )
     test = 1;
 
-  assertFalseM(test,"The SU3 assignment operator does not work correctly!\n");
+  assertTrueM(test,"The SU3 assignment operator does not work correctly!\n");
 }
 
 TEST(su3_expo_positivedet) {
@@ -58,12 +58,12 @@ TEST(su3_expo_positivedet) {
   _trace_lambda(T,Q);
   Q = exposu3(T);
 
-  if( Q.c00.re - U.c00.re < EPS &&  Q.c01.re - U.c01.re < EPS && Q.c02.re - U.c02.re < EPS &&
-  Q.c10.re - U.c10.re < EPS && Q.c11.re - U.c11.re < EPS && Q.c12.re - U.c12.re < EPS &&   
-  Q.c20.re - U.c20.re < EPS && Q.c21.re - U.c21.re < EPS && Q.c22.re - U.c22.re < EPS &&
-  Q.c00.im - U.c00.im < EPS && Q.c01.im - U.c01.im < EPS && Q.c02.im - U.c02.im < EPS &&
-  Q.c10.im - U.c10.im < EPS && Q.c11.im - U.c11.im < EPS && Q.c12.im - U.c12.im < EPS &&   
-  Q.c20.im - U.c20.im < EPS && Q.c21.im - U.c21.im < EPS && Q.c22.im - U.c22.im < EPS )
+  if( Q.c00.re - U.c00.re > EPS &&  Q.c01.re - U.c01.re > EPS && Q.c02.re - U.c02.re > EPS &&
+  Q.c10.re - U.c10.re > EPS && Q.c11.re - U.c11.re > EPS && Q.c12.re - U.c12.re > EPS &&   
+  Q.c20.re - U.c20.re > EPS && Q.c21.re - U.c21.re > EPS && Q.c22.re - U.c22.re > EPS &&
+  Q.c00.im - U.c00.im > EPS && Q.c01.im - U.c01.im > EPS && Q.c02.im - U.c02.im > EPS &&
+  Q.c10.im - U.c10.im > EPS && Q.c11.im - U.c11.im > EPS && Q.c12.im - U.c12.im > EPS &&   
+  Q.c20.im - U.c20.im > EPS && Q.c21.im - U.c21.im > EPS && Q.c22.im - U.c22.im > EPS )
     test = 1;
 
   assertFalseM(test,"The exponentation of Q with a positive determinant failed.\n");
