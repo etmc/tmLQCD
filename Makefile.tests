@@ -1,4 +1,4 @@
-TESTS = tests/test_sample tests/test_su3
+TESTS = tests/test_sample tests/test_su3 tests/test_buffers
 
 TEMP = $(patsubst %.c,%,$(wildcard $(top_srcdir)/tests/*.c))
 TESTMODULES = $(patsubst $(top_srcdir)/%,%,$(TEMP))
@@ -24,6 +24,10 @@ tests/test_sample: $(TEST_SAMPLE_OBJECTS) $(top_builddir)/cu/libcu.a
 TEST_SU3_OBJECTS:=$(patsubst $(top_srcdir)/%.c,%.o,$(wildcard $(top_srcdir)/tests/test_su3*.c)) expo.o
 tests/test_su3: $(TEST_SU3_OBJECTS) expo.o $(top_builddir)/cu/libcu.a
 	${LINK} $(TEST_SU3_OBJECTS) $(TESTFLAGS) -lm
+
+TEST_BUFFERS_OBJECTS:=$(patsubst $(top_srcdir)/%.c,%.o,$(wildcard $(top_srcdir)/tests/test_buffers*.c)) fatal_error.o
+tests/test_buffers: $(TEST_BUFFERS_OBJECTS) $(top_builddir)/cu/libcu.a $(top_builddir)/buffers/libbuffers.a
+	${LINK} $(TEST_BUFFERS_OBJECTS) $(TESTFLAGS) -lbuffers -L$(top_builddir)/buffers/
 
 # make sure that the regressions directory exists in the tests directory, this is where the tests
 # will store output for regression testing
