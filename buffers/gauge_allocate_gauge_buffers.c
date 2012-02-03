@@ -14,8 +14,8 @@ void allocate_gauge_buffers(unsigned int count)
     p = ((p + ALIGN_BASE) & ~ALIGN_BASE);
     ((void**)p)[-1] = raw;
 
-    ++g_gauge_buffers.stack;
-    g_gauge_buffers.reserve[g_gauge_buffers.stack] = (su3_tuple*)p;
+    g_gauge_buffers.reserve[g_gauge_buffers.free] = (su3_tuple*)p;
     ++g_gauge_buffers.allocated;
+    ++g_gauge_buffers.free;
   }
 }
