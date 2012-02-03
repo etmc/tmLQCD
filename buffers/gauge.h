@@ -13,7 +13,7 @@ typedef struct
   su3_tuple **reserve;
   unsigned int max;
   unsigned int allocated;
-  int stack;
+  unsigned int free;
 } gauge_buffers_t;
 
 typedef struct
