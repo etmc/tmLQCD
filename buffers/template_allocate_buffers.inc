@@ -13,8 +13,8 @@ void allocate_ ## NAME ## _buffers(unsigned int count) 								\
     p = ((p + ALIGN_BASE) & ~ALIGN_BASE);									\
     ((void**)p)[-1] = raw;											\
 														\
-    ++g_ ## NAME ## _buffers.stack;										\
-    g_ ## NAME ## _buffers.reserve[g_ ## NAME ## _buffers.stack] = (DATATYPE*)p;				\
+    g_ ## NAME ## _buffers.reserve[g_ ## NAME ## _buffers.free] = (DATATYPE*)p;	        			\
+    ++g_ ## NAME ## _buffers.free;                                                                              \
     ++g_ ## NAME ## _buffers.allocated;										\
   }														\
 }

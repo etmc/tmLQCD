@@ -717,10 +717,7 @@ void little_D_hop(int eo,_Complex double * v, _Complex double *w) {
   CONE = 1.0;
   CMONE = -1.0;
   CZERO = 0.0;
-<<<<<<< HEAD
-=======
 
->>>>>>> Clean up further instances of awkward struct-complex to C99-complex conversion.
   i_eo=(eo+1)%2;
   
 #ifdef MPI
