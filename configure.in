@@ -721,6 +721,10 @@ if test ! -e tests; then
   mkdir tests
 fi
 
+if test ! -e tests/regressions; then
+  mkdir tests/regressions
+fi
+
 
 LIBS="-lhmc -lsolver -llinalg -lhmc -lio -lsmear $LIBS"
 AUTOCONF=autoconf

@@ -35,9 +35,5 @@ TEST_BUFFERS_LIBS:=$(top_builddir)/cu/libcu.a $(top_builddir)/buffers/libbuffers
 tests/test_buffers: $(TEST_BUFFERS_OBJECTS) $(TEST_BUFFERS_LIBS)
 	${LINK} $(TEST_BUFFERS_OBJECTS) $(TESTFLAGS) $(TEST_BUFFERS_FLAGS)
 
-# make sure that the regressions directory exists in the tests directory, this is where the tests
-# will store output for regression testing
 tests: ${TESTS}
-	@ cd ${top_builddir}/tests && \
-  mkdir -p regressions
 
