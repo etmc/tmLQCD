@@ -246,7 +246,7 @@ int init_monomials(const int V, const int even_odd_flag) {
     monomial_list[no_monomials-1].id = no_monomials-1;
     monomial_list[no_monomials-1].c_sw = g_c_sw;
     monomial_list[no_monomials-1].mu = g_mu;
-    monomial_list[no_monomials-1].mu = g_kappa;
+    monomial_list[no_monomials-1].kappa = g_kappa;
     monomial_list[no_monomials-1].hbfunction = &clover_trlog_heatbath;
     monomial_list[no_monomials-1].accfunction = &clover_trlog_acc;
     monomial_list[no_monomials-1].derivativefunction = NULL;
