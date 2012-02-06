@@ -1,0 +1,80 @@
+
+srcdir = @srcdir@
+top_builddir =  @top_builddir@
+abs_top_builddir = @abs_top_builddir@
+top_srcdir = @top_srcdir@
+abs_top_srcdir = @abs_top_srcdir@
+subdir = cu
+builddir = @builddir@
+
+CFLAGS = @CFLAGS@
+DEPFLAGS = @DEPFLAGS@
+LDFLAGS = @LDFLAGS@
+DEFS = @DEFS@
+OPTARGS = @OPTARGS@
+
+AR = ar
+RANLIB = @RANLIB@
+CC = @CC@
+CCDEP = @CCDEP@
+CCLD = $(CC)
+LINK = $(CCLD) $(CFLAGS) $(LDFLAGS) ${OPTARGS} -o $@
+LEX = @LEX@
+AUTOCONF = @AUTOCONF@
+DEFS = @DEFS@
+
+INCLUDES = @INCLUDES@
+LDADD =
+COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS} ${OPTARGS}
+
+LIBRARIES = libcu
+
+libcu_TARGETS = cu
+
+libcu_OBJECTS = $(addsuffix .o, ${libcu_TARGETS})
+
+# default rule
+all: Makefile dep libcu.a
+
+#include dep rules
+
+-include $(addsuffix .d,${libcu_TARGETS})
+
+include ${top_srcdir}/Makefile.global
+
+# rule to compile objects
+
+${libcu_OBJECTS}: %.o : ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+	$(COMPILE) -c $<
+
+
+# rule to make libcu
+
+libcu.a: ${libcu_OBJECTS} Makefile
+	@rm -f libcu.a
+	@${AR} cru libcu.a $(libcu_OBJECTS)
+	@$(RANLIB) libcu.a
+#	@cp libcu.a ${top_builddir}/cu/libcu.a
+
+# rule to generate .d files
+
+$(addsuffix .d,$(libcu_TARGETS)): %.d: ${srcdir}/%.c Makefile
+	@$(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@
+
+# rule to make dependencies
+
+dep: ${addsuffix .d, ${libcu_TARGETS}}
+
+# rules to clean
+
+compile-clean: Makefile
+	rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} *.d
+
+clean: compile-clean
+	rm -f $(addsuffix .a, ${LIBRARIES})
+
+distclean: clean
+	rm -f Makefile
+
+
+.PHONY: all dep clean compile-clean distclean
