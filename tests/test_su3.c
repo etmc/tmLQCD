@@ -1,3 +1,5 @@
+#define MAIN_PROGRAM
+
 #include "test_su3_algebra.h"
 
 TEST_SUITES {
@@ -10,3 +12,6 @@ int main(int argc,char *argv[]){
   CU_RUN(argc,argv);
   return 0;
 }
+
+#undef MAIN_PROGRAM
+
