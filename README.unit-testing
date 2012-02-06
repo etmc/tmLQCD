@@ -42,8 +42,31 @@ made)
 # REGRESSION TESTING #
 ######################
 
-TODO: this section.
+CU implements a rudimentary form of regression testing based on differences
+in output files.
 
+CU redirects stdout and stderr to two files in the $builddir/tests/regressions 
+directory which are named
+
+  tmp.NAME_TESTSUITENAME.[out,err] .
+
+By moving tmp.*.[out,err] to *.[out,err] , you can create 'reference' output
+from a known-good test-run.
+
+To run a regression test, after running the tests you want to regression
+check, run the 'check-regressions' script from the 'cu' directory with 
+the $builddir/tests/regressions folder as an argument. E.g.:
+
+ ~/tmLQCD $ cu/check-regressions build/tests/regressions
+
+The script will compare output and show differences in case the outputs
+diverge. When dealing with floating point numbers the script compares
+up to a given precision which you can specify with the --eps option.
+
+See 'cu/check-regressions -h' for more information and further options.
+
+Don't forget that you have to update the reference output if you change the
+output of your test harnesses.
 
 ###########
 # DEVELOP #
