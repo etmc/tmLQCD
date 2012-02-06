@@ -142,7 +142,7 @@ ${PROGRAMS}: %: %.o libhmc.a all-recursive
 include ${top_srcdir}/Makefile.tests
 
 dep: $(addsuffix .d,$(ALLOBJ))
-	@ echo "...dependency files build"
+	@ echo "...dependency files built"
 
 install: Makefile
 	@mkdir -p $(bindir); \
