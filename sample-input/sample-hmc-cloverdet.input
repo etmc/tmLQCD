@@ -1,23 +1,26 @@
 # this is a sample input file for a single cloverdet
 # monomial
 #
-# reference results to come
+# the plaquette value should be
+# 0.5905(3)
+#
 
 L=4
 T=4
-Measurements = 1000
+Measurements = 10000
 Startcondition = hot
-2KappaMu = 0.177
-kappa = 0.177
+2KappaMu = 0.0
+CSW = 1.76
+kappa = 0.138
 NSave = 500000
-ThetaT = 1.
+ThetaT = 1.0
 BCGstabMaxIter = 0
 CGMaxIter = 1000
 UseEvenOdd = yes
 ReversibilityCheck = yes
 ReversibilityCheckIntervall = 100
 InitialStoreCounter = 0
-DebugLevel = 1
+DebugLevel = 0
 
 BeginMeasurement CORRELATORS
   Frequency = 2
@@ -25,14 +28,14 @@ EndMeasurement
 
 BeginMonomial GAUGE
   Type = Wilson
-  beta = 6.00
+  beta = 5.60
   Timescale = 0
 EndMonomial
 
 BeginMonomial CLOVERDET
   Timescale = 1
-  CSW = 1.0
-  kappa = 0.177
+  CSW = 1.76
+  kappa = 0.138
   AcceptancePrecision =  1.e-20
   ForcePrecision = 1.e-12
   Name = cloverdet
@@ -43,8 +46,8 @@ BeginIntegrator
   Type0 = 2MN
   Type1 = 2MN
   IntegrationSteps0 = 2
-  IntegrationSteps1 = 6
-  tau = 1.
+  IntegrationSteps1 = 12
+  tau = 1.00
   Lambda0 = 0.19
   Lambda1 = 0.20
   NumberOfTimescales = 2
