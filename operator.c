@@ -39,6 +39,7 @@
 #include "D_psi.h"
 #include "Dov_psi.h"
 #include "Nondegenerate_Matrix.h"
+#include "Hopping_Matrix.h"
 #include "invert_eo.h"
 #include "invert_doublet_eo.h"
 #include "invert_overlap.h"
@@ -256,7 +257,7 @@ void op_invert(const int op_id, const int index_start) {
 	sw_term(g_gauge_field, optr->kappa, optr->c_sw); 
 	/* this must be EO (so 0) here!   */
 	/* to match clover_inv in Qsw_psi */
-	sw_invert(0);
+	sw_invert(EO);
       }
       if (g_cart_id == 0) {
         printf("#\n# mu = %e\n", g_mu);
