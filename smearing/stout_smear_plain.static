@@ -2,18 +2,19 @@
 
 static void stout_smear_plain(struct stout_control *control, gauge_field_t in)
 {
-  // Alias the fields
-  gauge_field_t Q0 = control->Q.field_array[0];
-  gauge_field_t U0 = control->U.field_array[0];
+  /* Alias the field */
+  gauge_field_t U = control->U.field_array[0];
 
+  control->scratch = get_gauge_field();
   for(int iter = 0; iter < control->iterations; ++iter)
   {
-    generic_staples(Q0, in);
-    stout_fatten_links(U0, control->rho, Q0, in);
-    exchange_gauge_field(U0);
+    generic_staples(control->scratch, in);
+    stout_fatten_links(control, in);
+    exchange_gauge_field(U);
 
-    in = U0; /* Prepare for next iteration, shallow copy */
+    in = U; /* Prepare for next iteration, shallow copy */
   }
   
-  control->result = U0;
+  control->result = U; 
+  return_gauge_field(control->scratch);
 }

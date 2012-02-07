@@ -1,18 +1,15 @@
 static void stout_smear_with_force_terms(stout_control *control, gauge_field_t in)
 {
-  /* Start of the the stout smearing */
-  for(int iter = 0; iter < params->iterations; ++iter)
+  int *iter = &control->current_iteration; /* Using control->current_iteration everywhere makes the code unreadable.*/
+  
+  for(*iter = 0; *iter < control->iterations; ++(*iter))
   {
-    generic_staples(m_force->Q[iter], m_field_in);
-    stout_links_with_force_terms(buffer, m_force->Q[iter], m_force->f0[iter], m_force->f1[iter], m_force->f2[iter],
-                                         m_force->u[iter], m_force->v[iter], params->rho, buffer, buff_in)
-    copy_gauge_field(m_field_out, buffer);
-    exchange_gauge_field(m_field_out);
-
-    m_field_in = m_field_out; /* Prepare for next iteration */
+    /* Iteration 0 is a special case: we need to use in instead of a previously calculated field. */
+    generic_staples(control->U.field_array[*iter], *iter ? control->U.field_array[*iter - 1] : in);
+    stout_fatten_links_with_force_terms(control, *iter ? control->U.field_array[*iter - 1] : in);
+    exchange_gauge_field(control->U.field_array[*iter]); /* NOTE Maybe exchange more fields than just this one? */
   }
   
-  return_gauge_field(&buffer);
-  
-  return m_force;
+  /* Make a shallow copy of the final result for straightforward usage. */
+  control->result = control->U.field_array[*iter];
 }

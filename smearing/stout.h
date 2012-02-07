@@ -22,12 +22,14 @@ struct stout_control
   int                    calculate_force_terms;
   gauge_field_array_t    U;
   gauge_field_array_t    Q;
+  gauge_field_array_t    exp_IQ;
   complex_field_array_t  f0;
   complex_field_array_t  f1;
   complex_field_array_t  f2;
   gauge_field_array_t    B1;
   gauge_field_array_t    B2;
   
+  gauge_field_t          scratch; /* We need some additional buffer space to store intermediate steps */
   gauge_field_t          result; /* For direct access to the result, shallow copy... */
 };
 
