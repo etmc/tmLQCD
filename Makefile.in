@@ -36,7 +36,8 @@ INCLUDES = @INCLUDES@
 LINK = $(CCLD) -o $@ ${LDFLAGS}
 LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
 	${top_builddir}/solver/libsolver.a ${top_builddir}/io/libio.a \
-	${top_builddir}/smearing/libsmear.a ${top_builddir}/buffers/libbuffers.a
+	${top_builddir}/smearing/libsmear.a ${top_builddir}/buffers/libbuffers.a \
+	$(top_builddir)/cu/libcu.a
 
 COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
@@ -68,7 +69,6 @@ MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	xchange_field_tslice temporalgauge spinor_fft X_psi P_M_eta \
 	xchange_jacobi jacobi init_jacobi_field \
 	fatal_error
-
 
 ## the GPU modules (all .cu files in $GPUDIR)
 GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)
@@ -139,7 +139,10 @@ ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 ${PROGRAMS}: %: %.o libhmc.a all-recursive
 	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
 
-dep: $(addsuffix .d,$(ALLOBJ)) 
+# The rules for unit tests are kept in a separate file for tidyness
+include ${top_srcdir}/Makefile.tests
+
+dep: $(addsuffix .d,$(ALLOBJ))
 	@ echo "...dependency files built"
 
 install: Makefile
@@ -163,7 +166,7 @@ compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d
 
 clean: clean-recursive Makefile
-	rm -f hmc_tm invert *.o *.d test/*.o test/*.d
+	rm -f hmc_tm invert *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 distclean: distclean-recursive Makefile
 	rm -f hmc_tm hybrid *.o *.d *~ Makefile config.log config.status fixed_volume.h
@@ -174,4 +177,4 @@ distclean: distclean-recursive Makefile
 	all-debug-recursive all-profile-recursive \
 	clean-recursive distclean-recursive \
 	compile-clean-recursive $(LINKLIBS) \
-	libhmc.a
+	tests libhmc.a

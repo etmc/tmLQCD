@@ -9,12 +9,12 @@ gauge_field_t get_gauge_field()
 {
   gauge_field_t gauge_field;
 
-  if (g_gauge_buffers.stack < 0) /* Need to allocate a new buffer */
+  if (g_gauge_buffers.free == 0) /* Need to allocate a new buffer */
     allocate_gauge_buffers(1);
-
-  gauge_field.field = g_gauge_buffers.reserve[g_gauge_buffers.stack];
-  g_gauge_buffers.reserve[g_gauge_buffers.stack] = NULL;
-  --g_gauge_buffers.stack;
+  --g_gauge_buffers.free;
+  
+  gauge_field.field = g_gauge_buffers.reserve[g_gauge_buffers.free];
+  g_gauge_buffers.reserve[g_gauge_buffers.free] = NULL;
 
   return gauge_field;
 }
