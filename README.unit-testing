@@ -1,0 +1,114 @@
+This document explains how to run and develop test suites for the tmLQCD
+program suite. tmLQCD uses the CU unit testing framework by 
+Daniel Fiser [http://cu.danfis.cz/] 
+
+###########
+# COMPILE #
+###########
+
+The unit tests reside in the tests directory and are currently not built 
+automatically. To compile them, enter your build directory and call 
+'configure' if necessary and then 'make tests':
+
+  $ cd build
+  $ ../configure [--options ..]
+  $ make tests
+
+The build system is configured so that make will build the modules
+which are used by the tests.
+
+
+###########
+# EXECUTE #
+###########
+
+To run the unit tests, change into the tests directory in your build
+directory and run the tests as any executable. Make sure that you are
+actually in the tests directory because the tests require a 'regressions'
+folder to be in the current working directory.
+
+  $ cd build/tests
+  $ ./test_sample
+
+Any output of the unit tests is redirected into the files in the 
+'regressions' directory. The python script 'check-regressions' in
+the 'cu' directory in the source tree can be used to perform
+automated regression testing on these output files. (ie. compare
+known-good ouput to the current output after a change has been
+made)
+
+
+######################
+# REGRESSION TESTING #
+######################
+
+CU implements a rudimentary form of regression testing based on differences
+in output files.
+
+CU redirects stdout and stderr to two files in the $builddir/tests/regressions 
+directory which are named
+
+  tmp.NAME_TESTSUITENAME.[out,err] .
+
+By moving tmp.*.[out,err] to *.[out,err] , you can create 'reference' output
+from a known-good test-run.
+
+To run a regression test, after running the tests you want to regression
+check, run the 'check-regressions' script from the 'cu' directory with 
+the $builddir/tests/regressions folder as an argument. E.g.:
+
+ ~/tmLQCD $ cu/check-regressions build/tests/regressions
+
+The script will compare output and show differences in case the outputs
+diverge. When dealing with floating point numbers the script compares
+up to a given precision which you can specify with the --eps option.
+
+See 'cu/check-regressions -h' for more information and further options.
+
+Don't forget that you have to update the reference output if you change the
+output of your test harnesses.
+
+###########
+# DEVELOP #
+###########
+
+The process of adding a unit test begins with the creation of three files
+in the test directory.
+
+tests/test_name.c
+tests/test_name_testsuitename.h
+tests/test_name_testsuitename.c
+
+Where 'name' should be a descriptive name of what the test harness does.
+
+CU supports adding multiple testsuites to one test harness to create
+further thematic links. For instance, the test harness for the buffers
+framework is test_buffers, and the test suite for the "gauge" buffers
+is test_buffers_gauge.
+
+There is a sample test harness in test_sample*.[c,h] which clarifies how
+to write test suites. In principle the stem file runs the tests. The 
+test suite header declares the tests and adds them together into a
+test suite and the test suite C file defines the different tests. 
+
+Finally, in order to build the test harness, 'Makefile.tests' has to be edited
+as hinted at by the existing tests.
+
+1) add the stem of your test name to the TESTS variable
+2) add the five-line rule for building the test harness, adjusting the
+    lines as required
+
+TEST_SAMPLE_OBJECTS:=$(patsubst $(top_srcdir)/%.c,%.o,$(wildcard $(top_srcdir)/tests/test_sample*.c))
+TEST_SAMPLE_FLAGS:=
+TEST_SAMPLE_LIBS:= $(top_builddir)/cu/libcu.a
+tests/test_sample: $(TEST_SAMPLE_OBJECTS) $(TEST_SAMPLE_LIBS)
+        ${LINK} $(TEST_SAMPLE_OBJECTS) $(TESTFLAGS) $(TEST_SAMPLE_FLAGS)
+
+Object files of the modules under test shoud be added to *_OBJECTS variable.
+For example, the su3 test requires 'expo.o'. If a module is built into a
+library the object can also be added to the compilation and prerequisites
+by adding it to the *_LIBS variable in addition to $(top_builddir)/cu/libcu.a
+(see test_buffers for an example which has both an object file and a library
+added)
+
+Bartosz Kostrzewa, 2012/02/03

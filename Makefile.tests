@@ -1,0 +1,39 @@
+TESTS = tests/test_sample tests/test_su3 tests/test_buffers
+
+TEMP = $(patsubst %.c,%,$(wildcard $(top_srcdir)/tests/*.c))
+TESTMODULES = $(patsubst $(top_srcdir)/%,%,$(TEMP))
+
+TESTFLAGS = -L$(top_builddir)/cu/ -lcu
+
+$(addsuffix .o,$(TESTMODULES)): %.o : $(top_srcdir)/%.c
+	${COMPILE} -c $(OPTARGS) $<
+
+# The linking stage needs to be differentiated because different tests rely on
+# different modules from the codebase
+# Each test itself consists of a number of modules that need to be linked.
+
+# when used as a prerequisite, the wildcard with "tests/test_sample*.c" replaced by "$@*.c" is not evaluated
+# correctly, even though it works perfectly in an echo statement, it results in make
+# trying to compile all objects in top_srcdir
+# we therefore evaluate the wildcard into a variable
+
+TEST_SAMPLE_OBJECTS:=$(patsubst $(top_srcdir)/%.c,%.o,$(wildcard $(top_srcdir)/tests/test_sample*.c))
+TEST_SAMPLE_FLAGS:=
+TEST_SAMPLE_LIBS:=$(top_builddir)/cu/libcu.a
+tests/test_sample: $(TEST_SAMPLE_OBJECTS) $(TEST_SAMPLE_LIBS)
+	${LINK} $(TEST_SAMPLE_OBJECTS) $(TESTFLAGS) $(TEST_SAMPLE_FLAGS)
+
+TEST_SU3_OBJECTS:=$(patsubst $(top_srcdir)/%.c,%.o,$(wildcard $(top_srcdir)/tests/test_su3*.c)) expo.o
+TEST_SU3_FLAGS:=-lm
+TEST_SU3_LIBS:=$(top_builddir)/cu/libcu.a
+tests/test_su3: $(TEST_SU3_OBJECTS) $(TEST_SU3_LIBS)
+	${LINK} $(TEST_SU3_OBJECTS) $(TESTFLAGS) $(TEST_SU3_FLAGS)
+
+TEST_BUFFERS_OBJECTS:=$(patsubst $(top_srcdir)/%.c,%.o,$(wildcard $(top_srcdir)/tests/test_buffers*.c)) fatal_error.o
+TEST_BUFFERS_FLAGS:=-lbuffers -L$(top_builddir)/buffers/
+TEST_BUFFERS_LIBS:=$(top_builddir)/cu/libcu.a $(top_builddir)/buffers/libbuffers.a
+tests/test_buffers: $(TEST_BUFFERS_OBJECTS) $(TEST_BUFFERS_LIBS)
+	${LINK} $(TEST_BUFFERS_OBJECTS) $(TESTFLAGS) $(TEST_BUFFERS_FLAGS)
+
+tests: ${TESTS}
+
