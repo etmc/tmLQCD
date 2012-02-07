@@ -19,7 +19,8 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
     control->f0 = get_complex_field_array(4 * iterations);
     control->f1 = get_complex_field_array(4 * iterations);
     control->f2 = get_complex_field_array(4 * iterations);
-    control->u  = get_real_field_array(4 * iterations);
-    control->v  = get_real_field_array(4 * iterations);
+    control->B1 = get_gauge_field_array(iterations);
+    control->B2 = get_gauge_field_array(iterations);
   }
+  result->field = NULL;
 }

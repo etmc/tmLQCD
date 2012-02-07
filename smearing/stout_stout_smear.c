@@ -1,18 +1,12 @@
 #include "stout.ih"
 
-void stout_smear(gauge_field_t m_field_out, struct stout_parameters const *params, gauge_field_t m_field_in)
-{
-  gauge_field_t buffer = get_gauge_field();
-  
-  for(int iter = 0; iter < params->iterations; ++iter)
-  {
-    generic_staples(buffer, m_field_in);
-    stout_links(buffer, params->rho, buffer, m_field_in);
-    copy_gauge_field(m_field_out, buffer);
-    exchange_gauge_field(m_field_out);
+#include "stout_smear_plain.static"
+#include "stout_smear_with_force_terms.static"
 
-    m_field_in = m_field_out; /* Prepare for next iteration */
-  }
-  
-  return_gauge_field(&buffer);
+void stout_smear(struct stout_control *control, gauge_field_t in)
+{
+  if (!control->calculate_force_terms)
+    stout_smear_plain(control, in);
+  else
+    stout_smear_with_force_terms(control, in);
 }
