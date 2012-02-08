@@ -508,14 +508,14 @@ void sw_invert(const int ieo, const double mu) {
       populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
 
       // we add the twisted mass term
-      if(i == 0) add_tm(a, mu);
+      if(i == 0) add_tm(a, +mu);
       else add_tm(a, -mu);
       // and invert the resulting matrix
 
       err = six_invert(a); 
       // here we need to catch the error! 
       if(err > 0 && g_proc_id == 0) {
-	printf("# %d\n", err);
+	printf("# inversion failed in six_invert code %d\n", err);
 	err = 0;
       }
 
@@ -537,7 +537,7 @@ void sw_invert(const int ieo, const double mu) {
 	_a_C(3,3,*w);
 	// we add the twisted mass term
 	if(i == 0) add_tm(a, -mu);
-	else add_tm(a, mu);
+	else add_tm(a, +mu);
 	// and invert the resulting matrix
 	err = six_invert(a); 
 	// here we need to catch the error! 

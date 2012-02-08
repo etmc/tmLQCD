@@ -126,7 +126,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
 void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   monomial * mnl = &monomial_list[id];
-  g_mu = 0.;
+  g_mu = mnl->mu;
   boundary(mnl->kappa);
   mnl->csg_n = 0;
   mnl->csg_n2 = 0;
@@ -157,12 +157,12 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   int save_sloppy = g_sloppy_precision_flag;
 
+  g_mu = mnl->mu;
+  boundary(mnl->kappa);
+
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert(EE, mnl->mu);
 
-  g_mu = 0.;
-  boundary(mnl->kappa);
-  
   chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 	       mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
   g_sloppy_precision_flag = 0;

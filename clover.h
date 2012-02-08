@@ -32,7 +32,10 @@ void Qsw_psi(spinor * const l, spinor * const k);
 void Qsw_plus_psi(spinor * const l, spinor * const k);
 void Qsw_minus_psi(spinor * const l, spinor * const k);
 void Qsw_sq_psi(spinor * const l, spinor * const k);
+void Qsw_pm_psi(spinor * const l, spinor * const k);
 void Msw_psi(spinor * const l, spinor * const k);
+void Msw_plus_psi(spinor * const l, spinor * const k);
+void Msw_minus_psi(spinor * const l, spinor * const k);
 void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const double mu);
 void init_sw_fields();
 
