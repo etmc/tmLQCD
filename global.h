@@ -48,6 +48,9 @@
 #define N_CHEBYMAX 49
 #define NTILDE_CHEBYMAX 2000
 
+/* size of the g_extra_masses array for CGMMS */
+#define MAX_EXTRA_MASSES 30
+
 #if defined MAIN_PROGRAM
 #  define EXTERN
 #else
@@ -251,7 +254,7 @@ EXTERN int counter_Spsi;
 
 /* Info for CGMMS solver */
 EXTERN int g_no_extra_masses;
-EXTERN double g_extra_masses[30];
+EXTERN double g_extra_masses[MAX_EXTRA_MASSES];
 
 EXTERN int ITER_MAX_BCG;
 EXTERN int ITER_MAX_CG;

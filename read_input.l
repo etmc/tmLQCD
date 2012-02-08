@@ -524,26 +524,36 @@ inline void rmQuotes(char *str){
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
-  /* This needs to check for a MAX when adding masses to prevent out of bounds errors */
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
-    char * token;
+    char * token = NULL;
     int no_extra_masses = 0;
     double mass;
     if( strtok(yytext,"\n\t =,\\") != NULL ) {
        /* Implicitly drop the first token, it is "ExtraMasses" */
       token = strtok(NULL," =,");
+
       while( token != NULL ) {
+        if( no_extra_masses >= MAX_EXTRA_MASSES ) {
+          yy_fatal_error("  CGMMS maximum number of extra masses reached. Increase MAX_EXTRA_MASSES in global.h!\n");
+        }
         sscanf(token,"%lf",&mass);
         g_extra_masses[no_extra_masses] = mass;
-        if(myverbose) printf("  CGMMS extra mass %d = 2 * kappa * %lf added line %d operator %d\n",no_extra_masses,mass,line_of_file,current_operator);
+        if(myverbose) printf("  CGMMS extra mass %d = %lf (2*kappa*mu) added line %d operator %d\n",no_extra_masses,mass,line_of_file,current_operator);
         ++no_extra_masses;
         token = strtok(NULL," =,");
       }
+    } else {
+      yy_fatal_error("  CGMMS Failed to read ExtraMasses input line in configuration file!");
     }
-    g_no_extra_masses = no_extra_masses;
-    if(myverbose) printf("  CGMMS %d extra masses added line %d operator %d\n",g_no_extra_masses,line_of_file,current_operator);
+
+    if( no_extra_masses == 0 ) {
+      yy_fatal_error("  CGMMS Failed to add any extra masses. Input line must be malformed.");
+    } else {    
+      g_no_extra_masses = no_extra_masses;
+      if(myverbose) printf("  CGMMS %d extra masses added line %d operator %d\n",g_no_extra_masses,line_of_file,current_operator);
+    }
   }
-  ^EndOperator{SPC}*  {
+  ^EndOperator{SPC}* {
     if(myverbose) printf("operator %d parsed line %d\n\n", current_operator, line_of_file);
     BEGIN(0);
   }
