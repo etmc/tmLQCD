@@ -348,6 +348,16 @@ EndMonomial
   \[
   \det(Q^2(\kappa) + \mu^2)
   \]
+\item {\ttfamily CLOVERDET}: pseudo fermion representation of the
+  (mass degenerate)
+  \[
+  \det(Q_\mathrm{sw}^2(\kappa, c_\mathrm{sw}))
+  \]
+  for the clover operator without twisted mass term. This monomial is
+  only available with even/odd preconditioning right now. It
+  automatically adds another monomial for the $\tr\ln$ part of the
+  clover term.
+
 \item {\ttfamily DETRATIO}: pseudo fermion representation of\\
   \[
   \det(Q^2(\kappa) + \mu^2)/\det(Q^2(\kappa_2) + \mu_2^2)
@@ -376,9 +386,16 @@ EndMonomial
 \end{itemize}
 Each of them has different options:
 \begin{itemize}
-\item {\ttfamily DET}:
+\item {\ttfamily DET, CLOVERDET}:
   \begin{itemize}
   \item {\ttfamily 2KappaMu}
+  \end{itemize}
+\item {\ttfamily CLOVERDET}:
+  \begin{itemize}
+  \item {\ttfamily csw}
+  \end{itemize}
+\item {\ttfamily DET, CLOVERDET}:
+  \begin{itemize}
   \item {\ttfamily Kappa}
   \item {\ttfamily Timescale}: the timescale on which to integrate
     this monomial. Counting starts from zero up to the total number of
