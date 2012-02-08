@@ -168,8 +168,8 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].mu = 0.;
 	monomial_list[i].even_odd_flag = 1;
 	monomial_list[i].Qsq = &Qsw_sq_psi;
-	monomial_list[i].Qp = &Qsw_psi;
-	monomial_list[i].Qm = &Qsw_psi;
+	monomial_list[i].Qp = &Qsw_plus_psi;
+	monomial_list[i].Qm = &Qsw_minus_psi;
 	init_swpm(VOLUME);
 	clover_trlog_monomial = 1;
       }
