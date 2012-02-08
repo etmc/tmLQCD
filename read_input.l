@@ -810,11 +810,6 @@ inline void rmQuotes(char *str){
 }
 
 <DETMONOMIAL,POLYMONOMIAL>{
-  {SPC}*2KappaMu{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    mnl->mu = c;
-    if(myverbose) printf("  2KappaMu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
   {SPC}*2KappaMu2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu2 = c;
@@ -848,6 +843,11 @@ inline void rmQuotes(char *str){
 }
 
 <DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL>{
+  {SPC}*2KappaMu{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mnl->mu = c;
+    if(myverbose) printf("  2KappaMu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
   {SPC}*Kappa{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->kappa = c;

@@ -90,7 +90,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
     
     /* apply Hopping Matrix M_{eo} */
     /* to get the even sites of X_e */
-    H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, mnl->mu);
+    H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -mnl->mu);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
     deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
     
@@ -139,7 +139,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
 void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   monomial * mnl = &monomial_list[id];
-  g_mu = 0.;
+  g_mu = mnl->mu;
   boundary(mnl->kappa);
   mnl->csg_n = 0;
   mnl->csg_n2 = 0;
@@ -176,11 +176,12 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   int save_iter = ITER_MAX_BCG;
   int save_sloppy = g_sloppy_precision_flag;
 
+  g_mu = mnl->mu;
+  boundary(mnl->kappa);
+
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert(EO, mnl->mu);
 
-  g_mu = 0.;
-  boundary(mnl->kappa);
   if(mnl->even_odd_flag) {
 
     if(mnl->solver == CG) {
