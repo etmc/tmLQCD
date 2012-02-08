@@ -53,7 +53,7 @@ void clover_trlog_heatbath(const int id, hamiltonian_field_t * const hf) {
   init_sw_fields(VOLUME);
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
-  mnl->energy0 = -2.*sw_trace(EO);
+  mnl->energy0 = -sw_trace(EO, mnl->mu);
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called clover_trlog_heatbath for id %d %d\n", id, mnl->even_odd_flag);
   }
@@ -65,7 +65,7 @@ double clover_trlog_acc(const int id, hamiltonian_field_t * const hf) {
   mnl->energy1 = 0.;
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
-  mnl->energy1 = -2.*sw_trace(EO);   
+  mnl->energy1 = -sw_trace(EO, mnl->mu);   
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called clover_trlog_acc for id %d %d dH = %1.4e\n", 
 	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);

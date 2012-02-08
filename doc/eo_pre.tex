@@ -376,6 +376,35 @@ mass fermions plus clover term is that the matrices $M_{ee}$ and
 $M_{oo}$ need to be inverted numerically. A stable numerical method
 for this task needs to be devised.
 
+For the implementation it is useful to compute the term
+\begin{equation}
+  \label{eq:Tee}
+  1 + \frac{i}{2} c_\mathrm{sw}
+  \kappa\sigma_{\mu\nu}^{\alpha\beta}F_{\mu\nu}^{\alpha\beta}(x)
+\end{equation}  
+once for all $x$. This is implemented in {\ttfamily clover\_leaf.c} in
+the routine {\ttfamily sw\_term}. The twisted mass term is not
+included in this routine, as this would require double the storage for
+plus and minus $\mu$, respectively. It is easier to add the twisted
+mass term in later on. 
+
+The term in eq.~(\ref{eq:Tee}) represents a complex $6\times6$ matrix
+per site. As the off-diagonal $3\times3$ matrices are just inverse to
+each other, we get away with storing two times three $3\times3$
+complex matrices. These are stored in the array {\ttfamily
+  sw[VOLUME][3][2]} of type {\ttfamily su3}. Here, {\ttfamily
+  sw[x][0][0]} is the upper diagonal $3\times3$ matrix, {\ttfamily
+  sw[x][1][0]} the upper off-diagnoal $3\times3$ matrix and {\ttfamily
+  sw[x][2][0]} the lower diagonal matrix. The lower off-diagonal
+matrix would be the inverse of {\ttfamily sw[x][1][0]}. The second
+$6\times6$ matrix is stored following the same conventions.
+
+When it comes to computing the inverse of $1\pm i \mu\gamma_5 +
+T_{ee}$, the dependence on the sign of $\mu$ is unavoidable. However,
+it is only needed for even (odd) sites, so we can use an array
+{\ttfamily sw\_inv[VOLUME][3][2]} of type {\ttfamily su3} to store
+e.g. $+\mu$ at even and $-\mu$ at odd sites.
+
 \subsection{Inversion}
 
 In addition to even/odd preconditioning in the HMC algorithm as

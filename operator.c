@@ -257,7 +257,7 @@ void op_invert(const int op_id, const int index_start) {
 	sw_term(g_gauge_field, optr->kappa, optr->c_sw); 
 	/* this must be EO (so 0) here!   */
 	/* to match clover_inv in Qsw_psi */
-	sw_invert(EO);
+	sw_invert(EO, 0.);
       }
       if (g_cart_id == 0) {
         printf("#\n# mu = %e\n", g_mu);

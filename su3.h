@@ -222,6 +222,15 @@ typedef struct
 
 #endif
 
+/* r += I * c * s (c real) */
+#define _vector_add_i_mul(r,c,s) \
+   (r).c0.re-=(c)*(s).c0.im; \
+   (r).c0.im+=(c)*(s).c0.re; \
+   (r).c1.re-=(c)*(s).c1.im; \
+   (r).c1.im+=(c)*(s).c1.re; \
+   (r).c2.re-=(c)*(s).c2.im; \
+   (r).c2.im+=(c)*(s).c2.re;
+
 /*
 * r.c1=s1.c1+s2.c1
 * r.c2=s1.c2+s2.c2

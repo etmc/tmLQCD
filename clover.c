@@ -42,13 +42,13 @@
 su3 *** sw;
 su3 *** sw_inv;
 
-void clover_inv(const int ieo, spinor * const l);
+void clover_inv(const int ieo, spinor * const l, const double mu);
 void clover_gamma5(const int ieo, 
 		   spinor * const l, spinor * const k, spinor * const j,
-		   const double q_off);
+		   const double mu);
 void clover(const int ieo, 
 	    spinor * const l, spinor * const k, spinor * const j,
-	    const double q_off);
+	    const double mu);
 
 /*******************************************************************
  *
@@ -68,37 +68,56 @@ void clover(const int ieo,
 
 void Qsw_psi(spinor * const l, spinor * const k) {
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
+  clover_inv(EO, g_spinor_field[DUM_MATRIX+1], 0.);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   /* temporarily set to 0 -> needs to be fixed */
   /*   mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], +1.); */
   clover_gamma5(OE, l, k, g_spinor_field[DUM_MATRIX], 0.);
 }
 
+void Qsw_minus_psi(spinor * const l, spinor * const k) {
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  clover_inv(EO, g_spinor_field[DUM_MATRIX+1], -g_mu);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  /* temporarily set to 0 -> needs to be fixed */
+  /*   mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], +1.); */
+  clover_gamma5(OE, l, k, g_spinor_field[DUM_MATRIX], -g_mu);
+}
+
+void Qsw_plus_psi(spinor * const l, spinor * const k) {
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  clover_inv(EO, g_spinor_field[DUM_MATRIX+1], +g_mu);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  /* temporarily set to 0 -> needs to be fixed */
+  /*   mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], +1.); */
+  clover_gamma5(OE, l, k, g_spinor_field[DUM_MATRIX], +g_mu);
+}
+
+
 void Qsw_sq_psi(spinor * const l, spinor * const k) {
   /* \hat Q_{-} */
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
+  clover_inv(EO, g_spinor_field[DUM_MATRIX+1], +g_mu);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
-  clover_gamma5(OE, g_spinor_field[DUM_MATRIX], k, g_spinor_field[DUM_MATRIX], 0.);
+  clover_gamma5(OE, g_spinor_field[DUM_MATRIX], k, g_spinor_field[DUM_MATRIX], +g_mu);
   /* \hat Q_{+} */
   Hopping_Matrix(EO, l, g_spinor_field[DUM_MATRIX]);
-  clover_inv(EO, l); 
+  clover_inv(EO, l, -g_mu); 
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], l);
-  clover_gamma5(OE, l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], 0.);
+  clover_gamma5(OE, l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], -g_mu);
 }
 
 void Msw_psi(spinor * const l, spinor * const k) {
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(EO, g_spinor_field[DUM_MATRIX+1]);
+  clover_inv(EO, g_spinor_field[DUM_MATRIX+1], +g_mu);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   /* temporarily set to zero -> needs to be fixed */
-  clover(OE, l, k, g_spinor_field[DUM_MATRIX], 0.);
+  clover(OE, l, k, g_spinor_field[DUM_MATRIX], +g_mu);
 }
 
-void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo) {
+void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const double mu) {
   Hopping_Matrix(ieo, l, k);
-  clover_inv(ieo, l);
+  clover_inv(ieo, l, mu);
   return;
 }
 
@@ -114,9 +133,9 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo) {
  *
  **********************************************************/
 
-void clover_inv(const int ieo, spinor * const l) {
+void clover_inv(const int ieo, spinor * const l, const double mu) {
   int ix;
-  int ioff,icx;
+  int ioff;
   su3 *w1,*w2,*w3;
   spinor *rn;
   static su3_vector psi, chi, phi1, phi3;
@@ -129,7 +148,7 @@ void clover_inv(const int ieo, spinor * const l) {
   }
   /************************ loop over all lattice sites *************************/
 
-  for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+  for(int icx = ioff, icy = 0; icx < (VOLUME/2+ioff); icx++, icy++) {
     ix = g_eo2lexic[icx];
 
     rn = l + icx - ioff;
@@ -137,10 +156,10 @@ void clover_inv(const int ieo, spinor * const l) {
     _vector_assign(phi1,(*rn).s0);
     _vector_assign(phi3,(*rn).s2);
 
-    w1=&sw_inv[ix][0][0];
+    w1=&sw_inv[icy][0][0];
 /*     printf("w1 %d %e %e\n", icx-ioff, (*w1).c00.re, (*w1).c00.im); */
-    w2=w1+2;  /* &sw_inv[ix][1][0]; */
-    w3=w1+4;  /* &sw_inv[ix][2][0]; */
+    w2=w1+2;  /* &sw_inv[icy][1][0]; */
+    w3=w1+4;  /* &sw_inv[icy][2][0]; */
     _su3_multiply(psi,*w1,phi1); 
     _su3_multiply(chi,*w2,(*rn).s1);
     _vector_add((*rn).s0,psi,chi);
@@ -149,9 +168,9 @@ void clover_inv(const int ieo, spinor * const l) {
     _vector_add((*rn).s1,psi,chi);
 /*     printf("s1 %d %e %e\n", icx-ioff, (*rn).s1.c0.re, (*rn).s1.c0.im); */
 
-    w1++; /* &sw_inv[ix][0][1]; */
-    w2++; /* &sw_inv[ix][1][1]; */
-    w3++; /* &sw_inv[ix][2][1]; */
+    w1++; /* &sw_inv[icy][0][1]; */
+    w2++; /* &sw_inv[icy][1][1]; */
+    w3++; /* &sw_inv[icy][2][1]; */
     _su3_multiply(psi,*w1,phi3); 
     _su3_multiply(chi,*w2,(*rn).s3);
     _vector_add((*rn).s2,psi,chi);
@@ -171,14 +190,14 @@ void clover_inv(const int ieo, spinor * const l) {
  * to j then and stores it in l multiplied by gamma_5
  *
  * it is assumed that the clover leaf is computed and stored
- * in sw
+ * in sw[VOLUME][3][2]
  * the corresponding routine can be found in clover_leaf.c
  *
  **************************************************************/
 
 void clover_gamma5(const int ieo, 
 		   spinor * const l, spinor * const k, spinor * const j,
-		   const double q_off) {
+		   const double mu) {
   int ix;
   int ioff,icx;
   su3 *w1,*w2,*w3;
@@ -208,10 +227,10 @@ void clover_gamma5(const int ieo,
     _su3_inverse_multiply(psi2,*w2,(*s).s0); 
     _su3_multiply(chi,*w3,(*s).s1);
     _vector_add_assign(psi2,chi); 
-    /*********************** contribution from q_off ***************************/
-    _vector_add_mul(psi1,q_off,(*s).s0);
-    _vector_add_mul(psi2,q_off,(*s).s1);
-    /**************************************************************/
+    // add in the twisted mass term (plus in the upper components)
+    _vector_add_i_mul(psi1, mu, (*s).s0);
+    _vector_add_i_mul(psi2, mu, (*s).s1);
+
     _vector_sub((*r).s0,psi1,(*t).s0);
     _vector_sub((*r).s1,psi2,(*t).s1);
     
@@ -222,9 +241,10 @@ void clover_gamma5(const int ieo,
     _vector_add_assign(psi1,chi); 
     _su3_inverse_multiply(psi2,*w2,(*s).s2); _su3_multiply(chi,*w3,(*s).s3);
     _vector_add_assign(psi2,chi); 
-    /*********************** contribution from q_off ***************************/
-    _vector_add_mul(psi1,q_off,(*s).s2);
-    _vector_add_mul(psi2,q_off,(*s).s3);
+    // add in the twisted mass term (minus from g5 in the lower components)
+    _vector_add_i_mul(psi1, mu, (*s).s2);
+    _vector_add_i_mul(psi2, mu, (*s).s3);
+
     /**************** multiply with  gamma5 included ******************************/
     _vector_sub((*r).s2,(*t).s2,psi1);
     _vector_sub((*r).s3,(*t).s3,psi2);
@@ -239,7 +259,7 @@ void clover_gamma5(const int ieo,
  * to j then and stores it in l
  *
  * it is assumed that the clover leaf is computed and stored
- * in sw
+ * in sw[VOLUME][3][2]
  * the corresponding routine can be found in clover_leaf.c
  *
  **************************************************************/
@@ -247,7 +267,7 @@ void clover_gamma5(const int ieo,
 
 void clover(const int ieo, 
 	    spinor * const l, spinor * const k, spinor * const j,
-	    const double q_off) {
+	    const double mu) {
   int ix;
   int ioff,icx;
   su3 *w1,*w2,*w3;
@@ -268,6 +288,7 @@ void clover(const int ieo,
     s = k + icx-ioff;
     t = j + icx-ioff;
 
+    // upper two spin components first
     w1=&sw[ix][0][0];
     w2=w1+2; /*&sw[ix][1][0];*/
     w3=w1+4; /*&sw[ix][2][0];*/
@@ -277,13 +298,15 @@ void clover(const int ieo,
     _su3_inverse_multiply(psi2,*w2,(*s).s0); 
     _su3_multiply(chi,*w3,(*s).s1);
     _vector_add_assign(psi2,chi); 
-    /*********************** contribution from q_off ***************************/
-    _vector_add_mul(psi1,q_off,(*s).s0);
-    _vector_add_mul(psi2,q_off,(*s).s1);
-    /*************************************************/
+
+    // add in the twisted mass term (plus in the upper components)
+    _vector_add_i_mul(psi1, mu, (*s).s0);
+    _vector_add_i_mul(psi2, mu, (*s).s1);
+
     _vector_sub((*r).s0,psi1,(*t).s0);
     _vector_sub((*r).s1,psi2,(*t).s1);
 
+    // now lower to spin components
     w1++; /*=&sw[ix][0][1];*/
     w2++; /*=&sw[ix][1][1];*/
     w3++; /*=&sw[ix][2][1];*/
@@ -293,13 +316,13 @@ void clover(const int ieo,
     _su3_inverse_multiply(psi2,*w2,(*s).s2); 
     _su3_multiply(chi,*w3,(*s).s3);
     _vector_add_assign(psi2,chi); 
-    /*********************** contribution from q_off ***************************/
-    _vector_add_mul(psi1,q_off,(*s).s2);
-    _vector_add_mul(psi2,q_off,(*s).s3);
-    /*************************************************/
+
+    // add in the twisted mass term (minus from g5 in the lower components)
+    _vector_add_i_mul(psi1, mu, (*s).s2);
+    _vector_add_i_mul(psi2, mu, (*s).s3);
+
     _vector_sub((*r).s2,psi1,(*t).s2);
     _vector_sub((*r).s3,psi2,(*t).s3);
-    /******************************** end of loop *********************************/
   }
   return;
 }
