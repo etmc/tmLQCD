@@ -22,9 +22,11 @@ struct stout_control
   unsigned int    iterations;
   unsigned int    current;
   int             calculate_force_terms;
+  int             smearing_performed;
   
   gauge_field_t    result; /* For direct access to the result, shallow copy... */
   gauge_field_t   *scratch;
+  adjoint_field_t  force_result;
   
   /* The following are fields that store intermediate results for the force terms */
   gauge_field_t   *U;
@@ -39,4 +41,5 @@ struct stout_control
 stout_control *construct_stout_control(double rho, unsigned int iterations, int calculate_force_terms);
 void free_stout_control(stout_control *control);
 
-void stout_smear(stout_control *control, gauge_field_t m_field_in);
+void stout_smear(stout_control *control, gauge_field_t in);
+void stout_smear_forces(stout_control *control, adjoint_field_t in);

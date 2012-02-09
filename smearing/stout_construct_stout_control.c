@@ -7,6 +7,7 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
   control->iterations = iterations;
   control->current = 0;
   control->calculate_force_terms = calculate_force_terms;
+  control->smearing_performed = 0;
 
   control->scratch = (gauge_field_t*)malloc(2 * sizeof(gauge_field_t));
   if (!calculate_force_terms)
@@ -37,4 +38,5 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
   }
   
   result = control->U[iterations];
+  force_result = get_adjoint_field();
 }

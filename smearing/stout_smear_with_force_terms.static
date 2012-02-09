@@ -1,8 +1,7 @@
-static void stout_smear_with_force_terms(stout_control *control, gauge_field_t in)
+static void stout_smear_with_force_terms(stout_control *control)
 {
   control->scratch[0] = get_gauge_field();
   control->scratch[1] = get_gauge_field();
-  control->U[0] = in; /* Shallow copy */
     
   for(control->current = 0; control->current < control->iterations; ++control->current)
   {
@@ -12,6 +11,7 @@ static void stout_smear_with_force_terms(stout_control *control, gauge_field_t i
     exchange_gauge_field(control->U.field_array[control->current]); /* NOTE Maybe exchange more fields than just this one? */
   }
   
-  return_gauge_field[control->scratch[0]);
-  return_gauge_field[control->scratch[1]);
+  control->smearing_performed = 1;
+  return_gauge_field(&control->scratch[0]);
+  return_gauge_field(&control->scratch[1]);
 }

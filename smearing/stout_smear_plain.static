@@ -1,13 +1,11 @@
 #include "stout_fatten_links.static"
 
-static void stout_smear_plain(struct stout_control *control, gauge_field_t in)
+static void stout_smear_plain(struct stout_control *control)
 {
   /* We request two temporary fields: One for storing the staples, one to
    * provide scratch space for matrix multiplications. */
   control->scratch[0] = get_gauge_field();
   control->scratch[1] = get_gauge_field();
-
-  control->U[0] = in; /* Shallow copy */
   
   for(int iter = 0; iter < control->iterations; ++iter)
   {
@@ -16,8 +14,9 @@ static void stout_smear_plain(struct stout_control *control, gauge_field_t in)
     exchange_gauge_field(result);
     control->U[0] = result; /* Prepare for next iteration, shallow copy */
   }
+  control->smearing_performed = 1;
 
   /* Free temporary resources */
-  return_gauge_field(control->U[0]);
-  return_gauge_field(control->U[1]);
+  return_gauge_field(&control->U[0]);
+  return_gauge_field(&control->U[1]);
 }
