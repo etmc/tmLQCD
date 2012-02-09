@@ -1,15 +1,17 @@
 static void stout_smear_with_force_terms(stout_control *control, gauge_field_t in)
 {
-  int *iter = &control->current_iteration; /* Using control->current_iteration everywhere makes the code unreadable.*/
-  
-  for(*iter = 0; *iter < control->iterations; ++(*iter))
+  control->scratch[0] = get_gauge_field();
+  control->scratch[1] = get_gauge_field();
+  control->U[0] = in; /* Shallow copy */
+    
+  for(control->current = 0; control->current < control->iterations; ++control->current)
   {
     /* Iteration 0 is a special case: we need to use in instead of a previously calculated field. */
-    generic_staples(control->U.field_array[*iter], *iter ? control->U.field_array[*iter - 1] : in);
-    stout_fatten_links_with_force_terms(control, *iter ? control->U.field_array[*iter - 1] : in);
-    exchange_gauge_field(control->U.field_array[*iter]); /* NOTE Maybe exchange more fields than just this one? */
+    generic_staples(control->scratch[0], control->U.field_array[control->current]);
+    stout_fatten_links_with_force_terms(control);
+    exchange_gauge_field(control->U.field_array[control->current]); /* NOTE Maybe exchange more fields than just this one? */
   }
   
-  /* Make a shallow copy of the final result for straightforward usage. */
-  control->result = control->U.field_array[*iter];
+  return_gauge_field[control->scratch[0]);
+  return_gauge_field[control->scratch[1]);
 }

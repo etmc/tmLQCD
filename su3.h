@@ -634,7 +634,7 @@ _sse_store_up(r);
    x.c0 = (c) * (y).c0;			\
    x.c1 = (c) * (y).c1;			\
    x.c2 = (c) * (y).c2;
-    
+
 #define _vector_tensor_vector(t,u,v)	\
   (t).c00 = (u).c0 * conj((v).c0);	\
   (t).c01 = (u).c0 * conj((v).c1);	\
@@ -647,7 +647,7 @@ _sse_store_up(r);
   (t).c22 = (u).c2 * conj((v).c2);
 
 #define _vector_tensor_vector_add(t, u, v, w, z) \
-  (t).c00 = (u).c0 * conj((v).c0) + (w).c0 * conj((z).c0) ;	\
+  (t).c00 = (u).c0 * conj((v).c0) + (w).c0 * conj((z).c0);	\
   (t).c01 = (u).c0 * conj((v).c1) + (w).c0 * conj((z).c1);	\
   (t).c02 = (u).c0 * conj((v).c2) + (w).c0 * conj((z).c2);	\
   (t).c10 = (u).c1 * conj((v).c0) + (w).c1 * conj((z).c0);	\
@@ -656,3 +656,8 @@ _sse_store_up(r);
   (t).c20 = (u).c2 * conj((v).c0) + (w).c2 * conj((z).c0);	\
   (t).c21 = (u).c2 * conj((v).c1) + (w).c2 * conj((z).c1);	\
   (t).c22 = (u).c2 * conj((v).c2) + (w).c2 * conj((z).c2);
+
+#define _su3_add_equals_complex_identity(u, c) \
+  (u).c00 += (c); \
+  (u).c11 += (c); \
+  (u).c22 += (c);

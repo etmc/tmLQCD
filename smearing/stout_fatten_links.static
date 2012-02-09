@@ -1,16 +1,14 @@
-static void stout_fatten_links(stout_control *control, gauge_field_t in)
+static void stout_fatten_links(stout_control *control)
 {
-  static su3 tmp;
-
-  /* Alias fields */
-  gauge_field_t staples = control->scratch;
+  
+  /* NOTE Check potential performance impact of Cayley-Hamilton procedure here... */
   
 #define _MULTIPLY_AND_EXPONENTIATE(x, principal) \
   { \
-    _su3_times_su3d(tmp, staples.field[x][principal], in.field[x][principal]); \
-    project_antiherm(&tmp); \
-    _real_times_su3(buff_out.field[x][principal], coeff, tmp); \
-    exposu3_in_place(&buff_out.field[x][principal]); \
+    _su3_times_su3d(control->scratch[1].field[x][principal], control->scratch[0].field[x][principal], control->U[0].field[x][principal]); \
+    project_antiherm(&control->scratch[1].field[x][principal]); \
+    _real_times_su3(control->U[1].field[x][principal], coeff, control->scratch[1].field[x][principal]); \
+    exposu3_in_place(&control->U[1].field[x][principal]); \
   }
 
   for (int x = 0; x < VOLUME; ++x)

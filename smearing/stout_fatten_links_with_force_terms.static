@@ -1,19 +1,13 @@
 #include "cayley_hamilton_exponent_with_force_terms.static"
 
-static void stout_fatten_links_with_force_terms(stout_control *control, gauge_field_t in)
+static void stout_fatten_links_with_force_terms(stout_control *control)
 {
-  static su3 tmp;
-  
-  /* Alias the fields */
-  gauge_field_t staples = control->scratch; /* As scratch space */
-  gauge_field_t Q = control->Q.field_array[control->current_iteration];
-  
-#define _CALCULATE_WEIGHTED_PLAQUETTE(x, principal)                                        \
-  {                                                                                        \
-    _su3_times_su3d(Q[x][principal], staples.field[x][principal], in.field[x][principal]); \
-    _real_times_su3(Q[x][principal], control->rho, Q[x][principal]);                       \
-    project_antiherm(&Q[x][principal]);                                                    \
-  }
+#define _CALCULATE_WEIGHTED_PLAQUETTE(x, principal)                                                                                                             \
+{                                                                                                                                                               \
+  _su3_times_su3d(control->Q[control->current].field[x][principal], control->scratch[0].field[x][principal], control->U[control->current].field[x][principal]); \
+  _real_times_su3(control->Q[control->current].field[x][principal], control->rho, control->Q[control->current].field[x][principal]);                            \
+    project_antiherm(&control->Q[control->current].field[x][principal]);                                                                                        \
+}
   
   for (int x = 0; x < VOLUME; ++x)
   {
@@ -26,7 +20,8 @@ static void stout_fatten_links_with_force_terms(stout_control *control, gauge_fi
   cayley_hamilton_exponent_with_force_terms(control);
   
   for (int x = 0; x < VOLUME; ++x)
-    _su3_times_
+    for (int mu = 0; mu < 4; ++mu)
+      _su3_times_su3(control->U[control->current + 1].field[x][mu], control->scratch[0].field[x][mu], control->U[control->current].field[x][mu]);
   
 #undef _CALCULATE_WEIGHTED_PLAQUETTE
 }

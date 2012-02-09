@@ -1,30 +1,32 @@
+#define _EXPONENT_FROM_COEFFICIENTS(out, f0, f1, f2, in)                               \
+  _complex_times_su3(control->scratch[1].field[x][mu], f2, in.field[x][mu]);           \
+  _su3_add_equals_complex_identity(control->scratch[1].field[x][mu], f1);              \
+  _su3_times_su3(out.field[x][mu], control->scratch[1].field[x][mu], in.field[x][mu]); \
+  _su3_add_equals_complex_identity(out.field[x][mu], f0);              
+
 static void cayley_hamilton_exponent_with_force_terms(stout_control *control)
-{
-#define _exponent_from_coefficients(dest, c0, c1, c2, orig)                                                                                                   \
-  dest.c00 = c0 + c1 * orig.c00 + c2 * dest.c00  \
-  dest.c01 =      c1 * orig.c01 + c2 * dest.c01; \
-  dest.c02 =      c1 * orig.c02 + c2 * dest.c02; \
-  dest.c10 =      c1 * orig.c10 + c2 * dest.c10; \
-  dest.c11 = c0 + c1 * orig.c11 + c2 * dest.c11; \
-  dest.c12 =      c1 * orig.c12 + c2 * dest.c12; \
-  dest.c20 =      c1 * orig.c20 + c2 * dest.c20; \
-  dest.c21 =      c1 * orig.c21 + c2 * dest.c21; \
-  dest.c22 = c0 + c1 * orig.c22 + c2 * dest.c22;
-  
+{    
   static double const fac_1_3 = 1 / 3.0;
+  
+  su3_tuple  *Q = control->Q[control->current].field;
+  double     f0; /* Is not really needed beyond this function... */
+  exp_par   *f1 = control->f1[control->current];
+  exp_par   *f2 = control->f2[control->current];
+    
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)
     {
-      double c0 = Q.field[x][mu].c00 * (Q.field[x][mu].c11 * Q.field[x][mu].c22 - Q.field[x][mu].c12 * Q.field[x][mu].c21) + 
-                  Q.field[x][mu].c01 * (Q.field[x][mu].c12 * Q.field[x][mu].c20 - Q.field[x][mu].c10 * Q.field[x][mu].c22) +
-                  Q.field[x][mu].c02 * (Q.field[x][mu].c10 * Q.field[x][mu].c21 - Q.field[x][mu].c11 * Q.field[x][mu].c20)  ;
+      /* c0 = det[Q] */
+      double c0 = Q[x][mu].c00 * (Q[x][mu].c11 * Q[x][mu].c22 - Q[x][mu].c12 * Q[x][mu].c21) + 
+                  Q[x][mu].c01 * (Q[x][mu].c12 * Q[x][mu].c20 - Q[x][mu].c10 * Q[x][mu].c22) +
+                  Q[x][mu].c02 * (Q[x][mu].c10 * Q[x][mu].c21 - Q[x][mu].c11 * Q[x][mu].c20)  ;
       double sign_c0 = copysign(1.0, c0);
       c0 = fabs(c0);
 
-      /* We'll need U^2 down the line, so we might as well calculate it now. */
-      /* This is also why we need the buffer space -- can't do matrix multiplication in place */
-      _su3_times_su3(*U, *Q, *Q);
-      double c1 = 0.5 * (U.field[x][mu].c00 + U.field[x][mu].c11 + U.field[x][mu].c22);
+      /* c1 = 0.5 * Tr[QQ] */
+      double c1 = 0.5 * (Q[x][mu].c00 * Q[x][mu].c00 + Q[x][mu].c01 * Q[x][mu].c10 + Q[x][mu].c02 * Q[x][mu].c20 +
+                         Q[x][mu].c10 * Q[x][mu].c01 + Q[x][mu].c11 * Q[x][mu].c11 + Q[x][mu].c12 * Q[x][mu].c21 +
+                         Q[x][mu].c20 * Q[x][mu].c02 + Q[x][mu].c21 * Q[x][mu].c12 + Q[x][mu].c22 * Q[x][mu].c22  );
 
       double c0max = 2.0 * pow(fac_1_3 * c1, 1.5);
       double theta_3 = fac_1_3 * acos(c0 / c0max); 
@@ -36,6 +38,8 @@ static void cayley_hamilton_exponent_with_force_terms(stout_control *control)
       double xi0 = (w > 0.05) ? (sin(w) / w) : 1 - 0.16666666666666667 *  w *  w * (1 - 0.05 *  w *  w * (1 - 0.023809523809523808 *  w * w));
       double divisor = 1.0 / (9.0 * u * u -  w * w);
       
+      /* NOTE The following can probably be reorganized for efficiency -- some of the factors keep returning... */
+      
       double r10 = 2 * (u + I * (u * u - w * w)) * cexp(2 * I * u) + 2 * cexp(-I * u) * (4 * u * (2 - I * u) * cos(w) + I * (9 * u * u + w * w - I * u * (3 * u * u + w * w)) * xi0);
       double r11 = 2 * (1 + 2 * I * u) * cexp(2 * I * u) + cexp(-I * u) * (-2 * (1 - I * u) * cos(w) + I * (6 * u + I * (w * w - 3 * u * u)) * xi0);
       double r12 = 2 * I * cexp(2 * I * u) + I * cexp(-I * u) * (cos(w) - 3 * (1 - I * u) * xi0);
@@ -44,24 +48,23 @@ static void cayley_hamilton_exponent_with_force_terms(stout_control *control)
       double r22 = cexp(-I * u) * (xi0 - 3 * I * u * xi1);
       
       /* We can fold in the sign immediately -- c.f. f_j(-c0, c1) = -1^j * conj(f_j(c0, c1)) */
-      f0.field_array[mu].field[x] =           divisor * ((u * u -  w * w) * cexp(sign_c0 * 2 * I * u) + 
-                                                         cexp(-sign_c0 * I * u) * (8 * u * u * cos(w) + 2 * sign_c0 * I * u * (3 * u * u +  w * w) * xi0));
-      f1.field_array[mu].field[x] = sign_c0 * divisor * (2 * u * cexp(sign_c0 * 2 * I * u) - 
-                                                         cexp(-sign_c0 * I * u) * (2 * u * cos(w) - sign_c0 * I * (3 * u * u -  w * w) * xi0));
-      f2.field_array[mu].field[x] =           divisor * (cexp(2 * sign_c0 * I * u) - cexp(-sign_c0 * I * u) * (cos(w) + 3 * sign_c0 * I * u * xi0));
+      f0        = divisor * ((u * u -  w * w) * cexp(sign_c0 * 2 * I * u) + cexp(-sign_c0 * I * u) * (8 * u * u * cos(w) + 2 * sign_c0 * I * u * (3 * u * u +  w * w) * xi0));
+      f1[x][mu] = sign_c0 * divisor * (2 * u * cexp(sign_c0 * 2 * I * u) - cexp(-sign_c0 * I * u) * (2 * u * cos(w) - sign_c0 * I * (3 * u * u -  w * w) * xi0));
+      f2[x][mu] =  divisor * (cexp(2 * sign_c0 * I * u) - cexp(-sign_c0 * I * u) * (cos(w) + 3 * sign_c0 * I * u * xi0));
 
       double bdiv = 0.5 * divisor * divisor;
       
-      double b10 = bdiv * (2 * u * r10 + (3 * u * u - w * w) * r20 - 2 * (15 * u * u + w * w) * f0.field_array[mu].field[x]);
-      double b11 = bdiv * (2 * u * r11 + (3 * u * u - w * w) * r21 - 2 * (15 * u * u + w * w) * f1.field_array[mu].field[x]);
-      double b12 = bdiv * (2 * u * r12 + (3 * u * u - w * w) * r22 - 2 * (15 * u * u + w * w) * f2.field_array[mu].field[x]);
-      double b20 = bdiv * (r10 - 3 * u * r20 - 24 * u * f0.field_array[mu].field[x]);
-      double b21 = bdiv * (r11 - 3 * u * r21 - 24 * u * f1.field_array[mu].field[x]);
-      double b22 = bdiv * (r12 - 3 * u * r22 - 24 * u * f2.field_array[mu].field[x]);
+      double b10 = bdiv * (2 * u * r10 + (3 * u * u - w * w) * r20 - 2 * (15 * u * u + w * w) * f0;
+      double b11 = bdiv * (2 * u * r11 + (3 * u * u - w * w) * r21 - 2 * (15 * u * u + w * w) * f1[x][mu]);
+      double b12 = bdiv * (2 * u * r12 + (3 * u * u - w * w) * r22 - 2 * (15 * u * u + w * w) * f2[x][mu]);
+      double b20 = bdiv * (r10 - 3 * u * r20 - 24 * u * f0);
+      double b21 = bdiv * (r11 - 3 * u * r21 - 24 * u * f1[x][mu]);
+      double b22 = bdiv * (r12 - 3 * u * r22 - 24 * u * f2[x][mu]);
       
-      _exponent_from_coefficients(U.field[x][mu], f0.field_array[mu].field[x], f1.field_array[mu].field[x], f2.field_array[mu].field[x], Q.field[x][mu]);
-      _exponent_from_coefficients(B1.field[x][mu], b10, b11, b12, Q.field[x][mu]);
-      _exponent_from_coefficients(B1.field[x][mu], b20, b21, b22, Q.field[x][mu]);
+      _EXPONENT_FROM_COEFFICIENTS(control->scratch[0],           f0,  f1[x][mu], f2[x][mu], control->Q[control->current]);
+      _EXPONENT_FROM_COEFFICIENTS(control->B1[control->current], b10, b11,       b12,       control->Q[control->current]);
+      _EXPONENT_FROM_COEFFICIENTS(control->B2[control->current], b20, b21,       b22,       control->Q[control->current]);
     }
-#undef _exponent_from_coefficients
 }
+
+#undef _EXPONENT_FROM_COEFFICIENTS
