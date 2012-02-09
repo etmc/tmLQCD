@@ -575,27 +575,27 @@ _sse_store_up(r);
 
 /* M.Hasenbusch */
 #define _complex_times_su3(r,c,s) \
-   (r).c00 *= (c); \
-   (r).c01 *= (c); \
-   (r).c02 *= (c); \
-   (r).c10 *= (c); \
-   (r).c11 *= (c); \
-   (r).c12 *= (c); \
-   (r).c20 *= (c); \
-   (r).c21 *= (c); \
-   (r).c22 *= (c);
+   (r).c00 = (c) * (s); \
+   (r).c01 = (c) * (s); \
+   (r).c02 = (c) * (s); \
+   (r).c10 = (c) * (s); \
+   (r).c11 = (c) * (s); \
+   (r).c12 = (c) * (s); \
+   (r).c20 = (c) * (s); \
+   (r).c21 = (c) * (s); \
+   (r).c22 = (c) * (s);
 
 /* M.Hasenbusch */
 #define _complexcjg_times_su3(r,c,s) \
-   (r).c00 *= conj(c); \
-   (r).c01 *= conj(c); \
-   (r).c02 *= conj(c); \
-   (r).c10 *= conj(c); \
-   (r).c11 *= conj(c); \
-   (r).c12 *= conj(c); \
-   (r).c20 *= conj(c); \
-   (r).c21 *= conj(c); \
-   (r).c22 *= conj(c);
+   (r).c00 = conj(c) * (s); \
+   (r).c01 = conj(c) * (s); \
+   (r).c02 = conj(c) * (s); \
+   (r).c10 = conj(c) * (s); \
+   (r).c11 = conj(c) * (s); \
+   (r).c12 = conj(c) * (s); \
+   (r).c20 = conj(c) * (s); \
+   (r).c21 = conj(c) * (s); \
+   (r).c22 = conj(c) * (s);
 
 
 /* M. Hasenbusch
