@@ -159,28 +159,22 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
  **********************************************************/
 
 void clover_inv(const int ieo, spinor * const l, const double mu) {
-  int ix;
-  int ioff = 0, ioffy = 0;
+  int ioff = 0;
   su3 *w1,*w2,*w3;
   spinor *rn;
   static su3_vector psi, chi, phi1, phi3;
 
-  if(ieo != 0) {
-    ioff = (VOLUME+RAND)/2;
-  }
-  if(mu < 0) ioffy = VOLUME/2;
+  if(mu < 0) ioff = VOLUME/2;
   /************************ loop over all lattice sites *************************/
 
-  for(int icx = ioff, icy = ioffy; icx < (VOLUME/2+ioff); icx++, icy++) {
-    ix = g_eo2lexic[icx];
+  for(int icx = 0, icy = ioff; icx < (VOLUME/2); icx++, icy++) {
+/*     ix = g_eo2lexic[icx]; */
 
-    rn = l + icx - ioff;
-    /* noch schlimmer murks fuer den clover-term*/
+    rn = l + icx;
     _vector_assign(phi1,(*rn).s0);
     _vector_assign(phi3,(*rn).s2);
 
     w1=&sw_inv[icy][0][0];
-/*     printf("w1 %d %e %e\n", icx-ioff, (*w1).c00.re, (*w1).c00.im); */
     w2=w1+2;  /* &sw_inv[icy][1][0]; */
     w3=w1+4;  /* &sw_inv[icy][2][0]; */
     _su3_multiply(psi,*w1,phi1); 
@@ -189,7 +183,6 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
     _su3_inverse_multiply(psi,*w2,phi1); 
     _su3_multiply(chi,*w3,(*rn).s1);
     _vector_add((*rn).s1,psi,chi);
-/*     printf("s1 %d %e %e\n", icx-ioff, (*rn).s1.c0.re, (*rn).s1.c0.im); */
 
     w1++; /* &sw_inv[icy][0][1]; */
     w2++; /* &sw_inv[icy][1][1]; */
@@ -200,7 +193,6 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
     _su3_inverse_multiply(psi,*w2,phi3); 
     _su3_multiply(chi,*w3,(*rn).s3);
     _vector_add((*rn).s3,psi,chi);
-/*     printf("s3 %d %e %e\n", icx-ioff, (*rn).s3.c0.re, (*rn).s3.c0.im); */
 
     /******************************** end of loop *********************************/
   }
@@ -265,8 +257,8 @@ void clover_gamma5(const int ieo,
     _su3_inverse_multiply(psi2,*w2,(*s).s2); _su3_multiply(chi,*w3,(*s).s3);
     _vector_add_assign(psi2,chi); 
     // add in the twisted mass term (minus from g5 in the lower components)
-    _vector_add_i_mul(psi1, mu, (*s).s2);
-    _vector_add_i_mul(psi2, mu, (*s).s3);
+    _vector_add_i_mul(psi1, -mu, (*s).s2);
+    _vector_add_i_mul(psi2, -mu, (*s).s3);
 
     /**************** multiply with  gamma5 included ******************************/
     _vector_sub((*r).s2,(*t).s2,psi1);
@@ -341,8 +333,8 @@ void clover(const int ieo,
     _vector_add_assign(psi2,chi); 
 
     // add in the twisted mass term (minus from g5 in the lower components)
-    _vector_add_i_mul(psi1, mu, (*s).s2);
-    _vector_add_i_mul(psi2, mu, (*s).s3);
+    _vector_add_i_mul(psi1, -mu, (*s).s2);
+    _vector_add_i_mul(psi2, -mu, (*s).s3);
 
     _vector_sub((*r).s2,psi1,(*t).s2);
     _vector_sub((*r).s3,psi2,(*t).s3);
