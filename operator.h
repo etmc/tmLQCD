@@ -81,6 +81,10 @@ typedef struct {
   /* generic place for propagators */
   spinor *prop0, *prop1, *prop2, *prop3;
 
+  /* multiple masses for CGMMS */
+  double extra_masses[MAX_EXTRA_MASSES];
+  int no_extra_masses;
+
   /* chebyshef coefficients for the overlap */
   double * coefs;
   /* various versions of the Dirac operator */

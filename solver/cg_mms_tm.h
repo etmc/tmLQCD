@@ -28,6 +28,7 @@
 #include"su3.h"
 
 int cg_mms_tm(spinor * const P,spinor * const Q, const int max_iter, 
-	      double eps_sq, const int rel_prec, const int N, matrix_mult f);
+	      double eps_sq, const int rel_prec, const int N, matrix_mult f,
+        const int no_extra_masses, double * const extra_masses);
 
 #endif

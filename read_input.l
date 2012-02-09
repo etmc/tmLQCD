@@ -228,8 +228,6 @@ inline void rmQuotes(char *str){
 %x DEBUG
 %x GMRESM
 %x GMRESDRNEV
-%x CGMMSNMS
-%x CGMMS
 %x REPRORND
 %x SLOPPYPREC
 %x USESTOUT
@@ -349,7 +347,6 @@ inline void rmQuotes(char *str){
 ^DebugLevel{EQL}                   BEGIN(DEBUG);
 ^GMRESMParameter{EQL}              BEGIN(GMRESM);
 ^GMRESDRNrEv{EQL}                  BEGIN(GMRESDRNEV);
-^CGMMSNoExtraMasses{EQL}           BEGIN(CGMMSNMS);
 ^GaugeConfigReadPrecision{EQL}     BEGIN(GAUGERPREC);
 ^GaugeConfigWritePrecision{EQL}    BEGIN(GAUGEWPREC);
 ^DisableIOChecks{EQL}              BEGIN(DSBLIOCHECK);
@@ -526,31 +523,30 @@ inline void rmQuotes(char *str){
   }
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
     char * token = NULL;
-    int no_extra_masses = 0;
+    optr->no_extra_masses = 0;
     double mass;
     if( strtok(yytext,"\n\t =,\\") != NULL ) {
        /* Implicitly drop the first token, it is "ExtraMasses" */
       token = strtok(NULL," =,");
 
       while( token != NULL ) {
-        if( no_extra_masses >= MAX_EXTRA_MASSES ) {
+        if( optr->no_extra_masses >= MAX_EXTRA_MASSES ) {
           yy_fatal_error("  CGMMS maximum number of extra masses reached. Increase MAX_EXTRA_MASSES in global.h!\n");
         }
         sscanf(token,"%lf",&mass);
-        g_extra_masses[no_extra_masses] = mass;
-        if(myverbose) printf("  CGMMS extra mass %d = %lf (2*kappa*mu) added line %d operator %d\n",no_extra_masses,mass,line_of_file,current_operator);
-        ++no_extra_masses;
+        optr->extra_masses[optr->no_extra_masses] = mass;
+        if(myverbose) printf("  CGMMS extra mass %d = %lf (2*kappa*mu) added line %d operator %d\n",optr->no_extra_masses,mass,line_of_file,current_operator);
+        ++(optr->no_extra_masses);
         token = strtok(NULL," =,");
       }
     } else {
       yy_fatal_error("  CGMMS Failed to read ExtraMasses input line in configuration file!");
     }
 
-    if( no_extra_masses == 0 ) {
+    if( optr->no_extra_masses == 0 ) {
       yy_fatal_error("  CGMMS Failed to add any extra masses. Input line must be malformed.");
     } else {    
-      g_no_extra_masses = no_extra_masses;
-      if(myverbose) printf("  CGMMS %d extra masses added line %d operator %d\n",g_no_extra_masses,line_of_file,current_operator);
+      if(myverbose) printf("  CGMMS %d extra masses added line %d operator %d\n",optr->no_extra_masses,line_of_file,current_operator);
     }
   }
   ^EndOperator{SPC}* {
@@ -1538,12 +1534,6 @@ inline void rmQuotes(char *str){
   gmresdr_nr_ev = atoi(yytext);
   if(myverbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
 }
- /*
-<CGMMSNMS>{DIGIT}+ {
-  g_no_extra_masses = atoi(yytext);
-  if(myverbose!=0) printf("Number of extra MMS masses set to %d\n", g_no_extra_masses);
-}
- */
 <DFLSP>{DIGIT}+ {
   g_N_s = atoi(yytext);
   if(myverbose!=0) printf("Deflation subspace dimension set to %d \n", g_N_s);
@@ -2020,7 +2010,6 @@ int read_input(char * conf_file){
   SourceInfo.automaticTS = _default_automaticTS;
   gmres_m_parameter = _default_gmres_m_parameter;
   gmresdr_nr_ev = _default_gmresdr_nr_ev;
-  g_no_extra_masses = _default_g_no_extra_masses;
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
   g_disable_IO_checks = _default_g_disable_IO_checks;
