@@ -21,7 +21,7 @@ void stout_smear_forces(struct stout_control *control, adjoint_field_t in)
   {
     /* NOTE Write routines operating on whole gauge fields? This is clunky and tedious. */
     
-    /* Calculate Gamma as defined by Peardon and Morningstar */
+    /* Calculate Lambda as defined by Peardon and Morningstar */
     for (unsigned int x = 0; x < VOLUME; ++x)
       for (unsigned int mu = 0; mu < 4; ++mu)
       {
@@ -39,14 +39,25 @@ void stout_smear_forces(struct stout_control *control, adjoint_field_t in)
         /* scratch[1] == ( Tr[Sigma' * B1 * U] + Tr[Sigma' * B2 * U] * Q ) * Q  + f_1 * U * Sigma' */
         _su3_times_su3(control->scratch[2].field[x][mu], control->U[iter].field[x][mu], control->scratch[0].field[x][mu]);
         _complex_times_su3(control->scratch[3].field[x][mu], control->f1[iter][x][mu], control->scratch[2].field[x][mu]);
-        _su3_plus_su3(control->scratch[1], control->scratch[3].field[x][mu], control->scratch[1]);
+        _su3_plus_su3(control->scratch[1].field[x][mu], control->scratch[3].field[x][mu], control->scratch[1].field[x][mu]);
         
         /* scratch[1] == ( Tr[Sigma' * B1 * U] + Tr[Sigma' * B2 * U] * Q ) * Q  + f_1 * U * Sigma' + f2 * Q * U * Sigma' */
         _su3_times_su3(control->scratch[3].field[x][mu], control->Q[iter].field[x][mu], control->scratch[2].field[x][mu]);
         _complex_times_su3(control->scratch[3].field[x][mu], control->f2[iter][x][mu], control->scratch[3].field[x][mu]);
+        _su3_plus_su3(control->scratch[1].field[x][mu], control->scratch[3].field[x][mu], control->scratch[1].field[x][mu]);
+        
+        /* scratch[1] == ( Tr[Sigma' * B1 * U] + Tr[Sigma' * B2 * U] * Q ) * Q  + f_1 * U * Sigma' + f2 * Q * U * Sigma' + f2 * U * Sigma' * Q* == Gamma */
+        _su3_times_su3(control->scratch[3].field[x][mu], control->scratch[2].field[x][mu], control->Q[iter].field[x][mu]);
+        _complex_times_su3(control->scratch[3].field[x][mu], control->f2[iter][x][mu], control->scratch[3].field[x][mu]);
+        _su3_plus_su3(control->scratch[1].field[x][mu], control->scratch[3].field[x][mu], control->scratch[1].field[x][mu]);
+        
+        /* scratch[1] = 0.5 * ((Gamma + Gamma^dag) - Tr(Gamma + Gamma^dag) / N_c) == Lambda */
+        project_herm(&control->scratch[1].field[x][mu]);
       }
+    
+    /* At this point, scratch[0] contains Sigma', scratch[1] contains Gamma. */
   }
   
-  for (unsigned int ctr = 0; ctr < 3; ++ctr)
+  for (unsigned int ctr = 0; ctr < 4; ++ctr)
     return_gauge_field(&control->scratch[ctr]);
 }
