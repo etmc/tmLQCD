@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
   char conf_filename[50];
   char * input_filename = NULL;
   double plaquette_energy;
-  struct stout_parameters params_smear;
+  /* struct stout_parameters params_smear; */
   spinor **s, *s_;
 
 #ifdef _KOJAK_INST
