@@ -57,71 +57,58 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   /* This factor 2 a missing factor 2 in trace_lambda */
   (*mnl).forcefactor = 2.;
 
-  if(mnl->even_odd_flag) {
-    /*********************************************************************
-     * 
-     * even/odd version 
-     *
-     * This a term is det(\hat Q^2(\mu))
-     *
-     *********************************************************************/
-    
-    g_mu = 0.;
-    boundary(mnl->kappa);
-
-    sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
-    sw_invert(EO);
-
-    if(mnl->solver != CG && g_proc_id == 0) {
-      fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (cloverdet_monomial.c)\n");
-    }
-    
-    /* Invert Q_{+} Q_{-} */
-    /* X_o -> DUM_DERI+1 */
-    chrono_guess(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
-    mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->maxiter, mnl->forceprec, 
-			 g_relative_precision_flag, VOLUME/2, mnl->Qsq);
-    chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
-			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-    
-    /* Y_o -> DUM_DERI  */
-    mnl->Qm(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-    
-    /* apply Hopping Matrix M_{eo} */
-    /* to get the even sites of X_e */
-    H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO);
-    /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
-    
-    /* to get the even sites of Y_e */
-    H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO);
-    /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf);
-
-    /* here comes the clover term... */
-    gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
-    sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
-    
-    /* compute the contribution for the det-part */
-    gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-    sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-    
-    sw_deriv(EO);
-    sw_all(hf, mnl->kappa, mnl->c_sw);
-  } 
-  else {
-    /*********************************************************************
-     * non even/odd version not existent
-     * 
-     * This term is det(Q^2 + \mu_1^2)
-     *
-     *********************************************************************/
-    if(g_proc_id == 0) {
-      fprintf(stderr, "only even/odd implemented right now! (cloverdet_monomial.c)\n");
-    }
-
+  /*********************************************************************
+   * 
+   * even/odd version 
+   *
+   * This a term is det(\hat Q^2(\mu))
+   *
+   *********************************************************************/
+  
+  g_mu = 0.;
+  boundary(mnl->kappa);
+  
+  sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_invert(EO);
+  
+  if(mnl->solver != CG && g_proc_id == 0) {
+    fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (cloverdet_monomial.c)\n");
   }
+  
+  /* Invert Q_{+} Q_{-} */
+  /* X_o -> DUM_DERI+1 */
+  chrono_guess(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+	       mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+  mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->maxiter, mnl->forceprec, 
+		       g_relative_precision_flag, VOLUME/2, mnl->Qsq);
+  chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
+		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
+  
+  /* Y_o -> DUM_DERI  */
+  mnl->Qm(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+  
+  /* apply Hopping Matrix M_{eo} */
+  /* to get the even sites of X_e */
+  H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO);
+  /* \delta Q sandwitched by Y_o^\dagger and X_e */
+  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
+  
+  /* to get the even sites of Y_e */
+  H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO);
+  /* \delta Q sandwitched by Y_e^\dagger and X_o */
+  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf);
+  
+  /* here comes the clover term... */
+  gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
+  sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
+  
+  /* compute the contribution for the det-part */
+  gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+  sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+  
+  sw_deriv(EO);
+  sw_all(hf, mnl->kappa, mnl->c_sw);
+
   g_mu = g_mu1;
   boundary(g_kappa);
 
@@ -139,22 +126,17 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->iter0 = 0;
   mnl->iter1 = 0;
 
-  init_sw_fields(VOLUME);
+  init_sw_fields();
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert(EO);
-  if(mnl->even_odd_flag) {
-    random_spinor_field(g_spinor_field[2], VOLUME/2, mnl->rngrepro);
-    mnl->energy0 = square_norm(g_spinor_field[2], VOLUME/2, 1);
 
-    mnl->Qp(mnl->pf, g_spinor_field[2]);
-    chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
-			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-  }
-  else {
-    if(g_proc_id == 0) {
-      fprintf(stderr, "only even/odd implemented right now! (cloverdet_monomial.c)\n");
-    }
-  }
+  random_spinor_field(g_spinor_field[2], VOLUME/2, mnl->rngrepro);
+  mnl->energy0 = square_norm(g_spinor_field[2], VOLUME/2, 1);
+  
+  mnl->Qp(mnl->pf, g_spinor_field[2]);
+  chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
+
   g_mu = g_mu1;
   boundary(g_kappa);
   if(g_proc_id == 0 && g_debug_level > 3) {
@@ -166,7 +148,6 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
 
 double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  int save_iter = ITER_MAX_BCG;
   int save_sloppy = g_sloppy_precision_flag;
 
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
@@ -174,33 +155,23 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
 
   g_mu = 0.;
   boundary(mnl->kappa);
-  if(mnl->even_odd_flag) {
+  
+  chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+	       mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+  g_sloppy_precision_flag = 0;
+  mnl->iter0 = cg_her(g_spinor_field[2], mnl->pf, mnl->maxiter, mnl->accprec,  
+		      g_relative_precision_flag, VOLUME/2, mnl->Qsq); 
+  mnl->Qm(g_spinor_field[2], g_spinor_field[2]);
+  
+  g_sloppy_precision_flag = save_sloppy;
+  /* Compute the energy contr. from first field */
+  mnl->energy1 = square_norm(g_spinor_field[2], VOLUME/2, 1);
 
-    if(mnl->solver == CG) {
-      ITER_MAX_BCG = 0;
-    }
-    chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
-    g_sloppy_precision_flag = 0;
-    mnl->iter0 = cg_her(g_spinor_field[2], mnl->pf, mnl->maxiter, mnl->accprec,  
-			g_relative_precision_flag, VOLUME/2, mnl->Qsq); 
-    mnl->Qm(g_spinor_field[2], g_spinor_field[2]);
-
-    g_sloppy_precision_flag = save_sloppy;
-    /* Compute the energy contr. from first field */
-    mnl->energy1 = square_norm(g_spinor_field[2], VOLUME/2, 1);
-  }
-  else {
-    if(g_proc_id == 0) {
-      fprintf(stderr, "only even/odd implemented right now! (cloverdet_monomial.c)\n");
-    }
-  }
   g_mu = g_mu1;
   boundary(g_kappa);
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called cloverdet_acc for id %d %d dH = %1.4e\n", 
 	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);
   }
-  ITER_MAX_BCG = save_iter;
   return(mnl->energy1 - mnl->energy0);
 }

@@ -173,8 +173,8 @@ void xchange_deri(su3adj ** const df)
   MPI_Status status;
   /* send the data to the neighbour on the left in time direction */
   /* recieve the data from the neighbour on the right in time direction */
-  MPI_Sendrecv(&df[(T+1)*LX*LY*LZ][0].d1,     1, deri_time_slice_cont, g_nb_t_dn, 40,
-	       &ddummy[(T-1)*LX*LY*LZ][0].d1, 1, deri_time_slice_cont, g_nb_t_up, 40,
+  MPI_Sendrecv((void*)df[(T+1)*LX*LY*LZ],     1, deri_time_slice_cont, g_nb_t_dn, 40,
+	       (void*)ddummy[(T-1)*LX*LY*LZ], 1, deri_time_slice_cont, g_nb_t_up, 40,
 	       g_cart_grid, &status);
 
   /* add ddummy to df */
@@ -198,8 +198,8 @@ void xchange_deri(su3adj ** const df)
 
   /* send the data to the neighbour on the right in time direction needed for clover */
 
-  MPI_Sendrecv(&df[T*L*L*L][0].d1, 1, deri_time_slice_cont, g_nb_t_up, 41,
-	       &ddummy[0][0].d1,   1, deri_time_slice_cont, g_nb_t_dn, 41,
+  MPI_Sendrecv((void*)df[T*L*L*L], 1, deri_time_slice_cont, g_nb_t_up, 41,
+	       (void*)ddummy[0],   1, deri_time_slice_cont, g_nb_t_dn, 41,
 	       g_cart_grid, &status);
 
   /* add ddummy to df */
@@ -225,8 +225,8 @@ void xchange_deri(su3adj ** const df)
 
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
-  MPI_Sendrecv(&df[(T+2)*LX*LY*LZ + T*LY*LZ][0],    1, deri_x_slice_cont, g_nb_x_dn, 42,
-	       &ddummy[(LX-1)*LY*LZ][0],             1, deri_x_slice_gath, g_nb_x_up, 42,
+  MPI_Sendrecv((void*)df[(T+2)*LX*LY*LZ + T*LY*LZ], 1, deri_x_slice_cont, g_nb_x_dn, 42,
+	       (void*)ddummy[(LX-1)*LY*LZ],         1, deri_x_slice_gath, g_nb_x_up, 42,
 	       g_cart_grid, &status);
   /* add ddummy to df */
   for(t = 0; t < T; t++) {
@@ -248,8 +248,8 @@ void xchange_deri(su3adj ** const df)
   }
   /* send the data to the neighbour on the right needed for clover */  
 
-  MPI_Sendrecv((void*)&df[(T+2)*LX*LY*LZ][0], 1, deri_x_slice_cont, g_nb_x_up, 43,
-	       (void*)&ddummy[0][0],          1, deri_x_slice_gath, g_nb_x_dn, 43,
+  MPI_Sendrecv((void*)df[(T+2)*LX*LY*LZ], 1, deri_x_slice_cont, g_nb_x_up, 43,
+	       (void*)ddummy[0],          1, deri_x_slice_gath, g_nb_x_dn, 43,
 	       g_cart_grid, &status);
   /* add ddummy to df */
   for(t = 0; t < T; t++) {

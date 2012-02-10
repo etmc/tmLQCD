@@ -102,7 +102,7 @@ double moment_energy(su3adj ** const momenta) {
  * with the gaussian distribution
  *
  **************************************/
-double ini_momenta(const int repro, su3adj ** const momenta) {
+double init_momenta(const int repro, su3adj ** const momenta) {
   
   su3adj *xm;
   int i, mu;

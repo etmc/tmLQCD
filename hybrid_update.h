@@ -20,6 +20,6 @@
 #define _HYBRID_UPDATE_H
 
 double moment_energy(su3adj ** const momenta);
-double ini_momenta(const int repro, su3adj ** const momenta);
+double init_momenta(const int repro, su3adj ** const momenta);
 
 #endif

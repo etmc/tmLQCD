@@ -32,6 +32,6 @@ void Qsw_psi(spinor * const l, spinor * const k);
 void Qsw_sq_psi(spinor * const l, spinor * const k);
 void Msw_psi(spinor * const l, spinor * const k);
 void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo);
-void init_sw_fields(const int V);
+void init_sw_fields();
 
 #endif

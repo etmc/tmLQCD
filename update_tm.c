@@ -131,7 +131,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 
   /* initialize the momenta  */
-  enep = ini_momenta(reproduce_randomnumber_flag, hf.momenta);
+  enep = init_momenta(reproduce_randomnumber_flag, hf.momenta);
 
   g_sloppy_precision = 1;
 

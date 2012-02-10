@@ -343,32 +343,35 @@ double six_det(complex a[6][6]) {
 }
 
 /*definitions needed for the functions sw_trace(int ieo) and sw_trace(int ieo)*/
-#define _a_C(A, B, C)	 \
-  a[0+(A)][0+(B)]=(C).c00;			\
-  a[0+(A)][1+(B)]=(C).c01;			\
-  a[0+(A)][2+(B)]=(C).c02;			\
-  a[1+(A)][0+(B)]=(C).c10;			\
-  a[1+(A)][1+(B)]=(C).c11;			\
-  a[1+(A)][2+(B)]=(C).c12;			\
-  a[2+(A)][0+(B)]=(C).c20;			\
-  a[2+(A)][1+(B)]=(C).c21;			\
-  a[2+(A)][2+(B)]=(C).c22;
+inline void populate_6x6_matrix(complex a[6][6], su3 * C, const int row, const int col) {
+  a[0+row][0+col] = C->c00;
+  a[0+row][1+col] = C->c01;
+  a[0+row][2+col] = C->c02;
+  a[1+row][0+col] = C->c10;
+  a[1+row][1+col] = C->c11;
+  a[1+row][2+col] = C->c12;
+  a[2+row][0+col] = C->c20;
+  a[2+row][1+col] = C->c21;
+  a[2+row][2+col] = C->c22;
+  return;
+}
 
-#define _C_a(A, B, C)	 \
-  (C).c00=a[0+(A)][0+(B)];			\
-  (C).c01=a[0+(A)][1+(B)];			\
-  (C).c02=a[0+(A)][2+(B)];			\
-  (C).c10=a[1+(A)][0+(B)];			\
-  (C).c11=a[1+(A)][1+(B)];			\
-  (C).c12=a[1+(A)][2+(B)];			\
-  (C).c20=a[2+(A)][0+(B)];			\
-  (C).c21=a[2+(A)][1+(B)];			\
-  (C).c22=a[2+(A)][2+(B)];
+inline void get_3x3_block_matrix(su3 * C, complex a[6][6], const int row, const int col) {
+  C->c00 = a[0+row][0+col];
+  C->c01 = a[0+row][1+col];
+  C->c02 = a[0+row][2+col];
+  C->c10 = a[1+row][0+col];
+  C->c11 = a[1+row][1+col];
+  C->c12 = a[1+row][2+col];
+  C->c20 = a[2+row][0+col];
+  C->c21 = a[2+row][1+col];
+  C->c22 = a[2+row][2+col];
+  return;
+}
 
 double sw_trace(const int ieo) {
   int i,x,icx,ioff;
-  su3 *w;
-  static su3 v2;
+  static su3 v;
   static complex a[6][6];
   static double tra;
   static double ks,kc,tr,ts,tt;
@@ -385,14 +388,11 @@ double sw_trace(const int ieo) {
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
     for(i=0;i<2;i++) {
-      w=&sw[x][0][i];     
-      _a_C(0,0,*w);
-      w=&sw[x][1][i];     
-      _a_C(0,3,*w);
-      _su3_dagger(v2,*w); 
-      _a_C(3,0,v2);
-      w=&sw[x][2][i];     
-      _a_C(3,3,*w);
+      populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
+      populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
+      _su3_dagger(v, sw[x][1][i]); 
+      populate_6x6_matrix(a, &v, 3, 0);
+      populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
       tra = log(six_det(a));
       
       tr=tra+kc;
@@ -417,8 +417,7 @@ double sw_trace(const int ieo) {
 void sw_invert(const int ieo) {
   int icx,ioff, err=0;
   int i,x;
-  su3 *w;
-  static su3 v2;
+  static su3 v;
   static complex a[6][6];
   if(ieo==0) {
     ioff=0;
@@ -431,14 +430,11 @@ void sw_invert(const int ieo) {
     x = g_eo2lexic[icx];
 
     for(i = 0; i < 2; i++) {
-      w=&sw[x][0][i];     
-      _a_C(0,0,*w);
-      w=&sw[x][1][i];
-      _a_C(0,3,*w);
-      _su3_dagger(v2,*w); 
-      _a_C(3,0,v2);
-      w=&sw[x][2][i];
-      _a_C(3,3,*w);
+      populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
+      populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
+      _su3_dagger(v, sw[x][1][i]); 
+      populate_6x6_matrix(a, &v, 3, 0);
+      populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
 
       err = six_invert(a); 
       /* here we need to catch the error! */
@@ -448,12 +444,9 @@ void sw_invert(const int ieo) {
       }
 
       /*  copy "a" back to sw_inv */
-      w=&sw_inv[x][0][i]; 
-      _C_a(0,0,*w);
-      w=&sw_inv[x][1][i]; 
-      _C_a(0,3,*w);
-      w=&sw_inv[x][2][i]; 
-      _C_a(3,3,*w);
+      get_3x3_block_matrix(&sw_inv[x][0][i], a, 0, 0);
+      get_3x3_block_matrix(&sw_inv[x][1][i], a, 0, 3);
+      get_3x3_block_matrix(&sw_inv[x][2][i], a, 3, 3);
     }
   }
   return;

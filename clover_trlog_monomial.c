@@ -50,7 +50,7 @@ void clover_trlog_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   mnl->energy0 = 0.;
 
-  init_sw_fields(VOLUME);
+  init_sw_fields();
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
   mnl->energy0 = -2.*sw_trace(EO);

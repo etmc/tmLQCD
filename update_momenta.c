@@ -101,7 +101,7 @@ void update_momenta(int * mnllist, double step, const int no,
 	}
       }
 #ifdef MPI
-      etime = MPI_Wtime(hf->derivative);
+      etime = MPI_Wtime();
 #else
       etime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif

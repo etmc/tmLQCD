@@ -149,7 +149,7 @@ int init_operators() {
     optr->rel_prec = g_relative_precision_flag;
     if(optr->type == TMWILSON || optr->type == WILSON) {
       if(optr->c_sw > 0) {
-	init_sw_fields(VOLUME);
+	init_sw_fields();
       }
       if(optr->even_odd_flag) {
         optr->applyQp = &Qtm_plus_psi;

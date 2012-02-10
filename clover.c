@@ -313,7 +313,8 @@ void clover(const int ieo,
 su3 ** sw1, ** sw_inv1;
 su3 * _sw, *_sw_inv;
 
-void init_sw_fields(const int V) {
+void init_sw_fields() {
+  int V = VOLUME;
   su3 * tmp;
   static int sw_init = 0;
 
@@ -338,7 +339,7 @@ void init_sw_fields(const int V) {
     }
     sw[0] = sw1;
     sw_inv[0] = sw_inv1;
-    for(int i = 1; i < VOLUME; i++) {
+    for(int i = 1; i < V; i++) {
       sw[i] = sw[i-1]+3;
       sw_inv[i] = sw_inv[i-1]+3;
     }
@@ -350,7 +351,7 @@ void init_sw_fields(const int V) {
     sw_inv[0][0] = _sw_inv;
 #    endif
     tmp = sw[0][0];
-    for(int i = 0; i < VOLUME; i++) {
+    for(int i = 0; i < V; i++) {
       for(int j = 0; j < 3; j++) {
 	sw[i][j] = tmp;
 	tmp = tmp+2;
@@ -358,7 +359,7 @@ void init_sw_fields(const int V) {
     }
     
     tmp = sw_inv[0][0];
-    for(int i = 0; i < VOLUME; i++) {
+    for(int i = 0; i < V; i++) {
       for(int j = 0; j < 3; j++) {
 	sw_inv[i][j] = tmp;
 	tmp = tmp+2;
