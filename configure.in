@@ -33,7 +33,7 @@ AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
 LDFLAGS="$LDFLAGS -L\${HOME}/lib -L\${top_builddir}/lib"
 CCLD=${CC}
 
-USESUBDIRS="buffers cu io solver smearing linalg"
+USESUBDIRS="buffers cu io solver linalg"
 
 AC_CHECK_HEADERS([stdint.h],
 [ dnl for inttypes.h and stdint.h for uint_xxx types

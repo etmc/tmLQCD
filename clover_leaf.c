@@ -309,7 +309,7 @@ double six_det(_Complex double a[6][6])
 }
 
 /*definitions needed for the functions sw_trace(int ieo) and sw_trace(int ieo)*/
-inline void populate_6x6_matrix(complex a[6][6], su3 * C, const int row, const int col) {
+inline void populate_6x6_matrix(_Complex double a[6][6], su3 * C, const int row, const int col) {
   a[0+row][0+col] = C->c00;
   a[0+row][1+col] = C->c01;
   a[0+row][2+col] = C->c02;
@@ -322,7 +322,7 @@ inline void populate_6x6_matrix(complex a[6][6], su3 * C, const int row, const i
   return;
 }
 
-inline void get_3x3_block_matrix(su3 * C, complex a[6][6], const int row, const int col) {
+inline void get_3x3_block_matrix(su3 * C, _Complex double a[6][6], const int row, const int col) {
   C->c00 = a[0+row][0+col];
   C->c01 = a[0+row][1+col];
   C->c02 = a[0+row][2+col];
@@ -334,11 +334,6 @@ inline void get_3x3_block_matrix(su3 * C, complex a[6][6], const int row, const 
   C->c22 = a[2+row][2+col];
   return;
 }
-
-double sw_trace(const int ieo) {
-  int i,x,icx,ioff;
-  static su3 v;
-  static complex a[6][6];
 
 /*definitions needed for the functions sw_trace(int ieo) and sw_trace(int ieo)*/
 #define _a_C(A, B, C)\
@@ -365,8 +360,7 @@ double sw_trace(const int ieo) {
 
 double sw_trace(const int ieo) {
   int i,x,icx,ioff;
-  su3 *w;
-  static su3 v2;
+  static su3 v;
   static _Complex double a[6][6];
   static double tra;
   static double ks,kc,tr,ts,tt;

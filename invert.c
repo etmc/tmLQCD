@@ -324,7 +324,6 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
 
-/*
     if (use_stout_flag == 1){
       params_smear.rho = stout_rho;
       params_smear.iterations = stout_no_iter;
@@ -339,7 +338,6 @@ int main(int argc, char *argv[])
         printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
         fflush(stdout);
       }
-*/
     }
 
     if (reweighting_flag == 1) {
