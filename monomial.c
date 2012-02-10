@@ -240,7 +240,7 @@ int init_monomials(const int V, const int even_odd_flag) {
   }
   if(clover_trlog_monomial && even_odd_flag) {
     monomial_list[no_monomials].type = CLOVERTRLOG;
-    strcpy( monomial_list[no_monomials].name, "CLTRLOG");
+    strcpy( monomial_list[no_monomials].name, "CLOVERTRLOG");
     add_monomial(CLOVERTRLOG);
     monomial_list[no_monomials-1].pf = NULL;
     monomial_list[no_monomials-1].id = no_monomials-1;
