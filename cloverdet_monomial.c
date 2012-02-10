@@ -69,15 +69,17 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu;
     boundary(mnl->kappa);
 
+    // we compute the clover term (1 + T_ee(oo)) for all sites x
     sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
-    sw_invert(EO, mnl->mu);
+    // we invert it for the even sites only
+    sw_invert(EE, mnl->mu);
 
     if(mnl->solver != CG && g_proc_id == 0) {
       fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (cloverdet_monomial.c)\n");
     }
     
-    /* Invert Q_{+} Q_{-} */
-    /* X_o -> DUM_DERI+1 */
+    // Invert Q_{+} Q_{-}
+    // X_o -> DUM_DERI+1
     chrono_guess(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
     mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->maxiter, mnl->forceprec, 
@@ -85,36 +87,42 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
     chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
     
-    /* Y_o -> DUM_DERI  */
+    // Y_o -> DUM_DERI
     mnl->Qm(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
     
-    /* apply Hopping Matrix M_{eo} */
-    /* to get the even sites of X_e */
-    H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -mnl->mu);
-    /* \delta Q sandwitched by Y_o^\dagger and X_e */
+    // apply Hopping Matrix M_{eo}
+    // to get the even sites of X_e
+    H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EE, -mnl->mu);
+    // \delta Q sandwitched by Y_o^\dagger and X_e
     deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
     
-    /* to get the even sites of Y_e */
-    H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, mnl->mu);
-    /* \delta Q sandwitched by Y_e^\dagger and X_o */
+    // to get the even sites of Y_e
+    H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EE, mnl->mu);
+    // \delta Q sandwitched by Y_e^\dagger and X_o
+    // uses the gauge field in hf and changes the derivative fields in hf
     deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf);
 
-    /* here comes the clover term...                 */
-    /* result is written to swp and swm              */
-    /* \delta T_ee sandwiched by Y_e and gamma_5 X_e */
+    // here comes the clover term...
+    // computes the insertion matrices for S_eff
+    // result is written to swp and swm
+    // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
     gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
     sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
 
-    /* \delta T_oo sandwiched by gamma_5 Y_o and gamma_5 X_o*/    
+    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
     gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
     sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
     
-    /* compute the contribution for the det-part     */
-    /* the result is added to swp and swm            */
-    sw_deriv(EO, mnl->mu);
+    // compute the contribution for the det-part
+    // we again compute only the insertion matrices for S_det
+    // the result is added to swp and swm
+    // even sites only!
+    sw_deriv(EE, mnl->mu);
 
-    /* now we compute \delta T_ee and \delta T_oo    */
-    /* using swm and swp                             */
+    // now we compute
+    // finally, using the insertion matrices stored in swm and swp
+    // we compute the terms F^{det} and F^{sw} at once
+    // uses the gaugefields in hf and changes the derivative field in hf
     sw_all(hf, mnl->kappa, mnl->c_sw);
   } 
   else {
@@ -148,7 +156,7 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   init_sw_fields(VOLUME);
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
-  sw_invert(EO, mnl->mu);
+  sw_invert(EE, mnl->mu);
   if(mnl->even_odd_flag) {
     random_spinor_field(g_spinor_field[2], VOLUME/2, mnl->rngrepro);
     mnl->energy0 = square_norm(g_spinor_field[2], VOLUME/2, 1);
@@ -180,7 +188,7 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   boundary(mnl->kappa);
 
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
-  sw_invert(EO, mnl->mu);
+  sw_invert(EE, mnl->mu);
 
   if(mnl->even_odd_flag) {
 
