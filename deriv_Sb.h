@@ -19,6 +19,8 @@
 #ifndef _DERIV_SB_H
 #define _DERIV_SB_H
 
-void deriv_Sb(const int ieo, spinor * const l, spinor * const k);
+#include "hamiltonian_field.h"
+
+void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_field_t * const hf);
 
 #endif

@@ -48,78 +48,6 @@
 #include "hybrid_update.h"
 
 
-/***********************************
- *
- * Computes the new gauge field
- *
- ***********************************/
-
-
-
-/*----------------------------------------------------------------------------*/
-
-void update_gauge(double step) {
-
-  int i,mu;
-  static su3 v,w;
-  su3 *z;
-  static su3adj deriv;
-  su3adj *xm;
-#ifdef _KOJAK_INST
-#pragma pomp inst begin(updategauge)
-#endif
-
-  if (bc_flag == 0) { /* if PBC */
-    for(i = 0; i < VOLUME; i++) { 
-      for(mu = 0; mu < 4; mu++){
-	/* moment[i][mu] = h_{i,mu}^{alpha} */
-	xm=&moment[i][mu];
-	z=&g_gauge_field[i][mu];
-	_assign_const_times_mom(deriv, step, *xm);
-	v=restoresu3( exposu3(deriv) );
-	_su3_times_su3(w, v, *z);
-	_su3_assign(*z, w);
-      }
-    }
-  }
-  else if (bc_flag == 1) { /* if SF bc */
-    for(i = 0; i < VOLUME; i++) { 
-      for(mu = 0; mu < 4; mu++){
-
-	if (g_t[i] == 0 && (mu==1 || mu==2 || mu==3)) { /* do not update spatial links at zero boundary */
-	  
-	}
-	else if (g_t[i] == g_Tbsf) { /* do not update all the links at T boundary */
-	  
-	}
-	else { /* update all links in the bulk and the temporal link at zero */
-	  xm=&moment[i][mu];
-	  z=&g_gauge_field[i][mu];
-	  _assign_const_times_mom(deriv, step, *xm);
-	  v=restoresu3( exposu3(deriv) );
-	  _su3_times_su3(w, v, *z);
-	  _su3_assign(*z, w);
-	}
-      }
-    }
-  }
-  
-#ifdef MPI
-  /* for parallelization */
-  xchange_gauge();
-#endif
-  /*
-   * The backward copy of the gauge field
-   * is not updated here!
-   */
-  g_update_gauge_copy = 1;
-  g_update_gauge_energy = 1;
-  g_update_rectangle_energy = 1;
-  return;
-#ifdef _KOJAK_INST
-#pragma pomp inst end(updategauge)
-#endif
-}
 
 
 /*----------------------------------------------------------------------------*/
@@ -130,7 +58,7 @@ void update_gauge(double step) {
  * the Hamiltonian coming from the momenta
  *
  *******************************************/
-double moment_energy() {
+double moment_energy(su3adj ** const momenta) {
 
   su3adj *xm;
   int i,mu;
@@ -139,7 +67,7 @@ double moment_energy() {
   
   for(i=0;i<VOLUME;i++){
     for(mu=0;mu<4;mu++){
-      xm=&moment[i][mu];
+      xm=&momenta[i][mu];
       sum=(*xm).d1*(*xm).d1
 	+(*xm).d2*(*xm).d2
 	+(*xm).d3*(*xm).d3
@@ -174,7 +102,7 @@ double moment_energy() {
  * with the gaussian distribution
  *
  **************************************/
-double ini_momenta(const int repro) {
+double init_momenta(const int repro, su3adj ** const momenta) {
   
   su3adj *xm;
   int i, mu;
@@ -192,7 +120,7 @@ double ini_momenta(const int repro) {
       for(i=0;i<VOLUME;i++){ 
 	for(mu=0;mu<4;mu++){
 	  sum=0.;
-	  xm=&moment[i][mu];
+	  xm=&momenta[i][mu];
 	  gauss_vector(y,8);
 	  /* from the previous line we get exp(-y^2) distribution */
 	  /* this means that <y^2> = sigma^2 = 1/2 */
@@ -231,7 +159,7 @@ double ini_momenta(const int repro) {
       for(i=0;i<VOLUME;i++){ 
 	for(mu=0;mu<4;mu++){
 	  sum=0.;
-	  xm=&moment[i][mu];
+	  xm=&momenta[i][mu];
 	  gauss_vector(y,8);
 	  (*xm).d1=1.4142135623731*y[0];
 	  (*xm).d2=1.4142135623731*y[1];
@@ -278,7 +206,7 @@ double ini_momenta(const int repro) {
     for(i=0;i<VOLUME;i++){ 
       for(mu=0;mu<4;mu++){
 	sum=0.;
-	xm=&moment[i][mu];
+	xm=&momenta[i][mu];
 	gauss_vector(y,8);
 	(*xm).d1=1.4142135623731*y[0];
 	(*xm).d2=1.4142135623731*y[1];

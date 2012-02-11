@@ -55,7 +55,7 @@ extern int ITER_MAX_CG;
 
 /* think about chronological solver ! */
 
-void detratio_derivative(const int no) {
+void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
   int saveiter = ITER_MAX_BCG;
 
   monomial * mnl = &monomial_list[no];
@@ -78,65 +78,37 @@ void detratio_derivative(const int no) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
     if(mnl->c_sw > 0) {
-      sw_term(); 
+      sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
       sw_invert(OE);
+    }
+    if(mnl->solver != CG) {
+      fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n");
     }
 
     Qtm_plus_psi(g_spinor_field[DUM_DERI+2], mnl->pf);
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if(mnl->solver == CG) {
-      ITER_MAX_CG = mnl->maxiter;
-      /* If CG is used anyhow */
-      /*       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME/2); */
-      /* Invert Q_{+} Q_{-} */
-      /* X_W -> DUM_DERI+1 */
-      chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->csg_field, 
-		   mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
-/*       mnl->iter1 += solve_cg(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->forceprec,  */
-/* 			     g_relative_precision_flag); */
-      mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, 
-			   mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi);
-      chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
-			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
-      /* Y_W -> DUM_DERI  */
-      Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-    }
-    else {
-      /* Invert first Q_+ */
-      /* Y_o -> DUM_DERI  */
-      ITER_MAX_BCG = mnl->maxiter;
-      chrono_guess(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], mnl->csg_field, mnl->csg_index_array,
-		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
-      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-      mnl->iter1 += bicg(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], mnl->forceprec, 
-			 g_relative_precision_flag);
-      chrono_add_solution(g_spinor_field[DUM_DERI], mnl->csg_field, mnl->csg_index_array,
-			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
-      
-      /* Now Q_- */
-      /* X_o -> DUM_DERI+1 */
-      g_mu = -g_mu;
-      chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], mnl->csg_field2, 
-		   mnl->csg_index_array2, mnl->csg_N2, mnl->csg_n2, VOLUME/2, &Qtm_plus_psi);
-      gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME/2);
-      mnl->iter1 += bicg(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], mnl->forceprec, 
-			 g_relative_precision_flag);
-      chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field2, mnl->csg_index_array2,
-			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
-      g_mu = -g_mu;
-    }
+    /* Invert Q_{+} Q_{-} */
+    /* X_W -> DUM_DERI+1 */
+    chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->csg_field, 
+		 mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
+    mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, 
+			 mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi);
+    chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
+			mnl->csg_N, &mnl->csg_n, VOLUME/2);
+    /* Y_W -> DUM_DERI  */
+    Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
     
     /* apply Hopping Matrix M_{eo} */
     /* to get the even sites of X */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2]); 
+    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
     
     /* to get the even sites of Y */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]); 
+    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf); 
 
     if(mnl->c_sw > 0) {
       /* here comes the clover term... */
@@ -159,12 +131,12 @@ void detratio_derivative(const int no) {
     /* to get the even sites of X */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2]); 
+    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
     
     /* to get the even sites of Y */
     H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1]);
+    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf);
 
     if(mnl->c_sw > 0) {
       /* here comes the clover term... */
@@ -176,7 +148,7 @@ void detratio_derivative(const int no) {
       sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
 
       sw_deriv(OE);
-      sw_all();
+      sw_all(hf, mnl->kappa, mnl->c_sw);
     }
   } 
   else { /* no even/odd preconditioning */
@@ -237,7 +209,7 @@ void detratio_derivative(const int no) {
     }
 
     /* \delta Q sandwitched by Y^\dagger and X */
-    deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]); 
+    deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], hf); 
     
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
@@ -247,7 +219,7 @@ void detratio_derivative(const int no) {
     mul_r(g_spinor_field[DUM_DERI], -1., mnl->pf, VOLUME);
     
     /* \delta Q sandwitched by Y^\dagger and X */
-    deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+    deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], hf);
   }
   g_mu = g_mu1;
   boundary(g_kappa);
@@ -257,7 +229,7 @@ void detratio_derivative(const int no) {
 }
 
 
-void detratio_heatbath(const int id) {
+void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   int saveiter = ITER_MAX_BCG;
   monomial * mnl = &monomial_list[id];
 
@@ -312,7 +284,7 @@ void detratio_heatbath(const int id) {
   return;
 }
 
-double detratio_acc(const int id) {
+double detratio_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   int saveiter = ITER_MAX_BCG;
   int save_sloppy = g_sloppy_precision_flag;

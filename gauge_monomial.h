@@ -20,8 +20,10 @@
 #ifndef _GAUGE_MONOMIAL_H
 #define _GAUGE_MONOMIAL_H
 
-void gauge_derivative(const int id);
-void gauge_heatbath(const int id);
-double gauge_acc(const int id);
+#include "hamiltonian_field.h"
+
+void gauge_derivative(const int id, hamiltonian_field_t * const hf);
+void gauge_heatbath(const int id, hamiltonian_field_t * const hf);
+double gauge_acc(const int id, hamiltonian_field_t * const hf);
 
 #endif

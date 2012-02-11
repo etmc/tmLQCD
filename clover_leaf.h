@@ -22,16 +22,16 @@
 #ifndef _CLOVER_LEAF_H
 #define _CLOVER_LEAF_H
 #include "su3.h"
+#include "hamiltonian_field.h"
 
 extern su3 ** swm, ** swp;
-/* extern su3adj ** dclover; */
 
-
-void sw_term();
+void sw_term(su3 ** const gf, const double kappa, const double c_sw);
 double sw_trace(const int ieo);
 void sw_invert(const int ieo);
 void sw_deriv(const int ieo);
 void sw_spinor(const int ieo, spinor * const kk, spinor * const ll);
-void sw_all();
+void sw_all(hamiltonian_field_t * const hf, const double kappa, const double c_sw);
+int init_swpm(const int V);
 
 #endif

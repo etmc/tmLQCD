@@ -29,6 +29,7 @@
 #ifndef _XCHANGE_DERI_H
 #define _XCHANGE_DERI_H
 
-void xchange_deri();
+#include "su3adj.h"
+void xchange_deri(su3adj ** const df);
 
 #endif

@@ -118,7 +118,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(g_gauge_field);
   }
 #endif
   /* We will run through the source vector now */
@@ -536,7 +536,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(g_gauge_field);
   }
 #endif
 
@@ -1090,7 +1090,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(g_gauge_field);
   }
 #endif
 
@@ -1563,7 +1563,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(g_gauge_field);
   }
 #endif
 
@@ -1906,7 +1906,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   /* for parallelization */
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(g_gauge_field);
   }
 #endif
 
@@ -2341,7 +2341,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(g_gauge_field);
   }
 #endif
 
@@ -2636,7 +2636,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(g_gauge_field);
   }
 #endif
 
@@ -2936,7 +2936,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(g_gauge_field);
   }
 #endif
 

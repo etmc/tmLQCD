@@ -1,7 +1,7 @@
 /***********************************************************************
  *
  * Copyright (C) 2001 Martin Hasebusch
- *               2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ *               2002,2003,2004,2005,2006,2007,2008,2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -32,12 +32,14 @@
 #include "su3spinor.h"
 #include "monomial.h"
 #include "xchange_deri.h"
-#include "update_momenta.h"
 #include "clover_leaf.h"
 #include "read_input.h"
+#include "hamiltonian_field.h"
+#include "update_momenta.h"
 
 /* Updates the momenta: equation 16 of Gottlieb */
-void update_momenta(int * mnllist, double step, const int no) {
+void update_momenta(int * mnllist, double step, const int no, 
+		    hamiltonian_field_t * const hf) {
   int i,mu, k;
   double tmp;
   su3adj *xm,*deriv;
@@ -53,71 +55,73 @@ void update_momenta(int * mnllist, double step, const int no) {
 
   for(i=0;i<(VOLUME);i++) { 
     for(mu=0;mu<4;mu++) { 
-      _zero_su3adj(df0[i][mu]);
+      _zero_su3adj(hf->derivative[i][mu]);
     }
   }
 
   for(k = 0; k < no; k++) {
-    /* these are needed for the clover term */
-    if(monomial_list[ mnllist[k] ].c_sw > 0) {
-      for(i = 0; i < VOLUME; i++) { 
+    if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
+      /* these are needed for the clover term */
+      if(monomial_list[ mnllist[k] ].type == 9) {
+	for(i = 0; i < VOLUME; i++) { 
+	  for(mu = 0; mu < 4; mu++) { 
+	    _su3_zero(swm[i][mu]); 
+	    _su3_zero(swp[i][mu]); 
+	  }
+	}
+      }
+      
+      sum = 0.;
+      max = 0.;
+      for(i = (VOLUME); i < (VOLUME+RAND); i++) { 
 	for(mu = 0; mu < 4; mu++) { 
-	  _su3_zero(swm[i][mu]); 
-	  _su3_zero(swp[i][mu]); 
+	  _zero_su3adj(hf->derivative[i][mu]);
 	}
       }
-    }
-
-    sum = 0.;
-    max = 0.;
-    for(i = (VOLUME); i < (VOLUME+RAND); i++) { 
-      for(mu = 0; mu < 4; mu++) { 
-	_zero_su3adj(df0[i][mu]);
-      }
-    }
-
-    monomial_list[ mnllist[k] ].derivativefunction(mnllist[k]);
+      
+      monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
 #ifdef MPI
-    xchange_deri();
+      xchange_deri(hf->derivative);
 #endif
-    for(i = 0; i < VOLUME; i++) {
-      for(mu = 0; mu < 4; mu++) {
-	xm=&moment[i][mu];
-	deriv=&df0[i][mu];
-	/* force monitoring */
-	if(g_debug_level > 0) {
-	  sum2 = _su3adj_square_norm(*deriv); 
-	  sum+= sum2;
-	  if(fabs(sum2) > max) max = sum2;
+      for(i = 0; i < VOLUME; i++) {
+	for(mu = 0; mu < 4; mu++) {
+	  xm=&hf->momenta[i][mu];
+	  deriv=&hf->derivative[i][mu];
+	  /* force monitoring */
+	  if(g_debug_level > 0) {
+	    sum2 = _su3adj_square_norm(*deriv); 
+	    sum+= sum2;
+	    if(fabs(sum2) > max) max = sum2;
+	  }
+	  tmp = step*monomial_list[ mnllist[k] ].forcefactor;
+	  /* the minus comes from an extra minus in trace_lambda */
+	  _minus_const_times_mom(*xm,tmp,*deriv); 
+	  /* set to zero immediately */
+	  _zero_su3adj(hf->derivative[i][mu]);
 	}
-	tmp = step*monomial_list[ mnllist[k] ].forcefactor;
-	/* the minus comes from an extra minus in trace_lambda */
-	_minus_const_times_mom(*xm,tmp,*deriv); 
-	/* set to zero immediately */
-	_zero_su3adj(df0[i][mu]);
       }
-    }
 #ifdef MPI
-    etime = MPI_Wtime();
+      etime = MPI_Wtime();
 #else
-    etime = (double)clock()/(double)(CLOCKS_PER_SEC);
+      etime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-    if(g_debug_level > 0) {
+      if(g_debug_level > 0) {
 #ifdef MPI
-      MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-      sum = sum2;
-      MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-      max = sum2;
+	MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	sum = sum2;
+	MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+	max = sum2;
 #endif
-      if(g_proc_id == 0) {
-	printf("force %s ts %d\taver: %1.4e\tmax: %1.4e\tdt*aver: %1.4e\tdt*max: %1.4e\tt/s %1.4e\n", 
-	       monomial_list[ mnllist[k] ].name, monomial_list[ mnllist[k] ].timescale, 
-	       fabs(sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor),
-	       fabs(max*monomial_list[ mnllist[k] ].forcefactor),
-	       fabs(step*sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor),
-	       fabs(step*max*monomial_list[ mnllist[k] ].forcefactor), 
-	       etime-atime);
-	fflush(stdout);
+	if(g_proc_id == 0) {
+	  printf("force %s ts %d\taver: %1.4e\tmax: %1.4e\tdt*aver: %1.4e\tdt*max: %1.4e\tt/s %1.4e\n", 
+		 monomial_list[ mnllist[k] ].name, monomial_list[ mnllist[k] ].timescale, 
+		 fabs(sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor),
+		 fabs(max*monomial_list[ mnllist[k] ].forcefactor),
+		 fabs(step*sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor),
+		 fabs(step*max*monomial_list[ mnllist[k] ].forcefactor), 
+		 etime-atime);
+	  fflush(stdout);
+	}
       }
     }
   }

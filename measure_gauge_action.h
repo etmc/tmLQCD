@@ -17,9 +17,11 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _OBSERVABLES_H
-#define _OBSERVABLES_H
+#ifndef _MEASURE_GAUGE_ACTION_H
+#define _MEASURE_GAUGE_ACTION_H
 
-double measure_gauge_action();
+#include "su3.h"
+
+double measure_gauge_action(su3 ** const gf);
 
 #endif

@@ -27,14 +27,11 @@
 extern su3 *** sw;
 extern su3 *** sw_inv;
 extern su3 ** swm, ** swp;
-extern su3adj ** dclover;
 
-void clover_inv(const int ieo, spinor * const l);
-void clover_gamma5(const int ieo, 
-		   spinor * const l, spinor * const k, spinor * const j,
-		   const double q_off);
-void clover(const int ieo, 
-	    spinor * const l, spinor * const k, spinor * const j,
-	    const double q_off);
+void Qsw_psi(spinor * const l, spinor * const k);
+void Qsw_sq_psi(spinor * const l, spinor * const k);
+void Msw_psi(spinor * const l, spinor * const k);
+void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo);
+void init_sw_fields();
 
 #endif

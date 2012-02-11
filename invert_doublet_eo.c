@@ -55,7 +55,7 @@
 #ifdef HAVE_GPU
   #include"GPU/cudadefs.h"
   #include"temporalgauge.h"
-  #include"observables.h"
+  #include"measure_gauge_action.h"
   int mixedsolve_eo_nd (spinor *, spinor *, spinor *, spinor *, int, double, int);
   int mixedsolve_eo_nd_mpi(spinor *, spinor *, spinor *, spinor *, int, double, int);
   #ifdef TEMPORALGAUGE
@@ -92,9 +92,9 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
       }
       
       /* do trafo */
-      plaquette1 = measure_gauge_action();
+      plaquette1 = measure_gauge_action(g_gauge_field);
       apply_gtrafo(g_gauge_field, g_trafo);								// transformation of the gauge field
-      plaquette2 = measure_gauge_action();
+      plaquette2 = measure_gauge_action(g_gauge_field);
       	if (g_proc_id == 0) printf("\tPlaquette before gauge fixing: %.16e\n", plaquette1/6./VOLUME);
       	if (g_proc_id == 0) printf("\tPlaquette after gauge fixing:  %.16e\n", plaquette2/6./VOLUME);
       
@@ -127,7 +127,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
       	if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2);
       
       #ifdef MPI
-        xchange_gauge();
+        xchange_gauge(g_gauge_field);
       #endif
             
     } 
@@ -209,10 +209,10 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
       /* undo trafo */
       /* apply_inv_gtrafo(g_gauge_field, g_trafo);*/
       /* copy back the saved original field located in g_tempgauge_field -> update necessary*/
-      plaquette1 = measure_gauge_action();
+      plaquette1 = measure_gauge_action(g_gauge_field);
       copy_gauge_field(g_gauge_field, g_tempgauge_field);
       g_update_gauge_copy = 1;
-      plaquette2 = measure_gauge_action();
+      plaquette2 = measure_gauge_action(g_gauge_field);
       	if (g_proc_id == 0) printf("\tPlaquette before inverse gauge fixing: %.16e\n", plaquette1/6./VOLUME);
       	if (g_proc_id == 0) printf("\tPlaquette after inverse gauge fixing:  %.16e\n", plaquette2/6./VOLUME);
    
@@ -277,7 +277,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
       finalize_temporalgauge();
       
       #ifdef MPI
-        xchange_gauge();
+        xchange_gauge(g_gauge_field);
       #endif
       
     }

@@ -32,12 +32,14 @@
 #include "su3.h"
 #include "su3adj.h"
 #include "su3spinor.h"
+#include "tm_operators.h"
+#include "clover_leaf.h"
+#include "clover.h"
 #include "ranlxd.h"
 #include "sse.h"
 #include "linalg_eo.h"
 #include "default_input_values.h"
 #include "read_input.h"
-#include "poly_monomial.h"
 #include "monomial.h"
 
 
@@ -46,6 +48,7 @@ monomial monomial_list[max_no_monomials];
 int no_monomials = 0;
 int no_gauge_monomials = 0;
 int no_ndpoly_monomials = 0;
+int clover_trlog_monomial = 0;
 static spinor * _pf;
 
 int add_monomial(const int type) {
@@ -143,7 +146,10 @@ int init_monomials(const int V, const int even_odd_flag) {
 
   no = 0;
   for(i = 0; i < no_monomials; i++) {
-    
+    /* Should be here if implementation is finished */
+    /*     if(monomial_list[i].c_sw > 0) { */
+    /*       clover_trlog_monomial = 1; */
+    /*     } */
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) {
           
       monomial_list[i].pf = __pf+no*V;
@@ -154,6 +160,18 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &det_heatbath;
 	monomial_list[i].accfunction = &det_acc;
 	monomial_list[i].derivativefunction = &det_derivative;
+      }
+      else if(monomial_list[i].type == CLOVERDET) {
+	monomial_list[i].hbfunction = &cloverdet_heatbath;
+	monomial_list[i].accfunction = &cloverdet_acc;
+	monomial_list[i].derivativefunction = &cloverdet_derivative;
+	monomial_list[i].mu = 0.;
+	monomial_list[i].even_odd_flag = 1;
+	monomial_list[i].Qsq = &Qsw_sq_psi;
+	monomial_list[i].Qp = &Qsw_psi;
+	monomial_list[i].Qm = &Qsw_psi;
+	init_swpm(VOLUME);
+	clover_trlog_monomial = 1;
       }
       else if(monomial_list[i].type == DETRATIO) {
 	monomial_list[i].hbfunction = &detratio_heatbath;
@@ -190,7 +208,7 @@ int init_monomials(const int V, const int even_odd_flag) {
       else if(monomial_list[i].type == NDDETRATIO) {
 	monomial_list[i].hbfunction = &dummy_heatbath;
 	monomial_list[i].accfunction = &nddetratio_acc;
-	monomial_list[i].derivativefunction = &dummy_derivative;
+	monomial_list[i].derivativefunction = NULL;
 	monomial_list[i].pf2 = __pf+no*V;
 	monomial_list[i].timescale = -5;
 	no++;
@@ -219,6 +237,24 @@ int init_monomials(const int V, const int even_odd_flag) {
     }
     monomial_list[i].id = i;
     monomial_list[i].even_odd_flag = even_odd_flag;
+  }
+  if(clover_trlog_monomial && even_odd_flag) {
+    monomial_list[no_monomials].type = CLOVERTRLOG;
+    strcpy( monomial_list[no_monomials].name, "CLOVERTRLOG");
+    add_monomial(CLOVERTRLOG);
+    monomial_list[no_monomials-1].pf = NULL;
+    monomial_list[no_monomials-1].id = no_monomials-1;
+    monomial_list[no_monomials-1].c_sw = g_c_sw;
+    monomial_list[no_monomials-1].mu = g_mu;
+    monomial_list[no_monomials-1].kappa = g_kappa;
+    monomial_list[no_monomials-1].hbfunction = &clover_trlog_heatbath;
+    monomial_list[no_monomials-1].accfunction = &clover_trlog_acc;
+    monomial_list[no_monomials-1].derivativefunction = NULL;
+    monomial_list[no_monomials-1].timescale = 0;
+    monomial_list[no_monomials-1].even_odd_flag = even_odd_flag;
+    if(g_proc_id == 0) {
+      printf("# Initialised clover_trlog_monomial, no_monomials= %d\n", no_monomials);
+    }
   }
   return(0);
 }
@@ -346,7 +382,7 @@ int init_poly_monomial(const int V,const int id){
 
 }
 
-void dummy_derivative(const int id) {
+void dummy_derivative(const int id, hamiltonian_field_t * const hf) {
   if(g_proc_id == 0) {
     fprintf(stderr, "dummy_derivative was called. Was that really intended?\n");
     fprintf(stderr, "callers monomial ID was %d\n", id);
@@ -354,7 +390,7 @@ void dummy_derivative(const int id) {
   return;
 }
 
-void dummy_heatbath(const int id) {
+void dummy_heatbath(const int id, hamiltonian_field_t * const hf) {
   if(g_proc_id == 0) {
     fprintf(stderr, "dummy_heatbath was called. Was that really intended?\n");
     fprintf(stderr, "callers monomial ID was %d\n", id);
@@ -362,7 +398,7 @@ void dummy_heatbath(const int id) {
   return;
 }
 
-double dummy_acc(const int id) {
+double dummy_acc(const int id, hamiltonian_field_t * const hf) {
   if(g_proc_id == 0) {
     fprintf(stderr, "dummy_acc was called. Was that really intended?\n");
     fprintf(stderr, "callers monomial ID was %d\n", id);

@@ -45,7 +45,7 @@
 #include "measure_rectangles.h"
 
 
-double measure_rectangles() {
+double measure_rectangles(su3 ** const gf) {
   int i, j, k, mu, nu;
   static su3 pr1, pr2, tmp; 
   su3 *v = NULL , *w = NULL;
@@ -70,10 +70,10 @@ double measure_rectangles() {
 	    */
 	    j = g_iup[i][mu];
 	    k = g_iup[j][nu];
-	    v = &g_gauge_field[i][mu];
-	    w = &g_gauge_field[j][nu];
+	    v = &gf[i][mu];
+	    w = &gf[j][nu];
 	    _su3_times_su3(tmp, *v, *w);
-	    v = &g_gauge_field[k][nu];
+	    v = &gf[k][nu];
 	    _su3_times_su3(pr1, tmp, *v);
 	    /*
 	      ->
@@ -84,10 +84,10 @@ double measure_rectangles() {
 	    */
 	    j = g_iup[i][nu];
 	    k = g_iup[j][nu];
-	    v = &g_gauge_field[i][nu];
-	    w = &g_gauge_field[j][nu];
+	    v = &gf[i][nu];
+	    w = &gf[j][nu];
 	    _su3_times_su3(tmp, *v, *w);
-	    v = &g_gauge_field[k][mu];
+	    v = &gf[k][mu];
 	    _su3_times_su3(pr2, tmp, *v);
 	    
 	    /* Trace it */

@@ -1,5 +1,6 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2012 Carsten Urbach
+ * 
+ * Copyright (C) 2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -15,19 +16,15 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * exchange routines for gauge fields
- *
- * Author: Carsten Urbach 
- *
- **********************************************************/
+ ***********************************************************************/
 
+#ifndef _CLOVERDET_MONOMIAL_H
+#define _CLOVERDET_MONOMIAL_H
 
-#ifndef _XCHANGE_GAUGE_H
-#define _XCHANGE_GAUGE_H
+#include "hamiltonian_field.h"
 
-#include "su3.h"
-
-void xchange_gauge(su3 ** const gf);
+void cloverdet_derivative(const int no, hamiltonian_field_t * const hf);
+void cloverdet_heatbath(const int no, hamiltonian_field_t * const hf);
+double cloverdet_acc(const int no, hamiltonian_field_t * const hf);
 
 #endif

@@ -46,7 +46,7 @@
 #include "geometry_eo.h"
 #include "start.h"
 /*#include "eigenvalues.h"*/
-#include "observables.h"
+#include "measure_gauge_action.h"
 #ifdef MPI
 #include "xchange.h"
 #endif
@@ -313,11 +313,11 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
 #ifdef MPI
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
 #endif
 
     /*compute the energy of the gauge field*/
-    plaquette_energy = measure_gauge_action();
+    plaquette_energy = measure_gauge_action(g_gauge_field);
 
     if (g_cart_id == 0) {
       printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
       g_update_gauge_copy = 1;
       g_update_gauge_energy = 1;
       g_update_rectangle_energy = 1;
-      plaquette_energy = measure_gauge_action();
+      plaquette_energy = measure_gauge_action(g_gauge_field);
 
       if (g_cart_id == 0) {
         printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));

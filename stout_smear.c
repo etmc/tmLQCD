@@ -65,7 +65,6 @@
 #include "xchange_gauge.h"
 #include "xchange.h"
 #include "io/gauge.h"
-#include "update_backward_gauge.h"
 #include "stout_smear.h"
 
 /*#include "stout_smear_aux_vars.h"*/
@@ -159,7 +158,7 @@ int stout_smear_gauge_field(const double rho , const int no_iters) {
     
 #ifdef MPI
     /** update boundaries for parallel stuff **/
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
 #endif
     g_update_gauge_copy = 1;
     g_update_gauge_energy = 1;
