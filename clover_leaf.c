@@ -503,7 +503,6 @@ void sw_invert(const int ieo, const double mu) {
       _su3_dagger(v, sw[x][1][i]); 
       populate_6x6_matrix(a, &v, 3, 0);
       populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
-
       // we add the twisted mass term
       if(i == 0) add_tm(a, +mu);
       else add_tm(a, -mu);
