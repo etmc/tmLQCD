@@ -23,9 +23,8 @@
  * Please edit read_input.l instead of read_input.c!
  * flex should be said to be case insensitive!
  *
- * After modifiing read_input.l please call once
- * make flex_read_input
- * to update read_input.c
+ * After modifiing read_input.l please update read_input.c with
+ * flex -Ptmlqcd -i -t read_input.l > read_input.c
  *
  * Autor: Carsten Urbach
  *        urbach@physik.fu-berlin.de
@@ -184,6 +183,7 @@ inline void rmQuotes(char *str){
 %x MUBAR
 %x EPSBAR
 %x MU
+%x CSW
 %x SEED
 %x RLXDLEVEL
 %x NSAVE
@@ -272,6 +272,7 @@ inline void rmQuotes(char *str){
 
 %x INITMONOMIAL
 %x DETMONOMIAL
+%x CLDETMONOMIAL
 %x GAUGEMONOMIAL
 %x SFGAUGEMONOMIAL
 %x NDPOLYMONOMIAL
@@ -310,6 +311,7 @@ inline void rmQuotes(char *str){
 ^NRYProcs{EQL}                     BEGIN(NPROCY);
 ^NRZProcs{EQL}                     BEGIN(NPROCZ);
 ^kappa{EQL}                        BEGIN(KAPPA);
+^csw{EQL}                          BEGIN(CSW);
 ^2KappaMu{EQL}                     BEGIN(MU);
 ^2KappaMubar{EQL}                  BEGIN(MUBAR);
 ^2KappaEpsBar{EQL}                 BEGIN(EPSBAR);
@@ -530,6 +532,9 @@ inline void rmQuotes(char *str){
     name_caller = YY_START; 
     BEGIN(TMSOLVER);
   }
+}
+
+<WILSONOP,TMOP>{
   {SPC}*UseEvenOdd{EQL}yes {
     if(myverbose) printf("  Use even/odd preconditioning line %d operator %d\n", line_of_file, current_operator);
     optr->even_odd_flag = 1;
@@ -573,7 +578,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<CLOVEROP>{
+<CLOVEROP,TMOP,WILSONOP,DBTMOP>{
   {SPC}*csw{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->c_sw = c;
@@ -715,6 +720,10 @@ inline void rmQuotes(char *str){
     mnl->type = DET;
     strcpy((*mnl).name, "DET");
   }
+  else if(strcmp(yytext, "CLOVERDET")==0) {
+    mnl->type = CLOVERDET;
+    strcpy((*mnl).name, "CLOVERDET");
+  }
   else if(strcmp(yytext, "DETRATIO")==0) {
     mnl->type = DETRATIO;
     strcpy((*mnl).name, "DETRATIO");
@@ -767,12 +776,13 @@ inline void rmQuotes(char *str){
           fprintf(stderr,"starting to parse poly(detratio) monomial\n");
           BEGIN(POLYMONOMIAL); 
   }
+  else if(mnl->type == CLOVERDET) BEGIN(CLDETMONOMIAL);
   else BEGIN(DETMONOMIAL);
 }
 
 
 
-<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
     if(mnl->type == NDDETRATIO) {
       mnl->timescale = -5;
@@ -794,7 +804,13 @@ inline void rmQuotes(char *str){
   }
 }
 
-
+<CLDETMONOMIAL>{
+  {SPC}*CSW{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->c_sw = c;
+    if(myverbose) printf("  CSW set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+}
 
 <DETMONOMIAL,POLYMONOMIAL>{
   {SPC}*2KappaMu{EQL}{FLT} {
@@ -807,12 +823,7 @@ inline void rmQuotes(char *str){
     mnl->mu2 = c;
     if(myverbose) printf("  2KappaMu2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*kappa{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    mnl->kappa = c;
-    if(myverbose) printf("  kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*kappa2{EQL}{FLT} {
+  {SPC}*Kappa2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->kappa2 = c;
     if(myverbose) printf("  kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
@@ -836,6 +847,14 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->epsbar2 = c;
     if(myverbose) printf("  2KappaEpsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+}
+
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL>{
+  {SPC}*Kappa{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->kappa = c;
+    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*CSGHistory{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -1417,6 +1436,10 @@ inline void rmQuotes(char *str){
   g_mu1=atof(yytext);
   if(myverbose!=0) printf("2 kappa mu=%s \n", yytext);
 }
+<CSW>{FLT}  {
+  g_c_sw=atof(yytext);
+  if(myverbose!=0) printf("c_sw=%lf \n", g_c_sw);
+}
 <STARTCOND>{
   cold {
     startoption=0;
@@ -1804,7 +1827,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
   line_of_file++;
 }
 <*>\n                       {
@@ -1880,6 +1903,7 @@ int read_input(char * conf_file){
   g_mubar = _default_g_mubar;
   g_epsbar = _default_g_epsbar;
   g_mu = _default_g_mu;
+  g_c_sw = _default_c_sw;
   g_mu1 = _default_g_mu1;
   g_mu2 = _default_g_mu2;
   g_mu3 = _default_g_mu3;

@@ -19,6 +19,8 @@
 #ifndef _MEASURE_RECTANGLES_H
 #define _MEASURE_RECTANGLES_H
 
-double measure_rectangles();
+#include "su3.h"
+
+double measure_rectangles(su3 ** const gf);
 
 #endif

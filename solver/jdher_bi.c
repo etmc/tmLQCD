@@ -66,7 +66,6 @@
 #include "solver/solver.h"
 #include "solver/gram-schmidt_bi.h"
 #include "solver/quicksort.h"
-#include "update_backward_gauge.h"
 #include "jdher.h"
 #include "jdher_bi.h"
 #ifdef CRAY
@@ -199,9 +198,6 @@ void jdher_bi(int n, int lda, double tau, double tol,
    *                                                                          *
    ****************************************************************************/
   /*   NEW PART FOR GAUGE_COPY */
-#ifdef _GAUGE_COPY
-  update_backward_gauge();
-#endif
   /* END NEW PART */
 
   /* print info header */

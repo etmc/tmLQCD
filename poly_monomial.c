@@ -49,6 +49,7 @@
 #include "solver/eigenvalues.h"
 #include "Nondegenerate_Matrix.h"
 #include "Hopping_Matrix.h"
+#include "hamiltonian_field.h"
 #include "phmc.h"
 
 
@@ -60,7 +61,7 @@ inline void setPhmcVars(monomial *mnl){
   phmc_root=mnl->MDPolyRoots;
 }
 
-void poly_derivative(const int id){
+void poly_derivative(const int id, hamiltonian_field_t * const hf){
 
   monomial * mnl = &monomial_list[id];
   int k,j;
@@ -121,19 +122,19 @@ void poly_derivative(const int id){
       Qtm_minus_psi(g_spinor_field[DUM_DERI+3],chi_spinor_field[j-1]); 
       
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf+1], EO, -1.);
-      deriv_Sb(OE, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+2]); 
+      deriv_Sb(OE, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+2], hf); 
       
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], EO, 1.); 
-      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf+1]);
+      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf+1], hf);
       
     
       Qtm_minus_psi(g_spinor_field[DUM_DERI+3],chi_spinor_field[degreehalf+1]); 
 
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2],g_spinor_field[DUM_DERI+3], EO, +1.);
-      deriv_Sb(OE, chi_spinor_field[j-1] , g_spinor_field[DUM_DERI+2]); 
+      deriv_Sb(OE, chi_spinor_field[j-1] , g_spinor_field[DUM_DERI+2], hf); 
       
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], chi_spinor_field[j-1], EO, -1.); 
-      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
+      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], hf);
       
     }
 
@@ -158,10 +159,10 @@ void poly_derivative(const int id){
       boundary(mnl->kappa2);
 
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2],chi_spinor_field[degreehalf], EO, -1.);
-      deriv_Sb(OE, mnl->pf , g_spinor_field[DUM_DERI+2]);
+      deriv_Sb(OE, mnl->pf , g_spinor_field[DUM_DERI+2], hf);
       
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], mnl->pf, EO, +1.);
-      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf]);
+      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf], hf);
 
 
 
@@ -190,7 +191,7 @@ void poly_derivative(const int id){
 
 }
 
-double poly_acc(const int id){
+double poly_acc(const int id, hamiltonian_field_t * const hf){
 
   monomial * mnl = &monomial_list[id];
   int j;
@@ -275,7 +276,7 @@ double poly_acc(const int id){
 
 }
 
-void poly_heatbath(const int id){
+void poly_heatbath(const int id, hamiltonian_field_t * const hf){
   monomial * mnl = &monomial_list[id];
   int j;
   spinor* spinor1=g_spinor_field[2];

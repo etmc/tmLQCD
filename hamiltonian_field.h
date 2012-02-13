@@ -1,5 +1,6 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2012 Carsten Urbach
+ *
+ * Copyright (C) 2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -15,19 +16,24 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * exchange routines for gauge fields
  *
- * Author: Carsten Urbach 
- *
- **********************************************************/
+ ***********************************************************************/
+
+#ifndef _HAMILTONIAN_FIELD_H
+#define _HAMILTONIAN_FIELD_H
+
+#include <su3.h>
+#include <su3adj.h>
+
+typedef struct {
+  su3 ** gaugefield;
+  su3adj ** momenta;
+  su3adj ** derivative;
+  int update_gauge_copy;
+  int update_gauge_energy;
+  int update_rectangle_energy;
+} hamiltonian_field_t;
 
 
-#ifndef _XCHANGE_GAUGE_H
-#define _XCHANGE_GAUGE_H
-
-#include "su3.h"
-
-void xchange_gauge(su3 ** const gf);
 
 #endif

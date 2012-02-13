@@ -15,8 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
  *
  * File check_xchange.c
  *
@@ -375,7 +373,7 @@ int check_xchange()
 #  endif
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
     MPI_Barrier(MPI_COMM_WORLD);
 
 #  if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT )
@@ -562,7 +560,7 @@ int check_xchange()
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* DEBUG */
@@ -1078,7 +1076,7 @@ int check_xchange()
       }
 
       MPI_Barrier(MPI_COMM_WORLD);
-      xchange_gauge();
+      xchange_gauge(g_gauge_field);
       MPI_Barrier(MPI_COMM_WORLD);
 
 #  if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT )
@@ -1294,7 +1292,7 @@ int check_xchange()
       }
 #  endif
       MPI_Barrier(MPI_COMM_WORLD);
-      xchange_gauge();
+      xchange_gauge(g_gauge_field);
       MPI_Barrier(MPI_COMM_WORLD);
 #  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
       di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
@@ -2140,7 +2138,7 @@ int check_xchange()
 #  endif
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_deri();
+    xchange_deri(&df0);
     MPI_Barrier(MPI_COMM_WORLD);
 
 #  if defined PARALLELT
@@ -3243,7 +3241,7 @@ int check_xchange()
 #  endif
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
     MPI_Barrier(MPI_COMM_WORLD);
 
     x = (double*) &g_gauge_field[T*LX*LY*LZ][0];
@@ -3421,7 +3419,7 @@ int check_xchange()
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_gauge();
+    xchange_gauge(g_gauge_field);
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* The edges */
@@ -3864,7 +3862,7 @@ int check_xchange()
       }
 
       MPI_Barrier(MPI_COMM_WORLD);
-      xchange_gauge();
+      xchange_gauge(g_gauge_field);
       MPI_Barrier(MPI_COMM_WORLD);
 
       x = (double*) &g_gauge_field[VOLUMEPLUSRAND][0];
@@ -3990,7 +3988,7 @@ int check_xchange()
       }
       
       MPI_Barrier(MPI_COMM_WORLD);
-      xchange_gauge();
+      xchange_gauge(g_gauge_field);
       MPI_Barrier(MPI_COMM_WORLD);
 
       /* Now there should be in the t and t2 Rand certain values set */
@@ -4202,7 +4200,7 @@ int check_xchange()
       }
 #  endif
       MPI_Barrier(MPI_COMM_WORLD);
-      xchange_gauge();
+      xchange_gauge(g_gauge_field);
       MPI_Barrier(MPI_COMM_WORLD);
 
 #  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
@@ -4916,7 +4914,7 @@ int check_xchange()
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  ix = g_ipt[T+1][x1][x2][x3];
+	  ix = g_idn[ g_ipt[0][x1][x2][x3] ][0];
 	  for(mu=0;mu<4;mu++){
 	    df0[ix][mu].d1=(double)g_cart_id;
 	    df0[ix][mu].d2=(double)g_cart_id;
@@ -4989,7 +4987,7 @@ int check_xchange()
 #  endif
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_deri();
+    xchange_deri(&df0);
     MPI_Barrier(MPI_COMM_WORLD);
 
 #  if defined PARALLELT

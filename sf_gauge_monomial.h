@@ -20,8 +20,10 @@
 #ifndef _SFGAUGE_MONOMIAL_H
 #define _SFGAUGE_MONOMIAL_H
 
-void sf_gauge_derivative(const int id);
-void sf_gauge_heatbath(const int id);
-double sf_gauge_acc(const int id);
+#include "hamiltonian_field.h"
+
+void sf_gauge_derivative(const int id, hamiltonian_field_t * const hf);
+void sf_gauge_heatbath(const int id, hamiltonian_field_t * const hf);
+double sf_gauge_acc(const int id, hamiltonian_field_t * const hf);
 
 #endif

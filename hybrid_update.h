@@ -19,13 +19,7 @@
 #ifndef _HYBRID_UPDATE_H
 #define _HYBRID_UPDATE_H
 
-#define first_psf 0
-#define second_psf 1
-#define third_psf 4
-
-double moment_energy();
-double ini_momenta(const int repro);
-void update_gauge(double step);
-void gauge_momenta(double step);
+double moment_energy(su3adj ** const momenta);
+double init_momenta(const int repro, su3adj ** const momenta);
 
 #endif

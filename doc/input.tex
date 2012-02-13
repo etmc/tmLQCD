@@ -82,17 +82,38 @@ supported general input paramters:
   The seed for the random number generator. Default value is $123456$.
 
 \item {\ttfamily kappa}:\\
-  The $\kappa$ value. Default is $0.12$.
+  The $\kappa$ value. Default is $0.12$. For the {\ttfamily hmc\_tm}
+  application, this must be set to the physical value! It can have
+  different values in the single monomials, but here we need the
+  target value.
+
+\item {\ttfamily csw}:\\
+  The value of the clover coefficient $c_\mathrm{sw}$. Must be larger
+  than zero to have effect. For the {\ttfamily hmc\_tm}
+  application, this must be set to the physical value! It can have
+  different values in the single monomials, but here we need the
+  target value. If set to larger than zero it will automatically
+  trigger an additional monomial in the even/odd case for the trace
+  log of the clover term. Default behaviour is no clover term.
 
 \item {\ttfamily 2KappaMu}:\\
   Twisted mass parameter (the physical one) for twisted mass
-  action. This is for internal reasons $2\kappa\mu$.
+  action. This is for internal reasons $2\kappa\mu$. For the {\ttfamily
+    hmc\_tm} application, this must be set to the physical value! It
+  can have different values in the single monomials, but here we need
+  the target value.
 
 \item {\ttfamily 2KappaMuBar}:\\
-  The average mass of the heavy doublet multiplied with $2\kappa$
+  The average mass of the heavy doublet multiplied with $2\kappa$. For
+  the {\ttfamily hmc\_tm} application, this must be set to the physical value! It
+  can have different values in the single monomials, but here we need
+  the target value.
 
 \item {\ttfamily 2KappaEpsBar}:\\
-  The splitting mass multiplied with $2\kappa$
+  The splitting mass multiplied with $2\kappa$. For the {\ttfamily
+    hmc\_tm} application, this must be set to the physical value! It
+  can have different values in the single monomials, but here we need
+  the target value.
 
 \item {\ttfamily Measurements}:\\
   Number of measurements in units of trajectories to be done. Default
@@ -327,6 +348,16 @@ EndMonomial
   \[
   \det(Q^2(\kappa) + \mu^2)
   \]
+\item {\ttfamily CLOVERDET}: pseudo fermion representation of the
+  (mass degenerate)
+  \[
+  \det(Q_\mathrm{sw}^2(\kappa, c_\mathrm{sw}))
+  \]
+  for the clover operator without twisted mass term. This monomial is
+  only available with even/odd preconditioning right now. It
+  automatically adds another monomial for the $\tr\ln$ part of the
+  clover term.
+
 \item {\ttfamily DETRATIO}: pseudo fermion representation of\\
   \[
   \det(Q^2(\kappa) + \mu^2)/\det(Q^2(\kappa_2) + \mu_2^2)
@@ -355,9 +386,16 @@ EndMonomial
 \end{itemize}
 Each of them has different options:
 \begin{itemize}
-\item {\ttfamily DET}:
+\item {\ttfamily DET, CLOVERDET}:
   \begin{itemize}
   \item {\ttfamily 2KappaMu}
+  \end{itemize}
+\item {\ttfamily CLOVERDET}:
+  \begin{itemize}
+  \item {\ttfamily csw}
+  \end{itemize}
+\item {\ttfamily DET, CLOVERDET}:
+  \begin{itemize}
   \item {\ttfamily Kappa}
   \item {\ttfamily Timescale}: the timescale on which to integrate
     this monomial. Counting starts from zero up to the total number of

@@ -20,8 +20,10 @@
 #ifndef _NDPOLY_MONOMIAL_H
 #define _NDPOLY_MONOMIAL_H
 
-void ndpoly_derivative(const int id);
-double ndpoly_acc(const int id);
-void ndpoly_heatbath(const int id);
+#include "hamiltonian_field.h"
+
+void ndpoly_derivative(const int id, hamiltonian_field_t * const hf);
+double ndpoly_acc(const int id, hamiltonian_field_t * const hf);
+void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf);
 
 #endif
