@@ -102,9 +102,6 @@ all: Makefile all-recursive dep hmc_tm invert
 ${top_srcdir}/git_hash.h:
 	@cd @srcdir@ && sh GIT-VERSION-GEN
 
-# no targets to be built serially
-.NOTPARALLEL:
-
 -include $(addsuffix .d,$(ALLOBJ))
 
 include ${top_srcdir}/Makefile.global
@@ -163,7 +160,7 @@ uninstall: Makefile
 	echo "done";
 
 compile-clean: compile-clean-recursive Makefile
-	rm -f *.o *.d
+	rm -f *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 clean: clean-recursive Makefile
 	rm -f hmc_tm invert *.o *.d test/*.o test/*.d tests/*.o tests/*.d
