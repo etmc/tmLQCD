@@ -517,9 +517,9 @@ void sw_invert(const int ieo, const double mu) {
       }
 
       /*  copy "a" back to sw_inv */
-      get_3x3_block_matrix(&sw_inv[x][0][i], a, 0, 0);
-      get_3x3_block_matrix(&sw_inv[x][1][i], a, 0, 3);
-      get_3x3_block_matrix(&sw_inv[x][2][i], a, 3, 3);
+      get_3x3_block_matrix(&sw_inv[icy][0][i], a, 0, 0);
+      get_3x3_block_matrix(&sw_inv[icy][1][i], a, 0, 3);
+      get_3x3_block_matrix(&sw_inv[icy][2][i], a, 3, 3);
     }
 
     if(fabs(mu) > 0.) {
@@ -542,9 +542,9 @@ void sw_invert(const int ieo, const double mu) {
 	}
 
 	/*  copy "a" back to sw_inv */
-	get_3x3_block_matrix(&sw_inv[x][0][i], a, 0, 0);
-	get_3x3_block_matrix(&sw_inv[x][1][i], a, 0, 3);
-	get_3x3_block_matrix(&sw_inv[x][2][i], a, 3, 3);
+	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][0][i], a, 0, 0);
+	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][1][i], a, 0, 3);
+	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][2][i], a, 3, 3);
       }
     }
   }
