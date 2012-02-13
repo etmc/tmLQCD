@@ -43,6 +43,7 @@
 #include "invert_eo.h"
 #include "invert_doublet_eo.h"
 #include "invert_overlap.h"
+#include "invert_clover_eo.h"
 #include "boundary.h"
 #include "init_chi_spinor_field.h"
 #include "start.h"
@@ -246,37 +247,48 @@ void op_invert(const int op_id, const int index_start) {
 #else
   atime = (double)clock() / (double)(CLOCKS_PER_SEC);
 #endif
-  if(optr->type == TMWILSON || optr->type == WILSON) {
-    for(i = 0; i < 2; i++) {
-      g_mu = optr->mu;
-      g_c_sw = optr->c_sw;
-      if(optr->c_sw > 0 && optr->even_odd_flag) {
-	if (g_cart_id == 0) {
-	  printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
-	}
-	sw_term(g_gauge_field, optr->kappa, optr->c_sw); 
-	/* this must be EO (so 0) here!   */
-	/* to match clover_inv in Qsw_psi */
-	sw_invert(EE, 0.);
+  if(optr->type == TMWILSON || optr->type == WILSON || optr->type == CLOVER) {
+    g_mu = optr->mu;
+    g_c_sw = optr->c_sw;
+    if(optr->type == CLOVER) {
+      if (g_cart_id == 0 && g_debug_level > 1) {
+	printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
       }
-      if (g_cart_id == 0) {
-        printf("#\n# mu = %e\n", g_mu);
-      }
+      init_sw_fields(VOLUME);
+      sw_term(g_gauge_field, optr->kappa, optr->c_sw); 
+      /* this must be EE here!   */
+      /* to match clover_inv in Qsw_psi */
+      sw_invert(EE, optr->mu);
+    }
 
-      if(use_preconditioning){
-        g_precWS=(void*)optr->precWS;
+    for(i = 0; i < 2; i++) {
+      if (g_cart_id == 0) {
+        printf("#\n# 2 kappa mu = %e, kappa = %e, c_sw = %e\n", g_mu, g_kappa, g_c_sw);
+      }
+      if(optr->type != CLOVER) {
+	if(use_preconditioning){
+	  g_precWS=(void*)optr->precWS;
+	}
+	else {
+	  g_precWS=NULL;
+	}
+	
+	optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+				      optr->eps_sq, optr->maxiter,
+				      optr->solver, optr->rel_prec,
+				      0, optr->even_odd_flag);
+	
+	/* check result */
+	M_full(g_spinor_field[4], g_spinor_field[5], optr->prop0, optr->prop1);
       }
       else {
-        g_precWS=NULL;
+	optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+					    optr->eps_sq, optr->maxiter,
+					    optr->solver, optr->rel_prec,
+					    &g_gauge_field, &Qsw_pm_psi, &Qsw_minus_psi);
+	/* check result */
+ 	Msw_full(g_spinor_field[4], g_spinor_field[5], optr->prop0, optr->prop1);
       }
-
-      optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
-                                    optr->eps_sq, optr->maxiter,
-                                    optr->solver, optr->rel_prec,
-                                    0, optr->even_odd_flag);
-
-      /* check result */
-      M_full(g_spinor_field[4], g_spinor_field[5], optr->prop0, optr->prop1);
 
       diff(g_spinor_field[4], g_spinor_field[4], optr->sr0, VOLUME / 2);
       diff(g_spinor_field[5], g_spinor_field[5], optr->sr1, VOLUME / 2);
