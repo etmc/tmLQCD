@@ -527,7 +527,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<WILSONOP,TMOP,CLOVEROP>{
+<WILSONOP,TMOP>{
   {SPC}*Solver{EQL} {
     name_caller = YY_START; 
     BEGIN(TMSOLVER);
@@ -562,7 +562,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<TMOP>{
+<TMOP,CLOVEROP>{
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->mu = c;
@@ -578,7 +578,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<CLOVEROP,TMOP,WILSONOP,DBTMOP>{
+<CLOVEROP>{
   {SPC}*csw{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->c_sw = c;
