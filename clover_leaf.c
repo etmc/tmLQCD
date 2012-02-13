@@ -481,10 +481,23 @@ double sw_trace(const int ieo, const double mu) {
 }
 
 
+void mult_6x6(complex a[6][6], complex b[6][6], complex d[6][6]) {
+
+  for(int i = 0; i < 6; i++) {
+    for(int j = 0; j < 6; j++) {
+      a[i][j].re = 0.; a[i][j].im = 0.; 
+      for(int k = 0; k < 6; k++) {
+	a[i][j].re += b[i][k].re*d[k][j].re - b[i][k].im*d[k][j].im;
+	a[i][j].im += b[i][k].re*d[k][j].im + b[i][k].im*d[k][j].re;
+      }
+    }
+  }
+  return;
+}
+
 void sw_invert(const int ieo, const double mu) {
   int ioff, err=0;
   int i, x;
-  su3 *w;
   static su3 v;
   static complex a[6][6];
   if(ieo==0) {
@@ -519,6 +532,7 @@ void sw_invert(const int ieo, const double mu) {
       get_3x3_block_matrix(&sw_inv[icy][0][i], a, 0, 0);
       get_3x3_block_matrix(&sw_inv[icy][1][i], a, 0, 3);
       get_3x3_block_matrix(&sw_inv[icy][2][i], a, 3, 3);
+      get_3x3_block_matrix(&sw_inv[icy][3][i], a, 3, 0);
     }
 
     if(fabs(mu) > 0.) {
@@ -544,6 +558,7 @@ void sw_invert(const int ieo, const double mu) {
 	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][0][i], a, 0, 0);
 	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][1][i], a, 0, 3);
 	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][2][i], a, 3, 3);
+	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][3][i], a, 3, 0);
       }
     }
   }
@@ -572,7 +587,8 @@ void sw_deriv(const int ieo, const double mu) {
   int x;
   double fac = 1.0000;
   static su3 lswp[4],lswm[4];
-  
+  static su3 tmp;
+
   /* convention: Tr clover-leaf times insertion */
   if(ieo == 0) {
     ioff=0;
@@ -586,15 +602,19 @@ void sw_deriv(const int ieo, const double mu) {
     x = g_eo2lexic[icx];
     /* compute the insertion matrix */
     _su3_plus_su3(lswp[0],sw_inv[icy][0][1],sw_inv[icy][0][0]);
-    _su3_plus_su3(lswp[1],sw_inv[icy][1][1],sw_inv[icy][1][0]);
+    _su3_plus_su3(tmp,sw_inv[icy][1][1],sw_inv[icy][1][0]);
+    _su3_dagger(lswp[1], tmp);
     _su3_plus_su3(lswp[2],sw_inv[icy][2][1],sw_inv[icy][2][0]);
-    _su3_dagger(lswp[3],lswp[1]);
-    _su3_assign(lswp[1],lswp[3]);
+    _su3_plus_su3(lswp[3],sw_inv[icy][3][1],sw_inv[icy][3][0]);
+/*     _su3_dagger(lswp[3],lswp[1]); */
+/*     _su3_assign(lswp[1],lswp[3]); */
     _su3_minus_su3(lswm[0],sw_inv[icy][0][1],sw_inv[icy][0][0]);
-    _su3_minus_su3(lswm[1],sw_inv[icy][1][1],sw_inv[icy][1][0]);
+    _su3_minus_su3(tmp,sw_inv[icy][1][1],sw_inv[icy][1][0]);
+    _su3_dagger(lswm[1], tmp);
     _su3_minus_su3(lswm[2],sw_inv[icy][2][1],sw_inv[icy][2][0]);
-    _su3_dagger(lswm[3],lswm[1]);
-    _su3_assign(lswm[1],lswm[3]);
+    _su3_minus_su3(lswm[3],sw_inv[icy][3][1],sw_inv[icy][3][0]);
+/*     _su3_dagger(lswm[3],lswm[1]); */
+/*     _su3_assign(lswm[1],lswm[3]); */
     
     /* add up to swm[] and swp[] */
     _su3_refac_acc(swm[x][0], fac, lswm[0]);
@@ -608,15 +628,19 @@ void sw_deriv(const int ieo, const double mu) {
     if(fabs(mu) > 0.) {
       /* compute the insertion matrix */
       _su3_plus_su3(lswp[0],sw_inv[icy+VOLUME/2][0][1],sw_inv[icy+VOLUME/2][0][0]);
-      _su3_plus_su3(lswp[1],sw_inv[icy+VOLUME/2][1][1],sw_inv[icy+VOLUME/2][1][0]);
+      _su3_plus_su3(tmp,sw_inv[icy+VOLUME/2][1][1],sw_inv[icy+VOLUME/2][1][0]);
+      _su3_dagger(lswp[1], tmp);
       _su3_plus_su3(lswp[2],sw_inv[icy+VOLUME/2][2][1],sw_inv[icy+VOLUME/2][2][0]);
-      _su3_dagger(lswp[3],lswp[1]);
-      _su3_assign(lswp[1],lswp[3]);
+      _su3_plus_su3(lswp[3],sw_inv[icy+VOLUME/2][3][1],sw_inv[icy+VOLUME/2][3][0]);
+/*       _su3_dagger(lswp[3],lswp[1]); */
+/*       _su3_assign(lswp[1],lswp[3]); */
       _su3_minus_su3(lswm[0],sw_inv[icy+VOLUME/2][0][1],sw_inv[icy+VOLUME/2][0][0]);
-      _su3_minus_su3(lswm[1],sw_inv[icy+VOLUME/2][1][1],sw_inv[icy+VOLUME/2][1][0]);
+      _su3_minus_su3(tmp,sw_inv[icy+VOLUME/2][1][1],sw_inv[icy+VOLUME/2][1][0]);
+      _su3_dagger(lswm[1], tmp);
       _su3_minus_su3(lswm[2],sw_inv[icy+VOLUME/2][2][1],sw_inv[icy+VOLUME/2][2][0]);
-      _su3_dagger(lswm[3],lswm[1]);
-      _su3_assign(lswm[1],lswm[3]);
+      _su3_minus_su3(lswm[3],sw_inv[icy+VOLUME/2][3][1],sw_inv[icy+VOLUME/2][3][0]);
+/*       _su3_dagger(lswm[3],lswm[1]); */
+/*       _su3_assign(lswm[1],lswm[3]); */
       
       /* add up to swm[] and swp[] */
       _su3_refac_acc(swm[x][0], fac, lswm[0]);

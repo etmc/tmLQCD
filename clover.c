@@ -174,7 +174,7 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
 
 void clover_inv(const int ieo, spinor * const l, const double mu) {
   int ioff = 0;
-  su3 *w1,*w2,*w3;
+  su3 *w1, *w2, *w3, *w4;
   spinor *rn;
   static su3_vector psi, chi, phi1, phi3;
 
@@ -191,20 +191,22 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
     w1=&sw_inv[icy][0][0];
     w2=w1+2;  /* &sw_inv[icy][1][0]; */
     w3=w1+4;  /* &sw_inv[icy][2][0]; */
+    w4=w1+6;  /* &sw_inv[icy][3][0]; */
     _su3_multiply(psi,*w1,phi1); 
     _su3_multiply(chi,*w2,(*rn).s1);
     _vector_add((*rn).s0,psi,chi);
-    _su3_inverse_multiply(psi,*w2,phi1); 
+    _su3_multiply(psi,*w4,phi1); 
     _su3_multiply(chi,*w3,(*rn).s1);
     _vector_add((*rn).s1,psi,chi);
 
     w1++; /* &sw_inv[icy][0][1]; */
     w2++; /* &sw_inv[icy][1][1]; */
     w3++; /* &sw_inv[icy][2][1]; */
+    w4++; /* &sw_inv[icy][3][1]; */
     _su3_multiply(psi,*w1,phi3); 
     _su3_multiply(chi,*w2,(*rn).s3);
     _vector_add((*rn).s2,psi,chi);
-    _su3_inverse_multiply(psi,*w2,phi3); 
+    _su3_multiply(psi,*w4,phi3); 
     _su3_multiply(chi,*w3,(*rn).s3);
     _vector_add((*rn).s3,psi,chi);
 
@@ -421,7 +423,7 @@ void assign_mul_one_sw_pm_imu(const int ieo,
 void assign_mul_one_sw_pm_imu_inv(const int ieo, 
 				  spinor * const k, spinor * const l,
 				  const double mu) {
-  su3 *w1,*w2,*w3;
+  su3 *w1, *w2, *w3, *w4;
   spinor *rn, *s;
   static su3_vector psi, chi, phi1, phi3;
 
@@ -437,20 +439,22 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
     w1=&sw_inv[icx][0][0];
     w2=w1+2;  /* &sw_inv[icx][1][0]; */
     w3=w1+4;  /* &sw_inv[icx][2][0]; */
+    w4=w1+6;  /* &sw_inv[icx][3][0]; */
     _su3_multiply(psi,*w1,phi1); 
     _su3_multiply(chi,*w2,(*rn).s1);
     _vector_add((*s).s0,psi,chi);
-    _su3_inverse_multiply(psi,*w2,phi1); 
+    _su3_multiply(psi,*w4,phi1); 
     _su3_multiply(chi,*w3,(*rn).s1);
     _vector_add((*s).s1,psi,chi);
 
     w1++; /* &sw_inv[icx][0][1]; */
     w2++; /* &sw_inv[icx][1][1]; */
     w3++; /* &sw_inv[icx][2][1]; */
+    w4++; /* &sw_inv[icx][3][1]; */
     _su3_multiply(psi,*w1,phi3); 
     _su3_multiply(chi,*w2,(*rn).s3);
     _vector_add((*s).s2,psi,chi);
-    _su3_inverse_multiply(psi,*w2,phi3); 
+    _su3_multiply(psi,*w4,phi3); 
     _su3_multiply(chi,*w3,(*rn).s3);
     _vector_add((*s).s3,psi,chi);
 
@@ -484,20 +488,20 @@ void init_sw_fields() {
     if((void*)(sw1 = (su3**)calloc(3*V, sizeof(su3*))) == NULL) {
       fprintf (stderr, "sw1 malloc err\n"); 
     }
-    if((void*)(sw_inv1 = (su3**)calloc(3*V, sizeof(su3*))) == NULL) {
+    if((void*)(sw_inv1 = (su3**)calloc(4*V, sizeof(su3*))) == NULL) {
       fprintf (stderr, "sw_inv1 malloc err\n"); 
     }
     if((void*)(_sw = (su3*)calloc(3*2*V+1, sizeof(su3))) == NULL) {
       fprintf (stderr, "_sw malloc err\n"); 
     }
-    if((void*)(_sw_inv = (su3*)calloc(3*2*V+1, sizeof(su3))) == NULL) {
+    if((void*)(_sw_inv = (su3*)calloc(4*2*V+1, sizeof(su3))) == NULL) {
       fprintf (stderr, "_sw_inv malloc err\n"); 
     }
     sw[0] = sw1;
     sw_inv[0] = sw_inv1;
     for(int i = 1; i < V; i++) {
       sw[i] = sw[i-1]+3;
-      sw_inv[i] = sw_inv[i-1]+3;
+      sw_inv[i] = sw_inv[i-1]+4;
     }
 #    if (defined SSE || defined SSE2 || defined SSE3)
     sw[0][0] = (su3*)(((unsigned long int)(_sw)+ALIGN_BASE)&~ALIGN_BASE);
@@ -516,7 +520,7 @@ void init_sw_fields() {
     
     tmp = sw_inv[0][0];
     for(int i = 0; i < V; i++) {
-      for(int j = 0; j < 3; j++) {
+      for(int j = 0; j < 4; j++) {
 	sw_inv[i][j] = tmp;
 	tmp = tmp+2;
       }
