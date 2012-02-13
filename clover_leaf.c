@@ -450,14 +450,11 @@ double sw_trace(const int ieo, const double mu) {
       
       if(fabs(mu) > 0) {
 	// here we populate the 6x6 colour matrix
-	w=&sw[x][0][i];     
-	_a_C(0,0,*w);
-	w=&sw[x][1][i];     
-	_a_C(0,3,*w);
-	_su3_dagger(v2,*w); 
-	_a_C(3,0,v2);
-	w=&sw[x][2][i];     
-	_a_C(3,3,*w);
+	populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
+	populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
+	_su3_dagger(v, sw[x][1][i]); 
+	populate_6x6_matrix(a, &v, 3, 0);
+	populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
 	// we add the twisted mass term
 	if(i == 0) add_tm(a, -mu);
 	else add_tm(a, +mu);
@@ -527,14 +524,12 @@ void sw_invert(const int ieo, const double mu) {
 
     if(fabs(mu) > 0.) {
       for(i = 0; i < 2; i++) {
-	w=&sw[x][0][i];
-	_a_C(0,0,*w);
-	w=&sw[x][1][i];
-	_a_C(0,3,*w);
-	_su3_dagger(v2,*w); 
-	_a_C(3,0,v2);
-	w=&sw[x][2][i];
-	_a_C(3,3,*w);
+	populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
+	populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
+	_su3_dagger(v, sw[x][1][i]); 
+	populate_6x6_matrix(a, &v, 3, 0);
+	populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
+
 	// we add the twisted mass term
 	if(i == 0) add_tm(a, -mu);
 	else add_tm(a, +mu);
@@ -545,14 +540,11 @@ void sw_invert(const int ieo, const double mu) {
 	  printf("# %d\n", err);
 	  err = 0;
 	}
-	
-	//  copy "a" back to sw_inv
-	w=&sw_inv[icy+VOLUME/2][0][i]; 
-	_C_a(0,0,*w);
-	w=&sw_inv[icy+VOLUME/2][1][i]; 
-	_C_a(0,3,*w);
-	w=&sw_inv[icy+VOLUME/2][2][i]; 
-	_C_a(3,3,*w);
+
+	/*  copy "a" back to sw_inv */
+	get_3x3_block_matrix(&sw_inv[x][0][i], a, 0, 0);
+	get_3x3_block_matrix(&sw_inv[x][1][i], a, 0, 3);
+	get_3x3_block_matrix(&sw_inv[x][2][i], a, 3, 3);
       }
     }
   }

@@ -57,6 +57,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   /* This factor 2 a missing factor 2 in trace_lambda */
   (*mnl).forcefactor = 2.;
 
+  
   /*********************************************************************
    * 
    * even/odd version 
@@ -135,6 +136,7 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   monomial * mnl = &monomial_list[id];
   g_mu = mnl->mu;
+  g_c_sw = mnl->c_sw;
   boundary(mnl->kappa);
   mnl->csg_n = 0;
   mnl->csg_n2 = 0;
@@ -144,7 +146,6 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
   init_sw_fields();
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert(EE, mnl->mu);
-<<<<<<< HEAD
 
   random_spinor_field(g_spinor_field[2], VOLUME/2, mnl->rngrepro);
   mnl->energy0 = square_norm(g_spinor_field[2], VOLUME/2, 1);
@@ -153,21 +154,6 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
   chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
 
-=======
-  if(mnl->even_odd_flag) {
-    random_spinor_field(g_spinor_field[2], VOLUME/2, mnl->rngrepro);
-    mnl->energy0 = square_norm(g_spinor_field[2], VOLUME/2, 1);
-
-    mnl->Qp(mnl->pf, g_spinor_field[2]);
-    chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
-			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-  }
-  else {
-    if(g_proc_id == 0) {
-      fprintf(stderr, "only even/odd implemented right now! (cloverdet_monomial.c)\n");
-    }
-  }
->>>>>>> - comments added
   g_mu = g_mu1;
   boundary(g_kappa);
   if(g_proc_id == 0 && g_debug_level > 3) {
@@ -182,12 +168,12 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   int save_sloppy = g_sloppy_precision_flag;
 
   g_mu = mnl->mu;
+  g_c_sw = mnl->c_sw;
   boundary(mnl->kappa);
 
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert(EE, mnl->mu);
 
-<<<<<<< HEAD
   chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 	       mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
   g_sloppy_precision_flag = 0;
@@ -199,29 +185,6 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   /* Compute the energy contr. from first field */
   mnl->energy1 = square_norm(g_spinor_field[2], VOLUME/2, 1);
 
-=======
-  if(mnl->even_odd_flag) {
-
-    if(mnl->solver == CG) {
-      ITER_MAX_BCG = 0;
-    }
-    chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
-    g_sloppy_precision_flag = 0;
-    mnl->iter0 = cg_her(g_spinor_field[2], mnl->pf, mnl->maxiter, mnl->accprec,  
-			g_relative_precision_flag, VOLUME/2, mnl->Qsq); 
-    mnl->Qm(g_spinor_field[2], g_spinor_field[2]);
-
-    g_sloppy_precision_flag = save_sloppy;
-    /* Compute the energy contr. from first field */
-    mnl->energy1 = square_norm(g_spinor_field[2], VOLUME/2, 1);
-  }
-  else {
-    if(g_proc_id == 0) {
-      fprintf(stderr, "only even/odd implemented right now! (cloverdet_monomial.c)\n");
-    }
-  }
->>>>>>> - comments added
   g_mu = g_mu1;
   boundary(g_kappa);
   if(g_proc_id == 0 && g_debug_level > 3) {
