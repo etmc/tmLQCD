@@ -115,8 +115,8 @@ inline void rmQuotes(char *str){
   int index_start, index_end;
   int random_seed;
   int rlxd_level;
-  char rlxd_input_filename[100];
-  char gauge_input_filename[100];
+  char rlxd_input_filename[500];
+  char gauge_input_filename[500];
   int read_source_flag;
   int return_check_flag, return_check_interval;
   int gauge_precision_read_flag;
@@ -1518,6 +1518,10 @@ inline void rmQuotes(char *str){
   if(myverbose!=0) printf("Write Checkpoint all %s measurements\n",yytext);
 }
 <GAUGEINPUTFILE>{FILENAME} {
+  int length = strlen(yytext)+1;
+  if(length >= sizeof(gauge_input_filename)/sizeof(char) )
+    yy_fatal_error("Filename GaugeConfigInputFile too long! (see read_input.l)\n");
+
   strcpy(gauge_input_filename,yytext);
   if(myverbose!=0) printf("Gauge Configuration input filename set to %s\n",yytext);
 }
