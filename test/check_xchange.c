@@ -2138,7 +2138,7 @@ int check_xchange()
 #  endif
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_deri(&df0);
+    xchange_deri(df0);
     MPI_Barrier(MPI_COMM_WORLD);
 
 #  if defined PARALLELT
@@ -4987,7 +4987,7 @@ int check_xchange()
 #  endif
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_deri(&df0);
+    xchange_deri(df0);
     MPI_Barrier(MPI_COMM_WORLD);
 
 #  if defined PARALLELT
