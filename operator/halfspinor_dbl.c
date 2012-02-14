@@ -80,20 +80,20 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       _vector_add(psi, rs.s0, rs.s2);
 
       _su3_multiply(chi,(*U),psi);
-      _complex_times_vector32((*phi32[ix]).s0, ka0, chi);
+      _complex_times_vector((*phi32[ix]).s0, ka0, chi);
       
       _vector_add(psi, rs.s1, rs.s3);
 
       _su3_multiply(chi,(*U),psi);
-      _complex_times_vector32((*phi32[ix]).s1, ka0, chi);
+      _complex_times_vector((*phi32[ix]).s1, ka0, chi);
             
       U++;
       ix++;
     
       /*********************** direction -0 ************************/
 
-      _vector_sub32((*phi32[ix]).s0, rs.s0, rs.s2);
-      _vector_sub32((*phi32[ix]).s1, rs.s1, rs.s3);
+      _vector_sub((*phi32[ix]).s0, rs.s0, rs.s2);
+      _vector_sub((*phi32[ix]).s1, rs.s1, rs.s3);
 
       ix++;
 
@@ -102,20 +102,20 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       _vector_i_add(psi, rs.s0, rs.s3);
 
       _su3_multiply(chi, (*U), psi);
-      _complex_times_vector32((*phi32[ix]).s0, ka1, chi);
+      _complex_times_vector((*phi32[ix]).s0, ka1, chi);
 
       _vector_i_add(psi, rs.s1, rs.s2);
 
       _su3_multiply(chi, (*U), psi);
-      _complex_times_vector32((*phi32[ix]).s1, ka1, chi);
+      _complex_times_vector((*phi32[ix]).s1, ka1, chi);
 
       U++;
       ix++;
 
       /*********************** direction -1 ************************/
 
-      _vector_i_sub32((*phi32[ix]).s0, rs.s0, rs.s3);
-      _vector_i_sub32((*phi32[ix]).s1, rs.s1, rs.s2);
+      _vector_i_sub((*phi32[ix]).s0, rs.s0, rs.s3);
+      _vector_i_sub((*phi32[ix]).s1, rs.s1, rs.s2);
 
       ix++;
       /*********************** direction +2 ************************/
@@ -123,20 +123,20 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       _vector_add(psi, rs.s0, rs.s3);
 
       _su3_multiply(chi,(*U),psi);
-      _complex_times_vector32((*phi32[ix]).s0, ka2, chi);
+      _complex_times_vector((*phi32[ix]).s0, ka2, chi);
 
       _vector_sub(psi, rs.s1, rs.s2);
 
       _su3_multiply(chi,(*U),psi);
-      _complex_times_vector32((*phi32[ix]).s1, ka2, chi);
+      _complex_times_vector((*phi32[ix]).s1, ka2, chi);
       
       U++;
       ix++;
 
       /*********************** direction -2 ************************/
 
-      _vector_sub32((*phi32[ix]).s0, rs.s0, rs.s3);
-      _vector_add32((*phi32[ix]).s1, rs.s1, rs.s2);
+      _vector_sub((*phi32[ix]).s0, rs.s0, rs.s3);
+      _vector_add((*phi32[ix]).s1, rs.s1, rs.s2);
       ix++;
 
       /*********************** direction +3 ************************/
@@ -144,20 +144,20 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       _vector_i_add(psi, rs.s0, rs.s2);
       
       _su3_multiply(chi, (*U), psi);
-      _complex_times_vector32((*phi32[ix]).s0, ka3, chi);
+      _complex_times_vector((*phi32[ix]).s0, ka3, chi);
 
 
       _vector_i_sub(psi, rs.s1, rs.s3);
 
       _su3_multiply(chi,(*U),psi);
-      _complex_times_vector32((*phi32[ix]).s1, ka3, chi);
+      _complex_times_vector((*phi32[ix]).s1, ka3, chi);
 
       U++;
       ix++;
       /*********************** direction -3 ************************/
 
-      _vector_i_sub32((*phi32[ix]).s0, rs.s0, rs.s2);
-      _vector_i_add32((*phi32[ix]).s1, rs.s1, rs.s3);
+      _vector_i_sub((*phi32[ix]).s0, rs.s0, rs.s2);
+      _vector_i_add((*phi32[ix]).s1, rs.s1, rs.s3);
 
       ix++;
       /************************ end of loop ************************/
@@ -177,20 +177,20 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix = 0;
     for(i = 0; i < (VOLUME)/2; i++){
       /*********************** direction +0 ************************/
-      _vector_assign32(rs.s0, (*phi32[ix]).s0);
-      _vector_assign32(rs.s2, (*phi32[ix]).s0);
-      _vector_assign32(rs.s1, (*phi32[ix]).s1);
-      _vector_assign32(rs.s3, (*phi32[ix]).s1);
+      _vector_assign(rs.s0, (*phi32[ix]).s0);
+      _vector_assign(rs.s2, (*phi32[ix]).s0);
+      _vector_assign(rs.s1, (*phi32[ix]).s1);
+      _vector_assign(rs.s3, (*phi32[ix]).s1);
       ix++;
       /*********************** direction -0 ************************/
-      _vector_assign32(psi, (*phi32[ix]).s0);
+      _vector_assign(psi, (*phi32[ix]).s0);
       _su3_inverse_multiply(chi,(*U), psi);
       _complexcjg_times_vector(psi,ka0,chi);
 
       _vector_add_assign(rs.s0, psi);
       _vector_sub_assign(rs.s2, psi);
 
-      _vector_assign32(psi, (*phi32[ix]).s1);
+      _vector_assign(psi, (*phi32[ix]).s1);
       _su3_inverse_multiply(chi,(*U), psi);
       _complexcjg_times_vector(psi,ka0,chi);
       
@@ -200,22 +200,22 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       U++;
       /*********************** direction +1 ************************/
 
-      _vector_add_assign32(rs.s0, (*phi32[ix]).s0);
-      _vector_i_sub_assign32(rs.s3, (*phi32[ix]).s0);
+      _vector_add_assign(rs.s0, (*phi32[ix]).s0);
+      _vector_i_sub_assign(rs.s3, (*phi32[ix]).s0);
 
-      _vector_add_assign32(rs.s1, (*phi32[ix]).s1);
-      _vector_i_sub_assign32(rs.s2, (*phi32[ix]).s1);
+      _vector_add_assign(rs.s1, (*phi32[ix]).s1);
+      _vector_i_sub_assign(rs.s2, (*phi32[ix]).s1);
     
       ix++;
       /*********************** direction -1 ************************/
-      _vector_assign32(psi, (*phi32[ix]).s0);
+      _vector_assign(psi, (*phi32[ix]).s0);
       _su3_inverse_multiply(chi,(*U), psi);
       _complexcjg_times_vector(psi,ka1,chi);
 
       _vector_add_assign(rs.s0, psi);
       _vector_i_add_assign(rs.s3, psi);
 
-      _vector_assign32(psi, (*phi32[ix]).s1);
+      _vector_assign(psi, (*phi32[ix]).s1);
       _su3_inverse_multiply(chi,(*U), psi);
       _complexcjg_times_vector(psi,ka1,chi);
 
@@ -227,23 +227,23 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
       /*********************** direction +2 ************************/
 
-      _vector_add_assign32(rs.s0, (*phi32[ix]).s0);
-      _vector_add_assign32(rs.s3, (*phi32[ix]).s0);
+      _vector_add_assign(rs.s0, (*phi32[ix]).s0);
+      _vector_add_assign(rs.s3, (*phi32[ix]).s0);
 
-      _vector_add_assign32(rs.s1, (*phi32[ix]).s1);
-      _vector_sub_assign32(rs.s2, (*phi32[ix]).s1);
+      _vector_add_assign(rs.s1, (*phi32[ix]).s1);
+      _vector_sub_assign(rs.s2, (*phi32[ix]).s1);
     
       ix++;
       /*********************** direction -2 ************************/
 
-      _vector_assign32(psi, (*phi32[ix]).s0);
+      _vector_assign(psi, (*phi32[ix]).s0);
       _su3_inverse_multiply(chi,(*U), psi);
       _complexcjg_times_vector(psi,ka2,chi);
 
       _vector_add_assign(rs.s0, psi);
       _vector_sub_assign(rs.s3, psi);
 
-      _vector_assign32(psi, (*phi32[ix]).s1);
+      _vector_assign(psi, (*phi32[ix]).s1);
       _su3_inverse_multiply(chi, (*U), psi);
       _complexcjg_times_vector(psi,ka2,chi);
       
@@ -254,24 +254,24 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       ix++;
       /*********************** direction +3 ************************/
 
-      _vector_add_assign32(rs.s0, (*phi32[ix]).s0);
-      _vector_i_sub_assign32(rs.s2, (*phi32[ix]).s0);
+      _vector_add_assign(rs.s0, (*phi32[ix]).s0);
+      _vector_i_sub_assign(rs.s2, (*phi32[ix]).s0);
 
-      _vector_add_assign32(rs.s1, (*phi32[ix]).s1);
-      _vector_i_add_assign32(rs.s3, (*phi32[ix]).s1);
+      _vector_add_assign(rs.s1, (*phi32[ix]).s1);
+      _vector_i_add_assign(rs.s3, (*phi32[ix]).s1);
 
       ix++;
 
       /*********************** direction -3 ************************/
 
-      _vector_assign32(psi, (*phi32[ix]).s0);
+      _vector_assign(psi, (*phi32[ix]).s0);
       _su3_inverse_multiply(chi,(*U), psi);
       _complexcjg_times_vector(psi,ka3,chi);
       
       _vector_add((*s).s0, rs.s0, psi);
       _vector_i_add((*s).s2, rs.s2, psi);
 
-      _vector_assign32(psi, (*phi32[ix]).s1);
+      _vector_assign(psi, (*phi32[ix]).s1);
       _su3_inverse_multiply(chi,(*U), psi);
       _complexcjg_times_vector(psi,ka3,chi);
 
