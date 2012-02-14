@@ -52,8 +52,8 @@ extern "C"
   extern int cp_interval;
   extern int nstore;
   extern int crylov_space_dim;
-  extern char rlxd_input_filename[100];
-  extern char gauge_input_filename[100];
+  extern char rlxd_input_filename[500];
+  extern char gauge_input_filename[500];
   extern int subforwilson_flag;
   extern int eigenvalue_method_flag;
   extern int eigenvalue_max_iterations;
