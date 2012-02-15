@@ -1244,11 +1244,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       U++;
       /*********************** direction +1 ************************/
 
-      _vector_add_assign32(rs.s0, (*phi32[ix]).s0);
-      _vector_i_sub_assign32(rs.s3, (*phi32[ix]).s0);
+      _vector_add_assign(rs.s0, (*phi32[ix]).s0);
+      _vector_i_sub_assign(rs.s3, (*phi32[ix]).s0);
 
-      _vector_add_assign32(rs.s1, (*phi32[ix]).s1);
-      _vector_i_sub_assign32(rs.s2, (*phi32[ix]).s1);
+      _vector_add_assign(rs.s1, (*phi32[ix]).s1);
+      _vector_i_sub_assign(rs.s2, (*phi32[ix]).s1);
     
       ix++;
       /*********************** direction -1 ************************/
@@ -1271,11 +1271,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
       /*********************** direction +2 ************************/
 
-      _vector_add_assign32(rs.s0, (*phi32[ix]).s0);
-      _vector_add_assign32(rs.s3, (*phi32[ix]).s0);
+      _vector_add_assign(rs.s0, (*phi32[ix]).s0);
+      _vector_add_assign(rs.s3, (*phi32[ix]).s0);
 
-      _vector_add_assign32(rs.s1, (*phi32[ix]).s1);
-      _vector_sub_assign32(rs.s2, (*phi32[ix]).s1);
+      _vector_add_assign(rs.s1, (*phi32[ix]).s1);
+      _vector_sub_assign(rs.s2, (*phi32[ix]).s1);
     
       ix++;
       /*********************** direction -2 ************************/
@@ -1298,11 +1298,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       ix++;
       /*********************** direction +3 ************************/
 
-      _vector_add_assign32(rs.s0, (*phi32[ix]).s0);
-      _vector_i_sub_assign32(rs.s2, (*phi32[ix]).s0);
+      _vector_add_assign(rs.s0, (*phi32[ix]).s0);
+      _vector_i_sub_assign(rs.s2, (*phi32[ix]).s0);
 
-      _vector_add_assign32(rs.s1, (*phi32[ix]).s1);
-      _vector_i_add_assign32(rs.s3, (*phi32[ix]).s1);
+      _vector_add_assign(rs.s1, (*phi32[ix]).s1);
+      _vector_i_add_assign(rs.s3, (*phi32[ix]).s1);
 
       ix++;
 
