@@ -163,7 +163,7 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
   !  Details can be found in  the notes sw.ps on tsun.desy.de    !
   !  by P. Weisz and U. Wolff.                                   !
   !--------------------------------------------------------------!
-  !  inversion in place of _Complex double matrix a without pivoting     !
+  !  inversion in place of complex matrix a without pivoting     !
   !  triangularization by householder reflexions                 !
   !  inversion of triangular matrix                              !
   !  inverse reflexions                                          !
@@ -204,13 +204,13 @@ int six_invert(_Complex double a[6][6])
     d[k] = -conj(sigma) / q;
 
     /* reflect all columns to the right */
-    for(j = k+1; j <= nm1; j++)
+    for(j = k+1; j <= nm1; ++j)
     {
       z = 0.0;
-      for(i = k; i <= nm1; i++)
+      for(i = k; i <= nm1; ++i)
 	z += conj(a[i][k]) * a[i][j];
       z /= p[k];
-      for(i = k; i <= nm1; i++)
+      for(i = k; i <= nm1; ++i)
 	a[i][j] -= z * a[i][k];
     }
   }
@@ -218,7 +218,7 @@ int six_invert(_Complex double a[6][6])
   q = conj(sigma) * sigma;
   if (q < tiny_t)
     ifail++;
-  d[nm1] = -conj(sigma) / q;
+  d[nm1] = conj(sigma) / q;
 
   /*  inversion of upper triangular matrix in place
       (diagonal elements done already): */

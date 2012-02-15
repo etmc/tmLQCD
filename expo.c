@@ -64,24 +64,17 @@ su3 exposu3(su3adj p)
   /* calculates v^2 */
   _su3_times_su3(v2,v,v);
   /* */
-  a=0.5*(creal(v2.c00)+creal(v2.c11)+creal(v2.c22));
+  a = 0.5 * (creal(v2.c00) + creal(v2.c11) + creal(v2.c22));
   /* 1/3 imaginary part of tr v*v2 */
-  b = 0.33333333333333333*
-    ( creal(v.c00)*cimag(v2.c00)+cimag(v.c00)*creal(v2.c00)
-     +creal(v.c01)*cimag(v2.c10)+cimag(v.c01)*creal(v2.c10)
-     +creal(v.c02)*cimag(v2.c20)+cimag(v.c02)*creal(v2.c20)
-     +creal(v.c10)*cimag(v2.c01)+cimag(v.c10)*creal(v2.c01)
-     +creal(v.c11)*cimag(v2.c11)+cimag(v.c11)*creal(v2.c11)
-     +creal(v.c12)*cimag(v2.c21)+cimag(v.c12)*creal(v2.c21)
-     +creal(v.c20)*cimag(v2.c02)+cimag(v.c20)*creal(v2.c02)
-     +creal(v.c21)*cimag(v2.c12)+cimag(v.c21)*creal(v2.c12)
-     +creal(v.c22)*cimag(v2.c22)+cimag(v.c22)*creal(v2.c22));
-  a0 = (0.16059043836821615e-9);
-  a1 = (0.11470745597729725e-10);
-  a2 = (0.76471637318198165e-12);
-  fac=0.20876756987868099e-8;      /*  1/12! */
-  r=12.0;
-  for(i = 3; i <= 15; i++)
+  b = 0.33333333333333333 * cimag(v.c00 * v2.c00 + v.c01 * v2.c10 + v.c02 * v2.c20 +
+                                  v.c10 * v2.c01 + v.c11 * v2.c11 + v.c12 * v2.c21 +
+                                  v.c20 * v2.c02 + v.c21 * v2.c12 + v.c22 * v2.c21  );
+  a0  = 0.16059043836821615e-9;
+  a1  = 0.11470745597729725e-10;
+  a2  = 0.76471637318198165e-12;
+  fac = 0.20876756987868099e-8;      /*  1/12! */
+  r   = 12.0;
+  for(i = 3; i <= 15; ++i)
   {
     a1p = a0 + a * a2;
     a0 = fac + b * I * a2;
@@ -130,22 +123,16 @@ su3 restoresu3(su3 u)
   static double n1,n2;
   
   /* normalize rows 1 and 2 */
-  n1= creal(u.c00) * creal(u.c00) + cimag(u.c00) * cimag(u.c00)
-    + creal(u.c01) * creal(u.c01) + cimag(u.c01) * cimag(u.c01)
-    + creal(u.c02) * creal(u.c02) + cimag(u.c02) * cimag(u.c02);
-  n1 = 1.0/sqrt(n1);
-  n2= creal(u.c10) * creal(u.c10) + cimag(u.c10) * cimag(u.c10)
-    + creal(u.c11) * creal(u.c11) + cimag(u.c11) * cimag(u.c11)
-    + creal(u.c12) * creal(u.c12) + cimag(u.c12) * cimag(u.c12);
-  n2= 1.0/sqrt(n2);
+  n1 = 1.0 / sqrt(conj(u.c00) * u.c00 + conj(u.c01) * u.c01 + conj(u.c02) * u.c02);
+  n2 = 1.0 / sqrt(conj(u.c10) * u.c10 + conj(u.c11) * u.c11 + conj(u.c12) * u.c12);
   
-  vr.c00 = n1*u.c00;
-  vr.c01 = n1*u.c01;
-  vr.c02 = n1*u.c02;
+  vr.c00 = n1 * u.c00;
+  vr.c01 = n1 * u.c01;
+  vr.c02 = n1 * u.c02;
   
-  vr.c10 = n1*u.c10;
-  vr.c11 = n1*u.c11;
-  vr.c12 = n1*u.c12;
+  vr.c10 = n1 * u.c10;
+  vr.c11 = n1 * u.c11;
+  vr.c12 = n1 * u.c12;
   
   /* compute  row 3 as the conjugate of the cross-product of 1 and 2 */ 
   vr.c20 = conj(vr.c01 * vr.c12 - vr.c02 * vr.c11);
