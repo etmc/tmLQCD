@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id: assign_add_mul_r.c 1784 2011-09-10 15:06:29Z scorzato $ */
 
 #include <complex.h>
 #include <stdlib.h>
