@@ -170,7 +170,7 @@ int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_pr
 int bicg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) {
 
   double err, d1, squarenorm=0.;
-  _Complex double rho0, rho1, omega, alpha, beta, nom, denom;
+  _Complex double rho0, rho1, omega, alpha, beta;
   int iteration, N=VOLUME/2;
   spinor * r, * p, * v, *hatr, * s, * t, * P, * Q;
   
@@ -208,8 +208,7 @@ int bicg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) 
 	break;
       }
       Mtm_plus_psi(v, p);
-      denom = scalar_prod(hatr, v, N, 1);
-      alpha = rho0 / denom;
+      alpha = rho0 / scalar_prod(hatr, v, N, 1);
       assign(s, r, N);
       assign_diff_mul(s, v, alpha, N);
       Mtm_plus_psi(t, s);
@@ -220,10 +219,7 @@ int bicg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) 
       assign(r, s, N);
       assign_diff_mul(r, t, omega, N);
       rho1 = scalar_prod(hatr, r, N, 1);
-      nom = (alpha) * (rho1);
-      denom = (omega) * (rho0);
-      beta = (nom) / (denom);
-      omega = -omega;
+      beta = -(alpha * rho1) / (omega * rho0);
       assign_mul_bra_add_mul_ket_add(p, v, r, omega, beta, N);
       rho0 = rho1;
     }
