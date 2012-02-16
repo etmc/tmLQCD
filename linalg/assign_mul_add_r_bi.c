@@ -16,8 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id: assign_mul_add_r_bi.c 1150 2009-02-16 16:52:09Z urbach $ */
-
 
 /************************************************************************
  *

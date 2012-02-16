@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id: assign_mul_add_r.c 1784 2011-09-10 15:06:29Z scorzato $ */
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
