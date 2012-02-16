@@ -130,15 +130,16 @@ int gcr(spinor * const P, spinor * const Q,
     }
 
     /* prepare for restart */
-    (c[k]) = (c[k]) / b[k];
+    c[k] /= b[k];
     assign_add_mul(P, xi[k], c[k], N);
-    for(l = k-1; l >= 0; l--) {
-      for(i = l+1; i <= k; i++) {
-        (ctmp) = (a[l][i]) * (c[i]);
-        /* c[l] -= ctmp */
-        (c[l]) -= ctmp;
+    for(l = k - 1; l >= 0; --l)
+    {
+      for(i = l+1; i <= k; ++i)
+      {
+        ctmp = a[l][i] * c[i];
+        c[l] -= ctmp;
       }
-      (c[l]) = (c[l]) / b[l];
+      c[l] /= b[l];
       assign_add_mul(P, xi[l], c[l], N);
     }
   }
