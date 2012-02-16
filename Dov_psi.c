@@ -381,8 +381,6 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
       }
       
       norm_Q_sqr_psi(R, aux, rnorm);
-/*       printf("%d %e %e\n", j, R[0].creal(s0.c0), R[0].cimag(s0.c0)); */
-/*       printf("%e %e\n", R[0].creal(s1.c0), R[0].cimag(s1.c0)); */
       temp1=-1.0;
       temp2=c[j];
       assign_mul_add_mul_add_mul_add_mul_r(d, R, dd, aux3, fact2, fact1, temp1, temp2, VOLUME);
@@ -426,8 +424,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
       temp2 = c[j];
       assign_add_mul_r(R, aux, temp2, VOLUME);
       /* The stoppping criterio tnorm = |T_j(Q^2)| */
-      tnorm=square_norm(aux, VOLUME, 1);
-      tnorm*= temp2*temp2;
+      tnorm =  square_norm(aux, VOLUME, 1) * temp2 * temp2;
       
       /*
 	auxnorm=square_norm(R);

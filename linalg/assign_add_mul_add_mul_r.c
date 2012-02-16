@@ -37,26 +37,27 @@
 
 /* S,U input, R inoutput, c1,c2 input */
 void assign_add_mul_add_mul_r(spinor * const R, spinor * const S, spinor * const U,
-			    const double c1, const double c2, const int N){
+			      const double c1, const double c2, const int N){
   int ix;
   spinor *r,*s,*u;
 
-  for (ix=0;ix<N;ix++){
+  for (ix = 0; ix < N; ++ix)
+  {
     r=(spinor *) R + ix;
     s=(spinor *) S + ix;
     u=(spinor *) U + ix;
     
-    (*r).s0.c0 += c1*(*s).s0.c0 + c2*(*u).s0.c0;
-    (*r).s0.c1 += c1*(*s).s0.c1 + c2*(*u).s0.c1;
-    (*r).s0.c2 += c1*(*s).s0.c2 + c2*(*u).s0.c2;
-    (*r).s1.c0 += c1*(*s).s1.c0 + c2*(*u).s1.c0;
-    (*r).s1.c1 += c1*(*s).s1.c1 + c2*(*u).s1.c1;
-    (*r).s1.c2 += c1*(*s).s1.c2 + c2*(*u).s1.c2;
-    (*r).s2.c0 += c1*(*s).s2.c0 + c2*(*u).s2.c0;
-    (*r).s2.c1 += c1*(*s).s2.c1 + c2*(*u).s2.c1;
-    (*r).s2.c2 += c1*(*s).s2.c2 + c2*(*u).s2.c2;
-    (*r).s3.c0 += c1*(*s).s3.c0 + c2*(*u).s3.c0;
-    (*r).s3.c1 += c1*(*s).s3.c1 + c2*(*u).s3.c1;
-    (*r).s3.c2 += c1*(*s).s3.c2 + c2*(*u).s3.c2;
+    r->s0.c0 += c1 * s->s0.c0 + c2 * u->s0.c0;
+    r->s0.c1 += c1 * s->s0.c1 + c2 * u->s0.c1;
+    r->s0.c2 += c1 * s->s0.c2 + c2 * u->s0.c2;
+    r->s1.c0 += c1 * s->s1.c0 + c2 * u->s1.c0;
+    r->s1.c1 += c1 * s->s1.c1 + c2 * u->s1.c1;
+    r->s1.c2 += c1 * s->s1.c2 + c2 * u->s1.c2;
+    r->s2.c0 += c1 * s->s2.c0 + c2 * u->s2.c0;
+    r->s2.c1 += c1 * s->s2.c1 + c2 * u->s2.c1;
+    r->s2.c2 += c1 * s->s2.c2 + c2 * u->s2.c2;
+    r->s3.c0 += c1 * s->s3.c0 + c2 * u->s3.c0;
+    r->s3.c1 += c1 * s->s3.c1 + c2 * u->s3.c1;
+    r->s3.c2 += c1 * s->s3.c2 + c2 * u->s3.c2;
   }
 }

@@ -396,11 +396,6 @@ void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
     _vector_sub_assign(r->s3, phi1);    
   }
 
-  /*     
-  printf(" IN 2 UP: %f %f \n", l_strange[0].creal(s2.c1), l_strange[0].cimag(s2.c1));
-  printf(" IN 2 DN: %f %f \n", l_charm[0].creal(s2.c1), l_charm[0].cimag(s2.c1));
-  */
-
   /* Finally, we multiply by the constant  phmc_Cpol  */
   /* which renders the polynomial in monomials  */
   /* identical to the polynomial a la clenshaw */;

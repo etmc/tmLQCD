@@ -196,8 +196,8 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : (g_nb_list[j] == g_cart_id) ? 0 : -1);
     block_list[i].mpilocal_neighbour[7] = (i == 1 ? 0 : (g_nb_list[j] == g_cart_id) ? 1 : -1);
 #else
-    block_list[i].mpilocal_neighbour[6] = i == 0 ? 1 : 0;
-    block_list[i].mpilocal_neighbour[7] = i == 0 ? 1 : 0;
+    block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : 0);
+    block_list[i].mpilocal_neighbour[7] = (i == 0 ? 1 : 0);
 #endif
     if(g_debug_level > 4 && g_proc_id == 0) {
       for(j = 0; j < 8; j++) {
