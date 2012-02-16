@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* $Id: mul_diff_mul_r.c 1150 2009-02-16 16:52:09Z urbach $*/
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
