@@ -192,7 +192,7 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
     __stfpd(r+4, y02);
     __stfpd(r+6, y03);
     __stfpd(r+8, y04);
-    __stfpd(r+10, y05);r
+    __stfpd(r+10, y05);
     __stfpd(r+12, y06);
     __stfpd(r+14, y07);
     __stfpd(r+16, y08);
