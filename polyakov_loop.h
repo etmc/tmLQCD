@@ -22,7 +22,7 @@
 #include "measurements.h"
 
 void polyakov_loop(_Complex double * pl_, const int mu);
-int polyakov_loop_0(const int nstore,_Complex double* pl);
+int polyakov_loop_0(const int nstore, _Complex double* pl);
 int polyakov_loop_dir(const int nstore, const int dir);
 void polyakov_loop_measurement(const int nstore, const int id);
 

@@ -42,8 +42,8 @@
 
 
 /* k output , l input */
-int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) {
-
+int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec)
+{
   static double normsq, pro, err, alpha_cg, beta_cg, squarenorm, sqnrm, sqnrm2;
   int iteration = 0, i, j;
   int save_sloppy = g_sloppy_precision;
@@ -209,7 +209,7 @@ int bicg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec) 
       }
       Mtm_plus_psi(v, p);
       denom = scalar_prod(hatr, v, N, 1);
-      alpha = (rho0) / (denom);
+      alpha = rho0 / denom;
       assign(s, r, N);
       assign_diff_mul(s, v, alpha, N);
       Mtm_plus_psi(t, s);

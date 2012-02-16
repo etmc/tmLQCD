@@ -232,30 +232,17 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ks = 0.;
     kc = 0.;
 
-    for(ix=0;ix<VOLUME;ix++) {
-      for(mu=0;mu<4;mu++){
+    for(ix = 0; ix < VOLUME; ++ix)
+    {
+      for(mu = 0; mu < 4; ++mu)
+      {
         tmp = 0.;
         v=&hf.gaugefield[ix][mu];
         w=&gauge_tmp[ix][mu];
-        ds = (creal(v->c00)-creal(w->c00))*(creal(v->c00)-creal(w->c00))
-          + (cimag(v->c00)-cimag(w->c00))*(cimag(v->c00)-cimag(w->c00))
-          + (creal(v->c01)-creal(w->c01))*(creal(v->c01)-creal(w->c01))
-          + (cimag(v->c01)-cimag(w->c01))*(cimag(v->c01)-cimag(w->c01))
-          + (creal(v->c02)-creal(w->c02))*(creal(v->c02)-creal(w->c02))
-          + (cimag(v->c02)-cimag(w->c02))*(cimag(v->c02)-cimag(w->c02))
-          + (creal(v->c10)-creal(w->c10))*(creal(v->c10)-creal(w->c10))
-          + (cimag(v->c10)-cimag(w->c10))*(cimag(v->c10)-cimag(w->c10))
-          + (creal(v->c11)-creal(w->c11))*(creal(v->c11)-creal(w->c11))
-          + (cimag(v->c11)-cimag(w->c11))*(cimag(v->c11)-cimag(w->c11))
-          + (creal(v->c12)-creal(w->c12))*(creal(v->c12)-creal(w->c12))
-          + (cimag(v->c12)-cimag(w->c12))*(cimag(v->c12)-cimag(w->c12))
-          + (creal(v->c20)-creal(w->c20))*(creal(v->c20)-creal(w->c20))
-          + (cimag(v->c20)-cimag(w->c20))*(cimag(v->c20)-cimag(w->c20))
-          + (creal(v->c21)-creal(w->c21))*(creal(v->c21)-creal(w->c21))
-          + (cimag(v->c21)-cimag(w->c21))*(cimag(v->c21)-cimag(w->c21))
-          + (creal(v->c22)-creal(w->c22))*(creal(v->c22)-creal(w->c22))
-          + (cimag(v->c22)-cimag(w->c22))*(cimag(v->c22)-cimag(w->c22));
-        ds = sqrt(ds);
+        /* NOTE Should this perhaps be some function or macro? */
+        ds = sqrt(conj(v->c00 - w->c00) * (v->c00 - w->c00) + conj(v->c01 - w->c01) * (v->c01 - w->c01) + conj(v->c02 - w->c02) * (v->c02 - w->c02) +
+                  conj(v->c10 - w->c10) * (v->c10 - w->c10) + conj(v->c11 - w->c11) * (v->c11 - w->c11) + conj(v->c12 - w->c12) * (v->c12 - w->c12) +             conj(v->c20 - w->c20) * (v->c20 - w->c20) + conj(v->c21 - w->c21) * (v->c21 - w->c21) + conj(v->c22 - w->c22) * (v->c22 - w->c22));
+             
         tr = ds + kc;
         ts = tr + ks;
         tt = ts-ks;
