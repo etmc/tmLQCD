@@ -37,7 +37,8 @@
 
 /*   (*P) = (*P) + c(*Q)        c is a complex constant   */
 
-void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N) {
+void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N)
+{
   int ix;
   su3_vector *s,*r;
   __asm__ __volatile__ ("movsd %0, %%xmm7 \n\t"
@@ -191,7 +192,7 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
     __stfpd(r+4, y02);
     __stfpd(r+6, y03);
     __stfpd(r+8, y04);
-    __stfpd(r+10, y05);
+    __stfpd(r+10, y05);r
     __stfpd(r+12, y06);
     __stfpd(r+14, y07);
     __stfpd(r+16, y08);
@@ -261,29 +262,29 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
 
 void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N)
 {
-  register spinor *r;
-  register spinor *s;
+  register spinor *p;
+  register spinor *q;
 
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
   for (int ix = 0; ix < N; ++ix)
   {
-    r = P + ix;
-    s = Q + ix;
-    r->s0.c0 += c * s->s0.c0;
-    r->s0.c1 += c * s->s0.c1;
-    r->s0.c2 += c * s->s0.c2;
+    p = P + ix;
+    q = Q + ix;
+    p->s0.c0 += c * q->s0.c0;
+    p->s0.c1 += c * q->s0.c1;
+    p->s0.c2 += c * q->s0.c2;
 
-    r->s1.c0 += c * s->s1.c0;
-    r->s1.c1 += c * s->s1.c1;
-    r->s1.c2 += c * s->s1.c2;
+    p->s1.c0 += c * q->s1.c0;
+    p->s1.c1 += c * q->s1.c1;
+    p->s1.c2 += c * q->s1.c2;
     
-    r->s2.c0 += c * s->s2.c0;
-    r->s2.c1 += c * s->s2.c1;
-    r->s2.c2 += c * s->s2.c2;
+    p->s2.c0 += c * q->s2.c0;
+    p->s2.c1 += c * q->s2.c1;
+    p->s2.c2 += c * q->s2.c2;
 
-    r->s3.c0 += c * s->s3.c0;
-    r->s3.c1 += c * s->s3.c1;
-    r->s3.c2 += c * s->s3.c2;
+    p->s3.c0 += c * q->s3.c0;
+    p->s3.c1 += c * q->s3.c1;
+    p->s3.c2 += c * q->s3.c2;
   }
 }
 #endif
@@ -291,16 +292,16 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
 #ifdef WITHLAPH
 void assign_add_mul_r_su3vect(su3_vector * const P, su3_vector * const Q, const double c, const int N)
 {
-  su3_vector *r,*s;
+  su3_vector *p,*q;
 
   for (int ix = 0; ix < N; ++ix) 
   {
-    r=P+ix;      
-    s=Q+ix;
+    p = P + ix;      
+    q = Q + ix;
     
-    r->c0 += c * s->c0;
-    r->c1 += c * s->c1;
-    r->c2 += c * s->c2;
+    p->c0 += c * q->c0;
+    p->c1 += c * q->c1;
+    p->c2 += c * q->c2;
   }
 }
 #endif
