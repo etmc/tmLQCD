@@ -38,28 +38,7 @@
 /* S input, R output */
 void assign(spinor * const R, spinor * const S, const int N)
 {
-  register spinor *r = R;
-  register spinor *s = S;
-
-  /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-  for (int ix = 0; ix < N; ++ix, ++r, ++s)
-  {
-    r->s0.c0 = s->s0.c0;
-    r->s0.c1 = s->s0.c1;
-    r->s0.c2 = s->s0.c2;
-
-    r->s1.c0 = s->s1.c0;
-    r->s1.c1 = s->s1.c1;
-    r->s1.c2 = s->s1.c2;
-    
-    r->s2.c0 = s->s2.c0;
-    r->s2.c1 = s->s2.c1;
-    r->s2.c2 = s->s2.c2;
-
-    r->s3.c0 = s->s3.c0;
-    r->s3.c1 = s->s3.c1;
-    r->s3.c2 = s->s3.c2;
-  } 
+  memmove(R, S, N * sizeof(spinor));
 }
 
 #ifdef WITHLAPH
