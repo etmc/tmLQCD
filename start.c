@@ -82,11 +82,8 @@ void gauss_vector(double v[],int n)
 {
    int k;
    double r[2];
-/*    float r[4]; */
-/*   double pi; */
    double x1,x2,rho,y1,y2;
 
- /*  pi=4.0*atan(1.0); */
 
    for (k=0;;k+=2)
    {
@@ -94,18 +91,17 @@ void gauss_vector(double v[],int n)
       x1=r[0];
       x2=r[1];
 
-      rho=-log(1.0-x1);
-      rho=sqrt(rho);
-/*      x2*=2.0*pi; */
-      x2*=6.2831853071796;
-      y1=rho*sin(x2);
-      y2=rho*cos(x2);
+      rho = -log(1.0 - x1);
+      rho = sqrt(rho);
+      x2 *= 6.2831853071796;
+      y1 = rho * sin(x2);
+      y2 = rho * cos(x2);
 
-      if (n>k)
-         v[k]=y1;
-      if (n>(k+1))
-         v[k+1]=y2;
-      if (n<=(k+2))
+      if (n > k)
+         v[k] = y1;
+      if (n > (k+1))
+         v[k + 1] = y2;
+      if (n <= (k + 2))
          return;
    }
 }
@@ -113,31 +109,14 @@ void gauss_vector(double v[],int n)
 
 static su3 unit_su3(void)
 {
-   su3 u;
-
-   u.c00 = (1.0);
-   u.c01 = (0.0);
-   u.c02 = (0.0);
-
-   u.c10 = (0.0);
-   u.c11 = (1.0);
-   u.c12 = (0.0);
-
-   u.c20 = (0.0);
-   u.c21 = (0.0);
-   u.c22 = (1.0);
-
-   return(u);
+   su3 u = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+   return u;
 }
 
-su3_vector unit_su3_vector() {
-  su3_vector s;
-
-  s.c0 = (1.);
-  s.c1 = (1.);
-  s.c2 = (1.);
-
-  return(s);
+su3_vector unit_su3_vector()
+{
+  su3_vector s = {1.0, 1.0, 1.0};
+  return s;
 }
 
 
@@ -147,21 +126,21 @@ su3_vector random_su3_vector(void)
    double v[6],norm,fact;
    su3_vector s;
 
-   for (;;)
+   while (1)
    {
       gauss_vector(v,6);
       norm=0.0;
 
-      for (i=0;i<6;i++)
-         norm+=v[i]*v[i];
+      for (i = 0; i < 6; ++i)
+         norm += v[i] * v[i];
 
-      norm=sqrt(norm);
+      norm = sqrt(norm);
 
-      if (1.0!=(1.0+norm))
+      if (1.0 != (1.0 + norm))
          break;
    }
 
-   fact=1.0/norm;
+   fact = 1.0 / norm;
    s.c0 = fact * (v[0] + I * v[1]);
    s.c1 = fact * (v[2] + I * v[3]);
    s.c2 = fact * (v[4] + I * v[5]);
@@ -191,7 +170,7 @@ su3_vector unif_su3_vector(void)
          break;
    }
 
-   fact=1.0/norm;
+   fact = 1.0 / norm;
    s.c0 = fact * (v[0] + I * v[1]);
    s.c1 = fact * (v[2] + I * v[3]);
    s.c2 = fact * (v[4] + I * v[5]);
@@ -217,7 +196,8 @@ spinor random_spinor(void)
    return(s);
 }
 
-spinor unit_spinor() {
+spinor unit_spinor()
+{
   spinor s;
 
   s.s0 = unit_su3_vector();
@@ -228,7 +208,8 @@ spinor unit_spinor() {
   return(s);
 }
 
-void unit_spinor_field(const int k) {
+void unit_spinor_field(const int k)
+{
   int i=0;
   spinor *s;
 
@@ -467,47 +448,19 @@ void z2_random_spinor_field(spinor * const k, const int N) {
 /* Function provides a zero spinor field of length N with */
 void zero_spinor_field(spinor * const k, const int N)
 {
-  spinor *s;
-  s = k;
-  for (int ix = 0; ix < N; ++ix)
-  {
-    s->s0.c0 = 0.;
-    s->s0.c1 = 0.;
-    s->s0.c2 = 0.;
-    s->s1.c0 = 0.;
-    s->s1.c1 = 0.;
-    s->s1.c2 = 0.;
-    s->s2.c0 = 0.;
-    s->s2.c1 = 0.;
-    s->s2.c2 = 0.;
-    s->s3.c0 = 0.;
-    s->s3.c1 = 0.;
-    s->s3.c2 = 0.;
-    s++;
-  }
-  return;
+  memset(k, 0, sizeof(spinor) * N);
 }
 
 /* Function provides a constant spinor field of length N with */
-void constant_spinor_field(spinor * const k, const int p, const int N) {
-
+void constant_spinor_field(spinor * const k, const int p, const int N)
+{
   int ix;
   spinor *s;
   double * tmp;
   s = k;
-  for (ix = 0; ix < N; ix++) {
-    s->s0.c0 = 0.;
-    s->s0.c1 = 0.;
-    s->s0.c2 = 0.;
-    s->s1.c0 = 0.;
-    s->s1.c1 = 0.;
-    s->s1.c2 = 0.;
-    s->s2.c0 = 0.;
-    s->s2.c1 = 0.;
-    s->s2.c2 = 0.;
-    s->s3.c0 = 0.;
-    s->s3.c1 = 0.;
-    s->s3.c2 = 0.;
+  for (ix = 0; ix < N; ix++)
+  {
+    memset(s, 0, sizeof(spinor));
     tmp = (double*) s;
     tmp[2*p] = 1.;
     s++;
@@ -562,7 +515,8 @@ su3 random_su3(void)
 }
 
 
-void unit_g_gauge_field(void) {
+void unit_g_gauge_field(void)
+{
   int ix,mu;
 
   for (ix=0;ix<VOLUME;ix++) {
@@ -630,8 +584,8 @@ void set_spinor_point(spinor * s, const double c)
   s->s3.c2 = c * (1 + I);
 }
 
-void set_spinor_field(int k, const double c) {
-
+void set_spinor_field(int k, const double c)
+{
   int ix;
   spinor *s;
   for (ix=0;ix<VOLUME/2;ix++)
@@ -687,7 +641,8 @@ su3 set_su3(const double c)
    return(u);
 }
 
-void set_gauge_field(const double c) {
+void set_gauge_field(const double c)
+{
   int ix,mu;
 
   for (ix=0;ix<VOLUMEPLUSRAND + g_dbw2rand;ix++) {
