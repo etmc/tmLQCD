@@ -311,17 +311,8 @@ void Qtm_pm_psi_nocom(spinor * const l, spinor * const k){
 
 
 /* the "full" operators */
-void Q_pm_psi(spinor * const l, spinor * const k) {
-  /* Q */
-/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
-/*   g_mu = g_mu; */
-/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
-/*   gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME); */
-/*   g_mu = -g_mu; */
-/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
-/*   g_mu = -g_mu; */
-
-
+void Q_pm_psi(spinor * const l, spinor * const k)
+{
   g_mu = -g_mu;
   D_psi(l, k);
   gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME);
@@ -332,17 +323,8 @@ void Q_pm_psi(spinor * const l, spinor * const k) {
 
 
 /* the "full" operators */
-void Q_pm_psi_prec(spinor * const l, spinor * const k) {
-  /* Q */
-/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
-/*   g_mu = g_mu; */
-/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
-/*   gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME); */
-/*   g_mu = -g_mu; */
-/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
-/*   g_mu = -g_mu; */
-
-  /* todo: do preconditioning */
+void Q_pm_psi_prec(spinor * const l, spinor * const k)
+{
   spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
   static _Complex double alpha= -1.0;
 
@@ -379,16 +361,8 @@ void Q_pm_psi_prec(spinor * const l, spinor * const k) {
 
 
 /* This is the version for the gpu with interchanged order of gamma5 and D_psi (Florian Burger)*/
-void Q_pm_psi_gpu(spinor * const l, spinor * const k) {
-  /* Q */
-/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
-/*   g_mu = g_mu; */
-/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
-/*   gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME); */
-/*   g_mu = -g_mu; */
-/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
-/*   g_mu = -g_mu; */
-
+void Q_pm_psi_gpu(spinor * const l, spinor * const k)
+{
   gamma5(k, k, VOLUME);
   g_mu = -g_mu;
   D_psi(l, k);
@@ -401,17 +375,8 @@ void Q_pm_psi_gpu(spinor * const l, spinor * const k) {
 
 
 /* the "full" operators */
-void Q_pm_psi2(spinor * const l, spinor * const k) {
-  /* Q */
-/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
-/*   g_mu = g_mu; */
-/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
-/*   gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME); */
-/*   g_mu = -g_mu; */
-/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
-/*   g_mu = -g_mu; */
-
-
+void Q_pm_psi2(spinor * const l, spinor * const k)
+{
   g_mu = -10.*g_mu;
   D_psi(l, k);
   gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME);
@@ -421,12 +386,8 @@ void Q_pm_psi2(spinor * const l, spinor * const k) {
 }
 
 
-void Q_minus_psi(spinor * const l, spinor * const k) {
-/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
-/*   g_mu = -g_mu; */
-/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
-/*   g_mu = -g_mu; */
-
+void Q_minus_psi(spinor * const l, spinor * const k)
+{
   g_mu = -g_mu;
   D_psi(l, k);
   g_mu = -g_mu;
@@ -435,12 +396,8 @@ void Q_minus_psi(spinor * const l, spinor * const k) {
 
 
 /* This is the version for the gpu (Florian Burger)*/
-void Q_minus_psi_gpu(spinor * const l, spinor * const k) {
-/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
-/*   g_mu = -g_mu; */
-/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
-/*   g_mu = -g_mu; */
-
+void Q_minus_psi_gpu(spinor * const l, spinor * const k)
+{
   gamma5(k,k,VOLUME);
   g_mu = -g_mu;
   D_psi(l, k);
@@ -451,9 +408,8 @@ void Q_minus_psi_gpu(spinor * const l, spinor * const k) {
 
 
 
-void Q_plus_psi(spinor * const l, spinor * const k) {
-/*   gamma5(g_spinor_field[DUM_MATRIX], k, VOLUME); */
-/*   D_psi(l, g_spinor_field[DUM_MATRIX]); */
+void Q_plus_psi(spinor * const l, spinor * const k)
+{
   D_psi(l, k);
   gamma5(l, l, VOLUME);
 }
@@ -480,8 +436,8 @@ void H_eo_tm_inv_psi(spinor * const l, spinor * const k,
 /**********************************************
  *
  * All the results are only stored in the first
- * half of the spinor fields, they have anly
- * lenght VOLUME/2
+ * half of the spinor fields, they have only
+ * length VOLUME/2
  * 
  * That's why mul_... do not need a iput
  * parameter ieo.
