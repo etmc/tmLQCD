@@ -124,38 +124,23 @@ typedef struct
    _vector_assign((r).s3,(s).s3);
 
 #define _vector_norm_square(r) \
-   creal(conj((r).c0) * (r).c0 + conj((r).c1) * (r).c1 + conj((r).c2) * (r).c2)
+   conj((r).c0) * (r).c0 + conj((r).c1) * (r).c1 + conj((r).c2) * (r).c2
    
-/* M. Hasenbusch Mon Sep 24
-* r.c1=-s.c1
-* r.c2=-s.c2
-* r.c3=-s.c3
-*/
 #define _vector_minus_assign(r,s)		\
   (r).c0 = -(s).c0;				\
   (r).c1 = -(s).c1;				\
   (r).c2 = -(s).c2;
 
-/*
-* r.c1=c*s.c1 (c real)
-* r.c2=c*s.c2
-* r.c3=c*s.c3
-*/
 #define _vector_mul(r,c,s)			\
-  (r).c0 = (c)*(s).c0;				\
-  (r).c1 = (c)*(s).c1;				\
-  (r).c2 = (c)*(s).c2;
+  (r).c0 = (c) * (s).c0;			\
+  (r).c1 = (c) * (s).c1;			\
+  (r).c2 = (c) * (s).c2;
 
 #define _vector_add_mul(r,c,s)			\
-  (r).c0 += ((c)*(s).c0);			\
-  (r).c1 += ((c)*(s).c1);			\
-  (r).c2 += ((c)*(s).c2);
+  (r).c0 += (c) * (s).c0;			\
+  (r).c1 += (c) * (s).c1;			\
+  (r).c2 += (c) * (s).c2;
 
-/*
-* r.c1=s1.c1+s2.c1
-* r.c2=s1.c2+s2.c2
-* r.c3=s1.c3+s2.c3
-*/
 #if ((defined SSE2)||(defined SSE3))
 
 #define _vector_add(r,s1,s2) \
@@ -186,51 +171,36 @@ _sse_store(r);
 
 #else
 
-#define _vector_add(r,s1,s2)			\
-  (r).c0 = (s1).c0 + (s2).c0;			\
-  (r).c1 = (s1).c1 + (s2).c1;			\
+#define _vector_add(r,s1,s2)		\
+  (r).c0 = (s1).c0 + (s2).c0;		\
+  (r).c1 = (s1).c1 + (s2).c1;		\
   (r).c2 = (s1).c2 + (s2).c2;
 
-#define _vector_sub(r,s1,s2)			\
-  (r).c0 = (s1).c0 - (s2).c0;			\
-  (r).c1 = (s1).c1 - (s2).c1;			\
+#define _vector_sub(r,s1,s2)		\
+  (r).c0 = (s1).c0 - (s2).c0;		\
+  (r).c1 = (s1).c1 - (s2).c1;		\
   (r).c2 = (s1).c2 - (s2).c2;
 #endif
 
 
-/*
-* r.c1=s1.c1+i*s2.c1
-* r.c2=s1.c2+i*s2.c2
-* r.c3=s1.c3+i*s2.c3
-*/
-#define _vector_i_add(r,s1,s2)			\
-  (r).c0 = (s1).c0 + I*(s2).c0;			\
-  (r).c1 = (s1).c1 + I*(s2).c1;			\
-  (r).c2 = (s1).c2 + I*(s2).c2;
+#define _vector_i_add(r,s1,s2)		\
+  (r).c0 = (s1).c0 + I * (s2).c0;	\
+  (r).c1 = (s1).c1 + I * (s2).c1;	\
+  (r).c2 = (s1).c2 + I * (s2).c2;
 
-/*
-* r.c1=s1.c1-i*s2.c1
-* r.c2=s1.c2-i*s2.c2
-* r.c3=s1.c3-i*s2.c3
-*/
-#define _vector_i_sub(r,s1,s2)			\
-  (r).c0 = (s1).c0 - I*(s2).c0;			\
-  (r).c1 = (s1).c1 - I*(s2).c1;			\
-  (r).c2 = (s1).c2 - I*(s2).c2;
+#define _vector_i_sub(r,s1,s2)		\
+  (r).c0 = (s1).c0 - I * (s2).c0;	\
+  (r).c1 = (s1).c1 - I * (s2).c1;	\
+  (r).c2 = (s1).c2 - I * (s2).c2;
 
 #define _vector_combined_add_i_add(r1, s1, r2, s2, s)	\
   (r1).c0 = (s1).c0 + (s).c0;				\
-  (r2).c0 = (s2).c0 + I*(s).c0;				\
+  (r2).c0 = (s2).c0 + I * (s).c0;			\
   (r1).c1 = (s1).c1 + (s).c1;				\
-  (r2).c1 = (s2).c1 + I*(s).c1;				\
+  (r2).c1 = (s2).c1 + I * (s).c1;			\
   (r1).c2 = (s1).c2 + (s).c2;				\
-  (r2).c2 = (s2).c2 + I*(s).c2;				\
+  (r2).c2 = (s2).c2 + I * (s).c2;			\
 
-/*
-* r.c1+=s.c1
-* r.c2+=s.c2
-* r.c3+=s.c3
-*/
 #if ((defined SSE2) || (defined SSE3))
 
 #define _vector_add_assign(r,s) \
@@ -260,58 +230,32 @@ _sse_store(r);
 #endif 
 
 #define _vector_i_add_assign(r,s)		\
-  (r).c0 += (I*(s).c0);				\
-  (r).c1 += (I*(s).c1);				\
-  (r).c2 += (I*(s).c2);
+  (r).c0 += I * (s).c0;			\
+  (r).c1 += I * (s).c1;			\
+  (r).c2 += I * (s).c2;
 
-
-/*
-* r.c1-=i*s.c1
-* r.c2-=i*s.c2
-* r.c3-=i*s.c3
-*/
 
 #define _vector_i_sub_assign(r,s)		\
-  (r).c0 -= (I*(s).c0);				\
-  (r).c1 -= (I*(s).c1);				\
-  (r).c2 -= (I*(s).c2);
-
-/* M.Hasenbusch 
-* r.c1=c*s.c1
-* r.c2=c*s.c2
-* r.c3=c*s.c3
-*
-* c _Complex double
-*/
+  (r).c0 -= I * (s).c0;				\
+  (r).c1 -= I * (s).c1;				\
+  (r).c2 -= I * (s).c2;
 
 #define complex_times_vector(r,c,s)		\
-  (r).c0 = (c)*(s).c0;				\
-  (r).c1 = (c)*(s).c1;				\
-  (r).c2 = (c)*(s).c2;
+  (r).c0 = (c) * (s).c0;			\
+  (r).c1 = (c) * (s).c1;			\
+  (r).c2 = (c) * (s).c2;
 
 /* M.Hasenbusch */
 #define _complexcjg_times_vector(r,c,s)		\
-  (r).c0 = conj(c)*(s).c0;			\
-  (r).c1 = conj(c)*(s).c1;			\
-  (r).c2 = conj(c)*(s).c2;
+  (r).c0 = conj(c) * (s).c0;			\
+  (r).c1 = conj(c) * (s).c1;			\
+  (r).c2 = conj(c) * (s).c2;
 
-/*
-* r.c1-=z*s.c1 (z of type _Complex double)
-* r.c2-=z*s.c2
-* r.c3-=z*s.c3
-*/
 #define _vector_project(r,z,s)			\
-  (r).c0 -= (z*(s).c0);				\
-  (r).c1 -= (z*(s).c1);				\
-  (r).c2 -= (z*(s).c2);
+  (r).c0 -= z * (s).c0;				\
+  (r).c1 -= z * (s).c1;		        	\
+  (r).c2 -= z * (s).c2;
 
-/*
-* SU(3) matrix u times SU(3) vector s
-*  
-* r.c1=(u*s).c1
-* r.c2=(u*s).c2
-* r.c3=(u*s).c3
-*/
 #if ((defined SSE2) || (defined SSE3))
 
 #define _su3_multiply(r,u,s) \
@@ -338,15 +282,15 @@ _sse_store_up(r);
 
 #else
 
-#define _su3_multiply(r,u,s)					\
-  (r).c0 = (u).c00*(s).c0 + (u).c01*(s).c1 + (u).c02*(s).c2;	\
-  (r).c1 = (u).c10*(s).c0 + (u).c11*(s).c1 + (u).c12*(s).c2;	\
-  (r).c2 = (u).c20*(s).c0 + (u).c21*(s).c1 + (u).c22*(s).c2;  
+#define _su3_multiply(r,u,s)					        \
+  (r).c0 = (u).c00 * (s).c0 + (u).c01 * (s).c1 + (u).c02 * (s).c2;	\
+  (r).c1 = (u).c10 * (s).c0 + (u).c11 * (s).c1 + (u).c12 * (s).c2;	\
+  (r).c2 = (u).c20 * (s).c0 + (u).c21 * (s).c1 + (u).c22 * (s).c2;
 
 #define _su3_inverse_multiply(r,u,s)		\
-(r).c0 = conj((u).c00)*(s).c0 + conj((u).c10)*(s).c1 + conj((u).c20)*(s).c2;	\
-(r).c1 = conj((u).c01)*(s).c0 + conj((u).c11)*(s).c1 + conj((u).c21)*(s).c2;	\
-(r).c2 = conj((u).c02)*(s).c0 + conj((u).c12)*(s).c1 + conj((u).c22)*(s).c2;   
+(r).c0 = conj((u).c00) * (s).c0 + conj((u).c10) * (s).c1 + conj((u).c20) * (s).c2;	\
+(r).c1 = conj((u).c01) * (s).c0 + conj((u).c11) * (s).c1 + conj((u).c21) * (s).c2;	\
+(r).c2 = conj((u).c02) * (s).c0 + conj((u).c12) * (s).c1 + conj((u).c22) * (s).c2;   
 
 #endif
 
@@ -358,44 +302,32 @@ _sse_store_up(r);
 *
 *******************************************************************************/
 
-/* M. Hasenbusch */
 #define _su3_norm_sq(x,u)			\
-  x = (u).c00*conj((u).c00) + (u).c01*conj((u).c01) + (u).c02*conj((u).c02) \
-    (u).c10*conj((u).c10) + (u).c11*conj((u).c11) + (u).c12*conj((u).c12) \
-    (u).c20*conj((u).c20) + (u).c21*conj((u).c21) + (u).c22*conj((u).c22); 
+  x = (u).c00 * conj((u).c00) + (u).c01 * conj((u).c01) + (u).c02 * conj((u).c02) \
+      (u).c10 * conj((u).c10) + (u).c11 * conj((u).c11) + (u).c12 * conj((u).c12) \
+      (u).c20 * conj((u).c20) + (u).c21 * conj((u).c21) + (u).c22 * conj((u).c22); 
 
-/*
- u=1 
- added by M.Hasenbusch Thu Aug  9 10:27:28 MEST 2001 */
-
-#define _su3_one(u)				\
-  (u).c00 = 1.;					\
-  (u).c01 = 0.;					\
-  (u).c02 = 0.;					\
-  (u).c10 = 0.;					\
-  (u).c11 = 1.;					\
-  (u).c12 = 0.;					\
-  (u).c20 = 0.;					\
-  (u).c21 = 0.;					\
+#define _su3_one(u)	\
+  (u).c00 = 1.;		\
+  (u).c01 = 0.;		\
+  (u).c02 = 0.;		\
+  (u).c10 = 0.;		\
+  (u).c11 = 1.;		\
+  (u).c12 = 0.;		\
+  (u).c20 = 0.;		\
+  (u).c21 = 0.;		\
   (u).c22 = 1.;
 
-/*
- u=0 
- added by M.Hasenbusch Thu Aug  9 10:27:28 MEST 2001 */
-#define _su3_zero(u)				\
-  (u).c00 = 0.;					\
-  (u).c01 = 0.;					\
-  (u).c02 = 0.;					\
-  (u).c10 = 0.;					\
-  (u).c11 = 0.;					\
-  (u).c12 = 0.;					\
-  (u).c20 = 0.;					\
-  (u).c21 = 0.;					\
+#define _su3_zero(u)		\
+  (u).c00 = 0.;			\
+  (u).c01 = 0.;			\
+  (u).c02 = 0.;			\
+  (u).c10 = 0.;			\
+  (u).c11 = 0.;			\
+  (u).c12 = 0.;			\
+  (u).c20 = 0.;			\
+  (u).c21 = 0.;			\
   (u).c22 = 0.;
-
-/* M. Hasenbusch
-* u=v
-*/
 
 #define _su3_assign(u,v)			\
   (u).c00 = (v).c00;				\
@@ -408,9 +340,6 @@ _sse_store_up(r);
   (u).c21 = (v).c21;				\
   (u).c22 = (v).c22;
 
-/* M. Hasenbusch
-* u=-v
-*/
 #define _su3_minus_assign(u,v)			\
   (u).c00 = -(v).c00;				\
   (u).c01 = -(v).c01;				\
@@ -422,9 +351,6 @@ _sse_store_up(r);
   (u).c21 = -(v).c21;				\
   (u).c22 = -(v).c22;
 
-/*
-* u=v^dagger
-*/
 #define _su3_dagger(u,v)			\
   (u).c00 = conj((v).c00);			\
   (u).c01 = conj((v).c10);			\
@@ -437,38 +363,28 @@ _sse_store_up(r);
   (u).c22 = conj((v).c22); 
 
 #define _itimes_su3(u,v)			\
-  (u).c00 = I*(v).c00;				\
-  (u).c01 = I*(v).c01;				\
-  (u).c02 = I*(v).c02;				\
-  (u).c10 = I*(v).c10;				\
-  (u).c11 = I*(v).c11;				\
-  (u).c12 = I*(v).c12;				\
-  (u).c20 = I*(v).c20;				\
-  (u).c21 = I*(v).c21;				\
-  (u).c22 = I*(v).c22;
+  (u).c00 = I * (v).c00;			\
+  (u).c01 = I * (v).c01;			\
+  (u).c02 = I * (v).c02;			\
+  (u).c10 = I * (v).c10;			\
+  (u).c11 = I * (v).c11;			\
+  (u).c12 = I * (v).c12;			\
+  (u).c20 = I * (v).c20;			\
+  (u).c21 = I * (v).c21;			\
+  (u).c22 = I * (v).c22;
 
-/* M. Hasenbusch
-* u=c*v 
-* c real
-*/
+#define _real_times_su3(u,a,v)			\
+  (u).c00 = (a) * (v).c00;			\
+  (u).c01 = (a) * (v).c01;			\
+  (u).c02 = (a) * (v).c02;			\
+  (u).c10 = (a) * (v).c10;			\
+  (u).c11 = (a) * (v).c11;			\
+  (u).c12 = (a) * (v).c12;			\
+  (u).c20 = (a) * (v).c20;			\
+  (u).c21 = (a) * (v).c21;			\
+  (u).c22 = (a) * (v).c22;
 
-#define _real_times_su3(u,a,v)				\
-  (u).c00 = (a)*(v).c00;				\
-  (u).c01 = (a)*(v).c01;				\
-  (u).c02 = (a)*(v).c02;				\
-  (u).c10 = (a)*(v).c10;				\
-  (u).c11 = (a)*(v).c11;				\
-  (u).c12 = (a)*(v).c12;				\
-  (u).c20 = (a)*(v).c20;				\
-  (u).c21 = (a)*(v).c21;				\
-  (u).c22 = (a)*(v).c22;
-
-/* A. Deuzeman
-* u=a*v + b*w 
-* a, b real
-*/
-
-#define _real_times_su3_plus_real_times_su3(u,a,v,b,w) \
+#define _real_times_su3_plus_real_times_su3(u, a, v, b, w) \
   (u).c00 = (a)*(v).c00 + (b)*(w).c00; \
   (u).c01 = (a)*(v).c01 + (b)*(w).c01; \
   (u).c02 = (a)*(v).c02 + (b)*(w).c02; \
@@ -479,101 +395,72 @@ _sse_store_up(r);
   (u).c21 = (a)*(v).c21 + (b)*(w).c21; \
   (u).c22 = (a)*(v).c22 + (b)*(w).c22;
 
-/* A Deuzeman
-* u = v + a
-*/
-#define _su3_add_assign__Complex double(u, a) \
-  (u).c00 += (a); \
-  (u).c11 += (a); \
-  (u).c22 += (a);
-
-/* M. Hasenbusch
-* u=v-w
-*/
 #define _su3_minus_su3(u,v,w) \
-   (u).c00= (v).c00-(w).c00; \
-   (u).c01= (v).c01-(w).c01; \
-   (u).c02= (v).c02-(w).c02; \
-   (u).c10= (v).c10-(w).c10; \
-   (u).c11= (v).c11-(w).c11; \
-   (u).c12= (v).c12-(w).c12; \
-   (u).c20= (v).c20-(w).c20; \
-   (u).c21= (v).c21-(w).c21; \
-   (u).c22= (v).c22-(w).c22; \
+   (u).c00 = (v).c00 - (w).c00; \
+   (u).c01 = (v).c01 - (w).c01; \
+   (u).c02 = (v).c02 - (w).c02; \
+   (u).c10 = (v).c10 - (w).c10; \
+   (u).c11 = (v).c11 - (w).c11; \
+   (u).c12 = (v).c12 - (w).c12; \
+   (u).c20 = (v).c20 - (w).c20; \
+   (u).c21 = (v).c21 - (w).c21; \
+   (u).c22 = (v).c22 - (w).c22; \
 
-/* M. Hasenbusch
-* u=i*(v-w)
-*/
-#define _itimes_su3_minus_su3(u,v,w) \
-   (u).c00=I*((w).c00-(v).c00); \
-   (u).c01=I*((w).c01-(v).c01); \
-   (u).c02=I*((w).c02-(v).c02); \
-   (u).c10=I*((w).c10-(v).c10); \
-   (u).c11=I*((w).c11-(v).c11); \
-   (u).c12=I*((w).c12-(v).c12); \
-   (u).c20=I*((w).c20-(v).c20); \
-   (u).c21=I*((w).c21-(v).c21); \
-   (u).c22=I*((w).c22-(v).c22);
+#define _itimes_su3_minus_su3(u,v,w)  \
+   (u).c00 = I * ((v).c00 - (w).c00); \
+   (u).c01 = I * ((v).c01 - (w).c01); \
+   (u).c02 = I * ((v).c02 - (w).c02); \
+   (u).c10 = I * ((v).c10 - (w).c10); \
+   (u).c11 = I * ((v).c11 - (w).c11); \
+   (u).c12 = I * ((v).c12 - (w).c12); \
+   (u).c20 = I * ((v).c20 - (w).c20); \
+   (u).c21 = I * ((v).c21 - (w).c21); \
+   (u).c22 = I * ((v).c22 - (w).c22);
 
-/* M. Hasenbusch
-* u=v+w
-*/
 #define _su3_plus_su3(u,v,w) \
-   (u).c00= (v).c00+(w).c00; \
-   (u).c01= (v).c01+(w).c01; \
-   (u).c02= (v).c02+(w).c02; \
-   (u).c10= (v).c10+(w).c10; \
-   (u).c11= (v).c11+(w).c11; \
-   (u).c12= (v).c12+(w).c12; \
-   (u).c20= (v).c20+(w).c20; \
-   (u).c21= (v).c21+(w).c21; \
-   (u).c22= (v).c22+(w).c22;
+   (u).c00 = (v).c00 + (w).c00; \
+   (u).c01 = (v).c01 + (w).c01; \
+   (u).c02 = (v).c02 + (w).c02; \
+   (u).c10 = (v).c10 + (w).c10; \
+   (u).c11 = (v).c11 + (w).c11; \
+   (u).c12 = (v).c12 + (w).c12; \
+   (u).c20 = (v).c20 + (w).c20; \
+   (u).c21 = (v).c21 + (w).c21; \
+   (u).c22 = (v).c22 + (w).c22;
 
-/* M. Hasenbusch
-* u=-(v+w)
-*/
 #define _minus_su3_plus_su3(u,v,w) \
-   (u).c00=-((v).c00+(w).c00); \
-   (u).c01=-((v).c01+(w).c01); \
-   (u).c02=-((v).c02+(w).c02); \
-   (u).c10=-((v).c10+(w).c10); \
-   (u).c11=-((v).c11+(w).c11); \
-   (u).c12=-((v).c12+(w).c12); \
-   (u).c20=-((v).c20+(w).c20); \
-   (u).c21=-((v).c21+(w).c21); \
-   (u).c22=-((v).c22+(w).c22);
-
-/* M. Hasenbusch
-* u=i*(v+w)
-*/
+   (u).c00 = -((v).c00 + (w).c00); \
+   (u).c01 = -((v).c01 + (w).c01); \
+   (u).c02 = -((v).c02 + (w).c02); \
+   (u).c10 = -((v).c10 + (w).c10); \
+   (u).c11 = -((v).c11 + (w).c11); \
+   (u).c12 = -((v).c12 + (w).c12); \
+   (u).c20 = -((v).c20 + (w).c20); \
+   (u).c21 = -((v).c21 + (w).c21); \
+   (u).c22 = -((v).c22 + (w).c22);
 
 #define _itimes_su3_plus_su3(u,v,w) \
-   (u).c00=I*((v).c00+(w).c00); \
-   (u).c01=I*((v).c01+(w).c01); \
-   (u).c02=I*((v).c02+(w).c02); \
-   (u).c10=I*((v).c10+(w).c10); \
-   (u).c11=I*((v).c11+(w).c11); \
-   (u).c12=I*((v).c12+(w).c12); \
-   (u).c20=I*((v).c20+(w).c20); \
-   (u).c21=I*((v).c21+(w).c21); \
-   (u).c22=I*((v).c22+(w).c22);
-
-/* M. Hasenbusch
-* u=-i*(v+w)
-*/
+   (u).c00 = I * ((v).c00 + (w).c00); \
+   (u).c01 = I * ((v).c01 + (w).c01); \
+   (u).c02 = I * ((v).c02 + (w).c02); \
+   (u).c10 = I * ((v).c10 + (w).c10); \
+   (u).c11 = I * ((v).c11 + (w).c11); \
+   (u).c12 = I * ((v).c12 + (w).c12); \
+   (u).c20 = I * ((v).c20 + (w).c20); \
+   (u).c21 = I * ((v).c21 + (w).c21); \
+   (u).c22 = I * ((v).c22 + (w).c22);
 
 #define _minus_itimes_su3_plus_su3(u,v,w) \
-   (u).c00=-I*((v).c00+(w).c00); \
-   (u).c01=-I*((v).c01+(w).c01); \
-   (u).c02=-I*((v).c02+(w).c02); \
-   (u).c10=-I*((v).c10+(w).c10); \
-   (u).c11=-I*((v).c11+(w).c11); \
-   (u).c12=-I*((v).c12+(w).c12); \
-   (u).c20=-I*((v).c20+(w).c20); \
-   (u).c21=-I*((v).c21+(w).c21); \
-   (u).c22=-I*((v).c22+(w).c22); \
+  (u).c00 = -I * ((v).c00 + (w).c00); \
+  (u).c01 = -I * ((v).c01 + (w).c01); \
+  (u).c02 = -I * ((v).c02 + (w).c02); \
+  (u).c10 = -I * ((v).c10 + (w).c10); \
+  (u).c11 = -I * ((v).c11 + (w).c11); \
+  (u).c12 = -I * ((v).c12 + (w).c12); \
+  (u).c20 = -I * ((v).c20 + (w).c20); \
+  (u).c21 = -I * ((v).c21 + (w).c21); \
+  (u).c22 = -I * ((v).c22 + (w).c22);
 
-/* M.Hasenbusch */
 #define _complex_times_su3(r,c,s) \
    (r).c00 = (c) * (s).c00; \
    (r).c01 = (c) * (s).c01; \
@@ -585,7 +472,6 @@ _sse_store_up(r);
    (r).c21 = (c) * (s).c21; \
    (r).c22 = (c) * (s).c22;
 
-/* M.Hasenbusch */
 #define _complexcjg_times_su3(r,c,s) \
    (r).c00 = conj(c) * (s).c00; \
    (r).c01 = conj(c) * (s).c01; \
@@ -605,15 +491,15 @@ _sse_store_up(r);
 #define _su3_acc(u,v) _sse_su3_acc(u,v) 
 #else
 #define _su3_acc(u,v) \
-   (u).c00+=(v).c00; \
-   (u).c01+=(v).c01; \
-   (u).c02+=(v).c02; \
-   (u).c10+=(v).c10; \
-   (u).c11+=(v).c11; \
-   (u).c12+=(v).c12; \
-   (u).c20+=(v).c20; \
-   (u).c21+=(v).c21; \
-   (u).c22+=(v).c22;
+   (u).c00 += (v).c00; \
+   (u).c01 += (v).c01; \
+   (u).c02 += (v).c02; \
+   (u).c10 += (v).c10; \
+   (u).c11 += (v).c11; \
+   (u).c12 += (v).c12; \
+   (u).c20 += (v).c20; \
+   (u).c21 += (v).c21; \
+   (u).c22 += (v).c22;
 #endif
 
 /*
@@ -656,128 +542,118 @@ _sse_store_up(r);
 #else
 
 #define _su3_times_su3(u,v,w)					\
-{ \
-  (u).c00 = (v).c00*(w).c00 + (v).c01*(w).c10  + (v).c02*(w).c20;	\
-  (u).c01 = (v).c00*(w).c01 + (v).c01*(w).c11  + (v).c02*(w).c21;	\
-  (u).c02 = (v).c00*(w).c02 + (v).c01*(w).c12  + (v).c02*(w).c22;	\
-  (u).c10 = (v).c10*(w).c00 + (v).c11*(w).c10	+ (v).c12*(w).c20;	\
-  (u).c11 = (v).c10*(w).c01 + (v).c11*(w).c11	+ (v).c12*(w).c21;	\
-  (u).c12 = (v).c10*(w).c02 + (v).c11*(w).c12	+ (v).c12*(w).c22;	\
-  (u).c20 = (v).c20*(w).c00 + (v).c21*(w).c10	+ (v).c22*(w).c20;	\
-  (u).c21 = (v).c20*(w).c01 + (v).c21*(w).c11	+ (v).c22*(w).c21;	\
-  (u).c22 = (v).c20*(w).c02 + (v).c21*(w).c12	+ (v).c22*(w).c22;	\
-}
+  (u).c00 = (v).c00 * (w).c00 + (v).c01 * (w).c10 + (v).c02*(w).c20;	\
+  (u).c01 = (v).c00 * (w).c01 + (v).c01 * (w).c11 + (v).c02*(w).c21;	\
+  (u).c02 = (v).c00 * (w).c02 + (v).c01 * (w).c12 + (v).c02*(w).c22;	\
+  (u).c10 = (v).c10 * (w).c00 + (v).c11 * (w).c10 + (v).c12*(w).c20;	\
+  (u).c11 = (v).c10 * (w).c01 + (v).c11 * (w).c11 + (v).c12*(w).c21;	\
+  (u).c12 = (v).c10 * (w).c02 + (v).c11 * (w).c12 + (v).c12*(w).c22;	\
+  (u).c20 = (v).c20 * (w).c00 + (v).c21 * (w).c10 + (v).c22*(w).c20;	\
+  (u).c21 = (v).c20 * (w).c01 + (v).c21 * (w).c11 + (v).c22*(w).c21;	\
+  (u).c22 = (v).c20 * (w).c02 + (v).c21 * (w).c12 + (v).c22*(w).c22;	\
 
-/* C.Urbach u=u + v * w */
 #define _su3_times_su3_acc(u,v,w)					\
-  (u).c00 += (v).c00*(w).c00 + (v).c01*(w).c10  + (v).c02*(w).c20;	\
-  (u).c01 += (v).c00*(w).c01 + (v).c01*(w).c11  + (v).c02*(w).c21;	\
-  (u).c02 += (v).c00*(w).c02 + (v).c01*(w).c12  + (v).c02*(w).c22;	\
-  (u).c10 += (v).c10*(w).c00 + (v).c11*(w).c10	+ (v).c12*(w).c20;	\
-  (u).c11 += (v).c10*(w).c01 + (v).c11*(w).c11	+ (v).c12*(w).c21;	\
-  (u).c12 += (v).c10*(w).c02 + (v).c11*(w).c12	+ (v).c12*(w).c22;	\
-  (u).c20 += (v).c20*(w).c00 + (v).c21*(w).c10	+ (v).c22*(w).c20;	\
-  (u).c21 += (v).c20*(w).c01 + (v).c21*(w).c11	+ (v).c22*(w).c21;	\
-  (u).c22 += (v).c20*(w).c02 + (v).c21*(w).c12	+ (v).c22*(w).c22;
+  (u).c00 += (v).c00 * (w).c00 + (v).c01*(w).c10 + (v).c02*(w).c20;	\
+  (u).c01 += (v).c00 * (w).c01 + (v).c01*(w).c11 + (v).c02*(w).c21;	\
+  (u).c02 += (v).c00 * (w).c02 + (v).c01*(w).c12 + (v).c02*(w).c22;	\
+  (u).c10 += (v).c10 * (w).c00 + (v).c11*(w).c10 + (v).c12*(w).c20;	\
+  (u).c11 += (v).c10 * (w).c01 + (v).c11*(w).c11 + (v).c12*(w).c21;	\
+  (u).c12 += (v).c10 * (w).c02 + (v).c11*(w).c12 + (v).c12*(w).c22;	\
+  (u).c20 += (v).c20 * (w).c00 + (v).c21*(w).c10 + (v).c22*(w).c20;	\
+  (u).c21 += (v).c20 * (w).c01 + (v).c21*(w).c11 + (v).c22*(w).c21;	\
+  (u).c22 += (v).c20 * (w).c02 + (v).c21*(w).c12 + (v).c22*(w).c22;
 
-/* C.Urbach u=v * w^{dag} */
 #define _su3_times_su3d(u,v,w)						\
-  (u).c00 =  (v).c00*conj((w).c00) + (v).c01*conj((w).c01)  + (v).c02*conj((w).c02); \
-  (u).c01 =  (v).c00*conj((w).c10) + (v).c01*conj((w).c11)  + (v).c02*conj((w).c12); \
-  (u).c02 =  (v).c00*conj((w).c20) + (v).c01*conj((w).c21)  + (v).c02*conj((w).c22); \
-  (u).c10 =  (v).c10*conj((w).c00) + (v).c11*conj((w).c01)  + (v).c12*conj((w).c02); \
-  (u).c11 =  (v).c10*conj((w).c10) + (v).c11*conj((w).c11)  + (v).c12*conj((w).c12); \
-  (u).c12 =  (v).c10*conj((w).c20) + (v).c11*conj((w).c21)  + (v).c12*conj((w).c22); \
-  (u).c20 =  (v).c20*conj((w).c00) + (v).c21*conj((w).c01)  + (v).c22*conj((w).c02); \
-  (u).c21 =  (v).c20*conj((w).c10) + (v).c21*conj((w).c11)  + (v).c22*conj((w).c12); \
-  (u).c22 =  (v).c20*conj((w).c20) + (v).c21*conj((w).c21)  + (v).c22*conj((w).c22);
+  (u).c00 =  (v).c00 * conj((w).c00) + (v).c01 * conj((w).c01) + (v).c02 * conj((w).c02); \
+  (u).c01 =  (v).c00 * conj((w).c10) + (v).c01 * conj((w).c11) + (v).c02 * conj((w).c12); \
+  (u).c02 =  (v).c00 * conj((w).c20) + (v).c01 * conj((w).c21) + (v).c02 * conj((w).c22); \
+  (u).c10 =  (v).c10 * conj((w).c00) + (v).c11 * conj((w).c01) + (v).c12 * conj((w).c02); \
+  (u).c11 =  (v).c10 * conj((w).c10) + (v).c11 * conj((w).c11) + (v).c12 * conj((w).c12); \
+  (u).c12 =  (v).c10 * conj((w).c20) + (v).c11 * conj((w).c21) + (v).c12 * conj((w).c22); \
+  (u).c20 =  (v).c20 * conj((w).c00) + (v).c21 * conj((w).c01) + (v).c22 * conj((w).c02); \
+  (u).c21 =  (v).c20 * conj((w).c10) + (v).c21 * conj((w).c11) + (v).c22 * conj((w).c12); \
+  (u).c22 =  (v).c20 * conj((w).c20) + (v).c21 * conj((w).c21) + (v).c22 * conj((w).c22);
 
-/* C.Urbach u=u + v * w^{dag} */
 #define _su3_times_su3d_acc(u,v,w)						\
-  (u).c00 +=  (v).c00*conj((w).c00) + (v).c01*conj((w).c01)  + (v).c02*conj((w).c02); \
-  (u).c01 +=  (v).c00*conj((w).c10) + (v).c01*conj((w).c11)  + (v).c02*conj((w).c12); \
-  (u).c02 +=  (v).c00*conj((w).c20) + (v).c01*conj((w).c21)  + (v).c02*conj((w).c22); \
-  (u).c10 +=  (v).c10*conj((w).c00) + (v).c11*conj((w).c01)  + (v).c12*conj((w).c02); \
-  (u).c11 +=  (v).c10*conj((w).c10) + (v).c11*conj((w).c11)  + (v).c12*conj((w).c12); \
-  (u).c12 +=  (v).c10*conj((w).c20) + (v).c11*conj((w).c21)  + (v).c12*conj((w).c22); \
-  (u).c20 +=  (v).c20*conj((w).c00) + (v).c21*conj((w).c01)  + (v).c22*conj((w).c02); \
-  (u).c21 +=  (v).c20*conj((w).c10) + (v).c21*conj((w).c11)  + (v).c22*conj((w).c12); \
-  (u).c22 +=  (v).c20*conj((w).c20) + (v).c21*conj((w).c21)  + (v).c22*conj((w).c22);
+  (u).c00 += (v).c00 * conj((w).c00) + (v).c01 * conj((w).c01)  + (v).c02 * conj((w).c02); \
+  (u).c01 += (v).c00 * conj((w).c10) + (v).c01 * conj((w).c11)  + (v).c02 * conj((w).c12); \
+  (u).c02 += (v).c00 * conj((w).c20) + (v).c01 * conj((w).c21)  + (v).c02 * conj((w).c22); \
+  (u).c10 += (v).c10 * conj((w).c00) + (v).c11 * conj((w).c01)  + (v).c12 * conj((w).c02); \
+  (u).c11 += (v).c10 * conj((w).c10) + (v).c11 * conj((w).c11)  + (v).c12 * conj((w).c12); \
+  (u).c12 += (v).c10 * conj((w).c20) + (v).c11 * conj((w).c21)  + (v).c12 * conj((w).c22); \
+  (u).c20 += (v).c20 * conj((w).c00) + (v).c21 * conj((w).c01)  + (v).c22 * conj((w).c02); \
+  (u).c21 += (v).c20 * conj((w).c10) + (v).c21 * conj((w).c11)  + (v).c22 * conj((w).c12); \
+  (u).c22 += (v).c20 * conj((w).c20) + (v).c21 * conj((w).c21)  + (v).c22 * conj((w).c22);
 
-/* C.Urbach u = v^dag * w */
 #define _su3d_times_su3(u,v,w)			\
-  (u).c00 = conj((v).c00)*(w).c00 + conj((v).c10)*(w).c10 + conj((v).c20)*(w).c20; \
-  (u).c01 = conj((v).c00)*(w).c01 + conj((v).c10)*(w).c11 + conj((v).c20)*(w).c21; \
-  (u).c02 = conj((v).c00)*(w).c02 + conj((v).c10)*(w).c12 + conj((v).c20)*(w).c22; \
-  (u).c10 = conj((v).c01)*(w).c00 + conj((v).c11)*(w).c10 + conj((v).c21)*(w).c20; \
-  (u).c11 = conj((v).c01)*(w).c01 + conj((v).c11)*(w).c11 + conj((v).c21)*(w).c21; \
-  (u).c12 = conj((v).c01)*(w).c02 + conj((v).c11)*(w).c12 + conj((v).c21)*(w).c22; \
-  (u).c20 = conj((v).c02)*(w).c00 + conj((v).c12)*(w).c10 + conj((v).c22)*(w).c20; \
-  (u).c21 = conj((v).c02)*(w).c01 + conj((v).c12)*(w).c11 + conj((v).c22)*(w).c21; \
-  (u).c22 = conj((v).c02)*(w).c02 + conj((v).c12)*(w).c12 + conj((v).c22)*(w).c22;
+  (u).c00 = conj((v).c00) * (w).c00 + conj((v).c10) * (w).c10 + conj((v).c20) * (w).c20; \
+  (u).c01 = conj((v).c00) * (w).c01 + conj((v).c10) * (w).c11 + conj((v).c20) * (w).c21; \
+  (u).c02 = conj((v).c00) * (w).c02 + conj((v).c10) * (w).c12 + conj((v).c20) * (w).c22; \
+  (u).c10 = conj((v).c01) * (w).c00 + conj((v).c11) * (w).c10 + conj((v).c21) * (w).c20; \
+  (u).c11 = conj((v).c01) * (w).c01 + conj((v).c11) * (w).c11 + conj((v).c21) * (w).c21; \
+  (u).c12 = conj((v).c01) * (w).c02 + conj((v).c11) * (w).c12 + conj((v).c21) * (w).c22; \
+  (u).c20 = conj((v).c02) * (w).c00 + conj((v).c12) * (w).c10 + conj((v).c22) * (w).c20; \
+  (u).c21 = conj((v).c02) * (w).c01 + conj((v).c12) * (w).c11 + conj((v).c22) * (w).c21; \
+  (u).c22 = conj((v).c02) * (w).c02 + conj((v).c12) * (w).c12 + conj((v).c22) * (w).c22;
 
-/* C.Urbach u = u + v^dag * w */
 #define _su3d_times_su3_acc(u,v,w)						\
-  (u).c00 += conj((v).c00)*(w).c00 + conj((v).c10)*(w).c10 + conj((v).c20)*(w).c20; \
-  (u).c01 += conj((v).c00)*(w).c01 + conj((v).c10)*(w).c11 + conj((v).c20)*(w).c21; \
-  (u).c02 += conj((v).c00)*(w).c02 + conj((v).c10)*(w).c12 + conj((v).c20)*(w).c22; \
-  (u).c10 += conj((v).c01)*(w).c00 + conj((v).c11)*(w).c10 + conj((v).c21)*(w).c20; \
-  (u).c11 += conj((v).c01)*(w).c01 + conj((v).c11)*(w).c11 + conj((v).c21)*(w).c21; \
-  (u).c12 += conj((v).c01)*(w).c02 + conj((v).c11)*(w).c12 + conj((v).c21)*(w).c22; \
-  (u).c20 += conj((v).c02)*(w).c00 + conj((v).c12)*(w).c10 + conj((v).c22)*(w).c20; \
-  (u).c21 += conj((v).c02)*(w).c01 + conj((v).c12)*(w).c11 + conj((v).c22)*(w).c21; \
-  (u).c22 += conj((v).c02)*(w).c02 + conj((v).c12)*(w).c12 + conj((v).c22)*(w).c22;
+  (u).c00 += conj((v).c00) * (w).c00 + conj((v).c10) * (w).c10 + conj((v).c20) * (w).c20; \
+  (u).c01 += conj((v).c00) * (w).c01 + conj((v).c10) * (w).c11 + conj((v).c20) * (w).c21; \
+  (u).c02 += conj((v).c00) * (w).c02 + conj((v).c10) * (w).c12 + conj((v).c20) * (w).c22; \
+  (u).c10 += conj((v).c01) * (w).c00 + conj((v).c11) * (w).c10 + conj((v).c21) * (w).c20; \
+  (u).c11 += conj((v).c01) * (w).c01 + conj((v).c11) * (w).c11 + conj((v).c21) * (w).c21; \
+  (u).c12 += conj((v).c01) * (w).c02 + conj((v).c11) * (w).c12 + conj((v).c21) * (w).c22; \
+  (u).c20 += conj((v).c02) * (w).c00 + conj((v).c12) * (w).c10 + conj((v).c22) * (w).c20; \
+  (u).c21 += conj((v).c02) * (w).c01 + conj((v).c12) * (w).c11 + conj((v).c22) * (w).c21; \
+  (u).c22 += conj((v).c02) * (w).c02 + conj((v).c12) * (w).c12 + conj((v).c22) * (w).c22;
 
 #endif
 
-/* M. Hasenbusch x=Re Tr (v * w^{\dag}) */
-#define _trace_su3_times_su3d(x,v,w)		    \
-  x = (v).c00*conj((w).c00)			    \
-    +(v).c01*conj((w).c01)			    \
-    +(v).c02*conj((w).c02)			    \
-    +(v).c10*conj((w).c10)			    \
-    +(v).c11*conj((w).c11)			    \
-    +(v).c12*conj((w).c12)			    \
-    +(v).c20*conj((w).c20)			    \
-    +(v).c21*conj((w).c21)			    \
-    +(v).c22*conj((w).c22);
+#define _trace_su3_times_su3d(x,v,w)	\
+  x =   (v).c00 * conj((w).c00)		\
+      + (v).c01 * conj((w).c01)		\
+      + (v).c02 * conj((w).c02)		\
+      + (v).c10 * conj((w).c10)		\
+      + (v).c11 * conj((w).c11)		\
+      + (v).c12 * conj((w).c12)		\
+      + (v).c20 * conj((w).c20)		\
+      + (v).c21 * conj((w).c21)		\
+      + (v).c22 * conj((w).c22);
 
-/* U. Wenger x=Tr (v * w) */
-#define _trace_su3_times_su3(x,v,w)		\
-  x = (v).c00*(w).c00				\
-    + (v).c01*(w).c10				\
-    + (v).c02*(w).c20				\
-    + (v).c10*(w).c01				\
-    + (v).c11*(w).c11				\
-    + (v).c12*(w).c21				\
-    + (v).c20*(w).c02				\
-    + (v).c21*(w).c12				\
-    + (v).c22*(w).c22;
+#define _trace_su3_times_su3(x,v,w)	\
+  x = (v).c00 * (w).c00			\
+    + (v).c01 * (w).c10			\
+    + (v).c02 * (w).c20			\
+    + (v).c10 * (w).c01			\
+    + (v).c11 * (w).c11			\
+    + (v).c12 * (w).c21			\
+    + (v).c20 * (w).c02			\
+    + (v).c21 * (w).c12			\
+    + (v).c22 * (w).c22;
 
 #define _complex_times_vector(x, c, y)	\
    x.c0 = (c) * (y).c0;			\
    x.c1 = (c) * (y).c1;			\
    x.c2 = (c) * (y).c2;
     
-/* M. Hasenbusch t =u tensor v^dag */
 #define _vector_tensor_vector(t,u,v)	\
-  (t).c00 = (u).c0*conj((v).c0);	\
-  (t).c01 = (u).c0*conj((v).c1);	\
-  (t).c02 = (u).c0*conj((v).c2);	\
-  (t).c10 = (u).c1*conj((v).c0);	\
-  (t).c11 = (u).c1*conj((v).c1);	\
-  (t).c12 = (u).c1*conj((v).c2);	\
-  (t).c20 = (u).c2*conj((v).c0);	\
-  (t).c21 = (u).c2*conj((v).c1);	\
-  (t).c22 = (u).c2*conj((v).c2);
+  (t).c00 = (u).c0 * conj((v).c0);	\
+  (t).c01 = (u).c0 * conj((v).c1);	\
+  (t).c02 = (u).c0 * conj((v).c2);	\
+  (t).c10 = (u).c1 * conj((v).c0);	\
+  (t).c11 = (u).c1 * conj((v).c1);	\
+  (t).c12 = (u).c1 * conj((v).c2);	\
+  (t).c20 = (u).c2 * conj((v).c0);	\
+  (t).c21 = (u).c2 * conj((v).c1);	\
+  (t).c22 = (u).c2 * conj((v).c2);
 
 #define _vector_tensor_vector_add(t, u, v, w, z) \
-  (t).c00 = (u).c0*conj((v).c0) + (w).c0*conj((z).c0) ;	\
-  (t).c01 = (u).c0*conj((v).c1) + (w).c0*conj((z).c1);	\
-  (t).c02 = (u).c0*conj((v).c2) + (w).c0*conj((z).c2);	\
-  (t).c10 = (u).c1*conj((v).c0) + (w).c1*conj((z).c0);	\
-  (t).c11 = (u).c1*conj((v).c1) + (w).c1*conj((z).c1);	\
-  (t).c12 = (u).c1*conj((v).c2) + (w).c1*conj((z).c2);	\
-  (t).c20 = (u).c2*conj((v).c0) + (w).c2*conj((z).c0);	\
-  (t).c21 = (u).c2*conj((v).c1) + (w).c2*conj((z).c1);	\
-  (t).c22 = (u).c2*conj((v).c2) + (w).c2*conj((z).c2);
+  (t).c00 = (u).c0 * conj((v).c0) + (w).c0 * conj((z).c0) ;	\
+  (t).c01 = (u).c0 * conj((v).c1) + (w).c0 * conj((z).c1);	\
+  (t).c02 = (u).c0 * conj((v).c2) + (w).c0 * conj((z).c2);	\
+  (t).c10 = (u).c1 * conj((v).c0) + (w).c1 * conj((z).c0);	\
+  (t).c11 = (u).c1 * conj((v).c1) + (w).c1 * conj((z).c1);	\
+  (t).c12 = (u).c1 * conj((v).c2) + (w).c1 * conj((z).c2);	\
+  (t).c20 = (u).c2 * conj((v).c0) + (w).c2 * conj((z).c0);	\
+  (t).c21 = (u).c2 * conj((v).c1) + (w).c2 * conj((z).c1);	\
+  (t).c22 = (u).c2 * conj((v).c2) + (w).c2 * conj((z).c2);
