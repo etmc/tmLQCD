@@ -57,9 +57,9 @@ double scalar_prod_i(spinor * const S,spinor * const R, const int N, const int p
     s=(spinor *) S + ix;
     r=(spinor *) R + ix;
     
-    ds=creal(I * r->s0.c0 * s->s0.c0 + I * r->s0.c1 * s->s0.c2 + I * r->s0.c1 * s->s0.c2 +
-             I * r->s1.c0 * s->s1.c0 + I * r->s1.c1 * s->s1.c2 + I * r->s1.c1 * s->s1.c2 +
-	     I * r->s2.c0 * s->s2.c0 + I * r->s2.c1 * s->s2.c2 + I * r->s2.c1 * s->s2.c2  );
+    ds=cimag(r->s0.c0 * conj(s->s0.c0) + r->s0.c1 * conj(s->s0.c1) + r->s0.c2 * conj(s->s0.c2) +
+             r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +
+	     r->s2.c0 * conj(s->s2.c0) + r->s2.c1 * conj(s->s2.c1) + r->s2.c2 * conj(s->s2.c2)  );
     
     tr=ds+kc;
     ts=tr+ks;

@@ -41,23 +41,38 @@
 double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel)
 {
   
-  double aggregate = 0.0;
+  static double ks,kc,ds,tr,ts,tt;
+  spinor *s,*r;
+  
+  ks=0.0;
+  kc=0.0;
 
-  _Complex double const *ps = (_Complex double const*)S;
-  _Complex double const *pr = (_Complex double const*)R;
-
-  for (int ix = 0; ix < 12 * N; ++ix) 
-    aggregate += conj(ps[ix]) * pr[ix];
+  for (int ix = 0; ix < N; ++ix)
+  {
+    s=(spinor *) S + ix;
+    r=(spinor *) R + ix;
+    
+    ds=creal(r->s0.c0 * conj(s->s0.c0) + r->s0.c1 * conj(s->s0.c1) + r->s0.c2 * conj(s->s0.c2) +
+             r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +
+	     r->s2.c0 * conj(s->s2.c0) + r->s2.c1 * conj(s->s2.c1) + r->s2.c2 * conj(s->s2.c2)  );
+    
+    tr=ds+kc;
+    ts=tr+ks;
+    tt=ts-ks;
+    ks=ts;
+    kc=tr-tt;
+  }
+  kc=ks+kc;
 
 #if defined MPI
   if(parallel)
   {
-    double buffer = aggregate;
-    MPI_Allreduce(&buffer, &aggregate, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    double buffer = kc;
+    MPI_Allreduce(&buffer, &kc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   }
 #endif
 
-  return creal(aggregate);
+  return kc;
 
 }
 
