@@ -40,11 +40,9 @@
 
 double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel)
 {
-  _Complex double aggregate = 0.0;
-#if defined MPI
-  double buffer = 0.0;
-  double result = 0.0;
-#endif
+  
+  double aggregate = 0.0;
+
   _Complex double const *ps = (_Complex double const*)S;
   _Complex double const *pr = (_Complex double const*)R;
 
@@ -52,12 +50,11 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
     aggregate += conj(ps[ix]) * pr[ix];
 
 #if defined MPI
- if(parallel)
- {
-   buffer = creal(aggregate);
-   MPI_Allreduce(&buffer, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-   return result;
- }
+  if(parallel)
+  {
+    double buffer = aggregate;
+    MPI_Allreduce(&buffer, &aggregate, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  }
 #endif
 
   return creal(aggregate);
