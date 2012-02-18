@@ -177,7 +177,7 @@ typedef struct
 
 
 #if defined SSE2
-#define _assign_const_times_mom(res,c,in) \
+#define _su3adj_assign_const_times_su3adj(res,c,in) \
 __asm__ __volatile__ ("movsd %0, %%xmm0 \n\t" \
                       "unpcklpd %%xmm0, %%xmm0 \n\t" \
                       "movapd %%xmm0, %%xmm1 \n\t" \
@@ -210,7 +210,7 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
                       "=m" ((res).d5), \
                       "=m" ((res).d7))
 #else
-#define _assign_const_times_mom(res,c,in) \
+#define _su3adj_assign_const_times_su3adj(res,c,in) \
 (res).d1=(c)*(in).d1; \
 (res).d2=(c)*(in).d2; \
 (res).d3=(c)*(in).d3; \
@@ -222,7 +222,7 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
 #endif
 
 #if defined SSE2
-#define _minus_const_times_mom(res,c,in) \
+#define _su3adj_minus_const_times_su3adj(res,c,in) \
 __asm__ __volatile__ ("movsd %0, %%xmm0 \n\t" \
                       "unpcklpd %%xmm0, %%xmm0 \n\t" \
                       "movapd %%xmm0, %%xmm1 \n\t" \
@@ -269,7 +269,7 @@ __asm__ __volatile__ ("movapd %%xmm4, %0 \n\t" \
                       "=m" ((res).d5), \
                       "=m" ((res).d7))
 #else
-#define _minus_const_times_mom(res,c,in) \
+#define _su3adj_minus_const_times_su3adj(res,c,in) \
 (res).d1-=(c)*(in).d1; \
 (res).d2-=(c)*(in).d2; \
 (res).d3-=(c)*(in).d3; \
