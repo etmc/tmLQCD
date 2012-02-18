@@ -50,42 +50,40 @@ void assign_mul_bra_add_mul_ket_add_bi(bispinor * const R, bispinor * const S, b
     s=(spinor *) &S[ix].sp_up;
     u=(spinor *) &U[ix].sp_up;
     
-    r->s0.c0 = c2 * (r->s0.c0 + c1 * s->s0.c0) + u->s0.c0;
-    r->s0.c1 = c2 * (r->s0.c1 + c1 * s->s0.c1) + u->s0.c1;
-    r->s0.c2 = c2 * (r->s0.c2 + c1 * s->s0.c2) + u->s0.c2;
+    r->s0.c0 = u->s0.c0 + c2 * (r->s0.c0 + c1 * s->s0.c0);
+    r->s0.c1 = u->s0.c1 + c2 * (r->s0.c1 + c1 * s->s0.c1);
+    r->s0.c2 = u->s0.c2 + c2 * (r->s0.c2 + c1 * s->s0.c2);
+    
+    r->s1.c0 = u->s1.c0 + c2 * (r->s1.c0 + c1 * s->s1.c0);
+    r->s1.c1 = u->s1.c1 + c2 * (r->s1.c1 + c1 * s->s1.c1);
+    r->s1.c2 = u->s1.c2 + c2 * (r->s1.c2 + c1 * s->s1.c2);
 
-    r->s0.c0 = c2 * (r->s0.c0 + c1 * s->s0.c0) + u->s0.c0;
-    r->s0.c1 = c2 * (r->s0.c1 + c1 * s->s0.c1) + u->s0.c1;
-    r->s0.c2 = c2 * (r->s0.c2 + c1 * s->s0.c2) + u->s0.c2;
+    r->s2.c0 = u->s2.c0 + c2 * (r->s2.c0 + c1 * s->s2.c0);
+    r->s2.c1 = u->s2.c1 + c2 * (r->s2.c1 + c1 * s->s2.c1);
+    r->s2.c2 = u->s2.c2 + c2 * (r->s2.c2 + c1 * s->s2.c2);
 
-    r->s0.c0 = c2 * (r->s0.c0 + c1 * s->s0.c0) + u->s0.c0;
-    r->s0.c1 = c2 * (r->s0.c1 + c1 * s->s0.c1) + u->s0.c1;
-    r->s0.c2 = c2 * (r->s0.c2 + c1 * s->s0.c2) + u->s0.c2;
-
-    r->s0.c0 = c2 * (r->s0.c0 + c1 * s->s0.c0) + u->s0.c0;
-    r->s0.c1 = c2 * (r->s0.c1 + c1 * s->s0.c1) + u->s0.c1;
-    r->s0.c2 = c2 * (r->s0.c2 + c1 * s->s0.c2) + u->s0.c2;
+    r->s3.c0 = u->s3.c0 + c2 * (r->s3.c0 + c1 * s->s3.c0);
+    r->s3.c1 = u->s3.c1 + c2 * (r->s3.c1 + c1 * s->s3.c1);
+    r->s3.c2 = u->s3.c2 + c2 * (r->s3.c2 + c1 * s->s3.c2);
 
     r=(spinor *) &R[ix].sp_dn;
     s=(spinor *) &S[ix].sp_dn;
     u=(spinor *) &U[ix].sp_dn;
-    /* w=(spinor *) U + ix; */
 
-    /* *W = *R + c1*(*S) */
-    r->s0.c0 = c2 * (r->s0.c0 + c1 * s->s0.c0) + u->s0.c0;
-    r->s0.c1 = c2 * (r->s0.c1 + c1 * s->s0.c1) + u->s0.c1;
-    r->s0.c2 = c2 * (r->s0.c2 + c1 * s->s0.c2) + u->s0.c2;
+    r->s0.c0 = u->s0.c0 + c2 * (r->s0.c0 + c1 * s->s0.c0);
+    r->s0.c1 = u->s0.c1 + c2 * (r->s0.c1 + c1 * s->s0.c1);
+    r->s0.c2 = u->s0.c2 + c2 * (r->s0.c2 + c1 * s->s0.c2);
+    
+    r->s1.c0 = u->s1.c0 + c2 * (r->s1.c0 + c1 * s->s1.c0);
+    r->s1.c1 = u->s1.c1 + c2 * (r->s1.c1 + c1 * s->s1.c1);
+    r->s1.c2 = u->s1.c2 + c2 * (r->s1.c2 + c1 * s->s1.c2);
 
-    r->s0.c0 = c2 * (r->s0.c0 + c1 * s->s0.c0) + u->s0.c0;
-    r->s0.c1 = c2 * (r->s0.c1 + c1 * s->s0.c1) + u->s0.c1;
-    r->s0.c2 = c2 * (r->s0.c2 + c1 * s->s0.c2) + u->s0.c2;
+    r->s2.c0 = u->s2.c0 + c2 * (r->s2.c0 + c1 * s->s2.c0);
+    r->s2.c1 = u->s2.c1 + c2 * (r->s2.c1 + c1 * s->s2.c1);
+    r->s2.c2 = u->s2.c2 + c2 * (r->s2.c2 + c1 * s->s2.c2);
 
-    r->s0.c0 = c2 * (r->s0.c0 + c1 * s->s0.c0) + u->s0.c0;
-    r->s0.c1 = c2 * (r->s0.c1 + c1 * s->s0.c1) + u->s0.c1;
-    r->s0.c2 = c2 * (r->s0.c2 + c1 * s->s0.c2) + u->s0.c2;
-
-    r->s0.c0 = c2 * (r->s0.c0 + c1 * s->s0.c0) + u->s0.c0;
-    r->s0.c1 = c2 * (r->s0.c1 + c1 * s->s0.c1) + u->s0.c1;
-    r->s0.c2 = c2 * (r->s0.c2 + c1 * s->s0.c2) + u->s0.c2;
+    r->s3.c0 = u->s3.c0 + c2 * (r->s3.c0 + c1 * s->s3.c0);
+    r->s3.c1 = u->s3.c1 + c2 * (r->s3.c1 + c1 * s->s3.c1);
+    r->s3.c2 = u->s3.c2 + c2 * (r->s3.c2 + c1 * s->s3.c2);
   }
 }

@@ -18,11 +18,11 @@
  ***********************************************************************/
 /*******************************************************************************
  *
- * File assign_mul_bra_add_mul_ket_add.c
+ * File assign_mul_bra_add_mul_ket_add_r.c
  *
  *   void assign_mul_bra_add_mul_ket_add
  *   (spinor * const R,spinor * const S,spinor * const U,const double c1,const double c2)
- *     (*R) = c2*(*R + c1*(*S)) + (*U)  with c1 and c2 complex variables
+ *     (*R) = c2*(*R + c1*(*S)) + (*U)  with c1 and c2 real variables
  *
  *******************************************************************************/
 

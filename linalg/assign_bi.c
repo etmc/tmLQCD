@@ -40,11 +40,10 @@
 /* S input, R output */
 void assign_bi(bispinor * const R, bispinor * const S, const int N){
 
-  int ix;
   spinor *r,*s;
   
-  for (ix = 0; ix < N; ix++){
-
+  for (int ix = 0; ix < N; ++ix)
+  {
     r=(spinor *) &R[ix].sp_up;
     s=(spinor *) &S[ix].sp_up;
    
