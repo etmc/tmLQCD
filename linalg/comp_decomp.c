@@ -45,55 +45,51 @@
 
 
 /* S and P inputs, R output */
-void compact(bispinor * const R, spinor * const S, spinor * const P){ 
-
-
-  
-  int ix;
-  int N = VOLUME/2;
+void compact(bispinor * const R, spinor * const S, spinor * const P)
+{ 
   spinor *r,*s;
   spinor *u,*t;
   
-  for (ix = 0; ix < N; ix++){
+  for (int ix = 0; ix < VOLUME/2; ix++){
     r=(spinor *) &R[ix].sp_up;
     s=(spinor *) S + ix;
     
     /*    (*r) = (*s);    */
 
-    (*r).s0.c0 = (*s).s0.c0;
-    (*r).s0.c1 = (*s).s0.c1;
-    (*r).s0.c2 = (*s).s0.c2;
+    r->s0.c0 = s->s0.c0;
+    r->s0.c1 = s->s0.c1;
+    r->s0.c2 = s->s0.c2;
     
-    (*r).s1.c0 = (*s).s1.c0;
-    (*r).s1.c1 = (*s).s1.c1;
-    (*r).s1.c2 = (*s).s1.c2;
+    r->s1.c0 = s->s1.c0;
+    r->s1.c1 = s->s1.c1;
+    r->s1.c2 = s->s1.c2;
     
-    (*r).s2.c0 = (*s).s2.c0;
-    (*r).s2.c1 = (*s).s2.c1;
-    (*r).s2.c2 = (*s).s2.c2;
+    r->s2.c0 = s->s2.c0;
+    r->s2.c1 = s->s2.c1;
+    r->s2.c2 = s->s2.c2;
     
-    (*r).s3.c0 = (*s).s3.c0;
-    (*r).s3.c1 = (*s).s3.c1;
-    (*r).s3.c2 = (*s).s3.c2;
+    r->s3.c0 = s->s3.c0;
+    r->s3.c1 = s->s3.c1;
+    r->s3.c2 = s->s3.c2;
 
     u=(spinor *) &R[ix].sp_dn;
     t=(spinor *) P + ix;
     
-    (*u).s0.c0 = (*t).s0.c0;
-    (*u).s0.c1 = (*t).s0.c1;
-    (*u).s0.c2 = (*t).s0.c2;
+    u->s0.c0 = t->s0.c0;
+    u->s0.c1 = t->s0.c1;
+    u->s0.c2 = t->s0.c2;
     
-    (*u).s1.c0 = (*t).s1.c0;
-    (*u).s1.c1 = (*t).s1.c1;
-    (*u).s1.c2 = (*t).s1.c2;
+    u->s1.c0 = t->s1.c0;
+    u->s1.c1 = t->s1.c1;
+    u->s1.c2 = t->s1.c2;
     
-    (*u).s2.c0 = (*t).s2.c0;
-    (*u).s2.c1 = (*t).s2.c1;
-    (*u).s2.c2 = (*t).s2.c2;
+    u->s2.c0 = t->s2.c0;
+    u->s2.c1 = t->s2.c1;
+    u->s2.c2 = t->s2.c2;
     
-    (*u).s3.c0 = (*t).s3.c0;
-    (*u).s3.c1 = (*t).s3.c1;
-    (*u).s3.c2 = (*t).s3.c2;
+    u->s3.c0 = t->s3.c0;
+    u->s3.c1 = t->s3.c1;
+    u->s3.c2 = t->s3.c2;
   }
   
   /* 
@@ -123,50 +119,49 @@ void compact(bispinor * const R, spinor * const S, spinor * const P){
 /* R input , S and P outputs */
 void decompact(spinor * const S, spinor * const P, bispinor * const R){
 
-  int ix;
-  int N = VOLUME/2;
   spinor *r,*s;
   spinor *u,*t;
   
-  for (ix = 0; ix < N; ix++){
+  for (int ix = 0; ix < VOLUME/2; ix++)
+  {
     s=(spinor *) &R[ix].sp_up;
     r=(spinor *) S + ix;
     
-    (*r).s0.c0 = (*s).s0.c0;
-    (*r).s0.c1 = (*s).s0.c1;
-    (*r).s0.c2 = (*s).s0.c2;
+    r->s0.c0 = s->s0.c0;
+    r->s0.c1 = s->s0.c1;
+    r->s0.c2 = s->s0.c2;
     
-    (*r).s1.c0 = (*s).s1.c0;
-    (*r).s1.c1 = (*s).s1.c1;
-    (*r).s1.c2 = (*s).s1.c2;
+    r->s1.c0 = s->s1.c0;
+    r->s1.c1 = s->s1.c1;
+    r->s1.c2 = s->s1.c2;
     
-    (*r).s2.c0 = (*s).s2.c0;
-    (*r).s2.c1 = (*s).s2.c1;
-    (*r).s2.c2 = (*s).s2.c2;
+    r->s2.c0 = s->s2.c0;
+    r->s2.c1 = s->s2.c1;
+    r->s2.c2 = s->s2.c2;
     
-    (*r).s3.c0 = (*s).s3.c0;
-    (*r).s3.c1 = (*s).s3.c1;
-    (*r).s3.c2 = (*s).s3.c2;
+    r->s3.c0 = s->s3.c0;
+    r->s3.c1 = s->s3.c1;
+    r->s3.c2 = s->s3.c2;
 
 
     t=(spinor *) &R[ix].sp_dn;
     u=(spinor *) P + ix;
     
-    (*u).s0.c0 = (*t).s0.c0;
-    (*u).s0.c1 = (*t).s0.c1;
-    (*u).s0.c2 = (*t).s0.c2;
+    u->s0.c0 = t->s0.c0;
+    u->s0.c1 = t->s0.c1;
+    u->s0.c2 = t->s0.c2;
     
-    (*u).s1.c0 = (*t).s1.c0;
-    (*u).s1.c1 = (*t).s1.c1;
-    (*u).s1.c2 = (*t).s1.c2;
+    u->s1.c0 = t->s1.c0;
+    u->s1.c1 = t->s1.c1;
+    u->s1.c2 = t->s1.c2;
     
-    (*u).s2.c0 = (*t).s2.c0;
-    (*u).s2.c1 = (*t).s2.c1;
-    (*u).s2.c2 = (*t).s2.c2;
+    u->s2.c0 = t->s2.c0;
+    u->s2.c1 = t->s2.c1;
+    u->s2.c2 = t->s2.c2;
     
-    (*u).s3.c0 = (*t).s3.c0;
-    (*u).s3.c1 = (*t).s3.c1;
-    (*u).s3.c2 = (*t).s3.c2;
+    u->s3.c0 = t->s3.c0;
+    u->s3.c1 = t->s3.c1;
+    u->s3.c2 = t->s3.c2;
   }
 
   /* !!! The following should be enough !!! */

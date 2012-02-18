@@ -51,19 +51,19 @@ double diff_and_square_norm(spinor * const Q, spinor * const R, const int N) {
     q->s1.c1 = r->s1.c1 - q->s1.c1;
     q->s1.c2 = r->s1.c2 - q->s1.c2;     
     
-    ds += q->s1.c0 * conj(q->s1.c0) + q->s1.c1 * conj(q->s1.c1) + q->s1.c2 * conj(q->s1.c2)
+    ds += q->s1.c0 * conj(q->s1.c0) + q->s1.c1 * conj(q->s1.c1) + q->s1.c2 * conj(q->s1.c2);
     
     q->s2.c0 = r->s2.c0 - q->s2.c0;
     q->s2.c1 = r->s2.c1 - q->s2.c1;
     q->s2.c2 = r->s2.c2 - q->s2.c2;     
     
-    ds += q->s2.c0 * conj(q->s2.c0) + q->s2.c1 * conj(q->s2.c1) + q->s2.c2 * conj(q->s2.c2)
+    ds += q->s2.c0 * conj(q->s2.c0) + q->s2.c1 * conj(q->s2.c1) + q->s2.c2 * conj(q->s2.c2);
     
     q->s3.c0 = r->s3.c0 - q->s3.c0;
     q->s3.c1 = r->s3.c1 - q->s3.c1;
     q->s3.c2 = r->s3.c2 - q->s3.c2;     
     
-    ds += q->s3.c0 * conj(q->s3.c0) + q->s3.c1 * conj(q->s3.c1) + q->s3.c2 * conj(q->s3.c2)
+    ds += q->s3.c0 * conj(q->s3.c0) + q->s3.c1 * conj(q->s3.c1) + q->s3.c2 * conj(q->s3.c2);
     
     tr = ds+kc;
     ts = tr+ks;

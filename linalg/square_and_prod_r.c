@@ -38,7 +38,8 @@
 #include "su3.h"
 #include "square_and_prod_r.h"
 
-void square_and_prod_r(double * const x1, double * const x2, spinor * const S, spinor * const R, const int N){
+void square_and_prod_r(double * const x1, double * const x2, spinor * const S, spinor * const R, const int N)
+{
   int ix;
   static double ks,kc,ds,tr,ts,tt;
   static double xks,xkc,xds,xtr,xts,xtt;
@@ -55,17 +56,18 @@ void square_and_prod_r(double * const x1, double * const x2, spinor * const S, s
   __alignx(16, R);
 #endif
   
-  for (ix = 0; ix < N; ix++){
+  for (ix = 0; ix < N; ix++)
+  {
     s=(spinor *) S + ix;
     r=(spinor *) R + ix;
 
-    ds=creal(r->s0.c0 * conj(s->s0.c0)) + creal(r->s0.c1 * conj(s->s0.c1)) + creal(r->s0.c2 * conj(s->s0.c2)) +  
-       creal(r->s1.c0 * conj(s->s1.c0)) + creal(r->s1.c1 * conj(s->s1.c1)) + creal(r->s1.c2 * conj(s->s1.c2)) +  
-       creal(r->s2.c0 * conj(s->s2.c0)) + creal(r->s2.c1 * conj(s->s2.c1)) + creal(r->s2.c2 * conj(s->s2.c2));
+    ds= r->s0.c0 * conj(s->s0.c0) + r->s0.c1 * conj(s->s0.c1) + r->s0.c2 * conj(s->s0.c2) +  
+        r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +  
+        r->s2.c0 * conj(s->s2.c0) + r->s2.c1 * conj(s->s2.c1) + r->s2.c2 * conj(s->s2.c2);
 
-    xds=creal(s->s0.c0 * conj(s->s0.c0)) + creal(s->s0.c1 * conj(s->s0.c1)) + creal(s->s0.c2 * conj(s->s0.c2)) +  
-        creal(s->s1.c0 * conj(s->s1.c0)) + creal(s->s1.c1 * conj(s->s1.c1)) + creal(s->s1.c2 * conj(s->s1.c2)) +  
-        creal(s->s2.c0 * conj(s->s2.c0)) + creal(s->s2.c1 * conj(s->s2.c1)) + creal(s->s2.c2 * conj(s->s2.c2));
+    xds=s->s0.c0 * conj(s->s0.c0) + s->s0.c1 * conj(s->s0.c1) + s->s0.c2 * conj(s->s0.c2) +  
+        s->s1.c0 * conj(s->s1.c0) + s->s1.c1 * conj(s->s1.c1) + s->s1.c2 * conj(s->s1.c2) +  
+        s->s2.c0 * conj(s->s2.c0) + s->s2.c1 * conj(s->s2.c1) + s->s2.c2 * conj(s->s2.c2);
     
     tr=ds + kc;
     ts=tr + ks;
