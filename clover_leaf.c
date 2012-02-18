@@ -164,9 +164,9 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
   !  by P. Weisz and U. Wolff.                                   !
   !--------------------------------------------------------------!
   !  inversion in place of complex matrix a without pivoting     !
-  !  triangularization by householder reflexions                 !
+  !  triangularization by householder reflections                 !
   !  inversion of triangular matrix                              !
-  !  inverse reflexions                                          !
+  !  inverse reflections                                          !
   !--------------------------------------------------------------!
   !  a square matrix, dimensioned 0:n-1                          !
   !  itrouble is counted up, when a dangerously small diagonal   !
@@ -197,7 +197,7 @@ int six_invert(_Complex double a[6][6])
     sigma = s * a[k][k];
 
     a[k][k] += sigma;
-    p[k] = creal(conj(sigma) * a[k][k]);
+    p[k] = conj(sigma) * a[k][k];
     q = conj(sigma) * sigma;
     if (q < tiny_t)
       ifail++;
@@ -232,7 +232,7 @@ int six_invert(_Complex double a[6][6])
       a[i][k] = -z * d[i];
     }
   }     
-  /* execute reflexions in reverse order from the right: */
+  /* execute reflections in reverse order from the right: */
   
   a[nm1][nm1] = d[nm1];
   for(k = nm1-1; k >= 0; k--)
@@ -250,7 +250,7 @@ int six_invert(_Complex double a[6][6])
       z /= p[k];         /* normalization */
       
       for(j = k; j <= nm1; j++)
-        a[i][j] -= conj(u[j]) * z; /* reflexion */
+        a[i][j] -= conj(u[j]) * z; /* reflection */
     }
   }
   return ifail;
@@ -277,7 +277,7 @@ double six_det(_Complex double a[6][6])
     sigma = s * a[k][k];
 
     /* determinant */
-    det = sigma * det;
+    det *= sigma;
     q   = sigma * conj(sigma);
     if (q < tiny_t)
       ifail++;
@@ -299,7 +299,7 @@ double six_det(_Complex double a[6][6])
   sigma = a[nm1][nm1];
 
   /* determinant */
-  det = sigma * det;
+  det *= sigma;
   q = conj(sigma) * sigma;
 
   if(q < tiny_t)

@@ -51,7 +51,6 @@ int phmc_max_ptilde_degree = NTILDE_CHEBYMAX;
 
 void init_phmc() {
   int max_iter_ev, j, k;
-  double temp, temp2;
   FILE *roots;
   char *filename_phmc_root = "Square_root_BR_roots.dat";
   char *filename_phmc_root_oox = "Square_root_BR_roots.dat.oox";
@@ -91,10 +90,8 @@ void init_phmc() {
     else
       phmc_cheb_evmax = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, 0, nstore, even_odd_flag);
        
-    temp=phmc_cheb_evmin;
-    temp2=phmc_cheb_evmax;
-    
-    if(g_proc_id==0) {
+    if(g_proc_id==0)
+    {
       printf("PHMC: Ev-max = %e \n", phmc_cheb_evmax);
       printf("PHMC: Ev-min = %e \n", phmc_cheb_evmin); 
     }
@@ -184,9 +181,9 @@ void init_phmc() {
     }
     
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
-    for(j=0; j<(2*phmc_dop_n_cheby-2); j++){
-      errcode = fscanf(roots," %d %lf %lf \n", &k, (double*)&phmc_root[j], (double*)&phmc_root[j] + 1);
-    }
+    double *phmc_darray = (double*)phmc_root;
+    for(j = 0; j< 2 * phmc_dop_n_cheby - 2; ++j)
+      errcode = fscanf(roots," %d %lf %lf \n", &k, &phmc_darray[2 * j], &phmc_darray[2 * j + 1]);
     fclose(roots);
   }
   else {
