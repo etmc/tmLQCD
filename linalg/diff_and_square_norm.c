@@ -36,7 +36,8 @@ double diff_and_square_norm(spinor * const Q, spinor * const R, const int N) {
   kc=0.0;
   
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-  for (ix = 0; ix < N; ix++) {
+  for (ix = 0; ix < N; ix++)
+  {
     q=Q+ix;
     r=R+ix;
     
@@ -44,25 +45,25 @@ double diff_and_square_norm(spinor * const Q, spinor * const R, const int N) {
     q->s0.c1 = r->s0.c1 - q->s0.c1;
     q->s0.c2 = r->s0.c2 - q->s0.c2;
     
-    ds = creal(q->s0.c0 * conj(q->s0.c0)) + creal(q->s0.c1 * conj(q->s0.c1)) + creal(q->s0.c2 * conj(q->s0.c2));
+    ds = q->s0.c0 * conj(q->s0.c0) + q->s0.c1 * conj(q->s0.c1) + q->s0.c2 * conj(q->s0.c2);
     
     q->s1.c0 = r->s1.c0 - q->s1.c0;
     q->s1.c1 = r->s1.c1 - q->s1.c1;
     q->s1.c2 = r->s1.c2 - q->s1.c2;     
     
-    ds += creal(q->s1.c0 * conj(q->s1.c0)) + creal(q->s1.c1 * conj(q->s1.c1)) + creal(q->s1.c2 * conj(q->s1.c2));
+    ds += q->s1.c0 * conj(q->s1.c0) + q->s1.c1 * conj(q->s1.c1) + q->s1.c2 * conj(q->s1.c2)
     
     q->s2.c0 = r->s2.c0 - q->s2.c0;
     q->s2.c1 = r->s2.c1 - q->s2.c1;
     q->s2.c2 = r->s2.c2 - q->s2.c2;     
     
-    ds += creal(q->s2.c0 * conj(q->s2.c0)) + creal(q->s2.c1 * conj(q->s2.c1)) + creal(q->s2.c2 * conj(q->s2.c2));
+    ds += q->s2.c0 * conj(q->s2.c0) + q->s2.c1 * conj(q->s2.c1) + q->s2.c2 * conj(q->s2.c2)
     
     q->s3.c0 = r->s3.c0 - q->s3.c0;
     q->s3.c1 = r->s3.c1 - q->s3.c1;
     q->s3.c2 = r->s3.c2 - q->s3.c2;     
     
-    ds += creal(q->s3.c0 * conj(q->s3.c0)) + creal(q->s3.c1 * conj(q->s3.c1)) + creal(q->s3.c2 * conj(q->s3.c2));
+    ds += q->s3.c0 * conj(q->s3.c0) + q->s3.c1 * conj(q->s3.c1) + q->s3.c2 * conj(q->s3.c2)
     
     tr = ds+kc;
     ts = tr+ks;
