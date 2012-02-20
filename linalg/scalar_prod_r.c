@@ -46,6 +46,11 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
   
   ks=0.0;
   kc=0.0;
+  
+#if (defined BGL && defined XLC)
+  __alignx(16, S);
+  __alignx(16, R);
+#endif
 
   for (int ix = 0; ix < N; ++ix)
   {
