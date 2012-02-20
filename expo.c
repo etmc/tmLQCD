@@ -111,7 +111,7 @@ su3 exposu3_check(su3adj p, int im) {
     fac = fac/i;
     _su3_times_su3(v3, v2, v);
     _su3_refac_acc(vr, fac, v3); 
-    v2 = v3; 
+    _su3_assign(v2, v3); 
   }
   return vr;
 }
