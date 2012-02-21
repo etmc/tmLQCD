@@ -64,10 +64,10 @@ double scalar_prod_r_bi(bispinor * const S,bispinor * const R, const int N){
     r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +
     r->s2.c0 * conj(s->s2.c0) + r->s2.c1 * conj(s->s2.c1) + r->s2.c2 * conj(s->s2.c2) +
     r->s3.c0 * conj(s->s3.c0) + r->s3.c1 * conj(s->s3.c1) + r->s3.c2 * conj(s->s3.c2) +
-    u->t0.c0 * conj(t->t0.c0) + u->t0.c1 * conj(t->t0.c1) + u->t0.c2 * conj(t->t0.c2) +
-    u->t1.c0 * conj(t->t1.c0) + u->t1.c1 * conj(t->t1.c1) + u->t1.c2 * conj(t->t1.c2) +
-    u->t2.c0 * conj(t->t2.c0) + u->t2.c1 * conj(t->t2.c1) + u->t2.c2 * conj(t->t2.c2) +
-    u->t3.c0 * conj(t->t3.c0) + u->t3.c1 * conj(t->t3.c1) + u->t3.c2 * conj(t->t3.c2);
+    u->s0.c0 * conj(t->s0.c0) + u->s0.c1 * conj(t->s0.c1) + u->s0.c2 * conj(t->s0.c2) +
+    u->s1.c0 * conj(t->s1.c0) + u->s1.c1 * conj(t->s1.c1) + u->s1.c2 * conj(t->s1.c2) +
+    u->s2.c0 * conj(t->s2.c0) + u->s2.c1 * conj(t->s2.c1) + u->s2.c2 * conj(t->s2.c2) +
+    u->s3.c0 * conj(t->s3.c0) + u->s3.c1 * conj(t->s3.c1) + u->s3.c2 * conj(t->s3.c2);
     
     tr = ds + kc;
     ts = tr + ks;
