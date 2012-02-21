@@ -57,5 +57,9 @@ void assign_mul_bra_add_mul_ket_add_r(spinor * const R, spinor * const S, spinor
      r->s2.c0 = c2 * (r->s2.c0 + c1 * s->s2.c0) + u->s2.c0;
      r->s2.c1 = c2 * (r->s2.c1 + c1 * s->s2.c1) + u->s2.c1;
      r->s2.c2 = c2 * (r->s2.c2 + c1 * s->s2.c2) + u->s2.c2;
+
+     r->s3.c0 = c2 * (r->s3.c0 + c1 * s->s3.c0) + u->s3.c0;
+     r->s3.c1 = c2 * (r->s3.c1 + c1 * s->s3.c1) + u->s3.c1;
+     r->s3.c2 = c2 * (r->s3.c2 + c1 * s->s3.c2) + u->s3.c2;
    }
 }

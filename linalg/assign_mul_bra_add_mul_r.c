@@ -59,5 +59,9 @@ void assign_mul_bra_add_mul_r(spinor * const R,const double c0, const double c,s
     r->s2.c0 = fact0 * (r->s2.c0 + fact * s->s2.c0);
     r->s2.c1 = fact0 * (r->s2.c1 + fact * s->s2.c1);
     r->s2.c2 = fact0 * (r->s2.c2 + fact * s->s2.c2);
+
+    r->s3.c0 = fact0 * (r->s3.c0 + fact * s->s3.c0);
+    r->s3.c1 = fact0 * (r->s3.c1 + fact * s->s3.c1);
+    r->s3.c2 = fact0 * (r->s3.c2 + fact * s->s3.c2);
   }
 }
