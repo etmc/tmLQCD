@@ -60,30 +60,14 @@ double scalar_prod_r_bi(bispinor * const S,bispinor * const R, const int N){
     t = (spinor *) &S[ix].sp_dn;
     u = (spinor *) &R[ix].sp_dn;
     
-    ds=creal(r->s0.c0) * creal(s->s0.c0) + cimag(r->s0.c0) * cimag(s->s0.c0) + 
-       creal(r->s0.c1) * creal(s->s0.c1) + cimag(r->s0.c1) * cimag(s->s0.c1) + 
-       creal(r->s0.c2) * creal(s->s0.c2) + cimag(r->s0.c2) * cimag(s->s0.c2) + 
-       creal(r->s1.c0) * creal(s->s1.c0) + cimag(r->s1.c0) * cimag(s->s1.c0) + 
-       creal(r->s1.c1) * creal(s->s1.c1) + cimag(r->s1.c1) * cimag(s->s1.c1) + 
-       creal(r->s1.c2) * creal(s->s1.c2) + cimag(r->s1.c2) * cimag(s->s1.c2) + 
-       creal(r->s2.c0) * creal(s->s2.c0) + cimag(r->s2.c0) * cimag(s->s2.c0) + 
-       creal(r->s2.c1) * creal(s->s2.c1) + cimag(r->s2.c1) * cimag(s->s2.c1) + 
-       creal(r->s2.c2) * creal(s->s2.c2) + cimag(r->s2.c2) * cimag(s->s2.c2) + 
-       creal(r->s3.c0) * creal(s->s3.c0) + cimag(r->s3.c0) * cimag(s->s3.c0) + 
-       creal(r->s3.c1) * creal(s->s3.c1) + cimag(r->s3.c1) * cimag(s->s3.c1) + 
-       creal(r->s3.c2) * creal(s->s3.c2) + cimag(r->s3.c2) * cimag(s->s3.c2) +
-       creal(u->s0.c0) * creal(t->s0.c0) + cimag(u->s0.c0) * cimag(t->s0.c0) + 
-       creal(u->s0.c1) * creal(t->s0.c1) + cimag(u->s0.c1) * cimag(t->s0.c1) + 
-       creal(u->s0.c2) * creal(t->s0.c2) + cimag(u->s0.c2) * cimag(t->s0.c2) + 
-       creal(u->s1.c0) * creal(t->s1.c0) + cimag(u->s1.c0) * cimag(t->s1.c0) + 
-       creal(u->s1.c1) * creal(t->s1.c1) + cimag(u->s1.c1) * cimag(t->s1.c1) + 
-       creal(u->s1.c2) * creal(t->s1.c2) + cimag(u->s1.c2) * cimag(t->s1.c2) + 
-       creal(u->s2.c0) * creal(t->s2.c0) + cimag(u->s2.c0) * cimag(t->s2.c0) + 
-       creal(u->s2.c1) * creal(t->s2.c1) + cimag(u->s2.c1) * cimag(t->s2.c1) + 
-       creal(u->s2.c2) * creal(t->s2.c2) + cimag(u->s2.c2) * cimag(t->s2.c2) + 
-       creal(u->s3.c0) * creal(t->s3.c0) + cimag(u->s3.c0) * cimag(t->s3.c0) + 
-       creal(u->s3.c1) * creal(t->s3.c1) + cimag(u->s3.c1) * cimag(t->s3.c1) + 
-       creal(u->s3.c2) * creal(t->s3.c2) + cimag(u->s3.c2) * cimag(t->s3.c2);
+    ds = r->s0.c0 * conj(s->s0.c0) + r->s0.c1 * conj(s->s0.c1) + r->s0.c2 * conj(s->s0.c2) +
+    r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +
+    r->s2.c0 * conj(s->s2.c0) + r->s2.c1 * conj(s->s2.c1) + r->s2.c2 * conj(s->s2.c2) +
+    r->s3.c0 * conj(s->s3.c0) + r->s3.c1 * conj(s->s3.c1) + r->s3.c2 * conj(s->s3.c2) +
+    u->t0.c0 * conj(t->t0.c0) + u->t0.c1 * conj(t->t0.c1) + u->t0.c2 * conj(t->t0.c2) +
+    u->t1.c0 * conj(t->t1.c0) + u->t1.c1 * conj(t->t1.c1) + u->t1.c2 * conj(t->t1.c2) +
+    u->t2.c0 * conj(t->t2.c0) + u->t2.c1 * conj(t->t2.c1) + u->t2.c2 * conj(t->t2.c2) +
+    u->t3.c0 * conj(t->t3.c0) + u->t3.c1 * conj(t->t3.c1) + u->t3.c2 * conj(t->t3.c2);
     
     tr = ds + kc;
     ts = tr + ks;
