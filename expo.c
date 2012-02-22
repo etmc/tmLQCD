@@ -136,7 +136,7 @@ su3 restoresu3(su3 u)
   
   /* compute  row 3 as the conjugate of the cross-product of 1 and 2 */ 
   vr.c20 = conj(vr.c01 * vr.c12 - vr.c02 * vr.c11);
-  vr.c21 = conj(vr.c02 * vr.c10 - vr.c00 * vr.c11);
+  vr.c21 = conj(vr.c02 * vr.c10 - vr.c00 * vr.c12);
   vr.c22 = conj(vr.c00 * vr.c11 - vr.c01 * vr.c10);
 
   return vr;
