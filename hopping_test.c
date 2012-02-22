@@ -33,6 +33,7 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <complex.h>
 #if (defined BGL && !defined BGP)
 #  include <rts.h>
 #endif
@@ -319,7 +320,7 @@ int main(int argc,char *argv[])
 	if (n>0){
 	  printf("mismatch in even spincolorfield in %d points:\n",n);
 	  for(i=0; i< MIN(n,1000); i++){
-	    printf("%d,(%d,%d,%d,%d):%f vs. %f\n",nn[i],g_coord[nn[i]][0],g_coord[nn[i]][1],g_coord[nn[i]][2],g_coord[nn[i]][3],(g_spinor_field[2][mm[i]].s0).c0.re, (g_spinor_field[0][mm[i]].s0).c0.re);fflush(stdout);
+	    printf("%d,(%d,%d,%d,%d):%f vs. %f\n",nn[i],g_coord[nn[i]][0],g_coord[nn[i]][1],g_coord[nn[i]][2],g_coord[nn[i]][3],creal((g_spinor_field[2][mm[i]].s0).c0), creal((g_spinor_field[0][mm[i]].s0).c0));fflush(stdout);
 	  }
 	}
 	n = 0;
