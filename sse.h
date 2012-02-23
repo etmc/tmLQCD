@@ -21,19 +21,6 @@
 #ifndef _SSE_H
 #define _SSE_H
 
-#if ((defined SSE)||(defined SSE2)||(defined SSE3))
-#  if ((defined P4))
-#    define ALIGN_BASE 0x3f
-#    define ALIGN __attribute__ ((aligned (64)))
-#  elif defined OPTERON
-#    define ALIGN_BASE 0x1f
-#    define ALIGN __attribute__ ((aligned (32)))
-#  else
-#    define ALIGN_BASE 0x1f
-#    define ALIGN __attribute__ ((aligned (32)))
-#  endif
-#endif
-
 #if (defined SSE || defined SSE2 || defined SSE3)
 
 
