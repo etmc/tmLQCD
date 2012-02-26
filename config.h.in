@@ -77,6 +77,12 @@
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
 #undef HAVE_FSEEKO
 
+/* Alignment for arrays -- necessary for SSE and automated vectorization */
+#undef ALIGN_BASE
+
+/* Alignment compiler hint macro */
+#undef ALIGN
+
 /* Compile with SSE2 support */
 #undef SSE2
 
