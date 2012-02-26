@@ -16,7 +16,7 @@
 
 typedef _Complex double exp_par[4];
 
-struct stout_control
+typedef struct
 {
   double          rho;
   unsigned int    iterations;
@@ -36,7 +36,7 @@ struct stout_control
   
   exp_par        **f1;
   exp_par        **f2;
-};
+} stout_control;
 
 stout_control *construct_stout_control(double rho, unsigned int iterations, int calculate_force_terms);
 void free_stout_control(stout_control *control);
