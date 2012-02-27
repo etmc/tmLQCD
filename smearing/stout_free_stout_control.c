@@ -10,7 +10,7 @@ void free_stout_control(stout_control *control)
   free(control->scratch);
   if (!control->calculate_force_terms)
   {
-    return_gauge_field(control->U[1]);
+    return_gauge_field(&control->U[1]);
     free(control->U);
     free(control);
     return;
@@ -18,10 +18,10 @@ void free_stout_control(stout_control *control)
 
   for (unsigned int iter = 0; iter < control->iterations; ++iter)
   {
-    return_gauge_field(control->U[iter + 1]);
-    return_gauge_field(control->Q[iter]);
-    return_gauge_field(control->B1[iter]);
-    return_gauge_field(control->B2[iter]);
+    return_gauge_field(&control->U[iter + 1]);
+    return_gauge_field(&control->Q[iter]);
+    return_gauge_field(&control->B1[iter]);
+    return_gauge_field(&control->B2[iter]);
     
     free(control->f1[iter]);
     free(control->f2[iter]);

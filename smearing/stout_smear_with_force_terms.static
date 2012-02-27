@@ -6,9 +6,9 @@ static void stout_smear_with_force_terms(stout_control *control)
   for(control->current = 0; control->current < control->iterations; ++control->current)
   {
     /* Iteration 0 is a special case: we need to use in instead of a previously calculated field. */
-    generic_staples(control->scratch[0], control->U.field_array[control->current]);
+    generic_staples(control->scratch[0], control->U[control->current]);
     stout_fatten_links_with_force_terms(control);
-    exchange_gauge_field(control->U.field_array[control->current]); /* NOTE Maybe exchange more fields than just this one? */
+    exchange_gauge_field(control->U[control->current]); /* NOTE Maybe exchange more fields than just this one? */
   }
   
   control->smearing_performed = 1;

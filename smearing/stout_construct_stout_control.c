@@ -13,9 +13,9 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
   if (!calculate_force_terms)
   {
     control->U = (gauge_field_t*)malloc(2 * sizeof(gauge_field_t));
-    control->U[1].field = get_gauge_field();
-    result = control->U[1];
-    return;
+    control->U[1] = get_gauge_field();
+    control->result = control->U[1];
+    return control;
   }
 
   control->U  = (gauge_field_t*)malloc((iterations + 1) * sizeof(gauge_field_t));
@@ -23,8 +23,8 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
   control->B1 = (gauge_field_t*)malloc(iterations * sizeof(gauge_field_t));
   control->B2 = (gauge_field_t*)malloc(iterations * sizeof(gauge_field_t));
   
-  control->f1 = (exp_par**)malloc(iterators * sizeof(exp_par*));
-  control->f2 = (exp_par**)malloc(iterators * sizeof(exp_par*));
+  control->f1 = (exp_par**)malloc(iterations * sizeof(exp_par*));
+  control->f2 = (exp_par**)malloc(iterations * sizeof(exp_par*));
   
   for (unsigned int iter = 0; iter < iterations; ++iter)
   {
@@ -37,6 +37,8 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
     control->f2[iter] = (exp_par*)malloc(VOLUME * sizeof(exp_par));
   }
   
-  result = control->U[iterations];
-  force_result = get_adjoint_field();
+  control->result = control->U[iterations];
+  control->force_result = get_adjoint_field();
+  
+  return control;
 }

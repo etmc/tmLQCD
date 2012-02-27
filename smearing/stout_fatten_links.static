@@ -7,7 +7,7 @@ static void stout_fatten_links(stout_control *control)
   { \
     _su3_times_su3d(control->scratch[1].field[x][principal], control->scratch[0].field[x][principal], control->U[0].field[x][principal]); \
     project_antiherm(&control->scratch[1].field[x][principal]); \
-    _real_times_su3(control->U[1].field[x][principal], coeff, control->scratch[1].field[x][principal]); \
+    _real_times_su3(control->U[1].field[x][principal], control->rho, control->scratch[1].field[x][principal]); \
     exposu3_in_place(&control->U[1].field[x][principal]); \
   }
 
