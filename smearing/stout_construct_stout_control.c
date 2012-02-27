@@ -9,7 +9,7 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
   control->calculate_force_terms = calculate_force_terms;
   control->smearing_performed = 0;
 
-  control->scratch = (gauge_field_t*)malloc(2 * sizeof(gauge_field_t));
+  control->scratch = (gauge_field_t*)malloc(4 * sizeof(gauge_field_t));
   if (!calculate_force_terms)
   {
     control->U = (gauge_field_t*)malloc(2 * sizeof(gauge_field_t));

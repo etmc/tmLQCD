@@ -18,7 +18,7 @@ typedef _Complex double exp_par[4];
 
 typedef struct
 {
-  double          rho;
+  double          rho; /* For now, we're going to work with homogeneous smearing coefficients */
   unsigned int    iterations;
   unsigned int    current;
   int             calculate_force_terms;

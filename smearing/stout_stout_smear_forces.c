@@ -8,7 +8,7 @@ void stout_smear_forces(struct stout_control *control, adjoint_field_t in)
   if (!control->smearing_performed)
     fatal_error("Stout smearing not yet performed.", "stout_smear_forces");
   
-  for (unsigned int ctr = 0; ctr < 3; ++ctr)
+  for (unsigned int ctr = 0; ctr < 4; ++ctr)
     control->scratch[ctr] = get_gauge_field();
   
   /* We'll need the forces in their tangent space representation, so let's first build this up. */
@@ -17,9 +17,11 @@ void stout_smear_forces(struct stout_control *control, adjoint_field_t in)
       _make_su3(control->scratch[0].field[x][mu], in.field[x][mu]);
   
   _Complex double trace;
+  /* The modifications are done backwards, all the time peeling off one layer of stouting... */
   for (int iter = control->iterations - 1; iter > 0; --iter)
   {
     /* NOTE Write routines operating on whole gauge fields? This is clunky and tedious. */
+    /* NOTE Or the opposite for cache coherence... */
     
     /* Calculate Lambda as defined by Peardon and Morningstar */
     for (unsigned int x = 0; x < VOLUME; ++x)
@@ -53,10 +55,36 @@ void stout_smear_forces(struct stout_control *control, adjoint_field_t in)
         
         /* scratch[1] = 0.5 * ((Gamma + Gamma^dag) - Tr(Gamma + Gamma^dag) / N_c) == Lambda */
         project_herm(&control->scratch[1].field[x][mu]);
+
+        /* scratch[3] = Sigma' * U' * U^dag = Sigma' * exp[i Q] * U * U^dag = Sigma' * exp[i Q] */
+        /* NOTE Check indices on U from here on downwards -- iterations look a little fishy. */
+        _su3_times_su3d(control->scratch[3].field[x][mu], control->U[iter + 1].field[x][mu], control->U[iter].field[x][mu]);
+        _su3_times_su3(control->scratch[2].field[x][mu], control->scratch[0].field[x][mu], control->scratch[3].field[x][mu]);
       }
+        
+    /********************************************************************************************************/
+    /* At this point, scratch[0] contains Sigma', scratch[1] contains Lambda, scratch[3] contains exp[i Q]. */
+    /********************************************************************************************************/
     
-    /* At this point, scratch[0] contains Sigma', scratch[1] contains Gamma. */
+    _Complex double minus_i_rho = -I * control->rho;
+    generic_staples(control->scratch[4], control->U[iter]);
+    
+    for (unsigned int x = 0; x < VOLUME; ++x)
+      for (unsigned int mu = 0; mu < 4; ++mu)
+      {
+        /* scratch[3] = Sigma' * exp[i Q] + i * C^dag * Lambda */
+        _complex_times_su3(control->scratch[4], I, control->scratch[4]);
+        _su3d_times_su3_acc(control->scratch[3], control->scratch[4], control->scratch[1]);
+        
+        /* NOTE Insert staple derivative terms here. */
+      }
   }
+
+      
+  /* The force terms are still in the tangent space representation, so project them back to the adjoint one */
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int mu = 0; mu < 4; ++mu)
+      _trace_lambda(control->force_result.field[x][mu], control->scratch[0].field[x][mu]);
   
   for (unsigned int ctr = 0; ctr < 4; ++ctr)
     return_gauge_field(&control->scratch[ctr]);
