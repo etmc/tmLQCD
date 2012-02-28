@@ -43,7 +43,7 @@ libsmear_TARGETS = 	ape_ape_smear \
 			stout_free_stout_control \
 			stout_stout_smear \
 			stout_stout_smear_forces \
-			utils_cayley_hamilton_exponent \
+			utils_cayley_hamilton_exponent_with_force_terms \
 			utils_generic_staples \
 			utils_print_config_to_screen \
 			utils_print_su3 \

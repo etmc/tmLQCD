@@ -1,0 +1,9 @@
+/* This static function replaces/packages a macro */
+static void exponent_from_coefficients(su3 *out, double f0, double f1, double f2, su3 const *in)
+{
+  static su3 tmp;
+  _complex_times_su3(tmp, f2, *in);
+  _su3_add_equals_complex_identity(tmp, f1);
+  _su3_times_su3(*out, tmp, *in);
+  _su3_add_equals_complex_identity(*out, f0);
+}
