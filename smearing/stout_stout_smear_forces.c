@@ -1,6 +1,6 @@
 #include "stout.ih"
 
-void stout_smear_forces(struct stout_control *control, adjoint_field_t in)
+void stout_smear_forces(stout_control *control, adjoint_field_t in)
 {
   if (!control->calculate_force_terms)
     fatal_error("Stout control structure not setup for calculating force terms.", "stout_smear_forces");
@@ -14,7 +14,9 @@ void stout_smear_forces(struct stout_control *control, adjoint_field_t in)
   /* We'll need the forces in their tangent space representation, so let's first build this up. */
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)
+    {
       _make_su3(control->scratch[0].field[x][mu], in.field[x][mu]);
+    }
   
   _Complex double trace;
   /* The modifications are done backwards, all the time peeling off one layer of stouting... */
@@ -73,8 +75,8 @@ void stout_smear_forces(struct stout_control *control, adjoint_field_t in)
       for (unsigned int mu = 0; mu < 4; ++mu)
       {
         /* scratch[3] = i * C^dag * Lambda */
-        _su3d_times_su3_acc(control->scratch[3][x][mu], control->scratch[4][x][mu], control->scratch[1][x][mu]);
-	_complex_times_su3(control->scratch[3].field[x][mu], I, control->scratch[3][x][mu]);
+        _su3d_times_su3_acc(control->scratch[3].field[x][mu], control->scratch[4].field[x][mu], control->scratch[1].field[x][mu]);
+        _complex_times_su3(control->scratch[3].field[x][mu], I, control->scratch[3].field[x][mu]);
       }  
 
     su3_tuple aggr;
@@ -86,21 +88,22 @@ void stout_smear_forces(struct stout_control *control, adjoint_field_t in)
   _su3_times_su3d(t2, t1, control->U[iter].field[x][nu]); \
   _su3_times_su3_acc(aggr[mu], t2, control->scratch[1].field[x][nu]);
 
+/* NOTE The first term below wants to multiply two daggered matrices, which we don't have code for. Hence the rewrite */
 #define _STAPLE_DERIV_TERM_2(mu, nu) \
-  _su3d_times_su3d(t1, control->U[iter].field[g_idn[g_iup[x][mu]][nu]][nu], control->U[iter].field[g_idn[x][nu]][mu]); \
-  _su3_times_su3(t2, t1, control->scratch[1].field[g_idn[x][nu]][mu]); \
+  _su3_times_su3(t1, control->U[iter].field[g_idn[x][nu]][mu], control->U[iter].field[g_idn[g_iup[x][mu]][nu]][nu]); \
+  _su3d_times_su3(t2, t1, control->scratch[1].field[g_idn[x][nu]][mu]); \
   _su3_times_su3_acc(aggr[mu], t2, control->U[iter].field[g_idn[x][nu]][nu]);
 
 #define _STAPLE_DERIV_TERM_3(mu, nu) \
   _su3d_times_su3(t1, control->U[iter].field[g_idn[g_iup[x][mu]][nu]][nu], control->scratch[1].field[g_idn[g_iup[x][mu]][nu]][nu]); \
-  _su3_times_su3d(t2, t1, control->U[iter].field[g_idx[x][nu]][mu]); \
-  _su3_times_su3_acc(aggr[mu], t2, control->U[iter].field[g_idx[x][nu]][nu]);
+  _su3_times_su3d(t2, t1, control->U[iter].field[g_idn[x][nu]][mu]); \
+  _su3_times_su3_acc(aggr[mu], t2, control->U[iter].field[g_idn[x][nu]][nu]);
 
 /* NOTE Derivative terms 2 and 4 could be easily combined by plugging in a commutator on Lambda. */
 
 #define _STAPLE_DERIV_TERM_4(mu, nu) \
-  _su3d_times_su3d(t1, control->U[iter].field[g_idn[g_iup[x][mu]][nu]][nu], control->U[iter].field[g_idn[x][nu]][mu]); \
-  _su3_times_su3(t2, t1, control->scratch[1].field[g_idn[x][nu]][nu]); \
+  _su3_times_su3(t1, control->U[iter].field[g_idn[x][nu]][mu], control->U[iter].field[g_idn[g_iup[x][mu]][nu]][nu]); \
+  _su3d_times_su3(t2, t1, control->scratch[1].field[g_idn[x][nu]][nu]); \
   _su3_times_su3(t1, t2, control->U[iter].field[g_idn[x][nu]][nu]); \
   _su3_refac_acc(aggr[mu], -1.0, t1);
 
@@ -118,7 +121,9 @@ void stout_smear_forces(struct stout_control *control, adjoint_field_t in)
     for (unsigned int x = 0; x < VOLUME; ++x)
     {
       for (unsigned int mu = 0; mu < 4; ++mu)
+      {
         _su3_zero(aggr[mu]);
+      }
       
       /* NOTE The stuff below can obviously be done better, with less repetition. */
       
@@ -224,9 +229,9 @@ void stout_smear_forces(struct stout_control *control, adjoint_field_t in)
       for (unsigned int mu = 0; mu < 4; ++mu)
       {
 	_su3_times_su3(t1, control->scratch[0].field[x][mu], control->scratch[2].field[x][mu]);
-	_su3_plus_su3(control->scratch[0], t1, control->scratch[3].field[x][mu]);
+	_su3_plus_su3(control->scratch[0].field[x][mu], t1, control->scratch[3].field[x][mu]);
 	/* NOTE _su3_refac_acc is abused slightly by providing a complex value here... */
-	_su3_refac_acc(control->scratch[0], minus_i_rho, aggr[mu]);
+	_su3_refac_acc(control->scratch[0].field[x][mu], minus_i_rho, aggr[mu]);
       }
     }
     
@@ -242,7 +247,9 @@ void stout_smear_forces(struct stout_control *control, adjoint_field_t in)
   /* The force terms are still in the tangent space representation, so project them back to the adjoint one */
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)
+    {
       _trace_lambda(control->force_result.field[x][mu], control->scratch[0].field[x][mu]);
+    }
   
   for (unsigned int ctr = 0; ctr < 4; ++ctr)
     return_gauge_field(&control->scratch[ctr]);

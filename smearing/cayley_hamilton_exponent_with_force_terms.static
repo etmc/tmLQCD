@@ -35,7 +35,10 @@ static void cayley_hamilton_exponent_with_force_terms(stout_control *control)
       double w = sqrt(c1) * sin(theta_3);
       
       /* Modification w.r.t. Peardon & Morningstar:  w is always positive, so |w| =  w */
-      double xi0 = (w > 0.05) ? (sin(w) / w) : 1 - 0.16666666666666667 *  w *  w * (1 - 0.05 *  w *  w * (1 - 0.023809523809523808 *  w * w));
+      double xi0 = (w > 0.05) ? (sin(w) / w) 
+                              : 1 - 0.16666666666666667 *  w *  w * (1 - 0.05 *  w *  w * (1 - 0.023809523809523808 *  w * w));
+      double xi1 = (w > 0.05) ? (w * cos(w) - sin(w)) / (w * w * w) 
+                              : -fac_1_3 * (1 - 0.10 * w * w * (1 - 0.03571428571428571 * w * w * (1 - 0.01851851851851852 * w * w)));
       double divisor = 1.0 / (9.0 * u * u -  w * w);
       
       /* NOTE The following can probably be reorganized for efficiency -- some of the factors keep returning... */
@@ -43,7 +46,7 @@ static void cayley_hamilton_exponent_with_force_terms(stout_control *control)
       double r10 = 2 * (u + I * (u * u - w * w)) * cexp(2 * I * u) + 2 * cexp(-I * u) * (4 * u * (2 - I * u) * cos(w) + I * (9 * u * u + w * w - I * u * (3 * u * u + w * w)) * xi0);
       double r11 = 2 * (1 + 2 * I * u) * cexp(2 * I * u) + cexp(-I * u) * (-2 * (1 - I * u) * cos(w) + I * (6 * u + I * (w * w - 3 * u * u)) * xi0);
       double r12 = 2 * I * cexp(2 * I * u) + I * cexp(-I * u) * (cos(w) - 3 * (1 - I * u) * xi0);
-      double r20 = - 2 * cexp(2 * I * u) + 2 * I * u * cexp(-I * u) * (cos(w) + (1 + 4 * I * u) * xi0 + 3 * u * u * x1);
+      double r20 = - 2 * cexp(2 * I * u) + 2 * I * u * cexp(-I * u) * (cos(w) + (1 + 4 * I * u) * xi0 + 3 * u * u * xi1);
       double r21 = -I * cexp(-I * u) * (cos(w) + (1 + 2 * I * u) * xi0 - 3 * u * u * xi1);
       double r22 = cexp(-I * u) * (xi0 - 3 * I * u * xi1);
       
@@ -54,7 +57,7 @@ static void cayley_hamilton_exponent_with_force_terms(stout_control *control)
 
       double bdiv = 0.5 * divisor * divisor;
       
-      double b10 = bdiv * (2 * u * r10 + (3 * u * u - w * w) * r20 - 2 * (15 * u * u + w * w) * f0;
+      double b10 = bdiv * (2 * u * r10 + (3 * u * u - w * w) * r20 - 2 * (15 * u * u + w * w) * f0);
       double b11 = bdiv * (2 * u * r11 + (3 * u * u - w * w) * r21 - 2 * (15 * u * u + w * w) * f1[x][mu]);
       double b12 = bdiv * (2 * u * r12 + (3 * u * u - w * w) * r22 - 2 * (15 * u * u + w * w) * f2[x][mu]);
       double b20 = bdiv * (r10 - 3 * u * r20 - 24 * u * f0);

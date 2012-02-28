@@ -21,7 +21,9 @@ static void stout_fatten_links_with_force_terms(stout_control *control)
   
   for (int x = 0; x < VOLUME; ++x)
     for (int mu = 0; mu < 4; ++mu)
+    {
       _su3_times_su3(control->U[control->current + 1].field[x][mu], control->scratch[0].field[x][mu], control->U[control->current].field[x][mu]);
+    }
   
 #undef _CALCULATE_WEIGHTED_PLAQUETTE
 }

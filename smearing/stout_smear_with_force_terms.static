@@ -1,3 +1,5 @@
+#include "stout_fatten_links_with_force_terms.static"
+
 static void stout_smear_with_force_terms(stout_control *control)
 {
   control->scratch[0] = get_gauge_field();
