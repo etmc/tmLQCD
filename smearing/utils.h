@@ -35,8 +35,10 @@ void project_antiherm(su3 *omega);
 void project_herm(su3 *omega);
 void reunitarize(su3 *omega);
 
-void cayley_hamilton_exponent(su3 *U, su3 *Q);
-void cayley_hamilton_exponent_verbose(su3 *U, su3_vector *f, double *u, double *w, su3 *Q);
+void cayley_hamilton_exponent(su3 *expiQ, su3 const *Q);
+void cayley_hamilton_exponent_with_force_terms(su3 *expiQ, su3 *B1, su3 *B2, double *f1, double *f2, su3 const *Q);
 
 void print_su3(su3 *in);
 void print_config_to_screen(su3 **in);
+
+#include "utils.inline"

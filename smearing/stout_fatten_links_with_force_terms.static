@@ -1,5 +1,3 @@
-#include "cayley_hamilton_exponent_with_force_terms.static"
-
 static void stout_fatten_links_with_force_terms(stout_control *control)
 {
 #define _CALCULATE_WEIGHTED_PLAQUETTE(x, principal)                                                                                                             \
@@ -16,12 +14,16 @@ static void stout_fatten_links_with_force_terms(stout_control *control)
     _CALCULATE_WEIGHTED_PLAQUETTE(x, I0_2);
     _CALCULATE_WEIGHTED_PLAQUETTE(x, I0_3);
   }
-  
-  cayley_hamilton_exponent_with_force_terms(control);
-  
+    
   for (int x = 0; x < VOLUME; ++x)
     for (int mu = 0; mu < 4; ++mu)
     {
+      cayley_hamilton_exponent_with_force_terms(&control->scratch[0].field[x][mu],
+                                                &control->B1[control->current].field[x][mu],
+                                                &control->B2[control->current].field[x][mu],
+                                                &control->f1[control->current][x][mu],
+                                                &control->f2[control->current][x][mu],
+                                                &control->Q[control->current].field[x][mu]);
       _su3_times_su3(control->U[control->current + 1].field[x][mu], control->scratch[0].field[x][mu], control->U[control->current].field[x][mu]);
     }
   
