@@ -14,28 +14,35 @@
  * minimal interface clutter.
  */
 
-typedef _Complex double exp_par[4];
+typedef struct
+{
+  su3    Q;
+  su3    B1;
+  su3    B2;
+  double f1;
+  double f2;
+} stout_notes_t;
+
+typedef stout_notes_t stout_notes_tuple[4];
 
 typedef struct
 {
+  /* Parameters */
   double          rho; /* For now, we're going to work with homogeneous smearing coefficients */
   unsigned int    iterations;
+  
+  /* Flags / trackers */
   unsigned int    current;
   int             calculate_force_terms;
   int             smearing_performed;
   
+  /* Results -- main output for users */
   gauge_field_t    result; /* For direct access to the result, shallow copy... */
-  gauge_field_t   *scratch;
   adjoint_field_t  force_result;
   
-  /* The following are fields that store intermediate results for the force terms */
-  gauge_field_t   *U;
-  gauge_field_t   *Q;
-  gauge_field_t   *B1;
-  gauge_field_t   *B2;
-  
-  exp_par        **f1;
-  exp_par        **f2;
+  /* Intermediate results, stored to enhance locality of the analysis */
+  gauge_field_t      *U;     /* The sequence of iterations gauge fields */
+  stout_notes_tuple **trace; /* Intermediate results to avoid double calculations */
 } stout_control;
 
 stout_control *construct_stout_control(double rho, unsigned int iterations, int calculate_force_terms);

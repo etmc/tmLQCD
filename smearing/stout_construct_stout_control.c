@@ -9,7 +9,7 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
   control->calculate_force_terms = calculate_force_terms;
   control->smearing_performed = 0;
 
-  control->scratch = (gauge_field_t*)malloc(4 * sizeof(gauge_field_t));
+  /* We can keep this quite simple if we don't need any forces anyway. */
   if (!calculate_force_terms)
   {
     control->U = (gauge_field_t*)malloc(2 * sizeof(gauge_field_t));
@@ -19,23 +19,10 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
   }
 
   control->U  = (gauge_field_t*)malloc((iterations + 1) * sizeof(gauge_field_t));
-  control->Q  = (gauge_field_t*)malloc(iterations * sizeof(gauge_field_t));
-  control->B1 = (gauge_field_t*)malloc(iterations * sizeof(gauge_field_t));
-  control->B2 = (gauge_field_t*)malloc(iterations * sizeof(gauge_field_t));
-  
-  control->f1 = (exp_par**)malloc(iterations * sizeof(exp_par*));
-  control->f2 = (exp_par**)malloc(iterations * sizeof(exp_par*));
+  control->trace = (stout_notes_tuple**)malloc(iterations * sizeof(stout_notes_tuple*));
   
   for (unsigned int iter = 0; iter < iterations; ++iter)
-  {
-    control->U[iter + 1] = get_gauge_field();
-    control->Q[iter]     = get_gauge_field();
-    control->B1[iter]    = get_gauge_field();
-    control->B2[iter]   = get_gauge_field();
-    
-    control->f1[iter] = (exp_par*)malloc(VOLUME * sizeof(exp_par));
-    control->f2[iter] = (exp_par*)malloc(VOLUME * sizeof(exp_par));
-  }
+    control->trace[iter] = malloc(VOLUME * sizeof(stout_notes_tuple));
   
   control->result = control->U[iterations];
   control->force_result = get_adjoint_field();
