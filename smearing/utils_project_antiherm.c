@@ -1,6 +1,6 @@
 #include "utils.ih"
 
-void project_antiherm(su3 *omega)
+void project_antiherm(su3 *in)
 {
   static const double fac_3 = 1.00 / 3.00;
   double tr_omega = creal(-I * fac_3 * (omega->c00 + omega->c11 + omega->c22));

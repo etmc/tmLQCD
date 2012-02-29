@@ -2,7 +2,7 @@
 
 /* This implements the approach of taking (I/2) * (Omega' - Omega) - (I/6) * Tr(Omega' - Omega) */
 
-void project_herm(su3 *omega)
+void project_herm(su3 *in)
 {
   static const double fac_3 = 1.00 / 3.00;
   double tr_omega = fac_3 * (cimag(omega->c00) + cimag(omega->c11) + cimag(omega->c22));

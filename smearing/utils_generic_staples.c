@@ -1,35 +1,17 @@
 #include "utils.ih"
 
-void generic_staples(gauge_field_t buff_out, gauge_field_t buff_in)
+void generic_staples(su3 *out, unsigned int x, unsigned int mu, gauge_field_t in)
 {
-  static su3 tmp;
+  static su3 tmp; /* NOTE Look for replacement of static variables somehow? */
 
-#define _ADD_STAPLES_TO_COMPONENT(x, to, via) \
-  { \
-    _su3_times_su3d(tmp, buff_in.field[g_iup[x][via]][to], buff_in.field[g_iup[x][to]][via]); \
-    _su3_times_su3_acc(buff_out.field[x][via], buff_in.field[x][via], tmp); \
-    _su3_times_su3(tmp, buff_in.field[g_idn[x][via]][to], buff_in.field[g_iup[g_idn[x][via]][to]][via]); \
-    _su3d_times_su3_acc(buff_out.field[x][via], buff_in.field[g_idn[x][via]][via], tmp); \
-  }
-  
-  for (int x = 0; x < VOLUME; ++x)
+  for (unsigned int nu = 0; nu < 4; ++nu)
   {
-    _ADD_STAPLES_TO_COMPONENT(x, 0, 1);
-    _ADD_STAPLES_TO_COMPONENT(x, 0, 2);
-    _ADD_STAPLES_TO_COMPONENT(x, 0, 3);
+    if (nu == mu)
+      continue;
     
-    _ADD_STAPLES_TO_COMPONENT(x, 1, 0);
-    _ADD_STAPLES_TO_COMPONENT(x, 1, 2);
-    _ADD_STAPLES_TO_COMPONENT(x, 1, 3);
-
-    _ADD_STAPLES_TO_COMPONENT(x, 2, 0);
-    _ADD_STAPLES_TO_COMPONENT(x, 2, 1);
-    _ADD_STAPLES_TO_COMPONENT(x, 2, 3);
-
-    _ADD_STAPLES_TO_COMPONENT(x, 3, 0);
-    _ADD_STAPLES_TO_COMPONENT(x, 3, 1);
-    _ADD_STAPLES_TO_COMPONENT(x, 3, 2);
+    _su3_times_su3d(tmp, in.field[g_iup[x][nu]][mu], in.field[g_iup[x][mu]][nu]);
+    _su3_times_su3_acc(*out, in.field[x][nu], tmp);
+    _su3_times_su3(tmp, in.field[g_idn[x][nu]][mu], in.field[g_iup[g_idn[x][nu]][mu]][nu]);
+    _su3d_times_su3_acc(*out, in.field[g_idn[x][nu]][nu], tmp);
   }
-      
-#undef _ADD_STAPLES_TO_COMPONENT
 }

@@ -1,7 +1,7 @@
 #include "utils.ih"
 
 /* Method based on Givens' rotations, as used by Urs Wenger */
-void reunitarize(su3 *omega)
+void reunitarize(su3 *in)
 {
   static su3 w, rot, tmp;
   static double trace_old, trace_new;
