@@ -1,0 +1,4 @@
+inline void cayley_hamilton_exponent(su3 *expiQ, su3 const *Q)
+{
+  cayley_hamilton_exponent_with_force_terms(expiQ, NULL, NULL, NULL, NULL, Q);
+}

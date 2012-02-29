@@ -1,19 +1,19 @@
-#include "stout_fatten_links_with_force_terms.static"
-
-static void stout_smear_with_force_terms(stout_control *control)
+static void stout_smear_with_force_terms(stout_control *control, gauge_field_t in)
 {
-  control->scratch[0] = get_gauge_field();
-  control->scratch[1] = get_gauge_field();
-    
-  for(control->current = 0; control->current < control->iterations; ++control->current)
+  su3 staples;
+  control->U[0] = in; /* Shallow copy intended */
+  
+  for(unsigned int iter = 0; iter < control->iterations; ++iter)
   {
-    /* Iteration 0 is a special case: we need to use in instead of a previously calculated field. */
-    generic_staples(control->scratch[0], control->U[control->current]);
-    stout_fatten_links_with_force_terms(control);
-    exchange_gauge_field(control->U[control->current]); /* NOTE Maybe exchange more fields than just this one? */
+    for (unsigned int x = 0; x < VOLUME; ++x)
+      for (unsigned int mu = 0; mu < 4; ++mu)
+      {
+        generic_staples(&staples, x, mu, control->U[iter]);
+        stout_fatten_links_with_force_terms(&control->U[iter + 1].field[x][mu], &control->trace[iter][x][mu], 
+                                             control->rho, &staples, &control->U[iter].field[x][mu]);
+      }
+    exchange_gauge_field(control->U[iter]);
   }
   
   control->smearing_performed = 1;
-  return_gauge_field(&control->scratch[0]);
-  return_gauge_field(&control->scratch[1]);
 }

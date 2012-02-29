@@ -5,7 +5,6 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
   stout_control *control = (stout_control*)malloc(sizeof(stout_control));
   control->rho = rho;
   control->iterations = iterations;
-  control->current = 0;
   control->calculate_force_terms = calculate_force_terms;
   control->smearing_performed = 0;
 
@@ -22,9 +21,12 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
   control->trace = (stout_notes_tuple**)malloc(iterations * sizeof(stout_notes_tuple*));
   
   for (unsigned int iter = 0; iter < iterations; ++iter)
+  {
+    control->U[iter + 1] = get_gauge_field();
     control->trace[iter] = malloc(VOLUME * sizeof(stout_notes_tuple));
+  }
   
-  control->result = control->U[iterations];
+  control->result = control->U[iterations]; /* A shallow copy, just putting the reference in place. */
   control->force_result = get_adjoint_field();
   
   return control;

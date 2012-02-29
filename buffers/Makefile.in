@@ -49,6 +49,7 @@ libbuffers_TARGETS = 	adjoint \
 			complex_return_complex_field_array \
 			gauge \
 			gauge_allocate_gauge_buffers \
+			gauge_copy_gauge_field \
 			gauge_finalize_gauge_buffers \
 			gauge_free_unused_gauge_buffers \
 			gauge_get_gauge_field \
@@ -56,6 +57,7 @@ libbuffers_TARGETS = 	adjoint \
 			gauge_initialize_gauge_buffers \
 			gauge_return_gauge_field \
 			gauge_return_gauge_field_array \
+			gauge_swap_gauge_field \
 			real \
 			real_allocate_real_buffers \
 			real_finalize_real_buffers \

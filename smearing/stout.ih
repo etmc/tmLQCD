@@ -1,16 +1,6 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-#ifdef SSE
-# undef SSE
-#endif
-#ifdef SSE2
-# undef SSE2
-#endif
-#ifdef SSE3
-# undef SSE3
-#endif
-
 
 #include <stdio.h>
 #include <math.h>
@@ -30,3 +20,8 @@
 
 #include <buffers/utils.h>
 #include <smearing/stout.h>
+
+#include "stout_fatten_links.static"
+#include "stout_smear_plain.static"
+#include "stout_fatten_links_with_force_terms.static"
+#include "stout_smear_with_force_terms.static"

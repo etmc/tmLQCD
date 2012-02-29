@@ -1,31 +1,8 @@
-static void stout_fatten_links_with_force_terms(stout_control *control)
+static void stout_fatten_links_with_force_terms(su3 *out, stout_notes_t *notes, double rho, su3 const *staples, su3 const *in)
 {
-#define _CALCULATE_WEIGHTED_PLAQUETTE(x, principal)                                                                                                             \
-{                                                                                                                                                               \
-  _su3_times_su3d(control->Q[control->current].field[x][principal], control->scratch[0].field[x][principal], control->U[control->current].field[x][principal]); \
-  _real_times_su3(control->Q[control->current].field[x][principal], control->rho, control->Q[control->current].field[x][principal]);                            \
-    project_antiherm(&control->Q[control->current].field[x][principal]);                                                                                        \
-}
-  
-  for (int x = 0; x < VOLUME; ++x)
-  {
-    _CALCULATE_WEIGHTED_PLAQUETTE(x, I0_0);
-    _CALCULATE_WEIGHTED_PLAQUETTE(x, I0_1);
-    _CALCULATE_WEIGHTED_PLAQUETTE(x, I0_2);
-    _CALCULATE_WEIGHTED_PLAQUETTE(x, I0_3);
-  }
-    
-  for (int x = 0; x < VOLUME; ++x)
-    for (int mu = 0; mu < 4; ++mu)
-    {
-      cayley_hamilton_exponent_with_force_terms(&control->scratch[0].field[x][mu],
-                                                &control->B1[control->current].field[x][mu],
-                                                &control->B2[control->current].field[x][mu],
-                                                &control->f1[control->current][x][mu],
-                                                &control->f2[control->current][x][mu],
-                                                &control->Q[control->current].field[x][mu]);
-      _su3_times_su3(control->U[control->current + 1].field[x][mu], control->scratch[0].field[x][mu], control->U[control->current].field[x][mu]);
-    }
-  
-#undef _CALCULATE_WEIGHTED_PLAQUETTE
+  _su3_times_su3d(notes->Q, *staples, *in);
+  project_antiherm(notes->Q);
+  _real_times_su3(notes->Q, rho, notes->Q);
+  cayley_hamilton_exponent_with_force_terms(&notes->expiQ, &notes->B1, &notes->B2, &notes->f1, &notes->f2, &notes->Q)
+  _su3_times_su3(*out, notes->expiQ, in);
 }

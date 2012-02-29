@@ -1,23 +1,10 @@
-static void stout_fatten_links(stout_control *control)
+static void stout_fatten_links(su3 *out, double rho, su3 const *staples, su3 const *in)
 {
+  static su3 tmp;
   
-  /* NOTE Check potential performance impact of Cayley-Hamilton procedure here... */
-  
-#define _MULTIPLY_AND_EXPONENTIATE(x, principal) \
-  { \
-    _su3_times_su3d(control->scratch[1].field[x][principal], control->scratch[0].field[x][principal], control->U[0].field[x][principal]); \
-    project_antiherm(&control->scratch[1].field[x][principal]); \
-    _real_times_su3(control->U[1].field[x][principal], control->rho, control->scratch[1].field[x][principal]); \
-    exposu3_in_place(&control->U[1].field[x][principal]); \
-  }
-
-  for (int x = 0; x < VOLUME; ++x)
-  {
-    _MULTIPLY_AND_EXPONENTIATE(x, I0_0);
-    _MULTIPLY_AND_EXPONENTIATE(x, I0_1);
-    _MULTIPLY_AND_EXPONENTIATE(x, I0_2);
-    _MULTIPLY_AND_EXPONENTIATE(x, I0_3);
-  }
-
-#undef _MULTIPLY_AND_EXPONENTIATE
+  _su3_times_su3d(tmp, *staples, *in);
+  project_antiherm(*out);
+  _real_times_su3(tmp, rho, tmp);
+  exposu3_in_place(tmp);
+  _su3_times_su3(*out, tmp, *in);
 }

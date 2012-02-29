@@ -17,6 +17,7 @@
 typedef struct
 {
   su3    Q;
+  su3    expiQ;
   su3    B1;
   su3    B2;
   double f1;
@@ -31,8 +32,7 @@ typedef struct
   double          rho; /* For now, we're going to work with homogeneous smearing coefficients */
   unsigned int    iterations;
   
-  /* Flags / trackers */
-  unsigned int    current;
+  /* Flags */
   int             calculate_force_terms;
   int             smearing_performed;
   

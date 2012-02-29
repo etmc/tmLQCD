@@ -1,22 +1,26 @@
-#include "stout_fatten_links.static"
-
-static void stout_smear_plain(stout_control *control)
+static void stout_smear_plain(stout_control *control, gauge_field_t in)
 {
-  /* We request two temporary fields: One for storing the staples, one to
-   * provide scratch space for matrix multiplications. */
-  control->scratch[0] = get_gauge_field();
-  control->scratch[1] = get_gauge_field();
+  su3 staples;
+  /* Staple calculation isn't local, so we cannot store changes per site immediately
+   * and need a separate input and output. Since the result of one iteration becomes 
+   * the input of the next, that means we'll actually need an additional field of 
+   * scratch space. */
+  gauge_field_t scratch = get_gauge_field();
+
+  control->U[0] = in; /* Shallow copy intended */
   
-  for(int iter = 0; iter < control->iterations; ++iter)
+  for(unsigned int iter = 0; iter < control->iterations; ++iter)
   {
-    generic_staples(control->scratch[0], control->U[0]);
-    stout_fatten_links(control);
-    exchange_gauge_field(control->result);
-    control->U[0] = control->result; /* Prepare for next iteration, shallow copy */
+    for (unsigned int x = 0; x < VOLUME; ++x)
+      for (unsigned int mu = 0; mu < 4; ++mu)
+      {
+        generic_staples(&staples, x, mu, in);
+        stout_fatten_links(&scratch.field[x][mu], control->rho, &staples, &in->result.field[x][mu]);
+      }
+    swap_gauge_field(&control->result, &scratch);
+    exchange_gauge_field(control->result); /* The edge terms will have changed by now */
+    in = control->result; /* Prepare for next iteration, shallow copy */
   }
   control->smearing_performed = 1;
-
-  /* Free temporary resources */
-  return_gauge_field(&control->U[0]);
-  return_gauge_field(&control->U[1]);
+  return_gauge_field(&scratch);
 }
