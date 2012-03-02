@@ -21,6 +21,7 @@
 #include <buffers/utils.h>
 #include <smearing/stout.h>
 
+#include "stout_add_staple_derivatives.static"
 #include "stout_fatten_links.static"
 #include "stout_smear_plain.static"
 #include "stout_fatten_links_with_force_terms.static"

@@ -1,0 +1,41 @@
+static gauge_field_t construct_lambda(gauge_field_t lambda, gauge_field_t const sigma, stout_notes_tuple const *smearing_trace, gauge_field_t const U)
+{
+  _Complex double trace;
+  su3 t1;
+  su3 t2;
+  
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int mu = 0; mu < 4; ++mu)
+    {
+      /* t2 == Tr[sigma' * B2 * U] * Q */
+      _su3_times_su3(t1, sigma.field[x][mu], smearing_trace[x][mu].B2);
+      _trace_su3_times_su3(trace, t1, U.field[x][mu]);
+      _complex_times_su3(t2, trace, smearing_trace[x][mu].Q);
+
+      /* lambda == ( Tr[sigma' * B1 * U] + Tr[sigma' * B2 * U] * Q ) * Q */
+      _su3_times_su3(t1, sigma.field[x][mu], smearing_trace[x][mu].B1);
+      _trace_su3_times_su3(trace, t1, U.field[x][mu]);
+      _su3_add_equals_complex_identity(t2, trace);
+      _su3_times_su3(lambda.field[x][mu], t2, smearing_trace[x][mu].Q);
+
+      /* lambda == ( Tr[sigma' * B1 * U] + Tr[sigma' * B2 * U] * Q ) * Q  + f_1 * U * sigma' */
+      _su3_times_su3(t1, U.field[x][mu], sigma.field[x][mu]);
+      _complex_times_su3(t2, control->f1[iter][x][mu], t1);
+      _su3_plus_su3(lambda.field[x][mu], t2, lambda.field[x][mu]);
+
+      /* lambda == ( Tr[sigma' * B1 * U] + Tr[sigma' * B2 * U] * Q ) * Q  + f_1 * U * sigma' + f2 * Q * U * sigma' */
+      _su3_times_su3(t2, smearing_trace[x][mu].Q, t1);
+      _complex_times_su3(t2, control->f2[iter][x][mu], t2);
+      _su3_plus_su3(lambda.field[x][mu], t2, lambda.field[x][mu]);
+
+      /* lambda == ( Tr[sigma' * B1 * U] + Tr[sigma' * B2 * U] * Q ) * Q  + f_1 * U * sigma' + f2 * Q * U * sigma' + f2 * U * sigma' * Q* == Gamma */
+      _su3_times_su3(t2, t1, smearing_trace[x][mu].Q);
+      _complex_times_su3(t2, control->f2[iter][x][mu], t2);
+      _su3_plus_su3(lambda.field[x][mu], t2, lambda.field[x][mu]);
+
+      /* lambda = 0.5 * ((Gamma + Gamma^dag) - Tr(Gamma + Gamma^dag) / N_c) == lambda */
+      project_herm(&lambda.field[x][mu]);
+    }
+
+  return lambda;
+}
