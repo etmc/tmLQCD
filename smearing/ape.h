@@ -2,12 +2,22 @@
 
 #include <buffers/gauge.h>
 
-struct ape_parameters
+typedef struct
 {
   double rho;
-  int    iterations;
-};
+  unsigned int iterations;
 
-int ape_smear(gauge_field_t m_field_out, struct ape_parameters const *params, gauge_field_t m_field_in);
-void APE_project_exclude_none(gauge_field_t buff_out, double const coeff, gauge_field_t staples, gauge_field_t buff_in);
+  /* Flags */
+  int             smearing_performed;
+  
+  /* Result -- main output for users */
+  gauge_field_t    result; /* For direct access to the result, shallow copy... */
 
+  /* Intermediate results, stored to enhance locality of the analysis */
+  gauge_field_t      *U;     /* The sequence of iterations gauge fields */
+} ape_control;
+
+ape_control *construct_ape_control(double rho, unsigned int iterations);
+void free_ape_control(ape_control *control);
+
+void ape_smear(ape_control *control, gauge_field_t in);

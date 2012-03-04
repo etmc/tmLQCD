@@ -32,7 +32,8 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS} ${OPTARGS}
 LIBRARIES = libsmear
 
 libsmear_TARGETS = 	ape_ape_smear \
-			ape_APE_project_exclude_none \
+			ape_construct_ape_control \
+			ape_free_ape_control \
 			hyp_APE_project_exclude_one \
 			hyp_APE_project_exclude_two \
 			hyp_hyp_staples_exclude_none \
