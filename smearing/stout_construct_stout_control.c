@@ -13,7 +13,6 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
   {
     control->U = (gauge_field_t*)malloc(2 * sizeof(gauge_field_t));
     control->U[1] = get_gauge_field();
-    control->result = control->U[1]; /* A shallow copy, just putting the reference in place. */
     return control;
   }
 
