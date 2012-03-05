@@ -8,44 +8,35 @@
 
 void generic_exchange(void *field_in, int bytes_per_site);
 
-void copy_adjoint_field(adjoint_field_t dest, adjoint_field_t orig);
-void copy_complex_field(complex_field_t dest, complex_field_t orig);
-void copy_gauge_field(gauge_field_t dest, gauge_field_t orig);
-void copy_real_field(real_field_t dest, real_field_t orig);
-void copy_spinor_field(spinor_field_t dest, spinor_field_t orig);
-
 void zero_adjoint_field(adjoint_field_t target);
 void zero_complex_field(complex_field_t target);
 void zero_gauge_field(gauge_field_t target);
 void zero_real_field(real_field_t target);
 void zero_spinor_field(spinor_field_t target);
 
-void zero_adjoint_field_array(adjoint_field_array_t target);
-void zero_complex_field_array(complex_field_array_t target);
-void zero_gauge_field_array(gauge_field_array_t target);
-void zero_real_field_array(real_field_array_t target);
-void zero_spinor_field_array(spinor_field_array_t target);
-
 void exchange_adjoint_field(adjoint_field_t target);
-void exchange_adjoint_field_array(adjoint_field_array_t target);
-
 void exchange_complex_field(complex_field_t target);
-void exchange_complex_field_array(complex_field_array_t target);
-
 void exchange_gauge_field(gauge_field_t target);
-void exchange_gauge_field_array(gauge_field_array_t target);
-
 void exchange_real_field(real_field_t target);
-void exchange_real_field_array(real_field_array_t target);
-
 void exchange_spinor_field(spinor_field_t target);
-void exchange_spinor_field_array(spinor_field_array_t target);
 
-void convert_gauge_to_adjoint_field(adjoint_field_t dest, gauge_field_t orig);
-void convert_adjoint_to_gauge_field(gauge_field_t dest, adjoint_field_t orig);
+void copy_adjoint_field(adjoint_field_t *left, adjoint_field_t const right);
+void copy_complex_field(complex_field_t *left, complex_field_t const right);
+void copy_gauge_field(gauge_field_t *left, copy_gauge_field const right);
+void copy_real_field(real_field_t *left,real_field_t const right);
+void copy_spinor_field(spinor_field_t *left, spinor_field_t const right);
 
-void convert_gauge_to_adjoint_field_array(adjoint_field_array_t dest, gauge_field_array_t orig);
-void convert_adjoint_to_gauge_field_array(gauge_field_array_t dest, adjoint_field_array_t orig);
+void swap_adjoint_field(adjoint_field_t *left, adjoint_field_t *right);
+void swap_complex_field(complex_field_t *left, complex_field_t *right);
+void swap_gauge_field(gauge_field_t *left, swap_gauge_field *right);
+void swap_real_field(real_field_t *left,real_field_t *right);
+void swap_spinor_field(spinor_field_t *left, spinor_field_t *right);
+
+void zero_adjoint_field(adjoint_field_t target);
+void zero_complex_field(complex_field_t target);
+void zero_gauge_field(gauge_field_t target);
+void zero_real_field(real_field_t target);
+void zero_spinor_field(spinor_field_t target);
 
 /* Inline functions need to be declared inside the header -- hence the following nastiness here... */
 
@@ -60,21 +51,21 @@ inline void zero_ ## NAME ##_field(NAME ## _field_t target)                     
   memset((void*)target.field, 0.0, VOLUMEPLUSRAND * sizeof(DATATYPE));                          \
 }                                                                                               \
                                                                                                 \
-inline void zero_ ## NAME ## _field_array(NAME ## _field_array_t target)                        \
-{                                                                                               \
-  for (unsigned int idx = 0; idx < target.length; ++idx)                                        \
-    zero_ ## NAME ##_field(target.field_array[idx]);	                                        \
-}                                                                                               \
-                                                                                                \
 inline void exchange_ ## NAME ## _field(NAME ## _field_t target)                                \
 {                                                                                               \
   generic_exchange((void*)target.field, sizeof(DATATYPE));                                      \
 }                                                                                               \
                                                                                                 \
-inline void exchange_ ## NAME ## _field_array(NAME ## _field_array_t target)                    \
+inline void swap_ ## NAME ## _field(NAME ## _field_t *left, NAME ## _field_t *right)            \
 {                                                                                               \
-  for (unsigned int idx = 0; idx < target.length; ++idx)                                        \
-    exchange_ ## NAME ## _field(target.field_array[idx]);                                       \
+   DATATYPE *tmp = left->field;                                                                 \
+   left->field = right->field;                                                                  \
+   right->field = tmp;                                                                          \
+}                                                                                               \
+                                                                                                \
+inline void copy_ ## NAME ## _field(NAME ## _field_t *copy, NAME ## _field_t const original)    \
+{                                                                                               \
+  memmove(copy->field, original.field, VOLUMEPLUSRAND * sizeof(DATATYPE));                      \
 }
 
 __DEFINE_BUFFER_INLINES(su3adj_tuple, adjoint)
