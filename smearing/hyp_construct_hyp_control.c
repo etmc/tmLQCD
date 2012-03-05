@@ -1,11 +1,11 @@
 #include "hyp.ih"
 
-hyp_control *construct_hyp_control(double const alpha_0, double const alpha_1, double const alpha_2,  unsigned int iterations)
+hyp_control *construct_hyp_control(double const alpha_1, double const alpha_2, double const alpha_3,  unsigned int iterations)
 {
   hyp_control *control = (ape_control*)malloc(sizeof(hyp_control));
-  control->alpha[0] = alpha_0;
-  control->alpha[1] = alpha_1;
-  control->alpha[2] = alpha_2;
+  control->alpha[0] = alpha_1;
+  control->alpha[1] = alpha_2;
+  control->alpha[2] = alpha_3;
   control->iterations = iterations;
   control->smearing_performed = 0;
 

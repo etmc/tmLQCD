@@ -1,9 +1,10 @@
 #include "hyp.ih"
 
-int hyp_smear(gauge_field_t m_field_out, struct hyp_parameters const *params, gauge_field_t m_field_in)
+void hyp_smear(hyp_control *control, gauge_field_t in)
 {
-  gauge_field_array_t gamma = get_gauge_field_array(3);
-  gauge_field_array_t v = get_gauge_field_array(3);
+  /* NOTE Can we get rid of one of these?  */
+  gauge_field_t gamma[3];
+  gauge_field_t v[3];
 
   for (unsigned int iter = 0; iter < params->iterations; ++iter)
   {
@@ -28,6 +29,7 @@ int hyp_smear(gauge_field_t m_field_out, struct hyp_parameters const *params, ga
         m_field_in = m_field_out; /* Prepare for next iteration */
       }
   }
+  control->smearing_performed = 1;
   return_gauge_field_array(&v);
   return_gauge_field_array(&gamma);
   

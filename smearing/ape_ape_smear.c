@@ -1,6 +1,6 @@
 #include "ape.ih"
 
-int ape_smear(ape_control *control, gauge_field_t in)
+void ape_smear(ape_control *control, gauge_field_t in)
 {
   /* We may alias the data, so we need something to store intermediate results somewhere else then m_field_out */
   control->U[0] = in;
@@ -31,6 +31,4 @@ int ape_smear(ape_control *control, gauge_field_t in)
   control->smearing_performed = 1;
   control->result = control->U[1];
   return_gauge_field(&buffer);
-
-  return(0);
 }

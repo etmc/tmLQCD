@@ -1,0 +1,43 @@
+static void hyp_smear_second_stage(gauge_field_t *out, double const alpha_2, gauge_field_t const * in)
+{
+  su3 tmp;
+  su3 staples;
+
+  double const coeff_principal = 1.0 - alpha_2;
+  double const coeff_staples   = alpha_2 / 4.0;
+    
+  #define _HYP_SMEAR_COMPONENT(component, to, excl, via_1, via_2, x) \
+  { \
+    _su3_times_su3d(tmp, in[I2_ ## to ## _ ## excl ## via_1 / 4].field[g_iup[x][via_1]][I2_ ## to ## _ ## excl ## via_1 % 4], in[I2_ ## via_1 ## _ ## to ## excl / 4].field[g_iup[x][to]][I2_ ## via_1 ## _ ## to ## excl % 4]); \
+    _su3_times_su3(staples, in[I2_ ## via_1 ## _ ## to ## excl / 4].field[x][I2_ ## via_1 ## _ ## to ## excl % 4], tmp); \
+    _su3_times_su3(tmp, in[I2_ ## to ## _ ## excl ## via_1 / 4].field[g_idn[x][via_1]][I2_ ## to ## _ ## excl ## via_1 % 4], in[I2_ ## via_1 ## _ ## to ## excl / 4].field[g_iup[g_idn[x][via_1]][to]][I2_ ## via_1 ## _ ## to ## excl % 4]); \
+    _su3d_times_su3_acc(staples, in[I2_ ## via_1 ## _ ## to ## excl / 4].field[g_idn[x][via_1]][I2_ ## via_1 ## _ ## to ## excl % 4], tmp); \
+    _su3_times_su3d(tmp, in[I2_ ## to ## _ ## excl ## via_2 / 4].field[g_iup[x][via_2]][I2_ ## to ## _ ## excl ## via_2 % 4], in[I2_ ## via_2 ## _ ## to ## excl / 4].field[g_iup[x][to]][I2_ ## via_2 ## _ ## to ## excl % 4]); \
+    _su3_times_su3_acc(staples, in[I2_ ## via_2 ## _ ## to ## excl / 4].field[x][I2_ ## via_2 ## _ ## to ## excl % 4], tmp); \
+    _su3_times_su3(tmp, in[I2_ ## to ## _ ## excl ## via_2 / 4].field[g_idn[x][via_2]][I2_ ## to ## _ ## excl ## via_2 % 4], in[I2_ ## via_2 ## _ ## to ## excl / 4].field[g_iup[g_idn[x][via_2]][to]][I2_ ## via_2 ## _ ## to ## excl % 4]); \
+    _su3d_times_su3_acc(staples, in[I2_ ## via_2 ## _ ## to ## excl / 4].field[g_idn[x][via_2]][I2_ ## via_2 ## _ ## to ## excl % 4], tmp); \
+    _real_times_su3_plus_real_times_su3(out[component / 4].field[x][component % 4], coeff_principal, buff_in.field[x][principal], coeff_staples, staples) \
+    reunitarize(out[component / 4].field[x] + (component % 4)); \
+  }
+
+  for (int x = 0; x < VOLUME; ++x)
+  {
+    _HYP_SMEAR_COMPONENT(I1_0_1, 0, 1, 2, 3, x);
+    _HYP_SMEAR_COMPONENT(I1_0_2, 0, 2, 1, 3, x);
+    _HYP_SMEAR_COMPONENT(I1_0_3, 0, 3, 1, 2, x);
+
+    _HYP_SMEAR_COMPONENT(I1_1_0, 1, 0, 2, 3, x);
+    _HYP_SMEAR_COMPONENT(I1_1_2, 1, 2, 0, 3, x);
+    _HYP_SMEAR_COMPONENT(I1_1_3, 1, 3, 0, 2, x);
+
+    _HYP_SMEAR_COMPONENT(I1_2_0, 2, 0, 1, 3, x);
+    _HYP_SMEAR_COMPONENT(I1_2_1, 2, 1, 0, 3, x);
+    _HYP_SMEAR_COMPONENT(I1_2_3, 2, 3, 0, 1, x);
+
+    _HYP_SMEAR_COMPONENT(I1_3_0, 3, 0, 1, 2, x);
+    _HYP_SMEAR_COMPONENT(I1_3_1, 3, 1, 0, 2, x);
+    _HYP_SMEAR_COMPONENT(I1_3_2, 3, 2, 0, 1, x);
+  }
+
+  #undef _HYP_SMEAR_COMPONENT
+}
