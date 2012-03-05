@@ -20,6 +20,8 @@
 #ifndef _SU3ADJ_H
 #define _SU3ADJ_H
 
+#include <complex.h>
+
 typedef struct
 {
   double d1, d2, d3, d4, d5, d6, d7, d8;

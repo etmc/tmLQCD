@@ -36,29 +36,13 @@ libbuffers_TARGETS = 	adjoint \
 			adjoint_get_adjoint_field \
 			adjoint_initialize_adjoint_buffers \
 			adjoint_return_adjoint_field \
-			complex \
-			complex_allocate_complex_buffers \
-			complex_finalize_complex_buffers \
-			complex_free_unused_complex_buffers \
-			complex_get_complex_field \
-			complex_initialize_complex_buffers \
-			complex_return_complex_field \
 			gauge \
 			gauge_allocate_gauge_buffers \
-			gauge_copy_gauge_field \
 			gauge_finalize_gauge_buffers \
 			gauge_free_unused_gauge_buffers \
 			gauge_get_gauge_field \
 			gauge_initialize_gauge_buffers \
 			gauge_return_gauge_field \
-			gauge_swap_gauge_field \
-			real \
-			real_allocate_real_buffers \
-			real_finalize_real_buffers \
-			real_free_unused_real_buffers \
-			real_get_real_field \
-			real_initialize_real_buffers \
-			real_return_real_field \
 			spinor \
 			spinor_allocate_spinor_buffers \
 			spinor_finalize_spinor_buffers \
