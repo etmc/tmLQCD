@@ -2,6 +2,7 @@
 
 #include <su3.h>
 #include <buffers/gauge.h>
+#include <buffers/adjoint.h>
 
 /* We need a number of indices to do the bookkeeping.
    This will always amount to at most 12 fields, but
@@ -34,9 +35,6 @@ void generic_staples(su3 *out, unsigned int x, unsigned int mu, gauge_field_t in
 void project_antiherm(su3 *in);
 void project_herm(su3 *in);
 void reunitarize(su3 *in);
-
-void fundamental_to_adjoint(adjoint_field_t out, gauge_field_t const in);
-void adjoint_to_fundamental(gauge_field_t out, adjoint_field_t const in);
 
 void cayley_hamilton_exponent(su3 *expiQ, su3 const *Q);
 void cayley_hamilton_exponent_with_force_terms(su3 *expiQ, su3 *B1, su3 *B2, double *f1, double *f2, su3 const *Q);

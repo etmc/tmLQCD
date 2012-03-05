@@ -13,7 +13,7 @@ void ape_smear(ape_control *control, gauge_field_t in)
   double const rho_staples = control->rho / 6.0;
   
   /* start of the the stout smearing **/
-  for(unsigned int iter = 0; iter < params->iterations; ++iter)
+  for(unsigned int iter = 0; iter < control->iterations; ++iter)
   {
     for (unsigned int x = 0; x < VOLUME; ++x)
       for (unsigned int mu = 0; mu < 4; ++x)
@@ -24,9 +24,9 @@ void ape_smear(ape_control *control, gauge_field_t in)
       }
 
     /* Prepare for the next iteration -- the last result is now input! */
-    swap_gauge_field(control->U[1], buffer);
+    swap_gauge_field(&control->U[1], &buffer);
+    exchange_gauge_field(control->U[1]);
     in = control->U[1];
-    exchange_gauge_field(m_field_out);
   }
   control->smearing_performed = 1;
   control->result = control->U[1];
