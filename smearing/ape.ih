@@ -22,5 +22,3 @@
 #include <smearing/utils.h>
 #include <buffers/gauge.h>
 #include <buffers/utils.h>
-
-#include "ape_project.static"

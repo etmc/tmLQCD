@@ -32,5 +32,5 @@ void return_ ## NAME ## _field(NAME ## _field_t *field);                        
 NAME ## _field_array_t get_ ## NAME ## _field_array(unsigned int length);                        \
 void return_ ## NAME ## _field_array(NAME ## _field_array_t *field_array);                       \
                                                                                                  \
-void swap_ ## NAME ## _field(NAME # _field_t *left, NAME # _field_t *right);                     \
-void copy_ ## NAME ## _field(NAME # _field_t *copy, NAME # _field_t const original);
+void swap_ ## NAME ## _field(NAME ## _field_t *left, NAME ## _field_t *right);                   \
+void copy_ ## NAME ## _field(NAME ## _field_t *copy, NAME ## _field_t const original);

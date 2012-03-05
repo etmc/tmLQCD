@@ -22,7 +22,7 @@
 #include <smearing/stout.h>
 
 #include "stout_add_staple_derivatives.static"
-#include "stouts_construct_lambda.static"
+#include "stout_construct_lambda.static"
 #include "stout_fatten_links.static"
 #include "stout_fatten_links_with_force_terms.static"
 #include "stout_smear_plain.static"
