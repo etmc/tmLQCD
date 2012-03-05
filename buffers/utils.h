@@ -38,14 +38,12 @@ void zero_gauge_field(gauge_field_t target);
 void zero_real_field(real_field_t target);
 void zero_spinor_field(spinor_field_t target);
 
+void adjoint_to_gauge(gauge_field_t out, adjoint_field_t const in);
+void gauge_to_adjoint(adjoint_field_t out, gauge_field_t const in);
+
 /* Inline functions need to be declared inside the header -- hence the following nastiness here... */
 
 #define __DEFINE_BUFFER_INLINES(DATATYPE, NAME)                                                 \
-inline void copy_ ## NAME ## _field(NAME ## _field_t dest,  NAME ## _field_t orig)              \
-{                                                                                               \
-  memmove((void*)dest.field, (void*)orig.field, sizeof(DATATYPE) * VOLUMEPLUSRAND + 1);         \
-}                                                                                               \
-                                                                                                \
 inline void zero_ ## NAME ##_field(NAME ## _field_t target)                                     \
 {                                                                                               \
   memset((void*)target.field, 0.0, VOLUMEPLUSRAND * sizeof(DATATYPE));                          \
