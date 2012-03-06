@@ -1,5 +1,6 @@
 #pragma once
 
+#include <buffers/alignment.h>
 #include <su3.h>
 
 #ifndef ALIGN_BASE

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <buffers/alignment.h>
 #include <su3adj.h>
 
 typedef su3adj su3adj_tuple[4];

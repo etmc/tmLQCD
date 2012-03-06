@@ -36,6 +36,7 @@ libbuffers_TARGETS = 	adjoint \
 			adjoint_get_adjoint_field \
 			adjoint_initialize_adjoint_buffers \
 			adjoint_return_adjoint_field \
+			alignment_aalloc \
 			gauge \
 			gauge_allocate_gauge_buffers \
 			gauge_finalize_gauge_buffers \
