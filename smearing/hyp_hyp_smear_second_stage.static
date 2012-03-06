@@ -1,4 +1,4 @@
-static void hyp_smear_second_stage(gauge_field_t *out, double const alpha_2, gauge_field_t const * in)
+static void hyp_smear_second_stage(su3_outer *out, double const alpha_2, su3_outer *in)
 {
   su3 tmp;
   su3 staples;
@@ -8,16 +8,16 @@ static void hyp_smear_second_stage(gauge_field_t *out, double const alpha_2, gau
     
   #define _HYP_SMEAR_COMPONENT(component, to, excl, via_1, via_2, x) \
   { \
-    _su3_times_su3d(tmp, in[I2_ ## to ## _ ## excl ## via_1 / 4].field[g_iup[x][via_1]][I2_ ## to ## _ ## excl ## via_1 % 4], in[I2_ ## via_1 ## _ ## to ## excl / 4].field[g_iup[x][to]][I2_ ## via_1 ## _ ## to ## excl % 4]); \
-    _su3_times_su3(staples, in[I2_ ## via_1 ## _ ## to ## excl / 4].field[x][I2_ ## via_1 ## _ ## to ## excl % 4], tmp); \
-    _su3_times_su3(tmp, in[I2_ ## to ## _ ## excl ## via_1 / 4].field[g_idn[x][via_1]][I2_ ## to ## _ ## excl ## via_1 % 4], in[I2_ ## via_1 ## _ ## to ## excl / 4].field[g_iup[g_idn[x][via_1]][to]][I2_ ## via_1 ## _ ## to ## excl % 4]); \
-    _su3d_times_su3_acc(staples, in[I2_ ## via_1 ## _ ## to ## excl / 4].field[g_idn[x][via_1]][I2_ ## via_1 ## _ ## to ## excl % 4], tmp); \
-    _su3_times_su3d(tmp, in[I2_ ## to ## _ ## excl ## via_2 / 4].field[g_iup[x][via_2]][I2_ ## to ## _ ## excl ## via_2 % 4], in[I2_ ## via_2 ## _ ## to ## excl / 4].field[g_iup[x][to]][I2_ ## via_2 ## _ ## to ## excl % 4]); \
-    _su3_times_su3_acc(staples, in[I2_ ## via_2 ## _ ## to ## excl / 4].field[x][I2_ ## via_2 ## _ ## to ## excl % 4], tmp); \
-    _su3_times_su3(tmp, in[I2_ ## to ## _ ## excl ## via_2 / 4].field[g_idn[x][via_2]][I2_ ## to ## _ ## excl ## via_2 % 4], in[I2_ ## via_2 ## _ ## to ## excl / 4].field[g_iup[g_idn[x][via_2]][to]][I2_ ## via_2 ## _ ## to ## excl % 4]); \
-    _su3d_times_su3_acc(staples, in[I2_ ## via_2 ## _ ## to ## excl / 4].field[g_idn[x][via_2]][I2_ ## via_2 ## _ ## to ## excl % 4], tmp); \
-    _real_times_su3_plus_real_times_su3(out[component / 4].field[x][component % 4], coeff_principal, buff_in.field[x][principal], coeff_staples, staples) \
-    reunitarize(out[component / 4].field[x] + (component % 4)); \
+    _su3_times_su3d(tmp, in[g_iup[x][via_1]][I2_ ## to ## _ ## excl ## via_1], in[g_iup[x][to]][I2_ ## via_1 ## _ ## to ## excl]); \
+    _su3_times_su3(staples, in[x][I2_ ## via_1 ## _ ## to ## excl], tmp); \
+    _su3_times_su3(tmp, in[g_idn[x][via_1]][I2_ ## to ## _ ## excl ## via_1], in[g_iup[g_idn[x][via_1]][to]][I2_ ## via_1 ## _ ## to ## excl]); \
+    _su3d_times_su3_acc(staples, in[g_idn[x][via_1]][I2_ ## via_1 ## _ ## to ## excl], tmp); \
+    _su3_times_su3d(tmp, in[g_iup[x][via_2]][I2_ ## to ## _ ## excl ## via_2], in[g_iup[x][to]][I2_ ## via_2 ## _ ## to ## excl]); \
+    _su3_times_su3_acc(staples, in[x][I2_ ## via_2 ## _ ## to ## excl], tmp); \
+    _su3_times_su3(tmp, in[g_idn[x][via_2]][I2_ ## to ## _ ## excl ## via_2], in[g_iup[g_idn[x][via_2]][to]][I2_ ## via_2 ## _ ## to ## excl]); \
+    _su3d_times_su3_acc(staples, in[g_idn[x][via_2]][I2_ ## via_2 ## _ ## to ## excl], tmp); \
+    _real_times_su3_plus_real_times_su3(out[x][component], coeff_principal, in[x][component], coeff_staples, staples) \
+    reunitarize(&out[x][component]); \
   }
 
   for (int x = 0; x < VOLUME; ++x)

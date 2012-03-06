@@ -1,0 +1,26 @@
+#include "stout_add_staple_derivatives.static"
+
+static void add_stout_terms_to_forces(gauge_field_t sigma, double const rho, gauge_field_t const lambda, stout_notes_tuple *trace, gauge_field_t const U)
+{
+  su3 staples;
+  su3 aggr;
+  
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int mu = 0; mu < 4; ++mu)
+    {
+      /* sigma' = (sigma' * expiQ) */
+      aggr = sigma.field[x][mu];
+      _su3_times_su3(sigma.field[x][mu], aggr, trace[x][mu].expiQ);
+      
+      /* sigma' = (sigma' * expiQ) + i * C^dag * lambda */
+      generic_staples(&staples, x, mu, U);
+      _su3d_times_su3_acc(aggr, staples, lambda.field[x][mu]);
+      _su3_imfac_acc(sigma.field[x][mu], 1, aggr);
+
+      /* sigma' = (sigma' * expiQ) + i * C^dag * lambda - i rho \sum [St.Deriv] */
+      for (unsigned int nu = 0; nu < 4; ++nu)
+        if (mu != nu)
+          add_staple_derivatives(&aggr, x, mu, nu, lambda, U);
+      _su3_imfac_acc(sigma.field[x][mu], -rho, aggr);
+    }
+}

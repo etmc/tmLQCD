@@ -43,6 +43,3 @@ enum I2
   I2_3_02 = 10, I2_3_20 = 10, I2_3_12 = 11, I2_3_21 = 11
 };
 
-#include "hyp_hyp_smear_first_stage.static"
-#include "hyp_hyp_smear_second_stage.static"
-#include "hyp_hyp_smear_third_stage.static"

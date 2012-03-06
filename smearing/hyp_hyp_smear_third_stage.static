@@ -1,20 +1,41 @@
-static void hyp_smear_third_stage(gauge_field_t out, double const alpha_3, gauge_field_t const *in)
+static void hyp_smear_third_stage(gauge_field_t out, double const alpha_3, su3_outer *in)
 {
   su3 tmp;
   su3 staples;
-
+  
+  double const coeff_principal = 1.0 - alpha_3;
+  double const coeff_staples   = alpha_3 / 6.0;
+  
+#define _HYP_SMEAR_COMPONENT(component, to, via, x) \
+  _su3_times_su3d(tmp, in[g_iup[x][via]][I1_ ## to ## _ ## via], in[g_iup[x][to]][I1_ ## via ## _ ## to]); \
+  _su3_times_su3_acc(staples, in[x][I1_ ## via ## _ ## to], tmp); \
+  _su3_times_su3(tmp, in[g_idn[x][via]][I1_ ## to ## _ ## via], in[g_iup[g_idn[x][via]][to]][I1_ ## via ## _ ## to]); \
+  _su3d_times_su3_acc(staples, in[g_idn[x][via]][I1_ ## via ## _ ## to], tmp);
+  
   for (unsigned int x = 0; x < VOLUME; ++x)
+  {
+    _su3_zero(staples);
+    _HYP_SMEAR_COMPONENT(I0_0, 0, 1, x);
+    _HYP_SMEAR_COMPONENT(I0_0, 0, 2, x);
+    _HYP_SMEAR_COMPONENT(I0_0, 0, 3, x);
+        
+    _HYP_SMEAR_COMPONENT(I0_1, 1, 0, x);
+    _HYP_SMEAR_COMPONENT(I0_1, 1, 2, x);
+    _HYP_SMEAR_COMPONENT(I0_1, 1, 3, x);
+          
+    _HYP_SMEAR_COMPONENT(I0_2, 2, 0, x);
+    _HYP_SMEAR_COMPONENT(I0_2, 2, 1, x);
+    _HYP_SMEAR_COMPONENT(I0_2, 2, 3, x);
+          
+    _HYP_SMEAR_COMPONENT(I0_3, 3, 0, x);
+    _HYP_SMEAR_COMPONENT(I0_3, 3, 1, x);
+    _HYP_SMEAR_COMPONENT(I0_3, 3, 2, x);
+    
     for (unsigned int mu = 0; mu < 4; ++mu)
     {
-      _su3_zero(staples);
-      for (unsigned int via = 0; via < 4; ++via)
-        if (via != component)
-        {
-          _su3_times_su3d(tmp, in[component].field[g_iup[x][via]][via], in[component].field[g_iup[x][component]][via]);
-          _su3_times_su3_acc(staples, in[component].field[x][via], tmp);
-          _su3_times_su3(tmp, in[component].field[g_idn[x][via]][via], in[component].field[g_iup[g_idn[x][via]][component]][via]);
-          _su3d_times_su3_acc(staples, in[component].field[g_idn[x][via]][via], tmp);
-        }
-    _real_times_su3_plus_real_times_su3(out.field[x][mu], rho_principal, in.field[x][mu], rho_staples, staples);
-    reunitarize(&buffer.field[x][mu]);
+      _real_times_su3_plus_real_times_su3(out.field[x][mu], coeff_principal, in[x][mu], coeff_staples, staples);
+      reunitarize(&out.field[x][mu]);
+    }
+  }    
+#undef _HYP_SMEAR_COMPONENT
 }

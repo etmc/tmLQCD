@@ -3,22 +3,22 @@
 void project_antiherm(su3 *in)
 {
   static const double fac_3 = 1.00 / 3.00;
-  double tr_omega = creal(-I * fac_3 * (omega->c00 + omega->c11 + omega->c22));
+  double tr_in = creal(-I * fac_3 * (in->c00 + in->c11 + in->c22));
   
-  omega->c00 = (cimag(omega->c00) - tr_omega) * I;
-  omega->c11 = (cimag(omega->c11) - tr_omega) * I;
-  omega->c22 = (cimag(omega->c22) - tr_omega) * I;
+  in->c00 = (cimag(in->c00) - tr_in) * I;
+  in->c11 = (cimag(in->c11) - tr_in) * I;
+  in->c22 = (cimag(in->c22) - tr_in) * I;
 
-  omega->c01 -= conj(omega->c10);
-  omega->c01 *= 0.50;
-  omega->c10  = -conj(omega->c01);
+  in->c01 -= conj(in->c10);
+  in->c01 *= 0.50;
+  in->c10  = -conj(in->c01);
 
 
-  omega->c02 -= conj(omega->c20);
-  omega->c02 *= 0.50;
-  omega->c20  = -conj(omega->c02);
+  in->c02 -= conj(in->c20);
+  in->c02 *= 0.50;
+  in->c20  = -conj(in->c02);
 
-  omega->c12 -= conj(omega->c21);
-  omega->c12 *= 0.50;
-  omega->c21  = -conj(omega->c12);
+  in->c12 -= conj(in->c21);
+  in->c12 *= 0.50;
+  in->c21  = -conj(in->c12);
 }

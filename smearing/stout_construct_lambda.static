@@ -1,4 +1,4 @@
-static gauge_field_t construct_lambda(gauge_field_t lambda, gauge_field_t const sigma, stout_notes_tuple const *smearing_trace, gauge_field_t const U)
+static gauge_field_t construct_lambda(gauge_field_t lambda, gauge_field_t const sigma, stout_notes_tuple *smearing_trace, gauge_field_t const U)
 {
   _Complex double trace;
   su3 t1;
@@ -20,17 +20,17 @@ static gauge_field_t construct_lambda(gauge_field_t lambda, gauge_field_t const 
 
       /* lambda == ( Tr[sigma' * B1 * U] + Tr[sigma' * B2 * U] * Q ) * Q  + f_1 * U * sigma' */
       _su3_times_su3(t1, U.field[x][mu], sigma.field[x][mu]);
-      _complex_times_su3(t2, control->f1[iter][x][mu], t1);
+      _complex_times_su3(t2, smearing_trace[x][mu].f1, t1);
       _su3_plus_su3(lambda.field[x][mu], t2, lambda.field[x][mu]);
 
       /* lambda == ( Tr[sigma' * B1 * U] + Tr[sigma' * B2 * U] * Q ) * Q  + f_1 * U * sigma' + f2 * Q * U * sigma' */
       _su3_times_su3(t2, smearing_trace[x][mu].Q, t1);
-      _complex_times_su3(t2, control->f2[iter][x][mu], t2);
+      _complex_times_su3(t2, smearing_trace[x][mu].f2, t2);
       _su3_plus_su3(lambda.field[x][mu], t2, lambda.field[x][mu]);
 
       /* lambda == ( Tr[sigma' * B1 * U] + Tr[sigma' * B2 * U] * Q ) * Q  + f_1 * U * sigma' + f2 * Q * U * sigma' + f2 * U * sigma' * Q* == Gamma */
       _su3_times_su3(t2, t1, smearing_trace[x][mu].Q);
-      _complex_times_su3(t2, control->f2[iter][x][mu], t2);
+      _complex_times_su3(t2, smearing_trace[x][mu].f2, t2);
       _su3_plus_su3(lambda.field[x][mu], t2, lambda.field[x][mu]);
 
       /* lambda = 0.5 * ((Gamma + Gamma^dag) - Tr(Gamma + Gamma^dag) / N_c) == lambda */

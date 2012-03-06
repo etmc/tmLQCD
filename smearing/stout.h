@@ -2,8 +2,6 @@
 
 #include <buffers/adjoint.h>
 #include <buffers/gauge.h>
-#include <buffers/real.h>
-#include <buffers/spinor.h>
 
 #include <smearing/utils.h>
 

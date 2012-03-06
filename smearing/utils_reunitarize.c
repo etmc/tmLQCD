@@ -9,13 +9,13 @@ void reunitarize(su3 *in)
   static double scale;
 
   _su3_one(w);
-  trace_old = omega->c00 + omega->c11 + omega->c22;
+  trace_old = in->c00 + in->c11 + in->c22;
 
   for (int iter = 0; iter < 200; ++iter)
   {
     /* Givens' rotation 01 */
-      s0 = omega->c00 + conj(omega->c11);
-      s1 = omega->c01 - conj(omega->c10);
+      s0 = in->c00 + conj(in->c11);
+      s1 = in->c01 - conj(in->c10);
       scale = 1.0 / sqrt(conj(s0) * s0 + conj(s1) * s1);
       s0 *= scale;
       s1 *= scale;
@@ -29,12 +29,12 @@ void reunitarize(su3 *in)
 
       _su3_times_su3(tmp, rot, w);
       _su3_assign(w, tmp);
-      _su3_times_su3d(tmp, *omega, rot);
-      _su3_assign(*omega, tmp);
+      _su3_times_su3d(tmp, *in, rot);
+      _su3_assign(*in, tmp);
 
     /* Givens' rotation 12 */
-      s0 = omega->c11 + conj(omega->c22);
-      s1 = omega->c12 - conj(omega->c21);
+      s0 = in->c11 + conj(in->c22);
+      s1 = in->c12 - conj(in->c21);
       scale = 1.0 / sqrt(conj(s0) * s0 + conj(s1) * s1);
       s0 *= scale;
       s1 *= scale;
@@ -48,12 +48,12 @@ void reunitarize(su3 *in)
 
       _su3_times_su3(tmp, rot, w);
       _su3_assign(w, tmp);
-      _su3_times_su3d(tmp, *omega, rot);
-      _su3_assign(*omega, tmp);
+      _su3_times_su3d(tmp, *in, rot);
+      _su3_assign(*in, tmp);
 
     /* Givens' rotation 20 */
-      s0 = omega->c22 + conj(omega->c00);
-      s1 = omega->c20 - conj(omega->c02);
+      s0 = in->c22 + conj(in->c00);
+      s1 = in->c20 - conj(in->c02);
       scale = 1.0 / sqrt(conj(s0) * s0 + conj(s1) * s1);
       s0 *= scale;
       s1 *= scale;
@@ -67,14 +67,14 @@ void reunitarize(su3 *in)
 
       _su3_times_su3(tmp, rot, w);
       _su3_assign(w, tmp);
-      _su3_times_su3d(tmp, *omega, rot);
-      _su3_assign(*omega, tmp);
+      _su3_times_su3d(tmp, *in, rot);
+      _su3_assign(*in, tmp);
 
-    trace_new = omega->c00 + omega->c11 + omega->c22;
+    trace_new = in->c00 + in->c11 + in->c22;
 
     if (trace_new - trace_old < 1e-15)
       break;
     trace_old = trace_new;
   }
-  _su3_assign(*omega, w);
+  _su3_assign(*in, w);
 }

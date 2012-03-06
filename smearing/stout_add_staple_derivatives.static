@@ -1,30 +1,30 @@
-static void add_staple_derivatives(su3 *aggr, unsigned int mu, unsigned int nu, gauge_field_t lambda, gauge_field_t U)
+static void add_staple_derivatives(su3 *aggr, unsigned int x, unsigned int mu, unsigned int nu, gauge_field_t lambda, gauge_field_t U)
 {
   static su3 t1;
   static su3 t2;
 
-  _su3_zero(aggr);
+  _su3_zero(*aggr);
 
   _su3_times_su3d(t1, U.field[x][nu], U.field[g_iup[x][nu]][mu]);
   _su3_times_su3d(t2, t1, U.field[x][nu]);
-  _su3_times_su3_acc(*aggr, t2, lambda->field[x][nu]);
+  _su3_times_su3_acc(*aggr, t2, lambda.field[x][nu]);
 
   /* Derivative terms 2 and 4 from Peardon & Morningstar can be combined using a difference on lambda. */
-  _su3_minus_su3(t1, lambda->field[g_idn[x][nu]][mu], lambda->field[g_idn[x][nu]][nu])
+  _su3_minus_su3(t1, lambda.field[g_idn[x][nu]][mu], lambda.field[g_idn[x][nu]][nu])
   _su3d_times_su3(t2, U.field[g_idn[x][nu]][mu], t1);
   _su3d_times_su3(t1, U.field[g_idn[g_iup[x][mu]][nu]][nu], t1);
   _su3_times_su3_acc(*aggr, t1, U.field[g_idn[x][nu]][nu]);
 
-  _su3d_times_su3(t1, U.field[g_idn[g_iup[x][mu]][nu]][nu], lambda->field[g_idn[g_iup[x][mu]][nu]][nu]);
+  _su3d_times_su3(t1, U.field[g_idn[g_iup[x][mu]][nu]][nu], lambda.field[g_idn[g_iup[x][mu]][nu]][nu]);
   _su3_times_su3d(t2, t1, U.field[g_idn[x][nu]][mu]);
   _su3_times_su3_acc(*aggr, t2, U.field[g_idn[x][nu]][nu]);
 
-  _su3_times_su3(t1, lambda->field[g_iup[x][mu]][nu], U.field[g_iup[x][mu]][nu]);
+  _su3_times_su3(t1, lambda.field[g_iup[x][mu]][nu], U.field[g_iup[x][mu]][nu]);
   _su3_times_su3d(t2, t1, U.field[g_iup[x][nu]][mu]);
   _su3_times_su3d(*aggr, t2, U.field[x][nu]);
   _su3_refac_acc(*aggr, -1.0, t1);
 
   _su3_times_su3d(t1, U.field[g_iup[x][mu]][nu], U.field[g_iup[x][nu]][mu]);
-  _su3_times_su3(t2, t1, lambda->field[g_iup[x][nu]][mu]);
+  _su3_times_su3(t2, t1, lambda.field[g_iup[x][nu]][mu]);
   _su3_times_su3d_acc(*aggr, t2, U.field[x][nu]);
 }

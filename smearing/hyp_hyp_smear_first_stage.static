@@ -1,4 +1,4 @@
-static void hyp_smear_first_stage(gauge_field_t *out, double const alpha_1, gauge_field_t const in)
+static void hyp_smear_first_stage(su3_outer *out, double const alpha_1, gauge_field_t const in)
 {
   su3 tmp;
   su3 staples;
@@ -12,10 +12,9 @@ static void hyp_smear_first_stage(gauge_field_t *out, double const alpha_1, gaug
     _su3_times_su3(staples, in.field[x][via], tmp); \
     _su3_times_su3(tmp, in.field[g_idn[x][via]][principal], in.field[g_idn[g_iup[x][principal]][via]][via]); \
     _su3d_times_su3_acc(staples, in.field[g_idn[x][via]][via], tmp); \
-    _real_times_su3_plus_real_times_su3(out[component / 4].field[x][component % 4], coeff_principal, in.field[x][principal], coeff_staples, staples) \
-    reunitarize(&out[component / 4].field[x][component % 4]); \
+    _real_times_su3_plus_real_times_su3(out[x][component], coeff_principal, in.field[x][principal], coeff_staples, staples) \
+    reunitarize(&out[x][component]); \
   }
-}
 
   for (int x = 0; x < VOLUME; ++x)
   {
@@ -35,4 +34,6 @@ static void hyp_smear_first_stage(gauge_field_t *out, double const alpha_1, gaug
     _HYP_SMEAR_COMPONENT(I2_3_02, I0_3, 1, x);
     _HYP_SMEAR_COMPONENT(I2_3_12, I0_3, 0, x);
   }
+  
+#undef _HYP_SMEAR_COMPONENT
 }

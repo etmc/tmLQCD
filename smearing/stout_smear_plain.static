@@ -15,7 +15,7 @@ static void stout_smear_plain(stout_control *control, gauge_field_t in)
       for (unsigned int mu = 0; mu < 4; ++mu)
       {
         generic_staples(&staples, x, mu, in);
-        stout_fatten_links(&buffer.field[x][mu], control->rho, &staples, &in->result.field[x][mu]);
+        stout_fatten_links(&buffer.field[x][mu], control->rho, &staples, &in.field[x][mu]);
       }
     /* Prepare for the next iteration, swap and exchange fields */
     swap_gauge_field(&control->U[1], &buffer);

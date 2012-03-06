@@ -18,7 +18,4 @@
 #include <io/gauge.h>
 #include <update_backward_gauge.h>
 
-#include <buffers/complex.h>
-#include <buffers/real.h>
-
 #include "utils.h"

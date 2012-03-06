@@ -16,7 +16,7 @@ void free_stout_control(stout_control *control)
     free(control->trace[iter]);
   }
 
-  return_adjoint_field(force_result);
+  return_adjoint_field(&control->force_result);
   
   free(control->U);
   free(control->trace);
