@@ -1,14 +1,45 @@
 #pragma once
 
 #include <buffers/gauge.h>
-#include <smearing/hyp.h>
-#include <smearing/stout.h>
 
-/* Just to have a consistent look to the interface  */
-typedef struct hyp_parameters hex_parameters;
+typedef struct
+{
+  su3    Q;
+  su3    expiQ;
+  su3    B1;
+  su3    B2;
+  double f1;
+  double f2;
+} hex_notes_t;
 
-/* Now all defined in terms of buffers */
-void stout_exclude_one (gauge_field_array_t buff_out, double const coeff, gauge_field_array_t staples, gauge_field_t buff_in);
-void stout_exclude_two (gauge_field_array_t buff_out, double const coeff, gauge_field_array_t staples, gauge_field_t buff_in);
+typedef hex_notes_t hex_notes[4];
+typedef su3 su3_outer[12];
+typedef hex_notes_t hex_notes_outer[12];
 
-int hex_smear(gauge_field_t m_field_out, hex_parameters const *params, gauge_field_t m_field_in);  /*  4 components in, 4 components out */
+typedef struct
+{
+  double alpha[3];
+  unsigned int    iterations;
+  
+  /* Flags */
+  int             calculate_force_terms;
+  int             smearing_performed;
+  
+  /* Results -- main output for users */
+  gauge_field_t    result; /* For direct access to the result, shallow copy... */
+  adjoint_field_t  force_result;
+  
+  /* Intermediate results, stored to enhance locality of the analysis */
+  gauge_field_t    *U;     /* The sequence of iterations gauge fields */
+  hex_notes **trace; /* Intermediate results to avoid double calculations */
+  
+  su3_outer       **U_outer;     /* The sequence of iterations gauge fields */
+  hex_notes_outer **trace_outer; /* Intermediate results to avoid double calculations */
+  
+} hex_control;
+
+hex_control *construct_hex_control(double const alpha_1, double const alpha_2, double const alpha_3,  unsigned int iterations, int calculate_force_terms);
+void free_hex_control(hex_control *control);
+
+void hex_smear(hex_control *control, gauge_field_t in);
+void hex_smear_forces(hex_control *control, adjoint_field_t in);

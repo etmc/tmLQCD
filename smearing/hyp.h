@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #include <buffers/gauge.h>
 
 typedef su3 su3_outer[12];

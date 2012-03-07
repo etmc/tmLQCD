@@ -1,4 +1,4 @@
-static void hyp_smear_third_stage(gauge_field_t out, double const alpha_3, su3_outer *in)
+static void smear_third_stage(gauge_field_t out, double const alpha_3, su3_outer *in, gauge_field_t const orig)
 {
   su3 tmp;
   su3 staples;
@@ -33,7 +33,7 @@ static void hyp_smear_third_stage(gauge_field_t out, double const alpha_3, su3_o
     
     for (unsigned int mu = 0; mu < 4; ++mu)
     {
-      _real_times_su3_plus_real_times_su3(out.field[x][mu], coeff_principal, in[x][mu], coeff_staples, staples);
+      _real_times_su3_plus_real_times_su3(out.field[x][mu], coeff_principal, orig.field[x][mu], coeff_staples, staples);
       reunitarize(&out.field[x][mu]);
     }
   }    
