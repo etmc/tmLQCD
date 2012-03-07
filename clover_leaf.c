@@ -606,15 +606,12 @@ void sw_deriv(const int ieo, const double mu) {
     _su3_dagger(lswp[1], tmp);
     _su3_plus_su3(lswp[2],sw_inv[icy][2][1],sw_inv[icy][2][0]);
     _su3_plus_su3(lswp[3],sw_inv[icy][3][1],sw_inv[icy][3][0]);
-/*     _su3_dagger(lswp[3],lswp[1]); */
-/*     _su3_assign(lswp[1],lswp[3]); */
+
     _su3_minus_su3(lswm[0],sw_inv[icy][0][1],sw_inv[icy][0][0]);
     _su3_minus_su3(tmp,sw_inv[icy][1][1],sw_inv[icy][1][0]);
     _su3_dagger(lswm[1], tmp);
     _su3_minus_su3(lswm[2],sw_inv[icy][2][1],sw_inv[icy][2][0]);
     _su3_minus_su3(lswm[3],sw_inv[icy][3][1],sw_inv[icy][3][0]);
-/*     _su3_dagger(lswm[3],lswm[1]); */
-/*     _su3_assign(lswm[1],lswm[3]); */
     
     /* add up to swm[] and swp[] */
     _su3_refac_acc(swm[x][0], fac, lswm[0]);
@@ -631,16 +628,13 @@ void sw_deriv(const int ieo, const double mu) {
       _su3_plus_su3(tmp,sw_inv[icy+VOLUME/2][1][1],sw_inv[icy+VOLUME/2][1][0]);
       _su3_dagger(lswp[1], tmp);
       _su3_plus_su3(lswp[2],sw_inv[icy+VOLUME/2][2][1],sw_inv[icy+VOLUME/2][2][0]);
-      _su3_plus_su3(lswp[3],sw_inv[icy+VOLUME/2][3][1],sw_inv[icy+VOLUME/2][3][0]);
-/*       _su3_dagger(lswp[3],lswp[1]); */
-/*       _su3_assign(lswp[1],lswp[3]); */
+      _su3_plus_su3(lswp[3],sw_inv[icy+VOLUME/2][3][1],sw_inv[icy+VOLUME/2][3][0]); 
+
       _su3_minus_su3(lswm[0],sw_inv[icy+VOLUME/2][0][1],sw_inv[icy+VOLUME/2][0][0]);
       _su3_minus_su3(tmp,sw_inv[icy+VOLUME/2][1][1],sw_inv[icy+VOLUME/2][1][0]);
       _su3_dagger(lswm[1], tmp);
       _su3_minus_su3(lswm[2],sw_inv[icy+VOLUME/2][2][1],sw_inv[icy+VOLUME/2][2][0]);
       _su3_minus_su3(lswm[3],sw_inv[icy+VOLUME/2][3][1],sw_inv[icy+VOLUME/2][3][0]);
-/*       _su3_dagger(lswm[3],lswm[1]); */
-/*       _su3_assign(lswm[1],lswm[3]); */
       
       /* add up to swm[] and swp[] */
       _su3_refac_acc(swm[x][0], fac, lswm[0]);
@@ -668,9 +662,10 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
   int icx;
   int x;
   spinor *r,*s;
-  static su3 v1,v2,v3;
-  static su3 u1,u2,u3;
+  static su3 v0,v1,v2,v3;
+  static su3 u0,u1,u2,u3;
   static su3 lswp[4],lswm[4];
+  static su3 tmp;
   
   /* convention: Tr colver-leaf times insertion */
   /* task : put the matrix in question to the front */
@@ -688,36 +683,31 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
     r = kk + icx - ioff;
     s = ll + icx - ioff;
     
-    /*
-      s1= sw(1,1,l,t)     *phi(1,l,t) +sw(2,1,l,t)*phi(2,l,t)
-      s2=(sw(2,1,l,t).hdot.phi(1,l,t))+sw(3,1,l,t)*phi(2,l,t)
-      s3= sw(1,2,l,t)     *phi(3,l,t) +sw(2,2,l,t)*phi(4,l,t)
-      s4=(sw(2,2,l,t).hdot.phi(3,l,t))+sw(3,2,l,t)*phi(4,l,t)
-    */
-    
-    _vector_tensor_vector(v1,(*r).s0,(*s).s0);
-    _vector_tensor_vector(v2,(*r).s0,(*s).s1);
+    _vector_tensor_vector(v0,(*r).s0,(*s).s0);
+    _vector_tensor_vector(v1,(*r).s0,(*s).s1);
+    _vector_tensor_vector(v2,(*r).s1,(*s).s1);
     _vector_tensor_vector(v3,(*s).s0,(*r).s1);
-    _su3_acc(v2,v3);
-    _vector_tensor_vector(v3,(*r).s1,(*s).s1);
     
-    _vector_tensor_vector(u1,(*r).s2,(*s).s2);
-    _vector_tensor_vector(u2,(*r).s2,(*s).s3);
+    _vector_tensor_vector(u0,(*r).s2,(*s).s2);
+    _vector_tensor_vector(u1,(*r).s2,(*s).s3);
+    _vector_tensor_vector(u2,(*r).s3,(*s).s3);
     _vector_tensor_vector(u3,(*s).s2,(*r).s3);
-    _su3_acc(u2,u3);
-    _vector_tensor_vector(u3,(*r).s3,(*s).s3);
     
     /* compute the insertion matrix */
-    _su3_plus_su3(lswp[0],u1,v1);
-    _su3_plus_su3(lswp[1],u2,v2);
-    _su3_plus_su3(lswp[2],u3,v3);
-    _su3_dagger(lswp[3],lswp[1]);
-    _su3_zero(lswp[1]);
-    _su3_minus_su3(lswm[0],u1,v1);
-    _su3_minus_su3(lswm[1],u2,v2);
-    _su3_minus_su3(lswm[2],u3,v3);
-    _su3_dagger(lswm[3],lswm[1]);
-    _su3_zero(lswm[1]);
+    _su3_plus_su3(lswp[0],u0,v0);
+    _su3_plus_su3(tmp,u1,v1);
+    _su3_dagger(lswp[1], tmp);
+    _su3_plus_su3(lswp[2],u2,v2);
+    _su3_plus_su3(tmp,u3,v3);
+    _su3_dagger(lswp[3], tmp);
+
+    _su3_minus_su3(lswm[0],u0,v0);
+    _su3_minus_su3(tmp,u1,v1);
+    _su3_dagger(lswm[1], tmp);
+    _su3_minus_su3(lswm[2],u2,v2);
+    _su3_minus_su3(tmp,u3,v3);
+    _su3_dagger(lswm[3], tmp);
+
     
     /* add up the swm[0] and swp[0] */
     _su3_acc(swm[x][0], lswm[0]);
@@ -755,15 +745,21 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
     _itimes_su3_minus_su3(vis[1][2],swp[x][2],swp[x][0]);
 
     /* anti-hermiticity */
-    _su3_dagger(v1,vis[0][1]); _su3_minus_su3(vis[0][1],vis[0][1],v1);
-    _su3_dagger(v1,vis[0][2]); _su3_minus_su3(vis[0][2],vis[0][2],v1);
-    _su3_dagger(v1,vis[0][3]); _su3_minus_su3(vis[0][3],vis[0][3],v1);
-    _su3_dagger(v1,vis[2][3]); _su3_minus_su3(vis[2][3],vis[2][3],v1);
-    _su3_dagger(v1,vis[1][3]); _su3_minus_su3(vis[1][3],vis[1][3],v1);
-    _su3_dagger(v1,vis[1][2]); _su3_minus_su3(vis[1][2],vis[1][2],v1);
+    _su3_dagger(v1,vis[0][1]); 
+    _su3_minus_su3(vis[0][1],vis[0][1],v1);
+    _su3_dagger(v1,vis[0][2]); 
+    _su3_minus_su3(vis[0][2],vis[0][2],v1);
+    _su3_dagger(v1,vis[0][3]); 
+    _su3_minus_su3(vis[0][3],vis[0][3],v1);
+    _su3_dagger(v1,vis[2][3]); 
+    _su3_minus_su3(vis[2][3],vis[2][3],v1);
+    _su3_dagger(v1,vis[1][3]); 
+    _su3_minus_su3(vis[1][3],vis[1][3],v1);
+    _su3_dagger(v1,vis[1][2]); 
+    _su3_minus_su3(vis[1][2],vis[1][2],v1);
     
     for(k = 0; k < 4; k++) {
-      for(l=k+1;l<4;l++) {
+      for(l = k+1; l < 4; l++) {
 	xpk=g_iup[x][k];
 	xpl=g_iup[x][l];
 	xmk=g_idn[x][k];
