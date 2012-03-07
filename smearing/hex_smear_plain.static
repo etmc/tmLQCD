@@ -1,11 +1,10 @@
 #include "stout_fatten_links.static"
 #include "hex_smear_first_stage.static"
+#include "hex_smear_second_stage.static"
+#include "hex_smear_third_stage.static"
 
-static void smear_plain(gauge_field_t m_field_out, hex_parameters const *params, gauge_field_t m_field_in)
+static void smear_plain(hex_control *control, gauge_field_t in)
 {
-  gauge_field_array_t gamma = get_gauge_field_array(3);
-  gauge_field_array_t v = get_gauge_field_array(3);
-
   for (int iter = 0; iter < params->iterations; ++iter)
   {
     /* First level of contractions */

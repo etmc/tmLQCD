@@ -39,5 +39,6 @@ static void smear_second_stage(su3_outer *out, double const alpha_2, su3_outer *
     _HYP_SMEAR_COMPONENT(I1_3_2, 3, 2, 0, 1, x);
   }
 
+  generic_exchange(out, sizeof(su3_outer));
   #undef _HYP_SMEAR_COMPONENT
 }

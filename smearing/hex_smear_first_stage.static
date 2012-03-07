@@ -1,4 +1,4 @@
-static void smear_first_stage(su3_outer *out, double const alpha_1, gauge_field_t const in)
+static void smear_first_stage(su3_outer *out, double const alpha_1, gauge_field_t const orig)
 {
   su3 tmp;
   su3 staples;
@@ -11,7 +11,7 @@ static void smear_first_stage(su3_outer *out, double const alpha_1, gauge_field_
     _su3_times_su3(staples, in.field[x][via], tmp); \
     _su3_times_su3(tmp, in.field[g_idn[x][via]][principal], in.field[g_idn[g_iup[x][principal]][via]][via]); \
     _su3d_times_su3_acc(staples, in.field[g_idn[x][via]][via], tmp); \
-    fatten_links(&out[x][component], coeff, &staples, &in.field[x][principal]); \
+    fatten_links(&out[x][component], coeff, &staples, &orig.field[x][principal]); \
   }
 
   for (int x = 0; x < VOLUME; ++x)
@@ -33,5 +33,6 @@ static void smear_first_stage(su3_outer *out, double const alpha_1, gauge_field_
     _HEX_SMEAR_COMPONENT(I2_3_12, I0_3, 0, x);
   }
   
+  generic_exchange(out, sizeof(su3_outer));
 #undef _HEX_SMEAR_COMPONENT
 }

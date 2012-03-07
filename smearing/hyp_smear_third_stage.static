@@ -37,5 +37,7 @@ static void smear_third_stage(gauge_field_t out, double const alpha_3, su3_outer
       reunitarize(&out.field[x][mu]);
     }
   }    
+  
+  exchange_gauge_field(out);
 #undef _HYP_SMEAR_COMPONENT
 }
