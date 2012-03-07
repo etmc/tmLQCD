@@ -9,34 +9,12 @@
    we define some aliases so that we don't have to do
    the mental mapping all the time. */
 
-enum I0
-{
-  I0_0 = 0, I0_1 = 1, I0_2 = 2, I0_3 = 3
-};
-
-enum I1
-{
-  I1_0_1 =  0, I1_0_2 =  1, I1_0_3 =  2, I1_1_0 =  3,
-  I1_1_2 =  4, I1_1_3 =  5, I1_2_0 =  6, I1_2_1 =  7,
-  I1_2_3 =  8, I1_3_0 =  9, I1_3_1 = 10, I1_3_2 = 11
-};
-
-enum I2
-{
-  I2_0_12 =  0, I2_0_21 =  0, I2_0_13 =  1, I2_0_31 =  1,
-  I2_0_23 =  2, I2_0_32 =  2, I2_1_02 =  3, I2_1_20 =  3,
-  I2_1_03 =  4, I2_1_30 =  4, I2_1_23 =  5, I2_1_32 =  5,
-  I2_2_01 =  6, I2_2_10 =  6, I2_2_03 =  7, I2_2_30 =  7,
-  I2_2_13 =  8, I2_2_31 =  8, I2_3_01 =  9, I2_3_10 =  9,
-  I2_3_02 = 10, I2_3_20 = 10, I2_3_12 = 11, I2_3_21 = 11
-};
-
 void generic_staples(su3 *out, unsigned int x, unsigned int mu, gauge_field_t in);
 void project_antiherm(su3 *in);
 void project_herm(su3 *in);
 void reunitarize(su3 *in);
 
-void cayley_hamilton_exponent(su3 *expiQ, su3 const *Q);
+inline void cayley_hamilton_exponent(su3 *expiQ, su3 const *Q);
 void cayley_hamilton_exponent_with_force_terms(su3 *expiQ, su3 *B1, su3 *B2, double *f1, double *f2, su3 const *Q);
 
 void print_su3(su3 *in);

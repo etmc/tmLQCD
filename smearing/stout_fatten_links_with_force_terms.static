@@ -1,4 +1,4 @@
-static void stout_fatten_links_with_force_terms(su3 *out, stout_notes_t *notes, double rho, su3 const *staples, su3 const *in)
+static void fatten_links_with_force_terms(su3 *out, stout_notes_t *notes, double rho, su3 const *staples, su3 const *in)
 {
   _su3_times_su3d(notes->Q, *staples, *in);
   project_antiherm(&notes->Q);

@@ -20,6 +20,7 @@
 
 #include <buffers/utils.h>
 #include <smearing/hyp.h>
+#include <smearing/utils.h>
 
 enum I0
 {

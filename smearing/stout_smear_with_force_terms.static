@@ -1,4 +1,6 @@
-static void stout_smear_with_force_terms(stout_control *control, gauge_field_t in)
+#include "stout_fatten_links_with_force_terms.static"
+
+static void smear_with_force_terms(stout_control *control, gauge_field_t in)
 {
   su3 staples;
   control->U[0] = in; /* Shallow copy intended */
@@ -9,8 +11,8 @@ static void stout_smear_with_force_terms(stout_control *control, gauge_field_t i
       for (unsigned int mu = 0; mu < 4; ++mu)
       {
         generic_staples(&staples, x, mu, control->U[iter]);
-        stout_fatten_links_with_force_terms(&control->U[iter + 1].field[x][mu], &control->trace[iter][x][mu], 
-                                             control->rho, &staples, &control->U[iter].field[x][mu]);
+        fatten_links_with_force_terms(&control->U[iter + 1].field[x][mu], &control->trace[iter][x][mu], 
+                                       control->rho, &staples, &control->U[iter].field[x][mu]);
       }
     exchange_gauge_field(control->U[iter]);
   }

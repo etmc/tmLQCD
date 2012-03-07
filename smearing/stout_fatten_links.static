@@ -1,4 +1,4 @@
-static void stout_fatten_links(su3 *out, double rho, su3 const *staples, su3 const *in)
+static void fatten_links(su3 *out, double rho, su3 const *staples, su3 const *in)
 {
   static su3 tmp;
   
