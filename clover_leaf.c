@@ -315,7 +315,7 @@ int six_invert(complex a[6][6]) {
   return ifail;
 }
     
-double six_det(complex a[6][6]) {
+complex six_det(complex a[6][6]) {
   static complex sigma,z;
   static complex det;
   static double p[nm1+1];
@@ -375,7 +375,10 @@ double six_det(complex a[6][6]) {
   if(q < tiny_t) {
     ifail++;
   }
-  return det.re;
+  if(g_proc_id == 0 && ifail > 0) {
+    fprintf(stderr, "Warning: ifail = %d > 0 in six_det\n", ifail);
+  }
+  return(det);
 }
 
 /*definitions needed for the functions sw_trace(int ieo) and sw_trace(int ieo)*/
@@ -424,10 +427,11 @@ double sw_trace(const int ieo, const double mu) {
   static complex a[6][6];
   static double tra;
   static double ks,kc,tr,ts,tt;
+  static complex det;
   
   ks=0.0;
   kc=0.0;
-  
+
   if(ieo==0) {
     ioff=0;
   } 
@@ -446,22 +450,10 @@ double sw_trace(const int ieo, const double mu) {
       if(i == 0) add_tm(a, mu);
       else add_tm(a, -mu);
       // and compute the tr log (or log det)
-      tra = log(six_det(a));
-      
-      if(fabs(mu) > 0) {
-	// here we populate the 6x6 colour matrix
-	populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
-	populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
-	_su3_dagger(v, sw[x][1][i]); 
-	populate_6x6_matrix(a, &v, 3, 0);
-	populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
-	// we add the twisted mass term
-	if(i == 0) add_tm(a, -mu);
-	else add_tm(a, +mu);
-	// and compute the tr log (or log det)
-	tra += log(six_det(a));
-	tra *= 0.5;
-      }
+      det = six_det(a);
+      tra = log(det.re*det.re + det.im*det.im);
+      // we need to compute only the one with +mu
+      // the one with -mu must be the complex conjugate!
 
       tr=tra+kc;
       ts=tr+ks;
@@ -473,9 +465,9 @@ double sw_trace(const int ieo, const double mu) {
   kc=ks+kc;
 #ifdef MPI
   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return(2.*ks);
+  return(ks);
 #else
-  return(2.*kc);
+  return(kc);
 #endif
 
 }
@@ -587,7 +579,6 @@ void sw_deriv(const int ieo, const double mu) {
   int x;
   double fac = 1.0000;
   static su3 lswp[4],lswm[4];
-  static su3 tmp;
 
   /* convention: Tr clover-leaf times insertion */
   if(ieo == 0) {
@@ -661,11 +652,7 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
   static su3 v0,v1,v2,v3;
   static su3 u0,u1,u2,u3;
   static su3 lswp[4],lswm[4];
-  static su3 tmp;
   
-  /* convention: Tr colver-leaf times insertion */
-  /* task : put the matrix in question to the front */
-
   if(ieo == 0) {
     ioff=0;
   } 
