@@ -46,9 +46,6 @@
 #include "clover.h"
 #include "cloverdet_monomial.h"
 
-extern int ITER_MAX_BCG;
-extern int ITER_MAX_CG;
-
 /* think about chronological solver ! */
 
 void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
