@@ -302,9 +302,24 @@ lattice. From the first factor in the Schur decomposition a second
 term needs to be taken into account, this reads
 \begin{equation}
   \label{eq:swdet}
-  S_{\det} =  - \tr[\log(1+T_{ee} + i\tilde\mu\gamma_5) +
-  \log(1+T_{ee} - i\tilde\mu\gamma_5)]\, .
+  \begin{split}
+    S_{\det} &=  - \log[\det(1+T_{ee} + i\tilde\mu\gamma_5)\ \cdot\ 
+    \det(1+T_{ee} - i\tilde\mu\gamma_5)]\\
+    &= -\tr[\det(1+T_{ee} + i\tilde\mu\gamma_5) + \det(1+T_{ee} -
+    i\tilde\mu\gamma_5)]\, .\\
+  \end{split}
 \end{equation}
+Note that for $\tilde\mu=0$  $\det(1+T_{ee})$ is real. For
+$\tilde\mu\neq0$ however, $\det(1+T_{ee}+i\tilde\mu\gamma_5)$ is the
+complex conjugate of $\det(1+T_{ee}-i\tilde\mu\gamma_5)$ as the
+product of the two must be real. The latter can be seen from
+\[
+\begin{split}
+  &(1+T_{ee} + i\tilde\mu\gamma_5)\ \cdot\ (1+T_{ee} -
+  i\tilde\mu\gamma_5) = \\
+  &(1+T_{ee})^2 + \tilde\mu^2\, .\\
+\end{split}
+\]
 In order to compute the force corresponding to the effective
 action $S_\mathrm{PF}$ we need the variation of $S_\mathrm{PF}$ with
 respect to the gauge fields 
@@ -388,7 +403,7 @@ included in this routine, as this would require double the storage for
 plus and minus $\mu$, respectively. It is easier to add the twisted
 mass term in later on. 
 
-The term in eq.~(\ref{eq:Tee}) represents a complex $6\times6$ matrix
+The term in eq.~(\ref{eq:Tee}) represents two complex $6\times6$ matrices
 per site. As the off-diagonal $3\times3$ matrices are just inverse to
 each other, we get away with storing two times three $3\times3$
 complex matrices. These are stored in the array {\ttfamily
@@ -404,6 +419,62 @@ T_{ee}$, the dependence on the sign of $\mu$ is unavoidable. However,
 it is only needed for even (odd) sites, so we can use an array
 {\ttfamily sw\_inv[VOLUME][3][2]} of type {\ttfamily su3} to store
 e.g. $+\mu$ at even and $-\mu$ at odd sites.
+
+For evaluating the force for $S_\mathrm{det}$ in the function
+{\ttfamily sw\_deriv} we have to compute
+\begin{equation}
+  \label{eq:trdiracdet}
+  \tr_\mathrm{dirac}[\ i\sigma_{\mu\nu}(1+T_{ee}(x)\pm
+  i\tilde\mu\gamma_5)^{-1}\ ]\, ,
+\end{equation}
+with $\sigma_{\mu\nu} = i\gamma_\mu\gamma_\nu\ \forall \mu\neq\nu$.
+The matrix $(1+T_{ee}(x)\pm i\tilde\mu\gamma_5)^{-1}$ has the general
+structure
+\[
+T_\mathrm{det} = 
+\begin{pmatrix}
+  u_0 & u_1 & 0 & 0 \\
+  u_3 & u_2 & 0 & 0 \\
+  0 & 0 & l_0 & l_1 \\
+  0 & 0 & l_3 & l_2 \\
+\end{pmatrix}\,.
+\]
+Evaluating eq.~(\ref{eq:trdiracdet}) with matrix $T_\mathrm{det}$ for
+$\mu\neq\nu$ leads to the following terms
+\begin{eqnarray*}
+  \label{eq:trsigma}
+  \mu\nu & \\
+  01 & -i (( l_1 -u_1) + (l_3-u_3))\\
+  02 & (l_1 - u_1) - (l_3 - u_3)\\
+  03 & i((l_2-u_2) - (l_0-u_0))\\
+  12 & i((l_2+u_2) - (l_0-u_0))\\
+  13 & (l_3+u_3) - (l_1 + u_1)\\
+  23 & -i(l_3+u_3+l_1+u_1)\,.
+\end{eqnarray*}
+The force for $S_\mathrm{PF}$ can be computed in exactly the same way,
+even if in this case the matrix $T_\mathrm{PF}$ is a full matrix
+stemming from 
+\begin{equation}
+  \label{eq:trdiracpf}
+  \tr_\mathrm{dirac}[\ i\sigma_{\mu\nu}(\gamma_5Y(x)\otimes
+  X^\dagger(x) + \gamma_5X(x)\otimes Y^\dagger(x))\ ]\equiv
+  \tr_\mathrm{dirac}[\ i\sigma_{\mu\nu}\ T_\mathrm{PF}\ ]\, .
+\end{equation}
+$T_\mathrm{PF}$ is computed in the function {\ttfamily sw\_spinor}.
+After multiplying with 
+$\sigma_{\mu\nu}$ only the upper left and lower right blocks survive
+and the structure stays identical to the case discussed for
+$T_\mathrm{det}$. So in both cases, in order to compute the trace, we
+have to compute first in the functions {\ttfamily sw\_spinor} and
+{\ttfamily sw\_deriv} only
+\begin{equation}
+  m_i = l_i - u_i\,,\quad p_i = l_i + u_i\quad i = 0,...,3\,.
+\end{equation}
+The $m_i$ and $p_i$ are then passed on to the function {\ttfamily
+  sw\_all} which combines them to the correct insertion matrices,
+whereafter the traceless antihermitian part of it is
+computed. Finally, $\delta T_{ee}$ is computed and combined with the
+insertion matrices.
 
 \subsection{Inversion}
 
