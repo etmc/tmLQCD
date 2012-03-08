@@ -125,7 +125,7 @@ where $X$ and $Y$ are now defined over the full lattice as
     -(M_{ee}^+)^{-1}M_{eo}Y_o \\ Y_o\\
   \end{pmatrix}.
 \end{equation}
-In addition $\delta\Qp = \delta\Qm, M_{eo}^\dagger = \gamma_5 M_{oe}\gamma_5$ and
+In addition $\delta\Qp = \delta\Qm= \delta Q, M_{eo}^\dagger = \gamma_5 M_{oe}\gamma_5$ and
 $M_{oe}^\dagger = \gamma_5 M_{eo}\gamma_5$ has been used. Since the bosonic part
 is quadratic in the $\phi_o$ fields, the $\phi_o$ are generated at the
 beginning of each molecular dynamics trajectory with
@@ -368,8 +368,18 @@ where $X$ and $Y$ are now defined over the full lattice as
     -(M_{ee}^+)^{-1}M_{eo}Y_o \\ Y_o\\
   \end{pmatrix}.
 \end{equation}
-In addition $\delta\Qp = \delta\Qm, M_{eo}^\dagger = \gamma_5 M_{oe}\gamma_5$ and
-$M_{oe}^\dagger = \gamma_5 M_{eo}\gamma_5$ has been used. Since the bosonic part
+In addition $\delta\Qp = \delta\Qm = \delta Q, M_{eo}^\dagger =
+\gamma_5 M_{oe}\gamma_5$ and $M_{oe}^\dagger = \gamma_5
+M_{eo}\gamma_5$ has been used.  $\delta Q$
+is now the original
+\[
+\delta Q = \gamma_5
+\begin{pmatrix}
+  \delta T_{ee} & \delta M_{eo} \\
+  \delta M_{oe} & \delta T_{oo} \\
+\end{pmatrix}
+\]
+defined over the full lattice. Since the bosonic part
 is quadratic in the $\phi_o$ fields, the $\phi_o$ are generated at the
 beginning of each molecular dynamics trajectory with
 \begin{equation}
