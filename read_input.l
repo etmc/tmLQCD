@@ -825,7 +825,7 @@ inline void rmQuotes(char *str){
 
 <CLDETRATMONOMIAL>{
   {SPC}*rho2{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    sscanf(yytext, " %[a-zA-Z]2 = %lf", name, &c);
     mnl->rho2 = c;
     if(myverbose) printf("  mass shift rho2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }

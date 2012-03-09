@@ -53,7 +53,7 @@
 
 /* think about chronological solver ! */
 
-void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf) {
+void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
 
   /* This factor 2* a missing factor 2 in trace_lambda */
@@ -156,7 +156,7 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
 }
 
 
-void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
+void cloverdetratio_derivative2(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
 
   /* This factor 2* a missing factor 2 in trace_lambda */
@@ -181,7 +181,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   sw_invert(EE, mnl->mu);
   
   if(mnl->solver != CG) {
-    fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n");
+    fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (cloverdetratio_monomial.c)\n");
   }
   
   // apply W_{+} to phi
@@ -300,8 +300,8 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
   g_mu3 = 0.;
   boundary(g_kappa);
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called cloverdetratio_acc for id %d %d dH = %1.4e\n", 
-	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);
+    printf("called cloverdetratio_acc for id %d dH = %1.4e\n", 
+	   id, mnl->energy1 - mnl->energy0);
   }
   return(mnl->energy1 - mnl->energy0);
 }
