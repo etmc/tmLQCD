@@ -70,7 +70,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   /* First term coming from the second field */
   /* Multiply with W_+ */
   g_mu = mnl->mu;
-  g_mu3 = 0.; //rho2
+  g_mu3 = mnl->rho2; //rho2
   boundary(mnl->kappa);
 
   // we compute the clover term (1 + T_ee(oo)) for all sites x
@@ -83,7 +83,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   }
   
   mnl->Qp(g_spinor_field[DUM_DERI+2], mnl->pf);
-  g_mu3 = 0.; // rho1
+  g_mu3 = mnl->rho; // rho1
 
   /* Invert Q_{+} Q_{-} */
   /* X_W -> DUM_DERI+1 */
@@ -118,7 +118,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
   sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
 
-  g_mu3 = 0.; // rho2
+  g_mu3 = mnl->rho2; // rho2
   
   /* Second term coming from the second field */
   /* The sign is opposite!! */
@@ -149,6 +149,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   sw_all(hf, mnl->kappa, mnl->c_sw);
   
   g_mu = g_mu1;
+  g_mu3 = 0.;
   boundary(g_kappa);
 
   return;
@@ -173,9 +174,9 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   random_spinor_field(g_spinor_field[4], VOLUME/2, mnl->rngrepro);
   mnl->energy0  = square_norm(g_spinor_field[4], VOLUME/2, 1);
   
-  g_mu3 = 0.;
+  g_mu3 = mnl->rho;
   mnl->Qp(g_spinor_field[3], g_spinor_field[4]);
-  g_mu3 = 0.;
+  g_mu3 = mnl->rho2;
   zero_spinor_field(mnl->pf,VOLUME/2);
 
   mnl->iter0 = cg_her(mnl->pf, g_spinor_field[3], mnl->maxiter, mnl->accprec,  
@@ -201,9 +202,9 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
   g_mu = mnl->mu;
   boundary(mnl->kappa);
   
-  g_mu3 = 0.;
+  g_mu3 = mnl->rho2;
   mnl->Qp(g_spinor_field[DUM_DERI+5], mnl->pf);
-  g_mu3 = 0.;
+  g_mu3 = mnl->rho;
 
   chrono_guess(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->csg_field, mnl->csg_index_array, 
 	       mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
@@ -219,7 +220,7 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
 
   g_mu = g_mu1;
   g_mu3 = 0.;
-
+  boundary(g_kappa);
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called cloverdetratio_acc for id %d %d dH = %1.4e\n", 
 	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);

@@ -76,6 +76,8 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].mu = _default_g_mu;
   monomial_list[no_monomials].mu2 = _default_g_mu;
   monomial_list[no_monomials].c_sw = _default_c_sw;
+  monomial_list[no_monomials].rho = _default_rho;
+  monomial_list[no_monomials].rho2 = _default_rho2;
   monomial_list[no_monomials].mubar = _default_g_mubar;
   monomial_list[no_monomials].mubar2 = _default_g_mubar;
   monomial_list[no_monomials].epsbar = _default_g_epsbar;
@@ -147,10 +149,6 @@ int init_monomials(const int V, const int even_odd_flag) {
 
   no = 0;
   for(i = 0; i < no_monomials; i++) {
-    /* Should be here if implementation is finished */
-    /*     if(monomial_list[i].c_sw > 0) { */
-    /*       clover_trlog_monomial = 1; */
-    /*     } */
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) {
           
       monomial_list[i].pf = __pf+no*V;
@@ -176,6 +174,16 @@ int init_monomials(const int V, const int even_odd_flag) {
 	sw_mu = monomial_list[i].mu;
 	sw_k = monomial_list[i].kappa;
 	sw_c = monomial_list[i].c_sw;
+      }
+      else if(monomial_list[i].type == CLOVERDETRATIO) {
+	monomial_list[i].hbfunction = &cloverdetratio_heatbath;
+	monomial_list[i].accfunction = &cloverdetratio_acc;
+	monomial_list[i].derivativefunction = &cloverdetratio_derivative;
+	monomial_list[i].even_odd_flag = 1;
+	monomial_list[i].Qsq = &Qsw_pm_psi;
+	monomial_list[i].Qp = &Qsw_plus_psi;
+	monomial_list[i].Qm = &Qsw_minus_psi;
+	init_swpm(VOLUME);
       }
       else if(monomial_list[i].type == DETRATIO) {
 	monomial_list[i].hbfunction = &detratio_heatbath;

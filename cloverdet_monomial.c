@@ -64,6 +64,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
    *********************************************************************/
   
   g_mu = mnl->mu;
+  g_mu3 = mnl->rho;
   boundary(mnl->kappa);
   
   // we compute the clover term (1 + T_ee(oo)) for all sites x
@@ -123,6 +124,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   sw_all(hf, mnl->kappa, mnl->c_sw);
 
   g_mu = g_mu1;
+  g_mu3 = 0.;
   boundary(g_kappa);
 
   return;
@@ -133,6 +135,7 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   monomial * mnl = &monomial_list[id];
   g_mu = mnl->mu;
+  g_mu3 = mnl->rho;
   g_c_sw = mnl->c_sw;
   boundary(mnl->kappa);
   mnl->csg_n = 0;
@@ -152,6 +155,7 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
 		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
 
   g_mu = g_mu1;
+  g_mu3 = 0.;
   boundary(g_kappa);
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called cloverdet_heatbath for id %d %d\n", id, mnl->even_odd_flag);
@@ -165,6 +169,7 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   int save_sloppy = g_sloppy_precision_flag;
 
   g_mu = mnl->mu;
+  g_mu3 = mnl->rho;
   g_c_sw = mnl->c_sw;
   boundary(mnl->kappa);
 
@@ -183,6 +188,7 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   mnl->energy1 = square_norm(g_spinor_field[2], VOLUME/2, 1);
 
   g_mu = g_mu1;
+  g_mu3 = 0.;
   boundary(g_kappa);
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called cloverdet_acc for id %d %d dH = %1.4e\n", 

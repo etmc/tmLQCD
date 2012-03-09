@@ -62,11 +62,11 @@ void update_momenta(int * mnllist, double step, const int no,
   for(k = 0; k < no; k++) {
     if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
       /* these are needed for the clover term */
-      if(monomial_list[ mnllist[k] ].type == 9) {
+      if(monomial_list[ mnllist[k] ].type == 9 || monomial_list[ mnllist[k] ].type == 10) {
 	for(i = 0; i < VOLUME; i++) { 
 	  for(mu = 0; mu < 4; mu++) { 
-	    _su3_zero(swm[i][mu]); 
-	    _su3_zero(swp[i][mu]); 
+	    _su3_zero(swm[i][mu]);
+	    _su3_zero(swp[i][mu]);
 	  }
 	}
       }

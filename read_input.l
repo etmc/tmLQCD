@@ -273,6 +273,7 @@ inline void rmQuotes(char *str){
 %x INITMONOMIAL
 %x DETMONOMIAL
 %x CLDETMONOMIAL
+%x CLDETRATMONOMIAL
 %x GAUGEMONOMIAL
 %x SFGAUGEMONOMIAL
 %x NDPOLYMONOMIAL
@@ -724,6 +725,10 @@ inline void rmQuotes(char *str){
     mnl->type = CLOVERDET;
     strcpy((*mnl).name, "CLOVERDET");
   }
+  else if(strcmp(yytext, "CLOVERDETRATIO")==0) {
+    mnl->type = CLOVERDETRATIO;
+    strcpy((*mnl).name, "CLOVERDETRATIO");
+  }
   else if(strcmp(yytext, "DETRATIO")==0) {
     mnl->type = DETRATIO;
     strcpy((*mnl).name, "DETRATIO");
@@ -777,12 +782,13 @@ inline void rmQuotes(char *str){
           BEGIN(POLYMONOMIAL); 
   }
   else if(mnl->type == CLOVERDET) BEGIN(CLDETMONOMIAL);
+  else if(mnl->type == CLOVERDETRATIO) BEGIN(CLDETRATMONOMIAL);
   else BEGIN(DETMONOMIAL);
 }
 
 
 
-<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
     if(mnl->type == NDDETRATIO) {
       mnl->timescale = -5;
@@ -804,13 +810,27 @@ inline void rmQuotes(char *str){
   }
 }
 
-<CLDETMONOMIAL>{
+<CLDETMONOMIAL,CLDETRATMONOMIAL>{
   {SPC}*CSW{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->c_sw = c;
     if(myverbose) printf("  CSW set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
+  {SPC}*rho{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->rho = c;
+    if(myverbose) printf("  mass shift rho set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
 }
+
+<CLDETRATMONOMIAL>{
+  {SPC}*rho2{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->rho2 = c;
+    if(myverbose) printf("  mass shift rho2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+}
+
 
 <DETMONOMIAL,POLYMONOMIAL>{
   {SPC}*2KappaMu2{EQL}{FLT} {
@@ -845,7 +865,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu = c;
@@ -887,7 +907,6 @@ inline void rmQuotes(char *str){
    BEGIN(MSOLVER);
   }
 }
-
 
 <GAUGEMONOMIAL>{
   {SPC}*Type{EQL} BEGIN(GTYPE);
@@ -1831,7 +1850,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
   line_of_file++;
 }
 <*>\n                       {

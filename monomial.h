@@ -37,6 +37,7 @@
 #define POLYDETRATIO 7
 #define CLOVERTRLOG 8
 #define CLOVERDET 9
+#define CLOVERDETRATIO 10
 
 #define max_no_monomials 20
 
@@ -58,7 +59,7 @@ typedef struct {
   /* det or detratio related */
   double mu, mu2, kappa, kappa2;
   /* clover coefficient */
-  double c_sw;
+  double c_sw, rho, rho2;
   /* polynomial related, not yet in use */
   double mubar, epsbar, mubar2, epsbar2;
   /* energies at beginning and end of trajectory */
@@ -113,6 +114,7 @@ typedef struct {
 #include "sf_gauge_monomial.h"
 #include "clover_trlog_monomial.h"
 #include "cloverdet_monomial.h"
+#include "cloverdetratio_monomial.h"
 
 /* list of all monomials */
 extern monomial monomial_list[max_no_monomials];
