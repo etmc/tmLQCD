@@ -53,7 +53,7 @@
 
 /* think about chronological solver ! */
 
-void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
+void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
 
   /* This factor 2* a missing factor 2 in trace_lambda */
@@ -156,7 +156,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
 }
 
 
-void cloverdetratio_derivative2(const int no, hamiltonian_field_t * const hf) {
+void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
 
   /* This factor 2* a missing factor 2 in trace_lambda */
@@ -200,7 +200,7 @@ void cloverdetratio_derivative2(const int no, hamiltonian_field_t * const hf) {
   // Apply Q_{-} to get Y_W -> DUM_DERI 
   mnl->Qm(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
   // Compute phi - Y_W -> DUM_DERI
-  diff(g_spinor_field[DUM_DERI], mnl->pf, g_spinor_field[DUM_DERI], VOLUME/2);
+  diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], mnl->pf, VOLUME/2);
 
   /* apply Hopping Matrix M_{eo} */
   /* to get the even sites of X */
