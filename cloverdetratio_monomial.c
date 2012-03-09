@@ -53,7 +53,7 @@
 
 /* think about chronological solver ! */
 
-void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
+void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
 
   /* This factor 2* a missing factor 2 in trace_lambda */
@@ -156,6 +156,84 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
 }
 
 
+void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
+  monomial * mnl = &monomial_list[no];
+
+  /* This factor 2* a missing factor 2 in trace_lambda */
+  mnl->forcefactor = 2.;
+
+  /*********************************************************************
+   *
+   *  this is being run in case there is even/odd preconditioning
+   * 
+   * This term is det((Q^2 + \mu_1^2)/(Q^2 + \mu_2^2))
+   * mu1 and mu2 are set according to the monomial
+   *
+   *********************************************************************/
+  /* First term coming from the second field */
+  /* Multiply with W_+ */
+  g_mu = mnl->mu;
+  boundary(mnl->kappa);
+
+  // we compute the clover term (1 + T_ee(oo)) for all sites x
+  sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  // we invert it for the even sites only including mu
+  sw_invert(EE, mnl->mu);
+  
+  if(mnl->solver != CG) {
+    fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n");
+  }
+  
+  // apply W_{+} to phi
+  g_mu3 = mnl->rho2; //rho2
+  mnl->Qp(g_spinor_field[DUM_DERI+2], mnl->pf);
+  g_mu3 = mnl->rho; // rho1
+
+  // Invert Q_{+} Q_{-}
+  // X_W -> DUM_DERI+1 
+  chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->csg_field, 
+	       mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+  mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, 
+		       mnl->forceprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq);
+  chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
+		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
+  // Apply Q_{-} to get Y_W -> DUM_DERI 
+  mnl->Qm(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+  // Compute phi - Y_W -> DUM_DERI
+  diff(g_spinor_field[DUM_DERI], mnl->pf, g_spinor_field[DUM_DERI], VOLUME/2);
+
+  /* apply Hopping Matrix M_{eo} */
+  /* to get the even sites of X */
+  H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EE, -mnl->mu);
+  /* \delta Q sandwitched by Y_o^\dagger and X_e */
+  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
+  
+  /* to get the even sites of Y */
+  H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EE, mnl->mu);
+  /* \delta Q sandwitched by Y_e^\dagger and X_o */
+  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf); 
+
+  // here comes the clover term...
+  // computes the insertion matrices for S_eff
+  // result is written to swp and swm
+  // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e  
+  gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
+  sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
+  
+  // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+  gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+  sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+
+  sw_all(hf, mnl->kappa, mnl->c_sw);
+  
+  g_mu = g_mu1;
+  g_mu3 = 0.;
+  boundary(g_kappa);
+
+  return;
+}
+
+
 void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
 
@@ -187,7 +265,7 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->Qm(mnl->pf, mnl->pf);
 
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called cloverdetratio_heatbath for id %d %d energy %f\n", id, mnl->even_odd_flag, mnl->energy0);
+    printf("called cloverdetratio_heatbath for id %d \n", id);
   }
   g_mu3 = 0.;
   g_mu = g_mu1;
