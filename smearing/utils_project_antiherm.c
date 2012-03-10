@@ -3,11 +3,11 @@
 void project_antiherm(su3 *in)
 {
   static const double fac_3 = 1.00 / 3.00;
-  double tr_in = creal(-I * fac_3 * (in->c00 + in->c11 + in->c22));
+  double tr_in = fac_3 * (cimag(in->c00) + cimag(in->c11) + cimag(in->c22));
   
-  in->c00 = (cimag(in->c00) - tr_in) * I;
-  in->c11 = (cimag(in->c11) - tr_in) * I;
-  in->c22 = (cimag(in->c22) - tr_in) * I;
+  in->c00  = (cimag(in->c00) - tr_in) * I;
+  in->c11  = (cimag(in->c11) - tr_in) * I;
+  in->c22  = (cimag(in->c22) - tr_in) * I;
 
   in->c01 -= conj(in->c10);
   in->c01 *= 0.50;
