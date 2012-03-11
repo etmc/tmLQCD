@@ -92,6 +92,9 @@ typedef struct {
   double MDPolyLocNormConst;
   int MDPolyDetRatio;
   int MaxPtildeDegree;
+  double PrecisionPtilde;
+  double PrecisionHfinal;
+  double StildeMin, StildeMax;
   /* chronological solver fields */
   spinor ** csg_field;
   spinor ** csg_field2;

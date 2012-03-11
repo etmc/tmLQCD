@@ -1017,33 +1017,38 @@ inline void rmQuotes(char *str){
   {SPC}*StildeMax{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     stilde_max = c;
-    if(myverbose!=0) printf("  Stilde max set to %e line %d monomial %d\n", stilde_max, line_of_file, current_monomial);
+    mnl->StildeMax = c;
+    if(myverbose!=0) printf("  Stilde max set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*StildeMin{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
+    mnl->StildeMin = c;
     stilde_min = c;
-    if(myverbose!=0) printf("  Stilde min set to %e line %d monomial %d\n", stilde_min, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  Stilde min set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*MaxPtildeDegree{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    /* mnl->MaxPtildeDegree = a; */
+    mnl->MaxPtildeDegree = a;
     phmc_max_ptilde_degree = a;
     if(myverbose!=0) printf("  Maximal Degree of Ptilde set to %d line %d monomial %d\n", mnl->MaxPtildeDegree, line_of_file, current_monomial);
   }
   {SPC}*DegreeOfMDPolynomial{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->MDPolyDegree = a;
     degree_of_p = a;
-    if(myverbose!=0) printf("  Degree of MD polynomial set to %d line %d monomial %d\n", degree_of_p, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  Degree of MD polynomial set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
   {SPC}*PrecisionPtilde{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     g_acc_Ptilde = c;
-    if(myverbose!=0) printf("  Precision for Ptilde set to %e line %d monomial %d\n", g_acc_Ptilde, line_of_file, current_monomial);
+    mnl->PrecisionPtilde = c;
+    if(myverbose!=0) printf("  Precision for Ptilde set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*PrecisionHfinal{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
+    mnl->PrecisionHfinal = c;
     g_acc_Hfin = c;
-    if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", g_acc_Hfin, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*ComputeEVFreq{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
