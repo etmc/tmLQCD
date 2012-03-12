@@ -42,6 +42,8 @@ extern MPI_Datatype deri_x_slice_cont;
 extern MPI_Datatype deri_x_slice_gath;
 extern MPI_Datatype gauge_xt_edge_cont;
 extern MPI_Datatype gauge_xt_edge_gath;
+extern MPI_Datatype deri_xt_edge_cont;
+extern MPI_Datatype deri_xt_edge_gath;
 
 extern MPI_Datatype gauge_yx_edge_cont;
 extern MPI_Datatype gauge_yx_edge_gath;

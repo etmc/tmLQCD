@@ -73,7 +73,7 @@ void update_momenta(int * mnllist, double step, const int no,
       
       sum = 0.;
       max = 0.;
-      for(i = (VOLUME); i < (VOLUME+RAND); i++) { 
+      for(i = (VOLUME); i < (VOLUMEPLUSRAND); i++) { 
 	for(mu = 0; mu < 4; mu++) { 
 	  _zero_su3adj(hf->derivative[i][mu]);
 	}

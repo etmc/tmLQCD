@@ -2,7 +2,7 @@
 # monomial with a twisted mass
 #
 # the plaquette value should be
-# to com
+# 0.57375(7)
 #
 
 L=4
@@ -34,7 +34,8 @@ EndMonomial
 
 BeginMonomial CLOVERDET
   Timescale = 1
-  2KappaMu = 0.10
+  2KappaMu = 0.01
+  rho = 0.0
   CSW = 1.00
   kappa = 0.138
   AcceptancePrecision =  1.e-20
@@ -47,7 +48,7 @@ BeginIntegrator
   Type0 = 2MN
   Type1 = 2MN
   IntegrationSteps0 = 2
-  IntegrationSteps1 = 12
+  IntegrationSteps1 = 8
   tau = 1.00
   Lambda0 = 0.19
   Lambda1 = 0.20

@@ -2,15 +2,15 @@
 # monomial
 #
 # the plaquette value should be
-#  to come
+# 0.57375(7)
 #
 
 L=4
 T=4
 Measurements = 10000
 Startcondition = hot
-2KappaMu = 0.0
-CSW = 1.76
+2KappaMu = 0.01
+CSW = 1.00
 kappa = 0.138
 NSave = 500000
 ThetaT = 1.0
@@ -65,7 +65,7 @@ BeginIntegrator
   Type0 = 2MN
   Type1 = 2MN
   IntegrationSteps0 = 2
-  IntegrationSteps1 = 12
+  IntegrationSteps1 = 6
   tau = 1.00
   Lambda0 = 0.19
   Lambda1 = 0.20

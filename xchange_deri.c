@@ -169,7 +169,7 @@ void xchange_deri(su3adj ** const df)
 void xchange_deri(su3adj ** const df)
 {
 #  ifdef MPI
-  int ix,mu, t, y, z, x;
+  int ix,mu, t, y, z, x, iy;
   MPI_Status status;
   /* send the data to the neighbour on the left in time direction */
   /* recieve the data from the neighbour on the right in time direction */
@@ -198,7 +198,7 @@ void xchange_deri(su3adj ** const df)
 
   /* send the data to the neighbour on the right in time direction needed for clover */
 
-  MPI_Sendrecv((void*)df[T*L*L*L], 1, deri_time_slice_cont, g_nb_t_up, 41,
+  MPI_Sendrecv((void*)df[T*LX*LY*LZ], 1, deri_time_slice_cont, g_nb_t_up, 41,
 	       (void*)ddummy[0],   1, deri_time_slice_cont, g_nb_t_dn, 41,
 	       g_cart_grid, &status);
 
@@ -208,20 +208,96 @@ void xchange_deri(su3adj ** const df)
       for(z = 0; z < LZ; z++) {
 	ix = g_ipt[0][x][y][z];
 	for(mu = 0; mu < 4; mu++) {
-	  df[ix][mu].d1+=ddummy[ix][mu].d1;
-	  df[ix][mu].d2+=ddummy[ix][mu].d2;
-	  df[ix][mu].d3+=ddummy[ix][mu].d3;
-	  df[ix][mu].d4+=ddummy[ix][mu].d4;
-	  df[ix][mu].d5+=ddummy[ix][mu].d5;
-	  df[ix][mu].d6+=ddummy[ix][mu].d6;
-	  df[ix][mu].d7+=ddummy[ix][mu].d7;
-	  df[ix][mu].d8+=ddummy[ix][mu].d8;
+	  df[ix][mu].d1 += ddummy[ix][mu].d1;
+	  df[ix][mu].d2 += ddummy[ix][mu].d2;
+	  df[ix][mu].d3 += ddummy[ix][mu].d3;
+	  df[ix][mu].d4 += ddummy[ix][mu].d4;
+	  df[ix][mu].d5 += ddummy[ix][mu].d5;
+	  df[ix][mu].d6 += ddummy[ix][mu].d6;
+	  df[ix][mu].d7 += ddummy[ix][mu].d7;
+	  df[ix][mu].d8 += ddummy[ix][mu].d8;
 	}
       }
     }
   }
 
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+
+  /* The edges need to come first */
+
+  /* send the data to the neighbour on the left in t direction */
+  /* recieve the data from the neighbour on the right in t direction */
+  /* is on the x-boundary: xt-edge */
+  MPI_Sendrecv((void*)df[VOLUME + RAND + 2*LY*LZ], 1, deri_xt_edge_cont, g_nb_t_dn, 492,
+	       (void*)ddummy[0],                   1, deri_xt_edge_cont, g_nb_t_up, 492, 
+	       g_cart_grid, &status);
+
+  /* add ddummy to df */
+  for(y = 0; y < LY; y++) {
+    for(z = 0; z < LZ; z++) {
+      ix = g_iup[ g_ipt[T-1][LX-1][y][z] ][1];
+      iy = y*LZ + z;
+      for(mu = 0; mu < 4; mu++) {
+	df[ix][mu].d1 += ddummy[iy][mu].d1;
+	df[ix][mu].d2 += ddummy[iy][mu].d2;
+	df[ix][mu].d3 += ddummy[iy][mu].d3;
+	df[ix][mu].d4 += ddummy[iy][mu].d4;
+	df[ix][mu].d5 += ddummy[iy][mu].d5;
+	df[ix][mu].d6 += ddummy[iy][mu].d6;
+	df[ix][mu].d7 += ddummy[iy][mu].d7;
+	df[ix][mu].d8 += ddummy[iy][mu].d8;
+      }
+      ix = g_idn[ g_ipt[T-1][0][y][z] ][1];
+      iy = LY*LZ + y*LZ + z;
+      for(mu = 0; mu < 4; mu++) {
+	df[ix][mu].d1 += ddummy[iy][mu].d1;
+	df[ix][mu].d2 += ddummy[iy][mu].d2;
+	df[ix][mu].d3 += ddummy[iy][mu].d3;
+	df[ix][mu].d4 += ddummy[iy][mu].d4;
+	df[ix][mu].d5 += ddummy[iy][mu].d5;
+	df[ix][mu].d6 += ddummy[iy][mu].d6;
+	df[ix][mu].d7 += ddummy[iy][mu].d7;
+	df[ix][mu].d8 += ddummy[iy][mu].d8;
+      }
+    }
+  }
+
+  /* send the data to the neighbour on the right in t direction */
+  /* recieve the data from the neighbour on the left in t direction */
+  /* xt-edge */
+  MPI_Sendrecv((void*)df[VOLUME + RAND], 1, deri_xt_edge_cont, g_nb_t_up, 493,
+	       (void*)ddummy[0],         1, deri_xt_edge_cont, g_nb_t_dn, 493,
+	       g_cart_grid, &status);
+
+  /* add ddummy to df */
+  for(y = 0; y < LY; y++) {
+    for(z = 0; z < LZ; z++) {
+      ix = g_iup[ g_ipt[0][LX-1][y][z] ][1];
+      iy = y*LZ + z;
+      for(mu = 0; mu < 4; mu++) {
+	df[ix][mu].d1 += ddummy[iy][mu].d1;
+	df[ix][mu].d2 += ddummy[iy][mu].d2;
+	df[ix][mu].d3 += ddummy[iy][mu].d3;
+	df[ix][mu].d4 += ddummy[iy][mu].d4;
+	df[ix][mu].d5 += ddummy[iy][mu].d5;
+	df[ix][mu].d6 += ddummy[iy][mu].d6;
+	df[ix][mu].d7 += ddummy[iy][mu].d7;
+	df[ix][mu].d8 += ddummy[iy][mu].d8;
+      }
+      ix = g_idn[ g_ipt[0][0][y][z] ][1];
+      iy = LY*LZ + y*LZ + z;
+      for(mu = 0; mu < 4; mu++) {
+	df[ix][mu].d1 += ddummy[iy][mu].d1;
+	df[ix][mu].d2 += ddummy[iy][mu].d2;
+	df[ix][mu].d3 += ddummy[iy][mu].d3;
+	df[ix][mu].d4 += ddummy[iy][mu].d4;
+	df[ix][mu].d5 += ddummy[iy][mu].d5;
+	df[ix][mu].d6 += ddummy[iy][mu].d6;
+	df[ix][mu].d7 += ddummy[iy][mu].d7;
+	df[ix][mu].d8 += ddummy[iy][mu].d8;
+      }
+    }
+  }
 
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
@@ -246,8 +322,9 @@ void xchange_deri(su3adj ** const df)
       }
     }
   }
-  /* send the data to the neighbour on the right needed for clover */  
 
+  /* send the data to the neighbour on the right needed for clover */  
+  /* and receive from the one on the left                          */
   MPI_Sendrecv((void*)df[(T+2)*LX*LY*LZ], 1, deri_x_slice_cont, g_nb_x_up, 43,
 	       (void*)ddummy[0],          1, deri_x_slice_gath, g_nb_x_dn, 43,
 	       g_cart_grid, &status);
@@ -269,6 +346,8 @@ void xchange_deri(su3adj ** const df)
       }
     }
   }
+
+
 
 
   /* end of ifdef PARALLELXT || PARALLELXYT */

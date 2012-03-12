@@ -59,6 +59,8 @@ MPI_Datatype deri_x_subslice;
 MPI_Datatype deri_x_slice_gath;
 MPI_Datatype gauge_xt_edge_cont;
 MPI_Datatype gauge_xt_edge_gath;
+MPI_Datatype deri_xt_edge_cont;
+MPI_Datatype deri_xt_edge_gath;
 
 MPI_Datatype gauge_y_slice_gath;
 MPI_Datatype gauge_y_slice_cont;
@@ -627,6 +629,10 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(T, 1, LX, deri_x_subslice, &deri_x_slice_gath);
   MPI_Type_commit(&deri_x_slice_gath);
   MPI_Type_commit(&deri_x_slice_cont);
+
+  /* external edges: on x-boundary send in t-direction first */
+  MPI_Type_contiguous(2*LY*LZ ,deri_point, &deri_xt_edge_cont);
+  MPI_Type_commit(&deri_xt_edge_cont);
 
   MPI_Type_contiguous(T*LX*LZ, deri_point, &deri_y_slice_cont);
   MPI_Type_contiguous(LZ, deri_point, &deri_y_subslice);
