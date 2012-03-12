@@ -47,18 +47,23 @@ extern MPI_Datatype deri_xt_edge_gath;
 
 extern MPI_Datatype gauge_yx_edge_cont;
 extern MPI_Datatype gauge_yx_edge_gath;
+extern MPI_Datatype deri_yx_edge_cont;
 
 extern MPI_Datatype gauge_ty_edge_cont;
 extern MPI_Datatype gauge_ty_edge_gath;
+extern MPI_Datatype deri_ty_edge_cont;
 
 extern MPI_Datatype gauge_zx_edge_cont;
 extern MPI_Datatype gauge_zx_edge_gath;
+extern MPI_Datatype deri_zx_edge_cont;
 
 extern MPI_Datatype gauge_tz_edge_cont;
 extern MPI_Datatype gauge_tz_edge_gath;
+extern MPI_Datatype deri_tz_edge_cont;
 
 extern MPI_Datatype gauge_zy_edge_cont;
 extern MPI_Datatype gauge_zy_edge_gath;
+extern MPI_Datatype deri_zy_edge_cont;
 
 extern MPI_Datatype gauge_y_slice_cont;
 extern MPI_Datatype gauge_y_slice_gath;

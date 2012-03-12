@@ -60,7 +60,6 @@ MPI_Datatype deri_x_slice_gath;
 MPI_Datatype gauge_xt_edge_cont;
 MPI_Datatype gauge_xt_edge_gath;
 MPI_Datatype deri_xt_edge_cont;
-MPI_Datatype deri_xt_edge_gath;
 
 MPI_Datatype gauge_y_slice_gath;
 MPI_Datatype gauge_y_slice_cont;
@@ -86,9 +85,11 @@ MPI_Datatype deri_y_slice_gath;
 
 MPI_Datatype gauge_yx_edge_cont;
 MPI_Datatype gauge_yx_edge_gath;
+MPI_Datatype deri_yx_edge_cont;
 
 MPI_Datatype gauge_ty_edge_cont;
 MPI_Datatype gauge_ty_edge_gath;
+MPI_Datatype deri_ty_edge_cont;
 
 MPI_Datatype gauge_z_slice_gath;
 MPI_Datatype gauge_z_slice_cont;
@@ -100,12 +101,15 @@ MPI_Datatype deri_z_slice_gath;
 
 MPI_Datatype gauge_zx_edge_cont;
 MPI_Datatype gauge_zx_edge_gath;
+MPI_Datatype deri_zx_edge_cont;
 
 MPI_Datatype gauge_tz_edge_cont;
 MPI_Datatype gauge_tz_edge_gath;
+MPI_Datatype deri_tz_edge_cont;
 
 MPI_Datatype gauge_zy_edge_cont;
 MPI_Datatype gauge_zy_edge_gath;
+MPI_Datatype deri_zy_edge_cont;
 
 MPI_Datatype halffield_point;
 MPI_Datatype halffield_time_slice_cont;
@@ -633,6 +637,21 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   /* external edges: on x-boundary send in t-direction first */
   MPI_Type_contiguous(2*LY*LZ ,deri_point, &deri_xt_edge_cont);
   MPI_Type_commit(&deri_xt_edge_cont);
+  /* external edges: y-boundary send in x-direction */
+  MPI_Type_contiguous(2*T*LZ ,deri_point, &deri_yx_edge_cont);
+  MPI_Type_commit(&deri_yx_edge_cont);
+  /* external edges: t-boundary send in y-direction */
+  MPI_Type_contiguous(2*LX*LZ ,deri_point, &deri_ty_edge_cont);
+  MPI_Type_commit(&deri_ty_edge_cont);
+  /* external edges: z-boundary send in x-direction */
+  MPI_Type_contiguous(2*T*LY ,deri_point, &deri_zx_edge_cont);
+  MPI_Type_commit(&deri_zx_edge_cont);
+  /* external edges: t-boundary send in z-direction */
+  MPI_Type_contiguous(2*LX*LY ,deri_point, &deri_tz_edge_cont);
+  MPI_Type_commit(&deri_tz_edge_cont);
+  /* external edges: z-boundary send in y-direction */
+  MPI_Type_contiguous(2*T*LX ,deri_point, &deri_zy_edge_cont);
+  MPI_Type_commit(&deri_zy_edge_cont);
 
   MPI_Type_contiguous(T*LX*LZ, deri_point, &deri_y_slice_cont);
   MPI_Type_contiguous(LZ, deri_point, &deri_y_subslice);
