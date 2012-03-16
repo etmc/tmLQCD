@@ -6136,7 +6136,263 @@ int check_xchange()
 	}
       }
     }
-    
+
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[0][0][0][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8mmm)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[T-1][0][0][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8pmm)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[T-1][0][LY-1][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8pmp)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[T-1][LX-1][LY-1][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8ppp)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[0][LX-1][0][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8mpm)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[0][0][LY-1][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8mmp)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[0][LX-1][LY-1][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8mpp)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[T-1][LX-1][0][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8ppm)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
 
 #  endif
 
