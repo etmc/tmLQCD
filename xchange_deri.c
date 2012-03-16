@@ -377,11 +377,11 @@ void xchange_deri(su3adj ** const df)
   /* add ddummy to df */
   for(x = 0; x < LX; x++) {
     for(y = 0; y < LY; y++) {
-      ix = g_iup[ g_ipt[T-1][x][y][LZ-1] ][2];
+      ix = g_iup[ g_ipt[T-1][x][y][LZ-1] ][0];
       iy = x*LY + y;
       addup_ddummy(df, ix, iy);
 
-      ix = g_idn[ g_ipt[T-1][x][y][0] ][2];
+      ix = g_idn[ g_ipt[0][x][y][LZ-1] ][0];
       iy = LX*LY + x*LY + y;
       addup_ddummy(df, ix, iy);
     }
@@ -400,11 +400,11 @@ void xchange_deri(su3adj ** const df)
   /* add ddummy to df */
   for(x = 0; x < LX; x++) {
     for(y = 0; y < LY; y++) {
-      ix = g_iup[ g_ipt[0][x][y][LZ-1] ][2];
+      ix = g_iup[ g_ipt[T-1][x][y][0] ][0];
       iy = x*LY + y;
       addup_ddummy(df, ix, iy);
 
-      ix = g_idn[ g_ipt[0][x][y][0] ][2];
+      ix = g_idn[ g_ipt[0][x][y][0] ][0];
       iy = LX*LY + x*LY + y;
       addup_ddummy(df, ix, iy);
     }
@@ -437,9 +437,9 @@ void xchange_deri(su3adj ** const df)
   /* recieve the data from the neighbour on the left in y direction */
   /* zy-edge */
   MPI_Sendrecv((void*)df[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY], 
-	       1, deri_tz_edge_cont, g_nb_y_up, 501,
+	       1, deri_zy_edge_cont, g_nb_y_up, 501,
 	       (void*)ddummy[0],                            
-	       1, deri_tz_edge_cont, g_nb_y_dn, 501,
+	       1, deri_zy_edge_cont, g_nb_y_dn, 501,
 	       g_cart_grid, &status);
 
   /* add ddummy to df */
@@ -455,50 +455,7 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-  /* send the data to the neighbour on the left in y direction */
-  /* recieve the data from the neighbour on the right in y direction */
-  /* zy-edge */
-  MPI_Sendrecv((void*)df[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY + 2*LY*LZ], 
-	       1, deri_zy_edge_cont, g_nb_y_dn, 502,
-	       (void*)ddummy[0],
-	       1, deri_zy_edge_cont, g_nb_y_up, 502, 
-	       g_cart_grid, &status);
 
-  /* add ddummy to df */
-  for(t = 0; t < T; t++) {
-    for(x = 0; x < LX; x++) {
-      ix = g_iup[ g_ipt[t][x][LY-1][LZ-1] ][3];
-      iy = t*LX + x;
-      addup_ddummy(df, ix, iy);
-
-      ix = g_idn[ g_ipt[t][x][LY-1][0] ][3];
-      iy = T*LX + t*LX + x;
-      addup_ddummy(df, ix, iy);
-    }
-  }
-
-
-  /* send the data to the neighbour on the right in y direction */
-  /* recieve the data from the neighbour on the left in y direction */
-  /* zy-edge */
-  MPI_Sendrecv((void*)df[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY], 
-	       1, deri_tz_edge_cont, g_nb_y_up, 501,
-	       (void*)ddummy[0],                            
-	       1, deri_tz_edge_cont, g_nb_y_dn, 501,
-	       g_cart_grid, &status);
-
-  /* add ddummy to df */
-  for(t = 0; t < T; t++) {
-    for(x = 0; x < LX; x++) {
-      ix = g_iup[ g_ipt[t][x][0][LZ-1] ][3];
-      iy = t*LX + x;
-      addup_ddummy(df, ix, iy);
-
-      ix = g_idn[ g_ipt[t][x][0][0] ][3];
-      iy = T*LX + t*LX + x;
-      addup_ddummy(df, ix, iy);
-    }
-  }
 
 
 #    endif
