@@ -328,7 +328,7 @@ void xchange_deri(su3adj ** const df)
   /* send the data to the neighbour on the left in time direction */
   /* recieve the data from the neighbour on the right in time direction */
   MPI_Sendrecv((void*)df[(T+1)*LX*LY*LZ],     1, deri_time_slice_cont, g_nb_t_dn, 40,
-	       (void*)ddummy[(T-1)*LX*LY*LZ], 1, deri_time_slice_cont, g_nb_t_up, 40,
+	       (void*)ddummy[0],              1, deri_time_slice_cont, g_nb_t_up, 40,
 	       g_cart_grid, &status);
 
   /* add ddummy to df */
@@ -336,7 +336,8 @@ void xchange_deri(su3adj ** const df)
     for(y = 0; y < LY; y++) {
       for(z = 0; z < LZ; z++) {
 	ix = g_ipt[T-1][x][y][z];
-	addup_ddummy(df, ix, ix);
+	iy = x*LY*LZ + y*LZ + z;
+	addup_ddummy(df, ix, iy);
       }
     }
   }
@@ -344,7 +345,7 @@ void xchange_deri(su3adj ** const df)
   /* send the data to the neighbour on the right in time direction needed for clover */
 
   MPI_Sendrecv((void*)df[T*LX*LY*LZ], 1, deri_time_slice_cont, g_nb_t_up, 41,
-	       (void*)ddummy[0],   1, deri_time_slice_cont, g_nb_t_dn, 41,
+	       (void*)ddummy[0],      1, deri_time_slice_cont, g_nb_t_dn, 41,
 	       g_cart_grid, &status);
 
   /* add ddummy to df */
@@ -352,7 +353,8 @@ void xchange_deri(su3adj ** const df)
     for(y = 0; y < LY; y++) {
       for(z = 0; z < LZ; z++) {
 	ix = g_ipt[0][x][y][z];
-	addup_ddummy(df, ix, ix);
+	iy = x*LY*LZ + y*LZ + z;
+	addup_ddummy(df, ix, iy);
       }
     }
   }
@@ -363,14 +365,15 @@ void xchange_deri(su3adj ** const df)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Sendrecv((void*)df[(T+2)*LX*LY*LZ + T*LY*LZ], 1, deri_x_slice_cont, g_nb_x_dn, 42,
-	       (void*)ddummy[(LX-1)*LY*LZ],         1, deri_x_slice_gath, g_nb_x_up, 42,
+	       (void*)ddummy[0],         1, deri_x_slice_cont, g_nb_x_up, 42,
 	       g_cart_grid, &status);
   /* add ddummy to df */
   for(t = 0; t < T; t++) {
     for(y = 0; y < LY; y++) {
       for(z = 0; z < LZ; z++) {
 	ix = g_ipt[t][LX-1][y][z];
-	addup_ddummy(df, ix, ix);
+	iy = t*LY*LZ + y*LZ + z;
+	addup_ddummy(df, ix, iy);
       }
     }
   }
@@ -378,14 +381,15 @@ void xchange_deri(su3adj ** const df)
   /* send the data to the neighbour on the right needed for clover */  
   /* and receive from the one on the left                          */
   MPI_Sendrecv((void*)df[(T+2)*LX*LY*LZ], 1, deri_x_slice_cont, g_nb_x_up, 43,
-	       (void*)ddummy[0],          1, deri_x_slice_gath, g_nb_x_dn, 43,
+	       (void*)ddummy[0],          1, deri_x_slice_cont, g_nb_x_dn, 43,
 	       g_cart_grid, &status);
   /* add ddummy to df */
   for(t = 0; t < T; t++) {
     for(y = 0; y < LY; y++) {
       for(z = 0; z < LZ; z++) {
 	ix = g_ipt[t][0][y][z];
-	addup_ddummy(df, ix, ix);
+	iy = t*LY*LZ + y*LZ + z;
+	addup_ddummy(df, ix, iy);
       }
     }
   }
@@ -440,15 +444,16 @@ void xchange_deri(su3adj ** const df)
   /* recieve the data from the neighbour on the right in y direction */
   MPI_Sendrecv((void*)df[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY], 
 	       1, deri_z_slice_cont, g_nb_z_dn, 46,
-	       (void*)ddummy[LZ-1],
-	       1, deri_z_slice_gath, g_nb_z_up, 46,
+	       (void*)ddummy[0],
+	       1, deri_z_slice_cont, g_nb_z_up, 46,
 	       g_cart_grid, &status);
   /* add ddummy to df */
   for(t = 0; t < T; t++) {
     for(x = 0; x < LX; x++) {
       for(y = 0; y < LY; y++) {
 	ix = g_ipt[t][x][y][LZ-1];
-	addup_ddummy(df, ix, ix);
+	iy = t*LX*LY + x*LY + y;
+	addup_ddummy(df, ix, iy);
       }
     }
   }
@@ -457,14 +462,15 @@ void xchange_deri(su3adj ** const df)
   MPI_Sendrecv((void*)df[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ], 
 	       1, deri_z_slice_cont, g_nb_z_up, 47,
 	       (void*)ddummy[0],
-	       1, deri_z_slice_gath, g_nb_z_dn, 47,
+	       1, deri_z_slice_cont, g_nb_z_dn, 47,
 	       g_cart_grid, &status);
   /* add ddummy to df */
   for(t = 0; t < T; t++) {
     for(x = 0; x < LX; x++) {
       for(y = 0; y < LY; y++) {
 	ix = g_ipt[t][x][y][0];
-	addup_ddummy(df, ix, ix);
+	iy = t*LX*LY + x*LY + y;
+	addup_ddummy(df, ix, iy);
       }
     }
   }

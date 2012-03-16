@@ -459,6 +459,7 @@ inline void rmQuotes(char *str){
   }
   else if(strcmp(yytext, "CLOVER")==0) {
     optr->type = CLOVER;
+    g_dbw2rand = 1;
   }
   else if(strcmp(yytext, "DBTMWILSON")==0) {
     optr->type = DBTMWILSON;
@@ -724,10 +725,12 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "CLOVERDET")==0) {
     mnl->type = CLOVERDET;
     strcpy((*mnl).name, "CLOVERDET");
+    g_dbw2rand = 1;
   }
   else if(strcmp(yytext, "CLOVERDETRATIO")==0) {
     mnl->type = CLOVERDETRATIO;
     strcpy((*mnl).name, "CLOVERDETRATIO");
+    g_dbw2rand = 1;
   }
   else if(strcmp(yytext, "DETRATIO")==0) {
     mnl->type = DETRATIO;
@@ -917,7 +920,9 @@ inline void rmQuotes(char *str){
   }
   {SPC}*UseRectangleStaples{EQL}no {
     mnl->use_rectangles = 0;
-    g_dbw2rand = 0;
+    /* g_dbw2rand = 0; */
+    mnl->c1 = 0.;
+    g_rgi_C1 = 0.;
     if(myverbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
   {SPC}*Beta{EQL}{FLT} {
@@ -951,7 +956,9 @@ inline void rmQuotes(char *str){
   }
   {SPC}*UseRectangleStaples{EQL}no {
     mnl->use_rectangles = 0;
-    g_dbw2rand = 0;
+    /* g_dbw2rand = 0; */
+    mnl->c1 = 0.;
+    g_rgi_C1 = 0.;
     if(myverbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
   {SPC}*Beta{EQL}{FLT} {
@@ -1139,7 +1146,7 @@ inline void rmQuotes(char *str){
     mnl->c1 = 0.;
     mnl->use_rectangles = 0;
     g_rgi_C1 = 0.;
-    g_dbw2rand = 0;
+    /* g_dbw2rand = 0; */
     BEGIN(GAUGEMONOMIAL);
   }
   tlsym {
@@ -1175,7 +1182,7 @@ inline void rmQuotes(char *str){
     mnl->c1 = 0.;
     mnl->use_rectangles = 0;
     g_rgi_C1 = 0.;
-    g_dbw2rand = 0;
+    /* g_dbw2rand = 0; */
     BEGIN(SFGAUGEMONOMIAL);
   }
   sf_user {
