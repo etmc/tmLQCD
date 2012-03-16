@@ -5577,7 +5577,7 @@ int check_xchange()
 	  for(mu = 0; mu < 4; mu++) {
 	    x = (double*)&df0[ix][mu];
 	    for(int j = 0; j < 8; j++) {
-	      if((int)x[j] != (g_nb_z_up) {
+	      if((int)x[j] != g_nb_z_up) {
 		printf("Exchange of derivatives is working not correctly (15)!\n");
 		printf("%d %d %d %d %d\n", x0, x1, x3, ix, g_proc_id);
 		printf("Aborting program!\n");
@@ -5705,7 +5705,7 @@ int check_xchange()
       for(mu = 0; mu < 4; mu++) {
 	x = (double*)&df0[ix][mu];
 	for(int j = 0; j < 8; j++) {
-	  if((int)x[j] != ((g_nb_t_up + g_nb_x_up + g_nb_z_up)) {
+	  if((int)x[j] != (g_nb_t_up + g_nb_x_up + g_nb_z_up)) {
 	    printf("Exchange of derivatives is working not correctly (23)!\n");
 	    printf("Aborting program!\n");
 	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
