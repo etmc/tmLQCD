@@ -62,7 +62,7 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
       /* moment[i][mu] = h_{i,mu}^{alpha} */
       xm = &hf->momenta[i][mu];
       z = &hf->gaugefield[i][mu];
-      _assign_const_times_mom(deriv, step, *xm);
+      _su3adj_assign_const_times_su3adj(deriv, step, *xm);
       v = restoresu3( exposu3(deriv) );
       _su3_times_su3(w, v, *z);
       _su3_assign(*z, w);

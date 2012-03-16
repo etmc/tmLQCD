@@ -59,7 +59,7 @@
 void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_field_t * const hf) {
 
   int ix,iy, iz;
-  int ioff,ioff2,icx,icy, icz;
+  int ioff, icx, icy, icz;
   su3 * restrict up ALIGN;
   su3 * restrict um ALIGN;
   su3adj * restrict ddd;
@@ -95,7 +95,6 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
   else {
     ioff=(VOLUME+RAND)/2;
   } 
-  ioff2=(VOLUME+RAND)/2-ioff;
 
   /* for parallelization */
 #ifdef MPI
@@ -132,10 +131,10 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     _bgl_load_reg0_up((*sp).s1);
     _bgl_load_reg1((*sp).s2);
     _bgl_load_reg1_up((*sp).s3);
-    
+
     _bgl_add_to_reg0_reg1();
     _bgl_add_to_reg0_up_reg1_up();
-      
+
     _bgl_add_r0_to_r2_reg1();
     _bgl_add_r1_to_r3_reg1_up();
 
@@ -157,15 +156,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     /************** direction -0 ****************************/
 
     ddd = &hf->derivative[iy][0];
-    _bgl_load_r0((*r).s0);
-    _bgl_load_r1((*r).s1);
-    _bgl_load_minus_r2((*r).s2);
-    _bgl_load_minus_r3((*r).s3);
+    _bgl_load_r0(r->s0);
+    _bgl_load_r1(r->s1);
+    _bgl_load_minus_r2(r->s2);
+    _bgl_load_minus_r3(r->s3);
 
-    _bgl_load_reg0((*sm).s0);
-    _bgl_load_reg0_up((*sm).s1);
-    _bgl_load_reg1((*sm).s2);
-    _bgl_load_reg1_up((*sm).s3);
+    _bgl_load_reg0(sm->s0);
+    _bgl_load_reg0_up(sm->s1);
+    _bgl_load_reg1(sm->s2);
+    _bgl_load_reg1_up(sm->s3);
 
     _bgl_sub_from_reg0_reg1();
     _bgl_sub_from_reg0_up_reg1_up();
@@ -191,15 +190,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     /*************** direction +1 **************************/
 
     ddd = &hf->derivative[ix][1];
-    _bgl_load_r0((*r).s0);
-    _bgl_load_r1((*r).s1);
-    _bgl_load_minus_r2((*r).s2);
-    _bgl_load_minus_r3((*r).s3);
+    _bgl_load_r0(r->s0);
+    _bgl_load_r1(r->s1);
+    _bgl_load_minus_r2(r->s2);
+    _bgl_load_minus_r3(r->s3);
 
-    _bgl_load_reg0((*sp).s0);
-    _bgl_load_reg0_up((*sp).s1);
-    _bgl_load_reg1((*sp).s2);
-    _bgl_load_reg1_up((*sp).s3);
+    _bgl_load_reg0(sp->s0);
+    _bgl_load_reg0_up(sp->s1);
+    _bgl_load_reg1(sp->s2);
+    _bgl_load_reg1_up(sp->s3);
     
     _bgl_i_mul_add_to_reg0_reg1_up();
     _bgl_i_mul_add_to_reg0_up_reg1();
@@ -224,15 +223,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     /**************** direction -1 *************************/
 
     ddd = &hf->derivative[iy][1];
-    _bgl_load_r0((*r).s0);
-    _bgl_load_r1((*r).s1);
-    _bgl_load_minus_r2((*r).s2);
-    _bgl_load_minus_r3((*r).s3);
+    _bgl_load_r0(r->s0);
+    _bgl_load_r1(r->s1);
+    _bgl_load_minus_r2(r->s2);
+    _bgl_load_minus_r3(r->s3);
 
-    _bgl_load_reg0((*sm).s0);
-    _bgl_load_reg0_up((*sm).s1);
-    _bgl_load_reg1((*sm).s2);
-    _bgl_load_reg1_up((*sm).s3);
+    _bgl_load_reg0(sm->s0);
+    _bgl_load_reg0_up(sm->s1);
+    _bgl_load_reg1(sm->s2);
+    _bgl_load_reg1_up(sm->s3);
     
     _bgl_i_mul_sub_from_reg0_reg1_up();
     _bgl_i_mul_sub_from_reg0_up_reg1();
@@ -257,19 +256,19 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     /*************** direction +2 **************************/
 
     ddd = &hf->derivative[ix][2];
-    _bgl_load_r0((*r).s0);
-    _bgl_load_r1((*r).s1);
-    _bgl_load_minus_r2((*r).s2);
-    _bgl_load_minus_r3((*r).s3);
+    _bgl_load_r0(r->s0);
+    _bgl_load_r1(r->s1);
+    _bgl_load_minus_r2(r->s2);
+    _bgl_load_minus_r3(r->s3);
 
-    _bgl_load_reg0((*sp).s0);
-    _bgl_load_reg0_up((*sp).s1);
-    _bgl_load_reg1((*sp).s2);
-    _bgl_load_reg1_up((*sp).s3);
-    
+    _bgl_load_reg0(sp->s0);
+    _bgl_load_reg0_up(sp->s1);
+    _bgl_load_reg1(sp->s2);
+    _bgl_load_reg1_up(sp->s3);
+
     _bgl_add_to_reg0_reg1_up();
     _bgl_sub_from_reg0_up_reg1();
-      
+
     _bgl_add_r0_to_r3_reg1();
     _bgl_sub_from_r1_r2_reg1_up();
 
@@ -290,19 +289,19 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     /***************** direction -2 ************************/
 
     ddd = &hf->derivative[iy][2];
-    _bgl_load_r0((*r).s0);
-    _bgl_load_r1((*r).s1);
-    _bgl_load_minus_r2((*r).s2);
-    _bgl_load_minus_r3((*r).s3);
+    _bgl_load_r0(r->s0);
+    _bgl_load_r1(r->s1);
+    _bgl_load_minus_r2(r->s2);
+    _bgl_load_minus_r3(r->s3);
 
-    _bgl_load_reg0((*sm).s0);
-    _bgl_load_reg0_up((*sm).s1);
-    _bgl_load_reg1((*sm).s2);
-    _bgl_load_reg1_up((*sm).s3);
-    
+    _bgl_load_reg0(sm->s0);
+    _bgl_load_reg0_up(sm->s1);
+    _bgl_load_reg1(sm->s2);
+    _bgl_load_reg1_up(sm->s3);
+
     _bgl_sub_from_reg0_reg1_up();
     _bgl_add_to_reg0_up_reg1();
-      
+
     _bgl_sub_from_r0_r3_reg1();
     _bgl_add_r1_to_r2_reg1_up();
 
@@ -323,19 +322,19 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     /****************** direction +3 ***********************/
 
     ddd = &hf->derivative[ix][3];
-    _bgl_load_r0((*r).s0);
-    _bgl_load_r1((*r).s1);
-    _bgl_load_minus_r2((*r).s2);
-    _bgl_load_minus_r3((*r).s3);
+    _bgl_load_r0(r->s0);
+    _bgl_load_r1(r->s1);
+    _bgl_load_minus_r2(r->s2);
+    _bgl_load_minus_r3(r->s3);
 
-    _bgl_load_reg0((*sp).s0);
-    _bgl_load_reg0_up((*sp).s1);
-    _bgl_load_reg1((*sp).s2);
-    _bgl_load_reg1_up((*sp).s3);
-    
+    _bgl_load_reg0(sp->s0);
+    _bgl_load_reg0_up(sp->s1);
+    _bgl_load_reg1(sp->s2);
+    _bgl_load_reg1_up(sp->s3);
+
     _bgl_i_mul_add_to_reg0_reg1();
     _bgl_i_mul_sub_from_reg0_up_reg1_up();
-      
+
     _bgl_i_mul_add_r0_to_r2_reg1();
     _bgl_i_mul_sub_from_r1_r3_reg1_up();
 
@@ -356,19 +355,19 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     /***************** direction -3 ************************/
 
     ddd = &hf->derivative[iy][3];
-    _bgl_load_r0((*r).s0);
-    _bgl_load_r1((*r).s1);
-    _bgl_load_minus_r2((*r).s2);
-    _bgl_load_minus_r3((*r).s3);
+    _bgl_load_r0(r->s0);
+    _bgl_load_r1(r->s1);
+    _bgl_load_minus_r2(r->s2);
+    _bgl_load_minus_r3(r->s3);
 
-    _bgl_load_reg0((*sm).s0);
-    _bgl_load_reg0_up((*sm).s1);
-    _bgl_load_reg1((*sm).s2);
-    _bgl_load_reg1_up((*sm).s3);
-    
+    _bgl_load_reg0(sm->s0);
+    _bgl_load_reg0_up(sm->s1);
+    _bgl_load_reg1(sm->s2);
+    _bgl_load_reg1_up(sm->s3);
+
     _bgl_i_mul_sub_from_reg0_reg1();
     _bgl_i_mul_add_to_reg0_up_reg1_up();
-      
+
     _bgl_i_mul_sub_from_r0_r2_reg1();
     _bgl_i_mul_add_r1_to_r3_reg1_up();
 
@@ -404,7 +403,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_field_t * const hf) {
 /* const int l, const int k){ */
   int ix,iy;
-  int ioff,ioff2,icx,icy;
+  int ioff, icx, icy;
   su3 * restrict up ALIGN;
   su3 * restrict um ALIGN;
 /*   su3adj * restrict ddd; */
@@ -434,7 +433,6 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
   else {
     ioff=(VOLUME+RAND)/2;
   } 
-  ioff2=(VOLUME+RAND)/2-ioff;
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
@@ -466,15 +464,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 #else
     up=&hf->gaugefield[ix][0];
 #endif      
-    _vector_add(psia,(*sp).s0,(*sp).s2);
-    _vector_add(psib,(*sp).s1,(*sp).s3);
+    _vector_add(psia,sp->s0,sp->s2);
+    _vector_add(psib,sp->s1,sp->s3);
       
     _vector_add(phia,rr.s0,rr.s2);
     _vector_add(phib,rr.s1,rr.s3);
 
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
     _su3_times_su3d(v2,*up,v1);
-    _complex_times_su3(v1,ka0,v2);
+    _complex_times_su3(v1, ka0, v2);
     _trace_lambda_add_assign(hf->derivative[ix][0], v1);
 
     /************** direction -0 ****************************/
@@ -488,8 +486,8 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     um=&hf->gaugefield[iy][0];
 #endif
       
-    _vector_sub(psia,(*sm).s0,(*sm).s2);
-    _vector_sub(psib,(*sm).s1,(*sm).s3);
+    _vector_sub(psia,sm->s0,sm->s2);
+    _vector_sub(psib,sm->s1,sm->s3);
 
     _vector_sub(phia,rr.s0,rr.s2);
     _vector_sub(phib,rr.s1,rr.s3);
@@ -510,8 +508,8 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 #else
     up=&hf->gaugefield[ix][1];      
 #endif
-    _vector_i_add(psia,(*sp).s0,(*sp).s3);
-    _vector_i_add(psib,(*sp).s1,(*sp).s2);
+    _vector_i_add(psia,sp->s0,sp->s3);
+    _vector_i_add(psib,sp->s1,sp->s2);
 
     _vector_i_add(phia,rr.s0,rr.s3);
     _vector_i_add(phib,rr.s1,rr.s2);
@@ -531,8 +529,8 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 #else
     um=&hf->gaugefield[iy][1];
 #endif
-    _vector_i_sub(psia,(*sm).s0,(*sm).s3);
-    _vector_i_sub(psib,(*sm).s1,(*sm).s2);
+    _vector_i_sub(psia,sm->s0,sm->s3);
+    _vector_i_sub(psib,sm->s1,sm->s2);
 
     _vector_i_sub(phia,rr.s0,rr.s3);
     _vector_i_sub(phib,rr.s1,rr.s2);
@@ -552,8 +550,8 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 #else
     up=&hf->gaugefield[ix][2];
 #endif      
-    _vector_add(psia,(*sp).s0,(*sp).s3);
-    _vector_sub(psib,(*sp).s1,(*sp).s2);
+    _vector_add(psia,sp->s0,sp->s3);
+    _vector_sub(psib,sp->s1,sp->s2);
       
     _vector_add(phia,rr.s0,rr.s3);
     _vector_sub(phib,rr.s1,rr.s2);
@@ -573,8 +571,8 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 #else
     um=&hf->gaugefield[iy][2];
 #endif
-    _vector_sub(psia,(*sm).s0,(*sm).s3);
-    _vector_add(psib,(*sm).s1,(*sm).s2);
+    _vector_sub(psia,sm->s0,sm->s3);
+    _vector_add(psib,sm->s1,sm->s2);
 
     _vector_sub(phia,rr.s0,rr.s3);
     _vector_add(phib,rr.s1,rr.s2);
@@ -594,15 +592,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 #else
     up=&hf->gaugefield[ix][3];
 #endif      
-    _vector_i_add(psia,(*sp).s0,(*sp).s2);
-    _vector_i_sub(psib,(*sp).s1,(*sp).s3);
+    _vector_i_add(psia,sp->s0,sp->s2);
+    _vector_i_sub(psib,sp->s1,sp->s3);
 
     _vector_i_add(phia,rr.s0,rr.s2);
     _vector_i_sub(phib,rr.s1,rr.s3);
 
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
     _su3_times_su3d(v2,*up,v1);
-    _complex_times_su3(v1,ka3,v2);
+    _complex_times_su3(v1, ka3, v2);
     _trace_lambda_add_assign(hf->derivative[ix][3], v1);
 
     /***************** direction -3 ************************/
@@ -615,8 +613,8 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 #else
     um=&hf->gaugefield[iy][3];
 #endif
-    _vector_i_sub(psia,(*sm).s0,(*sm).s2);
-    _vector_i_add(psib,(*sm).s1,(*sm).s3);
+    _vector_i_sub(psia,sm->s0,sm->s2);
+    _vector_i_add(psib,sm->s1,sm->s3);
 
     _vector_i_sub(phia,rr.s0,rr.s2);
     _vector_i_add(phib,rr.s1,rr.s3);

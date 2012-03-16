@@ -21,9 +21,9 @@
 #ifndef _OPERATOR_H
 #define _OPERATOR_H
 
-#include "su3.h"
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
+#include "su3.h"
 
 #define TMWILSON 0
 #define OVERLAP 1

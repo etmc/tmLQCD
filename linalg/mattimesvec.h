@@ -20,9 +20,9 @@
 #ifndef _MATTIMESVEC_H
 #define _MATTIMESVEC_H
 
-#include "complex.h"
+#include <complex.h>
 
-void mattimesvec(complex * const v, complex * const M, complex * const w, 
+void mattimesvec(_Complex double * const v, _Complex double * const M, _Complex double * const w, 
 		 const int N, const int ldM);
 
 #endif

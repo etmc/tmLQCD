@@ -107,57 +107,39 @@ void set_all_links_to_one_with_dirichlet(int t) {
 
 /* it calculates an su3 matrix "u" which is gonna be the (lattice) spatially constant abelian field */
 #define _su3_spatially_constant_abelian_field(u, p1, p2, p3)	\
-  (u).c00.re = cos(p1);						\
-  (u).c00.im = sin(p1);						\
-  (u).c01.re = 0.0;						\
-  (u).c01.im = 0.0;						\
-  (u).c02.re = 0.0;						\
-  (u).c02.im = 0.0;						\
-  (u).c10.re = 0.0;						\
-  (u).c10.im = 0.0;						\
-  (u).c11.re = cos(p2);						\
-  (u).c11.im = sin(p2);						\
-  (u).c12.re = 0.0;						\
-  (u).c12.im = 0.0;						\
-  (u).c20.re = 0.0;						\
-  (u).c20.im = 0.0;						\
-  (u).c21.re = 0.0;						\
-  (u).c21.im = 0.0;						\
-  (u).c22.re = cos(p3);						\
-  (u).c22.im = sin(p3);
+  (u).c00 = cexp(p1);						\
+  (u).c01 = 0.0;						\
+  (u).c02 = 0.0;						\
+  (u).c10 = 0.0;						\
+  (u).c11 = cexp(p2);						\
+  (u).c12 = 0.0;						\
+  (u).c20 = 0.0;						\
+  (u).c21 = 0.0;						\
+  (u).c22 = cexp(p3);
 
 
 /* it calculates an su3 matrix "u" which is gonna be the (continuum) spatially constant abelian field */
 #define _su3_spatially_constant_abelian_field_continuum(u, p1, p2, p3)	\
-  (u).c00.re = 0.0;							\
-  (u).c00.im = p1;							\
-  (u).c01.re = 0.0;							\
-  (u).c01.im = 0.0;							\
-  (u).c02.re = 0.0;							\
-  (u).c02.im = 0.0;							\
-  (u).c10.re = 0.0;							\
-  (u).c10.im = 0.0;							\
-  (u).c11.re = 0.0;							\
-  (u).c11.im = p2;							\
-  (u).c12.re = 0.0;							\
-  (u).c12.im = 0.0;							\
-  (u).c20.re = 0.0;							\
-  (u).c20.im = 0.0;							\
-  (u).c21.re = 0.0;							\
-  (u).c21.im = 0.0;							\
-  (u).c22.re = 0.0;							\
-  (u).c22.im = p3;
+  (u).c00 = p1 * I;							\
+  (u).c01 = 0.0;							\
+  (u).c02 = 0.0;							\
+  (u).c10 = 0.0;							\
+  (u).c11 = p2 * I;							\
+  (u).c12 = 0.0;							\
+  (u).c20 = 0.0;							\
+  (u).c21 = 0.0;							\
+  (u).c22 = p3 * I;
 
 
 /* it just prints on the screen the su3 matrix "u" */
 void print_su3_matrix (su3 u) {
   
   printf(" %e i %e  %e i %e  %e i %e \n",
-	 (u).c00.re,  (u).c00.im,  (u).c01.re,  (u).c01.im,  (u).c02.re,  (u).c02.im);
+	 creal(u.c00),  cimag(u.c00),  creal(u.c01),  cimag(u.c01),  creal(u.c02),  cimag(u.c02));
   printf(" %e i %e  %e i %e  %e i %e \n",
-	 (u).c10.re,  (u).c10.im,  (u).c11.re,  (u).c11.im,  (u).c12.re,  (u).c12.im);
+	 creal(u.c10),  cimag(u.c10),  creal(u.c11),  cimag(u.c11),  creal(u.c12),  cimag(u.c12));
   printf(" %e i %e  %e i %e  %e i %e \n",
-	 (u).c20.re,  (u).c20.im,  (u).c21.re,  (u).c21.im,  (u).c22.re,  (u).c22.im);
+	 creal(u.c20),  cimag(u.c20),  creal(u.c21),  cimag(u.c21),  creal(u.c22),  cimag(u.c22));
   printf("\n");
 }
 
@@ -1288,47 +1270,29 @@ double measure_iwasaki_action_sf(int t, double beta, double cs, double ct, doubl
 /* it calculates an su3 matrix "u" which is gonna be the partial with respect to eta of the
    (lattice) spatially constant abelian field "C_k"*/
 #define _su3_partial_eta_spatially_constant_abelian_field_phi(u)	\
-  (u).c00.re = cos(1./LX);						\
-  (u).c00.im = sin(1./LX);						\
-  (u).c01.re = 0.0;							\
-  (u).c01.im = 0.0;							\
-  (u).c02.re = 0.0;							\
-  (u).c02.im = 0.0;							\
-  (u).c10.re = 0.0;							\
-  (u).c10.im = 0.0;							\
-  (u).c11.re = cos((-1./2.)/LX);					\
-  (u).c11.im = sin((-1./2.)/LX);					\
-  (u).c12.re = 0.0;							\
-  (u).c12.im = 0.0;							\
-  (u).c20.re = 0.0;							\
-  (u).c20.im = 0.0;							\
-  (u).c21.re = 0.0;							\
-  (u).c21.im = 0.0;							\
-  (u).c22.re = cos((-1./2.)/LX);					\
-  (u).c22.im = sin((-1./2.)/LX);
+  (u).c00 = cexp(1./LX);						\
+  (u).c01 = 0.0;							\
+  (u).c02 = 0.0;							\
+  (u).c10 = 0.0;							\
+  (u).c11 = cexp((-1./2.)/LX);						\
+  (u).c12 = 0.0;							\
+  (u).c20 = 0.0;							\
+  (u).c21 = 0.0;							\
+  (u).c22 = cexp((-1./2.)/LX);						\
 
 
 /* it calculates an su3 matrix "u" which is gonna be the partial with respect to eta of the
    (lattice) spatially constant abelian field "(C_k)^prime"*/
 #define _su3_partial_eta_spatially_constant_abelian_field_phi_prime(u)	\
-  (u).c00.re = cos(-1./LX);						\
-  (u).c00.im = sin(-1./LX);						\
-  (u).c01.re = 0.0;							\
-  (u).c01.im = 0.0;							\
-  (u).c02.re = 0.0;							\
-  (u).c02.im = 0.0;							\
-  (u).c10.re = 0.0;							\
-  (u).c10.im = 0.0;							\
-  (u).c11.re = cos((1./2.)/LX);						\
-  (u).c11.im = sin((1./2.)/LX);						\
-  (u).c12.re = 0.0;							\
-  (u).c12.im = 0.0;							\
-  (u).c20.re = 0.0;							\
-  (u).c20.im = 0.0;							\
-  (u).c21.re = 0.0;							\
-  (u).c21.im = 0.0;							\
-  (u).c22.re = cos((1./2.)/LX);						\
-  (u).c22.im = sin((1./2.)/LX);
+  (u).c00 = cexp(-1./LX);						\
+  (u).c01 = 0.0;							\
+  (u).c02 = 0.0;							\
+  (u).c10 = 0.0;							\
+  (u).c11 = cexp((1./2.)/LX);						\
+  (u).c12 = 0.0;							\
+  (u).c20 = 0.0;							\
+  (u).c21 = 0.0;							\
+  (u).c22 = cexp((1./2.)/LX);						\
 
 
 /*--------------------------------------------------------------------------------------------------*/
@@ -1655,46 +1619,28 @@ double partial_lattice_lo_effective_iwasaki_action_sf_k(int t, double beta, doub
 
 /* it calculates an su3 matrix "u" which is gonna be the eighth-generator of SU(3) "lambda_8" */
 #define _su3_lambda_8(u)					\
-  (u).c00.re = 1.0;						\
-  (u).c00.im = 0.0;						\
-  (u).c01.re = 0.0;						\
-  (u).c01.im = 0.0;						\
-  (u).c02.re = 0.0;						\
-  (u).c02.im = 0.0;						\
-  (u).c10.re = 0.0;						\
-  (u).c10.im = 0.0;						\
-  (u).c11.re =-0.5;						\
-  (u).c11.im = 0.0;						\
-  (u).c12.re = 0.0;						\
-  (u).c12.im = 0.0;						\
-  (u).c20.re = 0.0;						\
-  (u).c20.im = 0.0;						\
-  (u).c21.re = 0.0;						\
-  (u).c21.im = 0.0;						\
-  (u).c22.re =-0.5;						\
-  (u).c22.im = 0.0;
+  (u).c00 = 1.0;						\
+  (u).c01 = 0.0;						\
+  (u).c02 = 0.0;						\
+  (u).c10 = 0.0;						\
+  (u).c11 =-0.5;						\
+  (u).c12 = 0.0;						\
+  (u).c20 = 0.0;						\
+  (u).c21 = 0.0;						\
+  (u).c22 =-0.5;						\
 
 
 /* it calculates an su3 matrix "u" which is gonna be the eighth-generator of SU(3) "lambda_8" times "i" */
 #define _su3_i_times_lambda_8(u)				\
-  (u).c00.re = 0.0;						\
-  (u).c00.im = 1.0;						\
-  (u).c01.re = 0.0;						\
-  (u).c01.im = 0.0;						\
-  (u).c02.re = 0.0;						\
-  (u).c02.im = 0.0;						\
-  (u).c10.re = 0.0;						\
-  (u).c10.im = 0.0;						\
-  (u).c11.re = 0.0;						\
-  (u).c11.im =-0.5;						\
-  (u).c12.re = 0.0;						\
-  (u).c12.im = 0.0;						\
-  (u).c20.re = 0.0;						\
-  (u).c20.im = 0.0;						\
-  (u).c21.re = 0.0;						\
-  (u).c21.im = 0.0;						\
-  (u).c22.re = 0.0;						\
-  (u).c22.im =-0.5;
+  (u).c00 = 1.0 * I;						\
+  (u).c01 = 0.0;						\
+  (u).c02 = 0.0;						\
+  (u).c10 = 0.0;						\
+  (u).c11 =-0.5 * I;						\
+  (u).c12 = 0.0;						\
+  (u).c20 = 0.0;						\
+  (u).c21 = 0.0;						\
+  (u).c22 =-0.5 * I;
 
 /*------------------------------------------------------------------------------------------------------------*/
 

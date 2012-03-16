@@ -1,17 +1,11 @@
+#pragma once
 
-
-#ifndef _DIRAC_OPERATOR_EIGENVECTORS_
-#define _DIRAC_OPERATOR_EIGENVECTORS_
-
-/* #include "utils.hh" */
-
-#include <math.h>
 #include "config.h"
 #ifdef HAVE_FFTW
   #include <fftw3.h>
 #endif
 
-#include "complex.h"
+#include <complex.h>
 #include "linalg/lapack.h"
 
 /* some macros for 4d loops */
@@ -23,14 +17,14 @@
 #define M_PI  3.14159265358979323846
 #endif
 
-#define SWAP(x,y,d) \
+#define SWAP(x,y,d)\
   d=x;\
   x=y;\
   y=d;
 
-#define min(x,y) \
+#define min(x,y)\
   ((x<y)?x:y)
-#define max(x,y) \
+#define max(x,y)\
   ((x>y)?x:y)
 
 
@@ -58,9 +52,9 @@ extern double g_prec_sequence_d_dagger_d[3];
 const char* precWSOpToString(tm_operator op);
 
 
-extern void _FT(zgeev)( char* jobvl, char* jobvr, int const * n, complex* a,
-                int const * lda, complex* w, complex* vl, int* ldvl, complex* vr, int* ldvr,
-                complex* work, int* lwork, double* rwork, int* info );
+extern void _FT(zgeev)( char* jobvl, char* jobvr, int const * n, _Complex double* a,
+                int const * lda, _Complex double* w, _Complex double* vl, int* ldvl, _Complex double* vr, int* ldvr,
+                _Complex double* work, int* lwork, double* rwork, int* info );
 
 extern void _FT(dposv)( char* jobvl, int const * n,int const * nrhs,double* mat, int const * lda,double *rhs,int const *ldrhs,int const * lapackINfo);
 
@@ -75,7 +69,7 @@ typedef struct spinorPrecWS_{
 
 
   /* array containing eigenvalues */
-  complex *evs;
+  _Complex double *evs;
 
   /* sinus and cosinus lookup table */
   double *c_table;
@@ -83,7 +77,7 @@ typedef struct spinorPrecWS_{
 
   tm_operator m_op;
 
-  complex averageLambda;
+  _Complex double averageLambda;
 
   /* correction function parameters */
   unsigned int useCorrectionFunc;
@@ -127,9 +121,9 @@ void eigenvector_Dtm(spinor *two_spinor,double mu,int epsilon,int k,int color,in
 
 /**
  * the fanction performing the actual precondition 
- * this function applies the desired treelevel Dirac operator with an arbitrary (complex) exponent to the given spinor
+ * this function applies the desired treelevel Dirac operator with an arbitrary (_Complex double) exponent to the given spinor
  */
-void spinorPrecondition(spinor *spinor_out,const spinor* spinor_in,spinorPrecWS* ws,int tt,int ll,const complex alpha,unsigned int dagger,unsigned int autofft);
+void spinorPrecondition(spinor *spinor_out,const spinor* spinor_in,spinorPrecWS* ws,int tt,int ll,const _Complex double alpha,unsigned int dagger,unsigned int autofft);
 
 /**
  * creates a plane wave representation in momentum or space time domain depending on 
@@ -158,11 +152,11 @@ void loadFFTWWisdom(spinor *spinor_in,spinor *spinor_out,int tt,int ll);
 /**
  * calculate matrix elements of the pre- und unpreconditioned operator
  */
-complex calcMatrixElement(spinor* field1,spinor *field2,complex mat[144],int praw1[4],int praw2[4], void (*op)(spinor*,spinor*),int diag,int jTo);
+_Complex double calcMatrixElement(spinor* field1,spinor *field2,_Complex double mat[144],int praw1[4],int praw2[4], void (*op)(spinor*,spinor*),int diag,int jTo);
 /**
  * diagonalizes matrix elements with lapack
  */
-void diagMatrixElement(complex mat[144]);
+void diagMatrixElement(_Complex double mat[144]);
 
 /**
  * calculates the matrix element of the (intended) eigenvector given by the parameters
@@ -172,7 +166,7 @@ void computeEigenvectorMatrixElementDtm(int rawp[4],void (*op)(spinor*,spinor*),
 
 /**
  * these functions are for creating raw lattice momenta beeing either equaly distributed in the 
- * ( \hat{p}^2 , \tilde{p}^2 ) plane or in the p^lattice_raw_mu space
+ * (\hat{p}^2 , \tilde{p}^2 ) plane or in the p^lattice_raw_mu space
  */
 int * makeEqualPmuMap(int n);
 int * makeRandomPmuMap(int n);
@@ -194,56 +188,31 @@ int cyclicDiff(int a,int b, int period);
  * some algebraic macros
  */
 
-#define _exp_complex(/*complex*/ x,/*complex*/ z,/*double*/ dum)	\
-  dum =	exp(z.re);							\
-  x.re=dum*cos(z.im);							\
-  x.im=dum*sin(z.im); 
+#define _exp_complex(/*_Complex double*/ x,/*_Complex double*/ z,/*double*/ dum)\
+  x = cexp(z);
 
-/* res = z^x = exp ( x * ln(z) ) */
-#define _pow_complex(/*complex*/ res,/*complex*/ z,/*complex*/ x,/*complex*/ dum) \
-   /* dum = ln(z) */ \
-   /* Re(dum) = ln ( |z| ) */ \
-  dum.re=0.5*log(z.re*z.re+z.im*z.im);	\
-   /* Im(dum) =  arg(z) */  \
-  dum.im=atan2(z.im,z.re);	 \
-  /* res = x * dum = x *ln(z) */ \
-  _mult_assign_complex(res,x,dum);    \
-/* res=exp(res) */ \
-  _exp_complex(res,res,(dum).re);
+/* res = z^x = exp ( x * ln(z)) */
+#define _pow_complex(/*_Complex double*/ res,/*_Complex double*/ z,/*_Complex double*/ x,/*_Complex double*/ dum)\
+  res = cpow(z, x);
 
-#define _spinor_muleq_real(s,r) \
-  (s).s0.c0.re*=r; \
-  (s).s0.c0.im*=r; \
-  (s).s0.c1.re*=r; \
-  (s).s0.c1.im*=r; \
-  (s).s0.c2.re*=r; \
-  (s).s0.c2.im*=r; \
-  (s).s1.c0.re*=r; \
-  (s).s1.c0.im*=r; \
-  (s).s1.c1.re*=r; \
-  (s).s1.c1.im*=r; \
-  (s).s1.c2.re*=r; \
-  (s).s1.c2.im*=r; \
-  (s).s2.c0.re*=r; \
-  (s).s2.c0.im*=r; \
-  (s).s2.c1.re*=r; \
-  (s).s2.c1.im*=r; \
-  (s).s2.c2.re*=r; \
-  (s).s2.c2.im*=r; \
-  (s).s3.c0.re*=r; \
-  (s).s3.c0.im*=r; \
-  (s).s3.c1.re*=r; \
-  (s).s3.c1.im*=r; \
-  (s).s3.c2.re*=r; \
-  (s).s3.c2.im*=r
+#define _spinor_muleq_real(s,r)\
+  (s).s0.c0*=r; \
+  (s).s0.c1*=r; \
+  (s).s0.c2*=r; \
+  (s).s1.c0*=r; \
+  (s).s1.c1*=r; \
+  (s).s1.c2*=r; \
+  (s).s2.c0*=r; \
+  (s).s2.c1*=r; \
+  (s).s2.c2*=r; \
+  (s).s3.c0*=r; \
+  (s).s3.c1*=r; \
+  (s).s3.c2*=r; \
 
 #define _complex_muleq_complex(z1,z2,dum)\
-  dum=(z1).re; \
-  (z1).re=(z1).re * (z2).re-(z1).im * (z2).im;	\
-  (z1).im=(z1).im*(z2).re+  dum    *(z2).im;
+  (z1) *= (z2);
 
-
-#define _spinor_muleq_complex(s,c,dum)		\
+#define _spinor_muleq_complex(s,c,dum)\
   _complex_muleq_complex((s).s0.c0,c,dum);\
   _complex_muleq_complex((s).s0.c1,c,dum);\
   _complex_muleq_complex((s).s0.c2,c,dum);\
@@ -258,56 +227,39 @@ int cyclicDiff(int a,int b, int period);
   _complex_muleq_complex((s).s3.c2,c,dum);
 
 
-/* #define _spinor_scalar_prod(proj,a,b) \ */
+/* #define _spinor_scalar_prod(proj,a,b)\ */
 /* 	  proj.re=_spinor_prod_re(a,b); \ */
 /* 	  proj.im=_spinor_prod_im(a,b); */
 
 
-#define _spinor_scalar_prod(proj,r,s)				\
-  (proj).re=(r).s0.c0.re*(s).s0.c0.re+(r).s0.c0.im*(s).s0.c0.im+	\
-  (r).s0.c1.re*(s).s0.c1.re+(r).s0.c1.im*(s).s0.c1.im+	\
-  (r).s0.c2.re*(s).s0.c2.re+(r).s0.c2.im*(s).s0.c2.im+	\
-  (r).s1.c0.re*(s).s1.c0.re+(r).s1.c0.im*(s).s1.c0.im+	\
-  (r).s1.c1.re*(s).s1.c1.re+(r).s1.c1.im*(s).s1.c1.im+	\
-  (r).s1.c2.re*(s).s1.c2.re+(r).s1.c2.im*(s).s1.c2.im+	\
-  (r).s2.c0.re*(s).s2.c0.re+(r).s2.c0.im*(s).s2.c0.im+	\
-  (r).s2.c1.re*(s).s2.c1.re+(r).s2.c1.im*(s).s2.c1.im+	\
-  (r).s2.c2.re*(s).s2.c2.re+(r).s2.c2.im*(s).s2.c2.im+	\
-  (r).s3.c0.re*(s).s3.c0.re+(r).s3.c0.im*(s).s3.c0.im+	\
-  (r).s3.c1.re*(s).s3.c1.re+(r).s3.c1.im*(s).s3.c1.im+	\
-    (r).s3.c2.re*(s).s3.c2.re+(r).s3.c2.im*(s).s3.c2.im; \
-(proj).im= \
-   (r).s0.c0.re*(s).s0.c0.im-(r).s0.c0.im*(s).s0.c0.re		\
-  +(r).s0.c1.re*(s).s0.c1.im-(r).s0.c1.im*(s).s0.c1.re		\
-  +(r).s0.c2.re*(s).s0.c2.im-(r).s0.c2.im*(s).s0.c2.re	       \
-  +(r).s1.c0.re*(s).s1.c0.im-(r).s1.c0.im*(s).s1.c0.re  \
-  +(r).s1.c1.re*(s).s1.c1.im-(r).s1.c1.im*(s).s1.c1.re  \
-  +(r).s1.c2.re*(s).s1.c2.im-(r).s1.c2.im*(s).s1.c2.re	\
-  +(r).s2.c0.re*(s).s2.c0.im-(r).s2.c0.im*(s).s2.c0.re	\
-  +(r).s2.c1.re*(s).s2.c1.im-(r).s2.c1.im*(s).s2.c1.re	\
-  +(r).s2.c2.re*(s).s2.c2.im-(r).s2.c2.im*(s).s2.c2.re	\
-  +(r).s3.c0.re*(s).s3.c0.im-(r).s3.c0.im*(s).s3.c0.re	\
-  +(r).s3.c1.re*(s).s3.c1.im-(r).s3.c1.im*(s).s3.c1.re  \
-  +(r).s3.c2.re*(s).s3.c2.im-(r).s3.c2.im*(s).s3.c2.re
+#define _spinor_scalar_prod(proj,r,s)\
+  (proj) = conj((r).s0.c0) * (s).s0.c0 + \
+	   conj((r).s0.c1) * (s).s0.c1 + \
+	   conj((r).s0.c2) * (s).s0.c2 + \
+	   conj((r).s1.c0) * (s).s1.c0 + \
+	   conj((r).s1.c1) * (s).s1.c1 + \
+	   conj((r).s1.c2) * (s).s1.c2 + \
+	   conj((r).s2.c0) * (s).s2.c0 + \
+	   conj((r).s2.c1) * (s).s2.c1 + \
+	   conj((r).s2.c2) * (s).s2.c2 + \
+	   conj((r).s3.c0) * (s).s3.c0 + \
+	   conj((r).s3.c1) * (s).s3.c1 + \
+	   conj((r).s3.c2) * (s).s3.c2;
 
 
-#define PROJECTSPLIT(p_plus,up_plus,col_proj,phi_o,phi_plus,col_phi)	\
-  p_plus.re=0; p_plus.im=0;						\
-	_add_assign_complex_conj(p_plus,up_plus->s0.col_proj,phi_o->s0.col_phi); \
-	_add_assign_complex_conj(p_plus,up_plus->s1.col_proj,phi_o->s1.col_phi); \
-	_add_assign_complex_conj(p_plus,up_plus->s2.col_proj,phi_o->s2.col_phi);\
-	_add_assign_complex_conj(p_plus,up_plus->s3.col_proj,phi_o->s3.col_phi);\
+#define PROJECTSPLIT(p_plus,up_plus,col_proj,phi_o,phi_plus,col_phi)\
+        p_plus = 0; \
+	p_plus += conj(up_plus->s0.col_proj) * (phi_o->s0.col_phi); \
+	p_plus += conj(up_plus->s1.col_proj) * (phi_o->s1.col_phi); \
+	p_plus += conj(up_plus->s2.col_proj) * (phi_o->s2.col_phi);\
+	p_plus += conj(up_plus->s3.col_proj) * (phi_o->s3.col_phi);\
 	/* project out from input vector "positive" modes */\
-	_diff_assign_complex(phi_o->s0.col_phi,p_plus,up_plus->s0.col_proj); \
-	_diff_assign_complex(phi_o->s1.col_phi,p_plus,up_plus->s1.col_proj);\
-	_diff_assign_complex(phi_o->s2.col_phi,p_plus,up_plus->s2.col_proj);\
-	_diff_assign_complex(phi_o->s3.col_phi,p_plus,up_plus->s3.col_proj);\
+	phi_o->s0.col_phi -= (p_plus) * (up_plus->s0.col_proj); \
+	phi_o->s1.col_phi -= (p_plus) * (up_plus->s1.col_proj);\
+	phi_o->s2.col_phi -= (p_plus) * (up_plus->s2.col_proj);\
+	phi_o->s3.col_phi -= (p_plus) * (up_plus->s3.col_proj);\
 	/* buil up vector with "positive projectors"  */ \
-	_diff_assign_complex(phi_plus.s0.col_phi,p_plus,up_plus->s0.col_proj); \
-	_diff_assign_complex(phi_plus.s1.col_phi,p_plus,up_plus->s1.col_proj); \
-	_diff_assign_complex(phi_plus.s2.col_phi,p_plus,up_plus->s2.col_proj);\
-	_diff_assign_complex(phi_plus.s3.col_phi,p_plus,up_plus->s3.col_proj);
-
-
-
-#endif /* _DIRAC_OPERATOR_EIGENVECTORS_ */
+	phi_plus.s0.col_phi -= (p_plus) * (up_plus->s0.col_proj); \
+	phi_plus.s1.col_phi -= (p_plus) * (up_plus->s1.col_proj); \
+	phi_plus.s2.col_phi -= (p_plus) * (up_plus->s2.col_proj);\
+	phi_plus.s3.col_phi -= (p_plus) * (up_plus->s3.col_proj);

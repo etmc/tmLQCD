@@ -23,6 +23,6 @@
 #include "su3.h"
 
 /*   Makes (*R) = c*(*S) */
-void mul(spinor * const R, const complex c, spinor * const S, const int N);
+void mul(spinor * const R, const _Complex double c, spinor * const S, const int N);
 
 #endif

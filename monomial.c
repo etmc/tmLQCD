@@ -299,7 +299,7 @@ int init_poly_monomial(const int V,const int id){
       return(1);
     }
 
-    if(  (void*) (mnl->MDPoly_chi_spinor_fields=(spinor**)calloc(mnl->MDPolyDegree/2+2,sizeof(spinor*)) ) ==NULL ){
+    if((void*)(mnl->MDPoly_chi_spinor_fields=(spinor**)calloc(mnl->MDPolyDegree/2+2,sizeof(spinor*))) ==NULL ){
       printf ("malloc errno in init_poly_monomial pf fields: %d\n",errno); 
       errno = 0;
       return(2);
@@ -353,7 +353,7 @@ int init_poly_monomial(const int V,const int id){
 
   /* read in the roots from the given file */
 
-  if(  (void*) (mnl->MDPolyRoots=(complex*)calloc(mnl->MDPolyDegree,sizeof(complex)) ) ==NULL ){
+  if((void*)(mnl->MDPolyRoots=(_Complex double*)calloc(mnl->MDPolyDegree,sizeof(_Complex double))) ==NULL ){
     printf ("malloc errno in init_poly_monomial roots array: %d\n",errno); 
     errno = 0;
     return(3);
@@ -372,7 +372,7 @@ int init_poly_monomial(const int V,const int id){
     
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
     for(j=0; j<(mnl->MDPolyDegree); j++){
-      errcode = fscanf(rootsFile," %d %lf %lf \n", &k, &mnl->MDPolyRoots[j].re, &mnl->MDPolyRoots[j].im);
+      errcode = fscanf(rootsFile," %d %lf %lf \n", &k, (double*)&(mnl->MDPolyRoots[j]), (double*)&(mnl->MDPolyRoots[j]) + 1);
     }
     fclose(rootsFile);
   }
@@ -389,7 +389,7 @@ int init_poly_monomial(const int V,const int id){
   printf("Here come the roots\n");
 
     for(j=0; j<(mnl->MDPolyDegree); j++){
-      printf("%lf %lf\n",  mnl->MDPolyRoots[j].re, mnl->MDPolyRoots[j].im);
+      printf("%lf %lf\n",  creal(mnl->MDPolyRoots[j]), cimag(mnl->MDPolyRoots[j]));
     }
 
   return 0;

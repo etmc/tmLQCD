@@ -36,7 +36,7 @@
 /* P output = solution , Q input = source */
 int pcg_her(spinor * const P, spinor * const Q, const int max_iter, 
 	    double eps_sq, const int rel_prec, const int N, matrix_mult f) {
-  double normsp, normsq, pro, pro2, err, alpha_cg, beta_cg, squarenorm;
+  double normsp, pro, pro2, err, alpha_cg, beta_cg, squarenorm;
   int iteration;
   spinor ** solver_field = NULL;
   const int nr_sf = 5;
@@ -71,7 +71,6 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
   invert_eigenvalue_part(solver_field[3], solver_field[1], 10, N);
   /* p0 = z0 */
   assign(solver_field[2], solver_field[3], N);
-  normsq=square_norm(solver_field[1], N, 1);
 
   /* Is this really real? */
   pro2 = scalar_prod_r(solver_field[1], solver_field[3], N, 1);  
@@ -117,7 +116,6 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
     pro2 = scalar_prod_r(solver_field[1], solver_field[3], N, 1);
     beta_cg *= pro2;
     assign_mul_add_r(solver_field[2], beta_cg, solver_field[3], N);
-    normsq=err;
   }
   assign(P, solver_field[0], N);
   g_sloppy_precision = 0;

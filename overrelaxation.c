@@ -49,7 +49,7 @@
 ! action.
 !
 !   S_G  =  -\beta_f  \sum_P 1/N   Re Tr_f U_P
-!           -\beta_a  \sum_P 1/N^2 ( Tr_f U_P^* ) ( Tr_f U_P )
+!           -\beta_a  \sum_P 1/N^2 ( Tr_f U_P^* )( Tr_f U_P )
 !
 !   for simplicity we have fixed betap = 6.0 here.
 !
@@ -105,65 +105,59 @@ void flip_subgroup(int ix, int mu, su3 vv, int i){
   /*
     According to Peter's notes ``A Cabibbo-Marinari SU(3)....", eqs. (A.14-A.17)
     we have */
-  if(i==1){
-    vv0 =  w.c00.re+w.c11.re;   
-    vv3 = -w.c00.im+w.c11.im;
-    vv1 = -w.c01.im-w.c10.im;
-    vv2 = -w.c01.re+w.c10.re;
+  if(i==1)
+  {
+    vv0 =  creal(w.c00) + creal(w.c11);   
+    vv3 = -cimag(w.c00) + cimag(w.c11);
+    vv1 = -cimag(w.c01) - cimag(w.c10);
+    vv2 = -creal(w.c01) + creal(w.c10);
   }
-  else if(i==2){
-    vv0 =  w.c00.re+w.c22.re;   
-    vv3 = -w.c00.im+w.c22.im;
-    vv1 = -w.c02.im-w.c20.im;
-    vv2 = -w.c02.re+w.c20.re;
+  else if(i==2)
+  {
+    vv0 =  creal(w.c00) + creal(w.c22);   
+    vv3 = -cimag(w.c00) + cimag(w.c22);
+    vv1 = -cimag(w.c02) - cimag(w.c20);
+    vv2 = -creal(w.c02) + creal(w.c20);
   }
-  else{
-    vv0 =  w.c11.re+w.c22.re;   
-    vv3 = -w.c11.im+w.c22.im;
-    vv1 = -w.c12.im-w.c21.im;
-    vv2 = -w.c12.re+w.c21.re;
+  else
+  {
+    vv0 =  creal(w.c11) + creal(w.c22);   
+    vv3 = -cimag(w.c11) + cimag(w.c22);
+    vv1 = -cimag(w.c12) - cimag(w.c21);
+    vv2 = -creal(w.c12) + creal(w.c21);
   }
 
-  norm_vv_sq=vv0*vv0+vv1*vv1+vv2*vv2+vv3*vv3;
+  norm_vv_sq= vv0 * vv0 + vv1 * vv1 + vv2 * vv2 + vv3 * vv3;
 
-  aux= 2.0*vv0/norm_vv_sq;
-  aa0 = aux*vv0-1.0;
-  aa1 = aux*vv1;
-  aa2 = aux*vv2;
-  aa3 = aux*vv3;
+  aux= 2.0 * vv0 / norm_vv_sq;
+  aa0 = aux * vv0-1.0;
+  aa1 = aux * vv1;
+  aa2 = aux * vv2;
+  aa3 = aux * vv3;
 
   /*  aa is embedded in the SU(3) matrix (a) which can be multiplied on
       the link variable using the su3_type operator * . */
       
-  if(i==1){
-    a.c00.re =  aa0;
-    a.c00.im =  aa3;
-    a.c11.re =  aa0;
-    a.c11.im = -aa3;
-    a.c01.re =  aa2;
-    a.c01.im =  aa1;
-    a.c10.re = -aa2;
-    a.c10.im =  aa1;
+  if(i==1)
+  {
+    a.c00 = aa0 + aa3 * I;
+    a.c11 = conj(a.c00);
+    a.c01 = aa2 + aa1 * I;
+    a.c10 = -conj(a.c01);
   }
-  else if(i==2){
-    a.c00.re =  aa0;
-    a.c00.im =  aa3;
-    a.c22.re =  aa0;
-    a.c22.im = -aa3;
-    a.c02.re =  aa2;
-    a.c02.im =  aa1;
-    a.c20.re = -aa2;
-    a.c20.im =  aa1;
+  else if(i==2)
+  {
+    a.c00 = aa0 + aa3 * I;
+    a.c22 = conj(a.c00);
+    a.c02 = aa2 + aa1 * I;
+    a.c20 = -conj(a.c02);
   }
-  else{
-    a.c11.re =  aa0;
-    a.c11.im =  aa3;
-    a.c22.re =  aa0;
-    a.c22.im = -aa3;
-    a.c12.re =  aa2;
-    a.c12.im =  aa1;
-    a.c21.re = -aa2;
-    a.c21.im =  aa1;
+  else
+  {
+    a.c11 = aa0 + aa3 * I;
+    a.c22 = conj(a.c11);
+    a.c12 = aa2 + aa1 * I;
+    a.c21 = -conj(a.c12);
   }
 
   _su3_times_su3(w,a,*z);

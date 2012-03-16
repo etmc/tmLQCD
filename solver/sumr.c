@@ -49,7 +49,7 @@
 #include "linalg_eo.h"
 #include "start.h"
 #include "solver/matrix_mult_typedef.h"
-#include "complex.h"
+#include <complex.h>
 #include "gamma.h"
 #include "solver/eigenvalues.h"
 #include "solver/sub_low_ev.h"
@@ -66,12 +66,11 @@
 int sumr(spinor * const P, spinor * const Q, const int max_iter,
 	 double eps_sq){
   double sigma, delta, s, rho, zeta, z_r, tmpr, normsp, err, tau_hat;
-  double ov_s, m_ov=0., ap_eps_sq, shift;
-  complex phi, phi_hat, tau, lambda, c, gamm, alpha, eta, kappa;
-  complex r_hat, r_off, r_off_old, r_diag, r_diag_old, tmpc, tmpc1, tmpc2;
+  double ov_s, m_ov=0.;
+  _Complex double phi, phi_hat, tau, lambda, c, gamm, alpha, eta, kappa;
+  _Complex double r_hat, r_off, r_diag, r_diag_old, tmpc, tmpc1, tmpc2;
   int iteration;
   /* to be fixed somewhere else */
-  int switch_on_adaptive_precision=0;
   const int N=VOLUME;
   spinor *x, *r, *p, *v, *v_til, *w, *u, *b, *tmp, *tmp2;
   spinor ** solver_field = NULL;
@@ -110,30 +109,25 @@ int sumr(spinor * const P, spinor * const Q, const int max_iter,
     delta = sqrt(square_norm(r, N, 1));
   }
 
-  _complex_set(phi_hat, 1 / delta,0);
+  phi_hat = 1 / delta;
   tau_hat = delta / rho;
   zero_spinor_field(p, N);
-  _complex_zero(phi);
+  phi = 0.0;
   s = 0.;
-  _complex_zero(lambda);
-  _complex_zero(r_off_old);
-  _complex_one(r_diag_old);
-  _complex_one(gamm);
+  lambda = 0.0;
+  r_diag_old = 1.0;
+  gamm = 1.0;
   sigma = 1.;
-  _complex_one(c);
+  c = 1.0;
   mul(v_til, phi_hat, r, N);
   assign(v, v_til, N);
 
 #if DEBUG_SUMR ==1
   printf("delta=%g;\t phihat=%g;\t tauhat=%g;\t w=%g;\t p=%g;\t phi=%g;\t s=%g;\t lambda=%g;\t r_off=%g;\t r_off_old=%g;\t r_diag=%g;\t r_diag_old=%g;\t gamm=%g;\t sigma=%g;\t c=%g;\t v=%g;\t v_til=%g;\t ",
-	 delta,_complex_norm(phi_hat),tau_hat,square_norm(w),square_norm(p),
-	 _complex_norm(phi),s,_complex_norm(lambda),_complex_norm(r_off),_complex_norm(r_off_old),_complex_norm(r_diag),_complex_norm(r_diag_old),_complex_norm(gamm),sigma,_complex_norm(c),
+	 delta,cabs(phi_hat),tau_hat,square_norm(w),square_norm(p),
+	 cabs(phi),s,cabs(lambda),cabs(r_off),cabs(r_off_old),cabs(r_diag),cabs(r_diag_old),cabs(gamm),sigma,cabs(c),
 	 square_norm(v),square_norm(v_til));
 #endif
-
-  if(switch_on_adaptive_precision == 1) {
-    ap_eps_sq = 1.0e-2 * eps_sq;
-  }
 
   if(ov_cheby_coef==NULL) calculateOverlapPolynomial();
 
@@ -145,59 +139,59 @@ int sumr(spinor * const P, spinor * const Q, const int max_iter,
     printf("u=%g;\t\n", square_norm(u));
 #endif
     gamm = scalar_prod(v_til, u, N, 1);
-    _complex_chgsig(gamm, gamm);
+    gamm = -(gamm);
 #if DEBUG_SUMR ==1
-    printf("gamm=%g,%g;\t\n",gamm.re,gamm.im);
+    printf("gamm=%g,%g;\t\n",creal(gamm),cimag(gamm));
 #endif
-    sigma= sqrt((1 - _complex_norm(gamm))*(1 + _complex_norm(gamm)));
+    sigma= sqrt((1 - cabs(gamm))*(1 + cabs(gamm)));
 #if DEBUG_SUMR ==1
     printf("sigma=%g;\t\n", sigma);
 #endif
-    _mult_real(alpha,gamm,-delta);
+    alpha = -gamm * delta;
 #if DEBUG_SUMR ==1
-    printf("alpha=%g,%g;\t\n",alpha.re,alpha.im);
+    printf("alpha=%g,%g;\t\n",creal(alpha),cimag(alpha));
 #endif
-    _complex_set(r_off,s*z_r,0);
-    _add_assign_complex(r_off,alpha,phi);
+    r_off = s*z_r;
+    r_off += (alpha) * (phi);
 #if DEBUG_SUMR ==1
-    printf("r_off=%g,%g;\t\n",r_off.re,r_off.im);
+    printf("r_off=%g,%g;\t\n",creal(r_off),cimag(r_off));
 #endif
-    _complex_conj(tmpc, c);
-    _mult_real(r_hat, tmpc, z_r);
-    _add_assign_complex(r_hat, alpha, phi_hat);
+    tmpc = conj(c);
+    r_hat = (tmpc) * (z_r);
+    r_hat += (alpha) * (phi_hat);
 #if DEBUG_SUMR ==1
-    printf("r_hat=%g,%g;\t\n",r_hat.re, r_hat.im);
+    printf("r_hat=%g,%g;\t\n",creal(r_hat), cimag(r_hat));
 #endif
-    tmpr = 1/(sqrt(_complex_square_norm(r_hat) + (sigma*sigma) ));
-    _mult_real(tmpc, r_hat, tmpr);
-    _complex_conj(c, tmpc);
+    tmpr = 1/(sqrt(creal(r_hat * conj(r_hat)) + (sigma*sigma)));
+    tmpc = (r_hat) * (tmpr);
+    c = conj(tmpc);
 #if DEBUG_SUMR ==1
-    printf("c=%g,%g;\t\n",c.re,c.im);
+    printf("c=%g,%g;\t\n",creal(c),cimag(c));
 #endif
     s=-sigma * tmpr;
 #if DEBUG_SUMR ==1
     printf("s=%g;\t\n", s);
 #endif
-    _complex_set(r_diag, s*sigma, 0.);
-    _diff_assign_complex(r_diag, c, r_hat);
+    r_diag = s*sigma;
+    r_diag -= c * r_hat;
 #if DEBUG_SUMR ==1
-    printf("r_diag=%g,%g;\t\n",r_diag.re,r_diag.im);
+    printf("r_diag=%g,%g;\t\n",creal(r_diag),cimag(r_diag));
 #endif
-    _mult_real(tau, c, -tau_hat);
+    tau = -c * tau_hat;
 #if DEBUG_SUMR ==1
-    printf("tau=%g,%g;\t\n",tau.re,tau.im);
+    printf("tau=%g,%g;\t\n",creal(tau),cimag(tau));
 #endif
     tau_hat *= s;
 #if DEBUG_SUMR ==1
     printf("tau_hat=%g;\t\n", tau_hat);
 #endif
-    _div_complex(eta, tau, r_diag);
+    eta = tau / r_diag;
 #if DEBUG_SUMR ==1
-    printf("eta=%g,%g;\t\n",eta.re,eta.im);
+    printf("eta=%g,%g;\t\n",creal(eta),cimag(eta));
 #endif
-    _div_complex(kappa, r_off, r_diag_old);
+    kappa = r_off / r_diag_old;
 #if DEBUG_SUMR ==1
-    printf("kappa=%g,%g;\t\n",kappa.re,kappa.im);
+    printf("kappa=%g,%g;\t\n",creal(kappa),cimag(kappa));
 #endif
     zero_spinor_field(w, N);
     assign_add_mul_add_mul(w, p, tmp2, alpha, kappa, N);
@@ -225,9 +219,6 @@ int sumr(spinor * const P, spinor * const Q, const int max_iter,
     /* Check whether the precision is reached ... */
     err = tau_hat * tau_hat;
 
-    /* relax ap_eps_sq for adaptive precision (abuse of index_shift as a  "prudence factor") */ 
-    if(switch_on_adaptive_precision == 1)    ap_eps_sq = (shift * eps_sq) / err;
-
 #if DEBUG_SUMR ==1 
     tmpr = square_norm(x, N, 1);
     if(g_proc_id == g_stdio_proc) {
@@ -235,7 +226,7 @@ int sumr(spinor * const P, spinor * const Q, const int max_iter,
       fflush( stdout);
     }
 #endif
-    if ( (iteration%10) == 0 && g_proc_id == g_stdio_proc ) {
+    if ((iteration%10) == 0 && g_proc_id == g_stdio_proc ) {
       printf("SUMR iteration= %d\t|res|^2= %g\n",iteration,err); 
       /*      fflush( stdout); */ 
     }
@@ -250,23 +241,23 @@ int sumr(spinor * const P, spinor * const Q, const int max_iter,
 #if DEBUG_SUMR ==1
     printf("delta=%g;\t\n", delta);
 #endif
-    _complex_conj(tmpc, gamm);
-    _complex_conj(tmpc1, c);
-    _mult_real(phi,tmpc, s / delta);
-    _diff_assign_complex(phi, c, phi_hat);
+    tmpc = conj(gamm);
+    tmpc1 = conj(c);
+    phi = (tmpc) * (s / delta);
+    phi -= (c) * (phi_hat);
 #if DEBUG_SUMR ==1
     printf("phi=%g;\t\n", phi);
 #endif
 
-    _div_complex(lambda, phi, r_diag);
+    lambda = (phi) / (r_diag);
 #if DEBUG_SUMR ==1
     printf("lambda=%g;\t\n", lambda);
 #endif
 
-    _div_real(tmpc1, tmpc1, delta);
-    _mult_assign_complex(tmpc2, tmpc1, tmpc);
-    _mult_real(phi_hat, phi_hat, s);
-    _add_complex(phi_hat, tmpc2);
+    tmpc1 = (tmpc1) / (delta);
+    tmpc2 = (tmpc1) * (tmpc);
+    phi_hat = (phi_hat) * (s);
+    phi_hat += tmpc2;
 #if DEBUG_SUMR ==1
     printf("phi_hat=%g;\t\n", phi_hat);
 #endif

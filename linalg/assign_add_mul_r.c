@@ -17,9 +17,7 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifdef _STD_C99_COMPLEX_CHECKED
-# include <complex.h>
-#endif
+#include <complex.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -28,10 +26,6 @@
 #endif
 #ifdef HAVE_CONFIG_H
 # include<config.h>
-#endif
-#ifdef apenext
-#include <topology.h>
-#include <queue.h>
 #endif
 #include "global.h"
 #include "sse.h"
@@ -43,7 +37,8 @@
 
 /*   (*P) = (*P) + c(*Q)        c is a complex constant   */
 
-void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N) {
+void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N)
+{
   int ix;
   su3_vector *s,*r;
   __asm__ __volatile__ ("movsd %0, %%xmm7 \n\t"
@@ -261,170 +256,52 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
   return;
 }
 
-#elif ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+#else
 
 /*   (*P) = (*P) + c(*Q)        c is a complex constant   */
 
-void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N) {
-  int ix;
-  static double fact;
-  spinor *r,*s;
-
-  fact=c;
+void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N)
+{
+  register spinor *p;
+  register spinor *q;
 
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-  for (ix = 0; ix < N; ix++) {
-    r=P+ix;      
-    s=Q+ix;
-    
-    (*r).s0.c0.re+=fact*(*s).s0.c0.re;
-    (*r).s0.c0.im+=fact*(*s).s0.c0.im;
-    (*r).s0.c1.re+=fact*(*s).s0.c1.re;
-    (*r).s0.c1.im+=fact*(*s).s0.c1.im;
-    (*r).s0.c2.re+=fact*(*s).s0.c2.re;
-    (*r).s0.c2.im+=fact*(*s).s0.c2.im;
-    
-    (*r).s1.c0.re+=fact*(*s).s1.c0.re;
-    (*r).s1.c0.im+=fact*(*s).s1.c0.im;
-    (*r).s1.c1.re+=fact*(*s).s1.c1.re;
-    (*r).s1.c1.im+=fact*(*s).s1.c1.im;
-    (*r).s1.c2.re+=fact*(*s).s1.c2.re;
-    (*r).s1.c2.im+=fact*(*s).s1.c2.im;         
-    
-    (*r).s2.c0.re+=fact*(*s).s2.c0.re;
-    (*r).s2.c0.im+=fact*(*s).s2.c0.im;
-    (*r).s2.c1.re+=fact*(*s).s2.c1.re;
-    (*r).s2.c1.im+=fact*(*s).s2.c1.im;
-    (*r).s2.c2.re+=fact*(*s).s2.c2.re;
-    (*r).s2.c2.im+=fact*(*s).s2.c2.im;         
-    
-    (*r).s3.c0.re+=fact*(*s).s3.c0.re;
-    (*r).s3.c0.im+=fact*(*s).s3.c0.im;
-    (*r).s3.c1.re+=fact*(*s).s3.c1.re;
-    (*r).s3.c1.im+=fact*(*s).s3.c1.im;
-    (*r).s3.c2.re+=fact*(*s).s3.c2.re;
-    (*r).s3.c2.im+=fact*(*s).s3.c2.im;
-  }
-}
-#elif ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
-
-/*   (*P) = (*P) + c(*Q)        c is a complex constant   */
-
-void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N) {
-  register int ix=0;
-  register double fact;
-  register spinor *rPointer,*sPointer;
-
-  fact=c;
-
-  rPointer = P;
-  sPointer = Q;
-
-  /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-  do {
-    register spinor s, r;
-    ix+=1;
-    
-    s = *(sPointer);
-    r = *(rPointer);
-
-    r.s0.c0+=fact*s.s0.c0;
-    r.s0.c1+=fact*s.s0.c1;
-    r.s0.c2+=fact*s.s0.c2;
-
-    r.s1.c0+=fact*s.s1.c0;
-    r.s1.c1+=fact*s.s1.c1;
-    r.s1.c2+=fact*s.s1.c2;
-    
-    r.s2.c0+=fact*s.s2.c0;
-    r.s2.c1+=fact*s.s2.c1;
-    r.s2.c2+=fact*s.s2.c2;
-
-    r.s3.c0+=fact*s.s3.c0;
-    r.s3.c1+=fact*s.s3.c1;
-    r.s3.c2+=fact*s.s3.c2;
-
-    sPointer+=1;
-    rPointer+=1;
-
-  } while (ix<N);
-}
-#elif defined apenext
-
-#define NOWHERE_COND(condition) ((condition) ? 0x0 : NOWHERE )
-
-/*   (*P) = (*P) + c(*Q)        c is a complex constant   */
-
-void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N) {
-  register int ix=N;
-  register double fact;
-  register spinor *rPointer,*sPointer;
-
-  fact=c;
-
-  rPointer = P;
-  sPointer = Q;
-
-  prefetch(*(rPointer));
-  prefetch(*(sPointer));
+  for (int ix = 0; ix < N; ++ix)
   {
-#pragma cache
-  /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-    do {
-      register spinor s, r;
-      ix--;
+    p = P + ix;
+    q = Q + ix;
+    p->s0.c0 += c * q->s0.c0;
+    p->s0.c1 += c * q->s0.c1;
+    p->s0.c2 += c * q->s0.c2;
+
+    p->s1.c0 += c * q->s1.c0;
+    p->s1.c1 += c * q->s1.c1;
+    p->s1.c2 += c * q->s1.c2;
     
-      rPointer++;
-      sPointer++;
+    p->s2.c0 += c * q->s2.c0;
+    p->s2.c1 += c * q->s2.c1;
+    p->s2.c2 += c * q->s2.c2;
 
-      fetch(r);
-      fetch(s);      
-
-      prefetch (*(rPointer+NOWHERE_COND(ix)));
-      prefetch (*(sPointer+NOWHERE_COND(ix)));
-
-      r.s0.c0+=fact*s.s0.c0;
-      r.s0.c1+=fact*s.s0.c1;
-      r.s0.c2+=fact*s.s0.c2;
-
-      r.s1.c0+=fact*s.s1.c0;
-      r.s1.c1+=fact*s.s1.c1;
-      r.s1.c2+=fact*s.s1.c2;
-    
-      r.s2.c0+=fact*s.s2.c0;
-      r.s2.c1+=fact*s.s2.c1;
-      r.s2.c2+=fact*s.s2.c2;
-
-      r.s3.c0+=fact*s.s3.c0;
-      r.s3.c1+=fact*s.s3.c1;
-      r.s3.c2+=fact*s.s3.c2;
-
-      *(rPointer-1) = r;
-
-    } while (ix>0);
+    p->s3.c0 += c * q->s3.c0;
+    p->s3.c1 += c * q->s3.c1;
+    p->s3.c2 += c * q->s3.c2;
   }
 }
 #endif
 
 #ifdef WITHLAPH
-void assign_add_mul_r_su3vect(su3_vector * const P, su3_vector * const Q, const double c, const int N) {
-  int ix;
-  static double fact;
-  su3_vector *r,*s;
+void assign_add_mul_r_su3vect(su3_vector * const P, su3_vector * const Q, const double c, const int N)
+{
+  su3_vector *p,*q;
 
-  fact=c;
-
-  for (ix = 0; ix < N; ix++) 
-	{
-    r=P+ix;      
-    s=Q+ix;
+  for (int ix = 0; ix < N; ++ix) 
+  {
+    p = P + ix;      
+    q = Q + ix;
     
-    (*r).c0.re+=fact*(*s).c0.re;
-    (*r).c0.im+=fact*(*s).c0.im;
-    (*r).c1.re+=fact*(*s).c1.re;
-    (*r).c1.im+=fact*(*s).c1.im;
-    (*r).c2.re+=fact*(*s).c2.re;
-    (*r).c2.im+=fact*(*s).c2.im;
-	}
+    p->c0 += c * q->c0;
+    p->c1 += c * q->c1;
+    p->c2 += c * q->c2;
+  }
 }
 #endif

@@ -35,7 +35,7 @@
 #include <math.h>
 #include <stdio.h>
 #include "su3spinor.h"
-#include "complex.h"
+#include <complex.h>
 #include "linalg_eo.h"
 #include "linalg/blas.h"
 #ifdef CRAY
@@ -54,13 +54,13 @@ static int ONE = 1;
  *
  */
 
-void IteratedClassicalGS_bi_old(complex v[], double *vnrm, int n, int m, complex A[], 
-			 complex work1[]) {
+void IteratedClassicalGS_bi_old(_Complex double v[], double *vnrm, int n, int m, _Complex double A[], 
+			 _Complex double work1[]) {
   const double alpha = 0.5;
 
   double vnrm_old;
   int i, n2, isorth = 0;
-  complex CMONE, CONE, CZERO;
+  _Complex double CMONE, CONE, CZERO;
 #ifdef CRAY
   char * cupl_c = "C", *cupl_n = "N";
   _fcd fupl_c, fupl_n;
@@ -71,9 +71,9 @@ void IteratedClassicalGS_bi_old(complex v[], double *vnrm, int n, int m, complex
 #endif
 
   n2 = 2*n;
-  CMONE.re = -1.; CMONE.im=0.;
-  CONE.re = 1.; CONE.im=0.;
-  CZERO.re = 0.; CZERO.im=0.;
+  CMONE = -1.;
+  CONE = 1.;
+  CZERO = 0.;
 
   vnrm_old = _FT(dnrm2)(&n2, (double*) v, &ONE);
 
@@ -84,7 +84,7 @@ void IteratedClassicalGS_bi_old(complex v[], double *vnrm, int n, int m, complex
     (*vnrm) = _FT(dnrm2)(&n2, (double*) v, &ONE);
 
     isorth=((*vnrm) > alpha*vnrm_old);
-    vnrm_old = (*vnrm);
+    vnrm_old = *vnrm;
   }
   if (i >= max_cgs_it_bi) {
 /*     errorhandler(400,""); */
@@ -92,14 +92,14 @@ void IteratedClassicalGS_bi_old(complex v[], double *vnrm, int n, int m, complex
 }
 
 
-void IteratedClassicalGS_bi(complex v[], double *vnrm, int n, int m, complex A[], 
-			 complex work1[], int lda) {
+void IteratedClassicalGS_bi(_Complex double v[], double *vnrm, int n, int m, _Complex double A[], 
+			 _Complex double work1[], int lda) {
   const double alpha = 0.5;
 
   double vnrm_old;
-  int i, n2, isorth = 0;
+  int i, isorth = 0;
   int j;
-  complex CMONE, CONE, CZERO;
+  _Complex double CMONE, CONE;
 #ifdef CRAY
   char *cupl_n = "N";
   _fcd fupl_n;
@@ -108,23 +108,21 @@ void IteratedClassicalGS_bi(complex v[], double *vnrm, int n, int m, complex A[]
   char *fupl_n = "N";
 #endif
 
-  n2 = 2*n;
-  CMONE.re = -1.; CMONE.im=0.;
-  CONE.re = 1.; CONE.im=0.;
-  CZERO.re = 0.; CZERO.im=0.;
+  CMONE = -1.;
+  CONE = 1.;
 
-  vnrm_old = sqrt(square_norm_bi((bispinor*) v, n*sizeof(complex)/sizeof(bispinor)));
+  vnrm_old = sqrt(square_norm_bi((bispinor*) v, n*sizeof(_Complex double)/sizeof(bispinor)));
 
   for(i = 0; !isorth && i < max_cgs_it_bi; i ++) {
 
     for(j = 0; j < m; j++){
-      work1[j] = scalar_prod_bi((bispinor*) (A+j*lda), (bispinor*) v, n*sizeof(complex)/sizeof(bispinor));
+      work1[j] = scalar_prod_bi((bispinor*)(A+j*lda), (bispinor*) v, n*sizeof(_Complex double)/sizeof(bispinor));
     }
     _FT(zgemv)(fupl_n, &n, &m, &CMONE, A, &lda, work1, &ONE, &CONE, v, &ONE, 1);
-    (*vnrm) = sqrt(square_norm_bi((bispinor*) v, n*sizeof(complex)/sizeof(bispinor)));
+    (*vnrm) = sqrt(square_norm_bi((bispinor*) v, n*sizeof(_Complex double)/sizeof(bispinor)));
 
     isorth=((*vnrm) > alpha*vnrm_old);
-    vnrm_old = (*vnrm);
+    vnrm_old = *vnrm;
   }
   if (i >= max_cgs_it_bi) {
 /*     errorhandler(400,""); */
@@ -138,27 +136,27 @@ void IteratedClassicalGS_bi(complex v[], double *vnrm, int n, int m, complex A[]
  *  Orthogonlaizes v with respect to span{A[:,1:m]}
  */
 
-void ModifiedGS_bi_old(complex v[], int n, int m, complex A[]){
+void ModifiedGS_bi_old(_Complex double v[], int n, int m, _Complex double A[]){
 
   int i;
-  complex s;
+  _Complex double s;
 
   for (i = 0; i < m; i ++) {
-    s = scalar_prod_bi((bispinor*) (A+i*n), (bispinor*) v, n*sizeof(complex)/sizeof(bispinor));
-    s.re = -s.re; s.im = -s.im;
+    s = scalar_prod_bi((bispinor*)(A+i*n), (bispinor*) v, n*sizeof(_Complex double)/sizeof(bispinor));
+    s = -s;
     _FT(zaxpy)(&n, &s, A+i*n, &ONE, v, &ONE); 
   }
 }
 
 
-void ModifiedGS_bi(complex v[], int n, int m, complex A[], int lda){
+void ModifiedGS_bi(_Complex double v[], int n, int m, _Complex double A[], int lda){
 
   int i;
-  complex s;
+  _Complex double s;
 
   for (i = 0; i < m; i ++) {
-    s = scalar_prod_bi((bispinor*) (A+i*lda), (bispinor*) v, n*sizeof(complex)/sizeof(bispinor));
-    s.re = -s.re; s.im = -s.im;
+    s = scalar_prod_bi((bispinor*)(A+i*lda), (bispinor*) v, n*sizeof(_Complex double)/sizeof(bispinor));
+    s = -s;
     _FT(zaxpy)(&n, &s, A+i*lda, &ONE, v, &ONE); 
   }
 }

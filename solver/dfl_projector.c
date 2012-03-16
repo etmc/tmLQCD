@@ -30,7 +30,7 @@
 #endif
 #include "global.h"
 #include "start.h"
-#include "complex.h"
+#include <complex.h>
 #include "block.h"
 #include "linalg/blas.h"
 #include "D_psi.h"
@@ -51,25 +51,25 @@ double dfl_little_D_prec = 1.e-24;
 int dfl_sloppy_prec = 0;
 int init_dfl_projector = 0;
 spinor **psi;
-complex *inprod;
-complex *inprod_eo;
-complex *inprod_o;
-complex *inprod_e;
-complex *invvec;
-complex *invvec_eo;
-complex *ctmp;
-complex *work_block;
+_Complex double *inprod;
+_Complex double *inprod_eo;
+_Complex double *inprod_o;
+_Complex double *inprod_e;
+_Complex double *invvec;
+_Complex double *invvec_eo;
+_Complex double *ctmp;
+_Complex double *work_block;
 const int dfl_work_size = 16;
-complex *work[16];
+_Complex double *work[16];
 
 static void alloc_dfl_projector();
 
 /* Break up full volume spinor to blocks
  * loop over block.basis
- * compute inner product and store as complex vector
- * compute A^-1 * complex vector
+ * compute inner product and store as _Complex double vector
+ * compute A^-1 * _Complex double vector
  * loop over block.basis
- * compute sum of basis vectors times complex element
+ * compute sum of basis vectors times _Complex double element
  * create global vector */
 
 /* this is phi_k A^{-1}_{kl} (phi_k, in) */
@@ -78,7 +78,7 @@ void project(spinor * const out, spinor * const in) {
   int evenodd = 0;
   int usePL = 0;
   int vol = block_list[0].volume;
-  complex * v, * w;
+  _Complex double * v, * w;
   double prec;
   
   if(init_dfl_projector == 0) {
@@ -90,15 +90,15 @@ void project(spinor * const out, spinor * const in) {
   split_global_field_GEN(psi, in, nb_blocks);
   
   for (j = 0; j < g_N_s*nb_blocks*9; j++) {
-    _complex_zero(inprod[j]);
-    _complex_zero(inprod_o[j]);
-    _complex_zero(inprod_eo[j]);
-    _complex_zero(inprod_e[j]);
-    _complex_zero(invvec[j]);
-    _complex_zero(invvec_eo[j]);
-    _complex_zero(ctmp[j]);
-    _complex_zero(w[j]);
-    _complex_zero(v[j]);
+    (inprod[j]) = 0.0;
+    (inprod_o[j]) = 0.0;
+    (inprod_eo[j]) = 0.0;
+    (inprod_e[j]) = 0.0;
+    (invvec[j]) = 0.0;
+    (invvec_eo[j]) = 0.0;
+    (ctmp[j]) = 0.0;
+    (w[j]) = 0.0;
+    (v[j]) = 0.0;
   }
   
   for (j = 0; j < g_N_s; j++) {/*loop over block.basis */
@@ -108,13 +108,11 @@ void project(spinor * const out, spinor * const in) {
       inprod[j + i*g_N_s]  = scalar_prod(block_list[i].basis[j], psi[i], vol, 0);
       if(evenodd) {
 	if (block_list[i].evenodd==0) {
-	  inprod_eo[j + i_e*g_N_s].re=inprod[j + i*g_N_s].re;
-	  inprod_eo[j + i_e*g_N_s].im=inprod[j + i*g_N_s].im;
+	  inprod_eo[j + i_e*g_N_s] = inprod[j + i*g_N_s];
 	  i_e++;
 	}
 	if (block_list[i].evenodd==1) {
-	  inprod_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].re=inprod[j + i*g_N_s].re;
-	  inprod_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].im=inprod[j + i*g_N_s].im;
+	  inprod_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s] = inprod[j + i*g_N_s];
 	  i_o++;
 	}
       }
@@ -147,13 +145,11 @@ void project(spinor * const out, spinor * const in) {
 	i_e=0;
 	for(i = 0; i < nb_blocks; i++) {
 	  if (block_list[i].evenodd==0) {
-	    invvec[j + i*g_N_s].re=invvec_eo[j + i_e*g_N_s].re;
-	    invvec[j + i*g_N_s].im=invvec_eo[j + i_e*g_N_s].im;
+	    invvec[j + i*g_N_s] = invvec_eo[j + i_e*g_N_s];
 	    i_e++;
 	  }
 	  if (block_list[i].evenodd==1) {
-	    invvec[j + i*g_N_s].re=invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].re;
-	    invvec[j + i*g_N_s].im=invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].im;
+	    invvec[j + i*g_N_s] = invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s];
 	    i_o++;
 	  }
 	}
@@ -176,10 +172,8 @@ void project(spinor * const out, spinor * const in) {
       little_P_R_sym(v, w);
 /*      little_project(w, inprod_o, g_N_s);*/
       little_project_eo(w,inprod_o,g_N_s);
-      for(i = 0; i < nb_blocks*g_N_s; i++) {
-	invvec_eo[i].re = w[i].re + v[i].re;
-	invvec_eo[i].im = w[i].im + v[i].im;
-      }
+      for(i = 0; i < nb_blocks*g_N_s; ++i)
+	invvec_eo[i] = w[i] + v[i];
       little_D_hop(0,ctmp, invvec_eo);
       little_D_ee_inv(invvec_eo,ctmp);
       little_Dhat_rhs(0,invvec_eo, -1., inprod_e);
@@ -188,13 +182,11 @@ void project(spinor * const out, spinor * const in) {
 	i_e=0;
 	for(i = 0; i < nb_blocks; i++){
 	  if (block_list[i].evenodd==0) {
-	    invvec[j + i*g_N_s].re=invvec_eo[j + i_e*g_N_s].re;
-	    invvec[j + i*g_N_s].im=invvec_eo[j + i_e*g_N_s].im;
+	    invvec[j + i*g_N_s] = invvec_eo[j + i_e*g_N_s];
 	    i_e++;
 	  }
 	  if (block_list[i].evenodd==1) {
-	    invvec[j + i*g_N_s].re=invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].re;
-	    invvec[j + i*g_N_s].im=invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s].im;
+	    invvec[j + i*g_N_s] = invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s];
 	    i_o++;
 	  }
 	}
@@ -208,10 +200,8 @@ void project(spinor * const out, spinor * const in) {
       iter = gcr4complex(w, v, 10, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
       little_P_R(v, w);
       little_project(w, inprod, g_N_s);
-      for(i = 0; i < nb_blocks*g_N_s; i++) {
-	invvec[i].re = w[i].re + v[i].re;
-	invvec[i].im = w[i].im + v[i].im;
-      }
+      for(i = 0; i < nb_blocks*g_N_s; ++i)
+	invvec[i] = w[i] + v[i];
       if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
 	printf("lgcr number of iterations %d (using P_L)\n", iter);
       }
@@ -237,14 +227,14 @@ static void alloc_dfl_projector() {
   int i;
   
   psi = calloc(2*nb_blocks, sizeof(spinor*)); /*block local version of global spinor */
-  inprod = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
-  inprod_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
-  inprod_o = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
-  inprod_e = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
-  ctmp = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
-  invvec = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
-  invvec_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
-  work_block = calloc(dfl_work_size * nb_blocks * 9 * g_N_s, sizeof(complex));
+  inprod = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+  inprod_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+  inprod_o = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+  inprod_e = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+  ctmp = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+  invvec = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+  invvec_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+  work_block = calloc(dfl_work_size * nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   for(i = 0; i < dfl_work_size; ++i) {
     work[i] = work_block + i * nb_blocks * 9 * g_N_s;
   }
@@ -335,10 +325,10 @@ void D_project_right(spinor * const out, spinor * const in) {
 
 
 /* out = |phi_k> A^{-1}_kl <phi_l|in> */
-void little_project(complex * const out, complex * const in, const int  N) {
+void little_project(_Complex double * const out, _Complex double * const in, const int  N) {
   int i, j;
-  static complex *phi;
-  static complex *psi;
+  static _Complex double *phi;
+  static _Complex double *psi;
 
   if(init_dfl_projector == 0) {
     alloc_dfl_projector();
@@ -355,14 +345,14 @@ void little_project(complex * const out, complex * const in, const int  N) {
 #ifdef MPI
   MPI_Allreduce(phi, psi, N, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
 #else
-  memcpy(psi, phi, N*sizeof(complex));
+  memcpy(psi, phi, N*sizeof(_Complex double));
 #endif
   
   /* apply inverse of little_A */
   for(i = 0; i < N; i++) {
-    _complex_zero(phi[i]);
+    (phi[i]) = 0.0;
     for(j = 0; j < N; j++) {
-      _add_assign_complex(phi[i], little_A[j*N + i], psi[j]);
+      (phi[i]) += (little_A[j*N + i]) * (psi[j]);
     }
   }
 
@@ -373,10 +363,10 @@ void little_project(complex * const out, complex * const in, const int  N) {
   return;
 }
 
-void little_project_eo(complex * const out, complex * const in, const int  N) {
+void little_project_eo(_Complex double * const out, _Complex double * const in, const int  N) {
   int i, j;
-  static complex *phi;
-  static complex *psi;
+  static _Complex double *phi;
+  static _Complex double *psi;
   
   if(init_dfl_projector == 0) {
     alloc_dfl_projector();
@@ -393,14 +383,14 @@ void little_project_eo(complex * const out, complex * const in, const int  N) {
 #ifdef MPI
   MPI_Allreduce(phi, psi, N, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
 #else
-  memcpy(psi, phi, N*sizeof(complex));
+  memcpy(psi, phi, N*sizeof(_Complex double));
 #endif
 
   /* apply inverse of little_A_eo */
   for(i = 0; i < N; i++) {
-    _complex_zero(phi[i]);
+    (phi[i]) = 0.0;
     for(j = 0; j < N; j++) {
-      _add_assign_complex(phi[i], little_A_eo[j*N + i], psi[j]);
+      (phi[i]) += (little_A_eo[j*N + i]) * (psi[j]);
     }
   }
   
@@ -412,10 +402,10 @@ void little_project_eo(complex * const out, complex * const in, const int  N) {
 }
 
 
-void little_project2(complex * const out, complex * const in, const int  N) {
+void little_project2(_Complex double * const out, _Complex double * const in, const int  N) {
   int i;
-  static complex *phi;
-  static complex *psi;
+  static _Complex double *phi;
+  static _Complex double *psi;
   
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   phi = work[4];
@@ -427,7 +417,7 @@ void little_project2(complex * const out, complex * const in, const int  N) {
 #ifdef MPI
   MPI_Allreduce(phi, psi, g_N_s, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
 #else
-  memcpy(psi, phi, g_N_s*sizeof(complex));
+  memcpy(psi, phi, g_N_s*sizeof(_Complex double));
 #endif
   
   lmul(out, psi[0], little_dfl_fields[0], nb_blocks*g_N_s);
@@ -439,7 +429,7 @@ void little_project2(complex * const out, complex * const in, const int  N) {
 }
 
 
-void little_P_L(complex * const out, complex * const in) {
+void little_P_L(_Complex double * const out, _Complex double * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   little_project(out, in, g_N_s);
   little_D(work[6], out);
@@ -447,7 +437,7 @@ void little_P_L(complex * const out, complex * const in) {
   return;
 }
 
-void little_P_R(complex * const out, complex * const in) {
+void little_P_R(_Complex double * const out, _Complex double * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   little_D(out, in);
   little_project(work[7], out, g_N_s);
@@ -455,7 +445,7 @@ void little_P_R(complex * const out, complex * const in) {
   return;
 }
 
-void little_P_L_sym(complex * const out, complex * const in) {
+void little_P_L_sym(_Complex double * const out, _Complex double * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
 /*  little_project(out, in, g_N_s);*/
   little_project_eo(out,in,g_N_s);
@@ -464,7 +454,7 @@ void little_P_L_sym(complex * const out, complex * const in) {
   return;
 }
 
-void little_P_R_sym(complex * const out, complex * const in) {
+void little_P_R_sym(_Complex double * const out, _Complex double * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   little_D_sym(out, in);
 /*  little_project(work[14], out, g_N_s);*/
@@ -473,21 +463,21 @@ void little_P_R_sym(complex * const out, complex * const in) {
   return;
 }
 
-void little_P_L_D(complex * const out, complex * const in) {
+void little_P_L_D(_Complex double * const out, _Complex double * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   little_D(work[8], in);
   little_P_L(out, work[8]);
   return;
 }
 
-void little_P_L_D_sym(complex * const out, complex * const in) {
+void little_P_L_D_sym(_Complex double * const out, _Complex double * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   little_D_sym(work[15], in);
   little_P_L_sym(out, work[15]);
   return;
 }
 
-void little_D_P_R(complex * const out, complex * const in) {
+void little_D_P_R(_Complex double * const out, _Complex double * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   little_P_R(work[9], in);
   little_D(out, work[9]);
@@ -500,7 +490,7 @@ int check_projectors() {
   int i,j;
   spinor **phi;
   spinor **wphi;
-  complex *v;
+  _Complex double *v;
   spinor ** work_fields = NULL;
   const int nr_wf = 4;
 
@@ -661,9 +651,9 @@ int check_projectors() {
 
 
   /* Different flavours for kappa != 0. First project to only a single block */
-  for (j = 0; j < (VOLUME * sizeof(spinor) / sizeof(complex)); ++j){
-    _complex_zero(((complex*)work_fields[1])[j]);
-    _complex_zero(((complex*)work_fields[2])[j]);
+  for (j = 0; j < (VOLUME * sizeof(spinor) / sizeof(_Complex double)); ++j){
+    ((_Complex double*)work_fields[1])[j] = 0.;
+    ((_Complex double*)work_fields[2])[j] = 0.;
   }
 
   if (!g_cart_id){
@@ -677,7 +667,7 @@ int check_projectors() {
   D_psi(work_fields[2], work_fields[1]);
   
   if (g_cart_id == 0 && g_debug_level > 4){
-    v = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
+    v = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
     split_global_field_GEN(phi, work_fields[2], nb_blocks);
 
     for (j = 0; j < g_N_s; ++j) {
@@ -687,7 +677,7 @@ int check_projectors() {
     }
 
     for (j = 0; j < nb_blocks* g_N_s; ++j) {
-      printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
+      printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, creal(v[j]), cimag(v[j]));
     }
     free(v);
   }
@@ -706,13 +696,13 @@ int check_projectors() {
   apply_little_D_spinor(work_fields[3], work_fields[1]);
   D_psi(work_fields[2], work_fields[1]);
   if (!g_proc_id && g_debug_level > 4){
-    v = calloc(nb_blocks * 9 * g_N_s, sizeof(complex));
+    v = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
     split_global_field_GEN(phi, work_fields[2],nb_blocks);
     for (j = 0; j < g_N_s; ++j) 
       for(i = 0; i < nb_blocks; i++)
 	v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], phi[i], VOLUME/nb_blocks, 0);
     for (j = 0; j < nb_blocks* g_N_s; ++j) {
-      printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, v[j].re, v[j].im);
+      printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, creal(v[j]), cimag(v[j]));
     }
     free(v);
   }
@@ -733,24 +723,24 @@ int check_projectors() {
   if(g_proc_id == 0 && g_debug_level > 4) {
     printf("||P D P psi - A psi|| = %1.5e\n", sqrt(nrm));
     printf("\n*** Comparison of the leading spinor components ***\n");
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s0.c0.re, work_fields[3]->s0.c0.re);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s0.c0.im, work_fields[3]->s0.c0.im);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s0.c1.re, work_fields[3]->s0.c1.re);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s0.c1.im, work_fields[3]->s0.c1.im);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s0.c2.re, work_fields[3]->s0.c2.re);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s0.c2.im, work_fields[3]->s0.c2.im);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s1.c0.re, work_fields[3]->s1.c0.re);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s1.c0.im, work_fields[3]->s1.c0.im);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s1.c1.re, work_fields[3]->s1.c1.re);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s1.c1.im, work_fields[3]->s1.c1.im);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s1.c2.re, work_fields[3]->s1.c2.re);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s1.c2.im, work_fields[3]->s1.c2.im);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s2.c0.re, work_fields[3]->s2.c0.re);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s2.c0.im, work_fields[3]->s2.c0.im);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s2.c1.re, work_fields[3]->s2.c1.re);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s2.c1.im, work_fields[3]->s2.c1.im);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s2.c2.re, work_fields[3]->s2.c2.re);
-    printf("%1.5e\t%1.5e\n", work_fields[1]->s2.c2.im, work_fields[3]->s2.c2.im);
+    printf("%1.5e\t%1.5e\n", creal(work_fields[1]->s0.c0), creal(work_fields[3]->s0.c0));
+    printf("%1.5e\t%1.5e\n", cimag(work_fields[1]->s0.c0), cimag(work_fields[3]->s0.c0));
+    printf("%1.5e\t%1.5e\n", creal(work_fields[1]->s0.c1), creal(work_fields[3]->s0.c1));
+    printf("%1.5e\t%1.5e\n", cimag(work_fields[1]->s0.c1), cimag(work_fields[3]->s0.c1));
+    printf("%1.5e\t%1.5e\n", creal(work_fields[1]->s0.c2), creal(work_fields[3]->s0.c2));
+    printf("%1.5e\t%1.5e\n", cimag(work_fields[1]->s0.c2), cimag(work_fields[3]->s0.c2));
+    printf("%1.5e\t%1.5e\n", creal(work_fields[1]->s1.c0), creal(work_fields[3]->s1.c0));
+    printf("%1.5e\t%1.5e\n", cimag(work_fields[1]->s1.c0), cimag(work_fields[3]->s1.c0));
+    printf("%1.5e\t%1.5e\n", creal(work_fields[1]->s1.c1), creal(work_fields[3]->s1.c1));
+    printf("%1.5e\t%1.5e\n", cimag(work_fields[1]->s1.c1), cimag(work_fields[3]->s1.c1));
+    printf("%1.5e\t%1.5e\n", creal(work_fields[1]->s1.c2), creal(work_fields[3]->s1.c2));
+    printf("%1.5e\t%1.5e\n", cimag(work_fields[1]->s1.c2), cimag(work_fields[3]->s1.c2));
+    printf("%1.5e\t%1.5e\n", creal(work_fields[1]->s2.c0), creal(work_fields[3]->s2.c0));
+    printf("%1.5e\t%1.5e\n", cimag(work_fields[1]->s2.c0), cimag(work_fields[3]->s2.c0));
+    printf("%1.5e\t%1.5e\n", creal(work_fields[1]->s2.c1), creal(work_fields[3]->s2.c1));
+    printf("%1.5e\t%1.5e\n", cimag(work_fields[1]->s2.c1), cimag(work_fields[3]->s2.c1));
+    printf("%1.5e\t%1.5e\n", creal(work_fields[1]->s2.c2), creal(work_fields[3]->s2.c2));
+    printf("%1.5e\t%1.5e\n", cimag(work_fields[1]->s2.c2), cimag(work_fields[3]->s2.c2));
     printf("*** End of dump ***\n\n");
     fflush(stdout);
   }
@@ -763,7 +753,7 @@ int check_projectors() {
     alloc_dfl_projector();
   }
   
-  memcpy(work[10], work_fields[0], nb_blocks*g_N_s*sizeof(complex));
+  memcpy(work[10], work_fields[0], nb_blocks*g_N_s*sizeof(_Complex double));
   little_project2(work[11], work[10], g_N_s);
   little_project2(work[12], work[11], g_N_s);
   ldiff(work[12], work[12], work[11], nb_blocks*g_N_s);
@@ -820,7 +810,7 @@ void check_little_D_inversion() {
   int i,j,ctr_t;
   int contig_block = LZ / nb_blocks;
   int vol = block_list[0].volume;
-  complex *result, *v, *w;
+  _Complex double *result, *v, *w;
   double dif;
   spinor ** work_fields = NULL;
   const int nr_wf = 1;
@@ -833,7 +823,7 @@ void check_little_D_inversion() {
   v = work[11];
   w = work[12];
 
-  result = calloc(nb_blocks * 9 * g_N_s, sizeof(complex)); /*inner product of spinors with bases */
+  result = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
 
   /* no loop below because further down we also don't take this cleanly into account */
 
@@ -859,17 +849,15 @@ void check_little_D_inversion() {
     gcr4complex(w, v, 10, 1000, 1.e-24, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
     little_P_R(v, w);
     little_project(w, inprod, g_N_s);
-    for(i = 0; i < nb_blocks*g_N_s; i++) {
-      invvec[i].re = w[i].re + v[i].re;
-      invvec[i].im = w[i].im + v[i].im;
-    }
+    for(i = 0; i < nb_blocks*g_N_s; ++i)
+      invvec[i] = w[i] + v[i];
   }
   little_D(result, invvec); /* This should be a proper inverse now */
 
   dif = 0.0;
   for(ctr_t = 0; ctr_t < nb_blocks * g_N_s; ++ctr_t){
-    dif += (inprod[ctr_t].re - result[ctr_t].re) * (inprod[ctr_t].re - result[ctr_t].re);
-    dif += (inprod[ctr_t].im - result[ctr_t].im) * (inprod[ctr_t].im - result[ctr_t].im);
+    dif += (creal(inprod[ctr_t]) - creal(result[ctr_t])) * (creal(inprod[ctr_t]) - creal(result[ctr_t]));
+    dif += (cimag(inprod[ctr_t]) - cimag(result[ctr_t])) * (cimag(inprod[ctr_t]) - cimag(result[ctr_t]));
   }
   dif = sqrt(dif);
 
@@ -883,19 +871,19 @@ void check_little_D_inversion() {
   if ((g_debug_level > 2) && !g_proc_id){
     printf("Inversion check on little_D\nStart:\n");
     for(ctr_t = 0; ctr_t < nb_blocks * g_N_s; ++ctr_t){
-      printf("%1.9e + %1.9e I   ", inprod[ctr_t].re, inprod[ctr_t].im);
+      printf("%1.9e + %1.9e I   ", creal(inprod[ctr_t]), cimag(inprod[ctr_t]));
       if (ctr_t == g_N_s - 1)
         printf("\n");
     }
     printf("\nInverted:\n");
     for(ctr_t = 0; ctr_t < nb_blocks * g_N_s; ++ctr_t){
-      printf("%1.9e + %19e I   ", invvec[ctr_t].re, invvec[ctr_t].im);
+      printf("%1.9e + %19e I   ", creal(invvec[ctr_t]), cimag(invvec[ctr_t]));
       if (ctr_t == g_N_s - 1 )
         printf("\n");
     }
     printf("\nResult:\n");
     for(ctr_t = 0; ctr_t < nb_blocks * g_N_s; ++ctr_t){
-      printf("%1.9e + %1.9e I   ", result[ctr_t].re, result[ctr_t].im);
+      printf("%1.9e + %1.9e I   ", creal(result[ctr_t]), cimag(result[ctr_t]));
       if (ctr_t == g_N_s - 1)
         printf("\n");
     }
@@ -948,9 +936,9 @@ void check_local_D()
 
     if(g_proc_id == 0 && g_debug_level > 5) {
       for(i = 0; i < block_list[0].volume; i++) {
-	if(fabs(work_fields[6][i].s0.c0.re) > 1.e-15 || fabs(work_fields[5][i].s0.c0.re) > 1.e-15) {
-	  printf("%d %e %d\n", i, work_fields[6][i].s0.c0.re, block_list[0].volume);
-	  printf("%d %e\n", i, work_fields[5][i].s0.c0.re);
+	if(fabs(creal(work_fields[6][i].s0.c0)) > 1.e-15 || fabs(creal(work_fields[5][i].s0.c0)) > 1.e-15) {
+	  printf("%d %e %d\n", i, creal(work_fields[6][i].s0.c0), block_list[0].volume);
+	  printf("%d %e\n", i, creal(work_fields[5][i].s0.c0));
 	}
       }
     }

@@ -43,24 +43,15 @@ typedef struct
  */
 
 #define _make_su3(v,p) \
-(v).c00.im= (p).d3+0.5773502691896258*(p).d8; \
-(v).c01.im= (p).d1; \
-(v).c02.im= (p).d4; \
-(v).c10.im= (p).d1; \
-(v).c11.im=-(p).d3+0.5773502691896258*(p).d8; \
-(v).c12.im= (p).d6; \
-(v).c20.im= (p).d4; \
-(v).c21.im= (p).d6; \
-(v).c22.im=-1.154700538379252*(p).d8; \
-(v).c00.re= 0.0; \
-(v).c01.re= (p).d2; \
-(v).c02.re= (p).d5; \
-(v).c10.re=-(p).d2; \
-(v).c11.re= 0.0; \
-(v).c12.re= (p).d7; \
-(v).c20.re=-(p).d5; \
-(v).c21.re=-(p).d7; \
-(v).c22.re= 0.0;
+(v).c00 =   0.0   +  (0.5773502691896258 * (p).d8 + (p).d3) * I; \
+(v).c01 =  (p).d2 +  (p).d1 * I; \
+(v).c02 =  (p).d5 +  (p).d4 * I; \
+(v).c10 = -(p).d2 +  (p).d1 * I; \
+(v).c11 =   0.0   +  (0.5773502691896258 * (p).d8 - (p).d3) * I; \
+(v).c12 =  (p).d7 +  (p).d6 * I; \
+(v).c20 = -(p).d5 +  (p).d4 * I; \
+(v).c21 = -(p).d7 +  (p).d6 * I; \
+(v).c22 =   0.0   -  (1.154700538379252 * (p).d8)           * I;
 
 /*
  *
@@ -74,34 +65,34 @@ typedef struct
  */
 
 #define _trace_lambda(r,a) \
-(r).d1=-(a).c10.im-(a).c01.im; \
-(r).d2=+(a).c10.re-(a).c01.re; \
-(r).d3=-(a).c00.im+(a).c11.im; \
-(r).d4=-(a).c20.im-(a).c02.im; \
-(r).d5=+(a).c20.re-(a).c02.re; \
-(r).d6=-(a).c21.im-(a).c12.im; \
-(r).d7=+(a).c21.re-(a).c12.re; \
-(r).d8=(-(a).c00.im-(a).c11.im + 2.0*(a).c22.im)*0.577350269189625;
+(r).d1=-cimag((a).c10)-cimag((a).c01); \
+(r).d2=+creal((a).c10)-creal((a).c01); \
+(r).d3=-cimag((a).c00)+cimag((a).c11); \
+(r).d4=-cimag((a).c20)-cimag((a).c02); \
+(r).d5=+creal((a).c20)-creal((a).c02); \
+(r).d6=-cimag((a).c21)-cimag((a).c12); \
+(r).d7=+creal((a).c21)-creal((a).c12); \
+(r).d8=(-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag((a).c22))*0.577350269189625;
 
 #define _add_trace_lambda(r,a) \
-(r).d1+=-(a).c10.im-(a).c01.im; \
-(r).d2+=+(a).c10.re-(a).c01.re; \
-(r).d3+=-(a).c00.im+(a).c11.im; \
-(r).d4+=-(a).c20.im-(a).c02.im; \
-(r).d5+=+(a).c20.re-(a).c02.re; \
-(r).d6+=-(a).c21.im-(a).c12.im; \
-(r).d7+=+(a).c21.re-(a).c12.re; \
-(r).d8+=(-(a).c00.im-(a).c11.im + 2.0*a.c22.im)*0.577350269189625;
+(r).d1+=-cimag((a).c10)-cimag((a).c01); \
+(r).d2+=+creal((a).c10)-creal((a).c01); \
+(r).d3+=-cimag((a).c00)+cimag((a).c11); \
+(r).d4+=-cimag((a).c20)-cimag((a).c02); \
+(r).d5+=+creal((a).c20)-creal((a).c02); \
+(r).d6+=-cimag((a).c21)-cimag((a).c12); \
+(r).d7+=+creal((a).c21)-creal((a).c12); \
+(r).d8+=(-cimag((a).c00)-cimag((a).c11) + 2.0*cimag(a.c22))*0.577350269189625;
 
 #define _mul_add_trace_lambda(r,a,c)		\
-  (r).d1+=c*(-(a).c10.im-(a).c01.im);		\
-  (r).d2+=c*(+(a).c10.re-(a).c01.re);		\
-  (r).d3+=c*(-(a).c00.im+(a).c11.im);		\
-  (r).d4+=c*(-(a).c20.im-(a).c02.im);		\
-  (r).d5+=c*(+(a).c20.re-(a).c02.re);		\
-  (r).d6+=c*(-(a).c21.im-(a).c12.im);		\
-  (r).d7+=c*(+(a).c21.re-(a).c12.re);					\
-  (r).d8+=c*((-(a).c00.im-(a).c11.im + 2.0*a.c22.im)*0.577350269189625);
+  (r).d1+=c*(-cimag((a).c10)-cimag((a).c01));		\
+  (r).d2+=c*(+creal((a).c10)-creal((a).c01));		\
+  (r).d3+=c*(-cimag((a).c00)+cimag((a).c11));		\
+  (r).d4+=c*(-cimag((a).c20)-cimag((a).c02));		\
+  (r).d5+=c*(+creal((a).c20)-creal((a).c02));		\
+  (r).d6+=c*(-cimag((a).c21)-cimag((a).c12));		\
+  (r).d7+=c*(+creal((a).c21)-creal((a).c12));					\
+  (r).d8+=c*((-cimag((a).c00)-cimag((a).c11) + 2.0*cimag(a.c22))*0.577350269189625);
 
 
 #define _add_su3adj(r,a) \
@@ -126,34 +117,34 @@ typedef struct
 
 
 #define _trace_lambda_add_assign(r,a) \
-(r).d1+= (-(a).c10.im-(a).c01.im); \
-(r).d2+= (+(a).c10.re-(a).c01.re); \
-(r).d3+= (-(a).c00.im+(a).c11.im); \
-(r).d4+= (-(a).c20.im-(a).c02.im); \
-(r).d5+= (+(a).c20.re-(a).c02.re); \
-(r).d6+= (-(a).c21.im-(a).c12.im); \
-(r).d7+= (+(a).c21.re-(a).c12.re); \
-(r).d8+= ((-(a).c00.im-(a).c11.im + 2.0*a.c22.im)*0.577350269189625);
+(r).d1+= (-cimag((a).c10)-cimag((a).c01)); \
+(r).d2+= (+creal((a).c10)-creal((a).c01)); \
+(r).d3+= (-cimag((a).c00)+cimag((a).c11)); \
+(r).d4+= (-cimag((a).c20)-cimag((a).c02)); \
+(r).d5+= (+creal((a).c20)-creal((a).c02)); \
+(r).d6+= (-cimag((a).c21)-cimag((a).c12)); \
+(r).d7+= (+creal((a).c21)-creal((a).c12)); \
+(r).d8+= ((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag(a.c22))*0.577350269189625);
 
 #define _trace_lambda_sub_assign(r,a) \
-(r).d1-= (-(a).c10.im-(a).c01.im); \
-(r).d2-= (+(a).c10.re-(a).c01.re); \
-(r).d3-= (-(a).c00.im+(a).c11.im); \
-(r).d4-= (-(a).c20.im-(a).c02.im); \
-(r).d5-= (+(a).c20.re-(a).c02.re); \
-(r).d6-= (-(a).c21.im-(a).c12.im); \
-(r).d7-= (+(a).c21.re-(a).c12.re); \
-(r).d8-= ((-(a).c00.im-(a).c11.im + 2.0*a.c22.im)*0.577350269189625);
+(r).d1-= (-cimag((a).c10)-cimag((a).c01)); \
+(r).d2-= (+creal((a).c10)-creal((a).c01)); \
+(r).d3-= (-cimag((a).c00)+cimag((a).c11)); \
+(r).d4-= (-cimag((a).c20)-cimag((a).c02)); \
+(r).d5-= (+creal((a).c20)-creal((a).c02)); \
+(r).d6-= (-cimag((a).c21)-cimag((a).c12)); \
+(r).d7-= (+creal((a).c21)-creal((a).c12)); \
+(r).d8-= ((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag(a.c22))*0.577350269189625);
 
 #define _trace_lambda_mul_add_assign(r,c,a)	\
-(r).d1+= c*(-(a).c10.im-(a).c01.im); \
-(r).d2+= c*(+(a).c10.re-(a).c01.re); \
-(r).d3+= c*(-(a).c00.im+(a).c11.im); \
-(r).d4+= c*(-(a).c20.im-(a).c02.im); \
-(r).d5+= c*(+(a).c20.re-(a).c02.re); \
-(r).d6+= c*(-(a).c21.im-(a).c12.im); \
-(r).d7+= c*(+(a).c21.re-(a).c12.re); \
-(r).d8+= c*((-(a).c00.im-(a).c11.im + 2.0*a.c22.im)*0.577350269189625);
+(r).d1+= c*(-cimag((a).c10)-cimag((a).c01)); \
+(r).d2+= c*(+creal((a).c10)-creal((a).c01)); \
+(r).d3+= c*(-cimag((a).c00)+cimag((a).c11)); \
+(r).d4+= c*(-cimag((a).c20)-cimag((a).c02)); \
+(r).d5+= c*(+creal((a).c20)-creal((a).c02)); \
+(r).d6+= c*(-cimag((a).c21)-cimag((a).c12)); \
+(r).d7+= c*(+creal((a).c21)-creal((a).c12)); \
+(r).d8+= c*((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag(a.c22))*0.577350269189625);
 
 
 /*************************************************
@@ -186,7 +177,7 @@ typedef struct
 
 
 #if defined SSE2
-#define _assign_const_times_mom(res,c,in) \
+#define _su3adj_assign_const_times_su3adj(res,c,in) \
 __asm__ __volatile__ ("movsd %0, %%xmm0 \n\t" \
                       "unpcklpd %%xmm0, %%xmm0 \n\t" \
                       "movapd %%xmm0, %%xmm1 \n\t" \
@@ -219,7 +210,7 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
                       "=m" ((res).d5), \
                       "=m" ((res).d7))
 #else
-#define _assign_const_times_mom(res,c,in) \
+#define _su3adj_assign_const_times_su3adj(res,c,in) \
 (res).d1=(c)*(in).d1; \
 (res).d2=(c)*(in).d2; \
 (res).d3=(c)*(in).d3; \
@@ -231,7 +222,7 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
 #endif
 
 #if defined SSE2
-#define _minus_const_times_mom(res,c,in) \
+#define _su3adj_minus_const_times_su3adj(res,c,in) \
 __asm__ __volatile__ ("movsd %0, %%xmm0 \n\t" \
                       "unpcklpd %%xmm0, %%xmm0 \n\t" \
                       "movapd %%xmm0, %%xmm1 \n\t" \
@@ -278,7 +269,7 @@ __asm__ __volatile__ ("movapd %%xmm4, %0 \n\t" \
                       "=m" ((res).d5), \
                       "=m" ((res).d7))
 #else
-#define _minus_const_times_mom(res,c,in) \
+#define _su3adj_minus_const_times_su3adj(res,c,in) \
 (res).d1-=(c)*(in).d1; \
 (res).d2-=(c)*(in).d2; \
 (res).d3-=(c)*(in).d3; \

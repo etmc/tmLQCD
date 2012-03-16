@@ -95,7 +95,7 @@ void update_momenta(int * mnllist, double step, const int no,
 	  }
 	  tmp = step*monomial_list[ mnllist[k] ].forcefactor;
 	  /* the minus comes from an extra minus in trace_lambda */
-	  _minus_const_times_mom(*xm,tmp,*deriv); 
+	  _su3adj_minus_const_times_su3adj(*xm,tmp,*deriv); 
 	  /* set to zero immediately */
 	  _zero_su3adj(hf->derivative[i][mu]);
 	}
