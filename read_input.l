@@ -459,7 +459,6 @@ inline void rmQuotes(char *str){
   }
   else if(strcmp(yytext, "CLOVER")==0) {
     optr->type = CLOVER;
-    g_dbw2rand = 1;
   }
   else if(strcmp(yytext, "DBTMWILSON")==0) {
     optr->type = DBTMWILSON;
