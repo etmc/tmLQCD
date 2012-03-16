@@ -303,42 +303,43 @@ _Complex double six_det(_Complex double a[6][6])
   ifail=0;
   /* compute the determinant:*/
   det = 1.0;
-
-  for(k = 0; k < nm1; k++)
-  {
+  
+  for(k = 0; k < nm1; k++) {
     s=0.0;
-    for(j = k+1; j <= nm1; ++j)
+    for(j = k+1; j <= nm1; ++j) {
       s += conj(a[j][k]) * a[j][k];
+    }
     s = sqrt(1. + s / (conj(a[k][k]) * a[k][k]));
     sigma = s * a[k][k];
-
+    
     /* determinant */
     det *= sigma;
     q   = sigma * conj(sigma);
     if (q < tiny_t)
       ifail++;
-
+    
     a[k][k] += sigma;
     p[k]     = sigma * conj(a[k][k]);
-
+    
     /* reflect all columns to the right */
-    for(j = k+1; j <= nm1; j++)
-    {
+    for(j = k+1; j <= nm1; j++) {
       z = 0.;
-      for(i = k; i <= nm1; i++)
+      for(i = k; i <= nm1; i++) {
 	z += conj(a[i][k]) * a[i][j];
+      }
       z /= p[k];
-      for(i = k; i <= nm1; i++)
+      for(i = k; i <= nm1; i++) {
 	a[i][j] -= z * a[i][k];
+      }
     }
   }
   sigma = a[nm1][nm1];
-
+  
   /* determinant */
   det *= sigma;
   q = conj(sigma) * sigma;
-
-  if(q < tiny_t)
+  
+  if(q < tiny_t) {
     ifail++;
   }
   if(g_proc_id == 0 && ifail > 0) {
@@ -380,7 +381,7 @@ inline void get_3x3_block_matrix(su3 * C, _Complex double a[6][6], const int row
 // it is expected that sw_term is called beforehand such that
 // the array sw is populated properly
 
-inline void add_tm(complex a[6][6], const double mu) {
+inline void add_tm(_Complex double a[6][6], const double mu) {
   for(int i = 0; i < 6; i++) {
     a[i][i] += I*mu;
   }
@@ -393,7 +394,7 @@ double sw_trace(const int ieo, const double mu) {
   static _Complex double a[6][6];
   static double tra;
   static double ks,kc,tr,ts,tt;
-  static complex det;
+  static _Complex double det;
   
   ks=0.0;
   kc=0.0;
@@ -417,7 +418,7 @@ double sw_trace(const int ieo, const double mu) {
       else add_tm(a, -mu);
       // and compute the tr log (or log det)
       det = six_det(a);
-      tra = log(det.re*det.re + det.im*det.im);
+      tra = log(conj(det)*det);
       // we need to compute only the one with +mu
       // the one with -mu must be the complex conjugate!
 
@@ -439,14 +440,13 @@ double sw_trace(const int ieo, const double mu) {
 }
 
 
-void mult_6x6(complex a[6][6], complex b[6][6], complex d[6][6]) {
+void mult_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double d[6][6]) {
 
   for(int i = 0; i < 6; i++) {
     for(int j = 0; j < 6; j++) {
-      a[i][j].re = 0.; a[i][j].im = 0.; 
+      a[i][j] = 0.;
       for(int k = 0; k < 6; k++) {
-	a[i][j].re += b[i][k].re*d[k][j].re - b[i][k].im*d[k][j].im;
-	a[i][j].im += b[i][k].re*d[k][j].im + b[i][k].im*d[k][j].re;
+	a[i][j] += b[i][k] * d[k][j];
       }
     }
   }
