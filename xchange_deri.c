@@ -437,9 +437,9 @@ void xchange_deri(su3adj ** const df)
   /* recieve the data from the neighbour on the left in y direction */
   /* zy-edge */
   MPI_Sendrecv((void*)df[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY], 
-	       1, deri_zy_edge_cont, g_nb_y_up, 501,
-	       (void*)ddummy[0],                            
-	       1, deri_zy_edge_cont, g_nb_y_dn, 501,
+	       1, deri_zy_edge_cont, g_nb_y_up, 503,
+	       (void*)ddummy[0],
+	       1, deri_zy_edge_cont, g_nb_y_dn, 503,
 	       g_cart_grid, &status);
 
   /* add ddummy to df */
@@ -454,9 +454,6 @@ void xchange_deri(su3adj ** const df)
       addup_ddummy(df, ix, iy);
     }
   }
-
-
-
 
 #    endif
 
