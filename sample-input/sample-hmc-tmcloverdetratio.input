@@ -1,0 +1,73 @@
+# this is a sample input file for a cloverdet + cloverdetratio
+# monomial
+#
+# the plaquette value should be
+# 0.57375(7)
+#
+
+L=4
+T=4
+Measurements = 10000
+Startcondition = hot
+2KappaMu = 0.01
+CSW = 1.00
+kappa = 0.138
+NSave = 500000
+ThetaT = 1.0
+BCGstabMaxIter = 0
+CGMaxIter = 1000
+UseEvenOdd = yes
+ReversibilityCheck = yes
+ReversibilityCheckIntervall = 100
+InitialStoreCounter = 0
+DebugLevel = 0
+
+BeginMeasurement CORRELATORS
+  Frequency = 2
+EndMeasurement
+
+BeginMonomial GAUGE
+  Type = Wilson
+  beta = 5.60
+  Timescale = 0
+EndMonomial
+
+BeginMonomial CLOVERDET
+  Timescale = 1
+  2KappaMu = 0.01
+  CSW = 1.00
+  # nominator shift
+  rho = 0.1
+  kappa = 0.138
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = cloverdet
+  solver = CG
+EndMonomial
+
+BeginMonomial CLOVERDETRATIO
+  Timescale = 1
+  2KappaMu = 0.01
+  # nominator shift
+  rho = 0.0
+  # denominator shift, should match CLOVERDET shift
+  rho2 = 0.1
+  CSW = 1.00
+  kappa = 0.138
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = cloverdetratio
+  solver = CG
+EndMonomial
+
+
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  IntegrationSteps0 = 2
+  IntegrationSteps1 = 6
+  tau = 1.00
+  Lambda0 = 0.19
+  Lambda1 = 0.20
+  NumberOfTimescales = 2
+EndIntegrator

@@ -273,6 +273,7 @@ inline void rmQuotes(char *str){
 %x INITMONOMIAL
 %x DETMONOMIAL
 %x CLDETMONOMIAL
+%x CLDETRATMONOMIAL
 %x GAUGEMONOMIAL
 %x SFGAUGEMONOMIAL
 %x NDPOLYMONOMIAL
@@ -527,7 +528,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<WILSONOP,TMOP,CLOVEROP>{
+<WILSONOP,TMOP>{
   {SPC}*Solver{EQL} {
     name_caller = YY_START; 
     BEGIN(TMSOLVER);
@@ -562,7 +563,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<TMOP>{
+<TMOP,CLOVEROP>{
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->mu = c;
@@ -578,7 +579,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<CLOVEROP,TMOP,WILSONOP,DBTMOP>{
+<CLOVEROP>{
   {SPC}*csw{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->c_sw = c;
@@ -723,6 +724,12 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "CLOVERDET")==0) {
     mnl->type = CLOVERDET;
     strcpy((*mnl).name, "CLOVERDET");
+    g_dbw2rand = 1;
+  }
+  else if(strcmp(yytext, "CLOVERDETRATIO")==0) {
+    mnl->type = CLOVERDETRATIO;
+    strcpy((*mnl).name, "CLOVERDETRATIO");
+    g_dbw2rand = 1;
   }
   else if(strcmp(yytext, "DETRATIO")==0) {
     mnl->type = DETRATIO;
@@ -777,12 +784,13 @@ inline void rmQuotes(char *str){
           BEGIN(POLYMONOMIAL); 
   }
   else if(mnl->type == CLOVERDET) BEGIN(CLDETMONOMIAL);
+  else if(mnl->type == CLOVERDETRATIO) BEGIN(CLDETRATMONOMIAL);
   else BEGIN(DETMONOMIAL);
 }
 
 
 
-<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
     if(mnl->type == NDDETRATIO) {
       mnl->timescale = -5;
@@ -804,20 +812,29 @@ inline void rmQuotes(char *str){
   }
 }
 
-<CLDETMONOMIAL>{
+<CLDETMONOMIAL,CLDETRATMONOMIAL>{
   {SPC}*CSW{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->c_sw = c;
     if(myverbose) printf("  CSW set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
+  {SPC}*rho{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->rho = c;
+    if(myverbose) printf("  mass shift rho set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
 }
 
-<DETMONOMIAL,POLYMONOMIAL>{
-  {SPC}*2KappaMu{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    mnl->mu = c;
-    if(myverbose) printf("  2KappaMu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+<CLDETRATMONOMIAL>{
+  {SPC}*rho2{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z]2 = %lf", name, &c);
+    mnl->rho2 = c;
+    if(myverbose) printf("  mass shift rho2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
+}
+
+
+<DETMONOMIAL,POLYMONOMIAL>{
   {SPC}*2KappaMu2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu2 = c;
@@ -850,7 +867,12 @@ inline void rmQuotes(char *str){
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
+  {SPC}*2KappaMu{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mnl->mu = c;
+    if(myverbose) printf("  2KappaMu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
   {SPC}*Kappa{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->kappa = c;
@@ -888,7 +910,6 @@ inline void rmQuotes(char *str){
   }
 }
 
-
 <GAUGEMONOMIAL>{
   {SPC}*Type{EQL} BEGIN(GTYPE);
   {SPC}*UseRectangleStaples{EQL}yes {
@@ -898,7 +919,9 @@ inline void rmQuotes(char *str){
   }
   {SPC}*UseRectangleStaples{EQL}no {
     mnl->use_rectangles = 0;
-    g_dbw2rand = 0;
+    /* g_dbw2rand = 0; */
+    mnl->c1 = 0.;
+    g_rgi_C1 = 0.;
     if(myverbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
   {SPC}*Beta{EQL}{FLT} {
@@ -932,7 +955,9 @@ inline void rmQuotes(char *str){
   }
   {SPC}*UseRectangleStaples{EQL}no {
     mnl->use_rectangles = 0;
-    g_dbw2rand = 0;
+    /* g_dbw2rand = 0; */
+    mnl->c1 = 0.;
+    g_rgi_C1 = 0.;
     if(myverbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
   {SPC}*Beta{EQL}{FLT} {
@@ -998,33 +1023,38 @@ inline void rmQuotes(char *str){
   {SPC}*StildeMax{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     stilde_max = c;
-    if(myverbose!=0) printf("  Stilde max set to %e line %d monomial %d\n", stilde_max, line_of_file, current_monomial);
+    mnl->StildeMax = c;
+    if(myverbose!=0) printf("  Stilde max set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*StildeMin{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
+    mnl->StildeMin = c;
     stilde_min = c;
-    if(myverbose!=0) printf("  Stilde min set to %e line %d monomial %d\n", stilde_min, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  Stilde min set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*MaxPtildeDegree{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    /* mnl->MaxPtildeDegree = a; */
+    mnl->MaxPtildeDegree = a;
     phmc_max_ptilde_degree = a;
     if(myverbose!=0) printf("  Maximal Degree of Ptilde set to %d line %d monomial %d\n", mnl->MaxPtildeDegree, line_of_file, current_monomial);
   }
   {SPC}*DegreeOfMDPolynomial{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->MDPolyDegree = a;
     degree_of_p = a;
-    if(myverbose!=0) printf("  Degree of MD polynomial set to %d line %d monomial %d\n", degree_of_p, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  Degree of MD polynomial set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
   {SPC}*PrecisionPtilde{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     g_acc_Ptilde = c;
-    if(myverbose!=0) printf("  Precision for Ptilde set to %e line %d monomial %d\n", g_acc_Ptilde, line_of_file, current_monomial);
+    mnl->PrecisionPtilde = c;
+    if(myverbose!=0) printf("  Precision for Ptilde set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*PrecisionHfinal{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
+    mnl->PrecisionHfinal = c;
     g_acc_Hfin = c;
-    if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", g_acc_Hfin, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*ComputeEVFreq{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -1115,7 +1145,7 @@ inline void rmQuotes(char *str){
     mnl->c1 = 0.;
     mnl->use_rectangles = 0;
     g_rgi_C1 = 0.;
-    g_dbw2rand = 0;
+    /* g_dbw2rand = 0; */
     BEGIN(GAUGEMONOMIAL);
   }
   tlsym {
@@ -1151,7 +1181,7 @@ inline void rmQuotes(char *str){
     mnl->c1 = 0.;
     mnl->use_rectangles = 0;
     g_rgi_C1 = 0.;
-    g_dbw2rand = 0;
+    /* g_dbw2rand = 0; */
     BEGIN(SFGAUGEMONOMIAL);
   }
   sf_user {
@@ -1831,7 +1861,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
   line_of_file++;
 }
 <*>\n                       {

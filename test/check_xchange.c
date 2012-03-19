@@ -321,7 +321,7 @@ int check_xchange()
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[0][x1][x2][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-1][x1][x2][x3] ][mu] = set_su3((double)g_cart_id);
 	  }
@@ -335,7 +335,7 @@ int check_xchange()
     for(x0 = 0; x0 < T; x0++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[x0][0][x2][x3] ][mu]    = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][LX-1][x2][x3] ][mu] = set_su3((double)g_cart_id);
 	  }
@@ -349,7 +349,7 @@ int check_xchange()
     for(x0 = 0; x0 < T; x0++) {
       for(x1 = 0; x1 < LX; x1++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[x0][x1][0][x3] ][mu]    = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][x1][LY-1][x3] ][mu] = set_su3((double)g_cart_id);
 	  }
@@ -363,7 +363,7 @@ int check_xchange()
     for(x0 = 0; x0 < T; x0++) {
       for(x1 = 0; x1 < LX; x1++) {
 	for(x2 = 0; x2 < LY; x2++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[x0][x1][x2][0] ][mu]    = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][x1][x2][LZ-1] ][mu] = set_su3((double)g_cart_id);
 	  }
@@ -490,7 +490,7 @@ int check_xchange()
     /* Set the tx boundary */
     for(x2 = 0; x2 < LY; x2++) {
       for(x3 = 0; x3 < LZ; x3++) {
-	for (mu=0;mu<4;mu++){
+	for (mu = 0; mu < 4; mu++) {
 	  g_gauge_field[ g_ipt[0][0][x2][x3] ][mu]   = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[T-1][0][x2][x3] ][mu] = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[0][LX-1][x2][x3] ][mu]   = set_su3((double)g_cart_id);
@@ -502,7 +502,7 @@ int check_xchange()
     /* Set the xy boundary */
     for(x0 = 0; x0 < T; x0++) {
       for(x3 = 0; x3 < LZ; x3++) {
-	for (mu=0;mu<4;mu++){
+	for (mu = 0; mu < 4; mu++) {
 	  g_gauge_field[ g_ipt[x0][0][0][x3] ][mu]   = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[x0][LX-1][0][x3] ][mu] = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[x0][0][LY-1][x3] ][mu]   = set_su3((double)g_cart_id);
@@ -514,7 +514,7 @@ int check_xchange()
     /* Set the ty boundary */
     for(x1 = 0; x1 < LX; x1++) {
       for(x3 = 0; x3 < LZ; x3++) {
-	for (mu=0;mu<4;mu++){
+	for (mu = 0; mu < 4; mu++) {
 	  g_gauge_field[ g_ipt[0][x1][0][x3] ][mu]   = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[T-1][x1][0][x3] ][mu] = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[0][x1][LY-1][x3] ][mu]   = set_su3((double)g_cart_id);
@@ -526,7 +526,7 @@ int check_xchange()
     /* Set the tz boundary */
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
-	for (mu=0;mu<4;mu++){
+	for (mu = 0; mu < 4; mu++) {
 	  g_gauge_field[ g_ipt[0][x1][x2][0] ][mu]   = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[T-1][x1][x2][0] ][mu] = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[0][x1][x2][LZ-1] ][mu]   = set_su3((double)g_cart_id);
@@ -538,7 +538,7 @@ int check_xchange()
     /* Set the xz boundary */
     for(x0 = 0; x0 < T; x0++) {
       for(x2 = 0; x2 < LY; x2++) {
-	for (mu=0;mu<4;mu++){
+	for (mu = 0; mu < 4; mu++) {
 	  g_gauge_field[ g_ipt[x0][0][x2][0] ][mu]   = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[x0][LX-1][x2][0] ][mu] = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[x0][0][x2][LZ-1] ][mu]   = set_su3((double)g_cart_id);
@@ -550,7 +550,7 @@ int check_xchange()
     /* Set the yz boundary */
     for(x0 = 0; x0 < T; x0++) {
       for(x1 = 0; x1 < LX; x1++) {
-	for (mu=0;mu<4;mu++){
+	for (mu = 0; mu < 4; mu++) {
 	  g_gauge_field[ g_ipt[x0][x1][0][0] ][mu]   = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[x0][x1][LY-1][0] ][mu] = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[x0][x1][0][LZ-1] ][mu]   = set_su3((double)g_cart_id);
@@ -1031,7 +1031,7 @@ int check_xchange()
       for(x1 = 0; x1 < LX; x1++) {
 	for(x2 = 0; x2 < LY; x2++) {
 	  for(x3 = 0; x3 < LZ; x3++) {
-	    for (mu=0;mu<4;mu++){
+	    for (mu = 0; mu < 4; mu++) {
 	      g_gauge_field[ g_ipt[1][x1][x2][x3] ][mu]   = set_su3((double)g_cart_id);
 	      g_gauge_field[ g_ipt[T-2][x1][x2][x3] ][mu] = set_su3((double)g_cart_id);
 	    }
@@ -1043,7 +1043,7 @@ int check_xchange()
       for(x0 = 0; x0 < T; x0++) {
 	for(x2 = 0; x2 < LY; x2++) {
 	  for(x3 = 0; x3 < LZ; x3++) {
-	    for (mu=0;mu<4;mu++){
+	    for (mu = 0; mu < 4; mu++) {
 	      g_gauge_field[ g_ipt[x0][1][x2][x3] ][mu]    = set_su3((double)g_cart_id);
 	      g_gauge_field[ g_ipt[x0][LX-2][x2][x3] ][mu] = set_su3((double)g_cart_id);
 	    }
@@ -1055,7 +1055,7 @@ int check_xchange()
       for(x0 = 0; x0 < T; x0++) {
 	for(x1 = 0; x1 < LX; x1++) {
 	  for(x3 = 0; x3 < LZ; x3++) {
-	    for (mu=0;mu<4;mu++){
+	    for (mu = 0; mu < 4; mu++) {
 	      g_gauge_field[ g_ipt[x0][x1][1][x3] ][mu]    = set_su3((double)g_cart_id);
 	      g_gauge_field[ g_ipt[x0][x1][LY-2][x3] ][mu] = set_su3((double)g_cart_id);
 	    }
@@ -1067,7 +1067,7 @@ int check_xchange()
       for(x0 = 0; x0 < T; x0++) {
 	for(x1 = 0; x1 < LX; x1++) {
 	  for(x2 = 0; x2 < LY; x2++) {
-	    for (mu=0;mu<4;mu++){
+	    for (mu = 0; mu < 4; mu++) {
 	      g_gauge_field[ g_ipt[x0][x1][x2][1] ][mu]    = set_su3((double)g_cart_id);
 	      g_gauge_field[ g_ipt[x0][x1][x2][LZ-2] ][mu] = set_su3((double)g_cart_id);
 	    }
@@ -1194,7 +1194,7 @@ int check_xchange()
       /* Set the tx boundary */
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[1][0][x2][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[0][1][x2][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-1][1][x2][x3] ][mu] = set_su3((double)g_cart_id);
@@ -1211,7 +1211,7 @@ int check_xchange()
       /* Set the xy boundary */
       for(x0 = 0; x0 < T; x0++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[x0][1][0][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][0][1][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][LX-1][1][x3] ][mu] = set_su3((double)g_cart_id);
@@ -1228,7 +1228,7 @@ int check_xchange()
       /* Set the ty boundary */
       for(x1 = 0; x1 < LX; x1++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[1][x1][0][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[0][x1][1][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-2][x1][0][x3] ][mu] = set_su3((double)g_cart_id);
@@ -1245,7 +1245,7 @@ int check_xchange()
       /* Set the tz boundary */
       for(x1 = 0; x1 < LX; x1++) {
 	for(x2 = 0; x2 < LY; x2++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[1  ][x1][x2][0   ] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[0  ][x1][x2][1   ] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-2][x1][x2][0   ] ][mu] = set_su3((double)g_cart_id);
@@ -1262,7 +1262,7 @@ int check_xchange()
       /* Set the yz boundary */
       for(x0 = 0; x0 < T; x0++) {
 	for(x1 = 0; x1 < LX; x1++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[x0][x1][1   ][0   ] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][x1][0   ][1   ] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][x1][LY-2][0   ] ][mu] = set_su3((double)g_cart_id);
@@ -1278,7 +1278,7 @@ int check_xchange()
       /* Set the xz boundary */
       for(x0 = 0; x0 < T; x0++) {
 	for(x2 = 0; x2 < LY; x2++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[x0][1][x2][0] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][0][x2][1] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][LX-2][x2][0] ][mu] = set_su3((double)g_cart_id);
@@ -2065,7 +2065,7 @@ int check_xchange()
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_idn[ g_ipt[0][x1][x2][x3] ][0];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    df0[ix][mu].d1=(double)g_cart_id;
 	    df0[ix][mu].d2=(double)g_cart_id;
 	    df0[ix][mu].d3=(double)g_cart_id;
@@ -2084,7 +2084,7 @@ int check_xchange()
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_idn[ g_ipt[x0][0][x2][x3] ][1];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    df0[ix][mu].d1=(double)g_cart_id;
 	    df0[ix][mu].d2=(double)g_cart_id;
 	    df0[ix][mu].d3=(double)g_cart_id;
@@ -2103,7 +2103,7 @@ int check_xchange()
       for(x1 = 0; x1 < LX; x1++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_idn[ g_ipt[x0][x1][0][x3] ][2];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    df0[ix][mu].d1=(double)g_cart_id;
 	    df0[ix][mu].d2=(double)g_cart_id;
 	    df0[ix][mu].d3=(double)g_cart_id;
@@ -2122,7 +2122,7 @@ int check_xchange()
       for(x1 = 0; x1 < LX; x1++) {
 	for(x2 = 0; x2 < LY; x2++) {
 	  ix = g_idn[ g_ipt[x0][x1][x2][0] ][3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    df0[ix][mu].d1=(double)g_cart_id;
 	    df0[ix][mu].d2=(double)g_cart_id;
 	    df0[ix][mu].d3=(double)g_cart_id;
@@ -2138,7 +2138,7 @@ int check_xchange()
 #  endif
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_deri(&df0);
+    xchange_deri(df0);
     MPI_Barrier(MPI_COMM_WORLD);
 
 #  if defined PARALLELT
@@ -2146,7 +2146,7 @@ int check_xchange()
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[T-1][x1][x2][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_t_up ||
 	       df0[ix][mu].d2 != (double)g_nb_t_up ||
 	       df0[ix][mu].d3 != (double)g_nb_t_up ||
@@ -2172,7 +2172,7 @@ int check_xchange()
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[T-1][x1][x2][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_t_up ||
 	       df0[ix][mu].d2 != (double)g_nb_t_up ||
 	       df0[ix][mu].d3 != (double)g_nb_t_up ||
@@ -2195,7 +2195,7 @@ int check_xchange()
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[x0][LX-1][x2][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_x_up ||
 	       df0[ix][mu].d2 != (double)g_nb_x_up ||
 	       df0[ix][mu].d3 != (double)g_nb_x_up ||
@@ -2217,7 +2217,7 @@ int check_xchange()
     for(x2 = 0; x2 < LY; x2++) {
       for(x3 = 0; x3 < LZ; x3++) {
 	ix = g_ipt[T-1][LX-1][x2][x3];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_t_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_t_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_t_up) ||
@@ -2241,7 +2241,7 @@ int check_xchange()
       for(x2 = 0; x2 < LY-1; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[T-1][x1][x2][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_t_up ||
 	       df0[ix][mu].d2 != (double)g_nb_t_up ||
 	       df0[ix][mu].d3 != (double)g_nb_t_up ||
@@ -2266,7 +2266,7 @@ int check_xchange()
       for(x2 = 0; x2 < LY-1; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[x0][LX-1][x2][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_x_up ||
 	       df0[ix][mu].d2 != (double)g_nb_x_up ||
 	       df0[ix][mu].d3 != (double)g_nb_x_up ||
@@ -2289,7 +2289,7 @@ int check_xchange()
       for(x1 = 1; x1 < LX-1; x1++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[x0][x1][LY-1][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_y_up ||
 	       df0[ix][mu].d2 != (double)g_nb_y_up ||
 	       df0[ix][mu].d3 != (double)g_nb_y_up ||
@@ -2312,7 +2312,7 @@ int check_xchange()
     for(x2 = 0; x2 < LY-1; x2++) {
       for(x3 = 0; x3 < LZ; x3++) {
 	ix = g_ipt[T-1][LX-1][x2][x3];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_t_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_t_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_t_up) ||
@@ -2333,7 +2333,7 @@ int check_xchange()
     for(x1 = 0; x1 < LX-1; x1++) {
       for(x3 = 0; x3 < LZ; x3++) {
 	ix = g_ipt[T-1][x1][LY-1][x3];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_y_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_y_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_y_up) ||
@@ -2354,7 +2354,7 @@ int check_xchange()
     for(x0 = 0; x0 < T-1; x0++) {
       for(x3 = 0; x3 < LZ; x3++) {
 	ix = g_ipt[x0][LX-1][LY-1][x3];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_y_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_y_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_y_up) ||
@@ -2374,7 +2374,7 @@ int check_xchange()
     }
     for(x3 = 0; x3 < LZ; x3++) {
       ix = g_ipt[T-1][LX-1][LY-1][x3];
-      for(mu=0;mu<4;mu++){
+      for(mu = 0; mu < 4; mu++) {
 	if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
 	   df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
 	   df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
@@ -2399,7 +2399,7 @@ int check_xchange()
       for(x2 = 0; x2 < LY-1; x2++) {
 	for(x3 = 0; x3 < LZ-1; x3++) {
 	  ix = g_ipt[T-1][x1][x2][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_t_up ||
 	       df0[ix][mu].d2 != (double)g_nb_t_up ||
 	       df0[ix][mu].d3 != (double)g_nb_t_up ||
@@ -2424,7 +2424,7 @@ int check_xchange()
       for(x2 = 0; x2 < LY-1; x2++) {
 	for(x3 = 0; x3 < LZ-1; x3++) {
 	  ix = g_ipt[x0][LX-1][x2][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_x_up ||
 	       df0[ix][mu].d2 != (double)g_nb_x_up ||
 	       df0[ix][mu].d3 != (double)g_nb_x_up ||
@@ -2447,7 +2447,7 @@ int check_xchange()
       for(x1 = 1; x1 < LX-1; x1++) {
 	for(x3 = 0; x3 < LZ-1; x3++) {
 	  ix = g_ipt[x0][x1][LY-1][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_y_up ||
 	       df0[ix][mu].d2 != (double)g_nb_y_up ||
 	       df0[ix][mu].d3 != (double)g_nb_y_up ||
@@ -2471,7 +2471,7 @@ int check_xchange()
       for(x1 = 1; x1 < LX-1; x1++) {
 	for(x2 = 0; x2 < LY-1; x2++) {
 	  ix = g_ipt[x0][x1][x2][LZ-1];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_z_up ||
 	       df0[ix][mu].d2 != (double)g_nb_z_up ||
 	       df0[ix][mu].d3 != (double)g_nb_z_up ||
@@ -2494,7 +2494,7 @@ int check_xchange()
     for(x2 = 0; x2 < LY-1; x2++) {
       for(x3 = 0; x3 < LZ-1; x3++) {
 	ix = g_ipt[T-1][LX-1][x2][x3];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_t_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_t_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_t_up) ||
@@ -2515,7 +2515,7 @@ int check_xchange()
     for(x1 = 0; x1 < LX-1; x1++) {
       for(x3 = 0; x3 < LZ-1; x3++) {
 	ix = g_ipt[T-1][x1][LY-1][x3];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_y_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_y_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_y_up) ||
@@ -2536,7 +2536,7 @@ int check_xchange()
     for(x0 = 0; x0 < T-1; x0++) {
       for(x3 = 0; x3 < LZ-1; x3++) {
 	ix = g_ipt[x0][LX-1][LY-1][x3];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_y_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_y_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_y_up) ||
@@ -2557,7 +2557,7 @@ int check_xchange()
     for(x0 = 0; x0 < T-1; x0++) {
       for(x2 = 0; x2 < LY-1; x2++) {
 	ix = g_ipt[x0][LX-1][x2][LZ-1];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_z_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_z_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_z_up) ||
@@ -2579,7 +2579,7 @@ int check_xchange()
     for(x0 = 0; x0 < T-1; x0++) {
       for(x1 = 0; x1 < LX-1; x1++) {
 	ix = g_ipt[x0][x1][LY-1][LZ-1];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_y_up + g_nb_z_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_y_up + g_nb_z_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_y_up + g_nb_z_up) ||
@@ -2600,7 +2600,7 @@ int check_xchange()
     for(x1 = 0; x1 < LX-1; x1++) {
       for(x2 = 0; x2 < LY-1; x2++) {
 	ix = g_ipt[T-1][x1][x2][LZ-1];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_z_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_z_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_z_up) ||
@@ -2620,7 +2620,7 @@ int check_xchange()
     }
     for(x3 = 0; x3 < LZ-1; x3++) {
       ix = g_ipt[T-1][LX-1][LY-1][x3];
-      for(mu=0;mu<4;mu++){
+      for(mu = 0; mu < 4; mu++) {
 	if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
 	   df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
 	   df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
@@ -2639,7 +2639,7 @@ int check_xchange()
     }
     for(x2 = 0; x2 < LY-1; x2++) {
       ix = g_ipt[T-1][LX-1][x2][LZ-1];
-      for(mu=0;mu<4;mu++){
+      for(mu = 0; mu < 4; mu++) {
 	if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_x_up + g_nb_z_up) ||
 	   df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_x_up + g_nb_z_up) ||
 	   df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_x_up + g_nb_z_up) ||
@@ -2657,7 +2657,7 @@ int check_xchange()
     }
     for(x1 = 0; x1 < LX-1; x1++) {
       ix = g_ipt[T-1][x1][LY-1][LZ-1];
-      for(mu=0;mu<4;mu++){
+      for(mu = 0; mu < 4; mu++) {
 	if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_z_up + g_nb_y_up) ||
 	   df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_z_up + g_nb_y_up) ||
 	   df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_z_up + g_nb_y_up) ||
@@ -2676,7 +2676,7 @@ int check_xchange()
     }
     for(x0 = 0; x0 < T-1; x0++) {
       ix = g_ipt[x0][LX-1][LY-1][LZ-1];
-      for(mu=0;mu<4;mu++){
+      for(mu = 0; mu < 4; mu++) {
 	if(df0[ix][mu].d1 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
 	   df0[ix][mu].d2 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
 	   df0[ix][mu].d3 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
@@ -2694,7 +2694,7 @@ int check_xchange()
       }
     }
     ix = g_ipt[T-1][LX-1][LY-1][LZ-1];
-      for(mu=0;mu<4;mu++){
+      for(mu = 0; mu < 4; mu++) {
 	if(df0[ix][mu].d1 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up + g_nb_t_up) ||
 	   df0[ix][mu].d2 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up + g_nb_t_up) ||
 	   df0[ix][mu].d3 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up + g_nb_t_up) ||
@@ -2718,7 +2718,7 @@ int check_xchange()
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[x0][LX-1][x2][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_x_up ||
 	       df0[ix][mu].d2 != (double)g_nb_x_up ||
 	       df0[ix][mu].d3 != (double)g_nb_x_up ||
@@ -2743,7 +2743,7 @@ int check_xchange()
       for(x1 = 0; x1 < LX-1; x1++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[x0][x1][LY-1][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_y_up ||
 	       df0[ix][mu].d2 != (double)g_nb_y_up ||
 	       df0[ix][mu].d3 != (double)g_nb_y_up ||
@@ -2766,7 +2766,7 @@ int check_xchange()
       for(x2 = 0; x2 < LY-1; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[x0][LX-1][x2][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_x_up ||
 	       df0[ix][mu].d2 != (double)g_nb_x_up ||
 	       df0[ix][mu].d3 != (double)g_nb_x_up ||
@@ -2788,7 +2788,7 @@ int check_xchange()
     for(x0 = 0; x0 < T; x0++) {
       for(x3 = 0; x3 < LZ; x3++) {
 	ix = g_ipt[x0][LX-1][LY-1][x3];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_y_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_y_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_y_up) ||
@@ -2813,7 +2813,7 @@ int check_xchange()
       for(x1 = 0; x1 < LX-1; x1++) {
 	for(x2 = 0; x2 < LY-1; x2++) {
 	  ix = g_ipt[x0][x1][x2][LZ-1];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_z_up ||
 	       df0[ix][mu].d2 != (double)g_nb_z_up ||
 	       df0[ix][mu].d3 != (double)g_nb_z_up ||
@@ -2836,7 +2836,7 @@ int check_xchange()
       for(x2 = 0; x2 < LY-1; x2++) {
 	for(x3 = 0; x3 < LZ-1; x3++) {
 	  ix = g_ipt[x0][LX-1][x2][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_x_up ||
 	       df0[ix][mu].d2 != (double)g_nb_x_up ||
 	       df0[ix][mu].d3 != (double)g_nb_x_up ||
@@ -2859,7 +2859,7 @@ int check_xchange()
       for(x1 = 1; x1 < LX-1; x1++) {
 	for(x3 = 0; x3 < LZ-1; x3++) {
 	  ix = g_ipt[x0][x1][LY-1][x3];
-	  for(mu=0;mu<4;mu++){
+	  for(mu = 0; mu < 4; mu++) {
 	    if(df0[ix][mu].d1 != (double)g_nb_y_up ||
 	       df0[ix][mu].d2 != (double)g_nb_y_up ||
 	       df0[ix][mu].d3 != (double)g_nb_y_up ||
@@ -2881,7 +2881,7 @@ int check_xchange()
     for(x0 = 0; x0 < T; x0++) {
       for(x2 = 0; x2 < LY-1; x2++) {
 	ix = g_ipt[x0][LX-1][x2][LZ-1];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_z_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_z_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_z_up) ||
@@ -2902,7 +2902,7 @@ int check_xchange()
     for(x0 = 0; x0 < T; x0++) {
       for(x1 = 0; x1 < LX-1; x1++) {
 	ix = g_ipt[x0][x1][LY-1][LZ-1];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_z_up + g_nb_y_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_z_up + g_nb_y_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_z_up + g_nb_y_up) ||
@@ -2923,7 +2923,7 @@ int check_xchange()
     for(x0 = 0; x0 < T; x0++) {
       for(x3 = 0; x3 < LZ-1; x3++) {
 	ix = g_ipt[x0][LX-1][LY-1][x3];
-	for(mu=0;mu<4;mu++){
+	for(mu = 0; mu < 4; mu++) {
 	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_y_up) ||
 	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_y_up) ||
 	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_y_up) ||
@@ -2943,7 +2943,7 @@ int check_xchange()
     }
     for(x0 = 0; x0 < T; x0++) {
       ix = g_ipt[x0][LX-1][LY-1][LZ-1];
-      for(mu=0;mu<4;mu++){
+      for(mu = 0; mu < 4; mu++) {
 	if(df0[ix][mu].d1 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
 	   df0[ix][mu].d2 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
 	   df0[ix][mu].d3 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
@@ -3190,7 +3190,7 @@ int check_xchange()
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[0][x1][x2][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-1][x1][x2][x3] ][mu] = set_su3((double)g_cart_id);
 	  }
@@ -3203,7 +3203,7 @@ int check_xchange()
     for(x0 = 0; x0 < T; x0++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[x0][0][x2][x3] ][mu]    = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][LX-1][x2][x3] ][mu] = set_su3((double)g_cart_id);
 	  }
@@ -3217,7 +3217,7 @@ int check_xchange()
     for(x0 = 0; x0 < T; x0++) {
       for(x1 = 0; x1 < LX; x1++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[x0][x1][0][x3] ][mu]    = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][x1][LY-1][x3] ][mu] = set_su3((double)g_cart_id);
 	  }
@@ -3231,7 +3231,7 @@ int check_xchange()
     for(x0 = 0; x0 < T; x0++) {
       for(x1 = 0; x1 < LX; x1++) {
 	for(x2 = 0; x2 < LY; x2++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[x0][x1][x2][0] ][mu]    = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][x1][x2][LZ-1] ][mu] = set_su3((double)g_cart_id);
 	  }
@@ -3349,7 +3349,7 @@ int check_xchange()
     /* Set the x boundary */
     for(x2 = 0; x2 < LY; x2++) {
       for(x3 = 0; x3 < LZ; x3++) {
-	for (mu=0;mu<4;mu++){
+	for (mu = 0; mu < 4; mu++) {
 	  g_gauge_field[ g_ipt[0][0][x2][x3] ][mu]   = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[T-1][0][x2][x3] ][mu] = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[0][LX-1][x2][x3] ][mu]   = set_su3((double)g_cart_id);
@@ -3361,7 +3361,7 @@ int check_xchange()
     /* Set the y boundary */
     for(x0 = 0; x0 < T; x0++) {
       for(x3 = 0; x3 < LZ; x3++) {
-	for (mu=0;mu<4;mu++){
+	for (mu = 0; mu < 4; mu++) {
 	  g_gauge_field[ g_ipt[x0][0][0][x3] ][mu]   = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[x0][LX-1][0][x3] ][mu] = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[x0][0][LY-1][x3] ][mu]   = set_su3((double)g_cart_id);
@@ -3373,7 +3373,7 @@ int check_xchange()
     /* Set the t boundary */
     for(x1 = 0; x1 < LX; x1++) {
       for(x3 = 0; x3 < LZ; x3++) {
-	for (mu=0;mu<4;mu++){
+	for (mu = 0; mu < 4; mu++) {
 	  g_gauge_field[ g_ipt[0][x1][0][x3] ][mu]   = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[T-1][x1][0][x3] ][mu] = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[0][x1][LY-1][x3] ][mu]   = set_su3((double)g_cart_id);
@@ -3385,7 +3385,7 @@ int check_xchange()
     /* Set the z boundary */
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
-	for (mu=0;mu<4;mu++){
+	for (mu = 0; mu < 4; mu++) {
 	  g_gauge_field[ g_ipt[0][x1][x2][0] ][mu]   = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[T-1][x1][x2][0] ][mu] = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[0][x1][x2][LZ-1] ][mu]   = set_su3((double)g_cart_id);
@@ -3397,7 +3397,7 @@ int check_xchange()
     /* Set the z boundary */
     for(x0 = 0; x0 < T; x0++) {
       for(x2 = 0; x2 < LY; x2++) {
-	for (mu=0;mu<4;mu++){
+	for (mu = 0; mu < 4; mu++) {
 	  g_gauge_field[ g_ipt[x0][0][x2][0] ][mu]   = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[x0][LX-1][x2][0] ][mu] = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[x0][0][x2][LZ-1] ][mu]   = set_su3((double)g_cart_id);
@@ -3409,7 +3409,7 @@ int check_xchange()
     /* Set the z boundary */
     for(x0 = 0; x0 < T; x0++) {
       for(x1 = 0; x1 < LX; x1++) {
-	for (mu=0;mu<4;mu++){
+	for (mu = 0; mu < 4; mu++) {
 	  g_gauge_field[ g_ipt[x0][x1][0][0] ][mu]   = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[x0][x1][LY-1][0] ][mu] = set_su3((double)g_cart_id);
 	  g_gauge_field[ g_ipt[x0][x1][0][LZ-1] ][mu]   = set_su3((double)g_cart_id);
@@ -3817,7 +3817,7 @@ int check_xchange()
       for(x1 = 0; x1 < LX; x1++) {
 	for(x2 = 0; x2 < LY; x2++) {
 	  for(x3 = 0; x3 < LZ; x3++) {
-	    for (mu=0;mu<4;mu++){
+	    for (mu = 0; mu < 4; mu++) {
 	      g_gauge_field[ g_ipt[1][x1][x2][x3] ][mu]   = set_su3((double)g_cart_id);
 	      g_gauge_field[ g_ipt[T-2][x1][x2][x3] ][mu] = set_su3((double)g_cart_id);
 	    }
@@ -3829,7 +3829,7 @@ int check_xchange()
       for(x0 = 0; x0 < T; x0++) {
 	for(x2 = 0; x2 < LY; x2++) {
 	  for(x3 = 0; x3 < LZ; x3++) {
-	    for (mu=0;mu<4;mu++){
+	    for (mu = 0; mu < 4; mu++) {
 	      g_gauge_field[ g_ipt[x0][1][x2][x3] ][mu]    = set_su3((double)g_cart_id);
 	      g_gauge_field[ g_ipt[x0][LX-2][x2][x3] ][mu] = set_su3((double)g_cart_id);
 	    }
@@ -3841,7 +3841,7 @@ int check_xchange()
       for(x0 = 0; x0 < T; x0++) {
 	for(x1 = 0; x1 < LX; x1++) {
 	  for(x3 = 0; x3 < LZ; x3++) {
-	    for (mu=0;mu<4;mu++){
+	    for (mu = 0; mu < 4; mu++) {
 	      g_gauge_field[ g_ipt[x0][x1][1][x3] ][mu]    = set_su3((double)g_cart_id);
 	      g_gauge_field[ g_ipt[x0][x1][LY-2][x3] ][mu] = set_su3((double)g_cart_id);
 	    }
@@ -3853,7 +3853,7 @@ int check_xchange()
       for(x0 = 0; x0 < T; x0++) {
 	for(x1 = 0; x1 < LX; x1++) {
 	  for(x2 = 0; x2 < LY; x2++) {
-	    for (mu=0;mu<4;mu++){
+	    for (mu = 0; mu < 4; mu++) {
 	      g_gauge_field[ g_ipt[x0][x1][x2][1] ][mu]    = set_su3((double)g_cart_id);
 	      g_gauge_field[ g_ipt[x0][x1][x2][LZ-2] ][mu] = set_su3((double)g_cart_id);
 	    }
@@ -3974,7 +3974,7 @@ int check_xchange()
       /* Set the tz boundary */
       for(x1 = 0; x1 < LX; x1++) {
 	for(x2 = 0; x2 < LY; x2++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[1  ][x1][x2][0   ] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[0  ][x1][x2][1   ] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-2][x1][x2][0   ] ][mu] = set_su3((double)g_cart_id);
@@ -4106,7 +4106,7 @@ int check_xchange()
       /* Set the edges */
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[1][0][x2][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[0][1][x2][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-1][1][x2][x3] ][mu] = set_su3((double)g_cart_id);
@@ -4122,7 +4122,7 @@ int check_xchange()
       /* Set the y boundary */
       for(x0 = 0; x0 < T; x0++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[x0][1][0][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][0][1][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][LX-1][1][x3] ][mu] = set_su3((double)g_cart_id);
@@ -4138,7 +4138,7 @@ int check_xchange()
       /* Set the t boundary */
       for(x1 = 0; x1 < LX; x1++) {
 	for(x3 = 0; x3 < LZ; x3++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[1][x1][0][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[0][x1][1][x3] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-2][x1][0][x3] ][mu] = set_su3((double)g_cart_id);
@@ -4154,7 +4154,7 @@ int check_xchange()
       /* Set the tz boundary */
       for(x1 = 0; x1 < LX; x1++) {
 	for(x2 = 0; x2 < LY; x2++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[1  ][x1][x2][0   ] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[0  ][x1][x2][1   ] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[T-2][x1][x2][0   ] ][mu] = set_su3((double)g_cart_id);
@@ -4170,7 +4170,7 @@ int check_xchange()
       /* Set the yz boundary */
       for(x0 = 0; x0 < T; x0++) {
 	for(x1 = 0; x1 < LX; x1++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[x0][x1][1   ][0   ] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][x1][0   ][1   ] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][x1][LY-2][0   ] ][mu] = set_su3((double)g_cart_id);
@@ -4186,7 +4186,7 @@ int check_xchange()
       /* Set the xz boundary */
       for(x0 = 0; x0 < T; x0++) {
 	for(x2 = 0; x2 < LY; x2++) {
-	  for (mu=0;mu<4;mu++){
+	  for (mu = 0; mu < 4; mu++) {
 	    g_gauge_field[ g_ipt[x0][1][x2][0] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][0][x2][1] ][mu]   = set_su3((double)g_cart_id);
 	    g_gauge_field[ g_ipt[x0][LX-2][x2][0] ][mu] = set_su3((double)g_cart_id);
@@ -4886,28 +4886,21 @@ int check_xchange()
 
     if(g_proc_id == 0) {
       printf("# Exchange of gauge fields checked successfully!\n");
+      printf("# Starting check of deri...\n");
     }
 
     /* Check the deri exchange */
 
-    for(ix = 0; ix < VOLUME+RAND; ix++){
-      for(mu=0; mu<4; mu++){
-	ddummy[ix][mu].d1=0.;
-	ddummy[ix][mu].d2=0.;
-	ddummy[ix][mu].d3=0.;
-	ddummy[ix][mu].d4=0.;
-	ddummy[ix][mu].d5=0.;
-	ddummy[ix][mu].d6=0.;
-	ddummy[ix][mu].d7=0.;
-	ddummy[ix][mu].d8=0.;
-	df0[ix][mu].d1=0.;
-	df0[ix][mu].d2=0.;
-	df0[ix][mu].d3=0.;
-	df0[ix][mu].d4=0.;
-	df0[ix][mu].d5=0.;
-	df0[ix][mu].d6=0.;
-	df0[ix][mu].d7=0.;
-	df0[ix][mu].d8=0.;      
+    for(ix = 0; ix < VOLUMEPLUSRAND; ix++) {
+      for(mu=0; mu<4; mu++) {
+	x = (double*)&ddummy[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  x[j] = 0.;
+	}
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  x[j] = 0.;
+	}
       }
     }
 
@@ -4915,15 +4908,18 @@ int check_xchange()
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_idn[ g_ipt[0][x1][x2][x3] ][0];
-	  for(mu=0;mu<4;mu++){
-	    df0[ix][mu].d1=(double)g_cart_id;
-	    df0[ix][mu].d2=(double)g_cart_id;
-	    df0[ix][mu].d3=(double)g_cart_id;
-	    df0[ix][mu].d4=(double)g_cart_id;
-	    df0[ix][mu].d5=(double)g_cart_id;
-	    df0[ix][mu].d6=(double)g_cart_id;
-	    df0[ix][mu].d7=(double)g_cart_id;
-	    df0[ix][mu].d8=(double)g_cart_id;
+	  for(mu = 0; mu < 4; mu++){
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      x[j] = (double)g_cart_id;
+	    }
+	  }
+	  ix = g_iup[ g_ipt[T-1][x1][x2][x3] ][0];
+	  for(mu = 0; mu < 4; mu++){
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      x[j] = (double)g_cart_id;
+	    }
 	  }
 	}
       }
@@ -4933,15 +4929,18 @@ int check_xchange()
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_idn[ g_ipt[x0][0][x2][x3] ][1];
-	  for(mu=0;mu<4;mu++){
-	    df0[ix][mu].d1=(double)g_cart_id;
-	    df0[ix][mu].d2=(double)g_cart_id;
-	    df0[ix][mu].d3=(double)g_cart_id;
-	    df0[ix][mu].d4=(double)g_cart_id;
-	    df0[ix][mu].d5=(double)g_cart_id;
-	    df0[ix][mu].d6=(double)g_cart_id;
-	    df0[ix][mu].d7=(double)g_cart_id;
-	    df0[ix][mu].d8=(double)g_cart_id;
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      x[j] = (double)g_cart_id;
+	    }
+	  }
+	  ix = g_iup[ g_ipt[x0][LX-1][x2][x3] ][1];
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      x[j] = (double)g_cart_id;
+	    }
 	  }
 	}
       }
@@ -4952,15 +4951,18 @@ int check_xchange()
       for(x1 = 0; x1 < LX; x1++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_idn[ g_ipt[x0][x1][0][x3] ][2];
-	  for(mu=0;mu<4;mu++){
-	    df0[ix][mu].d1=(double)g_cart_id;
-	    df0[ix][mu].d2=(double)g_cart_id;
-	    df0[ix][mu].d3=(double)g_cart_id;
-	    df0[ix][mu].d4=(double)g_cart_id;
-	    df0[ix][mu].d5=(double)g_cart_id;
-	    df0[ix][mu].d6=(double)g_cart_id;
-	    df0[ix][mu].d7=(double)g_cart_id;
-	    df0[ix][mu].d8=(double)g_cart_id;
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      x[j] = (double)g_cart_id;
+	    }
+	  }
+	  ix = g_iup[ g_ipt[x0][x1][LY-1][x3] ][2];
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      x[j] = (double)g_cart_id;
+	    }
 	  }
 	}
       }
@@ -4971,15 +4973,18 @@ int check_xchange()
       for(x1 = 0; x1 < LX; x1++) {
 	for(x2 = 0; x2 < LY; x2++) {
 	  ix = g_idn[ g_ipt[x0][x1][x2][0] ][3];
-	  for(mu=0;mu<4;mu++){
-	    df0[ix][mu].d1=(double)g_cart_id;
-	    df0[ix][mu].d2=(double)g_cart_id;
-	    df0[ix][mu].d3=(double)g_cart_id;
-	    df0[ix][mu].d4=(double)g_cart_id;
-	    df0[ix][mu].d5=(double)g_cart_id;
-	    df0[ix][mu].d6=(double)g_cart_id;
-	    df0[ix][mu].d7=(double)g_cart_id;
-	    df0[ix][mu].d8=(double)g_cart_id;
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      x[j] = (double)g_cart_id;
+	    }
+	  }
+	  ix = g_iup[ g_ipt[x0][x1][x2][LZ-1] ][3];
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      x[j] = (double)g_cart_id;
+	    }
 	  }
 	}
       }
@@ -4987,7 +4992,7 @@ int check_xchange()
 #  endif
 
     MPI_Barrier(MPI_COMM_WORLD);
-    xchange_deri(&df0);
+    xchange_deri(df0);
     MPI_Barrier(MPI_COMM_WORLD);
 
 #  if defined PARALLELT
@@ -4995,20 +5000,27 @@ int check_xchange()
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[T-1][x1][x2][x3];
-	  for(mu=0;mu<4;mu++){
-	    if(df0[ix][mu].d1 != (double)g_nb_t_up ||
-	       df0[ix][mu].d2 != (double)g_nb_t_up ||
-	       df0[ix][mu].d3 != (double)g_nb_t_up ||
-	       df0[ix][mu].d4 != (double)g_nb_t_up ||
-	       df0[ix][mu].d5 != (double)g_nb_t_up ||
-	       df0[ix][mu].d6 != (double)g_nb_t_up ||
-	       df0[ix][mu].d7 != (double)g_nb_t_up ||
-	       df0[ix][mu].d8 != (double)g_nb_t_up){
-	      printf("Exchange of derivatives is working not correctly (1)!\n");
-	      printf("%d %d %d %d %f %d %d\n", ix, x1, x2, x3, df0[ix][mu].d1, g_nb_t_up, mu, (T-1+x1+x2+x3)%2);
-	      printf("Aborting program!");
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_t_up) {
+		printf("Exchange of derivatives is working not correctly (1u)!\n");
+		printf("Aborting program!");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0);
+	      }
+	    }
+	  }
+	  ix = g_ipt[0][x1][x2][x3];
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_t_dn) {
+		printf("Exchange of derivatives is working not correctly (1d)!\n");
+		printf("Aborting program!");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0);
+	      }
 	    }
 	  }
 	}
@@ -5016,45 +5028,62 @@ int check_xchange()
     }
 #  endif
 #  if defined PARALLELXT
-    for(x1 = 0; x1 < LX-1; x1++) {
+    for(x1 = 1; x1 < LX-1; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[T-1][x1][x2][x3];
-	  for(mu=0;mu<4;mu++){
-	    if(df0[ix][mu].d1 != (double)g_nb_t_up ||
-	       df0[ix][mu].d2 != (double)g_nb_t_up ||
-	       df0[ix][mu].d3 != (double)g_nb_t_up ||
-	       df0[ix][mu].d4 != (double)g_nb_t_up ||
-	       df0[ix][mu].d5 != (double)g_nb_t_up ||
-	       df0[ix][mu].d6 != (double)g_nb_t_up ||
-	       df0[ix][mu].d7 != (double)g_nb_t_up ||
-	       df0[ix][mu].d8 != (double)g_nb_t_up){
-	      printf("Exchange of derivatives is working not correctly (2)!\n");
-	      printf("Aborting program!");
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_t_up) {
+		printf("Exchange of derivatives is working not correctly (2u)!\n");
+		printf("Aborting program!");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0);
+	      }
+	    }
+	  }
+	  ix = g_ipt[0][x1][x2][x3];
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_t_dn) {
+  		printf("Exchange of derivatives is working not correctly (2d)!\n");
+  		printf("Aborting program!");
+  		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+  		exit(0);
+	      }
 	    }
 	  }
 	}
       }
     }
-    for(x0 = 0; x0 < T-1; x0++) {
+    MPI_Barrier(MPI_COMM_WORLD);
+    for(x0 = 1; x0 < T-1; x0++) {
       for(x2 = 0; x2 < LY; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[x0][LX-1][x2][x3];
-	  for(mu=0;mu<4;mu++){
-	    if(df0[ix][mu].d1 != (double)g_nb_x_up ||
-	       df0[ix][mu].d2 != (double)g_nb_x_up ||
-	       df0[ix][mu].d3 != (double)g_nb_x_up ||
-	       df0[ix][mu].d4 != (double)g_nb_x_up ||
-	       df0[ix][mu].d5 != (double)g_nb_x_up ||
-	       df0[ix][mu].d6 != (double)g_nb_x_up ||
-	       df0[ix][mu].d7 != (double)g_nb_x_up ||
-	       df0[ix][mu].d8 != (double)g_nb_x_up){
-	      printf("Exchange of derivatives is working not correctly (3)!\n");
-	      printf("Aborting program!");
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_x_up) {
+		printf("Exchange of derivatives is working not correctly (3u)!\n");
+		printf("Aborting program!");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0);
+	      }
+	    }
+	  }
+	  ix = g_ipt[x0][0][x2][x3];
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_x_dn) {
+		printf("Exchange of derivatives is working not correctly (3d)!\n");
+		printf("Aborting program!");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0);
+	      }
 	    }
 	  }
 	}
@@ -5063,86 +5092,191 @@ int check_xchange()
     for(x2 = 0; x2 < LY; x2++) {
       for(x3 = 0; x3 < LZ; x3++) {
 	ix = g_ipt[T-1][LX-1][x2][x3];
-	for(mu=0;mu<4;mu++){
-	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d4 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d5 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d6 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d7 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d8 != (double)(g_nb_x_up + g_nb_t_up)){
-	    printf("Exchange of derivatives is working not correctly (4)!\n");
-	    printf("Aborting program!\n");
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_x_up + g_nb_t_up) {
+	      printf("Exchange of derivatives is working not correctly (4uu)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[0][LX-1][x2][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_x_up + g_nb_t_dn) {
+	      printf("Exchange of derivatives is working not correctly (4ud)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[T-1][0][x2][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_x_dn + g_nb_t_up) {
+	      printf("Exchange of derivatives is working not correctly (4du)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[0][0][x2][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_x_dn + g_nb_t_dn) {
+	      printf("Exchange of derivatives is working not correctly (4dd)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
 	  }
 	}
       }
     }
 #  endif
 #  if defined PARALLELXYT
-    for(x1 = 0; x1 < LX-1; x1++) {
-      for(x2 = 0; x2 < LY-1; x2++) {
+    for(x1 = 1; x1 < LX-1; x1++) {
+      for(x2 = 1; x2 < LY-1; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[T-1][x1][x2][x3];
-	  for(mu=0;mu<4;mu++){
-	    if(df0[ix][mu].d1 != (double)g_nb_t_up ||
-	       df0[ix][mu].d2 != (double)g_nb_t_up ||
-	       df0[ix][mu].d3 != (double)g_nb_t_up ||
-	       df0[ix][mu].d4 != (double)g_nb_t_up ||
-	       df0[ix][mu].d5 != (double)g_nb_t_up ||
-	       df0[ix][mu].d6 != (double)g_nb_t_up ||
-	       df0[ix][mu].d7 != (double)g_nb_t_up ||
-	       df0[ix][mu].d8 != (double)g_nb_t_up){
-	      printf("Exchange of derivatives is working not correctly (5)!\n");
-	      printf("%d %d %d %d %d\n", x1, x2, x3, ix, g_proc_id);
-	      printf("%f %d %d\n", df0[ix][mu].d8, g_nb_t_up, g_nb_t_dn);
- 	      printf("Aborting program!\n"); 
- 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
- 	      exit(0); 
+	  for(mu = 0; mu < 4; mu++){
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_t_up) {
+		printf("Exchange of derivatives is working not correctly (5u)!\n");
+		printf("Aborting program!\n"); 
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+		exit(0); 
+	      }
+	    }
+	  }
+	  ix = g_ipt[0][x1][x2][x3];
+	  for(mu = 0; mu < 4; mu++){
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_t_dn) {
+		printf("Exchange of derivatives is working not correctly (5d)!\n");
+		printf("Aborting program!\n"); 
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+		exit(0); 
+	      }
 	    }
 	  }
 	}
       }
     }
-    for(x0 = 0; x0 < T-1; x0++) {
-      for(x2 = 0; x2 < LY-1; x2++) {
+    for(x0 = 1; x0 < T-1; x0++) {
+      for(x2 = 1; x2 < LY-1; x2++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[x0][LX-1][x2][x3];
-	  for(mu=0;mu<4;mu++){
-	    if(df0[ix][mu].d1 != (double)g_nb_x_up ||
-	       df0[ix][mu].d2 != (double)g_nb_x_up ||
-	       df0[ix][mu].d3 != (double)g_nb_x_up ||
-	       df0[ix][mu].d4 != (double)g_nb_x_up ||
-	       df0[ix][mu].d5 != (double)g_nb_x_up ||
-	       df0[ix][mu].d6 != (double)g_nb_x_up ||
-	       df0[ix][mu].d7 != (double)g_nb_x_up ||
-	       df0[ix][mu].d8 != (double)g_nb_x_up){
-	      printf("Exchange of derivatives is working not correctly (6)!\n");
-	      printf("Aborting program!\n");
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+	  for(mu = 0; mu < 4; mu++){
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_x_up) {
+		printf("Exchange of derivatives is working not correctly (6u)!\n");
+		printf("Aborting program!\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0);
+	      }
+	    }
+	  }
+	  ix = g_ipt[x0][0][x2][x3];
+	  for(mu = 0; mu < 4; mu++){
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_x_dn) {
+		printf("Exchange of derivatives is working not correctly (6d)!\n");
+		printf("Aborting program!\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0);
+	      }
 	    }
 	  }
 	}
       }
     }
-    for(x0 = 0; x0 < T-1; x0++) {
+    for(x0 = 1; x0 < T-1; x0++) {
       for(x1 = 1; x1 < LX-1; x1++) {
 	for(x3 = 0; x3 < LZ; x3++) {
 	  ix = g_ipt[x0][x1][LY-1][x3];
-	  for(mu=0;mu<4;mu++){
-	    if(df0[ix][mu].d1 != (double)g_nb_y_up ||
-	       df0[ix][mu].d2 != (double)g_nb_y_up ||
-	       df0[ix][mu].d3 != (double)g_nb_y_up ||
-	       df0[ix][mu].d4 != (double)g_nb_y_up ||
-	       df0[ix][mu].d5 != (double)g_nb_y_up ||
-	       df0[ix][mu].d6 != (double)g_nb_y_up ||
-	       df0[ix][mu].d7 != (double)g_nb_y_up ||
-	       df0[ix][mu].d8 != (double)g_nb_y_up){
-	      printf("Exchange of derivatives is working not correctly (7)!\n");
-	      printf("%d %d %d %d %d\n", x0, x1, x3, ix, g_proc_id);
+	  for(mu = 0; mu < 4; mu++){
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_y_up) {
+		printf("Exchange of derivatives is working not correctly (7u)!\n");
+		printf("Aborting program!\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0);
+	      }
+	    }
+	  }
+	  ix = g_ipt[x0][x1][0][x3];
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_y_dn) {
+		printf("Exchange of derivatives is working not correctly (7d)!\n");
+		printf("Aborting program!\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0);
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    for(x2 = 1; x2 < LY-1; x2++) {
+      for(x3 = 0; x3 < LZ; x3++) {
+	ix = g_ipt[T-1][LX-1][x2][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_x_up + g_nb_t_up) {
+	      printf("Exchange of derivatives is working not correctly (8uu)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[0][LX-1][x2][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_x_up + g_nb_t_dn) {
+	      printf("Exchange of derivatives is working not correctly (8ud)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[T-1][0][x2][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_x_dn + g_nb_t_up) {
+	      printf("Exchange of derivatives is working not correctly (8du)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[0][0][x2][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_x_dn + g_nb_t_dn) {
+	      printf("Exchange of derivatives is working not correctly (8dd)!\n");
 	      printf("Aborting program!\n");
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 	      exit(0);
@@ -5151,129 +5285,267 @@ int check_xchange()
 	}
       }
     }
-    for(x2 = 0; x2 < LY-1; x2++) {
-      for(x3 = 0; x3 < LZ; x3++) {
-	ix = g_ipt[T-1][LX-1][x2][x3];
-	for(mu=0;mu<4;mu++){
-	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d4 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d5 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d6 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d7 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d8 != (double)(g_nb_x_up + g_nb_t_up)){
-	    printf("Exchange of derivatives is working not correctly (8)!\n");
-	    printf("Aborting program!\n");
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
-	  }
-	}
-      }
-    }
-    for(x1 = 0; x1 < LX-1; x1++) {
+    for(x1 = 1; x1 < LX-1; x1++) {
       for(x3 = 0; x3 < LZ; x3++) {
 	ix = g_ipt[T-1][x1][LY-1][x3];
-	for(mu=0;mu<4;mu++){
-	  if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d4 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d5 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d6 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d7 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d8 != (double)(g_nb_t_up + g_nb_y_up)){
-	    printf("Exchange of derivatives is working not correctly (9)!\n");
-	    printf("Aborting program!\n");
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_t_up + g_nb_y_up) {
+	      printf("Exchange of derivatives is working not correctly (9uu)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[T-1][x1][0][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_t_up + g_nb_y_dn) {
+	      printf("Exchange of derivatives is working not correctly (9ud)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[0][x1][LY-1][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_t_dn + g_nb_y_up) {
+	      printf("Exchange of derivatives is working not correctly (9du)!\n");
+	      printf("%d %d %d %d %d %d %d\n", (int)x[j], g_nb_t_dn, g_nb_t_up, g_nb_y_dn, g_nb_y_up, x1, x3);
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[0][x1][0][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_t_dn + g_nb_y_dn) {
+	      printf("Exchange of derivatives is working not correctly (9dd)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
 	  }
 	}
       }
     }
-    for(x0 = 0; x0 < T-1; x0++) {
+    for(x0 = 1; x0 < T-1; x0++) {
       for(x3 = 0; x3 < LZ; x3++) {
 	ix = g_ipt[x0][LX-1][LY-1][x3];
-	for(mu=0;mu<4;mu++){
-	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d4 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d5 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d6 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d7 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d8 != (double)(g_nb_x_up + g_nb_y_up)){
-	    printf("Exchange of derivatives is working not correctly (10)!\n");
-	    printf("Aborting program!\n");
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_x_up + g_nb_y_up) {
+	      printf("Exchange of derivatives is working not correctly (10uu)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[x0][LX-1][0][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_x_up + g_nb_y_dn) {
+	      printf("Exchange of derivatives is working not correctly (10ud)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[x0][0][LY-1][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_x_dn + g_nb_y_up) {
+	      printf("Exchange of derivatives is working not correctly (10du)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[x0][0][0][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != g_nb_x_dn + g_nb_y_dn) {
+	      printf("Exchange of derivatives is working not correctly (10dd)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
 	  }
 	}
       }
     }
     for(x3 = 0; x3 < LZ; x3++) {
       ix = g_ipt[T-1][LX-1][LY-1][x3];
-      for(mu=0;mu<4;mu++){
-	if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d4 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d5 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d6 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d7 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d8 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up)){
-	  printf("Exchange of derivatives is working not correctly (11)!\n");
-	  printf("Aborting program!\n");
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+      for(mu = 0; mu < 4; mu++) {
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != g_nb_x_up + g_nb_y_up + g_nb_t_up) {
+	    printf("Exchange of derivatives is working not correctly (11uuu)!\n");
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+      ix = g_ipt[T-1][0][LY-1][x3];
+      for(mu = 0; mu < 4; mu++) {
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != g_nb_x_dn + g_nb_y_up + g_nb_t_up) {
+	    printf("Exchange of derivatives is working not correctly (11duu)!\n");
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+      ix = g_ipt[0][0][LY-1][x3];
+      for(mu = 0; mu < 4; mu++) {
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != g_nb_x_dn + g_nb_y_up + g_nb_t_dn) {
+	    printf("Exchange of derivatives is working not correctly (11dud)!\n");
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+      ix = g_ipt[T-1][0][0][x3];
+      for(mu = 0; mu < 4; mu++) {
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != g_nb_x_dn + g_nb_y_dn + g_nb_t_up) {
+	    printf("Exchange of derivatives is working not correctly (11ddu)!\n");
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+      ix = g_ipt[0][LX-1][0][x3];
+      for(mu = 0; mu < 4; mu++) {
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != g_nb_x_up + g_nb_y_dn + g_nb_t_dn) {
+	    printf("Exchange of derivatives is working not correctly (11udd)!\n");
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+      ix = g_ipt[0][LX-1][LY-1][x3];
+      for(mu = 0; mu < 4; mu++) {
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != g_nb_x_up + g_nb_y_up + g_nb_t_dn) {
+	    printf("Exchange of derivatives is working not correctly (11uud)!\n");
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+      ix = g_ipt[T-1][LX-1][0][x3];
+      for(mu = 0; mu < 4; mu++) {
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != g_nb_x_up + g_nb_y_dn + g_nb_t_up) {
+	    printf("Exchange of derivatives is working not correctly (11udu)!\n");
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+      ix = g_ipt[0][0][0][x3];
+      for(mu = 0; mu < 4; mu++) {
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != g_nb_x_dn + g_nb_y_dn + g_nb_t_dn) {
+	    printf("Exchange of derivatives is working not correctly (11ddd)!\n");
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
 	}
       }
     }
-    
-#  endif
-
-#  if defined PARALLELXYZT
-    for(x1 = 0; x1 < LX-1; x1++) {
-      for(x2 = 0; x2 < LY-1; x2++) {
-	for(x3 = 0; x3 < LZ-1; x3++) {
-	  ix = g_ipt[T-1][x1][x2][x3];
-	  for(mu=0;mu<4;mu++){
-	    if(df0[ix][mu].d1 != (double)g_nb_t_up ||
-	       df0[ix][mu].d2 != (double)g_nb_t_up ||
-	       df0[ix][mu].d3 != (double)g_nb_t_up ||
-	       df0[ix][mu].d4 != (double)g_nb_t_up ||
-	       df0[ix][mu].d5 != (double)g_nb_t_up ||
-	       df0[ix][mu].d6 != (double)g_nb_t_up ||
-	       df0[ix][mu].d7 != (double)g_nb_t_up ||
-	       df0[ix][mu].d8 != (double)g_nb_t_up){
-	      printf("Exchange of derivatives is working not correctly (12)!\n");
-	      printf("%d %d %d %d %d\n", x1, x2, x3, ix, g_proc_id);
-	      printf("%f %d %d\n", df0[ix][mu].d8, g_nb_t_up, g_nb_t_dn);
- 	      printf("Aborting program!\n"); 
- 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
- 	      exit(0); 
+    for(x0 = 1; x0 < T-1; x0++) {
+      for(x1 = 1; x1 < LX-1; x1++) {
+	for(x2 = 1; x2 < LY-1; x2++) {
+	  for(x3 = 0; x3 < LZ; x3++) {
+	    ix = g_ipt[x0][x1][x2][x3];
+	    for(mu = 0; mu < 4; mu++) {
+	      x = (double*)&df0[ix][mu];
+	      for(int j = 0; j < 8; j++) {
+		if((int)x[j] != 0) {
+		  printf("Exchange of derivatives is working not correctly (bulk XYT)!\n");
+		  printf("Aborting program!\n");
+		  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		  exit(0);
+		}
+	      }
 	    }
 	  }
 	}
       }
     }
-    for(x0 = 0; x0 < T-1; x0++) {
-      for(x2 = 0; x2 < LY-1; x2++) {
-	for(x3 = 0; x3 < LZ-1; x3++) {
+
+    
+#  endif
+
+#  if defined PARALLELXYZT
+    for(x1 = 1; x1 < LX-1; x1++) {
+      for(x2 = 1; x2 < LY-1; x2++) {
+	for(x3 = 1; x3 < LZ-1; x3++) {
+	  ix = g_ipt[T-1][x1][x2][x3];
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_t_up) {
+		printf("Exchange of derivatives is working not correctly (12)!\n");
+		printf("%d %d %d %d %d\n", x1, x2, x3, ix, g_proc_id);
+		printf("%f %d %d\n", df0[ix][mu].d8, g_nb_t_up, g_nb_t_dn);
+		printf("Aborting program!\n"); 
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize(); 
+		exit(0); 
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    for(x0 = 1; x0 < T-1; x0++) {
+      for(x2 = 1; x2 < LY-1; x2++) {
+	for(x3 = 1; x3 < LZ-1; x3++) {
 	  ix = g_ipt[x0][LX-1][x2][x3];
-	  for(mu=0;mu<4;mu++){
-	    if(df0[ix][mu].d1 != (double)g_nb_x_up ||
-	       df0[ix][mu].d2 != (double)g_nb_x_up ||
-	       df0[ix][mu].d3 != (double)g_nb_x_up ||
-	       df0[ix][mu].d4 != (double)g_nb_x_up ||
-	       df0[ix][mu].d5 != (double)g_nb_x_up ||
-	       df0[ix][mu].d6 != (double)g_nb_x_up ||
-	       df0[ix][mu].d7 != (double)g_nb_x_up ||
-	       df0[ix][mu].d8 != (double)g_nb_x_up){
-	      printf("Exchange of derivatives is working not correctly (13)!\n");
-	      printf("Aborting program!\n");
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_x_up) {
+		printf("Exchange of derivatives is working not correctly (13)!\n");
+		printf("Aborting program!\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0);
+	      }
 	    }
 	  }
 	}
@@ -5283,40 +5555,48 @@ int check_xchange()
       for(x1 = 1; x1 < LX-1; x1++) {
 	for(x3 = 0; x3 < LZ-1; x3++) {
 	  ix = g_ipt[x0][x1][LY-1][x3];
-	  for(mu=0;mu<4;mu++){
-	    if(df0[ix][mu].d1 != (double)g_nb_y_up ||
-	       df0[ix][mu].d2 != (double)g_nb_y_up ||
-	       df0[ix][mu].d3 != (double)g_nb_y_up ||
-	       df0[ix][mu].d4 != (double)g_nb_y_up ||
-	       df0[ix][mu].d5 != (double)g_nb_y_up ||
-	       df0[ix][mu].d6 != (double)g_nb_y_up ||
-	       df0[ix][mu].d7 != (double)g_nb_y_up ||
-	       df0[ix][mu].d8 != (double)g_nb_y_up){
-	      printf("Exchange of derivatives is working not correctly (14)!\n");
-	      printf("%d %d %d %d %d\n", x0, x1, x3, ix, g_proc_id);
-	      printf("Aborting program!\n");
-	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	      exit(0);
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_y_up) {
+		printf("Exchange of derivatives is working not correctly (14)!\n");
+		printf("%d %d %d %d %d\n", x0, x1, x3, ix, g_proc_id);
+		printf("Aborting program!\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0);
+	      }
 	    }
 	  }
 	}
       }
     }
-    for(x0 = 0; x0 < T-1; x0++) {
+    for(x0 = 1; x0 < T-1; x0++) {
       for(x1 = 1; x1 < LX-1; x1++) {
-	for(x2 = 0; x2 < LY-1; x2++) {
+	for(x2 = 1; x2 < LY-1; x2++) {
 	  ix = g_ipt[x0][x1][x2][LZ-1];
-	  for(mu=0;mu<4;mu++){
-	    if(df0[ix][mu].d1 != (double)g_nb_z_up ||
-	       df0[ix][mu].d2 != (double)g_nb_z_up ||
-	       df0[ix][mu].d3 != (double)g_nb_z_up ||
-	       df0[ix][mu].d4 != (double)g_nb_z_up ||
-	       df0[ix][mu].d5 != (double)g_nb_z_up ||
-	       df0[ix][mu].d6 != (double)g_nb_z_up ||
-	       df0[ix][mu].d7 != (double)g_nb_z_up ||
-	       df0[ix][mu].d8 != (double)g_nb_z_up){
-	      printf("Exchange of derivatives is working not correctly (15)!\n");
-	      printf("%d %d %d %d %d\n", x0, x1, x3, ix, g_proc_id);
+	  for(mu = 0; mu < 4; mu++) {
+	    x = (double*)&df0[ix][mu];
+	    for(int j = 0; j < 8; j++) {
+	      if((int)x[j] != g_nb_z_up) {
+		printf("Exchange of derivatives is working not correctly (15)!\n");
+		printf("%d %d %d %d %d\n", x0, x1, x3, ix, g_proc_id);
+		printf("Aborting program!\n");
+		MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		exit(0);
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    for(x2 = 1; x2 < LY-1; x2++) {
+      for(x3 = 1; x3 < LZ-1; x3++) {
+	ix = g_ipt[T-1][LX-1][x2][x3];
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != (g_nb_x_up + g_nb_t_up)) {
+	      printf("Exchange of derivatives is working not correctly (16)!\n");
 	      printf("Aborting program!\n");
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 	      exit(0);
@@ -5325,42 +5605,18 @@ int check_xchange()
 	}
       }
     }
-    for(x2 = 0; x2 < LY-1; x2++) {
-      for(x3 = 0; x3 < LZ-1; x3++) {
-	ix = g_ipt[T-1][LX-1][x2][x3];
-	for(mu=0;mu<4;mu++){
-	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d4 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d5 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d6 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d7 != (double)(g_nb_x_up + g_nb_t_up) ||
-	     df0[ix][mu].d8 != (double)(g_nb_x_up + g_nb_t_up)){
-	    printf("Exchange of derivatives is working not correctly (16)!\n");
-	    printf("Aborting program!\n");
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
-	  }
-	}
-      }
-    }
-    for(x1 = 0; x1 < LX-1; x1++) {
-      for(x3 = 0; x3 < LZ-1; x3++) {
+    for(x1 = 1; x1 < LX-1; x1++) {
+      for(x3 = 1; x3 < LZ-1; x3++) {
 	ix = g_ipt[T-1][x1][LY-1][x3];
-	for(mu=0;mu<4;mu++){
-	  if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d4 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d5 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d6 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d7 != (double)(g_nb_t_up + g_nb_y_up) ||
-	     df0[ix][mu].d8 != (double)(g_nb_t_up + g_nb_y_up)){
-	    printf("Exchange of derivatives is working not correctly (17)!\n");
-	    printf("Aborting program!\n");
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != (g_nb_y_up + g_nb_t_up)) {
+	      printf("Exchange of derivatives is working not correctly (17)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
 	  }
 	}
       }
@@ -5368,77 +5624,75 @@ int check_xchange()
     for(x0 = 0; x0 < T-1; x0++) {
       for(x3 = 0; x3 < LZ-1; x3++) {
 	ix = g_ipt[x0][LX-1][LY-1][x3];
-	for(mu=0;mu<4;mu++){
-	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d4 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d5 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d6 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d7 != (double)(g_nb_x_up + g_nb_y_up) ||
-	     df0[ix][mu].d8 != (double)(g_nb_x_up + g_nb_y_up)){
-	    printf("Exchange of derivatives is working not correctly (18)!\n");
-	    printf("Aborting program!\n");
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != (g_nb_y_up + g_nb_x_up)) {
+	      printf("Exchange of derivatives is working not correctly (18)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
 	  }
 	}
       }
     }
-    for(x0 = 0; x0 < T-1; x0++) {
-      for(x2 = 0; x2 < LY-1; x2++) {
+    for(x0 = 1; x0 < T-1; x0++) {
+      for(x2 = 1; x2 < LY-1; x2++) {
 	ix = g_ipt[x0][LX-1][x2][LZ-1];
-	for(mu=0;mu<4;mu++){
-	  if(df0[ix][mu].d1 != (double)(g_nb_x_up + g_nb_z_up) ||
-	     df0[ix][mu].d2 != (double)(g_nb_x_up + g_nb_z_up) ||
-	     df0[ix][mu].d3 != (double)(g_nb_x_up + g_nb_z_up) ||
-	     df0[ix][mu].d4 != (double)(g_nb_x_up + g_nb_z_up) ||
-	     df0[ix][mu].d5 != (double)(g_nb_x_up + g_nb_z_up) ||
-	     df0[ix][mu].d6 != (double)(g_nb_x_up + g_nb_z_up) ||
-	     df0[ix][mu].d7 != (double)(g_nb_x_up + g_nb_z_up) ||
-	     df0[ix][mu].d8 != (double)(g_nb_x_up + g_nb_z_up)){
-	    printf("Exchange of derivatives is working not correctly (19)!\n");
-	    printf("%f %d %d %d\n", df0[ix][mu].d1, g_nb_x_up + g_nb_z_up, g_nb_x_up, g_nb_z_up); 
-	    printf("Aborting program!\n");
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != (g_nb_y_up + g_nb_z_up)) {
+	      printf("Exchange of derivatives is working not correctly (19)!\n");
+	      printf("%f %d %d %d\n", df0[ix][mu].d1, g_nb_x_up + g_nb_z_up, g_nb_x_up, g_nb_z_up); 
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
 	  }
 	}
       }
     }
-    for(x0 = 0; x0 < T-1; x0++) {
-      for(x1 = 0; x1 < LX-1; x1++) {
+    for(x0 = 1; x0 < T-1; x0++) {
+      for(x1 = 1; x1 < LX-1; x1++) {
 	ix = g_ipt[x0][x1][LY-1][LZ-1];
-	for(mu=0;mu<4;mu++){
-	  if(df0[ix][mu].d1 != (double)(g_nb_y_up + g_nb_z_up) ||
-	     df0[ix][mu].d2 != (double)(g_nb_y_up + g_nb_z_up) ||
-	     df0[ix][mu].d3 != (double)(g_nb_y_up + g_nb_z_up) ||
-	     df0[ix][mu].d4 != (double)(g_nb_y_up + g_nb_z_up) ||
-	     df0[ix][mu].d5 != (double)(g_nb_y_up + g_nb_z_up) ||
-	     df0[ix][mu].d6 != (double)(g_nb_y_up + g_nb_z_up) ||
-	     df0[ix][mu].d7 != (double)(g_nb_y_up + g_nb_z_up) ||
-	     df0[ix][mu].d8 != (double)(g_nb_y_up + g_nb_z_up)){
-	    printf("Exchange of derivatives is working not correctly (20)!\n");
-	    printf("Aborting program!\n");
-	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	    exit(0);
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] != (g_nb_y_up + g_nb_z_up)) {
+	      printf("Exchange of derivatives is working not correctly (20)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
 	  }
 	}
       }
     }
-    for(x1 = 0; x1 < LX-1; x1++) {
-      for(x2 = 0; x2 < LY-1; x2++) {
+    for(x1 = 1; x1 < LX-1; x1++) {
+      for(x2 = 1; x2 < LY-1; x2++) {
 	ix = g_ipt[T-1][x1][x2][LZ-1];
-	for(mu=0;mu<4;mu++){
-	  if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_z_up) ||
-	     df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_z_up) ||
-	     df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_z_up) ||
-	     df0[ix][mu].d4 != (double)(g_nb_t_up + g_nb_z_up) ||
-	     df0[ix][mu].d5 != (double)(g_nb_t_up + g_nb_z_up) ||
-	     df0[ix][mu].d6 != (double)(g_nb_t_up + g_nb_z_up) ||
-	     df0[ix][mu].d7 != (double)(g_nb_t_up + g_nb_z_up) ||
-	     df0[ix][mu].d8 != (double)(g_nb_t_up + g_nb_z_up)){
-	    printf("Exchange of derivatives is working not correctly (21)!\n");
+	for(mu = 0; mu < 4; mu++) {
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    if((int)x[j] !=  (g_nb_t_up + g_nb_z_up)) {
+	      printf("Exchange of derivatives is working not correctly (21)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+      }
+    }
+    for(x3 = 1; x3 < LZ-1; x3++) {
+      ix = g_ipt[T-1][LX-1][LY-1][x3];
+      for(mu = 0; mu < 4; mu++) {
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != (g_nb_t_up + g_nb_x_up + g_nb_y_up)) {
+	    printf("Exchange of derivatives is working not correctly (22)!\n");
 	    printf("Aborting program!\n");
 	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 	    exit(0);
@@ -5446,96 +5700,701 @@ int check_xchange()
 	}
       }
     }
-    for(x3 = 0; x3 < LZ-1; x3++) {
-      ix = g_ipt[T-1][LX-1][LY-1][x3];
-      for(mu=0;mu<4;mu++){
-	if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d4 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d5 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d6 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d7 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d8 != (double)(g_nb_t_up + g_nb_x_up + g_nb_y_up)){
-	  printf("Exchange of derivatives is working not correctly (22)!\n");
-	  printf("Aborting program!\n");
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
-	}
-      }
-    }
-    for(x2 = 0; x2 < LY-1; x2++) {
+    for(x2 = 1; x2 < LY-1; x2++) {
       ix = g_ipt[T-1][LX-1][x2][LZ-1];
-      for(mu=0;mu<4;mu++){
-	if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_x_up + g_nb_z_up) ||
-	   df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_x_up + g_nb_z_up) ||
-	   df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_x_up + g_nb_z_up) ||
-	   df0[ix][mu].d4 != (double)(g_nb_t_up + g_nb_x_up + g_nb_z_up) ||
-	   df0[ix][mu].d5 != (double)(g_nb_t_up + g_nb_x_up + g_nb_z_up) ||
-	   df0[ix][mu].d6 != (double)(g_nb_t_up + g_nb_x_up + g_nb_z_up) ||
-	   df0[ix][mu].d7 != (double)(g_nb_t_up + g_nb_x_up + g_nb_z_up) ||
-	   df0[ix][mu].d8 != (double)(g_nb_t_up + g_nb_x_up + g_nb_z_up)){
-	  printf("Exchange of derivatives is working not correctly (23)!\n");
-	  printf("Aborting program!\n");
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+      for(mu = 0; mu < 4; mu++) {
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != (g_nb_t_up + g_nb_x_up + g_nb_z_up)) {
+	    printf("Exchange of derivatives is working not correctly (23)!\n");
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
 	}
       }
     }
-    for(x1 = 0; x1 < LX-1; x1++) {
+    for(x1 = 1; x1 < LX-1; x1++) {
       ix = g_ipt[T-1][x1][LY-1][LZ-1];
-      for(mu=0;mu<4;mu++){
-	if(df0[ix][mu].d1 != (double)(g_nb_t_up + g_nb_z_up + g_nb_y_up) ||
-	   df0[ix][mu].d2 != (double)(g_nb_t_up + g_nb_z_up + g_nb_y_up) ||
-	   df0[ix][mu].d3 != (double)(g_nb_t_up + g_nb_z_up + g_nb_y_up) ||
-	   df0[ix][mu].d4 != (double)(g_nb_t_up + g_nb_z_up + g_nb_y_up) ||
-	   df0[ix][mu].d5 != (double)(g_nb_t_up + g_nb_z_up + g_nb_y_up) ||
-	   df0[ix][mu].d6 != (double)(g_nb_t_up + g_nb_z_up + g_nb_y_up) ||
-	   df0[ix][mu].d7 != (double)(g_nb_t_up + g_nb_z_up + g_nb_y_up) ||
-	   df0[ix][mu].d8 != (double)(g_nb_t_up + g_nb_z_up + g_nb_y_up)){
-	  printf("Exchange of derivatives is working not correctly (24)!\n");
-	  printf("Aborting program!\n");
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+      for(mu = 0; mu < 4; mu++) {
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != (g_nb_t_up + g_nb_z_up + g_nb_y_up)) {
+	    printf("Exchange of derivatives is working not correctly (24)!\n");
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
 	}
       }
     }
-    for(x0 = 0; x0 < T-1; x0++) {
+    for(x0 = 1; x0 < T-1; x0++) {
       ix = g_ipt[x0][LX-1][LY-1][LZ-1];
-      for(mu=0;mu<4;mu++){
-	if(df0[ix][mu].d1 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d2 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d3 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d4 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d5 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d6 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d7 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up) ||
-	   df0[ix][mu].d8 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up)){
-	  printf("Exchange of derivatives is working not correctly (25)!\n");
-	  printf("Aborting program!\n");
-	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
-	  exit(0);
+      for(mu = 0; mu < 4; mu++) {
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != (g_nb_z_up + g_nb_x_up + g_nb_y_up)) {
+	    printf("Exchange of derivatives is working not correctly (25)!\n");
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
 	}
       }
     }
     ix = g_ipt[T-1][LX-1][LY-1][LZ-1];
-      for(mu=0;mu<4;mu++){
-	if(df0[ix][mu].d1 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up + g_nb_t_up) ||
-	   df0[ix][mu].d2 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up + g_nb_t_up) ||
-	   df0[ix][mu].d3 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up + g_nb_t_up) ||
-	   df0[ix][mu].d4 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up + g_nb_t_up) ||
-	   df0[ix][mu].d5 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up + g_nb_t_up) ||
-	   df0[ix][mu].d6 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up + g_nb_t_up) ||
-	   df0[ix][mu].d7 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up + g_nb_t_up) ||
-	   df0[ix][mu].d8 != (double)(g_nb_z_up + g_nb_x_up + g_nb_y_up + g_nb_t_up)){
+    for(mu = 0; mu < 4; mu++){
+      x = (double*)&df0[ix][mu];
+      for(int j = 0; j < 8; j++) {
+	if((int)x[j] != (g_nb_z_up + g_nb_x_up + g_nb_y_up + g_nb_t_up)) {
 	  printf("Exchange of derivatives is working not correctly (26)!\n");
 	  printf("Aborting program!\n");
 	  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 	  exit(0);
 	}
       }
+    }
 
 #  endif
+
+    // edges
+    if(g_proc_id == 0) {
+      printf("# Setting edges\n");
+    }
+
+    for(ix = 0; ix < VOLUMEPLUSRAND; ix++) {
+      for(mu=0; mu<4; mu++) {
+	x = (double*)&ddummy[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  x[j] = 0.;
+	}
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  x[j] = 0.;
+	}
+      }
+    }
+
+#  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+
+    //xt edge
+    for(x2 = 0; x2 < LY; x2++) {
+      for(x3 = 0; x3 < LZ; x3++) {
+	ix = g_iup[g_iup[ g_ipt[T-1][LX-1][x2][x3] ][1] ][0]; 
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    x[j] = (double)g_cart_id;
+	  }
+	}
+	ix = g_iup[g_idn[ g_ipt[T-1][0][x2][x3] ][1] ][0]; 
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    x[j] = (double)g_cart_id;
+	  }
+	}
+	ix = g_idn[g_iup[ g_ipt[0][LX-1][x2][x3] ][1] ][0]; 
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    x[j] = (double)g_cart_id;
+	  }
+	}
+	ix = g_idn[g_idn[ g_ipt[0][0][x2][x3] ][1] ][0]; 
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    x[j] = (double)g_cart_id;
+	  }
+	}
+      }
+    }
+#  endif
+
+#  if (defined PARALLELXYT || defined PARALLELXYZT)
+
+    // ty edge
+    for(x1 = 0; x1 < LX; x1++) {
+      for(x3 = 0; x3 < LZ; x3++) {
+	ix = g_iup[g_iup[ g_ipt[T-1][x1][LY-1][x3] ][2] ][0]; 
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    x[j] = (double)g_cart_id;
+	  }
+	}
+	ix = g_iup[g_idn[ g_ipt[T-1][x1][0][x3] ][2] ][0]; 
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    x[j] = (double)g_cart_id;
+	  }
+	}
+	ix = g_idn[g_iup[ g_ipt[0][x1][LY-1][x3] ][2] ][0]; 
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    x[j] = (double)g_cart_id;
+	  }
+	}
+	ix = g_idn[g_idn[ g_ipt[0][x1][0][x3] ][2] ][0]; 
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    x[j] = (double)g_cart_id;
+	  }
+	}
+      }
+    }
+
+    // xy edge
+    for(x0 = 0; x0 < T; x0++) {
+      for(x3 = 0; x3 < LZ; x3++) {
+	ix = g_iup[g_iup[ g_ipt[x0][LX-1][LY-1][x3] ][2] ][1]; 
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    x[j] = (double)g_cart_id;
+	  }
+	}
+	ix = g_iup[g_idn[ g_ipt[x0][LX-1][0][x3] ][2] ][1]; 
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    x[j] = (double)g_cart_id;
+	  }
+	}
+	ix = g_idn[g_iup[ g_ipt[x0][0][LY-1][x3] ][2] ][1]; 
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    x[j] = (double)g_cart_id;
+	  }
+	}
+	ix = g_idn[g_idn[ g_ipt[x0][0][0][x3] ][2] ][1]; 
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+	    x[j] = (double)g_cart_id;
+	  }
+	}
+      }
+    }
+
+
+#  endif
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    xchange_deri(df0);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+#  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    MPI_Cart_rank(g_cart_grid, di, &pp);
+
+#ifdef PARALLELXT
+    for(x2 = 0; x2 < LY; x2++) {
+      for(x3 = 0; x3 < LZ; x3++) {
+#else
+    for(x2 = 1; x2 < LY-1; x2++) {
+      for(x3 = 0; x3 < LZ; x3++) {
+#endif
+	ix = g_ipt[0][0][x2][x3];
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+ 	    if((int)x[j] != mm) {
+	      printf("Exchange of derivatives is working not correctly (e5mm)!\n");
+	      printf("%f %d %d %d %d\n", x[j], g_nb_t_up, g_nb_x_up, pp, mm);
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[0][LX-1][x2][x3];
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+ 	    if((int)x[j] != mp) {
+	      printf("Exchange of derivatives is working not correctly (e5mp)!\n");
+	      printf("%f %d %d %d %d\n", x[j], g_nb_t_up, g_nb_x_up, pm, mp);
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[T-1][0][x2][x3];
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+ 	    if((int)x[j] != pm) {
+	      printf("Exchange of derivatives is working not correctly (e5pm)!\n");
+	      printf("%f %d %d %d %d\n", x[j], g_nb_t_up, g_nb_x_up, pm, mp);
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[T-1][LX-1][x2][x3];
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+ 	    if((int)x[j] != pp) {
+	      printf("Exchange of derivatives is working not correctly (e5pp)!\n");
+	      printf("%f %d %d %d %d\n", x[j], g_nb_t_up, g_nb_x_up, pp, mm);
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+      }
+    }
+      
+#  endif
+
+#  if (defined PARALLELXYT || defined PARALLELXYZT)
+
+    // xy-edge
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[0] = g_proc_coords[0];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    MPI_Cart_rank(g_cart_grid, di, &pp);
+
+    for(x0 = 1; x0 < T-1; x0++) {
+      for(x3 = 0; x3 < LZ; x3++) {
+	ix = g_ipt[x0][0][0][x3];
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+ 	    if((int)x[j] != mm) {
+	      printf("Exchange of derivatives is working not correctly (e6mm)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[x0][LX-1][0][x3];
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+ 	    if((int)x[j] != pm) {
+	      printf("Exchange of derivatives is working not correctly (e6pm)!\n");
+	      printf("%f %d %d %d %d\n", x[j], g_nb_x_up, g_nb_y_up, pm, mp);
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[x0][0][LY-1][x3];
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+ 	    if((int)x[j] != mp) {
+	      printf("Exchange of derivatives is working not correctly (e6mp)!\n");
+	      printf("%f %d %d %d %d\n", x[j], g_nb_x_up, g_nb_y_up, pm, mp);
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[x0][LX-1][LY-1][x3];
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+ 	    if((int)x[j] != pp) {
+	      printf("Exchange of derivatives is working not correctly (e6pp)!\n");
+	      printf("%f %d %d %d %d\n", x[j], g_nb_x_up, g_nb_y_up, pp, mm);
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    MPI_Cart_rank(g_cart_grid, di, &pp);
+
+    for(x1 = 1; x1 < LX-1; x1++) {
+      for(x3 = 0; x3 < LZ; x3++) {
+	ix = g_ipt[0][x1][0][x3];
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+ 	    if((int)x[j] != mm) {
+	      printf("Exchange of derivatives is working not correctly (e7mm)!\n");
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[T-1][x1][0][x3];
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+ 	    if((int)x[j] != pm) {
+	      printf("Exchange of derivatives is working not correctly (e7pm)!\n");
+	      printf("%f %d %d %d %d\n", x[j], g_nb_t_up, g_nb_y_up, pm, pm);
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[0][x1][LY-1][x3];
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+ 	    if((int)x[j] != mp) {
+	      printf("Exchange of derivatives is working not correctly (e7mp)!\n");
+	      printf("%f %d %d %d %d\n", x[j], g_nb_t_up, g_nb_y_up, pm, mp);
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+	ix = g_ipt[T-1][x1][LY-1][x3];
+	for(mu = 0; mu < 4; mu++) { 
+	  x = (double*)&df0[ix][mu];
+	  for(int j = 0; j < 8; j++) {
+ 	    if((int)x[j] != pp) {
+	      printf("Exchange of derivatives is working not correctly (e7pp)!\n");
+	      printf("%f %d %d %d %d\n", x[j], g_nb_t_up, g_nb_y_up, pp, mm);
+	      printf("Aborting program!\n");
+	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	      exit(0);
+	    }
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[0][0][0][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8mmm)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[T-1][0][0][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8pmm)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[T-1][0][LY-1][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8pmp)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[T-1][LX-1][LY-1][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8ppp)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[0][LX-1][0][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8mpm)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] - 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[0][0][LY-1][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8mmp)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] + 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[0][LX-1][LY-1][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8mpp)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[1] = g_proc_coords[1];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mm);
+    di[0] = g_proc_coords[0];
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = (g_proc_coords[2] - 1)%g_nproc_y;
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &mp);
+    di[0] = (g_proc_coords[0] + 1)%g_nproc_t;
+    di[1] = (g_proc_coords[1] + 1)%g_nproc_x;
+    di[2] = g_proc_coords[2];
+    di[3] = g_proc_coords[3];
+    MPI_Cart_rank(g_cart_grid, di, &pm);
+
+    for(x3 = 0; x3 < LZ; x3++) {
+      ix = g_ipt[T-1][LX-1][0][x3];
+      for(mu = 0; mu < 4; mu++) { 
+	x = (double*)&df0[ix][mu];
+	for(int j = 0; j < 8; j++) {
+	  if((int)x[j] != mm + mp + pm) {
+	    printf("Exchange of derivatives is working not correctly (e8ppm)!\n");
+	    printf("%d %d %d %d %d\n", (int)x[j], mm, mp, pm, pp);
+	    printf("Aborting program!\n");
+	    MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+	    exit(0);
+	  }
+	}
+      }
+    }
+    for(x0 = 1; x0 < T-1; x0++) {
+      for(x1 = 1; x1 < LX-1; x1++) {
+	for(x2 = 1; x2 < LY-1; x2++) {
+	  for(x3 = 0; x3 < LZ; x3++) {
+	    ix = g_ipt[x0][x1][x2][x3];
+	    for(mu = 0; mu < 4; mu++) {
+	      x = (double*)&df0[ix][mu];
+	      for(int j = 0; j < 8; j++) {
+		if((int)x[j] != 0) {
+		  printf("Exchange of derivatives is working not correctly (ebulk XYT)!\n");
+		  printf("Aborting program!\n");
+		  MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
+		  exit(0);
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+
+
+#  endif
+
+
     if(g_proc_id == 0) {
       printf("# The exchange routines are working correctly.\n");
     }
