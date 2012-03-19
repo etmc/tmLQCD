@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _DIRAC_EIGENVALUES_H
+#define _DIRAC_EIGENVALUES_H
 
 #include "config.h"
 #ifdef HAVE_FFTW
@@ -263,3 +264,5 @@ int cyclicDiff(int a,int b, int period);
 	phi_plus.s1.col_phi -= (p_plus) * (up_plus->s1.col_proj); \
 	phi_plus.s2.col_phi -= (p_plus) * (up_plus->s2.col_proj);\
 	phi_plus.s3.col_phi -= (p_plus) * (up_plus->s3.col_proj);
+
+#endif
