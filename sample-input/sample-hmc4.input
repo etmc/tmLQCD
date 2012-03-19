@@ -1,6 +1,11 @@
-# the expected plaquette value is 0.624(2)
+# the expected plaquette value is 0.62597(8)
+# the expected rectangle value is 0.3935(1)
 # in this example the topologie should be fixed.
 # expect huge autocorrelation times
+# PP correlator
+# 1.632(8)
+# 0.333(2)
+# 0.0775(5)
 #
 
 L=4
