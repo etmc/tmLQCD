@@ -1,8 +1,7 @@
 #pragma once
 
 #include <su3.h>
-
-typedef su3 su3_tuple[4];
+#include <buffers/gauge.h>
 
 /* We need a number of indices to do the bookkeeping.
    This will always amount to at most 12 fields, but
@@ -31,7 +30,7 @@ enum I2
   I2_3_02 = 10, I2_3_20 = 10, I2_3_12 = 11, I2_3_21 = 11
 };
 
-void generic_staples(su3 *buff_out, int x, int mu, su3_tuple *buff_in);
+void generic_staples(gauge_field_t buff_out, int x, int mu, gauge_field_t buff_in);
 void generic_exchange(void *field_in, int bytes_per_site);
 void project_antiherm(su3 *omega);
 void project_herm(su3 *omega);

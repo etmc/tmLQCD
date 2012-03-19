@@ -31,15 +31,15 @@ void check_little_D_inversion();
 void check_local_D();
 void free_dfl_projector();
 
-void little_project(complex * const out, complex * const in, const int  N);
-void little_project_eo(complex * const out, complex * const in, const int N);
-void little_P_L_D(complex * const out, complex * const in);
-void little_P_L_D_sym(complex * const out, complex * const in);
-void little_D_P_R(complex * const out, complex * const in);
-void little_P_R(complex * const out, complex * const in);
-void little_P_L(complex * const out, complex * const in);
-void little_P_R_sym(complex * const out, complex * const in);
-void little_P_L_sym(complex * const out, complex * const in);
+void little_project(_Complex double * const out, _Complex double * const in, const int  N);
+void little_project_eo(_Complex double * const out, _Complex double * const in, const int N);
+void little_P_L_D(_Complex double * const out, _Complex double * const in);
+void little_P_L_D_sym(_Complex double * const out, _Complex double * const in);
+void little_D_P_R(_Complex double * const out, _Complex double * const in);
+void little_P_R(_Complex double * const out, _Complex double * const in);
+void little_P_L(_Complex double * const out, _Complex double * const in);
+void little_P_R_sym(_Complex double * const out, _Complex double * const in);
+void little_P_L_sym(_Complex double * const out, _Complex double * const in);
 
 extern double dfl_little_D_prec;
 extern int dfl_sloppy_prec;

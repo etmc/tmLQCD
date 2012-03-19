@@ -21,8 +21,8 @@
 #define LU_SOLVE_H
 
 /* Solve M a = b by LU decomposition with partial pivoting */
-void LUSolve( const int Nvec, complex * M, const int ldM, complex * b);
+void LUSolve( const int Nvec, _Complex double * M, const int ldM, _Complex double * b);
 
-void LUInvert( const int Nvec, complex * const M, const int ldM);
+void LUInvert( const int Nvec, _Complex double * const M, const int ldM);
 
 #endif

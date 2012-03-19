@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2007 Craig McNeile
+ * Copyright (C) 2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -16,20 +16,15 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ *
  ***********************************************************************/
+#ifndef _CLOVERDETRATIO_MONOMIAL_H
+#define _CLOVERDETRATIO_MONOMIAL_H
 
-#ifndef _STOUT_SMEAR_
-#define _STOUT_SMEAR_
+#include "hamiltonian_field.h"
 
-int stout_smear_gauge_field(const double rho , const int no_iters); 
-void scale_su3(su3 *in, double scale);
-void  project_anti_herm(su3 *omega);
-void  print_su3(su3 *in);
-void  print_su3_octave(su3 *in);
-void  print_spinor(spinor *in); 
-void print_config_to_screen(su3 **in);
-void  print_scalar_complex_field_to_screen(complex *in_field);
-void  print_scalar_real_field_to_screen(double *in_field); 
-void load_config_from_file(su3 **in, char * filename);
+void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf);
+double cloverdetratio_acc(const int no, hamiltonian_field_t * const hf);
+void cloverdetratio_heatbath(const int no, hamiltonian_field_t * const hf);
 
 #endif

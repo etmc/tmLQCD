@@ -24,7 +24,6 @@
 *******************************************************************************/
 
 #define MAIN_PROGRAM
-
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -122,7 +121,7 @@ int main(int argc,char *argv[])
   g_rgi_C1 = 1.; 
   
     /* Read the input file */
-  if( (status = read_input("benchmark.input")) != 0) {
+  if((status = read_input("benchmark.input")) != 0) {
     fprintf(stderr, "Could not find input file: benchmark.input\nAborting...\n");
     exit(-1);
   }
@@ -275,7 +274,7 @@ int main(int argc,char *argv[])
         for (k=0;k<k_max;k++) {
           Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
           Hopping_Matrix(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
-          antioptaway+=g_spinor_field[2*k_max][0].s0.c0.re;
+          antioptaway+=creal(g_spinor_field[2*k_max][0].s0.c0);
         }
       }
 #if defined BGL
@@ -324,7 +323,7 @@ int main(int argc,char *argv[])
       for (k=0;k<k_max;k++) {
         Hopping_Matrix_nocom(0, g_spinor_field[k+k_max], g_spinor_field[k]);
         Hopping_Matrix_nocom(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
-        antioptaway+=g_spinor_field[2*k_max][0].s0.c0.re;
+        antioptaway += creal(g_spinor_field[2*k_max][0].s0.c0);
       }
     }
 #if defined BGL
@@ -381,7 +380,7 @@ int main(int argc,char *argv[])
       for (j=0;j<j_max;j++) {
         for (k=0;k<k_max;k++) {
           D_psi(g_spinor_field[k+k_max], g_spinor_field[k]);
-          antioptaway+=g_spinor_field[k+k_max][0].s0.c0.re;
+          antioptaway+=creal(g_spinor_field[k+k_max][0].s0.c0);
         }
       }
 #if defined BGL

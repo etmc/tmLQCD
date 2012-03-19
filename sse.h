@@ -493,8 +493,8 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "addpd %%xmm2, %%xmm5" \
                       : \
                       : \
-                      "m" ((c).re), \
-                      "m" ((c).im), \
+                      "m" (creal(c)), \
+                      "m" (cimag(c)), \
                       "m" (_sse_sgn)) ;
 
 
@@ -527,8 +527,8 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "subpd %%xmm2, %%xmm5" \
                       : \
                       : \
-                      "m" ((c).re), \
-                      "m" ((c).im), \
+                      "m" (creal(c)), \
+                      "m" (cimag(c)), \
                       "m" (_sse_sgn)) ;
 
 
@@ -579,15 +579,15 @@ __asm__ __volatile__ ("movsd %0, %%xmm3 \n\t" \
                       "addpd %%xmm11, %%xmm5" \
                       : \
                       : \
-                      "m" ((u).c00.re), \
-                      "m" ((u).c01.re), \
-                      "m" ((u).c10.re), \
-                      "m" ((u).c12.re), \
-                      "m" ((u).c20.re), \
-                      "m" ((u).c21.re), \
-                      "m" ((u).c02.re), \
-                      "m" ((u).c11.re), \
-                      "m" ((u).c22.re)); \
+                      "m" (creal((u).c00)), \
+                      "m" (creal((u).c01)), \
+                      "m" (creal((u).c10)), \
+                      "m" (creal((u).c12)), \
+                      "m" (creal((u).c20)), \
+                      "m" (creal((u).c21)), \
+                      "m" (creal((u).c02)), \
+                      "m" (creal((u).c11)), \
+                      "m" (creal((u).c22))); \
 __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "movsd %1, %%xmm7 \n\t" \
                       "movsd %2, %%xmm8 \n\t" \
@@ -632,15 +632,15 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "addpd %%xmm14, %%xmm4" \
                       : \
                       : \
-                      "m" ((u).c00.im), \
-                      "m" ((u).c11.im), \
-                      "m" ((u).c22.im), \
-                      "m" ((u).c10.im), \
-                      "m" ((u).c01.im), \
-                      "m" ((u).c20.im), \
-                      "m" ((u).c02.im), \
-                      "m" ((u).c21.im), \
-                      "m" ((u).c12.im), \
+                      "m" (cimag((u).c00)), \
+                      "m" (cimag((u).c11)), \
+                      "m" (cimag((u).c22)), \
+                      "m" (cimag((u).c10)), \
+                      "m" (cimag((u).c01)), \
+                      "m" (cimag((u).c20)), \
+                      "m" (cimag((u).c02)), \
+                      "m" (cimag((u).c21)), \
+                      "m" (cimag((u).c12)), \
                       "m" (_sse_sgn))
 
 
@@ -682,15 +682,15 @@ __asm__ __volatile__ ("movsd %0, %%xmm3 \n\t" \
                       "addpd %%xmm7, %%xmm5" \
                       : \
                       : \
-                      "m" ((u).c00.re), \
-                      "m" ((u).c01.re), \
-                      "m" ((u).c10.re), \
-                      "m" ((u).c12.re), \
-                      "m" ((u).c20.re), \
-                      "m" ((u).c21.re), \
-                      "m" ((u).c02.re), \
-                      "m" ((u).c11.re), \
-                      "m" ((u).c22.re)); \
+                      "m" (creal((u).c00)), \
+                      "m" (creal((u).c01)), \
+                      "m" (creal((u).c10)), \
+                      "m" (creal((u).c12)), \
+                      "m" (creal((u).c20)), \
+                      "m" (creal((u).c21)), \
+                      "m" (creal((u).c02)), \
+                      "m" (creal((u).c11)), \
+                      "m" (creal((u).c22))); \
 __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "movsd %1, %%xmm7 \n\t" \
                       "shufpd $0x1, %%xmm0, %%xmm0 \n\t" \
@@ -735,15 +735,15 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "addpd %%xmm7, %%xmm4" \
                       : \
                       : \
-                      "m" ((u).c00.im), \
-                      "m" ((u).c11.im), \
-                      "m" ((u).c22.im), \
-                      "m" ((u).c10.im), \
-                      "m" ((u).c01.im), \
-                      "m" ((u).c20.im), \
-                      "m" ((u).c02.im), \
-                      "m" ((u).c21.im), \
-                      "m" ((u).c12.im), \
+                      "m" (cimag((u).c00)), \
+                      "m" (cimag((u).c11)), \
+                      "m" (cimag((u).c22)), \
+                      "m" (cimag((u).c10)), \
+                      "m" (cimag((u).c01)), \
+                      "m" (cimag((u).c20)), \
+                      "m" (cimag((u).c02)), \
+                      "m" (cimag((u).c21)), \
+                      "m" (cimag((u).c12)), \
                       "m" (_sse_sgn))
 
 #endif
@@ -794,15 +794,15 @@ __asm__ __volatile__ ("movsd %0, %%xmm3 \n\t" \
                       "addpd %%xmm11, %%xmm5" \
                       : \
                       : \
-                      "m" ((u).c00.re), \
-                      "m" ((u).c10.re), \
-                      "m" ((u).c01.re), \
-                      "m" ((u).c21.re), \
-                      "m" ((u).c02.re), \
-                      "m" ((u).c12.re), \
-                      "m" ((u).c20.re), \
-                      "m" ((u).c11.re), \
-                      "m" ((u).c22.re)); \
+                      "m" (creal((u).c00)), \
+                      "m" (creal((u).c10)), \
+                      "m" (creal((u).c01)), \
+                      "m" (creal((u).c21)), \
+                      "m" (creal((u).c02)), \
+                      "m" (creal((u).c12)), \
+                      "m" (creal((u).c20)), \
+                      "m" (creal((u).c11)), \
+                      "m" (creal((u).c22))); \
 __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "movsd %1, %%xmm7 \n\t" \
                       "movsd %2, %%xmm8 \n\t" \
@@ -847,15 +847,15 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "addpd %%xmm14, %%xmm4" \
                       : \
                       : \
-                      "m" ((u).c00.im), \
-                      "m" ((u).c11.im), \
-                      "m" ((u).c22.im), \
-                      "m" ((u).c01.im), \
-                      "m" ((u).c10.im), \
-                      "m" ((u).c02.im), \
-                      "m" ((u).c20.im), \
-                      "m" ((u).c12.im), \
-                      "m" ((u).c21.im), \
+                      "m" (cimag((u).c00)), \
+                      "m" (cimag((u).c11)), \
+                      "m" (cimag((u).c22)), \
+                      "m" (cimag((u).c01)), \
+                      "m" (cimag((u).c10)), \
+                      "m" (cimag((u).c02)), \
+                      "m" (cimag((u).c20)), \
+                      "m" (cimag((u).c12)), \
+                      "m" (cimag((u).c21)), \
                       "m" (_sse_sgn));
 
 #else
@@ -896,15 +896,15 @@ __asm__ __volatile__ ("movsd %0, %%xmm3 \n\t" \
                       "addpd %%xmm7, %%xmm5" \
                       : \
                       : \
-                      "m" ((u).c00.re), \
-                      "m" ((u).c10.re), \
-                      "m" ((u).c01.re), \
-                      "m" ((u).c21.re), \
-                      "m" ((u).c02.re), \
-                      "m" ((u).c12.re), \
-                      "m" ((u).c20.re), \
-                      "m" ((u).c11.re), \
-                      "m" ((u).c22.re)); \
+                      "m" (creal((u).c00)), \
+                      "m" (creal((u).c10)), \
+                      "m" (creal((u).c01)), \
+                      "m" (creal((u).c21)), \
+                      "m" (creal((u).c02)), \
+                      "m" (creal((u).c12)), \
+                      "m" (creal((u).c20)), \
+                      "m" (creal((u).c11)), \
+                      "m" (creal((u).c22))); \
 __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "movsd %1, %%xmm7 \n\t" \
                       "xorpd %9, %%xmm0 \n\t" \
@@ -949,15 +949,15 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "addpd %%xmm7, %%xmm4" \
                       : \
                       : \
-                      "m" ((u).c00.im), \
-                      "m" ((u).c11.im), \
-                      "m" ((u).c22.im), \
-                      "m" ((u).c01.im), \
-                      "m" ((u).c10.im), \
-                      "m" ((u).c02.im), \
-                      "m" ((u).c20.im), \
-                      "m" ((u).c12.im), \
-                      "m" ((u).c21.im), \
+                      "m" (cimag((u).c00)), \
+                      "m" (cimag((u).c11)), \
+                      "m" (cimag((u).c22)), \
+                      "m" (cimag((u).c01)), \
+                      "m" (cimag((u).c10)), \
+                      "m" (cimag((u).c02)), \
+                      "m" (cimag((u).c20)), \
+                      "m" (cimag((u).c12)), \
+                      "m" (cimag((u).c21)), \
                       "m" (_sse_sgn));
 /* OPTERON */
 #endif

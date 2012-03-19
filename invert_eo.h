@@ -15,9 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-
-/****************************************************************
  *
  * invert_eo makes an inversion with EO precoditioned
  * tm Operator
@@ -25,7 +22,7 @@
  * Author: Carsten Urbach
  *         urbach@physik.fu-berlin.de
  *
- ****************************************************************/
+ ***********************************************************************/
 
 #ifndef _INVERT_EO_H
 #define _INVERT_EO_H
@@ -36,11 +33,4 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	      const int solver_flag, const int rel_prec,
 	      const int sub_evs_flag, const int even_odd_flag);
 
-/* This is the full matrix multiplication */
-void M_full(spinor * const Even_new, spinor * const Odd_new, 
-	    spinor * const Even, spinor * const Odd);
-void Q_full(spinor * const Even_new, spinor * const Odd_new, 
-	    spinor * const Even, spinor * const Odd);
-void M_minus_1_timesC(spinor * const Even_new, spinor * const Odd_new, 
-		      spinor * const Even, spinor * const Odd);
 #endif

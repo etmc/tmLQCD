@@ -77,10 +77,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     /* Multiply with W_+ */
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
-    if(mnl->c_sw > 0) {
-      sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
-      sw_invert(OE);
-    }
+
     if(mnl->solver != CG) {
       fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n");
     }
@@ -110,16 +107,6 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
     deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf); 
 
-    if(mnl->c_sw > 0) {
-      /* here comes the clover term... */
-      gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
-      sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
-      
-      /* compute the contribution for the det-part */
-      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-      sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-    }
-
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
     
@@ -138,18 +125,6 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
     deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf);
 
-    if(mnl->c_sw > 0) {
-      /* here comes the clover term... */
-      gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
-      sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
-      
-      /* compute the contribution for the det-part */
-      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-      sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-
-      sw_deriv(OE);
-      sw_all(hf, mnl->kappa, mnl->c_sw);
-    }
   } 
   else { /* no even/odd preconditioning */
     /*********************************************************************

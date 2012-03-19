@@ -389,11 +389,11 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 
       if(use_preconditioning==1 && g_precWS!=NULL){
 	spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
-	static complex alpha={0,0};
+	static _Complex double alpha = 0.0;
 	if(g_proc_id==0) {printf("# Using preconditioning (which one?)!\n");}
 
 	if(g_prec_sequence_d_dagger_d[2] != 0.0){
-	  alpha.re=g_prec_sequence_d_dagger_d[2];
+	  alpha = g_prec_sequence_d_dagger_d[2];
 	  spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
 	}
 
@@ -401,7 +401,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 		    rel_prec, VOLUME, &Q_pm_psi_prec);
 
 	if(g_prec_sequence_d_dagger_d[0] != 0.0){
-	  alpha.re=g_prec_sequence_d_dagger_d[0];
+	  alpha = g_prec_sequence_d_dagger_d[0];
 	  spinorPrecondition(g_spinor_field[DUM_DERI],g_spinor_field[DUM_DERI],ws,T,L,alpha,0,1);
 	}
 
@@ -416,9 +416,9 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 
       if(use_preconditioning==1 && g_precWS!=NULL){
 	spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
-	static complex alpha={0,0};
+	static _Complex double alpha = 0.0;
 	if(g_prec_sequence_d_dagger_d[1] != 0.0){
-	  alpha.re=g_prec_sequence_d_dagger_d[1];
+	  alpha = g_prec_sequence_d_dagger_d[1];
 	  spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
 	}
       }
@@ -429,41 +429,3 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   return(iter);
 }
 
-void M_full(spinor * const Even_new, spinor * const Odd_new, 
-	    spinor * const Even, spinor * const Odd) {
-  /* Even sites */
-  Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd);
-  assign_mul_one_pm_imu(Even_new, Even, 1., VOLUME/2); 
-  assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], -1., VOLUME/2);
-
-  /* Odd sites */
-  Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even);
-  assign_mul_one_pm_imu(Odd_new, Odd, 1., VOLUME/2); 
-  assign_add_mul_r(Odd_new, g_spinor_field[DUM_DERI], -1., VOLUME/2);
-}
-
-void Q_full(spinor * const Even_new, spinor * const Odd_new, 
-	    spinor * const Even, spinor * const Odd) {
-  /* Even sites */
-  Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd);
-  assign_mul_one_pm_imu(Even_new, Even, 1., VOLUME/2); 
-  assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], -1., VOLUME/2);
-  gamma5(Even_new, Even_new, VOLUME/2);
-
-  /* Odd sites */
-  Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even);
-  assign_mul_one_pm_imu(Odd_new, Odd, 1., VOLUME/2); 
-  assign_add_mul_r(Odd_new, g_spinor_field[DUM_DERI], -1., VOLUME/2);
-  gamma5(Odd_new, Odd_new, VOLUME/2);
-}
-
-void M_minus_1_timesC(spinor * const Even_new, spinor * const Odd_new, 
-		      spinor * const Even, spinor * const Odd) {
-  /* Even sites */
-  Hopping_Matrix(EO, Even_new, Odd);
-  mul_one_pm_imu_inv(Even_new, 1., VOLUME/2); 
-
-  /* Odd sites */
-  Hopping_Matrix(OE, Odd_new, Even);
-  mul_one_pm_imu_inv(Odd_new, 1., VOLUME/2); 
-}

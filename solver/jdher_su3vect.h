@@ -36,11 +36,11 @@ void jderrorhandler(const int i, char * message);
 extern void jdher_su3vect(int n, int lda, double tau, double tol, 
 		  int kmax, int jmax, int jmin, int itmax,
 		  int blksize, int blkwise, 
-		  int V0dim, complex *V0, 
+		  int V0dim, _Complex double *V0, 
 		  int solver_flag, 
 		  int linitmax, double eps_tr, double toldecay,
 		  int verbosity,
-		  int *k_conv, complex *Q, double *lambda, int *it,
+		  int *k_conv, _Complex double *Q, double *lambda, int *it,
 		  int maxmin, int shift_mode,int tslice,
 		  matrix_mult_su3vect A_psi);
 

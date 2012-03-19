@@ -45,10 +45,10 @@ int **** block_ipt;
 int *** bipt__;
 int ** bipt_;
 int * bipt;
-complex * little_A = NULL;
-complex32 * little_A32 = NULL;
-complex * little_A_eo = NULL;
-complex32 * little_A32_eo = NULL;
+_Complex double * little_A = NULL;
+_Complex float * little_A32 = NULL;
+_Complex double * little_A_eo = NULL;
+_Complex float * little_A32_eo = NULL;
 int * block_idx;
 int * block_evenidx;
 int * block_oddidx;
@@ -210,7 +210,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].mpilocal_coordinate[0] = (i / (nblks_x * nblks_y * nblks_z));
     block_list[i].mpilocal_coordinate[1] = (i / (nblks_y * nblks_z)) % nblks_x;
     block_list[i].mpilocal_coordinate[2] = (i / (nblks_z)) % nblks_y;
-    block_list[i].mpilocal_coordinate[3] = (i % nblks_z);
+    block_list[i].mpilocal_coordinate[3] = i % nblks_z;
 
     /* global block coordinate                    */
     for(j = 0; j < 4; j++) {
@@ -237,16 +237,16 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
       _spinor_null(block_list[i].basis[j][VOLUME/nb_blocks]);
     }
 
-    if ((void*)(block_list[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(complex))) == NULL)
+    if ((void*)(block_list[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(_Complex double))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].little_dirac_operator32 = calloc(9 * g_N_s * g_N_s, sizeof(complex32))) == NULL)
+    if ((void*)(block_list[i].little_dirac_operator32 = calloc(9 * g_N_s * g_N_s, sizeof(_Complex float))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].little_dirac_operator_eo = calloc(9*g_N_s * g_N_s, sizeof(complex))) == NULL)
+    if ((void*)(block_list[i].little_dirac_operator_eo = calloc(9*g_N_s * g_N_s, sizeof(_Complex double))) == NULL)
       CALLOC_ERROR_CRASH;
     for (j = 0; j < 9 * g_N_s * g_N_s; ++j) {
-      _complex_zero(block_list[i].little_dirac_operator[j]);
-      _complex_zero(block_list[i].little_dirac_operator32[j]);
-      _complex_zero(block_list[i].little_dirac_operator_eo[j]);
+      block_list[i].little_dirac_operator[j] = 0.0;
+      block_list[i].little_dirac_operator32[j] = 0.0;
+      block_list[i].little_dirac_operator_eo[j] = 0.0;
     }
   }
  
@@ -634,14 +634,14 @@ int init_blocks_geometry() {
   int tstride = dX * dY * dZ;
   int boundidx = VOLUME/nb_blocks;
   for (ix = 0; ix < VOLUME/nb_blocks; ++ix) {
-    block_idx[8 * ix + 0] = (ix           >= VOLUME/nb_blocks - tstride ? boundidx : ix + tstride);/* +t */
-    block_idx[8 * ix + 1] = (ix           <  tstride                    ? boundidx : ix - tstride);/* -t */
+    block_idx[8 * ix + 0] = ix           >= VOLUME/nb_blocks - tstride ? boundidx : ix + tstride;/* +t */
+    block_idx[8 * ix + 1] = ix           <  tstride                    ? boundidx : ix - tstride;/* -t */
     block_idx[8 * ix + 2] = (ix % tstride >= dZ * dY * (dX - 1)		? boundidx : ix + xstride);/* +x */
-    block_idx[8 * ix + 3] = (ix % tstride <  dZ * dY			? boundidx : ix - xstride);/* -x */
+    block_idx[8 * ix + 3] = ix % tstride <  dZ * dY			? boundidx : ix - xstride;/* -x */
     block_idx[8 * ix + 4] = (ix % xstride >= dZ * (dY - 1)		? boundidx : ix + ystride);/* +y */
-    block_idx[8 * ix + 5] = (ix % xstride <  dZ				? boundidx : ix - ystride);/* -y */
-    block_idx[8 * ix + 6] = (ix % ystride == dZ - 1			? boundidx : ix + zstride);/* +z */
-    block_idx[8 * ix + 7] = (ix % ystride == 0				? boundidx : ix - zstride);/* -z */
+    block_idx[8 * ix + 5] = ix % xstride <  dZ				? boundidx : ix - ystride;/* -y */
+    block_idx[8 * ix + 6] = ix % ystride == dZ - 1			? boundidx : ix + zstride;/* +z */
+    block_idx[8 * ix + 7] = ix % ystride == 0				? boundidx : ix - zstride;/* -z */
     /* Assume that all directions have even extension */
     /* even and odd versions should be equal          */
     eo = ((ix%dZ)+(ix/ystride)%dY+(ix/(xstride))%dX
@@ -713,7 +713,7 @@ int init_blocks_geometry() {
 /* Uses a Modified Gram-Schmidt algorithm to orthonormalize little basis vectors */
 void block_orthonormalize(block *parent) {
   int i, j;
-  complex coeff;
+  _Complex double coeff;
   double scale;
 
   for(i = 0; i < g_N_s; ++i){
@@ -732,7 +732,7 @@ void block_orthonormalize(block *parent) {
     for(i = 0; i < g_N_s; i++) {
       for(j = 0; j < g_N_s; j++) {
         coeff = scalar_prod(parent->basis[i], parent->basis[j], parent->volume, 0);
-        if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", parent->id, j, i, coeff.re, coeff.im);
+        if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", parent->id, j, i, creal(coeff), cimag(coeff));
       }
     }
   }
@@ -741,7 +741,7 @@ void block_orthonormalize(block *parent) {
 
 void block_orthonormalize_free(block *parent) {
   int i, j;
-  complex coeff;
+  _Complex double coeff;
   double scale;
 
   for(i = 0; i < 12; i++){  // CHECK THIS !!!!!! 12
@@ -755,7 +755,7 @@ void block_orthonormalize_free(block *parent) {
     for(i = 0; i < g_N_s; i++) {
       for(j = 0; j < g_N_s; j++) {
         coeff = scalar_prod(parent->basis[i], parent->basis[j], parent->volume, 0);
-        if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", parent->id, j, i, coeff.re, coeff.im);
+        if(g_proc_id == 0) printf("basis id = %d <%d, %d> = %1.3e +i %1.3e\n", parent->id, j, i, creal(coeff), cimag(coeff));
       }
     }
   }
@@ -892,7 +892,7 @@ void alt_block_compute_little_D() {
       for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
-          printf("%s%1.3e %s %1.3e i", block_list[0].little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list[0].little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list[0].little_dirac_operator[i * g_N_s + j].re : -block_list[0].little_dirac_operator[i * g_N_s + j].re, block_list[0].little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list[0].little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list[0].little_dirac_operator[i * g_N_s + j].im : -block_list[0].little_dirac_operator[i * g_N_s + j].im);
+          printf("%s%1.3e %s %1.3e i", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
           if (j != g_N_s - 1){
             printf(",\t");
           }
@@ -907,7 +907,7 @@ void alt_block_compute_little_D() {
       for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
-          printf("%s%1.3e %s %1.3e i", block_list[1].little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list[1].little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list[1].little_dirac_operator[i * g_N_s + j].re : -block_list[1].little_dirac_operator[i * g_N_s + j].re, block_list[1].little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list[1].little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list[1].little_dirac_operator[i * g_N_s + j].im : -block_list[1].little_dirac_operator[i * g_N_s + j].im);
+          printf("%s%1.3e %s %1.3e i", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
           if (j != g_N_s - 1){
             printf(",\t");
           }
@@ -930,7 +930,7 @@ void alt_block_compute_little_D() {
 void compute_little_D_diagonal() {
   int i,j, blk;
   spinor * tmp, * _tmp;
-  complex * M;
+  _Complex double * M;
   _tmp = calloc( block_list[0].volume + block_list[0].spinpad + 1, sizeof(spinor));
 #if ( defined SSE || defined SSE2 || defined SSE3)
   tmp = (spinor*)(((unsigned long int)(_tmp)+ALIGN_BASE)&~ALIGN_BASE);
@@ -944,8 +944,7 @@ void compute_little_D_diagonal() {
       Block_D_psi(&block_list[blk], tmp, block_list[blk].basis[i]);
       for(j = 0; j < g_N_s; j++) {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
-	block_list[blk].little_dirac_operator32[i*g_N_s + j].re = M[i * g_N_s + j].re;
-	block_list[blk].little_dirac_operator32[i*g_N_s + j].im = M[i * g_N_s + j].im;
+	block_list[blk].little_dirac_operator32[i*g_N_s + j] = M[i * g_N_s + j];
       }
     }
   }
@@ -968,7 +967,7 @@ void compute_little_D() {
   su3 * u;
   int x, y, z=0, t, ix, iy=0, i, j, pm, mu=0, blk;
   int t_start, t_end, x_start, x_end, y_start, y_end, z_start, z_end;
-  complex c, *M;
+  _Complex double c, *M;
   int count=0;
   int bx, by, bz, bt, block_id = 0, block_id_e, block_id_o,is_up = 0, ib;
   int dT, dX, dY, dZ;
@@ -999,12 +998,10 @@ void compute_little_D() {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
 	
 	if (block_list[blk].evenodd==0) {
-	  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j].re=M[i * g_N_s + j].re;
-	  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j].im=M[i * g_N_s + j].im;
+	  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
 	}
 	if (block_list[blk].evenodd==1) {
-	  block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j].re=M[i * g_N_s + j].re;
-	  block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j].im=M[i * g_N_s + j].im;
+	  block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
 	}
       }
     }
@@ -1124,9 +1121,9 @@ void compute_little_D() {
 	  for(bx = 0; bx < nblks_x; bx++) {
             for(by = 0; by < nblks_y; by++) {
 	      for(bz = 0; bz < nblks_z; bz++){
-		_complex_zero(block_list[block_id].little_dirac_operator[ iy ]);
-		if (block_list[block_id].evenodd==0) {_complex_zero(block_list[block_id_e].little_dirac_operator_eo[ iy ]);}
- 		if (block_list[block_id].evenodd==1) {_complex_zero(block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ]);}
+		block_list[block_id].little_dirac_operator[ iy ] = 0.0;
+		if (block_list[block_id].evenodd==0) {block_list[block_id_e].little_dirac_operator_eo[ iy ] = 0.0;}
+ 		if (block_list[block_id].evenodd==1) {block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] = 0.0;}
 		/* We need to contract g_N_s times with the same set of fields */
 		for(t = t_start; t < t_end; t++) {
 		  for(x = x_start; x < x_end; x++) {
@@ -1135,15 +1132,12 @@ void compute_little_D() {
 			ix = index_b(t, x, y, z); // TO BE INLINED
 			s = &block_list[block_id].basis[j][ ix ];
 			c = scalar_prod(s, r, 1, 0);// TO BE INLINED
-			block_list[block_id].little_dirac_operator[ iy ].re += c.re;
-			block_list[block_id].little_dirac_operator[ iy ].im += c.im;
+			block_list[block_id].little_dirac_operator[ iy ] += c;
 		if (block_list[block_id].evenodd==0) {
-		block_list[block_id_e].little_dirac_operator_eo[ iy ].re += c.re;
-		block_list[block_id_e].little_dirac_operator_eo[ iy ].im += c.im;
+		block_list[block_id_e].little_dirac_operator_eo[ iy ] += c;
 		}
 		if (block_list[block_id].evenodd==1) {
-		block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ].re += c.re;
-		block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ].im += c.im;
+		block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] += c;
 		}
 			r++;
 		      }
@@ -1161,14 +1155,9 @@ void compute_little_D() {
       }
     }
   }
-  for(i = 0; i < nb_blocks; i++) {
-    for(j = 0; j < 9 * g_N_s * g_N_s; j++) {
-      block_list[i].little_dirac_operator32[j].re =
-	(float)block_list[i].little_dirac_operator[ iy ].re;
-      block_list[i].little_dirac_operator32[j].im =
-	(float)block_list[i].little_dirac_operator[ iy ].im;
-    }
-  }
+  for(i = 0; i < nb_blocks; i++)
+    for(j = 0; j < 9 * g_N_s * g_N_s; j++)
+      block_list[i].little_dirac_operator32[j] = (_Complex float)block_list[i].little_dirac_operator[ iy ];
 
   if(g_debug_level > 3) {
     if (g_N_s <= 5 && !g_cart_id){
@@ -1177,7 +1166,7 @@ void compute_little_D() {
       for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
-          printf("%s%1.3e %s %1.3e i", block_list[0].little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list[0].little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list[0].little_dirac_operator[i * g_N_s + j].re : -block_list[0].little_dirac_operator[i * g_N_s + j].re, block_list[0].little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list[0].little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list[0].little_dirac_operator[i * g_N_s + j].im : -block_list[0].little_dirac_operator[i * g_N_s + j].im);
+          printf("%s%1.3e %s %1.3e i", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
           if (j != g_N_s - 1){
             printf(",\t");
           }
@@ -1192,7 +1181,7 @@ void compute_little_D() {
       for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
-          printf("%s%1.3e %s %1.3e i", block_list[1].little_dirac_operator[i * g_N_s + j].re >= 0 ? "  " : "- ", block_list[1].little_dirac_operator[i * g_N_s + j].re >= 0 ? block_list[1].little_dirac_operator[i * g_N_s + j].re : -block_list[1].little_dirac_operator[i * g_N_s + j].re, block_list[1].little_dirac_operator[i * g_N_s + j].im >= 0 ? "+" : "-", block_list[1].little_dirac_operator[i * g_N_s + j].im >= 0 ? block_list[1].little_dirac_operator[i * g_N_s + j].im : -block_list[1].little_dirac_operator[i * g_N_s + j].im);
+          printf("%s%1.3e %s %1.3e i", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
           if (j != g_N_s - 1){
             printf(",\t");
           }

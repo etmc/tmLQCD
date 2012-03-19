@@ -22,7 +22,7 @@
 
 #include "su3.h"
 /*  <S,R>=SxR^* */
-complex scalar_prod(spinor * const S,spinor * const R, const int N, const int parallel);
-complex scalar_prod_su3vect(su3_vector * const S,su3_vector * const R, const int N, const int parallel);
+_Complex double scalar_prod(spinor * const S,spinor * const R, const int N, const int parallel);
+_Complex double scalar_prod_su3vect(su3_vector * const S,su3_vector * const R, const int N, const int parallel);
 
 #endif

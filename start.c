@@ -82,11 +82,8 @@ void gauss_vector(double v[],int n)
 {
    int k;
    double r[2];
-/*    float r[4]; */
-/*   double pi; */
    double x1,x2,rho,y1,y2;
 
- /*  pi=4.0*atan(1.0); */
 
    for (k=0;;k+=2)
    {
@@ -94,18 +91,17 @@ void gauss_vector(double v[],int n)
       x1=r[0];
       x2=r[1];
 
-      rho=-log(1.0-x1);
-      rho=sqrt(rho);
-/*      x2*=2.0*pi; */
-      x2*=6.2831853071796;
-      y1=rho*sin(x2);
-      y2=rho*cos(x2);
+      rho = -log(1.0 - x1);
+      rho = sqrt(rho);
+      x2 *= 6.2831853071796;
+      y1 = rho * sin(x2);
+      y2 = rho * cos(x2);
 
-      if (n>k)
-         v[k]=y1;
-      if (n>(k+1))
-         v[k+1]=y2;
-      if (n<=(k+2))
+      if (n > k)
+         v[k] = y1;
+      if (n > (k+1))
+         v[k + 1] = y2;
+      if (n <= (k + 2))
          return;
    }
 }
@@ -113,43 +109,14 @@ void gauss_vector(double v[],int n)
 
 static su3 unit_su3(void)
 {
-   su3 u;
-
-   u.c00.re=1.0;
-   u.c00.im=0.0;
-   u.c01.re=0.0;
-   u.c01.im=0.0;
-   u.c02.re=0.0;
-   u.c02.im=0.0;
-
-   u.c10.re=0.0;
-   u.c10.im=0.0;
-   u.c11.re=1.0;
-   u.c11.im=0.0;
-   u.c12.re=0.0;
-   u.c12.im=0.0;
-
-   u.c20.re=0.0;
-   u.c20.im=0.0;
-   u.c21.re=0.0;
-   u.c21.im=0.0;
-   u.c22.re=1.0;
-   u.c22.im=0.0;
-
-   return(u);
+   su3 u = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+   return u;
 }
 
-su3_vector unit_su3_vector() {
-  su3_vector s;
-
-  s.c0.re = 1.;
-  s.c0.im = 0.;
-  s.c1.re = 1.;
-  s.c1.im = 0.;
-  s.c2.re = 1.;
-  s.c2.im = 0.;
-
-  return(s);
+su3_vector unit_su3_vector()
+{
+  su3_vector s = {1.0, 1.0, 1.0};
+  return s;
 }
 
 
@@ -159,27 +126,24 @@ su3_vector random_su3_vector(void)
    double v[6],norm,fact;
    su3_vector s;
 
-   for (;;)
+   while (1)
    {
       gauss_vector(v,6);
       norm=0.0;
 
-      for (i=0;i<6;i++)
-         norm+=v[i]*v[i];
+      for (i = 0; i < 6; ++i)
+         norm += v[i] * v[i];
 
-      norm=sqrt(norm);
+      norm = sqrt(norm);
 
-      if (1.0!=(1.0+norm))
+      if (1.0 != (1.0 + norm))
          break;
    }
 
-   fact=1.0/norm;
-   s.c0.re=v[0]*fact;
-   s.c0.im=v[1]*fact;
-   s.c1.re=v[2]*fact;
-   s.c1.im=v[3]*fact;
-   s.c2.re=v[4]*fact;
-   s.c2.im=v[5]*fact;
+   fact = 1.0 / norm;
+   s.c0 = fact * (v[0] + I * v[1]);
+   s.c1 = fact * (v[2] + I * v[3]);
+   s.c2 = fact * (v[4] + I * v[5]);
 
    return(s);
 }
@@ -206,13 +170,10 @@ su3_vector unif_su3_vector(void)
          break;
    }
 
-   fact=1.0/norm;
-   s.c0.re=v[0]*fact;
-   s.c0.im=v[1]*fact;
-   s.c1.re=v[2]*fact;
-   s.c1.im=v[3]*fact;
-   s.c2.re=v[4]*fact;
-   s.c2.im=v[5]*fact;
+   fact = 1.0 / norm;
+   s.c0 = fact * (v[0] + I * v[1]);
+   s.c1 = fact * (v[2] + I * v[3]);
+   s.c2 = fact * (v[4] + I * v[5]);
 
    return(s);
 }
@@ -235,7 +196,8 @@ spinor random_spinor(void)
    return(s);
 }
 
-spinor unit_spinor() {
+spinor unit_spinor()
+{
   spinor s;
 
   s.s0 = unit_su3_vector();
@@ -246,13 +208,14 @@ spinor unit_spinor() {
   return(s);
 }
 
-void unit_spinor_field(const int k) {
+void unit_spinor_field(const int k)
+{
   int i=0;
   spinor *s;
 
   s = &g_spinor_field[k][0];
   for(i = 0; i < VOLUME/2; i++, s++) {
-    (*s) = unit_spinor();
+    *s = unit_spinor();
   }
 }
 
@@ -307,7 +270,7 @@ void random_spinor_field_lexic(spinor * const k) {
 }
 
 void random_spinor_field_eo(spinor * const k) {
-  int x, y, z, t, X, Y, Z, tt, id = 0;
+  int x, y, z, t, id = 0;
 #ifdef MPI
   int rlxd_state[105];
 #endif
@@ -325,16 +288,12 @@ void random_spinor_field_eo(spinor * const k) {
   }
 #endif
   for(t = 0; t < g_nproc_t*T; t++) {
-    tt = t - g_proc_coords[0]*T;
     coords[0] = t / T;
     for(x = 0; x < g_nproc_x*LX; x++) {
-      X = x - g_proc_coords[1]*LX; 
       coords[1] = x / LX;
       for(y = 0; y < g_nproc_y*LY; y++) {
-	Y = y - g_proc_coords[2]*LY;
 	coords[2] = y / LY;
 	for(z = 0; z < g_nproc_z*LZ; z++) {
-	  Z = z - g_proc_coords[3]*LZ;
 	  coords[3] = z / LZ;
 #ifdef MPI
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
@@ -365,33 +324,21 @@ void random_spinor_field(spinor * const k, const int V, const int repro) {
     for (ix = 0; ix < V; ix++) {
       s = k + ix;
       gauss_vector(v,6);
-      (*s).s0.c0.re=v[0];
-      (*s).s0.c0.im=v[1];
-      (*s).s0.c1.re=v[2];
-      (*s).s0.c1.im=v[3];
-      (*s).s0.c2.re=v[4];
-      (*s).s0.c2.im=v[5];
+      s->s0.c0 = v[0] + v[1] * I;
+      s->s0.c1 = v[2] + v[3] * I;
+      s->s0.c2 = v[4] + v[5] * I;
       gauss_vector(v,6);
-      (*s).s1.c0.re=v[0];
-      (*s).s1.c0.im=v[1];
-      (*s).s1.c1.re=v[2];
-      (*s).s1.c1.im=v[3];
-      (*s).s1.c2.re=v[4];
-      (*s).s1.c2.im=v[5];
+      s->s1.c0 = v[0] + v[1] * I;
+      s->s1.c1 = v[2] + v[3] * I;
+      s->s1.c2 = v[4] + v[5] * I;
       gauss_vector(v,6);
-      (*s).s2.c0.re=v[0];
-      (*s).s2.c0.im=v[1];
-      (*s).s2.c1.re=v[2];
-      (*s).s2.c1.im=v[3];
-      (*s).s2.c2.re=v[4];
-      (*s).s2.c2.im=v[5];
+      s->s2.c0 = v[0] + v[1] * I;
+      s->s2.c1 = v[2] + v[3] * I;
+      s->s2.c2 = v[4] + v[5] * I;
       gauss_vector(v,6);
-      (*s).s3.c0.re=v[0];
-      (*s).s3.c0.im=v[1];
-      (*s).s3.c1.re=v[2];
-      (*s).s3.c1.im=v[3];
-      (*s).s3.c2.re=v[4];
-      (*s).s3.c2.im=v[5];
+      s->s3.c0 = v[0] + v[1] * I;
+      s->s3.c1 = v[2] + v[3] * I;
+      s->s3.c2 = v[4] + v[5] * I;
     }
     /* send the state for the random-number generator to 1 */
     rlxd_get(rlxd_state);
@@ -408,33 +355,21 @@ void random_spinor_field(spinor * const k, const int V, const int repro) {
     for (ix=0;ix<V;ix++) {
       s = k + ix;
       gauss_vector(v,6);
-      (*s).s0.c0.re=v[0];
-      (*s).s0.c0.im=v[1];
-      (*s).s0.c1.re=v[2];
-      (*s).s0.c1.im=v[3];
-      (*s).s0.c2.re=v[4];
-      (*s).s0.c2.im=v[5];
+      s->s0.c0 = v[0] + v[1] * I;
+      s->s0.c1 = v[2] + v[3] * I;
+      s->s0.c2 = v[4] + v[5] * I;
       gauss_vector(v,6);
-      (*s).s1.c0.re=v[0];
-      (*s).s1.c0.im=v[1];
-      (*s).s1.c1.re=v[2];
-      (*s).s1.c1.im=v[3];
-      (*s).s1.c2.re=v[4];
-      (*s).s1.c2.im=v[5];
+      s->s1.c0 = v[0] + v[1] * I;
+      s->s1.c1 = v[2] + v[3] * I;
+      s->s1.c2 = v[4] + v[5] * I;
       gauss_vector(v,6);
-      (*s).s2.c0.re=v[0];
-      (*s).s2.c0.im=v[1];
-      (*s).s2.c1.re=v[2];
-      (*s).s2.c1.im=v[3];
-      (*s).s2.c2.re=v[4];
-      (*s).s2.c2.im=v[5];
+      s->s2.c0 = v[0] + v[1] * I;
+      s->s2.c1 = v[2] + v[3] * I;
+      s->s2.c2 = v[4] + v[5] * I;
       gauss_vector(v,6);
-      (*s).s3.c0.re=v[0];
-      (*s).s3.c0.im=v[1];
-      (*s).s3.c1.re=v[2];
-      (*s).s3.c1.im=v[3];
-      (*s).s3.c2.re=v[4];
-      (*s).s3.c2.im=v[5];
+      s->s3.c0 = v[0] + v[1] * I;
+      s->s3.c1 = v[2] + v[3] * I;
+      s->s3.c2 = v[4] + v[5] * I;
     }
     /* send the state fo the random-number generator to k+1 */
     
@@ -454,33 +389,21 @@ void random_spinor_field(spinor * const k, const int V, const int repro) {
     for (ix = 0; ix < V; ix++) {
       s = k + ix;
       gauss_vector(v,6);
-      (*s).s0.c0.re=v[0];
-      (*s).s0.c0.im=v[1];
-      (*s).s0.c1.re=v[2];
-      (*s).s0.c1.im=v[3];
-      (*s).s0.c2.re=v[4];
-      (*s).s0.c2.im=v[5];
+      s->s0.c0 = v[0] + v[1] * I;
+      s->s0.c1 = v[2] + v[3] * I;
+      s->s0.c2 = v[4] + v[5] * I;
       gauss_vector(v,6);
-      (*s).s1.c0.re=v[0];
-      (*s).s1.c0.im=v[1];
-      (*s).s1.c1.re=v[2];
-      (*s).s1.c1.im=v[3];
-      (*s).s1.c2.re=v[4];
-      (*s).s1.c2.im=v[5];
+      s->s1.c0 = v[0] + v[1] * I;
+      s->s1.c1 = v[2] + v[3] * I;
+      s->s1.c2 = v[4] + v[5] * I;
       gauss_vector(v,6);
-      (*s).s2.c0.re=v[0];
-      (*s).s2.c0.im=v[1];
-      (*s).s2.c1.re=v[2];
-      (*s).s2.c1.im=v[3];
-      (*s).s2.c2.re=v[4];
-      (*s).s2.c2.im=v[5];
+      s->s2.c0 = v[0] + v[1] * I;
+      s->s2.c1 = v[2] + v[3] * I;
+      s->s2.c2 = v[4] + v[5] * I;
       gauss_vector(v,6);
-      (*s).s3.c0.re=v[0];
-      (*s).s3.c0.im=v[1];
-      (*s).s3.c1.re=v[2];
-      (*s).s3.c1.im=v[3];
-      (*s).s3.c2.re=v[4];
-      (*s).s3.c2.im=v[5];
+      s->s3.c0 = v[0] + v[1] * I;
+      s->s3.c1 = v[2] + v[3] * I;
+      s->s3.c2 = v[4] + v[5] * I;
     }
   }
 }
@@ -493,7 +416,6 @@ void z2_random_spinor_field(spinor * const k, const int N) {
   double r[24];
   double z2noise[24];
   int rv=0;
-  double x1,x2;
 
   s = k;
   for (ix = 0;ix < N; ix++) {
@@ -505,30 +427,18 @@ void z2_random_spinor_field(spinor * const k, const int N) {
       else
         z2noise[rv]=-1/sqrt(2);
     }
-    (*s).s0.c0.re=z2noise[0];
-    (*s).s0.c0.im=z2noise[1];
-    (*s).s0.c1.re=z2noise[2];
-    (*s).s0.c1.im=z2noise[3];
-    (*s).s0.c2.re=z2noise[4];
-    (*s).s0.c2.im=z2noise[5];
-    (*s).s1.c0.re=z2noise[6];
-    (*s).s1.c0.im=z2noise[7];
-    (*s).s1.c1.re=z2noise[8];
-    (*s).s1.c1.im=z2noise[9];
-    (*s).s1.c2.re=z2noise[10];
-    (*s).s1.c2.im=z2noise[11];
-    (*s).s2.c0.re=z2noise[12];
-    (*s).s2.c0.im=z2noise[13];
-    (*s).s2.c1.re=z2noise[14];
-    (*s).s2.c1.im=z2noise[15];
-    (*s).s2.c2.re=z2noise[16];
-    (*s).s2.c2.im=z2noise[17];
-    (*s).s3.c0.re=z2noise[18];
-    (*s).s3.c0.im=z2noise[19];
-    (*s).s3.c1.re=z2noise[20];
-    (*s).s3.c1.im=z2noise[21];
-    (*s).s3.c2.re=z2noise[22];
-    (*s).s3.c2.im=z2noise[23];
+    s->s0.c0 = z2noise[0] + z2noise[1] * I;
+    s->s0.c1 = z2noise[2] + z2noise[3] * I;
+    s->s0.c2 = z2noise[4] + z2noise[5] * I;
+    s->s1.c0 = z2noise[6] + z2noise[7] * I;
+    s->s1.c1 = z2noise[8] + z2noise[9] * I;
+    s->s1.c2 = z2noise[10] + z2noise[11] * I;
+    s->s2.c0 = z2noise[12] + z2noise[13] * I;
+    s->s2.c1 = z2noise[14] + z2noise[15] * I;
+    s->s2.c2 = z2noise[16] + z2noise[17] * I;
+    s->s3.c0 = z2noise[18] + z2noise[19] * I;
+    s->s3.c1 = z2noise[20] + z2noise[21] * I;
+    s->s3.c2 = z2noise[22] + z2noise[23] * I;
     s++;
   }
   return;
@@ -536,73 +446,21 @@ void z2_random_spinor_field(spinor * const k, const int N) {
 
 
 /* Function provides a zero spinor field of length N with */
-void zero_spinor_field(spinor * const k, const int N) {
-
-  int ix;
-  spinor *s;
-  s = k;
-  for (ix=0;ix<N;ix++) {
-    (*s).s0.c0.re=0.;
-    (*s).s0.c0.im=0.;
-    (*s).s0.c1.re=0.;
-    (*s).s0.c1.im=0.;
-    (*s).s0.c2.re=0.;
-    (*s).s0.c2.im=0.;
-    (*s).s1.c0.re=0.;
-    (*s).s1.c0.im=0.;
-    (*s).s1.c1.re=0.;
-    (*s).s1.c1.im=0.;
-    (*s).s1.c2.re=0.;
-    (*s).s1.c2.im=0.;
-    (*s).s2.c0.re=0.;
-    (*s).s2.c0.im=0.;
-    (*s).s2.c1.re=0.;
-    (*s).s2.c1.im=0.;
-    (*s).s2.c2.re=0.;
-    (*s).s2.c2.im=0.;
-    (*s).s3.c0.re=0.;
-    (*s).s3.c0.im=0.;
-    (*s).s3.c1.re=0.;
-    (*s).s3.c1.im=0.;
-    (*s).s3.c2.re=0.;
-    (*s).s3.c2.im=0.;
-    s++;
-  }
-  return;
+void zero_spinor_field(spinor * const k, const int N)
+{
+  memset(k, 0, sizeof(spinor) * N);
 }
 
 /* Function provides a constant spinor field of length N with */
-void constant_spinor_field(spinor * const k, const int p, const int N) {
-
+void constant_spinor_field(spinor * const k, const int p, const int N)
+{
   int ix;
   spinor *s;
   double * tmp;
   s = k;
-  for (ix = 0; ix < N; ix++) {
-    (*s).s0.c0.re=0.;
-    (*s).s0.c0.im=0.;
-    (*s).s0.c1.re=0.;
-    (*s).s0.c1.im=0.;
-    (*s).s0.c2.re=0.;
-    (*s).s0.c2.im=0.;
-    (*s).s1.c0.re=0.;
-    (*s).s1.c0.im=0.;
-    (*s).s1.c1.re=0.;
-    (*s).s1.c1.im=0.;
-    (*s).s1.c2.re=0.;
-    (*s).s1.c2.im=0.;
-    (*s).s2.c0.re=0.;
-    (*s).s2.c0.im=0.;
-    (*s).s2.c1.re=0.;
-    (*s).s2.c1.im=0.;
-    (*s).s2.c2.re=0.;
-    (*s).s2.c2.im=0.;
-    (*s).s3.c0.re=0.;
-    (*s).s3.c0.im=0.;
-    (*s).s3.c1.re=0.;
-    (*s).s3.c1.im=0.;
-    (*s).s3.c2.re=0.;
-    (*s).s3.c2.im=0.;
+  for (ix = 0; ix < N; ix++)
+  {
+    memset(s, 0, sizeof(spinor));
     tmp = (double*) s;
     tmp[2*p] = 1.;
     s++;
@@ -614,52 +472,32 @@ void constant_spinor_field(spinor * const k, const int p, const int N) {
 su3 random_su3(void)
 {
    double norm,fact;
-   complex z;
+   _Complex double z;
    su3_vector z1,z2,z3;
    su3 u;
 
-   /*
-   z1=random_su3_vector();
-   */
    z1=unif_su3_vector();
-
 
    for (;;)
    {
-     /*
-      z2=random_su3_vector();
-     */
       z2=unif_su3_vector();
 
-      z.re=_vector_prod_re(z1,z2);
-      z.im=_vector_prod_im(z1,z2);
+      z = conj(z1.c0) * z2.c0 + conj(z1.c1) * z2.c1 + conj(z1.c2) * z2.c2;
 
       _vector_project(z2,z,z1);
 
-      norm=_vector_prod_re(z2,z2);
-      norm=sqrt(norm);
+      norm=sqrt(_vector_norm_square(z2));
 
-      if (1.0!=(1.0+norm))
+      if (1.0 != (1.0 + norm))
          break;
    }
 
-   fact=1.0/norm;
-   _vector_mul(z2,fact,z2);
+   fact = 1.0 / norm;
+   _vector_mul(z2, fact, z2);
 
-   z3.c0.re= (z1.c1.re*z2.c2.re-z1.c1.im*z2.c2.im)
-            -(z1.c2.re*z2.c1.re-z1.c2.im*z2.c1.im);
-   z3.c0.im=-(z1.c1.re*z2.c2.im+z1.c1.im*z2.c2.re)
-            +(z1.c2.re*z2.c1.im+z1.c2.im*z2.c1.re);
-
-   z3.c1.re= (z1.c2.re*z2.c0.re-z1.c2.im*z2.c0.im)
-            -(z1.c0.re*z2.c2.re-z1.c0.im*z2.c2.im);
-   z3.c1.im=-(z1.c2.re*z2.c0.im+z1.c2.im*z2.c0.re)
-            +(z1.c0.re*z2.c2.im+z1.c0.im*z2.c2.re);
-
-   z3.c2.re= (z1.c0.re*z2.c1.re-z1.c0.im*z2.c1.im)
-            -(z1.c1.re*z2.c0.re-z1.c1.im*z2.c0.im);
-   z3.c2.im=-(z1.c0.re*z2.c1.im+z1.c0.im*z2.c1.re)
-            +(z1.c1.re*z2.c0.im+z1.c1.im*z2.c0.re);
+   z3.c0 = conj((z1.c1 * z2.c2) - (z1.c2 * z2.c1));
+   z3.c1 = conj((z1.c2 * z2.c0) - (z1.c0 * z2.c2));
+   z3.c2 = conj((z1.c0 * z2.c1) - (z1.c1 * z2.c0));
 
    u.c00=z1.c0;
    u.c01=z1.c1;
@@ -677,7 +515,8 @@ su3 random_su3(void)
 }
 
 
-void unit_g_gauge_field(void) {
+void unit_g_gauge_field(void)
+{
   int ix,mu;
 
   for (ix=0;ix<VOLUME;ix++) {
@@ -729,90 +568,57 @@ void random_gauge_field(const int repro) {
   return;
 }
 
-void set_spinor_point(spinor * s, const double c){
-  (*s).s0.c0.re=c;
-  (*s).s0.c0.im=c;
-  (*s).s0.c1.re=c;
-  (*s).s0.c1.im=c;
-  (*s).s0.c2.re=c;
-  (*s).s0.c2.im=c;
-  (*s).s1.c0.re=c;
-  (*s).s1.c0.im=c;
-  (*s).s1.c1.re=c;
-  (*s).s1.c1.im=c;
-  (*s).s1.c2.re=c;
-  (*s).s1.c2.im=c;
-  (*s).s2.c0.re=c;
-  (*s).s2.c0.im=c;
-  (*s).s2.c1.re=c;
-  (*s).s2.c1.im=c;
-  (*s).s2.c2.re=c;
-  (*s).s2.c2.im=c;
-  (*s).s3.c0.re=c;
-  (*s).s3.c0.im=c;
-  (*s).s3.c1.re=c;
-  (*s).s3.c1.im=c;
-  (*s).s3.c2.re=c;
-  (*s).s3.c2.im=c;
+void set_spinor_point(spinor * s, const double c)
+{
+  s->s0.c0 = c * (1 + I);
+  s->s0.c1 = c * (1 + I);
+  s->s0.c2 = c * (1 + I);
+  s->s1.c0 = c * (1 + I);
+  s->s1.c1 = c * (1 + I);
+  s->s1.c2 = c * (1 + I);
+  s->s2.c0 = c * (1 + I);
+  s->s2.c1 = c * (1 + I);
+  s->s2.c2 = c * (1 + I);
+  s->s3.c0 = c * (1 + I);
+  s->s3.c1 = c * (1 + I);
+  s->s3.c2 = c * (1 + I);
 }
 
-void set_spinor_field(int k, const double c) {
-
+void set_spinor_field(int k, const double c)
+{
   int ix;
   spinor *s;
-  for (ix=0;ix<VOLUME/2;ix++) {
+  for (ix=0;ix<VOLUME/2;ix++)
+  {
     s=&g_spinor_field[k][ix];
-    (*s).s0.c0.re=c;
-    (*s).s0.c0.im=c;
-    (*s).s0.c1.re=c;
-    (*s).s0.c1.im=c;
-    (*s).s0.c2.re=c;
-    (*s).s0.c2.im=c;
-    (*s).s1.c0.re=c;
-    (*s).s1.c0.im=c;
-    (*s).s1.c1.re=c;
-    (*s).s1.c1.im=c;
-    (*s).s1.c2.re=c;
-    (*s).s1.c2.im=c;
-    (*s).s2.c0.re=c;
-    (*s).s2.c0.im=c;
-    (*s).s2.c1.re=c;
-    (*s).s2.c1.im=c;
-    (*s).s2.c2.re=c;
-    (*s).s2.c2.im=c;
-    (*s).s3.c0.re=c;
-    (*s).s3.c0.im=c;
-    (*s).s3.c1.re=c;
-    (*s).s3.c1.im=c;
-    (*s).s3.c2.re=c;
-    (*s).s3.c2.im=c;
-  }
- for (ix=VOLUME/2;ix<VOLUMEPLUSRAND/2;ix++) {
+    s->s0.c0 = c * (1 + I);
+    s->s0.c1 = c * (1 + I);
+    s->s0.c2 = c * (1 + I);
+    s->s1.c0 = c * (1 + I);
+    s->s1.c1 = c * (1 + I);
+    s->s1.c2 = c * (1 + I);
+    s->s2.c0 = c * (1 + I);
+    s->s2.c1 = c * (1 + I);
+    s->s2.c2 = c * (1 + I);
+    s->s3.c0 = c * (1 + I);
+    s->s3.c1 = c * (1 + I);
+    s->s3.c2 = c * (1 + I);
+ }
+ for (ix=VOLUME/2;ix<VOLUMEPLUSRAND/2;ix++)
+ {
     s=&g_spinor_field[k][ix];
-    (*s).s0.c0.re=0;
-    (*s).s0.c0.im=0.;
-    (*s).s0.c1.re=0.;
-    (*s).s0.c1.im=0.;
-    (*s).s0.c2.re=0.;
-    (*s).s0.c2.im=0.;
-    (*s).s1.c0.re=0.;
-    (*s).s1.c0.im=0.;
-    (*s).s1.c1.re=0.;
-    (*s).s1.c1.im=0.;
-    (*s).s1.c2.re=0.;
-    (*s).s1.c2.im=0.;
-    (*s).s2.c0.re=0.;
-    (*s).s2.c0.im=0.;
-    (*s).s2.c1.re=0.;
-    (*s).s2.c1.im=0.;
-    (*s).s2.c2.re=0.;
-    (*s).s2.c2.im=0.;
-    (*s).s3.c0.re=0.;
-    (*s).s3.c0.im=0.;
-    (*s).s3.c1.re=0.;
-    (*s).s3.c1.im=0.;
-    (*s).s3.c2.re=0.;
-    (*s).s3.c2.im=0.;
+    s->s0.c0 = 0.;
+    s->s0.c1 = 0.;
+    s->s0.c2 = 0.;
+    s->s1.c0 = 0.;
+    s->s1.c1 = 0.;
+    s->s1.c2 = 0.;
+    s->s2.c0 = 0.;
+    s->s2.c1 = 0.;
+    s->s2.c2 = 0.;
+    s->s3.c0 = 0.;
+    s->s3.c1 = 0.;
+    s->s3.c2 = 0.;
   }
 }
 
@@ -820,31 +626,23 @@ su3 set_su3(const double c)
 {
    su3 u;
 
-   u.c00.re=c;
-   u.c00.im=c;
-   u.c01.re=c;
-   u.c01.im=c;
-   u.c02.re=c;
-   u.c02.im=c;
+   u.c00 = c * (1 + I);
+   u.c01 = c * (1 + I);
+   u.c02 = c * (1 + I);
 
-   u.c10.re=c;
-   u.c10.im=c;
-   u.c11.re=c;
-   u.c11.im=c;
-   u.c12.re=c;
-   u.c12.im=c;
+   u.c10 = c * (1 + I);
+   u.c11 = c * (1 + I);
+   u.c12 = c * (1 + I);
 
-   u.c20.re=c;
-   u.c20.im=c;
-   u.c21.re=c;
-   u.c21.im=c;
-   u.c22.re=c;
-   u.c22.im=c;
+   u.c20 = c * (1 + I);
+   u.c21 = c * (1 + I);
+   u.c22 = c * (1 + I);
 
    return(u);
 }
 
-void set_gauge_field(const double c) {
+void set_gauge_field(const double c)
+{
   int ix,mu;
 
   for (ix=0;ix<VOLUMEPLUSRAND + g_dbw2rand;ix++) {
@@ -873,24 +671,24 @@ void source_spinor_field(spinor * const P, spinor * const Q, int is, int ic) {
 
     /* put source to 1.0 */
     if (is==0){
-      if      (ic==0) (*s).s0.c0.re=1.0;
-      else if (ic==1) (*s).s0.c1.re=1.0;
-      else if (ic==2) (*s).s0.c2.re=1.0;
+      if      (ic==0) s->s0.c0 = 1.0;
+      else if (ic==1) s->s0.c1 = 1.0;
+      else if (ic==2) s->s0.c2 = 1.0;
     }
     else if (is==1){
-      if      (ic==0) (*s).s1.c0.re=1.0;
-      else if (ic==1) (*s).s1.c1.re=1.0;
-      else if (ic==2) (*s).s1.c2.re=1.0;
+      if      (ic==0) s->s1.c0 = 1.0;
+      else if (ic==1) s->s1.c1 = 1.0;
+      else if (ic==2) s->s1.c2 = 1.0;
     }
     else if (is==2){
-      if      (ic==0) (*s).s2.c0.re=1.0;
-      else if (ic==1) (*s).s2.c1.re=1.0;
-      else if (ic==2) (*s).s2.c2.re=1.0;
+      if      (ic==0) s->s2.c0 = 1.0;
+      else if (ic==1) s->s2.c1 = 1.0;
+      else if (ic==2) s->s2.c2 = 1.0;
     }
     else if (is==3){
-      if      (ic==0) (*s).s3.c0.re=1.0;
-      else if (ic==1) (*s).s3.c1.re=1.0;
-      else if (ic==2) (*s).s3.c2.re=1.0;
+      if      (ic==0) s->s3.c0 = 1.0;
+      else if (ic==1) s->s3.c1 = 1.0;
+      else if (ic==2) s->s3.c2 = 1.0;
     }
   }
 }
@@ -967,24 +765,24 @@ void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int
 
     /* put source to 1.0 */
     if (is==0){
-      if      (ic==0) (*s).s0.c0.re=1.0;
-      else if (ic==1) (*s).s0.c1.re=1.0;
-      else if (ic==2) (*s).s0.c2.re=1.0;
+      if      (ic==0) s->s0.c0 = 1.0;
+      else if (ic==1) s->s0.c1 = 1.0;
+      else if (ic==2) s->s0.c2 = 1.0;
     }
     else if (is==1){
-      if      (ic==0) (*s).s1.c0.re=1.0;
-      else if (ic==1) (*s).s1.c1.re=1.0;
-      else if (ic==2) (*s).s1.c2.re=1.0;
+      if      (ic==0) s->s1.c0 = 1.0;
+      else if (ic==1) s->s1.c1 = 1.0;
+      else if (ic==2) s->s1.c2 = 1.0;
     }
     else if (is==2){
-      if      (ic==0) (*s).s2.c0.re=1.0;
-      else if (ic==1) (*s).s2.c1.re=1.0;
-      else if (ic==2) (*s).s2.c2.re=1.0;
+      if      (ic==0) s->s2.c0 = 1.0;
+      else if (ic==1) s->s2.c1 = 1.0;
+      else if (ic==2) s->s2.c2 = 1.0;
     }
     else if (is==3){
-      if      (ic==0) (*s).s3.c0.re=1.0;
-      else if (ic==1) (*s).s3.c1.re=1.0;
-      else if (ic==2) (*s).s3.c2.re=1.0;
+      if      (ic==0) s->s3.c0 = 1.0;
+      else if (ic==1) s->s3.c1 = 1.0;
+      else if (ic==2) s->s3.c2 = 1.0;
     }
   }
 }
@@ -1024,30 +822,18 @@ void gen_test_spinor_field(spinor * const k, const int eoflag) {
     
     invind=(double)(((g_coord[iy][0]*g_nproc_x*LX + g_coord[iy][1])*g_nproc_y*LY + g_coord[iy][2])*g_nproc_z*LZ + g_coord[iy][3] + 1.0);
     invind=1.0/invind;
-    (*s).s0.c0.re=invind;
-    (*s).s0.c0.im=0.;
-    (*s).s0.c1.re=invind+invvol;
-    (*s).s0.c1.im=0.;
-    (*s).s0.c2.re=invind+invvol/2.0;
-    (*s).s0.c2.im=0.;
-    (*s).s1.c0.re=invind+invvol/3.0;
-    (*s).s1.c0.im=0.;
-    (*s).s1.c1.re=invind+invvol/4.0;
-    (*s).s1.c1.im=0.;
-    (*s).s1.c2.re=invind+invvol/5.0;
-    (*s).s1.c2.im=0.;
-    (*s).s2.c0.re=invind+invvol/6.0;
-    (*s).s2.c0.im=0.;
-    (*s).s2.c1.re=invind+invvol/7.0;
-    (*s).s2.c1.im=0.;
-    (*s).s2.c2.re=invind+invvol/8.0;
-    (*s).s2.c2.im=0.;
-    (*s).s3.c0.re=invind+invvol/9.0;
-    (*s).s3.c0.im=0.;
-    (*s).s3.c1.re=invind+invvol/10.0;
-    (*s).s3.c1.im=0.;
-    (*s).s3.c2.re=invind+invvol/11.0;
-    (*s).s3.c2.im=0.;
+    s->s0.c0 = invind;
+    s->s0.c1 = invind+invvol;
+    s->s0.c2 = invind+invvol/2.0;
+    s->s1.c0 = invind+invvol/3.0;
+    s->s1.c1 = invind+invvol/4.0;
+    s->s1.c2 = invind+invvol/5.0;
+    s->s2.c0 = invind+invvol/6.0;
+    s->s2.c1 = invind+invvol/7.0;
+    s->s2.c2 = invind+invvol/8.0;
+    s->s3.c0 = invind+invvol/9.0;
+    s->s3.c1 = invind+invvol/10.0;
+    s->s3.c2 = invind+invvol/11.0;
     s++;
   }
 
@@ -1074,7 +860,7 @@ void write_test_spinor_field(spinor * const k, const int eoflag, char * postfix)
     }else{
       iy=ix;
     }
-    fprintf(testout,"[%d,%d,%d,%d;0,0]:%e\n",g_coord[iy][0],g_coord[iy][1],g_coord[iy][2],g_coord[iy][3],(k[ix]).s0.c0.re);
+    fprintf(testout,"[%d,%d,%d,%d;0,0]:%e\n",g_coord[iy][0],g_coord[iy][1],g_coord[iy][2],g_coord[iy][3],creal((k[ix]).s0.c0));
   }
   fclose(testout);
 }

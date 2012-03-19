@@ -62,18 +62,18 @@ void update_momenta(int * mnllist, double step, const int no,
   for(k = 0; k < no; k++) {
     if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
       /* these are needed for the clover term */
-      if(monomial_list[ mnllist[k] ].type == 9) {
+      if(monomial_list[ mnllist[k] ].type == 9 || monomial_list[ mnllist[k] ].type == 10) {
 	for(i = 0; i < VOLUME; i++) { 
 	  for(mu = 0; mu < 4; mu++) { 
-	    _su3_zero(swm[i][mu]); 
-	    _su3_zero(swp[i][mu]); 
+	    _su3_zero(swm[i][mu]);
+	    _su3_zero(swp[i][mu]);
 	  }
 	}
       }
       
       sum = 0.;
       max = 0.;
-      for(i = (VOLUME); i < (VOLUME+RAND); i++) { 
+      for(i = (VOLUME); i < (VOLUMEPLUSRAND); i++) { 
 	for(mu = 0; mu < 4; mu++) { 
 	  _zero_su3adj(hf->derivative[i][mu]);
 	}
@@ -95,7 +95,7 @@ void update_momenta(int * mnllist, double step, const int no,
 	  }
 	  tmp = step*monomial_list[ mnllist[k] ].forcefactor;
 	  /* the minus comes from an extra minus in trace_lambda */
-	  _minus_const_times_mom(*xm,tmp,*deriv); 
+	  _su3adj_minus_const_times_su3adj(*xm,tmp,*deriv); 
 	  /* set to zero immediately */
 	  _zero_su3adj(hf->derivative[i][mu]);
 	}

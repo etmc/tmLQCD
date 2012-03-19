@@ -98,19 +98,17 @@ void ov_free_spinor(spinor *s) {
 
 
 /* col sum norm of operator in colour and spinor space */
-double ov_operator_colsumnorm(spinor *s[4][3], int k) {
-
-  int i, j;
+double ov_operator_colsumnorm(spinor *s[4][3], int k)
+{
   double norm = 0.0, nrm;
 
-  for (i=0; i<4; i++) {
-    for (j=0; j<3; j++) {
+  for (int i=0; i<4; ++i)
+    for (int j=0; j<3; ++j)
+    {
       _spinor_norm_l1(nrm, s[i][j][k]);
       if (nrm > norm)
 	norm = nrm;
     }
-  }
-
   return norm;
 }
 
@@ -193,17 +191,13 @@ void ov_check_locality() {
 
 }
 
-void ov_matrix4x4_diff(matrix4x4 result, matrix4x4 left, matrix4x4 right) {
-	
-  int i, j;
-
-  for (i=0; i<4; i++)
-    for (j=0; j<4; j++) {
-      result[i][j].re = left[i][j].re - right[i][j].re;
-      result[i][j].im = left[i][j].im - right[i][j].im;
-    }
-
+void ov_matrix4x4_diff(matrix4x4 result, matrix4x4 left, matrix4x4 right)
+{
+  for (int i = 0; i < 4; ++i)
+    for (int j = 0; j < 4; ++j)
+      result[i][j] = left[i][j] - right[i][j];
 }
+
 
 double ov_matrix4x4_rowsumnorm(matrix4x4 A) {
 	
@@ -215,7 +209,7 @@ double ov_matrix4x4_rowsumnorm(matrix4x4 A) {
 
     nrm = 0.0;
     for (j=0; j<4; j++)
-      nrm += _complex_norm(A[i][j]);
+      nrm += cabs(A[i][j]);
 
     if (nrm > norm)
       norm = nrm;
@@ -224,16 +218,11 @@ double ov_matrix4x4_rowsumnorm(matrix4x4 A) {
   return norm;
 }
 
-void ov_matrix12x12_diff(matrix12x12 result, matrix12x12 left, matrix12x12 right) {
-	
-  int i, j;
-
-  for (i=0; i<12; i++)
-    for (j=0; j<12; j++) {
-      result[i][j].re = left[i][j].re - right[i][j].re;
-      result[i][j].im = left[i][j].im - right[i][j].im;
-    }
-
+void ov_matrix12x12_diff(matrix12x12 result, matrix12x12 left, matrix12x12 right)
+{
+  for (int i = 0; i < 12; ++i)
+    for (int j = 0; j < 12; ++j)
+      result[i][j] = left[i][j] - right[i][j];
 }
 
 double ov_matrix12x12_rowsumnorm(matrix12x12 A) {
@@ -246,7 +235,7 @@ double ov_matrix12x12_rowsumnorm(matrix12x12 A) {
 
     nrm = 0.0;
     for (j=0; j<12; j++)
-      nrm += _complex_norm(A[i][j]);
+      nrm += cabs(A[i][j]);
 
     if (nrm > norm)
       norm = nrm;
@@ -318,7 +307,7 @@ void ov_compare_4x4(const char * pFileName) {
 
 	  for (i=0;i<4; i++)
 	    for (j=0; j<4; j++)
-	      fscanf(pCompare, "%le %le", &mat2[i][j].re, &mat2[i][j].im);
+	      fscanf(pCompare, "%le %le", (double*)&mat2[i][j], (double*)&mat2[i][j] + 1);
 
 	  ov_matrix4x4_diff(diff, mat, mat2);
 
@@ -437,7 +426,7 @@ void ov_compare_12x12(const char * pFileName) {
 
 	  for (i=0;i<12; i++)
 	    for (j=0; j<12; j++)
-	      fscanf(pCompare, "%le %le", &mat2[i][j].re, &mat2[i][j].im);
+	      fscanf(pCompare, "%le %le", (double*)&mat2[i][j], (double*)&mat2[i][j] + 1);
 
 	  ov_matrix12x12_diff(diff, mat, mat2);
 
@@ -537,7 +526,7 @@ void ov_save_12x12(const char * pFileName) {
 
 	  for (i=0;i<12; i++)
 	    for (j=0; j<12; j++)
-	      fprintf(pCompare, "%.20le %.20le ", mat[i][j].re, mat[i][j].im);
+	      fprintf(pCompare, "%.20le %.20le ", creal(mat[i][j]), cimag(mat[i][j]));
 	}
       }
     }
@@ -582,10 +571,10 @@ void ov_print_spinor(spinor * pS) {
 
   printf("Color 0:                            | Color 1:                            | Color 2:                            \n");
   printf("------------------------------------+-------------------------------------+-------------------------------------\n");
-  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n", (double)(*pS).s0.c0.re, (double)(*pS).s0.c0.im, (double)(*pS).s0.c1.re, (double)(*pS).s0.c1.im, (double)(*pS).s0.c2.re, (double)(*pS).s0.c2.im);
-  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n", (double)(*pS).s1.c0.re, (double)(*pS).s1.c0.im, (double)(*pS).s1.c1.re, (double)(*pS).s1.c1.im, (double)(*pS).s1.c2.re, (double)(*pS).s1.c2.im);
-  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n", (double)(*pS).s2.c0.re, (double)(*pS).s2.c0.im, (double)(*pS).s2.c1.re, (double)(*pS).s2.c1.im, (double)(*pS).s2.c2.re, (double)(*pS).s2.c2.im);
-  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n", (double)(*pS).s3.c0.re, (double)(*pS).s3.c0.im, (double)(*pS).s3.c1.re, (double)(*pS).s3.c1.im, (double)(*pS).s3.c2.re, (double)(*pS).s3.c2.im);
+  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n", (double)creal(pS->s0.c0), (double)cimag(pS->s0.c0), (double)creal(pS->s0.c1), (double)cimag(pS->s0.c1), (double)creal(pS->s0.c2), (double)cimag(pS->s0.c2));
+  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n", (double)creal(pS->s1.c0), (double)cimag(pS->s1.c0), (double)creal(pS->s1.c1), (double)cimag(pS->s1.c1), (double)creal(pS->s1.c2), (double)cimag(pS->s1.c2));
+  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n", (double)creal(pS->s2.c0), (double)cimag(pS->s2.c0), (double)creal(pS->s2.c1), (double)cimag(pS->s2.c1), (double)creal(pS->s2.c2), (double)cimag(pS->s2.c2));
+  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n", (double)creal(pS->s3.c0), (double)cimag(pS->s3.c0), (double)creal(pS->s3.c1), (double)cimag(pS->s3.c1), (double)creal(pS->s3.c2), (double)cimag(pS->s3.c2));
 
 }
 

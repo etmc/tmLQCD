@@ -21,18 +21,10 @@
 # include<config.h>
 #endif
 #include <stdlib.h>
-# ifdef _STD_C99_COMPLEX_CHECKED
 #include <complex.h>
-#endif
-#ifdef apenext
-# include <topology.h>
-# include <queue.h>
-#endif
 #include "su3.h"
 #include "sse.h"
 #include "assign_mul_add_r.h"
-
-
 
 
 #if defined SSE2
@@ -256,199 +248,53 @@ void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const 
   return;
 }
 
-#elif ((!defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
+#else
 
 /* R inoutput , c,S input*/
 /*   (*R) = c*(*R) + (*S)        c is a real constant   */
 
-void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const int N) {
-
-  int ix;
-  static double fact;
+void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const int N)
+{
   spinor *r,*s;
   
-  fact=c;
-  
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-  for (ix = 0; ix < N; ix++) {
+  for (int ix = 0; ix < N; ++ix)
+  {
     r = R + ix;
     s = S + ix;
     
-    (*r).s0.c0.re = fact*(*r).s0.c0.re + (*s).s0.c0.re;
-    (*r).s0.c0.im = fact*(*r).s0.c0.im + (*s).s0.c0.im;
-    (*r).s0.c1.re = fact*(*r).s0.c1.re + (*s).s0.c1.re;
-    (*r).s0.c1.im = fact*(*r).s0.c1.im + (*s).s0.c1.im;
-    (*r).s0.c2.re = fact*(*r).s0.c2.re + (*s).s0.c2.re;
-    (*r).s0.c2.im = fact*(*r).s0.c2.im + (*s).s0.c2.im;
-    
-    (*r).s1.c0.re = fact*(*r).s1.c0.re + (*s).s1.c0.re;
-    (*r).s1.c0.im = fact*(*r).s1.c0.im + (*s).s1.c0.im;
-    (*r).s1.c1.re = fact*(*r).s1.c1.re + (*s).s1.c1.re;
-    (*r).s1.c1.im = fact*(*r).s1.c1.im + (*s).s1.c1.im;
-    (*r).s1.c2.re = fact*(*r).s1.c2.re + (*s).s1.c2.re;
-    (*r).s1.c2.im = fact*(*r).s1.c2.im + (*s).s1.c2.im;         
-    
-    (*r).s2.c0.re = fact*(*r).s2.c0.re + (*s).s2.c0.re;
-    (*r).s2.c0.im = fact*(*r).s2.c0.im + (*s).s2.c0.im;
-    (*r).s2.c1.re = fact*(*r).s2.c1.re + (*s).s2.c1.re;
-    (*r).s2.c1.im = fact*(*r).s2.c1.im + (*s).s2.c1.im;
-    (*r).s2.c2.re = fact*(*r).s2.c2.re + (*s).s2.c2.re;
-    (*r).s2.c2.im = fact*(*r).s2.c2.im + (*s).s2.c2.im;
-    
-    (*r).s3.c0.re = fact*(*r).s3.c0.re + (*s).s3.c0.re;
-    (*r).s3.c0.im = fact*(*r).s3.c0.im + (*s).s3.c0.im;
-    (*r).s3.c1.re = fact*(*r).s3.c1.re + (*s).s3.c1.re;
-    (*r).s3.c1.im = fact*(*r).s3.c1.im + (*s).s3.c1.im;
-    (*r).s3.c2.re = fact*(*r).s3.c2.re + (*s).s3.c2.re;
-    (*r).s3.c2.im = fact*(*r).s3.c2.im + (*s).s3.c2.im;
+    r->s0.c0 = c * r->s0.c0 + s->s0.c0;
+    r->s0.c1 = c * r->s0.c1 + s->s0.c1;
+    r->s0.c2 = c * r->s0.c2 + s->s0.c2;    
 
-/*       printf("%1.16e %1.16e\n",(*r).s0.c0.re,(*r).s0.c0.im); */
-/*       printf("%1.16e %1.16e\n",(*r).s0.c1.re,(*r).s0.c1.im); */
-/*       printf("%1.16e %1.16e\n",(*r).s0.c2.re,(*r).s0.c2.im); */
+    r->s1.c0 = c * r->s1.c0 + s->s1.c0;
+    r->s1.c1 = c * r->s1.c1 + s->s1.c1;
+    r->s1.c2 = c * r->s1.c2 + s->s1.c2;    
 
-/*       printf("%1.16e %1.16e\n",(*r).s1.c0.re,(*r).s1.c0.im); */
-/*       printf("%1.16e %1.16e\n",(*r).s1.c1.re,(*r).s1.c1.im); */
-/*       printf("%1.16e %1.16e\n",(*r).s1.c2.re,(*r).s1.c2.im); */
+    r->s2.c0 = c * r->s2.c0 + s->s2.c0;
+    r->s2.c1 = c * r->s2.c1 + s->s2.c1;
+    r->s2.c2 = c * r->s2.c2 + s->s2.c2;    
 
-/*       printf("%1.16e %1.16e\n",(*r).s2.c0.re,(*r).s2.c0.im); */
-/*       printf("%1.16e %1.16e\n",(*r).s2.c1.re,(*r).s2.c1.im); */
-/*       printf("%1.16e %1.16e\n",(*r).s2.c2.re,(*r).s2.c2.im); */
-
-/*       printf("%1.16e %1.16e\n",(*r).s3.c0.re,(*r).s3.c0.im); */
-/*       printf("%1.16e %1.16e\n",(*r).s3.c1.re,(*r).s3.c1.im); */
-/*       printf("%1.16e %1.16e\n",(*r).s3.c2.re,(*r).s3.c2.im); */
+    r->s3.c0 = c * r->s3.c0 + s->s3.c0;
+    r->s3.c1 = c * r->s3.c1 + s->s3.c1;
+    r->s3.c2 = c * r->s3.c2 + s->s3.c2;   
   }
 }
 
-#elif ((defined _STD_C99_COMPLEX_CHECKED) && (!defined apenext))
-
-/*   (*R) = c*(*R) + (*S)        c is a real constant   */
-
-void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const int N) {
-
-  register int ix=0;
-  register double fact;
-  register spinor *rPointer,*sPointer;
-
-  fact=c;
-
-  rPointer = R;
-  sPointer = S;
-
-  /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-  do {
-    register spinor s, r;
-    ix+=1;
-    
-    s = *(sPointer);
-    r = *(rPointer);
-
-    r.s0.c0 =fact*r.s0.c0+s.s0.c0;
-    r.s0.c1 =fact*r.s0.c1+s.s0.c1;
-    r.s0.c2 =fact*r.s0.c2+s.s0.c2;
-   	   	 	   
-    r.s1.c0 =fact*r.s1.c0+s.s1.c0;
-    r.s1.c1 =fact*r.s1.c1+s.s1.c1;
-    r.s1.c2 =fact*r.s1.c2+s.s1.c2;
-   	    	 	   
-    r.s2.c0 =fact*r.s2.c0+s.s2.c0;
-    r.s2.c1 =fact*r.s2.c1+s.s2.c1;
-    r.s2.c2 =fact*r.s2.c2+s.s2.c2;
-   	   	 	   
-    r.s3.c0 =fact*r.s3.c0+s.s3.c0;
-    r.s3.c1 =fact*r.s3.c1+s.s3.c1;
-    r.s3.c2 =fact*r.s3.c2+s.s3.c2;
-
-    *(rPointer) = r;
-
-    sPointer+=1;
-    rPointer+=1;
-
-  } while (ix<N);
-}
-
-#elif defined apenext
-
-#define NOWHERE_COND(condition) ((condition) ? 0x0 : NOWHERE ) 
-
-/*   (*R) = c*(*R) + (*S)        c is a real constant   */
-
-void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const int N) {
-
-  register int ix=N;
-  register double fact;
-  register spinor *rPointer,*sPointer;
-
-  fact=c;
-
-  rPointer = R;
-  sPointer = S;
-
-  prefetch(*(rPointer));
-  prefetch(*(sPointer));
-
-  {
-#pragma cache
-
-    do {
-      register spinor s, r;
-      register spinor *aux;
-      ix--;
-    
-      rPointer++;
-      sPointer++;
-
-      fetch(r);
-      fetch(s);
-
-
-      prefetch (*(rPointer+NOWHERE_COND(ix)));
-      prefetch (*(sPointer+NOWHERE_COND(ix)));
-
-
-      r.s0.c0 = fact*r.s0.c0+s.s0.c0;
-      r.s0.c1 = fact*r.s0.c1+s.s0.c1;
-      r.s0.c2 = fact*r.s0.c2+s.s0.c2;
-   	        	 	   
-      r.s1.c0 = fact*r.s1.c0+s.s1.c0;
-      r.s1.c1 = fact*r.s1.c1+s.s1.c1;
-      r.s1.c2 = fact*r.s1.c2+s.s1.c2;
-   	        	 	   
-      r.s2.c0 = fact*r.s2.c0+s.s2.c0;
-      r.s2.c1 = fact*r.s2.c1+s.s2.c1;
-      r.s2.c2 = fact*r.s2.c2+s.s2.c2;
-   	        	 	   
-      r.s3.c0 = fact*r.s3.c0+s.s3.c0;
-      r.s3.c1 = fact*r.s3.c1+s.s3.c1;
-      r.s3.c2 = fact*r.s3.c2+s.s3.c2;
-
-      *(rPointer-1) = r;
-
-    } while (ix>0);
-  }
-}
 #endif
 
 #ifdef WITHLAPH
 void assign_mul_add_r_su3vect(su3_vector * const R, const double c, su3_vector * const S, const int N)
 {
-  int ix;
-  static double fact;
   su3_vector *r,*s;
-  
-  fact=c;
-  
-  for (ix = 0; ix < N; ix++) 
-	{
+
+  for (int ix = 0; ix < N; ++ix) 
+  {
     r = R + ix;
     s = S + ix;
-    
-    (*r).c0.re = fact*(*r).c0.re + (*s).c0.re;
-    (*r).c0.im = fact*(*r).c0.im + (*s).c0.im;
-    (*r).c1.re = fact*(*r).c1.re + (*s).c1.re;
-    (*r).c1.im = fact*(*r).c1.im + (*s).c1.im;
-    (*r).c2.re = fact*(*r).c2.re + (*s).c2.re;
-    (*r).c2.im = fact*(*r).c2.im + (*s).c2.im;
-	}
+    r->c0 = c * r->c0 + s->c0;
+    r->c1 = c * r->c1 + s->c1;
+    r->c2 = c * r->c2 + s->c2;    
+  }
 }
 #endif

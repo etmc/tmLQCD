@@ -113,7 +113,7 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
   }
   else{
     j_max = 2*(*nr_of_eigenvalues);
-    j_min = (*nr_of_eigenvalues);
+    j_min = *nr_of_eigenvalues;
   }
   if(precision < 1.e-14){
     prec = 1.e-14;
@@ -140,13 +140,13 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
     printf(" Values of   mu = %e     mubar = %e     eps = %e     precision = %e  \n \n", g_mu, g_mubar, g_epsbar, precision);
   }
  
-  jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(complex), (VOLUME)/2*sizeof(bispinor)/sizeof(complex),
+  jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double), (VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double),
 	    startvalue, prec, 
 	    (*nr_of_eigenvalues), j_max, j_min, 
-	    max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors_bi,
+	    max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors_bi,
 	    BICGSTAB, solver_it_max,
 	    threshold, decay, verbosity,
-	    &converged, (complex*) eigenvectors_bi, eigenvls_bi,
+	    &converged, (_Complex double*) eigenvectors_bi, eigenvls_bi,
 	    &returncode, maxmin, 1,
 	    &Q_Qdagger_ND_BI);
   
@@ -157,7 +157,7 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
   */
 
 
-  (*nr_of_eigenvalues) = converged;
+  *nr_of_eigenvalues = converged;
 
   returnvalue = eigenvls_bi[0];
   return(returnvalue);

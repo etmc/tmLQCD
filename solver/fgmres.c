@@ -18,7 +18,7 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Generalized minimal residual (FGMRES) with a maximal number of restarts.    
- * Solves Q=AP for complex regular matrices A. Flexibel version of GMRES 
+ * Solves Q=AP for _Complex double regular matrices A. Flexibel version of GMRES 
  * with the ability for variable right preconditioning. 
  *
  * Inout:                                                                      
@@ -56,17 +56,17 @@
 
 static void init_gmres(const int _M, const int _V);
 
-static complex ** H;
-static complex * alpha;
-static complex * c;
+static _Complex double ** H;
+static _Complex double * alpha;
+static _Complex double * c;
 static double * s;
 static spinor ** V;
 static spinor * _v;
 static spinor ** Z;
 static spinor * _z;
-static complex * _h;
-static complex * alpha;
-static complex * c;
+static _Complex double * _h;
+static _Complex double * alpha;
+static _Complex double * c;
 static double * s;
 extern int dfl_poly_iter;
 
@@ -77,13 +77,28 @@ int fgmres(spinor * const P,spinor * const Q,
 
   int restart, i, j, k;
   double beta, eps, norm;
-  complex tmp1, tmp2;
+  _Complex double tmp1, tmp2;
   spinor * r0;
   spinor ** solver_field = NULL;
   const int nr_sf = 3;
 
   if(N == VOLUME) {
-    init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
+    init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);/* #ifdef HAVE_LAPACK */
+/*     _FT(zhetrf)("U", &n, G, &N, ipiv, work, &lwork, &info, 1); */
+/* #endif */
+/*     if(info != 0) { */
+/*       printf("Error in zhetrf info = %d\n", info); */
+/*     } */
+/*     else { */
+/* #ifdef HAVE_LAPACK */
+/*       _FT(zhetrs)("U", &n, &ONE, G, &N, ipiv, bn, &N, &info, 1); */
+/* #endif */
+/*       if(info != 0) { */
+/* 	printf("Error in zhetrs info = %d\n", info); */
+/*       } */
+/*     } */
+    /* solution again stored in bn */
+
   }
   else {
     init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
@@ -101,20 +116,20 @@ int fgmres(spinor * const P,spinor * const Q,
     diff(r0, Q, r0, N); 
 
     /* v_0=r_0/||r_0|| */
-    alpha[0].re=sqrt(square_norm(r0, N, 1));
+    alpha[0] = sqrt(square_norm(r0, N, 1));
 
     if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-      printf("FGMRES %d\t%g true residue\n", restart*m, alpha[0].re*alpha[0].re); 
+      printf("FGMRES %d\t%g true residue\n", restart*m, creal(alpha[0])*creal(alpha[0])); 
       fflush(stdout);
     }
 
-    if(alpha[0].re==0.){ 
+    if(creal(alpha[0])==0.){ 
       assign(P, solver_field[2], N);
       finalize_solver(solver_field, nr_sf);
       return(restart*m);
     }
 
-    mul_r(V[0], 1./alpha[0].re, r0, N);
+    mul_r(V[0], 1./creal(alpha[0]), r0, N);
 
     for(j = 0; j < m; j++){
       /* solver_field[0]=A*M^-1*v_j */
@@ -136,43 +151,43 @@ int fgmres(spinor * const P,spinor * const Q,
 	assign_diff_mul(solver_field[1], V[i], H[i][j], N);
       }
 
-      _complex_set(H[j+1][j], sqrt(square_norm(solver_field[1], N, 1)), 0.);
+      H[j+1][j] = sqrt(square_norm(solver_field[1], N, 1));
       for(i = 0; i < j; i++){
 	tmp1 = H[i][j];
 	tmp2 = H[i+1][j];
-	_mult_real(H[i][j], tmp2, s[i]);
-	_add_assign_complex_conj(H[i][j], c[i], tmp1);
-	_mult_real(H[i+1][j], tmp1, s[i]);
-	_diff_assign_complex(H[i+1][j], c[i], tmp2);
+	(H[i][j]) = (tmp2) * (s[i]);
+	(H[i][j]) += conj(c[i]) * (tmp1);
+	(H[i+1][j]) = (tmp1) * (s[i]);
+	(H[i+1][j]) -= (c[i]) * (tmp2);
       }
 
       /* Set beta, s, c, alpha[j],[j+1] */
-      beta = sqrt(_complex_square_norm(H[j][j]) + _complex_square_norm(H[j+1][j]));
-      s[j] = H[j+1][j].re / beta;
-      _mult_real(c[j], H[j][j], 1./beta);
-      _complex_set(H[j][j], beta, 0.);
-      _mult_real(alpha[j+1], alpha[j], s[j]);
+      beta = sqrt(creal(H[j][j] * conj(H[j][j])) + creal(H[j+1][j] * conj(H[j+1][j])));
+      s[j] = creal(H[j+1][j]) / beta;
+      (c[j]) = (H[j][j]) / beta;
+      (H[j][j]) = beta;
+      (alpha[j+1]) = (alpha[j]) * (s[j]);
       tmp1 = alpha[j];
-      _mult_assign_complex_conj(alpha[j], c[j], tmp1);
+      (alpha[j]) = conj(c[j]) * (tmp1);
 
       /* precision reached? */
       if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-	printf("FGMRES\t%d\t%g iterated residue\n", restart*m+j, alpha[j+1].re*alpha[j+1].re); 
+	printf("FGMRES\t%d\t%g iterated residue\n", restart*m+j, creal(alpha[j+1])*creal(alpha[j+1])); 
 	fflush(stdout);
       }
-      if(((alpha[j+1].re <= eps) && (rel_prec == 0)) || ((alpha[j+1].re <= eps*norm) && (rel_prec == 1))){
-	_mult_real(alpha[j], alpha[j], 1./H[j][j].re);
+      if(((creal(alpha[j+1]) <= eps) && (rel_prec == 0)) || ((creal(alpha[j+1]) <= eps*norm) && (rel_prec == 1))){
+	(alpha[j]) = (alpha[j]) * (1./creal(H[j][j]));
 	assign_add_mul(solver_field[2], Z[j], alpha[j], N);
 	for(i = j-1; i >= 0; i--){
 	  for(k = i+1; k <= j; k++){
- 	    _mult_assign_complex(tmp1, H[i][k], alpha[k]); 
-	    _diff_complex(alpha[i], tmp1);
+ 	    (tmp1) = (H[i][k]) * (alpha[k]); 
+	    (alpha[i]) -= tmp1;
 	  }
-	  _mult_real(alpha[i], alpha[i], 1./H[i][i].re);
+	  (alpha[i]) = (alpha[i]) * (1./creal(H[i][i]));
 	  assign_add_mul(solver_field[2], Z[i], alpha[i], N);
 	}
 	for(i = 0; i < m; i++){
-	  alpha[i].im = 0.;
+	  alpha[i] = creal(alpha[i]);
 	}
 	assign(P, solver_field[2], N);
 	finalize_solver(solver_field, nr_sf);
@@ -181,25 +196,25 @@ int fgmres(spinor * const P,spinor * const Q,
       /* if not */
       else{
 	if(j != m-1){
-	  mul_r(V[(j+1)], 1./H[j+1][j].re, solver_field[1], N);
+	  mul_r(V[(j+1)], 1./creal(H[j+1][j]), solver_field[1], N);
 	}
       }
 
     }
     j=m-1;
     /* prepare for restart */
-    _mult_real(alpha[j], alpha[j], 1./H[j][j].re);
+    (alpha[j]) = (alpha[j]) * (1./creal(H[j][j]));
     assign_add_mul(solver_field[2], Z[j], alpha[j], N);
     for(i = j-1; i >= 0; i--){
       for(k = i+1; k <= j; k++){
-	_mult_assign_complex(tmp1, H[i][k], alpha[k]);
-	_diff_complex(alpha[i], tmp1);
+	(tmp1) = (H[i][k]) * (alpha[k]);
+	(alpha[i]) -= tmp1;
       }
-      _mult_real(alpha[i], alpha[i], 1./H[i][i].re);
+      (alpha[i]) = (alpha[i]) * (1./creal(H[i][i]));
       assign_add_mul(solver_field[2], Z[i], alpha[i], N);
     }
     for(i = 0; i < m; i++){
-      alpha[i].im = 0.;
+      alpha[i] = creal(alpha[i]);
     }
   }
 
@@ -226,18 +241,18 @@ static void init_gmres(const int _M, const int _V){
     }
     Vo = _V;
     M = _M;
-    H = calloc(M+1, sizeof(complex *));
+    H = calloc(M+1, sizeof(_Complex double *));
     V = calloc(M, sizeof(spinor *));
     Z = calloc(M, sizeof(spinor *));
 #if (defined SSE || defined SSE2)
-    _h = calloc((M+2)*M, sizeof(complex));
-    H[0] = (complex *)(((unsigned long int)(_h)+ALIGN_BASE)&~ALIGN_BASE); 
+    _h = calloc((M+2)*M, sizeof(_Complex double));
+    H[0] = (_Complex double *)(((unsigned long int)(_h)+ALIGN_BASE)&~ALIGN_BASE); 
     _v = calloc(M*Vo+1, sizeof(spinor));
     V[0] = (spinor *)(((unsigned long int)(_v)+ALIGN_BASE)&~ALIGN_BASE);
     _z = calloc(M*Vo+1, sizeof(spinor));
     Z[0] = (spinor *)(((unsigned long int)(_z)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-    _h = calloc((M+1)*M, sizeof(complex));
+    _h = calloc((M+1)*M, sizeof(_Complex double));
     H[0] = _h;
     _v = calloc(M*Vo, sizeof(spinor));
     V[0] = _v;
@@ -245,8 +260,8 @@ static void init_gmres(const int _M, const int _V){
     Z[0] = _z;
 #endif
     s = calloc(M, sizeof(double));
-    c = calloc(M, sizeof(complex));
-    alpha = calloc(M+1, sizeof(complex));
+    c = calloc(M, sizeof(_Complex double));
+    alpha = calloc(M+1, sizeof(_Complex double));
     for(i = 1; i < M; i++){
       V[i] = V[i-1] + Vo;
       H[i] = H[i-1] + M;

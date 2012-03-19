@@ -28,7 +28,7 @@ extern double phmc_cheb_evmin, phmc_cheb_evmax;
 /* inverse maximal EV, needed for normalisation */
 extern double phmc_invmaxev;
 /* These are the roots */
-extern complex * phmc_root;
+extern _Complex double * phmc_root;
 /* degree and coefs of P */
 extern int phmc_dop_n_cheby;
 extern double * phmc_dop_cheby_coef;
@@ -43,7 +43,7 @@ typedef struct phmc_vars_ {
   double invmaxev;
   double Cpol;
   int dop_n_cheby;
-  complex *root;
+  _Complex double *root;
   int stacksize;
 } phmc_vars;
 

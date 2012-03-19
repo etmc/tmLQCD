@@ -35,14 +35,14 @@
 
 double shift;
 
-#define min(a,b) ((a)<(b) ? (a) : (b))
-#define max(a,b) ((a)<(b) ? (b) : (a))
+#define min(a,b)((a)<(b) ? (a) : (b))
+#define max(a,b)((a)<(b) ? (b) : (a))
 
 void index_jd(int * nr_of_eigenvalues_ov, 
 	      const int max_iterations, const double precision_ov, char *conf_filename, 
 	      const int nstore, const int method){
   
-  complex *eval;
+  _Complex double *eval;
   spinor  *eigenvectors_ov, *eigenvectors_ov_;
   spinor  *lowvectors, *lowvectors_;
   int i=0 , k=0, returncode=0, index = 0, determined = 0, signed_index = 0;
@@ -80,7 +80,7 @@ void index_jd(int * nr_of_eigenvalues_ov,
    * General variables                                                    
    **********************/
 
-  eval= calloc((*nr_of_eigenvalues_ov),sizeof(complex));
+  eval= calloc((*nr_of_eigenvalues_ov),sizeof(_Complex double));
   shift = 0.0;
 
   //  ov_s = 0.5*(1./g_kappa - 8.) - 1.;
@@ -143,13 +143,13 @@ void index_jd(int * nr_of_eigenvalues_ov,
       }
     }
 
-    jdher(VOLUME*sizeof(spinor)/sizeof(complex),
-	  VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex),
+    jdher(VOLUME*sizeof(spinor)/sizeof(_Complex double),
+	  VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
 	  shift, prec, blocksize, j_max, j_min, 
-	  max_iter, blocksize, blockwise, v0dim, (complex*) &lowvectors[first_blocksize*intsign*VOLUMEPLUSRAND],
+	  max_iter, blocksize, blockwise, v0dim, (_Complex double*) &lowvectors[first_blocksize*intsign*VOLUMEPLUSRAND],
 	  CG, solver_it_max,
 	  threshold_min, decay_min, verbosity,
-	  &converged, (complex*) &lowvectors[first_blocksize*intsign*VOLUMEPLUSRAND], 
+	  &converged, (_Complex double*) &lowvectors[first_blocksize*intsign*VOLUMEPLUSRAND], 
 	  &lowestmodes[first_blocksize*intsign],
 	  &returncode, JD_MINIMAL, 1,
 	  Operator[intsign]);
@@ -271,7 +271,7 @@ void index_jd(int * nr_of_eigenvalues_ov,
     converged = first_blocksize;
     for(i = first_blocksize; i < (*nr_of_eigenvalues_ov); i+=3) { 
 
-      if((i + blocksize) > (*nr_of_eigenvalues_ov) ) {
+      if((i + blocksize) > (*nr_of_eigenvalues_ov)) {
 	blocksize = (*nr_of_eigenvalues_ov) - i;
       }
 
@@ -286,23 +286,23 @@ void index_jd(int * nr_of_eigenvalues_ov,
 
       /* compute minimal eigenvalues */
 #ifdef MPI
-      /*      pjdher(VOLUME*sizeof(spinor)/sizeof(complex), VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex),
+      /*      pjdher(VOLUME*sizeof(spinor)/sizeof(_Complex double), VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
 	     shift, prec, omega, n_omega, ev_tr,
 	     i+blocksize, j_max, j_min, 
-	     max_iterations, blocksize, blockwise, v0dim, (complex*)(&eigenvectors_ov[i*VOLUMEPLUSRAND]),
+	     max_iterations, blocksize, blockwise, v0dim, (_Complex double*)(&eigenvectors_ov[i*VOLUMEPLUSRAND]),
 	     CG, solver_it_max,
 	     threshold_min, decay_min, verbosity,
-	     &converged, (complex*) eigenvectors_ov, eigenvalues_ov,
+	     &converged, (_Complex double*) eigenvectors_ov, eigenvalues_ov,
 	     &returncode, JD_MINIMAL, 1, use_AV,
 	     Operator[intsign]);*/
 #else
-      jdher(VOLUME*sizeof(spinor)/sizeof(complex),
-	    VOLUMEPLUSRAND*sizeof(spinor)/sizeof(complex),
+      jdher(VOLUME*sizeof(spinor)/sizeof(_Complex double),
+	    VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
 	    shift, prec, blocksize, j_max, j_min,
-	    max_iter, blocksize, blockwise, v0dim, (complex*) &eigenvectors_ov[i*VOLUMEPLUSRAND],
+	    max_iter, blocksize, blockwise, v0dim, (_Complex double*) &eigenvectors_ov[i*VOLUMEPLUSRAND],
 	    CG, solver_it_max,
 	    threshold_min, decay_min, verbosity,
-	    &converged, (complex*) eigenvectors_ov,
+	    &converged, (_Complex double*) eigenvectors_ov,
 	    eigenvalues_ov,
 	    &returncode, JD_MINIMAL, 1,
 	    Operator[intsign]);
@@ -370,8 +370,7 @@ void index_jd(int * nr_of_eigenvalues_ov,
 
     /* Save the eigenvectors_ov */
     for(i = 0; i < converged; i++){
-      eval[i].re = 2.*(1.+ov_s)*eigenvalues_ov[i];
-      eval[i].im = 0.;
+      eval[i] = 2.*(1.+ov_s)*eigenvalues_ov[i];
       if(intsign == 0){
 	sprintf(filename, "eigenvector_of_Dplus.%.2d.%s.%.4d", i, conf_filename, nstore);
       }
@@ -396,8 +395,8 @@ void index_jd(int * nr_of_eigenvalues_ov,
       for(k = 0; k < 2; k++) {
 	if(k == intsign) {
 	  for (i=0; i < converged; i++) {
-	    fprintf(ifs, "%d %e %s\n", i, eval[i].re, intsign ? "negative" : "positive");
-	    printf("%d %e %s\n", i, eval[i].re, intsign ? "negative" : "positive");
+	    fprintf(ifs, "%d %e %s\n", i, creal(eval[i]), intsign ? "negative" : "positive");
+	    printf("%d %e %s\n", i, creal(eval[i]), intsign ? "negative" : "positive");
 	  }
 	}
 	else {
@@ -418,8 +417,10 @@ void index_jd(int * nr_of_eigenvalues_ov,
 	if(k == intsign) {
 	  fwrite(&converged, sizeof(int), 1, ifs);
 	  fwrite(&signed_index, sizeof(int), 1, ifs);
-	  for (i=index; i < converged; i++) {
-	    fwrite(&eval[i].re, sizeof(double), 1, ifs);
+	  for (i=index; i < converged; ++i)
+	  {
+	    double eval_re = creal(eval[i]);
+	    fwrite(&eval_re, sizeof(double), 1, ifs);
 	  }
 	}
 	else {
