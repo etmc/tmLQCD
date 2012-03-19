@@ -58,8 +58,6 @@
 #  include "sse.h"
 #elif defined BGL
 # include "bgl.h"
-#else
-#  define ALIGN
 #endif
 
 EXTERN int DUM_DERI, DUM_SOLVER, DUM_MATRIX;

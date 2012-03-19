@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _SU3_H
+#define _SU3_H
 
 /***********************************************************************
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
@@ -664,3 +665,5 @@ _sse_store_up(r);
   (t).c20 = (u).c2 * conj((v).c0) + (w).c2 * conj((z).c0);	\
   (t).c21 = (u).c2 * conj((v).c1) + (w).c2 * conj((z).c1);	\
   (t).c22 = (u).c2 * conj((v).c2) + (w).c2 * conj((z).c2);
+
+#endif
