@@ -5,6 +5,15 @@
 # be found in this directory
 # the expected plaquette value is 0.53347(17)
 # the expected rect. plaq. value is 0.30393(22)
+#
+# PP correlator
+# 1.963(2)
+# 0.2846(2)
+# 0.1078(2)
+#
+# smallest EV: 0.01890(3)
+# largest EV: 0.82744(4)
+
 L=4
 T=4
 Measurements = 35000

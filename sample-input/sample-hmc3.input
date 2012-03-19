@@ -1,6 +1,11 @@
 # this sample corresponds to a nf=4 run
-# the expected plaquette value is 
-# the expected rectangular values is 
+# the expected plaquette value is 0.59515(8)
+# the expected rectangular value is 0.3637(1)
+#
+# PP correlator
+# 1.88(2)
+# 0.242(2)
+# 0.084(1)
 
 L=4
 T=4
