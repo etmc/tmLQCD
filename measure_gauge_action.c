@@ -44,7 +44,10 @@ double measure_gauge_action(su3 ** const gf) {
   int ix,ix1,ix2,mu1,mu2;
   static su3 pr1,pr2; 
   su3 *v,*w;
-  static double ga,ac,gas; 
+  static double ga,ac;
+#ifdef MPI
+  static double gas;
+#endif
   static double ks,kc,tr,ts,tt;
 
   if(g_update_gauge_energy) {

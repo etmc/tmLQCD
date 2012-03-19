@@ -1,7 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2005 Martin Hasenbusch
- *               2011 Carsten Urbach
+ * Copyright (C) 2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -17,21 +16,15 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ *
  ***********************************************************************/
+#ifndef _CLOVERDETRATIO_MONOMIAL_H
+#define _CLOVERDETRATIO_MONOMIAL_H
 
-#ifndef _CLOVER_LEAF_H
-#define _CLOVER_LEAF_H
-#include "su3.h"
 #include "hamiltonian_field.h"
 
-extern su3 ** swm, ** swp;
-
-void sw_term(su3 ** const gf, const double kappa, const double c_sw);
-double sw_trace(const int ieo, const double mu);
-void sw_invert(const int ieo, const double mu);
-void sw_deriv(const int ieo, const double mu);
-void sw_spinor(const int ieo, spinor * const kk, spinor * const ll);
-void sw_all(hamiltonian_field_t * const hf, const double kappa, const double c_sw);
-int init_swpm(const int V);
+void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf);
+double cloverdetratio_acc(const int no, hamiltonian_field_t * const hf);
+void cloverdetratio_heatbath(const int no, hamiltonian_field_t * const hf);
 
 #endif

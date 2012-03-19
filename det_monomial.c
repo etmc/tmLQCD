@@ -42,7 +42,6 @@
 #include "solver/chrono_guess.h"
 #include "solver/bicgstab_complex.h"
 #include "solver/solver.h"
-#include "clover_leaf.h"
 #include "read_input.h"
 #include "hamiltonian_field.h"
 #include "boundary.h"
@@ -71,10 +70,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if(mnl->c_sw > 0) {
-      sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
-      sw_invert(OE);
-    }
+
     if(mnl->solver != CG) {
       fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (det_monomial.c)\n");
     }
@@ -102,18 +98,6 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
     deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf);
 
-    if(mnl->c_sw > 0) {
-      /* here comes the clover term... */
-      gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
-      sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
-      
-      /* compute the contribution for the det-part */
-      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-      sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-
-      sw_deriv(OE);
-      sw_all(hf, mnl->kappa, mnl->c_sw);
-    }
   } 
   else {
     /*********************************************************************

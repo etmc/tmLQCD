@@ -40,7 +40,7 @@ void clover_trlog_derivative(const int id, hamiltonian_field_t * const hf) {
   /* this term has no derivative */
   /* so a dummy function         */
   if(g_proc_id == 0 && g_debug_level > 4) {
-    printf("called clover_trlog_derivative for id %d %d, which is a dummy function\n", id, mnl->even_odd_flag);
+    printf("called clover_trlog_derivative for id %d, which is a dummy function\n", id);
   }
   return;
 }
@@ -53,9 +53,9 @@ void clover_trlog_heatbath(const int id, hamiltonian_field_t * const hf) {
   init_sw_fields();
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
-  mnl->energy0 = -2.*sw_trace(EO);
+  mnl->energy0 = -sw_trace(EO, mnl->mu);
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called clover_trlog_heatbath for id %d %d\n", id, mnl->even_odd_flag);
+    printf("called clover_trlog_heatbath for id %d E = %e\n", id, mnl->energy0);
   }
   return;
 }
@@ -65,10 +65,10 @@ double clover_trlog_acc(const int id, hamiltonian_field_t * const hf) {
   mnl->energy1 = 0.;
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
-  mnl->energy1 = -2.*sw_trace(EO);   
+  mnl->energy1 = -sw_trace(EO, mnl->mu);   
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called clover_trlog_acc for id %d %d dH = %1.4e\n", 
-	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);
+    printf("called clover_trlog_acc for id %d dH = %1.4e\n", 
+	   id, mnl->energy1 - mnl->energy0);
   }
   return(mnl->energy1 - mnl->energy0);
 }

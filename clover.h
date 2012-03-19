@@ -28,10 +28,20 @@ extern su3 *** sw;
 extern su3 *** sw_inv;
 extern su3 ** swm, ** swp;
 
+void assign_mul_one_sw_pm_imu(const int ieo, spinor * const k, spinor * const l, const double mu);
+void assign_mul_one_sw_pm_imu_inv(const int ieo, spinor * const k, spinor * const l, const double mu);
+void Msw_full(spinor * const Even_new, spinor * const Odd_new, 
+	      spinor * const Even, spinor * const Odd);
+void clover_inv(const int ieo, spinor * const l, const double mu);
 void Qsw_psi(spinor * const l, spinor * const k);
+void Qsw_plus_psi(spinor * const l, spinor * const k);
+void Qsw_minus_psi(spinor * const l, spinor * const k);
 void Qsw_sq_psi(spinor * const l, spinor * const k);
+void Qsw_pm_psi(spinor * const l, spinor * const k);
 void Msw_psi(spinor * const l, spinor * const k);
-void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo);
+void Msw_plus_psi(spinor * const l, spinor * const k);
+void Msw_minus_psi(spinor * const l, spinor * const k);
+void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const double mu);
 void init_sw_fields();
 
 #endif

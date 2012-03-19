@@ -141,6 +141,13 @@ typedef struct
   (r).c1 += (c) * (s).c1;			\
   (r).c2 += (c) * (s).c2;
 
+
+/* r += I * c * s (c real) */
+#define _vector_add_i_mul(r,c,s) \
+  (r).c0 += I*(c)*(s).c0; \
+  (r).c1 += I*(c)*(s).c1; \
+  (r).c2 += I*(c)*(s).c2;
+
 #if ((defined SSE2)||(defined SSE3))
 
 #define _vector_add(r,s1,s2) \

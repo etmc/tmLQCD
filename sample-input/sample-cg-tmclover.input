@@ -1,0 +1,34 @@
+# sample inverter file for a twisted clover operator
+
+L=4
+T=4
+
+Measurements = 1
+InitialStoreCounter = 0
+2KappaMu = 0.1
+csw = 1.00
+kappa = 0.160
+ThetaT = 1.
+UseEvenOdd = yes
+DebugLevel = 2
+NoSamples = 1
+SourceType = Point
+SplittedPropagator = yes
+Indices = 0
+ReadSource = no
+UseRelativePrecision = yes
+UseSloppyPrecision = yes
+
+BeginOperator CLOVER
+  2KappaMu = 0.1
+  kappa = 0.160
+  csw = 1.00
+# the following are not available for this operator (yet)
+#  Solver = CG
+#  UseEvenOdd = yes
+  SolverPrecision = 1.e-16
+  MaxSolverIterations = 100
+  PropagatorPrecision = 64
+  AddDownPropagator = yes
+EndOperator
+
