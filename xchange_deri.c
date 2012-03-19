@@ -88,7 +88,7 @@ void xchange_deri(su3adj ** const df)
   }
 
   /* send the data to the neighbour on the right is not needed*/
-#    endif
+#    endif /* (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT ) */
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
 
   /* send the data to the neighbour on the left in x direction */
@@ -115,7 +115,7 @@ void xchange_deri(su3adj ** const df)
     }
   }
   /* send the data to the neighbour on the right is not needed*/  
-#    endif
+#    endif /* (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ ) */
 
 #    if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ )
   /* send the data to the neighbour on the left in y direction */
@@ -144,7 +144,7 @@ void xchange_deri(su3adj ** const df)
     }
   }
   /* send the data to the neighbour on the right is not needed*/  
-#    endif
+#    endif /* (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ ) */
 
 #    if (defined PARALLELXYZT || defined PARALLELXYZ )
   /* send the data to the neighbour on the left in z direction */
@@ -173,9 +173,9 @@ void xchange_deri(su3adj ** const df)
     }
   }
   /* send the data to the neighbour on the right is not needed*/  
-#    endif
-  return;
+#    endif /* (defined PARALLELXYZT || defined PARALLELXYZ ) */
 #  endif /* MPI */
+  return;
 }
 
 #else /* _INDEX_INDEP_GEOM */
@@ -229,7 +229,7 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-#endif
+#    endif /* (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT) */
 
 #    if (defined PARALLELXYT || defined PARALLELXYZT)
   /* edges */
@@ -316,7 +316,7 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-#    endif
+#    endif /* (defined PARALLELXYT || defined PARALLELXYZT) */
 
 #    ifdef PARALLELXYZT
 
@@ -455,7 +455,7 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-#    endif
+#    endif /* PARALLELXYZT */
 
   // now the normal boundaries
 
@@ -528,8 +528,7 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-  /* end of ifdef PARALLELXT || PARALLELXYT || PARALLELXYZT */
-#    endif
+#    endif /* (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT) */
 
 
 #    if (defined PARALLELXYT || defined PARALLELXYZT)
@@ -570,8 +569,7 @@ void xchange_deri(su3adj ** const df)
   }
 
 
-  /* end of ifdef PARALLELXYT */
-#    endif
+#    endif /* (defined PARALLELXYT || defined PARALLELXYZT) */
 
 #    ifdef PARALLELXYZT
   /* send the data to the neighbour on the left in y direction */
@@ -609,10 +607,9 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-  /* end of ifdef PARALLELXYZT */
-#    endif
+#    endif /* PARALLELXYZT */
+#  endif /* MPI */
   return;
-#  endif
 }
 
 #endif /* _INDEX_INDEP_GEOM */
