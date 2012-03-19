@@ -68,7 +68,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
 		   const int readwrite, const int nstore, 
 		   const int even_odd_flag) {
   double returnvalue;
-  complex norm2;
+  _Complex double norm2;
 #ifdef HAVE_LAPACK
   static spinor * eigenvectors_ = NULL;
   static int allocated = 0;
@@ -84,7 +84,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   int verbosity = g_debug_level, converged = 0, blocksize = 1, blockwise = 0;
   int solver_it_max = 50, j_max, j_min, ii, jj;
   /*int it_max = 10000;*/
-  /* complex *eigv_ = NULL, *eigv; */
+  /* _Complex double *eigv_ = NULL, *eigv; */
   double decay_min = 1.7, decay_max = 1.5, prec,
     threshold_min = 1.e-3, threshold_max = 5.e-2;
 
@@ -110,8 +110,8 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   sprintf(eigenvalue_prefix,"eigenvalues.%%s.%%.4d");
 
   if(!even_odd_flag) {
-    N = (VOLUME);
-    N2 = (VOLUMEPLUSRAND);
+    N = VOLUME;
+    N2 = VOLUMEPLUSRAND;
     f = &Q_pm_psi;
   }
   else {
@@ -130,7 +130,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   }
   else{
     j_max = 2*(*nr_of_eigenvalues);
-    j_min = (*nr_of_eigenvalues);
+    j_min = *nr_of_eigenvalues;
   }
   if(precision < 1.e-14){
     prec = 1.e-14;
@@ -161,12 +161,12 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
 
   solver_it_max = 50;
   /* compute the maximal one first */
-  jdher(N*sizeof(spinor)/sizeof(complex), N2*sizeof(spinor)/sizeof(complex),
+  jdher(N*sizeof(spinor)/sizeof(_Complex double), N2*sizeof(spinor)/sizeof(_Complex double),
 	50., 1.e-12, 
 	1, 15, 8, max_iterations, 1, 0, 0, NULL,
 	CG, solver_it_max,
 	threshold_max, decay_max, verbosity,
-	&converged, (complex*) max_eigenvector, (double*) &max_eigenvalue,
+	&converged, (_Complex double*) max_eigenvector, (double*) &max_eigenvalue,
 	&returncode2, JD_MAXIMAL, 1,
 	f);
 
@@ -211,23 +211,23 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
     solver_it_max = 200;
 
     if(maxmin)
-      jdher(N*sizeof(spinor)/sizeof(complex), N2*sizeof(spinor)/sizeof(complex),
+      jdher(N*sizeof(spinor)/sizeof(_Complex double), N2*sizeof(spinor)/sizeof(_Complex double),
 	  50., prec, 
 	  (*nr_of_eigenvalues), j_max, j_min, 
-	  max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors,
+	  max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors,
 	  CG, solver_it_max,
 	  threshold_max, decay_max, verbosity,
-	  &converged, (complex*) eigenvectors, eigenvls,
+	  &converged, (_Complex double*) eigenvectors, eigenvls,
 	  &returncode, JD_MAXIMAL, 1,
 	  f);
     else
-      jdher(N*sizeof(spinor)/sizeof(complex), N2*sizeof(spinor)/sizeof(complex),
+      jdher(N*sizeof(spinor)/sizeof(_Complex double), N2*sizeof(spinor)/sizeof(_Complex double),
 	  0., prec, 
 	  (*nr_of_eigenvalues), j_max, j_min, 
-	  max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors,
+	  max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors,
 	  CG, solver_it_max,
 	  threshold_min, decay_min, verbosity,
-	  &converged, (complex*) eigenvectors, eigenvls,
+	  &converged, (_Complex double*) eigenvectors, eigenvls,
 	  &returncode, JD_MINIMAL, 1,
 	  f);
     
@@ -242,7 +242,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
     sprintf(filename, eigenvalue_prefix, maxmin ? "max" : "min", nstore); 
     if((ofs = fopen(filename, "r")) != (FILE*) NULL) {
       for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
-	fscanf(ofs, "%d %lf\n", &v0dim, &eigenvls[v0dim]);
+    fscanf(ofs, "%d %lf\n", &v0dim, &eigenvls[v0dim]);
 	if(feof(ofs)) break;
 	converged = v0dim;
       }
@@ -259,17 +259,17 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
     for (jj = 0; jj <= ii; jj++){
       norm2 = scalar_prod(&(eigenvectors[ii*N2]),&(eigenvectors[jj*N2]), VOLUME, 1);
       if(ii==jj){
-        if((fabs(1.-norm2.re)>1e-12) || (fabs(norm2.im)>1e-12) || 1) {
+        if((fabs(1.-creal(norm2))>1e-12) || (fabs(cimag(norm2))>1e-12) || 1) {
           if(g_proc_id == g_stdio_proc){
-            printf("< %d | %d>  =\t   %e  +i * %e \n", ii+1, jj+1, norm2.re, norm2.im);
+            printf("< %d | %d>  =\t   %e  +i * %e \n", ii+1, jj+1, creal(norm2), cimag(norm2));
             fflush(stdout);
           }
         }
       }
       else{
-        if((fabs(norm2.re)>1e-12) || (fabs(norm2.im)>1e-12) || 1) {
+        if((fabs(creal(norm2))>1e-12) || (fabs(cimag(norm2))>1e-12) || 1) {
           if(g_proc_id == g_stdio_proc){
-            printf("< %d | %d>  =\t   %e  +i * %e \n", ii+1, jj+1, norm2.re, norm2.im);
+            printf("< %d | %d>  =\t   %e  +i * %e \n", ii+1, jj+1, creal(norm2), cimag(norm2));
             fflush(stdout);
           }
         }

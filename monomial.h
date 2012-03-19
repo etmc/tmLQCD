@@ -86,7 +86,7 @@ typedef struct {
   double MDPolyLmin;
   double MDPolyLmax;
   char MDPolyRootsFile[256];
-  complex *MDPolyRoots;
+  _Complex double *MDPolyRoots;
   spinor **MDPoly_chi_spinor_fields;
   double MDPolyLocNormConst;
   int MDPolyDetRatio;

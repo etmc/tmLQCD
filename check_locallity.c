@@ -294,7 +294,7 @@ int main(int argc,char *argv[]) {
 	    sum = X + Y + Z + tt;
 	    _spinor_norm_sq(nrm, g_spinor_field[DUM_DERI+1][ g_ipt[t][x][y][z] ]);
 /* 	    _spinor_norm_sq(nrm, qprop[0][0][1][ g_ipt[t][x][y][z] ]); */
- 	    printf("%e %e\n", g_spinor_field[DUM_DERI+1][ g_ipt[t][x][y][z] ].s0.c0.re, g_spinor_field[DUM_DERI+1][ g_ipt[t][x][y][z] ].s0.c0.im);
+ 	    printf("%e %e\n", creal(g_spinor_field[DUM_DERI+1][ g_ipt[t][x][y][z] ].s0.c0), cimag(g_spinor_field[DUM_DERI+1][ g_ipt[t][x][y][z] ].s0.c0));
 	    nrm = sqrt( nrm );
 	    printf("%1.12e\n", nrm);
 	    if(nrm > norm[sum]) norm[sum] = nrm;

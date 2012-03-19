@@ -17,7 +17,6 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-
 /************************************************************************
  *
  *      Adpated routine evaluating the P=P+c*Q where P,Q are bispinors
@@ -76,79 +75,50 @@ void assign_add_mul_r_bi(bispinor * const P, bispinor * const Q, const double c,
 
 #else
 /*  k input, l output */
-void assign_add_mul_r_bi(bispinor * const P, bispinor * const Q, const double c, const int N) {
-  int ix;
-  static double fact;
+void assign_add_mul_r_bi(bispinor * const P, bispinor * const Q, const double c, const int N)
+{
   spinor *r,*s;
 
-  fact=c;
-
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-  for (ix = 0; ix < N; ix++) {
-
+  for (int ix = 0; ix < N; ix++)
+  {
     r=(spinor *) &P[ix].sp_up;
     s=(spinor *) &Q[ix].sp_up;
     
-    (*r).s0.c0.re+=fact*(*s).s0.c0.re;
-    (*r).s0.c0.im+=fact*(*s).s0.c0.im;
-    (*r).s0.c1.re+=fact*(*s).s0.c1.re;
-    (*r).s0.c1.im+=fact*(*s).s0.c1.im;
-    (*r).s0.c2.re+=fact*(*s).s0.c2.re;
-    (*r).s0.c2.im+=fact*(*s).s0.c2.im;
+    r->s0.c0 += c * s->s0.c0;
+    r->s0.c1 += c * s->s0.c1;
+    r->s0.c2 += c * s->s0.c2;
     
-    (*r).s1.c0.re+=fact*(*s).s1.c0.re;
-    (*r).s1.c0.im+=fact*(*s).s1.c0.im;
-    (*r).s1.c1.re+=fact*(*s).s1.c1.re;
-    (*r).s1.c1.im+=fact*(*s).s1.c1.im;
-    (*r).s1.c2.re+=fact*(*s).s1.c2.re;
-    (*r).s1.c2.im+=fact*(*s).s1.c2.im;         
+    r->s1.c0 += c * s->s1.c0;
+    r->s1.c1 += c * s->s1.c1;
+    r->s1.c2 += c * s->s1.c2;
     
-    (*r).s2.c0.re+=fact*(*s).s2.c0.re;
-    (*r).s2.c0.im+=fact*(*s).s2.c0.im;
-    (*r).s2.c1.re+=fact*(*s).s2.c1.re;
-    (*r).s2.c1.im+=fact*(*s).s2.c1.im;
-    (*r).s2.c2.re+=fact*(*s).s2.c2.re;
-    (*r).s2.c2.im+=fact*(*s).s2.c2.im;         
+    r->s2.c0 += c * s->s2.c0;
+    r->s2.c1 += c * s->s2.c1;
+    r->s2.c2 += c * s->s2.c2;       
     
-    (*r).s3.c0.re+=fact*(*s).s3.c0.re;
-    (*r).s3.c0.im+=fact*(*s).s3.c0.im;
-    (*r).s3.c1.re+=fact*(*s).s3.c1.re;
-    (*r).s3.c1.im+=fact*(*s).s3.c1.im;
-    (*r).s3.c2.re+=fact*(*s).s3.c2.re;
-    (*r).s3.c2.im+=fact*(*s).s3.c2.im;
-
+    r->s3.c0 += c * s->s3.c0;
+    r->s3.c1 += c * s->s3.c1;
+    r->s3.c2 += c * s->s3.c2;
 
     r=(spinor *) &P[ix].sp_dn;
     s=(spinor *) &Q[ix].sp_dn;
     
-    (*r).s0.c0.re+=fact*(*s).s0.c0.re;
-    (*r).s0.c0.im+=fact*(*s).s0.c0.im;
-    (*r).s0.c1.re+=fact*(*s).s0.c1.re;
-    (*r).s0.c1.im+=fact*(*s).s0.c1.im;
-    (*r).s0.c2.re+=fact*(*s).s0.c2.re;
-    (*r).s0.c2.im+=fact*(*s).s0.c2.im;
+    r->s0.c0 += c * s->s0.c0;
+    r->s0.c1 += c * s->s0.c1;
+    r->s0.c2 += c * s->s0.c2;
     
-    (*r).s1.c0.re+=fact*(*s).s1.c0.re;
-    (*r).s1.c0.im+=fact*(*s).s1.c0.im;
-    (*r).s1.c1.re+=fact*(*s).s1.c1.re;
-    (*r).s1.c1.im+=fact*(*s).s1.c1.im;
-    (*r).s1.c2.re+=fact*(*s).s1.c2.re;
-    (*r).s1.c2.im+=fact*(*s).s1.c2.im;         
+    r->s1.c0 += c * s->s1.c0;
+    r->s1.c1 += c * s->s1.c1; 
+    r->s1.c2 += c * s->s1.c2;
     
-    (*r).s2.c0.re+=fact*(*s).s2.c0.re;
-    (*r).s2.c0.im+=fact*(*s).s2.c0.im;
-    (*r).s2.c1.re+=fact*(*s).s2.c1.re;
-    (*r).s2.c1.im+=fact*(*s).s2.c1.im;
-    (*r).s2.c2.re+=fact*(*s).s2.c2.re;
-    (*r).s2.c2.im+=fact*(*s).s2.c2.im;         
+    r->s2.c0 += c * s->s2.c0;
+    r->s2.c1 += c * s->s2.c1;
+    r->s2.c2 += c * s->s2.c2;       
     
-    (*r).s3.c0.re+=fact*(*s).s3.c0.re;
-    (*r).s3.c0.im+=fact*(*s).s3.c0.im;
-    (*r).s3.c1.re+=fact*(*s).s3.c1.re;
-    (*r).s3.c1.im+=fact*(*s).s3.c1.im;
-    (*r).s3.c2.re+=fact*(*s).s3.c2.re;
-    (*r).s3.c2.im+=fact*(*s).s3.c2.im;
-
+    r->s3.c0 += c * s->s3.c0;
+    r->s3.c1 += c * s->s3.c1;
+    r->s3.c2 += c * s->s3.c2;
   }
 }
 #endif

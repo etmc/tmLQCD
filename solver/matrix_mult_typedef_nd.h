@@ -28,7 +28,7 @@
 #ifndef _MATRIX_MULT_TYPEDEF_ND_H
 #define _MATRIX_MULT_TYPEDEF_ND_H
 
-typedef void (*matrix_mult_nd) (spinor * const, spinor * const,spinor * const, spinor * const);
+typedef void (*matrix_mult_nd)(spinor * const, spinor * const,spinor * const, spinor * const);
 
 
 #endif

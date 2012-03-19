@@ -19,7 +19,7 @@
 
 /*******************************************************************************
  * Generalized minimal residual (GMRES) with a maximal number of restarts.    
- * Solves Q=AP for complex regular matrices A.
+ * Solves Q=AP for _Complex double regular matrices A.
  * For details see: Andreas Meister, Numerik linearer Gleichungssysteme        
  *   or the original citation:                                                 
  * Y. Saad, M.H.Schultz in GMRES: A generalized minimal residual algorithm    

@@ -41,44 +41,45 @@
 #include "sse.h"
 #include "square_norm_bi.h"
 
-double square_norm_bi(bispinor * const P, const int N) {
+double square_norm_bi(bispinor  *  const P, const int N) {
   int ix;
   static double ks,kc,ds,tr,ts,tt;
-  spinor *s, *t;
+  spinor  * s,  * t;
   
   ks = 0.0;
   kc = 0.0;
   
-  /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-  for (ix  =  0; ix < N; ix++) {
+  /*  Change due to even-odd preconditioning : VOLUME   to VOLUME/2  */   
+  for (ix  =  0; ix < N; ix++)
+  {
     s = &P[ix].sp_up;
     t = &P[ix].sp_dn;
 
     
-    ds = (*s).s0.c0.re*(*s).s0.c0.re + (*s).s0.c0.im*(*s).s0.c0.im + 
-         (*s).s0.c1.re*(*s).s0.c1.re + (*s).s0.c1.im*(*s).s0.c1.im + 
-         (*s).s0.c2.re*(*s).s0.c2.re + (*s).s0.c2.im*(*s).s0.c2.im + 
-         (*s).s1.c0.re*(*s).s1.c0.re + (*s).s1.c0.im*(*s).s1.c0.im + 
-         (*s).s1.c1.re*(*s).s1.c1.re + (*s).s1.c1.im*(*s).s1.c1.im + 
-         (*s).s1.c2.re*(*s).s1.c2.re + (*s).s1.c2.im*(*s).s1.c2.im + 
-         (*s).s2.c0.re*(*s).s2.c0.re + (*s).s2.c0.im*(*s).s2.c0.im + 
-         (*s).s2.c1.re*(*s).s2.c1.re + (*s).s2.c1.im*(*s).s2.c1.im + 
-         (*s).s2.c2.re*(*s).s2.c2.re + (*s).s2.c2.im*(*s).s2.c2.im + 
-         (*s).s3.c0.re*(*s).s3.c0.re + (*s).s3.c0.im*(*s).s3.c0.im + 
-         (*s).s3.c1.re*(*s).s3.c1.re + (*s).s3.c1.im*(*s).s3.c1.im + 
-         (*s).s3.c2.re*(*s).s3.c2.re + (*s).s3.c2.im*(*s).s3.c2.im +
-         (*t).s0.c0.re*(*t).s0.c0.re + (*t).s0.c0.im*(*t).s0.c0.im + 
-         (*t).s0.c1.re*(*t).s0.c1.re + (*t).s0.c1.im*(*t).s0.c1.im + 
-         (*t).s0.c2.re*(*t).s0.c2.re + (*t).s0.c2.im*(*t).s0.c2.im + 
-         (*t).s1.c0.re*(*t).s1.c0.re + (*t).s1.c0.im*(*t).s1.c0.im + 
-         (*t).s1.c1.re*(*t).s1.c1.re + (*t).s1.c1.im*(*t).s1.c1.im + 
-         (*t).s1.c2.re*(*t).s1.c2.re + (*t).s1.c2.im*(*t).s1.c2.im + 
-         (*t).s2.c0.re*(*t).s2.c0.re + (*t).s2.c0.im*(*t).s2.c0.im + 
-         (*t).s2.c1.re*(*t).s2.c1.re + (*t).s2.c1.im*(*t).s2.c1.im + 
-         (*t).s2.c2.re*(*t).s2.c2.re + (*t).s2.c2.im*(*t).s2.c2.im + 
-         (*t).s3.c0.re*(*t).s3.c0.re + (*t).s3.c0.im*(*t).s3.c0.im + 
-         (*t).s3.c1.re*(*t).s3.c1.re + (*t).s3.c1.im*(*t).s3.c1.im + 
-         (*t).s3.c2.re*(*t).s3.c2.re + (*t).s3.c2.im*(*t).s3.c2.im;
+    ds = creal(s->s0.c0) * creal(s->s0.c0) + cimag(s->s0.c0) * cimag(s->s0.c0) + 
+         creal(s->s0.c1) * creal(s->s0.c1) + cimag(s->s0.c1) * cimag(s->s0.c1) + 
+         creal(s->s0.c2) * creal(s->s0.c2) + cimag(s->s0.c2) * cimag(s->s0.c2) + 
+         creal(s->s1.c0) * creal(s->s1.c0) + cimag(s->s1.c0) * cimag(s->s1.c0) + 
+         creal(s->s1.c1) * creal(s->s1.c1) + cimag(s->s1.c1) * cimag(s->s1.c1) + 
+         creal(s->s1.c2) * creal(s->s1.c2) + cimag(s->s1.c2) * cimag(s->s1.c2) + 
+         creal(s->s2.c0) * creal(s->s2.c0) + cimag(s->s2.c0) * cimag(s->s2.c0) + 
+         creal(s->s2.c1) * creal(s->s2.c1) + cimag(s->s2.c1) * cimag(s->s2.c1) + 
+         creal(s->s2.c2) * creal(s->s2.c2) + cimag(s->s2.c2) * cimag(s->s2.c2) + 
+         creal(s->s3.c0) * creal(s->s3.c0) + cimag(s->s3.c0) * cimag(s->s3.c0) + 
+         creal(s->s3.c1) * creal(s->s3.c1) + cimag(s->s3.c1) * cimag(s->s3.c1) + 
+         creal(s->s3.c2) * creal(s->s3.c2) + cimag(s->s3.c2) * cimag(s->s3.c2) +
+         creal(t->s0.c0) * creal(t->s0.c0) + cimag(t->s0.c0) * cimag(t->s0.c0) + 
+         creal(t->s0.c1) * creal(t->s0.c1) + cimag(t->s0.c1) * cimag(t->s0.c1) + 
+         creal(t->s0.c2) * creal(t->s0.c2) + cimag(t->s0.c2) * cimag(t->s0.c2) + 
+         creal(t->s1.c0) * creal(t->s1.c0) + cimag(t->s1.c0) * cimag(t->s1.c0) + 
+         creal(t->s1.c1) * creal(t->s1.c1) + cimag(t->s1.c1) * cimag(t->s1.c1) + 
+         creal(t->s1.c2) * creal(t->s1.c2) + cimag(t->s1.c2) * cimag(t->s1.c2) + 
+         creal(t->s2.c0) * creal(t->s2.c0) + cimag(t->s2.c0) * cimag(t->s2.c0) + 
+         creal(t->s2.c1) * creal(t->s2.c1) + cimag(t->s2.c1) * cimag(t->s2.c1) + 
+         creal(t->s2.c2) * creal(t->s2.c2) + cimag(t->s2.c2) * cimag(t->s2.c2) + 
+         creal(t->s3.c0) * creal(t->s3.c0) + cimag(t->s3.c0) * cimag(t->s3.c0) + 
+         creal(t->s3.c1) * creal(t->s3.c1) + cimag(t->s3.c1) * cimag(t->s3.c1) + 
+         creal(t->s3.c2) * creal(t->s3.c2) + cimag(t->s3.c2) * cimag(t->s3.c2);
     
     tr = ds + kc;
     ts = tr + ks;

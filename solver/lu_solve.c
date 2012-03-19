@@ -22,28 +22,28 @@
 #include<stdlib.h>
 #include<math.h>
 #include "global.h"
-#include"complex.h"
+#include <complex.h>
 #include"solver/lu_solve.h"
 
 /* Solve M a = b by LU decomposition with partial pivoting */
 
-double norm2(complex* b, const int Nvec) {
+double norm2(_Complex double* b, const int Nvec) {
   int i;
   double res=0.;
   for(i = 0; i < Nvec; i++) {
-    res+= b[i].re*b[i].re + b[i].im*b[i].im;
+    res+= creal(b[i])*creal(b[i]) + cimag(b[i])*cimag(b[i]);
   }
   return(res);
 }
 
-void LUSolve( const int Nvec, complex * M, const int ldM, complex * b) {
+void LUSolve( const int Nvec, _Complex double * M, const int ldM, _Complex double * b) {
   int i, j, k, maxrow, row;
-  complex * b_local, * y;
+  _Complex double * b_local, * y;
   double maxnorm;
-  complex tmp, sum_LU;
+  _Complex double tmp, sum_LU;
 
-  b_local = (complex*)malloc(Nvec*sizeof(complex));
-  y = (complex*)malloc(Nvec*sizeof(complex));
+  b_local = (_Complex double*)malloc(Nvec*sizeof(_Complex double));
+  y = (_Complex double*)malloc(Nvec*sizeof(_Complex double));
   for(i = 0; i < Nvec; i++) {
     b_local[i] = b[i];
   }
@@ -113,28 +113,28 @@ void LUSolve( const int Nvec, complex * M, const int ldM, complex * b) {
      * -------------------------------------------------------- */
     for(j = 0; j < i; j++) { 
       
-      _complex_set(sum_LU, 0., 0.);
+      (sum_LU) = 0.;
       for(k = 0; k < j; k++) {
 	/*  sum_LU += M(i,k)*M(k,j); */
-	_mult_assign_complex(tmp, M[i*ldM + k], M[k*ldM + j]); 
-	_add_complex(sum_LU, tmp);
+	(tmp) = (M[i*ldM + k]) * (M[k*ldM + j]); 
+	(sum_LU) += tmp;
 	
       }
       /* M(i,j) -= sum_LU; */
-      _diff_complex(M[i*ldM + j], sum_LU);
+      (M[i*ldM + j]) -= sum_LU;
       /* M(i,j) /= M(j,j); */
-      _div_complex(tmp, M[i*ldM + j], M[j*ldM + j]);
+      (tmp) = (M[i*ldM + j]) / (M[j*ldM + j]);
       M[i*ldM + j] = tmp;
     }
     
     for(j=i; j < Nvec; j++) { 
-      _complex_set(sum_LU, 0., 0.);
+      (sum_LU) = 0.;
       for(k = 0; k < i; k++) {
-	_mult_assign_complex(tmp, M[i*ldM + k], M[k*ldM + j]); 
-	_add_complex(sum_LU, tmp); 
+	(tmp) = (M[i*ldM + k]) * (M[k*ldM + j]); 
+	(sum_LU) += tmp; 
       }
       /* M(i,j) -= sum_LU; */
-      _diff_complex(M[i*ldM+j], sum_LU);
+      (M[i*ldM+j]) -= sum_LU;
     }
   }
   
@@ -151,42 +151,41 @@ void LUSolve( const int Nvec, complex * M, const int ldM, complex * b) {
   for(i = 1; i < Nvec; i++) { 
     y[i] = b_local[i];
     for(j = 0; j < i; j++) { 
-      _diff_assign_complex(y[i], M[i*ldM+j], y[j]);
+      (y[i]) -= (M[i*ldM+j]) * (y[j]);
     }
   }
   
   /*  Solve U a = y by back substitution */
   /* a[Nvec-1] = y[Nvec-1] / M(Nvec-1, Nvec-1); */
-  _div_complex(tmp, y[Nvec-1], M[(Nvec-1)*ldM + (Nvec-1)]);
+  (tmp) = (y[Nvec-1]) / (M[(Nvec-1)*ldM + (Nvec-1)]);
   b[Nvec-1] = tmp;
   
   for(i = Nvec-2; i >= 0; i--) { 
     tmp = y[i];
     for(j = i+1; j < Nvec; j++) { 
       /* tmp -= M(i,j)*b[j]; */
-      _diff_assign_complex(tmp, M[i*ldM + j], b[j]);
+      (tmp) -= (M[i*ldM + j]) * (b[j]);
     }
-    _div_complex(b[i], tmp, M[i*ldM+i]);
+    (b[i]) = (tmp) / (M[i*ldM+i]);
   }
   free(b_local);
   free(y);
 }
 
 
-void LUInvert( const int Nvec, complex * const M, const int ldM) {
+void LUInvert( const int Nvec, _Complex double * const M, const int ldM) {
   int i, j, k, maxrow, row, col;
-  complex * y;
+  _Complex double * y;
   double maxnorm;
-  complex tmp, sum_LU, cone;
+  _Complex double tmp, sum_LU, cone;
   int * pivot;
-  complex *A = NULL;
-  cone.re = 1.;
-  cone.im = 0.;
+  _Complex double *A = NULL;
+  cone = 1.;
 
   pivot = (int*)malloc(Nvec*sizeof(int));
-  y = (complex*)malloc(Nvec*sizeof(complex));
+  y = (_Complex double*)malloc(Nvec*sizeof(_Complex double));
   if(g_debug_level > 4) {
-    A = (complex*)malloc(Nvec*Nvec*sizeof(complex));
+    A = (_Complex double*)malloc(Nvec*Nvec*sizeof(_Complex double));
     for(i = 0; i < Nvec; i++) {
       for(j = 0; j < Nvec; j++) {
 	A[i*Nvec + j] = M[i*ldM + j];
@@ -254,28 +253,28 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
      * -------------------------------------------------------- */
     for(j = 0; j < i; j++) { 
       
-      _complex_set(sum_LU, 0., 0.);
+      (sum_LU) = 0.;
       for(k = 0; k < j; k++) {
 	/*  sum_LU += M(i,k)*M(k,j); */
-	_mult_assign_complex(tmp, M[i*ldM + k], M[k*ldM + j]); 
-	_add_complex(sum_LU, tmp);
+	(tmp) = (M[i*ldM + k]) * (M[k*ldM + j]); 
+	(sum_LU) += tmp;
 	
       }
       /* M(i,j) -= sum_LU; */
-      _diff_complex(M[i*ldM + j], sum_LU);
+      (M[i*ldM + j]) -= sum_LU;
       /* M(i,j) /= M(j,j); */
-      _div_complex(tmp, M[i*ldM + j], M[j*ldM + j]);
+      (tmp) = (M[i*ldM + j]) / (M[j*ldM + j]);
       M[i*ldM + j] = tmp;
     }
     
     for(j=i; j < Nvec; j++) { 
-      _complex_set(sum_LU, 0., 0.);
+      (sum_LU) = 0.;
       for(k = 0; k < i; k++) {
-	_mult_assign_complex(tmp, M[i*ldM + k], M[k*ldM + j]); 
-	_add_complex(sum_LU, tmp); 
+	(tmp) = (M[i*ldM + k]) * (M[k*ldM + j]); 
+	(sum_LU) += tmp; 
       }
       /* M(i,j) -= sum_LU; */
-      _diff_complex(M[i*ldM+j], sum_LU);
+      (M[i*ldM+j]) -= sum_LU;
     }
   }
   
@@ -290,15 +289,14 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
   /* now compute inv(U) */
   
   for(row = 0; row < Nvec; row++) {
-    _div_complex(tmp, cone, M[row*ldM + row]);
+    (tmp) = (cone) / (M[row*ldM + row]);
     M[row*ldM + row] = tmp;
     for(col = row+1; col < Nvec; col++) {
-      tmp.re = 0.;
-      tmp.im = 0.;
+      tmp = 0.;
       for(j = row; j < col; j ++) {
-	_diff_assign_complex(tmp, M[row*ldM + j], M[j*ldM + col]);
+	(tmp) -= (M[row*ldM + j]) * (M[j*ldM + col]);
       }
-      _div_complex(M[row*ldM + col], tmp, M[col*ldM + col]);
+      (M[row*ldM + col]) = (tmp) / (M[col*ldM + col]);
     }
   }
 
@@ -306,12 +304,11 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
   for(col = Nvec-2; col > -1; col--) {
     for(row = 0; row < Nvec; row++) {
       if(row > col) {
-	y[row].re = 0.;
-	y[row].im = 0.;
+	y[row] = 0.;
       }
       else y[row] = M[row*ldM + col];
       for(j = col+1; j < Nvec; j++) {
-	_diff_assign_complex(y[row], M[row*ldM + j], M[j*ldM + col]);
+	(y[row]) -= (M[row*ldM + j]) * (M[j*ldM + col]);
       }
     }
     for(row = 0; row < Nvec; row++) {
@@ -334,11 +331,11 @@ void LUInvert( const int Nvec, complex * const M, const int ldM) {
     printf("check little_A inversion \n");
     for(i = 0; i < Nvec; i++) {
       for(j = 0; j < Nvec; j++) {
-	_complex_zero(tmp);
+	(tmp) = 0.0;
 	for(k = 0; k < Nvec; k++) {
-  	  _add_assign_complex(tmp, A[i*ldM + k], M[k*Nvec + j]);
+  	  (tmp) += (A[i*ldM + k]) * (M[k*Nvec + j]);
 	}
-	printf("%1.3e %1.3ei, ", tmp.re, tmp.im);
+	printf("%1.3e %1.3ei, ", creal(tmp), cimag(tmp));
       }
       printf("\n");
     }

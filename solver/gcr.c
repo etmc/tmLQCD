@@ -39,15 +39,15 @@
 
 static void init_gcr(const int _M, const int _V);
 
-static complex ** a; 
-static complex * _a;
+static _Complex double ** a; 
+static _Complex double * _a;
 static double * b;
-static complex * c;
+static _Complex double * c;
 static spinor ** chi;
 static spinor * _chi;
 static spinor ** xi;
 static spinor * _xi;
-static complex * alpha;
+static _Complex double * alpha;
 extern int dfl_poly_iter;
 
 int gcr(spinor * const P, spinor * const Q, 
@@ -58,7 +58,7 @@ int gcr(spinor * const P, spinor * const Q,
   int k, l, restart, i, iter = 0;
   double norm_sq, err;
   spinor * rho, * tmp;
-  complex ctmp;
+  _Complex double ctmp;
   spinor ** solver_field = NULL;
   const int nr_sf = 2;
 
@@ -130,15 +130,16 @@ int gcr(spinor * const P, spinor * const Q,
     }
 
     /* prepare for restart */
-    _mult_real(c[k], c[k], 1./b[k]);
+    c[k] /= b[k];
     assign_add_mul(P, xi[k], c[k], N);
-    for(l = k-1; l >= 0; l--) {
-      for(i = l+1; i <= k; i++) {
-        _mult_assign_complex(ctmp, a[l][i], c[i]);
-        /* c[l] -= ctmp */
-        _diff_complex(c[l], ctmp);
+    for(l = k - 1; l >= 0; --l)
+    {
+      for(i = l+1; i <= k; ++i)
+      {
+        ctmp = a[l][i] * c[i];
+        c[l] -= ctmp;
       }
-      _mult_real(c[l], c[l], 1./b[l]);
+      c[l] /= b[l];
       assign_add_mul(P, xi[l], c[l], N);
     }
   }
@@ -164,18 +165,18 @@ static void init_gcr(const int _M, const int _V){
     }
     Vo = _V;
     M = _M;
-    a = calloc(M+1, sizeof(complex *));
+    a = calloc(M+1, sizeof(_Complex double *));
     chi = calloc(M, sizeof(spinor *));
     xi = calloc(M, sizeof(spinor *));
 #if (defined SSE || defined SSE2 || defined SSE3)
-    _a = calloc((M+2)*M, sizeof(complex));
-    a[0] = (complex *)(((unsigned long int)(_a)+ALIGN_BASE)&~ALIGN_BASE); 
+    _a = calloc((M+2)*M, sizeof(_Complex double));
+    a[0] = (_Complex double *)(((unsigned long int)(_a)+ALIGN_BASE)&~ALIGN_BASE); 
     _chi = calloc(M*Vo+1, sizeof(spinor));
     chi[0] = (spinor *)(((unsigned long int)(_chi)+ALIGN_BASE)&~ALIGN_BASE);
     _xi = calloc(M*Vo+1, sizeof(spinor));
     xi[0] = (spinor *)(((unsigned long int)(_xi)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-    _a = calloc((M+1)*M, sizeof(complex));
+    _a = calloc((M+1)*M, sizeof(_Complex double));
     a[0] = _a;
     _chi = calloc(M*Vo, sizeof(spinor));
     chi[0] = _chi;
@@ -184,8 +185,8 @@ static void init_gcr(const int _M, const int _V){
 #endif
     if(_xi == NULL) {printf("Unable to allocated space for GCR iterations\n");exit(0);  }
     b = calloc(M, sizeof(double));
-    c = calloc(M, sizeof(complex));
-    alpha = calloc(M+1, sizeof(complex));
+    c = calloc(M, sizeof(_Complex double));
+    alpha = calloc(M+1, sizeof(_Complex double));
     for(i = 1; i < M; i++){
       chi[i] = chi[i-1] + Vo;
       xi[i] = xi[i-1] + Vo;
