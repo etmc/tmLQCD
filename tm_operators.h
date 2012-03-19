@@ -22,6 +22,14 @@
 
 #include "su3.h"
 
+/* This is the full matrix multiplication */
+void M_full(spinor * const Even_new, spinor * const Odd_new, 
+	    spinor * const Even, spinor * const Odd);
+void Q_full(spinor * const Even_new, spinor * const Odd_new, 
+	    spinor * const Even, spinor * const Odd);
+void M_minus_1_timesC(spinor * const Even_new, spinor * const Odd_new, 
+		      spinor * const Even, spinor * const Odd);
+
 void Qtm_plus_psi(spinor * const l, spinor * const k);
 void Qtm_plus_psi_nocom(spinor * const l, spinor * const k);
 void Qtm_minus_psi(spinor * const l, spinor * const k);
