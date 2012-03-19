@@ -32,13 +32,13 @@
 
 #ifdef XLC
 /*#include <essl.h>*/
-#include "su3/complex.h"
-complex zdotc(int, complex*, int, complex*, int);
-void zaxpy(int, complex ,complex* ,int ,complex* ,int);
-void zcopy(int, complex*, int, complex*, int);
-#define assign_add_mul(A,B,C) zaxpy(12*VOLUME,C,(complex*)B,1,(complex*)A,1)
-#define scalar_prod(A,B) zdotc(12*VOLUME,(complex*)A,1,(complex*)B,1)
-#define assign(A,B) zcopy(12*VOLUME,(complex*)B,1,(complex*)A,1)
+#include "su3/_Complex double.h"
+_Complex double zdotc(int, _Complex double*, int, _Complex double*, int);
+void zaxpy(int, _Complex double ,_Complex double* ,int ,_Complex double* ,int);
+void zcopy(int, _Complex double*, int, _Complex double*, int);
+#define assign_add_mul(A,B,C) zaxpy(12*VOLUME,C,(_Complex double*)B,1,(_Complex double*)A,1)
+#define scalar_prod(A,B) zdotc(12*VOLUME,(_Complex double*)A,1,(_Complex double*)B,1)
+#define assign(A,B) zcopy(12*VOLUME,(_Complex double*)B,1,(_Complex double*)A,1)
 
 #else
 

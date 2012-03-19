@@ -119,12 +119,13 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
     _su3_one(sw[x][0][1]);
     _su3_one(sw[x][2][1]);
     
-    for(k = 1; k < 4; k++) {
-      _su3_assign(electric[k],fkl[0][k]);
+    for(k = 1; k < 4; k++)
+    {
+      _su3_assign(electric[k], fkl[0][k]);
     }
-    _su3_assign(magnetic[1],fkl[2][3]);
-    _su3_minus_assign(magnetic[2],fkl[1][3]);
-    _su3_assign(magnetic[3],fkl[1][2]);
+    _su3_assign(magnetic[1], fkl[2][3]);
+    _su3_minus_assign(magnetic[2], fkl[1][3]);
+    _su3_assign(magnetic[3], fkl[1][2]);
     
     /*  upper left block matrix  */
     
@@ -163,9 +164,9 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
   !  by P. Weisz and U. Wolff.                                   !
   !--------------------------------------------------------------!
   !  inversion in place of complex matrix a without pivoting     !
-  !  triangularization by householder reflexions                 !
+  !  triangularization by householder reflections                 !
   !  inversion of triangular matrix                              !
-  !  inverse reflexions                                          !
+  !  inverse reflections                                          !
   !--------------------------------------------------------------!
   !  a square matrix, dimensioned 0:n-1                          !
   !  itrouble is counted up, when a dangerously small diagonal   !
@@ -178,172 +179,137 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
   !______________________________________________________________!
 */
 #define nm1 5
-int six_invert(complex a[6][6]) {
-  static complex d[nm1+1],u[nm1+1];
-  static complex sigma,z;
+int six_invert(_Complex double a[6][6])
+{
+  static _Complex double d[nm1+1],u[nm1+1];
+  static _Complex double sigma,z;
   static double p[nm1+1];
   static double s,q;
   int i,j,k;
   int ifail;
   ifail=0;
-  for(k = 0; k < nm1; k++) {
+  for(k = 0; k < nm1; ++k)
+  {
     s=0.0;
-    for(j = k+1; j <= nm1; j++) {
-      s += a[j][k].re*a[j][k].re 
-	+ a[j][k].im*a[j][k].im; 
-    }
-    s=1.+s/(a[k][k].re*a[k][k].re+a[k][k].im*a[k][k].im);
-    s=sqrt(s);
-    sigma.re=s*a[k][k].re; sigma.im=s*a[k][k].im;
-    a[k][k].re+=sigma.re; a[k][k].im+=sigma.im;
-    p[k]=sigma.re*a[k][k].re+sigma.im*a[k][k].im;
-    /* d[k]=-1./sigma */
-    q=sigma.re*sigma.re+sigma.im*sigma.im;
-    if(q < tiny_t) {
+    for(j = k+1; j <= nm1; ++j)
+      s += conj(a[j][k]) * a[j][k];
+    s = sqrt(1. + s / (conj(a[k][k]) * a[k][k]));
+    sigma = s * a[k][k];
+
+    a[k][k] += sigma;
+    p[k] = conj(sigma) * a[k][k];
+    q = conj(sigma) * sigma;
+    if (q < tiny_t)
       ifail++;
-    }
-    q=1./q;
-    d[k].re=-q*sigma.re; 
-    d[k].im= q*sigma.im; 
+    d[k] = -conj(sigma) / q;
+
     /* reflect all columns to the right */
-    for(j = k+1; j <= nm1; j++) {
-      z.re=0.; z.im=0.; 
-      for(i = k; i <= nm1; i++) {
-	z.re+=a[i][k].re*a[i][j].re+a[i][k].im*a[i][j].im;
-	z.im+=a[i][k].re*a[i][j].im-a[i][k].im*a[i][j].re;
-      }
-      q=1./p[k];
-      z.re=q*z.re; 
-      z.im=q*z.im; 
-      for(i = k; i <= nm1; i++) {
-	a[i][j].re-=z.re*a[i][k].re-z.im*a[i][k].im;
-	a[i][j].im-=z.re*a[i][k].im+z.im*a[i][k].re;
-      }
+    for(j = k+1; j <= nm1; ++j)
+    {
+      z = 0.0;
+      for(i = k; i <= nm1; ++i)
+	z += conj(a[i][k]) * a[i][j];
+      z /= p[k];
+      for(i = k; i <= nm1; ++i)
+	a[i][j] -= z * a[i][k];
     }
   }
-  sigma.re=a[nm1][nm1].re;
-  sigma.im=a[nm1][nm1].im;
-  q=sigma.re*sigma.re+sigma.im*sigma.im;
-  if(q < tiny_t) {
+  sigma = a[nm1][nm1];
+  q = conj(sigma) * sigma;
+  if (q < tiny_t)
     ifail++;
-  }
-  q=1./q;
-  d[nm1].re= q*sigma.re; 
-  d[nm1].im=-q*sigma.im; 
+  d[nm1] = conj(sigma) / q;
+
   /*  inversion of upper triangular matrix in place
       (diagonal elements done already): */
-  
+
   for(k = nm1; k >= 0; k--) {
     for(i = k-1; i >= 0;i--) {
-      z.re=0.; z.im=0.;
-      for(j = i+1; j < k; j++) {
-	z.re+=a[i][j].re*a[j][k].re-a[i][j].im*a[j][k].im;
-	z.im+=a[i][j].re*a[j][k].im+a[i][j].im*a[j][k].re;
-      }
-      z.re+=a[i][k].re*d[k].re-a[i][k].im*d[k].im;
-      z.im+=a[i][k].re*d[k].im+a[i][k].im*d[k].re;
-      a[i][k].re=-z.re*d[i].re+z.im*d[i].im;
-      a[i][k].im=-z.re*d[i].im-z.im*d[i].re;
+      z = 0.0;
+      for(j = i+1; j < k; j++)
+	z += a[i][j] * a[j][k];
+      z += a[i][k] * d[k];
+      a[i][k] = -z * d[i];
     }
   }     
-  /* execute reflexions in reverse order from the right: */
+  /* execute reflections in reverse order from the right: */
   
-  a[nm1][nm1].re=d[nm1].re;
-  a[nm1][nm1].im=d[nm1].im;
-  for(k = nm1-1; k >= 0; k--) {
-    for(j=k;j<=nm1;j++) {
-      u[j].re=a[j][k].re;
-      u[j].im=a[j][k].im;
-    }
-    a[k][k].re=d[k].re;
-    a[k][k].im=d[k].im;
-    for(j = k+1; j <= nm1; j++) {
-      a[j][k].re=0.0;
-      a[j][k].im=0.0;
-    }
-    for(i = 0; i <= nm1; i++) {
-      z.re=0.0;
-      z.im=0.0;
-      for(j = k; j <= nm1; j++) {
-        z.re+=a[i][j].re*u[j].re-a[i][j].im*u[j].im;
-        z.im+=a[i][j].re*u[j].im+a[i][j].im*u[j].re;
-      }
-      z.re=z.re/p[k];         /* normalization */
-      z.im=z.im/p[k];         /* normalization */
-      for(j = k; j <= nm1; j++) {
-        a[i][j].re-= z.re*u[j].re+z.im*u[j].im; /* reflexion */
-        a[i][j].im-=-z.re*u[j].im+z.im*u[j].re; /* reflexion */
-      }
+  a[nm1][nm1] = d[nm1];
+  for(k = nm1-1; k >= 0; k--)
+  {
+    for(j=k;j<=nm1;j++)
+      u[j] = a[j][k];
+    a[k][k] = d[k];
+    for(j = k+1; j <= nm1; j++)
+      a[j][k] = 0.0;
+    for(i = 0; i <= nm1; i++)
+    {
+      z = 0.0;
+      for(j = k; j <= nm1; j++)
+        z += a[i][j] * u[j];
+      z /= p[k];         /* normalization */
+      
+      for(j = k; j <= nm1; j++)
+        a[i][j] -= conj(u[j]) * z; /* reflection */
     }
   }
   return ifail;
 }
     
-double six_det(complex a[6][6]) {
-  static complex sigma,z;
-  static complex det;
+double six_det(_Complex double a[6][6])
+{
+  static _Complex double sigma,z;
+  static _Complex double det;
   static double p[nm1+1];
-  static double s,q,ds;
+  static double s,q;
   int i,j,k;
   int ifail;
   ifail=0;
   /* compute the determinant:*/
-  det.re=1.0;  
-  det.im=0.0;
+  det = 1.0;
 
-  for(k = 0; k < nm1; k++) {
+  for(k = 0; k < nm1; k++)
+  {
     s=0.0;
-    for(j = k+1; j <= nm1; j++) {
-      s+=a[j][k].re*a[j][k].re+a[j][k].im*a[j][k].im; 
-    }
-    s=1.+s/(a[k][k].re*a[k][k].re+a[k][k].im*a[k][k].im);
-    s=sqrt(s);
-    sigma.re=s*a[k][k].re; 
-    sigma.im=s*a[k][k].im;
-    
+    for(j = k+1; j <= nm1; ++j)
+      s += conj(a[j][k]) * a[j][k];
+    s = sqrt(1. + s / (conj(a[k][k]) * a[k][k]));
+    sigma = s * a[k][k];
+
     /* determinant */
-    ds=sigma.re*det.re-sigma.im*det.im;
-    det.im=sigma.re*det.im+sigma.im*det.re;
-    det.re=ds;
-    q=sigma.re*sigma.re+sigma.im*sigma.im;
-    if(q < tiny_t) {
+    det *= sigma;
+    q   = sigma * conj(sigma);
+    if (q < tiny_t)
       ifail++;
-    }
-    a[k][k].re+=sigma.re; a[k][k].im+=sigma.im;
-    p[k]=sigma.re*a[k][k].re+sigma.im*a[k][k].im;
-    
+
+    a[k][k] += sigma;
+    p[k]     = sigma * conj(a[k][k]);
+
     /* reflect all columns to the right */
-    for(j = k+1; j <= nm1; j++) {
-      z.re=0.; z.im=0.; 
-      for(i = k; i <= nm1; i++) {
-	z.re+=a[i][k].re*a[i][j].re+a[i][k].im*a[i][j].im;
-	z.im+=a[i][k].re*a[i][j].im-a[i][k].im*a[i][j].re;
-      }
-      q=1./p[k];
-      z.re=q*z.re; 
-      z.im=q*z.im; 
-      for(i = k; i <= nm1; i++) {
-	a[i][j].re-=z.re*a[i][k].re-z.im*a[i][k].im;
-	a[i][j].im-=z.re*a[i][k].im+z.im*a[i][k].re;
-      }
+    for(j = k+1; j <= nm1; j++)
+    {
+      z = 0.;
+      for(i = k; i <= nm1; i++)
+	z += conj(a[i][k]) * a[i][j];
+      z /= p[k];
+      for(i = k; i <= nm1; i++)
+	a[i][j] -= z * a[i][k];
     }
   }
-  sigma.re=a[nm1][nm1].re;
-  sigma.im=a[nm1][nm1].im;
-  
+  sigma = a[nm1][nm1];
+
   /* determinant */
-  ds=sigma.re*det.re-sigma.im*det.im;
-  det.im=sigma.re*det.im+sigma.im*det.re;
-  det.re=ds;
-  q=sigma.re*sigma.re+sigma.im*sigma.im;
-  if(q < tiny_t) {
+  det *= sigma;
+  q = conj(sigma) * sigma;
+
+  if(q < tiny_t)
     ifail++;
-  }
-  return det.re;
+
+  return det;
 }
 
 /*definitions needed for the functions sw_trace(int ieo) and sw_trace(int ieo)*/
-inline void populate_6x6_matrix(complex a[6][6], su3 * C, const int row, const int col) {
+inline void populate_6x6_matrix(_Complex double a[6][6], su3 * C, const int row, const int col) {
   a[0+row][0+col] = C->c00;
   a[0+row][1+col] = C->c01;
   a[0+row][2+col] = C->c02;
@@ -356,7 +322,7 @@ inline void populate_6x6_matrix(complex a[6][6], su3 * C, const int row, const i
   return;
 }
 
-inline void get_3x3_block_matrix(su3 * C, complex a[6][6], const int row, const int col) {
+inline void get_3x3_block_matrix(su3 * C, _Complex double a[6][6], const int row, const int col) {
   C->c00 = a[0+row][0+col];
   C->c01 = a[0+row][1+col];
   C->c02 = a[0+row][2+col];
@@ -369,10 +335,33 @@ inline void get_3x3_block_matrix(su3 * C, complex a[6][6], const int row, const 
   return;
 }
 
+/*definitions needed for the functions sw_trace(int ieo) and sw_trace(int ieo)*/
+#define _a_C(A, B, C)\
+  a[0+(A)][0+(B)]=(C).c00;			\
+  a[0+(A)][1+(B)]=(C).c01;			\
+  a[0+(A)][2+(B)]=(C).c02;			\
+  a[1+(A)][0+(B)]=(C).c10;			\
+  a[1+(A)][1+(B)]=(C).c11;			\
+  a[1+(A)][2+(B)]=(C).c12;			\
+  a[2+(A)][0+(B)]=(C).c20;			\
+  a[2+(A)][1+(B)]=(C).c21;			\
+  a[2+(A)][2+(B)]=(C).c22;
+
+#define _C_a(A, B, C)\
+  (C).c00=a[0+(A)][0+(B)];			\
+  (C).c01=a[0+(A)][1+(B)];			\
+  (C).c02=a[0+(A)][2+(B)];			\
+  (C).c10=a[1+(A)][0+(B)];			\
+  (C).c11=a[1+(A)][1+(B)];			\
+  (C).c12=a[1+(A)][2+(B)];			\
+  (C).c20=a[2+(A)][0+(B)];			\
+  (C).c21=a[2+(A)][1+(B)];			\
+  (C).c22=a[2+(A)][2+(B)];
+
 double sw_trace(const int ieo) {
   int i,x,icx,ioff;
   static su3 v;
-  static complex a[6][6];
+  static _Complex double a[6][6];
   static double tra;
   static double ks,kc,tr,ts,tt;
   
@@ -418,7 +407,7 @@ void sw_invert(const int ieo) {
   int icx,ioff, err=0;
   int i,x;
   static su3 v;
-  static complex a[6][6];
+  static _Complex double a[6][6];
   if(ieo==0) {
     ioff=0;
   } 
@@ -481,12 +470,12 @@ void sw_deriv(const int ieo) {
     _su3_plus_su3(lswp[1],sw_inv[x][1][1],sw_inv[x][1][0]);
     _su3_plus_su3(lswp[2],sw_inv[x][2][1],sw_inv[x][2][0]);
     _su3_dagger(lswp[3],lswp[1]);
-    _su3_assign(lswp[1],lswp[3]);
+    _su3_assign(lswp[1], lswp[3]);
     _su3_minus_su3(lswm[0],sw_inv[x][0][1],sw_inv[x][0][0]);
     _su3_minus_su3(lswm[1],sw_inv[x][1][1],sw_inv[x][1][0]);
     _su3_minus_su3(lswm[2],sw_inv[x][2][1],sw_inv[x][2][0]);
     _su3_dagger(lswm[3],lswm[1]);
-    _su3_assign(lswm[1],lswm[3]);
+    _su3_assign(lswm[1], lswm[3]);
     
     /* add up the swm[0]  and swp[2] */
     _su3_acc(swm[x][0],lswm[0]);
@@ -544,17 +533,17 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
       s4=(sw(2,2,l,t).hdot.phi(3,l,t))+sw(3,2,l,t)*phi(4,l,t)
     */
     
-    _vector_tensor_vector(v1,(*r).s0,(*s).s0);
-    _vector_tensor_vector(v2,(*r).s0,(*s).s1);
-    _vector_tensor_vector(v3,(*s).s0,(*r).s1);
+    _vector_tensor_vector(v1,r->s0,s->s0);
+    _vector_tensor_vector(v2,r->s0,s->s1);
+    _vector_tensor_vector(v3,s->s0,r->s1);
     _su3_acc(v2,v3);
-    _vector_tensor_vector(v3,(*r).s1,(*s).s1);
+    _vector_tensor_vector(v3,r->s1,s->s1);
     
-    _vector_tensor_vector(u1,(*r).s2,(*s).s2);
-    _vector_tensor_vector(u2,(*r).s2,(*s).s3);
-    _vector_tensor_vector(u3,(*s).s2,(*r).s3);
+    _vector_tensor_vector(u1,r->s2,s->s2);
+    _vector_tensor_vector(u2,r->s2,s->s3);
+    _vector_tensor_vector(u3,s->s2,r->s3);
     _su3_acc(u2,u3);
-    _vector_tensor_vector(u3,(*r).s3,(*s).s3);
+    _vector_tensor_vector(u3,r->s3,s->s3);
     
     /* compute the insertion matrix */
     _su3_plus_su3(lswp[0],u1,v1);

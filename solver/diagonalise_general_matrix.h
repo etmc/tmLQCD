@@ -20,7 +20,7 @@
 #ifndef _DIAGONALISE_GENERAL_MATRIX_H
 #define _DIAGONALISE_GENERAL_MATRIX_H
 
-void diagonalise_general_matrix(int n, complex * A, int lda, complex * vl,
-				complex * evalues);
+void diagonalise_general_matrix(int n, _Complex double * A, int lda, _Complex double * vl,
+				_Complex double * evalues);
 
 #endif

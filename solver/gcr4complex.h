@@ -23,21 +23,21 @@
 #include"solver/matrix_mult_typedef.h"
 #include"su3.h"
 
-void ldiff(complex * Q, complex * const R, complex * const S, const int N);
-void ladd(complex * Q, complex * const R, complex * const S, const int N);
-double lsquare_norm(complex * const Q, const int N, const int parallel);
-complex lscalar_prod(complex * const R, complex * const S, const int N, const int parallel);
-void lmul_r(complex * const R, const double c, complex * const S, const int N);
-void lmul(complex * const R, const complex c, complex * const S, const int N);
-void lassign_diff_mul(complex * const R, complex * const S, const complex c, const int N);
-void lassign_add_mul(complex * const R, complex * const S, const complex c, const int N);
-void ldiff_assign(complex * const Q, complex * const S, 
+void ldiff(_Complex double * Q, _Complex double * const R, _Complex double * const S, const int N);
+void ladd(_Complex double * Q, _Complex double * const R, _Complex double * const S, const int N);
+double lsquare_norm(_Complex double * const Q, const int N, const int parallel);
+_Complex double lscalar_prod(_Complex double * const R, _Complex double * const S, const int N, const int parallel);
+void lmul_r(_Complex double * const R, const double c, _Complex double * const S, const int N);
+void lmul(_Complex double * const R, const _Complex double c, _Complex double * const S, const int N);
+void lassign_diff_mul(_Complex double * const R, _Complex double * const S, const _Complex double c, const int N);
+void lassign_add_mul(_Complex double * const R, _Complex double * const S, const _Complex double c, const int N);
+void ldiff_assign(_Complex double * const Q, _Complex double * const S, 
 		  const int N);
-void ladd_assign(complex * const Q, complex * const S, 
+void ladd_assign(_Complex double * const Q, _Complex double * const S, 
 		  const int N);
 
 
-int gcr4complex(complex * const P, complex * const Q, 
+int gcr4complex(_Complex double * const P, _Complex double * const Q, 
 		const int m, const int max_restarts,
 		const double eps_sq, const int rel_prec,
 		const int N, const int parallel,

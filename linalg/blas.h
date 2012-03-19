@@ -20,7 +20,7 @@
 #ifndef _BLAS_H
 #define _BLAS_H
 
-#include "complex.h"
+#include <complex.h>
 #include "linalg/fortran.h"
 
 #if defined CRAY || defined HITACHI
@@ -55,40 +55,40 @@ extern void _FT(zgemm)();
 #else
 
 /* BLAS-1 functions */
-extern double _FT(dasum) (int* n, double x[], int* incx);
-extern double _FT(ddot) (int* n, double x[], int* incx, double y[],
+extern double _FT(dasum)(int* n, double x[], int* incx);
+extern double _FT(ddot)(int* n, double x[], int* incx, double y[],
         int* incy);
-extern void _FT(zdotc) (int* n, complex x[], int* incx, complex y[],
+extern void _FT(zdotc)(int* n, _Complex double x[], int* incx, _Complex double y[],
         int* incy);
-extern double _FT(dnrm2) (int* n, double x[], int* incx);
-extern double _FT(znrm2) (int* n, complex x[], int* incx);
-extern int _FT(idamax) (int* n, double x[], int* incx);
+extern double _FT(dnrm2)(int* n, double x[], int* incx);
+extern double _FT(znrm2)(int* n, _Complex double x[], int* incx);
+extern int _FT(idamax)(int* n, double x[], int* incx);
 
 /* BLAS-1 subroutines */
-extern void _FT(daxpy) (int* n, double* a, double x[], int* incx,
+extern void _FT(daxpy)(int* n, double* a, double x[], int* incx,
         double y[], int* incy);
-extern void _FT(zaxpy) (int* n, complex* a, complex x[], int* incx,
-        complex y[], int* incy);
-extern void _FT(dcopy) (int* n, double x[], int* incx, double y[],
+extern void _FT(zaxpy)(int* n, _Complex double* a, _Complex double x[], int* incx,
+        _Complex double y[], int* incy);
+extern void _FT(dcopy)(int* n, double x[], int* incx, double y[],
         int* incy);
-extern void _FT(dscal) (int* n, double* a, double x[], int* incx);
+extern void _FT(dscal)(int* n, double* a, double x[], int* incx);
 
 /* BLAS-2 subroutines */
-extern void _FT(dgemv) (char* trans, int* m, int* n, double* alpha,
+extern void _FT(dgemv)(char* trans, int* m, int* n, double* alpha,
         double a[], int* lda, double x[], int* incx, double* beta,
         double y[], int* incy, int len_trans);
-extern void _FT(zgemv) (char* trans, int* m, int* n, complex* alpha,
-        complex a[], int* lda, complex x[], int* incx, complex* beta,
-        complex y[], int* incy, int len_trans);
+extern void _FT(zgemv)(char* trans, int* m, int* n, _Complex double* alpha,
+        _Complex double a[], int* lda, _Complex double x[], int* incx, _Complex double* beta,
+        _Complex double y[], int* incy, int len_trans);
 
 /* BLAS-3 subroutines */
-extern void _FT(dgemm) (char* transa, char* transb, int* m, int* n, int* k,
+extern void _FT(dgemm)(char* transa, char* transb, int* m, int* n, int* k,
         double* alpha, double a[], int* lda, double b[], int* ldb,
         double* beta, double c[], int* ldc, int len_transa,
         int len_transb);
-extern void _FT(zgemm) (char* transa, char* transb, int* m, int* n, int* k,
-        complex* alpha, complex a[], int* lda, complex b[], int* ldb,
-        complex* beta, complex c[], int* ldc, int len_transa,
+extern void _FT(zgemm)(char* transa, char* transb, int* m, int* n, int* k,
+        _Complex double* alpha, _Complex double a[], int* lda, _Complex double b[], int* ldb,
+        _Complex double* beta, _Complex double c[], int* ldc, int len_transa,
         int len_transb);
 #endif
 

@@ -30,192 +30,92 @@
 #ifdef WITHLAPH
 complex_spinor scalar_prod_su3spinor(su3_vector * const S, spinor * const R, const int N, const int parallel){
   int ix;
-  static double ks,kc,ds,tr,ts,tt;
-  su3_vector *s,*r;
+  static _Complex double ks, kc, ds, tr, ts, tt;
+  su3_vector *s, *r;
   complex_spinor c;
 #ifdef MPI
   complex_spinor d;
 #endif
 
-  /* sc0.re */
-
-  ks=0.0;
-  kc=0.0;
+  /* sc0 */
+  ks = 0.0;
+  kc = 0.0;
   for (ix = 0; ix < N; ix++)
-    {
-      s=(su3_vector *) S + ix;
-      r=&(R[ix].s0);
-    
-      ds=(*r).c0.re*(*s).c0.re+(*r).c0.im*(*s).c0.im+
-	(*r).c1.re*(*s).c1.re+(*r).c1.im*(*s).c1.im+
-	(*r).c2.re*(*s).c2.re+(*r).c2.im*(*s).c2.im;
+  {
+    s = (su3_vector *) S + ix;
+    r = &(R[ix].s0);
+  
+    ds = r->c0 * conj(s->c0) + r->c1 * conj(s->c1) + r->c2 * conj(s->c2);
 
-      /* Kahan Summation */    
-      tr=ds+kc;
-      ts=tr+ks;
-      tt=ts-ks;
-      ks=ts;
-      kc=tr-tt;
-    }
-  kc=ks+kc;
-  c.sc0.re = kc;
+    /* Kahan Summation */    
+    tr = ds + kc;
+    ts = tr + ks;
+    tt = ts - ks;
+    ks = ts;
+    kc = tr - tt;
+  }
+  kc = ks + kc;
+  c.sc0 = kc;
 
-  /* sc0.im */
-
-  ks=0.0;
-  kc=0.0;
-  for (ix=0;ix<N;ix++)
-    {
-      s=(su3_vector *) S + ix;
-      r=&(R[ix].s0);
-    
-      ds=-(*r).c0.re*(*s).c0.im+(*r).c0.im*(*s).c0.re-
-	(*r).c1.re*(*s).c1.im+(*r).c1.im*(*s).c1.re-
-	(*r).c2.re*(*s).c2.im+(*r).c2.im*(*s).c2.re;
-    
-      tr=ds+kc;
-      ts=tr+ks;
-      tt=ts-ks;
-      ks=ts;
-      kc=tr-tt;
-    }
-  kc=ks+kc;
-  c.sc0.im = kc;
-
-  /* sc1.re */
-
-  ks=0.0;
-  kc=0.0;
+  /* sc1 */
+  ks = 0.0;
+  kc = 0.0;
   for (ix = 0; ix < N; ix++)
-    {
-      s=(su3_vector *) S + ix;
-      r=&(R[ix].s0);
-    
-      ds=(*r).c0.re*(*s).c0.re+(*r).c0.im*(*s).c0.im+
-	(*r).c1.re*(*s).c1.re+(*r).c1.im*(*s).c1.im+
-	(*r).c2.re*(*s).c2.re+(*r).c2.im*(*s).c2.im;
+  {
+    s = (su3_vector *) S + ix;
+    r = &(R[ix].s1);
+  
+    ds = r->c0 * conj(s->c0) + r->c1 * conj(s->c1) + r->c2 * conj(s->c2);
 
-      /* Kahan Summation */    
-      tr=ds+kc;
-      ts=tr+ks;
-      tt=ts-ks;
-      ks=ts;
-      kc=tr-tt;
-    }
-  kc=ks+kc;
-  c.sc1.re = kc;
+    /* Kahan Summation */    
+    tr = ds + kc;
+    ts = tr + ks;
+    tt = ts - ks;
+    ks = ts;
+    kc = tr - tt;
+  }
+  kc = ks + kc;
+  c.sc1 = kc;
 
-  /* sc1.im */
-
-  ks=0.0;
-  kc=0.0;
-  for (ix=0;ix<N;ix++)
-    {
-      s=(su3_vector *) S + ix;
-      r=&(R[ix].s1);
-    
-      ds=-(*r).c0.re*(*s).c0.im+(*r).c0.im*(*s).c0.re-
-	(*r).c1.re*(*s).c1.im+(*r).c1.im*(*s).c1.re-
-	(*r).c2.re*(*s).c2.im+(*r).c2.im*(*s).c2.re;
-    
-      tr=ds+kc;
-      ts=tr+ks;
-      tt=ts-ks;
-      ks=ts;
-      kc=tr-tt;
-    }
-  kc=ks+kc;
-  c.sc1.im = kc;
-
-  /* sc2.re */
-
-  ks=0.0;
-  kc=0.0;
+  /* sc2 */
+  ks = 0.0;
+  kc = 0.0;
   for (ix = 0; ix < N; ix++)
-    {
-      s=(su3_vector *) S + ix;
-      r=&(R[ix].s2);
-    
-      ds=(*r).c0.re*(*s).c0.re+(*r).c0.im*(*s).c0.im+
-	(*r).c1.re*(*s).c1.re+(*r).c1.im*(*s).c1.im+
-	(*r).c2.re*(*s).c2.re+(*r).c2.im*(*s).c2.im;
+  {
+    s = (su3_vector *) S + ix;
+    r = &(R[ix].s2);
+  
+    ds = r->c0 * conj(s->c0) + r->c1 * conj(s->c1) + r->c2 * conj(s->c2);
 
-      /* Kahan Summation */    
-      tr=ds+kc;
-      ts=tr+ks;
-      tt=ts-ks;
-      ks=ts;
-      kc=tr-tt;
-    }
-  kc=ks+kc;
-  c.sc2.re = kc;
+    /* Kahan Summation */    
+    tr = ds + kc;
+    ts = tr + ks;
+    tt = ts - ks;
+    ks = ts;
+    kc = tr - tt;
+  }
+  kc = ks + kc;
+  c.sc2 = kc;
 
-  /* sc2.im */
-
-  ks=0.0;
-  kc=0.0;
-  for (ix=0;ix<N;ix++)
-    {
-      s=(su3_vector *) S + ix;
-      r=&(R[ix].s2);
-    
-      ds=-(*r).c0.re*(*s).c0.im+(*r).c0.im*(*s).c0.re-
-	(*r).c1.re*(*s).c1.im+(*r).c1.im*(*s).c1.re-
-	(*r).c2.re*(*s).c2.im+(*r).c2.im*(*s).c2.re;
-    
-      tr=ds+kc;
-      ts=tr+ks;
-      tt=ts-ks;
-      ks=ts;
-      kc=tr-tt;
-    }
-  kc=ks+kc;
-  c.sc2.im = kc;
-
-  /* sc3.re */
-
-  ks=0.0;
-  kc=0.0;
+  /* sc3 */
+  ks = 0.0;
+  kc = 0.0;
   for (ix = 0; ix < N; ix++)
-    {
-      s=(su3_vector *) S + ix;
-      r=&(R[ix].s3);
-    
-      ds=(*r).c0.re*(*s).c0.re+(*r).c0.im*(*s).c0.im+
-	(*r).c1.re*(*s).c1.re+(*r).c1.im*(*s).c1.im+
-	(*r).c2.re*(*s).c2.re+(*r).c2.im*(*s).c2.im;
+  {
+    s = (su3_vector *) S + ix;
+    r = &(R[ix].s3);
+  
+    ds = r->c0 * conj(s->c0) + r->c1 * conj(s->c1) + r->c2 * conj(s->c2);
 
-      /* Kahan Summation */    
-      tr=ds+kc;
-      ts=tr+ks;
-      tt=ts-ks;
-      ks=ts;
-      kc=tr-tt;
-    }
-  kc=ks+kc;
-  c.sc3.re = kc;
-
-  /* sc3.im */
-
-  ks=0.0;
-  kc=0.0;
-  for (ix=0;ix<N;ix++)
-    {
-      s=(su3_vector *) S + ix;
-      r=&(R[ix].s3);
-    
-      ds=-(*r).c0.re*(*s).c0.im+(*r).c0.im*(*s).c0.re-
-	(*r).c1.re*(*s).c1.im+(*r).c1.im*(*s).c1.re-
-	(*r).c2.re*(*s).c2.im+(*r).c2.im*(*s).c2.re;
-    
-      tr=ds+kc;
-      ts=tr+ks;
-      tt=ts-ks;
-      ks=ts;
-      kc=tr-tt;
-    }
-  kc=ks+kc;
-  c.sc3.im = kc;
+    /* Kahan Summation */    
+    tr = ds + kc;
+    ts = tr + ks;
+    tt = ts - ks;
+    ks = ts;
+    kc = tr - tt;
+  }
+  kc = ks + kc;
+  c.sc3 = kc;
 
 #ifdef MPI
   if(parallel == 1) {

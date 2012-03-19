@@ -57,19 +57,13 @@ void Jacobi(su3_vector * const l, su3_vector * const k,int t)
       for(mu=1;mu<4;mu++)
 	{
 	  _su3_multiply(lt,g_gauge_field[coord][mu],k[g_iup3d[ix][mu]]);
-	  l[ix].c0.re-=lt.c0.re;
-	  l[ix].c0.im-=lt.c0.im;
-	  l[ix].c1.re-=lt.c1.re;
-	  l[ix].c1.im-=lt.c1.im;
-	  l[ix].c2.re-=lt.c2.re;
-	  l[ix].c2.im-=lt.c2.im;
+	  l[ix].c0 -= lt.c0;
+	  l[ix].c1 -= lt.c1;
+	  l[ix].c2 -= lt.c2;
 	  _su3_inverse_multiply(lt,g_gauge_field[g_idn[coord][mu]][mu],k[g_idn3d[ix][mu]]);
-	  l[ix].c0.re-=lt.c0.re;
-	  l[ix].c0.im-=lt.c0.im;
-	  l[ix].c1.re-=lt.c1.re;
-	  l[ix].c1.im-=lt.c1.im;
-	  l[ix].c2.re-=lt.c2.re;
-	  l[ix].c2.im-=lt.c2.im;
+	  l[ix].c0 -= lt.c0;
+	  l[ix].c1 -= lt.c1;
+	  l[ix].c2 -= lt.c2;
 	}
     }
 #ifdef MPI

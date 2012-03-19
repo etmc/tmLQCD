@@ -456,13 +456,6 @@ void xchange_field(spinor * const l, const int ieo) {
   }
   MPI_Waitall(reqcount, requests, status);
 
-  //fprintf(stdout,"recv-rank=%d_",g_proc_id); // DEBUG
-  //for (ix = 0; ix < T*LX*LY/2; ix++){
-  //  fprintf(stdout,"%e:",(*(l+(VOLUME/2 + LX*LY*LZ + T*LY*LZ +T*LX*LZ)+ix)).s0.c0.re);
-  //}
-  //fprintf(stdout,"\n");
-  //fflush(stdout);
-
 #  endif
 
 

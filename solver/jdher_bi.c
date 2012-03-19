@@ -62,7 +62,7 @@
 #include "linalg/blas.h"
 #include "linalg/lapack.h"
 #include "linalg_eo.h"
-#include "complex.h"
+#include <complex.h>
 #include "solver/solver.h"
 #include "solver/gram-schmidt_bi.h"
 #include "solver/quicksort.h"
@@ -72,8 +72,8 @@
 #include <fortran.h>
 #endif
 
-#define min(a,b) ((a)<(b) ? (a) : (b))
-#define max(a,b) ((a)<(b) ? (b) : (a))
+#define min(a,b)((a)<(b) ? (a) : (b))
+#define max(a,b)((a)<(b) ? (b) : (a))
 
 
 
@@ -85,7 +85,7 @@
 static void print_status(int clvl, int it, int k, int j, int kmax, 
 			 int blksize, int actblksize,
 			 double *s, double *resnrm, int *actcorrits);
-static void sorteig(int j, double S[], complex U[], int ldu, double tau,
+static void sorteig(int j, double S[], _Complex double U[], int ldu, double tau,
 		    double dtemp[], int idx1[], int idx2[], int strategy);
 
 /* Projection routines */
@@ -98,14 +98,14 @@ void Proj_A_psi_bi(bispinor * const y, bispinor * const x);
  ****************************************************************************/
 /* static double DMONE = -1.0, DZER = 0.0, DONE = 1.0; */
 static int MONE = -1, ONE = 1;
-static complex CONE, CZERO, CMONE;
+static _Complex double CONE, CZERO, CMONE;
 
 /* Projector variables */
 
 static int p_n, p_n2, p_k, p_lda;
 static double p_theta;
-complex * p_Q_bi;
-complex * p_work_bi;
+_Complex double * p_Q_bi;
+_Complex double * p_work_bi;
 matrix_mult_bi p_A_psi_bi;
 
 /****************************************************************************
@@ -117,9 +117,9 @@ matrix_mult_bi p_A_psi_bi;
 
 #ifdef CRAY
 static char * cupl_u = "U", * cupl_c = "C", *cupl_n = "N", * cupl_a = "A", *cupl_v = "V", *cilaenv = "zhetrd", *cvu = "VU";
-_fcd fupl_u, fupl_c, fupl_a, fupl_n, fupl_v, filaenv, fvu;
+_fcd fupl_u, fupl_a, fupl_n, fupl_v, filaenv, fvu;
 #else
-static char * fupl_u = "U", * fupl_c = "C", *fupl_n = "N", * fupl_a = "A", *fupl_v = "V", *filaenv = "zhetrd", *fvu = "VU";
+static char * fupl_u = "U", *fupl_n = "N", * fupl_a = "A", *fupl_v = "V", *filaenv = "zhetrd", *fvu = "VU";
 #endif
 
 /****************************************************************************
@@ -131,11 +131,11 @@ static char * fupl_u = "U", * fupl_c = "C", *fupl_n = "N", * fupl_a = "A", *fupl
 void jdher_bi(int n, int lda, double tau, double tol, 
 	      int kmax, int jmax, int jmin, int itmax,
 	      int blksize, int blkwise, 
-	      int V0dim, complex *V0, 
+	      int V0dim, _Complex double *V0, 
 	      int solver_flag, 
 	      int linitmax, double eps_tr, double toldecay,
 	      int verbosity,
-	      int *k_conv, complex *Q, double *lambda, int *it,
+	      int *k_conv, _Complex double *Q, double *lambda, int *it,
 	      int maxmin, const int shift_mode,
 	      matrix_mult_bi A_psi){
   
@@ -151,7 +151,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
    * initialize with NULL, so we can free even unallocated ptrs */
   double *s = NULL, *resnrm = NULL, *resnrm_old = NULL, *dtemp = NULL, *rwork = NULL;
 
-  complex *V_ = NULL, *V, *Vtmp = NULL, *U = NULL, *M = NULL, *Z = NULL,
+  _Complex double *V_ = NULL, *V, *Vtmp = NULL, *U = NULL, *M = NULL, *Z = NULL,
     *Res_ = NULL, *Res,
     *eigwork = NULL, *temp1_ = NULL, *temp1;
 
@@ -160,13 +160,13 @@ void jdher_bi(int n, int lda, double tau, double tol,
     *actcorrits = NULL;
 
   /* non-allocated ptrs */
-  complex *q, *v, *u, *r = NULL;  
-  /*   complex *matdummy, *vecdummy; */
+  _Complex double *q, *v, *u, *r = NULL;  
+  /*   _Complex double *matdummy, *vecdummy; */
 
   /* scalar vars */
   double theta, alpha, it_tol;
 
-  int i, k, j, actblksize, eigworklen, found, conv, keep, n2, N = n*sizeof(complex)/sizeof(bispinor);
+  int i, k, j, actblksize, eigworklen, found, conv, keep, n2, N = n*sizeof(_Complex double)/sizeof(bispinor);
   int act, cnt, idummy, info, CntCorrIts=0, endflag=0;
 
 
@@ -233,9 +233,9 @@ void jdher_bi(int n, int lda, double tau, double tol,
   if(eps_tr < 0.) jderrorhandler(500,"");
   if(toldecay <= 1.0) jderrorhandler(501,"");
   
-  CONE.re=1.; CONE.im=0.;
-  CZERO.re=0.; CZERO.im=0.;
-  CMONE.re=-1.; CMONE.im=0.;
+  CONE = 1.;
+  CZERO = 0.;
+  CMONE = -1.;
 
   /* Get hardware-dependent values:
    * Opt size of workspace for ZHEEV is (NB+1)*j, where NB is the opt.
@@ -243,26 +243,26 @@ void jdher_bi(int n, int lda, double tau, double tol,
   eigworklen = (2 + _FT(ilaenv)(&ONE, filaenv, fvu, &jmax, &MONE, &MONE, &MONE, 6, 2)) * jmax;
 
   /* Allocating memory for matrices & vectors */ 
-  if((void*)(V_ = (complex *)malloc((lda * jmax + 4) * sizeof(complex))) == NULL) {
+  if((void*)(V_ = (_Complex double *)malloc((lda * jmax + 4) * sizeof(_Complex double))) == NULL) {
     errno = 0;
     jderrorhandler(300,"V in jdher_bi");
   }
 #if (defined SSE || defined SSE2 || defined SSE3)
-  V = (complex*)(((unsigned long int)(V_)+ALIGN_BASE)&~ALIGN_BASE);
+  V = (_Complex double*)(((unsigned long int)(V_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
   V = V_;
 #endif
-  if((void*)(U = (complex *)malloc(jmax * jmax * sizeof(complex))) == NULL) {
+  if((void*)(U = (_Complex double *)malloc(jmax * jmax * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300,"U in jdher_bi");
   }
   if((void*)(s = (double *)malloc(jmax * sizeof(double))) == NULL) {
     jderrorhandler(300,"s in jdher_bi");
   }
-  if((void*)(Res_ = (complex *)malloc((lda * blksize+4) * sizeof(complex))) == NULL) {
+  if((void*)(Res_ = (_Complex double *)malloc((lda * blksize+4) * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300,"Res in jdher_bi");
   }
 #if (defined SSE || defined SSE2 || defined SSE3)
-  Res = (complex*)(((unsigned long int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
+  Res = (_Complex double*)(((unsigned long int)(Res_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
   Res = Res_;
 #endif
@@ -272,13 +272,13 @@ void jdher_bi(int n, int lda, double tau, double tol,
   if((void*)(resnrm_old = (double *)calloc(blksize,sizeof(double))) == NULL) {
     jderrorhandler(300,"resnrm_old in jdher_bi");
   }
-  if((void*)(M = (complex *)malloc(jmax * jmax * sizeof(complex))) == NULL) {
+  if((void*)(M = (_Complex double *)malloc(jmax * jmax * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300,"M in jdher_bi");
   }
-  if((void*)(Vtmp = (complex *)malloc(jmax * jmax * sizeof(complex))) == NULL) {
+  if((void*)(Vtmp = (_Complex double *)malloc(jmax * jmax * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300,"Vtmp in jdher_bi");
   }
-  if((void*)(p_work_bi = (complex *)malloc(lda * sizeof(complex))) == NULL) {
+  if((void*)(p_work_bi = (_Complex double *)malloc(lda * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300,"p_work_bi in jdher_bi");
   }
 
@@ -304,21 +304,21 @@ void jdher_bi(int n, int lda, double tau, double tol,
     jderrorhandler(300,"actcorrits in jdher_bi");
   }
 
-  if((void*)(eigwork = (complex *)malloc(eigworklen * sizeof(complex))) == NULL) {
+  if((void*)(eigwork = (_Complex double *)malloc(eigworklen * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300,"eigwork in jdher_bi");
   }
   if((void*)(rwork = (double *)malloc(3*jmax * sizeof(double))) == NULL) {
     jderrorhandler(300,"rwork in jdher_bi");
   }
-  if((void*)(temp1_ = (complex *)malloc((lda+4) * sizeof(complex))) == NULL) {
+  if((void*)(temp1_ = (_Complex double *)malloc((lda+4) * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300,"temp1 in jdher_bi");
   }
 #if (defined SSE || defined SSE2 || defined SSE3)
-  temp1 = (complex*)(((unsigned long int)(temp1_)+ALIGN_BASE)&~ALIGN_BASE);
+  temp1 = (_Complex double*)(((unsigned long int)(temp1_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
   temp1 = temp1_;
 #endif
-  if((void*)(dtemp = (double *)malloc(lda * sizeof(complex))) == NULL) {
+  if((void*)(dtemp = (double *)malloc(lda * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300,"dtemp in jdher_bi");
   }
 
@@ -355,7 +355,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
   /* Generate interaction matrix M = V^dagger*A*V. Only the upper triangle
      is computed. */
   for (cnt = 0; cnt < j; cnt++){
-    A_psi((bispinor*) temp1, (bispinor*) (V+cnt*lda));
+    A_psi((bispinor*) temp1, (bispinor*)(V+cnt*lda));
     idummy = cnt+1;
     for(i = 0; i < idummy; i++) {
       M[cnt*jmax+i] = scalar_prod_bi((bispinor*)(V+i*lda), (bispinor*) temp1, N);
@@ -364,7 +364,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
   /* Other initializations */
   k = 0; (*it) = 0; 
   if((*k_conv) > 0) {
-    k = (*k_conv);
+    k = *k_conv;
   }
 
   actblksize = blksize; 
@@ -506,9 +506,8 @@ void jdher_bi(int n, int lda, double tau, double tol,
 
 	/* Let M become a diagonalmatrix with the Ritzvalues as entries ... */ 
 	_FT(zlaset)(fupl_u, &j, &j, &CZERO, &CZERO, M, &jmax, 1);
-	for (act = 0; act < j; act++){
-	  M[act*jmax + act].re = s[act];
-	}
+	for (act = 0; act < j; act++)
+	  M[act*jmax + act] = s[act];
 	
 	/* ... and U the Identity(jnew,jnew) */
 	_FT(zlaset)(fupl_a, &j, &j, &CZERO, &CONE, U, &jmax, 1);
@@ -578,7 +577,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
 	_FT(zlaset)(fupl_a, &j, &j, &CZERO, &CONE, U, &jmax, 1);
 	_FT(zlaset)(fupl_u, &j, &j, &CZERO, &CZERO, M, &jmax, 1);
 	for (act = 0; act < j; act++)
-	  M[act*jmax + act].re = s[act];
+	  M[act*jmax + act] = s[act];
       }
 
     } /* while(found) */    
@@ -601,8 +600,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
          orthogonality */
       v = V + j*lda;
       for (cnt = 0; cnt < n; cnt ++){ 
-	v[cnt].re = 0.;
-	v[cnt].im = 0.;
+	v[cnt] = 0.;
       }
 
       /* Adaptive accuracy and shift for the lin.solver. In case the
@@ -634,10 +632,6 @@ void jdher_bi(int n, int lda, double tau, double tol,
       /* equation and project if necessary */
       ModifiedGS_bi(r, n, k + actblksize, Q, lda);
 
-      /*       for(i=0;i<n;i++){ */
-      /* 	r[i].re*=-1.; */
-      /* 	r[i].im*=-1.; */
-      /*       } */
       g_sloppy_precision = 1;
       /* Solve the correction equation ...  */
       if (solver_flag == BICGSTAB){
@@ -677,7 +671,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
       A_psi((bispinor*) temp1, (bispinor*) v);
       idummy = j+1;
       for(i = 0; i < idummy; i++){
- 	M[j*jmax+i] = scalar_prod_bi((bispinor*) (V+i*lda), (bispinor*) temp1, N);
+ 	M[j*jmax+i] = scalar_prod_bi((bispinor*)(V+i*lda), (bispinor*) temp1, N);
       }
       /* Increasing SearchSpaceSize j */
       j ++;
@@ -833,7 +827,7 @@ static void print_status(int verbosity, int it, int k, int j, int kmax,
  *   avoid computation of zero eigenvalues.
  */
 
-static void sorteig(int j, double S[], complex U[], int ldu, double tau,
+static void sorteig(int j, double S[], _Complex double U[], int ldu, double tau,
 		    double dtemp[], int idx1[], int idx2[], int strategy){
   int i;
 
@@ -871,9 +865,9 @@ static void sorteig(int j, double S[], complex U[], int ldu, double tau,
   /* sort eigenvectors (in place) */
   for (i = 0; i < j; i ++) {
     if (i != idx1[i]) {
-      memcpy(dtemp, U+i*ldu, j*sizeof(complex));
-      memcpy(U+i*ldu, U+idx1[i]*ldu, j*sizeof(complex));
-      memcpy(U+idx1[i]*ldu, dtemp, j*sizeof(complex));
+      memcpy(dtemp, U+i*ldu, j*sizeof(_Complex double));
+      memcpy(U+i*ldu, U+idx1[i]*ldu, j*sizeof(_Complex double));
+      memcpy(U+idx1[i]*ldu, dtemp, j*sizeof(_Complex double));
       idx1[idx2[i]] = idx1[i];
       idx2[idx1[i]] = idx2[i];
     }
@@ -894,10 +888,10 @@ void Proj_A_psi_bi(bispinor * const y, bispinor * const x){
   _FT(daxpy)(&p_n2, &mtheta, (double*) x, &ONE, (double*) y, &ONE);
   /* p_work_bi = Q^dagger*y */ 
   for(i = 0; i < p_k; i++) {
-    p_work_bi[i] = scalar_prod_bi((bispinor*) (p_Q_bi+i*p_lda), (bispinor*) y, 
-				  p_n*sizeof(complex)/sizeof(bispinor));
+    p_work_bi[i] = scalar_prod_bi((bispinor*)(p_Q_bi+i*p_lda), (bispinor*) y, 
+				  p_n*sizeof(_Complex double)/sizeof(bispinor));
   }
   /* y = y - Q*p_work_bi */ 
-  _FT(zgemv)(fupl_n, &p_n, &p_k, &CMONE, p_Q_bi, &p_lda, (complex*) p_work_bi, 
-	     &ONE, &CONE, (complex*) y, &ONE, 1);
+  _FT(zgemv)(fupl_n, &p_n, &p_k, &CMONE, p_Q_bi, &p_lda, (_Complex double*) p_work_bi, 
+	     &ONE, &CONE, (_Complex double*) y, &ONE, 1);
 }
