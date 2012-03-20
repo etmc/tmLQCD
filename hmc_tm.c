@@ -184,8 +184,8 @@ int main(int argc,char *argv[]) {
     exit(-1);
   }
 
-  DUM_DERI = 6;
-  DUM_SOLVER = DUM_DERI+8;
+  DUM_DERI = 4;
+  DUM_SOLVER = DUM_DERI+1;
   DUM_MATRIX = DUM_SOLVER+6;
   if(g_running_phmc) {
     NO_OF_SPINORFIELDS = DUM_MATRIX+8;

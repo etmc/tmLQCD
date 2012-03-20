@@ -76,27 +76,27 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     }
     
     /* Invert Q_{+} Q_{-} */
-    /* X_o -> DUM_DERI+1 */
-    chrono_guess(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+    /* X_o -> w_fields[1] */
+    chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
-    mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->maxiter, mnl->forceprec, 
+    mnl->iter1 += cg_her(mnl->w_fields[1], mnl->pf, mnl->maxiter, mnl->forceprec, 
 			 g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi);
-    chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
+    chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
     
-    /* Y_o -> DUM_DERI  */
-    Qtm_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+    /* Y_o -> w_fields[0]  */
+    Qtm_minus_psi(mnl->w_fields[0], mnl->w_fields[1]);
     
     /* apply Hopping Matrix M_{eo} */
     /* to get the even sites of X_e */
-    H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EO, -1.);
+    H_eo_tm_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1.);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
+    deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf); 
     
     /* to get the even sites of Y_e */
-    H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EO, +1);
+    H_eo_tm_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf);
+    deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf);
 
   } 
   else {
@@ -110,45 +110,45 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     boundary(mnl->kappa);
     if(mnl->solver == CG) {
       /* Invert Q_{+} Q_{-} */
-      /* X -> DUM_DERI+1 */
-      chrono_guess(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+      /* X -> w_fields[1] */
+      chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
-      mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], mnl->pf, 
+      mnl->iter1 += cg_her(mnl->w_fields[1], mnl->pf, 
 			mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
 			VOLUME, &Q_pm_psi);
-      chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
+      chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
 
-      /* Y -> DUM_DERI  */
-      Q_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+      /* Y -> w_fields[0]  */
+      Q_minus_psi(mnl->w_fields[0], mnl->w_fields[1]);
       
     }
     else {
       /* Invert first Q_+ */
-      /* Y -> DUM_DERI  */
-      chrono_guess(g_spinor_field[DUM_DERI], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+      /* Y -> w_fields[0]  */
+      chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_plus_psi);
-      mnl->iter1 += bicgstab_complex(g_spinor_field[DUM_DERI], mnl->pf, 
+      mnl->iter1 += bicgstab_complex(mnl->w_fields[0], mnl->pf, 
 				     mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
 				     VOLUME,  Q_plus_psi);
-      chrono_add_solution(g_spinor_field[DUM_DERI], mnl->csg_field, mnl->csg_index_array,
+      chrono_add_solution(mnl->w_fields[0], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       
       /* Now Q_- */
-      /* X -> DUM_DERI+1 */
+      /* X -> w_fields[1] */
       g_mu = -g_mu;
-      chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], mnl->csg_field2, 
+      chrono_guess(mnl->w_fields[1], mnl->w_fields[0], mnl->csg_field2, 
 		   mnl->csg_index_array2, mnl->csg_N2, mnl->csg_n2, VOLUME/2, &Q_minus_psi);
-      mnl->iter1 += bicgstab_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], 
+      mnl->iter1 += bicgstab_complex(mnl->w_fields[1], mnl->w_fields[0], 
 				     mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
 				     VOLUME, Q_minus_psi);
-      chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field2, mnl->csg_index_array2,
+      chrono_add_solution(mnl->w_fields[1], mnl->csg_field2, mnl->csg_index_array2,
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
       g_mu = -g_mu;   
     }
     
     /* \delta Q sandwitched by Y^\dagger and X */
-    deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], hf);
+    deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf);
   }
   g_mu = g_mu1;
   boundary(g_kappa);
@@ -168,10 +168,10 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->iter1 = 0;
 
   if(mnl->even_odd_flag) {
-    random_spinor_field(g_spinor_field[2], VOLUME/2, mnl->rngrepro);
-    mnl->energy0 = square_norm(g_spinor_field[2], VOLUME/2, 1);
+    random_spinor_field(mnl->w_fields[0], VOLUME/2, mnl->rngrepro);
+    mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
-    Qtm_plus_psi(mnl->pf, g_spinor_field[2]);
+    Qtm_plus_psi(mnl->pf, mnl->w_fields[0]);
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
     if(mnl->solver != CG) {
@@ -180,10 +180,10 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
     }
   }
   else {
-    random_spinor_field(g_spinor_field[2], VOLUME, mnl->rngrepro);
-    mnl->energy0 = square_norm(g_spinor_field[2], VOLUME, 1);
+    random_spinor_field(mnl->w_fields[0], VOLUME, mnl->rngrepro);
+    mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME, 1);
 
-    Q_plus_psi(mnl->pf, g_spinor_field[2]);
+    Q_plus_psi(mnl->pf, mnl->w_fields[0]);
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
     if(mnl->solver != CG) {
@@ -212,32 +212,32 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
     if(mnl->solver == CG) {
       ITER_MAX_BCG = 0;
     }
-    chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+    chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
     g_sloppy_precision_flag = 0;
-    mnl->iter0 = bicg(g_spinor_field[2], mnl->pf, mnl->accprec, g_relative_precision_flag);
+    mnl->iter0 = bicg(mnl->w_fields[0], mnl->pf, mnl->accprec, g_relative_precision_flag);
     g_sloppy_precision_flag = save_sloppy;
     /* Compute the energy contr. from first field */
-    mnl->energy1 = square_norm(g_spinor_field[2], VOLUME/2, 1);
+    mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
   }
   else {
     if(mnl->solver == CG) {
-      chrono_guess(g_spinor_field[DUM_DERI+5], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+      chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
-      mnl->iter0 = cg_her(g_spinor_field[DUM_DERI+5], mnl->pf, 
+      mnl->iter0 = cg_her(mnl->w_fields[1], mnl->pf, 
 			  mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
 			  VOLUME, Q_pm_psi);
-      Q_minus_psi(g_spinor_field[2], g_spinor_field[DUM_DERI+5]);
+      Q_minus_psi(mnl->w_fields[0], mnl->w_fields[1]);
       /* Compute the energy contr. from first field */
-      mnl->energy1 = square_norm(g_spinor_field[2], VOLUME, 1);
+      mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1);
     }
     else {
-      chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+      chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_plus_psi);
-      mnl->iter0 += bicgstab_complex(g_spinor_field[2], mnl->pf, 
+      mnl->iter0 += bicgstab_complex(mnl->w_fields[0], mnl->pf, 
 				     mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
 				     VOLUME,  Q_plus_psi);
-      mnl->energy1 = square_norm(g_spinor_field[2], VOLUME, 1);
+      mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1);
     }
   }
   g_mu = g_mu1;

@@ -94,20 +94,20 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 			   phmc_root[2*phmc_dop_n_cheby-3-j]);
       
       /* Get the even parts of the  (j-1)th  chi_spinors */
-      H_eo_ND(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], 
+      H_eo_ND(mnl->w_fields[0], mnl->w_fields[1], 
 	      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
       
       /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
-      deriv_Sb(EO, g_spinor_field[DUM_DERI], g_chi_up_spinor_field[phmc_dop_n_cheby], hf);      /* UP */
-      deriv_Sb(EO, g_spinor_field[DUM_DERI+1], g_chi_dn_spinor_field[phmc_dop_n_cheby], hf);    /* DN */
+      deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[phmc_dop_n_cheby], hf);      /* UP */
+      deriv_Sb(EO, mnl->w_fields[1], g_chi_dn_spinor_field[phmc_dop_n_cheby], hf);    /* DN */
       
       /* Get the even parts of the  (2N-j)-th  chi_spinors */
-      H_eo_ND(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], 
+      H_eo_ND(mnl->w_fields[0], mnl->w_fields[1], 
 	      g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby], EO);
       
       /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
-      deriv_Sb(OE, g_chi_up_spinor_field[j-1], g_spinor_field[DUM_DERI], hf);
-      deriv_Sb(OE, g_chi_dn_spinor_field[j-1], g_spinor_field[DUM_DERI+1], hf);
+      deriv_Sb(OE, g_chi_up_spinor_field[j-1], mnl->w_fields[0], hf);
+      deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[1], hf);
     }
   } 
   else if(g_epsbar == 0.0) {
@@ -130,21 +130,21 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 			   g_chi_up_spinor_field[phmc_dop_n_cheby-1],
 			   phmc_root[2*phmc_dop_n_cheby-3-j]);
 
-      Qtm_minus_psi(g_spinor_field[DUM_DERI+3],g_chi_up_spinor_field[j-1]); 
+      Qtm_minus_psi(mnl->w_fields[3],g_chi_up_spinor_field[j-1]); 
 
-      H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_chi_up_spinor_field[phmc_dop_n_cheby], EO, -1.);
-      deriv_Sb(OE, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+2], hf); 
+      H_eo_tm_inv_psi(mnl->w_fields[2], g_chi_up_spinor_field[phmc_dop_n_cheby], EO, -1.);
+      deriv_Sb(OE, mnl->w_fields[3], mnl->w_fields[2], hf); 
       
-      H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], EO, 1.); 
-      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], g_chi_up_spinor_field[phmc_dop_n_cheby], hf);
+      H_eo_tm_inv_psi(mnl->w_fields[2], mnl->w_fields[3], EO, 1.); 
+      deriv_Sb(EO, mnl->w_fields[2], g_chi_up_spinor_field[phmc_dop_n_cheby], hf);
 
-      Qtm_minus_psi(g_spinor_field[DUM_DERI+3],g_chi_up_spinor_field[phmc_dop_n_cheby]); 
+      Qtm_minus_psi(mnl->w_fields[3],g_chi_up_spinor_field[phmc_dop_n_cheby]); 
 
-      H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2],g_spinor_field[DUM_DERI+3], EO, +1.);
-      deriv_Sb(OE, g_chi_up_spinor_field[j-1] , g_spinor_field[DUM_DERI+2], hf); 
+      H_eo_tm_inv_psi(mnl->w_fields[2],mnl->w_fields[3], EO, +1.);
+      deriv_Sb(OE, g_chi_up_spinor_field[j-1] , mnl->w_fields[2], hf); 
       
-      H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_chi_up_spinor_field[j-1], EO, -1.); 
-      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], hf);
+      H_eo_tm_inv_psi(mnl->w_fields[2], g_chi_up_spinor_field[j-1], EO, -1.); 
+      deriv_Sb(EO, mnl->w_fields[2], mnl->w_fields[3], hf);
     }
   }
   /*
