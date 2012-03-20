@@ -447,6 +447,7 @@ int init_ndpoly_monomial(const int id) {
   monomial * mnl = &monomial_list[id];
   int j, k, errcode;
   FILE * ifs;
+  double *phmc_darray;
   char title[100];
 
   phmc_invmaxev = 1.0;
@@ -529,7 +530,7 @@ int init_ndpoly_monomial(const int id) {
     }
     
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
-    double *phmc_darray = (double*)mnl->MDPolyRoots;
+    phmc_darray = (double*)mnl->MDPolyRoots;
     for(j = 0; j< 2 * mnl->MDPolyDegree - 2; ++j) {
       errcode = fscanf(ifs, " %d %lf %lf \n", &k, &phmc_darray[2 * j], &phmc_darray[2 * j + 1]);
     }
