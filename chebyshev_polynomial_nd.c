@@ -265,7 +265,8 @@ double cheb_eval(int M, double *c, double s){
  *****************************************************************************/
 
 
-void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs) { 
+void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
+			     const double EVMin, const double EVMax) { 
   int j;
   double temp, temp2;
   int degree_of_p = *_degree_of_p + 1;
@@ -303,13 +304,13 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs) {
 #endif
   
   
-  chebyshev_coefs(phmc_cheb_evmin, phmc_cheb_evmax, *coefs, degree_of_p, -0.5);
+  chebyshev_coefs(EVMin, EVMax, *coefs, degree_of_p, -0.5);
 
   random_spinor_field(ss,VOLUME/2, 1);
   random_spinor_field(sc,VOLUME/2, 1);
 
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)){
-    printf("NDPOLY MD Polynomial: EVmin = %e  EVmax = %e  \n", phmc_cheb_evmin, phmc_cheb_evmax);
+    printf("NDPOLY MD Polynomial: EVmin = %e  EVmax = %e  \n", EVMin, EVMax);
     printf("NDPOLY MD Polynomial: the degree was set to: %d\n", degree_of_p);
     fflush(stdout);
   }
@@ -338,12 +339,12 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs) {
   }
 
   if(g_debug_level > 1) {
-    temp = cheb_eval(degree_of_p, *coefs, phmc_cheb_evmin);
-    temp *= phmc_cheb_evmin;
-    temp *= cheb_eval(degree_of_p, *coefs, phmc_cheb_evmin);
+    temp = cheb_eval(degree_of_p, *coefs, EVMin);
+    temp *= EVMin;
+    temp *= cheb_eval(degree_of_p, *coefs, EVMin);
     temp = 0.5*fabs(temp - 1);
     if(g_proc_id == g_stdio_proc) {
-      printf("PHMC: Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", phmc_cheb_evmin, temp);
+      printf("PHMC: Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", EVMin, temp);
     }
   }
   /* RECALL THAT WE NEED AN EVEN DEGREE !!!! */

@@ -37,7 +37,7 @@
 #include "phmc.h"
 #include "monomial.h"
 
-                                         // --> in  monomial
+//                                          --> in  monomial
 double phmc_Cpol;                        // --> MDPolyLocNormConst
 double phmc_cheb_evmin, phmc_cheb_evmax; // --> EVMin, EVMax
 double phmc_invmaxev;                    // --> EVMaxInv

@@ -208,7 +208,6 @@ EXTERN int g_sf_inc_wrap_sq;
 /*************************/
 
 /* Parameters for non-degenrate case */
-EXTERN double g_acc_Ptilde;
 EXTERN double g_acc_Hfin;
 EXTERN int g_rec_ev;
 EXTERN double g_mubar, g_epsbar;

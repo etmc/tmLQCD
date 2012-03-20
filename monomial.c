@@ -115,6 +115,8 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].MaxPtildeDegree = NTILDE_CHEBYMAX;
   monomial_list[no_monomials].StildeMin = _default_stilde_min;
   monomial_list[no_monomials].StildeMax = _default_stilde_max;
+  monomial_list[no_monomials].PrecisionHfinal = _default_g_acc_Hfin;
+  monomial_list[no_monomials].PrecisionPtilde = _default_g_acc_Ptilde;
 
   monomial_list[no_monomials].initialised = 1;
   if(monomial_list[no_monomials].type == NDDETRATIO) {

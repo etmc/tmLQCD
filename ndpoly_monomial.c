@@ -50,7 +50,6 @@
 #include "ndpoly_monomial.h"
 
 extern int phmc_exact_poly;
-void ndpoly_set_global_parameter(monomial * const mnl, const int exact);
 
 /********************************************
  *
@@ -368,7 +367,7 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
 	printf("PHMC: Correction aftern %d steps: %e \n", j, Diff);
       }
 
-      if(Diff < g_acc_Hfin) {
+      if(Diff < mnl->PrecisionHfinal) {
 	if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
 	  printf("PHMC: At j = %d  PHMC Only Final Energy %e \n", j, Ener[j]);
 	}
@@ -464,7 +463,7 @@ int init_ndpoly_monomial(const int id) {
 
   /* This is the epsilon parameter */
   mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
-  
+  mnl->EVMax = 1.;
   /* In the following there is the  "sqrt"  since the value refers to 
      the hermitian Dirac operator (used in EV-computation), namely 
      S = Q Q^dag         
@@ -476,7 +475,8 @@ int init_ndpoly_monomial(const int id) {
   phmc_cheb_evmax = 1.0;
 
   /* Here we prepare the less precise MD polynomial first   */
-  degree_of_polynomial_nd(&mnl->MDPolyDegree, &mnl->MDPolyCoefs);
+  degree_of_polynomial_nd(&mnl->MDPolyDegree, &mnl->MDPolyCoefs,
+			  mnl->EVMin, mnl->EVMax);
   phmc_dop_n_cheby = mnl->MDPolyDegree;
   phmc_dop_cheby_coef = mnl->MDPolyCoefs;
   if((g_proc_id == 0) && (g_debug_level > 1)) {
@@ -495,7 +495,9 @@ int init_ndpoly_monomial(const int id) {
 
   /* End memory allocation */
   /* Here we prepare the precise polynomial Ptilde */
-  degree_of_Ptilde(&mnl->PtildeDegree, &mnl->PtildeCoefs);
+  degree_of_Ptilde(&mnl->PtildeDegree, &mnl->PtildeCoefs, 
+		   mnl->EVMin, mnl->EVMax, mnl->MDPolyDegree, 
+		   mnl->PrecisionPtilde);
   phmc_ptilde_cheby_coef = mnl->PtildeCoefs;
   phmc_ptilde_n_cheby = mnl->PtildeDegree;
 
