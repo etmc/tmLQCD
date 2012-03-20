@@ -54,8 +54,6 @@ extern phmc_vars *phmc_var_stack;
 void pushPhmcVars();
 void popPhmcVars();
 
-
-void init_phmc();
 void phmc_compute_ev(const int trajectory_counter,
 		     const double plaquette_energy);
 

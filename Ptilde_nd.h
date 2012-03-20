@@ -29,6 +29,6 @@ void Poly_tilde_ND(spinor *R_s, spinor *R_c, double *dd, int n, spinor *S_s, spi
 
 double chebtilde_eval(int M, double *dd, double s);
 
-void degree_of_Ptilde();
+void degree_of_Ptilde(int * _degree, double ** coefs);
 
 #endif

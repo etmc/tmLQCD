@@ -455,7 +455,7 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
 }
 
 
-int init_nd_poly_monomial(const int id) {
+int init_ndpoly_monomial(const int id) {
   monomial * mnl = &monomial_list[id];
   int j, k, errcode;
   FILE * ifs;
@@ -487,14 +487,15 @@ int init_nd_poly_monomial(const int id) {
   phmc_invmaxev = mnl->EVMaxInv;
   phmc_cheb_evmax = 1.0;
 
-  /* Here we prepare the less precise polynomial first   */
-  /* the routine determines a value for phmc_dop_n_cheby */
-  degree_of_polynomial_nd(mnl->MDPolyDegree);
+  /* Here we prepare the less precise MD polynomial first   */
+  degree_of_polynomial_nd(&mnl->MDPolyDegree, &mnl->MDPolyCoefs);
+  phmc_dop_n_cheby = mnl->MDPolyDegree;
+  phmc_dop_cheby_coef = mnl->MDPolyCoefs;
   if((g_proc_id == 0) && (g_debug_level > 1)) {
     printf("# monomial %s approximation interval [stilde_min, stilde_max] = [%e, %e]\n", 
 	   mnl->name, mnl->StildeMin, mnl->StildeMax);
     printf("# monomial %s degree for P = %d, epsilont = %e, normalisation = %e", 
-	   mnl->name, phmc_dop_n_cheby-1, mnl->EVMin, mnl->EVMaxInv);
+	   mnl->name, mnl->MDPolyDegree-1, mnl->EVMin, mnl->EVMaxInv);
   }
 
   /* Chi`s-spinors  memory allocation */
@@ -505,8 +506,10 @@ int init_nd_poly_monomial(const int id) {
   }
 
   /* End memory allocation */
-  /* Here we prepare the precise polynomial */
-  degree_of_Ptilde();
+  /* Here we prepare the precise polynomial Ptilde */
+  degree_of_Ptilde(&mnl->PtildeDegree, &mnl->PtildeCoefs);
+  phmc_ptilde_cheby_coef = mnl->PtildeCoefs;
+  phmc_ptilde_n_cheby = mnl->PtildeDegree;
 
   /* THIS IS THE OVERALL CONSTANT */
   /* write phmc_Cpol as the result of the simple-program files (BigC^(1/2))^1/2 
@@ -524,7 +527,7 @@ int init_nd_poly_monomial(const int id) {
     exit(6);
   } 
 
-  mnl->MDPolyRoots = calloc((2*phmc_dop_n_cheby-2),sizeof(_Complex double));
+  mnl->MDPolyRoots = calloc((2*mnl->MDPolyDegree-2),sizeof(_Complex double));
 
   if((ifs = fopen(mnl->MDPolyRootsFile, "r")) != (FILE*)NULL) {
     if (fgets(title, 100, ifs) == NULL) {
@@ -565,6 +568,12 @@ void ndpoly_set_global_parameter(monomial * const mnl) {
   phmc_cheb_evmin = mnl->EVMin;
   phmc_invmaxev = mnl->EVMaxInv;
   phmc_cheb_evmax = 1.0;
+
+  phmc_dop_n_cheby = mnl->MDPolyDegree;
+  phmc_dop_cheby_coef = mnl->MDPolyCoefs;
+
+  phmc_ptilde_cheby_coef = mnl->PtildeCoefs;
+  phmc_ptilde_n_cheby = mnl->PtildeDegree;
  
   return;
 }

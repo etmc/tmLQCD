@@ -229,7 +229,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	no_ndpoly_monomials++;
 	monomial_list[i].pf2 = __pf+no*V;
 	no++;
-	retval = init_nd_poly_monomial(i);
+	retval = init_ndpoly_monomial(i);
       }
       else if(monomial_list[i].type == NDDETRATIO) {
 	monomial_list[i].hbfunction = &dummy_heatbath;

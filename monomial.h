@@ -82,20 +82,19 @@ typedef struct {
   /* second one needed for ND monomials */
   spinor * pf, * pf2;
   /* parameters for the POLY Monomial*/
-  int MDPolyDegree;
-  double MDPolyLmin;
-  double MDPolyLmax;
+  int MDPolyDegree, MaxPtildeDegree, PtildeDegree;
+  double MDPolyLmin, MDPolyLmax;
   char MDPolyRootsFile[256];
   _Complex double *MDPolyRoots;
   spinor **MDPoly_chi_spinor_fields;
   double MDPolyLocNormConst;
   int MDPolyDetRatio;
-  int MaxPtildeDegree;
   int no_wfields;
   double PrecisionPtilde;
   double PrecisionHfinal;
   double StildeMin, StildeMax;
   double EVMin, EVMax, EVMaxInv;
+  double * MDPolyCoefs, * PtildeCoefs;
   /* chronological solver fields */
   spinor ** csg_field;
   spinor ** csg_field2;

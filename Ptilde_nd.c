@@ -266,11 +266,11 @@ double chebtilde_eval(int M, double *dd, double s){
 
 
 
-void degree_of_Ptilde() {
+void degree_of_Ptilde(int * _degree, double ** coefs) {
   int i, j;
   double temp, temp2;
   static int ini=0;
-
+  int degree;
   double sum=0.0;
 
   spinor *ss=NULL, *ss_=NULL, *sc=NULL, *sc_=NULL;
@@ -278,9 +278,9 @@ void degree_of_Ptilde() {
   spinor *aux2s=NULL, *aux2s_=NULL, *aux2c=NULL, *aux2c_=NULL;
 
   if(ini==0){
-    phmc_ptilde_cheby_coef = calloc(phmc_max_ptilde_degree, sizeof(double)); 
+    *coefs = calloc(phmc_max_ptilde_degree, sizeof(double)); 
     ini=1;
-  }   
+  }
 
 #if ( defined SSE || defined SSE2 || defined SSE3)
   ss_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
@@ -306,7 +306,7 @@ void degree_of_Ptilde() {
   aux2c=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
 #endif
 
-  Ptilde_cheb_coefs(phmc_cheb_evmin, phmc_cheb_evmax, phmc_ptilde_cheby_coef, phmc_max_ptilde_degree, -1.0); 
+  Ptilde_cheb_coefs(phmc_cheb_evmin, phmc_cheb_evmax, *coefs, phmc_max_ptilde_degree, -1.0); 
 
   if(g_proc_id == g_stdio_proc && g_debug_level > 0){
     printf("# NDPOLY Acceptance Polynomial: EVmin = %f  EVmax = %f\n", phmc_cheb_evmin, phmc_cheb_evmax);
@@ -314,12 +314,12 @@ void degree_of_Ptilde() {
     fflush(stdout);
   }
 
-  phmc_ptilde_n_cheby = 2*phmc_dop_n_cheby;
+  degree = 2*phmc_dop_n_cheby;
 
   for(i = 0; i < 100 ; i++) {
-    if (phmc_ptilde_n_cheby > phmc_max_ptilde_degree) {
+    if (degree > phmc_max_ptilde_degree) {
       fprintf(stderr, "Error: n_cheby=%d > phmc_max_ptilde_degree=%d in ptilde\n",
-              phmc_ptilde_n_cheby, phmc_max_ptilde_degree);
+              degree, phmc_max_ptilde_degree);
       fprintf(stderr, "Increase n_chebymax\n");
 #ifdef MPI
       MPI_Finalize();
@@ -328,22 +328,22 @@ void degree_of_Ptilde() {
     }
 
     sum=0;
-    for(j=phmc_ptilde_n_cheby; j<phmc_max_ptilde_degree; j++){ 
-      sum += fabs(phmc_ptilde_cheby_coef[j]);
+    for(j=degree; j<phmc_max_ptilde_degree; j++){ 
+      sum += fabs(coefs[0][j]);
     }
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)) {
-      printf("# NDPOLY Acceptance Polynomial: Sum remaining | d_n | = %e for degree=%d\n", sum, phmc_ptilde_n_cheby);
-      printf("# NDPOLY Acceptance Polynomial: coef[degree] = %e\n", phmc_ptilde_cheby_coef[phmc_ptilde_n_cheby]);
+      printf("# NDPOLY Acceptance Polynomial: Sum remaining | d_n | = %e for degree=%d\n", sum, degree);
+      printf("# NDPOLY Acceptance Polynomial: coef[degree] = %e\n", (*coefs)[degree]);
     }
     if(sum < g_acc_Ptilde) { 
-/*     if(fabs(phmc_ptilde_cheby_coef[phmc_ptilde_n_cheby]) < g_acc_Ptilde) { */
+/*     if(fabs(*coefs[degree]) < g_acc_Ptilde) { */
       if((g_proc_id == g_stdio_proc) && (g_debug_level > 1)) {
-        printf(" sum %e, coef %e\n", sum, phmc_ptilde_cheby_coef[phmc_ptilde_n_cheby]);
+        printf(" sum %e, coef %e\n", sum, (*coefs)[degree]);
       }
       break;
     }
-    phmc_ptilde_n_cheby= (int)(phmc_ptilde_n_cheby*1.2);
+    degree= (int)(degree*1.2);
   }
 
   if(g_debug_level > 0) {
@@ -352,11 +352,11 @@ void degree_of_Ptilde() {
     random_spinor_field(ss,VOLUME/2, 1);
     random_spinor_field(sc,VOLUME/2, 1);
 
-    Poly_tilde_ND(&auxs[0], &auxc[0], phmc_ptilde_cheby_coef, phmc_ptilde_n_cheby, &ss[0], &sc[0]);
+    Poly_tilde_ND(&auxs[0], &auxc[0], *coefs, degree, &ss[0], &sc[0]);
     QdaggerQ_poly(&aux2s[0], &aux2c[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &auxs[0], &auxc[0]);
     Q_Qdagger_ND(&auxs[0], &auxc[0], &aux2s[0], &aux2c[0]);
     QdaggerQ_poly(&aux2s[0], &aux2c[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &auxs[0], &auxc[0]);
-    Poly_tilde_ND(&auxs[0], &auxc[0], phmc_ptilde_cheby_coef, phmc_ptilde_n_cheby, &aux2s[0], &aux2c[0]);
+    Poly_tilde_ND(&auxs[0], &auxc[0], *coefs, degree, &aux2s[0], &aux2c[0]);
 
     diff(&aux2s[0],&auxs[0], &ss[0], VOLUME/2);
     temp = square_norm(&aux2s[0], VOLUME/2, 1) / square_norm(&ss[0], VOLUME/2, 1) / 4.0;
@@ -372,20 +372,21 @@ void degree_of_Ptilde() {
       printf("# NDPOLY Acceptance Polynomial: relative squared accuracy in components:\n UP=%e  DN=%e \n", temp, temp2);
     }
 
-    temp = chebtilde_eval(phmc_ptilde_n_cheby, phmc_ptilde_cheby_coef, phmc_cheb_evmin);
+    temp = chebtilde_eval(degree, *coefs, phmc_cheb_evmin);
     temp *= cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
     temp *= phmc_cheb_evmin;
     temp *= cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
-    temp *= chebtilde_eval(phmc_ptilde_n_cheby, phmc_ptilde_cheby_coef, phmc_cheb_evmin);
+    temp *= chebtilde_eval(degree, *coefs, phmc_cheb_evmin);
     temp = 0.5*fabs(temp - 1);
     if(g_proc_id == g_stdio_proc) {
       printf("# NDPOLY Acceptance Polynomial: Delta_IR at s=%f: | Ptilde P s_low P Ptilde - 1 |/2 = %e \n", phmc_cheb_evmin, temp);
     }
   }
   if(g_proc_id == g_stdio_proc) {
-    printf("# NDPOLY Acceptance Polynomial degree set to %d\n\n", phmc_ptilde_n_cheby);
+    printf("# NDPOLY Acceptance Polynomial degree set to %d\n\n", degree);
   }
 
+  *_degree = degree;
 #if ( defined SSE || defined SSE2 || defined SSE3)
   free(ss_);
   free(auxs_);

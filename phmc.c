@@ -37,14 +37,15 @@
 #include "phmc.h"
 #include "monomial.h"
 
-double phmc_Cpol;
-double phmc_cheb_evmin, phmc_cheb_evmax;
-double phmc_invmaxev;
-_Complex double * phmc_root;
-int phmc_dop_n_cheby;
-double * phmc_dop_cheby_coef;
-int phmc_ptilde_n_cheby;
-double * phmc_ptilde_cheby_coef;
+                                         // --> in  monomial
+double phmc_Cpol;                        // --> MDPolyLocNormConst
+double phmc_cheb_evmin, phmc_cheb_evmax; // --> EVMin, EVMax
+double phmc_invmaxev;                    // --> EVMaxInv
+_Complex double * phmc_root;             // --> MDPolyRoots
+int phmc_dop_n_cheby;                    // --> MDPolyDegree
+double * phmc_dop_cheby_coef;            // --> MDPolyCoefs
+int phmc_ptilde_n_cheby;                 // --> PtildeDegree
+double * phmc_ptilde_cheby_coef;         // --> PtildeCoefs
 int errcode;
 phmc_vars *phmc_var_stack=NULL;
 int phmc_max_ptilde_degree = NTILDE_CHEBYMAX;
@@ -113,7 +114,7 @@ void init_phmc() {
   phmc_cheb_evmax = 1.0;
 
   /* Here we prepare the less precise polynomial first */
-  degree_of_polynomial_nd(degree_of_p);
+  //degree_of_polynomial_nd(&degree_of_p);
 
   if((g_proc_id == 0) && (g_debug_level > 1)) {
     printf("PHMC: interval of approximation [stilde_min, stilde_max] = [%e, %e]\n", stilde_min, stilde_max);
@@ -130,7 +131,7 @@ void init_phmc() {
 
   /* End memory allocation */
   /* Here we prepare the precise polynomial */
-  degree_of_Ptilde();
+  //degree_of_Ptilde();
 
   /* THIS IS THE OVERALL CONSTANT */
   /* write phmc_Cpol as the result of the simple-program files (BigC^(1/2))^1/2 

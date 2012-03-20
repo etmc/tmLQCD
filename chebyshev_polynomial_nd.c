@@ -265,10 +265,11 @@ double cheb_eval(int M, double *c, double s){
  *****************************************************************************/
 
 
-void degree_of_polynomial_nd(const int degree_of_p){
+void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs) { 
   int j;
   double temp, temp2;
   static int ini=0;
+  int degree_of_p = *_degree_of_p + 1;
 
   double sum=0.0;
 
@@ -276,12 +277,10 @@ void degree_of_polynomial_nd(const int degree_of_p){
   spinor *auxs=NULL, *auxs_=NULL, *auxc=NULL, *auxc_=NULL;
   spinor *aux2s=NULL, *aux2s_=NULL, *aux2c=NULL, *aux2c_=NULL;
 
-  phmc_dop_n_cheby=degree_of_p+1;
   if(ini==0){
-    phmc_dop_cheby_coef = calloc(phmc_dop_n_cheby,sizeof(double));
+    *coefs = calloc(degree_of_p, sizeof(double));
     ini=1;
   }
-
 
 #if ( defined SSE || defined SSE2 || defined SSE3)
   ss_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
@@ -308,21 +307,21 @@ void degree_of_polynomial_nd(const int degree_of_p){
 #endif
   
   
-  chebyshev_coefs(phmc_cheb_evmin, phmc_cheb_evmax, phmc_dop_cheby_coef, phmc_dop_n_cheby, -0.5);
+  chebyshev_coefs(phmc_cheb_evmin, phmc_cheb_evmax, *coefs, degree_of_p, -0.5);
 
   random_spinor_field(ss,VOLUME/2, 1);
   random_spinor_field(sc,VOLUME/2, 1);
 
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)){
     printf("NDPOLY MD Polynomial: EVmin = %e  EVmax = %e  \n", phmc_cheb_evmin, phmc_cheb_evmax);
-    printf("NDPOLY MD Polynomial: the degree was set to: %d\n", phmc_dop_n_cheby);
+    printf("NDPOLY MD Polynomial: the degree was set to: %d\n", degree_of_p);
     fflush(stdout);
   }
 
   /* Here we check the accuracy */
-  QdaggerQ_poly(&auxs[0], &auxc[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &ss[0], &sc[0]);
+  QdaggerQ_poly(&auxs[0], &auxc[0], *coefs, degree_of_p, &ss[0], &sc[0]);
   Q_Qdagger_ND(&aux2s[0], &aux2c[0], &auxs[0], &auxc[0]);
-  QdaggerQ_poly(&auxs[0], &auxc[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &aux2s[0], &aux2c[0]);
+  QdaggerQ_poly(&auxs[0], &auxc[0], *coefs, degree_of_p, &aux2s[0], &aux2c[0]);
 
   diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);
   temp=square_norm(&aux2s[0],VOLUME/2, 1)/square_norm(&ss[0],VOLUME/2, 1)/4.0;
@@ -343,30 +342,31 @@ void degree_of_polynomial_nd(const int degree_of_p){
   }
 
   if(g_debug_level > 1) {
-    temp = cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
+    temp = cheb_eval(degree_of_p, *coefs, phmc_cheb_evmin);
     temp *= phmc_cheb_evmin;
-    temp *= cheb_eval(phmc_dop_n_cheby, phmc_dop_cheby_coef, phmc_cheb_evmin);
+    temp *= cheb_eval(degree_of_p, *coefs, phmc_cheb_evmin);
     temp = 0.5*fabs(temp - 1);
     if(g_proc_id == g_stdio_proc) {
       printf("PHMC: Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", phmc_cheb_evmin, temp);
     }
   }
   /* RECALL THAT WE NEED AN EVEN DEGREE !!!! */
+  *_degree_of_p = degree_of_p;
 
 #if ( defined SSE || defined SSE2 || defined SSE3)
-   free(ss_);   
-   free(auxs_); 
-   free(aux2s_);
-   free(sc_);   
-   free(auxc_); 
-   free(aux2c_);
+  free(ss_);   
+  free(auxs_); 
+  free(aux2s_);
+  free(sc_);   
+  free(auxc_); 
+  free(aux2c_);
 #else
-   free(ss);   
-   free(auxs); 
-   free(aux2s);
-   free(sc);   
-   free(auxc); 
-   free(aux2c);
+  free(ss);   
+  free(auxs); 
+  free(aux2s);
+  free(sc);   
+  free(auxc); 
+  free(aux2c);
 #endif
-
+  return;
 }
