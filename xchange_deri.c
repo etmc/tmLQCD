@@ -183,10 +183,9 @@ void xchange_deri(su3adj ** const df)
 void xchange_deri(su3adj ** const df)
 {
 #  ifdef MPI
-  int ix, t, y, z, x;
+  int ix,iy, t, y, z, x;
   MPI_Status status;
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
-  int iy;
   /* The edges need to come first */
 
   /* send the data to the neighbour on the left in t direction */
