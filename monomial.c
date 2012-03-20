@@ -114,6 +114,8 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].MDPolyLocNormConst = _default_MDPolyLocNormConst;
   monomial_list[no_monomials].MDPolyDetRatio = _default_MDPolyDetRatio;
   monomial_list[no_monomials].MaxPtildeDegree = NTILDE_CHEBYMAX;
+  monomial_list[no_monomials].StildeMin = _default_stilde_min;
+  monomial_list[no_monomials].StildeMax = _default_stilde_max;
 
   monomial_list[no_monomials].initialised = 1;
   if(monomial_list[no_monomials].type == NDDETRATIO) {
@@ -227,6 +229,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	no_ndpoly_monomials++;
 	monomial_list[i].pf2 = __pf+no*V;
 	no++;
+	retval = init_nd_poly_monomial(i);
       }
       else if(monomial_list[i].type == NDDETRATIO) {
 	monomial_list[i].hbfunction = &dummy_heatbath;
@@ -291,7 +294,7 @@ void free_monomials() {
 }
 
 
-int init_poly_monomial(const int V,const int id){
+int init_poly_monomial(const int V, const int id){
 
   monomial * mnl = &monomial_list[id];
   int i,j,k;

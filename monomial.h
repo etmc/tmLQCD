@@ -95,6 +95,7 @@ typedef struct {
   double PrecisionPtilde;
   double PrecisionHfinal;
   double StildeMin, StildeMax;
+  double EVMin, EVMax, EVMaxInv;
   /* chronological solver fields */
   spinor ** csg_field;
   spinor ** csg_field2;
