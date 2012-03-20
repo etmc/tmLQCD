@@ -46,7 +46,6 @@
 monomial monomial_list[max_no_monomials];
 int no_monomials = 0;
 int no_gauge_monomials = 0;
-int no_ndpoly_monomials = 0;
 int clover_trlog_monomial = 0;
 static spinor * _pf;
 spinor ** w_fields;
@@ -219,14 +218,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 	if(retval!=0) return retval;
       }
       else if(monomial_list[i].type == NDPOLY) {
-	if(no_ndpoly_monomials > 0) {
-	  fprintf(stderr, "maximal number of ndpoly monomials (1) exceeded!\n");
-	  exit(-1);
-	}
 	monomial_list[i].hbfunction = &ndpoly_heatbath;
 	monomial_list[i].accfunction = &ndpoly_acc;
 	monomial_list[i].derivativefunction = &ndpoly_derivative;
-	no_ndpoly_monomials++;
 	monomial_list[i].pf2 = __pf+no*V;
 	no++;
 	retval = init_ndpoly_monomial(i);

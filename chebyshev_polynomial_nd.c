@@ -268,7 +268,6 @@ double cheb_eval(int M, double *c, double s){
 void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs) { 
   int j;
   double temp, temp2;
-  static int ini=0;
   int degree_of_p = *_degree_of_p + 1;
 
   double sum=0.0;
@@ -277,10 +276,7 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs) {
   spinor *auxs=NULL, *auxs_=NULL, *auxc=NULL, *auxc_=NULL;
   spinor *aux2s=NULL, *aux2s_=NULL, *aux2c=NULL, *aux2c_=NULL;
 
-  if(ini==0){
-    *coefs = calloc(degree_of_p, sizeof(double));
-    ini=1;
-  }
+  *coefs = calloc(degree_of_p, sizeof(double));
 
 #if ( defined SSE || defined SSE2 || defined SSE3)
   ss_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
