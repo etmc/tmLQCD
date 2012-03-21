@@ -297,8 +297,10 @@ int read_binary_spinor_data_l(spinor * const s, LimeReader * limereader, DML_Che
   DML_SiteRank rank;
   int prec;
 
+ 
   DML_checksum_init(checksum);
-
+  bytes = limeReaderBytes(limereader);
+  
   if (bytes == (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * (n_uint64_t)sizeof(spinor)) {
     prec = 64;
     bytes = sizeof(spinor);
