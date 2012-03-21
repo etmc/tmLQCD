@@ -5551,9 +5551,9 @@ int check_xchange()
 	}
       }
     }
-    for(x0 = 0; x0 < T-1; x0++) {
+    for(x0 = 1; x0 < T-1; x0++) {
       for(x1 = 1; x1 < LX-1; x1++) {
-	for(x3 = 0; x3 < LZ-1; x3++) {
+	for(x3 = 1; x3 < LZ-1; x3++) {
 	  ix = g_ipt[x0][x1][LY-1][x3];
 	  for(mu = 0; mu < 4; mu++) {
 	    x = (double*)&df0[ix][mu];
@@ -5621,8 +5621,8 @@ int check_xchange()
 	}
       }
     }
-    for(x0 = 0; x0 < T-1; x0++) {
-      for(x3 = 0; x3 < LZ-1; x3++) {
+    for(x0 = 1; x0 < T-1; x0++) {
+      for(x3 = 1; x3 < LZ-1; x3++) {
 	ix = g_ipt[x0][LX-1][LY-1][x3];
 	for(mu = 0; mu < 4; mu++) {
 	  x = (double*)&df0[ix][mu];
@@ -5643,7 +5643,7 @@ int check_xchange()
 	for(mu = 0; mu < 4; mu++) {
 	  x = (double*)&df0[ix][mu];
 	  for(int j = 0; j < 8; j++) {
-	    if((int)x[j] != (g_nb_y_up + g_nb_z_up)) {
+	    if((int)x[j] != (g_nb_x_up + g_nb_z_up)) {
 	      printf("Exchange of derivatives is working not correctly (19)!\n");
 	      printf("%f %d %d %d\n", df0[ix][mu].d1, g_nb_x_up + g_nb_z_up, g_nb_x_up, g_nb_z_up); 
 	      printf("Aborting program!\n");
