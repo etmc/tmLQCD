@@ -61,7 +61,7 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 
 
   /* This factor 2 a missing factor 2 in trace_lambda */
-  ndpoly_set_global_parameter(mnl, phmc_exact_poly);
+  ndpoly_set_global_parameter(mnl, 0);
   mnl->forcefactor = -2.*phmc_Cpol*mnl->EVMaxInv;
 
   /* Recall:  The GAMMA_5 left of  delta M_eo  is done in  deriv_Sb !!! */
@@ -124,7 +124,7 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   double temp;
   monomial * mnl = &monomial_list[id];
 
-  ndpoly_set_global_parameter(mnl, phmc_exact_poly);
+  ndpoly_set_global_parameter(mnl, 0);
   mnl->energy0 = 0.;
   random_spinor_field(g_chi_up_spinor_field[0], VOLUME/2, mnl->rngrepro);
   mnl->energy0 = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
@@ -182,7 +182,7 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   spinor *up0, *dn0, *up1, *dn1, *dummy;
 
-  ndpoly_set_global_parameter(mnl, phmc_exact_poly);
+  ndpoly_set_global_parameter(mnl, 0);
   mnl->energy1 = 0.;
   Ener[0] = 0;
   factor[0] = 1.0;
