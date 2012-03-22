@@ -3,7 +3,7 @@
 #include "utils_exponent_from_coefficients.static"
 
 /* This is a convenience function with a fairly ugly interface */
-void cayley_hamilton_exponent_with_force_terms(su3 *expiQ, su3 *B1, su3 *B2, double *f1, double *f2, su3 const *Q)
+void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, double *f1, double *f2, su3 const *A)
 {    
   static double const fac_1_3 = 1 / 3.0;
   /* The value of f0 is never needed beyond this function, unlike f1 and f2. We make room for all three in case f1 and f2 are not requested.
@@ -16,17 +16,17 @@ void cayley_hamilton_exponent_with_force_terms(su3 *expiQ, su3 *B1, su3 *B2, dou
     f2 = f0 + 2;
   }
     
-  /* c0 = det[Q] */
-  double c0 = Q->c00 * (Q->c11 * Q->c22 - Q->c12 * Q->c21) + 
-              Q->c01 * (Q->c12 * Q->c20 - Q->c10 * Q->c22) +
-              Q->c02 * (Q->c10 * Q->c21 - Q->c11 * Q->c20)  ;
+  /* c0 = det[A] */
+  double c0 = A->c00 * (A->c11 * A->c22 - A->c12 * A->c21) + 
+              A->c01 * (A->c12 * A->c20 - A->c10 * A->c22) +
+              A->c02 * (A->c10 * A->c21 - A->c11 * A->c20)  ;
   double sign_c0 = copysign(1.0, c0);
   c0 = fabs(c0);
 
-  /* c1 = 0.5 * Tr[QQ] */
-  double c1 = 0.5 * (Q->c00 * Q->c00 + Q->c01 * Q->c10 + Q->c02 * Q->c20 +
-                     Q->c10 * Q->c01 + Q->c11 * Q->c11 + Q->c12 * Q->c21 +
-                     Q->c20 * Q->c02 + Q->c21 * Q->c12 + Q->c22 * Q->c22  );
+  /* c1 = 0.5 * Tr[AA] */
+  double c1 = 0.5 * (A->c00 * A->c00 + A->c01 * A->c10 + A->c02 * A->c20 +
+                     A->c10 * A->c01 + A->c11 * A->c11 + A->c12 * A->c21 +
+                     A->c20 * A->c02 + A->c21 * A->c12 + A->c22 * A->c22  );
 
   double c0max = 2.0 * pow(fac_1_3 * c1, 1.5);
   double theta_3 = fac_1_3 * acos(c0 / c0max); 
@@ -55,7 +55,7 @@ void cayley_hamilton_exponent_with_force_terms(su3 *expiQ, su3 *B1, su3 *B2, dou
   *f1 = sign_c0 * divisor * (2 * u * cexp(sign_c0 * 2 * I * u) - cexp(-sign_c0 * I * u) * (2 * u * cos(w) - sign_c0 * I * (3 * u * u -  w * w) * xi0));
   *f2 =  divisor * (cexp(2 * sign_c0 * I * u) - cexp(-sign_c0 * I * u) * (cos(w) + 3 * sign_c0 * I * u * xi0));
   
-  exponent_from_coefficients(expiQ,  *f0, *f1, *f2, Q);
+  exponent_from_coefficients(expA,  *f0, *f1, *f2, A);
 
   /* To also provide a replacement for plain su3_expo, we add a check on a request for B1 and B2 calculation. */
   if (!B1)
@@ -67,11 +67,11 @@ void cayley_hamilton_exponent_with_force_terms(su3 *expiQ, su3 *B1, su3 *B2, dou
   double bn1 = bdiv * (2 * u * r11 + (3 * u * u - w * w) * r21 - 2 * (15 * u * u + w * w) * *f1);
   double bn2 = bdiv * (2 * u * r12 + (3 * u * u - w * w) * r22 - 2 * (15 * u * u + w * w) * *f2);
   
-  exponent_from_coefficients(B1,    bn0, bn1, bn2, Q);
+  exponent_from_coefficients(B1,    bn0, bn1, bn2, A);
   
   bn0 = bdiv * (r10 - 3 * u * r20 - 24 * u * *f0);
   bn1 = bdiv * (r11 - 3 * u * r21 - 24 * u * *f1);
   bn2 = bdiv * (r12 - 3 * u * r22 - 24 * u * *f2);
   
-  exponent_from_coefficients(B2,    bn0, bn1, bn2, Q);
+  exponent_from_coefficients(B2,    bn0, bn1, bn2, A);
 }
