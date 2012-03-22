@@ -1,6 +1,6 @@
 #include "utils.ih"
 
-void project_antiherm(su3 *in)
+void project_traceless_antiherm(su3 *in)
 {
   static const double fac_3 = 1.00 / 3.00;
   double tr_in = fac_3 * (cimag(in->c00) + cimag(in->c11) + cimag(in->c22));

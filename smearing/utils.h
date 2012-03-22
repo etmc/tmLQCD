@@ -10,8 +10,7 @@
    the mental mapping all the time. */
 
 void generic_staples(su3 *out, unsigned int x, unsigned int mu, gauge_field_t in);
-void project_antiherm(su3 *in);
-void project_herm(su3 *in);
+void project_traceless_antiherm(su3 *in);
 void reunitarize(su3 *in);
 
 inline void cayley_hamilton_exponent(su3 *expiQ, su3 const *Q);

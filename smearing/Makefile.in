@@ -45,7 +45,7 @@ libsmear_TARGETS = 	ape_ape_smear \
 			utils_generic_staples \
 			utils_print_config_to_screen \
 			utils_print_su3 \
-			utils_project_antiherm \
+			utils_project_traceless_antiherm \
 			utils_reunitarize
 
 libsmear_OBJECTS = $(addsuffix .o, ${libsmear_TARGETS})
