@@ -1,0 +1,9 @@
+TAGS
+autom4te.cache/
+configure
+git_hash.h
+read_input.c
+*.d
+*.o
+Makefile
+config.log
