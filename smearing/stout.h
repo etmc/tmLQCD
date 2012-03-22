@@ -14,10 +14,15 @@
 
 typedef struct
 {
-  su3    Q;
-  su3    expiQ;
+  su3    A;
   su3    B1;
   su3    B2;
+  
+  /* Sigma and Z will be needed in the force modification calculation,
+     but we include that 'scratch' space here already. */
+  su3    Sigma;
+  su3    Z;
+  
   double f1;
   double f2;
 } stout_notes_t;

@@ -1,0 +1,43 @@
+static void gauge_field_t construct_intermediates(stout_notes_tuple *trace, gauge_field_t const V, gauge_field_t const U, gauge_field_t const smeared_force)
+{
+  _Complex double mat_trace;
+  su3 t1;
+  su3 t2;
+  
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int mu = 0; mu < 4; ++mu)
+    {
+      /* Construct the BMW Sigma (V^\dagger * \frac{\partial S}{\partial V} */
+      _su3d_times_su3(trace[x][mu].Sigma, V.field[x][mu], smeared_force.field[x][mu]);
+      
+      /* t2 == Tr[Sigma * B2 * U] * A */
+      _su3_times_su3(t1, trace[x][mu].sigma, trace[x][mu].B2);
+      _trace_su3_times_su3(mat_trace, t1, U.field[x][mu]);
+      _complex_times_su3(t2, mat_trace, trace[x][mu].A);
+
+      /* Z == ( Tr[Sigma * B1 * U] + Tr[Sigma * B2 * U] * A ) * A */
+      _su3_times_su3(t1, trace[x][mu].sigma, trace[x][mu].B1);
+      _trace_su3_times_su3(mat_trace, t1, U.field[x][mu]);
+      _su3_add_equals_complex_identity(t2, mat_trace);
+      _su3_times_su3(trace[x][mu].Z, t2, trace[x][mu].A);
+
+      /* Z == ( Tr[Sigma * B1 * U] + Tr[Sigma * B2 * U] * A ) * A  + f_1 * U * Sigma */
+      _su3_times_su3(t1, U.field[x][mu], trace[x][mu].sigma);
+      _complex_times_su3(t2, trace[x][mu].f1, t1);
+      _su3_plus_su3(trace[x][mu].Z, t2, trace[x][mu].Z);
+
+      /* Z == ( Tr[Sigma * B1 * U] + Tr[Sigma * B2 * U] * A ) * A  + f_1 * U * Sigma + f2 * A * U * Sigma */
+      _su3_times_su3(t2, trace[x][mu].A, t1);
+      _complex_times_su3(t2, trace[x][mu].f2, t2);
+      _su3_plus_su3(trace[x][mu].Z, t2, trace[x][mu].Z);
+
+      /* t1 == ( Tr[Sigma * B1 * U] + Tr[Sigma * B2 * U] * A ) * A  + f_1 * U * Sigma + f2 * A * U * Sigma + f2 * U * Sigma * A* */
+      _su3_times_su3(t2, t1, trace[x][mu].A);
+      _complex_times_su3(t2, trace[x][mu].f2, t2);
+      _su3_plus_su3(t1, t2, trace[x][mu].Z);
+
+      /* Z = U^\dagger * P_TA(t1) == Z */
+      project_traceless_antiherm(&t1);
+      _su3d_times_su3(trace[x][mu].Z, U.field[x][mu], t1);
+    }
+}
