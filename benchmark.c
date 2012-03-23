@@ -42,6 +42,9 @@
 #  include <io/gauge.h>
 # endif
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "su3.h"
 #include "su3adj.h"
 #include "ranlxd.h"
@@ -130,6 +133,13 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Could not find input file: benchmark.input\nAborting...\n");
     exit(-1);
   }
+
+#ifdef OMP
+  if(omp_num_threads > 0)
+  {
+    omp_set_num_threads(omp_num_threads);
+  }
+#endif
 
   tmlqcd_mpi_init(argc, argv);
   
