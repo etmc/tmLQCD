@@ -21,7 +21,12 @@ AC_C_INLINE
 AC_C_RESTRICT
 AC_F77_LIBRARY_LDFLAGS
 LIBS="$LIBS $FLIBS -lm"
+
 AC_PROG_LEX
+if ["$LEX" != "lex" || "$LEX" != "flex"]; then
+  AC_MSG_ERROR([(F)LEX is required for building read_input.c. Please install it, delete config.log and run configure again.])
+fi
+
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
