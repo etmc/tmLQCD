@@ -827,7 +827,7 @@ if test ! -e tests/regressions; then
 fi
 
 
-LIBS="-lhmc -lsolver -llinalg -lhmc -lio $LIBS"
+LIBS="-lhmc -lsolver -llinalg -lhmc -lio -lsmearing -lbuffers $LIBS"
 AUTOCONF=autoconf
 
 for i in $USESUBDIRS
