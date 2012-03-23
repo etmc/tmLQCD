@@ -368,7 +368,11 @@ void Q_pm_psi(spinor * const l, spinor * const k)
 void Q_pm_psi_prec(spinor * const l, spinor * const k)
 {
   spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
+#ifndef OMP
   static _Complex double alpha= -1.0;
+#else
+  _Complex double alpha=-1.0;
+#endif
 
   if(g_prec_sequence_d_dagger_d[0]!=0.0)
   {
@@ -495,7 +499,11 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
   double sign=-1.; 
   spinor *r;
 #if (!defined SSE2 && !defined SSE3 && !defined BGL3)
+#  ifndef OMP
   static su3_vector phi1;
+#  else
+  su3_vector phi1;
+#  endif
 #endif
   double ALIGN nrm = 1./(1.+g_mu*g_mu);
 #if (defined BGL3 && defined XLC)
@@ -637,7 +645,11 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
   int ix;
   double sign = 1.; 
   spinor *r;
+#ifndef OMP
   static su3_vector phi1;
+#else
+  su3_vector phi1;
+#endif
 
 #if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
@@ -836,9 +848,17 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k,
   int ix;
   double sign=1.;
   spinor *r, *s, *t;
+#ifndef OMP
   static su3_vector phi1;
+#else
+  su3_vector phi1;
+#endif
 #if (!defined SSE22 && !defined SSE32)
+#  ifndef OMP
   static su3_vector  phi2, phi3, phi4;
+#  else
+  su3_vector phi2, phi3, phi4;
+#  endif
 #endif
 
   if(_sign < 0.){
@@ -905,7 +925,11 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
   double sign=1.;
   spinor *r, *s, *t;
 #if (!defined SSE2 && !defined SSE3 && !defined BGL3)
+#  ifndef OMP
   static su3_vector  phi1, phi2, phi3, phi4;
+#  else
+  su3_vector phi1, phi2, phi3, phi4;
+#  endif
 #endif
 #if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
