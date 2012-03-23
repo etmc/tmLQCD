@@ -20,6 +20,9 @@
 /* Compile with MPI support */
 #undef MPI
 
+/* Compile with OpenMP support */
+#undef OMP
+
 /* Compile with FFTW support */
 #undef HAVE_FFTW
 
