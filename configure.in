@@ -128,8 +128,8 @@ if test $enable_omp = yes; then
   AC_OPENMP
 # -- AC_OPENMP provides a compiler-dependent OPENMP_CFLAGS so we can set it here
   CFLAGS="$CFLAGS $OPENMP_CFLAGS"
-  CPPFLAGS="$CFLAGS $OPENMP_CFLAGS"
-  LDFLAGS="$CFLAGS $OPENMP_CFLAGS"
+  CPPFLAGS="$CPPFLAGS $OPENMP_CFLAGS"
+  LDFLAGS="$LDFLAGS $OPENMP_CFLAGS"
 else
   AC_MSG_RESULT(no)
 fi
