@@ -494,6 +494,10 @@ void H_eo_tm_inv_psi(spinor * const l, spinor * const k,
  **********************************************/
 
 void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   _Complex double ALIGN z,w;
   int ix;
   double sign=-1.; 
@@ -527,6 +531,9 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
   __alignx(16,l);
 #endif
   /************ loop over all lattice sites ************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(ix = 0; ix < N; ix++){
     r=l + ix;
     /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
@@ -574,9 +581,18 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
     _vector_assign(r->s3, phi1);
 #endif
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 }
 
 void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double _sign, const int N){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   _Complex double z,w;
   int ix;
   double sign=-1.; 
@@ -599,6 +615,9 @@ void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double 
   __alignx(16,k);
 #endif
   /************ loop over all lattice sites ************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(ix = 0; ix < N; ix++){
     r=k+ix;
     s=l+ix;
@@ -638,9 +657,17 @@ void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double 
     _complex_times_vector(s->s3, w, r->s3);
 #endif
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 void mul_one_pm_imu(spinor * const l, const double _sign){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   _Complex double z,w;
   int ix;
   double sign = 1.; 
@@ -666,6 +693,9 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
   __alignx(16,l);
 #endif
   /************ loop over all lattice sites ************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(ix = 0; ix < (VOLUME/2); ix++){
     r=l+ix;
     /* Multiply the spinorfield with 1+imu\gamma_5 */
@@ -707,9 +737,18 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
     _vector_assign(r->s3, phi1);
 #endif
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 }
 
 void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sign, const int N){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   _Complex double z,w;
   int ix;
   double sign = 1.; 
@@ -730,6 +769,9 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
   __alignx(16,k);
 #endif
   /************ loop over all lattice sites ************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(ix = 0; ix < N; ix++){
     s=l+ix;
     r=k+ix;
@@ -770,10 +812,17 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
     _complex_times_vector(s->s3, w, r->s3);
 #endif
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k, 
 				   spinor * const j){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   spinor *r, *s, *t;
 #if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
@@ -786,6 +835,9 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
   __alignx(16,j);
 #endif
   /************ loop over all lattice sites ************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(int ix = 0; ix < (VOLUME/2); ++ix)
   {
     r = k+ix;
@@ -839,11 +891,19 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
     _vector_sub(t->s3, s->s3, r->s3);  
 #endif
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 
 void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k, 
 				   spinor * const j, const double _sign){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   _Complex double z,w;
   int ix;
   double sign=1.;
@@ -874,6 +934,8 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k,
   __alignx(16,j);
 #endif
   /************ loop over all lattice sites ************/
+
+#pragma omp for
   for(ix = 0; ix < (VOLUME/2); ix++){
     r = k+ix;
     s = j+ix;
@@ -916,10 +978,18 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k,
     _vector_sub(t->s3, s->s3, phi4);
 #endif
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k, 
 			    spinor * const j, const double _sign, const int N){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   _Complex double z,w;
   int ix;
   double sign=1.;
@@ -948,6 +1018,9 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
   __alignx(16,j);
 #endif
   /************ loop over all lattice sites ************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(ix = 0; ix < N; ix++){
     r = k+ix;
     s = j+ix;
@@ -1010,5 +1083,9 @@ void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
     _vector_sub(t->s3, phi4, s->s3);
 #endif
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
