@@ -27,7 +27,7 @@
 #include "assign_mul_add_r.h"
 
 
-#if defined SSE2
+#if ( defined SSE2 || defined SSE3 )
 /* k input , l output*/
 void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const int N) {
 
