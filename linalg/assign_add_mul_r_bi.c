@@ -40,7 +40,7 @@
 #include "assign_add_mul_r_bi.h"
 
 
-#if defined SSE2
+#if ( defined SSE2 || defined SSE3 )
 /*  k input, l output */
 void assign_add_mul_r_bi(bispinor * const P, bispinor * const Q, const double c, const int N) {
   
