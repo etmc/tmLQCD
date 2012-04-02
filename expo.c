@@ -120,7 +120,7 @@ su3 exposu3_check(su3adj p, int im) {
 su3 restoresu3(su3 u)
 {
   static su3 vr;
-  static double n1,n2;
+  static double n0,n1;
 
   /* normalize rows 1 and 2 */
   n0 = 1.0 / sqrt(conj(u.c00) * u.c00 + conj(u.c01) * u.c01 + conj(u.c02) * u.c02);
