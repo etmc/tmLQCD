@@ -14,6 +14,9 @@
 /* Define to 1 if you have the `lemon' library (-llemon). */
 #undef HAVE_LIBLEMON
 
+/* 1 if clock_gettime is available for use in benchmark */
+#undef HAVE_CLOCK_GETTIME
+
 /* Compile with MPI support */
 #undef MPI
 

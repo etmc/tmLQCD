@@ -256,13 +256,20 @@ fi
 dnl for the case of other configure scripts
 dnl AC_CONFIG_SUBDIRS( rng )
 
+dnl check for clock_gettime and set correct library flag if one is required
+AC_CHECK_FUNCS(clock_gettime, [
+  AC_DEFINE(HAVE_CLOCK_GETTIME, 1)], [
+    AC_CHECK_LIB(rt, clock_gettime, [
+    AC_DEFINE(HAVE_CLOCK_GETTIME, 1)
+    LIBS="$LIBS -lrt"]) ])
+
 dnl Checks for lapack and defines proper name mangling scheme for
 dnl linking with f77 code
 AC_F77_FUNC(zheev)
 if test "$zheev" = "zheev"; then
   AC_DEFINE(NOF77_,1,Fortran has no extra _)
 fi
-AC_SEARCH_LIBS([$zheev],[], [], [AC_MSG_ERROR([Cannot find lapack])])
+AC_SEARCH_LIBS([$zheev],[lapack], [], [AC_MSG_ERROR([Cannot find lapack])])
 
 dnl Checks for header files.
 AC_HEADER_STDC
