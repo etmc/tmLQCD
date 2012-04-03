@@ -81,45 +81,25 @@
 #  define SLICE ((LY*LZ*T/2) + (LX*LZ*T/2) + (LX*LY*T/2))
 #endif
 
-#if (defined BGL && !defined BGP)
-static double clockspeed=1.0e-6/700.0;
-
-double bgl_wtime() {
-  return ( rts_get_timebase() * clockspeed );
-}
-#else
-# ifdef MPI
-double bgl_wtime() { return(MPI_Wtime()); }
-# else
-double bgl_wtime() { return(0); }
-# endif
-#endif
-
 int check_xchange();
 
 double gettime(void) {
   double t;
-#if defined BGL
-  t = bgl_wtime();
-#elif (defined MPI && !defined BGL)
+#if (defined BGL && !defined BGP)
+  const double clockspeed=1.0e-6/700.0;
+  t = rts_get_timebase() * clockspeed;
+#elif defined MPI
   t = MPI_Wtime();
-#elif HAVE_CLOCK_GETTIME
+  /* clock_gettime is detected on BGL/BGP but it is an unsupported system call so we can't use it! */
+#elif (defined HAVE_CLOCK_GETTIME && !defined BGL)
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC,&ts);
   t = ts.tv_sec + 1.0e-9*ts.tv_nsec;
 #else
-#  ifdef OMP
-  /* if we are using a multithreaded setup, the processor will do (roughly) a factor NUM_THREADS
-   * more clock ticks per second than with a single thread */
-  double n = (double)omp_num_threads;
-#  else
-  double n = 1.0;
-#  endif
-  t = (double)clock()/(CLOCKS_PER_SEC*n);
+  t = (double)clock()/(CLOCKS_PER_SEC);
 #endif
   return t;
 }
- 
 
 
 int main(int argc,char *argv[])
