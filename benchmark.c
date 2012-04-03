@@ -97,6 +97,31 @@ double bgl_wtime() { return(0); }
 
 int check_xchange();
 
+double gettime(void) {
+  double t;
+#if defined BGL
+  t = bgl_wtime();
+#elif (defined MPI && !defined BGL)
+  t = MPI_Wtime();
+#elif HAVE_CLOCK_GETTIME
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC,&ts);
+  t = ts.tv_sec + 1.0e-9*ts.tv_nsec;
+#else
+#  ifdef OMP
+  /* if we are using a multithreaded setup, the processor will do (roughly) a factor NUM_THREADS
+   * more clock ticks per second than with a single thread */
+  double n = (double)omp_num_threads;
+#  else
+  double n = 1.0;
+#  endif
+  t = (double)clock()/(CLOCKS_PER_SEC*n);
+#endif
+  return t;
+}
+ 
+
+
 int main(int argc,char *argv[])
 {
   int j,j_max,k,k_max = 1;
@@ -264,11 +289,7 @@ int main(int argc,char *argv[])
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
-#if defined BGL
-      t1 = bgl_wtime();
-#else
-      t1=(double)clock();
-#endif
+      t1 = gettime();
       antioptaway=0.0;
       for (j=0;j<j_max;j++) {
         for (k=0;k<k_max;k++) {
@@ -277,13 +298,8 @@ int main(int argc,char *argv[])
           antioptaway+=creal(g_spinor_field[2*k_max][0].s0.c0);
         }
       }
-#if defined BGL
-      t2 = bgl_wtime();
-      dt = t2 - t1;
-#else
-      t2=(double)clock();
-      dt=(t2-t1)/((double)(CLOCKS_PER_SEC));
-#endif
+      t2 = gettime();
+      dt = t2-t1;
 #ifdef MPI
       MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
@@ -313,11 +329,7 @@ int main(int argc,char *argv[])
     
 #ifdef MPI
     /* isolated computation */
-#if defined BGL
-    t1 = bgl_wtime();
-#else
-    t1=(double)clock();
-#endif
+    t1 = gettime();
     antioptaway=0.0;
     for (j=0;j<j_max;j++) {
       for (k=0;k<k_max;k++) {
@@ -326,13 +338,8 @@ int main(int argc,char *argv[])
         antioptaway += creal(g_spinor_field[2*k_max][0].s0.c0);
       }
     }
-#if defined BGL
-    t2 = bgl_wtime();
-    dt2 = t2 - t1;
-#else
-    t2=(double)clock();
-    dt2=(t2-t1)/((double)(CLOCKS_PER_SEC));
-#endif
+    t2 = gettime();
+    dt2 = t2-t1;
     /* compute the bandwidth */
     dt=dts-dt2;
     MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -372,24 +379,15 @@ int main(int argc,char *argv[])
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
-#if defined BGL
-      t1 = bgl_wtime();
-#else
-      t1=(double)clock();
-#endif
+      t1 = gettime();
       for (j=0;j<j_max;j++) {
         for (k=0;k<k_max;k++) {
           D_psi(g_spinor_field[k+k_max], g_spinor_field[k]);
           antioptaway+=creal(g_spinor_field[k+k_max][0].s0.c0);
         }
       }
-#if defined BGL
-      t2 = bgl_wtime();
-      dt = t2 - t1;
-#else
-      t2=(double)clock();
-      dt=(t2-t1)/((double)(CLOCKS_PER_SEC));
-#endif
+      t2 = gettime();
+      dt=t2-t1;
 #ifdef MPI
       MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
