@@ -323,7 +323,11 @@ int main(int argc,char *argv[])
     if(g_proc_id==0) {
       printf("# The following result is just to make sure that the calculation is not optimized away: %e\n", antioptaway);
       printf("# Total compute time %e sec, variance of the time %e sec. (%d iterations).\n", sdt, sqdt, j_max);
-      printf("# Communication switched on:\n# (%d Mflops [%d bit arithmetic])\n\n", (int)(1320.0f/sdt),(int)sizeof(spinor)/3);
+      printf("# Communication switched on:\n# (%d Mflops [%d bit arithmetic])\n", (int)(1320.0f/sdt),(int)sizeof(spinor)/3);
+#ifdef OMP
+      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1320.0f/(omp_num_threads*sdt)));
+#endif
+      printf("\n");
       fflush(stdout);
     }
     
@@ -349,7 +353,11 @@ int main(int argc,char *argv[])
     dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
     if(g_proc_id==0) {
       printf("# The following result is printed just to make sure that the calculation is not optimized away: %e\n",antioptaway);
-      printf("# Communication switched off: \n# (%d Mflops [%d bit arithmetic])\n\n", (int)(1320.0f/dt),(int)sizeof(spinor)/3);
+      printf("# Communication switched off: \n# (%d Mflops [%d bit arithmetic])\n", (int)(1320.0f/dt),(int)sizeof(spinor)/3);
+#ifdef OMP
+      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1320.0f/(omp_num_threads*dt)));
+#endif
+      printf("\n"); 
       fflush(stdout);
     }
     sdt=sdt/((double)k_max);
@@ -411,7 +419,11 @@ int main(int argc,char *argv[])
     if(g_proc_id==0) {
       printf("# The following result is just to make sure that the calculation is not optimized away: %e\n", antioptaway);
       printf("# Total compute time %e sec, variance of the time %e sec. (%d iterations).\n", sdt, sqdt, j_max);
-      printf("\n# (%d Mflops [%d bit arithmetic])\n\n", (int)(1392.0f/sdt),(int)sizeof(spinor)/3);
+      printf("\n# (%d Mflops [%d bit arithmetic])\n", (int)(1392.0f/sdt),(int)sizeof(spinor)/3);
+#ifdef OMP
+      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1320.0f/(omp_num_threads*sdt)));
+#endif
+      printf("\n"); 
       fflush(stdout);
     }
   }
