@@ -257,11 +257,17 @@ dnl for the case of other configure scripts
 dnl AC_CONFIG_SUBDIRS( rng )
 
 dnl check for clock_gettime and set correct library flag if one is required
-AC_CHECK_FUNCS(clock_gettime, [
-  AC_DEFINE(HAVE_CLOCK_GETTIME, 1)], [
+dnl (as done by AC_CHECK_LIB)
+AC_CHECK_FUNCS(clock_gettime, [], [
     AC_CHECK_LIB(rt, clock_gettime, [
-    AC_DEFINE(HAVE_CLOCK_GETTIME, 1)
-    LIBS="$LIBS -lrt"]) ])
+    AC_DEFINE(HAVE_CLOCK_GETTIME, 1)]) ])
+
+dnl with glibc and c99 mode the timespec required for clock_gettime is only
+dnl available in POSIX 199309L compatibility mode when clock_gettime is in librt
+if test "$ac_cv_lib_rt_clock_gettime" == "yes"; then
+  CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=199309L"
+  AC_MSG_NOTICE([Instructing the compiler to use POSIX 199309L])
+fi
 
 dnl Checks for lapack and defines proper name mangling scheme for
 dnl linking with f77 code
