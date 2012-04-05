@@ -281,7 +281,7 @@ AC_CHECK_FUNCS(clock_gettime, [], [
 
 dnl with glibc and c99 mode the timespec required for clock_gettime is only
 dnl available in POSIX 199309L compatibility mode when clock_gettime is in librt
-if test "$ac_cv_lib_rt_clock_gettime" == "yes"; then
+if test "$ac_cv_lib_rt_clock_gettime" = "yes"; then
   CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=199309L"
   AC_MSG_NOTICE([Instructing the compiler to use POSIX 199309L])
 fi
@@ -487,6 +487,13 @@ XLCGREP=`$CC -V 2>&1 | grep -i xlc`
 if test "$XLCGREP" != ""; then
   XLC="yes"
   AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
+<<<<<<< HEAD
+=======
+dnl if AC_OPENMP did not run (old autoconf f.ex.) , this is required  
+  if "$enable_omp" = "yes"; then
+    CFLAGS="$CFLAGS -qsmp=omp"
+  fi
+>>>>>>> c8ad4e1... replace several instances of == with = in configure.in
 fi
 PGCC=`$CC -V 2>&1 | grep pgcc`
 ICC=`$CC -V 2>&1 | grep -i intel`
