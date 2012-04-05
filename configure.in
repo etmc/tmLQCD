@@ -490,7 +490,7 @@ if test "$XLCGREP" != ""; then
 <<<<<<< HEAD
 =======
 dnl if AC_OPENMP did not run (old autoconf f.ex.) , this is required  
-  if "$enable_omp" = "yes"; then
+  if test "$enable_omp" = "yes"; then
     CFLAGS="$CFLAGS -qsmp=omp"
   fi
 >>>>>>> c8ad4e1... replace several instances of == with = in configure.in
