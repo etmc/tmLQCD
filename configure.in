@@ -374,8 +374,8 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
   AC_MSG_CHECKING(whether we want to use P4 instructions)
   AC_ARG_ENABLE(p4,
-    AS_HELP_STRING([--enable-p4],[enable use of P4 instructions [default=yes]]),
-    enable_p4=$enableval, enable_p4=yes)
+    AS_HELP_STRING([--enable-p4],[enable use of P4 instructions [default=no]]),
+    enable_p4=$enableval, enable_p4=no)
   if test $enable_p4 = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(P4,1,Use Pentium4 instructions)
@@ -416,8 +416,8 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
 
   AC_MSG_CHECKING(whether we want to use SSE2 instructions)
   AC_ARG_ENABLE(sse2,
-    AS_HELP_STRING([--enable-sse2], [enable use of SSE2 instructions [default=yes]]),
-    enable_sse2=$enableval, enable_sse2=yes)
+    AS_HELP_STRING([--enable-sse2], [enable use of SSE2 instructions [default=no]]),
+    enable_sse2=$enableval, enable_sse2=no)
   if test $enable_sse2 = yes; then
     AC_MSG_RESULT(yes)
     if test $withalign = auto; then
@@ -457,8 +457,8 @@ fi
 
 AC_MSG_CHECKING(whether we want to use gprof as profiler)
 AC_ARG_WITH(gprof,
-  AS_HELP_STRING([--with-gprof], [use of gprof profiler [default=yes]]),
-  enable_gprof=$withval, enable_gprof=yes)
+  AS_HELP_STRING([--with-gprof], [use of gprof profiler [default=no]]),
+  enable_gprof=$withval, enable_gprof=no)
 if test $enable_gprof = yes; then
   AC_MSG_RESULT(yes)
     if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
