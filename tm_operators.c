@@ -934,8 +934,9 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k,
   __alignx(16,j);
 #endif
   /************ loop over all lattice sites ************/
-
+#ifdef OMP
 #pragma omp for
+#endif
   for(ix = 0; ix < (VOLUME/2); ix++){
     r = k+ix;
     s = j+ix;
