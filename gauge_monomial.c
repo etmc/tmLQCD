@@ -45,6 +45,7 @@
 
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
+
 #ifdef OMP
 #define static
 #pragma omp parallel
