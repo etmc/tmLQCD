@@ -400,11 +400,17 @@ void clover(const int ieo,
 void assign_mul_one_sw_pm_imu(const int ieo, 
 			      spinor * const k, spinor * const l,
 			      const double mu) {
+#ifdef OMP
+#pragma omp parallel
+  {
+  su3_vector chi, psi1, psi2;
+#else
+  static su3_vector chi, psi1, psi2;
+#endif
   int ix;
   int ioff, icx;
   su3 *w1, *w2, *w3;
   spinor *r, *s;
-  static su3_vector chi, psi1, psi2;
   
   if(ieo == 0) {
     ioff = 0;
@@ -413,6 +419,9 @@ void assign_mul_one_sw_pm_imu(const int ieo,
     ioff = (VOLUME+RAND)/2;
   }
   /************************ loop over all lattice sites *************************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     ix = g_eo2lexic[icx];
     
@@ -455,6 +464,9 @@ void assign_mul_one_sw_pm_imu(const int ieo,
     _vector_assign((*r).s2, psi1);
     _vector_assign((*r).s3, psi2);
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
