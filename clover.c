@@ -173,16 +173,27 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
  **********************************************************/
 
 void clover_inv(const int ieo, spinor * const l, const double mu) {
+#ifdef OMP
+#pragma omp parallel
+  {
+  su3_vector psi, chi, phi1, phi3;
+  int icy;
+#else
+  static su3_vector psi, chi, phi1, phi3;
+#endif
   int ioff = 0;
   su3 *w1, *w2, *w3, *w4;
   spinor *rn;
-  static su3_vector psi, chi, phi1, phi3;
 
   if(mu < 0) ioff = VOLUME/2;
   /************************ loop over all lattice sites *************************/
-
+#ifdef OMP
+#pragma omp for
+  for(int icx = 0; icx < (VOLUME/2); icx++) {
+    icy = ioff + icx;
+#else
   for(int icx = 0, icy = ioff; icx < (VOLUME/2); icx++, icy++) {
-/*     ix = g_eo2lexic[icx]; */
+#endif
 
     rn = l + icx;
     _vector_assign(phi1,(*rn).s0);
@@ -212,6 +223,9 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
 
     /******************************** end of loop *********************************/
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
@@ -291,10 +305,10 @@ void clover_gamma5(const int ieo,
     _vector_sub((*r).s3,(*t).s3,psi2);
     /******************************** end of loop *********************************/
   }
-  return;
 #ifdef OMP
   } /* OMP closing brace */
 #endif
+  return;
 }
 
 /**************************************************************
