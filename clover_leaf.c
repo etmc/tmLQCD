@@ -576,10 +576,24 @@ void sw_invert(const int ieo, const double mu) {
 // this function depends on mu
 
 void sw_deriv(const int ieo, const double mu) {
+#ifdef OMP
+#define static
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+  int icy;
+#endif
+
   int ioff;
   int x;
   double fac = 1.0000;
   static su3 lswp[4],lswm[4];
+
+#ifdef OMP
+#undef static
+#endif
 
   /* convention: Tr clover-leaf times insertion */
   if(ieo == 0) {
@@ -590,7 +604,13 @@ void sw_deriv(const int ieo, const double mu) {
   }
   if(fabs(mu) > 0.) fac = 0.5;
 
+#ifdef OMP
+#pragma omp for
+  for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+    icy = icx - ioff;
+#else
   for(int icx = ioff, icy=0; icx < (VOLUME/2+ioff); icx++, icy++) {
+#endif
     x = g_eo2lexic[icx];
     /* compute the insertion matrix */
     _su3_plus_su3(lswp[0],sw_inv[icy][0][1],sw_inv[icy][0][0]);
@@ -635,6 +655,9 @@ void sw_deriv(const int ieo, const double mu) {
       _su3_refac_acc(swp[x][3], fac, lswp[3]);
     }
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
