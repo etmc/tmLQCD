@@ -474,12 +474,20 @@ void assign_mul_one_sw_pm_imu(const int ieo,
 void assign_mul_one_sw_pm_imu_inv(const int ieo, 
 				  spinor * const k, spinor * const l,
 				  const double mu) {
+#ifdef OMP
+#pragma omp parallel
+  {
+  su3_vector psi, chi, phi1, phi3;
+#else
+  static su3_vector psi, chi, phi1, phi3;
+#endif
   su3 *w1, *w2, *w3, *w4;
   spinor *rn, *s;
-  static su3_vector psi, chi, phi1, phi3;
 
   /************************ loop over all lattice sites *************************/
-
+#ifdef OMP
+#pragma omp for
+#endif
   for(int icx = 0; icx < (VOLUME/2); icx++) {
 
     rn = l + icx;
@@ -511,6 +519,9 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
 
     /******************************** end of loop *********************************/
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
