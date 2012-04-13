@@ -56,11 +56,11 @@ void init_mms_tm(const int nr);
 /* P output = solution , Q input = source */
 int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter, 
 	      double eps_sq, const int rel_prec, const int N, matrix_mult f,
-        const int no_extra_masses, double * const extra_masses) {
+        const int no_extra_masses, double * const extra_masses, const int id) {
 
   static double normsq, pro, err, alpha_cg = 1., beta_cg = 0., squarenorm;
   int iteration, im, append = 0;
-  char filename[100];
+  char filename[300];
   static double gamma, alpham1;
   double tmp_mu = g_mu;
   WRITER * writer = NULL;
@@ -71,7 +71,11 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
   const int nr_sf = 5;
 
   init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
-  init_mms_tm(no_extra_masses);
+
+  /* we initialise the maximum number of parameter arrays for cg_mms_tm
+   * because we have no way to figure out what is the actual maximum number
+   * of extra masses configured in the set of operators with extra masses */
+  init_mms_tm(MAX_EXTRA_MASSES);
 
   /* currently only implemented for P=0 */
   zero_spinor_field(P, N);
@@ -175,13 +179,13 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
         if(SourceInfo.type != 1) {
           if (PropInfo.splitted) {
-            sprintf(filename, "%s.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im+1);
+            sprintf(filename, "%s.%.4d.%.2d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, id, im+1);
           } else {
-            sprintf(filename, "%s.%.4d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, im+1);
+            sprintf(filename, "%s.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, id, im+1);
           }
         }
         else {
-          sprintf(filename, "%s.%.4d.%.5d.cgmms.%.2d.0", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, im+1);
+          sprintf(filename, "%s.%.4d.%.5d.%.2d.cgmms.%.2d.0", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, id, im+1);
         }
         if(g_kappa != 0) {
           mul_r(temp_save, (2*g_kappa)*(2*g_kappa), temp_save, N);
