@@ -326,11 +326,17 @@ void clover_gamma5(const int ieo,
 void clover(const int ieo, 
 	    spinor * const l, spinor * const k, spinor * const j,
 	    const double mu) {
+#ifdef OMP
+#pragma omp parallel
+  {
+  su3_vector chi, psi1, psi2;
+#else
+  static su3_vector chi, psi1, psi2;
+#endif
   int ix;
   int ioff,icx;
   su3 *w1,*w2,*w3;
   spinor *r,*s,*t;
-  static su3_vector chi, psi1, psi2;
   
   if(ieo == 0) {
     ioff = 0;
@@ -339,6 +345,9 @@ void clover(const int ieo,
     ioff = (VOLUME+RAND)/2;
   }
   /************************ loop over all lattice sites *************************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     ix = g_eo2lexic[icx];
     
@@ -382,6 +391,9 @@ void clover(const int ieo,
     _vector_sub((*r).s2,psi1,(*t).s2);
     _vector_sub((*r).s3,psi2,(*t).s3);
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
