@@ -217,10 +217,17 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
 #define nm1 5
 int six_invert(_Complex double a[6][6])
 {
+  /* required for thread safety */
+#ifdef OMP
+#define static
+#endif
   static _Complex double d[nm1+1],u[nm1+1];
   static _Complex double sigma,z;
   static double p[nm1+1];
   static double s,q;
+#ifdef OMP
+#undef static
+#endif
   int i,j,k;
   int ifail;
   ifail=0;
@@ -294,10 +301,17 @@ int six_invert(_Complex double a[6][6])
     
 _Complex double six_det(_Complex double a[6][6])
 {
+  /* required for thread safety */
+#ifdef OMP
+#define static
+#endif
   static _Complex double sigma,z;
   static _Complex double det;
   static double p[nm1+1];
   static double s,q;
+#ifdef OMP
+#undef static
+#endif
   int i,j,k;
   int ifail;
   ifail=0;
@@ -395,7 +409,7 @@ double sw_trace(const int ieo, const double mu) {
   static double tra;
   static double ks,kc,tr,ts,tt;
   static _Complex double det;
-  
+
   ks=0.0;
   kc=0.0;
 
