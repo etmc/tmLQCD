@@ -745,6 +745,12 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
 
 void sw_all(hamiltonian_field_t * const hf, const double kappa, 
 	    const double c_sw) {
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
+
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
   su3 *w1,*w2,*w3,*w4;
@@ -752,6 +758,13 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
   static su3 v1,v2,vv1,vv2,plaq;
   static su3 vis[4][4];
   
+#ifdef OMP
+#undef static
+#endif
+
+#ifdef OMP
+#pragma omp for
+#endif
   for(x = 0; x < VOLUME; x++) {
     _minus_itimes_su3_plus_su3(vis[0][1],swm[x][1],swm[x][3]);
     _su3_minus_su3(vis[0][2],swm[x][1],swm[x][3]);
@@ -880,6 +893,9 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
       }
     }
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
