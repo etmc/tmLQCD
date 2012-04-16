@@ -669,6 +669,12 @@ void sw_deriv(const int ieo, const double mu) {
 // additional gamma_5 needed for one of the input vectors
 
 void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
+
   int ioff;
   int icx;
   int x;
@@ -676,7 +682,11 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
   static su3 v0,v1,v2,v3;
   static su3 u0,u1,u2,u3;
   static su3 lswp[4],lswm[4];
-  
+
+#ifdef OMP
+#undef static
+#endif
+
   if(ieo == 0) {
     ioff=0;
   } 
@@ -684,7 +694,10 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
     ioff=(VOLUME+RAND)/2;
   }
   /************************ loop over half of the lattice sites ***********/
-  
+
+#ifdef OMP
+#pragma omp for
+#endif  
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
     r = kk + icx - ioff;
@@ -721,6 +734,9 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
     _su3_acc(swp[x][2], lswp[2]);
     _su3_acc(swp[x][3], lswp[3]);
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
