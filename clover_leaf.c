@@ -87,6 +87,12 @@ su3 ** swm, ** swp;
 // suppressing space-time indices
 
 void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
+
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
   su3 *w1,*w2,*w3,*w4;
@@ -96,6 +102,10 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
   static su3 magnetic[4],electric[4];
   static su3 aux;
   
+#ifdef OMP
+#undef static
+#endif
+
   /*  compute the clover-leave */
   /*  l  __   __
         |  | |  |
@@ -104,6 +114,9 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
         |  | |  |
         |__| |__| k  */
   
+#ifdef OMP
+#pragma omp for
+#endif
   for(x = 0; x < VOLUME; x++) {
     for(k = 0; k < 4; k++) {
       for(l = k+1; l < 4; l++) {
@@ -189,6 +202,9 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
     _itimes_su3_plus_su3(aux,magnetic[3],electric[3]);
     _su3_refac_acc(sw[x][2][1],ka_csw_8,aux);
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
@@ -214,6 +230,12 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
   !  ported to C by M.Hasenbusch Wed Oct 24 15:46:46 MEST 2001   !
   !______________________________________________________________!
 */
+
+
+/* six_invert and six_det are called from multiple threads, they are thus
+ * made thread-safe by removing the static keywords but they are NOT
+ * parallelised for OpenMP */
+
 #define nm1 5
 int six_invert(_Complex double a[6][6])
 {
