@@ -305,6 +305,9 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
 void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
                      spinor * const k_strange, spinor * const k_charm, const _Complex double z){
 
+#ifdef OMP
+#define static
+#endif
 
   int ix;
   spinor *r, *s;
@@ -312,6 +315,9 @@ void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
 
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
 
+#ifdef OMP
+#undef static
+#endif
 
   /*   tau_1   inverts the   k_charm  <->  k_strange   spinors */
   /*  Apply first  Qhat(2x2)  and finally substract the constant  */
@@ -369,6 +375,10 @@ void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
 
 
   /************ loop over all lattice sites ************/
+
+#ifdef OMP
+#pragma omp parallel for private(r) private(s) private(phi1) private(ix)
+#endif
   for(ix = 0; ix < (VOLUME/2); ix++){
 
     r=l_strange + ix;
@@ -789,9 +799,18 @@ void Qtau1_P_ND(spinor * const l_strange, spinor * const l_charm,
 
 void Qtm_pm_min_cconst_nrm(spinor * const l, spinor * const k,
 			   const _Complex double z){
+#ifdef OMP
+#define static
+#endif
+
   static su3_vector phi1;
   spinor *r,*s;
   int ix;
+
+#ifdef OMP
+#undef static
+#endif
+
   Qtm_pm_psi(l,k);
   mul_r(l, phmc_invmaxev, l, VOLUME/2);
 
@@ -799,6 +818,9 @@ void Qtm_pm_min_cconst_nrm(spinor * const l, spinor * const k,
 
 
   /************ loop over all lattice sites ************/
+#ifdef OMP
+#pragma omp parallel for private(ix) private(r) private(s) private(phi1)
+#endif
   for(ix = 0; ix < (VOLUME/2); ix++){
 
     r=l + ix;
@@ -876,13 +898,14 @@ void Qtm_pm_Ptm_pm_psi(spinor * const l, spinor * const k){
 void red_noise_nd(spinor * const lse, spinor * const lso, 
 		  spinor * const lce, spinor * const lco) 
 {
+
   double nrm0 = (1.-g_epsbar)/(1+g_mubar*g_mubar-g_epsbar*g_epsbar);
   double nrm1 = (1.+g_epsbar)/(1+g_mubar*g_mubar-g_epsbar*g_epsbar);
   _Complex double z;
   int ix, i;
   static su3_vector phi;
   spinor * r, * s;
-
+  
   /* need B^\dagger, so change sign of g_mubar */
   z = (g_mubar / (1 + g_mubar * g_mubar - g_epsbar * g_epsbar)) * I;
 
