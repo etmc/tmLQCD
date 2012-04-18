@@ -441,6 +441,7 @@ double sw_trace(const int ieo, const double mu) {
   else {
     ioff=(VOLUME+RAND)/2;
   }
+  
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
     for(i=0;i<2;i++) {
