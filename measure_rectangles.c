@@ -46,17 +46,38 @@
 
 
 double measure_rectangles(su3 ** const gf) {
-  int i, j, k, mu, nu;
-  static su3 pr1, pr2, tmp; 
-  su3 *v = NULL , *w = NULL;
-  static double ga, ac; 
+/* there is a reduction on ks and kc, so we need to make these OMP shared
+ * also, we keep the static keyword because this function relies on the data
+ * retention on ga, as can be seen below (it always returns ga) */
+  static double ks,kc,ga;
+
+#ifdef OMP
+#define static
+#endif
+
 #ifdef MPI
   static double gas;
 #endif
-  static double ks, kc, tr, ts, tt;
-  kc=0.0; ks=0.0;
+
+  ks=0.0; kc=0.0;
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  int i, j, k, mu, nu;
+  static su3 pr1, pr2, tmp; 
+  su3 *v = NULL , *w = NULL;
+  static double ac, tr, ts, tt;
+
+#ifdef OMP
+#undef static
+#endif
 
   if(g_update_rectangle_energy) {
+#ifdef OMP
+#pragma omp for reduction(+:kc) reduction(+:ks)
+#endif
     for (i = 0; i < VOLUME; i++) {
       for (mu = 0; mu < 4; mu++) {
 	for (nu = 0; nu < 4; nu++) { 
@@ -103,7 +124,18 @@ double measure_rectangles(su3 ** const gf) {
 	}
       }
     }
+
+#ifdef OMP
+  } /* if g_update_rectangle_energy */
+  } /* OpenMP closing brace */
+
+  /* this construct is unfortunately necessary for OpenMP because the closing brace must
+   * come before the calculation of ga */
+  if(g_update_rectangle_energy) {
+#endif
+
     ga=(kc+ks)/3.0;
+  
 #ifdef MPI
     MPI_Allreduce(&ga, &gas, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     ga = gas;
