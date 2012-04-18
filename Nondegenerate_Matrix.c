@@ -658,10 +658,23 @@ void mul_one_pm_itau2(spinor * const p, spinor * const q,
 
 void mul_one_minus_imubar(spinor * const l, spinor * const k)
 {
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
+      
   spinor *r, *s;
   static su3_vector phi1;
 
+#ifdef OMP
+#undef static
+#endif
+
   /************ loop over all lattice sites ************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(int ix = 0; ix < (VOLUME/2); ++ix){
     r=l + ix;
     s=k + ix;
@@ -675,14 +688,31 @@ void mul_one_minus_imubar(spinor * const l, spinor * const k)
     _complex_times_vector(phi1, (1. + g_mubar * I), s->s3);
     _vector_assign(r->s3, phi1);
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 
 void mul_one_plus_imubar(spinor * const l, spinor * const k){
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
+
   spinor *r, *s;
   static su3_vector phi1;
 
+#ifdef OMP
+#undef static
+#endif
+
   /************ loop over all lattice sites ************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(int ix = 0; ix < (VOLUME/2); ++ix){
     r=l + ix;
     s=k + ix;
@@ -696,6 +726,11 @@ void mul_one_plus_imubar(spinor * const l, spinor * const k){
     _complex_times_vector(phi1, (1. - g_mubar * I), s->s3);
     _vector_assign(r->s3, phi1);
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   return;
 }
 
