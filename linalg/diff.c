@@ -25,6 +25,9 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -253,9 +256,17 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N) {
 
 void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
 {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
    spinor *q,*r,*s;
 
 /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
+#ifdef OMP
+#pragma omp for
+#endif
    for (int ix = 0; ix < N; ix++)
    {
      q=(spinor *) Q + ix;
@@ -278,6 +289,9 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
      q->s3.c1 = r->s3.c1 - s->s3.c1;
      q->s3.c2 = r->s3.c2 - s->s3.c2;
    }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 #endif
@@ -285,8 +299,16 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
 #ifdef WITHLAPH
 void diff_su3vect(su3_vector * const Q,su3_vector * const R,su3_vector * const S, const int N)
 {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   su3_vector *q,*r,*s;
 
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix) 
   {
     q=(su3_vector *) Q + ix;
@@ -297,5 +319,8 @@ void diff_su3vect(su3_vector * const Q,su3_vector * const R,su3_vector * const S
     q->c1 = r->c1 - s->c1;
     q->c2 = r->c2 - s->c2;
   } 
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 #endif
