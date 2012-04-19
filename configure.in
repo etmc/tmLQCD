@@ -276,13 +276,13 @@ dnl AC_CONFIG_SUBDIRS( rng )
 
 dnl check for clock_gettime and set correct library flag if one is required
 dnl (as done by AC_CHECK_LIB)
-AC_CHECK_FUNCS(clock_gettime, [], [
-    AC_CHECK_LIB(rt, clock_gettime, [
-    AC_DEFINE(HAVE_CLOCK_GETTIME, 1)]) ])
+AC_CHECK_FUNCS(clock_gettime, [], [AC_CHECK_LIB(rt, clock_gettime)])
+
 
 dnl with glibc and c99 mode the timespec required for clock_gettime is only
 dnl available in POSIX 199309L compatibility mode when clock_gettime is in librt
 if test "$ac_cv_lib_rt_clock_gettime" = "yes"; then
+  AC_DEFINE(HAVE_CLOCK_GETTIME,1)
   CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=199309L"
   AC_MSG_NOTICE([Instructing the compiler to use POSIX 199309L])
 fi
