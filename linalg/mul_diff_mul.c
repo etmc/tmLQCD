@@ -20,6 +20,9 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -29,9 +32,17 @@
 
 /* Makes (*R)=c1*(*S)-c2*(*U) , c1 and c2 are complex constants */
 void mul_diff_mul(spinor * const R,spinor * const S,spinor * const U,const _Complex double c1,const _Complex double c2, const int N){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   int ix;
   spinor *r,*s,*u;
   
+#ifdef OMP
+#pragma omp for
+#endif
   for (ix=0;ix<N;ix++){
     r=(spinor *) R + ix;
     s=(spinor *) S + ix;
@@ -53,6 +64,10 @@ void mul_diff_mul(spinor * const R,spinor * const S,spinor * const U,const _Comp
     r->s3.c1 = c1 * s->s3.c1 - c2 * u->s3.c1;
     r->s3.c2 = c1 * s->s3.c2 - c2 * u->s3.c2;
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 
