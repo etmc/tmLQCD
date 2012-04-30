@@ -45,6 +45,7 @@
 #ifdef OMP
 # include <omp.h>
 #endif
+#include "gettime.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "ranlxd.h"
@@ -85,25 +86,6 @@
 #endif
 
 int check_xchange();
-
-double gettime(void) {
-  double t;
-#if (defined BGL && !defined BGP)
-  const double clockspeed=1.0e-6/700.0;
-  t = rts_get_timebase() * clockspeed;
-#elif defined MPI
-  t = MPI_Wtime();
-  /* clock_gettime is detected on BGL/BGP but it is an unsupported system call so we can't use it! */
-#elif (defined HAVE_CLOCK_GETTIME && !defined BGL)
-  struct timespec ts;
-  clock_gettime(CLOCK_MONOTONIC,&ts);
-  t = ts.tv_sec + 1.0e-9*ts.tv_nsec;
-#else
-  t = (double)clock()/(CLOCKS_PER_SEC);
-#endif
-  return t;
-}
-
 
 int main(int argc,char *argv[])
 {
