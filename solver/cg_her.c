@@ -52,6 +52,7 @@
 #include "su3.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "gettime.h"
 #include "solver/matrix_mult_typedef.h"
 #include "sub_low_ev.h"
 #include "poly_precon.h"
@@ -75,11 +76,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf); 
   } 
   /* initialize residue r and search vector p */
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = ((double)clock())/((double)(CLOCKS_PER_SEC));
-#endif
+  atime = gettime();
   squarenorm = square_norm(Q, N, 1);
 
   f(solver_field[0], P);  
@@ -120,11 +117,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     assign(solver_field[1], solver_field[0], N);
     normsq = err;
   }
-#ifdef MPI
-  etime = MPI_Wtime();
-#else
-  etime = ((double)clock())/((double)(CLOCKS_PER_SEC));
-#endif
+  etime = gettime();
   g_sloppy_precision = save_sloppy;
   /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
   /* 2*1320.0 because the linalg is over VOLUME/2 */

@@ -41,6 +41,7 @@
 #include "solver/matrix_mult_typedef.h"
 #include "linalg_eo.h"
 #include "eigenvalues_Jacobi.h"
+#include "gettime.h"
 
 #ifdef WITHLAPH
 
@@ -137,9 +138,7 @@ volatile  int v0dim = 0;
 		&returncode2, JD_MAXIMAL, 1,tslice,f);
   */
   
-#ifdef MPI
-  atime = MPI_Wtime();
-#endif
+  atime = gettime();
   
   /* (re-) compute minimal eigenvalues */
   converged = 0;
@@ -166,12 +165,10 @@ volatile  int v0dim = 0;
 		  &returncode, JD_MINIMAL, 1,tslice,
 		  f);
   
-#ifdef MPI
-  etime = MPI_Wtime();
+  etime = gettime();
   if(g_proc_id == 0) {
-    printf("Eigenvalues computed in %e sec. (MPI_Wtime)\n", etime-atime);
+    printf("Eigenvalues computed in %e sec. (gettime)\n", etime-atime);
     }
-#endif
 
   
   /* Printout eigenvalues.  */
