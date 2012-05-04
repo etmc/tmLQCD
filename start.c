@@ -84,7 +84,7 @@ void gauss_vector(double v[],int n)
    double r[2];
    double x1,x2,rho,y1,y2;
 
-
+/* no operation in the comparison? This was missing! */
    for (k=0;;k+=2)
    {
       ranlxd(r,2);

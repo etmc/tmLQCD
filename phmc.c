@@ -49,6 +49,7 @@ int errcode;
 phmc_vars *phmc_var_stack=NULL;
 int phmc_max_ptilde_degree = NTILDE_CHEBYMAX;
 
+/* this is sooo slow */
 void init_phmc() {
   int max_iter_ev, j, k;
   FILE *roots;
