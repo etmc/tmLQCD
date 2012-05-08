@@ -179,13 +179,13 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
         if(SourceInfo.type != 1) {
           if (PropInfo.splitted) {
-            sprintf(filename, "%s.%.4d.%.2d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, id, im+1);
+            sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im+1);
           } else {
-            sprintf(filename, "%s.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, id, im+1);
+            sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, im+1);
           }
         }
         else {
-          sprintf(filename, "%s.%.4d.%.5d.%.2d.cgmms.%.2d.0", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, id, im+1);
+          sprintf(filename, "%s.%.2d.%.4d.%.5d.cgmms.%.2d.0", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.sample, im+1);
         }
         if(g_kappa != 0) {
           mul_r(temp_save, (2*g_kappa)*(2*g_kappa), temp_save, N);
