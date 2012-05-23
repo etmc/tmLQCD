@@ -22,10 +22,10 @@ ReversibilityCheck = yes
 ReversibilityCheckIntervall = 100
 InitialStoreCounter = readin
 DebugLevel = 1
-StartCondition = restart
+StartCondition = hot
 ComputeEVs = no
 
-BeginMeasurement CORREATORS
+BeginMeasurement CORRELATORS
   Frequency = 5
 EndMeasurement
 
@@ -38,15 +38,15 @@ EndMonomial
 
 BeginMonomial POLY
  Timescale = 1
- Degree = 70
+ Degree = 90
  Lmin = 0.1
- Lmax = 3.0
- LocNormConst = 2.9035094762297051
+ Lmax = 4.0
+ LocNormConst = 3.0187720224543191
  2KappaMu = 0.177
  Kappa = 0.177
- RootsFile = "Square_root_BR_roots.dat.oox.70.3.3333333333333333e-02"
- AcceptancePrecision =  1e-20
- ForcePrecision = 1e-12
+ RootsFile = "Square_root_BR_roots.dat.oox.90.2.5000000000000001e-02"
+ AcceptancePrecision =  1.e-20
+ ForcePrecision = 1.e-12
 EndMonomial
 
 BeginIntegrator 
@@ -54,7 +54,7 @@ BeginIntegrator
   Type1 = 2MN
   IntegrationSteps0 = 3
   IntegrationSteps1 = 20
-  Tau = 2.0
+  Tau = 2.
   Lambda0 = 0.19
   Lambda1 = 0.20
   NumberOfTimescales = 2
