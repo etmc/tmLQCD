@@ -15,8 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
- /*******************************************************************************
  *
  * Here we compute the nr_of_eigenvalues lowest eigenvalues
  * of (gamma5*D)^2. Therefore we use the arnoldi routines.
@@ -71,11 +69,9 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
    **********************/
   int verbosity = g_debug_level, converged = 0, blocksize = 1, blockwise = 0;
   int solver_it_max = 200, j_max, j_min; 
-  /*int it_max = 10000;*/
   double decay_min = 1.7, decay_max = 1.5, prec,
     threshold_min = 1.e-3, threshold_max = 5.e-2, 
     startvalue, threshold, decay, returnvalue;
-/*   static int v0dim = 0; */
   int v0dim = 0;
 
   /**********************
@@ -139,7 +135,10 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
   if((g_proc_id==0) && (g_debug_level > 4)) {
     printf(" Values of   mu = %e     mubar = %e     eps = %e     precision = %e  \n \n", g_mu, g_mubar, g_epsbar, precision);
   }
- 
+
+  /* here n and lda are equal, because Q_Qdagger_ND_BI does an internal */
+  /* conversion to non _bi fields which are subject to xchange_fields   */
+  /* so _bi fields do not need boundary                                 */
   jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double), (VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double),
 	    startvalue, prec, 
 	    (*nr_of_eigenvalues), j_max, j_min, 
@@ -150,13 +149,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
 	    &returncode, maxmin, 1,
 	    &Q_Qdagger_ND_BI);
   
-  /* IN THE LAST LINE, INSERT:
-     Q_Qdagger_ND_BI;   Non-degenerate case - on 1 bispinor 
-     Q_Qdagger_ND;      Non-degenerate case - on 2 spinors 
-     Qtm_pm_psi;        Degenerate case  -  on 1 spinor 
-  */
-
-
   *nr_of_eigenvalues = converged;
 
   returnvalue = eigenvls_bi[0];
