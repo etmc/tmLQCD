@@ -275,7 +275,7 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for csg fields! Aborting...\n");
     exit(0);
   }
-  j = init_moment_field(VOLUME, VOLUMEPLUSRAND);
+  j = init_moment_field(VOLUME, VOLUMEPLUSRAND + g_dbw2rand);
   if (j != 0) {
     fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
     exit(0);

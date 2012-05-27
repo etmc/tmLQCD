@@ -20,11 +20,9 @@
 #define _GRAM_SCHMIDT_BI_H
 #include <complex.h>
 
-void IteratedClassicalGS_bi_old(_Complex double v[], double *vnrm, int n, int m, _Complex double A[], _Complex double work1[]);
 void IteratedClassicalGS_bi(_Complex double v[], double *vnrm, int n, int m, _Complex double A[], 
 			 _Complex double work1[], int lda) ;
 
-void ModifiedGS_bi_old(_Complex double v[], int n, int m, _Complex double A[]);
 void ModifiedGS_bi(_Complex double v[], int n, int m, _Complex double A[], int lda);
 
 #endif

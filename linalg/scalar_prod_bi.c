@@ -75,7 +75,7 @@ _Complex double scalar_prod_bi(bispinor * const S, bispinor * const R, const int
   kc = ks + kc;
 
 #if defined MPI
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
   kc = ks;
 #endif
 

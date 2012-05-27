@@ -62,9 +62,6 @@
 #include "solver/gram-schmidt.h"
 #include "solver/quicksort.h"
 #include "jdher.h"
-#ifdef CRAY
-#include <fortran.h>
-#endif
 
 #define min(a,b)((a)<(b) ? (a) : (b))
 #define max(a,b)((a)<(b) ? (b) : (a))
@@ -110,19 +107,7 @@ _Complex double * p_Q;
 _Complex double * p_work;
 matrix_mult p_A_psi;
 
-/****************************************************************************
- *                                                                          *
- * Of course on the CRAY everything is different :( !!                      *
- * that's why we need something more.
- *                                                                          *
- ****************************************************************************/
-
-#ifdef CRAY
-  char * cupl_u = "U", * cupl_c = "C", *cupl_n = "N", * cupl_a = "A", *cupl_v = "V", *cilaenv = "zhetrd", *cvu = "VU";
-  _fcd fupl_u, fupl_c, fupl_a, fupl_n, fupl_v, filaenv, fvu;
-#else
-  static char * fupl_u = "U", *fupl_n = "N", * fupl_a = "A", *fupl_v = "V", *filaenv = "zhetrd", *fvu = "VU";
-#endif
+static char * fupl_u = "U", *fupl_n = "N", * fupl_a = "A", *fupl_v = "V", *filaenv = "zhetrd", *fvu = "VU";
 
 /****************************************************************************
  *                                                                          *
@@ -176,23 +161,6 @@ void jdher(int n, int lda, double tau, double tol,
   int IDIST = 1;
   int ISEED[4] = {2, 3, 5, 7};
   ISEED[0] = g_proc_id+2;
-
-  /****************************************************************************
-   *                                                                          *
-   * Of course on the CRAY everything is different :( !!                      *
-   * that's why we need something more.
-   *                                                                          *
-   ****************************************************************************/
-
-#ifdef CRAY
-  fupl_u = _cptofcd(cupl_u, strlen(cupl_u));
-  fupl_c = _cptofcd(cupl_c, strlen(cupl_c));
-  fupl_n = _cptofcd(cupl_n, strlen(cupl_n));
-  fupl_a = _cptofcd(cupl_a, strlen(cupl_a));
-  fupl_v = _cptofcd(cupl_v, strlen(cupl_v));
-  filaenv = _cptofcd(cilaenv, strlen(cilaenv));
-  fvu = _cptofcd(cvu, strlen(cvu));
-#endif
 
   /****************************************************************************
    *                                                                          *
