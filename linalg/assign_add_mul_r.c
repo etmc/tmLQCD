@@ -33,7 +33,7 @@
 #include "assign_add_mul_r.h"
 
 
-#if defined SSE2
+#if ( defined SSE2 || defined SSE3 )
 
 /*   (*P) = (*P) + c(*Q)        c is a complex constant   */
 
