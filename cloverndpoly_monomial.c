@@ -125,6 +125,12 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
 
   ndpoly_set_global_parameter(mnl, 0);
+  g_mu3 = 0.;
+  g_c_sw = mnl->c_sw;
+  init_sw_fields();
+  sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_invert(EE, mnl->mu);
+
   mnl->energy0 = 0.;
   random_spinor_field(g_chi_up_spinor_field[0], VOLUME/2, mnl->rngrepro);
   mnl->energy0 = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
@@ -183,6 +189,12 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   spinor *up0, *dn0, *up1, *dn1, *dummy;
 
   ndpoly_set_global_parameter(mnl, 0);
+  g_mu3 = 0.;
+  g_c_sw = mnl->c_sw;
+  init_sw_fields();
+  sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_invert(EE, mnl->mu);
+
   mnl->energy1 = 0.;
   Ener[0] = 0;
   factor[0] = 1.0;

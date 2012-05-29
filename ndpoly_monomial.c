@@ -247,20 +247,22 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   assign(mnl->pf, g_chi_up_spinor_field[0], VOLUME/2);
   assign(mnl->pf2, g_chi_dn_spinor_field[0], VOLUME/2);
 
-  temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
-  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-    printf("PHMC: Then: evaluate Norm of pseudofermion heatbath BHB \n ");
-    printf("PHMC: Norm of BHB up squared %e \n", temp);
-  }
+  if(g_debug_level > 2) {
+    temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
+    if(g_proc_id == g_stdio_proc) {
+      printf("PHMC: Then: evaluate Norm of pseudofermion heatbath BHB \n ");
+      printf("PHMC: Norm of BHB up squared %e \n", temp);
+    }
 
-  if(g_epsbar!=0.0 || phmc_exact_poly==0) 
-    temp += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
+    if(g_epsbar!=0.0 || phmc_exact_poly==0) 
+      temp += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
 
-  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)){
-    printf("PHMC: Norm of BHB up + BHB dn squared %e \n\n", temp);
+    if(g_proc_id == g_stdio_proc){
+      printf("PHMC: Norm of BHB up + BHB dn squared %e \n\n", temp);
+    }
   }
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called ndpoly_heatbath for id %d with g_running_phmc = %d\n", id, g_running_phmc);
+    printf("called ndpoly_heatbath for id %d \n", id);
   }
   return;
 }
@@ -375,9 +377,6 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
       }
     }
     mnl->energy1 += Ener[ij];  /* this is quite sticky */
-    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-      printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], mnl->energy1);
-    }
   } 
   else if(phmc_exact_poly==1 && g_epsbar!=0.0) {
     /* B(Q*tau1) */
