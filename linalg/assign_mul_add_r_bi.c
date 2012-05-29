@@ -36,7 +36,7 @@
 #include "assign_mul_add_r_bi.h"
 
 
-#if defined SSE2
+#if ( defined SSE2 || defined SSE3 )
 /* k input , l output*/
 void assign_mul_add_r_bi(bispinor * const S, const double c, bispinor * const R, const int N) {
 

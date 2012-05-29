@@ -120,20 +120,20 @@ su3 exposu3_check(su3adj p, int im) {
 su3 restoresu3(su3 u)
 {
   static su3 vr;
-  static double n1,n2;
-  
+  static double n0,n1;
+
   /* normalize rows 1 and 2 */
-  n1 = 1.0 / sqrt(conj(u.c00) * u.c00 + conj(u.c01) * u.c01 + conj(u.c02) * u.c02);
-  n2 = 1.0 / sqrt(conj(u.c10) * u.c10 + conj(u.c11) * u.c11 + conj(u.c12) * u.c12);
-  
-  vr.c00 = n1 * u.c00;
-  vr.c01 = n1 * u.c01;
-  vr.c02 = n1 * u.c02;
-  
+  n0 = 1.0 / sqrt(conj(u.c00) * u.c00 + conj(u.c01) * u.c01 + conj(u.c02) * u.c02);
+  n1 = 1.0 / sqrt(conj(u.c10) * u.c10 + conj(u.c11) * u.c11 + conj(u.c12) * u.c12);
+
+  vr.c00 = n0 * u.c00;
+  vr.c01 = n0 * u.c01;
+  vr.c02 = n0 * u.c02;
+
   vr.c10 = n1 * u.c10;
   vr.c11 = n1 * u.c11;
   vr.c12 = n1 * u.c12;
-  
+
   /* compute  row 3 as the conjugate of the cross-product of 1 and 2 */ 
   vr.c20 = conj(vr.c01 * vr.c12 - vr.c02 * vr.c11);
   vr.c21 = conj(vr.c02 * vr.c10 - vr.c00 * vr.c12);

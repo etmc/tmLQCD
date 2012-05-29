@@ -1,4 +1,3 @@
-  MPI_Status status;
 #    if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT )
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */

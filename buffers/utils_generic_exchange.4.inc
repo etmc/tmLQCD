@@ -1,4 +1,3 @@
-  MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
   MPI_Sendrecv(buffer[0],          1, slice_T_cont_type, g_nb_t_dn, 83, 
@@ -454,3 +453,5 @@
 		 g_cart_grid, &status);
 
   }
+
+#endif /* PARALLELXYZT */
