@@ -121,20 +121,36 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
 
       Qtm_minus_psi(g_spinor_field[DUM_DERI+3],chi_spinor_field[j-1]); 
       
+<<<<<<< HEAD
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf+1], EO, -1.);
       deriv_Sb(OE, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+2], hf); 
       
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], EO, 1.); 
       deriv_Sb(EO, g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf+1], hf);
+=======
+      H_eo_tm_inv_psi(mnl->w_fields[0], chi_spinor_field[degreehalf+1], EO, -1.);
+      deriv_Sb(OE, mnl->w_fields[1], mnl->w_fields[0], hf, mnl->forcefactor); 
+      
+      H_eo_tm_inv_psi(mnl->w_fields[0], mnl->w_fields[1], EO, 1.); 
+      deriv_Sb(EO, mnl->w_fields[0], chi_spinor_field[degreehalf+1], hf, mnl->forcefactor);
+>>>>>>> forcefactor now applied on the level of deriv_Sb, deriv_Sb_D_psi and sw_all
       
     
       Qtm_minus_psi(g_spinor_field[DUM_DERI+3],chi_spinor_field[degreehalf+1]); 
 
+<<<<<<< HEAD
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2],g_spinor_field[DUM_DERI+3], EO, +1.);
       deriv_Sb(OE, chi_spinor_field[j-1] , g_spinor_field[DUM_DERI+2], hf); 
       
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], chi_spinor_field[j-1], EO, -1.); 
       deriv_Sb(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], hf);
+=======
+      H_eo_tm_inv_psi(mnl->w_fields[0],mnl->w_fields[1], EO, +1.);
+      deriv_Sb(OE, chi_spinor_field[j-1] , mnl->w_fields[0], hf, mnl->forcefactor); 
+      
+      H_eo_tm_inv_psi(mnl->w_fields[0], chi_spinor_field[j-1], EO, -1.); 
+      deriv_Sb(EO, mnl->w_fields[0], mnl->w_fields[1], hf, mnl->forcefactor);
+>>>>>>> forcefactor now applied on the level of deriv_Sb, deriv_Sb_D_psi and sw_all
       
     }
 
@@ -159,27 +175,21 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
       boundary(mnl->kappa2);
 
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2],chi_spinor_field[degreehalf], EO, -1.);
-      deriv_Sb(OE, mnl->pf , g_spinor_field[DUM_DERI+2], hf);
+      deriv_Sb(OE, mnl->pf , g_spinor_field[DUM_DERI+2], hf, mnl->forcefactor);
       
       H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], mnl->pf, EO, +1.);
-      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf], hf);
-
-
-
+      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf], hf, mnl->forcefactor);
     }
-
-
-
-
-  } else {
+  } 
+  else {
     if(g_proc_id == 0) {
       fprintf(stderr,"Error: PHMC for light quarks not implementeted for non even/odd preconditioning\n");
     }
-
+    
     g_mu = g_mu1;
     boundary(g_kappa);
     popPhmcVars();
-
+    
     return;
   }
 
@@ -200,15 +210,10 @@ double poly_acc(const int id, hamiltonian_field_t * const hf){
   double diff;
   int no_eigenvalues=-1;
 
-
-
-
-  if(mnl->even_odd_flag){
-
-    if(mnl->MDPolyDetRatio==1){
+  if(mnl->even_odd_flag) {
+    if(mnl->MDPolyDetRatio==1) {
       g_mu = mnl->mu2;
       boundary(mnl->kappa2);
-
       Qtm_plus_psi(spinor2,mnl->pf);
 
     } else {

@@ -44,7 +44,7 @@ void update_momenta(int * mnllist, double step, const int no,
   su3adj *xm,*deriv;
   double atime=0., etime=0.;
 
-  for(i = 0; i < (VOLUMEPLUSRAND);i++) { 
+  for(i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
     for(mu=0;mu<4;mu++) { 
       _zero_su3adj(hf->derivative[i][mu]);
     }
@@ -58,17 +58,8 @@ void update_momenta(int * mnllist, double step, const int no,
       atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
 
-      /* these are needed for the clover term */
-      if(monomial_list[ mnllist[k] ].type == 9 || monomial_list[ mnllist[k] ].type == 10) {
-	for(i = 0; i < VOLUME; i++) { 
-	  for(mu = 0; mu < 4; mu++) { 
-	    _su3_zero(swm[i][mu]);
-	    _su3_zero(swp[i][mu]);
-	  }
-	}
-      }
-      
       monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
+
 #ifdef MPI
       etime = MPI_Wtime();
 #else

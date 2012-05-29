@@ -35,7 +35,6 @@
 #include "linalg_eo.h"
 #include "linsolve.h"
 #include "deriv_Sb.h"
-#include "deriv_Sb_D_psi.h"
 #include "gamma.h"
 #include "tm_operators.h"
 #include "hybrid_update.h"
@@ -100,12 +99,12 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   /* to get the even sites of X */
   H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EE, -mnl->mu);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
-  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
+  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf, mnl->forcefactor); 
   
   /* to get the even sites of Y */
   H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EE, mnl->mu);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
-  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf); 
+  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf, mnl->forcefactor); 
 
   // here comes the clover term...
   // computes the insertion matrices for S_eff
@@ -128,12 +127,12 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   /* to get the even sites of X */
   H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EE, -mnl->mu);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
-  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
+  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf, mnl->forcefactor); 
   
   /* to get the even sites of Y */
   H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EE, mnl->mu);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
-  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf);
+  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf, mnl->forcefactor);
 
   // here comes the clover term...
   // computes the insertion matrices for S_eff
@@ -146,7 +145,7 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
   sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
 
-  sw_all(hf, mnl->kappa, mnl->c_sw);
+  sw_all(hf, mnl->kappa*mnl->forcefactor, mnl->c_sw);
   
   g_mu = g_mu1;
   g_mu3 = 0.;
@@ -159,7 +158,12 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
 void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
 
-  /* This factor 2* a missing factor 2 in trace_lambda */
+  for(int i = 0; i < VOLUME; i++) { 
+    for(int mu = 0; mu < 4; mu++) { 
+      _su3_zero(swm[i][mu]);
+      _su3_zero(swp[i][mu]);
+    }
+  }
   mnl->forcefactor = 1.;
 
   /*********************************************************************
@@ -206,12 +210,12 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   /* to get the even sites of X */
   H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EE, -mnl->mu);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
-  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
+  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf, mnl->forcefactor); 
   
   /* to get the even sites of Y */
   H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EE, mnl->mu);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
-  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf); 
+  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf, mnl->forcefactor); 
 
   // here comes the clover term...
   // computes the insertion matrices for S_eff
@@ -224,7 +228,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
   sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
 
-  sw_all(hf, mnl->kappa, mnl->c_sw);
+  sw_all(hf, mnl->kappa*mnl->forcefactor, mnl->c_sw);
   
   g_mu = g_mu1;
   g_mu3 = 0.;
