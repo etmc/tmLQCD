@@ -41,19 +41,10 @@
 void update_momenta(int * mnllist, double step, const int no, 
 		    hamiltonian_field_t * const hf) {
   int i,mu, k;
-  double tmp;
   su3adj *xm,*deriv;
-  double sum=0., max=0.;
-  double sum2=0.;
   double atime=0., etime=0.;
 
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
-
-  for(i=0;i<(VOLUME);i++) { 
+  for(i = 0; i < (VOLUMEPLUSRAND);i++) { 
     for(mu=0;mu<4;mu++) { 
       _zero_su3adj(hf->derivative[i][mu]);
     }
@@ -61,6 +52,12 @@ void update_momenta(int * mnllist, double step, const int no,
 
   for(k = 0; k < no; k++) {
     if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
+#ifdef MPI
+      atime = MPI_Wtime();
+#else
+      atime = (double)clock()/(double)(CLOCKS_PER_SEC);
+#endif
+
       /* these are needed for the clover term */
       if(monomial_list[ mnllist[k] ].type == 9 || monomial_list[ mnllist[k] ].type == 10) {
 	for(i = 0; i < VOLUME; i++) { 
@@ -71,58 +68,23 @@ void update_momenta(int * mnllist, double step, const int no,
 	}
       }
       
-      sum = 0.;
-      max = 0.;
-      for(i = (VOLUME); i < (VOLUMEPLUSRAND); i++) { 
-	for(mu = 0; mu < 4; mu++) { 
-	  _zero_su3adj(hf->derivative[i][mu]);
-	}
-      }
-      
       monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
-#ifdef MPI
-      xchange_deri(hf->derivative);
-#endif
-      for(i = 0; i < VOLUME; i++) {
-	for(mu = 0; mu < 4; mu++) {
-	  xm=&hf->momenta[i][mu];
-	  deriv=&hf->derivative[i][mu];
-	  /* force monitoring */
-	  if(g_debug_level > 0) {
-	    sum2 = _su3adj_square_norm(*deriv); 
-	    sum+= sum2;
-	    if(fabs(sum2) > max) max = sum2;
-	  }
-	  tmp = step*monomial_list[ mnllist[k] ].forcefactor;
-	  /* the minus comes from an extra minus in trace_lambda */
-	  _su3adj_minus_const_times_su3adj(*xm,tmp,*deriv); 
-	  /* set to zero immediately */
-	  _zero_su3adj(hf->derivative[i][mu]);
-	}
-      }
 #ifdef MPI
       etime = MPI_Wtime();
 #else
       etime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-      if(g_debug_level > 0) {
+    }
+  }
 #ifdef MPI
-	MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-	sum = sum2;
-	MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-	max = sum2;
+  xchange_deri(hf->derivative);
 #endif
-	if(g_proc_id == 0) {
-	  printf("force %s ts %d\taver: %1.4e\tmax: %1.4e\tdt*aver: %1.4e\tdt*max: %1.4e\tt/s %1.4e\n", 
-		 monomial_list[ mnllist[k] ].name, monomial_list[ mnllist[k] ].timescale, 
-		 fabs(sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor),
-		 fabs(max*monomial_list[ mnllist[k] ].forcefactor),
-		 fabs(step*sum/((double)(VOLUME*g_nproc))/4.*monomial_list[ mnllist[k] ].forcefactor),
-		 fabs(step*max*monomial_list[ mnllist[k] ].forcefactor), 
-		 etime-atime);
-	  fflush(stdout);
-	}
-      }
+  for(i = 0; i < VOLUME; i++) {
+    for(mu = 0; mu < 4; mu++) {
+      xm=&hf->momenta[i][mu];
+      deriv=&hf->derivative[i][mu];
+      /* the minus comes from an extra minus in trace_lambda */
+      _su3adj_minus_const_times_su3adj(*xm, step, *deriv); 
     }
   }
   return;
