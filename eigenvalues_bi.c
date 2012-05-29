@@ -148,11 +148,11 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
 	    threshold, decay, verbosity,
 	    &converged, (_Complex double*) eigenvectors_bi, eigenvls_bi,
 	    &returncode, maxmin, 1,
-	    &Q_Qdagger_ND_BI);
+	    &Qtm_pm_ndbipsi);
   
   /* IN THE LAST LINE, INSERT:
-     Q_Qdagger_ND_BI;   Non-degenerate case - on 1 bispinor 
-     Q_Qdagger_ND;      Non-degenerate case - on 2 spinors 
+     Qtm_pm_ndbipsi;   Non-degenerate case - on 1 bispinor 
+     Qtm_pm_ndpsi;      Non-degenerate case - on 2 spinors 
      Qtm_pm_psi;        Degenerate case  -  on 1 spinor 
   */
 

@@ -15,12 +15,9 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-
-/****************************************************************
  *
- * invert_eo makes an inversion with EO precoditioned
- * tm Operator
+ * invert_doublet_eo makes an inversion with EO precoditioned
+ * tm Operator for the non-degenerate doublet
  *
  * Even and Odd are the numbers of spinor_field that contain
  * the even and the odd sites of the source. The result is stored
@@ -137,7 +134,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 
   /* here comes the inversion using even/odd preconditioning */
   if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}
-  M_ee_inv_ND(Even_new_s, Even_new_c, 
+  M_ee_inv_ndpsi(Even_new_s, Even_new_c, 
 	      Even_s, Even_c);
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new_s);
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI+1], Even_new_c);
@@ -176,22 +173,22 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     else {		// CPU, conjugate gradient
       iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
 		       max_iter, precision, rel_prec, 
-		       VOLUME/2, &Q_Qdagger_ND);
+		       VOLUME/2, &Qtm_pm_ndpsi);
     }
   #else			// CPU, conjugate gradient
     iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
 		     max_iter, precision, rel_prec, 
-		     VOLUME/2, &Q_Qdagger_ND);
+		     VOLUME/2, &Qtm_pm_ndpsi);
   #endif
   
   
-  QdaggerNon_degenerate(Odd_new_s, Odd_new_c,
+  Qtm_dagger_ndpsi(Odd_new_s, Odd_new_c,
 			Odd_new_s, Odd_new_c);
   
   /* Reconstruct the even sites                */
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new_s);
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI+1], Odd_new_c);
-  M_ee_inv_ND(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3],
+  M_ee_inv_ndpsi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3],
 	      g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
 
   /* The sign is plus, since in Hopping_Matrix */

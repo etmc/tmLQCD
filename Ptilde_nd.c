@@ -103,7 +103,7 @@ void Ptilde_cheb_coefs(double aa, double bb, double dd[], int n, double exponent
  *
  **************************************************************************/
 
-void Poly_tilde_ND(spinor *R_s, spinor *R_c, double *dd, int n, 
+void Ptilde_ndpsi(spinor *R_s, spinor *R_c, double *dd, int n, 
                    spinor *S_s, spinor *S_c){
 
   int j;
@@ -195,7 +195,7 @@ void Poly_tilde_ND(spinor *R_s, spinor *R_c, double *dd, int n,
     /*   } */
 
 
-    Q_Qdagger_ND(&R_s[0], &R_c[0], &auxs[0], &auxc[0]);
+    Qtm_pm_ndpsi(&R_s[0], &R_c[0], &auxs[0], &auxc[0]);
 
     temp1=-1.0;
     temp2=dd[j];
@@ -208,7 +208,7 @@ void Poly_tilde_ND(spinor *R_s, spinor *R_c, double *dd, int n,
   assign(&R_s[0], &ds[0],VOLUME/2);
   assign(&R_c[0], &dc[0],VOLUME/2);
 
-  Q_Qdagger_ND(&auxs[0], &auxc[0], &R_s[0], &R_c[0]);
+  Qtm_pm_ndpsi(&auxs[0], &auxc[0], &R_s[0], &R_c[0]);
 
   temp1=-1.0;
   temp2=dd[0]/2;
@@ -350,11 +350,11 @@ void degree_of_Ptilde(int * _degree, double ** coefs,
     random_spinor_field(ss,VOLUME/2, 1);
     random_spinor_field(sc,VOLUME/2, 1);
 
-    Poly_tilde_ND(&auxs[0], &auxc[0], *coefs, degree, &ss[0], &sc[0]);
+    Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree, &ss[0], &sc[0]);
     QdaggerQ_poly(&aux2s[0], &aux2c[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &auxs[0], &auxc[0]);
-    Q_Qdagger_ND(&auxs[0], &auxc[0], &aux2s[0], &aux2c[0]);
+    Qtm_pm_ndpsi(&auxs[0], &auxc[0], &aux2s[0], &aux2c[0]);
     QdaggerQ_poly(&aux2s[0], &aux2c[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &auxs[0], &auxc[0]);
-    Poly_tilde_ND(&auxs[0], &auxc[0], *coefs, degree, &aux2s[0], &aux2c[0]);
+    Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree, &aux2s[0], &aux2c[0]);
 
     diff(&aux2s[0],&auxs[0], &ss[0], VOLUME/2);
     temp = square_norm(&aux2s[0], VOLUME/2, 1) / square_norm(&ss[0], VOLUME/2, 1) / 4.0;

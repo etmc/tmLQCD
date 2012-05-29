@@ -98,7 +98,7 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
     /* Here comes the definitions for the chi_j fields */
     /* from  j=0  (chi_0 = phi)  .....  to j = n-1 */
     for(k = 0; k < degreehalf-1 ; k++) {
-      Qtm_pm_min_cconst_nrm(chi_spinor_field[k+1],
+      Qtm_pm_sub_const_nrm_psi(chi_spinor_field[k+1],
 				 chi_spinor_field[k], 
 				 mnl->MDPolyRoots[k]);
     }
@@ -114,7 +114,7 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
       assign(chi_spinor_field[degreehalf],
 	     chi_spinor_field[degreehalf+1], VOLUME/2);
       
-      Qtm_pm_min_cconst_nrm(chi_spinor_field[degreehalf+1], 
+      Qtm_pm_sub_const_nrm_psi(chi_spinor_field[degreehalf+1], 
 			    chi_spinor_field[degreehalf],
 			    mnl->MDPolyRoots[mnl->MDPolyDegree-(j+1)]);
       
@@ -144,7 +144,7 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
       * multiply with the last missing monomial *
       * such that we get an evaluation of P     *
       ******************************************/
-      Qtm_pm_min_cconst_nrm(chi_spinor_field[degreehalf], 
+      Qtm_pm_sub_const_nrm_psi(chi_spinor_field[degreehalf], 
 			    chi_spinor_field[degreehalf+1],
 			    mnl->MDPolyRoots[mnl->MDPolyDegree-1]);
       
@@ -223,7 +223,7 @@ double poly_acc(const int id, hamiltonian_field_t * const hf){
     /* apply B */
     for(j = 0; j < mnl->MDPolyDegree/2; j++){
       assign(mnl->w_fields[0], mnl->w_fields[1], VOLUME/2);
-      Qtm_pm_min_cconst_nrm(mnl->w_fields[1],
+      Qtm_pm_sub_const_nrm_psi(mnl->w_fields[1],
 			    mnl->w_fields[0],
 			    mnl->MDPolyRoots[j]);
     }
@@ -310,7 +310,7 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
     /*  phi= Bdagger phi  */
     for(j = 0; j < (mnl->MDPolyDegree/2); j++){
       assign(mnl->w_fields[1], mnl->w_fields[0], VOLUME/2);
-      Qtm_pm_min_cconst_nrm(mnl->w_fields[0],
+      Qtm_pm_sub_const_nrm_psi(mnl->w_fields[0],
 				 mnl->w_fields[1],
 				 mnl->MDPolyRoots[mnl->MDPolyDegree/2+j]);
     }

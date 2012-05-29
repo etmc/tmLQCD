@@ -56,7 +56,7 @@ double reweighting_factor_nd(const int N)
     temp1 = phmc_ptilde_cheby_coef[0];
     phmc_ptilde_cheby_coef[0] = temp1 - 1;
 
-    Poly_tilde_ND(g_chi_up_spinor_field[3], g_chi_dn_spinor_field[3], phmc_ptilde_cheby_coef, phmc_ptilde_n_cheby, g_chi_up_spinor_field[2], g_chi_dn_spinor_field[2]);
+    Ptilde_ndpsi(g_chi_up_spinor_field[3], g_chi_dn_spinor_field[3], phmc_ptilde_cheby_coef, phmc_ptilde_n_cheby, g_chi_up_spinor_field[2], g_chi_dn_spinor_field[2]);
 
     phmc_ptilde_cheby_coef[0] = temp1;
 

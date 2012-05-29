@@ -179,7 +179,7 @@ void QdaggerQ_poly(spinor *R_s, spinor *R_c, double *c, int n,
      /*   } */  
 
 
-     Q_Qdagger_ND(&R_s[0], &R_c[0], &auxs[0], &auxc[0]);
+     Qtm_pm_ndpsi(&R_s[0], &R_c[0], &auxs[0], &auxc[0]);
 
      temp1=-1.0;
      temp2=c[j];
@@ -195,7 +195,7 @@ void QdaggerQ_poly(spinor *R_s, spinor *R_c, double *c, int n,
    assign(&R_c[0], &dc[0],VOLUME/2);  
 
 
-   Q_Qdagger_ND(&auxs[0], &auxc[0], &R_s[0], &R_c[0]);
+   Qtm_pm_ndpsi(&auxs[0], &auxc[0], &R_s[0], &R_c[0]);
 
    temp1=-1.0;
    temp2=c[0]/2;
@@ -317,7 +317,7 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
 
   /* Here we check the accuracy */
   QdaggerQ_poly(&auxs[0], &auxc[0], *coefs, degree_of_p, &ss[0], &sc[0]);
-  Q_Qdagger_ND(&aux2s[0], &aux2c[0], &auxs[0], &auxc[0]);
+  Qtm_pm_ndpsi(&aux2s[0], &aux2c[0], &auxs[0], &auxc[0]);
   QdaggerQ_poly(&auxs[0], &auxc[0], *coefs, degree_of_p, &aux2s[0], &aux2c[0]);
 
   diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);

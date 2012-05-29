@@ -61,15 +61,15 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
 
   iter = cg_her_nd(mnl->w_fields[0], mnl->w_fields[1], mnl->pf, mnl->pf2,
 		   mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
-		   VOLUME/2, &Q_Qdagger_ND);
-  QdaggerNon_degenerate(mnl->w_fields[2], mnl->w_fields[3],
+		   VOLUME/2, &Qtm_pm_ndpsi);
+  Qtm_dagger_ndpsi(mnl->w_fields[2], mnl->w_fields[3],
 			mnl->w_fields[0], mnl->w_fields[1]);
 
   g_mubar = mnl->mubar2;
   g_epsbar = mnl->epsbar2;
   boundary(mnl->kappa2);
 
-  QNon_degenerate(mnl->w_fields[0], mnl->w_fields[1],
+  Qtm_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
 		  mnl->w_fields[2], mnl->w_fields[3]);
   
   mnl->energy1  = scalar_prod_r(mnl->pf , mnl->w_fields[0], VOLUME/2, 1);

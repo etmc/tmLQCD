@@ -207,7 +207,7 @@ int init_operators() {
     }
     else if(optr->type == DBTMWILSON) {
       optr->even_odd_flag = 1;
-      optr->applyDbQsq = &Q_Qdagger_ND;
+      optr->applyDbQsq = &Qtm_pm_ndpsi;
       /* TODO: this should be here!       */
       /* Chi`s-spinors  memory allocation */
       /*       if(init_chi_spinor_field(VOLUMEPLUSRAND/2, 20) != 0) { */

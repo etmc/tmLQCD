@@ -38,24 +38,11 @@
 #include "gamma.h"
 #include "linsolve.h"
 #include "linalg_eo.h"
+#include "tm_operators.h"
 #include "Nondegenerate_Matrix.h"
 
 
-void mul_one_minus_imubar(spinor * const l, spinor * const k);
-/******************************************
- * mul_one_plus_imubar_inv computes
- * l = [(1-i\mubar\gamma_5) * l
- *
-*/
-
-void mul_one_plus_imubar(spinor * const l, spinor * const k);
-/******************************************
- * mul_one_plus_imubar_inv computes
- * l = [(1+i\mubar\gamma_5) * l
- *
-*/
-
-void Qtm_pm_psi(spinor *l,spinor *k);
+void mul_one_minus_iconst(spinor * const l, spinor * const k, const double mu);
 
 /* external functions */
 
@@ -72,7 +59,7 @@ void Qtm_pm_psi(spinor *l,spinor *k);
  * it acts only on the odd part or only 
  * on a half spinor
  ******************************************/
-void QNon_degenerate(spinor * const l_strange, spinor * const l_charm,
+void Qtm_ndpsi(spinor * const l_strange, spinor * const l_charm,
                      spinor * const k_strange, spinor * const k_charm){
 
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
@@ -81,8 +68,8 @@ void QNon_degenerate(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_strange);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_charm);
 
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX]);
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX], g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -96,8 +83,8 @@ void QNon_degenerate(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX], k_strange);
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+1], k_charm);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX], k_strange, -g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+1], k_charm, g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX], k_charm, -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+1], k_strange, -g_epsbar, VOLUME/2);
@@ -122,7 +109,7 @@ void QNon_degenerate(spinor * const l_strange, spinor * const l_charm,
  *
  *  = Qhat(2x2)  with   g_mubar  ->  - g_mubar
  *
- * With respect to QNon_degenerate the role of charme and strange fields
+ * With respect to Qtm_ndpsi the role of charme and strange fields
  * are interchenged, since Qdagger=tau_1 Q tau_1
  * see documentation for details
  * k_charm and k_strange are the input fields
@@ -131,7 +118,7 @@ void QNon_degenerate(spinor * const l_strange, spinor * const l_charm,
  * it acts only on the odd part or only
  * on a half spinor
  ******************************************/
-void QdaggerNon_degenerate(spinor * const l_strange, spinor * const l_charm,
+void Qtm_dagger_ndpsi(spinor * const l_strange, spinor * const l_charm,
                            spinor * const k_strange, spinor * const k_charm){
 
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
@@ -140,8 +127,8 @@ void QdaggerNon_degenerate(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX]);
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -155,8 +142,8 @@ void QdaggerNon_degenerate(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX+2], k_charm);
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+3], k_strange);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], k_charm, -g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], k_strange, g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], k_strange, -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], k_charm, -g_epsbar, VOLUME/2);
@@ -191,7 +178,7 @@ void QdaggerNon_degenerate(spinor * const l_strange, spinor * const l_charm,
  * it acts only on the odd part or only
  * on a half spinor
  ******************************************/
-void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
+void Qtm_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
                            spinor * const k_strange, spinor * const k_charm){
 
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
@@ -201,8 +188,8 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX]);
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -214,8 +201,8 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX+2], k_charm);
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+3], k_strange);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], k_charm, -g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], k_strange, g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], k_strange, -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], k_charm, -g_epsbar, VOLUME/2);
@@ -245,8 +232,8 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+7]);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+6]);
 
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX]);
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -258,8 +245,8 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+7]);
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+6]);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+7], -g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+6], g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+6], -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+7], -g_epsbar, VOLUME/2);
@@ -284,7 +271,7 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
  *
  * This is the implementation of 
  *
- *  Q_tau1_min_cconst_ND =  M - z_k 
+ *  Q_tau1_sub_const_ndpsi =  M - z_k 
  *
  *  with M = Qhat(2x2) tau_1   and z_k \in Complex
  *
@@ -302,7 +289,7 @@ void Q_Qdagger_ND(spinor * const l_strange, spinor * const l_charm,
  * it acts only on the odd part or only
  * on a half spinor
  ******************************************/
-void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
+void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
                      spinor * const k_strange, spinor * const k_charm, const _Complex double z){
 
 
@@ -321,10 +308,8 @@ void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
-
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX]);
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1]);
-
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX], g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -338,19 +323,15 @@ void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, l_strange, g_spinor_field[DUM_MATRIX+4]);
   Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+3]);
 
-
   /* Here the M_oo  implementation  */
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX], k_charm);
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+1], k_strange);
-
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX], k_charm, -g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+1], k_strange, g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX], k_strange, -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+1], k_charm, -g_epsbar, VOLUME/2);
 
-
   diff(l_strange, g_spinor_field[DUM_MATRIX], l_strange, VOLUME/2);
   diff(l_charm, g_spinor_field[DUM_MATRIX+1], l_charm, VOLUME/2);
-
 
   /* and finally the  gamma_5  multiplication  */
   gamma5(l_strange, l_strange, VOLUME/2);
@@ -360,20 +341,12 @@ void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
   mul_r(l_strange, phmc_invmaxev, l_strange, VOLUME/2);
   mul_r(l_charm, phmc_invmaxev, l_charm, VOLUME/2);
 
-  /*     
-  printf(" IN UP: %f %f \n", l_strange[0].creal(s2.c1), l_strange[0].cimag(s2.c1));
-  printf(" IN DN: %f %f \n", l_charm[0].creal(s2.c1), l_charm[0].cimag(s2.c1));
-  */
-
-  /*  AND FINALLY WE SUBSTRACT THE C-CONSTANT  */
-
-
   /************ loop over all lattice sites ************/
-  for(ix = 0; ix < (VOLUME/2); ix++){
-
+  for(ix = 0; ix < (VOLUME/2); ix++) {
+    
     r=l_strange + ix;
     s=k_strange + ix;
-
+    
     _complex_times_vector(phi1, z, s->s0);
     _vector_sub_assign(r->s0, phi1);
     _complex_times_vector(phi1, z, s->s1);
@@ -385,7 +358,7 @@ void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
     
     r=l_charm + ix;
     s=k_charm + ix;
-
+    
     _complex_times_vector(phi1, z, s->s0);
     _vector_sub_assign(r->s0, phi1);
     _complex_times_vector(phi1, z, s->s1);
@@ -395,7 +368,7 @@ void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
     _complex_times_vector(phi1, z, s->s3);
     _vector_sub_assign(r->s3, phi1);    
   }
-
+  
   /* Finally, we multiply by the constant  phmc_Cpol  */
   /* which renders the polynomial in monomials  */
   /* identical to the polynomial a la clenshaw */;
@@ -425,7 +398,7 @@ void Q_tau1_min_cconst_ND(spinor * const l_strange, spinor * const l_charm,
  * it acts only on the odd part or only
  * on a half spinor
  ******************************************/
-void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
+void Qtm_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k){
 
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
   static int memalloc = 0;
@@ -468,8 +441,8 @@ void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX]);
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -483,8 +456,8 @@ void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX+2], k_charm);
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+3], k_strange);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], k_charm, -g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], k_strange, g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], k_strange, -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], k_charm, -g_epsbar, VOLUME/2);
@@ -514,8 +487,8 @@ void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+7]);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+6]);
 
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX]);
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -529,8 +502,8 @@ void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
   Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_plus_imubar(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+7]);
-  mul_one_minus_imubar(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+6]);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+7], -g_mubar);
+  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+6], g_mubar);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+6], -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+7], -g_epsbar, VOLUME/2);
@@ -566,7 +539,7 @@ void Q_Qdagger_ND_BI(bispinor * const bisp_l, bispinor * const bisp_k){
  * it acts only on the odd part or only 
  * on a half spinor
  ******************************************/
-void H_eo_ND(spinor * const l_strange, spinor * const l_charm, 
+void H_eo_tm_ndpsi(spinor * const l_strange, spinor * const l_charm, 
              spinor * const k_strange, spinor * const k_charm, 
 	     const int ieo) {
 
@@ -577,8 +550,8 @@ void H_eo_ND(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX], k_strange);
   Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX+1], k_charm);
 
-  mul_one_minus_imubar(l_strange, g_spinor_field[DUM_MATRIX+1]);
-  mul_one_plus_imubar(l_charm, g_spinor_field[DUM_MATRIX]);
+  mul_one_minus_iconst(l_strange, g_spinor_field[DUM_MATRIX+1], g_mubar);
+  mul_one_minus_iconst(l_charm, g_spinor_field[DUM_MATRIX], -g_mubar);
 
   assign_add_mul_r(l_strange, g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
   assign_add_mul_r(l_charm, g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
@@ -588,7 +561,7 @@ void H_eo_ND(spinor * const l_strange, spinor * const l_charm,
 
 }
 
-void M_ee_inv_ND(spinor * const l_strange, spinor * const l_charm, 
+void M_ee_inv_ndpsi(spinor * const l_strange, spinor * const l_charm, 
 		 spinor * const k_strange, spinor * const k_charm) {
   
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
@@ -596,8 +569,8 @@ void M_ee_inv_ND(spinor * const l_strange, spinor * const l_charm,
 
   /* recall:   strange <-> up    while    charm <-> dn   */
 
-  mul_one_minus_imubar(l_strange, k_strange);
-  mul_one_plus_imubar(l_charm, k_charm);
+  mul_one_minus_iconst(l_strange, k_strange, g_mubar);
+  mul_one_minus_iconst(l_charm, k_charm, -g_mubar);
 
   assign_add_mul_r(l_strange, k_charm, g_epsbar, VOLUME/2);
   assign_add_mul_r(l_charm, k_strange, g_epsbar, VOLUME/2);
@@ -655,8 +628,7 @@ void mul_one_pm_itau2(spinor * const p, spinor * const q,
   mul_r(q, fac, q, N);
 }
 
-
-void mul_one_minus_imubar(spinor * const l, spinor * const k)
+void mul_one_minus_iconst(spinor * const l, spinor * const k, const double mu)
 {
   spinor *r, *s;
   static su3_vector phi1;
@@ -666,43 +638,21 @@ void mul_one_minus_imubar(spinor * const l, spinor * const k)
     r=l + ix;
     s=k + ix;
     /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
-    _complex_times_vector(phi1, (1. - g_mubar * I), s->s0);
+    _complex_times_vector(phi1, (1. - mu * I), s->s0);
     _vector_assign(r->s0, phi1);
-    _complex_times_vector(phi1, (1. - g_mubar * I), s->s1);
+    _complex_times_vector(phi1, (1. - mu * I), s->s1);
     _vector_assign(r->s1, phi1);
-    _complex_times_vector(phi1, (1. + g_mubar * I), s->s2);
+    _complex_times_vector(phi1, (1. + mu * I), s->s2);
     _vector_assign(r->s2, phi1);
-    _complex_times_vector(phi1, (1. + g_mubar * I), s->s3);
-    _vector_assign(r->s3, phi1);
-  }
-}
-
-
-void mul_one_plus_imubar(spinor * const l, spinor * const k){
-  spinor *r, *s;
-  static su3_vector phi1;
-
-  /************ loop over all lattice sites ************/
-  for(int ix = 0; ix < (VOLUME/2); ++ix){
-    r=l + ix;
-    s=k + ix;
-    /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
-    _complex_times_vector(phi1, (1. + g_mubar * I), s->s0);
-    _vector_assign(r->s0, phi1);
-    _complex_times_vector(phi1, (1. + g_mubar * I), s->s1);
-    _vector_assign(r->s1, phi1);
-    _complex_times_vector(phi1, (1. - g_mubar * I), s->s2);
-    _vector_assign(r->s2, phi1);
-    _complex_times_vector(phi1, (1. - g_mubar * I), s->s3);
+    _complex_times_vector(phi1, (1. + mu * I), s->s3);
     _vector_assign(r->s3, phi1);
   }
   return;
 }
 
-
 /*  calculates P(Q Q^dagger) for the nondegenerate case */
 
-void P_ND(spinor * const l_strange, spinor * const l_charm,
+void P_ndpsi(spinor * const l_strange, spinor * const l_charm,
 	  spinor * const k_strange, spinor * const k_charm){
   
   
@@ -722,7 +672,7 @@ void P_ND(spinor * const l_strange, spinor * const l_charm,
       assign(dum_dn,l_charm,VOLUME/2);
     }
     
-    Q_tau1_min_cconst_ND(l_strange, l_charm,
+    Q_tau1_sub_const_ndpsi(l_strange, l_charm,
 			 dum_up, dum_dn,
 			 phmc_root[j]);
   }
@@ -731,7 +681,7 @@ void P_ND(spinor * const l_strange, spinor * const l_charm,
 
 
 /* calculates  Q * \tau^1  for the nondegenerate case */
-void Qtau1_P_ND(spinor * const l_strange, spinor * const l_charm,
+void Qtau1_P_ndpsi(spinor * const l_strange, spinor * const l_charm,
 		spinor * const k_strange, spinor * const k_charm){
   
   
@@ -739,12 +689,12 @@ void Qtau1_P_ND(spinor * const l_strange, spinor * const l_charm,
   dum_up=g_chi_up_spinor_field[DUM_MATRIX+1];
   dum_dn=g_chi_dn_spinor_field[DUM_MATRIX+1];
   
-  P_ND(l_strange, l_charm,k_strange,k_charm);
+  P_ndpsi(l_strange, l_charm,k_strange,k_charm);
   
   assign(dum_up,l_strange,VOLUME/2);
   assign(dum_dn,l_charm,VOLUME/2);
   
-  QNon_degenerate(l_strange,l_charm,dum_dn,dum_up);
+  Qtm_ndpsi(l_strange,l_charm,dum_dn,dum_up);
   return;
 }
 
@@ -752,7 +702,7 @@ void Qtau1_P_ND(spinor * const l_strange, spinor * const l_charm,
 
 /* this is neccessary for the calculation of the polynomial */
 
-void Qtm_pm_min_cconst_nrm(spinor * const l, spinor * const k,
+void Qtm_pm_sub_const_nrm_psi(spinor * const l, spinor * const k,
 			   const _Complex double z){
   static su3_vector phi1;
   spinor *r,*s;
@@ -801,7 +751,7 @@ void Ptm_pm_psi(spinor * const l, spinor * const k){
       assign(spinDum,l,VOLUME/2);
     }
     
-    Qtm_pm_min_cconst_nrm(l,spinDum,phmc_root[j]);
+    Qtm_pm_sub_const_nrm_psi(l,spinDum,phmc_root[j]);
   }
   return;
 }

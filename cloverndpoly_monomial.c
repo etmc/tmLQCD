@@ -76,7 +76,7 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   assign(g_chi_dn_spinor_field[0], mnl->pf2, VOLUME/2);
   
   for(k = 1; k < (mnl->MDPolyDegree-1); k++) {
-    Q_tau1_min_cconst_ND(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
+    Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
 			 g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
 			 mnl->MDPolyRoots[k-1]);
   }
@@ -91,12 +91,12 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     assign(g_chi_up_spinor_field[mnl->MDPolyDegree-1], g_chi_up_spinor_field[mnl->MDPolyDegree], VOLUME/2);
     assign(g_chi_dn_spinor_field[mnl->MDPolyDegree-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], VOLUME/2);
     
-    Q_tau1_min_cconst_ND(g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], 
+    Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], 
 			 g_chi_up_spinor_field[mnl->MDPolyDegree-1], g_chi_dn_spinor_field[mnl->MDPolyDegree-1], 
 			 mnl->MDPolyRoots[2*mnl->MDPolyDegree-3-j]);
     
     /* Get the even parts of the  (j-1)th  chi_spinors */
-    H_eo_ND(mnl->w_fields[0], mnl->w_fields[1], 
+    H_eo_tm_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
 	    g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
     
     /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
@@ -104,18 +104,14 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     deriv_Sb(EO, mnl->w_fields[1], g_chi_dn_spinor_field[mnl->MDPolyDegree], hf);    /* DN */
     
     /* Get the even parts of the  (2N-j)-th  chi_spinors */
-    H_eo_ND(mnl->w_fields[0], mnl->w_fields[1], 
+    H_eo_tm_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
 	    g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], EO);
     
     /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
     deriv_Sb(OE, g_chi_up_spinor_field[j-1], mnl->w_fields[0], hf);
     deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[1], hf);
   }
-
-  /*
-    Normalisation by the largest  EW  is done in update_momenta
-    using mnl->forcefactor
-  */ 
+  return;
 }
 
 
@@ -145,18 +141,18 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
     printf("PHMC: OLD Energy  DN + UP %e \n\n", mnl->energy0);
   }
 
-  QNon_degenerate(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
+  Qtm_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
 		  g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0]);
   
   for(j = 1; j < (mnl->MDPolyDegree); j++){
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
     assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
     
-    Q_tau1_min_cconst_ND(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
+    Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
 			 g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
 			 mnl->MDPolyRoots[mnl->MDPolyDegree-2+j]);
   }
-  Poly_tilde_ND(g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], mnl->PtildeCoefs, 
+  Ptilde_ndpsi(g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], mnl->PtildeCoefs, 
 		mnl->PtildeDegree, g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1]);
   
   assign(mnl->pf, g_chi_up_spinor_field[0], VOLUME/2);
@@ -213,7 +209,7 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
 
   for(j = 1; j <= (mnl->MDPolyDegree-1); j++) {
     /* Change this name !!*/
-    Q_tau1_min_cconst_ND(up1, dn1, up0, dn0, mnl->MDPolyRoots[j-1]);
+    Q_tau1_sub_const_ndpsi(up1, dn1, up0, dn0, mnl->MDPolyRoots[j-1]);
     
     dummy = up1; up1 = up0; up0 = dummy;
     dummy = dn1; dn1 = dn0; dn0 = dummy;
@@ -243,22 +239,22 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   for(j = 1; j < 1; j++){ /* To omit corrections just set  j<1 */
     
     if(j % 2){ /*  Chi[j] = ( Qdag P  Ptilde ) Chi[j-1]  */ 
-      Poly_tilde_ND(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+      Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 		    mnl->PtildeCoefs, mnl->PtildeDegree, 
 		    g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
       QdaggerQ_poly(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
 		    mnl->MDPolyCoefs, mnl->MDPolyDegree, 
 		    g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
-      QdaggerNon_degenerate(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+      Qtm_dagger_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			    g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
     }
     else { /*  Chi[j] = ( Ptilde P Q ) Chi[j-1]  */ 
-      QNon_degenerate(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+      Qtm_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 		      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
       QdaggerQ_poly(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
 		    mnl->MDPolyCoefs, mnl->MDPolyDegree, g_chi_up_spinor_field[j], 
 		    g_chi_dn_spinor_field[j]);
-      Poly_tilde_ND(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+      Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 		    mnl->PtildeCoefs, mnl->PtildeDegree, 
 		    g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
     }

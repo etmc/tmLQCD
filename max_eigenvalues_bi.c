@@ -214,11 +214,11 @@ double max_eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
 	 threshold_max, decay_max, verbosity,
 	 &converged, (complex*) max_evs, max_evls,
 	 &returncode, JD_MAXIMAL, 1,
-	 &Q_Qdagger_ND_BI);
+	 &Qtm_pm_ndbipsi);
 
 	/* IN THE LAST LINE, INSERT:
-             Q_Qdagger_ND_BI;   Non-degenerate case - on 1 bispinor 
-             Q_Qdagger_ND;      Non-degenerate case - on 2 spinors 
+             Qtm_pm_ndbipsi;   Non-degenerate case - on 1 bispinor 
+             Qtm_pm_ndpsi;      Non-degenerate case - on 2 spinors 
              Qtm_pm_psi;        Degenerate case  -  on 1 spinor 
 	*/
 
@@ -231,11 +231,11 @@ double max_eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
 	threshold_max, decay_max, verbosity,
 	&converged, (complex*) max_evs, max_evls,
 	&returncode, JD_MAXIMAL, 1,
-	&Q_Qdagger_ND_BI);
+	&Qtm_pm_ndbipsi);
 
 	/* IN THE LAST LINE, INSERT:
-             Q_Qdagger_ND_BI;   Non-degenerate case - on 1 bispinor 
-             Q_Qdagger_ND;      Non-degenerate case - on 2 spinors 
+             Qtm_pm_ndbipsi;   Non-degenerate case - on 1 bispinor 
+             Qtm_pm_ndpsi;      Non-degenerate case - on 2 spinors 
              Qtm_pm_psi;        Degenerate case  -  on 1 spinor 
 	*/
 
