@@ -103,16 +103,16 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 	      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
       
       /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
-      deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[mnl->MDPolyDegree], hf);      /* UP */
-      deriv_Sb(EO, mnl->w_fields[1], g_chi_dn_spinor_field[mnl->MDPolyDegree], hf);    /* DN */
+      deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[mnl->MDPolyDegree], hf, mnl->forcefactor);      /* UP */
+      deriv_Sb(EO, mnl->w_fields[1], g_chi_dn_spinor_field[mnl->MDPolyDegree], hf, mnl->forcefactor);    /* DN */
       
       /* Get the even parts of the  (2N-j)-th  chi_spinors */
       H_eo_ND(mnl->w_fields[0], mnl->w_fields[1], 
 	      g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], EO);
       
       /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
-      deriv_Sb(OE, g_chi_up_spinor_field[j-1], mnl->w_fields[0], hf);
-      deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[1], hf);
+      deriv_Sb(OE, g_chi_up_spinor_field[j-1], mnl->w_fields[0], hf, mnl->forcefactor);
+      deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[1], hf, mnl->forcefactor);
     }
   } 
   else if(g_epsbar == 0.0) {
@@ -138,18 +138,18 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
       Qtm_minus_psi(mnl->w_fields[3],g_chi_up_spinor_field[j-1]); 
 
       H_eo_tm_inv_psi(mnl->w_fields[2], g_chi_up_spinor_field[mnl->MDPolyDegree], EO, -1.);
-      deriv_Sb(OE, mnl->w_fields[3], mnl->w_fields[2], hf); 
+      deriv_Sb(OE, mnl->w_fields[3], mnl->w_fields[2], hf, mnl->forcefactor); 
       
       H_eo_tm_inv_psi(mnl->w_fields[2], mnl->w_fields[3], EO, 1.); 
-      deriv_Sb(EO, mnl->w_fields[2], g_chi_up_spinor_field[mnl->MDPolyDegree], hf);
+      deriv_Sb(EO, mnl->w_fields[2], g_chi_up_spinor_field[mnl->MDPolyDegree], hf, mnl->forcefactor);
 
       Qtm_minus_psi(mnl->w_fields[3],g_chi_up_spinor_field[mnl->MDPolyDegree]); 
 
       H_eo_tm_inv_psi(mnl->w_fields[2],mnl->w_fields[3], EO, +1.);
-      deriv_Sb(OE, g_chi_up_spinor_field[j-1] , mnl->w_fields[2], hf); 
+      deriv_Sb(OE, g_chi_up_spinor_field[j-1] , mnl->w_fields[2], hf, mnl->forcefactor); 
       
       H_eo_tm_inv_psi(mnl->w_fields[2], g_chi_up_spinor_field[j-1], EO, -1.); 
-      deriv_Sb(EO, mnl->w_fields[2], mnl->w_fields[3], hf);
+      deriv_Sb(EO, mnl->w_fields[2], mnl->w_fields[3], hf, mnl->forcefactor);
     }
   }
   /*

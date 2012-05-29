@@ -60,7 +60,6 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
 
   monomial * mnl = &monomial_list[no];
 
-  /* This factor 2* a missing factor 2 in trace_lambda */
   mnl->forcefactor = 1.;
 
   if(mnl->even_odd_flag) {
@@ -100,12 +99,12 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     /* to get the even sites of X */
     H_eo_tm_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1.);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf); 
+    deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
     
     /* to get the even sites of Y */
     H_eo_tm_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf); 
+    deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor); 
 
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
@@ -118,12 +117,12 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     /* to get the even sites of X */
     H_eo_tm_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1.);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf); 
+    deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
     
     /* to get the even sites of Y */
     H_eo_tm_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf);
+    deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
 
   } 
   else { /* no even/odd preconditioning */
@@ -184,7 +183,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     }
 
     /* \delta Q sandwitched by Y^\dagger and X */
-    deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf); 
+    deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf, mnl->forcefactor); 
     
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
@@ -194,7 +193,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     mul_r(mnl->w_fields[0], -1., mnl->pf, VOLUME);
     
     /* \delta Q sandwitched by Y^\dagger and X */
-    deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf);
+    deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf, mnl->forcefactor);
   }
   g_mu = g_mu1;
   boundary(g_kappa);
