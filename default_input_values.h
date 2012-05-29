@@ -154,7 +154,7 @@
 #define _default_MDPolyDegree 123
 #define _default_MDPolyLmin 0.1
 #define _default_MDPolyLmax 3.0
-#define _default_MDPolyRootsFile ""
+#define _default_MDPolyRootsFile "Square_root_BR_roots.dat"
 #define _default_MDPolyLocNormConst -1.0
 #define _default_MDPolyDetRatio 0
 

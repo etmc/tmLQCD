@@ -1,8 +1,7 @@
 /***********************************************************************
  *
- * Copyright (C) 2008 Carsten Urbach
- *
- * Modified by Jenifer Gonzalez Lopez 2009/03/31
+ * Copyright (C) 2008,2011,2012 Carsten Urbach
+ *               2009 Jenifer Gonzalez Lopez
  *
  * This file is part of tmLQCD.
  *
@@ -47,9 +46,10 @@
 monomial monomial_list[max_no_monomials];
 int no_monomials = 0;
 int no_gauge_monomials = 0;
-int no_ndpoly_monomials = 0;
 int clover_trlog_monomial = 0;
 static spinor * _pf;
+spinor ** w_fields;
+const int no_wfields = 4;
 
 int add_monomial(const int type) {
   
@@ -63,10 +63,12 @@ int add_monomial(const int type) {
 
   monomial_list[no_monomials].pf = NULL;
   monomial_list[no_monomials].pf2 = NULL;
+  monomial_list[no_monomials].w_fields = NULL;
   monomial_list[no_monomials].csg_field = NULL;
   monomial_list[no_monomials].csg_field2 = NULL;
   monomial_list[no_monomials].csg_index_array = NULL;
   monomial_list[no_monomials].csg_index_array2 = NULL;
+  monomial_list[no_monomials].no_wfields = no_wfields;
   monomial_list[no_monomials].csg_N = 0;
   monomial_list[no_monomials].csg_N2 = 0;
   monomial_list[no_monomials].csg_n = 1;
@@ -111,6 +113,10 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].MDPolyLocNormConst = _default_MDPolyLocNormConst;
   monomial_list[no_monomials].MDPolyDetRatio = _default_MDPolyDetRatio;
   monomial_list[no_monomials].MaxPtildeDegree = NTILDE_CHEBYMAX;
+  monomial_list[no_monomials].StildeMin = _default_stilde_min;
+  monomial_list[no_monomials].StildeMax = _default_stilde_max;
+  monomial_list[no_monomials].PrecisionHfinal = _default_g_acc_Hfin;
+  monomial_list[no_monomials].PrecisionPtilde = _default_g_acc_Ptilde;
 
   monomial_list[no_monomials].initialised = 1;
   if(monomial_list[no_monomials].type == NDDETRATIO) {
@@ -123,17 +129,17 @@ int add_monomial(const int type) {
 
 
 int init_monomials(const int V, const int even_odd_flag) {
-  int i, no=0;
+  int no=0;
   int retval;
   spinor * __pf = NULL;
   double sw_mu=0., sw_k=0., sw_c=0.;
-  for(i = 0; i < no_monomials; i++) {
+  for(int i = 0; i < no_monomials; i++) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
     /* non-degenerate monomials need two pseudo fermion fields */
     if((monomial_list[i].type == NDPOLY) || (monomial_list[i].type == NDDETRATIO)) no++;
   }
   if(no_monomials > 0) {
-    if((void*)(_pf = (spinor*)calloc(no*V+1, sizeof(spinor))) == NULL) {
+    if((void*)(_pf = (spinor*)calloc((no+4)*V+1, sizeof(spinor))) == NULL) {
       printf ("malloc errno in monomial pf fields: %d\n",errno); 
       errno = 0;
       return(1);
@@ -145,12 +151,20 @@ int init_monomials(const int V, const int even_odd_flag) {
       __pf = _pf;
 #endif
     }
+    if((void*)(w_fields = (spinor**)calloc(no_wfields, sizeof(spinor*))) == NULL) {
+      printf ("malloc errno in monomial  w_fields: %d\n",errno); 
+      errno = 0;
+      return(1);
+    }
+    for(int i = 0; i < no_wfields; i++) {
+      w_fields[i] = __pf+(no+i)*V;
+    }
   }
 
   no = 0;
-  for(i = 0; i < no_monomials; i++) {
+  for(int i = 0; i < no_monomials; i++) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) {
-          
+      monomial_list[i].w_fields = w_fields;
       monomial_list[i].pf = __pf+no*V;
       no++;
       monomial_list[i].rngrepro = reproduce_randomnumber_flag;
@@ -206,16 +220,12 @@ int init_monomials(const int V, const int even_odd_flag) {
 	if(retval!=0) return retval;
       }
       else if(monomial_list[i].type == NDPOLY) {
-	if(no_ndpoly_monomials > 0) {
-	  fprintf(stderr, "maximal number of ndpoly monomials (1) exceeded!\n");
-	  exit(-1);
-	}
 	monomial_list[i].hbfunction = &ndpoly_heatbath;
 	monomial_list[i].accfunction = &ndpoly_acc;
 	monomial_list[i].derivativefunction = &ndpoly_derivative;
-	no_ndpoly_monomials++;
 	monomial_list[i].pf2 = __pf+no*V;
 	no++;
+	retval = init_ndpoly_monomial(i);
       }
       else if(monomial_list[i].type == NDDETRATIO) {
 	monomial_list[i].hbfunction = &dummy_heatbath;
@@ -280,7 +290,7 @@ void free_monomials() {
 }
 
 
-int init_poly_monomial(const int V,const int id){
+int init_poly_monomial(const int V, const int id){
 
   monomial * mnl = &monomial_list[id];
   int i,j,k;

@@ -35,7 +35,6 @@
 #include "linalg_eo.h"
 #include "linsolve.h"
 #include "deriv_Sb.h"
-#include "deriv_Sb_D_psi.h"
 #include "gamma.h"
 #include "tm_operators.h"
 #include "hybrid_update.h"
@@ -57,7 +56,7 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   monomial * mnl = &monomial_list[no];
 
   /* This factor 2* a missing factor 2 in trace_lambda */
-  mnl->forcefactor = 2.;
+  mnl->forcefactor = 1.;
 
   /*********************************************************************
    *
@@ -82,71 +81,71 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
     fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n");
   }
   
-  mnl->Qp(g_spinor_field[DUM_DERI+2], mnl->pf);
+  mnl->Qp(mnl->w_fields[2], mnl->pf);
   g_mu3 = mnl->rho; // rho1
 
   /* Invert Q_{+} Q_{-} */
-  /* X_W -> DUM_DERI+1 */
-  chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->csg_field, 
+  /* X_W -> w_fields[1] */
+  chrono_guess(mnl->w_fields[1], mnl->w_fields[2], mnl->csg_field, 
 	       mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
-  mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, 
+  mnl->iter1 += cg_her(mnl->w_fields[1], mnl->w_fields[2], mnl->maxiter, 
 		       mnl->forceprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq);
-  chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
+  chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
-  /* Y_W -> DUM_DERI  */
-  mnl->Qm(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+  /* Y_W -> w_fields[0]  */
+  mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
   
   /* apply Hopping Matrix M_{eo} */
   /* to get the even sites of X */
-  H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EE, -mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EE, -mnl->mu);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
-  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
+  deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
   
   /* to get the even sites of Y */
-  H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EE, mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EE, mnl->mu);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
-  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf); 
+  deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor); 
 
   // here comes the clover term...
   // computes the insertion matrices for S_eff
   // result is written to swp and swm
   // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e  
-  gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
-  sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
+  gamma5(mnl->w_fields[2], mnl->w_fields[2], VOLUME/2);
+  sw_spinor(EO, mnl->w_fields[2], mnl->w_fields[3]);
   
   // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-  gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-  sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+  gamma5(mnl->w_fields[0], mnl->w_fields[0], VOLUME/2);
+  sw_spinor(OE, mnl->w_fields[0], mnl->w_fields[1]);
 
   g_mu3 = mnl->rho2; // rho2
   
   /* Second term coming from the second field */
   /* The sign is opposite!! */
-  mul_r(g_spinor_field[DUM_DERI], -1., mnl->pf, VOLUME/2);
+  mul_r(mnl->w_fields[0], -1., mnl->pf, VOLUME/2);
   
   /* apply Hopping Matrix M_{eo} */
   /* to get the even sites of X */
-  H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EE, -mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EE, -mnl->mu);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
-  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
+  deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
   
   /* to get the even sites of Y */
-  H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EE, mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EE, mnl->mu);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
-  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf);
+  deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
 
   // here comes the clover term...
   // computes the insertion matrices for S_eff
   // result is written to swp and swm
   // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-  gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
-  sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
+  gamma5(mnl->w_fields[2], mnl->w_fields[2], VOLUME/2);
+  sw_spinor(EO, mnl->w_fields[2], mnl->w_fields[3]);
   
   // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-  gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-  sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+  gamma5(mnl->w_fields[0], mnl->w_fields[0], VOLUME/2);
+  sw_spinor(OE, mnl->w_fields[0], mnl->w_fields[1]);
 
-  sw_all(hf, mnl->kappa, mnl->c_sw);
+  sw_all(hf, mnl->kappa*mnl->forcefactor, mnl->c_sw);
   
   g_mu = g_mu1;
   g_mu3 = 0.;
@@ -159,8 +158,13 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
 void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
 
-  /* This factor 2* a missing factor 2 in trace_lambda */
-  mnl->forcefactor = 2.;
+  for(int i = 0; i < VOLUME; i++) { 
+    for(int mu = 0; mu < 4; mu++) { 
+      _su3_zero(swm[i][mu]);
+      _su3_zero(swp[i][mu]);
+    }
+  }
+  mnl->forcefactor = 1.;
 
   /*********************************************************************
    *
@@ -186,45 +190,45 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   
   // apply W_{+} to phi
   g_mu3 = mnl->rho2; //rho2
-  mnl->Qp(g_spinor_field[DUM_DERI+2], mnl->pf);
+  mnl->Qp(mnl->w_fields[2], mnl->pf);
   g_mu3 = mnl->rho; // rho1
 
   // Invert Q_{+} Q_{-}
-  // X_W -> DUM_DERI+1 
-  chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->csg_field, 
+  // X_W -> w_fields[1] 
+  chrono_guess(mnl->w_fields[1], mnl->w_fields[2], mnl->csg_field, 
 	       mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
-  mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, 
+  mnl->iter1 += cg_her(mnl->w_fields[1], mnl->w_fields[2], mnl->maxiter, 
 		       mnl->forceprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq);
-  chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
+  chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
-  // Apply Q_{-} to get Y_W -> DUM_DERI 
-  mnl->Qm(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-  // Compute phi - Y_W -> DUM_DERI
-  diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], mnl->pf, VOLUME/2);
+  // Apply Q_{-} to get Y_W -> w_fields[0] 
+  mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
+  // Compute phi - Y_W -> w_fields[0]
+  diff(mnl->w_fields[0], mnl->w_fields[0], mnl->pf, VOLUME/2);
 
   /* apply Hopping Matrix M_{eo} */
   /* to get the even sites of X */
-  H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1], EE, -mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EE, -mnl->mu);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
-  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf); 
+  deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
   
   /* to get the even sites of Y */
-  H_eo_sw_inv_psi(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], EE, mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EE, mnl->mu);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
-  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf); 
+  deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor); 
 
   // here comes the clover term...
   // computes the insertion matrices for S_eff
   // result is written to swp and swm
   // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e  
-  gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], VOLUME/2);
-  sw_spinor(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
+  gamma5(mnl->w_fields[2], mnl->w_fields[2], VOLUME/2);
+  sw_spinor(EO, mnl->w_fields[2], mnl->w_fields[3]);
   
   // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-  gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-  sw_spinor(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+  gamma5(mnl->w_fields[0], mnl->w_fields[0], VOLUME/2);
+  sw_spinor(OE, mnl->w_fields[0], mnl->w_fields[1]);
 
-  sw_all(hf, mnl->kappa, mnl->c_sw);
+  sw_all(hf, mnl->kappa*mnl->forcefactor, mnl->c_sw);
   
   g_mu = g_mu1;
   g_mu3 = 0.;
@@ -249,15 +253,15 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert(EE, mnl->mu);
 
-  random_spinor_field(g_spinor_field[4], VOLUME/2, mnl->rngrepro);
-  mnl->energy0  = square_norm(g_spinor_field[4], VOLUME/2, 1);
+  random_spinor_field(mnl->w_fields[0], VOLUME/2, mnl->rngrepro);
+  mnl->energy0  = square_norm(mnl->w_fields[0], VOLUME/2, 1);
   
   g_mu3 = mnl->rho;
-  mnl->Qp(g_spinor_field[3], g_spinor_field[4]);
+  mnl->Qp(mnl->w_fields[1], mnl->w_fields[0]);
   g_mu3 = mnl->rho2;
   zero_spinor_field(mnl->pf,VOLUME/2);
 
-  mnl->iter0 = cg_her(mnl->pf, g_spinor_field[3], mnl->maxiter, mnl->accprec,  
+  mnl->iter0 = cg_her(mnl->pf, mnl->w_fields[1], mnl->maxiter, mnl->accprec,  
 		      g_relative_precision_flag, VOLUME/2, mnl->Qsq); 
 
   chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -281,20 +285,20 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
   boundary(mnl->kappa);
   
   g_mu3 = mnl->rho2;
-  mnl->Qp(g_spinor_field[DUM_DERI+5], mnl->pf);
+  mnl->Qp(mnl->w_fields[1], mnl->pf);
   g_mu3 = mnl->rho;
 
-  chrono_guess(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->csg_field, mnl->csg_index_array, 
+  chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
 	       mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
   g_sloppy_precision_flag = 0;    
-  mnl->iter0 += cg_her(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->maxiter, mnl->accprec,  
+  mnl->iter0 += cg_her(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec,  
 		      g_relative_precision_flag, VOLUME/2, mnl->Qsq);
-  mnl->Qm(g_spinor_field[3], g_spinor_field[3]);
+  mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
 
   g_sloppy_precision_flag = save_sloppy;
 
   /* Compute the energy contr. from second field */
-  mnl->energy1 = square_norm(g_spinor_field[3], VOLUME/2, 1);
+  mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
   g_mu = g_mu1;
   g_mu3 = 0.;

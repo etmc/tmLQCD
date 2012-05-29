@@ -720,19 +720,19 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 	_su3_times_su3d(plaq,v1,v2);
 	
 	_su3_times_su3(vv1,plaq,vis[k][l]);
- 	_trace_lambda_mul_add_assign(hf->derivative[x][k], -ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[x][k], -2.*ka_csw_8, vv1);
 
 	_su3d_times_su3(vv2,*w1,vv1); 
 	_su3_times_su3(vv1,vv2,*w1);
- 	_trace_lambda_mul_add_assign(hf->derivative[xpk][l], -ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[xpk][l], -2.*ka_csw_8, vv1);
 	
 	_su3_times_su3(vv2,vis[k][l],plaq); 
 	_su3_dagger(vv1,vv2);
- 	_trace_lambda_mul_add_assign(hf->derivative[x][l], -ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[x][l], -2.*ka_csw_8, vv1);
 
 	_su3d_times_su3(vv2,*w4,vv1); 
 	_su3_times_su3(vv1,vv2,*w4);
- 	_trace_lambda_mul_add_assign(hf->derivative[xpl][k], -ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[xpl][k], -2.*ka_csw_8, vv1);
 	
 	w1=&hf->gaugefield[x][l];
 	w2=&hf->gaugefield[xplmk][k];   /*dag*/
@@ -743,19 +743,19 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 	_su3_times_su3(plaq,v1,v2);
 	
 	_su3_times_su3(vv1,plaq,vis[k][l]);
- 	_trace_lambda_mul_add_assign(hf->derivative[x][l], -ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[x][l], -2.*ka_csw_8, vv1);
 	
 	_su3_dagger(vv1,v1); 
 	_su3_times_su3d(vv2,vv1,vis[k][l]);
 	_su3_times_su3d(vv1,vv2,v2);
- 	_trace_lambda_mul_add_assign(hf->derivative[xplmk][k], -ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[xplmk][k], -2.*ka_csw_8, vv1);
 
 	_su3_times_su3(vv2,*w3,vv1); 
 	_su3_times_su3d(vv1,vv2,*w3);
- 	_trace_lambda_mul_add_assign(hf->derivative[xmk][l], -ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[xmk][l], -2.*ka_csw_8, vv1);
 
 	_su3_dagger(vv2,vv1);
- 	_trace_lambda_mul_add_assign(hf->derivative[xmk][k], -ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign(hf->derivative[xmk][k], -2.*ka_csw_8, vv2);
 	
 	w1=&hf->gaugefield[xmk][k];   /*dag*/
 	w2=&hf->gaugefield[xmkml][l]; /*dag*/
@@ -767,18 +767,18 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 	_su3_times_su3d(vv1,*w1,vis[k][l]);
 	_su3_times_su3d(vv2,vv1,v2);
 	_su3_times_su3(vv1,vv2,*w2);
- 	_trace_lambda_mul_add_assign(hf->derivative[xmk][k], -ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[xmk][k], -2.*ka_csw_8, vv1);
 
 	_su3_times_su3(vv2,*w2,vv1); 
 	_su3_times_su3d(vv1,vv2,*w2);
- 	_trace_lambda_mul_add_assign(hf->derivative[xmkml][l], -ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[xmkml][l], -2.*ka_csw_8, vv1);
 
 	_su3_dagger(vv2,vv1);
- 	_trace_lambda_mul_add_assign(hf->derivative[xmkml][k], -ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign(hf->derivative[xmkml][k], -2.*ka_csw_8, vv2);
 
 	_su3d_times_su3(vv1,*w3,vv2); 
 	_su3_times_su3(vv2,vv1,*w3);
- 	_trace_lambda_mul_add_assign(hf->derivative[xml][l], -ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign(hf->derivative[xml][l], -2.*ka_csw_8, vv2);
 	
 	w1=&hf->gaugefield[xml][l];   /*dag*/
 	w2=&hf->gaugefield[xml][k];
@@ -790,19 +790,19 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 	_su3_times_su3d(vv1,*w1,vis[k][l]);
 	_su3_times_su3d(vv2,vv1,v2);
 	_su3_times_su3d(vv1,vv2,*w2);
- 	_trace_lambda_mul_add_assign(hf->derivative[xml][l], -ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[xml][l], -2.*ka_csw_8, vv1);
 	
 	_su3_dagger(vv2,vv1);
- 	_trace_lambda_mul_add_assign(hf->derivative[xml][k], -ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign(hf->derivative[xml][k], -2.*ka_csw_8, vv2);
 
 	_su3d_times_su3(vv1,*w2,vv2); 
 	_su3_times_su3(vv2,vv1,*w2);
- 	_trace_lambda_mul_add_assign(hf->derivative[xpkml][l], -ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign(hf->derivative[xpkml][l], -2.*ka_csw_8, vv2);
 
 	_su3_dagger(vv2,v2);  
 	_su3_times_su3d(vv1,vv2,v1);
 	_su3_times_su3d(vv2,vv1,vis[k][l]);
- 	_trace_lambda_mul_add_assign(hf->derivative[x][k], -ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign(hf->derivative[x][k], -2.*ka_csw_8, vv2);
       }
     }
   }

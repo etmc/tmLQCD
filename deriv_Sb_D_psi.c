@@ -36,7 +36,8 @@
 
 #if (defined BGLnotchecked && defined XLC)
 
-void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * const hf) {
+void deriv_Sb_D_psi(spinor * const l, spinor * const k, 
+		    hamiltonian_field_t * const hf, const double factor) {
 
   int ix,iy, iz;
   int ioff,ioff2,icx,icy, icz;
@@ -92,9 +93,6 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
   _prefetch_su3(up);
 
   for(icx = ioff; icx < (VOLUME+ioff); icx++){
-/*     rr = (*(l + (icx-ioff))); */
-    /*     rr=g_spinor_field[l][icx-ioff]; */
-/*     r=&rr; */
 
     /* load left vector r and */
     /* multiply with gamma5   */
@@ -131,7 +129,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _bgl_su3_times_v_dagger(*up);
     /* result in r now */
     _bgl_complex_times_r(ka0);
-    _bgl_trace_lambda_add_assign((*ddd));
+    _bgl_trace_lambda_mul_add_assign((*ddd), 2.*factor);
 
     /************** direction -0 ****************************/
 
@@ -164,7 +162,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _bgl_su3_times_v_dagger(*um);
     /* result in r now */
     _bgl_complex_times_r(ka0);
-    _bgl_trace_lambda_add_assign((*ddd));
+    _bgl_trace_lambda_mul_add_assign((*ddd), 2.*factor);
 
     /*************** direction +1 **************************/
 
@@ -197,7 +195,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _bgl_su3_times_v_dagger(*up);
     /* result in r now */
     _bgl_complex_times_r(ka1);
-    _bgl_trace_lambda_add_assign((*ddd));
+    _bgl_trace_lambda_mul_add_assign((*ddd), 2.*factor);
 
     /**************** direction -1 *************************/
 
@@ -230,7 +228,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _bgl_su3_times_v_dagger(*um);
     /* result in r now */
     _bgl_complex_times_r(ka1);
-    _bgl_trace_lambda_add_assign((*ddd));
+    _bgl_trace_lambda_mul_add_assign((*ddd), 2.*factor);
 
     /*************** direction +2 **************************/
 
@@ -263,7 +261,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _bgl_su3_times_v_dagger(*up);
     /* result in r now */
     _bgl_complex_times_r(ka2);
-    _bgl_trace_lambda_add_assign((*ddd));
+    _bgl_trace_lambda_mul_add_assign((*ddd), 2.*factor);
       
     /***************** direction -2 ************************/
 
@@ -296,7 +294,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _bgl_su3_times_v_dagger(*um);
     /* result in r now */
     _bgl_complex_times_r(ka1);
-    _bgl_trace_lambda_add_assign(*ddd);
+    _bgl_trace_lambda_mul_add_assign(*ddd, 2.*factor);
 
     /****************** direction +3 ***********************/
 
@@ -329,7 +327,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _bgl_su3_times_v_dagger(*up);
     /* result in r now */
     _bgl_complex_times_r(ka3);
-    _bgl_trace_lambda_add_assign((*ddd));
+    _bgl_trace_lambda_mul_add_assign((*ddd), 2.*factor);
 
     /***************** direction -3 ************************/
 
@@ -366,7 +364,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _bgl_su3_times_v_dagger(*um);
     /* result in r now */
     _bgl_complex_times_r(ka3);
-    _bgl_trace_lambda_add_assign((*ddd));
+    _bgl_trace_lambda_mul_add_assign((*ddd), 2.*factor);
 
     /****************** end of loop ************************/
   }
@@ -379,7 +377,8 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
 
 /*----------------------------------------------------------------------------*/
 
-void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * const hf) {
+void deriv_Sb_D_psi(spinor * const l, spinor * const k, 
+		    hamiltonian_field_t * const hf, const double factor) {
   int ix,iy;
   su3 * restrict up ALIGN;
   su3 * restrict um ALIGN;
@@ -422,7 +421,6 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     iy=g_iup[ix][0];
 
     sp = k + iy;
-/*     sp=&g_spinor_field[k][icy]; */
     up=&hf->gaugefield[ix][0];
       
     _vector_add(psia,(*sp).s0,(*sp).s2);
@@ -432,22 +430,15 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _vector_add(phib,rr.s1,rr.s3);
 
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
-/*     _vector_tensor_vector(v1,phia,psia); */
-/*     _vector_tensor_vector(v2,phib,psib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka0,v2);
-    _trace_lambda_add_assign(hf->derivative[ix][0], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&hf->derivative[ix][0]; */
-/*     _add_su3adj(*ddd,der); */
+    _trace_lambda_mul_add_assign(hf->derivative[ix][0], 2.*factor, v1);
 
     /************** direction -0 ****************************/
 
     iy=g_idn[ix][0];
 
     sm = k + iy;
-/*     sm=&g_spinor_field[k][icy]; */
     um=&hf->gaugefield[iy][0];
       
     _vector_sub(psia,(*sm).s0,(*sm).s2);
@@ -457,22 +448,15 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _vector_sub(phib,rr.s1,rr.s3);
 
     _vector_tensor_vector_add(v1, psia, phia, psib, phib);
-/*     _vector_tensor_vector(v1,psia,phia); */
-/*     _vector_tensor_vector(v2,psib,phib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka0,v2);
-    _trace_lambda_add_assign(hf->derivative[iy][0], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&hf->derivative[iy][0]; */
-/*     _add_su3adj(*ddd,der); */
+    _trace_lambda_mul_add_assign(hf->derivative[iy][0], 2.*factor, v1);
 
     /*************** direction +1 **************************/
 
     iy=g_iup[ix][1];
 
     sp = k + iy;
-    /*     sp=&g_spinor_field[k][icy]; */
     up=&hf->gaugefield[ix][1];      
 
     _vector_i_add(psia,(*sp).s0,(*sp).s3);
@@ -482,22 +466,15 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _vector_i_add(phib,rr.s1,rr.s2);
 
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
-/*     _vector_tensor_vector(v1,phia,psia); */
-/*     _vector_tensor_vector(v2,phib,psib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka1,v2);
-    _trace_lambda_add_assign(hf->derivative[ix][1], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&hf->derivative[ix][1]; */
-/*     _add_su3adj(*ddd,der); */
+    _trace_lambda_mul_add_assign(hf->derivative[ix][1], 2.*factor, v1);
 
     /**************** direction -1 *************************/
 
     iy=g_idn[ix][1];
 
     sm = k + iy;
-    /*     sm=&g_spinor_field[k][icy]; */
     um=&hf->gaugefield[iy][1];
       
     _vector_i_sub(psia,(*sm).s0,(*sm).s3);
@@ -507,22 +484,15 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _vector_i_sub(phib,rr.s1,rr.s2);
 
     _vector_tensor_vector_add(v1, psia, phia, psib, phib);
-/*     _vector_tensor_vector(v1,psia,phia); */
-/*     _vector_tensor_vector(v2,psib,phib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka1,v2);
-    _trace_lambda_add_assign(hf->derivative[iy][1], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&hf->derivative[iy][1]; */
-/*     _add_su3adj(*ddd,der); */
+    _trace_lambda_mul_add_assign(hf->derivative[iy][1], 2.*factor, v1);
 
     /*************** direction +2 **************************/
 
     iy=g_iup[ix][2];
 
     sp = k + iy;
-    /*     sp=&g_spinor_field[k][icy]; */
     up=&hf->gaugefield[ix][2];
       
     _vector_add(psia,(*sp).s0,(*sp).s3);
@@ -532,22 +502,15 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _vector_sub(phib,rr.s1,rr.s2);
 
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
-/*     _vector_tensor_vector(v1,phia,psia); */
-/*     _vector_tensor_vector(v2,phib,psib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka2,v2);
-    _trace_lambda_add_assign(hf->derivative[ix][2], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&hf->derivative[ix][2]; */
-/*     _add_su3adj(*ddd,der); */
+    _trace_lambda_mul_add_assign(hf->derivative[ix][2], 2.*factor, v1);
 
     /***************** direction -2 ************************/
 
     iy=g_idn[ix][2];
 
     sm = k + iy;
-    /*     sm=&g_spinor_field[k][icy]; */
     um=&hf->gaugefield[iy][2];
       
     _vector_sub(psia,(*sm).s0,(*sm).s3);
@@ -557,22 +520,15 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _vector_add(phib,rr.s1,rr.s2);
 
     _vector_tensor_vector_add(v1, psia, phia, psib, phib);
-/*     _vector_tensor_vector(v1,psia,phia); */
-/*     _vector_tensor_vector(v2,psib,phib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka2,v2);
-    _trace_lambda_add_assign(hf->derivative[iy][2], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&hf->derivative[iy][2]; */
-/*     _add_su3adj(*ddd,der); */
+    _trace_lambda_mul_add_assign(hf->derivative[iy][2], 2.*factor, v1);
 
     /****************** direction +3 ***********************/
 
     iy=g_iup[ix][3];
 
     sp = k + iy;
-    /*     sp=&g_spinor_field[k][icy]; */
     up=&hf->gaugefield[ix][3];
       
     _vector_i_add(psia,(*sp).s0,(*sp).s2);
@@ -582,22 +538,15 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _vector_i_sub(phib,rr.s1,rr.s3);
 
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
-/*     _vector_tensor_vector(v1,phia,psia); */
-/*     _vector_tensor_vector(v2,phib,psib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka3,v2);
-    _trace_lambda_add_assign(hf->derivative[ix][3], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&hf->derivative[ix][3]; */
-/*     _add_su3adj(*ddd,der); */
+    _trace_lambda_mul_add_assign(hf->derivative[ix][3], 2.*factor, v1);
 
     /***************** direction -3 ************************/
 
     iy=g_idn[ix][3];
 
     sm = k + iy;
-    /*     sm=&g_spinor_field[k][icy]; */
     um=&hf->gaugefield[iy][3];
       
     _vector_i_sub(psia,(*sm).s0,(*sm).s2);
@@ -607,15 +556,9 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k, hamiltonian_field_t * co
     _vector_i_add(phib,rr.s1,rr.s3);
 
     _vector_tensor_vector_add(v1, psia, phia, psib, phib);
-/*     _vector_tensor_vector(v1,psia,phia); */
-/*     _vector_tensor_vector(v2,psib,phib); */
-/*     _su3_plus_su3(v1,v1,v2); */
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka3,v2);
-    _trace_lambda_add_assign(hf->derivative[iy][3], v1);
-/*     _trace_lambda(der,v1); */
-/*     ddd=&hf->derivative[iy][3]; */
-/*     _add_su3adj(*ddd,der); */
+    _trace_lambda_mul_add_assign(hf->derivative[iy][3], 2.*factor, v1);
      
     /****************** end of loop ************************/
   }

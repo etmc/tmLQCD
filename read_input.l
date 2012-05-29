@@ -834,7 +834,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<DETMONOMIAL,POLYMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,NDPOLYMONOMIAL>{
   {SPC}*2KappaMu2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu2 = c;
@@ -864,6 +864,11 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->epsbar2 = c;
     if(myverbose) printf("  2KappaEpsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*Kappa{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->kappa = c;
+    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
 }
 
@@ -1046,14 +1051,12 @@ inline void rmQuotes(char *str){
   }
   {SPC}*PrecisionPtilde{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    g_acc_Ptilde = c;
     mnl->PrecisionPtilde = c;
     if(myverbose!=0) printf("  Precision for Ptilde set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*PrecisionHfinal{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->PrecisionHfinal = c;
-    g_acc_Hfin = c;
     if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*ComputeEVFreq{EQL}{DIGIT}+ {
@@ -1931,8 +1934,6 @@ int read_input(char * conf_file){
   dfl_poly_iter = 20;
 
   g_kappa = _default_g_kappa;
-  g_acc_Ptilde = _default_g_acc_Ptilde;
-  g_acc_Hfin = _default_g_acc_Hfin;
   g_rec_ev = _default_g_rec_ev;
   g_mubar = _default_g_mubar;
   g_epsbar = _default_g_epsbar;

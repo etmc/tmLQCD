@@ -21,6 +21,7 @@
 
 #include "hamiltonian_field.h"
 
-void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_field_t * const hf);
+void deriv_Sb(const int ieo, spinor * const l, spinor * const k, 
+	      hamiltonian_field_t * const hf, const double factor);
 
 #endif

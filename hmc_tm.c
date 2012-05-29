@@ -122,7 +122,7 @@ int main(int argc,char *argv[]) {
 /* For online measurements */
   measurement * meas;
   int imeas;
-
+  
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
@@ -184,8 +184,8 @@ int main(int argc,char *argv[]) {
     exit(-1);
   }
 
-  DUM_DERI = 6;
-  DUM_SOLVER = DUM_DERI+8;
+  DUM_DERI = 4;
+  DUM_SOLVER = DUM_DERI+1;
   DUM_MATRIX = DUM_SOLVER+6;
   if(g_running_phmc) {
     NO_OF_SPINORFIELDS = DUM_MATRIX+8;
@@ -201,25 +201,6 @@ int main(int argc,char *argv[]) {
 
   tmlqcd_mpi_init(argc, argv);
 
-  if(even_odd_flag) {
-    j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
-  }
-  else {
-    j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
-  }
-  if (j != 0) {
-    fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
-    exit(0);
-  }
-
-  init_integrator();
-
-  if(g_proc_id == 0) {
-    for(j = 0; j < no_monomials; j++) {
-      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type, monomial_list[j].timescale);
-    }
-  }
-
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
     if(countfile != NULL) {
@@ -233,14 +214,14 @@ int main(int argc,char *argv[]) {
       trajectory_counter = 0;
     }
   }
-
+  
 #ifndef MPI
   g_dbw2rand = 0;
 #endif
-
-
+  
+  
   g_mu = g_mu1;
-
+  
 #ifdef _GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
@@ -289,22 +270,20 @@ int main(int argc,char *argv[]) {
     }
   }
 
-   /* list and initialize measurements*/
-   if(g_proc_id == 0) {
+  /* list and initialize measurements*/
+  if(g_proc_id == 0) {
     printf("\n");
     for(j = 0; j < no_measurements; j++) {
       printf("# measurement id %d, type = %d: Frequency %d\n", j, measurement_list[j].type, measurement_list[j].freq);
     }
-   }
-   init_measurements();
-
-  zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME);
-  zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME);
-  zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME);
+  }
+  init_measurements();
 
   /*construct the filenames for the observables and the parameters*/
-  strcpy(datafilename,filename);  strcat(datafilename,".data");
-  strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
+  strcpy(datafilename,filename);  
+  strcat(datafilename,".data");
+  strcpy(parameterfilename,filename);  
+  strcat(parameterfilename,".para");
 
   if(g_proc_id == 0){
     parameterfile = fopen(parameterfilename, "a");
@@ -374,8 +353,23 @@ int main(int argc,char *argv[]) {
   xchange_gauge(g_gauge_field);
 #endif
 
-  if(g_running_phmc) {
-    init_phmc();
+  if(even_odd_flag) {
+    j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
+  }
+  else {
+    j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
+  }
+  if (j != 0) {
+    fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
+    exit(0);
+  }
+
+  init_integrator();
+
+  if(g_proc_id == 0) {
+    for(j = 0; j < no_monomials; j++) {
+      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type, monomial_list[j].timescale);
+    }
   }
 
   plaquette_energy = measure_gauge_action(g_gauge_field);
@@ -392,10 +386,9 @@ int main(int argc,char *argv[]) {
     printf("# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
     fclose(parameterfile);
   }
- 
 
   /* set ddummy to zero */
-  for(ix = 0; ix < VOLUME+RAND; ix++){
+  for(ix = 0; ix < VOLUMEPLUSRAND; ix++){
     for(mu=0; mu<4; mu++){
       ddummy[ix][mu].d1=0.;
       ddummy[ix][mu].d2=0.;

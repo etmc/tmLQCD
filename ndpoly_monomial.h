@@ -25,5 +25,7 @@
 void ndpoly_derivative(const int id, hamiltonian_field_t * const hf);
 double ndpoly_acc(const int id, hamiltonian_field_t * const hf);
 void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf);
+int init_ndpoly_monomial(const int id);
+void ndpoly_set_global_parameter(monomial * const mnl, const int exact);
 
 #endif

@@ -1,8 +1,7 @@
 /***********************************************************************
  *
- * Copyright (C) 2008 Carsten Urbach
- *
- * Modified by Jenifer Gonzalez Lopez 2009/03/27
+ * Copyright (C) 2008,2011,2012 Carsten Urbach
+ *               2009 Jenifer Gonzalez Lopez
  *
  * This file is part of tmLQCD.
  *
@@ -83,21 +82,23 @@ typedef struct {
   /* second one needed for ND monomials */
   spinor * pf, * pf2;
   /* parameters for the POLY Monomial*/
-  int MDPolyDegree;
-  double MDPolyLmin;
-  double MDPolyLmax;
+  int MDPolyDegree, MaxPtildeDegree, PtildeDegree;
+  double MDPolyLmin, MDPolyLmax;
   char MDPolyRootsFile[256];
   _Complex double *MDPolyRoots;
   spinor **MDPoly_chi_spinor_fields;
   double MDPolyLocNormConst;
   int MDPolyDetRatio;
-  int MaxPtildeDegree;
+  int no_wfields;
   double PrecisionPtilde;
   double PrecisionHfinal;
   double StildeMin, StildeMax;
+  double EVMin, EVMax, EVMaxInv;
+  double * MDPolyCoefs, * PtildeCoefs;
   /* chronological solver fields */
   spinor ** csg_field;
   spinor ** csg_field2;
+  spinor ** w_fields;
   /* functions for the HMC update */
   void (*hbfunction) (const int no, hamiltonian_field_t * const hf);
   double (*accfunction) (const int no, hamiltonian_field_t * const hf);

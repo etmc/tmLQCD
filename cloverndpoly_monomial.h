@@ -1,6 +1,6 @@
 /***********************************************************************
  * 
- * Copyright (C) 2007,2008 Jan Volkholz, Carsten Urbach
+ * Copyright (C) 2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -17,13 +17,13 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-
-#ifndef _DERIV_SB_D_PSI_H
-#define _DERIV_SB_D_PSI_H
+#ifndef _CLOVERNDPOLY_MONOMIAL_H
+#define _CLOVERNDPOLY_MONOMIAL_H
 
 #include "hamiltonian_field.h"
 
-void deriv_Sb_D_psi(spinor * const l, spinor * const k,
-		    hamiltonian_field_t * const hf, const double factor);
+void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf);
+double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf);
+void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf);
 
 #endif

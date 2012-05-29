@@ -70,7 +70,7 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
   spinor** chi_spinor_field=mnl->MDPoly_chi_spinor_fields;
 
 
-  (*mnl).forcefactor = -2.*mnl->MDPolyLocNormConst/mnl->MDPolyLmax;
+  (*mnl).forcefactor = -mnl->MDPolyLocNormConst/mnl->MDPolyLmax;
 
 
   /* push and set phmc vars */
@@ -119,22 +119,22 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
 			    mnl->MDPolyRoots[mnl->MDPolyDegree-(j+1)]);
       
 
-      Qtm_minus_psi(g_spinor_field[DUM_DERI+3],chi_spinor_field[j-1]); 
+      Qtm_minus_psi(mnl->w_fields[1],chi_spinor_field[j-1]); 
       
-      H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf+1], EO, -1.);
-      deriv_Sb(OE, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+2], hf); 
+      H_eo_tm_inv_psi(mnl->w_fields[0], chi_spinor_field[degreehalf+1], EO, -1.);
+      deriv_Sb(OE, mnl->w_fields[1], mnl->w_fields[0], hf, mnl->forcefactor); 
       
-      H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], EO, 1.); 
-      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf+1], hf);
+      H_eo_tm_inv_psi(mnl->w_fields[0], mnl->w_fields[1], EO, 1.); 
+      deriv_Sb(EO, mnl->w_fields[0], chi_spinor_field[degreehalf+1], hf, mnl->forcefactor);
       
     
-      Qtm_minus_psi(g_spinor_field[DUM_DERI+3],chi_spinor_field[degreehalf+1]); 
+      Qtm_minus_psi(mnl->w_fields[1],chi_spinor_field[degreehalf+1]); 
 
-      H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2],g_spinor_field[DUM_DERI+3], EO, +1.);
-      deriv_Sb(OE, chi_spinor_field[j-1] , g_spinor_field[DUM_DERI+2], hf); 
+      H_eo_tm_inv_psi(mnl->w_fields[0],mnl->w_fields[1], EO, +1.);
+      deriv_Sb(OE, chi_spinor_field[j-1] , mnl->w_fields[0], hf, mnl->forcefactor); 
       
-      H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], chi_spinor_field[j-1], EO, -1.); 
-      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], hf);
+      H_eo_tm_inv_psi(mnl->w_fields[0], chi_spinor_field[j-1], EO, -1.); 
+      deriv_Sb(EO, mnl->w_fields[0], mnl->w_fields[1], hf, mnl->forcefactor);
       
     }
 
@@ -158,28 +158,22 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
       g_mu=mnl->mu2;
       boundary(mnl->kappa2);
 
-      H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2],chi_spinor_field[degreehalf], EO, -1.);
-      deriv_Sb(OE, mnl->pf , g_spinor_field[DUM_DERI+2], hf);
+      H_eo_tm_inv_psi(mnl->w_fields[0],chi_spinor_field[degreehalf], EO, -1.);
+      deriv_Sb(OE, mnl->pf , mnl->w_fields[0], hf, mnl->forcefactor);
       
-      H_eo_tm_inv_psi(g_spinor_field[DUM_DERI+2], mnl->pf, EO, +1.);
-      deriv_Sb(EO, g_spinor_field[DUM_DERI+2], chi_spinor_field[degreehalf], hf);
-
-
-
+      H_eo_tm_inv_psi(mnl->w_fields[0], mnl->pf, EO, +1.);
+      deriv_Sb(EO, mnl->w_fields[0], chi_spinor_field[degreehalf], hf, mnl->forcefactor);
     }
-
-
-
-
-  } else {
+  } 
+  else {
     if(g_proc_id == 0) {
       fprintf(stderr,"Error: PHMC for light quarks not implementeted for non even/odd preconditioning\n");
     }
-
+    
     g_mu = g_mu1;
     boundary(g_kappa);
     popPhmcVars();
-
+    
     return;
   }
 
@@ -195,24 +189,19 @@ double poly_acc(const int id, hamiltonian_field_t * const hf){
 
   monomial * mnl = &monomial_list[id];
   int j;
-  spinor* spinor1=g_spinor_field[2];
-  spinor* spinor2=g_spinor_field[3];
   double diff;
   int no_eigenvalues=-1;
 
-
-
-
-  if(mnl->even_odd_flag){
-
-    if(mnl->MDPolyDetRatio==1){
+  if(mnl->even_odd_flag) {
+    if(mnl->MDPolyDetRatio==1) {
       g_mu = mnl->mu2;
       boundary(mnl->kappa2);
-
-      Qtm_plus_psi(spinor2,mnl->pf);
-
-    } else {
-      assign(spinor2,mnl->pf,VOLUME/2);
+      
+      Qtm_plus_psi(mnl->w_fields[1],mnl->pf);
+      
+    } 
+    else {
+      assign(mnl->w_fields[1],mnl->pf,VOLUME/2);
     }
 
     g_mu = mnl->mu;
@@ -223,14 +212,14 @@ double poly_acc(const int id, hamiltonian_field_t * const hf){
     setPhmcVars(mnl);
 
     /* apply B */
-    for(j = 0; j < mnl->MDPolyDegree/2; j++){
-      assign(spinor1, spinor2, VOLUME/2);
-      Qtm_pm_min_cconst_nrm(spinor2,
-			    spinor1,
+    for(j = 0; j < mnl->MDPolyDegree/2; j++) {
+      assign(mnl->w_fields[0], mnl->w_fields[1], VOLUME/2);
+      Qtm_pm_min_cconst_nrm(mnl->w_fields[1],
+			    mnl->w_fields[0],
 			    mnl->MDPolyRoots[j]);
     }
 
-    mnl->energy1 =  square_norm(spinor2, VOLUME/2,1);
+    mnl->energy1 =  square_norm(mnl->w_fields[1], VOLUME/2,1);
 
     /* calculate evs */
     if (compute_evs != 0) {
@@ -279,8 +268,6 @@ double poly_acc(const int id, hamiltonian_field_t * const hf){
 void poly_heatbath(const int id, hamiltonian_field_t * const hf){
   monomial * mnl = &monomial_list[id];
   int j;
-  spinor* spinor1=g_spinor_field[2];
-  spinor* spinor2=g_spinor_field[3];
 
   mnl->csg_n = 0;
   mnl->csg_n2 = 0;
@@ -297,25 +284,25 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
   if(mnl->even_odd_flag) {
 
 
-    random_spinor_field(spinor1, VOLUME/2, mnl->rngrepro);
-    mnl->energy0 = square_norm(spinor1, VOLUME/2, 1);
+    random_spinor_field(mnl->w_fields[0], VOLUME/2, mnl->rngrepro);
+    mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
     if(g_proc_id == 0 && g_debug_level > 3) {
       fprintf(stderr," Poly energy0     = %e \n" , mnl->energy0);
     }
 
     /* calculate the phmc hamiltonian */
-    Qtm_pm_psi(spinor2, spinor1);
+    Qtm_pm_psi(mnl->w_fields[1], mnl->w_fields[0]);
 
     /* solve (Q+)*(Q-)*P((Q+)*(Q-)) *x=y */
-    cg_her(spinor1, spinor2,
+    cg_her(mnl->w_fields[0], mnl->w_fields[1],
 	   1000,mnl->accprec,g_relative_precision_flag,VOLUME/2, Qtm_pm_Ptm_pm_psi);
     
     /*  phi= Bdagger phi  */
     for(j = 0; j < (mnl->MDPolyDegree/2); j++){
-      assign(spinor2, spinor1, VOLUME/2);
-      Qtm_pm_min_cconst_nrm(spinor1,
-				 spinor2,
+      assign(mnl->w_fields[1], mnl->w_fields[0], VOLUME/2);
+      Qtm_pm_min_cconst_nrm(mnl->w_fields[0],
+				 mnl->w_fields[1],
 				 mnl->MDPolyRoots[mnl->MDPolyDegree/2+j]);
     }
 
@@ -326,7 +313,7 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
       zero_spinor_field(mnl->pf,VOLUME/2);
       if(mnl->solver == CG) ITER_MAX_BCG = 0;
       ITER_MAX_CG = mnl->maxiter;
-      mnl->iter0 += bicg(mnl->pf, spinor1, mnl->accprec, g_relative_precision_flag);
+      mnl->iter0 += bicg(mnl->pf, mnl->w_fields[0], mnl->accprec, g_relative_precision_flag);
       
       chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
@@ -337,7 +324,7 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
       }
     } else {
       /* store constructed phi field */
-      assign(mnl->pf, spinor1, VOLUME/2);
+      assign(mnl->pf, mnl->w_fields[0], VOLUME/2);
     }
     
   }
