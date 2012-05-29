@@ -57,7 +57,7 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   monomial * mnl = &monomial_list[no];
 
   /* This factor 2* a missing factor 2 in trace_lambda */
-  mnl->forcefactor = 2.;
+  mnl->forcefactor = 1.;
 
   /*********************************************************************
    *
@@ -160,7 +160,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
 
   /* This factor 2* a missing factor 2 in trace_lambda */
-  mnl->forcefactor = 2.;
+  mnl->forcefactor = 1.;
 
   /*********************************************************************
    *

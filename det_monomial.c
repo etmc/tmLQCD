@@ -57,7 +57,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
 
   /* This factor 2 a missing factor 2 in trace_lambda */
-  (*mnl).forcefactor = 2.;
+  (*mnl).forcefactor = 1.;
 
   if(mnl->even_odd_flag) {
     /*********************************************************************

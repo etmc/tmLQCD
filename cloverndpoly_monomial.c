@@ -62,7 +62,7 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 
   /* This factor 2 a missing factor 2 in trace_lambda */
   ndpoly_set_global_parameter(mnl, 0);
-  mnl->forcefactor = -2.*phmc_Cpol*mnl->EVMaxInv;
+  mnl->forcefactor = -phmc_Cpol*mnl->EVMaxInv;
 
   /* Recall:  The GAMMA_5 left of  delta M_eo  is done in  deriv_Sb !!! */
 

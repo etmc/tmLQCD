@@ -1573,5 +1573,15 @@
   (r).d7+= (+__creal(r21) - __creal(r12));				\
   (r).d8+= ((-__cimag(r00) - __cimag(r11) + 2.*__cimag(r22))*0.577350269189625);
 
+#define _bgl_trace_lambda_mul_add_assign(r, c)				\
+  (r).d1+= c * (-__cimag(r10) - __cimag(r01));				\
+  (r).d2+= c * (+__creal(r10) - __creal(r01));				\
+  (r).d3+= c * (-__cimag(r00) + __cimag(r11));				\
+  (r).d4+= c * (-__cimag(r20) - __cimag(r02));				\
+  (r).d5+= c * (+__creal(r20) - __creal(r02));				\
+  (r).d6+= c * (-__cimag(r21) - __cimag(r12));				\
+  (r).d7+= c * (+__creal(r21) - __creal(r12));				\
+  (r).d8+= c * ((-__cimag(r00) - __cimag(r11) + 2.*__cimag(r22))*0.577350269189625);
+
 
 #endif
