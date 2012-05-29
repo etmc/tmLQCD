@@ -41,7 +41,6 @@
 void update_momenta(int * mnllist, double step, const int no, 
 		    hamiltonian_field_t * const hf) {
   int i,mu, k;
-  su3adj *xm,*deriv;
   double atime=0., etime=0.;
 
   for(i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
@@ -72,10 +71,8 @@ void update_momenta(int * mnllist, double step, const int no,
 #endif
   for(i = 0; i < VOLUME; i++) {
     for(mu = 0; mu < 4; mu++) {
-      xm=&hf->momenta[i][mu];
-      deriv=&hf->derivative[i][mu];
       /* the minus comes from an extra minus in trace_lambda */
-      _su3adj_minus_const_times_su3adj(*xm, step, *deriv); 
+      _su3adj_minus_const_times_su3adj(hf->momenta[i][mu], step, hf->derivative[i][mu]); 
     }
   }
   return;
