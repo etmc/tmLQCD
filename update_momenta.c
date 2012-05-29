@@ -48,9 +48,9 @@ void update_momenta(int * mnllist, double step, const int no,
   double atime=0., etime=0.;
 
 #ifdef MPI
-    atime = MPI_Wtime();
+  atime = MPI_Wtime();
 #else
-    atime = (double)clock()/(double)(CLOCKS_PER_SEC);
+  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
 
   for(i=0;i<(VOLUME);i++) { 

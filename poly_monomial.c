@@ -70,7 +70,7 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
   spinor** chi_spinor_field=mnl->MDPoly_chi_spinor_fields;
 
 
-  (*mnl).forcefactor = -2.*mnl->MDPolyLocNormConst/mnl->MDPolyLmax;
+  (*mnl).forcefactor = -mnl->MDPolyLocNormConst/mnl->MDPolyLmax;
 
 
   /* push and set phmc vars */

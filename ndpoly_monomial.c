@@ -58,9 +58,7 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   int j, k;
   monomial * mnl = &monomial_list[id];
 
-  /* This factor 2 a missing factor 2 in trace_lambda */
-  (*mnl).forcefactor = -2.*phmc_Cpol*phmc_invmaxev;
-
+  mnl->forcefactor = -phmc_Cpol*mnl->EVMaxInv;
   /* Recall:  The GAMMA_5 left of  delta M_eo  is done in  deriv_Sb !!! */
 
   if (g_epsbar!=0.0 || phmc_exact_poly==0){
