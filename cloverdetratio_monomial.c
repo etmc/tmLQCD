@@ -99,12 +99,12 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   /* to get the even sites of X */
   H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EE, -mnl->mu);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
-  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf, mnl->forcefactor); 
+  deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
   
   /* to get the even sites of Y */
   H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EE, mnl->mu);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
-  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf, mnl->forcefactor); 
+  deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor); 
 
   // here comes the clover term...
   // computes the insertion matrices for S_eff
@@ -127,12 +127,12 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   /* to get the even sites of X */
   H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EE, -mnl->mu);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
-  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf, mnl->forcefactor); 
+  deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
   
   /* to get the even sites of Y */
   H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EE, mnl->mu);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
-  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf, mnl->forcefactor);
+  deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
 
   // here comes the clover term...
   // computes the insertion matrices for S_eff
@@ -210,12 +210,12 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   /* to get the even sites of X */
   H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EE, -mnl->mu);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
-  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf, mnl->forcefactor); 
+  deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
   
   /* to get the even sites of Y */
   H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EE, mnl->mu);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
-  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf, mnl->forcefactor); 
+  deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor); 
 
   // here comes the clover term...
   // computes the insertion matrices for S_eff
