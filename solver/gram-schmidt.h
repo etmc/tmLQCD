@@ -20,13 +20,11 @@
 #define _GRAM_SCHMIDT_H
 #include <complex.h>
 
-void IteratedClassicalGS_old(_Complex double v[], double *vnrm, int n, int m, _Complex double A[], _Complex double work1[]);
 void IteratedClassicalGS(_Complex double v[], double *vnrm, int n, int m, _Complex double A[], 
 			 _Complex double work1[], int lda) ;
 void IteratedClassicalGS_su3vect(_Complex double v[], double *vnrm, int n, int m, _Complex double A[],
 				 _Complex double work1[], int lda);
 
-void ModifiedGS_old(_Complex double v[], int n, int m, _Complex double A[]);
 void ModifiedGS(_Complex double v[], int n, int m, _Complex double A[], int lda);
 void ModifiedGS_su3vect(_Complex double v[], int n, int m, _Complex double A[], int lda);
 

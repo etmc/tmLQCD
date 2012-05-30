@@ -42,45 +42,6 @@ static int ONE = 1;
  *
  */
 
-void IteratedClassicalGS_old(_Complex double v[], double *vnrm, int n, int m, _Complex double A[], 
-			 _Complex double work1[]) {
-  const double alpha = 0.5;
-
-  double vnrm_old;
-  int i, n2, isorth = 0;
-  _Complex double CMONE, CONE, CZERO;
-#ifdef CRAY
-  char * cupl_c = "C", *cupl_n = "N";
-  _fcd fupl_c, fupl_n;
-  fupl_c = _cptofcd(cupl_c, strlen(cupl_c));
-  fupl_n = _cptofcd(cupl_n, strlen(cupl_n));
-#else
-  char * fupl_c = "C", *fupl_n = "N";
-#endif
-
-  n2 = 2*n;
-  CMONE = -1.;
-  CONE = 1.;
-  CZERO = 0.;
-
-#ifdef HAVE_LAPACK
-  vnrm_old = _FT(dnrm2)(&n2, (double*) v, &ONE);
-  for (i = 0; !isorth && i < max_cgs_it; i ++) {
-    _FT(zgemv)(fupl_c, &n, &m, &CONE, A, &n, v, &ONE, &CZERO, work1, &ONE, 1);
-    _FT(zgemv)(fupl_n, &n, &m, &CMONE, A, &n, work1, &ONE, &CONE, v, &ONE, 1);
-
-    (*vnrm) = _FT(dnrm2)(&n2, (double*) v, &ONE);
-
-    isorth=((*vnrm) > alpha*vnrm_old);
-    vnrm_old = *vnrm;
-  }
-#endif
-  if (i >= max_cgs_it) {
-/*     errorhandler(400,""); */
-  }
-}
-
-
 void IteratedClassicalGS(_Complex double v[], double *vnrm, int n, int m, _Complex double A[], 
 			 _Complex double work1[], int lda) {
   const double alpha = 0.5;
@@ -89,13 +50,7 @@ void IteratedClassicalGS(_Complex double v[], double *vnrm, int n, int m, _Compl
   int i, isorth = 0;
   int j;
   _Complex double CMONE, CONE;
-#ifdef CRAY
-  char *cupl_n = "N";
-  _fcd fupl_n;
-  fupl_n = _cptofcd(cupl_n, strlen(cupl_n));
-#else
   char *fupl_n = "N";
-#endif
 
   CMONE = -1.;
   CONE = 1.;
@@ -131,13 +86,7 @@ void IteratedClassicalGS_su3vect(_Complex double v[], double *vnrm, int n, int m
   int j;
   _Complex double CMONE, CONE;
 
-#ifdef CRAY
-  char *cupl_n = "N";
-  _fcd fupl_n;
-  fupl_n = _cptofcd(cupl_n, strlen(cupl_n));
-#else
   char *fupl_n = "N";
-#endif
 
   CMONE = -1.;
   CONE = 1.;
@@ -169,21 +118,6 @@ void IteratedClassicalGS_su3vect(_Complex double v[], double *vnrm, int n, int m
  *
  *  Orthogonlaizes v with respect to span{A[:,1:m]}
  */
-
-void ModifiedGS_old(_Complex double v[], int n, int m, _Complex double A[]){
-
-  int i;
-  _Complex double s;
-
-  for (i = 0; i < m; i ++) {
-    s = scalar_prod((spinor*)(A+i*n), (spinor*) v, n*sizeof(_Complex double)/sizeof(spinor), 1);
-    s = -s;
-#ifdef HAVE_LAPACK
-    _FT(zaxpy)(&n, &s, A+i*n, &ONE, v, &ONE); 
-#endif
-  }
-}
-
 
 void ModifiedGS(_Complex double v[], int n, int m, _Complex double A[], int lda) {
 

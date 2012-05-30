@@ -15,9 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-
-/**************************************************************************
  *
  * This is an implementation of the Jacobi-Davidson merhod
  * for hermitian matrices.
@@ -68,9 +65,6 @@
 #include "solver/quicksort.h"
 #include "jdher.h"
 #include "jdher_bi.h"
-#ifdef CRAY
-#include <fortran.h>
-#endif
 
 #define min(a,b)((a)<(b) ? (a) : (b))
 #define max(a,b)((a)<(b) ? (b) : (a))
@@ -108,19 +102,7 @@ _Complex double * p_Q_bi;
 _Complex double * p_work_bi;
 matrix_mult_bi p_A_psi_bi;
 
-/****************************************************************************
- *                                                                          *
- * Of course on the CRAY everything is different :( !!                      *
- * that's why we need something more.
- *                                                                          *
- ****************************************************************************/
-
-#ifdef CRAY
-static char * cupl_u = "U", * cupl_c = "C", *cupl_n = "N", * cupl_a = "A", *cupl_v = "V", *cilaenv = "zhetrd", *cvu = "VU";
-_fcd fupl_u, fupl_a, fupl_n, fupl_v, filaenv, fvu;
-#else
 static char * fupl_u = "U", *fupl_n = "N", * fupl_a = "A", *fupl_v = "V", *filaenv = "zhetrd", *fvu = "VU";
-#endif
 
 /****************************************************************************
  *                                                                          *
@@ -174,23 +156,6 @@ void jdher_bi(int n, int lda, double tau, double tol,
   int IDIST = 1;
   int ISEED[4] = {2, 3, 5, 7};
   ISEED[0] = g_proc_id;
-
-  /****************************************************************************
-   *                                                                          *
-   * Of course on the CRAY everything is different :( !!                      *
-   * that's why we need something more.
-   *                                                                          *
-   ****************************************************************************/
-
-#ifdef CRAY
-  fupl_u = _cptofcd(cupl_u, strlen(cupl_u));
-  fupl_c = _cptofcd(cupl_c, strlen(cupl_c));
-  fupl_n = _cptofcd(cupl_n, strlen(cupl_n));
-  fupl_a = _cptofcd(cupl_a, strlen(cupl_a));
-  fupl_v = _cptofcd(cupl_v, strlen(cupl_v));
-  filaenv = _cptofcd(cilaenv, strlen(cilaenv));
-  fvu = _cptofcd(cvu, strlen(cvu));
-#endif
 
   /****************************************************************************
    *                                                                          *
@@ -628,7 +593,6 @@ void jdher_bi(int n, int lda, double tau, double tol,
       }
       solvestep[act] = solvestep[act] + 1;
 
-
       /* equation and project if necessary */
       ModifiedGS_bi(r, n, k + actblksize, Q, lda);
 
@@ -646,6 +610,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
 	info = bicgstab_complex_bi((bispinor*) v, (bispinor*) r, linitmax, 
 				   it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &Proj_A_psi_bi);
       }
+
       g_sloppy_precision = 0;
       /* Actualizing profiling data */
       if (info == -1){
