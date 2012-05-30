@@ -56,8 +56,7 @@ extern int ITER_MAX_CG;
 void det_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
 
-  /* This factor 2 a missing factor 2 in trace_lambda */
-  (*mnl).forcefactor = 2.;
+  (*mnl).forcefactor = 1.;
 
   if(mnl->even_odd_flag) {
     /*********************************************************************
@@ -91,13 +90,12 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     /* to get the even sites of X_e */
     H_eo_tm_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1.);
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf); 
+    deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf, mnl->forcefactor); 
     
     /* to get the even sites of Y_e */
     H_eo_tm_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf);
-
+    deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf, mnl->forcefactor);
   } 
   else {
     /*********************************************************************
@@ -148,7 +146,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     }
     
     /* \delta Q sandwitched by Y^\dagger and X */
-    deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf);
+    deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], hf, mnl->forcefactor);
   }
   g_mu = g_mu1;
   boundary(g_kappa);

@@ -48,14 +48,11 @@ void sf_gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   su3 *z;
   su3adj *xm;
   monomial * mnl = &monomial_list[id];
+  double factor = -1. * g_beta/3.0;
 
-  printf ("hola");
 
   if(mnl->use_rectangles) {
-    mnl->forcefactor = -mnl->c0 * g_beta/3.0;
-  }
-  else {
-    mnl->forcefactor = -1. * g_beta/3.0;
+    factor = -mnl->c0 * g_beta/3.0;
   }
 
   for(i = 0; i < VOLUME; i++) { 
@@ -64,12 +61,12 @@ void sf_gauge_derivative(const int id, hamiltonian_field_t * const hf) {
       xm=&hf->derivative[i][mu];
       v=get_staples(i,mu, hf->gaugefield); 
       _su3_times_su3d(w,*z,v);
-      _add_trace_lambda((*xm),w);
+      _trace_lambda_mul_add_assign((*xm), factor, w);
 
       if(mnl->use_rectangles) {
 	get_rectangle_staples(&v, i, mu);
 	_su3_times_su3d(w, *z, v);
- 	_mul_add_trace_lambda((*xm), w, mnl->c1/mnl->c0);
+ 	_trace_lambda_mul_add_assign((*xm), factor*mnl->c1/mnl->c0, w);
       }
     }
   }

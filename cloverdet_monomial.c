@@ -51,10 +51,14 @@
 void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
 
-  /* This factor 2 a missing factor 2 in trace_lambda */
-  (*mnl).forcefactor = 2.;
+  for(int i = 0; i < VOLUME; i++) { 
+    for(int mu = 0; mu < 4; mu++) { 
+      _su3_zero(swm[i][mu]);
+      _su3_zero(swp[i][mu]);
+    }
+  }
 
-  
+  (*mnl).forcefactor = 1.;
   /*********************************************************************
    * 
    * even/odd version 
@@ -92,13 +96,13 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // to get the even sites of X_e
   H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EE, -mnl->mu);
   // \delta Q sandwitched by Y_o^\dagger and X_e
-  deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf); 
+  deriv_Sb(OE, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], hf, mnl->forcefactor); 
   
   // to get the even sites of Y_e
   H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EE, mnl->mu);
   // \delta Q sandwitched by Y_e^\dagger and X_o
   // uses the gauge field in hf and changes the derivative fields in hf
-  deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf);
+  deriv_Sb(EO, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], hf, mnl->forcefactor);
   
   // here comes the clover term...
   // computes the insertion matrices for S_eff
@@ -121,7 +125,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // finally, using the insertion matrices stored in swm and swp
   // we compute the terms F^{det} and F^{sw} at once
   // uses the gaugefields in hf and changes the derivative field in hf
-  sw_all(hf, mnl->kappa, mnl->c_sw);
+  sw_all(hf, mnl->kappa*mnl->forcefactor, mnl->c_sw);
 
   g_mu = g_mu1;
   g_mu3 = 0.;
