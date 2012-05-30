@@ -222,7 +222,11 @@ where $\hat Q^h_{oo}$ is given in flavour space by
   \end{pmatrix}
 \end{equation*}
 with the previous definitions of $M_{eo}$ etc. The inplementation for
-the HMC is very similar to the mass degenerate case.
+the HMC is very similar to the mass degenerate case. $\hat Q^h$ has
+again a hermitian conjugate given by
+\[
+(\hat Q^h)^\dagger = \tau^1\ \hat Q^h\ \tau^1
+\]
 
 \subsubsection{Combining Clover and Twisted mass term}
 
@@ -404,7 +408,7 @@ for this task needs to be devised.
 For the implementation it is useful to compute the term
 \begin{equation}
   \label{eq:Tee}
-  1 + \frac{i}{2} c_\mathrm{sw}
+  1+T_{a\alpha,b\beta} = 1 + \frac{i}{2} c_\mathrm{sw}
   \kappa\sigma_{\mu\nu}^{\alpha\beta}F_{\mu\nu}^{\alpha\beta}(x)
 \end{equation}  
 once for all $x$. This is implemented in {\ttfamily clover\_leaf.c} in
@@ -414,9 +418,10 @@ plus and minus $\mu$, respectively. It is easier to add the twisted
 mass term in later on. 
 
 The term in eq.~(\ref{eq:Tee}) represents two complex $6\times6$ matrices
-per site. As the off-diagonal $3\times3$ matrices are just inverse to
-each other, we get away with storing two times three $3\times3$
-complex matrices. These are stored in the array {\ttfamily
+per site. As for each $6\times6$ matrix the off-diagonal $3\times3$
+matrices are just hermitian conjugate to each other -- $1+T$ is
+hermitian --, we get away with storing two times three 
+$3\times3$ complex matrices. These are stored in the array {\ttfamily
   sw[VOLUME][3][2]} of type {\ttfamily su3}. Here, {\ttfamily
   sw[x][0][0]} is the upper diagonal $3\times3$ matrix, {\ttfamily
   sw[x][1][0]} the upper off-diagnoal $3\times3$ matrix and {\ttfamily
@@ -491,15 +496,25 @@ insertion matrices.
 Now we have
 \[
 \hat Q^h_{oo} = \gamma_5(M_{oo}^h -
-(M_{oe}^h\ (1+T_{ee}+i\bar\mu\gamma_5\tau^3-\bar\epsilon\tau^1)^{-1}\ M_{eo}^h)
+(M_{oe}^h\ (M_{ee}^h)^{-1}\ M_{eo}^h)\,,
 \]
-where
+with
+\[
+M_{oo|ee}^h = 1+T_{oo|ee}+i\bar\mu\gamma_5\tau^3-\bar\epsilon\tau^1\,.
+\]
+Because $1+T_{oo|ee}$ is hermitian, we can invert $M_{ee}^h$ by
 \[
 (1+T_{ee}+i\bar\mu\gamma_5\tau^3-\bar\epsilon\tau^1)^{-1} =
 \frac{1}{(1+T_{ee})^2 + \bar\mu^2 - \bar\epsilon^2}
-(1+T_{ee}-i\bar\mu\gamma_5\tau^3+\bar\epsilon\tau^1)
+(1+T_{ee}-i\bar\mu\gamma_5\tau^3+\bar\epsilon\tau^1)\,.
 \]
-if $(1+T_{ee})^2$ is symmetric.
+{\bf check!}\\
+Therefore, the determinant we have to compute is
+\[
+\det(Q^h) =
+\det[\gamma_5(1+T_{ee}+i\bar\mu\gamma_5\tau^3-\bar\epsilon\tau^1)]\
+\det[\hat Q^h_{oo}]
+\]
 
 \subsection{Inversion}
 

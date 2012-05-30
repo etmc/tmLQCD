@@ -439,6 +439,54 @@ double sw_trace(const int ieo, const double mu) {
 
 }
 
+double sw_trace_nd(const int ieo, const double mu, const double eps) {
+  int i,x,icx,ioff;
+  static su3 v;
+  static _Complex double a[6][6];
+  static double tra;
+  static double ks,kc,tr,ts,tt;
+  static _Complex double det[2];
+  
+  ks=0.0;
+  kc=0.0;
+
+  if(ieo==0) {
+    ioff=0;
+  } 
+  else {
+    ioff=(VOLUME+RAND)/2;
+  }
+  for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+    x = g_eo2lexic[icx];
+    for(i=0;i<2;i++) {
+      populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
+      populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
+      _su3_dagger(v, sw[x][1][i]); 
+      populate_6x6_matrix(a, &v, 3, 0);
+      populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
+      // we add the twisted mass term
+      if(i == 0) add_tm(a, mu);
+      else add_tm(a, -mu);
+      // and compute the tr log (or log det)
+      det[i] = six_det(a);
+    }
+    tra = log(conj(det[0])*det[0]*conj(det[1])*det[1] - eps*eps);
+
+    tr=tra+kc;
+    ts=tr+ks;
+    tt=ts-ks;
+    ks=ts;
+    kc=tr-tt;
+  }
+  kc=ks+kc;
+#ifdef MPI
+  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  return(ks);
+#else
+  return(kc);
+#endif
+}
+
 
 void mult_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double d[6][6]) {
 
@@ -452,6 +500,21 @@ void mult_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double 
   }
   return;
 }
+
+void copy_6x6(_Complex double a[6][6], _Complex double b[6][6]) {
+  for(int i = 0; i < 6; i++) {
+    for(int j = 0; j < 6; j++) {
+      a[i][j] = b[i][j];
+    }
+  }
+  return;
+}
+
+// This function computes the inverse of
+// (1 + T_ee \pm I\mu\gamma_5)
+//
+// + is stored in sw_inv[0-(VOLUME/2-1)] 
+// - is stored in sw_inv[VOLUME/2-(VOLUME-1)]
 
 void sw_invert(const int ieo, const double mu) {
   int ioff, err=0;
@@ -523,6 +586,62 @@ void sw_invert(const int ieo, const double mu) {
   return;
 }
 
+inline void add_shift(_Complex double a[6][6], const double mshift) {
+  for(int i = 0; i < 6; i++) {
+    a[i][i] += mshift;
+  }
+  return;
+}
+
+// This function computes
+//
+// 1/((1+T)^2 + barmu^2 - bareps^)^{-1}
+//
+// for all even x,
+// which is stored in sw_inv[0-(VOLUME/2-1)]
+//
+// it is the complement of sw_invert for the
+// non-degenerate case
+// multiplication with
+// (1+T - i\bar\mu\gamma_5\tau^3 + \bar\epsion\tau^1)
+// must be done elsewhere because of flavour structure
+
+void sw_invert_nd(const double mshift) {
+  int err=0;
+  int i, x;
+  static su3 v;
+  static _Complex double a[6][6], b[6][6];
+
+  for(int icx = 0; icx < (VOLUME/2); icx++) {
+    x = g_eo2lexic[icx];
+
+    for(i = 0; i < 2; i++) {
+      populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
+      populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
+      _su3_dagger(v, sw[x][1][i]); 
+      populate_6x6_matrix(a, &v, 3, 0);
+      populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
+
+      mult_6x6(b, a, a);
+      // we add the mass shift term
+      add_shift(b, mshift);
+      // so b = (1+T)^2 + shift
+      err = six_invert(b); 
+      // here we need to catch the error! 
+      if(err > 0 && g_proc_id == 0) {
+	printf("# inversion failed in six_invert_nd code %d\n", err);
+	err = 0;
+      }
+
+      /*  copy "a" back to sw_inv */
+      get_3x3_block_matrix(&sw_inv[icx][0][i], b, 0, 0);
+      get_3x3_block_matrix(&sw_inv[icx][1][i], b, 0, 3);
+      get_3x3_block_matrix(&sw_inv[icx][2][i], b, 3, 3);
+      get_3x3_block_matrix(&sw_inv[icx][3][i], b, 3, 0);
+    }
+  }
+  return;
+}
 
 // this is (-tr(1+T_ee(+mu)) -tr(1+T_ee(-mu)))      
 // (or T_oo of course)
