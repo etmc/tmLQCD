@@ -38,7 +38,7 @@
 #include "linalg_eo.h"
 #include "D_psi.h"
 #include "Dov_psi.h"
-#include "Nondegenerate_Matrix.h"
+#include "tm_operators_nd.h"
 #include "Hopping_Matrix.h"
 #include "invert_eo.h"
 #include "invert_doublet_eo.h"
@@ -55,7 +55,7 @@
 #include <io/utils.h>
 #include "test/overlaptests.h"
 #include "solver/index_jd.h"
-#include "clover.h"
+#include "clovertm_operators.h"
 #include "clover_leaf.h"
 #include "operator.h"
 

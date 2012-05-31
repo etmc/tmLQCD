@@ -43,7 +43,7 @@
 #include "solver/solver.h"
 #include "read_input.h"
 #include "smearing/stout.h"
-#include "clover.h"
+#include "clovertm_operators.h"
 #include "clover_leaf.h"
 
 #include "monomial.h"

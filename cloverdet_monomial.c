@@ -43,7 +43,7 @@
 #include "hamiltonian_field.h"
 #include "boundary.h"
 #include "monomial.h"
-#include "clover.h"
+#include "clovertm_operators.h"
 #include "cloverdet_monomial.h"
 
 /* think about chronological solver ! */

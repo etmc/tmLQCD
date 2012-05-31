@@ -32,7 +32,7 @@
 #include "linalg_eo.h"
 #include "start.h"
 #include "tm_operators.h"
-#include "Nondegenerate_Matrix.h"
+#include "tm_operators_nd.h"
 #include "chebyshev_polynomial_nd.h"
 #include "phmc.h"
 #include "Ptilde_nd.h"

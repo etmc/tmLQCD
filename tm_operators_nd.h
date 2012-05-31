@@ -19,8 +19,8 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _NONDEGENRATE_MATRIX_H
-#define _NONDEGENRATE_MATRIX_H
+#ifndef _TM_OPERATTORS_ND_H
+#define _TM_OPERATTORS_ND_H
 
 void mul_one_pm_itau2(spinor * const p, spinor * const q,
 		      spinor * const r, spinor * const s,

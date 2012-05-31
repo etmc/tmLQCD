@@ -37,7 +37,7 @@
 #include "linalg_eo.h"
 #include "Hopping_Matrix.h"
 #include "tm_operators.h"
-#include "clover.h"
+#include "clovertm_operators.h"
 
 
 su3 *** sw;

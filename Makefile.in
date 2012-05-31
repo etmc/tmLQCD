@@ -46,7 +46,7 @@ MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	expo get_staples update_backward_gauge \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
-	test/overlaptests clover clover_leaf \
+	test/overlaptests clovertm_operators clover_leaf \
 	invert_eo invert_doublet_eo update_gauge \
 	polyakov_loop getopt sighandler reweighting_factor \
 	source_generation boundary update_tm ranlxd  \
@@ -56,7 +56,7 @@ MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	xchange_field xchange_gauge prepare_source \
 	init_gauge_field init_geometry_indices init_spinor_field \
 	init_dirac_halfspinor xchange_halffield \
-	Nondegenerate_Matrix nddetratio_monomial \
+	tm_operators_nd nddetratio_monomial \
 	chebyshev_polynomial_nd Ptilde_nd  \
 	init_chi_spinor_field reweighting_factor_nd \
 	init_bispinor_field eigenvalues_bi D_psi \

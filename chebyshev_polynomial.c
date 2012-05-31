@@ -31,7 +31,7 @@
 #include "start.h"
 #include "tm_operators.h"
 #include "chebyshev_polynomial.h"
-#include "Nondegenerate_Matrix.h"
+#include "tm_operators_nd.h"
 
 
 #define PI 3.141592653589793

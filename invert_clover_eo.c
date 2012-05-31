@@ -40,7 +40,7 @@
 #include"linalg_eo.h"
 #include"tm_operators.h"
 #include"Hopping_Matrix.h"
-#include"clover.h"
+#include"clovertm_operators.h"
 #include"D_psi.h"
 #include"linsolve.h"
 #include"gamma.h"

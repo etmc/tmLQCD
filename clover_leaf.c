@@ -2,7 +2,7 @@
  *
  * Copyright (C) 1995 Ulli Wolff, Stefan Sint
  *               2001,2005 Martin Hasenbusch
- *               2011 Carsten Urbach
+ *               2011,2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -46,7 +46,7 @@
 #include "su3.h"
 #include "sse.h"
 #include "su3adj.h"
-#include "clover.h"
+#include "clovertm_operators.h"
 #include "clover_leaf.h"
 
 const double tiny_t = 1.0e-20;

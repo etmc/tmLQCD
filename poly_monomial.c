@@ -47,7 +47,7 @@
 #include "solver/solver.h"
 #include "solver/chrono_guess.h"
 #include "solver/eigenvalues.h"
-#include "Nondegenerate_Matrix.h"
+#include "tm_operators_nd.h"
 #include "Hopping_Matrix.h"
 #include "hamiltonian_field.h"
 #include "phmc.h"

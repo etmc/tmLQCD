@@ -54,7 +54,7 @@
 #include "solver/pjdher_bi.h"
 #endif
 #include "max_eigenvalues_bi.h"
-#include "Nondegenerate_Matrix.h"
+#include "tm_operators_nd.h"
 
 /* Needed only if you want to create an EV-file
 #include "rw_ev.h"

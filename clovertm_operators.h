@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2005 Martin Hasenbusch
  *               2009 Carsten Urbach
+ *               2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -19,8 +20,8 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _CLOVER_H
-#define _CLOVER_H
+#ifndef _CLOVERTM_OPERATORS_H
+#define _CLOVERTM_OPERATORS_H
 
 #include "su3.h"
 

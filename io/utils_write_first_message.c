@@ -129,10 +129,10 @@ int write_first_messages(FILE * parameterfile, const int inv) {
   if(inv != 1) {
     printf("# mu = %f\n", g_mu/2./g_kappa);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
-    printf("# SFBC parameters (gauge):\n");
-    printf("# g_Ct = %f, g_Cs = %f\n", g_Ct, g_Cs);
-    printf("# g_C1ss = %f, g_C1tss = %f, g_C1tts = %f\n", g_C1ss, g_C1tss, g_C1tts);
-    printf("# g_eta = %f\n", g_eta);
+/*     printf("# SFBC parameters (gauge):\n"); */
+/*     printf("# g_Ct = %f, g_Cs = %f\n", g_Ct, g_Cs); */
+/*     printf("# g_C1ss = %f, g_C1tss = %f, g_C1tts = %f\n", g_C1ss, g_C1tss, g_C1tts); */
+/*     printf("# g_eta = %f\n", g_eta); */
     printf("# Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
   }

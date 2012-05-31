@@ -39,7 +39,7 @@
 #include "linsolve.h"
 #include "linalg_eo.h"
 #include "tm_operators.h"
-#include "Nondegenerate_Matrix.h"
+#include "tm_operators_nd.h"
 
 
 void mul_one_minus_iconst(spinor * const l, spinor * const k, const double mu);

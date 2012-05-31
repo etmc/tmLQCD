@@ -51,7 +51,7 @@
 #include "solver/solver.h"
 #include "solver/jdher_bi.h"
 #include "eigenvalues_bi.h"
-#include "Nondegenerate_Matrix.h"
+#include "tm_operators_nd.h"
 
 
 double eigenvalues_bi(int * nr_of_eigenvalues,  

@@ -40,7 +40,7 @@
 #include "su3.h"
 #include "operator.h"
 #include "linalg_eo.h"
-#include "Nondegenerate_Matrix.h"
+#include "tm_operators_nd.h"
 #include "source_generation.h"
 #include "prepare_source.h"
 
