@@ -439,6 +439,16 @@ double sw_trace(const int ieo, const double mu) {
 
 }
 
+
+// This function computes the trace-log part of the clover term
+// in case of even/odd preconditioning in the nd case
+//
+// it is expected that sw_term is called beforehand such that
+// the array sw is populated properly
+//
+// it is tested to deliver bit-identical results to sw_trace
+// if eps is set to zero
+
 double sw_trace_nd(const int ieo, const double mu, const double eps) {
   int i,x,icx,ioff;
   static su3 v;
@@ -446,7 +456,7 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
   static double tra;
   static double ks,kc,tr,ts,tt;
   static _Complex double det[2];
-  
+  double se = (eps*eps)*(eps*eps)*(eps*eps);
   ks=0.0;
   kc=0.0;
 
@@ -464,13 +474,15 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
       _su3_dagger(v, sw[x][1][i]); 
       populate_6x6_matrix(a, &v, 3, 0);
       populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
-      // we add the twisted mass term
+      // we add the twisted mass term prop to tau^3
       if(i == 0) add_tm(a, mu);
       else add_tm(a, -mu);
-      // and compute the tr log (or log det)
       det[i] = six_det(a);
     }
-    tra = log(conj(det[0])*det[0]*conj(det[1])*det[1] - eps*eps);
+    // and compute the tr log (or log det)
+    // for the 2x2 matrix in flavour space
+    // with eps*tau^1 in the off diagonal
+    tra = log(conj(det[0])*det[0]*conj(det[1])*det[1] - se*se);
 
     tr=tra+kc;
     ts=tr+ks;
@@ -586,7 +598,7 @@ void sw_invert(const int ieo, const double mu) {
   return;
 }
 
-inline void add_shift(_Complex double a[6][6], const double mshift) {
+inline void add_shift_6x6(_Complex double a[6][6], const double mshift) {
   for(int i = 0; i < 6; i++) {
     a[i][i] += mshift;
   }
@@ -624,7 +636,7 @@ void sw_invert_nd(const double mshift) {
 
       mult_6x6(b, a, a);
       // we add the mass shift term
-      add_shift(b, mshift);
+      add_shift_6x6(b, mshift);
       // so b = (1+T)^2 + shift
       err = six_invert(b); 
       // here we need to catch the error! 

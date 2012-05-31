@@ -36,7 +36,7 @@
 #include "clover_trlog_monomial.h"
 
 void clover_trlog_derivative(const int id, hamiltonian_field_t * const hf) {
-  monomial * mnl = &monomial_list[id];
+  //monomial * mnl = &monomial_list[id];
   /* this term has no derivative */
   /* so a dummy function         */
   if(g_proc_id == 0 && g_debug_level > 4) {
@@ -53,7 +53,7 @@ void clover_trlog_heatbath(const int id, hamiltonian_field_t * const hf) {
   init_sw_fields();
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
-  mnl->energy0 = -sw_trace_nd(EO, mnl->mu,0);
+  mnl->energy0 = -sw_trace(EO, mnl->mu);
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called clover_trlog_heatbath for id %d E = %e\n", id, mnl->energy0);
   }
@@ -65,7 +65,7 @@ double clover_trlog_acc(const int id, hamiltonian_field_t * const hf) {
   mnl->energy1 = 0.;
   sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
-  mnl->energy1 = -sw_trace(EO, mnl->mu);   
+  mnl->energy1 = -sw_trace(EO, mnl->mu);
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called clover_trlog_acc for id %d dH = %1.4e\n", 
 	   id, mnl->energy1 - mnl->energy0);
