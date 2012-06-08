@@ -17,13 +17,13 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
  * invert_doublet_eo makes an inversion with EO precoditioned
- * tm Operator for the non-degenerate doublet
+ * tm Operator with a nondegenerate doublet
  *
  * Even and Odd are the numbers of spinor_field that contain
  * the even and the odd sites of the source. The result is stored
  * int Even_new and Odd_new.
  *
- * invert_eo returns the number of iterations neede or -1 if the 
+ * invert_doublet_eo returns the number of iterations neede or -1 if the 
  * solver did not converge.
  *
  * Author: Carsten Urbach

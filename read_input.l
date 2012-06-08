@@ -42,6 +42,7 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 NAME [a-zA-Z0-9_]+
 CSTR \"[a-zA-Z0-9\-\._]+\"
 TYPE [0-9A-Z]+
+FLTLIST [0-9"."","" "]*
 EQL {SPC}*={SPC}*
 
 %{
@@ -227,7 +228,6 @@ inline void rmQuotes(char *str){
 %x DEBUG
 %x GMRESM
 %x GMRESDRNEV
-%x CGMMSNMS
 %x REPRORND
 %x SLOPPYPREC
 %x USESTOUT
@@ -347,7 +347,6 @@ inline void rmQuotes(char *str){
 ^DebugLevel{EQL}                   BEGIN(DEBUG);
 ^GMRESMParameter{EQL}              BEGIN(GMRESM);
 ^GMRESDRNrEv{EQL}                  BEGIN(GMRESDRNEV);
-^CGMMSNoExtraMasses{EQL}           BEGIN(CGMMSNMS);
 ^GaugeConfigReadPrecision{EQL}     BEGIN(GAUGERPREC);
 ^GaugeConfigWritePrecision{EQL}    BEGIN(GAUGEWPREC);
 ^DisableIOChecks{EQL}              BEGIN(DSBLIOCHECK);
@@ -404,37 +403,37 @@ inline void rmQuotes(char *str){
  BEGIN(GPU);
  }
 <GPU>{
-  {SPC}*InnersolverPrecision{SPC}*={SPC}*{FLT} {
+  {SPC}*InnersolverPrecision{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     innersolver_precision = c;
     if(myverbose) printf("  Inner solver precision set to %lf line %d\n", c, line_of_file);
   }
-  {SPC}*MaxInnersolverIteration{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*MaxInnersolverIteration{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     max_innersolver_it = a;
     if(myverbose) printf("  Inner solver iterations set to %d line %d\n", a, line_of_file);
   }
-  {SPC}*DeviceNum{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*DeviceNum{EQL}{DIGIT}+ {
       sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
       device_num = a;
       if(myverbose) printf("  Device Number set to %d line %d\n", a, line_of_file);
   }
-  {SPC}*InnersolverPrecisionAbs{SPC}*={SPC}*{FLT} {
+  {SPC}*InnersolverPrecisionAbs{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     innersolver_precision_abs = c;
     if(myverbose) printf("  innersolver_precision_abs set to %lf line %d\n", c, line_of_file);
   }
-  {SPC}*InnersolverPrecisionRel{SPC}*={SPC}*{FLT} {
+  {SPC}*InnersolverPrecisionRel{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     innersolver_precision_rel = c;
     if(myverbose) printf("  innersolver_precision_rel set to %lf line %d\n", c, line_of_file);
   }
-  {SPC}*InnersolverPrecisionCheckAbs{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*InnersolverPrecisionCheckAbs{EQL}{DIGIT}+ {
       sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
       innersolver_precision_check_abs = a;
       if(myverbose) printf("  innersolver_precision_check_abs set to %d line %d\n", a, line_of_file);
   }
-  {SPC}*InnersolverPrecisionCheckRel{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*InnersolverPrecisionCheckRel{EQL}{DIGIT}+ {
       sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
       innersolver_precision_check_rel = a;
       if(myverbose) printf("  innersolver_precision_check_rel set to %d line %d\n", a, line_of_file);
@@ -522,7 +521,73 @@ inline void rmQuotes(char *str){
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
-  ^EndOperator{SPC}*  {
+  {SPC}*ExtraMasses{EQL}{FLTLIST} {
+    char * token = NULL;
+    optr->no_extra_masses = 0;
+    double mass;
+    if( strtok(yytext,"\n\t =,\\") != NULL ) {
+       /* Implicitly drop the first token, it is "ExtraMasses" */
+      token = strtok(NULL," =,\t");
+
+      while( token != NULL ) {
+        if( optr->no_extra_masses >= MAX_EXTRA_MASSES ) {
+          yy_fatal_error("  CGMMS maximum number of extra masses reached. Increase MAX_EXTRA_MASSES in global.h!");
+        }
+        sscanf(token,"%lf",&mass);
+        optr->extra_masses[optr->no_extra_masses] = mass;
+        if(myverbose) printf("  CGMMS extra mass %d = %lf (2*kappa*mu) added line %d operator %d\n",optr->no_extra_masses,mass,line_of_file,current_operator);
+        ++(optr->no_extra_masses);
+        token = strtok(NULL," =,\t");
+      }
+    } else {
+      yy_fatal_error("  CGMMS Failed to read ExtraMasses input line in configuration file!");
+    }
+
+    if( optr->no_extra_masses == 0 ) {
+      yy_fatal_error("  CGMMS Failed to add any extra masses. Input line must be malformed.");
+    } else {    
+      if(myverbose) printf("  CGMMS %d extra masses added line %d operator %d\n",optr->no_extra_masses,line_of_file,current_operator);
+    }
+  }
+  {SPC}*ExtraMasses{EQL}{FILENAME} {
+    FILE * ifs;
+    double tempmass = 0.0;
+    optr->no_extra_masses = 0;
+    char * token = NULL;
+    if( strtok(yytext,"\n\t =,\\") != NULL ) {
+      /* drop the first token, it is ExtraMasses" */
+      token = strtok(NULL," =\t");
+      if( token != NULL ) {
+        printf("  CGMMS Reading extra masses input file %s\n",token);
+        if ((ifs = fopen(token, "r")) != NULL) {
+          while ( fscanf( ifs, "%lf", &tempmass ) != EOF ) {
+            if( optr->no_extra_masses >= MAX_EXTRA_MASSES ) {
+              yy_fatal_error("  CGMMS maximum number of extra masses reached. Increase MAX_EXTRA_MASSES in global.h!");
+            } 
+            optr->extra_masses[optr->no_extra_masses] = tempmass;
+            if (myverbose) {
+              printf("  CGMMS Extra mass %d = %lf (2*kappa*mu) added line %d operator %d\n",
+                optr->no_extra_masses, optr->extra_masses[optr->no_extra_masses],line_of_file,current_operator);
+            }
+            ++(optr->no_extra_masses);
+          }
+          if( optr->no_extra_masses == 0 ) {
+            yy_fatal_error("  CGMMS Failed to add any extra masses. Extra masses input file must be malformed!");
+          }
+          else {
+            if(myverbose) 
+              printf("  CGMMS %d extra masses added line %d operator %d\n",optr->no_extra_masses,line_of_file,current_operator);
+          }
+          fclose(ifs);
+        }
+        else {
+          fprintf(stderr, "Could not open extra masses input file %s\n",token);
+          optr->no_extra_masses=0;
+        }
+      }
+    }
+  }
+  ^EndOperator{SPC}* {
     if(myverbose) printf("operator %d parsed line %d\n\n", current_operator, line_of_file);
     BEGIN(0);
   }
@@ -711,7 +776,6 @@ inline void rmQuotes(char *str){
     BEGIN(OVERLAPOP);
   }
 }
-
 
 <INITMONOMIAL>{TYPE} {
   current_monomial++;
@@ -1338,7 +1402,7 @@ inline void rmQuotes(char *str){
     if(myverbose) printf("Measurement with id %d parsed in line %d\n\n", meas->id, line_of_file);
     BEGIN(0);
   }
-  {SPC}*Frequency{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*Frequency{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     meas->freq = a;
     if(myverbose!=0) printf("  Frequency for measurement with id %d set to %d\n", meas->id, meas->freq);
@@ -1510,10 +1574,6 @@ inline void rmQuotes(char *str){
 <GMRESDRNEV>{DIGIT}+ {
   gmresdr_nr_ev = atoi(yytext);
   if(myverbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
-}
-<CGMMSNMS>{DIGIT}+ {
-  g_no_extra_masses = atoi(yytext);
-  if(myverbose!=0) printf("Number of extra MMS masses set to %d\n", g_no_extra_masses);
 }
 <DFLSP>{DIGIT}+ {
   g_N_s = atoi(yytext);
@@ -1989,7 +2049,6 @@ int read_input(char * conf_file){
   SourceInfo.automaticTS = _default_automaticTS;
   gmres_m_parameter = _default_gmres_m_parameter;
   gmresdr_nr_ev = _default_gmresdr_nr_ev;
-  g_no_extra_masses = _default_g_no_extra_masses;
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
   g_disable_IO_checks = _default_g_disable_IO_checks;

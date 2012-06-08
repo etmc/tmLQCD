@@ -23,7 +23,7 @@
  * the even and the odd sites of the source. The result is stored
  * int Even_new and Odd_new.
  *
- * invert_eo returns the number of iterations needed or -1 if the 
+ * invert_clover_eo returns the number of iterations needed or -1 if the 
  * solver did not converge.
  *
  * Author: Carsten Urbach
