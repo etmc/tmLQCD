@@ -19,8 +19,8 @@
 
 /****************************************************************
  *
- * invert_eo makes an inversion with EO precoditioned
- * tm Operator
+ * invert_doublet_eo makes an inversion with EO precoditioned
+ * tm Operator with a nondegenerate doublet
  *
  * Author: Carsten Urbach
  *         urbach@physik.fu-berlin.de
