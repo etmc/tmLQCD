@@ -104,7 +104,7 @@ inline void rmQuotes(char *str){
   char * type;
 
   int verbose = 0;
-  int myverbose = 0;
+  int myverbose = 1;
   int startoption;
   int Ntherm;
   int Nmeas;
@@ -527,17 +527,17 @@ inline void rmQuotes(char *str){
     double mass;
     if( strtok(yytext,"\n\t =,\\") != NULL ) {
        /* Implicitly drop the first token, it is "ExtraMasses" */
-      token = strtok(NULL," =,");
+      token = strtok(NULL," =,\t");
 
       while( token != NULL ) {
         if( optr->no_extra_masses >= MAX_EXTRA_MASSES ) {
-          yy_fatal_error("  CGMMS maximum number of extra masses reached. Increase MAX_EXTRA_MASSES in global.h!\n");
+          yy_fatal_error("  CGMMS maximum number of extra masses reached. Increase MAX_EXTRA_MASSES in global.h!");
         }
         sscanf(token,"%lf",&mass);
         optr->extra_masses[optr->no_extra_masses] = mass;
         if(myverbose) printf("  CGMMS extra mass %d = %lf (2*kappa*mu) added line %d operator %d\n",optr->no_extra_masses,mass,line_of_file,current_operator);
         ++(optr->no_extra_masses);
-        token = strtok(NULL," =,");
+        token = strtok(NULL," =,\t");
       }
     } else {
       yy_fatal_error("  CGMMS Failed to read ExtraMasses input line in configuration file!");
@@ -547,6 +547,44 @@ inline void rmQuotes(char *str){
       yy_fatal_error("  CGMMS Failed to add any extra masses. Input line must be malformed.");
     } else {    
       if(myverbose) printf("  CGMMS %d extra masses added line %d operator %d\n",optr->no_extra_masses,line_of_file,current_operator);
+    }
+  }
+  {SPC}*ExtraMasses{EQL}{FILENAME} {
+    FILE * ifs;
+    double tempmass = 0.0;
+    optr->no_extra_masses = 0;
+    char * token = NULL;
+    if( strtok(yytext,"\n\t =,\\") != NULL ) {
+      /* drop the first token, it is ExtraMasses" */
+      token = strtok(NULL," =\t");
+      if( token != NULL ) {
+        printf("  CGMMS Reading extra masses input file %s\n",token);
+        if ((ifs = fopen(token, "r")) != NULL) {
+          while ( fscanf( ifs, "%lf", &tempmass ) != EOF ) {
+            if( optr->no_extra_masses >= MAX_EXTRA_MASSES ) {
+              yy_fatal_error("  CGMMS maximum number of extra masses reached. Increase MAX_EXTRA_MASSES in global.h!");
+            } 
+            optr->extra_masses[optr->no_extra_masses] = tempmass;
+            if (myverbose) {
+              printf("  CGMMS Extra mass %d = %lf (2*kappa*mu) added line %d operator %d\n",
+                optr->no_extra_masses, optr->extra_masses[optr->no_extra_masses],line_of_file,current_operator);
+            }
+            ++(optr->no_extra_masses);
+          }
+          if( optr->no_extra_masses == 0 ) {
+            yy_fatal_error("  CGMMS Failed to add any extra masses. Extra masses input file must be malformed!");
+          }
+          else {
+            if(myverbose) 
+              printf("  CGMMS %d extra masses added line %d operator %d\n",optr->no_extra_masses,line_of_file,current_operator);
+          }
+          fclose(ifs);
+        }
+        else {
+          fprintf(stderr, "Could not open extra masses input file %s\n",token);
+          optr->no_extra_masses=0;
+        }
+      }
     }
   }
   ^EndOperator{SPC}* {
