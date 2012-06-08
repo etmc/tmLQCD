@@ -3,7 +3,13 @@
 #
 # Extra masses can be specified in this file directly as
 # one line of floating point numbers separated by commas
+# or by naming an extra file which contains the extra masses
+# one on each line
+
 # NOTE: Masses must be specified as 2*Kappa*Mu 
+
+# the maximum number of extra masses is configured
+# by setting MAX_EXTRA_MASSES in global.h 
 
 L=4
 T=4
@@ -42,6 +48,6 @@ BeginOperator TMWILSON
   SolverPrecision = 1e-15
   MaxSolverIterations = 1000
   AddDownPropagator = no
-  ExtraMasses = 0.1,0.12,0.13,0.15,0.17
+  ExtraMasses = extra_masses.input
 EndOperator
 
