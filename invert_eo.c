@@ -73,7 +73,9 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	      spinor * const Even, spinor * const Odd,
 	      const double precision, const int max_iter,
 	      const int solver_flag, const int rel_prec,
-	      const int sub_evs_flag, const int even_odd_flag) {
+	      const int sub_evs_flag, const int even_odd_flag,
+        const int no_extra_masses, double * const extra_masses,
+        const int id )  {
 
   int iter = 0;
   /* here comes the inversion using even/odd preconditioning */
@@ -368,7 +370,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(g_proc_id == 0) {printf("# Using multi mass CG!\n"); fflush(stdout);}
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
       iter = cg_mms_tm(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], 
-                       max_iter, precision, rel_prec, VOLUME, &Q_pm_psi);
+                       max_iter, precision, rel_prec, VOLUME, &Q_pm_psi, no_extra_masses, extra_masses, id);
       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     }
     else {
