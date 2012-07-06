@@ -2305,6 +2305,85 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 }
 #    endif /* _USE_TSPLITPAR */
 
+#  elif (defined BGQ && defined XLC)
+
+void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+  int icx,icy,icz,ioff,ioff2;
+  int ix,iy,iz;
+  su3 * restrict up ALIGN;
+  su3 * restrict um ALIGN;
+  spinor * restrict sp ALIGN;
+  spinor * restrict sm ALIGN;
+  spinor * restrict rn ALIGN;
+  /* We have 32 registers available */
+  vector4double r[12];
+  vector4double U[9];
+  /* The following contains the result spinor */
+  vector4double rs[12];
+
+#pragma disjoint(*sp, *sm, *rn, *up, *um, *l, *k)
+
+  __alignx(16,l);
+  __alignx(16,k);
+
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#endif
+
+#    if (defined MPI && !(defined _NO_COMM))
+  xchange_field(k, ieo);
+#    endif
+
+  if(ieo == 0){
+    ioff = 0;
+  } 
+  else{
+    ioff = (VOLUME+RAND)/2;
+  }
+  ioff2 = (VOLUME+RAND)/2-ioff;
+
+  ix=g_eo2lexic[ioff];
+  iy=g_iup[ix][0]; 
+  icy=g_lexic2eosub[iy];
+
+  sp=k+icy;
+
+#    if ((defined _GAUGE_COPY))
+  up=&g_gauge_field_copy[ioff][0];
+#    else
+  up=&g_gauge_field[ix][0];
+#    endif
+  /**************** loop over all lattice sites ******************/
+  for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
+    rn=l+(icx-ioff);
+    ix=g_eo2lexic[icx];
+    /*********************** direction +0 ************************/
+    iy=g_idn[ix][0]; 
+    icy=g_lexic2eosub[iy];
+#    if (!defined _GAUGE_COPY)
+    um=&g_gauge_field[iy][0]; 
+#    else
+    um=up+1;
+#    endif
+    vec_load2(r, &sp->s0);
+    vec_load2(&r[3], &sp->s1);
+    vec_load2(&r[6], &sp->s2);
+    vec_load2(&r[9], &sp->s3);
+    vec_add2(r, r, &r[6]);
+    // result is now in r[0-5] 
+
+    vec_su3_multiply_double(up, U, r);
+    _bgl_vector_cmplx_mul_double(ka0);
+    _bgl_store_reg0_up_rs0();
+    _bgl_store_reg0_up_rs2();
+    _bgl_store_reg1_up_rs1();
+    _bgl_store_reg1_up_rs3();
+
+  }
+}
+
 #  elif (defined BGL && defined XLC)
 
 /**********************************
