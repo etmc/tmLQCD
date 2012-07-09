@@ -19,6 +19,7 @@ inline void vec_store2(su3_vector * const phi, vector4double * r) {
   return;
 }
 
+// r = r + s
 inline void vec_add2(vector4double * restrict r, vector4double * restrict s) {
 #pragma disjoint(*s, *r)
 #pragma unroll(3)
@@ -28,6 +29,7 @@ inline void vec_add2(vector4double * restrict r, vector4double * restrict s) {
   return;
 }
 
+// r = r + s
 inline void vec_add_double2(vector4double * restrict r, vector4double * restrict s) {
 #pragma disjoint(*s, *r)
 #pragma unroll(6)
@@ -37,6 +39,7 @@ inline void vec_add_double2(vector4double * restrict r, vector4double * restrict
   return;
 }
 
+// r = r - s
 inline void vec_sub2(vector4double * restrict r, vector4double * restrict s) {
 #pragma disjoint(*s, *r)
 #pragma unroll(3)
@@ -46,6 +49,7 @@ inline void vec_sub2(vector4double * restrict r, vector4double * restrict s) {
   return;
 }
 
+// r = r - s
 inline void vec_sub_double2(vector4double * restrict r, vector4double * restrict s) {
 #pragma disjoint(*s, *r)
 #pragma unroll(6)
@@ -55,6 +59,8 @@ inline void vec_sub_double2(vector4double * restrict r, vector4double * restrict
   return;
 }
 
+// r = r + i*s
+// tmp, temporary memory
 inline void vec_i_mul_add2(vector4double * restrict r, vector4double * restrict s, 
 			   vector4double * restrict tmp) {
 #pragma disjoint(*s, *r)
@@ -68,6 +74,8 @@ inline void vec_i_mul_add2(vector4double * restrict r, vector4double * restrict 
   return;
 }
 
+// r = r + i*s
+// tmp, temporary memory
 inline void vec_i_mul_add_double2(vector4double * restrict r, vector4double * restrict s, 
 				  vector4double * restrict tmp) {
 #pragma disjoint(*s, *r)
@@ -81,6 +89,8 @@ inline void vec_i_mul_add_double2(vector4double * restrict r, vector4double * re
   return;
 }
 
+// r = r - i*s
+// tmp, temporary memory
 inline void vec_i_mul_sub2(vector4double * restrict r, vector4double * restrict s, 
 			   vector4double * restrict tmp) {
 #pragma disjoint(*s, *r)
@@ -94,6 +104,8 @@ inline void vec_i_mul_sub2(vector4double * restrict r, vector4double * restrict 
   return;
 }
 
+// r = r - i*s
+// tmp, temporary memory
 inline void vec_i_mul_sub_double2(vector4double * restrict r, vector4double * restrict s, 
 				  vector4double * restrict tmp) {
 #pragma disjoint(*s, *r)
