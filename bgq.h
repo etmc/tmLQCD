@@ -21,6 +21,15 @@ inline void vec_store2(su3_vector * const phi, vector4double * r) {
 
 inline void vec_add2(vector4double * restrict r, vector4double * restrict s) {
 #pragma disjoint(*s, *r)
+#pragma unroll(3)
+  for(int i = 0; i < 3; i++) {
+    r[i] = vec_add(r[i], s[i]);
+  }
+  return;
+}
+
+inline void vec_add_double2(vector4double * restrict r, vector4double * restrict s) {
+#pragma disjoint(*s, *r)
 #pragma unroll(6)
   for(int i = 0; i < 6; i++) {
     r[i] = vec_add(r[i], s[i]);
@@ -30,6 +39,15 @@ inline void vec_add2(vector4double * restrict r, vector4double * restrict s) {
 
 inline void vec_sub2(vector4double * restrict r, vector4double * restrict s) {
 #pragma disjoint(*s, *r)
+#pragma unroll(3)
+  for(int i = 0; i < 3; i++) {
+    r[i] = vec_sub(r[i], s[i]);
+  }
+  return;
+}
+
+inline void vec_sub_double2(vector4double * restrict r, vector4double * restrict s) {
+#pragma disjoint(*s, *r)
 #pragma unroll(6)
   for(int i = 0; i < 6; i++) {
     r[i] = vec_sub(r[i], s[i]);
@@ -37,8 +55,21 @@ inline void vec_sub2(vector4double * restrict r, vector4double * restrict s) {
   return;
 }
 
-inline void vec_i_mul_add(vector4double * restrict r, vector4double * restrict s, 
-			  vector4double * restrict tmp) {
+inline void vec_i_mul_add2(vector4double * restrict r, vector4double * restrict s, 
+			   vector4double * restrict tmp) {
+#pragma disjoint(*s, *r)
+#pragma disjoint(*s, *tmp)
+#pragma disjoint(*r, *tmp)
+  tmp[0] = vec_splats(1.);
+#pragma unroll(3)
+  for(int i = 0; i < 3; i++) {
+    r[i] = vec_xxnpmadd(s[i], tmp[0], r[i]);
+  }
+  return;
+}
+
+inline void vec_i_mul_add_double2(vector4double * restrict r, vector4double * restrict s, 
+				  vector4double * restrict tmp) {
 #pragma disjoint(*s, *r)
 #pragma disjoint(*s, *tmp)
 #pragma disjoint(*r, *tmp)
@@ -49,6 +80,34 @@ inline void vec_i_mul_add(vector4double * restrict r, vector4double * restrict s
   }
   return;
 }
+
+inline void vec_i_mul_sub2(vector4double * restrict r, vector4double * restrict s, 
+			   vector4double * restrict tmp) {
+#pragma disjoint(*s, *r)
+#pragma disjoint(*s, *tmp)
+#pragma disjoint(*r, *tmp)
+  tmp[0] = vec_splats(-1.);
+#pragma unroll(3)
+  for(int i = 0; i < 3; i++) {
+    r[i] = vec_xxnpmadd(s[i], tmp[0], r[i]);
+  }
+  return;
+}
+
+inline void vec_i_mul_sub_double2(vector4double * restrict r, vector4double * restrict s, 
+				  vector4double * restrict tmp) {
+#pragma disjoint(*s, *r)
+#pragma disjoint(*s, *tmp)
+#pragma disjoint(*r, *tmp)
+  tmp[0] = vec_splats(-1.);
+#pragma unroll(6)
+  for(int i = 0; i < 6; i++) {
+    r[i] = vec_xxnpmadd(s[i], tmp[0], r[i]);
+  }
+  return;
+}
+
+
 
 inline void vec_cmplx_mul_double2(vector4double * restrict rs, vector4double * restrict r,
 				  vector4double * tmp, complex double * c) {

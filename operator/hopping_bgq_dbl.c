@@ -94,9 +94,9 @@
     vec_load2(r+6, &sp->s2);
     vec_load2(r+9, &sp->s3);
     // s0 + s2 and s1 + s3
-    vec_add2(r, r, &r[6]);
+    vec_add_double2(r, r, &r[6]);
     // result is now in r[0-5] 
-    vec_su3_multiply_double(up, U, r);
+    vec_su3_multiply_double2(up, U, r);
     // result is now in r[6-11]
     // mult with ka0 and store in rs
     vec_cmplx_mul_double2(rs, &r[6], U, &ka0);
@@ -119,15 +119,15 @@
     vec_load2(r+6, &sm->s2);
     vec_load2(r+9, &sm->s3);
     // s0 - s2 and s1 - s3
-    vec_sub2(r, r, &r[6]);
+    vec_sub_double2(r, r, &r[6]);
     // result is now in r[0-5]
     vec_su3_inverse_multiply_double2(um, U, r);
     // result is now in r[6-11]
     // mult with k0
     vec_cmplxcg_mul_double2(r, &r[6], U, &ka0);
     // result in r[0-5] now
-    vec_add2(rs, rs, r);
-    vec_sub2(&rs[6], &rs[6], r);
+    vec_add_double2(rs, rs, r);
+    vec_sub_double2(&rs[6], &rs[6], r);
 
     /*********************** direction +1 ************************/
 
@@ -145,17 +145,136 @@
     vec_load2(r+3, &sp->s1);
     vec_load2(r+9, &sp->s2);
     vec_load2(r+6, &sp->s3);
-    vec_i_mul_add(r, &r[6], U);
+    vec_i_mul_add_double2(r, &r[6], U);
     vec_su3_multiply_double2(up, U, r);
     vec_cmplx_mul_double2(r, &r[6], U, &ka1);
-    vec_add2(rs, rs, r);
-    _bgl_add_to_rs0_reg0();
-    _bgl_i_mul_sub_from_rs3_reg0();
-    _bgl_add_to_rs1_reg1();
-    _bgl_i_mul_sub_from_rs2_reg1();
+    vec_add_double2(rs, rs, r);
+    vec_i_mul_sub2(&rs[6], &r[3], U);
+    vec_i_mul_sub2(&rs[9], &r[0], U);
 
+    /*********************** direction -1 ************************/
 
+    iy=g_iup[ix][2]; 
+    icy=g_lexic2eosub[iy];
+
+#    if ((defined _GAUGE_COPY))
+    up=um+1;
+#    else
+    up+=1;
+#    endif
+    sp=k+icy;
+
+    vec_load2(r, &sm->s0);
+    vec_load2(r+3, &sm->s1);
+    vec_load2(r+9, &sm->s2);
+    vec_load2(r+6, &sm->s3);
+    vec_i_mul_sub_double2(r, &r[6], U);
+    vec_su3_inverse_multiply_double2(um, U, r);
+    vec_cmplx_mul_double2(r, &r[6], U, &ka1);
+    vec_add_double2(rs, rs, r);
+    vec_i_mul_add2(&rs[6], &r[3], U);
+    vec_i_mul_add2(&rs[9], &r[0], U);
+
+    /*********************** direction +2 ************************/
+
+    iy=g_idn[ix][2]; 
+    icy=g_lexic2eosub[iy];
+
+#    ifndef _GAUGE_COPY
+    um=&g_gauge_field[iy][2]; 
+#    else
+    um= up+1;
+#    endif
+    sm=k+icy;
+
+    vec_load2(r, &sp->s0);
+    vec_load2(r+3, &sp->s1);
+    vec_load2(r+9, &sp->s2);
+    vec_load2(r+6, &sp->s3);
+    vec_add2(r, r, &r[6]);
+    vec_sub2(&r[3], &r[3], &r[9]);
+    vec_su3_multiply_double2(up, U, r);
+    vec_cmplx_mul_double2(r, &r[6], U, &ka2);
+    vec_add_double2(rs, rs, r);
+    vec_sub2(&rs[6], &rs[6], &r[3]);
+    vec_add2(&rs[9], &rs[9], r);
+
+    /*********************** direction -2 ************************/
+
+    iy=g_iup[ix][3]; 
+    icy=g_lexic2eosub[iy];
+
+#    if ((defined _GAUGE_COPY))
+    up=um+1;
+#    else
+    up+=1;
+#    endif
+    sp=k+icy;
+
+    vec_load2(r, &sm->s0);
+    vec_load2(r+3, &sm->s1);
+    vec_load2(r+9, &sm->s2);
+    vec_load2(r+6, &sm->s3);
+    vec_sub2(r, r, r+6);
+    vec_add2(r+3, r+3, r+9);
+    vec_su3_inverse_multiply_double2(um, U, r);
+    vec_cmplx_mul_double2(r, &r[6], U, &ka2);
+    vec_add_double2(rs, rs, r);
+    vec_add2(rs+6, rs+6, r+3);
+    vec_sub2(rs+9, rs+9, r);
+
+    /*********************** direction +3 ************************/
+
+    iy=g_idn[ix][3]; 
+    icy=g_lexic2eosub[iy];
+
+#    ifndef _GAUGE_COPY
+    um=&g_gauge_field[iy][3]; 
+#    else
+    um=up+1;
+#    endif
+    sm=k+icy;
+
+    vec_load2(r, &sp->s0);
+    vec_load2(r+3, &sp->s1);
+    vec_load2(r+6, &sp->s2);
+    vec_load2(r+9, &sp->s3);
+    vec_i_mul_add2(r, r, r+6);
+    vec_i_mul_sub2(r+3, r+3, r+0);
+    vec_su3_multiply_double2(up, U, r);
+    vec_cmplx_mul_double2(r, &r[6], U, &ka3);
+    vec_add_double2(rs, rs, r);
+    vec_i_mul_sub2(rs+6, rs+6, r);
+    vec_i_mul_add2(rs+9, rs+9, r+3);
+
+    /*********************** direction -3 ************************/
+
+    icz=icx+1;
+    if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
+    iz=g_eo2lexic[icz];
+    iy=g_iup[iz][0]; icy=g_lexic2eosub[iy];
+
+#    if ((defined _GAUGE_COPY))
+    up=um+1;
+#    else
+    up=&g_gauge_field[iz][0];
+#    endif
+    sp=k+icy;
+
+    vec_load2(r, &sm->s0);
+    vec_load2(r+3, &sm->s1);
+    vec_load2(r+6, &sm->s2);
+    vec_load2(r+9, &sm->s3);
+    vec_i_mul_sub2(r, r, r+6);
+    vec_i_mul_add2(r+3, r+3, r+9);
+    vec_su3_inverse_multiply_double2(um, U, r);
+    vec_cmplx_mul_double2(r, &r[6], U, &ka3);
+    vec_add_double2(rs, rs, r);
+    vec_store2(rn->s0, rs);
+    vec_store2(rn->s1, rs+3);
+    vec_i_mul_add2(rs+6, rs+6, r);
+    vec_store2(rn->s2, rs+6);
+    vec_i_mul_sub2(rs+9, rs+9, r+3);
+    vec_store2(rn->s3, rs+9);
   }
-
-
 }
