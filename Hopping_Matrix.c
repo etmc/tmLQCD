@@ -1085,7 +1085,16 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #pragma pomp inst begin(hoppingmatrix)
 #endif
 #ifdef XLC
-#pragma disjoint(*l, *k, *U, *s)
+#pragma disjoint(*l, *k)
+#pragma disjoint(*k, *U)
+#pragma disjoint(*l, *U)
+#pragma disjoint(*U, *s)
+#pragma disjoint(*k, *s)
+#pragma disjoint(*l, *s)
+  __alignx(32, l);
+  __alignx(32, k);
+  __alignx(32, U);
+  __alignx(32, s);
 #endif
 
 #ifdef _GAUGE_COPY
@@ -2305,7 +2314,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 }
 #    endif /* _USE_TSPLITPAR */
 
-#  elif (defined BGQ && defined XLC)
+#  elif (!defined BGQ && defined XLC)
+
+#include"bgq.h"
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #include "operator/hopping_bgq_dbl.c"
