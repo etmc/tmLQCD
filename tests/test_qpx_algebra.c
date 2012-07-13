@@ -170,10 +170,18 @@ TEST(qpx_algebra) {
   assertFalseM(test, "vec_i_mul_sub2 failed\n");
   test = 0;
 
+  phi2.c0 = 0.9+2*I;
+  phi2.c1 = 0.6+1.3*I;
+  phi2.c2 = 0.6-.2*I;
+
+  phi3.c0 = -0.4+0.3*I;
+  phi3.c1 = 0.5-1.3*I;
+  phi3.c2 = -0.1-3.12*I;
+  
   s.s0 = phi0;
   s.s1 = phi1;
-  s.s2 = phi0;
-  s.s3 = phi1;
+  s.s2 = phi2;
+  s.s3 = phi3;
   sp = &s;
   _vector_add(psi,sp->s0,sp->s2);
   _su3_multiply(chi,u,psi);
@@ -221,6 +229,326 @@ TEST(qpx_algebra) {
   assertFalseM(test, "D_t+ failed\n");
   test = 0;
 
+  sm = sp;
+  _vector_sub(psi,sm->s0,sm->s2);
+  _su3_inverse_multiply(chi,u,psi);
+  _complexcjg_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s0,psi);
+  _vector_sub_assign(temp.s2,psi);
+  _vector_sub(psi,sm->s1,sm->s3);
+  _su3_inverse_multiply(chi,u,psi);
+  _complexcjg_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s1,psi);
+  _vector_sub_assign(temp.s3,psi);
+
+  vec_load2(r, &sm->s0);
+  vec_load2(r+3, &sm->s1);
+  vec_load2(r+6, &sm->s2);
+  vec_load2(r+9, &sm->s3);
+  // s0 - s2 and s1 - s3
+  vec_sub_double2(r, &r[6]);
+  // result is now in r[0-5]
+  vec_su3_inverse_multiply_double2(&u, U, r);
+  // result is now in r[6-11]
+  // mult with k0
+  vec_cmplxcg_mul_double2(r, &r[6], U, &k);
+  // result in r[0-5] now
+  vec_add_double2(rs, r);
+  vec_sub_double2(&rs[6], r);
+
+  vec_store2(&temp2.s0, rs);
+  vec_store2(&temp2.s1, rs+3);
+  vec_store2(&temp2.s2, rs+6);
+  vec_store2(&temp2.s3, rs+9);
+
+  if( cabs(temp.s0.c0 - temp2.s0.c0) > EPS || 
+      cabs(temp.s0.c1 - temp2.s0.c1) > EPS || 
+      cabs(temp.s0.c2 - temp2.s0.c2) > EPS ||
+      cabs(temp.s1.c0 - temp2.s1.c0) > EPS || 
+      cabs(temp.s1.c1 - temp2.s1.c1) > EPS || 
+      cabs(temp.s1.c2 - temp2.s1.c2) > EPS ||
+      cabs(temp.s2.c0 - temp2.s2.c0) > EPS || 
+      cabs(temp.s2.c1 - temp2.s2.c1) > EPS || 
+      cabs(temp.s2.c2 - temp2.s2.c2) > EPS ||
+      cabs(temp.s3.c0 - temp2.s3.c0) > EPS || 
+      cabs(temp.s3.c1 - temp2.s3.c1) > EPS || 
+      cabs(temp.s3.c2 - temp2.s3.c2) > EPS )
+    test = 1;
+
+  assertFalseM(test, "D_t- failed\n");
+  test = 0;
+
+  _vector_i_add(psi,sp->s0,sp->s3);
+  _su3_multiply(chi,u,psi);
+  _complex_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s0,psi);
+  _vector_i_sub_assign(temp.s3,psi);
+  _vector_i_add(psi,sp->s1,sp->s2);
+  _su3_multiply(chi,u,psi);
+  _complex_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s1,psi);
+  _vector_i_sub_assign(temp.s2,psi);
+
+  vec_load2(r, &sp->s0);
+  vec_load2(r+3, &sp->s1);
+  vec_load2(r+9, &sp->s2);
+  vec_load2(r+6, &sp->s3);
+  vec_i_mul_add_double2(r, &r[6], U);
+  vec_su3_multiply_double2(&u, U, r);
+  vec_cmplx_mul_double2(r, &r[6], U, &k);
+  vec_add_double2(rs, r);
+  vec_i_mul_sub2(&rs[6], &r[3], U);
+  vec_i_mul_sub2(&rs[9], &r[0], U);
+
+  vec_store2(&temp2.s0, rs);
+  vec_store2(&temp2.s1, rs+3);
+  vec_store2(&temp2.s2, rs+6);
+  vec_store2(&temp2.s3, rs+9);
+
+  if( cabs(temp.s0.c0 - temp2.s0.c0) > EPS || 
+      cabs(temp.s0.c1 - temp2.s0.c1) > EPS || 
+      cabs(temp.s0.c2 - temp2.s0.c2) > EPS ||
+      cabs(temp.s1.c0 - temp2.s1.c0) > EPS || 
+      cabs(temp.s1.c1 - temp2.s1.c1) > EPS || 
+      cabs(temp.s1.c2 - temp2.s1.c2) > EPS ||
+      cabs(temp.s2.c0 - temp2.s2.c0) > EPS || 
+      cabs(temp.s2.c1 - temp2.s2.c1) > EPS || 
+      cabs(temp.s2.c2 - temp2.s2.c2) > EPS ||
+      cabs(temp.s3.c0 - temp2.s3.c0) > EPS || 
+      cabs(temp.s3.c1 - temp2.s3.c1) > EPS || 
+      cabs(temp.s3.c2 - temp2.s3.c2) > EPS )
+    test = 1;
+
+  assertFalseM(test, "D_x+ failed\n");
+  test = 0;
+
+  _vector_i_sub(psi,sm->s0,sm->s3);
+  _su3_inverse_multiply(chi,u,psi);
+  _complexcjg_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s0,psi);
+  _vector_i_add_assign(temp.s3,psi);
+  _vector_i_sub(psi,sm->s1,sm->s2);
+  _su3_inverse_multiply(chi,u,psi);
+  _complexcjg_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s1,psi);
+  _vector_i_add_assign(temp.s2,psi);
+
+  vec_load2(r, &sm->s0);
+  vec_load2(r+3, &sm->s1);
+  vec_load2(r+9, &sm->s2);
+  vec_load2(r+6, &sm->s3);
+  vec_i_mul_sub_double2(r, &r[6], U);
+  vec_su3_inverse_multiply_double2(&u, U, r);
+  vec_cmplxcg_mul_double2(r, &r[6], U, &k);
+  vec_add_double2(rs, r);
+  vec_i_mul_add2(&rs[6], &r[3], U);
+  vec_i_mul_add2(&rs[9], &r[0], U);
+
+  vec_store2(&temp2.s0, rs);
+  vec_store2(&temp2.s1, rs+3);
+  vec_store2(&temp2.s2, rs+6);
+  vec_store2(&temp2.s3, rs+9);
+
+  if( cabs(temp.s0.c0 - temp2.s0.c0) > EPS || 
+      cabs(temp.s0.c1 - temp2.s0.c1) > EPS || 
+      cabs(temp.s0.c2 - temp2.s0.c2) > EPS ||
+      cabs(temp.s1.c0 - temp2.s1.c0) > EPS || 
+      cabs(temp.s1.c1 - temp2.s1.c1) > EPS || 
+      cabs(temp.s1.c2 - temp2.s1.c2) > EPS ||
+      cabs(temp.s2.c0 - temp2.s2.c0) > EPS || 
+      cabs(temp.s2.c1 - temp2.s2.c1) > EPS || 
+      cabs(temp.s2.c2 - temp2.s2.c2) > EPS ||
+      cabs(temp.s3.c0 - temp2.s3.c0) > EPS || 
+      cabs(temp.s3.c1 - temp2.s3.c1) > EPS || 
+      cabs(temp.s3.c2 - temp2.s3.c2) > EPS )
+    test = 1;
+
+  assertFalseM(test, "D_x- failed\n");
+  test = 0;
+
+  _vector_add(psi,sp->s0,sp->s3);
+  _su3_multiply(chi,u,psi);
+  _complex_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s0,psi);
+  _vector_add_assign(temp.s3,psi);
+  _vector_sub(psi,sp->s1,sp->s2);
+  _su3_multiply(chi,u,psi);
+  _complex_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s1,psi);
+  _vector_sub_assign(temp.s2,psi);
+
+  vec_load2(r, &sp->s0);
+  vec_load2(r+3, &sp->s1);
+  vec_load2(r+9, &sp->s2);
+  vec_load2(r+6, &sp->s3);
+  vec_add2(r, &r[6]);
+  vec_sub2(r+3, &r[9]);
+  vec_su3_multiply_double2(&u, U, r);
+  vec_cmplx_mul_double2(r, &r[6], U, &k);
+  vec_add_double2(rs, r);
+  vec_sub2(&rs[6], &r[3]);
+  vec_add2(&rs[9], r);
+
+  vec_store2(&temp2.s0, rs);
+  vec_store2(&temp2.s1, rs+3);
+  vec_store2(&temp2.s2, rs+6);
+  vec_store2(&temp2.s3, rs+9);
+
+  if( cabs(temp.s0.c0 - temp2.s0.c0) > EPS || 
+      cabs(temp.s0.c1 - temp2.s0.c1) > EPS || 
+      cabs(temp.s0.c2 - temp2.s0.c2) > EPS ||
+      cabs(temp.s1.c0 - temp2.s1.c0) > EPS || 
+      cabs(temp.s1.c1 - temp2.s1.c1) > EPS || 
+      cabs(temp.s1.c2 - temp2.s1.c2) > EPS ||
+      cabs(temp.s2.c0 - temp2.s2.c0) > EPS || 
+      cabs(temp.s2.c1 - temp2.s2.c1) > EPS || 
+      cabs(temp.s2.c2 - temp2.s2.c2) > EPS ||
+      cabs(temp.s3.c0 - temp2.s3.c0) > EPS || 
+      cabs(temp.s3.c1 - temp2.s3.c1) > EPS || 
+      cabs(temp.s3.c2 - temp2.s3.c2) > EPS )
+    test = 1;
+
+  assertFalseM(test, "D_y+ failed\n");
+  test = 0;
+
+  _vector_sub(psi,sm->s0,sm->s3);
+  _su3_inverse_multiply(chi,u,psi);
+  _complexcjg_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s0,psi);
+  _vector_sub_assign(temp.s3,psi);
+  _vector_add(psi,sm->s1,sm->s2);
+  _su3_inverse_multiply(chi,u,psi);
+  _complexcjg_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s1,psi);
+  _vector_add_assign(temp.s2,psi);
+
+  vec_load2(r, &sm->s0);
+  vec_load2(r+3, &sm->s1);
+  vec_load2(r+9, &sm->s2);
+  vec_load2(r+6, &sm->s3);
+  vec_sub2(r, r+6);
+  vec_add2(r+3, r+9);
+  vec_su3_inverse_multiply_double2(&u, U, r);
+  vec_cmplxcg_mul_double2(r, &r[6], U, &k);
+  vec_add_double2(rs, r);
+  vec_add2(rs+6, r+3);
+  vec_sub2(rs+9, r);
+
+  vec_store2(&temp2.s0, rs);
+  vec_store2(&temp2.s1, rs+3);
+  vec_store2(&temp2.s2, rs+6);
+  vec_store2(&temp2.s3, rs+9);
+
+  if( cabs(temp.s0.c0 - temp2.s0.c0) > EPS || 
+      cabs(temp.s0.c1 - temp2.s0.c1) > EPS || 
+      cabs(temp.s0.c2 - temp2.s0.c2) > EPS ||
+      cabs(temp.s1.c0 - temp2.s1.c0) > EPS || 
+      cabs(temp.s1.c1 - temp2.s1.c1) > EPS || 
+      cabs(temp.s1.c2 - temp2.s1.c2) > EPS ||
+      cabs(temp.s2.c0 - temp2.s2.c0) > EPS || 
+      cabs(temp.s2.c1 - temp2.s2.c1) > EPS || 
+      cabs(temp.s2.c2 - temp2.s2.c2) > EPS ||
+      cabs(temp.s3.c0 - temp2.s3.c0) > EPS || 
+      cabs(temp.s3.c1 - temp2.s3.c1) > EPS || 
+      cabs(temp.s3.c2 - temp2.s3.c2) > EPS )
+    test = 1;
+
+  assertFalseM(test, "D_y- failed\n");
+  test = 0;
+
+  _vector_i_add(psi,sp->s0,sp->s2);
+  _su3_multiply(chi,u,psi);
+  _complex_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s0,psi);
+  _vector_i_sub_assign(temp.s2,psi);
+  _vector_i_sub(psi,sp->s1,sp->s3);
+  _su3_multiply(chi,u,psi);
+  _complex_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s1,psi);
+  _vector_i_add_assign(temp.s3,psi);
+
+  vec_load2(r, &sp->s0);
+  vec_load2(r+3, &sp->s1);
+  vec_load2(r+6, &sp->s2);
+  vec_load2(r+9, &sp->s3);
+  vec_i_mul_add2(r, r+6, U);
+  vec_i_mul_sub2(r+3, r+9, U);
+  vec_su3_multiply_double2(&u, U, r);
+  vec_cmplx_mul_double2(r, &r[6], U, &k);
+  vec_add_double2(rs, r);
+  vec_i_mul_sub2(rs+6, r, U);
+  vec_i_mul_add2(rs+9, r+3, U);
+
+  vec_store2(&temp2.s0, rs);
+  vec_store2(&temp2.s1, rs+3);
+  vec_store2(&temp2.s2, rs+6);
+  vec_store2(&temp2.s3, rs+9);
+
+  if( cabs(temp.s0.c0 - temp2.s0.c0) > EPS || 
+      cabs(temp.s0.c1 - temp2.s0.c1) > EPS || 
+      cabs(temp.s0.c2 - temp2.s0.c2) > EPS ||
+      cabs(temp.s1.c0 - temp2.s1.c0) > EPS || 
+      cabs(temp.s1.c1 - temp2.s1.c1) > EPS || 
+      cabs(temp.s1.c2 - temp2.s1.c2) > EPS ||
+      cabs(temp.s2.c0 - temp2.s2.c0) > EPS || 
+      cabs(temp.s2.c1 - temp2.s2.c1) > EPS || 
+      cabs(temp.s2.c2 - temp2.s2.c2) > EPS ||
+      cabs(temp.s3.c0 - temp2.s3.c0) > EPS || 
+      cabs(temp.s3.c1 - temp2.s3.c1) > EPS || 
+      cabs(temp.s3.c2 - temp2.s3.c2) > EPS )
+    test = 1;
+
+  assertFalseM(test, "D_z+ failed\n");
+  test = 0;
+
+  _vector_i_sub(psi,sm->s0,sm->s2);
+  _su3_inverse_multiply(chi,u,psi);
+  _complexcjg_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s0, psi);
+  _vector_i_add_assign(temp.s2, psi);
+  _vector_i_add(psi,sm->s1,sm->s3);
+  _su3_inverse_multiply(chi,u,psi);
+  _complexcjg_times_vector(psi,k,chi);
+  _vector_add_assign(temp.s1, psi);
+  _vector_i_sub_assign(temp.s3, psi);
+
+  vec_load2(r, &sm->s0);
+  vec_load2(r+3, &sm->s1);
+  vec_load2(r+6, &sm->s2);
+  vec_load2(r+9, &sm->s3);
+  vec_i_mul_sub2(r, r+6, U);
+  vec_i_mul_add2(r+3, r+9, U);
+  vec_su3_inverse_multiply_double2(&u, U, r);
+  vec_cmplxcg_mul_double2(r, &r[6], U, &k);
+  vec_add_double2(rs, r);
+  vec_store2(&temp2.s0, rs);
+  vec_store2(&temp2.s1, rs+3);
+  vec_i_mul_add2(rs+6, r, U);
+  vec_store2(&temp2.s2, rs+6);
+  vec_i_mul_sub2(rs+9, r+3, U);
+  vec_store2(&temp2.s3, rs+9);
+
+  vec_store2(&temp2.s0, rs);
+  vec_store2(&temp2.s1, rs+3);
+  vec_store2(&temp2.s2, rs+6);
+  vec_store2(&temp2.s3, rs+9);
+
+  if( cabs(temp.s0.c0 - temp2.s0.c0) > EPS || 
+      cabs(temp.s0.c1 - temp2.s0.c1) > EPS || 
+      cabs(temp.s0.c2 - temp2.s0.c2) > EPS ||
+      cabs(temp.s1.c0 - temp2.s1.c0) > EPS || 
+      cabs(temp.s1.c1 - temp2.s1.c1) > EPS || 
+      cabs(temp.s1.c2 - temp2.s1.c2) > EPS ||
+      cabs(temp.s2.c0 - temp2.s2.c0) > EPS || 
+      cabs(temp.s2.c1 - temp2.s2.c1) > EPS || 
+      cabs(temp.s2.c2 - temp2.s2.c2) > EPS ||
+      cabs(temp.s3.c0 - temp2.s3.c0) > EPS || 
+      cabs(temp.s3.c1 - temp2.s3.c1) > EPS || 
+      cabs(temp.s3.c2 - temp2.s3.c2) > EPS )
+    test = 1;
+
+  assertFalseM(test, "D_z- failed\n");
+  test = 0;
 
 #else
   test = 1;
