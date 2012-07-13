@@ -222,7 +222,7 @@ inline void vec_su3_multiply_double2(su3 * const restrict u, vector4double * res
   r[8] = vec_xxnpmadd(U[5], r[1], r[8]);
   r[9] = vec_xxnpmadd(U[3], r[4], r[9]);
   r[10] = vec_xxnpmadd(U[4], r[4], r[10]);
-  r[11] = vec_xxnpmadd(U[5], r[4], r[10]);
+  r[11] = vec_xxnpmadd(U[5], r[4], r[11]);
   U[8] = vec_ld2(0, (double*) &u->c22);
 
   r[6] = vec_xmadd(r[2], U[6], r[6]);
