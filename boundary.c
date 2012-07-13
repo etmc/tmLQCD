@@ -31,8 +31,8 @@
 #include "su3.h"
 #include "boundary.h"
   
-_Complex double ka0, ka1, ka2, ka3;
-_Complex double phase_0, phase_1, phase_2, phase_3;
+_Complex double ka0, ka1, ka2, ka3 ALIGN;
+_Complex double phase_0, phase_1, phase_2, phase_3 ALIGN;
 const double PI_ = 3.14159265358979;
 double X0, X1, X2, X3;
 
