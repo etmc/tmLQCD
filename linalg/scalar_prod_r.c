@@ -15,8 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
  *
  * File scalar_prod_r.c
  *
@@ -38,6 +36,65 @@
 
 #include <complex.h>
 
+#if (defined BGQ && defined XLC)
+
+double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel) {
+  vector4double ks, kc, ds, tr, ts, tt;
+  vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
+  vector4double z0, z1, z2, z3, z4, z4;
+  double *s, *r;
+#ifdef MPI
+  vector4double buffer;
+#endif
+  ks = vec_splats(0.0);
+  kc = vec_splats(0.0);
+
+#pragma unroll(6)
+  for (int ix = 0; ix < N; ++ix) {
+    s=(double*)((spinor *) S + ix);
+    r=(double*)((spinor *) R + ix);
+    x0 = vec_ld(0, s);
+    x1 = vec_ld(0, s+4);
+    x2 = vec_ld(0, s+8);
+    x3 = vec_ld(0, s+12);
+    x4 = vec_ld(0, s+16);
+    x5 = vec_ld(0, s+20);
+    y0 = vec_ld(0, r);
+    y1 = vec_ld(0, r+4);
+    y2 = vec_ld(0, r+8);
+    y3 = vec_ld(0, r+12);
+    y4 = vec_ld(0, r+16);
+    y5 = vec_ld(0, r+20);
+    z0 = vec_mul(x0, y0);
+    z1 = vec_mul(x1, y1);
+    z2 = vec_mul(x2, y2);
+    z3 = vec_mul(x3, y3);
+    z4 = vec_mul(x4, y4);
+    z5 = vec_mul(x5, y5);
+    x0 = vec_add(z0, z1);
+    x1 = vec_add(z2, z3);
+    x2 = vec_add(z4, z5);
+    x3 = vec_add(x0, x1);
+    ds = vec_add(x2, x3);
+
+    tr = vec_add(ds, kc);
+    ts = vec_add(tr, ks);
+    tt = vec_sub(ts, ks);
+    ks = ts;
+    kc = vec_sub(tr, tt);
+  }
+#if defined MPI
+  if(parallel) {
+    buffer = kc;
+    MPI_Allreduce(&buffer, &kc, 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return(buffer1);
+  }
+#endif
+  return (kc[0] + kc[1] + kc[2] + kc[3]);
+}
+
+#else
+
 double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel)
 {
   
@@ -52,15 +109,14 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
   __alignx(16, R);
 #endif
 
-  for (int ix = 0; ix < N; ++ix)
-  {
+  for (int ix = 0; ix < N; ++ix) {
     s=(spinor *) S + ix;
     r=(spinor *) R + ix;
     
-    ds = r->s0.c0 * conj(s->s0.c0) + r->s0.c1 * conj(s->s0.c1) + r->s0.c2 * conj(s->s0.c2) +
-         r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +
-	 r->s2.c0 * conj(s->s2.c0) + r->s2.c1 * conj(s->s2.c1) + r->s2.c2 * conj(s->s2.c2) +
-         r->s3.c0 * conj(s->s3.c0) + r->s3.c1 * conj(s->s3.c1) + r->s3.c2 * conj(s->s3.c2);
+    ds = creal(r->s0.c0 * conj(s->s0.c0)) + creal(r->s0.c1 * conj(s->s0.c1)) + creal(r->s0.c2 * conj(s->s0.c2)) +
+      creal(r->s1.c0 * conj(s->s1.c0)) + creal(r->s1.c1 * conj(s->s1.c1)) + creal(r->s1.c2 * conj(s->s1.c2)) +
+      creal(r->s2.c0 * conj(s->s2.c0)) + creal(r->s2.c1 * conj(s->s2.c1)) + creal(r->s2.c2 * conj(s->s2.c2)) +
+      creal(r->s3.c0 * conj(s->s3.c0)) + creal(r->s3.c1 * conj(s->s3.c1)) + creal(r->s3.c2 * conj(s->s3.c2));    
     
     tr=ds+kc;
     ts=tr+ks;
@@ -81,6 +137,9 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
   return kc;
 
 }
+
+
+#endif
 
 #ifdef WITHLAPH
 double scalar_prod_r_su3vect(su3_vector * const S,su3_vector * const R, const int N, const int parallel)
