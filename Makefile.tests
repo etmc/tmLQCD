@@ -1,4 +1,4 @@
-TESTS = tests/test_sample tests/test_su3 tests/test_buffers tests/test_qpx
+TESTS = tests/test_sample tests/test_su3 tests/test_buffers tests/test_qpx tests/test_linalg
 
 TEMP = $(patsubst %.c,%,$(wildcard $(top_srcdir)/tests/*.c))
 TESTMODULES = $(patsubst $(top_srcdir)/%,%,$(TEMP))
@@ -34,6 +34,12 @@ TEST_QPX_FLAGS:=-lm
 TEST_QPX_LIBS:=$(top_builddir)/cu/libcu.a
 tests/test_qpx: $(TEST_QPX_OBJECTS) $(TEST_QPX_LIBS)
 	${LINK} $(TEST_QPX_OBJECTS) $(TESTFLAGS) $(TEST_QPX_FLAGS)
+
+TEST_LINALG_OBJECTS:=$(patsubst $(top_srcdir)/%.c,%.o,$(wildcard $(top_srcdir)/tests/test_linalg*.c)) 
+TEST_LINALG_FLAGS:=-lm
+TEST_LINALG_LIBS:=$(top_builddir)/cu/libcu.a $(top_builddir)/linalg/liblinalg.a
+tests/test_linalg: $(TEST_LINALG_OBJECTS) $(TEST_LINALG_LIBS)
+	${LINK} $(TEST_LINALG_OBJECTS) $(TEST_LINALG_LIBS) $(TESTFLAGS) $(TEST_LINALG_FLAGS)
 
 TEST_BUFFERS_OBJECTS:=$(patsubst $(top_srcdir)/%.c,%.o,$(wildcard $(top_srcdir)/tests/test_buffers*.c)) fatal_error.o
 TEST_BUFFERS_FLAGS:=-lbuffers -L$(top_builddir)/buffers/
