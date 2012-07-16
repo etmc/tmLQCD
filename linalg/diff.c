@@ -213,14 +213,14 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N) {
   __prefetch_by_load(R);
   __prefetch_by_load(Q);
 
-#pragma uroll(2)
+#pragma unroll(2)
   for (int ix = 0; ix < N; ++ix) {
     s=(double*)((spinor *) S + ix);
     r=(double*)((spinor *) R + ix);
     q=(double*)((spinor *) Q + ix);
     __prefetch_by_load(S + ix + 1);
     __prefetch_by_load(R + ix + 1);
-    __prefetch_by_load(Q + ix + 1);
+    __prefetch_by_stream(1, Q + ix + 1);
     x0 = vec_ld(0, r);
     x1 = vec_ld(0, r+4);
     x2 = vec_ld(0, r+8);
