@@ -41,18 +41,26 @@
 double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel) {
   vector4double ks, kc, ds, tr, ts, tt;
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
-  vector4double z0, z1, z2, z3, z4, z4;
+  vector4double z0, z1, z2, z3, z4, z5;
   double *s, *r;
-#ifdef MPI
   vector4double buffer;
-#endif
+  __alignx(32, s);
+  __alignx(32, r);
+  __alignx(32, S);
+  __alignx(32, R);
+
+  __prefetch_by_load(S);
+  __prefetch_by_load(R);
+
   ks = vec_splats(0.0);
   kc = vec_splats(0.0);
 
-#pragma unroll(6)
+//#pragma unroll(6)
   for (int ix = 0; ix < N; ++ix) {
     s=(double*)((spinor *) S + ix);
     r=(double*)((spinor *) R + ix);
+    __prefetch_by_load(S + ix + 1);
+    __prefetch_by_load(R + ix + 1);
     x0 = vec_ld(0, s);
     x1 = vec_ld(0, s+4);
     x2 = vec_ld(0, s+8);
@@ -83,14 +91,14 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
     ks = ts;
     kc = vec_sub(tr, tt);
   }
+  buffer = vec_add(kc, ks);
 #if defined MPI
   if(parallel) {
-    buffer = kc;
     MPI_Allreduce(&buffer, &kc, 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    return(buffer1);
+    return(kc[0] + kc[1] + kc[2] + kc[3]);
   }
 #endif
-  return (kc[0] + kc[1] + kc[2] + kc[3]);
+  return (buffer[0] + buffer[1] + buffer[2] + buffer[3]);
 }
 
 #else
