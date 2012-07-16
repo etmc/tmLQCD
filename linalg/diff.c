@@ -196,6 +196,59 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
   return;
 }
 
+#elif (defined BGQ && defined XLC)
+
+void diff(spinor * const Q,spinor * const R,spinor * const S, const int N) {
+  vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
+  vector4double z0, z1, z2, z3, z4, z5;
+  double *s, *r, *q;
+
+  __alignx(32, s);
+  __alignx(32, r);
+  __alignx(32, q);
+  __alignx(32, S);
+  __alignx(32, R);
+
+  __prefetch_by_load(S);
+  __prefetch_by_load(R);
+  __prefetch_by_load(Q);
+
+#pragma uroll(2)
+  for (int ix = 0; ix < N; ++ix) {
+    s=(double*)((spinor *) S + ix);
+    r=(double*)((spinor *) R + ix);
+    q=(double*)((spinor *) Q + ix);
+    __prefetch_by_load(S + ix + 1);
+    __prefetch_by_load(R + ix + 1);
+    __prefetch_by_load(Q + ix + 1);
+    x0 = vec_ld(0, r);
+    x1 = vec_ld(0, r+4);
+    x2 = vec_ld(0, r+8);
+    x3 = vec_ld(0, r+12);
+    x4 = vec_ld(0, r+16);
+    x5 = vec_ld(0, r+20);
+    y0 = vec_ld(0, s);
+    y1 = vec_ld(0, s+4);
+    y2 = vec_ld(0, s+8);
+    y3 = vec_ld(0, s+12);
+    y4 = vec_ld(0, s+16);
+    y5 = vec_ld(0, s+20);
+    z0 = vec_sub(x0, y0);
+    z1 = vec_sub(x1, y1);
+    z2 = vec_sub(x2, y2);
+    z3 = vec_sub(x3, y3);
+    z4 = vec_sub(x4, y4);
+    z5 = vec_sub(x5, y5);
+    vec_st(z0, 0, q);
+    vec_st(z1, 0, q+4);
+    vec_st(z2, 0, q+8);
+    vec_st(z3, 0, q+12);
+    vec_st(z4, 0, q+16);
+    vec_st(z5, 0, q+20);
+  }
+  return;
+}
+
 #else
 
 void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
