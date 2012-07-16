@@ -61,7 +61,7 @@ void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const 
 
 #elif (defined BGQ && defined XLC)
 
-void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const int N) {
+void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const int N) {
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5, k;
   double *s, *r;
@@ -78,10 +78,10 @@ void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const 
 
 #pragma unroll(4)
   for(int i = 0; i < N; i++) {
-    s=(double*)((spinor *) S + ix);
-    r=(double*)((spinor *) R + ix);
-    __prefetch_by_load(S + ix + 1);
-    __prefetch_by_stream(1, R + ix + 1);
+    s=(double*)((spinor *) S + i);
+    r=(double*)((spinor *) R + i);
+    __prefetch_by_load(S + i + 1);
+    __prefetch_by_stream(1, R + i + 1);
     x0 = vec_ld(0, r);
     x1 = vec_ld(0, r+4);
     x2 = vec_ld(0, r+8);
