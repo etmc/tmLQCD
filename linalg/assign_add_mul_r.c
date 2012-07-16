@@ -27,13 +27,12 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#include "global.h"
-#include "sse.h"
 #include "su3.h"
 #include "assign_add_mul_r.h"
 
 
 #if ( defined SSE2 || defined SSE3 )
+#include "sse.h"
 
 /*   (*P) = (*P) + c(*Q)        c is a complex constant   */
 
@@ -85,10 +84,10 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
 
 #pragma unroll(2)
   for(int i = 0; i < N; i++) {
-    s=(double*)((spinor *) S + ix);
-    r=(double*)((spinor *) R + ix);
-    __prefetch_by_load(S + ix + 1);
-    __prefetch_by_load(R + ix + 1);
+    s=(double*)((spinor *) S + i);
+    r=(double*)((spinor *) R + i);
+    __prefetch_by_load(S + i + 1);
+    __prefetch_by_stream(1, R + i + 1);
     x0 = vec_ld(0, r);
     x1 = vec_ld(0, r+4);
     x2 = vec_ld(0, r+8);
@@ -108,11 +107,11 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
     z4 = vec_madd(k, y4, x4);
     z5 = vec_madd(k, y5, x5);
     vec_st(z0, 0, r);
-    vec_st(z0, 0, r+4);
-    vec_st(z0, 0, r+8);
-    vec_st(z0, 0, r+12);
-    vec_st(z0, 0, r+16);
-    vec_st(z0, 0, r+20);
+    vec_st(z1, 0, r+4);
+    vec_st(z2, 0, r+8);
+    vec_st(z3, 0, r+12);
+    vec_st(z4, 0, r+16);
+    vec_st(z5, 0, r+20);
   }
   return;
 }
