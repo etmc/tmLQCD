@@ -55,7 +55,7 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
   ks = vec_splats(0.0);
   kc = vec_splats(0.0);
 
-//#pragma unroll(6)
+#pragma unroll(2)
   for (int ix = 0; ix < N; ++ix) {
     s=(double*)((spinor *) S + ix);
     r=(double*)((spinor *) R + ix);

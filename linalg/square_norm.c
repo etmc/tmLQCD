@@ -34,9 +34,12 @@
 #endif
 #include <complex.h>
 #include "su3.h"
-#include "sse.h"
+#if (defined SSE || defined SSE2 || defined SSE3)
+# include "sse.h"
+#endif
 #include "square_norm.h"
 
+#define ALIGN __attribute__ ((aligned (32)))
 #if ((defined BGL) && (defined XLC))
 
 /***************************************
@@ -176,6 +179,7 @@ double square_norm(spinor * const P, const int N, const int parallel) {
 #endif
   double *s ALIGN;
   s = (double*) P;
+  __prefetch_by_load(s+24);
   x0 = vec_ld(0, s);
   x1 = vec_ld(0, s+4);
   x2 = vec_ld(0, s+8);
@@ -183,15 +187,16 @@ double square_norm(spinor * const P, const int N, const int parallel) {
   x4 = vec_ld(0, s+16);
   x5 = vec_ld(0, s+20);
   s += 24;
-  y[0] = vec_mul(x0, x0);
-  y[1] = vec_mul(x1, x1);
-  y[2] = vec_mul(x2, x2);
-  y[3] = vec_mul(x3, x3);
-  y[4] = vec_mul(x4, x4);
-  y[5] = vec_mul(x5, x5);
+  y0 = vec_mul(x0, x0);
+  y1 = vec_mul(x1, x1);
+  y2 = vec_mul(x2, x2);
+  y3 = vec_mul(x3, x3);
+  y4 = vec_mul(x4, x4);
+  y5 = vec_mul(x5, x5);
 
-#pragma unroll(6)
+#pragma unroll(4)
   for(int i = 1; i < N; i++) {
+//    __prefetch_by_load(s+48);
     x0 = vec_ld(0, s);
     x1 = vec_ld(0, s+4);
     x2 = vec_ld(0, s+8);
@@ -204,7 +209,7 @@ double square_norm(spinor * const P, const int N, const int parallel) {
     y3 = vec_madd(x3, x3, y3);
     y4 = vec_madd(x4, x4, y4);
     y5 = vec_madd(x5, x5, y5);
-    s+=24
+    s+=24;
   }
   x0 = vec_add(y0, y1);
   x1 = vec_add(y2, y3);
