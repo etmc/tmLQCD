@@ -23,11 +23,12 @@
 #include <stdlib.h>
 #include <complex.h>
 #include "su3.h"
-#include "sse.h"
 #include "assign_mul_add_r.h"
 
 
 #if ( defined SSE2 || defined SSE3 )
+#include "sse.h"
+
 /* k input , l output*/
 void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const int N) {
 
@@ -56,6 +57,57 @@ void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const 
     _sse_store(*s);
     s++; r++;
   }
+}
+
+#elif (defined BGQ && defined XLC)
+
+void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const int N) {
+  vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
+  vector4double z0, z1, z2, z3, z4, z5, k;
+  double *s, *r;
+  double _c __attribute__ ((aligned (32)));
+  _c = c;
+  __prefetch_by_load(S);
+  __prefetch_by_load(R);
+
+  k = vec_splats(_c);
+  __alignx(32, s);
+  __alignx(32, r);
+  __alignx(32, S);
+  __alignx(32, R);
+
+#pragma unroll(4)
+  for(int i = 0; i < N; i++) {
+    s=(double*)((spinor *) S + ix);
+    r=(double*)((spinor *) R + ix);
+    __prefetch_by_load(S + ix + 1);
+    __prefetch_by_stream(1, R + ix + 1);
+    x0 = vec_ld(0, r);
+    x1 = vec_ld(0, r+4);
+    x2 = vec_ld(0, r+8);
+    x3 = vec_ld(0, r+12);
+    x4 = vec_ld(0, r+16);
+    x5 = vec_ld(0, r+20);
+    y0 = vec_ld(0, s);
+    y1 = vec_ld(0, s+4);
+    y2 = vec_ld(0, s+8);
+    y3 = vec_ld(0, s+12);
+    y4 = vec_ld(0, s+16);
+    y5 = vec_ld(0, s+20);
+    z0 = vec_madd(k, x0, y0);
+    z1 = vec_madd(k, x1, y1);
+    z2 = vec_madd(k, x2, y2);
+    z3 = vec_madd(k, x3, y3);
+    z4 = vec_madd(k, x4, y4);
+    z5 = vec_madd(k, x5, y5);
+    vec_st(z0, 0, r);
+    vec_st(z1, 0, r+4);
+    vec_st(z2, 0, r+8);
+    vec_st(z3, 0, r+12);
+    vec_st(z4, 0, r+16);
+    vec_st(z5, 0, r+20);
+  }
+  return;
 }
 
 #elif ((defined BGL) && (defined XLC))
