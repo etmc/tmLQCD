@@ -32,6 +32,11 @@
   (r1) = vec_ld2(0, (double*) &(phi).c1);   \
   (r2) = vec_ld2(0, (double*) &(phi).c2);
 
+#define _vec_load2_32(r0, r1, r2, phi)	    \
+  (r0) = vec_ld2(0, (float*) &(phi).c0);   \
+  (r1) = vec_ld2(0, (float*) &(phi).c1);   \
+  (r2) = vec_ld2(0, (float*) &(phi).c2);
+
 inline void vec_load2(vector4double * r, su3_vector * const phi) {
 #pragma disjoint(*r,*phi)
   r[0] = vec_ld2(0, (double*) &phi->c0); 
@@ -44,6 +49,11 @@ inline void vec_load2(vector4double * r, su3_vector * const phi) {
   vec_st2((r0), 0, (double*) &phi.c0);		\
   vec_st2((r1), 0, (double*) &phi.c1);		\
   vec_st2((r2), 0, (double*) &phi.c2);
+
+#define _vec_store2_32(phi, r0, r1, r2)		\
+  vec_st2((r0), 0, (float*) &phi.c0);		\
+  vec_st2((r1), 0, (float*) &phi.c1);		\
+  vec_st2((r2), 0, (float*) &phi.c2);
 
 inline void vec_store2(su3_vector * const phi, vector4double * r) {
 #pragma disjoint(*r,*phi)
@@ -58,6 +68,11 @@ inline void vec_store2(su3_vector * const phi, vector4double * r) {
   (r0) = vec_add((r0), (s0));		  \
   (r1) = vec_add((r1), (s1));		  \
   (r2) = vec_add((r2), (s2));
+
+#define _vec_add_to2(rs0, rs1, rs2, r0, r1, r2, s0, s1, s2)	\
+  (rs0) = vec_add((r0), (s0));		  \
+  (rs1) = vec_add((r1), (s1));		  \
+  (rs2) = vec_add((r2), (s2));
 
 inline void vec_add2(vector4double * restrict r, vector4double * restrict s) {
 #pragma disjoint(*s, *r)
@@ -75,6 +90,14 @@ inline void vec_add2(vector4double * restrict r, vector4double * restrict s) {
   (r3) = vec_add((r3), (s3));						\
   (r4) = vec_add((r4), (s4));						\
   (r5) = vec_add((r5), (s5));						
+
+#define _vec_add_double_to2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5, s0, s1, s2, s3, s4, s5) \
+  (rs0) = vec_add((r0), (s0));						\
+  (rs1) = vec_add((r1), (s1));						\
+  (rs2) = vec_add((r2), (s2));						\
+  (rs3) = vec_add((r3), (s3));						\
+  (rs4) = vec_add((r4), (s4));						\
+  (rs5) = vec_add((r5), (s5));						
 
 inline void vec_add_double2(vector4double * restrict r, vector4double * restrict s) {
 #pragma disjoint(*s, *r)
@@ -94,6 +117,12 @@ inline void vec_add_double2(vector4double * restrict r, vector4double * restrict
   (r1) = vec_sub((r1), (s1));		  \
   (r2) = vec_sub((r2), (s2));
 
+#define _vec_sub_to2(rs0, rs1, rs2, r0, r1, r2, s0, s1, s2)	\
+  (rs0) = vec_sub((r0), (s0));		  \
+  (rs1) = vec_sub((r1), (s1));		  \
+  (rs2) = vec_sub((r2), (s2));
+
+
 inline void vec_sub2(vector4double * restrict r, vector4double * restrict s) {
 #pragma disjoint(*s, *r)
   r[0] = vec_sub(r[0], s[0]);
@@ -110,6 +139,15 @@ inline void vec_sub2(vector4double * restrict r, vector4double * restrict s) {
   (r3) = vec_sub((r3), (s3));						\
   (r4) = vec_sub((r4), (s4));						\
   (r5) = vec_sub((r5), (s5));						
+
+#define _vec_sub_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5, s0, s1, s2, s3, s4, s5) \
+  (rs0) = vec_sub((r0), (s0));						\
+  (rs1) = vec_sub((r1), (s1));						\
+  (rs2) = vec_sub((r2), (s2));						\
+  (rs3) = vec_sub((r3), (s3));						\
+  (rs4) = vec_sub((r4), (s4));						\
+  (rs5) = vec_sub((r5), (s5));						
+
 
 inline void vec_sub_double2(vector4double * restrict r, vector4double * restrict s) {
 #pragma disjoint(*s, *r)
@@ -129,6 +167,12 @@ inline void vec_sub_double2(vector4double * restrict r, vector4double * restrict
   r0 = vec_xxnpmadd(s0, tmp, r0);		     \
   r1 = vec_xxnpmadd(s1, tmp, r1);		     \
   r2 = vec_xxnpmadd(s2, tmp, r2);
+
+#define _vec_i_mul_add_to2(rs0, rs1, rs2, r0, r1, r2, s0, s1, s2, tmp)	\
+  tmp = vec_splats(1.);				     \
+  rs0 = vec_xxnpmadd(s0, tmp, r0);		     \
+  rs1 = vec_xxnpmadd(s1, tmp, r1);		     \
+  rs2 = vec_xxnpmadd(s2, tmp, r2);
 
 // tmp, temporary memory
 inline void vec_i_mul_add2(vector4double * restrict r, vector4double * restrict s, 
@@ -152,6 +196,15 @@ inline void vec_i_mul_add2(vector4double * restrict r, vector4double * restrict 
   r3 = vec_xxnpmadd(s3, tmp, r3);		     \
   r4 = vec_xxnpmadd(s4, tmp, r4);		     \
   r5 = vec_xxnpmadd(s5, tmp, r5);
+
+#define _vec_i_mul_add_double_to2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5, s0, s1, s2, s3, s4, s5, tmp) \
+  tmp = vec_splats(1.);				     \
+  rs0 = vec_xxnpmadd(s0, tmp, r0);		     \
+  rs1 = vec_xxnpmadd(s1, tmp, r1);		     \
+  rs2 = vec_xxnpmadd(s2, tmp, r2);		     \
+  rs3 = vec_xxnpmadd(s3, tmp, r3);		     \
+  rs4 = vec_xxnpmadd(s4, tmp, r4);		     \
+  rs5 = vec_xxnpmadd(s5, tmp, r5);
 
 
 // tmp, temporary memory
@@ -177,6 +230,13 @@ inline void vec_i_mul_add_double2(vector4double * restrict r, vector4double * re
   r1 = vec_xxnpmadd(s1, tmp, r1);		     \
   r2 = vec_xxnpmadd(s2, tmp, r2);
 
+#define _vec_i_mul_sub_to2(rs0, rs1, rs2, r0, r1, r2, s0, s1, s2, tmp)	\
+  tmp = vec_splats(-1.);				     \
+  rs0 = vec_xxnpmadd(s0, tmp, r0);		     \
+  rs1 = vec_xxnpmadd(s1, tmp, r1);		     \
+  rs2 = vec_xxnpmadd(s2, tmp, r2);
+
+
 // tmp, temporary memory
 inline void vec_i_mul_sub2(vector4double * restrict r, vector4double * restrict s, 
 			   vector4double * restrict tmp) {
@@ -199,6 +259,16 @@ inline void vec_i_mul_sub2(vector4double * restrict r, vector4double * restrict 
   r3 = vec_xxnpmadd(s3, tmp, r3);		     \
   r4 = vec_xxnpmadd(s4, tmp, r4);		     \
   r5 = vec_xxnpmadd(s5, tmp, r5);
+
+#define _vec_i_mul_sub_double_to2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5, s0, s1, s2, s3, s4, s5, tmp) \
+  tmp = vec_splats(-1.);				     \
+  rs0 = vec_xxnpmadd(s0, tmp, r0);		     \
+  rs1 = vec_xxnpmadd(s1, tmp, r1);		     \
+  rs2 = vec_xxnpmadd(s2, tmp, r2);		     \
+  rs3 = vec_xxnpmadd(s3, tmp, r3);		     \
+  rs4 = vec_xxnpmadd(s4, tmp, r4);		     \
+  rs5 = vec_xxnpmadd(s5, tmp, r5);
+
 
 // tmp, temporary memory
 inline void vec_i_mul_sub_double2(vector4double * restrict r, vector4double * restrict s, 

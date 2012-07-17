@@ -104,6 +104,10 @@
 #    include "bgl.h"
 #    include "operator/halfspinor_bg_dbl.c"
 
+#  elif (defined BGQ && defined XLC)
+#    include "bgq.h"
+#    include "operator/halfspinor_bgq_dbl.c"
+
 #  else
 #    include "operator/halfspinor_dbl.c"
 
