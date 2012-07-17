@@ -140,7 +140,7 @@ inline void vec_sub2(vector4double * restrict r, vector4double * restrict s) {
   (r4) = vec_sub((r4), (s4));						\
   (r5) = vec_sub((r5), (s5));						
 
-#define _vec_sub_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5, s0, s1, s2, s3, s4, s5) \
+#define _vec_sub_to_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5, s0, s1, s2, s3, s4, s5) \
   (rs0) = vec_sub((r0), (s0));						\
   (rs1) = vec_sub((r1), (s1));						\
   (rs2) = vec_sub((r2), (s2));						\
