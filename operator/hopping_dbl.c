@@ -26,20 +26,25 @@
  *
  **********************************************************************/
 
-static su3_vector psi1, psi2, psi, chi, phi1, phi3;
+static su3_vector psi, chi;
+
+#include"xlc_prefetch.h"
 
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
 void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
-  int ix,iy;
-  int ioff,ioff2,icx,icy;
+  int ix, iy, iz;
+  int ioff, icx, icy, icz;
   su3 * restrict up, * restrict um;
-  spinor * restrict r, * restrict sp, * restrict sm;
+  spinor * restrict r,* restrict sp,* restrict sm;
   spinor temp;
+#ifdef XLC
+#pragma disjoint(temp, *sp, *sm, *r, *up, *um)
+#endif
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(g_gauge_field);
   }
 #endif
 
@@ -60,53 +65,64 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
   else{
     ioff = (VOLUME+RAND)/2;
   } 
-  ioff2 = (VOLUME+RAND)/2-ioff;
   /**************** loop over all lattice sites ****************/
 
-  for (icx = ioff; icx < (VOLUME/2 + ioff); icx++){
-    ix=g_eo2lexic[icx];
+  ix = g_eo2lexic[ioff];
 
-    r=l+(icx-ioff);
+  iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
 
-    /*********************** direction +0 ************************/
-    iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
-
-
-    sp=k+icy;
+  sp=k+icy;
 #    if ((defined _GAUGE_COPY))
-    up=&g_gauge_field_copy[icx][0];
+  up=&g_gauge_field_copy[ioff][0];
 #    else
-    up=&g_gauge_field[ix][0];
+  up=&g_gauge_field[ix][0];
 #    endif
-      
-    _vector_add(psi,(*sp).s0,(*sp).s2);
+  for (icx = ioff; icx < (VOLUME/2 + ioff); icx++) {
+    ix = g_eo2lexic[icx];
+    /*********************** direction +0 ************************/
+    
+    iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
+    
+    sm=k+icy;
+    _prefetch_spinor((void*)sm);
+
+#    ifndef _GAUGE_COPY
+    um=&g_gauge_field[iy][0];
+#    else
+    um=up+1;
+#    endif
+    _prefetch_su3((void*)um);
+
+    _vector_add(psi,sp->s0,sp->s2);
 
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka0,chi);
-      
+
     _vector_assign(temp.s0,psi);
     _vector_assign(temp.s2,psi);
 
-    _vector_add(psi,(*sp).s1,(*sp).s3);
+    _vector_add(psi,sp->s1,sp->s3);
 
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka0,chi);
-            
+
     _vector_assign(temp.s1,psi);
     _vector_assign(temp.s3,psi);
 
     /*********************** direction -0 ************************/
 
-    iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
+    iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
 
-    sm=k+icy;
+    sp=k+icy;
+    _prefetch_spinor((void*)sp);
 #    if ((defined _GAUGE_COPY))
-    um = up+1;
+    up=um+1;
 #    else
-    um=&g_gauge_field[iy][0];
+    up+=1;
 #    endif
-
-    _vector_sub(psi,(*sm).s0,(*sm).s2);
+    _prefetch_su3((void*)up); 
+      
+    _vector_sub(psi,sm->s0,sm->s2);
 
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka0,chi);
@@ -114,27 +130,29 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     _vector_add_assign(temp.s0,psi);
     _vector_sub_assign(temp.s2,psi);
 
-    _vector_sub(psi,(*sm).s1,(*sm).s3);
+    _vector_sub(psi,sm->s1,sm->s3);
 
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka0,chi);
-      
+
     _vector_add_assign(temp.s1,psi);
     _vector_sub_assign(temp.s3,psi);
 
     /*********************** direction +1 ************************/
 
-    iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
+    iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
 
-    sp=k+icy;
+    sm=k+icy;
+    _prefetch_spinor((void*)sm);
 
-#    if ((defined _GAUGE_COPY))
-    up=um+1;
+#    ifndef _GAUGE_COPY
+    um=&g_gauge_field[iy][1];
 #    else
-    up+=1;
+    um=up+1;
 #    endif
+    _prefetch_su3((void*)um);
       
-    _vector_i_add(psi,(*sp).s0,(*sp).s3);
+    _vector_i_add(psi,sp->s0,sp->s3);
 
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka1,chi);
@@ -142,7 +160,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     _vector_add_assign(temp.s0,psi);
     _vector_i_sub_assign(temp.s3,psi);
 
-    _vector_i_add(psi,(*sp).s1,(*sp).s2);
+    _vector_i_add(psi,sp->s1,sp->s2);
 
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka1,chi);
@@ -152,16 +170,18 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 
     /*********************** direction -1 ************************/
 
-    iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
+    iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
 
-    sm=k+icy;
-#    ifndef _GAUGE_COPY
-    um=&g_gauge_field[iy][1];
+    sp=k+icy;
+    _prefetch_spinor((void*)sp);
+#    if ((defined _GAUGE_COPY))
+    up=um+1;
 #    else
-    um=up+1;
+    up+=1;
 #    endif
+    _prefetch_su3((void*)up);
 
-    _vector_i_sub(psi,(*sm).s0,(*sm).s3);
+    _vector_i_sub(psi,sm->s0,sm->s3);
 
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka1,chi);
@@ -169,7 +189,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     _vector_add_assign(temp.s0,psi);
     _vector_i_add_assign(temp.s3,psi);
 
-    _vector_i_sub(psi,(*sm).s1,(*sm).s2);
+    _vector_i_sub(psi,sm->s1,sm->s2);
 
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka1,chi);
@@ -179,15 +199,19 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 
     /*********************** direction +2 ************************/
 
-    iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
+    iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
 
-    sp=k+icy;
-#    if ((defined _GAUGE_COPY))
-    up=um+1;
+    sm=k+icy;
+    _prefetch_spinor((void*)sm);
+
+#    ifndef _GAUGE_COPY
+    um=&g_gauge_field[iy][2];
 #    else
-    up+=1;
-#    endif 
-    _vector_add(psi,(*sp).s0,(*sp).s3);
+    um=up+1;
+#    endif
+    _prefetch_su3((void*)um);
+
+    _vector_add(psi,sp->s0,sp->s3);
 
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka2,chi);
@@ -195,27 +219,28 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     _vector_add_assign(temp.s0,psi);
     _vector_add_assign(temp.s3,psi);
 
-    _vector_sub(psi,(*sp).s1,(*sp).s2);
+    _vector_sub(psi,sp->s1,sp->s2);
 
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka2,chi);
-      
+
     _vector_add_assign(temp.s1,psi);
     _vector_sub_assign(temp.s2,psi);
 
-
     /*********************** direction -2 ************************/
 
-    iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
+    iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
 
-    sm=k+icy;
-#    ifndef _GAUGE_COPY
-    um = &g_gauge_field[iy][2];
+    sp=k+icy;
+    _prefetch_spinor((void*)sp);
+#    if ((defined _GAUGE_COPY))
+    up=um+1;
 #    else
-    um = up +1;
+    up+=1;
 #    endif
+    _prefetch_su3((void*)up);
 
-    _vector_sub(psi,(*sm).s0,(*sm).s3);
+    _vector_sub(psi,sm->s0,sm->s3);
 
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka2,chi);
@@ -223,25 +248,29 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     _vector_add_assign(temp.s0,psi);
     _vector_sub_assign(temp.s3,psi);
 
-    _vector_add(psi,(*sm).s1,(*sm).s2);
+    _vector_add(psi,sm->s1,sm->s2);
 
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka2,chi);
-      
+
     _vector_add_assign(temp.s1,psi);
     _vector_add_assign(temp.s2,psi);
 
     /*********************** direction +3 ************************/
 
-    iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
+    iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
 
-    sp=k+icy;
-#    if ((defined _GAUGE_COPY))
-    up=um+1;
+    sm=k+icy;
+    _prefetch_spinor((void*)sm);
+
+#    ifndef _GAUGE_COPY
+    um=&g_gauge_field[iy][3];
 #    else
-    up+=1;
-#    endif 
-    _vector_i_add(psi,(*sp).s0,(*sp).s2);
+    um=up+1;
+#    endif
+    _prefetch_su3((void*)um);
+
+    _vector_i_add(psi,sp->s0,sp->s2);
       
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka3,chi);
@@ -249,40 +278,49 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     _vector_add_assign(temp.s0,psi);
     _vector_i_sub_assign(temp.s2,psi);
 
-    _vector_i_sub(psi,(*sp).s1,(*sp).s3);
+    _vector_i_sub(psi,sp->s1,sp->s3);
 
     _su3_multiply(chi,(*up),psi);
     _complex_times_vector(psi,ka3,chi);
 
-    _vector_add_assign(temp.s1,psi);
-    _vector_i_add_assign(temp.s3,psi);
+    _vector_add_assign(temp.s1,psi); 
+    _vector_i_add_assign(temp.s3,psi); 
 
     /*********************** direction -3 ************************/
 
-    iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
+    r=l+(icx - ioff);
+    _prefetch_spinor((void*)r);
 
-    sm=k+icy;
-#    ifndef _GAUGE_COPY
-    um = &g_gauge_field[iy][3];
+    icz = icx + 1;
+    if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
+    iz=g_eo2lexic[icz];
+    iy=g_iup[iz][0]; icy=g_lexic2eosub[iy];
+#    if ((defined _GAUGE_COPY))
+    up=&g_gauge_field_copy[icz][0];
 #    else
-    um = up+1;
+    up=&g_gauge_field[iz][0];
 #    endif
+    _prefetch_su3((void*)up);
 
-    _vector_i_sub(psi,(*sm).s0,(*sm).s2);
+    sp=k+icy;
+    _prefetch_spinor((void*)sp);
+
+    _vector_i_sub(psi,sm->s0,sm->s2);
 
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka3,chi);
       
-    _vector_add((*r).s0, temp.s0, psi);
-    _vector_i_add((*r).s2, temp.s2, psi);
+    _vector_add(r->s0, temp.s0, psi);
+    _vector_i_add(r->s2, temp.s2, psi);
 
-    _vector_i_add(psi,(*sm).s1,(*sm).s3);
+    _vector_i_add(psi,sm->s1,sm->s3);
 
     _su3_inverse_multiply(chi,(*um),psi);
     _complexcjg_times_vector(psi,ka3,chi);
 
-    _vector_add((*r).s1, temp.s1, psi);
-    _vector_i_sub((*r).s3, temp.s3, psi);
+    _vector_add(r->s1, temp.s1, psi);
+    _vector_i_sub(r->s3, temp.s3, psi);
+
     /************************ end of loop ************************/
   }
 }

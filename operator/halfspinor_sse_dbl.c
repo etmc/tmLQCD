@@ -26,10 +26,7 @@
  *
  **********************************************************************/
 
-
 /* input on k; output on l */
-
-
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int ix, i;
   su3 * restrict U ALIGN;
@@ -47,7 +44,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(g_gauge_field);
   }
 #endif
   /* We will run through the source vector now */
@@ -71,141 +68,141 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     /*********************** direction +0 ************************/
     _prefetch_su3(U+predist);
 
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s2);
+    _sse_load(s->s0);
+    _sse_load_up(s->s2);
     _sse_vector_add();
 
     _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka0);
-    _sse_store_nt_up((*phi[ix]).s0);
+    _sse_store_nt_up(phi[ix]->s0);
 
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s3);
+    _sse_load(s->s1);
+    _sse_load_up(s->s3);
     _sse_vector_add();
       
     _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka0);
-    _sse_store_nt_up((*phi[ix]).s1);
+    _sse_store_nt_up(phi[ix]->s1);
     U++;
     ix++;
     /*********************** direction -0 ************************/
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s2);
+    _sse_load(s->s0);
+    _sse_load_up(s->s2);
     _sse_vector_sub();
-    _sse_store_nt((*phi[ix]).s0);
+    _sse_store_nt(phi[ix]->s0);
 
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s3);
+    _sse_load(s->s1);
+    _sse_load_up(s->s3);
     _sse_vector_sub();
-    _sse_store_nt((*phi[ix]).s1);
+    _sse_store_nt(phi[ix]->s1);
     ix++;
 
     /*********************** direction +1 ************************/
     _prefetch_su3(U+predist);
 
-    _sse_load((*s).s0);
+    _sse_load(s->s0);
     /*next not needed?*/
-    _sse_load_up((*s).s3);
+    _sse_load_up(s->s3);
     _sse_vector_i_mul();
     _sse_vector_add();
 
     _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka1);
-    _sse_store_nt_up((*phi[ix]).s0);
+    _sse_store_nt_up(phi[ix]->s0);
 
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s2);
+    _sse_load(s->s1);
+    _sse_load_up(s->s2);
     _sse_vector_i_mul();
     _sse_vector_add();
 
     _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka1);
-    _sse_store_nt_up((*phi[ix]).s1);
+    _sse_store_nt_up(phi[ix]->s1);
     ix++;
     U++;
 
     /*********************** direction -1 ************************/
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s3);
+    _sse_load(s->s0);
+    _sse_load_up(s->s3);
     _sse_vector_i_mul();
     _sse_vector_sub();
-    _sse_store_nt((*phi[ix]).s0);
+    _sse_store_nt(phi[ix]->s0);
 
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s2);
+    _sse_load(s->s1);
+    _sse_load_up(s->s2);
     _sse_vector_i_mul();
     _sse_vector_sub();
-    _sse_store_nt((*phi[ix]).s1);
+    _sse_store_nt(phi[ix]->s1);
     ix++;
 
     /*********************** direction +2 ************************/
     _prefetch_su3(U+predist);
 
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s3);
+    _sse_load(s->s0);
+    _sse_load_up(s->s3);
     _sse_vector_add();
 
     _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka2);
-    _sse_store_nt_up((*phi[ix]).s0);
+    _sse_store_nt_up(phi[ix]->s0);
 
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s2);
+    _sse_load(s->s1);
+    _sse_load_up(s->s2);
     _sse_vector_sub();
 
     _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka2);
-    _sse_store_nt_up((*phi[ix]).s1);
+    _sse_store_nt_up(phi[ix]->s1);
     ix++;
     U++;
     /*********************** direction -2 ************************/
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s3);
+    _sse_load(s->s0);
+    _sse_load_up(s->s3);
     _sse_vector_sub();
-    _sse_store_nt((*phi[ix]).s0);
+    _sse_store_nt(phi[ix]->s0);
 
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s2);
+    _sse_load(s->s1);
+    _sse_load_up(s->s2);
     _sse_vector_add();
-    _sse_store_nt((*phi[ix]).s1);
+    _sse_store_nt(phi[ix]->s1);
     ix++;
 
     /*********************** direction +3 ************************/
     _prefetch_su3(U+predist);
     _prefetch_spinor(s+1);
 
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s2);
+    _sse_load(s->s0);
+    _sse_load_up(s->s2);
     _sse_vector_i_mul();
     _sse_vector_add();
 
     _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka3);
-    _sse_store_nt_up((*phi[ix]).s0);
+    _sse_store_nt_up(phi[ix]->s0);
 
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s3);
+    _sse_load(s->s1);
+    _sse_load_up(s->s3);
     _sse_vector_i_mul();
     _sse_vector_sub();
 
     _sse_su3_multiply((*U));
     _sse_vector_cmplx_mul(ka3);
-    _sse_store_nt_up((*phi[ix]).s1);
+    _sse_store_nt_up(phi[ix]->s1);
     ix++;
     U++;
 
     /*********************** direction -3 ************************/
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s2);
+    _sse_load(s->s0);
+    _sse_load_up(s->s2);
     _sse_vector_i_mul();
     _sse_vector_sub();
-    _sse_store_nt((*phi[ix]).s0);
+    _sse_store_nt(phi[ix]->s0);
 
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s3);
+    _sse_load(s->s1);
+    _sse_load_up(s->s3);
     _sse_vector_i_mul();
     _sse_vector_add();
-    _sse_store_nt((*phi[ix]).s1);
+    _sse_store_nt(phi[ix]->s1);
     ix++;
     s++;
   }
@@ -227,16 +224,16 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   ix = 0;
   for(i = 0; i < (VOLUME)/2; i++){
     /*********************** direction +0 ************************/
-    _vector_assign(rs.s0, (*phi[ix]).s0);
-    _vector_assign(rs.s2, (*phi[ix]).s0);
-    _vector_assign(rs.s1, (*phi[ix]).s1);
-    _vector_assign(rs.s3, (*phi[ix]).s1);
+    _vector_assign(rs.s0, phi[ix]->s0);
+    _vector_assign(rs.s2, phi[ix]->s0);
+    _vector_assign(rs.s1, phi[ix]->s1);
+    _vector_assign(rs.s3, phi[ix]->s1);
     ix++;
 
     /*********************** direction -0 ************************/
     _prefetch_su3(U+predist);
       
-    _sse_load((*phi[ix]).s0);
+    _sse_load(phi[ix]->s0);
     _sse_su3_inverse_multiply((*U));
     _sse_vector_cmplxcg_mul(ka0);
     _sse_load(rs.s0);
@@ -247,7 +244,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_sub();
     _sse_store(rs.s2);
 
-    _sse_load((*phi[ix]).s1);
+    _sse_load(phi[ix]->s1);
     _sse_su3_inverse_multiply((*U));
     _sse_vector_cmplxcg_mul(ka0);
 
@@ -262,7 +259,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
     U++;
     /*********************** direction +1 ************************/
-    _sse_load_up((*phi[ix]).s0);
+    _sse_load_up(phi[ix]->s0);
     _sse_load(rs.s0);
     _sse_vector_add();
     _sse_store(rs.s0);
@@ -272,7 +269,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_sub();
     _sse_store(rs.s3); 
 
-    _sse_load_up((*phi[ix]).s1);
+    _sse_load_up(phi[ix]->s1);
     _sse_load(rs.s1);
     _sse_vector_add();
     _sse_store(rs.s1);
@@ -287,7 +284,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     _prefetch_su3(U+predist);
 
-    _sse_load((*phi[ix]).s0);
+    _sse_load(phi[ix]->s0);
     _sse_su3_inverse_multiply((*U));
     _sse_vector_cmplxcg_mul(ka1);
 
@@ -300,7 +297,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_add();
     _sse_store(rs.s3);
 
-    _sse_load((*phi[ix]).s1);
+    _sse_load(phi[ix]->s1);
       
     _sse_su3_inverse_multiply((*U));
     _sse_vector_cmplxcg_mul(ka1);
@@ -317,7 +314,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     U++;
 
     /*********************** direction +2 ************************/
-    _sse_load_up((*phi[ix]).s0);
+    _sse_load_up(phi[ix]->s0);
     _sse_load(rs.s0);
     _sse_vector_add();
     _sse_store(rs.s0);
@@ -326,7 +323,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_add();
     _sse_store(rs.s3);
 
-    _sse_load_up((*phi[ix]).s1);
+    _sse_load_up(phi[ix]->s1);
     _sse_load(rs.s1);
     _sse_vector_add();
     _sse_store(rs.s1);
@@ -340,7 +337,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     _prefetch_su3(U+predist);
 
-    _sse_load((*phi[ix]).s0);
+    _sse_load(phi[ix]->s0);
     _sse_su3_inverse_multiply((*U));
     _sse_vector_cmplxcg_mul(ka2);
 
@@ -352,7 +349,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_sub();
     _sse_store(rs.s3);
 
-    _sse_load((*phi[ix]).s1);
+    _sse_load(phi[ix]->s1);
       
     _sse_su3_inverse_multiply((*U));
     _sse_vector_cmplxcg_mul(ka2);
@@ -367,7 +364,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
     U++;
     /*********************** direction +3 ************************/
-    _sse_load_up((*phi[ix]).s0);
+    _sse_load_up(phi[ix]->s0);
 
     _sse_load(rs.s0);
     _sse_vector_add();
@@ -378,7 +375,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_sub();
     _sse_store(rs.s2);
 
-    _sse_load_up((*phi[ix]).s1);
+    _sse_load_up(phi[ix]->s1);
 
     _sse_load(rs.s1);
     _sse_vector_add();
@@ -395,33 +392,33 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _prefetch_su3(U+predist); 
     _prefetch_spinor(s+1);
 
-    _sse_load((*phi[ix]).s0);
+    _sse_load(phi[ix]->s0);
       
     _sse_su3_inverse_multiply((*U));
     _sse_vector_cmplxcg_mul(ka3);
 
     _sse_load(rs.s0);
     _sse_vector_add();
-    _sse_store_nt((*s).s0);
+    _sse_store_nt(s->s0);
 
     _sse_load(rs.s2);
     _sse_vector_i_mul();      
     _sse_vector_add();
-    _sse_store_nt((*s).s2);
+    _sse_store_nt(s->s2);
 
-    _sse_load((*phi[ix]).s1);
+    _sse_load(phi[ix]->s1);
       
     _sse_su3_inverse_multiply((*U));
     _sse_vector_cmplxcg_mul(ka3);
 
     _sse_load(rs.s1);
     _sse_vector_add();
-    _sse_store_nt((*s).s1);
+    _sse_store_nt(s->s1);
 
     _sse_load(rs.s3);
     _sse_vector_i_mul();      
     _sse_vector_sub();
-    _sse_store_nt((*s).s3);
+    _sse_store_nt(s->s3);
     ix++;
     U++;
     s++;
@@ -430,4 +427,5 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #pragma pomp inst end(hoppingmatrix)
 #endif
 }
+
 

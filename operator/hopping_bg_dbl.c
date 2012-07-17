@@ -52,7 +52,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(g_gauge_field);
   }
 #endif
 
@@ -95,10 +95,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     sm=k+icy;
     _prefetch_spinor(sm); 
 
-    _bgl_load_reg0((*sp).s0);
-    _bgl_load_reg1((*sp).s1);
-    _bgl_load_reg0_up((*sp).s2);
-    _bgl_load_reg1_up((*sp).s3);
+    _bgl_load_reg0(sp->s0);
+    _bgl_load_reg1(sp->s1);
+    _bgl_load_reg0_up(sp->s2);
+    _bgl_load_reg1_up(sp->s3);
     _bgl_vector_add_reg0();
     _bgl_vector_add_reg1();
     /* result is now in regx0, regx1, regx2 x = 0,1 */
@@ -124,10 +124,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     sp=k+icy;
     _prefetch_spinor(sp); 
 
-    _bgl_load_reg0((*sm).s0);
-    _bgl_load_reg1((*sm).s1);
-    _bgl_load_reg0_up((*sm).s2);
-    _bgl_load_reg1_up((*sm).s3);
+    _bgl_load_reg0(sm->s0);
+    _bgl_load_reg1(sm->s1);
+    _bgl_load_reg0_up(sm->s2);
+    _bgl_load_reg1_up(sm->s3);
     _bgl_vector_sub_reg0();
     _bgl_vector_sub_reg1();
 
@@ -153,10 +153,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     sm=k+icy;
     _prefetch_spinor(sm); 
 
-    _bgl_load_reg0((*sp).s0);
-    _bgl_load_reg1((*sp).s1);
-    _bgl_load_reg0_up((*sp).s3);
-    _bgl_load_reg1_up((*sp).s2);
+    _bgl_load_reg0(sp->s0);
+    _bgl_load_reg1(sp->s1);
+    _bgl_load_reg0_up(sp->s3);
+    _bgl_load_reg1_up(sp->s2);
     _bgl_vector_i_mul_add_reg0();
     _bgl_vector_i_mul_add_reg1();
 
@@ -182,10 +182,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     sp=k+icy;
     _prefetch_spinor(sp); 
 
-    _bgl_load_reg0((*sm).s0);
-    _bgl_load_reg1((*sm).s1);
-    _bgl_load_reg0_up((*sm).s3);
-    _bgl_load_reg1_up((*sm).s2);
+    _bgl_load_reg0(sm->s0);
+    _bgl_load_reg1(sm->s1);
+    _bgl_load_reg0_up(sm->s3);
+    _bgl_load_reg1_up(sm->s2);
     _bgl_vector_i_mul_sub_reg0();
     _bgl_vector_i_mul_sub_reg1();
       
@@ -211,10 +211,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     sm=k+icy;
     _prefetch_spinor(sm); 
 
-    _bgl_load_reg0((*sp).s0);
-    _bgl_load_reg1((*sp).s1);
-    _bgl_load_reg1_up((*sp).s2);
-    _bgl_load_reg0_up((*sp).s3);
+    _bgl_load_reg0(sp->s0);
+    _bgl_load_reg1(sp->s1);
+    _bgl_load_reg1_up(sp->s2);
+    _bgl_load_reg0_up(sp->s3);
     _bgl_vector_add_reg0();
     _bgl_vector_sub_reg1();
 
@@ -241,10 +241,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     sp=k+icy;
     _prefetch_spinor(sp); 
 
-    _bgl_load_reg0((*sm).s0);
-    _bgl_load_reg1((*sm).s1);
-    _bgl_load_reg1_up((*sm).s2);
-    _bgl_load_reg0_up((*sm).s3);
+    _bgl_load_reg0(sm->s0);
+    _bgl_load_reg1(sm->s1);
+    _bgl_load_reg1_up(sm->s2);
+    _bgl_load_reg0_up(sm->s3);
     _bgl_vector_sub_reg0();
     _bgl_vector_add_reg1();
       
@@ -270,10 +270,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     sm=k+icy;
     _prefetch_spinor(sm); 
 
-    _bgl_load_reg0((*sp).s0);
-    _bgl_load_reg1((*sp).s1);
-    _bgl_load_reg0_up((*sp).s2);
-    _bgl_load_reg1_up((*sp).s3);
+    _bgl_load_reg0(sp->s0);
+    _bgl_load_reg1(sp->s1);
+    _bgl_load_reg0_up(sp->s2);
+    _bgl_load_reg1_up(sp->s3);
     _bgl_vector_i_mul_add_reg0();
     _bgl_vector_i_mul_sub_reg1();
 
@@ -303,10 +303,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     sp=k+icy;
     _prefetch_spinor(sp); 
 
-    _bgl_load_reg0((*sm).s0);
-    _bgl_load_reg1((*sm).s1);
-    _bgl_load_reg0_up((*sm).s2);
-    _bgl_load_reg1_up((*sm).s3);
+    _bgl_load_reg0(sm->s0);
+    _bgl_load_reg1(sm->s1);
+    _bgl_load_reg0_up(sm->s2);
+    _bgl_load_reg1_up(sm->s3);
     _bgl_vector_i_mul_sub_reg0();
     _bgl_vector_i_mul_add_reg1();
       
@@ -316,14 +316,14 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
       
     _bgl_add_to_rs0_reg0();
-    _bgl_store_rs0((*rn).s0);
+    _bgl_store_rs0(rn->s0);
     _bgl_i_mul_add_to_rs2_reg0();
-    _bgl_store_rs2((*rn).s2);
+    _bgl_store_rs2(rn->s2);
 
     _bgl_add_to_rs1_reg1();
-    _bgl_store_rs1((*rn).s1);
+    _bgl_store_rs1(rn->s1);
     _bgl_i_mul_sub_from_rs3_reg1();
-    _bgl_store_rs3((*rn).s3);
+    _bgl_store_rs3(rn->s3);
 
     /************************ end of loop ************************/
   }
