@@ -26,103 +26,103 @@
 
 #include "bgq.h"
 
-#define _hop_t_p()				\
-  vec_load2(r, &sp->s0);			\
-  vec_load2(r+3, &sp->s1);			\
-  vec_load2(r+6, &sp->s2);			\
-  vec_load2(r+9, &sp->s3);			\
-  vec_add_double2(r, r+6);			\
-  vec_su3_multiply_double2(up, U, r);		\
-  vec_cmplx_mul_double2(rs, r+6, U, &ka0);	\
-  rs[6] = rs[0]; rs[7] = rs[1]; rs[8] = rs[2];	\
-  rs[9] = rs[3]; rs[10]= rs[4]; rs[11]= rs[5];
+#define _hop_t_p()							\
+  _vec_load2(r0, r1, r2, sp->s0);					\
+  _vec_load2(r3, r4, r5, sp->s1);					\
+  _vec_load2(r6, r7, r8, sp->s2);					\
+  _vec_load2(r9, r10, r11, sp->s3);					\
+  _vec_add_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11);	\
+  _vec_su3_multiply_double2(up);					\
+  _vec_cmplx_mul_double2(rs0, rs1, rs2, rs3, rs4, rs5, r6, r7, r8, r9, r10, r11, U0, ka0); \
+  rs6 = rs0; rs7 = rs1; rs8 = rs2;					\
+  rs9 = rs3; rs10= rs4; rs11= rs5;
 
-#define _hop_t_m()				\
-  vec_load2(r, &sm->s0);			\
-  vec_load2(r+3, &sm->s1);			\
-  vec_load2(r+6, &sm->s2);			\
-  vec_load2(r+9, &sm->s3);			\
-  vec_sub_double2(r, r+6);			\
-  vec_su3_inverse_multiply_double2(um, U, r);	\
-  vec_cmplxcg_mul_double2(r, r+6, U, &ka0);	\
-  vec_add_double2(rs, r);			\
-  vec_sub_double2(rs+6, r);
-  
-#define _hop_x_p()				\
-  vec_load2(r, &sp->s0);			\
-  vec_load2(r+3, &sp->s1);			\
-  vec_load2(r+9, &sp->s2);			\
-  vec_load2(r+6, &sp->s3);			\
-  vec_i_mul_add_double2(r, &r[6], U);		\
-  vec_su3_multiply_double2(up, U, r);		\
-  vec_cmplx_mul_double2(r, &r[6], U, &ka1);	\
-  vec_add_double2(rs, r);			\
-  vec_i_mul_sub2(&rs[6], &r[3], U);		\
-  vec_i_mul_sub2(&rs[9], &r[0], U);
+#define _hop_t_m()							\
+  _vec_load2(r0, r1, r2, sm->s0);					\
+  _vec_load2(r3, r4, r5, sm->s1);					\
+  _vec_load2(r6, r7, r8, sm->s2);					\
+  _vec_load2(r9, r10, r11, sm->s3);					\
+  _vec_sub_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11);	\
+  _vec_su3_inverse_multiply_double2(um);				\
+  _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0, ka0); \
+  _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
+  _vec_sub_double2(rs6, rs7, rs8, rs9, rs10, rs11, r0, r1, r2, r3, r4, r5);
 
-#define _hop_x_m()				\
-  vec_load2(r, &sm->s0);			\
-  vec_load2(r+3, &sm->s1);			\
-  vec_load2(r+9, &sm->s2);			\
-  vec_load2(r+6, &sm->s3);			\
-  vec_i_mul_sub_double2(r, &r[6], U);		\
-  vec_su3_inverse_multiply_double2(um, U, r);	\
-  vec_cmplxcg_mul_double2(r, &r[6], U, &ka1);	\
-  vec_add_double2(rs, r);			\
-  vec_i_mul_add2(&rs[6], &r[3], U);		\
-  vec_i_mul_add2(&rs[9], &r[0], U);
-  
-#define _hop_y_p()			      \
-  vec_load2(r, &sp->s0);		      \
-  vec_load2(r+3, &sp->s1);		      \
-  vec_load2(r+9, &sp->s2);		      \
-  vec_load2(r+6, &sp->s3);		      \
-  vec_add2(r, &r[6]);			      \
-  vec_sub2(r+3, &r[9]);			      \
-  vec_su3_multiply_double2(up, U, r);	      \
-  vec_cmplx_mul_double2(r, &r[6], U, &ka2);   \
-  vec_add_double2(rs, r);		      \
-  vec_sub2(&rs[6], &r[3]);		      \
-  vec_add2(&rs[9], r);
+#define _hop_x_p()							\
+  _vec_load2(r0, r1, r2, sp->s0);					\
+  _vec_load2(r3, r4, r5, sp->s1);					\
+  _vec_load2(r9, r10, r11, sp->s2);					\
+  _vec_load2(r6, r7, r8, sp->s3);					\
+  _vec_i_mul_add_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0); \
+  _vec_su3_multiply_double2(up);					\
+  _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0, ka1); \
+  _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
+  _vec_i_mul_sub2(rs6, rs7, rs8, r3, r4, r5, U0);			\
+  _vec_i_mul_sub2(rs9, rs10, rs11, r0, r1, r2, U1);
 
-#define _hop_y_m()				\
-  vec_load2(r, &sm->s0);			\
-  vec_load2(r+3, &sm->s1);			\
-  vec_load2(r+9, &sm->s2);			\
-  vec_load2(r+6, &sm->s3);			\
-  vec_sub2(r, r+6);				\
-  vec_add2(r+3, r+9);				\
-  vec_su3_inverse_multiply_double2(um, U, r);	\
-  vec_cmplxcg_mul_double2(r, &r[6], U, &ka2);	\
-  vec_add_double2(rs, r);			\
-  vec_add2(rs+6, r+3);				\
-  vec_sub2(rs+9, r);
+#define _hop_x_m()							\
+  _vec_load2(r0, r1, r2, sm->s0);					\
+  _vec_load2(r3, r4, r5, sm->s1);					\
+  _vec_load2(r9, r10, r11, sm->s2);					\
+  _vec_load2(r6, r7, r8, sm->s3);					\
+  _vec_i_mul_sub_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0); \
+  _vec_su3_inverse_multiply_double2(um);				\
+  _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0, ka1); \
+  _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
+  _vec_i_mul_add2(rs6, rs7, rs8, r3, r4, r5, U0);			\
+  _vec_i_mul_add2(rs9, rs10, rs11, r0, r1, r2, U1);
 
-#define _hop_z_p()				\
-  vec_load2(r, &sp->s0);			\
-  vec_load2(r+3, &sp->s1);			\
-  vec_load2(r+6, &sp->s2);			\
-  vec_load2(r+9, &sp->s3);			\
-  vec_i_mul_add2(r, r+6, U);			\
-  vec_i_mul_sub2(r+3, r+9, U);			\
-  vec_su3_multiply_double2(up, U, r);		\
-  vec_cmplx_mul_double2(r, &r[6], U, &ka3);	\
-  vec_add_double2(rs, r);			\
-  vec_i_mul_sub2(rs+6, r, U);			\
-  vec_i_mul_add2(rs+9, r+3, U);
+#define _hop_y_p()							\
+  _vec_load2(r0, r1, r2, sp->s0);					\
+  _vec_load2(r3, r4, r5, sp->s1);					\
+  _vec_load2(r9, r10, r11, sp->s2);					\
+  _vec_load2(r6, r7, r8, sp->s3);					\
+  _vec_add2(r0, r1, r2, r6, r7, r8);					\
+  _vec_sub2(r3, r4, r5, r9, r10, r11);					\
+  _vec_su3_multiply_double2(up);					\
+  _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0, ka2); \
+  _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5);	\
+  _vec_sub2(rs6, rs7, rs8, r3, r4, r5);					\
+  _vec_add2(rs9, rs10, rs11, r0, r1, r2);
 
-#define _hop_z_m()				\
-  vec_load2(r, &sm->s0);			\
-  vec_load2(r+3, &sm->s1);			\
-  vec_load2(r+6, &sm->s2);			\
-  vec_load2(r+9, &sm->s3);			\
-  vec_i_mul_sub2(r, r+6, U);			\
-  vec_i_mul_add2(r+3, r+9, U);			\
-  vec_su3_inverse_multiply_double2(um, U, r);	\
-  vec_cmplxcg_mul_double2(r, &r[6], U, &ka3);	\
-  vec_add_double2(rs, r);			\
-  vec_i_mul_add2(rs+6, r, U);			\
-  vec_i_mul_sub2(rs+9, r+3, U);
+#define _hop_y_m()							\
+  _vec_load2(r0, r1, r2, sm->s0);					\
+  _vec_load2(r3, r4, r5, sm->s1);					\
+  _vec_load2(r9, r10, r11, sm->s2);					\
+  _vec_load2(r6, r7, r8, sm->s3);					\
+  _vec_sub2(r0, r1, r2, r6, r7, r8);					\
+  _vec_add2(r3, r4, r5, r9, r10, r11);					\
+  _vec_su3_inverse_multiply_double2(um);				\
+  _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0, ka2); \
+  _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
+  _vec_add2(rs6, rs7, rs8, r3, r4, r5);					\
+  _vec_sub2(rs9, rs10, rs11, r0, r1, r2);
+
+#define _hop_z_p()							\
+  _vec_load2(r0, r1, r2, sp->s0);					\
+  _vec_load2(r3, r4, r5, sp->s1);					\
+  _vec_load2(r6, r7, r8, sp->s2);					\
+  _vec_load2(r9, r10, r11, sp->s3);					\
+  _vec_i_mul_sub2(r3, r4, r5, r9, r10, r11, U1);			\
+  _vec_i_mul_add2(r0, r1, r2, r6, r7, r8, U0);				\
+  _vec_su3_multiply_double2(up);					\
+  _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0, ka3); \
+  _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
+  _vec_i_mul_sub2(rs6, rs7, rs8, r0, r1, r2, U0);			\
+  _vec_i_mul_add2(rs9, rs10, rs11, r3, r4, r5, U1);
+
+#define _hop_z_m()							\
+  _vec_load2(r0, r1, r2, sm->s0);					\
+  _vec_load2(r3, r4, r5, sm->s1);					\
+  _vec_load2(r6, r7, r8, sm->s2);					\
+  _vec_load2(r9, r10, r11, sm->s3);					\
+  _vec_i_mul_sub2(r0, r1, r2, r6, r7, r8, U0);				\
+  _vec_i_mul_add2(r3, r4, r5, r9, r10, r11, U1);			\
+  _vec_su3_inverse_multiply_double2(um);				\
+  _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0, ka3); \
+  _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
+  _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);			\
+  _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U1);
 
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
@@ -135,13 +135,13 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
   spinor * restrict sm ALIGN;
   spinor * restrict rn ALIGN;
   /* We have 32 registers available */
-  vector4double r[12];
-  vector4double U[9];
+  //vector4double r[12];
+  //vector4double U[9];
   /* The following contains the result spinor */
-  vector4double rs[12];
-  // vector4double r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
-  // vector4double rs0, rs1, rs2, rs3, rs4, rs5, rs6, rs7, rs8, rs9, rs10, rs11;
-  // vector4double U0, U1, U2, U3, U4, U5, U6, U7, U8;
+  //vector4double rs[12];
+  vector4double ALIGN r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
+  vector4double ALIGN rs0, rs1, rs2, rs3, rs4, rs5, rs6, rs7, rs8, rs9, rs10, rs11;
+  vector4double ALIGN U0, U1, U2, U3, U4, U5, U6, U7, U8;
 #pragma disjoint(*sp, *sm, *rn, *up, *um, *l, *k)
 
   __alignx(16,l);
@@ -292,10 +292,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 
     _hop_z_m();
 
-    vec_store2(&rn->s0, rs);
-    vec_store2(&rn->s1, rs+3);
-    vec_store2(&rn->s2, rs+6);
-    vec_store2(&rn->s3, rs+9);
+    _vec_store2(rn->s0, rs0, rs1, rs2);
+    _vec_store2(rn->s1, rs3, rs4, rs5);
+    _vec_store2(rn->s2, rs6, rs7, rs8);
+    _vec_store2(rn->s3, rs9, rs10, rs11);
   }
   return;
 }
