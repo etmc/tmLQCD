@@ -36,7 +36,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   /* We have 32 registers available */
   vector4double ALIGN r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
   vector4double ALIGN rs0, rs1, rs2, rs3, rs4, rs5, rs6, rs7, rs8, rs9, rs10, rs11;
-  vector4double ALIGN U0, U1, U2, U3, U4, U5, U6, U7, U8;
+  vector4double ALIGN U0, U1, U2, U3, U4, U6, U7;
+  vector4double ALIGN rtmp;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
