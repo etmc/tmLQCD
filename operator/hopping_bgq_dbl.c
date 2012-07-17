@@ -25,6 +25,7 @@
  **********************************************************************/
 
 #include "bgq.h"
+#include "xlc_prefetch.h"
 
 #define _hop_t_p()							\
   _vec_load2(r0, r1, r2, sp->s0);					\
@@ -129,19 +130,16 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 
   int icx,icy,icz,ioff,ioff2;
   int ix,iy,iz;
-  su3 * restrict up ALIGN;
-  su3 * restrict um ALIGN;
-  spinor * restrict sp ALIGN;
-  spinor * restrict sm ALIGN;
-  spinor * restrict rn ALIGN;
+  su3 * restrict ALIGN up;
+  su3 * restrict ALIGN um;
+  spinor * restrict ALIGN sp;
+  spinor * restrict ALIGN sm;
+  spinor * restrict ALIGN rn;
   /* We have 32 registers available */
-  //vector4double r[12];
-  //vector4double U[9];
-  /* The following contains the result spinor */
-  //vector4double rs[12];
   vector4double ALIGN r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
   vector4double ALIGN rs0, rs1, rs2, rs3, rs4, rs5, rs6, rs7, rs8, rs9, rs10, rs11;
-  vector4double ALIGN U0, U1, U2, U3, U4, U5, U6, U7, U8;
+  vector4double ALIGN U0, U1, U2, U3, U4, U6, U7;
+  vector4double rtmp;
 #pragma disjoint(*sp, *sm, *rn, *up, *um, *l, *k)
 
   __alignx(16,l);
