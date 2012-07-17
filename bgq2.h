@@ -124,6 +124,12 @@ inline void vec_sub_double2(vector4double * restrict r, vector4double * restrict
 }
 
 // r = r + i*s
+#define _vec_i_mul_add2(r0, r1, r2, s0, s1, s2, tmp) \
+  tmp = vec_splats(1.);				     \
+  r0 = vec_xxnpmadd(s0, tmp, r0);		     \
+  r1 = vec_xxnpmadd(s1, tmp, r1);		     \
+  r2 = vec_xxnpmadd(s2, tmp, r2);
+
 // tmp, temporary memory
 inline void vec_i_mul_add2(vector4double * restrict r, vector4double * restrict s, 
 			   vector4double * restrict tmp) {
@@ -138,6 +144,16 @@ inline void vec_i_mul_add2(vector4double * restrict r, vector4double * restrict 
 }
 
 // r = r + i*s
+#define _vec_i_mul_add_double2(r0, r1, r2, r3, r4, r5, s0, s1, s2, s3, s4, s5, tmp) \
+  tmp = vec_splats(1.);				     \
+  r0 = vec_xxnpmadd(s0, tmp, r0);		     \
+  r1 = vec_xxnpmadd(s1, tmp, r1);		     \
+  r2 = vec_xxnpmadd(s2, tmp, r2);		     \
+  r3 = vec_xxnpmadd(s3, tmp, r3);		     \
+  r4 = vec_xxnpmadd(s4, tmp, r4);		     \
+  r5 = vec_xxnpmadd(s5, tmp, r5);
+
+
 // tmp, temporary memory
 inline void vec_i_mul_add_double2(vector4double * restrict r, vector4double * restrict s, 
 				  vector4double * restrict tmp) {
@@ -155,6 +171,12 @@ inline void vec_i_mul_add_double2(vector4double * restrict r, vector4double * re
 }
 
 // r = r - i*s
+#define _vec_i_mul_sub2(r0, r1, r2, s0, s1, s2, tmp) \
+  tmp = vec_splats(-1.);				     \
+  r0 = vec_xxnpmadd(s0, tmp, r0);		     \
+  r1 = vec_xxnpmadd(s1, tmp, r1);		     \
+  r2 = vec_xxnpmadd(s2, tmp, r2);
+
 // tmp, temporary memory
 inline void vec_i_mul_sub2(vector4double * restrict r, vector4double * restrict s, 
 			   vector4double * restrict tmp) {
@@ -169,6 +191,15 @@ inline void vec_i_mul_sub2(vector4double * restrict r, vector4double * restrict 
 }
 
 // r = r - i*s
+#define _vec_i_mul_sub_double2(r0, r1, r2, r3, r4, r5, s0, s1, s2, s3, s4, s5, tmp) \
+  tmp = vec_splats(-1.);				     \
+  r0 = vec_xxnpmadd(s0, tmp, r0);		     \
+  r1 = vec_xxnpmadd(s1, tmp, r1);		     \
+  r2 = vec_xxnpmadd(s2, tmp, r2);		     \
+  r3 = vec_xxnpmadd(s3, tmp, r3);		     \
+  r4 = vec_xxnpmadd(s4, tmp, r4);		     \
+  r5 = vec_xxnpmadd(s5, tmp, r5);
+
 // tmp, temporary memory
 inline void vec_i_mul_sub_double2(vector4double * restrict r, vector4double * restrict s, 
 				  vector4double * restrict tmp) {
