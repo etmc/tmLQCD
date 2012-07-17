@@ -51,7 +51,7 @@
   rs2 = vec_xxcpnmadd(r2, tmp, rs2);					\
   rs3 = vec_xxcpnmadd(r3, tmp, rs3);
 
-#define _vec_su3_multiply_double2(u)		\
+#define _vec_su3_multiply_double(u)		\
   U[0] = vec_ld2(0, (double*) &(u)->c00);	\
   U[3] = vec_ld2(0, (double*) &(u)->c01);	\
   U[6] = vec_ld2(0, (double*) &(u)->c02);	\

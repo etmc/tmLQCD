@@ -269,7 +269,7 @@ inline void vec_cmplxcg_mul_double2(vector4double * restrict rs, vector4double *
 // r[6-11]
 //
 // this routine uses only half of the 4 doubles in vector4double
-#define _vec_su3_multiply_double2(u)		\
+#define _vec_su3_multiply_double2b(u)		\
   U[0] = vec_ld2(0, (double*) &(u)->c00);	\
   U[3] = vec_ld2(0, (double*) &(u)->c01);	\
   U[6] = vec_ld2(0, (double*) &(u)->c02);	\
@@ -321,7 +321,7 @@ inline void vec_cmplxcg_mul_double2(vector4double * restrict rs, vector4double *
   r[10] = vec_xxnpmadd(U[7], r[5], r[10]);	\
   r[11] = vec_xxnpmadd(U[8], r[5], r[11]); 
 
-#define _vec_su3_multiply_double2b(u)		\
+#define _vec_su3_multiply_double2(u)		\
   U0 = vec_ld2(0, (double*) &(u)->c00);	\
   U3 = vec_ld2(0, (double*) &(u)->c01);	\
   U6 = vec_ld2(0, (double*) &(u)->c02);	\
@@ -441,7 +441,7 @@ inline void vec_su3_multiply_double2(su3 * const restrict u, vector4double * res
 // r[6-11]
 //
 // this routine uses only half of the 4 doubles in vector4double
-#define _vec_su3_inverse_multiply_double2(u)	\
+#define _vec_su3_inverse_multiply_double2b(u)	\
   U[0] = vec_ld2(0, (double*) &(u)->c00);	\
   U[1] = vec_ld2(0, (double*) &(u)->c01);	\
   U[2] = vec_ld2(0, (double*) &(u)->c02);	\
@@ -496,7 +496,7 @@ inline void vec_su3_multiply_double2(su3 * const restrict u, vector4double * res
   r[10] = vec_xxcpnmadd(r[5], U[1], r[10]);	\
   r[11] = vec_xxcpnmadd(r[5], U[2], r[11]);
 
-#define _vec_su3_inverse_multiply_double2b(u)	\
+#define _vec_su3_inverse_multiply_double2(u)	\
   U0 = vec_ld2(0, (double*) &(u)->c00);	\
   U1 = vec_ld2(0, (double*) &(u)->c01);	\
   U2 = vec_ld2(0, (double*) &(u)->c02);	\

@@ -46,7 +46,7 @@ void add(spinor * const Q,spinor * const R,spinor * const S, const int N) {
 
   __prefetch_by_load(S);
   __prefetch_by_load(R);
-  __prefetch_by_stream(Q);
+  __prefetch_by_stream(1, Q);
 
 #pragma unroll(2)
   for (int ix = 0; ix < N; ++ix) {
