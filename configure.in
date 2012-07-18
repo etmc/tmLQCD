@@ -488,13 +488,6 @@ XLCGREP=`$CC -V 2>&1 | grep -i xlc`
 if test "$XLCGREP" != ""; then
   XLC="yes"
   AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
-<<<<<<< HEAD
-=======
-dnl if AC_OPENMP did not run (old autoconf f.ex.) , this is required  
-  if test "$enable_omp" = "yes"; then
-    CFLAGS="$CFLAGS -qsmp=omp"
-  fi
->>>>>>> c8ad4e1... replace several instances of == with = in configure.in
 fi
 PGCC=`$CC -V 2>&1 | grep pgcc`
 ICC=`$CC -V 2>&1 | grep -i intel`
