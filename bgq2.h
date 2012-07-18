@@ -474,6 +474,47 @@ inline void vec_cmplxcg_mul_double2(vector4double * restrict rs, vector4double *
   r10= vec_xxnpmadd(U7, r5, r10);	\
   r11= vec_xxnpmadd(U1, r5, r11); 
 
+#define _vec_su3_multiply_double2c(u)		\
+  r11 = vec_gpci(00145);			\
+  U0 = vec_ld2(0, (double*) &(u)->c00);		\
+  U3 = vec_ld2(0, (double*) &(u)->c01);		\
+  U6 = vec_ld2(0, (double*) &(u)->c02);		\
+  U1 = vec_ld2(0, (double*) &(u)->c10);		\
+  r9 = vec_perm(r0, r3, r11);			\
+  U4 = vec_ld2(0, (double*) &(u)->c11);		\
+  U7 = vec_ld2(0, (double*) &(u)->c12);		\
+  U2 = vec_ld2(0, (double*) &(u)->c20);		\
+  r6 = vec_xmul(r9, U0);			\
+  r7 = vec_xmul(r9, U1);			\
+  r8 = vec_xmul(r9, U2);			\
+						\
+  r10 = vec_perm(r1, r4, r11);			\
+  r6 = vec_xxnpmadd(U0, r9, r6);		\
+  r7 = vec_xxnpmadd(U1, r9, r7);		\
+  r8 = vec_xxnpmadd(U2, r9, r8);		\
+  U0 = vec_ld2(0, (double*) &(u)->c21);		\
+						\
+  r6 = vec_xmadd(r10, U3, r6);			\
+  r7 = vec_xmadd(r10, U4, r7);			\
+  r8 = vec_xmadd(r10, U0, r8);			\
+  						\
+  r9 = vec_perm(r2, r5, r11);			\
+  r6 = vec_xxnpmadd(U3, r10, r6);		\
+  r7 = vec_xxnpmadd(U4, r10, r7);		\
+  r8 = vec_xxnpmadd(U0, r10, r8);		\
+  U1 = vec_ld2(0, (double*) &(u)->c22);		\
+						\
+  r6 = vec_xmadd(r9, U6, r6);			\
+  r7 = vec_xmadd(r9, U7, r7);			\
+  r8 = vec_xmadd(r9, U1, r8);			\
+  						\
+  r6 = vec_xxnpmadd(U6, r9, r6);		\
+  r7 = vec_xxnpmadd(U7, r9, r7);		\
+  r8 = vec_xxnpmadd(U1, r9, r8);		\
+  r9 = vec_sldw(r6, U0, 2);			\
+  r10 = vec_sldw(r7, U3, 2);			\
+  r11 = vec_sldw(r8, U4, 2);
+
 inline void vec_su3_multiply_double2(su3 * const restrict u, vector4double * restrict U, 
 				     vector4double * restrict r) {
 #pragma disjoint(*U, *r)
@@ -542,60 +583,106 @@ inline void vec_su3_multiply_double2(su3 * const restrict u, vector4double * res
 // r[6-11]
 //
 // this routine uses only half of the 4 doubles in vector4double
-#define _vec_su3_inverse_multiply_double2(u)	\
-  U0 = vec_ld2(0, (double*) &(u)->c00);	\
-  U1 = vec_ld2(0, (double*) &(u)->c01);	\
-  U2 = vec_ld2(0, (double*) &(u)->c02);	\
-						\
-  r6 = vec_xmul(U0, r0);			\
-  r7 = vec_xmul(U1, r0);			\
-  r8 = vec_xmul(U2, r0);			\
-  r9 = vec_xmul(U0, r3);			\
-  r10= vec_xmul(U1, r3);			\
-  r11= vec_xmul(U2, r3);			\
-						\
-  r6 = vec_xxcpnmadd(r0, U0, r6);	\
-  r7 = vec_xxcpnmadd(r0, U1, r7);	\
-  r8 = vec_xxcpnmadd(r0, U2, r8);	\
-  r9 = vec_xxcpnmadd(r3, U0, r9);	\
-  r10= vec_xxcpnmadd(r3, U1, r10);	\
-  r11= vec_xxcpnmadd(r3, U2, r11);	\
-						\
-  U3 = vec_ld2(0, (double*) &(u)->c10);	\
-  U4 = vec_ld2(0, (double*) &(u)->c11);	\
-  U6 = vec_ld2(0, (double*) &(u)->c12);	\
-						\
-  r6 = vec_xmadd(U3, r1, r6);		\
-  r7 = vec_xmadd(U4, r1, r7);		\
-  r8 = vec_xmadd(U6, r1, r8);		\
-  r9 = vec_xmadd(U3, r4, r9);		\
-  r10= vec_xmadd(U4, r4, r10);		\
-  r11= vec_xmadd(U6, r4, r11);		\
-						\
-  r6 = vec_xxcpnmadd(r1, U3, r6);	\
-  r7 = vec_xxcpnmadd(r1, U4, r7);	\
-  r8 = vec_xxcpnmadd(r1, U6, r8);	\
-  r9 = vec_xxcpnmadd(r4, U3, r9);	\
-  r10= vec_xxcpnmadd(r4, U4, r10);	\
-  r11= vec_xxcpnmadd(r4, U6, r11);	\
-						\
-  U0 = vec_ld2(0, (double*) &(u)->c20);	\
-  U1 = vec_ld2(0, (double*) &(u)->c21);	\
-  U2 = vec_ld2(0, (double*) &(u)->c22);	\
-						\
-  r6 = vec_xmadd(U0, r2, r6);		\
-  r7 = vec_xmadd(U1, r2, r7);		\
-  r8 = vec_xmadd(U2, r2, r8);		\
-  r9 = vec_xmadd(U0, r5, r9);		\
-  r10= vec_xmadd(U1, r5, r10);		\
-  r11= vec_xmadd(U2, r5, r11);		\
-						\
-  r6 = vec_xxcpnmadd(r2, U0, r6);	\
-  r7 = vec_xxcpnmadd(r2, U1, r7);	\
-  r8 = vec_xxcpnmadd(r2, U2, r8);	\
-  r9 = vec_xxcpnmadd(r5, U0, r9);	\
-  r10= vec_xxcpnmadd(r5, U1, r10);	\
+#define _vec_su3_inverse_multiply_double2(u)    \
+  U0 = vec_ld2(0, (double*) &(u)->c00);		\
+  U1 = vec_ld2(0, (double*) &(u)->c01);		\
+  U2 = vec_ld2(0, (double*) &(u)->c02);		\
+  						\
+  r6 = vec_xmul(U0, r0);                        \
+  r7 = vec_xmul(U1, r0);                        \
+  r8 = vec_xmul(U2, r0);                        \
+  r9 = vec_xmul(U0, r3);                        \
+  r10= vec_xmul(U1, r3);                        \
+  r11= vec_xmul(U2, r3);                        \
+  						\
+  r6 = vec_xxcpnmadd(r0, U0, r6);		\
+  r7 = vec_xxcpnmadd(r0, U1, r7);		\
+  r8 = vec_xxcpnmadd(r0, U2, r8);		\
+  r9 = vec_xxcpnmadd(r3, U0, r9);		\
+  r10= vec_xxcpnmadd(r3, U1, r10);		\
+  r11= vec_xxcpnmadd(r3, U2, r11);		\
+  						\
+  U3 = vec_ld2(0, (double*) &(u)->c10);		\
+  U4 = vec_ld2(0, (double*) &(u)->c11);		\
+  U6 = vec_ld2(0, (double*) &(u)->c12);		\
+  						\
+  r6 = vec_xmadd(U3, r1, r6);			\
+  r7 = vec_xmadd(U4, r1, r7);			\
+  r8 = vec_xmadd(U6, r1, r8);			\
+  r9 = vec_xmadd(U3, r4, r9);			\
+  r10= vec_xmadd(U4, r4, r10);			\
+  r11= vec_xmadd(U6, r4, r11);			\
+  						\
+  r6 = vec_xxcpnmadd(r1, U3, r6);		\
+  r7 = vec_xxcpnmadd(r1, U4, r7);		\
+  r8 = vec_xxcpnmadd(r1, U6, r8);		\
+  r9 = vec_xxcpnmadd(r4, U3, r9);		\
+  r10= vec_xxcpnmadd(r4, U4, r10);		\
+  r11= vec_xxcpnmadd(r4, U6, r11);		\
+  						\
+  U0 = vec_ld2(0, (double*) &(u)->c20);		\
+  U1 = vec_ld2(0, (double*) &(u)->c21);		\
+  U2 = vec_ld2(0, (double*) &(u)->c22);		\
+  						\
+  r6 = vec_xmadd(U0, r2, r6);			\
+  r7 = vec_xmadd(U1, r2, r7);			\
+  r8 = vec_xmadd(U2, r2, r8);			\
+  r9 = vec_xmadd(U0, r5, r9);			\
+  r10= vec_xmadd(U1, r5, r10);			\
+  r11= vec_xmadd(U2, r5, r11);			\
+  						\
+  r6 = vec_xxcpnmadd(r2, U0, r6);		\
+  r7 = vec_xxcpnmadd(r2, U1, r7);		\
+  r8 = vec_xxcpnmadd(r2, U2, r8);		\
+  r9 = vec_xxcpnmadd(r5, U0, r9);		\
+  r10= vec_xxcpnmadd(r5, U1, r10);		\
   r11= vec_xxcpnmadd(r5, U2, r11);
+
+
+#define _vec_su3_inverse_multiply_double2c(u)	\
+  U0 = vec_ld2(0, (double*) &(u)->c00);		\
+  r11 = vec_gpci(00145);			\
+  U1 = vec_ld2(0, (double*) &(u)->c01);		\
+  r9 = vec_perm(r0, r3, r11);			\
+  U2 = vec_ld2(0, (double*) &(u)->c02);		\
+						\
+  r6 = vec_xmul(U0, r9);			\
+  r7 = vec_xmul(U1, r9);			\
+  r8 = vec_xmul(U2, r9);			\
+						\
+  r6 = vec_xxcpnmadd(r9, U0, r6);		\
+  r7 = vec_xxcpnmadd(r9, U1, r7);		\
+  r8 = vec_xxcpnmadd(r9, U2, r8);		\
+						\
+  r10 = vec_perm(r1, r4, r11);			\
+  U3 = vec_ld2(0, (double*) &(u)->c10);		\
+  U4 = vec_ld2(0, (double*) &(u)->c11);		\
+  U6 = vec_ld2(0, (double*) &(u)->c12);		\
+  						\
+  r6 = vec_xmadd(U3, r10, r6);			\
+  r7 = vec_xmadd(U4, r10, r7);			\
+  r8 = vec_xmadd(U6, r10, r8);			\
+  						\
+  r6 = vec_xxcpnmadd(r10, U3, r6);		\
+  r7 = vec_xxcpnmadd(r10, U4, r7);		\
+  r8 = vec_xxcpnmadd(r10, U6, r8);		\
+						\
+  r9 = vec_perm(r2, r5, r11);			\
+  U0 = vec_ld2(0, (double*) &(u)->c20);		\
+  U1 = vec_ld2(0, (double*) &(u)->c21);		\
+  U2 = vec_ld2(0, (double*) &(u)->c22);		\
+  						\
+  r6 = vec_xmadd(U0, r9, r6);			\
+  r7 = vec_xmadd(U1, r9, r7);			\
+  r8 = vec_xmadd(U2, r9, r8);			\
+  						\
+  r6 = vec_xxcpnmadd(r9, U0, r6);		\
+  r7 = vec_xxcpnmadd(r9, U1, r7);		\
+  r8 = vec_xxcpnmadd(r9, U2, r8);		\
+  r9 = vec_sldw(r6, U0, 2);			\
+  r10 = vec_sldw(r7, U3, 2);			\
+  r11 = vec_sldw(r8, U4, 2);
+
 
 inline void vec_su3_inverse_multiply_double2(su3 * const restrict u, vector4double * restrict U, 
 					     vector4double * restrict r) {
