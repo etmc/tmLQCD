@@ -3,10 +3,29 @@
 
 #include "bgq2.h"
 
+// requires 32 byte alignment of phi
 #define _vec_load(r0, r1, phi)			\
   r0 = vec_ld(0, (double*) &(phi).c0);		\
   r1 = vec_ld2(0, (double*) &(phi).c2); 
 
+// works also with 16 byte alignement of phi
+#define _vec_load16(r0, r1, phi, tmp)		\
+  r0 = vec_ld2(0, (double*) &(phi).c0);		\
+  r1 = vec_ld(0, (double*) &(phi).c1);		\
+  tmp = vec_gpci(00145);			\
+  r0 = vec_perm(r0, r1, tmp);			\
+  tmp = vec_gpci(02301);			\
+  r1 = vec_perm(r1, r0, tmp);
+
+// alternative
+#define _vec_load16c(r0, r1, phi, tmp)		\
+  r0 = vec_ld2(0, (double*) &(phi).c0);		\
+  r1 = vec_ld(0, (double*) &(phi).c1);		\
+  tmp = vec_gpci(00145);			\
+  r0 = vec_perm(r0, r1, tmp);			\
+  r1 = vec_ld2(0, (double*) &(phi).c2);
+
+// requires 32 byte alignment of phi
 #define _vec_store(phi, r0, r1)				\
   vec_st((r0), 0, (double*) &(phi).c0);			\
   vec_st2((r1), 0, (double*) &(phi).c2);

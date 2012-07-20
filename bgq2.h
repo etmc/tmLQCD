@@ -27,15 +27,20 @@
 
 //#define regtype vector4double
 
-#define _vec_load2(r0, r1, r2, phi)	    \
-  (r0) = vec_ld2(0, (double*) &(phi).c0);   \
-  (r1) = vec_ld2(0, (double*) &(phi).c1);   \
-  (r2) = vec_ld2(0, (double*) &(phi).c2);
+#define _vec_load2(r0, r1, r2, phi)	  \
+  (r0) = vec_ld2(0L, (double*) &(phi).c0); \
+  (r1) = vec_ld2(0L, (double*) &(phi).c1); \
+  (r2) = vec_ld2(0L, (double*) &(phi).c2);
 
-#define _vec_load2_32(r0, r1, r2, phi)	    \
-  (r0) = vec_ld2(0, (float*) &(phi).c0);   \
-  (r1) = vec_ld2(0, (float*) &(phi).c1);   \
-  (r2) = vec_ld2(0, (float*) &(phi).c2);
+#define _vec_load2_32(r0, r1, r2, phi)	 \
+  (r0) = vec_ld2(0L, (float*) &(phi).c0); \
+  (r1) = vec_ld2(0L, (float*) &(phi).c1); \
+  (r2) = vec_ld2(0L, (float*) &(phi).c2);
+
+#define _vec_load2c(r0, r1, phi)	 \
+  r0 = vec_ld(0L, (double*) &(phi).c0);	 \
+  r1 = vec_ld2(0L, (double*) &(phi).c2); 
+
 
 inline void vec_load2(vector4double * r, su3_vector * const phi) {
 #pragma disjoint(*r,*phi)
@@ -496,42 +501,43 @@ inline void vec_cmplxcg_mul_double2(vector4double * restrict rs, vector4double *
   r11= vec_xxnpmadd(U1, r5, r11); 
 
 #define _vec_su3_multiply_double2c(u)		\
-  r11 = vec_gpci(00145);			\
+  r8 = vec_gpci(00145);				\
+  r9 = vec_gpci(02367);				\
   U0 = vec_ld2(0, (double*) &(u)->c00);		\
   U3 = vec_ld2(0, (double*) &(u)->c01);		\
   U6 = vec_ld2(0, (double*) &(u)->c02);		\
   U1 = vec_ld2(0, (double*) &(u)->c10);		\
-  r9 = vec_perm(r0, r3, r11);			\
+  r7 = vec_perm(r0, r2, r8);			\
   U4 = vec_ld2(0, (double*) &(u)->c11);		\
   U7 = vec_ld2(0, (double*) &(u)->c12);		\
   U2 = vec_ld2(0, (double*) &(u)->c20);		\
-  r6 = vec_xmul(r9, U0);			\
-  r7 = vec_xmul(r9, U1);			\
-  r8 = vec_xmul(r9, U2);			\
+  r4 = vec_xmul(r7, U0);			\
+  r5 = vec_xmul(r7, U1);			\
+  r6 = vec_xmul(r7, U2);			\
 						\
-  r10 = vec_perm(r1, r4, r11);			\
-  r6 = vec_xxnpmadd(U0, r9, r6);		\
-  r7 = vec_xxnpmadd(U1, r9, r7);		\
-  r8 = vec_xxnpmadd(U2, r9, r8);		\
+  r4 = vec_xxnpmadd(U0, r7, r4);		\
+  r5 = vec_xxnpmadd(U1, r7, r5);		\
+  r6 = vec_xxnpmadd(U2, r7, r6);		\
+  r7 = vec_perm(r0, r2, r9);			\
   U0 = vec_ld2(0, (double*) &(u)->c21);		\
 						\
-  r6 = vec_xmadd(r10, U3, r6);			\
-  r7 = vec_xmadd(r10, U4, r7);			\
-  r8 = vec_xmadd(r10, U0, r8);			\
+  r4 = vec_xmadd(r7, U3, r4);			\
+  r5 = vec_xmadd(r7, U4, r5);			\
+  r6 = vec_xmadd(r7, U0, r6);			\
   						\
-  r9 = vec_perm(r2, r5, r11);			\
-  r6 = vec_xxnpmadd(U3, r10, r6);		\
-  r7 = vec_xxnpmadd(U4, r10, r7);		\
-  r8 = vec_xxnpmadd(U0, r10, r8);		\
+  r4 = vec_xxnpmadd(U3, r7, r4);		\
+  r5 = vec_xxnpmadd(U4, r7, r5);		\
+  r6 = vec_xxnpmadd(U0, r7, r6);		\
+  r7 = vec_perm(r1, r3, r8);			\
   U1 = vec_ld2(0, (double*) &(u)->c22);		\
 						\
-  r6 = vec_xmadd(r9, U6, r6);			\
-  r7 = vec_xmadd(r9, U7, r7);			\
-  r8 = vec_xmadd(r9, U1, r8);			\
+  r4 = vec_xmadd(r7, U6, r4);			\
+  r5 = vec_xmadd(r7, U7, r5);			\
+  r6 = vec_xmadd(r7, U1, r6);			\
   						\
-  r6 = vec_xxnpmadd(U6, r9, r6);		\
-  r7 = vec_xxnpmadd(U7, r9, r7);		\
-  r8 = vec_xxnpmadd(U1, r9, r8);
+  r4 = vec_xxnpmadd(U6, r7, r4);		\
+  r5 = vec_xxnpmadd(U7, r7, r5);		\
+  r6 = vec_xxnpmadd(U1, r7, r6);
 
 inline void vec_su3_multiply_double2(su3 * const restrict u, vector4double * restrict U, 
 				     vector4double * restrict r) {
@@ -659,44 +665,45 @@ inline void vec_su3_multiply_double2(su3 * const restrict u, vector4double * res
 
 #define _vec_su3_inverse_multiply_double2c(u)	\
   U0 = vec_ld2(0, (double*) &(u)->c00);		\
-  r11 = vec_gpci(00145);			\
+  r8 = vec_gpci(00145);				\
+  r9 = vec_gpci(02367);				\
   U1 = vec_ld2(0, (double*) &(u)->c01);		\
-  r9 = vec_perm(r0, r3, r11);			\
+  r7 = vec_perm(r0, r2, r8);			\
   U2 = vec_ld2(0, (double*) &(u)->c02);		\
 						\
-  r6 = vec_xmul(U0, r9);			\
-  r7 = vec_xmul(U1, r9);			\
-  r8 = vec_xmul(U2, r9);			\
+  r4 = vec_xmul(U0, r7);			\
+  r5 = vec_xmul(U1, r7);			\
+  r6 = vec_xmul(U2, r7);			\
 						\
-  r6 = vec_xxcpnmadd(r9, U0, r6);		\
-  r7 = vec_xxcpnmadd(r9, U1, r7);		\
-  r8 = vec_xxcpnmadd(r9, U2, r8);		\
+  r4 = vec_xxcpnmadd(r7, U0, r4);		\
+  r5 = vec_xxcpnmadd(r7, U1, r5);		\
+  r6 = vec_xxcpnmadd(r7, U2, r6);		\
 						\
-  r10 = vec_perm(r1, r4, r11);			\
+  r7 = vec_perm(r0, r2, r9);			\
   U3 = vec_ld2(0, (double*) &(u)->c10);		\
   U4 = vec_ld2(0, (double*) &(u)->c11);		\
   U6 = vec_ld2(0, (double*) &(u)->c12);		\
   						\
-  r6 = vec_xmadd(U3, r10, r6);			\
-  r7 = vec_xmadd(U4, r10, r7);			\
-  r8 = vec_xmadd(U6, r10, r8);			\
+  r4 = vec_xmadd(U3, r7, r4);			\
+  r5 = vec_xmadd(U4, r7, r5);			\
+  r6 = vec_xmadd(U6, r7, r6);			\
   						\
-  r6 = vec_xxcpnmadd(r10, U3, r6);		\
-  r7 = vec_xxcpnmadd(r10, U4, r7);		\
-  r8 = vec_xxcpnmadd(r10, U6, r8);		\
+  r4 = vec_xxcpnmadd(r7, U3, r4);		\
+  r5 = vec_xxcpnmadd(r7, U4, r5);		\
+  r6 = vec_xxcpnmadd(r7, U6, r6);		\
 						\
-  r9 = vec_perm(r2, r5, r11);			\
+  r7 = vec_perm(r1, r3, r8);			\
   U0 = vec_ld2(0, (double*) &(u)->c20);		\
   U1 = vec_ld2(0, (double*) &(u)->c21);		\
   U2 = vec_ld2(0, (double*) &(u)->c22);		\
   						\
-  r6 = vec_xmadd(U0, r9, r6);			\
-  r7 = vec_xmadd(U1, r9, r7);			\
-  r8 = vec_xmadd(U2, r9, r8);			\
+  r4 = vec_xmadd(U0, r7, r4);			\
+  r5 = vec_xmadd(U1, r7, r5);			\
+  r6 = vec_xmadd(U2, r7, r6);			\
   						\
-  r6 = vec_xxcpnmadd(r9, U0, r6);		\
-  r7 = vec_xxcpnmadd(r9, U1, r7);		\
-  r8 = vec_xxcpnmadd(r9, U2, r8);
+  r4 = vec_xxcpnmadd(r7, U0, r4);		\
+  r5 = vec_xxcpnmadd(r7, U1, r5);		\
+  r6 = vec_xxcpnmadd(r7, U2, r6);
 
 
 inline void vec_su3_inverse_multiply_double2(su3 * const restrict u, vector4double * restrict U, 
@@ -832,110 +839,114 @@ inline void vec_su3_multiply_double2b(su3 * const u, vector4double * U, vector4d
 
 
 #define _hop_t_p()							\
-  _vec_load2(r0, r1, r2, sp->s0);					\
-  _vec_load2(r3, r4, r5, sp->s1);					\
-  _vec_load2(r6, r7, r8, sp->s2);					\
-  _vec_load2(r9, r10, r11, sp->s3);					\
-  _vec_add_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11);	\
+  _vec_load(r4, r5, sp->s0);						\
+  _vec_load16(r6, r7, sp->s1, U0);						\
+  _vec_load(r8, r9, sp->s2);						\
+  _vec_load16(r10, r11, sp->s3, U0);						\
+  _vec_add(r0, r1, r4, r5, r8, r9);					\
+  _vec_add(r2, r3, r6, r7, r10, r11);					\
   _vec_su3_multiply_double2c(up);					\
   rtmp = vec_ld2(0, (double*) &ka0);					\
-  _vec_cmplx_mul_double2c(rs0, rs1, rs2, r6, r7, r8, rtmp);		\
+  _vec_cmplx_mul_double2c(rs0, rs1, rs2, r4, r5, r6, rtmp);		\
   _vec_unfuse(rs0, rs1, rs2, rs3, rs4, rs5);				\
   rs6 = rs0; rs7 = rs1; rs8 = rs2;					\
   rs9 = rs3; rs10= rs4; rs11= rs5;
 
 #define _hop_t_m()							\
-  _vec_load2(r0, r1, r2, sm->s0);					\
-  _vec_load2(r3, r4, r5, sm->s1);					\
-  _vec_load2(r6, r7, r8, sm->s2);					\
-  _vec_load2(r9, r10, r11, sm->s3);					\
-  _vec_sub_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11);	\
+  _vec_load(r4, r5, sp->s0);						\
+  _vec_load16(r6, r7, sp->s1, U0);						\
+  _vec_load(r8, r9, sp->s2);						\
+  _vec_load16(r10, r11, sp->s3, U0);						\
+  _vec_sub(r0, r1, r4, r5, r8, r9);					\
+  _vec_sub(r2, r3, r6, r7, r10, r11);					\
   _vec_su3_inverse_multiply_double2c(um);				\
-  _vec_cmplxcg_mul_double2c(r0, r1, r2, r6, r7, r8, rtmp);		\
+  _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_sub_double2(rs6, rs7, rs8, rs9, rs10, rs11, r0, r1, r2, r3, r4, r5);
 
 #define _hop_x_p()							\
-  _vec_load2(r0, r1, r2, sp->s0);					\
-  _vec_load2(r3, r4, r5, sp->s1);					\
-  _vec_load2(r9, r10, r11, sp->s2);					\
-  _vec_load2(r6, r7, r8, sp->s3);					\
-  _vec_i_mul_add_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0); \
+  _vec_load(r4, r5, sp->s0);						\
+  _vec_load16(r6, r7, sp->s1, U0);						\
+  _vec_load(r10, r11, sp->s2);						\
+  _vec_load16(r8, r9, sp->s3, U0);						\
+  _vec_i_mul_add(r0, r1, r4, r5, r8, r9, U0);				\
+  _vec_i_mul_add(r2, r3, r6, r7, r10, r11, U0);				\
   _vec_su3_multiply_double2c(up);					\
   rtmp = vec_ld2(0, (double*) &ka1);					\
-  _vec_cmplx_mul_double2c(r0, r1, r2, r6, r7, r8, rtmp);		\
+  _vec_cmplx_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_i_mul_sub2(rs6, rs7, rs8, r3, r4, r5, U0);			\
   _vec_i_mul_sub2(rs9, rs10, rs11, r0, r1, r2, U1);
 
 #define _hop_x_m()							\
-  _vec_load2(r0, r1, r2, sm->s0);					\
-  _vec_load2(r3, r4, r5, sm->s1);					\
-  _vec_load2(r9, r10, r11, sm->s2);					\
-  _vec_load2(r6, r7, r8, sm->s3);					\
-  _vec_i_mul_sub_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0); \
+  _vec_load(r4, r5, sp->s0);						\
+  _vec_load16(r6, r7, sp->s1, U0);						\
+  _vec_load(r10, r11, sp->s2);						\
+  _vec_load16(r8, r9, sp->s3, U0);						\
+  _vec_i_mul_sub(r0, r1, r4, r5, r8, r9, U0);				\
+  _vec_i_mul_sub(r2, r3, r6, r7, r10, r11, U0);				\
   _vec_su3_inverse_multiply_double2c(um);				\
-  _vec_cmplxcg_mul_double2c(r0, r1, r2, r6, r7, r8, rtmp);		\
+  _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_i_mul_add2(rs6, rs7, rs8, r3, r4, r5, U0);			\
   _vec_i_mul_add2(rs9, rs10, rs11, r0, r1, r2, U1);
 
 #define _hop_y_p()							\
-  _vec_load2(r0, r1, r2, sp->s0);					\
-  _vec_load2(r3, r4, r5, sp->s1);					\
-  _vec_load2(r9, r10, r11, sp->s2);					\
-  _vec_load2(r6, r7, r8, sp->s3);					\
-  _vec_add2(r0, r1, r2, r6, r7, r8);					\
-  _vec_sub2(r3, r4, r5, r9, r10, r11);					\
+  _vec_load(r4, r5, sp->s0);						\
+  _vec_load16(r6, r7, sp->s1, U0);						\
+  _vec_load(r10, r11, sp->s2);						\
+  _vec_load16(r8, r9, sp->s3, U0);						\
+  _vec_add(r0, r1, r4, r5, r8, r9);					\
+  _vec_sub(r2, r3, r6, r7, r10, r11);					\
   _vec_su3_multiply_double2c(up);					\
   rtmp = vec_ld2(0, (double*) &ka2);					\
-  _vec_cmplx_mul_double2c(r0, r1, r2, r6, r7, r8, rtmp);		\
+  _vec_cmplx_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5);	\
   _vec_sub2(rs6, rs7, rs8, r3, r4, r5);					\
   _vec_add2(rs9, rs10, rs11, r0, r1, r2);
 
 #define _hop_y_m()							\
-  _vec_load2(r0, r1, r2, sm->s0);					\
-  _vec_load2(r3, r4, r5, sm->s1);					\
-  _vec_load2(r9, r10, r11, sm->s2);					\
-  _vec_load2(r6, r7, r8, sm->s3);					\
-  _vec_sub2(r0, r1, r2, r6, r7, r8);					\
-  _vec_add2(r3, r4, r5, r9, r10, r11);					\
+  _vec_load(r4, r5, sp->s0);						\
+  _vec_load16(r6, r7, sp->s1, U0);						\
+  _vec_load(r10, r11, sp->s2);						\
+  _vec_load16(r8, r9, sp->s3, U0);						\
+  _vec_sub(r0, r1, r4, r5, r8, r9);					\
+  _vec_add(r2, r3, r6, r7, r10, r11);					\
   _vec_su3_inverse_multiply_double2c(um);				\
-  _vec_cmplxcg_mul_double2c(r0, r1, r2, r6, r7, r8, rtmp);		\
+  _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_add2(rs6, rs7, rs8, r3, r4, r5);					\
   _vec_sub2(rs9, rs10, rs11, r0, r1, r2);
 
 #define _hop_z_p()							\
-  _vec_load2(r0, r1, r2, sp->s0);					\
-  _vec_load2(r3, r4, r5, sp->s1);					\
-  _vec_load2(r6, r7, r8, sp->s2);					\
-  _vec_load2(r9, r10, r11, sp->s3);					\
-  _vec_i_mul_sub2(r3, r4, r5, r9, r10, r11, U1);			\
-  _vec_i_mul_add2(r0, r1, r2, r6, r7, r8, U0);				\
+  _vec_load(r4, r5, sp->s0);						\
+  _vec_load16(r6, r7, sp->s1, U0);						\
+  _vec_load(r8, r9, sp->s2);						\
+  _vec_load16(r10, r11, sp->s3, U0);						\
+  _vec_i_mul_add(r0, r1, r4, r5, r8, r9, U0);				\
+  _vec_i_mul_sub(r2, r3, r6, r7, r10, r11, U1);				\
   _vec_su3_multiply_double2c(up);					\
   rtmp = vec_ld2(0, (double*) &ka3);					\
-  _vec_cmplx_mul_double2c(r0, r1, r2, r6, r7, r8, rtmp);		\
+  _vec_cmplx_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_i_mul_sub2(rs6, rs7, rs8, r0, r1, r2, U0);			\
   _vec_i_mul_add2(rs9, rs10, rs11, r3, r4, r5, U1);
 
 #define _hop_z_m()							\
-  _vec_load2(r0, r1, r2, sm->s0);					\
-  _vec_load2(r3, r4, r5, sm->s1);					\
-  _vec_load2(r6, r7, r8, sm->s2);					\
-  _vec_load2(r9, r10, r11, sm->s3);					\
-  _vec_i_mul_sub2(r0, r1, r2, r6, r7, r8, U0);				\
-  _vec_i_mul_add2(r3, r4, r5, r9, r10, r11, U1);			\
+  _vec_load(r4, r5, sp->s0);						\
+  _vec_load16(r6, r7, sp->s1, U0);						\
+  _vec_load(r8, r9, sp->s2);						\
+  _vec_load16(r10, r11, sp->s3, U0);					\
+  _vec_i_mul_sub(r0, r1, r4, r5, r8, r9, U0);				\
+  _vec_i_mul_add(r2, r3, r6, r7, r10, r11, U1);				\
   _vec_su3_inverse_multiply_double2c(um);				\
-  _vec_cmplxcg_mul_double2c(r0, r1, r2, r6, r7, r8, rtmp);		\
+  _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);			\
