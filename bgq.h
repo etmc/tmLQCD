@@ -11,6 +11,14 @@
   r4 = vec_ld(128L, (double*) &(phi).c0);		\
   r5 = vec_ld(160L, (double*) &(phi).c0);
 
+#define _vec_store_spinor(phi, r0, r1, r2, r3, r4, r5) \
+  vec_st(r0, 0L, (double*) &(phi).c0);		       \
+  vec_st(r1, 32L, (double*) &(phi).c0);		       \
+  vec_st(r2, 64L, (double*) &(phi).c0);		       \
+  vec_st(r3, 96L, (double*) &(phi).c0);		       \
+  vec_st(r4, 128L, (double*) &(phi).c0);	       \
+  vec_st(r5, 160L, (double*) &(phi).c0);
+
 #define _vec_add_ul_spinor(rs0, rs1, rs2, r0, r1, r2, r3, r4, r5) \
   rs0 = vec_add(r0, r3);					  \
   rs1 = vec_add(r1, r4);					  \

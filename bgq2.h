@@ -917,6 +917,14 @@ inline void vec_su3_multiply_double2b(su3 * const u, vector4double * U, vector4d
   return;
 }
 
+/* We have 32 registers available */
+#define _declare_regs()							\
+  vector4double ALIGN r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11; \
+  vector4double ALIGN rs0, rs1, rs2, rs3, rs4, rs5, rs6, rs7, rs8, rs9, rs10, rs11; \
+  vector4double ALIGN U0, U1, U2, U3, U4, U6, U7;			\
+  vector4double rtmp;							\
+  __alignx(16,l);							\
+  __alignx(16,k);
 
 #define _hop_t_p()							\
   _vec_load_spinor(r4, r5, r6, r7, r8, r9, sp->s0);			\
@@ -929,7 +937,7 @@ inline void vec_su3_multiply_double2b(su3 * const u, vector4double * U, vector4d
   rs9 = rs3; rs10= rs4; rs11= rs5;
 
 #define _hop_t_m()							\
-  _vec_load_spinor(r4, r5, r6, r7, r8, r9, sp->s0);			\
+  _vec_load_spinor(r4, r5, r6, r7, r8, r9, sm->s0);			\
   _vec_sub_ul_spinor(r0, r1, r2, r4, r5, r6, r7, r8, r9);		\
   _vec_su3_inverse_multiply_double2ct(um);				\
   _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
@@ -953,10 +961,10 @@ inline void vec_su3_multiply_double2b(su3 * const u, vector4double * U, vector4d
   _vec_i_mul_sub2(rs9, rs10, rs11, r0, r1, r2, U1);
 
 #define _hop_x_m()							\
-  _vec_load(r4, r5, sp->s0);						\
-  _vec_load16(r6, r7, sp->s1, U0);					\
-  _vec_load(r10, r11, sp->s2);						\
-  _vec_load16(r8, r9, sp->s3, U0);					\
+  _vec_load(r4, r5, sm->s0);						\
+  _vec_load16(r6, r7, sm->s1, U0);					\
+  _vec_load(r10, r11, sm->s2);						\
+  _vec_load16(r8, r9, sm->s3, U0);					\
   _vec_i_mul_sub(r0, r1, r4, r5, r8, r9, U0);				\
   _vec_i_mul_sub(r2, r3, r6, r7, r10, r11, U0);				\
   _vec_su3_inverse_multiply_double2c(um);				\
@@ -982,10 +990,10 @@ inline void vec_su3_multiply_double2b(su3 * const u, vector4double * U, vector4d
   _vec_add2(rs9, rs10, rs11, r0, r1, r2);
 
 #define _hop_y_m()							\
-  _vec_load(r4, r5, sp->s0);						\
-  _vec_load16(r6, r7, sp->s1, U0);					\
-  _vec_load(r10, r11, sp->s2);						\
-  _vec_load16(r8, r9, sp->s3, U0);					\
+  _vec_load(r4, r5, sm->s0);						\
+  _vec_load16(r6, r7, sm->s1, U0);					\
+  _vec_load(r10, r11, sm->s2);						\
+  _vec_load16(r8, r9, sm->s3, U0);					\
   _vec_sub(r0, r1, r4, r5, r8, r9);					\
   _vec_add(r2, r3, r6, r7, r10, r11);					\
   _vec_su3_inverse_multiply_double2c(um);				\
@@ -1011,10 +1019,10 @@ inline void vec_su3_multiply_double2b(su3 * const u, vector4double * U, vector4d
   _vec_i_mul_add2(rs9, rs10, rs11, r3, r4, r5, U1);
 
 #define _hop_z_m()							\
-  _vec_load(r4, r5, sp->s0);						\
-  _vec_load16(r6, r7, sp->s1, U0);					\
-  _vec_load(r8, r9, sp->s2);						\
-  _vec_load16(r10, r11, sp->s3, U0);					\
+  _vec_load(r4, r5, sm->s0);						\
+  _vec_load16(r6, r7, sm->s1, U0);					\
+  _vec_load(r8, r9, sm->s2);						\
+  _vec_load16(r10, r11, sm->s3, U0);					\
   _vec_i_mul_sub(r0, r1, r4, r5, r8, r9, U0);				\
   _vec_i_mul_add(r2, r3, r6, r7, r10, r11, U1);				\
   _vec_su3_inverse_multiply_double2c(um);				\
@@ -1024,5 +1032,10 @@ inline void vec_su3_multiply_double2b(su3 * const u, vector4double * U, vector4d
   _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);			\
   _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U1);
 
+#define _store_res()				\
+  _vec_store2(rn->s0, rs0, rs1, rs2);		\
+  _vec_store2(rn->s1, rs3, rs4, rs5);		\
+  _vec_store2(rn->s2, rs6, rs7, rs8);		\
+  _vec_store2(rn->s3, rs9, rs10, rs11);
 
 #endif
