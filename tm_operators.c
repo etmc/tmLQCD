@@ -554,7 +554,7 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
     _vec_load_spinor(r0, r1, r2, r3, r4, r5, r->s0);
     _vec_cmplx_mul_double2c(rs0, rs1, rs2, r0, r1, r2, rtmp);
     _vec_cmplxcg_mul_double2c(rs3, rs4, rs5, r3, r4, r5, rtmp);
-    _vec_store_spinor(r->s0, r0, r1, r2, r3, r4, r5);
+    _vec_store_spinor(r->s0, rs0, rs1, rs2, rs3, rs4, rs5);
 #else
     _complex_times_vector(phi1, z, r->s0);
     _vector_assign(r->s0, phi1);
