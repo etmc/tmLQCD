@@ -83,7 +83,10 @@ for lapack first load the module mkl and then use
 
 - on Blue Gene installations
 
-For the Blue Gene see the README.bg? files
+For the Blue Gene L and P see the README.bg? files
+
+For BG/Q you can enable QPX intrinsics with --enable-qpx, which will have
+effect only with the XLC compiler.
 
 You may enable or disable other configure options as needed. See the
 documentation for more details.
