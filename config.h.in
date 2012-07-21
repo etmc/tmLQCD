@@ -95,6 +95,9 @@
 /* Optimize for Blue Gene/P */
 #undef BGP
 
+/* Compile with QPX intrinsics */
+#undef BGQ
+
 /* Are we using the IBM xlc compiler? */
 #undef XLC
 
