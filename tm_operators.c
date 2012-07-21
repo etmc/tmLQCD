@@ -15,8 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/**************************************************************
  *                                                            *
  * This file contains operators for twisted mass Wilson QCD   *
  * prepared for even odd preconditioning                      *
@@ -41,6 +39,9 @@
 #include "D_psi.h"
 #ifdef BGL
 #  include "bgl.h"
+#endif
+#ifdef BGQ
+#  include "bgq.h"
 #endif
 
 #include "solver/dirac_operator_eigenvectors.h"
@@ -489,17 +490,20 @@ void H_eo_tm_inv_psi(spinor * const l, spinor * const k,
  **********************************************/
 
 void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
-  _Complex double z,w;
+  _Complex double ALIGN z,w;
   int ix;
   double sign=-1.; 
   spinor *r;
 #if (!defined SSE2 && !defined SSE3 && !defined BGL3)
   static su3_vector phi1;
 #endif
-  double nrm = 1./(1.+g_mu*g_mu);
+  double ALIGN nrm = 1./(1.+g_mu*g_mu);
 #if (defined BGL3 && defined XLC)
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
   double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
+#elif (defined BGQ && defined XLC)
+  vector4double r0, r1, r2, r3, r4, r5, rtmp;
+  vector4double rs0, rs1, rs2, rs3, rs4, rs5;
 #endif
 
   if(_sign < 0.){
@@ -507,6 +511,9 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
   }
 
   z = nrm + (sign * nrm * g_mu) * I;
+#if (defined BGQ && defined XLC)
+  rtmp = vec_ld2(0, (double*) &z);
+#endif
   w = conj(z);
 #if (defined BGL3 && defined XLC)
   __alignx(16,l);
@@ -542,6 +549,12 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
     _bgl_vector_cmplx_mul_double(w);
     _bgl_store_reg0_up(r->s2);
     _bgl_store_reg1_up(r->s3);
+#elif (defined BGQ && defined XLC)
+    _prefetch_by_load(r+1);
+    _vec_load_spinor(r0, r1, r2, r3, r4, r5, r->s0);
+    _vec_cmplx_mul_double2(rs0, rs1, rs2, r0, r1, r2, rtmp);
+    _vec_cmplxcg_mul_double2(rs3, rs4, rs5, r3, r4, r5, rtmp);
+    _vec_store_spinor(r->s0, r0, r1, r2, r3, r4, r5);
 #else
     _complex_times_vector(phi1, z, r->s0);
     _vector_assign(r->s0, phi1);
