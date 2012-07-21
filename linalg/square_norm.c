@@ -39,7 +39,6 @@
 #endif
 #include "square_norm.h"
 
-#define ALIGN __attribute__ ((aligned (32)))
 #if ((defined BGL) && (defined XLC))
 
 /***************************************
