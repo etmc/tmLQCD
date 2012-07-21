@@ -27,8 +27,6 @@
 #include "bgq.h"
 #include "xlc_prefetch.h"
 
-
-
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 
   int icx,icy,icz,ioff,ioff2;
@@ -38,15 +36,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
   spinor * restrict ALIGN sp;
   spinor * restrict ALIGN sm;
   spinor * restrict ALIGN rn;
-  /* We have 32 registers available */
-  vector4double ALIGN r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
-  vector4double ALIGN rs0, rs1, rs2, rs3, rs4, rs5, rs6, rs7, rs8, rs9, rs10, rs11;
-  vector4double ALIGN U0, U1, U2, U3, U4, U6, U7;
-  vector4double rtmp;
+  
 #pragma disjoint(*sp, *sm, *rn, *up, *um, *l, *k)
-
-  __alignx(16,l);
-  __alignx(16,k);
+  _declare_regs();
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
@@ -64,7 +56,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
   else{
     ioff = (VOLUME+RAND)/2;
   }
-  ioff2 = (VOLUME+RAND)/2-ioff;
 
   ix=g_eo2lexic[ioff];
   iy=g_iup[ix][0]; 
@@ -94,10 +85,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
     _hop_t_p();
 
     /*********************** direction -t ************************/
-
     iy=g_iup[ix][1]; 
     icy=g_lexic2eosub[iy];
-
 #    if ((defined _GAUGE_COPY))
     up=um+1;
 #    else
@@ -108,10 +97,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
     _hop_t_m();
 
     /*********************** direction +1 ************************/
-
     iy=g_idn[ix][1]; 
     icy=g_lexic2eosub[iy];
-
 #    ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][1]; 
 #    else
@@ -122,10 +109,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
     _hop_x_p();
 
     /*********************** direction -1 ************************/
-
     iy=g_iup[ix][2]; 
     icy=g_lexic2eosub[iy];
-
 #    if ((defined _GAUGE_COPY))
     up=um+1;
 #    else
@@ -136,10 +121,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
     _hop_x_m();
 
     /*********************** direction +2 ************************/
-
     iy=g_idn[ix][2]; 
     icy=g_lexic2eosub[iy];
-
 #    ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][2]; 
 #    else
@@ -150,10 +133,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
     _hop_y_p();
 
     /*********************** direction -2 ************************/
-
     iy=g_iup[ix][3]; 
     icy=g_lexic2eosub[iy];
-
 #    if ((defined _GAUGE_COPY))
     up=um+1;
 #    else
@@ -164,10 +145,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
     _hop_y_m();
 
     /*********************** direction +3 ************************/
-
     iy=g_idn[ix][3]; 
     icy=g_lexic2eosub[iy];
-
 #    ifndef _GAUGE_COPY
     um=&g_gauge_field[iy][3]; 
 #    else
@@ -178,12 +157,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
     _hop_z_p();
 
     /*********************** direction -3 ************************/
-
     icz=icx+1;
     if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
     iz=g_eo2lexic[icz];
     iy=g_iup[iz][0]; icy=g_lexic2eosub[iy];
-
 #    if ((defined _GAUGE_COPY))
     up=um+1;
 #    else
@@ -193,10 +170,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 
     _hop_z_m();
 
-    _vec_store2(rn->s0, rs0, rs1, rs2);
-    _vec_store2(rn->s1, rs3, rs4, rs5);
-    _vec_store2(rn->s2, rs6, rs7, rs8);
-    _vec_store2(rn->s3, rs9, rs10, rs11);
+    _store_res();
   }
   return;
 }
