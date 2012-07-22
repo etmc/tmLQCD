@@ -99,6 +99,7 @@ EXTERN int ** g_idn;
 EXTERN int ** g_iup_eo; /* NEW GIUPDNEO */
 EXTERN int ** g_idn_eo;
 EXTERN int ** g_coord;
+EXTERN int * g_hi;
 
 
 EXTERN int * g_field_z_ipt_even;
