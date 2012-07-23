@@ -507,7 +507,6 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
   int ix;
   double sign=-1.; 
   spinor *r;
-#if (!defined SSE2 && !defined SSE3 && !defined BGL3)
 
 #ifdef OMP
 #define static
@@ -674,6 +673,7 @@ void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double 
 
 void mul_one_pm_imu(spinor * const l, const double _sign){
 #ifdef OMP
+#define static
 #pragma omp parallel
   {
 #endif
@@ -681,10 +681,6 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
   int ix;
   double sign = 1.; 
   spinor *r;
-
-#ifdef OMP
-#define static
-#endif
 
   static su3_vector phi1;
 
