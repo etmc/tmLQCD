@@ -28,7 +28,20 @@
 #include "xlc_prefetch.h"
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#endif
 
+#    if (defined MPI && !(defined _NO_COMM))
+  xchange_field(k, ieo);
+#    endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   int icx,icy,icz,ioff,ioff2;
   int ix,iy,iz;
   su3 * restrict ALIGN up;
@@ -40,16 +53,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 #pragma disjoint(*sp, *sm, *rn, *up, *um, *l, *k)
   _declare_regs();
 
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-  }
-#endif
-
-#    if (defined MPI && !(defined _NO_COMM))
-  xchange_field(k, ieo);
-#    endif
-
   if(ieo == 0){
     ioff = 0;
   } 
@@ -57,6 +60,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
     ioff = (VOLUME+RAND)/2;
   }
 
+#ifndef OMP
   ix=g_eo2lexic[ioff];
   iy=g_iup[ix][0]; 
   icy=g_lexic2eosub[iy];
@@ -68,10 +72,32 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 #    else
   up=&g_gauge_field[ix][0];
 #    endif
+#endif
+
   /**************** loop over all lattice sites ******************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    rn=l+(icx-ioff);
+
+#ifdef OMP
     ix=g_eo2lexic[icx];
+    iy=g_iup[ix][0]; 
+    icy=g_lexic2eosub[iy];
+
+    sp=k+icy;
+#endif
+#    if ((defined _GAUGE_COPY))
+    p=&g_gauge_field_copy[icx][0];
+#    else
+    p=&g_gauge_field[ix][0];
+#    endif
+#endif
+
+    rn=l+(icx-ioff);
+#ifndef OMP
+    ix=g_eo2lexic[icx];
+#endif
     /*********************** direction +t ************************/
     iy=g_idn[ix][0]; 
     icy=g_lexic2eosub[iy];
@@ -172,5 +198,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 
     _store_res();
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
