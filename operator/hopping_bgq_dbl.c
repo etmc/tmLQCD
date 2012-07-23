@@ -34,12 +34,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
   }
 #endif
 
-#    if (defined MPI && !(defined _NO_COMM))
+#if (defined MPI && !(defined _NO_COMM))
   xchange_field(k, ieo);
-#    endif
+#endif
 
 #ifdef OMP
-#pragma omp parallel
+#  pragma omp parallel
   {
 #endif
   int icx,icy,icz,ioff,ioff2;
@@ -67,16 +67,16 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 
   sp=k+icy;
 
-#    if ((defined _GAUGE_COPY))
+#  if ((defined _GAUGE_COPY))
   up=&g_gauge_field_copy[ioff][0];
-#    else
+#  else
   up=&g_gauge_field[ix][0];
-#    endif
+#  endif
 #endif
 
   /**************** loop over all lattice sites ******************/
 #ifdef OMP
-#pragma omp for
+#  pragma omp for
 #endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
 
@@ -86,13 +86,13 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
     icy=g_lexic2eosub[iy];
 
     sp=k+icy;
-#else
+#endif
 #    if ((defined _GAUGE_COPY))
     up=&g_gauge_field_copy[icx][0];
 #    else
     up=&g_gauge_field[ix][0];
 #    endif
-#endif
+    //#endif
 
     rn=l+(icx-ioff);
 #ifndef OMP
