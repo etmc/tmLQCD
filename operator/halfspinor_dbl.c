@@ -30,6 +30,26 @@
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+  if(k == l){
+    printf("Error in H_psi (simple.c):\n");
+    printf("Arguments k and l must be different\n");
+    printf("Program aborted\n");
+    exit(1);
+  }
+
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#endif
+
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+  su3 * restrict U0 ALIGN;
+#endif
+
   int i,ix;
   su3 * restrict U ALIGN;
   spinor * restrict s ALIGN;
@@ -37,6 +57,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   static su3_vector psi, chi, psi2, chi2;
   halfspinor * restrict * phi ALIGN;
   halfspinor32 * restrict * phi32 ALIGN;
+
+#ifdef OMP
+#undef static
+#endif
+
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
 #endif
@@ -53,32 +78,38 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   __alignx(32, s);
 #endif
 
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-  }
-#endif
-
-  if(k == l){
-    printf("Error in H_psi (simple.c):\n");
-    printf("Arguments k and l must be different\n");
-    printf("Program aborted\n");
-    exit(1);
-  }
+#ifndef OMP  
   s = k;
-
   if(ieo == 0) {
     U = g_gauge_field_copy[0][0];
   }
   else {
     U = g_gauge_field_copy[1][0];
   }
+#else
+  if(ieo == 0) {
+    U0 = g_gauge_field_copy[0][0];
+  }
+  else {
+    U0 = g_gauge_field_copy[1][0];
+  }
+#endif
+
   if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
     phi32 = NBPointer32[ieo];
       
     /**************** loop over all lattice sites ****************/
+#ifdef OMP
+#pragma omp for
+#else
     ix=0;
+#endif
     for(i = 0; i < (VOLUME)/2; i++){
+#ifdef OMP
+      U=U0+i*4;
+      s=k+i;
+      ix=i*8;
+#endif
       _vector_assign(rs.s0, s->s0);
       _vector_assign(rs.s1, s->s1);
       _vector_assign(rs.s2, s->s2);
@@ -168,23 +199,55 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       _vector_i_sub(phi32[ix]->s0, rs.s0, rs.s2);
       _vector_i_add(phi32[ix]->s1, rs.s1, rs.s3);
 
+#ifndef OMP
       ix++;
+#endif
       /************************ end of loop ************************/
     }
+
+#ifdef OMP
+#pragma omp single
+{
+#endif
+
 #    if (defined MPI && !defined _NO_COMM)
     xchange_halffield32(); 
 #    endif
+
+#ifdef OMP
+}
+#endif
+
+#ifndef OMP
     s = l;
-    phi32 = NBPointer32[2 + ieo];
     if(ieo == 0) {
       U = g_gauge_field_copy[1][0];
     }
     else {
       U = g_gauge_field_copy[0][0];
     }
+#else
+    if(ieo == 0) {
+      U0 = g_gauge_field_copy[1][0];
+    }
+    else {
+      U0 = g_gauge_field_copy[0][0];
+    }
+#endif
+   
+   phi32 = NBPointer32[2 + ieo];
 
+#ifdef OMP
+#pragma omp for
+#else
     ix = 0;
+#endif
     for(i = 0; i < (VOLUME)/2; i++){
+#ifdef OMP
+      ix=i*8;
+      s=l+i;
+      U=U0+i*4;
+#endif
       /*********************** direction +0 ************************/
       _vector_assign(rs.s0, phi32[ix]->s0);
       _vector_assign(rs.s2, phi32[ix]->s0);
@@ -287,18 +350,29 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       _vector_add(s->s1, rs.s1, psi);
       _vector_i_sub(s->s3, rs.s3, psi);
 
+#ifndef OMP
       U++;
       ix++;
       s++;
+#endif
     }
   }
   else {
     phi = NBPointer[ieo];
       
     /**************** loop over all lattice sites ****************/
+#ifdef OMP
+#pragma omp for
+#else
     ix=0;
+#endif
     /* #pragma ivdep*/
     for(i = 0; i < (VOLUME)/2; i++){
+#ifdef OMP
+      s=k+i;
+      ix=i*8;
+      U=U0+i*4;
+#endif
       _vector_assign(rs.s0, s->s0);
       _vector_assign(rs.s1, s->s1);
       _vector_assign(rs.s2, s->s2);
@@ -375,24 +449,57 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       _vector_i_sub(phi[ix]->s0, rs.s0, rs.s2);
       _vector_i_add(phi[ix]->s1, rs.s1, rs.s3);
 
+#ifndef OMP
       ix++;
+#endif
       /************************ end of loop ************************/
     }
+
+#ifdef OMP
+#pragma omp single
+{
+#endif
+
 #    if (defined MPI && !defined _NO_COMM)
     xchange_halffield(); 
 #    endif
+
+#ifdef OMP
+}
+#endif
+
+#ifndef OMP
     s = l;
-    phi = NBPointer[2 + ieo];
     if(ieo == 0) {
       U = g_gauge_field_copy[1][0];
     }
     else {
       U = g_gauge_field_copy[0][0];
     }
+#else
+    if(ieo == 0) {
+      U0 = g_gauge_field_copy[1][0];
+    }
+    else {
+      U0 = g_gauge_field_copy[0][0];
+    }
+#endif
 
+    phi = NBPointer[2 + ieo];
+
+#ifdef OMP
+#pragma omp for
+#else
     ix = 0;
+#endif
     /* #pragma ivdep */
     for(i = 0; i < (VOLUME)/2; i++){
+#ifdef OMP
+      ix=i*8;
+      U=U0+i*4;
+      s=l+i;
+#endif
+
       /*********************** direction +0 ************************/
       _vector_assign(rs.s0, phi[ix]->s0);
       _vector_assign(rs.s2, phi[ix]->s0);
@@ -476,12 +583,19 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       _vector_add(s->s1, rs.s1, psi2);
       _vector_i_sub(s->s3, rs.s3, psi2);
 
+#ifndef OMP
       U++;
       ix++;
       s++;
+#endif
     }
   }
 #ifdef _KOJAK_INST
 #pragma pomp inst end(hoppingmatrix)
 #endif
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 }
