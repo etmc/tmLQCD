@@ -1539,35 +1539,65 @@ void geometry(){
 
 void Hopping_Matrix_Indices(){
   int ix;
+  int ioff = (VOLUME+RAND)/2;
   /**************** loop over all lattice sites ****************/
-  for (int icx = 0; icx < VOLUME; icx++)
+  for (int icx = 0, icy = VOLUME/2; icx < VOLUME/2; icx++, icy++)
   {
     ix=g_eo2lexic[icx];
     /*********************** direction +0 ************************/
-    g_hi[(16*icx)+1] = g_iup[ix][0];
-    g_hi[(16*icx)] = g_lexic2eosub[g_hi[(16*icx)+1]];
+    g_hi[(16*icx)] = g_iup[ix][0];
+    g_hi[(16*icx)+1] = g_lexic2eosub[g_hi[(16*icx)]];
+    g_hi[(16*icx)] = ix;
     /*********************** direction -0 ************************/
-    g_hi[(16*icx)+3] = g_idn[ix][0];
-    g_hi[(16*icx)+2] = g_lexic2eosub[g_hi[(16*icx)+3]];
+    g_hi[(16*icx)+2] = g_idn[ix][0];
+    g_hi[(16*icx)+3] = g_lexic2eosub[g_hi[(16*icx)+2]];
     /*********************** direction +1 ************************/
-    g_hi[(16*icx)+5] = g_iup[ix][1];
-    g_hi[(16*icx)+4] = g_lexic2eosub[g_hi[(16*icx)+5]];
+    g_hi[(16*icx)+4] = g_iup[ix][1];
+    g_hi[(16*icx)+5] = g_lexic2eosub[g_hi[(16*icx)+4]];
     /*********************** direction -1 ************************/
-    g_hi[(16*icx)+7] = g_idn[ix][1];
-    g_hi[(16*icx)+6] = g_lexic2eosub[g_hi[(16*icx)+7]];
+    g_hi[(16*icx)+6] = g_idn[ix][1];
+    g_hi[(16*icx)+7] = g_lexic2eosub[g_hi[(16*icx)+6]];
     /*********************** direction +2 ************************/
-    g_hi[(16*icx)+9] = g_iup[ix][2];
-    g_hi[(16*icx)+8] = g_lexic2eosub[g_hi[(16*icx)+9]];
+    g_hi[(16*icx)+8] = g_iup[ix][2];
+    g_hi[(16*icx)+9] = g_lexic2eosub[g_hi[(16*icx)+8]];
     /*********************** direction -2 ************************/
-    g_hi[(16*icx)+11] = g_idn[ix][2];
-    g_hi[(16*icx)+10] = g_lexic2eosub[g_hi[(16*icx)+11]];
+    g_hi[(16*icx)+10] = g_idn[ix][2];
+    g_hi[(16*icx)+11] = g_lexic2eosub[g_hi[(16*icx)+10]];
     /*********************** direction +3 ************************/
-    g_hi[(16*icx)+13] = g_iup[ix][3];
-    g_hi[(16*icx)+12] = g_lexic2eosub[g_hi[(16*icx)+13]];
+    g_hi[(16*icx)+12] = g_iup[ix][3];
+    g_hi[(16*icx)+13] = g_lexic2eosub[g_hi[(16*icx)+12]];
     /*********************** direction -3 ************************/
-    g_hi[(16*icx)+15] = g_idn[ix][3];
-    g_hi[(16*icx)+14] = g_lexic2eosub[g_hi[(16*icx)+15]];
+    g_hi[(16*icx)+14] = g_idn[ix][3];
+    g_hi[(16*icx)+15] = g_lexic2eosub[g_hi[(16*icx)+14]];
     /************************ end of loop ************************/
+    ix=g_eo2lexic[icx+ioff];
+    /*********************** direction +0 ************************/
+    g_hi[(16*icy)] = g_iup[ix][0];
+    g_hi[(16*icy)+1] = g_lexic2eosub[g_hi[(16*icy)]];
+    g_hi[(16*icy)] = ix;
+    /*********************** direction -0 ************************/
+    g_hi[(16*icy)+2] = g_idn[ix][0];
+    g_hi[(16*icy)+3] = g_lexic2eosub[g_hi[(16*icy)+2]];
+    /*********************** direction +1 ************************/
+    g_hi[(16*icy)+4] = g_iup[ix][1];
+    g_hi[(16*icy)+5] = g_lexic2eosub[g_hi[(16*icy)+4]];
+    /*********************** direction -1 ************************/
+    g_hi[(16*icy)+6] = g_idn[ix][1];
+    g_hi[(16*icy)+7] = g_lexic2eosub[g_hi[(16*icy)+6]];
+    /*********************** direction +2 ************************/
+    g_hi[(16*icy)+8] = g_iup[ix][2];
+    g_hi[(16*icy)+9] = g_lexic2eosub[g_hi[(16*icy)+8]];
+    /*********************** direction -2 ************************/
+    g_hi[(16*icy)+10] = g_idn[ix][2];
+    g_hi[(16*icy)+11] = g_lexic2eosub[g_hi[(16*icy)+10]];
+    /*********************** direction +3 ************************/
+    g_hi[(16*icy)+12] = g_iup[ix][3];
+    g_hi[(16*icy)+13] = g_lexic2eosub[g_hi[(16*icy)+12]];
+    /*********************** direction -3 ************************/
+    g_hi[(16*icy)+14] = g_idn[ix][3];
+    g_hi[(16*icy)+15] = g_lexic2eosub[g_hi[(16*icy)+14]];
+    /************************ end of loop ************************/
+
   }
   g_hi[(16*VOLUME)] = 0;
   g_hi[(16*VOLUME)+1] = 0;
