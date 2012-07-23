@@ -39,6 +39,9 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
+#ifdef OMP
+#include <omp.h>
+#endif
 #include "global.h"
 #include "git_hash.h"
 #include "getopt.h"
@@ -175,6 +178,13 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
     exit(-1);
   }
+
+#ifdef OMP
+  if(omp_num_threads > 0)
+  {
+    omp_set_num_threads(omp_num_threads);
+  }
+#endif
 
   /* this DBW2 stuff is not needed for the inversion ! */
   if (g_dflgcr_flag == 1) {

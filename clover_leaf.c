@@ -87,6 +87,12 @@ su3 ** swm, ** swp;
 // suppressing space-time indices
 
 void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
+
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
   su3 *w1,*w2,*w3,*w4;
@@ -96,6 +102,10 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
   static su3 magnetic[4],electric[4];
   static su3 aux;
   
+#ifdef OMP
+#undef static
+#endif
+
   /*  compute the clover-leave */
   /*  l  __   __
         |  | |  |
@@ -104,6 +114,9 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
         |  | |  |
         |__| |__| k  */
   
+#ifdef OMP
+#pragma omp for
+#endif
   for(x = 0; x < VOLUME; x++) {
     for(k = 0; k < 4; k++) {
       for(l = k+1; l < 4; l++) {
@@ -189,6 +202,9 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
     _itimes_su3_plus_su3(aux,magnetic[3],electric[3]);
     _su3_refac_acc(sw[x][2][1],ka_csw_8,aux);
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
@@ -214,13 +230,26 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
   !  ported to C by M.Hasenbusch Wed Oct 24 15:46:46 MEST 2001   !
   !______________________________________________________________!
 */
+
+
+/* six_invert and six_det are called from multiple threads, they are thus
+ * made thread-safe by removing the static keywords but they are NOT
+ * parallelised for OpenMP */
+
 #define nm1 5
 int six_invert(_Complex double a[6][6])
 {
+  /* required for thread safety */
+#ifdef OMP
+#define static
+#endif
   static _Complex double d[nm1+1],u[nm1+1];
   static _Complex double sigma,z;
   static double p[nm1+1];
   static double s,q;
+#ifdef OMP
+#undef static
+#endif
   int i,j,k;
   int ifail;
   ifail=0;
@@ -294,10 +323,17 @@ int six_invert(_Complex double a[6][6])
     
 _Complex double six_det(_Complex double a[6][6])
 {
+  /* required for thread safety */
+#ifdef OMP
+#define static
+#endif
   static _Complex double sigma,z;
   static _Complex double det;
   static double p[nm1+1];
   static double s,q;
+#ifdef OMP
+#undef static
+#endif
   int i,j,k;
   int ifail;
   ifail=0;
@@ -395,7 +431,7 @@ double sw_trace(const int ieo, const double mu) {
   static double tra;
   static double ks,kc,tr,ts,tt;
   static _Complex double det;
-  
+
   ks=0.0;
   kc=0.0;
 
@@ -405,6 +441,7 @@ double sw_trace(const int ieo, const double mu) {
   else {
     ioff=(VOLUME+RAND)/2;
   }
+  
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
     for(i=0;i<2;i++) {
@@ -454,10 +491,22 @@ void mult_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double 
 }
 
 void sw_invert(const int ieo, const double mu) {
+#ifdef OMP
+#define static
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+  int icy;
+#endif
   int ioff, err=0;
   int i, x;
   static su3 v;
   static _Complex double a[6][6];
+#ifdef OMP
+#undef static
+#endif
   if(ieo==0) {
     ioff=0;
   } 
@@ -465,7 +514,13 @@ void sw_invert(const int ieo, const double mu) {
     ioff=(VOLUME+RAND)/2;
   }
 
+#ifdef OMP
+#pragma omp for
+  for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+    icy = icx - ioff;
+#else
   for(int icx = ioff, icy = 0; icx < (VOLUME/2+ioff); icx++, icy++) {
+#endif
     x = g_eo2lexic[icx];
 
     for(i = 0; i < 2; i++) {
@@ -520,6 +575,9 @@ void sw_invert(const int ieo, const double mu) {
       }
     }
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
@@ -541,10 +599,24 @@ void sw_invert(const int ieo, const double mu) {
 // this function depends on mu
 
 void sw_deriv(const int ieo, const double mu) {
+#ifdef OMP
+#define static
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+  int icy;
+#endif
+
   int ioff;
   int x;
   double fac = 1.0000;
   static su3 lswp[4],lswm[4];
+
+#ifdef OMP
+#undef static
+#endif
 
   /* convention: Tr clover-leaf times insertion */
   if(ieo == 0) {
@@ -555,7 +627,13 @@ void sw_deriv(const int ieo, const double mu) {
   }
   if(fabs(mu) > 0.) fac = 0.5;
 
+#ifdef OMP
+#pragma omp for
+  for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+    icy = icx - ioff;
+#else
   for(int icx = ioff, icy=0; icx < (VOLUME/2+ioff); icx++, icy++) {
+#endif
     x = g_eo2lexic[icx];
     /* compute the insertion matrix */
     _su3_plus_su3(lswp[0],sw_inv[icy][0][1],sw_inv[icy][0][0]);
@@ -600,6 +678,9 @@ void sw_deriv(const int ieo, const double mu) {
       _su3_refac_acc(swp[x][3], fac, lswp[3]);
     }
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
@@ -611,6 +692,12 @@ void sw_deriv(const int ieo, const double mu) {
 // additional gamma_5 needed for one of the input vectors
 
 void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
+
   int ioff;
   int icx;
   int x;
@@ -618,7 +705,11 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
   static su3 v0,v1,v2,v3;
   static su3 u0,u1,u2,u3;
   static su3 lswp[4],lswm[4];
-  
+
+#ifdef OMP
+#undef static
+#endif
+
   if(ieo == 0) {
     ioff=0;
   } 
@@ -626,7 +717,10 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
     ioff=(VOLUME+RAND)/2;
   }
   /************************ loop over half of the lattice sites ***********/
-  
+
+#ifdef OMP
+#pragma omp for
+#endif  
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
     r = kk + icx - ioff;
@@ -663,6 +757,9 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
     _su3_acc(swp[x][2], lswp[2]);
     _su3_acc(swp[x][3], lswp[3]);
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
@@ -671,6 +768,12 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
 
 void sw_all(hamiltonian_field_t * const hf, const double kappa, 
 	    const double c_sw) {
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
+
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
   su3 *w1,*w2,*w3,*w4;
@@ -678,6 +781,13 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
   static su3 v1,v2,vv1,vv2,plaq;
   static su3 vis[4][4];
   
+#ifdef OMP
+#undef static
+#endif
+
+#ifdef OMP
+#pragma omp for
+#endif
   for(x = 0; x < VOLUME; x++) {
     _minus_itimes_su3_plus_su3(vis[0][1],swm[x][1],swm[x][3]);
     _su3_minus_su3(vis[0][2],swm[x][1],swm[x][3]);
@@ -806,6 +916,9 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
       }
     }
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 

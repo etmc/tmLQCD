@@ -173,16 +173,27 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
  **********************************************************/
 
 void clover_inv(const int ieo, spinor * const l, const double mu) {
+#ifdef OMP
+#pragma omp parallel
+  {
+  su3_vector psi, chi, phi1, phi3;
+  int icy;
+#else
+  static su3_vector psi, chi, phi1, phi3;
+#endif
   int ioff = 0;
   su3 *w1, *w2, *w3, *w4;
   spinor *rn;
-  static su3_vector psi, chi, phi1, phi3;
 
   if(mu < 0) ioff = VOLUME/2;
   /************************ loop over all lattice sites *************************/
-
+#ifdef OMP
+#pragma omp for
+  for(int icx = 0; icx < (VOLUME/2); icx++) {
+    icy = ioff + icx;
+#else
   for(int icx = 0, icy = ioff; icx < (VOLUME/2); icx++, icy++) {
-/*     ix = g_eo2lexic[icx]; */
+#endif
 
     rn = l + icx;
     _vector_assign(phi1,(*rn).s0);
@@ -212,6 +223,9 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
 
     /******************************** end of loop *********************************/
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
@@ -229,11 +243,17 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
 void clover_gamma5(const int ieo, 
 		   spinor * const l, spinor * const k, spinor * const j,
 		   const double mu) {
+#ifdef OMP
+#pragma omp parallel
+  {
+  su3_vector chi, psi1, psi2;
+#else
+  static su3_vector chi, psi1, psi2;
+#endif
   int ix;
   int ioff,icx;
   su3 *w1,*w2,*w3;
   spinor *r,*s,*t;
-  static su3_vector chi, psi1, psi2;
 
   if(ieo == 0) {
     ioff = 0;
@@ -241,7 +261,11 @@ void clover_gamma5(const int ieo,
   else {
     ioff = (VOLUME+RAND)/2;
   }
+
 /************************ loop over all lattice sites *************************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     ix = g_eo2lexic[icx];
     
@@ -281,6 +305,9 @@ void clover_gamma5(const int ieo,
     _vector_sub((*r).s3,(*t).s3,psi2);
     /******************************** end of loop *********************************/
   }
+#ifdef OMP
+  } /* OMP closing brace */
+#endif
   return;
 }
 
@@ -299,11 +326,17 @@ void clover_gamma5(const int ieo,
 void clover(const int ieo, 
 	    spinor * const l, spinor * const k, spinor * const j,
 	    const double mu) {
+#ifdef OMP
+#pragma omp parallel
+  {
+  su3_vector chi, psi1, psi2;
+#else
+  static su3_vector chi, psi1, psi2;
+#endif
   int ix;
   int ioff,icx;
   su3 *w1,*w2,*w3;
   spinor *r,*s,*t;
-  static su3_vector chi, psi1, psi2;
   
   if(ieo == 0) {
     ioff = 0;
@@ -312,6 +345,9 @@ void clover(const int ieo,
     ioff = (VOLUME+RAND)/2;
   }
   /************************ loop over all lattice sites *************************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     ix = g_eo2lexic[icx];
     
@@ -355,17 +391,26 @@ void clover(const int ieo,
     _vector_sub((*r).s2,psi1,(*t).s2);
     _vector_sub((*r).s3,psi2,(*t).s3);
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
 void assign_mul_one_sw_pm_imu(const int ieo, 
 			      spinor * const k, spinor * const l,
 			      const double mu) {
+#ifdef OMP
+#pragma omp parallel
+  {
+  su3_vector chi, psi1, psi2;
+#else
+  static su3_vector chi, psi1, psi2;
+#endif
   int ix;
   int ioff, icx;
   su3 *w1, *w2, *w3;
   spinor *r, *s;
-  static su3_vector chi, psi1, psi2;
   
   if(ieo == 0) {
     ioff = 0;
@@ -374,6 +419,9 @@ void assign_mul_one_sw_pm_imu(const int ieo,
     ioff = (VOLUME+RAND)/2;
   }
   /************************ loop over all lattice sites *************************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     ix = g_eo2lexic[icx];
     
@@ -416,6 +464,9 @@ void assign_mul_one_sw_pm_imu(const int ieo,
     _vector_assign((*r).s2, psi1);
     _vector_assign((*r).s3, psi2);
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
@@ -423,12 +474,20 @@ void assign_mul_one_sw_pm_imu(const int ieo,
 void assign_mul_one_sw_pm_imu_inv(const int ieo, 
 				  spinor * const k, spinor * const l,
 				  const double mu) {
+#ifdef OMP
+#pragma omp parallel
+  {
+  su3_vector psi, chi, phi1, phi3;
+#else
+  static su3_vector psi, chi, phi1, phi3;
+#endif
   su3 *w1, *w2, *w3, *w4;
   spinor *rn, *s;
-  static su3_vector psi, chi, phi1, phi3;
 
   /************************ loop over all lattice sites *************************/
-
+#ifdef OMP
+#pragma omp for
+#endif
   for(int icx = 0; icx < (VOLUME/2); icx++) {
 
     rn = l + icx;
@@ -460,6 +519,9 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
 
     /******************************** end of loop *********************************/
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 

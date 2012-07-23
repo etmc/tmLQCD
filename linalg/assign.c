@@ -61,5 +61,4 @@ void assign_su3vect(su3_vector * const R, su3_vector * const S, const int N)
     r->c2 = s->c2;
   }
 }
-}
 #endif

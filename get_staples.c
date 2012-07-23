@@ -39,7 +39,17 @@ su3 get_staples(int x, int mu, su3 ** in_gauge_field) {
   double _Complex w00, w01, w02, w10, w11, w12, w20;
   double _Complex reg00, reg01, reg02, reg10, reg11, reg12, reg20, reg21, reg22;
   int k, iy;
+
+#ifdef OMP
+#define static
+#endif
+
   static su3 v;
+ 
+#ifdef OMP
+#undef static
+#endif
+  
   su3 *w1 ALIGN;
   su3 *w2 ALIGN;
   su3 *w3 ALIGN;
@@ -85,7 +95,17 @@ su3 get_staples(int x, int mu, su3 ** in_gauge_field) {
 su3 get_staples(int x, int mu, su3 ** in_gauge_field) {
 
   int k,iy;
+
+#ifdef OMP
+#define static
+#endif
+
   static su3 v,st;
+  
+#ifdef OMP
+#undef static
+#endif
+    
   su3 *w1,*w2,*w3;
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(staples)

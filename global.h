@@ -248,6 +248,10 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 
 #endif
 
+#ifdef OMP
+EXTERN int omp_num_threads;
+#endif
+
 /* something to evaluate time elaps */
 EXTERN double DeltaTtot, DeltaTcd, DeltaTev;
 EXTERN int counter_Spsi;

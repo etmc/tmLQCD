@@ -30,6 +30,9 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include <stdlib.h>
 #include "su3.h"
 #include "sse.h"
@@ -39,6 +42,10 @@
 #if ( defined SSE2 || defined SSE3 )
 /* k input , l output*/
 void assign_mul_add_r_bi(bispinor * const S, const double c, bispinor * const R, const int N) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
 
   int ix;
   su3_vector *s,*r;
@@ -52,12 +59,21 @@ void assign_mul_add_r_bi(bispinor * const S, const double c, bispinor * const R,
 			:
 			"m" (c));
   
-  
+#ifndef OMP
   s=(su3_vector *) &S[0].sp_up.s0;
   r=(su3_vector *) &R[0].sp_up.s0;
+#endif
 
 /*  for (ix=0;ix<4*N;ix++) { */
+#ifdef OMP
+#pragma omp for
+#endif
   for (ix=0;ix<2*4*N;ix++) {
+#ifdef OMP
+    s=((su3_vector *) &S[0].sp_up.s0) +  ix;
+    r=((su3_vector *) &R[0].sp_up.s0)  + ix;
+#endif
+
     _sse_load(*s);
     __asm__ __volatile__ ("mulpd %%xmm7, %%xmm0 \n\t"
 			  "mulpd %%xmm7, %%xmm1 \n\t"
@@ -71,18 +87,30 @@ void assign_mul_add_r_bi(bispinor * const S, const double c, bispinor * const R,
 			  :
 			  :);
     _sse_store(*s);
+#ifndef OMP
     s++; r++;
+#endif
   }
-
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 #else
 /* k input , l output*/
 void assign_mul_add_r_bi(bispinor * const R, const double c, bispinor * const S, const int N)
 {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   spinor *r,*s;
   
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix)
   {
     r = (spinor *) &R[ix].sp_up;
@@ -123,6 +151,9 @@ void assign_mul_add_r_bi(bispinor * const R, const double c, bispinor * const S,
     r->s3.c1 = c * r->s3.c1 + s->s3.c1;
     r->s3.c2 = c * r->s3.c2 + s->s3.c2;    
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 #endif

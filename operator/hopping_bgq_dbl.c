@@ -28,17 +28,6 @@
 #include "xlc_prefetch.h"
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
-
-  int ioff;
-  int * hi;
-  su3 * restrict ALIGN up;
-  su3 * restrict ALIGN um;
-  spinor * restrict ALIGN sp;
-  spinor * restrict ALIGN sm;
-  spinor * restrict ALIGN rn;
-  
-#pragma disjoint(*sp, *sm, *rn, *up, *um, *l, *k)
-  _declare_regs();
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
@@ -49,123 +38,168 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
   xchange_field(k, ieo);
 #    endif
 
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  int icx,icy,icz,ioff,ioff2;
+  int ix,iy,iz;
+  su3 * restrict ALIGN up;
+  su3 * restrict ALIGN um;
+  spinor * restrict ALIGN sp;
+  spinor * restrict ALIGN sm;
+  spinor * restrict ALIGN rn;
+  
+#pragma disjoint(*sp, *sm, *rn, *up, *um, *l, *k)
+  _declare_regs();
+
   if(ieo == 0){
     ioff = 0;
-    hi = &g_hi[0];
   } 
   else{
     ioff = (VOLUME+RAND)/2;
-    hi = &g_hi[16*VOLUME/2];
   }
+
+#ifndef OMP
+  ix=g_eo2lexic[ioff];
+  iy=g_iup[ix][0]; 
+  icy=g_lexic2eosub[iy];
+
+  sp=k+icy;
 
 #    if ((defined _GAUGE_COPY))
   up=&g_gauge_field_copy[ioff][0];
 #    else
-  up=&g_gauge_field[(*hi)][0];
+  up=&g_gauge_field[ix][0];
 #    endif
-  hi++;
-  sp=k+(*hi);
-  hi++;
+#endif
+
   /**************** loop over all lattice sites ******************/
-  for(int icx = ioff; icx < (VOLUME/2+ioff); icx++){
+#ifdef OMP
+#pragma omp for
+#endif
+  for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
+
+#ifdef OMP
+    ix=g_eo2lexic[icx];
+    iy=g_iup[ix][0]; 
+    icy=g_lexic2eosub[iy];
+
+    sp=k+icy;
+#else
+#    if ((defined _GAUGE_COPY))
+    up=&g_gauge_field_copy[icx][0];
+#    else
+    up=&g_gauge_field[ix][0];
+#    endif
+#endif
+
     rn=l+(icx-ioff);
+#ifndef OMP
+    ix=g_eo2lexic[icx];
+#endif
     /*********************** direction +t ************************/
+    iy=g_idn[ix][0]; 
+    icy=g_lexic2eosub[iy];
 #    if (!defined _GAUGE_COPY)
-    um=&g_gauge_field[(*hi)][0]; 
+    um=&g_gauge_field[iy][0]; 
 #    else
     um=up+1;
 #    endif
-    hi++;
-    sm=k+(*hi);
-    hi++;
+    sm=k+icy;
 
     _hop_t_p();
 
     /*********************** direction -t ************************/
+    iy=g_iup[ix][1]; 
+    icy=g_lexic2eosub[iy];
 #    if ((defined _GAUGE_COPY))
     up=um+1;
 #    else
     up+=1;
 #    endif
-    hi++;
-    sp=k+(*hi);
-    hi++;
+    sp=k+icy;
     
     _hop_t_m();
 
     /*********************** direction +1 ************************/
+    iy=g_idn[ix][1]; 
+    icy=g_lexic2eosub[iy];
 #    ifndef _GAUGE_COPY
-    um=&g_gauge_field[(*hi)][1]; 
+    um=&g_gauge_field[iy][1]; 
 #    else
     um = up+1;
 #    endif
-    hi++;
-    sm=k+(*hi);
-    hi++;
+    sm=k+icy;
 
     _hop_x_p();
 
     /*********************** direction -1 ************************/
+    iy=g_iup[ix][2]; 
+    icy=g_lexic2eosub[iy];
 #    if ((defined _GAUGE_COPY))
     up=um+1;
 #    else
     up+=1;
 #    endif
-    hi++;
-    sp=k+(*hi);
-    hi++;
+    sp=k+icy;
 
     _hop_x_m();
 
     /*********************** direction +2 ************************/
+    iy=g_idn[ix][2]; 
+    icy=g_lexic2eosub[iy];
 #    ifndef _GAUGE_COPY
-    um=&g_gauge_field[(*hi)][2]; 
+    um=&g_gauge_field[iy][2]; 
 #    else
     um= up+1;
 #    endif
-    hi++;
-    sm=k+(*hi);
-    hi++;
+    sm=k+icy;
 
     _hop_y_p();
 
     /*********************** direction -2 ************************/
+    iy=g_iup[ix][3]; 
+    icy=g_lexic2eosub[iy];
 #    if ((defined _GAUGE_COPY))
     up=um+1;
 #    else
     up+=1;
 #    endif
-    hi++;
-    sp=k+(*hi);
-    hi++;
+    sp=k+icy;
 
     _hop_y_m();
 
     /*********************** direction +3 ************************/
+    iy=g_idn[ix][3]; 
+    icy=g_lexic2eosub[iy];
 #    ifndef _GAUGE_COPY
-    um=&g_gauge_field[(*hi)][3]; 
+    um=&g_gauge_field[iy][3]; 
 #    else
     um=up+1;
 #    endif
-    hi++;
-    sm=k+(*hi);
-    hi++;
+    sm=k+icy;
 
     _hop_z_p();
 
     /*********************** direction -3 ************************/
+    icz=icx+1;
+    if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
+    iz=g_eo2lexic[icz];
+    iy=g_iup[iz][0]; icy=g_lexic2eosub[iy];
 #    if ((defined _GAUGE_COPY))
     up=um+1;
 #    else
-    up=&g_gauge_field[(*hi)][0];
+    up=&g_gauge_field[iz][0];
 #    endif
-    hi++;
-    sp=k+(*hi);
-    hi++;
+    sp=k+icy;
 
     _hop_z_m();
 
     _store_res();
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }

@@ -36,6 +36,8 @@
 #include "linalg/convert_eo_to_lexic.h"
 #include "measurements.h"
 #include "online_measurement.h"
+#include "gettime.h"
+
 
 /******************************************************
  *
@@ -79,11 +81,7 @@ void online_measurement(const int traj, const int id) {
     printf("# timeslice set to %d (T=%d) for online measurement\n", t0, g_nproc_t*T);
     printf("# online measurements parameters: kappa = %g, mu = %g\n", g_kappa, g_mu/2./g_kappa);
   }
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  atime = gettime();
 
   Cpp = (double*) calloc(g_nproc_t*T, sizeof(double));
   Cpa = (double*) calloc(g_nproc_t*T, sizeof(double));
@@ -171,11 +169,9 @@ void online_measurement(const int traj, const int id) {
     fclose(ofs);
   }
   free(Cpp); free(Cpa); free(Cp4);
-#ifdef MPI
-  etime = MPI_Wtime();
-#else
-  etime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  
+  etime = gettime();
+  
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("ONLINE: measurement done int t/s = %1.4e\n", etime - atime);
   }

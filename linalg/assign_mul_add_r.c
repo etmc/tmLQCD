@@ -22,6 +22,9 @@
 #endif
 #include <stdlib.h>
 #include <complex.h>
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "su3.h"
 #include "assign_mul_add_r.h"
 
@@ -31,7 +34,10 @@
 
 /* k input , l output*/
 void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const int N) {
-
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   int ix;
   su3_vector *s,*r;
   __asm__ __volatile__ ("movsd %0, %%xmm7 \n\t"
@@ -39,9 +45,17 @@ void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const 
 			:
 			:
 			"m" (c));
+#ifndef OMP
   s=&S[0].s0;
   r=&R[0].s0;
+#else
+#pragma omp for
+#endif
   for (ix=0;ix<4*N;ix++) {
+#ifdef OMP
+  s=&S[0].s0+ix;
+  r=&R[0].s0+ix;
+#endif
     _sse_load(*s);
     __asm__ __volatile__ ("mulpd %%xmm7, %%xmm0 \n\t"
 			  "mulpd %%xmm7, %%xmm1 \n\t"
@@ -55,8 +69,14 @@ void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const 
 			  :
 			  :);
     _sse_store(*s);
+#ifndef OMP
     s++; r++;
+#endif
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif  
 }
 
 #elif (defined BGQ && defined XLC)
@@ -307,9 +327,16 @@ void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const 
 
 void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const int N)
 {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   spinor *r,*s;
   
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix)
   {
     r = R + ix;
@@ -331,6 +358,9 @@ void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const 
     r->s3.c1 = c * r->s3.c1 + s->s3.c1;
     r->s3.c2 = c * r->s3.c2 + s->s3.c2;   
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 #endif
@@ -338,8 +368,15 @@ void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const 
 #ifdef WITHLAPH
 void assign_mul_add_r_su3vect(su3_vector * const R, const double c, su3_vector * const S, const int N)
 {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   su3_vector *r,*s;
 
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix) 
   {
     r = R + ix;
@@ -348,5 +385,8 @@ void assign_mul_add_r_su3vect(su3_vector * const R, const double c, su3_vector *
     r->c1 = c * r->c1 + s->c1;
     r->c2 = c * r->c2 + s->c2;    
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 #endif

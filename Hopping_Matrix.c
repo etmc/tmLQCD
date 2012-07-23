@@ -79,6 +79,9 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef OMP
+#include <omp.h>
+#endif
 #include "global.h"
 #include "su3.h"
 #include "sse.h"
