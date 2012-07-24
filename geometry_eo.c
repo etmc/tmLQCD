@@ -1541,7 +1541,7 @@ void Hopping_Matrix_Indices(){
   int ix;
   int ioff = (VOLUME+RAND)/2;
   /**************** loop over all lattice sites ****************/
-  for (int icx = 0, icy = VOLUME/2; icx < VOLUME/2; icx++, icy++)
+  for (int icx = 0, icy = (VOLUME+RAND)/2; icx < VOLUME/2; icx++, icy++)
   {
     ix=g_eo2lexic[icx];
     /*********************** direction +0 ************************/
@@ -1599,8 +1599,8 @@ void Hopping_Matrix_Indices(){
     /************************ end of loop ************************/
 
   }
-  g_hi[(16*VOLUME)] = 0;
-  g_hi[(16*VOLUME)+1] = 0;
+  g_hi[(16*(VOLUME+RAND))] = 0;
+  g_hi[(16*(VOLUME+RAND))+1] = 0;
   return;
 }
 

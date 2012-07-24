@@ -150,7 +150,7 @@ int init_geometry_indices(const int V) {
   for(i = 1; i < (T+4); i++){
     g_ipt[i] = g_ipt[i-1]+(LX+4);
   }
-  g_hi = (int*)calloc(16*V+2,sizeof(int));
+  g_hi = (int*)calloc(16*(VOLUME+RAND)+2,sizeof(int));
   if((void*) g_hi == NULL) return(40);
 
 #ifdef WITHLAPH
