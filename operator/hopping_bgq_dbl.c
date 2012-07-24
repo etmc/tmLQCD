@@ -184,7 +184,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
     up=&g_gauge_field[(*hi)][0];
 #  endif
     hi++;
-    sp=k+icy;
+    sp=k+(*hi);
     hi++;
 #endif
     _hop_z_m();
