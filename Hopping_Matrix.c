@@ -119,7 +119,7 @@
 #else /* thats _USE_HALFSPINOR */
 
 #  if ((defined SSE2)||(defined SSE3))
-#    include "operator/hopping_sse_bgl.c"
+#    include "operator/hopping_sse_dbl.c"
 
 #  elif (defined BGQ && defined XLC)
 #    include "bgq.h"

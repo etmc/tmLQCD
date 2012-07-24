@@ -56,8 +56,8 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 
 #ifdef OMP
 #pragma omp parallel
-  su3_vector psi, chi;
   {
+  su3_vector psi, chi;
 #endif
   int ix,iy;
   int ioff,ioff2,icx,icy;

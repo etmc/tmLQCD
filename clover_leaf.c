@@ -493,12 +493,9 @@ void mult_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double 
 void sw_invert(const int ieo, const double mu) {
 #ifdef OMP
 #define static
-#endif
-
-#ifdef OMP
+  int icy;
 #pragma omp parallel
   {
-  int icy;
 #endif
   int ioff, err=0;
   int i, x;
@@ -601,12 +598,9 @@ void sw_invert(const int ieo, const double mu) {
 void sw_deriv(const int ieo, const double mu) {
 #ifdef OMP
 #define static
-#endif
-
-#ifdef OMP
+  int icy;
 #pragma omp parallel
   {
-  int icy;
 #endif
 
   int ioff;

@@ -174,16 +174,19 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
 
 void clover_inv(const int ieo, spinor * const l, const double mu) {
 #ifdef OMP
+#define static
+  int icy;
 #pragma omp parallel
   {
-  su3_vector psi, chi, phi1, phi3;
-  int icy;
-#else
+#endif    
   static su3_vector psi, chi, phi1, phi3;
-#endif
   int ioff = 0;
   su3 *w1, *w2, *w3, *w4;
   spinor *rn;
+
+#ifdef OMP
+#undef static
+#endif
 
   if(mu < 0) ioff = VOLUME/2;
   /************************ loop over all lattice sites *************************/
@@ -244,16 +247,19 @@ void clover_gamma5(const int ieo,
 		   spinor * const l, spinor * const k, spinor * const j,
 		   const double mu) {
 #ifdef OMP
+#define static
 #pragma omp parallel
   {
-  su3_vector chi, psi1, psi2;
-#else
-  static su3_vector chi, psi1, psi2;
 #endif
+  static su3_vector chi, psi1, psi2;
   int ix;
   int ioff,icx;
   su3 *w1,*w2,*w3;
   spinor *r,*s,*t;
+
+#ifdef OMP
+#undef static
+#endif
 
   if(ieo == 0) {
     ioff = 0;
