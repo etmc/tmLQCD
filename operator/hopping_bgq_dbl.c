@@ -28,6 +28,7 @@
 #include "xlc_prefetch.h"
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
+#pragma disjoint(*l, *k)
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
@@ -50,7 +51,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
   spinor * restrict ALIGN sm;
   spinor * restrict ALIGN rn;
   
-#pragma disjoint(*sp, *sm, *rn, *up, *um, *l, *k)
+#pragma disjoint(*sp, *sm, *rn, *up, *um, *l)
   _declare_regs();
 
   if(ieo == 0){
