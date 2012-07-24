@@ -26,11 +26,113 @@
  *
  **********************************************************************/
 
-#ifndef OMP
-static su3_vector psi, chi;
-#endif
-
 #include"xlc_prefetch.h"
+
+#define _declare_regs()	     \
+  su3_vector ALIGN psi, chi; \
+  spinor ALIGN temp;
+
+#define _hop_t_p()				\
+  _vector_add(psi,sp->s0,sp->s2);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka0,chi);		\
+  _vector_assign(temp.s0,psi);			\
+  _vector_assign(temp.s2,psi);			\
+  _vector_add(psi,sp->s1,sp->s3);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka0,chi);		\
+  _vector_assign(temp.s1,psi);			\
+  _vector_assign(temp.s3,psi);
+  
+#define _hop_t_m()				\
+  _vector_sub(psi,sm->s0,sm->s2);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka0,chi);	\
+  _vector_add_assign(temp.s0,psi);		\
+  _vector_sub_assign(temp.s2,psi);		\
+  _vector_sub(psi,sm->s1,sm->s3);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka0,chi);	\
+  _vector_add_assign(temp.s1,psi);		\
+  _vector_sub_assign(temp.s3,psi);
+
+#define _hop_x_p()				\
+  _vector_i_add(psi,sp->s0,sp->s3);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka1,chi);		\
+  _vector_add_assign(temp.s0,psi);		\
+  _vector_i_sub_assign(temp.s3,psi);		\
+  _vector_i_add(psi,sp->s1,sp->s2);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka1,chi);		\
+  _vector_add_assign(temp.s1,psi);		\
+  _vector_i_sub_assign(temp.s2,psi);
+
+#define _hop_x_m()				\
+  _vector_i_sub(psi,sm->s0,sm->s3);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka1,chi);	\
+  _vector_add_assign(temp.s0,psi);		\
+  _vector_i_add_assign(temp.s3,psi);		\
+  _vector_i_sub(psi,sm->s1,sm->s2);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka1,chi);	\
+  _vector_add_assign(temp.s1,psi);		\
+  _vector_i_add_assign(temp.s2,psi);
+
+#define _hop_y_p()				\
+  _vector_add(psi,sp->s0,sp->s3);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka2,chi);		\
+  _vector_add_assign(temp.s0,psi);		\
+  _vector_add_assign(temp.s3,psi);		\
+  _vector_sub(psi,sp->s1,sp->s2);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka2,chi);		\
+  _vector_add_assign(temp.s1,psi);		\
+  _vector_sub_assign(temp.s2,psi);
+
+#define _hop_y_m()				\
+  _vector_sub(psi,sm->s0,sm->s3);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka2,chi);	\
+  _vector_add_assign(temp.s0,psi);		\
+  _vector_sub_assign(temp.s3,psi);		\
+  _vector_add(psi,sm->s1,sm->s2);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka2,chi);	\
+  _vector_add_assign(temp.s1,psi);		\
+  _vector_add_assign(temp.s2,psi);
+
+#define _hop_z_p()				\
+  _vector_i_add(psi,sp->s0,sp->s2);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka3,chi);		\
+  _vector_add_assign(temp.s0,psi);		\
+  _vector_i_sub_assign(temp.s2,psi);		\
+  _vector_i_sub(psi,sp->s1,sp->s3);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka3,chi);		\
+  _vector_add_assign(temp.s1,psi);		\
+  _vector_i_add_assign(temp.s3,psi);
+
+#define _hop_z_m()					\
+  _vector_i_sub(psi,sm->s0,sm->s2);			\
+  _su3_inverse_multiply(chi,(*um),psi);			\
+  _complexcjg_times_vector(psi,ka3,chi);		\
+  _vector_add_assign(temp.s0, psi);		\
+  _vector_i_add_assign(temp.s2, psi);		\
+  _vector_i_add(psi,sm->s1,sm->s3);			\
+  _su3_inverse_multiply(chi,(*um),psi);			\
+  _complexcjg_times_vector(psi,ka3,chi);		\
+  _vector_add_assign(temp.s1, psi);		\
+  _vector_i_sub_assign(temp.s3, psi);
+
+#define _store_res()				\
+  _vector_assign(rn->s0, temp.s0);		\
+  _vector_assign(rn->s1, temp.s1);		\
+  _vector_assign(rn->s2, temp.s2);		\
+  _vector_assign(rn->s3, temp.s3);		\
 
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
@@ -49,7 +151,6 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
   }
 #endif
 
-  /* for parallelization */
 #    if (defined MPI && !(defined _NO_COMM))
   xchange_field(k, ieo);
 #    endif
@@ -57,17 +158,18 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 #ifdef OMP
 #pragma omp parallel
   {
-  su3_vector psi, chi;
 #endif
+  int ioff;
+  int * hi;
   int ix,iy;
-  int ioff,ioff2,icx,icy;
-  su3 * restrict up, * restrict um;
-  spinor * restrict r, * restrict sp, * restrict sm;
-  spinor temp;
+  int icy;
+  su3 * restrict ALIGN up, * restrict ALIGN um;
+  spinor * restrict rn, * restrict sp, * restrict sm;
   
 #ifdef XLC
-#pragma disjoint(temp, *sp, *sm, *r, *up, *um)
+#pragma disjoint(temp, *sp, *sm, *rn, *up, *um)
 #endif
+  _declare_regs();
 
   if(ieo == 0){
     ioff = 0;
@@ -75,15 +177,14 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
   else{
     ioff = (VOLUME+RAND)/2;
   } 
-  ioff2 = (VOLUME+RAND)/2-ioff;
   /**************** loop over all lattice sites ****************/
 #ifdef OMP
 #pragma omp for
 #endif
-  for (icx = ioff; icx < (VOLUME/2 + ioff); icx++){
+  for (int icx = ioff; icx < (VOLUME/2 + ioff); icx++){
     ix=g_eo2lexic[icx];
 
-    r=l+(icx-ioff);
+    rn=l+(icx-ioff);
 
     /*********************** direction +0 ************************/
     iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
@@ -96,21 +197,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     up=&g_gauge_field[ix][0];
 #    endif
       
-    _vector_add(psi,sp->s0,sp->s2);
-
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka0,chi);
-      
-    _vector_assign(temp.s0,psi);
-    _vector_assign(temp.s2,psi);
-
-    _vector_add(psi,sp->s1,sp->s3);
-
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka0,chi);
-            
-    _vector_assign(temp.s1,psi);
-    _vector_assign(temp.s3,psi);
+    _hop_t_p();
 
     /*********************** direction -0 ************************/
 
@@ -123,21 +210,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     um=&g_gauge_field[iy][0];
 #    endif
 
-    _vector_sub(psi,sm->s0,sm->s2);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka0,chi);
-
-    _vector_add_assign(temp.s0,psi);
-    _vector_sub_assign(temp.s2,psi);
-
-    _vector_sub(psi,sm->s1,sm->s3);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka0,chi);
-      
-    _vector_add_assign(temp.s1,psi);
-    _vector_sub_assign(temp.s3,psi);
+    _hop_t_m();
 
     /*********************** direction +1 ************************/
 
@@ -150,22 +223,8 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 #    else
     up+=1;
 #    endif
-      
-    _vector_i_add(psi,sp->s0,sp->s3);
 
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka1,chi);
-
-    _vector_add_assign(temp.s0,psi);
-    _vector_i_sub_assign(temp.s3,psi);
-
-    _vector_i_add(psi,sp->s1,sp->s2);
-
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka1,chi);
-
-    _vector_add_assign(temp.s1,psi);
-    _vector_i_sub_assign(temp.s2,psi);
+    _hop_x_p();      
 
     /*********************** direction -1 ************************/
 
@@ -178,21 +237,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     um=up+1;
 #    endif
 
-    _vector_i_sub(psi,sm->s0,sm->s3);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka1,chi);
-
-    _vector_add_assign(temp.s0,psi);
-    _vector_i_add_assign(temp.s3,psi);
-
-    _vector_i_sub(psi,sm->s1,sm->s2);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka1,chi);
-
-    _vector_add_assign(temp.s1,psi);
-    _vector_i_add_assign(temp.s2,psi);
+    _hop_x_m();
 
     /*********************** direction +2 ************************/
 
@@ -204,22 +249,8 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 #    else
     up+=1;
 #    endif 
-    _vector_add(psi,sp->s0,sp->s3);
 
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka2,chi);
-
-    _vector_add_assign(temp.s0,psi);
-    _vector_add_assign(temp.s3,psi);
-
-    _vector_sub(psi,sp->s1,sp->s2);
-
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka2,chi);
-      
-    _vector_add_assign(temp.s1,psi);
-    _vector_sub_assign(temp.s2,psi);
-
+    _hop_y_p();
 
     /*********************** direction -2 ************************/
 
@@ -232,21 +263,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     um = up +1;
 #    endif
 
-    _vector_sub(psi,sm->s0,sm->s3);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka2,chi);
-
-    _vector_add_assign(temp.s0,psi);
-    _vector_sub_assign(temp.s3,psi);
-
-    _vector_add(psi,sm->s1,sm->s2);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka2,chi);
-      
-    _vector_add_assign(temp.s1,psi);
-    _vector_add_assign(temp.s2,psi);
+    _hop_y_m();
 
     /*********************** direction +3 ************************/
 
@@ -258,21 +275,8 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 #    else
     up+=1;
 #    endif 
-    _vector_i_add(psi,sp->s0,sp->s2);
-      
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka3,chi);
 
-    _vector_add_assign(temp.s0,psi);
-    _vector_i_sub_assign(temp.s2,psi);
-
-    _vector_i_sub(psi,sp->s1,sp->s3);
-
-    _su3_multiply(chi,(*up),psi);
-    _complex_times_vector(psi,ka3,chi);
-
-    _vector_add_assign(temp.s1,psi);
-    _vector_i_add_assign(temp.s3,psi);
+    _hop_z_p();
 
     /*********************** direction -3 ************************/
 
@@ -285,22 +289,9 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
     um = up+1;
 #    endif
 
-    _vector_i_sub(psi,sm->s0,sm->s2);
+    _hop_z_m();
 
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka3,chi);
-      
-    _vector_add(r->s0, temp.s0, psi);
-    _vector_i_add(r->s2, temp.s2, psi);
-
-    _vector_i_add(psi,sm->s1,sm->s3);
-
-    _su3_inverse_multiply(chi,(*um),psi);
-    _complexcjg_times_vector(psi,ka3,chi);
-
-    _vector_add(r->s1, temp.s1, psi);
-    _vector_i_sub(r->s3, temp.s3, psi);
-    /************************ end of loop ************************/
+    _store_res();
   }
 #ifdef OMP
   } /* OpenMP closing brace */
