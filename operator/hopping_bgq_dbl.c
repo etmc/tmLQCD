@@ -87,9 +87,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 #ifdef OMP
     hi = &g_hi[16*icx];
 #  if ((defined _GAUGE_COPY))
-    up=&g_gauge_field_copy[(*hi)][0];
+    up=&g_gauge_field_copy[icx][0];
 #  else
-    up=&g_gauge_field[ix][0];
+    up=&g_gauge_field[(*hi)][0];
 #  endif
     hi++;
     sp=k+(*hi);
