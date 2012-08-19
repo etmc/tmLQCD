@@ -1,7 +1,7 @@
 /**********************************************************************
  *
  *
- * Copyright (C) 2012 Carsten Urbach
+ * Copyright (C) 2012 Carsten Urbach, Bartosz Kostrzewa
  *
  * This file is based on an implementation of the Dirac operator 
  * written by Martin Luescher, modified by Martin Hasenbusch in 2002 
