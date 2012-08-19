@@ -84,7 +84,6 @@
 #endif
 #include "global.h"
 #include "su3.h"
-#include "sse.h"
 #ifdef MPI
 #  include "xchange_field.h"
 #  ifdef _USE_TSPLITPAR
@@ -101,6 +100,7 @@
 
 #if defined _USE_HALFSPINOR
 #  if ((defined SSE2)||(defined SSE3))
+#    include "sse.h"
 #    include "operator/halfspinor_sse_dbl.c"
 
 #  elif (defined BGL && defined XLC)
@@ -118,19 +118,32 @@
 
 #else /* thats _USE_HALFSPINOR */
 
-#  if ((defined SSE2)||(defined SSE3))
+#  if (((defined SSE2)||(defined SSE3)) && defined _USE_TSPLITPAR)
+#    include "sse.h"
 #    include "operator/hopping_sse_dbl.c"
-
-#  elif (defined BGQ && defined XLC)
-#    include "bgq.h"
-#    include "operator/hopping_bgq_dbl.c"
 
 #  elif (defined BGL && defined XLC)
 #    include "bgl.h"
 #    include "operator/hopping_bg_dbl.c"
 
 #  else
-#    include "operator/hopping_dbl.c"
+#    if ((defined SSE2)||(defined SSE3))
+#      include "sse.h"
+
+#    elif (defined BGQ && defined XLC)
+#      include "bgq.h"
+#      include "xlc_prefetch.h"
+
+#    elif defined XLC
+#      include"xlc_prefetch.h"
+
+#    endif
+void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
+
+#    include "operator/hopping_body_dbl.c"
+
+  return;
+}
 #  endif
 
 #endif /* thats _USE_HALFSPINOR */

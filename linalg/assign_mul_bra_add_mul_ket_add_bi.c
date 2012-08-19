@@ -15,8 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
  *
  * File assign_mul_bra_add_mul_ket_add.c
  *
@@ -38,8 +36,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "sse.h"
 #include "su3.h"
+#include "sse.h"
 #include "assign_mul_bra_add_mul_ket_add_bi.h"
 
 /* R inoutput, S input, U input, c1 input, c2 input */

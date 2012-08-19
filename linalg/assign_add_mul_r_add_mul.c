@@ -29,9 +29,9 @@
 #ifdef OMP
 # include <omp.h>
 #endif
-#include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
+#include "sse.h"
 #include "assign_add_mul_r_add_mul.h"
 
 #if ( defined SSE2 || defined SSE3 )

@@ -15,9 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-
-/************************************************************************
  *
  *      Adpated routine evaluating the P=P+c*Q where P,Q are bispinors
  *
@@ -38,8 +35,8 @@
 #ifdef OMP
 # include <omp.h>
 #endif
-#include "sse.h"
 #include "su3.h"
+#include "sse.h"
 #include "assign_add_mul_r_bi.h"
 
 

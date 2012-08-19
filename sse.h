@@ -1524,6 +1524,252 @@ __asm__ __volatile__ ("movapd %%xmm0, %0 \n\t" \
 
 #endif
 
-#ifdef MAIN_PROGRAM
+#if (defined SSE || defined SSE2 || defined SSE3)
+
+#ifdef _declare_regs
+#  undef _declare_regs
 #endif
+#define _declare_regs()				\
+  spinor ALIGN rs;
+
+#ifdef _hop_t_p
+#  undef _hop_t_p
+#endif
+#define _hop_t_p()				\
+  _prefetch_su3(um);				\
+  _sse_load(sp->s0);				\
+  _sse_load_up(sp->s2);				\
+  _sse_vector_add();				\
+  _sse_su3_multiply((*up));			\
+  _sse_vector_cmplx_mul(ka0);			\
+  _sse_store_up(rs.s0);				\
+  _sse_store_up(rs.s2);				\
+  _sse_load(sp->s1);				\
+  _sse_load_up(sp->s3);				\
+  _sse_vector_add();				\
+  _sse_su3_multiply((*up));			\
+  _sse_vector_cmplx_mul(ka0);			\
+  _sse_store_up(rs.s1);				\
+  _sse_store_up(rs.s3);
+
+#ifdef _hop_t_m
+#  undef _hop_t_m
+#endif
+#define _hop_t_m()				\
+  _prefetch_su3(up);				\
+  _sse_load(sm->s0);				\
+  _sse_load_up(sm->s2);				\
+  _sse_vector_sub();				\
+  _sse_su3_inverse_multiply((*um));		\
+  _sse_vector_cmplxcg_mul(ka0);			\
+  _sse_load(rs.s0);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s0);				\
+  _sse_load(rs.s2);				\
+  _sse_vector_sub();				\
+  _sse_store(rs.s2);				\
+  _sse_load(sm->s1);				\
+  _sse_load_up(sm->s3);				\
+  _sse_vector_sub();				\
+  _sse_su3_inverse_multiply((*um));		\
+  _sse_vector_cmplxcg_mul(ka0);			\
+  _sse_load(rs.s1);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s1);				\
+  _sse_load(rs.s3);				\
+  _sse_vector_sub();				\
+  _sse_store(rs.s3);
+
+#ifdef _hop_x_p
+#  undef _hop_x_p
+#endif
+#define _hop_x_p()				\
+  _prefetch_su3(um);				\
+  _sse_load(sp->s0);				\
+  _sse_load_up(sp->s3);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_add();				\
+  _sse_su3_multiply((*up));			\
+  _sse_vector_cmplx_mul(ka1);			\
+  _sse_load(rs.s0);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s0);				\
+  _sse_load(rs.s3);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_sub();				\
+  _sse_store(rs.s3);				\
+  _sse_load(sp->s1);				\
+  _sse_load_up(sp->s2);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_add();				\
+  _sse_su3_multiply((*up));			\
+  _sse_vector_cmplx_mul(ka1);			\
+  _sse_load(rs.s1);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s1);				\
+  _sse_load(rs.s2);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_sub();				\
+  _sse_store(rs.s2);
+
+#ifdef _hop_x_m
+#  undef _hop_x_m
+#endif
+#define _hop_x_m()				\
+  _prefetch_su3(up);				\
+  _sse_load(sm->s0);				\
+  _sse_load_up(sm->s3);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_sub();				\
+  _sse_su3_inverse_multiply((*um));		\
+  _sse_vector_cmplxcg_mul(ka1);			\
+  _sse_load(rs.s0);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s0);				\
+  _sse_load(rs.s3);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_add();				\
+  _sse_store(rs.s3);				\
+  _sse_load(sm->s1);				\
+  _sse_load_up(sm->s2);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_sub();				\
+  _sse_su3_inverse_multiply((*um));		\
+  _sse_vector_cmplxcg_mul(ka1);			\
+  _sse_load(rs.s1);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s1);				\
+  _sse_load(rs.s2);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_add();				\
+  _sse_store(rs.s2);
+
+#ifdef _hop_y_p
+#  undef _hop_y_p
+#endif
+#define _hop_y_p()				\
+  _prefetch_su3(um);				\
+  _sse_load(sp->s0);				\
+  _sse_load_up(sp->s3);				\
+  _sse_vector_add();				\
+  _sse_su3_multiply((*up));			\
+  _sse_vector_cmplx_mul(ka2);			\
+  _sse_load(rs.s0);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s0);				\
+  _sse_load(rs.s3);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s3);				\
+  _sse_load(sp->s1);				\
+  _sse_load_up(sp->s2);				\
+  _sse_vector_sub();				\
+  _sse_su3_multiply((*up));			\
+  _sse_vector_cmplx_mul(ka2);			\
+  _sse_load(rs.s1);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s1);				\
+  _sse_load(rs.s2);				\
+  _sse_vector_sub();				\
+  _sse_store(rs.s2);      
+
+#ifdef _hop_y_m
+#  undef _hop_y_m
+#endif
+#define _hop_y_m()				\
+  _prefetch_su3(up);				\
+  _sse_load(sm->s0);				\
+  _sse_load_up(sm->s3);				\
+  _sse_vector_sub();				\
+  _sse_su3_inverse_multiply((*um));		\
+  _sse_vector_cmplxcg_mul(ka2);			\
+  _sse_load(rs.s0);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s0);				\
+  _sse_load(rs.s3);				\
+  _sse_vector_sub();				\
+  _sse_store(rs.s3);				\
+  _sse_load(sm->s1);				\
+  _sse_load_up(sm->s2);				\
+  _sse_vector_add();				\
+  _sse_su3_inverse_multiply((*um));		\
+  _sse_vector_cmplxcg_mul(ka2);			\
+  _sse_load(rs.s1);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s1);				\
+  _sse_load(rs.s2);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s2);
+
+#ifdef _hop_z_p
+#  undef _hop_z_p
+#endif
+#define _hop_z_p()				\
+  _prefetch_su3(um);				\
+  _sse_load(sp->s0);				\
+  _sse_load_up(sp->s2);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_add();				\
+  _sse_su3_multiply((*up));			\
+  _sse_vector_cmplx_mul(ka3);			\
+  _sse_load(rs.s0);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s0);				\
+  _sse_load(rs.s2);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_sub();				\
+  _sse_store(rs.s2);				\
+  _sse_load(sp->s1);				\
+  _sse_load_up(sp->s3);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_sub();				\
+  _sse_su3_multiply((*up));			\
+  _sse_vector_cmplx_mul(ka3);			\
+  _sse_load(rs.s1);				\
+  _sse_vector_add();				\
+  _sse_store(rs.s1);				\
+  _sse_load(rs.s3);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_add();				\
+  _sse_store(rs.s3);
+
+#ifdef _hop_z_m
+#  undef _hop_z_m
+#endif
+#define _hop_z_m()				\
+  _prefetch_su3(up);				\
+  _sse_load(sm->s0);				\
+  _sse_load_up(sm->s2);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_sub();				\
+  _sse_su3_inverse_multiply((*um));		\
+  _sse_vector_cmplxcg_mul(ka3);			\
+  rn=l+(icx-ioff);				\
+  _sse_load(rs.s0);				\
+  _sse_vector_add();				\
+  _sse_store_nt(rn->s0);			\
+  _sse_load(rs.s2);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_add();				\
+  _sse_store_nt(rn->s2);			\
+  _sse_load(sm->s1);				\
+  _sse_load_up(sm->s3);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_add();				\
+  _sse_su3_inverse_multiply((*um));		\
+  _sse_vector_cmplxcg_mul(ka3);			\
+  _sse_load(rs.s1);				\
+  _sse_vector_add();				\
+  _sse_store_nt(rn->s1);			\
+  _sse_load(rs.s3);				\
+  _sse_vector_i_mul();				\
+  _sse_vector_sub();				\
+  _sse_store_nt(rn->s3);
+
+#ifdef _store_res
+#  undef _store_res
+#endif
+#define _store_res()
+
+#endif
+
 #endif

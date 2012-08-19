@@ -18,21 +18,19 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
-*
-* File su3.h
-*
-* Type definitions and macros for SU(3) matrices and spinors  
-*
-* Version: 1.0
-* Author: Martin Luescher <luscher@mail.desy.de>
-* Date: 24.10.2000
-*
-* Extended by Martin Hasenbusch 2001.  <Martin.Hasenbusch@desy.de>
-* Rewritten for C99 complex by Albert Deuzeman 2012 <deuzeman@itp.unibe.ch>
-*
-*******************************************************************************/
+ *
+ * File su3.h
+ *
+ * Type definitions and macros for SU(3) matrices and spinors  
+ *
+ * Version: 1.0
+ * Author: Martin Luescher <luscher@mail.desy.de>
+ * Date: 24.10.2000
+ *
+ * Extended by Martin Hasenbusch 2001.  <Martin.Hasenbusch@desy.de>
+ * Rewritten for C99 complex by Albert Deuzeman 2012 <deuzeman@itp.unibe.ch>
+ *
+ *******************************************************************************/
 
 #include <complex.h>
 #if (defined XLC && defined BGL)
@@ -665,5 +663,112 @@ _sse_store_up(r);
   (t).c20 = (u).c2 * conj((v).c0) + (w).c2 * conj((z).c0);	\
   (t).c21 = (u).c2 * conj((v).c1) + (w).c2 * conj((z).c1);	\
   (t).c22 = (u).c2 * conj((v).c2) + (w).c2 * conj((z).c2);
+
+
+#define _declare_regs()	     \
+  su3_vector ALIGN psi, chi; \
+  spinor ALIGN temp;
+
+#define _hop_t_p()				\
+  _vector_add(psi,sp->s0,sp->s2);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka0,chi);		\
+  _vector_assign(temp.s0,psi);			\
+  _vector_assign(temp.s2,psi);			\
+  _vector_add(psi,sp->s1,sp->s3);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka0,chi);		\
+  _vector_assign(temp.s1,psi);			\
+  _vector_assign(temp.s3,psi);
+  
+#define _hop_t_m()				\
+  _vector_sub(psi,sm->s0,sm->s2);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka0,chi);	\
+  _vector_add_assign(temp.s0,psi);		\
+  _vector_sub_assign(temp.s2,psi);		\
+  _vector_sub(psi,sm->s1,sm->s3);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka0,chi);	\
+  _vector_add_assign(temp.s1,psi);		\
+  _vector_sub_assign(temp.s3,psi);
+
+#define _hop_x_p()				\
+  _vector_i_add(psi,sp->s0,sp->s3);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka1,chi);		\
+  _vector_add_assign(temp.s0,psi);		\
+  _vector_i_sub_assign(temp.s3,psi);		\
+  _vector_i_add(psi,sp->s1,sp->s2);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka1,chi);		\
+  _vector_add_assign(temp.s1,psi);		\
+  _vector_i_sub_assign(temp.s2,psi);
+
+#define _hop_x_m()				\
+  _vector_i_sub(psi,sm->s0,sm->s3);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka1,chi);	\
+  _vector_add_assign(temp.s0,psi);		\
+  _vector_i_add_assign(temp.s3,psi);		\
+  _vector_i_sub(psi,sm->s1,sm->s2);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka1,chi);	\
+  _vector_add_assign(temp.s1,psi);		\
+  _vector_i_add_assign(temp.s2,psi);
+
+#define _hop_y_p()				\
+  _vector_add(psi,sp->s0,sp->s3);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka2,chi);		\
+  _vector_add_assign(temp.s0,psi);		\
+  _vector_add_assign(temp.s3,psi);		\
+  _vector_sub(psi,sp->s1,sp->s2);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka2,chi);		\
+  _vector_add_assign(temp.s1,psi);		\
+  _vector_sub_assign(temp.s2,psi);
+
+#define _hop_y_m()				\
+  _vector_sub(psi,sm->s0,sm->s3);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka2,chi);	\
+  _vector_add_assign(temp.s0,psi);		\
+  _vector_sub_assign(temp.s3,psi);		\
+  _vector_add(psi,sm->s1,sm->s2);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka2,chi);	\
+  _vector_add_assign(temp.s1,psi);		\
+  _vector_add_assign(temp.s2,psi);
+
+#define _hop_z_p()				\
+  _vector_i_add(psi,sp->s0,sp->s2);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka3,chi);		\
+  _vector_add_assign(temp.s0,psi);		\
+  _vector_i_sub_assign(temp.s2,psi);		\
+  _vector_i_sub(psi,sp->s1,sp->s3);		\
+  _su3_multiply(chi,(*up),psi);			\
+  _complex_times_vector(psi,ka3,chi);		\
+  _vector_add_assign(temp.s1,psi);		\
+  _vector_i_add_assign(temp.s3,psi);
+
+#define _hop_z_m()					\
+  _vector_i_sub(psi,sm->s0,sm->s2);			\
+  _su3_inverse_multiply(chi,(*um),psi);			\
+  _complexcjg_times_vector(psi,ka3,chi);		\
+  _vector_add_assign(temp.s0, psi);		\
+  _vector_i_add_assign(temp.s2, psi);		\
+  _vector_i_add(psi,sm->s1,sm->s3);			\
+  _su3_inverse_multiply(chi,(*um),psi);			\
+  _complexcjg_times_vector(psi,ka3,chi);		\
+  _vector_add_assign(temp.s1, psi);		\
+  _vector_i_sub_assign(temp.s3, psi);
+
+#define _store_res()				\
+  _vector_assign(rn->s0, temp.s0);		\
+  _vector_assign(rn->s1, temp.s1);		\
+  _vector_assign(rn->s2, temp.s2);		\
+  _vector_assign(rn->s3, temp.s3);		\
 
 #endif

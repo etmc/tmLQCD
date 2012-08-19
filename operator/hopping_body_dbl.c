@@ -24,11 +24,9 @@
  *
  **********************************************************************/
 
-#include "bgq.h"
-#include "xlc_prefetch.h"
-
-void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
-#pragma disjoint(*l, *k)
+#ifdef XLC
+#  pragma disjoint(*l, *k)
+#endif
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
@@ -51,7 +49,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
   spinor * restrict ALIGN sm;
   spinor * restrict ALIGN rn;
   
-#pragma disjoint(*sp, *sm, *rn, *up, *um, *l)
+#ifdef XLC
+#  pragma disjoint(*sp, *sm, *rn, *up, *um, *l)
+#endif
   _declare_regs();
 
   if(ieo == 0){
@@ -195,5 +195,3 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
-  return;
-}
