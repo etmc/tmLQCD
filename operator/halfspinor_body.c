@@ -1,7 +1,6 @@
 /**********************************************************************
  *
- *
- * Copyright (C) 2012 Carsten Urbach
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Carsten Urbach
  *
  * BG and halfspinor versions (C) 2007, 2008 Carsten Urbach
  *
@@ -27,19 +26,15 @@
  **********************************************************************/
 
 
+/* l output , k input*/
+/* for ieo=0, k resides on  odd sites and l on even sites */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
-  int ix;
-  su3 * restrict ALIGN U;
-  spinor * restrict ALIGN s;
-  halfspinor * restrict * phi ALIGN;
-  halfspinor32 * restrict * phi32 ALIGN;
-  /* We have 32 registers available */
-  _declare_hregs();
-
-#ifdef _KOJAK_INST
-#pragma pomp inst begin(hoppingmatrix)
-#endif
-#pragma disjoint(*s, *U)
+  if(k == l){
+    printf("Error in H_psi (simple.c):\n");
+    printf("Arguments k and l must be different\n");
+    printf("Program aborted\n");
+    exit(1);
+  }
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
@@ -47,43 +42,84 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   }
 #endif
 
-  __alignx(16, l);
-  __alignx(16, k);
+#ifdef OMP
+#pragma omp parallel
+  {
+  su3 * restrict U0 ALIGN;
+#endif
+
+  int ix;
+  su3 * restrict U ALIGN;
+  spinor * restrict s ALIGN;
+  halfspinor * restrict * phi ALIGN;
+  halfspinor32 * restrict * phi32 ALIGN;
+  _declare_hregs();
+
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(hoppingmatrix)
+#endif
+#ifdef XLC
+#pragma disjoint(*l, *k)
+#pragma disjoint(*k, *U)
+#pragma disjoint(*l, *U)
+#pragma disjoint(*U, *s)
+#pragma disjoint(*k, *s)
+#pragma disjoint(*l, *s)
+  __alignx(32, l);
+  __alignx(32, k);
+  __alignx(32, U);
+  __alignx(32, s);
+#endif
+
+#ifndef OMP  
+  s = k;
+  _prefetch_spinor(s);
+  if(ieo == 0) {
+    U = g_gauge_field_copy[0][0];
+  }
+  else {
+    U = g_gauge_field_copy[1][0];
+  }
+  _prefetch_su3(U);
+#else
+  if(ieo == 0) {
+    U0 = g_gauge_field_copy[0][0];
+  }
+  else {
+    U0 = g_gauge_field_copy[1][0];
+  }
+#endif
+#if (defined SSE2 || defined SSE3)
+  g_sloppy_precision = 0;
+#endif
   if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
-    __alignx(16, HalfSpinor32);
-    /* We will run through the source vector now */
-    /* instead of the solution vector            */
-    s = k;
-    _prefetch_spinor(s); 
-
-    /* s contains the source vector */
-
-    if(ieo == 0) {
-      U = g_gauge_field_copy[0][0];
-    }
-    else {
-      U = g_gauge_field_copy[1][0];
-    }
     phi32 = NBPointer32[ieo];
-
-    _prefetch_su3(U);
-    /**************** loop over all lattice sites ******************/
+      
+    /**************** loop over all lattice sites ****************/
+#ifdef OMP
+#pragma omp for
+#else
     ix=0;
+#endif
     for(int i = 0; i < (VOLUME)/2; i++){
+#ifdef OMP
+      U=U0+i*4;
+      s=k+i;
+      ix=i*8;
+#endif
       /*********************** direction +0 ************************/
       _hop_t_p_pre32();
-      s++; 
       U++;
       ix++;
-
+    
       /*********************** direction -0 ************************/
       _hop_t_m_pre32();
       ix++;
 
       /*********************** direction +1 ************************/
       _hop_x_p_pre32();
-      ix++;
       U++;
+      ix++;
 
       /*********************** direction -1 ************************/
       _hop_x_m_pre32();
@@ -91,9 +127,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
       /*********************** direction +2 ************************/
       _hop_y_p_pre32();
-
-      ix++;
       U++;
+      ix++;
 
       /*********************** direction -2 ************************/
       _hop_y_m_pre32();
@@ -101,113 +136,144 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
       /*********************** direction +3 ************************/
       _hop_z_p_pre32();
-      ix++;
       U++;
+      ix++;
 
       /*********************** direction -3 ************************/
       _hop_z_m_pre32();
-      ix++;
 
+#ifndef OMP
+      s++;
+      ix++;
+#endif
       /************************ end of loop ************************/
     }
+
+#ifdef OMP
+#pragma omp single
+{
+#endif
 
 #    if (defined MPI && !defined _NO_COMM)
     xchange_halffield32(); 
 #    endif
+
+#ifdef OMP
+}
+#endif
+
+#ifndef OMP
     s = l;
-    phi32 = NBPointer32[2 + ieo];
     if(ieo == 0) {
       U = g_gauge_field_copy[1][0];
     }
     else {
       U = g_gauge_field_copy[0][0];
     }
-    //_prefetch_halfspinor(phi32[0]);
-    _prefetch_su3(U);
-  
-    /* Now we sum up and expand to a full spinor */
+#else
+    if(ieo == 0) {
+      U0 = g_gauge_field_copy[1][0];
+    }
+    else {
+      U0 = g_gauge_field_copy[0][0];
+    }
+#endif
+   
+   phi32 = NBPointer32[2 + ieo];
+
+#ifdef OMP
+#pragma omp for
+#else
     ix = 0;
-    /*   _prefetch_spinor_for_store(s); */
+#endif
     for(int i = 0; i < (VOLUME)/2; i++){
-      /* This causes a lot of trouble, do we understand this? */
-      /*     _prefetch_spinor_for_store(s); */
-      //_prefetch_halfspinor(phi32[ix+1]);
+#ifdef OMP
+      ix=i*8;
+      s=l+i;
+      U=U0+i*4;
+#endif
       /*********************** direction +0 ************************/
       _hop_t_p_post32();
       ix++;
+
       /*********************** direction -0 ************************/
       _hop_t_m_post32();
-      U++;
       ix++;
+      U++;
+
       /*********************** direction +1 ************************/
       _hop_x_p_post32();
       ix++;
+
       /*********************** direction -1 ************************/
       _hop_x_m_post32();
       U++;
       ix++;
+
       /*********************** direction +2 ************************/
       _hop_y_p_post32();
       ix++;
+      
       /*********************** direction -2 ************************/
       _hop_y_m_post32();
       U++;
       ix++;
+
       /*********************** direction +3 ************************/
       _hop_z_p_post32();
       ix++;
+
       /*********************** direction -3 ************************/
       _hop_z_m_post32();
+
+#ifndef OMP
       U++;
       ix++;
       s++;
+#endif
     }
   }
   else {
-    __alignx(16, HalfSpinor);
-    /* We will run through the source vector now */
-    /* instead of the solution vector            */
-    s = k;
-    _prefetch_spinor(s); 
-
-    /* s contains the source vector */
-
-    if(ieo == 0) {
-      U = g_gauge_field_copy[0][0];
-    }
-    else {
-      U = g_gauge_field_copy[1][0];
-    }
     phi = NBPointer[ieo];
-
-    _prefetch_su3(U);
-    /**************** loop over all lattice sites ******************/
+      
+    /**************** loop over all lattice sites ****************/
+#ifdef OMP
+#pragma omp for
+#else
     ix=0;
+#endif
+    /* #pragma ivdep*/
     for(int i = 0; i < (VOLUME)/2; i++){
+#ifdef OMP
+      s=k+i;
+    _prefetch_spinor(s);
+      ix=i*8;
+      U=U0+i*4;
+    _prefetch_su3(U);
+#endif
+
       /*********************** direction +0 ************************/
       _hop_t_p_pre();
-      s++; 
       U++;
       ix++;
-
+    
       /*********************** direction -0 ************************/
       _hop_t_m_pre();
       ix++;
 
       /*********************** direction +1 ************************/
       _hop_x_p_pre();
-      ix++;
       U++;
+      ix++;
 
       /*********************** direction -1 ************************/
       _hop_x_m_pre();
       ix++;
 
-
       /*********************** direction +2 ************************/
       _hop_y_p_pre();
-      ix++;
       U++;
+      ix++;
 
       /*********************** direction -2 ************************/
       _hop_y_m_pre();
@@ -215,23 +281,34 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
       /*********************** direction +3 ************************/
       _hop_z_p_pre();
-      ix++;
       U++;
+      ix++;
 
       /*********************** direction -3 ************************/
       _hop_z_m_pre();
+
+#ifndef OMP
+      s++;            
       ix++;
-
+#endif
       /************************ end of loop ************************/
-
     }
+
+#ifdef OMP
+#pragma omp single
+{
+#endif
 
 #    if (defined MPI && !defined _NO_COMM)
     xchange_halffield(); 
 #    endif
+
+#ifdef OMP
+}
+#endif
+
+#ifndef OMP
     s = l;
-    phi = NBPointer[2 + ieo];
-    //_prefetch_halfspinor(phi[0]);
     if(ieo == 0) {
       U = g_gauge_field_copy[1][0];
     }
@@ -239,46 +316,78 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       U = g_gauge_field_copy[0][0];
     }
     _prefetch_su3(U);
-  
-    /* Now we sum up and expand to a full spinor */
+#else
+    if(ieo == 0) {
+      U0 = g_gauge_field_copy[1][0];
+    }
+    else {
+      U0 = g_gauge_field_copy[0][0];
+    }
+#endif
+
+    phi = NBPointer[2 + ieo];
+
+#ifdef OMP
+#pragma omp for
+#else
     ix = 0;
-    /*   _prefetch_spinor_for_store(s); */
+#endif
+    /* #pragma ivdep */
     for(int i = 0; i < (VOLUME)/2; i++){
-      /* This causes a lot of trouble, do we understand this? */
-      /*     _prefetch_spinor_for_store(s); */
-      //_prefetch_halfspinor(phi[ix+1]);
+#ifdef OMP
+      ix=i*8;
+      U=U0+i*4;
+      _prefetch_su3(U);
+      s=l+i;
+#endif
+
       /*********************** direction +0 ************************/
       _hop_t_p_post();
       ix++;
+
       /*********************** direction -0 ************************/
       _hop_t_m_post();
-      U++;
       ix++;
+      U++;
+
       /*********************** direction +1 ************************/
       _hop_x_p_post();
       ix++;
+
       /*********************** direction -1 ************************/
       _hop_x_m_post();
       U++;
       ix++;
+
       /*********************** direction +2 ************************/
       _hop_y_p_post();
       ix++;
+
       /*********************** direction -2 ************************/
       _hop_y_m_post();
       U++;
       ix++;
+
       /*********************** direction +3 ************************/
       _hop_z_p_post();
       ix++;
+
       /*********************** direction -3 ************************/
       _hop_z_m_post();
+
+#ifndef OMP
       U++;
       ix++;
       s++;
+#endif
     }
   }
 #ifdef _KOJAK_INST
 #pragma pomp inst end(hoppingmatrix)
 #endif
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 }

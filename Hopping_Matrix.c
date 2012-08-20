@@ -47,30 +47,6 @@
  *
  * - the numbers represent the certain implementation of Hopping_Matrix
  *
- * #if defined _USE_HALFSPINOR
- *   #if ((defined SSE2)||(defined SSE3))
- *     1. 
- *    #elif (defined BGL && defined XLC)
- *     2.
- *   #else
- *     3.
- *   #endif
- * #else * thats _USE_HALFSPINOR *
- *   #if ((defined SSE2)||(defined SSE3))
- *     #if (defined _USE_TSPLITPAR)
- *     4.
- *     #else
- *     5.
- *     #endif
- *   #elif (defined BGL && defined XLC)
- *     6.
- *   #elif defined XLC
- *     7.
- *   * else of If defined SSE2  and if defined XLC *
- *   #else
- *     8.
- *   #endif
- * #endif * thats _USE_HALFSPINOR *
  *
  ****************************************************************/
 
@@ -99,22 +75,22 @@
 #include "Hopping_Matrix.h"
 
 #if defined _USE_HALFSPINOR
+#  include "operator/halfspinor_hopping.h"
+
 #  if ((defined SSE2)||(defined SSE3))
 #    include "sse.h"
-#    include "operator/halfspinor_sse_dbl.c"
 
 #  elif (defined BGL && defined XLC)
 #    include "bgl.h"
-#    include "operator/halfspinor_bg_dbl.c"
 
 #  elif (defined BGQ && defined XLC)
 #    include "bgq.h"
-#    include "operator/halfspinor_bgq_dbl.c"
-
-#  else
-#    include "operator/halfspinor_dbl.c"
+#    include "bgq2.h"
+#    include "xlc_prefetch.h"
 
 #  endif
+
+#  include "operator/halfspinor_body.c"
 
 #else /* thats _USE_HALFSPINOR */
 
@@ -122,16 +98,17 @@
 #    include "sse.h"
 #    include "operator/hopping_sse_dbl.c"
 
-#  elif (defined BGL && defined XLC)
-#    include "bgl.h"
-#    include "operator/hopping_bg_dbl.c"
-
 #  else
+#    include "operator/hopping.h"
 #    if ((defined SSE2)||(defined SSE3))
 #      include "sse.h"
 
+#    elif (defined BGL && defined XLC)
+#      include "bgl.h"
+
 #    elif (defined BGQ && defined XLC)
 #      include "bgq.h"
+#      include "bgq2.h"
 #      include "xlc_prefetch.h"
 
 #    elif defined XLC
