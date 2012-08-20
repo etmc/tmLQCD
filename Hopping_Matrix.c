@@ -90,7 +90,12 @@
 
 #  endif
 
+void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+
 #  include "operator/halfspinor_body.c"
+
+  return;
+}
 
 #else /* thats _USE_HALFSPINOR */
 

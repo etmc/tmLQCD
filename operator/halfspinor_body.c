@@ -28,7 +28,7 @@
 
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
-void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+
   if(k == l){
     printf("Error in H_psi (simple.c):\n");
     printf("Arguments k and l must be different\n");
@@ -390,4 +390,4 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   } /* OpenMP closing brace */
 #endif
 
-}
+
