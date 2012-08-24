@@ -34,16 +34,22 @@ int big_endian(){
   return(u.c[sizeof(int) - 1] == 1);
 }
 
-void write_su3(su3 * up, FILE * f) {
-  fprintf(f,"%f %f %f %f %f %f \n%f %f %f %f %f %f \n%f %f %f %f %f %f %d\n\n",
-	     creal(up->c00), cimag(up->c00), creal(up->c01), cimag(up->c01),
+void dump_su3(su3 * up, FILE * f) {
+  fprintf(f,"(%+7.4f %+7.4f i\t%+7.4f %+7.4f i\t%+7.4f %+7.4f i)\n(%+7.4f %+7.4f i\t%+7.4f %+7.4f i\t%+7.4f %+7.4f i)\n(%+7.4f %+7.4f i\t%+7.4f %+7.4f i\t%+7.4f %+7.4f i)\n\n",
+             creal(up->c00), cimag(up->c00), creal(up->c01), cimag(up->c01),
 	     creal(up->c02), cimag(up->c02), creal(up->c10), cimag(up->c10),
 	     creal(up->c11), cimag(up->c11), creal(up->c12), cimag(up->c12),
 	     creal(up->c20), cimag(up->c20), creal(up->c21), cimag(up->c21),
-	     creal(up->c22), cimag(up->c22), g_cart_id);
+	     creal(up->c22), cimag(up->c22));
 }
 
-
+void dump_spinor(spinor * up, FILE * f) {
+  fprintf(f,"(%+9.7f %+9.7f i\t%+9.7f %+9.7f i\t%+9.7f %+9.7f i)\n(%+9.7f %+9.7f i\t%+9.7f %+9.7f i\t%+9.7f %+9.7f i)\n(%+9.7f %+9.7f i\t%+9.7f %+9.7f i\t%+9.7f %+9.7f i)\n(%+9.7f %+9.7f i\t%+9.7f %+9.7f i\t%+9.7f %+9.7f i)\n\n",
+	     creal(up->s0.c0), cimag(up->s0.c0), creal(up->s0.c1), cimag(up->s0.c1), creal(up->s0.c2), cimag(up->s0.c2),
+	     creal(up->s1.c0), cimag(up->s1.c0), creal(up->s1.c1), cimag(up->s1.c1), creal(up->s1.c2), cimag(up->s1.c2),
+	     creal(up->s2.c0), cimag(up->s2.c0), creal(up->s2.c1), cimag(up->s2.c1), creal(up->s2.c2), cimag(up->s2.c2),
+             creal(up->s3.c0), cimag(up->s3.c0), creal(up->s3.c1), cimag(up->s3.c1), creal(up->s3.c2), cimag(up->s3.c2));
+}
 
 void single2double_cm(spinor * const R, float * const S) {
   R->s0.c0 = S[ 0] + S[ 1] * I;
