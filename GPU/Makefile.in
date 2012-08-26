@@ -10,7 +10,7 @@ bindir = @bindir@
 program_transform_name = @program_transform_name@
 subdir = .
 
-AR = ar
+AR = @AR@
 RANLIB = @RANLIB@
 CC = 
 CCDEP = 
