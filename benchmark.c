@@ -117,9 +117,12 @@ int main(int argc,char *argv[])
   }
 
 #ifdef OMP
-  if(omp_num_threads > 0)
+  if(omp_num_threads > 0) 
   {
-    omp_set_num_threads(omp_num_threads);
+     omp_set_num_threads(omp_num_threads);
+  }
+  else {
+    omp_num_threads = omp_get_max_threads();
   }
 #endif
 
@@ -251,7 +254,7 @@ int main(int argc,char *argv[])
 
   if(even_odd_flag) {
     /*initialize the pseudo-fermion fields*/
-    j_max=1;
+    j_max=2048;
     sdt=0.;
     for (k = 0; k < k_max; k++) {
       random_spinor_field(g_spinor_field[k], VOLUME/2, 0);
