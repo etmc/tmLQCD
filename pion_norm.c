@@ -39,7 +39,7 @@
 #include "measurements.h"
 #include "pion_norm.h"
 
-void pion_norm(const int traj, const int id) {
+void pion_norm(const int traj, const int id, const int ieo) {
   int i, j, z, zz, z0;
   double *Cpp;
   double res = 0.;
@@ -88,7 +88,7 @@ void pion_norm(const int traj, const int id) {
   /* invert on the stochastic source */
   invert_eo(g_spinor_field[2], g_spinor_field[3], 
             g_spinor_field[0], g_spinor_field[1],
-            1.e-14, measurement_list[id].max_iter, CG, 1, 0, 1, 0, NULL, -1);
+            1.e-14, measurement_list[id].max_iter, CG, 1, 0, ieo, 0, NULL, -1);
 
   /* now we bring it to normal format */
   /* here we use implicitly DUM_MATRIX and DUM_MATRIX+1 */
