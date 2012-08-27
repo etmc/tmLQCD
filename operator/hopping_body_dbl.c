@@ -24,23 +24,6 @@
  *
  **********************************************************************/
 
-#ifdef XLC
-#  pragma disjoint(*l, *k)
-#endif
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-  }
-#endif
-
-#if (defined MPI && !(defined _NO_COMM))
-  xchange_field(k, ieo);
-#endif
-
-#ifdef OMP
-#  pragma omp parallel
-  {
-#endif
   int ioff;
   int * hi;
   su3 * restrict ALIGN up;
@@ -190,8 +173,9 @@
 #endif
     _hop_z_m();
 
+#ifdef _MUL_G5_CMPLX
+    _hop_mul_g5_cmplx_and_store();
+#else
     _store_res();
-  }
-#ifdef OMP
-  } /* OpenMP closing brace */
 #endif
+  }

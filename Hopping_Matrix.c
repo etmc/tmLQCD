@@ -121,12 +121,81 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #    endif
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
+#    ifdef XLC
+#      pragma disjoint(*l, *k)
+#    endif
+#    ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#    endif
+
+#    if (defined MPI && !(defined _NO_COMM))
+  xchange_field(k, ieo);
+#    endif
+
+#    ifdef OMP
+#      pragma omp parallel
+  {
+#    endif
 
 #    include "operator/hopping_body_dbl.c"
 
+#    ifdef OMP
+  } /* OpenMP closing brace */
+#    endif
   return;
 }
 #  endif
 
 #endif /* thats _USE_HALFSPINOR */
 
+#if (!defined _NO_COMM && !defined _USE_HALFSPINOR)
+#include "operator/hopping.h"
+#if ((defined SSE2)||(defined SSE3))
+#  include "sse.h"
+
+#elif (defined BGL && defined XLC)
+#  include "bgl.h"
+
+#elif (defined BGQ && defined XLC)
+#  include "bgq.h"
+#  include "bgq2.h"
+#  include "xlc_prefetch.h"
+
+#elif defined XLC
+#  include"xlc_prefetch.h"
+
+#endif
+void complx_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, complex double const cfactor) {
+#ifdef XLC
+#  pragma disjoint(*l, *k)
+#endif
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#endif
+
+#if (defined MPI && !(defined _NO_COMM))
+  xchange_field(k, ieo);
+#endif
+
+#ifdef OMP
+#  pragma omp parallel
+  {
+#endif
+#define _MUL_G5_CMPLX
+#if (defined BGQ && defined XLC)
+    vector4double ALIGN cf = vec_ld2(0, (double*) &cfactor);
+#elif (defined SSE2 || defined SSE3)
+ _Complex double ALIGN cf = cfactor;
+#endif
+#include "operator/hopping_body_dbl.c"
+#undef _MUL_G5_CMPLX
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+  return;
+}
+#endif

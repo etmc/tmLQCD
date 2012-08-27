@@ -35,7 +35,7 @@
   vector4double ALIGN r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11; \
   vector4double ALIGN rs0, rs1, rs2, rs3, rs4, rs5, rs6, rs7, rs8, rs9, rs10, rs11; \
   vector4double ALIGN U0, U1, U2, U3, U4, U6, U7;			\
-  vector4double rtmp;							\
+  vector4double ALIGN rtmp;							\
   __alignx(16,l);							\
   __alignx(16,k);
 
@@ -144,6 +144,16 @@
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);			\
   _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U1);
+
+#define _hop_mul_g5_cmplx_and_store()					\
+  _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, rs0, rs1, rs2, rs3, rs4, rs5, cf); \
+  _vec_cmplxcg_mul_double2(r6, r7, r8, r9, r10, r11, rs6, rs7, rs8, rs9, rs10, rs11, cf); \
+  _vec_store2(rn->s0, r0, r1, r2);					\
+  _vec_store2(rn->s1, r3, r4, r5);					\
+  _vec_store2(rn->s2, r6, r7, r8);					\
+  _vec_store2(rn->s3, r9, r10, r11);
+
+#define _hop_mul_g5_cmplx_and_store()		\
 
 #define _store_res()				\
   _vec_store2(rn->s0, rs0, rs1, rs2);		\
@@ -508,6 +518,21 @@
   _sse_vector_sub();				\
   _sse_store_nt(rn->s3);
 
+#define _hop_mul_g5_cmplx_and_store()			\
+  _sse_load_up(rn->s0);					\
+  _sse_vector_cmplx_mul(cf);				\
+  _sse_store_nt_up(rn->s0);				\
+  _sse_load_up(rn->s1);					\
+  _sse_vector_cmplx_mul(cf);				\
+  _sse_store_nt_up(rn->s1);				\
+  _sse_load_up(rn->s2);					\
+  _sse_vector_cmplxcg_mul(cf);				\
+  _sse_store_nt_up(rn->s2);				\
+  _sse_load_up(rn->s3);					\
+  _sse_vector_cmplxcg_mul(cf);				\
+  _sse_store_nt_up(rn->s3);
+  
+
 #define _store_res()
 
 #  else
@@ -600,17 +625,23 @@
   _vector_add_assign(temp.s1,psi);		\
   _vector_i_add_assign(temp.s3,psi);
 
-#define _hop_z_m()					\
-  _vector_i_sub(psi,sm->s0,sm->s2);			\
-  _su3_inverse_multiply(chi,(*um),psi);			\
-  _complexcjg_times_vector(psi,ka3,chi);		\
+#define _hop_z_m()				\
+  _vector_i_sub(psi,sm->s0,sm->s2);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka3,chi);	\
   _vector_add_assign(temp.s0, psi);		\
   _vector_i_add_assign(temp.s2, psi);		\
-  _vector_i_add(psi,sm->s1,sm->s3);			\
-  _su3_inverse_multiply(chi,(*um),psi);			\
-  _complexcjg_times_vector(psi,ka3,chi);		\
+  _vector_i_add(psi,sm->s1,sm->s3);		\
+  _su3_inverse_multiply(chi,(*um),psi);		\
+  _complexcjg_times_vector(psi,ka3,chi);	\
   _vector_add_assign(temp.s1, psi);		\
   _vector_i_sub_assign(temp.s3, psi);
+
+#define _hop_mul_g5_cmplx_and_store()			\
+  _complex_times_vector(rn->s0, cfactor, temp.s0);	\
+  _complex_times_vector(rn->s1, cfactor, temp.s1);	\
+  _complexcjg_times_vector(rn->s2, cfactor, temp.s2);	\
+  _complexcjg_times_vector(rn->s3, cfactor, temp.s3);
 
 #define _store_res()				\
   _vector_assign(rn->s0, temp.s0);		\

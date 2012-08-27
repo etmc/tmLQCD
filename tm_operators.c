@@ -62,6 +62,8 @@ const int predist=2;
  * l is number of input and output field
  *
  ******************************************/
+void mul_one_pm_imu_inv_hop(spinor * const l, spinor * const k, 
+			    const int ieo, const double _sign);
 void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N);
 void mul_one_pm_imu(spinor * const l, const double _sign);
 /******************************************
@@ -194,8 +196,7 @@ void Qtm_plus_sym_psi_nocom(spinor * const l, spinor * const k){
  * on a half spinor
  ******************************************/
 void Qtm_minus_psi(spinor * const l, spinor * const k){
-  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1., VOLUME/2);
+  mul_one_pm_imu_inv_hop(g_spinor_field[DUM_MATRIX+1], k, EO, -1);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], -1.);
 }
@@ -304,13 +305,13 @@ void Mtm_minus_sym_psi_nocom(spinor * const l, spinor * const k) {
  ******************************************/
 void Qtm_pm_psi(spinor * const l, spinor * const k){
   /* Q_{-} */
-  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1., VOLUME/2);
+  mul_one_pm_imu_inv_hop(g_spinor_field[DUM_MATRIX+1], k, EO, -1);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   mul_one_pm_imu_sub_mul_gamma5(g_spinor_field[DUM_MATRIX], k, g_spinor_field[DUM_MATRIX], -1.);
   /* Q_{+} */
-  Hopping_Matrix(EO, l, g_spinor_field[DUM_MATRIX]);
-  mul_one_pm_imu_inv(l, +1., VOLUME/2);
+  //Hopping_Matrix(EO, l, g_spinor_field[DUM_MATRIX]);
+  //mul_one_pm_imu_inv(l, +1., VOLUME/2);
+  mul_one_pm_imu_inv_hop(l, g_spinor_field[DUM_MATRIX], EO, +1);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], l);
   mul_one_pm_imu_sub_mul_gamma5(l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], +1.);
 }
@@ -498,6 +499,26 @@ void H_eo_tm_inv_psi(spinor * const l, spinor * const k,
  *
  **********************************************/
 
+void mul_one_pm_imu_inv_hop(spinor * const l, spinor * const k, 
+			    const int ieo, const double _sign) {
+
+#ifdef _USE_HALFSPINOR
+  Hopping_Matrix(ieo, l, k);
+  mul_one_pm_imu_inv(l, _sign, VOLUME/2);
+#else
+  double ALIGN nrm = 1./(1.+g_mu*g_mu);
+  double sign=-1.; 
+  complex double z;
+  if(_sign < 0.){
+    sign = 1.; 
+  }
+
+  z = nrm + (sign * nrm * g_mu) * I;
+  complx_times_Hopping_Matrix(ieo, l, k, z);
+  return;
+#endif
+}
+
 void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
 #ifdef OMP
 #pragma omp parallel
@@ -518,10 +539,7 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
 #undef static
 #endif
   double ALIGN nrm = 1./(1.+g_mu*g_mu);
-#if (defined BGL3 && defined XLC)
-  double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
-  double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
-#elif (defined BGQ && defined XLC)
+#if (defined BGQ && defined XLC)
   vector4double r0, r1, r2, r3, r4, r5, rtmp;
   vector4double rs0, rs1, rs2, rs3, rs4, rs5;
 #endif
@@ -535,9 +553,6 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
   rtmp = vec_ld2(0, (double*) &z);
 #endif
   w = conj(z);
-#if (defined BGL3 && defined XLC)
-  __alignx(16,l);
-#endif
   /************ loop over all lattice sites ************/
 #ifdef OMP
 #pragma omp for
