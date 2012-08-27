@@ -2,6 +2,8 @@
 
 void free_stout_control(stout_control *control)
 {
+  if (!control)
+    return;
   if (!control->calculate_force_terms)
   {
     return_gauge_field(&control->U[1]);

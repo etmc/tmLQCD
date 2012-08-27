@@ -46,6 +46,8 @@ int init_gauge_field(const int V, const int back) {
   g_gauge_field_copy = NULL;
 #endif
 
+  
+
   if((void*)(g_gauge_field = (su3**)calloc(V, sizeof(su3*))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;

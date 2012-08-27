@@ -28,12 +28,12 @@ int parse_propagator_type(READER * reader) {
 
   while ((status = ReaderNextRecord(reader)) != LIME_EOF) {
     if (status != LIME_SUCCESS) {
-      fprintf(stderr, "ReaderNextRecord returned status %d.\n", status);
+      fprintf(stderr, "# ReaderNextRecord returned status %d.\n", status);
       break;
     }
     header_type = ReaderType(reader);
     if(g_cart_id == 0 && g_debug_level > 1) {
-      fprintf(stdout, "found header %s, will now read the message\n", header_type);
+      fprintf(stdout, "# Found header %s, will now read the message\n", header_type);
       fflush(stdout);
     }
     if (strcmp("propagator-type", header_type) == 0) {
@@ -49,7 +49,7 @@ int parse_propagator_type(READER * reader) {
       else if(strcmp("DiracFermion_Deflation_Field", prop_type_string) == 0)
         prop_type = 4;
       else {
-        fprintf(stderr,"Unrecognized propagator-type, found type: %s.\n", prop_type_string);
+        fprintf(stderr,"# Unrecognized propagator-type, found type: %s.\n", prop_type_string);
         break;
       }
       proptypefound = 1;
@@ -71,7 +71,7 @@ int parse_propagator_type(READER * reader) {
       else if(strcmp("DiracFermion_TwelveScalarSource", prop_type_string) == 0)
         prop_type = 13;
       else {
-        fprintf(stderr,"Unrecognized source-type, found type: %s\n", prop_type_string);
+        fprintf(stderr,"# Unrecognized source-type, found type: %s\n", prop_type_string);
         break;
       }
       sourcetypefound = 1;
@@ -83,7 +83,7 @@ int parse_propagator_type(READER * reader) {
       break;
     }
     if ((sourcetypefound || proptypefound) == 0) {
-      fprintf(stderr, "Unable to find either source-type or propagator-type record.\nWARNING: Continuing in blind faith.\n");
+      fprintf(stderr, "# Unable to find either source-type or propagator-type record.\nWARNING: Continuing in blind faith.\n");
     }
     close_reader_record(reader);
   }

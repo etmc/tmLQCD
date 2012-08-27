@@ -19,6 +19,7 @@ static void smear_plain(stout_control *control, gauge_field_t in)
         generic_staples(&staples, x, mu, in);
         fatten_links(&buffer.field[x][mu], control->rho, &staples, &in.field[x][mu]);
       }
+      dump_su3(buffer.field[0], stderr);
     /* Prepare for the next iteration, swap and exchange fields */
     swap_gauge_field(&control->U[1], &buffer);
     exchange_gauge_field(control->U[1]); /* The edge terms will have changed by now */

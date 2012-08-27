@@ -64,7 +64,7 @@
 #include "init_bispinor_field.h"
 #include "init_chi_spinor_field.h"
 #include "xchange_halffield.h"
-#include "smearing/stout.h"
+#include <smearing/stout.h>
 #include "invert_eo.h"
 #include "monomial.h"
 #include "ranlxd.h"
@@ -117,6 +117,7 @@ int main(int argc, char *argv[])
   double plaquette_energy;
   /* struct stout_parameters params_smear; */
   spinor **s, *s_;
+  stout_control *smear_control = NULL;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -175,6 +176,16 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
     exit(-1);
   }
+
+#ifdef OMP
+  if(omp_num_threads > 0)
+  {
+    omp_set_num_threads(omp_num_threads);
+  }
+#endif
+
+  /* Allocate needed memory */
+  initialize_gauge_buffers(5);
 
   /* this DBW2 stuff is not needed for the inversion ! */
   if (g_dflgcr_flag == 1) {
@@ -326,7 +337,7 @@ int main(int argc, char *argv[])
 
     /* DEBUG BLOCK! */
     use_stout_flag = 1;
-    stout_rho = 0.05;
+    stout_rho = 0.25;
     stout_no_iter = 1;
     /* END */
     if (use_stout_flag == 1){
@@ -341,7 +352,8 @@ int main(int argc, char *argv[])
       if (g_cart_id == 0) {
         printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
         fflush(stdout);
-      }*/
+      }
+    }
 
     if (reweighting_flag == 1) {
       reweighting_factor(reweighting_samples, nstore);
@@ -506,8 +518,10 @@ int main(int argc, char *argv[])
 #ifdef MPI
   MPI_Finalize();
 #endif
+  free_stout_control(smear_control);
   free_blocks();
   free_dfl_subspace();
+  finalize_gauge_buffers();
   free_gauge_field();
   free_geometry_indices();
   free_spinor_field();

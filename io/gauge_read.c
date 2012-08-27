@@ -49,24 +49,24 @@ int read_gauge_field(char * filename) {
 
   while ((status = ReaderNextRecord(reader)) != LIME_EOF) {
     if (status != LIME_SUCCESS) {
-      fprintf(stderr, "ReaderNextRecord returned status %d.\n", status);
+      fprintf(stderr, "# ReaderNextRecord returned status %d.\n", status);
       break;
     }
     header_type = ReaderType(reader);
 
     if(g_cart_id == 0 && g_debug_level > 1) {
-      fprintf(stdout, "found header %s, will now read the message\n", header_type);
+      fprintf(stdout, "# Found header %s, will now read the message\n", header_type);
     }
 
     if (strcmp("ildg-binary-data", header_type) == 0) {
       if (gauge_read_flag && !g_disable_IO_checks) { /* a previous ildg-binary-data record has already been read from this file */
-        fprintf(stderr, "In gauge file %s, multiple LIME records with name: \"ildg-binary-data\" found.\n", filename);
-        fprintf(stderr, "Unable to verify integrity of the gauge field data.\n");
+        fprintf(stderr, "# In gauge file %s, multiple LIME records with name: \"ildg-binary-data\" found.\n", filename);
+        fprintf(stderr, "# Unable to verify integrity of the gauge field data.\n");
         return(-1);
       }
       gauge_binary_status = read_binary_gauge_data(reader, &checksum_calc, ildgformat_input);
       if (gauge_binary_status) {
-        fprintf(stderr, "Gauge file reading failed at binary part, unable to proceed.\n");
+        fprintf(stderr, "# Gauge file reading failed at binary part, unable to proceed.\n");
         return(-1);
       }
       gauge_read_flag = 1;
@@ -81,8 +81,8 @@ int read_gauge_field(char * filename) {
       }
       else { /* checksum_string is not NULL, so a scidac-checksum record was already found */
         if (!g_disable_IO_checks) {
-          fprintf(stderr, "In gauge file %s, multiple LIME records with name: \"scidac-checksum\" found.\n", filename);
-          fprintf(stderr, "Unable to verify integrity of the gauge field data.\n");
+          fprintf(stderr, "# In gauge file %s, multiple LIME records with name: \"scidac-checksum\" found.\n", filename);
+          fprintf(stderr, "# Unable to verify integrity of the gauge field data.\n");
           return(-1);
         }
       }
@@ -101,8 +101,8 @@ int read_gauge_field(char * filename) {
       }
       else { /* ildgformat_string is not NULL, so a ildg-format record was already found */
         if (!g_disable_IO_checks) {
-          fprintf(stderr, "In gauge file %s, multiple LIME records with name: \"ildg-format\" found.\n", filename);
-          fprintf(stderr, "Unable to verify integrity of the gauge field data.\n");
+          fprintf(stderr, "# In gauge file %s, multiple LIME records with name: \"ildg-format\" found.\n", filename);
+          fprintf(stderr, "# Unable to verify integrity of the gauge field data.\n");
           return(-1);
         }
       }
@@ -113,20 +113,20 @@ int read_gauge_field(char * filename) {
   if (!g_disable_IO_checks) {
 
     if (!ildgformat_read_flag) {
-      fprintf(stderr, "LIME record with name: \"ildg-format\", in gauge file %s either missing or malformed.\n", filename);
-      fprintf(stderr, "Unable to verify gauge field size or precision.\n");
+      fprintf(stderr, "# LIME record with name: \"ildg-format\", in gauge file %s either missing or malformed.\n", filename);
+      fprintf(stderr, "# Unable to verify gauge field size or precision.\n");
       return(-1);
     }
 
     if (!gauge_read_flag) {
-      fprintf(stderr, "LIME record with name: \"ildg-binary-data\", in gauge file %s either missing or malformed.\n", filename);
-      fprintf(stderr, "No gauge field was read, unable to proceed.\n");
+      fprintf(stderr, "# LIME record with name: \"ildg-binary-data\", in gauge file %s either missing or malformed.\n", filename);
+      fprintf(stderr, "# No gauge field was read, unable to proceed.\n");
       return(-1);
     }
 
     if (!DML_read_flag) {
-      fprintf(stderr, "LIME record with name: \"scidac-checksum\", in gauge file %s either missing or malformed.\n", filename);
-      fprintf(stderr, "Unable to verify integrity of gauge field data.\n");
+      fprintf(stderr, "# LIME record with name: \"scidac-checksum\", in gauge file %s either missing or malformed.\n", filename);
+      fprintf(stderr, "# Unable to verify integrity of gauge field data.\n");
       return(-1);
     }
 
@@ -139,11 +139,11 @@ int read_gauge_field(char * filename) {
       fflush(stdout);
     }
     if (checksum_calc.suma != checksum_read.suma) {
-      fprintf(stderr, "For gauge file %s, calculated and stored values for SciDAC checksum A do not match.\n", filename);
+      fprintf(stderr, "# For gauge file %s, calculated and stored values for SciDAC checksum A do not match.\n", filename);
       return(-1);
     }
     if (checksum_calc.sumb != checksum_read.sumb) {
-      fprintf(stderr, "For gauge file %s, calculated and stored values for SciDAC checksum B do not match.\n", filename);
+      fprintf(stderr, "# For gauge file %s, calculated and stored values for SciDAC checksum B do not match.\n", filename);
       return(-1);
     }
 
