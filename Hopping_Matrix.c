@@ -187,7 +187,8 @@ void complx_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const
 #endif
 #define _MUL_G5_CMPLX
 #if (defined BGQ && defined XLC)
-    vector4double ALIGN cf = vec_ld2(0, (double*) &cfactor);
+    complex double ALIGN bla = cfactor;
+    vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
 #elif (defined SSE2 || defined SSE3)
  _Complex double ALIGN cf = cfactor;
 #endif

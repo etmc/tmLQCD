@@ -153,8 +153,6 @@
   _vec_store2(rn->s2, r6, r7, r8);					\
   _vec_store2(rn->s3, r9, r10, r11);
 
-#define _hop_mul_g5_cmplx_and_store()		\
-
 #define _store_res()				\
   _vec_store2(rn->s0, rs0, rs1, rs2);		\
   _vec_store2(rn->s1, rs3, rs4, rs5);		\
