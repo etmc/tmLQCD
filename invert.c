@@ -180,9 +180,12 @@ int main(int argc, char *argv[])
   }
 
 #ifdef OMP
-  if(omp_num_threads > 0)
+  if(omp_num_threads > 0) 
   {
-    omp_set_num_threads(omp_num_threads);
+     omp_set_num_threads(omp_num_threads);
+  }
+  else {
+    omp_num_threads = omp_get_max_threads();
   }
 #endif
 
