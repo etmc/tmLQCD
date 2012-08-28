@@ -62,12 +62,7 @@
   }
 
 #ifndef OMP
-  if(ieo == 0) {
-    hi = &g_hi[0];
-  }
-  else {
-    hi = &g_hi[16*VOLUME/2];
-  }
+  hi = &g_hi[16*ioff];
 
 #  if ((defined _GAUGE_COPY))
   up=&g_gauge_field_copy[ioff][0];
