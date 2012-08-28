@@ -21,7 +21,7 @@ void stout_smear_forces(stout_control *control, adjoint_field_t in)
   for (unsigned int iter = control->iterations - 1; iter > 0; --iter)
   {
     construct_intermediates(control->trace[iter], control->U[iter]);
-    add_stout_terms_to_forces(sigma, control->rho, Z, control->trace[iter], control->U[iter + 1] /* = V */, control->U[iter], smeared_force);
+    add_stout_terms_to_forces(control->trace[iter]->Sigma, control->rho, control->trace[iter]->Z, control->trace[iter], control->U[iter + 1] /* = V */, control->U[iter], smeared_force);
   }
 
   /* The force terms are still in the tangent space representation, so project them back to the adjoint one */
