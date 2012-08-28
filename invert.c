@@ -337,9 +337,10 @@ int main(int argc, char *argv[])
 
     /* DEBUG BLOCK! */
     use_stout_flag = 1;
-    stout_rho = 0.25;
+    stout_rho = 0.9 / 6.0; /* Think about changing this to alpha -- we need to choose a convention. */
     stout_no_iter = 1;
     /* END */
+
     if (use_stout_flag == 1){
       smear_control = construct_stout_control(stout_rho, stout_no_iter, 0 /* calculate_force_terms */);
       stout_smear(smear_control, _AS_GAUGE_FIELD_T(g_gauge_field));

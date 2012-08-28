@@ -4,7 +4,7 @@ void generic_staples(su3 *out, unsigned int x, unsigned int mu, gauge_field_t in
 {
   static su3 tmp; /* NOTE Look for replacement of static variables somehow? */
 
-  dzero(out, sizeof(su3));
+  bzero(out, sizeof(su3));
 
   for (unsigned int nu = 0; nu < 4; ++nu)
   {

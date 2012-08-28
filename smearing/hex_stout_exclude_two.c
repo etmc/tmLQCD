@@ -7,7 +7,7 @@ void stout_exclude_two(gauge_field_array_t buff_out, double const coeff, gauge_f
 #define _MULTIPLY_AND_EXPONENTIATE(x, principal, component) \
   { \
     _su3_times_su3d(tmp, staples.field_array[component / 4].field[x][component % 4], buff_in.field[x][principal]); \
-    project_antiherm(&tmp); \
+    project_traceless_antiherm(&tmp); \
     _real_times_su3(buff_out.field_array[component / 4].field[x][component % 4], coeff, tmp); \
     exposu3_in_place(&buff_out.field_array[component / 4].field[x][component % 4]); \
   }

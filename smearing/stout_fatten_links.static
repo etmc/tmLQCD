@@ -3,7 +3,7 @@ static void fatten_links(su3 *out, double rho, su3 const *staples, su3 const *in
   static su3 tmp;
   
   _su3_times_su3d(tmp, *staples, *in);
-  project_antiherm(out);
+  project_traceless_antiherm(out);
   _real_times_su3(tmp, rho, tmp);
   exposu3_in_place(&tmp);
   _su3_times_su3(*out, tmp, *in);

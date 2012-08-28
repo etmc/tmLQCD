@@ -20,10 +20,10 @@ void stout_smear_forces(stout_control *control, adjoint_field_t in)
   /* The modifications are done backwards, all the time peeling off one layer of stouting... */
   for (unsigned int iter = control->iterations - 1; iter > 0; --iter)
   {
-    construct_intermediates(control->trace[iter], control->U[iter]);
-    add_stout_terms_to_forces(control->trace[iter]->Sigma, control->rho, control->trace[iter]->Z, control->trace[iter], control->U[iter + 1] /* = V */, control->U[iter], smeared_force);
+    construct_intermediates(control->trace[iter], control->U[iter + 1] /* = V */, control->U[iter] /* = U */, smeared_force);
+    add_stout_terms_to_forces(smeared_force, control->rho, control->trace[iter], control->U[iter + 1] /* = V */, control->U[iter] /* = U */);
   }
 
   /* The force terms are still in the tangent space representation, so project them back to the adjoint one */
-  gauge_to_adjoint(control->force_result, sigma);
+  gauge_to_adjoint(control->force_result, smeared_force);
 }
