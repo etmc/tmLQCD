@@ -19,4 +19,10 @@ invert
 output.data
 output.para
 read_input.c
-hmc.input
+*.d
+*.o
+*~
+Makefile
+config.log
+doc/main.pdf
+bin
