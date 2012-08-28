@@ -275,7 +275,7 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for csg fields! Aborting...\n");
     exit(0);
   }
-  j = init_moment_field(VOLUME, VOLUMEPLUSRAND);
+  j = init_moment_field(VOLUME, VOLUMEPLUSRAND + g_dbw2rand);
   if (j != 0) {
     fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
     exit(0);
@@ -504,7 +504,7 @@ int main(int argc,char *argv[]) {
         if (g_proc_id == 0) {
           fprintf(stdout, "#\n# Beginning online measurement.\n");
         }
-        meas->measurefunc(trajectory_counter, imeas);
+        meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
       }
     }
 

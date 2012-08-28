@@ -55,11 +55,12 @@ void init_mms_tm(const int nr);
 
 /* P output = solution , Q input = source */
 int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter, 
-	      double eps_sq, const int rel_prec, const int N, matrix_mult f) {
+	      double eps_sq, const int rel_prec, const int N, matrix_mult f,
+        const int no_extra_masses, double * const extra_masses, const int id) {
 
   static double normsq, pro, err, alpha_cg = 1., beta_cg = 0., squarenorm;
   int iteration, im, append = 0;
-  char filename[100];
+  char filename[300];
   static double gamma, alpham1;
   double tmp_mu = g_mu;
   WRITER * writer = NULL;
@@ -70,13 +71,17 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
   const int nr_sf = 5;
 
   init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
-  init_mms_tm(g_no_extra_masses);
+
+  /* we initialise the maximum number of parameter arrays for cg_mms_tm
+   * because we have no way to figure out what is the actual maximum number
+   * of extra masses configured in the set of operators with extra masses */
+  init_mms_tm(MAX_EXTRA_MASSES);
 
   /* currently only implemented for P=0 */
   zero_spinor_field(P, N);
   /*  Value of the bare MMS-masses (\mu^2 - \mu_0^2) */
-  for(im = 0; im < g_no_extra_masses; im++) {
-    sigma[im] = g_extra_masses[im]*g_extra_masses[im] - g_mu*g_mu;
+  for(im = 0; im < no_extra_masses; im++) {
+    sigma[im] = extra_masses[im]*extra_masses[im] - g_mu*g_mu;
     assign(xs_mms_solver[im], P, N);
     assign(ps_mms_solver[im], Q, N);
     zitam1[im] = 1.0;
@@ -120,7 +125,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
     /* Compute alpha_cg(i+1) */
     alpha_cg = normsq/pro;
-    for(im = 0; im < g_no_extra_masses; im++) {
+    for(im = 0; im < no_extra_masses; im++) {
 
       /* Now gamma is a temp variable that corresponds to zita(i+1) */ 
       gamma = zita[im]*alpham1/(alpha_cg*beta_cg*(1.-zita[im]/zitam1[im]) 
@@ -165,7 +170,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
       /* save all the results of (Q^dagger Q)^(-1) \gamma_5 \phi */
       /* here ... */
       /* when im == -1 save the base mass*/
-      for(im = -1; im < g_no_extra_masses; im++) {
+      for(im = -1; im < no_extra_masses; im++) {
         if(im==-1) {
           temp_save=solver_field[0];
         } else {
@@ -174,13 +179,13 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
         if(SourceInfo.type != 1) {
           if (PropInfo.splitted) {
-            sprintf(filename, "%s.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im+1);
+            sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im+1);
           } else {
-            sprintf(filename, "%s.%.4d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, im+1);
+            sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, im+1);
           }
         }
         else {
-          sprintf(filename, "%s.%.4d.%.5d.cgmms.%.2d.0", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, im+1);
+          sprintf(filename, "%s.%.2d.%.4d.%.5d.cgmms.%.2d.0", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.sample, im+1);
         }
         if(g_kappa != 0) {
           mul_r(temp_save, (2*g_kappa)*(2*g_kappa), temp_save, N);
@@ -196,7 +201,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
           if (im == -1) {
             inverterInfo->cgmms_mass = inverterInfo->mu;
           } else {
-            inverterInfo->cgmms_mass = g_extra_masses[im]/(2 * inverterInfo->kappa);
+            inverterInfo->cgmms_mass = extra_masses[im]/(2 * inverterInfo->kappa);
           }
           write_spinor_info(writer, PropInfo.format, inverterInfo, append);
           //Create the propagatorFormat NOTE: always set to 1 flavour (to be adjusted)
@@ -221,7 +226,7 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
     /* Compute betas(i+1) = beta_cg(i)*(zita(i+1)*alphas(i))/(zita(i)*alpha_cg(i))
        Compute ps(i+1) = zita(i+1)*r(i+1) + betas(i+1)*ps(i)  */
-    for(im = 0; im < g_no_extra_masses; im++) {
+    for(im = 0; im < no_extra_masses; im++) {
       betas[im] = beta_cg*zita[im]*alphas[im]/(zitam1[im]*alpha_cg);
       assign_mul_add_mul_r(ps_mms_solver[im], solver_field[1], betas[im], zita[im], N);
     }

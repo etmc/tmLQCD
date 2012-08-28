@@ -50,7 +50,7 @@
  *
  ******************************************************/
 
-void online_measurement(const int traj, const int id) {
+void online_measurement(const int traj, const int id, const int ieo) {
   int i, j, t, tt, t0;
   double *Cpp, *Cpa, *Cp4;
   double res = 0., respa = 0., resp4 = 0.;
@@ -94,7 +94,7 @@ void online_measurement(const int traj, const int id) {
 
   invert_eo(g_spinor_field[2], g_spinor_field[3], 
 	    g_spinor_field[0], g_spinor_field[1],
-	    1.e-14, measurement_list[id].max_iter, CG, 1, 0, 1);
+	    1.e-14, measurement_list[id].max_iter, CG, 1, 0, ieo, 0, NULL, -1);
 
   /* now we bring it to normal format */
   /* here we use implicitly DUM_MATRIX and DUM_MATRIX+1 */
