@@ -79,7 +79,7 @@ void sf_gauge_heatbath( const int id, hamiltonian_field_t * const hf)
 
   if( mnl->use_rectangles ){ mnl->c0 = 1. - 8.*mnl->c1; }
 
-  mnl->energy0 = g_beta * ( mnl->c0 * measure_gauge_action(hf->gaugefield) );
+  mnl->energy0 = g_beta * ( mnl->c0 * measure_gauge_action(_AS_GAUGE_FIELD_T(hf->gaugefield)) );
 
   if(mnl->use_rectangles) {
     mnl->energy0 += g_beta*(mnl->c1 * measure_rectangles(hf->gaugefield));

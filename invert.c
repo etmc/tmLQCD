@@ -317,22 +317,26 @@ int main(int argc, char *argv[])
 #endif
 
     /*compute the energy of the gauge field*/
-    plaquette_energy = measure_gauge_action(g_gauge_field);
+    plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field));
 
     if (g_cart_id == 0) {
       printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
       fflush(stdout);
     }
 
-/*  if (use_stout_flag == 1){
-      params_smear.rho = stout_rho;
-      params_smear.iterations = stout_no_iter;
-      if (stout_smear((su3_tuple*)(g_gauge_field[0]), &params_smear, (su3_tuple*)(g_gauge_field[0])) != 0) 
-         exit(1) ;
+    /* DEBUG BLOCK! */
+    use_stout_flag = 1;
+    stout_rho = 0.05;
+    stout_no_iter = 1;
+    /* END */
+    if (use_stout_flag == 1){
+      smear_control = construct_stout_control(stout_rho, stout_no_iter, 0 /* calculate_force_terms */);
+      stout_smear(smear_control, _AS_GAUGE_FIELD_T(g_gauge_field));
       g_update_gauge_copy = 1;
       g_update_gauge_energy = 1;
       g_update_rectangle_energy = 1;
-      plaquette_energy = measure_gauge_action(g_gauge_field);
+
+      plaquette_energy = measure_gauge_action(smear_control->result);
 
       if (g_cart_id == 0) {
         printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));

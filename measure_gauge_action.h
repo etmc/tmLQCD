@@ -20,8 +20,8 @@
 #ifndef _MEASURE_GAUGE_ACTION_H
 #define _MEASURE_GAUGE_ACTION_H
 
-#include "su3.h"
+#include <buffers/gauge.h>
 
-double measure_gauge_action(su3 ** const gf);
+double measure_gauge_action(gauge_field_t const gf);
 
 #endif

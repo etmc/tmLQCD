@@ -14,3 +14,5 @@ typedef su3 su3_tuple[4];
 __DECLARE_BUFFER_INTERFACE(su3_tuple, gauge)
 
 #undef __DECLARE_BUFFER_INTERFACE
+
+#define _AS_GAUGE_FIELD_T(gf) (*(gauge_field_t*)(gf))

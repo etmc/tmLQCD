@@ -152,7 +152,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   enepx = moment_energy(hf.momenta);
 
   if (!bc_flag) { /* if PBC */
-    new_plaquette_energy = measure_gauge_action(hf.gaugefield);
+    new_plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(hf.gaugefield));
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
       new_rectangle_energy = measure_rectangles(hf.gaugefield);
     }

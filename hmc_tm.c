@@ -378,7 +378,7 @@ int main(int argc,char *argv[]) {
     init_phmc();
   }
 
-  plaquette_energy = measure_gauge_action(g_gauge_field);
+  plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field));
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
     rectangle_energy = measure_rectangles(g_gauge_field);
     if(g_proc_id == 0){

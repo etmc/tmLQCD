@@ -39,8 +39,9 @@
 #include "global.h"
 #include <io/params.h>
 #include "measure_gauge_action.h"
+#include <buffers/gauge.h>
 
-double measure_gauge_action(su3 ** const gf) {
+double measure_gauge_action(gauge_field_t const gf) {
   int ix,ix1,ix2,mu1,mu2;
   static su3 pr1,pr2; 
   su3 *v,*w;
@@ -57,11 +58,11 @@ double measure_gauge_action(su3 ** const gf) {
 	ix1=g_iup[ix][mu1];
 	for (mu2=mu1+1;mu2<4;mu2++){ 
 	  ix2=g_iup[ix][mu2];
-	  v=&gf[ix][mu1];
-	  w=&gf[ix1][mu2];
+	  v=&gf.field[ix][mu1];
+	  w=&gf.field[ix1][mu2];
 	  _su3_times_su3(pr1,*v,*w);
-	  v=&gf[ix][mu2];
-	  w=&gf[ix2][mu1];
+	  v=&gf.field[ix][mu2];
+	  w=&gf.field[ix2][mu1];
 	  _su3_times_su3(pr2,*v,*w);
 	  _trace_su3_times_su3d(ac,pr1,pr2);
 	  tr=ac+kc;

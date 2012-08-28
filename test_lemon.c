@@ -107,7 +107,7 @@ int main(int argc,char *argv[]) {
   xchange_gauge(g_gauge_field);
 #endif
 
-  plaquette_energy = measure_gauge_action(g_gauge_field) / (6.*VOLUME*g_nproc);
+  plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field)) / (6.*VOLUME*g_nproc);
 
   if(g_proc_id == 0) {
     printf("# the first plaquette value is %e\n", plaquette_energy);
@@ -129,7 +129,7 @@ int main(int argc,char *argv[]) {
     printf("# now we read with lemon from conf.lime\n");
   }
   read_lemon_gauge_field_parallel("conf.lime", NULL, NULL, NULL);
-  plaquette_energy = measure_gauge_action(g_gauge_field) / (6.*VOLUME*g_nproc);
+  plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field)) / (6.*VOLUME*g_nproc);
   if(g_proc_id == 0) {
     printf("# the plaquette value after lemon read of conf.lime is %e\n", plaquette_energy);
   }
@@ -138,7 +138,7 @@ int main(int argc,char *argv[]) {
     printf("# now we read with lemon from conf.lemon\n");
   }
   read_lemon_gauge_field_parallel("conf.lemon", NULL, NULL, NULL);
-  plaquette_energy = measure_gauge_action(g_gauge_field) / (6.*VOLUME*g_nproc);
+  plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field)) / (6.*VOLUME*g_nproc);
   if(g_proc_id == 0) {
     printf("# the plaquette value after lemon read of conf.lemon is %e\n", plaquette_energy);
   }
@@ -147,7 +147,7 @@ int main(int argc,char *argv[]) {
     printf("# now we read with lime from conf.lemon\n");
   }
   read_lime_gauge_field("conf.lemon");
-  plaquette_energy = measure_gauge_action(g_gauge_field) / (6.*VOLUME*g_nproc);
+  plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field)) / (6.*VOLUME*g_nproc);
   if(g_proc_id == 0) {
     printf("# the plaquette value after lime read of conf.lemon is %e\n", plaquette_energy);
   }
@@ -162,7 +162,7 @@ int main(int argc,char *argv[]) {
     printf("# now we read with lime from conf.lime\n");
   }
   read_lime_gauge_field("conf.lime", NULL, NULL, NULL);
-  plaquette_energy = measure_gauge_action(g_gauge_field) / (6.*VOLUME*g_nproc);
+  plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field)) / (6.*VOLUME*g_nproc);
   if(g_proc_id == 0) {
     printf("# the plaquette value after lime read of conf.lime is %e\n", plaquette_energy);
   }
