@@ -504,7 +504,7 @@ int main(int argc,char *argv[]) {
         if (g_proc_id == 0) {
           fprintf(stdout, "#\n# Beginning online measurement.\n");
         }
-        meas->measurefunc(trajectory_counter, imeas);
+        meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
       }
     }
 
