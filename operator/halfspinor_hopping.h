@@ -647,8 +647,8 @@
   rtmp = vec_ld2(0, (double*) &ka0);					\
   _vec_su3_multiply_double2(U);						\
   _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
-  _vec_store2_32(phi32[ix]->s0, r6, r7, r8);				\
-  _vec_store2_32(phi32[ix]->s1, r9, r10, r11);
+  _vec_store2_32(phi32[ix]->s0, r0, r1, r2);				\
+  _vec_store2_32(phi32[ix]->s1, r3, r4, r5);
 
 #define _hop_t_m_pre32()					\
   _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8);	\
@@ -663,8 +663,8 @@
   rtmp = vec_ld2(0, (double*) &ka1);					\
   _vec_su3_multiply_double2(U);						\
   _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
-  _vec_store2_32(phi32[ix]->s0, r6, r7, r8);				\
-  _vec_store2_32(phi32[ix]->s1, r9, r10, r11);
+  _vec_store2_32(phi32[ix]->s0, r0, r1, r2);				\
+  _vec_store2_32(phi32[ix]->s1, r3, r4, r5);
 
 #define _hop_x_m_pre32()						\
   _vec_i_mul_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11, U0);	\
@@ -679,8 +679,8 @@
   rtmp = vec_ld2(0, (double*) &ka2);					\
   _vec_su3_multiply_double2(U);						\
   _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
-  _vec_store2_32(phi32[ix]->s0, r6, r7, r8);				\
-  _vec_store2_32(phi32[ix]->s1, r9, r10, r11);
+  _vec_store2_32(phi32[ix]->s0, r0, r1, r2);				\
+  _vec_store2_32(phi32[ix]->s1, r3, r4, r5);
 
 #define _hop_y_m_pre32()					\
   _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11);	\
@@ -695,8 +695,8 @@
   rtmp = vec_ld2(0, (double*) &ka3);					\
   _vec_su3_multiply_double2(U);						\
   _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
-  _vec_store2_32(phi32[ix]->s0, r6, r7, r8);				\
-  _vec_store2_32(phi32[ix]->s1, r9, r10, r11);
+  _vec_store2_32(phi32[ix]->s0, r0, r1, r2);				\
+  _vec_store2_32(phi32[ix]->s1, r3, r4, r5);
 
 #define _hop_z_m_pre32()						\
   _vec_i_mul_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8, U0);	\
@@ -797,8 +797,8 @@
   rtmp = vec_ld2(0, (double*) &ka0);					\
   _vec_su3_multiply_double2(U);						\
   _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
-  _vec_store2(phi[ix]->s0, r6, r7, r8);					\
-  _vec_store2(phi[ix]->s1, r9, r10, r11);
+  _vec_store2(phi[ix]->s0, r0, r1, r2);					\
+  _vec_store2(phi[ix]->s1, r3, r4, r5);
 
 #define _hop_t_m_pre()						\
   _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8);	\
@@ -813,8 +813,8 @@
   rtmp = vec_ld2(0, (double*) &ka1);					\
   _vec_su3_multiply_double2(U);						\
   _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
-  _vec_store2(phi[ix]->s0, r6, r7, r8);					\
-  _vec_store2(phi[ix]->s1, r9, r10, r11);
+  _vec_store2(phi[ix]->s0, r0, r1, r2);					\
+  _vec_store2(phi[ix]->s1, r3, r4, r5);
 
 #define _hop_x_m_pre()							\
   _vec_i_mul_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11, U0);	\
@@ -829,8 +829,8 @@
   rtmp = vec_ld2(0, (double*) &ka2);					\
   _vec_su3_multiply_double2(U);						\
   _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
-  _vec_store2(phi[ix]->s0, r6, r7, r8);					\
-  _vec_store2(phi[ix]->s1, r9, r10, r11);
+  _vec_store2(phi[ix]->s0, r0, r1, r2);					\
+  _vec_store2(phi[ix]->s1, r3, r4, r5);
 
 #define _hop_y_m_pre()						\
   _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11);	\
@@ -845,8 +845,8 @@
   rtmp = vec_ld2(0, (double*) &ka3);					\
   _vec_su3_multiply_double2(U);						\
   _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
-  _vec_store2(phi[ix]->s0, r6, r7, r8);					\
-  _vec_store2(phi[ix]->s1, r9, r10, r11);
+  _vec_store2(phi[ix]->s0, r0, r1, r2);					\
+  _vec_store2(phi[ix]->s1, r3, r4, r5);
 
 #define _hop_z_m_pre()							\
   _vec_i_mul_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8, U0);	\
