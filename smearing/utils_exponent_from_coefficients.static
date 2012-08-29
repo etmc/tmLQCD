@@ -1,9 +1,12 @@
 /* This static function replaces/packages a macro */
 static void exponent_from_coefficients(su3 *out, double f0, double f1, double f2, su3 const *in)
 {
+  /* In the original Peardon-Morningstar formulation, this expression connects Q to exp[iQ], but
+   * in BMW's notation, we need exp[A] and friends from A = iQ. This is most easily fixed by 
+   * introducing factors of  -i in the coefficients -- two for f2, one for f1 and none for f0. */
   static su3 tmp;
-  _complex_times_su3(tmp, f2, *in);
-  _su3_add_equals_complex_identity(tmp, f1);
+  _complex_times_su3(tmp, -f2, *in);
+  _su3_add_equals_complex_identity(tmp, -I * f1);
   _su3_times_su3(*out, tmp, *in);
   _su3_add_equals_complex_identity(*out, f0);
 }

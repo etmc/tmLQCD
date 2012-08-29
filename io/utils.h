@@ -296,7 +296,7 @@ inline static void be_to_cpu_assign_double2single(void * out_ptr, void * in_ptr,
 }
 #endif
 
-void dump_su3(su3 * up, FILE * f);
-void dump_spinor(spinor * up, FILE * f);
+void dump_su3(su3 const * up, FILE * f);
+void dump_spinor(spinor const * up, FILE * f);
 
 #endif
