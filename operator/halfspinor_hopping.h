@@ -892,7 +892,7 @@
   _vec_su3_inverse_multiply_double2(U);					\
   _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
-  _vec_i_mul_add_double2(rs6, rs7, rs8, rs9, rs10, rs11, r0, r1, r2, r3, r4, r5, U0);
+  _vec_i_mul_add_double2(rs9, rs10, rs11, rs6, rs7, rs8, r0, r1, r2, r3, r4, r5, U0);
 
 #define _hop_y_p_post()							\
   _vec_load2(r0, r1, r2, phi[ix]->s0);					\
@@ -927,12 +927,12 @@
   _vec_su3_inverse_multiply_double2(U);					\
   _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
   _vec_add2(rs0, rs1, rs2, r0, r1, r2);					\
-  _vec_store2(s->s0, rs0, rs1, rs2);					\
-  _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);			\
-  _vec_store2(s->s2, rs6, rs7, rs8);					\
   _vec_add2(rs3, rs4, rs5, r3, r4, r5);					\
-  _vec_store2(s->s1, rs3, rs4, rs5);					\
+  _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);			\
   _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U0);			\
+  _vec_store2(s->s0, rs0, rs1, rs2);					\
+  _vec_store2(s->s1, rs3, rs4, rs5);					\
+  _vec_store2(s->s2, rs6, rs7, rs8);					\
   _vec_store2(s->s3, rs9, rs10, rs11);
 
 #define _declare_hregs()						\
