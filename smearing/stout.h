@@ -24,8 +24,8 @@ typedef struct
   su3    Sigma;
   su3    Z;
   
-  double f1;
-  double f2;
+  _Complex double f1;
+  _Complex double f2;
 } stout_notes_t;
 
 typedef stout_notes_t stout_notes_tuple[4];

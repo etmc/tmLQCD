@@ -1,5 +1,5 @@
 /* This static function replaces/packages a macro */
-static void exponent_from_coefficients(su3 *out, double f0, double f1, double f2, su3 const *in)
+static void exponent_from_coefficients(su3 *out, _Complex double f0, _Complex double f1, _Complex double f2, su3 const *in)
 {
   /* In the original Peardon-Morningstar formulation, this expression connects Q to exp[iQ], but
    * in BMW's notation, we need exp[A] and friends from A = iQ. This is most easily fixed by 

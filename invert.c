@@ -185,8 +185,8 @@ int main(int argc, char *argv[])
 #endif
 
   /* Allocate needed memory */
-  initialize_gauge_buffers(1);
-  initialize_adjoint_buffers(1);
+  initialize_gauge_buffers(5);
+  initialize_adjoint_buffers(5);
 
   /* this DBW2 stuff is not needed for the inversion ! */
   if (g_dflgcr_flag == 1) {
@@ -343,7 +343,7 @@ int main(int argc, char *argv[])
     /* END */
 
     if (use_stout_flag == 1){
-      smear_control = construct_stout_control(stout_rho, stout_no_iter, 1 /* calculate_force_terms */);
+      smear_control = construct_stout_control(stout_rho, stout_no_iter, 0 /* calculate_force_terms */);
       stout_smear(smear_control, _AS_GAUGE_FIELD_T(g_gauge_field));
       g_update_gauge_copy = 1;
       g_update_gauge_energy = 1;
