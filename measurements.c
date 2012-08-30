@@ -81,7 +81,7 @@ void free_measurements(){
 
 
 
-void dummy_meas(const int traj, const int id) {
+void dummy_meas(const int traj, const int id, const int ieo) {
   if(g_proc_id == 0) {
     fprintf(stderr, "dummy_meas was called for measurement with id=%d. Was that really intended?\n", id);
   }

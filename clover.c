@@ -175,9 +175,9 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
 void clover_inv(const int ieo, spinor * const l, const double mu) {
 #ifdef OMP
 #define static
-  int icy;
 #pragma omp parallel
   {
+  int icy;
 #endif    
   static su3_vector psi, chi, phi1, phi3;
   int ioff = 0;

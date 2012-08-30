@@ -29,12 +29,14 @@
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
 
-  if(k == l){
-    printf("Error in H_psi (simple.c):\n");
-    printf("Arguments k and l must be different\n");
-    printf("Program aborted\n");
-    exit(1);
-  }
+
+
+//  if(k == l){
+//    printf("Error in H_psi (simple.c):\n");
+//    printf("Arguments k and l must be different\n");
+//    printf("Program aborted\n");
+//    exit(1);
+//  }
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
@@ -45,7 +47,7 @@
 #ifdef OMP
 #pragma omp parallel
   {
-  su3 * restrict U0 ALIGN;
+  su3 * restrict u0 ALIGN;
 #endif
 
   int ix;
@@ -55,20 +57,22 @@
   halfspinor32 * restrict * phi32 ALIGN;
   _declare_hregs();
 
-#ifdef _KOJAK_INST
-#pragma pomp inst begin(hoppingmatrix)
-#endif
 #ifdef XLC
-#pragma disjoint(*l, *k)
-#pragma disjoint(*k, *U)
-#pragma disjoint(*l, *U)
-#pragma disjoint(*U, *s)
-#pragma disjoint(*k, *s)
-#pragma disjoint(*l, *s)
+# pragma disjoint(*l, *k)
+# pragma disjoint(*k, *U)
+# pragma disjoint(*l, *U)
+# pragma disjoint(*U, *s)
+# pragma disjoint(*k, *s)
+# pragma disjoint(*l, *s)
   __alignx(32, l);
   __alignx(32, k);
   __alignx(32, U);
   __alignx(32, s);
+#endif
+
+
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(hoppingmatrix)
 #endif
 
 #ifndef OMP  
@@ -83,10 +87,10 @@
   _prefetch_su3(U);
 #else
   if(ieo == 0) {
-    U0 = g_gauge_field_copy[0][0];
+    u0 = g_gauge_field_copy[0][0];
   }
   else {
-    U0 = g_gauge_field_copy[1][0];
+    u0 = g_gauge_field_copy[1][0];
   }
 #endif
 #if (defined SSE2 || defined SSE3)
@@ -103,7 +107,7 @@
 #endif
     for(int i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
-      U=U0+i*4;
+      U=u0+i*4;
       s=k+i;
       ix=i*8;
 #endif
@@ -172,10 +176,10 @@
     }
 #else
     if(ieo == 0) {
-      U0 = g_gauge_field_copy[1][0];
+      u0 = g_gauge_field_copy[1][0];
     }
     else {
-      U0 = g_gauge_field_copy[0][0];
+      u0 = g_gauge_field_copy[0][0];
     }
 #endif
    
@@ -190,7 +194,7 @@
 #ifdef OMP
       ix=i*8;
       s=l+i;
-      U=U0+i*4;
+      U=u0+i*4;
 #endif
       /*********************** direction +0 ************************/
       _hop_t_p_post32();
@@ -248,7 +252,7 @@
       s=k+i;
     _prefetch_spinor(s);
       ix=i*8;
-      U=U0+i*4;
+      U=u0+i*4;
     _prefetch_su3(U);
 #endif
 
@@ -318,10 +322,10 @@
     _prefetch_su3(U);
 #else
     if(ieo == 0) {
-      U0 = g_gauge_field_copy[1][0];
+      u0 = g_gauge_field_copy[1][0];
     }
     else {
-      U0 = g_gauge_field_copy[0][0];
+      u0 = g_gauge_field_copy[0][0];
     }
 #endif
 
@@ -336,7 +340,7 @@
     for(int i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
       ix=i*8;
-      U=U0+i*4;
+      U=u0+i*4;
       _prefetch_su3(U);
       s=l+i;
 #endif
