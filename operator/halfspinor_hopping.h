@@ -684,7 +684,7 @@
 
 #define _hop_y_m_pre32()					\
   _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11);	\
-  _vec_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8);	\
+  _vec_add_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8);	\
   _vec_store2_32(phi32[ix]->s0, r0, r1, r2);			\
   _vec_store2_32(phi32[ix]->s1, r3, r4, r5);
 
@@ -742,7 +742,7 @@
   _vec_su3_inverse_multiply_double2(U);					\
   _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
-  _vec_i_mul_add_double2(rs6, rs7, rs8, rs9, rs10, rs11, r0, r1, r2, r3, r4, r5, U0);
+  _vec_i_mul_add_double2(rs9, rs10, rs11, rs6, rs7, rs8, r0, r1, r2, r3, r4, r5, U0);
 
 #define _hop_y_p_post32()						\
   _vec_load2_32(r0, r1, r2, phi32[ix]->s0);				\
@@ -834,7 +834,7 @@
 
 #define _hop_y_m_pre()						\
   _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11);	\
-  _vec_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8);	\
+  _vec_add_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8);	\
   _vec_store2(phi[ix]->s0, r0, r1, r2);				\
   _vec_store2(phi[ix]->s1, r3, r4, r5);
 
@@ -1182,8 +1182,8 @@
   _complexcjg_times_vector(psi,ka3,chi);		\
   _complexcjg_times_vector(psi2,ka3,chi2);		\
   _vector_add(s->s0, rs.s0, psi);			\
-  _vector_i_add(s->s2, rs.s2, psi);			\
   _vector_add(s->s1, rs.s1, psi2);			\
+  _vector_i_add(s->s2, rs.s2, psi);			\
   _vector_i_sub(s->s3, rs.s3, psi2);
 
 #define _declare_hregs()				\
