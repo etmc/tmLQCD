@@ -52,7 +52,7 @@ typedef struct {
   int max_source_slice;
   
   /* functions for the measurement */
-  void (*measurefunc) (const int traj, const int id);
+  void (*measurefunc) (const int traj, const int id, const int ieo);
 } measurement;
 
 
@@ -67,6 +67,6 @@ int init_measurements();
 /* free space again */
 void free_measurements();
 
-void dummy_meas(const int traj, const int id);
+void dummy_meas(const int traj, const int id, const int ieo);
 
 #endif
