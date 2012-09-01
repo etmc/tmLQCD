@@ -800,6 +800,12 @@
   _vec_store2(phi[ix]->s0, r0, r1, r2);					\
   _vec_store2(phi[ix]->s1, r3, r4, r5);
 
+// note that this _hop_t_p_pre stores the quadwords in phi[ix] 
+// in a different order than expected, but this is taken care of in 
+// the correspondin _hop_t_p_post version
+//
+// it might be good to check whether unfusing is better done here
+// instead of in the corresponding post version!?
 #define _hop_t_p_pre2()							\
   _vec_load(rs0, rs1, s->s0);						\
   _vec_load16(rs2, rs3, s->s1, rtmp);					\
@@ -822,7 +828,7 @@
   _vec_sub(r0, r1, rs0, rs1, rs4, rs5);				\
   _vec_sub(r2, r3, rs2, rs3, rs6, rs7);				\
   _vec_store(phi[ix]->s0, r0, r1);				\
-  _vec_store16(phi[ix]->s1, r2, r3);
+  _vec_store16(phi[ix]->s1, r2, r3, U0);
 
 #define _hop_x_p_pre()							\
   _prefetch_su3(U+1);							\
@@ -852,7 +858,7 @@
   _vec_i_mul_sub(r0, r1, rs0, rs1, rs6, rs7, U0);	\
   _vec_i_mul_sub(r2, r3, rs2, rs3, rs4, rs5, U0);	\
   _vec_store(phi[ix]->s0, r0, r1);			\
-  _vec_store16(phi[ix]->s1, r2, r3);
+  _vec_store16(phi[ix]->s1, r2, r3, U0);
 
 #define _hop_y_p_pre()						\
   _prefetch_su3(U+1);						\
@@ -882,7 +888,7 @@
   _vec_sub(r0, r1, rs0, rs1, rs6, rs7);		\
   _vec_add(r2, r3, rs2, rs3, rs4, rs5);		\
   _vec_store(phi[ix]->s0, r0, r1);		\
-  _vec_store16(phi[ix]->s1, r2, r3);
+  _vec_store16(phi[ix]->s1, r2, r3, U0);
 
 #define _hop_z_p_pre()							\
   _prefetch_su3(U+1);							\
@@ -912,7 +918,7 @@
   _vec_i_mul_sub(r0, r1, rs0, rs1, rs4, rs5, U0);	\
   _vec_i_mul_add(r2, r3, rs2, rs3, rs6, rs7, U0);	\
   _vec_store(phi[ix]->s0, r0, r1);			\
-  _vec_store16(phi[ix]->s1, r2, r3);
+  _vec_store16(phi[ix]->s1, r2, r3, U0);
 
 #define _hop_t_p_post()				\
   _vec_load2(rs0, rs1, rs2, phi[ix]->s0);	\
