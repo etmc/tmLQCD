@@ -332,6 +332,9 @@
   r10= vec_xxnpmadd(U7, r5, r10);	\
   r11= vec_xxnpmadd(U1, r5, r11); 
 
+// expects the spinor to act on in
+// r0, r1 -> s0
+// r2, r3 -> s1
 #define _vec_su3_multiply_double2c(u)		\
   r8 = vec_gpci(00145);				\
   r9 = vec_gpci(02367);				\
