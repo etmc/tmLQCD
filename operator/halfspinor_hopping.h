@@ -950,7 +950,7 @@
 
 #define _hop_t_m_post2()						\
   _vec_load(r0, r1, phi[ix]->s0);					\
-  _vec_load16(r2, r3, phi[ix]->s1);					\
+  _vec_load16(r2, r3, phi[ix]->s1, rtmp);					\
   rtmp = vec_ld2(0, (double*) &ka0);					\
   _vec_su3_inverse_multiply_double2c(U);				\
   _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
@@ -985,7 +985,7 @@
 
 #define _hop_x_m_post2()						\
   _vec_load(r0, r1, phi[ix]->s0);					\
-  _vec_load16(r2, r3, phi[ix]->s1);					\
+  _vec_load16(r2, r3, phi[ix]->s1, rtmp);					\
   rtmp = vec_ld2(0, (double*) &ka1);					\
   _vec_su3_inverse_multiply_double2c(U);				\
   _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
@@ -1020,7 +1020,7 @@
 
 #define _hop_y_m_post2()						\
   _vec_load(r0, r1, phi[ix]->s0);					\
-  _vec_load16(r2, r3, phi[ix]->s1);					\
+  _vec_load16(r2, r3, phi[ix]->s1, rtmp);					\
   rtmp = vec_ld2(0, (double*) &ka2);					\
   _vec_su3_inverse_multiply_double2c(U);				\
   _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
@@ -1061,14 +1061,14 @@
 
 #define _hop_z_m_post2()			\
   _vec_load(r0, r1, phi[ix]->s0);					\
-  _vec_load16(r2, r3, phi[ix]->s1);					\
+  _vec_load16(r2, r3, phi[ix]->s1, rtmp);					\
   rtmp = vec_ld2(0, (double*) &ka3);					\
   _vec_su3_inverse_multiply_double2c(U);				\
   _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);			\
-  _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U1);
+  _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U1);                     \
   _vec_store2(s->s0, rs0, rs1, rs2);					\
   _vec_store2(s->s1, rs3, rs4, rs5);					\
   _vec_store2(s->s2, rs6, rs7, rs8);					\
