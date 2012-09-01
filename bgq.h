@@ -11,6 +11,12 @@
   r4 = vec_ld(128L, (double*) &(phi).c0);		\
   r5 = vec_ld(160L, (double*) &(phi).c0);
 
+#define _vec_load_halfspinor(r0, r1, r2, phi)	\
+  r0 = vec_ld(0L, (double*) &(phi).c0);			\
+  r1 = vec_ld(32L, (double*) &(phi).c0);		\
+  r2 = vec_ld(64L, (double*) &(phi).c0);
+
+
 #define _vec_store_spinor(phi, r0, r1, r2, r3, r4, r5) \
   vec_st(r0, 0L, (double*) &(phi).c0);		       \
   vec_st(r1, 32L, (double*) &(phi).c0);		       \

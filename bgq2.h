@@ -215,6 +215,8 @@
   rs1 = vec_xxcpnmadd(r1, tmp, rs1);					\
   rs2 = vec_xxcpnmadd(r2, tmp, rs2);
 
+// pushes the second quadword from r0, r1, r2
+// int the first quadword of r3, r4, r5
 #define _vec_unfuse(r0, r1, r2, r3, r4, r5)	\
   r3 = vec_sldw(r0, r0, 2);			\
   r4 = vec_sldw(r1, r1, 2);			\
