@@ -70,11 +70,10 @@
   vec_st((r0), 0L, (double *) &(phi).c1);
 
 // requires 32 byte alignment of phi
-#define _vec_store_double(phi, r0, r1, r2)	\
+#define _vec_store_halfspinor(phi, r0, r1, r2)	\
   vec_st((r0), 0L, (double*) &(phi).c0);	\
   vec_st((r1), 32L, (double*) &(phi).c0);	\
   vec_st((r2), 64L, (double*) &(phi).c0);
-
 
 #define _vec_add(rs0, rs1, r0, r1, s0, s1) \
   rs0 = vec_add(r0, s0);		   \
