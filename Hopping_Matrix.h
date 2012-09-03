@@ -28,7 +28,5 @@
 #include "su3.h"
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k);
-#ifndef _USE_HALFSPINOR
 void complx_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, complex double const cfactor);
-#endif
 #endif

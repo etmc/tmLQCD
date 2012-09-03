@@ -645,7 +645,7 @@
   _vector_assign(rn->s0, temp.s0);		\
   _vector_assign(rn->s1, temp.s1);		\
   _vector_assign(rn->s2, temp.s2);		\
-  _vector_assign(rn->s3, temp.s3);		\
+  _vector_assign(rn->s3, temp.s3);
 
 #  endif
 

@@ -303,6 +303,23 @@
   _sse_vector_sub();				\
   _sse_store_nt(s->s3);
 
+#define _hop_mul_g5_cmplx_and_store(res)	\
+  _sse_load_up((res)->s0);			\
+  _sse_vector_cmplx_mul(cf);			\
+  _sse_store_nt_up((res)->s0);			\
+  _sse_load_up((res)->s1);			\
+  _sse_vector_cmplx_mul(cf);			\
+  _sse_store_nt_up((res)->s1);			\
+  _sse_load_up((res)->s2);			\
+  _sse_vector_cmplxcg_mul(cf);			\
+  _sse_store_nt_up((res)->s2);			\
+  _sse_load_up((res)->s3);			\
+  _sse_vector_cmplxcg_mul(cf);			\
+  _sse_store_nt_up((res)->s3);
+
+
+#define _hop_store_post(res)
+
 #if defined OPTERON
 #  define _declare_hregs()			\
   spinor rs ALIGN;				\
@@ -461,13 +478,9 @@
   _bgl_su3_inverse_multiply_double((*U));			\
   _bgl_vector_cmplxcg_mul_double(ka3);				\
   _bgl_add_to_rs0_reg0();					\
-  _bgl_store_rs0(s->s0);					\
   _bgl_i_mul_add_to_rs2_reg0();					\
-  _bgl_store_rs2(s->s2);					\
   _bgl_add_to_rs1_reg1();					\
-  _bgl_store_rs1(s->s1);					\
-  _bgl_i_mul_sub_from_rs3_reg1();				\
-  _bgl_store_rs3(s->s3);
+  _bgl_i_mul_sub_from_rs3_reg1();
 
 #define _hop_t_p_pre()				\
   _prefetch_halfspinor(phi[ix+4]);		\
@@ -625,13 +638,18 @@
   _bgl_su3_inverse_multiply_double((*U));	\
   _bgl_vector_cmplxcg_mul_double(ka3);		\
   _bgl_add_to_rs0_reg0();			\
-  _bgl_store_rs0(s->s0);			\
   _bgl_i_mul_add_to_rs2_reg0();			\
-  _bgl_store_rs2(s->s2);			\
   _bgl_add_to_rs1_reg1();			\
-  _bgl_store_rs1(s->s1);			\
-  _bgl_i_mul_sub_from_rs3_reg1();		\
-  _bgl_store_rs3(s->s3);
+  _bgl_i_mul_sub_from_rs3_reg1();
+
+
+
+#define _hop_store_post(res)			\
+  _bgl_store_rs0((res)->s0);			\
+  _bgl_store_rs1((res)->s1);			\
+  _bgl_store_rs2((res)->s2);			\
+  _bgl_store_rs3((res)->s3);
+
 
 #elif (defined BGQ && defined XLC)
 
@@ -777,13 +795,9 @@
   _vec_su3_inverse_multiply_double2(U);					\
   _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
   _vec_add2(rs0, rs1, rs2, r0, r1, r2);					\
-  _vec_store2(s->s0, rs0, rs1, rs2);					\
   _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);			\
-  _vec_store2(s->s2, rs6, rs7, rs8);					\
   _vec_add2(rs3, rs4, rs5, r3, r4, r5);					\
-  _vec_store2(s->s1, rs3, rs4, rs5);					\
-  _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U0);			\
-  _vec_store2(s->s3, rs9, rs10, rs11);
+  _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U0);
 
 #define _hop_t_p_pre2()						\
   _vec_load2(rs0, rs1, rs2, s->s0);				\
@@ -811,6 +825,8 @@
   _vec_load16(rs2, rs3, s->s1, rtmp);					\
   _vec_load(rs4, rs5, s->s2);						\
   _vec_load16(rs6, rs7, s->s3, rtmp);					\
+  _prefetch_spinor(s+1);						\
+  _prefetch_su3(U+1);							\
   _vec_add(r0, r1, rs0, rs1, rs4, rs5);					\
   _vec_add(r2, r3, rs2, rs3, rs6, rs7);					\
   _vec_su3_multiply_double2c(U);					\
@@ -841,6 +857,7 @@
   _vec_store2(phi[ix]->s1, r3, r4, r5);
 
 #define _hop_x_p_pre()						\
+  _prefetch_su3(U+1);						\
   _vec_i_mul_add(r0, r1, rs0, rs1, rs6, rs7, U0);		\
   _vec_i_mul_add(r2, r3, rs2, rs3, rs4, rs5, U0);		\
   rtmp = vec_ld2(0, (double*) &ka1);				\
@@ -871,6 +888,7 @@
   _vec_store2(phi[ix]->s1, r3, r4, r5);
 
 #define _hop_y_p_pre()						\
+  _prefetch_su3(U+1);						\
   _vec_add(r0, r1, rs0, rs1, rs6, rs7);				\
   _vec_sub(r2, r3, rs2, rs3, rs4, rs5);				\
   rtmp = vec_ld2(0, (double*) &ka2);				\
@@ -901,6 +919,7 @@
   _vec_store2(phi[ix]->s1, r3, r4, r5);
 
 #define _hop_z_p_pre()						\
+  _prefetch_su3(U+1);						\
   _vec_i_mul_add(r0, r1, rs0, rs1, rs4, rs5, U0);		\
   _vec_i_mul_sub(r2, r3, rs2, rs3, rs6, rs7, U0);		\
   rtmp = vec_ld2(0, (double*) &ka3);				\
@@ -936,10 +955,10 @@
   rs6 = rs0; rs7 = rs1; rs8 = rs2;			\
   rs9 = rs3; rs10= rs4; rs11= rs5;
 
-#define _hop_t_m_post2()				\
-  _prefetch_su3(U+1);				\
-  _vec_load2(r0, r1, r2, phi[ix]->s0);		\
-  _vec_load2(r3, r4, r5, phi[ix]->s1);		\
+#define _hop_t_m_post2()							\
+  _prefetch_su3(U+1);							\
+  _vec_load2(r0, r1, r2, phi[ix]->s0);					\
+  _vec_load2(r3, r4, r5, phi[ix]->s1);					\
   rtmp = vec_ld2(0, (double*) &ka0);					\
   _vec_su3_inverse_multiply_double2(U);					\
   _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
@@ -948,9 +967,11 @@
   _vec_add2(rs3, rs4, rs5, r3, r4, r5);					\
   _vec_sub2(rs9, rs10, rs11, r3, r4, r5);
 
+
 #define _hop_t_m_post()						\
+  _prefetch_su3(U+1);							\
   _vec_load(r0, r1, phi[ix]->s0);					\
-  _vec_load16(r2, r3, phi[ix]->s1, rtmp);					\
+  _vec_load16(r2, r3, phi[ix]->s1, rtmp);				\
   rtmp = vec_ld2(0, (double*) &ka0);					\
   _vec_su3_inverse_multiply_double2c(U);				\
   _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
@@ -984,8 +1005,9 @@
   _vec_i_mul_add_double2(rs9, rs10, rs11, rs6, rs7, rs8, r0, r1, r2, r3, r4, r5, U0);
 
 #define _hop_x_m_post()						\
+  _prefetch_su3(U+1);							\
   _vec_load(r0, r1, phi[ix]->s0);					\
-  _vec_load16(r2, r3, phi[ix]->s1, rtmp);					\
+  _vec_load16(r2, r3, phi[ix]->s1, rtmp);				\
   rtmp = vec_ld2(0, (double*) &ka1);					\
   _vec_su3_inverse_multiply_double2c(U);				\
   _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
@@ -1019,8 +1041,9 @@
   _vec_sub2(rs9, rs10, rs11, r0, r1, r2);
 
 #define _hop_y_m_post()						\
+  _prefetch_su3(U+1);							\
   _vec_load(r0, r1, phi[ix]->s0);					\
-  _vec_load16(r2, r3, phi[ix]->s1, rtmp);					\
+  _vec_load16(r2, r3, phi[ix]->s1, rtmp);				\
   rtmp = vec_ld2(0, (double*) &ka2);					\
   _vec_su3_inverse_multiply_double2c(U);				\
   _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
@@ -1053,26 +1076,34 @@
   _vec_add2(rs0, rs1, rs2, r0, r1, r2);					\
   _vec_add2(rs3, rs4, rs5, r3, r4, r5);					\
   _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);			\
-  _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U0);			\
-  _vec_store2(s->s0, rs0, rs1, rs2);					\
-  _vec_store2(s->s1, rs3, rs4, rs5);					\
-  _vec_store2(s->s2, rs6, rs7, rs8);					\
-  _vec_store2(s->s3, rs9, rs10, rs11);
+  _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U0);
 
-#define _hop_z_m_post()			\
+#define _hop_z_m_post()						\
+  _prefetch_su3(U+1);							\
   _vec_load(r0, r1, phi[ix]->s0);					\
-  _vec_load16(r2, r3, phi[ix]->s1, rtmp);					\
+  _vec_load16(r2, r3, phi[ix]->s1, rtmp);				\
   rtmp = vec_ld2(0, (double*) &ka3);					\
   _vec_su3_inverse_multiply_double2c(U);				\
   _vec_cmplxcg_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);			\
-  _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U1);                     \
-  _vec_store2(s->s0, rs0, rs1, rs2);					\
-  _vec_store2(s->s1, rs3, rs4, rs5);					\
-  _vec_store2(s->s2, rs6, rs7, rs8);					\
-  _vec_store2(s->s3, rs9, rs10, rs11);
+  _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U1);
+
+#define _hop_mul_g5_cmplx_and_store(res)					\
+  _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, rs0, rs1, rs2, rs3, rs4, rs5, cf); \
+  _vec_cmplxcg_mul_double2(r6, r7, r8, r9, r10, r11, rs6, rs7, rs8, rs9, rs10, rs11, cf); \
+  _vec_store2((res)->s0, r0, r1, r2);					\
+  _vec_store2((res)->s1, r3, r4, r5);					\
+  _vec_store2((res)->s2, r6, r7, r8);					\
+  _vec_store2((res)->s3, r9, r10, r11);
+
+#define _hop_store_post(res)		\
+  _vec_store2((res)->s0, rs0, rs1, rs2);	\
+  _vec_store2((res)->s1, rs3, rs4, rs5);	\
+  _vec_store2((res)->s2, rs6, rs7, rs8);	\
+  _vec_store2((res)->s3, rs9, rs10, rs11);
+
 
 #define _declare_hregs()						\
   vector4double ALIGN r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;	\
@@ -1201,13 +1232,13 @@
   _vector_assign(psi, phi32[ix]->s0);		\
   _su3_inverse_multiply(chi,(*U), psi);		\
   _complexcjg_times_vector(psi,ka3,chi);	\
-  _vector_add(s->s0, rs.s0, psi);		\
-  _vector_i_add(s->s2, rs.s2, psi);		\
+  _vector_add_assign(rs.s0, psi);		\
+  _vector_i_add_assign(rs.s2, psi);		\
   _vector_assign(psi, phi32[ix]->s1);		\
   _su3_inverse_multiply(chi,(*U), psi);		\
   _complexcjg_times_vector(psi,ka3,chi);	\
-  _vector_add(s->s1, rs.s1, psi);		\
-  _vector_i_sub(s->s3, rs.s3, psi);
+  _vector_add_assign(rs.s1, psi);		\
+  _vector_i_sub_assign(rs.s3, psi);
 
 #define _hop_t_p_pre()					\
   _vector_assign(rs.s0, s->s0);				\
@@ -1320,10 +1351,23 @@
   _su3_inverse_multiply(chi2, (*U), phi[ix]->s1);	\
   _complexcjg_times_vector(psi,ka3,chi);		\
   _complexcjg_times_vector(psi2,ka3,chi2);		\
-  _vector_add(s->s0, rs.s0, psi);			\
-  _vector_add(s->s1, rs.s1, psi2);			\
-  _vector_i_add(s->s2, rs.s2, psi);			\
-  _vector_i_sub(s->s3, rs.s3, psi2);
+  _vector_add_assign(rs.s0, psi);			\
+  _vector_add_assign(rs.s1, psi2);			\
+  _vector_i_add_assign(rs.s2, psi);			\
+  _vector_i_sub_assign(rs.s3, psi2);
+
+#define _hop_mul_g5_cmplx_and_store(res)			\
+  _complex_times_vector((res)->s0, cfactor, rs.s0);		\
+  _complex_times_vector((res)->s1, cfactor, rs.s1);		\
+  _complexcjg_times_vector((res)->s2, cfactor, rs.s2);	\
+  _complexcjg_times_vector((res)->s3, cfactor, rs.s3);
+
+#define _hop_store_post(res)		\
+  _vector_assign(res->s0, rs.s0);	\
+  _vector_assign(res->s1, rs.s1);	\
+  _vector_assign(res->s2, rs.s2);	\
+  _vector_assign(res->s3, rs.s3);
+
 
 #define _declare_hregs()				\
   spinor ALIGN rs;					\

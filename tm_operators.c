@@ -502,7 +502,7 @@ void H_eo_tm_inv_psi(spinor * const l, spinor * const k,
 void mul_one_pm_imu_inv_hop(spinor * const l, spinor * const k, 
 			    const int ieo, const double _sign) {
 
-#ifdef _USE_HALFSPINOR
+#if ((defined BGL && defined XLC) || defined _USE_TSPLITPAR)
   Hopping_Matrix(ieo, l, k);
   mul_one_pm_imu_inv(l, _sign, VOLUME/2);
 #else
