@@ -46,14 +46,14 @@
 #include "boundary.h"
 #include "init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
-#include "complx_times_Hopping_Matrix.h"
+#include "tm_times_Hopping_Matrix.h"
 
-// now comes the definition of complx_times_Hopping_Matrix
+// now comes the definition of tm_times_Hopping_Matrix
 // which does (a + g5 i b) * Hopping_Matrix
 // where cfactor = a + i b
 //
 
-#if (defined _USE_HALFSPINOR && !defined _NO_COMM)
+#if (defined _USE_HALFSPINOR)
 #  include "operator/halfspinor_hopping.h"
 
 #  if ((defined SSE2)||(defined SSE3))
@@ -69,7 +69,7 @@
 
 #  endif
 
-void complx_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, complex double const cfactor) {
+void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, complex double const cfactor) {
   
 #  ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
@@ -115,7 +115,7 @@ void complx_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const
 #    include"xlc_prefetch.h"
 
 #  endif
-void complx_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, complex double const cfactor) {
+void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, complex double const cfactor) {
 #  ifdef XLC
 #    pragma disjoint(*l, *k)
 #  endif

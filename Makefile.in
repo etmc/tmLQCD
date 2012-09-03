@@ -40,7 +40,7 @@ LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
 
 COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
-SMODULES = Hopping_Matrix_nocom complx_times_Hopping_Matrix Hopping_Matrix tm_operators
+SMODULES = Hopping_Matrix_nocom tm_times_Hopping_Matrix Hopping_Matrix tm_operators
 
 MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	expo get_staples update_backward_gauge \
