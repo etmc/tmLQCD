@@ -33,6 +33,7 @@
 #include "su3.h"
 #include "Hopping_Matrix.h"
 #include "Hopping_Matrix_nocom.h"
+#include "complx_times_Hopping_Matrix.h"
 #include "sse.h"
 #include "linalg_eo.h"
 #include "gamma.h"
