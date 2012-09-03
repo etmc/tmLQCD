@@ -8,11 +8,11 @@ static void smear_first_stage(su3_outer *out, double const alpha_1, gauge_field_
   
   #define _HYP_SMEAR_COMPONENT(component, principal, via, x) \
   { \
-    _su3_times_su3d(tmp, orig.field[g_iup[x][via]][principal], orig.field[g_iup[x][principal]][via]); \
-    _su3_times_su3(staples, orig.field[x][via], tmp); \
-    _su3_times_su3(tmp, orig.field[g_idn[x][via]][principal], orig.field[g_idn[g_iup[x][principal]][via]][via]); \
-    _su3d_times_su3_acc(staples, orig.field[g_idn[x][via]][via], tmp); \
-    _real_times_su3_plus_real_times_su3(out[x][component], coeff_principal, orig.field[x][principal], coeff_staples, staples) \
+    _su3_times_su3d(tmp, orig[g_iup[x][via]][principal], orig[g_iup[x][principal]][via]); \
+    _su3_times_su3(staples, orig[x][via], tmp); \
+    _su3_times_su3(tmp, orig[g_idn[x][via]][principal], orig[g_idn[g_iup[x][principal]][via]][via]); \
+    _su3d_times_su3_acc(staples, orig[g_idn[x][via]][via], tmp); \
+    _real_times_su3_plus_real_times_su3(out[x][component], coeff_principal, orig[x][principal], coeff_staples, staples) \
     reunitarize(&out[x][component]); \
   }
 

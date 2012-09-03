@@ -33,8 +33,8 @@ static void smear_third_stage(gauge_field_t out, double const alpha_3, su3_outer
     
     for (unsigned int mu = 0; mu < 4; ++mu)
     {
-      _real_times_su3_plus_real_times_su3(out.field[x][mu], coeff_principal, orig.field[x][mu], coeff_staples, staples);
-      reunitarize(&out.field[x][mu]);
+      _real_times_su3_plus_real_times_su3(out[x][mu], coeff_principal, orig[x][mu], coeff_staples, staples);
+      reunitarize(&out[x][mu]);
     }
   }    
   

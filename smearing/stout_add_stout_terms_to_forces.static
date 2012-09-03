@@ -12,14 +12,14 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
       _su3d_times_su3_acc(t2, trace[x][mu].Z, t1);
      
       /* t1 = Sigma * V */
-      _su3_times_su3(t1, trace[x][mu].Sigma, V.field[x][mu]);
+      _su3_times_su3(t1, trace[x][mu].Sigma, V[x][mu]);
       
       /* t1 = Sigma * V - Z * C */
       _su3_refac_acc(t1, -1.0, t2);
 
       /* smeared_force = U * (Sigma * V - Z * C) * U^\dagger */
-      _su3_times_su3d(t2, t1, U.field[x][mu]);
-      _su3_times_su3(smeared_force.field[x][mu], U.field[x][mu], t2);
+      _su3_times_su3d(t2, t1, U[x][mu]);
+      _su3_times_su3(smeared_force[x][mu], U[x][mu], t2);
       
       /* This completes the first half of our calculation -- note that smeared_force can be overwritten.
          The data it contained is encapsulated in trace->Sigma at this point. */
@@ -34,42 +34,42 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
           /* Four of the lines are all multiplied by the same matrix eventually -- we can aggregate them first*/
           
           /* Line 1 */
-          _su3d_times_su3(t1, U.field[g_iup[x][nu]][mu], trace[x][nu].Z);
-          _su3_times_su3(t2, U.field[g_iup[x][mu]][nu], t1);
+          _su3d_times_su3(t1, U[g_iup[x][nu]][mu], trace[x][nu].Z);
+          _su3_times_su3(t2, U[g_iup[x][mu]][nu], t1);
 
           /* Line 2 */
-          _su3_times_su3(t1, trace[g_idn[x][nu]][mu].Z, U.field[g_idn[x][nu]][nu]);
-          _su3d_times_su3_acc(t2, U.field[g_idn[g_iup[x][mu]][nu]][nu], t1);
+          _su3_times_su3(t1, trace[g_idn[x][nu]][mu].Z, U[g_idn[x][nu]][nu]);
+          _su3d_times_su3_acc(t2, U[g_idn[g_iup[x][mu]][nu]][nu], t1);
 
           /* Line 5 */
-          _su3_times_su3d(t1, trace[g_iup[x][nu]][mu].Z, U.field[x][nu]);
-          _su3_times_su3_acc(t2, U.field[g_iup[x][mu]][nu], t1);
+          _su3_times_su3d(t1, trace[g_iup[x][nu]][mu].Z, U[x][nu]);
+          _su3_times_su3_acc(t2, U[g_iup[x][mu]][nu], t1);
           
           /* Line 6 */
-          _su3d_times_su3(t1, U.field[g_idn[x][nu]][mu], U.field[g_idn[x][nu]][nu]);
+          _su3d_times_su3(t1, U[g_idn[x][nu]][mu], U[g_idn[x][nu]][nu]);
           _su3_times_su3_acc(t2, trace[g_idn[g_iup[x][mu]][nu]][nu].Z, t1);
           
           /* Now add the final multiplication */
-          _su3_times_su3_acc(C_der, U.field[x][mu], t2);
+          _su3_times_su3_acc(C_der, U[x][mu], t2);
 
 
           /* The remaining lines are multiplied by the same matrix from the right, so we can aggregate them too */
           
           /* Line 3 */
-          _su3_times_su3d(t1, U.field[g_idn[x][nu]][mu], U.field[g_idn[g_iup[x][mu]][nu]][nu]);
+          _su3_times_su3d(t1, U[g_idn[x][nu]][mu], U[g_idn[g_iup[x][mu]][nu]][nu]);
           _su3_times_su3(t2, trace[g_idn[x][nu]][nu].Z, t1);
 
           /* Line 4 */
-          _su3_times_su3(t1, U.field[g_iup[x][nu]][mu], trace[g_iup[x][mu]][nu].Z);
-          _su3_times_su3_acc(t2, U.field[x][nu], t1);
+          _su3_times_su3(t1, U[g_iup[x][nu]][mu], trace[g_iup[x][mu]][nu].Z);
+          _su3_times_su3_acc(t2, U[x][nu], t1);
           
           /* Now we plug in the final multiplication and the sign, aggregating in C_der */
-          _su3_times_su3d(t1, t2, U.field[x][mu]);
+          _su3_times_su3d(t1, t2, U[x][mu]);
           _su3_refac_acc(C_der, -1.0, t1)
         }
       }
       /* Now add this second half of the calculation to the smeared forces and project back to the tangent space */
-      _su3_refac_acc(smeared_force.field[x][mu], rho, C_der);
-      project_traceless_antiherm(&smeared_force.field[x][mu]);
+      _su3_refac_acc(smeared_force[x][mu], rho, C_der);
+      project_traceless_antiherm(&smeared_force[x][mu]);
     }
 }

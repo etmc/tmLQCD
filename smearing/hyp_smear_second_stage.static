@@ -16,7 +16,7 @@ static void smear_second_stage(su3_outer *out, double const alpha_2, su3_outer *
     _su3_times_su3_acc(staples, in[x][I2_ ## via_2 ## _ ## to ## excl], tmp); \
     _su3_times_su3(tmp, in[g_idn[x][via_2]][I2_ ## to ## _ ## excl ## via_2], in[g_iup[g_idn[x][via_2]][to]][I2_ ## via_2 ## _ ## to ## excl]); \
     _su3d_times_su3_acc(staples, in[g_idn[x][via_2]][I2_ ## via_2 ## _ ## to ## excl], tmp); \
-    _real_times_su3_plus_real_times_su3(out[x][component], coeff_principal, orig.field[x][to], coeff_staples, staples) \
+    _real_times_su3_plus_real_times_su3(out[x][component], coeff_principal, orig[x][to], coeff_staples, staples) \
     reunitarize(&out[x][component]); \
   }
 

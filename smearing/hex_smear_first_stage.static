@@ -7,11 +7,11 @@ static void smear_first_stage(su3_outer *out, double const alpha_1, gauge_field_
   
   #define _HEX_SMEAR_COMPONENT(component, principal, via, x) \
   { \
-    _su3_times_su3d(tmp, in.field[g_iup[x][via]][principal], in.field[g_iup[x][principal]][via]); \
-    _su3_times_su3(staples, in.field[x][via], tmp); \
-    _su3_times_su3(tmp, in.field[g_idn[x][via]][principal], in.field[g_idn[g_iup[x][principal]][via]][via]); \
-    _su3d_times_su3_acc(staples, in.field[g_idn[x][via]][via], tmp); \
-    fatten_links(&out[x][component], coeff, &staples, &orig.field[x][principal]); \
+    _su3_times_su3d(tmp, in[g_iup[x][via]][principal], in[g_iup[x][principal]][via]); \
+    _su3_times_su3(staples, in[x][via], tmp); \
+    _su3_times_su3(tmp, in[g_idn[x][via]][principal], in[g_idn[g_iup[x][principal]][via]][via]); \
+    _su3d_times_su3_acc(staples, in[g_idn[x][via]][via], tmp); \
+    fatten_links(&out[x][component], coeff, &staples, &orig[x][principal]); \
   }
 
   for (int x = 0; x < VOLUME; ++x)

@@ -7,10 +7,7 @@ typedef struct                                                                  
   unsigned int free;                                                                             \
 } NAME ## _buffers_t;                                                                            \
                                                                                                  \
-typedef struct                                                                                   \
-{                                                                                                \
-  DATATYPE *field;                                                                               \
-} NAME ## _field_t;                                                                              \
+typedef DATATYPE * NAME ## _field_t;                                                             \
                                                                                                  \
 extern  NAME ## _buffers_t g_ ## NAME ## _buffers;                                               \
                                                                                                  \

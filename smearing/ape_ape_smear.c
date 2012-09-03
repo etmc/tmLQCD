@@ -19,8 +19,8 @@ void ape_smear(ape_control *control, gauge_field_t in)
       for (unsigned int mu = 0; mu < 4; ++x)
       {
         generic_staples(&staples, x, mu, in);
-        _real_times_su3_plus_real_times_su3(buffer.field[x][mu], rho_principal, in.field[x][mu], rho_staples, staples);
-        reunitarize(&buffer.field[x][mu]);
+        _real_times_su3_plus_real_times_su3(buffer[x][mu], rho_principal, in[x][mu], rho_staples, staples);
+        reunitarize(&buffer[x][mu]);
       }
 
     /* Prepare for the next iteration -- the last result is now input! */

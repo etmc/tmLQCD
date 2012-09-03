@@ -34,24 +34,24 @@ void gauge_to_adjoint(adjoint_field_t out, gauge_field_t const in);
 #define __DEFINE_BUFFER_INLINES(DATATYPE, NAME)                                                 \
 inline void zero_ ## NAME ##_field(NAME ## _field_t target)                                     \
 {                                                                                               \
-  memset((void*)target.field, 0.0, VOLUMEPLUSRAND * sizeof(DATATYPE));                          \
+  memset((void*)target, 0.0, VOLUMEPLUSRAND * sizeof(DATATYPE));                          \
 }                                                                                               \
                                                                                                 \
 inline void exchange_ ## NAME ## _field(NAME ## _field_t target)                                \
 {                                                                                               \
-  generic_exchange((void*)target.field, sizeof(DATATYPE));                                      \
+  generic_exchange((void*)target, sizeof(DATATYPE));                                      \
 }                                                                                               \
                                                                                                 \
 inline void swap_ ## NAME ## _field(NAME ## _field_t *left, NAME ## _field_t *right)            \
 {                                                                                               \
-   DATATYPE *tmp = left->field;                                                                 \
-   left->field = right->field;                                                                  \
-   right->field = tmp;                                                                          \
+   DATATYPE *tmp = *left;                                                                 \
+   *left = *right;									\
+   *right = tmp;                                                                          \
 }                                                                                               \
                                                                                                 \
 inline void copy_ ## NAME ## _field(NAME ## _field_t *copy, NAME ## _field_t const original)    \
 {                                                                                               \
-  memmove(copy->field, original.field, VOLUMEPLUSRAND * sizeof(DATATYPE));                      \
+  memmove(*copy, original, VOLUMEPLUSRAND * sizeof(DATATYPE));                      \
 }
 
 __DEFINE_BUFFER_INLINES(su3adj_tuple, adjoint)

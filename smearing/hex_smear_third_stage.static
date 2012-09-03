@@ -31,7 +31,7 @@ static void smear_third_stage(gauge_field_t out, double const alpha_3, su3_outer
     _HEX_SMEAR_COMPONENT(I0_3, 3, 2, x);
     
     for (unsigned int mu = 0; mu < 4; ++mu)
-      fatten_links(&out.field[x][mu], coeff, &staples, &orig.[x][mu]);
+      fatten_links(&out[x][mu], coeff, &staples, &orig.[x][mu]);
   }  
   
   exchange_gauge_field(out);

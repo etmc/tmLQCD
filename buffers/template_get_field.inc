@@ -7,7 +7,7 @@ NAME ## _field_t get_ ## NAME ## _field()                                       
     allocate_ ## NAME ## _buffers(1);                                           \
                                                                                 \
   --g_ ## NAME ## _buffers.free;                                                \
-  field.field = g_ ## NAME ## _buffers.reserve[g_ ## NAME ## _buffers.free];    \
+  field = g_ ## NAME ## _buffers.reserve[g_ ## NAME ## _buffers.free];    \
   g_ ## NAME ## _buffers.reserve[g_ ## NAME ## _buffers.free] = NULL;           \
                                                                                 \
   return field;                                                                 \

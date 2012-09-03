@@ -18,8 +18,8 @@ static void smear_plain(hex_control *control, gauge_field_t in)
     exchange_gauge_field_array(v);
 
     /* Final level of contractions  */
-    hyp_staples_exclude_none(gamma.field_array[0], v);
-    stout_links(m_field_out, params->alpha[0], gamma.field_array[0], m_field_in);
+    hyp_staples_exclude_none(gamma_array[0], v);
+    stout_links(m_field_out, params->alpha[0], gamma_array[0], m_field_in);
     exchange_gauge_field(m_field_out);
     
     m_field_in = m_field_out; /* Prepare for next iteration */

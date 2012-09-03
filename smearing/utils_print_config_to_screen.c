@@ -6,6 +6,6 @@ void  print_config_to_screen(gauge_field_t in)
     for(int mu = 0; mu < 4; ++mu)
     {
       printf("x = %d  mu = %d\n", x, mu);
-      print_su3(&(in.field[x][mu]));
+      print_su3(&(in[x][mu]));
     }
 }
