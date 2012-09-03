@@ -641,6 +641,16 @@
   _complexcjg_times_vector(rn->s2, cfactor, temp.s2);	\
   _complexcjg_times_vector(rn->s3, cfactor, temp.s3);
 
+#define _g5_cmplx_sub_hop_and_g5store()		\
+  _complex_times_vector(psi, cfactor, pn.s0);		\
+  _vector_sub(rn->s0, psi, temp->s0);			\
+  _complex_times_vector(chi, cfactor, pn.s1);		\
+  _vector_sub(rn->s1, chi, temp->s1);			\
+  _complexcjg_times_vector(psi, cfactor, pn.s2);	\
+  _vector_sub(rn->s2, temp->s2, psi);			\
+  _complexcjg_times_vector(chi, cfactor, pn.s3);	\
+  _vector_sub(rn->s3, temp->s3, chi);
+
 #define _store_res()				\
   _vector_assign(rn->s0, temp.s0);		\
   _vector_assign(rn->s1, temp.s1);		\
