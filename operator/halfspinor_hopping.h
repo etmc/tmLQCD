@@ -785,7 +785,7 @@
   _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U0);			\
   _vec_store2(s->s3, rs9, rs10, rs11);
 
-#define _hop_t_p_pre()						\
+#define _hop_t_p_pre2()						\
   _vec_load2(rs0, rs1, rs2, s->s0);				\
   _vec_load2(rs3, rs4, rs5, s->s1);				\
   _vec_load2(rs6, rs7, rs8, s->s2);				\
@@ -806,7 +806,7 @@
 //
 // it might be good to check whether unfusing is better done here
 // instead of in the corresponding post version!?
-#define _hop_t_p_pre2()							\
+#define _hop_t_p_pre()							\
   _vec_load(rs0, rs1, s->s0);						\
   _vec_load16(rs2, rs3, s->s1, rtmp);					\
   _vec_load(rs4, rs5, s->s2);						\
@@ -818,19 +818,19 @@
   _vec_cmplx_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);		\
   _vec_store_halfspinor(phi[ix]->s0, r0, r1, r2);
 
-#define _hop_t_m_pre()						\
+#define _hop_t_m_pre2()						\
   _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8);	\
   _vec_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11);	\
   _vec_store2(phi[ix]->s0, r0, r1, r2);				\
   _vec_store2(phi[ix]->s1, r3, r4, r5);
 
-#define _hop_t_m_pre2()						\
+#define _hop_t_m_pre()						\
   _vec_sub(r0, r1, rs0, rs1, rs4, rs5);				\
   _vec_sub(r2, r3, rs2, rs3, rs6, rs7);				\
   _vec_store(phi[ix]->s0, r0, r1);				\
   _vec_store16(phi[ix]->s1, r2, r3, U0);
 
-#define _hop_x_p_pre()							\
+#define _hop_x_p_pre2()							\
   _prefetch_su3(U+1);							\
   _vec_i_mul_add_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11, U0);	\
   _vec_i_mul_add_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8, U0);	\
@@ -840,7 +840,7 @@
   _vec_store2(phi[ix]->s0, r0, r1, r2);					\
   _vec_store2(phi[ix]->s1, r3, r4, r5);
 
-#define _hop_x_p_pre2()						\
+#define _hop_x_p_pre()						\
   _vec_i_mul_add(r0, r1, rs0, rs1, rs6, rs7, U0);		\
   _vec_i_mul_add(r2, r3, rs2, rs3, rs4, rs5, U0);		\
   rtmp = vec_ld2(0, (double*) &ka1);				\
@@ -848,19 +848,19 @@
   _vec_cmplx_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);	\
   _vec_store_halfspinor(phi[ix]->s0, r0, r1, r2);
 
-#define _hop_x_m_pre()							\
+#define _hop_x_m_pre2()							\
   _vec_i_mul_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11, U0);	\
   _vec_i_mul_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8, U0);	\
   _vec_store2(phi[ix]->s0, r0, r1, r2);					\
   _vec_store2(phi[ix]->s1, r3, r4, r5);
 
-#define _hop_x_m_pre2()					\
+#define _hop_x_m_pre()					\
   _vec_i_mul_sub(r0, r1, rs0, rs1, rs6, rs7, U0);	\
   _vec_i_mul_sub(r2, r3, rs2, rs3, rs4, rs5, U0);	\
   _vec_store(phi[ix]->s0, r0, r1);			\
   _vec_store16(phi[ix]->s1, r2, r3, U0);
 
-#define _hop_y_p_pre()						\
+#define _hop_y_p_pre2()						\
   _prefetch_su3(U+1);						\
   _vec_add_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11);	\
   _vec_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8);	\
@@ -870,7 +870,7 @@
   _vec_store2(phi[ix]->s0, r0, r1, r2);					\
   _vec_store2(phi[ix]->s1, r3, r4, r5);
 
-#define _hop_y_p_pre2()						\
+#define _hop_y_p_pre()						\
   _vec_add(r0, r1, rs0, rs1, rs6, rs7);				\
   _vec_sub(r2, r3, rs2, rs3, rs4, rs5);				\
   rtmp = vec_ld2(0, (double*) &ka2);				\
@@ -878,19 +878,19 @@
   _vec_cmplx_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);	\
   _vec_store_halfspinor(phi[ix]->s0, r0, r1, r2);
 
-#define _hop_y_m_pre()						\
+#define _hop_y_m_pre2()						\
   _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11);	\
   _vec_add_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8);	\
   _vec_store2(phi[ix]->s0, r0, r1, r2);				\
   _vec_store2(phi[ix]->s1, r3, r4, r5);
 
-#define _hop_y_m_pre2()				\
+#define _hop_y_m_pre()				\
   _vec_sub(r0, r1, rs0, rs1, rs6, rs7);		\
   _vec_add(r2, r3, rs2, rs3, rs4, rs5);		\
   _vec_store(phi[ix]->s0, r0, r1);		\
   _vec_store16(phi[ix]->s1, r2, r3, U0);
 
-#define _hop_z_p_pre()							\
+#define _hop_z_p_pre2()							\
   _prefetch_su3(U+1);							\
   _vec_i_mul_add_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8, U0);	\
   _vec_i_mul_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11, U0);	\
@@ -900,7 +900,7 @@
   _vec_store2(phi[ix]->s0, r0, r1, r2);					\
   _vec_store2(phi[ix]->s1, r3, r4, r5);
 
-#define _hop_z_p_pre2()						\
+#define _hop_z_p_pre()						\
   _vec_i_mul_add(r0, r1, rs0, rs1, rs4, rs5, U0);		\
   _vec_i_mul_sub(r2, r3, rs2, rs3, rs6, rs7, U0);		\
   rtmp = vec_ld2(0, (double*) &ka3);				\
@@ -908,19 +908,19 @@
   _vec_cmplx_mul_double2c(r0, r1, r2, r4, r5, r6, rtmp);	\
   _vec_store_halfspinor(phi[ix]->s0, r0, r1, r2);
 
-#define _hop_z_m_pre()							\
+#define _hop_z_m_pre2()							\
   _vec_i_mul_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8, U0);	\
   _vec_i_mul_add_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11, U0);	\
   _vec_store2(phi[ix]->s0, r0, r1, r2);					\
   _vec_store2(phi[ix]->s1, r3, r4, r5);
 
-#define _hop_z_m_pre2()					\
+#define _hop_z_m_pre()					\
   _vec_i_mul_sub(r0, r1, rs0, rs1, rs4, rs5, U0);	\
   _vec_i_mul_add(r2, r3, rs2, rs3, rs6, rs7, U0);	\
   _vec_store(phi[ix]->s0, r0, r1);			\
   _vec_store16(phi[ix]->s1, r2, r3, U0);
 
-#define _hop_t_p_post()				\
+#define _hop_t_p_post2()				\
   _vec_load2(rs0, rs1, rs2, phi[ix]->s0);	\
   rs6 = rs0;					\
   rs7 = rs1;					\
@@ -930,13 +930,13 @@
   rs10= rs4;					\
   rs11= rs5;
 
-#define _hop_t_p_post2()				\
+#define _hop_t_p_post()				\
   _vec_load_halfspinor(rs0, rs1, rs2, phi[ix]->s0);	\
   _vec_unfuse(rs0, rs1, rs2, rs3, rs4, rs5);		\
   rs6 = rs0; rs7 = rs1; rs8 = rs2;			\
   rs9 = rs3; rs10= rs4; rs11= rs5;
 
-#define _hop_t_m_post()				\
+#define _hop_t_m_post2()				\
   _prefetch_su3(U+1);				\
   _vec_load2(r0, r1, r2, phi[ix]->s0);		\
   _vec_load2(r3, r4, r5, phi[ix]->s1);		\
@@ -948,7 +948,7 @@
   _vec_add2(rs3, rs4, rs5, r3, r4, r5);					\
   _vec_sub2(rs9, rs10, rs11, r3, r4, r5);
 
-#define _hop_t_m_post2()						\
+#define _hop_t_m_post()						\
   _vec_load(r0, r1, phi[ix]->s0);					\
   _vec_load16(r2, r3, phi[ix]->s1, rtmp);					\
   rtmp = vec_ld2(0, (double*) &ka0);					\
@@ -958,7 +958,7 @@
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_sub_double2(rs6, rs7, rs8, rs9, rs10, rs11, r0, r1, r2, r3, r4, r5);
 
-#define _hop_x_p_post()					\
+#define _hop_x_p_post2()					\
   _vec_load2(r0, r1, r2, phi[ix]->s0);			\
   _vec_load2(r3, r4, r5, phi[ix]->s1);			\
   _vec_add2(rs0, rs1, rs2, r0, r1, r2);			\
@@ -966,14 +966,14 @@
   _vec_add2(rs3, rs4, rs5, r3, r4, r5);			\
   _vec_i_mul_sub2(rs6, rs7, rs8, r3, r4, r5, U0);
 
-#define _hop_x_p_post2()						\
+#define _hop_x_p_post()						\
   _vec_load_halfspinor(r0, r1, r2, phi[ix]->s0);			\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);				\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_i_mul_sub2(rs6, rs7, rs8, r3, r4, r5, U0);			\
   _vec_i_mul_sub2(rs9, rs10, rs11, r0, r1, r2, U1);
   
-#define _hop_x_m_post()							\
+#define _hop_x_m_post2()							\
   _prefetch_su3(U+1);							\
   _vec_load2(r0, r1, r2, phi[ix]->s0);					\
   _vec_load2(r3, r4, r5, phi[ix]->s1);					\
@@ -983,7 +983,7 @@
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_i_mul_add_double2(rs9, rs10, rs11, rs6, rs7, rs8, r0, r1, r2, r3, r4, r5, U0);
 
-#define _hop_x_m_post2()						\
+#define _hop_x_m_post()						\
   _vec_load(r0, r1, phi[ix]->s0);					\
   _vec_load16(r2, r3, phi[ix]->s1, rtmp);					\
   rtmp = vec_ld2(0, (double*) &ka1);					\
@@ -993,21 +993,21 @@
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_i_mul_add_double2(rs9, rs10, rs11, rs6, rs7, rs8, r0, r1, r2, r3, r4, r5, U0);
 
-#define _hop_y_p_post()							\
+#define _hop_y_p_post2()							\
   _vec_load2(r0, r1, r2, phi[ix]->s0);					\
   _vec_load2(r3, r4, r5, phi[ix]->s1);					\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_sub2(rs6, rs7, rs8, r3, r4, r5);					\
   _vec_add2(rs9, rs10, rs11, r0, r1, r2);
 
-#define _hop_y_p_post2()						\
+#define _hop_y_p_post()						\
   _vec_load_halfspinor(r0, r1, r2, phi[ix]->s0);			\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);				\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5);	\
   _vec_sub2(rs6, rs7, rs8, r3, r4, r5);					\
   _vec_add2(rs9, rs10, rs11, r0, r1, r2);
 
-#define _hop_y_m_post()							\
+#define _hop_y_m_post2()							\
   _prefetch_su3(U+1);							\
   _vec_load2(r0, r1, r2, phi[ix]->s0);					\
   _vec_load2(r3, r4, r5, phi[ix]->s1);					\
@@ -1018,7 +1018,7 @@
   _vec_add2(rs6, rs7, rs8, r3, r4, r5);					\
   _vec_sub2(rs9, rs10, rs11, r0, r1, r2);
 
-#define _hop_y_m_post2()						\
+#define _hop_y_m_post()						\
   _vec_load(r0, r1, phi[ix]->s0);					\
   _vec_load16(r2, r3, phi[ix]->s1, rtmp);					\
   rtmp = vec_ld2(0, (double*) &ka2);					\
@@ -1029,21 +1029,21 @@
   _vec_add2(rs6, rs7, rs8, r3, r4, r5);					\
   _vec_sub2(rs9, rs10, rs11, r0, r1, r2);
 
-#define _hop_z_p_post()				\
+#define _hop_z_p_post2()				\
   _vec_load2(r0, r1, r2, phi[ix]->s0);		\
   _vec_load2(r3, r4, r5, phi[ix]->s1);		\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_i_mul_sub2(rs6, rs7, rs8, r0, r1, r2, U0);			\
   _vec_i_mul_add2(rs9, rs10, rs11, r3, r4, r5, U0);
 
-#define _hop_z_p_post2()						\
+#define _hop_z_p_post()						\
   _vec_load_halfspinor(r0, r1, r2, phi[ix]->s0);			\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);				\
   _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
   _vec_i_mul_sub2(rs6, rs7, rs8, r0, r1, r2, U0);			\
   _vec_i_mul_add2(rs9, rs10, rs11, r3, r4, r5, U1);
 
-#define _hop_z_m_post()							\
+#define _hop_z_m_post2()							\
   _prefetch_su3(U+1);							\
   _vec_load2(r0, r1, r2, phi[ix]->s0);					\
   _vec_load2(r3, r4, r5, phi[ix]->s1);					\
@@ -1059,7 +1059,7 @@
   _vec_store2(s->s2, rs6, rs7, rs8);					\
   _vec_store2(s->s3, rs9, rs10, rs11);
 
-#define _hop_z_m_post2()			\
+#define _hop_z_m_post()			\
   _vec_load(r0, r1, phi[ix]->s0);					\
   _vec_load16(r2, r3, phi[ix]->s1, rtmp);					\
   rtmp = vec_ld2(0, (double*) &ka3);					\
