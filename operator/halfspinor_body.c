@@ -185,6 +185,9 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
     s=l+i;
     U=u0+i*4;
 #endif
+#ifdef _TM_SUB_HOP
+     pn=p+i;
+#endif
     /*********************** direction +0 ************************/
     _hop_t_p_post32();
     ix++;
@@ -221,6 +224,8 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
     
 #ifdef _MUL_G5_CMPLX
     _hop_mul_g5_cmplx_and_store(s);
+#elif defined _TM_SUB_HOP
+     _g5_cmplx_sub_hop_and_g5store(s);
 #else
     _hop_store_post(s);
 #endif
@@ -340,6 +345,9 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      s=l+i;
      _prefetch_spinor(s);
 #endif
+#ifdef _TM_SUB_HOP
+     pn=p+i;
+#endif
      
      /*********************** direction +0 ************************/
      _hop_t_p_post();
@@ -377,6 +385,8 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      
 #ifdef _MUL_G5_CMPLX
      _hop_mul_g5_cmplx_and_store(s);
+#elif defined _TM_SUB_HOP
+     _g5_cmplx_sub_hop_and_g5store(s);
 #else
      _hop_store_post(s);
 #endif

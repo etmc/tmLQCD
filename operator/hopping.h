@@ -153,6 +153,21 @@
   _vec_store2(rn->s2, r6, r7, r8);					\
   _vec_store2(rn->s3, r9, r10, r11);
 
+#define _g5_cmplx_sub_hop_and_g5store()					\
+  _vec_load_halfspinor(r3, r4, r5, pn.s0);				\
+  _vec_cmplx_mul_double2c(r0, r1, r2, r3, r4, r5, cf);			\
+  _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
+  _vec_sub_double2(r0, r1, r2, r3, r4, r5, rs0, rs1, rs2, rs3, rs4, rs5); \
+  _vec_store2(rn->s0, r0, r1, r2);					\
+  _vec_store2(rn->s1, r3, r4, r5);					\
+  _vec_load_halfspinor(r3, r4, r5, pn.s2);				\
+  _vec_cmplxcg_mul_double2c(r0, r1, r2, r3, r4, r5, cf);		\
+  _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
+  _vec_sub_double2(rs6, rs7, rs8, rs9, rs10, rs11, r0, r1, r2, r3, r4, r5); \
+  _vec_store2(rn->s2, rs6, rs7, rs8);					\
+  _vec_store2(rn->s3, rs9, rs10, rs11);
+  
+
 #define _store_res()				\
   _vec_store2(rn->s0, rs0, rs1, rs2);		\
   _vec_store2(rn->s1, rs3, rs4, rs5);		\
@@ -529,8 +544,17 @@
   _sse_load_up(rn->s3);					\
   _sse_vector_cmplxcg_mul(cf);				\
   _sse_store_nt_up(rn->s3);
-  
 
+#define _g5_cmplx_sub_hop_and_g5store()			\
+  _complex_times_vector(psi, cf, pn->s0);		\
+  _vector_sub(rn->s0, psi, rn->s0);			\
+  _complex_times_vector(psi2, cf, pn->s1);		\
+  _vector_sub(rn->s1, psi2, rn->s1);			\
+  _complexcjg_times_vector(psi, cf, pn->s2);		\
+  _vector_sub(rn->s2, rn->s2, psi);			\
+  _complexcjg_times_vector(psi2, cf, pn->s3);		\
+  _vector_sub(rn->s3, rn->s3, psi2);
+  
 #define _store_res()
 
 #  else
@@ -641,15 +665,15 @@
   _complexcjg_times_vector(rn->s2, cfactor, temp.s2);	\
   _complexcjg_times_vector(rn->s3, cfactor, temp.s3);
 
-#define _g5_cmplx_sub_hop_and_g5store()		\
-  _complex_times_vector(psi, cfactor, pn.s0);		\
-  _vector_sub(rn->s0, psi, temp->s0);			\
-  _complex_times_vector(chi, cfactor, pn.s1);		\
-  _vector_sub(rn->s1, chi, temp->s1);			\
-  _complexcjg_times_vector(psi, cfactor, pn.s2);	\
-  _vector_sub(rn->s2, temp->s2, psi);			\
-  _complexcjg_times_vector(chi, cfactor, pn.s3);	\
-  _vector_sub(rn->s3, temp->s3, chi);
+#define _g5_cmplx_sub_hop_and_g5store()			\
+  _complex_times_vector(psi, cfactor, pn->s0);		\
+  _vector_sub(rn->s0, psi, temp.s0);			\
+  _complex_times_vector(chi, cfactor, pn->s1);		\
+  _vector_sub(rn->s1, chi, temp.s1);			\
+  _complexcjg_times_vector(psi, cfactor, pn->s2);	\
+  _vector_sub(rn->s2, temp.s2, psi);			\
+  _complexcjg_times_vector(chi, cfactor, pn->s3);	\
+  _vector_sub(rn->s3, temp.s3, chi);
 
 #define _store_res()				\
   _vector_assign(rn->s0, temp.s0);		\

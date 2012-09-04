@@ -24,4 +24,6 @@
 
 void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, complex double const cfactor);
 
+void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * p, spinor * const k, 
+			   complex double const cfactor);
 #endif

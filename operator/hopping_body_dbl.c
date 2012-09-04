@@ -74,6 +74,9 @@
     hi++;
 #endif
     rn=l+(icx-ioff);
+#ifdef _TM_SUB_HOP
+    pn=p+(icx-ioff);
+#endif
     /*********************** direction +t ************************/
 #    if (!defined _GAUGE_COPY)
     um=&g_gauge_field[(*hi)][0]; 
@@ -170,6 +173,8 @@
 
 #ifdef _MUL_G5_CMPLX
     _hop_mul_g5_cmplx_and_store();
+#elif defined _TM_SUB_HOP
+    _g5_cmplx_sub_hop_and_g5store();
 #else
     _store_res();
 #endif

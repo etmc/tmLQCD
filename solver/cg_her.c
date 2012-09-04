@@ -106,7 +106,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
 #ifdef _USE_HALFSPINOR
     if(((err*err <= eps_sq) && (rel_prec == 0)) || ((err*err <= eps_sq*squarenorm) && (rel_prec == 1))) {
       g_sloppy_precision = 1;
-      if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
+      if(g_debug_level > 2 && g_proc_id == g_stdio_proc && g_sloppy_precision_flag == 1) {
         printf("sloppy precision on\n"); fflush( stdout);
       }
     }

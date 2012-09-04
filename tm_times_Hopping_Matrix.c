@@ -35,6 +35,7 @@
 #ifdef OMP
 #include <omp.h>
 #endif
+#include <complex.h>
 #include "global.h"
 #include "su3.h"
 #ifdef MPI
@@ -53,7 +54,7 @@
 // where cfactor = a + i b
 //
 
-#if (defined _USE_HALFSPINOR)
+#if (defined _USE_HALFSPINOR && !defined _NO_COMM)
 #  include "operator/halfspinor_hopping.h"
 
 #  if ((defined SSE2)||(defined SSE3))
@@ -115,7 +116,7 @@ void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, 
 #    include"xlc_prefetch.h"
 
 #  endif
-void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, complex double const cfactor) {
+void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, double complex const cfactor) {
 #  ifdef XLC
 #    pragma disjoint(*l, *k)
 #  endif
@@ -142,6 +143,109 @@ void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, 
 #  endif
 #  include "operator/hopping_body_dbl.c"
 #  undef _MUL_G5_CMPLX
+#  ifdef OMP
+  } /* OpenMP closing brace */
+#  endif
+  return;
+}
+#endif
+
+
+#if (defined _USE_HALFSPINOR)
+#  include "operator/halfspinor_hopping.h"
+
+#  if ((defined SSE2)||(defined SSE3))
+#    include "sse.h"
+
+#  elif (defined BGL && defined XLC)
+#    include "bgl.h"
+
+#  elif (defined BGQ && defined XLC)
+#    include "bgq.h"
+#    include "bgq2.h"
+#    include "xlc_prefetch.h"
+
+#  endif
+
+void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * const p, spinor * const k, 
+			   complex double const cfactor) {
+  
+#  ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#  endif
+  
+#  ifdef OMP
+#  pragma omp parallel
+  {
+    su3 * restrict u0 ALIGN;
+#  endif
+
+#  define _TM_SUB_HOP
+    spinor * pn;
+#  if (defined BGQ && defined XLC)
+    complex double ALIGN bla = cfactor;
+    vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
+#  elif (defined SSE2 || defined SSE3)
+    _Complex double ALIGN cf = cfactor;
+    su3_vector ALIGN psi, psi2;
+#  endif
+#  include "operator/halfspinor_body.c"
+#  undef _TM_SUB_HOP    
+#  ifdef OMP
+  } /* OpenMP closing brace */
+#  endif
+  return;
+}
+
+#elif (!defined _NO_COMM && !defined _USE_HALFSPINOR)
+#  include "operator/hopping.h"
+#  if ((defined SSE2)||(defined SSE3))
+#    include "sse.h"
+
+#  elif (defined BGL && defined XLC)
+#    include "bgl.h"
+
+#  elif (defined BGQ && defined XLC)
+#    include "bgq.h"
+#    include "bgq2.h"
+#    include "xlc_prefetch.h"
+
+#  elif defined XLC
+#    include"xlc_prefetch.h"
+
+#  endif
+void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * p, spinor * const k, 
+			   complex double const cfactor) {
+#  ifdef XLC
+#    pragma disjoint(*l, *k)
+#  endif
+#  ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#  endif
+
+#  if (defined MPI)
+  xchange_field(k, ieo);
+#  endif
+  
+#  ifdef OMP
+#    pragma omp parallel
+  {
+#  endif
+#  define _TM_SUB_HOP
+    spinor * pn;
+#  if (defined BGQ && defined XLC)
+    complex double ALIGN bla = cfactor;
+    vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
+#  elif (defined SSE2 || defined SSE3)
+    _Complex double ALIGN cf = cfactor;
+    su3_vector ALIGN psi, psi2;
+#  endif
+#  include "operator/hopping_body_dbl.c"
+#  undef _TM_SUB_HOP
 #  ifdef OMP
   } /* OpenMP closing brace */
 #  endif
