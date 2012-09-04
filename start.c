@@ -789,10 +789,12 @@ void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int
 
 void start_ranlux(int level,int seed)
 {
-   int max_seed,loc_seed;
+   unsigned int max_seed,loc_seed;
 
    max_seed=2147483647/g_nproc;
-   loc_seed=seed+g_proc_id*max_seed;
+   loc_seed=(seed+g_proc_id*max_seed) % max_seed;
+
+   if(loc_seed == 0) loc_seed++;
 
    rlxs_init(level-1,loc_seed);
    rlxd_init(level,loc_seed);
