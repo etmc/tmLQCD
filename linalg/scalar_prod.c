@@ -28,9 +28,9 @@
 #include "scalar_prod.h"
 
 /*  <S,R>=S^* times R */
-_Complex double scalar_prod(spinor * const S, spinor * const R, const int N, const int parallel){
+_Complex double scalar_prod(spinor * const S, spinor * const R, const int N, const int parallel) {
   int ix;
-  static _Complex double ds,ks,kc,tr,ts,tt;
+  _Complex double ALIGN ds,ks,kc,tr,ts,tt;
   spinor *s,*r;
   _Complex double c;
 #ifdef MPI
@@ -77,7 +77,7 @@ _Complex double scalar_prod(spinor * const S, spinor * const R, const int N, con
 #ifdef WITHLAPH
 _Complex double scalar_prod_su3vect(su3_vector * const S, su3_vector * const R, const int N, const int parallel)
 {
-  static double ks, ds, tr, ts, tt;
+  double ALIGN ks, ds, tr, ts, tt;
   su3_vector *s, *r;
   _Complex double c;
 #ifdef MPI

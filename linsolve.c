@@ -39,7 +39,7 @@
 #include "tm_operators.h"
 #include "linalg/assign_add_mul_r_add_mul.h"
 #include "linsolve.h"
-
+#include "gettime.h"
 
 /* k output , l input */
 int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec)
@@ -51,11 +51,7 @@ int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_pr
   spinor *x, *delta, *y;
   
   /* initialize residue r and search vector p */
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = ((double)clock())/((double)(CLOCKS_PER_SEC));
-#endif
+  atime = gettime();
   squarenorm = square_norm(l, VOLUME/2, 1);
 
   if(g_sloppy_precision_flag == 1) { 
@@ -148,11 +144,7 @@ int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_pr
       normsq=err;
     }
   }
-#ifdef MPI
-  etime = MPI_Wtime();
-#else
-  etime = ((double)clock())/((double)(CLOCKS_PER_SEC));
-#endif
+  etime = gettime();
   /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
   /* 2*1320.0 because the linalg is over VOLUME/2 */
   flops = (2*(2*1320.0+2*3*4) + 2*3*4 + iteration*(2.*(2*1320.0+2*3*4) + 10*3*4))*VOLUME/2/1.0e6f;

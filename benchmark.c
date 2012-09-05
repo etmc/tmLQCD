@@ -42,6 +42,10 @@
 #  include <io/gauge.h>
 # endif
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
+#include "gettime.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "ranlxd.h"
@@ -81,20 +85,6 @@
 #  define SLICE ((LY*LZ*T/2) + (LX*LZ*T/2) + (LX*LY*T/2))
 #endif
 
-#if (defined BGL && !defined BGP)
-static double clockspeed=1.0e-6/700.0;
-
-double bgl_wtime() {
-  return ( rts_get_timebase() * clockspeed );
-}
-#else
-# ifdef MPI
-double bgl_wtime() { return(MPI_Wtime()); }
-# else
-double bgl_wtime() { return(0); }
-# endif
-#endif
-
 int check_xchange();
 
 int main(int argc,char *argv[])
@@ -125,6 +115,16 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Could not find input file: benchmark.input\nAborting...\n");
     exit(-1);
   }
+
+#ifdef OMP
+  if(omp_num_threads > 0) 
+  {
+     omp_set_num_threads(omp_num_threads);
+  }
+  else {
+    omp_num_threads = omp_get_max_threads();
+  }
+#endif
 
   tmlqcd_mpi_init(argc, argv);
   
@@ -254,7 +254,7 @@ int main(int argc,char *argv[])
 
   if(even_odd_flag) {
     /*initialize the pseudo-fermion fields*/
-    j_max=1;
+    j_max=2048;
     sdt=0.;
     for (k = 0; k < k_max; k++) {
       random_spinor_field(g_spinor_field[k], VOLUME/2, 0);
@@ -264,11 +264,7 @@ int main(int argc,char *argv[])
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
-#if defined BGL
-      t1 = bgl_wtime();
-#else
-      t1=(double)clock();
-#endif
+      t1 = gettime();
       antioptaway=0.0;
       for (j=0;j<j_max;j++) {
         for (k=0;k<k_max;k++) {
@@ -277,13 +273,8 @@ int main(int argc,char *argv[])
           antioptaway+=creal(g_spinor_field[2*k_max][0].s0.c0);
         }
       }
-#if defined BGL
-      t2 = bgl_wtime();
-      dt = t2 - t1;
-#else
-      t2=(double)clock();
-      dt=(t2-t1)/((double)(CLOCKS_PER_SEC));
-#endif
+      t2 = gettime();
+      dt = t2-t1;
 #ifdef MPI
       MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
@@ -307,17 +298,17 @@ int main(int argc,char *argv[])
     if(g_proc_id==0) {
       printf("# The following result is just to make sure that the calculation is not optimized away: %e\n", antioptaway);
       printf("# Total compute time %e sec, variance of the time %e sec. (%d iterations).\n", sdt, sqdt, j_max);
-      printf("# Communication switched on:\n# (%d Mflops [%d bit arithmetic])\n\n", (int)(1320.0f/sdt),(int)sizeof(spinor)/3);
+      printf("# Communication switched on:\n# (%d Mflops [%d bit arithmetic])\n", (int)(1320.0f/sdt),(int)sizeof(spinor)/3);
+#ifdef OMP
+      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1320.0f/(omp_num_threads*sdt)));
+#endif
+      printf("\n");
       fflush(stdout);
     }
     
 #ifdef MPI
     /* isolated computation */
-#if defined BGL
-    t1 = bgl_wtime();
-#else
-    t1=(double)clock();
-#endif
+    t1 = gettime();
     antioptaway=0.0;
     for (j=0;j<j_max;j++) {
       for (k=0;k<k_max;k++) {
@@ -326,13 +317,8 @@ int main(int argc,char *argv[])
         antioptaway += creal(g_spinor_field[2*k_max][0].s0.c0);
       }
     }
-#if defined BGL
-    t2 = bgl_wtime();
-    dt2 = t2 - t1;
-#else
-    t2=(double)clock();
-    dt2=(t2-t1)/((double)(CLOCKS_PER_SEC));
-#endif
+    t2 = gettime();
+    dt2 = t2-t1;
     /* compute the bandwidth */
     dt=dts-dt2;
     MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -342,7 +328,11 @@ int main(int argc,char *argv[])
     dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
     if(g_proc_id==0) {
       printf("# The following result is printed just to make sure that the calculation is not optimized away: %e\n",antioptaway);
-      printf("# Communication switched off: \n# (%d Mflops [%d bit arithmetic])\n\n", (int)(1320.0f/dt),(int)sizeof(spinor)/3);
+      printf("# Communication switched off: \n# (%d Mflops [%d bit arithmetic])\n", (int)(1320.0f/dt),(int)sizeof(spinor)/3);
+#ifdef OMP
+      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1320.0f/(omp_num_threads*dt)));
+#endif
+      printf("\n"); 
       fflush(stdout);
     }
     sdt=sdt/((double)k_max);
@@ -372,24 +362,15 @@ int main(int argc,char *argv[])
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
-#if defined BGL
-      t1 = bgl_wtime();
-#else
-      t1=(double)clock();
-#endif
+      t1 = gettime();
       for (j=0;j<j_max;j++) {
         for (k=0;k<k_max;k++) {
           D_psi(g_spinor_field[k+k_max], g_spinor_field[k]);
           antioptaway+=creal(g_spinor_field[k+k_max][0].s0.c0);
         }
       }
-#if defined BGL
-      t2 = bgl_wtime();
-      dt = t2 - t1;
-#else
-      t2=(double)clock();
-      dt=(t2-t1)/((double)(CLOCKS_PER_SEC));
-#endif
+      t2 = gettime();
+      dt=t2-t1;
 #ifdef MPI
       MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
@@ -413,7 +394,11 @@ int main(int argc,char *argv[])
     if(g_proc_id==0) {
       printf("# The following result is just to make sure that the calculation is not optimized away: %e\n", antioptaway);
       printf("# Total compute time %e sec, variance of the time %e sec. (%d iterations).\n", sdt, sqdt, j_max);
-      printf("\n# (%d Mflops [%d bit arithmetic])\n\n", (int)(1392.0f/sdt),(int)sizeof(spinor)/3);
+      printf("\n# (%d Mflops [%d bit arithmetic])\n", (int)(1392.0f/sdt),(int)sizeof(spinor)/3);
+#ifdef OMP
+      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1320.0f/(omp_num_threads*sdt)));
+#endif
+      printf("\n"); 
       fflush(stdout);
     }
   }

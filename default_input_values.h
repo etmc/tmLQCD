@@ -160,6 +160,8 @@
 /* default GPU values */
 #define _default_device_num -1
 
+/* default OpenMP values */
+#define _default_omp_num_threads 0
 
 #define _default_use_preconditioning 0
 

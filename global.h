@@ -99,6 +99,7 @@ EXTERN int ** g_idn;
 EXTERN int ** g_iup_eo; /* NEW GIUPDNEO */
 EXTERN int ** g_idn_eo;
 EXTERN int ** g_coord;
+EXTERN int * g_hi;
 
 
 EXTERN int * g_field_z_ipt_even;
@@ -245,6 +246,10 @@ EXTERN int g_nb_y_up, g_nb_y_dn;
 EXTERN int g_nb_t_up, g_nb_t_dn;
 EXTERN int g_nb_z_up, g_nb_z_dn;
 
+#endif
+
+#ifdef OMP
+EXTERN int omp_num_threads;
 #endif
 
 /* something to evaluate time elaps */

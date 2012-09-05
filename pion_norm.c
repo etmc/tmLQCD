@@ -38,6 +38,7 @@
 #include "linalg/convert_eo_to_lexic.h"
 #include "measurements.h"
 #include "pion_norm.h"
+#include "gettime.h"
 
 void pion_norm(const int traj, const int id, const int ieo) {
   int i, j, z, zz, z0;
@@ -70,11 +71,7 @@ void pion_norm(const int traj, const int id, const int ieo) {
   MPI_Bcast(&z0, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
 
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  atime = gettime();
 
   Cpp = (double*) calloc(g_nproc_z*LZ, sizeof(double));
 
@@ -150,11 +147,7 @@ void pion_norm(const int traj, const int id, const int ieo) {
   }
   
   free(Cpp);
-#ifdef MPI
-  etime = MPI_Wtime();
-#else
-  etime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  etime = gettime();
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("PIONNORM : measurement done int t/s = %1.4e\n", etime - atime);
   }

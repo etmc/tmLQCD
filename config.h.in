@@ -14,8 +14,14 @@
 /* Define to 1 if you have the `lemon' library (-llemon). */
 #undef HAVE_LIBLEMON
 
+/* 1 if clock_gettime is available for use in benchmark */
+#undef HAVE_CLOCK_GETTIME
+
 /* Compile with MPI support */
 #undef MPI
+
+/* Compile with OpenMP support */
+#undef OMP
 
 /* Compile with FFTW support */
 #undef HAVE_FFTW
@@ -94,6 +100,9 @@
 
 /* Optimize for Blue Gene/P */
 #undef BGP
+
+/* Compile with QPX intrinsics */
+#undef BGQ
 
 /* Are we using the IBM xlc compiler? */
 #undef XLC

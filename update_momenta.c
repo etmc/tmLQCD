@@ -36,12 +36,12 @@
 #include "read_input.h"
 #include "hamiltonian_field.h"
 #include "update_momenta.h"
+#include "gettime.h"
 
 /* Updates the momenta: equation 16 of Gottlieb */
 void update_momenta(int * mnllist, double step, const int no, 
 		    hamiltonian_field_t * const hf) {
   int i,mu, k;
-  double atime=0., etime=0.;
 
   for(i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
     for(mu=0;mu<4;mu++) { 
@@ -51,21 +51,10 @@ void update_momenta(int * mnllist, double step, const int no,
 
   for(k = 0; k < no; k++) {
     if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
-#ifdef MPI
-      atime = MPI_Wtime();
-#else
-      atime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
-
       monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
-
-#ifdef MPI
-      etime = MPI_Wtime();
-#else
-      etime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
     }
   }
+
 #ifdef MPI
   xchange_deri(hf->derivative);
 #endif

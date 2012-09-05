@@ -26,14 +26,25 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "global.h"
 #include "su3.h"
 #include "convert_eo_to_lexic.h"
 
 void convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * const r) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   int x, y, z, t, i, ix;
   spinor * p = NULL;
 
+#ifdef OMP
+#pragma omp for
+#endif
   for(x = 0; x < LX; x++) {
     for(y = 0; y < LY; y++) {
       for(z = 0; z < LZ; z++) {
@@ -52,6 +63,11 @@ void convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * const r) {
       }
     }
   }
+
+#ifdef OMP
+  } /*OpenMP closing brace */
+#endif
+
   return;
 }
 
@@ -61,9 +77,17 @@ void convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * const r) {
  *      r: new spinor odd 
  */
 void convert_lexic_to_eo(spinor * const s, spinor * const r, spinor * const P) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   int x, y, z, t, i, ix;
   spinor * p = NULL;
 
+#ifdef OMP
+#pragma omp for
+#endif
   for(x = 0; x < LX; x++) {
     for(y = 0; y < LY; y++) {
       for(z = 0; z < LZ; z++) {
@@ -82,5 +106,10 @@ void convert_lexic_to_eo(spinor * const s, spinor * const r, spinor * const P) {
       }
     }
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   return;
 }
