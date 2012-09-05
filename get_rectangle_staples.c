@@ -27,16 +27,8 @@
 #include "get_rectangle_staples.h"
 
 void get_rectangle_staples(su3 * const v, const int x, const int mu) {
-#ifdef OMP
-#define static
-#endif
 
-  static su3 tmp1, tmp2;
-
-#ifdef OMP
-#undef static
-#endif  
-  
+  su3 ALIGN tmp1, tmp2;
   int y, z, nu;
   su3 * a, * b, * c, * d, * e;
 #ifdef _KOJAK_INST

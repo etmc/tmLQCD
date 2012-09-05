@@ -47,21 +47,16 @@
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 
 #ifdef OMP
-#define static
 #pragma omp parallel
   {
 #endif
 
-  static su3 v, w;
+  su3 ALIGN v, w;
   int i, mu;
   su3 *z;
   su3adj *xm;
   monomial * mnl = &monomial_list[id];
   double factor = -1. * g_beta/3.0;
-
-#ifdef OMP
-#undef static
-#endif
 
   if(mnl->use_rectangles) {
     mnl->forcefactor = 1.;

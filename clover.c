@@ -174,19 +174,15 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
 
 void clover_inv(const int ieo, spinor * const l, const double mu) {
 #ifdef OMP
-#define static
 #pragma omp parallel
   {
   int icy;
 #endif    
-  static su3_vector psi, chi, phi1, phi3;
+  su3_vector ALIGN psi, chi, phi1, phi3;
   int ioff = 0;
   su3 *w1, *w2, *w3, *w4;
   spinor *rn;
 
-#ifdef OMP
-#undef static
-#endif
 
   if(mu < 0) ioff = VOLUME/2;
   /************************ loop over all lattice sites *************************/
@@ -247,19 +243,14 @@ void clover_gamma5(const int ieo,
 		   spinor * const l, spinor * const k, spinor * const j,
 		   const double mu) {
 #ifdef OMP
-#define static
 #pragma omp parallel
   {
 #endif
-  static su3_vector chi, psi1, psi2;
+  su3_vector ALIGN chi, psi1, psi2;
   int ix;
   int ioff,icx;
   su3 *w1,*w2,*w3;
   spinor *r,*s,*t;
-
-#ifdef OMP
-#undef static
-#endif
 
   if(ieo == 0) {
     ioff = 0;
@@ -335,10 +326,8 @@ void clover(const int ieo,
 #ifdef OMP
 #pragma omp parallel
   {
-  su3_vector chi, psi1, psi2;
-#else
-  static su3_vector chi, psi1, psi2;
 #endif
+  su3_vector ALIGN chi, psi1, psi2;
   int ix;
   int ioff,icx;
   su3 *w1,*w2,*w3;
@@ -409,10 +398,8 @@ void assign_mul_one_sw_pm_imu(const int ieo,
 #ifdef OMP
 #pragma omp parallel
   {
-  su3_vector chi, psi1, psi2;
-#else
-  static su3_vector chi, psi1, psi2;
 #endif
+  su3_vector ALIGN chi, psi1, psi2;
   int ix;
   int ioff, icx;
   su3 *w1, *w2, *w3;
@@ -483,10 +470,8 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
 #ifdef OMP
 #pragma omp parallel
   {
-  su3_vector psi, chi, phi1, phi3;
-#else
-  static su3_vector psi, chi, phi1, phi3;
 #endif
+  su3_vector ALIGN psi, chi, phi1, phi3;
   su3 *w1, *w2, *w3, *w4;
   spinor *rn, *s;
 

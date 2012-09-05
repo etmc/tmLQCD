@@ -41,8 +41,8 @@
 void square_and_prod_r(double * const x1, double * const x2, spinor * const S, spinor * const R, const int N)
 {
   int ix;
-  static double ks,kc,ds,tr,ts,tt;
-  static double xks,xkc,xds,xtr,xts,xtt;
+  double ALIGN ks,kc,ds,tr,ts,tt;
+  double ALIGN xks,xkc,xds,xtr,xts,xtt;
   spinor *s,*r;
   
   ks=0.0;

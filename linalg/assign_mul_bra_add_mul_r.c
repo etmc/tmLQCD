@@ -40,13 +40,12 @@
 /*  R output, S input, c0 input, c input */
 void assign_mul_bra_add_mul_r(spinor * const R,const double c0, const double c,spinor * const S, const int N){
 #ifdef OMP
-#define static
 #pragma omp parallel
   {
 #endif
 
   int ix;
-  static double fact0,fact;
+  double ALIGN fact0,fact;
   spinor *r,*s;
   
   fact=c;
@@ -54,7 +53,6 @@ void assign_mul_bra_add_mul_r(spinor * const R,const double c0, const double c,s
 
 
 #ifdef OMP
-#undef static
 #pragma omp for
 #endif
   for (ix = 0;ix < N; ++ix)

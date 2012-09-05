@@ -232,7 +232,7 @@ double square_norm(spinor * const P, const int N, const int parallel) {
 double square_norm(spinor * const P, const int N, const int parallel)
 {
   int ix;
-  static double ks,kc,ds,tr,ts,tt;
+  double ALIGN ks,kc,ds,tr,ts,tt;
   spinor *s;
   
   ks = 0.0;
@@ -277,7 +277,7 @@ double square_norm(spinor * const P, const int N, const int parallel)
 double square_norm_su3vect(su3_vector * const P, const int N, const int parallel) 
 {
   int ix;
-  static double ks,kc,ds,tr,ts,tt;
+  double ALIGN ks,kc,ds,tr,ts,tt;
   su3_vector *s;
 
   ks = 0.0;

@@ -725,7 +725,7 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k,
   double sign=1.;
   spinor *r, *s, *t;
 
-  su3_vector ALIGN phi1;
+  su3_vector ALIGN phi1, phi2, phi3, phi4;
 
   if(_sign < 0.){
     sign = -1.;
