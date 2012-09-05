@@ -17,11 +17,11 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _TM_TIMES_HOPPING_MATRIX_H
-#  define _TM_TIMES_HOPPING_MATRIX_H
+#ifndef _TM_SUB_HOPPING_MATRIX_H
+#  define _TM_SUB_HOPPING_MATRIX_H
 
 #  include "su3.h"
 
-void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, complex double const cfactor);
-
+void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * p, spinor * const k, 
+			   complex double const cfactor);
 #endif
