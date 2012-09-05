@@ -107,6 +107,8 @@ extern "C"
   extern int innersolver_precision_check_abs;
   extern int innersolver_precision_check_rel;
 
+  extern int omp_num_threads;
+
   extern int use_preconditioning;
 
   extern int nblocks_t, nblocks_x, nblocks_y, nblocks_z;

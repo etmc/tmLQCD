@@ -40,7 +40,7 @@ LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
 
 COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
-SMODULES = Hopping_Matrix_nocom Hopping_Matrix tm_operators
+SMODULES = Hopping_Matrix_nocom tm_times_Hopping_Matrix Hopping_Matrix tm_operators tm_sub_Hopping_Matrix
 
 MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	expo get_staples update_backward_gauge \
@@ -67,7 +67,7 @@ MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	little_D block Dov_psi operator poly_monomial measurements pion_norm Dov_proj \
 	xchange_field_tslice temporalgauge spinor_fft X_psi P_M_eta \
 	xchange_jacobi jacobi init_jacobi_field \
-	fatal_error invert_clover_eo
+	fatal_error invert_clover_eo gettime
 
 ## the GPU modules (all .cu files in $GPUDIR)
 GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)

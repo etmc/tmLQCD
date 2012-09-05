@@ -67,6 +67,11 @@ int write_first_messages(FILE * parameterfile, const int inv) {
   fprintf(parameterfile,
           "# The code is compiled for Blue Gene/P\n");
 #endif
+#if (defined BGQ && defined XLC)
+  printf("# The code is compiled with QPX intrinsics for Blue Gene/Q\n");
+  fprintf(parameterfile,
+          "# The code is compiled with QPX intrinsics for Blue Gene/Q\n");
+#endif
 #ifdef OPTERON
   printf("# The code is compiled for AMD Opteron\n");
   fprintf(parameterfile,
@@ -103,6 +108,11 @@ int write_first_messages(FILE * parameterfile, const int inv) {
   fprintf(parameterfile,
 	  "# the code is compiled with MPI IO / Lemon\n");
 #  endif
+#endif
+#ifdef OMP
+  printf("# the code is compiled with openMP support\n");
+  fprintf(parameterfile,
+          "# the code is compiled with openMP support\n");
 #endif
   if( bc_flag == 0 ) {
     printf("# Periodic boundary conditions are used\n");

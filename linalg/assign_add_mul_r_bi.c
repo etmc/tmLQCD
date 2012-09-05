@@ -15,9 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-
-/************************************************************************
  *
  *      Adpated routine evaluating the P=P+c*Q where P,Q are bispinors
  *
@@ -35,8 +32,11 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
-#include "sse.h"
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "su3.h"
+#include "sse.h"
 #include "assign_add_mul_r_bi.h"
 
 
@@ -77,9 +77,16 @@ void assign_add_mul_r_bi(bispinor * const P, bispinor * const Q, const double c,
 /*  k input, l output */
 void assign_add_mul_r_bi(bispinor * const P, bispinor * const Q, const double c, const int N)
 {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   spinor *r,*s;
 
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ix++)
   {
     r=(spinor *) &P[ix].sp_up;
@@ -120,6 +127,9 @@ void assign_add_mul_r_bi(bispinor * const P, bispinor * const Q, const double c,
     r->s3.c1 += c * s->s3.c1;
     r->s3.c2 += c * s->s3.c2;
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 #endif
 

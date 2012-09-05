@@ -51,13 +51,12 @@
 #include "su3adj.h"
 #include "expo.h"
 
-su3 exposu3(su3adj p)
-{
+su3 exposu3(su3adj p) {
   int i;
-  static su3 v,v2,vr;
-  static double fac,r;
-  static double a,b;
-  static _Complex double a0,a1,a2,a1p;
+  su3 ALIGN v,v2,vr;
+  double ALIGN fac,r;
+  double ALIGN a,b;
+  _Complex double ALIGN a0,a1,a2,a1p;
 
   /* it writes 'p=vec(h_{j,mu})' in matrix form 'v' */  
   _make_su3(v,p);
@@ -97,10 +96,12 @@ su3 exposu3(su3adj p)
 }
 
 su3 exposu3_check(su3adj p, int im) {
+
   /* compute the result by taylor series */
-  static su3 v,v2,v3,vr;
-  static double fac;
+  su3 ALIGN v,v2,v3,vr;
+  double ALIGN fac;
   int i;
+
   _make_su3(v, p);
   _su3_one(vr);
   _su3_acc(vr, v); 
@@ -117,10 +118,9 @@ su3 exposu3_check(su3adj p, int im) {
 }
 
 
-su3 restoresu3(su3 u)
-{
-  static su3 vr;
-  static double n0,n1;
+su3 restoresu3(su3 u) {
+  su3 ALIGN vr;
+  double ALIGN n0,n1;
 
   /* normalize rows 1 and 2 */
   n0 = 1.0 / sqrt(conj(u.c00) * u.c00 + conj(u.c01) * u.c01 + conj(u.c02) * u.c02);
@@ -144,9 +144,9 @@ su3 restoresu3(su3 u)
 
 /* Exponentiates a hermitian 3x3 matrix Q */
 /* Convenience function -- wrapper around Hasenbusch's implementation */
-void exposu3_in_place(su3 *u)
-{
-  static su3adj p;
+void exposu3_in_place(su3 *u) {
+  su3adj ALIGN p;
+
   _trace_lambda(p, *u); /* Projects onto the Gell-Mann matrices */
   /* -2.0 to get su3 to su3adjoint consistency ****/
   p.d1 *= -0.5; p.d2 *= -0.5; p.d3 *= -0.5; p.d4 *= -0.5;

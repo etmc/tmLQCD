@@ -26,9 +26,12 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
-#include "sse.h"
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "su3.h"
 #include "su3adj.h"
+#include "sse.h"
 #include "assign_add_mul_r_add_mul.h"
 
 #if ( defined SSE2 || defined SSE3 )
@@ -83,9 +86,16 @@ void assign_add_mul_r_add_mul(spinor * const R, spinor * const S, spinor * const
 /* j, k input, l output */
 void assign_add_mul_r_add_mul(spinor * const R, spinor * const S, spinor * const U,
 			      const double c1,const double c2, const int N) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
 
    spinor *r,*s,*t;
 
+#ifdef OMP
+#pragma omp for
+#endif
    for (int ix = 0; ix < N; ++ix)
    {
      r=R+ix;      
@@ -108,5 +118,10 @@ void assign_add_mul_r_add_mul(spinor * const R, spinor * const S, spinor * const
      r->s3.c1 += c1 * s->s3.c1 + c2 * t->s3.c1;
      r->s3.c2 += c1 * s->s3.c2 + c2 * t->s3.c2;
    }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 }
 #endif

@@ -24,6 +24,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef OMP 
+# include <omp.h>
+#endif
 #include "global.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -43,8 +46,13 @@
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
+  su3 ALIGN v, w;
   int i, mu;
-  static su3 v, w;
   su3 *z;
   su3adj *xm;
   monomial * mnl = &monomial_list[id];
@@ -55,6 +63,9 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
     factor = -mnl->c0 * g_beta/3.0;
   }
   
+#ifdef OMP
+#pragma omp for
+#endif
   for(i = 0; i < VOLUME; i++) { 
     for(mu=0;mu<4;mu++) {
       z=&hf->gaugefield[i][mu];
@@ -70,6 +81,10 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
       }
     }
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
