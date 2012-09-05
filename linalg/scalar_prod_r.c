@@ -106,7 +106,7 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
 double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel)
 {
   
-  static double ks,kc,ds,tr,ts,tt;
+  double ALIGN ks,kc,ds,tr,ts,tt;
   spinor *s,*r;
   
   ks=0.0;
@@ -153,7 +153,7 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
 double scalar_prod_r_su3vect(su3_vector * const S,su3_vector * const R, const int N, const int parallel)
 {
   int ix;
-  static double ks,kc,ds,tr,ts,tt;
+  double ALIGN ks,kc,ds,tr,ts,tt;
   su3_vector *s,*r;
 
   ks=0.0;
