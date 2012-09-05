@@ -480,7 +480,7 @@ void H_eo_tm_inv_psi(spinor * const l, spinor * const k,
 
 void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
                        const int ieo, const double _sign) {
-#if ((defined BGL && defined XLC) || defined _USE_TSPLITPAR)
+#if ((defined BGL && defined XLC) || defined _USE_TSPLITPAR || defined BGQ)
   Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX+2], k);
   mul_one_pm_imu_sub_mul_gamma5(l, p, g_spinor_field[DUM_MATRIX+2], _sign);
 #else

@@ -1120,13 +1120,13 @@
   _vec_store2((res)->s3, r9, r10, r11);
 
 #define _g5_cmplx_sub_hop_and_g5store(res)				\
-  _vec_load_halfspinor(r3, r4, r5, pn.s0);				\
+  _vec_load_halfspinor(r3, r4, r5, pn->s0);				\
   _vec_cmplx_mul_double2c(r0, r1, r2, r3, r4, r5, cf);			\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
   _vec_sub_double2(r0, r1, r2, r3, r4, r5, rs0, rs1, rs2, rs3, rs4, rs5); \
   _vec_store2((res)->s0, r0, r1, r2);					\
   _vec_store2((res)->s1, r3, r4, r5);					\
-  _vec_load_halfspinor(r3, r4, r5, pn.s2);				\
+  _vec_load_halfspinor(r3, r4, r5, pn->s2);				\
   _vec_cmplxcg_mul_double2c(r0, r1, r2, r3, r4, r5, cf);		\
   _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
   _vec_sub_double2(rs6, rs7, rs8, rs9, rs10, rs11, r0, r1, r2, r3, r4, r5); \
