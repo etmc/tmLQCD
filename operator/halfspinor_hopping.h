@@ -318,15 +318,26 @@
   _sse_store_nt_up((res)->s3);
 
 #define _g5_cmplx_sub_hop_and_g5store(res)		\
-  _complex_times_vector(psi, cf, pn->s0);		\
-  _vector_sub((res)->s0, psi, (res)->s0);		\
-  _complex_times_vector(psi2, cfactor, pn->s1);		\
-  _vector_sub((res)->s1, psi2, (res)->s1);		\
-  _complexcjg_times_vector(psi, cfactor, pn->s2);	\
-  _vector_sub((res)->s2, (res)->s2, psi);		\
-  _complexcjg_times_vector(psi2, cfactor, pn->s3);	\
-  _vector_sub((res)->s3, (res)->s3, psi2);
-
+  _sse_load_up(pn->s0);					\
+  _sse_vector_cmplx_mul(cf);				\
+  _sse_load((res)->s0);					\
+  _sse_vector_sub_up();					\
+  _sse_store_nt_up((res)->s0);				\
+  _sse_load_up(pn->s1);					\
+  _sse_vector_cmplx_mul(cf);				\
+  _sse_load((res)->s1);					\
+  _sse_vector_sub_up();					\
+  _sse_store_nt_up((res)->s1);				\
+  _sse_load_up(pn->s2);					\
+  _sse_vector_cmplxcg_mul(cf);				\
+  _sse_load((res)->s2);					\
+  _sse_vector_sub();					\
+  _sse_store_nt((res)->s2);				\
+  _sse_load_up(pn->s3);					\
+  _sse_vector_cmplxcg_mul(cf);				\
+  _sse_load((res)->s3);					\
+  _sse_vector_sub();					\
+  _sse_store_nt((res)->s3);
 
 #define _hop_store_post(res)
 

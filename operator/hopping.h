@@ -546,14 +546,26 @@
   _sse_store_nt_up(rn->s3);
 
 #define _g5_cmplx_sub_hop_and_g5store()			\
-  _complex_times_vector(psi, cf, pn->s0);		\
-  _vector_sub(rn->s0, psi, rn->s0);			\
-  _complex_times_vector(psi2, cf, pn->s1);		\
-  _vector_sub(rn->s1, psi2, rn->s1);			\
-  _complexcjg_times_vector(psi, cf, pn->s2);		\
-  _vector_sub(rn->s2, rn->s2, psi);			\
-  _complexcjg_times_vector(psi2, cf, pn->s3);		\
-  _vector_sub(rn->s3, rn->s3, psi2);
+  _sse_load_up(pn->s0);					\
+  _sse_vector_cmplx_mul(cf);				\
+  _sse_load(rn->s0);					\
+  _sse_vector_sub_up();					\
+  _sse_store_nt_up(rn->s0);				\
+  _sse_load_up(pn->s1);					\
+  _sse_vector_cmplx_mul(cf);				\
+  _sse_load(rn->s1);					\
+  _sse_vector_sub_up();					\
+  _sse_store_nt_up(rn->s1);				\
+  _sse_load_up(pn->s2);					\
+  _sse_vector_cmplxcg_mul(cf);				\
+  _sse_load(rn->s2);					\
+  _sse_vector_sub();					\
+  _sse_store_nt(rn->s2);				\
+  _sse_load_up(pn->s3);					\
+  _sse_vector_cmplxcg_mul(cf);				\
+  _sse_load(rn->s3);					\
+  _sse_vector_sub();					\
+  _sse_store_nt(rn->s3);
   
 #define _store_res()
 

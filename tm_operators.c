@@ -198,7 +198,9 @@ void Qtm_plus_sym_psi_nocom(spinor * const l, spinor * const k){
  ******************************************/
 void Qtm_minus_psi(spinor * const l, spinor * const k) {
   H_eo_tm_inv_psi(g_spinor_field[DUM_MATRIX+1], k, EO, -1);
-  tm_sub_H_eo_gamma5(l, k, g_spinor_field[DUM_MATRIX+1], OE, -1);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+1]);
+  mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX+2], -1);
+  //tm_sub_H_eo_gamma5(l, k, g_spinor_field[DUM_MATRIX+1], OE, -1.);
 }
 
 void Qtm_minus_sym_psi(spinor * const l, spinor * const k){
@@ -464,7 +466,7 @@ void H_eo_tm_inv_psi(spinor * const l, spinor * const k,
 #else
   double ALIGN nrm = 1./(1.+g_mu*g_mu);
   double sign=-1.; 
-  complex double z;
+  complex double ALIGN z;
   if(_sign < 0.){
     sign = 1.; 
   }
@@ -482,7 +484,7 @@ void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
   Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX+2], k);
   mul_one_pm_imu_sub_mul_gamma5(l, p, g_spinor_field[DUM_MATRIX+2], _sign);
 #else
-  _Complex double z;
+  _Complex double ALIGN z;
   double sign=1.;
 
   if(_sign < 0.){
