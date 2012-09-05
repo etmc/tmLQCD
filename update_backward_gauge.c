@@ -49,12 +49,7 @@ void update_backward_gauge(su3 ** const gf) {
     _su3_assign(g_gauge_field_copy[0][ix][2], gf[kb][2]);
     kb = g_idn[ g_eo2lexic[iy] ][3];
     _su3_assign(g_gauge_field_copy[0][ix][3], gf[kb][3]);
-  }
 
-#ifdef OMP
-#pragma omp for
-#endif
-  for(ix = 0; ix < VOLUME/2; ix++) {
     kb = g_idn[ g_eo2lexic[ix] ][0];
     _su3_assign(g_gauge_field_copy[1][ix][0], gf[kb][0]);
     kb = g_idn[ g_eo2lexic[ix] ][1];
