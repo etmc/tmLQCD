@@ -643,7 +643,7 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "m" (cimag((u).c12)), \
                       "m" (_sse_sgn))
 
-
+// else for ifdef OPTERON
 #else
 
 #define _sse_su3_multiply(u) \
@@ -746,7 +746,8 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "m" (cimag((u).c12)), \
                       "m" (_sse_sgn))
 
-#endif
+// endif for OPTERON
+#endif 
 
 /*
  * Multiplies an su3 vector s with an su3 matrix u^dagger, assuming s is
@@ -857,7 +858,7 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
                       "m" (cimag((u).c12)), \
                       "m" (cimag((u).c21)), \
                       "m" (_sse_sgn));
-
+// else for ifdef OPTERON
 #else
 
 #define _sse_su3_inverse_multiply(u) \
@@ -962,6 +963,7 @@ __asm__ __volatile__ ("movsd %0, %%xmm6 \n\t" \
 /* OPTERON */
 #endif
 
+// else for ifndef SSE3
 #else
 
 #include "sse3.h"

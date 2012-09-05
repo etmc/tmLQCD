@@ -198,8 +198,6 @@ void Qtm_plus_sym_psi_nocom(spinor * const l, spinor * const k){
  ******************************************/
 void Qtm_minus_psi(spinor * const l, spinor * const k) {
   H_eo_tm_inv_psi(g_spinor_field[DUM_MATRIX+1], k, EO, -1);
-  //Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
-  //mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], -1.);
   tm_sub_H_eo_gamma5(l, k, g_spinor_field[DUM_MATRIX+1], OE, -1);
 }
 
@@ -479,10 +477,10 @@ void H_eo_tm_inv_psi(spinor * const l, spinor * const k,
 }
 
 void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
-			const int ieo, const double _sign) {
-#if ((defined BGL && defined XLC) || defined _USE_TSPLITPAR || defined SSE2)
-  Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX], k);
-  mul_one_pm_imu_sub_mul_gamma5(l, p, g_spinor_field[DUM_MATRIX], _sign);
+                       const int ieo, const double _sign) {
+#if ((defined BGL && defined XLC) || defined _USE_TSPLITPAR)
+  Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX+2], k);
+  mul_one_pm_imu_sub_mul_gamma5(l, p, g_spinor_field[DUM_MATRIX+2], _sign);
 #else
   _Complex double z;
   double sign=1.;
@@ -494,8 +492,10 @@ void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
   z = 1. + (sign * g_mu) * I;
   tm_sub_Hopping_Matrix(ieo, l, p, k, z);
 #endif
+
   return;
 }
+
 
 /**********************************************
  *
