@@ -103,8 +103,9 @@ void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const 
 
 #ifdef OMP
 #pragma omp for
-#endif
+#else
 #pragma unroll(4)
+#endif
   for(int i = 0; i < N; i++) {
     s=(double*)((spinor *) S + i);
     r=(double*)((spinor *) R + i);
