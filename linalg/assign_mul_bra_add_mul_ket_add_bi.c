@@ -15,8 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
  *
  * File assign_mul_bra_add_mul_ket_add.c
  *
@@ -32,18 +30,29 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "sse.h"
 #include "su3.h"
+#include "sse.h"
 #include "assign_mul_bra_add_mul_ket_add_bi.h"
 
 /* R inoutput, S input, U input, c1 input, c2 input */
 void assign_mul_bra_add_mul_ket_add_bi(bispinor * const R, bispinor * const S, bispinor * const U, const _Complex double c1, const _Complex double c2, const int N)
 { 
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   spinor *r,*s,*u;
 
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix)
   {
     r=(spinor *) &R[ix].sp_up;
@@ -86,4 +95,9 @@ void assign_mul_bra_add_mul_ket_add_bi(bispinor * const R, bispinor * const S, b
     r->s3.c1 = u->s3.c1 + c2 * (r->s3.c1 + c1 * s->s3.c1);
     r->s3.c2 = u->s3.c2 + c2 * (r->s3.c2 + c1 * s->s3.c2);
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+  
 }

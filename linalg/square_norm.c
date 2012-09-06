@@ -15,8 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
  *
  * File square_norm.c
  *
@@ -36,7 +34,9 @@
 #endif
 #include <complex.h>
 #include "su3.h"
-#include "sse.h"
+#if (defined SSE || defined SSE2 || defined SSE3)
+# include "sse.h"
+#endif
 #include "square_norm.h"
 
 #if ((defined BGL) && (defined XLC))
@@ -168,12 +168,71 @@ double square_norm(spinor * const P, const int N, const int parallel) {
   return res;
 }
 
+#elif (defined BGQ && defined XLC)
+
+double square_norm(spinor * const P, const int N, const int parallel) {
+  vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
+  double res ALIGN;
+#ifdef MPI
+  double res2 ALIGN;
+#endif
+  double *s ALIGN;
+  s = (double*) P;
+  __prefetch_by_load(s+24);
+  x0 = vec_ld(0, s);
+  x1 = vec_ld(0, s+4);
+  x2 = vec_ld(0, s+8);
+  x3 = vec_ld(0, s+12);
+  x4 = vec_ld(0, s+16);
+  x5 = vec_ld(0, s+20);
+  s += 24;
+  y0 = vec_mul(x0, x0);
+  y1 = vec_mul(x1, x1);
+  y2 = vec_mul(x2, x2);
+  y3 = vec_mul(x3, x3);
+  y4 = vec_mul(x4, x4);
+  y5 = vec_mul(x5, x5);
+
+#pragma unroll(4)
+  for(int i = 1; i < N; i++) {
+//    __prefetch_by_load(s+48);
+    x0 = vec_ld(0, s);
+    x1 = vec_ld(0, s+4);
+    x2 = vec_ld(0, s+8);
+    x3 = vec_ld(0, s+12);
+    x4 = vec_ld(0, s+16);
+    x5 = vec_ld(0, s+20);
+    y0 = vec_madd(x0, x0, y0);
+    y1 = vec_madd(x1, x1, y1);
+    y2 = vec_madd(x2, x2, y2);
+    y3 = vec_madd(x3, x3, y3);
+    y4 = vec_madd(x4, x4, y4);
+    y5 = vec_madd(x5, x5, y5);
+    s+=24;
+  }
+  x0 = vec_add(y0, y1);
+  x1 = vec_add(y2, y3);
+  x2 = vec_add(y4, y5);
+  y0 = vec_add(x0, x1);
+  y1 = vec_add(x2, y0);
+  res = y1[0] + y1[1] + y1[2] + y1[3];
+#  ifdef MPI
+  if(parallel) {
+    MPI_Allreduce(&res, &res2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return res2;
+  }
+#  endif
+
+  return res;
+}
+
+
 #else 
 
 double square_norm(spinor * const P, const int N, const int parallel)
 {
   int ix;
-  static double ks,kc,ds,tr,ts,tt;
+  double ALIGN ks,kc,ds,tr,ts,tt;
   spinor *s;
   
   ks = 0.0;
@@ -218,7 +277,7 @@ double square_norm(spinor * const P, const int N, const int parallel)
 double square_norm_su3vect(su3_vector * const P, const int N, const int parallel) 
 {
   int ix;
-  static double ks,kc,ds,tr,ts,tt;
+  double ALIGN ks,kc,ds,tr,ts,tt;
   su3_vector *s;
 
   ks = 0.0;

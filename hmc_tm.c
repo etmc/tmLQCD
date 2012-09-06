@@ -41,6 +41,9 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "global.h"
 #include "git_hash.h"
 #include <io/params.h>
@@ -183,6 +186,17 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
     exit(-1);
   }
+
+  /* set number of omp threads to be used */
+#ifdef OMP
+  if(omp_num_threads > 0) 
+  {
+     omp_set_num_threads(omp_num_threads);
+  }
+  else {
+    omp_num_threads = omp_get_max_threads();
+  }
+#endif
 
   DUM_DERI = 4;
   DUM_SOLVER = DUM_DERI+1;
@@ -497,7 +511,7 @@ int main(int argc,char *argv[]) {
         if (g_proc_id == 0) {
           fprintf(stdout, "#\n# Beginning online measurement.\n");
         }
-        meas->measurefunc(trajectory_counter, imeas);
+        meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
       }
     }
 

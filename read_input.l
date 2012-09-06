@@ -164,6 +164,8 @@ inline void rmQuotes(char *str){
   int propagator_comparison;
   int nb_cores;
 
+  int omp_num_threads;
+
   int nblocks_t;
   int nblocks_x;
   int nblocks_y;
@@ -289,6 +291,8 @@ inline void rmQuotes(char *str){
 %x PCOMP
 %x NBCORES
 
+%x OMPNUMTHREADS
+
 %x DFLNBLOCKT
 %x DFLNBLOCKX
 %x DFLNBLOCKY
@@ -383,6 +387,8 @@ inline void rmQuotes(char *str){
 
 ^PropagatorComparison{EQL}         BEGIN(PCOMP);
 ^NbCoresPerNode{EQL}               BEGIN(NBCORES);
+
+^OMPNumThreads{EQL}                BEGIN(OMPNUMTHREADS);
 
 ^NoBlocksT{EQL}                    BEGIN(DFLNBLOCKT);
 ^NoBlocksX{EQL}                    BEGIN(DFLNBLOCKX);
@@ -1485,6 +1491,10 @@ inline void rmQuotes(char *str){
   nb_cores=atoi(yytext);
   if(myverbose!=0) printf("nb_cores = %s \n", yytext);
 }
+<OMPNUMTHREADS>{DIGIT}+ {
+  omp_num_threads=atoi(yytext);
+  if(myverbose!=0) printf("omp_num_threads = %s \n", yytext);
+}
 <DFLNBLOCKT>{DIGIT}+               {
   nblocks_t=atoi(yytext);
   if(myverbose!=0) printf("nblocks_t = %s \n", yytext);
@@ -1984,6 +1994,8 @@ int read_input(char * conf_file){
 #endif
   propagator_comparison = 0;
   nb_cores = 1;
+
+  omp_num_threads=_default_omp_num_threads;
 
   nblocks_t = 1;
   nblocks_x = 1;

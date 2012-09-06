@@ -28,6 +28,9 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -36,13 +39,22 @@
 
 /*  R output, S input, c0 input, c input */
 void assign_mul_bra_add_mul_r(spinor * const R,const double c0, const double c,spinor * const S, const int N){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   int ix;
-  static double fact0,fact;
+  double ALIGN fact0,fact;
   spinor *r,*s;
   
   fact=c;
   fact0=c0;
 
+
+#ifdef OMP
+#pragma omp for
+#endif
   for (ix = 0;ix < N; ++ix)
   {
     r=(spinor *) R + ix;
@@ -64,4 +76,7 @@ void assign_mul_bra_add_mul_r(spinor * const R,const double c0, const double c,s
     r->s3.c1 = fact0 * (r->s3.c1 + fact * s->s3.c1);
     r->s3.c2 = fact0 * (r->s3.c2 + fact * s->s3.c2);
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }

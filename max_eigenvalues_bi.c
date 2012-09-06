@@ -55,6 +55,7 @@
 #endif
 #include "max_eigenvalues_bi.h"
 #include "tm_operators_nd.h"
+#include "gettime.h"
 
 /* Needed only if you want to create an EV-file
 #include "rw_ev.h"
@@ -190,9 +191,7 @@ double max_eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
 
   }
 
-#ifdef MPI
-  av_time = MPI_Wtime();
-#endif
+  av_time = gettime();
 
   DeltaTcd = 0.0;
   DeltaTtot = 0.0;
@@ -248,9 +247,7 @@ double max_eigenvalues_bi(int * nr_of_eigenvalues, const int operator_flag,
   printf(" Largest EV = %22.15e  \n", max_evls[0]);
   */
 
-#ifdef MPI
-  ev_time = MPI_Wtime();
-#endif
+  ev_time = gettime();
 
   DeltaTev = (ev_time - av_time);
 

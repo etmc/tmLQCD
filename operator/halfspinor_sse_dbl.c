@@ -26,30 +26,31 @@
  *
  **********************************************************************/
 
-
 /* input on k; output on l */
-
-
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
-  int ix, i;
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+{
+  su3 * restrict U0 ALIGN;
+#endif
+
+  int ix;
   su3 * restrict U ALIGN;
-  static spinor rs;
   spinor * restrict s ALIGN;
   halfspinor ** phi ALIGN;
-#if defined OPTERON
-  const int predist=2;
-#else
-  const int predist=1;
-#endif
+  _declare_hregs();
+
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
 #endif
 
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge();
-  }
-#endif
+#ifndef OMP
   /* We will run through the source vector now */
   /* instead of the solution vector            */
   s = k;
@@ -61,160 +62,82 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   else {
     U = g_gauge_field_copy[1][0];
   }
+  _prefetch_su3(U);
+#else
+  if(ieo == 0) {
+    U0 = g_gauge_field_copy[0][0];
+  }
+  else {
+    U0 = g_gauge_field_copy[1][0];
+  }
+#endif
   phi = NBPointer[ieo];
 
-  _prefetch_su3(U);
   /**************** loop over all lattice sites ******************/
-  ix=0;
-  for(i = 0; i < (VOLUME)/2; i++){
-
+#ifdef OMP
+#pragma omp for
+#else
+  ix = 0;
+#endif
+  for(int i = 0; i < (VOLUME)/2; i++){
+#ifdef OMP
+    s = k+i;
+    _prefetch_spinor(s);
+    U = U0+i*4;
+    _prefetch_su3(U);
+    ix = i*8;
+#endif
     /*********************** direction +0 ************************/
-    _prefetch_su3(U+predist);
-
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s2);
-    _sse_vector_add();
-
-    _sse_su3_multiply((*U));
-    _sse_vector_cmplx_mul(ka0);
-    _sse_store_nt_up((*phi[ix]).s0);
-
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s3);
-    _sse_vector_add();
-      
-    _sse_su3_multiply((*U));
-    _sse_vector_cmplx_mul(ka0);
-    _sse_store_nt_up((*phi[ix]).s1);
+    _hop_t_p_pre();
     U++;
     ix++;
     /*********************** direction -0 ************************/
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s2);
-    _sse_vector_sub();
-    _sse_store_nt((*phi[ix]).s0);
-
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s3);
-    _sse_vector_sub();
-    _sse_store_nt((*phi[ix]).s1);
+    _hop_t_m_pre();
     ix++;
 
     /*********************** direction +1 ************************/
-    _prefetch_su3(U+predist);
-
-    _sse_load((*s).s0);
-    /*next not needed?*/
-    _sse_load_up((*s).s3);
-    _sse_vector_i_mul();
-    _sse_vector_add();
-
-    _sse_su3_multiply((*U));
-    _sse_vector_cmplx_mul(ka1);
-    _sse_store_nt_up((*phi[ix]).s0);
-
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s2);
-    _sse_vector_i_mul();
-    _sse_vector_add();
-
-    _sse_su3_multiply((*U));
-    _sse_vector_cmplx_mul(ka1);
-    _sse_store_nt_up((*phi[ix]).s1);
+    _hop_x_p_pre();
     ix++;
     U++;
 
     /*********************** direction -1 ************************/
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s3);
-    _sse_vector_i_mul();
-    _sse_vector_sub();
-    _sse_store_nt((*phi[ix]).s0);
-
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s2);
-    _sse_vector_i_mul();
-    _sse_vector_sub();
-    _sse_store_nt((*phi[ix]).s1);
+    _hop_x_m_pre();
     ix++;
 
     /*********************** direction +2 ************************/
-    _prefetch_su3(U+predist);
-
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s3);
-    _sse_vector_add();
-
-    _sse_su3_multiply((*U));
-    _sse_vector_cmplx_mul(ka2);
-    _sse_store_nt_up((*phi[ix]).s0);
-
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s2);
-    _sse_vector_sub();
-
-    _sse_su3_multiply((*U));
-    _sse_vector_cmplx_mul(ka2);
-    _sse_store_nt_up((*phi[ix]).s1);
+    _hop_y_p_pre();
     ix++;
     U++;
     /*********************** direction -2 ************************/
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s3);
-    _sse_vector_sub();
-    _sse_store_nt((*phi[ix]).s0);
-
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s2);
-    _sse_vector_add();
-    _sse_store_nt((*phi[ix]).s1);
+    _hop_y_m_pre();
     ix++;
 
     /*********************** direction +3 ************************/
-    _prefetch_su3(U+predist);
-    _prefetch_spinor(s+1);
-
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s2);
-    _sse_vector_i_mul();
-    _sse_vector_add();
-
-    _sse_su3_multiply((*U));
-    _sse_vector_cmplx_mul(ka3);
-    _sse_store_nt_up((*phi[ix]).s0);
-
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s3);
-    _sse_vector_i_mul();
-    _sse_vector_sub();
-
-    _sse_su3_multiply((*U));
-    _sse_vector_cmplx_mul(ka3);
-    _sse_store_nt_up((*phi[ix]).s1);
+    _hop_z_p_pre();
     ix++;
     U++;
 
     /*********************** direction -3 ************************/
-    _sse_load((*s).s0);
-    _sse_load_up((*s).s2);
-    _sse_vector_i_mul();
-    _sse_vector_sub();
-    _sse_store_nt((*phi[ix]).s0);
-
-    _sse_load((*s).s1);
-    _sse_load_up((*s).s3);
-    _sse_vector_i_mul();
-    _sse_vector_add();
-    _sse_store_nt((*phi[ix]).s1);
+    _hop_z_m_pre();
+#ifndef OMP
     ix++;
     s++;
+#endif
   }
 
+#ifdef OMP
+#pragma omp single
+{
+#endif
 #    if (defined MPI && !defined _NO_COMM)
   xchange_halffield(); 
 #    endif
+#ifdef OMP
+}
+#endif
+
+#ifndef OMP
   s = l;
-  phi = NBPointer[2 + ieo];
   if(ieo == 0) {
     U = g_gauge_field_copy[1][0];
   }
@@ -222,212 +145,75 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     U = g_gauge_field_copy[0][0];
   }
   _prefetch_su3(U);
+#else
+  if(ieo == 0) {
+    U0 = g_gauge_field_copy[1][0];
+  }
+  else {
+    U0 = g_gauge_field_copy[0][0];
+  }
+#endif
+  phi = NBPointer[2 + ieo];
+
   
   /* Now we sum up and expand to a full spinor */
+#ifdef OMP
+#pragma omp for
+#else
   ix = 0;
-  for(i = 0; i < (VOLUME)/2; i++){
+#endif
+  for(int i = 0; i < (VOLUME)/2; i++){
+#ifdef OMP
+    U = U0 + i*4;
+    _prefetch_su3(U);
+    ix = i*8;
+    s = l + i;
+#endif
     /*********************** direction +0 ************************/
-    _vector_assign(rs.s0, (*phi[ix]).s0);
-    _vector_assign(rs.s2, (*phi[ix]).s0);
-    _vector_assign(rs.s1, (*phi[ix]).s1);
-    _vector_assign(rs.s3, (*phi[ix]).s1);
+    _hop_t_p_post();
     ix++;
 
     /*********************** direction -0 ************************/
-    _prefetch_su3(U+predist);
-      
-    _sse_load((*phi[ix]).s0);
-    _sse_su3_inverse_multiply((*U));
-    _sse_vector_cmplxcg_mul(ka0);
-    _sse_load(rs.s0);
-    _sse_vector_add();
-    _sse_store(rs.s0);
-
-    _sse_load(rs.s2);
-    _sse_vector_sub();
-    _sse_store(rs.s2);
-
-    _sse_load((*phi[ix]).s1);
-    _sse_su3_inverse_multiply((*U));
-    _sse_vector_cmplxcg_mul(ka0);
-
-    _sse_load(rs.s1);
-    _sse_vector_add();
-    _sse_store(rs.s1);
-
-    _sse_load(rs.s3);
-    _sse_vector_sub();
-    _sse_store(rs.s3);
+    _hop_t_m_post();
 
     ix++;
     U++;
     /*********************** direction +1 ************************/
-    _sse_load_up((*phi[ix]).s0);
-    _sse_load(rs.s0);
-    _sse_vector_add();
-    _sse_store(rs.s0);
-
-    _sse_load(rs.s3);
-    _sse_vector_i_mul();      
-    _sse_vector_sub();
-    _sse_store(rs.s3); 
-
-    _sse_load_up((*phi[ix]).s1);
-    _sse_load(rs.s1);
-    _sse_vector_add();
-    _sse_store(rs.s1);
-
-    _sse_load(rs.s2);
-    _sse_vector_i_mul();      
-    _sse_vector_sub();
-    _sse_store(rs.s2);       
+    _hop_x_p_post();
     ix++;
 
     /*********************** direction -1 ************************/
-
-    _prefetch_su3(U+predist);
-
-    _sse_load((*phi[ix]).s0);
-    _sse_su3_inverse_multiply((*U));
-    _sse_vector_cmplxcg_mul(ka1);
-
-    _sse_load(rs.s0);
-    _sse_vector_add();
-    _sse_store(rs.s0);
-
-    _sse_load(rs.s3);
-    _sse_vector_i_mul();      
-    _sse_vector_add();
-    _sse_store(rs.s3);
-
-    _sse_load((*phi[ix]).s1);
-      
-    _sse_su3_inverse_multiply((*U));
-    _sse_vector_cmplxcg_mul(ka1);
-
-    _sse_load(rs.s1);
-    _sse_vector_add();
-    _sse_store(rs.s1);
-
-    _sse_load(rs.s2);
-    _sse_vector_i_mul();      
-    _sse_vector_add();
-    _sse_store(rs.s2);
+    _hop_x_m_post();
     ix++;
     U++;
 
     /*********************** direction +2 ************************/
-    _sse_load_up((*phi[ix]).s0);
-    _sse_load(rs.s0);
-    _sse_vector_add();
-    _sse_store(rs.s0);
-
-    _sse_load(rs.s3);
-    _sse_vector_add();
-    _sse_store(rs.s3);
-
-    _sse_load_up((*phi[ix]).s1);
-    _sse_load(rs.s1);
-    _sse_vector_add();
-    _sse_store(rs.s1);
-
-    _sse_load(rs.s2);
-    _sse_vector_sub();
-    _sse_store(rs.s2);      
+    _hop_y_p_post();
     ix++;
 
     /*********************** direction -2 ************************/
-
-    _prefetch_su3(U+predist);
-
-    _sse_load((*phi[ix]).s0);
-    _sse_su3_inverse_multiply((*U));
-    _sse_vector_cmplxcg_mul(ka2);
-
-    _sse_load(rs.s0);
-    _sse_vector_add();
-    _sse_store(rs.s0);
-
-    _sse_load(rs.s3);
-    _sse_vector_sub();
-    _sse_store(rs.s3);
-
-    _sse_load((*phi[ix]).s1);
-      
-    _sse_su3_inverse_multiply((*U));
-    _sse_vector_cmplxcg_mul(ka2);
-
-    _sse_load(rs.s1);
-    _sse_vector_add();
-    _sse_store(rs.s1);
-
-    _sse_load(rs.s2);
-    _sse_vector_add();
-    _sse_store(rs.s2);      
+    _hop_y_m_post();
     ix++;
     U++;
     /*********************** direction +3 ************************/
-    _sse_load_up((*phi[ix]).s0);
-
-    _sse_load(rs.s0);
-    _sse_vector_add();
-    _sse_store(rs.s0);
-
-    _sse_load(rs.s2);
-    _sse_vector_i_mul();      
-    _sse_vector_sub();
-    _sse_store(rs.s2);
-
-    _sse_load_up((*phi[ix]).s1);
-
-    _sse_load(rs.s1);
-    _sse_vector_add();
-    _sse_store(rs.s1);
-
-    _sse_load(rs.s3);
-    _sse_vector_i_mul();      
-    _sse_vector_add();
-    _sse_store(rs.s3);
+    _hop_z_p_post();
 
     ix++;
     /*********************** direction -3 ************************/
-
-    _prefetch_su3(U+predist); 
-    _prefetch_spinor(s+1);
-
-    _sse_load((*phi[ix]).s0);
-      
-    _sse_su3_inverse_multiply((*U));
-    _sse_vector_cmplxcg_mul(ka3);
-
-    _sse_load(rs.s0);
-    _sse_vector_add();
-    _sse_store_nt((*s).s0);
-
-    _sse_load(rs.s2);
-    _sse_vector_i_mul();      
-    _sse_vector_add();
-    _sse_store_nt((*s).s2);
-
-    _sse_load((*phi[ix]).s1);
-      
-    _sse_su3_inverse_multiply((*U));
-    _sse_vector_cmplxcg_mul(ka3);
-
-    _sse_load(rs.s1);
-    _sse_vector_add();
-    _sse_store_nt((*s).s1);
-
-    _sse_load(rs.s3);
-    _sse_vector_i_mul();      
-    _sse_vector_sub();
-    _sse_store_nt((*s).s3);
+    _hop_z_m_post();
+#ifndef OMP
     ix++;
     U++;
     s++;
+#endif
   }
 #ifdef _KOJAK_INST
 #pragma pomp inst end(hoppingmatrix)
 #endif
+
+#ifdef OMP
+  } /* omp parallel closing bracket */
+#endif
 }
+
 

@@ -38,8 +38,9 @@
 #include "linalg/convert_eo_to_lexic.h"
 #include "measurements.h"
 #include "pion_norm.h"
+#include "gettime.h"
 
-void pion_norm(const int traj, const int id) {
+void pion_norm(const int traj, const int id, const int ieo) {
   int i, j, z, zz, z0;
   double *Cpp;
   double res = 0.;
@@ -70,11 +71,7 @@ void pion_norm(const int traj, const int id) {
   MPI_Bcast(&z0, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
 
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  atime = gettime();
 
   Cpp = (double*) calloc(g_nproc_z*LZ, sizeof(double));
 
@@ -88,7 +85,7 @@ void pion_norm(const int traj, const int id) {
   /* invert on the stochastic source */
   invert_eo(g_spinor_field[2], g_spinor_field[3], 
             g_spinor_field[0], g_spinor_field[1],
-            1.e-14, measurement_list[id].max_iter, CG, 1, 0, 1, 0, NULL, -1);
+            1.e-14, measurement_list[id].max_iter, CG, 1, 0, ieo, 0, NULL, -1);
 
   /* now we bring it to normal format */
   /* here we use implicitly DUM_MATRIX and DUM_MATRIX+1 */
@@ -150,11 +147,7 @@ void pion_norm(const int traj, const int id) {
   }
   
   free(Cpp);
-#ifdef MPI
-  etime = MPI_Wtime();
-#else
-  etime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  etime = gettime();
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("PIONNORM : measurement done int t/s = %1.4e\n", etime - atime);
   }

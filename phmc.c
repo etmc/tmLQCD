@@ -36,6 +36,7 @@
 #include "Ptilde_nd.h"
 #include "phmc.h"
 #include "monomial.h"
+#include "gettime.h"
 
 //                                          --> in  monomial
 double phmc_Cpol;                        // --> MDPolyLocNormConst
@@ -207,11 +208,8 @@ void phmc_compute_ev(const int trajectory_counter,
   char * phmcfilename = "phmc.data";
   FILE * countfile;
 
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  atime = gettime();
+  
   max_iter_ev = 1000;
   g_mu = g_mu1;
   
@@ -244,11 +242,7 @@ void phmc_compute_ev(const int trajectory_counter,
 	    trajectory_counter, plaquette_energy/(6.*VOLUME*g_nproc), temp, temp2, stilde_min, stilde_max);
     fclose(countfile);
   }
-#ifdef MPI
-  etime = MPI_Wtime();
-#else
-  etime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  etime = gettime();
   if((g_proc_id == 0)) {
     printf("# PHMC: time/s for eigenvalue computation %e\n", etime-atime);
   }

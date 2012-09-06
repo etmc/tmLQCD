@@ -58,6 +58,8 @@
 #include "clovertm_operators.h"
 #include "clover_leaf.h"
 #include "operator.h"
+#include "gettime.h"
+
 
 void dummy_D(spinor * const, spinor * const);
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q);
@@ -218,11 +220,7 @@ void op_invert(const int op_id, const int index_start) {
   g_kappa = optr->kappa;
   boundary(g_kappa);
 
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = (double)clock() / (double)(CLOCKS_PER_SEC);
-#endif
+  atime = gettime();
   if(optr->type == TMWILSON || optr->type == WILSON || optr->type == CLOVER) {
     g_mu = optr->mu;
     g_c_sw = optr->c_sw;
@@ -377,11 +375,7 @@ void op_invert(const int op_id, const int index_start) {
 
     optr->write_prop(op_id, index_start, 0);
   }
-#ifdef MPI
-  etime = MPI_Wtime();
-#else
-  etime = (double)clock() / (double)(CLOCKS_PER_SEC);
-#endif
+  etime = gettime();
   if (g_cart_id == 0 && g_debug_level > 0) {
     fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
             optr->iterations, optr->reached_prec);

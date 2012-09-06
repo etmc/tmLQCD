@@ -29,6 +29,9 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include <stdlib.h>
 #include "su3.h"
 #include "assign_diff_mul_bi.h"
@@ -37,8 +40,15 @@
 /* S=S-c*Q */
 void assign_diff_mul_bi(bispinor * const S, bispinor * const R, const _Complex double c, const int N)
 {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   spinor *r, *s;
 
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix)
   {
     s = (spinor *) &S[ix].sp_up;
@@ -80,6 +90,10 @@ void assign_diff_mul_bi(bispinor * const S, bispinor * const R, const _Complex d
     s->s3.c1 -= c * r->s3.c1;
     s->s3.c2 -= c * r->s3.c2;
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 

@@ -18,21 +18,19 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
-*
-* File su3.h
-*
-* Type definitions and macros for SU(3) matrices and spinors  
-*
-* Version: 1.0
-* Author: Martin Luescher <luscher@mail.desy.de>
-* Date: 24.10.2000
-*
-* Extended by Martin Hasenbusch 2001.  <Martin.Hasenbusch@desy.de>
-* Rewritten for C99 complex by Albert Deuzeman 2012 <deuzeman@itp.unibe.ch>
-*
-*******************************************************************************/
+ *
+ * File su3.h
+ *
+ * Type definitions and macros for SU(3) matrices and spinors  
+ *
+ * Version: 1.0
+ * Author: Martin Luescher <luscher@mail.desy.de>
+ * Date: 24.10.2000
+ *
+ * Extended by Martin Hasenbusch 2001.  <Martin.Hasenbusch@desy.de>
+ * Rewritten for C99 complex by Albert Deuzeman 2012 <deuzeman@itp.unibe.ch>
+ *
+ *******************************************************************************/
 
 #include <complex.h>
 #if (defined XLC && defined BGL)
@@ -665,5 +663,7 @@ _sse_store_up(r);
   (t).c20 = (u).c2 * conj((v).c0) + (w).c2 * conj((z).c0);	\
   (t).c21 = (u).c2 * conj((v).c1) + (w).c2 * conj((z).c1);	\
   (t).c22 = (u).c2 * conj((v).c2) + (w).c2 * conj((z).c2);
+
+
 
 #endif

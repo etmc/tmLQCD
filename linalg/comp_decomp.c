@@ -36,6 +36,9 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -47,9 +50,16 @@
 /* S and P inputs, R output */
 void compact(bispinor * const R, spinor * const S, spinor * const P)
 { 
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   spinor *r,*s;
   spinor *u,*t;
   
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < VOLUME/2; ix++){
     r=(spinor *) &R[ix].sp_up;
     s=(spinor *) S + ix;
@@ -91,6 +101,10 @@ void compact(bispinor * const R, spinor * const S, spinor * const P)
     u->s3.c1 = t->s3.c1;
     u->s3.c2 = t->s3.c2;
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   
   /* 
       The following IS NOT enough, since it copies the values 
@@ -118,10 +132,17 @@ void compact(bispinor * const R, spinor * const S, spinor * const P)
 
 /* R input , S and P outputs */
 void decompact(spinor * const S, spinor * const P, bispinor * const R){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
 
   spinor *r,*s;
   spinor *u,*t;
   
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < VOLUME/2; ix++)
   {
     s=(spinor *) &R[ix].sp_up;
@@ -163,6 +184,10 @@ void decompact(spinor * const S, spinor * const P, bispinor * const R){
     u->s3.c1 = t->s3.c1;
     u->s3.c2 = t->s3.c2;
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 
   /* !!! The following should be enough !!! */
 

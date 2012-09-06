@@ -29,6 +29,9 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -36,12 +39,18 @@
 #include "diff_bi.h"
 
 void diff_bi(bispinor * const Q, bispinor * const R, bispinor * const S, const int N){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
 
    int ix;
    spinor *q,*r,*s;
 
-
 /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
+#ifdef OMP
+#pragma omp for
+#endif
    for (ix = 0; ix < N; ix++) {
 
      q = (spinor *) &Q[ix].sp_up;
@@ -84,5 +93,8 @@ void diff_bi(bispinor * const Q, bispinor * const R, bispinor * const S, const i
      q->s3.c1 = r->s3.c1 - s->s3.c1;
      q->s3.c2 = r->s3.c2 - s->s3.c2;
    }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
