@@ -82,10 +82,15 @@ void assign_mul_add_r(spinor * const S, const double c, spinor * const R, const 
 #elif (defined BGQ && defined XLC)
 
 void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const int N) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5, k;
   double *s, *r;
-  double _c __attribute__ ((aligned (32)));
+  double ALIGN _c;
   _c = c;
   __prefetch_by_load(S);
   __prefetch_by_load(R);
@@ -96,6 +101,9 @@ void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const 
   __alignx(32, S);
   __alignx(32, R);
 
+#ifdef OMP
+#pragma omp for
+#endif
 #pragma unroll(4)
   for(int i = 0; i < N; i++) {
     s=(double*)((spinor *) S + i);
@@ -127,6 +135,9 @@ void assign_mul_add_r(spinor * const R, const double c, spinor * const S, const 
     vec_st(z4, 0, r+16);
     vec_st(z5, 0, r+20);
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif  
   return;
 }
 
