@@ -37,63 +37,39 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
 #ifdef MPI
   double ALIGN mres;
 #endif
-  vector4double r0, r1, r2, r3, r4, r5;
 
 #ifdef OMP
-#pragma omp parallel private(res, r0, r1, r2, r3, r4, r5) reduction(+: res)
+#pragma omp parallel reduction(+: res)
   {
 #endif
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5, k;
+  vector4double r0, r1, r2, r3, r4, r5;
   double *s, *r;
   double ALIGN _c = c;
+#ifndef OMP
   __prefetch_by_load(S);
   __prefetch_by_load(R);
+#endif
 
   k = vec_splats(_c);
   __alignx(32, s);
   __alignx(32, r);
   __alignx(32, S);
   __alignx(32, R);
+  r0 = vec_splats(0.);
+  r1 = vec_splats(0.);
+  r2 = vec_splats(0.);
+  r3 = vec_splats(0.);
+  r4 = vec_splats(0.);
+  r5 = vec_splats(0.);
 
-  s=(double*)((spinor *) S);
-  r=(double*)((spinor *) R);
-  x0 = vec_ld(0, r);
-  x1 = vec_ld(0, r+4);
-  x2 = vec_ld(0, r+8);
-  x3 = vec_ld(0, r+12);
-  x4 = vec_ld(0, r+16);
-  x5 = vec_ld(0, r+20);
-  y0 = vec_ld(0, s);
-  y1 = vec_ld(0, s+4);
-  y2 = vec_ld(0, s+8);
-  y3 = vec_ld(0, s+12);
-  y4 = vec_ld(0, s+16);
-  y5 = vec_ld(0, s+20);
-  z0 = vec_madd(k, x0, y0);
-  z1 = vec_madd(k, x1, y1);
-  z2 = vec_madd(k, x2, y2);
-  z3 = vec_madd(k, x3, y3);
-  z4 = vec_madd(k, x4, y4);
-  z5 = vec_madd(k, x5, y5);
-  vec_st(z0, 0, r);
-  vec_st(z1, 0, r+4);
-  vec_st(z2, 0, r+8);
-  vec_st(z3, 0, r+12);
-  vec_st(z4, 0, r+16);
-  vec_st(z5, 0, r+20);
-  r0 = vec_mul(z0, z0);
-  r1 = vec_mul(z1, z1);
-  r2 = vec_mul(z2, z2);
-  r3 = vec_mul(z3, z3);
-  r4 = vec_mul(z4, z4);
-  r5 = vec_mul(z5, z5);
 
 #ifdef OMP
 #pragma omp for 
 #endif
-#pragma unroll(4)
-  for(int i = 1; i < N; i++) {
+  //#pragma unroll(4)
+  for(int i = 0; i < N; i++) {
     s=(double*)((spinor *) S + i);
     r=(double*)((spinor *) R + i);
     __prefetch_by_load(S + i + 1);
@@ -128,7 +104,6 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
     r3 = vec_madd(z3, z3, r3);
     r4 = vec_madd(z4, z4, r4);
     r5 = vec_madd(z5, z5, r5);
-
   }
   x0 = vec_add(r0, r1);
   x1 = vec_add(r2, r3);
@@ -140,7 +115,13 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif  
-  return;
+#  ifdef MPI
+  if(parallel) {
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return(mres);
+  }
+#endif
+  return(res);
 }
 
 #else
@@ -150,51 +131,52 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
 
 double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * const S, 
 				   const int N, const int parallel) {
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-  spinor *r,*s;
-  double res = 0.;
+  double res;
 #ifdef MPI
   double mres;
 #endif
-  
+
+#ifdef OMP
+#pragma omp parallel reduction(+ : res)
+  {
+#endif
+  spinor *r,*s;
+  res = 0.;
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
 #ifdef OMP
-#pragma omp for private(res) reduction(+ : res)
+#pragma omp for 
 #endif
   for (int ix = 0; ix < N; ++ix) {
     r = R + ix;
     s = S + ix;
     
     r->s0.c0 = c * r->s0.c0 + s->s0.c0;
-    sum += creal(r->s0.c0)*creal(r->s0.c0) + cimag(r->s0.c0)*cimag(r->s0.c0);
+    res += creal(r->s0.c0)*creal(r->s0.c0) + cimag(r->s0.c0)*cimag(r->s0.c0);
     r->s0.c1 = c * r->s0.c1 + s->s0.c1;
-    sum += creal(r->s0.c1)*creal(r->s0.c1) + cimag(r->s0.c1)*cimag(r->s0.c1);
+    res += creal(r->s0.c1)*creal(r->s0.c1) + cimag(r->s0.c1)*cimag(r->s0.c1);
     r->s0.c2 = c * r->s0.c2 + s->s0.c2;    
-    sum += creal(r->s0.c2)*creal(r->s0.c2) + cimag(r->s0.c2)*cimag(r->s0.c2);
+    res += creal(r->s0.c2)*creal(r->s0.c2) + cimag(r->s0.c2)*cimag(r->s0.c2);
 
     r->s1.c0 = c * r->s1.c0 + s->s1.c0;
-    sum += creal(r->s1.c0)*creal(r->s1.c0) + cimag(r->s1.c0)*cimag(r->s1.c0);
+    res += creal(r->s1.c0)*creal(r->s1.c0) + cimag(r->s1.c0)*cimag(r->s1.c0);
     r->s1.c1 = c * r->s1.c1 + s->s1.c1;
-    sum += creal(r->s1.c1)*creal(r->s1.c1) + cimag(r->s1.c1)*cimag(r->s1.c1);
+    res += creal(r->s1.c1)*creal(r->s1.c1) + cimag(r->s1.c1)*cimag(r->s1.c1);
     r->s1.c2 = c * r->s1.c2 + s->s1.c2;    
-    sum += creal(r->s1.c2)*creal(r->s1.c2) + cimag(r->s1.c2)*cimag(r->s1.c2);
+    res += creal(r->s1.c2)*creal(r->s1.c2) + cimag(r->s1.c2)*cimag(r->s1.c2);
 
     r->s2.c0 = c * r->s2.c0 + s->s2.c0;
-    sum += creal(r->s2.c0)*creal(r->s2.c0) + cimag(r->s2.c0)*cimag(r->s2.c0);
+    res += creal(r->s2.c0)*creal(r->s2.c0) + cimag(r->s2.c0)*cimag(r->s2.c0);
     r->s2.c1 = c * r->s2.c1 + s->s2.c1;
-    sum += creal(r->s2.c1)*creal(r->s2.c1) + cimag(r->s2.c1)*cimag(r->s2.c1);
+    res += creal(r->s2.c1)*creal(r->s2.c1) + cimag(r->s2.c1)*cimag(r->s2.c1);
     r->s2.c2 = c * r->s2.c2 + s->s2.c2;    
-    sum += creal(r->s2.c2)*creal(r->s2.c2) + cimag(r->s2.c2)*cimag(r->s2.c2);
+    res += creal(r->s2.c2)*creal(r->s2.c2) + cimag(r->s2.c2)*cimag(r->s2.c2);
 
     r->s3.c0 = c * r->s3.c0 + s->s3.c0;
-    sum += creal(r->s3.c0)*creal(r->s3.c0) + cimag(r->s3.c0)*cimag(r->s3.c0);
+    res += creal(r->s3.c0)*creal(r->s3.c0) + cimag(r->s3.c0)*cimag(r->s3.c0);
     r->s3.c1 = c * r->s3.c1 + s->s3.c1;
-    sum += creal(r->s3.c1)*creal(r->s3.c1) + cimag(r->s3.c1)*cimag(r->s3.c1);
+    res += creal(r->s3.c1)*creal(r->s3.c1) + cimag(r->s3.c1)*cimag(r->s3.c1);
     r->s3.c2 = c * r->s3.c2 + s->s3.c2;   
-    sum += creal(r->s3.c2)*creal(r->s3.c2) + cimag(r->s3.c2)*cimag(r->s3.c2);
+    res += creal(r->s3.c2)*creal(r->s3.c2) + cimag(r->s3.c2)*cimag(r->s3.c2);
   }
 #ifdef OMP
   } /* OpenMP closing brace */
