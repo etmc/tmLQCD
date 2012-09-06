@@ -67,6 +67,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   int save_sloppy = g_sloppy_precision;
   double atime, etime, flops;
   spinor ** solver_field = NULL;
+  spinor * stmp;
   const int nr_sf = 3;
 
   if(N == VOLUME) {
@@ -92,7 +93,12 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     alpha_cg = normsq / pro;
     assign_add_mul_r(P, solver_field[2], alpha_cg, N);
 
+#if (defined SSE2 || defined SSE3)
+    assign_mul_add_r(solver_field[0], -alpha_cg, solver_field[1], N);
+    err = square_norm(solver_field[0], N, 1);
+#else
     err = assign_mul_add_r_and_square(solver_field[0], -alpha_cg, solver_field[1], N, 1);
+#endif
 
     if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
       printf("CG: iterations: %d res^2 %e\n", iteration, err);
@@ -113,7 +119,9 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
     beta_cg = err / normsq;
     assign_mul_add_r(solver_field[2], beta_cg, solver_field[0], N);
-    assign(solver_field[1], solver_field[0], N);
+    stmp = solver_field[0];
+    solver_field[0] = solver_field[1];
+    solver_field[1] = stmp;
     normsq = err;
   }
   etime = gettime();
