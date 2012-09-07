@@ -190,6 +190,9 @@ int main(int argc, char *argv[])
      omp_set_num_threads(omp_num_threads);
   }
   else {
+    if( g_proc_id == 0 )
+      printf("# No value provided for OmpNumThreads, running in single-threaded mode!\n");
+
     omp_num_threads = 1;
     omp_set_num_threads(omp_num_threads);
   }
