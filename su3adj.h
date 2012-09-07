@@ -127,7 +127,7 @@ typedef struct
 
 #if ( defined OMP && defined BGQ )
 
-#define _trace_lambda_mul_add_assign(r,c,a) \
+#define _trace_lambda_mul_add_assign_nonlocal(r,c,a) \
 _Pragma("tm_atomic") \
 { \
 (r).d1 += c*(-cimag((a).c10)-cimag((a).c01)); \
@@ -140,9 +140,9 @@ _Pragma("tm_atomic") \
 (r).d8 += c*((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag(a.c22))*0.577350269189625); \
 } \
 
-#elif ( defined OMP && !defined QPX )
+#elif ( defined OMP && !defined BGQ )
 
-#define _trace_lambda_mul_add_assign(r,c,a) \
+#define _trace_lambda_mul_add_assign_nonlocal(r,c,a) \
 _Pragma("omp atomic") \
 (r).d1 += c*(-cimag((a).c10)-cimag((a).c01)); \
 _Pragma("omp atomic") \
@@ -162,7 +162,11 @@ _Pragma("omp atomic") \
 
 #else
 
-#define _trace_lambda_mul_add_assign(r,c,a)	\
+#define _trace_lambda_mul_add_assign_nonlocal(r,c,a) _trace_lambda_mul_add_assign(r,c,a)
+
+#endif
+
+#define _trace_lambda_mul_add_assign(r,c,a) \
 (r).d1 += c*(-cimag((a).c10)-cimag((a).c01)); \
 (r).d2 += c*(+creal((a).c10)-creal((a).c01)); \
 (r).d3 += c*(-cimag((a).c00)+cimag((a).c11)); \
@@ -171,9 +175,6 @@ _Pragma("omp atomic") \
 (r).d6 += c*(-cimag((a).c21)-cimag((a).c12)); \
 (r).d7 += c*(+creal((a).c21)-creal((a).c12)); \
 (r).d8 += c*((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag(a.c22))*0.577350269189625); \
-
-#endif
-
 
 
 /*************************************************
