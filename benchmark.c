@@ -44,6 +44,7 @@
 #endif
 #ifdef OMP
 # include <omp.h>
+# include "init_omp_kahan_arrays.h"
 #endif
 #include "gettime.h"
 #include "su3.h"
@@ -122,8 +123,11 @@ int main(int argc,char *argv[])
      omp_set_num_threads(omp_num_threads);
   }
   else {
-    omp_num_threads = omp_get_max_threads();
+    omp_num_threads = 1;
+    omp_set_num_threads(omp_num_threads);
   }
+
+  init_omp_kahan_arrays(omp_num_threads);
 #endif
 
   tmlqcd_mpi_init(argc, argv);
@@ -417,6 +421,9 @@ int main(int argc,char *argv[])
 
 #ifdef MPI
   MPI_Finalize();
+#endif
+#ifdef OMP
+  free_omp_kahan_arrays();
 #endif
   free_gauge_field();
   free_geometry_indices();
