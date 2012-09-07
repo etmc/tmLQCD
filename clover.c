@@ -176,8 +176,8 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
+#endif
   int icy;
-#endif    
   su3_vector ALIGN psi, chi, phi1, phi3;
   int ioff = 0;
   su3 *w1, *w2, *w3, *w4;
@@ -185,13 +185,17 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
 
 
   if(mu < 0) ioff = VOLUME/2;
+
+#ifndef OMP
+  icy = ioff;
+#endif
   /************************ loop over all lattice sites *************************/
 #ifdef OMP
 #pragma omp for
+#endif
   for(int icx = 0; icx < (VOLUME/2); icx++) {
+#ifdef OMP
     icy = ioff + icx;
-#else
-  for(int icx = 0, icy = ioff; icx < (VOLUME/2); icx++, icy++) {
 #endif
 
     rn = l + icx;
@@ -219,6 +223,10 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
     _su3_multiply(psi,*w4,phi3); 
     _su3_multiply(chi,*w3,(*rn).s3);
     _vector_add((*rn).s3,psi,chi);
+
+#ifndef OMP
+    ++icy;
+#endif
 
     /******************************** end of loop *********************************/
   }

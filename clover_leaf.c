@@ -478,8 +478,8 @@ void sw_invert(const int ieo, const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
-  int icy;
 #endif
+  int icy;
   int ioff, err=0;
   int i, x;
   su3 ALIGN v;
@@ -492,12 +492,16 @@ void sw_invert(const int ieo, const double mu) {
     ioff=(VOLUME+RAND)/2;
   }
 
+#ifndef OMP
+  icy=0;
+#endif
+
 #ifdef OMP
 #pragma omp for
+#endif
   for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+#ifdef OMP
     icy = icx - ioff;
-#else
-  for(int icx = ioff, icy = 0; icx < (VOLUME/2+ioff); icx++, icy++) {
 #endif
     x = g_eo2lexic[icx];
 
@@ -552,6 +556,9 @@ void sw_invert(const int ieo, const double mu) {
 	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][3][i], a, 3, 0);
       }
     }
+#ifndef OMP
+    ++icy;
+#endif
   }
 #ifdef OMP
   } /* OpenMP closing brace */
@@ -580,9 +587,8 @@ void sw_deriv(const int ieo, const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
-  int icy;
 #endif
-
+  int icy;
   int ioff;
   int x;
   double fac = 1.0000;
@@ -597,12 +603,16 @@ void sw_deriv(const int ieo, const double mu) {
   }
   if(fabs(mu) > 0.) fac = 0.5;
 
+#ifndef OMP
+  icy = 0;
+#endif
+
 #ifdef OMP
 #pragma omp for
+#endif
   for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+#ifdef OMP
     icy = icx - ioff;
-#else
-  for(int icx = ioff, icy=0; icx < (VOLUME/2+ioff); icx++, icy++) {
 #endif
     x = g_eo2lexic[icx];
     /* compute the insertion matrix */
@@ -647,6 +657,9 @@ void sw_deriv(const int ieo, const double mu) {
       _su3_refac_acc(swp[x][2], fac, lswp[2]);
       _su3_refac_acc(swp[x][3], fac, lswp[3]);
     }
+#ifndef OMP
+    ++icy;
+#endif
   }
 #ifdef OMP
   } /* OpenMP closing brace */
