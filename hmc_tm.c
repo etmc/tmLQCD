@@ -240,7 +240,7 @@ int main(int argc,char *argv[]) {
 
 
   g_mu = g_mu1;
-
+  initialize_gauge_buffers(5);
 #ifdef _GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
