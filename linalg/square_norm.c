@@ -175,31 +175,33 @@ double square_norm(spinor * const P, const int N, const int parallel) {
 #elif (defined BGQ && defined XLC)
 
 double square_norm(spinor * const P, const int N, const int parallel) {
-  vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
-  double res ALIGN;
+  double ALIGN res = 0.0;
 #ifdef MPI
-  double res2 ALIGN;
+  double ALIGN mres;
 #endif
-  double *s ALIGN;
-  s = (double*) P;
-  __prefetch_by_load(s+24);
-  x0 = vec_ld(0, s);
-  x1 = vec_ld(0, s+4);
-  x2 = vec_ld(0, s+8);
-  x3 = vec_ld(0, s+12);
-  x4 = vec_ld(0, s+16);
-  x5 = vec_ld(0, s+20);
-  s += 24;
-  y0 = vec_mul(x0, x0);
-  y1 = vec_mul(x1, x1);
-  y2 = vec_mul(x2, x2);
-  y3 = vec_mul(x3, x3);
-  y4 = vec_mul(x4, x4);
-  y5 = vec_mul(x5, x5);
 
+#ifdef OMP
+#pragma omp parallel reduction(+:res)
+  {
+#endif
+  vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
+  double *s ALIGN;
+
+  y0 = vec_splats(0.);
+  y1 = vec_splats(0.);
+  y2 = vec_splats(0.);
+  y3 = vec_splats(0.);
+  y4 = vec_splats(0.);
+  y5 = vec_splats(0.);  
+
+#ifdef OMP
+#pragma omp for
+#else
 #pragma unroll(4)
-  for(int i = 1; i < N; i++) {
-//    __prefetch_by_load(s+48);
+#endif
+  for(int i = 0; i < N; i++) {
+    s = (double*)((spinor*) P+i);
+    __prefetch_by_load(P+i+1);
     x0 = vec_ld(0, s);
     x1 = vec_ld(0, s+4);
     x2 = vec_ld(0, s+8);
@@ -212,7 +214,6 @@ double square_norm(spinor * const P, const int N, const int parallel) {
     y3 = vec_madd(x3, x3, y3);
     y4 = vec_madd(x4, x4, y4);
     y5 = vec_madd(x5, x5, y5);
-    s+=24;
   }
   x0 = vec_add(y0, y1);
   x1 = vec_add(y2, y3);
@@ -220,10 +221,15 @@ double square_norm(spinor * const P, const int N, const int parallel) {
   y0 = vec_add(x0, x1);
   y1 = vec_add(x2, y0);
   res = y1[0] + y1[1] + y1[2] + y1[3];
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 #  ifdef MPI
   if(parallel) {
-    MPI_Allreduce(&res, &res2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    return res2;
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return mres;
   }
 #  endif
 
