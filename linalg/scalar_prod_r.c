@@ -29,6 +29,10 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+# include <global.h>
+#endif
 #include "su3.h"
 #include "scalar_prod_r.h"
 
@@ -105,18 +109,27 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
 
 double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel)
 {
-  
-  double ALIGN ks,kc,ds,tr,ts,tt;
+  double ALIGN ks, kc;
+  ks = kc = 0.0;
+#ifdef OMP
+#pragma omp parallel
+  {
+  int thread_num = omp_get_thread_num();
+  g_omp_kc_re[thread_num] = 0.0;
+  g_omp_ks_re[thread_num] = 0.0;
+#endif
+
+  double ALIGN ds,tr,ts,tt;
   spinor *s,*r;
-  
-  ks=0.0;
-  kc=0.0;
-  
+
 #if (defined BGL && defined XLC)
   __alignx(16, S);
   __alignx(16, R);
 #endif
 
+#ifdef OMP
+#pragma omp for schedule(static)
+#endif
   for (int ix = 0; ix < N; ++ix) {
     s=(spinor *) S + ix;
     r=(spinor *) R + ix;
@@ -126,13 +139,33 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
       creal(r->s2.c0 * conj(s->s2.c0)) + creal(r->s2.c1 * conj(s->s2.c1)) + creal(r->s2.c2 * conj(s->s2.c2)) +
       creal(r->s3.c0 * conj(s->s3.c0)) + creal(r->s3.c1 * conj(s->s3.c1)) + creal(r->s3.c2 * conj(s->s3.c2));    
     
+#ifdef OMP
+    tr = ds + g_omp_kc_re[thread_num];
+    ts = tr + g_omp_ks_re[thread_num];
+    tt = ts - g_omp_ks_re[thread_num];
+    g_omp_ks_re[thread_num] = ts;
+    g_omp_kc_re[thread_num] = tr - tt;
+#else
     tr=ds+kc;
     ts=tr+ks;
     tt=ts-ks;
     ks=ts;
     kc=tr-tt;
+#endif
   }
+#ifdef OMP
+  /* thread-local last step of the Kahan summation */
+  g_omp_kc_re[thread_num] = g_omp_ks_re[thread_num] + g_omp_kc_re[thread_num];
+
+  } /* OpenMP closing brace */
+
+  /* having left the parallel section, we can now sum up the Kahan
+     corrected sums from each thread into kc */
+  for(int i = 0; i < omp_num_threads; ++i)
+    kc += g_omp_kc_re[i];
+#else
   kc=ks+kc;
+#endif
 
 #if defined MPI
   if(parallel)
