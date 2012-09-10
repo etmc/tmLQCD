@@ -32,16 +32,28 @@
 int init_omp_kahan_arrays(const int num) {
   g_omp_ks=NULL;
   g_omp_kc=NULL;
+  g_omp_ks_re=NULL;
+  g_omp_kc_re=NULL;
 
-  if((void*)(g_omp_ks = (double*)calloc(num, sizeof(double))) == NULL) {
+  if((void*)(g_omp_ks = (_Complex double*)calloc(num, sizeof(_Complex double))) == NULL) {
     printf ("init_omp_kahan_arrays malloc errno : %d\n",errno); 
     errno = 0;
     return(1);
   }
-  if((void*)(g_omp_kc = (double*)calloc(num, sizeof(double))) == NULL) {
+  if((void*)(g_omp_kc = (_Complex double*)calloc(num, sizeof(_Complex double))) == NULL) {
     printf ("init_omp_kahan_arrays malloc errno : %d\n",errno); 
     errno = 0;
     return(2);
+  }
+  if((void*)(g_omp_ks_re = (double*)calloc(num, sizeof(double))) == NULL) {
+    printf ("init_omp_kahan_arrays malloc errno : %d\n",errno); 
+    errno = 0;
+    return(3);
+  }
+  if((void*)(g_omp_kc_re = (double*)calloc(num, sizeof(double))) == NULL) {
+    printf ("init_omp_kahan_arrays malloc errno : %d\n",errno); 
+    errno = 0;
+    return(4);
   }
 
   return(0);
@@ -50,4 +62,6 @@ int init_omp_kahan_arrays(const int num) {
 void free_omp_kahan_arrays() {
   free(g_omp_kc);
   free(g_omp_ks);
+  free(g_omp_kc_re);
+  free(g_omp_ks_re);
 }

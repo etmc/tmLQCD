@@ -247,8 +247,8 @@ double square_norm(spinor * const P, const int N, const int parallel)
 #pragma omp parallel
   {
     int thread_num = omp_get_thread_num();
-    g_omp_kc[thread_num] = 0.0;
-    g_omp_ks[thread_num] = 0.0;
+    g_omp_kc_re[thread_num] = 0.0;
+    g_omp_ks_re[thread_num] = 0.0;
 #endif
   double ALIGN ds,tr,ts,tt;
   spinor *s;
@@ -278,11 +278,11 @@ double square_norm(spinor * const P, const int N, const int parallel)
          conj(s->s3.c2) * s->s3.c2;
 
 #ifdef OMP
-    tr = ds + g_omp_kc[thread_num];
-    ts = tr + g_omp_ks[thread_num];
-    tt = ts - g_omp_ks[thread_num];
-    g_omp_ks[thread_num] = ts;
-    g_omp_kc[thread_num] = tr - tt;
+    tr = ds + g_omp_kc_re[thread_num];
+    ts = tr + g_omp_ks_re[thread_num];
+    tt = ts - g_omp_ks_re[thread_num];
+    g_omp_ks_re[thread_num] = ts;
+    g_omp_kc_re[thread_num] = tr - tt;
 #else    
     tr = ds + kc;
     ts = tr + ks;
@@ -294,14 +294,14 @@ double square_norm(spinor * const P, const int N, const int parallel)
 
 #ifdef OMP
   /* thread-local last step of the Kahan summation */
-  g_omp_kc[thread_num] = g_omp_ks[thread_num] + g_omp_kc[thread_num];
+  g_omp_kc_re[thread_num] = g_omp_ks_re[thread_num] + g_omp_kc_re[thread_num];
 
   } /* OpenMP closing brace */
 
   /* having left the parallel section, we can now sum up the Kahan
      corrected sums from each thread into kc */
   for(int i = 0; i < omp_num_threads; ++i)
-    kc += g_omp_kc[i];
+    kc += g_omp_kc_re[i];
 #else
   kc = ks + kc;
 #endif
