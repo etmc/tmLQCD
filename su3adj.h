@@ -125,22 +125,7 @@ typedef struct
 (r).d7 -= (+creal((a).c21)-creal((a).c12)); \
 (r).d8 -= ((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag(a.c22))*0.577350269189625);
 
-#if ( defined OMP && defined BGQ )
-
-#define _trace_lambda_mul_add_assign_nonlocal(r,c,a) \
-_Pragma("tm_atomic") \
-{ \
-(r).d1 += c*(-cimag((a).c10)-cimag((a).c01)); \
-(r).d2 += c*(+creal((a).c10)-creal((a).c01)); \
-(r).d3 += c*(-cimag((a).c00)+cimag((a).c11)); \
-(r).d4 += c*(-cimag((a).c20)-cimag((a).c02)); \
-(r).d5 += c*(+creal((a).c20)-creal((a).c02)); \
-(r).d6 += c*(-cimag((a).c21)-cimag((a).c12)); \
-(r).d7 += c*(+creal((a).c21)-creal((a).c12)); \
-(r).d8 += c*((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag(a.c22))*0.577350269189625); \
-} \
-
-#elif ( defined OMP && !defined BGQ )
+#if ( defined OMP )
 
 #define _trace_lambda_mul_add_assign_nonlocal(r,c,a) \
 _Pragma("omp atomic") \
