@@ -38,6 +38,9 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "global.h"
 #include "start.h"
 #include "sighandler.h"
@@ -57,6 +60,7 @@
 #include "integrator.h"
 #include "hamiltonian_field.h"
 #include "update_tm.h"
+#include "gettime.h"
 
 extern su3 ** g_gauge_field_saved;
 
@@ -65,7 +69,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
   su3 *v, *w;
   static int ini_g_tmp = 0;
-  int ix, mu, accept, i=0, j=0, iostatus=0;
+  int accept, i=0, j=0, iostatus=0;
 
   double yy[1];
   double dh, expmdh, ret_dh=0., ret_gauge_diff=0., tmp;
@@ -101,11 +105,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     ini_g_tmp = 1;
   }
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = (double)clock()/((double)(CLOCKS_PER_SEC));
-#endif
+  atime = gettime();
 
   /*
    *  here the momentum and spinor fields are initialized 
@@ -115,8 +115,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* 
    *  copy the gauge field to gauge_tmp 
    */
-  for(ix=0;ix<VOLUME;ix++) { 
-    for(mu=0;mu<4;mu++) {
+#ifdef OMP
+#pragma omp parallel for private(w,v)
+#endif
+  for(int ix=0;ix<VOLUME;ix++) { 
+    for(int mu=0;mu<4;mu++) {
       v=&hf.gaugefield[ix][mu];
       w=&gauge_tmp[ix][mu];
       _su3_assign(*w,*v);
@@ -232,25 +235,54 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ks = 0.;
     kc = 0.;
 
-    for(ix = 0; ix < VOLUME; ++ix)
+#ifdef OMP
+#pragma omp parallel private(w,v,tt,tr,ts,ds)
     {
-      for(mu = 0; mu < 4; ++mu)
+    int thread_num = omp_get_thread_num();
+    g_omp_kc_re[thread_num] = g_omp_ks_re[thread_num] = 0.0;
+#endif
+
+#ifdef OMP
+#pragma omp for schedule(static)
+#endif
+    for(int ix = 0; ix < VOLUME; ++ix)
+    {
+      for(int mu = 0; mu < 4; ++mu)
       {
-        tmp = 0.;
         v=&hf.gaugefield[ix][mu];
         w=&gauge_tmp[ix][mu];
         /* NOTE Should this perhaps be some function or macro? */
         ds = sqrt(conj(v->c00 - w->c00) * (v->c00 - w->c00) + conj(v->c01 - w->c01) * (v->c01 - w->c01) + conj(v->c02 - w->c02) * (v->c02 - w->c02) +
                   conj(v->c10 - w->c10) * (v->c10 - w->c10) + conj(v->c11 - w->c11) * (v->c11 - w->c11) + conj(v->c12 - w->c12) * (v->c12 - w->c12) +             conj(v->c20 - w->c20) * (v->c20 - w->c20) + conj(v->c21 - w->c21) * (v->c21 - w->c21) + conj(v->c22 - w->c22) * (v->c22 - w->c22));
-             
+
+#ifdef OMP
+        tr = ds + g_omp_kc_re[thread_num];
+        ts = tr + g_omp_ks_re[thread_num];
+        tt = ts - g_omp_ks_re[thread_num];
+        g_omp_ks_re[thread_num] = ts;
+        g_omp_kc_re[thread_num] = tr-tt;
+#else       
         tr = ds + kc;
         ts = tr + ks;
         tt = ts-ks;
         ks = ts;
         kc = tr-tt;
+#endif
       }
     }
+#ifdef OMP
+    /* final step of thread-local Kahan summation */
+    g_omp_kc_re[thread_num] = g_omp_kc_re[thread_num] + g_omp_ks_re[thread_num];
+      
+    } /* OpenMP parallel section closing brace */
+
+    /* sum up contributions from thread-local kahan summations */
+    for(int k = 0; k < omp_num_threads; ++k)
+      ret_gauge_diff += g_omp_kc_re[k];
+#else
     ret_gauge_diff = ks + kc;
+#endif
+
 #ifdef MPI
     tmp = ret_gauge_diff;
     MPI_Reduce(&tmp, &ret_gauge_diff, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -294,8 +326,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     *rectangle_energy = new_rectangle_energy;
     /* put the links back to SU(3) group */
     if (!bc_flag) { /* periodic boundary conditions */
-      for(ix=0;ix<VOLUME;ix++) { 
-        for(mu=0;mu<4;mu++) { 
+#ifdef OMP
+#pragma omp parallel for private(v)
+#endif
+      for(int ix=0;ix<VOLUME;ix++) { 
+        for(int mu=0;mu<4;mu++) { 
           v=&hf.gaugefield[ix][mu];
           *v=restoresu3(*v); 
         }
@@ -303,8 +338,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
   else { /* reject: copy gauge_tmp to hf.gaugefield */
-    for(ix=0;ix<VOLUME;ix++) {
-      for(mu=0;mu<4;mu++){
+#ifdef OMP
+#pragma omp parallel for private(w) private(v)
+#endif
+    for(int ix=0;ix<VOLUME;ix++) {
+      for(int mu=0;mu<4;mu++){
         v=&hf.gaugefield[ix][mu];
         w=&gauge_tmp[ix][mu];
         _su3_assign(*v,*w);
@@ -319,10 +357,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   g_update_rectangle_energy = 1;
 #ifdef MPI
   xchange_gauge(hf.gaugefield);
-  etime = MPI_Wtime();
-#else
-  etime = (double)clock()/((double)(CLOCKS_PER_SEC));
 #endif
+  etime=gettime();
 
   /* printing data in the .data file */
   if(g_proc_id==0) {
