@@ -116,7 +116,7 @@ if test $enable_qpx = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(BGQ,1,Compile with QPX intrinsics)
   AC_MSG_NOTICE([Compiling with QPX intrinsics on BGQ, enabling compiler optimizations for XLC.])
-  OPTARGS="-O3 -qtm -qstrict=all -qtune=qp -qarch=qp -qmaxmem=-1"
+  OPTARGS="-O3 -qstrict=all -qtune=qp -qarch=qp -qmaxmem=-1"
   SOPTARGS="$OPTARGS" 
 else
   AC_MSG_RESULT(no)
