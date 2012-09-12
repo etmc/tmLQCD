@@ -144,7 +144,17 @@ int main(int argc, char *argv[])
   g_use_clover_flag = 0;
 
 #ifdef MPI
+
+#  ifdef OMP
+  int mpi_thread_provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
+#  else
   MPI_Init(&argc, &argv);
+#  endif
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+#else
+  g_proc_id = 0;
 #endif
 
   while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {

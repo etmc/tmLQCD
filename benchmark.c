@@ -98,6 +98,7 @@ int main(int argc,char *argv[])
   
   static double t1,t2,dt,sdt,dts,qdt,sqdt;
   double antioptaway=0.0;
+
 #ifdef MPI
   static double dt2;
   
@@ -106,9 +107,18 @@ int main(int argc,char *argv[])
   DUM_MATRIX = DUM_SOLVER+6;
   NO_OF_SPINORFIELDS = DUM_MATRIX+2;
 
-  
+#  ifdef OMP
+  int mpi_thread_provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
+#  else
   MPI_Init(&argc, &argv);
+#  endif
+  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+
+#else
+  g_proc_id = 0;
 #endif
+
   g_rgi_C1 = 1.; 
   
     /* Read the input file */
