@@ -332,7 +332,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       for(int ix=0;ix<VOLUME;ix++) { 
         for(int mu=0;mu<4;mu++) { 
           v=&hf.gaugefield[ix][mu];
-          *v=restoresu3(*v); 
+          restoresu3_in_place(v); 
         }
       }
     }
