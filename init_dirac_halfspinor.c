@@ -37,13 +37,16 @@ halfspinor ** NBPointer_;
 halfspinor * HalfSpinor_;
 halfspinor * HalfSpinor ALIGN;
 halfspinor *** NBPointer;
+halfspinor * sendBuffer, * recvBuffer;
+halfspinor * sendBuffer_, * recvBuffer_;
 
 /* The single precision versions */
 halfspinor32 ** NBPointer32_;
 halfspinor32 * HalfSpinor32_;
 halfspinor32 * HalfSpinor32 ALIGN;
 halfspinor32 *** NBPointer32;
-
+halfspinor32 * sendBuffer32, * recvBuffer32;
+halfspinor32 * sendBuffer32_, * recvBuffer32_;
 
 int init_dirac_halfspinor() {
   int ieo=0, i=0, j=0, k;
@@ -60,28 +63,27 @@ int init_dirac_halfspinor() {
   NBPointer[2] = NBPointer_ + (16*(VOLUME+RAND)/2);
   NBPointer[3] = NBPointer_ + (24*(VOLUME+RAND)/2);
 
-#ifdef _USE_SHMEM
-  if((coid*)(HalfSpinor_ = (halfspinor*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor))) == NULL) {
+  if((void*)(HalfSpinor_ = (halfspinor*)calloc(4*(VOLUME)+1, sizeof(halfspinor))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(1);
   }
-#elif (defined BGL && defined _USE_BGLDRAM && !defined BGP)
-  rts_return = rts_get_dram_window(8*((VOLUME+RAND)+1)*sizeof(halfspinor), RTS_STORE_WITHOUT_ALLOCATE, (void**)&HalfSpinor_, &actualSize);
-  if(rts_return !=0) {
-    return(-1);
-  }
-#else
-  if((void*)(HalfSpinor_ = (halfspinor*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(1);
-  }
-#endif
-#if ( defined SSE || defined SSE2 || defined SSE3)
+
   HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  HalfSpinor = HalfSpinor_;
+
+#ifdef MPI
+  if((void*)(sendBuffer_ = (halfspinor*)calloc(RAND/2+1, sizeof(halfspinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+  sendBuffer = (halfspinor*)(((unsigned long int)(sendBuffer_)+ALIGN_BASE)&~ALIGN_BASE);
+  if((void*)(recvBuffer_ = (halfspinor*)calloc(RAND/2+1, sizeof(halfspinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+  recvBuffer = (halfspinor*)(((unsigned long int)(recvBuffer_)+ALIGN_BASE)&~ALIGN_BASE);
 #endif
 
   for(ieo = 0; ieo < 2; ieo++) {
@@ -98,42 +100,42 @@ int init_dirac_halfspinor() {
       }
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(t == 0) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_idn[j][0]] - VOLUME/2);
-	NBPointer[ieo][8*i] = &HalfSpinor[ k ];
+	k = (g_lexic2eosub[g_idn[j][0]] - VOLUME/2);
+	NBPointer[ieo][8*i] = &sendBuffer[ k ];
       }
       if(t == T-1) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_iup[j][0]] - VOLUME/2);
-	NBPointer[ieo][8*i + 1] = &HalfSpinor[ k ];
+	k = (g_lexic2eosub[g_iup[j][0]] - VOLUME/2);
+	NBPointer[ieo][8*i + 1] = &sendBuffer[ k ];
       }
 #endif
 #if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(x == 0) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_idn[j][1]] - VOLUME/2);
-	NBPointer[ieo][8*i + 2] = &HalfSpinor[ k ];
+	k = (g_lexic2eosub[g_idn[j][1]] - VOLUME/2);
+	NBPointer[ieo][8*i + 2] = &sendBuffer[ k ];
       }
       if(x == LX-1) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_iup[j][1]] - VOLUME/2);
-	NBPointer[ieo][8*i + 3] = &HalfSpinor[ k ];
+	k = (g_lexic2eosub[g_iup[j][1]] - VOLUME/2);
+	NBPointer[ieo][8*i + 3] = &sendBuffer[ k ];
       }
 #endif
 #if ((defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(y == 0) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_idn[j][2]] - VOLUME/2);
-	NBPointer[ieo][8*i + 4] = &HalfSpinor[ k ];
+	k = (g_lexic2eosub[g_idn[j][2]] - VOLUME/2);
+	NBPointer[ieo][8*i + 4] = &sendBuffer[ k ];
       }
       if(y == LY-1) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_iup[j][2]] - VOLUME/2);
-	NBPointer[ieo][8*i + 5] = &HalfSpinor[ k ];
+	k = (g_lexic2eosub[g_iup[j][2]] - VOLUME/2);
+	NBPointer[ieo][8*i + 5] = &sendBuffer[ k ];
       }
 #endif
 #if ((defined PARALLELXYZ) || (defined PARALLELXYZT))
       if(z == 0) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_idn[j][3]] - VOLUME/2);
-	NBPointer[ieo][8*i + 6] = &HalfSpinor[ k ];
+	k = (g_lexic2eosub[g_idn[j][3]] - VOLUME/2);
+	NBPointer[ieo][8*i + 6] = &sendBuffer[ k ];
       }
       if(z == LZ-1) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_iup[j][3]] - VOLUME/2);
-	NBPointer[ieo][8*i + 7] = &HalfSpinor[ k ];
+	k = (g_lexic2eosub[g_iup[j][3]] - VOLUME/2);
+	NBPointer[ieo][8*i + 7] = &sendBuffer[ k ];
       }
 #endif
     }
@@ -158,34 +160,34 @@ int init_dirac_halfspinor() {
       }
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(t == T-1) {
-	NBPointer[ieo][8*i]     = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_iup[j][0] ] - VOLUME/2)];
+	NBPointer[ieo][8*i]     = &recvBuffer[ (g_lexic2eosub[ g_iup[j][0] ] - VOLUME/2)];
       }
       if(t == 0) {
-	NBPointer[ieo][8*i + 1] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][0] ] - VOLUME/2)];
+	NBPointer[ieo][8*i + 1] = &recvBuffer[ (g_lexic2eosub[ g_idn[j][0] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(x == LX-1) { 
-	NBPointer[ieo][8*i + 2] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_iup[j][1] ] - VOLUME/2)];
+	NBPointer[ieo][8*i + 2] = &recvBuffer[ (g_lexic2eosub[ g_iup[j][1] ] - VOLUME/2)];
       }
       if(x == 0) {
-	NBPointer[ieo][8*i + 3] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][1] ] - VOLUME/2)];
+	NBPointer[ieo][8*i + 3] = &recvBuffer[ (g_lexic2eosub[ g_idn[j][1] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(y == LY-1) {
-	NBPointer[ieo][8*i + 4] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_iup[j][2] ] - VOLUME/2)];
+	NBPointer[ieo][8*i + 4] = &recvBuffer[ (g_lexic2eosub[ g_iup[j][2] ] - VOLUME/2)];
       }
       if(y == 0) {
-	NBPointer[ieo][8*i + 5] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][2] ] - VOLUME/2)];
+	NBPointer[ieo][8*i + 5] = &recvBuffer[ (g_lexic2eosub[ g_idn[j][2] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELXYZ) || (defined PARALLELXYZT))
       if(z == LZ-1) {
-	NBPointer[ieo][8*i + 6] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_iup[j][3] ] - VOLUME/2)];
+	NBPointer[ieo][8*i + 6] = &recvBuffer[ (g_lexic2eosub[ g_iup[j][3] ] - VOLUME/2)];
       }
       if(z == 0) {
-	NBPointer[ieo][8*i + 7] = &HalfSpinor[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][3] ] - VOLUME/2)];
+	NBPointer[ieo][8*i + 7] = &recvBuffer[ (g_lexic2eosub[ g_idn[j][3] ] - VOLUME/2)];
       }
 #endif
     }
@@ -217,29 +219,27 @@ int init_dirac_halfspinor32() {
   NBPointer32[2] = NBPointer32_ + (16*(VOLUME+RAND)/2);
   NBPointer32[3] = NBPointer32_ + (24*(VOLUME+RAND)/2);
 
-#ifdef _USE_SHMEM
-  if((void*)(HalfSpinor32_ = (halfspinor32*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor32))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(1);
-  }
-#elif (defined BGL && defined _USE_BGLDRAM && !defined BGP)
-  rts_return = rts_get_dram_window(8*((VOLUME+RAND)+1)*sizeof(halfspinor32), RTS_STORE_WITHOUT_ALLOCATE, (void**)&HalfSpinor32_, &actualSize);
-  if(rts_return !=0) {
-    return(-1);
-  }
-#else
   if((void*)(HalfSpinor32_ = (halfspinor32*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor32))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(-1);
   }
-#endif
 
-#if ( defined SSE || defined SSE2 || defined SSE3)
   HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  HalfSpinor32 = HalfSpinor32_;
+
+#ifdef MPI
+  if((void*)(sendBuffer32_ = (halfspinor32*)calloc(RAND/2+1, sizeof(halfspinor32))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+  sendBuffer32 = (halfspinor32*)(((unsigned long int)(sendBuffer32_)+ALIGN_BASE)&~ALIGN_BASE);
+  if((void*)(recvBuffer32_ = (halfspinor32*)calloc(RAND/2+1, sizeof(halfspinor))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+  recvBuffer32 = (halfspinor32*)(((unsigned long int)(recvBuffer32_)+ALIGN_BASE)&~ALIGN_BASE);
 #endif
 
   for(ieo = 0; ieo < 2; ieo++) {
@@ -256,42 +256,42 @@ int init_dirac_halfspinor32() {
       }
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(t == 0) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_idn[j][0]] - VOLUME/2);
-	NBPointer32[ieo][8*i] = &HalfSpinor32[ k ];
+	k = (g_lexic2eosub[g_idn[j][0]] - VOLUME/2);
+	NBPointer32[ieo][8*i] = &sendBuffer32[ k ];
       }
       if(t == T-1) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_iup[j][0]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 1] = &HalfSpinor32[ k ];
+	k = (g_lexic2eosub[g_iup[j][0]] - VOLUME/2);
+	NBPointer32[ieo][8*i + 1] = &sendBuffer32[ k ];
       }
 #endif
 #if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(x == 0) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_idn[j][1]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 2] = &HalfSpinor32[ k ];
+	k = (g_lexic2eosub[g_idn[j][1]] - VOLUME/2);
+	NBPointer32[ieo][8*i + 2] = &sendBuffer32[ k ];
       }
       if(x == LX-1) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_iup[j][1]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 3] = &HalfSpinor32[ k ];
+	k = (g_lexic2eosub[g_iup[j][1]] - VOLUME/2);
+	NBPointer32[ieo][8*i + 3] = &sendBuffer32[ k ];
       }
 #endif
 #if ((defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(y == 0) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_idn[j][2]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 4] = &HalfSpinor32[ k ];
+	k = (g_lexic2eosub[g_idn[j][2]] - VOLUME/2);
+	NBPointer32[ieo][8*i + 4] = &sendBuffer32[ k ];
       }
       if(y == LY-1) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_iup[j][2]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 5] = &HalfSpinor32[ k ];
+	k = (g_lexic2eosub[g_iup[j][2]] - VOLUME/2);
+	NBPointer32[ieo][8*i + 5] = &sendBuffer32[ k ];
       }
 #endif
 #if ((defined PARALLELXYZ) || (defined PARALLELXYZT))
       if(z == 0) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_idn[j][3]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 6] = &HalfSpinor32[ k ];
+	k = (g_lexic2eosub[g_idn[j][3]] - VOLUME/2);
+	NBPointer32[ieo][8*i + 6] = &sendBuffer32[ k ];
       }
       if(z == LZ-1) {
-	k = 8*VOLUME/2 + (g_lexic2eosub[g_iup[j][3]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 7] = &HalfSpinor32[ k ];
+	k = (g_lexic2eosub[g_iup[j][3]] - VOLUME/2);
+	NBPointer32[ieo][8*i + 7] = &sendBuffer32[ k ];
       }
 #endif
     }
@@ -312,34 +312,34 @@ int init_dirac_halfspinor32() {
       }
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(t == T-1) {
-	NBPointer32[ieo][8*i]     = &HalfSpinor32[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_iup[j][0] ] - VOLUME/2)];
+	NBPointer32[ieo][8*i]     = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][0] ] - VOLUME/2)];
       }
       if(t == 0) {
-	NBPointer32[ieo][8*i + 1] = &HalfSpinor32[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][0] ] - VOLUME/2)];
+	NBPointer32[ieo][8*i + 1] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][0] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(x == LX-1) { 
-	NBPointer32[ieo][8*i + 2] = &HalfSpinor32[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_iup[j][1] ] - VOLUME/2)];
+	NBPointer32[ieo][8*i + 2] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][1] ] - VOLUME/2)];
       }
       if(x == 0) {
-	NBPointer32[ieo][8*i + 3] = &HalfSpinor32[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][1] ] - VOLUME/2)];
+	NBPointer32[ieo][8*i + 3] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][1] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(y == LY-1) {
-	NBPointer32[ieo][8*i + 4] = &HalfSpinor32[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_iup[j][2] ] - VOLUME/2)];
+	NBPointer32[ieo][8*i + 4] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][2] ] - VOLUME/2)];
       }
       if(y == 0) {
-	NBPointer32[ieo][8*i + 5] = &HalfSpinor32[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][2] ] - VOLUME/2)];
+	NBPointer32[ieo][8*i + 5] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][2] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELXYZ) || (defined PARALLELXYZT))
       if(z == LZ-1) {
-	NBPointer32[ieo][8*i + 6] = &HalfSpinor32[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_iup[j][3] ] - VOLUME/2)];
+	NBPointer32[ieo][8*i + 6] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][3] ] - VOLUME/2)];
       }
       if(z == 0) {
-	NBPointer32[ieo][8*i + 7] = &HalfSpinor32[ 4*VOLUME + RAND/2 + (g_lexic2eosub[ g_idn[j][3] ] - VOLUME/2)];
+	NBPointer32[ieo][8*i + 7] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][3] ] - VOLUME/2)];
       }
 #endif
     }
