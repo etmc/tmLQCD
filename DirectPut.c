@@ -30,11 +30,9 @@
 #ifdef OMP
 #  include <omp.h>
 #endif
+#include "global.h"
 #include "DirectPut.h"
 
-
-// we have four directions and forward/backward
-#define INJ_MEMORY_FIFO_SIZE  ((64*NUM_DIRS) -1)
 
 // Allocate static memory for descriptors
 char SPIDescriptorsMemory[ NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64 ];
@@ -96,7 +94,7 @@ void setup_mregions_bats_counters() {
   
   if (rc != 0) {
     fprintf(stderr, "Kernel_AllocateBaseAddressTable failed with rc=%d\n", rc);
-    alltoall_exit(1);
+    exit(1);
   }
   
   // Receive buffer bat is set to the PA addr of the receive buffer
@@ -106,7 +104,7 @@ void setup_mregions_bats_counters() {
 				   buffersSize);
   if ( rc != 0) {
     printf("Kernel_CreateMemoryRegion failed with rc=%d\n",rc);
-    alltoall_exit(1);
+    exit(1);
   }
   
   uint64_t paAddr = 
@@ -120,13 +118,13 @@ void setup_mregions_bats_counters() {
   
   if(rc != 0) {
     printf("MUSPI_SetBaseAddress failed with rc=%d\n",rc);
-    alltoall_exit(1);
+    exit(1);
   }
   
   // Receive counter bat is set to the MU style atomic PA addr of the receive counter
   if( (uint64_t)(&recvCounter) & 0x7 ) {
     printf("ERROR: recv counter is not 8 byte aligned\n");
-    alltoall_exit(1);
+    exit(1);
   }
   
   rc = Kernel_CreateMemoryRegion ( &memRegion,
@@ -134,7 +132,7 @@ void setup_mregions_bats_counters() {
 				   sizeof(recvCounter));
   if(rc != 0) {
     printf("Kernel_CreateMemoryRegion failed with rc=%d\n",rc);
-    alltoall_exit(1);
+    exit(1);
   }
   
   paAddr = 
@@ -150,7 +148,7 @@ void setup_mregions_bats_counters() {
   
   if(rc != 0) {
     printf("MUSPI_SetBaseAddress failed with rc=%d\n",rc);
-    alltoall_exit(1);
+    exit(1);
   }
   
   // Get the send buffers physical address
@@ -159,7 +157,7 @@ void setup_mregions_bats_counters() {
 				   buffersSize);
   if(rc != 0) {
     printf("Kernel_CreateMemoryRegion failed with rc=%d\n",rc);
-    alltoall_exit(1);
+    exit(1);
   }
   
   sendBufPAddr = 
@@ -242,7 +240,7 @@ void create_descriptors() {
 						  &dinfo );
     if (rc != 0) {
       fprintf(stderr, "MUSPI_CreatePt2PtDirectPutDescriptor failed with rc=%d\n",rc);
-      alltoall_exit(1);
+      exit(1);
     }
       
   }
@@ -363,7 +361,7 @@ int msg_InjFifoInit ( msg_InjFifoHandle_t *injFifoHandlePtr,
   // Malloc space for the injection fifos.  They are 64-byte aligned.
   for (i=0; i<numFifos; i++)
     {
-      info->fifoPtr[i] = memalign(64, fifoSize);
+      info->fifoPtr[i] = (uint64_t*)memalign(64, fifoSize);
       if ( !info->fifoPtr[i] ) return -1;
     }
   
@@ -461,7 +459,7 @@ void global_barrier() {
   rc = MUSPI_GIBarrierEnter ( &GIBarrier );
   if (rc) {
     printf("MUSPI_GIBarrierEnter failed returned rc = %d\n", rc);
-    alltoall_exit(1);
+    exit(1);
   }
   
   // Poll for completion of the barrier.
@@ -469,7 +467,7 @@ void global_barrier() {
   if( rc ) {
     printf("MUSPI_GIBarrierPollWithTimeout failed returned rc = %d\n", rc);
     DelayTimeBase (200000000000UL);
-    alltoall_exit(1);
+    exit(1);
   }
   return;
 }

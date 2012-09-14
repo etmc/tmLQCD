@@ -205,9 +205,12 @@ int init_dirac_halfspinor() {
 
   totalMessageSize = 0;
   for(int i = 0; i < NUM_DIRS; i ++) {
-    messageSizes[i] = MAX_MESSAGE_SIZE;
-    if(i == 1 || i == 0) messageSizes[i] = MAX_MESSAGE_SIZE/2;
-    if(i == 2 || i == 3) messageSizes[i] += MAX_MESSAGE_SIZE/2;
+    // message sizes in Bytes
+    if(i == 0 || i == 1) messageSizes[i] = LX*LY*LZ*6*sizeof(double);
+    else if(i == 2 || i == 3) messageSizes[i] = T*LY*LZ*6*sizeof(double);
+    else if(i == 4 || i == 5) messageSizes[i] = T*LX*LZ*6*sizeof(double);
+    else if(i == 6 || i == 7) messageSizes[i] = T*LX*LY*6*sizeof(double);
+
     soffsets[i] = totalMessageSize;
     totalMessageSize += messageSizes[i];
   }
@@ -220,10 +223,10 @@ int init_dirac_halfspinor() {
     else {
       roffsets[i] = soffsets[i] - messageSizes[i-1];
     }
-    // for testing
-    //roffsets[i] = soffsets[i];
   }
 
+  Personality_t pers;
+  int rc = 0;
   // get the CNK personality
   Kernel_GetPersonality(&pers, sizeof(pers));
   int mypers[6];
@@ -257,8 +260,8 @@ int init_dirac_halfspinor() {
 
   // Create descriptors
   // Injection Direct Put Descriptor, one for each neighbour
-  muDescriptors =
-    ( MUHWI_Descriptor_t *)(((uint64_t)muDescriptorsMemory+64)&~(64-1));
+  SPIDescriptors =
+    ( MUHWI_Descriptor_t *)(((uint64_t)SPIDescriptorsMemory+64)&~(64-1));
   create_descriptors();  
 
 #endif
@@ -269,10 +272,6 @@ int init_dirac_halfspinor() {
 int init_dirac_halfspinor32() {
   int ieo=0, i=0, j=0, k;
   int x, y, z, t, mu;
-#if (defined BGL && defined _USE_BGLDRAM && !defined BGP)
-  unsigned int actualSize;
-  int rts_return=0;
-#endif  
   
   NBPointer32 = (halfspinor32***) calloc(4,sizeof(halfspinor32**));
   NBPointer32_ = (halfspinor32**) calloc(16,(VOLUME+RAND)*sizeof(halfspinor32*));

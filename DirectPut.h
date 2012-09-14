@@ -17,6 +17,9 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+#ifndef _DIRECT_PUT_H
+#define _DIRECT_PUT_H
+#  ifdef BGQ
 // Basic SPI and HWI includes
 #include <hwi/include/bqc/A2_core.h>
 #include <hwi/include/bqc/A2_inlines.h>
@@ -33,6 +36,8 @@
 #include <spi/include/kernel/location.h>
 
 #define NUM_DIRS               8
+// we have four directions and forward/backward
+#define INJ_MEMORY_FIFO_SIZE  ((64*NUM_DIRS) -1)
 
 // pointers to send and receive buffers
 extern uint64_t messageSizes[NUM_DIRS];
@@ -41,7 +46,11 @@ extern uint64_t totalMessageSize;
 
 extern char * SPIrecvBuffers;
 extern char * SPIsendBuffers;
+extern char SPIDescriptorsMemory[ NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64 ];
 extern MUHWI_Descriptor_t *SPIDescriptors;
+
+// physical address of send buffers
+extern uint64_t sendBufPAddr;
 
 // receive counter
 extern volatile uint64_t recvCounter;
@@ -49,8 +58,6 @@ extern volatile uint64_t recvCounter;
 // counter for injected messages
 extern uint64_t descCount[NUM_DIRS];
 
-// Fifo handles
-extern msg_InjFifoHandle_t injFifoHandle;
 
 // get the destinations for all neighbours
 // will be saved in nb2dest
@@ -77,6 +84,8 @@ typedef struct {
   void* pOpaqueObject;
 } msg_InjFifoHandle_t;
 
+// Fifo handles
+extern msg_InjFifoHandle_t injFifoHandle;
 
 int msg_InjFifoInit ( msg_InjFifoHandle_t *injFifoHandlePtr,
                       uint32_t             startingSubgroupId,
@@ -130,3 +139,5 @@ uint64_t msg_InjFifoInject ( msg_InjFifoHandle_t injFifoHandle,
                              MUHWI_Descriptor_t *descPtr );
 
 
+#  endif // BGQ
+#endif

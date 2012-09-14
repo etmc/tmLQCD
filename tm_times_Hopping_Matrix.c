@@ -38,6 +38,9 @@
 #include <complex.h>
 #include "global.h"
 #include "su3.h"
+#ifdef BGQ
+#  include"DirectPut.h"
+#endif
 #ifdef MPI
 #  include "xchange_field.h"
 #  if defined _USE_HALFSPINOR

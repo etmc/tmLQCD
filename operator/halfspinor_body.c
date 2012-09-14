@@ -304,7 +304,38 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
      
 #    if (defined MPI && !defined _NO_COMM)
+#      ifdef BGQ_nocheck
+
+     // Initialize the barrier, resetting the hardware.
+     int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
+     if(rc) {
+       printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
+       exit(__LINE__);
+     }
+     // reset the recv counter 
+     recvCounter = totalMessageSize;
+     global_barrier(); // make sure everybody is set recv counter
+
+     //#pragma omp for nowait
+     for (int j = 0; j < NUM_DIRS; j++) {
+       uint64_t msize = messageSizes[j];
+       
+       SPIDescriptors[j].Message_Length = msize; 
+       //muDescriptors[j].Pa_Payload    =  sendBufPAddr + soffsets[j];
+       SPIDescriptors[j].Pa_Payload    =  sendBufPAddr;
+       MUSPI_SetRecPutOffset (&SPIDescriptors[j], roffsets[j]);
+       //MUSPI_SetRecPutOffset (&muDescriptors[j], 0);
+       descCount[ j ] =
+	 msg_InjFifoInject ( injFifoHandle,
+			     j,
+			     &SPIDescriptors[j]);
+     }
+     // wait for receive completion
+     while ( recvCounter > 0 );
+
+#      else
      xchange_halffield(); 
+#      endif
 #    endif
      
 #ifdef OMP
