@@ -25,6 +25,7 @@
 #include <errno.h>
 #if (defined BGQ)
 # include "DirectPut.h"
+# include "xchange_halffield.h"
 #endif
 #include "global.h"
 #include "su3.h"
@@ -194,7 +195,7 @@ int init_dirac_halfspinor() {
       }
 #endif
     }
-    for(i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
+    for(int i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
       for(int mu = 0; mu < 8; mu++) {
 	NBPointer[ieo][8*i + mu] = NBPointer[ieo][0];
       }
@@ -266,11 +267,16 @@ int init_dirac_halfspinor() {
 
   // test communication
   for(int i = 0; i < RAND/2; i++) {
-    sendBuffer[i] = (double)g_cart_id;
+    sendBuffer[i].s0.c0 = (double)g_cart_id;
+    sendBuffer[i].s0.c1 = (double)g_cart_id;
+    sendBuffer[i].s0.c2 = (double)g_cart_id;
+    sendBuffer[i].s1.c0 = (double)g_cart_id;
+    sendBuffer[i].s1.c1 = (double)g_cart_id;
+    sendBuffer[i].s1.c2 = (double)g_cart_id;
   }
 
   // Initialize the barrier, resetting the hardware.
-  int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
+  rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
   if(rc) {
     printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
     exit(__LINE__);
@@ -296,6 +302,9 @@ int init_dirac_halfspinor() {
   // wait for receive completion
   while ( recvCounter > 0 );
 
+  _bgq_msync();
+
+  j = 0;
   for(int i = 0; i < NUM_DIRS; i++) {
     if(i == 0) k = g_nb_t_up;
     if(i == 1) k = g_nb_t_dn;
@@ -305,11 +314,23 @@ int init_dirac_halfspinor() {
     if(i == 5) k = g_nb_y_dn;
     if(i == 6) k = g_nb_z_up;
     if(i == 7) k = g_nb_z_dn;
-    for(int mu = 0; mu < messageSizes[i]/sizeof(double); mu++) {
-      if(k != (int)recvBuffer[ soffsets[0] + mu ]) {
-	printf("SPI exchange doesn't work for dir %d: %d != %d\n", i, k ,(int)recvBuffer[ soffsets[0] + mu ]);
+    for(int mu = 0; mu < messageSizes[i]/sizeof(halfspinor); mu++) {
+      if(k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s0.c0) ||
+	 k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s0.c1) ||
+	 k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s0.c2) ||
+	 k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s1.c0) ||
+	 k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s1.c1) ||
+	 k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s1.c2)) {
+	if(g_cart_id == 0) printf("SPI exchange doesn't work for dir %d: %d != %d at point %d\n", i, k ,(int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s0.c0), mu);
+	j++;
       }
     }
+  }
+  if(j > 0) {
+    printf("hmm, SPI exchange failed on proc %d...\n!", g_cart_id);
+  }
+  else {
+    if(g_cart_id == 0) printf("# SPI exchange successfully tested\n");
   }
   
 #endif

@@ -211,7 +211,7 @@ void create_descriptors() {
 	zoneRoutingMask | 
 	stayOnBubbleMask;
       if ( (g_cart_id ==0) && (did_print ==0)) 
-	printf(" dynamic routing  zoneRoutingMask=%d stayOnBubbleMask=%d\n",
+	printf("# SPI using dynamic routing  zoneRoutingMask=%d stayOnBubbleMask=%d\n",
 	       zoneRoutingMask, stayOnBubbleMask);
     }
     else {	    	    
@@ -224,7 +224,7 @@ void create_descriptors() {
 	MUHWI_PACKET_VIRTUAL_CHANNEL_DETERMINISTIC | 
 	zoneRoutingMask | 
 	stayOnBubbleMask;
-      if ( (g_cart_id ==0) && (did_print ==0)) printf(" deterministic routing\n");
+      if ( (g_cart_id ==0) && (did_print ==0)) printf("# SPI using deterministic routing\n");
     }
     did_print++;
     
