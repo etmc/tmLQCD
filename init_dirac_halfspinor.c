@@ -52,8 +52,8 @@ halfspinor32 * sendBuffer32, * recvBuffer32;
 halfspinor32 * sendBuffer32_, * recvBuffer32_;
 
 int init_dirac_halfspinor() {
-  int ieo=0, i=0, j=0, k;
-  int x, y, z, t, mu;
+  int j=0, k;
+  int x, y, z, t;
 #if (defined BGL && defined _USE_BGLDRAM && !defined BGP)
   unsigned int actualSize;
   int rts_return=0;
@@ -89,15 +89,15 @@ int init_dirac_halfspinor() {
   recvBuffer = (halfspinor*)(((unsigned long int)(recvBuffer_)+SPI_ALIGN_BASE+1)&~SPI_ALIGN_BASE);
 #endif
 
-  for(ieo = 0; ieo < 2; ieo++) {
-    for(i = 0; i < VOLUME/2; i++) {
+  for(int ieo = 0; ieo < 2; ieo++) {
+    for(int i = 0; i < VOLUME/2; i++) {
       j = g_eo2lexic[i + ((ieo+1)%2)*(VOLUME+RAND)/2];
       /* get (t,x,y,z) from j */
       t = j/(LX*LY*LZ);
       x = (j-t*(LX*LY*LZ))/(LY*LZ);
       y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
       z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
-      for(mu = 0; mu < 4; mu++) {
+      for(int mu = 0; mu < 4; mu++) {
 	NBPointer[ieo][8*i + 2*mu + 0] = &HalfSpinor[ 8*g_lexic2eosub[ g_idn[j][mu] ] + 2*mu + 0];
 	NBPointer[ieo][8*i + 2*mu + 1] = &HalfSpinor[ 8*g_lexic2eosub[ g_iup[j][mu] ] + 2*mu + 1];
       }
@@ -142,23 +142,23 @@ int init_dirac_halfspinor() {
       }
 #endif
     }
-    for(i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
-      for(mu = 0; mu < 8; mu++) {
+    for(int i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
+      for(int mu = 0; mu < 8; mu++) {
 	NBPointer[ieo][8*i + mu] = NBPointer[ieo][0];
       }
     }
 #ifdef MPI
 #endif
   }
-  for(ieo = 2; ieo < 4; ieo++) {
-    for(i = 0; i < VOLUME/2; i++) {
+  for(int ieo = 2; ieo < 4; ieo++) {
+    for(int i = 0; i < VOLUME/2; i++) {
       j = g_eo2lexic[i + ((ieo+0)%2)*(VOLUME+RAND)/2];
       /* get (t,x,y,z) from j */
       t = j/(LX*LY*LZ);
       x = (j-t*(LX*LY*LZ))/(LY*LZ);
       y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
       z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
-      for(mu = 0; mu < 8; mu++) {
+      for(int mu = 0; mu < 8; mu++) {
 	NBPointer[ieo][8*i + mu] = &HalfSpinor[8*i + mu];
       }
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
@@ -195,7 +195,7 @@ int init_dirac_halfspinor() {
 #endif
     }
     for(i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
-      for(mu = 0; mu < 8; mu++) {
+      for(int mu = 0; mu < 8; mu++) {
 	NBPointer[ieo][8*i + mu] = NBPointer[ieo][0];
       }
     }
@@ -264,6 +264,54 @@ int init_dirac_halfspinor() {
     ( MUHWI_Descriptor_t *)(((uint64_t)SPIDescriptorsMemory+64)&~(64-1));
   create_descriptors();  
 
+  // test communication
+  for(int i = 0; i < RAND/2; i++) {
+    sendBuffer[i] = (double)g_cart_id;
+  }
+
+  // Initialize the barrier, resetting the hardware.
+  int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
+  if(rc) {
+    printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
+    exit(__LINE__);
+  }
+  // reset the recv counter 
+  recvCounter = totalMessageSize;
+  global_barrier(); // make sure everybody is set recv counter
+  
+  //#pragma omp for nowait
+  for (int j = 0; j < NUM_DIRS; j++) {
+    uint64_t msize = messageSizes[j];
+    
+    SPIDescriptors[j].Message_Length = msize; 
+    //muDescriptors[j].Pa_Payload    =  sendBufPAddr + soffsets[j];
+    SPIDescriptors[j].Pa_Payload    =  sendBufPAddr;
+    MUSPI_SetRecPutOffset (&SPIDescriptors[j], roffsets[j]);
+    //MUSPI_SetRecPutOffset (&muDescriptors[j], 0);
+    descCount[ j ] =
+      msg_InjFifoInject ( injFifoHandle,
+			  j,
+			  &SPIDescriptors[j]);
+  }
+  // wait for receive completion
+  while ( recvCounter > 0 );
+
+  for(int i = 0; i < NUM_DIRS; i++) {
+    if(i == 0) k = g_nb_t_up;
+    if(i == 1) k = g_nb_t_dn;
+    if(i == 2) k = g_nb_x_up;
+    if(i == 3) k = g_nb_x_dn;
+    if(i == 4) k = g_nb_y_up;
+    if(i == 5) k = g_nb_y_dn;
+    if(i == 6) k = g_nb_z_up;
+    if(i == 7) k = g_nb_z_dn;
+    for(int mu = 0; mu < messageSizes[i]/sizeof(double); mu++) {
+      if(k != (int)recvBuffer[ soffsets[0] + mu ]) {
+	printf("SPI exchange doesn't work for dir %d: %d != %d\n", i, k ,(int)recvBuffer[ soffsets[0] + mu ]);
+      }
+    }
+  }
+  
 #endif
   return(0);
 }
