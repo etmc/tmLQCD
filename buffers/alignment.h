@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _BUFFERS_ALIGNMENT_H
+#define _BUFFERS_ALIGNMENT_H
 
 #include <stdlib.h>
 
@@ -9,3 +10,6 @@ inline void afree(void *ptr)
 {
   free(((void**)ptr)[-1]);
 }
+
+#endif
+

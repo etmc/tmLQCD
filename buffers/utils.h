@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _BUFFERS_UTILS_H
+#define _BUFFERS_UTILS_H
 
 #include <buffers/adjoint.h>
 #include <buffers/gauge.h>
@@ -6,25 +7,25 @@
 
 void generic_exchange(void *field_in, int bytes_per_site);
 
-void zero_adjoint_field(adjoint_field_t target);
-void zero_gauge_field(gauge_field_t target);
-void zero_spinor_field(spinor_field_t target);
+inline void zero_adjoint_field(adjoint_field_t target);
+inline void zero_gauge_field(gauge_field_t target);
+inline void zero_spinor_field(spinor_field_t target);
 
-void exchange_adjoint_field(adjoint_field_t target);
-void exchange_gauge_field(gauge_field_t target);
-void exchange_spinor_field(spinor_field_t target);
+inline void exchange_adjoint_field(adjoint_field_t target);
+inline void exchange_gauge_field(gauge_field_t target);
+inline void exchange_spinor_field(spinor_field_t target);
 
-void copy_adjoint_field(adjoint_field_t *left, adjoint_field_t const right);
-void copy_gauge_field(gauge_field_t *left, gauge_field_t const right);
-void copy_spinor_field(spinor_field_t *left, spinor_field_t const right);
+inline void copy_adjoint_field(adjoint_field_t *left, adjoint_field_t const right);
+inline void copy_gauge_field(gauge_field_t *left, gauge_field_t const right);
+inline void copy_spinor_field(spinor_field_t *left, spinor_field_t const right);
 
-void swap_adjoint_field(adjoint_field_t *left, adjoint_field_t *right);
-void swap_gauge_field(gauge_field_t *left, gauge_field_t *right);
-void swap_spinor_field(spinor_field_t *left, spinor_field_t *right);
+inline void swap_adjoint_field(adjoint_field_t *left, adjoint_field_t *right);
+inline void swap_gauge_field(gauge_field_t *left, gauge_field_t *right);
+inline void swap_spinor_field(spinor_field_t *left, spinor_field_t *right);
 
-void zero_adjoint_field(adjoint_field_t target);
-void zero_gauge_field(gauge_field_t target);
-void zero_spinor_field(spinor_field_t target);
+inline void zero_adjoint_field(adjoint_field_t target);
+inline void zero_gauge_field(gauge_field_t target);
+inline void zero_spinor_field(spinor_field_t target);
 
 void adjoint_to_gauge(gauge_field_t out, adjoint_field_t const in);
 void gauge_to_adjoint(adjoint_field_t out, gauge_field_t const in);
@@ -59,3 +60,5 @@ __DEFINE_BUFFER_INLINES(su3_tuple, gauge)
 __DEFINE_BUFFER_INLINES(spinor, spinor)
 
 #undef __DEFINE_BUFFER_INLINES
+
+#endif
