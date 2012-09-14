@@ -23,15 +23,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#if defined BGL && !defined BGP
-# include <rts.h>
-#endif
-#ifdef _USE_SHMEM
-# include <mpp/shmem.h>
+#if (defined BGQ)
+# include "DirectPut.h"
 #endif
 #include "global.h"
 #include "su3.h"
 #include "init_dirac_halfspinor.h"
+
+#ifdef BGQ
+#  define SPI_ALIGN_BASE 0x7f
+#else
+#  define SPI_ALIGN_BASE ALIGN_BASE
+#endif
 
 halfspinor ** NBPointer_;
 halfspinor * HalfSpinor_;
@@ -69,21 +72,21 @@ int init_dirac_halfspinor() {
     return(1);
   }
 
-  HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE)&~ALIGN_BASE);
+  HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE+1)&~ALIGN_BASE);
 
 #ifdef MPI
-  if((void*)(sendBuffer_ = (halfspinor*)calloc(RAND/2+1, sizeof(halfspinor))) == NULL) {
+  if((void*)(sendBuffer_ = (halfspinor*)calloc(RAND/2+8, sizeof(halfspinor))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(1);
   }
-  sendBuffer = (halfspinor*)(((unsigned long int)(sendBuffer_)+ALIGN_BASE)&~ALIGN_BASE);
-  if((void*)(recvBuffer_ = (halfspinor*)calloc(RAND/2+1, sizeof(halfspinor))) == NULL) {
+  sendBuffer = (halfspinor*)(((unsigned long int)(sendBuffer_)+SPI_ALIGN_BASE+1)&~SPI_ALIGN_BASE);
+  if((void*)(recvBuffer_ = (halfspinor*)calloc(RAND/2+8, sizeof(halfspinor))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(1);
   }
-  recvBuffer = (halfspinor*)(((unsigned long int)(recvBuffer_)+ALIGN_BASE)&~ALIGN_BASE);
+  recvBuffer = (halfspinor*)(((unsigned long int)(recvBuffer_)+SPI_ALIGN_BASE+1)&~SPI_ALIGN_BASE);
 #endif
 
   for(ieo = 0; ieo < 2; ieo++) {
@@ -196,10 +199,69 @@ int init_dirac_halfspinor() {
 	NBPointer[ieo][8*i + mu] = NBPointer[ieo][0];
       }
     }
-#ifdef MPI
-/*     NBPointer[ieo][4*VOLUME] = NBPointer[ieo][0];  */
-#endif
   }
+#ifdef BGQ
+  // here comes the SPI initialisation
+
+  totalMessageSize = 0;
+  for(int i = 0; i < NUM_DIRS; i ++) {
+    messageSizes[i] = MAX_MESSAGE_SIZE;
+    if(i == 1 || i == 0) messageSizes[i] = MAX_MESSAGE_SIZE/2;
+    if(i == 2 || i == 3) messageSizes[i] += MAX_MESSAGE_SIZE/2;
+    soffsets[i] = totalMessageSize;
+    totalMessageSize += messageSizes[i];
+  }
+  for(int i = 0; i < NUM_DIRS; i++) {
+    // forward here is backward on the right neighbour
+    // and the other way around...
+    if(i%2 == 0) {
+      roffsets[i] = soffsets[i] + messageSizes[i];
+    }
+    else {
+      roffsets[i] = soffsets[i] - messageSizes[i-1];
+    }
+    // for testing
+    //roffsets[i] = soffsets[i];
+  }
+
+  // get the CNK personality
+  Kernel_GetPersonality(&pers, sizeof(pers));
+  int mypers[6];
+  mypers[0] = pers.Network_Config.Acoord;
+  mypers[1] = pers.Network_Config.Bcoord;
+  mypers[2] = pers.Network_Config.Ccoord;
+  mypers[3] = pers.Network_Config.Dcoord;
+  mypers[4] = pers.Network_Config.Ecoord;
+
+  get_destinations(mypers);
+
+  // adjust the SPI pointers to the send and receive buffers
+  SPIrecvBuffers = (char *)(recvBuffer);
+  SPIsendBuffers = (char *)(sendBuffer);
+
+  // Setup the FIFO handles
+  rc = msg_InjFifoInit ( &injFifoHandle,
+			 0,        /* startingSubgroupId */
+			 0,        /* startingFifoId     */
+			 NUM_DIRS,       /* numFifos   */
+			 INJ_MEMORY_FIFO_SIZE+1, /* fifoSize */
+			 NULL      /* Use default attributes */
+			 );
+  if(rc != 0) {
+    fprintf(stderr, "msg_InjFifoInit failed with rc=%d\n",rc);
+    exit(1);
+  }
+
+  // Set up base address table for reception counter and buffer
+  setup_mregions_bats_counters();
+
+  // Create descriptors
+  // Injection Direct Put Descriptor, one for each neighbour
+  muDescriptors =
+    ( MUHWI_Descriptor_t *)(((uint64_t)muDescriptorsMemory+64)&~(64-1));
+  create_descriptors();  
+
+#endif
   return(0);
 }
 

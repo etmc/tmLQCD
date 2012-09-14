@@ -67,7 +67,7 @@ MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	little_D block Dov_psi operator poly_monomial measurements pion_norm Dov_proj \
 	xchange_field_tslice temporalgauge spinor_fft X_psi P_M_eta \
 	xchange_jacobi jacobi init_jacobi_field \
-	fatal_error invert_clover_eo gettime
+	fatal_error invert_clover_eo gettime DirectPut
 
 ## the GPU modules (all .cu files in $GPUDIR)
 GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)
