@@ -330,7 +330,7 @@ int init_dirac_halfspinor() {
 
 
 int init_dirac_halfspinor32() {
-  int ieo=0, i=0, j=0, k;
+  int j=0, k;
   int x, y, z, t, mu;
   
   NBPointer32 = (halfspinor32***) calloc(4,sizeof(halfspinor32**));
@@ -354,8 +354,8 @@ int init_dirac_halfspinor32() {
   recvBuffer32 = (halfspinor32*)(((unsigned long int)(recvBuffer_)+ALIGN_BASE)&~ALIGN_BASE);
 #endif
 
-  for(ieo = 0; ieo < 2; ieo++) {
-    for(i = 0; i < VOLUME/2; i++) {
+  for(int ieo = 0; ieo < 2; ieo++) {
+    for(int i = 0; i < VOLUME/2; i++) {
       j = g_eo2lexic[i + ((ieo+1)%2)*(VOLUME+RAND)/2];
       /* get (t,x,y,z) from j */
       t = j/(LX*LY*LZ);
@@ -411,8 +411,8 @@ int init_dirac_halfspinor32() {
 /*     NBPointer32[ieo][4*VOLUME] = NBPointer32[ieo][0];  */
 #endif
   }
-  for(ieo = 2; ieo < 4; ieo++) {
-    for(i = 0; i < VOLUME/2; i++) {
+  for(int ieo = 2; ieo < 4; ieo++) {
+    for(int i = 0; i < VOLUME/2; i++) {
       j = g_eo2lexic[i + ((ieo+0)%2)*(VOLUME+RAND)/2];
       /* get (t,x,y,z) from j */
       t = j/(LX*LY*LZ);
@@ -459,5 +459,39 @@ int init_dirac_halfspinor32() {
 /*     NBPointer32[ieo][4*VOLUME] = NBPointer32[ieo][0];  */
 #endif
   }
+#ifdef SPI_nocheck
+  // here comes the SPI initialisation
+  uint64_t messageSizes[NUM_DIRS];
+  uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];
+
+  int tMS = 0;
+  for(int i = 0; i < NUM_DIRS; i ++) {
+    // message sizes in Bytes
+    if(i == 0 || i == 1) messageSizes[i] = LX*LY*LZ*6*sizeof(float);
+    else if(i == 2 || i == 3) messageSizes[i] = T*LY*LZ*6*sizeof(float);
+    else if(i == 4 || i == 5) messageSizes[i] = T*LX*LZ*6*sizeof(float);
+    else if(i == 6 || i == 7) messageSizes[i] = T*LX*LY*6*sizeof(float);
+
+    soffsets[i] = tMS;
+    tMS += messageSizes[i];
+  }
+  for(int i = 0; i < NUM_DIRS; i++) {
+    // forward here is backward on the right neighbour
+    // and the other way around...
+    if(i%2 == 0) {
+      roffsets[i] = soffsets[i] + messageSizes[i];
+    }
+    else {
+      roffsets[i] = soffsets[i] - messageSizes[i-1];
+    }
+  }
+
+  // Create descriptors
+  // Injection Direct Put Descriptor, one for each neighbour
+  SPIDescriptors32 =
+    ( MUHWI_Descriptor_t *)(((uint64_t)SPIDescriptorsMemory32+64)&~(64-1));
+  create_descriptors(SPIDescriptors32, messageSizes, soffsets, roffsets);  
+
+#endif
   return(0);
 }
