@@ -304,7 +304,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
      
 #    if (defined MPI && !defined _NO_COMM)
-#      ifdef BGQ_nocheck
+#      ifdef BGQ
 
      // Initialize the barrier, resetting the hardware.
      int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
@@ -318,13 +318,6 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 
      //#pragma omp for nowait
      for (int j = 0; j < NUM_DIRS; j++) {
-       uint64_t msize = messageSizes[j];
-       
-       SPIDescriptors[j].Message_Length = msize; 
-       //muDescriptors[j].Pa_Payload    =  sendBufPAddr + soffsets[j];
-       SPIDescriptors[j].Pa_Payload    =  sendBufPAddr;
-       MUSPI_SetRecPutOffset (&SPIDescriptors[j], roffsets[j]);
-       //MUSPI_SetRecPutOffset (&muDescriptors[j], 0);
        descCount[ j ] =
 	 msg_InjFifoInject ( injFifoHandle,
 			     j,
@@ -332,6 +325,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      }
      // wait for receive completion
      while ( recvCounter > 0 );
+     _bgq_msync();
 
 #      else
      xchange_halffield(); 

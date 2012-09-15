@@ -287,13 +287,6 @@ int init_dirac_halfspinor() {
   
   //#pragma omp for nowait
   for (int j = 0; j < NUM_DIRS; j++) {
-    uint64_t msize = messageSizes[j];
-    
-    SPIDescriptors[j].Message_Length = msize; 
-    //muDescriptors[j].Pa_Payload    =  sendBufPAddr + soffsets[j];
-    SPIDescriptors[j].Pa_Payload    =  sendBufPAddr;
-    MUSPI_SetRecPutOffset (&SPIDescriptors[j], roffsets[j]);
-    //MUSPI_SetRecPutOffset (&muDescriptors[j], 0);
     descCount[ j ] =
       msg_InjFifoInject ( injFifoHandle,
 			  j,
