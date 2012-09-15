@@ -33,11 +33,15 @@
 #include "global.h"
 #include "DirectPut.h"
 
-
+// total Message Size
+uint64_t totalMessageSize;
+uint64_t totalMessageSize;
 // Allocate static memory for descriptors
 char SPIDescriptorsMemory[ NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64 ];
+char SPIDescriptorsMemory32[ NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64 ];
 // pointer to descriptor array
 MUHWI_Descriptor_t *SPIDescriptors;
+MUHWI_Descriptor_t *SPIDescriptors32;
 
 const int batsubgroupID = 0;
 int do_dynamic      = 1;
@@ -60,8 +64,6 @@ struct {
 } nb2dest[NUM_DIRS];
 
 // in bytes
-uint64_t messageSizes[NUM_DIRS];
-uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];
 uint64_t totalMessageSize;
 
 // receive counter
@@ -78,8 +80,8 @@ uint64_t sendBufPAddr;
 
 msg_InjFifoHandle_t injFifoHandle;
 
-void setup_mregions_bats_counters() {
-  const uint64_t buffersSize =  totalMessageSize;
+void setup_mregions_bats_counters(const int bufferSize) {
+  const uint64_t buffersSize =  bufferSize;
 
   // allocate bat entries for the recive buffer and the receive counter
   
@@ -168,7 +170,7 @@ void setup_mregions_bats_counters() {
 }
 
 
-void create_descriptors() {
+void create_descriptors(MUHWI_Descriptor_t * descriptors, uint64_t * messageSizes, uint64_t * soffsets, uint64_t * roffsets) {
   uint64_t anyFifoMap = 
     MUHWI_DESCRIPTOR_TORUS_FIFO_MAP_AM |
     MUHWI_DESCRIPTOR_TORUS_FIFO_MAP_AP | 
@@ -236,7 +238,7 @@ void create_descriptors() {
       
     dinfo.DirectPut.Pacing = MUHWI_PACKET_DIRECT_PUT_IS_NOT_PACED;
       
-    int rc = MUSPI_CreatePt2PtDirectPutDescriptor(&SPIDescriptors[i],
+    int rc = MUSPI_CreatePt2PtDirectPutDescriptor(&descriptors[i],
 						  &dinfo );
     if (rc != 0) {
       fprintf(stderr, "MUSPI_CreatePt2PtDirectPutDescriptor failed with rc=%d\n",rc);

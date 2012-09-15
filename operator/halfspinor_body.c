@@ -304,7 +304,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
      
 #    if (defined MPI && !defined _NO_COMM)
-#      ifdef BGQ
+#      ifdef SPI
 
      // Initialize the barrier, resetting the hardware.
      int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
@@ -327,9 +327,9 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      while ( recvCounter > 0 );
      _bgq_msync();
 
-#      else
+#      else // SPI
      xchange_halffield(); 
-#      endif
+#      endif // SPI
 #    endif
      
 #ifdef OMP

@@ -39,15 +39,15 @@
 // we have four directions and forward/backward
 #define INJ_MEMORY_FIFO_SIZE  ((64*NUM_DIRS) -1)
 
-// pointers to send and receive buffers
-extern uint64_t messageSizes[NUM_DIRS];
-extern uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];
 extern uint64_t totalMessageSize;
 
+// pointers to send and receive buffers
 extern char * SPIrecvBuffers;
 extern char * SPIsendBuffers;
 extern char SPIDescriptorsMemory[ NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64 ];
+extern char SPIDescriptorsMemory32[ NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64 ];
 extern MUHWI_Descriptor_t *SPIDescriptors;
+extern MUHWI_Descriptor_t *SPIDescriptors32;
 
 // physical address of send buffers
 extern uint64_t sendBufPAddr;
@@ -64,10 +64,10 @@ extern uint64_t descCount[NUM_DIRS];
 int get_destinations(int * mypers);
 
 // Call to create the descriptors for all eight directions
-void create_descriptors();
+void create_descriptors(MUHWI_Descriptor_t * descriptors, uint64_t *, uint64_t *, uint64_t *);
 
 // Call to set up the base address table id and memory regions
-void setup_mregions_bats_counters();
+void setup_mregions_bats_counters(const int bufferSize);
 
 // global barrier using GIBarrier
 MUSPI_GIBarrier_t GIBarrier;

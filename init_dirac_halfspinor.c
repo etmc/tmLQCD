@@ -23,9 +23,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#if (defined BGQ)
+#if (defined SPI)
 # include "DirectPut.h"
-# include "xchange_halffield.h"
 #endif
 #include "global.h"
 #include "su3.h"
@@ -52,13 +51,10 @@ halfspinor32 *** NBPointer32;
 halfspinor32 * sendBuffer32, * recvBuffer32;
 halfspinor32 * sendBuffer32_, * recvBuffer32_;
 
+
 int init_dirac_halfspinor() {
   int j=0, k;
   int x, y, z, t;
-#if (defined BGL && defined _USE_BGLDRAM && !defined BGP)
-  unsigned int actualSize;
-  int rts_return=0;
-#endif  
 
   NBPointer = (halfspinor***) calloc(4,sizeof(halfspinor**));
   NBPointer_ = (halfspinor**) calloc(16,(VOLUME+RAND)*sizeof(halfspinor*));
@@ -201,8 +197,10 @@ int init_dirac_halfspinor() {
       }
     }
   }
-#ifdef BGQ
+#ifdef SPI
   // here comes the SPI initialisation
+  uint64_t messageSizes[NUM_DIRS];
+  uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];
 
   totalMessageSize = 0;
   for(int i = 0; i < NUM_DIRS; i ++) {
@@ -257,13 +255,13 @@ int init_dirac_halfspinor() {
   }
 
   // Set up base address table for reception counter and buffer
-  setup_mregions_bats_counters();
+  setup_mregions_bats_counters(totalMessageSize);
 
   // Create descriptors
   // Injection Direct Put Descriptor, one for each neighbour
   SPIDescriptors =
     ( MUHWI_Descriptor_t *)(((uint64_t)SPIDescriptorsMemory+64)&~(64-1));
-  create_descriptors();  
+  create_descriptors(SPIDescriptors, messageSizes, soffsets, roffsets);  
 
   // test communication
   for(int i = 0; i < RAND/2; i++) {
@@ -326,7 +324,7 @@ int init_dirac_halfspinor() {
     if(g_cart_id == 0) printf("# SPI exchange successfully tested\n");
   }
   
-#endif
+#endif // SPI
   return(0);
 }
 
@@ -351,18 +349,9 @@ int init_dirac_halfspinor32() {
   HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE)&~ALIGN_BASE);
 
 #ifdef MPI
-  if((void*)(sendBuffer32_ = (halfspinor32*)calloc(RAND/2+1, sizeof(halfspinor32))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(1);
-  }
-  sendBuffer32 = (halfspinor32*)(((unsigned long int)(sendBuffer32_)+ALIGN_BASE)&~ALIGN_BASE);
-  if((void*)(recvBuffer32_ = (halfspinor32*)calloc(RAND/2+1, sizeof(halfspinor))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(1);
-  }
-  recvBuffer32 = (halfspinor32*)(((unsigned long int)(recvBuffer32_)+ALIGN_BASE)&~ALIGN_BASE);
+  //re-use memory from 64Bit version
+  sendBuffer32 = (halfspinor32*)(((unsigned long int)(sendBuffer_)+ALIGN_BASE)&~ALIGN_BASE);
+  recvBuffer32 = (halfspinor32*)(((unsigned long int)(recvBuffer_)+ALIGN_BASE)&~ALIGN_BASE);
 #endif
 
   for(ieo = 0; ieo < 2; ieo++) {
