@@ -35,22 +35,22 @@ int init_omp_kahan_arrays(const int num) {
   g_omp_ks_re=NULL;
   g_omp_kc_re=NULL;
 
-  if((void*)(g_omp_ks = (_Complex double*)calloc(num, sizeof(_Complex double))) == NULL) {
+  if((void*)(g_omp_ks = (_Complex double*)malloc(num*sizeof(_Complex double))) == NULL) {
     printf ("init_omp_kahan_arrays malloc errno : %d\n",errno); 
     errno = 0;
     return(1);
   }
-  if((void*)(g_omp_kc = (_Complex double*)calloc(num, sizeof(_Complex double))) == NULL) {
+  if((void*)(g_omp_kc = (_Complex double*)malloc(num*sizeof(_Complex double))) == NULL) {
     printf ("init_omp_kahan_arrays malloc errno : %d\n",errno); 
     errno = 0;
     return(2);
   }
-  if((void*)(g_omp_ks_re = (double*)calloc(num, sizeof(double))) == NULL) {
+  if((void*)(g_omp_ks_re = (double*)malloc(num*sizeof(double))) == NULL) {
     printf ("init_omp_kahan_arrays malloc errno : %d\n",errno); 
     errno = 0;
     return(3);
   }
-  if((void*)(g_omp_kc_re = (double*)calloc(num, sizeof(double))) == NULL) {
+  if((void*)(g_omp_kc_re = (double*)malloc(num*sizeof(double))) == NULL) {
     printf ("init_omp_kahan_arrays malloc errno : %d\n",errno); 
     errno = 0;
     return(4);
