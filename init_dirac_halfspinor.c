@@ -366,8 +366,8 @@ int init_dirac_halfspinor32() {
 
 #ifdef MPI
   //re-use memory from 64Bit version
-  sendBuffer32 = (halfspinor32*)(((unsigned long int)(sendBuffer_)+ALIGN_BASE)&~ALIGN_BASE);
-  recvBuffer32 = (halfspinor32*)(((unsigned long int)(recvBuffer_)+ALIGN_BASE)&~ALIGN_BASE);
+  sendBuffer32 = (halfspinor32*)sendBuffer;
+  recvBuffer32 = (halfspinor32*)recvBuffer;
 #endif
 
   for(int ieo = 0; ieo < 2; ieo++) {
@@ -501,6 +501,70 @@ int init_dirac_halfspinor32() {
   SPIDescriptors32 =
     ( MUHWI_Descriptor_t *)(((uint64_t)SPIDescriptorsMemory32+64)&~(64-1));
   create_descriptors(SPIDescriptors32, messageSizes, soffsets, roffsets, spi_num_dirs);  
+
+  // test communication
+  for(unsigned int i = 0; i < RAND/2; i++) {
+    sendBuffer[i].s0.c0 = (double)g_cart_id;
+    sendBuffer[i].s0.c1 = (double)g_cart_id;
+    sendBuffer[i].s0.c2 = (double)g_cart_id;
+    sendBuffer[i].s1.c0 = (double)g_cart_id;
+    sendBuffer[i].s1.c1 = (double)g_cart_id;
+    sendBuffer[i].s1.c2 = (double)g_cart_id;
+  }
+
+  // Initialize the barrier, resetting the hardware.
+  rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
+  if(rc) {
+    printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
+    exit(__LINE__);
+  }
+  // reset the recv counter 
+  recvCounter = totalMessageSize/2;
+  global_barrier(); // make sure everybody is set recv counter
+  
+  //#pragma omp for nowait
+  for (unsigned int j = 0; j < spi_num_dirs; j++) {
+    descCount[ j ] =
+      msg_InjFifoInject ( injFifoHandle,
+			  j,
+			  &SPIDescriptors32[j]);
+  }
+  // wait for receive completion
+  while ( recvCounter > 0 );
+
+  _bgq_msync();
+
+  j = 0;
+  for(unsigned int i = 0; i < spi_num_dirs; i++) {
+    if(i == 0) k = g_nb_t_up;
+    if(i == 1) k = g_nb_t_dn;
+    if(i == 2) k = g_nb_x_up;
+    if(i == 3) k = g_nb_x_dn;
+    if(i == 4) k = g_nb_y_up;
+    if(i == 5) k = g_nb_y_dn;
+    if(i == 6) k = g_nb_z_up;
+    if(i == 7) k = g_nb_z_dn;
+    for(int mu = 0; mu < messageSizes[i]/sizeof(halfspinor32); mu++) {
+      if(k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s0.c0) ||
+	 k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s0.c1) ||
+	 k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s0.c2) ||
+	 k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s1.c0) ||
+	 k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s1.c1) ||
+	 k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s1.c2)) {
+	if(g_cart_id == 0) {
+	  printf("SPI exchange doesn't work for dir %d: %d != %d at point %d\n", 
+		 i, k ,(int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s0.c0), mu);
+	}
+	j++;
+      }
+    }
+  }
+  if(j > 0) {
+    printf("hmm, SPI exchange failed for 32 Bit halfspinor on proc %d...\n!", g_cart_id);
+  }
+  else {
+    if(g_cart_id == 0) printf("# 32 Bit SPI exchange successfully tested\n");
+  }
 
 #endif
   return(0);
