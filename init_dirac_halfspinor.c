@@ -469,13 +469,13 @@ int init_dirac_halfspinor32() {
 #endif
     }
   }
-#if (defined SPI_nocheck && defined MPI)
+#if (defined SPI && defined MPI)
   // here comes the SPI initialisation
   uint64_t messageSizes[NUM_DIRS];
   uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];
 
   uint64_t tMS = 0;
-  for(unsigned int i = 0; i < spi_num_dirs; i ++) {
+  for(unsigned int i = 0; i < spi_num_dirs; i++) {
     // message sizes in Bytes
     if(i == 0 || i == 1) messageSizes[i] = LX*LY*LZ*6*sizeof(float);
     else if(i == 2 || i == 3) messageSizes[i] = T*LY*LZ*6*sizeof(float);
@@ -504,16 +504,16 @@ int init_dirac_halfspinor32() {
 
   // test communication
   for(unsigned int i = 0; i < RAND/2; i++) {
-    sendBuffer[i].s0.c0 = (double)g_cart_id;
-    sendBuffer[i].s0.c1 = (double)g_cart_id;
-    sendBuffer[i].s0.c2 = (double)g_cart_id;
-    sendBuffer[i].s1.c0 = (double)g_cart_id;
-    sendBuffer[i].s1.c1 = (double)g_cart_id;
-    sendBuffer[i].s1.c2 = (double)g_cart_id;
+    sendBuffer32[i].s0.c0 = (double)g_cart_id;
+    sendBuffer32[i].s0.c1 = (double)g_cart_id;
+    sendBuffer32[i].s0.c2 = (double)g_cart_id;
+    sendBuffer32[i].s1.c0 = (double)g_cart_id;
+    sendBuffer32[i].s1.c1 = (double)g_cart_id;
+    sendBuffer32[i].s1.c2 = (double)g_cart_id;
   }
 
   // Initialize the barrier, resetting the hardware.
-  rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
+  int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
   if(rc) {
     printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
     exit(__LINE__);
@@ -552,7 +552,7 @@ int init_dirac_halfspinor32() {
 	 k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s1.c1) ||
 	 k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s1.c2)) {
 	if(g_cart_id == 0) {
-	  printf("SPI exchange doesn't work for dir %d: %d != %d at point %d\n", 
+	  printf("32 Bit SPI exchange doesn't work for dir %d: %d != %d at point %d\n", 
 		 i, k ,(int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s0.c0), mu);
 	}
 	j++;
