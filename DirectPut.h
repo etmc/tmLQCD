@@ -19,35 +19,40 @@
 
 #ifndef _DIRECT_PUT_H
 #define _DIRECT_PUT_H
-#  ifdef BGQ
+#  ifdef SPI
 // Basic SPI and HWI includes
-#include <hwi/include/bqc/A2_core.h>
-#include <hwi/include/bqc/A2_inlines.h>
-#include <hwi/include/bqc/MU_PacketCommon.h>
-#include <firmware/include/personality.h>
-#include <spi/include/mu/Descriptor.h>
-#include <spi/include/mu/Descriptor_inlines.h>
-#include <spi/include/mu/InjFifo.h>
-#include <spi/include/mu/Addressing.h>
-#include <spi/include/mu/Addressing_inlines.h>
-#include <spi/include/mu/GIBarrier.h>
-#include <spi/include/kernel/MU.h>
-#include <spi/include/kernel/process.h>
-#include <spi/include/kernel/location.h>
+#  include <hwi/include/bqc/A2_core.h>
+#  include <hwi/include/bqc/A2_inlines.h>
+#  include <hwi/include/bqc/MU_PacketCommon.h>
+#  include <firmware/include/personality.h>
+#  include <spi/include/mu/Descriptor.h>
+#  include <spi/include/mu/Descriptor_inlines.h>
+#  include <spi/include/mu/InjFifo.h>
+#  include <spi/include/mu/Addressing.h>
+#  include <spi/include/mu/Addressing_inlines.h>
+#  include <spi/include/mu/GIBarrier.h>
+#  include <spi/include/kernel/MU.h>
+#  include <spi/include/kernel/process.h>
+#  include <spi/include/kernel/location.h>
 
-#define NUM_DIRS               8
+// maximal number of directions
+#  define NUM_DIRS               8
 // we have four directions and forward/backward
-#define INJ_MEMORY_FIFO_SIZE  ((64*NUM_DIRS) -1)
+#  define INJ_MEMORY_FIFO_SIZE  ((64*NUM_DIRS) -1)
 
+// total message size summed over all directions
 extern uint64_t totalMessageSize;
+
+// actual number of directions
+extern unsigned int spi_num_dirs;
 
 // pointers to send and receive buffers
 extern char * SPIrecvBuffers;
 extern char * SPIsendBuffers;
 extern char SPIDescriptorsMemory[ NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64 ];
 extern char SPIDescriptorsMemory32[ NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64 ];
-extern MUHWI_Descriptor_t *SPIDescriptors;
-extern MUHWI_Descriptor_t *SPIDescriptors32;
+extern MUHWI_Descriptor_t * SPIDescriptors;
+extern MUHWI_Descriptor_t * SPIDescriptors32;
 
 // physical address of send buffers
 extern uint64_t sendBufPAddr;
@@ -58,13 +63,12 @@ extern volatile uint64_t recvCounter;
 // counter for injected messages
 extern uint64_t descCount[NUM_DIRS];
 
-
 // get the destinations for all neighbours
 // will be saved in nb2dest
 int get_destinations(int * mypers);
 
 // Call to create the descriptors for all eight directions
-void create_descriptors(MUHWI_Descriptor_t * descriptors, uint64_t *, uint64_t *, uint64_t *);
+void create_descriptors(MUHWI_Descriptor_t * descriptors, uint64_t *, uint64_t *, uint64_t *, const unsigned int);
 
 // Call to set up the base address table id and memory regions
 void setup_mregions_bats_counters(const int bufferSize);
@@ -94,21 +98,7 @@ int msg_InjFifoInit ( msg_InjFifoHandle_t *injFifoHandlePtr,
                       size_t               fifoSize,
                       Kernel_InjFifoAttributes_t  *injFifoAttrs );
 
-
-/**
- * \brief Terminate Injection Fifos
- * 
- * Terminate the usage of injection fifos.  This deactivates the fifos and
- * frees all of the storage associated with them (previously allocated during
- * msg_InjFifoInit()).
- * 
- * \param [in]  injFifoHandle  The handle returned from msg_InjFifoInit().
- *                             It must be passed into this function untouched
- *                             from when it was returned from msg_InjFifoInit().
- *
- * \note After this function returns, no more InjFifo functions should be called
- *       with this injFifoHandle.
- */
+// basically a dummy routine for termination
 void msg_InjFifoTerm ( msg_InjFifoHandle_t injFifoHandle );
 
 
@@ -139,5 +129,5 @@ uint64_t msg_InjFifoInject ( msg_InjFifoHandle_t injFifoHandle,
                              MUHWI_Descriptor_t *descPtr );
 
 
-#  endif // BGQ
+#  endif // SPI
 #endif

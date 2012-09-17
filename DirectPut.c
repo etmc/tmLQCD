@@ -18,7 +18,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#  include<config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -33,8 +33,10 @@
 #include "global.h"
 #include "DirectPut.h"
 
+// actual number of directions
+unsigned int spi_num_dirs = NUM_DIRS;
 // total Message Size
-uint64_t totalMessageSize;
+// in bytes!
 uint64_t totalMessageSize;
 // Allocate static memory for descriptors
 char SPIDescriptorsMemory[ NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64 ];
@@ -62,9 +64,6 @@ struct {
   uint8_t             hintsABCD;
   uint8_t             hintsE;
 } nb2dest[NUM_DIRS];
-
-// in bytes
-uint64_t totalMessageSize;
 
 // receive counter
 volatile uint64_t recvCounter;
@@ -170,7 +169,8 @@ void setup_mregions_bats_counters(const int bufferSize) {
 }
 
 
-void create_descriptors(MUHWI_Descriptor_t * descriptors, uint64_t * messageSizes, uint64_t * soffsets, uint64_t * roffsets) {
+void create_descriptors(MUHWI_Descriptor_t * descriptors, uint64_t * messageSizes, uint64_t * soffsets, 
+			uint64_t * roffsets, const unsigned int num_dirs) {
   uint64_t anyFifoMap = 
     MUHWI_DESCRIPTOR_TORUS_FIFO_MAP_AM |
     MUHWI_DESCRIPTOR_TORUS_FIFO_MAP_AP | 
@@ -188,7 +188,7 @@ void create_descriptors(MUHWI_Descriptor_t * descriptors, uint64_t * messageSize
  
   // loop over directions
   // CHECK offset needs to be adjusted for QCD case
-  for(int i = 0; i < 8; i++) {
+  for(unsigned int i = 0; i < num_dirs; i++) {
     // Injection Direct Put Descriptor Information Structure
     MUSPI_Pt2PtDirectPutDescriptorInfo_t dinfo;
     
@@ -244,7 +244,6 @@ void create_descriptors(MUHWI_Descriptor_t * descriptors, uint64_t * messageSize
       fprintf(stderr, "MUSPI_CreatePt2PtDirectPutDescriptor failed with rc=%d\n",rc);
       exit(1);
     }
-      
   }
 }
 
@@ -252,6 +251,7 @@ void create_descriptors(MUHWI_Descriptor_t * descriptors, uint64_t * messageSize
 int get_destinations(int * mypers) {
 
   int tmp[6];
+#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   MPI_Status mstatus;
   MPI_Sendrecv((void*)mypers, 6, MPI_INT, g_nb_t_up, 0, 
 	       (void*)tmp, 6, MPI_INT, g_nb_t_dn, 0,
@@ -261,7 +261,8 @@ int get_destinations(int * mypers) {
 	       (void*)tmp, 6, MPI_INT, g_nb_t_up, 1, 
 	       g_cart_grid, &mstatus);
   MUSPI_SetUpDestination( &nb2dest[0].dest, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4] );
-  
+#endif
+#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   MPI_Sendrecv((void*)mypers, 6, MPI_INT, g_nb_x_up, 2, 
 	       (void*)tmp, 6, MPI_INT, g_nb_x_dn, 2, 
 	       g_cart_grid, &mstatus);
@@ -270,7 +271,8 @@ int get_destinations(int * mypers) {
 	       (void*)tmp, 6, MPI_INT, g_nb_x_up, 3, 
 	       g_cart_grid, &mstatus);
   MUSPI_SetUpDestination( &nb2dest[2].dest, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4] );  
-
+#endif
+#if (defined PARALLELXYT || defined PARALLELXYZT)
   MPI_Sendrecv((void*)mypers, 6, MPI_INT, g_nb_y_up, 4, 
 	       (void*)tmp, 6, MPI_INT, g_nb_y_dn, 4, 
 	       g_cart_grid, &mstatus);
@@ -279,7 +281,8 @@ int get_destinations(int * mypers) {
 	       (void*)tmp, 6, MPI_INT, g_nb_y_up, 5, 
 	       g_cart_grid, &mstatus);
   MUSPI_SetUpDestination( &nb2dest[4].dest, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4] );  
-  
+#endif
+#if (defined PARALLELXYZT)
   MPI_Sendrecv((void*)mypers, 6, MPI_INT, g_nb_z_up, 6, 
 	       (void*)tmp, 6, MPI_INT, g_nb_z_dn, 6, 
 	       g_cart_grid, &mstatus);
@@ -288,7 +291,7 @@ int get_destinations(int * mypers) {
 	       (void*)tmp, 6, MPI_INT, g_nb_z_up, 7, 
 	       g_cart_grid, &mstatus);
   MUSPI_SetUpDestination( &nb2dest[6].dest, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4] );  
-  
+#endif
   return(0);
 }
 
@@ -309,8 +312,7 @@ typedef struct msg_InjFifoInfo
 
 uint64_t msg_InjFifoInject ( msg_InjFifoHandle_t injFifoHandle,
                              uint32_t            relativeFifoId,
-                             MUHWI_Descriptor_t *descPtr )
-{
+                             MUHWI_Descriptor_t *descPtr ) {
   msg_InjFifoInfo_t *info = (msg_InjFifoInfo_t*)injFifoHandle.pOpaqueObject;
   
   uint32_t globalFifoId = (info->startingSubgroupId * BGQ_MU_NUM_INJ_FIFOS_PER_SUBGROUP) +
@@ -320,11 +322,10 @@ uint64_t msg_InjFifoInject ( msg_InjFifoHandle_t injFifoHandle,
   uint64_t rc = MUSPI_InjFifoInject (MUSPI_IdToInjFifo( globalFifoId % BGQ_MU_NUM_INJ_FIFOS_PER_SUBGROUP,
 							&info->subgroup[subgroupId] ),
 				     descPtr);
-  return rc;  
+  return rc;
 }
 
-void msg_InjFifoTerm ( msg_InjFifoHandle_t injFifoHandle )
-{
+void msg_InjFifoTerm ( msg_InjFifoHandle_t injFifoHandle ) {
   return; /*Simple library do nothing! */
 }
 
@@ -333,8 +334,8 @@ int msg_InjFifoInit ( msg_InjFifoHandle_t *injFifoHandlePtr,
                       uint32_t             startingFifoId,
                       uint32_t             numFifos,
                       size_t               fifoSize,
-                      Kernel_InjFifoAttributes_t  *injFifoAttrs )
-{  
+                      Kernel_InjFifoAttributes_t  *injFifoAttrs ) {  
+
   void                *buffer = NULL;
   uint32_t endingFifoId; // Relative to a subgroup
   uint32_t numFifosInSubgroup;
@@ -343,16 +344,17 @@ int msg_InjFifoInit ( msg_InjFifoHandle_t *injFifoHandlePtr,
   uint32_t fifoIds[BGQ_MU_NUM_INJ_FIFOS_PER_SUBGROUP];
   Kernel_InjFifoAttributes_t attrs[BGQ_MU_NUM_INJ_FIFOS_PER_SUBGROUP];
   Kernel_InjFifoAttributes_t defaultAttrs;
-  unsigned int i;
   uint64_t lock_cache;
 
   memset ( &defaultAttrs, 0x00, sizeof(defaultAttrs) );
-  if ( injFifoAttrs == NULL ) injFifoAttrs = &defaultAttrs;
+  if(injFifoAttrs == NULL) {
+    injFifoAttrs = &defaultAttrs;
+  }
 
   // Malloc space for the info structure
   msg_InjFifoInfo_t *info;
   info = (msg_InjFifoInfo_t *) memalign(32, sizeof(msg_InjFifoInfo_t));
-  if ( !info ) return -1;
+  if( !info ) return -1;
   
     // Initialize the info structure
   info->startingSubgroupId = startingSubgroupId;
@@ -361,94 +363,87 @@ int msg_InjFifoInit ( msg_InjFifoHandle_t *injFifoHandlePtr,
   info->numSubgroups       = 0;
 
   // Malloc space for the injection fifos.  They are 64-byte aligned.
-  for (i=0; i<numFifos; i++)
-    {
-      info->fifoPtr[i] = (uint64_t*)memalign(64, fifoSize);
-      if ( !info->fifoPtr[i] ) return -1;
-    }
+  for (unsigned int i = 0; i < numFifos; i++) {
+    info->fifoPtr[i] = (uint64_t*)memalign(64, fifoSize);
+    if ( !info->fifoPtr[i] ) return -1;
+  }
   
   // Process one subgroup at a time.
   // - Allocate the fifos.
   // - Init the MU MMIO for the fifos.
   // - Activate the fifos.
-  while ( numFifos > 0 )
-    {
-      info->numSubgroups++;
-
-      // startingFifoId is the starting fifo number relative to the
-      // subgroup we are working on.
-      // Determine endingFifoId, the ending fifo number relative to
-      // the subgroup we are working on.
-      endingFifoId = startingFifoId + numFifos-1;
-      if ( endingFifoId > (BGQ_MU_NUM_INJ_FIFOS_PER_SUBGROUP-1) )
-        endingFifoId = BGQ_MU_NUM_INJ_FIFOS_PER_SUBGROUP-1;
-      numFifosInSubgroup = endingFifoId - startingFifoId + 1;
-      info->numFifosInSubgroup[subgroupId] = numFifosInSubgroup;
-
-      // Init structures for allocating the fifos...
-      // - fifo Ids
-      // - attributes
-      for (i=0; i<numFifosInSubgroup; i++)
-        {
-          fifoIds[i] = startingFifoId + i;
-          memcpy(&attrs[i],injFifoAttrs,sizeof(attrs[i]));
-/*        printf("Attrs[%u] = 0x%x\n",i,*((uint32_t*)&attrs[i])); */
-/*        printf("InjFifoInit: fifoIds[%u]=%u\n",i,fifoIds[i]); */
-        }
-
-      // Allocate the fifos
-      rc = Kernel_AllocateInjFifos (subgroupId,
-                                    &info->subgroup[subgroupId], 
-                                    numFifosInSubgroup,
-                                    fifoIds,
-                                    attrs);
-      if ( rc ) {
-        printf("msg_InjFifoInit: Kernel_AllocateInjFifos failed with rc=%d\n",rc);
-        return rc;
-      }
-
-      // Init the MU MMIO for the fifos.
-      for (i=0; i<numFifosInSubgroup; i++)
-        {
-          Kernel_MemoryRegion_t memRegion;
-          rc = Kernel_CreateMemoryRegion ( &memRegion,
-                                           info->fifoPtr[numFifos-i-1],
-                                           fifoSize );
-          if ( rc ) {
-            printf("msg_InjFifoInit: Kernel_CreateMemoryRegion failed with rc=%d\n",rc);
-            return rc;
-          }
-        
-          rc = Kernel_InjFifoInit (&info->subgroup[subgroupId], 
-                                   fifoIds[i],
-                                   &memRegion,
-                                   (uint64_t)info->fifoPtr[numFifos-i-1] -
-                                   (uint64_t)memRegion.BaseVa,
-                                   fifoSize-1);    
-          if ( rc ) {
-            printf("msg_InjFifoInit: Kernel_InjFifoInit failed with rc=%d\n",rc);
-            return rc;
-          }
-
-/*        TRACE(("HW freespace=%lx\n", MUSPI_getHwFreeSpace (MUSPI_IdToInjFifo (fifoIds[i],&info->subgroup[subgroupId]))))
-; */
-        }
-
-      // Activate the fifos.
-      rc = Kernel_InjFifoActivate (&info->subgroup[subgroupId],
-                                   numFifosInSubgroup,
-                                   fifoIds,
-                                   KERNEL_INJ_FIFO_ACTIVATE);
-      if ( rc ) {
-        printf("msg_InjFifoInit: Kernel_InjFifoActivate failed with rc=%d\n",rc);
-        return rc;
-      }
-      
-      startingFifoId = 0; // Next subgroup will start at fifo 0.
-      
-      subgroupId++;       // Next subgroup.
-      numFifos -= numFifosInSubgroup;
+  while ( numFifos > 0 ) {
+    info->numSubgroups++;
+    
+    // startingFifoId is the starting fifo number relative to the
+    // subgroup we are working on.
+    // Determine endingFifoId, the ending fifo number relative to
+    // the subgroup we are working on.
+    endingFifoId = startingFifoId + numFifos-1;
+    if ( endingFifoId > (BGQ_MU_NUM_INJ_FIFOS_PER_SUBGROUP-1) ) {
+      endingFifoId = BGQ_MU_NUM_INJ_FIFOS_PER_SUBGROUP-1;
     }
+    numFifosInSubgroup = endingFifoId - startingFifoId + 1;
+    info->numFifosInSubgroup[subgroupId] = numFifosInSubgroup;
+    
+    // Init structures for allocating the fifos...
+    // - fifo Ids
+    // - attributes
+    for (unsigned int i = 0; i < numFifosInSubgroup; i++) {
+      fifoIds[i] = startingFifoId + i;
+      memcpy(&attrs[i], injFifoAttrs, sizeof(attrs[i]));
+    }
+    
+    // Allocate the fifos
+    rc = Kernel_AllocateInjFifos (subgroupId,
+				  &info->subgroup[subgroupId], 
+				  numFifosInSubgroup,
+				  fifoIds,
+				  attrs);
+    if ( rc ) {
+      printf("msg_InjFifoInit: Kernel_AllocateInjFifos failed with rc=%d\n",rc);
+      return rc;
+    }
+    
+    // Init the MU MMIO for the fifos.
+    for (unsigned int i = 0; i < numFifosInSubgroup; i++) {
+      Kernel_MemoryRegion_t memRegion;
+      rc = Kernel_CreateMemoryRegion ( &memRegion,
+				       info->fifoPtr[numFifos-i-1],
+				       fifoSize );
+      if ( rc ) {
+	printf("msg_InjFifoInit: Kernel_CreateMemoryRegion failed with rc=%d\n",rc);
+	return rc;
+      }
+  
+      // initialise the Fifos
+      rc = Kernel_InjFifoInit (&info->subgroup[subgroupId], 
+			       fifoIds[i],
+			       &memRegion,
+			       (uint64_t)info->fifoPtr[numFifos-i-1] -
+			       (uint64_t)memRegion.BaseVa,
+			       fifoSize-1);    
+      if ( rc ) {
+	printf("msg_InjFifoInit: Kernel_InjFifoInit failed with rc=%d\n",rc);
+	return rc;
+      }
+    }
+    
+    // Activate the fifos.
+    rc = Kernel_InjFifoActivate (&info->subgroup[subgroupId],
+				 numFifosInSubgroup,
+				 fifoIds,
+				 KERNEL_INJ_FIFO_ACTIVATE);
+    if ( rc ) {
+      printf("msg_InjFifoInit: Kernel_InjFifoActivate failed with rc=%d\n",rc);
+      return rc;
+    }
+    
+    startingFifoId = 0; // Next subgroup will start at fifo 0.
+    
+    subgroupId++;       // Next subgroup.
+    numFifos -= numFifosInSubgroup;
+  }
   
   injFifoHandlePtr->pOpaqueObject = (void *)info;
   return 0;
