@@ -42,6 +42,9 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "global.h"
 #include "su3.h"
 #include "sse.h"
@@ -233,7 +236,7 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
  * parallelised for OpenMP */
 
 #define nm1 5
-int six_invert(_Complex double a[6][6])
+void six_invert(int* ifail ,_Complex double a[6][6])
 {
   /* required for thread safety */
   _Complex double ALIGN d[nm1+1],u[nm1+1];
@@ -241,8 +244,7 @@ int six_invert(_Complex double a[6][6])
   double ALIGN p[nm1+1];
   double ALIGN s,q;
   int i,j,k;
-  int ifail;
-  ifail=0;
+  *ifail=0;
   for(k = 0; k < nm1; ++k)
   {
     s=0.0;
@@ -255,7 +257,7 @@ int six_invert(_Complex double a[6][6])
     p[k] = conj(sigma) * a[k][k];
     q = conj(sigma) * sigma;
     if (q < tiny_t)
-      ifail++;
+      *ifail++;
     d[k] = -conj(sigma) / q;
 
     /* reflect all columns to the right */
@@ -272,7 +274,7 @@ int six_invert(_Complex double a[6][6])
   sigma = a[nm1][nm1];
   q = conj(sigma) * sigma;
   if (q < tiny_t)
-    ifail++;
+    *ifail++;
   d[nm1] = conj(sigma) / q;
 
   /*  inversion of upper triangular matrix in place
@@ -308,10 +310,9 @@ int six_invert(_Complex double a[6][6])
         a[i][j] -= conj(u[j]) * z; /* reflection */
     }
   }
-  return ifail;
 }
     
-_Complex double six_det(_Complex double a[6][6])
+void six_det(_Complex double* const rval, _Complex double a[6][6])
 {
   /* required for thread safety */
   _Complex double ALIGN sigma,z;
@@ -365,11 +366,11 @@ _Complex double six_det(_Complex double a[6][6])
   if(g_proc_id == 0 && ifail > 0) {
     fprintf(stderr, "Warning: ifail = %d > 0 in six_det\n", ifail);
   }
-  return(det);
+  *rval = det;
 }
 
 /*definitions needed for the functions sw_trace(int ieo) and sw_trace(int ieo)*/
-inline void populate_6x6_matrix(_Complex double a[6][6], su3 * C, const int row, const int col) {
+inline void populate_6x6_matrix(_Complex double a[6][6], const su3 * const C, const int row, const int col) {
   a[0+row][0+col] = C->c00;
   a[0+row][1+col] = C->c01;
   a[0+row][2+col] = C->c02;
@@ -382,7 +383,7 @@ inline void populate_6x6_matrix(_Complex double a[6][6], su3 * C, const int row,
   return;
 }
 
-inline void get_3x3_block_matrix(su3 * C, _Complex double a[6][6], const int row, const int col) {
+inline void get_3x3_block_matrix(su3 * const C, _Complex double a[6][6], const int row, const int col) {
   C->c00 = a[0+row][0+col];
   C->c01 = a[0+row][1+col];
   C->c02 = a[0+row][2+col];
@@ -409,15 +410,21 @@ inline void add_tm(_Complex double a[6][6], const double mu) {
 }
 
 double sw_trace(const int ieo, const double mu) {
-  int i,x,icx,ioff;
+  double ALIGN ks, kc;
+  ks = kc = 0.0;
+#ifdef OMP
+#pragma omp parallel
+  {
+  int thread_num = omp_get_thread_num();
+  g_omp_ks_re[thread_num] = g_omp_kc_re[thread_num] = 0.0;
+#endif
+
+  int i,x,ioff;
   su3 ALIGN v;
   _Complex double ALIGN a[6][6];
   double ALIGN tra;
-  double ALIGN ks,kc,tr,ts,tt;
+  double ALIGN tr,ts,tt;
   _Complex double ALIGN det;
-
-  ks=0.0;
-  kc=0.0;
 
   if(ieo==0) {
     ioff=0;
@@ -426,7 +433,10 @@ double sw_trace(const int ieo, const double mu) {
     ioff=(VOLUME+RAND)/2;
   }
   
-  for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+#ifdef OMP
+#pragma omp for schedule(static)
+#endif
+  for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
     for(i=0;i<2;i++) {
       populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
@@ -438,19 +448,35 @@ double sw_trace(const int ieo, const double mu) {
       if(i == 0) add_tm(a, mu);
       else add_tm(a, -mu);
       // and compute the tr log (or log det)
-      det = six_det(a);
+      six_det(&det,a);
       tra = log(conj(det)*det);
       // we need to compute only the one with +mu
       // the one with -mu must be the complex conjugate!
-
+#ifdef OMP
+      tr=tra+g_omp_kc_re[thread_num];
+      ts=tr+g_omp_ks_re[thread_num];
+      tt=ts-g_omp_ks_re[thread_num];
+      g_omp_ks_re[thread_num]=ts;
+      g_omp_kc_re[thread_num]=tr-tt;
+#else
       tr=tra+kc;
       ts=tr+ks;
       tt=ts-ks;
       ks=ts;
       kc=tr-tt;
+#endif
     }
   }
+#ifdef OMP
+  g_omp_kc_re[thread_num] = g_omp_ks_re[thread_num] + g_omp_kc_re[thread_num];
+  } /* OpenMP parallel closing brace */
+
+  for(int i = 0; i < omp_num_threads; ++i) {
+    kc += g_omp_kc_re[i];
+  }
+#else
   kc=ks+kc;
+#endif
 #ifdef MPI
   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   return(ks);
@@ -516,7 +542,7 @@ void sw_invert(const int ieo, const double mu) {
       else add_tm(a, -mu);
       // and invert the resulting matrix
 
-      err = six_invert(a); 
+      six_invert(&err,a); 
       // here we need to catch the error! 
       if(err > 0 && g_proc_id == 0) {
 	printf("# inversion failed in six_invert code %d\n", err);
@@ -542,7 +568,7 @@ void sw_invert(const int ieo, const double mu) {
 	if(i == 0) add_tm(a, -mu);
 	else add_tm(a, +mu);
 	// and invert the resulting matrix
-	err = six_invert(a); 
+	six_invert(&err,a); 
 	// here we need to catch the error! 
 	if(err > 0 && g_proc_id == 0) {
 	  printf("# %d\n", err);
