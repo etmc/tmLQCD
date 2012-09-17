@@ -1,12 +1,10 @@
 /**********************************************************************
  *
- * Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Carsten Urbach
- *
- * BG and halfspinor versions (C) 2007, 2008 Carsten Urbach
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2012 Carsten Urbach
  *
  * This file is based on an implementation of the Dirac operator 
  * written by Martin Luescher, modified by Martin Hasenbusch in 2002 
- * and modified and extended by Carsten Urbach from 2003-2008
+ * this is a new version based on the aforementioned implementations
  *
  * This file is part of tmLQCD.
  *
@@ -24,19 +22,6 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
  **********************************************************************/
-
-
-/* l output , k input*/
-/* for ieo=0, k resides on  odd sites and l on even sites */
-
-
-
-//  if(k == l){
-//    printf("Error in H_psi (simple.c):\n");
-//    printf("Arguments k and l must be different\n");
-//    printf("Program aborted\n");
-//    exit(1);
-//  }
 
 
 int ix;
@@ -88,58 +73,48 @@ g_sloppy_precision = 0;
 if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   phi32 = NBPointer32[ieo];
   
-  /**************** loop over all lattice sites ****************/
 #ifdef OMP
 #pragma omp for
 #else
   ix=0;
 #endif
-  for(int i = 0; i < (VOLUME)/2; i++){
+  for(unsigned int i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
     U=u0+i*4;
     s=k+i;
     ix=i*8;
 #endif
-    /*********************** direction +0 ************************/
     _hop_t_p_pre32();
     U++;
     ix++;
     
-    /*********************** direction -0 ************************/
     _hop_t_m_pre32();
     ix++;
     
-    /*********************** direction +1 ************************/
     _hop_x_p_pre32();
     U++;
     ix++;
     
-    /*********************** direction -1 ************************/
     _hop_x_m_pre32();
     ix++;
     
-    /*********************** direction +2 ************************/
     _hop_y_p_pre32();
     U++;
     ix++;
     
-    /*********************** direction -2 ************************/
     _hop_y_m_pre32();
     ix++;
     
-    /*********************** direction +3 ************************/
     _hop_z_p_pre32();
     U++;
     ix++;
     
-    /*********************** direction -3 ************************/
     _hop_z_m_pre32();
     
 #ifndef OMP
     s++;
     ix++;
 #endif
-    /************************ end of loop ************************/
   }
   
 #ifdef OMP
@@ -148,7 +123,31 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
     
 #    if (defined MPI && !defined _NO_COMM)
+#      ifdef SPI
+
+     // Initialize the barrier, resetting the hardware.
+     int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
+     if(rc) {
+       printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
+       exit(__LINE__);
+     }
+     // reset the recv counter 
+     recvCounter = totalMessageSize/2;
+     global_barrier(); // make sure everybody is set recv counter
+
+     //#pragma omp for nowait
+     for (unsigned int j = 0; j < spi_num_dirs; j++) {
+       descCount[ j ] =
+	 msg_InjFifoInject ( injFifoHandle,
+			     j,
+			     &SPIDescriptors32[j]);
+     }
+     // wait for receive completion
+     while ( recvCounter > 0 );
+     _bgq_msync();
+#      else
     xchange_halffield32(); 
+#      endif
 #    endif
     
 #ifdef OMP
@@ -179,7 +178,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #else
   ix = 0;
 #endif
-  for(int i = 0; i < (VOLUME)/2; i++){
+  for(unsigned int i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
     ix=i*8;
     s=l+i;
@@ -188,38 +187,30 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifdef _TM_SUB_HOP
      pn=p+i;
 #endif
-    /*********************** direction +0 ************************/
     _hop_t_p_post32();
     ix++;
     
-    /*********************** direction -0 ************************/
     _hop_t_m_post32();
     ix++;
     U++;
     
-    /*********************** direction +1 ************************/
     _hop_x_p_post32();
     ix++;
     
-    /*********************** direction -1 ************************/
     _hop_x_m_post32();
     U++;
     ix++;
     
-    /*********************** direction +2 ************************/
     _hop_y_p_post32();
     ix++;
     
-    /*********************** direction -2 ************************/
     _hop_y_m_post32();
     U++;
     ix++;
     
-    /*********************** direction +3 ************************/
     _hop_z_p_post32();
     ix++;
     
-    /*********************** direction -3 ************************/
     _hop_z_m_post32();
     
 #ifdef _MUL_G5_CMPLX
@@ -240,14 +231,12 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
  else {
    phi = NBPointer[ieo];
    
-   /**************** loop over all lattice sites ****************/
 #ifdef OMP
 #pragma omp for
 #else
    ix=0;
 #endif
-   /* #pragma ivdep*/
-   for(int i = 0; i < (VOLUME)/2; i++){
+   for(unsigned int i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
      s=k+i;
      _prefetch_spinor(s);
@@ -256,46 +245,37 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      _prefetch_su3(U);
 #endif
      
-     /*********************** direction +0 ************************/
      _hop_t_p_pre();
      U++;
      ix++;
      
-     /*********************** direction -0 ************************/
      _hop_t_m_pre();
      ix++;
      
-     /*********************** direction +1 ************************/
      _hop_x_p_pre();
      U++;
      ix++;
      
-     /*********************** direction -1 ************************/
      _hop_x_m_pre();
      ix++;
      
-     /*********************** direction +2 ************************/
      _hop_y_p_pre();
      U++;
      ix++;
      
-     /*********************** direction -2 ************************/
      _hop_y_m_pre();
      ix++;
      
-     /*********************** direction +3 ************************/
      _hop_z_p_pre();
      U++;
      ix++;
      
-     /*********************** direction -3 ************************/
      _hop_z_m_pre();
      
 #ifndef OMP
      s++;            
      ix++;
 #endif
-     /************************ end of loop ************************/
    }
    
 #ifdef OMP
@@ -304,7 +284,32 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
      
 #    if (defined MPI && !defined _NO_COMM)
+#      ifdef SPI
+
+     // Initialize the barrier, resetting the hardware.
+     int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
+     if(rc) {
+       printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
+       exit(__LINE__);
+     }
+     // reset the recv counter 
+     recvCounter = totalMessageSize;
+     global_barrier(); // make sure everybody is set recv counter
+
+     //#pragma omp for nowait
+     for (unsigned int j = 0; j < spi_num_dirs; j++) {
+       descCount[ j ] =
+	 msg_InjFifoInject ( injFifoHandle,
+			     j,
+			     &SPIDescriptors[j]);
+     }
+     // wait for receive completion
+     while ( recvCounter > 0 );
+     _bgq_msync();
+
+#      else // SPI
      xchange_halffield(); 
+#      endif // SPI
 #    endif
      
 #ifdef OMP
@@ -337,7 +342,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
    ix = 0;
 #endif
    /* #pragma ivdep */
-   for(int i = 0; i < (VOLUME)/2; i++){
+   for(unsigned int i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
      ix=i*8;
      U=u0+i*4;
@@ -348,39 +353,30 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifdef _TM_SUB_HOP
      pn=p+i;
 #endif
-     
-     /*********************** direction +0 ************************/
      _hop_t_p_post();
      ix++;
      
-     /*********************** direction -0 ************************/
      _hop_t_m_post();
      ix++;
      U++;
      
-     /*********************** direction +1 ************************/
      _hop_x_p_post();
      ix++;
      
-     /*********************** direction -1 ************************/
      _hop_x_m_post();
      U++;
      ix++;
      
-     /*********************** direction +2 ************************/
      _hop_y_p_post();
      ix++;
      
-     /*********************** direction -2 ************************/
      _hop_y_m_post();
      U++;
      ix++;
      
-     /*********************** direction +3 ************************/
      _hop_z_p_post();
      ix++;
      
-     /*********************** direction -3 ************************/
      _hop_z_m_post();
      
 #ifdef _MUL_G5_CMPLX
