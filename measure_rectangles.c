@@ -45,10 +45,10 @@
 #include "measure_rectangles.h"
 
 
-double measure_rectangles(su3 ** const gf) {
+double measure_rectangles(const su3 ** const gf) {
   int i, j, k, mu, nu;
   static su3 pr1, pr2, tmp; 
-  su3 *v = NULL , *w = NULL;
+  const su3 *v = NULL , *w = NULL;
   static double ga, ac; 
 #ifdef MPI
   static double gas;

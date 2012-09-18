@@ -40,10 +40,10 @@
 #include <io/params.h>
 #include "measure_gauge_action.h"
 
-double measure_gauge_action(su3 ** const gf) {
+double measure_gauge_action(const su3 ** const gf) {
   int ix,ix1,ix2,mu1,mu2;
   static su3 pr1,pr2; 
-  su3 *v,*w;
+  const su3 *v,*w;
   static double ga,ac;
 #ifdef MPI
   static double gas;

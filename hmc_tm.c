@@ -406,9 +406,9 @@ int main(int argc,char *argv[]) {
     init_phmc();
   }
 
-  plaquette_energy = measure_gauge_action(g_gauge_field);
+  plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-    rectangle_energy = measure_rectangles(g_gauge_field);
+    rectangle_energy = measure_rectangles( (const su3**) g_gauge_field);
     if(g_proc_id == 0){
       fprintf(parameterfile,"# Computed rectangle value: %14.12f.\n",rectangle_energy/(12.*VOLUME*g_nproc));
     }
