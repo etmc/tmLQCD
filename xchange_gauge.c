@@ -36,7 +36,6 @@
 #include "mpi_init.h"
 #include "su3.h"
 #include "su3adj.h"
-#include "xchange_gauge.h"
 
 #if defined _NON_BLOCKING
 

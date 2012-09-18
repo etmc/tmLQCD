@@ -50,7 +50,6 @@ double measure_gauge_action(gauge_field_t const gf) {
   static double gas;
 #endif
   static double ks,kc,tr,ts,tt;
-
   if(g_update_gauge_energy) {
     kc=0.0; ks=0.0;
     for (ix=0;ix<VOLUME;ix++){

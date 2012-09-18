@@ -76,6 +76,9 @@
 #include "sighandler.h"
 #include "measurements.h"
 
+#include <buffers/gauge.h>
+#include <buffers/utils.h>
+
 void usage(){
   fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
   fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
@@ -371,14 +374,15 @@ int main(int argc,char *argv[]) {
 
   /*For parallelization: exchange the gaugefield */
 #ifdef MPI
-  xchange_gauge(g_gauge_field);
+  exchange_gauge_field(g_gf);
+  // xchange_gauge(g_gauge_field);
 #endif
 
   if(g_running_phmc) {
     init_phmc();
   }
 
-  plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field));
+  plaquette_energy = measure_gauge_action(g_gf);
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
     rectangle_energy = measure_rectangles(g_gauge_field);
     if(g_proc_id == 0){
