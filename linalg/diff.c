@@ -201,7 +201,11 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
 
 #elif (defined BGQ && defined XLC)
 
-void diff(spinor * const Q,spinor * const R,spinor * const S, const int N) {
+void diff(spinor * const Q,const spinor * const R,const spinor * const S, const int N) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5;
   double *s, *r, *q;
@@ -216,7 +220,11 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N) {
   __prefetch_by_load(R);
   __prefetch_by_load(Q);
 
+#ifndef OMP
 #pragma unroll(2)
+#else
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix) {
     s=(double*)((spinor *) S + ix);
     r=(double*)((spinor *) R + ix);
@@ -249,6 +257,11 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N) {
     vec_st(z4, 0, q+16);
     vec_st(z5, 0, q+20);
   }
+
+#ifdef OMP
+  } /* OpenMP parallel closing brace */
+#endif
+
   return;
 }
 
