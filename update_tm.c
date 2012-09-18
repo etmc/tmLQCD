@@ -260,7 +260,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         tt = ts-ks;
         ks = ts;
         kc = tr-tt;
-#endif
       }
     }
     kc=ks+kc;

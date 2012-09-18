@@ -46,7 +46,7 @@ _Complex double scalar_prod(const spinor * const S, const spinor * const R, cons
 #endif
 
   _Complex double ALIGN ds,tr,ts,tt,ks,kc;
-  spinor *s,*r;
+  const spinor *s,*r;
 
   ks = kc = 0.0;
 
@@ -60,8 +60,8 @@ _Complex double scalar_prod(const spinor * const S, const spinor * const R, cons
 #endif
   for (int ix = 0; ix < N; ix++)
   {
-    s=(spinor *) S + ix;
-    r=(spinor *) R + ix;
+    s= S + ix;
+    r= R + ix;
     
     ds = r->s0.c0 * conj(s->s0.c0) + r->s0.c1 * conj(s->s0.c1) + r->s0.c2 * conj(s->s0.c2) +
          r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +

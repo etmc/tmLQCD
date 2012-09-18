@@ -56,7 +56,7 @@ double scalar_prod_r(const spinor * const S, const spinor * const R, const int N
   vector4double ks, kc, ds, tr, ts, tt;
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5;
-  double *s, *r;
+  const double *s, *r;
   vector4double buffer;
   __alignx(32, s);
   __alignx(32, r);
@@ -132,9 +132,9 @@ double scalar_prod_r(const spinor * const S, const spinor * const R, const int N
 
 #else
 
-double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel)
+double scalar_prod_r(const spinor * const S, const spinor * const R, const int N, const int parallel)
 {
-  double ALGIN res = 0.0;
+  double ALIGN res = 0.0;
 #ifdef MPI
   double ALIGN mres = 0.0;
 #endif
@@ -146,7 +146,7 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
   g_omp_acc_re[thread_num] = 0.0;
 #endif
   double ALIGN kc,ks,ds,tr,ts,tt;
-  spinor *s,*r;
+  const spinor *s,*r;
 
   ks = kc = 0.0;
 
@@ -159,8 +159,8 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
 #pragma omp for
 #endif
   for (int ix = 0; ix < N; ++ix) {
-    s=(spinor *) S + ix;
-    r=(spinor *) R + ix;
+    s = S + ix;
+    r = R + ix;
     
     ds = creal(r->s0.c0 * conj(s->s0.c0)) + creal(r->s0.c1 * conj(s->s0.c1)) + creal(r->s0.c2 * conj(s->s0.c2)) +
       creal(r->s1.c0 * conj(s->s1.c0)) + creal(r->s1.c1 * conj(s->s1.c1)) + creal(r->s1.c2 * conj(s->s1.c2)) +

@@ -36,7 +36,7 @@
 
 double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * const S, 
 				   const int N, const int parallel) {
-  double ALIGN res = 0.;
+  double ALIGN res = 0.0;
 #ifdef MPI
   double ALIGN mres;
 #endif
@@ -134,9 +134,9 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
 
 double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * const S, 
 				   const int N, const int parallel) {
-  double res;
+  double ALIGN res = 0.0;
 #ifdef MPI
-  double mres;
+  double ALIGN mres;
 #endif
 
 #ifdef OMP
@@ -144,7 +144,6 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
   {
 #endif
   spinor *r,*s;
-  res = 0.;
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
 #ifdef OMP
 #pragma omp for 

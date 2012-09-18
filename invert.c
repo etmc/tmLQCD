@@ -41,7 +41,7 @@
 #endif
 #ifdef OMP
 # include <omp.h>
-# include "init_omp_kahan_arrays.h"
+# include "init_omp_accumulators.h"
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
     omp_set_num_threads(omp_num_threads);
   }
 
-  init_omp_kahan_arrays(omp_num_threads);
+  init_omp_accumulators(omp_num_threads);
 #endif
 
   /* this DBW2 stuff is not needed for the inversion ! */
@@ -538,7 +538,7 @@ int main(int argc, char *argv[])
   MPI_Finalize();
 #endif
 #ifdef OMP
-  free_omp_kahan_arrays();
+  free_omp_accumulators();
 #endif
   free_blocks();
   free_dfl_subspace();

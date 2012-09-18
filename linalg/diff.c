@@ -267,14 +267,15 @@ void diff(spinor * const Q,const spinor * const R,const spinor * const S, const 
 
 #else
 
-void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
+void diff(spinor * const Q, const spinor * const R, const spinor * const S, const int N)
 {
 #ifdef OMP
 #pragma omp parallel
   {
 #endif
 
-   spinor *q,*r,*s;
+   spinor *q;
+   const spinor *r,*s;
 
 /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
 #ifdef OMP

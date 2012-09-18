@@ -42,7 +42,9 @@
 void update_momenta(int * mnllist, double step, const int no, 
 		    hamiltonian_field_t * const hf) {
 
+#ifdef OMP
 #pragma omp parallel for
+#endif
   for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
     for(int mu=0;mu<4;mu++) { 
       _zero_su3adj(hf->derivative[i][mu]);
@@ -59,7 +61,9 @@ void update_momenta(int * mnllist, double step, const int no,
   xchange_deri(hf->derivative);
 #endif
 
+#ifdef OMP
 #pragma omp parallel for
+#endif
   for(int i = 0; i < VOLUME; i++) {
     for(int mu = 0; mu < 4; mu++) {
       /* the minus comes from an extra minus in trace_lambda */

@@ -253,7 +253,7 @@ double square_norm(const spinor * const P, const int N, const int parallel)
     g_omp_acc_re[thread_num] = 0.0;
 #endif
   double ALIGN ks,kc,ds,tr,ts,tt;
-  spinor *s;
+  const spinor *s;
   
   ks = 0.0;
   kc = 0.0;

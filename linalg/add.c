@@ -43,7 +43,8 @@ void add(spinor * const Q,const spinor * const R,const spinor * const S, const i
 #endif
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5;
-  double *s, *r, *q;
+  double *q;
+  const double *r,*s;
 
   __alignx(32, s);
   __alignx(32, r);

@@ -43,7 +43,7 @@
 #endif
 #ifdef OMP
 # include <omp.h>
-# include "init_omp_kahan_arrays.h"
+# include "init_omp_accumulators.h"
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -209,7 +209,7 @@ int main(int argc,char *argv[]) {
     omp_set_num_threads(omp_num_threads);
   }
 
-  init_omp_kahan_arrays(omp_num_threads);
+  init_omp_accumulators(omp_num_threads);
 #endif
 
   DUM_DERI = 6;
@@ -574,7 +574,7 @@ int main(int argc,char *argv[]) {
   MPI_Finalize();
 #endif
 #ifdef OMP
-  free_omp_kahan_arrays();
+  free_omp_accumulators();
 #endif
   free_gauge_tmp();
   free_gauge_field();
