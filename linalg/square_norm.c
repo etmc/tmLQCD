@@ -34,7 +34,7 @@
 #endif
 #ifdef OMP
 # include <omp.h>
-# include <global.h>
+# include "global.h"
 #endif
 #include <complex.h>
 #include "su3.h"
@@ -194,10 +194,10 @@ double square_norm(spinor * const P, const int N, const int parallel) {
   y4 = vec_splats(0.);
   y5 = vec_splats(0.);  
 
-#ifdef OMP
-#pragma omp for
-#else
+#ifndef OMP
 #pragma unroll(4)
+#else
+#pragma omp for
 #endif
   for(int i = 0; i < N; i++) {
     s = (double*)((spinor*) P+i);
@@ -239,27 +239,27 @@ double square_norm(spinor * const P, const int N, const int parallel) {
 
 #else 
 
-double square_norm(spinor * const P, const int N, const int parallel)
+double square_norm(const spinor * const P, const int N, const int parallel)
 {
-  double ALIGN ks,kc;
-  ks = kc = 0.0;
+  double ALIGN res = 0.0;
+#ifdef MPI
+  double ALIGN mres;
+#endif
+
 #ifdef OMP
 #pragma omp parallel
   {
     int thread_num = omp_get_thread_num();
-    g_omp_kc_re[thread_num] = 0.0;
-    g_omp_ks_re[thread_num] = 0.0;
+    g_omp_acc_re[thread_num] = 0.0;
 #endif
-  double ALIGN ds,tr,ts,tt;
+  double ALIGN ks,kc,ds,tr,ts,tt;
   spinor *s;
   
   ks = 0.0;
   kc = 0.0;
   
-  /* this loop needs to be scheduled statically so each thread is given work
-     only once, otherwise the manual accumulation will be wrong */
 #ifdef OMP
-#pragma omp for schedule(static)
+#pragma omp for
 #endif    
   for (int ix  =  0; ix < N; ix++) {
     s = P + ix;
@@ -277,43 +277,35 @@ double square_norm(spinor * const P, const int N, const int parallel)
          conj(s->s3.c1) * s->s3.c1 +
          conj(s->s3.c2) * s->s3.c2;
 
-#ifdef OMP
-    tr = ds + g_omp_kc_re[thread_num];
-    ts = tr + g_omp_ks_re[thread_num];
-    tt = ts - g_omp_ks_re[thread_num];
-    g_omp_ks_re[thread_num] = ts;
-    g_omp_kc_re[thread_num] = tr - tt;
-#else    
     tr = ds + kc;
     ts = tr + ks;
     tt = ts-ks;
     ks = ts;
     kc = tr-tt;
-#endif
   }
+  kc=ks+kc;
 
 #ifdef OMP
-  /* thread-local last step of the Kahan summation */
-  g_omp_kc_re[thread_num] = g_omp_ks_re[thread_num] + g_omp_kc_re[thread_num];
+  g_omp_acc_re[thread_num] = kc;
 
   } /* OpenMP closing brace */
 
   /* having left the parallel section, we can now sum up the Kahan
      corrected sums from each thread into kc */
   for(int i = 0; i < omp_num_threads; ++i)
-    kc += g_omp_kc_re[i];
+    res += g_omp_acc_re[i];
 #else
-  kc = ks + kc;
+  res = kc;
 #endif
-
 
 #  ifdef MPI
   if(parallel) {
-    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    return ks;
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return mres;
   }
 #endif
-  return kc;
+
+  return res;
 }
 
 #endif

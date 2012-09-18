@@ -227,10 +227,8 @@ EXTERN int g_mpi_ST_rank;
 EXTERN int g_nb_list[8];
 
 /* OpenMP Kahan accumulation arrays */
-EXTERN _Complex double *g_omp_kc;
-EXTERN _Complex double *g_omp_ks;
-EXTERN double* g_omp_kc_re;
-EXTERN double* g_omp_ks_re;
+EXTERN _Complex double *g_omp_acc_cp;
+EXTERN double* g_omp_acc_re;
 
 /* Deflation information */
 EXTERN int g_dflgcr_flag;

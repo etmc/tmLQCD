@@ -42,7 +42,17 @@
 
 #if (defined BGQ && defined XLC)
 
-double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel) {
+double scalar_prod_r(const spinor * const S, const spinor * const R, const int N, const int parallel) {
+  double ALIGN res = 0.0;
+#ifdef MPI
+  double ALIGN mres = 0.0;
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+  int thread_num = omp_get_thread_num();
+#endif
   vector4double ks, kc, ds, tr, ts, tt;
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5;
@@ -59,7 +69,11 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
   ks = vec_splats(0.0);
   kc = vec_splats(0.0);
 
+#ifndef OMP
 #pragma unroll(2)
+#else
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix) {
     s=(double*)((spinor *) S + ix);
     r=(double*)((spinor *) R + ix);
@@ -96,31 +110,45 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
     kc = vec_sub(tr, tt);
   }
   buffer = vec_add(kc, ks);
+
+#ifdef OMP
+  g_omp_acc_re[thread_num] = buffer[0] + buffer[1] + buffer[2] + buffer[3];
+  } /* OpenMP parallel closing brace */
+  for( int i = 0; i < omp_num_threads; ++i)
+    res += g_omp_acc_re[i];
+#else
+  res = buffer[0] + buffer[1] + buffer[2] + buffer[3]; 
+#endif
+
 #if defined MPI
   if(parallel) {
-    MPI_Allreduce(&buffer, &kc, 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    return(kc[0] + kc[1] + kc[2] + kc[3]);
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return(mres);
   }
 #endif
-  return (buffer[0] + buffer[1] + buffer[2] + buffer[3]);
+
+  return (res);
 }
 
 #else
 
 double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel)
 {
-  double ALIGN ks, kc;
-  ks = kc = 0.0;
+  double ALGIN res = 0.0;
+#ifdef MPI
+  double ALIGN mres = 0.0;
+#endif
+
 #ifdef OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
-  g_omp_kc_re[thread_num] = 0.0;
-  g_omp_ks_re[thread_num] = 0.0;
+  g_omp_acc_re[thread_num] = 0.0;
 #endif
-
-  double ALIGN ds,tr,ts,tt;
+  double ALIGN kc,ks,ds,tr,ts,tt;
   spinor *s,*r;
+
+  ks = kc = 0.0;
 
 #if (defined BGL && defined XLC)
   __alignx(16, S);
@@ -128,7 +156,7 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
 #endif
 
 #ifdef OMP
-#pragma omp for schedule(static)
+#pragma omp for
 #endif
   for (int ix = 0; ix < N; ++ix) {
     s=(spinor *) S + ix;
@@ -139,44 +167,33 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
       creal(r->s2.c0 * conj(s->s2.c0)) + creal(r->s2.c1 * conj(s->s2.c1)) + creal(r->s2.c2 * conj(s->s2.c2)) +
       creal(r->s3.c0 * conj(s->s3.c0)) + creal(r->s3.c1 * conj(s->s3.c1)) + creal(r->s3.c2 * conj(s->s3.c2));    
     
-#ifdef OMP
-    tr = ds + g_omp_kc_re[thread_num];
-    ts = tr + g_omp_ks_re[thread_num];
-    tt = ts - g_omp_ks_re[thread_num];
-    g_omp_ks_re[thread_num] = ts;
-    g_omp_kc_re[thread_num] = tr - tt;
-#else
     tr=ds+kc;
     ts=tr+ks;
     tt=ts-ks;
     ks=ts;
     kc=tr-tt;
-#endif
   }
+  kc=ks+kc;
+
 #ifdef OMP
-  /* thread-local last step of the Kahan summation */
-  g_omp_kc_re[thread_num] = g_omp_ks_re[thread_num] + g_omp_kc_re[thread_num];
+  g_omp_acc_re[thread_num] = kc;
 
   } /* OpenMP closing brace */
 
-  /* having left the parallel section, we can now sum up the Kahan
-     corrected sums from each thread into kc */
   for(int i = 0; i < omp_num_threads; ++i)
-    kc += g_omp_kc_re[i];
+    res += g_omp_acc_re[i];
 #else
-  kc=ks+kc;
+  res = kc;
 #endif
 
 #if defined MPI
   if(parallel)
   {
-    double buffer = kc;
-    MPI_Allreduce(&buffer, &kc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return mres;
   }
 #endif
-
-  return kc;
-
+  return res;
 }
 
 

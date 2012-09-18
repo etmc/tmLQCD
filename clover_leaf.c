@@ -410,21 +410,26 @@ inline void add_tm(_Complex double a[6][6], const double mu) {
 }
 
 double sw_trace(const int ieo, const double mu) {
-  double ALIGN ks, kc;
-  ks = kc = 0.0;
+  double ALIGN res = 0.0;
+#ifdef MPI
+  double ALIGN mres = 0.0;
+#endif
+
 #ifdef OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
-  g_omp_ks_re[thread_num] = g_omp_kc_re[thread_num] = 0.0;
+  g_omp_acc_re[thread_num] = 0.0;
 #endif
 
   int i,x,ioff;
   su3 ALIGN v;
   _Complex double ALIGN a[6][6];
   double ALIGN tra;
-  double ALIGN tr,ts,tt;
+  double ALIGN ks,kc,tr,ts,tt;
   _Complex double ALIGN det;
+
+  ks = kc = 0.0;
 
   if(ieo==0) {
     ioff=0;
@@ -434,7 +439,7 @@ double sw_trace(const int ieo, const double mu) {
   }
   
 #ifdef OMP
-#pragma omp for schedule(static)
+#pragma omp for
 #endif
   for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
@@ -452,36 +457,32 @@ double sw_trace(const int ieo, const double mu) {
       tra = log(conj(det)*det);
       // we need to compute only the one with +mu
       // the one with -mu must be the complex conjugate!
-#ifdef OMP
-      tr=tra+g_omp_kc_re[thread_num];
-      ts=tr+g_omp_ks_re[thread_num];
-      tt=ts-g_omp_ks_re[thread_num];
-      g_omp_ks_re[thread_num]=ts;
-      g_omp_kc_re[thread_num]=tr-tt;
-#else
+      
       tr=tra+kc;
       ts=tr+ks;
       tt=ts-ks;
       ks=ts;
       kc=tr-tt;
-#endif
     }
   }
+  kc=ks+kc;
+
 #ifdef OMP
-  g_omp_kc_re[thread_num] = g_omp_ks_re[thread_num] + g_omp_kc_re[thread_num];
+  g_omp_acc_re[thread_num] = kc;
   } /* OpenMP parallel closing brace */
 
   for(int i = 0; i < omp_num_threads; ++i) {
-    kc += g_omp_kc_re[i];
+    res += g_omp_acc_re[i];
   }
 #else
-  kc=ks+kc;
+  res=kc;
 #endif
+
 #ifdef MPI
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return(ks);
+  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  return(mres);
 #else
-  return(kc);
+  return(res);
 #endif
 
 }

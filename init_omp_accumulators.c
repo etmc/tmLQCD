@@ -27,41 +27,27 @@
 #include <stdio.h>
 #include <errno.h>
 #include "global.h"
-#include "init_omp_kahan_arrays.h"
+#include "init_omp_accumulators.h"
 
-int init_omp_kahan_arrays(const int num) {
-  g_omp_ks=NULL;
-  g_omp_kc=NULL;
-  g_omp_ks_re=NULL;
-  g_omp_kc_re=NULL;
+int init_omp_accumulators(const int num) {
+  g_omp_acc_cp=NULL;
+  g_omp_acc_re=NULL;
 
-  if((void*)(g_omp_ks = (_Complex double*)malloc(num*sizeof(_Complex double))) == NULL) {
-    printf ("init_omp_kahan_arrays malloc errno : %d\n",errno); 
+  if((void*)(g_omp_acc_cp = (_Complex double*)malloc(num*sizeof(_Complex double))) == NULL) {
+    printf ("init_omp_accumulators malloc errno : %d\n",errno); 
     errno = 0;
     return(1);
   }
-  if((void*)(g_omp_kc = (_Complex double*)malloc(num*sizeof(_Complex double))) == NULL) {
-    printf ("init_omp_kahan_arrays malloc errno : %d\n",errno); 
+  if((void*)(g_omp_acc_re = (double*)malloc(num*sizeof(double))) == NULL) {
+    printf ("init_omp_accumulators malloc errno : %d\n",errno); 
     errno = 0;
     return(2);
-  }
-  if((void*)(g_omp_ks_re = (double*)malloc(num*sizeof(double))) == NULL) {
-    printf ("init_omp_kahan_arrays malloc errno : %d\n",errno); 
-    errno = 0;
-    return(3);
-  }
-  if((void*)(g_omp_kc_re = (double*)malloc(num*sizeof(double))) == NULL) {
-    printf ("init_omp_kahan_arrays malloc errno : %d\n",errno); 
-    errno = 0;
-    return(4);
   }
 
   return(0);
 }
 
-void free_omp_kahan_arrays() {
-  free(g_omp_kc);
-  free(g_omp_ks);
-  free(g_omp_kc_re);
-  free(g_omp_ks_re);
+void free_omp_accumulators() {
+  free(g_omp_acc_cp);
+  free(g_omp_acc_re);
 }

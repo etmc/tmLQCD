@@ -32,26 +32,31 @@
 #include "scalar_prod.h"
 
 /*  <S,R>=S^* times R */
-_Complex double scalar_prod(spinor * const S, spinor * const R, const int N, const int parallel) {
-  _Complex double ALIGN ks,kc;
-  ks = kc = 0.0;
+_Complex double scalar_prod(const spinor * const S, const spinor * const R, const int N, const int parallel) {
+  _Complex double ALIGN res = 0.0;
+#ifdef MPI
+  _Complex double ALIGN mres = 0.0;
+#endif
+
 #ifdef OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
-  g_omp_kc[thread_num] = 0.0;
-  g_omp_ks[thread_num] = 0.0;
+  g_omp_acc_cp[thread_num] = 0.0;
 #endif
 
-  _Complex double ALIGN ds,tr,ts,tt;
+  _Complex double ALIGN ds,tr,ts,tt,ks,kc;
   spinor *s,*r;
+
+  ks = kc = 0.0;
 
 #if (defined BGL && defined XLC)
   __alignx(16, S);
   __alignx(16, R);
 #endif
+
 #ifdef OMP
-#pragma omp for schedule(static)
+#pragma omp for
 #endif
   for (int ix = 0; ix < N; ix++)
   {
@@ -64,43 +69,35 @@ _Complex double scalar_prod(spinor * const S, spinor * const R, const int N, con
          r->s3.c0 * conj(s->s3.c0) + r->s3.c1 * conj(s->s3.c1) + r->s3.c2 * conj(s->s3.c2);
 
     /* Kahan Summation */
-#ifdef OMP
-    tr = ds + g_omp_kc[thread_num];
-    ts = tr + g_omp_ks[thread_num];
-    tt = ts - g_omp_ks[thread_num];
-    g_omp_ks[thread_num] = ts;
-    g_omp_kc[thread_num] = tr - tt;
-#else
     tr=ds+kc;
     ts=tr+ks;
     tt=ts-ks;
     ks=ts;
     kc=tr-tt;
-#endif
   }
+  kc=ks+kc;
 
 #ifdef OMP
-  /* thread-local last step of the Kahan summation */
-  g_omp_kc[thread_num] = g_omp_ks[thread_num] + g_omp_kc[thread_num];
+  g_omp_acc_cp[thread_num] = kc;
 
   } /* OpenMP closing brace */
 
   /* having left the parallel section, we can now sum up the Kahan
      corrected sums from each thread into kc */
   for(int i = 0; i < omp_num_threads; ++i)
-    kc += g_omp_kc[i];
+    res += g_omp_acc_cp[i];
 #else
-  kc=ks+kc;
+  res=kc;
 #endif
 
 #ifdef MPI
   if(parallel == 1)
   {
-    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
-    return(ks);
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+    return(mres);
   }
 #endif
-  return(kc);
+  return(res);
 }
 
 #ifdef WITHLAPH

@@ -236,14 +236,14 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     kc = 0.;
 
 #ifdef OMP
-#pragma omp parallel private(w,v,tt,tr,ts,ds)
+#pragma omp parallel private(w,v,tt,tr,ts,ds,ks,kc)
     {
     int thread_num = omp_get_thread_num();
-    g_omp_kc_re[thread_num] = g_omp_ks_re[thread_num] = 0.0;
+    g_omp_acc_re[thread_num] = 0.0;
 #endif
 
 #ifdef OMP
-#pragma omp for schedule(static)
+#pragma omp for
 #endif
     for(int ix = 0; ix < VOLUME; ++ix)
     {
@@ -255,13 +255,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         ds = sqrt(conj(v->c00 - w->c00) * (v->c00 - w->c00) + conj(v->c01 - w->c01) * (v->c01 - w->c01) + conj(v->c02 - w->c02) * (v->c02 - w->c02) +
                   conj(v->c10 - w->c10) * (v->c10 - w->c10) + conj(v->c11 - w->c11) * (v->c11 - w->c11) + conj(v->c12 - w->c12) * (v->c12 - w->c12) +             conj(v->c20 - w->c20) * (v->c20 - w->c20) + conj(v->c21 - w->c21) * (v->c21 - w->c21) + conj(v->c22 - w->c22) * (v->c22 - w->c22));
 
-#ifdef OMP
-        tr = ds + g_omp_kc_re[thread_num];
-        ts = tr + g_omp_ks_re[thread_num];
-        tt = ts - g_omp_ks_re[thread_num];
-        g_omp_ks_re[thread_num] = ts;
-        g_omp_kc_re[thread_num] = tr-tt;
-#else       
         tr = ds + kc;
         ts = tr + ks;
         tt = ts-ks;
@@ -270,17 +263,17 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 #endif
       }
     }
+    kc=ks+kc;
 #ifdef OMP
-    /* final step of thread-local Kahan summation */
-    g_omp_kc_re[thread_num] = g_omp_kc_re[thread_num] + g_omp_ks_re[thread_num];
+    g_omp_acc_re[thread_num] = kc;
       
     } /* OpenMP parallel section closing brace */
 
     /* sum up contributions from thread-local kahan summations */
     for(int k = 0; k < omp_num_threads; ++k)
-      ret_gauge_diff += g_omp_kc_re[k];
+      ret_gauge_diff += g_omp_acc_re[k];
 #else
-    ret_gauge_diff = ks + kc;
+    ret_gauge_diff = kc;
 #endif
 
 #ifdef MPI

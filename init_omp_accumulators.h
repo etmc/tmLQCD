@@ -16,10 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _INIT_OMP_KAHAN_ARRAYS_H
-#define _INIT_OMP_KAHAN_ARRAYS_H
+#ifndef _INIT_OMP_ACCUMULATORS_H
+#define _INIT_OMP_ACCUMULATORS_H
 
-int init_omp_kahan_arrays(int num);
-void free_omp_kahan_arrays();
+int init_omp_accumulators(int num);
+void free_omp_accumulators();
 
 #endif
