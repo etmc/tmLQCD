@@ -44,10 +44,10 @@ su3 *** sw;
 su3 *** sw_inv;
 
 void clover_gamma5(const int ieo, 
-		   spinor * const l, spinor * const k, spinor * const j,
+		   spinor * const l, const spinor * const k, const spinor * const j,
 		   const double mu);
 void clover(const int ieo, 
-	    spinor * const l, spinor * const k, spinor * const j,
+	    spinor * const l, const spinor * const k, const spinor * const j,
 	    const double mu);
 
 void Msw_full(spinor * const Even_new, spinor * const Odd_new, 
@@ -180,7 +180,7 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
   int icy;
   su3_vector ALIGN psi, chi, phi1, phi3;
   int ioff = 0;
-  su3 *w1, *w2, *w3, *w4;
+  const su3 *w1, *w2, *w3, *w4;
   spinor *rn;
 
 
@@ -248,7 +248,7 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
  **************************************************************/
 
 void clover_gamma5(const int ieo, 
-		   spinor * const l, spinor * const k, spinor * const j,
+		   spinor * const l, const spinor * const k, const spinor * const j,
 		   const double mu) {
 #ifdef OMP
 #pragma omp parallel
@@ -257,8 +257,9 @@ void clover_gamma5(const int ieo,
   su3_vector ALIGN chi, psi1, psi2;
   int ix;
   int ioff,icx;
-  su3 *w1,*w2,*w3;
-  spinor *r,*s,*t;
+  const su3 *w1,*w2,*w3;
+  spinor *r;
+  const spinor *s,*t;
 
   if(ieo == 0) {
     ioff = 0;
@@ -329,7 +330,7 @@ void clover_gamma5(const int ieo,
 
 
 void clover(const int ieo, 
-	    spinor * const l, spinor * const k, spinor * const j,
+	    spinor * const l, const spinor * const k, const spinor * const j,
 	    const double mu) {
 #ifdef OMP
 #pragma omp parallel
@@ -338,8 +339,9 @@ void clover(const int ieo,
   su3_vector ALIGN chi, psi1, psi2;
   int ix;
   int ioff,icx;
-  su3 *w1,*w2,*w3;
-  spinor *r,*s,*t;
+  const su3 *w1,*w2,*w3;
+  spinor *r;
+  const spinor *s,*t;
   
   if(ieo == 0) {
     ioff = 0;
@@ -401,7 +403,7 @@ void clover(const int ieo,
 }
 
 void assign_mul_one_sw_pm_imu(const int ieo, 
-			      spinor * const k, spinor * const l,
+			      spinor * const k, const spinor * const l,
 			      const double mu) {
 #ifdef OMP
 #pragma omp parallel
@@ -410,8 +412,9 @@ void assign_mul_one_sw_pm_imu(const int ieo,
   su3_vector ALIGN chi, psi1, psi2;
   int ix;
   int ioff, icx;
-  su3 *w1, *w2, *w3;
-  spinor *r, *s;
+  const su3 *w1, *w2, *w3;
+  spinor *r;
+  const spinor *s;
   
   if(ieo == 0) {
     ioff = 0;
@@ -473,15 +476,16 @@ void assign_mul_one_sw_pm_imu(const int ieo,
 
 
 void assign_mul_one_sw_pm_imu_inv(const int ieo, 
-				  spinor * const k, spinor * const l,
+				  spinor * const k, const spinor * const l,
 				  const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
 #endif
   su3_vector ALIGN psi, chi, phi1, phi3;
-  su3 *w1, *w2, *w3, *w4;
-  spinor *rn, *s;
+  const su3 *w1, *w2, *w3, *w4;
+  const spinor *rn;
+  spinor *s;
 
   /************************ loop over all lattice sites *************************/
 #ifdef OMP

@@ -89,7 +89,7 @@ su3 ** swm, ** swp;
 //
 // suppressing space-time indices
 
-void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
+void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
 #ifdef OMP
 #pragma omp parallel
   {
@@ -97,7 +97,7 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
 
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
-  su3 *w1,*w2,*w3,*w4;
+  const su3 *w1,*w2,*w3,*w4;
   double ka_csw_8 = kappa*c_sw/8.;
   su3 ALIGN v1,v2,plaq;
   su3 ALIGN fkl[4][4];
@@ -488,7 +488,7 @@ double sw_trace(const int ieo, const double mu) {
 }
 
 
-void mult_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double d[6][6]) {
+void mult_6x6(_Complex double a[6][6], const _Complex double b[6][6], const _Complex double d[6][6]) {
 
   for(int i = 0; i < 6; i++) {
     for(int j = 0; j < 6; j++) {
@@ -701,7 +701,7 @@ void sw_deriv(const int ieo, const double mu) {
 // result is again stored in swm and swp                 
 // additional gamma_5 needed for one of the input vectors
 
-void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
+void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll) {
 #ifdef OMP
 #pragma omp parallel
   {
@@ -710,7 +710,7 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
   int ioff;
   int icx;
   int x;
-  spinor *r,*s;
+  const spinor *r,*s;
   su3 ALIGN v0,v1,v2,v3;
   su3 ALIGN u0,u1,u2,u3;
   su3 ALIGN lswp[4],lswm[4];
@@ -780,7 +780,7 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
-  su3 *w1,*w2,*w3,*w4;
+  const su3 *w1,*w2,*w3,*w4;
   double ka_csw_8 = kappa*c_sw/8.;
   su3 ALIGN v1,v2,vv1,vv2,plaq;
   su3 ALIGN vis[4][4];

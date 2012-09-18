@@ -73,7 +73,7 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   boundary(mnl->kappa);
 
   // we compute the clover term (1 + T_ee(oo)) for all sites x
-  sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   // we invert it for the even sites only including mu
   sw_invert(EE, mnl->mu);
   
@@ -180,7 +180,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   boundary(mnl->kappa);
 
   // we compute the clover term (1 + T_ee(oo)) for all sites x
-  sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   // we invert it for the even sites only including mu
   sw_invert(EE, mnl->mu);
   
@@ -250,7 +250,7 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->iter1 = 0;
   
   init_sw_fields();
-  sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert(EE, mnl->mu);
 
   random_spinor_field(g_spinor_field[4], VOLUME/2, mnl->rngrepro);
