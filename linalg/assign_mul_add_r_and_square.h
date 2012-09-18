@@ -22,7 +22,7 @@
 
 #include "su3.h"
 
-double assign_mul_add_r_and_square(spinor * const S, const double c, spinor * const R, 
+double assign_mul_add_r_and_square(spinor * const R, const double c, const spinor * const S, 
 				   const int N, const int parallel);
 
 #endif
