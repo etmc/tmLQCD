@@ -56,7 +56,7 @@ double scalar_prod_r(const spinor * const S, const spinor * const R, const int N
   vector4double ks, kc, ds, tr, ts, tt;
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5;
-  const double *s, *r;
+  double *s, *r;
   vector4double buffer;
   __alignx(32, s);
   __alignx(32, r);
