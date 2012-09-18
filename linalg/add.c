@@ -36,7 +36,11 @@
 
 #if (defined BGQ && defined XLC)
 
-void add(spinor * const Q,spinor * const R,spinor * const S, const int N) {
+void add(spinor * const Q,const spinor * const R,const spinor * const S, const int N) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5;
   double *s, *r, *q;
@@ -51,7 +55,11 @@ void add(spinor * const Q,spinor * const R,spinor * const S, const int N) {
   __prefetch_by_load(R);
   __prefetch_by_stream(1, Q);
 
+#ifndef OMP
 #pragma unroll(2)
+#else
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix) {
     s=(double*)((spinor *) S + ix);
     r=(double*)((spinor *) R + ix);
@@ -84,13 +92,17 @@ void add(spinor * const Q,spinor * const R,spinor * const S, const int N) {
     vec_st(z4, 0, q+16);
     vec_st(z5, 0, q+20);
   }
+
+#ifdef OMP
+  } /*OpenMP parallel closing brace */
+#endif
   return;
 }
 
 #else
 
 /* Q output, R input, S input */
-void add(spinor * const Q,spinor * const R,spinor * const S, const int N){
+void add(spinor * const Q,const spinor * const R,const spinor * const S, const int N){
 #ifdef OMP
 #pragma omp parallel
   {
