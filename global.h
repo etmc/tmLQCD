@@ -43,6 +43,7 @@
 #endif
 #include "su3.h"
 #include "su3adj.h"
+#include "buffers/gauge.h"
 //#  include <tormpi_export.h>
 
 #define N_CHEBYMAX 49
@@ -171,6 +172,7 @@ EXTERN int g_running_phmc;
 /* End IF PHMC  */
 
 EXTERN su3 ** g_gauge_field;
+EXTERN gauge_field_t g_gf;
 #ifdef _USE_HALFSPINOR
 EXTERN su3 *** g_gauge_field_copy;
 #elif (defined _USE_TSPLITPAR )

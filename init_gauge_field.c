@@ -26,9 +26,9 @@
 #include "global.h"
 #include "su3.h"
 #include "sse.h"
+#include "buffers/gauge.h"
 #include "init_gauge_field.h"
 
-su3 * gauge_field = NULL;
 #ifdef _USE_TSPLITPAR
 su3 * gauge_field_copyt = NULL;
 su3 * gauge_field_copys = NULL;
@@ -46,23 +46,15 @@ int init_gauge_field(const int V, const int back) {
   g_gauge_field_copy = NULL;
 #endif
 
-  
+  g_gf = get_gauge_field();
 
   if((void*)(g_gauge_field = (su3**)calloc(V, sizeof(su3*))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(1);
   }
-  if((void*)(gauge_field = (su3*)calloc(4*V+1, sizeof(su3))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(2);
-  }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_gauge_field[0] = (su3*)(((unsigned long int)(gauge_field)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  g_gauge_field[0] = gauge_field;
-#endif
+
+  g_gauge_field[0] = (su3*) &g_gf[0][0];
   for(i = 1; i < V; i++){
     g_gauge_field[i] = g_gauge_field[i-1]+4;
   }
@@ -164,7 +156,6 @@ int init_gauge_field(const int V, const int back) {
 }
 
 void free_gauge_field() {
-  free(gauge_field);
   free(g_gauge_field);
 #  if defined _USE_TSPLITPAR
   free(gauge_field_copys);
