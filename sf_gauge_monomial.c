@@ -59,7 +59,7 @@ void sf_gauge_derivative(const int id, hamiltonian_field_t * const hf) {
     for(mu=0;mu<4;mu++) {
       z=&hf->gaugefield[i][mu];
       xm=&hf->derivative[i][mu];
-      v=get_staples(i,mu, hf->gaugefield); 
+      get_staples(&v,i,mu, (const su3**) hf->gaugefield); 
       _su3_times_su3d(w,*z,v);
       _trace_lambda_mul_add_assign((*xm), factor, w);
 

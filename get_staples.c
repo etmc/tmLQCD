@@ -31,18 +31,17 @@
 #include "get_staples.h"
 
 
-su3 get_staples(int x, int mu, su3 ** in_gauge_field) {
+void get_staples(su3* const staple, const int x, const int mu, const su3 ** in_gauge_field) {
 
   int iy;
-  su3 ALIGN v,st;
-  su3 *w1,*w2,*w3;
+  su3 ALIGN st;
+  const su3 *w1,*w2,*w3;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(staples)
 #endif
   
-  
-  _su3_zero(v);
+  _su3_zero(*staple);
   for(int k=0;k<4;k++) {
     if(k!=mu){
       w1=&in_gauge_field[x][k];
@@ -52,7 +51,7 @@ su3 get_staples(int x, int mu, su3 ** in_gauge_field) {
       /* st = w2 * w3^d */
       _su3_times_su3d(st,*w2,*w3);
       /* v = v + w1 * st */
-      _su3_times_su3_acc(v,*w1,st); 
+      _su3_times_su3_acc(*staple,*w1,st); 
 
       iy=g_idn[x][k];
       w1=&in_gauge_field[iy][k];
@@ -61,10 +60,9 @@ su3 get_staples(int x, int mu, su3 ** in_gauge_field) {
       /* st = w2 * w3 */
       _su3_times_su3(st,*w2,*w3);
       /* v = v + w1^d * st */
-      _su3d_times_su3_acc(v,*w1,st);
+      _su3d_times_su3_acc(*staple,*w1,st);
     }
   }
-  return v;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(staples)
 #endif
