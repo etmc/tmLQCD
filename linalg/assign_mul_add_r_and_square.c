@@ -50,6 +50,7 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
   vector4double r0, r1, r2, r3, r4, r5;
   double *s, *r;
   double ALIGN _c = c;
+  res = 0.0;
 #ifndef OMP
   __prefetch_by_load(S);
   __prefetch_by_load(R);
@@ -145,6 +146,7 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, const spino
 #endif
   spinor *r;
   const spinor *s;
+  res = 0.0;
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
 #ifdef OMP
 #pragma omp for 
