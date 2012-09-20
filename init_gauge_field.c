@@ -26,7 +26,7 @@
 #include "global.h"
 #include "su3.h"
 #include "sse.h"
-#include "buffers/gauge.h"
+#include <buffers/gauge.h>
 #include "init_gauge_field.h"
 
 #ifdef _USE_TSPLITPAR
@@ -38,7 +38,7 @@ su3 * gauge_field_copy = NULL;
 
 int init_gauge_field(const int V, const int back) {
   int i=0;
-
+  
 #ifdef _USE_TSPLITPAR
   g_gauge_field_copyt = NULL;
   g_gauge_field_copys = NULL;

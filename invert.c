@@ -343,7 +343,7 @@ int main(int argc, char *argv[])
     /* END */
 
     if (use_stout_flag == 1){
-      smear_control = construct_stout_control(stout_rho, stout_no_iter, 0 /* calculate_force_terms */);
+      smear_control = construct_stout_control(stout_rho, stout_no_iter, 1 /* calculate_force_terms */);
       stout_smear(smear_control, _AS_GAUGE_FIELD_T(g_gauge_field));
       g_update_gauge_copy = 1;
       g_update_gauge_energy = 1;
@@ -517,20 +517,26 @@ int main(int argc, char *argv[])
     nstore += Nsave;
   }
 
-#ifdef MPI
-  MPI_Finalize();
-#endif
   free_stout_control(smear_control);
+  return_gauge_field(&g_gf);
   free_blocks();
   free_dfl_subspace();
-  finalize_gauge_buffers();
-  finalize_adjoint_buffers();
-  free_gauge_field();
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
   free_chi_spinor_field();
+
+  finalize_gauge_buffers();
+  finalize_adjoint_buffers();
+
+  
+#ifdef MPI
+  MPI_Finalize();
+#endif
+
   return(0);
+  
+  
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
 #endif

@@ -243,7 +243,10 @@ int main(int argc,char *argv[]) {
 
 
   g_mu = g_mu1;
+  
   initialize_gauge_buffers(5);
+  initialize_adjoint_buffers(6);
+  
 #ifdef _GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
@@ -546,11 +549,9 @@ int main(int argc,char *argv[]) {
     fclose(parameterfile);
   }
 
-#ifdef MPI
-  MPI_Finalize();
-#endif
   free_gauge_tmp();
   free_gauge_field();
+  return_gauge_field(&g_gf);
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
@@ -559,7 +560,14 @@ int main(int argc,char *argv[]) {
     free_bispinor_field();
     free_chi_spinor_field();
   }
+  
+  finalize_gauge_buffers();
+  finalize_adjoint_buffers();
 
+#ifdef MPI
+  MPI_Finalize();
+#endif
+  
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
