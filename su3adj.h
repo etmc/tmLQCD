@@ -143,7 +143,7 @@ _Pragma("omp atomic") \
 _Pragma("omp atomic") \
 (r).d7 += c*(+creal((a).c21)-creal((a).c12)); \
 _Pragma("omp atomic") \
-(r).d8 += c*((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag(a.c22))*0.577350269189625); \
+(r).d8 += c*((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag(a.c22))*0.577350269189625);
 
 #else
 
@@ -159,7 +159,7 @@ _Pragma("omp atomic") \
 (r).d5 += c*(+creal((a).c20)-creal((a).c02)); \
 (r).d6 += c*(-cimag((a).c21)-cimag((a).c12)); \
 (r).d7 += c*(+creal((a).c21)-creal((a).c12)); \
-(r).d8 += c*((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag(a.c22))*0.577350269189625); \
+(r).d8 += c*((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag(a.c22))*0.577350269189625);
 
 
 /*************************************************
