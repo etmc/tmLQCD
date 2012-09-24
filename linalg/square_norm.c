@@ -181,18 +181,16 @@ double square_norm(spinor * const P, const int N, const int parallel) {
 #endif
 
 #ifdef OMP
-#pragma omp parallel reduction(+:res)
+#pragma omp parallel
   {
+    int thread_num = omp_get_thread_num();
 #endif
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
+  vector4double ds,tt,tr,ts,kc,ks,buffer;
   double *s ALIGN;
 
-  y0 = vec_splats(0.);
-  y1 = vec_splats(0.);
-  y2 = vec_splats(0.);
-  y3 = vec_splats(0.);
-  y4 = vec_splats(0.);
-  y5 = vec_splats(0.);  
+  ks = vec_splats(0.);
+  kc = vec_splats(0.);
 
 #ifndef OMP
 #pragma unroll(4)
@@ -208,22 +206,35 @@ double square_norm(spinor * const P, const int N, const int parallel) {
     x3 = vec_ld(0, s+12);
     x4 = vec_ld(0, s+16);
     x5 = vec_ld(0, s+20);
-    y0 = vec_madd(x0, x0, y0);
-    y1 = vec_madd(x1, x1, y1);
-    y2 = vec_madd(x2, x2, y2);
-    y3 = vec_madd(x3, x3, y3);
-    y4 = vec_madd(x4, x4, y4);
-    y5 = vec_madd(x5, x5, y5);
+    y0 = vec_mul(x0, x0);
+    y1 = vec_mul(x1, x1);
+    y2 = vec_mul(x2, x2);
+    y3 = vec_mul(x3, x3);
+    y4 = vec_mul(x4, x4);
+    y5 = vec_mul(x5, x5);
+
+    x0 = vec_add(y0, y1);
+    x1 = vec_add(y2, y3);
+    x2 = vec_add(y4, y5);
+    x3 = vec_add(x0, x1);
+    ds = vec_add(x2, x3);
+
+    tr = vec_add(ds, kc);
+    ts = vec_add(tr, ks);
+    tt = vec_sub(ts, ks);
+    ks = ts;
+    kc = vec_sub(tr, tt);
   }
-  x0 = vec_add(y0, y1);
-  x1 = vec_add(y2, y3);
-  x2 = vec_add(y4, y5);
-  y0 = vec_add(x0, x1);
-  y1 = vec_add(x2, y0);
-  res = y1[0] + y1[1] + y1[2] + y1[3];
+  buffer = vec_add(kc,ks);
 
 #ifdef OMP
+  g_omp_acc_re[thread_num] = buffer[0] + buffer[1] + buffer[2] + buffer[3];
   } /* OpenMP closing brace */
+
+  for(int i = 0; i < omp_num_threads; ++i)
+    res += g_omp_acc_re[i];
+#else
+  res = buffer[0] + buffer[1] + buffer[2] + buffer[3];
 #endif
 
 #  ifdef MPI
