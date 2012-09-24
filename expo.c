@@ -1,6 +1,6 @@
 /***********************************************************************
  * Copyright (C) 2001 Martin Hasenbusch
- * Copyright (C) 2012 Bartosz Kostrzewa (void versions)
+ * Modified by Bartosz Kostrzewa (2012 void versions)
  *
  * This file is part of tmLQCD.
  *
