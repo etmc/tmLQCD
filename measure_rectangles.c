@@ -58,7 +58,6 @@ double measure_rectangles(const su3 ** const gf) {
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
-  g_omp_acc_re[thread_num] = 0.0;
 #endif
 
   int i, j, k, mu, nu;

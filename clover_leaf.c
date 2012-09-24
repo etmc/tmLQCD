@@ -412,14 +412,13 @@ inline void add_tm(_Complex double a[6][6], const double mu) {
 double sw_trace(const int ieo, const double mu) {
   double ALIGN res = 0.0;
 #ifdef MPI
-  double ALIGN mres = 0.0;
+  double ALIGN mres;
 #endif
 
 #ifdef OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
-  g_omp_acc_re[thread_num] = 0.0;
 #endif
 
   int i,x,ioff;
@@ -429,7 +428,8 @@ double sw_trace(const int ieo, const double mu) {
   double ALIGN ks,kc,tr,ts,tt;
   _Complex double ALIGN det;
 
-  ks = kc = 0.0;
+  ks = 0.0;
+  kc = 0.0;
 
   if(ieo==0) {
     ioff=0;

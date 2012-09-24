@@ -45,7 +45,7 @@
 double scalar_prod_r(const spinor * const S, const spinor * const R, const int N, const int parallel) {
   double ALIGN res = 0.0;
 #ifdef MPI
-  double ALIGN mres = 0.0;
+  double ALIGN mres;
 #endif
 
 #ifdef OMP
@@ -136,19 +136,19 @@ double scalar_prod_r(const spinor * const S, const spinor * const R, const int N
 {
   double ALIGN res = 0.0;
 #ifdef MPI
-  double ALIGN mres = 0.0;
+  double ALIGN mres;
 #endif
 
 #ifdef OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
-  g_omp_acc_re[thread_num] = 0.0;
 #endif
   double ALIGN kc,ks,ds,tr,ts,tt;
   const spinor *s,*r;
 
-  ks = kc = 0.0;
+  ks = 0.0;
+  kc = 0.0;
 
 #if (defined BGL && defined XLC)
   __alignx(16, S);

@@ -53,7 +53,6 @@ double measure_gauge_action(const su3 ** const gf) {
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
-  g_omp_acc_re[thread_num] = 0.0;
 #endif
 
   int ix,ix1,ix2,mu1,mu2;

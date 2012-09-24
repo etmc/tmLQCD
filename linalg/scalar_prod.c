@@ -35,20 +35,20 @@
 _Complex double scalar_prod(const spinor * const S, const spinor * const R, const int N, const int parallel) {
   _Complex double ALIGN res = 0.0;
 #ifdef MPI
-  _Complex double ALIGN mres = 0.0;
+  _Complex double ALIGN mres;
 #endif
 
 #ifdef OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
-  g_omp_acc_cp[thread_num] = 0.0;
 #endif
 
   _Complex double ALIGN ds,tr,ts,tt,ks,kc;
   const spinor *s,*r;
 
-  ks = kc = 0.0;
+  ks = 0.0;
+  kc = 0.0;
 
 #if (defined BGL && defined XLC)
   __alignx(16, S);

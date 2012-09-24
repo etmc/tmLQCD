@@ -239,7 +239,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 #pragma omp parallel private(w,v,tt,tr,ts,ds,ks,kc)
     {
     int thread_num = omp_get_thread_num();
-    g_omp_acc_re[thread_num] = 0.0;
 #endif
 
 #ifdef OMP
