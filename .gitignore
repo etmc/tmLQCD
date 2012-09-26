@@ -8,3 +8,5 @@ read_input.c
 *~
 Makefile
 config.log
+*.mod.c
+*.opari.inc

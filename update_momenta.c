@@ -41,15 +41,17 @@
 /* Updates the momenta: equation 16 of Gottlieb */
 void update_momenta(int * mnllist, double step, const int no, 
 		    hamiltonian_field_t * const hf) {
-  int i,mu, k;
 
-  for(i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
-    for(mu=0;mu<4;mu++) { 
+#ifdef OMP
+#pragma omp parallel for
+#endif
+  for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
+    for(int mu=0;mu<4;mu++) { 
       _zero_su3adj(hf->derivative[i][mu]);
     }
   }
 
-  for(k = 0; k < no; k++) {
+  for(int k = 0; k < no; k++) {
     if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
       monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
     }
@@ -58,12 +60,17 @@ void update_momenta(int * mnllist, double step, const int no,
 #ifdef MPI
   xchange_deri(hf->derivative);
 #endif
-  for(i = 0; i < VOLUME; i++) {
-    for(mu = 0; mu < 4; mu++) {
+
+#ifdef OMP
+#pragma omp parallel for
+#endif
+  for(int i = 0; i < VOLUME; i++) {
+    for(int mu = 0; mu < 4; mu++) {
       /* the minus comes from an extra minus in trace_lambda */
       _su3adj_minus_const_times_su3adj(hf->momenta[i][mu], step, hf->derivative[i][mu]); 
     }
   }
+
   return;
 }
 
