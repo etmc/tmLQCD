@@ -119,6 +119,20 @@ else
   AC_MSG_RESULT(no)
 fi
 
+AC_MSG_CHECKING(whether to use IBM BG/Q SPI for communications)
+AC_ARG_ENABLE(spi,
+  AS_HELP_STRING([--enable-spi], [enable use of SPI [default=no]]),
+  enable_spi=$enableval, enable_spi=no)
+if test $enable_spi = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(SPI,1,Compile with SPI for communications)
+  SPI_FILES="DirectPut"
+else
+  AC_MSG_RESULT(no)
+  SPI_FILES=""
+fi
+
+
 AC_MSG_CHECKING(whether we want to use OpenMP)
 AC_ARG_ENABLE(omp,
   AS_HELP_STRING([--enable-omp], [enable use of OpenMP [default=yes]]),
@@ -329,6 +343,7 @@ AC_SUBST(XCHANGELIB)
 AC_SUBST(XCHANGEDIR)
 AC_SUBST(XLIB)
 AC_SUBST([LEMON_AVAILABLE])
+AC_SUBST(SPI_FILES)
 
 INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
 DEPFLAGS="$DEPFLAGS"

@@ -56,11 +56,6 @@ int write_first_messages(FILE * parameterfile, const int inv) {
   printf("# The code is compiled for Blue Gene/L\n");
   fprintf(parameterfile, 
 	  "# The code is compiled for Blue Gene/L\n");
-#  if (defined _USE_BGLDRAM)
-  printf("# The code is compiled for Blue Gene/L dram window\n");
-  fprintf(parameterfile, 
-	  "# The code is compiled for Blue Gene/L dram window\n");
-#  endif
 #endif
 #ifdef BGP
   printf("# The code is compiled for Blue Gene/P\n");
@@ -71,6 +66,11 @@ int write_first_messages(FILE * parameterfile, const int inv) {
   printf("# The code is compiled with QPX intrinsics for Blue Gene/Q\n");
   fprintf(parameterfile,
           "# The code is compiled with QPX intrinsics for Blue Gene/Q\n");
+#endif
+#ifdef SPI
+  printf("# Compiled with BG/Q SPI communication\n");
+  fprintf(parameterfile,
+	  "# Compiled with IBM Blue Gene/Q SPI communication\n");
 #endif
 #ifdef OPTERON
   printf("# The code is compiled for AMD Opteron\n");
