@@ -51,8 +51,8 @@ halfspinor32 *** NBPointer32;
 halfspinor32 * sendBuffer32, * recvBuffer32;
 halfspinor32 * sendBuffer32_, * recvBuffer32_;
 
-
 int init_dirac_halfspinor() {
+
   int j=0, k;
   int x, y, z, t;
 
@@ -87,6 +87,9 @@ int init_dirac_halfspinor() {
 #endif
 
   for(int ieo = 0; ieo < 2; ieo++) {
+    /* body and surface indices */
+    int sc = 0 + ieo*SURFACE/2;
+    int bc = 0 + ieo*BODY/2;
     for(int i = 0; i < VOLUME/2; i++) {
       j = g_eo2lexic[i + ((ieo+1)%2)*(VOLUME+RAND)/2];
       /* get (t,x,y,z) from j */
@@ -138,6 +141,31 @@ int init_dirac_halfspinor() {
 	NBPointer[ieo][8*i + 7] = &sendBuffer[ k ];
       }
 #endif
+
+/* check if i is part of the body or the surface */
+#ifdef PARALLELT
+      if( t != 0 && t != T-1 ) {
+#elif PARALLELX
+      if( x != 0 && x != LX-1 ) {
+#elif PARALLELXT
+      if( (t != 0 && t != T-1) && (x != 0 && x != LX-1) ) {
+#elif PARALLELXY
+      if( (y != 0 && y != LY-1) && (x != 0 && x != LX-1) ) {
+#elif PARALLELXYZ
+      if( (y != 0 && y != LY-1) && (x != 0 && x != LX-1) && (z != 0 && z != LZ-1) ) {
+#elif PARALLELXYT
+      if( (y != 0 && y != LY-1) && (x != 0 && x != LX-1) && (t != 0 && t != T-1) ) { 
+#elif PARALLELXYZT
+      if( (y != 0 && y != LY-1) && (x != 0 && x != LX-1) && (t != 0 && t != T-1) && (z != 0 && z != LZ-1) ) { 
+#else
+      if(1) {
+#endif
+        g_body[bc] = i;
+        ++bc;
+      } else {
+        g_surface[sc] = i;
+        ++sc;
+      }
     }
     for(int i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
       for(int mu = 0; mu < 8; mu++) {
@@ -146,6 +174,7 @@ int init_dirac_halfspinor() {
     }
 #ifdef MPI
 #endif
+
   }
   for(int ieo = 2; ieo < 4; ieo++) {
     for(int i = 0; i < VOLUME/2; i++) {

@@ -81,6 +81,11 @@
 #    include "bgq2.h"
 #    include "xlc_prefetch.h"
 
+#    ifdef SPI
+  unsigned int * surface;
+  unsigned int * body;
+#    endif
+
 #  endif
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {

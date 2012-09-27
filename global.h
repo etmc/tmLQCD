@@ -78,7 +78,7 @@ EXTERN int g_disable_IO_checks;
 
 EXTERN int T_global;
 #ifndef FIXEDVOLUME
-EXTERN int T, L, LX, LY, LZ, VOLUME;
+EXTERN int T, L, LX, LY, LZ, VOLUME, BODY, SURFACE;
 EXTERN int N_PROC_T, N_PROC_X, N_PROC_Y, N_PROC_Z;
 EXTERN int RAND, EDGES, VOLUMEPLUSRAND;
 EXTERN int TEOSLICE;
@@ -101,6 +101,10 @@ EXTERN int ** g_idn_eo;
 EXTERN int ** g_coord;
 EXTERN int * g_hi;
 
+/* body and surface index arrays */
+
+EXTERN unsigned int * g_body;
+EXTERN unsigned int * g_surface;
 
 EXTERN int * g_field_z_ipt_even;
 EXTERN int * g_field_z_ipt_odd;

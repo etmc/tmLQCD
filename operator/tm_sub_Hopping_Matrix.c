@@ -68,6 +68,11 @@
 #    include "bgq2.h"
 #    include "xlc_prefetch.h"
 
+#    ifdef SPI
+  unsigned int * body;
+  unsigned int * surface; 
+#    endif
+
 #  endif
 
 void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * const p, spinor * const k, 

@@ -67,12 +67,13 @@ if(ieo == 0) {
    u0 = g_gauge_field_copy[1][0];
  }
 #endif
+
 #if (defined SSE2 || defined SSE3)
 g_sloppy_precision = 0;
 #endif
 if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   phi32 = NBPointer32[ieo];
-  
+
 #ifdef OMP
 #pragma omp for
 #else
@@ -229,7 +230,57 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   }
  }
  else {
-   phi = NBPointer[ieo];
+
+  phi = NBPointer[ieo];
+
+#ifdef SPI
+
+/* compute the surface terms to be sent first */
+
+  surface = g_surface + ieo*SURFACE/2;
+  body = g_body + ieo*BODY/2;
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for(unsigned int i = 0; i < SURFACE/2; ++i){
+    U=u0+surface[i]*4;
+    _prefetch_su3(U);
+    s=k+surface[i];
+    _prefetch_spinor(s);
+    ix=surface[i]*8;
+    
+    _hop_t_p_pre();
+    U++;
+    ix++;
+     
+    _hop_t_m_pre();
+    ix++;
+     
+    _hop_x_p_pre();
+    U++;
+    ix++;
+     
+    _hop_x_m_pre();
+    ix++;
+     
+    _hop_y_p_pre();
+    U++;
+    ix++;
+     
+    _hop_y_m_pre();
+    ix++;
+     
+    _hop_z_p_pre();
+    U++;
+    ix++;
+     
+    _hop_z_m_pre();
+    }
+
+#else // SPI
+  
+  /* when not interleaving we compute body and surface together */
    
 #ifdef OMP
 #pragma omp for
@@ -277,11 +328,20 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      ix++;
 #endif
    }
-   
+
+#endif // SPI
+
+/* with SPI we can easily interleave communication and computation
+   so we don't wait for the communication to complete */
+
 #ifdef OMP
+# ifdef SPI
+#pragma omp single nowait
+# else
 #pragma omp single
+# endif // SPI
    {
-#endif
+#endif // OMP
      
 #    if (defined MPI && !defined _NO_COMM)
 #      ifdef SPI
@@ -315,7 +375,56 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifdef OMP
    }
 #endif
+
+
+#ifdef SPI
+
+/* compute the body while the communication is in progress 
+   the barrier at the end of this for loop will also catch the
+   thread carrying out the "single nowait" above */
    
+#ifdef OMP
+#pragma omp for
+#endif
+  for(int i = 0; i < BODY/2; ++i)
+  {
+    U=u0+body[i]*4;
+    _prefetch_su3(U);
+    s=k+body[i];
+    _prefetch_spinor(s);
+    ix=body[i]*8;
+    
+    _hop_t_p_pre();
+    U++;
+    ix++;
+     
+    _hop_t_m_pre();
+    ix++;
+     
+    _hop_x_p_pre();
+    U++;
+    ix++;
+     
+    _hop_x_m_pre();
+    ix++;
+     
+    _hop_y_p_pre();
+    U++;
+    ix++;
+     
+    _hop_y_m_pre();
+    ix++;
+     
+    _hop_z_p_pre();
+    U++;
+    ix++;
+     
+    _hop_z_m_pre(); 
+  }
+#endif // SPI
+
+/* now we can move on to compute the solution as usual */
+
 #ifndef OMP
    s = l;
    if(ieo == 0) {

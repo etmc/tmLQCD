@@ -148,8 +148,16 @@ int init_geometry_indices(const int V) {
   for(i = 1; i < (T+4); i++){
     g_ipt[i] = g_ipt[i-1]+(LX+4);
   }
+  
+
+  /* allocate memory to keep a special index array for the 
+     non-halfspinor hopping matrix */
   g_hi = (int*)calloc(16*(VOLUME+RAND)+2,sizeof(int));
   if((void*) g_hi == NULL) return(40);
+
+  /* body and surface index arrays, they are defined in the spinor initialization */
+  g_body = (unsigned int *) malloc(BODY*sizeof(unsigned int));
+  g_surface = (unsigned int *) malloc(SURFACE*sizeof(unsigned int));
 
 #ifdef WITHLAPH
   g_idn3d = (int**)calloc(SPACEVOLUME, sizeof(int*));
@@ -178,6 +186,8 @@ void free_geometry_indices() {
   free(g_eo2lexic);
   free(g_lexic2eosub);
   free(g_lexic2eo);
+  free(g_body);
+  free(g_surface);
 #if ( defined PARALLELXYZT || defined PARALLELXYZ )
   free(g_field_z_ipt_odd);
   free(g_field_z_ipt_even);
