@@ -156,8 +156,15 @@ int init_geometry_indices(const int V) {
   if((void*) g_hi == NULL) return(40);
 
   /* body and surface index arrays, they are defined in the spinor initialization */
-  g_body = (unsigned int *) malloc(BODY*sizeof(unsigned int));
-  g_surface = (unsigned int *) malloc(SURFACE*sizeof(unsigned int));
+  if( BODY > 0 ) {
+    g_body = (unsigned int *) malloc(BODY*sizeof(unsigned int));
+    if((void*) g_body == NULL ) return(50);
+  }
+  
+  if( SURFACE > 0 ) {
+    g_surface = (unsigned int *) malloc(SURFACE*sizeof(unsigned int));
+    if((void*) g_surface == NULL ) return(51);
+  }
 
 #ifdef WITHLAPH
   g_idn3d = (int**)calloc(SPACEVOLUME, sizeof(int*));
@@ -186,8 +193,8 @@ void free_geometry_indices() {
   free(g_eo2lexic);
   free(g_lexic2eosub);
   free(g_lexic2eo);
-  free(g_body);
-  free(g_surface);
+  if(BODY > 0 ) free(g_body);
+  if(SURFACE > 0 ) free(g_surface);
 #if ( defined PARALLELXYZT || defined PARALLELXYZ )
   free(g_field_z_ipt_odd);
   free(g_field_z_ipt_even);
