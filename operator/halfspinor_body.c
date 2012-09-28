@@ -363,10 +363,6 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 			     j,
 			     &SPIDescriptors[j]);
      }
-     // wait for receive completion
-     while ( recvCounter > 0 );
-     _bgq_msync();
-
 #      else // SPI
      xchange_halffield(); 
 #      endif // SPI
@@ -421,6 +417,18 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      
     _hop_z_m_pre(); 
   }
+
+  /* wait for the communication to finish */
+#ifdef OMP
+#pragma omp single
+{
+#endif
+  while ( recvCounter > 0 );
+  _bgq_msync();
+#ifdef OMP
+}
+#endif
+
 #endif // SPI
 
 /* now we can move on to compute the solution as usual */
