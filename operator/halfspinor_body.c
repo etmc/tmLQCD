@@ -74,6 +74,53 @@ g_sloppy_precision = 0;
 if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   phi32 = NBPointer32[ieo];
 
+#ifdef SPI
+
+/* compute the surface terms to be sent first */
+
+  surface = g_surface + ieo*SURFACE/2;
+  body = g_body + ieo*BODY/2;
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for(unsigned int i = 0; i < SURFACE/2; ++i){
+    U=u0+surface[i]*4;
+    s=k+surface[i];
+    ix=surface[i]*8;
+    
+    _hop_t_p_pre32();
+    U++;
+    ix++;
+     
+    _hop_t_m_pre32();
+    ix++;
+     
+    _hop_x_p_pre32();
+    U++;
+    ix++;
+     
+    _hop_x_m_pre32();
+    ix++;
+     
+    _hop_y_p_pre32();
+    U++;
+    ix++;
+     
+    _hop_y_m_pre32();
+    ix++;
+     
+    _hop_z_p_pre32();
+    U++;
+    ix++;
+     
+    _hop_z_m_pre32();
+    }
+
+#else // SPI
+
+/* without interleaving we compute surface and body together */
+
 #ifdef OMP
 #pragma omp for
 #else
@@ -119,7 +166,11 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   }
   
 #ifdef OMP
+#  ifdef SPI
+#pragma omp single nowait
+#  else
 #pragma omp single
+#  endif
   {
 #endif
     
@@ -143,9 +194,6 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 			     j,
 			     &SPIDescriptors32[j]);
      }
-     // wait for receive completion
-     while ( recvCounter > 0 );
-     _bgq_msync();
 #      else
     xchange_halffield32(); 
 #      endif
@@ -154,6 +202,64 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifdef OMP
   }
 #endif
+
+#ifdef SPI
+
+/* compute the body while the communication is in progress 
+   the barrier at the end of this for loop will also catch the
+   thread carrying out the "single nowait" above */
+   
+#ifdef OMP
+#pragma omp for
+#endif
+  for(int i = 0; i < BODY/2; ++i)
+  {
+    U=u0+body[i]*4;
+    s=k+body[i];
+    ix=body[i]*8;
+    
+    _hop_t_p_pre32();
+    U++;
+    ix++;
+     
+    _hop_t_m_pre32();
+    ix++;
+     
+    _hop_x_p_pre32();
+    U++;
+    ix++;
+     
+    _hop_x_m_pre32();
+    ix++;
+     
+    _hop_y_p_pre32();
+    U++;
+    ix++;
+     
+    _hop_y_m_pre32();
+    ix++;
+     
+    _hop_z_p_pre32();
+    U++;
+    ix++;
+     
+    _hop_z_m_pre32(); 
+  }
+
+  /* wait for the communication to finish */
+#ifdef OMP
+#pragma omp single
+{
+#endif
+  while ( recvCounter > 0 );
+  _bgq_msync();
+#ifdef OMP
+}
+#endif
+
+#endif // SPI
+
+/* move on to compute the result as usual */
   
 #ifndef OMP
   s = l;
