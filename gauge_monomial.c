@@ -70,7 +70,7 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
     for(mu=0;mu<4;mu++) {
       z=&hf->gaugefield[i][mu];
       xm=&hf->derivative[i][mu];
-      v=get_staples(i,mu, hf->gaugefield); 
+      get_staples(&v,i,mu, (const su3**) hf->gaugefield); 
       _su3_times_su3d(w,*z,v);
       _trace_lambda_mul_add_assign((*xm), factor, w);
       
@@ -93,9 +93,9 @@ void gauge_heatbath(const int id, hamiltonian_field_t * const hf) {
   
   if(mnl->use_rectangles) mnl->c0 = 1. - 8.*mnl->c1;
   
-  mnl->energy0 = g_beta*(mnl->c0 * measure_gauge_action(hf->gaugefield));
+  mnl->energy0 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield));
   if(mnl->use_rectangles) {
-    mnl->energy0 += g_beta*(mnl->c1 * measure_rectangles(hf->gaugefield));
+    mnl->energy0 += g_beta*(mnl->c1 * measure_rectangles( (const su3**) hf->gaugefield));
   }
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called gauge_heatbath for id %d %d\n", id, mnl->even_odd_flag);
@@ -105,9 +105,9 @@ void gauge_heatbath(const int id, hamiltonian_field_t * const hf) {
 double gauge_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   
-  mnl->energy1 = g_beta*(mnl->c0 * measure_gauge_action(hf->gaugefield));
+  mnl->energy1 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield));
   if(mnl->use_rectangles) {
-    mnl->energy1 += g_beta*(mnl->c1 * measure_rectangles(hf->gaugefield));
+    mnl->energy1 += g_beta*(mnl->c1 * measure_rectangles( (const su3**) hf->gaugefield));
     }
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called gauge_acc for id %d %d dH = %1.4e\n", 

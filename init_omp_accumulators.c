@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2012 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -17,11 +17,37 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _GET_STAPLES_H
-#define _GET_STAPLES_H
-
-#include"su3.h"
-
-void get_staples(su3* const staple, const int x, const int mu, const su3 ** in_gauge_field);
-
+#ifdef HAVE_CONFIG_H
+# include<config.h>
 #endif
+#ifdef OMP
+#include <omp.h>
+#endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include "global.h"
+#include "init_omp_accumulators.h"
+
+int init_omp_accumulators(const int num) {
+  g_omp_acc_cp=NULL;
+  g_omp_acc_re=NULL;
+
+  if((void*)(g_omp_acc_cp = (_Complex double*)malloc(num*sizeof(_Complex double))) == NULL) {
+    printf ("init_omp_accumulators malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+  if((void*)(g_omp_acc_re = (double*)malloc(num*sizeof(double))) == NULL) {
+    printf ("init_omp_accumulators malloc errno : %d\n",errno); 
+    errno = 0;
+    return(2);
+  }
+
+  return(0);
+}
+
+void free_omp_accumulators() {
+  free(g_omp_acc_cp);
+  free(g_omp_acc_re);
+}

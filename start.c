@@ -795,7 +795,7 @@ void start_ranlux(int level, int seed)
      g_proc_coords[2]*g_nproc_z + g_proc_coords[3];
 
    max_seed = 2147483647 / g_nproc;
-   loc_seed = (seed + step*max_seed) % max_seed;
+   loc_seed = (seed + step*max_seed) % 2147483647;
 
    if(loc_seed == 0) loc_seed++;
 

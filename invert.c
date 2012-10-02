@@ -40,7 +40,8 @@
 #include <mpi.h>
 #endif
 #ifdef OMP
-#include <omp.h>
+# include <omp.h>
+# include "init_omp_accumulators.h"
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -143,7 +144,17 @@ int main(int argc, char *argv[])
   g_use_clover_flag = 0;
 
 #ifdef MPI
+
+#  ifdef OMP
+  int mpi_thread_provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
+#  else
   MPI_Init(&argc, &argv);
+#  endif
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+#else
+  g_proc_id = 0;
 #endif
 
   while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
@@ -189,8 +200,14 @@ int main(int argc, char *argv[])
      omp_set_num_threads(omp_num_threads);
   }
   else {
-    omp_num_threads = omp_get_max_threads();
+    if( g_proc_id == 0 )
+      printf("# No value provided for OmpNumThreads, running in single-threaded mode!\n");
+
+    omp_num_threads = 1;
+    omp_set_num_threads(omp_num_threads);
   }
+
+  init_omp_accumulators(omp_num_threads);
 #endif
 
   /* this DBW2 stuff is not needed for the inversion ! */
@@ -334,7 +351,7 @@ int main(int argc, char *argv[])
 #endif
 
     /*compute the energy of the gauge field*/
-    plaquette_energy = measure_gauge_action(g_gauge_field);
+    plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
 
     if (g_cart_id == 0) {
       printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
@@ -349,7 +366,7 @@ int main(int argc, char *argv[])
       g_update_gauge_copy = 1;
       g_update_gauge_energy = 1;
       g_update_rectangle_energy = 1;
-      plaquette_energy = measure_gauge_action(g_gauge_field);
+      plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
 
       if (g_cart_id == 0) {
         printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
@@ -519,6 +536,9 @@ int main(int argc, char *argv[])
 
 #ifdef MPI
   MPI_Finalize();
+#endif
+#ifdef OMP
+  free_omp_accumulators();
 #endif
   free_blocks();
   free_dfl_subspace();

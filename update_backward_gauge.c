@@ -28,7 +28,6 @@
 
 #if defined _USE_HALFSPINOR
 void update_backward_gauge(su3 ** const gf) {
-
 #ifdef OMP
 #pragma omp parallel
   {

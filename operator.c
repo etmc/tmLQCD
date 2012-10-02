@@ -229,7 +229,7 @@ void op_invert(const int op_id, const int index_start) {
 	printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
       }
       init_sw_fields(VOLUME);
-      sw_term(g_gauge_field, optr->kappa, optr->c_sw); 
+      sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw); 
       /* this must be EE here!   */
       /* to match clover_inv in Qsw_psi */
       sw_invert(EE, optr->mu);

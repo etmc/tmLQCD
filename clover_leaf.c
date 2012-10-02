@@ -42,6 +42,9 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "global.h"
 #include "su3.h"
 #include "sse.h"
@@ -86,7 +89,7 @@ su3 ** swm, ** swp;
 //
 // suppressing space-time indices
 
-void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
+void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
 #ifdef OMP
 #pragma omp parallel
   {
@@ -94,7 +97,7 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
 
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
-  su3 *w1,*w2,*w3,*w4;
+  const su3 *w1,*w2,*w3,*w4;
   double ka_csw_8 = kappa*c_sw/8.;
   su3 ALIGN v1,v2,plaq;
   su3 ALIGN fkl[4][4];
@@ -233,7 +236,7 @@ void sw_term(su3 ** const gf, const double kappa, const double c_sw) {
  * parallelised for OpenMP */
 
 #define nm1 5
-int six_invert(_Complex double a[6][6])
+void six_invert(int* ifail ,_Complex double a[6][6])
 {
   /* required for thread safety */
   _Complex double ALIGN d[nm1+1],u[nm1+1];
@@ -241,8 +244,7 @@ int six_invert(_Complex double a[6][6])
   double ALIGN p[nm1+1];
   double ALIGN s,q;
   int i,j,k;
-  int ifail;
-  ifail=0;
+  *ifail=0;
   for(k = 0; k < nm1; ++k)
   {
     s=0.0;
@@ -255,7 +257,7 @@ int six_invert(_Complex double a[6][6])
     p[k] = conj(sigma) * a[k][k];
     q = conj(sigma) * sigma;
     if (q < tiny_t)
-      ifail++;
+      *ifail++;
     d[k] = -conj(sigma) / q;
 
     /* reflect all columns to the right */
@@ -272,7 +274,7 @@ int six_invert(_Complex double a[6][6])
   sigma = a[nm1][nm1];
   q = conj(sigma) * sigma;
   if (q < tiny_t)
-    ifail++;
+    *ifail++;
   d[nm1] = conj(sigma) / q;
 
   /*  inversion of upper triangular matrix in place
@@ -308,10 +310,9 @@ int six_invert(_Complex double a[6][6])
         a[i][j] -= conj(u[j]) * z; /* reflection */
     }
   }
-  return ifail;
 }
     
-_Complex double six_det(_Complex double a[6][6])
+void six_det(_Complex double* const rval, _Complex double a[6][6])
 {
   /* required for thread safety */
   _Complex double ALIGN sigma,z;
@@ -365,11 +366,11 @@ _Complex double six_det(_Complex double a[6][6])
   if(g_proc_id == 0 && ifail > 0) {
     fprintf(stderr, "Warning: ifail = %d > 0 in six_det\n", ifail);
   }
-  return(det);
+  *rval = det;
 }
 
 /*definitions needed for the functions sw_trace(int ieo) and sw_trace(int ieo)*/
-inline void populate_6x6_matrix(_Complex double a[6][6], su3 * C, const int row, const int col) {
+inline void populate_6x6_matrix(_Complex double a[6][6], const su3 * const C, const int row, const int col) {
   a[0+row][0+col] = C->c00;
   a[0+row][1+col] = C->c01;
   a[0+row][2+col] = C->c02;
@@ -382,7 +383,7 @@ inline void populate_6x6_matrix(_Complex double a[6][6], su3 * C, const int row,
   return;
 }
 
-inline void get_3x3_block_matrix(su3 * C, _Complex double a[6][6], const int row, const int col) {
+inline void get_3x3_block_matrix(su3 * const C, _Complex double a[6][6], const int row, const int col) {
   C->c00 = a[0+row][0+col];
   C->c01 = a[0+row][1+col];
   C->c02 = a[0+row][2+col];
@@ -409,15 +410,26 @@ inline void add_tm(_Complex double a[6][6], const double mu) {
 }
 
 double sw_trace(const int ieo, const double mu) {
-  int i,x,icx,ioff;
+  double ALIGN res = 0.0;
+#ifdef MPI
+  double ALIGN mres;
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+  int thread_num = omp_get_thread_num();
+#endif
+
+  int i,x,ioff;
   su3 ALIGN v;
   _Complex double ALIGN a[6][6];
   double ALIGN tra;
   double ALIGN ks,kc,tr,ts,tt;
   _Complex double ALIGN det;
 
-  ks=0.0;
-  kc=0.0;
+  ks = 0.0;
+  kc = 0.0;
 
   if(ieo==0) {
     ioff=0;
@@ -426,7 +438,10 @@ double sw_trace(const int ieo, const double mu) {
     ioff=(VOLUME+RAND)/2;
   }
   
-  for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+#ifdef OMP
+#pragma omp for
+#endif
+  for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
     for(i=0;i<2;i++) {
       populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
@@ -438,11 +453,11 @@ double sw_trace(const int ieo, const double mu) {
       if(i == 0) add_tm(a, mu);
       else add_tm(a, -mu);
       // and compute the tr log (or log det)
-      det = six_det(a);
+      six_det(&det,a);
       tra = log(conj(det)*det);
       // we need to compute only the one with +mu
       // the one with -mu must be the complex conjugate!
-
+      
       tr=tra+kc;
       ts=tr+ks;
       tt=ts-ks;
@@ -451,17 +466,29 @@ double sw_trace(const int ieo, const double mu) {
     }
   }
   kc=ks+kc;
-#ifdef MPI
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return(ks);
+
+#ifdef OMP
+  g_omp_acc_re[thread_num] = kc;
+  } /* OpenMP parallel closing brace */
+
+  for(int i = 0; i < omp_num_threads; ++i) {
+    res += g_omp_acc_re[i];
+  }
 #else
-  return(kc);
+  res=kc;
+#endif
+
+#ifdef MPI
+  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  return(mres);
+#else
+  return(res);
 #endif
 
 }
 
 
-void mult_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double d[6][6]) {
+void mult_6x6(_Complex double a[6][6], const _Complex double b[6][6], const _Complex double d[6][6]) {
 
   for(int i = 0; i < 6; i++) {
     for(int j = 0; j < 6; j++) {
@@ -478,8 +505,8 @@ void sw_invert(const int ieo, const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
-  int icy;
 #endif
+  int icy;
   int ioff, err=0;
   int i, x;
   su3 ALIGN v;
@@ -492,12 +519,16 @@ void sw_invert(const int ieo, const double mu) {
     ioff=(VOLUME+RAND)/2;
   }
 
+#ifndef OMP
+  icy=0;
+#endif
+
 #ifdef OMP
 #pragma omp for
+#endif
   for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+#ifdef OMP
     icy = icx - ioff;
-#else
-  for(int icx = ioff, icy = 0; icx < (VOLUME/2+ioff); icx++, icy++) {
 #endif
     x = g_eo2lexic[icx];
 
@@ -512,7 +543,7 @@ void sw_invert(const int ieo, const double mu) {
       else add_tm(a, -mu);
       // and invert the resulting matrix
 
-      err = six_invert(a); 
+      six_invert(&err,a); 
       // here we need to catch the error! 
       if(err > 0 && g_proc_id == 0) {
 	printf("# inversion failed in six_invert code %d\n", err);
@@ -538,7 +569,7 @@ void sw_invert(const int ieo, const double mu) {
 	if(i == 0) add_tm(a, -mu);
 	else add_tm(a, +mu);
 	// and invert the resulting matrix
-	err = six_invert(a); 
+	six_invert(&err,a); 
 	// here we need to catch the error! 
 	if(err > 0 && g_proc_id == 0) {
 	  printf("# %d\n", err);
@@ -552,6 +583,9 @@ void sw_invert(const int ieo, const double mu) {
 	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][3][i], a, 3, 0);
       }
     }
+#ifndef OMP
+    ++icy;
+#endif
   }
 #ifdef OMP
   } /* OpenMP closing brace */
@@ -580,9 +614,8 @@ void sw_deriv(const int ieo, const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
-  int icy;
 #endif
-
+  int icy;
   int ioff;
   int x;
   double fac = 1.0000;
@@ -597,12 +630,16 @@ void sw_deriv(const int ieo, const double mu) {
   }
   if(fabs(mu) > 0.) fac = 0.5;
 
+#ifndef OMP
+  icy = 0;
+#endif
+
 #ifdef OMP
 #pragma omp for
+#endif
   for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+#ifdef OMP
     icy = icx - ioff;
-#else
-  for(int icx = ioff, icy=0; icx < (VOLUME/2+ioff); icx++, icy++) {
 #endif
     x = g_eo2lexic[icx];
     /* compute the insertion matrix */
@@ -647,6 +684,9 @@ void sw_deriv(const int ieo, const double mu) {
       _su3_refac_acc(swp[x][2], fac, lswp[2]);
       _su3_refac_acc(swp[x][3], fac, lswp[3]);
     }
+#ifndef OMP
+    ++icy;
+#endif
   }
 #ifdef OMP
   } /* OpenMP closing brace */
@@ -661,7 +701,7 @@ void sw_deriv(const int ieo, const double mu) {
 // result is again stored in swm and swp                 
 // additional gamma_5 needed for one of the input vectors
 
-void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
+void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll) {
 #ifdef OMP
 #pragma omp parallel
   {
@@ -670,7 +710,7 @@ void sw_spinor(const int ieo, spinor * const kk, spinor * const ll) {
   int ioff;
   int icx;
   int x;
-  spinor *r,*s;
+  const spinor *r,*s;
   su3 ALIGN v0,v1,v2,v3;
   su3 ALIGN u0,u1,u2,u3;
   su3 ALIGN lswp[4],lswm[4];
@@ -740,7 +780,7 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 
   int k,l;
   int x,xpk,xpl,xmk,xml,xpkml,xplmk,xmkml;
-  su3 *w1,*w2,*w3,*w4;
+  const su3 *w1,*w2,*w3,*w4;
   double ka_csw_8 = kappa*c_sw/8.;
   su3 ALIGN v1,v2,vv1,vv2,plaq;
   su3 ALIGN vis[4][4];
@@ -790,19 +830,19 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 	_su3_times_su3d(plaq,v1,v2);
 	
 	_su3_times_su3(vv1,plaq,vis[k][l]);
- 	_trace_lambda_mul_add_assign(hf->derivative[x][k], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[x][k], -2.*ka_csw_8, vv1);
 
 	_su3d_times_su3(vv2,*w1,vv1); 
 	_su3_times_su3(vv1,vv2,*w1);
- 	_trace_lambda_mul_add_assign(hf->derivative[xpk][l], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xpk][l], -2.*ka_csw_8, vv1);
 	
 	_su3_times_su3(vv2,vis[k][l],plaq); 
 	_su3_dagger(vv1,vv2);
- 	_trace_lambda_mul_add_assign(hf->derivative[x][l], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[x][l], -2.*ka_csw_8, vv1);
 
 	_su3d_times_su3(vv2,*w4,vv1); 
 	_su3_times_su3(vv1,vv2,*w4);
- 	_trace_lambda_mul_add_assign(hf->derivative[xpl][k], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xpl][k], -2.*ka_csw_8, vv1);
 	
 	w1=&hf->gaugefield[x][l];
 	w2=&hf->gaugefield[xplmk][k];   /*dag*/
@@ -813,19 +853,19 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 	_su3_times_su3(plaq,v1,v2);
 	
 	_su3_times_su3(vv1,plaq,vis[k][l]);
- 	_trace_lambda_mul_add_assign(hf->derivative[x][l], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[x][l], -2.*ka_csw_8, vv1);
 	
 	_su3_dagger(vv1,v1); 
 	_su3_times_su3d(vv2,vv1,vis[k][l]);
 	_su3_times_su3d(vv1,vv2,v2);
- 	_trace_lambda_mul_add_assign(hf->derivative[xplmk][k], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xplmk][k], -2.*ka_csw_8, vv1);
 
 	_su3_times_su3(vv2,*w3,vv1); 
 	_su3_times_su3d(vv1,vv2,*w3);
- 	_trace_lambda_mul_add_assign(hf->derivative[xmk][l], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xmk][l], -2.*ka_csw_8, vv1);
 
 	_su3_dagger(vv2,vv1);
- 	_trace_lambda_mul_add_assign(hf->derivative[xmk][k], -2.*ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xmk][k], -2.*ka_csw_8, vv2);
 	
 	w1=&hf->gaugefield[xmk][k];   /*dag*/
 	w2=&hf->gaugefield[xmkml][l]; /*dag*/
@@ -837,18 +877,18 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 	_su3_times_su3d(vv1,*w1,vis[k][l]);
 	_su3_times_su3d(vv2,vv1,v2);
 	_su3_times_su3(vv1,vv2,*w2);
- 	_trace_lambda_mul_add_assign(hf->derivative[xmk][k], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xmk][k], -2.*ka_csw_8, vv1);
 
 	_su3_times_su3(vv2,*w2,vv1); 
 	_su3_times_su3d(vv1,vv2,*w2);
- 	_trace_lambda_mul_add_assign(hf->derivative[xmkml][l], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xmkml][l], -2.*ka_csw_8, vv1);
 
 	_su3_dagger(vv2,vv1);
- 	_trace_lambda_mul_add_assign(hf->derivative[xmkml][k], -2.*ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xmkml][k], -2.*ka_csw_8, vv2);
 
 	_su3d_times_su3(vv1,*w3,vv2); 
 	_su3_times_su3(vv2,vv1,*w3);
- 	_trace_lambda_mul_add_assign(hf->derivative[xml][l], -2.*ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xml][l], -2.*ka_csw_8, vv2);
 	
 	w1=&hf->gaugefield[xml][l];   /*dag*/
 	w2=&hf->gaugefield[xml][k];
@@ -860,19 +900,19 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 	_su3_times_su3d(vv1,*w1,vis[k][l]);
 	_su3_times_su3d(vv2,vv1,v2);
 	_su3_times_su3d(vv1,vv2,*w2);
- 	_trace_lambda_mul_add_assign(hf->derivative[xml][l], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xml][l], -2.*ka_csw_8, vv1);
 	
 	_su3_dagger(vv2,vv1);
- 	_trace_lambda_mul_add_assign(hf->derivative[xml][k], -2.*ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xml][k], -2.*ka_csw_8, vv2);
 
 	_su3d_times_su3(vv1,*w2,vv2); 
 	_su3_times_su3(vv2,vv1,*w2);
- 	_trace_lambda_mul_add_assign(hf->derivative[xpkml][l], -2.*ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xpkml][l], -2.*ka_csw_8, vv2);
 
 	_su3_dagger(vv2,v2);  
 	_su3_times_su3d(vv1,vv2,v1);
 	_su3_times_su3d(vv2,vv1,vis[k][l]);
- 	_trace_lambda_mul_add_assign(hf->derivative[x][k], -2.*ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[x][k], -2.*ka_csw_8, vv2);
       }
     }
   }

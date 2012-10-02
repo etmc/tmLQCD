@@ -24,36 +24,51 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+# include <global.h>
+#endif
 #include "su3.h"
 #include "scalar_prod.h"
 
 /*  <S,R>=S^* times R */
-_Complex double scalar_prod(spinor * const S, spinor * const R, const int N, const int parallel) {
-  int ix;
-  _Complex double ALIGN ds,ks,kc,tr,ts,tt;
-  spinor *s,*r;
-  _Complex double c;
+_Complex double scalar_prod(const spinor * const S, const spinor * const R, const int N, const int parallel) {
+  _Complex double ALIGN res = 0.0;
 #ifdef MPI
-  _Complex double d;
+  _Complex double ALIGN mres;
 #endif
-  
-  ks=0.0;
-  kc=0.0;
+
+#ifdef OMP
+#pragma omp parallel
+  {
+  int thread_num = omp_get_thread_num();
+#endif
+
+  _Complex double ALIGN ds,tr,ts,tt,ks,kc;
+  const spinor *s,*r;
+
+  ks = 0.0;
+  kc = 0.0;
+
 #if (defined BGL && defined XLC)
   __alignx(16, S);
   __alignx(16, R);
-#endif  
-  for (ix = 0; ix < N; ix++)
+#endif
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for (int ix = 0; ix < N; ix++)
   {
-    s=(spinor *) S + ix;
-    r=(spinor *) R + ix;
+    s= S + ix;
+    r= R + ix;
     
     ds = r->s0.c0 * conj(s->s0.c0) + r->s0.c1 * conj(s->s0.c1) + r->s0.c2 * conj(s->s0.c2) +
          r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +
 	 r->s2.c0 * conj(s->s2.c0) + r->s2.c1 * conj(s->s2.c1) + r->s2.c2 * conj(s->s2.c2) + 
          r->s3.c0 * conj(s->s3.c0) + r->s3.c1 * conj(s->s3.c1) + r->s3.c2 * conj(s->s3.c2);
 
-    /* Kahan Summation */    
+    /* Kahan Summation */
     tr=ds+kc;
     ts=tr+ks;
     tt=ts-ks;
@@ -62,16 +77,27 @@ _Complex double scalar_prod(spinor * const S, spinor * const R, const int N, con
   }
   kc=ks+kc;
 
-  c = kc;
+#ifdef OMP
+  g_omp_acc_cp[thread_num] = kc;
+
+  } /* OpenMP closing brace */
+
+  /* having left the parallel section, we can now sum up the Kahan
+     corrected sums from each thread into kc */
+  for(int i = 0; i < omp_num_threads; ++i)
+    res += g_omp_acc_cp[i];
+#else
+  res=kc;
+#endif
 
 #ifdef MPI
   if(parallel == 1)
   {
-    d = c;
-    MPI_Allreduce(&d, &c, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+    return(mres);
   }
 #endif
-  return(c);
+  return(res);
 }
 
 #ifdef WITHLAPH

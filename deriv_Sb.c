@@ -401,6 +401,22 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
 
 void deriv_Sb(const int ieo, spinor * const l, spinor * const k, 
 	      hamiltonian_field_t * const hf, const double factor) {
+
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(hf->gaugefield);
+  }
+#endif
+  /* for parallelization */
+#ifdef MPI
+  xchange_2fields(k, l, ieo);
+#endif
+
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
   int ix,iy;
   int ioff, icx, icy;
   su3 * restrict up ALIGN;
@@ -410,6 +426,10 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
   static spinor rr;
   spinor * restrict sp ALIGN;
   spinor * restrict sm ALIGN;
+
+#ifdef OMP
+#undef static
+#endif
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(derivSb)
@@ -430,17 +450,10 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
     ioff=(VOLUME+RAND)/2;
   } 
 
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(hf->gaugefield);
-  }
-#endif
-  /* for parallelization */
-#ifdef MPI
-  xchange_2fields(k, l, ieo);
-#endif
   /************** loop over all lattice sites ****************/
-
+#ifdef OMP
+#pragma omp for
+#endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
     ix=g_eo2lexic[icx];
     rr = (*(l + (icx-ioff)));
@@ -469,7 +482,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1, ka0, v2);
-    _trace_lambda_mul_add_assign(hf->derivative[ix][0], 2.*factor, v1);
+    _trace_lambda_mul_add_assign_nonlocal(hf->derivative[ix][0], 2.*factor, v1);
 
     /************** direction -0 ****************************/
 
@@ -492,7 +505,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
     _vector_tensor_vector_add(v1, psia, phia, psib, phib);
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka0,v2);
-    _trace_lambda_mul_add_assign(hf->derivative[iy][0], 2.*factor, v1);
+    _trace_lambda_mul_add_assign_nonlocal(hf->derivative[iy][0], 2.*factor, v1);
 
     /*************** direction +1 **************************/
 
@@ -513,7 +526,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka1,v2);
-    _trace_lambda_mul_add_assign(hf->derivative[ix][1], 2.*factor, v1);
+    _trace_lambda_mul_add_assign_nonlocal(hf->derivative[ix][1], 2.*factor, v1);
 
     /**************** direction -1 *************************/
 
@@ -534,7 +547,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
     _vector_tensor_vector_add(v1, psia, phia, psib, phib);
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka1,v2);
-    _trace_lambda_mul_add_assign(hf->derivative[iy][1], 2.*factor, v1);
+    _trace_lambda_mul_add_assign_nonlocal(hf->derivative[iy][1], 2.*factor, v1);
 
     /*************** direction +2 **************************/
 
@@ -555,7 +568,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1,ka2,v2);
-    _trace_lambda_mul_add_assign(hf->derivative[ix][2], 2.*factor, v1);
+    _trace_lambda_mul_add_assign_nonlocal(hf->derivative[ix][2], 2.*factor, v1);
 
     /***************** direction -2 ************************/
 
@@ -576,7 +589,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
     _vector_tensor_vector_add(v1, psia, phia, psib, phib);
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka2,v2);
-    _trace_lambda_mul_add_assign(hf->derivative[iy][2], 2.*factor, v1);
+    _trace_lambda_mul_add_assign_nonlocal(hf->derivative[iy][2], 2.*factor, v1);
 
     /****************** direction +3 ***********************/
 
@@ -597,7 +610,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
     _vector_tensor_vector_add(v1, phia, psia, phib, psib);
     _su3_times_su3d(v2,*up,v1);
     _complex_times_su3(v1, ka3, v2);
-    _trace_lambda_mul_add_assign(hf->derivative[ix][3], 2.*factor, v1);
+    _trace_lambda_mul_add_assign_nonlocal(hf->derivative[ix][3], 2.*factor, v1);
 
     /***************** direction -3 ************************/
 
@@ -618,10 +631,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
     _vector_tensor_vector_add(v1, psia, phia, psib, phib);
     _su3_times_su3d(v2,*um,v1);
     _complex_times_su3(v1,ka3,v2);
-    _trace_lambda_mul_add_assign(hf->derivative[iy][3], 2.*factor, v1);
+    _trace_lambda_mul_add_assign_nonlocal(hf->derivative[iy][3], 2.*factor, v1);
      
     /****************** end of loop ************************/
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 #ifdef _KOJAK_INST
 #pragma pomp inst end(derivSb)
 #endif

@@ -21,6 +21,6 @@
 
 #include "su3.h"
 
-double measure_rectangles(su3 ** const gf);
+double measure_rectangles(const su3 ** const gf);
 
 #endif
