@@ -72,7 +72,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   boundary(mnl->kappa);
   
   // we compute the clover term (1 + T_ee(oo)) for all sites x
-  sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   // we invert it for the even sites only
   sw_invert(EE, mnl->mu);
   
@@ -148,7 +148,7 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->iter1 = 0;
 
   init_sw_fields();
-  sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert(EE, mnl->mu);
 
   random_spinor_field(mnl->w_fields[0], VOLUME/2, mnl->rngrepro);
@@ -177,7 +177,7 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   g_c_sw = mnl->c_sw;
   boundary(mnl->kappa);
 
-  sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert(EE, mnl->mu);
 
   chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,

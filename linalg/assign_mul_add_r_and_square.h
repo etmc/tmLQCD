@@ -17,11 +17,12 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _GET_STAPLES_H
-#define _GET_STAPLES_H
+#ifndef ASSIGN_MUL_ADD_R_AND_SQUARE_H
+#define ASSIGN_MUL_ADD_R_AND_SQUARE_H
 
-#include"su3.h"
+#include "su3.h"
 
-void get_staples(su3* const staple, const int x, const int mu, const su3 ** in_gauge_field);
+double assign_mul_add_r_and_square(spinor * const R, const double c, const spinor * const S, 
+				   const int N, const int parallel);
 
 #endif

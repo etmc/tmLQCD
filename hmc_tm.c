@@ -43,6 +43,7 @@
 #endif
 #ifdef OMP
 # include <omp.h>
+# include "init_omp_accumulators.h"
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -143,7 +144,14 @@ int main(int argc,char *argv[]) {
   g_use_clover_flag = 0;
 
 #ifdef MPI
+
+#  ifdef OMP
+  int mpi_thread_provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
+#  else
   MPI_Init(&argc, &argv);
+#  endif
+
   MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
 #else
   g_proc_id = 0;
@@ -194,8 +202,14 @@ int main(int argc,char *argv[]) {
      omp_set_num_threads(omp_num_threads);
   }
   else {
-    omp_num_threads = omp_get_max_threads();
+    if( g_proc_id == 0 )
+      printf("# No value provided for OmpNumThreads, running in single-threaded mode!\n");
+
+    omp_num_threads = 1;
+    omp_set_num_threads(omp_num_threads);
   }
+
+  init_omp_accumulators(omp_num_threads);
 #endif
 
   DUM_DERI = 4;
@@ -333,7 +347,7 @@ int main(int argc,char *argv[]) {
 #endif
 
   /* Initialise random number generator */
-  start_ranlux(rlxd_level, random_seed^nstore);
+  start_ranlux(rlxd_level, random_seed^(nstore+1) );
 
   /* Set up the gauge field */
   /* continue and restart */
@@ -386,9 +400,9 @@ int main(int argc,char *argv[]) {
     }
   }
 
-  plaquette_energy = measure_gauge_action(g_gauge_field);
+  plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-    rectangle_energy = measure_rectangles(g_gauge_field);
+    rectangle_energy = measure_rectangles( (const su3**) g_gauge_field);
     if(g_proc_id == 0){
       fprintf(parameterfile,"# Computed rectangle value: %14.12f.\n",rectangle_energy/(12.*VOLUME*g_nproc));
     }
@@ -551,6 +565,9 @@ int main(int argc,char *argv[]) {
 
 #ifdef MPI
   MPI_Finalize();
+#endif
+#ifdef OMP
+  free_omp_accumulators();
 #endif
   free_gauge_tmp();
   free_gauge_field();

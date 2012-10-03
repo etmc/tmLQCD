@@ -22,6 +22,6 @@
 
 #include "su3.h"
 
-double measure_gauge_action(su3 ** const gf);
+double measure_gauge_action(const su3 ** const gf);
 
 #endif

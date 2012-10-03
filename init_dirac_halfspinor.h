@@ -24,6 +24,8 @@ extern halfspinor * HalfSpinor ALIGN;
 extern halfspinor *** NBPointer;
 extern halfspinor32 * HalfSpinor32 ALIGN;
 extern halfspinor32 *** NBPointer32;
+extern halfspinor * ALIGN sendBuffer, * ALIGN recvBuffer;
+extern halfspinor32 * ALIGN sendBuffer32, * ALIGN recvBuffer32;
 
 int init_dirac_halfspinor();
 int init_dirac_halfspinor32();

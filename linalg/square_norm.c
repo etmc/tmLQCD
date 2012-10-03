@@ -32,6 +32,10 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+# include "global.h"
+#endif
 #include <complex.h>
 #include "su3.h"
 #if (defined SSE || defined SSE2 || defined SSE3)
@@ -171,55 +175,72 @@ double square_norm(spinor * const P, const int N, const int parallel) {
 #elif (defined BGQ && defined XLC)
 
 double square_norm(spinor * const P, const int N, const int parallel) {
-  vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
-  double res ALIGN;
+  double ALIGN res = 0.0;
 #ifdef MPI
-  double res2 ALIGN;
+  double ALIGN mres;
 #endif
-  double *s ALIGN;
-  s = (double*) P;
-  __prefetch_by_load(s+24);
-  x0 = vec_ld(0, s);
-  x1 = vec_ld(0, s+4);
-  x2 = vec_ld(0, s+8);
-  x3 = vec_ld(0, s+12);
-  x4 = vec_ld(0, s+16);
-  x5 = vec_ld(0, s+20);
-  s += 24;
-  y0 = vec_mul(x0, x0);
-  y1 = vec_mul(x1, x1);
-  y2 = vec_mul(x2, x2);
-  y3 = vec_mul(x3, x3);
-  y4 = vec_mul(x4, x4);
-  y5 = vec_mul(x5, x5);
 
+#ifdef OMP
+#pragma omp parallel
+  {
+    int thread_num = omp_get_thread_num();
+#endif
+  vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
+  vector4double ds,tt,tr,ts,kc,ks,buffer;
+  double *s ALIGN;
+
+  ks = vec_splats(0.);
+  kc = vec_splats(0.);
+
+#ifndef OMP
 #pragma unroll(4)
-  for(int i = 1; i < N; i++) {
-//    __prefetch_by_load(s+48);
+#else
+#pragma omp for
+#endif
+  for(int i = 0; i < N; i++) {
+    s = (double*)((spinor*) P+i);
+    __prefetch_by_load(P+i+1);
     x0 = vec_ld(0, s);
     x1 = vec_ld(0, s+4);
     x2 = vec_ld(0, s+8);
     x3 = vec_ld(0, s+12);
     x4 = vec_ld(0, s+16);
     x5 = vec_ld(0, s+20);
-    y0 = vec_madd(x0, x0, y0);
-    y1 = vec_madd(x1, x1, y1);
-    y2 = vec_madd(x2, x2, y2);
-    y3 = vec_madd(x3, x3, y3);
-    y4 = vec_madd(x4, x4, y4);
-    y5 = vec_madd(x5, x5, y5);
-    s+=24;
+    y0 = vec_mul(x0, x0);
+    y1 = vec_mul(x1, x1);
+    y2 = vec_mul(x2, x2);
+    y3 = vec_mul(x3, x3);
+    y4 = vec_mul(x4, x4);
+    y5 = vec_mul(x5, x5);
+
+    x0 = vec_add(y0, y1);
+    x1 = vec_add(y2, y3);
+    x2 = vec_add(y4, y5);
+    x3 = vec_add(x0, x1);
+    ds = vec_add(x2, x3);
+
+    tr = vec_add(ds, kc);
+    ts = vec_add(tr, ks);
+    tt = vec_sub(ts, ks);
+    ks = ts;
+    kc = vec_sub(tr, tt);
   }
-  x0 = vec_add(y0, y1);
-  x1 = vec_add(y2, y3);
-  x2 = vec_add(y4, y5);
-  y0 = vec_add(x0, x1);
-  y1 = vec_add(x2, y0);
-  res = y1[0] + y1[1] + y1[2] + y1[3];
+  buffer = vec_add(kc,ks);
+
+#ifdef OMP
+  g_omp_acc_re[thread_num] = buffer[0] + buffer[1] + buffer[2] + buffer[3];
+  } /* OpenMP closing brace */
+
+  for(int i = 0; i < omp_num_threads; ++i)
+    res += g_omp_acc_re[i];
+#else
+  res = buffer[0] + buffer[1] + buffer[2] + buffer[3];
+#endif
+
 #  ifdef MPI
   if(parallel) {
-    MPI_Allreduce(&res, &res2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    return res2;
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return mres;
   }
 #  endif
 
@@ -229,17 +250,29 @@ double square_norm(spinor * const P, const int N, const int parallel) {
 
 #else 
 
-double square_norm(spinor * const P, const int N, const int parallel)
+double square_norm(const spinor * const P, const int N, const int parallel)
 {
-  int ix;
+  double ALIGN res = 0.0;
+#ifdef MPI
+  double ALIGN mres;
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+    int thread_num = omp_get_thread_num();
+    g_omp_acc_re[thread_num] = 0.0;
+#endif
   double ALIGN ks,kc,ds,tr,ts,tt;
-  spinor *s;
+  const spinor *s;
   
   ks = 0.0;
   kc = 0.0;
   
-  /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-  for (ix  =  0; ix < N; ix++) {
+#ifdef OMP
+#pragma omp for
+#endif    
+  for (int ix  =  0; ix < N; ix++) {
     s = P + ix;
     
     ds = conj(s->s0.c0) * s->s0.c0 +
@@ -254,21 +287,36 @@ double square_norm(spinor * const P, const int N, const int parallel)
          conj(s->s3.c0) * s->s3.c0 +
          conj(s->s3.c1) * s->s3.c1 +
          conj(s->s3.c2) * s->s3.c2;
-    
+
     tr = ds + kc;
     ts = tr + ks;
     tt = ts-ks;
     ks = ts;
     kc = tr-tt;
   }
-  kc = ks + kc;
+  kc=ks+kc;
+
+#ifdef OMP
+  g_omp_acc_re[thread_num] = kc;
+
+  } /* OpenMP closing brace */
+
+  /* having left the parallel section, we can now sum up the Kahan
+     corrected sums from each thread into kc */
+  for(int i = 0; i < omp_num_threads; ++i)
+    res += g_omp_acc_re[i];
+#else
+  res = kc;
+#endif
+
 #  ifdef MPI
   if(parallel) {
-    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    return ks;
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return mres;
   }
 #endif
-  return kc;
+
+  return res;
 }
 
 #endif

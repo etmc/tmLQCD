@@ -23,7 +23,7 @@
 #include "su3.h"
 
 /* Returns the real part of the scalar product (*R,*S) */
-double scalar_prod_r(spinor * const S,spinor * const R, const int N, const int parallel);
+double scalar_prod_r(const spinor * const S, const spinor * const R, const int N, const int parallel);
 double scalar_prod_r_su3vect(su3_vector * const S,su3_vector * const R, const int N, const int parallel);
 
 #endif

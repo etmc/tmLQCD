@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2012 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -17,11 +17,21 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _GET_STAPLES_H
-#define _GET_STAPLES_H
+/* The two arrays 
+ *
+ *   g_omp_acc_re
+ *   g_omp_acc_cp
+ *
+ * have as many elements as there are threads (set by ompnumthreads input parameter,
+ * stored in omp_num_threads configuration variable). They are initialiazed
+ * upon program launch and serve to hold thread-local values over the boundaries
+ * of parallel sections, such as for Kahan summations. _re is of type
+ * "double" while _cp is of type "_Complex double". They are declared in global.h */
 
-#include"su3.h"
+#ifndef _INIT_OMP_ACCUMULATORS_H
+#define _INIT_OMP_ACCUMULATORS_H
 
-void get_staples(su3* const staple, const int x, const int mu, const su3 ** in_gauge_field);
+int init_omp_accumulators(int num);
+void free_omp_accumulators();
 
 #endif

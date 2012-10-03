@@ -23,7 +23,7 @@
 #include "su3.h"
 
 /* Makes the difference (*Q) = (*R) - (*S) */
-void diff(spinor * const Q, spinor * const R, spinor * const S, const int N);
+void diff(spinor * const Q, const spinor * const R, const spinor * const S, const int N);
 void diff_su3vect(su3_vector * const Q, su3_vector * const R, su3_vector * const S, const int N);
 
 

@@ -37,6 +37,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "global.h"
 #include "sse.h"
 #include "su3.h"
@@ -45,18 +48,29 @@
 #include "measure_rectangles.h"
 
 
-double measure_rectangles(su3 ** const gf) {
-  int i, j, k, mu, nu;
-  static su3 pr1, pr2, tmp; 
-  su3 *v = NULL , *w = NULL;
-  static double ga, ac; 
+double measure_rectangles(const su3 ** const gf) {
+  static double res;
 #ifdef MPI
-  static double gas;
+  double ALIGN mres;
 #endif
-  static double ks, kc, tr, ts, tt;
-  kc=0.0; ks=0.0;
+
+#ifdef OMP
+#pragma omp parallel
+  {
+  int thread_num = omp_get_thread_num();
+#endif
+
+  int i, j, k, mu, nu;
+  su3 ALIGN pr1, pr2, tmp; 
+  const su3 *v = NULL , *w = NULL;
+  double ALIGN ac, ks, kc, tr, ts, tt;
 
   if(g_update_rectangle_energy) {
+    kc = 0.0;
+    ks = 0.0;
+#ifdef OMP
+#pragma omp for
+#endif
     for (i = 0; i < VOLUME; i++) {
       for (mu = 0; mu < 4; mu++) {
 	for (nu = 0; nu < 4; nu++) { 
@@ -103,12 +117,30 @@ double measure_rectangles(su3 ** const gf) {
 	}
       }
     }
-    ga=(kc+ks)/3.0;
+    kc=(kc+ks)/3.0;
+#ifdef OMP
+    g_omp_acc_re[thread_num] = kc;
+#else
+    res = kc;
+#endif
+  }
+
+#ifdef OMP
+  } /* OpenMP parallel closing brace */
+  
+  if(g_update_rectangle_energy) {
+    res = 0.0;
+    for(int i = 0; i < omp_num_threads; ++i)
+      res += g_omp_acc_re[i];
+#else
+  if(g_update_rectangle_energy) {
+#endif
 #ifdef MPI
-    MPI_Allreduce(&ga, &gas, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    ga = gas;
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    res = mres;
 #endif
     g_update_rectangle_energy = 0;
   }
-  return ga;
+
+  return res;
 }

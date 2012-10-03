@@ -68,6 +68,9 @@
 #include "boundary.h"
 #include "init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
+#ifdef BGQ
+#  include"DirectPut.h"
+#endif
 #include "Hopping_Matrix.h"
 
 #if defined _USE_HALFSPINOR
