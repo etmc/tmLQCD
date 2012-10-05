@@ -294,7 +294,6 @@ void Qtm_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
 void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
                      spinor * const k_strange, spinor * const k_charm, const _Complex double z){
 
-  int ix;
   spinor *r, *s;
   su3_vector ALIGN phi1;
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
@@ -343,9 +342,9 @@ void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   /************ loop over all lattice sites ************/
 
 #ifdef OMP
-#pragma omp parallel for private(r) private(s) private(phi1) private(ix)
+#pragma omp parallel for private(r) private(s) private(phi1)
 #endif
-  for(ix = 0; ix < (VOLUME/2); ix++){
+  for(int ix = 0; ix < (VOLUME/2); ix++){
 
     r=l_strange + ix;
     s=k_strange + ix;
@@ -649,7 +648,7 @@ void mul_one_pm_iconst(spinor * const l, spinor * const k,
 #ifdef OMP
 #pragma omp for
 #endif
-  for(int ix = 0; ix < (VOLUME/2); ++ix){
+  for(unsigned int ix = 0; ix < (VOLUME/2); ++ix){
     r=l + ix;
     s=k + ix;
     /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
