@@ -39,6 +39,7 @@
 #include "linsolve.h"
 #include "linalg_eo.h"
 #include "tm_operators.h"
+#include "clovertm_operators.h"
 #include "tm_operators_nd.h"
 
 
@@ -181,7 +182,7 @@ void Qtm_dagger_ndpsi(spinor * const l_strange, spinor * const l_charm,
  * on a half spinor
  ******************************************/
 void Qtm_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
-                           spinor * const k_strange, spinor * const k_charm){
+		  spinor * const k_strange, spinor * const k_charm){
 
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
 
@@ -564,7 +565,7 @@ void H_eo_tm_ndpsi(spinor * const l_strange, spinor * const l_charm,
 }
 
 void M_ee_inv_ndpsi(spinor * const l_strange, spinor * const l_charm, 
-		 spinor * const k_strange, spinor * const k_charm) {
+		    const spinor * const k_strange, const spinor * const k_charm) {
   
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
 
@@ -580,6 +581,20 @@ void M_ee_inv_ndpsi(spinor * const l_strange, spinor * const l_charm,
   mul_r(l_strange, nrm, l_strange, VOLUME/2);
   mul_r(l_charm, nrm, l_charm, VOLUME/2);
 
+}
+
+// for this routine we need to have sw_invert_nd and sw_term called before hand
+// and the clover term must be initialised
+void Msw_ee_inv_ndpsi(spinor * const l_strange, spinor * const l_charm, 
+		      const spinor * const k_strange, const spinor * const k_charm) {
+  
+
+  /* recall:   strange <-> up    while    charm <-> dn   */
+
+  assign_mul_one_sw_pm_imu_eps(EE, l_strange, l_charm, k_strange, k_charm, -g_mubar, g_epsbar);
+
+  clover_inv_nd(EE, l_strange, l_charm);
+  return;
 }
 
 

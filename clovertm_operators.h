@@ -45,4 +45,20 @@ void Msw_minus_psi(spinor * const l, spinor * const k);
 void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const double mu);
 void init_sw_fields();
 
+void clover_nd(const int ieo, 
+	       spinor * const l_s, spinor * const l_c, 
+	       const spinor * const k_s, const spinor * const k_c, 
+	       const spinor * const j_s, const spinor * const j_c,
+	       const double mubar, const double epsbar);
+void clover_gamma5_nd(const int ieo, 
+		      spinor * const l_s, spinor * const l_c, 
+		      const spinor * const k_s, const spinor * const k_c, 
+		      const spinor * const j_s, const spinor * const j_c,
+		      const double mubar, const double epsbar);
+void clover_inv_nd(const int ieo, spinor * const l_s, spinor * const l_c);
+
+void assign_mul_one_sw_pm_imu_eps(const int ieo, 
+				  spinor * const k_s, spinor * const k_c, 
+				  const spinor * const l_s, const spinor * const l_c,
+				  const double mu, const double eps);
 #endif

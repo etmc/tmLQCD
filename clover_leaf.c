@@ -704,7 +704,7 @@ inline void add_shift_6x6(_Complex double a[6][6], const double mshift) {
 
 // This function computes
 //
-// 1/((1+T)^2 + barmu^2 - bareps^)^{-1}
+// 1/((1+T)^2 + barmu^2 - bareps^2)^{-1}
 //
 // for all even x,
 // which is stored in sw_inv[0-(VOLUME/2-1)]
@@ -738,10 +738,12 @@ void sw_invert_nd(const double mshift) {
       populate_6x6_matrix(a, &v, 3, 0);
       populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
 
+      // compute (1+T)^2 and store in b
       mult_6x6(b, a, a);
-      // we add the mass shift term
+      // we add the mass shift term, which is a real number
       add_shift_6x6(b, mshift);
       // so b = (1+T)^2 + shift
+      // now invert this matrix
       six_invert(&err, b); 
       // here we need to catch the error! 
       if(err > 0 && g_proc_id == 0) {
