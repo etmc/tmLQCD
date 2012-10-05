@@ -61,7 +61,6 @@
 #include "linalg_eo.h"
 #include <complex.h>
 #include "solver/solver.h"
-#include "solver/gram-schmidt_bi.h"
 #include "solver/gram-schmidt.h"
 #include "solver/quicksort.h"
 #include "jdher.h"
