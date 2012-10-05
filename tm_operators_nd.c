@@ -42,7 +42,9 @@
 #include "tm_operators_nd.h"
 
 
-void mul_one_minus_iconst(spinor * const l, spinor * const k, const double mu);
+void mul_one_pm_iconst(spinor * const l, spinor * const k, 
+		       const double mu_, const int sign_);
+
 
 /* external functions */
 
@@ -68,8 +70,8 @@ void Qtm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_strange);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_charm);
 
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX], g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX], g_mubar, -1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], g_mubar, +1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -83,8 +85,8 @@ void Qtm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX], k_strange, -g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+1], k_charm, g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX], k_strange, g_mubar, +1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+1], k_charm, g_mubar, -1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX], k_charm, -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+1], k_strange, -g_epsbar, VOLUME/2);
@@ -127,8 +129,8 @@ void Qtm_dagger_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar, -1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], g_mubar, +1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -142,8 +144,8 @@ void Qtm_dagger_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], k_charm, -g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], k_strange, g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+2], k_charm, g_mubar, +1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+3], k_strange, g_mubar, -1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], k_strange, -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], k_charm, -g_epsbar, VOLUME/2);
@@ -188,8 +190,8 @@ void Qtm_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar, -1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], g_mubar, +1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -201,8 +203,8 @@ void Qtm_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], k_charm, -g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], k_strange, g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+2], k_charm, g_mubar, +1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+3], k_strange, g_mubar, -1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], k_strange, -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], k_charm, -g_epsbar, VOLUME/2);
@@ -232,8 +234,8 @@ void Qtm_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+7]);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+6]);
 
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar, -1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], g_mubar, +1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -245,8 +247,8 @@ void Qtm_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+7], -g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+6], g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+7], g_mubar, +1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+6], g_mubar, -1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+6], -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+7], -g_epsbar, VOLUME/2);
@@ -305,8 +307,8 @@ void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX], g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX], g_mubar, -1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], g_mubar, +1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -321,8 +323,8 @@ void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX], k_charm, -g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+1], k_strange, g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX], k_charm, g_mubar, +1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+1], k_strange, g_mubar, -1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX], k_strange, -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+1], k_charm, -g_epsbar, VOLUME/2);
@@ -442,8 +444,8 @@ void Qtm_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k){
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar, -1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], g_mubar, +1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -457,8 +459,8 @@ void Qtm_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k){
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], k_charm, -g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], k_strange, g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+2], k_charm, g_mubar, +1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+3], k_strange, g_mubar, -1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], k_strange, -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], k_charm, -g_epsbar, VOLUME/2);
@@ -488,8 +490,8 @@ void Qtm_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k){
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+7]);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+6]);
 
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], -g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], g_mubar, -1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], g_mubar, +1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
@@ -503,8 +505,8 @@ void Qtm_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k){
   Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+7], -g_mubar);
-  mul_one_minus_iconst(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+6], g_mubar);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+7], g_mubar, +1);
+  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+6], g_mubar, -1);
 
   assign_add_mul_r(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+6], -g_epsbar, VOLUME/2);
   assign_add_mul_r(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+7], -g_epsbar, VOLUME/2);
@@ -551,8 +553,8 @@ void H_eo_tm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX], k_strange);
   Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX+1], k_charm);
 
-  mul_one_minus_iconst(l_strange, g_spinor_field[DUM_MATRIX+1], g_mubar);
-  mul_one_minus_iconst(l_charm, g_spinor_field[DUM_MATRIX], -g_mubar);
+  mul_one_pm_iconst(l_strange, g_spinor_field[DUM_MATRIX+1], g_mubar, -1);
+  mul_one_pm_iconst(l_charm, g_spinor_field[DUM_MATRIX], g_mubar, +1);
 
   assign_add_mul_r(l_strange, g_spinor_field[DUM_MATRIX], g_epsbar, VOLUME/2);
   assign_add_mul_r(l_charm, g_spinor_field[DUM_MATRIX+1], g_epsbar, VOLUME/2);
@@ -570,8 +572,8 @@ void M_ee_inv_ndpsi(spinor * const l_strange, spinor * const l_charm,
 
   /* recall:   strange <-> up    while    charm <-> dn   */
 
-  mul_one_minus_iconst(l_strange, k_strange, g_mubar);
-  mul_one_minus_iconst(l_charm, k_charm, -g_mubar);
+  mul_one_pm_iconst(l_strange, k_strange, g_mubar, -1);
+  mul_one_pm_iconst(l_charm, k_charm, g_mubar, +1);
 
   assign_add_mul_r(l_strange, k_charm, g_epsbar, VOLUME/2);
   assign_add_mul_r(l_charm, k_strange, g_epsbar, VOLUME/2);
@@ -629,48 +631,20 @@ void mul_one_pm_itau2(spinor * const p, spinor * const q,
   mul_r(q, fac, q, N);
 }
 
-void mul_one_minus_imubar(spinor * const l, spinor * const k, const double mu) {
+void mul_one_pm_iconst(spinor * const l, spinor * const k, 
+		       const double mu_, const int sign_) {
 #ifdef OMP
 #pragma omp parallel
   {
 #endif
-      
+
   spinor *r, *s;
   su3_vector ALIGN phi1;
-
-  /************ loop over all lattice sites ************/
-#ifdef OMP
-#pragma omp for
-#endif
-  for(int ix = 0; ix < (VOLUME/2); ++ix){
-    r=l + ix;
-    s=k + ix;
-    /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
-    _complex_times_vector(phi1, (1. - mu * I), s->s0);
-    _vector_assign(r->s0, phi1);
-    _complex_times_vector(phi1, (1. - mu * I), s->s1);
-    _vector_assign(r->s1, phi1);
-    _complex_times_vector(phi1, (1. + mu * I), s->s2);
-    _vector_assign(r->s2, phi1);
-    _complex_times_vector(phi1, (1. + mu * I), s->s3);
-    _vector_assign(r->s3, phi1);
+  double mu = mu_;
+  if(sign_ < 0) {
+    mu = -mu_;
   }
 
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
-}
-
-
-void mul_one_plus_imubar(spinor * const l, spinor * const k){
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-
-  spinor *r, *s;
-  su3_vector ALIGN phi1;
-
   /************ loop over all lattice sites ************/
 #ifdef OMP
 #pragma omp for
@@ -679,13 +653,13 @@ void mul_one_plus_imubar(spinor * const l, spinor * const k){
     r=l + ix;
     s=k + ix;
     /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
-    _complex_times_vector(phi1, (1. + g_mubar * I), s->s0);
+    _complex_times_vector(phi1, (1. + mu * I), s->s0);
     _vector_assign(r->s0, phi1);
-    _complex_times_vector(phi1, (1. + g_mubar * I), s->s1);
+    _complex_times_vector(phi1, (1. + mu * I), s->s1);
     _vector_assign(r->s1, phi1);
-    _complex_times_vector(phi1, (1. - g_mubar * I), s->s2);
+    _complex_times_vector(phi1, (1. - mu * I), s->s2);
     _vector_assign(r->s2, phi1);
-    _complex_times_vector(phi1, (1. - g_mubar * I), s->s3);
+    _complex_times_vector(phi1, (1. - mu * I), s->s3);
     _vector_assign(r->s3, phi1);
   }
 
@@ -695,6 +669,7 @@ void mul_one_plus_imubar(spinor * const l, spinor * const k){
 
   return;
 }
+
 
 /*  calculates P(Q Q^dagger) for the nondegenerate case */
 

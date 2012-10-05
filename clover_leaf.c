@@ -257,7 +257,7 @@ void six_invert(int* ifail ,_Complex double a[6][6])
     p[k] = conj(sigma) * a[k][k];
     q = conj(sigma) * sigma;
     if (q < tiny_t)
-      *ifail++;
+      (*ifail)++;
     d[k] = -conj(sigma) / q;
 
     /* reflect all columns to the right */
@@ -274,7 +274,7 @@ void six_invert(int* ifail ,_Complex double a[6][6])
   sigma = a[nm1][nm1];
   q = conj(sigma) * sigma;
   if (q < tiny_t)
-    *ifail++;
+    (*ifail)++;
   d[nm1] = conj(sigma) / q;
 
   /*  inversion of upper triangular matrix in place
@@ -540,7 +540,7 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
       // we add the twisted mass term prop to tau^3
       if(i == 0) add_tm(a, mu);
       else add_tm(a, -mu);
-      det[i] = six_det(a);
+      six_det(&det[i], a);
     }
     // and compute the tr log (or log det)
     // for the 2x2 matrix in flavour space
@@ -575,7 +575,7 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
 }
 
 
-void mult_6x6(_Complex double a[6][6], const _Complex double b[6][6], const _Complex double d[6][6]) {
+void mult_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double d[6][6]) {
 
   for(int i = 0; i < 6; i++) {
     for(int j = 0; j < 6; j++) {
@@ -716,11 +716,18 @@ inline void add_shift_6x6(_Complex double a[6][6], const double mshift) {
 // must be done elsewhere because of flavour structure
 
 void sw_invert_nd(const double mshift) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   int err=0;
   int i, x;
-  static su3 v;
-  static _Complex double a[6][6], b[6][6];
+  su3 ALIGN v;
+  _Complex double ALIGN a[6][6], b[6][6];
 
+#ifdef OMP
+#pragma omp for
+#endif
   for(int icx = 0; icx < (VOLUME/2); icx++) {
     x = g_eo2lexic[icx];
 
@@ -735,7 +742,7 @@ void sw_invert_nd(const double mshift) {
       // we add the mass shift term
       add_shift_6x6(b, mshift);
       // so b = (1+T)^2 + shift
-      err = six_invert(b); 
+      six_invert(&err, b); 
       // here we need to catch the error! 
       if(err > 0 && g_proc_id == 0) {
 	printf("# inversion failed in six_invert_nd code %d\n", err);
@@ -749,6 +756,9 @@ void sw_invert_nd(const double mshift) {
       get_3x3_block_matrix(&sw_inv[icx][3][i], b, 3, 0);
     }
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
