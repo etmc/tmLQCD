@@ -2775,13 +2775,13 @@ void benchmark(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter)
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     // x2 because 2x Hopping per iteration
-    double benchres = 1320.0*2*(VOLUME/2)* 1000 / timeelapsed / 1.0e9;
+    double benchres = 1608.0*2*(VOLUME/2)* 1000 / timeelapsed / 1.0e9;
     printf("Benchmark: %f Gflops\n", benchres); 
   #else
     stop = MPI_Wtime();
     timeelapsed = (double) (stop-start);
     // x2 because 2x Hopping per iteration
-    double benchres = 1320.0*2*(g_nproc*VOLUME/2)* 1000 / timeelapsed / 1.0e9;
+    double benchres = 1608.0*2*(g_nproc*VOLUME/2)* 1000 / timeelapsed / 1.0e9;
     if (g_proc_id == 0) {
       printf("Benchmark: %f Gflops\n", benchres); 
     }
@@ -2894,13 +2894,13 @@ void benchmark2(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     // x8 because 8x Hopping per iteration
-    double benchres = 1320.0*8*(VOLUME/2)* 100 / timeelapsed / 1.0e9;
+    double benchres = 1608.0*8*(VOLUME/2)* 100 / timeelapsed / 1.0e9;
     printf("Benchmark: %f Gflops\n", benchres); 
   #else
     stop = MPI_Wtime();
     timeelapsed = (double) (stop-start);
     // 8 because 8x Hopping per iteration
-    double benchres = 1320.0*8*(g_nproc*VOLUME/2)* 100 / timeelapsed / 1.0e9;
+    double benchres = 1608.0*8*(g_nproc*VOLUME/2)* 100 / timeelapsed / 1.0e9;
     if (g_proc_id == 0) {
       printf("Benchmark: %f Gflops\n", benchres); 
     }
