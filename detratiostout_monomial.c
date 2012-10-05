@@ -48,14 +48,21 @@
 
 #include "monomial.h"
 #include "boundary.h"
-#include "detratio_monomial.h"
+#include "detratiostout_monomial.h"
+
+#include <smearing/stout.h>
 
 extern int ITER_MAX_BCG;
 extern int ITER_MAX_CG;
 
-/* think about chronological solver ! */
+/* FIXME We need a stout control structure. I'm going to initialize it here, 
+ * where we have full control over it and don't interfere with the rest of the code.
+ * This should clearly not be some obscure global, eventually!
+ */
 
-void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
+stout_control * stout = NULL;
+
+void detratiostout_derivative(const int no, hamiltonian_field_t * const hf) {
   int saveiter = ITER_MAX_BCG;
 
   monomial * mnl = &monomial_list[no];
@@ -78,7 +85,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     boundary(mnl->kappa2);
 
     if(mnl->solver != CG) {
-      fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n");
+      fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratiostout_monomial.c)\n");
     }
 
     Qtm_plus_psi(g_spinor_field[DUM_DERI+2], mnl->pf);
@@ -202,7 +209,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
 }
 
 
-void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
+void detratiostout_heatbath(const int id, hamiltonian_field_t * const hf) {
   int saveiter = ITER_MAX_BCG;
   monomial * mnl = &monomial_list[id];
 
@@ -249,7 +256,7 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     }
   }
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called detratio_heatbath for id %d %d energy %f\n", id, mnl->even_odd_flag, mnl->energy0);
+    printf("called detratiostout_heatbath for id %d %d energy %f\n", id, mnl->even_odd_flag, mnl->energy0);
   }
   g_mu = g_mu1;
   boundary(g_kappa);
@@ -257,7 +264,7 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   return;
 }
 
-double detratio_acc(const int id, hamiltonian_field_t * const hf) {
+double detratiostout_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   int saveiter = ITER_MAX_BCG;
   int save_sloppy = g_sloppy_precision_flag;
@@ -296,7 +303,7 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
   boundary(g_kappa);
   ITER_MAX_BCG = saveiter;
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called detratio_acc for id %d %d dH = %1.4e\n", 
+    printf("called detratiostout_acc for id %d %d dH = %1.4e\n", 
 	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);
   }
   return(mnl->energy1 - mnl->energy0);

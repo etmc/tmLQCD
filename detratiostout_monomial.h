@@ -22,8 +22,8 @@
 
 #include "hamiltonian_field.h"
 
-void detratio_derivative(const int no, hamiltonian_field_t * const hf);
-double detratio_acc(const int no, hamiltonian_field_t * const hf);
-void detratio_heatbath(const int no, hamiltonian_field_t * const hf);
+void detratiostout_derivative(const int no, hamiltonian_field_t * const hf);
+double detratiostout_acc(const int no, hamiltonian_field_t * const hf);
+void detratiostout_heatbath(const int no, hamiltonian_field_t * const hf);
 
 #endif
