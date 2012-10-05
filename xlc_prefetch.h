@@ -26,7 +26,9 @@
 #ifndef _XLC_PREFETCH_H
 #define _XLC_PREFETCH_H
 
-#ifdef XLC
+/* disable prefetching on BGQ */
+
+#if (defined XLC && !defined BGQ)
 
 #define _prefetch_spinor(addr)			    \
   __dcbt(((char*)((unsigned long int)(addr))));	    \
