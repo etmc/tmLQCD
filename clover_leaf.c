@@ -498,12 +498,23 @@ double sw_trace(const int ieo, const double mu) {
 // if eps is set to zero
 
 double sw_trace_nd(const int ieo, const double mu, const double eps) {
-  int i,x,icx,ioff;
-  static su3 v;
-  static _Complex double a[6][6];
-  static double tra;
-  static double ks,kc,tr,ts,tt;
-  static _Complex double det[2];
+  double ALIGN res = 0.0;
+#ifdef MPI
+  double ALIGN mres;
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+  int thread_num = omp_get_thread_num();
+#endif
+
+  int x,ioff;
+  su3 ALIGN v;
+  _Complex double ALIGN a[6][6];
+  double ALIGN tra;
+  double ALIGN ks,kc,tr,ts,tt;
+  _Complex double ALIGN det[2];
   double se = (eps*eps)*(eps*eps)*(eps*eps);
   ks=0.0;
   kc=0.0;
@@ -514,9 +525,13 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
   else {
     ioff=(VOLUME+RAND)/2;
   }
-  for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
-    for(i=0;i<2;i++) {
+    for(unsigned int i = 0; i < 2; i++) {
       populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
       populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
       _su3_dagger(v, sw[x][1][i]); 
@@ -539,11 +554,23 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
     kc=tr-tt;
   }
   kc=ks+kc;
-#ifdef MPI
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return(ks);
+  
+#ifdef OMP
+  g_omp_acc_re[thread_num] = kc;
+  } /* OpenMP parallel closing brace */
+
+  for(int i = 0; i < omp_num_threads; ++i) {
+    res += g_omp_acc_re[i];
+  }
 #else
-  return(kc);
+  res=kc;
+#endif
+
+#ifdef MPI
+  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  return(mres);
+#else
+  return(res);
 #endif
 }
 
@@ -561,7 +588,7 @@ void mult_6x6(_Complex double a[6][6], const _Complex double b[6][6], const _Com
   return;
 }
 
-void copy_6x6(_Complex double a[6][6], _Complex double b[6][6]) {
+void copy_6x6(_Complex double a[6][6], const _Complex double b[6][6]) {
   for(int i = 0; i < 6; i++) {
     for(int j = 0; j < 6; j++) {
       a[i][j] = b[i][j];
