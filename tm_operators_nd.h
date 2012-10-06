@@ -52,10 +52,10 @@ void H_eo_tm_ndpsi(spinor * const l_strange, spinor * const l_charm,
 	     const int ieo);
 
 void M_ee_inv_ndpsi(spinor * const l_strange, spinor * const l_charm, 
-		    const spinor * const k_strange, const spinor * const k_charm);
+		    spinor * const k_strange, spinor * const k_charm);
 
 void Msw_ee_inv_ndpsi(spinor * const l_strange, spinor * const l_charm, 
-		      const spinor * const k_strange, const spinor * const k_charm);
+		      spinor * const k_strange, spinor * const k_charm);
 
 void Q_test_epsilon(spinor * const l_strange, spinor * const l_charm,
                     spinor * const k_strange, spinor * const k_charm);
