@@ -333,8 +333,8 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   /* Reconstruct the even sites                */
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new_s);
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI+1], Odd_new_c);
-  M_ee_inv_ndpsi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3],
-		 g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+  Msw_ee_inv_ndpsi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3],
+		   g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
   
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */

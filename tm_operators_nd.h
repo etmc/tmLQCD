@@ -27,10 +27,12 @@ void mul_one_pm_itau2(spinor * const p, spinor * const q,
 		      const double sign, const int N);
 
 void Qtm_ndpsi(spinor * const l_strange, spinor * const l_charm,
-                     spinor * const k_strange,  spinor * const k_charm);
+	       spinor * const k_strange,  spinor * const k_charm);
+void Qsw_ndpsi(spinor * const l_strange, spinor * const l_charm,
+	       spinor * const k_strange, spinor * const k_charm);
 
 void Qtm_dagger_ndpsi(spinor * const l_strange, spinor * const l_charm,
-                           spinor * const k_strange, spinor * const k_charm);
+		      spinor * const k_strange, spinor * const k_charm);
 void Qsw_dagger_ndpsi(spinor * const l_strange, spinor * const l_charm,
 		      spinor * const k_strange, spinor * const k_charm);
 
