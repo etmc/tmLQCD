@@ -161,7 +161,7 @@ void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
 
     // this is the one in flavour and colour space
     // twisted mass term is treated in clover, sw_inv and
-    // clover_gamma5
+    // clover_gamma5 and the corresponding nd versions
     _su3_one(sw[x][0][0]);
     _su3_one(sw[x][2][0]);
     _su3_one(sw[x][0][1]);

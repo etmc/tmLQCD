@@ -34,6 +34,8 @@ void Qtm_dagger_ndpsi(spinor * const l_strange, spinor * const l_charm,
 
 void Qtm_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
                   spinor * const k_strange, spinor * const k_charm);
+void Qsw_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
+		  spinor * const k_strange, spinor * const k_charm);
 
 void Qtm_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k);
 

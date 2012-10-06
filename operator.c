@@ -291,6 +291,7 @@ void op_invert(const int op_id, const int index_start) {
   else if(optr->type == DBTMWILSON || optr->type == DBCLOVER) {
     g_mubar = optr->mubar;
     g_epsbar = optr->epsbar;
+    g_c_sw = 0.;
     if(optr->type == DBCLOVER) {
       g_c_sw = optr->c_sw;
       if (g_cart_id == 0 && g_debug_level > 1) {
@@ -298,7 +299,7 @@ void op_invert(const int op_id, const int index_start) {
       }
       init_sw_fields(VOLUME);
       sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw); 
-      sw_invert_nd(g_mubar*g_mubar-g_epsbar*g_epsbar);
+      sw_invert_nd(optr->mubar*optr->mubar-optr->epsbar*optr->epsbar);
     }
 
     for(i = 0; i < SourceInfo.no_flavours; i++) {
