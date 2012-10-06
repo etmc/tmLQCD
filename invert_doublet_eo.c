@@ -298,6 +298,10 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}
   Msw_ee_inv_ndpsi(Even_new_s, Even_new_c, 
 		   Even_s, Even_c);
+  printf("strange %e %e\n", creal(Even_new_s[0].s0.c0), cimag(Even_new_s[0].s0.c0));
+  printf("strange %e %e\n", creal(Even_new_s[0].s2.c0), cimag(Even_new_s[0].s2.c0));
+  printf("charm %e %e\n", creal(Even_new_c[0].s0.c0), cimag(Even_new_c[0].s0.c0));
+  printf("charm %e %e\n", creal(Even_new_c[0].s2.c0), cimag(Even_new_c[0].s2.c0));
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new_s);
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI+1], Even_new_c);
   
@@ -323,7 +327,7 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 		   VOLUME/2, &Qsw_pm_ndpsi);
   
   
-  Qtm_dagger_ndpsi(Odd_new_s, Odd_new_c,
+  Qsw_dagger_ndpsi(Odd_new_s, Odd_new_c,
 		   Odd_new_s, Odd_new_c);
   
   /* Reconstruct the even sites                */

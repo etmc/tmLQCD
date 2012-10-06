@@ -122,7 +122,7 @@ void Qtm_ndpsi(spinor * const l_strange, spinor * const l_charm,
  * on a half spinor
  ******************************************/
 void Qtm_dagger_ndpsi(spinor * const l_strange, spinor * const l_charm,
-                           spinor * const k_strange, spinor * const k_charm){
+		      spinor * const k_strange, spinor * const k_charm) {
 
   double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
 
@@ -162,6 +162,28 @@ void Qtm_dagger_ndpsi(spinor * const l_strange, spinor * const l_charm,
   mul_r(l_charm, phmc_invmaxev, l_charm, VOLUME/2);
   mul_r(l_strange, phmc_invmaxev, l_strange, VOLUME/2);
 
+}
+
+void Qsw_dagger_ndpsi(spinor * const l_strange, spinor * const l_charm,
+		      spinor * const k_strange, spinor * const k_charm) {
+
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
+
+  assign_mul_one_sw_pm_imu_eps(EE, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], 
+			       g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], -g_mubar, g_epsbar);
+  clover_inv_nd(EE, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3]);
+
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+2]);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+3]);
+
+  clover_gamma5_nd(OO, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], 
+  		   k_charm, k_strange,
+  		   g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1],
+  		   -g_mubar, -g_epsbar);
+  mul_r(l_charm, phmc_invmaxev, g_spinor_field[DUM_MATRIX+2], VOLUME/2);
+  mul_r(l_strange, phmc_invmaxev, g_spinor_field[DUM_MATRIX+3], VOLUME/2);
+  return;
 }
 
 
@@ -271,8 +293,6 @@ void Qtm_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
 
 void Qsw_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
 		  spinor * const k_strange, spinor * const k_charm) {
-
-  double nrm = 1./(1.+g_mubar*g_mubar-g_epsbar*g_epsbar);
 
   /* FIRST THE  Qhat(2x2)^dagger  PART*/
   /* Here the  M_oe Mee^-1 M_eo  implementation  */
