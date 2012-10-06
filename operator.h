@@ -30,6 +30,7 @@
 #define WILSON 2
 #define DBTMWILSON 3
 #define CLOVER 4
+#define DBCLOVER 5
 
 #define max_no_operators 10
 

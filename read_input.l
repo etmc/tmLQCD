@@ -268,6 +268,7 @@ inline void rmQuotes(char *str){
 %x WILSONOP
 %x OVERLAPOP
 %x CLOVEROP
+%x DBCLOVEROP
 %x TMSOLVER
 %x DBTMSOLVER
 %x OVSOLVER
@@ -465,6 +466,9 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "CLOVER")==0) {
     optr->type = CLOVER;
   }
+  else if(strcmp(yytext, "DBCLOVER")==0) {
+    optr->type = DBCLOVER;
+  }
   else if(strcmp(yytext, "DBTMWILSON")==0) {
     optr->type = DBTMWILSON;
   }
@@ -488,10 +492,11 @@ inline void rmQuotes(char *str){
   else if(optr->type == CLOVER) BEGIN(CLOVEROP);
   else if(optr->type == TMWILSON) BEGIN(TMOP);
   else if(optr->type == DBTMWILSON) BEGIN(DBTMOP);
+  else if(optr->type == DBCLOVER) BEGIN(DBCLOVEROP);
   else BEGIN(OVERLAPOP);
 }
 
-<WILSONOP,TMOP,OVERLAPOP,DBTMOP,CLOVEROP>{
+<WILSONOP,TMOP,OVERLAPOP,DBTMOP,CLOVEROP,DBCLOVEROP>{
   {SPC}*kappa{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->kappa = c;
@@ -561,7 +566,7 @@ inline void rmQuotes(char *str){
     optr->no_extra_masses = 0;
     char * token = NULL;
     if( strtok(yytext,"\n\t =,\\") != NULL ) {
-      /* drop the first token, it is ExtraMasses" */
+      /* drop the first token, it is ExtraMasses */
       token = strtok(NULL," =\t");
       if( token != NULL ) {
         printf("  CGMMS Reading extra masses input file %s\n",token);
@@ -617,7 +622,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<DBTMOP>{
+<DBTMOP,DBCLOVEROP>{
   {SPC}*2KappaMubar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->mubar = c;
@@ -650,7 +655,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<CLOVEROP>{
+<CLOVEROP,DBCLOVEROP>{
   {SPC}*csw{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->c_sw = c;
@@ -1934,7 +1939,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
   line_of_file++;
 }
 <*>\n                       {

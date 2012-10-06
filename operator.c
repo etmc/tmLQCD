@@ -130,7 +130,7 @@ int add_operator(const int type) {
     optr->m = 0.;
     optr->inverter = &op_invert;
   }
-  if(optr->type == DBTMWILSON) {
+  if(optr->type == DBTMWILSON || optr->type == DBCLOVER) {
     optr->no_flavours = 2;
     g_running_phmc = 1;
   }
@@ -144,7 +144,6 @@ int add_operator(const int type) {
 }
 
 int init_operators() {
-  FILE * ifs;
   int i;
   operator * optr;
   for(i = 0; i < no_operators; i++) {
@@ -192,6 +191,10 @@ int init_operators() {
       /* 	fprintf(stderr, "Not enough memory for 20 NDPHMC Chi fields! Aborting...\n"); */
       /* 	exit(0); */
       /*       } */
+    }
+    else if(optr->type == DBCLOVER) {
+      optr->even_odd_flag = 1;
+      optr->applyDbQsq = &Qtm_pm_ndpsi;
     }
   }
   return(0);
@@ -285,15 +288,32 @@ void op_invert(const int op_id, const int index_start) {
         break;
     }
   }
-  else if(optr->type == DBTMWILSON) {
+  else if(optr->type == DBTMWILSON || optr->type == DBCLOVER) {
     g_mubar = optr->mubar;
     g_epsbar = optr->epsbar;
-    for(i = 0; i < SourceInfo.no_flavours; i++) {
-      optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
-                                            optr->sr0, optr->sr1, optr->sr2, optr->sr3,
-                                            optr->eps_sq, optr->maxiter,
-                                            optr->solver, optr->rel_prec);
+    if(optr->type == DBCLOVER) {
+      g_c_sw = optr->c_sw;
+      if (g_cart_id == 0 && g_debug_level > 1) {
+	printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+      }
+      init_sw_fields(VOLUME);
+      sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw); 
+      sw_invert_nd(g_mubar*g_mubar-g_epsbar*g_epsbar);
+    }
 
+    for(i = 0; i < SourceInfo.no_flavours; i++) {
+      if(optr->type != DBCLOVER) {
+	optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
+					      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
+					      optr->eps_sq, optr->maxiter,
+					      optr->solver, optr->rel_prec);
+      }
+      else {
+	optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
+						    optr->sr0, optr->sr1, optr->sr2, optr->sr3,
+						    optr->eps_sq, optr->maxiter,
+						    optr->solver, optr->rel_prec);
+      }
       g_mu = optr->mubar;
       M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1); 
       assign_add_mul_r(g_spinor_field[DUM_DERI+1], optr->prop2, -optr->epsbar, VOLUME/2);
@@ -396,7 +416,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   paramsSourceFormat *sourceFormat = NULL;
   paramsPropagatorFormat *propagatorFormat = NULL;
   paramsInverterInfo *inverterInfo = NULL;
-  if(optr->type == DBTMWILSON) {
+  if(optr->type == DBTMWILSON || optr->type == DBCLOVER) {
     strcpy(ending, "hinverted");
   }
   else if(optr->type == OVERLAP) {
