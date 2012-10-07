@@ -458,6 +458,22 @@ void H_eo_tm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   return;
 }
 
+void H_eo_sw_ndpsi(spinor * const l_strange, spinor * const l_charm, 
+		   spinor * const k_strange, spinor * const k_charm, 
+		   const int ieo) {
+  /* recall:   strange <-> up    while    charm <-> dn   */
+  Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX], k_strange);
+  Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX+1], k_charm);
+  
+  assign_mul_one_sw_pm_imu_eps(EE, l_strange, l_charm, 
+			       g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], 
+			       -g_mubar, g_epsbar);
+
+  clover_inv_nd(EE, l_strange, l_charm);
+
+  return;
+}
+
 // for this routine we need to have sw_invert_nd and sw_term called before hand
 // and the clover term must be initialised
 void Msw_ee_inv_ndpsi(spinor * const l_strange, spinor * const l_charm, 
