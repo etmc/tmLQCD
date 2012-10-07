@@ -78,8 +78,8 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 
     for(k = 1; k < (mnl->MDPolyDegree-1); k++) {
       Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
-			   g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
-			   mnl->MDPolyRoots[k-1]);
+			     g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
+			     mnl->MDPolyRoots[k-1]);
     }
     
     /* Here comes the remaining fields  chi_k ; k=n,...,2n-1  */
@@ -93,12 +93,12 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
       assign(g_chi_dn_spinor_field[mnl->MDPolyDegree-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], VOLUME/2);
       
       Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], 
-			   g_chi_up_spinor_field[mnl->MDPolyDegree-1], g_chi_dn_spinor_field[mnl->MDPolyDegree-1], 
-			   mnl->MDPolyRoots[2*mnl->MDPolyDegree-3-j]);
+			     g_chi_up_spinor_field[mnl->MDPolyDegree-1], g_chi_dn_spinor_field[mnl->MDPolyDegree-1], 
+			     mnl->MDPolyRoots[2*mnl->MDPolyDegree-3-j]);
       
       /* Get the even parts of the  (j-1)th  chi_spinors */
       H_eo_tm_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
-	      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
+		    g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
       
       /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
       deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[phmc_dop_n_cheby], hf, mnl->forcefactor);      /* UP */
@@ -106,7 +106,7 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
       
       /* Get the even parts of the  (2N-j)-th  chi_spinors */
       H_eo_tm_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
-	      g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], EO);
+		    g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], EO);
       
       /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
       deriv_Sb(OE, g_chi_up_spinor_field[j-1], mnl->w_fields[0], hf, mnl->forcefactor);
@@ -119,28 +119,28 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     assign(g_chi_up_spinor_field[0], mnl->pf, VOLUME/2);
     for(k = 1; k < (mnl->MDPolyDegree-1); k++) {
       Qtm_pm_sub_const_nrm_psi(g_chi_up_spinor_field[k],
-			    g_chi_up_spinor_field[k-1], 
-			    mnl->MDPolyRoots[k-1]);
+			       g_chi_up_spinor_field[k-1], 
+			       mnl->MDPolyRoots[k-1]);
     }
     assign(g_chi_up_spinor_field[mnl->MDPolyDegree],
 	   g_chi_up_spinor_field[mnl->MDPolyDegree-2], VOLUME/2);
-
+    
     for(j = (mnl->MDPolyDegree-1); j >= 1; j--) {
       assign(g_chi_up_spinor_field[mnl->MDPolyDegree-1],
 	     g_chi_up_spinor_field[mnl->MDPolyDegree], VOLUME/2);
-
+      
       Qtm_pm_sub_const_nrm_psi(g_chi_up_spinor_field[mnl->MDPolyDegree], 
-			   g_chi_up_spinor_field[mnl->MDPolyDegree-1],
-			   mnl->MDPolyRoots[2*mnl->MDPolyDegree-3-j]);
-
+			       g_chi_up_spinor_field[mnl->MDPolyDegree-1],
+			       mnl->MDPolyRoots[2*mnl->MDPolyDegree-3-j]);
+      
       Qtm_minus_psi(mnl->w_fields[3],g_chi_up_spinor_field[j-1]); 
-
+      
       H_eo_tm_inv_psi(mnl->w_fields[2], g_chi_up_spinor_field[phmc_dop_n_cheby], EO, -1.);
       deriv_Sb(OE, mnl->w_fields[3], mnl->w_fields[2], hf, mnl->forcefactor); 
       
       H_eo_tm_inv_psi(mnl->w_fields[2], mnl->w_fields[3], EO, 1.); 
       deriv_Sb(EO, mnl->w_fields[2], g_chi_up_spinor_field[phmc_dop_n_cheby], hf, mnl->forcefactor);
-
+      
       Qtm_minus_psi(mnl->w_fields[3],g_chi_up_spinor_field[mnl->MDPolyDegree]); 
 
       H_eo_tm_inv_psi(mnl->w_fields[2],mnl->w_fields[3], EO, +1.);
@@ -475,7 +475,8 @@ int init_ndpoly_monomial(const int id) {
 
   /* Here we prepare the less precise MD polynomial first   */
   degree_of_polynomial_nd(&mnl->MDPolyDegree, &mnl->MDPolyCoefs,
-			  mnl->EVMin, mnl->EVMax);
+			  mnl->EVMin, mnl->EVMax,
+			  Qtm_pm_ndpsi);
   phmc_dop_n_cheby = mnl->MDPolyDegree;
   phmc_dop_cheby_coef = mnl->MDPolyCoefs;
   if((g_proc_id == 0) && (g_debug_level > 1)) {
@@ -496,7 +497,7 @@ int init_ndpoly_monomial(const int id) {
   /* Here we prepare the precise polynomial Ptilde */
   degree_of_Ptilde(&mnl->PtildeDegree, &mnl->PtildeCoefs, 
 		   mnl->EVMin, mnl->EVMax, mnl->MDPolyDegree, 
-		   mnl->PrecisionPtilde);
+		   mnl->PrecisionPtilde, &Qtm_pm_ndpsi);
   phmc_ptilde_cheby_coef = mnl->PtildeCoefs;
   phmc_ptilde_n_cheby = mnl->PtildeDegree;
 

@@ -311,7 +311,7 @@ void Qsw_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
  ******************************************/
 void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
 			    spinor * const k_strange, spinor * const k_charm, 
-			    const _Complex double z){
+			    const _Complex double z) {
 
   spinor *r, *s;
   su3_vector ALIGN phi1;
@@ -335,6 +335,82 @@ void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   M_oo_sub_g5_ndpsi(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], k_charm, k_strange,
   		    l_strange, l_charm,
   		    -g_mubar, -g_epsbar);
+
+  /* At the end, the normalisation by the max. eigenvalue  */
+  mul_r(l_strange, phmc_invmaxev, g_spinor_field[DUM_MATRIX], VOLUME/2);
+  mul_r(l_charm, phmc_invmaxev, g_spinor_field[DUM_MATRIX+1], VOLUME/2);
+
+  /* Finally, we add k to l and multiply all */
+  /* by the constant  phmc_Cpol  */
+  /* which renders the polynomial in monomials  */
+  /* identical to the polynomial a la clenshaw */;
+#ifdef OMP
+#pragma omp parallel for private(r) private(s) private(phi1)
+#endif
+  for(int ix = 0; ix < (VOLUME/2); ix++){
+
+    r=l_strange + ix;
+    s=k_strange + ix;
+    
+    _complex_times_vector(phi1, z, s->s0);
+    _vector_sub_assign(r->s0, phi1);
+    _vector_mul(r->s0, phmc_Cpol, r->s0);
+    _complex_times_vector(phi1, z, s->s1);
+    _vector_sub_assign(r->s1, phi1);
+    _vector_mul(r->s1, phmc_Cpol, r->s1);
+    _complex_times_vector(phi1, z, s->s2);
+    _vector_sub_assign(r->s2, phi1);
+    _vector_mul(r->s2, phmc_Cpol, r->s2);
+    _complex_times_vector(phi1, z, s->s3);
+    _vector_sub_assign(r->s3, phi1);
+    _vector_mul(r->s3, phmc_Cpol, r->s3);
+
+    r=l_charm + ix;
+    s=k_charm + ix;
+    
+    _complex_times_vector(phi1, z, s->s0);
+    _vector_sub_assign(r->s0, phi1);
+    _vector_mul(r->s0, phmc_Cpol, r->s0);
+    _complex_times_vector(phi1, z, s->s1);
+    _vector_sub_assign(r->s1, phi1);
+    _vector_mul(r->s1, phmc_Cpol, r->s1);
+    _complex_times_vector(phi1, z, s->s2);
+    _vector_sub_assign(r->s2, phi1);
+    _vector_mul(r->s2, phmc_Cpol, r->s2);
+    _complex_times_vector(phi1, z, s->s3);
+    _vector_sub_assign(r->s3, phi1);    
+    _vector_mul(r->s3, phmc_Cpol, r->s3);
+  }
+  return;
+}
+
+void Qsw_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
+			      spinor * const k_strange, spinor * const k_charm, 
+			      const _Complex double z) {
+
+  spinor *r, *s;
+  su3_vector ALIGN phi1;
+
+  /*   tau_1   inverts the   k_charm  <->  k_strange   spinors */
+  /*  Apply first  Qhat(2x2)  and finally substract the constant  */
+
+  /* Here the  M_oe Mee^-1 M_eo  implementation  */
+
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
+
+  assign_mul_one_sw_pm_imu_eps(EE, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], 
+			       g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], -g_mubar, g_epsbar);
+  clover_inv_nd(EE, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3]);
+
+  Hopping_Matrix(OE, l_strange, g_spinor_field[DUM_MATRIX+3]);
+  Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+2]);
+
+  /* Here the M_oo  implementation  */
+  clover_gamma5_nd(OO, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], 
+  		   k_charm, k_strange,
+  		   l_strange, l_charm,
+  		   g_mubar, -g_epsbar);
 
   /* At the end, the normalisation by the max. eigenvalue  */
   mul_r(l_strange, phmc_invmaxev, g_spinor_field[DUM_MATRIX], VOLUME/2);

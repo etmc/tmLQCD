@@ -19,6 +19,7 @@
 #ifndef _CHEBYSHEV_POLYNOMIAL_ND_H
 #define _CHEBYSHEV_POLYNOMIAL_ND_H
 
+#include "solver/matrix_mult_typedef_nd.h"
 
 double func(double u, double exponent);
 
@@ -27,6 +28,7 @@ void chebyshev_coefs(double a, double b, double c[], int n, double exponent);
 double cheb_eval(int M, double *c, double s);
 
 void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
-			     const double EVMin, const double EVMax);
+			     const double EVMin, const double EVMax,
+			     matrix_mult_nd Qsq);
 
 #endif

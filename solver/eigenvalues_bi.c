@@ -50,13 +50,14 @@
 #include "tm_operators.h"
 #include "solver/solver.h"
 #include "solver/jdher_bi.h"
+#include "solver/matrix_mult_typedef_bi.h"
 #include "eigenvalues_bi.h"
 #include "tm_operators_nd.h"
 
 
 double eigenvalues_bi(int * nr_of_eigenvalues,  
 		      const int max_iterations, const double precision,
-		      const int maxmin) {
+		      const int maxmin, matrix_mult_bi Qsq) {
 
 
   static bispinor * eigenvectors_bi_ = NULL;
@@ -78,11 +79,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
    * General variables
    **********************/
   int returncode=0;
-  char * filename = NULL;
-
-  
-  filename = calloc(200, sizeof(char));
-  /*  strcpy(filename,optarg);*/
 
   if(maxmin == JD_MINIMAL) {
     startvalue = 0.;
@@ -140,14 +136,14 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
   /* conversion to non _bi fields which are subject to xchange_fields   */
   /* so _bi fields do not need boundary                                 */
   jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double), (VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double),
-	    startvalue, prec, 
-	    (*nr_of_eigenvalues), j_max, j_min, 
-	    max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors_bi,
-	    BICGSTAB, solver_it_max,
-	    threshold, decay, verbosity,
-	    &converged, (_Complex double*) eigenvectors_bi, eigenvls_bi,
-	    &returncode, maxmin, 1,
-	    &Qtm_pm_ndbipsi);
+	   startvalue, prec, 
+	   (*nr_of_eigenvalues), j_max, j_min, 
+	   max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors_bi,
+	   BICGSTAB, solver_it_max,
+	   threshold, decay, verbosity,
+	   &converged, (_Complex double*) eigenvectors_bi, eigenvls_bi,
+	   &returncode, maxmin, 1,
+	   Qsq);
   
   *nr_of_eigenvalues = converged;
 

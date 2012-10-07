@@ -19,7 +19,10 @@
 #ifndef _EIGENVALUES_BI_H
 #define _EIGENVALUES_BI_H
 
+#include "matrix_mult_typedef_bi.h"
+
 double eigenvalues_bi(int * nev, const int max_iterations, 
-		      const double prec, const int maxmin);
+		      const double prec, const int maxmin,
+		      matrix_mult_bi Qsq);
 
 #endif
