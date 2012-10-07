@@ -47,7 +47,9 @@
 #include "boundary.h"
 #include "phmc.h"
 #include "init_chi_spinor_field.h"
+#include "clovertm_operators.h"
 #include "clover_leaf.h"
+
 #include "cloverndpoly_monomial.h"
 
 /********************************************
@@ -71,7 +73,7 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   // we compute the clover term (1 + T_ee(oo)) for all sites x
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   // we invert it for the even sites only
-  sw_invert_nd(EE, mnl->mu);
+  sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
 
 
   /* This factor 2 a missing factor 2 in trace_lambda */
@@ -137,8 +139,8 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   ndpoly_set_global_parameter(mnl, 0);
   g_mu3 = 0.;
   init_sw_fields();
-  sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
-  sw_invert_nd(EE, mnl->mu);
+  sw_term((const su3**)hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
 
   mnl->energy0 = 0.;
   random_spinor_field(g_chi_up_spinor_field[0], VOLUME/2, mnl->rngrepro);
@@ -200,8 +202,8 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   ndpoly_set_global_parameter(mnl, 0);
   g_mu3 = 0.;
   init_sw_fields();
-  sw_term(hf->gaugefield, mnl->kappa, mnl->c_sw); 
-  sw_invert_nd(EE, mnl->mu);
+  sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
 
   mnl->energy1 = 0.;
   Ener[0] = 0;

@@ -227,6 +227,14 @@ int init_monomials(const int V, const int even_odd_flag) {
 	no++;
 	retval = init_ndpoly_monomial(i);
       }
+      else if(monomial_list[i].type == NDCLOVER) {
+	monomial_list[i].hbfunction = &cloverndpoly_heatbath;
+	monomial_list[i].accfunction = &cloverndpoly_acc;
+	monomial_list[i].derivativefunction = &cloverndpoly_derivative;
+	monomial_list[i].pf2 = __pf+no*V;
+	no++;
+	retval = init_ndpoly_monomial(i);
+      }
       else if(monomial_list[i].type == NDDETRATIO) {
 	monomial_list[i].hbfunction = &dummy_heatbath;
 	monomial_list[i].accfunction = &nddetratio_acc;

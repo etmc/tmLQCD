@@ -89,7 +89,7 @@ void Qtm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   mul_r(l_charm, phmc_invmaxev, g_spinor_field[DUM_MATRIX+1], VOLUME/2);
 }
 
-void Qsw__ndpsi(spinor * const l_strange, spinor * const l_charm,
+void Qsw_ndpsi(spinor * const l_strange, spinor * const l_charm,
 		spinor * const k_strange, spinor * const k_charm) {
 
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
