@@ -135,7 +135,8 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   /* here comes the inversion using even/odd preconditioning */
   if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}
   M_ee_inv_ndpsi(Even_new_s, Even_new_c, 
-		 Even_s, Even_c);
+		 Even_s, Even_c,
+		 g_mubar, g_epsbar);
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new_s);
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI+1], Even_new_c);
   
@@ -184,12 +185,13 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   
   Qtm_dagger_ndpsi(Odd_new_s, Odd_new_c,
 		   Odd_new_s, Odd_new_c);
-  
+
   /* Reconstruct the even sites                */
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new_s);
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI+1], Odd_new_c);
   M_ee_inv_ndpsi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3],
-		 g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+		 g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+		 g_mubar, g_epsbar);
   
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */

@@ -45,9 +45,11 @@
 
 void mul_one_pm_iconst(spinor * const l, spinor * const k, 
 		       const double mu_, const int sign_);
-void mul_one_p_imug5t3_p_epst1_inv(spinor * const l_c, spinor * const l_s, 
-				   spinor * const k_c, spinor * const k_s,
-				   const double mu, const double eps);
+
+void M_oo_sub_g5_ndpsi(spinor * const l_s, spinor * const l_c, 
+		       spinor * const k_s, spinor * const k_c,
+		       spinor * const j_s, spinor * const j_c,
+		       const double mu, const double eps);
 
 /* external functions */
 
@@ -71,30 +73,20 @@ void Qtm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_strange);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_charm);
 
-  mul_one_p_imug5t3_p_epst1_inv(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2],
-				g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1],
-				g_mubar, g_epsbar);
-
+  M_ee_inv_ndpsi(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2],
+		 g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1],
+		 g_mubar, g_epsbar);
+  
   Hopping_Matrix(OE, l_strange, g_spinor_field[DUM_MATRIX+3]);
   Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+2]);
 
   /* Here the M_oo  implementation  */
-  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX], k_strange, g_mubar, +1);
-  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+1], k_charm, g_mubar, -1);
-
-  assign_add_mul_r(g_spinor_field[DUM_MATRIX], k_charm, -g_epsbar, VOLUME/2);
-  assign_add_mul_r(g_spinor_field[DUM_MATRIX+1], k_strange, -g_epsbar, VOLUME/2);
-   
-  diff(l_strange, g_spinor_field[DUM_MATRIX], l_strange, VOLUME/2);
-  diff(l_charm, g_spinor_field[DUM_MATRIX+1], l_charm, VOLUME/2);
-
-  /* and finally the  gamma_5  multiplication  */
-  gamma5(l_strange, l_strange, VOLUME/2);
-  gamma5(l_charm, l_charm, VOLUME/2);
-
+  M_oo_sub_g5_ndpsi(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], k_strange, k_charm,
+  		    l_strange, l_charm,
+  		    -g_mubar, -g_epsbar);
   /* At the end, the normalisation by the max. eigenvalue  */
-  mul_r(l_strange, phmc_invmaxev, l_strange, VOLUME/2);
-  mul_r(l_charm, phmc_invmaxev, l_charm, VOLUME/2);
+  mul_r(l_strange, phmc_invmaxev, g_spinor_field[DUM_MATRIX], VOLUME/2);
+  mul_r(l_charm, phmc_invmaxev, g_spinor_field[DUM_MATRIX+1], VOLUME/2);
 }
 
 void Qsw__ndpsi(spinor * const l_strange, spinor * const l_charm,
@@ -143,27 +135,17 @@ void Qtm_dagger_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
-  mul_one_p_imug5t3_p_epst1_inv(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3],
-				g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1],
-				g_mubar, g_epsbar);
-
+  M_ee_inv_ndpsi(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3],
+		 g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1],
+		 g_mubar, g_epsbar);
+  
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+2]);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+2], k_charm, g_mubar, +1);
-  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+3], k_strange, g_mubar, -1);
-
-  assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], k_strange, -g_epsbar, VOLUME/2);
-  assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], k_charm, -g_epsbar, VOLUME/2);
-   
-  diff(l_charm, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], VOLUME/2);
-  diff(l_strange, g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], VOLUME/2);
-
-  /* and finally the  gamma_5  multiplication  */
-  gamma5(l_charm, l_charm, VOLUME/2);
-  gamma5(l_strange, l_strange, VOLUME/2);
-
+  M_oo_sub_g5_ndpsi(l_strange, l_charm, k_strange, k_charm,
+  		    g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX],
+  		    g_mubar, -g_epsbar);
   /* At the end, the normalisation by the max. eigenvalue  */
   mul_r(l_charm, phmc_invmaxev, l_charm, VOLUME/2);
   mul_r(l_strange, phmc_invmaxev, l_strange, VOLUME/2);
@@ -219,27 +201,17 @@ void Qtm_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
-  mul_one_p_imug5t3_p_epst1_inv(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3],
-				g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1],
-				g_mubar, g_epsbar);
+  M_ee_inv_ndpsi(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3],
+		 g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1],
+		 g_mubar, g_epsbar);
 
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+2]);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+3]);
 
   /* Here the M_oo  implementation  */
-  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+2], k_charm, g_mubar, +1);
-  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+3], k_strange, g_mubar, -1);
-
-  assign_add_mul_r(g_spinor_field[DUM_MATRIX+2], k_strange, -g_epsbar, VOLUME/2);
-  assign_add_mul_r(g_spinor_field[DUM_MATRIX+3], k_charm, -g_epsbar, VOLUME/2);
-   
-  diff(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX], VOLUME/2);
-  diff(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+1], VOLUME/2);
-
-  /* and finally the  gamma_5  multiplication  */
-  gamma5(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+2], VOLUME/2);
-  gamma5(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+3], VOLUME/2);
-
+  M_oo_sub_g5_ndpsi(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], k_charm, k_strange,
+  		    g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1],
+  		    -g_mubar, -g_epsbar);
   /* We have to reassigin as follows to avoid overwriting */
   /* Recall in fact that   Q^hat = tau_1 Q tau_1  , hence  */
   /* and then the  Qhat(2x2)  PART */
@@ -248,26 +220,17 @@ void Qtm_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+3]);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+2]);
 
-  mul_one_p_imug5t3_p_epst1_inv(g_spinor_field[DUM_MATRIX+5], g_spinor_field[DUM_MATRIX+4],
-				g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX],
-				-g_mubar, g_epsbar);
+  M_ee_inv_ndpsi(g_spinor_field[DUM_MATRIX+5], g_spinor_field[DUM_MATRIX+4],
+		 g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX],
+		 -g_mubar, g_epsbar);
 
   Hopping_Matrix(OE, l_strange, g_spinor_field[DUM_MATRIX+4]);
   Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+5]);
 
   /* Here the M_oo  implementation  */
-  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+3], g_mubar, +1);
-  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+2], g_mubar, -1);
-
-  assign_add_mul_r(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+2], -g_epsbar, VOLUME/2);
-  assign_add_mul_r(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX+3], -g_epsbar, VOLUME/2);
-   
-  diff(l_strange, g_spinor_field[DUM_MATRIX], l_strange, VOLUME/2);
-  diff(l_charm, g_spinor_field[DUM_MATRIX+1], l_charm, VOLUME/2);
-
-  gamma5(l_strange, l_strange, VOLUME/2);
-  gamma5(l_charm, l_charm, VOLUME/2);
-
+  M_oo_sub_g5_ndpsi(l_strange, l_charm, g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2],
+		    l_strange, l_charm,
+  		    -g_mubar, -g_epsbar);
   /* At the end, the normalisation by the max. eigenvalue  */ 
   /* Twice  phmc_invmaxev  since we consider here  D Ddag  !!! */
   mul_r(l_charm, phmc_invmaxev*phmc_invmaxev, l_charm, VOLUME/2);
@@ -361,7 +324,7 @@ void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
-  mul_one_p_imug5t3_p_epst1_inv(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2],
+  M_ee_inv_ndpsi(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2],
 				g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1],
 				g_mubar, g_epsbar);
 
@@ -369,22 +332,13 @@ void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(OE, l_charm, g_spinor_field[DUM_MATRIX+2]);
 
   /* Here the M_oo  implementation  */
-  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX], k_charm, g_mubar, +1);
-  mul_one_pm_iconst(g_spinor_field[DUM_MATRIX+1], k_strange, g_mubar, -1);
-
-  assign_add_mul_r(g_spinor_field[DUM_MATRIX], k_strange, -g_epsbar, VOLUME/2);
-  assign_add_mul_r(g_spinor_field[DUM_MATRIX+1], k_charm, -g_epsbar, VOLUME/2);
-
-  diff(l_strange, g_spinor_field[DUM_MATRIX], l_strange, VOLUME/2);
-  diff(l_charm, g_spinor_field[DUM_MATRIX+1], l_charm, VOLUME/2);
-
-  /* and finally the  gamma_5  multiplication  */
-  gamma5(l_strange, l_strange, VOLUME/2);
-  gamma5(l_charm, l_charm, VOLUME/2);
+  M_oo_sub_g5_ndpsi(g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], k_charm, k_strange,
+  		    l_strange, l_charm,
+  		    -g_mubar, -g_epsbar);
 
   /* At the end, the normalisation by the max. eigenvalue  */
-  mul_r(l_strange, phmc_invmaxev, l_strange, VOLUME/2);
-  mul_r(l_charm, phmc_invmaxev, l_charm, VOLUME/2);
+  mul_r(l_strange, phmc_invmaxev, g_spinor_field[DUM_MATRIX], VOLUME/2);
+  mul_r(l_charm, phmc_invmaxev, g_spinor_field[DUM_MATRIX+1], VOLUME/2);
 
   /* Finally, we add k to l and multiply all */
   /* by the constant  phmc_Cpol  */
@@ -451,7 +405,7 @@ void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
  * it acts only on the odd part or only
  * on a half spinor
  ******************************************/
-void Qtm_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k){
+void Qtm_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k) {
 
   /*  create 2 spinors out of 1 (input) bispinor  */
   decompact(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], bisp_k);
@@ -461,6 +415,20 @@ void Qtm_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k){
 
   /*  create 1 (output) bispinor out of 2 spinors  */
   compact(bisp_l, g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
+  return;
+}
+
+void Qsw_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k) {
+
+  /*  create 2 spinors out of 1 (input) bispinor  */
+  decompact(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], bisp_k);
+
+  Qsw_pm_ndpsi(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7],
+	       g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
+
+  /*  create 1 (output) bispinor out of 2 spinors  */
+  compact(bisp_l, g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
+  return;
 }
 
 
@@ -484,19 +452,9 @@ void H_eo_tm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX], k_strange);
   Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX+1], k_charm);
 
-  mul_one_p_imug5t3_p_epst1_inv(l_charm, l_strange,
-				g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1],
-				-g_mubar, g_epsbar);
-  return;
-}
-
-void M_ee_inv_ndpsi(spinor * const l_strange, spinor * const l_charm, 
-		    spinor * const k_strange, spinor * const k_charm) {
-  
-  /* recall:   strange <-> up    while    charm <-> dn   */
-  mul_one_p_imug5t3_p_epst1_inv(l_charm, l_strange,
-				k_charm, k_strange,
-				-g_mubar, g_epsbar);
+  M_ee_inv_ndpsi(l_charm, l_strange,
+		 g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1],
+		 -g_mubar, g_epsbar);
   return;
 }
 
@@ -601,17 +559,17 @@ void mul_one_pm_iconst(spinor * const l, spinor * const k,
   return;
 }
 
-
-void mul_one_p_imug5t3_p_epst1_inv(spinor * const l_c, spinor * const l_s, 
-				   spinor * const k_c, spinor * const k_s,
-				   const double mu, const double eps) {
+// l_ and k_ are allowed to be the same spinors
+void M_ee_inv_ndpsi(spinor * const l_s, spinor * const l_c, 
+		    spinor * const k_s, spinor * const k_c,
+		    const double mu, const double eps) {
 #ifdef OMP
 #pragma omp parallel
   {
 #endif
   double nrm = 1./(1.+ mu*mu - eps*eps);
   spinor *r_s, *r_c, *s_s, *s_c;
-  su3_vector ALIGN phi1;
+  su3_vector ALIGN phi1, phi2;
 
 #ifdef OMP
 #pragma omp for
@@ -622,33 +580,33 @@ void mul_one_p_imug5t3_p_epst1_inv(spinor * const l_c, spinor * const l_s,
     s_s = k_s + ix;
     s_c = k_c + ix;
 
-    _complex_times_vector(phi1, (1. + mu * I), s_s->s0);
+    _complex_times_vector(phi1, (1. - mu * I), s_s->s0);
     _vector_add_mul(phi1, eps, s_c->s0);
+    _complex_times_vector(phi2, (1. + mu * I), s_c->s0);
+    _vector_add_mul(phi2, eps, s_s->s0);
     _vector_mul(r_s->s0, nrm, phi1);
-    _complex_times_vector(phi1, (1. - mu * I), s_c->s0);
-    _vector_add_mul(phi1, eps, s_s->s0);
-    _vector_mul(r_c->s0, nrm, phi1);
+    _vector_mul(r_c->s0, nrm, phi2);
 
-    _complex_times_vector(phi1, (1. + mu * I), s_s->s1);
+    _complex_times_vector(phi1, (1. - mu * I), s_s->s1);
     _vector_add_mul(phi1, eps, s_c->s1);
+    _complex_times_vector(phi2, (1. + mu * I), s_c->s1);
+    _vector_add_mul(phi2, eps, s_s->s1);
     _vector_mul(r_s->s1, nrm, phi1);
-    _complex_times_vector(phi1, (1. - mu * I), s_c->s1);
-    _vector_add_mul(phi1, eps, s_s->s1);
-    _vector_mul(r_c->s1, nrm, phi1);
+    _vector_mul(r_c->s1, nrm, phi2);
 
-    _complex_times_vector(phi1, (1. - mu * I), s_s->s2);
+    _complex_times_vector(phi1, (1. + mu * I), s_s->s2);
     _vector_add_mul(phi1, eps, s_c->s2);
+    _complex_times_vector(phi2, (1. - mu * I), s_c->s2);
+    _vector_add_mul(phi2, eps, s_s->s2);
     _vector_mul(r_s->s2, nrm, phi1);
-    _complex_times_vector(phi1, (1. + mu * I), s_c->s2);
-    _vector_add_mul(phi1, eps, s_s->s2);
-    _vector_mul(r_c->s2, nrm, phi1);
+    _vector_mul(r_c->s2, nrm, phi2);
 
-    _complex_times_vector(phi1, (1. - mu * I), s_s->s3);
+    _complex_times_vector(phi1, (1. + mu * I), s_s->s3);
     _vector_add_mul(phi1, eps, s_c->s3);
+    _complex_times_vector(phi2, (1. - mu * I), s_c->s3);
+    _vector_add_mul(phi2, eps, s_s->s3);
     _vector_mul(r_s->s3, nrm, phi1);
-    _complex_times_vector(phi1, (1. + mu * I), s_c->s3);
-    _vector_add_mul(phi1, eps, s_s->s3);
-    _vector_mul(r_c->s3, nrm, phi1);
+    _vector_mul(r_c->s3, nrm, phi2);
 
   }
 
@@ -658,6 +616,67 @@ void mul_one_p_imug5t3_p_epst1_inv(spinor * const l_c, spinor * const l_s,
 
   return;
 }
+
+
+// l_ and k_ are allowed to be the same spinors
+void M_oo_sub_g5_ndpsi(spinor * const l_s, spinor * const l_c, 
+		       spinor * const k_s, spinor * const k_c,
+		       spinor * const j_s, spinor * const j_c,
+		       const double mu, const double eps) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  spinor *r_s, *r_c, *s_s, *s_c, *t_s, *t_c;
+  su3_vector ALIGN phi1, phi2;
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for(unsigned int ix = 0; ix < (VOLUME/2); ++ix){
+    r_s = l_s + ix;
+    r_c = l_c + ix;
+    s_s = k_s + ix;
+    s_c = k_c + ix;
+    t_s = j_s + ix;
+    t_c = j_c + ix;
+
+    _complex_times_vector(phi1, (1. - mu * I), s_s->s0);
+    _vector_add_mul(phi1, eps, s_c->s0);
+    _complex_times_vector(phi2, (1. + mu * I), s_c->s0);
+    _vector_add_mul(phi2, eps, s_s->s0);
+    _vector_sub(r_s->s0, phi1, t_s->s0);
+    _vector_sub(r_c->s0, phi2, t_c->s0);
+
+    _complex_times_vector(phi1, (1. - mu * I), s_s->s1);
+    _vector_add_mul(phi1, eps, s_c->s1);
+    _complex_times_vector(phi2, (1. + mu * I), s_c->s1);
+    _vector_add_mul(phi2, eps, s_s->s1);
+    _vector_sub(r_s->s1, phi1, t_s->s1);
+    _vector_sub(r_c->s1, phi2, t_c->s1);
+
+    _complex_times_vector(phi1, (1. + mu * I), s_s->s2);
+    _vector_add_mul(phi1, eps, s_c->s2);
+    _complex_times_vector(phi2, (1. - mu * I), s_c->s2);
+    _vector_add_mul(phi2, eps, s_s->s2);
+    _vector_sub(r_s->s2, t_s->s2, phi1);
+    _vector_sub(r_c->s2, t_c->s2, phi2);
+
+    _complex_times_vector(phi1, (1. + mu * I), s_s->s3);
+    _vector_add_mul(phi1, eps, s_c->s3);
+    _complex_times_vector(phi2, (1. - mu * I), s_c->s3);
+    _vector_add_mul(phi2, eps, s_s->s3);
+    _vector_sub(r_s->s3, t_s->s3, phi1);
+    _vector_sub(r_c->s3, t_c->s3, phi2);
+  }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
+  return;
+}
+
 
 /*  calculates P(Q Q^dagger) for the nondegenerate case */
 
