@@ -108,11 +108,9 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // computes the insertion matrices for S_eff
   // result is written to swp and swm
   // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-  gamma5(mnl->w_fields[2], mnl->w_fields[2], VOLUME/2);
   sw_spinor(EO, mnl->w_fields[2], mnl->w_fields[3]);
   
   // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-  gamma5(mnl->w_fields[0], mnl->w_fields[0], VOLUME/2);
   sw_spinor(OE, mnl->w_fields[0], mnl->w_fields[1]);
   
   // compute the contribution for the det-part

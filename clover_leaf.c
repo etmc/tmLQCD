@@ -869,7 +869,6 @@ void sw_deriv(const int ieo, const double mu) {
 // with insertion matrix at site x
 // see equation (22) of hep-lat/9603008                  
 // result is again stored in swm and swp                 
-// additional gamma_5 needed for one of the input vectors
 
 void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll) {
 #ifdef OMP
@@ -905,11 +904,11 @@ void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll) 
     _vector_tensor_vector(v1,(*r).s0,(*s).s1);
     _vector_tensor_vector(v2,(*r).s1,(*s).s1);
     _vector_tensor_vector(v3,(*r).s1,(*s).s0);
-    
-    _vector_tensor_vector(u0,(*r).s2,(*s).s2);
-    _vector_tensor_vector(u1,(*r).s2,(*s).s3);
-    _vector_tensor_vector(u2,(*r).s3,(*s).s3);
-    _vector_tensor_vector(u3,(*r).s3,(*s).s2);
+    // mvector takes g5 into account
+    _mvector_tensor_vector(u0,(*r).s2,(*s).s2);
+    _mvector_tensor_vector(u1,(*r).s2,(*s).s3);
+    _mvector_tensor_vector(u2,(*r).s3,(*s).s3);
+    _mvector_tensor_vector(u3,(*r).s3,(*s).s2);
     
     /* compute the insertion matrix */
     _su3_plus_su3(lswp[0],u0,v0);
